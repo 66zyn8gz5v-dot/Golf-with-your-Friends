@@ -4,7 +4,7 @@
   const MAX_SHOT = 19;       // Ballgeschwindigkeit bei voller Kraft
   const MAX_DRAG = 4.2;      // Zieh-Länge (Weltkoordinaten) für volle Kraft
   const DEFAULT_MAX_STROKES = 15; // danach wird die Bahn automatisch beendet (pro Bahn per maxStrokes überschreibbar)
-  const maxStrokes = () => COURSES[state.holeIdx].maxStrokes || DEFAULT_MAX_STROKES;
+  const maxStrokes = () => state.mode === 'creative' ? Infinity : (COURSES[state.holeIdx].maxStrokes || DEFAULT_MAX_STROKES);
   const PLAYER_COLORS = ['#ffffff', '#ff6b6b', '#4dd4ff', '#ffe066'];
   const PLAYER_NAMES = ['Spieler 1', 'Spieler 2', 'Spieler 3', 'Spieler 4'];
 
@@ -21,7 +21,9 @@
     particles: [], curPlayer: 0, strokes: 0, restTimer: 0, slowTimer: 0, lastBounceSfx: 0,
     camMode: 'overview', camTheta: Math.PI / 4, zoomFactor: 1,
     controlMode: 'sling', // 'sling' = Schleuder (vom Ball wegziehen), 'push' = Schieben (in Schussrichtung ziehen)
+    mode: 'normal',       // 'normal' = Wettkampf, 'creative' = Kreativ (Bahnen frei wählen und überspringen, kein Schlaglimit)
   };
+  let startHole = 0;
   try { const m = localStorage.getItem('fantasygolf.control'); if (m === 'sling' || m === 'push') state.controlMode = m; } catch (e) { /* kein Speicher verfügbar */ }
   function setControlMode(m) {
     state.controlMode = m;
@@ -41,7 +43,7 @@
     ui.name.textContent = def ? def.name : '–';
     const p = state.players[state.curPlayer];
     ui.player.textContent = p ? p.name : '–';
-    ui.strokes.textContent = def ? `Schläge: ${state.strokes} / ${maxStrokes()} · Par ${def.par}` : '';
+    ui.strokes.textContent = def ? (state.mode === 'creative' ? `Kreativ · Schläge: ${state.strokes} · Par ${def.par}` : `Schläge: ${state.strokes} / ${maxStrokes()} · Par ${def.par}`) : '';
     ui.board.innerHTML = state.players.map((pl, i) => {
       const total = pl.scores.reduce((a, b) => a + b, 0);
       return `<div class="row ${i === state.curPlayer ? 'active' : ''}"><span class="dot" style="background:${pl.color}"></span>${pl.name}<span class="score">${total}</span></div>`;
@@ -53,9 +55,24 @@
   function showTitle() {
     state.phase = 'title';
     document.body.classList.add('title');
+    document.body.classList.remove('creative');
     overlay(`<div class="panel">
       <h1>⛳ Fantasy Golf</h1>
       <div class="sub">Golf with your Friends · ${COURSES.length} magische Bahnen in 2,5D</div>
+      <p>Modus wählen:</p>
+      <div class="modes">
+        <span class="btn mode" data-mode="normal"><b>Normal</b><small>Alle ${COURSES.length} Bahnen der Reihe nach, mit Schlaglimit und Wertung</small></span>
+        <span class="btn mode" data-mode="creative"><b>Kreativ</b><small>Bahn frei wählen, jederzeit vor- und zurückspringen, kein Schlaglimit</small></span>
+      </div>
+      <div class="legend" style="text-align:center">Weitere Welten folgen hier.</div>
+    </div>`, 'title');
+    ui.overlay.querySelectorAll('.mode').forEach(b => b.addEventListener('click', () => { state.mode = b.dataset.mode; showSetup(); }));
+  }
+
+  function showSetup() {
+    const creative = state.mode === 'creative';
+    overlay(`<div class="panel">
+      <h2>${creative ? '🛠 Kreativmodus' : '🏆 Normales Spiel'}</h2>
       <p>Spieler:</p>
       <div id="pc">${[1, 2, 3, 4].map(n => `<span class="btn ghost small ${n === playerCount ? 'sel' : ''}" data-n="${n}">${n}</span>`).join('')}</div>
       <p style="margin-top:10px">Steuerung:</p>
@@ -63,11 +80,14 @@
         <span class="btn ghost small ${state.controlMode === 'sling' ? 'sel' : ''}" data-m="sling">Schleuder</span>
         <span class="btn ghost small ${state.controlMode === 'push' ? 'sel' : ''}" data-m="push">Schieben</span>
       </div>
-      <p style="margin-top:14px"><span class="btn" id="start">Los geht's!</span></p>
+      ${creative ? `<p style="margin-top:10px">Start bei Bahn:</p>
+      <div id="hp" class="holes">${COURSES.map((c, i) => `<span class="btn ghost small ${i === startHole ? 'sel' : ''}" data-h="${i}" title="${c.name}">${i + 1}</span>`).join('')}</div>
+      <div class="sub" id="hp-name" style="margin-top:6px">${COURSES[startHole].name}</div>` : ''}
+      <p style="margin-top:14px"><span class="btn ghost small" id="back">◀ Zurück</span> <span class="btn" id="start">Los geht's!</span></p>
       <div class="legend">
         Aufsetzen, ziehen, loslassen. Weiter ziehen = mehr Kraft.
         <b>Schleuder:</b> vom Ball wegziehen, er fliegt in die Gegenrichtung. <b>Schieben:</b> dorthin ziehen, wo der Ball hin soll.
-        Wasser, Lava und Abgrund kosten einen Strafschlag.
+        ${creative ? 'Im Spiel: Tasten „◀ Bahn“ und „Bahn ▶“ unten links (oder P / N) springen zwischen den Bahnen, „Ball zurück“ setzt an den Abschlag.' : 'Wasser, Lava und Abgrund kosten einen Strafschlag.'}
       </div>
     </div>`, 'title');
     ui.overlay.querySelectorAll('#pc .btn').forEach(b => b.addEventListener('click', () => {
@@ -78,7 +98,13 @@
       setControlMode(b.dataset.m);
       ui.overlay.querySelectorAll('#cm .btn').forEach(x => x.classList.toggle('sel', x.dataset.m === state.controlMode));
     }));
-    $('start').addEventListener('click', () => { Sfx.unlock(); startGame(playerCount); });
+    ui.overlay.querySelectorAll('#hp .btn').forEach(b => b.addEventListener('click', () => {
+      startHole = +b.dataset.h;
+      ui.overlay.querySelectorAll('#hp .btn').forEach(x => x.classList.toggle('sel', +x.dataset.h === startHole));
+      $('hp-name').textContent = COURSES[startHole].name;
+    }));
+    $('back').addEventListener('click', showTitle);
+    $('start').addEventListener('click', () => { Sfx.unlock(); startGame(playerCount, creative ? startHole : 0); });
   }
 
   function scoreName(strokes, par) {
@@ -110,12 +136,24 @@
   }
 
   /* ---------- Spielablauf ---------- */
-  function startGame(n) {
+  function startGame(n, first = 0) {
     state.players = Array.from({ length: n }, (_, i) => ({ name: PLAYER_NAMES[i], color: PLAYER_COLORS[i], scores: [] }));
-    state.holeIdx = 0;
+    state.holeIdx = first;
     document.body.classList.remove('title');
+    document.body.classList.toggle('creative', state.mode === 'creative');
     hideOverlay();
-    loadHole(0);
+    loadHole(first);
+  }
+  /* Kreativmodus: Bahn wechseln oder Ball an den Abschlag setzen */
+  function jumpHole(delta) {
+    if (state.mode !== 'creative' || !state.level) return;
+    clearTimeout(waitTimer); hideOverlay();
+    loadHole((state.holeIdx + delta + COURSES.length) % COURSES.length);
+  }
+  function resetBall() {
+    if (state.mode !== 'creative' || !state.ball) return;
+    clearTimeout(waitTimer);
+    state.strokes = 0; beginTurn();
   }
   function loadLevelPreview(i) {
     const def = COURSES[i];
@@ -206,7 +244,7 @@
       ${!last ? `<div class="sub">Als Nächstes: <b>${COURSES[state.holeIdx + 1].name}</b><br><i>${COURSES[state.holeIdx + 1].intro}</i></div>` : ''}
       <span class="btn" id="next">${last ? 'Zum Endergebnis' : 'Nächste Bahn ▶'}</span>
     </div>`);
-    $('next').addEventListener('click', () => { hideOverlay(); if (last) showFinal(); else loadHole(state.holeIdx + 1); });
+    $('next').addEventListener('click', () => { hideOverlay(); if (last) { if (state.mode === 'creative') loadHole(0); else showFinal(); } else loadHole(state.holeIdx + 1); });
   }
   function showFinal() {
     state.phase = 'final';
@@ -334,6 +372,9 @@
     if (e.key === 'Escape' && drag) { drag = null; state.aim = null; }
     if (e.key === 'm' || e.key === 'M') toggleOverview();
     if (e.key === '+') zoomBy(1.25); if (e.key === '-') zoomBy(0.8);
+    if (e.key === 'n' || e.key === 'N') jumpHole(1);
+    if (e.key === 'p' || e.key === 'P') jumpHole(-1);
+    if (e.key === 'r' || e.key === 'R') resetBall();
     if (e.key === 'q' || e.key === 'ArrowLeft') rotateBy(-Math.PI / 4);
     if (e.key === 'e' || e.key === 'ArrowRight') rotateBy(Math.PI / 4);
   });
@@ -341,6 +382,9 @@
   function zoomBy(f) { state.zoomFactor = Math.max(0.5, Math.min(2.2, state.zoomFactor * f)); if (state.camMode === 'overview' && state.ball) setCamMode('follow'); }
   function rotateBy(a) { state.camTheta += a; if (state.camMode === 'overview' && state.ball) setCamMode('follow'); }
   $('cam-overview').addEventListener('click', toggleOverview);
+  $('cr-prev').addEventListener('click', () => jumpHole(-1));
+  $('cr-next').addEventListener('click', () => jumpHole(1));
+  $('cr-reset').addEventListener('click', resetBall);
   $('cam-in').addEventListener('click', () => zoomBy(1.25));
   $('cam-out').addEventListener('click', () => zoomBy(0.8));
   $('cam-left').addEventListener('click', () => rotateBy(-Math.PI / 4));

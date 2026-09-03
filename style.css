@@ -52,7 +52,14 @@ html, body {
   position: fixed; left: 12px; bottom: 12px; font-size: 13px; opacity: 0.75; pointer-events: none;
   background: rgba(20,16,40,0.6); padding: 4px 10px; border-radius: 8px;
 }
-#controls { position: fixed; left: 12px; bottom: 44px; display: flex; gap: 6px; }
+#controls { position: fixed; left: 12px; bottom: 44px; display: flex; gap: 6px; flex-wrap: wrap; max-width: calc(100vw - 24px); }
+.cbtn.creative { display: none; background: rgba(60, 30, 90, 0.8); border-color: #c77dff; }
+body.creative .cbtn.creative { display: inline-block; }
+.modes { display: flex; flex-direction: column; gap: 8px; margin: 6px 0 12px; }
+.btn.mode { display: flex; flex-direction: column; align-items: center; padding: 10px 16px; }
+.btn.mode small { font-weight: normal; font-size: 12px; color: #4a3200; margin-top: 2px; text-shadow: none; }
+.holes { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; }
+.holes .btn.small { min-width: 38px; padding: 6px 8px; margin: 0; }
 .cbtn {
   font: inherit; font-size: 15px; font-weight: bold; color: #f4efe6; cursor: pointer;
   background: rgba(20,16,40,0.72); border: 2px solid rgba(255,215,120,0.55); border-radius: 10px;

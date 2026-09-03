@@ -11,6 +11,13 @@ Alternativ lokal über einen kleinen Server:
 npx serve .          # oder: python3 -m http.server 8080
 ```
 
+## Modi
+
+- **Normal**: alle Bahnen der Reihe nach, mit Schlaglimit und Wertung.
+- **Kreativ**: Startbahn frei wählen, im Spiel mit „◀ Bahn" / „Bahn ▶" (Tasten P / N) springen, „Ball zurück" (R) setzt an den Abschlag, kein Schlaglimit. Gedacht zum schnellen Prüfen einzelner Bahnen.
+
+Das Modus-Menü ist der Platz, an dem später weitere Welten eingehängt werden.
+
 ## Steuerung
 
 - Finger oder Maus aufsetzen, ziehen, loslassen. Je weiter gezogen wird, desto kräftiger der Schlag (Kraftanzeige unten).
