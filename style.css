@@ -59,6 +59,32 @@ body.creative .cbtn.creative { display: inline-block; }
 .btn.mode {
   font-family: "MedievalSharp", "Cinzel Decorative", Georgia, serif; font-size: 26px; letter-spacing: 2px;
   padding: 10px 24px; text-shadow: 0 1px 0 rgba(255,255,255,0.4);
+  position: relative; overflow: hidden;
+  animation: mode-in 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.2) both, mode-glow 2.8s ease-in-out 0.8s infinite;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.btn.mode:nth-child(2) { animation-delay: 0.15s, 1.4s; }
+.btn.mode:hover { transform: translateY(-2px) scale(1.03); box-shadow: 0 6px 0 #8a5a10, 0 10px 24px rgba(255, 200, 80, 0.45); }
+.btn.mode:active { transform: translateY(2px) scale(0.98); box-shadow: none; }
+/* Lichtstreif, der über die Taste wandert */
+.btn.mode::after {
+  content: ""; position: absolute; top: -20%; bottom: -20%; left: -60%; width: 40%;
+  background: linear-gradient(100deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.55) 50%, rgba(255,255,255,0) 100%);
+  transform: skewX(-20deg); animation: mode-shine 3.6s ease-in-out 1.2s infinite; pointer-events: none;
+}
+.btn.mode:nth-child(2)::after { animation-delay: 2.4s; }
+.screen.title .panel { animation: panel-in 0.7s ease-out both; }
+.screen.title .panel h1 { animation: title-in 0.8s cubic-bezier(0.2, 0.9, 0.3, 1.1) both; }
+@keyframes mode-in { from { opacity: 0; transform: translateY(24px) scale(0.92); } to { opacity: 1; transform: none; } }
+@keyframes mode-glow {
+  0%, 100% { box-shadow: 0 3px 0 #8a5a10, 0 0 0 rgba(255, 209, 102, 0); }
+  50% { box-shadow: 0 3px 0 #8a5a10, 0 0 22px rgba(255, 209, 102, 0.75); }
+}
+@keyframes mode-shine { 0% { left: -60%; } 35%, 100% { left: 130%; } }
+@keyframes panel-in { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: none; } }
+@keyframes title-in { from { opacity: 0; transform: scale(0.7); letter-spacing: 8px; } to { opacity: 1; transform: none; letter-spacing: 1px; } }
+@media (prefers-reduced-motion: reduce) {
+  .btn.mode, .btn.mode::after, .screen.title .panel, .screen.title .panel h1 { animation: none; }
 }
 .screen.title .panel h1 { font-family: "Cinzel Decorative", "MedievalSharp", Georgia, serif; font-weight: 900; letter-spacing: 1px; }
 .screen.title .panel h2 { font-family: "MedievalSharp", Georgia, serif; letter-spacing: 1px; }
