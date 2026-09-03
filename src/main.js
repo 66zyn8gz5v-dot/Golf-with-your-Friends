@@ -23,7 +23,6 @@
     controlMode: 'sling', // 'sling' = Schleuder (vom Ball wegziehen), 'push' = Schieben (in Schussrichtung ziehen)
     mode: 'normal',       // 'normal' = Wettkampf, 'creative' = Kreativ (Bahnen frei wählen und überspringen, kein Schlaglimit)
   };
-  let startHole = 0;
   try { const m = localStorage.getItem('fantasygolf.control'); if (m === 'sling' || m === 'push') state.controlMode = m; } catch (e) { /* kein Speicher verfügbar */ }
   function setControlMode(m) {
     state.controlMode = m;
@@ -62,32 +61,33 @@
       <p>Modus wählen:</p>
       <div class="modes">
         <span class="btn mode" data-mode="normal"><b>Normal</b><small>Alle ${COURSES.length} Bahnen der Reihe nach, mit Schlaglimit und Wertung</small></span>
-        <span class="btn mode" data-mode="creative"><b>Kreativ</b><small>Bahn frei wählen, jederzeit vor- und zurückspringen, kein Schlaglimit</small></span>
+        <span class="btn mode" data-mode="creative"><b>Kreativ</b><small>Startet sofort: ein Spieler, Schleuder, im Spiel frei zwischen den Bahnen springen, kein Schlaglimit</small></span>
       </div>
       <div class="legend" style="text-align:center">Weitere Welten folgen hier.</div>
     </div>`, 'title');
-    ui.overlay.querySelectorAll('.mode').forEach(b => b.addEventListener('click', () => { state.mode = b.dataset.mode; showSetup(); }));
+    ui.overlay.querySelectorAll('.mode').forEach(b => b.addEventListener('click', () => {
+      state.mode = b.dataset.mode;
+      if (state.mode === 'creative') { // sofort los: ein Spieler, Schleuder, Bahn 1
+        Sfx.unlock(); setControlMode('sling'); startGame(1, 0);
+      } else showSetup();
+    }));
   }
 
   function showSetup() {
-    const creative = state.mode === 'creative';
     overlay(`<div class="panel">
-      <h2>${creative ? '🛠 Kreativmodus' : '🏆 Normales Spiel'}</h2>
-      ${creative ? '' : `<p>Spieler:</p>
-      <div id="pc">${[1, 2, 3, 4].map(n => `<span class="btn ghost small ${n === playerCount ? 'sel' : ''}" data-n="${n}">${n}</span>`).join('')}</div>`}
+      <h2>🏆 Normales Spiel</h2>
+      <p>Spieler:</p>
+      <div id="pc">${[1, 2, 3, 4].map(n => `<span class="btn ghost small ${n === playerCount ? 'sel' : ''}" data-n="${n}">${n}</span>`).join('')}</div>
       <p style="margin-top:10px">Steuerung:</p>
       <div id="cm">
         <span class="btn ghost small ${state.controlMode === 'sling' ? 'sel' : ''}" data-m="sling">Schleuder</span>
         <span class="btn ghost small ${state.controlMode === 'push' ? 'sel' : ''}" data-m="push">Schieben</span>
       </div>
-      ${creative ? `<p style="margin-top:10px">Start bei Bahn:</p>
-      <div id="hp" class="holes">${COURSES.map((c, i) => `<span class="btn ghost small ${i === startHole ? 'sel' : ''}" data-h="${i}" title="${c.name}">${i + 1}</span>`).join('')}</div>
-      <div class="sub" id="hp-name" style="margin-top:6px">${COURSES[startHole].name}</div>` : ''}
       <p style="margin-top:14px"><span class="btn ghost small" id="back">◀ Zurück</span> <span class="btn" id="start">Los geht's!</span></p>
       <div class="legend">
         Aufsetzen, ziehen, loslassen. Weiter ziehen = mehr Kraft.
         <b>Schleuder:</b> vom Ball wegziehen, er fliegt in die Gegenrichtung. <b>Schieben:</b> dorthin ziehen, wo der Ball hin soll.
-        ${creative ? 'Im Spiel: Tasten „◀ Bahn“ und „Bahn ▶“ unten links (oder P / N) springen zwischen den Bahnen, „Ball zurück“ setzt an den Abschlag.' : 'Wasser, Lava und Abgrund kosten einen Strafschlag.'}
+        Wasser, Lava und Abgrund kosten einen Strafschlag.
       </div>
     </div>`, 'title');
     ui.overlay.querySelectorAll('#pc .btn').forEach(b => b.addEventListener('click', () => {
@@ -98,13 +98,8 @@
       setControlMode(b.dataset.m);
       ui.overlay.querySelectorAll('#cm .btn').forEach(x => x.classList.toggle('sel', x.dataset.m === state.controlMode));
     }));
-    ui.overlay.querySelectorAll('#hp .btn').forEach(b => b.addEventListener('click', () => {
-      startHole = +b.dataset.h;
-      ui.overlay.querySelectorAll('#hp .btn').forEach(x => x.classList.toggle('sel', +x.dataset.h === startHole));
-      $('hp-name').textContent = COURSES[startHole].name;
-    }));
     $('back').addEventListener('click', showTitle);
-    $('start').addEventListener('click', () => { Sfx.unlock(); startGame(creative ? 1 : playerCount, creative ? startHole : 0); });
+    $('start').addEventListener('click', () => { Sfx.unlock(); startGame(playerCount, 0); });
   }
 
   function scoreName(strokes, par) {
