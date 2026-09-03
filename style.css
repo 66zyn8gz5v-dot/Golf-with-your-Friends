@@ -79,7 +79,7 @@ body.creative .cbtn.creative { display: inline-block; }
 .drift { animation: drift 14s linear infinite; } .drift.d2 { animation-duration: 20s; animation-delay: -8s; }
 .twinkle { animation: twinkle 2.4s ease-in-out infinite; } .twinkle.t2 { animation-delay: 0.8s; } .twinkle.t3 { animation-delay: 1.6s; }
 /* Zauberpartikel steigen auf und verblassen */
-.particles .p { animation: rise 3.6s ease-out infinite; }
+.particles .p { animation: rise 3.6s ease-out infinite; filter: drop-shadow(0 0 2px currentColor); }
 .particles .p2 { animation-delay: 0.6s; } .particles .p3 { animation-delay: 1.2s; } .particles .p4 { animation-delay: 1.8s; } .particles .p5 { animation-delay: 2.6s; }
 .btn.mode:hover .sway { animation-duration: 1.4s; }
 .btn.mode:hover .art-flag { animation-duration: 0.5s; }
