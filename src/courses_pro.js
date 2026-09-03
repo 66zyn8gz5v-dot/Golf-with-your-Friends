@@ -222,6 +222,6 @@ const PRO_COURSES = [
 
 /* Welten: jede mit eigener Bahnliste. Neue Welten hier anhängen. */
 const WORLDS = [
-  { id: 'normal', name: 'Fantasy-Welt', short: 'Fantasy', courses: COURSES },
+  { id: 'normal', name: 'Normal-Welt', short: 'Normal', courses: COURSES },
   { id: 'pro', name: 'Profi-Welt', short: 'Profi', courses: PRO_COURSES },
 ];

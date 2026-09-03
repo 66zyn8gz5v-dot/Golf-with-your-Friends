@@ -13,8 +13,8 @@ npx serve .          # oder: python3 -m http.server 8080
 
 ## Welten und Modi
 
-- **Fantasy-Welt** (9 Bahnen) und **Profi-Welt** (8 schwerere Bahnen mit Windmühlen, Pendeln, schmalen Dämmen und Brücken).
-- **Normal**: die Fantasy-Welt der Reihe nach, mit Schlaglimit und Wertung.
+- **Normal-Welt** (9 Bahnen) und **Profi-Welt** (8 schwerere Bahnen mit Windmühlen, Pendeln, schmalen Dämmen und Brücken).
+- **Normal**: die Normal-Welt der Reihe nach, mit Schlaglimit und Wertung.
 - **Profi**: dasselbe für die Profi-Welt.
 - **Kreativ**: erst die Welt wählen, dann geht es sofort los mit einem Spieler, Schleuder-Steuerung und Bahn 1; im Spiel mit „◀ Bahn" / „Bahn ▶" (Tasten P / N) springen, „Ball zurück" (R) setzt an den Abschlag, kein Schlaglimit. Gedacht zum schnellen Prüfen einzelner Bahnen.
 
@@ -31,7 +31,7 @@ Das Modus-Menü ist der Platz, an dem später weitere Welten eingehängt werden.
 - Wasser, Lava und Abgrund: Ball zurück zur letzten Position, +1 Strafschlag.
 - Schlaglimit: 15 Schläge pro Bahn, lange Bahnen erlauben mehr (Burgberg 25, Hexenturm und Zwergenschmiede 20, Wolkenburg und Drachenhöhle 18). Danach wird die Bahn mit dem Limit gewertet.
 
-## Die Bahnen der Fantasy-Welt
+## Die Bahnen der Normal-Welt
 
 | # | Bahn | Par | Hindernisse |
 |---|------|-----|-------------|
@@ -60,7 +60,7 @@ Das Modus-Menü ist der Platz, an dem später weitere Welten eingehängt werden.
 
 ## Eigene Bahnen bauen
 
-Bahnen stehen in `src/courses.js` (Fantasy-Welt) und `src/courses_pro.js` (Profi-Welt) als ASCII-Karte plus Hindernisliste. Die Liste `WORLDS` in `src/courses_pro.js` registriert die Welten für das Menü.
+Bahnen stehen in `src/courses.js` (Normal-Welt) und `src/courses_pro.js` (Profi-Welt) als ASCII-Karte plus Hindernisliste. Die Liste `WORLDS` in `src/courses_pro.js` registriert die Welten für das Menü.
 
 ```
 .  Leere / Abgrund     #  Fairway      s  Sand      i  Eis
@@ -80,7 +80,7 @@ Farbwelten stehen in `src/themes.js`, jede mit einer dezenten Atmosphäre (`atmo
 index.html        Seite und HUD
 style.css         Oberfläche
 src/themes.js     Farbpaletten und Deko je Welt
-src/courses.js    die Bahnen der Fantasy-Welt
+src/courses.js    die Bahnen der Normal-Welt
 src/courses_pro.js die Bahnen der Profi-Welt und die Weltenliste
 src/level.js      Karte → Kacheln, Mauern, Kollisionssegmente
 src/obstacles.js  bewegliche und statische Hindernisse

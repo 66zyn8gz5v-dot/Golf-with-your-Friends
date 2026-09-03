@@ -7,7 +7,7 @@ const load = f => vm.runInContext(fs.readFileSync(new URL(`../src/${f}.js`, impo
 const THEMES = load('themes'), COURSES = load('courses'), PRO = load('courses_pro');
 const FLOOR = new Set(['#', 's', 'i', 'w', 'l', 'T', 'H', 'o']);
 let ok = true;
-[...COURSES.map(c => ({ ...c, world: 'Fantasy' })), ...PRO.map(c => ({ ...c, world: 'Profi' }))].forEach((c, i) => {
+[...COURSES.map(c => ({ ...c, world: 'Normal' })), ...PRO.map(c => ({ ...c, world: 'Profi' }))].forEach((c, i) => {
   const rows = c.map, H = rows.length, W = rows[0].length;
   const problems = [];
   if (!THEMES[c.theme]) problems.push(`Theme ${c.theme} fehlt`);
