@@ -566,14 +566,28 @@ class Renderer {
       ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.lineTo(apex[0], apex[1]); ctx.closePath();
       ctx.fillStyle = i % 2 ? '#8e5a34' : '#6e4224'; ctx.fill(); ctx.strokeStyle = '#3a2214'; ctx.lineWidth = 0.8; ctx.stroke();
     }
-    // Türbogen nur auf der Seite, die zur Kamera zeigt (kein Blick durch das Gebäude)
+    // Türbogen nur auf der Seite, die zur Kamera zeigt (kein Blick durch das Gebäude).
+    // Die Öffnung wird exakt in Durchgangsbreite (plus Überlappung) auf die Gebäudefront gezeichnet.
     const faceN = ax ? [0, 1] : [1, 0];
     const camSide = (faceN[0] * this.cam.sin + faceN[1] * this.cam.cos) > 0 ? 1 : -1;
-    for (const side of [camSide]) {
-      const cx = ax ? ob.x : ob.x + side * dd, cy = ax ? ob.y + side * dd : ob.y;
-      const [dx, dy] = this.proj(cx, cy, 0), [tx, ty] = this.proj(cx, cy, 0.9);
-      ctx.fillStyle = ob.blocked ? '#5a2a20' : '#1a120e';
-      ctx.beginPath(); ctx.ellipse(dx, ty + (dy - ty) * 0.15, ob.gap * s * 0.45, s * 0.25, 0, Math.PI, TAU); ctx.lineTo(dx + ob.gap * s * 0.45, dy); ctx.lineTo(dx - ob.gap * s * 0.45, dy); ctx.closePath(); ctx.fill();
+    {
+      const side = camSide, w2 = ob.gap / 2 + 0.08, top = 1.05, rad = Math.min(w2, 0.32);
+      const fx = ax ? ob.x : ob.x + side * dd, fy = ax ? ob.y + side * dd : ob.y;
+      const at = (u, z) => ax ? this.proj(fx + u, fy, z) : this.proj(fx, fy + u, z); // u = seitlicher Versatz auf der Front
+      // erst die ganze Öffnung in Mauerfarbe schließen, dann den Bogen darauf
+      const nx = ax ? 0 : side, ny = ax ? side : 0;
+      const light = 0.68 + 0.32 * (0.5 + 0.5 * (nx * 0.85 - ny * 0.53));
+      ctx.fillStyle = shade(wallSide, light); ctx.beginPath();
+      for (const [u, z] of [[-w2, 0], [-w2, top + 0.02], [w2, top + 0.02], [w2, 0]]) { const q = at(u, z); ctx.lineTo(q[0], q[1]); }
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = ob.blocked ? '#4a2318' : '#150e0b';
+      ctx.beginPath();
+      let p = at(-w2, 0); ctx.moveTo(p[0], p[1]);
+      p = at(-w2, top - rad); ctx.lineTo(p[0], p[1]);
+      for (let k = 0; k <= 10; k++) { const a = Math.PI - (k / 10) * Math.PI; p = at(Math.cos(a) * w2, top - rad + Math.sin(a) * rad); ctx.lineTo(p[0], p[1]); }
+      p = at(w2, 0); ctx.lineTo(p[0], p[1]); ctx.closePath(); ctx.fill();
+      // Türrahmen
+      ctx.strokeStyle = '#6b5a4a'; ctx.lineWidth = Math.max(1, s * 0.04); ctx.stroke();
     }
     // Fenster
     for (const b of ob.blocks) {
