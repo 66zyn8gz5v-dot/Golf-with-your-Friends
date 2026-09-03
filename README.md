@@ -27,7 +27,7 @@ npx serve .          # oder: python3 -m http.server 8080
 |---|------|-----|-------------|
 | 1 | Elfenwiese | 3 | Steinpfeiler, Hecken |
 | 2 | Pilzhain | 3 | federnde Riesenpilze, Sandkuhlen |
-| 3 | Zwergenschmiede | 3 | Lavafluss mit zwei Brücken, fahrende Loren auf Schienen |
+| 3 | Zwergenschmiede | 4 | breiter Lavafluss, eine Lore als Fähre: rechtzeitig hineinrollen, sie setzt den Ball drüben ab |
 | 4 | Zauberwald | 3 | Portale zwischen Inseln, ein Fallen-Portal |
 | 5 | Drachenhöhle | 4 | Sand, Lavabecken, Windfeld, patrouillierender Drache |
 | 6 | Eisgrotte | 3 | spiegelglattes Eis, Wassertümpel, rotierender Kristallstern |
@@ -46,7 +46,7 @@ o  Fairway ohne Randmauer (Klippe)
 T  Abschlag            H  Loch
 ```
 
-Hindernis-Typen: `bumper`, `mover`, `rotor`, `gate`, `portal`, `boost`, `field`, `rail`.
+Hindernis-Typen: `bumper`, `mover`, `ferry`, `rotor`, `gate`, `portal`, `boost`, `field`, `rail`.
 Farbwelten stehen in `src/themes.js`. Mit `node tools/validate.mjs` lässt sich prüfen, ob jede Bahn lösbar ist.
 
 ## Projektstruktur

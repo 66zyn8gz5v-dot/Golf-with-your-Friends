@@ -4,7 +4,7 @@ const MAX_SPEED = 21;
 const FRICTION = { '#': 4.2, T: 4.2, H: 4.2, o: 4.2, s: 14, i: 0.75, w: 4, l: 4 };
 
 function makeBall(x, y, color) {
-  return { x, y, z: 0, vx: 0, vy: 0, vz: 0, portalCd: 0, restX: x, restY: y, color, boosted: false };
+  return { x, y, z: 0, vx: 0, vy: 0, vz: 0, portalCd: 0, rideCd: 0, rider: null, restX: x, restY: y, color, boosted: false };
 }
 
 function collideSeg(ball, s, events) {
@@ -58,6 +58,11 @@ function collideCircle(ball, c, events) {
 function stepPhysics(level, ball, dt, t, allowForces) {
   const events = [];
   for (const ob of level.obstacles) if (ob.update) ob.update(t);
+
+  // Fähren: mitfahren (dann keine weitere Physik) oder einsteigen
+  ball.rideCd = Math.max(0, (ball.rideCd || 0) - dt);
+  if (ball.rider) { if (ball.rider.ride(ball, t, events)) return events; }
+  else for (const ob of level.obstacles) if (ob.type === 'ferry' && ob.ride(ball, t, events)) return events;
 
   ball.boosted = false;
   if (allowForces) for (const ob of level.obstacles) if (ob.force) ob.force(ball, dt);

@@ -125,6 +125,54 @@ class Field {
 
 class Rail { constructor(d) { Object.assign(this, d); this.type = 'rail'; } }
 
+/* Fähre: pendelt zwischen zwei Stationen, wartet dort, nimmt den Ball mit und setzt ihn
+   an der nächsten Station wieder ab. Keine Kollision – der Ball rollt hinein. */
+class Ferry {
+  constructor(d) {
+    Object.assign(this, { w: 1.1, h: 1.1, wait: 2.5, travel: 3, phase: 0, style: 'cart' }, d);
+    this.type = 'ferry'; this.x = this.x0; this.y = this.y0; this.docked = true; this.station = 'A'; this.dir = 1;
+    this.len = Math.hypot(this.x1 - this.x0, this.y1 - this.y0) || 1;
+    this.ux = (this.x1 - this.x0) / this.len; this.uy = (this.y1 - this.y0) / this.len;
+  }
+  update(t) {
+    const cycle = 2 * (this.wait + this.travel);
+    const u = (((t + this.phase * cycle) % cycle) + cycle) % cycle;
+    let p, dir;
+    if (u < this.wait) { p = 0; this.docked = true; this.station = 'A'; dir = 1; }
+    else if (u < this.wait + this.travel) { const q = (u - this.wait) / this.travel; p = q * q * (3 - 2 * q); this.docked = false; this.station = null; dir = 1; }
+    else if (u < 2 * this.wait + this.travel) { p = 1; this.docked = true; this.station = 'B'; dir = -1; }
+    else { const q = (u - 2 * this.wait - this.travel) / this.travel; p = 1 - q * q * (3 - 2 * q); this.docked = false; this.station = null; dir = -1; }
+    this.x = this.x0 + (this.x1 - this.x0) * p; this.y = this.y0 + (this.y1 - this.y0) * p;
+    this.dir = dir; this.progress = p;
+  }
+  poly() { return rectPoly(this.x, this.y, this.w, this.h); }
+  /* Ein- und Aussteigen; liefert true, wenn der Ball gerade mitfährt */
+  ride(ball, t, events) {
+    if (ball.rider === this) {
+      ball.x = this.x; ball.y = this.y; ball.vx = 0; ball.vy = 0; ball.z = 0.7; ball.vz = 0;
+      if (this.docked && this.station !== ball.boardStation) {
+        // Absetzen jenseits der Station in Fahrtrichtung
+        const d = this.station === 'B' ? 1 : -1;
+        ball.rider = null; ball.rideCd = 1.5;
+        ball.x = this.x + this.ux * d * (this.w / 2 + 0.6); ball.y = this.y + this.uy * d * (this.h / 2 + 0.6);
+        ball.vx = this.ux * d * 2.2; ball.vy = this.uy * d * 2.2; ball.z = 0.7; ball.vz = 1;
+        events.push({ type: 'dropoff', x: ball.x, y: ball.y });
+        return false;
+      }
+      return true;
+    }
+    if (ball.rideCd > 0) return false;
+    const dx = ball.x - this.x, dy = ball.y - this.y;
+    if (Math.abs(dx) < this.w / 2 + 0.15 && Math.abs(dy) < this.h / 2 + 0.15) {
+      ball.rider = this; ball.boardStation = this.docked ? this.station : 'transit';
+      ball.x = this.x; ball.y = this.y; ball.vx = 0; ball.vy = 0; ball.z = 0.7;
+      events.push({ type: 'board', x: this.x, y: this.y });
+      return true;
+    }
+    return false;
+  }
+}
+
 function createObstacles(defs) {
   const out = [];
   for (const d of defs) {
@@ -136,6 +184,7 @@ function createObstacles(defs) {
       case 'boost': out.push(new Boost(d)); break;
       case 'field': out.push(new Field(d)); break;
       case 'rail': out.push(new Rail(d)); break;
+      case 'ferry': out.push(new Ferry(d)); break;
       case 'portal': {
         const a = new Portal({ x: d.x, y: d.y, tx: d.tx, ty: d.ty, color: d.color, entrance: true });
         const b = new Portal({ x: d.tx, y: d.ty, tx: d.x, ty: d.y, color: d.color, entrance: !!d.twoWay, exit: true });

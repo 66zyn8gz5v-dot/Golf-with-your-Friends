@@ -367,13 +367,23 @@ class Renderer {
       }
     } else if (ob.type === 'rail') {
       ctx.strokeStyle = 'rgba(40,30,25,0.8)'; ctx.lineWidth = Math.max(1, s * 0.05);
+      const horiz = ob.x0 !== undefined;
       for (const off of [-0.25, 0.25]) {
-        const [a0, a1] = this.proj(ob.x + off, ob.y0, 0.01), [b0, b1] = this.proj(ob.x + off, ob.y1, 0.01);
+        const [a0, a1] = horiz ? this.proj(ob.x0, ob.y + off, 0.01) : this.proj(ob.x + off, ob.y0, 0.01);
+        const [b0, b1] = horiz ? this.proj(ob.x1, ob.y + off, 0.01) : this.proj(ob.x + off, ob.y1, 0.01);
         ctx.beginPath(); ctx.moveTo(a0, a1); ctx.lineTo(b0, b1); ctx.stroke();
       }
-      for (let yy = ob.y0 + 0.3; yy < ob.y1; yy += 0.6) {
-        const [a0, a1] = this.proj(ob.x - 0.35, yy, 0.01), [b0, b1] = this.proj(ob.x + 0.35, yy, 0.01);
+      const from = horiz ? ob.x0 : ob.y0, to = horiz ? ob.x1 : ob.y1;
+      for (let k = from + 0.3; k < to; k += 0.6) {
+        const [a0, a1] = horiz ? this.proj(k, ob.y - 0.35, 0.01) : this.proj(ob.x - 0.35, k, 0.01);
+        const [b0, b1] = horiz ? this.proj(k, ob.y + 0.35, 0.01) : this.proj(ob.x + 0.35, k, 0.01);
         ctx.beginPath(); ctx.moveTo(a0, a1); ctx.lineTo(b0, b1); ctx.stroke();
+      }
+    } else if (ob.type === 'ferry') {
+      // Stationen markieren
+      for (const [px, py] of [[ob.x0, ob.y0], [ob.x1, ob.y1]]) {
+        this.isoEllipse(ctx, px, py, 0.004, 0.75, 'rgba(255,200,90,0.28)');
+        this.isoEllipse(ctx, px, py, 0.005, 0.6, 'rgba(0,0,0,0.15)');
       }
     } else if (ob.type === 'bumper') {
       this.isoEllipse(ctx, ob.x, ob.y, 0.004, ob.r + 0.12, 'rgba(255,255,255,0.22)');
@@ -388,7 +398,7 @@ class Renderer {
 
   pushObstacle(items, ctx, ob, t) {
     const th = this.theme;
-    if (ob.type === 'mover') {
+    if (ob.type === 'mover' || ob.type === 'ferry') {
       items.push({ x: ob.x, y: ob.y, bias: 0.3, draw: () => this.drawMover(ctx, ob, t) });
     } else if (ob.type === 'rotor') {
       const hub = this.circlePoly(ob.x, ob.y, ob.hubR, 8);
@@ -498,8 +508,13 @@ class Renderer {
     } else { // Lore
       this.prism(ctx, poly, 0.15, 0.75, th.mover.top, th.mover.side, { outline: shade(th.mover.side, 0.6) });
       this.isoEllipse(ctx, ob.x, ob.y, 0.91, ob.w * 0.38, '#4a4a55');
-      this.isoEllipse(ctx, ob.x - 0.08, ob.y - 0.08, 0.93, ob.w * 0.22, '#ffd166');
-      this.isoEllipse(ctx, ob.x + 0.12, ob.y + 0.1, 0.93, ob.w * 0.12, '#ffe9a8');
+      if (ob.type !== 'ferry') {
+        this.isoEllipse(ctx, ob.x - 0.08, ob.y - 0.08, 0.93, ob.w * 0.22, '#ffd166');
+        this.isoEllipse(ctx, ob.x + 0.12, ob.y + 0.1, 0.93, ob.w * 0.12, '#ffe9a8');
+      } else if (ob.docked) { // Wartesignal: Laterne leuchtet
+        const [lx, ly] = this.proj(ob.x, ob.y, 1.25);
+        ctx.fillStyle = `rgba(120,255,120,${0.6 + 0.4 * Math.sin(t * 6)})`; ctx.beginPath(); ctx.arc(lx, ly, s * 0.12, 0, TAU); ctx.fill();
+      }
       const [wx, wy] = this.proj(ob.x, ob.y, 0.08);
       ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(wx - s * 0.3, wy, s * 0.11, 0, TAU); ctx.arc(wx + s * 0.3, wy, s * 0.11, 0, TAU); ctx.fill();
     }

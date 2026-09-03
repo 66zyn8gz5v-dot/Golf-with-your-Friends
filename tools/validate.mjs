@@ -28,7 +28,9 @@ COURSES.forEach((c, i) => {
       }
     }
     // Portale verbinden Gebiete
-    const portals = (c.obstacles || []).filter(o => o.type === 'portal');
+    // Portale und Fähren verbinden Gebiete
+    const portals = (c.obstacles || []).filter(o => o.type === 'portal')
+      .concat((c.obstacles || []).filter(o => o.type === 'ferry').map(o => ({ x: o.x0, y: o.y0, tx: o.x1, ty: o.y1, twoWay: true })));
     let changed = true;
     while (changed) {
       changed = false;
