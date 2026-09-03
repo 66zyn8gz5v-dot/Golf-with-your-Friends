@@ -73,8 +73,8 @@
     const creative = state.mode === 'creative';
     overlay(`<div class="panel">
       <h2>${creative ? '🛠 Kreativmodus' : '🏆 Normales Spiel'}</h2>
-      <p>Spieler:</p>
-      <div id="pc">${[1, 2, 3, 4].map(n => `<span class="btn ghost small ${n === playerCount ? 'sel' : ''}" data-n="${n}">${n}</span>`).join('')}</div>
+      ${creative ? '' : `<p>Spieler:</p>
+      <div id="pc">${[1, 2, 3, 4].map(n => `<span class="btn ghost small ${n === playerCount ? 'sel' : ''}" data-n="${n}">${n}</span>`).join('')}</div>`}
       <p style="margin-top:10px">Steuerung:</p>
       <div id="cm">
         <span class="btn ghost small ${state.controlMode === 'sling' ? 'sel' : ''}" data-m="sling">Schleuder</span>
@@ -104,7 +104,7 @@
       $('hp-name').textContent = COURSES[startHole].name;
     }));
     $('back').addEventListener('click', showTitle);
-    $('start').addEventListener('click', () => { Sfx.unlock(); startGame(playerCount, creative ? startHole : 0); });
+    $('start').addEventListener('click', () => { Sfx.unlock(); startGame(creative ? 1 : playerCount, creative ? startHole : 0); });
   }
 
   function scoreName(strokes, par) {
