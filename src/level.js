@@ -81,11 +81,13 @@ function buildLevel(def) {
   const obstacles = createObstacles(def.obstacles || []);
   const decor = buildDecor(def, tiles, W, H, isFloor);
 
-  return {
-    def, W, H, tiles, tee, cup, blocks, segs, walls, obstacles, decor,
+  const level = {
+    def, W, H, tiles, tee, cup, blocks, segs, walls, obstacles, decor, switches: {},
     charAt(x, y) { return at(Math.floor(x), Math.floor(y)); },
     isFloorChar(c) { return FLOOR_CHARS.has(c); },
   };
+  for (const ob of obstacles) ob.level = level;
+  return level;
 }
 
 function pushWallChunks(walls, x, y, w, h) {

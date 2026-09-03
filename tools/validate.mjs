@@ -35,6 +35,10 @@ let ok = true;
         const a = (o.angle || 0) * Math.PI / 180, dx = Math.cos(a), dy = Math.sin(a), cx = o.x + o.w / 2, cy = o.y + o.h / 2;
         const half = Math.abs(dx) > 0.5 ? o.w / 2 : o.h / 2;
         return { x: cx, y: cy, tx: cx + dx * (half + (o.land || 1.7)), ty: cy + dy * (half + (o.land || 1.7)) };
+      }))
+      .concat((c.obstacles || []).filter(o => o.type === 'cannon').map(o => { // Kanone: Landepunkt in Grundrichtung
+        const a = o.base || 0, R = 0.9 + (o.range || 9);
+        return { x: o.x, y: o.y, tx: o.x + Math.cos(a) * R, ty: o.y + Math.sin(a) * R };
       }));
     let changed = true;
     while (changed) {
@@ -61,7 +65,7 @@ let ok = true;
     }
     if (!seen.has(cup.join())) problems.push('Loch vom Abschlag nicht erreichbar');
     for (const o of c.obstacles || []) {
-      const pts = o.type === 'portal' ? [[o.x, o.y], [o.tx, o.ty]] : o.type === 'bumper' || o.type === 'rotor' ? [[o.x, o.y]] : o.type === 'mover' ? [[o.x0, o.y0], [o.x1, o.y1]] : [];
+      const pts = o.type === 'portal' ? [[o.x, o.y], [o.tx, o.ty]] : ['bumper', 'rotor', 'switch', 'potion', 'turntable', 'magnet', 'cannon'].includes(o.type) ? [[o.x, o.y]] : o.type === 'mover' ? [[o.x0, o.y0], [o.x1, o.y1]] : [];
       for (const [px, py] of pts) {
         const ch = rows[Math.floor(py)] && rows[Math.floor(py)][Math.floor(px)];
         if (!FLOOR.has(ch)) problems.push(`${o.type} bei (${px},${py}) liegt nicht auf dem Fairway (${ch})`);

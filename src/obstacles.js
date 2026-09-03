@@ -60,6 +60,12 @@ class Gate {
     this.type = 'gate'; this.lift = 0;
   }
   update(t) {
+    if (this.linked) { // Zaubertor: nur offen, solange der zugehörige Schalter aktiv ist
+      const until = (this.level && this.level.switches[this.linked]) || 0;
+      const target = until > t ? 1 : 0;
+      this.lift += (target - this.lift) * 0.12; if (Math.abs(target - this.lift) < 0.01) this.lift = target;
+      this.closed = this.lift < 0.45; return;
+    }
     const u = (((t / this.period + this.phase) % 1) + 1) % 1;
     const c = 1 - this.open, ramp = 0.1;
     let l;
@@ -189,6 +195,110 @@ class Windmill {
   }
 }
 
+/* Schalter: Druckplatte, die ein verknüpftes Zaubertor für 'duration' Sekunden öffnet */
+class Switch {
+  constructor(d) { Object.assign(this, { r: 0.5, duration: 12, target: 'A' }, d); this.type = 'switch'; this.activeUntil = 0; }
+  trigger(ball, t, events) {
+    if (Math.hypot(ball.x - this.x, ball.y - this.y) > this.r) return;
+    if (this.activeUntil > t + this.duration - 0.5) return; // gerade erst ausgelöst
+    this.activeUntil = t + this.duration; this.level.switches[this.target] = this.activeUntil;
+    events.push({ type: 'switch', x: this.x, y: this.y });
+  }
+}
+
+/* Schrumpftrank: der Ball wird für 'duration' Sekunden auf 'scale' verkleinert */
+class Potion {
+  constructor(d) { Object.assign(this, { r: 0.45, duration: 12, scale: 0.55 }, d); this.type = 'potion'; this.lastUse = -10; }
+  trigger(ball, t, events) {
+    if (t - this.lastUse < 1.5 || Math.hypot(ball.x - this.x, ball.y - this.y) > this.r) return;
+    this.lastUse = t; ball.shrinkUntil = t + this.duration; ball.r = BALL_R * this.scale;
+    events.push({ type: 'shrink', x: this.x, y: this.y });
+  }
+}
+
+/* Drehscheibe: ein großes Zahnrad im Boden. Ein langsamer Ball wird eingefangen, fährt auf der
+   Scheibe mit und wird an der Auswurfrinne (Weltwinkel 'exit', Grad) nach außen geschleudert.
+   Schnelle Bälle (über captureSpeed) rollen einfach darüber hinweg. */
+class Turntable {
+  constructor(d) {
+    Object.assign(this, { r: 1.3, speed: 2, exit: 0, captureSpeed: 7, eject: 4.5 }, d);
+    this.type = 'turntable'; this.angle = 0; this.exitA = (this.exit * Math.PI) / 180;
+  }
+  update(t) { this.angle = t * this.speed; }
+  ride(ball, t, events) {
+    if (ball.rider === this) {
+      const prev = ball.rideAng; ball.rideAng = ball.rideAng0 + this.speed * (t - ball.rideT0);
+      // Auswurf, sobald der Ball den Rinnenwinkel passiert
+      const norm = a => Math.atan2(Math.sin(a), Math.cos(a));
+      const dPrev = norm(prev - this.exitA), dNow = norm(ball.rideAng - this.exitA);
+      const crossed = this.speed > 0 ? (dPrev < 0 && dNow >= 0) : (dPrev > 0 && dNow <= 0);
+      if (crossed) {
+        const ex = Math.cos(this.exitA), ey = Math.sin(this.exitA);
+        ball.rider = null; ball.rideCd = 1.5;
+        ball.x = this.x + ex * (this.r + 0.2); ball.y = this.y + ey * (this.r + 0.2);
+        ball.vx = ex * this.eject; ball.vy = ey * this.eject; ball.z = 0;
+        events.push({ type: 'spinout', x: ball.x, y: ball.y });
+        return false;
+      }
+      ball.x = this.x + Math.cos(ball.rideAng) * ball.rideR; ball.y = this.y + Math.sin(ball.rideAng) * ball.rideR;
+      ball.vx = -Math.sin(ball.rideAng) * this.speed * ball.rideR; ball.vy = Math.cos(ball.rideAng) * this.speed * ball.rideR;
+      ball.z = 0.05;
+      return true;
+    }
+    if (ball.rideCd > 0 || ball.air) return false;
+    const dx = ball.x - this.x, dy = ball.y - this.y, d = Math.hypot(dx, dy);
+    if (d > this.r - 0.1 || Math.hypot(ball.vx, ball.vy) > this.captureSpeed) return false;
+    ball.rider = this; ball.rideAng = ball.rideAng0 = Math.atan2(dy, dx); ball.rideT0 = t; ball.rideR = Math.max(0.5, Math.min(this.r - 0.35, d));
+    events.push({ type: 'spin', x: ball.x, y: ball.y });
+    return true;
+  }
+}
+
+/* Kristall-Magnet: zieht den Ball an (strength > 0) oder stößt ihn ab (strength < 0) */
+class Magnet {
+  constructor(d) { Object.assign(this, { r: 3, strength: 6, core: 0.35 }, d); this.type = 'magnet'; }
+  force(ball, dt) {
+    const dx = this.x - ball.x, dy = this.y - ball.y, d = Math.hypot(dx, dy);
+    if (d > this.r || d < 0.01) return;
+    const a = this.strength * (1 - d / this.r) * 1.5;
+    ball.vx += (dx / d) * a * dt; ball.vy += (dy / d) * a * dt;
+  }
+  circles(out) { out.push({ x: this.x, y: this.y, r: this.core, e: 0.5, kind: 'crystal' }); }
+}
+
+/* Kanone: schwenkt hin und her; ein hineinrollender Ball wird geladen und nach kurzer Zeit
+   in Rohrrichtung abgefeuert, Flugweite 'range' */
+class Cannon {
+  constructor(d) {
+    Object.assign(this, { amp: 0.35, speed: 1.0, phase: 0, base: 0, range: 9, loadTime: 0.7, catch: 0.6, flySpeed: 8 }, d);
+    this.type = 'cannon'; this.angle = this.base; this.loaded = false;
+  }
+  update(t) { this.angle = this.base + this.amp * Math.sin(t * this.speed + this.phase); }
+  ride(ball, t, events) {
+    if (ball.rider === this) {
+      ball.x = this.x; ball.y = this.y; ball.vx = 0; ball.vy = 0; ball.z = 0.7; ball.vz = 0;
+      if (t >= ball.fireAt) {
+        const dx = Math.cos(this.angle), dy = Math.sin(this.angle);
+        ball.rider = null; ball.rideCd = 2; this.loaded = false;
+        ball.x = this.x + dx * 1.2; ball.y = this.y + dy * 1.2;
+        ball.vx = dx * this.flySpeed; ball.vy = dy * this.flySpeed;
+        const tFlight = this.range / this.flySpeed; ball.vz = (12 * tFlight) / 2; ball.z = 0.7; ball.air = true;
+        events.push({ type: 'fire', x: ball.x, y: ball.y });
+        return false;
+      }
+      return true;
+    }
+    if (ball.rideCd > 0 || ball.air) return false;
+    if (Math.hypot(ball.x - this.x, ball.y - this.y) < this.catch) {
+      ball.rider = this; ball.fireAt = t + this.loadTime; this.loaded = true;
+      ball.x = this.x; ball.y = this.y; ball.vx = 0; ball.vy = 0; ball.z = 0.55;
+      events.push({ type: 'load', x: this.x, y: this.y });
+      return true;
+    }
+    return false;
+  }
+}
+
 /* Geländer: gerades Mauerstück von (x0,y0) nach (x1,y1) */
 class Wall {
   constructor(d) {
@@ -264,6 +374,11 @@ function createObstacles(defs) {
       case 'wall': out.push(new Wall(d)); break;
       case 'ramp': out.push(new Ramp(d)); break;
       case 'windmill': out.push(new Windmill(d)); break;
+      case 'switch': out.push(new Switch(d)); break;
+      case 'potion': out.push(new Potion(d)); break;
+      case 'turntable': out.push(new Turntable(d)); break;
+      case 'magnet': out.push(new Magnet(d)); break;
+      case 'cannon': out.push(new Cannon(d)); break;
       case 'portal': {
         const a = new Portal({ x: d.x, y: d.y, tx: d.tx, ty: d.ty, color: d.color, entrance: true });
         const b = new Portal({ x: d.tx, y: d.ty, tx: d.x, ty: d.y, color: d.color, entrance: !!d.twoWay, exit: true });

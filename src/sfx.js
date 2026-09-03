@@ -36,5 +36,8 @@ const Sfx = (() => {
     lava() { noise(0.4, 0.3); tone(90, 0.4, 'sawtooth', 0.12, -40); },
     portal() { tone(400, 0.35, 'sine', 0.2, 900); },
     oob() { tone(200, 0.3, 'sawtooth', 0.12, -120); },
+    lever() { tone(300, 0.15, 'square', 0.18, -120); setTimeout(() => tone(520, 0.25, 'sine', 0.2, 200), 120); },
+    potion() { tone(700, 0.3, 'sine', 0.15, -400); setTimeout(() => tone(1100, 0.2, 'triangle', 0.12, 300), 150); },
+    cannon() { noise(0.3, 0.35); tone(80, 0.35, 'sawtooth', 0.2, -50); },
   };
 })();

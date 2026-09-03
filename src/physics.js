@@ -4,11 +4,11 @@ const MAX_SPEED = 21;
 const FRICTION = { '#': 4.2, T: 4.2, H: 4.2, o: 4.2, s: 20, i: 0.75, w: 4, l: 4 }; // Bremsung je Untergrund, pro Bahn per friction überschreibbar
 
 function makeBall(x, y, color) {
-  return { x, y, z: 0, vx: 0, vy: 0, vz: 0, portalCd: 0, rideCd: 0, rider: null, air: false, restX: x, restY: y, color, boosted: false };
+  return { x, y, z: 0, vx: 0, vy: 0, vz: 0, r: BALL_R, shrinkUntil: 0, portalCd: 0, rideCd: 0, rider: null, air: false, restX: x, restY: y, color, boosted: false };
 }
 
 function collideSeg(ball, s, events) {
-  const rad = BALL_R + (s.rad || 0);
+  const rad = ball.r + (s.rad || 0);
   const ex = s.bx - s.ax, ey = s.by - s.ay;
   const L2 = ex * ex + ey * ey || 1e-9;
   const u = clamp(((ball.x - s.ax) * ex + (ball.y - s.ay) * ey) / L2, 0, 1);
@@ -36,7 +36,7 @@ function collideSeg(ball, s, events) {
 }
 
 function collideCircle(ball, c, events) {
-  const rad = BALL_R + c.r;
+  const rad = ball.r + c.r;
   let dx = ball.x - c.x, dy = ball.y - c.y;
   const d = Math.hypot(dx, dy);
   if (d >= rad) return false;
@@ -59,10 +59,13 @@ function stepPhysics(level, ball, dt, t, allowForces) {
   const events = [];
   for (const ob of level.obstacles) if (ob.update) ob.update(t);
 
-  // Fähren: mitfahren (dann keine weitere Physik) oder einsteigen
+  // Schrumpfzauber läuft ab
+  if (ball.shrinkUntil && t > ball.shrinkUntil) { ball.shrinkUntil = 0; ball.r = BALL_R; events.push({ type: 'unshrink' }); }
+
+  // Fähren und Kanonen: mitfahren bzw. geladen sein (dann keine weitere Physik) oder einsteigen
   ball.rideCd = Math.max(0, (ball.rideCd || 0) - dt);
   if (ball.rider) { if (ball.rider.ride(ball, t, events)) return events; }
-  else for (const ob of level.obstacles) if (ob.type === 'ferry' && ob.ride(ball, t, events)) return events;
+  else for (const ob of level.obstacles) if (ob.ride && ob.ride(ball, t, events)) return events;
 
   // Sprungschanzen und Flugphase: in der Luft gibt es keine Reibung, keine Mauern, keine Hindernisse
   for (const ob of level.obstacles) if (ob.type === 'ramp') ob.launch(ball, events);
@@ -108,7 +111,7 @@ function stepPhysics(level, ball, dt, t, allowForces) {
   }
 
   ball.portalCd = Math.max(0, ball.portalCd - dt);
-  for (const ob of level.obstacles) if (ob.teleport) ob.teleport(ball, t, events);
+  for (const ob of level.obstacles) { if (ob.teleport) ob.teleport(ball, t, events); if (ob.trigger) ob.trigger(ball, t, events); }
 
   // Loch
   const cdx = ball.x - level.cup.x, cdy = ball.y - level.cup.y;

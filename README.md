@@ -51,12 +51,12 @@ Das Modus-Menü ist der Platz, an dem später weitere Welten eingehängt werden.
 |---|------|-----|-------------|
 | 1 | Mühlenwiese | 3 | Windmühle mit schmaler Tür, Sand |
 | 2 | Nebelmoor | 4 | breiter Fluss, Rampensprung ans andere Ufer, Windmühle als Tor zum Loch, Eis |
-| 3 | Zwergenmine | 4 | Damm ohne Geländer über zwei Lavaflüsse, Lore, Pendel |
-| 4 | Kristallsee | 4 | Eisfläche mit Löchern, zwei Kristallsterne, Windmühle vor dem Loch |
-| 5 | Sturmhöhe | 4 | Brücken von einer Kachel Breite, Fallgatter, Gegenwind, Beschleuniger |
+| 3 | Zwergenkanone | 3 | schwenkende Kanone, die den Ball über den Lavasee schießt (Timing!), zwei Pendel |
+| 4 | Magnetsee | 4 | Kristall-Magnete, die den Ball anziehen oder abstoßen, Eisflächen und Eislöcher |
+| 5 | Uhrwerk | 4 | zwei Zahnrad-Drehscheiben, die den Ball mitnehmen und an der Rinne auswerfen, Fallgatter |
 | 6 | Drachenschlund | 5 | Sprungschanze über Lava, zwei Drachen, tiefer Sand |
-| 7 | Hexenküche | 5 | drei Inseln per Portal, Eishalle mit Kessel und Pendel, Besen-Rotor |
-| 8 | Königsburg | 5 | zwei Windmühlen, Ritter, Steigungen, Burggraben mit Zugbrücke |
+| 7 | Hexenküche | 5 | Schrumpftrank (Ball wird 20 s klein) und ein Spalt, durch den nur der kleine Ball passt, Kessel, Besen |
+| 8 | Königsburg | 5 | zwei Windmühlen, Ritter, Steigungen, Schalterplatte, die das Zaubertor (Zugbrücke) 14 s öffnet |
 
 ## Eigene Bahnen bauen
 
@@ -71,7 +71,7 @@ T  Abschlag            H  Loch
 
 Pro Bahn lässt sich die Bremsung eines Untergrunds überschreiben, z. B. `friction: { s: 32 }` für besonders tiefen Sand.
 
-Hindernis-Typen: `bumper`, `mover`, `ferry`, `rotor` (auch als Pendel mit `swing`), `windmill`, `gate`, `portal`, `boost`, `field`, `ramp`, `rail`, `wall`.
+Hindernis-Typen: `bumper`, `mover`, `ferry`, `rotor` (auch als Pendel mit `swing`), `windmill`, `gate` (periodisch oder mit `linked` an einen Schalter gekoppelt), `portal`, `boost`, `field`, `ramp`, `rail`, `wall`, `cannon` (schwenkende Kanone, `base`/`amp`/`speed`/`range`), `magnet` (`strength` > 0 zieht an, < 0 stößt ab), `turntable` (Drehscheibe mit Auswurfrinne `exit` in Grad), `potion` (Schrumpftrank, `scale`/`duration`), `switch` (Druckplatte, `target`/`duration`).
 Farbwelten stehen in `src/themes.js`, jede mit einer dezenten Atmosphäre (`atmo`: `fog`, `mist`, `fireflies`, `spores`, `embers`, `snow`, `pollen`, `none`), die eine Bahn per `atmo` überschreiben kann. Mit `node tools/validate.mjs` lässt sich prüfen, ob jede Bahn lösbar ist.
 
 ## Projektstruktur

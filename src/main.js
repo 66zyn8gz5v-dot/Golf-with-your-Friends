@@ -411,6 +411,13 @@
         case 'jump': Sfx.portal(); showMessage('Sprung!', 900); break;
         case 'land': Sfx.bounce(3); burst(ev.x, ev.y, 'rgba(255,255,255,0.7)', 6); break;
         case 'dropoff': Sfx.bounce(4); burst(ev.x, ev.y, '#ffd166', 8); break;
+        case 'switch': Sfx.lever(); burst(ev.x, ev.y, '#9dffb5', 14); showMessage('Schalter gedrückt – das Zaubertor öffnet sich!', 1600); break;
+        case 'shrink': Sfx.potion(); burst(ev.x, ev.y, '#d58cff', 16, true); showMessage('Schrumpftrank! Der Ball ist jetzt winzig.', 1600); break;
+        case 'unshrink': showMessage('Der Trank lässt nach.', 1200); break;
+        case 'spin': Sfx.bounce(5); showMessage('Das Zahnrad nimmt den Ball mit …', 1200); break;
+        case 'spinout': Sfx.bumper(); burst(ev.x, ev.y, '#ffe9a8', 8); break;
+        case 'load': Sfx.bounce(5); showMessage('Geladen … Feuer frei!', 900); break;
+        case 'fire': Sfx.cannon(); burst(ev.x, ev.y, '#ffb347', 18); break;
         case 'sunk': sunk(); return;
         case 'water': case 'lava': case 'oob': hazard(ev.type); return;
       }
