@@ -35,15 +35,20 @@ class Mover {
 class Rotor {
   constructor(d) {
     Object.assign(this, { blades: 4, len: 3, speed: 1, phase: 0, thick: 0.16, hubR: 0.45, style: 'wood', height: 0.55 }, d);
-    this.type = 'rotor'; this.angle = 0;
+    this.type = 'rotor'; this.angle = 0; this.omega = this.speed;
   }
-  update(t) { this.angle = t * this.speed + this.phase; }
+  update(t) {
+    if (this.swing) { // Pendel: schwingt hin und her statt zu rotieren
+      this.angle = this.phase + this.swing.amp * Math.sin(t * this.swing.speed);
+      this.omega = this.swing.amp * this.swing.speed * Math.cos(t * this.swing.speed);
+    } else { this.angle = t * this.speed + this.phase; this.omega = this.speed; }
+  }
   bladeAngle(i) { return this.angle + (i * TAU) / this.blades; }
   segments(out) {
     for (let i = 0; i < this.blades; i++) {
       const a = this.bladeAngle(i);
       out.push({ ax: this.x, ay: this.y, bx: this.x + Math.cos(a) * this.len, by: this.y + Math.sin(a) * this.len,
-        rad: this.thick, omega: this.speed, cx: this.x, cy: this.y, e: 0.9, kind: 'rotor' });
+        rad: this.thick, omega: this.omega, cx: this.x, cy: this.y, e: 0.9, kind: 'rotor' });
     }
   }
   circles(out) { out.push({ x: this.x, y: this.y, r: this.hubR, e: 0.6, kind: 'hub' }); }
@@ -153,6 +158,36 @@ class Ramp {
   }
 }
 
+/* Windmühle: ein Gebäude quer zum Weg mit schmalem Durchgang in der Mitte. Die Flügel drehen sich
+   in einer senkrechten Ebene vor dem Durchgang; zeigt ein Flügel nach unten, ist die Tür versperrt. */
+class Windmill {
+  constructor(d) {
+    Object.assign(this, { w: 3, depth: 1.2, gap: 0.8, speed: 1.2, phase: 0, axis: 'y', blades: 4, len: 1.3, height: 1.7 }, d);
+    this.type = 'windmill'; this.angle = 0; this.blocked = false;
+    // axis: Richtung, in der sich das Gebäude erstreckt ('y' = quer zu einem Weg entlang x)
+    const ax = this.axis === 'x';
+    const bw = (this.w - this.gap) / 2, off = this.gap / 2 + bw / 2;
+    this.blocks = ax
+      ? [rectPoly(this.x - off, this.y, bw, this.depth), rectPoly(this.x + off, this.y, bw, this.depth)]
+      : [rectPoly(this.x, this.y - off, this.depth, bw), rectPoly(this.x, this.y + off, this.depth, bw)];
+    // Türsegmente (beide Seiten des Durchgangs), nur aktiv wenn versperrt
+    const g = this.gap / 2, dd = this.depth / 2;
+    this.doors = ax
+      ? [{ ax: this.x - g, ay: this.y - dd, bx: this.x + g, by: this.y - dd }, { ax: this.x - g, ay: this.y + dd, bx: this.x + g, by: this.y + dd }]
+      : [{ ax: this.x - dd, ay: this.y - g, bx: this.x - dd, by: this.y + g }, { ax: this.x + dd, ay: this.y - g, bx: this.x + dd, by: this.y + g }];
+  }
+  update(t) {
+    this.angle = t * this.speed + this.phase;
+    const step = TAU / this.blades;
+    const rel = ((this.angle + Math.PI / 2) % step + step) % step; // 0 = ein Flügel zeigt nach unten
+    this.blocked = rel < 0.3 || rel > step - 0.3;
+  }
+  segments(out) {
+    for (const b of this.blocks) polySegments(b, out, { e: 0.6, kind: 'wall' });
+    if (this.blocked) for (const d of this.doors) out.push(Object.assign({ e: 0.5, kind: 'gate' }, d));
+  }
+}
+
 /* Geländer: gerades Mauerstück von (x0,y0) nach (x1,y1) */
 class Wall {
   constructor(d) { Object.assign(this, { t: 0.22, h: 0.5 }, d); this.type = 'wall'; }
@@ -221,6 +256,7 @@ function createObstacles(defs) {
       case 'ferry': out.push(new Ferry(d)); break;
       case 'wall': out.push(new Wall(d)); break;
       case 'ramp': out.push(new Ramp(d)); break;
+      case 'windmill': out.push(new Windmill(d)); break;
       case 'portal': {
         const a = new Portal({ x: d.x, y: d.y, tx: d.tx, ty: d.ty, color: d.color, entrance: true });
         const b = new Portal({ x: d.tx, y: d.ty, tx: d.x, ty: d.y, color: d.color, entrance: !!d.twoWay, exit: true });

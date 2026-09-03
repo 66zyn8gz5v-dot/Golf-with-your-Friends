@@ -76,6 +76,8 @@ body.creative .cbtn.creative { display: inline-block; }
 .sway.s2 { animation-delay: 0.9s; animation-duration: 3.8s; } .sway.s3 { animation-delay: 1.7s; animation-duration: 2.9s; }
 .art-flag { transform-box: fill-box; transform-origin: 0% 50%; animation: art-flag 1.2s ease-in-out infinite; }
 .art-window { animation: art-window 2.6s ease-in-out infinite; }
+.mill-blades { transform-box: fill-box; transform-origin: 50% 50%; animation: spin 6s linear infinite; }
+.btn.mode:hover .mill-blades { animation-duration: 2s; }
 .drift { animation: drift 14s linear infinite; } .drift.d2 { animation-duration: 20s; animation-delay: -8s; }
 .twinkle { animation: twinkle 2.4s ease-in-out infinite; } .twinkle.t2 { animation-delay: 0.8s; } .twinkle.t3 { animation-delay: 1.6s; }
 /* Zauberpartikel steigen auf und verblassen */
@@ -90,13 +92,14 @@ body.creative .cbtn.creative { display: inline-block; }
 @keyframes art-flag { 0%, 100% { transform: skewY(-10deg) scaleX(1); } 50% { transform: skewY(10deg) scaleX(0.85); } }
 @keyframes art-window { 0%, 100% { opacity: 0.7; } 50% { opacity: 1; } }
 @keyframes sway { 0%, 100% { transform: skewX(-4deg) rotate(-2deg); } 50% { transform: skewX(4deg) rotate(2deg); } }
+@keyframes spin { to { transform: rotate(360deg); } }
 @keyframes drift { from { transform: translateX(-40px); } to { transform: translateX(120px); } }
 @keyframes twinkle { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
 @keyframes rise { 0% { opacity: 0; transform: translateY(0) scale(0.6); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-46px) translateX(6px) scale(1.2); } }
 @keyframes panel-in { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: none; } }
 @keyframes title-in { from { opacity: 0; transform: scale(0.7); letter-spacing: 8px; } to { opacity: 1; transform: none; letter-spacing: 1px; } }
 @media (prefers-reduced-motion: reduce) {
-  .btn.mode, .art-flag, .art-window, .sway, .drift, .twinkle, .particles .p, .screen.title .panel, .screen.title .panel h1 { animation: none; }
+  .btn.mode, .art-flag, .art-window, .sway, .drift, .twinkle, .mill-blades, .particles .p, .screen.title .panel, .screen.title .panel h1 { animation: none; }
 }
 .screen.title .panel h1 { font-family: "Cinzel Decorative", "MedievalSharp", Georgia, serif; font-weight: 900; letter-spacing: 1px; }
 .screen.title .panel h2 { font-family: "MedievalSharp", Georgia, serif; letter-spacing: 1px; }

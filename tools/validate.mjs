@@ -3,11 +3,11 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 const ctx = { console };
 vm.createContext(ctx);
-const load = f => vm.runInContext(fs.readFileSync(new URL(`../src/${f}.js`, import.meta.url), 'utf8') + `\n;${f.toUpperCase()}`, ctx);
-const THEMES = load('themes'), COURSES = load('courses');
+const load = f => vm.runInContext(fs.readFileSync(new URL(`../src/${f}.js`, import.meta.url), 'utf8') + `\n;${f === 'courses_pro' ? 'PRO_COURSES' : f.toUpperCase()}`, ctx);
+const THEMES = load('themes'), COURSES = load('courses'), PRO = load('courses_pro');
 const FLOOR = new Set(['#', 's', 'i', 'w', 'l', 'T', 'H', 'o']);
 let ok = true;
-COURSES.forEach((c, i) => {
+[...COURSES.map(c => ({ ...c, world: 'Fantasy' })), ...PRO.map(c => ({ ...c, world: 'Profi' }))].forEach((c, i) => {
   const rows = c.map, H = rows.length, W = rows[0].length;
   const problems = [];
   if (!THEMES[c.theme]) problems.push(`Theme ${c.theme} fehlt`);
@@ -64,7 +64,7 @@ COURSES.forEach((c, i) => {
     }
   }
   const status = problems.length ? 'FEHLER' : 'ok';
-  console.log(`${i + 1}. ${c.name.padEnd(16)} ${W}x${H} Par ${c.par} ${status}${problems.length ? ': ' + problems.join('; ') : ''}`);
+  console.log(`${c.world.padEnd(8)} ${c.name.padEnd(16)} ${W}x${H} Par ${c.par} ${status}${problems.length ? ': ' + problems.join('; ') : ''}`);
   if (problems.length) ok = false;
 });
 process.exit(ok ? 0 : 1);

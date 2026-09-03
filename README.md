@@ -11,10 +11,12 @@ Alternativ lokal über einen kleinen Server:
 npx serve .          # oder: python3 -m http.server 8080
 ```
 
-## Modi
+## Welten und Modi
 
-- **Normal**: alle Bahnen der Reihe nach, mit Schlaglimit und Wertung.
-- **Kreativ**: startet sofort mit einem Spieler, Schleuder-Steuerung und Bahn 1; im Spiel mit „◀ Bahn" / „Bahn ▶" (Tasten P / N) springen, „Ball zurück" (R) setzt an den Abschlag, kein Schlaglimit. Gedacht zum schnellen Prüfen einzelner Bahnen.
+- **Fantasy-Welt** (9 Bahnen) und **Profi-Welt** (8 schwerere Bahnen mit Windmühlen, Pendeln, schmalen Dämmen und Brücken).
+- **Normal**: die Fantasy-Welt der Reihe nach, mit Schlaglimit und Wertung.
+- **Profi**: dasselbe für die Profi-Welt.
+- **Kreativ**: erst die Welt wählen, dann geht es sofort los mit einem Spieler, Schleuder-Steuerung und Bahn 1; im Spiel mit „◀ Bahn" / „Bahn ▶" (Tasten P / N) springen, „Ball zurück" (R) setzt an den Abschlag, kein Schlaglimit. Gedacht zum schnellen Prüfen einzelner Bahnen.
 
 Das Modus-Menü ist der Platz, an dem später weitere Welten eingehängt werden.
 
@@ -29,7 +31,7 @@ Das Modus-Menü ist der Platz, an dem später weitere Welten eingehängt werden.
 - Wasser, Lava und Abgrund: Ball zurück zur letzten Position, +1 Strafschlag.
 - Schlaglimit: 15 Schläge pro Bahn, lange Bahnen erlauben mehr (Burgberg 25, Hexenturm und Zwergenschmiede 20, Wolkenburg und Drachenhöhle 18). Danach wird die Bahn mit dem Limit gewertet.
 
-## Die 9 Bahnen
+## Die Bahnen der Fantasy-Welt
 
 | # | Bahn | Par | Hindernisse |
 |---|------|-----|-------------|
@@ -43,9 +45,22 @@ Das Modus-Menü ist der Platz, an dem später weitere Welten eingehängt werden.
 | 8 | Hexenturm | 5 | Lava, Eis, Fallgatter, rotierender Besen, wandernde Kessel, Portal-Abkürzung, Aufwind |
 | 9 | Burgberg | 5 | Serpentinen mit Steigungen, patrouillierende Ritter, Burggraben mit Zugbrücke, die Burg vom Startbildschirm |
 
+## Die Bahnen der Profi-Welt
+
+| # | Bahn | Par | Hindernisse |
+|---|------|-----|-------------|
+| 1 | Mühlenwiese | 3 | Windmühle mit schmaler Tür, Sand |
+| 2 | Nebelmoor | 4 | Dämme zwischen Wassertümpeln, Pendelbalken, Windmühle, Eis |
+| 3 | Zwergenmine | 4 | Damm ohne Geländer über zwei Lavaflüsse, Lore, Pendel |
+| 4 | Kristallsee | 4 | Eisfläche mit Löchern, zwei Kristallsterne, Windmühle vor dem Loch |
+| 5 | Sturmhöhe | 4 | Brücken von einer Kachel Breite, Fallgatter, Gegenwind, Beschleuniger |
+| 6 | Drachenschlund | 5 | Sprungschanze über Lava, zwei Drachen, tiefer Sand |
+| 7 | Hexenküche | 5 | drei Inseln per Portal, Eishalle mit Kessel und Pendel, Besen-Rotor |
+| 8 | Königsburg | 5 | zwei Windmühlen, Ritter, Steigungen, Burggraben mit Zugbrücke |
+
 ## Eigene Bahnen bauen
 
-Bahnen stehen in `src/courses.js` als ASCII-Karte plus Hindernisliste:
+Bahnen stehen in `src/courses.js` (Fantasy-Welt) und `src/courses_pro.js` (Profi-Welt) als ASCII-Karte plus Hindernisliste. Die Liste `WORLDS` in `src/courses_pro.js` registriert die Welten für das Menü.
 
 ```
 .  Leere / Abgrund     #  Fairway      s  Sand      i  Eis
@@ -56,7 +71,7 @@ T  Abschlag            H  Loch
 
 Pro Bahn lässt sich die Bremsung eines Untergrunds überschreiben, z. B. `friction: { s: 32 }` für besonders tiefen Sand.
 
-Hindernis-Typen: `bumper`, `mover`, `ferry`, `rotor`, `gate`, `portal`, `boost`, `field`, `ramp`, `rail`, `wall`.
+Hindernis-Typen: `bumper`, `mover`, `ferry`, `rotor` (auch als Pendel mit `swing`), `windmill`, `gate`, `portal`, `boost`, `field`, `ramp`, `rail`, `wall`.
 Farbwelten stehen in `src/themes.js`. Mit `node tools/validate.mjs` lässt sich prüfen, ob jede Bahn lösbar ist.
 
 ## Projektstruktur
@@ -65,7 +80,8 @@ Farbwelten stehen in `src/themes.js`. Mit `node tools/validate.mjs` lässt sich 
 index.html        Seite und HUD
 style.css         Oberfläche
 src/themes.js     Farbpaletten und Deko je Welt
-src/courses.js    die 8 Bahnen
+src/courses.js    die Bahnen der Fantasy-Welt
+src/courses_pro.js die Bahnen der Profi-Welt und die Weltenliste
 src/level.js      Karte → Kacheln, Mauern, Kollisionssegmente
 src/obstacles.js  bewegliche und statische Hindernisse
 src/physics.js    Ballphysik und Kollision

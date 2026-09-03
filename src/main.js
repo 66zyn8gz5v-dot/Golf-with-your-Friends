@@ -4,7 +4,7 @@
   const MAX_SHOT = 19;       // Ballgeschwindigkeit bei voller Kraft
   const MAX_DRAG = 4.2;      // Zieh-Länge (Weltkoordinaten) für volle Kraft
   const DEFAULT_MAX_STROKES = 15; // danach wird die Bahn automatisch beendet (pro Bahn per maxStrokes überschreibbar)
-  const maxStrokes = () => state.mode === 'creative' ? Infinity : (COURSES[state.holeIdx].maxStrokes || DEFAULT_MAX_STROKES);
+  const maxStrokes = () => state.mode === 'creative' ? Infinity : (state.courses[state.holeIdx].maxStrokes || DEFAULT_MAX_STROKES);
   const PLAYER_COLORS = ['#ffffff', '#ff6b6b', '#4dd4ff', '#ffe066'];
   const PLAYER_NAMES = ['Spieler 1', 'Spieler 2', 'Spieler 3', 'Spieler 4'];
 
@@ -22,6 +22,7 @@
     camMode: 'overview', camTheta: Math.PI / 4, zoomFactor: 1,
     controlMode: 'sling', // 'sling' = Schleuder (vom Ball wegziehen), 'push' = Schieben (in Schussrichtung ziehen)
     mode: 'normal',       // 'normal' = Wettkampf, 'creative' = Kreativ (Bahnen frei wählen und überspringen, kein Schlaglimit)
+    world: WORLDS[0], courses: WORLDS[0].courses,
   };
   try { const m = localStorage.getItem('fantasygolf.control'); if (m === 'sling' || m === 'push') state.controlMode = m; } catch (e) { /* kein Speicher verfügbar */ }
   function setControlMode(m) {
@@ -37,8 +38,8 @@
     clearTimeout(msgTimer); msgTimer = setTimeout(() => ui.msg.classList.remove('visible'), ms);
   }
   function updateHud() {
-    const def = COURSES[state.holeIdx];
-    ui.hole.textContent = `Bahn ${state.holeIdx + 1} / ${COURSES.length}`;
+    const def = state.courses[state.holeIdx];
+    ui.hole.textContent = `${state.world.short} · Bahn ${state.holeIdx + 1} / ${state.courses.length}`;
     ui.name.textContent = def ? def.name : '–';
     const p = state.players[state.curPlayer];
     ui.player.textContent = p ? p.name : '–';
@@ -51,17 +52,7 @@
   function overlay(html, cls) { ui.overlay.innerHTML = html; ui.overlay.className = 'screen visible' + (cls ? ' ' + cls : ''); }
   function hideOverlay() { ui.overlay.className = 'screen'; ui.overlay.innerHTML = ''; }
 
-  function showTitle() {
-    state.phase = 'title';
-    document.body.classList.add('title');
-    document.body.classList.remove('creative');
-    overlay(`<div class="panel">
-      <h1>⛳ Fantasy Golf</h1>
-      <div class="sub">Golf with your Friends · ${COURSES.length} magische Bahnen in 2,5D</div>
-      <p>Modus wählen:</p>
-      <div class="modes">
-        <span class="btn mode" data-mode="normal">
-          <svg class="mode-scene" viewBox="0 0 300 72" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+  const SCENE_NORMAL = `<svg class="mode-scene" viewBox="0 0 300 72" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
             <defs>
               <linearGradient id="skyN" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4f9de8"/><stop offset="1" stop-color="#d6ecff"/></linearGradient>
               <radialGradient id="sunN" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fff8d0"/><stop offset="0.55" stop-color="#ffe98a"/><stop offset="1" stop-color="#ffd166"/></radialGradient>
@@ -91,7 +82,6 @@
             <path d="M34 32 L42 20 L50 32 Z M74 32 L82 20 L90 32 Z M52 24 L62 8 L72 24 Z" fill="url(#roofG)"/>
             <path d="M42 20 L50 32 L46 32 Z M82 20 L90 32 L86 32 Z M62 8 L72 24 L67 24 Z" fill="rgba(0,0,0,0.22)"/>
             <path d="M40 40 h3 v-4 h-3 z M46 40 h3 v-4 h-3 z M70 40 h3 v-4 h-3 z M77 40 h3 v-4 h-3 z" fill="#d9d4cb"/>
-            <path d="M40 40 h3 v-1 h-3 z M46 40 h3 v-1 h-3 z M70 40 h3 v-1 h-3 z M77 40 h3 v-1 h-3 z" fill="rgba(0,0,0,0.25)"/>
             <rect x="59" y="44" width="6" height="8" rx="1" fill="#ffd166" class="art-window"/><rect x="40" y="46" width="3" height="4" rx="0.8" fill="#ffd166" opacity="0.8"/><rect x="80" y="46" width="3" height="4" rx="0.8" fill="#ffd166" opacity="0.8"/>
             <path d="M57 54 a5 5 0 0 1 10 0 v8 h-10 z" fill="#2a1c12"/><path d="M58.5 55.5 a3.5 3.5 0 0 1 7 0 v6.5 h-7 z" fill="#4a3320"/>
             <rect x="61.5" y="0" width="1.2" height="9" fill="#3a2a1a"/>
@@ -99,11 +89,33 @@
             <g class="sway s2"><path d="M100 62 L110 34 L120 62 Z" fill="url(#firL)"/><path d="M103 52 L110 38 L117 52 Z" fill="#4aa85a"/><path d="M110 34 L120 62 L110 62 Z" fill="rgba(0,0,0,0.18)"/></g>
             <g class="sway s3"><path d="M118 63 L125 46 L132 63 Z" fill="url(#firL)"/><path d="M125 46 L132 63 L125 63 Z" fill="rgba(0,0,0,0.2)"/></g>
             <path d="M92 66 L98 62 L104 66 Z M110 68 L114 65 L118 68 Z" fill="#3f8a33"/>
-          </svg>
-          <span class="mode-label">Normal</span>
-        </span>
-        <span class="btn mode" data-mode="creative">
-          <svg class="mode-scene" viewBox="0 0 300 72" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          </svg>`;
+  const SCENE_PRO = `<svg class="mode-scene" viewBox="0 0 300 72" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+            <defs>
+              <linearGradient id="skyP" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a2a3a"/><stop offset="0.5" stop-color="#c8562e"/><stop offset="1" stop-color="#ffb46a"/></linearGradient>
+              <radialGradient id="sunP" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fff1c0"/><stop offset="1" stop-color="#ff9a3a"/></radialGradient>
+              <linearGradient id="hillP1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6a4a6a"/><stop offset="1" stop-color="#3a2a44"/></linearGradient>
+              <linearGradient id="hillP2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4f7a3a"/><stop offset="1" stop-color="#2a4a22"/></linearGradient>
+              <linearGradient id="millG" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#5a4030"/><stop offset="0.45" stop-color="#a07850"/><stop offset="1" stop-color="#5a4030"/></linearGradient>
+              <filter id="softP" x="-20%" y="-20%" width="140%" height="160%"><feGaussianBlur stdDeviation="1.2"/></filter>
+            </defs>
+            <rect width="300" height="72" fill="url(#skyP)"/>
+            <circle cx="230" cy="40" r="14" fill="url(#sunP)"/>
+            <g class="drift" opacity="0.6"><ellipse cx="120" cy="14" rx="26" ry="5" fill="#7a4a5a"/></g>
+            <path d="M0 50 L30 34 L60 46 L95 26 L130 44 L170 30 L205 46 L240 36 L270 48 L300 40 V72 H0 Z" fill="url(#hillP1)"/>
+            <path d="M0 64 Q80 54 160 62 T300 60 V72 H0 Z" fill="url(#hillP2)"/>
+            <path d="M0 64 Q80 54 160 62" stroke="#7fb060" stroke-width="1" fill="none" opacity="0.5"/>
+            <ellipse cx="62" cy="64" rx="18" ry="3" fill="rgba(0,0,0,0.3)" filter="url(#softP)"/>
+            <path d="M52 62 L56 30 L68 30 L72 62 Z" fill="url(#millG)"/>
+            <path d="M54 30 L62 22 L70 30 Z" fill="#3a2214"/>
+            <rect x="60" y="46" width="4" height="6" fill="#ffd166" class="art-window"/><path d="M58 62 a4 4 0 0 1 8 0 v0 h-8 z" fill="#1a120e"/>
+            <g class="mill-blades"><path d="M62 30 L62 8 M62 30 L84 30 M62 30 L62 52 M62 30 L40 30" stroke="#3a2214" stroke-width="1.6"/>
+              <path d="M62 30 L64 10 L69 12 L64 30 Z M62 30 L82 28 L80 23 L62 28 Z M62 30 L60 50 L55 48 L60 30 Z M62 30 L42 32 L44 37 L62 32 Z" fill="rgba(245,235,210,0.85)" stroke="#3a2214" stroke-width="0.8"/></g>
+            <circle cx="62" cy="30" r="1.8" fill="#1a120e"/>
+            <g class="sway s2"><path d="M100 62 L108 40 L116 62 Z" fill="#2a4a22"/></g><g class="sway s3"><path d="M280 63 L287 46 L294 63 Z" fill="#2a4a22"/></g>
+            <g class="twinkle"><path d="M150 12 l1 3 l3 1 l-3 1 l-1 3 l-1 -3 l-3 -1 l3 -1 z" fill="#fff"/></g>
+          </svg>`;
+  const SCENE_CREATIVE = `<svg class="mode-scene" viewBox="0 0 300 72" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
             <defs>
               <linearGradient id="skyK" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1d1238"/><stop offset="0.6" stop-color="#4a2f7a"/><stop offset="1" stop-color="#7a58b0"/></linearGradient>
               <radialGradient id="moonGlow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="rgba(220,230,255,0.45)"/><stop offset="1" stop-color="rgba(220,230,255,0)"/></radialGradient>
@@ -140,24 +152,48 @@
               <circle class="p p4" cx="110" cy="66" r="1.2" fill="#d8ff70"/><circle class="p p2" cx="22" cy="66" r="1.4" fill="#7fe8ff"/><circle class="p p5" cx="134" cy="60" r="1.3" fill="#ff7fd8"/>
               <circle class="p p3" cx="160" cy="64" r="1.1" fill="#ffd166"/><circle class="p p5" cx="200" cy="66" r="1.4" fill="#d8ff70"/><circle class="p p4" cx="240" cy="62" r="1.2" fill="#7fe8ff"/>
             </g>
-            <rect width="300" height="72" fill="url(#skyK)" opacity="0" />
-          </svg>
-          <span class="mode-label">Kreativ</span>
-        </span>
+          </svg>`;
+
+  function showTitle() {
+    state.phase = 'title';
+    document.body.classList.add('title');
+    document.body.classList.remove('creative');
+    overlay(`<div class="panel">
+      <h1>⛳ Fantasy Golf</h1>
+      <div class="sub">Golf with your Friends · ${WORLDS.reduce((a, w) => a + w.courses.length, 0)} magische Bahnen in 2,5D</div>
+      <p>Modus wählen:</p>
+      <div class="modes">
+        <span class="btn mode" data-mode="normal">${SCENE_NORMAL}<span class="mode-label">Normal</span></span>
+        <span class="btn mode" data-mode="pro">${SCENE_PRO}<span class="mode-label">Profi</span></span>
+        <span class="btn mode" data-mode="creative">${SCENE_CREATIVE}<span class="mode-label">Kreativ</span></span>
       </div>
-      <div class="legend" style="text-align:center">Weitere Welten folgen hier.</div>
     </div>`, 'title');
     ui.overlay.querySelectorAll('.mode').forEach(b => b.addEventListener('click', () => {
-      state.mode = b.dataset.mode;
-      if (state.mode === 'creative') { // sofort los: ein Spieler, Schleuder, Bahn 1
-        Sfx.unlock(); setControlMode('sling'); startGame(1, 0);
-      } else showSetup();
+      const m = b.dataset.mode;
+      if (m === 'creative') { state.mode = 'creative'; showWorldSelect(); }
+      else { state.mode = 'normal'; setWorld(m === 'pro' ? 'pro' : 'normal'); showSetup(); }
     }));
+  }
+  function setWorld(id) { state.world = WORLDS.find(w => w.id === id) || WORLDS[0]; state.courses = state.world.courses; }
+
+  /* Kreativ: Welt wählen, dann sofort los (ein Spieler, Schleuder, Bahn 1) */
+  function showWorldSelect() {
+    overlay(`<div class="panel">
+      <h2>🛠 Kreativ – Welt wählen</h2>
+      <div class="modes">
+        ${WORLDS.map(w => `<span class="btn mode" data-world="${w.id}">${w.id === 'pro' ? SCENE_PRO : SCENE_NORMAL}<span class="mode-label">${w.short}</span></span>`).join('')}
+      </div>
+      <div class="sub">${WORLDS.map(w => `${w.name}: ${w.courses.length} Bahnen`).join(' · ')}</div>
+      <p><span class="btn ghost small" id="back">◀ Zurück</span></p>
+    </div>`, 'title');
+    ui.overlay.querySelectorAll('.mode').forEach(b => b.addEventListener('click', () => { setWorld(b.dataset.world); Sfx.unlock(); setControlMode('sling'); startGame(1, 0); }));
+    $('back').addEventListener('click', showTitle);
   }
 
   function showSetup() {
     overlay(`<div class="panel">
-      <h2>🏆 Normales Spiel</h2>
+      <h2>${state.world.id === 'pro' ? '🔥 Profi-Welt' : '🏆 Normales Spiel'}</h2>
+      <div class="sub">${state.world.name} · ${state.courses.length} Bahnen</div>
       <p>Spieler:</p>
       <div id="pc">${[1, 2, 3, 4].map(n => `<span class="btn ghost small ${n === playerCount ? 'sel' : ''}" data-n="${n}">${n}</span>`).join('')}</div>
       <p style="margin-top:10px">Steuerung:</p>
@@ -225,7 +261,7 @@
   function jumpHole(delta) {
     if (state.mode !== 'creative' || !state.level) return;
     clearTimeout(waitTimer); hideOverlay();
-    loadHole((state.holeIdx + delta + COURSES.length) % COURSES.length);
+    loadHole((state.holeIdx + delta + state.courses.length) % state.courses.length);
   }
   function resetBall() {
     if (state.mode !== 'creative' || !state.ball) return;
@@ -233,7 +269,7 @@
     state.strokes = 0; beginTurn();
   }
   function loadLevelPreview(i) {
-    const def = COURSES[i];
+    const def = state.courses[i];
     state.level = buildLevel(def); state.theme = THEMES[def.theme];
     R.setLevel(state.level, state.theme);
     state.ball = null; state.aim = null;
@@ -244,7 +280,7 @@
     loadLevelPreview(i);
     state.particles = [];
     state.curPlayer = 0;
-    showMessage(`Bahn ${i + 1}: ${COURSES[i].name}`, 2200);
+    showMessage(`Bahn ${i + 1}: ${state.courses[i].name}`, 2200);
     setTimeout(beginTurn, 900);
   }
   function beginTurn() {
@@ -298,7 +334,7 @@
     updateHud();
   }
   function sunk() {
-    const par = COURSES[state.holeIdx].par;
+    const par = state.courses[state.holeIdx].par;
     Sfx.sink();
     burst(state.level.cup.x, state.level.cup.y, state.theme.accent, 26, true);
     showMessage(`${scoreName(state.strokes, par)}  (${state.strokes} Schläge)`, 1800);
@@ -309,7 +345,7 @@
   }
   function showHoleDone() {
     state.phase = 'summary';
-    const def = COURSES[state.holeIdx], last = state.holeIdx === COURSES.length - 1;
+    const def = state.courses[state.holeIdx], last = state.holeIdx === state.courses.length - 1;
     const rows = state.players.map(p => {
       const total = p.scores.reduce((a, b) => a + b, 0);
       return `<tr><td><span class="dot" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.color};margin-right:6px"></span>${p.name}</td><td class="num">${p.scores[state.holeIdx]}</td><td class="num">${total}</td></tr>`;
@@ -318,18 +354,18 @@
       <h2>Bahn ${state.holeIdx + 1}: ${def.name}</h2>
       <div class="sub">Par ${def.par}</div>
       <table class="scores"><tr><th>Spieler</th><th>Bahn</th><th>Gesamt</th></tr>${rows}</table>
-      ${!last ? `<div class="sub">Als Nächstes: <b>${COURSES[state.holeIdx + 1].name}</b><br><i>${COURSES[state.holeIdx + 1].intro}</i></div>` : ''}
+      ${!last ? `<div class="sub">Als Nächstes: <b>${state.courses[state.holeIdx + 1].name}</b><br><i>${state.courses[state.holeIdx + 1].intro}</i></div>` : ''}
       <span class="btn" id="next">${last ? 'Zum Endergebnis' : 'Nächste Bahn ▶'}</span>
     </div>`);
     $('next').addEventListener('click', () => { hideOverlay(); if (last) { if (state.mode === 'creative') loadHole(0); else showFinal(); } else loadHole(state.holeIdx + 1); });
   }
   function showFinal() {
     state.phase = 'final';
-    const parTotal = COURSES.reduce((a, c) => a + c.par, 0);
+    const parTotal = state.courses.reduce((a, c) => a + c.par, 0);
     const ranked = state.players.map(p => ({ p, total: p.scores.reduce((a, b) => a + b, 0) })).sort((a, b) => a.total - b.total);
     const medals = ['🥇', '🥈', '🥉', '4.'];
     const rows = ranked.map((r, i) => `<tr><td class="medal">${medals[i]}</td><td>${r.p.name}</td><td class="num">${r.total}</td><td class="num">${r.total - parTotal >= 0 ? '+' : ''}${r.total - parTotal}</td></tr>`).join('');
-    const holes = `<tr><th></th>${COURSES.map((c, i) => `<th>${i + 1}</th>`).join('')}</tr>` +
+    const holes = `<tr><th></th>${state.courses.map((c, i) => `<th>${i + 1}</th>`).join('')}</tr>` +
       state.players.map(p => `<tr><td>${p.name}</td>${p.scores.map(s => `<td class="num">${s}</td>`).join('')}</tr>`).join('');
     overlay(`<div class="panel">
       <h1>🏆 Endergebnis</h1>
@@ -476,7 +512,7 @@
     skipHole() {
       if (!state.level || state.phase === 'title') return false;
       clearTimeout(waitTimer);
-      const par = COURSES[state.holeIdx].par;
+      const par = state.courses[state.holeIdx].par;
       for (let i = 0; i < state.players.length; i++) if (state.players[i].scores[state.holeIdx] == null) state.players[i].scores[state.holeIdx] = par;
       showHoleDone(); return true;
     },

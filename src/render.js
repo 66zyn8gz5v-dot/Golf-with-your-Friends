@@ -426,7 +426,9 @@ class Renderer {
 
   pushObstacle(items, ctx, ob, t) {
     const th = this.theme;
-    if (ob.type === 'ramp') {
+    if (ob.type === 'windmill') {
+      items.push({ x: ob.x, y: ob.y, bias: 0.4, draw: () => this.drawWindmill(ctx, ob, t) });
+    } else if (ob.type === 'ramp') {
       items.push({ x: ob.x + ob.w / 2, y: ob.y + ob.h / 2, draw: () => this.drawRamp(ctx, ob, t) });
     } else if (ob.type === 'wall') {
       const L = Math.hypot(ob.x1 - ob.x0, ob.y1 - ob.y0) || 1, ux = (ob.x1 - ob.x0) / L, uy = (ob.y1 - ob.y0) / L;
@@ -448,6 +450,7 @@ class Renderer {
           const p = [[ob.x - sa * tk, ob.y + ca * tk], [ob.x + ca * ob.len - sa * tk, ob.y + sa * ob.len + ca * tk],
             [ob.x + ca * ob.len + sa * tk, ob.y + sa * ob.len - ca * tk], [ob.x + sa * tk, ob.y - ca * tk]];
           if (ob.style === 'crystal') { ctx.globalAlpha = 0.85; this.prism(ctx, p, 0.05, ob.height, '#eaf8ff', '#7fc0f0'); ctx.globalAlpha = 1; }
+          else if (ob.style === 'log') { this.prism(ctx, p, 0.15, 0.45, '#a8763f', '#5c4520'); }
           else if (ob.style === 'broom') { this.prism(ctx, p, 0.1, 0.35, '#c9a15a', '#7a5a2a'); const [ex, ey] = this.proj(ob.x + ca * ob.len, ob.y + sa * ob.len, 0.3); ctx.fillStyle = '#e0c070'; ctx.beginPath(); ctx.arc(ex, ey, this.scale * 0.22, 0, TAU); ctx.fill(); }
           else this.prism(ctx, p, 0.05, ob.height, th.rotor.top, th.rotor.side);
         }
@@ -495,6 +498,60 @@ class Renderer {
         ctx.globalAlpha = 1;
       } });
     }
+  }
+
+  /* Windmühle: zwei Turmhälften mit Durchgang, Dach, Fenster, Tür und drehenden Flügeln */
+  drawWindmill(ctx, ob, t) {
+    const s = this.scale, th = this.theme, ax = ob.axis === 'x';
+    const wallTop = '#e8dfcf', wallSide = '#a8998a', roof = '#7a4a2a';
+    for (const b of ob.blocks) this.prism(ctx, b, 0, ob.height, wallTop, wallSide, { outline: '#6b5a4a' });
+    // Brücke über dem Durchgang und Dach
+    const g = ob.gap / 2 + 0.05, dd = ob.depth / 2;
+    const bridge = ax ? [[ob.x - g, ob.y - dd], [ob.x + g, ob.y - dd], [ob.x + g, ob.y + dd], [ob.x - g, ob.y + dd]] : [[ob.x - dd, ob.y - g], [ob.x + dd, ob.y - g], [ob.x + dd, ob.y + g], [ob.x - dd, ob.y + g]];
+    this.prism(ctx, bridge, 1.05, ob.height - 1.05, wallTop, wallSide, { outline: '#6b5a4a' });
+    const rw = ob.w / 2 + 0.15, rd = ob.depth / 2 + 0.15;
+    const roofBase = ax ? [[ob.x - rw, ob.y - rd], [ob.x + rw, ob.y - rd], [ob.x + rw, ob.y + rd], [ob.x - rw, ob.y + rd]] : [[ob.x - rd, ob.y - rw], [ob.x + rd, ob.y - rw], [ob.x + rd, ob.y + rw], [ob.x - rd, ob.y + rw]];
+    this.prism(ctx, roofBase, ob.height, 0.3, roof, '#4a2c18');
+    // Spitzdach als Pyramide
+    const apex = this.proj(ob.x, ob.y, ob.height + 1.1);
+    const corners = roofBase.map(p => this.proj(p[0], p[1], ob.height + 0.3));
+    for (let i = 0; i < 4; i++) {
+      const a = corners[i], b = corners[(i + 1) % 4];
+      ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.lineTo(apex[0], apex[1]); ctx.closePath();
+      ctx.fillStyle = i % 2 ? '#8e5a34' : '#6e4224'; ctx.fill(); ctx.strokeStyle = '#3a2214'; ctx.lineWidth = 0.8; ctx.stroke();
+    }
+    // Türbögen an beiden Seiten des Durchgangs
+    for (const side of [-1, 1]) {
+      const cx = ax ? ob.x : ob.x + side * dd, cy = ax ? ob.y + side * dd : ob.y;
+      const [dx, dy] = this.proj(cx, cy, 0), [tx, ty] = this.proj(cx, cy, 0.9);
+      ctx.fillStyle = ob.blocked ? '#5a2a20' : '#1a120e';
+      ctx.beginPath(); ctx.ellipse(dx, ty + (dy - ty) * 0.15, ob.gap * s * 0.45, s * 0.25, 0, Math.PI, TAU); ctx.lineTo(dx + ob.gap * s * 0.45, dy); ctx.lineTo(dx - ob.gap * s * 0.45, dy); ctx.closePath(); ctx.fill();
+    }
+    // Fenster
+    for (const b of ob.blocks) {
+      const mx = (b[0][0] + b[2][0]) / 2, my = (b[0][1] + b[2][1]) / 2;
+      for (const z of [0.5, 1.15]) {
+        const [wx, wy] = this.proj(ax ? mx : ob.x + dd + 0.01, ax ? ob.y + dd + 0.01 : my, z);
+        ctx.fillStyle = '#ffd166'; ctx.fillRect(wx - s * 0.08, wy - s * 0.12, s * 0.16, s * 0.24);
+      }
+    }
+    // Flügel: senkrechte Ebene an der Vorderseite, Drehung um die Nabe
+    const hubX = ax ? ob.x : ob.x + dd + 0.08, hubY = ax ? ob.y + dd + 0.08 : ob.y, hubZ = ob.height - 0.15;
+    const [hx, hy] = this.proj(hubX, hubY, hubZ);
+    ctx.lineCap = 'round';
+    for (let i = 0; i < ob.blades; i++) {
+      const a = ob.angle + (i * TAU) / ob.blades, ca = Math.cos(a), sa = Math.sin(a);
+      const tipX = hubX + (ax ? ca * ob.len : 0), tipY = hubY + (ax ? 0 : ca * ob.len), tipZ = hubZ + sa * ob.len;
+      const [tx, ty] = this.proj(tipX, tipY, tipZ);
+      ctx.strokeStyle = '#5a3a1e'; ctx.lineWidth = Math.max(2, s * 0.08); ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(tx, ty); ctx.stroke();
+      // Segeltuch als Rechteck neben dem Balken
+      const px = ax ? -sa * 0.28 : 0, py = ax ? 0 : -sa * 0.28, pz = ca * 0.28;
+      const q = [this.proj(hubX + (tipX - hubX) * 0.3, hubY + (tipY - hubY) * 0.3, hubZ + (tipZ - hubZ) * 0.3), this.proj(tipX, tipY, tipZ),
+        this.proj(tipX + px, tipY + py, tipZ + pz), this.proj(hubX + (tipX - hubX) * 0.3 + px, hubY + (tipY - hubY) * 0.3 + py, hubZ + (tipZ - hubZ) * 0.3 + pz)];
+      ctx.beginPath(); q.forEach((pp, k) => k ? ctx.lineTo(pp[0], pp[1]) : ctx.moveTo(pp[0], pp[1])); ctx.closePath();
+      ctx.fillStyle = 'rgba(245,235,210,0.9)'; ctx.fill(); ctx.strokeStyle = '#5a3a1e'; ctx.lineWidth = 1; ctx.stroke();
+    }
+    ctx.fillStyle = '#3a2214'; ctx.beginPath(); ctx.arc(hx, hy, s * 0.12, 0, TAU); ctx.fill();
   }
 
   /* Rampe: schräge Fläche, an der Eintrittskante flach, an der Austrittskante hoch */
