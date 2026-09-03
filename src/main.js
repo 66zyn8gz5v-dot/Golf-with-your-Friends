@@ -19,14 +19,7 @@
     phase: 'title', players: [], holeIdx: 0, level: null, theme: null, t: 0, ball: null, aim: null,
     particles: [], curPlayer: 0, strokes: 0, restTimer: 0, slowTimer: 0, lastBounceSfx: 0,
     camMode: 'overview', camTheta: Math.PI / 4, zoomFactor: 1,
-    controlMode: 'direct', // 'direct' = in Schussrichtung ziehen, 'sling' = Schleuder (vom Ball wegziehen)
   };
-  try { const m = localStorage.getItem('fantasygolf.control'); if (m === 'sling' || m === 'direct') state.controlMode = m; } catch (e) { /* kein Speicher verfügbar */ }
-  function setControlMode(m) {
-    state.controlMode = m;
-    try { localStorage.setItem('fantasygolf.control', m); } catch (e) { /* ignorieren */ }
-    ui.hint.textContent = m === 'direct' ? 'In Schussrichtung ziehen & loslassen' : 'Vom Ball wegziehen & loslassen';
-  }
   let playerCount = 1, msgTimer = null, waitTimer = null;
 
   /* ---------- UI ---------- */
@@ -57,25 +50,15 @@
       <div class="sub">Golf with your Friends · ${COURSES.length} magische Bahnen in 2,5D</div>
       <p>Spieler:</p>
       <div id="pc">${[1, 2, 3, 4].map(n => `<span class="btn ghost small ${n === playerCount ? 'sel' : ''}" data-n="${n}">${n}</span>`).join('')}</div>
-      <p style="margin-top:10px">Steuerung:</p>
-      <div id="cm">
-        <span class="btn ghost small ${state.controlMode === 'direct' ? 'sel' : ''}" data-m="direct">In Schussrichtung ziehen</span>
-        <span class="btn ghost small ${state.controlMode === 'sling' ? 'sel' : ''}" data-m="sling">Schleuder</span>
-      </div>
       <p style="margin-top:14px"><span class="btn" id="start">Los geht's!</span></p>
       <div class="legend">
-        Aufsetzen, ziehen, loslassen. Weiter ziehen = mehr Kraft.
-        <b>In Schussrichtung</b>: ziehen, wohin der Ball soll (Handy). <b>Schleuder</b>: vom Ball wegziehen.
+        <b>Schleuder:</b> Finger oder Maus aufsetzen, vom Ball wegziehen und loslassen. Der Ball fliegt in die Gegenrichtung, weiter ziehen = mehr Kraft.
         Wasser, Lava und Abgrund kosten einen Strafschlag.
       </div>
     </div>`, 'title');
     ui.overlay.querySelectorAll('#pc .btn').forEach(b => b.addEventListener('click', () => {
       playerCount = +b.dataset.n;
       ui.overlay.querySelectorAll('#pc .btn').forEach(x => x.classList.toggle('sel', +x.dataset.n === playerCount));
-    }));
-    ui.overlay.querySelectorAll('#cm .btn').forEach(b => b.addEventListener('click', () => {
-      setControlMode(b.dataset.m);
-      ui.overlay.querySelectorAll('#cm .btn').forEach(x => x.classList.toggle('sel', x.dataset.m === state.controlMode));
     }));
     $('start').addEventListener('click', () => { Sfx.unlock(); startGame(playerCount); });
   }
@@ -310,8 +293,7 @@
     const [wx, wy] = R.unprojDelta(x - drag.start[0], y - drag.start[1]);
     const len = Math.hypot(wx, wy);
     if (len < 0.05) { state.aim = { dx: 0, dy: 0, power: 0 }; return; }
-    const sign = state.controlMode === 'direct' ? 1 : -1;
-    state.aim = { dx: sign * wx / len, dy: sign * wy / len, power: Math.min(1, len / MAX_DRAG) };
+    state.aim = { dx: -wx / len, dy: -wy / len, power: Math.min(1, len / MAX_DRAG) };
   });
   function endDrag(e, cancel) {
     if (!drag || drag.id !== e.pointerId) return;
@@ -357,7 +339,6 @@
   };
 
   R.resize();
-  setControlMode(state.controlMode);
   showTitle();
   updateHud();
   requestAnimationFrame(frame);
