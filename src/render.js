@@ -574,42 +574,61 @@ class Renderer {
         ctx.fillStyle = 'rgba(160,255,120,0.7)'; ctx.beginPath(); ctx.arc(bx, by, s * 0.07, 0, TAU); ctx.fill();
       }
     } else if (ob.style === 'snake') {
-      // Schlange: Körperglieder von Schwanz zu Kopf entlang einer laufenden Welle, Kopf in Bewegungsrichtung
-      const n = 11, len = ob.w * 0.95, dir = ob.dir, amp = ob.h * 0.28;
-      const seg = [];
-      for (let i = 0; i < n; i++) {
-        const u = i / (n - 1);
-        const x = ob.x - dir * len / 2 + dir * u * len;
-        const y = ob.y + Math.sin(t * 7 - u * 6) * amp * (0.35 + 0.65 * (1 - u));
-        const r = i === n - 1 ? 0.34 : 0.13 + 0.2 * Math.sin(Math.pow(u, 0.7) * Math.PI);
-        seg.push({ x, y, r, u });
+      // Schlange: glatter, durchgehender Körper entlang einer laufenden Welle, flacher Kopf in Bewegungsrichtung
+      const len = ob.w * 0.95, dir = ob.dir, amp = ob.h * 0.28;
+      const bodyEnd = 0.84, n = 46;
+      const pt = u => ({ x: ob.x - dir * len / 2 + dir * u * len, y: ob.y + Math.sin(t * 7 - u * 6) * amp * (0.35 + 0.65 * (1 - u)) });
+      const rad = u => 0.07 + 0.2 * Math.sin(Math.pow(Math.min(1, u / bodyEnd), 0.6) * Math.PI * 0.85 + 0.15);
+      // Bodenschatten
+      ctx.fillStyle = 'rgba(0,0,0,0.2)';
+      for (let i = 0; i <= n; i++) { const u = (i / n) * bodyEnd, p = pt(u); this.isoEllipse(ctx, p.x, p.y, 0, rad(u) * 1.1, 'rgba(0,0,0,0.12)'); }
+      // Körper: dicht gesetzte Scheiben mit seitlichem Verlauf ergeben einen runden Schlauch
+      for (let i = 0; i <= n; i++) {
+        const u = (i / n) * bodyEnd, p = pt(u), r = rad(u), [sx, sy] = this.proj(p.x, p.y, r), R = r * s;
+        const g = ctx.createRadialGradient(sx - R * 0.3, sy - R * 0.45, R * 0.1, sx, sy, R);
+        g.addColorStop(0, '#a8ec72'); g.addColorStop(0.45, '#4fae45'); g.addColorStop(0.85, '#256f2b'); g.addColorStop(1, '#143d18');
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(sx, sy, R, 0, TAU); ctx.fill();
       }
-      for (const g of seg) this.isoEllipse(ctx, g.x, g.y, 0, g.r * 1.05, 'rgba(0,0,0,0.22)');
-      seg.forEach((g, i) => {
-        const [sx, sy] = this.proj(g.x, g.y, g.r);
-        const R = g.r * s;
-        const grad = ctx.createRadialGradient(sx - R * 0.35, sy - R * 0.4, R * 0.15, sx, sy, R);
-        const stripe = i % 2 === 0;
-        grad.addColorStop(0, stripe ? '#9be36a' : '#7fd25a'); grad.addColorStop(0.55, stripe ? '#3f9a3a' : '#2f8a34'); grad.addColorStop(1, '#173f1c');
-        ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(sx, sy, R, 0, TAU); ctx.fill();
-        if (i < n - 1 && i % 2 === 1) { // Rautenmuster auf dem Rücken
-          ctx.fillStyle = 'rgba(20,50,20,0.55)'; ctx.beginPath();
-          ctx.moveTo(sx, sy - R * 0.75); ctx.lineTo(sx + R * 0.35, sy - R * 0.3); ctx.lineTo(sx, sy + R * 0.15); ctx.lineTo(sx - R * 0.35, sy - R * 0.3); ctx.closePath(); ctx.fill();
-        }
-      });
-      // Kopf: Augen und züngelnde Zunge
-      const h = seg[n - 1], [hx, hy] = this.proj(h.x, h.y, h.r), R = h.r * s;
-      const fx = dir, [ex, ey] = this.proj(h.x + fx * 0.05, h.y - 0.16, h.r + 0.12), [ex2, ey2] = this.proj(h.x + fx * 0.05, h.y + 0.16, h.r + 0.12);
-      for (const [px, py] of [[ex, ey], [ex2, ey2]]) {
-        ctx.fillStyle = '#ffd12a'; ctx.beginPath(); ctx.arc(px, py, R * 0.24, 0, TAU); ctx.fill();
-        ctx.fillStyle = '#111'; ctx.beginPath(); ctx.ellipse(px, py, R * 0.07, R * 0.2, 0, 0, TAU); ctx.fill();
+      // Rückenzeichnung: dunkles Zickzack-Band
+      ctx.strokeStyle = 'rgba(18,60,24,0.75)'; ctx.lineWidth = Math.max(1.5, s * 0.07); ctx.lineJoin = 'round';
+      ctx.beginPath();
+      for (let i = 0; i <= 22; i++) {
+        const u = 0.06 + (i / 22) * (bodyEnd - 0.1), p = pt(u), r = rad(u), side = (i % 2 ? 1 : -1) * r * 0.45;
+        const [zx, zy] = this.proj(p.x, p.y + side, r * 1.55);
+        i ? ctx.lineTo(zx, zy) : ctx.moveTo(zx, zy);
       }
+      ctx.stroke();
+      // Kopf: flache, vorne spitz zulaufende Form
+      const hp = pt(bodyEnd), hr = 0.3, hz = 0.24;
+      const head = [];
+      for (let i = 0; i < 14; i++) {
+        const a = (i / 14) * TAU, cx = Math.cos(a), sy2 = Math.sin(a);
+        const lenF = cx > 0 ? 0.62 : 0.34, wid = 0.28 * (cx > 0 ? (1 - 0.45 * cx) : 1);
+        head.push([hp.x + dir * cx * lenF, hp.y + sy2 * wid]);
+      }
+      // Kopfschatten und -körper (unten dunkler, oben Glanz)
+      this.pathPoly(ctx, head, 0); ctx.fillStyle = 'rgba(0,0,0,0.14)'; ctx.fill();
+      this.pathPoly(ctx, head, hz); ctx.fillStyle = '#2b7a30'; ctx.fill();
+      const [gx, gy] = this.proj(hp.x + dir * 0.1, hp.y, hz), [tx, ty] = this.proj(hp.x + dir * 0.15, hp.y, hz + 0.12);
+      const hg = ctx.createRadialGradient(tx - s * 0.1, ty - s * 0.1, s * 0.05, gx, gy, s * 0.6);
+      hg.addColorStop(0, '#a8ec72'); hg.addColorStop(0.5, '#4fae45'); hg.addColorStop(1, '#256f2b');
+      this.pathPoly(ctx, head, hz + 0.06); ctx.fillStyle = hg; ctx.fill();
+      // Augen seitlich oben, mit Schlitzpupille
+      for (const side of [-1, 1]) {
+        const [ex, ey] = this.proj(hp.x + dir * 0.12, hp.y + side * 0.17, hz + 0.16);
+        ctx.fillStyle = '#ffd12a'; ctx.beginPath(); ctx.ellipse(ex, ey, s * 0.085, s * 0.06, 0, 0, TAU); ctx.fill();
+        ctx.fillStyle = '#111'; ctx.beginPath(); ctx.ellipse(ex, ey, s * 0.022, s * 0.055, 0, 0, TAU); ctx.fill();
+      }
+      // Nasenlöcher
+      ctx.fillStyle = '#143d18';
+      for (const side of [-1, 1]) { const [nx, ny] = this.proj(hp.x + dir * 0.5, hp.y + side * 0.07, hz + 0.1); ctx.beginPath(); ctx.arc(nx, ny, s * 0.02, 0, TAU); ctx.fill(); }
+      // Zunge schnellt vor
       const flick = (t * 2.5) % 1;
       if (flick < 0.35) {
-        const L = 0.45 * Math.sin((flick / 0.35) * Math.PI);
-        const [t0x, t0y] = this.proj(h.x + fx * h.r, h.y, h.r * 0.8), [t1x, t1y] = this.proj(h.x + fx * (h.r + L), h.y, h.r * 0.75);
-        const [taX, taY] = this.proj(h.x + fx * (h.r + L + 0.12), h.y - 0.08, h.r * 0.75), [tbX, tbY] = this.proj(h.x + fx * (h.r + L + 0.12), h.y + 0.08, h.r * 0.75);
-        ctx.strokeStyle = '#e0304a'; ctx.lineWidth = Math.max(1.5, s * 0.05); ctx.lineCap = 'round';
+        const L = 0.5 * Math.sin((flick / 0.35) * Math.PI);
+        const [t0x, t0y] = this.proj(hp.x + dir * 0.6, hp.y, hz + 0.02), [t1x, t1y] = this.proj(hp.x + dir * (0.6 + L), hp.y, hz);
+        const [taX, taY] = this.proj(hp.x + dir * (0.72 + L), hp.y - 0.08, hz), [tbX, tbY] = this.proj(hp.x + dir * (0.72 + L), hp.y + 0.08, hz);
+        ctx.strokeStyle = '#e0304a'; ctx.lineWidth = Math.max(1.5, s * 0.045); ctx.lineCap = 'round';
         ctx.beginPath(); ctx.moveTo(t0x, t0y); ctx.lineTo(t1x, t1y); ctx.lineTo(taX, taY); ctx.moveTo(t1x, t1y); ctx.lineTo(tbX, tbY); ctx.stroke();
       }
     } else if (ob.style === 'knight') {
