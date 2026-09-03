@@ -573,6 +573,45 @@ class Renderer {
         const a = t * 4 + i * 2.1, [bx, by] = this.proj(ob.x + Math.cos(a) * 0.2, ob.y + Math.sin(a) * 0.2, 0.9 + ((t * 0.8 + i * 0.33) % 1) * 0.6);
         ctx.fillStyle = 'rgba(160,255,120,0.7)'; ctx.beginPath(); ctx.arc(bx, by, s * 0.07, 0, TAU); ctx.fill();
       }
+    } else if (ob.style === 'snake') {
+      // Schlange: Körperglieder von Schwanz zu Kopf entlang einer laufenden Welle, Kopf in Bewegungsrichtung
+      const n = 11, len = ob.w * 0.95, dir = ob.dir, amp = ob.h * 0.28;
+      const seg = [];
+      for (let i = 0; i < n; i++) {
+        const u = i / (n - 1);
+        const x = ob.x - dir * len / 2 + dir * u * len;
+        const y = ob.y + Math.sin(t * 7 - u * 6) * amp * (0.35 + 0.65 * (1 - u));
+        const r = i === n - 1 ? 0.34 : 0.13 + 0.2 * Math.sin(Math.pow(u, 0.7) * Math.PI);
+        seg.push({ x, y, r, u });
+      }
+      for (const g of seg) this.isoEllipse(ctx, g.x, g.y, 0, g.r * 1.05, 'rgba(0,0,0,0.22)');
+      seg.forEach((g, i) => {
+        const [sx, sy] = this.proj(g.x, g.y, g.r);
+        const R = g.r * s;
+        const grad = ctx.createRadialGradient(sx - R * 0.35, sy - R * 0.4, R * 0.15, sx, sy, R);
+        const stripe = i % 2 === 0;
+        grad.addColorStop(0, stripe ? '#9be36a' : '#7fd25a'); grad.addColorStop(0.55, stripe ? '#3f9a3a' : '#2f8a34'); grad.addColorStop(1, '#173f1c');
+        ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(sx, sy, R, 0, TAU); ctx.fill();
+        if (i < n - 1 && i % 2 === 1) { // Rautenmuster auf dem Rücken
+          ctx.fillStyle = 'rgba(20,50,20,0.55)'; ctx.beginPath();
+          ctx.moveTo(sx, sy - R * 0.75); ctx.lineTo(sx + R * 0.35, sy - R * 0.3); ctx.lineTo(sx, sy + R * 0.15); ctx.lineTo(sx - R * 0.35, sy - R * 0.3); ctx.closePath(); ctx.fill();
+        }
+      });
+      // Kopf: Augen und züngelnde Zunge
+      const h = seg[n - 1], [hx, hy] = this.proj(h.x, h.y, h.r), R = h.r * s;
+      const fx = dir, [ex, ey] = this.proj(h.x + fx * 0.05, h.y - 0.16, h.r + 0.12), [ex2, ey2] = this.proj(h.x + fx * 0.05, h.y + 0.16, h.r + 0.12);
+      for (const [px, py] of [[ex, ey], [ex2, ey2]]) {
+        ctx.fillStyle = '#ffd12a'; ctx.beginPath(); ctx.arc(px, py, R * 0.24, 0, TAU); ctx.fill();
+        ctx.fillStyle = '#111'; ctx.beginPath(); ctx.ellipse(px, py, R * 0.07, R * 0.2, 0, 0, TAU); ctx.fill();
+      }
+      const flick = (t * 2.5) % 1;
+      if (flick < 0.35) {
+        const L = 0.45 * Math.sin((flick / 0.35) * Math.PI);
+        const [t0x, t0y] = this.proj(h.x + fx * h.r, h.y, h.r * 0.8), [t1x, t1y] = this.proj(h.x + fx * (h.r + L), h.y, h.r * 0.75);
+        const [taX, taY] = this.proj(h.x + fx * (h.r + L + 0.12), h.y - 0.08, h.r * 0.75), [tbX, tbY] = this.proj(h.x + fx * (h.r + L + 0.12), h.y + 0.08, h.r * 0.75);
+        ctx.strokeStyle = '#e0304a'; ctx.lineWidth = Math.max(1.5, s * 0.05); ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(t0x, t0y); ctx.lineTo(t1x, t1y); ctx.lineTo(taX, taY); ctx.moveTo(t1x, t1y); ctx.lineTo(tbX, tbY); ctx.stroke();
+      }
     } else if (ob.style === 'knight') {
       const body = this.circlePoly(ob.x, ob.y, ob.w * 0.42, 8);
       this.prism(ctx, body, 0.05, 0.7, '#d9dde6', '#7f8694', { outline: '#4a505c' });

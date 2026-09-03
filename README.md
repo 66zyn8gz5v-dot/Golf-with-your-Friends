@@ -27,7 +27,7 @@ Das Modus-Menü ist der Platz, an dem später weitere Welten eingehängt werden.
   `M` Übersicht der ganzen Bahn, `Q`/`E` drehen, `+`/`-` oder Mausrad zoomen.
 - 1–4 Spieler im Hotseat-Modus: Jeder spielt die Bahn nacheinander zu Ende.
 - Wasser, Lava und Abgrund: Ball zurück zur letzten Position, +1 Strafschlag.
-- Schlaglimit: 15 Schläge pro Bahn, lange Bahnen erlauben mehr (Burgberg 25, Hexenturm und Zwergenschmiede 20, Wolkenburg und Drachenhöhle 18). Danach wird die Bahn mit dem Limit gewertet.
+- Schlaglimit: 15 Schläge pro Bahn, lange Bahnen erlauben mehr (Burgberg 25, Hexenturm und Zwergenschmiede 20, Wolkenburg und Schlangenhöhle 18). Danach wird die Bahn mit dem Limit gewertet.
 
 ## Die 9 Bahnen
 
@@ -37,7 +37,7 @@ Das Modus-Menü ist der Platz, an dem später weitere Welten eingehängt werden.
 | 2 | Pilzhain | 3 | federnde Riesenpilze, Sandkuhlen |
 | 3 | Zwergenschmiede | 4 | zwei Lavaschluchten, zwei Loren als Fähren mit unterschiedlichem Takt: rechtzeitig hineinrollen, sie setzen den Ball drüben ab |
 | 4 | Zauberwald | 3 | Portale zwischen Inseln, ein Fallen-Portal |
-| 5 | Drachenhöhle | 4 | Sand, Lavabecken, Windfeld, patrouillierender Drache |
+| 5 | Schlangenhöhle | 4 | Sand, Lavabecken, Sprungschanze über die Mauer, patrouillierende Riesenschlange vor dem Loch |
 | 6 | Eisgrotte | 3 | spiegelglattes Eis, Wassertümpel, rotierender Kristallstern |
 | 7 | Wolkenburg | 4 | schwebende Inseln, breite Wege mit schrägen Banden in den Kurven, Rückenwind, Fallgatter |
 | 8 | Hexenturm | 5 | Lava, Eis, Fallgatter, rotierender Besen, wandernde Kessel, Portal-Abkürzung, Aufwind |
