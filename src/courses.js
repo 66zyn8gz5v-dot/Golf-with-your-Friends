@@ -199,10 +199,10 @@ const COURSES = [
     ],
     obstacles: [
       // schräge Banden an den Außenecken jeder Kurve
-      { type: 'wall', x0: 2, y0: 6, x1: 5, y1: 9 },
-      { type: 'wall', x0: 9, y0: 6, x1: 12, y1: 9 },
-      { type: 'wall', x0: 9, y0: 11, x1: 12, y1: 14 },
-      { type: 'wall', x0: 17, y0: 14, x1: 20, y1: 11 },
+      { type: 'wall', x0: 2, y0: 7, x1: 4, y1: 9 },
+      { type: 'wall', x0: 10, y0: 6, x1: 12, y1: 8 },
+      { type: 'wall', x0: 9, y0: 12, x1: 11, y1: 14 },
+      { type: 'wall', x0: 18, y0: 14, x1: 20, y1: 12 },
       { type: 'gate', x: 20.5, y: 5.2, w: 3, h: 0.3, period: 6, open: 0.6, phase: 0, axis: 'x' },
       { type: 'boost', x: 12, y: 11, w: 4, h: 3, angle: 0, acc: 12, max: 9 },
       { type: 'field', x: 17, y: 6, w: 4, h: 3, fx: -1.5, fy: 0, style: 'wind' },
