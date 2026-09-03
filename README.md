@@ -27,7 +27,7 @@ npx serve .          # oder: python3 -m http.server 8080
 |---|------|-----|-------------|
 | 1 | Elfenwiese | 3 | Steinpfeiler, Hecken |
 | 2 | Pilzhain | 3 | federnde Riesenpilze, Sandkuhlen |
-| 3 | Zwergenschmiede | 4 | breiter Lavafluss, eine Lore als Fähre: rechtzeitig hineinrollen, sie setzt den Ball drüben ab |
+| 3 | Zwergenschmiede | 4 | zwei Lavaschluchten, zwei Loren als Fähren mit unterschiedlichem Takt: rechtzeitig hineinrollen, sie setzen den Ball drüben ab |
 | 4 | Zauberwald | 3 | Portale zwischen Inseln, ein Fallen-Portal |
 | 5 | Drachenhöhle | 4 | Sand, Lavabecken, Windfeld, patrouillierender Drache |
 | 6 | Eisgrotte | 3 | spiegelglattes Eis, Wassertümpel, rotierender Kristallstern |
