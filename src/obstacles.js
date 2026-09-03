@@ -190,8 +190,14 @@ class Windmill {
 
 /* Geländer: gerades Mauerstück von (x0,y0) nach (x1,y1) */
 class Wall {
-  constructor(d) { Object.assign(this, { t: 0.22, h: 0.5 }, d); this.type = 'wall'; }
-  segments(out) { out.push({ ax: this.x0, ay: this.y0, bx: this.x1, by: this.y1, e: 0.72, kind: 'wall' }); }
+  constructor(d) {
+    Object.assign(this, { t: 0.22, h: 0.5, extend: 0.3 }, d); this.type = 'wall';
+    // Enden etwas verlängern, damit das Mauerstück bündig in angrenzende Wände läuft
+    const L = Math.hypot(this.x1 - this.x0, this.y1 - this.y0) || 1, ux = (this.x1 - this.x0) / L, uy = (this.y1 - this.y0) / L;
+    this.ex0 = this.x0 - ux * this.extend; this.ey0 = this.y0 - uy * this.extend;
+    this.ex1 = this.x1 + ux * this.extend; this.ey1 = this.y1 + uy * this.extend;
+  }
+  segments(out) { out.push({ ax: this.ex0, ay: this.ey0, bx: this.ex1, by: this.ey1, e: 0.72, kind: 'wall' }); }
 }
 
 /* Fähre: pendelt zwischen zwei Stationen, wartet dort, nimmt den Ball mit und setzt ihn
