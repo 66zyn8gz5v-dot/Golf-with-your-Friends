@@ -61,6 +61,6 @@ src/obstacles.js  bewegliche und statische Hindernisse
 src/physics.js    Ballphysik und Kollision
 src/render.js     isometrische Darstellung
 src/sfx.js        Klangeffekte (WebAudio)
-src/title.js      animierte Startbildschirm-Szene
+src/title.js      animierte Startbildschirm-Szene mit Tag-Nacht-Wechsel
 src/main.js       Spielablauf, Eingabe, Punkte
 ```
