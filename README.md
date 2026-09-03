@@ -46,7 +46,7 @@ o  Fairway ohne Randmauer (Klippe)
 T  Abschlag            H  Loch
 ```
 
-Hindernis-Typen: `bumper`, `mover`, `ferry`, `rotor`, `gate`, `portal`, `boost`, `field`, `rail`.
+Hindernis-Typen: `bumper`, `mover`, `ferry`, `rotor`, `gate`, `portal`, `boost`, `field`, `rail`, `wall`.
 Farbwelten stehen in `src/themes.js`. Mit `node tools/validate.mjs` lässt sich prüfen, ob jede Bahn lösbar ist.
 
 ## Projektstruktur

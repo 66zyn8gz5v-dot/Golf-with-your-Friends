@@ -398,7 +398,16 @@ class Renderer {
 
   pushObstacle(items, ctx, ob, t) {
     const th = this.theme;
-    if (ob.type === 'mover' || ob.type === 'ferry') {
+    if (ob.type === 'wall') {
+      const L = Math.hypot(ob.x1 - ob.x0, ob.y1 - ob.y0) || 1, ux = (ob.x1 - ob.x0) / L, uy = (ob.y1 - ob.y0) / L;
+      const nx = -uy * ob.t / 2, ny = ux * ob.t / 2, n = Math.max(1, Math.ceil(L / 3));
+      for (let i = 0; i < n; i++) {
+        const a = i / n, b = (i + 1) / n;
+        const p0 = [ob.x0 + (ob.x1 - ob.x0) * a, ob.y0 + (ob.y1 - ob.y0) * a], p1 = [ob.x0 + (ob.x1 - ob.x0) * b, ob.y0 + (ob.y1 - ob.y0) * b];
+        const poly = [[p0[0] + nx, p0[1] + ny], [p1[0] + nx, p1[1] + ny], [p1[0] - nx, p1[1] - ny], [p0[0] - nx, p0[1] - ny]];
+        items.push({ x: (p0[0] + p1[0]) / 2, y: (p0[1] + p1[1]) / 2, draw: () => this.prism(ctx, poly, 0, ob.h, th.wall.top, th.wall.side, { outline: shade(th.wall.side, 0.75) }) });
+      }
+    } else if (ob.type === 'mover' || ob.type === 'ferry') {
       items.push({ x: ob.x, y: ob.y, bias: 0.3, draw: () => this.drawMover(ctx, ob, t) });
     } else if (ob.type === 'rotor') {
       const hub = this.circlePoly(ob.x, ob.y, ob.hubR, 8);

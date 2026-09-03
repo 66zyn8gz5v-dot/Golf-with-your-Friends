@@ -125,6 +125,12 @@ class Field {
 
 class Rail { constructor(d) { Object.assign(this, d); this.type = 'rail'; } }
 
+/* Geländer: gerades Mauerstück von (x0,y0) nach (x1,y1) */
+class Wall {
+  constructor(d) { Object.assign(this, { t: 0.22, h: 0.5 }, d); this.type = 'wall'; }
+  segments(out) { out.push({ ax: this.x0, ay: this.y0, bx: this.x1, by: this.y1, e: 0.72, kind: 'wall' }); }
+}
+
 /* Fähre: pendelt zwischen zwei Stationen, wartet dort, nimmt den Ball mit und setzt ihn
    an der nächsten Station wieder ab. Keine Kollision – der Ball rollt hinein. */
 class Ferry {
@@ -185,6 +191,7 @@ function createObstacles(defs) {
       case 'field': out.push(new Field(d)); break;
       case 'rail': out.push(new Rail(d)); break;
       case 'ferry': out.push(new Ferry(d)); break;
+      case 'wall': out.push(new Wall(d)); break;
       case 'portal': {
         const a = new Portal({ x: d.x, y: d.y, tx: d.tx, ty: d.ty, color: d.color, entrance: true });
         const b = new Portal({ x: d.tx, y: d.ty, tx: d.x, ty: d.y, color: d.color, entrance: !!d.twoWay, exit: true });
