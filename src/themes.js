@@ -1,6 +1,7 @@
 /* Farbpaletten und Deko-Sets für die Fantasy-Welten. */
 const THEMES = {
   meadow: {
+    atmo: 'pollen',
     sky: ['#7fc9ff', '#d8f1ff'], ground: '#4a8a3c', groundEdge: '#2f5c27',
     floor: ['#7cc94f', '#70bd45'], sand: '#e9d68f', ice: '#c8ecff', snow: '#f1f7ff',
     water: '#3f8fd9', lava: '#ff5a1f',
@@ -12,6 +13,7 @@ const THEMES = {
     autoDecor: ['tree', 'tree', 'tree', 'flowerbush', 'rock', 'lantern', 'pine'],
   },
   mushroom: {
+    atmo: 'spores',
     sky: ['#3a2a63', '#6e4a9c'], ground: '#4f3d72', groundEdge: '#2e2245',
     floor: ['#69b391', '#5fa886'], sand: '#d9c48f', ice: '#c8ecff', snow: '#f1f7ff',
     water: '#3f6fd9', lava: '#ff5a1f',
@@ -23,6 +25,7 @@ const THEMES = {
     autoDecor: ['mushroom', 'mushroom', 'mushroomBig', 'tree', 'crystal', 'lantern'],
   },
   forge: {
+    atmo: 'embers',
     sky: ['#2a1410', '#5a2a1a'], ground: '#4a3a38', groundEdge: '#2a1f1e',
     floor: ['#8b8580', '#7f7974'], sand: '#c9b58a', ice: '#c8ecff', snow: '#f1f7ff',
     water: '#3f8fd9', lava: '#ff6a1f',
@@ -34,6 +37,7 @@ const THEMES = {
     autoDecor: ['anvil', 'rock', 'rock', 'stalagmite', 'brazier', 'crystalOrange'],
   },
   forest: {
+    atmo: 'fireflies',
     sky: ['#0b1a2a', '#1d3f4a'], ground: '#1f4a3a', groundEdge: '#0f2a20',
     floor: ['#4ea56e', '#469a65'], sand: '#d9c48f', ice: '#c8ecff', snow: '#f1f7ff',
     water: '#2f6fc9', lava: '#ff5a1f',
@@ -45,6 +49,7 @@ const THEMES = {
     autoDecor: ['pine', 'pine', 'pine', 'tree', 'crystal', 'lantern', 'mushroom'],
   },
   dragon: {
+    atmo: 'embers',
     sky: ['#1a0e0a', '#4a2a1a'], ground: '#5a4636', groundEdge: '#33271d',
     floor: ['#b8905a', '#ad8752'], sand: '#e6cf8e', ice: '#c8ecff', snow: '#f1f7ff',
     water: '#3f8fd9', lava: '#ff6a1f',
@@ -56,6 +61,7 @@ const THEMES = {
     autoDecor: ['stalagmite', 'stalagmite', 'bones', 'rock', 'brazier', 'crystalOrange', 'gold'],
   },
   ice: {
+    atmo: 'snow',
     sky: ['#0f1b3d', '#3b5f9c'], ground: '#5e7fb8', groundEdge: '#33497a',
     floor: ['#eaf4ff', '#dfeeff'], sand: '#d9c48f', ice: '#b9e3ff', snow: '#f1f7ff',
     water: '#2f6fd9', lava: '#ff5a1f',
@@ -67,6 +73,7 @@ const THEMES = {
     autoDecor: ['crystalBlue', 'crystalBlue', 'pineSnow', 'pineSnow', 'rockSnow', 'lantern'],
   },
   sky: {
+    atmo: 'none',
     sky: ['#7db8ff', '#ffe6f0'], ground: '#f6f9ff', groundEdge: '#c9d8f0',
     floor: ['#9be08a', '#8fd57f'], sand: '#f1e3a8', ice: '#c8ecff', snow: '#f1f7ff',
     water: '#5fb0ff', lava: '#ff5a1f',
@@ -78,6 +85,7 @@ const THEMES = {
     autoDecor: ['cloud', 'cloud', 'cloud', 'lantern', 'tree'],
   },
   witch: {
+    atmo: 'mist',
     sky: ['#120a1f', '#3a1f4d'], ground: '#2c2438', groundEdge: '#15111c',
     floor: ['#5f8a5a', '#557f50'], sand: '#cdb37f', ice: '#b9e3ff', snow: '#f1f7ff',
     water: '#3f5fd9', lava: '#ff5a1f',
@@ -89,6 +97,7 @@ const THEMES = {
     autoDecor: ['deadTree', 'deadTree', 'pumpkin', 'rock', 'lantern', 'crystal', 'cauldron'],
   },
   castle: {
+    atmo: 'pollen',
     sky: ['#5fa8f0', '#dff0ff'], ground: '#4b8a3c', groundEdge: '#2f5c27',
     floor: ['#7cc94f', '#70bd45'], sand: '#e9d68f', ice: '#c8ecff', snow: '#f1f7ff',
     water: '#3f8fd9', lava: '#ff5a1f',

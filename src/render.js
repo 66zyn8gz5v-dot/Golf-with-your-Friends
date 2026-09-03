@@ -225,6 +225,9 @@ class Renderer {
     }
     if (b) this.drawBall(ctx, b);
 
+    // Atmosphäre (dezent, über der Szene, unter den Effektpartikeln)
+    this.drawAtmosphere(ctx, lv.def.atmo || th.atmo || 'none', t);
+
     // Partikel
     for (const p of state.particles) {
       const [sx, sy] = this.proj(p.x, p.y, p.z);
@@ -232,6 +235,49 @@ class Renderer {
       ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(sx, sy, p.size * this.scale, 0, TAU); ctx.fill();
     }
     ctx.globalAlpha = 1;
+  }
+
+  /* Stimmungseffekte in Bildschirmkoordinaten: Nebel, Glühwürmchen, Funken, Schnee, Blütenstaub */
+  drawAtmosphere(ctx, kind, t) {
+    if (kind === 'none') return;
+    const w = this.w, h = this.h;
+    const hash = (i, k) => (Math.sin(i * 127.1 + k * 311.7) * 43758.5453) % 1 + (Math.sin(i * 127.1 + k * 311.7) * 43758.5453 < 0 ? 1 : 0);
+    if (kind === 'fog' || kind === 'mist') {
+      const n = kind === 'fog' ? 10 : 6, a = kind === 'fog' ? 0.13 : 0.08;
+      for (let i = 0; i < n; i++) {
+        const sp = 8 + hash(i, 1) * 10, x = ((hash(i, 2) * (w + 600) + t * sp) % (w + 600)) - 300;
+        const y = h * (0.35 + hash(i, 3) * 0.6) + Math.sin(t * 0.3 + i) * 12;
+        const rx = w * (0.25 + hash(i, 4) * 0.35), ry = h * (0.04 + hash(i, 5) * 0.05);
+        const g = ctx.createRadialGradient(x, y, 0, x, y, rx);
+        g.addColorStop(0, `rgba(225,235,240,${a})`); g.addColorStop(1, 'rgba(225,235,240,0)');
+        ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, TAU); ctx.fill();
+      }
+    } else if (kind === 'fireflies' || kind === 'spores') {
+      const col = kind === 'fireflies' ? '255,240,150' : '230,180,255', n = 28;
+      for (let i = 0; i < n; i++) {
+        const x = (hash(i, 1) * w + Math.sin(t * 0.4 + i) * 30) % w, y = (hash(i, 2) * h + Math.cos(t * 0.3 + i * 2) * 20 + (kind === 'spores' ? (t * 6 + i * 40) % h : 0)) % h;
+        const a = 0.25 + 0.55 * Math.abs(Math.sin(t * 1.5 + i * 1.7));
+        ctx.fillStyle = `rgba(${col},${a * 0.25})`; ctx.beginPath(); ctx.arc(x, y, 6, 0, TAU); ctx.fill();
+        ctx.fillStyle = `rgba(${col},${a})`; ctx.beginPath(); ctx.arc(x, y, 1.8, 0, TAU); ctx.fill();
+      }
+    } else if (kind === 'embers') {
+      for (let i = 0; i < 26; i++) {
+        const life = ((t * (0.12 + hash(i, 1) * 0.1) + hash(i, 2)) % 1);
+        const x = hash(i, 3) * w + Math.sin(t * 0.8 + i) * 25, y = h - life * h * 0.9;
+        ctx.fillStyle = `rgba(255,${120 + hash(i, 4) * 80 | 0},40,${(1 - life) * 0.7})`;
+        ctx.beginPath(); ctx.arc(x, y, 1.5 + hash(i, 5) * 1.5, 0, TAU); ctx.fill();
+      }
+    } else if (kind === 'snow') {
+      for (let i = 0; i < 60; i++) {
+        const sp = 18 + hash(i, 1) * 22, x = (hash(i, 2) * w + Math.sin(t * 0.7 + i) * 18 + t * 6) % w, y = (hash(i, 3) * h + t * sp) % h;
+        ctx.fillStyle = `rgba(255,255,255,${0.35 + hash(i, 4) * 0.45})`; ctx.beginPath(); ctx.arc(x, y, 1.2 + hash(i, 5) * 1.8, 0, TAU); ctx.fill();
+      }
+    } else if (kind === 'pollen') {
+      for (let i = 0; i < 30; i++) {
+        const x = (hash(i, 1) * w + t * (6 + hash(i, 2) * 8) + Math.sin(t * 0.5 + i) * 15) % w, y = (hash(i, 3) * h + Math.sin(t * 0.6 + i * 1.3) * 25) % h;
+        ctx.fillStyle = `rgba(255,250,200,${0.25 + 0.35 * Math.abs(Math.sin(t + i))})`; ctx.beginPath(); ctx.arc(x, y, 1.5, 0, TAU); ctx.fill();
+      }
+    }
   }
 
   drawStars(ctx, t) {
@@ -520,8 +566,10 @@ class Renderer {
       ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.lineTo(apex[0], apex[1]); ctx.closePath();
       ctx.fillStyle = i % 2 ? '#8e5a34' : '#6e4224'; ctx.fill(); ctx.strokeStyle = '#3a2214'; ctx.lineWidth = 0.8; ctx.stroke();
     }
-    // Türbögen an beiden Seiten des Durchgangs
-    for (const side of [-1, 1]) {
+    // Türbogen nur auf der Seite, die zur Kamera zeigt (kein Blick durch das Gebäude)
+    const faceN = ax ? [0, 1] : [1, 0];
+    const camSide = (faceN[0] * this.cam.sin + faceN[1] * this.cam.cos) > 0 ? 1 : -1;
+    for (const side of [camSide]) {
       const cx = ax ? ob.x : ob.x + side * dd, cy = ax ? ob.y + side * dd : ob.y;
       const [dx, dy] = this.proj(cx, cy, 0), [tx, ty] = this.proj(cx, cy, 0.9);
       ctx.fillStyle = ob.blocked ? '#5a2a20' : '#1a120e';

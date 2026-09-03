@@ -39,10 +39,14 @@ const PRO_COURSES = [
       '........................',
     ],
     obstacles: [
-      { type: 'rotor', x: 9.5, y: 5, blades: 1, len: 1.3, thick: 0.14, hubR: 0.25, style: 'log', swing: { amp: 1.1, speed: 2.2 }, phase: Math.PI / 2 },
-      { type: 'windmill', x: 15.5, y: 5, axis: 'y', w: 2, depth: 1.1, gap: 0.8, speed: 1.4 },
+      // Geländer am Damm zwischen den Tümpeln
+      { type: 'wall', x0: 8, y0: 4, x1: 12, y1: 4 }, { type: 'wall', x0: 8, y0: 6, x1: 12, y1: 6 },
+      { type: 'wall', x0: 6, y0: 4, x1: 6, y1: 6 }, { type: 'wall', x0: 14, y0: 4, x1: 16, y1: 4 },
+      { type: 'rotor', x: 9.5, y: 5, blades: 1, len: 1.0, thick: 0.14, hubR: 0.22, style: 'log', swing: { amp: 0.9, speed: 1.7 }, phase: Math.PI / 2 },
+      { type: 'windmill', x: 15.5, y: 5, axis: 'y', w: 2, depth: 1.1, gap: 0.85, speed: 1.2 },
       { type: 'bumper', x: 14.5, y: 7.5, r: 0.4, style: 'mushroom' },
     ],
+    atmo: 'fog',
     decor: [{ t: 'tree', x: 11, y: 4.2, s: 1.3, glow: true }, { t: 'crystal', x: 20, y: 3 }],
     autoDecor: { density: 0.5, seed: 103 },
   },
@@ -170,6 +174,7 @@ const PRO_COURSES = [
     ],
     decor: [{ t: 'tower', x: 9.5, y: 2.5, s: 2, roof: '#2a1a3a', witch: true }, { t: 'cauldron', x: 20.5, y: 1 }, { t: 'pumpkin', x: 21, y: 7.5 }],
     autoDecor: { density: 0.4, seed: 131 },
+    atmo: 'mist',
   },
   {
     name: 'Königsburg', par: 5, theme: 'castle', maxStrokes: 25,
