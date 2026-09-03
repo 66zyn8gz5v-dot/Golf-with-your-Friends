@@ -124,7 +124,7 @@ const COURSES = [
     autoDecor: { density: 0.55, seed: 41 },
   },
   {
-    name: 'Drachenhöhle', par: 4, theme: 'dragon', maxStrokes: 18,
+    name: 'Drachenhöhle', par: 4, theme: 'dragon', maxStrokes: 18, friction: { s: 32 }, // tiefer Wüstensand
     intro: 'Sandkuhlen, Lavabecken, eine Sprungschanze über die Mauer – und ein Drache, der vor dem Loch patrouilliert.',
     map: [
       '........................',

@@ -1,7 +1,7 @@
 /* Ballphysik: Reibung nach Untergrund, Kollision mit Segmenten (auch bewegten) und Kreisen. */
 const BALL_R = 0.3;
 const MAX_SPEED = 21;
-const FRICTION = { '#': 4.2, T: 4.2, H: 4.2, o: 4.2, s: 14, i: 0.75, w: 4, l: 4 };
+const FRICTION = { '#': 4.2, T: 4.2, H: 4.2, o: 4.2, s: 20, i: 0.75, w: 4, l: 4 }; // Bremsung je Untergrund, pro Bahn per friction überschreibbar
 
 function makeBall(x, y, color) {
   return { x, y, z: 0, vx: 0, vy: 0, vz: 0, portalCd: 0, rideCd: 0, rider: null, air: false, restX: x, restY: y, color, boosted: false };
@@ -82,7 +82,8 @@ function stepPhysics(level, ball, dt, t, allowForces) {
   const c = level.charAt(ball.x, ball.y);
   let sp = Math.hypot(ball.vx, ball.vy);
   if (sp > 0) {
-    const dec = (FRICTION[c] ?? 4) * dt;
+    const fr = level.def.friction && level.def.friction[c];
+    const dec = (fr ?? FRICTION[c] ?? 4) * dt;
     let ns = Math.max(0, sp - dec) * (1 - 0.06 * dt);
     if (ns > MAX_SPEED) ns = MAX_SPEED;
     ball.vx *= ns / sp; ball.vy *= ns / sp;

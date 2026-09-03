@@ -54,6 +54,8 @@ o  Fairway ohne Randmauer (Klippe)
 T  Abschlag            H  Loch
 ```
 
+Pro Bahn lässt sich die Bremsung eines Untergrunds überschreiben, z. B. `friction: { s: 32 }` für besonders tiefen Sand.
+
 Hindernis-Typen: `bumper`, `mover`, `ferry`, `rotor`, `gate`, `portal`, `boost`, `field`, `ramp`, `rail`, `wall`.
 Farbwelten stehen in `src/themes.js`. Mit `node tools/validate.mjs` lässt sich prüfen, ob jede Bahn lösbar ist.
 
