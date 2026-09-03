@@ -88,4 +88,15 @@ const THEMES = {
     accent: '#a6ff5e', flag: '#a6ff5e', stars: true,
     autoDecor: ['deadTree', 'deadTree', 'pumpkin', 'rock', 'lantern', 'crystal', 'cauldron'],
   },
+  castle: {
+    sky: ['#5fa8f0', '#dff0ff'], ground: '#4b8a3c', groundEdge: '#2f5c27',
+    floor: ['#7cc94f', '#70bd45'], sand: '#e9d68f', ice: '#c8ecff', snow: '#f1f7ff',
+    water: '#3f8fd9', lava: '#ff5a1f',
+    wall: { top: '#c4beb3', side: '#7d776e', style: 'stone' },
+    block: { top: '#b8b2a8', side: '#6f6960' },
+    mover: { top: '#d9dde6', side: '#7f8694' },
+    rotor: { top: '#a37a3c', side: '#5c4520' },
+    accent: '#ffd166', flag: '#3d7ad6',
+    autoDecor: ['pine', 'pine', 'pine', 'tree', 'flowerbush', 'rock', 'lantern'],
+  },
 };

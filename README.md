@@ -1,6 +1,6 @@
 # Fantasy Golf – Golf with your Friends
 
-Ein Minigolf-Spiel in 2,5D (isometrische Darstellung) mit Fantasy-Welten, gebaut mit reinem HTML5-Canvas und JavaScript – ohne Build-Schritt und ohne Abhängigkeiten.
+Ein Minigolf-Spiel in 2,5D mit Fantasy-Welten, gebaut mit reinem HTML5-Canvas und JavaScript – ohne Build-Schritt und ohne Abhängigkeiten.
 
 ## Spielen
 
@@ -21,7 +21,7 @@ npx serve .          # oder: python3 -m http.server 8080
 - 1–4 Spieler im Hotseat-Modus: Jeder spielt die Bahn nacheinander zu Ende.
 - Wasser, Lava und Abgrund: Ball zurück zur letzten Position, +1 Strafschlag.
 
-## Die 8 Bahnen
+## Die 9 Bahnen
 
 | # | Bahn | Par | Hindernisse |
 |---|------|-----|-------------|
@@ -33,6 +33,7 @@ npx serve .          # oder: python3 -m http.server 8080
 | 6 | Eisgrotte | 3 | spiegelglattes Eis, Wassertümpel, rotierender Kristallstern |
 | 7 | Wolkenburg | 4 | schwebende Inseln, Brücken ohne Geländer (Abgrund!), Fallgatter, Beschleuniger, Gegenwind |
 | 8 | Hexenturm | 5 | Lava, Eis, Fallgatter, rotierender Besen, wandernde Kessel, Portal-Abkürzung, Aufwind |
+| 9 | Burgberg | 5 | Serpentinen mit Steigungen, patrouillierende Ritter, Felsbrocken, Burggraben mit Zugbrücke, die Burg vom Startbildschirm |
 
 ## Eigene Bahnen bauen
 
@@ -60,5 +61,6 @@ src/obstacles.js  bewegliche und statische Hindernisse
 src/physics.js    Ballphysik und Kollision
 src/render.js     isometrische Darstellung
 src/sfx.js        Klangeffekte (WebAudio)
+src/title.js      animierte Startbildschirm-Szene
 src/main.js       Spielablauf, Eingabe, Punkte
 ```

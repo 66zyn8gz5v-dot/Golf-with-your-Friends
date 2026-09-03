@@ -335,8 +335,9 @@ class Renderer {
       const isBoost = ob.type === 'boost';
       const dx = isBoost ? ob.dx : ob.fx, dy = isBoost ? ob.dy : ob.fy;
       const L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L;
-      this.fillPoly(ctx, poly, 0.005, isBoost ? 'rgba(255,220,90,0.28)' : 'rgba(200,230,255,0.22)', false);
-      ctx.strokeStyle = isBoost ? 'rgba(255,240,160,0.9)' : 'rgba(230,245,255,0.7)'; ctx.lineWidth = Math.max(1.5, s * 0.06);
+      const slope = ob.style === 'slope';
+      this.fillPoly(ctx, poly, 0.005, isBoost ? 'rgba(255,220,90,0.28)' : slope ? 'rgba(90,60,20,0.22)' : 'rgba(200,230,255,0.22)', false);
+      ctx.strokeStyle = isBoost ? 'rgba(255,240,160,0.9)' : slope ? 'rgba(80,50,20,0.75)' : 'rgba(230,245,255,0.7)'; ctx.lineWidth = Math.max(1.5, s * 0.06);
       const cx = ob.x + ob.w / 2, cy = ob.y + ob.h / 2;
       const span = Math.abs(ux) > Math.abs(uy) ? ob.w : ob.h;
       const n = Math.max(2, Math.round(span / 0.9));
@@ -428,6 +429,7 @@ class Renderer {
         const now = performance.now() / 1000, sq = Math.max(0, 1 - (now - ob.hitAt) * 4);
         const sc = 1 + sq * 0.25;
         if (ob.style === 'crystal') this.spriteCrystal(ctx, ob.x, ob.y, 0, ob.r * 1.6 * sc, '#cfeeff', '#5b90c6');
+        else if (ob.style === 'rock') { const [rx, ry] = this.proj(ob.x, ob.y, 0); this.spriteRock(ctx, rx, ry, this.scale * ob.r * 2.1 * sc, '#9a948a', '#5f5a52'); }
         else this.spriteMushroom(ctx, ob.x, ob.y, 0, ob.r * 1.7 * sc, '#e63b5a', true);
       } });
     } else if (ob.type === 'portal') {
@@ -480,6 +482,17 @@ class Renderer {
         const a = t * 4 + i * 2.1, [bx, by] = this.proj(ob.x + Math.cos(a) * 0.2, ob.y + Math.sin(a) * 0.2, 0.9 + ((t * 0.8 + i * 0.33) % 1) * 0.6);
         ctx.fillStyle = 'rgba(160,255,120,0.7)'; ctx.beginPath(); ctx.arc(bx, by, s * 0.07, 0, TAU); ctx.fill();
       }
+    } else if (ob.style === 'knight') {
+      const body = this.circlePoly(ob.x, ob.y, ob.w * 0.42, 8);
+      this.prism(ctx, body, 0.05, 0.7, '#d9dde6', '#7f8694', { outline: '#4a505c' });
+      const [hx, hy] = this.proj(ob.x, ob.y, 0.95);
+      ctx.fillStyle = '#c9ced8'; ctx.beginPath(); ctx.arc(hx, hy, s * 0.24, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#2a2f3a'; ctx.fillRect(hx - s * 0.16, hy - s * 0.02, s * 0.32, s * 0.07);
+      ctx.strokeStyle = '#d93b3b'; ctx.lineWidth = Math.max(2, s * 0.08); ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(hx, hy - s * 0.22); ctx.quadraticCurveTo(hx - s * 0.2, hy - s * 0.5, hx - s * 0.35 + Math.sin(t * 8) * s * 0.03, hy - s * 0.3); ctx.stroke();
+      const [shx, shy] = this.proj(ob.x + ob.dir * 0.05, ob.y + 0.35, 0.45);
+      ctx.fillStyle = '#d93b3b'; ctx.beginPath(); ctx.arc(shx, shy, s * 0.17, 0, TAU); ctx.fill();
+      ctx.strokeStyle = '#ffd166'; ctx.lineWidth = Math.max(1, s * 0.04); ctx.beginPath(); ctx.moveTo(shx - s * 0.1, shy); ctx.lineTo(shx + s * 0.1, shy); ctx.moveTo(shx, shy - s * 0.1); ctx.lineTo(shx, shy + s * 0.1); ctx.stroke();
     } else if (ob.style === 'cloud') {
       this.isoEllipse(ctx, ob.x, ob.y, 0.2, ob.w * 0.6, '#ffffff');
     } else { // Lore

@@ -58,7 +58,7 @@ html, body {
   background: rgba(20,16,40,0.72); border: 2px solid rgba(255,215,120,0.55); border-radius: 10px;
   min-width: 40px; height: 40px; padding: 0 10px; touch-action: manipulation;
 }
-.cbtn.sel { background: rgba(255,209,102,0.4); color: #ffe08a; }
+.cbtn.sel { background: #ffd166; color: #3a2200; border-color: #8a5a10; }
 .cbtn:active { transform: translateY(1px); }
 
 .screen {
@@ -66,6 +66,12 @@ html, body {
   background: rgba(8, 6, 20, 0.72); z-index: 10; backdrop-filter: blur(3px);
 }
 .screen.visible { display: flex; }
+.screen.title { background: transparent; backdrop-filter: none; align-items: flex-end; padding-bottom: 3vh; }
+.screen.title .panel { background: rgba(28, 22, 58, 0.86); padding: 18px 26px; max-height: 88vh; overflow-y: auto; max-width: min(92vw, 520px); }
+.screen.title .panel h1 { font-size: 34px; }
+.screen.title .panel .sub { margin-bottom: 10px; }
+.screen.title .legend { margin-top: 8px; font-size: 12px; line-height: 1.4; }
+body.title #hud, body.title #scoreboard, body.title #controls, body.title #hint { display: none; }
 .panel {
   background: linear-gradient(180deg, #2c2450, #171232);
   border: 3px solid #ffd166; border-radius: 18px; padding: 28px 36px; text-align: center;

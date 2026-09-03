@@ -1,4 +1,4 @@
-/* Spielablauf: Titel → 8 Bahnen (Hotseat für 1–4 Spieler) → Endergebnis. */
+/* Spielablauf: Titel → 9 Bahnen (Hotseat für 1–4 Spieler) → Endergebnis. */
 (() => {
   const STEP = 1 / 240;
   const MAX_SHOT = 19;       // Ballgeschwindigkeit bei voller Kraft
@@ -46,15 +46,15 @@
       return `<div class="row ${i === state.curPlayer ? 'active' : ''}"><span class="dot" style="background:${pl.color}"></span>${pl.name}<span class="score">${total}</span></div>`;
     }).join('');
   }
-  function overlay(html) { ui.overlay.innerHTML = html; ui.overlay.classList.add('visible'); }
-  function hideOverlay() { ui.overlay.classList.remove('visible'); ui.overlay.innerHTML = ''; }
+  function overlay(html, cls) { ui.overlay.innerHTML = html; ui.overlay.className = 'screen visible' + (cls ? ' ' + cls : ''); }
+  function hideOverlay() { ui.overlay.className = 'screen'; ui.overlay.innerHTML = ''; }
 
   function showTitle() {
     state.phase = 'title';
-    if (!state.level) loadLevelPreview(0);
+    document.body.classList.add('title');
     overlay(`<div class="panel">
       <h1>⛳ Fantasy Golf</h1>
-      <div class="sub">Golf with your Friends · 8 magische Bahnen in 2,5D</div>
+      <div class="sub">Golf with your Friends · ${COURSES.length} magische Bahnen in 2,5D</div>
       <p>Spieler:</p>
       <div id="pc">${[1, 2, 3, 4].map(n => `<span class="btn ghost small ${n === playerCount ? 'sel' : ''}" data-n="${n}">${n}</span>`).join('')}</div>
       <p style="margin-top:10px">Steuerung:</p>
@@ -64,12 +64,11 @@
       </div>
       <p style="margin-top:14px"><span class="btn" id="start">Los geht's!</span></p>
       <div class="legend">
-        <b>Schlagen:</b> Finger oder Maus auf dem Bild aufsetzen, ziehen und loslassen. Weiter ziehen = mehr Kraft.<br>
-        <b>In Schussrichtung:</b> Du ziehst dorthin, wo der Ball hin soll (auf dem Handy empfohlen).<br>
-        <b>Schleuder:</b> Du ziehst vom Ball weg, der Ball fliegt in die Gegenrichtung.<br>
-        Wasser, Lava und Abgrund kosten einen Strafschlag. Mehrere Spieler wechseln sich pro Bahn ab.
+        Aufsetzen, ziehen, loslassen. Weiter ziehen = mehr Kraft.
+        <b>In Schussrichtung</b>: ziehen, wohin der Ball soll (Handy). <b>Schleuder</b>: vom Ball wegziehen.
+        Wasser, Lava und Abgrund kosten einen Strafschlag.
       </div>
-    </div>`);
+    </div>`, 'title');
     ui.overlay.querySelectorAll('#pc .btn').forEach(b => b.addEventListener('click', () => {
       playerCount = +b.dataset.n;
       ui.overlay.querySelectorAll('#pc .btn').forEach(x => x.classList.toggle('sel', +x.dataset.n === playerCount));
@@ -113,6 +112,7 @@
   function startGame(n) {
     state.players = Array.from({ length: n }, (_, i) => ({ name: PLAYER_NAMES[i], color: PLAYER_COLORS[i], scores: [] }));
     state.holeIdx = 0;
+    document.body.classList.remove('title');
     hideOverlay();
     loadHole(0);
   }
@@ -124,7 +124,7 @@
     setCamMode('overview'); R.target = R.overviewTarget(); R.snapCamera();
   }
   function loadHole(i) {
-    state.holeIdx = i;
+    state.holeIdx = i; state.phase = 'loading';
     loadLevelPreview(i);
     state.particles = [];
     state.curPlayer = 0;
@@ -288,7 +288,7 @@
     updateParticles(dt);
     if (state.ball && state.ball.sunk) state.ball.sinkT += dt;
     updateCamera(dt);
-    R.drawFrame(state);
+    if (state.phase === 'title') TitleScene.draw(R.ctx, R.w, R.h, state.t); else R.drawFrame(state);
     ui.power.classList.toggle('visible', !!state.aim);
     if (state.aim) ui.powerFill.style.width = `${Math.round(state.aim.power * 100)}%`;
     requestAnimationFrame(frame);
