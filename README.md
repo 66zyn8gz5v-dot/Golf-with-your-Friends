@@ -31,7 +31,7 @@ npx serve .          # oder: python3 -m http.server 8080
 | 4 | Zauberwald | 3 | Portale zwischen Inseln, ein Fallen-Portal |
 | 5 | Drachenhöhle | 4 | Sand, Lavabecken, Windfeld, patrouillierender Drache |
 | 6 | Eisgrotte | 3 | spiegelglattes Eis, Wassertümpel, rotierender Kristallstern |
-| 7 | Wolkenburg | 4 | schwebende Inseln, Brücken ohne Geländer (Abgrund!), Fallgatter, Beschleuniger, Gegenwind |
+| 7 | Wolkenburg | 4 | schwebende Inseln, breite Brücken ohne Geländer (Abgrund!), Fallgatter, Beschleuniger, leichter Gegenwind |
 | 8 | Hexenturm | 5 | Lava, Eis, Fallgatter, rotierender Besen, wandernde Kessel, Portal-Abkürzung, Aufwind |
 | 9 | Burgberg | 5 | Serpentinen mit Steigungen, patrouillierende Ritter, Felsbrocken, Burggraben mit Zugbrücke, die Burg vom Startbildschirm |
 
