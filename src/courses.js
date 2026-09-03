@@ -203,8 +203,6 @@ const COURSES = [
       { type: 'wall', x0: 9, y0: 6, x1: 12, y1: 9 },
       { type: 'wall', x0: 9, y0: 11, x1: 12, y1: 14 },
       { type: 'wall', x0: 17, y0: 14, x1: 20, y1: 11 },
-      { type: 'wall', x0: 17, y0: 9, x1: 20, y1: 6 },
-      { type: 'wall', x0: 21, y0: 9, x1: 24, y1: 6 },
       { type: 'gate', x: 20.5, y: 5.2, w: 3, h: 0.3, period: 6, open: 0.6, phase: 0, axis: 'x' },
       { type: 'boost', x: 12, y: 11, w: 4, h: 3, angle: 0, acc: 12, max: 9 },
       { type: 'field', x: 17, y: 6, w: 4, h: 3, fx: -1.5, fy: 0, style: 'wind' },
