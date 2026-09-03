@@ -68,12 +68,12 @@ html, body {
 .screen.visible { display: flex; }
 .screen.title { background: transparent; backdrop-filter: none; align-items: flex-end; padding-bottom: 3vh; }
 .screen.title .panel {
-  background: linear-gradient(160deg, rgba(40, 32, 80, 0.38), rgba(20, 16, 50, 0.46));
-  backdrop-filter: blur(7px) saturate(1.2); -webkit-backdrop-filter: blur(7px) saturate(1.2);
+  background: linear-gradient(160deg, rgba(40, 32, 80, 0.2), rgba(20, 16, 50, 0.28));
+  backdrop-filter: blur(1.5px); -webkit-backdrop-filter: blur(1.5px);
   border: 2px solid rgba(255, 224, 150, 0.7);
   box-shadow: 0 10px 40px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.35), inset 0 0 40px rgba(255,255,255,0.06);
   padding: 18px 26px; max-height: 88vh; overflow-y: auto; max-width: min(92vw, 520px);
-  text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+  text-shadow: 0 1px 3px rgba(0,0,0,0.85), 0 0 8px rgba(0,0,0,0.5);
 }
 .screen.title .panel h1 { text-shadow: 0 3px 0 #7a4a00, 0 2px 10px rgba(0,0,0,0.5); }
 .screen.title .btn.ghost { background: rgba(255,255,255,0.14); text-shadow: none; }
