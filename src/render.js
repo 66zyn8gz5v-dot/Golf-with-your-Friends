@@ -582,53 +582,50 @@ class Renderer {
       // Bodenschatten
       ctx.fillStyle = 'rgba(0,0,0,0.2)';
       for (let i = 0; i <= n; i++) { const u = (i / n) * bodyEnd, p = pt(u); this.isoEllipse(ctx, p.x, p.y, 0, rad(u) * 1.1, 'rgba(0,0,0,0.12)'); }
-      // Körper: dicht gesetzte Scheiben mit seitlichem Verlauf ergeben einen runden Schlauch
+      // Körper: dicht gesetzte Scheiben mit seitlichem Verlauf ergeben einen runden Schlauch (Comic-Look)
       for (let i = 0; i <= n; i++) {
         const u = (i / n) * bodyEnd, p = pt(u), r = rad(u), [sx, sy] = this.proj(p.x, p.y, r), R = r * s;
         const g = ctx.createRadialGradient(sx - R * 0.3, sy - R * 0.45, R * 0.1, sx, sy, R);
-        g.addColorStop(0, '#a8ec72'); g.addColorStop(0.45, '#4fae45'); g.addColorStop(0.85, '#256f2b'); g.addColorStop(1, '#143d18');
+        g.addColorStop(0, '#c9ff8a'); g.addColorStop(0.4, '#7ee85a'); g.addColorStop(0.85, '#3fb54a'); g.addColorStop(1, '#2a8a38');
         ctx.fillStyle = g; ctx.beginPath(); ctx.arc(sx, sy, R, 0, TAU); ctx.fill();
       }
-      // Rückenzeichnung: dunkles Zickzack-Band
-      ctx.strokeStyle = 'rgba(18,60,24,0.75)'; ctx.lineWidth = Math.max(1.5, s * 0.07); ctx.lineJoin = 'round';
-      ctx.beginPath();
-      for (let i = 0; i <= 22; i++) {
-        const u = 0.06 + (i / 22) * (bodyEnd - 0.1), p = pt(u), r = rad(u), side = (i % 2 ? 1 : -1) * r * 0.45;
-        const [zx, zy] = this.proj(p.x, p.y + side, r * 1.55);
-        i ? ctx.lineTo(zx, zy) : ctx.moveTo(zx, zy);
+      // gelbe Punkte auf dem Rücken
+      for (let i = 0; i < 6; i++) {
+        const u = 0.14 + i * 0.12, p = pt(u), r = rad(u), [dx, dy] = this.proj(p.x, p.y, r * 1.6);
+        ctx.fillStyle = '#ffe14a'; ctx.beginPath(); ctx.arc(dx, dy, r * s * 0.33, 0, TAU); ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.beginPath(); ctx.arc(dx - r * s * 0.1, dy - r * s * 0.12, r * s * 0.12, 0, TAU); ctx.fill();
       }
-      ctx.stroke();
-      // Kopf: flache, vorne spitz zulaufende Form
-      const hp = pt(bodyEnd), hr = 0.3, hz = 0.24;
-      const head = [];
-      for (let i = 0; i < 14; i++) {
-        const a = (i / 14) * TAU, cx = Math.cos(a), sy2 = Math.sin(a);
-        const lenF = cx > 0 ? 0.62 : 0.34, wid = 0.28 * (cx > 0 ? (1 - 0.45 * cx) : 1);
-        head.push([hp.x + dir * cx * lenF, hp.y + sy2 * wid]);
-      }
-      // Kopfschatten und -körper (unten dunkler, oben Glanz)
-      this.pathPoly(ctx, head, 0); ctx.fillStyle = 'rgba(0,0,0,0.14)'; ctx.fill();
-      this.pathPoly(ctx, head, hz); ctx.fillStyle = '#2b7a30'; ctx.fill();
-      const [gx, gy] = this.proj(hp.x + dir * 0.1, hp.y, hz), [tx, ty] = this.proj(hp.x + dir * 0.15, hp.y, hz + 0.12);
-      const hg = ctx.createRadialGradient(tx - s * 0.1, ty - s * 0.1, s * 0.05, gx, gy, s * 0.6);
-      hg.addColorStop(0, '#a8ec72'); hg.addColorStop(0.5, '#4fae45'); hg.addColorStop(1, '#256f2b');
-      this.pathPoly(ctx, head, hz + 0.06); ctx.fillStyle = hg; ctx.fill();
-      // Augen seitlich oben, mit Schlitzpupille
+      // Kopf: große runde Kugel, leicht nach vorn gezogen
+      const hp = pt(bodyEnd), hz = 0.36, hx = hp.x + dir * 0.28;
+      this.isoEllipse(ctx, hx, hp.y, 0, 0.44, 'rgba(0,0,0,0.16)');
+      const [cx, cy] = this.proj(hx, hp.y, hz), HR = 0.4 * s;
+      const hg = ctx.createRadialGradient(cx - HR * 0.35, cy - HR * 0.45, HR * 0.1, cx, cy, HR);
+      hg.addColorStop(0, '#c9ff8a'); hg.addColorStop(0.4, '#7ee85a'); hg.addColorStop(0.85, '#3fb54a'); hg.addColorStop(1, '#2a8a38');
+      ctx.fillStyle = hg; ctx.beginPath(); ctx.ellipse(cx, cy, HR * 1.05, HR * 0.92, 0, 0, TAU); ctx.fill();
+      // Schnauze
+      const [mx, my] = this.proj(hx + dir * 0.28, hp.y, hz - 0.08);
+      ctx.fillStyle = '#7ee85a'; ctx.beginPath(); ctx.ellipse(mx, my, HR * 0.45, HR * 0.34, 0, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#2a8a38';
+      for (const side of [-1, 1]) { ctx.beginPath(); ctx.arc(mx + side * HR * 0.14, my - HR * 0.05, HR * 0.045, 0, TAU); ctx.fill(); }
+      // Lächeln
+      ctx.strokeStyle = '#1f5f2a'; ctx.lineWidth = Math.max(1.5, s * 0.05); ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.arc(mx, my + HR * 0.02, HR * 0.3, 0.25 * Math.PI, 0.75 * Math.PI); ctx.stroke();
+      // große Kulleraugen
       for (const side of [-1, 1]) {
-        const [ex, ey] = this.proj(hp.x + dir * 0.12, hp.y + side * 0.17, hz + 0.16);
-        ctx.fillStyle = '#ffd12a'; ctx.beginPath(); ctx.ellipse(ex, ey, s * 0.085, s * 0.06, 0, 0, TAU); ctx.fill();
-        ctx.fillStyle = '#111'; ctx.beginPath(); ctx.ellipse(ex, ey, s * 0.022, s * 0.055, 0, 0, TAU); ctx.fill();
+        const ex = cx + side * HR * 0.38, ey = cy - HR * 0.35;
+        ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.ellipse(ex, ey, HR * 0.3, HR * 0.34, 0, 0, TAU); ctx.fill();
+        ctx.strokeStyle = '#1f5f2a'; ctx.lineWidth = Math.max(1, s * 0.03); ctx.stroke();
+        const look = Math.sin(t * 1.3) * HR * 0.06;
+        ctx.fillStyle = '#111'; ctx.beginPath(); ctx.ellipse(ex + look + dir * HR * 0.06, ey + HR * 0.04, HR * 0.14, HR * 0.17, 0, 0, TAU); ctx.fill();
+        ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(ex + look + dir * HR * 0.06 - HR * 0.05, ey - HR * 0.03, HR * 0.05, 0, TAU); ctx.fill();
       }
-      // Nasenlöcher
-      ctx.fillStyle = '#143d18';
-      for (const side of [-1, 1]) { const [nx, ny] = this.proj(hp.x + dir * 0.5, hp.y + side * 0.07, hz + 0.1); ctx.beginPath(); ctx.arc(nx, ny, s * 0.02, 0, TAU); ctx.fill(); }
       // Zunge schnellt vor
       const flick = (t * 2.5) % 1;
       if (flick < 0.35) {
-        const L = 0.5 * Math.sin((flick / 0.35) * Math.PI);
-        const [t0x, t0y] = this.proj(hp.x + dir * 0.6, hp.y, hz + 0.02), [t1x, t1y] = this.proj(hp.x + dir * (0.6 + L), hp.y, hz);
-        const [taX, taY] = this.proj(hp.x + dir * (0.72 + L), hp.y - 0.08, hz), [tbX, tbY] = this.proj(hp.x + dir * (0.72 + L), hp.y + 0.08, hz);
-        ctx.strokeStyle = '#e0304a'; ctx.lineWidth = Math.max(1.5, s * 0.045); ctx.lineCap = 'round';
+        const L = 0.45 * Math.sin((flick / 0.35) * Math.PI);
+        const [t0x, t0y] = this.proj(hx + dir * 0.55, hp.y, hz - 0.12), [t1x, t1y] = this.proj(hx + dir * (0.55 + L), hp.y, hz - 0.14);
+        const [taX, taY] = this.proj(hx + dir * (0.67 + L), hp.y - 0.08, hz - 0.14), [tbX, tbY] = this.proj(hx + dir * (0.67 + L), hp.y + 0.08, hz - 0.14);
+        ctx.strokeStyle = '#e0304a'; ctx.lineWidth = Math.max(1.5, s * 0.05); ctx.lineCap = 'round';
         ctx.beginPath(); ctx.moveTo(t0x, t0y); ctx.lineTo(t1x, t1y); ctx.lineTo(taX, taY); ctx.moveTo(t1x, t1y); ctx.lineTo(tbX, tbY); ctx.stroke();
       }
     } else if (ob.style === 'knight') {
