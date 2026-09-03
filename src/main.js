@@ -3,7 +3,8 @@
   const STEP = 1 / 240;
   const MAX_SHOT = 19;       // Ballgeschwindigkeit bei voller Kraft
   const MAX_DRAG = 4.2;      // Zieh-Länge (Weltkoordinaten) für volle Kraft
-  const MAX_STROKES = 12;    // danach wird die Bahn automatisch beendet
+  const DEFAULT_MAX_STROKES = 15; // danach wird die Bahn automatisch beendet (pro Bahn per maxStrokes überschreibbar)
+  const maxStrokes = () => COURSES[state.holeIdx].maxStrokes || DEFAULT_MAX_STROKES;
   const PLAYER_COLORS = ['#ffffff', '#ff6b6b', '#4dd4ff', '#ffe066'];
   const PLAYER_NAMES = ['Spieler 1', 'Spieler 2', 'Spieler 3', 'Spieler 4'];
 
@@ -40,7 +41,7 @@
     ui.name.textContent = def ? def.name : '–';
     const p = state.players[state.curPlayer];
     ui.player.textContent = p ? p.name : '–';
-    ui.strokes.textContent = def ? `Schläge: ${state.strokes} · Par ${def.par}` : '';
+    ui.strokes.textContent = def ? `Schläge: ${state.strokes} / ${maxStrokes()} · Par ${def.par}` : '';
     ui.board.innerHTML = state.players.map((pl, i) => {
       const total = pl.scores.reduce((a, b) => a + b, 0);
       return `<div class="row ${i === state.curPlayer ? 'active' : ''}"><span class="dot" style="background:${pl.color}"></span>${pl.name}<span class="score">${total}</span></div>`;
@@ -150,7 +151,7 @@
     const b = state.ball;
     b.vx = 0; b.vy = 0; b.restX = b.x; b.restY = b.y;
     faceCup();
-    if (state.strokes >= MAX_STROKES) { showMessage(`Maximale Schlagzahl (${MAX_STROKES}) erreicht`, 1800); finishTurn(MAX_STROKES); return; }
+    if (state.strokes >= maxStrokes()) { showMessage(`Maximale Schlagzahl (${maxStrokes()}) erreicht`, 1800); finishTurn(maxStrokes()); return; }
     state.phase = 'aim';
   }
   function finishTurn(score) {
@@ -176,7 +177,7 @@
     waitTimer = setTimeout(() => {
       b.x = rx; b.y = ry; b.vx = 0; b.vy = 0; b.z = 0.6; b.vz = 0; b.portalCd = 0.5;
       faceCup();
-      if (state.strokes >= MAX_STROKES) finishTurn(MAX_STROKES); else state.phase = 'aim';
+      if (state.strokes >= maxStrokes()) finishTurn(maxStrokes()); else state.phase = 'aim';
       updateHud();
     }, 900);
     updateHud();

@@ -65,7 +65,7 @@ const COURSES = [
     autoDecor: { density: 0.45, seed: 23 },
   },
   {
-    name: 'Zwergenschmiede', par: 4, theme: 'forge',
+    name: 'Zwergenschmiede', par: 4, theme: 'forge', maxStrokes: 20,
     intro: 'Zwei Lavaschluchten, zwei Loren mit unterschiedlichem Takt. Sie halten nur kurz – wer zu früh oder zu spät rollt, landet in der Lava.',
     map: [
       '..........................',
@@ -124,7 +124,7 @@ const COURSES = [
     autoDecor: { density: 0.55, seed: 41 },
   },
   {
-    name: 'Drachenhöhle', par: 4, theme: 'dragon',
+    name: 'Drachenhöhle', par: 4, theme: 'dragon', maxStrokes: 18,
     intro: 'Sandkuhlen, Lavabecken – und ein Drache, der vor dem Loch patrouilliert.',
     map: [
       '........................',
@@ -178,7 +178,7 @@ const COURSES = [
     autoDecor: { density: 0.4, seed: 67 },
   },
   {
-    name: 'Wolkenburg', par: 4, theme: 'sky',
+    name: 'Wolkenburg', par: 4, theme: 'sky', maxStrokes: 18,
     intro: 'Schwebende Inseln über den Wolken, ein Fallgatter, Rückenwind auf der Brücke und leichter Gegenwind.',
     map: [
       '........................',
@@ -206,7 +206,7 @@ const COURSES = [
     autoDecor: { density: 0.22, seed: 71 },
   },
   {
-    name: 'Hexenturm', par: 5, theme: 'witch',
+    name: 'Hexenturm', par: 5, theme: 'witch', maxStrokes: 20,
     intro: 'Lava, Eis, ein Fallgatter, Kessel auf Wanderschaft – und ein Portal als Abkürzung.',
     map: [
       '..........................',
@@ -239,7 +239,7 @@ const COURSES = [
     autoDecor: { density: 0.4, seed: 83 },
   },
   {
-    name: 'Burgberg', par: 5, theme: 'castle',
+    name: 'Burgberg', par: 5, theme: 'castle', maxStrokes: 25,
     intro: 'Der Serpentinenweg hinauf zur Burg vom Startbildschirm: Steigungen, Ritter, Burggraben und Zugbrücke.',
     map: [
       '..........................',

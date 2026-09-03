@@ -20,6 +20,7 @@ npx serve .          # oder: python3 -m http.server 8080
   `M` Übersicht der ganzen Bahn, `Q`/`E` drehen, `+`/`-` oder Mausrad zoomen.
 - 1–4 Spieler im Hotseat-Modus: Jeder spielt die Bahn nacheinander zu Ende.
 - Wasser, Lava und Abgrund: Ball zurück zur letzten Position, +1 Strafschlag.
+- Schlaglimit: 15 Schläge pro Bahn, lange Bahnen erlauben mehr (Burgberg 25, Hexenturm und Zwergenschmiede 20, Wolkenburg und Drachenhöhle 18). Danach wird die Bahn mit dem Limit gewertet.
 
 ## Die 9 Bahnen
 
