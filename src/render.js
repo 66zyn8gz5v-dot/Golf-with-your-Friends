@@ -543,26 +543,59 @@ class Renderer {
     const th = this.theme, s = this.scale, poly = ob.poly();
     this.isoEllipse(ctx, ob.x, ob.y, 0, Math.max(ob.w, ob.h) * 0.5, 'rgba(0,0,0,0.2)');
     if (ob.style === 'dragon') {
-      this.prism(ctx, poly, 0.1, 1.0, '#3d9a4a', '#215a2a', { outline: '#123a18' });
-      // Kopf in Bewegungsrichtung
-      const hx = ob.x + ob.dir * (ob.w / 2 + 0.35), hy = ob.y;
-      const head = this.circlePoly(hx, hy, 0.45, 8);
-      this.prism(ctx, head, 0.5, 0.7, '#4fb35a', '#215a2a');
-      const [ex, ey] = this.proj(hx, hy - 0.2, 1.05);
-      ctx.fillStyle = '#ffd12a'; ctx.beginPath(); ctx.arc(ex, ey, s * 0.09, 0, TAU); ctx.fill();
-      ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(ex, ey, s * 0.04, 0, TAU); ctx.fill();
-      // Zacken
-      for (let i = 0; i < 4; i++) {
-        const zx = ob.x - ob.w / 2 + (i + 0.5) * (ob.w / 4);
-        const [a0, a1] = this.proj(zx, ob.y, 1.1), [b0, b1] = this.proj(zx, ob.y, 1.45);
-        ctx.strokeStyle = '#e8b04a'; ctx.lineWidth = Math.max(2, s * 0.09); ctx.beginPath(); ctx.moveTo(a0, a1); ctx.lineTo(b0, b1); ctx.stroke();
+      const d = ob.dir, w = ob.w, h = ob.h, cx = ob.x, cy = ob.y;
+      const rect = (x, y, ww, hh) => [[x - ww / 2, y - hh / 2], [x + ww / 2, y - hh / 2], [x + ww / 2, y + hh / 2], [x - ww / 2, y + hh / 2]];
+      const green = ['#4fb35a', '#215a2a'], dark = ['#2f7a38', '#173f1c'], belly = '#d9c27a';
+      // Schwanz: spitz zulaufend nach hinten, pendelt leicht
+      const tw = Math.sin(t * 2.5) * 0.15;
+      const tailBase = cx - d * w / 2, tail = [[tailBase, cy - 0.35], [tailBase, cy + 0.35], [tailBase - d * 0.9, cy + tw + 0.12], [tailBase - d * 1.25, cy + tw], [tailBase - d * 0.9, cy + tw - 0.12]];
+      this.prism(ctx, tail, 0.15, 0.4, green[0], green[1]);
+      // Beine
+      for (const [lx, ly] of [[cx - d * w * 0.3, cy - h / 2 + 0.15], [cx + d * w * 0.25, cy - h / 2 + 0.15], [cx - d * w * 0.3, cy + h / 2 - 0.15], [cx + d * w * 0.25, cy + h / 2 - 0.15]])
+        this.prism(ctx, rect(lx, ly, 0.35, 0.3), 0, 0.35, dark[0], dark[1]);
+      // Körper mit hellem Bauchstreifen
+      this.prism(ctx, rect(cx, cy, w, h), 0.25, 0.85, green[0], green[1], { outline: '#123a18' });
+      this.fillPoly(ctx, rect(cx, cy, w * 0.9, h * 0.35), 1.105, belly, false);
+      // Flügel: zwei Flächen, die auf und ab schlagen
+      const flap = 0.35 + 0.3 * Math.sin(t * 5);
+      for (const side of [-1, 1]) {
+        const y0 = cy + side * h * 0.25, y1 = cy + side * (h / 2 + 0.9), y2 = cy + side * (h / 2 + 0.5);
+        const wing = [[cx - d * 0.2, y0, 1.1], [cx - d * 0.9, y1, 1.1 + flap], [cx + d * 0.1, y1, 1.1 + flap * 1.2], [cx + d * 0.6, y2, 1.1 + flap * 0.6]];
+        ctx.beginPath(); wing.forEach((p, i) => { const q = this.proj(p[0], p[1], p[2]); i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); }); ctx.closePath();
+        ctx.fillStyle = side < 0 ? '#8e3a44' : '#a8454f'; ctx.fill(); ctx.strokeStyle = '#4a1a22'; ctx.lineWidth = Math.max(1, s * 0.04); ctx.stroke();
+        for (const p of wing.slice(1, 3)) { const q0 = this.proj(wing[0][0], wing[0][1], wing[0][2]), q1 = this.proj(p[0], p[1], p[2]); ctx.beginPath(); ctx.moveTo(q0[0], q0[1]); ctx.lineTo(q1[0], q1[1]); ctx.stroke(); }
       }
+      // Rückenzacken
+      for (let i = 0; i < 4; i++) {
+        const zx = cx - w / 2 + (i + 0.5) * (w / 4);
+        const [a0, a1] = this.proj(zx - 0.12, cy, 1.1), [b0, b1] = this.proj(zx + 0.12, cy, 1.1), [c0, c1] = this.proj(zx, cy, 1.45);
+        ctx.fillStyle = '#e8b04a'; ctx.beginPath(); ctx.moveTo(a0, a1); ctx.lineTo(c0, c1); ctx.lineTo(b0, b1); ctx.closePath(); ctx.fill();
+      }
+      // Hals und Kopf mit Schnauze
+      const hx = cx + d * (w / 2 + 0.3), hy = cy;
+      this.prism(ctx, rect(cx + d * w / 2, cy, 0.5, 0.6), 0.5, 0.7, green[0], green[1]);
+      this.prism(ctx, this.circlePoly(hx, hy, 0.45, 8), 0.6, 0.7, green[0], green[1], { outline: '#123a18' });
+      this.prism(ctx, rect(hx + d * 0.55, hy, 0.5, 0.5), 0.65, 0.4, green[0], green[1]);
+      // Hörner
+      for (const side of [-1, 1]) {
+        const [q0x, q0y] = this.proj(hx - d * 0.15, hy + side * 0.25, 1.3), [q1x, q1y] = this.proj(hx - d * 0.45, hy + side * 0.35, 1.75);
+        ctx.strokeStyle = '#e9d9b8'; ctx.lineWidth = Math.max(2, s * 0.09); ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(q0x, q0y); ctx.lineTo(q1x, q1y); ctx.stroke();
+      }
+      // Augen auf beiden Seiten
+      for (const side of [-1, 1]) {
+        const [ex, ey] = this.proj(hx + d * 0.15, hy + side * 0.42, 1.12);
+        ctx.fillStyle = '#ffd12a'; ctx.beginPath(); ctx.arc(ex, ey, s * 0.09, 0, TAU); ctx.fill();
+        ctx.fillStyle = '#000'; ctx.beginPath(); ctx.ellipse(ex, ey, s * 0.03, s * 0.07, 0, 0, TAU); ctx.fill();
+      }
+      // Zähne an der Schnauze
+      const [z0x, z0y] = this.proj(hx + d * 0.8, hy - 0.2, 0.68), [z1x, z1y] = this.proj(hx + d * 0.8, hy + 0.2, 0.68);
+      ctx.strokeStyle = '#f4efe6'; ctx.lineWidth = Math.max(1, s * 0.05); ctx.setLineDash([s * 0.06, s * 0.06]); ctx.beginPath(); ctx.moveTo(z0x, z0y); ctx.lineTo(z1x, z1y); ctx.stroke(); ctx.setLineDash([]);
       // Feuerhauch
       const fl = 0.4 + 0.3 * Math.sin(t * 9);
-      for (let i = 0; i < 3; i++) {
-        const [fx, fy] = this.proj(hx + ob.dir * (0.5 + i * 0.3 * fl), hy + (i - 1) * 0.15, 0.75 + Math.sin(t * 7 + i) * 0.08);
-        ctx.fillStyle = i === 0 ? '#fff1a0' : i === 1 ? '#ff9a2a' : '#ff5a1f'; ctx.globalAlpha = 0.9 - i * 0.25;
-        ctx.beginPath(); ctx.arc(fx, fy, s * (0.16 - i * 0.03), 0, TAU); ctx.fill();
+      for (let i = 0; i < 4; i++) {
+        const [fx, fy] = this.proj(hx + d * (0.95 + i * 0.32 * fl), hy + (i % 2 ? 0.1 : -0.1) * i * 0.5, 0.8 + Math.sin(t * 7 + i) * 0.08);
+        ctx.fillStyle = i === 0 ? '#fff1a0' : i === 1 ? '#ffc23a' : i === 2 ? '#ff8a2a' : '#ff5a1f'; ctx.globalAlpha = 0.9 - i * 0.2;
+        ctx.beginPath(); ctx.arc(fx, fy, s * (0.17 - i * 0.03), 0, TAU); ctx.fill();
       }
       ctx.globalAlpha = 1;
     } else if (ob.style === 'cauldron') {

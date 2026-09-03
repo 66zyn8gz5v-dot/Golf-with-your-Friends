@@ -124,8 +124,8 @@ const COURSES = [
     autoDecor: { density: 0.55, seed: 41 },
   },
   {
-    name: 'Schlangenhöhle', par: 4, theme: 'dragon', maxStrokes: 18, friction: { s: 32 }, // tiefer Wüstensand
-    intro: 'Sandkuhlen, Lavabecken, eine Sprungschanze über die Mauer – und eine Riesenschlange, die vor dem Loch patrouilliert.',
+    name: 'Drachenhöhle', par: 4, theme: 'dragon', maxStrokes: 18, friction: { s: 32 }, // tiefer Wüstensand
+    intro: 'Sandkuhlen, Lavabecken, eine Sprungschanze über die Mauer – und ein Drache, der vor dem Loch patrouilliert.',
     map: [
       '........................',
       '..########ssss########..',
@@ -141,7 +141,7 @@ const COURSES = [
       '........................',
     ],
     obstacles: [
-      { type: 'mover', x0: 4.3, y0: 9.7, x1: 19.7, y1: 9.7, w: 2.6, h: 1.3, period: 9, phase: 0, style: 'snake' },
+      { type: 'mover', x0: 4.3, y0: 9.7, x1: 19.7, y1: 9.7, w: 2.4, h: 1.4, period: 9, phase: 0, style: 'dragon' },
       { type: 'ramp', x: 10, y: 6, w: 4, h: 2, angle: 90, minSpeed: 2.5, speed: 4.2, land: 1.7 },
     ],
     decor: [
