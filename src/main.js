@@ -268,7 +268,7 @@
   function frame(now) {
     const dt = Math.min(0.05, (now - last) / 1000); last = now; acc += dt;
     while (acc >= STEP) {
-      acc -= STEP; state.t += STEP;
+      acc -= STEP; if (!window.__golfDebug || !window.__golfDebug.freeze) state.t += STEP;
       const b = state.ball, lv = state.level;
       if (!lv) continue;
       if (b && (state.phase === 'aim' || state.phase === 'rolling')) {
