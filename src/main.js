@@ -61,33 +61,55 @@
       <p>Modus wählen:</p>
       <div class="modes">
         <span class="btn mode" data-mode="normal">
-          <svg class="mode-art" viewBox="0 -8 64 48" aria-hidden="true">
-            <path d="M2 40 L8 30 L14 40 Z M9 40 L15 27 L21 40 Z" fill="#2f6b3a"/>
-            <rect x="26" y="20" width="26" height="20" fill="#cfc9bf"/><rect x="39" y="20" width="13" height="20" fill="#9a948a"/>
-            <rect x="24" y="14" width="8" height="26" fill="#cfc9bf"/><rect x="46" y="14" width="8" height="26" fill="#9a948a"/>
-            <rect x="34" y="10" width="10" height="30" fill="#b8b2a8"/>
-            <path d="M23 14 L28 6 L33 14 Z M45 14 L50 6 L55 14 Z M33 10 L39 1 L45 10 Z" fill="#a63d3d"/>
-            <path d="M26 20 h2 v-3 h-2 z M30 20 h2 v-3 h-2 z M46 20 h2 v-3 h-2 z M50 20 h2 v-3 h-2 z" fill="#b8b2a8"/>
-            <rect x="37" y="26" width="4" height="6" fill="#ffd166" class="art-window"/>
-            <path d="M36 32 a3 3 0 0 1 6 0 v8 h-6 z" fill="#3a2a1a"/>
-            <rect x="38.5" y="-6" width="1" height="8" fill="#3a2a1a"/>
-            <path class="art-flag" d="M39.5 -6 L47 -3.5 L39.5 -1 Z" fill="#ff4f6d"/>
-            <path d="M56 40 L60 32 L64 40 Z" fill="#2f6b3a"/>
+          <svg class="mode-scene" viewBox="0 0 300 72" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+            <defs>
+              <linearGradient id="skyN" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5fa8f0"/><stop offset="1" stop-color="#cfe8ff"/></linearGradient>
+              <linearGradient id="hillN" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7cc94f"/><stop offset="1" stop-color="#4f9c3e"/></linearGradient>
+            </defs>
+            <rect width="300" height="72" fill="url(#skyN)"/>
+            <circle cx="262" cy="16" r="9" fill="#fff3b0"/>
+            <g class="drift"><ellipse cx="150" cy="16" rx="22" ry="6" fill="rgba(255,255,255,0.85)"/><ellipse cx="138" cy="19" rx="12" ry="5" fill="rgba(255,255,255,0.85)"/></g>
+            <g class="drift d2"><ellipse cx="220" cy="28" rx="16" ry="5" fill="rgba(255,255,255,0.7)"/></g>
+            <path d="M0 62 Q60 46 120 58 T240 54 T300 60 V72 H0 Z" fill="#5fae4a"/>
+            <path d="M0 66 Q80 56 160 64 T300 62 V72 H0 Z" fill="url(#hillN)"/>
+            <g class="sway"><path d="M6 64 L14 42 L22 64 Z" fill="#2f6b3a"/><path d="M8 56 L14 44 L20 56 Z" fill="#3f8a4e"/></g>
+            <g class="sway s2"><path d="M100 62 L110 34 L120 62 Z" fill="#2f6b3a"/><path d="M103 52 L110 38 L117 52 Z" fill="#3f8a4e"/></g>
+            <g class="sway s3"><path d="M118 63 L125 46 L132 63 Z" fill="#255a30"/></g>
+            <rect x="40" y="40" width="44" height="22" fill="#cfc9bf"/><rect x="62" y="40" width="22" height="22" fill="#9a948a"/>
+            <rect x="36" y="32" width="12" height="30" fill="#cfc9bf"/><rect x="76" y="32" width="12" height="30" fill="#9a948a"/>
+            <rect x="54" y="24" width="16" height="38" fill="#b8b2a8"/>
+            <path d="M34 32 L42 20 L50 32 Z M74 32 L82 20 L90 32 Z M52 24 L62 8 L72 24 Z" fill="#a63d3d"/>
+            <path d="M40 40 h3 v-4 h-3 z M46 40 h3 v-4 h-3 z M70 40 h3 v-4 h-3 z M77 40 h3 v-4 h-3 z" fill="#b8b2a8"/>
+            <rect x="59" y="44" width="6" height="8" fill="#ffd166" class="art-window"/>
+            <path d="M57 54 a5 5 0 0 1 10 0 v8 h-10 z" fill="#3a2a1a"/>
+            <rect x="61.5" y="0" width="1.2" height="9" fill="#3a2a1a"/>
+            <path class="art-flag" d="M62.7 0 L74 3.5 L62.7 7 Z" fill="#ff4f6d"/>
+            <path d="M92 66 L98 62 L104 66 Z M110 68 L114 65 L118 68 Z" fill="#3f8a33"/>
           </svg>
           <span class="mode-label">Normal</span>
         </span>
         <span class="btn mode" data-mode="creative">
-          <svg class="mode-art" viewBox="0 0 64 40" aria-hidden="true">
-            <path d="M44 40 L52 22 L60 40 Z" fill="#2b6d43"/><path d="M46 33 L52 20 L58 33 Z" fill="#3f8f5a"/>
-            <path d="M8 40 L12 28 L16 40 Z M13 40 L15 32 L17 40 Z" fill="#e0b8ff"/><path d="M8 40 L12 28 L13 38 Z" fill="#8a4fd0"/>
-            <rect x="24" y="26" width="6" height="14" rx="2" fill="#f3e6c8"/>
-            <path d="M18 27 a9 8 0 0 1 18 0 z" fill="#e0575a"/>
-            <circle cx="22" cy="23" r="1.5" fill="#fff"/><circle cx="28" cy="20" r="1.8" fill="#fff"/><circle cx="32" cy="24" r="1.2" fill="#fff"/>
-            <rect x="37" y="32" width="4" height="8" rx="1.5" fill="#f3e6c8"/>
-            <path d="M33 33 a6 5 0 0 1 12 0 z" fill="#c94a7a"/><circle cx="37" cy="30" r="1" fill="#fff"/><circle cx="41" cy="31" r="1.2" fill="#fff"/>
-            <circle class="art-fly f1" cx="14" cy="14" r="1.6" fill="#d8ff70"/>
-            <circle class="art-fly f2" cx="40" cy="12" r="1.4" fill="#ffe680"/>
-            <circle class="art-fly f3" cx="58" cy="16" r="1.5" fill="#d8ff70"/>
+          <svg class="mode-scene" viewBox="0 0 300 72" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+            <defs>
+              <linearGradient id="skyK" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a1a4d"/><stop offset="1" stop-color="#6e4a9c"/></linearGradient>
+              <linearGradient id="hillK" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#69b391"/><stop offset="1" stop-color="#3e7d66"/></linearGradient>
+            </defs>
+            <rect width="300" height="72" fill="url(#skyK)"/>
+            <g fill="#fff"><circle class="twinkle" cx="130" cy="10" r="1"/><circle class="twinkle t2" cx="180" cy="20" r="1.2"/><circle class="twinkle t3" cx="230" cy="8" r="0.9"/><circle class="twinkle t2" cx="270" cy="26" r="1"/><circle class="twinkle t3" cx="150" cy="30" r="0.8"/></g>
+            <circle cx="255" cy="16" r="8" fill="#f2f4ff"/><circle cx="259" cy="14" r="7" fill="#3a2a63"/>
+            <path d="M0 60 Q70 48 140 58 T300 56 V72 H0 Z" fill="#4f9a78"/>
+            <path d="M0 65 Q90 56 180 64 T300 62 V72 H0 Z" fill="url(#hillK)"/>
+            <g class="sway"><path d="M96 62 L106 32 L116 62 Z" fill="#2b6d43"/><path d="M99 52 L106 36 L113 52 Z" fill="#3f8f5a"/></g>
+            <g class="sway s3"><path d="M282 64 L290 44 L298 64 Z" fill="#245a30"/></g>
+            <path d="M14 64 L20 44 L26 64 Z M23 64 L27 52 L31 64 Z" fill="#e0b8ff"/><path d="M14 64 L20 44 L21 60 Z" fill="#8a4fd0"/>
+            <g class="sway s2"><rect x="46" y="40" width="9" height="24" rx="3" fill="#f3e6c8"/><path d="M36 42 a14 12 0 0 1 28 0 z" fill="#e0575a"/><circle cx="43" cy="35" r="2.2" fill="#fff"/><circle cx="52" cy="31" r="2.6" fill="#fff"/><circle cx="58" cy="37" r="1.8" fill="#fff"/></g>
+            <g class="sway s3"><rect x="68" y="50" width="6" height="14" rx="2" fill="#f3e6c8"/><path d="M61 51 a10 8 0 0 1 20 0 z" fill="#c94a7a"/><circle cx="67" cy="46" r="1.4" fill="#fff"/><circle cx="74" cy="47" r="1.6" fill="#fff"/></g>
+            <g class="sway"><rect x="126" y="54" width="5" height="10" rx="2" fill="#f3e6c8"/><path d="M120 55 a8.5 7 0 0 1 17 0 z" fill="#e7a53a"/></g>
+            <g class="particles">
+              <circle class="p" cx="40" cy="60" r="1.6" fill="#ff7fd8"/><circle class="p p2" cx="62" cy="64" r="1.3" fill="#7fe8ff"/><circle class="p p3" cx="84" cy="62" r="1.5" fill="#ffd166"/>
+              <circle class="p p4" cx="110" cy="66" r="1.2" fill="#d8ff70"/><circle class="p p2" cx="22" cy="66" r="1.4" fill="#7fe8ff"/><circle class="p p5" cx="134" cy="60" r="1.3" fill="#ff7fd8"/>
+              <circle class="p p3" cx="160" cy="64" r="1.1" fill="#ffd166"/><circle class="p p5" cx="200" cy="66" r="1.4" fill="#d8ff70"/><circle class="p p4" cx="240" cy="62" r="1.2" fill="#7fe8ff"/>
+            </g>
           </svg>
           <span class="mode-label">Kreativ</span>
         </span>
