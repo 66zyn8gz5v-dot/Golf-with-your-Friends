@@ -50,7 +50,7 @@ Das Modus-Menü ist der Platz, an dem später weitere Welten eingehängt werden.
 | # | Bahn | Par | Hindernisse |
 |---|------|-----|-------------|
 | 1 | Mühlenwiese | 3 | Windmühle mit schmaler Tür, Sand |
-| 2 | Nebelmoor | 4 | Dämme zwischen Wassertümpeln, Pendelbalken, Windmühle, Eis |
+| 2 | Nebelmoor | 4 | breiter Fluss, Rampensprung ans andere Ufer, Windmühle als Tor zum Loch, Eis |
 | 3 | Zwergenmine | 4 | Damm ohne Geländer über zwei Lavaflüsse, Lore, Pendel |
 | 4 | Kristallsee | 4 | Eisfläche mit Löchern, zwei Kristallsterne, Windmühle vor dem Loch |
 | 5 | Sturmhöhe | 4 | Brücken von einer Kachel Breite, Fallgatter, Gegenwind, Beschleuniger |

@@ -30,7 +30,12 @@ let ok = true;
     // Portale verbinden Gebiete
     // Portale und Fähren verbinden Gebiete
     const portals = (c.obstacles || []).filter(o => o.type === 'portal')
-      .concat((c.obstacles || []).filter(o => o.type === 'ferry').map(o => ({ x: o.x0, y: o.y0, tx: o.x1, ty: o.y1, twoWay: true })));
+      .concat((c.obstacles || []).filter(o => o.type === 'ferry').map(o => ({ x: o.x0, y: o.y0, tx: o.x1, ty: o.y1, twoWay: true })))
+      .concat((c.obstacles || []).filter(o => o.type === 'ramp').map(o => { // Rampe: Landepunkt hinter dem Rampenende
+        const a = (o.angle || 0) * Math.PI / 180, dx = Math.cos(a), dy = Math.sin(a), cx = o.x + o.w / 2, cy = o.y + o.h / 2;
+        const half = Math.abs(dx) > 0.5 ? o.w / 2 : o.h / 2;
+        return { x: cx, y: cy, tx: cx + dx * (half + (o.land || 1.7)), ty: cy + dy * (half + (o.land || 1.7)) };
+      }));
     let changed = true;
     while (changed) {
       changed = false;
