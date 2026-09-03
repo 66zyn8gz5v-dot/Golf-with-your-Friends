@@ -86,11 +86,8 @@ const COURSES = [
       { type: 'ferry', x0: 6.5, y0: 3.5, x1: 12.5, y1: 3.5, w: 1.1, h: 1.1, wait: 1.5, travel: 2.4, style: 'cart' },
       { type: 'rail', y: 8.5, x0: 16, x1: 23 },
       { type: 'ferry', x0: 16.5, y0: 8.5, x1: 22.5, y1: 8.5, w: 1.1, h: 1.1, wait: 1.2, travel: 2.1, phase: 0.37, style: 'cart' },
-      // Geländer an den Lava-Ufern, offen nur an den Haltestellen der Loren
-      { type: 'wall', x0: 7, y0: 1, x1: 7, y1: 3 }, { type: 'wall', x0: 7, y0: 4, x1: 7, y1: 11 },
-      { type: 'wall', x0: 12, y0: 1, x1: 12, y1: 3 }, { type: 'wall', x0: 12, y0: 4, x1: 12, y1: 11 },
-      { type: 'wall', x0: 17, y0: 1, x1: 17, y1: 8 }, { type: 'wall', x0: 17, y0: 9, x1: 17, y1: 11 },
-      { type: 'wall', x0: 22, y0: 1, x1: 22, y1: 8 }, { type: 'wall', x0: 22, y0: 9, x1: 22, y1: 11 },
+      // kleines Geländer an der Inselkante zur ersten Schlucht, neben der Blockmauer
+      { type: 'wall', x0: 12, y0: 7, x1: 12, y1: 9 },
     ],
     decor: [
       { t: 'tower', x: 25.3, y: 1.5, s: 1.2, roof: '#5a2a1a' },
