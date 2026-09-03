@@ -291,9 +291,14 @@ class Renderer {
     ctx.fillStyle = th.accent; ctx.beginPath(); ctx.arc(tx, ty, s * 0.07, 0, TAU); ctx.fill();
   }
   drawBall(ctx, b) {
-    const s = this.scale, r = BALL_R * s;
-    this.isoEllipse(ctx, b.x, b.y, 0, 0.3 * (1 - b.z * 0.2), 'rgba(0,0,0,0.3)');
-    const [sx, sy] = this.proj(b.x, b.y, b.z + 0.3);
+    const s = this.scale;
+    let r = BALL_R * s, z = b.z + 0.3;
+    if (b.sunk) { // in das Loch fallen: kleiner werden, absinken, dann weg
+      const p = Math.min(1, b.sinkT / 0.35);
+      if (p >= 1) return;
+      r *= 1 - p * 0.8; z = 0.3 - p * 0.6;
+    } else this.isoEllipse(ctx, b.x, b.y, 0, 0.3 * (1 - b.z * 0.2), 'rgba(0,0,0,0.3)');
+    const [sx, sy] = this.proj(b.x, b.y, z);
     const g = ctx.createRadialGradient(sx - r * 0.35, sy - r * 0.4, r * 0.1, sx, sy, r);
     g.addColorStop(0, '#ffffff'); g.addColorStop(0.35, b.color); g.addColorStop(1, shade(b.color, 0.55));
     ctx.fillStyle = g; ctx.beginPath(); ctx.arc(sx, sy, r, 0, TAU); ctx.fill();

@@ -186,7 +186,9 @@
     Sfx.sink();
     burst(state.level.cup.x, state.level.cup.y, state.theme.accent, 26, true);
     showMessage(`${scoreName(state.strokes, par)}  (${state.strokes} Schläge)`, 1800);
-    state.ball.vx = 0; state.ball.vy = 0; state.ball.x = state.level.cup.x; state.ball.y = state.level.cup.y; state.ball.z = -0.35;
+    const b = state.ball;
+    b.vx = 0; b.vy = 0; b.x = state.level.cup.x; b.y = state.level.cup.y; b.z = 0; b.vz = 0;
+    b.sunk = true; b.sinkT = 0; // Fall-Animation ins Loch, danach unsichtbar
     finishTurn(state.strokes);
   }
   function showHoleDone() {
@@ -284,6 +286,7 @@
       }
     }
     updateParticles(dt);
+    if (state.ball && state.ball.sunk) state.ball.sinkT += dt;
     updateCamera(dt);
     R.drawFrame(state);
     ui.power.classList.toggle('visible', !!state.aim);
