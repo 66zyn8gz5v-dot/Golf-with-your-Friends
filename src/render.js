@@ -619,42 +619,51 @@ class Renderer {
           ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.beginPath(); ctx.arc(gx - gr * 0.25, gy - gr * 0.3, gr * 0.25, 0, TAU); ctx.fill();
         }
       }
-      // Kopf: große Kugel mit Schnauze und Schuppen, Glubschaugen obendrauf
-      const hp = pt(bodyEnd), hz = 0.36, hx = hp.x + dir * 0.3;
-      this.isoEllipse(ctx, hx, hp.y, 0, 0.46, 'rgba(0,0,0,0.16)');
-      const [cx, cy] = this.proj(hx, hp.y, hz), HR = 0.42 * s;
-      const hg = ctx.createRadialGradient(cx - HR * 0.35, cy - HR * 0.45, HR * 0.1, cx, cy, HR * 1.05);
-      hg.addColorStop(0, G1); hg.addColorStop(0.45, G2); hg.addColorStop(0.85, G3); hg.addColorStop(1, G4);
-      ctx.fillStyle = hg; ctx.beginPath(); ctx.ellipse(cx, cy, HR * 1.1, HR * 0.95, 0, 0, TAU); ctx.fill();
-      ctx.strokeStyle = G4; ctx.lineWidth = Math.max(1, s * 0.04); ctx.stroke();
-      // Schnauze
-      const [mx, my] = this.proj(hx + dir * 0.32, hp.y, hz - 0.1);
-      ctx.fillStyle = G2; ctx.beginPath(); ctx.ellipse(mx, my, HR * 0.5, HR * 0.36, 0, 0, TAU); ctx.fill(); ctx.strokeStyle = G4; ctx.stroke();
-      ctx.fillStyle = G4;
-      for (const side of [-1, 1]) { ctx.beginPath(); ctx.arc(mx + side * HR * 0.16, my - HR * 0.06, HR * 0.045, 0, TAU); ctx.fill(); }
-      ctx.strokeStyle = G4; ctx.lineWidth = Math.max(1.5, s * 0.045); ctx.lineCap = 'round';
-      ctx.beginPath(); ctx.arc(mx, my + HR * 0.02, HR * 0.32, 0.2 * Math.PI, 0.8 * Math.PI); ctx.stroke();
-      // Stirnschuppen
-      const dsx = -dir * (this.cam.cos) , dsy = -dir * (this.cam.sin) * this.cam.tilt; const dl = Math.hypot(dsx, dsy) || 1;
-      hexScale(cx - HR * 0.05, cy - HR * 0.55, HR * 0.28, dsx / dl, dsy / dl, true);
-      // Glubschaugen: zwei weiße Kugeln oben auf dem Kopf
+      // Kopf: gestreckte Kapsel in Körperbreite, vorne abgerundet, mit Schuppen bedeckt
+      const hp = pt(bodyEnd), headLen = 0.95, HRw = 0.3;
+      const hr = v => HRw * (v < 0.4 ? 1 : Math.sqrt(Math.max(0, 1 - Math.pow((v - 0.4) / 0.6, 2))));
+      const hpt = v => ({ x: hp.x + dir * v * headLen, y: hp.y + Math.sin(t * 7 - bodyEnd * 6) * amp * 0.3 * (1 - v) });
+      for (let k = 0; k <= 24; k++) { const v = k / 24, q = hpt(v); this.isoEllipse(ctx, q.x, q.y, 0, hr(v) * 1.15 + 0.02, 'rgba(0,0,0,0.12)'); }
+      for (let k = 0; k <= 24; k++) {
+        const v = k / 24, q = hpt(v), r = Math.max(0.02, hr(v)), [sx, sy] = this.proj(q.x, q.y, r), R = r * s;
+        const g = ctx.createRadialGradient(sx - R * 0.3, sy - R * 0.45, R * 0.1, sx, sy, R);
+        g.addColorStop(0, G2); g.addColorStop(0.7, G3); g.addColorStop(1, G4);
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(sx, sy, R, 0, TAU); ctx.fill();
+      }
+      // Kopfschuppen (größere Platten), Spitze zum Schwanz
+      for (let k = 0; k < 4; k++) {
+        const v = 0.08 + k * 0.2, q = hpt(v), qb = hpt(Math.max(0, v - 0.1)), r = hr(v);
+        const [sx, sy] = this.proj(q.x, q.y, r * 1.05), [bx, by] = this.proj(qb.x, qb.y, r * 1.05);
+        let ax = bx - sx, ay = by - sy; const L = Math.hypot(ax, ay) || 1; ax /= L; ay /= L;
+        const px = -ay, py = ax, R = r * s * 0.95;
+        if (k < 3) { hexScale(sx + px * R * 0.55, sy + py * R * 0.55 + R * 0.15, R * 0.75, ax, ay, false); hexScale(sx - px * R * 0.55, sy - py * R * 0.55 + R * 0.15, R * 0.75, ax, ay, false); }
+        hexScale(sx, sy - R * 0.25, R * (k === 3 ? 0.6 : 0.8), ax, ay, true);
+      }
+      // Nasenlöcher vorn
+      const tip = hpt(0.9), [nx0, ny0] = this.proj(tip.x, tip.y, hr(0.9) * 1.4);
+      ctx.fillStyle = G4; for (const side of [-1, 1]) { ctx.beginPath(); ctx.arc(nx0 + side * s * 0.07, ny0, s * 0.028, 0, TAU); ctx.fill(); }
+      // Glubschaugen: zwei weiße Kugeln nebeneinander vorn oben auf dem Kopf
+      const ev = hpt(0.55), ER = 0.2 * s;
       for (const side of [-1, 1]) {
-        const ex = cx + side * HR * 0.4, ey = cy - HR * 0.75, ER = HR * 0.36;
-        ctx.fillStyle = 'rgba(0,0,0,0.15)'; ctx.beginPath(); ctx.ellipse(ex, ey + ER * 0.9, ER * 0.9, ER * 0.3, 0, 0, TAU); ctx.fill();
+        const [ex, ey] = this.proj(ev.x, ev.y + side * 0.17, hr(0.55) + 0.14);
+        ctx.fillStyle = 'rgba(0,0,0,0.18)'; ctx.beginPath(); ctx.ellipse(ex, ey + ER * 0.85, ER * 0.9, ER * 0.3, 0, 0, TAU); ctx.fill();
         const eg = ctx.createRadialGradient(ex - ER * 0.3, ey - ER * 0.35, ER * 0.1, ex, ey, ER);
-        eg.addColorStop(0, '#ffffff'); eg.addColorStop(0.8, '#f0f0f4'); eg.addColorStop(1, '#c9c9d4');
+        eg.addColorStop(0, '#ffffff'); eg.addColorStop(0.8, '#f0f0f4'); eg.addColorStop(1, '#c4c4d0');
         ctx.fillStyle = eg; ctx.beginPath(); ctx.arc(ex, ey, ER, 0, TAU); ctx.fill();
         ctx.strokeStyle = G4; ctx.lineWidth = Math.max(1, s * 0.035); ctx.stroke();
-        const look = Math.sin(t * 1.3) * ER * 0.12 + dir * ER * 0.18;
-        ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(ex + look, ey + ER * 0.12, ER * 0.5, 0, TAU); ctx.fill();
-        ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(ex + look - ER * 0.18, ey - ER * 0.1, ER * 0.16, 0, TAU); ctx.fill();
+        const [fx0, fy0] = this.proj(ev.x + dir * 0.12, ev.y + side * 0.17, hr(0.55) + 0.14);
+        const lookX = (fx0 - ex) * 0.7 + Math.sin(t * 1.3) * ER * 0.1, lookY = (fy0 - ey) * 0.7 + ER * 0.05;
+        ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(ex + lookX, ey + lookY, ER * 0.52, 0, TAU); ctx.fill();
+        ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(ex + lookX - ER * 0.18, ey + lookY - ER * 0.2, ER * 0.16, 0, TAU); ctx.fill();
       }
+      const hx = hp.x + dir * headLen * 0.55, hz = hr(0.55);
       // Zunge
       const flick = (t * 2.5) % 1;
       if (flick < 0.35) {
         const L = 0.45 * Math.sin((flick / 0.35) * Math.PI);
-        const [t0x, t0y] = this.proj(hx + dir * 0.6, hp.y, hz - 0.14), [t1x, t1y] = this.proj(hx + dir * (0.6 + L), hp.y, hz - 0.16);
-        const [taX, taY] = this.proj(hx + dir * (0.72 + L), hp.y - 0.08, hz - 0.16), [tbX, tbY] = this.proj(hx + dir * (0.72 + L), hp.y + 0.08, hz - 0.16);
+        const tx0 = hp.x + dir * headLen * 0.98, ty0 = hp.y, tz = 0.12;
+        const [t0x, t0y] = this.proj(tx0, ty0, tz), [t1x, t1y] = this.proj(tx0 + dir * L, ty0, tz);
+        const [taX, taY] = this.proj(tx0 + dir * (L + 0.12), ty0 - 0.08, tz), [tbX, tbY] = this.proj(tx0 + dir * (L + 0.12), ty0 + 0.08, tz);
         ctx.strokeStyle = '#e0304a'; ctx.lineWidth = Math.max(1.5, s * 0.05); ctx.lineCap = 'round';
         ctx.beginPath(); ctx.moveTo(t0x, t0y); ctx.lineTo(t1x, t1y); ctx.lineTo(taX, taY); ctx.moveTo(t1x, t1y); ctx.lineTo(tbX, tbY); ctx.stroke();
       }
