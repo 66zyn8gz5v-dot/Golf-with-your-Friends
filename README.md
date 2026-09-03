@@ -13,7 +13,8 @@ npx serve .          # oder: python3 -m http.server 8080
 
 ## Steuerung
 
-- Schleuder-Steuerung: Finger oder Maus aufsetzen, vom Ball wegziehen und loslassen. Der Ball fliegt in die Gegenrichtung, je weiter gezogen wird, desto kräftiger der Schlag (Kraftanzeige unten).
+- Finger oder Maus aufsetzen, ziehen, loslassen. Je weiter gezogen wird, desto kräftiger der Schlag (Kraftanzeige unten).
+- Steuerung im Startbildschirm wählbar: „Schleuder" (Standard, vom Ball wegziehen) oder „Schieben" (in Schussrichtung ziehen).
 - `Esc` bricht das Zielen ab.
 - Kamera: folgt dem Ball und blickt Richtung Loch. Tasten unten links oder Tastatur:
   `M` Übersicht der ganzen Bahn, `Q`/`E` drehen, `+`/`-` oder Mausrad zoomen.
