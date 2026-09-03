@@ -574,57 +574,87 @@ class Renderer {
         ctx.fillStyle = 'rgba(160,255,120,0.7)'; ctx.beginPath(); ctx.arc(bx, by, s * 0.07, 0, TAU); ctx.fill();
       }
     } else if (ob.style === 'snake') {
-      // Schlange: glatter, durchgehender Körper entlang einer laufenden Welle, flacher Kopf in Bewegungsrichtung
+      // Comic-Panzerschlange: Schlauchkörper mit überlappenden Sechseck-Schuppen, Edelsteinen und Glubschaugen
       const len = ob.w * 0.95, dir = ob.dir, amp = ob.h * 0.28;
       const bodyEnd = 0.84, n = 46;
       const pt = u => ({ x: ob.x - dir * len / 2 + dir * u * len, y: ob.y + Math.sin(t * 7 - u * 6) * amp * (0.35 + 0.65 * (1 - u)) });
-      const rad = u => 0.07 + 0.2 * Math.sin(Math.pow(Math.min(1, u / bodyEnd), 0.6) * Math.PI * 0.85 + 0.15);
-      // Bodenschatten
-      ctx.fillStyle = 'rgba(0,0,0,0.2)';
-      for (let i = 0; i <= n; i++) { const u = (i / n) * bodyEnd, p = pt(u); this.isoEllipse(ctx, p.x, p.y, 0, rad(u) * 1.1, 'rgba(0,0,0,0.12)'); }
-      // Körper: dicht gesetzte Scheiben mit seitlichem Verlauf ergeben einen runden Schlauch (Comic-Look)
+      const rad = u => 0.09 + 0.2 * Math.sin(Math.pow(Math.min(1, u / bodyEnd), 0.6) * Math.PI * 0.85 + 0.15);
+      const G1 = '#b8f57a', G2 = '#5ccf4a', G3 = '#2e9a3a', G4 = '#1b5e26';
+      for (let i = 0; i <= n; i++) { const u = (i / n) * bodyEnd, p = pt(u); this.isoEllipse(ctx, p.x, p.y, 0, rad(u) * 1.15, 'rgba(0,0,0,0.12)'); }
+      // Grundkörper
       for (let i = 0; i <= n; i++) {
         const u = (i / n) * bodyEnd, p = pt(u), r = rad(u), [sx, sy] = this.proj(p.x, p.y, r), R = r * s;
         const g = ctx.createRadialGradient(sx - R * 0.3, sy - R * 0.45, R * 0.1, sx, sy, R);
-        g.addColorStop(0, '#c9ff8a'); g.addColorStop(0.4, '#7ee85a'); g.addColorStop(0.85, '#3fb54a'); g.addColorStop(1, '#2a8a38');
+        g.addColorStop(0, G2); g.addColorStop(0.7, G3); g.addColorStop(1, G4);
         ctx.fillStyle = g; ctx.beginPath(); ctx.arc(sx, sy, R, 0, TAU); ctx.fill();
       }
-      // gelbe Punkte auf dem Rücken
-      for (let i = 0; i < 6; i++) {
-        const u = 0.14 + i * 0.12, p = pt(u), r = rad(u), [dx, dy] = this.proj(p.x, p.y, r * 1.6);
-        ctx.fillStyle = '#ffe14a'; ctx.beginPath(); ctx.arc(dx, dy, r * s * 0.33, 0, TAU); ctx.fill();
-        ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.beginPath(); ctx.arc(dx - r * s * 0.1, dy - r * s * 0.12, r * s * 0.12, 0, TAU); ctx.fill();
+      // Sechseck-Schuppen vom Schwanz zum Kopf, spätere überlappen frühere
+      const hexScale = (sx, sy, R, ax, ay, light) => {
+        // ax/ay: Richtung zum Schwanz (Bildschirm), Spitze zeigt dorthin
+        const px = -ay, py = ax;
+        const pts = [[ax * 1.15, ay * 1.15], [ax * 0.4 + px * 0.85, ay * 0.4 + py * 0.85], [-ax * 0.7 + px * 0.8, -ay * 0.7 + py * 0.8],
+          [-ax * 1.0, -ay * 1.0], [-ax * 0.7 - px * 0.8, -ay * 0.7 - py * 0.8], [ax * 0.4 - px * 0.85, ay * 0.4 - py * 0.85]];
+        ctx.beginPath(); pts.forEach((q, k) => { const X = sx + q[0] * R, Y = sy + q[1] * R; k ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); }); ctx.closePath();
+        const g = ctx.createLinearGradient(sx, sy - R, sx, sy + R);
+        g.addColorStop(0, light ? G1 : G2); g.addColorStop(0.55, G2); g.addColorStop(1, G3);
+        ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = G4; ctx.lineWidth = Math.max(1, s * 0.035); ctx.stroke();
+        // Facette oben
+        ctx.beginPath(); ctx.moveTo(sx - ax * 1.0 * R, sy - ay * 1.0 * R); ctx.lineTo(sx + (-ax * 0.7 + px * 0.8) * R, sy + (-ay * 0.7 + py * 0.8) * R); ctx.lineTo(sx + (ax * 0.4 + px * 0.85) * R * 0.5, sy + (ay * 0.4 + py * 0.85) * R * 0.5); ctx.closePath();
+        ctx.fillStyle = 'rgba(255,255,255,0.18)'; ctx.fill();
+      };
+      const K = 14;
+      for (let i = 0; i <= K; i++) {
+        const u = 0.06 + (i / K) * (bodyEnd - 0.06), p = pt(u), r = rad(u), pb = pt(Math.max(0, u - 0.05));
+        const [sx, sy] = this.proj(p.x, p.y, r * 1.05), [bx, by] = this.proj(pb.x, pb.y, r * 1.05);
+        let ax = bx - sx, ay = by - sy; const L = Math.hypot(ax, ay) || 1; ax /= L; ay /= L;
+        const px = -ay, py = ax, R = r * s * 0.95;
+        // zwei Reihen: links/rechts versetzt, dazwischen Mittelschuppe
+        hexScale(sx + px * R * 0.55, sy + py * R * 0.55 + R * 0.15, R * 0.75, ax, ay, false);
+        hexScale(sx - px * R * 0.55, sy - py * R * 0.55 + R * 0.15, R * 0.75, ax, ay, false);
+        hexScale(sx, sy - R * 0.25, R * 0.8, ax, ay, true);
+        if (i % 2 === 1 && i < K) { // gelber Edelstein zwischen den Reihen
+          const gx = sx + ax * R * 0.9, gy = sy + ay * R * 0.9 - R * 0.05, gr = R * 0.22;
+          ctx.fillStyle = '#ffe14a'; ctx.beginPath(); ctx.moveTo(gx, gy - gr); ctx.lineTo(gx + gr, gy); ctx.lineTo(gx, gy + gr); ctx.lineTo(gx - gr, gy); ctx.closePath(); ctx.fill();
+          ctx.strokeStyle = '#8a6a10'; ctx.lineWidth = Math.max(0.8, s * 0.025); ctx.stroke();
+          ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.beginPath(); ctx.arc(gx - gr * 0.25, gy - gr * 0.3, gr * 0.25, 0, TAU); ctx.fill();
+        }
       }
-      // Kopf: große runde Kugel, leicht nach vorn gezogen
-      const hp = pt(bodyEnd), hz = 0.36, hx = hp.x + dir * 0.28;
-      this.isoEllipse(ctx, hx, hp.y, 0, 0.44, 'rgba(0,0,0,0.16)');
-      const [cx, cy] = this.proj(hx, hp.y, hz), HR = 0.4 * s;
-      const hg = ctx.createRadialGradient(cx - HR * 0.35, cy - HR * 0.45, HR * 0.1, cx, cy, HR);
-      hg.addColorStop(0, '#c9ff8a'); hg.addColorStop(0.4, '#7ee85a'); hg.addColorStop(0.85, '#3fb54a'); hg.addColorStop(1, '#2a8a38');
-      ctx.fillStyle = hg; ctx.beginPath(); ctx.ellipse(cx, cy, HR * 1.05, HR * 0.92, 0, 0, TAU); ctx.fill();
+      // Kopf: große Kugel mit Schnauze und Schuppen, Glubschaugen obendrauf
+      const hp = pt(bodyEnd), hz = 0.36, hx = hp.x + dir * 0.3;
+      this.isoEllipse(ctx, hx, hp.y, 0, 0.46, 'rgba(0,0,0,0.16)');
+      const [cx, cy] = this.proj(hx, hp.y, hz), HR = 0.42 * s;
+      const hg = ctx.createRadialGradient(cx - HR * 0.35, cy - HR * 0.45, HR * 0.1, cx, cy, HR * 1.05);
+      hg.addColorStop(0, G1); hg.addColorStop(0.45, G2); hg.addColorStop(0.85, G3); hg.addColorStop(1, G4);
+      ctx.fillStyle = hg; ctx.beginPath(); ctx.ellipse(cx, cy, HR * 1.1, HR * 0.95, 0, 0, TAU); ctx.fill();
+      ctx.strokeStyle = G4; ctx.lineWidth = Math.max(1, s * 0.04); ctx.stroke();
       // Schnauze
-      const [mx, my] = this.proj(hx + dir * 0.28, hp.y, hz - 0.08);
-      ctx.fillStyle = '#7ee85a'; ctx.beginPath(); ctx.ellipse(mx, my, HR * 0.45, HR * 0.34, 0, 0, TAU); ctx.fill();
-      ctx.fillStyle = '#2a8a38';
-      for (const side of [-1, 1]) { ctx.beginPath(); ctx.arc(mx + side * HR * 0.14, my - HR * 0.05, HR * 0.045, 0, TAU); ctx.fill(); }
-      // Lächeln
-      ctx.strokeStyle = '#1f5f2a'; ctx.lineWidth = Math.max(1.5, s * 0.05); ctx.lineCap = 'round';
-      ctx.beginPath(); ctx.arc(mx, my + HR * 0.02, HR * 0.3, 0.25 * Math.PI, 0.75 * Math.PI); ctx.stroke();
-      // große Kulleraugen
+      const [mx, my] = this.proj(hx + dir * 0.32, hp.y, hz - 0.1);
+      ctx.fillStyle = G2; ctx.beginPath(); ctx.ellipse(mx, my, HR * 0.5, HR * 0.36, 0, 0, TAU); ctx.fill(); ctx.strokeStyle = G4; ctx.stroke();
+      ctx.fillStyle = G4;
+      for (const side of [-1, 1]) { ctx.beginPath(); ctx.arc(mx + side * HR * 0.16, my - HR * 0.06, HR * 0.045, 0, TAU); ctx.fill(); }
+      ctx.strokeStyle = G4; ctx.lineWidth = Math.max(1.5, s * 0.045); ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.arc(mx, my + HR * 0.02, HR * 0.32, 0.2 * Math.PI, 0.8 * Math.PI); ctx.stroke();
+      // Stirnschuppen
+      const dsx = -dir * (this.cam.cos) , dsy = -dir * (this.cam.sin) * this.cam.tilt; const dl = Math.hypot(dsx, dsy) || 1;
+      hexScale(cx - HR * 0.05, cy - HR * 0.55, HR * 0.28, dsx / dl, dsy / dl, true);
+      // Glubschaugen: zwei weiße Kugeln oben auf dem Kopf
       for (const side of [-1, 1]) {
-        const ex = cx + side * HR * 0.38, ey = cy - HR * 0.35;
-        ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.ellipse(ex, ey, HR * 0.3, HR * 0.34, 0, 0, TAU); ctx.fill();
-        ctx.strokeStyle = '#1f5f2a'; ctx.lineWidth = Math.max(1, s * 0.03); ctx.stroke();
-        const look = Math.sin(t * 1.3) * HR * 0.06;
-        ctx.fillStyle = '#111'; ctx.beginPath(); ctx.ellipse(ex + look + dir * HR * 0.06, ey + HR * 0.04, HR * 0.14, HR * 0.17, 0, 0, TAU); ctx.fill();
-        ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(ex + look + dir * HR * 0.06 - HR * 0.05, ey - HR * 0.03, HR * 0.05, 0, TAU); ctx.fill();
+        const ex = cx + side * HR * 0.4, ey = cy - HR * 0.75, ER = HR * 0.36;
+        ctx.fillStyle = 'rgba(0,0,0,0.15)'; ctx.beginPath(); ctx.ellipse(ex, ey + ER * 0.9, ER * 0.9, ER * 0.3, 0, 0, TAU); ctx.fill();
+        const eg = ctx.createRadialGradient(ex - ER * 0.3, ey - ER * 0.35, ER * 0.1, ex, ey, ER);
+        eg.addColorStop(0, '#ffffff'); eg.addColorStop(0.8, '#f0f0f4'); eg.addColorStop(1, '#c9c9d4');
+        ctx.fillStyle = eg; ctx.beginPath(); ctx.arc(ex, ey, ER, 0, TAU); ctx.fill();
+        ctx.strokeStyle = G4; ctx.lineWidth = Math.max(1, s * 0.035); ctx.stroke();
+        const look = Math.sin(t * 1.3) * ER * 0.12 + dir * ER * 0.18;
+        ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(ex + look, ey + ER * 0.12, ER * 0.5, 0, TAU); ctx.fill();
+        ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(ex + look - ER * 0.18, ey - ER * 0.1, ER * 0.16, 0, TAU); ctx.fill();
       }
-      // Zunge schnellt vor
+      // Zunge
       const flick = (t * 2.5) % 1;
       if (flick < 0.35) {
         const L = 0.45 * Math.sin((flick / 0.35) * Math.PI);
-        const [t0x, t0y] = this.proj(hx + dir * 0.55, hp.y, hz - 0.12), [t1x, t1y] = this.proj(hx + dir * (0.55 + L), hp.y, hz - 0.14);
-        const [taX, taY] = this.proj(hx + dir * (0.67 + L), hp.y - 0.08, hz - 0.14), [tbX, tbY] = this.proj(hx + dir * (0.67 + L), hp.y + 0.08, hz - 0.14);
+        const [t0x, t0y] = this.proj(hx + dir * 0.6, hp.y, hz - 0.14), [t1x, t1y] = this.proj(hx + dir * (0.6 + L), hp.y, hz - 0.16);
+        const [taX, taY] = this.proj(hx + dir * (0.72 + L), hp.y - 0.08, hz - 0.16), [tbX, tbY] = this.proj(hx + dir * (0.72 + L), hp.y + 0.08, hz - 0.16);
         ctx.strokeStyle = '#e0304a'; ctx.lineWidth = Math.max(1.5, s * 0.05); ctx.lineCap = 'round';
         ctx.beginPath(); ctx.moveTo(t0x, t0y); ctx.lineTo(t1x, t1y); ctx.lineTo(taX, taY); ctx.moveTo(t1x, t1y); ctx.lineTo(tbX, tbY); ctx.stroke();
       }
