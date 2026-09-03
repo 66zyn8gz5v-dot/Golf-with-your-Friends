@@ -179,7 +179,7 @@ const COURSES = [
   },
   {
     name: 'Wolkenburg', par: 4, theme: 'sky', maxStrokes: 18,
-    intro: 'Breite Wege über den Wolken, schräge Banden in jeder Kurve, ein Fallgatter und Rückenwind.',
+    intro: 'Breite Wege über den Wolken, schräge Banden in den Kurven, Rückenwind und ein Fallgatter vor dem Loch.',
     map: [
       '..........................',
       '..######..........######..',
@@ -205,7 +205,6 @@ const COURSES = [
       { type: 'wall', x0: 18, y0: 14, x1: 20, y1: 12 },
       { type: 'gate', x: 20.5, y: 5.2, w: 3, h: 0.3, period: 6, open: 0.6, phase: 0, axis: 'x' },
       { type: 'boost', x: 12, y: 11, w: 4, h: 3, angle: 0, acc: 12, max: 9 },
-      { type: 'field', x: 17, y: 6, w: 4, h: 3, fx: -1.5, fy: 0, style: 'wind' },
     ],
     decor: [
       { t: 'tower', x: 1, y: 0.5, s: 1.3 }, { t: 'tower', x: 25, y: 0.8, s: 1.3 },

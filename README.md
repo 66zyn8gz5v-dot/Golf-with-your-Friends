@@ -39,7 +39,7 @@ Das Modus-Menü ist der Platz, an dem später weitere Welten eingehängt werden.
 | 4 | Zauberwald | 3 | Portale zwischen Inseln, ein Fallen-Portal |
 | 5 | Drachenhöhle | 4 | Sand, Lavabecken, Windfeld, patrouillierender Drache |
 | 6 | Eisgrotte | 3 | spiegelglattes Eis, Wassertümpel, rotierender Kristallstern |
-| 7 | Wolkenburg | 4 | schwebende Inseln, breite Wege mit schrägen Banden in jeder Kurve, Fallgatter, Beschleuniger, leichter Gegenwind |
+| 7 | Wolkenburg | 4 | schwebende Inseln, breite Wege mit schrägen Banden in den Kurven, Rückenwind, Fallgatter |
 | 8 | Hexenturm | 5 | Lava, Eis, Fallgatter, rotierender Besen, wandernde Kessel, Portal-Abkürzung, Aufwind |
 | 9 | Burgberg | 5 | Serpentinen mit Steigungen, patrouillierende Ritter, Burggraben mit Zugbrücke, die Burg vom Startbildschirm |
 
