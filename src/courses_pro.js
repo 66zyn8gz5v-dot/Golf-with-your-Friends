@@ -25,7 +25,7 @@ const PRO_COURSES = [
   },
   {
     name: 'Nebelmoor', par: 4, theme: 'forest', maxStrokes: 18,
-    intro: 'Schmale Dämme zwischen Tümpeln, ein schwingender Balken und eine Mühle im Nebel.',
+    intro: 'Dämme mit Geländer zwischen Tümpeln, ein schwingender Balken und eine Mühle im Nebel.',
     map: [
       '........................',
       '..######wwww######......',
@@ -39,12 +39,14 @@ const PRO_COURSES = [
       '........................',
     ],
     obstacles: [
-      // Geländer am Damm zwischen den Tümpeln
+      // Geländer an allen Wasserkanten – nass wird es nur noch, wer über das Geländer hinweg zielt
       { type: 'wall', x0: 8, y0: 4, x1: 12, y1: 4 }, { type: 'wall', x0: 8, y0: 6, x1: 12, y1: 6 },
       { type: 'wall', x0: 6, y0: 4, x1: 6, y1: 6 }, { type: 'wall', x0: 14, y0: 4, x1: 16, y1: 4 },
-      { type: 'rotor', x: 9.5, y: 5, blades: 1, len: 1.0, thick: 0.14, hubR: 0.22, style: 'log', swing: { amp: 0.9, speed: 1.7 }, phase: Math.PI / 2 },
-      { type: 'windmill', x: 15.5, y: 5, axis: 'y', w: 2, depth: 1.1, gap: 0.85, speed: 1.2 },
-      { type: 'bumper', x: 14.5, y: 7.5, r: 0.4, style: 'mushroom' },
+      { type: 'wall', x0: 8, y0: 1, x1: 8, y1: 4 }, { type: 'wall', x0: 2, y0: 4, x1: 6, y1: 4 },
+      { type: 'wall', x0: 12, y0: 1, x1: 12, y1: 4 }, { type: 'wall', x0: 12, y0: 6, x1: 12, y1: 9 },
+      { type: 'wall', x0: 8, y0: 6, x1: 8, y1: 9 }, { type: 'wall', x0: 18, y0: 6, x1: 18, y1: 7 }, { type: 'wall', x0: 18, y0: 7, x1: 22, y1: 7 },
+      { type: 'rotor', x: 9.5, y: 5, blades: 1, len: 0.9, thick: 0.14, hubR: 0.22, style: 'log', swing: { amp: 0.8, speed: 1.4 }, phase: Math.PI / 2 },
+      { type: 'windmill', x: 15.5, y: 5, axis: 'y', w: 2, depth: 1.1, gap: 1.0, speed: 1.0 },
     ],
     atmo: 'fog',
     decor: [{ t: 'tree', x: 11, y: 4.2, s: 1.3, glow: true }, { t: 'crystal', x: 20, y: 3 }],
