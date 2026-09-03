@@ -16,6 +16,8 @@ npx serve .          # oder: python3 -m http.server 8080
 - Mit Maus oder Finger vom Ball wegziehen (Schleuder-Prinzip) und loslassen.
 - Je weiter gezogen wird, desto kräftiger der Schlag (Kraftanzeige unten).
 - `Esc` bricht das Zielen ab.
+- Kamera: folgt dem Ball und blickt Richtung Loch. Tasten unten links oder Tastatur:
+  `M` Übersicht der ganzen Bahn, `Q`/`E` drehen, `+`/`-` oder Mausrad zoomen.
 - 1–4 Spieler im Hotseat-Modus: Jeder spielt die Bahn nacheinander zu Ende.
 - Wasser, Lava und Abgrund: Ball zurück zur letzten Position, +1 Strafschlag.
 

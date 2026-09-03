@@ -18,6 +18,7 @@
   const state = {
     phase: 'title', players: [], holeIdx: 0, level: null, theme: null, t: 0, ball: null, aim: null,
     particles: [], curPlayer: 0, strokes: 0, restTimer: 0, slowTimer: 0, lastBounceSfx: 0,
+    camMode: 'overview', camTheta: Math.PI / 4, zoomFactor: 1,
   };
   let playerCount = 1, msgTimer = null, waitTimer = null;
 
@@ -71,6 +72,26 @@
     return `+${d}`;
   }
 
+  /* ---------- Kamera ---------- */
+  function thetaTowards(fromX, fromY, toX, toY) { // Blickrichtung so, dass "to" oben im Bild liegt
+    const dx = toX - fromX, dy = toY - fromY;
+    return Math.hypot(dx, dy) < 0.01 ? state.camTheta : Math.atan2(-dx, -dy);
+  }
+  function faceCup() {
+    const b = state.ball, c = state.level.cup;
+    state.camTheta = thetaTowards(b.x, b.y, c.x, c.y);
+  }
+  function setCamMode(mode) {
+    state.camMode = mode;
+    $('cam-overview').classList.toggle('sel', mode === 'overview');
+  }
+  function updateCamera(dt) {
+    if (!state.level) return;
+    if (state.camMode === 'overview' || !state.ball) R.target = R.overviewTarget();
+    else R.target = R.followTarget(state.ball, state.camTheta, R.defaultZoom() * state.zoomFactor);
+    R.updateCamera(dt);
+  }
+
   /* ---------- Spielablauf ---------- */
   function startGame(n) {
     state.players = Array.from({ length: n }, (_, i) => ({ name: PLAYER_NAMES[i], color: PLAYER_COLORS[i], scores: [] }));
@@ -83,6 +104,7 @@
     state.level = buildLevel(def); state.theme = THEMES[def.theme];
     R.setLevel(state.level, state.theme);
     state.ball = null; state.aim = null;
+    setCamMode('overview'); R.target = R.overviewTarget(); R.snapCamera();
   }
   function loadHole(i) {
     state.holeIdx = i;
@@ -96,6 +118,7 @@
     const p = state.players[state.curPlayer], lv = state.level;
     state.ball = makeBall(lv.tee.x, lv.tee.y, p.color);
     state.strokes = 0; state.phase = 'aim'; state.aim = null; state.restTimer = 0; state.slowTimer = 0;
+    faceCup(); setCamMode('follow');
     if (state.players.length > 1) showMessage(`${p.name} ist dran`, 1300);
     updateHud();
   }
@@ -109,6 +132,7 @@
   function ballAtRest() {
     const b = state.ball;
     b.vx = 0; b.vy = 0; b.restX = b.x; b.restY = b.y;
+    faceCup();
     if (state.strokes >= MAX_STROKES) { showMessage(`Maximale Schlagzahl (${MAX_STROKES}) erreicht`, 1800); finishTurn(MAX_STROKES); return; }
     state.phase = 'aim';
   }
@@ -134,6 +158,7 @@
     clearTimeout(waitTimer);
     waitTimer = setTimeout(() => {
       b.x = rx; b.y = ry; b.vx = 0; b.vy = 0; b.z = 0.6; b.vz = 0; b.portalCd = 0.5;
+      faceCup();
       if (state.strokes >= MAX_STROKES) finishTurn(MAX_STROKES); else state.phase = 'aim';
       updateHud();
     }, 900);
@@ -242,6 +267,7 @@
       }
     }
     updateParticles(dt);
+    updateCamera(dt);
     R.drawFrame(state);
     ui.power.classList.toggle('visible', !!state.aim);
     if (state.aim) ui.powerFill.style.width = `${Math.round(state.aim.power * 100)}%`;
@@ -276,7 +302,20 @@
   canvas.addEventListener('pointercancel', e => endDrag(e, true));
   window.addEventListener('keydown', e => {
     if (e.key === 'Escape' && drag) { drag = null; state.aim = null; }
+    if (e.key === 'm' || e.key === 'M') toggleOverview();
+    if (e.key === '+') zoomBy(1.25); if (e.key === '-') zoomBy(0.8);
+    if (e.key === 'q' || e.key === 'ArrowLeft') rotateBy(-Math.PI / 4);
+    if (e.key === 'e' || e.key === 'ArrowRight') rotateBy(Math.PI / 4);
   });
+  function toggleOverview() { if (state.ball) setCamMode(state.camMode === 'overview' ? 'follow' : 'overview'); }
+  function zoomBy(f) { state.zoomFactor = Math.max(0.5, Math.min(2.2, state.zoomFactor * f)); if (state.camMode === 'overview' && state.ball) setCamMode('follow'); }
+  function rotateBy(a) { state.camTheta += a; if (state.camMode === 'overview' && state.ball) setCamMode('follow'); }
+  $('cam-overview').addEventListener('click', toggleOverview);
+  $('cam-in').addEventListener('click', () => zoomBy(1.25));
+  $('cam-out').addEventListener('click', () => zoomBy(0.8));
+  $('cam-left').addEventListener('click', () => rotateBy(-Math.PI / 4));
+  $('cam-right').addEventListener('click', () => rotateBy(Math.PI / 4));
+  canvas.addEventListener('wheel', e => { e.preventDefault(); zoomBy(e.deltaY < 0 ? 1.1 : 0.9); }, { passive: false });
   window.addEventListener('resize', () => R.resize());
 
   // Test-Hook (für automatisierte Prüfungen): aktuelle Bahn für alle Spieler beenden

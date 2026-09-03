@@ -21,7 +21,7 @@ html, body {
 #hud-name, #hud-strokes { font-size: 19px; font-weight: bold; margin-top: 2px; }
 
 #power {
-  position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%);
+  position: fixed; left: 50%; bottom: 100px; transform: translateX(-50%);
   width: 220px; height: 14px; border-radius: 8px; overflow: hidden;
   background: rgba(20,16,40,0.7); border: 2px solid rgba(255,215,120,0.55);
   pointer-events: none; opacity: 0; transition: opacity 0.15s;
@@ -30,7 +30,7 @@ html, body {
 #power-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #6fe07a, #ffd166, #ff5a5a); }
 
 #scoreboard {
-  position: fixed; right: 12px; bottom: 12px; pointer-events: none;
+  position: fixed; right: 12px; bottom: 12px; pointer-events: none; max-width: 45vw;
   background: rgba(20,16,40,0.7); border: 2px solid rgba(255,215,120,0.4);
   border-radius: 12px; padding: 6px 12px; font-size: 14px;
 }
@@ -51,6 +51,14 @@ html, body {
   position: fixed; left: 12px; bottom: 12px; font-size: 13px; opacity: 0.75; pointer-events: none;
   background: rgba(20,16,40,0.6); padding: 4px 10px; border-radius: 8px;
 }
+#controls { position: fixed; left: 12px; bottom: 44px; display: flex; gap: 6px; }
+.cbtn {
+  font: inherit; font-size: 15px; font-weight: bold; color: #f4efe6; cursor: pointer;
+  background: rgba(20,16,40,0.72); border: 2px solid rgba(255,215,120,0.55); border-radius: 10px;
+  min-width: 40px; height: 40px; padding: 0 10px; touch-action: manipulation;
+}
+.cbtn.sel { background: rgba(255,209,102,0.4); color: #ffe08a; }
+.cbtn:active { transform: translateY(1px); }
 
 .screen {
   position: fixed; inset: 0; display: none; align-items: center; justify-content: center;

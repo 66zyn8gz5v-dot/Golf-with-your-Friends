@@ -1,6 +1,7 @@
-/* Isometrische 2,5D-Darstellung auf Canvas. Welt: x nach "rechts-unten", y nach "links-unten", z nach oben. */
-const AX = 0.866, AY = 0.5;
-const SQ2 = Math.SQRT2;
+/* 2,5D-Darstellung auf Canvas mit frei drehbarer Kamera (Schrägsicht von oben, hinter dem Ball).
+   Welt: x/y in Kacheln, z nach oben. Die Kamera hat Fokus, Drehwinkel, Zoom und Neigung. */
+const CAM_TILT = 0.62;   // Neigung: 1 = senkrecht von oben, kleiner = flacher
+const CAM_ZF = 0.9;      // Skalierung der Höhe
 
 function hexToRgb(hex) {
   const n = parseInt(hex.slice(1), 16);
@@ -21,35 +22,56 @@ function polyArea(p) {
 class Renderer {
   constructor(canvas) {
     this.cv = canvas; this.ctx = canvas.getContext('2d');
-    this.scale = 30; this.ox = 0; this.oy = 0; this.level = null; this.theme = null;
-    this.floorCache = null; this.w = 1; this.h = 1; this.dpr = 1;
+    this.level = null; this.theme = null; this.w = 1; this.h = 1; this.dpr = 1;
+    // aktuelle Kamera und Zielwerte (werden weich angenähert)
+    this.cam = { fx: 0, fy: 0, th: Math.PI / 4, zoom: 40, tilt: CAM_TILT, cx: 0, cy: 0 };
+    this.target = { fx: 0, fy: 0, th: Math.PI / 4, zoom: 40, tilt: CAM_TILT, cx: 0, cy: 0 };
+    this.scale = 40;
+    this.updateTrig();
   }
+  updateTrig() { const c = this.cam; c.sin = Math.sin(c.th); c.cos = Math.cos(c.th); this.scale = c.zoom; }
   resize() {
     this.dpr = Math.min(window.devicePixelRatio || 1, 2);
     this.w = window.innerWidth; this.h = window.innerHeight;
     this.cv.width = Math.round(this.w * this.dpr); this.cv.height = Math.round(this.h * this.dpr);
     this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
-    if (this.level) this.fit();
   }
-  setLevel(level, theme) { this.level = level; this.theme = theme; this.fit(); }
-  fit() {
-    const { W, H } = this.level;
-    const m = 1.6;
-    const minX = -(H + m) * AX, maxX = (W + m) * AX;
-    const minY = -2.6, maxY = (W + H + 2 * m) * AY + 1.2;
-    const padX = 20, padTop = 78, padBot = 60;
-    const s = Math.min((this.w - 2 * padX) / (maxX - minX), (this.h - padTop - padBot) / (maxY - minY));
-    this.scale = s;
-    this.ox = this.w / 2 - ((minX + maxX) / 2) * s;
-    this.oy = padTop + (this.h - padTop - padBot) / 2 - ((minY + maxY) / 2) * s;
-    this.floorCache = null;
+  setLevel(level, theme) { this.level = level; this.theme = theme; }
+  /* Zoomstufe für die Verfolger-Kamera, abhängig von der Bildschirmgröße */
+  defaultZoom() { return Math.max(30, Math.min(60, Math.min(this.w / 12, this.h / 14))); }
+  /* Übersicht: ganze Bahn im Bild */
+  overviewTarget() {
+    const { W, H } = this.level, padTop = 78, padBot = 70;
+    const span = (W + H + 4) * Math.SQRT1_2;
+    const zoom = Math.min((this.w - 30) / span, (this.h - padTop - padBot) / (span * CAM_TILT + 3));
+    return { fx: W / 2, fy: H / 2, th: Math.PI / 4, zoom, tilt: CAM_TILT, cx: this.w / 2, cy: padTop + (this.h - padTop - padBot) / 2 + zoom * 0.8 };
   }
-  proj(x, y, z = 0) { return [this.ox + (x - y) * AX * this.scale, this.oy + ((x + y) * AY - z) * this.scale]; }
+  /* Verfolger-Kamera: Ball unten im Bild, Blick in Richtung th */
+  followTarget(ball, th, zoom) {
+    const ahead = 2.0;
+    return { fx: ball.x - Math.sin(th) * ahead, fy: ball.y - Math.cos(th) * ahead, th, zoom, tilt: CAM_TILT, cx: this.w / 2, cy: this.h * 0.55 };
+  }
+  snapCamera() { Object.assign(this.cam, this.target); this.updateTrig(); }
+  updateCamera(dt) {
+    const c = this.cam, tg = this.target, k = Math.min(1, dt * 4);
+    c.fx += (tg.fx - c.fx) * k; c.fy += (tg.fy - c.fy) * k;
+    c.zoom += (tg.zoom - c.zoom) * k; c.cx += (tg.cx - c.cx) * k; c.cy += (tg.cy - c.cy) * k;
+    let d = tg.th - c.th; d = ((d + Math.PI) % TAU + TAU) % TAU - Math.PI;
+    c.th += d * Math.min(1, dt * 3);
+    this.updateTrig();
+  }
+  proj(x, y, z = 0) {
+    const c = this.cam, dx = x - c.fx, dy = y - c.fy;
+    const rx = dx * c.cos - dy * c.sin, ry = dx * c.sin + dy * c.cos;
+    return [c.cx + rx * c.zoom, c.cy + ry * c.zoom * c.tilt - z * c.zoom * CAM_ZF];
+  }
+  depth(x, y) { const c = this.cam; return (x - c.fx) * c.sin + (y - c.fy) * c.cos; }
   unprojDelta(dx, dy) {
-    const a = dx / (AX * this.scale), b = dy / (AY * this.scale);
-    return [(a + b) / 2, (b - a) / 2];
+    const c = this.cam, rx = dx / c.zoom, ry = dy / (c.zoom * c.tilt);
+    return [rx * c.cos + ry * c.sin, -rx * c.sin + ry * c.cos];
   }
-  screenToWorld(sx, sy) { return this.unprojDelta(sx - this.ox, sy - this.oy); }
+  screenToWorld(sx, sy) { const [x, y] = this.unprojDelta(sx - this.cam.cx, sy - this.cam.cy); return [x + this.cam.fx, y + this.cam.fy]; }
+  onScreen(sx, sy, m) { return sx > -m && sx < this.w + m && sy > -m && sy < this.h + m; }
 
   /* ---------- Grundformen ---------- */
   pathPoly(ctx, poly, z = 0) {
@@ -65,7 +87,7 @@ class Renderer {
   isoEllipse(ctx, x, y, z, r, color, ry = null) {
     const [sx, sy] = this.proj(x, y, z);
     ctx.beginPath();
-    ctx.ellipse(sx, sy, r * SQ2 * AX * this.scale, (ry ?? r) * SQ2 * AY * this.scale, 0, 0, TAU);
+    ctx.ellipse(sx, sy, r * this.scale, (ry ?? r) * this.scale * this.cam.tilt, 0, 0, TAU);
     ctx.fillStyle = color; ctx.fill();
   }
   prism(ctx, poly, z0, h, top, side, opts = {}) {
@@ -74,9 +96,9 @@ class Renderer {
       const a = poly[i], b = poly[(i + 1) % n];
       const ex = b[0] - a[0], ey = b[1] - a[1];
       let nx = ey * orient, ny = -ex * orient;
-      if (nx + ny <= 0) continue;
       const L = Math.hypot(nx, ny) || 1; nx /= L; ny /= L;
-      const light = 0.72 + 0.28 * ((nx - ny + 1) / 2);
+      if (nx * this.cam.sin + ny * this.cam.cos <= 0.001) continue;
+      const light = 0.68 + 0.32 * (0.5 + 0.5 * (nx * 0.85 - ny * 0.53));
       const p0 = this.proj(a[0], a[1], z0), p1 = this.proj(b[0], b[1], z0);
       const p2 = this.proj(b[0], b[1], z0 + h), p3 = this.proj(a[0], a[1], z0 + h);
       ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.lineTo(p2[0], p2[1]); ctx.lineTo(p3[0], p3[1]); ctx.closePath();
@@ -94,12 +116,10 @@ class Renderer {
     return p;
   }
 
-  /* ---------- Boden-Cache ---------- */
-  buildFloorCache() {
-    const cv = document.createElement('canvas');
-    cv.width = this.cv.width; cv.height = this.cv.height;
-    const ctx = cv.getContext('2d'); ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+  /* ---------- Boden ---------- */
+  drawFloor(ctx) {
     const { W, H, tiles } = this.level, th = this.theme;
+    const cull = this.scale * 1.5;
     // Erdscholle
     const m = 1.4;
     const slab = [[-m, -m], [W + m, -m], [W + m, H + m], [-m, H + m]];
@@ -107,13 +127,18 @@ class Renderer {
       // Schwebende Inseln: jede Fairway-Kachel bekommt einen Fels-Sockel
       const order = [];
       for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (this.level.isFloorChar(tiles[y][x])) order.push([x, y]);
-      order.sort((a, b) => (a[0] + a[1]) - (b[0] + b[1]));
-      for (const [x, y] of order) this.prism(ctx, [[x, y], [x + 1, y], [x + 1, y + 1], [x, y + 1]], -1.3, 1.3, th.ground, th.groundEdge);
+      order.sort((a, b) => this.depth(a[0] + 0.5, a[1] + 0.5) - this.depth(b[0] + 0.5, b[1] + 0.5));
+      for (const [x, y] of order) {
+        const [sx, sy] = this.proj(x + 0.5, y + 0.5);
+        if (this.onScreen(sx, sy, cull * 2)) this.prism(ctx, [[x, y], [x + 1, y], [x + 1, y + 1], [x, y + 1]], -1.3, 1.3, th.ground, th.groundEdge);
+      }
     } else this.prism(ctx, slab, -1.0, 1.0, th.ground, th.groundEdge);
     // Kacheln
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
       const c = tiles[y][x];
       if (c === '.' || c === 'x' || c === 'w' || c === 'l') continue;
+      const [tsx, tsy] = this.proj(x + 0.5, y + 0.5);
+      if (!this.onScreen(tsx, tsy, cull)) continue;
       const poly = [[x, y], [x + 1, y], [x + 1, y + 1], [x, y + 1]];
       let col;
       if (c === 's') col = th.sand; else if (c === 'i') col = th.ice; else col = th.floor[(x + y) & 1];
@@ -135,7 +160,6 @@ class Renderer {
     this.isoEllipse(ctx, t.x, t.y, 0, 0.5, 'rgba(0,0,0,0.18)');
     this.isoEllipse(ctx, t.x, t.y, 0.01, 0.42, th.accent);
     this.isoEllipse(ctx, t.x, t.y, 0.02, 0.3, shade(th.accent, 0.8));
-    this.floorCache = cv;
   }
 
   /* ---------- Frame ---------- */
@@ -149,13 +173,14 @@ class Renderer {
     if (th.stars) this.drawStars(ctx, t);
     if (th.clouds) this.drawSkyClouds(ctx, t);
 
-    if (!this.floorCache) this.buildFloorCache();
-    ctx.drawImage(this.floorCache, 0, 0, this.w, this.h);
+    this.drawFloor(ctx);
 
     // animierte Flüssigkeiten
     for (let y = 0; y < lv.H; y++) for (let x = 0; x < lv.W; x++) {
       const c = lv.tiles[y][x];
       if (c !== 'w' && c !== 'l') continue;
+      const [lsx, lsy] = this.proj(x + 0.5, y + 0.5);
+      if (!this.onScreen(lsx, lsy, this.scale * 1.5)) continue;
       const poly = [[x, y], [x + 1, y], [x + 1, y + 1], [x, y + 1]];
       const base = c === 'w' ? th.water : th.lava;
       const pulse = 0.5 + 0.5 * Math.sin(t * (c === 'w' ? 2 : 1.3) + x * 1.7 + y * 2.3);
@@ -176,18 +201,29 @@ class Renderer {
     const wall = th.wall;
     for (const wr of lv.walls) {
       const poly = [[wr.x, wr.y], [wr.x + wr.w, wr.y], [wr.x + wr.w, wr.y + wr.h], [wr.x, wr.y + wr.h]];
-      items.push({ k: wr.x + wr.w / 2 + wr.y + wr.h / 2, draw: () => this.drawWall(ctx, poly, wall) });
+      items.push({ x: wr.x + wr.w / 2, y: wr.y + wr.h / 2, draw: () => this.drawWall(ctx, poly, wall) });
     }
     for (const b of lv.blocks) {
       const poly = [[b.x, b.y], [b.x + 1, b.y], [b.x + 1, b.y + 1], [b.x, b.y + 1]];
-      items.push({ k: b.x + b.y + 1, draw: () => this.prism(ctx, poly, 0, 1.0, th.block.top, th.block.side, { outline: shade(th.block.side, 0.7) }) });
+      items.push({ x: b.x + 0.5, y: b.y + 0.5, draw: () => this.prism(ctx, poly, 0, 1.0, th.block.top, th.block.side, { outline: shade(th.block.side, 0.7) }) });
     }
-    for (const d of lv.decor) items.push({ k: d.x + d.y, draw: () => this.drawDecor(ctx, d, t) });
+    for (const d of lv.decor) items.push({ x: d.x, y: d.y, draw: () => this.drawDecor(ctx, d, t) });
     for (const ob of lv.obstacles) this.pushObstacle(items, ctx, ob, t);
-    items.push({ k: lv.cup.x + lv.cup.y + 0.01, draw: () => this.drawFlag(ctx, t) });
-    if (state.ball) items.push({ k: state.ball.x + state.ball.y + 0.02, draw: () => this.drawBall(ctx, state.ball) });
+    items.push({ x: lv.cup.x, y: lv.cup.y, bias: 0.01, draw: () => this.drawFlag(ctx, t) });
+    // Der Ball wird zum Schluss gezeichnet, damit er nie hinter Bäumen oder Mauern verschwindet
+    for (const it of items) { it.k = this.depth(it.x, it.y) + (it.bias || 0); const p = this.proj(it.x, it.y); it.sx = p[0]; it.sy = p[1]; }
     items.sort((a, b) => a.k - b.k);
-    for (const it of items) it.draw();
+    const b = state.ball, bp = b ? this.proj(b.x, b.y, 0) : null, bk = b ? this.depth(b.x, b.y) : 0;
+    const cullM = this.scale * 3.5, fadeW = this.scale * 2.2, fadeH = this.scale * 3.2;
+    for (const it of items) {
+      if (!this.onScreen(it.sx, it.sy, cullM)) continue;
+      // Objekte, die vor dem Ball stehen und ihn verdecken würden, fast durchsichtig zeichnen
+      const fade = bp && !it.ball && it.k > bk + 0.3 && Math.abs(it.sx - bp[0]) < fadeW && it.sy > bp[1] - this.scale * 0.4 && it.sy < bp[1] + fadeH;
+      if (fade) ctx.globalAlpha = 0.22;
+      it.draw();
+      if (fade) ctx.globalAlpha = 1;
+    }
+    if (b) this.drawBall(ctx, b);
 
     // Partikel
     for (const p of state.particles) {
@@ -283,7 +319,7 @@ class Renderer {
     ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(lx, ly); ctx.lineTo(rx, ry); ctx.closePath(); ctx.fill();
     ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255,255,255,0.7)';
     const [bx, by] = this.proj(ball.x, ball.y, 0.01);
-    ctx.beginPath(); ctx.ellipse(bx, by, 0.5 * SQ2 * AX * this.scale, 0.5 * SQ2 * AY * this.scale, 0, 0, TAU); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(bx, by, 0.5 * this.scale, 0.5 * this.scale * this.cam.tilt, 0, 0, TAU); ctx.stroke();
   }
 
   /* ---------- Hindernisse ---------- */
@@ -321,7 +357,7 @@ class Renderer {
       ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 1.5;
       for (let i = 0; i < 3; i++) {
         const a = t * 2 + (i * TAU) / 3;
-        ctx.beginPath(); ctx.ellipse(sx, sy, ob.r * 0.8 * SQ2 * AX * s, ob.r * 0.8 * SQ2 * AY * s, 0, a, a + 1.2); ctx.stroke();
+        ctx.beginPath(); ctx.ellipse(sx, sy, ob.r * 0.8 * s, ob.r * 0.8 * s * this.cam.tilt, 0, a, a + 1.2); ctx.stroke();
       }
     } else if (ob.type === 'rail') {
       ctx.strokeStyle = 'rgba(40,30,25,0.8)'; ctx.lineWidth = Math.max(1, s * 0.05);
@@ -347,10 +383,10 @@ class Renderer {
   pushObstacle(items, ctx, ob, t) {
     const th = this.theme;
     if (ob.type === 'mover') {
-      items.push({ k: ob.x + ob.y + 0.3, draw: () => this.drawMover(ctx, ob, t) });
+      items.push({ x: ob.x, y: ob.y, bias: 0.3, draw: () => this.drawMover(ctx, ob, t) });
     } else if (ob.type === 'rotor') {
       const hub = this.circlePoly(ob.x, ob.y, ob.hubR, 8);
-      items.push({ k: ob.x + ob.y, draw: () => {
+      items.push({ x: ob.x, y: ob.y, draw: () => {
         this.prism(ctx, hub, 0, ob.height + 0.25, th.rotor.top, th.rotor.side);
         for (let i = 0; i < ob.blades; i++) {
           const a = ob.bladeAngle(i), ca = Math.cos(a), sa = Math.sin(a), tk = ob.thick;
@@ -367,10 +403,10 @@ class Renderer {
       const ends = horizontal ? [[ob.x - ob.w / 2 - pw / 2, ob.y], [ob.x + ob.w / 2 + pw / 2, ob.y]] : [[ob.x, ob.y - ob.h / 2 - pw / 2], [ob.x, ob.y + ob.h / 2 + pw / 2]];
       for (const [px, py] of ends) {
         const poly = [[px - pw / 2, py - pw / 2], [px + pw / 2, py - pw / 2], [px + pw / 2, py + pw / 2], [px - pw / 2, py + pw / 2]];
-        items.push({ k: px + py, draw: () => this.prism(ctx, poly, 0, postH, th.block.top, th.block.side) });
+        items.push({ x: px, y: py, draw: () => this.prism(ctx, poly, 0, postH, th.block.top, th.block.side) });
       }
       const bar = [[ob.x - ob.w / 2, ob.y - ob.h / 2], [ob.x + ob.w / 2, ob.y - ob.h / 2], [ob.x + ob.w / 2, ob.y + ob.h / 2], [ob.x - ob.w / 2, ob.y + ob.h / 2]];
-      items.push({ k: ob.x + ob.y + 0.05, draw: () => {
+      items.push({ x: ob.x, y: ob.y, bias: 0.05, draw: () => {
         const z0 = ob.lift * ob.liftH;
         this.prism(ctx, bar, z0, ob.barH, '#7a5a3a', '#4a3320', { outline: '#2a1a10' });
         // Gitterstäbe
@@ -383,14 +419,14 @@ class Renderer {
         }
       } });
     } else if (ob.type === 'bumper') {
-      items.push({ k: ob.x + ob.y, draw: () => {
+      items.push({ x: ob.x, y: ob.y, draw: () => {
         const now = performance.now() / 1000, sq = Math.max(0, 1 - (now - ob.hitAt) * 4);
         const sc = 1 + sq * 0.25;
         if (ob.style === 'crystal') this.spriteCrystal(ctx, ob.x, ob.y, 0, ob.r * 1.6 * sc, '#cfeeff', '#5b90c6');
         else this.spriteMushroom(ctx, ob.x, ob.y, 0, ob.r * 1.7 * sc, '#e63b5a', true);
       } });
     } else if (ob.type === 'portal') {
-      items.push({ k: ob.x + ob.y, draw: () => {
+      items.push({ x: ob.x, y: ob.y, draw: () => {
         const s = this.scale, [sx, sy] = this.proj(ob.x, ob.y, 0);
         ctx.strokeStyle = rgba(ob.color, ob.entrance ? 0.9 : 0.5); ctx.lineWidth = Math.max(2, s * 0.08);
         ctx.beginPath(); ctx.ellipse(sx, sy - s * 0.9, s * ob.r * 1.0, s * 1.0, 0, 0, TAU); ctx.stroke();
