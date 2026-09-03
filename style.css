@@ -1,0 +1,90 @@
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0; width: 100%; height: 100%;
+  overflow: hidden; background: #0b1020;
+  font-family: "Trebuchet MS", "Segoe UI", Verdana, sans-serif;
+  color: #f4efe6; user-select: none; -webkit-user-select: none;
+}
+#game { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: crosshair; }
+
+#hud {
+  position: fixed; top: 12px; left: 12px; right: 12px;
+  display: flex; justify-content: space-between; pointer-events: none; gap: 10px;
+}
+.hud-box {
+  background: rgba(20, 16, 40, 0.72); border: 2px solid rgba(255, 215, 120, 0.55);
+  border-radius: 12px; padding: 8px 14px; min-width: 150px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.35); backdrop-filter: blur(4px);
+}
+#hud-right { text-align: right; }
+#hud-hole, #hud-player { font-size: 13px; letter-spacing: 1px; text-transform: uppercase; color: #ffd98a; }
+#hud-name, #hud-strokes { font-size: 19px; font-weight: bold; margin-top: 2px; }
+
+#power {
+  position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%);
+  width: 220px; height: 14px; border-radius: 8px; overflow: hidden;
+  background: rgba(20,16,40,0.7); border: 2px solid rgba(255,215,120,0.55);
+  pointer-events: none; opacity: 0; transition: opacity 0.15s;
+}
+#power.visible { opacity: 1; }
+#power-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #6fe07a, #ffd166, #ff5a5a); }
+
+#scoreboard {
+  position: fixed; right: 12px; bottom: 12px; pointer-events: none;
+  background: rgba(20,16,40,0.7); border: 2px solid rgba(255,215,120,0.4);
+  border-radius: 12px; padding: 6px 12px; font-size: 14px;
+}
+#scoreboard .row { display: flex; align-items: center; gap: 8px; padding: 2px 0; }
+#scoreboard .row.active { color: #ffd98a; font-weight: bold; }
+#scoreboard .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; border: 1px solid rgba(0,0,0,0.4); }
+#scoreboard .score { margin-left: auto; padding-left: 12px; }
+
+#message {
+  position: fixed; left: 50%; top: 18%; transform: translateX(-50%);
+  font-size: 34px; font-weight: bold; text-align: center; pointer-events: none;
+  color: #fff3c4; text-shadow: 0 2px 0 #7a4a00, 0 0 18px rgba(255,200,80,0.8);
+  opacity: 0; transition: opacity 0.25s; white-space: nowrap;
+}
+#message.visible { opacity: 1; }
+
+#hint {
+  position: fixed; left: 12px; bottom: 12px; font-size: 13px; opacity: 0.75; pointer-events: none;
+  background: rgba(20,16,40,0.6); padding: 4px 10px; border-radius: 8px;
+}
+
+.screen {
+  position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
+  background: rgba(8, 6, 20, 0.72); z-index: 10; backdrop-filter: blur(3px);
+}
+.screen.visible { display: flex; }
+.panel {
+  background: linear-gradient(180deg, #2c2450, #171232);
+  border: 3px solid #ffd166; border-radius: 18px; padding: 28px 36px; text-align: center;
+  min-width: 320px; max-width: 92vw; box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+}
+.panel h1 { margin: 0 0 4px; font-size: 40px; color: #ffe08a; text-shadow: 0 3px 0 #7a4a00; letter-spacing: 2px; }
+.panel h2 { margin: 0 0 12px; font-size: 26px; color: #ffe08a; }
+.panel .sub { color: #cbbfe6; margin-bottom: 18px; font-size: 15px; }
+.panel p { margin: 6px 0; }
+.btn {
+  display: inline-block; margin: 6px 4px; padding: 10px 22px; border-radius: 10px; cursor: pointer;
+  background: linear-gradient(180deg, #ffd166, #e39a2a); color: #3a2200; font-weight: bold; font-size: 17px;
+  border: 2px solid #8a5a10; box-shadow: 0 3px 0 #8a5a10;
+}
+.btn:active { transform: translateY(2px); box-shadow: none; }
+.btn.small { padding: 6px 14px; font-size: 15px; }
+.btn.ghost { background: rgba(255,255,255,0.1); color: #f4efe6; border-color: rgba(255,255,255,0.35); box-shadow: none; }
+.btn.ghost.sel { background: rgba(255, 209, 102, 0.35); border-color: #ffd166; }
+table.scores { margin: 10px auto 16px; border-collapse: collapse; font-size: 16px; }
+table.scores th, table.scores td { padding: 5px 12px; border-bottom: 1px solid rgba(255,255,255,0.15); }
+table.scores th { color: #ffd98a; font-weight: normal; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; }
+table.scores td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.legend { text-align: left; font-size: 13px; color: #cbbfe6; margin-top: 12px; line-height: 1.5; }
+.medal { font-size: 20px; }
+@media (max-width: 600px) {
+  #hud-name, #hud-strokes { font-size: 15px; }
+  .hud-box { min-width: 0; padding: 6px 10px; }
+  #message { font-size: 24px; }
+  .panel { padding: 18px 16px; }
+  .panel h1 { font-size: 30px; }
+}

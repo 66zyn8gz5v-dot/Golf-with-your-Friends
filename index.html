@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <title>Fantasy Golf – Golf with your Friends</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <div id="hud">
+    <div class="hud-box" id="hud-left">
+      <div id="hud-hole">Bahn 1 / 8</div>
+      <div id="hud-name">–</div>
+    </div>
+    <div class="hud-box" id="hud-right">
+      <div id="hud-player">–</div>
+      <div id="hud-strokes">Schläge: 0 · Par 3</div>
+    </div>
+  </div>
+
+  <div id="power"><div id="power-fill"></div></div>
+  <div id="scoreboard"></div>
+  <div id="message"></div>
+  <div id="hint">Ziehen &amp; loslassen zum Schlagen</div>
+
+  <div id="overlay" class="screen"></div>
+
+  <script src="src/themes.js"></script>
+  <script src="src/courses.js"></script>
+  <script src="src/level.js"></script>
+  <script src="src/obstacles.js"></script>
+  <script src="src/physics.js"></script>
+  <script src="src/render.js"></script>
+  <script src="src/sfx.js"></script>
+  <script src="src/main.js"></script>
+</body>
+</html>
