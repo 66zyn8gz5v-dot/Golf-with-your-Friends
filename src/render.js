@@ -555,7 +555,7 @@ class Renderer {
     const g = ob.gap / 2 + 0.05, dd = ob.depth / 2;
     const bridge = ax ? [[ob.x - g, ob.y - dd], [ob.x + g, ob.y - dd], [ob.x + g, ob.y + dd], [ob.x - g, ob.y + dd]] : [[ob.x - dd, ob.y - g], [ob.x + dd, ob.y - g], [ob.x + dd, ob.y + g], [ob.x - dd, ob.y + g]];
     this.prism(ctx, bridge, 1.05, ob.height - 1.05, wallTop, wallSide, { outline: '#6b5a4a' });
-    const rw = ob.w / 2 + 0.15, rd = ob.depth / 2 + 0.15;
+    const rw = ob.w / 2 + ob.overlap + 0.15, rd = ob.depth / 2 + 0.15;
     const roofBase = ax ? [[ob.x - rw, ob.y - rd], [ob.x + rw, ob.y - rd], [ob.x + rw, ob.y + rd], [ob.x - rw, ob.y + rd]] : [[ob.x - rd, ob.y - rw], [ob.x + rd, ob.y - rw], [ob.x + rd, ob.y + rw], [ob.x - rd, ob.y + rw]];
     this.prism(ctx, roofBase, ob.height, 0.3, roof, '#4a2c18');
     // Spitzdach als Pyramide

@@ -162,11 +162,12 @@ class Ramp {
    in einer senkrechten Ebene vor dem Durchgang; zeigt ein Flügel nach unten, ist die Tür versperrt. */
 class Windmill {
   constructor(d) {
-    Object.assign(this, { w: 3, depth: 1.2, gap: 0.8, speed: 1.2, phase: 0, axis: 'y', blades: 4, len: 1.3, height: 1.7 }, d);
+    Object.assign(this, { w: 3, depth: 1.2, gap: 0.8, speed: 1.2, phase: 0, axis: 'y', blades: 4, len: 1.3, height: 1.7, overlap: 0.7 }, d);
     this.type = 'windmill'; this.angle = 0; this.blocked = false;
     // axis: Richtung, in der sich das Gebäude erstreckt ('y' = quer zu einem Weg entlang x)
+    // overlap: die Gebäudehälften reichen in die Randmauern hinein, damit keine Lücke bleibt
     const ax = this.axis === 'x';
-    const bw = (this.w - this.gap) / 2, off = this.gap / 2 + bw / 2;
+    const bw = (this.w - this.gap) / 2 + this.overlap, off = this.gap / 2 + bw / 2;
     this.blocks = ax
       ? [rectPoly(this.x - off, this.y, bw, this.depth), rectPoly(this.x + off, this.y, bw, this.depth)]
       : [rectPoly(this.x, this.y - off, this.depth, bw), rectPoly(this.x, this.y + off, this.depth, bw)];
