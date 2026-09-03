@@ -60,8 +60,8 @@
       <div class="sub">Golf with your Friends · ${COURSES.length} magische Bahnen in 2,5D</div>
       <p>Modus wählen:</p>
       <div class="modes">
-        <span class="btn mode" data-mode="normal"><b>Normal</b><small>Alle ${COURSES.length} Bahnen der Reihe nach, mit Schlaglimit und Wertung</small></span>
-        <span class="btn mode" data-mode="creative"><b>Kreativ</b><small>Startet sofort: ein Spieler, Schleuder, im Spiel frei zwischen den Bahnen springen, kein Schlaglimit</small></span>
+        <span class="btn mode" data-mode="normal">Normal</span>
+        <span class="btn mode" data-mode="creative">Kreativ</span>
       </div>
       <div class="legend" style="text-align:center">Weitere Welten folgen hier.</div>
     </div>`, 'title');
