@@ -4,7 +4,7 @@ const MAX_SPEED = 21;
 const FRICTION = { '#': 4.2, T: 4.2, H: 4.2, o: 4.2, s: 14, i: 0.75, w: 4, l: 4 };
 
 function makeBall(x, y, color) {
-  return { x, y, z: 0, vx: 0, vy: 0, vz: 0, portalCd: 0, rideCd: 0, rider: null, restX: x, restY: y, color, boosted: false };
+  return { x, y, z: 0, vx: 0, vy: 0, vz: 0, portalCd: 0, rideCd: 0, rider: null, air: false, restX: x, restY: y, color, boosted: false };
 }
 
 function collideSeg(ball, s, events) {
@@ -63,6 +63,18 @@ function stepPhysics(level, ball, dt, t, allowForces) {
   ball.rideCd = Math.max(0, (ball.rideCd || 0) - dt);
   if (ball.rider) { if (ball.rider.ride(ball, t, events)) return events; }
   else for (const ob of level.obstacles) if (ob.type === 'ferry' && ob.ride(ball, t, events)) return events;
+
+  // Sprungschanzen und Flugphase: in der Luft gibt es keine Reibung, keine Mauern, keine Hindernisse
+  for (const ob of level.obstacles) if (ob.type === 'ramp') ob.launch(ball, events);
+  if (ball.air) {
+    ball.x += ball.vx * dt; ball.y += ball.vy * dt;
+    ball.vz -= 12 * dt; ball.z += ball.vz * dt;
+    if (ball.z <= 0) {
+      ball.z = 0; ball.vz = 0; ball.air = false;
+      ball.vx *= 0.6; ball.vy *= 0.6;
+      events.push({ type: 'land', x: ball.x, y: ball.y });
+    } else return events;
+  }
 
   ball.boosted = false;
   if (allowForces) for (const ob of level.obstacles) if (ob.force) ob.force(ball, dt);

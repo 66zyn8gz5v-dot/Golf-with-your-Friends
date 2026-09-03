@@ -125,7 +125,7 @@ const COURSES = [
   },
   {
     name: 'Drachenhöhle', par: 4, theme: 'dragon', maxStrokes: 18,
-    intro: 'Sandkuhlen, Lavabecken – und ein Drache, der vor dem Loch patrouilliert.',
+    intro: 'Sandkuhlen, Lavabecken, eine Sprungschanze über die Mauer – und ein Drache, der vor dem Loch patrouilliert.',
     map: [
       '........................',
       '..########ssss########..',
@@ -142,7 +142,7 @@ const COURSES = [
     ],
     obstacles: [
       { type: 'mover', x0: 4.3, y0: 9.7, x1: 19.7, y1: 9.7, w: 2.4, h: 1.4, period: 9, phase: 0, style: 'dragon' },
-      { type: 'field', x: 10, y: 6, w: 4, h: 2, fx: 0, fy: 4.5, style: 'wind' },
+      { type: 'ramp', x: 10, y: 6, w: 4, h: 2, angle: 90, minSpeed: 2.5, speed: 4.2, land: 1.7 },
     ],
     decor: [
       { t: 'gold', x: 11.5, y: 12 }, { t: 'gold', x: 12.6, y: 12.3 }, { t: 'bones', x: 4.5, y: 11.5 },

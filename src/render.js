@@ -398,7 +398,9 @@ class Renderer {
 
   pushObstacle(items, ctx, ob, t) {
     const th = this.theme;
-    if (ob.type === 'wall') {
+    if (ob.type === 'ramp') {
+      items.push({ x: ob.x + ob.w / 2, y: ob.y + ob.h / 2, draw: () => this.drawRamp(ctx, ob, t) });
+    } else if (ob.type === 'wall') {
       const L = Math.hypot(ob.x1 - ob.x0, ob.y1 - ob.y0) || 1, ux = (ob.x1 - ob.x0) / L, uy = (ob.y1 - ob.y0) / L;
       const nx = -uy * ob.t / 2, ny = ux * ob.t / 2, n = Math.max(1, Math.ceil(L / 3));
       for (let i = 0; i < n; i++) {
@@ -465,6 +467,48 @@ class Renderer {
         ctx.globalAlpha = 1;
       } });
     }
+  }
+
+  /* Rampe: schräge Fläche, an der Eintrittskante flach, an der Austrittskante hoch */
+  drawRamp(ctx, ob, t) {
+    const th = this.theme, s = this.scale;
+    const x0 = ob.x, y0 = ob.y, x1 = ob.x + ob.w, y1 = ob.y + ob.h;
+    const corners = [[x0, y0], [x1, y0], [x1, y1], [x0, y1]];
+    // Höhe je Ecke: 0 an der Eintrittsseite, ob.height an der Austrittsseite
+    const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, half = Math.abs(ob.dx) > 0.5 ? ob.w / 2 : ob.h / 2;
+    const zAt = (px, py) => ob.height * Math.max(0, Math.min(1, (((px - cx) * ob.dx + (py - cy) * ob.dy) + half) / (2 * half)));
+    const top = corners.map(([px, py]) => [px, py, zAt(px, py)]);
+    const P = v => this.proj(v[0], v[1], v[2]);
+    // Seitenflächen (senkrechte Dreiecke/Vierecke unter den Kanten), nur die zur Kamera zeigenden
+    for (let i = 0; i < 4; i++) {
+      const a = top[i], b = top[(i + 1) % 4];
+      if (a[2] < 0.01 && b[2] < 0.01) continue;
+      const ex = b[0] - a[0], ey = b[1] - a[1];
+      let nx = ey, ny = -ex; const L = Math.hypot(nx, ny) || 1; nx /= L; ny /= L;
+      if (nx * this.cam.sin + ny * this.cam.cos <= 0.001) continue;
+      const light = 0.68 + 0.32 * (0.5 + 0.5 * (nx * 0.85 - ny * 0.53));
+      const p0 = P([a[0], a[1], 0]), p1 = P([b[0], b[1], 0]), p2 = P(b), p3 = P(a);
+      ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.lineTo(p2[0], p2[1]); ctx.lineTo(p3[0], p3[1]); ctx.closePath();
+      ctx.fillStyle = shade(th.rotor.side, light); ctx.fill(); ctx.strokeStyle = ctx.fillStyle; ctx.lineWidth = 0.8; ctx.stroke();
+    }
+    // schräge Oberseite mit Brettern
+    ctx.beginPath(); top.forEach((v, i) => { const p = P(v); i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); }); ctx.closePath();
+    ctx.fillStyle = th.rotor.top; ctx.fill(); ctx.strokeStyle = shade(th.rotor.side, 0.7); ctx.lineWidth = 1; ctx.stroke();
+    ctx.strokeStyle = 'rgba(0,0,0,0.18)'; ctx.lineWidth = Math.max(1, s * 0.03);
+    const n = 5;
+    for (let i = 1; i < n; i++) {
+      const u = i / n;
+      const a = Math.abs(ob.dx) > 0.5 ? [x0 + u * ob.w, y0] : [x0, y0 + u * ob.h], b = Math.abs(ob.dx) > 0.5 ? [x0 + u * ob.w, y1] : [x1, y0 + u * ob.h];
+      const pa = P([a[0], a[1], zAt(a[0], a[1])]), pb = P([b[0], b[1], zAt(b[0], b[1])]);
+      ctx.beginPath(); ctx.moveTo(pa[0], pa[1]); ctx.lineTo(pb[0], pb[1]); ctx.stroke();
+    }
+    // Richtungspfeil, leicht pulsierend
+    const pulse = 0.5 + 0.5 * Math.sin(t * 4);
+    const ax = cx - ob.dx * half * 0.5, ay = cy - ob.dy * half * 0.5, bx = cx + ob.dx * half * 0.6, by = cy + ob.dy * half * 0.6;
+    const pa = P([ax, ay, zAt(ax, ay) + 0.02]), pb = P([bx, by, zAt(bx, by) + 0.02]);
+    const wl = P([bx - ob.dx * 0.5 - ob.dy * 0.35, by - ob.dy * 0.5 + ob.dx * 0.35, zAt(bx, by) + 0.02]), wr = P([bx - ob.dx * 0.5 + ob.dy * 0.35, by - ob.dy * 0.5 - ob.dx * 0.35, zAt(bx, by) + 0.02]);
+    ctx.strokeStyle = `rgba(255,240,160,${0.55 + 0.45 * pulse})`; ctx.lineWidth = Math.max(2, s * 0.08); ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(pa[0], pa[1]); ctx.lineTo(pb[0], pb[1]); ctx.moveTo(wl[0], wl[1]); ctx.lineTo(pb[0], pb[1]); ctx.lineTo(wr[0], wr[1]); ctx.stroke();
   }
 
   drawMover(ctx, ob, t) {

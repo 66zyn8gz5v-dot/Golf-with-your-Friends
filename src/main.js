@@ -290,6 +290,8 @@
           break;
         case 'portal': Sfx.portal(); burst(ev.x, ev.y, ev.color, 12, true); break;
         case 'board': Sfx.bounce(6); showMessage('Eingestiegen – gute Fahrt!', 1400); break;
+        case 'jump': Sfx.portal(); showMessage('Sprung!', 900); break;
+        case 'land': Sfx.bounce(3); burst(ev.x, ev.y, 'rgba(255,255,255,0.7)', 6); break;
         case 'dropoff': Sfx.bounce(4); burst(ev.x, ev.y, '#ffd166', 8); break;
         case 'sunk': sunk(); return;
         case 'water': case 'lava': case 'oob': hazard(ev.type); return;
@@ -308,7 +310,7 @@
       if (b && (state.phase === 'aim' || state.phase === 'rolling')) {
         const ev = stepPhysics(lv, b, STEP, state.t, state.phase === 'rolling');
         handleEvents(ev);
-        if (b.rider) { state.restTimer = 0; state.slowTimer = 0; if (state.phase === 'aim') { state.phase = 'rolling'; state.aim = null; } }
+        if (b.rider || b.air) { state.restTimer = 0; state.slowTimer = 0; if (state.phase === 'aim') { state.phase = 'rolling'; state.aim = null; } }
         else if (state.phase === 'rolling') {
           const sp = Math.hypot(b.vx, b.vy);
           if (sp < 0.08) { state.restTimer += STEP; if (state.restTimer > 0.25) ballAtRest(); }

@@ -125,6 +125,34 @@ class Field {
 
 class Rail { constructor(d) { Object.assign(this, d); this.type = 'rail'; } }
 
+/* Sprungschanze: Ball, der mit Schwung in Rampenrichtung auffährt, fliegt in festem Bogen
+   über alles hinweg und landet 'land' Kacheln hinter dem Rampenende. */
+class Ramp {
+  constructor(d) {
+    Object.assign(this, { w: 2, h: 2, angle: 90, minSpeed: 2.5, speed: 4.2, land: 1.7, height: 0.7 }, d);
+    this.type = 'ramp';
+    const a = (this.angle * Math.PI) / 180; this.dx = Math.cos(a); this.dy = Math.sin(a);
+  }
+  inside(px, py) { return px >= this.x && px <= this.x + this.w && py >= this.y && py <= this.y + this.h; }
+  /* Abstand vom Ball bis zur Rampenkante (Ende) entlang der Richtung */
+  toEnd(px, py) {
+    const cx = this.x + this.w / 2, cy = this.y + this.h / 2;
+    const half = Math.abs(this.dx) > 0.5 ? this.w / 2 : this.h / 2;
+    return half - ((px - cx) * this.dx + (py - cy) * this.dy);
+  }
+  launch(ball, events) {
+    if (ball.air || !this.inside(ball.x, ball.y)) return;
+    const sp = Math.hypot(ball.vx, ball.vy);
+    if (sp < this.minSpeed) return;
+    if ((ball.vx * this.dx + ball.vy * this.dy) < 0.6 * sp) return; // nur bergauf
+    const dist = this.toEnd(ball.x, ball.y) + this.land;
+    const tFlight = dist / this.speed;
+    ball.vx = this.dx * this.speed; ball.vy = this.dy * this.speed;
+    ball.vz = (12 * tFlight) / 2; ball.z = Math.max(ball.z, 0.01); ball.air = true;
+    events.push({ type: 'jump', x: ball.x, y: ball.y });
+  }
+}
+
 /* Geländer: gerades Mauerstück von (x0,y0) nach (x1,y1) */
 class Wall {
   constructor(d) { Object.assign(this, { t: 0.22, h: 0.5 }, d); this.type = 'wall'; }
@@ -192,6 +220,7 @@ function createObstacles(defs) {
       case 'rail': out.push(new Rail(d)); break;
       case 'ferry': out.push(new Ferry(d)); break;
       case 'wall': out.push(new Wall(d)); break;
+      case 'ramp': out.push(new Ramp(d)); break;
       case 'portal': {
         const a = new Portal({ x: d.x, y: d.y, tx: d.tx, ty: d.ty, color: d.color, entrance: true });
         const b = new Portal({ x: d.tx, y: d.ty, tx: d.x, ty: d.y, color: d.color, entrance: !!d.twoWay, exit: true });
