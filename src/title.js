@@ -56,84 +56,20 @@ const TitleScene = (() => {
     ctx.beginPath(); ctx.arc(x - s * 0.25, y - s * 0.75, s * 0.2, 0, TAU); ctx.arc(x + s * 0.2, y - s * 0.8, s * 0.22, 0, TAU); ctx.fill();
     ctx.fillStyle = '#2a2a30'; ctx.beginPath(); ctx.ellipse(x + s * 0.6, y - s * 0.55 + nod, s * 0.2, s * 0.15, 0.3, 0, TAU); ctx.fill();
   }
-  /* Drache in Seitenansicht, fliegt nach links. Alles in Einheiten von s. */
   function dragon(ctx, x, y, s, t) {
-    ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
-    const flap = Math.sin(t * 4.2);                 // -1 … 1 Flügelschlag
-    const body = '#8e2b3a', dark = '#5e1a26', belly = '#e8b07a', membrane = '#c2485c', horn = '#e9d9b8';
-    const wing = (side) => { // side: -1 = hinterer Flügel, 1 = vorderer
-      const f = side < 0 ? flap * 0.85 : flap;
-      const lift = -0.25 - 1.6 * f;                // Höhe der Flügelspitzen
-      const ox = side < 0 ? 0.35 : 0, oy = side < 0 ? -0.1 : -0.25;
-      const tips = [[-1.1 + ox, lift * 0.9 + oy], [-0.2 + ox, lift + oy], [0.8 + ox, lift * 0.75 + oy], [1.3 + ox, lift * 0.3 + oy]];
-      ctx.fillStyle = side < 0 ? dark : membrane;
-      ctx.beginPath(); ctx.moveTo(ox, oy);
-      for (let i = 0; i < tips.length; i++) {
-        const [tx, ty] = tips[i];
-        if (i === 0) ctx.lineTo(tx, ty);
-        else { const [px, py] = tips[i - 1]; ctx.quadraticCurveTo((px + tx) / 2, (py + ty) / 2 - lift * 0.18, tx, ty); }
-      }
-      ctx.lineTo(0.9 + ox, oy + 0.1); ctx.closePath(); ctx.fill();
-      ctx.strokeStyle = side < 0 ? '#3f1119' : dark; ctx.lineWidth = 0.07; ctx.lineCap = 'round';
-      for (const [tx, ty] of tips.slice(0, 3)) { ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(tx, ty); ctx.stroke(); }
-    };
-    wing(-1);
-    // Schwanz
-    const tw = Math.sin(t * 3) * 0.25;
-    ctx.fillStyle = body; ctx.beginPath(); ctx.moveTo(0.8, -0.15); ctx.quadraticCurveTo(1.8, 0.1 + tw, 2.6, -0.3 + tw);
-    ctx.lineTo(2.55, -0.05 + tw); ctx.quadraticCurveTo(1.7, 0.4 + tw, 0.8, 0.25); ctx.closePath(); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(2.45, -0.45 + tw); ctx.lineTo(2.95, -0.2 + tw); ctx.lineTo(2.45, 0.05 + tw); ctx.lineTo(2.6, -0.2 + tw); ctx.closePath(); ctx.fill();
-    // Körper und Bauch
-    ctx.fillStyle = body; ctx.beginPath(); ctx.ellipse(0, 0, 1.05, 0.45, 0, 0, TAU); ctx.fill();
-    ctx.fillStyle = belly; ctx.beginPath(); ctx.ellipse(0.05, 0.18, 0.85, 0.24, 0, 0, TAU); ctx.fill();
-    // Beine, angezogen
-    ctx.fillStyle = dark;
-    ctx.beginPath(); ctx.ellipse(-0.35, 0.42, 0.28, 0.16, 0.3, 0, TAU); ctx.ellipse(0.55, 0.4, 0.26, 0.15, -0.2, 0, TAU); ctx.fill();
-    ctx.strokeStyle = horn; ctx.lineWidth = 0.05;
-    for (const [lx, ly] of [[-0.5, 0.5], [-0.38, 0.55], [0.42, 0.5], [0.55, 0.53]]) { ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx - 0.1, ly + 0.12); ctx.stroke(); }
-    // Hals
-    ctx.fillStyle = body; ctx.beginPath(); ctx.moveTo(-0.75, -0.35); ctx.quadraticCurveTo(-1.45, -0.5, -1.75, -0.95);
-    ctx.lineTo(-1.5, -1.1); ctx.quadraticCurveTo(-1.2, -0.35, -0.6, 0.15); ctx.closePath(); ctx.fill();
-    // Rückenzacken
-    ctx.fillStyle = dark;
-    for (let i = 0; i < 7; i++) {
-      const u = i / 6, zx = -1.3 + u * 2.1, zy = -0.62 + Math.pow(u - 0.35, 2) * 0.7;
-      const hh = 0.18 + 0.1 * Math.sin(u * Math.PI);
-      ctx.beginPath(); ctx.moveTo(zx - 0.08, zy + 0.05); ctx.lineTo(zx, zy - hh); ctx.lineTo(zx + 0.08, zy + 0.05); ctx.closePath(); ctx.fill();
-    }
-    // Kopf
-    const hx = -1.95, hy = -1.05, jaw = 0.1 + 0.12 * Math.max(0, Math.sin(t * 2.4));
-    ctx.fillStyle = body; ctx.beginPath(); ctx.ellipse(hx, hy, 0.5, 0.3, -0.15, 0, TAU); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(hx - 0.2, hy - 0.12); ctx.lineTo(hx - 0.85, hy - 0.02); ctx.lineTo(hx - 0.2, hy + 0.12); ctx.closePath(); ctx.fill(); // Schnauze
-    ctx.fillStyle = dark; ctx.beginPath(); ctx.moveTo(hx - 0.15, hy + 0.1); ctx.lineTo(hx - 0.8, hy + 0.05 + jaw); ctx.lineTo(hx - 0.1, hy + 0.25); ctx.closePath(); ctx.fill(); // Unterkiefer
-    ctx.fillStyle = horn; // Zähne
-    for (const zx of [-0.35, -0.5, -0.65]) { ctx.beginPath(); ctx.moveTo(hx + zx, hy + 0.06); ctx.lineTo(hx + zx - 0.03, hy + 0.14); ctx.lineTo(hx + zx + 0.05, hy + 0.08); ctx.closePath(); ctx.fill(); }
-    ctx.beginPath(); ctx.moveTo(hx + 0.15, hy - 0.25); ctx.quadraticCurveTo(hx + 0.5, hy - 0.75, hx + 0.75, hy - 0.5); ctx.lineTo(hx + 0.3, hy - 0.2); ctx.closePath(); ctx.fill(); // Horn
-    ctx.beginPath(); ctx.moveTo(hx + 0.35, hy - 0.15); ctx.quadraticCurveTo(hx + 0.7, hy - 0.45, hx + 0.9, hy - 0.25); ctx.lineTo(hx + 0.45, hy - 0.05); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#ffd12a'; ctx.beginPath(); ctx.ellipse(hx - 0.1, hy - 0.08, 0.12, 0.09, 0, 0, TAU); ctx.fill(); // Auge
-    ctx.fillStyle = '#111'; ctx.beginPath(); ctx.ellipse(hx - 0.12, hy - 0.08, 0.035, 0.08, 0, 0, TAU); ctx.fill();
-    ctx.fillStyle = dark; ctx.beginPath(); ctx.arc(hx - 0.72, hy - 0.06, 0.035, 0, TAU); ctx.fill(); // Nüster
-    wing(1);
-    // Feueratem: Stoß von etwa 2 s, alle 4 s
-    const fc = (t % 4) / 4;
-    if (fc < 0.5) {
-      const p = fc / 0.5, str = Math.sin(p * Math.PI);            // an- und abschwellend
-      const fx = hx - 0.85, fy = hy + 0.05 + jaw * 0.5, len = 2.4 * str, fl = () => 1 + 0.18 * Math.sin(t * 23 + p * 9);
-      const grad = ctx.createLinearGradient(fx, fy, fx - len, fy);
-      grad.addColorStop(0, 'rgba(255,245,180,0.95)'); grad.addColorStop(0.35, 'rgba(255,170,40,0.9)'); grad.addColorStop(1, 'rgba(255,70,20,0)');
-      ctx.fillStyle = grad; ctx.beginPath(); ctx.moveTo(fx, fy - 0.08);
-      ctx.quadraticCurveTo(fx - len * 0.5, fy - 0.55 * fl(), fx - len, fy - 0.2 * fl());
-      ctx.quadraticCurveTo(fx - len * 0.7, fy + 0.15, fx - len * 0.9, fy + 0.45 * fl());
-      ctx.quadraticCurveTo(fx - len * 0.4, fy + 0.4, fx, fy + 0.12); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = 'rgba(255,240,150,0.85)'; ctx.beginPath(); ctx.moveTo(fx, fy - 0.04);
-      ctx.quadraticCurveTo(fx - len * 0.45, fy - 0.2, fx - len * 0.6, fy); ctx.quadraticCurveTo(fx - len * 0.4, fy + 0.18, fx, fy + 0.06); ctx.closePath(); ctx.fill();
-      for (let i = 0; i < 6; i++) { // Funken
-        const u = ((t * 1.7 + i * 0.37) % 1);
-        ctx.fillStyle = `rgba(255,${180 - u * 120},40,${(1 - u) * str})`;
-        ctx.beginPath(); ctx.arc(fx - u * len * 1.2, fy + Math.sin(i * 2.3 + t * 5) * 0.4 * u - u * 0.3, 0.07 * (1 - u * 0.5), 0, TAU); ctx.fill();
-      }
-    }
-    ctx.restore();
+    const flap = Math.sin(t * 5) * s * 0.9;
+    ctx.fillStyle = '#5a1f2a';
+    // Flügel
+    ctx.beginPath(); ctx.moveTo(x - s * 0.2, y); ctx.lineTo(x - s * 1.4, y - flap); ctx.lineTo(x - s * 1.7, y - flap * 0.4 + s * 0.2); ctx.lineTo(x - s * 0.8, y + s * 0.15); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x + s * 0.2, y); ctx.lineTo(x + s * 1.2, y - flap); ctx.lineTo(x + s * 1.5, y - flap * 0.4 + s * 0.2); ctx.lineTo(x + s * 0.6, y + s * 0.15); ctx.closePath(); ctx.fill();
+    // Körper, Hals, Kopf, Schwanz
+    ctx.fillStyle = '#6e2634';
+    ctx.beginPath(); ctx.ellipse(x, y + s * 0.1, s * 0.9, s * 0.3, 0, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x - s * 0.8, y); ctx.quadraticCurveTo(x - s * 1.4, y - s * 0.5, x - s * 1.7, y - s * 0.55); ctx.lineTo(x - s * 1.6, y - s * 0.25); ctx.quadraticCurveTo(x - s * 1.2, y - s * 0.1, x - s * 0.7, y + s * 0.25); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x + s * 0.8, y); ctx.quadraticCurveTo(x + s * 1.6, y + s * 0.2 + Math.sin(t * 3) * s * 0.2, x + s * 2.2, y - s * 0.1); ctx.lineTo(x + s * 2.1, y + s * 0.15); ctx.quadraticCurveTo(x + s * 1.5, y + s * 0.45, x + s * 0.7, y + s * 0.3); ctx.closePath(); ctx.fill();
+    // Feuer
+    const f = (t * 1.5) % 1;
+    if (f < 0.4) { ctx.fillStyle = `rgba(255,150,40,${0.9 - f * 2})`; ctx.beginPath(); ctx.ellipse(x - s * (1.9 + f * 1.2), y - s * 0.4, s * (0.2 + f * 0.6), s * (0.12 + f * 0.25), 0, 0, TAU); ctx.fill(); }
   }
   function cottage(ctx, x, y, s, t) {
     ctx.fillStyle = '#e8dcc0'; ctx.fillRect(x - s * 0.6, y - s * 0.75, s * 1.2, s * 0.75);
@@ -208,6 +144,9 @@ const TitleScene = (() => {
         ctx.beginPath(); ctx.moveTo(bx - s, by + fl); ctx.quadraticCurveTo(bx - s * 0.4, by - fl * 0.3, bx, by); ctx.quadraticCurveTo(bx + s * 0.4, by - fl * 0.3, bx + s, by + fl); ctx.stroke();
       }
     }
+    // Drache: alle 28 s ein Flug von rechts nach links
+    const dc = (t % 28) / 28;
+    if (dc < 0.45) { const u = dc / 0.45; dragon(ctx, w * (1.1 - u * 1.25), h * (0.2 + Math.sin(u * 7) * 0.03 + u * 0.06), h * 0.035, t); }
     // Ferne Berge
     ctx.fillStyle = mix('#9dbbe0', '#1c2a4a', night);
     ctx.beginPath(); ctx.moveTo(0, h * 0.66);
@@ -243,9 +182,6 @@ const TitleScene = (() => {
     tower(ctx, px - cw * 0.42, ctop - h * 0.05, cw * 0.16, h * 0.12, t, '#3d7ad6');
     tower(ctx, px + cw * 0.42, ctop - h * 0.05, cw * 0.16, h * 0.12, t, '#3d7ad6');
     tower(ctx, px, ctop - h * 0.11, cw * 0.24, h * 0.18, t, '#ff4f6d');
-    // Drache: alle 28 s ein Flug von rechts nach links, vor der Burg vorbei
-    const dc = (t % 28) / 28;
-    if (dc < 0.5) { const u = dc / 0.5; dragon(ctx, w * (1.12 - u * 1.3), h * (0.16 + Math.sin(u * 6) * 0.035 + u * 0.08 + Math.sin(t * 4.2) * 0.008), h * 0.05, t); }
     // Wiesen (3 Ebenen)
     const layers = ['#67b84f', '#55a542', '#3f8f33'];
     for (let L = 0; L < 3; L++) {
