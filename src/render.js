@@ -330,7 +330,8 @@ class Renderer {
   /* ---------- Hindernisse ---------- */
   drawObstacleFloor(ctx, ob, t) {
     const s = this.scale;
-    if (ob.type === 'boost' || ob.type === 'field') {
+    if (ob.type === 'boost' || (ob.type === 'field' && ob.style === 'wind')) { this.drawWind(ctx, ob, t); return; }
+    if (ob.type === 'field') {
       const poly = [[ob.x, ob.y], [ob.x + ob.w, ob.y], [ob.x + ob.w, ob.y + ob.h], [ob.x, ob.y + ob.h]];
       const isBoost = ob.type === 'boost';
       const dx = isBoost ? ob.dx : ob.fx, dy = isBoost ? ob.dy : ob.fy;
@@ -393,6 +394,33 @@ class Renderer {
     } else if (ob.type === 'gate') {
       const poly = [[ob.x - ob.w / 2, ob.y - ob.h / 2], [ob.x + ob.w / 2, ob.y - ob.h / 2], [ob.x + ob.w / 2, ob.y + ob.h / 2], [ob.x - ob.w / 2, ob.y + ob.h / 2]];
       this.fillPoly(ctx, poly, 0.005, ob.closed ? 'rgba(255,80,80,0.35)' : 'rgba(120,255,120,0.25)', false);
+    }
+  }
+
+  /* Wind: treibende Schlieren und kleine Böen in Windrichtung, kein Rechteck, keine Pfeile */
+  drawWind(ctx, ob, t) {
+    const s = this.scale;
+    const dx = ob.type === 'boost' ? ob.dx : ob.fx, dy = ob.type === 'boost' ? ob.dy : ob.fy;
+    const L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L, px = -uy, py = ux;
+    const cx = ob.x + ob.w / 2, cy = ob.y + ob.h / 2;
+    const along = Math.abs(ux) > Math.abs(uy) ? ob.w : ob.h, across = Math.abs(ux) > Math.abs(uy) ? ob.h : ob.w;
+    const n = Math.max(4, Math.round(ob.w * ob.h * 1.6)), speed = ob.type === 'boost' ? 0.55 : 0.35;
+    ctx.lineCap = 'round';
+    for (let i = 0; i < n; i++) {
+      const lat = ((i * 0.618) % 1 - 0.5) * (across - 0.4);
+      const u = ((t * speed + i * 0.173 + (i % 3) * 0.29) % 1);
+      const a = Math.sin(u * Math.PI);
+      const bx = cx + ux * ((u - 0.5) * along) + px * lat, by = cy + uy * ((u - 0.5) * along) + py * lat;
+      const len = 0.7 + (i % 3) * 0.25, wave = Math.sin(t * 3 + i) * 0.12;
+      const p0 = this.proj(bx - ux * len / 2, by - uy * len / 2, 0.05);
+      const p1 = this.proj(bx + px * wave, by + py * wave, 0.08);
+      const p2 = this.proj(bx + ux * len / 2, by + uy * len / 2, 0.05);
+      ctx.strokeStyle = `rgba(255,255,255,${0.75 * a})`; ctx.lineWidth = Math.max(1, s * 0.05);
+      ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.quadraticCurveTo(p1[0], p1[1], p2[0], p2[1]); ctx.stroke();
+      if (i % 4 === 0) { // kleine Böe
+        ctx.fillStyle = `rgba(255,255,255,${0.35 * a})`;
+        ctx.beginPath(); ctx.arc(p2[0], p2[1], s * 0.08, 0, TAU); ctx.fill();
+      }
     }
   }
 

@@ -122,6 +122,11 @@ function buildDecor(def, tiles, W, H, isFloor) {
       for (let i = 0; i <= 2 && !blocked; i++) for (let j = 0; j <= 2; j++) if (isFloor(x - i, y - j)) { blocked = true; break; }
       if (blocked) continue;
       const t = theme.autoDecor[Math.floor(rnd() * theme.autoDecor.length)];
+      if (t === 'cloud') { // Wolken sind breit: mindestens zwei Kacheln Abstand zur Bahn
+        let near = false;
+        for (let i = -2; i <= 2 && !near; i++) for (let j = -2; j <= 2; j++) if (isFloor(x + i, y + j)) { near = true; break; }
+        if (near) continue;
+      }
       const px = x + 0.25 + rnd() * 0.5, py = y + 0.25 + rnd() * 0.5;
       // Abstand zu Abschlag/Loch-Sicht: nichts direkt vor dem Loch (nur Optik)
       out.push({ t, x: px, y: py, s: 0.75 + rnd() * 0.6, z: 0, seed: rnd() });
