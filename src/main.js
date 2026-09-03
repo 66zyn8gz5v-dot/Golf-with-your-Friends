@@ -60,8 +60,8 @@
       <div class="sub">Golf with your Friends · ${COURSES.length} magische Bahnen in 2,5D</div>
       <p>Modus wählen:</p>
       <div class="modes">
-        <span class="btn mode" data-mode="normal">Normal</span>
-        <span class="btn mode" data-mode="creative">Kreativ</span>
+        <span class="btn mode" data-mode="normal"><span class="mode-label">Normal</span><span class="mode-hole"></span><span class="mode-flag"></span><span class="mode-ball"></span></span>
+        <span class="btn mode" data-mode="creative"><span class="mode-label">Kreativ</span><span class="mode-hole"></span><span class="mode-flag"></span><span class="mode-ball"></span></span>
       </div>
       <div class="legend" style="text-align:center">Weitere Welten folgen hier.</div>
     </div>`, 'title');
