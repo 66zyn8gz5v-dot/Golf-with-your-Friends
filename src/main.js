@@ -60,8 +60,37 @@
       <div class="sub">Golf with your Friends · ${COURSES.length} magische Bahnen in 2,5D</div>
       <p>Modus wählen:</p>
       <div class="modes">
-        <span class="btn mode" data-mode="normal"><span class="mode-label">Normal</span><span class="mode-hole"></span><span class="mode-flag"></span><span class="mode-ball"></span></span>
-        <span class="btn mode" data-mode="creative"><span class="mode-label">Kreativ</span><span class="mode-hole"></span><span class="mode-flag"></span><span class="mode-ball"></span></span>
+        <span class="btn mode" data-mode="normal">
+          <svg class="mode-art" viewBox="0 -8 64 48" aria-hidden="true">
+            <path d="M2 40 L8 30 L14 40 Z M9 40 L15 27 L21 40 Z" fill="#2f6b3a"/>
+            <rect x="26" y="20" width="26" height="20" fill="#cfc9bf"/><rect x="39" y="20" width="13" height="20" fill="#9a948a"/>
+            <rect x="24" y="14" width="8" height="26" fill="#cfc9bf"/><rect x="46" y="14" width="8" height="26" fill="#9a948a"/>
+            <rect x="34" y="10" width="10" height="30" fill="#b8b2a8"/>
+            <path d="M23 14 L28 6 L33 14 Z M45 14 L50 6 L55 14 Z M33 10 L39 1 L45 10 Z" fill="#a63d3d"/>
+            <path d="M26 20 h2 v-3 h-2 z M30 20 h2 v-3 h-2 z M46 20 h2 v-3 h-2 z M50 20 h2 v-3 h-2 z" fill="#b8b2a8"/>
+            <rect x="37" y="26" width="4" height="6" fill="#ffd166" class="art-window"/>
+            <path d="M36 32 a3 3 0 0 1 6 0 v8 h-6 z" fill="#3a2a1a"/>
+            <rect x="38.5" y="-6" width="1" height="8" fill="#3a2a1a"/>
+            <path class="art-flag" d="M39.5 -6 L47 -3.5 L39.5 -1 Z" fill="#ff4f6d"/>
+            <path d="M56 40 L60 32 L64 40 Z" fill="#2f6b3a"/>
+          </svg>
+          <span class="mode-label">Normal</span>
+        </span>
+        <span class="btn mode" data-mode="creative">
+          <svg class="mode-art" viewBox="0 0 64 40" aria-hidden="true">
+            <path d="M44 40 L52 22 L60 40 Z" fill="#2b6d43"/><path d="M46 33 L52 20 L58 33 Z" fill="#3f8f5a"/>
+            <path d="M8 40 L12 28 L16 40 Z M13 40 L15 32 L17 40 Z" fill="#e0b8ff"/><path d="M8 40 L12 28 L13 38 Z" fill="#8a4fd0"/>
+            <rect x="24" y="26" width="6" height="14" rx="2" fill="#f3e6c8"/>
+            <path d="M18 27 a9 8 0 0 1 18 0 z" fill="#e0575a"/>
+            <circle cx="22" cy="23" r="1.5" fill="#fff"/><circle cx="28" cy="20" r="1.8" fill="#fff"/><circle cx="32" cy="24" r="1.2" fill="#fff"/>
+            <rect x="37" y="32" width="4" height="8" rx="1.5" fill="#f3e6c8"/>
+            <path d="M33 33 a6 5 0 0 1 12 0 z" fill="#c94a7a"/><circle cx="37" cy="30" r="1" fill="#fff"/><circle cx="41" cy="31" r="1.2" fill="#fff"/>
+            <circle class="art-fly f1" cx="14" cy="14" r="1.6" fill="#d8ff70"/>
+            <circle class="art-fly f2" cx="40" cy="12" r="1.4" fill="#ffe680"/>
+            <circle class="art-fly f3" cx="58" cy="16" r="1.5" fill="#d8ff70"/>
+          </svg>
+          <span class="mode-label">Kreativ</span>
+        </span>
       </div>
       <div class="legend" style="text-align:center">Weitere Welten folgen hier.</div>
     </div>`, 'title');
