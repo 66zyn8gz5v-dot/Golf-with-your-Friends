@@ -275,6 +275,9 @@ const COURSES = [
     ],
     obstacles: [
       { type: 'gate', x: 14, y: 5.5, w: 2, h: 0.3, period: 6, open: 0.55, phase: 0, axis: 'x' },
+      // kleine Banden in den ersten beiden Kurven des Serpentinenwegs
+      { type: 'wall', x0: 17, y0: 19, x1: 19, y1: 17 },
+      { type: 'wall', x0: 17, y0: 11, x1: 19, y1: 13 },
       { type: 'field', x: 17, y: 15, w: 2, h: 2, fx: 0, fy: 2.5, style: 'slope' },
       { type: 'field', x: 4, y: 10, w: 2, h: 2, fx: 0, fy: 2.5, style: 'slope' },
       { type: 'mover', x0: 5, y0: 13, x1: 17.8, y1: 13, w: 0.7, h: 0.7, period: 9, phase: 0.5, style: 'knight' },
