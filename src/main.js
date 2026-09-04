@@ -155,9 +155,9 @@
           </svg>`;
 
   function showTitle() {
-    state.phase = 'title';
+    state.phase = 'title'; state.editorReturn = false;
     document.body.classList.add('title');
-    document.body.classList.remove('creative');
+    document.body.classList.remove('creative', 'editing', 'testing');
     overlay(`<div class="panel">
       <h1>⛳ Fantasy Golf</h1>
       <div class="sub">Golf with your Friends · ${WORLDS.reduce((a, w) => a + w.courses.length, 0)} magische Bahnen in 2,5D</div>
@@ -178,16 +178,31 @@
 
   /* Kreativ: Welt wählen, dann sofort los (ein Spieler, Schleuder, Bahn 1) */
   function showWorldSelect() {
+    const customs = editor.loadCustoms();
     overlay(`<div class="panel">
       <h2>🛠 Kreativ – Welt wählen</h2>
       <div class="modes">
         ${WORLDS.map(w => `<span class="btn mode" data-world="${w.id}">${w.id === 'pro' ? SCENE_PRO : SCENE_NORMAL}<span class="mode-label">${w.short}</span></span>`).join('')}
       </div>
       <div class="sub">${WORLDS.map(w => `${w.name}: ${w.courses.length} Bahnen`).join(' · ')}</div>
+      <div class="modes">
+        ${customs.length ? `<span class="btn mode own" id="own-play"><span class="mode-label">Eigene Bahnen (${customs.length})</span></span>` : ''}
+        <span class="btn mode build" id="build"><span class="mode-label">🛠 Bahn bauen</span></span>
+      </div>
       <p><span class="btn ghost small" id="back">◀ Zurück</span></p>
     </div>`, 'title');
-    ui.overlay.querySelectorAll('.mode').forEach(b => b.addEventListener('click', () => { setWorld(b.dataset.world); Sfx.unlock(); setControlMode('sling'); startGame(1, 0); }));
+    ui.overlay.querySelectorAll('.mode[data-world]').forEach(b => b.addEventListener('click', () => { setWorld(b.dataset.world); Sfx.unlock(); setControlMode('sling'); startGame(1, 0); }));
+    if (customs.length) $('own-play').addEventListener('click', () => { setCustomWorld(customs, 'Eigene Bahnen'); Sfx.unlock(); setControlMode('sling'); startGame(1, 0); });
+    $('build').addEventListener('click', () => { Sfx.unlock(); setControlMode('sling'); editor.open(null); });
     $('back').addEventListener('click', showTitle);
+  }
+  function setCustomWorld(courses, name) { state.world = { id: 'custom', name, short: 'Eigene', courses }; state.courses = courses; }
+  /* Baumodus: eine Bahn probespielen, danach zurück in den Editor */
+  function startTest(def) {
+    state.mode = 'creative'; state.editorReturn = true;
+    setCustomWorld([def], 'Test');
+    document.body.classList.add('testing');
+    startGame(1, 0);
   }
 
   function showSetup() {
@@ -246,7 +261,8 @@
   }
   function updateCamera(dt) {
     if (!state.level) return;
-    if (state.camMode === 'overview' || !state.ball) R.target = R.overviewTarget();
+    if (state.phase === 'edit') R.target = editor.cameraTarget();
+    else if (state.camMode === 'overview' || !state.ball) R.target = R.overviewTarget();
     else R.target = R.followTarget(state.ball, state.camTheta, R.defaultZoom() * state.zoomFactor);
     R.updateCamera(dt);
   }
@@ -262,12 +278,12 @@
   }
   /* Kreativmodus: Bahn wechseln oder Ball an den Abschlag setzen */
   function jumpHole(delta) {
-    if (state.mode !== 'creative' || !state.level) return;
+    if (state.mode !== 'creative' || !state.level || state.phase === 'edit') return;
     clearTimeout(waitTimer); hideOverlay();
     loadHole((state.holeIdx + delta + state.courses.length) % state.courses.length);
   }
   function resetBall() {
-    if (state.mode !== 'creative' || !state.ball) return;
+    if (state.mode !== 'creative' || !state.ball || state.phase === 'edit') return;
     clearTimeout(waitTimer);
     state.strokes = 0; beginTurn();
   }
@@ -364,9 +380,9 @@
       <div class="sub">Par ${def.par}</div>
       <table class="scores"><tr><th>Spieler</th><th>Bahn</th><th>Gesamt</th></tr>${rows}</table>
       ${!last ? `<div class="sub">Als Nächstes: <b>${state.courses[state.holeIdx + 1].name}</b><br><i>${state.courses[state.holeIdx + 1].intro}</i></div>` : ''}
-      <span class="btn" id="next">${last ? 'Zum Endergebnis' : 'Nächste Bahn ▶'}</span>
+      <span class="btn" id="next">${state.editorReturn ? '🛠 Zurück zum Editor' : last ? 'Zum Endergebnis' : 'Nächste Bahn ▶'}</span>
     </div>`);
-    $('next').addEventListener('click', () => { hideOverlay(); if (last) { if (state.mode === 'creative') loadHole(0); else showFinal(); } else loadHole(state.holeIdx + 1); });
+    $('next').addEventListener('click', () => { hideOverlay(); if (state.editorReturn) editor.returnFromTest(); else if (last) { if (state.mode === 'creative') loadHole(0); else showFinal(); } else loadHole(state.holeIdx + 1); });
   }
   function showFinal() {
     state.phase = 'final';
@@ -486,7 +502,7 @@
     updateParticles(dt);
     if (state.ball && state.ball.sunk) state.ball.sinkT += dt;
     updateCamera(dt);
-    if (state.phase === 'title') TitleScene.draw(R.ctx, R.w, R.h, state.t); else R.drawFrame(state);
+    if (state.phase === 'title') TitleScene.draw(R.ctx, R.w, R.h, state.t); else { R.drawFrame(state); if (state.phase === 'edit') editor.drawOverlay(R.ctx); }
     ui.power.classList.toggle('visible', !!state.aim);
     if (state.aim) ui.powerFill.style.width = `${Math.round(state.aim.power * 100)}%`;
     requestAnimationFrame(frame);
@@ -496,6 +512,7 @@
   let drag = null;
   function pointerPos(e) { const r = canvas.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
   canvas.addEventListener('pointerdown', e => {
+    if (state.phase === 'edit') { canvas.setPointerCapture(e.pointerId); const [x, y] = pointerPos(e); editor.pointer('down', e, x, y); return; }
     if (state.phase !== 'aim' || !state.ball) return;
     Sfx.unlock();
     canvas.setPointerCapture(e.pointerId);
@@ -503,6 +520,7 @@
     state.aim = { dx: 0, dy: 0, power: 0 };
   });
   canvas.addEventListener('pointermove', e => {
+    if (state.phase === 'edit') { const [x, y] = pointerPos(e); editor.pointer('move', e, x, y); return; }
     if (!drag || drag.id !== e.pointerId || state.phase !== 'aim') return;
     const [x, y] = pointerPos(e);
     const [wx, wy] = R.unprojDelta(x - drag.start[0], y - drag.start[1]);
@@ -512,6 +530,7 @@
     state.aim = { dx: sign * wx / len, dy: sign * wy / len, power: Math.min(1, len / MAX_DRAG) };
   });
   function endDrag(e, cancel) {
+    if (state.phase === 'edit') { const [x, y] = pointerPos(e); editor.pointer(cancel ? 'cancel' : 'up', e, x, y); return; }
     if (!drag || drag.id !== e.pointerId) return;
     drag = null;
     if (!cancel && state.phase === 'aim' && state.aim && state.aim.power > 0.04) shoot(state.aim.dx, state.aim.dy, state.aim.power);
@@ -541,6 +560,7 @@
   $('cr-prev').addEventListener('click', () => jumpHole(-1));
   $('cr-next').addEventListener('click', () => jumpHole(1));
   $('cr-reset').addEventListener('click', resetBall);
+  $('cr-editor').addEventListener('click', () => { if (state.editorReturn) { clearTimeout(waitTimer); hideOverlay(); editor.returnFromTest(); } });
   $('cam-in').addEventListener('click', () => zoomBy(1.25));
   $('cam-out').addEventListener('click', () => zoomBy(0.8));
   $('cam-left').addEventListener('click', () => rotateBy(-Math.PI / 4));
@@ -557,9 +577,10 @@
       for (let i = 0; i < state.players.length; i++) if (state.players[i].scores[state.holeIdx] == null) state.players[i].scores[state.holeIdx] = par;
       showHoleDone(); return true;
     },
-    state,
+    state, R,
   };
 
+  const editor = Editor({ state, R, $, showMessage, startTest, showWorldSelect, hideOverlay });
   R.resize();
   setControlMode(state.controlMode);
   showTitle();

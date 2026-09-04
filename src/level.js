@@ -29,7 +29,10 @@ function buildLevel(def) {
     const door = (def.obstacles || []).find(o => o.type === 'door');
     if (door) goal = { x: door.x, y: door.y };
   }
-  if (!tee || !goal) throw new Error(`Bahn "${def.name}": Abschlag (T) oder Loch (H) fehlt`);
+  if (!tee || !goal) {
+    if (!def.editing) throw new Error(`Bahn "${def.name}": Abschlag (T) oder Loch (H) fehlt`);
+    tee = tee || { x: -100, y: -100 }; goal = goal || tee; // Baumodus: noch unfertige Bahn darstellen
+  }
 
   const segs = [];   // Kollision
   const walls = [];  // Darstellung (Rechtecke in Weltkoordinaten)

@@ -59,7 +59,11 @@ Das Modus-Menü ist der Platz, an dem später weitere Welten eingehängt werden.
 | 8 | Sultanspalast | 5 | Zikkurat in der Wüste: drei Terrassen mit Höhenstufen, nur über Rampen erreichbar, Palastwachen, Wüstenwind, Mühle, Fallgatter zur obersten Terrasse |
 | 9 | Pyramide | 7 | zweiteilige Bahn: Serpentinenweg durch die Wüste an der Oase vorbei (Wüstenwind) zum Eingang der Stufenpyramide; drinnen die große Grabkammer mit Höhenstufen: Treppenrampen, Katapult über den Grabschacht (Timing wie die Kanone), Sprung über den Spalt, Pendelbalken, rollender Felsbrocken, Steintor und die Kammer mit dem Loch ganz oben |
 
-## Eigene Bahnen bauen
+## Baumodus (eigene Bahnen im Spiel bauen)
+
+Im Kreativmodus gibt es **Bahn bauen**: ein Editor direkt im Spiel. Kacheln (Rasen, Sand, Eis, Wasser, Lava, Block, Klippe, Leer) werden durch Tippen oder Ziehen gemalt, Abschlag und Loch per Werkzeug gesetzt. Objekte (Pilz, Windrad, Fallgatter, Lore, Windfeld, Sprungrampe, Beschleuniger, Windmühle, Kanone, Magnet, Drehscheibe, Schrumpftrank, Portal, Bande) werden per Tipp platziert, mit **Drehen** in der Richtung geändert und mit **Löschen** entfernt. Name, Par, Welt und Kartengröße stehen im Panel. **Testen** spielt die Bahn sofort, danach geht es zurück in den Editor. Gespeichert wird im Browser; **Exportieren** liefert den Bahn-Code als Text, **Importieren** liest ihn wieder ein (so lassen sich Bahnen weitergeben). Gespeicherte Bahnen erscheinen im Kreativmodus als Welt **Eigene Bahnen**. Der Editor steckt in `src/editor.js`.
+
+## Eigene Bahnen im Code bauen
 
 Bahnen stehen in `src/courses.js` (Normal-Welt) und `src/courses_pro.js` (Profi-Welt) als ASCII-Karte plus Hindernisliste. Die Liste `WORLDS` in `src/courses_pro.js` registriert die Welten für das Menü.
 
@@ -87,6 +91,7 @@ style.css         Oberfläche
 src/themes.js     Farbpaletten und Deko je Welt
 src/courses.js    die Bahnen der Normal-Welt
 src/courses_pro.js die Bahnen der Profi-Welt und die Weltenliste
+src/editor.js     Baumodus (Editor für eigene Bahnen)
 src/level.js      Karte → Kacheln, Mauern, Kollisionssegmente
 src/obstacles.js  bewegliche und statische Hindernisse
 src/physics.js    Ballphysik und Kollision
