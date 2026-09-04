@@ -17,7 +17,7 @@ const Editor = (deps) => {
     portal: 'Erst den Eingang, dann den Ausgang antippen.', wall: 'Erst den Anfang, dann das Ende der Bande antippen.',
     delete: 'Tippen: Objekt in der Nähe löschen.', rotate: 'Tippen: Objekt in der Nähe drehen (Richtung, Achse, Anziehen/Abstoßen).', pan: 'Ziehen: Ansicht verschieben.',
   };
-  const ed = { def: null, tiles: [], tool: '#', obj: 'bumper', pending: null, hover: null, panX: 0, panY: 0, drag: null, panel: null, collapsed: false };
+  const ed = { def: null, tiles: [], tool: '#', obj: 'bumper', pending: null, hover: null, panX: 0, panY: 0, drag: null, panel: null, collapsed: false, view: 'top' };
 
   /* ---------- Speicher ---------- */
   function loadCustoms() { try { const v = JSON.parse(localStorage.getItem(KEY) || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
@@ -45,7 +45,7 @@ const Editor = (deps) => {
     const W = Math.max(...ed.tiles.map(r => r.length)); for (const r of ed.tiles) while (r.length < W) r.push('.');
     ed.pending = null; ed.hover = null; ed.panX = 0; ed.panY = 0; ed.drag = null;
     state.phase = 'edit'; state.mode = 'creative'; state.ball = null; state.aim = null; state.particles = []; state.editorReturn = false;
-    state.camTheta = Math.PI / 4; state.zoomFactor = 1;
+    state.camTheta = ed.view === 'top' ? 0 : Math.PI / 4; state.zoomFactor = 1;
     document.body.classList.remove('title', 'testing'); document.body.classList.add('creative', 'editing');
     deps.hideOverlay();
     rebuild();
@@ -58,10 +58,19 @@ const Editor = (deps) => {
     state.level = buildLevel(ed.def); state.theme = THEMES[ed.def.theme] || THEMES.meadow;
     R.setLevel(state.level, state.theme);
   }
+  /* Kamera: Draufsicht (Norden oben, quadratische Kacheln, nur ein Hauch Höhe) oder Schrägsicht;
+     die Karte wird im Bereich neben dem Panel zentriert */
   function cameraTarget() {
+    const lv = state.level, panel = ed.panel && !ed.collapsed ? 290 : 0, availW = R.w - panel - 30, availH = R.h - 80 - 76;
+    if (ed.view === 'top') {
+      const zoom = Math.min(availW / (lv.W + 1.5), availH / (lv.H + 1.5)) * state.zoomFactor;
+      return { fx: lv.W / 2 + ed.panX, fy: lv.H / 2 + ed.panY, th: state.camTheta, zoom, tilt: 1, zf: 0.12, cx: 15 + availW / 2, cy: 80 + availH / 2 };
+    }
     const o = R.overviewTarget();
-    return Object.assign(o, { th: state.camTheta, zoom: o.zoom * state.zoomFactor, fx: o.fx + ed.panX, fy: o.fy + ed.panY });
+    const span = (lv.W + lv.H + 4) * Math.SQRT1_2, zoom = Math.min(availW / span, availH / (span * CAM_TILT + 3)) * state.zoomFactor;
+    return Object.assign(o, { th: state.camTheta, zoom, fx: o.fx + ed.panX, fy: o.fy + ed.panY, cx: 15 + availW / 2, cy: 80 + availH / 2 + zoom * 0.8, zf: CAM_ZF });
   }
+  function setView(v) { ed.view = v; state.camTheta = v === 'top' ? 0 : Math.PI / 4; ed.panX = 0; ed.panY = 0; state.zoomFactor = 1; syncPanel(); }
 
   /* ---------- Kacheln ---------- */
   const W = () => ed.tiles[0].length, H = () => ed.tiles.length;
@@ -185,7 +194,7 @@ const Editor = (deps) => {
     if (ed.panel) return;
     const p = document.createElement('div'); p.id = 'editor-panel'; ed.panel = p; document.body.appendChild(p);
     p.innerHTML = `
-      <div class="ed-head"><b>🛠 Baumodus</b><button class="cbtn small" id="ed-collapse" title="Panel ein-/ausklappen">▾</button></div>
+      <div class="ed-head"><b>🛠 Baumodus</b><span><button class="cbtn small" id="ed-view" title="Draufsicht / Schrägsicht">Schräg</button> <button class="cbtn small" id="ed-collapse" title="Panel einklappen, um frei zu bauen">Einklappen ▸</button></span></div>
       <div class="ed-body">
         <div class="ed-sec"><div class="ed-title">Kacheln</div><div class="ed-grid" id="ed-tiles">${TILES.map(([c, n]) => `<button class="cbtn small ed-tool" data-tool="${c}">${n}</button>`).join('')}</div></div>
         <div class="ed-sec"><div class="ed-title">Start und Ziel</div><div class="ed-grid"><button class="cbtn small ed-tool" data-tool="T">Abschlag</button><button class="cbtn small ed-tool" data-tool="H">Loch</button></div></div>
@@ -215,7 +224,8 @@ const Editor = (deps) => {
       </div>`;
     p.querySelectorAll('.ed-tool').forEach(b => b.addEventListener('click', () => { ed.tool = b.dataset.tool; ed.pending = null; syncPanel(); }));
     $('ed-obj').addEventListener('change', e => { ed.obj = e.target.value; ed.tool = 'obj'; ed.pending = null; syncPanel(); });
-    $('ed-collapse').addEventListener('click', () => { ed.collapsed = !ed.collapsed; p.classList.toggle('collapsed', ed.collapsed); $('ed-collapse').textContent = ed.collapsed ? '▸' : '▾'; });
+    $('ed-collapse').addEventListener('click', () => { ed.collapsed = !ed.collapsed; p.classList.toggle('collapsed', ed.collapsed); $('ed-collapse').textContent = ed.collapsed ? '🛠 Werkzeuge' : 'Einklappen ▸'; });
+    $('ed-view').addEventListener('click', () => setView(ed.view === 'top' ? 'iso' : 'top'));
     $('ed-name').addEventListener('input', e => { ed.def.name = e.target.value || 'Meine Bahn'; });
     $('ed-par').addEventListener('change', e => { ed.def.par = Math.max(1, Math.min(12, +e.target.value || 3)); });
     $('ed-theme').addEventListener('change', e => { ed.def.theme = e.target.value; rebuild(); });
@@ -240,6 +250,7 @@ const Editor = (deps) => {
   function syncPanel() {
     if (!ed.panel) return;
     ed.panel.querySelectorAll('.ed-tool').forEach(b => b.classList.toggle('sel', b.dataset.tool === ed.tool));
+    $('ed-view').textContent = ed.view === 'top' ? 'Schrägsicht' : 'Draufsicht';
     $('ed-obj').value = ed.obj;
     $('ed-name').value = ed.def.name; $('ed-par').value = ed.def.par; $('ed-theme').value = ed.def.theme; $('ed-w').value = W(); $('ed-h').value = H();
     const t = ed.tool;

@@ -24,8 +24,8 @@ class Renderer {
     this.cv = canvas; this.ctx = canvas.getContext('2d');
     this.level = null; this.theme = null; this.w = 1; this.h = 1; this.dpr = 1;
     // aktuelle Kamera und Zielwerte (werden weich angenähert)
-    this.cam = { fx: 0, fy: 0, th: Math.PI / 4, zoom: 40, tilt: CAM_TILT, cx: 0, cy: 0 };
-    this.target = { fx: 0, fy: 0, th: Math.PI / 4, zoom: 40, tilt: CAM_TILT, cx: 0, cy: 0 };
+    this.cam = { fx: 0, fy: 0, th: Math.PI / 4, zoom: 40, tilt: CAM_TILT, zf: CAM_ZF, cx: 0, cy: 0 };
+    this.target = { fx: 0, fy: 0, th: Math.PI / 4, zoom: 40, tilt: CAM_TILT, zf: CAM_ZF, cx: 0, cy: 0 };
     this.scale = 40;
     this.updateTrig();
   }
@@ -51,11 +51,12 @@ class Renderer {
     const ahead = 2.0;
     return { fx: ball.x - Math.sin(th) * ahead, fy: ball.y - Math.cos(th) * ahead, th, zoom, tilt: CAM_TILT, cx: this.w / 2, cy: this.h * 0.55 };
   }
-  snapCamera() { Object.assign(this.cam, this.target); this.updateTrig(); }
+  snapCamera() { Object.assign(this.cam, { tilt: CAM_TILT, zf: CAM_ZF }, this.target); this.updateTrig(); }
   updateCamera(dt) {
     const c = this.cam, tg = this.target, k = Math.min(1, dt * 4);
     c.fx += (tg.fx - c.fx) * k; c.fy += (tg.fy - c.fy) * k;
     c.zoom += (tg.zoom - c.zoom) * k; c.cx += (tg.cx - c.cx) * k; c.cy += (tg.cy - c.cy) * k;
+    c.tilt += ((tg.tilt ?? CAM_TILT) - c.tilt) * k; c.zf += ((tg.zf ?? CAM_ZF) - c.zf) * k; // Neigung und Höhenmaß (Draufsicht im Baumodus)
     let d = tg.th - c.th; d = ((d + Math.PI) % TAU + TAU) % TAU - Math.PI;
     c.th += d * Math.min(1, dt * 3);
     this.updateTrig();
@@ -67,7 +68,7 @@ class Renderer {
   projRaw(x, y, z = 0) {
     const c = this.cam, dx = x - c.fx, dy = y - c.fy;
     const rx = dx * c.cos - dy * c.sin, ry = dx * c.sin + dy * c.cos;
-    return [c.cx + rx * c.zoom, c.cy + ry * c.zoom * c.tilt - z * c.zoom * CAM_ZF];
+    return [c.cx + rx * c.zoom, c.cy + ry * c.zoom * c.tilt - z * c.zoom * (c.zf ?? CAM_ZF)];
   }
   depth(x, y) { const c = this.cam; return (x - c.fx) * c.sin + (y - c.fy) * c.cos; }
   unprojDelta(dx, dy) {
