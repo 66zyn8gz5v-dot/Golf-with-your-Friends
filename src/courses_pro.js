@@ -348,13 +348,11 @@ const PRO_COURSES = [
       // Mauer an der Oberkante der Oase: die obere Reihe wird zum Windkanal über das Wasser
       { type: 'wall', x0: 8, y0: 3, x1: 11, y1: 3, extend: 0.1 },
       // Wüstenwind (Pfeile aus der Skizze): im mittleren Gang hinauf zur Oase, über der Oase nach rechts, rechts kräftig hinunter zum Eingang
-      { type: 'field', x: 6, y: 5, w: 4, h: 5, fx: 0.7, fy: -3.4, style: 'wind' },
-      // Seitenwind an der Gabelung: drückt den Ball nach rechts in die Spur zur Oase
-      { type: 'field', x: 6, y: 10, w: 4, h: 4, fx: 2.6, fy: 0, style: 'wind' },
+      { type: 'field', x: 6, y: 5, w: 4, h: 9, fx: 0.7, fy: -3.4, style: 'wind' },
       { type: 'field', x: 7, y: 1, w: 7, h: 2, fx: 2.8, fy: 0, style: 'wind' },
       { type: 'field', x: 11, y: 3, w: 4, h: 8, fx: 0, fy: 3.8, style: 'wind' },
-      // Schiebestein an der Gabelung: gleitet im Takt hin und her und versperrt abwechselnd Streifen und Spur
-      { type: 'mover', x0: 7, y0: 10.6, x1: 9, y1: 10.6, w: 2, h: 1, period: 4.5, phase: 0, style: 'stone', e: 0.5 },
+      // Steinweiche an der Gabelung: schräger Balken am Ende der Trennwand, schwenkt im Takt und lenkt den Ball in den offenen Weg
+      { type: 'rotor', x: 8, y: 9.25, blades: 1, len: 3.6, thick: 0.2, hubR: 0.12, style: 'stone', e: 0.3, swing: { amp: Math.PI / 6, speed: 0.8 }, phase: Math.PI / 2 },
     ],
     decor: [
       { t: 'obelisk', x: 5.5, y: 0.4, s: 1.4 }, { t: 'obelisk', x: 15.6, y: 0.4, s: 1.4 }, { t: 'obelisk', x: 0.8, y: 19.6, s: 1.3 }, { t: 'obelisk', x: 10.6, y: 15.5, s: 1.2 },

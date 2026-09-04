@@ -48,7 +48,7 @@ class Rotor {
     for (let i = 0; i < this.blades; i++) {
       const a = this.bladeAngle(i);
       out.push({ ax: this.x, ay: this.y, bx: this.x + Math.cos(a) * this.len, by: this.y + Math.sin(a) * this.len,
-        rad: this.thick, omega: this.omega, cx: this.x, cy: this.y, e: 0.9, kind: 'rotor' });
+        rad: this.thick, omega: this.omega, cx: this.x, cy: this.y, e: this.e ?? 0.9, kind: 'rotor' });
     }
   }
   circles(out) { out.push({ x: this.x, y: this.y, r: this.hubR, e: 0.6, kind: 'hub' }); }

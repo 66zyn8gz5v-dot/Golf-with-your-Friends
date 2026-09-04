@@ -816,6 +816,7 @@ class Renderer {
             [ob.x + ca * ob.len + sa * tk, ob.y + sa * ob.len - ca * tk], [ob.x + sa * tk, ob.y - ca * tk]];
           if (ob.style === 'crystal') { ctx.globalAlpha = 0.85; this.prism(ctx, p, 0.05, ob.height, '#eaf8ff', '#7fc0f0'); ctx.globalAlpha = 1; }
           else if (ob.style === 'log') { this.prism(ctx, p, 0.15, 0.45, '#a8763f', '#5c4520'); }
+          else if (ob.style === 'stone') { this.prism(ctx, p, 0, 0.8, '#d9b979', '#8a6a34', { outline: '#5a4420' }); }
           else if (ob.style === 'broom') { this.prism(ctx, p, 0.1, 0.35, '#c9a15a', '#7a5a2a'); const [ex, ey] = this.proj(ob.x + ca * ob.len, ob.y + sa * ob.len, 0.3); ctx.fillStyle = '#e0c070'; ctx.beginPath(); ctx.arc(ex, ey, this.scale * 0.22, 0, TAU); ctx.fill(); }
           else this.prism(ctx, p, 0.05, ob.height, th.rotor.top, th.rotor.side);
         }
