@@ -305,7 +305,7 @@ const PRO_COURSES = [
     autoDecor: { density: 0.28, seed: 137 },
   },
   {
-    name: 'Pyramide', par: 6, theme: 'desert', maxStrokes: 30, hazardText: { water: 'Platsch! In die Oase', oob: 'Aus! In den Wüstensand' },
+    name: 'Pyramide', par: 7, theme: 'desert', maxStrokes: 30, hazardText: { water: 'Platsch! In die Oase', oob: 'Aus! In den Wüstensand' },
     views: [{ x: 1.5, y: 0.5, w: 3.5, h: 15, look: { x: 3.5, y: 18 } }, { x: 1.5, y: 15.5, w: 5, h: 4, look: { x: 9, y: 17.5 } }, { x: 5.5, y: 7, w: 4.5, h: 9, look: { x: 8, y: 3 } }, { x: 5.5, y: 0.5, w: 9.5, h: 6.5, look: { x: 13, y: 9 } }],
     intro: 'Der Weg zur Pyramide des Pharaos: ein Serpentinenweg durch die Wüste, an der Oase vorbei, gegen den Wüstenwind – bis zum Eingang. Drinnen wartet die große Grabkammer mit Rampen, einem Katapult über den Grabschacht und der Kammer ganz oben.',
     map: [
