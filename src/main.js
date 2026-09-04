@@ -234,7 +234,10 @@
     return Math.hypot(dx, dy) < 0.01 ? state.camTheta : Math.atan2(-dx, -dy);
   }
   function faceCup() {
-    const b = state.ball, c = state.level.cup || state.level.goal;
+    const b = state.ball;
+    // Blickzonen: liegt der Ball in einer Zone, schaut die Kamera auf deren Zielpunkt (z. B. Mühlentür, Fähre), sonst aufs Loch
+    const zone = (state.level.def.views || []).find(v => b.x >= v.x && b.x <= v.x + v.w && b.y >= v.y && b.y <= v.y + v.h);
+    const c = zone ? zone.look : (state.level.cup || state.level.goal);
     state.camTheta = thetaTowards(b.x, b.y, c.x, c.y);
   }
   function setCamMode(mode) {
