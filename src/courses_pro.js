@@ -342,7 +342,9 @@ const PRO_COURSES = [
       { type: 'wall', x0: 7.2, y0: 19, x1: 10, y1: 16.2 },
       { type: 'wall', x0: 6, y0: 2.3, x1: 7.5, y1: 1 },
       // Trennwand links der Oase (bis ans Wasser hoch): schmaler Windstreifen links, Spur rechts direkt auf das Wasser zu
-      { type: 'wall', x0: 8, y0: 3, x1: 8, y1: 13.5, extend: 0 },
+      { type: 'wall', x0: 8, y0: 3, x1: 8, y1: 9.5, extend: 0 },
+      // kurze Mauer an der Unterkante der Oase (linke Ecke)
+      { type: 'wall', x0: 8, y0: 5, x1: 9.1, y1: 5, extend: 0.1 },
       // Mauer an der Oberkante der Oase: die obere Reihe wird zum Windkanal über das Wasser
       { type: 'wall', x0: 8, y0: 3, x1: 11, y1: 3, extend: 0.1 },
       // Wüstenwind (Pfeile aus der Skizze): im Streifen Gegenwind nach unten, über der Oase nach rechts, rechts hinunter zum Eingang
