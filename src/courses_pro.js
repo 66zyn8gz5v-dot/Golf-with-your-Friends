@@ -69,8 +69,8 @@ const PRO_COURSES = [
     autoDecor: { density: 0.35, seed: 107 },
   },
   {
-    name: 'Magnetsee', par: 4, theme: 'ice', maxStrokes: 18,
-    intro: 'Kristall-Magnete ziehen den Ball an oder stoßen ihn ab. Wer stur aufs Loch zielt, landet im Eisloch – die Kraftfelder wollen mitgedacht sein.',
+    name: 'Korallenriff', par: 4, theme: 'reef', maxStrokes: 18, hazardText: { water: 'Hinab in die Tiefseeschlucht' },
+    intro: 'Am Meeresgrund ziehen Meereskristalle den Ball an oder stoßen ihn ab. Wer stur aufs Loch zielt, rutscht in die Tiefseeschlucht – die Kraftfelder wollen mitgedacht sein.',
     map: [
       '........................',
       '..###################...',
@@ -88,8 +88,8 @@ const PRO_COURSES = [
       { type: 'magnet', x: 16, y: 6.8, r: 2.8, strength: -7 },
       { type: 'magnet', x: 8.5, y: 6.5, r: 2.4, strength: 5 },
     ],
-    decor: [{ t: 'crystalBlue', x: 1, y: 3, s: 1.5 }, { t: 'pineSnow', x: 22.5, y: 3, s: 1.3 }, { t: 'crystalBlue', x: 22.3, y: 8.5, s: 1.1 }],
-    autoDecor: { density: 0.4, seed: 109 },
+    decor: [{ t: 'chest', x: 1, y: 3, s: 1.3 }, { t: 'coral', x: 22.5, y: 3, s: 1.6, seed: 0.9 }, { t: 'seaweed', x: 22.3, y: 8.5, s: 1.5, seed: 0.2 }, { t: 'coral', x: 0.8, y: 8.6, s: 1.4, seed: 0.5 }],
+    autoDecor: { density: 0.45, seed: 109 },
   },
   {
     name: 'Uhrwerk', par: 4, theme: 'clockwork', maxStrokes: 18,
@@ -123,8 +123,8 @@ const PRO_COURSES = [
     autoDecor: { density: 0.12, seed: 113 },
   },
   {
-    name: 'Drachenschlund', par: 5, theme: 'dragon', maxStrokes: 20, friction: { s: 32 },
-    intro: 'Über die Lava nur per Sprungschanze – dahinter warten gleich zwei Drachen.',
+    name: 'Drachenschlund', par: 5, theme: 'volcano', maxStrokes: 20, friction: { s: 32 },
+    intro: 'Am Hang des Feuerbergs, unter Aschenregen: Über den Lavastrom nur per Sprungschanze – dahinter warten gleich zwei Drachen. Die Asche bremst wie tiefer Sand.',
     map: [
       '........................',
       '..######ssss##########..',
@@ -144,7 +144,7 @@ const PRO_COURSES = [
       { type: 'mover', x0: 3.5, y0: 7, x1: 20.5, y1: 7, w: 2.4, h: 1.4, period: 8, phase: 0.2, style: 'dragon' },
       { type: 'mover', x0: 20.5, y0: 9.7, x1: 3.5, y1: 9.7, w: 2.4, h: 1.4, period: 9, phase: 0.6, style: 'dragon' },
     ],
-    decor: [{ t: 'gold', x: 11.5, y: 12 }, { t: 'bones', x: 4.5, y: 11.5 }, { t: 'brazier', x: 7.5, y: 8.5 }, { t: 'brazier', x: 16.5, y: 8.5 }],
+    decor: [{ t: 'gold', x: 11.5, y: 12 }, { t: 'bones', x: 4.5, y: 11.5 }, { t: 'vent', x: 7.5, y: 8.5, s: 1.3 }, { t: 'vent', x: 16.5, y: 8.5, s: 1.3 }, { t: 'basalt', x: 1, y: 6, s: 1.6, seed: 0.3 }, { t: 'basalt', x: 23, y: 3, s: 1.5, seed: 0.8 }, { t: 'obsidian', x: 22.8, y: 9.5, s: 1.3 }],
     autoDecor: { density: 0.4, seed: 127 },
   },
   {
@@ -202,8 +202,8 @@ const PRO_COURSES = [
     },
   },
   {
-    name: 'Königsburg', par: 5, theme: 'castle', maxStrokes: 25,
-    intro: 'Der lange Weg zur Königsburg: zwei Mühlen, Ritter und Steigungen. Die Zugbrücke bleibt zu, bis der Ball die Schalterplatte in der Nische drückt – dann zählt die Zeit.',
+    name: 'Sultanspalast', par: 5, theme: 'palace', maxStrokes: 25, hazardText: { water: 'Platsch! In der Oase' },
+    intro: 'Durch die Wüste zum Sultanspalast: zwei Mühlen, Palastwachen und sandige Steigungen. Das Tor über der Oase bleibt zu, bis der Ball die Schalterplatte in der Nische drückt – dann zählt die Zeit.',
     map: [
       '..........................',
       '........############......',
@@ -237,10 +237,11 @@ const PRO_COURSES = [
       { type: 'mover', x0: 9, y0: 3, x1: 18.8, y1: 3, w: 0.7, h: 0.7, period: 6, phase: 0, style: 'knight' },
     ],
     decor: [
-      { t: 'tower', x: 13.5, y: 0.3, s: 2.2, roof: '#a63d3d' }, { t: 'tower', x: 7.6, y: 0.6, s: 1.5, roof: '#a63d3d' }, { t: 'tower', x: 20.4, y: 0.6, s: 1.5, roof: '#a63d3d' },
-      { t: 'pine', x: 8, y: 9.8, s: 1.4 }, { t: 'pine', x: 12, y: 10.2, s: 1.2 }, { t: 'pine', x: 8, y: 15, s: 1.3 },
+      { t: 'tower', x: 13.5, y: 0.3, s: 2.4, dome: '#2fb8c9' }, { t: 'tower', x: 7.6, y: 0.6, s: 1.6, dome: '#2fb8c9' }, { t: 'tower', x: 20.4, y: 0.6, s: 1.6, dome: '#2fb8c9' },
+      { t: 'palm', x: 8, y: 9.8, s: 1.5, seed: 0.3 }, { t: 'palm', x: 12, y: 10.2, s: 1.3, seed: 0.7 }, { t: 'palm', x: 8, y: 15, s: 1.4, seed: 0.5 }, { t: 'palm', x: 21, y: 4.5, s: 1.4, seed: 0.2 },
+      { t: 'urn', x: 11.4, y: 6.3, s: 1.2 }, { t: 'urn', x: 16.6, y: 6.3, s: 1.2 }, { t: 'cactus', x: 2.5, y: 12, s: 1.4, seed: 0.7 },
     ],
-    autoDecor: { density: 0.45, seed: 137 },
+    autoDecor: { density: 0.26, seed: 137 },
   },
 ];
 

@@ -321,7 +321,8 @@
   }
   function hazard(type) {
     const b = state.ball;
-    const label = type === 'water' ? 'Platsch! Wasser' : type === 'lava' ? 'Zischhh! Lava' : 'Aus! Abgrund';
+    const custom = state.level.def.hazardText && state.level.def.hazardText[type];
+    const label = custom || (type === 'water' ? 'Platsch! Wasser' : type === 'lava' ? 'Zischhh! Lava' : 'Aus! Abgrund');
     if (type === 'water') { Sfx.water(); burst(b.x, b.y, '#9fd3ff', 18); }
     else if (type === 'lava') { Sfx.lava(); burst(b.x, b.y, '#ffb347', 18); }
     else { Sfx.oob(); burst(b.x, b.y, '#cccccc', 10); }
