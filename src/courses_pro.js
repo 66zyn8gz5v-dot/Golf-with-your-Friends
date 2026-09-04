@@ -84,9 +84,9 @@ const PRO_COURSES = [
       '........................',
     ],
     obstacles: [
-      { type: 'magnet', x: 12.5, y: 2.4, r: 3, strength: 5.5, style: 'coral' },
-      { type: 'magnet', x: 16, y: 6.8, r: 2.8, strength: -7, style: 'coral' },
-      { type: 'magnet', x: 8.5, y: 6.5, r: 2.6, slow: 2.0, style: 'coral' },
+      { type: 'magnet', x: 12.5, y: 2.4, r: 3.4, strength: 11, style: 'coral' },
+      { type: 'magnet', x: 16, y: 6.8, r: 3.2, strength: -13, style: 'coral' },
+      { type: 'magnet', x: 8.5, y: 6.5, r: 3, slow: 3.6, style: 'coral' },
     ],
     decor: [{ t: 'chest', x: 1, y: 3, s: 1.3 }, { t: 'coral', x: 22.5, y: 3, s: 1.6, seed: 0.9 }, { t: 'seaweed', x: 22.3, y: 8.5, s: 1.5, seed: 0.2 }, { t: 'coral', x: 0.8, y: 8.6, s: 1.4, seed: 0.5 }],
     autoDecor: { density: 0.45, seed: 109 },
