@@ -203,7 +203,7 @@ const PRO_COURSES = [
   },
   {
     name: 'Sultanspalast', par: 5, theme: 'palace', maxStrokes: 25, hStep: 0.5,
-    intro: 'Die Zikkurat des Sultans: Drei Terrassen, jede eine Stufe höher, verbunden nur über Rampen. Ganz oben wartet das Loch – bewacht von Palastwachen, Wüstenwind und einem Tor, das sich nur per Schalter öffnet.',
+    intro: 'Die Zikkurat des Sultans: Drei Terrassen, jede eine Stufe höher, verbunden nur über Rampen. Ganz oben wartet das Loch – bewacht von Palastwachen, Wüstenwind und einem Tor, das sich im Takt öffnet und schließt.',
     map: [
       '........................',
       '..####################..',
@@ -255,8 +255,7 @@ const PRO_COURSES = [
       { type: 'field', x: 8, y: 5, w: 8, h: 2, fx: -3, fy: 0, style: 'wind' },
       { type: 'field', x: 20, y: 11, w: 2, h: 5, fx: 0, fy: 2.2, style: 'wind' },
       { type: 'windmill', x: 21, y: 5.5, axis: 'x', w: 2, depth: 1.2, gap: 0.8, speed: 1.2 },
-      { type: 'gate', x: 10, y: 10, w: 0.3, h: 2, linked: 'A', axis: 'y' },
-      { type: 'switch', x: 11.5, y: 14, r: 0.5, duration: 16, target: 'A' },
+      { type: 'gate', x: 10, y: 10, w: 0.3, h: 2, period: 6, open: 0.5, phase: 0, axis: 'y' },
       { type: 'mover', x0: 7, y0: 2, x1: 19.5, y1: 2, w: 0.7, h: 0.7, period: 9, phase: 0.3, style: 'guard' },
       { type: 'mover', x0: 8, y0: 6, x1: 15.5, y1: 6, w: 0.7, h: 0.7, period: 6, phase: 0, style: 'guard' },
       { type: 'mover', x0: 7, y0: 13, x1: 16.5, y1: 13, w: 0.7, h: 0.7, period: 7, phase: 0.5, style: 'guard' },

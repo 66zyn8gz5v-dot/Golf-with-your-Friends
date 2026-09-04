@@ -56,7 +56,7 @@ Das Modus-Menü ist der Platz, an dem später weitere Welten eingehängt werden.
 | 5 | Uhrwerk | 4 | eigene Uhrwerk-Welt aus Messing und Zahnrädern, zwei Zahnrad-Drehscheiben, die den Ball mitnehmen und an der Rinne auswerfen, Fallgatter |
 | 6 | Drachenschlund | 5 | Vulkanhang unter Aschenregen, Sprungschanze über den Lavastrom, zwei Drachen, bremsende Asche |
 | 7 | Hexenküche | 5 | zweiteilige Bahn: durch den Hexengarten in die Hexenhütte (eigene Innen-Map), dort über eine Rampe in den Hexentopf – der Ball schrumpft 20 s und passt durch den Spalt zum Loch |
-| 8 | Sultanspalast | 5 | Zikkurat in der Wüste: drei Terrassen mit Höhenstufen, nur über Rampen erreichbar, Palastwachen, Wüstenwind, Mühle, Schalterplatte für das Tor zur obersten Terrasse |
+| 8 | Sultanspalast | 5 | Zikkurat in der Wüste: drei Terrassen mit Höhenstufen, nur über Rampen erreichbar, Palastwachen, Wüstenwind, Mühle, Fallgatter zur obersten Terrasse |
 
 ## Eigene Bahnen bauen
 
