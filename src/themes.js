@@ -84,6 +84,18 @@ const THEMES = {
     accent: '#ffd166', flag: '#ff4f6d', clouds: true, floating: true,
     autoDecor: ['cloud', 'cloud', 'cloud', 'lantern', 'tree'],
   },
+  clockwork: {
+    atmo: 'sparks',
+    sky: ['#14100c', '#3a2a1a'], ground: '#3b3237', groundEdge: '#1f1a1d',
+    floor: ['#8c7b5c', '#82714f'], sand: '#c9b58a', ice: '#c8ecff', snow: '#f1f7ff',
+    water: '#3f8fd9', lava: '#ff6a1f',
+    wall: { top: '#c08a3e', side: '#6e4a1c', style: 'brass' },
+    block: { top: '#5a5560', side: '#33303a' },
+    mover: { top: '#b08a4a', side: '#6a4f24' },
+    rotor: { top: '#d1a04e', side: '#7a5522' },
+    accent: '#ffcc66', flag: '#d94f3a', gears: true,
+    autoDecor: ['gear', 'gearFlat', 'pipe', 'lantern'],
+  },
   witch: {
     atmo: 'mist',
     sky: ['#120a1f', '#3a1f4d'], ground: '#2c2438', groundEdge: '#15111c',

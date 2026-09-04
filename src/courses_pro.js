@@ -92,8 +92,8 @@ const PRO_COURSES = [
     autoDecor: { density: 0.4, seed: 109 },
   },
   {
-    name: 'Uhrwerk', par: 4, theme: 'sky', maxStrokes: 18,
-    intro: 'Zwei riesige Zahnräder in den Wolken. Wer sich von der Drehscheibe tragen lässt, wird zum richtigen Ausgang geschleudert – wer zu stark schießt, dreht Runden.',
+    name: 'Uhrwerk', par: 4, theme: 'clockwork', maxStrokes: 18,
+    intro: 'Im Inneren des großen Uhrturms. Zwei Zahnräder nehmen einen langsamen Ball mit und werfen ihn an der Rinne wieder aus – zu schnelle Bälle rollen einfach darüber hinweg.',
     map: [
       '..........................',
       '..######..........#####...',
@@ -114,10 +114,13 @@ const PRO_COURSES = [
       { type: 'gate', x: 13, y: 8.5, w: 0.3, h: 1, period: 5, open: 0.5, phase: 0, axis: 'y' },
     ],
     decor: [
-      { t: 'tower', x: 1, y: 0.5, s: 1.3 }, { t: 'tower', x: 24, y: 0.6, s: 1.3 },
-      { t: 'cloud', x: 12, y: 3, s: 1.5, z: 0.4 }, { t: 'cloud', x: 1, y: 11.5, s: 1.3, z: 0.2 }, { t: 'cloud', x: 24.5, y: 11.8, s: 1.3, z: 0.3 },
+      { t: 'clock', x: 13, y: 0.6, s: 2.2 },
+      { t: 'gearFlat', x: 12.5, y: 4.3, s: 2.6, speed: 0.35, seed: 0.3 }, { t: 'gearFlat', x: 9.2, y: 2.2, s: 1.6, speed: -0.55, seed: 0.7 }, { t: 'gearFlat', x: 16.2, y: 2.4, s: 1.5, speed: -0.5, seed: 0.2 },
+      { t: 'gearFlat', x: 12.5, y: 10.4, s: 2.2, speed: -0.4, seed: 0.6 }, { t: 'gearFlat', x: 1.2, y: 9.6, s: 1.3, speed: 0.6, seed: 0.1 }, { t: 'gearFlat', x: 24.6, y: 5.2, s: 1.4, speed: 0.5, seed: 0.9 },
+      { t: 'gear', x: 1.2, y: 4.6, s: 1.5, seed: 0.35 }, { t: 'gear', x: 24.5, y: 1.2, s: 1.4, seed: 0.8 },
+      { t: 'pipe', x: 9.3, y: 0.6, s: 1.3, seed: 0.2 }, { t: 'pipe', x: 16.7, y: 0.6, s: 1.3, seed: 0.6 }, { t: 'pipe', x: 17.2, y: 5.4, s: 1.1, seed: 0.4 },
     ],
-    autoDecor: { density: 0.2, seed: 113 },
+    autoDecor: { density: 0.12, seed: 113 },
   },
   {
     name: 'Drachenschlund', par: 5, theme: 'dragon', maxStrokes: 20, friction: { s: 32 },

@@ -172,6 +172,7 @@ class Renderer {
     ctx.fillStyle = g; ctx.fillRect(0, 0, this.w, this.h);
     if (th.stars) this.drawStars(ctx, t);
     if (th.clouds) this.drawSkyClouds(ctx, t);
+    if (th.gears) this.drawSkyGears(ctx, t);
 
     this.drawFloor(ctx);
 
@@ -272,6 +273,13 @@ class Renderer {
         const sp = 18 + hash(i, 1) * 22, x = (hash(i, 2) * w + Math.sin(t * 0.7 + i) * 18 + t * 6) % w, y = (hash(i, 3) * h + t * sp) % h;
         ctx.fillStyle = `rgba(255,255,255,${0.35 + hash(i, 4) * 0.45})`; ctx.beginPath(); ctx.arc(x, y, 1.2 + hash(i, 5) * 1.8, 0, TAU); ctx.fill();
       }
+    } else if (kind === 'sparks') {
+      for (let i = 0; i < 18; i++) {
+        const life = ((t * (0.08 + hash(i, 1) * 0.08) + hash(i, 2)) % 1);
+        const x = hash(i, 3) * w + Math.sin(t * 0.6 + i) * 20, y = h - life * h;
+        ctx.fillStyle = `rgba(255,${200 + hash(i, 4) * 40 | 0},140,${(1 - life) * 0.6})`;
+        ctx.beginPath(); ctx.arc(x, y, 1.2 + hash(i, 5) * 1.2, 0, TAU); ctx.fill();
+      }
     } else if (kind === 'pollen') {
       for (let i = 0; i < 30; i++) {
         const x = (hash(i, 1) * w + t * (6 + hash(i, 2) * 8) + Math.sin(t * 0.5 + i) * 15) % w, y = (hash(i, 3) * h + Math.sin(t * 0.6 + i * 1.3) * 25) % h;
@@ -288,6 +296,29 @@ class Renderer {
       ctx.globalAlpha = a; ctx.beginPath(); ctx.arc(x, y, 1 + (i % 3) * 0.5, 0, TAU); ctx.fill();
     }
     ctx.globalAlpha = 1;
+  }
+  /* Zahnrad-Umriss in Bildschirmkoordinaten (Mittelpunkt x,y, Radius r) */
+  gearPath(ctx, x, y, r, teeth, angle) {
+    const inner = r * 0.82, n = teeth * 4;
+    ctx.beginPath();
+    for (let i = 0; i < n; i++) {
+      const k = i % 4, rr = k === 0 || k === 3 ? inner : r;
+      const a = angle + (i / n) * TAU + (k === 1 || k === 2 ? 0 : 0);
+      const px = x + Math.cos(a) * rr, py = y + Math.sin(a) * rr;
+      if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+  }
+  drawSkyGears(ctx, t) {
+    const w = this.w, h = this.h;
+    const gears = [[0.12, 0.22, 0.17, 12, 0.15], [0.3, 0.08, 0.1, 9, -0.22], [0.82, 0.18, 0.2, 14, -0.12], [0.62, 0.05, 0.09, 8, 0.28], [0.95, 0.55, 0.13, 10, 0.18], [0.05, 0.7, 0.11, 9, -0.2]];
+    for (const [gx, gy, gr, teeth, sp] of gears) {
+      const r = gr * Math.min(w, h) * 1.4, x = gx * w, y = gy * h;
+      ctx.fillStyle = 'rgba(190,140,70,0.13)'; this.gearPath(ctx, x, y, r, teeth, t * sp); ctx.fill();
+      ctx.fillStyle = 'rgba(20,16,12,0.5)'; ctx.beginPath(); ctx.arc(x, y, r * 0.18, 0, TAU); ctx.fill();
+      ctx.strokeStyle = 'rgba(190,140,70,0.16)'; ctx.lineWidth = Math.max(2, r * 0.06);
+      for (let i = 0; i < 5; i++) { const a = t * sp + (i * TAU) / 5; ctx.beginPath(); ctx.moveTo(x + Math.cos(a) * r * 0.2, y + Math.sin(a) * r * 0.2); ctx.lineTo(x + Math.cos(a) * r * 0.72, y + Math.sin(a) * r * 0.72); ctx.stroke(); }
+    }
   }
   drawSkyClouds(ctx, t) {
     ctx.fillStyle = 'rgba(255,255,255,0.75)';
@@ -313,6 +344,15 @@ class Renderer {
       }
     } else if (wall.style === 'ice') {
       ctx.globalAlpha = 0.85; this.prism(ctx, poly, 0, 0.6, wall.top, wall.side); ctx.globalAlpha = 1;
+    } else if (wall.style === 'brass') {
+      this.prism(ctx, poly, 0, 0.55, wall.top, wall.side, { outline: shade(wall.side, 0.7) });
+      // Nieten auf der Oberseite
+      const w = poly[2][0] - poly[0][0], h = poly[2][1] - poly[0][1], along = w > h, len = Math.max(w, h), n = Math.max(1, Math.round(len / 0.5));
+      ctx.fillStyle = shade(wall.side, 0.9);
+      for (let i = 0; i < n; i++) {
+        const u = (i + 0.5) / n, px = along ? poly[0][0] + u * w : (poly[0][0] + poly[2][0]) / 2, py = along ? (poly[0][1] + poly[2][1]) / 2 : poly[0][1] + u * h;
+        const [sx, sy] = this.proj(px, py, 0.56); ctx.beginPath(); ctx.arc(sx, sy, Math.max(1, this.scale * 0.035), 0, TAU); ctx.fill();
+      }
     } else if (wall.style === 'gold') {
       this.prism(ctx, poly, 0, 0.5, wall.top, wall.side, { outline: shade(wall.side, 0.8) });
     } else {
@@ -461,10 +501,14 @@ class Renderer {
       this.isoEllipse(ctx, ob.x, ob.y, 0.004, ob.r * 1.3 * pulse, 'rgba(190,90,255,0.22)');
       this.isoEllipse(ctx, ob.x, ob.y, 0.006, ob.r * 0.8, 'rgba(120,40,180,0.35)');
     } else if (ob.type === 'turntable') {
-      this.isoEllipse(ctx, ob.x, ob.y, 0.003, ob.r + 0.15, 'rgba(30,25,40,0.5)');
-      this.isoEllipse(ctx, ob.x, ob.y, 0.005, ob.r, '#8a7d70');
-      this.isoEllipse(ctx, ob.x, ob.y, 0.006, ob.r * 0.9, '#a89a8e');
+      const th = this.theme;
+      this.isoEllipse(ctx, ob.x, ob.y, 0.003, ob.r + 0.25, 'rgba(30,25,40,0.5)');
       const [cx, cy] = this.proj(ob.x, ob.y, 0.008);
+      ctx.save(); ctx.translate(cx, cy); ctx.scale(1, this.cam.tilt);
+      ctx.fillStyle = shade(th.rotor.side, 0.8); this.gearPath(ctx, 0, s * 0.1 / this.cam.tilt, (ob.r + 0.12) * s, 16, ob.angle); ctx.fill();
+      ctx.fillStyle = shade(th.rotor.side, 1.15); this.gearPath(ctx, 0, 0, (ob.r + 0.12) * s, 16, ob.angle); ctx.fill();
+      ctx.restore();
+      this.isoEllipse(ctx, ob.x, ob.y, 0.006, ob.r * 0.9, th.rotor.top);
       ctx.strokeStyle = 'rgba(60,45,40,0.75)'; ctx.lineWidth = Math.max(1.5, s * 0.07);
       for (let i = 0; i < 6; i++) {
         const a = ob.angle + (i * TAU) / 6;
@@ -1006,10 +1050,67 @@ class Renderer {
       case 'gold': this.spriteGold(ctx, sx, sy, s, t); break;
       case 'pumpkin': this.spritePumpkin(ctx, sx, sy, s, t); break;
       case 'cauldron': this.spriteCauldron(ctx, d, s, t); break;
+      case 'gear': this.spriteGear(ctx, sx, sy, s, d, t); break;
+      case 'gearFlat': this.spriteGearFlat(ctx, d, s, t); break;
+      case 'pipe': this.spritePipe(ctx, sx, sy, s, d, t); break;
+      case 'clock': this.spriteClock(ctx, sx, sy, s, t); break;
       default: break;
     }
   }
   shadow(ctx, sx, sy, r) { ctx.fillStyle = 'rgba(0,0,0,0.22)'; ctx.beginPath(); ctx.ellipse(sx, sy, r, r * 0.5, 0, 0, TAU); ctx.fill(); }
+  /* Stehendes Messing-Zahnrad auf einer Achse */
+  spriteGear(ctx, sx, sy, s, d, t) {
+    const r = s * 0.55, teeth = 8 + Math.floor((d.seed || 0) * 5), sp = ((d.seed || 0) > 0.5 ? 1 : -1) * (0.5 + (d.seed || 0));
+    this.shadow(ctx, sx, sy, r * 0.9);
+    ctx.fillStyle = '#3a3036'; ctx.fillRect(sx - s * 0.07, sy - s * 0.75, s * 0.14, s * 0.75);
+    const cy = sy - s * 0.75 - r * 0.6;
+    const g = ctx.createRadialGradient(sx - r * 0.3, cy - r * 0.3, r * 0.1, sx, cy, r);
+    g.addColorStop(0, '#e6bd6a'); g.addColorStop(1, '#8a5f22');
+    ctx.fillStyle = g; this.gearPath(ctx, sx, cy, r, teeth, t * sp); ctx.fill();
+    ctx.strokeStyle = '#4a3212'; ctx.lineWidth = Math.max(1, s * 0.03); ctx.stroke();
+    ctx.fillStyle = '#2a2026'; ctx.beginPath(); ctx.arc(sx, cy, r * 0.18, 0, TAU); ctx.fill();
+    ctx.strokeStyle = '#6a4a1a'; ctx.lineWidth = Math.max(1, r * 0.1);
+    for (let i = 0; i < 4; i++) { const a = t * sp + (i * TAU) / 4; ctx.beginPath(); ctx.moveTo(sx + Math.cos(a) * r * 0.22, cy + Math.sin(a) * r * 0.22); ctx.lineTo(sx + Math.cos(a) * r * 0.7, cy + Math.sin(a) * r * 0.7); ctx.stroke(); }
+  }
+  /* Liegendes Zahnrad im Boden (dreht sich langsam) */
+  spriteGearFlat(ctx, d, s, t) {
+    const [sx, sy] = this.proj(d.x, d.y, (d.z || 0) + 0.02), r = s * 0.7, teeth = 10 + Math.floor((d.seed || 0) * 6);
+    const sp = d.speed ?? (((d.seed || 0) > 0.5 ? 1 : -1) * (0.25 + (d.seed || 0) * 0.4));
+    ctx.save(); ctx.translate(sx, sy); ctx.scale(1, this.cam.tilt);
+    ctx.fillStyle = '#4a3a20'; this.gearPath(ctx, 0, r * 0.12 / this.cam.tilt, r, teeth, t * sp); ctx.fill();
+    ctx.fillStyle = '#b8873a'; this.gearPath(ctx, 0, 0, r, teeth, t * sp); ctx.fill();
+    ctx.strokeStyle = '#5a3f18'; ctx.lineWidth = Math.max(1, s * 0.03); ctx.stroke();
+    ctx.fillStyle = '#2a2026'; ctx.beginPath(); ctx.arc(0, 0, r * 0.2, 0, TAU); ctx.fill();
+    ctx.strokeStyle = '#7a5522'; ctx.lineWidth = Math.max(1, r * 0.09);
+    for (let i = 0; i < 5; i++) { const a = t * sp + (i * TAU) / 5; ctx.beginPath(); ctx.moveTo(Math.cos(a) * r * 0.25, Math.sin(a) * r * 0.25); ctx.lineTo(Math.cos(a) * r * 0.7, Math.sin(a) * r * 0.7); ctx.stroke(); }
+    ctx.restore();
+  }
+  /* Dampfrohr mit Ventil und Dampfwölkchen */
+  spritePipe(ctx, sx, sy, s, d, t) {
+    this.shadow(ctx, sx, sy, s * 0.3);
+    ctx.fillStyle = '#8a6a34'; ctx.fillRect(sx - s * 0.12, sy - s * 1.3, s * 0.24, s * 1.3);
+    ctx.fillStyle = '#c99a4a'; ctx.fillRect(sx - s * 0.12, sy - s * 1.3, s * 0.08, s * 1.3);
+    ctx.fillStyle = '#5a4020'; ctx.fillRect(sx - s * 0.18, sy - s * 0.9, s * 0.36, s * 0.1); ctx.fillRect(sx - s * 0.18, sy - s * 1.32, s * 0.36, s * 0.1);
+    ctx.fillStyle = '#c0392b'; ctx.beginPath(); ctx.arc(sx + s * 0.2, sy - s * 0.6, s * 0.1, 0, TAU); ctx.fill();
+    for (let i = 0; i < 3; i++) { // Dampf
+      const u = ((t * 0.5 + i * 0.33 + (d.seed || 0)) % 1);
+      ctx.fillStyle = `rgba(240,240,240,${0.35 * (1 - u)})`; ctx.beginPath(); ctx.arc(sx + Math.sin(u * 6 + i) * s * 0.15, sy - s * 1.35 - u * s * 0.8, s * (0.08 + u * 0.18), 0, TAU); ctx.fill();
+    }
+  }
+  /* Große Turmuhr auf einem Pfosten */
+  spriteClock(ctx, sx, sy, s, t) {
+    const r = s * 0.6, cy = sy - s * 1.4;
+    this.shadow(ctx, sx, sy, r * 0.8);
+    ctx.fillStyle = '#3a3036'; ctx.fillRect(sx - s * 0.08, sy - s * 1.4, s * 0.16, s * 1.4);
+    ctx.fillStyle = '#8a5f22'; ctx.beginPath(); ctx.arc(sx, cy, r * 1.12, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#f3e6c4'; ctx.beginPath(); ctx.arc(sx, cy, r, 0, TAU); ctx.fill();
+    ctx.strokeStyle = '#3a2a10'; ctx.lineWidth = Math.max(1, s * 0.04);
+    for (let i = 0; i < 12; i++) { const a = (i * TAU) / 12; ctx.beginPath(); ctx.moveTo(sx + Math.cos(a) * r * 0.82, cy + Math.sin(a) * r * 0.82); ctx.lineTo(sx + Math.cos(a) * r * 0.95, cy + Math.sin(a) * r * 0.95); ctx.stroke(); }
+    const am = t * 0.5 - Math.PI / 2, ah = t * 0.5 / 12 - Math.PI / 2;
+    ctx.lineWidth = Math.max(1.5, s * 0.06); ctx.beginPath(); ctx.moveTo(sx, cy); ctx.lineTo(sx + Math.cos(ah) * r * 0.5, cy + Math.sin(ah) * r * 0.5); ctx.stroke();
+    ctx.lineWidth = Math.max(1, s * 0.04); ctx.beginPath(); ctx.moveTo(sx, cy); ctx.lineTo(sx + Math.cos(am) * r * 0.78, cy + Math.sin(am) * r * 0.78); ctx.stroke();
+    ctx.fillStyle = '#c0392b'; ctx.beginPath(); ctx.arc(sx, cy, r * 0.07, 0, TAU); ctx.fill();
+  }
   spriteTree(ctx, sx, sy, s, d, t) {
     this.shadow(ctx, sx, sy, s * 0.6);
     ctx.fillStyle = '#6b4423'; ctx.fillRect(sx - s * 0.1, sy - s * 1.0, s * 0.2, s * 1.0);
