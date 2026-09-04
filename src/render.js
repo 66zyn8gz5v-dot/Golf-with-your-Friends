@@ -61,7 +61,7 @@ class Renderer {
     this.updateTrig();
   }
   proj(x, y, z = 0) {
-    if (this.level && this.level.hasHeights) z += this.level.heightAt(x, y);
+    if (!this.flat && this.level && this.level.hasHeights) z += this.level.heightAt(x, y);
     return this.projRaw(x, y, z);
   }
   projRaw(x, y, z = 0) {
@@ -137,6 +137,18 @@ class Renderer {
         if (this.onScreen(sx, sy, cull * 2)) this.prism(ctx, [[x, y], [x + 1, y], [x + 1, y + 1], [x, y + 1]], -1.3, 1.3, th.ground, th.groundEdge);
       }
     } else this.prism(ctx, slab, -1.0, 1.0, th.ground, th.groundEdge);
+    if (th.sea) { // Wellenkämme auf dem Meer (die Scholle ist das Wasser)
+      const t = this.level.t || 0;
+      ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = Math.max(1, this.scale * 0.04); ctx.lineCap = 'round';
+      for (let i = 0; i < 70; i++) {
+        const wx = ((i * 7.31) % (W + 2.8)) - 1.4, wy = (((i * 3.17) + this.seaT * 0.35) % (H + 2.8)) - 1.4;
+        if (this.level.isFloorChar(this.level.charAt(wx, wy))) continue;
+        const [a0, a1] = this.projRaw(wx - 0.3, wy, 0.01), [b0, b1] = this.projRaw(wx, wy - 0.08, 0.01), [c0, c1] = this.projRaw(wx + 0.3, wy, 0.01);
+        ctx.globalAlpha = 0.4 + 0.4 * Math.sin(this.seaT * 1.5 + i);
+        ctx.beginPath(); ctx.moveTo(a0, a1); ctx.quadraticCurveTo(b0, b1, c0, c1); ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    }
     // Kacheln (mit Höhenstufen: von hinten nach vorn, jede mit ihren Klippenwänden)
     const cells = [];
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) cells.push([x, y]);
@@ -207,7 +219,9 @@ class Renderer {
     if (th.clouds) this.drawSkyClouds(ctx, t);
     if (th.gears) this.drawSkyGears(ctx, t);
     if (th.planks) this.drawPlanks(ctx, t);
+    this.seaT = t;
     if (th.rays) this.drawRays(ctx, t);
+    if (th.sea) this.drawSea(ctx, t);
     if (th.volcano) this.drawVolcano(ctx, t);
     if (th.dunes) this.drawDunes(ctx, t);
 
@@ -261,7 +275,7 @@ class Renderer {
       it.draw();
       if (fade) ctx.globalAlpha = 1;
     }
-    if (b) this.drawBall(ctx, b);
+    if (b) { this.flat = !!(b.rider && b.rider.type === 'ferry' && b.rider.flat); this.drawBall(ctx, b); this.flat = false; }
 
     // Atmosphäre (dezent, über der Szene, unter den Effektpartikeln)
     this.drawAtmosphere(ctx, lv.def.atmo || th.atmo || 'none', t);
@@ -332,11 +346,12 @@ class Renderer {
         ctx.fillStyle = ember ? `rgba(255,${120 + hash(i, 4) * 60 | 0},40,${0.5 + 0.4 * Math.abs(Math.sin(t * 5 + i))})` : `rgba(190,180,185,${0.25 + hash(i, 4) * 0.35})`;
         ctx.beginPath(); ctx.arc(x, y, 1.2 + hash(i, 5) * 1.6, 0, TAU); ctx.fill();
       }
-    } else if (kind === 'sand') {
+    } else if (kind === 'sand' || kind === 'spray') {
+      const sc = kind === 'spray' ? '235,245,255' : '255,225,170';
       ctx.lineCap = 'round'; ctx.lineWidth = 1.2;
       for (let i = 0; i < 26; i++) {
         const sp = 60 + hash(i, 1) * 80, x = (hash(i, 2) * w + t * sp) % (w + 60) - 30, y = h * (0.3 + hash(i, 3) * 0.7) + Math.sin(t * 0.8 + i) * 10;
-        ctx.strokeStyle = `rgba(255,225,170,${0.18 + hash(i, 4) * 0.2})`; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 14 + hash(i, 5) * 20, y - 1); ctx.stroke();
+        ctx.strokeStyle = `rgba(${sc},${0.18 + hash(i, 4) * 0.2})`; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 14 + hash(i, 5) * 20, y - 1); ctx.stroke();
       }
     } else if (kind === 'pollen') {
       for (let i = 0; i < 30; i++) {
@@ -376,6 +391,23 @@ class Renderer {
       ctx.fillStyle = 'rgba(20,16,12,0.5)'; ctx.beginPath(); ctx.arc(x, y, r * 0.18, 0, TAU); ctx.fill();
       ctx.strokeStyle = 'rgba(190,140,70,0.16)'; ctx.lineWidth = Math.max(2, r * 0.06);
       for (let i = 0; i < 5; i++) { const a = t * sp + (i * TAU) / 5; ctx.beginPath(); ctx.moveTo(x + Math.cos(a) * r * 0.2, y + Math.sin(a) * r * 0.2); ctx.lineTo(x + Math.cos(a) * r * 0.72, y + Math.sin(a) * r * 0.72); ctx.stroke(); }
+    }
+  }
+  /* Küste: Horizont, ferne Segel und Möwen */
+  drawSea(ctx, t) {
+    const w = this.w, h = this.h, hz = h * 0.42;
+    const g = ctx.createLinearGradient(0, hz, 0, h);
+    g.addColorStop(0, '#3a8fb8'); g.addColorStop(1, '#1f5f85'); ctx.fillStyle = g; ctx.fillRect(0, hz, w, h - hz);
+    ctx.fillStyle = 'rgba(255,220,170,0.35)'; ctx.fillRect(0, hz, w, 2);
+    for (let i = 0; i < 4; i++) { // ferne Segel
+      const x = ((i * 0.27 + t * 0.006 * (i % 2 ? 1 : -1)) % 1 + 1) % 1 * w, y = hz + 6 + i * 3, s = 10 + i * 3;
+      ctx.fillStyle = 'rgba(30,45,70,0.7)'; ctx.fillRect(x - s * 0.6, y - 2, s * 1.2, 3);
+      ctx.beginPath(); ctx.moveTo(x, y - 2); ctx.lineTo(x, y - s * 1.6); ctx.lineTo(x + s * 0.7, y - 3); ctx.closePath(); ctx.fill();
+    }
+    ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 1.5;
+    for (let i = 0; i < 6; i++) { // Möwen
+      const x = ((i * 0.19 + t * 0.02) % 1) * w, y = h * (0.1 + (i * 0.07) % 0.25) + Math.sin(t + i) * 6, s = 7 + (i % 3) * 3, fl = Math.sin(t * 5 + i) * s * 0.5;
+      ctx.beginPath(); ctx.moveTo(x - s, y + fl); ctx.quadraticCurveTo(x - s * 0.4, y - fl * 0.3, x, y); ctx.quadraticCurveTo(x + s * 0.4, y - fl * 0.3, x + s, y + fl); ctx.stroke();
     }
   }
   /* Meeresgrund: Lichtstrahlen von oben und ein paar Fische im Hintergrund */
@@ -730,7 +762,7 @@ class Renderer {
         items.push({ x: (p0[0] + p1[0]) / 2, y: (p0[1] + p1[1]) / 2, draw: () => this.prism(ctx, poly, 0, ob.h, th.wall.top, th.wall.side, { outline: shade(th.wall.side, 0.75) }) });
       }
     } else if (ob.type === 'mover' || ob.type === 'ferry') {
-      items.push({ x: ob.x, y: ob.y, bias: 0.3, draw: () => this.drawMover(ctx, ob, t) });
+      items.push({ x: ob.x, y: ob.y, bias: 0.3, draw: () => { this.flat = ob.type === 'ferry' && ob.flat; this.drawMover(ctx, ob, t); this.flat = false; } });
     } else if (ob.type === 'rotor') {
       const hub = this.circlePoly(ob.x, ob.y, ob.hubR, 8);
       items.push({ x: ob.x, y: ob.y, draw: () => {
@@ -1183,6 +1215,34 @@ class Renderer {
       ctx.strokeStyle = '#ffd166'; ctx.lineWidth = Math.max(1, s * 0.04); ctx.beginPath(); ctx.moveTo(shx - s * 0.1, shy); ctx.lineTo(shx + s * 0.1, shy); ctx.moveTo(shx, shy - s * 0.1); ctx.lineTo(shx, shy + s * 0.1); ctx.stroke();
     } else if (ob.style === 'cloud') {
       this.isoEllipse(ctx, ob.x, ob.y, 0.2, ob.w * 0.6, '#ffffff');
+    } else if (ob.style === 'boat') { // Ruderboot
+      const d = ob.dir || 1, L = ob.w * 0.75, Wd = ob.h * 0.42, bob = 0.04 * Math.sin(t * 2.2 + ob.x);
+      const hull = [[ob.x - L, ob.y - Wd * 0.4], [ob.x - L * 0.6, ob.y - Wd], [ob.x + L * 0.6, ob.y - Wd], [ob.x + L, ob.y - Wd * 0.4], [ob.x + L, ob.y + Wd * 0.4], [ob.x + L * 0.6, ob.y + Wd], [ob.x - L * 0.6, ob.y + Wd], [ob.x - L, ob.y + Wd * 0.4]];
+      this.prism(ctx, hull, bob, 0.45, '#8a5a30', '#4a2e14', { outline: '#2a1a0c' });
+      this.fillPoly(ctx, [[ob.x - L * 0.85, ob.y - Wd * 0.7], [ob.x + L * 0.85, ob.y - Wd * 0.7], [ob.x + L * 0.85, ob.y + Wd * 0.7], [ob.x - L * 0.85, ob.y + Wd * 0.7]], bob + 0.46, '#c9a15a', false);
+      for (const k of [-0.35, 0.35]) this.fillPoly(ctx, [[ob.x + k * L - 0.08, ob.y - Wd * 0.7], [ob.x + k * L + 0.08, ob.y - Wd * 0.7], [ob.x + k * L + 0.08, ob.y + Wd * 0.7], [ob.x + k * L - 0.08, ob.y + Wd * 0.7]], bob + 0.5, '#6b4423', false);
+      ctx.strokeStyle = '#5a3a1e'; ctx.lineWidth = Math.max(1.5, s * 0.05); // Ruder
+      for (const side of [-1, 1]) { const [o0, o1] = this.proj(ob.x, ob.y + side * Wd * 0.8, bob + 0.5), [p0, p1] = this.proj(ob.x - d * 0.5 * Math.cos(t * 3), ob.y + side * (Wd + 0.6), bob + 0.15); ctx.beginPath(); ctx.moveTo(o0, o1); ctx.lineTo(p0, p1); ctx.stroke(); }
+      if (ob.docked) { const [lx, ly] = this.proj(ob.x, ob.y, bob + 1.1); ctx.fillStyle = `rgba(120,255,120,${0.6 + 0.4 * Math.sin(t * 6)})`; ctx.beginPath(); ctx.arc(lx, ly, s * 0.1, 0, TAU); ctx.fill(); }
+    } else if (ob.style === 'ship') { // Piratenschiff mit Mast, Segel und Flagge
+      const d = ob.dir || 1, L = ob.w * 0.7, Wd = ob.h * 0.45, bob = 0.05 * Math.sin(t * 1.6 + ob.x);
+      const hull = [[ob.x - L, ob.y - Wd * 0.5], [ob.x - L * 0.7, ob.y - Wd], [ob.x + L * 0.7, ob.y - Wd], [ob.x + L * 1.15, ob.y], [ob.x + L * 0.7, ob.y + Wd], [ob.x - L * 0.7, ob.y + Wd], [ob.x - L, ob.y + Wd * 0.5]];
+      this.prism(ctx, hull, bob, 0.7, '#6b4423', '#3a2412', { outline: '#1e1208' });
+      this.fillPoly(ctx, [[ob.x - L * 0.9, ob.y - Wd * 0.75], [ob.x + L * 0.9, ob.y - Wd * 0.75], [ob.x + L * 0.9, ob.y + Wd * 0.75], [ob.x - L * 0.9, ob.y + Wd * 0.75]], bob + 0.71, '#a87f52', false);
+      const [hx, hy] = this.proj(ob.x + 0.1, ob.y, bob + 0.7), [tx, ty] = this.proj(ob.x + 0.1, ob.y, bob + 3.0);
+      ctx.strokeStyle = '#3a2412'; ctx.lineWidth = Math.max(2, s * 0.08); ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(tx, ty); ctx.stroke();
+      const sw = Math.sin(t * 2) * s * 0.08; // Segel
+      ctx.fillStyle = '#f0e6d2'; ctx.beginPath(); ctx.moveTo(hx - s * 0.05, hy - s * 0.55 * CAM_ZF * 2); ctx.quadraticCurveTo(hx - d * s * 0.9 + sw, (hy + ty) / 2, hx - s * 0.05, ty + s * 0.25); ctx.lineTo(hx + s * 0.05, ty + s * 0.25); ctx.quadraticCurveTo(hx - d * s * 0.75 + sw, (hy + ty) / 2, hx + s * 0.05, hy - s * 0.55 * CAM_ZF * 2); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = '#3a2412'; ctx.lineWidth = 1; ctx.stroke();
+      ctx.fillStyle = '#1a1a1a'; ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(tx + d * s * 0.5, ty + s * 0.12 + sw * 0.5); ctx.lineTo(tx, ty + s * 0.25); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(tx + d * s * 0.18, ty + s * 0.12, s * 0.035, 0, TAU); ctx.fill();
+      if (ob.docked) { const [lx, ly] = this.proj(ob.x - L * 0.8, ob.y, bob + 1.3); ctx.fillStyle = `rgba(120,255,120,${0.6 + 0.4 * Math.sin(t * 6)})`; ctx.beginPath(); ctx.arc(lx, ly, s * 0.12, 0, TAU); ctx.fill(); }
+    } else if (ob.style === 'cannonball') { // rollende Kanonenkugel
+      const r = ob.w * 0.5, [cx, cy] = this.proj(ob.x, ob.y, r);
+      const g = ctx.createRadialGradient(cx - r * s * 0.35, cy - r * s * 0.4, r * s * 0.1, cx, cy, r * s);
+      g.addColorStop(0, '#6a6a72'); g.addColorStop(1, '#141418');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, r * s, 0, TAU); ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(cx, cy, r * s * 0.9, t * 6 * (ob.dir || 1), t * 6 * (ob.dir || 1) + 1.2); ctx.stroke();
     } else { // Lore
       this.prism(ctx, poly, 0.15, 0.75, th.mover.top, th.mover.side, { outline: shade(th.mover.side, 0.6) });
       this.isoEllipse(ctx, ob.x, ob.y, 0.91, ob.w * 0.38, '#4a4a55');
@@ -1228,6 +1288,12 @@ class Renderer {
       case 'gear': this.spriteGear(ctx, sx, sy, s, d, t); break;
       case 'candle': this.spriteCandle(ctx, sx, sy, s, t); break;
       case 'coral': this.spriteCoral(ctx, sx, sy, s, d); break;
+      case 'lighthouse': this.spriteLighthouse(ctx, sx, sy, s, t); break;
+      case 'barrel': this.spriteBarrel(ctx, sx, sy, s); break;
+      case 'crate': this.spriteCrate(ctx, sx, sy, s); break;
+      case 'bollard': this.spriteBollard(ctx, sx, sy, s, d, t); break;
+      case 'anchor': this.spriteAnchor(ctx, sx, sy, s); break;
+      case 'buoy': this.spriteBuoy(ctx, sx, sy, s, t); break;
       case 'seaweed': this.spriteSeaweed(ctx, sx, sy, s, d, t); break;
       case 'shell': this.spriteShell(ctx, sx, sy, s, d); break;
       case 'starfish': this.spriteStarfish(ctx, sx, sy, s, d); break;
@@ -1263,6 +1329,52 @@ class Renderer {
     }
     ctx.fillStyle = 'rgba(255,255,255,0.35)'; for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.arc(sx + (i - 1.5) * s * 0.2, sy - s * 0.5 - (i % 2) * s * 0.2, s * 0.04, 0, TAU); ctx.fill(); }
   }
+  /* Hafen */
+  spriteLighthouse(ctx, sx, sy, s, t) {
+    const w = s * 0.4, hgt = s * 2.6;
+    this.shadow(ctx, sx, sy, w * 1.3);
+    for (let i = 0; i < 6; i++) { const y0 = sy - hgt * (i + 1) / 6, ww = w * (1 - i * 0.05); ctx.fillStyle = i % 2 ? '#d93b3b' : '#f4efe6'; ctx.fillRect(sx - ww, y0, 2 * ww, hgt / 6 + 1); }
+    ctx.fillStyle = 'rgba(0,0,0,0.18)'; ctx.fillRect(sx, sy - hgt, w * 0.75, hgt);
+    ctx.fillStyle = '#3a3a44'; ctx.fillRect(sx - w * 0.95, sy - hgt - s * 0.08, w * 1.9, s * 0.1);
+    const beam = (t * 1.2) % TAU, gl = 0.5 + 0.5 * Math.cos(beam);
+    ctx.fillStyle = `rgba(255,240,170,${0.25 + 0.5 * gl})`; ctx.beginPath(); ctx.arc(sx, sy - hgt - s * 0.3, s * 0.55 * (0.6 + gl * 0.6), 0, TAU); ctx.fill();
+    ctx.fillStyle = '#ffe9a8'; ctx.fillRect(sx - w * 0.55, sy - hgt - s * 0.5, w * 1.1, s * 0.42);
+    ctx.fillStyle = '#3a3a44'; ctx.beginPath(); ctx.moveTo(sx - w * 0.8, sy - hgt - s * 0.5); ctx.lineTo(sx + w * 0.8, sy - hgt - s * 0.5); ctx.lineTo(sx, sy - hgt - s * 0.85); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = `rgba(255,240,170,${0.12 * gl})`; ctx.beginPath(); ctx.moveTo(sx, sy - hgt - s * 0.3); ctx.lineTo(sx + Math.cos(beam) * s * 3, sy - hgt - s * 0.3 + Math.sin(beam) * s * 0.9 - s * 0.35); ctx.lineTo(sx + Math.cos(beam) * s * 3, sy - hgt - s * 0.3 + Math.sin(beam) * s * 0.9 + s * 0.35); ctx.closePath(); ctx.fill();
+  }
+  spriteBarrel(ctx, sx, sy, s) {
+    this.shadow(ctx, sx, sy, s * 0.3);
+    ctx.fillStyle = '#8a5a30'; ctx.beginPath(); ctx.moveTo(sx - s * 0.22, sy); ctx.quadraticCurveTo(sx - s * 0.3, sy - s * 0.3, sx - s * 0.22, sy - s * 0.6); ctx.lineTo(sx + s * 0.22, sy - s * 0.6); ctx.quadraticCurveTo(sx + s * 0.3, sy - s * 0.3, sx + s * 0.22, sy); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#a87f52'; ctx.beginPath(); ctx.ellipse(sx, sy - s * 0.6, s * 0.22, s * 0.08, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#3a3a44'; ctx.fillRect(sx - s * 0.27, sy - s * 0.45, s * 0.54, s * 0.05); ctx.fillRect(sx - s * 0.27, sy - s * 0.2, s * 0.54, s * 0.05);
+  }
+  spriteCrate(ctx, sx, sy, s) {
+    this.shadow(ctx, sx, sy, s * 0.32);
+    ctx.fillStyle = '#b48a5a'; ctx.fillRect(sx - s * 0.25, sy - s * 0.5, s * 0.5, s * 0.5);
+    ctx.fillStyle = '#8a6a44'; ctx.fillRect(sx + s * 0.05, sy - s * 0.5, s * 0.2, s * 0.5);
+    ctx.strokeStyle = '#5a4028'; ctx.lineWidth = Math.max(1, s * 0.04); ctx.strokeRect(sx - s * 0.25, sy - s * 0.5, s * 0.5, s * 0.5);
+    ctx.beginPath(); ctx.moveTo(sx - s * 0.25, sy - s * 0.5); ctx.lineTo(sx + s * 0.25, sy); ctx.stroke();
+  }
+  spriteBollard(ctx, sx, sy, s, d, t) {
+    ctx.fillStyle = '#4a4a52'; ctx.fillRect(sx - s * 0.08, sy - s * 0.4, s * 0.16, s * 0.4);
+    ctx.beginPath(); ctx.ellipse(sx, sy - s * 0.4, s * 0.11, s * 0.05, 0, 0, TAU); ctx.fill();
+    ctx.strokeStyle = '#c9a15a'; ctx.lineWidth = Math.max(1, s * 0.04); ctx.beginPath(); ctx.moveTo(sx + s * 0.08, sy - s * 0.3); ctx.quadraticCurveTo(sx + s * 0.4, sy - s * 0.05 + Math.sin(t + sx) * s * 0.03, sx + s * 0.7, sy - s * 0.02); ctx.stroke();
+  }
+  spriteBuoy(ctx, sx, sy, s, t) {
+    const bob = Math.sin(t * 1.8 + sx) * s * 0.05, y = sy + bob;
+    ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.beginPath(); ctx.ellipse(sx, y, s * 0.32, s * 0.12, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#d93b3b'; ctx.beginPath(); ctx.moveTo(sx - s * 0.2, y); ctx.lineTo(sx + s * 0.2, y); ctx.lineTo(sx + s * 0.1, y - s * 0.4); ctx.lineTo(sx - s * 0.1, y - s * 0.4); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#f4efe6'; ctx.fillRect(sx - s * 0.15, y - s * 0.24, s * 0.3, s * 0.08);
+    ctx.fillStyle = '#3a3a44'; ctx.fillRect(sx - s * 0.03, y - s * 0.6, s * 0.06, s * 0.2);
+    ctx.fillStyle = `rgba(255,220,100,${0.6 + 0.4 * Math.sin(t * 4 + sx)})`; ctx.beginPath(); ctx.arc(sx, y - s * 0.62, s * 0.05, 0, TAU); ctx.fill();
+  }
+  spriteAnchor(ctx, sx, sy, s) {
+    ctx.strokeStyle = '#3a3a44'; ctx.lineWidth = Math.max(2, s * 0.08); ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(sx, sy - s * 0.15); ctx.lineTo(sx, sy - s * 0.75); ctx.moveTo(sx - s * 0.2, sy - s * 0.6); ctx.lineTo(sx + s * 0.2, sy - s * 0.6); ctx.stroke();
+    ctx.beginPath(); ctx.arc(sx, sy - s * 0.25, s * 0.3, 0.2, Math.PI - 0.2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(sx, sy - s * 0.82, s * 0.07, 0, TAU); ctx.stroke();
+  }
+
   /* Große Zauberkoralle (Anzieh-, Abstoß- oder Bremskoralle): dicke Äste, leuchtende Spitzen */
   spriteCoralBig(ctx, sx, sy, s, c1, c2, t) {
     this.shadow(ctx, sx, sy, s * 0.5);

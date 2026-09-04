@@ -156,6 +156,18 @@ const THEMES = {
     accent: '#2fb8c9', flag: '#2fb8c9', cliff: '#c9a469',
     autoDecor: ['palm', 'cactus', 'urn', 'rock', 'cactus'],
   },
+  harbor: { // Piratenbucht: Meer ringsum, Holzstege, Felsen, Leuchtturm
+    atmo: 'spray', sea: true, cliff: '#7a6250',
+    sky: ['#243f6e', '#f2b27a'], ground: '#2a7fa8', groundEdge: '#1a5a7a',
+    floor: ['#b48a5a', '#a87f52'], sand: '#e6d39a', ice: '#c8ecff', snow: '#f1f7ff',
+    water: '#2a7fa8', lava: '#ff5a1f',
+    wall: { top: '#8a6a44', side: '#5a4028', style: 'stone' },
+    block: { top: '#8a8a90', side: '#4a4a52' },
+    mover: { top: '#7a5230', side: '#3e2a16' },
+    rotor: { top: '#c9a15a', side: '#7a5a2a' },
+    accent: '#ffd166', flag: '#ff4f6d',
+    autoDecor: ['buoy', 'rock', 'rock', 'buoy', 'rock'],
+  },
   castle: {
     atmo: 'pollen',
     sky: ['#5fa8f0', '#dff0ff'], ground: '#4b8a3c', groundEdge: '#2f5c27',
