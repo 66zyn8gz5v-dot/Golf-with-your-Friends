@@ -361,7 +361,7 @@ const PRO_COURSES = [
       { type: 'wall', x0: 11, y0: 10.1, x1: 12.2, y1: 11.9, extend: 0.1 },
       { type: 'wall', x0: 15, y0: 10.1, x1: 13.8, y1: 11.9, extend: 0.1 },
       // Steinweiche an der Gabelung: schräger Balken am Ende der Trennwand, schwenkt im Takt und lenkt den Ball in den offenen Weg
-      { type: 'rotor', x: 8, y: 9.25, blades: 1, len: 3.6, thick: 0.2, hubR: 0.12, style: 'stone', e: 0.3, swing: { amp: Math.PI / 6, speed: 0.8 }, phase: Math.PI / 2 },
+      { type: 'rotor', x: 8, y: 9.25, blades: 1, len: 3.6, thick: 0.2, hubR: 0.12, style: 'stone', e: 0.3, swing: { amp: Math.PI / 6, speed: 1.6 }, phase: Math.PI / 2 },
     ],
     decor: [
       { t: 'obelisk', x: 5.5, y: 0.4, s: 1.4 }, { t: 'obelisk', x: 15.6, y: 0.4, s: 1.4 }, { t: 'obelisk', x: 0.8, y: 19.6, s: 1.3 }, { t: 'obelisk', x: 10.6, y: 15.5, s: 1.2 },
