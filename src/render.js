@@ -640,6 +640,10 @@ class Renderer {
     } else if (ob.type === 'gate') {
       const poly = [[ob.x - ob.w / 2, ob.y - ob.h / 2], [ob.x + ob.w / 2, ob.y - ob.h / 2], [ob.x + ob.w / 2, ob.y + ob.h / 2], [ob.x - ob.w / 2, ob.y + ob.h / 2]];
       this.fillPoly(ctx, poly, 0.005, ob.closed ? 'rgba(255,80,80,0.35)' : 'rgba(120,255,120,0.25)', false);
+    } else if (ob.type === 'windmill') {
+      const ax = ob.axis === 'x', g = ob.gap / 2, dd = ob.depth / 2 + 0.35;
+      const poly = ax ? [[ob.x - g, ob.y - dd], [ob.x + g, ob.y - dd], [ob.x + g, ob.y + dd], [ob.x - g, ob.y + dd]] : [[ob.x - dd, ob.y - g], [ob.x + dd, ob.y - g], [ob.x + dd, ob.y + g], [ob.x - dd, ob.y + g]];
+      this.fillPoly(ctx, poly, 0.005, ob.blocked ? 'rgba(255,80,70,0.4)' : 'rgba(120,255,140,0.3)', false);
     } else if (ob.type === 'switch') {
       const active = ob.activeUntil > t, left = active ? ob.activeUntil - t : 0;
       const pulse = active ? 0.85 + 0.15 * Math.sin(t * 6) : 1;
@@ -949,14 +953,31 @@ class Renderer {
       ctx.fillStyle = shade(wallSide, light); ctx.beginPath();
       for (const [u, z] of [[-w2, 0], [-w2, top + 0.02], [w2, top + 0.02], [w2, 0]]) { const q = at(u, z); ctx.lineTo(q[0], q[1]); }
       ctx.closePath(); ctx.fill();
-      ctx.fillStyle = ob.blocked ? '#4a2318' : '#150e0b';
-      ctx.beginPath();
-      let p = at(-w2, 0); ctx.moveTo(p[0], p[1]);
-      p = at(-w2, top - rad); ctx.lineTo(p[0], p[1]);
-      for (let k = 0; k <= 10; k++) { const a = Math.PI - (k / 10) * Math.PI; p = at(Math.cos(a) * w2, top - rad + Math.sin(a) * rad); ctx.lineTo(p[0], p[1]); }
-      p = at(w2, 0); ctx.lineTo(p[0], p[1]); ctx.closePath(); ctx.fill();
-      // Türrahmen
-      ctx.strokeStyle = '#6b5a4a'; ctx.lineWidth = Math.max(1, s * 0.04); ctx.stroke();
+      const arch = () => {
+        ctx.beginPath();
+        let p = at(-w2, 0); ctx.moveTo(p[0], p[1]);
+        p = at(-w2, top - rad); ctx.lineTo(p[0], p[1]);
+        for (let k = 0; k <= 10; k++) { const a = Math.PI - (k / 10) * Math.PI; p = at(Math.cos(a) * w2, top - rad + Math.sin(a) * rad); ctx.lineTo(p[0], p[1]); }
+        p = at(w2, 0); ctx.lineTo(p[0], p[1]); ctx.closePath();
+      };
+      if (ob.blocked) { // geschlossenes Holztor mit Brettern und Eisenband
+        ctx.fillStyle = '#8a5a30'; arch(); ctx.fill();
+        ctx.save(); arch(); ctx.clip();
+        ctx.strokeStyle = 'rgba(40,20,8,0.6)'; ctx.lineWidth = Math.max(1, s * 0.03);
+        for (let k = -3; k <= 3; k++) { const u = (k / 3.5) * w2; const q0 = at(u, 0), q1 = at(u, top); ctx.beginPath(); ctx.moveTo(q0[0], q0[1]); ctx.lineTo(q1[0], q1[1]); ctx.stroke(); }
+        ctx.strokeStyle = '#3a3a44'; ctx.lineWidth = Math.max(2, s * 0.07);
+        for (const z of [0.3, 0.72]) { const q0 = at(-w2, z), q1 = at(w2, z); ctx.beginPath(); ctx.moveTo(q0[0], q0[1]); ctx.lineTo(q1[0], q1[1]); ctx.stroke(); }
+        ctx.restore();
+        ctx.strokeStyle = '#3a2a1a'; ctx.lineWidth = Math.max(1.5, s * 0.05); arch(); ctx.stroke();
+      } else { // offener Durchgang
+        ctx.fillStyle = '#150e0b'; arch(); ctx.fill();
+        ctx.strokeStyle = '#6b5a4a'; ctx.lineWidth = Math.max(1, s * 0.04); ctx.stroke();
+      }
+      // Laterne über der Tür: rot = zu, grün = offen
+      const [lx, ly] = at(0, top + 0.28), lc = ob.blocked ? '255,80,70' : '120,255,140', pulse = 0.75 + 0.25 * Math.sin(t * 5);
+      ctx.fillStyle = `rgba(${lc},${0.22 * pulse})`; ctx.beginPath(); ctx.arc(lx, ly, s * 0.36, 0, TAU); ctx.fill();
+      ctx.fillStyle = `rgb(${lc})`; ctx.beginPath(); ctx.arc(lx, ly, s * 0.11, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#2a2a30'; ctx.fillRect(lx - s * 0.05, ly - s * 0.2, s * 0.1, s * 0.09);
     }
     // Fenster
     for (const b of ob.blocks) {
