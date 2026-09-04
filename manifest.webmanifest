@@ -1,0 +1,17 @@
+{
+  "name": "Fantasy Golf – Golf with your Friends",
+  "short_name": "Fantasy Golf",
+  "description": "2,5D-Fantasy-Minigolf mit Normal- und Profi-Welt, Baumodus und Eigener Welt.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#3b7bd6",
+  "theme_color": "#1b2a4a",
+  "lang": "de",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

@@ -61,6 +61,17 @@ Das Modus-Menü ist der Platz, an dem später weitere Welten eingehängt werden.
 
 Oben in der Mitte gibt es **⛶ Vollbild** (Taste F): das Spiel füllt den ganzen Bildschirm. Läuft das Spiel in einem Rahmen, der kein Vollbild erlaubt, wird es stattdessen in einem eigenen Fenster geöffnet.
 
+## Kostenlos als App aufs iPad oder Handy (GitHub Pages)
+
+Das Spiel ist eine Web-App: Manifest (`manifest.webmanifest`), App-Symbole (`icons/`) und ein Service Worker (`sw.js`) sorgen dafür, dass es sich wie eine App installieren lässt und offline läuft. Der Workflow `.github/workflows/pages.yml` veröffentlicht bei jedem Push automatisch auf GitHub Pages.
+
+Einmalig einrichten (auf github.com im Repository):
+1. **Settings → General → Danger Zone → Change visibility → Public** (GitHub Pages ist nur bei öffentlichen Repositories kostenlos).
+2. **Settings → Pages → Build and deployment → Source: „GitHub Actions“**.
+3. Reiter **Actions** → Workflow „Fantasy Golf auf GitHub Pages“ → **Run workflow** (oder einfach den nächsten Push abwarten).
+
+Danach ist das Spiel unter `https://66zyn8gz5v-dot.github.io/Golf-with-your-Friends/` erreichbar. Auf dem iPad in Safari öffnen, **Teilen → Zum Home-Bildschirm**: Es erscheint ein Symbol, das Spiel startet im Vollbild und funktioniert auch ohne Internet. Updates kommen automatisch beim nächsten Start mit Verbindung.
+
 ## Baumodus (eigene Bahnen im Spiel bauen)
 
 Im Kreativmodus gibt es **Bahn bauen**: ein Editor direkt im Spiel. Kacheln (Rasen, Sand, Eis, Wasser, Lava, Block, Klippe, Leer) werden durch Tippen oder Ziehen gemalt, Abschlag und Loch per Werkzeug gesetzt. Objekte (Pilz, Windrad, Fallgatter, Lore, Windfeld, Sprungrampe, Beschleuniger, Windmühle, Kanone, Magnet, Drehscheibe, Schrumpftrank, Portal, Bande) werden per Tipp platziert, mit **Drehen** in der Richtung geändert und mit **Löschen** entfernt. Gebaut wird in der Draufsicht (umschaltbar auf Schrägsicht), das Panel lässt sich einklappen und ist in die Reiter **Bauen** (Boden, Abschlag/Loch, Hindernisse), **Bahn** (Name, Par, Welt, Kartengröße) und **Speichern** (Speichern, Laden, Bahn-Code) aufgeteilt. **Testen** spielt die Bahn sofort, danach geht es zurück in den Editor. **Fertig** speichert die Bahn und öffnet die **Eigene Welt**: dort wird die Bahn per **Einsetzen** an einer wählbaren Position eingefügt, die Reihenfolge lässt sich mit ▲ ▼ ändern, ✕ nimmt eine Bahn wieder heraus. Die Eigene Welt erscheint im Kreativmodus als eigene Welt und wird in dieser Reihenfolge gespielt. Gespeichert wird im Browser; **Exportieren** liefert den Bahn-Code als Text, **Importieren** liest ihn wieder ein (so lassen sich Bahnen weitergeben). Der Editor steckt in `src/editor.js`.
@@ -94,6 +105,8 @@ src/themes.js     Farbpaletten und Deko je Welt
 src/courses.js    die Bahnen der Normal-Welt
 src/courses_pro.js die Bahnen der Profi-Welt und die Weltenliste
 src/editor.js     Baumodus (Editor für eigene Bahnen)
+manifest.webmanifest, sw.js, icons/   Web-App: Installieren und offline spielen
+.github/workflows/pages.yml           Veröffentlichung auf GitHub Pages
 src/level.js      Karte → Kacheln, Mauern, Kollisionssegmente
 src/obstacles.js  bewegliche und statische Hindernisse
 src/physics.js    Ballphysik und Kollision

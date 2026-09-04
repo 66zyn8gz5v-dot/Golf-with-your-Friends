@@ -595,6 +595,10 @@
   $('cam-right').addEventListener('click', () => rotateBy(Math.PI / 4));
   canvas.addEventListener('wheel', e => { e.preventDefault(); zoomBy(e.deltaY < 0 ? 1.1 : 0.9); }, { passive: false });
   window.addEventListener('resize', () => R.resize());
+  /* Offline-Fähigkeit: nur wenn die Seite als eigene Web-App ausgeliefert wird (Manifest vorhanden, https oder localhost) */
+  if ('serviceWorker' in navigator && document.querySelector('link[rel="manifest"]') && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+    navigator.serviceWorker.register('sw.js').catch(() => { /* ohne Service Worker läuft das Spiel trotzdem */ });
+  }
 
   // Test-Hook (für automatisierte Prüfungen): aktuelle Bahn für alle Spieler beenden
   window.__golfDebug = {
