@@ -1595,21 +1595,31 @@ class Renderer {
     for (let i = 0; i < 4; i++) { const a = corners[i], b = corners[(i + 1) % 4]; ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.lineTo(apex[0], apex[1]); ctx.closePath(); ctx.fillStyle = i % 2 ? '#e0b84a' : '#b8892a'; ctx.fill(); ctx.strokeStyle = '#7a5a10'; ctx.lineWidth = 0.8; ctx.stroke(); }
     const gl = 0.7 + 0.3 * Math.sin(t * 2);
     ctx.fillStyle = `rgba(255,230,140,${0.35 * gl})`; ctx.beginPath(); ctx.arc(apex[0], apex[1], s * 0.5 * gl, 0, TAU); ctx.fill();
-    // Eingang an der Nordseite (nur wenn diese Seite zur Kamera zeigt)
-    if (-this.cam.cos > 0.001) {
-      const fy = cy - B / 2 - 0.01, w2 = 0.7, top = 1.15;
-      ctx.fillStyle = '#c9a468'; ctx.beginPath();
-      for (const [u, zz] of [[-w2 - 0.3, 0], [-w2 - 0.3, top + 0.35], [w2 + 0.3, top + 0.35], [w2 + 0.3, 0]]) { const q = this.proj(ob.x + u, fy, zz); ctx.lineTo(q[0], q[1]); }
-      ctx.closePath(); ctx.fill(); ctx.strokeStyle = '#7a5a2a'; ctx.lineWidth = Math.max(1, s * 0.04); ctx.stroke();
-      ctx.fillStyle = '#140c04'; ctx.beginPath();
-      for (const [u, zz] of [[-w2, 0], [-w2, top - 0.35], [0, top], [w2, top - 0.35], [w2, 0]]) { const q = this.proj(ob.x + u, fy, zz); ctx.lineTo(q[0], q[1]); }
-      ctx.closePath(); ctx.fill();
-      // Fackeln links und rechts
+    // Torhaus an der Nordseite: Vorbau mit Pfeilern, Gesims, Hieroglyphenband, dunklem Tor mit Treppe und Fackeln
+    const fy = cy - B / 2, gx0 = ob.x - 1.9, gx1 = ob.x + 1.9, gd = 1.3;
+    this.fillPoly(ctx, [[ob.x - 1.2, fy - 1.0], [ob.x + 1.2, fy - 1.0], [ob.x + 1.2, fy], [ob.x - 1.2, fy]], 0.01, 'rgba(90,60,20,0.22)', false); // Schwelle
+    this.prism(ctx, [[gx0, fy], [gx1, fy], [gx1, fy + gd], [gx0, fy + gd]], 0, 2.1, '#e3c48f', '#a37a3e', { outline: '#7a5a2a' });
+    for (const px of [gx0 + 0.35, gx1 - 0.35]) this.prism(ctx, [[px - 0.3, fy - 0.35], [px + 0.3, fy - 0.35], [px + 0.3, fy + 0.25], [px - 0.3, fy + 0.25]], 0, 2.35, '#d9b979', '#8a6a34', { outline: '#5a4420' });
+    this.prism(ctx, [[gx0 - 0.15, fy - 0.45], [gx1 + 0.15, fy - 0.45], [gx1 + 0.15, fy + gd], [gx0 - 0.15, fy + gd]], 2.1, 0.3, '#c9a468', '#7a5a2a', { outline: '#5a4420' });
+    if (-this.cam.cos > 0.001) { // Frontseite zeigt zur Kamera
+      const ff = fy - 0.02, w2 = 0.95, top = 1.6, P = (u, zz) => this.proj(ob.x + u, ff, zz);
+      // Hieroglyphenband über dem Tor
+      const b0 = P(-1.25, 1.72), b1 = P(1.25, 1.72), b2 = P(1.25, 2.02), b3 = P(-1.25, 2.02);
+      ctx.fillStyle = 'rgba(60,40,10,0.35)'; ctx.beginPath(); ctx.moveTo(b0[0], b0[1]); ctx.lineTo(b1[0], b1[1]); ctx.lineTo(b2[0], b2[1]); ctx.lineTo(b3[0], b3[1]); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#ffd166';
+      for (let k = 0; k < 7; k++) { const q = P(-1.05 + k * 0.35, 1.87); const r = s * 0.05; if (k % 3 === 0) ctx.fillRect(q[0] - r * 0.5, q[1] - r * 1.4, r, r * 2.8); else if (k % 3 === 1) { ctx.beginPath(); ctx.arc(q[0], q[1], r, 0, TAU); ctx.fill(); } else { ctx.beginPath(); ctx.moveTo(q[0] - r, q[1] + r); ctx.lineTo(q[0], q[1] - r * 1.3); ctx.lineTo(q[0] + r, q[1] + r); ctx.closePath(); ctx.fill(); } }
+      // Tor: dunkle Öffnung, nach oben leicht verjüngt, innen eine Treppe hinab
+      const gate = [[-w2, 0], [-w2 * 0.78, top], [w2 * 0.78, top], [w2, 0]];
+      ctx.fillStyle = '#120a04'; ctx.beginPath(); gate.forEach(([u, zz], i) => { const q = P(u, zz); i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); }); ctx.closePath(); ctx.fill();
+      for (let k = 0; k < 4; k++) { const zz = 0.12 + k * 0.16, a = P(-w2 * (1 - zz / top * 0.22), zz), c = P(w2 * (1 - zz / top * 0.22), zz); ctx.strokeStyle = `rgba(200,160,90,${0.35 - k * 0.07})`; ctx.lineWidth = Math.max(1, s * 0.03); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(c[0], c[1]); ctx.stroke(); }
+      ctx.strokeStyle = '#7a5a2a'; ctx.lineWidth = Math.max(1.5, s * 0.06); ctx.beginPath(); gate.forEach(([u, zz], i) => { const q = P(u, zz); i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); }); ctx.closePath(); ctx.stroke();
+      // Fackeln an den Pfeilern
       for (const side of [-1, 1]) {
-        const [tx, ty] = this.proj(ob.x + side * (w2 + 0.45), fy - 0.02, 1.0), f = 0.8 + 0.2 * Math.sin(t * 9 + side);
-        ctx.fillStyle = '#5a3a1a'; ctx.fillRect(tx - s * 0.03, ty, s * 0.06, s * 0.3);
-        ctx.fillStyle = `rgba(255,150,40,${0.3 * f})`; ctx.beginPath(); ctx.arc(tx, ty - s * 0.05, s * 0.3 * f, 0, TAU); ctx.fill();
-        ctx.fillStyle = '#ff9a2a'; ctx.beginPath(); ctx.ellipse(tx, ty - s * 0.08, s * 0.06, s * 0.13 * f, 0, 0, TAU); ctx.fill();
+        const [tx, ty] = this.proj(ob.x + side * 1.55, fy - 0.37, 1.5), f = 0.8 + 0.2 * Math.sin(t * 9 + side);
+        ctx.fillStyle = '#5a3a1a'; ctx.fillRect(tx - s * 0.035, ty, s * 0.07, s * 0.32);
+        ctx.fillStyle = `rgba(255,150,40,${0.3 * f})`; ctx.beginPath(); ctx.arc(tx, ty - s * 0.06, s * 0.34 * f, 0, TAU); ctx.fill();
+        ctx.fillStyle = '#ff9a2a'; ctx.beginPath(); ctx.ellipse(tx, ty - s * 0.1, s * 0.07, s * 0.15 * f, 0, 0, TAU); ctx.fill();
+        ctx.fillStyle = '#fff1a0'; ctx.beginPath(); ctx.ellipse(tx, ty - s * 0.07, s * 0.03, s * 0.07 * f, 0, 0, TAU); ctx.fill();
       }
     }
   }

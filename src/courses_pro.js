@@ -336,21 +336,30 @@ const PRO_COURSES = [
       '.........................',
     ],
     obstacles: [
-      { type: 'door', x: 13, y: 11.4, r: 0.6, style: 'pyramid', px: 16.5, py: 17.6, base: 11 },
+      { type: 'door', x: 13, y: 11.4, r: 0.75, style: 'pyramid', px: 16.5, py: 17.6, base: 11 },
       // schräge Banden in den Kurven (wie in der Skizze)
       { type: 'wall', x0: 2, y0: 16.6, x1: 4.3, y1: 19 },
       { type: 'wall', x0: 7.2, y0: 19, x1: 10, y1: 16.2 },
       { type: 'wall', x0: 6, y0: 2.3, x1: 7.5, y1: 1 },
       // Trennwand links der Oase (bis ans Wasser hoch): schmaler Windstreifen links, Spur rechts direkt auf das Wasser zu
       { type: 'wall', x0: 8, y0: 3, x1: 8, y1: 9.5, extend: 0 },
-      // kurze Mauer an der Unterkante der Oase (linke Ecke)
-      { type: 'wall', x0: 8, y0: 5, x1: 9.1, y1: 5, extend: 0.1 },
+      // Mauer an der Unterkante der Oase: die Spur endet unter dem Wasser
+      { type: 'wall', x0: 8, y0: 5, x1: 10, y1: 5, extend: 0.1 },
+      // rechte Kante der Oase geschlossen – ins Wasser geht es nur von unten aus der Spur
+      { type: 'wall', x0: 11, y0: 3, x1: 11, y1: 5, extend: 0.1 },
+      // Bande in der oberen rechten Ecke: lenkt den Sturm-Ball aus dem Windkanal hinunter in den rechten Gang
+      { type: 'wall', x0: 12.6, y0: 1, x1: 14, y1: 2.4 },
       // Mauer an der Oberkante der Oase: die obere Reihe wird zum Windkanal über das Wasser
       { type: 'wall', x0: 8, y0: 3, x1: 11, y1: 3, extend: 0.1 },
       // Wüstenwind (Pfeile aus der Skizze): im mittleren Gang hinauf zur Oase, über der Oase nach rechts, rechts kräftig hinunter zum Eingang
-      { type: 'field', x: 6, y: 5, w: 4, h: 9, fx: 0.7, fy: -3.4, style: 'wind' },
-      { type: 'field', x: 7, y: 1, w: 7, h: 2, fx: 2.8, fy: 0, style: 'wind' },
-      { type: 'field', x: 11, y: 3, w: 4, h: 8, fx: 0, fy: 3.8, style: 'wind' },
+      // Streifen: Sturm hinauf (stärker als die Reibung – der Ball wird bis zur Pyramide durchgepustet), Spur: mäßiger Wind zur Oase
+      { type: 'field', x: 6, y: 5, w: 2, h: 9, fx: 0, fy: -6.5, style: 'wind' },
+      { type: 'field', x: 8, y: 5, w: 2, h: 9, fx: 0.5, fy: -3.4, style: 'wind' },
+      { type: 'field', x: 6, y: 1, w: 5, h: 2, fx: 6.5, fy: 0, style: 'wind' },
+      { type: 'field', x: 11, y: 1, w: 4, h: 10.5, fx: 0, fy: 6.5, style: 'wind' },
+      // Trichter vor dem Pyramidentor
+      { type: 'wall', x0: 11, y0: 10.1, x1: 12.2, y1: 11.9, extend: 0.1 },
+      { type: 'wall', x0: 15, y0: 10.1, x1: 13.8, y1: 11.9, extend: 0.1 },
       // Steinweiche an der Gabelung: schräger Balken am Ende der Trennwand, schwenkt im Takt und lenkt den Ball in den offenen Weg
       { type: 'rotor', x: 8, y: 9.25, blades: 1, len: 3.6, thick: 0.2, hubR: 0.12, style: 'stone', e: 0.3, swing: { amp: Math.PI / 6, speed: 0.8 }, phase: Math.PI / 2 },
     ],
