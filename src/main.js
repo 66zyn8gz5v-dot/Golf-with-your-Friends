@@ -414,7 +414,10 @@
       b.x = lv.tee.x; b.y = lv.tee.y; b.vx = 0; b.vy = 0; b.z = 0; b.vz = 0; b.air = false; b.rider = null;
       b.restX = b.x; b.restY = b.y; b.portalCd = 0.5;
       state.particles = [];
-      faceCup(); setCamMode('follow'); updateCamera(0); R.snapCamera();
+      // Startblick: auf den ersten Aufgabenpunkt (z. B. Rampe/Hexentopf), sonst aufs Loch
+      const look = def.look || lv.cup;
+      state.camTheta = thetaTowards(b.x, b.y, look.x, look.y);
+      setCamMode('follow'); updateCamera(0); R.snapCamera();
       state.phase = 'aim'; updateHud();
     }, 700);
   }

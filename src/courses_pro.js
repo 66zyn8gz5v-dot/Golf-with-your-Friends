@@ -175,7 +175,7 @@ const PRO_COURSES = [
     ],
     autoDecor: { density: 0.4, seed: 131 },
     inner: {
-      name: 'Hexenhütte', theme: 'hut', atmo: 'mist',
+      name: 'Hexenhütte', theme: 'hut', atmo: 'mist', look: { x: 3.5, y: 5.8 },
       map: [
         '................',
         '..T######.#####.',
