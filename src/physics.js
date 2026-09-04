@@ -76,6 +76,7 @@ function stepPhysics(level, ball, dt, t, allowForces) {
       ball.z = 0; ball.vz = 0; ball.air = false;
       ball.vx *= 0.6; ball.vy *= 0.6;
       events.push({ type: 'land', x: ball.x, y: ball.y });
+      for (const ob of level.obstacles) if (ob.catch && ob.catch(ball, t, events)) return events;
     } else return events;
   }
 
@@ -114,13 +115,15 @@ function stepPhysics(level, ball, dt, t, allowForces) {
   for (const ob of level.obstacles) { if (ob.teleport) ob.teleport(ball, t, events); if (ob.trigger) ob.trigger(ball, t, events); }
 
   // Loch
-  const cdx = ball.x - level.cup.x, cdy = ball.y - level.cup.y;
-  const cd = Math.hypot(cdx, cdy);
-  sp = Math.hypot(ball.vx, ball.vy);
-  if (cd < 0.62 && sp < 7.5 && sp > 0.01) { // leichte Anziehung am Lochrand
-    ball.vx -= (cdx / cd) * 9 * dt; ball.vy -= (cdy / cd) * 9 * dt;
+  if (level.cup) {
+    const cdx = ball.x - level.cup.x, cdy = ball.y - level.cup.y;
+    const cd = Math.hypot(cdx, cdy);
+    sp = Math.hypot(ball.vx, ball.vy);
+    if (cd < 0.62 && sp < 7.5 && sp > 0.01) { // leichte Anziehung am Lochrand
+      ball.vx -= (cdx / cd) * 9 * dt; ball.vy -= (cdy / cd) * 9 * dt;
+    }
+    if (cd < 0.42 && sp < 7.5) { events.push({ type: 'sunk' }); return events; }
   }
-  if (cd < 0.42 && sp < 7.5) { events.push({ type: 'sunk' }); return events; }
 
   // Hindernisse / Aus
   const c2 = level.charAt(ball.x, ball.y);

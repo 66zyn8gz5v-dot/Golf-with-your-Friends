@@ -234,7 +234,7 @@
     return Math.hypot(dx, dy) < 0.01 ? state.camTheta : Math.atan2(-dx, -dy);
   }
   function faceCup() {
-    const b = state.ball, c = state.level.cup;
+    const b = state.ball, c = state.level.cup || state.level.goal;
     state.camTheta = thetaTowards(b.x, b.y, c.x, c.y);
   }
   function setCamMode(mode) {
@@ -270,7 +270,7 @@
   }
   function loadLevelPreview(i) {
     const def = state.courses[i];
-    state.level = buildLevel(def); state.theme = THEMES[def.theme];
+    state.level = buildLevel(def); state.theme = THEMES[def.theme]; state.inner = false;
     R.setLevel(state.level, state.theme);
     state.ball = null; state.aim = null;
     setCamMode('overview'); R.target = R.overviewTarget(); R.snapCamera();
@@ -284,6 +284,11 @@
     setTimeout(beginTurn, 900);
   }
   function beginTurn() {
+    if (state.inner) { // zurück in den Außenbereich der Bahn
+      const def = state.courses[state.holeIdx];
+      state.level = buildLevel(def); state.theme = THEMES[def.theme]; state.inner = false;
+      R.setLevel(state.level, state.theme);
+    }
     const p = state.players[state.curPlayer], lv = state.level;
     state.ball = makeBall(lv.tee.x, lv.tee.y, p.color);
     state.strokes = 0; state.phase = 'aim'; state.aim = null; state.restTimer = 0; state.slowTimer = 0;
@@ -394,6 +399,26 @@
     state.particles = state.particles.filter(p => p.life > 0);
   }
 
+  /* Tür erreicht: die Bahn wechselt in ihre Innen-Map (z. B. Hexenhütte), Schläge zählen weiter */
+  function enterInner() {
+    const def = state.courses[state.holeIdx].inner;
+    if (!def) return;
+    Sfx.portal(); burst(state.ball.x, state.ball.y, '#a6ff5e', 16, true);
+    state.phase = 'wait'; state.aim = null;
+    showMessage(`Hinein in die ${def.name} …`, 1500);
+    clearTimeout(waitTimer);
+    waitTimer = setTimeout(() => {
+      state.level = buildLevel(def); state.theme = THEMES[def.theme]; state.inner = true;
+      R.setLevel(state.level, state.theme);
+      const b = state.ball, lv = state.level;
+      b.x = lv.tee.x; b.y = lv.tee.y; b.vx = 0; b.vy = 0; b.z = 0; b.vz = 0; b.air = false; b.rider = null;
+      b.restX = b.x; b.restY = b.y; b.portalCd = 0.5;
+      state.particles = [];
+      faceCup(); setCamMode('follow'); updateCamera(0); R.snapCamera();
+      state.phase = 'aim'; updateHud();
+    }, 700);
+  }
+
   /* ---------- Physik-Ereignisse ---------- */
   function handleEvents(events) {
     for (const ev of events) {
@@ -414,6 +439,8 @@
         case 'switch': Sfx.lever(); burst(ev.x, ev.y, '#9dffb5', 14); showMessage('Schalter gedrückt – das Zaubertor öffnet sich!', 1600); break;
         case 'shrink': Sfx.potion(); burst(ev.x, ev.y, '#d58cff', 16, true); showMessage('Schrumpftrank! Der Ball ist jetzt winzig.', 1600); break;
         case 'unshrink': showMessage('Der Trank lässt nach.', 1200); break;
+        case 'enter': enterInner(); return;
+        case 'spit': Sfx.bumper(); burst(ev.x, ev.y, '#a6ff5e', 10); break;
         case 'spin': Sfx.bounce(5); showMessage('Das Zahnrad nimmt den Ball mit …', 1200); break;
         case 'spinout': Sfx.bumper(); burst(ev.x, ev.y, '#ffe9a8', 8); break;
         case 'load': Sfx.bounce(5); showMessage('Geladen … Feuer frei!', 900); break;

@@ -24,7 +24,12 @@ function buildLevel(def) {
     if (c === 'H') cup = { x: x + 0.5, y: y + 0.5 };
     if (c === 'x') blocks.push({ x, y });
   }
-  if (!tee || !cup) throw new Error(`Bahn "${def.name}": Abschlag (T) oder Loch (H) fehlt`);
+  let goal = cup;
+  if (!cup) { // Bahnabschnitt ohne Loch: die Tür (Hexenhütte) ist das Ziel
+    const door = (def.obstacles || []).find(o => o.type === 'door');
+    if (door) goal = { x: door.x, y: door.y };
+  }
+  if (!tee || !goal) throw new Error(`Bahn "${def.name}": Abschlag (T) oder Loch (H) fehlt`);
 
   const segs = [];   // Kollision
   const walls = [];  // Darstellung (Rechtecke in Weltkoordinaten)
@@ -82,7 +87,7 @@ function buildLevel(def) {
   const decor = buildDecor(def, tiles, W, H, isFloor);
 
   const level = {
-    def, W, H, tiles, tee, cup, blocks, segs, walls, obstacles, decor, switches: {},
+    def, W, H, tiles, tee, cup, goal, blocks, segs, walls, obstacles, decor, switches: {},
     charAt(x, y) { return at(Math.floor(x), Math.floor(y)); },
     isFloorChar(c) { return FLOOR_CHARS.has(c); },
   };

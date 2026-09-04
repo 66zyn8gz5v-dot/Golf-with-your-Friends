@@ -299,6 +299,47 @@ class Cannon {
   }
 }
 
+/* Tür in die Hexenhütte: rollt der Ball hinein, wechselt die Bahn in ihre Innen-Map */
+class Door {
+  constructor(d) { Object.assign(this, { r: 0.55, s: 2.4 }, d); this.type = 'door'; }
+  trigger(ball, t, events) {
+    if (ball.air || ball.rider || ball.entered) return;
+    if (Math.hypot(ball.x - this.x, ball.y - this.y) > this.r) return;
+    ball.entered = true; events.push({ type: 'enter', x: this.x, y: this.y });
+  }
+}
+
+/* Hexentopf: ein großer Kessel. Am Boden prallt der Ball ab – nur wer aus der Luft hineintrifft,
+   wird geschrumpft, kurz im Sud gehalten und dann zur Seite 'exit' (Grad) wieder ausgespuckt. */
+class Cauldron {
+  constructor(d) {
+    Object.assign(this, { r: 0.75, duration: 20, scale: 0.45, exit: 0, hold: 0.8, spit: 2.5 }, d);
+    this.type = 'cauldron'; this.exitA = (this.exit * Math.PI) / 180; this.loaded = false;
+  }
+  circles(out) { out.push({ x: this.x, y: this.y, r: this.r, e: 0.5, kind: 'cauldron' }); }
+  catch(ball, t, events) { // direkt nach einer Landung aus der Luft
+    if (Math.hypot(ball.x - this.x, ball.y - this.y) > this.r * 0.9) return false;
+    ball.rider = this; ball.spitAt = t + this.hold; this.loaded = true;
+    ball.shrinkUntil = t + this.duration; ball.r = BALL_R * this.scale;
+    ball.x = this.x; ball.y = this.y; ball.z = 0.95; ball.vx = 0; ball.vy = 0; ball.vz = 0;
+    events.push({ type: 'shrink', x: this.x, y: this.y });
+    return true;
+  }
+  ride(ball, t, events) {
+    if (ball.rider !== this) return false;
+    if (t >= ball.spitAt) {
+      const ex = Math.cos(this.exitA), ey = Math.sin(this.exitA);
+      ball.rider = null; this.loaded = false; ball.rideCd = 1;
+      ball.x = this.x + ex * (this.r + 0.45); ball.y = this.y + ey * (this.r + 0.45);
+      ball.vx = ex * this.spit; ball.vy = ey * this.spit; ball.z = 0.5; ball.vz = 1.5;
+      events.push({ type: 'spit', x: ball.x, y: ball.y });
+      return false;
+    }
+    ball.x = this.x; ball.y = this.y; ball.z = 0.95 + 0.05 * Math.sin(t * 8); ball.vx = 0; ball.vy = 0;
+    return true;
+  }
+}
+
 /* Geländer: gerades Mauerstück von (x0,y0) nach (x1,y1) */
 class Wall {
   constructor(d) {
@@ -375,6 +416,8 @@ function createObstacles(defs) {
       case 'ramp': out.push(new Ramp(d)); break;
       case 'windmill': out.push(new Windmill(d)); break;
       case 'switch': out.push(new Switch(d)); break;
+      case 'door': out.push(new Door(d)); break;
+      case 'cauldron': out.push(new Cauldron(d)); break;
       case 'potion': out.push(new Potion(d)); break;
       case 'turntable': out.push(new Turntable(d)); break;
       case 'magnet': out.push(new Magnet(d)); break;

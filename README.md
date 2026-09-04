@@ -55,7 +55,7 @@ Das Modus-Menü ist der Platz, an dem später weitere Welten eingehängt werden.
 | 4 | Magnetsee | 4 | Kristall-Magnete, die den Ball anziehen oder abstoßen, Eisflächen und Eislöcher |
 | 5 | Uhrwerk | 4 | eigene Uhrwerk-Welt aus Messing und Zahnrädern, zwei Zahnrad-Drehscheiben, die den Ball mitnehmen und an der Rinne auswerfen, Fallgatter |
 | 6 | Drachenschlund | 5 | Sprungschanze über Lava, zwei Drachen, tiefer Sand |
-| 7 | Hexenküche | 5 | Schrumpftrank (Ball wird 20 s klein) und ein Spalt, durch den nur der kleine Ball passt, Kessel, Besen |
+| 7 | Hexenküche | 5 | zweiteilige Bahn: durch den Hexengarten in die Hexenhütte (eigene Innen-Map), dort über eine Rampe in den Hexentopf – der Ball schrumpft 20 s und passt durch den Spalt zum Loch |
 | 8 | Königsburg | 5 | zwei Windmühlen, Ritter, Steigungen, Schalterplatte, die das Zaubertor (Zugbrücke) 14 s öffnet |
 
 ## Eigene Bahnen bauen
@@ -71,7 +71,7 @@ T  Abschlag            H  Loch
 
 Pro Bahn lässt sich die Bremsung eines Untergrunds überschreiben, z. B. `friction: { s: 32 }` für besonders tiefen Sand.
 
-Hindernis-Typen: `bumper`, `mover`, `ferry`, `rotor` (auch als Pendel mit `swing`), `windmill`, `gate` (periodisch oder mit `linked` an einen Schalter gekoppelt), `portal`, `boost`, `field`, `ramp`, `rail`, `wall`, `cannon` (schwenkende Kanone, `base`/`amp`/`speed`/`range`), `magnet` (`strength` > 0 zieht an, < 0 stößt ab), `turntable` (Drehscheibe mit Auswurfrinne `exit` in Grad), `potion` (Schrumpftrank, `scale`/`duration`), `switch` (Druckplatte, `target`/`duration`).
+Hindernis-Typen: `bumper`, `mover`, `ferry`, `rotor` (auch als Pendel mit `swing`), `windmill`, `gate` (periodisch oder mit `linked` an einen Schalter gekoppelt), `portal`, `boost`, `field`, `ramp`, `rail`, `wall`, `cannon` (schwenkende Kanone, `base`/`amp`/`speed`/`range`), `magnet` (`strength` > 0 zieht an, < 0 stößt ab), `turntable` (Drehscheibe mit Auswurfrinne `exit` in Grad), `potion` (Schrumpftrank, `scale`/`duration`), `cauldron` (Hexentopf: nur aus der Luft zu treffen, schrumpft und spuckt Richtung `exit` aus), `switch` (Druckplatte, `target`/`duration`), `door` (Tür in die Innen-Map `inner` einer Bahn).
 Farbwelten stehen in `src/themes.js`, jede mit einer dezenten Atmosphäre (`atmo`: `fog`, `mist`, `fireflies`, `spores`, `embers`, `sparks`, `snow`, `pollen`, `none`), die eine Bahn per `atmo` überschreiben kann. Mit `node tools/validate.mjs` lässt sich prüfen, ob jede Bahn lösbar ist.
 
 ## Projektstruktur
