@@ -172,31 +172,50 @@ table.scores td.num { text-align: right; font-variant-numeric: tabular-nums; }
 body.testing .cbtn.testing { display: inline-block; }
 body.editing #hud, body.editing #scoreboard, body.editing #hint, body.editing #power, body.editing .cbtn.creative { display: none; }
 #editor-panel {
-  display: none; position: fixed; right: 12px; top: 12px; bottom: 96px; width: 260px; max-width: calc(100vw - 24px);
-  background: rgba(20, 16, 40, 0.86); border: 2px solid rgba(255, 215, 120, 0.55); border-radius: 12px;
+  display: none; position: fixed; right: 12px; top: 12px; bottom: 12px; width: 270px; max-width: calc(100vw - 24px);
+  background: rgba(20, 16, 40, 0.88); border: 2px solid rgba(255, 215, 120, 0.55); border-radius: 12px;
   color: #f4efe6; font-size: 13px; overflow: hidden; box-shadow: 0 4px 14px rgba(0,0,0,0.35); z-index: 5;
 }
 body.editing #editor-panel { display: flex; flex-direction: column; }
 #editor-panel.collapsed { bottom: auto; width: auto; background: rgba(20, 16, 40, 0.6); }
-#editor-panel.collapsed .ed-body, #editor-panel.collapsed .ed-head b, #editor-panel.collapsed #ed-view { display: none; }
+#editor-panel.collapsed .ed-body, #editor-panel.collapsed .ed-tabs, #editor-panel.collapsed .ed-foot, #editor-panel.collapsed .ed-head b, #editor-panel.collapsed #ed-view { display: none; }
 #editor-panel.collapsed .ed-head { border-bottom: none; padding: 6px; }
-#editor-panel .ed-head { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border-bottom: 1px solid rgba(255,215,120,0.3); font-size: 15px; }
-#editor-panel .ed-body { overflow-y: auto; padding: 6px 10px 10px; }
-#editor-panel .ed-sec { margin: 8px 0; }
-#editor-panel .ed-title { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: #ffd98a; margin-bottom: 4px; }
+#editor-panel .ed-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 8px 10px; font-size: 15px; }
+#editor-panel .ed-head span { display: flex; gap: 4px; }
+#editor-panel .ed-tabs { display: flex; border-top: 1px solid rgba(255,215,120,0.3); border-bottom: 1px solid rgba(255,215,120,0.3); }
+#editor-panel .ed-tab { flex: 1; font: inherit; font-weight: bold; color: #cbbfe6; background: rgba(0,0,0,0.25); border: none; border-right: 1px solid rgba(255,215,120,0.2); padding: 8px 0; cursor: pointer; }
+#editor-panel .ed-tab:last-child { border-right: none; }
+#editor-panel .ed-tab.sel { color: #3a2200; background: #ffd166; }
+#editor-panel .ed-body { overflow-y: auto; padding: 6px 10px 10px; flex: 1; }
+#editor-panel .ed-title { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: #ffd98a; margin: 10px 0 4px; }
 #editor-panel .ed-grid { display: flex; flex-wrap: wrap; gap: 4px; }
-#editor-panel .cbtn.small { height: 30px; min-width: 0; padding: 0 9px; font-size: 12px; }
+#editor-panel .ed-tiles .cbtn { flex: 1 1 44%; text-align: left; }
+#editor-panel .ed-tiles i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; border: 1px solid rgba(0,0,0,0.4); }
+#editor-panel .cbtn.small { height: 32px; min-width: 0; padding: 0 9px; font-size: 12px; }
+#editor-panel .ed-foot { display: flex; gap: 6px; padding: 8px 10px; border-top: 1px solid rgba(255,215,120,0.3); }
+#editor-panel .ed-foot .cbtn { flex: 1; height: 38px; font-size: 14px; }
 #editor-panel .ed-go { background: linear-gradient(180deg, #ffd166, #e39a2a); color: #3a2200; border-color: #8a5a10; }
-#editor-panel .ed-hint { font-size: 12px; color: #cbbfe6; min-height: 30px; padding: 4px 0; }
-#editor-panel label { display: block; margin: 4px 0; }
+#editor-panel .ed-done { background: linear-gradient(180deg, #8fe07a, #3f9a4e); color: #10300f; border-color: #2a6e38; }
+#editor-panel .ed-hint { font-size: 12px; color: #cbbfe6; min-height: 30px; padding: 6px 0; }
+#editor-panel label { display: grid; grid-template-columns: 52px 1fr; align-items: center; gap: 6px; margin: 8px 0; }
+#editor-panel .ed-size { display: flex; align-items: center; gap: 4px; }
 #editor-panel input, #editor-panel select, #editor-panel textarea {
-  font: inherit; color: #f4efe6; background: rgba(0,0,0,0.35); border: 1px solid rgba(255,215,120,0.4); border-radius: 6px; padding: 4px 6px; width: 100%; box-sizing: border-box;
+  font: inherit; color: #f4efe6; background: rgba(0,0,0,0.35); border: 1px solid rgba(255,215,120,0.4); border-radius: 6px; padding: 5px 6px; width: 100%; box-sizing: border-box;
 }
-#editor-panel label input, #editor-panel label select { width: auto; min-width: 100px; }
-#editor-panel label input[type=number] { width: 60px; }
-#editor-panel textarea { resize: vertical; font-family: monospace; font-size: 11px; }
+#editor-panel .ed-size input { width: 54px; }
+#editor-panel textarea { resize: vertical; font-family: monospace; font-size: 11px; margin-bottom: 4px; }
 #editor-panel select option { color: #111; }
 .btn.mode.own, .btn.mode.build { height: 54px; background: linear-gradient(90deg, #2a1a4d, #4a2f7a); }
 .btn.mode.build { background: linear-gradient(90deg, #3a2a10, #7a5a20); }
-.btn.mode.own .mode-label, .btn.mode.build .mode-label { right: auto; left: 22px; font-size: 22px; }
-@media (max-width: 700px) { #editor-panel { width: 210px; font-size: 12px; } }
+.btn.mode.own .mode-label, .btn.mode.build .mode-label { right: auto; left: 22px; font-size: 20px; white-space: nowrap; }
+/* Eigene Welt: Reihenfolge der Bahnen */
+.panel.wl { min-width: 340px; max-width: 520px; }
+.wl-list { text-align: left; margin: 8px 0; max-height: 40vh; overflow-y: auto; }
+.wl-row { display: flex; align-items: center; gap: 6px; padding: 4px 6px; border-radius: 8px; }
+.wl-row.me { background: rgba(255, 209, 102, 0.2); }
+.wl-num { width: 22px; color: #ffd98a; font-weight: bold; text-align: right; }
+.wl-name { flex: 1; }
+.wl-row .cbtn.small { height: 30px; min-width: 32px; padding: 0 6px; }
+.wl-slots { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; }
+.wl-slots .btn.small { min-width: 40px; margin: 2px; }
+@media (max-width: 700px) { #editor-panel { width: 220px; font-size: 12px; } }

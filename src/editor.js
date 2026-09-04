@@ -189,53 +189,93 @@ const Editor = (deps) => {
     if (ed.pending) { const [sx, sy] = R.proj(ed.pending.p[0], ed.pending.p[1], 0.05); ctx.fillStyle = '#ffd166'; ctx.beginPath(); ctx.arc(sx, sy, 6, 0, Math.PI * 2); ctx.fill(); }
   }
 
+  /* ---------- Eigene Welt (Reihenfolge gespeicherter Bahnen) ---------- */
+  const WKEY = 'fantasygolf.world';
+  function loadWorld() { try { const v = JSON.parse(localStorage.getItem(WKEY) || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
+  function saveWorld(ids) { try { localStorage.setItem(WKEY, JSON.stringify(ids)); } catch (e) { /* kein Speicher */ } }
+  function worldCourses() { const list = loadCustoms(); return loadWorld().map(id => list.find(c => c.id === id)).filter(Boolean); }
+  function showWorldDialog(insertId) {
+    const list = loadCustoms(), ids = loadWorld().filter(id => list.some(c => c.id === id));
+    const name = id => { const c = list.find(x => x.id === id); return c ? `${c.name} (Par ${c.par})` : '?'; };
+    const cur = insertId != null ? ids.indexOf(insertId) : -1;
+    const rows = ids.map((id, i) => `<div class="wl-row ${id === insertId ? 'me' : ''}"><span class="wl-num">${i + 1}</span><span class="wl-name">${name(id)}</span>
+      <button class="cbtn small wl-up" data-i="${i}" title="nach oben">▲</button><button class="cbtn small wl-down" data-i="${i}" title="nach unten">▼</button><button class="cbtn small wl-out" data-i="${i}" title="aus der Welt nehmen">✕</button></div>`).join('');
+    const slots = insertId != null && cur < 0 ? `<p>„${name(insertId)}“ einsetzen als Bahn:</p><div class="wl-slots">${Array.from({ length: ids.length + 1 }, (_, k) => `<span class="btn small wl-slot" data-k="${k}">${k + 1}</span>`).join('')}</div>` : '';
+    const info = insertId != null && cur >= 0 ? `<p class="sub">„${name(insertId)}“ ist Bahn ${cur + 1} der Welt. Mit ▲ ▼ verschieben.</p>` : '';
+    deps.overlay(`<div class="panel wl">
+      <h2>🌍 Eigene Welt</h2>
+      <div class="sub">${ids.length ? `${ids.length} Bahn${ids.length > 1 ? 'en' : ''} in der Reihenfolge, in der sie gespielt werden` : 'Noch keine Bahn in der Welt'}</div>
+      <div class="wl-list">${rows || ''}</div>
+      ${slots}${info}
+      <p style="margin-top:12px"><span class="btn ghost small" id="wl-back">◀ Zurück zum Editor</span> ${ids.length ? '<span class="btn small" id="wl-play">▶ Welt spielen</span>' : ''}</p>
+    </div>`);
+    const rerender = () => showWorldDialog(insertId);
+    ui().querySelectorAll('.wl-slot').forEach(b => b.addEventListener('click', () => { ids.splice(+b.dataset.k, 0, insertId); saveWorld(ids); showMessage('In die Eigene Welt eingesetzt', 1200); rerender(); }));
+    ui().querySelectorAll('.wl-up').forEach(b => b.addEventListener('click', () => { const i = +b.dataset.i; if (i > 0) { [ids[i - 1], ids[i]] = [ids[i], ids[i - 1]]; saveWorld(ids); rerender(); } }));
+    ui().querySelectorAll('.wl-down').forEach(b => b.addEventListener('click', () => { const i = +b.dataset.i; if (i < ids.length - 1) { [ids[i + 1], ids[i]] = [ids[i], ids[i + 1]]; saveWorld(ids); rerender(); } }));
+    ui().querySelectorAll('.wl-out').forEach(b => b.addEventListener('click', () => { ids.splice(+b.dataset.i, 1); saveWorld(ids); rerender(); }));
+    $('wl-back').addEventListener('click', () => { deps.hideOverlay(); syncPanel(); });
+    if (ids.length) $('wl-play').addEventListener('click', () => { deps.hideOverlay(); leave(); deps.playWorld(worldCourses()); });
+  }
+  const ui = () => $('overlay');
+
   /* ---------- Panel ---------- */
+  const SWATCH = { '#': '#7cc94f', s: '#e9d68f', i: '#c8ecff', w: '#3f8fd9', l: '#ff5a1f', x: '#8b889d', o: '#4d8a34', '.': '#2a2440' };
   function buildPanel() {
     if (ed.panel) return;
     const p = document.createElement('div'); p.id = 'editor-panel'; ed.panel = p; document.body.appendChild(p);
     p.innerHTML = `
-      <div class="ed-head"><b>🛠 Baumodus</b><span><button class="cbtn small" id="ed-view" title="Draufsicht / Schrägsicht">Schräg</button> <button class="cbtn small" id="ed-collapse" title="Panel einklappen, um frei zu bauen">Einklappen ▸</button></span></div>
+      <div class="ed-head"><b>🛠 Baumodus</b><span><button class="cbtn small" id="ed-view" title="Draufsicht / Schrägsicht">Schrägsicht</button><button class="cbtn small" id="ed-collapse" title="Panel einklappen, um frei zu bauen">▸</button></span></div>
+      <div class="ed-tabs"><button class="ed-tab sel" data-tab="build">Bauen</button><button class="ed-tab" data-tab="hole">Bahn</button><button class="ed-tab" data-tab="save">Speichern</button></div>
       <div class="ed-body">
-        <div class="ed-sec"><div class="ed-title">Kacheln</div><div class="ed-grid" id="ed-tiles">${TILES.map(([c, n]) => `<button class="cbtn small ed-tool" data-tool="${c}">${n}</button>`).join('')}</div></div>
-        <div class="ed-sec"><div class="ed-title">Start und Ziel</div><div class="ed-grid"><button class="cbtn small ed-tool" data-tool="T">Abschlag</button><button class="cbtn small ed-tool" data-tool="H">Loch</button></div></div>
-        <div class="ed-sec"><div class="ed-title">Objekte</div>
+        <div class="ed-page" data-page="build">
+          <div class="ed-title">Boden malen</div>
+          <div class="ed-grid ed-tiles">${TILES.map(([c, n]) => `<button class="cbtn small ed-tool" data-tool="${c}"><i style="background:${SWATCH[c]}"></i>${n}</button>`).join('')}</div>
+          <div class="ed-title">Start und Ziel</div>
+          <div class="ed-grid"><button class="cbtn small ed-tool" data-tool="T">⛳ Abschlag</button><button class="cbtn small ed-tool" data-tool="H">🕳 Loch</button></div>
+          <div class="ed-title">Hindernisse</div>
           <select id="ed-obj">${OBJECTS.map(([k, n]) => `<option value="${k}">${n}</option>`).join('')}</select>
-          <div class="ed-grid"><button class="cbtn small ed-tool" data-tool="obj">Setzen</button><button class="cbtn small ed-tool" data-tool="rotate">Drehen</button><button class="cbtn small ed-tool" data-tool="delete">Löschen</button><button class="cbtn small ed-tool" data-tool="pan">Verschieben</button></div>
+          <div class="ed-grid"><button class="cbtn small ed-tool" data-tool="obj">Setzen</button><button class="cbtn small ed-tool" data-tool="rotate">Drehen</button><button class="cbtn small ed-tool" data-tool="delete">Löschen</button></div>
+          <div class="ed-title">Ansicht</div>
+          <div class="ed-grid"><button class="cbtn small ed-tool" data-tool="pan">✋ Verschieben</button></div>
+          <div class="ed-hint" id="ed-hint"></div>
         </div>
-        <div class="ed-hint" id="ed-hint"></div>
-        <div class="ed-sec"><div class="ed-title">Bahn</div>
-          <label>Name <input id="ed-name" maxlength="24"></label>
-          <label>Par <input id="ed-par" type="number" min="1" max="12"></label>
-          <label>Welt <select id="ed-theme">${Object.keys(THEMES).map(k => `<option value="${k}">${THEME_LABELS[k] || k}</option>`).join('')}</select></label>
-          <label>Größe <input id="ed-w" type="number" min="6" max="48" style="width:52px"> × <input id="ed-h" type="number" min="6" max="36" style="width:52px"> <button class="cbtn small" id="ed-resize">OK</button></label>
+        <div class="ed-page" data-page="hole" hidden>
+          <label>Name<input id="ed-name" maxlength="24"></label>
+          <label>Par<input id="ed-par" type="number" min="1" max="12"></label>
+          <label>Welt<select id="ed-theme">${Object.keys(THEMES).map(k => `<option value="${k}">${THEME_LABELS[k] || k}</option>`).join('')}</select></label>
+          <label>Größe<span class="ed-size"><input id="ed-w" type="number" min="6" max="48"> × <input id="ed-h" type="number" min="6" max="36"> <button class="cbtn small" id="ed-resize">OK</button></span></label>
+          <div class="ed-hint">Größe: Breite × Höhe in Kacheln. Beim Verkleinern wird rechts und unten abgeschnitten.</div>
         </div>
-        <div class="ed-sec ed-grid">
-          <button class="cbtn small ed-go" id="ed-test">▶ Testen</button><button class="cbtn small" id="ed-save">Speichern</button>
-          <button class="cbtn small" id="ed-new">Neue Bahn</button><button class="cbtn small" id="ed-back">◀ Zurück</button>
-        </div>
-        <div class="ed-sec"><div class="ed-title">Gespeicherte Bahnen</div>
+        <div class="ed-page" data-page="save" hidden>
+          <div class="ed-grid"><button class="cbtn small" id="ed-save">💾 Speichern</button><button class="cbtn small" id="ed-new">＋ Neue Bahn</button><button class="cbtn small" id="ed-world">🌍 Eigene Welt</button></div>
+          <div class="ed-title">Gespeicherte Bahnen</div>
           <select id="ed-list"></select>
           <div class="ed-grid"><button class="cbtn small" id="ed-load">Laden</button><button class="cbtn small" id="ed-del">Löschen</button></div>
-        </div>
-        <div class="ed-sec"><div class="ed-title">Code (Export / Import)</div>
-          <textarea id="ed-code" rows="3" spellcheck="false"></textarea>
+          <div class="ed-title">Bahn-Code (weitergeben)</div>
+          <textarea id="ed-code" rows="3" spellcheck="false" placeholder="Code hier einfügen …"></textarea>
           <div class="ed-grid"><button class="cbtn small" id="ed-export">Exportieren</button><button class="cbtn small" id="ed-import">Importieren</button></div>
+          <div class="ed-grid" style="margin-top:10px"><button class="cbtn small" id="ed-back">◀ Zurück zum Menü</button></div>
         </div>
-      </div>`;
+      </div>
+      <div class="ed-foot"><button class="cbtn small ed-go" id="ed-test">▶ Testen</button><button class="cbtn small ed-done" id="ed-done">✔ Fertig</button></div>`;
+    p.querySelectorAll('.ed-tab').forEach(b => b.addEventListener('click', () => { p.querySelectorAll('.ed-tab').forEach(x => x.classList.toggle('sel', x === b)); p.querySelectorAll('.ed-page').forEach(x => { x.hidden = x.dataset.page !== b.dataset.tab; }); }));
     p.querySelectorAll('.ed-tool').forEach(b => b.addEventListener('click', () => { ed.tool = b.dataset.tool; ed.pending = null; syncPanel(); }));
     $('ed-obj').addEventListener('change', e => { ed.obj = e.target.value; ed.tool = 'obj'; ed.pending = null; syncPanel(); });
-    $('ed-collapse').addEventListener('click', () => { ed.collapsed = !ed.collapsed; p.classList.toggle('collapsed', ed.collapsed); $('ed-collapse').textContent = ed.collapsed ? '🛠 Werkzeuge' : 'Einklappen ▸'; });
+    $('ed-collapse').addEventListener('click', () => { ed.collapsed = !ed.collapsed; p.classList.toggle('collapsed', ed.collapsed); $('ed-collapse').textContent = ed.collapsed ? '🛠 Werkzeuge' : '▸'; });
     $('ed-view').addEventListener('click', () => setView(ed.view === 'top' ? 'iso' : 'top'));
     $('ed-name').addEventListener('input', e => { ed.def.name = e.target.value || 'Meine Bahn'; });
     $('ed-par').addEventListener('change', e => { ed.def.par = Math.max(1, Math.min(12, +e.target.value || 3)); });
     $('ed-theme').addEventListener('change', e => { ed.def.theme = e.target.value; rebuild(); });
     $('ed-resize').addEventListener('click', () => resize(+$('ed-w').value, +$('ed-h').value));
     $('ed-test').addEventListener('click', test);
+    $('ed-done').addEventListener('click', () => { if (!hasTeeAndCup()) { showMessage('Erst Abschlag und Loch setzen', 1600); return; } persist(); syncPanel(); showWorldDialog(ed.def.id); });
+    $('ed-world').addEventListener('click', () => showWorldDialog(null));
     $('ed-save').addEventListener('click', () => { persist(); syncPanel(); showMessage('Bahn gespeichert', 1200); });
     $('ed-new').addEventListener('click', () => open(null));
     $('ed-back').addEventListener('click', () => { persist(); leave(); showWorldSelect(); });
     $('ed-load').addEventListener('click', () => { const id = +$('ed-list').value; const c = loadCustoms().find(x => x.id === id); if (c) open(c); });
-    $('ed-del').addEventListener('click', () => { const id = +$('ed-list').value; const list = loadCustoms().filter(x => x.id !== id); saveCustoms(list); syncPanel(); showMessage('Bahn gelöscht', 1000); });
+    $('ed-del').addEventListener('click', () => { const id = +$('ed-list').value; saveCustoms(loadCustoms().filter(x => x.id !== id)); saveWorld(loadWorld().filter(x => x !== id)); syncPanel(); showMessage('Bahn gelöscht', 1000); });
     $('ed-export').addEventListener('click', () => { $('ed-code').value = JSON.stringify(cleanDef(ed.def)); $('ed-code').select(); showMessage('Code im Feld – markieren und kopieren', 1600); });
     $('ed-import').addEventListener('click', () => {
       try {
@@ -255,9 +295,11 @@ const Editor = (deps) => {
     $('ed-name').value = ed.def.name; $('ed-par').value = ed.def.par; $('ed-theme').value = ed.def.theme; $('ed-w').value = W(); $('ed-h').value = H();
     const t = ed.tool;
     $('ed-hint').textContent = t === 'obj' ? (HINTS[ed.obj] || HINTS.obj) : (HINTS[t] || HINTS.tile);
-    const list = loadCustoms(), sel = $('ed-list');
-    sel.innerHTML = list.length ? list.map(c => `<option value="${c.id}">${c.name} (Par ${c.par})</option>`).join('') : '<option value="">– noch keine –</option>';
+    const list = loadCustoms(), sel = $('ed-list'), world = loadWorld();
+    sel.innerHTML = list.length ? list.map(c => `<option value="${c.id}">${c.name} (Par ${c.par})${world.includes(c.id) ? ' · in Welt' : ''}</option>`).join('') : '<option value="">– noch keine –</option>';
     if (list.some(c => c.id === ed.def.id)) sel.value = String(ed.def.id);
+    const k = world.indexOf(ed.def.id);
+    $('ed-done').textContent = k >= 0 ? `✔ Fertig · Bahn ${k + 1}` : '✔ Fertig';
   }
   function leave() { state.phase = 'title'; document.body.classList.remove('editing'); document.body.classList.add('title'); }
 
@@ -271,5 +313,5 @@ const Editor = (deps) => {
   }
   function returnFromTest() { open(ed.def); }
 
-  return { open, loadCustoms, cameraTarget, drawOverlay, pointer, returnFromTest, get active() { return state.phase === 'edit'; } };
+  return { open, loadCustoms, worldCourses, cameraTarget, drawOverlay, pointer, returnFromTest, get active() { return state.phase === 'edit'; } };
 };

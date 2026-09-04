@@ -178,7 +178,7 @@
 
   /* Kreativ: Welt wählen, dann sofort los (ein Spieler, Schleuder, Bahn 1) */
   function showWorldSelect() {
-    const customs = editor.loadCustoms();
+    const own = editor.worldCourses();
     overlay(`<div class="panel">
       <h2>🛠 Kreativ – Welt wählen</h2>
       <div class="modes">
@@ -186,17 +186,18 @@
       </div>
       <div class="sub">${WORLDS.map(w => `${w.name}: ${w.courses.length} Bahnen`).join(' · ')}</div>
       <div class="modes">
-        ${customs.length ? `<span class="btn mode own" id="own-play"><span class="mode-label">Eigene Bahnen (${customs.length})</span></span>` : ''}
+        ${own.length ? `<span class="btn mode own" id="own-play"><span class="mode-label">🌍 Eigene Welt (${own.length} Bahn${own.length > 1 ? 'en' : ''})</span></span>` : ''}
         <span class="btn mode build" id="build"><span class="mode-label">🛠 Bahn bauen</span></span>
       </div>
       <p><span class="btn ghost small" id="back">◀ Zurück</span></p>
     </div>`, 'title');
     ui.overlay.querySelectorAll('.mode[data-world]').forEach(b => b.addEventListener('click', () => { setWorld(b.dataset.world); Sfx.unlock(); setControlMode('sling'); startGame(1, 0); }));
-    if (customs.length) $('own-play').addEventListener('click', () => { setCustomWorld(customs, 'Eigene Bahnen'); Sfx.unlock(); setControlMode('sling'); startGame(1, 0); });
+    if (own.length) $('own-play').addEventListener('click', () => { Sfx.unlock(); setControlMode('sling'); playWorld(own); });
     $('build').addEventListener('click', () => { Sfx.unlock(); setControlMode('sling'); editor.open(null); });
     $('back').addEventListener('click', showTitle);
   }
   function setCustomWorld(courses, name) { state.world = { id: 'custom', name, short: 'Eigene', courses }; state.courses = courses; }
+  function playWorld(courses) { state.mode = 'creative'; state.editorReturn = false; setCustomWorld(courses, 'Eigene Welt'); document.body.classList.remove('editing', 'testing'); startGame(1, 0); }
   /* Baumodus: eine Bahn probespielen, danach zurück in den Editor */
   function startTest(def) {
     state.mode = 'creative'; state.editorReturn = true;
@@ -580,7 +581,7 @@
     state, R,
   };
 
-  const editor = Editor({ state, R, $, showMessage, startTest, showWorldSelect, hideOverlay });
+  const editor = Editor({ state, R, $, showMessage, startTest, showWorldSelect, hideOverlay, overlay, playWorld });
   R.resize();
   setControlMode(state.controlMode);
   showTitle();
