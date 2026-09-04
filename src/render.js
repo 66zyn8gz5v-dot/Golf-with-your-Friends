@@ -1304,6 +1304,14 @@ class Renderer {
       g.addColorStop(0, rock ? '#a8926e' : '#6a6a72'); g.addColorStop(1, rock ? '#3a2e20' : '#141418');
       ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, r * s, 0, TAU); ctx.fill();
       ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(cx, cy, r * s * 0.9, t * 6 * (ob.dir || 1), t * 6 * (ob.dir || 1) + 1.2); ctx.stroke();
+    } else if (ob.style === 'stone') { // Schiebestein aus Sandstein mit eingemeißeltem Auge
+      this.prism(ctx, poly, 0, 0.9, '#d9b979', '#8a6a34', { outline: '#5a4420' });
+      const [ex, ey] = this.proj(ob.x, ob.y, 0.91);
+      ctx.strokeStyle = 'rgba(60,40,10,0.55)'; ctx.lineWidth = Math.max(1, s * 0.04);
+      ctx.beginPath(); ctx.ellipse(ex, ey, s * 0.32, s * 0.16 * this.cam.tilt, 0, 0, TAU); ctx.stroke();
+      ctx.fillStyle = 'rgba(60,40,10,0.55)'; ctx.beginPath(); ctx.ellipse(ex, ey, s * 0.1, s * 0.1 * this.cam.tilt, 0, 0, TAU); ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.18)'; ctx.lineWidth = 1;
+      for (const z of [0.3, 0.6]) { const p0 = this.proj(poly[3][0], poly[3][1], z), p1 = this.proj(poly[2][0], poly[2][1], z); ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke(); }
     } else { // Lore
       this.prism(ctx, poly, 0.15, 0.75, th.mover.top, th.mover.side, { outline: shade(th.mover.side, 0.6) });
       this.isoEllipse(ctx, ob.x, ob.y, 0.91, ob.w * 0.38, '#4a4a55');
