@@ -40,7 +40,7 @@ const PRO_COURSES = [
     ],
     obstacles: [
       { type: 'ramp', x: 6.5, y: 3.5, w: 1.5, h: 2, angle: 0, minSpeed: 3, speed: 4.5, land: 4.6 },
-      { type: 'windmill', x: 15, y: 6, axis: 'x', w: 6, depth: 1.2, gap: 0.9, speed: 1.0 },
+      { type: 'windmill', x: 15, y: 6, axis: 'x', w: 6, depth: 1.2, gap: 1.5, speed: 1.0 },
     ],
     atmo: 'fog',
     decor: [{ t: 'tree', x: 9.5, y: 0.3, s: 1.3, glow: true }, { t: 'crystal', x: 22.5, y: 3 }, { t: 'lantern', x: 8.4, y: 9.4 }, { t: 'lantern', x: 11.6, y: 9.4 }],
