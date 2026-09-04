@@ -219,6 +219,7 @@ class Renderer {
     if (th.clouds) this.drawSkyClouds(ctx, t);
     if (th.gears) this.drawSkyGears(ctx, t);
     if (th.planks) this.drawPlanks(ctx, t);
+    if (th.tomb) this.drawTomb(ctx, t);
     this.seaT = t;
     if (th.rays) this.drawRays(ctx, t);
     if (th.sea) this.drawSea(ctx, t);
@@ -461,9 +462,47 @@ class Renderer {
     ctx.fillStyle = '#fff2c4'; ctx.beginPath(); ctx.arc(sx, sy, sr, 0, TAU); ctx.fill();
     const cols = ['#e6a860', '#d18c48', '#b8743a'];
     for (let L = 0; L < 3; L++) {
+      if (L === 1 && this.theme.pyramids) { // ferne Pyramiden zwischen den Dünenreihen
+        ctx.fillStyle = '#b86a3a';
+        for (const [px, pw, ph] of [[0.18, 0.13, 0.19], [0.36, 0.08, 0.12], [0.86, 0.1, 0.15]]) {
+          const bx = px * w, by = h * 0.43, bw = pw * w, bh = ph * h;
+          ctx.beginPath(); ctx.moveTo(bx - bw, by); ctx.lineTo(bx, by - bh); ctx.lineTo(bx + bw, by); ctx.closePath(); ctx.fill();
+          ctx.fillStyle = '#8e4e2a'; ctx.beginPath(); ctx.moveTo(bx, by - bh); ctx.lineTo(bx + bw, by); ctx.lineTo(bx + bw * 0.15, by); ctx.closePath(); ctx.fill(); ctx.fillStyle = '#b86a3a';
+        }
+      }
       ctx.fillStyle = cols[L]; ctx.beginPath(); ctx.moveTo(0, h);
       for (let x = 0; x <= w; x += 12) ctx.lineTo(x, h * (0.36 + L * 0.09) + Math.sin(x * 0.004 + L * 2 + t * 0.02) * h * 0.04 + Math.sin(x * 0.011 + L) * h * 0.015);
       ctx.lineTo(w, h); ctx.closePath(); ctx.fill();
+    }
+  }
+  /* Grabkammer: Sandsteinwand mit Hieroglyphen-Reihen und flackerndem Fackelschein */
+  drawTomb(ctx, t) {
+    const w = this.w, h = this.h, hash = (i, k) => Math.abs(Math.sin(i * 127.1 + k * 311.7) * 43758.5453) % 1;
+    const g = ctx.createLinearGradient(0, 0, 0, h);
+    g.addColorStop(0, '#2a1c0e'); g.addColorStop(0.5, '#4a3418'); g.addColorStop(1, '#2a1c0e'); ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+    // Steinquader
+    ctx.strokeStyle = 'rgba(0,0,0,0.25)'; ctx.lineWidth = 2;
+    const bh = Math.max(40, h * 0.07), bw = bh * 2.2;
+    for (let row = 0, y = 0; y < h; y += bh, row++) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); for (let x = (row % 2) * bw / 2; x < w; x += bw) { ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + bh); ctx.stroke(); } }
+    // Hieroglyphen-Bänder
+    ctx.fillStyle = 'rgba(255,200,110,0.16)';
+    for (const band of [0.14, 0.5, 0.86]) {
+      const y = h * band; ctx.fillRect(0, y - bh * 0.32, w, bh * 0.64);
+      for (let i = 0; i < 40; i++) {
+        const x = (i / 40) * w + bh * 0.2, k = Math.floor(hash(i, band * 10) * 4), sz = bh * 0.2;
+        ctx.fillStyle = 'rgba(40,24,8,0.55)';
+        if (k === 0) ctx.fillRect(x, y - sz, sz * 0.6, sz * 2);
+        else if (k === 1) { ctx.beginPath(); ctx.arc(x + sz * 0.4, y, sz * 0.55, 0, TAU); ctx.fill(); }
+        else if (k === 2) { ctx.beginPath(); ctx.moveTo(x, y + sz); ctx.lineTo(x + sz * 0.5, y - sz); ctx.lineTo(x + sz, y + sz); ctx.closePath(); ctx.fill(); }
+        else { ctx.beginPath(); ctx.ellipse(x + sz * 0.5, y, sz * 0.9, sz * 0.4, 0, 0, TAU); ctx.fill(); }
+        ctx.fillStyle = 'rgba(255,200,110,0.16)';
+      }
+    }
+    // Fackelschein
+    for (const [fx, fy, ph] of [[0.12, 0.3, 0], [0.5, 0.18, 2], [0.88, 0.32, 4]]) {
+      const gl = 0.8 + 0.2 * Math.sin(t * 7 + ph) * Math.sin(t * 3.3 + ph);
+      const rg = ctx.createRadialGradient(fx * w, fy * h, 0, fx * w, fy * h, w * 0.28);
+      rg.addColorStop(0, `rgba(255,170,70,${0.22 * gl})`); rg.addColorStop(1, 'rgba(255,170,70,0)'); ctx.fillStyle = rg; ctx.fillRect(0, 0, w, h);
     }
   }
   /* Innenraum: Bretterwand mit Kerzen- und Hexenschein */
@@ -844,9 +883,10 @@ class Renderer {
     } else if (ob.type === 'potion') {
       items.push({ x: ob.x, y: ob.y, draw: () => this.spritePotion(ctx, ob, t) });
     } else if (ob.type === 'cannon') {
-      items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => this.drawCannon(ctx, ob, t) });
+      items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => ob.style === 'catapult' ? this.drawCatapult(ctx, ob, t) : this.drawCannon(ctx, ob, t) });
     } else if (ob.type === 'door') {
-      items.push({ x: ob.x, y: ob.y, bias: 0.15, noFade: true, draw: () => { const [sx, sy] = this.proj(ob.x, ob.y + 0.35, 0); this.spriteHut(ctx, sx, sy, this.scale * ob.s, t); } });
+      if (ob.style === 'pyramid') items.push({ x: ob.px, y: ob.py, noFade: true, draw: () => this.drawPyramid(ctx, ob, t) });
+      else items.push({ x: ob.x, y: ob.y, bias: 0.15, noFade: true, draw: () => { const [sx, sy] = this.proj(ob.x, ob.y + 0.35, 0); this.spriteHut(ctx, sx, sy, this.scale * ob.s, t); } });
     } else if (ob.type === 'cauldron') {
       items.push({ x: ob.x, y: ob.y, draw: () => this.drawCauldronPot(ctx, ob, t) });
     }
@@ -1258,10 +1298,10 @@ class Renderer {
       ctx.fillStyle = '#1a1a1a'; ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(tx + d * s * 0.5, ty + s * 0.12 + sw * 0.5); ctx.lineTo(tx, ty + s * 0.25); ctx.closePath(); ctx.fill();
       ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(tx + d * s * 0.18, ty + s * 0.12, s * 0.035, 0, TAU); ctx.fill();
       if (ob.docked) { const [lx, ly] = this.proj(ob.x - L * 0.8, ob.y, bob + 1.3); ctx.fillStyle = `rgba(120,255,120,${0.6 + 0.4 * Math.sin(t * 6)})`; ctx.beginPath(); ctx.arc(lx, ly, s * 0.12, 0, TAU); ctx.fill(); }
-    } else if (ob.style === 'cannonball') { // rollende Kanonenkugel
-      const r = ob.w * 0.5, [cx, cy] = this.proj(ob.x, ob.y, r);
+    } else if (ob.style === 'cannonball' || ob.style === 'boulder') { // rollende Kanonenkugel / Felsbrocken
+      const r = ob.w * 0.5, [cx, cy] = this.proj(ob.x, ob.y, r), rock = ob.style === 'boulder';
       const g = ctx.createRadialGradient(cx - r * s * 0.35, cy - r * s * 0.4, r * s * 0.1, cx, cy, r * s);
-      g.addColorStop(0, '#6a6a72'); g.addColorStop(1, '#141418');
+      g.addColorStop(0, rock ? '#a8926e' : '#6a6a72'); g.addColorStop(1, rock ? '#3a2e20' : '#141418');
       ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, r * s, 0, TAU); ctx.fill();
       ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(cx, cy, r * s * 0.9, t * 6 * (ob.dir || 1), t * 6 * (ob.dir || 1) + 1.2); ctx.stroke();
     } else { // Lore
@@ -1334,6 +1374,8 @@ class Renderer {
       case 'gearFlat': this.spriteGearFlat(ctx, d, s, t); break;
       case 'pipe': this.spritePipe(ctx, sx, sy, s, d, t); break;
       case 'clock': this.spriteClock(ctx, sx, sy, s, t); break;
+      case 'obelisk': this.spriteObelisk(ctx, sx, sy, s); break;
+      case 'sarcophagus': this.spriteSarcophagus(ctx, sx, sy, s, d, t); break;
       default: break;
     }
   }
@@ -1491,6 +1533,93 @@ class Renderer {
     ctx.fillStyle = '#b8683a'; ctx.beginPath(); ctx.moveTo(sx - s * 0.18, sy); ctx.quadraticCurveTo(sx - s * 0.4, sy - s * 0.35, sx - s * 0.16, sy - s * 0.6); ctx.lineTo(sx - s * 0.2, sy - s * 0.68); ctx.lineTo(sx + s * 0.2, sy - s * 0.68); ctx.lineTo(sx + s * 0.16, sy - s * 0.6); ctx.quadraticCurveTo(sx + s * 0.4, sy - s * 0.35, sx + s * 0.18, sy); ctx.closePath(); ctx.fill();
     ctx.fillStyle = '#e0a060'; ctx.beginPath(); ctx.moveTo(sx - s * 0.18, sy); ctx.quadraticCurveTo(sx - s * 0.4, sy - s * 0.35, sx - s * 0.16, sy - s * 0.6); ctx.lineTo(sx - s * 0.05, sy - s * 0.6); ctx.quadraticCurveTo(sx - s * 0.2, sy - s * 0.35, sx - s * 0.05, sy); ctx.closePath(); ctx.fill();
     ctx.fillStyle = '#2fb8c9'; ctx.fillRect(sx - s * 0.3, sy - s * 0.42, s * 0.6, s * 0.06);
+  }
+
+  /* Obelisk: schlanke, spitz zulaufende Steinsäule mit goldener Spitze */
+  spriteObelisk(ctx, sx, sy, s) {
+    this.shadow(ctx, sx, sy, s * 0.35);
+    ctx.fillStyle = '#b8955a'; ctx.fillRect(sx - s * 0.32, sy - s * 0.18, s * 0.64, s * 0.18);
+    ctx.fillStyle = '#d9b979'; ctx.beginPath(); ctx.moveTo(sx - s * 0.18, sy - s * 0.18); ctx.lineTo(sx - s * 0.1, sy - s * 1.9); ctx.lineTo(sx + s * 0.1, sy - s * 1.9); ctx.lineTo(sx + s * 0.18, sy - s * 0.18); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#8a6a34'; ctx.beginPath(); ctx.moveTo(sx, sy - s * 0.18); ctx.lineTo(sx, sy - s * 1.9); ctx.lineTo(sx + s * 0.1, sy - s * 1.9); ctx.lineTo(sx + s * 0.18, sy - s * 0.18); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#ffd166'; ctx.beginPath(); ctx.moveTo(sx - s * 0.1, sy - s * 1.9); ctx.lineTo(sx, sy - s * 2.15); ctx.lineTo(sx + s * 0.1, sy - s * 1.9); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(40,24,8,0.45)'; for (let i = 0; i < 5; i++) { const y = sy - s * (0.45 + i * 0.28); ctx.fillRect(sx - s * 0.04, y, s * 0.08, s * (i % 2 ? 0.06 : 0.12)); }
+  }
+  /* Sarkophag: goldener Kasten mit blauen Streifen und Pharaonenmaske */
+  spriteSarcophagus(ctx, sx, sy, s, d, t) {
+    this.shadow(ctx, sx, sy, s * 0.55);
+    const w = s * 0.42, h = s * 0.5;
+    ctx.fillStyle = '#8a6a2a'; ctx.fillRect(sx - w, sy - h, 2 * w, h);
+    ctx.fillStyle = '#e0b84a'; ctx.beginPath(); ctx.moveTo(sx - w, sy - h); ctx.lineTo(sx - w * 0.85, sy - h - s * 0.55); ctx.lineTo(sx + w * 0.85, sy - h - s * 0.55); ctx.lineTo(sx + w, sy - h); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#2f6fb0'; for (let i = 0; i < 3; i++) ctx.fillRect(sx - w * 0.8 + i * w * 0.6, sy - h - s * 0.5, w * 0.18, s * 0.45);
+    ctx.fillStyle = '#c99a3a'; ctx.fillRect(sx - w, sy - h * 0.55, 2 * w, h * 0.12);
+    // Maske
+    ctx.fillStyle = '#ffd166'; ctx.beginPath(); ctx.ellipse(sx, sy - h - s * 0.28, s * 0.14, s * 0.17, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#1e3a6a'; ctx.fillRect(sx - s * 0.2, sy - h - s * 0.45, s * 0.4, s * 0.07);
+    ctx.fillStyle = '#2a1a08'; ctx.beginPath(); ctx.arc(sx - s * 0.05, sy - h - s * 0.3, s * 0.02, 0, TAU); ctx.arc(sx + s * 0.05, sy - h - s * 0.3, s * 0.02, 0, TAU); ctx.fill();
+  }
+
+  /* Stufenpyramide aus Sandstein: vier kantige Stufen, goldene Spitze und der dunkle Eingang an der Nordseite.
+     ob.px/ob.py = Mittelpunkt der Grundfläche, ob.base = Kantenlänge, ob.x/ob.y = Tür */
+  drawPyramid(ctx, ob, t) {
+    const s = this.scale, cx = ob.px, cy = ob.py, B = ob.base;
+    const tiers = [[B, 1.3], [B * 0.76, 1.2], [B * 0.53, 1.1], [B * 0.31, 1.0]];
+    let z = 0;
+    for (const [w, hh] of tiers) {
+      const half = w / 2, poly = [[cx - half, cy - half], [cx + half, cy - half], [cx + half, cy + half], [cx - half, cy + half]];
+      this.prism(ctx, poly, z, hh, '#e3c48f', '#a37a3e', { outline: '#7a5a2a' });
+      // Fugen auf den sichtbaren Seiten
+      ctx.strokeStyle = 'rgba(60,40,10,0.25)'; ctx.lineWidth = 1;
+      for (const [ax, ay, bx, by, nx, ny] of [[cx - half, cy + half, cx + half, cy + half, 0, 1], [cx + half, cy - half, cx + half, cy + half, 1, 0], [cx - half, cy - half, cx + half, cy - half, 0, -1], [cx - half, cy - half, cx - half, cy + half, -1, 0]]) {
+        if (nx * this.cam.sin + ny * this.cam.cos <= 0.001) continue;
+        for (let k = 1; k < 3; k++) { const zz = z + hh * k / 3; const p0 = this.proj(ax, ay, zz), p1 = this.proj(bx, by, zz); ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke(); }
+      }
+      z += hh;
+    }
+    // goldene Spitze
+    const capHalf = B * 0.11, cap = [[cx - capHalf, cy - capHalf], [cx + capHalf, cy - capHalf], [cx + capHalf, cy + capHalf], [cx - capHalf, cy + capHalf]];
+    const apex = this.proj(cx, cy, z + 1.0), corners = cap.map(p => this.proj(p[0], p[1], z));
+    for (let i = 0; i < 4; i++) { const a = corners[i], b = corners[(i + 1) % 4]; ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.lineTo(apex[0], apex[1]); ctx.closePath(); ctx.fillStyle = i % 2 ? '#e0b84a' : '#b8892a'; ctx.fill(); ctx.strokeStyle = '#7a5a10'; ctx.lineWidth = 0.8; ctx.stroke(); }
+    const gl = 0.7 + 0.3 * Math.sin(t * 2);
+    ctx.fillStyle = `rgba(255,230,140,${0.35 * gl})`; ctx.beginPath(); ctx.arc(apex[0], apex[1], s * 0.5 * gl, 0, TAU); ctx.fill();
+    // Eingang an der Nordseite (nur wenn diese Seite zur Kamera zeigt)
+    if (-this.cam.cos > 0.001) {
+      const fy = cy - B / 2 - 0.01, w2 = 0.7, top = 1.15;
+      ctx.fillStyle = '#c9a468'; ctx.beginPath();
+      for (const [u, zz] of [[-w2 - 0.3, 0], [-w2 - 0.3, top + 0.35], [w2 + 0.3, top + 0.35], [w2 + 0.3, 0]]) { const q = this.proj(ob.x + u, fy, zz); ctx.lineTo(q[0], q[1]); }
+      ctx.closePath(); ctx.fill(); ctx.strokeStyle = '#7a5a2a'; ctx.lineWidth = Math.max(1, s * 0.04); ctx.stroke();
+      ctx.fillStyle = '#140c04'; ctx.beginPath();
+      for (const [u, zz] of [[-w2, 0], [-w2, top - 0.35], [0, top], [w2, top - 0.35], [w2, 0]]) { const q = this.proj(ob.x + u, fy, zz); ctx.lineTo(q[0], q[1]); }
+      ctx.closePath(); ctx.fill();
+      // Fackeln links und rechts
+      for (const side of [-1, 1]) {
+        const [tx, ty] = this.proj(ob.x + side * (w2 + 0.45), fy - 0.02, 1.0), f = 0.8 + 0.2 * Math.sin(t * 9 + side);
+        ctx.fillStyle = '#5a3a1a'; ctx.fillRect(tx - s * 0.03, ty, s * 0.06, s * 0.3);
+        ctx.fillStyle = `rgba(255,150,40,${0.3 * f})`; ctx.beginPath(); ctx.arc(tx, ty - s * 0.05, s * 0.3 * f, 0, TAU); ctx.fill();
+        ctx.fillStyle = '#ff9a2a'; ctx.beginPath(); ctx.ellipse(tx, ty - s * 0.08, s * 0.06, s * 0.13 * f, 0, 0, TAU); ctx.fill();
+      }
+    }
+  }
+
+  /* Katapult: Holzgestell mit Wurfarm, der sich in Zielrichtung dreht; der geladene Ball liegt in der Schale */
+  drawCatapult(ctx, ob, t) {
+    const s = this.scale, dx = Math.cos(ob.angle), dy = Math.sin(ob.angle), nx = -dy, ny = dx;
+    const rect = (px, py, w, h) => [[px - dx * w / 2 - nx * h / 2, py - dy * w / 2 - ny * h / 2], [px + dx * w / 2 - nx * h / 2, py + dy * w / 2 - ny * h / 2], [px + dx * w / 2 + nx * h / 2, py + dy * w / 2 + ny * h / 2], [px - dx * w / 2 + nx * h / 2, py - dy * w / 2 + ny * h / 2]];
+    // Sockel und zwei Balken quer zur Wurfrichtung
+    this.prism(ctx, rect(ob.x, ob.y, 1.5, 1.2), 0, 0.2, '#8a6a3a', '#4a3418', { outline: '#2a1c0c' });
+    for (const side of [-0.42, 0.42]) this.prism(ctx, rect(ob.x + nx * side, ob.y + ny * side, 0.18, 0.18), 0.2, 0.75, '#a8804a', '#5a3e1c');
+    // Wurfarm: in Ruhe steil nach hinten, beim Abschuss klappt er nach vorn
+    const ph = t - ob.firedAt, fwd = ph < 0 ? 0 : ph < 0.3 ? ph / 0.3 : ph < 1.1 ? 1 - (ph - 0.3) / 0.8 : 0;
+    const restX = ob.x - dx * 0.35, restY = ob.y - dy * 0.35, restZ = 1.05, fireX = ob.x + dx * 0.95, fireY = ob.y + dy * 0.95, fireZ = 1.3;
+    const tipX = restX + (fireX - restX) * fwd, tipY = restY + (fireY - restY) * fwd, tipZ = restZ + (fireZ - restZ) * fwd;
+    const pivot = this.proj(ob.x, ob.y, 0.95), tip = this.proj(tipX, tipY, tipZ);
+    const cwX = ob.x - (tipX - ob.x) * 0.5, cwY = ob.y - (tipY - ob.y) * 0.5, cwZ = 0.95 - (tipZ - 0.95) * 0.5, cw = this.proj(cwX, cwY, cwZ);
+    ctx.lineCap = 'round'; ctx.strokeStyle = '#6b4a22'; ctx.lineWidth = Math.max(3, s * 0.11);
+    ctx.beginPath(); ctx.moveTo(cw[0], cw[1]); ctx.lineTo(tip[0], tip[1]); ctx.stroke();
+    ctx.fillStyle = '#4a4a52'; ctx.beginPath(); ctx.arc(cw[0], cw[1], s * 0.16, 0, TAU); ctx.fill(); // Gegengewicht
+    ctx.fillStyle = '#3a2a14'; ctx.beginPath(); ctx.arc(pivot[0], pivot[1], s * 0.07, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#8a6a3a'; ctx.beginPath(); ctx.ellipse(tip[0], tip[1] + s * 0.02, s * 0.2, s * 0.1, 0, 0, TAU); ctx.fill(); // Schale
+    ctx.strokeStyle = '#3a2a14'; ctx.lineWidth = 1; ctx.stroke();
+    if (ob.loaded) { const f = 0.6 + 0.4 * Math.sin(t * 14); ctx.strokeStyle = `rgba(255,220,120,${f})`; ctx.lineWidth = Math.max(1.5, s * 0.05); ctx.beginPath(); ctx.ellipse(tip[0], tip[1], s * 0.3, s * 0.16, 0, 0, TAU); ctx.stroke(); }
   }
 
   /* Hexenhütte: schiefe Bretterhütte mit Schindeldach, Schornstein, leuchtendem Fenster und Tür */
