@@ -76,7 +76,7 @@ function stepPhysics(level, ball, dt, t, allowForces) {
       ball.z = 0; ball.vz = 0; ball.air = false;
       ball.vx *= 0.6; ball.vy *= 0.6;
       events.push({ type: 'land', x: ball.x, y: ball.y });
-      for (const ob of level.obstacles) if (ob.catch && ob.catch(ball, t, events)) return events;
+      for (const ob of level.obstacles) if (typeof ob.catch === 'function' && ob.catch(ball, t, events)) return events;
     } else return events;
   }
 

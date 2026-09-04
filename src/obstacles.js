@@ -274,7 +274,7 @@ class Magnet {
    in Rohrrichtung abgefeuert, Flugweite 'range' */
 class Cannon {
   constructor(d) {
-    Object.assign(this, { amp: 0.35, speed: 1.0, phase: 0, base: 0, range: 9, loadTime: 0.7, catch: 0.6, flySpeed: 8 }, d);
+    Object.assign(this, { amp: 0.35, speed: 1.0, phase: 0, base: 0, range: 9, loadTime: 0.7, catchR: 0.6, flySpeed: 8 }, d);
     this.type = 'cannon'; this.angle = this.base; this.loaded = false;
   }
   update(t) { this.angle = this.base + this.amp * Math.sin(t * this.speed + this.phase); }
@@ -293,7 +293,7 @@ class Cannon {
       return true;
     }
     if (ball.rideCd > 0 || ball.air) return false;
-    if (Math.hypot(ball.x - this.x, ball.y - this.y) < this.catch) {
+    if (Math.hypot(ball.x - this.x, ball.y - this.y) < this.catchR) {
       ball.rider = this; ball.fireAt = t + this.loadTime; this.loaded = true;
       ball.x = this.x; ball.y = this.y; ball.vx = 0; ball.vy = 0; ball.z = 0.55;
       events.push({ type: 'load', x: this.x, y: this.y });

@@ -61,7 +61,7 @@ const PRO_COURSES = [
       '..........................',
     ],
     obstacles: [
-      { type: 'cannon', x: 6.9, y: 4.5, base: 0, amp: 0.5, speed: 0.9, range: 12.5, catch: 0.6, loadTime: 0.7 },
+      { type: 'cannon', x: 6.9, y: 4.5, base: 0, amp: 0.5, speed: 0.9, range: 12.5, catchR: 0.6, loadTime: 0.7 },
       { type: 'rotor', x: 4.5, y: 2.2, blades: 1, len: 1.2, thick: 0.14, hubR: 0.25, style: 'log', swing: { amp: 1.1, speed: 2.2 }, phase: 0 },
       { type: 'rotor', x: 4.5, y: 6.8, blades: 1, len: 1.2, thick: 0.14, hubR: 0.25, style: 'log', swing: { amp: 1.1, speed: 2.2 }, phase: Math.PI },
     ],
