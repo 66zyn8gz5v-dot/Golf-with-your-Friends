@@ -34,7 +34,7 @@
 
   /* ---------- UI ---------- */
   function showMessage(text, ms = 1600) {
-    ui.msg.textContent = text; ui.msg.classList.add('visible');
+    ui.msg.textContent = text; ui.msg.classList.add('visible'); ui.msg.classList.toggle('small', text.length > 40);
     clearTimeout(msgTimer); msgTimer = setTimeout(() => ui.msg.classList.remove('visible'), ms);
   }
   function updateHud() {
@@ -560,7 +560,7 @@
   const fsAllowed = () => (document.fullscreenEnabled ?? document.webkitFullscreenEnabled ?? true) && !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
   function fsFallback() {
     let w = null; try { w = window.open(location.href, '_blank'); } catch (e) { /* blockiert */ }
-    if (!w) showMessage('Vollbild hier nicht möglich – öffne das Spiel über das Öffnen-Symbol in einem eigenen Fenster', 3400);
+    if (!w) showMessage('Vollbild geht hier nicht. Tippe oben rechts auf das Teilen-Symbol und öffne das Spiel im Browser. Dort klappt Vollbild.', 5000);
   }
   function toggleFullscreen() {
     const root = document.documentElement;

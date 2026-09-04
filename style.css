@@ -44,8 +44,10 @@ html, body {
   position: fixed; left: 50%; top: 18%; transform: translateX(-50%);
   font-size: 34px; font-weight: bold; text-align: center; pointer-events: none;
   color: #fff3c4; text-shadow: 0 2px 0 #7a4a00, 0 0 18px rgba(255,200,80,0.8);
-  opacity: 0; transition: opacity 0.25s; white-space: nowrap;
+  opacity: 0; transition: opacity 0.25s; white-space: normal; width: max-content; max-width: min(90vw, 720px); line-height: 1.2;
 }
+#message { z-index: 13; }
+#message.small { font-size: 22px; background: rgba(20,16,40,0.85); border: 2px solid rgba(255,215,120,0.55); border-radius: 12px; padding: 10px 16px; top: 30%; }
 #message.visible { opacity: 1; }
 
 #hint {
