@@ -86,8 +86,40 @@ function buildLevel(def) {
   const obstacles = createObstacles(def.obstacles || []);
   const decor = buildDecor(def, tiles, W, H, isFloor);
 
+  // Höhenstufen (optional): def.heights ist ein Ziffernraster wie die Karte, def.hStep die Höhe je Stufe.
+  // Steigungsfelder (field mit rise) verbinden zwei Stufen als schräge Ebene.
+  const hStep = def.hStep || 0.5, hasHeights = !!def.heights;
+  const hgrid = tiles.map((row, y) => row.map((c, x) => { const ch = def.heights && def.heights[y] && def.heights[y][x]; return ch >= '0' && ch <= '9' ? +ch : 0; }));
+  const slopes = obstacles.filter(o => o.type === 'field' && o.rise);
+  const cellH = (tx, ty) => (tx < 0 || ty < 0 || tx >= W || ty >= H) ? 0 : hgrid[ty][tx] * hStep;
+  const slopeAt = (x, y) => slopes.find(f => x >= f.x && x <= f.x + f.w && y >= f.y && y <= f.y + f.h);
+  const floorHeight = (x, y, tx, ty) => { // Höhe eines Punktes innerhalb einer Bodenkachel (mit Rampen-Interpolation)
+    const f = slopeAt(x, y);
+    if (!f) return cellH(tx, ty);
+    const L = Math.hypot(f.fx, f.fy) || 1, dx = f.fx / L, dy = f.fy / L; // (fx,fy) zeigt bergab
+    const cx = f.x + f.w / 2, cy = f.y + f.h / 2, half = Math.abs(dx) > 0.5 ? f.w / 2 : f.h / 2;
+    const u = Math.max(0, Math.min(1, 0.5 - ((x - cx) * dx + (y - cy) * dy) / (2 * half)));
+    return f.base * hStep + f.rise * hStep * u;
+  };
+  const heightAt = (x, y) => {
+    if (!hasHeights) return 0;
+    const tx = Math.floor(x), ty = Math.floor(y);
+    if (isFloor(tx, ty)) return floorHeight(x, y, tx, ty);
+    // Leere Kachel: Höhe der nächstgelegenen Bodenkachel (erst orthogonal, dann diagonal)
+    let best = null, bd = Infinity;
+    for (const [ox, oy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const nx = tx + ox, ny = ty + oy; if (!isFloor(nx, ny)) continue;
+      const px = Math.min(nx + 0.999, Math.max(nx + 0.001, x)), py = Math.min(ny + 0.999, Math.max(ny + 0.001, y));
+      const d = Math.hypot(px - x, py - y); if (d < bd) { bd = d; best = floorHeight(px, py, nx, ny); }
+    }
+    if (best !== null) return best;
+    let m = 0; for (const [ox, oy] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) if (isFloor(tx + ox, ty + oy)) m = Math.max(m, cellH(tx + ox, ty + oy));
+    return m;
+  };
+
   const level = {
     def, W, H, tiles, tee, cup, goal, blocks, segs, walls, obstacles, decor, switches: {},
+    hasHeights, hStep, heightAt, cellH, slopeAt,
     charAt(x, y) { return at(Math.floor(x), Math.floor(y)); },
     isFloorChar(c) { return FLOOR_CHARS.has(c); },
   };

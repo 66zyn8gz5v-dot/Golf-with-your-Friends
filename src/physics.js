@@ -92,7 +92,16 @@ function stepPhysics(level, ball, dt, t, allowForces) {
     if (ns > MAX_SPEED) ns = MAX_SPEED;
     ball.vx *= ns / sp; ball.vy *= ns / sp;
   }
+  const px = ball.x, py = ball.y;
   ball.x += ball.vx * dt; ball.y += ball.vy * dt;
+  if (level.hasHeights) { // eine Stufe hinauf geht nur über eine Rampe – sonst wirkt die Kante wie eine Mauer
+    const tx0 = Math.floor(px), ty0 = Math.floor(py), tx1 = Math.floor(ball.x), ty1 = Math.floor(ball.y);
+    if ((tx0 !== tx1 || ty0 !== ty1) && level.cellH(tx1, ty1) > level.cellH(tx0, ty0) + 0.01 && !level.slopeAt(px, py) && !level.slopeAt(ball.x, ball.y)) {
+      if (tx0 !== tx1) { ball.x = px; ball.vx = -ball.vx * 0.5; }
+      if (ty0 !== ty1) { ball.y = py; ball.vy = -ball.vy * 0.5; }
+      events.push({ type: 'bounce', speed: Math.hypot(ball.vx, ball.vy), kind: 'wall', x: ball.x, y: ball.y });
+    }
+  }
 
   // Sprung-Optik (z beeinflusst die Bahn nicht)
   if (ball.z > 0 || ball.vz !== 0) {

@@ -153,7 +153,7 @@ const THEMES = {
     block: { top: '#d9b57a', side: '#8a6a3c' },
     mover: { top: '#d9dde6', side: '#7f8694' },
     rotor: { top: '#c9a15a', side: '#7a5a2a' },
-    accent: '#2fb8c9', flag: '#2fb8c9',
+    accent: '#2fb8c9', flag: '#2fb8c9', cliff: '#c9a469',
     autoDecor: ['palm', 'cactus', 'urn', 'rock', 'cactus'],
   },
   castle: {

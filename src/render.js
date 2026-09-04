@@ -61,6 +61,10 @@ class Renderer {
     this.updateTrig();
   }
   proj(x, y, z = 0) {
+    if (this.level && this.level.hasHeights) z += this.level.heightAt(x, y);
+    return this.projRaw(x, y, z);
+  }
+  projRaw(x, y, z = 0) {
     const c = this.cam, dx = x - c.fx, dy = y - c.fy;
     const rx = dx * c.cos - dy * c.sin, ry = dx * c.sin + dy * c.cos;
     return [c.cx + rx * c.zoom, c.cy + ry * c.zoom * c.tilt - z * c.zoom * CAM_ZF];
@@ -133,13 +137,17 @@ class Renderer {
         if (this.onScreen(sx, sy, cull * 2)) this.prism(ctx, [[x, y], [x + 1, y], [x + 1, y + 1], [x, y + 1]], -1.3, 1.3, th.ground, th.groundEdge);
       }
     } else this.prism(ctx, slab, -1.0, 1.0, th.ground, th.groundEdge);
-    // Kacheln
-    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    // Kacheln (mit Höhenstufen: von hinten nach vorn, jede mit ihren Klippenwänden)
+    const cells = [];
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) cells.push([x, y]);
+    if (this.level.hasHeights) cells.sort((a, b) => this.depth(a[0] + 0.5, a[1] + 0.5) - this.depth(b[0] + 0.5, b[1] + 0.5));
+    for (const [x, y] of cells) {
       const c = tiles[y][x];
       if (c === '.' || c === 'x' || c === 'w' || c === 'l') continue;
       const [tsx, tsy] = this.proj(x + 0.5, y + 0.5);
       if (!this.onScreen(tsx, tsy, cull)) continue;
       const poly = [[x, y], [x + 1, y], [x + 1, y + 1], [x, y + 1]];
+      if (this.level.hasHeights) this.drawCliffs(ctx, x, y);
       let col;
       if (c === 's') col = th.sand; else if (c === 'i') col = th.ice; else col = th.floor[(x + y) & 1];
       this.fillPoly(ctx, poly, 0, col);
@@ -160,6 +168,31 @@ class Renderer {
     this.isoEllipse(ctx, t.x, t.y, 0, 0.5, 'rgba(0,0,0,0.18)');
     this.isoEllipse(ctx, t.x, t.y, 0.01, 0.42, th.accent);
     this.isoEllipse(ctx, t.x, t.y, 0.02, 0.3, shade(th.accent, 0.8));
+  }
+
+  /* Klippenwände einer erhöhten Kachel zu tieferen oder leeren Nachbarn */
+  drawCliffs(ctx, x, y) {
+    const lv = this.level, th = this.theme, e = 0.002;
+    const isFloor = (tx, ty) => lv.isFloorChar(lv.charAt(tx + 0.5, ty + 0.5)) && lv.charAt(tx + 0.5, ty + 0.5) !== 'x';
+    const edges = [[[x, y], [x + 1, y], 0, -1], [[x + 1, y], [x + 1, y + 1], 1, 0], [[x + 1, y + 1], [x, y + 1], 0, 1], [[x, y + 1], [x, y], -1, 0]];
+    for (const [a, b, nx, ny] of edges) {
+      if (nx * this.cam.sin + ny * this.cam.cos <= 0.001) continue; // von der Kamera abgewandt
+      const nb = isFloor(x + nx, y + ny);
+      const ins = p => [p[0] + (x + 0.5 - p[0]) * e * 8, p[1] + (y + 0.5 - p[1]) * e * 8];
+      const ia = ins(a), ib = ins(b);
+      const za = lv.heightAt(ia[0], ia[1]), zb = lv.heightAt(ib[0], ib[1]);
+      let zlA = 0, zlB = 0;
+      if (nb) { const oa = [a[0] + nx * e * 8, a[1] + ny * e * 8], ob = [b[0] + nx * e * 8, b[1] + ny * e * 8]; zlA = lv.heightAt(oa[0], oa[1]); zlB = lv.heightAt(ob[0], ob[1]); }
+      if (za - zlA < 0.02 && zb - zlB < 0.02) continue;
+      const light = 0.62 + 0.38 * (0.5 + 0.5 * (nx * 0.85 - ny * 0.53));
+      const p0 = this.projRaw(a[0], a[1], zlA), p1 = this.projRaw(b[0], b[1], zlB), p2 = this.projRaw(b[0], b[1], zb), p3 = this.projRaw(a[0], a[1], za);
+      ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.lineTo(p2[0], p2[1]); ctx.lineTo(p3[0], p3[1]); ctx.closePath();
+      ctx.fillStyle = shade(th.cliff || th.groundEdge, light); ctx.fill(); ctx.strokeStyle = ctx.fillStyle; ctx.lineWidth = 0.8; ctx.stroke();
+      // Fugen
+      ctx.strokeStyle = 'rgba(0,0,0,0.18)'; ctx.lineWidth = 1;
+      const n = Math.max(1, Math.round((Math.max(za - zlA, zb - zlB)) / 0.25));
+      for (let k = 1; k < n; k++) { const u = k / n; const q0 = this.projRaw(a[0], a[1], zlA + (za - zlA) * u), q1 = this.projRaw(b[0], b[1], zlB + (zb - zlB) * u); ctx.beginPath(); ctx.moveTo(q0[0], q0[1]); ctx.lineTo(q1[0], q1[1]); ctx.stroke(); }
+    }
   }
 
   /* ---------- Frame ---------- */
@@ -1123,6 +1156,20 @@ class Renderer {
         ctx.strokeStyle = '#e0304a'; ctx.lineWidth = Math.max(1.5, s * 0.05); ctx.lineCap = 'round';
         ctx.beginPath(); ctx.moveTo(t0x, t0y); ctx.lineTo(t1x, t1y); ctx.lineTo(taX, taY); ctx.moveTo(t1x, t1y); ctx.lineTo(tbX, tbY); ctx.stroke();
       }
+    } else if (ob.style === 'guard') { // Palastwache: Gewand, Schärpe, Turban mit Edelstein, Krummsäbel
+      const body = this.circlePoly(ob.x, ob.y, ob.w * 0.42, 8);
+      this.prism(ctx, body, 0.05, 0.7, '#f3e6c4', '#c9a15a', { outline: '#8a6a3a' });
+      this.fillPoly(ctx, this.circlePoly(ob.x, ob.y, ob.w * 0.43, 8), 0.45, '#2fb8c9', false);
+      const [hx, hy] = this.proj(ob.x, ob.y, 0.95);
+      ctx.fillStyle = '#c98a5a'; ctx.beginPath(); ctx.arc(hx, hy, s * 0.2, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#fff4dc'; ctx.beginPath(); ctx.ellipse(hx, hy - s * 0.14, s * 0.27, s * 0.18, 0, Math.PI, TAU); ctx.fill();
+      ctx.fillStyle = '#d93b3b'; ctx.fillRect(hx - s * 0.27, hy - s * 0.16, s * 0.54, s * 0.06);
+      ctx.fillStyle = '#2fb8c9'; ctx.beginPath(); ctx.arc(hx, hy - s * 0.2, s * 0.05, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#3a2a1a'; ctx.fillRect(hx - s * 0.12, hy + s * 0.02, s * 0.24, s * 0.05);
+      const [sx0, sy0] = this.proj(ob.x + ob.dir * 0.05, ob.y + 0.4, 0.5);
+      ctx.strokeStyle = '#dfe6ee'; ctx.lineWidth = Math.max(2, s * 0.07); ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(sx0, sy0); ctx.quadraticCurveTo(sx0 + s * 0.25, sy0 - s * 0.25, sx0 + s * 0.2 + Math.sin(t * 6) * s * 0.03, sy0 - s * 0.55); ctx.stroke();
+      ctx.fillStyle = '#c9a15a'; ctx.beginPath(); ctx.arc(sx0, sy0, s * 0.05, 0, TAU); ctx.fill();
     } else if (ob.style === 'knight') {
       const body = this.circlePoly(ob.x, ob.y, ob.w * 0.42, 8);
       this.prism(ctx, body, 0.05, 0.7, '#d9dde6', '#7f8694', { outline: '#4a505c' });
