@@ -52,6 +52,11 @@ html, body {
   position: fixed; left: 12px; bottom: 12px; font-size: 13px; opacity: 0.75; pointer-events: none;
   background: rgba(20,16,40,0.6); padding: 4px 10px; border-radius: 8px;
 }
+#fs-btn { position: fixed; top: 12px; left: 50%; transform: translateX(-50%); z-index: 12; font-size: 14px; height: 36px; opacity: 0.92; }
+body.editing #fs-btn { left: 12px; transform: none; }
+body.fullscreen #fs-btn { opacity: 0.55; }
+@media (max-width: 600px) { #fs-btn { top: auto; bottom: 12px; left: auto; right: 12px; transform: none; } body.editing #fs-btn { left: auto; } }
+
 #controls { position: fixed; left: 12px; bottom: 44px; display: flex; gap: 6px; flex-wrap: wrap; max-width: calc(100vw - 24px); }
 .cbtn.creative { display: none; background: rgba(60, 30, 90, 0.8); border-color: #c77dff; }
 body.creative .cbtn.creative { display: inline-block; }

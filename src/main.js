@@ -547,6 +547,7 @@
   window.addEventListener('keydown', e => {
     if (e.key === 'Escape' && drag) { drag = null; state.aim = null; }
     if (e.key === 'm' || e.key === 'M') toggleOverview();
+    if (e.key === 'f' || e.key === 'F') toggleFullscreen();
     if (e.key === '+') zoomBy(1.25); if (e.key === '-') zoomBy(0.8);
     if (e.key === 'n' || e.key === 'N') jumpHole(1);
     if (e.key === 'p' || e.key === 'P') jumpHole(-1);
@@ -554,6 +555,32 @@
     if (e.key === 'q' || e.key === 'ArrowLeft') rotateBy(-Math.PI / 4);
     if (e.key === 'e' || e.key === 'ArrowRight') rotateBy(Math.PI / 4);
   });
+  /* Vollbild: im eigenen Fenster per Fullscreen-API; in einem Rahmen ohne Vollbild-Recht wird das Spiel in einem eigenen Tab geöffnet */
+  const fsEl = () => document.fullscreenElement || document.webkitFullscreenElement || null;
+  const fsAllowed = () => (document.fullscreenEnabled ?? document.webkitFullscreenEnabled ?? true) && !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
+  function fsFallback() {
+    let w = null; try { w = window.open(location.href, '_blank'); } catch (e) { /* blockiert */ }
+    if (!w) showMessage('Vollbild hier nicht möglich – öffne das Spiel über das Öffnen-Symbol in einem eigenen Fenster', 3400);
+  }
+  function toggleFullscreen() {
+    const root = document.documentElement;
+    if (fsEl()) { const ex = document.exitFullscreen || document.webkitExitFullscreen; if (ex) ex.call(document); return; }
+    if (!fsAllowed()) { fsFallback(); return; }
+    try {
+      const req = root.requestFullscreen || root.webkitRequestFullscreen;
+      const p = req.call(root, { navigationUI: 'hide' });
+      if (p && p.catch) p.catch(fsFallback);
+    } catch (e) { fsFallback(); }
+  }
+  function syncFullscreen() {
+    const on = !!fsEl();
+    document.body.classList.toggle('fullscreen', on);
+    $('fs-btn').textContent = on ? '⛶ Vollbild aus' : '⛶ Vollbild';
+    R.resize();
+  }
+  document.addEventListener('fullscreenchange', syncFullscreen);
+  document.addEventListener('webkitfullscreenchange', syncFullscreen);
+  $('fs-btn').addEventListener('click', () => { Sfx.unlock(); toggleFullscreen(); });
   function toggleOverview() { if (state.ball) setCamMode(state.camMode === 'overview' ? 'follow' : 'overview'); }
   function zoomBy(f) { state.zoomFactor = Math.max(0.5, Math.min(2.2, state.zoomFactor * f)); if (state.camMode === 'overview' && state.ball) setCamMode('follow'); }
   function rotateBy(a) { state.camTheta += a; if (state.camMode === 'overview' && state.ball) setCamMode('follow'); }
