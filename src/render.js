@@ -675,7 +675,12 @@ class Renderer {
       this.isoEllipse(ctx, ob.x, ob.y, 0.004, ob.r + 0.12, 'rgba(255,255,255,0.22)');
       this.isoEllipse(ctx, ob.x, ob.y, 0.005, ob.r, 'rgba(0,0,0,0.18)');
     } else if (ob.type === 'rotor') {
-      this.isoEllipse(ctx, ob.x, ob.y, 0.004, ob.len + 0.2, 'rgba(0,0,0,0.08)');
+      if (ob.swing) { // Pendel/Weiche: nur den Schwenkbereich als Fächer markieren
+        const [cx, cy] = this.proj(ob.x, ob.y, 0.004);
+        ctx.fillStyle = 'rgba(0,0,0,0.1)'; ctx.beginPath(); ctx.moveTo(cx, cy);
+        for (let k = 0; k <= 12; k++) { const a = ob.phase - ob.swing.amp + (k / 12) * 2 * ob.swing.amp; const [px, py] = this.proj(ob.x + Math.cos(a) * (ob.len + 0.2), ob.y + Math.sin(a) * (ob.len + 0.2), 0.004); ctx.lineTo(px, py); }
+        ctx.closePath(); ctx.fill();
+      } else this.isoEllipse(ctx, ob.x, ob.y, 0.004, ob.len + 0.2, 'rgba(0,0,0,0.08)');
     } else if (ob.type === 'gate') {
       const poly = [[ob.x - ob.w / 2, ob.y - ob.h / 2], [ob.x + ob.w / 2, ob.y - ob.h / 2], [ob.x + ob.w / 2, ob.y + ob.h / 2], [ob.x - ob.w / 2, ob.y + ob.h / 2]];
       this.fillPoly(ctx, poly, 0.005, ob.closed ? 'rgba(255,80,80,0.35)' : 'rgba(120,255,120,0.25)', false);
