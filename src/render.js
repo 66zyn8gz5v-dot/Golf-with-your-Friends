@@ -631,14 +631,16 @@ class Renderer {
         ctx.beginPath(); ctx.moveTo(p2[0], p2[1]); ctx.lineTo(p1[0], p1[1]); ctx.lineTo(p3[0], p3[1]); ctx.closePath(); ctx.fill();
       }
     } else if (ob.type === 'magnet') {
-      const attract = ob.strength > 0, col = attract ? '120,220,255' : '255,120,200';
+      const kind = ob.slow ? 'slow' : ob.strength > 0 ? 'attract' : 'repel';
+      const col = ob.style === 'coral' ? (kind === 'attract' ? '255,110,110' : kind === 'repel' ? '110,230,130' : '110,180,255') : (kind === 'attract' ? '120,220,255' : '255,120,200');
       this.isoEllipse(ctx, ob.x, ob.y, 0.003, ob.r, `rgba(${col},0.07)`);
       const [cx, cy] = this.proj(ob.x, ob.y, 0.006);
       ctx.lineWidth = Math.max(1, s * 0.05);
       for (let i = 0; i < 4; i++) {
-        let u = (t * 0.45 + i / 4) % 1; if (attract) u = 1 - u;
+        let u = (t * 0.45 + i / 4) % 1; if (kind === 'attract') u = 1 - u;
+        if (kind === 'slow') u = (i + 1) / 5; // Bremsfeld: stehende Ringe, die nur pulsieren
         const rr = ob.core + (ob.r - ob.core) * u;
-        ctx.strokeStyle = `rgba(${col},${0.45 * (1 - u) + 0.08})`;
+        ctx.strokeStyle = `rgba(${col},${kind === 'slow' ? 0.2 + 0.15 * Math.sin(t * 2 + i) : 0.45 * (1 - u) + 0.08})`;
         ctx.beginPath(); ctx.ellipse(cx, cy, rr * s, rr * s * this.cam.tilt, 0, 0, TAU); ctx.stroke();
       }
     } else if (ob.type === 'cannon') {
@@ -754,7 +756,14 @@ class Renderer {
       } });
     } else if (ob.type === 'magnet') {
       items.push({ x: ob.x, y: ob.y, draw: () => {
-        const attract = ob.strength > 0, s = this.scale;
+        const kind = ob.slow ? 'slow' : ob.strength > 0 ? 'attract' : 'repel', s = this.scale;
+        if (ob.style === 'coral') {
+          const cols = kind === 'attract' ? ['#ff6a6a', '#a8202a'] : kind === 'repel' ? ['#6fe07a', '#1f7a30'] : ['#6fb0ff', '#1f4a9a'];
+          const [sx, sy] = this.proj(ob.x, ob.y, 0);
+          this.spriteCoralBig(ctx, sx, sy, s * ob.core * 4.2, cols[0], cols[1], t);
+          return;
+        }
+        const attract = kind === 'attract';
         this.spriteCrystal(ctx, ob.x, ob.y, 0, ob.core * 3.4, attract ? '#cfeeff' : '#ffd0ee', attract ? '#4a8ad0' : '#c04a90');
         ctx.fillStyle = attract ? 'rgba(200,240,255,0.85)' : 'rgba(255,200,240,0.85)';
         for (let i = 0; i < 5; i++) { // schwebende Funken
@@ -1206,6 +1215,25 @@ class Renderer {
       ctx.lineWidth = Math.max(1.5, s * 0.08); ctx.beginPath(); ctx.moveTo(sx + Math.cos(a) * L * 0.6, sy + Math.sin(a) * L * 0.6); ctx.lineTo(sx + Math.cos(a + 0.6) * L * 0.95, sy + Math.sin(a + 0.6) * L * 0.95); ctx.stroke();
     }
     ctx.fillStyle = 'rgba(255,255,255,0.35)'; for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.arc(sx + (i - 1.5) * s * 0.2, sy - s * 0.5 - (i % 2) * s * 0.2, s * 0.04, 0, TAU); ctx.fill(); }
+  }
+  /* Große Zauberkoralle (Anzieh-, Abstoß- oder Bremskoralle): dicke Äste, leuchtende Spitzen */
+  spriteCoralBig(ctx, sx, sy, s, c1, c2, t) {
+    this.shadow(ctx, sx, sy, s * 0.5);
+    const gl = 0.7 + 0.3 * Math.sin(t * 2.5 + sx);
+    ctx.fillStyle = `rgba(${hexToRgb(c1).join(',')},${0.16 * gl})`; ctx.beginPath(); ctx.arc(sx, sy - s * 0.55, s * 0.9, 0, TAU); ctx.fill();
+    ctx.lineCap = 'round';
+    const arms = [[-0.9, 0.8, 0.1], [-0.45, 1.05, -0.2], [0.05, 1.2, 0.15], [0.5, 1.0, -0.15], [0.95, 0.75, 0.2]];
+    for (const [ang, L, bend] of arms) {
+      const a = -Math.PI / 2 + ang * 0.75, ex = sx + Math.cos(a) * L * s, ey = sy + Math.sin(a) * L * s;
+      const cxp = sx + Math.cos(a) * L * s * 0.5 + bend * s, cyp = sy + Math.sin(a) * L * s * 0.5;
+      ctx.strokeStyle = c2; ctx.lineWidth = Math.max(3, s * 0.2); ctx.beginPath(); ctx.moveTo(sx, sy); ctx.quadraticCurveTo(cxp, cyp, ex, ey); ctx.stroke();
+      ctx.strokeStyle = c1; ctx.lineWidth = Math.max(2, s * 0.12); ctx.beginPath(); ctx.moveTo(sx - s * 0.03, sy); ctx.quadraticCurveTo(cxp - s * 0.04, cyp, ex - s * 0.03, ey); ctx.stroke();
+      // Seitenzweig und leuchtende Spitze
+      ctx.strokeStyle = c1; ctx.lineWidth = Math.max(1.5, s * 0.08);
+      ctx.beginPath(); ctx.moveTo(cxp, cyp); ctx.lineTo(cxp + Math.cos(a - 0.7) * s * 0.3, cyp + Math.sin(a - 0.7) * s * 0.3); ctx.stroke();
+      ctx.fillStyle = `rgba(255,255,255,${0.55 * gl})`; ctx.beginPath(); ctx.arc(ex, ey, s * 0.07, 0, TAU); ctx.fill();
+    }
+    ctx.fillStyle = c2; ctx.beginPath(); ctx.ellipse(sx, sy, s * 0.35, s * 0.14, 0, 0, TAU); ctx.fill();
   }
   spriteSeaweed(ctx, sx, sy, s, d, t) {
     ctx.lineCap = 'round';

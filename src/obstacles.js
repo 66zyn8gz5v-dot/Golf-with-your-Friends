@@ -256,10 +256,14 @@ class Turntable {
 
 /* Kristall-Magnet: zieht den Ball an (strength > 0) oder stößt ihn ab (strength < 0) */
 class Magnet {
-  constructor(d) { Object.assign(this, { r: 3, strength: 6, core: 0.35 }, d); this.type = 'magnet'; }
+  constructor(d) { Object.assign(this, { r: 3, strength: 6, core: 0.35, slow: 0 }, d); this.type = 'magnet'; }
   force(ball, dt) {
     const dx = this.x - ball.x, dy = this.y - ball.y, d = Math.hypot(dx, dy);
     if (d > this.r || d < 0.01) return;
+    if (this.slow) { // Bremskoralle: zieht Tempo aus dem Ball, je näher desto stärker
+      const k = Math.max(0, 1 - this.slow * (1 - d / this.r) * dt);
+      ball.vx *= k; ball.vy *= k; return;
+    }
     const a = this.strength * (1 - d / this.r) * 1.5;
     ball.vx += (dx / d) * a * dt; ball.vy += (dy / d) * a * dt;
   }
