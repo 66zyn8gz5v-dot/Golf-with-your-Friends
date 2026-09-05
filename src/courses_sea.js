@@ -204,7 +204,7 @@ const SEA_COURSES = [
     autoDecor: { density: 0.1, seed: 211 },
   },
   {
-    name: 'Schiffswrack', par: 5, theme: 'reef', maxStrokes: 22, hazardText: { water: 'Hinab in die Tiefseeschlucht', oob: 'In den Schlick gesunken' },
+    name: 'Schiffswrack', par: 6, theme: 'reef', maxStrokes: 24, hazardText: { water: 'Hinab in die Tiefseeschlucht', oob: 'In den Schlick gesunken' },
     views: [{ x: 7, y: 5, w: 11, h: 2, look: { x: 16, y: 5.4 } }],
     intro: 'Am Meeresgrund liegt ein altes Piratenschiff. Durch das breite Leck im Rumpf geht es hinein – drinnen hängt das Deck schief, Fässer rollen, und die Luke schließt sich alle paar Sekunden.',
     map: [
