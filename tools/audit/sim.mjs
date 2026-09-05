@@ -56,7 +56,7 @@ export function shoot(st0, ang, pow, wait = 0, wantTrace = false) {
       if (e.type === 'switch') st.switches = Object.assign({}, lv.switches);
       if (e.type === 'enter') { out = 'enter'; break; }
       if (e.type === 'shark') { out = (st.hole.inner && st.hole.inner.stomach && !st.inner) ? 'stomach' : 'shark'; break; }
-      if (e.type === 'water' || e.type === 'lava' || e.type === 'oob') { out = e.type; break; }
+      if (e.type === 'water' || e.type === 'lava' || e.type === 'oob' || e.type === 'spiked') { out = e.type; break; }
     }
     if (out) {
       st.t = t; st.trace = trace;

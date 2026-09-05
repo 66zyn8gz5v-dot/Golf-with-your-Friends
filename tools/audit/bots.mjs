@@ -24,7 +24,7 @@ export function intendedDir(st) {
 }
 const POW = [0.1, 0.15, 0.2, 0.3, 0.42, 0.55, 0.7, 0.85, 1.0];
 /* geschätzte Restkosten in Schlägen: eingelocht 0, sonst 1 + Restweg/6, Strafschlag +1 */
-function scoreOf(r, k, p) { if (r.last === 'sunk') return 0.02 * Math.abs(k) + 0.05 * p; if (r.last === 'max') return 10; return 1 + progress(r) / 6 + 0.03 * p + (['water', 'lava', 'oob', 'shark'].includes(r.last) ? 1 : 0); }
+function scoreOf(r, k, p) { if (r.last === 'sunk') return 0.02 * Math.abs(k) + 0.05 * p; if (r.last === 'max') return 10; return 1 + progress(r) / 6 + 0.03 * p + (['water', 'lava', 'oob', 'shark', 'spiked'].includes(r.last) ? 1 : 0); }
 export function normalGame(hole, verbose = false) {
   let st = newState(hole);
   const per = Math.max(periodOf(hole), hole.inner ? periodOf(hole.inner) : 0);

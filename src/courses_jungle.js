@@ -83,8 +83,9 @@ const JUNGLE_COURSES = [
     autoDecor: { density: 0.32, seed: 305 },
   },
   {
-    name: 'Stachelpfad', par: 4, theme: 'jungle', maxStrokes: 18, hazardText: { water: 'Platsch! In den Fluss' },
-    intro: 'Drei Stachelfallen im Takt: Die Platten schießen ihre Spitzen aus und versperren den Weg, kurz darauf fahren sie wieder ein. Schräge Banden lenken um die Kehren.',
+    name: 'Stachelpfad', par: 4, theme: 'jungle', maxStrokes: 18, hazardText: { water: 'Platsch! In den Fluss', spiked: 'Aufgespießt! Zurück zum Schlagstart' },
+    views: [{ x: 2, y: 1, w: 14, h: 2, look: { x: 16.5, y: 1.5 } }, { x: 16, y: 1, w: 2, h: 4, look: { x: 16.5, y: 6 } }],
+    intro: 'Drei Stachelfallen im Takt: Die Platten schießen ihre Spitzen aus und versperren den Weg, kurz darauf fahren sie wieder ein. Wer auf einer Platte liegen bleibt, wird aufgespießt. Mit dem richtigen Moment passt ein Schlag an beiden Platten der ersten Geraden vorbei.',
     map: [
       '......................',
       '..T###############....',
@@ -97,7 +98,7 @@ const JUNGLE_COURSES = [
     ],
     obstacles: [
       { type: 'spikes', x: 7, y: 2, w: 1, h: 2, period: 4, up: 0.45, phase: 0 },
-      { type: 'spikes', x: 12, y: 2, w: 1, h: 2, period: 4, up: 0.45, phase: 0.5 },
+      { type: 'spikes', x: 12, y: 2, w: 1, h: 2, period: 4, up: 0.45, phase: 0.1 }, // fährt 0,4 s nach der ersten Platte ein
       { type: 'spikes', x: 12, y: 6, w: 1, h: 2, period: 3.4, up: 0.45, phase: 0.25 },
       { type: 'wall', x0: 16.8, y0: 1, x1: 18, y1: 2.2, extend: 0 },
       { type: 'wall', x0: 18, y0: 5.8, x1: 16.8, y1: 7, extend: 0 },

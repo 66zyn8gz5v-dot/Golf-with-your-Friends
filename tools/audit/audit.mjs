@@ -134,7 +134,7 @@ for (const { world, hole } of holes) {
   const games = []; for (let g = 0; g < GAMES; g++) games.push(normalGame(hole));
   const s = games.map(g => g.strokes).sort((a, b) => a - b);
   res.normal = { mean: +(s.reduce((a, b) => a + b, 0) / s.length).toFixed(2), median: s[Math.floor(s.length / 2)], min: s[0], max: s[s.length - 1], maxReached: games.filter(g => !g.finished).length,
-    hazardsPerGame: +(games.reduce((a, g) => a + g.events.filter(e => ['water', 'lava', 'oob', 'shark'].includes(e)).length, 0) / games.length).toFixed(2),
+    hazardsPerGame: +(games.reduce((a, g) => a + g.events.filter(e => ['water', 'lava', 'oob', 'shark', 'spiked'].includes(e)).length, 0) / games.length).toFixed(2),
     dist: s.reduce((m, v) => (m[v] = (m[v] || 0) + 1, m), {}) };
   res.seconds = Math.round((Date.now() - t0) / 1000);
   fs.writeFileSync(`${OUT}/${world.id}_${hole.name.replace(/[^\wäöüÄÖÜß]/g, '_')}.json`, JSON.stringify(res, null, 1));

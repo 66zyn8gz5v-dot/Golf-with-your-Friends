@@ -83,9 +83,15 @@ class Spikes {
   update(t) {
     const u = (((t / this.period + this.phase) % 1) + 1) % 1, ramp = 0.07;
     const l = u < this.up ? Math.min(1, u / ramp) : Math.max(0, 1 - (u - this.up) / ramp);
-    this.lift = l * l * (3 - 2 * l); this.blocking = this.lift > 0.3;
+    this.lift = l * l * (3 - 2 * l); this.wasBlocking = this.blocking; this.blocking = this.lift > 0.3;
   }
   segments(out) { if (this.blocking) polySegments(rectPoly(this.x, this.y, this.w, this.h), out, { e: 0.5, kind: 'spikes' }); }
+  /* Ein Ball, der auf der Platte liegt (oder rollt), wenn die Stacheln hochkommen, wird aufgespießt: Strafschlag */
+  trigger(ball, t, events) {
+    if (!this.blocking || this.wasBlocking || ball.air || ball.rider) return;
+    if (Math.abs(ball.x - this.x) > this.w / 2 + 0.1 || Math.abs(ball.y - this.y) > this.h / 2 + 0.1) return;
+    events.push({ type: 'spiked', x: ball.x, y: ball.y });
+  }
 }
 
 class Rotor {

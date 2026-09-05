@@ -397,7 +397,7 @@
   }
   function shoot(dx, dy, power) {
     const b = state.ball;
-    b.restX = b.x; b.restY = b.y;
+    b.restX = b.x; b.restY = b.y; b.shotX = b.x; b.shotY = b.y; // Schlagstart (für Aufspießen am Ruheplatz)
     b.vx = dx * power * MAX_SHOT; b.vy = dy * power * MAX_SHOT;
     state.strokes++; state.phase = 'rolling'; state.aim = null; state.restTimer = 0; state.slowTimer = 0;
     Sfx.hit(power); updateHud();
@@ -421,10 +421,11 @@
   function hazard(type) {
     const b = state.ball;
     const custom = state.level.def.hazardText && state.level.def.hazardText[type];
-    const label = custom || (type === 'water' ? 'Platsch! Wasser' : type === 'lava' ? 'Zischhh! Lava' : type === 'shark' ? 'Vom Hai gefressen!' : 'Aus! Abgrund');
+    const label = custom || (type === 'water' ? 'Platsch! Wasser' : type === 'lava' ? 'Zischhh! Lava' : type === 'shark' ? 'Vom Hai gefressen!' : type === 'spiked' ? 'Aufgespießt!' : 'Aus! Abgrund');
     if (type === 'shark') { Sfx.water(); burst(b.x, b.y, '#ff5a5a', 22, true); b.z = 0; b.vz = 0; b.air = false; }
     else if (type === 'water') { Sfx.water(); burst(b.x, b.y, '#9fd3ff', 18); }
     else if (type === 'lava') { Sfx.lava(); burst(b.x, b.y, '#ffb347', 18); }
+    else if (type === 'spiked') { Sfx.lava(); burst(b.x, b.y, '#e6e6e6', 18, true); if (b.shotX != null) { b.restX = b.shotX; b.restY = b.shotY; } } // zurück zum Start des letzten Schlags
     else { Sfx.oob(); burst(b.x, b.y, '#cccccc', 10); }
     state.strokes++;
     showMessage(`${label} · +1 Strafschlag`, 1700);
@@ -570,7 +571,7 @@
         case 'fire': Sfx.cannon(); burst(ev.x, ev.y, '#ffb347', 18); break;
         case 'sunk': sunk(); return;
         case 'shark': { const inner = state.courses[state.holeIdx].inner; if (inner && inner.stomach && !state.inner) { const b = state.ball; b.z = 0; b.vz = 0; b.air = false; enterInner('Verschluckt! Ab in den Haimagen …'); } else hazard('shark'); return; }
-        case 'water': case 'lava': case 'oob': hazard(ev.type); return;
+        case 'water': case 'lava': case 'oob': case 'spiked': hazard(ev.type); return;
       }
     }
   }
