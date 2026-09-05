@@ -1601,27 +1601,49 @@ class Renderer {
     const s = this.scale;
     if (!ob.jumping) { // Flosse zieht Kreise in der Bucht
       const a = t * 1.4, fx = ob.x + Math.cos(a) * ob.w * 0.25, fy = ob.y + Math.sin(a) * ob.h * 0.25, d = Math.sin(a) >= 0 ? -1 : 1;
-      this.isoEllipse(ctx, fx, fy, -0.05, 0.8, 'rgba(20,40,60,0.45)', 0.4);
-      const fin = [[fx + d * 0.1, fy, 0.06], [fx - d * 0.15, fy, 0.55], [fx - d * 0.5, fy, 0.06]];
+      this.isoEllipse(ctx, fx, fy, -0.05, 1.4, 'rgba(20,40,60,0.45)', 0.6);
+      const fin = [[fx + d * 0.2, fy, 0.06], [fx - d * 0.25, fy, 0.95], [fx - d * 0.85, fy, 0.06]];
       ctx.fillStyle = '#5d6b78'; ctx.beginPath(); fin.forEach((q, i) => { const pp = this.proj(q[0], q[1], q[2]); i ? ctx.lineTo(pp[0], pp[1]) : ctx.moveTo(pp[0], pp[1]); }); ctx.closePath(); ctx.fill();
       ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = Math.max(1, s * 0.04);
       const [w0, w1] = this.proj(fx - d * 0.3, fy, 0.01), [w2, w3] = this.proj(fx - d * 1.1, fy + 0.25, 0.01); ctx.beginPath(); ctx.moveTo(w0, w1); ctx.lineTo(w2, w3); ctx.stroke();
       return;
     }
-    const vert = ob.axis === 'y', p = ob.p, z = ob.z, L = 1.1, tilt = (0.5 - p) * 1.2; // Körper neigt sich mit dem Bogen
-    this.isoEllipse(ctx, ob.px, ob.py, 0.004, L * 0.9, `rgba(0,0,0,${0.25 * (1 - z / (ob.height * 1.2))})`, 0.45);
-    const ax = vert ? 0 : 1, ay = vert ? 1 : 0; // Sprungrichtung
-    const nose = this.proj(ob.px + ax * L, ob.py + ay * L, z + tilt * 0.5), tail = this.proj(ob.px - ax * L, ob.py - ay * L, z - tilt * 0.5), mid = this.proj(ob.px, ob.py, z);
-    const ang = Math.atan2(nose[1] - tail[1], nose[0] - tail[0]), len = Math.hypot(nose[0] - tail[0], nose[1] - tail[1]);
-    ctx.save(); ctx.translate(mid[0], mid[1]); ctx.rotate(ang);
-    const g = ctx.createLinearGradient(0, -s * 0.3, 0, s * 0.3); g.addColorStop(0, '#6c7c8c'); g.addColorStop(0.55, '#4d5c6a'); g.addColorStop(0.56, '#dfe6ec'); g.addColorStop(1, '#c9d2da');
-    ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(0, 0, len / 2, s * 0.32, 0, 0, TAU); ctx.fill();
-    ctx.fillStyle = '#4d5c6a'; ctx.beginPath(); ctx.moveTo(-len * 0.1, -s * 0.2); ctx.lineTo(-len * 0.25, -s * 0.75); ctx.lineTo(-len * 0.35, -s * 0.2); ctx.closePath(); ctx.fill(); // Rückenflosse
-    ctx.beginPath(); ctx.moveTo(-len / 2 + s * 0.1, 0); ctx.lineTo(-len / 2 - s * 0.35, -s * 0.5); ctx.lineTo(-len / 2 - s * 0.3, s * 0.4); ctx.closePath(); ctx.fill(); // Schwanz
-    ctx.beginPath(); ctx.moveTo(len * 0.05, s * 0.15); ctx.lineTo(-len * 0.1, s * 0.6); ctx.lineTo(-len * 0.2, s * 0.15); ctx.closePath(); ctx.fill(); // Brustflosse
-    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(len * 0.3, -s * 0.08, s * 0.07, 0, TAU); ctx.fill(); ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(len * 0.31, -s * 0.08, s * 0.035, 0, TAU); ctx.fill();
-    ctx.strokeStyle = '#f4efe6'; ctx.lineWidth = Math.max(1, s * 0.05); ctx.setLineDash([s * 0.06, s * 0.05]); ctx.beginPath(); ctx.moveTo(len * 0.2, s * 0.14); ctx.lineTo(len * 0.46, s * 0.02); ctx.stroke(); ctx.setLineDash([]); // Zähne
-    ctx.restore();
+    // Comic-Hai aus Blöcken wie der Drache: Schwanz, Rumpf, Kopf, Schnauze entlang der Sprungachse, Neigung folgt dem Bogen
+    const vert = ob.axis === 'y', p = ob.p, z = ob.z, tilt = (0.5 - p) * 1.1, px = ob.px, py = ob.py;
+    const ax = vert ? 0 : 1, ay = vert ? 1 : 0, sx = vert ? 1 : 0, sy = vert ? 0 : 1; // Achse (Sprungrichtung) und Seite
+    const W = (u, v) => [px + ax * u + sx * v, py + ay * u + sy * v]; // Weltpunkt: u entlang der Achse, v seitlich
+    const zAt = u => z + tilt * u;
+    const seg = (u0, u1, wd, z0, h, top, side, opts) => this.prism(ctx, [W(u0, -wd / 2), W(u1, -wd / 2), W(u1, wd / 2), W(u0, wd / 2)], zAt((u0 + u1) / 2) + z0, h, top, side, opts);
+    const grey = ['#7d8fa0', '#3f4d5a'], dark = ['#5c6c7a', '#2e3a44'], belly = '#e6edf2';
+    this.isoEllipse(ctx, px, py, 0.004, 1.9, `rgba(0,0,0,${0.28 * Math.max(0, 1 - z / (ob.height * 1.3))})`, 0.8);
+    seg(-2.1, -1.3, 0.55, 0.25, 0.5, grey[0], grey[1]);                                  // Schwanzwurzel
+    seg(-1.3, 0.5, 1.15, 0.05, 1.0, grey[0], grey[1], { outline: '#25303a' });             // Rumpf
+    this.fillPoly(ctx, [W(-1.2, -0.5), W(0.4, -0.5), W(0.4, 0.5), W(-1.2, 0.5)], zAt(-0.4) + 1.06, '#93a4b3', false); // heller Rücken
+    seg(0.5, 1.5, 0.95, 0.15, 0.8, grey[0], grey[1], { outline: '#25303a' });              // Kopf
+    seg(1.5, 2.0, 0.6, 0.35, 0.45, dark[0], dark[1]);                                       // Schnauze
+    // Bauchstreifen an den Flanken
+    for (const side of [-1, 1]) { const q0 = this.proj(...W(-1.2, side * 0.58), zAt(-1.2) + 0.15), q1 = this.proj(...W(1.4, side * 0.48), zAt(1.4) + 0.2); ctx.strokeStyle = 'rgba(230,237,242,0.75)'; ctx.lineWidth = Math.max(1.5, s * 0.07); ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(q0[0], q0[1]); ctx.lineTo(q1[0], q1[1]); ctx.stroke(); }
+    // Rückenflosse: senkrechte Dreiecksplatte
+    const tri = (pts, col, edge) => { ctx.fillStyle = col; ctx.beginPath(); pts.forEach((q, i) => { const r = this.proj(q[0][0], q[0][1], q[1]); i ? ctx.lineTo(r[0], r[1]) : ctx.moveTo(r[0], r[1]); }); ctx.closePath(); ctx.fill(); if (edge) { ctx.strokeStyle = edge; ctx.lineWidth = 1; ctx.stroke(); } };
+    for (const off of [-0.06, 0.06]) tri([[W(-0.5, off), zAt(-0.5) + 1.0], [W(-0.35, off), zAt(-0.35) + 1.9], [W(0.45, off), zAt(0.45) + 1.0]], off < 0 ? dark[1] : dark[0], '#25303a');
+    // Schwanzflosse: Sichel senkrecht am Ende
+    for (const off of [-0.05, 0.05]) tri([[W(-2.1, off), zAt(-2.1) + 0.5], [W(-2.7, off), zAt(-2.7) + 1.35], [W(-2.45, off), zAt(-2.45) + 0.5], [W(-2.6, off), zAt(-2.6) - 0.1]], off < 0 ? dark[1] : dark[0], '#25303a');
+    // Brustflossen: flache Platten schräg nach außen
+    for (const side of [-1, 1]) this.prism(ctx, [W(0.1, side * 0.55), W(-0.6, side * 1.35), W(-0.95, side * 1.2), W(-0.7, side * 0.55)], zAt(-0.4) + 0.3, 0.1, dark[0], dark[1]);
+    // Kiemen
+    ctx.strokeStyle = '#2e3a44'; ctx.lineWidth = Math.max(1, s * 0.04);
+    for (const side of [-1, 1]) for (let k = 0; k < 3; k++) { const u = 0.55 + k * 0.18, q0 = this.proj(...W(u, side * 0.48), zAt(u) + 0.35), q1 = this.proj(...W(u, side * 0.48), zAt(u) + 0.8); ctx.beginPath(); ctx.moveTo(q0[0], q0[1]); ctx.lineTo(q1[0], q1[1]); ctx.stroke(); }
+    // Augen auf beiden Seiten des Kopfs, Blick nach vorn
+    for (const side of [-1, 1]) {
+      const [ex, ey] = this.proj(...W(1.25, side * 0.5), zAt(1.25) + 0.7);
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(ex, ey, s * 0.13, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(ex + s * 0.03 * (vert ? 0 : 1), ey - s * 0.02, s * 0.065, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(ex - s * 0.02, ey - s * 0.05, s * 0.025, 0, TAU); ctx.fill();
+    }
+    // Maul mit Zähnen an der Schnauze
+    const m0 = this.proj(...W(2.02, -0.3), zAt(2.0) + 0.35), m1 = this.proj(...W(2.02, 0.3), zAt(2.0) + 0.35);
+    ctx.strokeStyle = '#8a1a24'; ctx.lineWidth = Math.max(2, s * 0.09); ctx.beginPath(); ctx.moveTo(m0[0], m0[1]); ctx.lineTo(m1[0], m1[1]); ctx.stroke();
+    ctx.fillStyle = '#fff'; for (let k = 0; k < 5; k++) { const v = -0.26 + k * 0.13, a0 = this.proj(...W(2.03, v - 0.05), zAt(2.0) + 0.37), a1 = this.proj(...W(2.03, v + 0.05), zAt(2.0) + 0.37), a2 = this.proj(...W(2.03, v), zAt(2.0) + 0.24); ctx.beginPath(); ctx.moveTo(a0[0], a0[1]); ctx.lineTo(a1[0], a1[1]); ctx.lineTo(a2[0], a2[1]); ctx.closePath(); ctx.fill(); }
     if (p < 0.2 || p > 0.8) { // Gischt beim Auftauchen und Eintauchen
       const q = p < 0.2 ? 1 - p / 0.2 : (p - 0.8) / 0.2, [bx, by] = this.proj(ob.px, ob.py, 0.05);
       ctx.fillStyle = `rgba(255,255,255,${0.8 * q})`;
