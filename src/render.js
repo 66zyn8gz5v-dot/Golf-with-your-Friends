@@ -1616,6 +1616,7 @@ class Renderer {
     // Alles unter der Wasseroberfläche (z < 0) wird weggeschnitten: beim Auftauchen erscheint erst die Nase, beim Eintauchen verschwindet der Schwanz zuletzt
     const seg = (u0, u1, wd, z0, h, top, side, opts) => { let zb = zAt((u0 + u1) / 2) + z0; const zt = zb + h; if (zt <= 0.03) return; if (zb < 0) zb = 0; this.prism(ctx, [W(u0, -wd / 2), W(u1, -wd / 2), W(u1, wd / 2), W(u0, wd / 2)], zb, zt - zb, top, side, opts); };
     const above = zz => Math.max(0, zz);
+    const faces = (nx, ny) => nx * this.cam.sin + ny * this.cam.cos > 0.05; // zeigt diese Seite zur Kamera? (wie bei den Blockseiten)
     const grey = ['#7d8fa0', '#3f4d5a'], dark = ['#5c6c7a', '#2e3a44'], belly = '#e6edf2';
     this.isoEllipse(ctx, px, py, 0.004, 1.9, `rgba(0,0,0,${0.28 * Math.max(0, 1 - z / (ob.height * 1.3))})`, 0.8);
     seg(-2.1, -1.3, 0.55, 0.25, 0.5, grey[0], grey[1]);                                  // Schwanzwurzel
@@ -1624,7 +1625,7 @@ class Renderer {
     seg(0.5, 1.5, 0.95, 0.15, 0.8, grey[0], grey[1], { outline: '#25303a' });              // Kopf
     seg(1.5, 2.0, 0.6, 0.35, 0.45, dark[0], dark[1]);                                       // Schnauze
     // Bauchstreifen an den Flanken
-    for (const side of [-1, 1]) { if (zAt(-1.2) + 0.15 < 0 && zAt(1.4) + 0.2 < 0) continue; const q0 = this.proj(...W(-1.2, side * 0.58), above(zAt(-1.2) + 0.15)), q1 = this.proj(...W(1.4, side * 0.48), above(zAt(1.4) + 0.2)); ctx.strokeStyle = 'rgba(230,237,242,0.75)'; ctx.lineWidth = Math.max(1.5, s * 0.07); ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(q0[0], q0[1]); ctx.lineTo(q1[0], q1[1]); ctx.stroke(); }
+    for (const side of [-1, 1]) { if (!faces(sx * side, sy * side)) continue; if (zAt(-1.2) + 0.15 < 0 && zAt(1.4) + 0.2 < 0) continue; const q0 = this.proj(...W(-1.2, side * 0.58), above(zAt(-1.2) + 0.15)), q1 = this.proj(...W(1.4, side * 0.48), above(zAt(1.4) + 0.2)); ctx.strokeStyle = 'rgba(230,237,242,0.75)'; ctx.lineWidth = Math.max(1.5, s * 0.07); ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(q0[0], q0[1]); ctx.lineTo(q1[0], q1[1]); ctx.stroke(); }
     // Rückenflosse: senkrechte Dreiecksplatte
     const tri = (pts, col, edge) => { if (pts.every(q => q[1] <= 0.03)) return; ctx.fillStyle = col; ctx.beginPath(); pts.forEach((q, i) => { const r = this.proj(q[0][0], q[0][1], above(q[1])); i ? ctx.lineTo(r[0], r[1]) : ctx.moveTo(r[0], r[1]); }); ctx.closePath(); ctx.fill(); if (edge) { ctx.strokeStyle = edge; ctx.lineWidth = 1; ctx.stroke(); } };
     for (const off of [-0.06, 0.06]) tri([[W(-0.5, off), zAt(-0.5) + 1.0], [W(-0.35, off), zAt(-0.35) + 1.9], [W(0.45, off), zAt(0.45) + 1.0]], off < 0 ? dark[1] : dark[0], '#25303a');
@@ -1634,9 +1635,10 @@ class Renderer {
     if (zAt(-0.4) + 0.3 > 0) for (const side of [-1, 1]) this.prism(ctx, [W(0.1, side * 0.55), W(-0.6, side * 1.35), W(-0.95, side * 1.2), W(-0.7, side * 0.55)], zAt(-0.4) + 0.3, 0.1, dark[0], dark[1]);
     // Kiemen
     ctx.strokeStyle = '#2e3a44'; ctx.lineWidth = Math.max(1, s * 0.04);
-    for (const side of [-1, 1]) for (let k = 0; k < 3; k++) { const u = 0.55 + k * 0.18; if (zAt(u) + 0.8 < 0.03) continue; const q0 = this.proj(...W(u, side * 0.48), above(zAt(u) + 0.35)), q1 = this.proj(...W(u, side * 0.48), zAt(u) + 0.8); ctx.beginPath(); ctx.moveTo(q0[0], q0[1]); ctx.lineTo(q1[0], q1[1]); ctx.stroke(); }
+    for (const side of [-1, 1]) for (let k = 0; k < 3; k++) { if (!faces(sx * side, sy * side)) continue; const u = 0.55 + k * 0.18; if (zAt(u) + 0.8 < 0.03) continue; const q0 = this.proj(...W(u, side * 0.48), above(zAt(u) + 0.35)), q1 = this.proj(...W(u, side * 0.48), zAt(u) + 0.8); ctx.beginPath(); ctx.moveTo(q0[0], q0[1]); ctx.lineTo(q1[0], q1[1]); ctx.stroke(); }
     // Augen auf beiden Seiten des Kopfs, Blick nach vorn
     if (zAt(1.25) + 0.6 > 0) for (const side of [-1, 1]) {
+      if (!faces(sx * side, sy * side)) continue; // nur das Auge auf der sichtbaren Seite
       const [ex, ey] = this.proj(...W(1.25, side * 0.5), zAt(1.25) + 0.7);
       ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(ex, ey, s * 0.13, 0, TAU); ctx.fill();
       ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(ex + s * 0.03 * (vert ? 0 : 1), ey - s * 0.02, s * 0.065, 0, TAU); ctx.fill();
@@ -1644,7 +1646,7 @@ class Renderer {
     }
     // Maul mit Zähnen an der Schnauze
     const m0 = this.proj(...W(2.02, -0.3), zAt(2.0) + 0.35), m1 = this.proj(...W(2.02, 0.3), zAt(2.0) + 0.35);
-    if (zAt(2.0) + 0.24 > 0) {
+    if (zAt(2.0) + 0.24 > 0 && faces(ax, ay)) { // Maul nur, wenn die Schnauze zur Kamera zeigt
     ctx.strokeStyle = '#8a1a24'; ctx.lineWidth = Math.max(2, s * 0.09); ctx.beginPath(); ctx.moveTo(m0[0], m0[1]); ctx.lineTo(m1[0], m1[1]); ctx.stroke();
     ctx.fillStyle = '#fff'; for (let k = 0; k < 5; k++) { const v = -0.26 + k * 0.13, a0 = this.proj(...W(2.03, v - 0.05), zAt(2.0) + 0.37), a1 = this.proj(...W(2.03, v + 0.05), zAt(2.0) + 0.37), a2 = this.proj(...W(2.03, v), zAt(2.0) + 0.24); ctx.beginPath(); ctx.moveTo(a0[0], a0[1]); ctx.lineTo(a1[0], a1[1]); ctx.lineTo(a2[0], a2[1]); ctx.closePath(); ctx.fill(); }
     }
