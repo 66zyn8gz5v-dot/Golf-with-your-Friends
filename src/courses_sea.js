@@ -270,8 +270,8 @@ const SEA_COURSES = [
     },
   },
   {
-    name: 'Perlengrotte', par: 4, theme: 'reef', maxStrokes: 18, hazardText: { water: 'Hinab in die Tiefseeschlucht' },
-    intro: 'Über spiegelglattes Perlmutt in den Strudel – er trägt den Ball herum und wirft ihn zur Rinne hinaus. Unten zieht die große Zauberperle alles an, was in ihre Nähe rollt.',
+    name: 'Perlengrotte', par: 5, theme: 'reef', maxStrokes: 22, hazardText: { water: 'Hinab in die Tiefseeschlucht' },
+    intro: 'Die Strömung über dem Perlmutt treibt alles in den Strudel, und der Strudel wirft den Ball geradewegs in die Zauberperle. Wer sie berührt, trägt den Perlenfluch: Der Ball bleibt für den Rest der Bahn träge.',
     map: [
       '........................',
       '..######iiii#######.....',
@@ -285,8 +285,9 @@ const SEA_COURSES = [
       '........................',
     ],
     obstacles: [
-      { type: 'turntable', x: 13.6, y: 2.5, r: 1.3, speed: 1.7, exit: 90, style: 'whirl' },
-      { type: 'magnet', x: 13.5, y: 7.3, r: 2.2, strength: 7, style: 'pearl' },
+      { type: 'field', x: 8, y: 1, w: 4, h: 3, fx: 2.6, fy: 0, style: 'current' },
+      { type: 'turntable', x: 13.6, y: 2.5, r: 1.6, speed: 1.7, exit: 90, style: 'whirl', captureSpeed: 13, eject: 7.5 },
+      { type: 'magnet', x: 13.6, y: 7.3, r: 3.0, strength: 12, style: 'pearl', curse: 2.0 },
       { type: 'magnet', x: 18.5, y: 8.4, r: 2.2, slow: 3.4, style: 'coral' },
       { type: 'bumper', x: 5.5, y: 3.4, r: 0.38, style: 'coral' },
     ],

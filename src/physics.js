@@ -49,6 +49,7 @@ function collideCircle(ball, c, events) {
     if (c.kick) out = Math.max(out, c.kick);
     ball.vx += (out - vn) * nx; ball.vy += (out - vn) * ny;
     if (c.owner) c.owner.hitAt = performance.now() / 1000;
+    if (c.curse && !ball.curse) { ball.curse = c.curse; events.push({ type: 'curse', x: ball.x, y: ball.y }); } // Perlenfluch: bleibt bis zum Ende der Bahn
     events.push({ type: 'bounce', speed: out, kind: c.kind || 'circle', x: ball.x, y: ball.y });
   }
   return true;
@@ -87,7 +88,7 @@ function stepPhysics(level, ball, dt, t, allowForces) {
   let sp = Math.hypot(ball.vx, ball.vy);
   if (sp > 0) {
     const fr = level.def.friction && level.def.friction[c];
-    const dec = (fr ?? FRICTION[c] ?? 4) * dt;
+    const dec = (fr ?? FRICTION[c] ?? 4) * dt * (ball.curse || 1);
     let ns = Math.max(0, sp - dec) * (1 - 0.06 * dt);
     if (ns > MAX_SPEED) ns = MAX_SPEED;
     ball.vx *= ns / sp; ball.vy *= ns / sp;

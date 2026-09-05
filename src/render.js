@@ -594,6 +594,11 @@ class Renderer {
     const [sx, sy] = this.proj(b.x, b.y, z);
     const g = ctx.createRadialGradient(sx - r * 0.35, sy - r * 0.4, r * 0.1, sx, sy, r);
     g.addColorStop(0, '#ffffff'); g.addColorStop(0.35, b.color); g.addColorStop(1, shade(b.color, 0.55));
+    if (b.curse && !b.sunk) { // Perlenfluch: perlmuttfarbener Schimmer um den Ball
+      const t = this.level.t || 0, gl = 0.5 + 0.3 * Math.sin(t * 4);
+      ctx.fillStyle = `rgba(255,240,205,${0.28 * gl})`; ctx.beginPath(); ctx.arc(sx, sy, r * 2.1, 0, TAU); ctx.fill();
+      ctx.strokeStyle = `rgba(255,255,255,${0.6 * gl})`; ctx.lineWidth = Math.max(1, s * 0.03); ctx.beginPath(); ctx.arc(sx, sy, r * 1.5, 0, TAU); ctx.stroke();
+    }
     ctx.fillStyle = g; ctx.beginPath(); ctx.arc(sx, sy, r, 0, TAU); ctx.fill();
     ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 1; ctx.stroke();
   }

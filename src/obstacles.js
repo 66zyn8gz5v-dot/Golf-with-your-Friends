@@ -267,7 +267,7 @@ class Magnet {
     const a = this.strength * (1 - d / this.r) * 1.5;
     ball.vx += (dx / d) * a * dt; ball.vy += (dy / d) * a * dt;
   }
-  circles(out) { out.push({ x: this.x, y: this.y, r: this.core, e: 0.5, kind: 'crystal' }); }
+  circles(out) { out.push({ x: this.x, y: this.y, r: this.core, e: 0.5, kind: 'crystal', curse: this.curse }); }
 }
 
 /* Kanone: schwenkt hin und her; ein hineinrollender Ball wird geladen und nach kurzer Zeit
