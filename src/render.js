@@ -164,6 +164,12 @@ class Renderer {
       let col;
       if (c === 's') col = th.sand; else if (c === 'i') col = th.ice; else col = th.floor[(x + y) & 1];
       this.fillPoly(ctx, poly, 0, col);
+      if (th.plankFloor && c !== 's' && c !== 'i') { // Planken: zwei Fugen längs, ein versetzter Stoß
+        ctx.strokeStyle = 'rgba(40,20,5,0.3)'; ctx.lineWidth = 1;
+        for (const k of [0.34, 0.67]) { const [a0, a1] = this.proj(x, y + k), [b0, b1] = this.proj(x + 1, y + k); ctx.beginPath(); ctx.moveTo(a0, a1); ctx.lineTo(b0, b1); ctx.stroke(); }
+        const off = 0.2 + ((x * 3 + y * 5) % 3) * 0.28, [c0, c1] = this.proj(x + off, y + 0.34), [d0, d1] = this.proj(x + off, y + 0.67);
+        ctx.beginPath(); ctx.moveTo(c0, c1); ctx.lineTo(d0, d1); ctx.stroke();
+      }
       if (c === 's') {
         ctx.fillStyle = 'rgba(120,90,30,0.25)';
         for (let k = 0; k < 4; k++) { const [sx, sy] = this.proj(x + 0.2 + ((k * 37) % 6) / 10, y + 0.2 + ((k * 53) % 6) / 10); ctx.beginPath(); ctx.arc(sx, sy, this.scale * 0.03, 0, TAU); ctx.fill(); }
@@ -268,6 +274,7 @@ class Renderer {
     for (const it of items) { it.k = this.depth(it.x, it.y) + (it.bias || 0); const p = this.proj(it.x, it.y); it.sx = p[0]; it.sy = p[1]; }
     items.sort((a, b) => a.k - b.k);
     const b = state.ball, bp = b ? this.proj(b.x, b.y, 0) : null, bk = b ? this.depth(b.x, b.y) : 0;
+    this.ballPos = bp;
     const cullM = this.scale * 3.5, fadeW = this.scale * 2.2, fadeH = this.scale * 3.2;
     for (const it of items) {
       if (!this.onScreen(it.sx, it.sy, cullM)) continue;
@@ -616,7 +623,7 @@ class Renderer {
   /* ---------- Hindernisse ---------- */
   drawObstacleFloor(ctx, ob, t) {
     const s = this.scale;
-    if (ob.type === 'boost' || (ob.type === 'field' && ob.style === 'wind')) { this.drawWind(ctx, ob, t); return; }
+    if (ob.type === 'boost' || (ob.type === 'field' && (ob.style === 'wind' || ob.style === 'current'))) { this.drawWind(ctx, ob, t); return; }
     if (ob.type === 'field') {
       const poly = [[ob.x, ob.y], [ob.x + ob.w, ob.y], [ob.x + ob.w, ob.y + ob.h], [ob.x, ob.y + ob.h]];
       const isBoost = ob.type === 'boost';
@@ -710,6 +717,7 @@ class Renderer {
       this.isoEllipse(ctx, ob.x, ob.y, 0.006, ob.r * 0.8, 'rgba(120,40,180,0.35)');
     } else if (ob.type === 'turntable') {
       const th = this.theme;
+      if (ob.style === 'whirl') { this.drawWhirl(ctx, ob, t); return; }
       this.isoEllipse(ctx, ob.x, ob.y, 0.003, ob.r + 0.25, 'rgba(30,25,40,0.5)');
       const [cx, cy] = this.proj(ob.x, ob.y, 0.008);
       ctx.save(); ctx.translate(cx, cy); ctx.scale(1, this.cam.tilt);
@@ -746,7 +754,7 @@ class Renderer {
       }
     } else if (ob.type === 'magnet') {
       const kind = ob.slow ? 'slow' : ob.strength > 0 ? 'attract' : 'repel';
-      const col = ob.style === 'coral' ? (kind === 'attract' ? '255,110,110' : kind === 'repel' ? '110,230,130' : '110,180,255') : (kind === 'attract' ? '120,220,255' : '255,120,200');
+      const col = ob.style === 'pearl' ? '255,240,190' : ob.style === 'coral' ? (kind === 'attract' ? '255,110,110' : kind === 'repel' ? '110,230,130' : '110,180,255') : (kind === 'attract' ? '120,220,255' : '255,120,200');
       this.isoEllipse(ctx, ob.x, ob.y, 0.003, ob.r, `rgba(${col},0.07)`);
       const [cx, cy] = this.proj(ob.x, ob.y, 0.006);
       ctx.lineWidth = Math.max(1, s * 0.05);
@@ -776,6 +784,7 @@ class Renderer {
     const cx = ob.x + ob.w / 2, cy = ob.y + ob.h / 2;
     const along = Math.abs(ux) > Math.abs(uy) ? ob.w : ob.h, across = Math.abs(ux) > Math.abs(uy) ? ob.h : ob.w;
     const n = Math.max(4, Math.round(ob.w * ob.h * 1.6)), speed = ob.type === 'boost' ? 0.55 : 0.35;
+    const current = ob.style === 'current', col = current ? '170,225,255' : '255,255,255';
     ctx.lineCap = 'round';
     for (let i = 0; i < n; i++) {
       const lat = ((i * 0.618) % 1 - 0.5) * (across - 0.4);
@@ -786,10 +795,12 @@ class Renderer {
       const p0 = this.proj(bx - ux * len / 2, by - uy * len / 2, 0.05);
       const p1 = this.proj(bx + px * wave, by + py * wave, 0.08);
       const p2 = this.proj(bx + ux * len / 2, by + uy * len / 2, 0.05);
-      ctx.strokeStyle = `rgba(255,255,255,${0.75 * a})`; ctx.lineWidth = Math.max(1, s * 0.05);
+      ctx.strokeStyle = `rgba(${col},${0.75 * a})`; ctx.lineWidth = Math.max(1, s * 0.05);
       ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.quadraticCurveTo(p1[0], p1[1], p2[0], p2[1]); ctx.stroke();
-      if (i % 4 === 0) { // kleine Böe
-        ctx.fillStyle = `rgba(255,255,255,${0.35 * a})`;
+      if (current && i % 2 === 0) { // Luftblase, die mit der Strömung treibt
+        ctx.strokeStyle = `rgba(${col},${0.6 * a})`; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(p2[0], p2[1] - s * 0.15 * u, s * (0.05 + (i % 3) * 0.02), 0, TAU); ctx.stroke();
+      } else if (i % 4 === 0) { // kleine Böe
+        ctx.fillStyle = `rgba(${col},${0.35 * a})`;
         ctx.beginPath(); ctx.arc(p2[0], p2[1], s * 0.08, 0, TAU); ctx.fill();
       }
     }
@@ -815,6 +826,7 @@ class Renderer {
     } else if (ob.type === 'rotor') {
       const hub = this.circlePoly(ob.x, ob.y, ob.hubR, 8);
       items.push({ x: ob.x, y: ob.y, draw: () => {
+        if (ob.style === 'tentacle') { this.drawKraken(ctx, ob, t); return; }
         this.prism(ctx, hub, 0, ob.height + 0.25, th.rotor.top, th.rotor.side);
         for (let i = 0; i < ob.blades; i++) {
           const a = ob.bladeAngle(i), ca = Math.cos(a), sa = Math.sin(a), tk = ob.thick;
@@ -854,6 +866,7 @@ class Renderer {
         const sc = 1 + sq * 0.25;
         if (ob.style === 'crystal') this.spriteCrystal(ctx, ob.x, ob.y, 0, ob.r * 1.6 * sc, '#cfeeff', '#5b90c6');
         else if (ob.style === 'rock') { const [rx, ry] = this.proj(ob.x, ob.y, 0); this.spriteRock(ctx, rx, ry, this.scale * ob.r * 2.1 * sc, '#9a948a', '#5f5a52'); }
+        else if (ob.style === 'coral') { const [rx, ry] = this.proj(ob.x, ob.y, 0); this.spriteCoral(ctx, rx, ry, this.scale * ob.r * 2.6 * sc, { seed: ((ob.x * 7 + ob.y * 13) % 10) / 10 }); }
         else this.spriteMushroom(ctx, ob.x, ob.y, 0, ob.r * 1.7 * sc, '#e63b5a', true);
       } });
     } else if (ob.type === 'portal') {
@@ -872,6 +885,7 @@ class Renderer {
     } else if (ob.type === 'magnet') {
       items.push({ x: ob.x, y: ob.y, draw: () => {
         const kind = ob.slow ? 'slow' : ob.strength > 0 ? 'attract' : 'repel', s = this.scale;
+        if (ob.style === 'pearl') { const [sx, sy] = this.proj(ob.x, ob.y, 0); this.spritePearl(ctx, sx, sy, s * ob.core * 3.4, t, true); return; }
         if (ob.style === 'coral') {
           const cols = kind === 'attract' ? ['#ff6a6a', '#a8202a'] : kind === 'repel' ? ['#6fe07a', '#1f7a30'] : ['#6fb0ff', '#1f4a9a'];
           const [sx, sy] = this.proj(ob.x, ob.y, 0);
@@ -893,6 +907,7 @@ class Renderer {
       items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => ob.style === 'catapult' ? this.drawCatapult(ctx, ob, t) : this.drawCannon(ctx, ob, t) });
     } else if (ob.type === 'door') {
       if (ob.style === 'pyramid') items.push({ x: ob.px, y: ob.py, noFade: true, draw: () => this.drawPyramid(ctx, ob, t) });
+      else if (ob.style === 'wreck') items.push({ x: ob.px, y: ob.py, noFade: true, draw: () => this.drawWreck(ctx, ob, t) });
       else items.push({ x: ob.x, y: ob.y, bias: 0.15, noFade: true, draw: () => { const [sx, sy] = this.proj(ob.x, ob.y + 0.35, 0); this.spriteHut(ctx, sx, sy, this.scale * ob.s, t); } });
     } else if (ob.type === 'cauldron') {
       items.push({ x: ob.x, y: ob.y, draw: () => this.drawCauldronPot(ctx, ob, t) });
@@ -1305,6 +1320,42 @@ class Renderer {
       ctx.fillStyle = '#1a1a1a'; ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(tx + d * s * 0.5, ty + s * 0.12 + sw * 0.5); ctx.lineTo(tx, ty + s * 0.25); ctx.closePath(); ctx.fill();
       ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(tx + d * s * 0.18, ty + s * 0.12, s * 0.035, 0, TAU); ctx.fill();
       if (ob.docked) { const [lx, ly] = this.proj(ob.x - L * 0.8, ob.y, bob + 1.3); ctx.fillStyle = `rgba(120,255,120,${0.6 + 0.4 * Math.sin(t * 6)})`; ctx.beginPath(); ctx.arc(lx, ly, s * 0.12, 0, TAU); ctx.fill(); }
+    } else if (ob.style === 'barrel') { // rollendes Fass, liegend, mit zwei Reifen
+      const r = ob.w * 0.5, along = Math.abs(ob.x1 - ob.x0) >= Math.abs(ob.y1 - ob.y0);
+      const body = along ? [[ob.x - r, ob.y - r * 0.8], [ob.x + r, ob.y - r * 0.8], [ob.x + r, ob.y + r * 0.8], [ob.x - r, ob.y + r * 0.8]] : [[ob.x - r * 0.8, ob.y - r], [ob.x + r * 0.8, ob.y - r], [ob.x + r * 0.8, ob.y + r], [ob.x - r * 0.8, ob.y + r]];
+      this.prism(ctx, body, 0, r * 1.7, '#a8783f', '#5c3f1c', { outline: '#3a2610' });
+      ctx.strokeStyle = '#2a2a30'; ctx.lineWidth = Math.max(1.5, s * 0.06);
+      for (const k of [-0.45, 0.45]) { // Reifen quer zur Rollrichtung
+        const [a0, a1] = along ? this.proj(ob.x + k * r, ob.y - r * 0.8, r * 1.72) : this.proj(ob.x - r * 0.8, ob.y + k * r, r * 1.72);
+        const [b0, b1] = along ? this.proj(ob.x + k * r, ob.y + r * 0.8, r * 1.72) : this.proj(ob.x + r * 0.8, ob.y + k * r, r * 1.72);
+        ctx.beginPath(); ctx.moveTo(a0, a1); ctx.lineTo(b0, b1); ctx.stroke();
+      }
+      const roll = (t * 5 * (ob.dir || 1)) % 1; // wandernder Glanzstreifen zeigt das Rollen
+      const [g0, g1] = along ? this.proj(ob.x - r + roll * 2 * r, ob.y - r * 0.7, r * 1.72) : this.proj(ob.x - r * 0.7, ob.y - r + roll * 2 * r, r * 1.72);
+      const [g2, g3] = along ? this.proj(ob.x - r + roll * 2 * r, ob.y + r * 0.7, r * 1.72) : this.proj(ob.x + r * 0.7, ob.y - r + roll * 2 * r, r * 1.72);
+      ctx.strokeStyle = 'rgba(255,230,180,0.35)'; ctx.lineWidth = Math.max(2, s * 0.08); ctx.beginPath(); ctx.moveTo(g0, g1); ctx.lineTo(g2, g3); ctx.stroke();
+    } else if (ob.style === 'shark') { // Hai: dunkler Schatten unter Wasser, Rückenflosse und Schwanz über der Oberfläche
+      const d = ob.dir || 1, L = ob.w * 0.5, bob = 0.03 * Math.sin(t * 2 + ob.x);
+      this.isoEllipse(ctx, ob.x, ob.y, -0.05, L, 'rgba(20,40,60,0.55)', ob.h * 0.35);
+      this.isoEllipse(ctx, ob.x + d * L * 0.9, ob.y, -0.05, L * 0.35, 'rgba(20,40,60,0.5)', ob.h * 0.2);
+      const fin = [[ob.x + d * 0.1, ob.y, 0.08 + bob], [ob.x - d * 0.15, ob.y, 0.62 + bob], [ob.x - d * 0.5, ob.y, 0.08 + bob]];
+      ctx.fillStyle = '#5d6b78'; ctx.beginPath(); fin.forEach((q, i) => { const pp = this.proj(q[0], q[1], q[2]); i ? ctx.lineTo(pp[0], pp[1]) : ctx.moveTo(pp[0], pp[1]); }); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = '#2f3a44'; ctx.lineWidth = 1; ctx.stroke();
+      const tail = [[ob.x - d * L * 0.95, ob.y, 0.05 + bob], [ob.x - d * L * 1.15, ob.y, 0.42 + bob], [ob.x - d * L * 1.25, ob.y, 0.05 + bob]];
+      ctx.fillStyle = '#5d6b78'; ctx.beginPath(); tail.forEach((q, i) => { const pp = this.proj(q[0], q[1], q[2]); i ? ctx.lineTo(pp[0], pp[1]) : ctx.moveTo(pp[0], pp[1]); }); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = Math.max(1, s * 0.04); // Kielwasser
+      for (const side of [-0.25, 0.25]) { const [w0, w1] = this.proj(ob.x - d * 0.3, ob.y + side, 0.01), [w2, w3] = this.proj(ob.x - d * (1.2 + 0.3 * Math.sin(t * 3)), ob.y + side * 2.2, 0.01); ctx.beginPath(); ctx.moveTo(w0, w1); ctx.lineTo(w2, w3); ctx.stroke(); }
+    } else if (ob.style === 'wave') { // Welle: durchscheinender Wasserkamm mit Gischt, rollt quer über die Planken
+      const crest = 0.85 + 0.1 * Math.sin(t * 4);
+      ctx.globalAlpha = 0.7; this.prism(ctx, poly, 0, crest, '#8fd4f5', '#2a7fa8'); ctx.globalAlpha = 1;
+      const along = ob.w >= ob.h; // Gischt entlang der Kammlinie
+      for (let i = 0; i < 7; i++) {
+        const u = (i + 0.5) / 7, fx = along ? ob.x - ob.w / 2 + u * ob.w : ob.x, fy = along ? ob.y : ob.y - ob.h / 2 + u * ob.h;
+        const [px, py] = this.proj(fx, fy, crest + 0.1 + 0.12 * Math.sin(t * 6 + i * 1.7));
+        ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.beginPath(); ctx.arc(px, py, s * (0.09 + (i % 3) * 0.03), 0, TAU); ctx.fill();
+      }
+      const [q0, q1] = this.proj(poly[3][0], poly[3][1], crest), [q2, q3] = this.proj(poly[2][0], poly[2][1], crest);
+      ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = Math.max(2, s * 0.08); ctx.beginPath(); ctx.moveTo(q0, q1); ctx.lineTo(q2, q3); ctx.stroke();
     } else if (ob.style === 'cannonball' || ob.style === 'boulder') { // rollende Kanonenkugel / Felsbrocken
       const r = ob.w * 0.5, [cx, cy] = this.proj(ob.x, ob.y, r), rock = ob.style === 'boulder';
       const g = ctx.createRadialGradient(cx - r * s * 0.35, cy - r * s * 0.4, r * s * 0.1, cx, cy, r * s);
@@ -1364,6 +1415,10 @@ class Renderer {
       case 'gear': this.spriteGear(ctx, sx, sy, s, d, t); break;
       case 'candle': this.spriteCandle(ctx, sx, sy, s, t); break;
       case 'coral': this.spriteCoral(ctx, sx, sy, s, d); break;
+      case 'fish': this.spriteFish(ctx, sx, sy, s, d, t); break;
+      case 'jelly': this.spriteJelly(ctx, sx, sy, s, d, t); break;
+      case 'mast': this.spriteMast(ctx, sx, sy, s, d, t); break;
+      case 'pearl': this.spritePearl(ctx, sx, sy, s * 0.7, t, false); break;
       case 'lighthouse': this.spriteLighthouse(ctx, sx, sy, s, t); break;
       case 'barrel': this.spriteBarrel(ctx, sx, sy, s); break;
       case 'crate': this.spriteCrate(ctx, sx, sy, s); break;
@@ -1437,6 +1492,153 @@ class Renderer {
     ctx.fillStyle = '#4a4a52'; ctx.fillRect(sx - s * 0.08, sy - s * 0.4, s * 0.16, s * 0.4);
     ctx.beginPath(); ctx.ellipse(sx, sy - s * 0.4, s * 0.11, s * 0.05, 0, 0, TAU); ctx.fill();
     ctx.strokeStyle = '#c9a15a'; ctx.lineWidth = Math.max(1, s * 0.04); ctx.beginPath(); ctx.moveTo(sx + s * 0.08, sy - s * 0.3); ctx.quadraticCurveTo(sx + s * 0.4, sy - s * 0.05 + Math.sin(t + sx) * s * 0.03, sx + s * 0.7, sy - s * 0.02); ctx.stroke();
+  }
+  /* ---------- Meereswelt ---------- */
+  spriteFish(ctx, sx, sy, s, d, t) {
+    const seed = d.seed || 0, sw = Math.sin(t * 0.9 + seed * 6.3), dir = Math.cos(t * 0.9 + seed * 6.3) >= 0 ? 1 : -1;
+    const x = sx + sw * s * 0.5, y = sy - s * (0.7 + 0.15 * Math.sin(t * 2 + seed * 9)), L = s * 0.32, Hh = s * 0.17;
+    const cols = seed < 0.33 ? ['#ff8a3d', '#c25a1a'] : seed < 0.66 ? ['#ffd23d', '#c29a1a'] : ['#5fb8ff', '#2a6fc0'];
+    ctx.fillStyle = 'rgba(0,0,0,0.15)'; ctx.beginPath(); ctx.ellipse(sx, sy, L * 0.9, Hh * 0.5, 0, 0, TAU); ctx.fill();
+    const flap = Math.sin(t * 8 + seed * 5) * 0.3;
+    ctx.fillStyle = cols[1]; ctx.beginPath(); ctx.moveTo(x - dir * L * 0.8, y); ctx.lineTo(x - dir * L * 1.35, y - Hh * (0.9 + flap)); ctx.lineTo(x - dir * L * 1.35, y + Hh * (0.9 - flap)); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = cols[0]; ctx.beginPath(); ctx.ellipse(x, y, L, Hh, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = cols[1]; ctx.beginPath(); ctx.moveTo(x - dir * L * 0.2, y - Hh); ctx.lineTo(x + dir * L * 0.05, y - Hh * 1.6); ctx.lineTo(x + dir * L * 0.3, y - Hh * 0.9); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.beginPath(); ctx.ellipse(x - dir * L * 0.1, y, L * 0.12, Hh * 0.95, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x + dir * L * 0.55, y - Hh * 0.2, Hh * 0.3, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(x + dir * L * 0.6, y - Hh * 0.2, Hh * 0.15, 0, TAU); ctx.fill();
+  }
+  spriteJelly(ctx, sx, sy, s, d, t) {
+    const seed = d.seed || 0, y = sy - s * (1.1 + 0.25 * Math.sin(t * 1.1 + seed * 7)), r = s * 0.3, pulse = 1 + 0.08 * Math.sin(t * 3 + seed * 4);
+    const col = seed > 0.5 ? '255,140,200' : '190,150,255';
+    ctx.fillStyle = `rgba(${col},0.18)`; ctx.beginPath(); ctx.arc(sx, y, r * 1.8, 0, TAU); ctx.fill();
+    ctx.strokeStyle = `rgba(${col},0.7)`; ctx.lineWidth = Math.max(1, s * 0.03); ctx.lineCap = 'round';
+    for (let i = -2; i <= 2; i++) { // Tentakel schlängeln
+      const x0 = sx + i * r * 0.35, wv = Math.sin(t * 2.5 + i + seed * 5) * r * 0.3;
+      ctx.beginPath(); ctx.moveTo(x0, y + r * 0.2); ctx.quadraticCurveTo(x0 + wv, y + r * 0.9, x0 - wv * 0.6, y + r * (1.5 + Math.abs(i) * 0.2)); ctx.stroke();
+    }
+    const g = ctx.createRadialGradient(sx - r * 0.3, y - r * 0.4, r * 0.1, sx, y, r * pulse);
+    g.addColorStop(0, `rgba(255,255,255,0.9)`); g.addColorStop(1, `rgba(${col},0.55)`);
+    ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(sx, y, r * pulse, r * 0.8 * pulse, 0, Math.PI, TAU); ctx.lineTo(sx + r * pulse, y + r * 0.15); ctx.quadraticCurveTo(sx, y + r * 0.35, sx - r * pulse, y + r * 0.15); ctx.closePath(); ctx.fill();
+  }
+  spriteMast(ctx, sx, sy, s, d, t) {
+    const Hm = s * 3.2, yard = sy - Hm * 0.62, sw = Math.sin(t * 1.5 + (d.seed || 0) * 6) * s * 0.12;
+    ctx.strokeStyle = '#3a2412'; ctx.lineWidth = Math.max(2, s * 0.09); ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx, sy - Hm); ctx.stroke();
+    ctx.lineWidth = Math.max(1.5, s * 0.06); ctx.beginPath(); ctx.moveTo(sx - s * 0.95, yard); ctx.lineTo(sx + s * 0.95, yard); ctx.stroke();
+    ctx.fillStyle = '#f0e6d2'; ctx.beginPath(); ctx.moveTo(sx - s * 0.9, yard); ctx.lineTo(sx + s * 0.9, yard); // Segel bläht sich
+    ctx.quadraticCurveTo(sx + s * 0.75 + sw, yard + s * 0.7, sx + s * 0.7, yard + s * 1.35); ctx.lineTo(sx - s * 0.7, yard + s * 1.35); ctx.quadraticCurveTo(sx - s * 0.75 + sw, yard + s * 0.7, sx - s * 0.9, yard); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(90,60,30,0.5)'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(sx - s * 0.6, yard + s * 0.45); ctx.lineTo(sx + s * 0.6, yard + s * 0.45); ctx.moveTo(sx - s * 0.65, yard + s * 0.9); ctx.lineTo(sx + s * 0.65, yard + s * 0.9); ctx.stroke();
+    ctx.fillStyle = '#5a3a1e'; ctx.fillRect(sx - s * 0.22, sy - Hm * 0.86, s * 0.44, s * 0.2); // Ausguck
+    ctx.fillStyle = '#1a1a1a'; ctx.beginPath(); ctx.moveTo(sx, sy - Hm); ctx.lineTo(sx + s * 0.5, sy - Hm + s * 0.12 + sw * 0.5); ctx.lineTo(sx, sy - Hm + s * 0.26); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(sx + s * 0.18, sy - Hm + s * 0.13, s * 0.035, 0, TAU); ctx.fill();
+  }
+  /* Perle in offener Muschel; big = Zauberperle (Magnet) mit stärkerem Leuchten */
+  spritePearl(ctx, sx, sy, s, t, big) {
+    this.shadow(ctx, sx, sy, s * 0.5);
+    const gl = 0.6 + 0.4 * Math.sin(t * 2 + sx * 0.01);
+    ctx.fillStyle = `rgba(255,245,210,${(big ? 0.28 : 0.14) * gl})`; ctx.beginPath(); ctx.arc(sx, sy - s * 0.35, s * (big ? 1.1 : 0.7), 0, TAU); ctx.fill();
+    ctx.fillStyle = '#f2d9c4'; ctx.beginPath(); ctx.ellipse(sx, sy - s * 0.5, s * 0.5, s * 0.55, 0, Math.PI * 1.05, Math.PI * 1.95); ctx.lineTo(sx, sy - s * 0.15); ctx.closePath(); ctx.fill(); // oberer Deckel
+    ctx.strokeStyle = 'rgba(170,110,90,0.45)'; ctx.lineWidth = 1;
+    for (let i = 0; i < 5; i++) { const a = Math.PI * (1.1 + i * 0.2); ctx.beginPath(); ctx.moveTo(sx, sy - s * 0.15); ctx.lineTo(sx + Math.cos(a) * s * 0.5, sy - s * 0.5 + Math.sin(a) * s * 0.55); ctx.stroke(); }
+    const r = s * 0.24, g = ctx.createRadialGradient(sx - r * 0.35, sy - s * 0.2 - r * 0.4, r * 0.1, sx, sy - s * 0.2, r);
+    g.addColorStop(0, '#ffffff'); g.addColorStop(0.7, '#efe6f5'); g.addColorStop(1, '#c9bcd6');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(sx, sy - s * 0.2, r, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#f7e2cf'; ctx.beginPath(); ctx.ellipse(sx, sy, s * 0.52, s * 0.22, 0, 0, TAU); ctx.fill(); // untere Schale
+    ctx.strokeStyle = 'rgba(170,110,90,0.4)'; for (let i = -2; i <= 2; i++) { ctx.beginPath(); ctx.moveTo(sx, sy - s * 0.2); ctx.lineTo(sx + i * s * 0.2, sy + s * 0.18); ctx.stroke(); }
+    if (big) for (let i = 0; i < 4; i++) { // Funkeln
+      const a = t * 1.2 + i * 1.57, px = sx + Math.cos(a) * s * 0.75, py = sy - s * 0.35 + Math.sin(a) * s * 0.3, k = s * 0.06 * (0.6 + 0.4 * Math.sin(t * 5 + i));
+      ctx.fillStyle = 'rgba(255,255,255,0.9)'; ctx.beginPath(); ctx.moveTo(px, py - k * 2); ctx.lineTo(px + k, py); ctx.lineTo(px, py + k * 2); ctx.lineTo(px - k, py); ctx.closePath(); ctx.fill();
+    }
+  }
+  /* Krake: Kopf in der Mitte, die Rotorflügel sind schlängelnde Fangarme mit Saugnäpfen */
+  drawKraken(ctx, ob, t) {
+    const s = this.scale, segs = [];
+    for (let i = 0; i < ob.blades; i++) {
+      const a = ob.bladeAngle(i), ca = Math.cos(a), sa = Math.sin(a), n = 9;
+      for (let k = 1; k <= n; k++) {
+        const u = k / n, wave = Math.sin(t * 3 + u * 5 + i) * 0.18 * u;
+        const px = ob.x + ca * ob.len * u - sa * wave, py = ob.y + sa * ob.len * u + ca * wave;
+        segs.push({ px, py, r: ob.thick * (1.35 - u * 0.95) + 0.05, z: ob.height * 0.5 + 0.08 * Math.sin(t * 2 + u * 4 + i), u, k: this.depth(px, py) });
+      }
+    }
+    segs.sort((p, q) => p.k - q.k);
+    for (const sg of segs) {
+      this.isoEllipse(ctx, sg.px, sg.py, 0.005, sg.r * 1.1, 'rgba(0,0,0,0.14)');
+      const [cx, cy] = this.proj(sg.px, sg.py, sg.z), R = sg.r * s;
+      const g = ctx.createRadialGradient(cx - R * 0.35, cy - R * 0.4, R * 0.1, cx, cy, R);
+      g.addColorStop(0, '#d98ad0'); g.addColorStop(1, '#6a2a78');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.fill();
+      if (sg.u > 0.15) { ctx.fillStyle = 'rgba(255,220,240,0.7)'; ctx.beginPath(); ctx.arc(cx, cy + R * 0.45, R * 0.28, 0, TAU); ctx.fill(); } // Saugnapf
+    }
+    // Kopf: Kuppel mit Augen, die dem Ball nachschauen
+    const hr = ob.hubR, [hx, hy] = this.proj(ob.x, ob.y, ob.height * 0.5 + 0.1), HR = hr * s;
+    this.isoEllipse(ctx, ob.x, ob.y, 0.006, hr * 1.15, 'rgba(0,0,0,0.2)');
+    const g = ctx.createRadialGradient(hx - HR * 0.35, hy - HR * 0.6, HR * 0.1, hx, hy - HR * 0.2, HR * 1.25);
+    g.addColorStop(0, '#e29ad8'); g.addColorStop(0.6, '#9a48a8'); g.addColorStop(1, '#4a1a58');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(hx, hy - HR * 0.35, HR * 1.05, HR * 1.2, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.18)'; for (let i = 0; i < 5; i++) { const a = t * 0.8 + i * 1.26; ctx.beginPath(); ctx.arc(hx + Math.cos(a) * HR * 0.55, hy - HR * 0.4 + Math.sin(a) * HR * 0.5, HR * 0.13, 0, TAU); ctx.fill(); }
+    const b = this.ballPos, look = b ? Math.atan2(b[1] - hy, b[0] - hx) : t;
+    for (const side of [-1, 1]) {
+      const ex = hx + side * HR * 0.45, ey = hy - HR * 0.1;
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.ellipse(ex, ey, HR * 0.26, HR * 0.3, 0, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#1a0a20'; ctx.beginPath(); ctx.arc(ex + Math.cos(look) * HR * 0.09, ey + Math.sin(look) * HR * 0.09, HR * 0.14, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(ex + Math.cos(look) * HR * 0.09 - HR * 0.05, ey + Math.sin(look) * HR * 0.09 - HR * 0.06, HR * 0.045, 0, TAU); ctx.fill();
+    }
+  }
+  /* Strudel: dunkler Wassertrichter mit drehenden Schaumspiralen, Auswurfrinne wie bei der Drehscheibe */
+  drawWhirl(ctx, ob, t) {
+    const s = this.scale, [cx, cy] = this.proj(ob.x, ob.y, 0.006);
+    this.isoEllipse(ctx, ob.x, ob.y, 0.003, ob.r + 0.3, 'rgba(120,200,240,0.25)');
+    this.isoEllipse(ctx, ob.x, ob.y, 0.004, ob.r + 0.1, '#0b3a55');
+    ctx.save(); ctx.translate(cx, cy); ctx.scale(1, this.cam.tilt);
+    for (let arm = 0; arm < 3; arm++) { // drei Spiralarme
+      ctx.strokeStyle = `rgba(230,245,255,${0.55 + 0.25 * Math.sin(t * 4 + arm)})`; ctx.lineWidth = Math.max(1.5, s * 0.07); ctx.lineCap = 'round';
+      ctx.beginPath();
+      for (let k = 0; k <= 24; k++) { const u = k / 24, a = ob.angle * 1.4 + arm * TAU / 3 + u * 3.2, rr = (0.15 + u * 0.8) * ob.r * s; k ? ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr) : ctx.moveTo(Math.cos(a) * rr, Math.sin(a) * rr); }
+      ctx.stroke();
+    }
+    for (let i = 0; i < 8; i++) { // Gischtflocken am Rand
+      const a = -ob.angle * 1.4 + i * 0.785, rr = ob.r * s * (0.92 + 0.06 * Math.sin(t * 5 + i));
+      ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.beginPath(); ctx.arc(Math.cos(a) * rr, Math.sin(a) * rr, s * 0.05, 0, TAU); ctx.fill();
+    }
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, ob.r * s * 0.45); g.addColorStop(0, '#02101c'); g.addColorStop(1, 'rgba(11,58,85,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, ob.r * s * 0.45, 0, TAU); ctx.fill();
+    ctx.restore();
+    const ex = Math.cos(ob.exitA), ey = Math.sin(ob.exitA), px = -ey, py = ex; // Auswurfrinne
+    ctx.strokeStyle = 'rgba(255,240,200,0.9)'; ctx.lineWidth = Math.max(2, s * 0.09);
+    for (const side of [-0.32, 0.32]) {
+      const a0 = this.proj(ob.x + ex * (ob.r - 0.4) + px * side, ob.y + ey * (ob.r - 0.4) + py * side, 0.014);
+      const a1 = this.proj(ob.x + ex * (ob.r + 0.45) + px * side, ob.y + ey * (ob.r + 0.45) + py * side, 0.014);
+      ctx.beginPath(); ctx.moveTo(a0[0], a0[1]); ctx.lineTo(a1[0], a1[1]); ctx.stroke();
+    }
+  }
+  /* Schiffswrack: gekippter Rumpf im Sand, Maststumpf, Leck als dunkler Einstieg an der Vorderseite */
+  drawWreck(ctx, ob, t) {
+    const s = this.scale, px = ob.px, py = ob.py, L = 3.4, Wd = 1.45;
+    const hull = [[px - L, py - Wd * 0.5], [px - L * 0.7, py - Wd], [px + L * 0.7, py - Wd], [px + L * 1.15, py], [px + L * 0.7, py + Wd], [px - L * 0.7, py + Wd], [px - L, py + Wd * 0.5]];
+    this.isoEllipse(ctx, px, py, 0.003, L * 1.1, 'rgba(0,0,0,0.2)', Wd * 1.1);
+    this.prism(ctx, hull, 0, 1.4, '#5a4030', '#2e1c0e', { outline: '#140c06' });
+    ctx.strokeStyle = 'rgba(20,12,6,0.5)'; ctx.lineWidth = 1; // Deckplanken und Plankenlinien vorn
+    for (let k = -0.8; k <= 0.8; k += 0.4) { const a = this.proj(px - L * 0.65, py + k * Wd, 1.41), b = this.proj(px + L * 0.75, py + k * Wd, 1.41); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke(); }
+    for (const z of [0.35, 0.7, 1.05]) { const a = this.proj(px - L * 0.7, py + Wd, z), b = this.proj(px + L * 0.7, py + Wd, z); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke(); }
+    // Leck: dunkle Öffnung an der Vorderseite über der Tür
+    const dx = ob.x, gap = 0.62;
+    const o = [[dx - gap, py + Wd, 0], [dx - gap * 0.7, py + Wd, 0.95], [dx, py + Wd, 1.15], [dx + gap * 0.7, py + Wd, 0.95], [dx + gap, py + Wd, 0]];
+    ctx.fillStyle = '#03070c'; ctx.beginPath(); o.forEach((q, i) => { const pp = this.proj(q[0], q[1], q[2] + 0.01); i ? ctx.lineTo(pp[0], pp[1]) : ctx.moveTo(pp[0], pp[1]); }); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#6a4a2a'; ctx.lineWidth = Math.max(1.5, s * 0.06); ctx.stroke(); // gesplitterte Planken
+    for (let i = 0; i < 3; i++) { const q = this.proj(dx - gap * 0.6 + i * gap * 0.6, py + Wd, 0.95 + (i === 1 ? 0.2 : 0)), r = this.proj(dx - gap * 0.6 + i * gap * 0.6 + 0.12, py + Wd, 0.6); ctx.beginPath(); ctx.moveTo(q[0], q[1]); ctx.lineTo(r[0], r[1]); ctx.stroke(); }
+    // Maststumpf mit Fetzen Segel, schief
+    const [m0, m1] = this.proj(px + 0.4, py - 0.2, 1.4), [m2, m3] = this.proj(px + 1.0, py - 0.4, 3.4);
+    ctx.strokeStyle = '#2a1a0c'; ctx.lineWidth = Math.max(2, s * 0.09); ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(m0, m1); ctx.lineTo(m2, m3); ctx.stroke();
+    const sw = Math.sin(t * 1.2) * s * 0.1;
+    ctx.fillStyle = 'rgba(200,190,170,0.7)'; ctx.beginPath(); ctx.moveTo(m2, m3 + s * 0.2); ctx.quadraticCurveTo(m2 - s * 0.7 + sw, m3 + s * 0.6, m2 - s * 0.4, m3 + s * 1.3); ctx.lineTo(m2 - s * 0.05, m3 + s * 1.0); ctx.closePath(); ctx.fill();
+    // Seepocken und Tang am Rumpf, aufsteigende Blasen aus dem Leck
+    ctx.fillStyle = 'rgba(230,220,200,0.6)'; for (let i = 0; i < 6; i++) { const q = this.proj(px - L * 0.6 + i * 0.55, py + Wd, 0.2 + (i % 2) * 0.25); ctx.beginPath(); ctx.arc(q[0], q[1], s * 0.05, 0, TAU); ctx.fill(); }
+    const [w0, w1] = this.proj(px - L * 0.85, py + Wd * 0.7, 0); this.spriteSeaweed(ctx, w0, w1, s * 1.1, { seed: 0.4 }, t);
+    ctx.strokeStyle = 'rgba(220,245,255,0.6)'; ctx.lineWidth = 1;
+    for (let i = 0; i < 4; i++) { const u = (t * 0.35 + i * 0.25) % 1, q = this.proj(dx + Math.sin(t + i) * 0.15, py + Wd - 0.1, 0.4 + u * 2.2); ctx.globalAlpha = 1 - u; ctx.beginPath(); ctx.arc(q[0], q[1], s * (0.04 + i * 0.012), 0, TAU); ctx.stroke(); }
+    ctx.globalAlpha = 1;
   }
   spriteBuoy(ctx, sx, sy, s, t) {
     const bob = Math.sin(t * 1.8 + sx) * s * 0.05, y = sy + bob;

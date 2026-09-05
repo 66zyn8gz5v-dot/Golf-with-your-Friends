@@ -115,6 +115,37 @@
             <g class="sway s2"><path d="M100 62 L108 40 L116 62 Z" fill="#2a4a22"/></g><g class="sway s3"><path d="M280 63 L287 46 L294 63 Z" fill="#2a4a22"/></g>
             <g class="twinkle"><path d="M150 12 l1 3 l3 1 l-3 1 l-1 3 l-1 -3 l-3 -1 l3 -1 z" fill="#fff"/></g>
           </svg>`;
+  const SCENE_SEA = `<svg class="mode-scene" viewBox="0 0 300 72" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+            <defs>
+              <linearGradient id="skyS" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2f6fc4"/><stop offset="1" stop-color="#bfe6ff"/></linearGradient>
+              <linearGradient id="seaS" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3fa0d6"/><stop offset="1" stop-color="#155a8a"/></linearGradient>
+              <linearGradient id="deepS" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#135078"/><stop offset="1" stop-color="#062a45"/></linearGradient>
+              <linearGradient id="hullS" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7a5230"/><stop offset="1" stop-color="#3a2412"/></linearGradient>
+              <linearGradient id="towerS" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#c9c3b9"/><stop offset="0.5" stop-color="#f4efe6"/><stop offset="1" stop-color="#a49e94"/></linearGradient>
+              <radialGradient id="sunS" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fff8d0"/><stop offset="1" stop-color="#ffd166"/></radialGradient>
+              <filter id="softS" x="-20%" y="-20%" width="140%" height="160%"><feGaussianBlur stdDeviation="1.2"/></filter>
+            </defs>
+            <rect width="300" height="72" fill="url(#skyS)"/>
+            <circle cx="52" cy="14" r="9" fill="url(#sunS)"/>
+            <g class="drift" opacity="0.85"><ellipse cx="180" cy="12" rx="20" ry="5" fill="#ffffff"/><ellipse cx="192" cy="15" rx="12" ry="3" fill="#e6f2ff"/></g>
+            <rect x="0" y="34" width="300" height="38" fill="url(#seaS)"/>
+            <path d="M0 52 Q30 48 60 52 T120 52 T180 52 T240 52 T300 52 V72 H0 Z" fill="url(#deepS)" opacity="0.9"/>
+            <path d="M0 40 q10 -3 20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0" stroke="rgba(255,255,255,0.55)" stroke-width="1.2" fill="none"/>
+            <path d="M0 47 q10 -3 20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0" stroke="rgba(255,255,255,0.3)" stroke-width="1" fill="none"/>
+            <ellipse cx="110" cy="44" rx="30" ry="3" fill="rgba(0,0,0,0.25)" filter="url(#softS)"/>
+            <path d="M84 36 L136 36 L128 46 L92 46 Z" fill="url(#hullS)"/><rect x="88" y="33" width="44" height="3" fill="#a87f52"/>
+            <rect x="108" y="10" width="2" height="24" fill="#3a2412"/>
+            <path class="art-flag" d="M109 12 Q96 20 109 30 Z" fill="#f0e6d2" stroke="#3a2412" stroke-width="0.6"/>
+            <path d="M110 10 L120 12.5 L110 15 Z" fill="#1a1a1a"/><circle cx="114" cy="12.5" r="1" fill="#fff"/>
+            <path d="M232 46 L250 30 L268 46 Z" fill="#6a5a50"/><path d="M226 48 L244 36 L262 48 Z" fill="#8a7a6a"/>
+            <rect x="246" y="14" width="8" height="24" fill="url(#towerS)"/><rect x="244" y="20" width="12" height="3" fill="#d93b3b"/><rect x="244" y="28" width="12" height="3" fill="#d93b3b"/>
+            <rect x="245" y="10" width="10" height="5" fill="#3a3a44"/><rect x="247" y="11" width="6" height="3" fill="#ffd166" class="art-window"/>
+            <path d="M247 12 L232 4 L232 20 Z" fill="rgba(255,240,170,0.35)"/>
+            <g class="twinkle"><path d="M28 26 l1 2 l2 1 l-2 1 l-1 2 l-1 -2 l-2 -1 l2 -1 z" fill="#fff"/></g>
+            <path d="M150 20 q3 -3 6 0 M156 20 q3 -3 6 0" stroke="#fff" stroke-width="1" fill="none"/><path d="M200 26 q3 -3 6 0 M206 26 q3 -3 6 0" stroke="#fff" stroke-width="1" fill="none"/>
+            <ellipse cx="40" cy="60" rx="6" ry="2.5" fill="#ff7a3d" opacity="0.9"/><path d="M46 60 L52 56 L52 64 Z" fill="#ff7a3d" opacity="0.9"/><circle cx="37" cy="59.5" r="0.8" fill="#000"/>
+            <ellipse cx="290" cy="64" rx="5" ry="2" fill="#ffe066" opacity="0.9"/><path d="M285 64 L280 61 L280 67 Z" fill="#ffe066" opacity="0.9"/>
+          </svg>`;
   const SCENE_CREATIVE = `<svg class="mode-scene" viewBox="0 0 300 72" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
             <defs>
               <linearGradient id="skyK" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1d1238"/><stop offset="0.6" stop-color="#4a2f7a"/><stop offset="1" stop-color="#7a58b0"/></linearGradient>
@@ -171,10 +202,27 @@
     ui.overlay.querySelectorAll('.mode').forEach(b => b.addEventListener('click', () => {
       const m = b.dataset.mode;
       if (m === 'creative') { state.mode = 'creative'; showWorldSelect(); }
-      else { state.mode = 'normal'; setWorld(m === 'pro' ? 'pro' : 'normal'); showSetup(); }
+      else if (m === 'pro') { state.mode = 'normal'; setWorld('pro'); showSetup(); }
+      else { state.mode = 'normal'; showNormalWorldSelect(); }
     }));
   }
+  const sceneFor = id => ({ normal: SCENE_NORMAL, sea: SCENE_SEA, pro: SCENE_PRO })[id] || SCENE_NORMAL;
   function setWorld(id) { state.world = WORLDS.find(w => w.id === id) || WORLDS[0]; state.courses = state.world.courses; }
+
+  /* Normal: Welt wählen (Märchenland, Meereswelt, …), dann Spieler und Steuerung */
+  function showNormalWorldSelect() {
+    const worlds = WORLDS.filter(w => w.mode !== 'pro');
+    overlay(`<div class="panel">
+      <h2>🏆 Normal – Welt wählen</h2>
+      <div class="modes">
+        ${worlds.map(w => `<span class="btn mode" data-world="${w.id}">${sceneFor(w.id)}<span class="mode-label ${w.name.length > 8 ? 'long' : ''}">${w.name}</span></span>`).join('')}
+      </div>
+      <div class="sub">${worlds.map(w => `${w.name}: ${w.courses.length} Bahnen`).join(' · ')}</div>
+      <p><span class="btn ghost small" id="back">◀ Zurück</span></p>
+    </div>`, 'title');
+    ui.overlay.querySelectorAll('.mode[data-world]').forEach(b => b.addEventListener('click', () => { setWorld(b.dataset.world); showSetup(); }));
+    $('back').addEventListener('click', showTitle);
+  }
 
   /* Kreativ: Welt wählen, dann sofort los (ein Spieler, Schleuder, Bahn 1) */
   function showWorldSelect() {
@@ -182,7 +230,7 @@
     overlay(`<div class="panel">
       <h2>🛠 Kreativ – Welt wählen</h2>
       <div class="modes">
-        ${WORLDS.map(w => `<span class="btn mode" data-world="${w.id}">${w.id === 'pro' ? SCENE_PRO : SCENE_NORMAL}<span class="mode-label">${w.short}</span></span>`).join('')}
+        ${WORLDS.map(w => `<span class="btn mode" data-world="${w.id}">${sceneFor(w.id)}<span class="mode-label ${w.name.length > 8 ? 'long' : ''}">${w.name}</span></span>`).join('')}
       </div>
       <div class="sub">${WORLDS.map(w => `${w.name}: ${w.courses.length} Bahnen`).join(' · ')}</div>
       <div class="modes">
@@ -208,7 +256,7 @@
 
   function showSetup() {
     overlay(`<div class="panel">
-      <h2>${state.world.id === 'pro' ? '🔥 Profi-Welt' : '🏆 Normales Spiel'}</h2>
+      <h2>${state.world.id === 'pro' ? '🔥 Profi-Welt' : `🏆 ${state.world.name}`}</h2>
       <div class="sub">${state.world.name} · ${state.courses.length} Bahnen</div>
       <p>Spieler:</p>
       <div id="pc">${[1, 2, 3, 4].map(n => `<span class="btn ghost small ${n === playerCount ? 'sel' : ''}" data-n="${n}">${n}</span>`).join('')}</div>
@@ -232,7 +280,7 @@
       setControlMode(b.dataset.m);
       ui.overlay.querySelectorAll('#cm .btn').forEach(x => x.classList.toggle('sel', x.dataset.m === state.controlMode));
     }));
-    $('back').addEventListener('click', showTitle);
+    $('back').addEventListener('click', state.world.id === 'pro' ? showTitle : showNormalWorldSelect);
     $('start').addEventListener('click', () => { Sfx.unlock(); startGame(playerCount, 0); });
   }
 

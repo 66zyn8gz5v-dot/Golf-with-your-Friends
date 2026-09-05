@@ -3,11 +3,12 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 const ctx = { console };
 vm.createContext(ctx);
-const load = f => vm.runInContext(fs.readFileSync(new URL(`../src/${f}.js`, import.meta.url), 'utf8') + `\n;${f === 'courses_pro' ? 'PRO_COURSES' : f.toUpperCase()}`, ctx);
-const THEMES = load('themes'), COURSES = load('courses'), PRO = load('courses_pro');
+const load = f => vm.runInContext(fs.readFileSync(new URL(`../src/${f}.js`, import.meta.url), 'utf8') + `\n;${f === 'courses_pro' ? 'PRO_COURSES' : f === 'courses_sea' ? 'SEA_COURSES' : f.toUpperCase()}`, ctx);
+const THEMES = load('themes'), COURSES = load('courses'), SEA = load('courses_sea'), PRO = load('courses_pro');
 const FLOOR = new Set(['#', 's', 'i', 'w', 'l', 'T', 'H', 'o']);
 let ok = true;
-[...COURSES.map(c => ({ ...c, world: 'Normal' })), ...PRO.flatMap(c => c.inner ? [{ ...c, world: 'Profi' }, { ...c.inner, par: c.par, name: `${c.name} (innen)`, world: 'Profi' }] : [{ ...c, world: 'Profi' }])].forEach((c, i) => {
+const withInner = (list, world) => list.flatMap(c => c.inner ? [{ ...c, world }, { ...c.inner, par: c.par, name: `${c.name} (innen)`, world }] : [{ ...c, world }]);
+[...COURSES.map(c => ({ ...c, world: 'Märchenland' })), ...withInner(SEA, 'Meereswelt'), ...PRO.flatMap(c => c.inner ? [{ ...c, world: 'Profi' }, { ...c.inner, par: c.par, name: `${c.name} (innen)`, world: 'Profi' }] : [{ ...c, world: 'Profi' }])].forEach((c, i) => {
   const rows = c.map, H = rows.length, W = rows[0].length;
   const problems = [];
   if (!THEMES[c.theme]) problems.push(`Theme ${c.theme} fehlt`);
@@ -66,7 +67,7 @@ let ok = true;
     }
     if (!seen.has(cup.join())) problems.push('Loch vom Abschlag nicht erreichbar');
     for (const o of c.obstacles || []) {
-      const pts = o.type === 'portal' ? [[o.x, o.y], [o.tx, o.ty]] : ['bumper', 'rotor', 'switch', 'potion', 'turntable', 'magnet', 'cannon', 'cauldron', 'door'].includes(o.type) ? [[o.x, o.y]] : o.type === 'mover' ? [[o.x0, o.y0], [o.x1, o.y1]] : [];
+      const pts = o.type === 'portal' ? [[o.x, o.y], [o.tx, o.ty]] : ['bumper', 'rotor', 'switch', 'potion', 'turntable', 'magnet', 'cannon', 'cauldron', 'door'].includes(o.type) ? [[o.x, o.y]] : o.type === 'mover' && o.style !== 'shark' ? [[o.x0, o.y0], [o.x1, o.y1]] : []; // Haie schwimmen im Wasser neben der Bahn
       for (const [px, py] of pts) {
         const ch = rows[Math.floor(py)] && rows[Math.floor(py)][Math.floor(px)];
         if (!FLOOR.has(ch)) problems.push(`${o.type} bei (${px},${py}) liegt nicht auf dem Fairway (${ch})`);

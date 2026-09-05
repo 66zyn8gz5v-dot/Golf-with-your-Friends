@@ -74,6 +74,7 @@ body.creative .cbtn.creative { display: inline-block; }
 .btn.mode:hover { transform: translateY(-2px) scale(1.02); filter: brightness(1.08); box-shadow: 0 6px 0 #8a5a10, 0 12px 24px rgba(255, 200, 80, 0.4); }
 .btn.mode:active { transform: translateY(2px) scale(0.98); box-shadow: none; }
 .mode-scene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.mode-label.long { font-size: 22px; letter-spacing: 1px; }
 .mode-label {
   position: absolute; right: 22px; top: 50%; transform: translateY(-50%); z-index: 1;
   color: #fff6dc; text-shadow: 0 2px 0 #4a2a00, 0 0 12px rgba(0,0,0,0.75), 0 0 2px rgba(0,0,0,0.9);

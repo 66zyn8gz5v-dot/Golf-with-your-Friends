@@ -13,12 +13,12 @@ npx serve .          # oder: python3 -m http.server 8080
 
 ## Welten und Modi
 
-- **Normal-Welt** (9 Bahnen) und **Profi-Welt** (9 schwerere Bahnen mit Windmühlen, Pendeln, schmalen Dämmen und Brücken).
-- **Normal**: die Normal-Welt der Reihe nach, mit Schlaglimit und Wertung.
-- **Profi**: dasselbe für die Profi-Welt.
+- **Märchenland** (9 Bahnen: Wiese, Pilzhain, Schmiede, Zauberwald, Drachenhöhle, Eisgrotte, Wolkenburg, Hexenturm, Burgberg), **Meereswelt** (9 Bahnen auf See und am Meeresgrund) und **Profi-Welt** (9 schwerere Bahnen mit Windmühlen, Pendeln, schmalen Dämmen und Brücken).
+- **Normal**: erst eine Welt wählen (Märchenland oder Meereswelt), dann deren Bahnen der Reihe nach, mit Schlaglimit und Wertung. Jede Welt ist ein eigenes Thema; weitere Welten werden hier eingehängt.
+- **Profi**: die Profi-Welt der Reihe nach.
 - **Kreativ**: erst die Welt wählen, dann geht es sofort los mit einem Spieler, Schleuder-Steuerung und Bahn 1; im Spiel mit „◀ Bahn" / „Bahn ▶" (Tasten P / N) springen, „Ball zurück" (R) setzt an den Abschlag, kein Schlaglimit. Gedacht zum schnellen Prüfen einzelner Bahnen.
 
-Das Modus-Menü ist der Platz, an dem später weitere Welten eingehängt werden.
+Die Weltauswahl im Normal-Modus ist der Platz, an dem weitere Themenwelten eingehängt werden.
 
 ## Steuerung
 
@@ -44,6 +44,22 @@ Das Modus-Menü ist der Platz, an dem später weitere Welten eingehängt werden.
 | 7 | Wolkenburg | 4 | schwebende Inseln, breite Wege mit schrägen Banden in den Kurven, Rückenwind, Fallgatter |
 | 8 | Hexenturm | 5 | Lava, Eis, Fallgatter, rotierender Besen, wandernde Kessel, Portal-Abkürzung, Aufwind |
 | 9 | Burgberg | 5 | Serpentinen mit Steigungen, patrouillierende Ritter, Burggraben mit Zugbrücke, die Burg vom Startbildschirm |
+
+## Die Bahnen der Meereswelt
+
+Abwechselnd über und unter Wasser: Bahnen auf See spielen in der Piratenbucht-Welt (`harbor`) oder auf dem Piratendeck (`deck`), Bahnen am Meeresgrund im Korallenriff (`reef`) oder im Schiffswrack (`wreck`).
+
+| # | Bahn | Par | Hindernisse |
+|---|------|-----|-------------|
+| 1 | Strandbucht | 3 | Sandstrand, Holzsteg, zwei Felsen als Bumper, Gezeitentümpel vor dem Loch |
+| 2 | Muschelriff | 3 | zwei Tiefseeschluchten mit schmalem Grat dazwischen, Strömungen nach oben und unten, Korallen-Bumper |
+| 3 | Fischerpier | 4 | Ruderboot-Fähre zwischen zwei Stegen, rollendes Fass auf dem zweiten Steg |
+| 4 | Krakengrotte | 4 | Krake mit drei kreisenden Fangarmen (Rotor), Bremskoralle vor dem Loch |
+| 5 | Piratendeck | 4 | zwei Schiffe mit Höhenstufen: Planken hinauf zum Bug, Kanone schießt aufs Nachbarschiff, rollendes Fass, schwingende Rah, Hai im Wasser |
+| 6 | Leuchtturmfelsen | 5 | Serpentinen mit drei Höhenstufen, Gegenwind auf der zweiten Kehre, oben Klippe ohne Geländer und Wind zur Kante |
+| 7 | Schiffswrack | 5 | zweiteilige Bahn: über den Meeresgrund an Strömung und Hai vorbei durch das Leck ins Wrack; drinnen hängt das Deck schief (Dauergefälle), Fässer rollen, eine Luke öffnet sich im Takt, ein kleiner Krake bewacht das Loch |
+| 8 | Perlengrotte | 4 | Perlmutt-Eisfläche, Strudel (Drehscheibe) mit Auswurfrinne, Zauberperle als Magnet, Bremskoralle |
+| 9 | Sturmsee | 5 | drei Inseln: Ruderboot-Fähre, Mittelinsel mit rollender Welle und Wind, Piratenschiff zum Leuchtturmfelsen |
 
 ## Die Bahnen der Profi-Welt
 
@@ -78,7 +94,7 @@ Im Kreativmodus gibt es **Bahn bauen**: ein Editor direkt im Spiel. Kacheln (Ras
 
 ## Eigene Bahnen im Code bauen
 
-Bahnen stehen in `src/courses.js` (Normal-Welt) und `src/courses_pro.js` (Profi-Welt) als ASCII-Karte plus Hindernisliste. Die Liste `WORLDS` in `src/courses_pro.js` registriert die Welten für das Menü.
+Bahnen stehen in `src/courses.js` (Märchenland), `src/courses_sea.js` (Meereswelt) und `src/courses_pro.js` (Profi-Welt) als ASCII-Karte plus Hindernisliste. Die Liste `WORLDS` in `src/courses_pro.js` registriert die Welten für das Menü (`mode: 'normal'` erscheint in der Weltauswahl des Normal-Modus, `mode: 'pro'` hinter dem Profi-Knopf).
 
 ```
 .  Leere / Abgrund     #  Fairway      s  Sand      i  Eis
@@ -93,7 +109,7 @@ Blickzonen: Über `views` (Rechtecke mit `look`-Punkt) kann eine Bahn festlegen,
 
 Höhenstufen: Eine Bahn kann ein Ziffernraster `heights` (0–9) und `hStep` angeben. Stufen sind nur über `field`-Rampen mit `base`/`rise` zu erklimmen, Kanten nach oben wirken sonst wie Mauern; nach unten rollt der Ball frei.
 
-Hindernis-Typen: `bumper`, `mover`, `ferry`, `rotor` (auch als Pendel mit `swing`), `windmill`, `gate` (periodisch oder mit `linked` an einen Schalter gekoppelt), `portal`, `boost`, `field`, `ramp`, `rail`, `wall`, `cannon` (schwenkende Kanone, `base`/`amp`/`speed`/`range`; `style: 'catapult'` zeichnet ein Katapult), `magnet` (`strength` > 0 zieht an, < 0 stößt ab, `slow` bremst; `style: 'coral'` zeichnet eine Koralle), `turntable` (Drehscheibe mit Auswurfrinne `exit` in Grad), `potion` (Schrumpftrank, `scale`/`duration`), `cauldron` (Hexentopf: nur aus der Luft zu treffen, schrumpft und spuckt Richtung `exit` aus), `switch` (Druckplatte, `target`/`duration`), `door` (Tür in die Innen-Map `inner` einer Bahn; `style: 'pyramid'` mit `px`/`py`/`base` zeichnet eine Stufenpyramide um die Tür).
+Hindernis-Typen: `bumper` (`style`: `mushroom`, `rock`, `crystal`, `coral`), `mover` (`style` u. a. `cart`, `cannonball`, `boulder`, `barrel`, `shark`, `wave`, `dragon`, `knight`, `guard`), `ferry` (`style`: `cart`, `boat`, `ship`), `rotor` (auch als Pendel mit `swing`; `style: 'tentacle'` macht daraus eine Krake), `windmill`, `gate` (periodisch oder mit `linked` an einen Schalter gekoppelt), `portal`, `boost`, `field`, `ramp`, `rail`, `wall`, `cannon` (schwenkende Kanone, `base`/`amp`/`speed`/`range`; `style: 'catapult'` zeichnet ein Katapult), `magnet` (`strength` > 0 zieht an, < 0 stößt ab, `slow` bremst; `style: 'coral'` zeichnet eine Koralle, `style: 'pearl'` eine Perle), `turntable` (Drehscheibe mit Auswurfrinne `exit` in Grad; `style: 'whirl'` zeichnet einen Strudel), `field` (`style`: `wind`, `current` für Unterwasser-Strömung, `slope` für Rampen zwischen Höhenstufen), `potion` (Schrumpftrank, `scale`/`duration`), `cauldron` (Hexentopf: nur aus der Luft zu treffen, schrumpft und spuckt Richtung `exit` aus), `switch` (Druckplatte, `target`/`duration`), `door` (Tür in die Innen-Map `inner` einer Bahn; `style: 'pyramid'` mit `px`/`py`/`base` zeichnet eine Stufenpyramide um die Tür, `style: 'wreck'` mit `px`/`py` ein Schiffswrack, dessen Leck die Tür ist).
 Farbwelten stehen in `src/themes.js`, jede mit einer dezenten Atmosphäre (`atmo`: `fog`, `mist`, `fireflies`, `spores`, `embers`, `sparks`, `ash`, `bubbles`, `sand`, `spray`, `snow`, `pollen`, `none`), die eine Bahn per `atmo` überschreiben kann. Mit `node tools/validate.mjs` lässt sich prüfen, ob jede Bahn lösbar ist.
 
 ## Projektstruktur
@@ -102,7 +118,8 @@ Farbwelten stehen in `src/themes.js`, jede mit einer dezenten Atmosphäre (`atmo
 index.html        Seite und HUD
 style.css         Oberfläche
 src/themes.js     Farbpaletten und Deko je Welt
-src/courses.js    die Bahnen der Normal-Welt
+src/courses.js    die Bahnen des Märchenlands
+src/courses_sea.js die Bahnen der Meereswelt
 src/courses_pro.js die Bahnen der Profi-Welt und die Weltenliste
 src/editor.js     Baumodus (Editor für eigene Bahnen)
 manifest.webmanifest, sw.js, icons/   Web-App: Installieren und offline spielen
