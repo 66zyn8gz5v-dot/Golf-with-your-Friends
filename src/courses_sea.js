@@ -153,11 +153,11 @@ const SEA_COURSES = [
   },
   {
     name: 'Leuchtturmfelsen', par: 5, theme: 'harbor', maxStrokes: 22, hStep: 0.4, hazardText: { oob: 'Von der Klippe ins Meer' },
-    intro: 'Serpentinen den Felsen hinauf zum Leuchtturm. Schräge Banden lenken den Ball um die Kehren. Auf der zweiten Kehre bläst der Wind entgegen, ganz oben treibt er den Ball zur Klippe – ohne Geländer.',
+    intro: 'Serpentinen den Felsen hinauf zum Leuchtturm. Schräge Banden lenken den Ball um die Kehren. Auf der zweiten Kehre bläst der Wind entgegen, ganz oben drückt er den Ball vom Geländer weg zur Klippe.',
     map: [
       '................',
-      '..#Hoooooooo##..',
-      '............##..',
+      '..#H##########..',
+      '..##oooooooo##..',
       '............##..',
       '..############..',
       '..##............',
@@ -171,7 +171,7 @@ const SEA_COURSES = [
     heights: [
       '................',
       '..333333333333..',
-      '............22..',
+      '..333333333322..',
       '............22..',
       '..222222222222..',
       '..11............',
@@ -187,7 +187,7 @@ const SEA_COURSES = [
       { type: 'field', x: 2, y: 5, w: 2, h: 2, fx: 0, fy: 2.2, style: 'slope', base: 1, rise: 1 },
       { type: 'field', x: 12, y: 2, w: 2, h: 2, fx: 0, fy: 2.2, style: 'slope', base: 2, rise: 1 },
       { type: 'field', x: 4, y: 4, w: 8, h: 1, fx: -2.4, fy: 0, style: 'wind' },
-      { type: 'field', x: 4, y: 1, w: 8, h: 1, fx: 0, fy: -1.6, style: 'wind' },
+      { type: 'field', x: 4, y: 1, w: 8, h: 2, fx: 0, fy: 0.9, style: 'wind' },
       // schräge Banden in allen sechs Kehren: der Ball wird um die Ecke gelenkt
       { type: 'wall', x0: 12.8, y0: 11, x1: 14, y1: 9.8, extend: 0 },
       { type: 'wall', x0: 14, y0: 8.2, x1: 12.8, y1: 7, extend: 0 },
@@ -195,6 +195,7 @@ const SEA_COURSES = [
       { type: 'wall', x0: 2, y0: 5.2, x1: 3.2, y1: 4, extend: 0 },
       { type: 'wall', x0: 12.8, y0: 5, x1: 14, y1: 3.8, extend: 0 },
       { type: 'wall', x0: 14, y0: 2.2, x1: 12.8, y1: 1, extend: 0 },
+      { type: 'wall', x0: 2, y0: 2.2, x1: 3.2, y1: 3, extend: 0 },
     ],
     decor: [
       { t: 'lighthouse', x: 1.1, y: 1.6, z: 1.2, s: 1.7 }, { t: 'rock', x: 1.2, y: 2.3, z: 1.2, s: 1.4 }, { t: 'rock', x: 14.8, y: 1.2, z: 1.2, s: 1.2 },
