@@ -183,7 +183,7 @@ const PRO_COURSES = [
     autoDecor: { density: 0.14, seed: 127 },
   },
   {
-    name: 'Hexenküche', par: 5, theme: 'witch', maxStrokes: 20, atmo: 'mist',
+    name: 'Hexenküche', par: 6, theme: 'witch', maxStrokes: 22, atmo: 'mist',
     intro: 'Durch den Hexengarten bis zur Hütte – und hinein! Drinnen wartet der Hexentopf: Wer über die Rampe hineintrifft, wird geschrumpft und passt kurz durch den Spalt zum Loch.',
     map: [
       '......................',
