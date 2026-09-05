@@ -56,7 +56,7 @@ Abwechselnd über und unter Wasser: Bahnen auf See spielen in der Piratenbucht-W
 | 3 | Fischerpier | 4 | Ruderboot-Fähre zwischen zwei Stegen, rollendes Fass auf dem zweiten Steg |
 | 4 | Krakengrotte | 4 | Krake mit drei kreisenden Fangarmen (Rotor), Bremskoralle vor dem Loch |
 | 5 | Piratendeck | 4 | zwei Schiffe mit Höhenstufen: Planken hinauf zum Bug, Kanone schießt aufs Nachbarschiff, rollendes Fass, schwingende Rah, Hai im Wasser |
-| 6 | Leuchtturmfelsen | 5 | Serpentinen mit drei Höhenstufen, Gegenwind auf der zweiten Kehre, oben Klippe ohne Geländer und Wind zur Kante |
+| 6 | Leuchtturmfelsen | 5 | Serpentinen mit drei Höhenstufen und schrägen Banden in allen Kehren, Gegenwind auf der zweiten Kehre, oben Klippe ohne Geländer und Wind zur Kante |
 | 7 | Schiffswrack | 5 | zweiteilige Bahn: über den Meeresgrund an Strömung und Hai vorbei durch das Leck ins Wrack; drinnen hängt das Deck schief (Dauergefälle), Fässer rollen, eine Luke öffnet sich im Takt, ein kleiner Krake bewacht das Loch |
 | 8 | Perlengrotte | 4 | Perlmutt-Eisfläche, Strudel (Drehscheibe) mit Auswurfrinne, Zauberperle als Magnet, Bremskoralle |
 | 9 | Sturmsee | 5 | drei Inseln: Ruderboot-Fähre, Mittelinsel mit rollender Welle und Wind, Piratenschiff zum Leuchtturmfelsen |
