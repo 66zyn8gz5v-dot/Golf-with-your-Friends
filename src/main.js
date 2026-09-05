@@ -390,8 +390,9 @@
   function hazard(type) {
     const b = state.ball;
     const custom = state.level.def.hazardText && state.level.def.hazardText[type];
-    const label = custom || (type === 'water' ? 'Platsch! Wasser' : type === 'lava' ? 'Zischhh! Lava' : 'Aus! Abgrund');
-    if (type === 'water') { Sfx.water(); burst(b.x, b.y, '#9fd3ff', 18); }
+    const label = custom || (type === 'water' ? 'Platsch! Wasser' : type === 'lava' ? 'Zischhh! Lava' : type === 'shark' ? 'Vom Hai gefressen!' : 'Aus! Abgrund');
+    if (type === 'shark') { Sfx.water(); burst(b.x, b.y, '#ff5a5a', 22, true); b.z = 0; b.vz = 0; b.air = false; }
+    else if (type === 'water') { Sfx.water(); burst(b.x, b.y, '#9fd3ff', 18); }
     else if (type === 'lava') { Sfx.lava(); burst(b.x, b.y, '#ffb347', 18); }
     else { Sfx.oob(); burst(b.x, b.y, '#cccccc', 10); }
     state.strokes++;
@@ -519,7 +520,7 @@
         case 'load': Sfx.bounce(5); showMessage('Geladen … Feuer frei!', 900); break;
         case 'fire': Sfx.cannon(); burst(ev.x, ev.y, '#ffb347', 18); break;
         case 'sunk': sunk(); return;
-        case 'water': case 'lava': case 'oob': hazard(ev.type); return;
+        case 'water': case 'lava': case 'oob': case 'shark': hazard(ev.type); return;
       }
     }
   }

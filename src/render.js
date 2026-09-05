@@ -770,6 +770,8 @@ class Renderer {
         ctx.strokeStyle = `rgba(${col},${kind === 'slow' ? 0.2 + 0.15 * Math.sin(t * 2 + i) : 0.45 * (1 - u) + 0.08})`;
         ctx.beginPath(); ctx.ellipse(cx, cy, rr * s, rr * s * this.cam.tilt, 0, 0, TAU); ctx.stroke();
       }
+    } else if (ob.type === 'sharkjump') { // Warnschimmer über der Bucht, solange der Hai in der Luft ist
+      if (ob.jumping) { const a = 0.18 * Math.sin(ob.p * Math.PI); this.fillPoly(ctx, [[ob.x - ob.w / 2, ob.y - ob.h / 2], [ob.x + ob.w / 2, ob.y - ob.h / 2], [ob.x + ob.w / 2, ob.y + ob.h / 2], [ob.x - ob.w / 2, ob.y + ob.h / 2]], -0.1, `rgba(255,60,60,${a})`, false); }
     } else if (ob.type === 'cannon') {
       this.isoEllipse(ctx, ob.x, ob.y, 0.004, 0.75, 'rgba(0,0,0,0.25)');
       // Ziellinie und Landepunkt in aktueller Rohrrichtung
@@ -800,7 +802,8 @@ class Renderer {
       const p0 = this.proj(bx - ux * len / 2, by - uy * len / 2, 0.05);
       const p1 = this.proj(bx + px * wave, by + py * wave, 0.08);
       const p2 = this.proj(bx + ux * len / 2, by + uy * len / 2, 0.05);
-      ctx.strokeStyle = `rgba(${col},${0.75 * a})`; ctx.lineWidth = Math.max(1, s * 0.05);
+      const gk = ob.k ?? 1; if (gk < 0.05) continue;
+      ctx.strokeStyle = `rgba(${col},${0.75 * a * gk})`; ctx.lineWidth = Math.max(1, s * 0.05 * (0.6 + 0.8 * gk));
       ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.quadraticCurveTo(p1[0], p1[1], p2[0], p2[1]); ctx.stroke();
       if (current && i % 2 === 0) { // Luftblase, die mit der Strömung treibt
         ctx.strokeStyle = `rgba(${col},${0.6 * a})`; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(p2[0], p2[1] - s * 0.15 * u, s * (0.05 + (i % 3) * 0.02), 0, TAU); ctx.stroke();
@@ -916,6 +919,8 @@ class Renderer {
       else items.push({ x: ob.x, y: ob.y, bias: 0.15, noFade: true, draw: () => { const [sx, sy] = this.proj(ob.x, ob.y + 0.35, 0); this.spriteHut(ctx, sx, sy, this.scale * ob.s, t); } });
     } else if (ob.type === 'cauldron') {
       items.push({ x: ob.x, y: ob.y, draw: () => this.drawCauldronPot(ctx, ob, t) });
+    } else if (ob.type === 'sharkjump') {
+      items.push({ x: ob.px, y: ob.py, bias: 0.3, noFade: true, draw: () => this.drawSharkJump(ctx, ob, t) });
     }
   }
 
@@ -1589,6 +1594,38 @@ class Renderer {
       ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.ellipse(ex, ey, HR * 0.26, HR * 0.3, 0, 0, TAU); ctx.fill();
       ctx.fillStyle = '#1a0a20'; ctx.beginPath(); ctx.arc(ex + Math.cos(look) * HR * 0.09, ey + Math.sin(look) * HR * 0.09, HR * 0.14, 0, TAU); ctx.fill();
       ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(ex + Math.cos(look) * HR * 0.09 - HR * 0.05, ey + Math.sin(look) * HR * 0.09 - HR * 0.06, HR * 0.045, 0, TAU); ctx.fill();
+    }
+  }
+  /* Springender Hai: im Wasser kreist nur die Flosse, beim Sprung fliegt der ganze Hai im Bogen über die Bucht */
+  drawSharkJump(ctx, ob, t) {
+    const s = this.scale;
+    if (!ob.jumping) { // Flosse zieht Kreise in der Bucht
+      const a = t * 1.4, fx = ob.x + Math.cos(a) * ob.w * 0.25, fy = ob.y + Math.sin(a) * ob.h * 0.25, d = Math.sin(a) >= 0 ? -1 : 1;
+      this.isoEllipse(ctx, fx, fy, -0.05, 0.8, 'rgba(20,40,60,0.45)', 0.4);
+      const fin = [[fx + d * 0.1, fy, 0.06], [fx - d * 0.15, fy, 0.55], [fx - d * 0.5, fy, 0.06]];
+      ctx.fillStyle = '#5d6b78'; ctx.beginPath(); fin.forEach((q, i) => { const pp = this.proj(q[0], q[1], q[2]); i ? ctx.lineTo(pp[0], pp[1]) : ctx.moveTo(pp[0], pp[1]); }); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = Math.max(1, s * 0.04);
+      const [w0, w1] = this.proj(fx - d * 0.3, fy, 0.01), [w2, w3] = this.proj(fx - d * 1.1, fy + 0.25, 0.01); ctx.beginPath(); ctx.moveTo(w0, w1); ctx.lineTo(w2, w3); ctx.stroke();
+      return;
+    }
+    const vert = ob.axis === 'y', p = ob.p, z = ob.z, L = 1.1, tilt = (0.5 - p) * 1.2; // Körper neigt sich mit dem Bogen
+    this.isoEllipse(ctx, ob.px, ob.py, 0.004, L * 0.9, `rgba(0,0,0,${0.25 * (1 - z / (ob.height * 1.2))})`, 0.45);
+    const ax = vert ? 0 : 1, ay = vert ? 1 : 0; // Sprungrichtung
+    const nose = this.proj(ob.px + ax * L, ob.py + ay * L, z + tilt * 0.5), tail = this.proj(ob.px - ax * L, ob.py - ay * L, z - tilt * 0.5), mid = this.proj(ob.px, ob.py, z);
+    const ang = Math.atan2(nose[1] - tail[1], nose[0] - tail[0]), len = Math.hypot(nose[0] - tail[0], nose[1] - tail[1]);
+    ctx.save(); ctx.translate(mid[0], mid[1]); ctx.rotate(ang);
+    const g = ctx.createLinearGradient(0, -s * 0.3, 0, s * 0.3); g.addColorStop(0, '#6c7c8c'); g.addColorStop(0.55, '#4d5c6a'); g.addColorStop(0.56, '#dfe6ec'); g.addColorStop(1, '#c9d2da');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(0, 0, len / 2, s * 0.32, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#4d5c6a'; ctx.beginPath(); ctx.moveTo(-len * 0.1, -s * 0.2); ctx.lineTo(-len * 0.25, -s * 0.75); ctx.lineTo(-len * 0.35, -s * 0.2); ctx.closePath(); ctx.fill(); // Rückenflosse
+    ctx.beginPath(); ctx.moveTo(-len / 2 + s * 0.1, 0); ctx.lineTo(-len / 2 - s * 0.35, -s * 0.5); ctx.lineTo(-len / 2 - s * 0.3, s * 0.4); ctx.closePath(); ctx.fill(); // Schwanz
+    ctx.beginPath(); ctx.moveTo(len * 0.05, s * 0.15); ctx.lineTo(-len * 0.1, s * 0.6); ctx.lineTo(-len * 0.2, s * 0.15); ctx.closePath(); ctx.fill(); // Brustflosse
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(len * 0.3, -s * 0.08, s * 0.07, 0, TAU); ctx.fill(); ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(len * 0.31, -s * 0.08, s * 0.035, 0, TAU); ctx.fill();
+    ctx.strokeStyle = '#f4efe6'; ctx.lineWidth = Math.max(1, s * 0.05); ctx.setLineDash([s * 0.06, s * 0.05]); ctx.beginPath(); ctx.moveTo(len * 0.2, s * 0.14); ctx.lineTo(len * 0.46, s * 0.02); ctx.stroke(); ctx.setLineDash([]); // Zähne
+    ctx.restore();
+    if (p < 0.2 || p > 0.8) { // Gischt beim Auftauchen und Eintauchen
+      const q = p < 0.2 ? 1 - p / 0.2 : (p - 0.8) / 0.2, [bx, by] = this.proj(ob.px, ob.py, 0.05);
+      ctx.fillStyle = `rgba(255,255,255,${0.8 * q})`;
+      for (let i = 0; i < 7; i++) { const a = i * 0.9, rr = s * (0.3 + 0.5 * q); ctx.beginPath(); ctx.arc(bx + Math.cos(a) * rr, by + Math.sin(a) * rr * 0.5 - s * 0.3 * q, s * 0.07, 0, TAU); ctx.fill(); }
     }
   }
   /* Strudel: dunkler Wassertrichter mit drehenden Schaumspiralen, Auswurfrinne wie bei der Drehscheibe */

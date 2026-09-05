@@ -47,6 +47,28 @@ class Wave extends Mover {
   }
 }
 
+/* Springender Hai: taucht im Takt aus der Bucht auf und springt quer über die Lücke.
+   Ein Ball, der während des Sprungs über die Bucht fliegt, wird gefressen (Strafschlag wie Wasser). */
+class SharkJump {
+  constructor(d) {
+    Object.assign(this, { w: 4, h: 5, period: 4, jump: 0.4, phase: 0, axis: 'y', height: 1.7 }, d);
+    this.type = 'sharkjump'; this.jumping = false; this.p = 0; this.px = this.x; this.py = this.y; this.z = 0;
+  }
+  update(t) {
+    const u = (((t / this.period + this.phase) % 1) + 1) % 1;
+    this.jumping = u < this.jump; this.p = this.jumping ? u / this.jump : 0;
+    const span = (this.axis === 'y' ? this.h : this.w) / 2 + 0.9, s = -span + this.p * 2 * span;
+    this.px = this.axis === 'y' ? this.x : this.x + s; this.py = this.axis === 'y' ? this.y + s : this.y;
+    this.z = this.jumping ? this.height * 4 * this.p * (1 - this.p) : 0;
+    this.dir = 1;
+  }
+  airTrigger(ball, t, events) {
+    if (!this.jumping) return false;
+    if (Math.abs(ball.x - this.x) > this.w / 2 || Math.abs(ball.y - this.y) > this.h / 2) return false;
+    events.push({ type: 'shark', x: ball.x, y: ball.y }); return true;
+  }
+}
+
 class Rotor {
   constructor(d) {
     Object.assign(this, { blades: 4, len: 3, speed: 1, phase: 0, thick: 0.16, hubR: 0.45, style: 'wood', height: 0.55 }, d);
@@ -141,11 +163,13 @@ class Boost {
 }
 
 class Field {
-  constructor(d) { Object.assign(this, { w: 2, h: 2, fx: 0, fy: 0, style: 'wind' }, d); this.type = 'field'; }
+  constructor(d) { Object.assign(this, { w: 2, h: 2, fx: 0, fy: 0, style: 'wind', phase: 0 }, d); this.type = 'field'; this.k = 1; }
   inside(px, py) { return px >= this.x && px <= this.x + this.w && py >= this.y && py <= this.y + this.h; }
+  /* gust > 0: Windstöße statt Dauerwind – die Kraft schwillt im Takt an und ab (gust = Winkelgeschwindigkeit) */
+  update(t) { this.k = this.gust ? Math.pow(Math.max(0, Math.sin(t * this.gust + this.phase)), 2) : 1; }
   force(ball, dt) {
     if (!this.inside(ball.x, ball.y)) return;
-    ball.vx += this.fx * dt; ball.vy += this.fy * dt;
+    ball.vx += this.fx * this.k * dt; ball.vy += this.fy * this.k * dt;
   }
 }
 
@@ -424,6 +448,7 @@ function createObstacles(defs) {
   for (const d of defs) {
     switch (d.type) {
       case 'wave': out.push(new Wave(d)); break;
+    case 'sharkjump': out.push(new SharkJump(d)); break;
     case 'mover': out.push(new Mover(d)); break;
       case 'rotor': out.push(new Rotor(d)); break;
       case 'gate': out.push(new Gate(d)); break;

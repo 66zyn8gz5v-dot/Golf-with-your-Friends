@@ -78,7 +78,10 @@ function stepPhysics(level, ball, dt, t, allowForces) {
       ball.vx *= 0.6; ball.vy *= 0.6;
       events.push({ type: 'land', x: ball.x, y: ball.y });
       for (const ob of level.obstacles) if (typeof ob.catch === 'function' && ob.catch(ball, t, events)) return events;
-    } else return events;
+    } else { // im Flug: nur der springende Hai kann den Ball erwischen
+      for (const ob of level.obstacles) if (ob.airTrigger && ob.airTrigger(ball, t, events)) break;
+      return events;
+    }
   }
 
   ball.boosted = false;
