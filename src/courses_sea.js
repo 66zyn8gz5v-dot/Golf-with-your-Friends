@@ -82,7 +82,7 @@ const SEA_COURSES = [
     autoDecor: { density: 0.12, seed: 205 },
   },
   {
-    name: 'Krakengrotte', par: 4, theme: 'reef', maxStrokes: 18, hazardText: { water: 'Hinab in die Tiefseeschlucht' },
+    name: 'Krakengrotte', par: 3, theme: 'reef', maxStrokes: 18, hazardText: { water: 'Hinab in die Tiefseeschlucht' },
     intro: 'In der Grotte haust die Krake. Ihre drei Fangarme kreisen langsam – wer den Takt findet, rollt zwischen ihnen hindurch zum Loch.',
     map: [
       '....................',
@@ -111,7 +111,7 @@ const SEA_COURSES = [
     autoDecor: { density: 0.38, seed: 207 },
   },
   {
-    name: 'Piratendeck', par: 4, theme: 'deck', maxStrokes: 18, hStep: 0.6, hazardText: { oob: 'Platsch! Über Bord' },
+    name: 'Piratendeck', par: 3, theme: 'deck', maxStrokes: 18, hStep: 0.6, hazardText: { oob: 'Platsch! Über Bord' },
     views: [{ x: 2, y: 2, w: 10, h: 5, look: { x: 10.4, y: 4.5 } }],
     intro: 'Zwei Schiffe, dazwischen offenes Meer. Über die Planken hinauf zum Bug – die Kanone schießt den Ball aufs Nachbarschiff. Dort schwingt die Rah quer über das Deck.',
     map: [

@@ -2,7 +2,7 @@
    Schrumpftrank, Schalter und Zaubertor. Gleiche Kartenlegende wie in courses.js. */
 const PRO_COURSES = [
   {
-    name: 'Mühlenwiese', par: 3, theme: 'meadow', maxStrokes: 15,
+    name: 'Mühlenwiese', par: 4, theme: 'meadow', maxStrokes: 15,
     intro: 'Eine Windmühle versperrt den Weg. Nur durch die schmale Tür geht es weiter – und die Flügel streichen daran vorbei.',
     map: [
       '........................',
@@ -47,7 +47,7 @@ const PRO_COURSES = [
     autoDecor: { density: 0.5, seed: 103 },
   },
   {
-    name: 'Zwergenkanone', par: 3, theme: 'forge', maxStrokes: 18,
+    name: 'Zwergenkanone', par: 4, theme: 'forge', maxStrokes: 18,
     intro: 'Über den Lavasee führt kein Weg – nur die schwenkende Kanone der Zwerge. Rollt der Ball hinein, wird er abgefeuert: in die Richtung, in die das Rohr gerade zeigt.',
     map: [
       '..........................',
@@ -69,7 +69,7 @@ const PRO_COURSES = [
     autoDecor: { density: 0.35, seed: 107 },
   },
   {
-    name: 'Korallenriff', par: 4, theme: 'reef', maxStrokes: 18, hazardText: { water: 'Hinab in die Tiefseeschlucht' },
+    name: 'Korallenriff', par: 3, theme: 'reef', maxStrokes: 18, hazardText: { water: 'Hinab in die Tiefseeschlucht' },
     intro: 'Drei Zauberkorallen am Meeresgrund: Die rote zieht den Ball an, die grüne stößt ihn ab, die blaue bremst ihn aus. Wer stur aufs Loch zielt, rutscht in die Tiefseeschlucht.',
     map: [
       '........................',
@@ -123,7 +123,7 @@ const PRO_COURSES = [
     autoDecor: { density: 0.12, seed: 113 },
   },
   {
-    name: 'Piratenbucht', par: 5, theme: 'harbor', maxStrokes: 22, hStep: 0.35, hazardText: { oob: 'Platsch! Ins Meer' },
+    name: 'Piratenbucht', par: 6, theme: 'harbor', maxStrokes: 22, hStep: 0.35, hazardText: { oob: 'Platsch! Ins Meer' },
     views: [{ x: 2, y: 13.5, w: 9.5, h: 4, look: { x: 17.5, y: 15 } }, { x: 17, y: 12.5, w: 7.5, h: 5, look: { x: 20.5, y: 9.5 } }, { x: 17, y: 6.5, w: 7.5, h: 4.5, look: { x: 8, y: 8 } }],
     intro: 'Vom Strand über den Steg ins Ruderboot, hinüber zur Felseninsel und die Rampe hinauf zur Festung – dort rollt eine Kanonenkugel. Das Piratenschiff bringt den Ball über die Bucht zum Leuchtturmfelsen, wo es noch einmal hinaufgeht zum Loch.',
     map: [

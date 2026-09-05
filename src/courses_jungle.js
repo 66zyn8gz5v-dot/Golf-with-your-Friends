@@ -3,7 +3,7 @@
    Gleiche Kartenlegende wie in courses.js. */
 const JUNGLE_COURSES = [
   {
-    name: 'Urwaldpfad', par: 3, theme: 'jungle', maxStrokes: 15, friction: { s: 26 }, hazardText: { water: 'Platsch! In den Fluss' },
+    name: 'Urwaldpfad', par: 4, theme: 'jungle', maxStrokes: 15, friction: { s: 26 }, hazardText: { water: 'Platsch! In den Fluss' },
     intro: 'Ein schmaler Pfad durch den Urwald. Eine Liane pendelt über den Weg, im Treibsand bleibt der Ball fast stehen, und ein Steingötze wacht vor dem Loch.',
     map: [
       '......................',
@@ -31,7 +31,7 @@ const JUNGLE_COURSES = [
     autoDecor: { density: 0.4, seed: 301 },
   },
   {
-    name: 'Affenbrücke', par: 4, theme: 'jungle', maxStrokes: 18, hazardText: { water: 'Platsch! In den Fluss' },
+    name: 'Affenbrücke', par: 5, theme: 'jungle', maxStrokes: 18, hazardText: { water: 'Platsch! In den Fluss' },
     views: [{ x: 2, y: 1, w: 6, h: 6, look: { x: 20, y: 4.5 } }],
     intro: 'Eine Hängebrücke ohne Geländer führt über den Fluss. Drüben werfen zwei Affen Kokosnüsse quer über den Platz – wer sich anrempeln lässt, landet im Wasser.',
     map: [
@@ -59,7 +59,7 @@ const JUNGLE_COURSES = [
     autoDecor: { density: 0.3, seed: 303 },
   },
   {
-    name: 'Krokodilfluss', par: 4, theme: 'jungle', maxStrokes: 18, friction: { s: 26 }, hazardText: { water: 'Platsch! In den Krokodilfluss', shark: 'Vom Krokodil geschnappt!' },
+    name: 'Krokodilfluss', par: 3, theme: 'jungle', maxStrokes: 18, friction: { s: 26 }, hazardText: { water: 'Platsch! In den Krokodilfluss', shark: 'Vom Krokodil geschnappt!' },
     views: [{ x: 2, y: 1, w: 8, h: 3, look: { x: 17, y: 2.5 } }],
     intro: 'Über die Rampe hinweg über den Fluss – doch das Krokodil schnappt im Takt nach allem, was über ihm fliegt. Drüben lauert Treibsand, und ein Götze steht vor dem Loch.',
     map: [
@@ -109,7 +109,7 @@ const JUNGLE_COURSES = [
     autoDecor: { density: 0.34, seed: 307 },
   },
   {
-    name: 'Felskugelschlucht', par: 5, theme: 'jungle', maxStrokes: 22, hazardText: { water: 'Platsch! In den Fluss' },
+    name: 'Felskugelschlucht', par: 4, theme: 'jungle', maxStrokes: 22, hazardText: { water: 'Platsch! In den Fluss' },
     intro: 'Eine enge Schlucht, in der eine riesige Felskugel hin und her rollt. Nur die Nischen links und rechts bieten Schutz – warten, bis sie vorbei ist, dann weiter.',
     map: [
       '..........................',
@@ -158,7 +158,7 @@ const JUNGLE_COURSES = [
     autoDecor: { density: 0.3, seed: 311 },
   },
   {
-    name: 'Totemplatz', par: 5, theme: 'jungle', maxStrokes: 22, friction: { s: 26 }, hazardText: { water: 'Platsch! In den Fluss' },
+    name: 'Totemplatz', par: 4, theme: 'jungle', maxStrokes: 22, friction: { s: 26 }, hazardText: { water: 'Platsch! In den Fluss' },
     views: [{ x: 2, y: 8, w: 6, h: 3, look: { x: 19, y: 5.5 } }],
     intro: 'Auf dem Platz drehen sich zwei Totempfähle mit vier Armen. Die Druckplatte unten links öffnet das Steintor zur Kammer mit dem Loch – aber nur für kurze Zeit.',
     map: [
@@ -190,7 +190,7 @@ const JUNGLE_COURSES = [
     autoDecor: { density: 0.3, seed: 313 },
   },
   {
-    name: 'Wasserfallterrassen', par: 5, theme: 'jungle', maxStrokes: 22, hStep: 0.45, hazardText: { water: 'Platsch! In den Wasserfall', oob: 'Über die Kante gestürzt' },
+    name: 'Wasserfallterrassen', par: 4, theme: 'jungle', maxStrokes: 22, hStep: 0.45, hazardText: { water: 'Platsch! In den Wasserfall', oob: 'Über die Kante gestürzt' },
     intro: 'Drei Terrassen, durch Wasserfälle getrennt, führen bergab. Schräge Banden lenken um die Kehren, auf der mittleren Terrasse rollt eine Kokosnuss quer.',
     map: [
       '........................',
@@ -232,7 +232,7 @@ const JUNGLE_COURSES = [
       { type: 'wall', x0: 14.8, y0: 6, x1: 16, y1: 7.2, extend: 0 },
       { type: 'wall', x0: 13.8, y0: 13, x1: 15, y1: 11.8, extend: 0 },
       { type: 'mover', x0: 5, y0: 7.5, x1: 13, y1: 7.5, w: 0.5, h: 0.5, period: 6, style: 'coconut', e: 0.7 },
-      { type: 'bumper', x: 18.5, y: 11.7, r: 0.36, style: 'idol' },
+      { type: 'bumper', x: 18.5, y: 12.5, r: 0.36, style: 'idol' },
     ],
     decor: [
       { t: 'jungleTree', x: 1.0, y: 0.4, s: 1.6, seed: 0.2 }, { t: 'jungleTree', x: 20.5, y: 5.5, s: 1.5, seed: 0.7 }, { t: 'jungleTree', x: 6.5, y: 10.5, s: 1.4, seed: 0.5 },
