@@ -465,4 +465,5 @@ const WORLDS = [
   { id: 'normal', name: 'Märchenland', short: 'Märchen', mode: 'normal', courses: COURSES },
   { id: 'sea', name: 'Meereswelt', short: 'Meer', mode: 'normal', courses: SEA_COURSES },
   { id: 'pro', name: 'Profi-Welt', short: 'Profi', mode: 'pro', courses: PRO_COURSES },
+  { id: 'jungle', name: 'Dschungeltempel', short: 'Dschungel', mode: 'pro', courses: JUNGLE_COURSES },
 ];

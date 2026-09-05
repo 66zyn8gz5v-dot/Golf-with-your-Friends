@@ -69,6 +69,18 @@ class SharkJump {
   }
 }
 
+/* Stachelfalle: Bodenplatte, aus der im Takt Stacheln schießen. Oben blockieren sie wie eine Mauer,
+   unten rollt der Ball darüber hinweg. up = Anteil der Periode, in dem die Stacheln draußen sind. */
+class Spikes {
+  constructor(d) { Object.assign(this, { w: 1, h: 1, period: 4, up: 0.45, phase: 0, height: 0.75 }, d); this.type = 'spikes'; this.lift = 0; this.blocking = false; }
+  update(t) {
+    const u = (((t / this.period + this.phase) % 1) + 1) % 1, ramp = 0.07;
+    const l = u < this.up ? Math.min(1, u / ramp) : Math.max(0, 1 - (u - this.up) / ramp);
+    this.lift = l * l * (3 - 2 * l); this.blocking = this.lift > 0.3;
+  }
+  segments(out) { if (this.blocking) polySegments(rectPoly(this.x, this.y, this.w, this.h), out, { e: 0.5, kind: 'spikes' }); }
+}
+
 class Rotor {
   constructor(d) {
     Object.assign(this, { blades: 4, len: 3, speed: 1, phase: 0, thick: 0.16, hubR: 0.45, style: 'wood', height: 0.55 }, d);
@@ -449,6 +461,7 @@ function createObstacles(defs) {
     switch (d.type) {
       case 'wave': out.push(new Wave(d)); break;
     case 'sharkjump': out.push(new SharkJump(d)); break;
+    case 'spikes': out.push(new Spikes(d)); break;
     case 'mover': out.push(new Mover(d)); break;
       case 'rotor': out.push(new Rotor(d)); break;
       case 'gate': out.push(new Gate(d)); break;

@@ -1,9 +1,9 @@
 /* Service Worker: macht Fantasy Golf offline spielbar.
    Netz zuerst (damit Updates sofort ankommen), Cache als Ersatz ohne Verbindung. */
-const VERSION = 'fantasygolf-v2';
+const VERSION = 'fantasygolf-v3';
 const APP_FILES = [
   './', './index.html', './style.css', './manifest.webmanifest',
-  './src/themes.js', './src/courses.js', './src/courses_sea.js', './src/courses_pro.js', './src/level.js', './src/obstacles.js',
+  './src/themes.js', './src/courses.js', './src/courses_sea.js', './src/courses_jungle.js', './src/courses_pro.js', './src/level.js', './src/obstacles.js',
   './src/physics.js', './src/render.js', './src/sfx.js', './src/title.js', './src/editor.js', './src/main.js',
   './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png',
 ];

@@ -13,9 +13,9 @@ npx serve .          # oder: python3 -m http.server 8080
 
 ## Welten und Modi
 
-- **Märchenland** (9 Bahnen: Wiese, Pilzhain, Schmiede, Zauberwald, Drachenhöhle, Eisgrotte, Wolkenburg, Hexenturm, Burgberg), **Meereswelt** (10 Bahnen auf See und am Meeresgrund) und **Profi-Welt** (9 schwerere Bahnen mit Windmühlen, Pendeln, schmalen Dämmen und Brücken).
+- **Märchenland** (9 Bahnen: Wiese, Pilzhain, Schmiede, Zauberwald, Drachenhöhle, Eisgrotte, Wolkenburg, Hexenturm, Burgberg), **Meereswelt** (10 Bahnen auf See und am Meeresgrund), **Profi-Welt** (9 schwerere Bahnen mit Windmühlen, Pendeln, schmalen Dämmen und Brücken) und **Dschungeltempel** (9 Profi-Bahnen durch den Urwald bis zur verlorenen Stadt).
 - **Normal**: erst eine Welt wählen (Märchenland oder Meereswelt), dann deren Bahnen der Reihe nach, mit Schlaglimit und Wertung. Jede Welt ist ein eigenes Thema; weitere Welten werden hier eingehängt.
-- **Profi**: die Profi-Welt der Reihe nach.
+- **Profi**: erst eine Welt wählen (Profi-Welt oder Dschungeltempel), dann deren Bahnen der Reihe nach.
 - **Kreativ**: erst die Welt wählen, dann geht es sofort los mit einem Spieler, Schleuder-Steuerung und Bahn 1; im Spiel mit „◀ Bahn" / „Bahn ▶" (Tasten P / N) springen, „Ball zurück" (R) setzt an den Abschlag, kein Schlaglimit. Gedacht zum schnellen Prüfen einzelner Bahnen.
 
 Die Weltauswahl im Normal-Modus ist der Platz, an dem weitere Themenwelten eingehängt werden.
@@ -78,6 +78,22 @@ Abwechselnd über und unter Wasser: Bahnen auf See spielen in der Piratenbucht-W
 
 Oben in der Mitte gibt es **⛶ Vollbild** (Taste F): das Spiel füllt den ganzen Bildschirm. Läuft das Spiel in einem Rahmen, der kein Vollbild erlaubt, wird es stattdessen in einem eigenen Fenster geöffnet.
 
+## Die Bahnen des Dschungeltempels
+
+Zweite Profi-Welt in einem Guss: Urwald mit Moosstein, Lianen, Treibsand, trübem Fluss und Steingötzen (`jungle`), zum Schluss die Tempelhalle mit Fackeln, Glyphen und Feuergruben (`temple`).
+
+| # | Bahn | Par | Hindernisse |
+|---|------|-----|-------------|
+| 1 | Urwaldpfad | 3 | pendelnde Liane, Treibsand, Steingötze als Bumper, schräge Bande |
+| 2 | Affenbrücke | 4 | Hängebrücke ohne Geländer über den Fluss, zwei Affen werfen Kokosnüsse quer über den Platz |
+| 3 | Krokodilfluss | 4 | Rampe über den Fluss, ein Krokodil schnappt im Takt nach allem, was darüber fliegt (Strafschlag), Treibsand, Götze |
+| 4 | Stachelpfad | 4 | drei Stachelfallen, die im Takt aus dem Boden schießen und den Weg versperren, Banden in den Kehren |
+| 5 | Felskugelschlucht | 5 | enge Schlucht mit rollender Felskugel, Nischen zum Ausweichen |
+| 6 | Treibsandbecken | 4 | schmaler Steinpfad durch Treibsand, Liane, Kokosnuss, Banden in den Kehren |
+| 7 | Totemplatz | 5 | zwei drehende Totempfähle, Druckplatte öffnet das Steintor zur Lochkammer für kurze Zeit |
+| 8 | Wasserfallterrassen | 5 | drei Terrassen mit Höhenstufen und Wasserfällen, Rampen bergab, Banden, Kokosnuss |
+| 9 | Der Tempel | 7 | zweiteilige Bahn: Hängebrücke, Stachelfallen, Schlucht mit Felskugel, Tempeltor; drinnen die Tempelhalle mit Feuergruben, Stachelfalle, Steinscheibe, Felskugel, Druckplatte und Steintor zum goldenen Götzen |
+
 ## Kostenlos als App aufs iPad oder Handy (GitHub Pages)
 
 Das Spiel ist eine Web-App: Manifest (`manifest.webmanifest`), App-Symbole (`icons/`) und ein Service Worker (`sw.js`) sorgen dafür, dass es sich wie eine App installieren lässt und offline läuft. Der Workflow `.github/workflows/pages.yml` veröffentlicht bei jedem Push automatisch auf GitHub Pages.
@@ -110,7 +126,7 @@ Blickzonen: Über `views` (Rechtecke mit `look`-Punkt) kann eine Bahn festlegen,
 
 Höhenstufen: Eine Bahn kann ein Ziffernraster `heights` (0–9) und `hStep` angeben. Stufen sind nur über `field`-Rampen mit `base`/`rise` zu erklimmen, Kanten nach oben wirken sonst wie Mauern; nach unten rollt der Ball frei.
 
-Hindernis-Typen: `bumper` (`style`: `mushroom`, `rock`, `crystal`, `coral`), `mover` (`style` u. a. `cart`, `cannonball`, `boulder`, `barrel`, `shark`, `wave`, `dragon`, `knight`, `guard`), `ferry` (`style`: `cart`, `boat`, `ship`), `wave` (wandernde Welle, keine Mauer: schiebt den Ball mit `push` in ihrer Laufrichtung mit), `sharkjump` (Hai, der im Takt `period` quer über eine Bucht springt und einen Ball frisst, der währenddessen über die Zone fliegt; hat die Bahn eine `inner`-Map mit `stomach: true`, landet der Ball dort statt einen Strafschlag zu kassieren), `rotor` (auch als Pendel mit `swing`; `style: 'tentacle'` macht daraus eine Krake), `windmill`, `gate` (periodisch oder mit `linked` an einen Schalter gekoppelt), `portal`, `boost`, `field`, `ramp`, `rail`, `wall`, `cannon` (schwenkende Kanone, `base`/`amp`/`speed`/`range`; `style: 'catapult'` zeichnet ein Katapult), `magnet` (`strength` > 0 zieht an, < 0 stößt ab, `slow` bremst; `style: 'coral'` zeichnet eine Koralle, `style: 'pearl'` eine Perle; `curse: 2.0` macht den Ball nach Berührung für den Rest der Bahn träge), `turntable` (Drehscheibe mit Auswurfrinne `exit` in Grad; `style: 'whirl'` zeichnet einen Strudel), `field` (`style`: `wind`, `current` für Unterwasser-Strömung, `slope` für Rampen zwischen Höhenstufen; `gust` macht aus Dauerwind Windstöße), `potion` (Schrumpftrank, `scale`/`duration`), `cauldron` (Hexentopf: nur aus der Luft zu treffen, schrumpft und spuckt Richtung `exit` aus), `switch` (Druckplatte, `target`/`duration`), `door` (Tür in die Innen-Map `inner` einer Bahn; `style: 'pyramid'` mit `px`/`py`/`base` zeichnet eine Stufenpyramide um die Tür, `style: 'wreck'` mit `px`/`py` ein Schiffswrack, dessen Leck die Tür ist).
+Hindernis-Typen: `bumper` (`style`: `mushroom`, `rock`, `crystal`, `coral`), `mover` (`style` u. a. `cart`, `cannonball`, `boulder`, `barrel`, `shark`, `wave`, `dragon`, `knight`, `guard`), `ferry` (`style`: `cart`, `boat`, `ship`), `wave` (wandernde Welle, keine Mauer: schiebt den Ball mit `push` in ihrer Laufrichtung mit), `spikes` (Stachelfalle: Platte `w`×`h`, Stacheln sind `up`-Anteil der `period` draußen und blockieren dann wie eine Mauer), `sharkjump` (Hai, der im Takt `period` quer über eine Bucht springt; `style: 'croc'` zeichnet ein Krokodil und einen Ball frisst, der währenddessen über die Zone fliegt; hat die Bahn eine `inner`-Map mit `stomach: true`, landet der Ball dort statt einen Strafschlag zu kassieren), `rotor` (auch als Pendel mit `swing`; `style: 'tentacle'` macht daraus eine Krake, `style: 'vine'` eine Liane), `windmill`, `gate` (periodisch oder mit `linked` an einen Schalter gekoppelt), `portal`, `boost`, `field`, `ramp`, `rail`, `wall`, `cannon` (schwenkende Kanone, `base`/`amp`/`speed`/`range`; `style: 'catapult'` zeichnet ein Katapult), `magnet` (`strength` > 0 zieht an, < 0 stößt ab, `slow` bremst; `style: 'coral'` zeichnet eine Koralle, `style: 'pearl'` eine Perle; `curse: 2.0` macht den Ball nach Berührung für den Rest der Bahn träge), `turntable` (Drehscheibe mit Auswurfrinne `exit` in Grad; `style: 'whirl'` zeichnet einen Strudel), `field` (`style`: `wind`, `current` für Unterwasser-Strömung, `slope` für Rampen zwischen Höhenstufen; `gust` macht aus Dauerwind Windstöße), `potion` (Schrumpftrank, `scale`/`duration`), `cauldron` (Hexentopf: nur aus der Luft zu treffen, schrumpft und spuckt Richtung `exit` aus), `switch` (Druckplatte, `target`/`duration`), `door` (Tür in die Innen-Map `inner` einer Bahn; `style: 'pyramid'` mit `px`/`py`/`base` zeichnet eine Stufenpyramide um die Tür, `style: 'wreck'` mit `px`/`py` ein Schiffswrack, dessen Leck die Tür ist, `style: 'temple'` ein Tempeltor).
 Farbwelten stehen in `src/themes.js`, jede mit einer dezenten Atmosphäre (`atmo`: `fog`, `mist`, `fireflies`, `spores`, `embers`, `sparks`, `ash`, `bubbles`, `sand`, `spray`, `snow`, `pollen`, `none`), die eine Bahn per `atmo` überschreiben kann. Mit `node tools/validate.mjs` lässt sich prüfen, ob jede Bahn lösbar ist.
 
 ## Projektstruktur
@@ -121,6 +137,7 @@ style.css         Oberfläche
 src/themes.js     Farbpaletten und Deko je Welt
 src/courses.js    die Bahnen des Märchenlands
 src/courses_sea.js die Bahnen der Meereswelt
+src/courses_jungle.js die Bahnen des Dschungeltempels
 src/courses_pro.js die Bahnen der Profi-Welt und die Weltenliste
 src/editor.js     Baumodus (Editor für eigene Bahnen)
 manifest.webmanifest, sw.js, icons/   Web-App: Installieren und offline spielen
