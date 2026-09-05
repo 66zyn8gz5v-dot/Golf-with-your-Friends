@@ -525,13 +525,14 @@
     if (!def) return;
     Sfx.portal(); burst(state.ball.x, state.ball.y, msg ? '#ff5a5a' : '#a6ff5e', 16, true);
     state.phase = 'wait'; state.aim = null;
+    state.ball.sunk = true; state.ball.sinkT = 0; // der Ball verschwindet im Tor, statt davor liegen zu bleiben
     showMessage(msg || `Hinein in die ${def.name} …`, msg ? 1900 : 1500);
     clearTimeout(waitTimer);
     waitTimer = setTimeout(() => {
       state.level = buildLevel(def); state.theme = THEMES[def.theme]; state.inner = true;
       R.setLevel(state.level, state.theme);
       const b = state.ball, lv = state.level;
-      b.x = lv.tee.x; b.y = lv.tee.y; b.vx = 0; b.vy = 0; b.z = 0; b.vz = 0; b.air = false; b.rider = null;
+      b.x = lv.tee.x; b.y = lv.tee.y; b.vx = 0; b.vy = 0; b.z = 0; b.vz = 0; b.air = false; b.rider = null; b.sunk = false; b.sinkT = 0;
       b.restX = b.x; b.restY = b.y; b.portalCd = 0.5;
       state.particles = [];
       // Startblick: auf den ersten Aufgabenpunkt (z. B. Rampe/Hexentopf), sonst aufs Loch
