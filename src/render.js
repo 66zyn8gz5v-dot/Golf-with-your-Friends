@@ -1623,7 +1623,7 @@ class Renderer {
     for (let k = -0.8; k <= 0.8; k += 0.4) { const a = this.proj(px - L * 0.65, py + k * Wd, 1.41), b = this.proj(px + L * 0.75, py + k * Wd, 1.41); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke(); }
     for (const z of [0.35, 0.7, 1.05]) { const a = this.proj(px - L * 0.7, py + Wd, z), b = this.proj(px + L * 0.7, py + Wd, z); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke(); }
     // Leck: dunkle Öffnung an der Vorderseite über der Tür
-    const dx = ob.x, gap = 0.62;
+    const dx = ob.x, gap = Math.max(0.62, ob.r * 0.95);
     const o = [[dx - gap, py + Wd, 0], [dx - gap * 0.7, py + Wd, 0.95], [dx, py + Wd, 1.15], [dx + gap * 0.7, py + Wd, 0.95], [dx + gap, py + Wd, 0]];
     ctx.fillStyle = '#03070c'; ctx.beginPath(); o.forEach((q, i) => { const pp = this.proj(q[0], q[1], q[2] + 0.01); i ? ctx.lineTo(pp[0], pp[1]) : ctx.moveTo(pp[0], pp[1]); }); ctx.closePath(); ctx.fill();
     ctx.strokeStyle = '#6a4a2a'; ctx.lineWidth = Math.max(1.5, s * 0.06); ctx.stroke(); // gesplitterte Planken
