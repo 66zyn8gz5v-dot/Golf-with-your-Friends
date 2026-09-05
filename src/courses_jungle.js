@@ -242,7 +242,7 @@ const JUNGLE_COURSES = [
     autoDecor: { density: 0.3, seed: 315 },
   },
   {
-    name: 'Der Tempel', par: 7, theme: 'jungle', maxStrokes: 30, hazardText: { water: 'Platsch! In den Fluss', oob: 'In die Schlucht gestürzt' },
+    name: 'Der Tempel', par: 8, theme: 'jungle', maxStrokes: 30, hazardText: { water: 'Platsch! In den Fluss', oob: 'In die Schlucht gestürzt' },
     views: [{ x: 2, y: 2, w: 7, h: 2, look: { x: 17, y: 3 } }, { x: 15, y: 1, w: 6, h: 5, look: { x: 18.5, y: 11 } }, { x: 18, y: 6, w: 2, h: 6, look: { x: 22.5, y: 12.6 } }, { x: 10, y: 12, w: 14, h: 2, look: { x: 22.5, y: 12.6 } }],
     intro: 'Die verlorene Stadt: über die Hängebrücke, vorbei an Stachelfallen, durch die Schlucht mit der Felskugel bis zum Tempeltor. Drinnen wartet die Tempelhalle mit Feuergruben, Steinscheibe, Druckplatte und dem goldenen Götzen.',
     map: [
