@@ -32,18 +32,25 @@ class Mover {
   segments(out) { polySegments(this.poly(), out, { vx: this.vx, vy: this.vy, e: this.e, kind: 'mover' }); }
 }
 
-/* Welle: wandert wie ein Mover hin und her, ist aber keine Mauer – sie schiebt einen Ball,
-   der auf ihr liegt, in ihrer Laufrichtung mit. Wer schneller ist als die Welle, rollt hindurch. */
+/* Welle: wandert wie ein Mover hin und her, ist aber keine Mauer. Einen Ball, der auf ihr liegt oder
+   langsamer ist als sie, schiebt sie in ihrer Laufrichtung mit – auch einen ruhenden Ball. Wer schneller
+   ist als die Welle, bricht hindurch, wird dabei aber einmal kräftig abgebremst (brake = Restanteil). */
 class Wave extends Mover {
-  constructor(d) { super(Object.assign({ w: 0.6, h: 3, period: 6, push: 16, style: 'wave', e: 0 }, d)); this.type = 'wave'; }
+  constructor(d) { super(Object.assign({ w: 0.6, h: 3, period: 6, push: 16, brake: 0.55, style: 'wave', e: 0 }, d)); this.type = 'wave'; this.alwaysForce = true; }
   segments() { /* keine Kollision */ }
   force(ball, dt) {
     if (ball.air || ball.rider) return;
-    if (Math.abs(ball.x - this.x) > this.w / 2 + 0.3 || Math.abs(ball.y - this.y) > this.h / 2) return;
+    const inside = Math.abs(ball.x - this.x) <= this.w / 2 + 0.3 && Math.abs(ball.y - this.y) <= this.h / 2;
+    if (!inside) { if (ball.waveIn === this) ball.waveIn = null; return; }
     const sp = Math.hypot(this.vx, this.vy); if (sp < 0.05) return;
     const ux = this.vx / sp, uy = this.vy / sp, along = ball.vx * ux + ball.vy * uy;
+    if (along >= sp * 1.15) { // schneller als die Welle: beim Durchbrechen einmal bremsen, dann durchlassen
+      if (ball.waveIn !== this) { ball.waveIn = this; ball.vx *= this.brake; ball.vy *= this.brake; }
+      return;
+    }
+    ball.waveIn = this;
     if ((ball.x - this.x) * ux + (ball.y - this.y) * uy < -this.w / 2 + 0.05) return; // liegt hinter dem Kamm: nicht mehr schieben
-    if (along < sp * 1.15) { ball.vx += ux * this.push * dt; ball.vy += uy * this.push * dt; }
+    ball.vx += ux * this.push * dt; ball.vy += uy * this.push * dt;
   }
 }
 

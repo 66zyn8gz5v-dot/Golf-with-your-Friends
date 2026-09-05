@@ -85,7 +85,7 @@ function stepPhysics(level, ball, dt, t, allowForces) {
   }
 
   ball.boosted = false;
-  if (allowForces) for (const ob of level.obstacles) if (ob.force) ob.force(ball, dt);
+  for (const ob of level.obstacles) if (ob.force && (allowForces || ob.alwaysForce)) ob.force(ball, dt); // Wellen schieben auch einen ruhenden Ball
 
   const c = level.charAt(ball.x, ball.y);
   let sp = Math.hypot(ball.vx, ball.vy);

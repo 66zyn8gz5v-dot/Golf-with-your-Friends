@@ -337,14 +337,14 @@ const SEA_COURSES = [
     autoDecor: { density: 0.12, seed: 219 },
   },
   {
-    name: 'Haifischbucht', par: 8, theme: 'harbor', maxStrokes: 32, hazardText: { oob: 'Platsch! Ins Meer', water: 'Platsch! In die Haibucht', shark: 'Vom Hai gefressen!' },
+    name: 'Haifischbucht', par: 8, theme: 'harbor', maxStrokes: 32, hazardText: { oob: 'Platsch! Ins Meer', water: 'Platsch! In die Haibucht', shark: 'Vom Hai gefressen! Zurück an Land' },
     views: [
       { x: 8, y: 1, w: 4, h: 3, look: { x: 13.8, y: 6.5 } },
       { x: 13, y: 5, w: 12, h: 5, look: { x: 31, y: 7.5 } },
       { x: 29, y: 5, w: 9, h: 5, look: { x: 34, y: 12.5 } },
       { x: 33, y: 10, w: 2, h: 5, look: { x: 27.5, y: 17.5 } },
     ],
-    intro: 'Die große Überfahrt: Vom Hafensteg mit dem Ruderboot zum Windsteg, wo Böen den Ball quer schieben. Dann über die Rampe hinweg über die Haibucht – der Hai springt im Takt, wer im falschen Moment fliegt, wird gefressen. Weiter über die Welleninsel, den Steg mit dem Fallgatter und das Piratenschiff zum Leuchtturm.',
+    intro: 'Die große Überfahrt: Vom Hafensteg mit dem Ruderboot zum Windsteg, wo Böen den Ball quer schieben. Dann über die Rampe hinweg über die Haibucht – der Hai springt im Takt, wer im falschen Moment fliegt, wird gefressen und muss noch einmal anlaufen. Weiter über die Welleninsel, den Steg mit dem Fallgatter und das Piratenschiff zum Leuchtturm.',
     map: [
       '........................................',
       '..##########............................',
@@ -402,21 +402,5 @@ const SEA_COURSES = [
       { t: 'buoy', x: 8.5, y: 5.5, s: 1.0 }, { t: 'buoy', x: 16.5, y: 12.5, s: 1.0 }, { t: 'buoy', x: 4.5, y: 12.5, s: 1.0 }, { t: 'palm', x: 25.6, y: 3.2, s: 1.3, seed: 0.4 },
     ],
     autoDecor: { density: 0.1, seed: 221 },
-    inner: { // Wer vom Hai gefressen wird, landet hier – kurzer Weg, mit ein bis zwei Schlägen ist die Bahn zu Ende
-      name: 'Haimagen', theme: 'belly', stomach: true, look: { x: 11.5, y: 2.5 }, hazardText: { lava: 'Zischhh! Magensäure', oob: 'In die Speiseröhre gerutscht' },
-      map: [
-        '..............',
-        '..T#########..',
-        '..##########..',
-        '..ll#######H..',
-        '..............',
-      ],
-      obstacles: [],
-      decor: [
-        { t: 'chest', x: 13.2, y: 1.2, s: 1.3 }, { t: 'anchor', x: 0.8, y: 1.6, s: 1.2 }, { t: 'bones', x: 5.5, y: 0.4, s: 1.3 }, { t: 'skull', x: 9.5, y: 0.5 }, { t: 'barrel', x: 13.3, y: 3.5, s: 1.0 },
-        { t: 'crate', x: 6.5, y: 4.5, s: 1.0 }, { t: 'bones', x: 10.5, y: 4.6, s: 1.2 }, { t: 'skull', x: 1.2, y: 3.4 }, { t: 'lantern', x: 7.5, y: 0.5 },
-      ],
-      autoDecor: { density: 0.2, seed: 223 },
-    },
   },
 ];
