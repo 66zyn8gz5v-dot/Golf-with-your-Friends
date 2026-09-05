@@ -237,7 +237,7 @@ const PRO_COURSES = [
     },
   },
   {
-    name: 'Sultanspalast', par: 5, theme: 'palace', maxStrokes: 25, hStep: 0.5,
+    name: 'Sultanspalast', par: 6, theme: 'palace', maxStrokes: 25, hStep: 0.5,
     views: [{ x: 18, y: 0.5, w: 4.5, h: 4.4, look: { x: 21, y: 9.5 } }, { x: 20, y: 6.5, w: 2.5, h: 4, look: { x: 17, y: 9.5 } }],
     intro: 'Die Zikkurat des Sultans: Drei Terrassen, jede eine Stufe höher, verbunden nur über Rampen. Ganz oben wartet das Loch – bewacht von Palastwachen, Wüstenwind und einem Tor, das sich im Takt öffnet und schließt.',
     map: [
