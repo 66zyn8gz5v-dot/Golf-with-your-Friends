@@ -58,7 +58,7 @@ Abwechselnd über und unter Wasser: Bahnen auf See spielen in der Piratenbucht-W
 | 5 | Piratendeck | 4 | zwei Schiffe mit Höhenstufen: Planken hinauf zum Bug, Kanone schießt aufs Nachbarschiff, rollendes Fass, schwingende Rah, Hai im Wasser |
 | 6 | Leuchtturmfelsen | 5 | Serpentinen mit drei Höhenstufen und schrägen Banden in allen Kehren, Gegenwind auf der zweiten Kehre, oben Klippe ohne Geländer und Wind zur Kante |
 | 7 | Schiffswrack | 6 | zweiteilige Bahn: über den Meeresgrund an Strömung und Hai vorbei durch das breite Leck ins Wrack; drinnen hängt das Deck schief (Dauergefälle), Fässer rollen, eine breite Luke schließt sich alle paar Sekunden, ein kleiner Krake bewacht das Loch |
-| 8 | Perlengrotte | 5 | Strömung über der Perlmutt-Eisfläche treibt in den Strudel, der Strudel wirft den Ball in die Zauberperle; wer sie berührt, trägt den Perlenfluch (Ball bleibt bis zum Loch träge), Bremskoralle |
+| 8 | Perlengrotte | 5 | langer Weg mit Korallen- und Felsen-Bumpern, dann treibt die Strömung in den Strudel, der Strudel wirft den Ball in die Zauberperle; wer sie berührt, trägt den Perlenfluch (Ball bleibt bis zum Loch träge), Bremskoralle |
 | 9 | Sturmsee | 5 | drei Inseln: Ruderboot-Fähre, Mittelinsel mit rollender Welle und Wind, Piratenschiff zum Leuchtturmfelsen |
 
 ## Die Bahnen der Profi-Welt
