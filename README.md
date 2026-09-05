@@ -13,7 +13,7 @@ npx serve .          # oder: python3 -m http.server 8080
 
 ## Welten und Modi
 
-- **Märchenland** (9 Bahnen: Wiese, Pilzhain, Schmiede, Zauberwald, Drachenhöhle, Eisgrotte, Wolkenburg, Hexenturm, Burgberg), **Meereswelt** (9 Bahnen auf See und am Meeresgrund) und **Profi-Welt** (9 schwerere Bahnen mit Windmühlen, Pendeln, schmalen Dämmen und Brücken).
+- **Märchenland** (9 Bahnen: Wiese, Pilzhain, Schmiede, Zauberwald, Drachenhöhle, Eisgrotte, Wolkenburg, Hexenturm, Burgberg), **Meereswelt** (10 Bahnen auf See und am Meeresgrund) und **Profi-Welt** (9 schwerere Bahnen mit Windmühlen, Pendeln, schmalen Dämmen und Brücken).
 - **Normal**: erst eine Welt wählen (Märchenland oder Meereswelt), dann deren Bahnen der Reihe nach, mit Schlaglimit und Wertung. Jede Welt ist ein eigenes Thema; weitere Welten werden hier eingehängt.
 - **Profi**: die Profi-Welt der Reihe nach.
 - **Kreativ**: erst die Welt wählen, dann geht es sofort los mit einem Spieler, Schleuder-Steuerung und Bahn 1; im Spiel mit „◀ Bahn" / „Bahn ▶" (Tasten P / N) springen, „Ball zurück" (R) setzt an den Abschlag, kein Schlaglimit. Gedacht zum schnellen Prüfen einzelner Bahnen.
@@ -60,6 +60,7 @@ Abwechselnd über und unter Wasser: Bahnen auf See spielen in der Piratenbucht-W
 | 7 | Schiffswrack | 6 | zweiteilige Bahn: über den Meeresgrund an Strömung und Hai vorbei durch das breite Leck ins Wrack; drinnen hängt das Deck schief (Dauergefälle), Fässer rollen, eine breite Luke schließt sich alle paar Sekunden, ein kleiner Krake bewacht das Loch |
 | 8 | Perlengrotte | 5 | langer Weg mit Korallen- und Felsen-Bumpern, dann treibt die Strömung in den Strudel, der Strudel wirft den Ball in die Zauberperle; wer sie berührt, trägt den Perlenfluch (Ball bleibt bis zum Loch träge), Bremskoralle |
 | 9 | Sturmsee | 5 | drei Inseln: Ruderboot-Fähre, Mittelinsel mit Wind und einer Welle, die den Ball mitspült (schnelle Bälle rollen hindurch), Piratenschiff zum Leuchtturmfelsen |
+| 10 | Haifischbucht | 8 | die große Überfahrt: Hafensteg mit Fass, Ruderboot zur Sandbank im seichten Wasser, drei Haie kreuzen die Bahn, Kanone auf die Welleninsel (Welle und Wind), Steg mit Fallgatter, Piratenschiff zur Leuchtturminsel mit schwingender Rah |
 
 ## Die Bahnen der Profi-Welt
 
