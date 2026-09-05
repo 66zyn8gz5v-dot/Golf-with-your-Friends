@@ -826,7 +826,7 @@ class Renderer {
         const poly = [[p0[0] + nx, p0[1] + ny], [p1[0] + nx, p1[1] + ny], [p1[0] - nx, p1[1] - ny], [p0[0] - nx, p0[1] - ny]];
         items.push({ x: (p0[0] + p1[0]) / 2, y: (p0[1] + p1[1]) / 2, draw: () => this.prism(ctx, poly, 0, ob.h, th.wall.top, th.wall.side, { outline: shade(th.wall.side, 0.75) }) });
       }
-    } else if (ob.type === 'mover' || ob.type === 'ferry') {
+    } else if (ob.type === 'mover' || ob.type === 'ferry' || ob.type === 'wave') {
       items.push({ x: ob.x, y: ob.y, bias: 0.3, draw: () => { this.flat = ob.type === 'ferry' && ob.flat; this.drawMover(ctx, ob, t); this.flat = false; } });
     } else if (ob.type === 'rotor') {
       const hub = this.circlePoly(ob.x, ob.y, ob.hubR, 8);

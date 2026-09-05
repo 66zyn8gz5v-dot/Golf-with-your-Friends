@@ -304,7 +304,7 @@ const SEA_COURSES = [
   {
     name: 'Sturmsee', par: 5, theme: 'harbor', maxStrokes: 24, hazardText: { oob: 'Platsch! In die Sturmsee' },
     views: [{ x: 7, y: 1, w: 3, h: 3, look: { x: 11, y: 5.7 } }, { x: 10, y: 5, w: 8, h: 3, look: { x: 20.8, y: 10.2 } }],
-    intro: 'Drei Inseln in tobender See. Das Ruderboot bringt den Ball zur Mittelinsel, wo eine Welle nach der anderen über die Planken rollt. Das Schiff setzt zum Leuchtturmfelsen über – dort wartet das Loch.',
+    intro: 'Drei Inseln in tobender See. Das Ruderboot bringt den Ball zur Mittelinsel, wo die Welle über die Planken rollt und alles mitspült, was auf ihr liegt – wer schneller ist als die Welle, rollt hindurch. Das Schiff setzt zum Leuchtturmfelsen über.',
     map: [
       '............................',
       '..sss#####..................',
@@ -322,7 +322,7 @@ const SEA_COURSES = [
     ],
     obstacles: [
       { type: 'ferry', x0: 9.3, y0: 2.5, x1: 11.0, y1: 5.7, w: 1.6, h: 1.0, wait: 1.8, travel: 2.6, style: 'boat', flat: true },
-      { type: 'mover', x0: 10.6, y0: 6.5, x1: 17.4, y1: 6.5, w: 0.5, h: 3, period: 6.5, style: 'wave', e: 0.7 },
+      { type: 'wave', x0: 10.6, y0: 6.5, x1: 17.4, y1: 6.5, w: 0.6, h: 3, period: 6.5, push: 16 },
       { type: 'field', x: 10, y: 5, w: 8, h: 3, fx: 0, fy: -1.4, style: 'wind' },
       { type: 'ferry', x0: 17.3, y0: 6.5, x1: 20.8, y1: 10.2, w: 2.6, h: 1.4, wait: 2.0, travel: 3.4, phase: 0.45, style: 'ship', flat: true },
       { type: 'bumper', x: 22.5, y: 9.6, r: 0.36, style: 'rock' },

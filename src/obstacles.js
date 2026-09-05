@@ -32,6 +32,21 @@ class Mover {
   segments(out) { polySegments(this.poly(), out, { vx: this.vx, vy: this.vy, e: this.e, kind: 'mover' }); }
 }
 
+/* Welle: wandert wie ein Mover hin und her, ist aber keine Mauer – sie schiebt einen Ball,
+   der auf ihr liegt, in ihrer Laufrichtung mit. Wer schneller ist als die Welle, rollt hindurch. */
+class Wave extends Mover {
+  constructor(d) { super(Object.assign({ w: 0.6, h: 3, period: 6, push: 16, style: 'wave', e: 0 }, d)); this.type = 'wave'; }
+  segments() { /* keine Kollision */ }
+  force(ball, dt) {
+    if (ball.air || ball.rider) return;
+    if (Math.abs(ball.x - this.x) > this.w / 2 + 0.3 || Math.abs(ball.y - this.y) > this.h / 2) return;
+    const sp = Math.hypot(this.vx, this.vy); if (sp < 0.05) return;
+    const ux = this.vx / sp, uy = this.vy / sp, along = ball.vx * ux + ball.vy * uy;
+    if ((ball.x - this.x) * ux + (ball.y - this.y) * uy < -this.w / 2 + 0.05) return; // liegt hinter dem Kamm: nicht mehr schieben
+    if (along < sp * 1.15) { ball.vx += ux * this.push * dt; ball.vy += uy * this.push * dt; }
+  }
+}
+
 class Rotor {
   constructor(d) {
     Object.assign(this, { blades: 4, len: 3, speed: 1, phase: 0, thick: 0.16, hubR: 0.45, style: 'wood', height: 0.55 }, d);
@@ -408,7 +423,8 @@ function createObstacles(defs) {
   const out = [];
   for (const d of defs) {
     switch (d.type) {
-      case 'mover': out.push(new Mover(d)); break;
+      case 'wave': out.push(new Wave(d)); break;
+    case 'mover': out.push(new Mover(d)); break;
       case 'rotor': out.push(new Rotor(d)); break;
       case 'gate': out.push(new Gate(d)); break;
       case 'bumper': out.push(new Bumper(d)); break;
