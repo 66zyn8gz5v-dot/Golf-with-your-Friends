@@ -339,7 +339,8 @@ const SEA_COURSES = [
     name: 'Haifischbucht', par: 8, theme: 'harbor', maxStrokes: 32, hazardText: { oob: 'Platsch! Ins Meer', water: 'Platsch! In die Haibucht', shark: 'Vom Hai gefressen!' },
     views: [
       { x: 8, y: 1, w: 4, h: 3, look: { x: 13.8, y: 6.5 } },
-      { x: 20, y: 5, w: 5, h: 5, look: { x: 31, y: 7.5 } },
+      { x: 13, y: 5, w: 12, h: 5, look: { x: 31, y: 7.5 } },
+      { x: 29, y: 5, w: 9, h: 5, look: { x: 34, y: 12.5 } },
       { x: 33, y: 10, w: 2, h: 5, look: { x: 27.5, y: 17.5 } },
     ],
     intro: 'Die große Überfahrt: Vom Hafensteg mit dem Ruderboot zum Windsteg, wo Böen den Ball quer schieben. Dann über die Rampe hinweg über die Haibucht – der Hai springt im Takt, wer im falschen Moment fliegt, wird gefressen. Weiter über die Welleninsel, den Steg mit dem Fallgatter und das Piratenschiff zum Leuchtturm.',
