@@ -400,5 +400,28 @@ const SEA_COURSES = [
       { t: 'buoy', x: 8.5, y: 5.5, s: 1.0 }, { t: 'buoy', x: 16.5, y: 12.5, s: 1.0 }, { t: 'buoy', x: 4.5, y: 12.5, s: 1.0 }, { t: 'palm', x: 25.6, y: 3.2, s: 1.3, seed: 0.4 },
     ],
     autoDecor: { density: 0.1, seed: 221 },
+    inner: { // Wer vom Hai gefressen wird, landet hier – und kann trotzdem einlochen
+      name: 'Haimagen', theme: 'belly', stomach: true, look: { x: 15.5, y: 5.5 }, hazardText: { lava: 'Zischhh! Magensäure', oob: 'In die Speiseröhre gerutscht' },
+      map: [
+        '....................',
+        '..T#######xx####....',
+        '..###ll###xx####....',
+        '..########xx####....',
+        '.......##########...',
+        '.......###ll###H#...',
+        '.......##########...',
+        '....................',
+      ],
+      obstacles: [
+        { type: 'mover', x0: 8, y0: 4.5, x1: 15.5, y1: 4.5, w: 0.7, h: 0.7, period: 5, style: 'barrel' },
+        { type: 'field', x: 7, y: 4, w: 4, h: 3, fx: 2.6, fy: 0, style: 'wind', gust: 1.3, phase: 0.5 },
+        { type: 'rotor', x: 13.5, y: 5.5, blades: 2, len: 1.0, speed: 1.6, thick: 0.14, hubR: 0.3, height: 0.5 },
+      ],
+      decor: [
+        { t: 'chest', x: 14.5, y: 1.5, s: 1.3 }, { t: 'anchor', x: 12.6, y: 2.4, s: 1.2 }, { t: 'bones', x: 4.5, y: 0.5, s: 1.3 }, { t: 'skull', x: 8.5, y: 0.5 }, { t: 'barrel', x: 1.2, y: 2.5, s: 1.0 },
+        { t: 'crate', x: 5.5, y: 7.4, s: 1.0 }, { t: 'bones', x: 12.5, y: 7.5, s: 1.2 }, { t: 'skull', x: 17.5, y: 4.5 }, { t: 'anchor', x: 17.6, y: 7.2, s: 1.1 }, { t: 'lantern', x: 6.5, y: 3.5 },
+      ],
+      autoDecor: { density: 0.2, seed: 223 },
+    },
   },
 ];

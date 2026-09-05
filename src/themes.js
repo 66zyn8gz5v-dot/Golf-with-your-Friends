@@ -216,6 +216,18 @@ const THEMES = {
     accent: '#7fd6c8', flag: '#ff7fa8',
     autoDecor: ['seaweed', 'coral', 'shell', 'bones', 'barrel', 'fish'],
   },
+  belly: { // Haimagen: fleischig-rote Wände, Rippen aus Knochen, grüne Magensäure statt Lava
+    atmo: 'mist', belly: true,
+    sky: ['#2a0a10', '#6a1a26'], ground: '#5a1a22', groundEdge: '#2e0c10',
+    floor: ['#c2555f', '#b64c56'], sand: '#d9a37a', ice: '#c8ecff', snow: '#f1f7ff',
+    water: '#3f6fd9', lava: '#9fe04a',
+    wall: { top: '#d98a92', side: '#7a2a34', style: 'stone' },
+    block: { top: '#f4ede0', side: '#b8a890' },
+    mover: { top: '#8a5a30', side: '#4a2e14' },
+    rotor: { top: '#f4ede0', side: '#b8a890' },
+    accent: '#a6ff5e', flag: '#a6ff5e',
+    autoDecor: ['bones', 'skull', 'bones', 'barrel', 'anchor', 'crate'],
+  },
   castle: {
     atmo: 'pollen',
     sky: ['#5fa8f0', '#dff0ff'], ground: '#4b8a3c', groundEdge: '#2f5c27',

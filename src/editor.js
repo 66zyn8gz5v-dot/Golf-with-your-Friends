@@ -10,7 +10,7 @@ const Editor = (deps) => {
     ['boost', 'Beschleuniger'], ['windmill', 'Windmühle'], ['cannon', 'Kanone'], ['magnet', 'Magnet'], ['turntable', 'Drehscheibe'], ['potion', 'Schrumpftrank'],
     ['portal', 'Portal (2× tippen)'], ['wall', 'Bande (2× tippen)'],
   ];
-  const THEME_LABELS = { meadow: 'Elfenwiese', mushroom: 'Pilzhain', forge: 'Zwergenschmiede', forest: 'Zauberwald', dragon: 'Drachenhöhle', ice: 'Eisgrotte', sky: 'Wolkenburg', clockwork: 'Uhrwerk', witch: 'Hexenwald', hut: 'Hexenhütte', reef: 'Korallenriff', volcano: 'Vulkan', palace: 'Wüstenpalast', harbor: 'Piratenbucht', desert: 'Wüste', tomb: 'Grabkammer', castle: 'Burgberg', deck: 'Piratendeck', wreck: 'Schiffswrack' };
+  const THEME_LABELS = { meadow: 'Elfenwiese', mushroom: 'Pilzhain', forge: 'Zwergenschmiede', forest: 'Zauberwald', dragon: 'Drachenhöhle', ice: 'Eisgrotte', sky: 'Wolkenburg', clockwork: 'Uhrwerk', witch: 'Hexenwald', hut: 'Hexenhütte', reef: 'Korallenriff', volcano: 'Vulkan', palace: 'Wüstenpalast', harbor: 'Piratenbucht', desert: 'Wüste', tomb: 'Grabkammer', castle: 'Burgberg', deck: 'Piratendeck', wreck: 'Schiffswrack', belly: 'Haimagen' };
   const HINTS = {
     tile: 'Tippen oder ziehen, um Kacheln zu malen.', T: 'Tippen: Abschlag setzen.', H: 'Tippen: Loch setzen.',
     obj: 'Tippen: Objekt platzieren. Mit „Drehen“ Richtung ändern, mit „Löschen“ entfernen.',

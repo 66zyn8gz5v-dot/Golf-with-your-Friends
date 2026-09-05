@@ -470,12 +470,12 @@
   }
 
   /* Tür erreicht: die Bahn wechselt in ihre Innen-Map (z. B. Hexenhütte), Schläge zählen weiter */
-  function enterInner() {
+  function enterInner(msg) {
     const def = state.courses[state.holeIdx].inner;
     if (!def) return;
-    Sfx.portal(); burst(state.ball.x, state.ball.y, '#a6ff5e', 16, true);
+    Sfx.portal(); burst(state.ball.x, state.ball.y, msg ? '#ff5a5a' : '#a6ff5e', 16, true);
     state.phase = 'wait'; state.aim = null;
-    showMessage(`Hinein in die ${def.name} …`, 1500);
+    showMessage(msg || `Hinein in die ${def.name} …`, msg ? 1900 : 1500);
     clearTimeout(waitTimer);
     waitTimer = setTimeout(() => {
       state.level = buildLevel(def); state.theme = THEMES[def.theme]; state.inner = true;
@@ -520,7 +520,8 @@
         case 'load': Sfx.bounce(5); showMessage('Geladen … Feuer frei!', 900); break;
         case 'fire': Sfx.cannon(); burst(ev.x, ev.y, '#ffb347', 18); break;
         case 'sunk': sunk(); return;
-        case 'water': case 'lava': case 'oob': case 'shark': hazard(ev.type); return;
+        case 'shark': { const inner = state.courses[state.holeIdx].inner; if (inner && inner.stomach && !state.inner) { const b = state.ball; b.z = 0; b.vz = 0; b.air = false; enterInner('Verschluckt! Ab in den Haimagen …'); } else hazard('shark'); return; }
+        case 'water': case 'lava': case 'oob': hazard(ev.type); return;
       }
     }
   }

@@ -227,6 +227,7 @@ class Renderer {
     if (th.gears) this.drawSkyGears(ctx, t);
     if (th.planks) this.drawPlanks(ctx, t);
     if (th.tomb) this.drawTomb(ctx, t);
+    if (th.belly) this.drawBelly(ctx, t);
     this.seaT = t;
     if (th.rays) this.drawRays(ctx, t);
     if (th.sea) this.drawSea(ctx, t);
@@ -1655,6 +1656,22 @@ class Renderer {
       ctx.fillStyle = `rgba(255,255,255,${0.8 * q})`;
       for (let i = 0; i < 7; i++) { const a = i * 0.9, rr = s * (0.3 + 0.5 * q); ctx.beginPath(); ctx.arc(bx + Math.cos(a) * rr, by + Math.sin(a) * rr * 0.5 - s * 0.3 * q, s * 0.07, 0, TAU); ctx.fill(); }
     }
+  }
+  /* Haimagen: pulsierende Rippenbögen und Magenwände im Hintergrund */
+  drawBelly(ctx, t) {
+    const w = this.w, h = this.h, pulse = 1 + 0.02 * Math.sin(t * 1.6);
+    ctx.lineCap = 'round';
+    for (let i = 0; i < 9; i++) { // Rippen: helle Bögen von oben, schwingen leicht mit dem Puls
+      const x = w * (0.05 + i * 0.115), rw = w * 0.07 * pulse, rh = h * (0.55 + 0.05 * Math.sin(i * 1.3));
+      ctx.strokeStyle = `rgba(244,237,224,${0.22 + 0.06 * Math.sin(t * 1.6 + i)})`; ctx.lineWidth = Math.max(4, w * 0.012);
+      ctx.beginPath(); ctx.moveTo(x - rw, 0); ctx.quadraticCurveTo(x + rw * 0.4, rh * 0.5, x - rw * 0.2, rh); ctx.stroke();
+    }
+    for (let i = 0; i < 14; i++) { // Magenwand: weiche Wölbungen
+      const x = ((i * 0.173) % 1) * w, y = h * (0.35 + (i * 0.11) % 0.5), r = w * (0.05 + (i % 3) * 0.02) * pulse;
+      const g = ctx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, 'rgba(150,40,55,0.35)'); g.addColorStop(1, 'rgba(150,40,55,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+    }
+    ctx.fillStyle = 'rgba(159,224,74,0.08)'; ctx.fillRect(0, h * 0.7, w, h * 0.3); // Säuredunst unten
   }
   /* Strudel: dunkler Wassertrichter mit drehenden Schaumspiralen, Auswurfrinne wie bei der Drehscheibe */
   drawWhirl(ctx, ob, t) {
