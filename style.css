@@ -166,6 +166,57 @@ table.scores th, table.scores td { padding: 5px 12px; border-bottom: 1px solid r
 table.scores th { color: #ffd98a; font-weight: normal; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; }
 table.scores td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .legend { text-align: left; font-size: 13px; color: #cbbfe6; margin-top: 12px; line-height: 1.5; }
+/* Endtafel: je Welt eigene Farben, Szene als Banner, eine Karte je Bahn */
+.panel { max-height: 94vh; overflow-y: auto; box-sizing: border-box; }
+.panel.final { padding: 0 0 22px; max-width: min(94vw, 760px); width: min(94vw, 760px); overflow-x: hidden; }
+.panel.final .final-banner { position: relative; height: 118px; overflow: hidden; border-radius: 14px 14px 0 0; border-bottom: 2px solid rgba(255,255,255,0.25); }
+.panel.final .final-banner .mode-scene { position: absolute; inset: 0; width: 100%; height: 100%; }
+.panel.final .final-head { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; background: linear-gradient(180deg, rgba(0,0,0,0.05), rgba(0,0,0,0.55)); text-shadow: 0 2px 6px rgba(0,0,0,0.8); }
+.panel.final .final-head h1 { margin: 0; font-size: 36px; font-family: "Cinzel Decorative", "MedievalSharp", Georgia, serif; }
+.panel.final .final-world { color: #fff3d6; font-size: 15px; letter-spacing: 1px; margin-top: 2px; }
+.podium { display: flex; flex-direction: column; gap: 6px; margin: 16px 22px 8px; }
+.pod { display: flex; align-items: center; gap: 10px; padding: 7px 14px; border-radius: 12px; background: rgba(255,255,255,0.07); font-size: 17px; }
+.pod.win { background: linear-gradient(90deg, rgba(255, 209, 102, 0.28), rgba(255, 209, 102, 0.08)); border: 1px solid rgba(255, 209, 102, 0.6); font-size: 19px; }
+.pod-medal { font-size: 22px; width: 30px; text-align: center; }
+.pod-dot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.4); flex: none; }
+.pod-name { flex: 1; text-align: left; font-weight: bold; }
+.pod-total { font-variant-numeric: tabular-nums; font-weight: bold; min-width: 34px; text-align: right; }
+.pod-par { min-width: 46px; text-align: right; font-variant-numeric: tabular-nums; color: #ffe08a; }
+.pod-par.under { color: #9dff9d; } .pod-par.over { color: #ffb0a0; }
+.tallies { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: 2px 22px 6px; font-size: 13px; }
+.tally { padding: 3px 9px; border-radius: 999px; background: rgba(255,255,255,0.08); }
+.tally.ace { background: rgba(255, 230, 120, 0.35); } .tally.eagle, .tally.birdie { background: rgba(90, 210, 120, 0.3); } .tally.bogey { background: rgba(255, 170, 80, 0.3); } .tally.worse { background: rgba(255, 100, 90, 0.3); }
+.hole-cards { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 10px 14px 6px; }
+.hole-card { width: 92px; box-sizing: border-box; padding: 7px 4px 6px; border-radius: 12px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14); display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.hc-top { display: flex; align-items: center; gap: 5px; }
+.hc-num { font-size: 12px; color: #ffe08a; font-weight: bold; background: rgba(0,0,0,0.3); border-radius: 999px; padding: 1px 7px; }
+.hc-icon { font-size: 22px; line-height: 1; }
+.hc-name { font-size: 11px; line-height: 1.15; color: #f4efe6; text-align: center; min-height: 2.3em; display: flex; align-items: center; }
+.hc-par { font-size: 10px; color: #cbbfe6; letter-spacing: 0.5px; }
+.hc-scores { display: flex; flex-wrap: wrap; justify-content: center; gap: 3px; margin-top: 3px; }
+.hc-score { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 22px; padding: 0 3px; border-radius: 7px; border: 2px solid transparent; font-size: 13px; font-weight: bold; font-variant-numeric: tabular-nums; color: #1a1030; background: #ffe08a; }
+.hc-score.par { background: #ffe08a; }
+.hc-score.birdie { background: #8fe39a; } .hc-score.eagle { background: #4fd27a; } .hc-score.ace { background: #ffd23f; box-shadow: 0 0 10px #ffd23f; }
+.hc-score.bogey { background: #ffb866; } .hc-score.worse { background: #ff8a7a; }
+.final-legend { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4px 6px; margin: 8px 18px 12px; font-size: 12px; color: #cbbfe6; }
+.final-legend .hc-score { margin-left: 8px; min-width: 20px; height: 18px; font-size: 11px; }
+/* Weltfarben */
+.panel.world-sea { background: linear-gradient(180deg, #1c3f6b, #0d1f3c); border-color: #7fd8ff; }
+.panel.world-sea h1, .panel.world-sea h2, .panel.world-sea .hc-num { color: #d8f4ff; }
+.panel.world-sea .pod.win { background: linear-gradient(90deg, rgba(127, 216, 255, 0.28), rgba(127, 216, 255, 0.08)); border-color: rgba(127, 216, 255, 0.6); }
+.panel.world-pro { background: linear-gradient(180deg, #4a1d1d, #1f0d10); border-color: #ff9c5a; }
+.panel.world-pro h1, .panel.world-pro h2, .panel.world-pro .hc-num { color: #ffd3b0; }
+.panel.world-pro .pod.win { background: linear-gradient(90deg, rgba(255, 156, 90, 0.28), rgba(255, 156, 90, 0.08)); border-color: rgba(255, 156, 90, 0.6); }
+.panel.world-jungle { background: linear-gradient(180deg, #1f4a2a, #0d2114); border-color: #b6ff6e; }
+.panel.world-jungle h1, .panel.world-jungle h2, .panel.world-jungle .hc-num { color: #e2ffc4; }
+.panel.world-jungle .pod.win { background: linear-gradient(90deg, rgba(182, 255, 110, 0.26), rgba(182, 255, 110, 0.08)); border-color: rgba(182, 255, 110, 0.6); }
+.panel.world-custom { background: linear-gradient(180deg, #2e3a44, #141b22); border-color: #9be7d0; }
+.panel.world-custom h1, .panel.world-custom h2, .panel.world-custom .hc-num { color: #d8fff3; }
+@media (max-width: 600px) {
+  .panel.final .final-banner { height: 92px; } .panel.final .final-head h1 { font-size: 26px; }
+  .hole-card { width: 82px; } .hc-name { font-size: 10px; } .podium { margin: 12px 10px 6px; } .pod { font-size: 15px; padding: 6px 10px; }
+}
+
 .medal { font-size: 20px; }
 @media (max-width: 600px) {
   #hud-name, #hud-strokes { font-size: 15px; }

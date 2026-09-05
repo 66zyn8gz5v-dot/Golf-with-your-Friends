@@ -34,6 +34,7 @@
 
   /* ---------- UI ---------- */
   function showMessage(text, ms = 1600) {
+    if (state.phase === 'summary' || state.phase === 'final') return; // keine Laufmeldung über den Ergebnistafeln
     ui.msg.textContent = text; ui.msg.classList.add('visible'); ui.msg.classList.toggle('small', text.length > 40);
     clearTimeout(msgTimer); msgTimer = setTimeout(() => ui.msg.classList.remove('visible'), ms);
   }
@@ -304,6 +305,16 @@
     $('start').addEventListener('click', () => { Sfx.unlock(); startGame(playerCount, 0); });
   }
 
+  /* Endtafel: kleines Sinnbild je Bahn (nach Name, sonst nach Optik) */
+  const HOLE_ICONS = { Elfenwiese: '🌼', Pilzhain: '🍄', Zwergenschmiede: '⚒️', Zauberwald: '🔮', Drachenhöhle: '🐉', Eisgrotte: '❄️', Wolkenburg: '☁️', Hexenturm: '🧙', Burgberg: '🏰',
+    Strandbucht: '🏖️', Muschelriff: '🐚', Fischerpier: '🎣', Krakengrotte: '🐙', Piratendeck: '🏴‍☠️', Leuchtturmfelsen: '🗼', Schiffswrack: '🚢', Perlengrotte: '🦪', Sturmsee: '🌊', Haifischbucht: '🦈',
+    Mühlenwiese: '🌾', Nebelmoor: '🌫️', Zwergenkanone: '💣', Korallenriff: '🪸', Uhrwerk: '⚙️', Piratenbucht: '⚓', Hexenküche: '🧪', Sultanspalast: '🕌', Pyramide: '🔺',
+    Urwaldpfad: '🌿', Affenbrücke: '🐒', Krokodilfluss: '🐊', Stachelpfad: '🗡️', Felskugelschlucht: '🪨', Treibsandbecken: '⏳', Totemplatz: '🗿', Wasserfallterrassen: '💧', 'Der Tempel': '🏛️' };
+  const THEME_ICONS = { meadow: '🌼', mushroom: '🍄', forge: '⚒️', forest: '🌲', dragon: '🐉', ice: '❄️', sky: '☁️', witch: '🧙', castle: '🏰', harbor: '⚓', reef: '🐠', clockwork: '⚙️', palace: '🕌', desert: '🏜️', tomb: '⚱️', deck: '🏴‍☠️', wreck: '🚢', belly: '🦈', jungle: '🌴', temple: '🗿', hut: '🧪' };
+  const holeIcon = def => HOLE_ICONS[def.name] || THEME_ICONS[def.theme] || '⛳';
+  const worldClass = () => 'world-' + ((state.world && state.world.id) || 'custom');
+  const diffClass = (strokes, par) => strokes === 1 ? 'ace' : strokes - par <= -2 ? 'eagle' : strokes - par === -1 ? 'birdie' : strokes === par ? 'par' : strokes - par === 1 ? 'bogey' : 'worse';
+
   function scoreName(strokes, par) {
     if (strokes === 1) return 'Hole-in-One!';
     const d = strokes - par;
@@ -439,14 +450,14 @@
     finishTurn(state.strokes);
   }
   function showHoleDone() {
-    state.phase = 'summary';
+    state.phase = 'summary'; clearTimeout(msgTimer); ui.msg.classList.remove('visible');
     const def = state.courses[state.holeIdx], last = state.holeIdx === state.courses.length - 1;
     const rows = state.players.map(p => {
       const total = p.scores.reduce((a, b) => a + b, 0);
       return `<tr><td><span class="dot" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.color};margin-right:6px"></span>${p.name}</td><td class="num">${p.scores[state.holeIdx]}</td><td class="num">${total}</td></tr>`;
     }).join('');
-    overlay(`<div class="panel">
-      <h2>Bahn ${state.holeIdx + 1}: ${def.name}</h2>
+    overlay(`<div class="panel ${worldClass()}">
+      <h2>${holeIcon(def)} Bahn ${state.holeIdx + 1}: ${def.name}</h2>
       <div class="sub">Par ${def.par}</div>
       <table class="scores"><tr><th>Spieler</th><th>Bahn</th><th>Gesamt</th></tr>${rows}</table>
       ${!last ? `<div class="sub">Als Nächstes: <b>${state.courses[state.holeIdx + 1].name}</b><br><i>${state.courses[state.holeIdx + 1].intro}</i></div>` : ''}
@@ -455,18 +466,36 @@
     $('next').addEventListener('click', () => { hideOverlay(); if (state.editorReturn) editor.returnFromTest(); else if (last) { if (state.mode === 'creative') loadHole(0); else showFinal(); } else loadHole(state.holeIdx + 1); });
   }
   function showFinal() {
-    state.phase = 'final';
+    state.phase = 'final'; clearTimeout(msgTimer); ui.msg.classList.remove('visible'); // keine Laufmeldung über der Tafel
     const parTotal = state.courses.reduce((a, c) => a + c.par, 0);
     const ranked = state.players.map(p => ({ p, total: p.scores.reduce((a, b) => a + b, 0) })).sort((a, b) => a.total - b.total);
     const medals = ['🥇', '🥈', '🥉', '4.'];
-    const rows = ranked.map((r, i) => `<tr><td class="medal">${medals[i]}</td><td>${r.p.name}</td><td class="num">${r.total}</td><td class="num">${r.total - parTotal >= 0 ? '+' : ''}${r.total - parTotal}</td></tr>`).join('');
-    const holes = `<tr><th></th>${state.courses.map((c, i) => `<th>${i + 1}</th>`).join('')}</tr>` +
-      state.players.map(p => `<tr><td>${p.name}</td>${p.scores.map(s => `<td class="num">${s}</td>`).join('')}</tr>`).join('');
-    overlay(`<div class="panel">
-      <h1>🏆 Endergebnis</h1>
-      <div class="sub">Gesamt-Par: ${parTotal}</div>
-      <table class="scores"><tr><th></th><th>Spieler</th><th>Schläge</th><th>zu Par</th></tr>${rows}</table>
-      <table class="scores" style="font-size:13px">${holes}</table>
+    const vsPar = d => d === 0 ? 'Par' : (d > 0 ? '+' : '') + d;
+    const podium = ranked.map((r, i) => `<div class="pod ${i === 0 ? 'win' : ''}">
+        <span class="pod-medal">${medals[i]}</span>
+        <span class="pod-dot" style="background:${r.p.color}"></span>
+        <span class="pod-name">${r.p.name}</span>
+        <span class="pod-total">${r.total}</span>
+        <span class="pod-par ${r.total - parTotal < 0 ? 'under' : r.total - parTotal > 0 ? 'over' : ''}">${vsPar(r.total - parTotal)}</span>
+      </div>`).join('');
+    // je Bahn eine Karte: Nummer, Sinnbild, Name, Par und die Schläge aller Spieler (farbig nach Ergebnis)
+    const cards = state.courses.map((c, i) => `<div class="hole-card">
+        <div class="hc-top"><span class="hc-num">${i + 1}</span><span class="hc-icon">${holeIcon(c)}</span></div>
+        <div class="hc-name">${c.name}</div>
+        <div class="hc-par">Par ${c.par}</div>
+        <div class="hc-scores">${state.players.map(p => `<span class="hc-score ${diffClass(p.scores[i], c.par)}" style="border-color:${p.color}" title="${p.name}">${p.scores[i]}</span>`).join('')}</div>
+      </div>`).join('');
+    const best = state.players.length > 1 ? '' : (() => { // Solo: kleine Bilanz
+      const p = state.players[0]; const n = k => p.scores.filter((s, i) => diffClass(s, state.courses[i].par) === k).length;
+      const parts = [['ace', 'Hole-in-One'], ['eagle', 'Eagle'], ['birdie', 'Birdie'], ['par', 'Par'], ['bogey', 'Bogey'], ['worse', 'Schlechter']].filter(([k]) => n(k)).map(([k, l]) => `<span class="tally ${k}">${n(k)}× ${l}</span>`);
+      return `<div class="tallies">${parts.join('')}</div>`;
+    })();
+    overlay(`<div class="panel final ${worldClass()}">
+      <div class="final-banner">${sceneFor(state.world && state.world.id)}<div class="final-head"><h1>🏆 Endergebnis</h1><div class="final-world">${state.world ? state.world.name : ''} · ${state.courses.length} Bahnen · Par ${parTotal}</div></div></div>
+      <div class="podium">${podium}</div>
+      ${best}
+      <div class="hole-cards">${cards}</div>
+      <div class="final-legend"><span class="hc-score ace">1</span> Hole-in-One <span class="hc-score eagle">–2</span> Eagle <span class="hc-score birdie">–1</span> Birdie <span class="hc-score par">0</span> Par <span class="hc-score bogey">+1</span> Bogey <span class="hc-score worse">+2</span> mehr</div>
       <span class="btn" id="again">Nochmal spielen</span>
     </div>`);
     $('again').addEventListener('click', () => { hideOverlay(); showTitle(); });
