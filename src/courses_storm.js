@@ -267,7 +267,7 @@ const STORM_COURSES = [
   },
   {
     name: 'Sturmpfad', par: 6, theme: 'storm', maxStrokes: 26, hazardText: { oob: 'Vom Grat in die Wolken gestürzt', lava: 'Zzzt! Blitzpfütze', water: 'Platsch! Regentümpel', zapped: 'Vom Blitz getroffen!' },
-    views: [{ x: 2, y: 1, w: 38, h: 3, look: { x: 40.5, y: 2 } }, { x: 40, y: 1, w: 2, h: 9, look: { x: 40.5, y: 10 } }, { x: 8, y: 9, w: 32, h: 3, look: { x: 6.5, y: 10 } }, { x: 6, y: 9, w: 2, h: 4, look: { x: 6.5, y: 12 } }, { x: 2, y: 11, w: 12, h: 2, look: { x: 3.5, y: 11.5 } }],
+    views: [{ x: 2, y: 1, w: 38, h: 3, look: { x: 40.5, y: 2 } }, { x: 40, y: 1, w: 2, h: 9, look: { x: 40.5, y: 10 } }, { x: 8, y: 9, w: 32, h: 3, look: { x: 6.5, y: 10 } }, { x: 2, y: 11, w: 12, h: 2, look: { x: 3.5, y: 11.5 } }],
     map: [
       '............................................',
       '..############oooooooo####################..',
@@ -284,7 +284,7 @@ const STORM_COURSES = [
       '..############..............................',
       '............................................',
     ],
-    intro: 'Ein langer Grat hoch über den Wolken: hin auf der Nordseite, zurück auf der Südseite. Wo das Geländer fehlt, drücken Böen den Ball zur Kante; an den Kehren lenken Banden, und Blitze fallen im Takt.',
+    intro: 'Ein langer Grat hoch über den Wolken: hin auf der Nordseite, zurück auf der Südseite. Wo das Geländer fehlt, drücken Böen den Ball zur Kante; an den Kehren lenken Banden, Blitze fallen im Takt, und vor dem Loch wartet eine Kugel.',
     obstacles: [
       { type: 'field', x: 14, y: 1, w: 8, h: 3, fx: 0, fy: -2.4, style: 'wind', gust: 1.0, phase: 0 },
       { type: 'lightning', x: 30, y: 2, w: 2, h: 3, period: 5, phase: 0.2, warn: 1.0, strike: 0.35 },
@@ -294,8 +294,7 @@ const STORM_COURSES = [
       { type: 'field', x: 26, y: 9, w: 8, h: 3, fx: 0, fy: 2.4, style: 'wind', gust: 0.9, phase: 1.2 },
       { type: 'lightning', x: 19, y: 10, w: 2, h: 3, period: 5, phase: 0.7, warn: 1.0, strike: 0.35 },
       { type: 'bumper', x: 12.5, y: 9.6, r: 0.36, style: 'orb', kick: 8 },
-      { type: 'wall', x0: 6, y0: 9, x1: 8, y1: 9, extend: 0 },
-      { type: 'wall', x0: 6, y0: 13, x1: 8, y1: 11, extend: 0 },
+      { type: 'wall', x0: 6, y0: 11, x1: 8, y1: 9, extend: 0 },
       { type: 'wall', x0: 2, y0: 12, x1: 3, y1: 13, extend: 0 },
     ],
     decor: [
