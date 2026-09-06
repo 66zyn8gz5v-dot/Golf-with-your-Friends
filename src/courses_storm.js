@@ -33,7 +33,7 @@ const STORM_COURSES = [
     autoDecor: { density: 0.14, seed: 401 },
   },
   {
-    name: 'Ballonfahrt', par: 5, theme: 'storm', maxStrokes: 20, hazardText: { oob: 'In die Wolken gestürzt', lava: 'Zzzt! Blitzpfütze', water: 'Platsch! Regentümpel', zapped: 'Vom Blitz getroffen!' },
+    name: 'Ballonfahrt', par: 6, theme: 'storm', maxStrokes: 20, hazardText: { oob: 'In die Wolken gestürzt', lava: 'Zzzt! Blitzpfütze', water: 'Platsch! Regentümpel', zapped: 'Vom Blitz getroffen!' },
     views: [{ x: 2, y: 4, w: 8, h: 5, look: { x: 14, y: 6 } }, { x: 18, y: 2, w: 10, h: 8, look: { x: 32, y: 6 } }],
     map: [
       '........................................',

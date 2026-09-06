@@ -40,7 +40,7 @@ const SHADOW_COURSES = [
     autoDecor: { density: 0.18, seed: 501 },
   },
   {
-    name: 'Irrlichtsumpf', par: 5, theme: 'shadow', maxStrokes: 22, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Gruft gestürzt', spiked: 'Von Knochenstacheln aufgespießt' },
+    name: 'Irrlichtsumpf', par: 6, theme: 'shadow', maxStrokes: 22, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Gruft gestürzt', spiked: 'Von Knochenstacheln aufgespießt' },
     views: [{ x: 2, y: 2, w: 34, h: 10, look: { x: 33, y: 6.5 } }],
     map: [
       '......................................',
@@ -75,7 +75,7 @@ const SHADOW_COURSES = [
     autoDecor: { density: 0.18, seed: 503 },
   },
   {
-    name: 'Falltürgang', par: 5, theme: 'shadow', maxStrokes: 22, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Gruft gestürzt', spiked: 'Von Knochenstacheln aufgespießt' },
+    name: 'Falltürgang', par: 6, theme: 'shadow', maxStrokes: 22, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Gruft gestürzt', spiked: 'Von Knochenstacheln aufgespießt' },
     views: [{ x: 2, y: 2, w: 23, h: 3, look: { x: 26, y: 3 } }, { x: 25, y: 2, w: 3, h: 3, look: { x: 26, y: 7 } }],
     map: [
       '........................................',
@@ -91,10 +91,10 @@ const SHADOW_COURSES = [
     ],
     intro: 'Vier Falltüren im Gruftgang, jede klappt zu ihrer eigenen Zeit auf. Zu ist die Platte fester Boden, offen wartet der Schacht – wer zum falschen Moment darüberrollt oder darauf liegen bleibt, stürzt in die Gruft.',
     obstacles: [
-      { type: 'trapdoor', x: 8, y: 3.5, w: 2.4, h: 3, period: 5, open: 0.4, phase: 0 },
-      { type: 'trapdoor', x: 13, y: 3.5, w: 2.4, h: 3, period: 5, open: 0.4, phase: 0.3 },
-      { type: 'trapdoor', x: 18, y: 3.5, w: 2.4, h: 3, period: 5, open: 0.4, phase: 0.6 },
-      { type: 'trapdoor', x: 23, y: 3.5, w: 2.4, h: 3, period: 5, open: 0.4, phase: 0.9 },
+      { type: 'trapdoor', x: 8, y: 3.5, w: 2.2, h: 3, period: 5.5, open: 0.32, phase: 0 },
+      { type: 'trapdoor', x: 13, y: 3.5, w: 2.2, h: 3, period: 5.5, open: 0.32, phase: 0.3 },
+      { type: 'trapdoor', x: 18, y: 3.5, w: 2.2, h: 3, period: 5.5, open: 0.32, phase: 0.6 },
+      { type: 'trapdoor', x: 23, y: 3.5, w: 2.2, h: 3, period: 5.5, open: 0.32, phase: 0.9 },
       { type: 'wall', x0: 26, y0: 2, x1: 28, y1: 4, extend: 0 },
       { type: 'wall', x0: 25, y0: 8, x1: 27, y1: 6, extend: 0 },
       { type: 'rotor', x: 31.5, y: 6, blades: 1, len: 1.6, thick: 0.14, hubR: 0.22, style: 'scythe', e: 0.6, swing: { amp: Math.PI / 2.6, speed: 1.6 }, phase: Math.PI / 2, height: 0.5 },
@@ -108,7 +108,7 @@ const SHADOW_COURSES = [
     autoDecor: { density: 0.17, seed: 505 },
   },
   {
-    name: 'Schattenspiegel', par: 5, theme: 'shadow', maxStrokes: 22, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Gruft gestürzt', spiked: 'Von Knochenstacheln aufgespießt' },
+    name: 'Schattenspiegel', par: 4, theme: 'shadow', maxStrokes: 22, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Gruft gestürzt', spiked: 'Von Knochenstacheln aufgespießt' },
     views: [{ x: 2, y: 2, w: 12, h: 12, look: { x: 8, y: 3.5 } }],
     map: [
       '....................................',
@@ -148,7 +148,7 @@ const SHADOW_COURSES = [
     autoDecor: { density: 0.16, seed: 507 },
   },
   {
-    name: 'Knochenbrücke', par: 5, theme: 'shadow', maxStrokes: 22, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Gruft gestürzt', spiked: 'Von Knochenstacheln aufgespießt' },
+    name: 'Knochenbrücke', par: 6, theme: 'shadow', maxStrokes: 22, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Gruft gestürzt', spiked: 'Von Knochenstacheln aufgespießt' },
     views: [{ x: 2, y: 3, w: 6, h: 6, look: { x: 20, y: 5.5 } }, { x: 8, y: 5, w: 14, h: 2, look: { x: 24, y: 5.5 } }, { x: 22, y: 2, w: 6, h: 8, look: { x: 38, y: 5.5 } }, { x: 28, y: 5, w: 8, h: 2, look: { x: 39, y: 5.5 } }],
     map: [
       '............................................',
@@ -166,12 +166,12 @@ const SHADOW_COURSES = [
     ],
     intro: 'Eine Brücke aus Knochen ohne Geländer über einen Strom aus Schattenfeuer. Mitten auf der Brücke fahren Knochenstacheln aus dem Boden, auf der Felsinsel schwingt eine Sense, und der zweite Steg ist kürzer, aber schmal.',
     obstacles: [
-      { type: 'spikes', x: 14.5, y: 6, w: 1, h: 2, period: 4, up: 0.45, phase: 0 },
-      { type: 'spikes', x: 18.5, y: 6, w: 1, h: 2, period: 4, up: 0.45, phase: 0.12 },
+      { type: 'spikes', x: 14.5, y: 6, w: 1, h: 2, period: 4.4, up: 0.36, phase: 0 },
+      { type: 'spikes', x: 18.5, y: 6, w: 1, h: 2, period: 4.4, up: 0.36, phase: 0.1 },
       { type: 'rotor', x: 24.5, y: 5.5, blades: 1, len: 1.8, thick: 0.14, hubR: 0.22, style: 'scythe', e: 0.6, swing: { amp: Math.PI / 2.2, speed: 1.5 }, phase: 0, height: 0.5 },
       { type: 'bumper', x: 26.5, y: 2.8, r: 0.38, style: 'grave', kick: 7 },
       { type: 'bumper', x: 26.5, y: 8.2, r: 0.38, style: 'grave', kick: 7 },
-      { type: 'spikes', x: 32.5, y: 6, w: 1, h: 2, period: 3.6, up: 0.45, phase: 0.5 },
+      { type: 'spikes', x: 32.5, y: 6, w: 1, h: 2, period: 4, up: 0.36, phase: 0.5 },
       { type: 'wall', x0: 41, y0: 3, x1: 42, y1: 4, extend: 0 },
       { type: 'wall', x0: 42, y0: 8, x1: 41, y1: 9, extend: 0 },
     ],
