@@ -273,23 +273,23 @@
     state.pickMode = mode;
     const worlds = WORLDS.filter(w => worldMode(w) === mode);
     overlay(`<div class="panel">
-      <h2>${MODE_ICON[mode]} ${mode === 'pro' ? 'Profi' : mode === 'legend' ? 'Legende' : 'Normal'} – Welt wählen</h2>
+      <div class="panel-head"><span class="btn ghost small" id="back">◀ Zurück</span><h2>${MODE_ICON[mode]} ${mode === 'pro' ? 'Profi' : mode === 'legend' ? 'Legende' : 'Normal'} – Welt wählen</h2></div>
       ${mode === 'legend' ? '<div class="sub">Die höchste Stufe: extra große Bahnen, neue Gefahren, wenig Gnade.</div>' : ''}
       <div class="modes">
         ${worlds.map(w => `<span class="btn mode" data-world="${w.id}">${sceneFor(w.id)}<span class="mode-label ${w.name.length > 8 ? 'long' : ''}">${w.name}</span></span>`).join('')}
       </div>
       <div class="sub">${worlds.map(w => `${w.name}: ${w.courses.length} Bahnen`).join(' · ')}</div>
-      <p><span class="btn ghost small" id="back">◀ Zurück</span></p>
+      <p><span class="btn ghost small back2">◀ Zurück</span></p>
     </div>`, 'title');
     ui.overlay.querySelectorAll('.mode[data-world]').forEach(b => b.addEventListener('click', () => { setWorld(b.dataset.world); showSetup(); }));
-    $('back').addEventListener('click', showTitle);
+    ui.overlay.querySelectorAll('#back, .back2').forEach(b => b.addEventListener('click', showTitle));
   }
 
   /* Kreativ: Welt wählen, dann sofort los (ein Spieler, Schleuder, Bahn 1) */
   function showWorldSelect() {
     const own = editor.worldCourses();
     overlay(`<div class="panel">
-      <h2>🛠 Kreativ – Welt wählen</h2>
+      <div class="panel-head"><span class="btn ghost small" id="back">◀ Zurück</span><h2>🛠 Kreativ – Welt wählen</h2></div>
       <div class="modes">
         ${WORLDS.map(w => `<span class="btn mode" data-world="${w.id}">${sceneFor(w.id)}<span class="mode-label ${w.name.length > 8 ? 'long' : ''}">${w.name}</span></span>`).join('')}
       </div>
@@ -298,12 +298,12 @@
         ${own.length ? `<span class="btn mode own" id="own-play"><span class="mode-label">🌍 Eigene Welt (${own.length} Bahn${own.length > 1 ? 'en' : ''})</span></span>` : ''}
         <span class="btn mode build" id="build"><span class="mode-label">🛠 Bahn bauen</span></span>
       </div>
-      <p><span class="btn ghost small" id="back">◀ Zurück</span></p>
+      <p><span class="btn ghost small back2">◀ Zurück</span></p>
     </div>`, 'title');
     ui.overlay.querySelectorAll('.mode[data-world]').forEach(b => b.addEventListener('click', () => { setWorld(b.dataset.world); Sfx.unlock(); setControlMode('sling'); startGame(1, 0); }));
     if (own.length) $('own-play').addEventListener('click', () => { Sfx.unlock(); setControlMode('sling'); playWorld(own); });
     $('build').addEventListener('click', () => { Sfx.unlock(); setControlMode('sling'); editor.open(null); });
-    $('back').addEventListener('click', showTitle);
+    ui.overlay.querySelectorAll('#back, .back2').forEach(b => b.addEventListener('click', showTitle));
   }
   function setCustomWorld(courses, name) { state.world = { id: 'custom', name, short: 'Eigene', courses }; state.courses = courses; }
   function playWorld(courses) { state.mode = 'creative'; state.editorReturn = false; setCustomWorld(courses, 'Eigene Welt'); document.body.classList.remove('editing', 'testing'); startGame(1, 0); }
@@ -317,7 +317,7 @@
 
   function showSetup() {
     overlay(`<div class="panel">
-      <h2>${MODE_ICON[worldMode(state.world)]} ${state.world.name}</h2>
+      <div class="panel-head"><span class="btn ghost small" id="back-top">◀ Zurück</span><h2>${MODE_ICON[worldMode(state.world)]} ${state.world.name}</h2></div>
       <div class="sub">${state.world.name} · ${state.courses.length} Bahnen</div>
       <p>Spieler:</p>
       <div id="pc">${[1, 2, 3, 4].map(n => `<span class="btn ghost small ${n === playerCount ? 'sel' : ''}" data-n="${n}">${n}</span>`).join('')}</div>
@@ -341,7 +341,7 @@
       setControlMode(b.dataset.m);
       ui.overlay.querySelectorAll('#cm .btn').forEach(x => x.classList.toggle('sel', x.dataset.m === state.controlMode));
     }));
-    $('back').addEventListener('click', () => showModeWorldSelect(worldMode(state.world)));
+    for (const id of ['back', 'back-top']) $(id).addEventListener('click', () => showModeWorldSelect(worldMode(state.world)));
     $('start').addEventListener('click', () => { Sfx.unlock(); startGame(playerCount, 0); });
   }
 

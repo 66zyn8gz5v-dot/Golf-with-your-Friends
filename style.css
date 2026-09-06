@@ -63,6 +63,11 @@ body.fullscreen #fs-btn { opacity: 0.55; }
 .cbtn.creative { display: none; background: rgba(60, 30, 90, 0.8); border-color: #c77dff; }
 body.creative .cbtn.creative { display: inline-block; }
 .modes { display: flex; flex-direction: column; gap: 10px; margin: 6px 0 12px; }
+/* Kopfzeile der Auswahltafeln: Zurück links, Titel daneben – bleibt beim Scrollen oben sichtbar */
+.panel-head { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 10px; margin: -6px -8px 8px; padding: 6px 8px; border-radius: 12px; background: rgba(20, 16, 40, 0.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.panel-head h2 { flex: 1; margin: 0; text-align: left; font-size: 22px; line-height: 1.15; }
+.panel-head .btn.small { margin: 0; flex: none; white-space: nowrap; }
+@media (max-width: 600px) { .panel-head h2 { font-size: 19px; } }
 .btn.mode {
   font-family: "MedievalSharp", "Cinzel Decorative", Georgia, serif; font-size: 28px; letter-spacing: 2px;
   position: relative; overflow: hidden; display: block; height: 74px; padding: 0; margin: 0;
