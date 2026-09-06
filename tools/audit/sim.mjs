@@ -145,6 +145,15 @@ export function distMap(def) {
   };
   const { d } = run(true);
   const straight = run(false);
+  // Karte mit geschlossenen Schalter-Toren: wer das Ziel auch so erreicht, braucht den Schalter nicht (mehr)
+  const gates = (def.obstacles || []).filter(o => o.type === 'gate' && o.linked);
+  let dClosed = d;
+  if (gates.length) {
+    const saved = walls.slice();
+    for (const g of gates) walls.push(g.w >= g.h ? { x0: g.x - g.w / 2, y0: g.y, x1: g.x + g.w / 2, y1: g.y } : { x0: g.x, y0: g.y - g.h / 2, x1: g.x, y1: g.y + g.h / 2 });
+    dClosed = run(true).d;
+    walls.length = 0; walls.push(...saved);
+  }
   // Pfad vom Abschlag zum Ziel (geradlinig)
   const path = []; let cx = Math.floor(lv.tee.x), cy = Math.floor(lv.tee.y);
   for (let i = 0; i < 2000 && cx !== null; i++) { path.push([cx, cy]); const p = straight.par[cy] && straight.par[cy][cx]; if (!p) break; [cx, cy] = p; }
@@ -156,7 +165,7 @@ export function distMap(def) {
     linked.push({ id: g.linked, sw: { x: sw.x, y: sw.y }, dSw: m, swToGoal: d[sy][sx] });
   }
   const puzzle = { shrink: (def.obstacles || []).some(o => o.type === 'cauldron' || o.type === 'potion'), linked };
-  const res = { d, walk, lv, path, puzzle, at(x, y) { const tx = Math.floor(x), ty = Math.floor(y); if (tx < 0 || ty < 0 || tx >= W || ty >= H) return Infinity; return d[ty][tx]; } };
+  const res = { d, dClosed, walk, lv, path, puzzle, at(x, y) { const tx = Math.floor(x), ty = Math.floor(y); if (tx < 0 || ty < 0 || tx >= W || ty >= H) return Infinity; return d[ty][tx]; } };
   DIST.set(def, res); return res;
 }
 /* Fortschrittsmaß eines Zustands: BFS-Distanz zum Ziel + Feinanteil; Innen-Map zählt als "näher";
@@ -164,7 +173,11 @@ export function distMap(def) {
 /* aktive Zielkarte: normalerweise das Loch; ist ein Schalter-Tor noch zu, erst die Druckplatte */
 export function activeMap(st) {
   const dm = distMap(st.def), lv = dm.lv;
-  for (const L of dm.puzzle.linked) if (!(st.switches[L.id] > st.t)) return { d: L.dSw, goal: L.sw, extra: L.swToGoal + 1 };
+  for (const L of dm.puzzle.linked) if (!(st.switches[L.id] > st.t)) {
+    const tx = Math.floor(st.ball.x), ty = Math.floor(st.ball.y), inside = tx >= 0 && ty >= 0 && tx < lv.W && ty < lv.H;
+    if (inside && isFinite(dm.dClosed[ty][tx])) return { d: dm.dClosed, goal: lv.goal, extra: 0 }; // schon hinter dem Tor
+    return { d: L.dSw, goal: L.sw, extra: L.swToGoal + 1 };
+  }
   return { d: dm.d, goal: lv.goal, extra: 0 };
 }
 export function progress(st) {
