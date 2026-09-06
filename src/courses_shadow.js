@@ -323,7 +323,7 @@ const SHADOW_COURSES = [
     autoDecor: { density: 0.17, seed: 515 },
   },
   {
-    name: 'Schattenthron', par: 8, theme: 'shadow', maxStrokes: 32, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Gruft gestürzt', spiked: 'Von Knochenstacheln aufgespießt' },
+    name: 'Schattenthron', par: 9, theme: 'shadow', maxStrokes: 34, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Gruft gestürzt', spiked: 'Von Knochenstacheln aufgespießt' },
     views: [{ x: 2, y: 16, w: 14, h: 5, look: { x: 24, y: 17.5 } }, { x: 16, y: 16, w: 10, h: 3, look: { x: 30, y: 17 } }, { x: 26, y: 14, w: 8, h: 7, look: { x: 31.5, y: 5 } }, { x: 30, y: 8, w: 4, h: 6, look: { x: 31.5, y: 5 } }, { x: 30, y: 4, w: 10, h: 4, look: { x: 37, y: 2 } }],
     map: [
       '..........................................',
@@ -389,7 +389,7 @@ const SHADOW_COURSES = [
         '........................########..',
         '..##############################..',
         '..##############################..',
-        '..##H#############ll############..',
+        '..##H###########################..',
         '..##############################..',
         '..##############################..',
         '..................................',
@@ -404,7 +404,8 @@ const SHADOW_COURSES = [
         { type: 'field', x: 24, y: 7, w: 8, h: 4, fx: 0, fy: 0, style: 'dark' },
         { type: 'gate', x: 28, y: 12, w: 8, h: 0.3, linked: 'A', liftH: 1.5, barH: 1.1 },
         { type: 'mover', x0: 22, y0: 15.5, x1: 6, y1: 15.5, w: 0.9, h: 0.9, period: 8, phase: 0.3, style: 'ghost', e: 0.5 },
-        { type: 'rotor', x: 15.5, y: 15, blades: 2, len: 1.5, thick: 0.14, hubR: 0.3, speed: 1.5, style: 'scythe', e: 0.6, height: 0.5 },
+        { type: 'field', x: 16, y: 13, w: 5, h: 5, fx: 0, fy: 0, style: 'dark' },
+        { type: 'rotor', x: 13.5, y: 15, blades: 2, len: 1.4, thick: 0.14, hubR: 0.3, speed: 1.5, style: 'scythe', e: 0.6, height: 0.5 },
         { type: 'bumper', x: 8.5, y: 13.6, r: 0.42, style: 'eye', kick: 7 },
         { type: 'bumper', x: 8.5, y: 16.4, r: 0.42, style: 'eye', kick: 7 },
         { type: 'wall', x0: 2, y0: 13, x1: 3, y1: 14, extend: 0 },

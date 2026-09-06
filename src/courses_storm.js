@@ -305,7 +305,7 @@ const STORM_COURSES = [
     autoDecor: { density: 0.1, seed: 415 },
   },
   {
-    name: 'Sturmfestung', par: 8, theme: 'storm', maxStrokes: 32, hazardText: { oob: 'In die Wolken gestürzt', lava: 'Zzzt! Blitzpfütze', water: 'Platsch! Regentümpel', zapped: 'Vom Blitz getroffen!' },
+    name: 'Sturmfestung', par: 9, theme: 'storm', maxStrokes: 34, hazardText: { oob: 'In die Wolken gestürzt', lava: 'Zzzt! Blitzpfütze', water: 'Platsch! Regentümpel', zapped: 'Vom Blitz getroffen!' },
     views: [{ x: 2, y: 15, w: 8, h: 6, look: { x: 18, y: 17 } }, { x: 15, y: 14, w: 9, h: 7, look: { x: 33, y: 16.5 } }, { x: 30, y: 13, w: 9, h: 8, look: { x: 36, y: 7 } }, { x: 33, y: 3, w: 7, h: 10, look: { x: 36, y: 1.5 } }],
     map: [
       '..........................................',
@@ -335,7 +335,7 @@ const STORM_COURSES = [
     obstacles: [
       { type: 'updraft', x: 8, y: 16, w: 2, h: 3, minSpeed: 2.5, land: 7.5, fly: 7 },
       { type: 'rotor', x: 5.5, y: 17.5, blades: 3, len: 1.2, thick: 0.12, hubR: 0.28, speed: 2.2, height: 0.4, style: 'propeller', e: 0.7 },
-      { type: 'lightning', x: 19, y: 17, w: 2, h: 7, period: 5, phase: 0, warn: 1.0, strike: 0.35 },
+      { type: 'lightning', x: 19, y: 17, w: 2, h: 5, period: 5, phase: 0, warn: 1.0, strike: 0.35 },
       { type: 'ferry', x0: 23.4, y0: 17, x1: 29.6, y1: 17, w: 1.3, h: 1.3, wait: 2.6, travel: 3.4, style: 'balloon', flat: true },
       { type: 'mover', x0: 31, y0: 14.5, x1: 37, y1: 14.5, w: 1.4, h: 1.0, period: 6, style: 'stormcloud', e: 0.6 },
       { type: 'wall', x0: 38, y0: 21, x1: 39, y1: 20, extend: 0 },
@@ -370,16 +370,16 @@ const STORM_COURSES = [
         '........................########..',
         '........................########..',
         '..##############################..',
-        '..##########ll##################..',
-        '..##H#######ll##################..',
-        '..##########ll##################..',
+        '..##############################..',
+        '..##H###########################..',
+        '..##############################..',
         '..##############################..',
         '..................................',
         '..................................',
       ],
       obstacles: [
         { type: 'rotor', x: 8.5, y: 4.5, blades: 3, len: 1.6, thick: 0.12, hubR: 0.3, speed: 1.8, height: 0.4, style: 'propeller', e: 0.7 },
-        { type: 'lightning', x: 14.5, y: 4.5, w: 2, h: 5, period: 4.8, phase: 0, warn: 1.0, strike: 0.35 },
+        { type: 'lightning', x: 14.5, y: 4.5, w: 2, h: 3, period: 4.8, phase: 0, warn: 1.0, strike: 0.35 },
         { type: 'rotor', x: 20.5, y: 4.5, blades: 3, len: 1.6, thick: 0.12, hubR: 0.3, speed: -2.0, phase: 0.8, height: 0.4, style: 'propeller', e: 0.7 },
         { type: 'switch', x: 27.5, y: 4.5, r: 0.55, duration: 18, target: 'A' },
         { type: 'gate', x: 28, y: 12, w: 8, h: 0.3, linked: 'A', liftH: 1.5, barH: 1.1 },
