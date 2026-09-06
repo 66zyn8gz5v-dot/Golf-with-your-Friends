@@ -324,7 +324,7 @@ const SHADOW_COURSES = [
   },
   {
     name: 'Schattenthron', par: 8, theme: 'shadow', maxStrokes: 32, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Gruft gestürzt', spiked: 'Von Knochenstacheln aufgespießt' },
-    views: [{ x: 2, y: 16, w: 14, h: 5, look: { x: 24, y: 17.5 } }, { x: 16, y: 17, w: 10, h: 2, look: { x: 30, y: 17 } }, { x: 26, y: 14, w: 8, h: 7, look: { x: 31.5, y: 5 } }, { x: 30, y: 8, w: 4, h: 6, look: { x: 31.5, y: 5 } }, { x: 30, y: 4, w: 10, h: 4, look: { x: 37, y: 2 } }],
+    views: [{ x: 2, y: 16, w: 14, h: 5, look: { x: 24, y: 17.5 } }, { x: 16, y: 16, w: 10, h: 3, look: { x: 30, y: 17 } }, { x: 26, y: 14, w: 8, h: 7, look: { x: 31.5, y: 5 } }, { x: 30, y: 8, w: 4, h: 6, look: { x: 31.5, y: 5 } }, { x: 30, y: 4, w: 10, h: 4, look: { x: 37, y: 2 } }],
     map: [
       '..........................................',
       '....................................ooo...',
@@ -342,7 +342,7 @@ const SHADOW_COURSES = [
       '..............llllllllllllll..####........',
       '..............llllllllllll########........',
       '..............llllllllllll########........',
-      '..##############llllllllll########........',
+      '..##############oooooooooo########........',
       '..##############oooooooooo########........',
       '..#T############oooooooooo########........',
       '..##############llllllllll########........',
@@ -354,7 +354,7 @@ const SHADOW_COURSES = [
       { type: 'bumper', x: 7.5, y: 16.6, r: 0.4, style: 'grave', kick: 7 },
       { type: 'bumper', x: 10.5, y: 19.4, r: 0.4, style: 'grave', kick: 7 },
       { type: 'rotor', x: 12.5, y: 18, blades: 1, len: 1.5, thick: 0.14, hubR: 0.22, style: 'scythe', e: 0.6, swing: { amp: Math.PI / 2.4, speed: 1.6 }, phase: 0, height: 0.5 },
-      { type: 'spikes', x: 20.5, y: 18, w: 1, h: 2, period: 4.4, up: 0.3, phase: 0.2 },
+      { type: 'spikes', x: 20.5, y: 17.5, w: 1, h: 3, period: 4.4, up: 0.3, phase: 0.2 },
       { type: 'mover', x0: 27, y0: 15, x1: 32, y1: 19.5, w: 0.9, h: 0.9, period: 6, style: 'ghost', e: 0.5 },
       { type: 'wall', x0: 33, y0: 21, x1: 34, y1: 20, extend: 0 },
       { type: 'wall', x0: 34, y0: 14, x1: 33, y1: 13, extend: 0 },
