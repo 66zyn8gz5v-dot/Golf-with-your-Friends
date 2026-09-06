@@ -473,6 +473,9 @@ function createObstacles(defs) {
   for (const d of defs) {
     switch (d.type) {
       case 'wave': out.push(new Wave(d)); break;
+      case 'lightning': out.push(new Lightning(d)); break;
+      case 'updraft': out.push(new Updraft(d)); break;
+      case 'trapdoor': out.push(new Trapdoor(d)); break;
     case 'sharkjump': out.push(new SharkJump(d)); break;
     case 'spikes': out.push(new Spikes(d)); break;
     case 'mover': out.push(new Mover(d)); break;

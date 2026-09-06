@@ -9,7 +9,7 @@ const GAMES = +(process.env.GAMES || 20);
 const R = G.BALL_R;
 const OUT = process.env.OUT || 'out'; fs.mkdirSync(OUT, { recursive: true });
 
-const DYN = new Set(['mover', 'wave', 'sharkjump', 'spikes', 'rotor', 'gate', 'ferry', 'windmill', 'cannon', 'turntable', 'cauldron']);
+const DYN = new Set(['mover', 'wave', 'sharkjump', 'spikes', 'rotor', 'gate', 'ferry', 'windmill', 'cannon', 'turntable', 'cauldron', 'lightning', 'trapdoor']);
 function isDynamic(def) { return (def.obstacles || []).some(o => DYN.has(o.type) || (o.type === 'field' && o.gust)); }
 function periodOf_unused(def) { let p = 0; for (const o of (def.obstacles || [])) { if (o.period) p = Math.max(p, o.period); if (o.type === 'ferry') p = Math.max(p, 2 * ((o.wait ?? 2.5) + (o.travel ?? 3))); if (o.type === 'rotor') p = Math.max(p, o.swing ? 2 * Math.PI / o.swing.speed : 2 * Math.PI / ((o.blades || 4) * Math.abs(o.speed || 1))); if (o.type === 'windmill') p = Math.max(p, 2 * Math.PI / ((o.blades || 4) * (o.speed || 1.2))); } return p || 6; }
 
@@ -134,7 +134,7 @@ for (const { world, hole } of holes) {
   const games = []; for (let g = 0; g < GAMES; g++) games.push(normalGame(hole));
   const s = games.map(g => g.strokes).sort((a, b) => a - b);
   res.normal = { mean: +(s.reduce((a, b) => a + b, 0) / s.length).toFixed(2), median: s[Math.floor(s.length / 2)], min: s[0], max: s[s.length - 1], maxReached: games.filter(g => !g.finished).length,
-    hazardsPerGame: +(games.reduce((a, g) => a + g.events.filter(e => ['water', 'lava', 'oob', 'shark', 'spiked'].includes(e)).length, 0) / games.length).toFixed(2),
+    hazardsPerGame: +(games.reduce((a, g) => a + g.events.filter(e => ['water', 'lava', 'oob', 'shark', 'spiked', 'zapped', 'fell'].includes(e)).length, 0) / games.length).toFixed(2),
     dist: s.reduce((m, v) => (m[v] = (m[v] || 0) + 1, m), {}) };
   res.seconds = Math.round((Date.now() - t0) / 1000);
   fs.writeFileSync(`${OUT}/${world.id}_${hole.name.replace(/[^\wäöüÄÖÜß]/g, '_')}.json`, JSON.stringify(res, null, 1));

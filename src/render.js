@@ -230,6 +230,10 @@ class Renderer {
     if (th.belly) this.drawBelly(ctx, t);
     if (th.jungleBg) this.drawJungle(ctx, t);
     if (th.temple) this.drawTemple(ctx, t);
+    if (th.stormBg) this.drawStorm(ctx, t);
+    if (th.fortress) this.drawFortress(ctx, t);
+    if (th.shadowBg) this.drawShadow(ctx, t);
+    if (th.throne) this.drawThrone(ctx, t);
     this.seaT = t;
     if (th.rays) this.drawRays(ctx, t);
     if (th.sea) this.drawSea(ctx, t);
@@ -588,6 +592,8 @@ class Renderer {
   drawBall(ctx, b) {
     const s = this.scale;
     const br = b.r || BALL_R;
+    const dark = !b.sunk && this.level.obstacles.some(o => o.type === 'field' && o.style === 'dark' && o.inside(b.x, b.y));
+    if (dark) ctx.globalAlpha = 0.14;
     let r = br * s, z = b.z + br;
     if (b.sunk) { // in das Loch fallen: kleiner werden, absinken, dann weg
       const p = Math.min(1, b.sinkT / 0.35);
@@ -604,6 +610,7 @@ class Renderer {
     }
     ctx.fillStyle = g; ctx.beginPath(); ctx.arc(sx, sy, r, 0, TAU); ctx.fill();
     ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 1; ctx.stroke();
+    if (dark) ctx.globalAlpha = 1;
   }
   drawAim(ctx, ball, aim) {
     const { dx, dy, power } = aim;
@@ -631,6 +638,10 @@ class Renderer {
   /* ---------- Hindernisse ---------- */
   drawObstacleFloor(ctx, ob, t) {
     const s = this.scale;
+    if (ob.type === 'lightning') { this.drawLightningFloor(ctx, ob, t); return; }
+    if (ob.type === 'updraft') { this.drawUpdraft(ctx, ob, t); return; }
+    if (ob.type === 'trapdoor') { this.drawTrapdoor(ctx, ob, t); return; }
+    if (ob.type === 'field' && ob.style === 'dark') { this.drawDarkZone(ctx, ob, t); return; }
     if (ob.type === 'boost' || (ob.type === 'field' && (ob.style === 'wind' || ob.style === 'current'))) { this.drawWind(ctx, ob, t); return; }
     if (ob.type === 'field') {
       const poly = [[ob.x, ob.y], [ob.x + ob.w, ob.y], [ob.x + ob.w, ob.y + ob.h], [ob.x, ob.y + ob.h]];
@@ -725,7 +736,7 @@ class Renderer {
       this.isoEllipse(ctx, ob.x, ob.y, 0.006, ob.r * 0.8, 'rgba(120,40,180,0.35)');
     } else if (ob.type === 'turntable') {
       const th = this.theme;
-      if (ob.style === 'whirl') { this.drawWhirl(ctx, ob, t); return; }
+      if (ob.style === 'whirl' || ob.style === 'tornado' || ob.style === 'void') { this.drawWhirl(ctx, ob, t); return; }
       this.isoEllipse(ctx, ob.x, ob.y, 0.003, ob.r + 0.25, 'rgba(30,25,40,0.5)');
       const [cx, cy] = this.proj(ob.x, ob.y, 0.008);
       ctx.save(); ctx.translate(cx, cy); ctx.scale(1, this.cam.tilt);
@@ -844,6 +855,8 @@ class Renderer {
       items.push({ x: ob.x, y: ob.y, draw: () => {
         if (ob.style === 'tentacle') { this.drawKraken(ctx, ob, t); return; }
         if (ob.style === 'vine') { this.drawVineRotor(ctx, ob, t); return; }
+        if (ob.style === 'propeller') { this.drawPropeller(ctx, ob, t); return; }
+        if (ob.style === 'scythe') { this.drawScythe(ctx, ob, t); return; }
         this.prism(ctx, hub, 0, ob.height + 0.25, th.rotor.top, th.rotor.side);
         for (let i = 0; i < ob.blades; i++) {
           const a = ob.bladeAngle(i), ca = Math.cos(a), sa = Math.sin(a), tk = ob.thick;
@@ -885,6 +898,9 @@ class Renderer {
         else if (ob.style === 'rock') { const [rx, ry] = this.proj(ob.x, ob.y, 0); this.spriteRock(ctx, rx, ry, this.scale * ob.r * 2.1 * sc, '#9a948a', '#5f5a52'); }
         else if (ob.style === 'coral') { const [rx, ry] = this.proj(ob.x, ob.y, 0); this.spriteCoral(ctx, rx, ry, this.scale * ob.r * 2.6 * sc, { seed: ((ob.x * 7 + ob.y * 13) % 10) / 10 }); }
         else if (ob.style === 'idol') { const [rx, ry] = this.proj(ob.x, ob.y, 0); this.spriteIdol(ctx, rx, ry, this.scale * ob.r * 2.2 * sc, { seed: 0.5 }, t); }
+        else if (ob.style === 'orb') this.drawOrb(ctx, ob, t, sc);
+        else if (ob.style === 'grave') { const [rx, ry] = this.proj(ob.x, ob.y + 0.2, 0); this.spriteGravestone(ctx, rx, ry, this.scale * ob.r * 2.4 * sc, { seed: 0.3 }); }
+        else if (ob.style === 'eye') this.drawEye(ctx, ob, t, sc);
         else this.spriteMushroom(ctx, ob.x, ob.y, 0, ob.r * 1.7 * sc, '#e63b5a', true);
       } });
     } else if (ob.type === 'portal') {
@@ -911,6 +927,7 @@ class Renderer {
           return;
         }
         const attract = kind === 'attract';
+        if (ob.style === 'soul') { this.drawSoulLight(ctx, ob, t); return; }
         this.spriteCrystal(ctx, ob.x, ob.y, 0, ob.core * 3.4, attract ? '#cfeeff' : '#ffd0ee', attract ? '#4a8ad0' : '#c04a90');
         ctx.fillStyle = attract ? 'rgba(200,240,255,0.85)' : 'rgba(255,200,240,0.85)';
         for (let i = 0; i < 5; i++) { // schwebende Funken
@@ -927,6 +944,7 @@ class Renderer {
       if (ob.style === 'pyramid') items.push({ x: ob.px, y: ob.py, noFade: true, draw: () => this.drawPyramid(ctx, ob, t) });
       else if (ob.style === 'wreck') items.push({ x: ob.px, y: ob.py, noFade: true, draw: () => this.drawWreck(ctx, ob, t) });
       else if (ob.style === 'temple') items.push({ x: ob.px, y: ob.py, noFade: true, draw: () => this.drawTempleGate(ctx, ob, t) });
+      else if (ob.style === 'fortress' || ob.style === 'crypt') items.push({ x: ob.px, y: ob.py, noFade: true, draw: () => this.drawStoneGate(ctx, ob, t) });
       else items.push({ x: ob.x, y: ob.y, bias: 0.15, noFade: true, draw: () => { const [sx, sy] = this.proj(ob.x, ob.y + 0.35, 0); this.spriteHut(ctx, sx, sy, this.scale * ob.s, t); } });
     } else if (ob.type === 'cauldron') {
       items.push({ x: ob.x, y: ob.y, draw: () => this.drawCauldronPot(ctx, ob, t) });
@@ -934,6 +952,8 @@ class Renderer {
       items.push({ x: ob.px, y: ob.py, bias: 0.3, noFade: true, draw: () => ob.style === 'croc' ? this.drawCroc(ctx, ob, t) : this.drawSharkJump(ctx, ob, t) });
     } else if (ob.type === 'spikes') {
       items.push({ x: ob.x, y: ob.y, draw: () => this.drawSpikes(ctx, ob, t) });
+    } else if (ob.type === 'lightning') {
+      items.push({ x: ob.x, y: ob.y, bias: 0.3, noFade: true, draw: () => this.drawLightningBolt(ctx, ob, t) });
     }
   }
 
@@ -1319,6 +1339,11 @@ class Renderer {
       const [shx, shy] = this.proj(ob.x + ob.dir * 0.05, ob.y + 0.35, 0.45);
       ctx.fillStyle = '#d93b3b'; ctx.beginPath(); ctx.arc(shx, shy, s * 0.17, 0, TAU); ctx.fill();
       ctx.strokeStyle = '#ffd166'; ctx.lineWidth = Math.max(1, s * 0.04); ctx.beginPath(); ctx.moveTo(shx - s * 0.1, shy); ctx.lineTo(shx + s * 0.1, shy); ctx.moveTo(shx, shy - s * 0.1); ctx.lineTo(shx, shy + s * 0.1); ctx.stroke();
+    } else if (ob.style === 'balloon') { this.drawBalloon(ctx, ob, t); return;
+    } else if (ob.style === 'airship') { this.drawAirship(ctx, ob, t); return;
+    } else if (ob.style === 'ghost') { this.drawGhost(ctx, ob, t); return;
+    } else if (ob.style === 'bat') { this.drawBat(ctx, ob, t); return;
+    } else if (ob.style === 'stormcloud') { this.drawStormCloud(ctx, ob, t); return;
     } else if (ob.style === 'cloud') {
       this.isoEllipse(ctx, ob.x, ob.y, 0.2, ob.w * 0.6, '#ffffff');
     } else if (ob.style === 'boat') { // Ruderboot
@@ -1476,6 +1501,17 @@ class Renderer {
       case 'clock': this.spriteClock(ctx, sx, sy, s, t); break;
       case 'obelisk': this.spriteObelisk(ctx, sx, sy, s); break;
       case 'sarcophagus': this.spriteSarcophagus(ctx, sx, sy, s, d, t); break;
+      case 'gravestone': this.spriteGravestone(ctx, sx, sy, s, d); break;
+      case 'gravecross': this.spriteGraveCross(ctx, sx, sy, s, d); break;
+      case 'ghostlight': this.spriteGhostLight(ctx, sx, sy, s, d, t); break;
+      case 'cloudDark': this.spriteCloudDark(ctx, sx, sy, s, t); break;
+      case 'lightningrod': this.spriteLightningRod(ctx, sx, sy, s, t); break;
+      case 'windsock': this.spriteWindsock(ctx, sx, sy, s, d, t); break;
+      case 'banner': this.spriteBanner(ctx, sx, sy, s, d, t); break;
+      case 'brazierBlue': this.spriteBrazierColored(ctx, sx, sy, s, t, ['#4fc3ff', '#b7ecff', '80,190,255']); break;
+      case 'torchPurple': this.spriteBrazierColored(ctx, sx, sy, s, t, ['#a24bff', '#e0b8ff', '170,90,255']); break;
+      case 'pillar': this.spritePillar(ctx, sx, sy, s, d); break;
+      case 'urnDark': this.spriteUrn(ctx, sx, sy, s, Object.assign({}, d, { dark: true })); break;
       default: break;
     }
   }
@@ -1901,11 +1937,12 @@ class Renderer {
   /* Strudel: dunkler Wassertrichter mit drehenden Schaumspiralen, Auswurfrinne wie bei der Drehscheibe */
   drawWhirl(ctx, ob, t) {
     const s = this.scale, [cx, cy] = this.proj(ob.x, ob.y, 0.006);
-    this.isoEllipse(ctx, ob.x, ob.y, 0.003, ob.r + 0.3, 'rgba(120,200,240,0.25)');
-    this.isoEllipse(ctx, ob.x, ob.y, 0.004, ob.r + 0.1, '#0b3a55');
+    const pal = ob.style === 'tornado' ? ['rgba(200,210,240,0.25)', '#2a2f4a', '230,235,255'] : ob.style === 'void' ? ['rgba(150,90,255,0.25)', '#120a24', '210,170,255'] : ['rgba(120,200,240,0.25)', '#0b3a55', '230,245,255'];
+    this.isoEllipse(ctx, ob.x, ob.y, 0.003, ob.r + 0.3, pal[0]);
+    this.isoEllipse(ctx, ob.x, ob.y, 0.004, ob.r + 0.1, pal[1]);
     ctx.save(); ctx.translate(cx, cy); ctx.scale(1, this.cam.tilt);
     for (let arm = 0; arm < 3; arm++) { // drei Spiralarme
-      ctx.strokeStyle = `rgba(230,245,255,${0.55 + 0.25 * Math.sin(t * 4 + arm)})`; ctx.lineWidth = Math.max(1.5, s * 0.07); ctx.lineCap = 'round';
+      ctx.strokeStyle = `rgba(${pal[2]},${0.55 + 0.25 * Math.sin(t * 4 + arm)})`; ctx.lineWidth = Math.max(1.5, s * 0.07); ctx.lineCap = 'round';
       ctx.beginPath();
       for (let k = 0; k <= 24; k++) { const u = k / 24, a = ob.angle * 1.4 + arm * TAU / 3 + u * 3.2, rr = (0.15 + u * 0.8) * ob.r * s; k ? ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr) : ctx.moveTo(Math.cos(a) * rr, Math.sin(a) * rr); }
       ctx.stroke();

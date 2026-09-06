@@ -206,6 +206,42 @@
             </g>
           </svg>`;
 
+  const SCENE_STORM = `<svg class="mode-scene" viewBox="0 0 300 72" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+            <defs><linearGradient id="skyS" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#070a1e"/><stop offset="1" stop-color="#2a2f66"/></linearGradient>
+              <linearGradient id="isleS" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6f7d63"/><stop offset="0.3" stop-color="#3b3f5a"/><stop offset="1" stop-color="#1c1f33"/></linearGradient></defs>
+            <rect width="300" height="72" fill="url(#skyS)"/>
+            <g class="particles"><circle class="p" cx="24" cy="9" r="1.1" fill="#fff"/><circle class="p p3" cx="140" cy="7" r="1" fill="#fff"/><circle class="p p5" cx="262" cy="12" r="1.2" fill="#fff"/></g>
+            <polyline points="196,0 190,16 199,18 186,38" fill="none" stroke="#fff6a8" stroke-width="2.2" stroke-linejoin="round" class="art-flash"/>
+            <path d="M22 40 L78 40 L70 60 L32 62 Z" fill="url(#isleS)"/><rect x="26" y="34" width="48" height="6" fill="#6f7d63"/><rect x="40" y="22" width="3" height="12" fill="#4e526d"/><circle cx="41.5" cy="21" r="2" fill="#fff6a8"/>
+            <path d="M120 44 L176 44 L168 62 L128 64 Z" fill="url(#isleS)"/><rect x="124" y="38" width="48" height="6" fill="#6f7d63"/>
+            <ellipse cx="240" cy="28" rx="30" ry="10" fill="#9a8f7a"/><ellipse cx="240" cy="28" rx="30" ry="10" fill="none" stroke="#5a5244" stroke-width="1"/><rect x="226" y="38" width="28" height="7" rx="2" fill="#6b4a2a"/><line x1="232" y1="38" x2="230" y2="32" stroke="#3a2814"/><line x1="248" y1="38" x2="250" y2="32" stroke="#3a2814"/>
+            <circle cx="100" cy="18" r="9" fill="#e05a5a"/><circle cx="100" cy="18" r="9" fill="none" stroke="#7a1e2a"/><rect x="97" y="30" width="6" height="5" fill="#b58a4a"/><line x1="94" y1="24" x2="97" y2="30" stroke="#d9c39a"/><line x1="106" y1="24" x2="103" y2="30" stroke="#d9c39a"/>
+            <path d="M0 62 Q30 54 60 62 T120 62 T180 62 T240 62 T300 62 L300 72 L0 72 Z" fill="#15182e"/>
+          </svg>`;
+  const SCENE_SHADOW = `<svg class="mode-scene" viewBox="0 0 300 72" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+            <defs><linearGradient id="skyD" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#04030a"/><stop offset="1" stop-color="#1c1030"/></linearGradient></defs>
+            <rect width="300" height="72" fill="url(#skyD)"/>
+            <circle cx="236" cy="18" r="13" fill="#b8323c"/><circle cx="231" cy="14" r="3" fill="rgba(0,0,0,0.25)"/><circle cx="241" cy="22" r="2" fill="rgba(0,0,0,0.25)"/>
+            <path d="M0 50 Q40 40 80 50 T160 48 T240 52 T300 46 L300 72 L0 72 Z" fill="#0e0a18"/>
+            <g fill="#1a1428"><rect x="40" y="40" width="9" height="14"/><circle cx="44.5" cy="40" r="4.5"/><rect x="72" y="44" width="8" height="12"/><circle cx="76" cy="44" r="4"/><rect x="118" y="42" width="3" height="14"/><rect x="112" y="46" width="15" height="3"/><rect x="180" y="43" width="9" height="13"/><circle cx="184.5" cy="43" r="4.5"/></g>
+            <path d="M150 54 L150 26 M150 36 L140 28 M150 32 L160 24 M150 44 L142 40" stroke="#1a1428" stroke-width="3" fill="none" stroke-linecap="round"/>
+            <g class="particles"><circle class="p" cx="60" cy="30" r="2.2" fill="#c58bff"/><circle class="p p2" cx="100" cy="36" r="1.8" fill="#c58bff"/><circle class="p p4" cx="205" cy="34" r="2" fill="#c58bff"/><circle class="p p3" cx="270" cy="40" r="1.6" fill="#c58bff"/></g>
+            <path d="M92 52 a6 6 0 0 1 12 0 v8 l-2 -2 l-2 2 l-2 -2 l-2 2 l-2 -2 l-2 2 z" fill="rgba(230,235,255,0.85)"/><circle cx="96" cy="52" r="1.2" fill="#1a1030"/><circle cx="100" cy="52" r="1.2" fill="#1a1030"/>
+          </svg>`;
+  const SCENE_LEGEND = `<svg class="mode-scene" viewBox="0 0 300 72" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+            <defs><linearGradient id="skyL" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#070a1e"/><stop offset="1" stop-color="#2a1a4a"/></linearGradient>
+              <linearGradient id="isleL" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6f7d63"/><stop offset="0.35" stop-color="#3b3f5a"/><stop offset="1" stop-color="#1c1f33"/></linearGradient></defs>
+            <rect width="300" height="72" fill="url(#skyL)"/>
+            <circle cx="248" cy="16" r="11" fill="#b8323c"/><circle cx="244" cy="13" r="2.5" fill="rgba(0,0,0,0.25)"/><circle cx="252" cy="20" r="1.8" fill="rgba(0,0,0,0.25)"/>
+            <g class="particles"><circle class="p" cx="30" cy="10" r="1.2" fill="#fff"/><circle class="p p2" cx="90" cy="6" r="1" fill="#fff"/><circle class="p p3" cx="150" cy="12" r="1.1" fill="#fff"/><circle class="p p4" cx="200" cy="8" r="0.9" fill="#fff"/></g>
+            <polyline points="118,0 112,18 120,20 108,40" fill="none" stroke="#fff6a8" stroke-width="2" stroke-linejoin="round" class="art-flash"/>
+            <path d="M40 38 L110 38 L100 60 L52 62 Z" fill="url(#isleL)"/><rect x="46" y="32" width="58" height="6" fill="#6f7d63"/>
+            <rect x="60" y="20" width="4" height="12" fill="#4e526d"/><circle cx="62" cy="19" r="2" fill="#fff6a8"/>
+            <ellipse cx="160" cy="30" rx="26" ry="9" fill="#9a8f7a"/><rect x="146" y="38" width="28" height="7" rx="2" fill="#6b4a2a"/>
+            <g fill="#0e0a18"><rect x="200" y="46" width="8" height="12"/><circle cx="204" cy="46" r="4"/><rect x="222" y="44" width="7" height="14"/><circle cx="225.5" cy="44" r="3.5"/><rect x="262" y="48" width="8" height="10"/><circle cx="266" cy="48" r="4"/></g>
+            <path d="M0 58 Q40 50 80 58 T160 58 T240 58 T300 58 L300 72 L0 72 Z" fill="#160f26"/>
+            <circle cx="238" cy="40" r="3" fill="#c58bff" opacity="0.8"/><circle cx="286" cy="36" r="2.4" fill="#c58bff" opacity="0.7"/>
+          </svg>`;
   function showTitle() {
     state.phase = 'title'; state.editorReturn = false;
     document.body.classList.add('title');
@@ -217,24 +253,28 @@
       <div class="modes">
         <span class="btn mode" data-mode="normal">${SCENE_NORMAL}<span class="mode-label">Normal</span></span>
         <span class="btn mode" data-mode="pro">${SCENE_PRO}<span class="mode-label">Profi</span></span>
+        <span class="btn mode" data-mode="legend">${SCENE_LEGEND}<span class="mode-label">Legende</span></span>
         <span class="btn mode" data-mode="creative">${SCENE_CREATIVE}<span class="mode-label">Kreativ</span></span>
       </div>
     </div>`, 'title');
     ui.overlay.querySelectorAll('.mode').forEach(b => b.addEventListener('click', () => {
       const m = b.dataset.mode;
       if (m === 'creative') { state.mode = 'creative'; showWorldSelect(); }
-      else { state.mode = 'normal'; showModeWorldSelect(m === 'pro' ? 'pro' : 'normal'); }
+      else { state.mode = 'normal'; showModeWorldSelect(m === 'pro' ? 'pro' : m === 'legend' ? 'legend' : 'normal'); }
     }));
   }
-  const sceneFor = id => ({ normal: SCENE_NORMAL, sea: SCENE_SEA, pro: SCENE_PRO, jungle: SCENE_JUNGLE })[id] || SCENE_NORMAL;
+  const sceneFor = id => ({ normal: SCENE_NORMAL, sea: SCENE_SEA, pro: SCENE_PRO, jungle: SCENE_JUNGLE, storm: SCENE_STORM, shadow: SCENE_SHADOW })[id] || SCENE_NORMAL;
+  const MODE_ICON = { normal: '🏆', pro: '🔥', legend: '⚡' };
+  const worldMode = w => (w && w.mode) || 'normal';
   function setWorld(id) { state.world = WORLDS.find(w => w.id === id) || WORLDS[0]; state.courses = state.world.courses; }
 
   /* Normal/Profi: Welt wählen (Märchenland, Meereswelt … bzw. Profi-Welt, Dschungeltempel …), dann Spieler und Steuerung */
   function showModeWorldSelect(mode) {
     state.pickMode = mode;
-    const worlds = WORLDS.filter(w => (w.mode === 'pro') === (mode === 'pro'));
+    const worlds = WORLDS.filter(w => worldMode(w) === mode);
     overlay(`<div class="panel">
-      <h2>${mode === 'pro' ? '🔥 Profi – Welt wählen' : '🏆 Normal – Welt wählen'}</h2>
+      <h2>${MODE_ICON[mode]} ${mode === 'pro' ? 'Profi' : mode === 'legend' ? 'Legende' : 'Normal'} – Welt wählen</h2>
+      ${mode === 'legend' ? '<div class="sub">Die höchste Stufe: extra große Bahnen, neue Gefahren, wenig Gnade.</div>' : ''}
       <div class="modes">
         ${worlds.map(w => `<span class="btn mode" data-world="${w.id}">${sceneFor(w.id)}<span class="mode-label ${w.name.length > 8 ? 'long' : ''}">${w.name}</span></span>`).join('')}
       </div>
@@ -277,7 +317,7 @@
 
   function showSetup() {
     overlay(`<div class="panel">
-      <h2>${state.world.mode === 'pro' ? `🔥 ${state.world.name}` : `🏆 ${state.world.name}`}</h2>
+      <h2>${MODE_ICON[worldMode(state.world)]} ${state.world.name}</h2>
       <div class="sub">${state.world.name} · ${state.courses.length} Bahnen</div>
       <p>Spieler:</p>
       <div id="pc">${[1, 2, 3, 4].map(n => `<span class="btn ghost small ${n === playerCount ? 'sel' : ''}" data-n="${n}">${n}</span>`).join('')}</div>
@@ -301,7 +341,7 @@
       setControlMode(b.dataset.m);
       ui.overlay.querySelectorAll('#cm .btn').forEach(x => x.classList.toggle('sel', x.dataset.m === state.controlMode));
     }));
-    $('back').addEventListener('click', () => showModeWorldSelect(state.world.mode === 'pro' ? 'pro' : 'normal'));
+    $('back').addEventListener('click', () => showModeWorldSelect(worldMode(state.world)));
     $('start').addEventListener('click', () => { Sfx.unlock(); startGame(playerCount, 0); });
   }
 
@@ -421,11 +461,14 @@
   function hazard(type) {
     const b = state.ball;
     const custom = state.level.def.hazardText && state.level.def.hazardText[type];
-    const label = custom || (type === 'water' ? 'Platsch! Wasser' : type === 'lava' ? 'Zischhh! Lava' : type === 'shark' ? 'Vom Hai gefressen!' : type === 'spiked' ? 'Aufgespießt!' : 'Aus! Abgrund');
+    const label = custom || (type === 'water' ? 'Platsch! Wasser' : type === 'lava' ? 'Zischhh! Lava' : type === 'shark' ? 'Vom Hai gefressen!' : type === 'spiked' ? 'Aufgespießt!' : type === 'zapped' ? 'Vom Blitz getroffen!' : type === 'fell' ? 'In die Tiefe gestürzt!' : 'Aus! Abgrund');
     if (type === 'shark') { Sfx.water(); burst(b.x, b.y, '#ff5a5a', 22, true); b.z = 0; b.vz = 0; b.air = false; }
     else if (type === 'water') { Sfx.water(); burst(b.x, b.y, '#9fd3ff', 18); }
     else if (type === 'lava') { Sfx.lava(); burst(b.x, b.y, '#ffb347', 18); }
-    else if (type === 'spiked') { Sfx.lava(); burst(b.x, b.y, '#e6e6e6', 18, true); if (b.shotX != null) { b.restX = b.shotX; b.restY = b.shotY; } } // zurück zum Start des letzten Schlags
+    else if (type === 'spiked' || type === 'zapped' || type === 'fell') { // zurück zum Start des letzten Schlags
+      if (type === 'zapped') { Sfx.lava(); burst(b.x, b.y, '#fff27a', 26, true); } else if (type === 'fell') { Sfx.oob(); burst(b.x, b.y, '#b56bff', 14, true); } else { Sfx.lava(); burst(b.x, b.y, '#e6e6e6', 18, true); }
+      b.z = 0; b.vz = 0; b.air = false; if (b.shotX != null) { b.restX = b.shotX; b.restY = b.shotY; }
+    }
     else { Sfx.oob(); burst(b.x, b.y, '#cccccc', 10); }
     state.strokes++;
     showMessage(`${label} · +1 Strafschlag`, 1700);
@@ -572,7 +615,7 @@
         case 'fire': Sfx.cannon(); burst(ev.x, ev.y, '#ffb347', 18); break;
         case 'sunk': sunk(); return;
         case 'shark': { const inner = state.courses[state.holeIdx].inner; if (inner && inner.stomach && !state.inner) { const b = state.ball; b.z = 0; b.vz = 0; b.air = false; enterInner('Verschluckt! Ab in den Haimagen …'); } else hazard('shark'); return; }
-        case 'water': case 'lava': case 'oob': case 'spiked': hazard(ev.type); return;
+        case 'water': case 'lava': case 'oob': case 'spiked': case 'zapped': case 'fell': hazard(ev.type); return;
       }
     }
   }

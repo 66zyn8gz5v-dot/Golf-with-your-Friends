@@ -5,9 +5,9 @@
 import fs from 'node:fs'; import vm from 'node:vm'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
 const SRC = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'src');
 const ctx = { console, performance: { now: () => 0 }, window: {} }; vm.createContext(ctx);
-for (const f of ['themes', 'courses', 'courses_sea', 'courses_jungle', 'courses_pro', 'level', 'obstacles', 'physics'])
+for (const f of ['themes', 'courses', 'courses_sea', 'courses_jungle', 'courses_storm', 'courses_shadow', 'courses_pro', 'level', 'obstacles', 'obstacles_legend', 'physics'])
   vm.runInContext(fs.readFileSync(path.join(SRC, `${f}.js`), 'utf8'), ctx);
-export const G = vm.runInContext('({buildLevel, makeBall, stepPhysics, createObstacles, PRO_COURSES, COURSES, SEA_COURSES, JUNGLE_COURSES, WORLDS, BALL_R})', ctx);
+export const G = vm.runInContext('({buildLevel, makeBall, stepPhysics, createObstacles, PRO_COURSES, COURSES, SEA_COURSES, JUNGLE_COURSES, STORM_COURSES, SHADOW_COURSES, WORLDS, BALL_R})', ctx);
 export const WORLDS = G.WORLDS;
 export const MAX_SHOT = 19, STEP = 1 / 240, DEFAULT_MAX = 15;
 
@@ -56,7 +56,7 @@ export function shoot(st0, ang, pow, wait = 0, wantTrace = false) {
       if (e.type === 'switch') st.switches = Object.assign({}, lv.switches);
       if (e.type === 'enter') { out = 'enter'; break; }
       if (e.type === 'shark') { out = (st.hole.inner && st.hole.inner.stomach && !st.inner) ? 'stomach' : 'shark'; break; }
-      if (e.type === 'water' || e.type === 'lava' || e.type === 'oob' || e.type === 'spiked') { out = e.type; break; }
+      if (e.type === 'water' || e.type === 'lava' || e.type === 'oob' || e.type === 'spiked' || e.type === 'zapped' || e.type === 'fell') { out = e.type; break; }
     }
     if (out) {
       st.t = t; st.trace = trace;
@@ -125,6 +125,7 @@ export function distMap(def) {
     if (o.type === 'portal') { links.push([o.x, o.y, o.tx, o.ty]); if (o.twoWay) links.push([o.tx, o.ty, o.x, o.y]); }
     if (o.type === 'ferry') { links.push([o.x0, o.y0, o.x1, o.y1]); links.push([o.x1, o.y1, o.x0, o.y0]); }
     if (o.type === 'ramp') { const a = (o.angle ?? 90) * Math.PI / 180, cx = o.x + (o.w || 2) / 2, cy = o.y + (o.h || 2) / 2, half = Math.abs(Math.cos(a)) > 0.5 ? (o.w || 2) / 2 : (o.h || 2) / 2; const L = half + (o.land ?? 1.7); links.push([cx, cy, cx + Math.cos(a) * L, cy + Math.sin(a) * L]); }
+    if (o.type === 'updraft') { const cx = o.x + (o.w || 2) / 2, cy = o.y + (o.h || 2) / 2; for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) links.push([cx, cy, cx + dx * (o.land ?? 5), cy + dy * (o.land ?? 5)]); }
     if (o.type === 'cannon') { links.push([o.x, o.y, o.x + Math.cos(o.base || 0) * (o.range || 9) * 0.9, o.y + Math.sin(o.base || 0) * (o.range || 9) * 0.9]); }
   }
   const tgt = lv.goal;

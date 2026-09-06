@@ -466,4 +466,6 @@ const WORLDS = [
   { id: 'sea', name: 'Meereswelt', short: 'Meer', mode: 'normal', courses: SEA_COURSES },
   { id: 'pro', name: 'Profi-Welt', short: 'Profi', mode: 'pro', courses: PRO_COURSES },
   { id: 'jungle', name: 'Dschungeltempel', short: 'Dschungel', mode: 'pro', courses: JUNGLE_COURSES },
+  { id: 'storm', name: 'Sturmhimmel', short: 'Sturm', mode: 'legend', courses: STORM_COURSES },
+  { id: 'shadow', name: 'Schattenreich', short: 'Schatten', mode: 'legend', courses: SHADOW_COURSES },
 ];

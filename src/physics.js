@@ -69,7 +69,7 @@ function stepPhysics(level, ball, dt, t, allowForces) {
   else for (const ob of level.obstacles) if (ob.ride && ob.ride(ball, t, events)) return events;
 
   // Sprungschanzen und Flugphase: in der Luft gibt es keine Reibung, keine Mauern, keine Hindernisse
-  for (const ob of level.obstacles) if (ob.type === 'ramp') ob.launch(ball, events);
+  for (const ob of level.obstacles) if (ob.launch) ob.launch(ball, events); // Rampen und Aufwinde
   if (ball.air) {
     ball.x += ball.vx * dt; ball.y += ball.vy * dt;
     ball.vz -= 12 * dt; ball.z += ball.vz * dt;
