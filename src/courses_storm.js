@@ -213,7 +213,7 @@ const STORM_COURSES = [
     autoDecor: { density: 0.12, seed: 411 },
   },
   {
-    name: 'Gewitterkessel', par: 6, theme: 'storm', maxStrokes: 24, hazardText: { oob: 'In den Kessel gestürzt', lava: 'Zzzt! Blitzpfütze', water: 'Platsch! Regentümpel', zapped: 'Vom Blitz getroffen!' },
+    name: 'Gewitterkessel', par: 5, theme: 'storm', maxStrokes: 24, hazardText: { oob: 'In den Kessel gestürzt', lava: 'Zzzt! Blitzpfütze', water: 'Platsch! Regentümpel', zapped: 'Vom Blitz getroffen!' },
     views: [{ x: 2, y: 18, w: 22, h: 4, look: { x: 3.5, y: 8 } }, { x: 2, y: 6, w: 4, h: 12, look: { x: 8, y: 3.5 } }, { x: 20, y: 6, w: 4, h: 12, look: { x: 17, y: 3.5 } }, { x: 6, y: 2, w: 14, h: 4, look: { x: 12.5, y: 3.5 } }],
     map: [
       '..........................',

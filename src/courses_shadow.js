@@ -149,7 +149,7 @@ const SHADOW_COURSES = [
   },
   {
     name: 'Knochenbrücke', par: 6, theme: 'shadow', maxStrokes: 22, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Gruft gestürzt', spiked: 'Von Knochenstacheln aufgespießt' },
-    views: [{ x: 2, y: 3, w: 6, h: 6, look: { x: 20, y: 5.5 } }, { x: 8, y: 5, w: 14, h: 2, look: { x: 24, y: 5.5 } }, { x: 22, y: 2, w: 6, h: 8, look: { x: 38, y: 5.5 } }, { x: 28, y: 5, w: 8, h: 2, look: { x: 39, y: 5.5 } }],
+    views: [{ x: 2, y: 3, w: 6, h: 6, look: { x: 20, y: 5.5 } }, { x: 8, y: 5, w: 14, h: 3, look: { x: 24, y: 6 } }, { x: 22, y: 2, w: 6, h: 8, look: { x: 38, y: 5.5 } }, { x: 28, y: 5, w: 8, h: 2, look: { x: 39, y: 5.5 } }],
     map: [
       '............................................',
       '............................................',
@@ -158,16 +158,15 @@ const SHADOW_COURSES = [
       '..######llllllllllllll######llllllll######..',
       '..#T####oooooooooooooo######oooooooo###H##..',
       '..######oooooooooooooo######oooooooo######..',
-      '..######llllllllllllll######llllllll######..',
+      '..######oooooooooooooo######llllllll######..',
       '..######llllllllllllll######llllllll######..',
       '......................######................',
       '............................................',
       '............................................',
     ],
-    intro: 'Eine Brücke aus Knochen ohne Geländer über einen Strom aus Schattenfeuer. Mitten auf der Brücke fahren Knochenstacheln aus dem Boden, auf der Felsinsel schwingt eine Sense, und der zweite Steg ist kürzer, aber schmal.',
+    intro: 'Eine Brücke aus Knochen ohne Geländer über einen Strom aus Schattenfeuer. Mitten auf der Brücke fährt eine Reihe Knochenstacheln aus dem Boden, auf der Felsinsel schwingt eine Sense, und der zweite Steg ist kürzer, aber schmaler – und hat seine eigenen Stacheln.',
     obstacles: [
-      { type: 'spikes', x: 14.5, y: 6, w: 1, h: 2, period: 4.4, up: 0.36, phase: 0 },
-      { type: 'spikes', x: 18.5, y: 6, w: 1, h: 2, period: 4.4, up: 0.36, phase: 0.1 },
+      { type: 'spikes', x: 15.5, y: 6.5, w: 1, h: 3, period: 4.4, up: 0.36, phase: 0 },
       { type: 'rotor', x: 24.5, y: 5.5, blades: 1, len: 1.8, thick: 0.14, hubR: 0.22, style: 'scythe', e: 0.6, swing: { amp: Math.PI / 2.2, speed: 1.5 }, phase: 0, height: 0.5 },
       { type: 'bumper', x: 26.5, y: 2.8, r: 0.38, style: 'grave', kick: 7 },
       { type: 'bumper', x: 26.5, y: 8.2, r: 0.38, style: 'grave', kick: 7 },
