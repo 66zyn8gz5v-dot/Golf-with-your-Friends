@@ -177,7 +177,7 @@ const STORM_COURSES = [
     autoDecor: { density: 0.12, seed: 409 },
   },
   {
-    name: 'Wolkenschlucht', par: 6, theme: 'storm', maxStrokes: 24, hazardText: { oob: 'In die Wolken gestürzt', lava: 'Zzzt! Blitzpfütze', water: 'Platsch! Regentümpel', zapped: 'Vom Blitz getroffen!' },
+    name: 'Wolkenschlucht', par: 5, theme: 'storm', maxStrokes: 24, hazardText: { oob: 'In die Wolken gestürzt', lava: 'Zzzt! Blitzpfütze', water: 'Platsch! Regentümpel', zapped: 'Vom Blitz getroffen!' },
     views: [{ x: 2, y: 2, w: 8, h: 7, look: { x: 18, y: 5 } }, { x: 15, y: 1, w: 10, h: 12, look: { x: 32, y: 10.5 } }],
     map: [
       '......................................',

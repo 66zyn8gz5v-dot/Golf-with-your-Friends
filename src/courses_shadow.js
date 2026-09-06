@@ -281,7 +281,7 @@ const SHADOW_COURSES = [
     autoDecor: { density: 0.14, seed: 513 },
   },
   {
-    name: 'Schattenwald', par: 6, theme: 'shadow', maxStrokes: 24, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Gruft gestürzt', spiked: 'Von Knochenstacheln aufgespießt' },
+    name: 'Schattenwald', par: 5, theme: 'shadow', maxStrokes: 24, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Gruft gestürzt', spiked: 'Von Knochenstacheln aufgespießt' },
     views: [{ x: 2, y: 2, w: 36, h: 12, look: { x: 35.5, y: 7.5 } }],
     map: [
       '........................................',
