@@ -334,7 +334,7 @@ const STORM_COURSES = [
     intro: 'Der Weg zur Sturmfestung: mit dem Aufwind über die erste Schlucht, mit dem Ballon über die zweite, dann die Felsrampe hinauf zum Tor – Blitze schlagen davor ein. Drinnen wartet die Sturmhalle mit Propellern, Blitzfeldern, Fallgitter und der Sturmkanone.',
     obstacles: [
       { type: 'updraft', x: 8, y: 16, w: 2, h: 3, minSpeed: 2.5, land: 7.5, fly: 7 },
-      { type: 'rotor', x: 5.5, y: 17.5, blades: 3, len: 1.2, thick: 0.12, hubR: 0.28, speed: 2.2, height: 0.4, style: 'propeller', e: 0.7 },
+      { type: 'rotor', x: 34.5, y: 19.2, blades: 3, len: 1.0, thick: 0.12, hubR: 0.26, speed: 2.2, height: 0.4, style: 'propeller', e: 0.7 },
       { type: 'lightning', x: 19, y: 17, w: 2, h: 5, period: 5, phase: 0, warn: 1.0, strike: 0.35 },
       { type: 'ferry', x0: 23.4, y0: 17, x1: 29.6, y1: 17, w: 1.3, h: 1.3, wait: 2.6, travel: 3.4, style: 'balloon', flat: true },
       { type: 'mover', x0: 31, y0: 14.5, x1: 37, y1: 14.5, w: 1.4, h: 1.0, period: 6, style: 'stormcloud', e: 0.6 },
