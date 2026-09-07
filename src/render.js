@@ -13,6 +13,13 @@ function shade(hex, f) {
   return `rgb(${c(r)},${c(g)},${c(b)})`;
 }
 function rgba(hex, a) { const [r, g, b] = hexToRgb(hex); return `rgba(${r},${g},${b},${a})`; }
+function convexHull(pts) { // Andrew's monotone chain
+  const p = pts.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]), cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+  const lo = [], up = [];
+  for (const q of p) { while (lo.length >= 2 && cross(lo[lo.length - 2], lo[lo.length - 1], q) <= 0) lo.pop(); lo.push(q); }
+  for (let i = p.length - 1; i >= 0; i--) { const q = p[i]; while (up.length >= 2 && cross(up[up.length - 2], up[up.length - 1], q) <= 0) up.pop(); up.push(q); }
+  return lo.slice(0, -1).concat(up.slice(0, -1));
+}
 function polyArea(p) {
   let a = 0;
   for (let i = 0; i < p.length; i++) { const q = p[i], r = p[(i + 1) % p.length]; a += q[0] * r[1] - r[0] * q[1]; }
@@ -293,6 +300,7 @@ class Renderer {
     }
 
     for (const [fx, fy] of fires) this.drawShadowFire(ctx, fx, fy, t, lv, 1); // Glut, Flammen und Funken über den fertigen Grund
+    if (state.phase !== 'edit') this.drawCastShadows(ctx);
     // Boden-Overlays
     for (const ob of lv.obstacles) this.drawObstacleFloor(ctx, ob, t);
     if (lv.cup) this.drawCupHole(ctx);
@@ -328,6 +336,7 @@ class Renderer {
     }
     if (b) { this.flat = !!(b.rider && b.rider.type === 'ferry' && b.rider.flat); this.drawBall(ctx, b); this.flat = false; }
 
+    if (state.phase !== 'edit') this.drawDepthCues(ctx);
     // Atmosphäre (dezent, über der Szene, unter den Effektpartikeln)
     this.drawAtmosphere(ctx, lv.def.atmo || th.atmo || 'none', t);
 
@@ -340,6 +349,48 @@ class Renderer {
     ctx.globalAlpha = 1;
   }
 
+  /* Räumliche Tiefe: Schlagschatten von Randmauern, Blöcken und Banden auf den Boden (Licht von Nordwesten),
+     nur auf Bodenkacheln – nie in den Abgrund oder aufs Wasser hinaus. */
+  drawCastShadows(ctx) {
+    const lv = this.level, th = this.theme, LX = 0.42, LY = 0.3; // Schattenversatz je Höheneinheit (Weltkoordinaten)
+    const boxes = [];
+    for (const w of lv.walls) boxes.push([w.x, w.y, w.x + w.w, w.y + w.h, th.wall.style === 'hedge' ? 0.55 : 0.6]);
+    for (const b of lv.blocks) boxes.push([b.x, b.y, b.x + 1, b.y + 1, 1.0]);
+    for (const o of lv.obstacles) {
+      if (o.type === 'wall') { const nx = -(o.y1 - o.y0), ny = o.x1 - o.x0, L = Math.hypot(nx, ny) || 1, tx = nx / L * o.t / 2, ty = ny / L * o.t / 2; boxes.push({ poly: [[o.x0 + tx, o.y0 + ty], [o.x1 + tx, o.y1 + ty], [o.x1 - tx, o.y1 - ty], [o.x0 - tx, o.y0 - ty]], h: o.h }); }
+      else if (o.type === 'eyetower') boxes.push([o.x - o.r, o.y - o.r, o.x + o.r, o.y + o.r, o.height]);
+      else if (o.type === 'guillotine') { const vert = o.w < o.h, pw = 0.32, top = o.liftH + o.bladeH + 0.55; for (const [px, py] of vert ? [[o.x, o.y - o.h / 2 - pw / 2], [o.x, o.y + o.h / 2 + pw / 2]] : [[o.x - o.w / 2 - pw / 2, o.y], [o.x + o.w / 2 + pw / 2, o.y]]) boxes.push([px - pw / 2, py - pw / 2, px + pw / 2, py + pw / 2, top]); }
+    }
+    if (!boxes.length) return;
+    ctx.save();
+    ctx.beginPath(); // Schatten nur auf Bodenkacheln
+    for (let y = 0; y < lv.H; y++) for (let x = 0; x < lv.W; x++) {
+      const c = lv.tiles[y][x]; if (!lv.isFloorChar(c) || c === 'w' || c === 'l') continue;
+      const [tsx, tsy] = this.proj(x + 0.5, y + 0.5); if (!this.onScreen(tsx, tsy, this.scale * 2)) continue;
+      const p0 = this.proj(x, y, 0.002), p1 = this.proj(x + 1, y, 0.002), p2 = this.proj(x + 1, y + 1, 0.002), p3 = this.proj(x, y + 1, 0.002);
+      ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.lineTo(p2[0], p2[1]); ctx.lineTo(p3[0], p3[1]); ctx.closePath();
+    }
+    ctx.clip();
+    ctx.fillStyle = 'rgba(0,0,0,0.22)';
+    for (const b of boxes) {
+      let hull;
+      if (Array.isArray(b)) { const [x0, y0, x1, y1, h] = b, ox = LX * h, oy = LY * h; hull = [[x0, y0], [x1, y0], [x1 + ox, y0 + oy], [x1 + ox, y1 + oy], [x0 + ox, y1 + oy], [x0, y1]]; }
+      else { const ox = LX * b.h, oy = LY * b.h, pts = b.poly.concat(b.poly.map(p => [p[0] + ox, p[1] + oy])); hull = convexHull(pts); }
+      const [cx, cy] = this.proj(hull[0][0], hull[0][1]); if (!this.onScreen(cx, cy, this.scale * 4)) continue;
+      this.pathPoly(ctx, hull, 0.003); ctx.fill();
+    }
+    ctx.restore();
+  }
+  /* Tiefendunst zum Horizont (weit entfernte Teile der Bahn verschwimmen in der Himmelsfarbe) und eine leichte Randabdunklung */
+  drawDepthCues(ctx) {
+    const w = this.w, h = this.h, th = this.theme;
+    const g = ctx.createLinearGradient(0, 0, 0, h * 0.55);
+    g.addColorStop(0, rgba(th.sky[1].startsWith('#') ? th.sky[1] : '#000000', 0.26)); g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, w, h * 0.55);
+    const v = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.45, w / 2, h / 2, Math.hypot(w, h) * 0.62);
+    v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,0.3)');
+    ctx.fillStyle = v; ctx.fillRect(0, 0, w, h);
+  }
   /* Stimmungseffekte in Bildschirmkoordinaten: Nebel, Glühwürmchen, Funken, Schnee, Blütenstaub */
   drawAtmosphere(ctx, kind, t) {
     if (kind === 'none') return;
