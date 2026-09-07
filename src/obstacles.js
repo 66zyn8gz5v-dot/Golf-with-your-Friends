@@ -359,7 +359,7 @@ class Cannon {
         ball.x = this.x + dx * 1.2; ball.y = this.y + dy * 1.2;
         ball.vx = dx * this.flySpeed; ball.vy = dy * this.flySpeed;
         const tFlight = this.range / this.flySpeed; ball.vz = (12 * tFlight) / 2; ball.z = 0.7; ball.air = true;
-        events.push({ type: 'fire', x: ball.x, y: ball.y });
+        events.push({ type: 'fire', x: ball.x, y: ball.y, style: this.style });
         return false;
       }
       return true;
@@ -368,7 +368,7 @@ class Cannon {
     if (Math.hypot(ball.x - this.x, ball.y - this.y) < this.catchR) {
       ball.rider = this; ball.fireAt = t + this.loadTime; this.loaded = true;
       ball.x = this.x; ball.y = this.y; ball.vx = 0; ball.vy = 0; ball.z = 0.55;
-      events.push({ type: 'load', x: this.x, y: this.y });
+      events.push({ type: 'load', x: this.x, y: this.y, style: this.style });
       return true;
     }
     return false;

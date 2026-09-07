@@ -647,4 +647,92 @@ Object.assign(Renderer.prototype, {
     limb(sx - s * 0.3, sy - s * 1.05, sx - s * 0.62, sy - s * 1.0, s * 0.035, s * 0.015);
     if (embers) { ctx.fillStyle = 'rgba(255,120,40,0.85)'; for (const [ox, oy] of [[-0.5, -1.3], [0.55, -1.5], [-0.1, -1.7]]) { ctx.beginPath(); ctx.arc(sx + ox * s, sy + oy * s, s * 0.05, 0, TAU); ctx.fill(); } }
   },
+  /* Basilisk: der König der Schlangen liegt aufgerollt da, der Kopf mit offenem Rachen zeigt in Schussrichtung und pendelt.
+     Rollt der Ball ins Maul, schnappt es zu und der Schlund glüht – dann spuckt der Basilisk den Ball weit übers Feld. */
+  drawBasilisk(ctx, ob, t) {
+    const s = this.scale, dx = Math.cos(ob.angle), dy = Math.sin(ob.angle), nx = -dy, ny = dx;
+    const W = (a, b, z = 0) => [ob.x + dx * a + nx * b, ob.y + dy * a + ny * b, z];
+    const P = v => this.proj(v[0], v[1], v[2]);
+    const poly = pts => { ctx.beginPath(); pts.forEach((q, i) => { const r = P(q); i ? ctx.lineTo(r[0], r[1]) : ctx.moveTo(r[0], r[1]); }); ctx.closePath(); };
+    const since = t - (ob.firedAt ?? -10), spit = since < 0.4 ? 1 - since / 0.4 : 0;
+    const open = ob.loaded ? 0.1 + 0.04 * Math.sin(t * 22) : 0.5 + 0.45 * spit;
+    const C = ['#9ccb84', '#3f7a4e', '#14301d'], K = ['#c9a0ff', '#8a3bff', '#3a1466'];
+    this.isoEllipse(ctx, ob.x - dx * 1.0, ob.y - dy * 1.0, 0.003, 2.0, 'rgba(0,0,0,0.3)', 1.4);
+    // Körper: Kugelkette in einer S-Windung hinter dem Kopf, nach Tiefe sortiert; jede zweite Kugel trägt einen Rückenstachel
+    const parts = [];
+    for (let i = 0; i < 15; i++) {
+      const a = -0.35 - i * 0.24, b = Math.sin(i * 0.42 + 0.3) * 0.95, r = Math.max(0.16, 0.5 - i * 0.024), z = Math.max(0.16, 0.5 - i * 0.022);
+      parts.push({ v: W(a, b, z), r, spike: i % 2 === 1 && i < 11, k: this.depth(ob.x + dx * a + nx * b, ob.y + dy * a + ny * b) });
+    }
+    parts.sort((p, q) => p.k - q.k);
+    for (const pt of parts) {
+      const [sx, sy] = P(pt.v), rr = pt.r * s;
+      this.ball3(ctx, sx, sy, rr, C[0], C[1], C[2]);
+      ctx.strokeStyle = 'rgba(10,30,15,0.45)'; ctx.lineWidth = Math.max(1, s * 0.02); ctx.beginPath(); ctx.arc(sx, sy, rr, 0, TAU); ctx.stroke();
+      ctx.fillStyle = 'rgba(200,220,150,0.35)'; ctx.beginPath(); ctx.ellipse(sx, sy + rr * 0.45, rr * 0.55, rr * 0.22, 0, 0, TAU); ctx.fill(); // Bauchschuppen
+      if (pt.spike) { ctx.fillStyle = K[1]; ctx.beginPath(); ctx.moveTo(sx - rr * 0.25, sy - rr * 0.75); ctx.lineTo(sx + rr * 0.05, sy - rr * 1.55); ctx.lineTo(sx + rr * 0.35, sy - rr * 0.7); ctx.closePath(); ctx.fill(); }
+    }
+    // Hals und Kopf
+    const [hx, hy] = P(W(0.15, 0, 0.72));
+    this.ball3(ctx, ...P(W(-0.2, 0, 0.6)), s * 0.5, C[0], C[1], C[2]);
+    // Unterkiefer, Rachen, Oberkiefer (in Richtung Schussrichtung geöffnet)
+    ctx.fillStyle = shade(C[1], 0.8); poly([W(0.1, -0.42, 0.6), W(1.05, -0.26, 0.6 - open * 0.55), W(1.15, 0, 0.55 - open * 0.6), W(1.05, 0.26, 0.6 - open * 0.55), W(0.1, 0.42, 0.6)]); ctx.fill();
+    ctx.fillStyle = ob.loaded ? '#c86bff' : '#4a0f2a'; poly([W(0.2, -0.36, 0.66), W(1.0, -0.22, 0.62 - open * 0.5), W(1.0, 0.22, 0.62 - open * 0.5), W(0.2, 0.36, 0.66), W(0.2, 0.3, 0.7 + open * 0.8), W(0.95, 0.2, 0.72 + open * 0.9), W(0.95, -0.2, 0.72 + open * 0.9), W(0.2, -0.3, 0.7 + open * 0.8)]); ctx.fill();
+    if (!ob.loaded && spit === 0) { // züngelnde Zunge
+      const fl = 1.0 + 0.25 * Math.sin(t * 14), tip = W(1.2 * fl, 0, 0.62 - open * 0.3);
+      ctx.strokeStyle = '#ff3a5a'; ctx.lineWidth = Math.max(1.5, s * 0.045); ctx.lineCap = 'round';
+      const [a0, a1] = P(W(0.5, 0, 0.64)), [b0, b1] = P(tip), [c0, c1] = P(W(1.35 * fl, 0.14, 0.62 - open * 0.3)), [d0, d1] = P(W(1.35 * fl, -0.14, 0.62 - open * 0.3));
+      ctx.beginPath(); ctx.moveTo(a0, a1); ctx.lineTo(b0, b1); ctx.lineTo(c0, c1); ctx.moveTo(b0, b1); ctx.lineTo(d0, d1); ctx.stroke();
+    }
+    this.ball3(ctx, hx, hy, s * 0.64, C[0], C[1], C[2]); // Schädel
+    ctx.fillStyle = shade(C[0], 0.92); poly([W(0.1, -0.5, 0.78), W(1.1, -0.3, 0.78 + open * 0.85), W(1.25, 0, 0.74 + open * 0.9), W(1.1, 0.3, 0.78 + open * 0.85), W(0.1, 0.5, 0.78), W(0.05, 0, 1.25)]); ctx.fill(); // Oberkiefer / Schnauze
+    ctx.strokeStyle = 'rgba(10,30,15,0.5)'; ctx.lineWidth = Math.max(1, s * 0.025); ctx.stroke();
+    ctx.fillStyle = '#f4f0e0'; // Giftzähne
+    for (const sd of [-1, 1]) { poly([W(1.02, sd * 0.24, 0.78 + open * 0.8), W(0.9, sd * 0.2, 0.78 + open * 0.8), W(0.98, sd * 0.22, 0.5 + open * 0.55)]); ctx.fill(); }
+    // Krone aus Stacheln
+    for (let k = -2; k <= 2; k++) { ctx.fillStyle = k % 2 ? K[2] : K[1]; poly([W(0.2, k * 0.17, 1.15), W(0.0, k * 0.2, 1.2), W(-0.35 + Math.abs(k) * 0.08, k * 0.36, 1.75 - Math.abs(k) * 0.18)]); ctx.fill(); }
+    // glühende Augen
+    const pulse = ob.loaded ? 0.6 + 0.4 * Math.sin(t * 18) : 0.85;
+    for (const sd of [-1, 1]) {
+      const [ex, ey] = P(W(0.45, sd * 0.36, 1.02)), g = ctx.createRadialGradient(ex, ey, 0, ex, ey, s * 0.22);
+      g.addColorStop(0, `rgba(255,120,80,${pulse})`); g.addColorStop(1, 'rgba(255,60,40,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(ex, ey, s * 0.22, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#ffd36a'; ctx.beginPath(); ctx.ellipse(ex, ey, s * 0.09, s * 0.07, 0, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#200'; ctx.beginPath(); ctx.ellipse(ex, ey, s * 0.02, s * 0.065, 0, 0, TAU); ctx.fill();
+    }
+    if (ob.loaded) { // Schlund glüht violett, während der Basilisk „kaut“
+      const [gx, gy] = P(W(0.5, 0, 0.7)), f = 0.5 + 0.5 * Math.sin(t * 16), g = ctx.createRadialGradient(gx, gy, 0, gx, gy, s * 0.8);
+      g.addColorStop(0, `rgba(200,120,255,${0.5 + 0.3 * f})`); g.addColorStop(1, 'rgba(140,60,255,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(gx, gy, s * 0.8, 0, TAU); ctx.fill();
+    }
+    if (spit > 0) { // violetter Giftschwall beim Ausspucken
+      ctx.fillStyle = `rgba(190,110,255,${0.75 * spit})`; poly([W(1.1, -0.3, 0.8), W(1.2 + 1.6 * (1 - spit), -0.12, 1.1), W(1.2 + 1.6 * (1 - spit), 0.12, 1.1), W(1.1, 0.3, 0.8)]); ctx.fill();
+    }
+  },
+  /* Schwarzes Schloss: Torbau mit zwei Rundtürmen, Spitzdächern, Zinnen, glühenden Fenstern, Fallgitter halb im Bogen und
+     Totenschädel über dem Tor. Die Front zeigt nach +y; die Tür-Auslösung liegt davor. */
+  drawCastleGate(ctx, ob, t) {
+    const s = this.scale, px = ob.px, py = ob.py, Wd = ob.gw || 3.6, D = 1.3, H = 3.4, top = '#4a4064', side = '#1c1830', line = '#07050c';
+    const rect = (x0, y0, x1, y1) => [[x0, y0], [x1, y0], [x1, y1], [x0, y1]];
+    const flick = k => 0.6 + 0.35 * Math.sin(t * 3.1 + k * 1.7);
+    for (const sd of [-1, 1]) { // Rundtürme
+      const tx = px + sd * (Wd / 2 + 1.05);
+      this.prism(ctx, this.circlePoly(tx, py - 0.2, 1.0, 10), 0, H + 1.4, top, side, { outline: line });
+      for (let k = 0; k < 10; k++) { const a = k / 10 * TAU; this.prism(ctx, this.circlePoly(tx + Math.cos(a) * 0.85, py - 0.2 + Math.sin(a) * 0.85, 0.15, 4), H + 1.4, 0.35, top, side); }
+      const [ax, ay] = this.proj(tx, py - 0.2, H + 1.75); this.cone3(ctx, ax, ay, s * 1.05, s * 1.7, '#5a4a80', '#1e1430');
+      ctx.strokeStyle = '#2a2040'; // Fahnenstange ctx.lineWidth = Math.max(1, s * 0.04); ctx.beginPath(); ctx.moveTo(ax, ay - s * 1.7); ctx.lineTo(ax, ay - s * 2.25); ctx.stroke();
+      const wv = Math.sin(t * 5 + sd) * s * 0.08; ctx.fillStyle = '#3a1466'; ctx.beginPath(); ctx.moveTo(ax, ay - s * 2.25); ctx.lineTo(ax + s * 0.5, ay - s * 2.12 + wv); ctx.lineTo(ax, ay - s * 1.95); ctx.closePath(); ctx.fill();
+      for (const z of [H * 0.35, H * 0.8]) { const [wx, wy] = this.proj(tx, py + 0.8, z); ctx.fillStyle = `rgba(210,130,255,${flick(z + sd)})`; ctx.beginPath(); ctx.moveTo(wx - s * 0.1, wy + s * 0.18); ctx.lineTo(wx - s * 0.1, wy - s * 0.1); ctx.quadraticCurveTo(wx, wy - s * 0.3, wx + s * 0.1, wy - s * 0.1); ctx.lineTo(wx + s * 0.1, wy + s * 0.18); ctx.closePath(); ctx.fill(); }
+    }
+    // Mauer mit Zinnen und Torbogen
+    this.prism(ctx, rect(px - Wd / 2 - 0.4, py - D, px + Wd / 2 + 0.4, py + D), 0, H, top, side, { outline: line });
+    for (let k = 0; k < 6; k++) { const bx = px - Wd / 2 - 0.4 + k * (Wd + 0.8 - 0.36) / 5; this.prism(ctx, rect(bx, py - D, bx + 0.36, py + D), H, 0.45, top, side); }
+    const fy = py + D, o = [[px - 0.95, fy, 0], [px - 0.95, fy, 1.95], [px, fy, 2.6], [px + 0.95, fy, 1.95], [px + 0.95, fy, 0]];
+    ctx.fillStyle = '#04030a'; ctx.beginPath(); o.forEach((q, i) => { const r = this.proj(q[0], q[1], q[2] + 0.01); i ? ctx.lineTo(r[0], r[1]) : ctx.moveTo(r[0], r[1]); }); ctx.closePath(); ctx.fill();
+    const gg = ctx.createLinearGradient(...this.proj(px, fy, 0), ...this.proj(px, fy, 2.6)); gg.addColorStop(0, 'rgba(140,60,255,0.35)'); gg.addColorStop(1, 'rgba(140,60,255,0)'); ctx.fillStyle = gg; ctx.fill(); // Schein aus dem Inneren
+    ctx.strokeStyle = '#a24bff'; ctx.lineWidth = Math.max(1.5, s * 0.06); ctx.stroke();
+    ctx.strokeStyle = '#2a2438'; ctx.lineWidth = Math.max(1.5, s * 0.05); ctx.beginPath(); // halb hochgezogenes Fallgitter
+    for (let k = -3; k <= 3; k++) { const [a0, a1] = this.proj(px + k * 0.27, fy, 2.6 - Math.abs(k) * 0.1), [b0, b1] = this.proj(px + k * 0.27, fy, 1.8); ctx.moveTo(a0, a1); ctx.lineTo(b0, b1); }
+    const [q0, q1] = this.proj(px - 0.9, fy, 1.85), [q2, q3] = this.proj(px + 0.9, fy, 1.85); ctx.moveTo(q0, q1); ctx.lineTo(q2, q3); ctx.stroke();
+    const [kx, ky] = this.proj(px, fy - 0.05, H + 0.3); this.spriteSkull(ctx, kx, ky + s * 0.2, s * 0.95);
+    for (const sd of [-1, 1]) { const [bx, by] = this.proj(px + sd * (Wd / 2 + 0.15), fy + 0.25, 0); this.spriteBrazierColored(ctx, bx, by, s * 0.9, t, ['#a24bff', '#e0b8ff', '170,90,255']); }
+  },
 });

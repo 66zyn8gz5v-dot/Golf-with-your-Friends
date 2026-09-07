@@ -39,5 +39,7 @@ const Sfx = (() => {
     lever() { tone(300, 0.15, 'square', 0.18, -120); setTimeout(() => tone(520, 0.25, 'sine', 0.2, 200), 120); },
     potion() { tone(700, 0.3, 'sine', 0.15, -400); setTimeout(() => tone(1100, 0.2, 'triangle', 0.12, 300), 150); },
     cannon() { noise(0.3, 0.35); tone(80, 0.35, 'sawtooth', 0.2, -50); },
+    hiss() { noise(0.45, 0.18); tone(1400, 0.4, 'sine', 0.05, -600); },
+    spit() { noise(0.25, 0.3); tone(160, 0.3, 'sawtooth', 0.18, 260); setTimeout(() => tone(520, 0.2, 'square', 0.08, -200), 90); },
   };
 })();

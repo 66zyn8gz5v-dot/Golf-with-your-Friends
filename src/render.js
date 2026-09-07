@@ -967,9 +967,10 @@ class Renderer {
       this.isoEllipse(ctx, ob.x, ob.y, 0.004, 0.75, 'rgba(0,0,0,0.25)');
       // Ziellinie und Landepunkt in aktueller Rohrrichtung
       const dx = Math.cos(ob.angle), dy = Math.sin(ob.angle), R = 0.9 + ob.range;
-      ctx.fillStyle = 'rgba(255,210,120,0.55)';
+      const bas = ob.style === 'basilisk';
+      ctx.fillStyle = bas ? 'rgba(200,130,255,0.55)' : 'rgba(255,210,120,0.55)';
       for (let d = 1.6; d < R - 0.5; d += 0.7) { const [px, py] = this.proj(ob.x + dx * d, ob.y + dy * d, 0.01); ctx.beginPath(); ctx.arc(px, py, s * 0.05, 0, TAU); ctx.fill(); }
-      this.isoEllipse(ctx, ob.x + dx * R, ob.y + dy * R, 0.006, 0.45, 'rgba(255,210,120,0.3)');
+      this.isoEllipse(ctx, ob.x + dx * R, ob.y + dy * R, 0.006, 0.45, bas ? 'rgba(200,130,255,0.3)' : 'rgba(255,210,120,0.3)');
       this.isoEllipse(ctx, ob.x + dx * R, ob.y + dy * R, 0.008, 0.2, 'rgba(255,240,200,0.55)');
     }
   }
@@ -1116,13 +1117,14 @@ class Renderer {
     } else if (ob.type === 'potion') {
       items.push({ x: ob.x, y: ob.y, draw: () => this.spritePotion(ctx, ob, t) });
     } else if (ob.type === 'cannon') {
-      items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => ob.style === 'catapult' ? this.drawCatapult(ctx, ob, t) : this.drawCannon(ctx, ob, t) });
+      items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => ob.style === 'catapult' ? this.drawCatapult(ctx, ob, t) : ob.style === 'basilisk' ? this.drawBasilisk(ctx, ob, t) : this.drawCannon(ctx, ob, t) });
     } else if (ob.type === 'door') {
       if (ob.style === 'pyramid') items.push({ x: ob.px, y: ob.py, noFade: true, draw: () => this.drawPyramid(ctx, ob, t) });
       else if (ob.style === 'wreck') items.push({ x: ob.px, y: ob.py, noFade: true, draw: () => this.drawWreck(ctx, ob, t) });
       else if (ob.style === 'temple') items.push({ x: ob.px, y: ob.py, noFade: true, draw: () => this.drawTempleGate(ctx, ob, t) });
       else if (ob.style === 'fortress' || ob.style === 'crypt') items.push({ x: ob.px, y: ob.py, noFade: true, draw: () => this.drawStoneGate(ctx, ob, t) });
       else if (ob.style === 'hatch') items.push({ x: ob.x, y: ob.y, bias: 0.1, noFade: true, draw: () => this.drawHatch(ctx, ob, t) });
+      else if (ob.style === 'castle') items.push({ x: ob.px, y: ob.py, noFade: true, draw: () => this.drawCastleGate(ctx, ob, t) });
       else items.push({ x: ob.x, y: ob.y, bias: 0.15, noFade: true, draw: () => { const [sx, sy] = this.proj(ob.x, ob.y + 0.35, 0); this.spriteHut(ctx, sx, sy, this.scale * ob.s, t); } });
     } else if (ob.type === 'cauldron') {
       items.push({ x: ob.x, y: ob.y, draw: () => this.drawCauldronPot(ctx, ob, t) });

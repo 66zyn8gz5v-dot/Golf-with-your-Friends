@@ -130,7 +130,7 @@ const Editor = (deps) => {
       case 'gate': { const w = o.w; o.w = o.h; o.h = w; o.axis = o.axis === 'x' ? 'y' : 'x'; break; }
       case 'windmill': o.axis = o.axis === 'x' ? 'y' : 'x'; break;
       case 'mover': { const cx = (o.x0 + o.x1) / 2, cy = (o.y0 + o.y1) / 2, L = Math.hypot(o.x1 - o.x0, o.y1 - o.y0) / 2; if (o.y0 === o.y1) { o.x0 = o.x1 = cx; o.y0 = cy - L; o.y1 = cy + L; } else { o.y0 = o.y1 = cy; o.x0 = cx - L; o.x1 = cx + L; } break; }
-      case 'cannon': o.base = Math.round(((o.base || 0) + Math.PI / 2) * 1000) / 1000; if (o.base > Math.PI * 2 - 0.01) o.base = 0; break;
+      case 'cannon': o.base = Math.round(((o.base || 0) + Math.PI / 2) * 1000) / 1000; if (o.base > Math.PI * 2 - 0.01) { o.base = 0; o.style = o.style === 'basilisk' ? 'catapult' : o.style === 'catapult' ? undefined : 'basilisk'; } break;
       case 'magnet': o.strength = -o.strength; break;
       case 'turntable': o.exit = cyc(o.exit || 0); break;
       case 'rotor': o.speed = -o.speed; break;

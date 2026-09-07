@@ -350,7 +350,7 @@
     Strandbucht: '🏖️', Muschelriff: '🐚', Fischerpier: '🎣', Krakengrotte: '🐙', Piratendeck: '🏴‍☠️', Leuchtturmfelsen: '🗼', Schiffswrack: '🚢', Perlengrotte: '🦪', Sturmsee: '🌊', Haifischbucht: '🦈',
     Mühlenwiese: '🌾', Nebelmoor: '🌫️', Zwergenkanone: '💣', Korallenriff: '🪸', Uhrwerk: '⚙️', Piratenbucht: '⚓', Hexenküche: '🧪', Sultanspalast: '🕌', Pyramide: '🔺',
     Urwaldpfad: '🌿', Affenbrücke: '🐒', Krokodilfluss: '🐊', Stachelpfad: '🗡️', Felskugelschlucht: '🪨', Treibsandbecken: '⏳', Totemplatz: '🗿', Wasserfallterrassen: '💧', 'Der Tempel': '🏛️',
-    Friedhofspforte: '🪦', Rabenfriedhof: '🐦‍⬛', Fallbeilgasse: '🔪', Irrlichtsumpf: '🕯️', Ritterhalle: '⚔️', Knochenbrücke: '🦴', Gruftlabyrinth: '⚰️', 'Turm des Auges': '👁️', Totenschiff: '☠️' };
+    Friedhofspforte: '🪦', Rabenfriedhof: '🐦‍⬛', Fallbeilgasse: '🔪', Irrlichtsumpf: '🕯️', Ritterhalle: '⚔️', Knochenbrücke: '🦴', Schattenschloss: '🏰', 'Turm des Auges': '👁️', Totenschiff: '☠️' };
   const THEME_ICONS = { meadow: '🌼', mushroom: '🍄', forge: '⚒️', forest: '🌲', dragon: '🐉', ice: '❄️', sky: '☁️', witch: '🧙', castle: '🏰', harbor: '⚓', reef: '🐠', clockwork: '⚙️', palace: '🕌', desert: '🏜️', tomb: '⚱️', deck: '🏴‍☠️', wreck: '🚢', belly: '🦈', jungle: '🌴', temple: '🗿', hut: '🧪', storm: '⛈️', fortress: '🏯', shadow: '🌑', throne: '👑', darksea: '🌊', ghostship: '⚓' };
   const holeIcon = def => HOLE_ICONS[def.name] || THEME_ICONS[def.theme] || '⛳';
   const worldClass = () => 'world-' + ((state.world && state.world.id) || 'custom');
@@ -641,8 +641,8 @@
         case 'spit': Sfx.bumper(); burst(ev.x, ev.y, '#a6ff5e', 10); break;
         case 'spin': Sfx.bounce(5); showMessage('Das Zahnrad nimmt den Ball mit …', 1200); break;
         case 'spinout': Sfx.bumper(); burst(ev.x, ev.y, '#ffe9a8', 8); break;
-        case 'load': Sfx.bounce(5); showMessage('Geladen … Feuer frei!', 900); break;
-        case 'fire': Sfx.cannon(); burst(ev.x, ev.y, '#ffb347', 18); break;
+        case 'load': if (ev.style === 'basilisk') { Sfx.hiss(); showMessage('Verschluckt … der Basilisk kaut!', 900); } else { Sfx.bounce(5); showMessage('Geladen … Feuer frei!', 900); } break;
+        case 'fire': if (ev.style === 'basilisk') { Sfx.spit(); burst(ev.x, ev.y, '#c86bff', 22); showMessage('Ausgespuckt!', 800); } else { Sfx.cannon(); burst(ev.x, ev.y, '#ffb347', 18); } break;
         case 'sunk': sunk(); return;
         case 'shark': { const inner = state.courses[state.holeIdx].inner; if (inner && inner.stomach && !state.inner) { const b = state.ball; b.z = 0; b.vz = 0; b.air = false; enterInner('Verschluckt! Ab in den Haimagen …'); } else hazard('shark'); return; }
         case 'water': case 'lava': case 'oob': case 'spiked': case 'zapped': case 'fell': case 'beheaded': case 'seen': hazard(ev.type); return;
