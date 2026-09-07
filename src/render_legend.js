@@ -337,4 +337,172 @@ Object.assign(Renderer.prototype, {
     ctx.fillStyle = '#5e5474'; ctx.fillRect(sx - w * 1.3, sy - h, w * 2.6, s * 0.16); ctx.fillRect(sx - w * 1.3, sy - s * 0.16, w * 2.6, s * 0.16);
     ctx.fillStyle = 'rgba(197,139,255,0.35)'; ctx.fillRect(sx - w * 0.15, sy - h * 0.8, w * 0.3, h * 0.6);
   },
+  /* ---------- Schattenreich, zweiter Ausbau: Fallbeil, Augenturm, Ritterstatue, Raben ---------- */
+  /* Fallbeil: zwei dunkle Holzpfosten mit Querbalken, dazwischen hängt die schräge Stahlklinge unter dem
+     Gewichtsblock an einem Seil. Kurz vor dem Fall zittert sie, beim Aufschlag stieben Funken. */
+  drawGuillotineFloor(ctx, ob, t) {
+    const s = this.scale, hw = ob.w / 2 + 0.25, hh = ob.h / 2, rect = [[ob.x - hw, ob.y - hh], [ob.x + hw, ob.y - hh], [ob.x + hw, ob.y + hh], [ob.x - hw, ob.y + hh]];
+    this.fillPoly(ctx, rect, 0.004, ob.closed ? 'rgba(20,10,20,0.55)' : `rgba(120,20,40,${0.12 + 0.25 * ob.warn})`, false);
+    ctx.strokeStyle = ob.warn > 0 ? `rgba(255,60,80,${0.35 + 0.6 * ob.warn * (0.6 + 0.4 * Math.sin(t * 30))})` : 'rgba(150,40,60,0.45)'; ctx.lineWidth = Math.max(1, s * 0.05);
+    this.pathPoly(ctx, rect, 0.005); ctx.stroke();
+    if (ob.closed) { // Blutspur unter der Klinge
+      ctx.fillStyle = 'rgba(150,20,40,0.5)'; for (let k = 0; k < 4; k++) { const [bx, by] = this.proj(ob.x + (k % 2 ? 0.2 : -0.2), ob.y - hh + (k + 0.5) * ob.h / 4, 0.006); ctx.beginPath(); ctx.ellipse(bx, by, s * 0.12, s * 0.07, 0, 0, TAU); ctx.fill(); }
+    }
+  },
+  pushGuillotine(items, ctx, ob, t) {
+    const vert = ob.w < ob.h, pw = 0.32, top = ob.liftH + ob.bladeH + 0.55;
+    const ends = vert ? [[ob.x, ob.y - ob.h / 2 - pw / 2], [ob.x, ob.y + ob.h / 2 + pw / 2]] : [[ob.x - ob.w / 2 - pw / 2, ob.y], [ob.x + ob.w / 2 + pw / 2, ob.y]];
+    for (const [px, py] of ends) items.push({ x: px, y: py, draw: () => {
+      this.prism(ctx, [[px - pw / 2, py - pw / 2], [px + pw / 2, py - pw / 2], [px + pw / 2, py + pw / 2], [px - pw / 2, py + pw / 2]], 0, top, '#3a2a20', '#1e140e', { outline: '#0a0604' });
+      const [kx, ky] = this.proj(px, py + pw / 2, top - 0.3); this.spriteSkull(ctx, kx, ky, this.scale * 0.55); // Schädel am Pfosten
+    } });
+    items.push({ x: ob.x, y: ob.y, bias: 0.05, draw: () => this.drawGuillotineBlade(ctx, ob, t, vert, pw, top, ends) });
+  },
+  drawGuillotineBlade(ctx, ob, t, vert, pw, top, ends) {
+    const s = this.scale, L = vert ? ob.h : ob.w;
+    const A = vert ? [ob.x, ob.y - L / 2 + 0.05] : [ob.x - L / 2 + 0.05, ob.y], B = vert ? [ob.x, ob.y + L / 2 - 0.05] : [ob.x + L / 2 - 0.05, ob.y];
+    const beam = vert ? [[ob.x - 0.25, ends[0][1] - pw / 2], [ob.x + 0.25, ends[0][1] - pw / 2], [ob.x + 0.25, ends[1][1] + pw / 2], [ob.x - 0.25, ends[1][1] + pw / 2]] : [[ends[0][0] - pw / 2, ob.y - 0.25], [ends[1][0] + pw / 2, ob.y - 0.25], [ends[1][0] + pw / 2, ob.y + 0.25], [ends[0][0] - pw / 2, ob.y + 0.25]];
+    const shake = ob.warn > 0 ? Math.sin(t * 40) * 0.03 * ob.warn : 0, z0 = ob.lift * ob.liftH + shake;
+    const P = (q, z) => this.proj(q[0], q[1], z);
+    // Klinge: senkrechte Platte, Schneide schräg
+    const p0 = P(A, z0), p1 = P(B, z0 + ob.bladeH * 0.55), p2 = P(B, z0 + ob.bladeH), p3 = P(A, z0 + ob.bladeH);
+    const g = ctx.createLinearGradient(p0[0], p0[1], p3[0], p3[1]); g.addColorStop(0, '#f0f2f8'); g.addColorStop(0.35, '#9aa0b4'); g.addColorStop(1, '#5a6074');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.lineTo(p2[0], p2[1]); ctx.lineTo(p3[0], p3[1]); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#1a1c24'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,0.85)'; ctx.lineWidth = Math.max(1.5, s * 0.05); ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke(); // Schneide blitzt
+    if (ob.closed) { ctx.strokeStyle = 'rgba(150,20,40,0.8)'; ctx.lineWidth = Math.max(1.5, s * 0.06); ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke(); }
+    // Gewichtsblock über der Klinge
+    const blk = vert ? [[ob.x - 0.28, A[1]], [ob.x + 0.28, A[1]], [ob.x + 0.28, B[1]], [ob.x - 0.28, B[1]]] : [[A[0], ob.y - 0.28], [B[0], ob.y - 0.28], [B[0], ob.y + 0.28], [A[0], ob.y + 0.28]];
+    this.prism(ctx, blk, z0 + ob.bladeH, 0.4, '#4a3428', '#2a1c12', { outline: '#0a0604' });
+    // Seil zum Querbalken
+    const [r0, r1] = this.proj(ob.x, ob.y, z0 + ob.bladeH + 0.4), [r2, r3] = this.proj(ob.x, ob.y, top);
+    ctx.strokeStyle = '#8a7a5a'; ctx.lineWidth = Math.max(1, s * 0.035); ctx.beginPath(); ctx.moveTo(r0, r1); ctx.lineTo(r2, r3); ctx.stroke();
+    // Querbalken oben
+    this.prism(ctx, beam, top, 0.3, '#3a2a20', '#1e140e', { outline: '#0a0604' });
+    // Funken beim Aufschlag
+    const dtS = t - ob.slamAt;
+    if (dtS >= 0 && dtS < 0.35) { ctx.fillStyle = `rgba(255,220,120,${1 - dtS / 0.35})`; for (let k = 0; k < 8; k++) { const u = k / 8, q = P([A[0] + (B[0] - A[0]) * u, A[1] + (B[1] - A[1]) * u], 0.05 + dtS * 3 * (0.4 + (k % 3) * 0.3)); ctx.beginPath(); ctx.arc(q[0] + (k % 2 ? 1 : -1) * dtS * s * 2, q[1], Math.max(1, s * 0.05), 0, TAU); ctx.fill(); } }
+  },
+
+  /* Augenturm: Lichtkegel auf dem Boden (durch Blöcke abgeschattet), darüber der Turm mit Zinnen und das
+     brennende Auge, das sich langsam dreht. Sieht es den Ball, flackert der Kegel rot. */
+  drawEyeBeam(ctx, ob, t) {
+    const s = this.scale, n = 22, pts = [];
+    const lv = this.level, tiles = lv.tiles;
+    for (let i = 0; i <= n; i++) {
+      const a = ob.dir - ob.fov / 2 + ob.fov * i / n; let R = ob.r;
+      for (; R < ob.range; R += 0.2) { const c = lv.charAt(ob.x + Math.cos(a) * R, ob.y + Math.sin(a) * R); if (c === 'x') break; }
+      pts.push([ob.x + Math.cos(a) * R, ob.y + Math.sin(a) * R]);
+    }
+    const poly = [[ob.x + Math.cos(ob.dir - ob.fov / 2) * ob.r, ob.y + Math.sin(ob.dir - ob.fov / 2) * ob.r], ...pts, [ob.x + Math.cos(ob.dir + ob.fov / 2) * ob.r, ob.y + Math.sin(ob.dir + ob.fov / 2) * ob.r]];
+    const [cx, cy] = this.proj(ob.x, ob.y, 0.006), [ex, ey] = this.proj(ob.x + Math.cos(ob.dir) * ob.range, ob.y + Math.sin(ob.dir) * ob.range, 0.006);
+    const rg = ctx.createRadialGradient(cx, cy, s * ob.r, cx, cy, Math.hypot(ex - cx, ey - cy));
+    const fl = 0.85 + 0.15 * Math.sin(t * 9) + 0.1 * Math.sin(t * 23), al = ob.alert;
+    rg.addColorStop(0, `rgba(${255},${Math.round(170 - 110 * al)},${Math.round(60 - 40 * al)},${0.55 * fl})`); rg.addColorStop(1, `rgba(255,${Math.round(120 - 80 * al)},30,0)`);
+    ctx.fillStyle = rg; this.pathPoly(ctx, poly, 0.006); ctx.fill();
+    ctx.strokeStyle = `rgba(255,${Math.round(200 - 140 * al)},90,${0.5 * fl})`; ctx.lineWidth = Math.max(1, s * 0.04); this.pathPoly(ctx, poly, 0.007); ctx.stroke();
+    void tiles;
+  },
+  drawEyeTower(ctx, ob, t) {
+    const s = this.scale, r = ob.r, H = ob.height;
+    this.isoEllipse(ctx, ob.x, ob.y, 0.004, r * 1.5, 'rgba(0,0,0,0.3)');
+    this.prism(ctx, this.circlePoly(ob.x, ob.y, r * 1.25, 12), 0, 0.45, '#4a4060', '#1e1830', { outline: '#0a0810' });
+    this.prism(ctx, this.circlePoly(ob.x, ob.y, r, 12), 0.45, H - 0.45, '#3a3050', '#1a1428', { outline: '#0a0810' });
+    // Fugen und glühende Fenster
+    ctx.strokeStyle = 'rgba(0,0,0,0.25)'; ctx.lineWidth = 1;
+    for (const z of [1.2, 2.0, 2.8]) { const q0 = this.proj(ob.x - r, ob.y, z), q1 = this.proj(ob.x + r, ob.y, z); ctx.beginPath(); ctx.moveTo(q0[0], q0[1]); ctx.lineTo(q1[0], q1[1]); ctx.stroke(); }
+    const fl = 0.7 + 0.3 * Math.sin(t * 7);
+    for (let k = 0; k < 3; k++) { const a = this.cam.th + Math.PI + (k - 1) * 1.1, wx = ob.x + Math.cos(a) * r * 0.98, wy = ob.y + Math.sin(a) * r * 0.98; const [q0, q1] = this.proj(wx, wy, 1.5 + (k % 2) * 0.8); ctx.fillStyle = `rgba(255,150,40,${0.8 * fl})`; ctx.beginPath(); ctx.moveTo(q0 - s * 0.08, q1); ctx.lineTo(q0, q1 - s * 0.25); ctx.lineTo(q0 + s * 0.08, q1); ctx.closePath(); ctx.fill(); }
+    // Zinnenkranz
+    this.prism(ctx, this.circlePoly(ob.x, ob.y, r * 1.18, 12), H, 0.3, '#4a4060', '#1e1830', { outline: '#0a0810' });
+    for (let k = 0; k < 8; k++) { const a = k * TAU / 8 + 0.2; this.prism(ctx, this.circlePoly(ob.x + Math.cos(a) * r * 1.05, ob.y + Math.sin(a) * r * 1.05, 0.16, 4, a), H + 0.3, 0.32, '#5a5074', '#25203a'); }
+    // Das brennende Auge auf dem Turm
+    const ez = H + 1.15, [ex, ey] = this.proj(ob.x, ob.y, ez), R = s * r * 0.62;
+    const glow = ctx.createRadialGradient(ex, ey, R * 0.5, ex, ey, R * 3.2); glow.addColorStop(0, `rgba(255,140,40,${0.45 + 0.3 * ob.alert})`); glow.addColorStop(1, 'rgba(255,90,20,0)'); ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(ex, ey, R * 3.2, 0, TAU); ctx.fill();
+    for (let k = 0; k < 9; k++) { // Flammenkranz
+      const a = k * TAU / 9 + t * 0.6, ff = 0.7 + 0.3 * Math.sin(t * 11 + k * 2.1), fx = ex + Math.cos(a) * R * 0.95, fy = ey + Math.sin(a) * R * 0.5 - R * 0.1;
+      ctx.fillStyle = k % 2 ? `rgba(255,200,60,${0.85 * ff})` : `rgba(255,110,30,${0.9 * ff})`;
+      ctx.beginPath(); ctx.moveTo(fx - R * 0.28, fy + R * 0.2); ctx.quadraticCurveTo(fx + Math.sin(t * 9 + k) * R * 0.25, fy - R * (0.9 + 0.5 * ff), fx + R * 0.28, fy + R * 0.2); ctx.closePath(); ctx.fill();
+    }
+    const eg = ctx.createRadialGradient(ex - R * 0.3, ey - R * 0.3, R * 0.1, ex, ey, R); eg.addColorStop(0, '#fff4d0'); eg.addColorStop(0.5, '#ffb347'); eg.addColorStop(1, '#a33a10');
+    ctx.fillStyle = eg; ctx.beginPath(); ctx.ellipse(ex, ey, R, R * 0.8, 0, 0, TAU); ctx.fill();
+    ctx.strokeStyle = '#3a1008'; ctx.lineWidth = Math.max(1, s * 0.05); ctx.stroke();
+    // Pupille schaut in Blickrichtung
+    const [dx0, dy0] = this.proj(ob.x + Math.cos(ob.dir) * 0.4, ob.y + Math.sin(ob.dir) * 0.4, ez), vx = dx0 - ex, vy = dy0 - ey, vl = Math.hypot(vx, vy) || 1, pk = R * 0.45;
+    const px = ex + vx / vl * pk * Math.min(1, vl / (s * 0.4)), py = ey + vy / vl * pk * 0.8 * Math.min(1, vl / (s * 0.4));
+    ctx.fillStyle = '#1a0408'; ctx.beginPath(); ctx.ellipse(px, py, R * 0.16, R * 0.5, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = `rgba(255,60,30,${0.5 + 0.5 * ob.alert})`; ctx.beginPath(); ctx.ellipse(px, py, R * 0.08, R * 0.3, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.beginPath(); ctx.arc(ex - R * 0.35, ey - R * 0.35, R * 0.12, 0, TAU); ctx.fill();
+  },
+
+  /* Verfluchte Ritterstatue: steinerner Sockel, Rüstung, Helm mit Federbusch. Das Schwert liegt tief über
+     dem Boden; im Takt erwacht die Statue (Augen glühen) und schlägt blitzschnell zu. */
+  drawKnightStatue(ctx, ob, t) {
+    const s = this.scale, x = ob.x, y = ob.y, awake = ob.awake ? 1 : (ob.wakeIn || 0);
+    const sq = (cx, cy, w) => [[cx - w / 2, cy - w / 2], [cx + w / 2, cy - w / 2], [cx + w / 2, cy + w / 2], [cx - w / 2, cy + w / 2]];
+    this.isoEllipse(ctx, x, y, 0.004, 0.9, 'rgba(0,0,0,0.3)');
+    // Schwert (liegt auf Ballhöhe)
+    const a = ob.bladeAngle(0), ca = Math.cos(a), sa = Math.sin(a), tk = ob.thick * 0.7, L = ob.len;
+    const bl = [[x + ca * 0.5 - sa * tk, y + sa * 0.5 + ca * tk], [x + ca * L - sa * tk * 0.3, y + sa * L + ca * tk * 0.3], [x + ca * (L + 0.25), y + sa * (L + 0.25)], [x + ca * L + sa * tk * 0.3, y + sa * L - ca * tk * 0.3], [x + ca * 0.5 + sa * tk, y + sa * 0.5 - ca * tk]];
+    this.prism(ctx, bl, 0.2, 0.14, awake > 0.5 ? '#ffe8f0' : '#d8dce8', '#6a7084', { outline: '#20242c' });
+    this.prism(ctx, [[x + ca * 0.45 - sa * 0.3, y + sa * 0.45 + ca * 0.3], [x + ca * 0.55 - sa * 0.3, y + sa * 0.55 + ca * 0.3], [x + ca * 0.55 + sa * 0.3, y + sa * 0.55 - ca * 0.3], [x + ca * 0.45 + sa * 0.3, y + sa * 0.45 - ca * 0.3]], 0.15, 0.24, '#c9a15a', '#7a5a2a'); // Parierstange
+    if (awake > 0.5) { ctx.strokeStyle = `rgba(255,80,120,${0.6 * awake})`; ctx.lineWidth = Math.max(2, s * 0.1); const q0 = this.proj(x + ca * 0.5, y + sa * 0.5, 0.3), q1 = this.proj(x + ca * L, y + sa * L, 0.3); ctx.beginPath(); ctx.moveTo(q0[0], q0[1]); ctx.lineTo(q1[0], q1[1]); ctx.stroke(); }
+    // Sockel, Beine, Rumpf
+    this.prism(ctx, sq(x, y, 1.1), 0, 0.45, '#6a6280', '#332c48', { outline: '#14101e' });
+    this.prism(ctx, sq(x, y, 0.62), 0.45, 0.75, '#8a90a8', '#3e4458', { outline: '#1c202c' });
+    this.prism(ctx, sq(x, y, 0.82), 1.2, 0.95, '#a0a6bc', '#4a5068', { outline: '#1c202c' });
+    // Schulterplatten und Arm zum Schwert
+    for (const side of [-1, 1]) this.prism(ctx, this.circlePoly(x - sa * side * 0.5, y + ca * side * 0.5, 0.2, 6), 1.95, 0.25, '#b0b6cc', '#4a5068');
+    const [h0, h1] = this.proj(x - sa * 0.5, y + ca * 0.5, 1.95), [h2, h3] = this.proj(x + ca * 0.5, y + sa * 0.5, 0.4);
+    ctx.strokeStyle = '#7a8098'; ctx.lineWidth = Math.max(2, s * 0.14); ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(h0, h1); ctx.lineTo(h2, h3); ctx.stroke();
+    // Wappenrock mit Totenkopf
+    const [cx, cy] = this.proj(x, y + 0.42, 1.7); ctx.fillStyle = '#3a1f4d'; ctx.fillRect(cx - s * 0.2, cy - s * 0.25, s * 0.4, s * 0.5); this.spriteSkull(ctx, cx, cy + s * 0.12, s * 0.45);
+    // Helm mit Visier und Federbusch
+    this.prism(ctx, this.circlePoly(x, y, 0.3, 8), 2.15, 0.55, '#b0b6cc', '#4a5068', { outline: '#1c202c' });
+    const [vx, vy] = this.proj(x, y + 0.3, 2.45);
+    ctx.fillStyle = '#0a0810'; ctx.fillRect(vx - s * 0.22, vy - s * 0.05, s * 0.44, s * 0.09);
+    if (awake > 0) { ctx.fillStyle = `rgba(255,40,60,${awake})`; for (const k of [-0.1, 0.1]) { ctx.beginPath(); ctx.arc(vx + k * s, vy, s * 0.035 + awake * s * 0.02, 0, TAU); ctx.fill(); } const gl = ctx.createRadialGradient(vx, vy, 0, vx, vy, s * 0.5); gl.addColorStop(0, `rgba(255,40,60,${0.35 * awake})`); gl.addColorStop(1, 'rgba(255,40,60,0)'); ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(vx, vy, s * 0.5, 0, TAU); ctx.fill(); }
+    const [px, py] = this.proj(x, y, 2.75); ctx.strokeStyle = '#8a3bff'; ctx.lineWidth = Math.max(2, s * 0.09); ctx.beginPath(); ctx.moveTo(px, py); ctx.quadraticCurveTo(px + s * 0.1, py - s * 0.5, px - s * 0.25 + Math.sin(t * 3) * s * 0.05, py - s * 0.55); ctx.stroke();
+  },
+
+  /* Rabenschwarm: eine Reihe schwarzer Vögel fliegt dicht über den Boden – wie eine Welle nimmt sie den Ball mit. */
+  drawRavens(ctx, ob, t) {
+    const s = this.scale, along = ob.h >= ob.w, L = along ? ob.h : ob.w, n = Math.max(3, Math.round(L / 0.7));
+    const sp = Math.hypot(ob.vx, ob.vy), ux = sp > 0.05 ? ob.vx / sp : 1, uy = sp > 0.05 ? ob.vy / sp : 0;
+    const [d0, d1] = this.proj(ob.x + ux, ob.y + uy, 0), [c0, c1] = this.proj(ob.x, ob.y, 0), sdx = d0 - c0, sdy = d1 - c1, sl = Math.hypot(sdx, sdy) || 1, fdx = sdx / sl, fdy = sdy / sl;
+    const birds = [];
+    for (let i = 0; i < n; i++) { const u = (i + 0.5) / n, off = (i % 2 ? 0.25 : -0.15); birds.push({ x: along ? ob.x + off : ob.x - ob.w / 2 + u * ob.w, y: along ? ob.y - ob.h / 2 + u * ob.h : ob.y + off, z: 0.45 + 0.18 * Math.sin(t * 3.2 + i * 1.9), i }); }
+    birds.sort((p, q) => this.depth(p.x, p.y) - this.depth(q.x, q.y));
+    // Windspur hinter dem Schwarm
+    ctx.strokeStyle = 'rgba(180,160,220,0.25)'; ctx.lineWidth = Math.max(1, s * 0.04);
+    for (const b of birds) { const [q0, q1] = this.proj(b.x - ux * 0.3, b.y - uy * 0.3, 0.02), [q2, q3] = this.proj(b.x - ux * 1.4, b.y - uy * 1.4, 0.02); ctx.beginPath(); ctx.moveTo(q0, q1); ctx.lineTo(q2, q3); ctx.stroke(); }
+    for (const b of birds) {
+      this.isoEllipse(ctx, b.x, b.y, 0.005, 0.42, 'rgba(0,0,0,0.25)', 0.2);
+      const [bx, by] = this.proj(b.x, b.y, b.z), r = s * 0.46, fl = Math.sin(t * 15 + b.i * 1.3) * r * 0.55;
+      ctx.fillStyle = '#100c18';
+      ctx.beginPath(); ctx.ellipse(bx, by, r * 0.5, r * 0.26, Math.atan2(fdy, fdx), 0, 0, TAU); ctx.fill(); // Rumpf
+      ctx.strokeStyle = 'rgba(197,139,255,0.55)'; ctx.lineWidth = 1;
+      for (const side of [-1, 1]) { const wx = -fdy * side, wy = fdx * side; ctx.beginPath(); ctx.moveTo(bx + wx * r * 0.2, by + wy * r * 0.2); ctx.quadraticCurveTo(bx + wx * r * 1.0, by + wy * r * 0.5 - r * 0.5 - fl, bx + wx * r * 1.5, by + wy * r * 0.6 - fl * 0.8); ctx.quadraticCurveTo(bx + wx * r * 0.9, by + wy * r * 0.4 + r * 0.05, bx + wx * r * 0.15, by + wy * r * 0.15 + r * 0.15); ctx.closePath(); ctx.fill(); ctx.stroke(); } // Flügel mit fahlem Saum
+      const hx = bx + fdx * r * 0.55, hy = by + fdy * r * 0.55 - r * 0.12;
+      ctx.beginPath(); ctx.arc(hx, hy, r * 0.17, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#e0a030'; ctx.beginPath(); ctx.moveTo(hx + fdx * r * 0.15, hy + fdy * r * 0.15 - r * 0.05); ctx.lineTo(hx + fdx * r * 0.45, hy + fdy * r * 0.45); ctx.lineTo(hx + fdx * r * 0.15, hy + fdy * r * 0.15 + r * 0.06); ctx.closePath(); ctx.fill(); // Schnabel
+      ctx.fillStyle = '#ff4a4a'; ctx.beginPath(); ctx.arc(hx, hy - r * 0.04, r * 0.045, 0, TAU); ctx.fill();
+    }
+  },
+  /* Luke: offene Bodenklappe mit Leiter, aus der violettes Licht dringt – der Ausgang aus dem Totenschiff */
+  drawHatch(ctx, ob, t) {
+    const s = this.scale, r = ob.r || 0.9, rect = [[ob.x - r, ob.y - r * 0.8], [ob.x + r, ob.y - r * 0.8], [ob.x + r, ob.y + r * 0.8], [ob.x - r, ob.y + r * 0.8]];
+    this.prism(ctx, rect, 0, 0.12, '#4a3a2c', '#2a1c12', { outline: '#0a0604' });
+    const hole = [[ob.x - r * 0.8, ob.y - r * 0.6], [ob.x + r * 0.8, ob.y - r * 0.6], [ob.x + r * 0.8, ob.y + r * 0.6], [ob.x - r * 0.8, ob.y + r * 0.6]];
+    this.fillPoly(ctx, hole, 0.125, '#04030a', false);
+    const [cx, cy] = this.proj(ob.x, ob.y, 0.13), gl = 0.6 + 0.4 * Math.sin(t * 2.2);
+    const rg = ctx.createRadialGradient(cx, cy, 0, cx, cy, s * r * 1.6); rg.addColorStop(0, `rgba(197,139,255,${0.45 * gl})`); rg.addColorStop(1, 'rgba(197,139,255,0)'); ctx.fillStyle = rg; ctx.beginPath(); ctx.arc(cx, cy, s * r * 1.6, 0, TAU); ctx.fill();
+    // aufgeklappter Deckel
+    this.prism(ctx, [[ob.x - r * 0.8, ob.y - r * 0.75], [ob.x + r * 0.8, ob.y - r * 0.75], [ob.x + r * 0.8, ob.y - r * 0.6], [ob.x - r * 0.8, ob.y - r * 0.6]], 0.12, 1.1, '#5a4634', '#2a1c12', { outline: '#0a0604' });
+    // Leiter ins Dunkel
+    ctx.strokeStyle = '#8a7a5a'; ctx.lineWidth = Math.max(1, s * 0.05);
+    for (const k of [-0.3, 0.3]) { const q0 = this.proj(ob.x + k * r, ob.y + r * 0.5, 0.15), q1 = this.proj(ob.x + k * r, ob.y + r * 0.1, -0.5); ctx.beginPath(); ctx.moveTo(q0[0], q0[1]); ctx.lineTo(q1[0], q1[1]); ctx.stroke(); }
+    for (let i = 0; i < 3; i++) { const u = i / 3; const q0 = this.proj(ob.x - 0.3 * r, ob.y + r * (0.5 - 0.4 * u), 0.15 - 0.65 * u), q1 = this.proj(ob.x + 0.3 * r, ob.y + r * (0.5 - 0.4 * u), 0.15 - 0.65 * u); ctx.beginPath(); ctx.moveTo(q0[0], q0[1]); ctx.lineTo(q1[0], q1[1]); ctx.stroke(); }
+    const [lx, ly] = this.proj(ob.x + r * 0.9, ob.y - r * 0.7, 0); this.spriteLantern(ctx, lx, ly, s * 0.8, t);
+  },
 });

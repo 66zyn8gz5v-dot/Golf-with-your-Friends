@@ -349,8 +349,9 @@
   const HOLE_ICONS = { Elfenwiese: '🌼', Pilzhain: '🍄', Zwergenschmiede: '⚒️', Zauberwald: '🔮', Drachenhöhle: '🐉', Eisgrotte: '❄️', Wolkenburg: '☁️', Hexenturm: '🧙', Burgberg: '🏰',
     Strandbucht: '🏖️', Muschelriff: '🐚', Fischerpier: '🎣', Krakengrotte: '🐙', Piratendeck: '🏴‍☠️', Leuchtturmfelsen: '🗼', Schiffswrack: '🚢', Perlengrotte: '🦪', Sturmsee: '🌊', Haifischbucht: '🦈',
     Mühlenwiese: '🌾', Nebelmoor: '🌫️', Zwergenkanone: '💣', Korallenriff: '🪸', Uhrwerk: '⚙️', Piratenbucht: '⚓', Hexenküche: '🧪', Sultanspalast: '🕌', Pyramide: '🔺',
-    Urwaldpfad: '🌿', Affenbrücke: '🐒', Krokodilfluss: '🐊', Stachelpfad: '🗡️', Felskugelschlucht: '🪨', Treibsandbecken: '⏳', Totemplatz: '🗿', Wasserfallterrassen: '💧', 'Der Tempel': '🏛️' };
-  const THEME_ICONS = { meadow: '🌼', mushroom: '🍄', forge: '⚒️', forest: '🌲', dragon: '🐉', ice: '❄️', sky: '☁️', witch: '🧙', castle: '🏰', harbor: '⚓', reef: '🐠', clockwork: '⚙️', palace: '🕌', desert: '🏜️', tomb: '⚱️', deck: '🏴‍☠️', wreck: '🚢', belly: '🦈', jungle: '🌴', temple: '🗿', hut: '🧪' };
+    Urwaldpfad: '🌿', Affenbrücke: '🐒', Krokodilfluss: '🐊', Stachelpfad: '🗡️', Felskugelschlucht: '🪨', Treibsandbecken: '⏳', Totemplatz: '🗿', Wasserfallterrassen: '💧', 'Der Tempel': '🏛️',
+    Friedhofspforte: '🪦', Rabenfriedhof: '🐦‍⬛', Fallbeilgasse: '🔪', Irrlichtsumpf: '🕯️', Ritterhalle: '⚔️', Knochenbrücke: '🦴', Gruftlabyrinth: '⚰️', 'Turm des Auges': '👁️', Totenschiff: '☠️' };
+  const THEME_ICONS = { meadow: '🌼', mushroom: '🍄', forge: '⚒️', forest: '🌲', dragon: '🐉', ice: '❄️', sky: '☁️', witch: '🧙', castle: '🏰', harbor: '⚓', reef: '🐠', clockwork: '⚙️', palace: '🕌', desert: '🏜️', tomb: '⚱️', deck: '🏴‍☠️', wreck: '🚢', belly: '🦈', jungle: '🌴', temple: '🗿', hut: '🧪', storm: '⛈️', fortress: '🏯', shadow: '🌑', throne: '👑', darksea: '🌊', ghostship: '⚓' };
   const holeIcon = def => HOLE_ICONS[def.name] || THEME_ICONS[def.theme] || '⛳';
   const worldClass = () => 'world-' + ((state.world && state.world.id) || 'custom');
   const diffClass = (strokes, par) => strokes === 1 ? 'ace' : strokes - par <= -2 ? 'eagle' : strokes - par === -1 ? 'birdie' : strokes === par ? 'par' : strokes - par === 1 ? 'bogey' : 'worse';
@@ -478,13 +479,25 @@
   function hazard(type) {
     const b = state.ball;
     const custom = state.level.def.hazardText && state.level.def.hazardText[type];
-    const label = custom || (type === 'water' ? 'Platsch! Wasser' : type === 'lava' ? 'Zischhh! Lava' : type === 'shark' ? 'Vom Hai gefressen!' : type === 'spiked' ? 'Aufgespießt!' : type === 'zapped' ? 'Vom Blitz getroffen!' : type === 'fell' ? 'In die Tiefe gestürzt!' : 'Aus! Abgrund');
+    let label = custom || (type === 'water' ? 'Platsch! Wasser' : type === 'lava' ? 'Zischhh! Lava' : type === 'shark' ? 'Vom Hai gefressen!' : type === 'spiked' ? 'Aufgespießt!' : type === 'zapped' ? 'Vom Blitz getroffen!' : type === 'fell' ? 'In die Tiefe gestürzt!' : type === 'beheaded' ? 'Vom Fallbeil geköpft!' : type === 'seen' ? 'Vom brennenden Auge erblickt!' : 'Aus! Abgrund');
     if (type === 'shark') { Sfx.water(); burst(b.x, b.y, '#ff5a5a', 22, true); b.z = 0; b.vz = 0; b.air = false; }
     else if (type === 'water') { Sfx.water(); burst(b.x, b.y, '#9fd3ff', 18); }
     else if (type === 'lava') { Sfx.lava(); burst(b.x, b.y, '#ffb347', 18); }
     else if (type === 'spiked' || type === 'zapped' || type === 'fell') { // zurück zum Start des letzten Schlags
       if (type === 'zapped') { Sfx.lava(); burst(b.x, b.y, '#fff27a', 26, true); } else if (type === 'fell') { Sfx.oob(); burst(b.x, b.y, '#b56bff', 14, true); } else { Sfx.lava(); burst(b.x, b.y, '#e6e6e6', 18, true); }
       b.z = 0; b.vz = 0; b.air = false; if (b.shotX != null) { b.restX = b.shotX; b.restY = b.shotY; }
+    }
+    else if (type === 'beheaded' || type === 'seen') { // zurück zum Schlagstart – aber nie wieder unter die Klinge oder in den Blick des Auges
+      Sfx.lava(); burst(b.x, b.y, type === 'seen' ? '#ff9a3a' : '#ff4a4a', 26, true);
+      b.z = 0; b.vz = 0; b.air = false;
+      const lv = state.level; let rx = b.shotX != null ? b.shotX : b.restX, ry = b.shotX != null ? b.shotY : b.restY;
+      if (type === 'seen') { if (lv.obstacles.some(o => o.type === 'eyetower' && Math.hypot(rx - o.x, ry - o.y) <= o.range + 0.5)) { rx = lv.tee.x; ry = lv.tee.y; label += ' Zurück zum Anfang.'; } }
+      else for (const g of lv.obstacles) {
+        if (g.type !== 'guillotine' || !g.under(rx, ry, 0.7)) continue;
+        const vert = g.w < g.h, side = (vert ? Math.sign(lv.tee.x - g.x) : Math.sign(lv.tee.y - g.y)) || -1;
+        for (const sd of [side, -side]) { const px = vert ? g.x + sd * (g.w / 2 + 0.9) : g.x, py = vert ? g.y : g.y + sd * (g.h / 2 + 0.9); if (lv.isFloorChar(lv.charAt(px, py))) { rx = px; ry = py; break; } }
+      }
+      b.restX = rx; b.restY = ry;
     }
     else { Sfx.oob(); burst(b.x, b.y, '#cccccc', 10); }
     state.strokes++;
@@ -581,7 +594,7 @@
 
   /* Tür erreicht: die Bahn wechselt in ihre Innen-Map (z. B. Hexenhütte), Schläge zählen weiter */
   function enterInner(msg) {
-    const def = state.courses[state.holeIdx].inner;
+    const def = state.level.def.inner; // Innen-Maps können selbst wieder eine Innen-Map haben (Totenschiff → Totenufer)
     if (!def) return;
     Sfx.portal(); burst(state.ball.x, state.ball.y, msg ? '#ff5a5a' : '#a6ff5e', 16, true);
     state.phase = 'wait'; state.aim = null;
@@ -592,7 +605,7 @@
       state.level = buildLevel(def); state.theme = THEMES[def.theme]; state.inner = true;
       R.setLevel(state.level, state.theme);
       const b = state.ball, lv = state.level;
-      b.x = lv.tee.x; b.y = lv.tee.y; b.vx = 0; b.vy = 0; b.z = 0; b.vz = 0; b.air = false; b.rider = null; b.sunk = false; b.sinkT = 0;
+      b.x = lv.tee.x; b.y = lv.tee.y; b.vx = 0; b.vy = 0; b.z = 0; b.vz = 0; b.air = false; b.rider = null; b.sunk = false; b.sinkT = 0; b.entered = false; // die nächste Tür (z. B. die Luke) darf wieder auslösen
       b.restX = b.x; b.restY = b.y; b.portalCd = 0.5;
       state.particles = [];
       // Startblick: auf den ersten Aufgabenpunkt (z. B. Rampe/Hexentopf), sonst aufs Loch
@@ -623,7 +636,7 @@
         case 'switch': Sfx.lever(); burst(ev.x, ev.y, '#9dffb5', 14); showMessage('Schalter gedrückt – das Zaubertor öffnet sich!', 1600); break;
         case 'shrink': Sfx.potion(); burst(ev.x, ev.y, '#d58cff', 16, true); showMessage('Schrumpftrank! Der Ball ist jetzt winzig.', 1600); break;
         case 'unshrink': showMessage('Der Trank lässt nach.', 1200); break;
-        case 'curse': Sfx.potion(); burst(ev.x, ev.y, '#fff3d0', 18, true); showMessage('Perlenfluch! Der Ball bleibt bis zum Loch träge.', 2000); break;
+        case 'curse': Sfx.potion(); burst(ev.x, ev.y, '#fff3d0', 18, true); showMessage(ev.label || 'Perlenfluch! Der Ball bleibt bis zum Loch träge.', 2000); break;
         case 'enter': enterInner(); return;
         case 'spit': Sfx.bumper(); burst(ev.x, ev.y, '#a6ff5e', 10); break;
         case 'spin': Sfx.bounce(5); showMessage('Das Zahnrad nimmt den Ball mit …', 1200); break;
@@ -632,7 +645,7 @@
         case 'fire': Sfx.cannon(); burst(ev.x, ev.y, '#ffb347', 18); break;
         case 'sunk': sunk(); return;
         case 'shark': { const inner = state.courses[state.holeIdx].inner; if (inner && inner.stomach && !state.inner) { const b = state.ball; b.z = 0; b.vz = 0; b.air = false; enterInner('Verschluckt! Ab in den Haimagen …'); } else hazard('shark'); return; }
-        case 'water': case 'lava': case 'oob': case 'spiked': case 'zapped': case 'fell': hazard(ev.type); return;
+        case 'water': case 'lava': case 'oob': case 'spiked': case 'zapped': case 'fell': case 'beheaded': case 'seen': hazard(ev.type); return;
       }
     }
   }

@@ -47,6 +47,8 @@ const FLAG_DESIGNS = {
   fortress:  { main: '#23264a', second: '#7fd8ff', pattern: 'edge', emblem: 'lightning', emblemColor: '#fff6a8', emblemDark: '#8a7a10', finial: '#7fd8ff', pole: '#c8ccdd' },
   shadow:    { main: '#3a2a5e', second: '#c58bff', pattern: 'diag', emblem: 'skull', emblemColor: '#e8e2f2', emblemDark: '#1c1030', finial: '#c58bff', pole: '#b8b0d0' },
   throne:    { main: '#1c1330', second: '#8a3bff', pattern: 'band', emblem: 'crown', emblemColor: '#c58bff', emblemDark: '#3a1f4d', finial: '#c58bff', pole: '#b8b0d0' },
+  darksea:   { main: '#0c1424', second: '#c58bff', pattern: 'chevron', emblem: 'skull', emblemColor: '#e8e2f2', emblemDark: '#1c1030', finial: '#c58bff', pole: '#5a5068' },
+  ghostship: { main: '#1a1020', second: '#8a3bff', pattern: 'stripes', emblem: 'anchor', emblemColor: '#c58bff', emblemDark: '#0a0610', finial: '#c58bff', pole: '#5a4030' },
 };
 
 class Renderer {
@@ -170,7 +172,7 @@ class Renderer {
     } else this.prism(ctx, slab, -1.0, 1.0, th.ground, th.groundEdge);
     if (th.sea) { // Wellenkämme auf dem Meer (die Scholle ist das Wasser)
       const t = this.level.t || 0;
-      ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = Math.max(1, this.scale * 0.04); ctx.lineCap = 'round';
+      ctx.strokeStyle = th.darkSea ? 'rgba(170,140,220,0.3)' : 'rgba(255,255,255,0.35)'; ctx.lineWidth = Math.max(1, this.scale * 0.04); ctx.lineCap = 'round';
       for (let i = 0; i < 70; i++) {
         const wx = ((i * 7.31) % (W + 2.8)) - 1.4, wy = (((i * 3.17) + this.seaT * 0.35) % (H + 2.8)) - 1.4;
         if (this.level.isFloorChar(this.level.charAt(wx, wy))) continue;
@@ -442,6 +444,7 @@ class Renderer {
   /* Küste: Horizont, ferne Segel und Möwen */
   drawSea(ctx, t) {
     const w = this.w, h = this.h, hz = h * 0.42;
+    if (this.theme.darkSea) { this.drawDarkSea(ctx, t, hz); return; }
     const g = ctx.createLinearGradient(0, hz, 0, h);
     g.addColorStop(0, '#3a8fb8'); g.addColorStop(1, '#1f5f85'); ctx.fillStyle = g; ctx.fillRect(0, hz, w, h - hz);
     ctx.fillStyle = 'rgba(255,220,170,0.35)'; ctx.fillRect(0, hz, w, 2);
@@ -453,6 +456,29 @@ class Renderer {
     ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 1.5;
     for (let i = 0; i < 6; i++) { // Möwen
       const x = ((i * 0.19 + t * 0.02) % 1) * w, y = h * (0.1 + (i * 0.07) % 0.25) + Math.sin(t + i) * 6, s = 7 + (i % 3) * 3, fl = Math.sin(t * 5 + i) * s * 0.5;
+      ctx.beginPath(); ctx.moveTo(x - s, y + fl); ctx.quadraticCurveTo(x - s * 0.4, y - fl * 0.3, x, y); ctx.quadraticCurveTo(x + s * 0.4, y - fl * 0.3, x + s, y + fl); ctx.stroke();
+    }
+  }
+  /* Totensee: schwarzes Wasser, Nebelbank, Geisterschiffe mit violetten Laternen am Horizont */
+  drawDarkSea(ctx, t, hz) {
+    const w = this.w, h = this.h;
+    const g = ctx.createLinearGradient(0, hz, 0, h); g.addColorStop(0, '#141a2e'); g.addColorStop(1, '#04060c'); ctx.fillStyle = g; ctx.fillRect(0, hz, w, h - hz);
+    ctx.fillStyle = 'rgba(180,60,80,0.35)'; ctx.fillRect(0, hz, w, 2);
+    const mx = w * 0.72; const mg = ctx.createLinearGradient(0, hz, 0, h * 0.7); mg.addColorStop(0, 'rgba(184,50,60,0.25)'); mg.addColorStop(1, 'rgba(184,50,60,0)'); ctx.fillStyle = mg; ctx.fillRect(mx - w * 0.06, hz, w * 0.12, h * 0.28); // Mondspiegelung
+    for (let i = 0; i < 3; i++) { // Geisterschiffe
+      const x = ((i * 0.31 + 0.1 + t * 0.004 * (i % 2 ? 1 : -1)) % 1 + 1) % 1 * w, y = hz + 5 + i * 4, s = 14 + i * 4, d = i % 2 ? 1 : -1;
+      ctx.fillStyle = 'rgba(8,8,18,0.9)'; ctx.beginPath(); ctx.moveTo(x - s * 0.9, y - 2); ctx.lineTo(x + s * 0.9, y - 2); ctx.lineTo(x + s * 0.7, y + 3); ctx.lineTo(x - s * 0.7, y + 3); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(x, y - 2); ctx.lineTo(x, y - s * 1.9); ctx.lineTo(x + d * s * 0.8, y - 3); ctx.closePath(); ctx.fill(); ctx.fillRect(x - 1, y - s * 1.9, 2, s * 1.9);
+      ctx.fillStyle = 'rgba(180,40,60,0.25)'; ctx.beginPath(); ctx.moveTo(x + d * 1, y - 3); ctx.lineTo(x + d * 1, y - s * 1.6); ctx.lineTo(x + d * s * 0.6, y - 4); ctx.closePath(); ctx.fill(); // zerfetztes Segel
+      const la = 0.6 + 0.4 * Math.sin(t * 3 + i * 2); const lg = ctx.createRadialGradient(x - d * s * 0.6, y - 4, 0, x - d * s * 0.6, y - 4, s * 0.6); lg.addColorStop(0, `rgba(197,139,255,${0.8 * la})`); lg.addColorStop(1, 'rgba(197,139,255,0)'); ctx.fillStyle = lg; ctx.beginPath(); ctx.arc(x - d * s * 0.6, y - 4, s * 0.6, 0, TAU); ctx.fill();
+    }
+    for (let i = 0; i < 5; i++) { // Nebelbänke
+      const x = ((i * 0.23 + t * 0.005) % 1) * w, y = hz + 12 + (i % 3) * 8, fw = w * 0.22, fh = 9 + (i % 2) * 4;
+      const fg = ctx.createRadialGradient(x, y, 0, x, y, fw); fg.addColorStop(0, 'rgba(120,110,160,0.22)'); fg.addColorStop(1, 'rgba(120,110,160,0)'); ctx.fillStyle = fg; ctx.beginPath(); ctx.ellipse(x, y, fw, fh, 0, 0, TAU); ctx.fill();
+    }
+    ctx.strokeStyle = 'rgba(20,16,30,0.9)'; ctx.lineWidth = 1.5;
+    for (let i = 0; i < 5; i++) { // Raben statt Möwen
+      const x = ((i * 0.21 + t * 0.015) % 1) * w, y = h * (0.08 + (i * 0.06) % 0.22) + Math.sin(t + i) * 5, s = 6 + (i % 3) * 3, fl = Math.sin(t * 6 + i) * s * 0.5;
       ctx.beginPath(); ctx.moveTo(x - s, y + fl); ctx.quadraticCurveTo(x - s * 0.4, y - fl * 0.3, x, y); ctx.quadraticCurveTo(x + s * 0.4, y - fl * 0.3, x + s, y + fl); ctx.stroke();
     }
   }
@@ -731,6 +757,8 @@ class Renderer {
     if (ob.type === 'lightning') { this.drawLightningFloor(ctx, ob, t); return; }
     if (ob.type === 'updraft') { this.drawUpdraft(ctx, ob, t); return; }
     if (ob.type === 'trapdoor') { this.drawTrapdoor(ctx, ob, t); return; }
+    if (ob.type === 'guillotine') { this.drawGuillotineFloor(ctx, ob, t); return; }
+    if (ob.type === 'eyetower') { this.drawEyeBeam(ctx, ob, t); return; }
     if (ob.type === 'field' && ob.style === 'dark') { this.drawDarkZone(ctx, ob, t); return; }
     if (ob.type === 'boost' || (ob.type === 'field' && (ob.style === 'wind' || ob.style === 'current'))) { this.drawWind(ctx, ob, t); return; }
     if (ob.type === 'field') {
@@ -943,7 +971,8 @@ class Renderer {
     } else if (ob.type === 'rotor') {
       const hub = this.circlePoly(ob.x, ob.y, ob.hubR, 8);
       items.push({ x: ob.x, y: ob.y, draw: () => {
-        if (ob.style === 'tentacle') { this.drawKraken(ctx, ob, t); return; }
+        if (ob.style === 'tentacle' || ob.style === 'darktentacle') { this.drawKraken(ctx, ob, t); return; }
+        if (ob.style === 'knight') { this.drawKnightStatue(ctx, ob, t); return; }
         if (ob.style === 'vine') { this.drawVineRotor(ctx, ob, t); return; }
         if (ob.style === 'propeller') { this.drawPropeller(ctx, ob, t); return; }
         if (ob.style === 'scythe') { this.drawScythe(ctx, ob, t); return; }
@@ -959,6 +988,10 @@ class Renderer {
           else this.prism(ctx, p, 0.05, ob.height, th.rotor.top, th.rotor.side);
         }
       } });
+    } else if (ob.type === 'guillotine') {
+      this.pushGuillotine(items, ctx, ob, t);
+    } else if (ob.type === 'eyetower') {
+      items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => this.drawEyeTower(ctx, ob, t) });
     } else if (ob.type === 'gate') {
       const postH = ob.liftH + ob.barH + 0.2, pw = 0.28;
       const horizontal = ob.w >= ob.h;
@@ -1035,6 +1068,7 @@ class Renderer {
       else if (ob.style === 'wreck') items.push({ x: ob.px, y: ob.py, noFade: true, draw: () => this.drawWreck(ctx, ob, t) });
       else if (ob.style === 'temple') items.push({ x: ob.px, y: ob.py, noFade: true, draw: () => this.drawTempleGate(ctx, ob, t) });
       else if (ob.style === 'fortress' || ob.style === 'crypt') items.push({ x: ob.px, y: ob.py, noFade: true, draw: () => this.drawStoneGate(ctx, ob, t) });
+      else if (ob.style === 'hatch') items.push({ x: ob.x, y: ob.y, bias: 0.1, noFade: true, draw: () => this.drawHatch(ctx, ob, t) });
       else items.push({ x: ob.x, y: ob.y, bias: 0.15, noFade: true, draw: () => { const [sx, sy] = this.proj(ob.x, ob.y + 0.35, 0); this.spriteHut(ctx, sx, sy, this.scale * ob.s, t); } });
     } else if (ob.type === 'cauldron') {
       items.push({ x: ob.x, y: ob.y, draw: () => this.drawCauldronPot(ctx, ob, t) });
@@ -1433,6 +1467,7 @@ class Renderer {
     } else if (ob.style === 'airship') { this.drawAirship(ctx, ob, t); return;
     } else if (ob.style === 'ghost') { this.drawGhost(ctx, ob, t); return;
     } else if (ob.style === 'bat') { this.drawBat(ctx, ob, t); return;
+    } else if (ob.style === 'ravens') { this.drawRavens(ctx, ob, t); return;
     } else if (ob.style === 'stormcloud') { this.drawStormCloud(ctx, ob, t); return;
     } else if (ob.style === 'cloud') {
       this.isoEllipse(ctx, ob.x, ob.y, 0.2, ob.w * 0.6, '#ffffff');
@@ -1709,7 +1744,7 @@ class Renderer {
   }
   /* Krake: Kopf in der Mitte, die Rotorflügel sind schlängelnde Fangarme mit Saugnäpfen */
   drawKraken(ctx, ob, t) {
-    const s = this.scale, segs = [];
+    const s = this.scale, segs = [], dark = ob.style === 'darktentacle'; // dunkle Tentakel: aus dem Rumpf des Totenschiffs, ohne Kopf
     for (let i = 0; i < ob.blades; i++) {
       const a = ob.bladeAngle(i), ca = Math.cos(a), sa = Math.sin(a), n = 9;
       for (let k = 1; k <= n; k++) {
@@ -1723,9 +1758,14 @@ class Renderer {
       this.isoEllipse(ctx, sg.px, sg.py, 0.005, sg.r * 1.1, 'rgba(0,0,0,0.14)');
       const [cx, cy] = this.proj(sg.px, sg.py, sg.z), R = sg.r * s;
       const g = ctx.createRadialGradient(cx - R * 0.35, cy - R * 0.4, R * 0.1, cx, cy, R);
-      g.addColorStop(0, '#d98ad0'); g.addColorStop(1, '#6a2a78');
+      if (dark) { g.addColorStop(0, '#4a2a5a'); g.addColorStop(1, '#0c0612'); } else { g.addColorStop(0, '#d98ad0'); g.addColorStop(1, '#6a2a78'); }
       ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.fill();
-      if (sg.u > 0.15) { ctx.fillStyle = 'rgba(255,220,240,0.7)'; ctx.beginPath(); ctx.arc(cx, cy + R * 0.45, R * 0.28, 0, TAU); ctx.fill(); } // Saugnapf
+      if (sg.u > 0.15) { ctx.fillStyle = dark ? `rgba(197,139,255,${0.45 + 0.35 * Math.sin(t * 4 + sg.u * 9)})` : 'rgba(255,220,240,0.7)'; ctx.beginPath(); ctx.arc(cx, cy + R * 0.45, R * 0.28, 0, TAU); ctx.fill(); } // Saugnapf
+    }
+    if (dark) { // statt Kopf: ein finsteres Loch, aus dem die Arme kriechen
+      this.isoEllipse(ctx, ob.x, ob.y, 0.01, ob.hubR * 1.4, '#04030a');
+      const [hx, hy] = this.proj(ob.x, ob.y, 0.012); const rg = ctx.createRadialGradient(hx, hy, 0, hx, hy, ob.hubR * 2.2 * s); rg.addColorStop(0, 'rgba(140,60,255,0.35)'); rg.addColorStop(1, 'rgba(140,60,255,0)'); ctx.fillStyle = rg; ctx.beginPath(); ctx.arc(hx, hy, ob.hubR * 2.2 * s, 0, TAU); ctx.fill();
+      return;
     }
     // Kopf: Kuppel mit Augen, die dem Ball nachschauen
     const hr = ob.hubR, [hx, hy] = this.proj(ob.x, ob.y, ob.height * 0.5 + 0.1), HR = hr * s;

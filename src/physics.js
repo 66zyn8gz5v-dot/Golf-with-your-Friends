@@ -31,6 +31,7 @@ function collideSeg(ball, s, events) {
     if (s.kind === 'rotor' || s.kind === 'mover') { // Schwung mitgeben
       ball.vx += svx * 0.3; ball.vy += svy * 0.3;
     }
+    if (s.curse && !ball.curse) { ball.curse = s.curse; events.push({ type: 'curse', x: ball.x, y: ball.y, label: s.curseLabel }); } // verfluchte Klinge: Ball bleibt bis zum Loch träge
     events.push({ type: 'bounce', speed: -vn, kind: s.kind || 'wall', x: px, y: py });
   }
   return true;

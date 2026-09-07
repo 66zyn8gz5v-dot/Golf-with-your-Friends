@@ -103,14 +103,22 @@ class Rotor {
     if (this.swing) { // Pendel: schwingt hin und her statt zu rotieren
       this.angle = this.phase + this.swing.amp * Math.sin(t * this.swing.speed);
       this.omega = this.swing.amp * this.swing.speed * Math.cos(t * this.swing.speed);
+    } else if (this.slash) { // Hieb: steht still und schlägt im Takt einmal blitzschnell zu (verfluchte Statue)
+      const sl = this.slash, u = ((((t / sl.period + (sl.phase || 0)) % 1) + 1) % 1) * sl.period;
+      this.awake = u < sl.dur;
+      if (this.awake) { const k = Math.PI * u / sl.dur; this.angle = this.phase + sl.amp * Math.sin(k); this.omega = sl.amp * Math.cos(k) * Math.PI / sl.dur; }
+      else { this.angle = this.phase; this.omega = 0; }
+      this.wakeIn = this.awake ? 0 : Math.max(0, 1 - (sl.period - u) / 0.8); // 0..1 kurz vor dem Hieb (Augen glühen)
     } else { this.angle = t * this.speed + this.phase; this.omega = this.speed; }
   }
   bladeAngle(i) { return this.angle + (i * TAU) / this.blades; }
   segments(out) {
     for (let i = 0; i < this.blades; i++) {
       const a = this.bladeAngle(i);
-      out.push({ ax: this.x, ay: this.y, bx: this.x + Math.cos(a) * this.len, by: this.y + Math.sin(a) * this.len,
-        rad: this.thick, omega: this.omega, cx: this.x, cy: this.y, e: this.e ?? 0.9, kind: 'rotor' });
+      const s = { ax: this.x, ay: this.y, bx: this.x + Math.cos(a) * this.len, by: this.y + Math.sin(a) * this.len,
+        rad: this.thick, omega: this.omega, cx: this.x, cy: this.y, e: this.e ?? 0.9, kind: 'rotor' };
+      if (this.curse && (!this.slash || this.awake)) { s.curse = this.curse; s.curseLabel = this.curseLabel; } // verfluchte Klinge
+      out.push(s);
     }
   }
   circles(out) { out.push({ x: this.x, y: this.y, r: this.hubR, e: 0.6, kind: 'hub' }); }
@@ -476,6 +484,8 @@ function createObstacles(defs) {
       case 'lightning': out.push(new Lightning(d)); break;
       case 'updraft': out.push(new Updraft(d)); break;
       case 'trapdoor': out.push(new Trapdoor(d)); break;
+      case 'guillotine': out.push(new Guillotine(d)); break;
+      case 'eyetower': out.push(new EyeTower(d)); break;
     case 'sharkjump': out.push(new SharkJump(d)); break;
     case 'spikes': out.push(new Spikes(d)); break;
     case 'mover': out.push(new Mover(d)); break;
