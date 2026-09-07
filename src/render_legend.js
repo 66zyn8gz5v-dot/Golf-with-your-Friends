@@ -465,28 +465,54 @@ Object.assign(Renderer.prototype, {
     const [px, py] = this.proj(x, y, 2.75); ctx.strokeStyle = '#8a3bff'; ctx.lineWidth = Math.max(2, s * 0.09); ctx.beginPath(); ctx.moveTo(px, py); ctx.quadraticCurveTo(px + s * 0.1, py - s * 0.5, px - s * 0.25 + Math.sin(t * 3) * s * 0.05, py - s * 0.55); ctx.stroke();
   },
 
-  /* Rabenschwarm: eine Reihe schwarzer Vögel fliegt dicht über den Boden – wie eine Welle nimmt sie den Ball mit. */
+  /* Rabenschwarm: eine Reihe schwarzer Vögel fliegt dicht über den Boden – wie eine Welle nimmt sie den Ball mit.
+     Jeder Rabe in Seitenansicht wie eine Krähe im Flug: gestreckter Rumpf mit Glanz, Kopf mit Schnabel, Schwanzfächer,
+     beide Flügel hochgestellt und nach hinten gefegt mit gespreizten Fingerfedern; der ferne Flügel liegt hinter dem Rumpf. */
   drawRavens(ctx, ob, t) {
-    const s = this.scale, along = ob.h >= ob.w, L = along ? ob.h : ob.w, n = Math.max(3, Math.round(L / 0.7));
+    const s = this.scale, along = ob.h >= ob.w, L = along ? ob.h : ob.w, n = Math.max(3, Math.round(L / 0.8));
     const sp = Math.hypot(ob.vx, ob.vy), ux = sp > 0.05 ? ob.vx / sp : 1, uy = sp > 0.05 ? ob.vy / sp : 0;
     const [d0, d1] = this.proj(ob.x + ux, ob.y + uy, 0), [c0, c1] = this.proj(ob.x, ob.y, 0), sdx = d0 - c0, sdy = d1 - c1, sl = Math.hypot(sdx, sdy) || 1, fdx = sdx / sl, fdy = sdy / sl;
     const birds = [];
-    for (let i = 0; i < n; i++) { const u = (i + 0.5) / n, off = (i % 2 ? 0.25 : -0.15); birds.push({ x: along ? ob.x + off : ob.x - ob.w / 2 + u * ob.w, y: along ? ob.y - ob.h / 2 + u * ob.h : ob.y + off, z: 0.45 + 0.18 * Math.sin(t * 3.2 + i * 1.9), i }); }
+    for (let i = 0; i < n; i++) { const u = (i + 0.5) / n, off = (i % 2 ? 0.28 : -0.18); birds.push({ x: along ? ob.x + off : ob.x - ob.w / 2 + u * ob.w, y: along ? ob.y - ob.h / 2 + u * ob.h : ob.y + off, z: 0.5 + 0.2 * Math.sin(t * 3.2 + i * 1.9), i }); }
     birds.sort((p, q) => this.depth(p.x, p.y) - this.depth(q.x, q.y));
     // Windspur hinter dem Schwarm
     ctx.strokeStyle = 'rgba(180,160,220,0.25)'; ctx.lineWidth = Math.max(1, s * 0.04);
     for (const b of birds) { const [q0, q1] = this.proj(b.x - ux * 0.3, b.y - uy * 0.3, 0.02), [q2, q3] = this.proj(b.x - ux * 1.4, b.y - uy * 1.4, 0.02); ctx.beginPath(); ctx.moveTo(q0, q1); ctx.lineTo(q2, q3); ctx.stroke(); }
+    const facing = fdx >= 0 ? 1 : -1, tilt = Math.max(-0.5, Math.min(0.5, Math.atan2(fdy, Math.abs(fdx) + 0.35)));
     for (const b of birds) {
-      this.isoEllipse(ctx, b.x, b.y, 0.005, 0.42, 'rgba(0,0,0,0.25)', 0.2);
-      const [bx, by] = this.proj(b.x, b.y, b.z), r = s * 0.46, fl = Math.sin(t * 15 + b.i * 1.3) * r * 0.55;
-      ctx.fillStyle = '#100c18';
-      ctx.beginPath(); ctx.ellipse(bx, by, r * 0.5, r * 0.26, Math.atan2(fdy, fdx), 0, 0, TAU); ctx.fill(); // Rumpf
-      ctx.strokeStyle = 'rgba(197,139,255,0.55)'; ctx.lineWidth = 1;
-      for (const side of [-1, 1]) { const wx = -fdy * side, wy = fdx * side; ctx.beginPath(); ctx.moveTo(bx + wx * r * 0.2, by + wy * r * 0.2); ctx.quadraticCurveTo(bx + wx * r * 1.0, by + wy * r * 0.5 - r * 0.5 - fl, bx + wx * r * 1.5, by + wy * r * 0.6 - fl * 0.8); ctx.quadraticCurveTo(bx + wx * r * 0.9, by + wy * r * 0.4 + r * 0.05, bx + wx * r * 0.15, by + wy * r * 0.15 + r * 0.15); ctx.closePath(); ctx.fill(); ctx.stroke(); } // Flügel mit fahlem Saum
-      const hx = bx + fdx * r * 0.55, hy = by + fdy * r * 0.55 - r * 0.12;
-      ctx.beginPath(); ctx.arc(hx, hy, r * 0.17, 0, TAU); ctx.fill();
-      ctx.fillStyle = '#e0a030'; ctx.beginPath(); ctx.moveTo(hx + fdx * r * 0.15, hy + fdy * r * 0.15 - r * 0.05); ctx.lineTo(hx + fdx * r * 0.45, hy + fdy * r * 0.45); ctx.lineTo(hx + fdx * r * 0.15, hy + fdy * r * 0.15 + r * 0.06); ctx.closePath(); ctx.fill(); // Schnabel
-      ctx.fillStyle = '#ff4a4a'; ctx.beginPath(); ctx.arc(hx, hy - r * 0.04, r * 0.045, 0, TAU); ctx.fill();
+      this.isoEllipse(ctx, b.x, b.y, 0.005, 0.45, 'rgba(0,0,0,0.25)', 0.22);
+      const [bx, by] = this.proj(b.x, b.y, b.z), r = s * 0.5, flap = Math.sin(t * 11 + b.i * 1.3);
+      ctx.save(); ctx.translate(bx, by); ctx.scale(facing, 1); ctx.rotate(tilt); ctx.lineJoin = 'round';
+      // Flügel: Spannweite entlang wx, Hinterkante nach +wy; um den Schulterpunkt gedreht (hoch und nach hinten), Schlag ±
+      const wing = (sx, sy, scale, ang, top, dark, edge) => {
+        ctx.save(); ctx.translate(sx * r, sy * r); ctx.rotate(ang); ctx.scale(scale * r, scale * r);
+        const g = ctx.createLinearGradient(0, 0, 1.2, 0.6); g.addColorStop(0, top); g.addColorStop(1, dark);
+        ctx.fillStyle = g; ctx.strokeStyle = edge; ctx.lineWidth = 0.035;
+        ctx.beginPath(); ctx.moveTo(0, 0.05); ctx.quadraticCurveTo(0.6, -0.12, 1.25, -0.02); ctx.lineTo(1.35, 0.12); // Vorderkante
+        // fünf Fingerfedern am Ende, die sich nach hinten spreizen
+        for (let k = 0; k < 5; k++) { const bxk = 1.3 - k * 0.14, byk = 0.14 + k * 0.17, a = 0.15 + k * 0.28, len = 0.5 - k * 0.04; ctx.lineTo(bxk + Math.cos(a) * len, byk + Math.sin(a) * len); ctx.lineTo(bxk - 0.06, byk + 0.1); }
+        ctx.quadraticCurveTo(0.35, 0.75, 0.05, 0.45); ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 0.02; // Federlinien
+        for (let k = 1; k <= 3; k++) { ctx.beginPath(); ctx.moveTo(0.25 * k, 0.02); ctx.lineTo(0.2 * k + 0.35, 0.55 - k * 0.05); ctx.stroke(); }
+        ctx.restore();
+      };
+      const angNear = -1.95 + 0.42 * flap, angFar = -1.8 + 0.42 * Math.sin(t * 11 + b.i * 1.3 + 0.35);
+      wing(-0.05, -0.05, 0.86, angFar, '#1a1626', '#08060c', 'rgba(60,50,90,0.6)'); // ferner Flügel hinter dem Rumpf
+      // Schwanzfächer
+      ctx.fillStyle = '#14101c'; ctx.strokeStyle = 'rgba(80,70,120,0.5)'; ctx.lineWidth = Math.max(0.8, r * 0.03);
+      for (const [tx, ty] of [[-1.0, 0.22], [-1.05, 0.36], [-0.95, 0.5]]) { ctx.beginPath(); ctx.moveTo(-0.42 * r, 0.02 * r); ctx.lineTo(tx * r, (ty - 0.07) * r); ctx.lineTo((tx + 0.02) * r, (ty + 0.07) * r); ctx.lineTo(-0.4 * r, 0.14 * r); ctx.closePath(); ctx.fill(); ctx.stroke(); }
+      // Rumpf mit Glanz (Kugelgefühl), Kopf, Schnabel, Auge
+      const bg = ctx.createRadialGradient(-0.05 * r, -0.12 * r, 0.05 * r, 0, 0.05 * r, 0.62 * r); bg.addColorStop(0, '#3a3250'); bg.addColorStop(0.55, '#16121f'); bg.addColorStop(1, '#07060a');
+      ctx.fillStyle = bg; ctx.beginPath(); ctx.ellipse(0, 0.05 * r, 0.58 * r, 0.24 * r, 0.08, 0, TAU); ctx.fill();
+      const hg = ctx.createRadialGradient(0.52 * r, -0.2 * r, 0.03 * r, 0.56 * r, -0.12 * r, 0.22 * r); hg.addColorStop(0, '#3a3250'); hg.addColorStop(1, '#0a0810');
+      ctx.fillStyle = hg; ctx.beginPath(); ctx.arc(0.56 * r, -0.12 * r, 0.19 * r, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#2e2e38'; ctx.beginPath(); ctx.moveTo(0.7 * r, -0.2 * r); ctx.lineTo(1.02 * r, -0.07 * r); ctx.lineTo(0.7 * r, 0.0); ctx.closePath(); ctx.fill(); // Schnabel
+      ctx.strokeStyle = 'rgba(150,150,170,0.6)'; ctx.lineWidth = Math.max(0.8, r * 0.025); ctx.beginPath(); ctx.moveTo(0.7 * r, -0.19 * r); ctx.lineTo(1.0 * r, -0.08 * r); ctx.stroke();
+      ctx.fillStyle = '#e0dce8'; ctx.beginPath(); ctx.arc(0.6 * r, -0.16 * r, 0.035 * r, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#ff4a4a'; ctx.beginPath(); ctx.arc(0.6 * r, -0.16 * r, 0.02 * r, 0, TAU); ctx.fill();
+      ctx.strokeStyle = 'rgba(160,140,220,0.35)'; ctx.lineWidth = Math.max(1, r * 0.04); ctx.beginPath(); ctx.moveTo(-0.45 * r, -0.12 * r); ctx.quadraticCurveTo(0.05 * r, -0.28 * r, 0.42 * r, -0.2 * r); ctx.stroke(); // Glanz auf dem Rücken
+      wing(0.08, -0.1, 1.0, angNear, '#2a2440', '#0c0a14', 'rgba(150,130,210,0.55)'); // naher Flügel vor dem Rumpf
+      ctx.restore();
     }
   },
   /* Luke: offene Bodenklappe mit Leiter, aus der violettes Licht dringt – der Ausgang aus dem Totenschiff */
