@@ -480,7 +480,7 @@
     const b = state.ball;
     const custom = state.level.def.hazardText && state.level.def.hazardText[type];
     let label = custom || (type === 'water' ? 'Platsch! Wasser' : type === 'lava' ? 'Zischhh! Lava' : type === 'shark' ? 'Vom Hai gefressen!' : type === 'spiked' ? 'Aufgespießt!' : type === 'zapped' ? 'Vom Blitz getroffen!' : type === 'fell' ? 'In die Tiefe gestürzt!' : type === 'beheaded' ? 'Vom Fallbeil geköpft!' : type === 'seen' ? 'Vom brennenden Auge erblickt!' : 'Aus! Abgrund');
-    if (type === 'shark') { Sfx.water(); burst(b.x, b.y, '#ff5a5a', 22, true); b.z = 0; b.vz = 0; b.air = false; }
+    if (type === 'shark') { if (state.level.obstacles.some(o => o.type === 'sharkjump' && o.style === 'bat')) { Sfx.screech(); burst(b.x, b.y, '#6a4a9a', 26, true); } else { Sfx.water(); burst(b.x, b.y, '#ff5a5a', 22, true); } b.z = 0; b.vz = 0; b.air = false; }
     else if (type === 'water') { Sfx.water(); burst(b.x, b.y, '#9fd3ff', 18); }
     else if (type === 'lava') { Sfx.lava(); burst(b.x, b.y, '#ffb347', 18); }
     else if (type === 'spiked' || type === 'zapped' || type === 'fell') { // zurück zum Start des letzten Schlags
@@ -641,8 +641,8 @@
         case 'spit': Sfx.bumper(); burst(ev.x, ev.y, '#a6ff5e', 10); break;
         case 'spin': Sfx.bounce(5); showMessage('Das Zahnrad nimmt den Ball mit …', 1200); break;
         case 'spinout': Sfx.bumper(); burst(ev.x, ev.y, '#ffe9a8', 8); break;
-        case 'load': if (ev.style === 'basilisk') { Sfx.hiss(); showMessage('Verschluckt … der Basilisk kaut!', 900); } else { Sfx.bounce(5); showMessage('Geladen … Feuer frei!', 900); } break;
-        case 'fire': if (ev.style === 'basilisk') { Sfx.spit(); burst(ev.x, ev.y, '#c86bff', 22); showMessage('Ausgespuckt!', 800); } else { Sfx.cannon(); burst(ev.x, ev.y, '#ffb347', 18); } break;
+        case 'load': if (ev.style === 'ballista') { Sfx.winch(); showMessage('Gespannt … der Basilisk zielt!', 900); } else { Sfx.bounce(5); showMessage('Geladen … Feuer frei!', 900); } break;
+        case 'fire': if (ev.style === 'ballista') { Sfx.twang(); burst(ev.x, ev.y, '#e8e0ff', 20); showMessage('Abgeschossen!', 800); } else { Sfx.cannon(); burst(ev.x, ev.y, '#ffb347', 18); } break;
         case 'sunk': sunk(); return;
         case 'shark': { const inner = state.courses[state.holeIdx].inner; if (inner && inner.stomach && !state.inner) { const b = state.ball; b.z = 0; b.vz = 0; b.air = false; enterInner('Verschluckt! Ab in den Haimagen …'); } else hazard('shark'); return; }
         case 'water': case 'lava': case 'oob': case 'spiked': case 'zapped': case 'fell': case 'beheaded': case 'seen': hazard(ev.type); return;

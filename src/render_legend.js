@@ -647,65 +647,94 @@ Object.assign(Renderer.prototype, {
     limb(sx - s * 0.3, sy - s * 1.05, sx - s * 0.62, sy - s * 1.0, s * 0.035, s * 0.015);
     if (embers) { ctx.fillStyle = 'rgba(255,120,40,0.85)'; for (const [ox, oy] of [[-0.5, -1.3], [0.55, -1.5], [-0.1, -1.7]]) { ctx.beginPath(); ctx.arc(sx + ox * s, sy + oy * s, s * 0.05, 0, TAU); ctx.fill(); } }
   },
-  /* Basilisk: der König der Schlangen liegt aufgerollt da, der Kopf mit offenem Rachen zeigt in Schussrichtung und pendelt.
-     Rollt der Ball ins Maul, schnappt es zu und der Schlund glüht – dann spuckt der Basilisk den Ball weit übers Feld. */
-  drawBasilisk(ctx, ob, t) {
-    const s = this.scale, dx = Math.cos(ob.angle), dy = Math.sin(ob.angle), nx = -dy, ny = dx;
-    const W = (a, b, z = 0) => [ob.x + dx * a + nx * b, ob.y + dy * a + ny * b, z];
+  /* Räumliche Riesenfledermaus im kantigen Stil des Krokodils: Rumpf, Kopf und Ohren als Quader, Flughäute als flache
+     Dreiecksplatten zwischen Schulter und Fingerspitzen (die mit dem Flügelschlag steigen und sinken), Finger als Balken.
+     Bodenpunkt (cx, cy), Höhe z, Flugrichtung (dx, dy); o.r = Größe, o.flap = Flügelschlag, o.spread = Spannweite, o.dive = Stoß */
+  drawBigBat3(ctx, cx, cy, z, dx, dy, o) {
+    const s = this.scale, nx = -dy, ny = dx, r = o.r || 1, flap = o.flap, sp = o.spread, dive = o.dive || 0;
+    const G = (a, b) => [cx + (dx * a + nx * b) * r, cy + (dy * a + ny * b) * r];
+    const W = (a, b, dz = 0) => [...G(a, b), z + dz * r];
     const P = v => this.proj(v[0], v[1], v[2]);
-    const poly = pts => { ctx.beginPath(); pts.forEach((q, i) => { const r = P(q); i ? ctx.lineTo(r[0], r[1]) : ctx.moveTo(r[0], r[1]); }); ctx.closePath(); };
-    const since = t - (ob.firedAt ?? -10), spit = since < 0.4 ? 1 - since / 0.4 : 0;
-    const open = ob.loaded ? 0.1 + 0.04 * Math.sin(t * 22) : 0.5 + 0.45 * spit;
-    const C = ['#9ccb84', '#3f7a4e', '#14301d'], K = ['#c9a0ff', '#8a3bff', '#3a1466'];
-    this.isoEllipse(ctx, ob.x - dx * 1.0, ob.y - dy * 1.0, 0.003, 2.0, 'rgba(0,0,0,0.3)', 1.4);
-    // Körper: Kugelkette in einer S-Windung hinter dem Kopf, nach Tiefe sortiert; jede zweite Kugel trägt einen Rückenstachel
-    const parts = [];
-    for (let i = 0; i < 15; i++) {
-      const a = -0.35 - i * 0.24, b = Math.sin(i * 0.42 + 0.3) * 0.95, r = Math.max(0.16, 0.5 - i * 0.024), z = Math.max(0.16, 0.5 - i * 0.022);
-      parts.push({ v: W(a, b, z), r, spike: i % 2 === 1 && i < 11, k: this.depth(ob.x + dx * a + nx * b, ob.y + dy * a + ny * b) });
+    const box = (a0, a1, b0, b1, z0, h, top, side, opts) => this.prism(ctx, [G(a0, b0), G(a1, b0), G(a1, b1), G(a0, b1)], z + z0 * r, h * r, top, side, opts);
+    const plate = (pts, fill, edge) => { ctx.beginPath(); pts.forEach((q, i) => { const p = P(q); i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); }); ctx.closePath(); ctx.fillStyle = fill; ctx.fill(); if (edge) { ctx.strokeStyle = edge; ctx.lineWidth = 1; ctx.stroke(); } };
+    const bar = (v0, v1, wd, col) => { const p0 = P(v0), p1 = P(v1); ctx.strokeStyle = col; ctx.lineWidth = Math.max(1.5, s * wd * r); ctx.lineCap = 'butt'; ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke(); };
+    const fur = ['#5a4a78', '#2a1e3a'], dark = ['#3e3056', '#1a1226'], skin = ['#4a3a66', '#3a2c52', '#2e2242'], line = '#120c1a';
+    const wing = sd => { // Schulter, drei Fingerspitzen, Ansatz am Hinterleib; drei ebene Platten dazwischen, Finger als Balken
+      const S = W(0.15, sd * 0.3, 0.32), T1 = W(0.5, sd * 1.8 * sp, 0.3 + flap * 0.7), T2 = W(-0.05, sd * 1.65 * sp, 0.2 + flap * 0.55), T3 = W(-0.5, sd * 1.15 * sp, 0.12 + flap * 0.35), R = W(-0.8, sd * 0.25, 0.15);
+      plate([S, T1, T2], skin[0], line); plate([S, T2, T3], skin[1], line); plate([S, T3, R], skin[2], line);
+      for (const T of [T1, T2, T3]) bar(S, T, 0.07, '#1a1226');
+      bar(S, R, 0.06, '#1a1226');
+      for (const T of [T1, T2, T3]) { const [tx, ty] = P(T); ctx.fillStyle = '#c8c0d8'; ctx.beginPath(); ctx.arc(tx, ty, Math.max(1.5, s * 0.045 * r), 0, TAU); ctx.fill(); } // Krallen an den Fingerspitzen
+    };
+    this.isoEllipse(ctx, cx, cy, 0.004, (0.5 + 0.9 * dive) * r, `rgba(0,0,0,${0.12 + 0.28 * dive})`, (0.5 + 0.9 * dive) * r * 0.6);
+    const wings = [-1, 1].map(sd => ({ sd, k: this.depth(cx + nx * sd * r, cy + ny * sd * r) })).sort((u, v) => u.k - v.k);
+    wing(wings[0].sd); // fernerer Flügel zuerst
+    box(-0.95, -0.45, -0.14, 0.14, 0.1, 0.24, dark[0], dark[1]);                        // Schwanzstummel
+    box(-0.5, 0.35, -0.3, 0.3, 0.0, 0.55, fur[0], fur[1], { outline: line });            // Rumpf
+    box(-0.3, 0.2, -0.2, 0.2, 0.55, 0.12, '#6e5e8e', '#3c2e54');                         // Rückenkamm
+    box(0.35, 0.95, -0.24, 0.24, 0.12, 0.46, fur[0], fur[1], { outline: line });         // Kopf
+    box(0.95, 1.12, -0.14, 0.14, 0.2, 0.22, dark[0], dark[1]);                           // Schnauze
+    for (const sd of [-1, 1]) box(0.45, 0.62, sd * 0.1, sd * 0.24, 0.58, 0.45, '#8a6a9a', '#3c2e54', { outline: line }); // Ohren
+    for (const sd of [-1, 1]) { // rot glühende Augen an der Kopffront
+      const [ex, ey] = P(W(0.96, sd * 0.12, 0.44)), g = ctx.createRadialGradient(ex, ey, 0, ex, ey, s * 0.16 * r);
+      g.addColorStop(0, 'rgba(255,90,120,0.95)'); g.addColorStop(1, 'rgba(255,60,90,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(ex, ey, s * 0.16 * r, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#ff5f7a'; ctx.fillRect(ex - s * 0.045 * r, ey - s * 0.035 * r, s * 0.09 * r, s * 0.07 * r);
     }
-    parts.sort((p, q) => p.k - q.k);
-    for (const pt of parts) {
-      const [sx, sy] = P(pt.v), rr = pt.r * s;
-      this.ball3(ctx, sx, sy, rr, C[0], C[1], C[2]);
-      ctx.strokeStyle = 'rgba(10,30,15,0.45)'; ctx.lineWidth = Math.max(1, s * 0.02); ctx.beginPath(); ctx.arc(sx, sy, rr, 0, TAU); ctx.stroke();
-      ctx.fillStyle = 'rgba(200,220,150,0.35)'; ctx.beginPath(); ctx.ellipse(sx, sy + rr * 0.45, rr * 0.55, rr * 0.22, 0, 0, TAU); ctx.fill(); // Bauchschuppen
-      if (pt.spike) { ctx.fillStyle = K[1]; ctx.beginPath(); ctx.moveTo(sx - rr * 0.25, sy - rr * 0.75); ctx.lineTo(sx + rr * 0.05, sy - rr * 1.55); ctx.lineTo(sx + rr * 0.35, sy - rr * 0.7); ctx.closePath(); ctx.fill(); }
+    ctx.fillStyle = '#f4f0e0'; for (const sd of [-1, 1]) plate([W(1.12, sd * 0.1, 0.2), W(1.12, sd * 0.03, 0.2), W(1.12, sd * 0.065, 0.02)], '#f4f0e0'); // Fangzähne
+    if (dive > 0.2) for (const sd of [-1, 1]) { bar(W(0.05, sd * 0.16, 0.0), W(0.15, sd * 0.22, -0.35 * dive), 0.06, '#c8c0d8'); bar(W(0.15, sd * 0.22, -0.35 * dive), W(0.05, sd * 0.28, -0.45 * dive), 0.05, '#c8c0d8'); } // Krallen beim Stoß
+    wing(wings[1].sd); // näherer Flügel zuletzt
+  },
+  /* Riesenfledermaus (sharkjump-Stil 'bat'): hängt am Rand ihres Jagdgrunds, schießt im Takt von der Seite quer über die Lücke
+     und packt alles, was gerade darüber fliegt (wie Hai und Krokodil) */
+  drawBatSwoop(ctx, ob, t) {
+    const s = this.scale, vert = ob.axis === 'y', span = (vert ? ob.h : ob.w) / 2 + 0.9, dx = vert ? 0 : 1, dy = vert ? 1 : 0;
+    if (!ob.jumping) { // lauert am Startrand, hoch über dem Boden, mit leichtem Flattern
+      const gx = vert ? ob.x : ob.x - span, gy = vert ? ob.y - span : ob.y, z = 2.3 + 0.15 * Math.sin(t * 3);
+      this.drawBigBat3(ctx, gx, gy, z, dx, dy, { r: 0.8, flap: Math.sin(t * 7) * 0.35, spread: 0.75, dive: 0 });
+      return;
     }
-    // Hals und Kopf
-    const [hx, hy] = P(W(0.15, 0, 0.72));
-    this.ball3(ctx, ...P(W(-0.2, 0, 0.6)), s * 0.5, C[0], C[1], C[2]);
-    // Unterkiefer, Rachen, Oberkiefer (in Richtung Schussrichtung geöffnet)
-    ctx.fillStyle = shade(C[1], 0.8); poly([W(0.1, -0.42, 0.6), W(1.05, -0.26, 0.6 - open * 0.55), W(1.15, 0, 0.55 - open * 0.6), W(1.05, 0.26, 0.6 - open * 0.55), W(0.1, 0.42, 0.6)]); ctx.fill();
-    ctx.fillStyle = ob.loaded ? '#c86bff' : '#4a0f2a'; poly([W(0.2, -0.36, 0.66), W(1.0, -0.22, 0.62 - open * 0.5), W(1.0, 0.22, 0.62 - open * 0.5), W(0.2, 0.36, 0.66), W(0.2, 0.3, 0.7 + open * 0.8), W(0.95, 0.2, 0.72 + open * 0.9), W(0.95, -0.2, 0.72 + open * 0.9), W(0.2, -0.3, 0.7 + open * 0.8)]); ctx.fill();
-    if (!ob.loaded && spit === 0) { // züngelnde Zunge
-      const fl = 1.0 + 0.25 * Math.sin(t * 14), tip = W(1.2 * fl, 0, 0.62 - open * 0.3);
-      ctx.strokeStyle = '#ff3a5a'; ctx.lineWidth = Math.max(1.5, s * 0.045); ctx.lineCap = 'round';
-      const [a0, a1] = P(W(0.5, 0, 0.64)), [b0, b1] = P(tip), [c0, c1] = P(W(1.35 * fl, 0.14, 0.62 - open * 0.3)), [d0, d1] = P(W(1.35 * fl, -0.14, 0.62 - open * 0.3));
-      ctx.beginPath(); ctx.moveTo(a0, a1); ctx.lineTo(b0, b1); ctx.lineTo(c0, c1); ctx.moveTo(b0, b1); ctx.lineTo(d0, d1); ctx.stroke();
-    }
-    this.ball3(ctx, hx, hy, s * 0.64, C[0], C[1], C[2]); // Schädel
-    ctx.fillStyle = shade(C[0], 0.92); poly([W(0.1, -0.5, 0.78), W(1.1, -0.3, 0.78 + open * 0.85), W(1.25, 0, 0.74 + open * 0.9), W(1.1, 0.3, 0.78 + open * 0.85), W(0.1, 0.5, 0.78), W(0.05, 0, 1.25)]); ctx.fill(); // Oberkiefer / Schnauze
-    ctx.strokeStyle = 'rgba(10,30,15,0.5)'; ctx.lineWidth = Math.max(1, s * 0.025); ctx.stroke();
-    ctx.fillStyle = '#f4f0e0'; // Giftzähne
-    for (const sd of [-1, 1]) { poly([W(1.02, sd * 0.24, 0.78 + open * 0.8), W(0.9, sd * 0.2, 0.78 + open * 0.8), W(0.98, sd * 0.22, 0.5 + open * 0.55)]); ctx.fill(); }
-    // Krone aus Stacheln
-    for (let k = -2; k <= 2; k++) { ctx.fillStyle = k % 2 ? K[2] : K[1]; poly([W(0.2, k * 0.17, 1.15), W(0.0, k * 0.2, 1.2), W(-0.35 + Math.abs(k) * 0.08, k * 0.36, 1.75 - Math.abs(k) * 0.18)]); ctx.fill(); }
-    // glühende Augen
-    const pulse = ob.loaded ? 0.6 + 0.4 * Math.sin(t * 18) : 0.85;
+    // Sturzflug: kommt hoch vom Rand, taucht in der Mitte bis knapp über den Boden und steigt drüben wieder auf
+    const p = ob.p, dip = 4 * p * (1 - p), z = 0.35 + 2.1 * (1 - dip), r = 0.9 + 0.35 * dip;
+    if (dip > 0.5) { const [bx, by] = this.proj(ob.px, ob.py, z + 0.4); ctx.strokeStyle = `rgba(230,200,255,${0.5 * (dip - 0.5)})`; ctx.lineWidth = Math.max(1, s * 0.03); for (let i = 0; i < 3; i++) { const u = ((t * 2.5 + i / 3) % 1), rr = s * (0.6 + u * 1.5); ctx.globalAlpha = 1 - u; ctx.beginPath(); ctx.arc(bx, by, rr, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke(); } ctx.globalAlpha = 1; } // Kreischen
+    this.drawBigBat3(ctx, ob.px, ob.py, z, dx, dy, { r, flap: Math.sin(t * 22) * 0.5 - 0.3 * dip, spread: 1.0 + 0.25 * dip, dive: dip });
+    if (dip > 0.85) { const [gx, gy] = this.proj(ob.px, ob.py, 0.05), k = (dip - 0.85) / 0.15; ctx.fillStyle = `rgba(120,90,160,${0.5 * k})`; for (let i = 0; i < 8; i++) { const a = i * 0.8 + t, rr = s * (0.4 + 0.7 * k); ctx.beginPath(); ctx.ellipse(gx + Math.cos(a) * rr, gy + Math.sin(a) * rr * 0.5, s * 0.1, s * 0.05, a, 0, TAU); ctx.fill(); } } // Staub am Boden
+  },
+  /* Basilisk: die Riesenarmbrust des Schattenreichs (Kanonen-Stil 'ballista'). Schwerer Schaft auf einem Bock, zwei Bogenarme,
+     Sehne mit Winde; rollt der Ball in die Rinne, wird die Sehne gespannt und schnellt vor. Der Schaft pendelt wie das Kanonenrohr. */
+  drawBallista(ctx, ob, t) {
+    const s = this.scale, dx = Math.cos(ob.angle), dy = Math.sin(ob.angle), nx = -dy, ny = dx;
+    const W = (a, b) => [ob.x + dx * a + nx * b, ob.y + dy * a + ny * b];
+    const quad = (a0, b0, a1, b1, wd) => [W(a0, b0 - wd / 2), W(a1, b1 - wd / 2), W(a1, b1 + wd / 2), W(a0, b0 + wd / 2)];
+    const wood = ['#5a4470', '#2e2240'], iron = ['#6a6a80', '#2c2c3a'], line = '#150e1e';
+    const since = t - (ob.firedAt ?? -10), snap = since < 0.25 ? 1 - since / 0.25 : 0;
+    // Bock: Platte und zwei Stützböcke
+    this.prism(ctx, this.circlePoly(ob.x, ob.y, 0.85, 8), 0, 0.22, wood[0], wood[1], { outline: line });
+    for (const a of [-0.55, 0.45]) for (const b of [-0.45, 0.45]) this.prism(ctx, quad(a - 0.08, b, a + 0.08, b, 0.16), 0.22, 0.45, wood[0], wood[1]);
+    // Schaft mit Rinne
+    this.prism(ctx, quad(-1.0, 0, 1.45, 0, 0.36), 0.67, 0.2, wood[0], wood[1], { outline: line });
+    this.prism(ctx, quad(-0.6, 0, 1.4, 0, 0.14), 0.87, 0.03, '#1a1224', '#1a1224');
+    for (const a of [-0.7, 0.2, 1.1]) this.prism(ctx, quad(a - 0.04, 0, a + 0.04, 0, 0.4), 0.66, 0.23, iron[0], iron[1]); // Eisenbänder
+    // Bogenarme: von der Schaftspitze schräg nach hinten außen
     for (const sd of [-1, 1]) {
-      const [ex, ey] = P(W(0.45, sd * 0.36, 1.02)), g = ctx.createRadialGradient(ex, ey, 0, ex, ey, s * 0.22);
-      g.addColorStop(0, `rgba(255,120,80,${pulse})`); g.addColorStop(1, 'rgba(255,60,40,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(ex, ey, s * 0.22, 0, TAU); ctx.fill();
-      ctx.fillStyle = '#ffd36a'; ctx.beginPath(); ctx.ellipse(ex, ey, s * 0.09, s * 0.07, 0, 0, TAU); ctx.fill();
-      ctx.fillStyle = '#200'; ctx.beginPath(); ctx.ellipse(ex, ey, s * 0.02, s * 0.065, 0, 0, TAU); ctx.fill();
+      this.prism(ctx, [W(0.95, sd * 0.12), W(1.05, sd * 0.2), W(0.55, sd * 1.35), W(0.4, sd * 1.25)], 0.72, 0.14, '#7a5a3a', '#3e2a16', { outline: line });
+      this.prism(ctx, this.circlePoly(...W(0.47, sd * 1.3), 0.09, 6), 0.7, 0.2, iron[0], iron[1]);
     }
-    if (ob.loaded) { // Schlund glüht violett, während der Basilisk „kaut“
-      const [gx, gy] = P(W(0.5, 0, 0.7)), f = 0.5 + 0.5 * Math.sin(t * 16), g = ctx.createRadialGradient(gx, gy, 0, gx, gy, s * 0.8);
-      g.addColorStop(0, `rgba(200,120,255,${0.5 + 0.3 * f})`); g.addColorStop(1, 'rgba(140,60,255,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(gx, gy, s * 0.8, 0, TAU); ctx.fill();
+    // Sehne: gespannt (geladen) läuft sie zum Nocken am Schaftende, sonst locker vorn; beim Schuss schnellt sie vor
+    const nock = ob.loaded ? -0.55 : 0.75 + 0.5 * snap;
+    const [l0, l1] = this.proj(...W(0.47, -1.3), 0.82), [r0, r1] = this.proj(...W(0.47, 1.3), 0.82), [m0, m1] = this.proj(...W(nock, 0), 0.86);
+    ctx.strokeStyle = '#e8e0c8'; ctx.lineWidth = Math.max(1.5, s * 0.04); ctx.beginPath(); ctx.moveTo(l0, l1); ctx.lineTo(m0, m1); ctx.lineTo(r0, r1); ctx.stroke();
+    // Winde am Schaftende
+    this.prism(ctx, this.circlePoly(...W(-0.95, 0), 0.22, 8), 0.72, 0.16, iron[0], iron[1], { outline: line });
+    const [wx, wy] = this.proj(...W(-0.95, 0), 0.9), spin = ob.loaded ? t * 6 : 0;
+    ctx.strokeStyle = '#cfcfe0'; ctx.lineWidth = Math.max(1, s * 0.03); ctx.beginPath(); for (let k = 0; k < 4; k++) { const a = spin + k * Math.PI / 2; ctx.moveTo(wx, wy); ctx.lineTo(wx + Math.cos(a) * s * 0.2, wy + Math.sin(a) * s * 0.2 * this.cam.tilt); } ctx.stroke();
+    // Basiliskenkopf als Zierde an der Schaftspitze
+    const [bx, by] = this.proj(...W(1.5, 0), 0.85); ctx.fillStyle = '#3f7a4e'; ctx.beginPath(); ctx.ellipse(bx, by, s * 0.16, s * 0.12, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#ff5a3a'; for (const sd of [-1, 1]) { ctx.beginPath(); ctx.arc(bx + sd * s * 0.07, by - s * 0.03, s * 0.03, 0, TAU); ctx.fill(); }
+    if (ob.loaded) { // violette Rune glüht auf dem Schaft, solange gespannt wird
+      const f = 0.6 + 0.4 * Math.sin(t * 14), [gx, gy] = this.proj(...W(0.1, 0), 0.9), g = ctx.createRadialGradient(gx, gy, 0, gx, gy, s * 0.7);
+      g.addColorStop(0, `rgba(200,120,255,${0.45 * f})`); g.addColorStop(1, 'rgba(140,60,255,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(gx, gy, s * 0.7, 0, TAU); ctx.fill();
     }
-    if (spit > 0) { // violetter Giftschwall beim Ausspucken
-      ctx.fillStyle = `rgba(190,110,255,${0.75 * spit})`; poly([W(1.1, -0.3, 0.8), W(1.2 + 1.6 * (1 - spit), -0.12, 1.1), W(1.2 + 1.6 * (1 - spit), 0.12, 1.1), W(1.1, 0.3, 0.8)]); ctx.fill();
-    }
+    if (snap > 0) { ctx.fillStyle = `rgba(230,220,255,${0.6 * snap})`; const [fx, fy] = this.proj(...W(1.6, 0), 0.9); ctx.beginPath(); ctx.ellipse(fx, fy, s * 0.5 * (1.3 - snap), s * 0.25 * (1.3 - snap), 0, 0, TAU); ctx.fill(); }
   },
   /* Schwarzes Schloss: Torbau mit zwei Rundtürmen, Spitzdächern, Zinnen, glühenden Fenstern, Fallgitter halb im Bogen und
      Totenschädel über dem Tor. Die Front zeigt nach +y; die Tür-Auslösung liegt davor. */

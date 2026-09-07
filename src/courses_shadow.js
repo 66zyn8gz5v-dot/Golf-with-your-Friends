@@ -1,9 +1,9 @@
 /* Schattenreich: Stufe „Legende“ – neun extra große Bahnen im Reich der Schatten: Friedhöfe mit Rabenschwärmen,
-   Fallbeile, verfluchte Ritterstatuen, Knochenrampen, Geister, Sensen, der Basilisk, das schwarze Schloss mit Zugbrücke, Fallgatter und Thronsaal,
+   Fallbeile, verfluchte Ritterstatuen, Knochenrampen, Geister, Sensen, Riesenfledermäuse, der Basilisk (Riesenarmbrust), das schwarze Schloss mit Zugbrücke, Fallgatter und Thronsaal,
    der Turm mit dem brennenden Auge; die Neunte führt über den Totensee ins Totenschiff und zurück ans Totenufer. */
 const SHADOW_COURSES = [
   {
-    name: 'Friedhofspforte', par: 4, theme: 'shadow', maxStrokes: 18, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Gruft gestürzt', spiked: 'Von Knochenstacheln aufgespießt' },
+    name: 'Friedhofspforte', par: 4, theme: 'shadow', maxStrokes: 18, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Gruft gestürzt', spiked: 'Von Knochenstacheln aufgespießt', shark: 'Von der Riesenfledermaus gepackt!' },
     views: [{ x: 2, y: 5, w: 16, h: 4, look: { x: 19.5, y: 7 } }, { x: 18, y: 2, w: 3, h: 7, look: { x: 19.5, y: 3.5 } }],
     map: [
       '....................................',
@@ -41,7 +41,7 @@ const SHADOW_COURSES = [
     autoDecor: { density: 0.18, seed: 501 },
   },
   {
-    name: 'Rabenfriedhof', par: 4, theme: 'shadow', maxStrokes: 20, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Gruft gestürzt', spiked: 'Von Knochenstacheln aufgespießt' },
+    name: 'Rabenfriedhof', par: 4, theme: 'shadow', maxStrokes: 20, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Gruft gestürzt', spiked: 'Von Knochenstacheln aufgespießt', shark: 'Von der Riesenfledermaus gepackt!' },
     views: [{ x: 2, y: 3, w: 36, h: 8, look: { x: 35.5, y: 6.5 } }],
     map: [
       '........................................',
@@ -78,7 +78,7 @@ const SHADOW_COURSES = [
     autoDecor: { density: 0.12, seed: 503 },
   },
   {
-    name: 'Fallbeilgasse', par: 5, theme: 'shadow', maxStrokes: 22, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Gruft gestürzt', spiked: 'Von Knochenstacheln aufgespießt' },
+    name: 'Fallbeilgasse', par: 5, theme: 'shadow', maxStrokes: 22, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Gruft gestürzt', spiked: 'Von Knochenstacheln aufgespießt', shark: 'Von der Riesenfledermaus gepackt!' },
     views: [{ x: 2, y: 2, w: 26, h: 3, look: { x: 29.5, y: 3.5 } }, { x: 28, y: 2, w: 3, h: 5, look: { x: 29.5, y: 8.5 } }],
     map: [
       '........................................',
@@ -94,11 +94,12 @@ const SHADOW_COURSES = [
       '........................................',
       '........................................',
     ],
-    intro: 'Die Gasse der Fallbeile: Zwei Klingen hängen über dem Gruftgang, jede in ihrem eigenen Takt. Unten sind sie eine Mauer, oben eine Falle – wer beim Fall darunter liegt, wird geköpft. Dann klafft eine Grube voller Schattenfeuer: Nur mit Schwung über die Knochenrampe kommt man hinüber. Hinter der Kehre wartet das letzte Beil.',
+    intro: 'Die Gasse der Fallbeile: Zwei Klingen hängen über dem Gruftgang, jede in ihrem eigenen Takt. Unten sind sie eine Mauer, oben eine Falle – wer beim Fall darunter liegt, wird geköpft. Dann klafft eine Grube voller Schattenfeuer, über die im Takt eine Riesenfledermaus von der Seite hinwegschießt: Nur mit Schwung über die Knochenrampe kommt man hinüber – und nur, wenn die Fledermaus gerade nicht quer durch die Luft jagt. Hinter der Kehre wartet das letzte Beil.',
     obstacles: [
       { type: 'guillotine', x: 8.5, y: 3.5, w: 0.35, h: 3, period: 5.2, phase: 0, hold: 0.32 },
       { type: 'guillotine', x: 14.5, y: 3.5, w: 0.35, h: 3, period: 5.2, phase: 0.4, hold: 0.32 },
       { type: 'ramp', x: 17.5, y: 2, w: 2, h: 3, angle: 0, minSpeed: 2.5, speed: 4.6, land: 3.4 },
+      { type: 'sharkjump', style: 'bat', x: 21, y: 3.5, w: 2.4, h: 3, period: 4.8, jump: 0.3, phase: 0.2, axis: 'y', height: 1.4 },
       { type: 'guillotine', x: 25.5, y: 3.5, w: 0.35, h: 3, period: 5.2, phase: 0.7, hold: 0.32 },
       { type: 'wall', x0: 29, y0: 2, x1: 31, y1: 4, extend: 0 },
       { type: 'wall', x0: 28, y0: 8, x1: 30, y1: 10, extend: 0 },
@@ -113,7 +114,7 @@ const SHADOW_COURSES = [
     autoDecor: { density: 0.15, seed: 505 },
   },
   {
-    name: 'Irrlichtsumpf', par: 6, theme: 'shadow', maxStrokes: 22, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Gruft gestürzt', spiked: 'Von Knochenstacheln aufgespießt' },
+    name: 'Irrlichtsumpf', par: 6, theme: 'shadow', maxStrokes: 22, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Gruft gestürzt', spiked: 'Von Knochenstacheln aufgespießt', shark: 'Von der Riesenfledermaus gepackt!' },
     views: [{ x: 2, y: 2, w: 34, h: 10, look: { x: 33, y: 6.5 } }],
     map: [
       '......................................',
@@ -148,7 +149,7 @@ const SHADOW_COURSES = [
     autoDecor: { density: 0.18, seed: 507 },
   },
   {
-    name: 'Ritterhalle', par: 5, theme: 'shadow', maxStrokes: 24, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Gruft gestürzt', spiked: 'Von Knochenstacheln aufgespießt' },
+    name: 'Ritterhalle', par: 5, theme: 'shadow', maxStrokes: 24, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Gruft gestürzt', spiked: 'Von Knochenstacheln aufgespießt', shark: 'Von der Riesenfledermaus gepackt!' },
     views: [{ x: 2, y: 2, w: 31, h: 12, look: { x: 33.5, y: 7.5 } }],
     map: [
       '........................................',
@@ -191,7 +192,7 @@ const SHADOW_COURSES = [
     autoDecor: { density: 0.1, seed: 509 },
   },
   {
-    name: 'Knochenbrücke', par: 5, theme: 'shadow', maxStrokes: 22, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Gruft gestürzt', spiked: 'Von Knochenstacheln aufgespießt' },
+    name: 'Knochenbrücke', par: 5, theme: 'shadow', maxStrokes: 22, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Gruft gestürzt', spiked: 'Von Knochenstacheln aufgespießt', shark: 'Von der Riesenfledermaus gepackt!' },
     views: [{ x: 2, y: 3, w: 6, h: 6, look: { x: 20, y: 5.5 } }, { x: 8, y: 5, w: 14, h: 3, look: { x: 24, y: 6 } }, { x: 22, y: 2, w: 6, h: 8, look: { x: 38, y: 5.5 } }, { x: 28, y: 5, w: 8, h: 2, look: { x: 39, y: 5.5 } }],
     map: [
       '............................................',
@@ -207,9 +208,9 @@ const SHADOW_COURSES = [
       '............................................',
       '............................................',
     ],
-    intro: 'Eine Brücke aus Knochen ohne Geländer über einen Strom aus Schattenfeuer. Am Ufer lauert der Basilisk: Wer ihm in den Rachen rollt, wird verschluckt und weit über das Feuer bis auf die Felsinsel gespuckt – sein Kopf pendelt aber. Mitten auf der Brücke fährt eine Reihe Knochenstacheln aus dem Boden, über die ganze Felsinsel spannt sich ein riesiges Fallbeil, und der zweite Steg ist kürzer, aber schmaler – und hat seine eigenen Stacheln.',
+    intro: 'Eine Brücke aus Knochen ohne Geländer über einen Strom aus Schattenfeuer. Am Ufer steht der Basilisk, eine Riesenarmbrust: Rollt der Ball in ihre Rinne, wird die Sehne gespannt und er wird weit über das Feuer bis auf die Felsinsel geschossen – der Schaft pendelt aber. Mitten auf der Brücke fährt eine Reihe Knochenstacheln aus dem Boden, über die ganze Felsinsel spannt sich ein riesiges Fallbeil, und der zweite Steg ist kürzer, aber schmaler – und hat seine eigenen Stacheln.',
     obstacles: [
-      { type: 'cannon', style: 'basilisk', x: 5.5, y: 6, base: 0, amp: 0.14, speed: 0.8, range: 17.5, catchR: 0.6, loadTime: 0.9 },
+      { type: 'cannon', style: 'ballista', x: 5.5, y: 6, base: 0, amp: 0.14, speed: 0.8, range: 17.5, catchR: 0.6, loadTime: 0.9 },
       { type: 'spikes', x: 15.5, y: 6.5, w: 1, h: 3, period: 4.4, up: 0.36, phase: 0 },
       { type: 'guillotine', x: 24.5, y: 6, w: 0.4, h: 7.8, period: 6, phase: 0, hold: 0.3, liftH: 2.6, bladeH: 1.0 },
       { type: 'bumper', x: 26.5, y: 2.8, r: 0.38, style: 'grave', kick: 7 },
@@ -225,7 +226,7 @@ const SHADOW_COURSES = [
     autoDecor: { density: 0.13, seed: 511 },
   },
   {
-    name: 'Schattenschloss', par: 8, theme: 'shadow', maxStrokes: 30, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Gruft gestürzt', spiked: 'Von Knochenstacheln aufgespießt' },
+    name: 'Schattenschloss', par: 8, theme: 'shadow', maxStrokes: 30, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Gruft gestürzt', spiked: 'Von Knochenstacheln aufgespießt', shark: 'Von der Riesenfledermaus gepackt!' },
     views: [{ x: 2, y: 16, w: 6, h: 6, look: { x: 13.5, y: 18.5 } }, { x: 11, y: 16, w: 6, h: 6, look: { x: 14, y: 12 } }, { x: 12, y: 10, w: 4, h: 6, look: { x: 22, y: 6 } }, { x: 11, y: 2, w: 13, h: 8, look: { x: 28.5, y: 3 } }, { x: 24, y: 2, w: 11, h: 8, look: { x: 28.5, y: -2 } }],
     map: [
       '............................................',
@@ -253,9 +254,10 @@ const SHADOW_COURSES = [
       '........lll.................................',
       '........lll.................................',
     ],
-    intro: 'Das schwarze Schloss. Vom Vorhof geht es nur mit Schwung über die Zugbrücke – wer zu langsam ist, rollt in den Feuergraben. Im Torhaus rasselt das Fallgatter auf und ab. Im Burghof wachen verfluchte Ritter und ein Geist, eine Rampe führt über den Feuergraben. Hinter dem großen Tor liegt der Thronsaal: Der Kerkergang endet im Rachen des Basilisken, und nur er spuckt den Ball hinauf auf die Empore zum Loch.',
+    intro: 'Das schwarze Schloss. Vom Vorhof geht es nur mit Schwung über die Zugbrücke – wer zu langsam ist, rollt in den Feuergraben, und im Takt schießt eine Riesenfledermaus quer über den Graben und packt, wer gerade darüber fliegt. Im Torhaus rasselt das Fallgatter auf und ab. Im Burghof wachen verfluchte Ritter und ein Geist, eine Rampe führt über den Feuergraben. Hinter dem großen Tor liegt der Thronsaal: Der Kerkergang endet vor dem Basilisken, der Riesenarmbrust des Schattenkönigs, und nur sie schießt den Ball hinauf auf die Empore zum Loch.',
     obstacles: [
       { type: 'ramp', x: 5.5, y: 16.5, w: 2, h: 4, angle: 0, minSpeed: 3, speed: 6.5, land: 5.6 },
+      { type: 'sharkjump', style: 'bat', x: 9.5, y: 18.5, w: 3, h: 5, period: 4.6, jump: 0.36, phase: 0.1, axis: 'y', height: 1.4 },
       { type: 'gate', x: 14, y: 12.5, w: 4, h: 0.3, period: 6, open: 0.45, phase: 0, axis: 'x' },
       { type: 'bumper', x: 14.5, y: 5.5, r: 0.4, style: 'grave', kick: 7 },
       { type: 'ramp', x: 16.5, y: 3, w: 2, h: 4, angle: 0, minSpeed: 2.5, speed: 4.6, land: 2.8 },
@@ -294,14 +296,14 @@ const SHADOW_COURSES = [
         '..#####################.......',
         '..............................',
       ],
-      intro: 'Der Thronsaal des Schattenkönigs. Der Kerkergang führt an Sense und Fallbeil vorbei in den Rachen des Basilisken – er verschluckt den Ball, kaut kurz und spuckt ihn hinauf auf die Empore, wo das Loch liegt. Sein Kopf pendelt: Wer im falschen Moment hineinrollt, fliegt schief.',
+      intro: 'Der Thronsaal des Schattenkönigs. Der Kerkergang führt an Sense und Fallbeil vorbei in die Rinne des Basilisken, der Riesenarmbrust des Schattenkönigs – sie spannt die Sehne und schießt den Ball hinauf auf die Empore, wo das Loch liegt. Der Schaft pendelt: Wer im falschen Moment hineinrollt, fliegt schief.',
       obstacles: [
         { type: 'bumper', x: 7.5, y: 12.2, r: 0.4, style: 'grave', kick: 7 },
         { type: 'rotor', x: 10.5, y: 11, blades: 1, len: 1.6, thick: 0.14, hubR: 0.22, style: 'scythe', e: 0.6, swing: { amp: Math.PI / 2.4, speed: 1.6 }, phase: 0, height: 0.5 },
         { type: 'guillotine', x: 15.5, y: 11, w: 0.35, h: 4, period: 5.4, phase: 0, hold: 0.32 },
         { type: 'wall', x0: 19.5, y0: 9, x1: 21, y1: 10.3, extend: 0 },
         { type: 'wall', x0: 19.5, y0: 13, x1: 21, y1: 11.7, extend: 0 },
-        { type: 'cannon', style: 'basilisk', x: 21.4, y: 11, base: -Math.PI / 2, amp: 0.3, speed: 0.8, range: 6.2, catchR: 0.65, loadTime: 0.9 },
+        { type: 'cannon', style: 'ballista', x: 21.4, y: 11, base: -Math.PI / 2, amp: 0.3, speed: 0.8, range: 6.2, catchR: 0.65, loadTime: 0.9 },
         { type: 'wall', x0: 28, y0: 1, x1: 29, y1: 2.5, extend: 0 },
         { type: 'wall', x0: 29, y0: 4.5, x1: 28, y1: 6, extend: 0 },
       ],
@@ -314,7 +316,7 @@ const SHADOW_COURSES = [
     },
   },
   {
-    name: 'Turm des Auges', par: 5, theme: 'shadow', maxStrokes: 24, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Gruft gestürzt', spiked: 'Von Knochenstacheln aufgespießt' },
+    name: 'Turm des Auges', par: 5, theme: 'shadow', maxStrokes: 24, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Gruft gestürzt', spiked: 'Von Knochenstacheln aufgespießt', shark: 'Von der Riesenfledermaus gepackt!' },
     views: [{ x: 2, y: 11, w: 18, h: 9, look: { x: 19.5, y: 10.5 } }, { x: 2, y: 2, w: 18, h: 9, look: { x: 35.5, y: 3.5 } }, { x: 20, y: 2, w: 18, h: 18, look: { x: 35.5, y: 3.5 } }],
     map: [
       '........................................',
@@ -340,12 +342,13 @@ const SHADOW_COURSES = [
       '........................................',
       '........................................',
     ],
-    intro: 'Mitten auf dem Platz steht der Turm, und auf ihm brennt das Auge. Langsam dreht es seinen Blick über den Boden. Wer in seinem Lichtkegel liegen bleibt, ist verloren – nur hinter den Gruftblöcken ist man sicher. Ein rollender Ball ist zu schnell für das Auge: Also nie im Licht stehen bleiben. Vor dem Loch zieht sich ein Feuergraben über den Platz – über die Knochenrampe springt man hinüber, oder man geht unten herum.',
+    intro: 'Mitten auf dem Platz steht der Turm, und auf ihm brennt das Auge. Langsam dreht es seinen Blick über den Boden. Wer in seinem Lichtkegel liegen bleibt, ist verloren – nur hinter den Gruftblöcken ist man sicher. Ein rollender Ball ist zu schnell für das Auge: Also nie im Licht stehen bleiben. Vor dem Loch zieht sich ein Feuergraben über den Platz – über die Knochenrampe springt man hinüber (Vorsicht, im Takt jagt eine Riesenfledermaus quer über den Graben), oder man geht unten herum.',
     obstacles: [
       { type: 'eyetower', x: 19.5, y: 10.5, r: 1.1, range: 9.5, fov: 0.62, speed: 0.45, phase: 0 },
       { type: 'bumper', x: 11.5, y: 17.5, r: 0.4, style: 'grave', kick: 7 },
       { type: 'bumper', x: 27.5, y: 3.5, r: 0.4, style: 'grave', kick: 7 },
       { type: 'ramp', x: 27.5, y: 2, w: 2, h: 4, angle: 0, minSpeed: 2.5, speed: 4.6, land: 2.6 },
+      { type: 'sharkjump', style: 'bat', x: 30.5, y: 4.5, w: 1.6, h: 5, period: 4.6, jump: 0.36, phase: 0.5, axis: 'y', height: 1.4 },
       { type: 'mover', x0: 4, y0: 4, x1: 15, y1: 13, w: 0.6, h: 0.6, period: 7, style: 'bat', e: 0.7 },
       { type: 'wall', x0: 34, y0: 2, x1: 36, y1: 2, extend: 0 },
     ],
