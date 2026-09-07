@@ -277,7 +277,7 @@ const THEMES = {
     autoDecor: ['banner', 'brazierBlue', 'crate', 'banner', 'barrel'],
   },
   shadow: { // Schattenreich: Friedhöfe unter blutrotem Mond, Aschegrund, Schattenfeuer, Nebel
-    atmo: 'mist', shadowBg: true, stars: true,
+    atmo: 'mist', shadowBg: true, stars: true, shadowFire: true,
     sky: ['#04030a', '#1c1030'], ground: '#241a30', groundEdge: '#0d0813',
     floor: ['#4a3f5e', '#433856'], sand: '#5c5468', ice: '#b9b0d8', snow: '#f1f7ff',
     water: '#1a2242', lava: '#8a3bff',
@@ -289,7 +289,7 @@ const THEMES = {
     autoDecor: ['gravestone', 'deadTree', 'gravestone', 'ghostlight', 'bones', 'obsidian', 'gravecross', 'skull'],
   },
   darksea: { // Totensee: schwarzes Meer unter dem Blutmond, Nebel, Geistersegel am Horizont, morsche Stege
-    atmo: 'mist', sea: true, darkSea: true, shadowBg: true, stars: true, cliff: '#2a2238',
+    atmo: 'mist', sea: true, darkSea: true, shadowBg: true, stars: true, shadowFire: true, cliff: '#2a2238',
     sky: ['#04030a', '#1a1030'], ground: '#0c1424', groundEdge: '#05080f',
     floor: ['#4a3f5e', '#433856'], sand: '#5c5468', ice: '#b9b0d8', snow: '#f1f7ff',
     water: '#0c1424', lava: '#8a3bff',
@@ -301,7 +301,7 @@ const THEMES = {
     autoDecor: ['gravestone', 'deadTree', 'bones', 'ghostlight', 'skull', 'anchor', 'gravecross'],
   },
   ghostship: { // Im Totenschiff: morsche Planken im Dunkeln, violette Laternen, Nebel, Tentakel aus dem Rumpf
-    atmo: 'mist', plankFloor: true, planks: true, stars: true,
+    atmo: 'mist', plankFloor: true, planks: true, stars: true, shadowFire: true,
     sky: ['#04030a', '#120a20'], ground: '#0a0a14', groundEdge: '#040408',
     floor: ['#3e3040', '#352838'], sand: '#5c5468', ice: '#7fd6c8', snow: '#f1f7ff',
     water: '#0c1424', lava: '#8a3bff',
@@ -313,7 +313,7 @@ const THEMES = {
     autoDecor: ['bones', 'barrel', 'skull', 'ghostlight', 'crate', 'seaweed'],
   },
   throne: { // Thronsaal: schwarzer Marmor, violette Fackeln, Säulen, der Schattenthron
-    atmo: 'spores', throne: true,
+    atmo: 'spores', throne: true, shadowFire: true,
     sky: ['#05030a', '#120a20'], ground: '#1a1226', groundEdge: '#0a0610',
     floor: ['#3a3050', '#342b48'], sand: '#4a4456', ice: '#b9b0d8', snow: '#f1f7ff',
     water: '#1a2242', lava: '#8a3bff',

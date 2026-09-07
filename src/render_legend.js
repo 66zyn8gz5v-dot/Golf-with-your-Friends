@@ -531,4 +531,34 @@ Object.assign(Renderer.prototype, {
     for (let i = 0; i < 3; i++) { const u = i / 3; const q0 = this.proj(ob.x - 0.3 * r, ob.y + r * (0.5 - 0.4 * u), 0.15 - 0.65 * u), q1 = this.proj(ob.x + 0.3 * r, ob.y + r * (0.5 - 0.4 * u), 0.15 - 0.65 * u); ctx.beginPath(); ctx.moveTo(q0[0], q0[1]); ctx.lineTo(q1[0], q1[1]); ctx.stroke(); }
     const [lx, ly] = this.proj(ob.x + r * 0.9, ob.y - r * 0.7, 0); this.spriteLantern(ctx, lx, ly, s * 0.8, t);
   },
+  /* Schattenfeuer: die violette Glut des Schattenreichs. Durchgang 0: dunkler Grund, der über alle Kacheln
+     gleichmäßig wogt. Durchgang 1 (nach allen Grundflächen): wabernde Glutkerne, die über die Kachelränder
+     hinausleuchten, züngelnde Flammen, aufsteigende Funken und ein Lichtsaum auf den Nachbarkacheln. */
+  drawShadowFire(ctx, x, y, t, lv, pass) {
+    const s = this.scale, hash = this.hashL, poly = [[x, y], [x + 1, y], [x + 1, y + 1], [x, y + 1]];
+    const wave = 0.5 + 0.5 * Math.sin(t * 1.2 + (x + y) * 0.35) * Math.cos(t * 0.7 + (x - y) * 0.25), glow = 0.65 + 0.35 * Math.sin(t * 2.4 + (x + y) * 0.5);
+    if (pass === 0) { this.fillPoly(ctx, poly, -0.12, `rgb(${Math.round(30 + 14 * wave)},${Math.round(8 + 8 * wave)},${Math.round(64 + 26 * wave)})`); return; }
+    const [cx, cy] = this.proj(x + 0.5 + 0.15 * Math.sin(t * 1.1 + x * 1.7 + y * 2.3), y + 0.5 + 0.15 * Math.cos(t * 0.9 + x * 2.3 + y * 1.7), -0.11);
+    const rg = ctx.createRadialGradient(cx, cy, 0, cx, cy, s * 1.1); // Glutkern, reicht über den Kachelrand
+    rg.addColorStop(0, `rgba(225,165,255,${0.5 * glow})`); rg.addColorStop(0.35, `rgba(150,70,255,${0.42 * glow})`); rg.addColorStop(1, 'rgba(90,30,180,0)');
+    ctx.fillStyle = rg; ctx.beginPath(); ctx.ellipse(cx, cy, s * 1.1, s * 1.1 * this.cam.tilt, 0, 0, TAU); ctx.fill();
+    ctx.lineCap = 'round'; // züngelnde Flammen
+    for (let k = 0; k < 2; k++) {
+      const u = (t * 0.35 + hash(x + k * 7, y)) % 1, fx = x + 0.2 + hash(x, y + k * 3) * 0.6, fy = y + 0.85 - u * 0.7;
+      ctx.strokeStyle = `rgba(200,150,255,${0.5 * (1 - u) * glow})`; ctx.lineWidth = Math.max(1, s * 0.045);
+      const p0 = this.proj(fx - 0.1, fy + 0.1, -0.1), p1 = this.proj(fx + 0.1 * Math.sin(t * 5 + k), fy - 0.05, -0.05), p2 = this.proj(fx + 0.12, fy - 0.2, -0.02 + u * 0.3);
+      ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.quadraticCurveTo(p1[0], p1[1], p2[0], p2[1]); ctx.stroke();
+    }
+    for (let k = 0; k < 2; k++) { // aufsteigende Funken
+      const u = (t * (0.28 + 0.12 * hash(x, y + 5 + k)) + hash(x + 3 * k, y)) % 1, px = x + 0.2 + hash(x + k, y + 9) * 0.6 + Math.sin(t * 2 + u * 9) * 0.08, py = y + 0.2 + hash(x + 5, y + k) * 0.6;
+      const [ex, ey] = this.proj(px, py, -0.1 + u * 1.4);
+      ctx.fillStyle = `rgba(${u < 0.5 ? 240 : 190},${u < 0.5 ? 200 : 130},255,${0.9 * (1 - u)})`; ctx.beginPath(); ctx.arc(ex, ey, Math.max(1, s * (0.05 - u * 0.025)), 0, TAU); ctx.fill();
+    }
+    ctx.fillStyle = `rgba(160,90,255,${0.14 * glow})`; // Lichtsaum auf angrenzenden Bodenkacheln
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const c = lv.charAt(x + dx + 0.5, y + dy + 0.5); if (!lv.isFloorChar(c) || c === 'l' || c === 'w') continue;
+      const rim = dx ? [[x + (dx > 0 ? 1 : 0), y], [x + (dx > 0 ? 1.3 : -0.3), y], [x + (dx > 0 ? 1.3 : -0.3), y + 1], [x + (dx > 0 ? 1 : 0), y + 1]] : [[x, y + (dy > 0 ? 1 : 0)], [x + 1, y + (dy > 0 ? 1 : 0)], [x + 1, y + (dy > 0 ? 1.3 : -0.3)], [x, y + (dy > 0 ? 1.3 : -0.3)]];
+      this.pathPoly(ctx, rim, 0.003); ctx.fill();
+    }
+  },
 });

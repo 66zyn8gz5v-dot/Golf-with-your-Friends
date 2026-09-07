@@ -275,12 +275,14 @@ class Renderer {
     this.drawFloor(ctx);
 
     // animierte Flüssigkeiten
+    const fires = [];
     for (let y = 0; y < lv.H; y++) for (let x = 0; x < lv.W; x++) {
       const c = lv.tiles[y][x];
       if (c !== 'w' && c !== 'l') continue;
       const [lsx, lsy] = this.proj(x + 0.5, y + 0.5);
       if (!this.onScreen(lsx, lsy, this.scale * 1.5)) continue;
       const poly = [[x, y], [x + 1, y], [x + 1, y + 1], [x, y + 1]];
+      if (c === 'l' && th.shadowFire) { fires.push([x, y]); this.drawShadowFire(ctx, x, y, t, lv, 0); continue; }
       const base = c === 'w' ? th.water : th.lava;
       const pulse = 0.5 + 0.5 * Math.sin(t * (c === 'w' ? 2 : 1.3) + x * 1.7 + y * 2.3);
       this.fillPoly(ctx, poly, -0.12, shade(base, 0.85 + 0.2 * pulse));
@@ -290,6 +292,7 @@ class Renderer {
       ctx.beginPath(); ctx.moveTo(a0, a1); ctx.lineTo(b0, b1); ctx.stroke();
     }
 
+    for (const [fx, fy] of fires) this.drawShadowFire(ctx, fx, fy, t, lv, 1); // Glut, Flammen und Funken über den fertigen Grund
     // Boden-Overlays
     for (const ob of lv.obstacles) this.drawObstacleFloor(ctx, ob, t);
     if (lv.cup) this.drawCupHole(ctx);
