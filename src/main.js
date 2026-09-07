@@ -430,7 +430,7 @@
     }
     const p = state.players[state.curPlayer], lv = state.level;
     state.ball = makeBall(lv.tee.x, lv.tee.y, p.color);
-    state.strokes = 0; state.phase = 'aim'; state.aim = null; state.restTimer = 0; state.slowTimer = 0;
+    state.strokes = 0; state.phase = 'aim'; state.aim = null; state.restTimer = 0; state.slowTimer = 0; state.rollT = 0; state.stuckRef = null;
     faceCup(); setCamMode('follow');
     if (state.players.length > 1) showMessage(`${p.name} ist dran`, 1300);
     updateHud();
@@ -439,8 +439,25 @@
     const b = state.ball;
     b.restX = b.x; b.restY = b.y; b.shotX = b.x; b.shotY = b.y; // Schlagstart (für Aufspießen am Ruheplatz)
     b.vx = dx * power * MAX_SHOT; b.vy = dy * power * MAX_SHOT;
-    state.strokes++; state.phase = 'rolling'; state.aim = null; state.restTimer = 0; state.slowTimer = 0;
+    state.strokes++; state.phase = 'rolling'; state.aim = null; state.restTimer = 0; state.slowTimer = 0; state.rollT = 0; state.stuckRef = null;
     Sfx.hit(power); updateHud();
+  }
+  /* Festgefahrener Ball: anhalten; liegt er in der Fahrspur eines bewegten Hindernisses, auf die nächste freie Kachel daneben setzen */
+  function freeStuckBall() {
+    const b = state.ball, lv = state.level;
+    b.vx = 0; b.vy = 0; state.rollT = 0; state.stuckRef = null;
+    const lanes = lv.obstacles.filter(o => o.type === 'mover').map(o => ({ x0: Math.min(o.x0, o.x1) - o.w / 2 - b.r, x1: Math.max(o.x0, o.x1) + o.w / 2 + b.r, y0: Math.min(o.y0, o.y1) - o.h / 2 - b.r, y1: Math.max(o.y0, o.y1) + o.h / 2 + b.r }));
+    const inLane = (x, y) => lanes.some(l => x > l.x0 && x < l.x1 && y > l.y0 && y < l.y1);
+    if (inLane(b.x, b.y)) {
+      let best = null, bd = Infinity;
+      for (let ty = 0; ty < lv.H; ty++) for (let tx = 0; tx < lv.W; tx++) {
+        const c = lv.tiles[ty][tx]; if (!lv.isFloorChar(c) || c === 'w' || c === 'l' || c === 'o') continue;
+        const cx = tx + 0.5, cy = ty + 0.5; if (inLane(cx, cy)) continue;
+        const d = Math.hypot(cx - b.x, cy - b.y); if (d < bd) { bd = d; best = [cx, cy]; }
+      }
+      if (best && bd < 6) { b.x = best[0]; b.y = best[1]; b.z = 0.4; b.vz = 0; burst(b.x, b.y, '#ffffff', 8, true); showMessage('Der Ball wurde freigelegt', 1300); }
+    }
+    ballAtRest();
   }
   function ballAtRest() {
     const b = state.ball;
@@ -631,12 +648,18 @@
       if (b && (state.phase === 'aim' || state.phase === 'rolling')) {
         const ev = stepPhysics(lv, b, STEP, state.t, state.phase === 'rolling');
         handleEvents(ev);
-        if (b.rider || b.air) { state.restTimer = 0; state.slowTimer = 0; if (state.phase === 'aim') { state.phase = 'rolling'; state.aim = null; } }
+        if (ev.some(e => e.type === 'contact' && e.kind === 'mover')) state.lastMoverHit = state.t;
+        if (b.rider || b.air) { state.restTimer = 0; state.slowTimer = 0; state.rollT = 0; state.stuckRef = null; if (state.phase === 'aim') { state.phase = 'rolling'; state.aim = null; } }
         else if (state.phase === 'rolling') {
           const sp = Math.hypot(b.vx, b.vy);
           if (sp < 0.08) { state.restTimer += STEP; if (state.restTimer > 0.25) ballAtRest(); }
           else { state.restTimer = 0; }
           if (sp < 0.5 && !b.boosted) { state.slowTimer += STEP; if (state.slowTimer > 3) ballAtRest(); } else state.slowTimer = 0;
+          // Notbremse: der Ball zappelt seit Sekunden auf der Stelle (eingeklemmt) oder wird seit langem von einem
+          // bewegten Hindernis hin- und hergeschoben – anhalten und aus der Fahrspur nehmen
+          state.rollT = (state.rollT || 0) + STEP;
+          if (!state.stuckRef || Math.hypot(b.x - state.stuckRef.x, b.y - state.stuckRef.y) > 1) state.stuckRef = { x: b.x, y: b.y, t: state.t };
+          if (state.phase === 'rolling' && (state.t - state.stuckRef.t > 4 || (state.rollT > 8 && state.t - (state.lastMoverHit || -99) < 2.5))) freeStuckBall();
         } else if (state.phase === 'aim') {
           if (Math.hypot(b.vx, b.vy) > 0.3) { state.phase = 'rolling'; state.aim = null; state.restTimer = 0; state.slowTimer = 0; }
         }

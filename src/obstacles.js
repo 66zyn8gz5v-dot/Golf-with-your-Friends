@@ -29,7 +29,7 @@ class Mover {
     this.dir = Math.sign(this.vx || this.vy) || 1;
   }
   poly() { return rectPoly(this.x, this.y, this.w, this.h); }
-  segments(out) { polySegments(this.poly(), out, { vx: this.vx, vy: this.vy, e: this.e, kind: 'mover' }); }
+  segments(out) { polySegments(this.poly(), out, { vx: this.vx, vy: this.vy, e: this.e, kind: 'mover', owner: this }); }
 }
 
 /* Welle: wandert wie ein Mover hin und her, ist aber keine Mauer. Einen Ball, der auf ihr liegt oder

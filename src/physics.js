@@ -20,6 +20,7 @@ function collideSeg(ball, s, events) {
   if (d < 1e-6) { const L = Math.sqrt(L2); nx = -ey / L; ny = ex / L; }
   else { nx = dx / d; ny = dy / d; }
   ball.x += nx * (rad - d); ball.y += ny * (rad - d);
+  events.push({ type: 'contact', kind: s.kind || 'wall', nx, ny, owner: s.owner }); // jede Berührung (für die Klemm-Erkennung)
   let svx = s.vx || 0, svy = s.vy || 0;
   if (s.omega) { svx += -s.omega * (py - s.cy); svy += s.omega * (px - s.cx); }
   const rvx = ball.vx - svx, rvy = ball.vy - svy;
@@ -53,6 +54,30 @@ function collideCircle(ball, c, events) {
     events.push({ type: 'bounce', speed: out, kind: c.kind || 'circle', x: ball.x, y: ball.y });
   }
   return true;
+}
+
+/* Eingeklemmt: ein bewegtes Hindernis (Lore, Fass, Wache …) drückt den Ball gegen eine Mauer oder ein zweites
+   Hindernis – die Kollision allein kann das nicht lösen, der Ball würde endlos hin- und hergequetscht.
+   Dann wird der Ball hinter das Hindernis gesetzt (in Fahrtrichtung gesehen), notfalls davor. */
+function resolveCrush(level, ball, events) {
+  const cs = events.filter(e => e.type === 'contact'), movers = cs.filter(c => c.kind === 'mover' && c.owner);
+  if (!movers.length) return;
+  if (!movers.some(m => cs.some(c => c !== m && m.nx * c.nx + m.ny * c.ny < -0.5))) return;
+  const free = (x, y) => level.isFloorChar(level.charAt(x, y)) && !level.obstacles.some(o => o.type === 'mover' && Math.abs(x - o.x) < o.w / 2 + ball.r && Math.abs(y - o.y) < o.h / 2 + ball.r);
+  for (const m of movers) {
+    const ob = m.owner, sp = Math.hypot(ob.vx, ob.vy);
+    let ux, uy;
+    if (sp > 0.05) { ux = ob.vx / sp; uy = ob.vy / sp; }
+    else { const L = Math.hypot(ob.x1 - ob.x0, ob.y1 - ob.y0) || 1; ux = (ob.x1 - ob.x0) / L * (ob.dir || 1); uy = (ob.y1 - ob.y0) / L * (ob.dir || 1); }
+    const half = Math.abs(ux) * ob.w / 2 + Math.abs(uy) * ob.h / 2 + ball.r + 0.2;
+    for (const s of [1, -1]) {
+      const px = ob.x - ux * half * s, py = ob.y - uy * half * s;
+      if (!free(px, py)) continue;
+      ball.x = px; ball.y = py; ball.vx = -ux * s * 1.5; ball.vy = -uy * s * 1.5; ball.z = Math.max(ball.z, 0.15); ball.vz = 1.2;
+      events.push({ type: 'squeeze', x: px, y: py }); return;
+    }
+  }
+  ball.vx = 0; ball.vy = 0; // kein freier Platz: wenigstens zur Ruhe kommen lassen
 }
 
 /* Ein Physik-Schritt. allowForces: Windfelder/Beschleuniger nur, wenn der Ball "im Spiel" ist. */
@@ -123,6 +148,8 @@ function stepPhysics(level, ball, dt, t, allowForces) {
     for (const s of dyn) collideSeg(ball, s, events);
     for (const cc of circles) collideCircle(ball, cc, events);
   }
+
+  resolveCrush(level, ball, events);
 
   ball.portalCd = Math.max(0, ball.portalCd - dt);
   for (const ob of level.obstacles) { if (ob.teleport) ob.teleport(ball, t, events); if (ob.trigger) ob.trigger(ball, t, events); }
