@@ -579,15 +579,48 @@ class Renderer {
     this.isoEllipse(ctx, c.x, c.y, 0.01, 0.42, '#0e0b16');
     this.isoEllipse(ctx, c.x, c.y - 0.05, 0.012, 0.32, '#241c35');
   }
+  /* Fahne am Loch: Stange mit Messingspitze und Fuß am Lochrand, wehendes Tuch mit Bordüre, Emblem und Schatten */
   drawFlag(ctx, t) {
-    const c = this.level.cup, th = this.theme, s = this.scale;
-    const [bx, by] = this.proj(c.x, c.y, 0), [tx, ty] = this.proj(c.x, c.y, 1.7);
-    ctx.strokeStyle = '#f4efe6'; ctx.lineWidth = Math.max(1.5, s * 0.06);
-    ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(tx, ty); ctx.stroke();
-    const wave = Math.sin(t * 4) * 0.08;
-    ctx.fillStyle = th.flag;
-    ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(tx + s * 0.75, ty + s * (0.28 + wave)); ctx.lineTo(tx, ty + s * 0.55); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = th.accent; ctx.beginPath(); ctx.arc(tx, ty, s * 0.07, 0, TAU); ctx.fill();
+    const c = this.level.cup, th = this.theme, s = this.scale, flag = th.flag, dark = shade(flag, 0.6), light = shade(flag, 1.25);
+    const [bx, by] = this.proj(c.x, c.y, 0), [tx, ty] = this.proj(c.x, c.y, 1.9);
+    const H = by - ty, top = ty + H * 0.06, w = s * 0.95, h = s * 0.5, ph = t * 3.2 + c.x;
+    const wv = u => Math.sin(ph - u * 4.5) * s * 0.07 * u; // Wellenversatz entlang des Tuchs (am Stock 0)
+    // Schatten des Tuchs auf dem Boden
+    ctx.fillStyle = 'rgba(0,0,0,0.18)'; ctx.beginPath(); ctx.ellipse(bx + w * 0.45, by + s * 0.05, w * 0.42, s * 0.09, 0, 0, TAU); ctx.fill();
+    // Fuß am Lochrand und Stange (dunkler Kern, heller Glanz)
+    ctx.fillStyle = '#2a2430'; ctx.beginPath(); ctx.ellipse(bx, by, s * 0.13, s * 0.06, 0, 0, TAU); ctx.fill();
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#1e1a24'; ctx.lineWidth = Math.max(2.5, s * 0.1); ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(tx, ty); ctx.stroke();
+    ctx.strokeStyle = '#f4efe6'; ctx.lineWidth = Math.max(1.2, s * 0.05); ctx.beginPath(); ctx.moveTo(bx - s * 0.015, by); ctx.lineTo(tx - s * 0.015, ty); ctx.stroke();
+    // Tuch: oben und unten geschwungene Kanten, außen eingekerbter Schwalbenschwanz
+    const edge = (y0, y1) => { // Punkte einer Kante von der Stange nach außen
+      const pts = []; for (let k = 0; k <= 8; k++) { const u = k / 8; pts.push([tx + w * u, y0 + (y1 - y0) * u + wv(u)]); } return pts;
+    };
+    const topE = edge(top, top + h * 0.18), botE = edge(top + h, top + h * 0.82);
+    const path = () => {
+      ctx.beginPath(); ctx.moveTo(topE[0][0], topE[0][1]);
+      for (let k = 1; k < topE.length; k++) ctx.lineTo(topE[k][0], topE[k][1]);
+      const tipT = topE[8], tipB = botE[8]; ctx.lineTo(tipT[0] - w * 0.16, (tipT[1] + tipB[1]) / 2); ctx.lineTo(tipB[0], tipB[1]); // Kerbe
+      for (let k = botE.length - 2; k >= 0; k--) ctx.lineTo(botE[k][0], botE[k][1]);
+      ctx.closePath();
+    };
+    const g = ctx.createLinearGradient(tx, top, tx + w, top + h); g.addColorStop(0, light); g.addColorStop(0.45, flag); g.addColorStop(1, dark);
+    path(); ctx.fillStyle = g; ctx.fill();
+    // Falten: helle und dunkle Streifen, die mit der Welle wandern
+    ctx.save(); path(); ctx.clip();
+    for (let k = 1; k <= 3; k++) { const u = k / 4, x = tx + w * u, sway = Math.cos(ph - u * 4.5); ctx.fillStyle = sway > 0 ? 'rgba(255,255,255,0.14)' : 'rgba(0,0,0,0.16)'; ctx.fillRect(x - w * 0.07, top - s * 0.2, w * 0.14, h + s * 0.4); }
+    ctx.restore();
+    // Bordüre und Emblem
+    path(); ctx.strokeStyle = shade(flag, 0.45); ctx.lineWidth = Math.max(1, s * 0.035); ctx.stroke();
+    const ex = tx + w * 0.4, ey = top + h * 0.5 + wv(0.4), er = s * 0.11;
+    ctx.fillStyle = th.accent; ctx.beginPath(); ctx.arc(ex, ey, er, 0, TAU); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.beginPath(); ctx.arc(ex - er * 0.3, ey - er * 0.3, er * 0.35, 0, TAU); ctx.fill();
+    ctx.strokeStyle = shade(flag, 0.45); ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(ex, ey, er, 0, TAU); ctx.stroke();
+    // Messingspitze mit Glanz
+    const kg = ctx.createRadialGradient(tx - s * 0.03, ty - s * 0.04, s * 0.02, tx, ty, s * 0.1);
+    kg.addColorStop(0, '#fff3c4'); kg.addColorStop(0.6, '#ffd166'); kg.addColorStop(1, '#8a5a10');
+    ctx.fillStyle = kg; ctx.beginPath(); ctx.arc(tx, ty, s * 0.1, 0, TAU); ctx.fill();
+    ctx.fillStyle = `rgba(255,230,150,${0.25 + 0.2 * Math.sin(t * 2.5)})`; ctx.beginPath(); ctx.arc(tx, ty, s * 0.2, 0, TAU); ctx.fill();
   }
   drawBall(ctx, b) {
     const s = this.scale;
