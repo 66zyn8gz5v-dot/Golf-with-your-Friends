@@ -29,8 +29,8 @@ const SHADOW_COURSES = [
       { type: 'wall', x0: 12, y0: 8, x1: 14, y1: 10, extend: 0 },
       { type: 'mover', x0: 20, y0: 7.5, x1: 28, y1: 8.5, w: 0.9, h: 0.9, period: 6, style: 'ghost', e: 0.5 },
       { type: 'bumper', x: 24.5, y: 9.4, r: 0.38, style: 'grave', kick: 7 },
-      { type: 'wall', x0: 34, y0: 7, x1: 35, y1: 8, extend: 0 },
-      { type: 'wall', x0: 35, y0: 9, x1: 34, y1: 10, extend: 0 },
+      { type: 'wall', x0: 33, y0: 7, x1: 34, y1: 8, extend: 0 },
+      { type: 'wall', x0: 34, y0: 9, x1: 33, y1: 10, extend: 0 },
     ],
     decor: [
       { t: 'gravestone', x: 1.4, y: 1.4, s: 1.3, seed: 0.4 }, { t: 'gravecross', x: 5.5, y: 1.2, s: 1.2 }, { t: 'deadTree', x: 9.5, y: 0.8, s: 1.5 }, { t: 'ghostlight', x: 8.5, y: 5.6, s: 1.2, seed: 0.3 },
@@ -96,7 +96,7 @@ const SHADOW_COURSES = [
       { type: 'trapdoor', x: 18, y: 3.5, w: 2.2, h: 3, period: 5.5, open: 0.32, phase: 0.6 },
       { type: 'trapdoor', x: 23, y: 3.5, w: 2.2, h: 3, period: 5.5, open: 0.32, phase: 0.9 },
       { type: 'wall', x0: 26, y0: 2, x1: 28, y1: 4, extend: 0 },
-      { type: 'wall', x0: 25, y0: 8, x1: 27, y1: 6, extend: 0 },
+      { type: 'wall', x0: 25, y0: 6, x1: 27, y1: 8, extend: 0 },
       { type: 'rotor', x: 31.5, y: 6, blades: 1, len: 1.6, thick: 0.14, hubR: 0.22, style: 'scythe', e: 0.6, swing: { amp: Math.PI / 2.6, speed: 1.6 }, phase: Math.PI / 2, height: 0.5 },
       { type: 'wall', x0: 37, y0: 5, x1: 38, y1: 6, extend: 0 },
       { type: 'wall', x0: 38, y0: 7, x1: 37, y1: 8, extend: 0 },
@@ -222,7 +222,7 @@ const SHADOW_COURSES = [
       { type: 'bumper', x: 20.5, y: 5.8, r: 0.4, style: 'grave', kick: 7 },
       { type: 'bumper', x: 5.5, y: 18.5, r: 0.4, style: 'eye', kick: 7 },
       { type: 'bumper', x: 23.5, y: 18.5, r: 0.4, style: 'eye', kick: 7 },
-      { type: 'wall', x0: 11, y0: 4, x1: 12, y1: 5, extend: 0 },
+      { type: 'wall', x0: 13, y0: 4, x1: 12, y1: 5, extend: 0 },
       { type: 'wall', x0: 18, y0: 5, x1: 17, y1: 4, extend: 0 },
     ],
     decor: [
@@ -268,7 +268,7 @@ const SHADOW_COURSES = [
       { type: 'switch', x: 3.5, y: 12.5, r: 0.55, duration: 20, target: 'A' },
       { type: 'wall', x0: 2, y0: 17, x1: 4, y1: 18, extend: 0 },
       { type: 'wall', x0: 2, y0: 9, x1: 4, y1: 8, extend: 0 },
-      { type: 'gate', x: 13, y: 11, w: 0.3, h: 2, linked: 'A', liftH: 1.4, barH: 1.0 },
+      { type: 'gate', x: 13, y: 11.5, w: 0.3, h: 3, linked: 'A', liftH: 1.4, barH: 1.0 },
       { type: 'field', x: 14, y: 10, w: 4, h: 3, fx: 0, fy: 0, style: 'dark' },
       { type: 'bumper', x: 20.5, y: 10.5, r: 0.4, style: 'eye', kick: 7 },
       { type: 'rotor', x: 17.5, y: 7.5, blades: 1, len: 1.4, thick: 0.14, hubR: 0.22, style: 'scythe', e: 0.6, swing: { amp: Math.PI / 2.4, speed: 1.6 }, phase: 0, height: 0.5 },
@@ -280,7 +280,7 @@ const SHADOW_COURSES = [
     autoDecor: { density: 0.14, seed: 513 },
   },
   {
-    name: 'Schattenwald', par: 5, theme: 'shadow', maxStrokes: 24, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Gruft gestürzt', spiked: 'Von Knochenstacheln aufgespießt' },
+    name: 'Schattenwald', par: 4, theme: 'shadow', maxStrokes: 24, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Gruft gestürzt', spiked: 'Von Knochenstacheln aufgespießt' },
     views: [{ x: 2, y: 2, w: 36, h: 12, look: { x: 35.5, y: 7.5 } }],
     map: [
       '........................................',
@@ -357,7 +357,6 @@ const SHADOW_COURSES = [
       { type: 'spikes', x: 20.5, y: 17.5, w: 1, h: 3, period: 4.4, up: 0.3, phase: 0.2 },
       { type: 'mover', x0: 27, y0: 15, x1: 32, y1: 19.5, w: 0.9, h: 0.9, period: 6, style: 'ghost', e: 0.5 },
       { type: 'wall', x0: 33, y0: 21, x1: 34, y1: 20, extend: 0 },
-      { type: 'wall', x0: 34, y0: 14, x1: 33, y1: 13, extend: 0 },
       { type: 'trapdoor', x: 31.5, y: 11, w: 2.4, h: 2.2, period: 5.5, open: 0.32, phase: 0 },
       { type: 'trapdoor', x: 31.5, y: 8, w: 2.4, h: 2.2, period: 5.5, open: 0.32, phase: 0.5 },
       { type: 'wall', x0: 30, y0: 4, x1: 32, y1: 4, extend: 0 },
@@ -408,7 +407,7 @@ const SHADOW_COURSES = [
         { type: 'rotor', x: 13.5, y: 15, blades: 2, len: 1.4, thick: 0.14, hubR: 0.3, speed: 1.5, style: 'scythe', e: 0.6, height: 0.5 },
         { type: 'bumper', x: 8.5, y: 13.6, r: 0.42, style: 'eye', kick: 7 },
         { type: 'bumper', x: 8.5, y: 16.4, r: 0.42, style: 'eye', kick: 7 },
-        { type: 'wall', x0: 2, y0: 13, x1: 3, y1: 14, extend: 0 },
+        { type: 'wall', x0: 2, y0: 14, x1: 3, y1: 13, extend: 0 },
         { type: 'wall', x0: 3, y0: 17, x1: 2, y1: 16, extend: 0 },
       ],
       decor: [

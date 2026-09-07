@@ -102,14 +102,14 @@ Erste Welt der Stufe Legende: schwebende Felsinseln in einer Gewitternacht (`sto
 | Nr. | Bahn | Par | Besonderheit |
 |---|---|---|---|
 | 1 | Inselsprung | 4 | drei Inseln, zwei Aufwinde tragen den Ball in Rollrichtung über die Schlucht, Blitzfeld auf der Mittelinsel, Propeller, Blitzkugel |
-| 2 | Ballonfahrt | 5 | zwei Heißluftballon-Fähren, dazwischen eine Insel mit Böen und einer patrouillierenden Gewitterwolke |
+| 2 | Ballonfahrt | 6 | zwei Heißluftballon-Fähren, dazwischen eine Insel mit Böen und einer patrouillierenden Gewitterwolke |
 | 3 | Blitzfeld | 5 | vier versetzt schlagende Blitzfelder auf einer langen Insel, Knick mit Banden, Propeller vor dem Loch |
 | 4 | Windbrücke | 5 | zwei Hängestege ohne Geländer mit Böen quer zur Laufrichtung, Insel mit Blitzfeld dazwischen |
 | 5 | Luftschiffwerft | 6 | schwenkende Werftkanone über die Schlucht, Luftschiff-Fähre zur Zielinsel, Fallgitter und Propeller vor dem Loch |
-| 6 | Wolkenschlucht | 6 | Aufwind auf die große Mittelinsel, Wirbelsturm fängt langsame Bälle und schleudert sie nach Süden, zweiter Aufwind zur Zielinsel |
-| 7 | Gewitterkessel | 6 | Ringarena um den Kessel: zwei Gewitterwolken laufen um, vier Blitzfelder schlagen versetzt ein, Loch in der Nordnische |
+| 6 | Wolkenschlucht | 5 | Aufwind auf die große Mittelinsel, Wirbelsturm fängt langsame Bälle und schleudert sie nach Süden, zweiter Aufwind zur Zielinsel |
+| 7 | Gewitterkessel | 5 | Ringarena um den Kessel: zwei Gewitterwolken laufen um, vier Blitzfelder schlagen versetzt ein, Loch in der Nordnische |
 | 8 | Sturmpfad | 6 | langer Grat hin und zurück, geländerlose Abschnitte mit Böen, Banden an den Kehren, Blitze, Propeller |
-| 9 | Sturmfestung | 8 | zweiteilige Bahn: Aufwind, Ballon, Gewitterwolke, Felsrampe mit Gegenwind zum Tor; drinnen die Sturmhalle mit Propellern, Blitzfeldern, Druckplatte und Fallgitter und der Sturmkanone zurück zum Loch |
+| 9 | Sturmfestung | 9 | zweiteilige Bahn: Aufwind, Ballon, Gewitterwolke, Felsrampe mit Gegenwind zum Tor; drinnen die Sturmhalle mit Propellern, Blitzfeldern, Druckplatte und Fallgitter und der Sturmkanone zurück zum Loch |
 
 ## Die Bahnen des Schattenreichs
 
@@ -118,14 +118,14 @@ Zweite Welt der Stufe Legende: Friedhöfe unter blutrotem Mond, Aschegrund, Scha
 | Nr. | Bahn | Par | Besonderheit |
 |---|---|---|---|
 | 1 | Friedhofspforte | 4 | Grabstein-Bumper, Sense an der Kehre, Geist vor dem Loch |
-| 2 | Irrlichtsumpf | 5 | weites Moor mit Schattenwasser, Seelenlichter ziehen den Ball zu den Tümpeln, Schattenzone in der Mitte, Fledermaus |
-| 3 | Falltürgang | 5 | vier Falltüren im Takt, Knick mit Banden, Sense vor dem Loch |
-| 4 | Schattenspiegel | 5 | drei Spiegelportale: eines zum Loch, eines ins Schattenfeuer, eines zurück; Fledermäuse im Zielsaal |
-| 5 | Knochenbrücke | 5 | Steg ohne Geländer über den Feuerstrom, Knochenstacheln, Sense auf der Insel, schmaler zweiter Steg |
-| 6 | Geisterreigen | 6 | großer Platz mit drei Geistern, Schattenzone mit Schattenstrudel in der Mitte, Loch in der Nordnische |
-| 7 | Gruftlabyrinth | 6 | einmal außen herum zur Druckplatte, Steintor zur Grabkammer, Falltüren, Fledermaus, Schattenzone, Sense |
-| 8 | Schattenwald | 6 | tote Stämme als Blöcke, Sensen, Fledermäuse, zwei Schattenzonen, Schattenaugen vor dem Loch |
-| 9 | Schattenthron | 8 | zweiteilige Bahn: Friedhof, Knochensteg über Schattenfeuer, Geist, Falltüren, Gruft; drinnen der Thronsaal mit Geistern, Falltüren, Druckplatte, Schattenzone, Sense und Augen bis zum Thronpodest |
+| 2 | Irrlichtsumpf | 6 | weites Moor mit Schattenwasser, Seelenlichter ziehen den Ball zu den Tümpeln, Schattenzone in der Mitte, Fledermaus |
+| 3 | Falltürgang | 6 | vier Falltüren im Takt, Knick mit Banden, Sense vor dem Loch |
+| 4 | Schattenspiegel | 4 | drei Spiegelportale: eines zum Loch, eines ins Schattenfeuer, eines zurück; Fledermäuse im Zielsaal |
+| 5 | Knochenbrücke | 6 | Steg ohne Geländer über den Feuerstrom, Knochenstacheln, Sense auf der Insel, schmaler zweiter Steg |
+| 6 | Geisterreigen | 4 | großer Platz mit drei Geistern, Schattenzone mit Schattenstrudel in der Mitte, Loch in der Nordnische |
+| 7 | Gruftlabyrinth | 7 | einmal außen herum zur Druckplatte, Steintor zur Grabkammer, Falltüren, Fledermaus, Schattenzone, Sense |
+| 8 | Schattenwald | 4 | tote Stämme als Blöcke, Sensen, Fledermäuse, zwei Schattenzonen, Schattenaugen vor dem Loch |
+| 9 | Schattenthron | 9 | zweiteilige Bahn: Friedhof, Knochensteg über Schattenfeuer, Geist, Falltüren, Gruft; drinnen der Thronsaal mit Geistern, Falltüren, Druckplatte, Schattenzone, Sense und Augen bis zum Thronpodest |
 
 ## Kostenlos als App aufs iPad oder Handy (GitHub Pages)
 
