@@ -19,6 +19,36 @@ function polyArea(p) {
   return a / 2;
 }
 
+/* Fahnen je Thema: Haupt- und Zweitfarbe des Tuchs, Muster, Wappen, Stangen- und Spitzenfarbe */
+const FLAG_DESIGNS = {
+  meadow:    { main: '#e63b5a', second: '#ffd166', pattern: 'band', emblem: 'crown', emblemColor: '#ffd166', emblemDark: '#8a5a10' },
+  mushroom:  { main: '#c94a7a', second: '#ffd166', pattern: 'checker', emblem: 'mushroom', emblemColor: '#e0575a', emblemDark: '#7a2a30' },
+  forge:     { main: '#b8843f', second: '#3d3a45', pattern: 'edge', emblem: 'hammer', emblemColor: '#c9c9d2', emblemDark: '#3a3a44', finial: '#ffb347' },
+  forest:    { main: '#1f6a3a', second: '#7fe8ff', pattern: 'diag', emblem: 'star', emblemColor: '#fff7b0', emblemDark: '#2b6d43' },
+  dragon:    { main: '#7a1f1f', second: '#ff7a3d', pattern: 'chevron', emblem: 'flame', emblemColor: '#ff9a2a', emblemDark: '#7a1f1f', finial: '#ff7a3d' },
+  ice:       { main: '#5b90c6', second: '#dff3ff', pattern: 'stripes', emblem: 'snowflake', emblemColor: '#ffffff', emblemDark: '#5b90c6', finial: '#cfeeff', pole: '#cfeeff' },
+  sky:       { main: '#3d7ad6', second: '#ffe08a', pattern: 'edge', emblem: 'cloud', emblemColor: '#ffffff', emblemDark: '#8fb8ff' },
+  clockwork: { main: '#8a3a2a', second: '#d1a04e', pattern: 'band', emblem: 'gear', emblemColor: '#ffcc66', emblemDark: '#6e4a1c', finial: '#ffcc66', pole: '#c08a3e' },
+  witch:     { main: '#3a1f4d', second: '#a6ff5e', pattern: 'diag', emblem: 'moon', emblemColor: '#f4efd0', emblemDark: '#3a1f4d', finial: '#a6ff5e' },
+  hut:       { main: '#3a1f4d', second: '#a6ff5e', pattern: 'diag', emblem: 'moon', emblemColor: '#f4efd0', emblemDark: '#3a1f4d', finial: '#a6ff5e' },
+  castle:    { main: '#3d7ad6', second: '#ffd166', pattern: 'stripes', emblem: 'crown', emblemColor: '#ffd166', emblemDark: '#8a5a10' },
+  reef:      { main: '#ff7fa8', second: '#7fd6c8', pattern: 'band', emblem: 'wave', emblemColor: '#ffffff', emblemDark: '#3a8a80', finial: '#7fd6c8' },
+  volcano:   { main: '#2a2226', second: '#ff6a1f', pattern: 'chevron', emblem: 'flame', emblemColor: '#ffb347', emblemDark: '#8a2a10', finial: '#ff8a3d' },
+  palace:    { main: '#2fb8c9', second: '#ffd166', pattern: 'edge', emblem: 'moon', emblemColor: '#ffd166', emblemDark: '#8a6a34' },
+  harbor:    { main: '#d93b3b', second: '#f4efe6', pattern: 'stripes', emblem: 'anchor', emblemColor: '#f4efe6', emblemDark: '#3a3a44', pole: '#c9a15a' },
+  desert:    { main: '#c8552a', second: '#ffd166', pattern: 'band', emblem: 'sun', emblemColor: '#ffe08a', emblemDark: '#8a5a10' },
+  tomb:      { main: '#2fb8c9', second: '#e0b84a', pattern: 'edge', emblem: 'eye', emblemColor: '#ffd166', emblemDark: '#1e3a6a', finial: '#e0b84a' },
+  deck:      { main: '#1a1a1a', second: '#f4efe6', pattern: 'edge', emblem: 'skull', emblemColor: '#f4efe6', emblemDark: '#1a1a1a', pole: '#c9a15a' },
+  wreck:     { main: '#3a2618', second: '#7fd6c8', pattern: 'band', emblem: 'anchor', emblemColor: '#c9a15a', emblemDark: '#3a2618', finial: '#7fd6c8' },
+  belly:     { main: '#7a2a34', second: '#a6ff5e', pattern: 'chevron', emblem: 'skull', emblemColor: '#f4ede0', emblemDark: '#5a1a22', finial: '#a6ff5e' },
+  jungle:    { main: '#2f8a3a', second: '#ffd166', pattern: 'diag', emblem: 'leaf', emblemColor: '#9ee06f', emblemDark: '#1f5a2c' },
+  temple:    { main: '#8a6a2a', second: '#ffd166', pattern: 'edge', emblem: 'sun', emblemColor: '#ffd166', emblemDark: '#5a4c34' },
+  storm:     { main: '#2a2f66', second: '#ffe45e', pattern: 'chevron', emblem: 'lightning', emblemColor: '#fff6a8', emblemDark: '#8a7a10', finial: '#ffe45e', pole: '#c8ccdd' },
+  fortress:  { main: '#23264a', second: '#7fd8ff', pattern: 'edge', emblem: 'lightning', emblemColor: '#fff6a8', emblemDark: '#8a7a10', finial: '#7fd8ff', pole: '#c8ccdd' },
+  shadow:    { main: '#3a2a5e', second: '#c58bff', pattern: 'diag', emblem: 'skull', emblemColor: '#e8e2f2', emblemDark: '#1c1030', finial: '#c58bff', pole: '#b8b0d0' },
+  throne:    { main: '#1c1330', second: '#8a3bff', pattern: 'band', emblem: 'crown', emblemColor: '#c58bff', emblemDark: '#3a1f4d', finial: '#c58bff', pole: '#b8b0d0' },
+};
+
 class Renderer {
   constructor(canvas) {
     this.cv = canvas; this.ctx = canvas.getContext('2d');
@@ -579,48 +609,75 @@ class Renderer {
     this.isoEllipse(ctx, c.x, c.y, 0.01, 0.42, '#0e0b16');
     this.isoEllipse(ctx, c.x, c.y - 0.05, 0.012, 0.32, '#241c35');
   }
-  /* Fahne am Loch: Stange mit Messingspitze und Fuß am Lochrand, wehendes Tuch mit Bordüre, Emblem und Schatten */
+  /* Fahne am Loch: Stange mit Messingspitze und Fuß am Lochrand, wehendes Tuch mit Falten – Farben, Muster und
+     Wappen kommen aus FLAG_DESIGNS je Thema (Krone fürs Märchenland, Anker am Meer, Totenkopf im Schattenreich …) */
   drawFlag(ctx, t) {
-    const c = this.level.cup, th = this.theme, s = this.scale, flag = th.flag, dark = shade(flag, 0.6), light = shade(flag, 1.25);
+    const c = this.level.cup, th = this.theme, s = this.scale, d = FLAG_DESIGNS[this.level.def.theme] || { main: th.flag, second: th.accent, emblem: 'star', pattern: 'band' };
+    const flag = d.main, dark = shade(flag, 0.6), light = shade(flag, 1.25), sec = d.second, emCol = d.emblemColor || sec;
     const [bx, by] = this.proj(c.x, c.y, 0), [tx, ty] = this.proj(c.x, c.y, 1.9);
     const H = by - ty, top = ty + H * 0.06, w = s * 0.95, h = s * 0.5, ph = t * 3.2 + c.x;
     const wv = u => Math.sin(ph - u * 4.5) * s * 0.07 * u; // Wellenversatz entlang des Tuchs (am Stock 0)
-    // Schatten des Tuchs auf dem Boden
-    ctx.fillStyle = 'rgba(0,0,0,0.18)'; ctx.beginPath(); ctx.ellipse(bx + w * 0.45, by + s * 0.05, w * 0.42, s * 0.09, 0, 0, TAU); ctx.fill();
-    // Fuß am Lochrand und Stange (dunkler Kern, heller Glanz)
-    ctx.fillStyle = '#2a2430'; ctx.beginPath(); ctx.ellipse(bx, by, s * 0.13, s * 0.06, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = 'rgba(0,0,0,0.18)'; ctx.beginPath(); ctx.ellipse(bx + w * 0.45, by + s * 0.05, w * 0.42, s * 0.09, 0, 0, TAU); ctx.fill(); // Schatten des Tuchs
+    ctx.fillStyle = '#2a2430'; ctx.beginPath(); ctx.ellipse(bx, by, s * 0.13, s * 0.06, 0, 0, TAU); ctx.fill(); // Fuß
     ctx.lineCap = 'round';
     ctx.strokeStyle = '#1e1a24'; ctx.lineWidth = Math.max(2.5, s * 0.1); ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(tx, ty); ctx.stroke();
-    ctx.strokeStyle = '#f4efe6'; ctx.lineWidth = Math.max(1.2, s * 0.05); ctx.beginPath(); ctx.moveTo(bx - s * 0.015, by); ctx.lineTo(tx - s * 0.015, ty); ctx.stroke();
-    // Tuch: oben und unten geschwungene Kanten, außen eingekerbter Schwalbenschwanz
-    const edge = (y0, y1) => { // Punkte einer Kante von der Stange nach außen
-      const pts = []; for (let k = 0; k <= 8; k++) { const u = k / 8; pts.push([tx + w * u, y0 + (y1 - y0) * u + wv(u)]); } return pts;
-    };
+    ctx.strokeStyle = d.pole || '#f4efe6'; ctx.lineWidth = Math.max(1.2, s * 0.05); ctx.beginPath(); ctx.moveTo(bx - s * 0.015, by); ctx.lineTo(tx - s * 0.015, ty); ctx.stroke();
+    const edge = (y0, y1) => { const pts = []; for (let k = 0; k <= 8; k++) { const u = k / 8; pts.push([tx + w * u, y0 + (y1 - y0) * u + wv(u)]); } return pts; };
     const topE = edge(top, top + h * 0.18), botE = edge(top + h, top + h * 0.82);
     const path = () => {
       ctx.beginPath(); ctx.moveTo(topE[0][0], topE[0][1]);
       for (let k = 1; k < topE.length; k++) ctx.lineTo(topE[k][0], topE[k][1]);
-      const tipT = topE[8], tipB = botE[8]; ctx.lineTo(tipT[0] - w * 0.16, (tipT[1] + tipB[1]) / 2); ctx.lineTo(tipB[0], tipB[1]); // Kerbe
+      const tipT = topE[8], tipB = botE[8]; ctx.lineTo(tipT[0] - w * 0.16, (tipT[1] + tipB[1]) / 2); ctx.lineTo(tipB[0], tipB[1]); // Schwalbenschwanz
       for (let k = botE.length - 2; k >= 0; k--) ctx.lineTo(botE[k][0], botE[k][1]);
       ctx.closePath();
     };
     const g = ctx.createLinearGradient(tx, top, tx + w, top + h); g.addColorStop(0, light); g.addColorStop(0.45, flag); g.addColorStop(1, dark);
     path(); ctx.fillStyle = g; ctx.fill();
-    // Falten: helle und dunkle Streifen, die mit der Welle wandern
     ctx.save(); path(); ctx.clip();
+    // Muster in der Zweitfarbe (folgt der Welle)
+    const py = (u, v) => { const yt = top + h * 0.18 * u + wv(u), yb = top + h - h * 0.18 * u + wv(u); return yt + (yb - yt) * v; };
+    ctx.fillStyle = sec;
+    if (d.pattern === 'band') { ctx.beginPath(); for (let k = 0; k <= 8; k++) { const u = k / 8; const q = [tx + w * u, py(u, 0.4)]; k ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); } for (let k = 8; k >= 0; k--) { const u = k / 8; ctx.lineTo(tx + w * u, py(u, 0.6)); } ctx.closePath(); ctx.fill(); }
+    else if (d.pattern === 'stripes') { for (const [a, b] of [[0.12, 0.28], [0.44, 0.56], [0.72, 0.88]]) { ctx.beginPath(); for (let k = 0; k <= 8; k++) { const u = k / 8; const q = [tx + w * u, py(u, a)]; k ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); } for (let k = 8; k >= 0; k--) { const u = k / 8; ctx.lineTo(tx + w * u, py(u, b)); } ctx.closePath(); ctx.fill(); } }
+    else if (d.pattern === 'chevron') { ctx.beginPath(); ctx.moveTo(tx, py(0, 0)); ctx.lineTo(tx + w * 0.32, py(0.32, 0.5)); ctx.lineTo(tx, py(0, 1)); ctx.closePath(); ctx.fill(); }
+    else if (d.pattern === 'checker') { for (let i = 0; i < 6; i++) for (let j = 0; j < 3; j++) { if ((i + j) % 2) continue; const u0 = i / 6, u1 = (i + 1) / 6, v0 = j / 3, v1 = (j + 1) / 3; ctx.beginPath(); ctx.moveTo(tx + w * u0, py(u0, v0)); ctx.lineTo(tx + w * u1, py(u1, v0)); ctx.lineTo(tx + w * u1, py(u1, v1)); ctx.lineTo(tx + w * u0, py(u0, v1)); ctx.closePath(); ctx.fill(); } }
+    else if (d.pattern === 'diag') { ctx.globalAlpha = 0.85; for (const k0 of [-0.35, 0.25]) { ctx.beginPath(); ctx.moveTo(tx + w * Math.max(0, k0), py(Math.max(0, k0), Math.max(0, -k0 * 2))); ctx.lineTo(tx + w * Math.min(1, k0 + 0.5), py(Math.min(1, k0 + 0.5), 1)); ctx.lineTo(tx + w * Math.min(1, k0 + 0.65), py(Math.min(1, k0 + 0.65), 1)); ctx.lineTo(tx + w * Math.max(0, k0 + 0.15), py(Math.max(0, k0 + 0.15), Math.max(0, -(k0 + 0.15) * 2))); ctx.closePath(); ctx.fill(); } ctx.globalAlpha = 1; }
+    else if (d.pattern === 'edge') { ctx.beginPath(); for (let k = 0; k <= 8; k++) { const u = k / 8; const q = [tx + w * u, py(u, 0)]; k ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); } for (let k = 8; k >= 0; k--) { const u = k / 8; ctx.lineTo(tx + w * u, py(u, 0.16)); } ctx.closePath(); ctx.fill(); ctx.beginPath(); for (let k = 0; k <= 8; k++) { const u = k / 8; const q = [tx + w * u, py(u, 0.84)]; k ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); } for (let k = 8; k >= 0; k--) { const u = k / 8; ctx.lineTo(tx + w * u, py(u, 1)); } ctx.closePath(); ctx.fill(); }
+    // Falten: helle und dunkle Streifen, die mit der Welle wandern
     for (let k = 1; k <= 3; k++) { const u = k / 4, x = tx + w * u, sway = Math.cos(ph - u * 4.5); ctx.fillStyle = sway > 0 ? 'rgba(255,255,255,0.14)' : 'rgba(0,0,0,0.16)'; ctx.fillRect(x - w * 0.07, top - s * 0.2, w * 0.14, h + s * 0.4); }
     ctx.restore();
-    // Bordüre und Emblem
-    path(); ctx.strokeStyle = shade(flag, 0.45); ctx.lineWidth = Math.max(1, s * 0.035); ctx.stroke();
-    const ex = tx + w * 0.4, ey = top + h * 0.5 + wv(0.4), er = s * 0.11;
-    ctx.fillStyle = th.accent; ctx.beginPath(); ctx.arc(ex, ey, er, 0, TAU); ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.beginPath(); ctx.arc(ex - er * 0.3, ey - er * 0.3, er * 0.35, 0, TAU); ctx.fill();
-    ctx.strokeStyle = shade(flag, 0.45); ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(ex, ey, er, 0, TAU); ctx.stroke();
+    path(); ctx.strokeStyle = d.border || shade(flag, 0.45); ctx.lineWidth = Math.max(1, s * 0.035); ctx.stroke(); // Bordüre
+    this.flagEmblem(ctx, d.emblem, tx + w * 0.4, py(0.4, 0.5), s * 0.13, emCol, d.emblemDark || shade(emCol, 0.5), t); // Wappen
     // Messingspitze mit Glanz
     const kg = ctx.createRadialGradient(tx - s * 0.03, ty - s * 0.04, s * 0.02, tx, ty, s * 0.1);
-    kg.addColorStop(0, '#fff3c4'); kg.addColorStop(0.6, '#ffd166'); kg.addColorStop(1, '#8a5a10');
+    kg.addColorStop(0, '#fff3c4'); kg.addColorStop(0.6, d.finial || '#ffd166'); kg.addColorStop(1, shade(d.finial || '#ffd166', 0.5));
     ctx.fillStyle = kg; ctx.beginPath(); ctx.arc(tx, ty, s * 0.1, 0, TAU); ctx.fill();
-    ctx.fillStyle = `rgba(255,230,150,${0.25 + 0.2 * Math.sin(t * 2.5)})`; ctx.beginPath(); ctx.arc(tx, ty, s * 0.2, 0, TAU); ctx.fill();
+    ctx.fillStyle = rgba(d.finial || '#ffd166', 0.25 + 0.2 * Math.sin(t * 2.5)); ctx.beginPath(); ctx.arc(tx, ty, s * 0.2, 0, TAU); ctx.fill();
+  }
+  /* Kleine Wappen fürs Fahnentuch (Bildschirmkoordinaten, r = halbe Größe) */
+  flagEmblem(ctx, kind, x, y, r, col, dark, t) {
+    ctx.save(); ctx.translate(x, y); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.fillStyle = col; ctx.strokeStyle = dark; ctx.lineWidth = Math.max(1, r * 0.14);
+    const P = pts => { ctx.beginPath(); pts.forEach((q, i) => i ? ctx.lineTo(q[0] * r, q[1] * r) : ctx.moveTo(q[0] * r, q[1] * r)); ctx.closePath(); };
+    switch (kind) {
+      case 'crown': P([[-1, 0.8], [-1, -0.3], [-0.5, 0.2], [0, -0.9], [0.5, 0.2], [1, -0.3], [1, 0.8]]); ctx.fill(); ctx.stroke(); ctx.fillStyle = dark; for (const k of [-0.6, 0, 0.6]) { ctx.beginPath(); ctx.arc(k * r, r * 0.45, r * 0.13, 0, TAU); ctx.fill(); } break;
+      case 'anchor': ctx.lineWidth = Math.max(1.5, r * 0.28); ctx.strokeStyle = col; ctx.beginPath(); ctx.arc(0, -0.7 * r, r * 0.22, 0, TAU); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0, -0.48 * r); ctx.lineTo(0, r); ctx.moveTo(-0.55 * r, -0.2 * r); ctx.lineTo(0.55 * r, -0.2 * r); ctx.stroke(); ctx.beginPath(); ctx.arc(0, 0.25 * r, r * 0.75, 0.35, Math.PI - 0.35); ctx.stroke(); break;
+      case 'skull': ctx.beginPath(); ctx.arc(0, -0.15 * r, r * 0.7, 0, TAU); ctx.fill(); ctx.fillRect(-0.4 * r, 0.2 * r, 0.8 * r, 0.6 * r); ctx.fillStyle = dark; for (const k of [-0.28, 0.28]) { ctx.beginPath(); ctx.arc(k * r, -0.2 * r, r * 0.2, 0, TAU); ctx.fill(); } ctx.fillRect(-0.06 * r, 0.1 * r, 0.12 * r, 0.22 * r); for (const k of [-0.25, 0.05]) ctx.fillRect(k * r, 0.5 * r, 0.08 * r, 0.3 * r); break;
+      case 'lightning': P([[0.1, -1], [-0.6, 0.1], [-0.05, 0.1], [-0.3, 1], [0.6, -0.2], [0.05, -0.2]]); ctx.fill(); ctx.stroke(); break;
+      case 'flame': ctx.beginPath(); ctx.moveTo(0, r); ctx.quadraticCurveTo(-1.0 * r, 0.2 * r, -0.2 * r, -0.5 * r); ctx.quadraticCurveTo(0, -0.9 * r, 0.1 * r, -1.0 * r); ctx.quadraticCurveTo(0.2 * r, -0.4 * r, 0.5 * r, -0.3 * r); ctx.quadraticCurveTo(1.0 * r, 0.3 * r, 0, r); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#fff3b0'; ctx.beginPath(); ctx.moveTo(0, 0.7 * r); ctx.quadraticCurveTo(-0.35 * r, 0.2 * r, 0, -0.2 * r); ctx.quadraticCurveTo(0.35 * r, 0.2 * r, 0, 0.7 * r); ctx.fill(); break;
+      case 'snowflake': ctx.strokeStyle = col; ctx.lineWidth = Math.max(1, r * 0.16); for (let i = 0; i < 3; i++) { const a = i * Math.PI / 3, dx = Math.cos(a), dy = Math.sin(a); ctx.beginPath(); ctx.moveTo(-dx * r, -dy * r); ctx.lineTo(dx * r, dy * r); ctx.stroke(); for (const sg of [-1, 1]) for (const k of [0.55]) { ctx.beginPath(); ctx.moveTo(dx * k * r * sg, dy * k * r * sg); ctx.lineTo((dx * k + Math.cos(a + 0.6) * 0.3) * r * sg, (dy * k + Math.sin(a + 0.6) * 0.3) * r * sg); ctx.moveTo(dx * k * r * sg, dy * k * r * sg); ctx.lineTo((dx * k + Math.cos(a - 0.6) * 0.3) * r * sg, (dy * k + Math.sin(a - 0.6) * 0.3) * r * sg); ctx.stroke(); } } break;
+      case 'gear': this.gearPath(ctx, 0, 0, r, 8, t * 0.8); ctx.fill(); ctx.stroke(); ctx.fillStyle = dark; ctx.beginPath(); ctx.arc(0, 0, r * 0.3, 0, TAU); ctx.fill(); break;
+      case 'moon': ctx.beginPath(); ctx.arc(0, 0, r * 0.9, 0, TAU); ctx.fill(); ctx.stroke(); ctx.globalCompositeOperation = 'destination-out'; ctx.beginPath(); ctx.arc(0.45 * r, -0.25 * r, r * 0.75, 0, TAU); ctx.fill(); ctx.globalCompositeOperation = 'source-over'; break;
+      case 'sun': ctx.strokeStyle = col; ctx.lineWidth = Math.max(1, r * 0.16); for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4; ctx.beginPath(); ctx.moveTo(Math.cos(a) * r * 0.6, Math.sin(a) * r * 0.6); ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r); ctx.stroke(); } ctx.beginPath(); ctx.arc(0, 0, r * 0.42, 0, TAU); ctx.fill(); ctx.strokeStyle = dark; ctx.lineWidth = 1; ctx.stroke(); break;
+      case 'leaf': ctx.beginPath(); ctx.ellipse(0, 0, r * 0.55, r, -0.6, 0, TAU); ctx.fill(); ctx.stroke(); ctx.strokeStyle = dark; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-0.5 * r, 0.75 * r); ctx.lineTo(0.5 * r, -0.75 * r); ctx.stroke(); break;
+      case 'mushroom': ctx.fillStyle = '#f3e6c8'; ctx.fillRect(-0.28 * r, 0, 0.56 * r, r); ctx.fillStyle = col; ctx.beginPath(); ctx.arc(0, 0.05 * r, r, Math.PI, TAU); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#ffffff'; for (const [a, b] of [[-0.45, -0.4], [0.3, -0.6], [0.55, -0.15]]) { ctx.beginPath(); ctx.arc(a * r, b * r, r * 0.16, 0, TAU); ctx.fill(); } break;
+      case 'wave': ctx.strokeStyle = col; ctx.lineWidth = Math.max(1.5, r * 0.24); for (const yy of [-0.35, 0.35]) { ctx.beginPath(); ctx.moveTo(-r, yy * r); ctx.quadraticCurveTo(-0.5 * r, (yy - 0.6) * r, 0, yy * r); ctx.quadraticCurveTo(0.5 * r, (yy + 0.6) * r, r, yy * r); ctx.stroke(); } break;
+      case 'cloud': ctx.beginPath(); ctx.arc(-0.45 * r, 0.1 * r, r * 0.45, 0, TAU); ctx.arc(0.05 * r, -0.2 * r, r * 0.6, 0, TAU); ctx.arc(0.55 * r, 0.15 * r, r * 0.45, 0, TAU); ctx.fill(); ctx.stroke(); break;
+      case 'hammer': ctx.strokeStyle = '#8a5a30'; ctx.lineWidth = Math.max(1.5, r * 0.22); ctx.beginPath(); ctx.moveTo(-0.6 * r, 0.9 * r); ctx.lineTo(0.4 * r, -0.4 * r); ctx.stroke(); ctx.save(); ctx.translate(0.45 * r, -0.5 * r); ctx.rotate(0.65); ctx.fillStyle = col; ctx.fillRect(-0.55 * r, -0.32 * r, 1.1 * r, 0.64 * r); ctx.strokeStyle = dark; ctx.lineWidth = 1; ctx.strokeRect(-0.55 * r, -0.32 * r, 1.1 * r, 0.64 * r); ctx.restore(); break;
+      case 'eye': ctx.beginPath(); ctx.moveTo(-r, 0); ctx.quadraticCurveTo(0, -0.9 * r, r, 0); ctx.quadraticCurveTo(0, 0.9 * r, -r, 0); ctx.fill(); ctx.stroke(); ctx.fillStyle = dark; ctx.beginPath(); ctx.arc(0, 0, r * 0.35, 0, TAU); ctx.fill(); break;
+      default: { const pts = []; for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? 0.45 : 1; pts.push([Math.cos(a) * rr, Math.sin(a) * rr]); } P(pts); ctx.fill(); ctx.stroke(); }
+    }
+    ctx.restore();
   }
   drawBall(ctx, b) {
     const s = this.scale;
