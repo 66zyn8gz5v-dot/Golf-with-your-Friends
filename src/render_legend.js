@@ -548,7 +548,9 @@ Object.assign(Renderer.prototype, {
   },
   /* ---------- Räumliche Dekos: Bäume, Tannen, tote Bäume, Grabsteine, Grabkreuze ----------
      Alle stehen als Körper im Raum: Bildschirmvektoren der Welt-Achsen aus der Kamera, Höhe entlang der Bildhochachse. */
-  axes3() { const c = this.cam, z = c.zoom, k = z * (c.zf ?? CAM_ZF); return { ex: [c.cos * z, c.sin * z * c.tilt], ey: [-c.sin * z, c.cos * z * c.tilt], up: k }; },
+  /* Bildschirmfeste Achsen für Platten: leichte Gierung yaw gegenüber der Kamera, damit immer die Front und eine Kante sichtbar sind,
+     egal wie die Kamera gedreht ist (sonst stünde die Platte bei 90° genau in Blickrichtung und wäre nur ein Strich) */
+  axes3(yaw = 0.32) { const c = this.cam, z = c.zoom, k = z * (c.zf ?? CAM_ZF), cs = Math.cos(yaw), sn = Math.sin(yaw); return { ex: [cs * z, sn * z * c.tilt], ey: [-sn * z, cs * z * c.tilt], up: k }; },
   /* Senkrechte Platte (Breite w entlang Welt-x, Dicke th entlang Welt-y, Höhe h in Welt-Einheiten) am Bodenpunkt (sx, sy).
      shape(ctx) zeichnet die Form im Einheitsrahmen (u von -0.5..0.5, v von 0..1). Die Kamera-abgewandte Seite wird dunkel
      gezeichnet, dann die Kante als Stapel, zuletzt die sichtbare Front mit Verlauf. tilt = Neigung (Scherung) */
@@ -568,19 +570,36 @@ Object.assign(Renderer.prototype, {
     const g = ctx.createLinearGradient(sx + fx - Math.abs(T[0]) / 2, 0, sx + fx + Math.abs(T[0]) / 2, 0); g.addColorStop(0, cols.light); g.addColorStop(1, cols.front);
     draw(fx, fy, g, true);
   },
+  /* Flacher Sockel unter Grabstein/Kreuz: kleine Platte, auf der das Denkmal steht */
+  plinth3(ctx, sx, sy, w, th, h, cols) { this.slab3(ctx, sx, sy, w, th, h, c => { c.rect(-0.5, 0, 1, 1); }, cols); },
   spriteGravestone(ctx, sx, sy, s, d) {
-    const k = s / this.scale, tilt = ((d.seed || 0.3) - 0.5) * 0.5;
-    this.shadow(ctx, sx + s * 0.25, sy + s * 0.05, s * 0.42);
-    const shape = c => { c.moveTo(-0.5, 0); c.lineTo(-0.5, 0.68); c.arc(0, 0.68, 0.5, Math.PI, 0); c.lineTo(0.5, 0); c.closePath(); };
-    const deco = c => { c.strokeStyle = 'rgba(30,26,46,0.7)'; c.lineWidth = 0.05; c.beginPath(); c.moveTo(-0.3, 0.72); c.lineTo(0.25, 0.72); c.moveTo(-0.3, 0.55); c.lineTo(0.12, 0.55); c.moveTo(-0.25, 0.38); c.lineTo(0.2, 0.38); c.stroke();
-      c.fillStyle = 'rgba(60,110,70,0.45)'; c.beginPath(); c.ellipse(0.28, 0.12, 0.2, 0.1, 0, 0, Math.PI * 2); c.fill(); };
-    this.slab3(ctx, sx, sy, 0.62 * k, 0.24 * k, 0.72 * k, shape, { light: '#8a82a4', front: '#5e5678', side: '#3a3450', back: '#2a2438' }, tilt, deco);
+    const k = s / this.scale, seed = d.seed ?? 0.3, tilt = (seed - 0.5) * 0.45, up = this.axes3().up;
+    this.shadow(ctx, sx + s * 0.28, sy + s * 0.06, s * 0.5);
+    this.plinth3(ctx, sx, sy, 0.86 * k, 0.5 * k, 0.12 * k, { light: '#6e6788', front: '#4c4664', side: '#332e48', back: '#262236' });
+    const top = seed > 0.6 ? c => { c.moveTo(-0.5, 0); c.lineTo(-0.5, 0.7); c.lineTo(-0.5, 0.86); c.lineTo(-0.3, 0.86); c.lineTo(-0.3, 1); c.lineTo(0.3, 1); c.lineTo(0.3, 0.86); c.lineTo(0.5, 0.86); c.lineTo(0.5, 0); c.closePath(); } // eckiger Stein mit Absatz
+      : c => { c.moveTo(-0.5, 0); c.lineTo(-0.5, 0.62); c.arc(0, 0.62, 0.5, Math.PI, 0, true); c.lineTo(0.5, 0); c.closePath(); }; // runder Stein (Rahmen ist y-gespiegelt, daher gegen den Uhrzeigersinn)
+    const deco = c => {
+      c.lineWidth = 0.045; c.strokeStyle = 'rgba(20,16,34,0.75)'; c.beginPath(); // Inschrift
+      for (let i = 0; i < 4; i++) { const y = 0.78 - i * 0.14, w = 0.3 - (i % 2) * 0.08; c.moveTo(-w, y); c.lineTo(w * (i === 0 ? 0.6 : 1), y); }
+      c.stroke();
+      c.strokeStyle = 'rgba(255,255,255,0.22)'; c.lineWidth = 0.035; c.beginPath(); c.moveTo(-0.42, 0.04); c.lineTo(-0.42, 0.62); c.stroke(); // Lichtkante links
+      if (seed < 0.5) { c.strokeStyle = "rgba(12,8,20,0.8)"; c.lineWidth = 0.02; c.beginPath(); c.moveTo(0.38, 1.0); c.lineTo(0.31, 0.86); c.lineTo(0.35, 0.74); c.stroke(); } // Riss
+      c.fillStyle = 'rgba(60,120,70,0.5)'; c.beginPath(); c.ellipse(0.25, 0.1, 0.24, 0.1, 0, 0, Math.PI * 2); c.ellipse(-0.35, 0.06, 0.12, 0.06, 0, 0, Math.PI * 2); c.fill(); // Moos
+    };
+    ctx.save(); ctx.translate(0, -0.12 * k * up); // steht auf dem Sockel
+    this.slab3(ctx, sx, sy, 0.66 * k, 0.28 * k, 0.8 * k, top, { light: '#a49cbe', front: '#66607f', side: '#3e3856', back: '#2c2740' }, tilt, deco);
+    ctx.restore();
   },
   spriteGraveCross(ctx, sx, sy, s, d) {
-    const k = s / this.scale, tilt = ((d.seed || 0.5) - 0.5) * 0.3;
-    this.shadow(ctx, sx + s * 0.25, sy + s * 0.05, s * 0.3);
-    const shape = c => { c.moveTo(-0.14, 0); c.lineTo(-0.14, 0.55); c.lineTo(-0.5, 0.55); c.lineTo(-0.5, 0.75); c.lineTo(-0.14, 0.75); c.lineTo(-0.14, 1); c.lineTo(0.14, 1); c.lineTo(0.14, 0.75); c.lineTo(0.5, 0.75); c.lineTo(0.5, 0.55); c.lineTo(0.14, 0.55); c.lineTo(0.14, 0); c.closePath(); };
-    this.slab3(ctx, sx, sy, 0.7 * k, 0.2 * k, 0.95 * k, shape, { light: '#7a7290', front: '#54506a', side: '#332e46', back: '#241f33' }, tilt);
+    const k = s / this.scale, tilt = ((d.seed ?? 0.5) - 0.5) * 0.3, up = this.axes3().up;
+    this.shadow(ctx, sx + s * 0.25, sy + s * 0.05, s * 0.36);
+    this.plinth3(ctx, sx, sy, 0.6 * k, 0.42 * k, 0.12 * k, { light: '#6e6788', front: '#4c4664', side: '#332e48', back: '#262236' });
+    const shape = c => { c.moveTo(-0.15, 0); c.lineTo(-0.15, 0.56); c.lineTo(-0.5, 0.56); c.lineTo(-0.5, 0.76); c.lineTo(-0.15, 0.76); c.lineTo(-0.15, 1); c.lineTo(0.15, 1); c.lineTo(0.15, 0.76); c.lineTo(0.5, 0.76); c.lineTo(0.5, 0.56); c.lineTo(0.15, 0.56); c.lineTo(0.15, 0); c.closePath(); };
+    const deco = c => { c.strokeStyle = 'rgba(255,255,255,0.2)'; c.lineWidth = 0.035; c.beginPath(); c.moveTo(-0.1, 0.04); c.lineTo(-0.1, 0.55); c.moveTo(-0.45, 0.6); c.lineTo(-0.45, 0.73); c.stroke();
+      c.fillStyle = 'rgba(60,120,70,0.5)'; c.beginPath(); c.ellipse(0.05, 0.06, 0.13, 0.06, 0, 0, Math.PI * 2); c.fill(); };
+    ctx.save(); ctx.translate(0, -0.12 * k * up);
+    this.slab3(ctx, sx, sy, 0.76 * k, 0.24 * k, 1.0 * k, shape, { light: '#948caa', front: '#5c5776', side: '#38334e', back: '#272238' }, tilt, deco);
+    ctx.restore();
   },
   /* Kugelkrone: Kugel mit Lichtkante oben links und Schattenkern unten rechts */
   ball3(ctx, cx, cy, r, light, mid, dark) {
