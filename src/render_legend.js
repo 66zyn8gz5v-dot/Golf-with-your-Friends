@@ -278,21 +278,6 @@ Object.assign(Renderer.prototype, {
   },
 
   /* ---------- Dekos ---------- */
-  spriteGravestone(ctx, sx, sy, s, d) {
-    const w = s * 0.32, h = s * 0.7, tilt = ((d.seed || 0.3) - 0.5) * 0.25;
-    this.shadow(ctx, sx, sy, w * 1.3);
-    ctx.save(); ctx.translate(sx, sy); ctx.rotate(tilt);
-    ctx.fillStyle = '#6e6684'; ctx.beginPath(); ctx.moveTo(-w, 0); ctx.lineTo(-w, -h); ctx.arc(0, -h, w, Math.PI, 0); ctx.lineTo(w, 0); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#3f3852'; ctx.fillRect(w * 0.55, -h, w * 0.45, h); ctx.strokeStyle = '#2a2438'; ctx.lineWidth = 1; ctx.stroke();
-    ctx.strokeStyle = '#2f2a3e'; ctx.lineWidth = Math.max(1, s * 0.03); ctx.beginPath(); ctx.moveTo(-w * 0.5, -h * 0.75); ctx.lineTo(w * 0.3, -h * 0.75); ctx.moveTo(-w * 0.5, -h * 0.55); ctx.lineTo(w * 0.1, -h * 0.55); ctx.stroke();
-    ctx.restore();
-  },
-  spriteGraveCross(ctx, sx, sy, s, d) {
-    const w = s * 0.12, h = s * 0.9;
-    this.shadow(ctx, sx, sy, w * 2.5);
-    ctx.fillStyle = '#5a5470'; ctx.fillRect(sx - w, sy - h, w * 2, h); ctx.fillRect(sx - w * 3.2, sy - h * 0.75, w * 6.4, w * 2);
-    ctx.fillStyle = '#2f2a3e'; ctx.fillRect(sx + w * 0.4, sy - h, w * 0.6, h);
-  },
   spriteGhostLight(ctx, sx, sy, s, d, t) {
     const yy = sy - s * (0.9 + 0.15 * Math.sin(t * 1.7 + sx)), a = 0.5 + 0.4 * Math.abs(Math.sin(t * 1.1 + (d.seed || 0) * 6));
     const g = ctx.createRadialGradient(sx, yy, 0, sx, yy, s * 0.7); g.addColorStop(0, `rgba(190,140,255,${a})`); g.addColorStop(1, 'rgba(190,140,255,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(sx, yy, s * 0.7, 0, TAU); ctx.fill();
@@ -560,5 +545,87 @@ Object.assign(Renderer.prototype, {
       const rim = dx ? [[x + (dx > 0 ? 1 : 0), y], [x + (dx > 0 ? 1.3 : -0.3), y], [x + (dx > 0 ? 1.3 : -0.3), y + 1], [x + (dx > 0 ? 1 : 0), y + 1]] : [[x, y + (dy > 0 ? 1 : 0)], [x + 1, y + (dy > 0 ? 1 : 0)], [x + 1, y + (dy > 0 ? 1.3 : -0.3)], [x, y + (dy > 0 ? 1.3 : -0.3)]];
       this.pathPoly(ctx, rim, 0.003); ctx.fill();
     }
+  },
+  /* ---------- Räumliche Dekos: Bäume, Tannen, tote Bäume, Grabsteine, Grabkreuze ----------
+     Alle stehen als Körper im Raum: Bildschirmvektoren der Welt-Achsen aus der Kamera, Höhe entlang der Bildhochachse. */
+  axes3() { const c = this.cam, z = c.zoom, k = z * (c.zf ?? CAM_ZF); return { ex: [c.cos * z, c.sin * z * c.tilt], ey: [-c.sin * z, c.cos * z * c.tilt], up: k }; },
+  /* Senkrechte Platte (Breite w entlang Welt-x, Dicke th entlang Welt-y, Höhe h in Welt-Einheiten) am Bodenpunkt (sx, sy).
+     shape(ctx) zeichnet die Form im Einheitsrahmen (u von -0.5..0.5, v von 0..1). Die Kamera-abgewandte Seite wird dunkel
+     gezeichnet, dann die Kante als Stapel, zuletzt die sichtbare Front mit Verlauf. tilt = Neigung (Scherung) */
+  slab3(ctx, sx, sy, w, th, h, shape, cols, tilt = 0, deco = null) {
+    const { ex, ey, up } = this.axes3(), T = [ex[0] * w, ex[1] * w], N = [ey[0] * th, ey[1] * th];
+    const frontSign = ey[1] >= 0 ? 1 : -1; // welche Seite zeigt zur Kamera (die Seite, deren Normale bildschirmabwärts zeigt)
+    const draw = (ox, oy, fill, withDeco) => {
+      ctx.save(); ctx.translate(sx + ox, sy + oy); ctx.transform(T[0], T[1], tilt * up * 0.3, -h * up, 0, 0);
+      ctx.beginPath(); shape(ctx); ctx.fillStyle = fill; ctx.fill();
+      if (withDeco && deco) deco(ctx);
+      ctx.restore();
+    };
+    const steps = Math.max(3, Math.round(Math.hypot(N[0], N[1]) / 1.5));
+    draw(-frontSign * N[0] / 2, -frontSign * N[1] / 2, cols.back, false);
+    for (let k = 1; k < steps; k++) { const u = -0.5 + k / steps; draw(frontSign * N[0] * u, frontSign * N[1] * u, cols.side, false); }
+    const fx = frontSign * N[0] / 2, fy = frontSign * N[1] / 2;
+    const g = ctx.createLinearGradient(sx + fx - Math.abs(T[0]) / 2, 0, sx + fx + Math.abs(T[0]) / 2, 0); g.addColorStop(0, cols.light); g.addColorStop(1, cols.front);
+    draw(fx, fy, g, true);
+  },
+  spriteGravestone(ctx, sx, sy, s, d) {
+    const k = s / this.scale, tilt = ((d.seed || 0.3) - 0.5) * 0.5;
+    this.shadow(ctx, sx + s * 0.25, sy + s * 0.05, s * 0.42);
+    const shape = c => { c.moveTo(-0.5, 0); c.lineTo(-0.5, 0.68); c.arc(0, 0.68, 0.5, Math.PI, 0); c.lineTo(0.5, 0); c.closePath(); };
+    const deco = c => { c.strokeStyle = 'rgba(30,26,46,0.7)'; c.lineWidth = 0.05; c.beginPath(); c.moveTo(-0.3, 0.72); c.lineTo(0.25, 0.72); c.moveTo(-0.3, 0.55); c.lineTo(0.12, 0.55); c.moveTo(-0.25, 0.38); c.lineTo(0.2, 0.38); c.stroke();
+      c.fillStyle = 'rgba(60,110,70,0.45)'; c.beginPath(); c.ellipse(0.28, 0.12, 0.2, 0.1, 0, 0, Math.PI * 2); c.fill(); };
+    this.slab3(ctx, sx, sy, 0.62 * k, 0.24 * k, 0.72 * k, shape, { light: '#8a82a4', front: '#5e5678', side: '#3a3450', back: '#2a2438' }, tilt, deco);
+  },
+  spriteGraveCross(ctx, sx, sy, s, d) {
+    const k = s / this.scale, tilt = ((d.seed || 0.5) - 0.5) * 0.3;
+    this.shadow(ctx, sx + s * 0.25, sy + s * 0.05, s * 0.3);
+    const shape = c => { c.moveTo(-0.14, 0); c.lineTo(-0.14, 0.55); c.lineTo(-0.5, 0.55); c.lineTo(-0.5, 0.75); c.lineTo(-0.14, 0.75); c.lineTo(-0.14, 1); c.lineTo(0.14, 1); c.lineTo(0.14, 0.75); c.lineTo(0.5, 0.75); c.lineTo(0.5, 0.55); c.lineTo(0.14, 0.55); c.lineTo(0.14, 0); c.closePath(); };
+    this.slab3(ctx, sx, sy, 0.7 * k, 0.2 * k, 0.95 * k, shape, { light: '#7a7290', front: '#54506a', side: '#332e46', back: '#241f33' }, tilt);
+  },
+  /* Kugelkrone: Kugel mit Lichtkante oben links und Schattenkern unten rechts */
+  ball3(ctx, cx, cy, r, light, mid, dark) {
+    const g = ctx.createRadialGradient(cx - r * 0.35, cy - r * 0.4, r * 0.1, cx, cy, r * 1.05);
+    g.addColorStop(0, light); g.addColorStop(0.55, mid); g.addColorStop(1, dark);
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, r, 0, TAU); ctx.fill();
+  },
+  /* Kegel mit Schattenseite und gewölbter Unterkante */
+  cone3(ctx, cx, baseY, w, h, light, dark, snow) {
+    const t = this.cam.tilt, ry = w * 0.32 * t;
+    ctx.fillStyle = dark; ctx.beginPath(); ctx.ellipse(cx, baseY, w, ry, 0, 0, TAU); ctx.fill(); // Unterseite
+    const g = ctx.createLinearGradient(cx - w, 0, cx + w, 0); g.addColorStop(0, light); g.addColorStop(0.45, light); g.addColorStop(0.6, dark); g.addColorStop(1, dark);
+    ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(cx - w, baseY); ctx.lineTo(cx, baseY - h); ctx.lineTo(cx + w, baseY); ctx.ellipse(cx, baseY, w, ry, 0, 0, Math.PI, false); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.18)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(cx - w * 0.8, baseY - h * 0.05); ctx.lineTo(cx - w * 0.05, baseY - h * 0.95); ctx.stroke(); // Lichtkante
+    if (snow) { ctx.fillStyle = '#f4faff'; ctx.beginPath(); ctx.moveTo(cx - w * 0.55, baseY - h * 0.4); ctx.quadraticCurveTo(cx, baseY - h * 0.25, cx + w * 0.55, baseY - h * 0.4); ctx.lineTo(cx, baseY - h); ctx.closePath(); ctx.fill(); }
+  },
+  spriteTree(ctx, sx, sy, s, d, t) {
+    const k = s / this.scale;
+    this.shadow(ctx, sx + s * 0.3, sy + s * 0.05, s * 0.65);
+    this.slab3(ctx, sx, sy, 0.22 * k, 0.22 * k, 1.05 * k, c => { c.rect(-0.5, 0, 1, 1); }, { light: '#8a5c33', front: '#6b4423', side: '#4a2e14', back: '#3a2410' });
+    const cols = d.glow ? [['#8fe0e0', '#3fb3b0', '#1f6a70'], ['#6fd0d0', '#2e8f9a', '#164a55']] : [['#8fe07a', '#3f9a4e', '#1f5a2c'], ['#63c261', '#2f7a3e', '#163f20']];
+    const blobs = [[0.25, -1.75, 0.48, 1], [-0.2, -1.72, 0.5, 1], [0.4, -1.2, 0.52, 0], [-0.38, -1.15, 0.5, 0], [0, -1.35, 0.72, 0], [-0.1, -1.85, 0.34, 1]];
+    for (const [ox, oy, r, li] of blobs) this.ball3(ctx, sx + ox * s, sy + oy * s, r * s, cols[li][0], cols[li][1], cols[li][2]);
+    if (d.glow) for (let i = 0; i < 4; i++) { const a = t * 1.5 + i * 1.6; ctx.fillStyle = 'rgba(255,255,180,0.9)'; ctx.beginPath(); ctx.arc(sx + Math.cos(a) * s * 0.7, sy - s * 1.3 + Math.sin(a * 1.3) * s * 0.4, s * 0.06, 0, TAU); ctx.fill(); }
+  },
+  spritePine(ctx, sx, sy, s, c1, c2, snow = false) {
+    const k = s / this.scale;
+    this.shadow(ctx, sx + s * 0.25, sy + s * 0.04, s * 0.5);
+    this.slab3(ctx, sx, sy, 0.18 * k, 0.18 * k, 0.5 * k, c => { c.rect(-0.5, 0, 1, 1); }, { light: '#7a5230', front: '#5a3a1e', side: '#3e2712', back: '#2e1c0c' });
+    for (let i = 0; i < 3; i++) { const w = s * (0.75 - i * 0.18), y0 = sy - s * (0.45 + i * 0.55); this.cone3(ctx, sx, y0, w, s * 0.8, i % 2 ? c1 : shade(c1, 1.15), shade(c2, 0.8), snow); }
+  },
+  spriteDeadTree(ctx, sx, sy, s, col = '#2a2030', embers = false) {
+    this.shadow(ctx, sx + s * 0.2, sy + s * 0.03, s * 0.4);
+    const light = shade(col, 1.9), dark = shade(col, 0.6);
+    const limb = (x0, y0, x1, y1, w0, w1) => { // sich verjüngender Ast mit Licht- und Schattenseite
+      const dx = x1 - x0, dy = y1 - y0, L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L;
+      const g = ctx.createLinearGradient(x0 + nx * w0, y0 + ny * w0, x0 - nx * w0, y0 - ny * w0); g.addColorStop(0, light); g.addColorStop(0.5, col); g.addColorStop(1, dark);
+      ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(x0 + nx * w0, y0 + ny * w0); ctx.lineTo(x1 + nx * w1, y1 + ny * w1); ctx.lineTo(x1 - nx * w1, y1 - ny * w1); ctx.lineTo(x0 - nx * w0, y0 - ny * w0); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = dark; ctx.beginPath(); ctx.ellipse(x0, y0, w0, w0 * 0.45, 0, 0, TAU); ctx.fill();
+    };
+    limb(sx, sy, sx + s * 0.1, sy - s * 1.2, s * 0.13, s * 0.06);
+    limb(sx + s * 0.05, sy - s * 0.7, sx - s * 0.5, sy - s * 1.3, s * 0.06, s * 0.025);
+    limb(sx + s * 0.08, sy - s * 0.95, sx + s * 0.55, sy - s * 1.5, s * 0.055, s * 0.025);
+    limb(sx + s * 0.1, sy - s * 1.2, sx - s * 0.1, sy - s * 1.7, s * 0.05, s * 0.02);
+    limb(sx - s * 0.3, sy - s * 1.05, sx - s * 0.62, sy - s * 1.0, s * 0.035, s * 0.015);
+    if (embers) { ctx.fillStyle = 'rgba(255,120,40,0.85)'; for (const [ox, oy] of [[-0.5, -1.3], [0.55, -1.5], [-0.1, -1.7]]) { ctx.beginPath(); ctx.arc(sx + ox * s, sy + oy * s, s * 0.05, 0, TAU); ctx.fill(); } }
   },
 });
