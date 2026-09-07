@@ -113,17 +113,17 @@ Erste Welt der Stufe Legende: schwebende Felsinseln in einer Gewitternacht (`sto
 
 ## Die Bahnen des Schattenreichs
 
-Zweite Welt der Stufe Legende: Friedhöfe unter blutrotem Mond, Aschegrund, Schattenfeuer statt Lava, Nebel (`shadow`); die Neunte führt über den Totensee (`darksea`) ins Totenschiff (`ghostship`) und zurück ans Totenufer. Neue Gefahren: **Fallbeile** (Klinge wird langsam hochgezogen und knallt schlagartig herunter – wer dann darunter liegt, wird geköpft: Strafschlag, zurück), **Rabenschwärme** (fliegen wie Wellen ihre Bahn und nehmen den Ball mit – Timing!), **verfluchte Ritterstatuen** (erwachen im Takt, ein Schwerthieb belegt den Ball mit dem Ritterfluch: träge bis zum Loch), der **Turm des Auges** (das brennende Auge dreht seinen Lichtkegel über den Platz – wer darin liegen bleibt, wird erblickt: Strafschlag, zurück) und **dunkle Tentakel** aus dem Wrack. In Schattenzonen rollt der Ball unsichtbar.
+Zweite Welt der Stufe Legende: Friedhöfe unter blutrotem Mond, Aschegrund, Schattenfeuer statt Lava, Nebel (`shadow`); die Neunte führt über den Totensee (`darksea`) ins Totenschiff (`ghostship`) und zurück ans Totenufer. Neue Gefahren: **Fallbeile** (Klinge wird langsam hochgezogen und knallt schlagartig herunter – wer dann darunter liegt, wird geköpft: Strafschlag, zurück), **Rabenschwärme** (fliegen wie Wellen ihre Bahn und nehmen den Ball mit – Timing!), **verfluchte Ritterstatuen** (erwachen im Takt, ein Schwerthieb belegt den Ball mit dem Ritterfluch: träge bis zum Loch), der **Turm des Auges** (das brennende Auge dreht seinen Lichtkegel über den Platz – wer darin liegen bleibt, wird erblickt: Strafschlag, zurück) und **dunkle Tentakel** aus dem Wrack.
 
 | Nr. | Bahn | Par | Besonderheit |
 |---|---|---|---|
 | 1 | Friedhofspforte | 4 | Rabenschwarm über den Hof (trägt oder weht zurück), Grabsteine, Geist, erstes Fallbeil im Torgang |
 | 2 | Rabenfriedhof | 4 | Gräberfeld zwischen zwei Schattenfeuergräben, drei Rabenschwärme quer, Gruftblöcke als Deckung, Sense |
 | 3 | Fallbeilgasse | 5 | drei Fallbeile im Takt, Falltür, Kehre, viertes Fallbeil vor dem Loch |
-| 4 | Irrlichtsumpf | 6 | weites Moor mit Schattenwasser, Seelenlichter ziehen den Ball zu den Tümpeln, Schattenzone, Rabenschwarm |
+| 4 | Irrlichtsumpf | 6 | weites Moor mit Schattenwasser, Seelenlichter ziehen den Ball zu den Tümpeln, Rabenschwarm |
 | 5 | Ritterhalle | 5 | Säulenhalle mit fünf verfluchten Ritterstatuen (Schwerthieb = Ritterfluch), Fledermaus, Steinwand mit Fallbeil-Lücke |
 | 6 | Knochenbrücke | 5 | Steg ohne Geländer über den Feuerstrom, Knochenstacheln, riesiges Fallbeil quer über die Insel, schmaler zweiter Steg |
-| 7 | Gruftlabyrinth | 7 | einmal außen herum zur Druckplatte, die das Fallbeil vor der Grabkammer hebt (läuft die Zeit ab, fällt es), Falltüren, Rabenschwarm, Schattenzone, Sense |
+| 7 | Gruftlabyrinth | 7 | einmal außen herum zur Druckplatte, die das Fallbeil vor der Grabkammer hebt (läuft die Zeit ab, fällt es), Falltüren, Rabenschwarm, Sense |
 | 8 | Turm des Auges | 5 | großer Platz mit dem Augenturm in der Mitte; Gruftblöcke als Deckung, Falltür, Fledermaus – nie im Licht liegen bleiben |
 | 9 | Totenschiff | 10 | dreiteilige Bahn: Ufer, Steg ohne Geländer mit Rabenschwarm, Plattform am Wrack mit dunklen Tentakeln; drinnen das Totenschiff (Tentakel, Fässer, Falltür, sichere Kammer, Luke); zuletzt das Totenufer mit Rabenschwarm, Fallbeil und dem Loch |
 

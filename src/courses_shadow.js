@@ -1,5 +1,5 @@
 /* Schattenreich: Stufe „Legende“ – neun extra große Bahnen im Reich der Schatten: Friedhöfe mit Rabenschwärmen,
-   Fallbeile, verfluchte Ritterstatuen, Falltüren, Schattenzonen (der Ball wird unsichtbar), Geister, Sensen,
+   Fallbeile, verfluchte Ritterstatuen, Falltüren, Geister, Sensen,
    der Turm mit dem brennenden Auge; die Neunte führt über den Totensee ins Totenschiff und zurück ans Totenufer. */
 const SHADOW_COURSES = [
   {
@@ -131,11 +131,10 @@ const SHADOW_COURSES = [
       '......................................',
       '......................................',
     ],
-    intro: 'Ein weites Moor voller Schattenwasser. Seelenlichter locken den Ball an – und genau neben ihnen liegen die Tümpel. In der Mitte schluckt eine Schattenzone den Ball: Dort rollt er unsichtbar weiter. Ein Rabenschwarm zieht am Ende quer über den Weg.',
+    intro: 'Ein weites Moor voller Schattenwasser. Seelenlichter locken den Ball an – und genau neben ihnen liegen die Tümpel. Ein Rabenschwarm zieht am Ende quer über den Weg.',
     obstacles: [
       { type: 'magnet', x: 11.5, y: 6.5, r: 3.2, strength: 10, style: 'soul' },
       { type: 'magnet', x: 24.5, y: 6.5, r: 3.0, strength: 10, style: 'soul' },
-      { type: 'field', x: 17, y: 3, w: 4, h: 8, fx: 0, fy: 0, style: 'dark' },
       { type: 'wave', style: 'ravens', x0: 29, y0: 4.6, x1: 29, y1: 9.4, w: 2.4, h: 0.6, period: 5.5, push: 12, brake: 0.55 },
       { type: 'bumper', x: 29.5, y: 6.5, r: 0.38, style: 'grave', kick: 7 },
       { type: 'bumper', x: 5.5, y: 9.5, r: 0.38, style: 'grave', kick: 7 },
@@ -248,7 +247,7 @@ const SHADOW_COURSES = [
       '....................................',
       '....................................',
     ],
-    intro: 'Das Labyrinth der Gruft: einmal außen herum bis zur Druckplatte. Sie zieht das Fallbeil vor der Grabkammer langsam hoch – und wenn die Zeit abläuft, fällt es schlagartig. Falltüren im Gang, Fledermäuse, ein Rabenschwarm und eine Schattenzone vor der Kammer.',
+    intro: 'Das Labyrinth der Gruft: einmal außen herum bis zur Druckplatte. Sie zieht das Fallbeil vor der Grabkammer langsam hoch – und wenn die Zeit abläuft, fällt es schlagartig. Falltüren im Gang, ein Rabenschwarm und die Sense vor der Kammer.',
     obstacles: [
       { type: 'trapdoor', x: 12, y: 3, w: 2.2, h: 3, period: 5.5, open: 0.32, phase: 0 },
       { type: 'trapdoor', x: 24, y: 3, w: 2.2, h: 3, period: 5.5, open: 0.32, phase: 0.5 },
@@ -260,7 +259,6 @@ const SHADOW_COURSES = [
       { type: 'wall', x0: 2, y0: 17, x1: 4, y1: 18, extend: 0 },
       { type: 'wall', x0: 2, y0: 9, x1: 4, y1: 8, extend: 0 },
       { type: 'guillotine', x: 13, y: 11.5, w: 0.35, h: 3, linked: 'A', liftH: 2.2 },
-      { type: 'field', x: 14, y: 10, w: 4, h: 3, fx: 0, fy: 0, style: 'dark' },
       { type: 'bumper', x: 20.5, y: 10.5, r: 0.4, style: 'eye', kick: 7 },
       { type: 'rotor', x: 17.5, y: 7.5, blades: 1, len: 1.4, thick: 0.14, hubR: 0.22, style: 'scythe', e: 0.6, swing: { amp: Math.PI / 2.4, speed: 1.6 }, phase: 0, height: 0.5 },
     ],
