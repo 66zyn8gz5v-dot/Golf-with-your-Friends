@@ -1,574 +1,102 @@
-/* Weltkarte: die Übersicht über alle Welten. Jede Welt schwebt als eigene Insel im Himmel – links das
-   helle Märchenland, rechts das nächtliche Schattenreich. In der Mitte liegt auf einem Sockel ein
-   goldener Ball, von dem goldene Wege zu allen Inseln führen. Jede Welt ist von Anfang an anwählbar.
-
-   Für die Tiefe sorgt durchgehend dieselbe Lichtannahme: die Sonne steht links oben. Jede Fläche hat
-   deshalb eine helle und eine abgewandte Seite, unter dem Gras liegt eine Erdkante, der Fels darunter
-   bekommt Schichten und Zacken, und alles wirft einen Schatten. Weiter hinten liegende Inseln
-   verblassen leicht im Dunst.
+/* Weltkarte: die Übersicht über alle Welten. Ein gezeichneter Atlas, auf dem die Reise links im hellen
+   Märchenland beginnt und rechts im nächtlichen Schattenreich endet – Himmel, Land und Meer wechseln
+   dabei von Tag auf Nacht. Jede Welt ist ein Ort auf der Karte und von Anfang an anwählbar; nichts muss
+   freigespielt werden. Die Stufe (Normal, Profi, Legende) steht nur als Hinweis am Ort.
 
    Die Orte liegen in Prozent der Kartenfläche (spots), die Zeichnung nutzt denselben Maßstab
-   (viewBox 100 × 66, preserveAspectRatio="none"), damit Marke und Untergrund exakt zusammenpassen. */
+   (viewBox 100 × 62, preserveAspectRatio="none"), damit Marke und Untergrund exakt zusammenpassen. */
 const WorldMap = (() => {
   /* x, y in Prozent der Karte; icon = Zeichen der Marke, col = Farbe des Rings */
   const spots = {
-    normal: { x: 20, y: 40, icon: '🏰', col: '#ffd166' },
-    pro: { x: 18, y: 66, icon: '⚙️', col: '#e0a05a' },
-    sea: { x: 26, y: 89, icon: '🌊', col: '#7fd8ff' },
-    jungle: { x: 58, y: 89, icon: '🗿', col: '#9ee06f' },
-    storm: { x: 80, y: 36, icon: '⛈️', col: '#8fb8ff' },
-    shadow: { x: 84, y: 66, icon: '🔮', col: '#c58bff' },
+    normal: { x: 12, y: 52, icon: '🌼', col: '#8fe07a' },
+    sea: { x: 27, y: 82, icon: '🌊', col: '#7fd8ff' },
+    pro: { x: 43, y: 50, icon: '⚙️', col: '#ff9c5a' },
+    jungle: { x: 59, y: 82, icon: '🗿', col: '#b6ff6e' },
+    storm: { x: 75, y: 44, icon: '⛈️', col: '#ffe45e' },
+    shadow: { x: 88, y: 74, icon: '🌑', col: '#c58bff' },
   };
-
-  /* Schwebende Insel in drei Lagen: Grasdecke, Erdkante, Felskörper mit Zacken.
-     top/soil/rock sind Füllungen, dark die abgewandte Seite. */
-  function isle(cx, cy, rx, depth, top, soil, rock, dark, flat = 0.26) {
-    const ry = rx * flat, tip = cx + rx * 0.06;
-    const spur = (x, y, w, h) => `<path d="M ${x - w} ${y} Q ${x} ${y + h * 0.55} ${x + w * 0.2} ${y + h} Q ${x + w * 0.5} ${y + h * 0.5} ${x + w} ${y} Z" fill="${dark}" opacity="0.85"/>`;
-    return `<g>
-      <!-- Felskörper: helle Flanke links, abgewandte Seite rechts -->
-      <path d="M ${cx - rx} ${cy} Q ${cx - rx * 0.92} ${cy + depth * 0.5} ${cx - rx * 0.22} ${cy + depth * 0.84}
-               L ${tip} ${cy + depth} Q ${cx + rx * 0.78} ${cy + depth * 0.44} ${cx + rx} ${cy} Z" fill="${rock}"/>
-      <path d="M ${cx + rx * 0.06} ${cy + ry * 0.5} Q ${cx + rx * 0.5} ${cy + depth * 0.5} ${tip} ${cy + depth}
-               Q ${cx + rx * 0.82} ${cy + depth * 0.4} ${cx + rx} ${cy} Z" fill="${dark}" opacity="0.55"/>
-      <!-- Gesteinsschichten -->
-      <g stroke="rgba(0,0,0,0.16)" stroke-width="0.22" fill="none">
-        <path d="M ${cx - rx * 0.82} ${cy + depth * 0.26} q ${rx * 0.8} ${depth * 0.12} ${rx * 1.6} ${-depth * 0.02}"/>
-        <path d="M ${cx - rx * 0.6} ${cy + depth * 0.5} q ${rx * 0.6} ${depth * 0.12} ${rx * 1.15} ${-depth * 0.04}"/></g>
-      ${spur(cx - rx * 0.66, cy + depth * 0.34, rx * 0.13, depth * 0.36)}
-      ${spur(cx + rx * 0.52, cy + depth * 0.3, rx * 0.12, depth * 0.3)}
-      <!-- Erdkante unter dem Gras: sie gibt der Decke ihre Dicke -->
-      <ellipse cx="${cx}" cy="${cy + ry * 0.42}" rx="${rx * 0.985}" ry="${ry}" fill="${soil}"/>
-      <ellipse cx="${cx}" cy="${cy + ry * 0.42}" rx="${rx * 0.985}" ry="${ry}" fill="rgba(0,0,0,0.25)"
-        style="clip-path:none" opacity="0.35"/>
-      <!-- Kontaktschatten: dort, wo die Decke auf dem Fels aufliegt -->
-      <ellipse cx="${cx}" cy="${cy + ry * 0.75}" rx="${rx * 0.92}" ry="${ry * 0.7}" fill="rgba(0,0,0,0.32)" filter="url(#atNear)"/>
-      <!-- Grasdecke, von links oben beleuchtet -->
-      <ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${top}"/>
-      <ellipse cx="${cx - rx * 0.3}" cy="${cy - ry * 0.3}" rx="${rx * 0.52}" ry="${ry * 0.52}" fill="rgba(255,248,210,0.2)" filter="url(#atNear)"/>
-      <path d="M ${cx - rx * 0.95} ${cy - ry * 0.1} a ${rx} ${ry} 0 0 1 ${rx * 1.25} ${-ry * 0.82}" fill="none" stroke="rgba(255,246,205,0.55)" stroke-width="0.32"/>
-      <path d="M ${cx - rx} ${cy} a ${rx} ${ry} 0 0 0 ${rx * 2} 0" fill="none" stroke="rgba(0,0,0,0.3)" stroke-width="0.4"/>
-    </g>`;
-  }
-  /* Schatten, den ein Gebäude auf den Boden wirft (Licht von links oben) */
-  const cast = (x, y, rx, ry = rx * 0.32) => `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="rgba(0,0,0,0.3)"/>`;
-  /* kleiner Brocken, der frei unter einer Insel schwebt */
-  const chip = (x, y, s, rock, dark) =>
-    `<g><path d="M ${x - s} ${y} Q ${x - s * 0.5} ${y + s * 1.5} ${x + s * 0.1} ${y + s * 1.9} Q ${x + s * 0.8} ${y + s} ${x + s} ${y} Z" fill="${rock}"/>
-      <path d="M ${x + s * 0.1} ${y} Q ${x + s * 0.5} ${y + s} ${x + s * 0.1} ${y + s * 1.9} Q ${x + s * 0.85} ${y + s} ${x + s} ${y} Z" fill="${dark}" opacity="0.6"/>
-      <ellipse cx="${x}" cy="${y}" rx="${s}" ry="${s * 0.3}" fill="${rock}" opacity="0.9"/></g>`;
-  const fall = (x, y, w, h, col = '#cfeeff') =>
-    `<g><path d="M ${x - w / 2} ${y} q ${w * 0.15} ${h * 0.5} ${-w * 0.12} ${h} l ${w * 1.24} 0 q ${-w * 0.27} ${-h * 0.5} ${-w * 0.12} ${-h} Z" fill="${col}" opacity="0.7"/>
-      <path d="M ${x - w * 0.12} ${y} q ${w * 0.08} ${h * 0.5} ${-w * 0.05} ${h * 0.96}" stroke="rgba(255,255,255,0.75)" stroke-width="${w * 0.22}" fill="none"/>
-      <ellipse cx="${x}" cy="${y}" rx="${w * 0.75}" ry="${w * 0.28}" fill="${col}" opacity="0.85"/></g>`;
-  /* Grasbüschel auf der Decke – sie geben der Fläche Struktur statt einer glatten Ellipse */
-  function tufts(cx, cy, rx, ry, n, col = 'rgba(28,66,34,0.32)', seed = 1) {
-    let out = '';
-    for (let i = 0; i < n; i++) {
-      const a = i * 2.39996 + seed, r = Math.sqrt(((i * 37 + seed * 11) % 100) / 100);
-      const x = cx + Math.cos(a) * rx * 0.84 * r, y = cy + Math.sin(a) * ry * 0.84 * r;
-      const w = 0.14 + ((i * 3) % 3) * 0.05;
-      out += `<path d="M ${x - w} ${y} q ${w} ${-w * 2.6} ${w * 2} 0 Z" fill="${col}"/>`;
-    }
-    return out;
-  }
-  /* Blüten, Kiesel oder Funken als bunte Tupfer */
-  function specks(cx, cy, rx, ry, n, cols, seed = 3) {
-    let out = '';
-    for (let i = 0; i < n; i++) {
-      const a = i * 2.39996 + seed, r = Math.sqrt(((i * 53 + seed * 7) % 100) / 100);
-      out += `<circle cx="${(cx + Math.cos(a) * rx * 0.8 * r).toFixed(2)}" cy="${(cy + Math.sin(a) * ry * 0.8 * r).toFixed(2)}" r="${(0.1 + (i % 3) * 0.04).toFixed(2)}" fill="${cols[i % cols.length]}"/>`;
-    }
-    return out;
-  }
-  /* kleines Haus mit beleuchteter und abgewandter Dachseite */
-  const house = (x, y, w, h, wall = 'url(#atWall)', roof = 'url(#atRoof)', dark = '#7d2a2a') =>
-    `<g>${cast(x + w * 0.62, y + h, w * 0.95, w * 0.3)}
-      <rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${wall}"/>
-      <path d="M ${x - w * 0.2} ${y} L ${x + w / 2} ${y - h * 0.78} L ${x + w * 1.2} ${y} Z" fill="${roof}"/>
-      <path d="M ${x + w / 2} ${y - h * 0.78} L ${x + w * 1.2} ${y} L ${x + w / 2} ${y} Z" fill="${dark}" opacity="0.8"/>
-      <rect x="${x + w * 0.32}" y="${y + h * 0.34}" width="${w * 0.3}" height="${h * 0.42}" fill="#ffd166"/></g>`;
-  const tree = (x, y, s, col = '#3f8f47', dark = '#255f30', lit = '#6cbc63') =>
-    `<g>${cast(x + s * 0.5, y + s * 0.12, s * 1.05, s * 0.3)}
-      <g class="sway"><path d="M ${x - s} ${y} L ${x} ${y - s * 2.3} L ${x + s} ${y} Z" fill="${col}"/>
-        <path d="M ${x - s} ${y} L ${x} ${y - s * 2.3} L ${x} ${y} Z" fill="${lit}" opacity="0.55"/>
-        <path d="M ${x + s * 0.15} ${y} L ${x} ${y - s * 2.3} L ${x + s} ${y} Z" fill="${dark}" opacity="0.7"/></g></g>`;
+  const vb = (id, dy = 0) => `${spots[id].x} ${(spots[id].y * 0.62 + dy).toFixed(1)}`; // Prozent → Karten-Koordinate
 
   /* par: 'none' für die Karte selbst (Prozent = Koordinate), 'xMidYMid slice' für den Knopf im Titelbild */
   function svg(cls = 'atlas-bg', par = 'none') {
-    const clouds = [];
-    for (let i = 0; i < 9; i++) {
-      const x = 4 + ((i * 37) % 92), y = 6 + ((i * 23) % 44), s = 3 + ((i * 5) % 4);
-      clouds.push(`<g class="drift ${i % 2 ? 'd2' : ''}" opacity="${0.1 + (i % 3) * 0.05}">
-        <ellipse cx="${x}" cy="${y}" rx="${s * 2.2}" ry="${s * 0.7}" fill="#fff"/>
-        <ellipse cx="${x - s}" cy="${y + 0.4}" rx="${s * 1.2}" ry="${s * 0.5}" fill="#fff"/>
-        <ellipse cx="${x + s * 1.1}" cy="${y + 0.5}" rx="${s * 1.1}" ry="${s * 0.45}" fill="#fff"/></g>`);
-    }
     const stars = [];
-    for (let i = 0; i < 26; i++) {
-      const x = 58 + ((i * 43) % 41), y = 2 + ((i * 17) % 30), r = 0.16 + ((i * 7) % 3) * 0.12;
-      stars.push(`<circle class="twinkle ${i % 3 ? 't' + (i % 3 + 1) : ''}" cx="${x}" cy="${y}" r="${r}" fill="#fff" opacity="${0.4 + (i % 4) * 0.15}"/>`);
+    for (let i = 0; i < 30; i++) {
+      const x = 55 + ((i * 41) % 45), y = 1 + ((i * 19) % 17), r = 0.2 + ((i * 7) % 3) * 0.14;
+      stars.push(`<circle class="twinkle ${i % 3 ? 't' + (i % 3 + 1) : ''}" cx="${x}" cy="${y}" r="${r}" fill="#fff" opacity="${0.5 + (i % 4) * 0.15}"/>`);
     }
-    const ways = [[26, 24], [24, 42], [34, 51], [56, 50], [73, 24], [75, 40]]
-      .map(([x, y]) => `M 50 33 Q ${(50 + x) / 2} ${(33 + y) / 2 - 2.5} ${x} ${y}`).join(' ');
-
-    return `<svg class="${cls}" viewBox="0 0 100 66" preserveAspectRatio="${par}" aria-hidden="true">
+    const route = ['normal', 'sea', 'pro', 'jungle', 'storm', 'shadow'].map(id => vb(id, -1.6)).join(' L ');
+    return `<svg class="${cls}" viewBox="0 0 100 62" preserveAspectRatio="${par}" aria-hidden="true">
       <defs>
-        <linearGradient id="atSky" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#26599f"/><stop offset="0.32" stop-color="#4e94d6"/>
-          <stop offset="0.66" stop-color="#8cc4e8"/><stop offset="1" stop-color="#6ea4c8"/></linearGradient>
-        <linearGradient id="atDusk" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0.4" stop-color="rgba(24,14,48,0)"/><stop offset="0.72" stop-color="rgba(30,16,58,0.55)"/>
-          <stop offset="1" stop-color="rgba(14,7,30,0.92)"/></linearGradient>
-        <linearGradient id="atFar" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="rgba(120,168,150,0.5)"/><stop offset="1" stop-color="rgba(38,84,72,0.8)"/></linearGradient>
-        <!-- Fels: helle Kante oben, satter Kern, dunkler Fuß -->
-        <linearGradient id="atRock" x1="0.15" y1="0" x2="0.75" y2="1">
-          <stop offset="0" stop-color="#a3805c"/><stop offset="0.3" stop-color="#7a5a3c"/>
-          <stop offset="0.7" stop-color="#4c3626"/><stop offset="1" stop-color="#2a1c14"/></linearGradient>
-        <linearGradient id="atRockD" x1="0.15" y1="0" x2="0.75" y2="1">
-          <stop offset="0" stop-color="#514a72"/><stop offset="0.35" stop-color="#332d52"/>
-          <stop offset="1" stop-color="#100c22"/></linearGradient>
-        <linearGradient id="atSoil" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#8e6a44"/><stop offset="1" stop-color="#5a3f28"/></linearGradient>
-        <linearGradient id="atSoilD" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#463c62"/><stop offset="1" stop-color="#241d3e"/></linearGradient>
-        <!-- Grasdecke: Licht von links oben -->
-        <radialGradient id="atGrass" cx="0.34" cy="0.28" r="0.85">
-          <stop offset="0" stop-color="#a6e07a"/><stop offset="0.5" stop-color="#6fb857"/><stop offset="1" stop-color="#3d7a3c"/></radialGradient>
-        <radialGradient id="atGrassJ" cx="0.34" cy="0.28" r="0.85">
-          <stop offset="0" stop-color="#79c95f"/><stop offset="0.5" stop-color="#468f3f"/><stop offset="1" stop-color="#255c2c"/></radialGradient>
-        <radialGradient id="atGrassS" cx="0.34" cy="0.28" r="0.85">
-          <stop offset="0" stop-color="#5d7f78"/><stop offset="0.5" stop-color="#3b5a56"/><stop offset="1" stop-color="#1e3336"/></radialGradient>
-        <radialGradient id="atGrassX" cx="0.34" cy="0.28" r="0.85">
-          <stop offset="0" stop-color="#584a76"/><stop offset="0.5" stop-color="#392f56"/><stop offset="1" stop-color="#1d1636"/></radialGradient>
-        <radialGradient id="atWater" cx="0.36" cy="0.3" r="0.85">
-          <stop offset="0" stop-color="#8fe0f6"/><stop offset="0.45" stop-color="#41a5d8"/><stop offset="1" stop-color="#155c92"/></radialGradient>
-        <!-- Baustoffe -->
-        <linearGradient id="atWall" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stop-color="#f6f1e6"/><stop offset="0.45" stop-color="#ddd5c6"/><stop offset="1" stop-color="#9c9385"/></linearGradient>
-        <linearGradient id="atRoof" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stop-color="#e06a5a"/><stop offset="0.4" stop-color="#c94a4a"/><stop offset="1" stop-color="#7d2a2a"/></linearGradient>
-        <linearGradient id="atWood" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stop-color="#a5764a"/><stop offset="0.45" stop-color="#8a5f3a"/><stop offset="1" stop-color="#553a24"/></linearGradient>
-        <linearGradient id="atWood2" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stop-color="#a5764a"/><stop offset="0.45" stop-color="#8a5f3a"/><stop offset="1" stop-color="#553a24"/></linearGradient>
-        <linearGradient id="atDark" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stop-color="#3c4470"/><stop offset="0.45" stop-color="#262c52"/><stop offset="1" stop-color="#12142c"/></linearGradient>
-        <linearGradient id="atVoid" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stop-color="#33245c"/><stop offset="0.45" stop-color="#1f1440"/><stop offset="1" stop-color="#0c0720"/></linearGradient>
-        <linearGradient id="atStone" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stop-color="#d8c8a2"/><stop offset="0.45" stop-color="#b8a780"/><stop offset="1" stop-color="#7e7052"/></linearGradient>
-        <radialGradient id="atBall" cx="0.34" cy="0.3" r="0.78">
-          <stop offset="0" stop-color="#fffdf0"/><stop offset="0.35" stop-color="#ffdf7a"/>
-          <stop offset="0.75" stop-color="#e0a52a"/><stop offset="1" stop-color="#8a5c10"/></radialGradient>
-        <radialGradient id="atGlow" cx="0.5" cy="0.5" r="0.5">
-          <stop offset="0" stop-color="rgba(255,224,138,0.8)"/><stop offset="1" stop-color="rgba(255,224,138,0)"/></radialGradient>
-        <radialGradient id="atMagic" cx="0.5" cy="0.5" r="0.5">
-          <stop offset="0" stop-color="rgba(170,100,255,0.55)"/><stop offset="1" stop-color="rgba(170,100,255,0)"/></radialGradient>
-        <linearGradient id="atHaze" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="rgba(150,190,230,0.1)"/><stop offset="0.45" stop-color="rgba(150,190,230,0.08)"/>
-          <stop offset="0.75" stop-color="rgba(150,190,230,0)"/></linearGradient>
-        <radialGradient id="atVig" cx="0.5" cy="0.5" r="0.74">
-          <stop offset="0.55" stop-color="rgba(0,0,0,0)"/><stop offset="1" stop-color="rgba(0,0,0,0.5)"/></radialGradient>
-        <filter id="atShade" x="-40%" y="-40%" width="180%" height="200%">
-          <feDropShadow dx="0.5" dy="0.7" stdDeviation="0.45" flood-color="#0a0812" flood-opacity="0.5"/></filter>
-        <filter id="atNear" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="0.38"/></filter>
-        <filter id="atDof" x="-15%" y="-15%" width="130%" height="130%">
-          <feGaussianBlur stdDeviation="0.12"/></filter>
-        <filter id="atSoft" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="0.9"/></filter>
-        <filter id="atDeep" x="-30%" y="-30%" width="160%" height="180%">
-          <feDropShadow dx="1.2" dy="2" stdDeviation="1.1" flood-color="#0a0818" flood-opacity="0.55"/></filter>
+        <linearGradient id="atSky" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#5fb4f2"/><stop offset="0.24" stop-color="#bfe4ff"/><stop offset="0.44" stop-color="#f3ab63"/>
+          <stop offset="0.6" stop-color="#8a4a5a"/><stop offset="0.78" stop-color="#241a42"/><stop offset="1" stop-color="#06040e"/>
+        </linearGradient>
+        <linearGradient id="atLand" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#59a044"/><stop offset="0.2" stop-color="#71b34c"/><stop offset="0.38" stop-color="#c8a35e"/>
+          <stop offset="0.55" stop-color="#4a7a34"/><stop offset="0.74" stop-color="#42476a"/><stop offset="0.9" stop-color="#241b3c"/><stop offset="1" stop-color="#100a1c"/>
+        </linearGradient>
+        <linearGradient id="atRidge" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#9fc4ea"/><stop offset="0.35" stop-color="#b09a86"/><stop offset="0.62" stop-color="#6a5a80"/><stop offset="1" stop-color="#191233"/>
+        </linearGradient>
+        <linearGradient id="atSea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#63bce8"/><stop offset="1" stop-color="#10456e"/></linearGradient>
+        <radialGradient id="atSun" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fffbe0"/><stop offset="0.42" stop-color="#ffe08a"/><stop offset="1" stop-color="rgba(255,224,138,0)"/></radialGradient>
+        <radialGradient id="atMoon" cx="0.5" cy="0.5" r="0.5"><stop offset="0.34" stop-color="#c8434c"/><stop offset="1" stop-color="rgba(184,50,60,0)"/></radialGradient>
+        <radialGradient id="atVig" cx="0.5" cy="0.5" r="0.72"><stop offset="0.6" stop-color="rgba(0,0,0,0)"/><stop offset="1" stop-color="rgba(0,0,0,0.5)"/></radialGradient>
       </defs>
-
-      <rect width="100" height="66" fill="url(#atSky)"/>
+      <rect width="100" height="62" fill="url(#atSky)"/>
       ${stars.join('')}
-      <circle cx="14" cy="8" r="11" fill="url(#atGlow)"/>
-      <g filter="url(#atSoft)">${clouds.join('')}</g>
-      <!-- ferne Landschaft tief unter den Inseln, weich gezeichnet -->
-      <g filter="url(#atSoft)" opacity="0.9">
-        <path d="M0 48 q10 -7 20 -2 q12 6 22 0 q12 -7 24 -1 q14 7 24 -1 q6 -5 10 -1 L100 66 L0 66 Z" fill="url(#atFar)"/>
-        <path d="M0 56 q14 -5 26 -1 q14 5 26 0 q14 -5 26 0 q12 4 22 -1 L100 66 L0 66 Z" fill="rgba(22,54,48,0.55)"/></g>
-      <rect width="100" height="66" fill="url(#atDusk)"/>
-
-      <!-- goldene Wege, sie laufen unter den Inseln durch -->
-      <path d="${ways}" fill="none" stroke="rgba(18,12,36,0.4)" stroke-width="1.1" stroke-linecap="round" stroke-dasharray="1.6 2.6"/>
-      <path d="${ways}" fill="none" stroke="rgba(255,240,180,0.95)" stroke-width="0.62" stroke-linecap="round" stroke-dasharray="1.6 2.6"/>
-
-      <!-- ============ Sturmhimmel (am weitesten hinten) ============ -->
-      <g opacity="0.95" transform="translate(11.34 2.66) scale(0.86)" filter="url(#atDof)">
-        <g opacity="0.6">
-          <path d="M87.6 10.4 Q93 8.6 98.4 10.4 Q97 17 94.6 21 Q93.4 23.4 92.6 25.4 Q91.6 23 90.6 20.4 Q88.6 16.4 87.6 10.4 Z"
-            fill="rgba(190,208,240,0.3)" filter="url(#atSoft)"/>
-          <g stroke="rgba(226,238,255,0.75)" stroke-width="0.32" fill="none" stroke-linecap="round">
-            <path d="M88.2 11 q5.2 -2.2 9.6 0"/><path d="M89 13.6 q4 -1.8 7.6 0"/>
-            <path d="M89.9 16.4 q3.1 -1.5 5.8 0"/><path d="M90.9 19.2 q2.1 -1.1 3.8 0"/>
-            <path d="M91.8 21.9 q1.2 -0.7 2.1 0"/></g></g>
-        <g filter="url(#atDeep)">${isle(81, 19, 12, 8, 'url(#atGrassS)', 'url(#atSoilD)', 'url(#atRockD)', '#0a0818', 0.17)}</g>
-        ${chip(70.5, 24.6, 1.5, 'url(#atRockD)', '#0a0818')}${chip(90.8, 26.4, 1.2, 'url(#atRockD)', '#0a0818')}
-        <g filter="url(#atShade)">
-          ${cast(81.4, 18.9, 6.2, 1.7)}
-          <g fill="url(#atDark)">
-            <rect x="76.6" y="12.6" width="2.2" height="6.2"/><rect x="82.4" y="12.2" width="2.2" height="6.6"/>
-            <rect x="79" y="9.8" width="3.2" height="9"/></g>
-          <path d="M76.2 12.6 L77.7 9 L79.2 12.6 Z M82 12.2 L83.5 8.4 L85 12.2 Z M78.6 9.8 L80.6 5.4 L82.6 9.8 Z" fill="#171b3e"/>
-          <path d="M77.7 9 L79.2 12.6 L77.7 12.6 Z M83.5 8.4 L85 12.2 L83.5 12.2 Z M80.6 5.4 L82.6 9.8 L80.6 9.8 Z" fill="#0d1029" opacity="0.8"/>
-          <g stroke="rgba(90,104,160,0.4)" stroke-width="0.1" fill="none">
-            <path d="M76.6 14 h2.2 M76.6 15.6 h2.2 M76.6 17.2 h2.2"/>
-            <path d="M82.4 13.6 h2.2 M82.4 15.2 h2.2 M82.4 16.8 h2.2"/>
-            <path d="M79 11.6 h3.2 M79 13.2 h3.2 M79 14.8 h3.2 M79 16.4 h3.2"/></g>
-          <g fill="#8fd8ff" opacity="0.95">
-            <path d="M77.2 15.4 v-0.65 a0.35 0.35 0 0 1 0.7 0 v0.65 Z"/>
-            <path d="M83 15 v-0.65 a0.35 0.35 0 0 1 0.7 0 v0.65 Z"/>
-            <path d="M80.2 13.1 v-0.85 a0.45 0.45 0 0 1 0.9 0 v0.85 Z"/></g>
-          <g fill="#0e1130"><rect x="77.35" y="16.4" width="0.25" height="0.7"/><rect x="83.15" y="16" width="0.25" height="0.7"/>
-            <rect x="80.4" y="14.6" width="0.3" height="0.8"/></g>
-          <rect x="80.55" y="4.1" width="0.14" height="1.4" fill="#39406e"/>
-          <path class="art-flag" d="M80.69 4.1 L82.1 4.55 L80.69 5 Z" fill="#7f8fd6"/>
-        </g>
-        <g filter="url(#atShade)">
-          <rect x="77.6" y="17.7" width="6.6" height="0.6" fill="#2a3058"/>
-          <g fill="#39406e"><rect x="77.6" y="17.2" width="0.7" height="0.55"/><rect x="79" y="17.2" width="0.7" height="0.55"/>
-            <rect x="80.4" y="17.2" width="0.7" height="0.55"/><rect x="81.8" y="17.2" width="0.7" height="0.55"/><rect x="83.2" y="17.2" width="0.7" height="0.55"/></g></g>
-        ${tufts(81, 19, 12, 2.04, 14, 'rgba(20,44,44,0.4)', 2)}
-        <g opacity="0.32" filter="url(#atNear)">
-          <ellipse cx="74.6" cy="20" rx="4.6" ry="0.9" fill="#c8d8f0"/>
-          <ellipse cx="88" cy="20.6" rx="4" ry="0.8" fill="#c8d8f0"/></g>
-        <g stroke="rgba(200,224,255,0.45)" stroke-width="0.16" stroke-linecap="round">
-          <path d="M72.6 23.4 l-0.5 1.8"/><path d="M76.2 24.6 l-0.5 1.8"/><path d="M80.4 25.2 l-0.5 2"/>
-          <path d="M84.6 24.4 l-0.5 1.8"/><path d="M88.4 23.2 l-0.5 1.6"/></g>
-        <polyline class="twinkle" points="88.4,6.6 86.4,10.6 89,11 85.8,16.4" fill="none" stroke="#fff6a8" stroke-width="0.7" stroke-linejoin="round"/>
-        <polyline class="twinkle t2" points="73.4,8.6 71.9,11.6 73.8,11.9 71.6,15.6" fill="none" stroke="#dff0ff" stroke-width="0.45" stroke-linejoin="round"/>
-        <ellipse cx="82" cy="16" rx="22" ry="14" fill="rgba(150,180,220,0.07)" filter="url(#atSoft)"/>
+      <circle cx="12" cy="7" r="11" fill="url(#atSun)"/><circle cx="12" cy="7" r="3.6" fill="#fff8d2"/>
+      <circle cx="86" cy="6" r="10" fill="url(#atMoon)"/><circle cx="86" cy="6" r="3.2" fill="#c8434c"/>
+      <!-- Gebirgszug als Rückwand der Karte -->
+      <path d="M0 22 L6 15 L11 20 L17 12 L23 21 L30 14 L37 22 L45 11 L53 20 L60 13 L67 21 L74 12 L81 20 L88 14 L95 21 L100 16 L100 34 L0 34 Z" fill="url(#atRidge)"/>
+      <path d="M17 12 L20 17 L14 17 Z M45 11 L48.5 17 L41.5 17 Z M74 12 L77.5 17.5 L70.5 17.5 Z" fill="rgba(255,255,255,0.5)"/>
+      <!-- Landmasse mit heller Küstenlinie -->
+      <path d="M0 24 Q9 20 19 23 Q30 26 40 22 Q52 18 63 23 Q74 27 84 22 Q93 18 100 22 L100 62 L0 62 Z" fill="url(#atLand)"/>
+      <path d="M0 24 Q9 20 19 23 Q30 26 40 22 Q52 18 63 23 Q74 27 84 22 Q93 18 100 22" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.5"/>
+      <!-- Meeresbucht im Südwesten -->
+      <path d="M3 62 Q4 44 16 40 Q31 35 40 45 Q46 54 44 62 Z" fill="url(#atSea)"/>
+      <path d="M3 62 Q4 44 16 40 Q31 35 40 45 Q46 54 44 62" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="0.5"/>
+      <g stroke="rgba(255,255,255,0.55)" stroke-width="0.4" fill="none">
+        <path d="M10 50 q2.5 -1.3 5 0 t5 0 t5 0"/><path d="M13 55 q2.5 -1.3 5 0 t5 0 t5 0"/><path d="M8 45 q2.5 -1.3 5 0 t5 0"/>
       </g>
-
-      <!-- ============ Märchenland (oben links) ============ -->
-      <g transform="translate(1.44 1.56) scale(0.92)">
-        <g filter="url(#atDeep)">${isle(18, 19.5, 13, 9, 'url(#atGrass)', 'url(#atSoil)', 'url(#atRock)', '#241a12', 0.19)}</g>
-        ${chip(8.6, 25.4, 1.4, 'url(#atRock)', '#241a12')}${chip(28.2, 24.6, 1.1, 'url(#atRock)', '#241a12')}
-        ${fall(11.2, 20.1, 1.8, 8)}
-        ${tufts(18, 19.5, 13, 2.47, 26)}
-        ${specks(18, 19.9, 12, 2.2, 18, ['#ffe9a0', '#ff9ec0', '#fff', '#c8f0ff'], 5)}
-        <path d="M8.4 20.4 Q13 18.6 16.4 18.4 Q19.6 18.2 22.6 19.2" fill="none" stroke="rgba(226,214,180,0.85)" stroke-width="0.5" stroke-linecap="round"/>
-        <g filter="url(#atShade)">
-          ${cast(18.6, 19.4, 6.4, 1.8)}
-          <g fill="url(#atWall)">
-            <rect x="13.4" y="12.10" width="2.1" height="7.2"/><rect x="18.8" y="11.70" width="2.1" height="7.6"/>
-            <rect x="15.6" y="9.10" width="3" height="10.2"/><rect x="16.9" y="15.90" width="4.6" height="3.4"/></g>
-          <path d="M13 12.1 L14.45 8.9 L15.9 12.1 Z M18.4 11.7 L19.85 8.3 L21.3 11.7 Z M15.1 9.1 L17.1 5.1 L19.1 9.1 Z" fill="url(#atRoof)"/>
-          <path d="M14.45 8.9 L15.9 12.1 L14.45 12.1 Z M19.85 8.3 L21.3 11.7 L19.85 11.7 Z M17.1 5.1 L19.1 9.1 L17.1 9.1 Z" fill="#7d2a2a" opacity="0.75"/>
-          <!-- Zinnen auf den Turmkronen -->
-          <g fill="#efe9dc"><rect x="13.4" y="11.7" width="0.6" height="0.5"/><rect x="14.5" y="11.7" width="0.6" height="0.5"/>
-            <rect x="18.8" y="11.3" width="0.6" height="0.5"/><rect x="19.9" y="11.3" width="0.6" height="0.5"/>
-            <rect x="15.6" y="8.7" width="0.7" height="0.5"/><rect x="16.9" y="8.7" width="0.7" height="0.5"/><rect x="17.9" y="8.7" width="0.7" height="0.5"/></g>
-          <!-- Mauerwerk: waagerechte Fugen, versetzte Stoßfugen -->
-          <g stroke="rgba(120,110,95,0.35)" stroke-width="0.11" fill="none">
-            <path d="M13.4 13.4 h2.1 M13.4 14.9 h2.1 M13.4 16.4 h2.1 M13.4 17.9 h2.1"/>
-            <path d="M18.8 13 h2.1 M18.8 14.5 h2.1 M18.8 16 h2.1 M18.8 17.5 h2.1"/>
-            <path d="M15.6 10.6 h3 M15.6 12.1 h3 M15.6 13.6 h3 M15.6 15.1 h3 M15.6 16.6 h3 M15.6 18.1 h3"/>
-            <path d="M14.45 12.65 v0.75 M16.55 11.35 v0.75 M17.55 12.85 v0.75 M19.85 13.75 v0.75"/></g>
-          <!-- Bogenfenster mit warmem Licht -->
-          <g fill="#ffd166"><path d="M14.1 14.9 v-0.65 a0.35 0.35 0 0 1 0.7 0 v0.65 Z"/>
-            <path d="M19.5 14.5 v-0.65 a0.35 0.35 0 0 1 0.7 0 v0.65 Z"/>
-            <path d="M16.7 12.3 v-0.8 a0.4 0.4 0 0 1 0.8 0 v0.8 Z"/></g>
-          <!-- Tor mit Fallgatter -->
-          <path d="M18.6 19.3 v-1.75 a0.55 0.55 0 0 1 1.1 0 v1.75 Z" fill="#5a3a20"/>
-          <g stroke="#c9c2b2" stroke-width="0.09" fill="none">
-            <path d="M18.8 19.3 v-2 M19.15 19.3 v-2.1 M19.5 19.3 v-2"/>
-            <path d="M18.6 18.2 h1.1 M18.6 18.8 h1.1"/></g>
-          <rect x="17" y="3.10" width="0.24" height="2.2" fill="#4a3a2a"/>
-          <path class="art-flag" d="M17.24 3.1 L19.4 3.8 L17.24 4.5 Z" fill="#ff4f6d"/>
-          <rect x="14.3" y="10.6" width="0.18" height="1.5" fill="#4a3a2a"/>
-          <path class="art-flag s2" d="M14.48 10.6 L15.9 11.05 L14.48 11.5 Z" fill="#3d7ad6"/>
-          <rect x="19.7" y="10.2" width="0.18" height="1.5" fill="#4a3a2a"/>
-          <path class="art-flag s3" d="M19.88 10.2 L21.3 10.65 L19.88 11.1 Z" fill="#3d7ad6"/>
-        </g>
-        <g filter="url(#atShade)">
-          <rect x="23.2" y="15.90" width="2.4" height="3.4" fill="url(#atWood2)"/>
-          <path d="M22.7 15.9 L24.4 13.7 L26.1 15.9 Z" fill="#8a5a3a"/>
-          <path d="M24.4 13.7 L26.1 15.9 L24.4 15.9 Z" fill="#5a3a24" opacity="0.8"/>
-          <g class="mill-blades">
-            <path d="M24.4 14.7 L24.4 11.9 M24.4 14.7 L27.2 14.7 M24.4 14.7 L24.4 17.5 M24.4 14.7 L21.6 14.7" stroke="#5a3a1e" stroke-width="0.28"/>
-            <path d="M24.55 12.1 L25.3 12.3 L24.55 14.5 Z M27 14.85 L26.8 15.6 L24.6 14.85 Z M24.25 17.3 L23.5 17.1 L24.25 14.9 Z M21.8 14.55 L22 13.8 L24.2 14.55 Z" fill="rgba(245,238,215,0.94)"/></g>
-        </g>
-        <g filter="url(#atShade)">
-          <rect x="14.2" y="17.9" width="6.6" height="0.75" fill="#cfc7b6"/>
-          <g fill="#e6dfd0"><rect x="14.2" y="17.4" width="0.7" height="0.6"/><rect x="15.6" y="17.4" width="0.7" height="0.6"/>
-            <rect x="17" y="17.4" width="0.7" height="0.6"/><rect x="18.4" y="17.4" width="0.7" height="0.6"/><rect x="19.8" y="17.4" width="0.7" height="0.6"/></g></g>
-        ${house(9.4, 19.1, 1.9, 1.4)}${house(11.9, 19.6, 1.5, 1.1)}${house(21.6, 19.4, 1.6, 1.2)}
-        <g filter="url(#atShade)">
-          <!-- Brunnen -->
-          <ellipse cx="13.6" cy="20.6" rx="0.62" ry="0.24" fill="#8e8474"/>
-          <path d="M12.98 20.6 v-0.5 h1.24 v0.5 Z" fill="#a89c88"/>
-          <path d="M13.05 20.1 l0.55 -0.7 l0.55 0.7" fill="none" stroke="#6a4a2e" stroke-width="0.14"/>
-          <rect x="13.46" y="19.5" width="0.28" height="0.35" fill="#6a4a2e"/></g>
-        <g stroke="#8a6440" stroke-width="0.13" fill="none">
-          <path d="M6.6 21 h3.4 M6.6 20.7 h3.4"/>
-          <path d="M6.6 20.5 v0.8 M7.75 20.5 v0.8 M8.9 20.5 v0.8 M10 20.5 v0.8"/></g>
-        <g fill="#f2efe6"><ellipse cx="7.4" cy="20.75" rx="0.32" ry="0.22"/><circle cx="7.74" cy="20.66" r="0.14" fill="#3f3a34"/>
-          <ellipse cx="9.1" cy="20.95" rx="0.28" ry="0.2"/><circle cx="9.4" cy="20.87" r="0.12" fill="#3f3a34"/></g>
-        ${tree(9.8, 19.3, 1.2)}${tree(27.2, 18.9, 1.05)}${tree(12.4, 20.9, 0.85)}${tree(24.4, 20.2, 0.8)}${tree(7.4, 20.4, 0.75)}
-        <g fill="none" stroke="#2b3a52" stroke-width="0.16" stroke-linecap="round" opacity="0.7">
-          <path d="M6.4 11.6 q0.7 -0.6 1.4 0 M8.4 12.8 q0.6 -0.5 1.2 0 M27 13.4 q0.6 -0.5 1.2 0"/></g>
-      </g>
-
-      <!-- Dunst und Wolken zwischen den Ebenen – sie trennen hinten von vorne -->
-      <rect width="100" height="40" fill="url(#atHaze)"/>
-      <g filter="url(#atSoft)" opacity="0.2">
-        <g class="drift"><ellipse cx="34" cy="30" rx="13" ry="2.2" fill="#dbeaf8"/><ellipse cx="28" cy="31" rx="7" ry="1.5" fill="#dbeaf8"/></g>
-        <g class="drift d2"><ellipse cx="72" cy="33" rx="11" ry="2" fill="#cfe0f2"/><ellipse cx="79" cy="34" rx="6" ry="1.3" fill="#cfe0f2"/></g>
-      </g>
-
-      <!-- ============ Schattenreich (rechts) ============ -->
-      <g transform="translate(-4.25 -2.15) scale(1.05)">
-        <circle cx="86" cy="42" r="16" fill="url(#atMagic)"/>
-        <g filter="url(#atDeep)">${isle(85, 43, 13, 11.5, 'url(#atGrassX)', 'url(#atSoilD)', 'url(#atRockD)', '#0a0716', 0.31)}</g>
-        ${chip(75.4, 49.6, 1.4, 'url(#atRockD)', '#0a0716')}${chip(94.4, 50.4, 1.2, 'url(#atRockD)', '#0a0716')}
-        <g filter="url(#atShade)">
-          ${cast(85.4, 42.9, 6.6, 1.8)}
-          <g fill="url(#atVoid)">
-            <rect x="80.4" y="36" width="2.4" height="7"/><rect x="87" y="35.6" width="2.4" height="7.4"/>
-            <rect x="83.2" y="33" width="3.6" height="10"/></g>
-          <path d="M80 36 L81.6 32 L83.2 36 Z M86.6 35.6 L88.2 31.4 L89.8 35.6 Z M82.8 33 L85 28.2 L87.2 33 Z" fill="#1a1130"/>
-          <path d="M81.6 32 L83.2 36 L81.6 36 Z M88.2 31.4 L89.8 35.6 L88.2 35.6 Z M85 28.2 L87.2 33 L85 33 Z" fill="#0c0820" opacity="0.85"/>
-          <path d="M84.2 39 q0.8 -1.7 1.6 0 v4 h-1.6 Z" fill="#a86bff"/>
-          <path d="M84.2 39 q0.8 -1.7 1.6 0 v4 h-1.6 Z" fill="url(#atGlow)" opacity="0.5"/>
-          <g stroke="rgba(70,52,120,0.5)" stroke-width="0.1" fill="none">
-            <path d="M80.4 37.4 h2.4 M80.4 39.2 h2.4 M80.4 41 h2.4"/>
-            <path d="M87 37 h2.4 M87 38.8 h2.4 M87 40.6 h2.4"/>
-            <path d="M83.2 34.6 h3.6 M83.2 36.4 h3.6 M83.2 38.2 h3.6"/></g>
-          <g fill="#c58bff" opacity="0.95">
-            <path d="M81.1 38.6 v-0.7 L81.45 37.3 L81.8 37.9 v0.7 Z"/>
-            <path d="M87.7 38.2 v-0.7 L88.05 36.9 L88.4 37.5 v0.7 Z"/>
-            <path d="M84.6 36.2 v-0.8 L85 34.8 L85.4 35.4 v0.8 Z"/></g>
-          <g stroke="#3a2554" stroke-width="0.1"><path d="M84.55 43 v-3.4 M85 43 v-3.7 M85.45 43 v-3.4"/></g>
-          <path d="M85 27.4 L85 24.6" stroke="#4a3a6a" stroke-width="0.3"/>
-          <path class="art-flag" d="M85.1 24.6 L87.2 25.3 L85.1 26 Z" fill="#8a3bff"/>
-        </g>
-        <g stroke="#2c2444" stroke-width="0.42" fill="none" stroke-linecap="round">
-          <path d="M77.6 42.8 L77.6 38.6 M77.6 40.4 L76 39 M77.6 39.6 L79.3 38.2"/>
-          <path d="M92.4 43.2 L92.4 39.4 M92.4 41.2 L91 40 M92.4 40.4 L93.9 39.2"/></g>
-        <g><path d="M79.6 43.4 l0.95 -2.6 l0.95 2.6 Z" fill="#8a3bff" opacity="0.85"/>
-          <path d="M80.55 40.8 l0.95 2.6 l-0.95 0 Z" fill="#5a1fb0" opacity="0.9"/>
-          <path d="M90 43.6 l0.85 -2.2 l0.85 2.2 Z" fill="#8a3bff" opacity="0.85"/></g>
-        ${tufts(85, 43, 13, 4, 20, 'rgba(90,60,140,0.3)', 8)}
-        <g filter="url(#atShade)">
-          <g fill="#4a4066"><rect x="79.4" y="41.4" width="1.2" height="1.8"/><rect x="90.6" y="41.8" width="1" height="1.6"/></g>
-          <g fill="#2e2745"><rect x="80.1" y="41.4" width="0.5" height="1.8"/><rect x="91.2" y="41.8" width="0.4" height="1.6"/></g>
-          <circle cx="80" cy="41.4" r="0.6" fill="#4a4066"/><circle cx="91.1" cy="41.8" r="0.5" fill="#4a4066"/>
-          <path d="M87.6 42.9 v-1.5 h2.2 v1.5" fill="none" stroke="#3a3054" stroke-width="0.35"/></g>
-        <g><path d="M82.2 43.2 l0.6 -1.6 l0.6 1.6 Z" fill="#a86bff" opacity="0.8"/>
-          <path d="M82.8 41.6 l0.6 1.6 l-0.6 0 Z" fill="#5a1fb0" opacity="0.9"/>
-          <path d="M88.6 43.4 l0.5 -1.3 l0.5 1.3 Z" fill="#8a3bff" opacity="0.8"/></g>
-        <g><rect x="83.4" y="40.9" width="0.16" height="1.6" fill="#2e2745"/>
-          <rect x="86.5" y="40.7" width="0.16" height="1.6" fill="#2e2745"/>
-          <g class="twinkle"><path d="M83.48 40.9 q0.4 -0.75 0 -1.25 q-0.32 0.6 -0.4 1.25 Z" fill="#a86bff"/></g>
-          <g class="twinkle t2"><path d="M86.58 40.7 q0.4 -0.75 0 -1.25 q-0.32 0.6 -0.4 1.25 Z" fill="#a86bff"/></g></g>
-        <g opacity="0.3" filter="url(#atNear)">
-          <ellipse cx="80" cy="46.4" rx="5" ry="0.9" fill="#7a5fb8"/><ellipse cx="90" cy="46.8" rx="4.2" ry="0.8" fill="#7a5fb8"/></g>
-        <g fill="#2a1f44"><path d="M78.6 33.4 q0.7 -0.6 1.4 0 q-0.7 -0.2 -1.4 0 Z"/><path d="M80.6 32 q0.6 -0.5 1.2 0 q-0.6 -0.2 -1.2 0 Z"/>
-          <path d="M89.8 33.8 q0.7 -0.6 1.4 0 q-0.7 -0.2 -1.4 0 Z"/></g>
-        <g class="particles"><circle class="p" cx="80" cy="45" r="0.5" fill="#c58bff"/>
-          <circle class="p p3" cx="90.5" cy="45.5" r="0.42" fill="#c58bff"/>
-          <circle class="p p2" cx="85.5" cy="46" r="0.34" fill="#e0b8ff"/></g>
-      </g>
-
-      <!-- ============ Tüftlerreich (links) ============ -->
-      <g transform="translate(-0.60 0.60) scale(1.04)">
-        <g filter="url(#atDeep)">${isle(15, 42, 12, 11, 'url(#atGrass)', 'url(#atSoil)', 'url(#atRock)', '#241a12', 0.3)}</g>
-        ${chip(6.2, 48.4, 1.3, 'url(#atRock)', '#241a12')}${chip(23.8, 47.6, 1.1, 'url(#atRock)', '#241a12')}
-        ${fall(8.6, 42.6, 1.5, 7.5, '#bfe4f5')}
-        ${tufts(15, 42, 12, 3.6, 22, 'rgba(40,66,32,0.34)', 4)}
-        ${specks(15, 42.6, 11, 3.2, 14, ['#c9a15a', '#8a7a5a', '#d9c08a'], 9)}
-        <path d="M6.6 43.4 Q11 41.4 15 41.2 Q19 41 22.4 42.2" fill="none" stroke="rgba(150,132,96,0.7)" stroke-width="0.55" stroke-linecap="round"/>
-        <g filter="url(#atShade)">
-          ${cast(15.4, 41.9, 6, 1.7)}
-          <rect x="10.2" y="34.6" width="9" height="7.2" fill="url(#atWood2)"/>
-          <path d="M9.4 34.6 L14.7 31.9 L20 34.6 Z" fill="#6b4728"/>
-          <path d="M14.7 31.9 L20 34.6 L14.7 34.6 Z" fill="#452c17" opacity="0.85"/>
-          <!-- Bretterfassade -->
-          <g stroke="rgba(60,40,24,0.4)" stroke-width="0.1" fill="none">
-            <path d="M10.2 36.2 h9 M10.2 38.6 h9 M10.2 40.4 h9"/>
-            <path d="M12.6 34.6 v7.2 M16.4 34.6 v7.2"/></g>
-          <g fill="#ffcf6b"><rect x="11.4" y="36.6" width="1.6" height="1.8"/><rect x="14.2" y="36.6" width="1.6" height="1.8"/><rect x="17" y="36.6" width="1.4" height="1.8"/></g>
-          <g stroke="rgba(60,40,24,0.55)" stroke-width="0.1"><path d="M12.2 36.6 v1.8 M15 36.6 v1.8 M11.4 37.5 h1.6 M14.2 37.5 h1.6"/></g>
-          <!-- Tür mit Beschlag -->
-          <path d="M13.2 41.8 v-2.2 a0.7 0.7 0 0 1 1.4 0 v2.2 Z" fill="#5f3f26"/>
-          <path d="M13.9 41.8 v-2.9" stroke="rgba(0,0,0,0.35)" stroke-width="0.09"/>
-          <circle cx="14.35" cy="40.6" r="0.11" fill="#d9c08a"/>
-          <!-- Laterne am Giebel -->
-          <rect x="14.55" y="32.4" width="0.34" height="0.44" fill="#ffd166"/>
-          <path d="M14.72 32.4 v-0.35" stroke="#4a3a2a" stroke-width="0.09"/>
-          <rect x="17.6" y="31" width="1.8" height="3.8" fill="#6d4a30"/>
-          <rect x="18.8" y="31" width="0.6" height="3.8" fill="#3f2a1a" opacity="0.8"/>
-        </g>
-        <path d="M18.5 30.8 q1.5 -2.2 0.2 -4.2 q-1.3 -2 0.7 -3.4" stroke="rgba(232,228,222,0.5)" stroke-width="0.5" fill="none"/>
-        <!-- Riemen vom grossen Rad zum kleinen Zahnrad -->
-        <path d="M7.05 37.6 L4.1 35.9 M7.05 39.6 L4.1 37" fill="none" stroke="rgba(50,38,26,0.7)" stroke-width="0.2"/>
-        <g class="mill-blades" stroke="#c9a15a" stroke-width="0.45" fill="none">
-          <circle cx="9.6" cy="38.6" r="2.6"/><circle cx="9.6" cy="38.6" r="1"/>
-          <path d="M9.6 36 L9.6 41.2 M7 38.6 L12.2 38.6 M7.8 36.8 L11.4 40.4 M11.4 36.8 L7.8 40.4"/>
-          <path d="M8.7 36.15 L10.5 36.15 M11.85 37.7 L11.85 39.5 M8.7 41.05 L10.5 41.05 M7.35 37.7 L7.35 39.5" stroke-width="0.3"/></g>
-        <g filter="url(#atShade)">
-          <!-- Amboss mit Funken -->
-          <path d="M16.6 41.5 h1.5 l-0.25 0.35 h-1 Z" fill="#4a4a52"/>
-          <rect x="17" y="40.9" width="0.7" height="0.6" fill="#5c5c66"/>
-          <path d="M16.75 40.9 h1.2 l-0.15 -0.28 h-0.9 Z" fill="#6e6e7a"/></g>
-        <g fill="#ffd166"><circle cx="17.6" cy="40.4" r="0.11"/><circle cx="18" cy="40.1" r="0.08"/><circle cx="17.2" cy="40.05" r="0.07"/></g>
-        <g filter="url(#atShade)">
-          <path d="M20.4 41.6 L20.4 34 L24.6 32" stroke="#6a4a30" stroke-width="0.55" fill="none"/>
-          <path d="M24.6 32 L24.6 34.2" stroke="rgba(255,255,255,0.45)" stroke-width="0.22"/>
-          <rect x="23.9" y="34.2" width="1.4" height="1.2" fill="#8a6a3a"/></g>
-        <g class="mill-blades" fill="none" stroke="#d9a24e" stroke-width="0.42" stroke-linecap="round">
-          <circle cx="4.8" cy="36.4" r="1.5"/>
-          <path d="M6.3 36.4 L7.1 36.4 M5.85 37.45 L6.4 38 M4.8 37.9 L4.8 38.7 M3.75 37.45 L3.2 38 M3.3 36.4 L2.5 36.4 M3.75 35.35 L3.2 34.8 M4.8 34.9 L4.8 34.1 M5.85 35.35 L6.4 34.8"/></g>
-        <g filter="url(#atShade)">
-          <g fill="#7a5a34"><rect x="20.6" y="39.8" width="1.3" height="1.5"/><rect x="22.2" y="40.2" width="1.1" height="1.2"/></g>
-          <g fill="#a5764a"><rect x="20.6" y="39.8" width="0.55" height="1.5"/><rect x="22.2" y="40.2" width="0.45" height="1.2"/></g>
-          <g fill="none" stroke="#5f5a52" stroke-width="0.28"><path d="M20 39.6 h-2.6 v-1.4"/><path d="M20.2 40.6 h-1.4"/></g>
-          <rect x="9.4" y="41.2" width="6.6" height="0.28" fill="#6a6258"/>
-          <rect x="11.4" y="40.1" width="1.7" height="1.1" fill="#8a5f3a"/>
-          <rect x="12.6" y="40.1" width="0.5" height="1.1" fill="#5a3f26"/>
-          <g fill="#3f3a34"><circle cx="11.8" cy="41.3" r="0.24"/><circle cx="12.8" cy="41.3" r="0.24"/></g></g>
-        <g class="drift" opacity="0.5"><circle cx="19.6" cy="27.4" r="0.7" fill="#e8e4de"/><circle cx="20.6" cy="25.6" r="0.5" fill="#e8e4de"/></g>
-        ${tree(23.4, 41.4, 0.95, '#357a41')}${tree(6.6, 42.6, 0.8, '#357a41')}
-      </g>
-
-      <!-- ============ Dschungeltempel (vorne Mitte) ============ -->
-      <g transform="translate(-4.64 -4.40) scale(1.08)">
-        <g filter="url(#atDeep)">${isle(58, 55, 13, 12, 'url(#atGrassJ)', 'url(#atSoil)', 'url(#atRock)', '#1d2c19', 0.37)}</g>
-        ${chip(48.6, 61.2, 1.3, 'url(#atRock)', '#1d2c19')}${chip(67.4, 61.6, 1.1, 'url(#atRock)', '#1d2c19')}
-        ${fall(52.2, 55.6, 1.6, 7)}
-        ${tufts(58, 55, 13, 4.8, 26, 'rgba(20,60,26,0.4)', 6)}
-        ${specks(58, 55.6, 12, 4.2, 12, ['#8ed36a', '#ffd166', '#ff8fa8'], 11)}
-        <g filter="url(#atShade)">
-          ${cast(58.6, 54.9, 5.6, 1.6)}
-          <g fill="url(#atStone)">
-            <rect x="54.2" y="52.6" width="8" height="1.9"/><rect x="55.2" y="50.8" width="6" height="1.8"/>
-            <rect x="56.2" y="49" width="4" height="1.8"/><rect x="57" y="47.6" width="2.4" height="1.4"/></g>
-          <g fill="#6d6146" opacity="0.85">
-            <rect x="60.6" y="52.6" width="1.6" height="1.9"/><rect x="59.8" y="50.8" width="1.4" height="1.8"/>
-            <rect x="59" y="49" width="1.2" height="1.8"/><rect x="58.6" y="47.6" width="0.8" height="1.4"/></g>
-          <g fill="rgba(255,255,255,0.3)"><rect x="54.2" y="52.6" width="8" height="0.3"/><rect x="55.2" y="50.8" width="6" height="0.28"/><rect x="56.2" y="49" width="4" height="0.26"/></g>
-          <rect x="57.5" y="51" width="1.4" height="3.5" fill="#241f16"/>
-          <rect x="57.5" y="50.6" width="1.4" height="0.5" fill="#ffd166"/>
-          <!-- Steinfratze über dem Tor -->
-          <g fill="#9a8f72"><path d="M57.2 50.5 h2 v-0.8 h-2 Z"/></g>
-          <g fill="#2f2a20"><circle cx="57.7" cy="50.05" r="0.16"/><circle cx="58.7" cy="50.05" r="0.16"/>
-            <path d="M57.7 50.35 h1 v0.14 h-1 Z"/></g>
-          <!-- Moos auf den Stufen -->
-          <g fill="rgba(70,140,60,0.45)"><ellipse cx="55.4" cy="52.7" rx="0.8" ry="0.16"/><ellipse cx="60.8" cy="52.7" rx="0.7" ry="0.14"/>
-            <ellipse cx="56.6" cy="50.9" rx="0.6" ry="0.13"/></g>
-        </g>
-        <g class="sway"><path d="M64.6 54.4 L64.6 50.2" stroke="#7a5a30" stroke-width="0.45"/>
-          <g fill="#2f8a3a"><ellipse cx="62.8" cy="49.9" rx="2.4" ry="0.7" transform="rotate(-18 62.8 49.9)"/>
-            <ellipse cx="66.4" cy="49.9" rx="2.4" ry="0.7" transform="rotate(18 66.4 49.9)"/>
-            <ellipse cx="64.6" cy="48.8" rx="0.75" ry="1.9"/></g>
-          <g fill="#1f6b2a" opacity="0.6"><ellipse cx="66.4" cy="50.1" rx="2.2" ry="0.4" transform="rotate(18 66.4 50.1)"/></g></g>
-        <g class="sway s2"><path d="M51.8 54 L51.8 50.6" stroke="#7a5a30" stroke-width="0.4"/>
-          <g fill="#3f9a44"><ellipse cx="50.3" cy="50.3" rx="2" ry="0.62" transform="rotate(-20 50.3 50.3)"/>
-            <ellipse cx="53.3" cy="50.3" rx="2" ry="0.62" transform="rotate(20 53.3 50.3)"/></g></g>
-        <g fill="#2b6a2e"><circle cx="48.4" cy="54.4" r="2"/><circle cx="67.9" cy="54.2" r="1.8"/><circle cx="46.6" cy="56" r="1.35"/></g>
-        <g fill="#4f9c46" opacity="0.7"><circle cx="47.9" cy="53.9" r="1.2"/><circle cx="67.4" cy="53.7" r="1.1"/></g>
-        <g filter="url(#atShade)">
-          <g fill="#c6b489"><rect x="57.1" y="54.5" width="2.2" height="0.35"/><rect x="57.3" y="54.9" width="1.8" height="0.35"/></g>
-          <g fill="#7e7052" opacity="0.8"><rect x="54.6" y="52.9" width="7.2" height="0.16"/><rect x="55.6" y="51.1" width="5.2" height="0.14"/></g>
-          <g fill="#6b5f44"><rect x="55" y="53.1" width="0.5" height="0.5"/><rect x="56" y="53.1" width="0.5" height="0.5"/><rect x="60" y="53.1" width="0.5" height="0.5"/><rect x="61" y="53.1" width="0.5" height="0.5"/></g>
-          <g><rect x="49.9" y="52.4" width="1.5" height="2.2" fill="#9a8f72"/><rect x="50.9" y="52.4" width="0.5" height="2.2" fill="#6d6349"/>
-            <path d="M49.7 52.4 L50.65 51.4 L51.6 52.4 Z" fill="#b8a780"/>
-            <g fill="#2f2a20"><circle cx="50.3" cy="53" r="0.2"/><circle cx="51" cy="53" r="0.2"/><rect x="50.2" y="53.7" width="1" height="0.28"/></g></g></g>
-        <g stroke="#2f7a34" stroke-width="0.22" fill="none" stroke-linecap="round" opacity="0.85">
-          <path d="M47.4 55.6 q0.5 1.8 -0.2 3.2"/><path d="M69 55.4 q-0.4 1.6 0.3 3"/><path d="M63.4 56.4 q0.6 1.4 0 2.6"/>
-          <path d="M50.6 56.4 q0.4 1.2 -0.1 2.2"/></g>
-        <!-- Feuerschale vor dem Tempel -->
-        <g filter="url(#atShade)"><path d="M62.8 55 h1.4 l-0.25 -0.7 h-0.9 Z" fill="#8e7f5c"/>
-          <rect x="63.2" y="55" width="0.6" height="0.5" fill="#6d6349"/></g>
-        <g class="twinkle"><path d="M63.5 54.3 q0.45 -0.9 0 -1.5 q-0.35 0.7 -0.5 1.5 Z" fill="#ff9a3a"/>
-          <path d="M63.5 54.3 q0.25 -0.55 0 -0.95 q-0.2 0.45 -0.25 0.95 Z" fill="#ffe08a"/></g>
-        <g fill="#ffe08a" opacity="0.9"><circle class="twinkle t2" cx="55.4" cy="49.4" r="0.16"/><circle class="twinkle t3" cx="61.6" cy="48.6" r="0.14"/></g>
-        <circle cx="66.4" cy="51.2" r="0.52" fill="#ff5d5d"/><circle cx="66.55" cy="51.05" r="0.16" fill="#fff"/>
-      </g>
-
-      <!-- ============ Meereswelt (ganz vorne) ============ -->
-      <g transform="translate(-2.80 -5.50) scale(1.1)">
-        <g filter="url(#atDeep)">${isle(28, 55, 14, 11, 'url(#atWater)', 'url(#atSoil)', 'url(#atRock)', '#1a2c3a', 0.38)}</g>
-        ${chip(18.4, 61.4, 1.3, 'url(#atRock)', '#1a2c3a')}${chip(38.2, 61, 1.1, 'url(#atRock)', '#1a2c3a')}
-        <ellipse cx="28" cy="55" rx="13.4" ry="5.1" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="0.42" stroke-dasharray="1.2 0.8"/>
-        <g stroke="rgba(255,255,255,0.5)" stroke-width="0.28" fill="none">
-          <path d="M20 55.4 q2 -1.1 4 0 t4 0 t4 0"/><path d="M23 57 q2 -1.1 4 0 t4 0"/><path d="M31.5 53.8 q2 -1.1 4 0 t3 0"/>
-          <path d="M18.6 53.4 q1.6 -0.9 3.2 0"/><path d="M30 58 q1.8 -1 3.6 0"/></g>
-        <g filter="url(#atShade)">
-          <rect x="17.8" y="55.4" width="4.6" height="0.4" fill="#8a6440"/>
-          <g fill="#6a4a2e"><rect x="18.2" y="55.8" width="0.3" height="1"/><rect x="19.6" y="55.8" width="0.3" height="1.1"/><rect x="21" y="55.8" width="0.3" height="1"/></g></g>
-        <g><circle cx="33.4" cy="57.2" r="0.5" fill="#e0483c"/><circle cx="33.4" cy="56.9" r="0.16" fill="#fff"/>
-          <circle cx="24.6" cy="58.2" r="0.42" fill="#ffd166"/></g>
-        <g fill="#7fd8ff"><path d="M30.6 56.4 q0.9 -1.2 1.8 0 q-0.9 0.5 -1.8 0 Z"/><path d="M32.3 55.9 l0.6 -0.35 l0 0.7 Z"/></g>
-        <g filter="url(#atShade)">
-          <path d="M25.6 53.6 h4.4 l-0.8 -1.7 h-2.8 Z" fill="#7a5432"/>
-          <path d="M28.4 51.9 h0.8 l0.8 1.7 h-1.2 Z" fill="#4e3520"/>
-          <path d="M27.8 52 L27.8 47.2" stroke="#4a3320" stroke-width="0.3"/>
-          <path d="M27.8 47.4 L31.2 49.4 L27.8 50.9 Z" fill="#f6f2e8"/>
-          <path d="M27.8 49.4 L31.2 49.4 L27.8 50.9 Z" fill="#d9d2c2" opacity="0.9"/>
-          <path d="M27.8 50.3 L24.6 51.7 L27.8 52.1 Z" fill="#e6dece"/>
-          <g stroke="rgba(70,46,24,0.5)" stroke-width="0.09"><path d="M25.9 52.9 h3.8 M26 53.25 h3.5"/></g>
-          <path d="M27.75 47.2 L28.6 47.5 L27.75 47.8 Z" fill="#e0483c"/></g>
-        <!-- Sandbank und Seestern im flachen Wasser -->
-        <path d="M22 58.4 q3.4 -1.6 7 -0.4" fill="none" stroke="rgba(240,226,180,0.55)" stroke-width="0.75" stroke-linecap="round"/>
-        <g fill="#ff9a5a" opacity="0.9"><path d="M26.4 57.6 l0.22 -0.5 l0.22 0.5 l0.52 0.06 l-0.38 0.36 l0.1 0.52 l-0.46 -0.26 l-0.46 0.26 l0.1 -0.52 l-0.38 -0.36 Z"/></g>
-        <!-- kleines Boot am Horizont der Insel -->
-        <g opacity="0.85"><path d="M36.4 51.9 h1.6 l-0.3 -0.6 h-1 Z" fill="#7a5432"/>
-          <path d="M37 51.3 L37 50.1 L38.1 51 Z" fill="#f2ece0"/></g>
-        <g filter="url(#atShade)">
-          <ellipse cx="35.6" cy="54" rx="2.7" ry="0.95" fill="#6a5a4a"/>
-          <ellipse cx="35.6" cy="53.7" rx="2.4" ry="0.8" fill="#8a7864"/>
-          <rect x="34.9" y="48.9" width="1.5" height="5" fill="#f4f0e6"/>
-          <rect x="35.75" y="48.9" width="0.65" height="5" fill="#c8c0b0" opacity="0.8"/>
-          <rect x="34.9" y="50.5" width="1.5" height="0.9" fill="#d93b3b"/>
-          <rect x="34.9" y="52.1" width="1.5" height="0.9" fill="#d93b3b"/>
-          <path d="M34.4 48.9 L35.65 47.2 L36.9 48.9 Z" fill="#c33"/>
-          <path d="M35.65 47.2 L36.9 48.9 L35.65 48.9 Z" fill="#8e2323" opacity="0.85"/>
-          <!-- Galerie unter der Laterne -->
-          <rect x="34.5" y="48.85" width="2.3" height="0.2" fill="#8a8478"/>
-          <g stroke="#8a8478" stroke-width="0.08"><path d="M34.7 48.85 v-0.35 M35.65 48.85 v-0.35 M36.6 48.85 v-0.35"/></g>
-          <circle class="art-window" cx="35.65" cy="48.4" r="0.5" fill="#ffe98a"/>
-          <path class="art-window" d="M35.65 48.4 L39.6 47.5 L39.6 49.3 Z" fill="rgba(255,236,150,0.28)"/></g>
-        <g><path d="M21.4 54.6 q-1.5 -3.2 0.4 -4.7 q1 1.9 0.4 4.7 Z" fill="#b455a8"/>
-          <path d="M21.8 49.9 q1 1.9 0.4 4.7 l-0.6 0 q0.5 -2.6 -0.2 -4.4 Z" fill="#7d2f74" opacity="0.85"/>
-          <path d="M23.4 55 q-0.65 -3.6 1.5 -4.7 q0.55 2.4 -0.45 4.7 Z" fill="#b455a8"/>
-          <path d="M24.9 50.3 q0.55 2.4 -0.45 4.7 l-0.5 0 q0.85 -2.4 0.4 -4.5 Z" fill="#7d2f74" opacity="0.85"/></g>
-        <circle cx="21.6" cy="51.1" r="0.3" fill="#ffd9f2"/><circle cx="24.5" cy="51.3" r="0.26" fill="#ffd9f2"/>
-      </g>
-
-      <!-- ============ Mitte: goldener Ball auf dem Sockel ============ -->
-      <g>
-        <circle cx="50" cy="31" r="10" fill="url(#atGlow)"/>
-        <g filter="url(#atDeep)">${isle(50, 34, 6.6, 6.5, 'url(#atGrass)', 'url(#atSoil)', 'url(#atRock)', '#241a12', 0.27)}</g>
-        ${chip(45.4, 38.6, 0.9, 'url(#atRock)', '#241a12')}
-        <g filter="url(#atShade)">
-          <ellipse cx="50" cy="33.4" rx="3.7" ry="1.15" fill="#a89e8c"/>
-          <ellipse cx="50" cy="33" rx="3.7" ry="1.15" fill="#cfc6b4"/>
-          <ellipse cx="50" cy="32.3" rx="2.6" ry="0.82" fill="#eae2d2"/>
-          <ellipse cx="50" cy="32.1" rx="2.6" ry="0.82" fill="#f6f0e2"/>
-          <g stroke="rgba(140,128,104,0.5)" stroke-width="0.09" fill="none">
-            <path d="M47.4 32.6 a2.6 0.82 0 0 0 5.2 0"/><path d="M46.3 33.5 a3.7 1.15 0 0 0 7.4 0"/></g>
-          <g fill="rgba(140,128,104,0.45)"><rect x="48.6" y="32.5" width="0.16" height="0.5"/>
-            <rect x="51.2" y="32.5" width="0.16" height="0.5"/><rect x="49.9" y="32.6" width="0.16" height="0.5"/></g></g>
-        ${tufts(50, 34, 6.6, 1.78, 10, 'rgba(28,66,34,0.3)', 2)}
-        <ellipse cx="50" cy="34" rx="5.2" ry="1.4" fill="none" stroke="rgba(226,214,180,0.55)" stroke-width="0.3" stroke-dasharray="0.7 0.7"/>
-        <g fill="#cfc6b4"><rect x="46.6" y="33.4" width="0.5" height="0.9"/><rect x="52.9" y="33.4" width="0.5" height="0.9"/></g>
-        <ellipse cx="50" cy="31.9" rx="2" ry="0.5" fill="rgba(0,0,0,0.28)"/>
-        <circle cx="50" cy="30.3" r="2.6" fill="url(#atBall)"/>
-        <ellipse cx="49" cy="29.1" rx="0.85" ry="0.6" fill="rgba(255,255,255,0.9)" transform="rotate(-25 49 29.1)"/>
-      </g>
-
-      <!-- vorderste Wolkenschicht: schiebt alles dahinter in die Ferne -->
-      <g filter="url(#atSoft)" opacity="0.15">
-        <g class="drift d2"><ellipse cx="16" cy="63" rx="20" ry="3.2" fill="#e8f2fb"/><ellipse cx="30" cy="64.5" rx="12" ry="2.2" fill="#e8f2fb"/></g>
-        <g class="drift"><ellipse cx="88" cy="60" rx="16" ry="2.6" fill="#dbe8f6"/></g>
-      </g>
-      <rect width="100" height="66" fill="url(#atVig)"/>
+      <!-- Märchenland: Burg auf grünem Hügel, Tannen daneben -->
+      <path d="M1 30 Q9 21 18 30 Z" fill="#69b355"/>
+      <g fill="#d6d0c6"><rect x="6.6" y="23.4" width="1.9" height="5.4"/><rect x="11.2" y="23.4" width="1.9" height="5.4"/><rect x="8.7" y="21.4" width="2.6" height="7.4"/></g>
+      <path d="M6.2 23.4 L7.55 20.8 L8.9 23.4 Z M10.8 23.4 L12.15 20.8 L13.5 23.4 Z M8.3 21.4 L10 18.2 L11.7 21.4 Z" fill="#c94a4a"/>
+      <rect x="9.8" y="16.6" width="0.3" height="1.8" fill="#3a2a1a"/><path class="art-flag" d="M10.1 16.6 L12.4 17.3 L10.1 18 Z" fill="#ff4f6d"/>
+      <g class="sway" fill="#2f7a3e"><path d="M2.6 30 L3.9 26 L5.2 30 Z"/></g><g class="sway s2" fill="#2f7a3e"><path d="M14.8 30.4 L16 26.6 L17.2 30.4 Z"/></g>
+      <!-- Tüftlerreich: Windmühle und Zahnrad vor dem rauchenden Berg -->
+      <path d="M33 32 L42 17 L51 32 Z" fill="#6b5560"/><path d="M38 24.7 L42 17 L46 24.7 Z" fill="#a08a92"/>
+      <ellipse cx="42" cy="17.6" rx="1.6" ry="0.5" fill="#ff8a3d"/>
+      <path d="M42 16.8 q1.6 -2.4 0.2 -4.6 q-1.4 -2.2 0.8 -3.8" stroke="rgba(220,210,215,0.55)" stroke-width="0.5" fill="none"/>
+      <g><rect x="29.2" y="25.6" width="2.6" height="6.4" fill="#d6c09a"/><path d="M28.6 25.6 L30.5 22.6 L32.4 25.6 Z" fill="#8a5a3a"/>
+        <rect x="30" y="29" width="1" height="1.2" fill="#ffd166"/>
+        <g class="mill-blades"><path d="M30.5 26.4 L30.5 21.9 M30.5 26.4 L35 26.4 M30.5 26.4 L30.5 30.9 M30.5 26.4 L26 26.4" stroke="#5a3a1e" stroke-width="0.45"/>
+          <path d="M30.7 22.3 L31.8 22.6 L30.7 25.6 Z M34.6 26.6 L34.3 27.7 M34.6 26.6 L31.3 26.6 L34.6 27.7 Z M30.3 30.5 L29.2 30.2 L30.3 27.2 Z M26.4 26.2 L26.7 25.1 L30 26.2 Z" fill="rgba(245,235,210,0.9)"/></g></g>
+      <g class="mill-blades" fill="none" stroke="#d9a24e" stroke-width="0.5" stroke-linecap="round">
+        <circle cx="52.6" cy="26.4" r="1.35"/><path d="M53.95 26.40 L54.65 26.40 M53.55 27.35 L54.05 27.85 M52.60 27.75 L52.60 28.45 M51.65 27.35 L51.15 27.85 M51.25 26.40 L50.55 26.40 M51.65 25.45 L51.15 24.95 M52.60 25.05 L52.60 24.35 M53.55 25.45 L54.05 24.95"/>
+        <circle cx="52.6" cy="26.4" r="0.4" fill="#d9a24e" stroke="none"/></g>
+      <!-- Dschungel: Tempelstufen im Grün -->
+      <ellipse cx="58" cy="44" rx="12" ry="6" fill="#2f6a2c" opacity="0.75"/>
+      <path d="M52.5 43.6 L58 35.4 L63.5 43.6 Z" fill="#9a8a66"/><path d="M54.4 43.6 L58 38 L61.6 43.6 Z" fill="#b8a780"/>
+      <rect x="56.9" y="40.2" width="2.2" height="3.4" fill="#3a3226"/>
+      <g fill="#2f8a3a"><circle cx="49.5" cy="41.5" r="2.4"/><circle cx="66.5" cy="41.2" r="2.6"/><circle cx="47.4" cy="44.6" r="1.9"/><circle cx="68.6" cy="44.4" r="1.8"/></g>
+      <!-- Sturmhimmel: schwebende Inseln mit Blitz -->
+      <g fill="#3b3f5a"><path d="M69 24 h8.4 l-1.7 3 h-5 Z"/><path d="M79.6 19.6 h6 l-1.2 2.3 h-3.6 Z"/><path d="M71.6 16.4 h5.4 l-1.1 2 h-3.2 Z"/></g>
+      <g fill="#6f7d63"><rect x="69" y="23" width="8.4" height="1.1"/><rect x="79.6" y="18.7" width="6" height="0.9"/><rect x="71.6" y="15.5" width="5.4" height="0.9"/></g>
+      <g fill="#2f6b3a"><path d="M71.4 23 L72.4 20.6 L73.4 23 Z"/><path d="M81.2 18.7 L82 16.9 L82.8 18.7 Z"/></g>
+      <polyline class="art-flash" points="80.6,12.4 78.8,15.8 81,16.3 78,20.6" fill="none" stroke="#fff6a8" stroke-width="0.6" stroke-linejoin="round"/>
+      <!-- Schattenreich: Friedhofshügel unter dem Blutmond -->
+      <path d="M77 42 Q88 32 100 40 L100 62 L77 62 Z" fill="#221833"/>
+      <g fill="#5a5074"><rect x="83.4" y="37.4" width="1.8" height="3.2"/><circle cx="84.3" cy="37.4" r="0.9"/>
+        <rect x="89.6" y="38.2" width="1.6" height="2.8"/><circle cx="90.4" cy="38.2" r="0.8"/>
+        <rect x="94.4" y="39.2" width="0.6" height="2.6"/><rect x="93.3" y="39.9" width="2.8" height="0.6"/></g>
+      <path d="M87 39.6 L87 34.4 M87 36.2 L85.2 34.8 M87 35.4 L88.9 33.8 M87 37.4 L85.6 36.6" stroke="#4a3f66" stroke-width="0.5" fill="none" stroke-linecap="round"/>
+      <g class="particles"><circle class="p" cx="80" cy="44" r="0.6" fill="#c58bff"/><circle class="p p3" cx="96" cy="46" r="0.5" fill="#c58bff"/></g>
+      <!-- Reiseweg zwischen den Orten -->
+      <path d="M ${route}" fill="none" stroke="rgba(0,0,0,0.35)" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M ${route}" fill="none" stroke="rgba(255,246,214,0.9)" stroke-width="0.75" stroke-linecap="round" stroke-dasharray="1.5 2.4"/>
+      <rect width="100" height="62" fill="url(#atVig)"/>
     </svg>`;
   }
   return { spots, svg };
