@@ -1,7 +1,16 @@
 /* 2,5D-Darstellung auf Canvas mit frei drehbarer Kamera (Schrägsicht von oben, hinter dem Ball).
    Welt: x/y in Kacheln, z nach oben. Die Kamera hat Fokus, Drehwinkel, Zoom und Neigung. */
-const CAM_TILT = 0.62;   // Neigung: 1 = senkrecht von oben, kleiner = flacher
+const CAM_TILT = 0.62;      // Neigung im Hochformat: 1 = senkrecht von oben, kleiner = flacher
+const CAM_TILT_WIDE = 0.80; // Neigung auf breiten Bildschirmen (Tablet quer, Laptop)
 const CAM_ZF = 0.9;      // Skalierung der Höhe
+
+/* Die Tiefe der Bahn läuft immer über die Höhe des Bildes. Im Hochformat ist dafür viel Platz,
+   quer auf dem Tablet dagegen wenig – mit der flachen Neigung des Hochformats wirkt das Feld dort
+   platt gedrückt. Darum wird die Sicht mit wachsender Bildbreite Schritt für Schritt steiler. */
+function camTiltFor(w, h) {
+  const k = Math.max(0, Math.min(1, (w / Math.max(1, h) - 0.85) / 0.55));
+  return CAM_TILT + (CAM_TILT_WIDE - CAM_TILT) * k;
+}
 
 function hexToRgb(hex) {
   const n = parseInt(hex.slice(1), 16);
@@ -61,10 +70,10 @@ const FLAG_DESIGNS = {
 class Renderer {
   constructor(canvas) {
     this.cv = canvas; this.ctx = canvas.getContext('2d');
-    this.level = null; this.theme = null; this.w = 1; this.h = 1; this.dpr = 1;
+    this.level = null; this.theme = null; this.w = 1; this.h = 1; this.dpr = 1; this.tilt = CAM_TILT;
     // aktuelle Kamera und Zielwerte (werden weich angenähert)
-    this.cam = { fx: 0, fy: 0, th: Math.PI / 4, zoom: 40, tilt: CAM_TILT, zf: CAM_ZF, cx: 0, cy: 0 };
-    this.target = { fx: 0, fy: 0, th: Math.PI / 4, zoom: 40, tilt: CAM_TILT, zf: CAM_ZF, cx: 0, cy: 0 };
+    this.cam = { fx: 0, fy: 0, th: Math.PI / 4, zoom: 40, tilt: this.tilt, zf: CAM_ZF, cx: 0, cy: 0 };
+    this.target = { fx: 0, fy: 0, th: Math.PI / 4, zoom: 40, tilt: this.tilt, zf: CAM_ZF, cx: 0, cy: 0 };
     this.scale = 40;
     this.updateTrig();
   }
@@ -72,30 +81,31 @@ class Renderer {
   resize() {
     this.dpr = Math.min(window.devicePixelRatio || 1, 2);
     this.w = window.innerWidth; this.h = window.innerHeight;
+    this.tilt = camTiltFor(this.w, this.h); // Neigung an das Seitenverhältnis anpassen
     this.cv.width = Math.round(this.w * this.dpr); this.cv.height = Math.round(this.h * this.dpr);
     this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
   }
   setLevel(level, theme) { this.level = level; this.theme = theme; }
   /* Zoomstufe für die Verfolger-Kamera, abhängig von der Bildschirmgröße */
-  defaultZoom() { return Math.max(30, Math.min(60, Math.min(this.w / 12, this.h / 14))); }
+  defaultZoom() { const c = Math.sqrt(this.tilt / CAM_TILT); return Math.max(30, Math.min(60, Math.min(this.w / 12, this.h / (14 * c)))); }
   /* Übersicht: ganze Bahn im Bild */
   overviewTarget() {
     const { W, H } = this.level, padTop = 78, padBot = 70;
     const span = (W + H + 4) * Math.SQRT1_2;
-    const zoom = Math.min((this.w - 30) / span, (this.h - padTop - padBot) / (span * CAM_TILT + 3));
-    return { fx: W / 2, fy: H / 2, th: Math.PI / 4, zoom, tilt: CAM_TILT, cx: this.w / 2, cy: padTop + (this.h - padTop - padBot) / 2 + zoom * 0.8 };
+    const zoom = Math.min((this.w - 30) / span, (this.h - padTop - padBot) / (span * this.tilt + 3));
+    return { fx: W / 2, fy: H / 2, th: Math.PI / 4, zoom, tilt: this.tilt, cx: this.w / 2, cy: padTop + (this.h - padTop - padBot) / 2 + zoom * 0.8 };
   }
   /* Verfolger-Kamera: Ball unten im Bild, Blick in Richtung th */
   followTarget(ball, th, zoom) {
     const ahead = 2.0;
-    return { fx: ball.x - Math.sin(th) * ahead, fy: ball.y - Math.cos(th) * ahead, th, zoom, tilt: CAM_TILT, cx: this.w / 2, cy: this.h * 0.55 };
+    return { fx: ball.x - Math.sin(th) * ahead, fy: ball.y - Math.cos(th) * ahead, th, zoom, tilt: this.tilt, cx: this.w / 2, cy: this.h * 0.55 };
   }
-  snapCamera() { Object.assign(this.cam, { tilt: CAM_TILT, zf: CAM_ZF }, this.target); this.updateTrig(); }
+  snapCamera() { Object.assign(this.cam, { tilt: this.tilt, zf: CAM_ZF }, this.target); this.updateTrig(); }
   updateCamera(dt) {
     const c = this.cam, tg = this.target, k = Math.min(1, dt * 4);
     c.fx += (tg.fx - c.fx) * k; c.fy += (tg.fy - c.fy) * k;
     c.zoom += (tg.zoom - c.zoom) * k; c.cx += (tg.cx - c.cx) * k; c.cy += (tg.cy - c.cy) * k;
-    c.tilt += ((tg.tilt ?? CAM_TILT) - c.tilt) * k; c.zf += ((tg.zf ?? CAM_ZF) - c.zf) * k; // Neigung und Höhenmaß (Draufsicht im Baumodus)
+    c.tilt += ((tg.tilt ?? this.tilt) - c.tilt) * k; c.zf += ((tg.zf ?? CAM_ZF) - c.zf) * k; // Neigung und Höhenmaß (Draufsicht im Baumodus)
     let d = tg.th - c.th; d = ((d + Math.PI) % TAU + TAU) % TAU - Math.PI;
     c.th += d * Math.min(1, dt * 3);
     this.updateTrig();

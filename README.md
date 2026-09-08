@@ -40,6 +40,8 @@ Unter **Bauen & Eigene Welt** liegen der Editor und die selbst zusammengestellte
 - `Esc` bricht das Zielen ab.
 - Kamera: folgt dem Ball und blickt Richtung Loch. Tasten unten links oder Tastatur:
   `M` Übersicht der ganzen Bahn, `Q`/`E` drehen, `+`/`-` oder Mausrad zoomen.
+  Die Neigung richtet sich nach dem Bildschirm: hochkant (Handy) bleibt die Sicht flach,
+  quer auf Tablet oder Laptop wird sie steiler, damit das Feld nicht platt gedrückt wirkt.
 - Musik an oder aus: Knopf `♪` unten links oder Taste `J`; im Startbildschirm auch unter „Musik". Die Wahl merkt sich der Browser.
 - 1–4 Spieler im Hotseat-Modus: Jeder spielt die Bahn nacheinander zu Ende.
 - Wasser, Lava und Abgrund: Ball zurück zur letzten Position, +1 Strafschlag.

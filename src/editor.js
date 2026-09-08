@@ -67,7 +67,7 @@ const Editor = (deps) => {
       return { fx: lv.W / 2 + ed.panX, fy: lv.H / 2 + ed.panY, th: state.camTheta, zoom, tilt: 1, zf: 0.12, cx: 15 + availW / 2, cy: 80 + availH / 2 };
     }
     const o = R.overviewTarget();
-    const span = (lv.W + lv.H + 4) * Math.SQRT1_2, zoom = Math.min(availW / span, availH / (span * CAM_TILT + 3)) * state.zoomFactor;
+    const span = (lv.W + lv.H + 4) * Math.SQRT1_2, zoom = Math.min(availW / span, availH / (span * R.tilt + 3)) * state.zoomFactor;
     return Object.assign(o, { th: state.camTheta, zoom, fx: o.fx + ed.panX, fy: o.fy + ed.panY, cx: 15 + availW / 2, cy: 80 + availH / 2 + zoom * 0.8, zf: CAM_ZF });
   }
   function setView(v) { ed.view = v; state.camTheta = v === 'top' ? 0 : Math.PI / 4; ed.panX = 0; ed.panY = 0; state.zoomFactor = 1; syncPanel(); }
