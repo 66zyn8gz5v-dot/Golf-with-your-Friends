@@ -48,9 +48,9 @@ nur eine Zeichenfunktion in `DEFS` und einen Eintrag in `LIST`; der Nullpunkt li
 eine Einheit entspricht dem Ballradius, und die Ballmitte liegt bei (0, 0.72). Wer die Spielerfarbe braucht,
 nimmt sie als zweiten Wert der Zeichenfunktion entgegen.
 
-## Bestenliste
+## Rangliste
 
-Über **🏆 Bestenliste** im Startbildschirm: für jede Bahn und für jede ganze Runde, mit Namen dabei, in
+Über **🏆 Rangliste** im Startbildschirm: für jede Bahn und für jede ganze Runde, mit Namen dabei, in
 **drei Wertungen**. Es gibt nichts auszuwählen – **alle drei laufen bei jedem Schlag gleichzeitig mit**,
 und die Liste zeigt sie nebeneinander. Einmal den Namen eintragen, dann einfach drauflos spielen:
 
@@ -80,6 +80,41 @@ keinen Server, der mitrechnet: Jedes Gerät meldet sein Ergebnis selbst. Wer den
 kann melden, was er will. Damit man das einordnen kann, steht an jedem Eintrag, woher er kommt: **🌐**
 heißt „in einer Runde gegeneinander erspielt" – da haben andere zugeschaut. Einträge ohne Zeichen sind
 allein am eigenen Gerät entstanden. Derselbe Hinweis steht auch im Spiel über der Liste.
+
+**Zurücksetzen – und wer das darf.** Zurücksetzen löscht alle Rekorde aller Welten, bei dir und bei allen
+anderen. Nützlich, wenn jemand Ergebnisse eingetragen hat, die nicht stimmen. Genau deshalb darf es nicht
+jeder: Sonst räumt der, der geschummelt hat, gleich hinterher die Spuren weg.
+
+Darum **führt einer die Liste**. Unten in der Rangliste steht am Anfang **Liste führen**. Wer da zuerst
+tippt, bekommt den Posten. Das Gerät legt dafür ein Schlüsselpaar an: Der öffentliche Teil geht als
+aufbewahrte Nachricht an alle, der geheime Teil bleibt im Browser und wird nie verschickt. Ab dann steht
+bei allen anderen nur noch „Zurücksetzen kann nur, wer die Liste führt" – der Knopf ist bei ihnen weg.
+
+Ein Zurücksetzen wird mit dem geheimen Schlüssel **unterschrieben**. Jedes Gerät prüft die Unterschrift
+gegen den öffentlichen Schlüssel und wirft alles weg, was nicht passt. Ein selbst gebasteltes
+Zurücksetzen bewirkt darum nichts – auch nicht, wenn es direkt am Vermittler vorbeigeschickt wird. Wer
+sich später selbst zum Listenführer erklären will, muss das mit dem Schlüssel des bisherigen unterschreiben;
+ohne den bleibt der alte Listenführer stehen.
+
+**Schlüssel sichern.** Der geheime Schlüssel liegt nur in diesem einen Browser. Löschst du die Daten der
+Seite oder wechselst das Gerät, ist er weg – und niemand kann die Liste mehr zurücksetzen. Über
+**Schlüssel sichern** kannst du ihn anzeigen und kopieren (etwa in eine Notiz); auf dem anderen Gerät
+setzt du ihn über denselben Knopf wieder ein. Getrennt geführt werden Spiel und Vorschau: zwei Listen,
+zwei Listenführer.
+
+Das ist kein Schutz gegen jemanden, der den Code des Spiels ändert – er kann weiter eigene Ergebnisse
+melden. Es verhindert nur, dass irgendwer die Liste für alle löschen kann.
+
+Damit das hält, wird nicht nur gelöscht, sondern der **Zeitpunkt des Zurücksetzens geteilt**: Jedes Gerät
+merkt ihn sich und wirft alles weg, was davor eingetragen wurde. Ohne diesen Kniff käme der alte Stand
+vom nächsten Gerät sofort wieder zurück, denn jedes hält seine eigene Kopie und bietet sie an. Auch ein
+Gerät, das erst Tage später wieder online geht, bringt die alten Rekorde nicht mehr mit. Zeitstempel, die
+in der Zukunft liegen, werden auf „jetzt" gekappt – sonst würde ein gefälschter Eintrag jedes künftige
+Zurücksetzen überleben.
+
+**Grenzen der Glaubwürdigkeit:** Eine Bahn unter 2 Sekunden und eine ganze Runde unter 10 Sekunden werden
+für Zeit und Kombi nicht gewertet – so schnell geht es nicht. Die Schläge zählen trotzdem. Das hält
+niemanden auf, der den Code des Spiels ändert; es macht nur die einfachen Fälle unmöglich.
 
 **Wo die Rekorde liegen:** als „aufbewahrte" MQTT-Nachrichten beim Vermittler. Eine Nachricht mit
 Retain-Bit bleibt dort liegen und wird jedem zugestellt, der später zuhört – so gibt es eine gemeinsame
@@ -144,7 +179,8 @@ Unter **Bauen & Eigene Welt** liegen der Editor und die selbst zusammengestellte
   als SVG-Pfade in `src/icons.js` eingebettet – überall gleich, in der Textfarbe, ohne Schriftart aus dem Netz.
   Welten, Bahnen, Hüte und Rekordmeldungen behalten bewusst ihre bunten Zeichen: dafür hat kein Bedien-Icon-Satz Motive.
 - Online gegeneinander: **🌐 Online spielen** im Startbildschirm, Raumcode aufmachen oder eintippen.
-- Rekorde: **🏆 Bestenliste** im Startbildschirm, einmal den eigenen Namen eintragen. Drei Wertungen: Schläge, Zeit und Kombi (Schläge + Minuten).
+- Rekorde: **🏆 Rangliste** im Startbildschirm, einmal den eigenen Namen eintragen. Drei Wertungen: Schläge, Zeit und Kombi (Schläge + Minuten).
+- Zurücksetzen darf nur, wer die Liste führt: einmal unten in der Rangliste auf **Liste führen** tippen, dann den Schlüssel über **Schlüssel sichern** wegkopieren.
 - Musik an oder aus: Knopf `♪` unten links oder Taste `J`; im Startbildschirm auch unter „Musik". Die Wahl merkt sich der Browser.
 - 1–4 Spieler im Hotseat-Modus: Jeder spielt die Bahn nacheinander zu Ende.
 - Wasser, Lava und Abgrund: Ball zurück zur letzten Position, +1 Strafschlag.
@@ -259,7 +295,37 @@ Danach ist das Spiel unter `https://66zyn8gz5v-dot.github.io/Golf-with-your-Frie
 
 ## Baumodus (eigene Bahnen im Spiel bauen)
 
-Im Kreativmodus gibt es **Bahn bauen**: ein Editor direkt im Spiel. Kacheln (Rasen, Sand, Eis, Wasser, Lava, Block, Klippe, Leer) werden durch Tippen oder Ziehen gemalt, Abschlag und Loch per Werkzeug gesetzt. Objekte (Pilz, Windrad, Fallgatter, Lore, Windfeld, Sprungrampe, Beschleuniger, Windmühle, Kanone, Magnet, Drehscheibe, Schrumpftrank, Portal, Bande) werden per Tipp platziert, mit **Drehen** in der Richtung geändert und mit **Löschen** entfernt. Gebaut wird in der Draufsicht (umschaltbar auf Schrägsicht), das Panel lässt sich einklappen und ist in die Reiter **Bauen** (Boden, Abschlag/Loch, Hindernisse), **Bahn** (Name, Par, Welt, Kartengröße) und **Speichern** (Speichern, Laden, Bahn-Code) aufgeteilt. **Testen** spielt die Bahn sofort, danach geht es zurück in den Editor. **Fertig** speichert die Bahn und öffnet die **Eigene Welt**: dort wird die Bahn per **Einsetzen** an einer wählbaren Position eingefügt, die Reihenfolge lässt sich mit ▲ ▼ ändern, ✕ nimmt eine Bahn wieder heraus. Die Eigene Welt erscheint im Kreativmodus als eigene Welt und wird in dieser Reihenfolge gespielt. Gespeichert wird im Browser; **Exportieren** liefert den Bahn-Code als Text, **Importieren** liest ihn wieder ein (so lassen sich Bahnen weitergeben). Der Editor steckt in `src/editor.js`.
+Im Kreativmodus gibt es **Bahn bauen**: ein Editor direkt im Spiel. Kacheln (Rasen, Sand, Eis, Wasser,
+Lava, Block, Klippe, Leer) werden durch Tippen oder Ziehen gemalt, Abschlag und Loch per Werkzeug
+gesetzt. Gebaut wird in der Draufsicht (umschaltbar auf Schrägsicht), das Panel lässt sich einklappen und
+ist in die Reiter **Bauen** (Boden, Abschlag/Loch, Hindernisse, Höhenstufen), **Bahn** (Name, Par, Welt,
+Kartengröße) und **Speichern** (Speichern, Laden, Bahn-Code, Weitergeben) aufgeteilt. **Testen** spielt
+die Bahn sofort probe, danach geht es zurück in den Editor. **Fertig** speichert sie und öffnet die
+**Eigene Welt**: dort wird die Bahn per **Einsetzen** an einer wählbaren Stelle eingefügt, die Reihenfolge
+lässt sich mit den Pfeilen ändern, das Kreuz nimmt eine Bahn wieder heraus. Die Eigene Welt erscheint im
+Kreativmodus als eigene Welt und wird in dieser Reihenfolge gespielt. Gespeichert wird im Browser;
+**Exportieren** liefert den Bahn-Code als Text, **Importieren** liest ihn wieder ein – zum Weitergeben
+gibt es zusätzlich **Teilen** und **Link kopieren** (siehe „Bahnen weitergeben"). Der Editor steckt in
+`src/editor.js`.
+
+**Alle 24 Hindernisse** stehen zur Verfügung – auch die der Stufe „Legende", die vorher nur in den
+gebauten Welten vorkamen: Pilz, Windrad, Fallgatter, Lore, Windfeld, Sprungrampe, Beschleuniger,
+Windmühle, Kanone, Magnet, Drehscheibe, Schrumpftrank, **Fähre, Schiene, Welle, springender Hai,
+Stacheln, Aufwind, Blitz, Fallbeil, Turm des Auges, Schalter**, Portal und Bande (die letzten beiden
+werden mit zwei Tippern gesetzt). Sie kommen mit denselben Werten wie in den gebauten Welten, damit sie
+sich gleich anfühlen; **Drehen** ändert je nach Objekt die Richtung, die Achse, das Vorzeichen oder das
+Ziel, **Löschen** entfernt das Objekt in der Nähe. Unter der Auswahl steht immer ein Satz dazu, was das
+gewählte Objekt tut.
+
+**Höhenstufen** gibt es ebenfalls: **Höher**, **Tiefer** und **Stufe weg** heben und senken den Boden
+kachelweise, die **Stufenhöhe** wechselt zwischen flach (0,3), mittel (0,5) und steil (0,8). Der Ball
+rollt Hänge hinunter, wie in den Bahnen des Schattenreichs. Damit man von oben nicht blind malt, zeigt
+der Editor jede Stufe als Ziffer und Tönung. Das Raster liegt als Ziffernzeilen (`heights`) über der
+Karte, wird beim Ändern der Kartengröße mitgezogen und kommt nur dann in die Bahn, wenn wirklich Stufen
+gemalt sind.
+
+Was der Editor weiterhin nicht baut: Innenräume (Bahnen mit zweiter Karte, wie Pyramide oder
+Schattenschloss) und die Tür dorthin. Solche Bahnen lassen sich deshalb auch nicht teilen.
 
 ## Eigene Bahnen im Code bauen
 
@@ -285,10 +351,66 @@ Jede Welt hat einen eigenen, endlos weiterlaufenden Klangteppich – vollständi
 
 Farbwelten stehen in `src/themes.js`, jede mit einer dezenten Atmosphäre (`atmo`: `fog`, `mist`, `fireflies`, `spores`, `embers`, `sparks`, `ash`, `bubbles`, `sand`, `spray`, `snow`, `pollen`, `none`), die eine Bahn per `atmo` überschreiben kann. Mit `node tools/validate.mjs` lässt sich prüfen, ob jede Bahn lösbar ist; `node tools/audit/audit.mjs <welt|all> [Bahn]` spielt jede Bahn headless durch (Profi-Suche, simulierte Normalspieler mit Streuung, Prüfung von Engstellen, Zeitfenstern und Kamerazonen) und schreibt Ergebnisse nach `out/`.
 
+## Bahnen weitergeben
+
+Selbstgebaute Bahnen lassen sich auf zwei Wegen weitergeben – beide im Editor unter **Speichern**:
+
+**Teilen.** Ein Tipp auf **🌐 Teilen**, und die Bahn erscheint bei allen, die das Spiel haben, unter
+**Bauen & Eigene Welt** in der Liste **„Bahnen von Freunden"**. Dort steht neben jedem Eintrag, von wem
+er stammt; ein Knopf spielt die Bahn einmal, der andere lädt sie in den Editor. Kein Code, kein
+Einrichten – da nur der Freundeskreis das Spiel hat, bleibt es unter euch. **Nicht mehr teilen** nimmt
+die Bahn wieder heraus, und sie verschwindet bei allen.
+
+Höchstens 12 Bahnen je Gerät und 60 in der Liste, damit sie übersichtlich bleibt. Geteilte Bahnen liegen
+als aufbewahrte Nachrichten beim Vermittler, genau wie die Rekorde – startet er neu, bietet jedes Gerät
+seine Bahnen von selbst wieder an.
+
+**Link kopieren.** Macht aus der Bahn eine Adresse zum Verschicken. Wer sie antippt, bekommt die Bahn
+angeboten: gleich spielen, zu den eigenen Bahnen legen oder im Editor öffnen. Das braucht keine
+Verbindung zum Vermittler. Die Bahn steckt gepackt im Link (`CompressionStream`, wo der Browser ihn hat),
+was ihn etwa um zwei Drittel kürzt – eine große Bahn wie die Haifischbucht kommt so auf rund 1400
+Zeichen statt 4200.
+
+**Geprüft, bevor sie ins Spiel kommt.** Egal ob Werkstatt, Link oder eingefügter Textcode: Jede fremde
+Bahn geht durch dieselbe Prüfung in `src/share.js` – Kartenzeichen, Größe (6–48 × 4–36 Kacheln), genau
+ein Abschlag und genau ein Loch, bekannte Hindernistypen, Zahlen in sinnvollen Grenzen, keine tief
+verschachtelten Daten und kein Markup in Namen oder Textfeldern. Was nicht passt, wird mit Grund
+abgelehnt statt geladen. Bahnen mit Innenraum lassen sich nicht teilen, weil dafür zwei Karten nötig
+wären – der Editor baut ohnehin keine.
+
+## Vorschau: erst prüfen, dann ins Spiel
+
+Es gibt zwei Stände unter derselben Adresse:
+
+| | Adresse | Was ist das |
+| --- | --- | --- |
+| **Das Spiel** | `…github.io/Golf-with-your-Friends/` | Der freigegebene Stand. Den spielen die Freunde. Zweig `main`. |
+| **Die Vorschau** | `…github.io/Golf-with-your-Friends/vorschau/` | Der neue Stand zum Ausprobieren, auch wenn er noch nicht fertig ist. Arbeitszweig. |
+
+Neues geht **zuerst in die Vorschau**. Ins Spiel kommt es erst, wenn der Arbeitszweig nach `main`
+übernommen wird – also auf ausdrückliche Freigabe hin.
+
+Die Vorschau trägt oben ein oranges Band und im Startbildschirm „Vorschau · Fassung N", damit man die
+beiden nie verwechselt. Sie lässt sich genau wie das Spiel auf den Startbildschirm legen und offline
+spielen.
+
+**Beide Stände sind sauber getrennt**, obwohl sie auf derselben Adresse liegen und sich damit den
+Browser-Speicher teilen würden:
+
+- **Eigene Schlüssel im Browser**: `fantasygolf.vorschau.name` statt `fantasygolf.name` und so weiter.
+  Name, Rekorde, Hüte, Steuerung, eigene Bahnen – alles doppelt vorhanden und unabhängig.
+- **Eigene Themen beim Vermittler**: `fantasygolf/v1/vorschau/…` statt `fantasygolf/v1/spiel/…`.
+  Ein Testlauf kann die Rekorde der Freunde nicht überschreiben, und man landet nicht versehentlich
+  in ihrem Spielraum – selbst bei gleichem Raumcode.
+- **Eigener Offline-Speicher**: `fg-vorschau-vN` statt `fg-spiel-vN`. Beim Aufräumen löscht jede
+  Ausgabe nur ihre eigenen alten Stände.
+
+Erkannt wird das am Pfad (`src/version.js`), es gibt also keinen Schalter, den man vergessen könnte.
+
 ## Sicherheit – was geprüft wird und was offen bleibt
 
 Das Spiel läuft ohne eigenen Server: reine Dateien auf GitHub Pages, dazu ein offener MQTT-Vermittler
-für Netzspiel und Bestenliste. Das prägt, was möglich ist und was nicht.
+für Netzspiel und Rangliste. Das prägt, was möglich ist und was nicht.
 
 **Was abgesichert ist**
 
@@ -336,6 +458,18 @@ physikalisch nicht geht; er könnte Rekorde dauerhaft und fälschungssicher spei
 Kopfzeilen setzen, die das Einbetten unterbinden. Für einen Freundeskreis ist das viel Aufwand für wenig
 Gewinn – aber es ist der einzige Weg, diese Punkte wirklich zu schließen.
 
+## Einzeldatei fürs Artefakt
+
+Zum Weitergeben lässt sich das Spiel in eine einzige HTML-Datei packen (ein kleines Skript außerhalb
+des Repos tut das). Die Reihenfolge der Skripte liest es aus `index.html` – bewusst nicht aus einer
+zweiten, von Hand gepflegten Liste. Genau daran ist es einmal gescheitert: `src/text.js` kam dazu, war
+in `index.html` und im Service Worker eingebunden, fehlte aber im Bündel; ohne `Text` brach `best.js`
+beim Laden ab und die Einzeldatei zeigte nur einen schwarzen Bildschirm. Die auf GitHub Pages
+ausgelieferten Einzeldateien waren davon nie betroffen.
+
+Nach jedem Bauen wird die Datei einmal im Browser geladen und nachgesehen, ob Startbildschirm,
+Sinnbilder, ein laufendes Spiel, die Rangliste und der Editor da sind.
+
 ## Projektstruktur
 
 ```
@@ -358,11 +492,12 @@ src/physics.js    Ballphysik und Kollision
 src/render.js     isometrische Darstellung
 src/render_legend.js Optik der Legende-Welten (Hintergründe, neue Hindernisse und Stile)
 src/text.js       Eine Stelle für alle Eingaben: Namen und Bahnnamen filtern, Anzeige entschärfen
-src/version.js    Die Fassung des Spiels – eine Zahl, die bei jeder Auslieferung steigt; Service Worker und Startbildschirm lesen sie
+src/share.js      Bahnen weitergeben: prüfen, über den Vermittler teilen, als Link verpacken
+src/version.js    Fassung und Ausgabe (Spiel oder Vorschau): Zahl, Speicher-Vorsatz und Themen-Marke – von Seite und Service Worker gelesen
 src/icons.js      Bedien-Sinnbilder: Material Symbols als eingebettete SVG-Pfade (Zurück, Kamera, Musik, Editor …)
 src/hats.js       Hüte für die Bälle: Zeichnungen und Vorschau fürs Menü
 src/net.js        Netzspiel: Raumcode und MQTT-Zugang für das Spiel zu mehreren
-src/best.js       Bestenliste: Rekorde je Bahn und je Welt in drei Wertungen (Schläge, Zeit, Kombi), über alle Geräte geteilt
+src/best.js       Rangliste: Rekorde je Bahn und je Welt in drei Wertungen (Schläge, Zeit, Kombi), über alle Geräte geteilt
 src/sfx.js        Klangeffekte (WebAudio)
 src/music.js      Musik: je Welt ein erzeugter Klangteppich (WebAudio)
 src/worldmap.js   Weltkarte: die schwebenden Scheiben in 2,5D und die Orte der Welten

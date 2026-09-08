@@ -11,14 +11,14 @@
   const DEFAULT_HATS = ['crown', 'pirate', 'wizard', 'party'];
   const playerHats = DEFAULT_HATS.slice();
   try {
-    const saved = JSON.parse(localStorage.getItem('fantasygolf.hats') || 'null');
+    const saved = JSON.parse(localStorage.getItem(speicherSchluessel('hats')) || 'null');
     if (Array.isArray(saved)) saved.forEach((h, i) => { if (i < 4 && typeof h === 'string' && Hats.has(h)) playerHats[i] = h; });
   } catch (e) { /* kein Speicher, dann bleiben die Vorgaben */ }
   function setHat(i, id) {
     playerHats[i] = id;
     if (state.players[i]) state.players[i].hat = id;
     if (state.ball && state.curPlayer === i) state.ball.hat = id;
-    try { localStorage.setItem('fantasygolf.hats', JSON.stringify(playerHats)); } catch (e) { /* kein Speicher */ }
+    try { localStorage.setItem(speicherSchluessel('hats'), JSON.stringify(playerHats)); } catch (e) { /* kein Speicher */ }
   }
 
   const canvas = document.getElementById('game');
@@ -37,10 +37,10 @@
     mode: 'normal',       // 'normal' = Wettkampf, 'creative' = Kreativ (Bahnen frei wählen und überspringen, kein Schlaglimit)
     world: WORLDS[0], courses: WORLDS[0].courses,
   };
-  try { const m = localStorage.getItem('fantasygolf.control'); if (m === 'sling' || m === 'push') state.controlMode = m; } catch (e) { /* kein Speicher verfügbar */ }
+  try { const m = localStorage.getItem(speicherSchluessel('control')); if (m === 'sling' || m === 'push') state.controlMode = m; } catch (e) { /* kein Speicher verfügbar */ }
   function setControlMode(m) {
     state.controlMode = m;
-    try { localStorage.setItem('fantasygolf.control', m); } catch (e) { /* ignorieren */ }
+    try { localStorage.setItem(speicherSchluessel('control'), m); } catch (e) { /* ignorieren */ }
     syncHint();
   }
   /* Hinweiszeile unten links: im Netzspiel steht dort, wer gerade dran ist */
@@ -298,9 +298,9 @@
         <span class="btn mode" id="to-build">${SCENE_CREATIVE}<span class="mode-label long">Bauen &amp; Eigene Welt</span></span>
       </div>
       <div class="atlas-extra"><span class="btn small ghost" id="to-online">${Icons.svg('public')} Online spielen</span>
-        <span class="btn small ghost" id="to-best">${Icons.svg('emoji_events')} Bestenliste</span></div>
+        <span class="btn small ghost" id="to-best">${Icons.svg('emoji_events')} Rangliste</span></div>
       <div class="legend">Alle Welten sind von Anfang an offen. Die Stufe an jedem Ort sagt nur, was dich erwartet.
-        <span class="version">Fassung ${typeof APP_VERSION !== 'undefined' ? APP_VERSION : '?'}</span></div>
+        <span class="version">${typeof VORSCHAU !== 'undefined' && VORSCHAU ? 'Vorschau · ' : ''}Fassung ${typeof APP_VERSION !== 'undefined' ? APP_VERSION : '?'}</span></div>
     </div>`, 'title');
     $('to-online').addEventListener('click', () => { Sfx.unlock(); Music.start(); showOnline(); });
     $('to-best').addEventListener('click', () => { Sfx.unlock(); Music.start(); showBestList(); });
@@ -332,6 +332,28 @@
     $('back').addEventListener('click', showTitle);
   }
 
+  /* Jemand hat eine Bahn als Link geschickt */
+  function zeigeGeteilteBahn(bahn) {
+    state.phase = 'title'; document.body.classList.add('title');
+    overlay(`<div class="panel">
+      <div class="panel-head"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span><h2>${Icons.svg('language')} Geteilte Bahn</h2></div>
+      <div class="sub"><b>${Text.esc(bahn.name)}</b> · Par ${bahn.par} · ${bahn.map[0].length} × ${bahn.map.length} Kacheln</div>
+      <p><span class="btn" id="gb-play">${Icons.svg('play_arrow')} Jetzt spielen</span></p>
+      <p><span class="btn small ghost" id="gb-save">${Icons.svg('save')} Zu meinen Bahnen</span>
+        <span class="btn small ghost" id="gb-edit">${Icons.svg('construction')} Im Editor öffnen</span></p>
+      <div class="legend">Die Bahn kam über einen Link. Sie wurde geprüft, bevor sie hier steht.</div>
+    </div>`, 'title');
+    $('back').addEventListener('click', showTitle);
+    $('gb-play').addEventListener('click', () => {
+      Sfx.unlock(); state.mode = 'creative'; state.editorReturn = false;
+      setCustomWorld([bahn], bahn.name);
+      document.body.classList.remove('editing', 'testing');
+      startGame(1, 0);
+    });
+    $('gb-save').addEventListener('click', () => { Sfx.unlock(); editor.uebernimm(bahn); showMessage('Zu deinen Bahnen gelegt', 1800); showBuild(); });
+    $('gb-edit').addEventListener('click', () => { Sfx.unlock(); setControlMode('sling'); editor.open(Object.assign({}, bahn, { id: Date.now() })); });
+  }
+
   /* Bauen und eigene Welt */
   function showBuild() {
     state.phase = 'title'; document.body.classList.add('title'); document.body.classList.remove('creative', 'editing', 'testing');
@@ -344,11 +366,46 @@
         ${own.length ? `<span class="btn mode own" id="own-play"><span class="mode-label">${Icons.svg('language')} Eigene Welt (${own.length} Bahn${own.length > 1 ? 'en' : ''})</span></span>` : ''}
       </div>
       ${own.length ? '' : '<div class="legend">Noch keine eigene Bahn gebaut. Im Editor wird sie mit „Fertig“ in die Eigene Welt eingesetzt.</div>'}
+      <div id="freundesbahnen"></div>
       <p><span class="btn ghost small back2">${Icons.svg('arrow_back')} Zurück</span></p>
     </div>`, 'title');
+    zeigeFreundesbahnen();
+    Share.onChange(zeigeFreundesbahnen);
     $('build').addEventListener('click', () => { Sfx.unlock(); setControlMode('sling'); editor.open(null); });
     if (own.length) $('own-play').addEventListener('click', () => { Sfx.unlock(); setControlMode('sling'); playWorld(own); });
     ui.overlay.querySelectorAll('#back, .back2').forEach(b => b.addEventListener('click', showMap));
+  }
+
+  /* Bahnen, die andere geteilt haben: laden zum Bearbeiten oder gleich einmal probespielen */
+  function zeigeFreundesbahnen() {
+    const box = $('freundesbahnen');
+    if (!box) return;
+    const liste = Share.liste;
+    if (!liste.length) {
+      box.innerHTML = `<div class="legend">Noch keine Bahnen von Freunden da. Wer im Editor auf „Teilen“ tippt, erscheint hier –
+        das braucht eine Verbindung.</div>`;
+      return;
+    }
+    box.innerHTML = `<div class="sub" style="margin-top:14px"><b>Bahnen von Freunden</b> · ${liste.length}</div>
+      <div class="wl-list">${liste.map((b, i) => `<div class="wl-row">
+        <span class="wl-num">${holeIcon(b)}</span>
+        <span class="wl-name">${Text.esc(b.name)} <i>Par ${b.par} · von ${Text.esc(b.von)}</i></span>
+        <button class="cbtn small fb-play" data-i="${i}" title="einmal spielen">${Icons.svg('play_arrow')}</button>
+        <button class="cbtn small fb-load" data-i="${i}" title="in den Editor laden">${Icons.svg('construction')}</button>
+      </div>`).join('')}</div>`;
+    box.querySelectorAll('.fb-play').forEach(b => b.addEventListener('click', () => {
+      const bahn = Share.liste[+b.dataset.i]; if (!bahn) return;
+      Sfx.unlock(); state.mode = 'creative'; state.editorReturn = false;
+      setCustomWorld([bahn], 'Bahn von ' + bahn.von);
+      document.body.classList.remove('editing', 'testing');
+      startGame(1, 0);
+    }));
+    box.querySelectorAll('.fb-load').forEach(b => b.addEventListener('click', () => {
+      const bahn = Share.liste[+b.dataset.i]; if (!bahn) return;
+      Sfx.unlock(); setControlMode('sling');
+      editor.open(Object.assign({}, bahn, { id: Date.now(), name: bahn.name }));
+      showMessage('Bahn geladen – mit „Speichern“ behältst du sie', 2400);
+    }));
   }
 
   const sceneFor = id => ({ normal: SCENE_NORMAL, sea: SCENE_SEA, pro: SCENE_PRO, jungle: SCENE_JUNGLE, storm: SCENE_STORM, shadow: SCENE_SHADOW })[id] || SCENE_NORMAL;
@@ -372,7 +429,7 @@
     startGame(1, 0);
   }
 
-  /* Bestenlisten-Bildschirm: Name, Gruppencode und die Rekorde aller Welten */
+  /* Ranglisten-Bildschirm: Name, Gruppencode und die Rekorde aller Welten */
   function showBestList(worldId) {
     state.phase = 'title'; document.body.classList.add('title');
     document.body.classList.remove('creative', 'editing', 'testing');
@@ -395,7 +452,7 @@
     const rundeZeile = Best.KINDS.map(k => zelle(k, rec[k].round)).join('');
     const parTotal = w.courses.reduce((a, c) => a + c.par, 0);
     overlay(`<div class="panel wide">
-      <div class="panel-head"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span><h2>${Icons.svg('emoji_events')} Bestenliste</h2></div>
+      <div class="panel-head"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span><h2>${Icons.svg('emoji_events')} Rangliste</h2></div>
       <div class="sub">Für jede Bahn zählen <b>alle drei Wertungen gleichzeitig</b> – Namen eintragen, losspielen,
         der Rest passiert von allein. Gewertet wird dein eigener Ball im Wettkampf.</div>
       <div class="sub warn-note">Diese Liste ist eine Anschreibetafel, kein Schiedsrichter: Jedes Gerät meldet sein
@@ -414,6 +471,13 @@
         ${rows}
         <tr class="ganze-runde"><td></td><td>Ganze Runde</td><td></td>${rundeZeile}</tr>
       </table></div>
+      <p style="margin-top:12px">${Best.binBesitzer
+        ? `<span class="btn ghost small" id="brs">${Icons.svg('restart_alt')} Rangliste zurücksetzen</span>
+           <span class="btn ghost small" id="bkey">${Icons.svg('save')} Schlüssel sichern</span>`
+        : Best.gibtBesitzer
+          ? `<span class="sub" style="display:block">Zurücksetzen kann nur, wer die Liste führt.
+             <span class="btn ghost small" id="bkey">${Icons.svg('save')} Schlüssel einsetzen</span></span>`
+          : `<span class="btn ghost small" id="bown">${Icons.svg('emoji_events')} Liste führen</span>`}</p>
       <div class="legend"><b>${BEST_ICON.strokes} Schläge:</b> ${BEST_HELP.strokes}<br>
         <b>${BEST_ICON.time} Zeit:</b> ${BEST_HELP.time}<br>
         <b>${BEST_ICON.combo} Kombi:</b> ${BEST_HELP.combo}<br>
@@ -422,6 +486,9 @@
     </div>`, 'title');
     $('back').addEventListener('click', showTitle);
     ui.overlay.querySelectorAll('#bw .btn').forEach(b => b.addEventListener('click', () => showBestList(b.dataset.w)));
+    if ($('brs')) $('brs').addEventListener('click', () => fragenUndZuruecksetzen(w.id));
+    if ($('bkey')) $('bkey').addEventListener('click', () => zeigeSchluessel(w.id));
+    if ($('bown')) $('bown').addEventListener('click', () => werdeListenfuehrer(w.id));
     $('bn').addEventListener('keydown', e => { if (e.key === 'Enter') $('bsave').click(); });
     $('bsave').addEventListener('click', () => {
       Sfx.unlock();
@@ -431,9 +498,89 @@
     });
   }
 
+  /* Die Liste führen: einmalig ein Schlüsselpaar anlegen. Der öffentliche Teil wird geteilt,
+     der private bleibt hier – nur damit lässt sich später zurücksetzen. */
+  function werdeListenfuehrer(weltId) {
+    overlay(`<div class="panel">
+      <div class="panel-head"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span><h2>${Icons.svg('emoji_events')} Liste führen</h2></div>
+      <div class="sub">Noch führt niemand die Rangliste. Wer sie führt, darf sie zurücksetzen – sonst niemand.</div>
+      <div class="sub warn-note">Dein Gerät legt dafür einen Schlüssel an. Der öffentliche Teil geht an alle,
+        der geheime bleibt hier und wird nie verschickt. <b>Sichere ihn danach</b> – ohne ihn kann niemand mehr
+        zurücksetzen, auch du nicht.</div>
+      <p style="margin-top:14px"><span class="btn" id="lf-ja">Liste übernehmen</span></p>
+      <div class="legend">Wer zuerst übernimmt, führt die Liste. Sag deinen Freunden Bescheid, damit
+        es nicht jemand anderes tut.</div>
+    </div>`, 'title');
+    $('back').addEventListener('click', () => showBestList(weltId));
+    $('lf-ja').addEventListener('click', async () => {
+      Sfx.unlock();
+      const raus = await Best.werdeBesitzer();
+      if (!raus.ok) {
+        showMessage(raus.grund === 'schonVergeben' ? 'Jemand anderes führt die Liste schon.'
+          : raus.grund === 'keinKrypto' ? 'Dieser Browser kann keine Schlüssel anlegen.'
+          : 'Das hat nicht geklappt.', 2600);
+        showBestList(weltId); return;
+      }
+      zeigeSchluessel(weltId, true);
+    });
+  }
+
+  /* Schlüssel sichern oder auf einem anderen Gerät einsetzen */
+  function zeigeSchluessel(weltId, frisch) {
+    const meiner = Best.schluesselText;
+    overlay(`<div class="panel">
+      <div class="panel-head"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span><h2>${Icons.svg('save')} Schlüssel</h2></div>
+      ${frisch ? '<div class="sub">Du führst jetzt die Rangliste.</div>' : ''}
+      ${meiner ? `<div class="sub">Das ist dein geheimer Schlüssel. Sichere ihn – etwa in einer Notiz –
+          und setze ihn auf deinen anderen Geräten ein. Wer ihn hat, kann die Rangliste zurücksetzen.</div>
+        <textarea id="kt" rows="4" spellcheck="false" readonly>${Text.esc(meiner)}</textarea>
+        <p><span class="btn small" id="k-copy">Kopieren</span></p>`
+        : `<div class="sub">Setze hier den Schlüssel ein, den du auf deinem anderen Gerät gesichert hast.</div>`}
+      <div class="sub" style="margin-top:10px">${meiner ? 'Anderen Schlüssel einsetzen:' : ''}</div>
+      <textarea id="kein" rows="3" spellcheck="false" placeholder="Schlüssel hier einfügen …"></textarea>
+      <p><span class="btn small ghost" id="k-set">Einsetzen</span></p>
+      <div class="legend">Der Schlüssel liegt nur in diesem Browser. Löschst du die Daten der Seite,
+        ist er weg – dann kann niemand mehr zurücksetzen.</div>
+    </div>`, 'title');
+    $('back').addEventListener('click', () => showBestList(weltId));
+    if ($('k-copy')) $('k-copy').addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(meiner); showMessage('Schlüssel kopiert', 1800); }
+      catch (e) { $('kt').select(); showMessage('Markiert – jetzt kopieren', 2200); }
+    });
+    $('k-set').addEventListener('click', async () => {
+      const raus = await Best.schluesselEinsetzen($('kein').value);
+      showMessage(raus.ok ? 'Schlüssel eingesetzt – du kannst jetzt zurücksetzen'
+        : raus.grund === 'passtNicht' ? 'Dieser Schlüssel gehört nicht zu dieser Rangliste.'
+        : 'Der Schlüssel ist nicht lesbar.', 2800);
+      if (raus.ok) showBestList(weltId);
+    });
+  }
+
+  /* Zurücksetzen betrifft alle – darum wird deutlich gefragt, bevor etwas passiert */
+  function fragenUndZuruecksetzen(weltId) {
+    overlay(`<div class="panel">
+      <h2>Rangliste zurücksetzen?</h2>
+      <div class="sub">Alle Rekorde aller Welten werden gelöscht – <b>bei dir und bei allen anderen</b>.
+        Das lässt sich nicht rückgängig machen.</div>
+      <div class="sub warn-note">Nützlich, wenn jemand Ergebnisse eingetragen hat, die nicht stimmen.
+        Danach fangen alle wieder bei null an.</div>
+      <p style="margin-top:14px"><span class="btn ghost small" id="rs-nein">${Icons.svg('arrow_back')} Lieber nicht</span>
+        <span class="btn" id="rs-ja">Zurücksetzen</span></p>
+    </div>`, 'title');
+    $('rs-nein').addEventListener('click', () => showBestList(weltId));
+    $('rs-ja').addEventListener('click', async () => {
+      Sfx.unlock();
+      const raus = await Best.reset();
+      showBestList(weltId);
+      showMessage(!raus.ok ? 'Zurücksetzen kann nur, wer die Liste führt.'
+        : raus.gesendet ? 'Rangliste zurückgesetzt – auch bei den anderen'
+        : 'Auf diesem Gerät zurückgesetzt. Ohne Verbindung erfahren es die anderen erst später.', 3200);
+    });
+  }
+
   const BEST_ICON = { strokes: '🏆', time: '⏱', combo: '⚡' };
   function speicherGeht() {
-    try { localStorage.setItem('fantasygolf.probe', '1'); localStorage.removeItem('fantasygolf.probe'); return true; } catch (e) { return false; }
+    try { localStorage.setItem(speicherSchluessel('probe'), '1'); localStorage.removeItem(speicherSchluessel('probe')); return true; } catch (e) { return false; }
   }
   const BEST_HELP = {
     strokes: 'die Schläge einer Bahn, wie beim Golf üblich.',
@@ -441,7 +588,7 @@
     combo: 'gerechnet wie beim Speedgolf: <b>Schläge + Minuten</b>. Vier Schläge in 1:12 ergeben 4 + 1,2 = <b>5,2</b>. Wer trödelt, verliert – wer wild drauflos schlägt, aber auch.',
   };
 
-  /* ---------- Bestenliste ----------
+  /* ---------- Rangliste ----------
      Gewertet wird der eigene Ball im Wettkampf: am Gerät Spieler 1, online der eigene Platz.
      Im Kreativmodus zählt nichts, weil man dort beliebig oft neu setzen darf. */
   const myIndex = () => (online && online.started) ? online.players.findIndex(p => p.id === Net.id) : 0;
@@ -523,7 +670,7 @@
   function leaveOnline() {
     clearInterval(beatT); clearInterval(watchT); beatT = null; watchT = null;
     if (online) { netSend({ t: 'bye' }); Net.leaveRoom(); }
-    online = null;                      // die Verbindung bleibt für die Bestenliste bestehen
+    online = null;                      // die Verbindung bleibt für die Rangliste bestehen
   }
   function onlineLost(text) { leaveOnline(); showOnline(text); }
 
@@ -1084,7 +1231,7 @@
   function showFinal() {
     state.phase = 'final'; clearTimeout(msgTimer); ui.msg.classList.remove('visible'); // keine Laufmeldung über der Tafel
     const parTotal = state.courses.reduce((a, c) => a + c.par, 0);
-    // eigene Runde in die Bestenliste
+    // eigene Runde in die Rangliste
     const gewertet = state.mode !== 'creative' && !state.editorReturn;
     const gesamtZeit = p => (p.times || []).reduce((a, b) => a + (b || 0), 0);
     let roundRec = [];
@@ -1392,8 +1539,23 @@
 
   Best.onChange(recordFromFriend);
   Best.start();                         // Rekorde im Hintergrund holen
+  Share.start();                        // geteilte Bahnen der anderen mitbekommen
+  // Die eigenen geteilten Bahnen erneut anbieten – der Vermittler kann sie zwischendurch verloren haben
+  setTimeout(() => { if (Share.eigeneIds.length) Share.sende(editor.loadCustoms(), Best.name); }, 1800);
+  // Steckt eine Bahn im Anhang der Adresse (geteilter Link)? Dann anbieten.
+  Share.ausAdresse().then(bahn => {
+    Share.adresseAufraeumen();
+    if (bahn) zeigeGeteilteBahn(bahn);
+    else if (location.search.includes('bahn=')) showMessage(Share.grund || 'Der Link ließ sich nicht lesen', 2600);
+  }).catch(() => { /* kaputter Link, dann eben nicht */ });
   const editor = Editor({ state, R, $, showMessage, startTest, showWorldSelect, hideOverlay, overlay, playWorld });
   Icons.mount();                        // Platzhalter im festen HTML durch die Sinnbilder ersetzen
+  // Vorschau deutlich kennzeichnen, damit sie nie mit dem Spiel der Freunde verwechselt wird
+  if (typeof VORSCHAU !== 'undefined' && VORSCHAU) {
+    document.body.classList.add('vorschau');
+    const band = $('vorschau-band'); if (band) band.hidden = false;
+    document.title = 'VORSCHAU · ' + document.title;
+  }
   R.resize();
   setControlMode(state.controlMode);
   syncMusicBtn();

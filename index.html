@@ -16,7 +16,7 @@
        style-src 'unsafe-inline' ist nötig, weil Spielerfarben und Positionen als style-Attribut
                                am Element hängen (z. B. die Farbpunkte der Spieler). Inline-Stile
                                können keinen Code ausführen; das Risiko ist gering.
-       connect-src             nur der MQTT-Vermittler für Netzspiel und Bestenliste – und
+       connect-src             nur der MQTT-Vermittler für Netzspiel und Rangliste – und
                                localhost fürs Testen. Wer einen anderen Vermittler einträgt
                                (localStorage fantasygolf.broker), muss diese Zeile mit anpassen.
        object-src 'none', base-uri 'none', form-action 'none': verbietet eingebettete Objekte,
@@ -46,6 +46,8 @@
 </head>
 <body>
   <canvas id="game"></canvas>
+
+  <div id="vorschau-band" hidden>Vorschau – hier wird geprüft, was noch nicht im Spiel ist</div>
 
   <div id="hud">
     <div class="hud-box" id="hud-left">
@@ -100,6 +102,7 @@
   <script src="src/hats.js"></script>
   <script src="src/net.js"></script>
   <script src="src/best.js"></script>
+  <script src="src/share.js"></script>
   <script src="src/sfx.js"></script>
   <script src="src/music.js"></script>
   <script src="src/worldmap.js"></script>
