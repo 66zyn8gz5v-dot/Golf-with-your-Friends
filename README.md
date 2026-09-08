@@ -15,7 +15,7 @@ npx serve .          # oder: python3 -m http.server 8080
 
 Vom Titelbild führen zwei Wege: **🗺 Weltkarte** und **🛠 Bauen & Eigene Welt**.
 
-Auf der **Weltkarte** schwebt jede Welt als eigene Insel im Himmel – links im hellen Tag das Märchenland, rechts in der Nacht das Schattenreich. In der Mitte liegt auf einem Sockel ein goldener Ball, von dem gestrichelte goldene Wege zu allen Inseln führen. Die Inseln sind durchgehend von links oben beleuchtet: Grasdecke, Erdkante und Felsflanke mit Zacken, dazu Schlagschatten und schwebende Brocken darunter. **Jeder Ort ist von Anfang an anwählbar – nichts muss freigespielt werden.** Die Stufe am Ort ist nur ein Hinweis darauf, was einen erwartet:
+Auf der **Weltkarte** schwebt jede Welt als eigene Insel im Himmel – links im hellen Tag das Märchenland, rechts in der Nacht das Schattenreich. In der Mitte liegt auf einem Sockel ein goldener Ball, von dem gestrichelte goldene Wege zu allen Inseln führen. Die Inseln sind durchgehend von links oben beleuchtet: Grasdecke, Erdkante und Felsflanke mit Zacken, dazu Kontaktschatten, Streiflicht und schwebende Brocken darunter. Die Tiefe kommt aus drei Sachen: hintere Inseln sind kleiner, ihre Decken liegen flacher (gemeinsame Horizontlinie), und sie versinken leicht im Dunst; dazwischen ziehen Wolkenbänder durch, die vorne noch einmal die ganze Szene überlagern. **Jeder Ort ist von Anfang an anwählbar – nichts muss freigespielt werden.** Die Stufe am Ort ist nur ein Hinweis darauf, was einen erwartet:
 
 | Ort | Stufe | Bahnen |
 | --- | --- | --- |
