@@ -48,6 +48,24 @@ nur eine Zeichenfunktion in `DEFS` und einen Eintrag in `LIST`; der Nullpunkt li
 eine Einheit entspricht dem Ballradius, und die Ballmitte liegt bei (0, 0.72). Wer die Spielerfarbe braucht,
 nimmt sie als zweiten Wert der Zeichenfunktion entgegen.
 
+## Bestenliste
+
+Über **🏆 Bestenliste** im Startbildschirm: für jede Bahn die wenigsten Schläge und für jede Welt das
+beste Gesamtergebnis, mit Namen dabei. Die Liste ist über alle Geräte gleich – bricht jemand einen Rekord,
+sehen die anderen es sofort, auch mitten im Spiel („🏆 Lea: Elfenwiese in 2"). Während einer Bahn steht der
+aktuelle Rekord oben links im HUD.
+
+Einmal den eigenen Namen eintragen, mehr ist nicht nötig. Der Name gilt auch online: im Warteraum und auf
+der Punktetafel steht dann er statt „Spieler 2". Gewertet wird **der eigene Ball im Wettkampf** – am Gerät
+Spieler 1, online der eigene Platz. Der Kreativmodus zählt nicht, weil man dort beliebig oft neu setzen darf.
+
+**Wo die Rekorde liegen:** als „aufbewahrte" MQTT-Nachrichten beim Vermittler. Eine Nachricht mit
+Retain-Bit bleibt dort liegen und wird jedem zugestellt, der später zuhört – so gibt es eine gemeinsame
+Rekordtafel ohne Server. Zusätzlich hält jedes Gerät eine eigene Kopie im Browser
+(`fantasygolf.best`), damit die Liste auch ohne Verbindung sichtbar ist. Startet der Vermittler neu,
+können die Rekorde dort verloren gehen; das nächste Gerät, das sich meldet, spielt seinen Stand wieder ein.
+Der Code steht in `src/best.js`.
+
 ## Online gegeneinander
 
 Über **🌐 Online spielen** im Startbildschirm treten bis zu vier Geräte in einem Raum gegeneinander an.
@@ -92,6 +110,7 @@ Unter **Bauen & Eigene Welt** liegen der Editor und die selbst zusammengestellte
   quer auf Tablet oder Laptop wird sie steiler, damit das Feld nicht platt gedrückt wirkt.
 - Hut des eigenen Balls: in der Startaufstellung unter „Hut". Die Wahl merkt sich der Browser.
 - Online gegeneinander: **🌐 Online spielen** im Startbildschirm, Raumcode aufmachen oder eintippen.
+- Rekorde: **🏆 Bestenliste** im Startbildschirm, einmal den eigenen Namen eintragen.
 - Musik an oder aus: Knopf `♪` unten links oder Taste `J`; im Startbildschirm auch unter „Musik". Die Wahl merkt sich der Browser.
 - 1–4 Spieler im Hotseat-Modus: Jeder spielt die Bahn nacheinander zu Ende.
 - Wasser, Lava und Abgrund: Ball zurück zur letzten Position, +1 Strafschlag.
@@ -255,6 +274,7 @@ src/render.js     isometrische Darstellung
 src/render_legend.js Optik der Legende-Welten (Hintergründe, neue Hindernisse und Stile)
 src/hats.js       Hüte für die Bälle: Zeichnungen und Vorschau fürs Menü
 src/net.js        Netzspiel: Raumcode und MQTT-Zugang für das Spiel zu mehreren
+src/best.js       Bestenliste: Rekorde je Bahn und je Welt, über alle Geräte geteilt
 src/sfx.js        Klangeffekte (WebAudio)
 src/music.js      Musik: je Welt ein erzeugter Klangteppich (WebAudio)
 src/worldmap.js   Weltkarte: gezeichneter Atlas und die Orte der Welten

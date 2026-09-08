@@ -26,7 +26,7 @@
   const $ = id => document.getElementById(id);
   const ui = {
     hole: $('hud-hole'), name: $('hud-name'), player: $('hud-player'), strokes: $('hud-strokes'),
-    power: $('power'), powerFill: $('power-fill'), board: $('scoreboard'), msg: $('message'), overlay: $('overlay'), hint: $('hint'),
+    power: $('power'), powerFill: $('power-fill'), board: $('scoreboard'), msg: $('message'), overlay: $('overlay'), hint: $('hint'), best: $('hud-best'),
   };
 
   const state = {
@@ -47,7 +47,7 @@
   function syncHint() {
     const base = state.controlMode === 'push' ? 'In Schussrichtung ziehen & loslassen' : 'Vom Ball wegziehen & loslassen';
     ui.hint.textContent = (online && online.started && !myTurn())
-      ? `${(online.players[state.curPlayer] || {}).name || 'Jemand'} ist dran …`
+      ? `${seatName(online.players[state.curPlayer], state.curPlayer)} ist dran …`
       : base;
   }
   let playerCount = 1, gameMode = 'normal', msgTimer = null, waitTimer = null;
@@ -62,6 +62,9 @@
     const def = state.courses[state.holeIdx];
     ui.hole.textContent = `${state.world.short} · Bahn ${state.holeIdx + 1} / ${state.courses.length}`;
     ui.name.textContent = def ? def.name : '–';
+    // Rekordzeile: der beste Wert des Freundeskreises auf dieser Bahn
+    const rec = def && state.world && state.world.id !== 'custom' ? Best.of(state.world.id).holes[def.name] : null;
+    ui.best.textContent = rec ? `🏆 Rekord: ${rec.s} · ${rec.n}` : '';
     const p = state.players[state.curPlayer];
     ui.player.textContent = p ? p.name : '–';
     ui.strokes.textContent = def ? (state.mode === 'creative' ? `Kreativ · Schläge: ${state.strokes} · Par ${def.par}` : `Schläge: ${state.strokes} / ${maxStrokes()} · Par ${def.par}`) : '';
@@ -260,10 +263,12 @@
         <span class="btn mode" id="to-map">${WorldMap.svg('mode-scene', 'xMidYMid slice')}<span class="mode-label">Weltkarte</span></span>
         <span class="btn mode" id="to-build">${SCENE_CREATIVE}<span class="mode-label long">Bauen &amp; Eigene Welt</span></span>
       </div>
-      <div class="atlas-extra"><span class="btn small ghost" id="to-online">🌐 Online spielen</span></div>
+      <div class="atlas-extra"><span class="btn small ghost" id="to-online">🌐 Online spielen</span>
+        <span class="btn small ghost" id="to-best">🏆 Bestenliste</span></div>
       <div class="legend">Alle Welten sind von Anfang an offen. Die Stufe an jedem Ort sagt nur, was dich erwartet.</div>
     </div>`, 'title');
     $('to-online').addEventListener('click', () => { Sfx.unlock(); Music.start(); showOnline(); });
+    $('to-best').addEventListener('click', () => { Sfx.unlock(); Music.start(); showBestList(); });
     $('to-map').addEventListener('click', () => { Sfx.unlock(); Music.start(); showMap(); });
     $('to-build').addEventListener('click', () => { Sfx.unlock(); Music.start(); showBuild(); });
   }
@@ -327,6 +332,74 @@
     startGame(1, 0);
   }
 
+  /* Bestenlisten-Bildschirm: Name, Gruppencode und die Rekorde aller Welten */
+  function showBestList(worldId) {
+    state.phase = 'title'; document.body.classList.add('title');
+    document.body.classList.remove('creative', 'editing', 'testing');
+    const wid = worldId || (state.world && state.world.id !== 'custom' ? state.world.id : WORLDS[0].id);
+    const w = WORLDS.find(x => x.id === wid) || WORLDS[0];
+    const rec = Best.of(w.id);
+    const bestStatus = { status: st => { const el = $('bstate'); if (!el) return;
+      el.textContent = st === 'ready' ? 'Verbunden – alle mit dem Spiel teilen sich diese Liste.'
+        : st === 'error' ? 'Keine Verbindung – die Rekorde bleiben vorerst auf diesem Gerät.' : 'Verbinde …'; } };
+    const rows = w.courses.map((c, i) => {
+      const r = rec.holes[c.name];
+      return `<tr><td>${i + 1}</td><td>${holeIcon(c)} ${c.name}</td><td class="num">${c.par}</td>
+        <td class="num">${r ? r.s : '–'}</td><td>${r ? r.n : ''}</td></tr>`;
+    }).join('');
+    const parTotal = w.courses.reduce((a, c) => a + c.par, 0);
+    overlay(`<div class="panel wide">
+      <div class="panel-head"><span class="btn ghost small" id="back">◀ Zurück</span><h2>🏆 Bestenliste</h2></div>
+      <div class="sub">Wer braucht die wenigsten Schläge? Gewertet wird dein eigener Ball im Wettkampf.</div>
+      <p class="join-row"><label class="lbl">Dein Name<input id="bn" class="name-in" maxlength="14" autocomplete="off" spellcheck="false" placeholder="z. B. Max" value="${(Best.name || '').replace(/"/g, '&quot;')}"></label>
+        <span class="btn small" id="bsave">Merken</span></p>
+      <div class="sub net-note" id="bstate">${!Best.name ? 'Trag deinen Namen ein – ohne Namen wird nichts gewertet.'
+        : Net.status === 'ready' ? 'Verbunden – alle mit dem Spiel teilen sich diese Liste.'
+        : 'Keine Verbindung – die Rekorde bleiben vorerst auf diesem Gerät.'}</div>
+      <div id="bw" class="ow">${WORLDS.filter(x => x.id !== 'custom').map(x => `<span class="btn ghost small ${x.id === w.id ? 'sel' : ''}" data-w="${x.id}">${MODE_ICON[worldMode(x)]} ${x.short}</span>`).join('')}</div>
+      <div class="sub" style="margin-top:10px"><b>${w.name}</b> · Par ${parTotal}${rec.round ? ` · beste Runde: <b>${rec.round.s}</b> (${rec.round.n})` : ' · noch keine ganze Runde gespielt'}</div>
+      <table class="scores best-table"><tr><th>#</th><th>Bahn</th><th>Par</th><th>Rekord</th><th>von</th></tr>${rows}</table>
+      <div class="legend">Alle, die das Spiel haben, teilen sich diese Liste. Die Rekorde liegen beim Vermittler und
+        zusätzlich hier im Browser – startet der Vermittler neu, können sie dort verloren gehen.</div>
+    </div>`, 'title');
+    $('back').addEventListener('click', showTitle);
+    ui.overlay.querySelectorAll('#bw .btn').forEach(b => b.addEventListener('click', () => showBestList(b.dataset.w)));
+    $('bn').addEventListener('keydown', e => { if (e.key === 'Enter') $('bsave').click(); });
+    $('bsave').addEventListener('click', () => {
+      Sfx.unlock();
+      Best.setName($('bn').value);
+      Best.start(bestStatus);
+      showBestList(w.id);
+    });
+  }
+
+  /* ---------- Bestenliste ----------
+     Gewertet wird der eigene Ball im Wettkampf: am Gerät Spieler 1, online der eigene Platz.
+     Im Kreativmodus zählt nichts, weil man dort beliebig oft neu setzen darf. */
+  const myIndex = () => (online && online.started) ? online.players.findIndex(p => p.id === Net.id) : 0;
+  function noteRecord(score) {
+    if (state.mode === 'creative' || state.editorReturn) return;
+    if (!state.world || state.world.id === 'custom' || !Best.name) return;
+    if (state.curPlayer !== myIndex()) return;
+    const def = state.courses[state.holeIdx];
+    const hit = Best.hole(state.world.id, def.name, score);
+    if (hit) {
+      Sfx.sink();
+      showMessage(hit.old ? `🏆 Neuer Rekord! ${def.name} in ${score} (vorher ${hit.old.s})` : `🏆 Erster Eintrag: ${def.name} in ${score}`, 2400);
+    }
+  }
+  /* Ein anderes Gerät hat einen Rekord gemeldet */
+  function recordFromFriend(worldId, news) {
+    if (!news || !news.length) return;
+    if (state.phase === 'title' || state.phase === 'edit') return;
+    const w = WORLDS.find(x => x.id === worldId);
+    for (const n of news.slice(0, 1)) {
+      if (n.rec.n === Best.name) continue;   // der eigene Eintrag von einem anderen Gerät
+      showMessage(n.hole ? `🏆 ${n.rec.n}: ${n.hole} in ${n.rec.s}` : `🏆 ${n.rec.n}: ${w ? w.name : 'Welt'} gesamt ${n.rec.s}`, 2600);
+    }
+    updateHud();
+  }
+
   /* ---------- Online gegeneinander ----------
      Alle Geräte im Raum spielen dieselbe Welt reihum. Wer dran ist, ist für seinen Zug die
      verbindliche Quelle: er sagt den Schlag an, die anderen spielen ihn mit, und am Ende sagt er
@@ -339,7 +412,7 @@
   const myTurn = () => !online || !online.started || ((online.players[state.curPlayer] || {}).id === Net.id);
   const netSend = m => { if (online) Net.send(m); };
   const onlineWorlds = () => WORLDS.filter(w => w.id !== 'custom');
-  const renumber = () => online.players.forEach((p, i) => { p.name = PLAYER_NAMES[i]; });
+  const seatName = (p, i) => (p && p.nick) || PLAYER_NAMES[i];
 
   /* Einstieg: Raum aufmachen oder einem Code beitreten */
   function showOnline(note) {
@@ -371,7 +444,7 @@
   function enterRoom(code, host) {
     online = { code, host, hostId: '', players: [], started: false, world: onlineWorlds()[0].id, seen: {}, note: 'Verbinde …' };
     const id = Net.join(code, { message: netMessage, status: netStatus });
-    if (host) { online.hostId = id; online.players = [{ id, name: PLAYER_NAMES[0], hat: playerHats[0] }]; }
+    if (host) { online.hostId = id; online.players = [{ id, nick: Best.name, hat: playerHats[0] }]; }
     showLobby();
     clearInterval(beatT); clearInterval(watchT);
     beatT = setInterval(() => netSend({ t: 'alive' }), BEAT);
@@ -379,8 +452,8 @@
   }
   function leaveOnline() {
     clearInterval(beatT); clearInterval(watchT); beatT = null; watchT = null;
-    if (online) { netSend({ t: 'bye' }); Net.leave(); }
-    online = null;
+    if (online) { netSend({ t: 'bye' }); Net.leaveRoom(); }
+    online = null;                      // die Verbindung bleibt für die Bestenliste bestehen
   }
   function onlineLost(text) { leaveOnline(); showOnline(text); }
 
@@ -388,7 +461,7 @@
     if (!online) return;
     if (s === 'ready') {
       online.note = online.host ? '' : 'Suche den Raum …';
-      if (online.host) sendRoster(); else netSend({ t: 'hello', hat: playerHats[0] });
+      if (online.host) sendRoster(); else netSend({ t: 'hello', hat: playerHats[0], nick: Best.name });
     } else if (s === 'connecting') online.note = 'Verbinde …';
     else if (s === 'retry') online.note = 'Die Verbindung wackelt, ich versuche es nochmal …';
     else if (s === 'error') { onlineLost(text || 'Die Verbindung ist fehlgeschlagen.'); return; }
@@ -404,7 +477,7 @@
         if (!online.host) break;
         if (online.started) { netSend({ t: 'busy', to: m.from, why: 'Die Runde läuft schon.' }); break; }
         if (!online.players.some(p => p.id === m.from) && online.players.length < ONLINE_MAX)
-          online.players.push({ id: m.from, name: PLAYER_NAMES[online.players.length], hat: Hats.has(m.hat) ? m.hat : 'none' });
+          online.players.push({ id: m.from, nick: String(m.nick || '').slice(0, 14), hat: Hats.has(m.hat) ? m.hat : 'none' });
         sendRoster(); showLobby();
         break;
       case 'roster': {
@@ -450,7 +523,7 @@
       case 'bye':
         if (!online.host) { if (m.from === online.hostId) onlineLost('Der Gastgeber hat den Raum verlassen.'); break; }
         if (online.started) dropPlayer(m.from);
-        else { online.players = online.players.filter(p => p.id !== m.from); renumber(); sendRoster(); showLobby(); }
+        else { online.players = online.players.filter(p => p.id !== m.from); sendRoster(); showLobby(); }
         break;
     }
   }
@@ -461,7 +534,7 @@
     const now = Date.now();
     if (!online.host) {
       // solange ich nicht in der Liste stehe, melde ich mich weiter an
-      if (Net.status === 'ready' && !online.players.some(p => p.id === Net.id)) netSend({ t: 'hello', hat: playerHats[0] });
+      if (Net.status === 'ready' && !online.players.some(p => p.id === Net.id)) netSend({ t: 'hello', hat: playerHats[0], nick: Best.name });
       if (online.hostId && now - (online.seen[online.hostId] || now) > LOST) onlineLost('Der Gastgeber hat den Raum verlassen.');
       return;
     }
@@ -469,7 +542,7 @@
       if (p.id === Net.id || p.gone) continue;
       if (now - (online.seen[p.id] || now) < LOST) continue;
       if (online.started) dropPlayer(p.id);
-      else { online.players = online.players.filter(x => x.id !== p.id); renumber(); sendRoster(); showLobby(); }
+      else { online.players = online.players.filter(x => x.id !== p.id); sendRoster(); showLobby(); }
     }
   }
   function dropPlayer(id) {
@@ -477,7 +550,7 @@
     if (i < 0 || online.players[i].gone) return;
     online.players[i].gone = true;
     if (state.players[i]) state.players[i].gone = true;
-    showMessage(`${online.players[i].name} ist weg`, 1600);
+    showMessage(`${seatName(online.players[i], i)} ist weg`, 1600);
     if (state.curPlayer === i && state.phase !== 'summary' && state.phase !== 'final') skipGoneTurn();
   }
   /* Zug eines Weggegangenen: mit dem Schlaglimit werten und weiter */
@@ -496,7 +569,7 @@
     const ws = onlineWorlds();
     const seats = online.players.map((p, i) => `<div class="seat${p.id === Net.id ? ' me' : ''}">
         <canvas class="seat-ball" data-hat="${p.hat}" data-col="${PLAYER_COLORS[i]}"></canvas>
-        <b>${p.name}${p.id === online.hostId ? ' ★' : ''}</b></div>`).join('');
+        <b>${seatName(p, i)}${p.id === online.hostId ? ' ★' : ''}</b></div>`).join('');
     const free = Math.max(0, ONLINE_MAX - online.players.length);
     overlay(`<div class="panel">
       <div class="panel-head"><span class="btn ghost small" id="back">◀ Zurück</span><h2>🌐 Warteraum</h2></div>
@@ -659,7 +732,7 @@
   function startGame(n, first = 0, roster = null) {
     // roster: beim Netzspiel bringt jeder Spieler seinen eigenen Hut mit
     state.players = roster
-      ? roster.map((p, i) => ({ name: p.name, color: PLAYER_COLORS[i], hat: p.hat, scores: [], gone: !!p.gone }))
+      ? roster.map((p, i) => ({ name: seatName(p, i), color: PLAYER_COLORS[i], hat: p.hat, scores: [], gone: !!p.gone }))
       : Array.from({ length: n }, (_, i) => ({ name: PLAYER_NAMES[i], color: PLAYER_COLORS[i], hat: playerHats[i], scores: [] }));
     state.holeIdx = first;
     document.body.classList.remove('title');
@@ -749,6 +822,7 @@
       if (myTurn() && !fromNet) netSend({ t: 'done', h: state.holeIdx, pi: state.curPlayer, score, sunk: !!(state.ball && state.ball.sunk) });
     }
     state.players[state.curPlayer].scores[state.holeIdx] = score;
+    noteRecord(score);
     state.phase = 'wait'; state.aim = null; updateHud();
     clearTimeout(waitTimer);
     waitTimer = setTimeout(() => {
@@ -826,6 +900,13 @@
   function showFinal() {
     state.phase = 'final'; clearTimeout(msgTimer); ui.msg.classList.remove('visible'); // keine Laufmeldung über der Tafel
     const parTotal = state.courses.reduce((a, c) => a + c.par, 0);
+    // eigene Runde in die Bestenliste
+    let roundRec = null;
+    if (state.mode !== 'creative' && !state.editorReturn && state.world && state.world.id !== 'custom') {
+      const meP = state.players[myIndex()];
+      if (meP && meP.scores.length === state.courses.length && meP.scores.every(v => v != null))
+        roundRec = Best.round(state.world.id, meP.scores.reduce((a, b) => a + b, 0));
+    }
     const ranked = state.players.map(p => ({ p, total: p.scores.reduce((a, b) => a + b, 0) })).sort((a, b) => a.total - b.total);
     const medals = ['🥇', '🥈', '🥉', '4.'];
     const vsPar = d => d === 0 ? 'Par' : (d > 0 ? '+' : '') + d;
@@ -854,6 +935,7 @@
       ${best}
       <div class="hole-cards">${cards}</div>
       <div class="final-legend"><span class="hc-score ace">1</span> Hole-in-One <span class="hc-score eagle">–2</span> Eagle <span class="hc-score birdie">–1</span> Birdie <span class="hc-score par">0</span> Par <span class="hc-score bogey">+1</span> Bogey <span class="hc-score worse">+2</span> mehr</div>
+      ${roundRec ? `<div class="sub net-note">🏆 Neuer Rekord für ${roundRec.rec.n}: ${roundRec.rec.s} Schläge${roundRec.old ? ` (vorher ${roundRec.old.s})` : ''}</div>` : ''}
       <span class="btn" id="again">Nochmal spielen</span>
     </div>`);
     $('again').addEventListener('click', () => { hideOverlay(); leaveOnline(); showTitle(); });
@@ -1082,6 +1164,8 @@
     state, R,
   };
 
+  Best.onChange(recordFromFriend);
+  Best.start();                         // Rekorde im Hintergrund holen
   const editor = Editor({ state, R, $, showMessage, startTest, showWorldSelect, hideOverlay, overlay, playWorld });
   R.resize();
   setControlMode(state.controlMode);

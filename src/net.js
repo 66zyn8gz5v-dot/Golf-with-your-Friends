@@ -1,9 +1,14 @@
-/* Netzspiel: der Draht zwischen mehreren Browsern.
+/* Netzspiel und Bestenliste: der Draht zwischen mehreren Browsern.
 
    Das Spiel liegt als reine Dateien auf GitHub Pages, es gibt also keinen eigenen Server. Statt
-   dessen läuft der Verkehr über einen offenen MQTT-Vermittler: jeder Raum ist ein Thema, in das
-   alle Teilnehmer schreiben und aus dem alle mitlesen. Reihum gespielt sind das nur ein paar
-   kurze Nachrichten je Bahn, dafür reicht das dicke.
+   dessen läuft alles über einen offenen MQTT-Vermittler:
+
+   - Ein Spielraum ist ein Thema, in das alle Teilnehmer schreiben und aus dem alle mitlesen.
+     Reihum gespielt sind das nur ein paar kurze Nachrichten je Bahn.
+   - Die Bestenliste nutzt „aufbewahrte" Nachrichten: eine Nachricht mit gesetztem Retain-Bit
+     bleibt beim Vermittler liegen und wird jedem zugestellt, der später zuhört. So gibt es eine
+     gemeinsame Rekordtafel ohne Server. Startet der Vermittler neu, können die Rekorde
+     allerdings verloren gehen – deshalb hält jedes Gerät zusätzlich eine eigene Kopie.
 
    Der Zugang ist hier von Hand geschrieben (MQTT 3.1.1, nur QoS 0), damit keine fremde Bibliothek
    dazukommt und das Spiel eine einzelne kleine Datei bleibt.
@@ -13,7 +18,7 @@
    einsetzen, ohne am Spiel etwas zu ändern. */
 const Net = (() => {
   const BROKER = 'wss://broker.emqx.io:8084/mqtt';
-  const ROOM = code => `fantasygolf/v1/${code}`;
+  const ROOM = code => `fantasygolf/v1/room/${code}`;
   const KEEPALIVE = 45;                 // Sekunden zwischen zwei Lebenszeichen
   // Nur Ziffern: leicht durchzusagen und auf dem Handy mit der Zifferntastatur einzutippen
   const ALPHABET = '0123456789';
@@ -30,15 +35,29 @@ const Net = (() => {
   const packet = (type, flags, body) => new Uint8Array([(type << 4) | flags, ...varint(body.length), ...body]);
   const pConnect = id => packet(1, 0, [...str('MQTT'), 4, 0x02, KEEPALIVE >> 8, KEEPALIVE & 255, ...str(id)]);
   const pSubscribe = (pid, topic) => packet(8, 2, [pid >> 8, pid & 255, ...str(topic), 0]);
-  const pPublish = (topic, text) => packet(3, 0, [...str(topic), ...enc.encode(text)]);
+  const pUnsubscribe = (pid, topic) => packet(10, 2, [pid >> 8, pid & 255, ...str(topic)]);
+  const pPublish = (topic, text, retain) => packet(3, retain ? 1 : 0, [...str(topic), ...enc.encode(text)]);
   const PING = new Uint8Array([0xc0, 0x00]), BYE = new Uint8Array([0xe0, 0x00]);
 
   let ws = null, buf = new Uint8Array(0), timer = null;
-  let me = '', room = '', topic = '', status = 'off';
-  let onMsg = null, onStatus = null, tries = 0, retryT = null, wasReady = false;
+  let me = '', status = 'off', pid = 1;
+  let onStatus = null, tries = 0, retryT = null, wasReady = false;
+  const subs = new Map();               // Thema -> { handler, skipSelf }
+  let room = '';                        // aktuelles Spielraum-Thema (leer = kein Raum)
 
   const rnd = n => Array.from({ length: n }, () => ALPHABET[Math.floor(Math.random() * ALPHABET.length)]).join('');
   function setStatus(s, detail) { status = s; if (onStatus) onStatus(s, detail); }
+  /* Passt ein Thema auf ein Abo? + steht für eine Stufe, # für den Rest. */
+  function wildcardHit(filter, topic) {
+    if (filter === topic) return true;
+    const f = filter.split('/'), t = topic.split('/');
+    if (f.length !== t.length && f[f.length - 1] !== '#') return false;
+    for (let i = 0; i < f.length; i++) {
+      if (f[i] === '#') return true;
+      if (f[i] !== '+' && f[i] !== t[i]) return false;
+    }
+    return true;
+  }
 
   /* ---------- Empfangen ---------- */
   function feed(chunk) {
@@ -58,28 +77,29 @@ const Net = (() => {
   }
   function handle(type, body) {
     if (type === 2) {                                      // CONNACK
-      if (body[1] !== 0) { fail('Der Vermittler hat die Anmeldung abgelehnt'); return; }
-      ws.send(pSubscribe(1, topic));
-      return;
-    }
-    if (type === 9) {                                      // SUBACK: ab jetzt hören wir mit
+      if (body[1] !== 0) { fail('Der Vermittler hat die Anmeldung abgelehnt.'); return; }
+      for (const t of subs.keys()) ws.send(pSubscribe(pid++, t));
       tries = 0; wasReady = true; setStatus('ready');
       return;
     }
     if (type === 3) {                                      // PUBLISH
       const tl = (body[0] << 8) | body[1];
+      const topic = dec.decode(body.subarray(2, 2 + tl));
       let data;
       try { data = JSON.parse(dec.decode(body.subarray(2 + tl))); } catch (e) { return; }
-      if (!data || data.from === me) return;               // eigene Nachrichten nicht doppelt verarbeiten
-      if (onMsg) onMsg(data);
+      if (!data) return;
+      for (const [filter, s] of subs) {
+        if (!wildcardHit(filter, topic)) continue;
+        if (s.skipSelf && data.from === me) continue;
+        s.handler(data, topic);
+      }
     }
   }
 
   /* ---------- Verbinden ---------- */
   function open() {
-    const url = (() => { try { return localStorage.getItem('fantasygolf.broker') || BROKER; } catch (e) { return BROKER; } })();
     setStatus(tries ? 'retry' : 'connecting');
-    try { ws = new WebSocket(url, 'mqtt'); } catch (e) { fail('Der Vermittler ist nicht erreichbar'); return; }
+    try { ws = new WebSocket(brokerUrl(), 'mqtt'); } catch (e) { fail('Der Vermittler ist nicht erreichbar.'); return; }
     ws.binaryType = 'arraybuffer';
     ws.onopen = () => { buf = new Uint8Array(0); ws.send(pConnect('fg-' + me)); clearInterval(timer); timer = setInterval(ping, KEEPALIVE * 500); };
     ws.onmessage = e => feed(new Uint8Array(e.data));
@@ -93,33 +113,60 @@ const Net = (() => {
     clearTimeout(retryT);
     retryT = setTimeout(open, tries * 1500);
   }
-  function fail(text) { status = 'error'; if (onStatus) onStatus('error', text); close(); }
-  function close() {
+  function fail(text) { status = 'error'; if (onStatus) onStatus('error', text); shut(); }
+  function shut() {
     clearInterval(timer); timer = null; clearTimeout(retryT); retryT = null;
     if (ws) { try { if (ws.readyState === 1) ws.send(BYE); ws.close(); } catch (e) { /* schon zu */ } }
     ws = null; buf = new Uint8Array(0);
   }
+  function brokerUrl() { try { return localStorage.getItem('fantasygolf.broker') || BROKER; } catch (e) { return BROKER; } }
 
   return {
-    /* Neuen Raumcode würfeln – vier Ziffern, gut durchzusagen */
+    /* Neuen Code würfeln – vier Ziffern, gut durchzusagen */
     makeCode: () => rnd(4),
-    /* Raum betreten. handlers: { message(obj), status(zustand, text) } */
-    join(code, handlers) {
-      close();
-      me = rnd(10); room = String(code || '').toUpperCase(); topic = ROOM(room); wasReady = false;
-      onMsg = handlers.message; onStatus = handlers.status; tries = 0;
+
+    /* Verbindung herstellen, falls noch keine steht. Mehrfach aufrufen ist harmlos. */
+    connect(handlers) {
+      if (handlers && handlers.status) onStatus = handlers.status;
+      if (!me) me = rnd(10);
+      if (ws && (ws.readyState === 0 || ws.readyState === 1)) {
+        if (status === 'ready' && onStatus) onStatus('ready');
+        return me;
+      }
+      tries = 0; wasReady = false; status = 'off';
       open();
       return me;
     },
-    /* Nachricht an alle im Raum. Der eigene Absender hängt automatisch dran. */
-    send(obj) {
-      if (!ws || ws.readyState !== 1 || status !== 'ready') return false;
-      try { ws.send(pPublish(topic, JSON.stringify(Object.assign({ from: me }, obj)))); return true; } catch (e) { return false; }
+    /* Thema abonnieren. skipSelf blendet die eigenen Nachrichten aus (für Spielräume). */
+    sub(topic, handler, opts = {}) {
+      subs.set(topic, { handler, skipSelf: opts.skipSelf !== false });
+      if (ws && ws.readyState === 1 && status === 'ready') ws.send(pSubscribe(pid++, topic));
     },
-    leave() { status = 'off'; close(); onMsg = null; onStatus = null; room = ''; },
+    unsub(topic) {
+      if (!subs.delete(topic)) return;
+      if (ws && ws.readyState === 1) ws.send(pUnsubscribe(pid++, topic));
+    },
+    /* Nachricht senden. retain = beim Vermittler liegen lassen (für die Bestenliste). */
+    pub(topic, obj, retain = false) {
+      if (!ws || ws.readyState !== 1 || status !== 'ready') return false;
+      try { ws.send(pPublish(topic, JSON.stringify(Object.assign({ from: me }, obj)), retain)); return true; } catch (e) { return false; }
+    },
+
+    /* ---------- Spielraum ---------- */
+    join(code, handlers) {
+      const id = this.connect(handlers);
+      if (room) this.unsub(room);
+      room = ROOM(String(code || ''));
+      this.sub(room, handlers.message, { skipSelf: true });
+      return id;
+    },
+    send(obj) { return room ? this.pub(room, obj) : false; },
+    leaveRoom() { if (room) { this.unsub(room); room = ''; } },
+    /* Alles beenden – auch die Bestenliste */
+    leave() { status = 'off'; room = ''; subs.clear(); shut(); onStatus = null; },
+
     get id() { return me; },
-    get code() { return room; },
     get status() { return status; },
-    get broker() { try { return localStorage.getItem('fantasygolf.broker') || BROKER; } catch (e) { return BROKER; } },
+    get broker() { return brokerUrl(); },
   };
 })();
