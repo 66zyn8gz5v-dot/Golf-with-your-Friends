@@ -33,15 +33,20 @@ Nach dem Antippen eines Ortes folgt die Startaufstellung mit **Modus**, **Spiele
 
 ### Hüte
 
-Jeder Spieler sucht sich vor dem Spiel einen Hut für seinen Ball aus: **Krone**, **Zauberhut**, **Piratenhut**,
+Die vier Bälle sind weiß, grün, hellblau und gelb. Jeder Spieler sucht sich vor dem Spiel einen Hut für seinen Ball aus: **Krone**, **Zauberhut**, **Piratenhut**,
 **Zylinder**, **Kappe**, **Wikingerhelm**, **Ritterhelm**, **Partyhut**, **Strohhut**, **Teufelshörner**,
 **Blumenkranz** – oder **Ohne** für den blanken Ball. Die Vorschau in der Startaufstellung zeigt den Ball
 gleich in der Farbe des jeweiligen Spielers; bei mehreren Spielern wird oben umgeschaltet, für wen gerade
 gewählt wird. Die Wahl merkt sich der Browser, und in der Anzeigetafel steht neben jedem Spieler sein Hut.
 
+Der **Ritterhelm** ist ein Sonderfall: er legt sich um den ganzen Ball, als wäre der Ball der Kopf, und trägt
+einen Federbusch wie bei den Feldherren. Die beiden äußeren Federn nehmen die Farbe des Balls an (beim weißen
+Ball Rot), die mittlere bleibt immer weiß.
+
 Die Hüte werden in `src/hats.js` gezeichnet – reine Canvas-Pfade, keine Bilddateien. Ein neuer Hut braucht
 nur eine Zeichenfunktion in `DEFS` und einen Eintrag in `LIST`; der Nullpunkt liegt auf dem Kopf des Balls,
-eine Einheit entspricht dem Ballradius.
+eine Einheit entspricht dem Ballradius, und die Ballmitte liegt bei (0, 0.72). Wer die Spielerfarbe braucht,
+nimmt sie als zweiten Wert der Zeichenfunktion entgegen.
 
 Unter **Bauen & Eigene Welt** liegen der Editor und die selbst zusammengestellte eigene Welt. Neue Themenwelten werden in `WORLDS` (in `src/courses_pro.js`) eingehängt und bekommen in `src/worldmap.js` einen Ort auf der Karte.
 

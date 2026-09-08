@@ -24,6 +24,59 @@ const Hats = (() => {
     ctx.quadraticCurveTo(x - r * 0.18, y - r * 0.18, x, y - r);
     ctx.fillStyle = col; ctx.fill();
   }
+  /* Federfarbe aus der Ballfarbe: der Federbusch nimmt die Farbe des Spielers an. Ein (fast) weißer
+     Ball bekommt Rot, sonst ginge der Busch in der weißen Mittelfeder unter. */
+  function plumeColors(color) {
+    const n = parseInt((typeof color === 'string' && color[0] === '#' ? color : '#ffffff').slice(1), 16);
+    const hell = Math.min((n >> 16) & 255, (n >> 8) & 255, n & 255) > 200;
+    const base = hell ? '#e0483c' : color;
+    return [dim(base, 0.6), dim(base, 1.15)];
+  }
+  /* Straußenfeder wie am Helm eines Feldherrn: der Kiel ist eine Bezierkurve, links und rechts
+     liegt die Fahne an, deren Rand leicht wellt – nahe am Ansatz breit, zur Spitze auslaufend. */
+  function plume(ctx, p0, c1, c2, p3, wMax, col, colTip) {
+    const N = 30;
+    const at = t => {
+      const u = 1 - t, a = u * u * u, b = 3 * u * u * t, c = 3 * u * t * t, d = t * t * t;
+      return [a * p0[0] + b * c1[0] + c * c2[0] + d * p3[0], a * p0[1] + b * c1[1] + c * c2[1] + d * p3[1]];
+    };
+    const wid = (t, s) => wMax * Math.pow(Math.sin(Math.PI * Math.pow(t, 0.55)), 0.55) * (1 + 0.055 * Math.sin(t * 62 + (s > 0 ? 0 : 1.7)) + 0.03 * Math.sin(t * 107));
+    const side = s => {
+      const pts = [];
+      for (let i = 0; i <= N; i++) {
+        const t = i / N, [x, y] = at(t);
+        const [x1, y1] = at(Math.max(0, t - 0.02)), [x2, y2] = at(Math.min(1, t + 0.02));
+        const dx = x2 - x1, dy = y2 - y1, l = Math.hypot(dx, dy) || 1, w = wid(t, s);
+        pts.push([x - (dy / l) * w * s, y + (dx / l) * w * s]);
+      }
+      return pts;
+    };
+    ctx.beginPath();
+    side(1).forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y));
+    side(-1).reverse().forEach(([x, y]) => ctx.lineTo(x, y));
+    ctx.closePath();
+    const g = ctx.createLinearGradient(p0[0], p0[1], p3[0], p3[1]);
+    g.addColorStop(0, col); g.addColorStop(1, colTip);
+    ctx.fillStyle = g; ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.22)'; ctx.lineWidth = 0.05; ctx.stroke();
+    // Kiel, dazu feine Fahnenstrahlen, die schräg zur Spitze zeigen
+    ctx.strokeStyle = 'rgba(0,0,0,0.2)'; ctx.lineWidth = 0.04;
+    ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.bezierCurveTo(c1[0], c1[1], c2[0], c2[1], p3[0], p3[1]); ctx.stroke();
+    ctx.strokeStyle = 'rgba(0,0,0,0.09)'; ctx.lineWidth = 0.018;
+    ctx.beginPath();
+    for (let i = 1; i < 22; i++) {
+      const t = i / 22, [x, y] = at(t);
+      const [x1, y1] = at(t - 0.02), [x2, y2] = at(Math.min(1, t + 0.02));
+      const dx = x2 - x1, dy = y2 - y1, l = Math.hypot(dx, dy) || 1;
+      for (const s of [1, -1]) {
+        const w = wid(t, s);
+        ctx.moveTo(x + (dx / l) * w * 0.25, y + (dy / l) * w * 0.25);
+        ctx.lineTo(x - (dy / l) * w * 0.6 * s + (dx / l) * w * 1.6, y + (dx / l) * w * 0.6 * s + (dy / l) * w * 1.6);
+      }
+    }
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(0,0,0,0.4)'; ctx.lineWidth = 0.07;
+  }
   /* eine Blüte aus fünf Blättern mit gelber Mitte */
   function bloom(ctx, x, y, r, col) {
     ctx.fillStyle = col;
@@ -134,29 +187,47 @@ const Hats = (() => {
       fs(ctx, '#9aa3b0'); // Nasenschutz
     },
 
-    knight(ctx) { // Ritterhelm mit Federbusch
-      ctx.beginPath(); // Federbusch
-      ctx.moveTo(0.06, -0.8);
-      ctx.quadraticCurveTo(0.68, -1.5, 0.2, -1.96);
-      ctx.quadraticCurveTo(0.06, -1.52, -0.36, -1.16);
-      ctx.quadraticCurveTo(-0.22, -0.86, 0.06, -0.8);
-      ctx.closePath();
-      const gp = ctx.createLinearGradient(-0.2, -0.9, 0.3, -1.8);
-      gp.addColorStop(0, '#9e2b2b'); gp.addColorStop(1, '#e8544c');
-      fs(ctx, gp);
+    knight(ctx, color) { // Ritterhelm: legt sich um den ganzen Ball, als wäre er der Kopf
+      // Federbusch wie bei den Feldherren: drei Straußenfedern fächern auf, die helle steht mittig.
+      // Die beiden äußeren tragen die Farbe des Balls, die mittlere bleibt immer weiß.
+      const [fDunkel, fHell] = plumeColors(color);
+      plume(ctx, [-0.08, -0.3], [-0.55, -0.72], [-1.12, -0.94], [-1.02, -1.56], 0.32, fDunkel, fHell);
+      plume(ctx, [0.08, -0.3], [0.56, -0.7], [1.14, -0.9], [1.04, -1.5], 0.32, fDunkel, fHell);
+      plume(ctx, [0, -0.34], [-0.3, -1.06], [0.38, -1.5], [0.12, -2.08], 0.36, '#d8cfba', '#ffffff');
+      // Helmglocke: umschließt den Ball bis kurz über den Boden, unten schaut ein Rest Ball heraus
       ctx.beginPath();
-      ctx.moveTo(-0.7, 0.28); ctx.lineTo(-0.72, -0.44);
-      ctx.quadraticCurveTo(-0.62, -0.98, 0, -0.98);
-      ctx.quadraticCurveTo(0.62, -0.98, 0.72, -0.44);
-      ctx.lineTo(0.7, 0.28); ctx.closePath();
-      const g = ctx.createLinearGradient(-0.7, 0, 0.7, -0.5);
-      g.addColorStop(0, '#79808d'); g.addColorStop(0.42, '#c2c9d4'); g.addColorStop(1, '#6d747f');
+      ctx.moveTo(-1.06, 0.86);
+      ctx.bezierCurveTo(-1.13, 0.14, -0.8, -0.4, 0, -0.4);
+      ctx.bezierCurveTo(0.8, -0.4, 1.13, 0.14, 1.06, 0.86);
+      ctx.bezierCurveTo(0.99, 1.24, 0.56, 1.4, 0, 1.4);
+      ctx.bezierCurveTo(-0.56, 1.4, -0.99, 1.24, -1.06, 0.86);
+      ctx.closePath();
+      const g = ctx.createLinearGradient(-1.06, 0, 1.06, 0);
+      g.addColorStop(0, '#5c6371'); g.addColorStop(0.26, '#aeb7c4'); g.addColorStop(0.46, '#e2e8f0');
+      g.addColorStop(0.72, '#939bab'); g.addColorStop(1, '#565d6b');
       fs(ctx, g);
+      // Kamm über die Mitte
+      ctx.beginPath(); ctx.ellipse(0, 0.1, 0.16, 0.52, 0, 0, TAU2);
+      ctx.fillStyle = 'rgba(255,255,255,0.22)'; ctx.fill();
+      // Sehschlitz mit Braue darüber
+      ctx.fillStyle = '#1b2029';
+      ctx.beginPath(); ctx.ellipse(0, 0.36, 0.74, 0.13, 0, 0, TAU2); ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.45)'; ctx.lineWidth = 0.06;
+      ctx.beginPath(); ctx.ellipse(0, 0.42, 0.8, 0.42, 0, Math.PI + 0.35, TAU2 - 0.35); ctx.stroke();
+      // Luftschlitze im Visier
       ctx.fillStyle = '#232833';
-      ctx.fillRect(-0.56, -0.42, 1.12, 0.15); // Sehschlitz
-      ctx.fillRect(-0.1, -0.15, 0.2, 0.34);   // Luftschlitz
-      ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 0.05;
-      ctx.beginPath(); ctx.moveTo(-0.34, -0.72); ctx.quadraticCurveTo(-0.2, -0.86, 0.02, -0.86); ctx.stroke();
+      for (const [x, h] of [[-0.34, 0.3], [-0.12, 0.36], [0.12, 0.36], [0.34, 0.3]]) {
+        ctx.beginPath(); ctx.ellipse(x, 0.82, 0.055, h / 2, 0, 0, TAU2); ctx.fill();
+      }
+      // Nietenreihe am unteren Rand
+      ctx.fillStyle = 'rgba(60,66,78,0.9)';
+      for (let i = -2; i <= 2; i++) {
+        const a = i * 0.5;
+        ctx.beginPath(); ctx.arc(Math.sin(a) * 0.86, 1.16 - (1 - Math.cos(a)) * 0.85, 0.055, 0, TAU2); ctx.fill();
+      }
+      // goldene Fassung, aus der die Federn wachsen
+      ctx.strokeStyle = 'rgba(0,0,0,0.4)'; ctx.lineWidth = 0.07;
+      ctx.beginPath(); ctx.ellipse(0, -0.32, 0.22, 0.12, 0, 0, TAU2); fs(ctx, '#e0b84a');
     },
 
     party(ctx) { // Partyhut mit Streifen und Bommel
@@ -230,7 +301,7 @@ const Hats = (() => {
   const byId = id => LIST.find(h => h.id === id);
 
   /* Hut auf einen Ball zeichnen: (cx, cy) ist die Ballmitte auf dem Schirm, r sein Radius */
-  function draw(ctx, id, cx, cy, r) {
+  function draw(ctx, id, cx, cy, r, color) {
     const d = DEFS[id];
     if (!d || id === 'none' || r < 1) return;
     ctx.save();
@@ -238,7 +309,7 @@ const Hats = (() => {
     ctx.scale(r, r);
     ctx.lineJoin = 'round'; ctx.lineCap = 'round';
     ctx.lineWidth = 0.07; ctx.strokeStyle = 'rgba(0,0,0,0.4)';
-    d(ctx);
+    d(ctx, color);
     ctx.restore();
   }
 
@@ -250,7 +321,7 @@ const Hats = (() => {
     cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, w, h);
-    const r = w * 0.24, cx = w / 2, cy = h * 0.74;
+    const r = w * 0.21, cx = w / 2, cy = h * 0.76; // etwas kleiner, damit auch der hohe Federbusch ins Bild passt
     ctx.beginPath(); ctx.ellipse(cx, cy + r * 1.05, r * 1.05, r * 0.3, 0, 0, TAU2);
     ctx.fillStyle = 'rgba(0,0,0,0.28)'; ctx.fill();
     const g = ctx.createRadialGradient(cx - r * 0.35, cy - r * 0.4, r * 0.1, cx, cy, r);
@@ -258,7 +329,7 @@ const Hats = (() => {
     ctx.beginPath(); ctx.arc(cx, cy, r, 0, TAU2);
     ctx.fillStyle = g; ctx.fill();
     ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 1; ctx.stroke();
-    draw(ctx, id, cx, cy, r);
+    draw(ctx, id, cx, cy, r, color);
   }
 
   return {

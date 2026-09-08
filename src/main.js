@@ -5,7 +5,7 @@
   const MAX_DRAG = 4.2;      // Zieh-Länge (Weltkoordinaten) für volle Kraft
   const DEFAULT_MAX_STROKES = 15; // danach wird die Bahn automatisch beendet (pro Bahn per maxStrokes überschreibbar)
   const maxStrokes = () => state.mode === 'creative' ? Infinity : (state.courses[state.holeIdx].maxStrokes || DEFAULT_MAX_STROKES);
-  const PLAYER_COLORS = ['#ffffff', '#ff6b6b', '#4dd4ff', '#ffe066'];
+  const PLAYER_COLORS = ['#ffffff', '#5ce07a', '#4dd4ff', '#ffe066'];
   const PLAYER_NAMES = ['Spieler 1', 'Spieler 2', 'Spieler 3', 'Spieler 4'];
   /* Hut je Spieler: die Wahl merkt sich der Browser, damit sie beim nächsten Mal wieder dasteht */
   const DEFAULT_HATS = ['crown', 'pirate', 'wizard', 'party'];
