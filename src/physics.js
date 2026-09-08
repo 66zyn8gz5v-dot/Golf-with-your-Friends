@@ -124,7 +124,7 @@ function stepPhysics(level, ball, dt, t, allowForces) {
   }
   const px = ball.x, py = ball.y;
   ball.x += ball.vx * dt; ball.y += ball.vy * dt;
-  if (level.hasHeights) { // eine Stufe hinauf geht nur über eine Rampe – sonst wirkt die Kante wie eine Mauer
+  if (level.hasHeights && !ball.air) { // eine Stufe hinauf geht nur über eine Rampe – sonst wirkt die Kante wie eine Mauer; ein fliegender Ball setzt über
     const tx0 = Math.floor(px), ty0 = Math.floor(py), tx1 = Math.floor(ball.x), ty1 = Math.floor(ball.y);
     if ((tx0 !== tx1 || ty0 !== ty1) && level.cellH(tx1, ty1) > level.cellH(tx0, ty0) + 0.01 && !level.slopeAt(px, py) && !level.slopeAt(ball.x, ball.y)) {
       if (tx0 !== tx1) { ball.x = px; ball.vx = -ball.vx * 0.5; }

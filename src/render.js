@@ -1527,6 +1527,18 @@ class Renderer {
     } else if (ob.style === 'stormcloud') { this.drawStormCloud(ctx, ob, t); return;
     } else if (ob.style === 'cloud') {
       this.isoEllipse(ctx, ob.x, ob.y, 0.2, ob.w * 0.6, '#ffffff');
+    } else if (ob.style === 'coffin') { // Totenfähre: ein Sarg als Floß, violette Laterne am Bug
+      const L = ob.w * 0.8, Wd = ob.h * 0.42, bob = 0.04 * Math.sin(t * 1.8 + ob.x);
+      const hull = [[ob.x - L, ob.y - Wd * 0.55], [ob.x - L * 0.55, ob.y - Wd], [ob.x + L * 0.7, ob.y - Wd], [ob.x + L, ob.y - Wd * 0.5], [ob.x + L, ob.y + Wd * 0.5], [ob.x + L * 0.7, ob.y + Wd], [ob.x - L * 0.55, ob.y + Wd], [ob.x - L, ob.y + Wd * 0.55]];
+      this.prism(ctx, hull, bob, 0.42, '#3a2a48', '#1c1428', { outline: '#0c0812' });
+      this.fillPoly(ctx, hull.map(([px, py]) => [ob.x + (px - ob.x) * 0.82, ob.y + (py - ob.y) * 0.8]), bob + 0.43, '#2a1e3a', false);
+      ctx.strokeStyle = '#6a5a8a'; ctx.lineWidth = Math.max(1, s * 0.035); // Beschlag als Kreuz auf dem Deckel
+      const [c0, c1] = this.proj(ob.x - L * 0.15, ob.y, bob + 0.45), [c2, c3] = this.proj(ob.x + L * 0.45, ob.y, bob + 0.45), [c4, c5] = this.proj(ob.x + L * 0.05, ob.y - Wd * 0.55, bob + 0.45), [c6, c7] = this.proj(ob.x + L * 0.05, ob.y + Wd * 0.55, bob + 0.45);
+      ctx.beginPath(); ctx.moveTo(c0, c1); ctx.lineTo(c2, c3); ctx.moveTo(c4, c5); ctx.lineTo(c6, c7); ctx.stroke();
+      const [lx, ly] = this.proj(ob.x + L * 0.85, ob.y, bob + 1.0), gl = 0.6 + 0.3 * Math.sin(t * 5 + ob.x);
+      ctx.strokeStyle = '#2a2238'; ctx.lineWidth = Math.max(1.5, s * 0.05); const [p0, p1] = this.proj(ob.x + L * 0.85, ob.y, bob + 0.45); ctx.beginPath(); ctx.moveTo(p0, p1); ctx.lineTo(lx, ly); ctx.stroke();
+      const g = ctx.createRadialGradient(lx, ly, 0, lx, ly, s * 0.45); g.addColorStop(0, `rgba(200,130,255,${0.7 * gl})`); g.addColorStop(1, 'rgba(160,80,255,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(lx, ly, s * 0.45, 0, TAU); ctx.fill();
+      ctx.fillStyle = ob.docked ? '#c9a0ff' : '#8a3bff'; ctx.beginPath(); ctx.arc(lx, ly, s * 0.09, 0, TAU); ctx.fill();
     } else if (ob.style === 'boat') { // Ruderboot
       const d = ob.dir || 1, L = ob.w * 0.75, Wd = ob.h * 0.42, bob = 0.04 * Math.sin(t * 2.2 + ob.x);
       const hull = [[ob.x - L, ob.y - Wd * 0.4], [ob.x - L * 0.6, ob.y - Wd], [ob.x + L * 0.6, ob.y - Wd], [ob.x + L, ob.y - Wd * 0.4], [ob.x + L, ob.y + Wd * 0.4], [ob.x + L * 0.6, ob.y + Wd], [ob.x - L * 0.6, ob.y + Wd], [ob.x - L, ob.y + Wd * 0.4]];

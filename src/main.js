@@ -350,7 +350,7 @@
     Strandbucht: '🏖️', Muschelriff: '🐚', Fischerpier: '🎣', Krakengrotte: '🐙', Piratendeck: '🏴‍☠️', Leuchtturmfelsen: '🗼', Schiffswrack: '🚢', Perlengrotte: '🦪', Sturmsee: '🌊', Haifischbucht: '🦈',
     Mühlenwiese: '🌾', Nebelmoor: '🌫️', Zwergenkanone: '💣', Korallenriff: '🪸', Uhrwerk: '⚙️', Piratenbucht: '⚓', Hexenküche: '🧪', Sultanspalast: '🕌', Pyramide: '🔺',
     Urwaldpfad: '🌿', Affenbrücke: '🐒', Krokodilfluss: '🐊', Stachelpfad: '🗡️', Felskugelschlucht: '🪨', Treibsandbecken: '⏳', Totemplatz: '🗿', Wasserfallterrassen: '💧', 'Der Tempel': '🏛️',
-    Friedhofspforte: '🪦', Rabenfriedhof: '🐦‍⬛', Fallbeilgasse: '🔪', Irrlichtsumpf: '🕯️', Ritterhalle: '⚔️', Knochenbrücke: '🦴', Schattenschloss: '🏰', 'Turm des Auges': '👁️', Totenschiff: '☠️' };
+    Friedhofspforte: '🪦', Knochensteg: '🦴', Fallbeilgasse: '🔪', Rabenschlucht: '🐦‍⬛', Ritterhalle: '⚔️', Totenfähre: '⚰️', 'Turm des Auges': '👁️', Schattenschloss: '🏰', 'Gruft der Sensen': '🕯️', 'Herz der Finsternis': '🖤' };
   const THEME_ICONS = { meadow: '🌼', mushroom: '🍄', forge: '⚒️', forest: '🌲', dragon: '🐉', ice: '❄️', sky: '☁️', witch: '🧙', castle: '🏰', harbor: '⚓', reef: '🐠', clockwork: '⚙️', palace: '🕌', desert: '🏜️', tomb: '⚱️', deck: '🏴‍☠️', wreck: '🚢', belly: '🦈', jungle: '🌴', temple: '🗿', hut: '🧪', storm: '⛈️', fortress: '🏯', shadow: '🌑', throne: '👑', darksea: '🌊', ghostship: '⚓' };
   const holeIcon = def => HOLE_ICONS[def.name] || THEME_ICONS[def.theme] || '⛳';
   const worldClass = () => 'world-' + ((state.world && state.world.id) || 'custom');
