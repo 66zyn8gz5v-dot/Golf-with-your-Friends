@@ -15,7 +15,7 @@ npx serve .          # oder: python3 -m http.server 8080
 
 Vom Titelbild führen zwei Wege: **🗺 Weltkarte** und **🛠 Bauen & Eigene Welt**.
 
-Auf der **Weltkarte** liegen alle Welten als Orte in einem gezeichneten Atlas, der von links (heller Tag im Märchenland) nach rechts (Nacht im Schattenreich) wandert; ein gestrichelter Reiseweg verbindet sie. **Jeder Ort ist von Anfang an anwählbar – nichts muss freigespielt werden.** Die Stufe am Ort ist nur ein Hinweis darauf, was einen erwartet:
+Auf der **Weltkarte** schwebt jede Welt als eigene Insel im Himmel – links im hellen Tag das Märchenland, rechts in der Nacht das Schattenreich. In der Mitte liegt auf einem Sockel ein goldener Ball, von dem gestrichelte goldene Wege zu allen Inseln führen. Die Inseln sind durchgehend von links oben beleuchtet: Grasdecke, Erdkante und Felsflanke mit Zacken, dazu Schlagschatten und schwebende Brocken darunter. **Jeder Ort ist von Anfang an anwählbar – nichts muss freigespielt werden.** Die Stufe am Ort ist nur ein Hinweis darauf, was einen erwartet:
 
 | Ort | Stufe | Bahnen |
 | --- | --- | --- |
@@ -277,7 +277,7 @@ src/net.js        Netzspiel: Raumcode und MQTT-Zugang für das Spiel zu mehreren
 src/best.js       Bestenliste: Rekorde je Bahn und je Welt, über alle Geräte geteilt
 src/sfx.js        Klangeffekte (WebAudio)
 src/music.js      Musik: je Welt ein erzeugter Klangteppich (WebAudio)
-src/worldmap.js   Weltkarte: gezeichneter Atlas und die Orte der Welten
+src/worldmap.js   Weltkarte: die schwebenden Inseln und die Orte der Welten
 src/title.js      animierte Startbildschirm-Szene mit Tag-Nacht-Wechsel
 src/main.js       Spielablauf, Eingabe, Punkte
 ```
