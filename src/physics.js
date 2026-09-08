@@ -160,10 +160,11 @@ function stepPhysics(level, ball, dt, t, allowForces) {
     const cdx = ball.x - level.cup.x, cdy = ball.y - level.cup.y;
     const cd = Math.hypot(cdx, cdy);
     sp = Math.hypot(ball.vx, ball.vy);
-    if (cd < 0.62 && sp < 7.5 && sp > 0.01) { // leichte Anziehung am Lochrand
-      ball.vx -= (cdx / cd) * 9 * dt; ball.vy -= (cdy / cd) * 9 * dt;
+    const cr = level.cup.r || 0.42, pullR = level.cup.pull || 0.62, pullF = 9 * pullR / 0.62;
+    if (cd < pullR && sp < 7.5 && sp > 0.01) { // leichte Anziehung am Lochrand
+      ball.vx -= (cdx / cd) * pullF * dt; ball.vy -= (cdy / cd) * pullF * dt;
     }
-    if (cd < 0.42 && sp < 7.5) { events.push({ type: 'sunk' }); return events; }
+    if (cd < cr && sp < 7.5) { events.push({ type: 'sunk' }); return events; }
   }
 
   // Hindernisse / Aus

@@ -3,7 +3,7 @@
    die Gruft der Sensen und zuletzt das Herz der Finsternis. Neue Tiere und Geräte: Riesenfledermaus, Basilisk (Riesenarmbrust). */
 const SHADOW_COURSES = [
   {
-    name: 'Friedhofspforte', par: 3, theme: 'shadow', maxStrokes: 15, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Tiefe gestürzt', spiked: 'Von Knochenstacheln aufgespießt', shark: 'Von der Riesenfledermaus gepackt!' },
+    name: 'Friedhofspforte', par: 3, theme: 'shadow', maxStrokes: 15, cupR: 0.56, cupPull: 1.0, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Tiefe gestürzt', spiked: 'Von Knochenstacheln aufgespießt', shark: 'Von der Riesenfledermaus gepackt!' },
     views: [{ x: 2, y: 10, w: 11, h: 2, look: { x: 14, y: 10.5 } }, { x: 13, y: 6, w: 2, h: 6, look: { x: 14, y: 4.5 } }, { x: 13, y: 4, w: 14, h: 2, look: { x: 25.5, y: 4.5 } }],
     map: [
       '..............................',
@@ -39,7 +39,7 @@ const SHADOW_COURSES = [
     autoDecor: { density: 0.2, seed: 601 },
   },
   {
-    name: 'Knochensteg', par: 4, theme: 'shadow', maxStrokes: 18, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Tiefe gestürzt', spiked: 'Von Knochenstacheln aufgespießt', shark: 'Von der Riesenfledermaus gepackt!' },
+    name: 'Knochensteg', par: 4, theme: 'shadow', maxStrokes: 18, cupR: 0.56, cupPull: 1.0, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Tiefe gestürzt', spiked: 'Von Knochenstacheln aufgespießt', shark: 'Von der Riesenfledermaus gepackt!' },
     views: [{ x: 2, y: 6, w: 4, h: 4, look: { x: 14, y: 7.5 } }, { x: 6, y: 7, w: 8, h: 2, look: { x: 14.5, y: 7.5 } }, { x: 14, y: 5, w: 2, h: 4, look: { x: 14.5, y: 3.5 } }, { x: 14, y: 3, w: 11, h: 2, look: { x: 26, y: 3.5 } }],
     map: [
       '..................................',
@@ -80,7 +80,7 @@ const SHADOW_COURSES = [
     autoDecor: { density: 0.12, seed: 603 },
   },
   {
-    name: 'Fallbeilgasse', par: 4, theme: 'shadow', maxStrokes: 18, hStep: 0.5, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Tiefe gestürzt', spiked: 'Von Knochenstacheln aufgespießt', shark: 'Von der Riesenfledermaus gepackt!' },
+    name: 'Fallbeilgasse', par: 4, theme: 'shadow', maxStrokes: 18, hStep: 0.5, cupR: 0.56, cupPull: 1.0, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Tiefe gestürzt', spiked: 'Von Knochenstacheln aufgespießt', shark: 'Von der Riesenfledermaus gepackt!' },
     views: [{ x: 2, y: 5, w: 12, h: 2, look: { x: 15, y: 5.5 } }, { x: 14, y: 5, w: 10, h: 2, look: { x: 25, y: 5.5 } }, { x: 24, y: 5, w: 10, h: 2, look: { x: 32.5, y: 5.5 } }],
     map: [
       '....................................',
@@ -129,7 +129,7 @@ const SHADOW_COURSES = [
     autoDecor: { density: 0.15, seed: 605 },
   },
   {
-    name: 'Rabenschlucht', par: 4, theme: 'shadow', maxStrokes: 18, hStep: 0.55, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Tiefe gestürzt', spiked: 'Von Knochenstacheln aufgespießt', shark: 'Von der Riesenfledermaus gepackt!' },
+    name: 'Rabenschlucht', par: 4, theme: 'shadow', maxStrokes: 18, hStep: 0.55, cupR: 0.56, cupPull: 1.0, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Tiefe gestürzt', spiked: 'Von Knochenstacheln aufgespießt', shark: 'Von der Riesenfledermaus gepackt!' },
     views: [{ x: 2, y: 2, w: 4, h: 4, look: { x: 16, y: 4 } }, { x: 6, y: 3, w: 21, h: 3, look: { x: 28, y: 4 } }, { x: 27, y: 2, w: 6, h: 6, look: { x: 30.5, y: 3.5 } }],
     map: [
       '....................................',
@@ -175,7 +175,7 @@ const SHADOW_COURSES = [
     autoDecor: { density: 0.14, seed: 607 },
   },
   {
-    name: 'Ritterhalle', par: 6, theme: 'shadow', maxStrokes: 24, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Tiefe gestürzt', spiked: 'Von Knochenstacheln aufgespießt', shark: 'Von der Riesenfledermaus gepackt!' },
+    name: 'Ritterhalle', par: 6, theme: 'shadow', maxStrokes: 24, cupR: 0.56, cupPull: 1.0, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Tiefe gestürzt', spiked: 'Von Knochenstacheln aufgespießt', shark: 'Von der Riesenfledermaus gepackt!' },
     views: [{ x: 2, y: 3, w: 28, h: 2, look: { x: 31, y: 4 } }, { x: 30, y: 3, w: 2, h: 5, look: { x: 31, y: 7.5 } }, { x: 6, y: 7, w: 26, h: 2, look: { x: 4, y: 7.5 } }, { x: 4, y: 7, w: 2, h: 5, look: { x: 4.5, y: 11.5 } }, { x: 4, y: 11, w: 30, h: 2, look: { x: 31.5, y: 11.5 } }],
     map: [
       '....................................',
@@ -220,7 +220,7 @@ const SHADOW_COURSES = [
     autoDecor: { density: 0.1, seed: 609 },
   },
   {
-    name: 'Totenfähre', par: 6, theme: 'darksea', maxStrokes: 24, hazardText: { oob: 'Ins schwarze Wasser gestürzt', water: 'Im Totensee versunken' },
+    name: 'Totenfähre', par: 6, theme: 'darksea', maxStrokes: 24, cupR: 0.56, cupPull: 1.0, hazardText: { oob: 'Ins schwarze Wasser gestürzt', water: 'Im Totensee versunken' },
     views: [{ x: 2, y: 6, w: 5, h: 4, look: { x: 16, y: 7.5 } }, { x: 15, y: 5, w: 4, h: 6, look: { x: 28, y: 6.5 } }, { x: 27, y: 3, w: 5, h: 8, look: { x: 38, y: 6.5 } }, { x: 32, y: 6, w: 5, h: 2, look: { x: 38.5, y: 6.5 } }],
     map: [
       '..........................................',
@@ -259,7 +259,7 @@ const SHADOW_COURSES = [
     autoDecor: { density: 0.1, seed: 611 },
   },
   {
-    name: 'Turm des Auges', par: 5, theme: 'shadow', maxStrokes: 22, hStep: 0.55, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Tiefe gestürzt', spiked: 'Von Knochenstacheln aufgespießt', shark: 'Von der Riesenfledermaus gepackt!' },
+    name: 'Turm des Auges', par: 5, theme: 'shadow', maxStrokes: 22, hStep: 0.55, cupR: 0.56, cupPull: 1.0, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Tiefe gestürzt', spiked: 'Von Knochenstacheln aufgespießt', shark: 'Von der Riesenfledermaus gepackt!' },
     views: [{ x: 4, y: 17, w: 24, h: 3, look: { x: 29, y: 18 } }, { x: 28, y: 8, w: 3, h: 12, look: { x: 29, y: 6 } }, { x: 8, y: 5, w: 23, h: 3, look: { x: 5, y: 6 } }, { x: 4, y: 5, w: 4, h: 3, look: { x: 5, y: 12.5 } }, { x: 4, y: 8, w: 3, h: 6, look: { x: 5, y: 12.5 } }],
     map: [
       '....................................',
@@ -328,7 +328,7 @@ const SHADOW_COURSES = [
     autoDecor: { density: 0.1, seed: 613 },
   },
   {
-    name: 'Schattenschloss', par: 8, theme: 'shadow', maxStrokes: 30, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Tiefe gestürzt', spiked: 'Von Knochenstacheln aufgespießt', shark: 'Von der Riesenfledermaus gepackt!' },
+    name: 'Schattenschloss', par: 8, theme: 'shadow', maxStrokes: 30, cupR: 0.56, cupPull: 1.0, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Tiefe gestürzt', spiked: 'Von Knochenstacheln aufgespießt', shark: 'Von der Riesenfledermaus gepackt!' },
     views: [{ x: 2, y: 17, w: 5, h: 4, look: { x: 12, y: 18.5 } }, { x: 10, y: 17, w: 5, h: 4, look: { x: 12, y: 12 } }, { x: 11, y: 11, w: 3, h: 6, look: { x: 20, y: 10 } }, { x: 11, y: 9, w: 16, h: 3, look: { x: 28.5, y: 10 } }, { x: 27, y: 3, w: 4, h: 9, look: { x: 28.5, y: 3 } }, { x: 15, y: 3, w: 12, h: 3, look: { x: 20.5, y: 1 } }],
     map: [
       '........................................',
@@ -382,7 +382,7 @@ const SHADOW_COURSES = [
     ],
     autoDecor: { density: 0.1, seed: 615 },
     inner: {
-      name: 'Thronsaal', theme: 'throne', hStep: 0.6, look: { x: 21.4, y: 11 }, hazardText: { fell: 'In den Kerker gestürzt', beheaded: 'Im Thronsaal geköpft!' },
+      name: 'Thronsaal', theme: 'throne', hStep: 0.6, cupR: 0.56, cupPull: 1.0, look: { x: 21.4, y: 11 }, hazardText: { fell: 'In den Kerker gestürzt', beheaded: 'Im Thronsaal geköpft!' },
       views: [{ x: 2, y: 9, w: 20, h: 4, look: { x: 21.4, y: 11 } }, { x: 14, y: 1, w: 15, h: 5, look: { x: 26.5, y: 2.5 } }],
       map: [
         '..............................',
@@ -436,7 +436,7 @@ const SHADOW_COURSES = [
     },
   },
   {
-    name: 'Gruft der Sensen', par: 5, theme: 'shadow', maxStrokes: 22, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Tiefe gestürzt', spiked: 'Von Knochenstacheln aufgespießt', shark: 'Von der Riesenfledermaus gepackt!' },
+    name: 'Gruft der Sensen', par: 5, theme: 'shadow', maxStrokes: 22, cupR: 0.56, cupPull: 1.0, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Tiefe gestürzt', spiked: 'Von Knochenstacheln aufgespießt', shark: 'Von der Riesenfledermaus gepackt!' },
     views: [{ x: 2, y: 3, w: 18, h: 2, look: { x: 18.5, y: 3.5 } }, { x: 3, y: 9, w: 18, h: 2, look: { x: 21.5, y: 9.5 } }, { x: 21, y: 9, w: 2, h: 6, look: { x: 21.5, y: 14.5 } }, { x: 8, y: 14, w: 13, h: 2, look: { x: 9.5, y: 14.5 } }],
     map: [
       '..............................',
@@ -482,7 +482,7 @@ const SHADOW_COURSES = [
     autoDecor: { density: 0.12, seed: 617 },
   },
   {
-    name: 'Herz der Finsternis', par: 9, theme: 'shadow', maxStrokes: 33, hStep: 0.55, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Tiefe gestürzt', spiked: 'Von Knochenstacheln aufgespießt', shark: 'Von der Riesenfledermaus gepackt!' },
+    name: 'Herz der Finsternis', par: 9, theme: 'shadow', maxStrokes: 33, hStep: 0.55, cupR: 0.56, cupPull: 1.0, hazardText: { lava: 'Vom Schattenfeuer verschlungen', water: 'Im Schattenwasser versunken', oob: 'In die Finsternis gestürzt', fell: 'In die Tiefe gestürzt', spiked: 'Von Knochenstacheln aufgespießt', shark: 'Von der Riesenfledermaus gepackt!' },
     views: [{ x: 4, y: 3, w: 5, h: 4, look: { x: 20, y: 4.5 } }, { x: 9, y: 4, w: 12, h: 2, look: { x: 21.5, y: 5 } }, { x: 21, y: 6, w: 2, h: 10, look: { x: 21.5, y: 15 } }, { x: 7, y: 14, w: 14, h: 2, look: { x: 4, y: 15 } }, { x: 2, y: 13, w: 5, h: 6, look: { x: 30, y: 15 } }, { x: 28, y: 12, w: 6, h: 7, look: { x: 34, y: 15 } }],
     map: [
       '........................................',
@@ -529,7 +529,7 @@ const SHADOW_COURSES = [
     ],
     autoDecor: { density: 0.08, seed: 619 },
     inner: {
-      name: 'Im Herz der Finsternis', theme: 'throne', hStep: 0.55, look: { x: 14.5, y: 10.5 }, hazardText: { fell: 'In den Abgrund gestürzt', seen: 'Vom Herz der Finsternis erblickt!', beheaded: 'Im Herz der Finsternis geköpft!' },
+      name: 'Im Herz der Finsternis', theme: 'throne', hStep: 0.55, cupR: 0.56, cupPull: 1.0, look: { x: 14.5, y: 10.5 }, hazardText: { fell: 'In den Abgrund gestürzt', seen: 'Vom Herz der Finsternis erblickt!', beheaded: 'Im Herz der Finsternis geköpft!' },
       views: [{ x: 3, y: 12, w: 22, h: 2, look: { x: 25.5, y: 12.5 } }, { x: 25, y: 10, w: 2, h: 4, look: { x: 25.5, y: 8.5 } }, { x: 5, y: 8, w: 22, h: 2, look: { x: 3.5, y: 8.5 } }, { x: 3, y: 6, w: 2, h: 4, look: { x: 3.5, y: 4.5 } }, { x: 3, y: 4, w: 24, h: 2, look: { x: 24.5, y: 4.5 } }],
       map: [
         '..............................',

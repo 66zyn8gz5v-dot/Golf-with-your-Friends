@@ -684,10 +684,10 @@ class Renderer {
   }
 
   drawCupHole(ctx) {
-    const c = this.level.cup;
-    this.isoEllipse(ctx, c.x, c.y, 0.005, 0.5, 'rgba(255,255,255,0.35)');
-    this.isoEllipse(ctx, c.x, c.y, 0.01, 0.42, '#0e0b16');
-    this.isoEllipse(ctx, c.x, c.y - 0.05, 0.012, 0.32, '#241c35');
+    const c = this.level.cup, k = (c.r || 0.42) / 0.42; // größere Löcher (Schattenreich) auch größer zeichnen
+    this.isoEllipse(ctx, c.x, c.y, 0.005, 0.5 * k, 'rgba(255,255,255,0.35)');
+    this.isoEllipse(ctx, c.x, c.y, 0.01, 0.42 * k, '#0e0b16');
+    this.isoEllipse(ctx, c.x, c.y - 0.05 * k, 0.012, 0.32 * k, '#241c35');
   }
   /* Fahne am Loch: Stange mit Messingspitze und Fuß am Lochrand, wehendes Tuch mit Falten – Farben, Muster und
      Wappen kommen aus FLAG_DESIGNS je Thema (Krone fürs Märchenland, Anker am Meer, Totenkopf im Schattenreich …) */

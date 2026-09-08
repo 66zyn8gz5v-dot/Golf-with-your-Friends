@@ -21,7 +21,7 @@ function buildLevel(def) {
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const c = tiles[y][x];
     if (c === 'T') tee = { x: x + 0.5, y: y + 0.5 };
-    if (c === 'H') cup = { x: x + 0.5, y: y + 0.5 };
+    if (c === 'H') cup = { x: x + 0.5, y: y + 0.5, r: def.cupR || 0.42, pull: def.cupPull || 0.62 }; // cupR/cupPull: größeres Loch (Schattenreich)
     if (c === 'x') blocks.push({ x, y });
   }
   let goal = cup;
