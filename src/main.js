@@ -740,6 +740,33 @@
     hideOverlay();
     loadHole(first);
   }
+  /* Aussteigen: raus aus der laufenden Runde, zurück dorthin, wo sie ausgesucht wurde.
+     Wer aus Versehen in die falsche Welt gegangen ist, kommt so ohne Neuladen wieder heraus.
+     Ist schon etwas gespielt, wird vorher gefragt – der Punktestand einer Runde kommt nicht zurück. */
+  const leaveTarget = () => (state.world && state.world.id === 'custom' ? showBuild : showMap);
+  const roundStarted = () => state.mode !== 'creative' &&
+    (state.holeIdx > 0 || state.strokes > 0 || state.players.some(p => p.scores.some(v => v != null)));
+  function leaveRound(force) {
+    if (state.phase === 'title' || state.phase === 'edit' || !state.level) return;
+    // Liegt schon eine Tafel obenauf (Bahn fertig, Endergebnis), hat die ihren eigenen Weg zurück
+    if (!force && ui.overlay.classList.contains('visible')) return;
+    if (state.editorReturn) { clearTimeout(waitTimer); hideOverlay(); editor.returnFromTest(); return; }
+    if (!force && roundStarted()) { askLeave(); return; }
+    clearTimeout(waitTimer); clearTimeout(msgTimer); ui.msg.classList.remove('visible');
+    leaveOnline();
+    hideOverlay();
+    leaveTarget()();
+  }
+  function askLeave() {
+    overlay(`<div class="panel">
+      <h2>Runde verlassen?</h2>
+      <div class="sub">Zurück ${state.world && state.world.id === 'custom' ? 'zur Auswahl' : 'zur Weltkarte'} – der Punktestand dieser Runde geht dabei verloren.</div>
+      <p style="margin-top:14px"><span class="btn ghost small" id="stay">◀ Weiterspielen</span> <span class="btn" id="leave-yes">Verlassen</span></p>
+    </div>`);
+    $('stay').addEventListener('click', hideOverlay);
+    $('leave-yes').addEventListener('click', () => leaveRound(true));
+  }
+
   /* Kreativmodus: Bahn wechseln oder Ball an den Abschlag setzen */
   function jumpHole(delta) {
     if (state.mode !== 'creative' || !state.level || state.phase === 'edit') return;
@@ -892,7 +919,9 @@
       ${!last ? `<div class="sub">Als Nächstes: <b>${state.courses[state.holeIdx + 1].name}</b><br><i>${state.courses[state.holeIdx + 1].intro}</i></div>` : ''}
       ${online && !online.host ? '<div class="sub">Der Gastgeber öffnet die nächste Bahn …</div>'
         : `<span class="btn" id="next">${state.editorReturn ? '🛠 Zurück zum Editor' : last ? 'Zum Endergebnis' : 'Nächste Bahn ▶'}</span>`}
+      ${state.editorReturn ? '' : `<p style="margin-top:12px"><span class="btn ghost small" id="leave-here">◀ ${state.world && state.world.id === 'custom' ? 'Zurück zur Auswahl' : 'Zurück zur Weltkarte'}</span></p>`}
     </div>`);
+    if (!state.editorReturn) $('leave-here').addEventListener('click', () => leaveRound(true));
     const goOn = () => { hideOverlay(); if (state.editorReturn) editor.returnFromTest(); else if (last) { if (state.mode === 'creative') loadHole(0); else showFinal(); } else loadHole(state.holeIdx + 1); };
     // Im Netzspiel gibt der Gastgeber den Takt vor, damit alle auf derselben Bahn stehen
     if (!online || online.host) $('next').addEventListener('click', () => { if (online) netSend({ t: 'next', h: last ? -1 : state.holeIdx + 1 }); goOn(); });
@@ -1093,7 +1122,8 @@
   document.addEventListener('gesturestart', e => e.preventDefault(), { passive: false });
   canvas.addEventListener('pointercancel', e => endDrag(e, true));
   window.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && drag) { drag = null; state.aim = null; }
+    // Esc bricht erst das Zielen ab; ohne Zug ist es der Weg aus der Runde heraus
+    if (e.key === 'Escape') { if (drag) { drag = null; state.aim = null; } else leaveRound(false); }
     if (e.key === 'm' || e.key === 'M') toggleOverview();
     if (e.key === 'f' || e.key === 'F') toggleFullscreen();
     if (e.key === '+') zoomBy(1.25); if (e.key === '-') zoomBy(0.8);
@@ -1141,6 +1171,7 @@
   $('cr-next').addEventListener('click', () => jumpHole(1));
   $('cr-reset').addEventListener('click', resetBall);
   $('cr-editor').addEventListener('click', () => { if (state.editorReturn) { clearTimeout(waitTimer); hideOverlay(); editor.returnFromTest(); } });
+  $('leave-btn').addEventListener('click', () => leaveRound(false));
   $('cam-in').addEventListener('click', () => zoomBy(1.25));
   $('cam-out').addEventListener('click', () => zoomBy(0.8));
   $('cam-left').addEventListener('click', () => rotateBy(-Math.PI / 4));

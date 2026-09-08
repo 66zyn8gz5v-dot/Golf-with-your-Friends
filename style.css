@@ -124,6 +124,17 @@ body.creative .cbtn.creative { display: inline-block; }
   min-width: 40px; height: 40px; padding: 0 10px; touch-action: manipulation;
 }
 .cbtn.sel { background: #ffd166; color: #3a2200; border-color: #8a5a10; }
+/* Ausstieg aus der Runde – im Baumodus führt statt dessen „🛠 Editor“ zurück */
+.cbtn.leave { background: rgba(40, 24, 60, 0.78); }
+/* Auf schmalen Bildschirmen kurze Beschriftungen, damit die Leiste in eine Reihe passt */
+.cbtn .kurz { display: none; }
+@media (max-width: 600px) {
+  .cbtn .lang { display: none; } .cbtn .kurz { display: inline; }
+  /* rechts Platz lassen, damit die Leiste nicht unter den Vollbild-Knopf läuft;
+     was nicht mehr hinpasst, rutscht in eine zweite Reihe darüber */
+  #controls { max-width: calc(100vw - 122px); }
+}
+body.editing .cbtn.leave, body.testing .cbtn.leave { display: none; }
 .cbtn:active { transform: translateY(1px); }
 
 .screen {

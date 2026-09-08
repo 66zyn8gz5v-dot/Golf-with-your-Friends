@@ -103,7 +103,11 @@ Unter **Bauen & Eigene Welt** liegen der Editor und die selbst zusammengestellte
 
 - Finger oder Maus aufsetzen, ziehen, loslassen. Je weiter gezogen wird, desto kräftiger der Schlag (Kraftanzeige unten).
 - Steuerung im Startbildschirm wählbar: „Schleuder" (Standard, vom Ball wegziehen) oder „Schieben" (in Schussrichtung ziehen).
-- `Esc` bricht das Zielen ab.
+- `Esc` bricht das Zielen ab; ohne begonnenen Zug führt `Esc` aus der Runde heraus.
+- **◀ Weltkarte** unten links verlässt die laufende Runde – der Weg zurück, wenn man in der falschen Welt gelandet ist.
+  Ist schon etwas gespielt, wird vorher gefragt, denn der Punktestand der Runde geht dabei verloren; ganz am Anfang geht es ohne Rückfrage.
+  Auch die Ergebnistafel nach jeder Bahn hat den Knopf. Bei einer eigenen Welt führt er zurück zu **Bauen & Eigene Welt**,
+  beim Probespielen aus dem Editor bleibt es beim gewohnten „🛠 Editor“.
 - Kamera: folgt dem Ball und blickt Richtung Loch. Tasten unten links oder Tastatur:
   `M` Übersicht der ganzen Bahn, `Q`/`E` drehen, `+`/`-` oder Mausrad zoomen.
   Die Neigung richtet sich nach dem Bildschirm: hochkant (Handy) bleibt die Sicht flach,
