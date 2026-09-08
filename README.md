@@ -437,6 +437,18 @@ physikalisch nicht geht; er könnte Rekorde dauerhaft und fälschungssicher spei
 Kopfzeilen setzen, die das Einbetten unterbinden. Für einen Freundeskreis ist das viel Aufwand für wenig
 Gewinn – aber es ist der einzige Weg, diese Punkte wirklich zu schließen.
 
+## Einzeldatei fürs Artefakt
+
+Zum Weitergeben lässt sich das Spiel in eine einzige HTML-Datei packen (ein kleines Skript außerhalb
+des Repos tut das). Die Reihenfolge der Skripte liest es aus `index.html` – bewusst nicht aus einer
+zweiten, von Hand gepflegten Liste. Genau daran ist es einmal gescheitert: `src/text.js` kam dazu, war
+in `index.html` und im Service Worker eingebunden, fehlte aber im Bündel; ohne `Text` brach `best.js`
+beim Laden ab und die Einzeldatei zeigte nur einen schwarzen Bildschirm. Die auf GitHub Pages
+ausgelieferten Einzeldateien waren davon nie betroffen.
+
+Nach jedem Bauen wird die Datei einmal im Browser geladen und nachgesehen, ob Startbildschirm,
+Sinnbilder, ein laufendes Spiel, die Rangliste und der Editor da sind.
+
 ## Projektstruktur
 
 ```
