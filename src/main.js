@@ -1179,7 +1179,18 @@
   document.addEventListener('touchmove', block, { passive: false });
   document.addEventListener('gesturestart', e => e.preventDefault(), { passive: false });
   canvas.addEventListener('pointercancel', e => endDrag(e, true));
+  /* Tippt jemand gerade in ein Feld – Name, Raumcode, Bahnname, Bahn-Code –, dann gehören die
+     Buchstaben dorthin und nicht in die Steuerung. Sonst schaltet das „f" in „Fynn" das Vollbild um
+     (und in einem Rahmen ohne Vollbildrecht öffnet das sogar einen neuen Tab), das „n" springt zur
+     nächsten Bahn und das „j" schaltet die Musik. */
+  function tipptGerade() {
+    const el = document.activeElement;
+    if (!el || el === document.body) return false;
+    const tag = (el.tagName || '').toLowerCase();
+    return tag === 'input' || tag === 'textarea' || tag === 'select' || el.isContentEditable;
+  }
   window.addEventListener('keydown', e => {
+    if (tipptGerade()) return;
     // Esc bricht erst das Zielen ab; ohne Zug ist es der Weg aus der Runde heraus
     if (e.key === 'Escape') { if (drag) { drag = null; state.aim = null; } else leaveRound(false); }
     if (e.key === 'm' || e.key === 'M') toggleOverview();

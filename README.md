@@ -120,6 +120,8 @@ Unter **Bauen & Eigene Welt** liegen der Editor und die selbst zusammengestellte
 - Finger oder Maus aufsetzen, ziehen, loslassen. Je weiter gezogen wird, desto kräftiger der Schlag (Kraftanzeige unten).
 - Steuerung im Startbildschirm wählbar: „Schleuder" (Standard, vom Ball wegziehen) oder „Schieben" (in Schussrichtung ziehen).
 - `Esc` bricht das Zielen ab; ohne begonnenen Zug führt `Esc` aus der Runde heraus.
+- Die Tastenkürzel gelten nur außerhalb von Eingabefeldern. Wer seinen Namen, einen Raumcode oder einen Bahnnamen
+  eintippt, schaltet mit dem „f" in „Fynn" also nicht das Vollbild um.
 - **◀ Weltkarte** unten links verlässt die laufende Runde – der Weg zurück, wenn man in der falschen Welt gelandet ist.
   Ist schon etwas gespielt, wird vorher gefragt, denn der Punktestand der Runde geht dabei verloren; ganz am Anfang geht es ohne Rückfrage.
   Auch die Ergebnistafel nach jeder Bahn hat den Knopf. Bei einer eigenen Welt führt er zurück zu **Bauen & Eigene Welt**,
