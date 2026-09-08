@@ -215,13 +215,27 @@ const WorldMap = (() => {
             <rect x="79" y="9.8" width="3.2" height="9"/></g>
           <path d="M76.2 12.6 L77.7 9 L79.2 12.6 Z M82 12.2 L83.5 8.4 L85 12.2 Z M78.6 9.8 L80.6 5.4 L82.6 9.8 Z" fill="#171b3e"/>
           <path d="M77.7 9 L79.2 12.6 L77.7 12.6 Z M83.5 8.4 L85 12.2 L83.5 12.2 Z M80.6 5.4 L82.6 9.8 L80.6 9.8 Z" fill="#0d1029" opacity="0.8"/>
-          <g fill="#8fd8ff" opacity="0.95"><rect x="77.2" y="14.4" width="0.7" height="1"/><rect x="83" y="14" width="0.7" height="1"/><rect x="80.2" y="11.8" width="0.9" height="1.3"/></g>
+          <g stroke="rgba(90,104,160,0.4)" stroke-width="0.1" fill="none">
+            <path d="M76.6 14 h2.2 M76.6 15.6 h2.2 M76.6 17.2 h2.2"/>
+            <path d="M82.4 13.6 h2.2 M82.4 15.2 h2.2 M82.4 16.8 h2.2"/>
+            <path d="M79 11.6 h3.2 M79 13.2 h3.2 M79 14.8 h3.2 M79 16.4 h3.2"/></g>
+          <g fill="#8fd8ff" opacity="0.95">
+            <path d="M77.2 15.4 v-0.65 a0.35 0.35 0 0 1 0.7 0 v0.65 Z"/>
+            <path d="M83 15 v-0.65 a0.35 0.35 0 0 1 0.7 0 v0.65 Z"/>
+            <path d="M80.2 13.1 v-0.85 a0.45 0.45 0 0 1 0.9 0 v0.85 Z"/></g>
+          <g fill="#0e1130"><rect x="77.35" y="16.4" width="0.25" height="0.7"/><rect x="83.15" y="16" width="0.25" height="0.7"/>
+            <rect x="80.4" y="14.6" width="0.3" height="0.8"/></g>
+          <rect x="80.55" y="4.1" width="0.14" height="1.4" fill="#39406e"/>
+          <path class="art-flag" d="M80.69 4.1 L82.1 4.55 L80.69 5 Z" fill="#7f8fd6"/>
         </g>
         <g filter="url(#atShade)">
           <rect x="77.6" y="17.7" width="6.6" height="0.6" fill="#2a3058"/>
           <g fill="#39406e"><rect x="77.6" y="17.2" width="0.7" height="0.55"/><rect x="79" y="17.2" width="0.7" height="0.55"/>
             <rect x="80.4" y="17.2" width="0.7" height="0.55"/><rect x="81.8" y="17.2" width="0.7" height="0.55"/><rect x="83.2" y="17.2" width="0.7" height="0.55"/></g></g>
         ${tufts(81, 19, 12, 2.04, 14, 'rgba(20,44,44,0.4)', 2)}
+        <g opacity="0.32" filter="url(#atNear)">
+          <ellipse cx="74.6" cy="20" rx="4.6" ry="0.9" fill="#c8d8f0"/>
+          <ellipse cx="88" cy="20.6" rx="4" ry="0.8" fill="#c8d8f0"/></g>
         <g stroke="rgba(200,224,255,0.45)" stroke-width="0.16" stroke-linecap="round">
           <path d="M72.6 23.4 l-0.5 1.8"/><path d="M76.2 24.6 l-0.5 1.8"/><path d="M80.4 25.2 l-0.5 2"/>
           <path d="M84.6 24.4 l-0.5 1.8"/><path d="M88.4 23.2 l-0.5 1.6"/></g>
@@ -232,10 +246,6 @@ const WorldMap = (() => {
 
       <!-- ============ Märchenland (oben links) ============ -->
       <g transform="translate(1.44 1.56) scale(0.92)">
-        <g opacity="0.55">
-          <path d="M4 15 a 15 15 0 0 1 24 -3" fill="none" stroke="#ff8098" stroke-width="0.7"/>
-          <path d="M4.6 16.2 a 15 15 0 0 1 23.2 -3" fill="none" stroke="#ffd678" stroke-width="0.7"/>
-          <path d="M5.2 17.4 a 15 15 0 0 1 22.4 -3" fill="none" stroke="#8cdc96" stroke-width="0.7"/></g>
         <g filter="url(#atDeep)">${isle(18, 19.5, 13, 9, 'url(#atGrass)', 'url(#atSoil)', 'url(#atRock)', '#241a12', 0.19)}</g>
         ${chip(8.6, 25.4, 1.4, 'url(#atRock)', '#241a12')}${chip(28.2, 24.6, 1.1, 'url(#atRock)', '#241a12')}
         ${fall(11.2, 20.1, 1.8, 8)}
@@ -249,10 +259,31 @@ const WorldMap = (() => {
             <rect x="15.6" y="9.10" width="3" height="10.2"/><rect x="16.9" y="15.90" width="4.6" height="3.4"/></g>
           <path d="M13 12.1 L14.45 8.9 L15.9 12.1 Z M18.4 11.7 L19.85 8.3 L21.3 11.7 Z M15.1 9.1 L17.1 5.1 L19.1 9.1 Z" fill="url(#atRoof)"/>
           <path d="M14.45 8.9 L15.9 12.1 L14.45 12.1 Z M19.85 8.3 L21.3 11.7 L19.85 11.7 Z M17.1 5.1 L19.1 9.1 L17.1 9.1 Z" fill="#7d2a2a" opacity="0.75"/>
-          <g fill="#ffd166"><rect x="14.1" y="13.90" width="0.7" height="1"/><rect x="19.5" y="13.50" width="0.7" height="1"/><rect x="16.7" y="11.10" width="0.8" height="1.2"/>
-            <rect x="18.6" y="16.90" width="1.1" height="2.4" fill="#8a5a30"/></g>
+          <!-- Zinnen auf den Turmkronen -->
+          <g fill="#efe9dc"><rect x="13.4" y="11.7" width="0.6" height="0.5"/><rect x="14.5" y="11.7" width="0.6" height="0.5"/>
+            <rect x="18.8" y="11.3" width="0.6" height="0.5"/><rect x="19.9" y="11.3" width="0.6" height="0.5"/>
+            <rect x="15.6" y="8.7" width="0.7" height="0.5"/><rect x="16.9" y="8.7" width="0.7" height="0.5"/><rect x="17.9" y="8.7" width="0.7" height="0.5"/></g>
+          <!-- Mauerwerk: waagerechte Fugen, versetzte Stoßfugen -->
+          <g stroke="rgba(120,110,95,0.35)" stroke-width="0.11" fill="none">
+            <path d="M13.4 13.4 h2.1 M13.4 14.9 h2.1 M13.4 16.4 h2.1 M13.4 17.9 h2.1"/>
+            <path d="M18.8 13 h2.1 M18.8 14.5 h2.1 M18.8 16 h2.1 M18.8 17.5 h2.1"/>
+            <path d="M15.6 10.6 h3 M15.6 12.1 h3 M15.6 13.6 h3 M15.6 15.1 h3 M15.6 16.6 h3 M15.6 18.1 h3"/>
+            <path d="M14.45 12.65 v0.75 M16.55 11.35 v0.75 M17.55 12.85 v0.75 M19.85 13.75 v0.75"/></g>
+          <!-- Bogenfenster mit warmem Licht -->
+          <g fill="#ffd166"><path d="M14.1 14.9 v-0.65 a0.35 0.35 0 0 1 0.7 0 v0.65 Z"/>
+            <path d="M19.5 14.5 v-0.65 a0.35 0.35 0 0 1 0.7 0 v0.65 Z"/>
+            <path d="M16.7 12.3 v-0.8 a0.4 0.4 0 0 1 0.8 0 v0.8 Z"/></g>
+          <!-- Tor mit Fallgatter -->
+          <path d="M18.6 19.3 v-1.75 a0.55 0.55 0 0 1 1.1 0 v1.75 Z" fill="#5a3a20"/>
+          <g stroke="#c9c2b2" stroke-width="0.09" fill="none">
+            <path d="M18.8 19.3 v-2 M19.15 19.3 v-2.1 M19.5 19.3 v-2"/>
+            <path d="M18.6 18.2 h1.1 M18.6 18.8 h1.1"/></g>
           <rect x="17" y="3.10" width="0.24" height="2.2" fill="#4a3a2a"/>
           <path class="art-flag" d="M17.24 3.1 L19.4 3.8 L17.24 4.5 Z" fill="#ff4f6d"/>
+          <rect x="14.3" y="10.6" width="0.18" height="1.5" fill="#4a3a2a"/>
+          <path class="art-flag s2" d="M14.48 10.6 L15.9 11.05 L14.48 11.5 Z" fill="#3d7ad6"/>
+          <rect x="19.7" y="10.2" width="0.18" height="1.5" fill="#4a3a2a"/>
+          <path class="art-flag s3" d="M19.88 10.2 L21.3 10.65 L19.88 11.1 Z" fill="#3d7ad6"/>
         </g>
         <g filter="url(#atShade)">
           <rect x="23.2" y="15.90" width="2.4" height="3.4" fill="url(#atWood2)"/>
@@ -267,6 +298,17 @@ const WorldMap = (() => {
           <g fill="#e6dfd0"><rect x="14.2" y="17.4" width="0.7" height="0.6"/><rect x="15.6" y="17.4" width="0.7" height="0.6"/>
             <rect x="17" y="17.4" width="0.7" height="0.6"/><rect x="18.4" y="17.4" width="0.7" height="0.6"/><rect x="19.8" y="17.4" width="0.7" height="0.6"/></g></g>
         ${house(9.4, 19.1, 1.9, 1.4)}${house(11.9, 19.6, 1.5, 1.1)}${house(21.6, 19.4, 1.6, 1.2)}
+        <g filter="url(#atShade)">
+          <!-- Brunnen -->
+          <ellipse cx="13.6" cy="20.6" rx="0.62" ry="0.24" fill="#8e8474"/>
+          <path d="M12.98 20.6 v-0.5 h1.24 v0.5 Z" fill="#a89c88"/>
+          <path d="M13.05 20.1 l0.55 -0.7 l0.55 0.7" fill="none" stroke="#6a4a2e" stroke-width="0.14"/>
+          <rect x="13.46" y="19.5" width="0.28" height="0.35" fill="#6a4a2e"/></g>
+        <g stroke="#8a6440" stroke-width="0.13" fill="none">
+          <path d="M6.6 21 h3.4 M6.6 20.7 h3.4"/>
+          <path d="M6.6 20.5 v0.8 M7.75 20.5 v0.8 M8.9 20.5 v0.8 M10 20.5 v0.8"/></g>
+        <g fill="#f2efe6"><ellipse cx="7.4" cy="20.75" rx="0.32" ry="0.22"/><circle cx="7.74" cy="20.66" r="0.14" fill="#3f3a34"/>
+          <ellipse cx="9.1" cy="20.95" rx="0.28" ry="0.2"/><circle cx="9.4" cy="20.87" r="0.12" fill="#3f3a34"/></g>
         ${tree(9.8, 19.3, 1.2)}${tree(27.2, 18.9, 1.05)}${tree(12.4, 20.9, 0.85)}${tree(24.4, 20.2, 0.8)}${tree(7.4, 20.4, 0.75)}
         <g fill="none" stroke="#2b3a52" stroke-width="0.16" stroke-linecap="round" opacity="0.7">
           <path d="M6.4 11.6 q0.7 -0.6 1.4 0 M8.4 12.8 q0.6 -0.5 1.2 0 M27 13.4 q0.6 -0.5 1.2 0"/></g>
@@ -293,7 +335,15 @@ const WorldMap = (() => {
           <path d="M81.6 32 L83.2 36 L81.6 36 Z M88.2 31.4 L89.8 35.6 L88.2 35.6 Z M85 28.2 L87.2 33 L85 33 Z" fill="#0c0820" opacity="0.85"/>
           <path d="M84.2 39 q0.8 -1.7 1.6 0 v4 h-1.6 Z" fill="#a86bff"/>
           <path d="M84.2 39 q0.8 -1.7 1.6 0 v4 h-1.6 Z" fill="url(#atGlow)" opacity="0.5"/>
-          <g fill="#c58bff" opacity="0.95"><rect x="81.1" y="37.6" width="0.7" height="1"/><rect x="87.7" y="37.2" width="0.7" height="1"/></g>
+          <g stroke="rgba(70,52,120,0.5)" stroke-width="0.1" fill="none">
+            <path d="M80.4 37.4 h2.4 M80.4 39.2 h2.4 M80.4 41 h2.4"/>
+            <path d="M87 37 h2.4 M87 38.8 h2.4 M87 40.6 h2.4"/>
+            <path d="M83.2 34.6 h3.6 M83.2 36.4 h3.6 M83.2 38.2 h3.6"/></g>
+          <g fill="#c58bff" opacity="0.95">
+            <path d="M81.1 38.6 v-0.7 L81.45 37.3 L81.8 37.9 v0.7 Z"/>
+            <path d="M87.7 38.2 v-0.7 L88.05 36.9 L88.4 37.5 v0.7 Z"/>
+            <path d="M84.6 36.2 v-0.8 L85 34.8 L85.4 35.4 v0.8 Z"/></g>
+          <g stroke="#3a2554" stroke-width="0.1"><path d="M84.55 43 v-3.4 M85 43 v-3.7 M85.45 43 v-3.4"/></g>
           <path d="M85 27.4 L85 24.6" stroke="#4a3a6a" stroke-width="0.3"/>
           <path class="art-flag" d="M85.1 24.6 L87.2 25.3 L85.1 26 Z" fill="#8a3bff"/>
         </g>
@@ -310,7 +360,14 @@ const WorldMap = (() => {
           <circle cx="80" cy="41.4" r="0.6" fill="#4a4066"/><circle cx="91.1" cy="41.8" r="0.5" fill="#4a4066"/>
           <path d="M87.6 42.9 v-1.5 h2.2 v1.5" fill="none" stroke="#3a3054" stroke-width="0.35"/></g>
         <g><path d="M82.2 43.2 l0.6 -1.6 l0.6 1.6 Z" fill="#a86bff" opacity="0.8"/>
+          <path d="M82.8 41.6 l0.6 1.6 l-0.6 0 Z" fill="#5a1fb0" opacity="0.9"/>
           <path d="M88.6 43.4 l0.5 -1.3 l0.5 1.3 Z" fill="#8a3bff" opacity="0.8"/></g>
+        <g><rect x="83.4" y="40.9" width="0.16" height="1.6" fill="#2e2745"/>
+          <rect x="86.5" y="40.7" width="0.16" height="1.6" fill="#2e2745"/>
+          <g class="twinkle"><path d="M83.48 40.9 q0.4 -0.75 0 -1.25 q-0.32 0.6 -0.4 1.25 Z" fill="#a86bff"/></g>
+          <g class="twinkle t2"><path d="M86.58 40.7 q0.4 -0.75 0 -1.25 q-0.32 0.6 -0.4 1.25 Z" fill="#a86bff"/></g></g>
+        <g opacity="0.3" filter="url(#atNear)">
+          <ellipse cx="80" cy="46.4" rx="5" ry="0.9" fill="#7a5fb8"/><ellipse cx="90" cy="46.8" rx="4.2" ry="0.8" fill="#7a5fb8"/></g>
         <g fill="#2a1f44"><path d="M78.6 33.4 q0.7 -0.6 1.4 0 q-0.7 -0.2 -1.4 0 Z"/><path d="M80.6 32 q0.6 -0.5 1.2 0 q-0.6 -0.2 -1.2 0 Z"/>
           <path d="M89.8 33.8 q0.7 -0.6 1.4 0 q-0.7 -0.2 -1.4 0 Z"/></g>
         <g class="particles"><circle class="p" cx="80" cy="45" r="0.5" fill="#c58bff"/>
@@ -331,14 +388,35 @@ const WorldMap = (() => {
           <rect x="10.2" y="34.6" width="9" height="7.2" fill="url(#atWood2)"/>
           <path d="M9.4 34.6 L14.7 31.9 L20 34.6 Z" fill="#6b4728"/>
           <path d="M14.7 31.9 L20 34.6 L14.7 34.6 Z" fill="#452c17" opacity="0.85"/>
+          <!-- Bretterfassade -->
+          <g stroke="rgba(60,40,24,0.4)" stroke-width="0.1" fill="none">
+            <path d="M10.2 36.2 h9 M10.2 38.6 h9 M10.2 40.4 h9"/>
+            <path d="M12.6 34.6 v7.2 M16.4 34.6 v7.2"/></g>
           <g fill="#ffcf6b"><rect x="11.4" y="36.6" width="1.6" height="1.8"/><rect x="14.2" y="36.6" width="1.6" height="1.8"/><rect x="17" y="36.6" width="1.4" height="1.8"/></g>
+          <g stroke="rgba(60,40,24,0.55)" stroke-width="0.1"><path d="M12.2 36.6 v1.8 M15 36.6 v1.8 M11.4 37.5 h1.6 M14.2 37.5 h1.6"/></g>
+          <!-- Tür mit Beschlag -->
+          <path d="M13.2 41.8 v-2.2 a0.7 0.7 0 0 1 1.4 0 v2.2 Z" fill="#5f3f26"/>
+          <path d="M13.9 41.8 v-2.9" stroke="rgba(0,0,0,0.35)" stroke-width="0.09"/>
+          <circle cx="14.35" cy="40.6" r="0.11" fill="#d9c08a"/>
+          <!-- Laterne am Giebel -->
+          <rect x="14.55" y="32.4" width="0.34" height="0.44" fill="#ffd166"/>
+          <path d="M14.72 32.4 v-0.35" stroke="#4a3a2a" stroke-width="0.09"/>
           <rect x="17.6" y="31" width="1.8" height="3.8" fill="#6d4a30"/>
           <rect x="18.8" y="31" width="0.6" height="3.8" fill="#3f2a1a" opacity="0.8"/>
         </g>
         <path d="M18.5 30.8 q1.5 -2.2 0.2 -4.2 q-1.3 -2 0.7 -3.4" stroke="rgba(232,228,222,0.5)" stroke-width="0.5" fill="none"/>
+        <!-- Riemen vom grossen Rad zum kleinen Zahnrad -->
+        <path d="M7.05 37.6 L4.1 35.9 M7.05 39.6 L4.1 37" fill="none" stroke="rgba(50,38,26,0.7)" stroke-width="0.2"/>
         <g class="mill-blades" stroke="#c9a15a" stroke-width="0.45" fill="none">
           <circle cx="9.6" cy="38.6" r="2.6"/><circle cx="9.6" cy="38.6" r="1"/>
-          <path d="M9.6 36 L9.6 41.2 M7 38.6 L12.2 38.6 M7.8 36.8 L11.4 40.4 M11.4 36.8 L7.8 40.4"/></g>
+          <path d="M9.6 36 L9.6 41.2 M7 38.6 L12.2 38.6 M7.8 36.8 L11.4 40.4 M11.4 36.8 L7.8 40.4"/>
+          <path d="M8.7 36.15 L10.5 36.15 M11.85 37.7 L11.85 39.5 M8.7 41.05 L10.5 41.05 M7.35 37.7 L7.35 39.5" stroke-width="0.3"/></g>
+        <g filter="url(#atShade)">
+          <!-- Amboss mit Funken -->
+          <path d="M16.6 41.5 h1.5 l-0.25 0.35 h-1 Z" fill="#4a4a52"/>
+          <rect x="17" y="40.9" width="0.7" height="0.6" fill="#5c5c66"/>
+          <path d="M16.75 40.9 h1.2 l-0.15 -0.28 h-0.9 Z" fill="#6e6e7a"/></g>
+        <g fill="#ffd166"><circle cx="17.6" cy="40.4" r="0.11"/><circle cx="18" cy="40.1" r="0.08"/><circle cx="17.2" cy="40.05" r="0.07"/></g>
         <g filter="url(#atShade)">
           <path d="M20.4 41.6 L20.4 34 L24.6 32" stroke="#6a4a30" stroke-width="0.55" fill="none"/>
           <path d="M24.6 32 L24.6 34.2" stroke="rgba(255,255,255,0.45)" stroke-width="0.22"/>
@@ -376,6 +454,13 @@ const WorldMap = (() => {
           <g fill="rgba(255,255,255,0.3)"><rect x="54.2" y="52.6" width="8" height="0.3"/><rect x="55.2" y="50.8" width="6" height="0.28"/><rect x="56.2" y="49" width="4" height="0.26"/></g>
           <rect x="57.5" y="51" width="1.4" height="3.5" fill="#241f16"/>
           <rect x="57.5" y="50.6" width="1.4" height="0.5" fill="#ffd166"/>
+          <!-- Steinfratze über dem Tor -->
+          <g fill="#9a8f72"><path d="M57.2 50.5 h2 v-0.8 h-2 Z"/></g>
+          <g fill="#2f2a20"><circle cx="57.7" cy="50.05" r="0.16"/><circle cx="58.7" cy="50.05" r="0.16"/>
+            <path d="M57.7 50.35 h1 v0.14 h-1 Z"/></g>
+          <!-- Moos auf den Stufen -->
+          <g fill="rgba(70,140,60,0.45)"><ellipse cx="55.4" cy="52.7" rx="0.8" ry="0.16"/><ellipse cx="60.8" cy="52.7" rx="0.7" ry="0.14"/>
+            <ellipse cx="56.6" cy="50.9" rx="0.6" ry="0.13"/></g>
         </g>
         <g class="sway"><path d="M64.6 54.4 L64.6 50.2" stroke="#7a5a30" stroke-width="0.45"/>
           <g fill="#2f8a3a"><ellipse cx="62.8" cy="49.9" rx="2.4" ry="0.7" transform="rotate(-18 62.8 49.9)"/>
@@ -395,7 +480,14 @@ const WorldMap = (() => {
             <path d="M49.7 52.4 L50.65 51.4 L51.6 52.4 Z" fill="#b8a780"/>
             <g fill="#2f2a20"><circle cx="50.3" cy="53" r="0.2"/><circle cx="51" cy="53" r="0.2"/><rect x="50.2" y="53.7" width="1" height="0.28"/></g></g></g>
         <g stroke="#2f7a34" stroke-width="0.22" fill="none" stroke-linecap="round" opacity="0.85">
-          <path d="M47.4 55.6 q0.5 1.8 -0.2 3.2"/><path d="M69 55.4 q-0.4 1.6 0.3 3"/><path d="M63.4 56.4 q0.6 1.4 0 2.6"/></g>
+          <path d="M47.4 55.6 q0.5 1.8 -0.2 3.2"/><path d="M69 55.4 q-0.4 1.6 0.3 3"/><path d="M63.4 56.4 q0.6 1.4 0 2.6"/>
+          <path d="M50.6 56.4 q0.4 1.2 -0.1 2.2"/></g>
+        <!-- Feuerschale vor dem Tempel -->
+        <g filter="url(#atShade)"><path d="M62.8 55 h1.4 l-0.25 -0.7 h-0.9 Z" fill="#8e7f5c"/>
+          <rect x="63.2" y="55" width="0.6" height="0.5" fill="#6d6349"/></g>
+        <g class="twinkle"><path d="M63.5 54.3 q0.45 -0.9 0 -1.5 q-0.35 0.7 -0.5 1.5 Z" fill="#ff9a3a"/>
+          <path d="M63.5 54.3 q0.25 -0.55 0 -0.95 q-0.2 0.45 -0.25 0.95 Z" fill="#ffe08a"/></g>
+        <g fill="#ffe08a" opacity="0.9"><circle class="twinkle t2" cx="55.4" cy="49.4" r="0.16"/><circle class="twinkle t3" cx="61.6" cy="48.6" r="0.14"/></g>
         <circle cx="66.4" cy="51.2" r="0.52" fill="#ff5d5d"/><circle cx="66.55" cy="51.05" r="0.16" fill="#fff"/>
       </g>
 
@@ -419,7 +511,15 @@ const WorldMap = (() => {
           <path d="M27.8 52 L27.8 47.2" stroke="#4a3320" stroke-width="0.3"/>
           <path d="M27.8 47.4 L31.2 49.4 L27.8 50.9 Z" fill="#f6f2e8"/>
           <path d="M27.8 49.4 L31.2 49.4 L27.8 50.9 Z" fill="#d9d2c2" opacity="0.9"/>
-          <path d="M27.8 50.3 L24.6 51.7 L27.8 52.1 Z" fill="#e6dece"/></g>
+          <path d="M27.8 50.3 L24.6 51.7 L27.8 52.1 Z" fill="#e6dece"/>
+          <g stroke="rgba(70,46,24,0.5)" stroke-width="0.09"><path d="M25.9 52.9 h3.8 M26 53.25 h3.5"/></g>
+          <path d="M27.75 47.2 L28.6 47.5 L27.75 47.8 Z" fill="#e0483c"/></g>
+        <!-- Sandbank und Seestern im flachen Wasser -->
+        <path d="M22 58.4 q3.4 -1.6 7 -0.4" fill="none" stroke="rgba(240,226,180,0.55)" stroke-width="0.75" stroke-linecap="round"/>
+        <g fill="#ff9a5a" opacity="0.9"><path d="M26.4 57.6 l0.22 -0.5 l0.22 0.5 l0.52 0.06 l-0.38 0.36 l0.1 0.52 l-0.46 -0.26 l-0.46 0.26 l0.1 -0.52 l-0.38 -0.36 Z"/></g>
+        <!-- kleines Boot am Horizont der Insel -->
+        <g opacity="0.85"><path d="M36.4 51.9 h1.6 l-0.3 -0.6 h-1 Z" fill="#7a5432"/>
+          <path d="M37 51.3 L37 50.1 L38.1 51 Z" fill="#f2ece0"/></g>
         <g filter="url(#atShade)">
           <ellipse cx="35.6" cy="54" rx="2.7" ry="0.95" fill="#6a5a4a"/>
           <ellipse cx="35.6" cy="53.7" rx="2.4" ry="0.8" fill="#8a7864"/>
@@ -429,7 +529,11 @@ const WorldMap = (() => {
           <rect x="34.9" y="52.1" width="1.5" height="0.9" fill="#d93b3b"/>
           <path d="M34.4 48.9 L35.65 47.2 L36.9 48.9 Z" fill="#c33"/>
           <path d="M35.65 47.2 L36.9 48.9 L35.65 48.9 Z" fill="#8e2323" opacity="0.85"/>
-          <circle class="art-window" cx="35.65" cy="48.5" r="0.52" fill="#ffe98a"/></g>
+          <!-- Galerie unter der Laterne -->
+          <rect x="34.5" y="48.85" width="2.3" height="0.2" fill="#8a8478"/>
+          <g stroke="#8a8478" stroke-width="0.08"><path d="M34.7 48.85 v-0.35 M35.65 48.85 v-0.35 M36.6 48.85 v-0.35"/></g>
+          <circle class="art-window" cx="35.65" cy="48.4" r="0.5" fill="#ffe98a"/>
+          <path class="art-window" d="M35.65 48.4 L39.6 47.5 L39.6 49.3 Z" fill="rgba(255,236,150,0.28)"/></g>
         <g><path d="M21.4 54.6 q-1.5 -3.2 0.4 -4.7 q1 1.9 0.4 4.7 Z" fill="#b455a8"/>
           <path d="M21.8 49.9 q1 1.9 0.4 4.7 l-0.6 0 q0.5 -2.6 -0.2 -4.4 Z" fill="#7d2f74" opacity="0.85"/>
           <path d="M23.4 55 q-0.65 -3.6 1.5 -4.7 q0.55 2.4 -0.45 4.7 Z" fill="#b455a8"/>
@@ -446,7 +550,11 @@ const WorldMap = (() => {
           <ellipse cx="50" cy="33.4" rx="3.7" ry="1.15" fill="#a89e8c"/>
           <ellipse cx="50" cy="33" rx="3.7" ry="1.15" fill="#cfc6b4"/>
           <ellipse cx="50" cy="32.3" rx="2.6" ry="0.82" fill="#eae2d2"/>
-          <ellipse cx="50" cy="32.1" rx="2.6" ry="0.82" fill="#f6f0e2"/></g>
+          <ellipse cx="50" cy="32.1" rx="2.6" ry="0.82" fill="#f6f0e2"/>
+          <g stroke="rgba(140,128,104,0.5)" stroke-width="0.09" fill="none">
+            <path d="M47.4 32.6 a2.6 0.82 0 0 0 5.2 0"/><path d="M46.3 33.5 a3.7 1.15 0 0 0 7.4 0"/></g>
+          <g fill="rgba(140,128,104,0.45)"><rect x="48.6" y="32.5" width="0.16" height="0.5"/>
+            <rect x="51.2" y="32.5" width="0.16" height="0.5"/><rect x="49.9" y="32.6" width="0.16" height="0.5"/></g></g>
         ${tufts(50, 34, 6.6, 1.78, 10, 'rgba(28,66,34,0.3)', 2)}
         <ellipse cx="50" cy="34" rx="5.2" ry="1.4" fill="none" stroke="rgba(226,214,180,0.55)" stroke-width="0.3" stroke-dasharray="0.7 0.7"/>
         <g fill="#cfc6b4"><rect x="46.6" y="33.4" width="0.5" height="0.9"/><rect x="52.9" y="33.4" width="0.5" height="0.9"/></g>
