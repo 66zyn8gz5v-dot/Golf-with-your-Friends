@@ -65,7 +65,7 @@ const SHADOW_COURSES = [
       { type: 'wall', x0: 14, y0: 9, x1: 16, y1: 7, extend: 0 },
       { type: 'wall', x0: 14, y0: 5, x1: 16, y1: 3, extend: 0 },
       { type: 'ramp', x: 23, y: 3, w: 2, h: 2, angle: 0, minSpeed: 2.5, speed: 4.6, land: 3.2 },
-      { type: 'sharkjump', style: 'bat', x: 26, y: 4, w: 2, h: 2.4, period: 4.6, jump: 0.34, phase: 0.3, axis: 'y', height: 1.4 },
+      { type: 'sharkjump', style: 'bat', x: 26, y: 4, w: 1.6, h: 2.4, period: 6.5, jump: 0.2, phase: 0.3, axis: 'y', height: 1.4 },
       { type: 'bumper', x: 28.5, y: 2.6, r: 0.38, style: 'grave', kick: 7 },
       { type: 'wall', x0: 32, y0: 3, x1: 31.4, y1: 4, extend: 0 },
       { type: 'wall', x0: 32, y0: 6, x1: 31.4, y1: 5, extend: 0 },
