@@ -258,7 +258,7 @@
     document.body.classList.remove('creative', 'editing', 'testing');
     overlay(`<div class="panel">
       <h1>⛳ Fantasy Golf</h1>
-      <div class="sub">Golf with your Friends · ${WORLDS.length} Welten, ${WORLDS.reduce((a, w) => a + w.courses.length, 0)} magische Bahnen in 2,5D</div>
+      <div class="sub">Golf with your Friends · ${WORLDS.length} Welten, ${TOTAL_HOLES} magische Bahnen in 2,5D</div>
       <div class="modes">
         <span class="btn mode" id="to-map">${WorldMap.svg('mode-scene', 'xMidYMid slice')}<span class="mode-label">Weltkarte</span></span>
         <span class="btn mode" id="to-build">${SCENE_CREATIVE}<span class="mode-label long">Bauen &amp; Eigene Welt</span></span>
@@ -320,6 +320,11 @@
   const MODE_ICON = { normal: '🏆', pro: '🔥', legend: '⚡' };
   const worldMode = w => (w && w.mode) || 'normal';
   function setWorld(id) { state.world = WORLDS.find(w => w.id === id) || WORLDS[0]; state.courses = state.world.courses; Music.set(state.world.id); }
+
+  /* Bahnen zählen: die Innenräume gehören dazu (Hexenküche innen, Pyramide innen, Schiffswrack innen …),
+     und ein Innenraum kann selbst wieder einen haben – darum rekursiv. */
+  const countHoles = list => list.reduce((n, c) => n + 1 + (c.inner ? countHoles([c.inner]) : 0), 0);
+  const TOTAL_HOLES = WORLDS.reduce((n, w) => n + countHoles(w.courses), 0);
 
   const showWorldSelect = () => showMap(); // der Editor kehrt über diesen Weg ins Menü zurück
   function setCustomWorld(courses, name) { state.world = { id: 'custom', name, short: 'Eigene', courses }; state.courses = courses; Music.set('custom'); }
