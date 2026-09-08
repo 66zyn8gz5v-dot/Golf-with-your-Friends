@@ -51,13 +51,17 @@ nimmt sie als zweiten Wert der Zeichenfunktion entgegen.
 ## Bestenliste
 
 Über **🏆 Bestenliste** im Startbildschirm: für jede Bahn und für jede ganze Runde, mit Namen dabei, in
-**drei Wertungen**:
+**drei Wertungen**. Es gibt nichts auszuwählen – **alle drei laufen bei jedem Schlag gleichzeitig mit**,
+und die Liste zeigt sie nebeneinander. Einmal den Namen eintragen, dann einfach drauflos spielen:
 
 | Wertung | Was zählt |
 | --- | --- |
 | **🏆 Schläge** | Die wenigsten Schläge, wie beim Golf üblich. |
 | **⏱ Zeit** | Wer ist am schnellsten durch? Die Uhr läuft, sobald der Ball auf dem Abschlag liegt, und stoppt beim Einlochen. |
 | **⚡ Kombi** | Beides zusammen, gerechnet wie beim Speedgolf: **Schläge + Minuten**. Vier Schläge in 1:12 ergeben 4 + 1,2 = **5,2**. Wer trödelt, verliert – wer wild drauflos schlägt, aber auch. |
+
+Wer einen Zeitrekord bricht, kann in derselben Bahn auch den Schläge- und den Kombi-Rekord holen – jede
+Wertung wird einzeln geprüft, und die Meldung im Spiel nennt alle, die gefallen sind.
 
 Die Uhr steht still, solange ein Menü offen ist oder die Seite im Hintergrund liegt – niemand soll dafür
 bestraft werden, dass das Telefon klingelt. Die laufende Zeit steht während des Zugs oben rechts, die

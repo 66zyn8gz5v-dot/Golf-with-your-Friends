@@ -359,63 +359,62 @@
   }
 
   /* Bestenlisten-Bildschirm: Name, Gruppencode und die Rekorde aller Welten */
-  let bestKind = 'strokes';                 // gerade angezeigte Wertung
-  function showBestList(worldId, kind) {
+  function showBestList(worldId) {
     state.phase = 'title'; document.body.classList.add('title');
     document.body.classList.remove('creative', 'editing', 'testing');
     const wid = worldId || (state.world && state.world.id !== 'custom' ? state.world.id : WORLDS[0].id);
     const w = WORLDS.find(x => x.id === wid) || WORLDS[0];
-    if (kind && Best.KINDS.includes(kind)) bestKind = kind;
-    const rec = Best.of(w.id)[bestKind];
+    const rec = Best.of(w.id);
     const bestStatus = { status: st => { const el = $('bstate'); if (!el) return;
       el.textContent = st === 'ready' ? 'Verbunden – alle mit dem Spiel teilen sich diese Liste.'
         : st === 'error' ? 'Keine Verbindung – die Rekorde bleiben vorerst auf diesem Gerät.' : 'Verbinde …'; } };
+    /* Eine Zelle je Wertung: der Wert, darunter klein, wer ihn hält */
+    const zelle = (kind, r) => `<td class="num rec">${r ? `<b>${Best.format(kind, r)}</b><i>${r.n}</i>` : '–'}</td>`;
     const rows = w.courses.map((c, i) => {
-      const r = rec.holes[c.name];
-      // Bei der Kombi zeigt die kleine Zeile, woraus der Wert entstanden ist
-      const teile = bestKind === 'combo' && r && r.st ? `<i class="combo-parts">${r.st} Schläge · ${Best.formatTime(r.ms)}</i>` : '';
+      const h = k => rec[k].holes[c.name];
       return `<tr><td>${i + 1}</td><td>${holeIcon(c)} ${c.name}</td><td class="num">${c.par}</td>
-        <td class="num">${Best.format(bestKind, r)}${teile}</td><td>${r ? r.n : ''}</td></tr>`;
+        ${Best.KINDS.map(k => zelle(k, h(k))).join('')}</tr>`;
     }).join('');
+    const rundeZeile = Best.KINDS.map(k => zelle(k, rec[k].round)).join('');
     const parTotal = w.courses.reduce((a, c) => a + c.par, 0);
     overlay(`<div class="panel wide">
       <div class="panel-head"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span><h2>${Icons.svg('emoji_events')} Bestenliste</h2></div>
-      <div class="sub">${BEST_INTRO[bestKind]} Gewertet wird dein eigener Ball im Wettkampf.</div>
+      <div class="sub">Für jede Bahn zählen <b>alle drei Wertungen gleichzeitig</b> – Namen eintragen, losspielen,
+        der Rest passiert von allein. Gewertet wird dein eigener Ball im Wettkampf.</div>
       <p class="join-row"><label class="lbl">Dein Name<input id="bn" class="name-in" maxlength="14" autocomplete="off" spellcheck="false" placeholder="z. B. Max" value="${(Best.name || '').replace(/"/g, '&quot;')}"></label>
         <span class="btn small" id="bsave">Merken</span></p>
       <div class="sub net-note" id="bstate">${!Best.name ? 'Trag deinen Namen ein – ohne Namen wird nichts gewertet.'
         : Net.status === 'ready' ? 'Verbunden – alle mit dem Spiel teilen sich diese Liste.'
         : 'Keine Verbindung – die Rekorde bleiben vorerst auf diesem Gerät.'}</div>
-      <div id="bk" class="ow">${Best.KINDS.map(k => `<span class="btn ghost small ${k === bestKind ? 'sel' : ''}" data-k="${k}">${BEST_ICON[k]} ${Best.KIND_NAME[k]}</span>`).join('')}</div>
       <div id="bw" class="ow">${WORLDS.filter(x => x.id !== 'custom').map(x => `<span class="btn ghost small ${x.id === w.id ? 'sel' : ''}" data-w="${x.id}">${MODE_ICON[worldMode(x)]} ${x.short}</span>`).join('')}</div>
-      <div class="sub" style="margin-top:10px"><b>${w.name}</b> · Par ${parTotal}${rec.round ? ` · beste ganze Runde: <b>${Best.format(bestKind, rec.round)}</b> (${rec.round.n})` : ' · noch keine ganze Runde gespielt'}</div>
-      <table class="scores best-table"><tr><th>#</th><th>Bahn</th><th>Par</th><th>Rekord</th><th>von</th></tr>${rows}</table>
-      <div class="legend">${BEST_HELP[bestKind]}<br>
+      <div class="sub" style="margin-top:10px"><b>${w.name}</b> · Par ${parTotal}</div>
+      <div class="tabelle-schiebe"><table class="scores best-table">
+        <tr><th>#</th><th>Bahn</th><th>Par</th>${Best.KINDS.map(k => `<th class="num">${BEST_ICON[k]} <span class="kopf-wort">${Best.KIND_NAME[k]}</span></th>`).join('')}</tr>
+        ${rows}
+        <tr class="ganze-runde"><td></td><td>Ganze Runde</td><td></td>${rundeZeile}</tr>
+      </table></div>
+      <div class="legend"><b>${BEST_ICON.strokes} Schläge:</b> ${BEST_HELP.strokes}<br>
+        <b>${BEST_ICON.time} Zeit:</b> ${BEST_HELP.time}<br>
+        <b>${BEST_ICON.combo} Kombi:</b> ${BEST_HELP.combo}<br>
         Alle, die das Spiel haben, teilen sich diese Liste. Die Rekorde liegen beim Vermittler und
         zusätzlich hier im Browser – startet der Vermittler neu, können sie dort verloren gehen.</div>
     </div>`, 'title');
     $('back').addEventListener('click', showTitle);
-    ui.overlay.querySelectorAll('#bw .btn').forEach(b => b.addEventListener('click', () => showBestList(b.dataset.w, null)));
-    ui.overlay.querySelectorAll('#bk .btn').forEach(b => b.addEventListener('click', () => showBestList(w.id, b.dataset.k)));
+    ui.overlay.querySelectorAll('#bw .btn').forEach(b => b.addEventListener('click', () => showBestList(b.dataset.w)));
     $('bn').addEventListener('keydown', e => { if (e.key === 'Enter') $('bsave').click(); });
     $('bsave').addEventListener('click', () => {
       Sfx.unlock();
       Best.setName($('bn').value);
       Best.start(bestStatus);
-      showBestList(w.id, null);
+      showBestList(w.id);
     });
   }
 
   const BEST_ICON = { strokes: '🏆', time: '⏱', combo: '⚡' };
-  const BEST_INTRO = {
-    strokes: 'Wer braucht die wenigsten Schläge?',
-    time: 'Wer ist am schnellsten durch?',
-    combo: 'Schnell <b>und</b> mit wenigen Schlägen – beides zusammen.',
-  };
   const BEST_HELP = {
-    strokes: 'Gezählt werden die Schläge einer Bahn, wie beim Golf üblich.',
-    time: 'Die Uhr läuft, sobald dein Ball auf dem Abschlag liegt, und stoppt beim Einlochen. Im Menü und wenn die Seite in den Hintergrund geht, steht sie still.',
-    combo: 'Gerechnet wie beim Speedgolf: <b>Schläge + Minuten</b>. Vier Schläge in 1:12 ergeben 4 + 1,2 = <b>5,2</b>. Wer trödelt, verliert – wer wild drauflos schlägt, aber auch.',
+    strokes: 'die Schläge einer Bahn, wie beim Golf üblich.',
+    time: 'die Uhr läuft, sobald dein Ball auf dem Abschlag liegt, und stoppt beim Einlochen. Im Menü und wenn die Seite in den Hintergrund geht, steht sie still.',
+    combo: 'gerechnet wie beim Speedgolf: <b>Schläge + Minuten</b>. Vier Schläge in 1:12 ergeben 4 + 1,2 = <b>5,2</b>. Wer trödelt, verliert – wer wild drauflos schlägt, aber auch.',
   };
 
   /* ---------- Bestenliste ----------

@@ -201,9 +201,7 @@ table.scores td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .pod-dot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.4); flex: none; }
 .pod-name { flex: 1; text-align: left; font-weight: bold; }
 .pod-time { font-size: 12px; color: #b9c2d6; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.combo-parts { display: block; font-size: 11px; color: #9fb0cc; font-style: normal; white-space: nowrap; }
-/* Die drei Wertungen sollen auch auf dem Handy in eine Reihe passen */
-@media (max-width: 600px) { #bk .btn.small { padding: 6px 9px; font-size: 14px; } }
+
 .pod-total { font-variant-numeric: tabular-nums; font-weight: bold; min-width: 34px; text-align: right; }
 .pod-par { min-width: 46px; text-align: right; font-variant-numeric: tabular-nums; color: #ffe08a; }
 .pod-par.under { color: #9dff9d; } .pod-par.over { color: #ffb0a0; }
@@ -413,12 +411,22 @@ body.editing #editor-panel { display: flex; flex-direction: column; }
 .best-table { font-size: 14px; width: 100%; }
 table.best-table th, table.best-table td { padding: 5px 6px; }
 .best-table td:nth-child(1) { color: #9c93b8; width: 24px; }
-.best-table td:nth-child(4) { color: #ffe08a; font-weight: bold; }
-.best-table td:nth-child(5) { color: #cbbfe6; }
-.panel.wide { max-width: min(94vw, 640px); }
+/* Je Wertung eine Zelle: Wert oben, Halter klein darunter */
+.best-table td.rec { color: #ffe08a; font-weight: bold; line-height: 1.15; white-space: nowrap; }
+.best-table td.rec b { display: block; }
+.best-table td.rec i { display: block; font-style: normal; font-weight: normal; font-size: 11px; color: #cbbfe6; }
+.best-table tr.ganze-runde td { border-top: 1px solid rgba(255,215,120,0.35); padding-top: 8px; font-weight: bold; }
+.panel.wide { max-width: min(94vw, 700px); }
+/* Passt die Rekordtafel doch einmal nicht, lässt sie sich schieben statt überzulaufen */
+.tabelle-schiebe { overflow-x: auto; max-width: 100%; }
 @media (max-width: 600px) {
   .name-in { width: 140px; }
   .best-table { font-size: 12px; }
   table.best-table th, table.best-table td { padding: 4px 3px; }
   .best-table th:nth-child(1), .best-table td:nth-child(1) { display: none; }  /* Nummer weglassen, sonst wird es zu breit */
+  .best-table th:nth-child(3), .best-table td:nth-child(3) { display: none; }  /* Par steht auch auf der Weltkarte */
+  .best-table td.rec i { font-size: 10px; }
+}
+@media (max-width: 480px) {
+  .best-table .kopf-wort { display: none; }   /* die Sinnbilder allein reichen */
 }
