@@ -81,9 +81,29 @@ kann melden, was er will. Damit man das einordnen kann, steht an jedem Eintrag, 
 heißt „in einer Runde gegeneinander erspielt" – da haben andere zugeschaut. Einträge ohne Zeichen sind
 allein am eigenen Gerät entstanden. Derselbe Hinweis steht auch im Spiel über der Liste.
 
-**Zurücksetzen.** Unten in der Rangliste steht **Rangliste zurücksetzen**. Das löscht alle Rekorde aller
-Welten – bei dir und bei allen anderen. Nützlich, wenn jemand Ergebnisse eingetragen hat, die nicht
-stimmen.
+**Zurücksetzen – und wer das darf.** Zurücksetzen löscht alle Rekorde aller Welten, bei dir und bei allen
+anderen. Nützlich, wenn jemand Ergebnisse eingetragen hat, die nicht stimmen. Genau deshalb darf es nicht
+jeder: Sonst räumt der, der geschummelt hat, gleich hinterher die Spuren weg.
+
+Darum **führt einer die Liste**. Unten in der Rangliste steht am Anfang **Liste führen**. Wer da zuerst
+tippt, bekommt den Posten. Das Gerät legt dafür ein Schlüsselpaar an: Der öffentliche Teil geht als
+aufbewahrte Nachricht an alle, der geheime Teil bleibt im Browser und wird nie verschickt. Ab dann steht
+bei allen anderen nur noch „Zurücksetzen kann nur, wer die Liste führt" – der Knopf ist bei ihnen weg.
+
+Ein Zurücksetzen wird mit dem geheimen Schlüssel **unterschrieben**. Jedes Gerät prüft die Unterschrift
+gegen den öffentlichen Schlüssel und wirft alles weg, was nicht passt. Ein selbst gebasteltes
+Zurücksetzen bewirkt darum nichts – auch nicht, wenn es direkt am Vermittler vorbeigeschickt wird. Wer
+sich später selbst zum Listenführer erklären will, muss das mit dem Schlüssel des bisherigen unterschreiben;
+ohne den bleibt der alte Listenführer stehen.
+
+**Schlüssel sichern.** Der geheime Schlüssel liegt nur in diesem einen Browser. Löschst du die Daten der
+Seite oder wechselst das Gerät, ist er weg – und niemand kann die Liste mehr zurücksetzen. Über
+**Schlüssel sichern** kannst du ihn anzeigen und kopieren (etwa in eine Notiz); auf dem anderen Gerät
+setzt du ihn über denselben Knopf wieder ein. Getrennt geführt werden Spiel und Vorschau: zwei Listen,
+zwei Listenführer.
+
+Das ist kein Schutz gegen jemanden, der den Code des Spiels ändert – er kann weiter eigene Ergebnisse
+melden. Es verhindert nur, dass irgendwer die Liste für alle löschen kann.
 
 Damit das hält, wird nicht nur gelöscht, sondern der **Zeitpunkt des Zurücksetzens geteilt**: Jedes Gerät
 merkt ihn sich und wirft alles weg, was davor eingetragen wurde. Ohne diesen Kniff käme der alte Stand
@@ -160,6 +180,7 @@ Unter **Bauen & Eigene Welt** liegen der Editor und die selbst zusammengestellte
   Welten, Bahnen, Hüte und Rekordmeldungen behalten bewusst ihre bunten Zeichen: dafür hat kein Bedien-Icon-Satz Motive.
 - Online gegeneinander: **🌐 Online spielen** im Startbildschirm, Raumcode aufmachen oder eintippen.
 - Rekorde: **🏆 Rangliste** im Startbildschirm, einmal den eigenen Namen eintragen. Drei Wertungen: Schläge, Zeit und Kombi (Schläge + Minuten).
+- Zurücksetzen darf nur, wer die Liste führt: einmal unten in der Rangliste auf **Liste führen** tippen, dann den Schlüssel über **Schlüssel sichern** wegkopieren.
 - Musik an oder aus: Knopf `♪` unten links oder Taste `J`; im Startbildschirm auch unter „Musik". Die Wahl merkt sich der Browser.
 - 1–4 Spieler im Hotseat-Modus: Jeder spielt die Bahn nacheinander zu Ende.
 - Wasser, Lava und Abgrund: Ball zurück zur letzten Position, +1 Strafschlag.

@@ -471,7 +471,13 @@
         ${rows}
         <tr class="ganze-runde"><td></td><td>Ganze Runde</td><td></td>${rundeZeile}</tr>
       </table></div>
-      <p style="margin-top:12px"><span class="btn ghost small" id="brs">${Icons.svg('restart_alt')} Rangliste zurücksetzen</span></p>
+      <p style="margin-top:12px">${Best.binBesitzer
+        ? `<span class="btn ghost small" id="brs">${Icons.svg('restart_alt')} Rangliste zurücksetzen</span>
+           <span class="btn ghost small" id="bkey">${Icons.svg('save')} Schlüssel sichern</span>`
+        : Best.gibtBesitzer
+          ? `<span class="sub" style="display:block">Zurücksetzen kann nur, wer die Liste führt.
+             <span class="btn ghost small" id="bkey">${Icons.svg('save')} Schlüssel einsetzen</span></span>`
+          : `<span class="btn ghost small" id="bown">${Icons.svg('emoji_events')} Liste führen</span>`}</p>
       <div class="legend"><b>${BEST_ICON.strokes} Schläge:</b> ${BEST_HELP.strokes}<br>
         <b>${BEST_ICON.time} Zeit:</b> ${BEST_HELP.time}<br>
         <b>${BEST_ICON.combo} Kombi:</b> ${BEST_HELP.combo}<br>
@@ -480,13 +486,73 @@
     </div>`, 'title');
     $('back').addEventListener('click', showTitle);
     ui.overlay.querySelectorAll('#bw .btn').forEach(b => b.addEventListener('click', () => showBestList(b.dataset.w)));
-    $('brs').addEventListener('click', () => fragenUndZuruecksetzen(w.id));
+    if ($('brs')) $('brs').addEventListener('click', () => fragenUndZuruecksetzen(w.id));
+    if ($('bkey')) $('bkey').addEventListener('click', () => zeigeSchluessel(w.id));
+    if ($('bown')) $('bown').addEventListener('click', () => werdeListenfuehrer(w.id));
     $('bn').addEventListener('keydown', e => { if (e.key === 'Enter') $('bsave').click(); });
     $('bsave').addEventListener('click', () => {
       Sfx.unlock();
       Best.setName($('bn').value);
       Best.start(bestStatus);
       showBestList(w.id);
+    });
+  }
+
+  /* Die Liste führen: einmalig ein Schlüsselpaar anlegen. Der öffentliche Teil wird geteilt,
+     der private bleibt hier – nur damit lässt sich später zurücksetzen. */
+  function werdeListenfuehrer(weltId) {
+    overlay(`<div class="panel">
+      <div class="panel-head"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span><h2>${Icons.svg('emoji_events')} Liste führen</h2></div>
+      <div class="sub">Noch führt niemand die Rangliste. Wer sie führt, darf sie zurücksetzen – sonst niemand.</div>
+      <div class="sub warn-note">Dein Gerät legt dafür einen Schlüssel an. Der öffentliche Teil geht an alle,
+        der geheime bleibt hier und wird nie verschickt. <b>Sichere ihn danach</b> – ohne ihn kann niemand mehr
+        zurücksetzen, auch du nicht.</div>
+      <p style="margin-top:14px"><span class="btn" id="lf-ja">Liste übernehmen</span></p>
+      <div class="legend">Wer zuerst übernimmt, führt die Liste. Sag deinen Freunden Bescheid, damit
+        es nicht jemand anderes tut.</div>
+    </div>`, 'title');
+    $('back').addEventListener('click', () => showBestList(weltId));
+    $('lf-ja').addEventListener('click', async () => {
+      Sfx.unlock();
+      const raus = await Best.werdeBesitzer();
+      if (!raus.ok) {
+        showMessage(raus.grund === 'schonVergeben' ? 'Jemand anderes führt die Liste schon.'
+          : raus.grund === 'keinKrypto' ? 'Dieser Browser kann keine Schlüssel anlegen.'
+          : 'Das hat nicht geklappt.', 2600);
+        showBestList(weltId); return;
+      }
+      zeigeSchluessel(weltId, true);
+    });
+  }
+
+  /* Schlüssel sichern oder auf einem anderen Gerät einsetzen */
+  function zeigeSchluessel(weltId, frisch) {
+    const meiner = Best.schluesselText;
+    overlay(`<div class="panel">
+      <div class="panel-head"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span><h2>${Icons.svg('save')} Schlüssel</h2></div>
+      ${frisch ? '<div class="sub">Du führst jetzt die Rangliste.</div>' : ''}
+      ${meiner ? `<div class="sub">Das ist dein geheimer Schlüssel. Sichere ihn – etwa in einer Notiz –
+          und setze ihn auf deinen anderen Geräten ein. Wer ihn hat, kann die Rangliste zurücksetzen.</div>
+        <textarea id="kt" rows="4" spellcheck="false" readonly>${Text.esc(meiner)}</textarea>
+        <p><span class="btn small" id="k-copy">Kopieren</span></p>`
+        : `<div class="sub">Setze hier den Schlüssel ein, den du auf deinem anderen Gerät gesichert hast.</div>`}
+      <div class="sub" style="margin-top:10px">${meiner ? 'Anderen Schlüssel einsetzen:' : ''}</div>
+      <textarea id="kein" rows="3" spellcheck="false" placeholder="Schlüssel hier einfügen …"></textarea>
+      <p><span class="btn small ghost" id="k-set">Einsetzen</span></p>
+      <div class="legend">Der Schlüssel liegt nur in diesem Browser. Löschst du die Daten der Seite,
+        ist er weg – dann kann niemand mehr zurücksetzen.</div>
+    </div>`, 'title');
+    $('back').addEventListener('click', () => showBestList(weltId));
+    if ($('k-copy')) $('k-copy').addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(meiner); showMessage('Schlüssel kopiert', 1800); }
+      catch (e) { $('kt').select(); showMessage('Markiert – jetzt kopieren', 2200); }
+    });
+    $('k-set').addEventListener('click', async () => {
+      const raus = await Best.schluesselEinsetzen($('kein').value);
+      showMessage(raus.ok ? 'Schlüssel eingesetzt – du kannst jetzt zurücksetzen'
+        : raus.grund === 'passtNicht' ? 'Dieser Schlüssel gehört nicht zu dieser Rangliste.'
+        : 'Der Schlüssel ist nicht lesbar.', 2800);
+      if (raus.ok) showBestList(weltId);
     });
   }
 
@@ -502,11 +568,12 @@
         <span class="btn" id="rs-ja">Zurücksetzen</span></p>
     </div>`, 'title');
     $('rs-nein').addEventListener('click', () => showBestList(weltId));
-    $('rs-ja').addEventListener('click', () => {
+    $('rs-ja').addEventListener('click', async () => {
       Sfx.unlock();
-      const gesendet = Best.reset();
+      const raus = await Best.reset();
       showBestList(weltId);
-      showMessage(gesendet ? 'Rangliste zurückgesetzt – auch bei den anderen'
+      showMessage(!raus.ok ? 'Zurücksetzen kann nur, wer die Liste führt.'
+        : raus.gesendet ? 'Rangliste zurückgesetzt – auch bei den anderen'
         : 'Auf diesem Gerät zurückgesetzt. Ohne Verbindung erfahren es die anderen erst später.', 3200);
     });
   }

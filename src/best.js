@@ -36,6 +36,8 @@ const Best = (() => {
   const TOPIC = world => `fantasygolf/v1/${APP_MARKE}/best/all/${world}`;
   const FILTER = `fantasygolf/v1/${APP_MARKE}/best/all/+`;
   const RESET = `fantasygolf/v1/${APP_MARKE}/best/reset`;
+  const OWNER = `fantasygolf/v1/${APP_MARKE}/best/owner`;
+  const ALGO = { name: 'ECDSA', namedCurve: 'P-256' }, SIGN = { name: 'ECDSA', hash: 'SHA-256' };
   /* Eine Bahn braucht Zeit: was darunter liegt, kann niemand wirklich gespielt haben */
   const MIN_MS_BAHN = 2000, MIN_MS_RUNDE = 10000;
   const KINDS = ['strokes', 'time', 'combo'];
@@ -54,6 +56,46 @@ const Best = (() => {
      wie die Rekorde geteilt: Wer zurücksetzt, sagt es allen, und jedes Gerät wirft daraufhin seine
      alten Einträge weg. Ohne das käme der alte Stand vom nächsten Gerät sofort wieder zurück. */
   let epoche = +load(K_RESET, 0) || 0;
+
+  /* ---------- Wer darf zurücksetzen ----------
+
+     Zurücksetzen löscht die Rekorde bei allen. Das soll nicht jeder können, nur wer die Liste
+     führt. Ohne eigenen Server gibt es niemanden, der Rechte vergibt – also übernimmt das ein
+     Schlüsselpaar, das der Browser selbst erzeugt:
+
+     - Der öffentliche Schlüssel wird geteilt und liegt beim Vermittler. Jedes Gerät kennt ihn.
+     - Der private Schlüssel bleibt auf dem Gerät des Besitzers und wird nie verschickt.
+     - Wer zurücksetzt, unterschreibt den Zeitpunkt mit dem privaten Schlüssel. Alle anderen
+       prüfen die Unterschrift mit dem öffentlichen und lehnen alles ab, was nicht passt.
+
+     Wer zuerst kommt, wird Besitzer: Ist noch kein öffentlicher Schlüssel abgelegt, darf einer
+     abgelegt werden. Ein zweiter wird nur angenommen, wenn er mit dem bisherigen unterschrieben
+     ist – so lässt sich die Liste weitergeben, aber nicht an sich reißen. */
+  const K_PRIV = speicherSchluessel('bestkey'), K_PUB = speicherSchluessel('bestowner');
+  let besitzerPub = load(K_PUB, null);        // öffentlicher Schlüssel des Besitzers (JWK)
+  let meinPriv = load(K_PRIV, null);          // eigener privater Schlüssel (JWK), nur hier
+
+  const b64 = buf => { let s = ''; for (const b of new Uint8Array(buf)) s += String.fromCharCode(b); return btoa(s); };
+  const vonB64 = t => Uint8Array.from(atob(t), c => c.charCodeAt(0));
+  const roh = t => new TextEncoder().encode(t);
+  const kryptoDa = () => typeof crypto !== 'undefined' && crypto.subtle;
+
+  async function unterschreibe(text) {
+    if (!meinPriv || !kryptoDa()) return null;
+    try {
+      const k = await crypto.subtle.importKey('jwk', meinPriv, ALGO, false, ['sign']);
+      return b64(await crypto.subtle.sign(SIGN, k, roh(text)));
+    } catch (e) { return null; }
+  }
+  async function pruefeUnterschrift(pubJwk, text, sig) {
+    if (!pubJwk || !sig || !kryptoDa()) return false;
+    try {
+      const k = await crypto.subtle.importKey('jwk', pubJwk, ALGO, false, ['verify']);
+      return await crypto.subtle.verify(SIGN, k, vonB64(sig), roh(text));
+    } catch (e) { return false; }
+  }
+  /* Passt mein privater Schlüssel zum abgelegten öffentlichen? */
+  const binBesitzer = () => !!(meinPriv && besitzerPub && meinPriv.x === besitzerPub.x && meinPriv.y === besitzerPub.y);
   let data = migrate(load(K_BEST, {}) || {});   // Welt-Kennung -> Rekorde
   let onChange = null, watching = '';
 
@@ -122,9 +164,12 @@ const Best = (() => {
   }
   /* Jemand hat zurückgesetzt: Zeitpunkt übernehmen, alles Ältere wegwerfen und den nun leeren
      Stand nachschicken, damit auch die aufbewahrten Nachrichten beim Vermittler aufräumen. */
-  function onReset(msg) {
+  async function onReset(msg) {
     const t = +(msg && msg.t) || 0;
     if (!t || t <= epoche || t > Date.now() + 300000) return;
+    // Ohne gültige Unterschrift des Besitzers passiert nichts
+    if (!besitzerPub) return;
+    if (!await pruefeUnterschrift(besitzerPub, 'reset:' + t, msg && msg.sig)) return;
     epoche = t; save(K_RESET, epoche);
     const welten = Object.keys(data);
     data = migrate(data);                       // wirft alles vor der Epoche weg
@@ -132,7 +177,22 @@ const Best = (() => {
     setTimeout(() => { for (const id of welten) publish(id); }, 400);
     if (onChange) onChange(null, []);
   }
+  /* Der abgelegte öffentliche Schlüssel des Besitzers */
+  async function onOwner(msg) {
+    const pub = msg && msg.pub;
+    if (!pub || typeof pub !== 'object' || pub.kty !== 'EC' || typeof pub.x !== 'string' || typeof pub.y !== 'string') return;
+    if (besitzerPub && besitzerPub.x === pub.x && besitzerPub.y === pub.y) return;     // schon bekannt
+    if (besitzerPub) {
+      // Übergabe: nur gültig, wenn der bisherige Besitzer den neuen Schlüssel unterschrieben hat
+      const ok = await pruefeUnterschrift(besitzerPub, 'owner:' + pub.x + '.' + pub.y, msg.sig);
+      if (!ok) return;
+    }
+    besitzerPub = { kty: pub.kty, crv: pub.crv || 'P-256', x: pub.x, y: pub.y, ext: true };
+    save(K_PUB, besitzerPub);
+    if (onChange) onChange(null, []);
+  }
   function onNet(msg, topic) {
+    if (topic === OWNER) { onOwner(msg); return; }
     if (topic === RESET) { onReset(msg); return; }
     const id = topic.split('/').pop();
     if (!id) return;
@@ -179,17 +239,65 @@ const Best = (() => {
     setName(v) { name = cleanName(v); save(K_NAME, name); },
     /* Alles zurücksetzen – bei allen. Der Zeitpunkt wird geteilt, damit die alten Einträge nicht
        vom nächsten Gerät wieder hereingetragen werden. */
-    reset() {
-      epoche = Date.now();
-      save(K_RESET, epoche);
+    async reset() {
+      if (!binBesitzer()) return { ok: false, grund: 'keinBesitzer' };
+      const t = Date.now();
+      const sig = await unterschreibe('reset:' + t);
+      if (!sig) return { ok: false, grund: 'keinSchluessel' };
+      epoche = t; save(K_RESET, epoche);
       const welten = Object.keys(data);
-      data = {};
-      save(K_BEST, data);
-      const gesendet = Net.pub(RESET, { t: epoche }, true);
+      data = {}; save(K_BEST, data);
+      const gesendet = Net.pub(RESET, { t, sig }, true);
       for (const id of welten) publish(id);     // leere Stände nachschieben
-      return gesendet;
+      if (onChange) onChange(null, []);
+      return { ok: true, gesendet };
     },
     get resetZeit() { return epoche; },
+
+    /* ---------- Besitz ---------- */
+    get binBesitzer() { return binBesitzer(); },
+    get gibtBesitzer() { return !!besitzerPub; },
+    /* Schlüsselpaar anlegen und den öffentlichen Teil ablegen. Geht nur, solange niemand die
+       Liste führt – sonst müsste der bisherige Besitzer übergeben. */
+    async werdeBesitzer() {
+      if (besitzerPub && !binBesitzer()) return { ok: false, grund: 'schonVergeben' };
+      if (!kryptoDa()) return { ok: false, grund: 'keinKrypto' };
+      try {
+        const paar = await crypto.subtle.generateKey(ALGO, true, ['sign', 'verify']);
+        const pub = await crypto.subtle.exportKey('jwk', paar.publicKey);
+        const priv = await crypto.subtle.exportKey('jwk', paar.privateKey);
+        let sig = null;
+        if (besitzerPub) sig = await unterschreibe('owner:' + pub.x + '.' + pub.y);   // Übergabe an sich selbst
+        meinPriv = priv; save(K_PRIV, meinPriv);
+        besitzerPub = { kty: pub.kty, crv: pub.crv, x: pub.x, y: pub.y, ext: true };
+        save(K_PUB, besitzerPub);
+        Net.pub(OWNER, sig ? { pub: besitzerPub, sig } : { pub: besitzerPub }, true);
+        return { ok: true };
+      } catch (e) { return { ok: false, grund: 'fehler' }; }
+    },
+    /* Den eigenen Schlüssel zum Sichern oder Mitnehmen */
+    get schluesselText() { return meinPriv ? JSON.stringify(meinPriv) : ''; },
+    /* Einen gesicherten Schlüssel auf diesem Gerät einsetzen */
+    async schluesselEinsetzen(text) {
+      let priv = null;
+      try { priv = JSON.parse(String(text || '').trim()); } catch (e) { return { ok: false, grund: 'unlesbar' }; }
+      if (!priv || priv.kty !== 'EC' || !priv.d || !priv.x || !priv.y) return { ok: false, grund: 'unlesbar' };
+      if (besitzerPub && (besitzerPub.x !== priv.x || besitzerPub.y !== priv.y)) return { ok: false, grund: 'passtNicht' };
+      const probe = await (async () => {
+        try {
+          const k = await crypto.subtle.importKey('jwk', priv, ALGO, false, ['sign']);
+          return !!await crypto.subtle.sign(SIGN, k, roh('probe'));
+        } catch (e) { return false; }
+      })();
+      if (!probe) return { ok: false, grund: 'unlesbar' };
+      meinPriv = priv; save(K_PRIV, meinPriv);
+      if (!besitzerPub) {
+        besitzerPub = { kty: priv.kty, crv: priv.crv || 'P-256', x: priv.x, y: priv.y, ext: true };
+        save(K_PUB, besitzerPub);
+        Net.pub(OWNER, { pub: besitzerPub }, true);
+      }
+      return { ok: true };
+    },
     /* Verbindung aufbauen und die Rekorde abonnieren */
     start(handlers) {
       Net.connect(handlers || {});
@@ -197,12 +305,13 @@ const Best = (() => {
         // Die eigenen aufbewahrten Nachrichten sollen mitkommen, darum skipSelf aus
         Net.sub(FILTER, onNet, { skipSelf: false });
         Net.sub(RESET, onNet, { skipSelf: false });
+        Net.sub(OWNER, onNet, { skipSelf: false });
         watching = FILTER;
       }
       // eigenen Stand einmal anbieten, damit neue Geräte ihn bekommen
       setTimeout(() => { for (const id of Object.keys(data)) publish(id); }, 1200);
     },
-    stop() { if (watching) { Net.unsub(watching); Net.unsub(RESET); watching = ''; } },
+    stop() { if (watching) { Net.unsub(watching); Net.unsub(RESET); Net.unsub(OWNER); watching = ''; } },
     onChange(fn) { onChange = fn; },
 
     /* Ergebnis einer Bahn eintragen: Schläge und gebrauchte Zeit.
