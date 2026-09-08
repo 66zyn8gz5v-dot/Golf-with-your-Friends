@@ -42,10 +42,10 @@ const WorldMap = (() => {
       <ellipse cx="${cx}" cy="${cy + ry * 0.42}" rx="${rx * 0.985}" ry="${ry}" fill="rgba(0,0,0,0.25)"
         style="clip-path:none" opacity="0.35"/>
       <!-- Kontaktschatten: dort, wo die Decke auf dem Fels aufliegt -->
-      <ellipse cx="${cx}" cy="${cy + ry * 0.75}" rx="${rx * 0.92}" ry="${ry * 0.7}" fill="rgba(0,0,0,0.3)" filter="url(#atSoft)"/>
+      <ellipse cx="${cx}" cy="${cy + ry * 0.75}" rx="${rx * 0.92}" ry="${ry * 0.7}" fill="rgba(0,0,0,0.32)" filter="url(#atNear)"/>
       <!-- Grasdecke, von links oben beleuchtet -->
       <ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${top}"/>
-      <ellipse cx="${cx - rx * 0.3}" cy="${cy - ry * 0.3}" rx="${rx * 0.5}" ry="${ry * 0.5}" fill="rgba(255,248,210,0.18)" filter="url(#atSoft)"/>
+      <ellipse cx="${cx - rx * 0.3}" cy="${cy - ry * 0.3}" rx="${rx * 0.52}" ry="${ry * 0.52}" fill="rgba(255,248,210,0.2)" filter="url(#atNear)"/>
       <path d="M ${cx - rx * 0.95} ${cy - ry * 0.1} a ${rx} ${ry} 0 0 1 ${rx * 1.25} ${-ry * 0.82}" fill="none" stroke="rgba(255,246,205,0.55)" stroke-width="0.32"/>
       <path d="M ${cx - rx} ${cy} a ${rx} ${ry} 0 0 0 ${rx * 2} 0" fill="none" stroke="rgba(0,0,0,0.3)" stroke-width="0.4"/>
     </g>`;
@@ -61,6 +61,33 @@ const WorldMap = (() => {
     `<g><path d="M ${x - w / 2} ${y} q ${w * 0.15} ${h * 0.5} ${-w * 0.12} ${h} l ${w * 1.24} 0 q ${-w * 0.27} ${-h * 0.5} ${-w * 0.12} ${-h} Z" fill="${col}" opacity="0.7"/>
       <path d="M ${x - w * 0.12} ${y} q ${w * 0.08} ${h * 0.5} ${-w * 0.05} ${h * 0.96}" stroke="rgba(255,255,255,0.75)" stroke-width="${w * 0.22}" fill="none"/>
       <ellipse cx="${x}" cy="${y}" rx="${w * 0.75}" ry="${w * 0.28}" fill="${col}" opacity="0.85"/></g>`;
+  /* Grasbüschel auf der Decke – sie geben der Fläche Struktur statt einer glatten Ellipse */
+  function tufts(cx, cy, rx, ry, n, col = 'rgba(28,66,34,0.32)', seed = 1) {
+    let out = '';
+    for (let i = 0; i < n; i++) {
+      const a = i * 2.39996 + seed, r = Math.sqrt(((i * 37 + seed * 11) % 100) / 100);
+      const x = cx + Math.cos(a) * rx * 0.84 * r, y = cy + Math.sin(a) * ry * 0.84 * r;
+      const w = 0.14 + ((i * 3) % 3) * 0.05;
+      out += `<path d="M ${x - w} ${y} q ${w} ${-w * 2.6} ${w * 2} 0 Z" fill="${col}"/>`;
+    }
+    return out;
+  }
+  /* Blüten, Kiesel oder Funken als bunte Tupfer */
+  function specks(cx, cy, rx, ry, n, cols, seed = 3) {
+    let out = '';
+    for (let i = 0; i < n; i++) {
+      const a = i * 2.39996 + seed, r = Math.sqrt(((i * 53 + seed * 7) % 100) / 100);
+      out += `<circle cx="${(cx + Math.cos(a) * rx * 0.8 * r).toFixed(2)}" cy="${(cy + Math.sin(a) * ry * 0.8 * r).toFixed(2)}" r="${(0.1 + (i % 3) * 0.04).toFixed(2)}" fill="${cols[i % cols.length]}"/>`;
+    }
+    return out;
+  }
+  /* kleines Haus mit beleuchteter und abgewandter Dachseite */
+  const house = (x, y, w, h, wall = 'url(#atWall)', roof = 'url(#atRoof)', dark = '#7d2a2a') =>
+    `<g>${cast(x + w * 0.62, y + h, w * 0.95, w * 0.3)}
+      <rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${wall}"/>
+      <path d="M ${x - w * 0.2} ${y} L ${x + w / 2} ${y - h * 0.78} L ${x + w * 1.2} ${y} Z" fill="${roof}"/>
+      <path d="M ${x + w / 2} ${y - h * 0.78} L ${x + w * 1.2} ${y} L ${x + w / 2} ${y} Z" fill="${dark}" opacity="0.8"/>
+      <rect x="${x + w * 0.32}" y="${y + h * 0.34}" width="${w * 0.3}" height="${h * 0.42}" fill="#ffd166"/></g>`;
   const tree = (x, y, s, col = '#3f8f47', dark = '#255f30', lit = '#6cbc63') =>
     `<g>${cast(x + s * 0.5, y + s * 0.12, s * 1.05, s * 0.3)}
       <g class="sway"><path d="M ${x - s} ${y} L ${x} ${y - s * 2.3} L ${x + s} ${y} Z" fill="${col}"/>
@@ -140,14 +167,16 @@ const WorldMap = (() => {
         <radialGradient id="atMagic" cx="0.5" cy="0.5" r="0.5">
           <stop offset="0" stop-color="rgba(170,100,255,0.55)"/><stop offset="1" stop-color="rgba(170,100,255,0)"/></radialGradient>
         <linearGradient id="atHaze" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="rgba(150,190,230,0.2)"/><stop offset="0.45" stop-color="rgba(150,190,230,0.08)"/>
+          <stop offset="0" stop-color="rgba(150,190,230,0.1)"/><stop offset="0.45" stop-color="rgba(150,190,230,0.08)"/>
           <stop offset="0.75" stop-color="rgba(150,190,230,0)"/></linearGradient>
         <radialGradient id="atVig" cx="0.5" cy="0.5" r="0.74">
           <stop offset="0.55" stop-color="rgba(0,0,0,0)"/><stop offset="1" stop-color="rgba(0,0,0,0.5)"/></radialGradient>
         <filter id="atShade" x="-40%" y="-40%" width="180%" height="200%">
           <feDropShadow dx="0.5" dy="0.7" stdDeviation="0.45" flood-color="#0a0812" flood-opacity="0.5"/></filter>
+        <filter id="atNear" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="0.38"/></filter>
         <filter id="atDof" x="-15%" y="-15%" width="130%" height="130%">
-          <feGaussianBlur stdDeviation="0.3"/></filter>
+          <feGaussianBlur stdDeviation="0.12"/></filter>
         <filter id="atSoft" x="-20%" y="-20%" width="140%" height="140%">
           <feGaussianBlur stdDeviation="0.9"/></filter>
         <filter id="atDeep" x="-30%" y="-30%" width="160%" height="180%">
@@ -188,9 +217,17 @@ const WorldMap = (() => {
           <path d="M77.7 9 L79.2 12.6 L77.7 12.6 Z M83.5 8.4 L85 12.2 L83.5 12.2 Z M80.6 5.4 L82.6 9.8 L80.6 9.8 Z" fill="#0d1029" opacity="0.8"/>
           <g fill="#8fd8ff" opacity="0.95"><rect x="77.2" y="14.4" width="0.7" height="1"/><rect x="83" y="14" width="0.7" height="1"/><rect x="80.2" y="11.8" width="0.9" height="1.3"/></g>
         </g>
+        <g filter="url(#atShade)">
+          <rect x="77.6" y="17.7" width="6.6" height="0.6" fill="#2a3058"/>
+          <g fill="#39406e"><rect x="77.6" y="17.2" width="0.7" height="0.55"/><rect x="79" y="17.2" width="0.7" height="0.55"/>
+            <rect x="80.4" y="17.2" width="0.7" height="0.55"/><rect x="81.8" y="17.2" width="0.7" height="0.55"/><rect x="83.2" y="17.2" width="0.7" height="0.55"/></g></g>
+        ${tufts(81, 19, 12, 2.04, 14, 'rgba(20,44,44,0.4)', 2)}
+        <g stroke="rgba(200,224,255,0.45)" stroke-width="0.16" stroke-linecap="round">
+          <path d="M72.6 23.4 l-0.5 1.8"/><path d="M76.2 24.6 l-0.5 1.8"/><path d="M80.4 25.2 l-0.5 2"/>
+          <path d="M84.6 24.4 l-0.5 1.8"/><path d="M88.4 23.2 l-0.5 1.6"/></g>
         <polyline class="twinkle" points="88.4,6.6 86.4,10.6 89,11 85.8,16.4" fill="none" stroke="#fff6a8" stroke-width="0.7" stroke-linejoin="round"/>
         <polyline class="twinkle t2" points="73.4,8.6 71.9,11.6 73.8,11.9 71.6,15.6" fill="none" stroke="#dff0ff" stroke-width="0.45" stroke-linejoin="round"/>
-        <ellipse cx="82" cy="16" rx="22" ry="14" fill="rgba(150,180,220,0.1)" filter="url(#atSoft)"/>
+        <ellipse cx="82" cy="16" rx="22" ry="14" fill="rgba(150,180,220,0.07)" filter="url(#atSoft)"/>
       </g>
 
       <!-- ============ Märchenland (oben links) ============ -->
@@ -202,6 +239,9 @@ const WorldMap = (() => {
         <g filter="url(#atDeep)">${isle(18, 19.5, 13, 9, 'url(#atGrass)', 'url(#atSoil)', 'url(#atRock)', '#241a12', 0.19)}</g>
         ${chip(8.6, 25.4, 1.4, 'url(#atRock)', '#241a12')}${chip(28.2, 24.6, 1.1, 'url(#atRock)', '#241a12')}
         ${fall(11.2, 20.1, 1.8, 8)}
+        ${tufts(18, 19.5, 13, 2.47, 26)}
+        ${specks(18, 19.9, 12, 2.2, 18, ['#ffe9a0', '#ff9ec0', '#fff', '#c8f0ff'], 5)}
+        <path d="M8.4 20.4 Q13 18.6 16.4 18.4 Q19.6 18.2 22.6 19.2" fill="none" stroke="rgba(226,214,180,0.85)" stroke-width="0.5" stroke-linecap="round"/>
         <g filter="url(#atShade)">
           ${cast(18.6, 19.4, 6.4, 1.8)}
           <g fill="url(#atWall)">
@@ -222,12 +262,19 @@ const WorldMap = (() => {
             <path d="M24.4 14.7 L24.4 11.9 M24.4 14.7 L27.2 14.7 M24.4 14.7 L24.4 17.5 M24.4 14.7 L21.6 14.7" stroke="#5a3a1e" stroke-width="0.28"/>
             <path d="M24.55 12.1 L25.3 12.3 L24.55 14.5 Z M27 14.85 L26.8 15.6 L24.6 14.85 Z M24.25 17.3 L23.5 17.1 L24.25 14.9 Z M21.8 14.55 L22 13.8 L24.2 14.55 Z" fill="rgba(245,238,215,0.94)"/></g>
         </g>
-        ${tree(9.8, 19.3, 1.2)}${tree(27.2, 18.9, 1.05)}${tree(12.4, 20.9, 0.85)}
+        <g filter="url(#atShade)">
+          <rect x="14.2" y="17.9" width="6.6" height="0.75" fill="#cfc7b6"/>
+          <g fill="#e6dfd0"><rect x="14.2" y="17.4" width="0.7" height="0.6"/><rect x="15.6" y="17.4" width="0.7" height="0.6"/>
+            <rect x="17" y="17.4" width="0.7" height="0.6"/><rect x="18.4" y="17.4" width="0.7" height="0.6"/><rect x="19.8" y="17.4" width="0.7" height="0.6"/></g></g>
+        ${house(9.4, 19.1, 1.9, 1.4)}${house(11.9, 19.6, 1.5, 1.1)}${house(21.6, 19.4, 1.6, 1.2)}
+        ${tree(9.8, 19.3, 1.2)}${tree(27.2, 18.9, 1.05)}${tree(12.4, 20.9, 0.85)}${tree(24.4, 20.2, 0.8)}${tree(7.4, 20.4, 0.75)}
+        <g fill="none" stroke="#2b3a52" stroke-width="0.16" stroke-linecap="round" opacity="0.7">
+          <path d="M6.4 11.6 q0.7 -0.6 1.4 0 M8.4 12.8 q0.6 -0.5 1.2 0 M27 13.4 q0.6 -0.5 1.2 0"/></g>
       </g>
 
       <!-- Dunst und Wolken zwischen den Ebenen – sie trennen hinten von vorne -->
       <rect width="100" height="40" fill="url(#atHaze)"/>
-      <g filter="url(#atSoft)" opacity="0.32">
+      <g filter="url(#atSoft)" opacity="0.2">
         <g class="drift"><ellipse cx="34" cy="30" rx="13" ry="2.2" fill="#dbeaf8"/><ellipse cx="28" cy="31" rx="7" ry="1.5" fill="#dbeaf8"/></g>
         <g class="drift d2"><ellipse cx="72" cy="33" rx="11" ry="2" fill="#cfe0f2"/><ellipse cx="79" cy="34" rx="6" ry="1.3" fill="#cfe0f2"/></g>
       </g>
@@ -256,6 +303,16 @@ const WorldMap = (() => {
         <g><path d="M79.6 43.4 l0.95 -2.6 l0.95 2.6 Z" fill="#8a3bff" opacity="0.85"/>
           <path d="M80.55 40.8 l0.95 2.6 l-0.95 0 Z" fill="#5a1fb0" opacity="0.9"/>
           <path d="M90 43.6 l0.85 -2.2 l0.85 2.2 Z" fill="#8a3bff" opacity="0.85"/></g>
+        ${tufts(85, 43, 13, 4, 20, 'rgba(90,60,140,0.3)', 8)}
+        <g filter="url(#atShade)">
+          <g fill="#4a4066"><rect x="79.4" y="41.4" width="1.2" height="1.8"/><rect x="90.6" y="41.8" width="1" height="1.6"/></g>
+          <g fill="#2e2745"><rect x="80.1" y="41.4" width="0.5" height="1.8"/><rect x="91.2" y="41.8" width="0.4" height="1.6"/></g>
+          <circle cx="80" cy="41.4" r="0.6" fill="#4a4066"/><circle cx="91.1" cy="41.8" r="0.5" fill="#4a4066"/>
+          <path d="M87.6 42.9 v-1.5 h2.2 v1.5" fill="none" stroke="#3a3054" stroke-width="0.35"/></g>
+        <g><path d="M82.2 43.2 l0.6 -1.6 l0.6 1.6 Z" fill="#a86bff" opacity="0.8"/>
+          <path d="M88.6 43.4 l0.5 -1.3 l0.5 1.3 Z" fill="#8a3bff" opacity="0.8"/></g>
+        <g fill="#2a1f44"><path d="M78.6 33.4 q0.7 -0.6 1.4 0 q-0.7 -0.2 -1.4 0 Z"/><path d="M80.6 32 q0.6 -0.5 1.2 0 q-0.6 -0.2 -1.2 0 Z"/>
+          <path d="M89.8 33.8 q0.7 -0.6 1.4 0 q-0.7 -0.2 -1.4 0 Z"/></g>
         <g class="particles"><circle class="p" cx="80" cy="45" r="0.5" fill="#c58bff"/>
           <circle class="p p3" cx="90.5" cy="45.5" r="0.42" fill="#c58bff"/>
           <circle class="p p2" cx="85.5" cy="46" r="0.34" fill="#e0b8ff"/></g>
@@ -266,6 +323,9 @@ const WorldMap = (() => {
         <g filter="url(#atDeep)">${isle(15, 42, 12, 11, 'url(#atGrass)', 'url(#atSoil)', 'url(#atRock)', '#241a12', 0.3)}</g>
         ${chip(6.2, 48.4, 1.3, 'url(#atRock)', '#241a12')}${chip(23.8, 47.6, 1.1, 'url(#atRock)', '#241a12')}
         ${fall(8.6, 42.6, 1.5, 7.5, '#bfe4f5')}
+        ${tufts(15, 42, 12, 3.6, 22, 'rgba(40,66,32,0.34)', 4)}
+        ${specks(15, 42.6, 11, 3.2, 14, ['#c9a15a', '#8a7a5a', '#d9c08a'], 9)}
+        <path d="M6.6 43.4 Q11 41.4 15 41.2 Q19 41 22.4 42.2" fill="none" stroke="rgba(150,132,96,0.7)" stroke-width="0.55" stroke-linecap="round"/>
         <g filter="url(#atShade)">
           ${cast(15.4, 41.9, 6, 1.7)}
           <rect x="10.2" y="34.6" width="9" height="7.2" fill="url(#atWood2)"/>
@@ -286,7 +346,16 @@ const WorldMap = (() => {
         <g class="mill-blades" fill="none" stroke="#d9a24e" stroke-width="0.42" stroke-linecap="round">
           <circle cx="4.8" cy="36.4" r="1.5"/>
           <path d="M6.3 36.4 L7.1 36.4 M5.85 37.45 L6.4 38 M4.8 37.9 L4.8 38.7 M3.75 37.45 L3.2 38 M3.3 36.4 L2.5 36.4 M3.75 35.35 L3.2 34.8 M4.8 34.9 L4.8 34.1 M5.85 35.35 L6.4 34.8"/></g>
-        ${tree(23.4, 41.4, 0.95, '#357a41')}
+        <g filter="url(#atShade)">
+          <g fill="#7a5a34"><rect x="20.6" y="39.8" width="1.3" height="1.5"/><rect x="22.2" y="40.2" width="1.1" height="1.2"/></g>
+          <g fill="#a5764a"><rect x="20.6" y="39.8" width="0.55" height="1.5"/><rect x="22.2" y="40.2" width="0.45" height="1.2"/></g>
+          <g fill="none" stroke="#5f5a52" stroke-width="0.28"><path d="M20 39.6 h-2.6 v-1.4"/><path d="M20.2 40.6 h-1.4"/></g>
+          <rect x="9.4" y="41.2" width="6.6" height="0.28" fill="#6a6258"/>
+          <rect x="11.4" y="40.1" width="1.7" height="1.1" fill="#8a5f3a"/>
+          <rect x="12.6" y="40.1" width="0.5" height="1.1" fill="#5a3f26"/>
+          <g fill="#3f3a34"><circle cx="11.8" cy="41.3" r="0.24"/><circle cx="12.8" cy="41.3" r="0.24"/></g></g>
+        <g class="drift" opacity="0.5"><circle cx="19.6" cy="27.4" r="0.7" fill="#e8e4de"/><circle cx="20.6" cy="25.6" r="0.5" fill="#e8e4de"/></g>
+        ${tree(23.4, 41.4, 0.95, '#357a41')}${tree(6.6, 42.6, 0.8, '#357a41')}
       </g>
 
       <!-- ============ Dschungeltempel (vorne Mitte) ============ -->
@@ -294,6 +363,8 @@ const WorldMap = (() => {
         <g filter="url(#atDeep)">${isle(58, 55, 13, 12, 'url(#atGrassJ)', 'url(#atSoil)', 'url(#atRock)', '#1d2c19', 0.37)}</g>
         ${chip(48.6, 61.2, 1.3, 'url(#atRock)', '#1d2c19')}${chip(67.4, 61.6, 1.1, 'url(#atRock)', '#1d2c19')}
         ${fall(52.2, 55.6, 1.6, 7)}
+        ${tufts(58, 55, 13, 4.8, 26, 'rgba(20,60,26,0.4)', 6)}
+        ${specks(58, 55.6, 12, 4.2, 12, ['#8ed36a', '#ffd166', '#ff8fa8'], 11)}
         <g filter="url(#atShade)">
           ${cast(58.6, 54.9, 5.6, 1.6)}
           <g fill="url(#atStone)">
@@ -316,6 +387,15 @@ const WorldMap = (() => {
             <ellipse cx="53.3" cy="50.3" rx="2" ry="0.62" transform="rotate(20 53.3 50.3)"/></g></g>
         <g fill="#2b6a2e"><circle cx="48.4" cy="54.4" r="2"/><circle cx="67.9" cy="54.2" r="1.8"/><circle cx="46.6" cy="56" r="1.35"/></g>
         <g fill="#4f9c46" opacity="0.7"><circle cx="47.9" cy="53.9" r="1.2"/><circle cx="67.4" cy="53.7" r="1.1"/></g>
+        <g filter="url(#atShade)">
+          <g fill="#c6b489"><rect x="57.1" y="54.5" width="2.2" height="0.35"/><rect x="57.3" y="54.9" width="1.8" height="0.35"/></g>
+          <g fill="#7e7052" opacity="0.8"><rect x="54.6" y="52.9" width="7.2" height="0.16"/><rect x="55.6" y="51.1" width="5.2" height="0.14"/></g>
+          <g fill="#6b5f44"><rect x="55" y="53.1" width="0.5" height="0.5"/><rect x="56" y="53.1" width="0.5" height="0.5"/><rect x="60" y="53.1" width="0.5" height="0.5"/><rect x="61" y="53.1" width="0.5" height="0.5"/></g>
+          <g><rect x="49.9" y="52.4" width="1.5" height="2.2" fill="#9a8f72"/><rect x="50.9" y="52.4" width="0.5" height="2.2" fill="#6d6349"/>
+            <path d="M49.7 52.4 L50.65 51.4 L51.6 52.4 Z" fill="#b8a780"/>
+            <g fill="#2f2a20"><circle cx="50.3" cy="53" r="0.2"/><circle cx="51" cy="53" r="0.2"/><rect x="50.2" y="53.7" width="1" height="0.28"/></g></g></g>
+        <g stroke="#2f7a34" stroke-width="0.22" fill="none" stroke-linecap="round" opacity="0.85">
+          <path d="M47.4 55.6 q0.5 1.8 -0.2 3.2"/><path d="M69 55.4 q-0.4 1.6 0.3 3"/><path d="M63.4 56.4 q0.6 1.4 0 2.6"/></g>
         <circle cx="66.4" cy="51.2" r="0.52" fill="#ff5d5d"/><circle cx="66.55" cy="51.05" r="0.16" fill="#fff"/>
       </g>
 
@@ -323,8 +403,16 @@ const WorldMap = (() => {
       <g transform="translate(-2.80 -5.50) scale(1.1)">
         <g filter="url(#atDeep)">${isle(28, 55, 14, 11, 'url(#atWater)', 'url(#atSoil)', 'url(#atRock)', '#1a2c3a', 0.38)}</g>
         ${chip(18.4, 61.4, 1.3, 'url(#atRock)', '#1a2c3a')}${chip(38.2, 61, 1.1, 'url(#atRock)', '#1a2c3a')}
+        <ellipse cx="28" cy="55" rx="13.4" ry="5.1" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="0.42" stroke-dasharray="1.2 0.8"/>
         <g stroke="rgba(255,255,255,0.5)" stroke-width="0.28" fill="none">
-          <path d="M20 55.4 q2 -1.1 4 0 t4 0 t4 0"/><path d="M23 57 q2 -1.1 4 0 t4 0"/><path d="M31.5 53.8 q2 -1.1 4 0 t3 0"/></g>
+          <path d="M20 55.4 q2 -1.1 4 0 t4 0 t4 0"/><path d="M23 57 q2 -1.1 4 0 t4 0"/><path d="M31.5 53.8 q2 -1.1 4 0 t3 0"/>
+          <path d="M18.6 53.4 q1.6 -0.9 3.2 0"/><path d="M30 58 q1.8 -1 3.6 0"/></g>
+        <g filter="url(#atShade)">
+          <rect x="17.8" y="55.4" width="4.6" height="0.4" fill="#8a6440"/>
+          <g fill="#6a4a2e"><rect x="18.2" y="55.8" width="0.3" height="1"/><rect x="19.6" y="55.8" width="0.3" height="1.1"/><rect x="21" y="55.8" width="0.3" height="1"/></g></g>
+        <g><circle cx="33.4" cy="57.2" r="0.5" fill="#e0483c"/><circle cx="33.4" cy="56.9" r="0.16" fill="#fff"/>
+          <circle cx="24.6" cy="58.2" r="0.42" fill="#ffd166"/></g>
+        <g fill="#7fd8ff"><path d="M30.6 56.4 q0.9 -1.2 1.8 0 q-0.9 0.5 -1.8 0 Z"/><path d="M32.3 55.9 l0.6 -0.35 l0 0.7 Z"/></g>
         <g filter="url(#atShade)">
           <path d="M25.6 53.6 h4.4 l-0.8 -1.7 h-2.8 Z" fill="#7a5432"/>
           <path d="M28.4 51.9 h0.8 l0.8 1.7 h-1.2 Z" fill="#4e3520"/>
@@ -359,13 +447,16 @@ const WorldMap = (() => {
           <ellipse cx="50" cy="33" rx="3.7" ry="1.15" fill="#cfc6b4"/>
           <ellipse cx="50" cy="32.3" rx="2.6" ry="0.82" fill="#eae2d2"/>
           <ellipse cx="50" cy="32.1" rx="2.6" ry="0.82" fill="#f6f0e2"/></g>
+        ${tufts(50, 34, 6.6, 1.78, 10, 'rgba(28,66,34,0.3)', 2)}
+        <ellipse cx="50" cy="34" rx="5.2" ry="1.4" fill="none" stroke="rgba(226,214,180,0.55)" stroke-width="0.3" stroke-dasharray="0.7 0.7"/>
+        <g fill="#cfc6b4"><rect x="46.6" y="33.4" width="0.5" height="0.9"/><rect x="52.9" y="33.4" width="0.5" height="0.9"/></g>
         <ellipse cx="50" cy="31.9" rx="2" ry="0.5" fill="rgba(0,0,0,0.28)"/>
         <circle cx="50" cy="30.3" r="2.6" fill="url(#atBall)"/>
         <ellipse cx="49" cy="29.1" rx="0.85" ry="0.6" fill="rgba(255,255,255,0.9)" transform="rotate(-25 49 29.1)"/>
       </g>
 
       <!-- vorderste Wolkenschicht: schiebt alles dahinter in die Ferne -->
-      <g filter="url(#atSoft)" opacity="0.3">
+      <g filter="url(#atSoft)" opacity="0.15">
         <g class="drift d2"><ellipse cx="16" cy="63" rx="20" ry="3.2" fill="#e8f2fb"/><ellipse cx="30" cy="64.5" rx="12" ry="2.2" fill="#e8f2fb"/></g>
         <g class="drift"><ellipse cx="88" cy="60" rx="16" ry="2.6" fill="#dbe8f6"/></g>
       </g>
