@@ -240,12 +240,11 @@ const SHADOW_COURSES = [
       '..........................................',
       '..........................................',
     ],
-    intro: 'Über den Totensee geht es nur mit den Sargfähren: Sie legen im Takt ab und an – wer noch auf dem Sarg liegt, fährt mit, wer daneben rollt, versinkt im schwarzen Wasser. Auf den Inseln kriechen dunkle Tentakel aus dem See und eine Sense schwingt. Zuletzt ein Steg ohne Geländer, über den ein Rabenschwarm zieht.',
+    intro: 'Über den Totensee geht es nur mit den Sargfähren: Sie legen im Takt ab und an – wer noch auf dem Sarg liegt, fährt mit, wer daneben rollt, versinkt im schwarzen Wasser. Auf dem Weg kriechen dunkle Tentakel aus dem See. Zuletzt ein Steg ohne Geländer, über den ein Rabenschwarm zieht.',
     obstacles: [
       { type: 'ferry', x0: 6.6, y0: 7.5, x1: 15.4, y1: 7.5, w: 1.5, h: 1.3, wait: 2.2, travel: 2.8, style: 'coffin', flat: true },
       { type: 'rotor', x: 16.5, y: 11.6, blades: 1, len: 2.4, speed: 1.0, thick: 0.17, hubR: 0.35, style: 'darktentacle', e: 0.7, height: 0.4, phase: 0.5 },
       { type: 'ferry', x0: 18.4, y0: 6.5, x1: 27.4, y1: 6.5, w: 1.5, h: 1.3, wait: 2.4, travel: 3.0, style: 'coffin', flat: true, phase: 0.5 },
-      { type: 'rotor', x: 29, y: 6.5, blades: 1, len: 1.6, thick: 0.14, hubR: 0.22, style: 'scythe', e: 0.6, swing: { amp: Math.PI / 2.4, speed: 1.6 }, phase: 0, height: 0.5 },
       { type: 'rotor', x: 25.6, y: 4, blades: 1, len: 2.2, speed: -1.0, thick: 0.17, hubR: 0.35, style: 'darktentacle', e: 0.7, height: 0.4, phase: 2.5 },
       { type: 'wave', style: 'ravens', x0: 34, y0: 4.4, x1: 34, y1: 8.6, w: 2.4, h: 0.6, period: 5.5, push: 12, brake: 0.55 },
       { type: 'wall', x0: 40, y0: 5, x1: 39.4, y1: 6, extend: 0 },
