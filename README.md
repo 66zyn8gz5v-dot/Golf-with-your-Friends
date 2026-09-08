@@ -50,10 +50,22 @@ nimmt sie als zweiten Wert der Zeichenfunktion entgegen.
 
 ## Bestenliste
 
-Über **🏆 Bestenliste** im Startbildschirm: für jede Bahn die wenigsten Schläge und für jede Welt das
-beste Gesamtergebnis, mit Namen dabei. Die Liste ist über alle Geräte gleich – bricht jemand einen Rekord,
-sehen die anderen es sofort, auch mitten im Spiel („🏆 Lea: Elfenwiese in 2"). Während einer Bahn steht der
-aktuelle Rekord oben links im HUD.
+Über **🏆 Bestenliste** im Startbildschirm: für jede Bahn und für jede ganze Runde, mit Namen dabei, in
+**drei Wertungen**:
+
+| Wertung | Was zählt |
+| --- | --- |
+| **🏆 Schläge** | Die wenigsten Schläge, wie beim Golf üblich. |
+| **⏱ Zeit** | Wer ist am schnellsten durch? Die Uhr läuft, sobald der Ball auf dem Abschlag liegt, und stoppt beim Einlochen. |
+| **⚡ Kombi** | Beides zusammen, gerechnet wie beim Speedgolf: **Schläge + Minuten**. Vier Schläge in 1:12 ergeben 4 + 1,2 = **5,2**. Wer trödelt, verliert – wer wild drauflos schlägt, aber auch. |
+
+Die Uhr steht still, solange ein Menü offen ist oder die Seite im Hintergrund liegt – niemand soll dafür
+bestraft werden, dass das Telefon klingelt. Die laufende Zeit steht während des Zugs oben rechts, die
+Rekorde der Bahn (Schläge und Zeit) oben links. Auf der Ergebnistafel nach jeder Bahn steht die gebrauchte
+Zeit je Spieler, im Endergebnis Gesamtzeit und Kombi-Wert.
+
+Die Liste ist über alle Geräte gleich – bricht jemand einen Rekord, sehen die anderen es sofort, auch
+mitten im Spiel („🏆 Lea: Elfenwiese – Zeit 0:41,2").
 
 Einmal den eigenen Namen eintragen, mehr ist nicht nötig. Der Name gilt auch online: im Warteraum und auf
 der Punktetafel steht dann er statt „Spieler 2". Gewertet wird **der eigene Ball im Wettkampf** – am Gerät
@@ -117,7 +129,7 @@ Unter **Bauen & Eigene Welt** liegen der Editor und die selbst zusammengestellte
   als SVG-Pfade in `src/icons.js` eingebettet – überall gleich, in der Textfarbe, ohne Schriftart aus dem Netz.
   Welten, Bahnen, Hüte und Rekordmeldungen behalten bewusst ihre bunten Zeichen: dafür hat kein Bedien-Icon-Satz Motive.
 - Online gegeneinander: **🌐 Online spielen** im Startbildschirm, Raumcode aufmachen oder eintippen.
-- Rekorde: **🏆 Bestenliste** im Startbildschirm, einmal den eigenen Namen eintragen.
+- Rekorde: **🏆 Bestenliste** im Startbildschirm, einmal den eigenen Namen eintragen. Drei Wertungen: Schläge, Zeit und Kombi (Schläge + Minuten).
 - Musik an oder aus: Knopf `♪` unten links oder Taste `J`; im Startbildschirm auch unter „Musik". Die Wahl merkt sich der Browser.
 - 1–4 Spieler im Hotseat-Modus: Jeder spielt die Bahn nacheinander zu Ende.
 - Wasser, Lava und Abgrund: Ball zurück zur letzten Position, +1 Strafschlag.
@@ -282,7 +294,7 @@ src/render_legend.js Optik der Legende-Welten (Hintergründe, neue Hindernisse u
 src/icons.js      Bedien-Sinnbilder: Material Symbols als eingebettete SVG-Pfade (Zurück, Kamera, Musik, Editor …)
 src/hats.js       Hüte für die Bälle: Zeichnungen und Vorschau fürs Menü
 src/net.js        Netzspiel: Raumcode und MQTT-Zugang für das Spiel zu mehreren
-src/best.js       Bestenliste: Rekorde je Bahn und je Welt, über alle Geräte geteilt
+src/best.js       Bestenliste: Rekorde je Bahn und je Welt in drei Wertungen (Schläge, Zeit, Kombi), über alle Geräte geteilt
 src/sfx.js        Klangeffekte (WebAudio)
 src/music.js      Musik: je Welt ein erzeugter Klangteppich (WebAudio)
 src/worldmap.js   Weltkarte: die schwebenden Scheiben in 2,5D und die Orte der Welten

@@ -1,6 +1,6 @@
 /* Service Worker: macht Fantasy Golf offline spielbar.
    Netz zuerst (damit Updates sofort ankommen), Cache als Ersatz ohne Verbindung. */
-const VERSION = 'fantasygolf-v12';
+const VERSION = 'fantasygolf-v13';
 const APP_FILES = [
   './', './index.html', './style.css', './manifest.webmanifest',
   './src/themes.js', './src/courses.js', './src/courses_sea.js', './src/courses_jungle.js', './src/courses_storm.js', './src/courses_shadow.js', './src/courses_pro.js', './src/level.js', './src/obstacles.js', './src/obstacles_legend.js',

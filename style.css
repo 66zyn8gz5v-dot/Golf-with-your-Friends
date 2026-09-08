@@ -200,6 +200,10 @@ table.scores td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .pod-medal { font-size: 22px; width: 30px; text-align: center; }
 .pod-dot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.4); flex: none; }
 .pod-name { flex: 1; text-align: left; font-weight: bold; }
+.pod-time { font-size: 12px; color: #b9c2d6; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.combo-parts { display: block; font-size: 11px; color: #9fb0cc; font-style: normal; white-space: nowrap; }
+/* Die drei Wertungen sollen auch auf dem Handy in eine Reihe passen */
+@media (max-width: 600px) { #bk .btn.small { padding: 6px 9px; font-size: 14px; } }
 .pod-total { font-variant-numeric: tabular-nums; font-weight: bold; min-width: 34px; text-align: right; }
 .pod-par { min-width: 46px; text-align: right; font-variant-numeric: tabular-nums; color: #ffe08a; }
 .pod-par.under { color: #9dff9d; } .pod-par.over { color: #ffb0a0; }
@@ -397,6 +401,9 @@ body.editing #editor-panel { display: flex; flex-direction: column; }
 
 /* ---------- Bestenliste ---------- */
 #hud-best { font-size: 12px; color: #ffd98a; margin-top: 2px; }
+/* Laufende Zeit der eigenen Bahn */
+#hud-time { font-variant-numeric: tabular-nums; font-size: 15px; color: #cfe4ff; }
+#hud-time:empty { display: none; }
 .lbl { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 3px; font-size: 12px; color: #cbbfe6; }
 .name-in {
   width: 170px; padding: 7px 10px; font: inherit; font-size: 17px; color: #ffe08a;

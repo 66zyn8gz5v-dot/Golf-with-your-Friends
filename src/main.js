@@ -26,7 +26,7 @@
   const $ = id => document.getElementById(id);
   const ui = {
     hole: $('hud-hole'), name: $('hud-name'), player: $('hud-player'), strokes: $('hud-strokes'),
-    power: $('power'), powerFill: $('power-fill'), board: $('scoreboard'), msg: $('message'), overlay: $('overlay'), hint: $('hint'), best: $('hud-best'),
+    power: $('power'), powerFill: $('power-fill'), board: $('scoreboard'), msg: $('message'), overlay: $('overlay'), hint: $('hint'), best: $('hud-best'), time: $('hud-time'),
   };
 
   const state = {
@@ -52,6 +52,18 @@
   }
   let playerCount = 1, gameMode = 'normal', msgTimer = null, waitTimer = null;
 
+  /* ---------- Uhr ----------
+     Gemessen wird die Zeit, die jemand für seine Bahn braucht: von dem Moment, in dem sein Ball
+     auf dem Abschlag liegt, bis zum Einlochen. Im Menü und wenn die Seite in den Hintergrund
+     wandert, steht die Uhr still – niemand soll dafür bestraft werden, dass das Telefon klingelt. */
+  const clock = { start: 0, acc: 0, running: false, active: false };
+  const now = () => (window.performance && performance.now) ? performance.now() : Date.now();
+  function clockStart() { clock.acc = 0; clock.start = now(); clock.running = true; clock.active = true; }
+  function clockPause() { if (clock.running) { clock.acc += now() - clock.start; clock.running = false; } }
+  function clockResume() { if (clock.active && !clock.running) { clock.start = now(); clock.running = true; } }
+  const clockRead = () => Math.round(clock.acc + (clock.running ? now() - clock.start : 0));
+  function clockStop() { clockPause(); clock.active = false; return Math.round(clock.acc); }
+
   /* ---------- UI ---------- */
   function showMessage(text, ms = 1600) {
     if (state.phase === 'summary' || state.phase === 'final') return; // keine Laufmeldung über den Ergebnistafeln
@@ -63,10 +75,12 @@
     ui.hole.textContent = `${state.world.short} · Bahn ${state.holeIdx + 1} / ${state.courses.length}`;
     ui.name.textContent = def ? def.name : '–';
     // Rekordzeile: der beste Wert des Freundeskreises auf dieser Bahn
-    const rec = def && state.world && state.world.id !== 'custom' ? Best.of(state.world.id).holes[def.name] : null;
-    ui.best.textContent = rec ? `🏆 Rekord: ${rec.s} · ${rec.n}` : '';
+    const w = def && state.world && state.world.id !== 'custom' ? Best.of(state.world.id) : null;
+    const recS = w ? w.strokes.holes[def.name] : null, recT = w ? w.time.holes[def.name] : null;
+    ui.best.textContent = [recS ? `🏆 ${recS.s} · ${recS.n}` : '', recT ? `⏱ ${Best.formatTime(recT.s)} · ${recT.n}` : ''].filter(Boolean).join('   ');
     const p = state.players[state.curPlayer];
     ui.player.textContent = p ? p.name : '–';
+    syncClock();
     ui.strokes.textContent = def ? (state.mode === 'creative' ? `Kreativ · Schläge: ${state.strokes} · Par ${def.par}` : `Schläge: ${state.strokes} / ${maxStrokes()} · Par ${def.par}`) : '';
     ui.board.innerHTML = state.players.map((pl, i) => {
       const total = pl.scores.reduce((a, b) => a + b, 0);
@@ -74,8 +88,15 @@
       return `<div class="row ${i === state.curPlayer ? 'active' : ''}"><span class="dot" style="background:${pl.color}"></span>${hat}${pl.name}<span class="score">${total}</span></div>`;
     }).join('');
   }
-  function overlay(html, cls) { ui.overlay.innerHTML = html; ui.overlay.className = 'screen visible' + (cls ? ' ' + cls : ''); }
-  function hideOverlay() { ui.overlay.className = 'screen'; ui.overlay.innerHTML = ''; }
+  /* Zeitanzeige im Kopf – nur im Wettkampf, im Kreativmodus wird nichts gewertet */
+  let clockShown = '';
+  function syncClock() {
+    const zeigen = clock.active && state.mode !== 'creative' && !state.editorReturn;
+    const txt = zeigen ? Best.formatTime(clockRead()) : '';
+    if (txt !== clockShown) { clockShown = txt; ui.time.textContent = txt; }
+  }
+  function overlay(html, cls) { clockPause(); ui.overlay.innerHTML = html; ui.overlay.className = 'screen visible' + (cls ? ' ' + cls : ''); }
+  function hideOverlay() { ui.overlay.className = 'screen'; ui.overlay.innerHTML = ''; clockResume(); }
 
   const SCENE_NORMAL = `<svg class="mode-scene" viewBox="0 0 300 72" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
             <defs>
@@ -338,61 +359,80 @@
   }
 
   /* Bestenlisten-Bildschirm: Name, Gruppencode und die Rekorde aller Welten */
-  function showBestList(worldId) {
+  let bestKind = 'strokes';                 // gerade angezeigte Wertung
+  function showBestList(worldId, kind) {
     state.phase = 'title'; document.body.classList.add('title');
     document.body.classList.remove('creative', 'editing', 'testing');
     const wid = worldId || (state.world && state.world.id !== 'custom' ? state.world.id : WORLDS[0].id);
     const w = WORLDS.find(x => x.id === wid) || WORLDS[0];
-    const rec = Best.of(w.id);
+    if (kind && Best.KINDS.includes(kind)) bestKind = kind;
+    const rec = Best.of(w.id)[bestKind];
     const bestStatus = { status: st => { const el = $('bstate'); if (!el) return;
       el.textContent = st === 'ready' ? 'Verbunden – alle mit dem Spiel teilen sich diese Liste.'
         : st === 'error' ? 'Keine Verbindung – die Rekorde bleiben vorerst auf diesem Gerät.' : 'Verbinde …'; } };
     const rows = w.courses.map((c, i) => {
       const r = rec.holes[c.name];
+      // Bei der Kombi zeigt die kleine Zeile, woraus der Wert entstanden ist
+      const teile = bestKind === 'combo' && r && r.st ? `<i class="combo-parts">${r.st} Schläge · ${Best.formatTime(r.ms)}</i>` : '';
       return `<tr><td>${i + 1}</td><td>${holeIcon(c)} ${c.name}</td><td class="num">${c.par}</td>
-        <td class="num">${r ? r.s : '–'}</td><td>${r ? r.n : ''}</td></tr>`;
+        <td class="num">${Best.format(bestKind, r)}${teile}</td><td>${r ? r.n : ''}</td></tr>`;
     }).join('');
     const parTotal = w.courses.reduce((a, c) => a + c.par, 0);
     overlay(`<div class="panel wide">
       <div class="panel-head"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span><h2>${Icons.svg('emoji_events')} Bestenliste</h2></div>
-      <div class="sub">Wer braucht die wenigsten Schläge? Gewertet wird dein eigener Ball im Wettkampf.</div>
+      <div class="sub">${BEST_INTRO[bestKind]} Gewertet wird dein eigener Ball im Wettkampf.</div>
       <p class="join-row"><label class="lbl">Dein Name<input id="bn" class="name-in" maxlength="14" autocomplete="off" spellcheck="false" placeholder="z. B. Max" value="${(Best.name || '').replace(/"/g, '&quot;')}"></label>
         <span class="btn small" id="bsave">Merken</span></p>
       <div class="sub net-note" id="bstate">${!Best.name ? 'Trag deinen Namen ein – ohne Namen wird nichts gewertet.'
         : Net.status === 'ready' ? 'Verbunden – alle mit dem Spiel teilen sich diese Liste.'
         : 'Keine Verbindung – die Rekorde bleiben vorerst auf diesem Gerät.'}</div>
+      <div id="bk" class="ow">${Best.KINDS.map(k => `<span class="btn ghost small ${k === bestKind ? 'sel' : ''}" data-k="${k}">${BEST_ICON[k]} ${Best.KIND_NAME[k]}</span>`).join('')}</div>
       <div id="bw" class="ow">${WORLDS.filter(x => x.id !== 'custom').map(x => `<span class="btn ghost small ${x.id === w.id ? 'sel' : ''}" data-w="${x.id}">${MODE_ICON[worldMode(x)]} ${x.short}</span>`).join('')}</div>
-      <div class="sub" style="margin-top:10px"><b>${w.name}</b> · Par ${parTotal}${rec.round ? ` · beste Runde: <b>${rec.round.s}</b> (${rec.round.n})` : ' · noch keine ganze Runde gespielt'}</div>
+      <div class="sub" style="margin-top:10px"><b>${w.name}</b> · Par ${parTotal}${rec.round ? ` · beste ganze Runde: <b>${Best.format(bestKind, rec.round)}</b> (${rec.round.n})` : ' · noch keine ganze Runde gespielt'}</div>
       <table class="scores best-table"><tr><th>#</th><th>Bahn</th><th>Par</th><th>Rekord</th><th>von</th></tr>${rows}</table>
-      <div class="legend">Alle, die das Spiel haben, teilen sich diese Liste. Die Rekorde liegen beim Vermittler und
+      <div class="legend">${BEST_HELP[bestKind]}<br>
+        Alle, die das Spiel haben, teilen sich diese Liste. Die Rekorde liegen beim Vermittler und
         zusätzlich hier im Browser – startet der Vermittler neu, können sie dort verloren gehen.</div>
     </div>`, 'title');
     $('back').addEventListener('click', showTitle);
-    ui.overlay.querySelectorAll('#bw .btn').forEach(b => b.addEventListener('click', () => showBestList(b.dataset.w)));
+    ui.overlay.querySelectorAll('#bw .btn').forEach(b => b.addEventListener('click', () => showBestList(b.dataset.w, null)));
+    ui.overlay.querySelectorAll('#bk .btn').forEach(b => b.addEventListener('click', () => showBestList(w.id, b.dataset.k)));
     $('bn').addEventListener('keydown', e => { if (e.key === 'Enter') $('bsave').click(); });
     $('bsave').addEventListener('click', () => {
       Sfx.unlock();
       Best.setName($('bn').value);
       Best.start(bestStatus);
-      showBestList(w.id);
+      showBestList(w.id, null);
     });
   }
+
+  const BEST_ICON = { strokes: '🏆', time: '⏱', combo: '⚡' };
+  const BEST_INTRO = {
+    strokes: 'Wer braucht die wenigsten Schläge?',
+    time: 'Wer ist am schnellsten durch?',
+    combo: 'Schnell <b>und</b> mit wenigen Schlägen – beides zusammen.',
+  };
+  const BEST_HELP = {
+    strokes: 'Gezählt werden die Schläge einer Bahn, wie beim Golf üblich.',
+    time: 'Die Uhr läuft, sobald dein Ball auf dem Abschlag liegt, und stoppt beim Einlochen. Im Menü und wenn die Seite in den Hintergrund geht, steht sie still.',
+    combo: 'Gerechnet wie beim Speedgolf: <b>Schläge + Minuten</b>. Vier Schläge in 1:12 ergeben 4 + 1,2 = <b>5,2</b>. Wer trödelt, verliert – wer wild drauflos schlägt, aber auch.',
+  };
 
   /* ---------- Bestenliste ----------
      Gewertet wird der eigene Ball im Wettkampf: am Gerät Spieler 1, online der eigene Platz.
      Im Kreativmodus zählt nichts, weil man dort beliebig oft neu setzen darf. */
   const myIndex = () => (online && online.started) ? online.players.findIndex(p => p.id === Net.id) : 0;
-  function noteRecord(score) {
+  function noteRecord(score, ms) {
     if (state.mode === 'creative' || state.editorReturn) return;
     if (!state.world || state.world.id === 'custom' || !Best.name) return;
     if (state.curPlayer !== myIndex()) return;
     const def = state.courses[state.holeIdx];
-    const hit = Best.hole(state.world.id, def.name, score);
-    if (hit) {
-      Sfx.sink();
-      showMessage(hit.old ? `🏆 Neuer Rekord! ${def.name} in ${score} (vorher ${hit.old.s})` : `🏆 Erster Eintrag: ${def.name} in ${score}`, 2400);
-    }
+    const treffer = Best.hole(state.world.id, def.name, score, ms);
+    if (treffer.length) { Sfx.sink(); showMessage(`🏆 ${def.name}: ${recordText(treffer)}`, 2600); }
   }
+  /* „Schläge 2 (vorher 3), Zeit 0:14,2" – aus den gefallenen Rekorden einer Runde */
+  const recordText = treffer => treffer.map(h =>
+    `${Best.KIND_NAME[h.kind]} ${Best.format(h.kind, h.rec)}${h.old ? ` (vorher ${Best.format(h.kind, h.old)})` : ''}`).join(', ');
   /* Ein anderes Gerät hat einen Rekord gemeldet */
   function recordFromFriend(worldId, news) {
     if (!news || !news.length) return;
@@ -400,7 +440,8 @@
     const w = WORLDS.find(x => x.id === worldId);
     for (const n of news.slice(0, 1)) {
       if (n.rec.n === Best.name) continue;   // der eigene Eintrag von einem anderen Gerät
-      showMessage(n.hole ? `🏆 ${n.rec.n}: ${n.hole} in ${n.rec.s}` : `🏆 ${n.rec.n}: ${w ? w.name : 'Welt'} gesamt ${n.rec.s}`, 2600);
+      const wert = `${Best.KIND_NAME[n.kind] || 'Schläge'} ${Best.format(n.kind, n.rec)}`;
+      showMessage(n.hole ? `🏆 ${n.rec.n}: ${n.hole} – ${wert}` : `🏆 ${n.rec.n}: ${w ? w.name : 'Welt'} gesamt – ${wert}`, 2600);
     }
     updateHud();
   }
@@ -417,7 +458,9 @@
   const myTurn = () => !online || !online.started || ((online.players[state.curPlayer] || {}).id === Net.id);
   const netSend = m => { if (online) Net.send(m); };
   const onlineWorlds = () => WORLDS.filter(w => w.id !== 'custom');
-  const seatName = (p, i) => (p && p.nick) || PLAYER_NAMES[i];
+  /* Namen aus dem Netz gehen in die Anzeige – kürzen und Markup-Zeichen entfernen */
+  const cleanName = v => String(v == null ? '' : v).replace(/[<>&"']/g, '').slice(0, 14).trim();
+  const seatName = (p, i) => (p && cleanName(p.nick)) || PLAYER_NAMES[i];
 
   /* Einstieg: Raum aufmachen oder einem Code beitreten */
   function showOnline(note) {
@@ -482,7 +525,7 @@
         if (!online.host) break;
         if (online.started) { netSend({ t: 'busy', to: m.from, why: 'Die Runde läuft schon.' }); break; }
         if (!online.players.some(p => p.id === m.from) && online.players.length < ONLINE_MAX)
-          online.players.push({ id: m.from, nick: String(m.nick || '').slice(0, 14), hat: Hats.has(m.hat) ? m.hat : 'none' });
+          online.players.push({ id: m.from, nick: cleanName(m.nick), hat: Hats.has(m.hat) ? m.hat : 'none' });
         sendRoster(); showLobby();
         break;
       case 'roster': {
@@ -517,7 +560,7 @@
         if (!myTurn() && m.h === state.holeIdx && m.pi === state.curPlayer) {
           const b = state.ball;
           if (b && m.sunk && !b.sunk) { b.x = state.level.cup.x; b.y = state.level.cup.y; b.z = 0; b.vx = 0; b.vy = 0; b.sunk = true; b.sinkT = 0; Sfx.sink(); }
-          state.strokes = m.score; clearTimeout(waitTimer); finishTurn(m.score, true);
+          state.strokes = m.score; clearTimeout(waitTimer); finishTurn(m.score, true, m.ms);
         }
         break;
       case 'next':
@@ -737,8 +780,8 @@
   function startGame(n, first = 0, roster = null) {
     // roster: beim Netzspiel bringt jeder Spieler seinen eigenen Hut mit
     state.players = roster
-      ? roster.map((p, i) => ({ name: seatName(p, i), color: PLAYER_COLORS[i], hat: p.hat, scores: [], gone: !!p.gone }))
-      : Array.from({ length: n }, (_, i) => ({ name: PLAYER_NAMES[i], color: PLAYER_COLORS[i], hat: playerHats[i], scores: [] }));
+      ? roster.map((p, i) => ({ name: seatName(p, i), color: PLAYER_COLORS[i], hat: p.hat, scores: [], times: [], gone: !!p.gone }))
+      : Array.from({ length: n }, (_, i) => ({ name: PLAYER_NAMES[i], color: PLAYER_COLORS[i], hat: playerHats[i], scores: [], times: [] }));
     state.holeIdx = first;
     document.body.classList.remove('title');
     document.body.classList.toggle('creative', state.mode === 'creative');
@@ -808,6 +851,7 @@
     state.ball = makeBall(lv.tee.x, lv.tee.y, p.color, p.hat);
     state.strokes = 0; state.phase = 'aim'; state.aim = null; state.restTimer = 0; state.slowTimer = 0; state.rollT = 0; state.stuckRef = null;
     faceCup(); setCamMode('follow');
+    clockStart();
     if (state.players.length > 1) showMessage(`${p.name} ist dran`, 1300);
     updateHud(); syncHint();
     // Wer den Raum verlassen hat, bekommt seinen Zug vom Gastgeber mit dem Schlaglimit gewertet
@@ -848,13 +892,17 @@
     if (state.strokes >= maxStrokes()) { showMessage(`Maximale Schlagzahl (${maxStrokes()}) erreicht`, 1800); finishTurn(maxStrokes()); return; }
     state.phase = 'aim';
   }
-  function finishTurn(score, fromNet = false) {
+  function finishTurn(score, fromNet = false, netMs = null) {
+    const ms = clockStop();
     if (online && online.started) {
       if (!myTurn() && !fromNet) return;   // Zuschauer warten auf die Ansage des Schlagenden
-      if (myTurn() && !fromNet) netSend({ t: 'done', h: state.holeIdx, pi: state.curPlayer, score, sunk: !!(state.ball && state.ball.sunk) });
+      if (myTurn() && !fromNet) netSend({ t: 'done', h: state.holeIdx, pi: state.curPlayer, score, ms, sunk: !!(state.ball && state.ball.sunk) });
     }
+    // Beim Zuschauen zählt die Zeit des Schlagenden, nicht die eigene Wartezeit
+    const zeit = (fromNet && netMs != null) ? netMs : ms;
     state.players[state.curPlayer].scores[state.holeIdx] = score;
-    noteRecord(score);
+    state.players[state.curPlayer].times[state.holeIdx] = zeit;
+    noteRecord(score, zeit);
     state.phase = 'wait'; state.aim = null; updateHud();
     clearTimeout(waitTimer);
     waitTimer = setTimeout(() => {
@@ -912,15 +960,17 @@
   function showHoleDone() {
     state.phase = 'summary'; clearTimeout(msgTimer); ui.msg.classList.remove('visible');
     const def = state.courses[state.holeIdx], last = state.holeIdx === state.courses.length - 1;
+    const zeit = state.mode !== 'creative' && !state.editorReturn;   // im Kreativmodus wird nichts gestoppt
     const rows = state.players.map(p => {
       const total = p.scores.reduce((a, b) => a + b, 0);
       const hat = p.hat && p.hat !== 'none' ? `<span title="${Hats.name(p.hat)}">${Hats.icon(p.hat)}</span> ` : '';
-      return `<tr><td><span class="dot" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.color};margin-right:6px"></span>${hat}${p.name}</td><td class="num">${p.scores[state.holeIdx]}</td><td class="num">${total}</td></tr>`;
+      const ms = (p.times || [])[state.holeIdx];
+      return `<tr><td><span class="dot" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.color};margin-right:6px"></span>${hat}${p.name}</td><td class="num">${p.scores[state.holeIdx]}</td>${zeit ? `<td class="num">${ms ? Best.formatTime(ms) : '–'}</td>` : ''}<td class="num">${total}</td></tr>`;
     }).join('');
     overlay(`<div class="panel ${worldClass()}">
       <h2>${holeIcon(def)} Bahn ${state.holeIdx + 1}: ${def.name}</h2>
       <div class="sub">Par ${def.par}</div>
-      <table class="scores"><tr><th>Spieler</th><th>Bahn</th><th>Gesamt</th></tr>${rows}</table>
+      <table class="scores"><tr><th>Spieler</th><th>Bahn</th>${zeit ? '<th>Zeit</th>' : ''}<th>Gesamt</th></tr>${rows}</table>
       ${!last ? `<div class="sub">Als Nächstes: <b>${state.courses[state.holeIdx + 1].name}</b><br><i>${state.courses[state.holeIdx + 1].intro}</i></div>` : ''}
       ${online && !online.host ? '<div class="sub">Der Gastgeber öffnet die nächste Bahn …</div>'
         : `<span class="btn" id="next">${state.editorReturn ? Icons.svg('construction') + ' Zurück zum Editor' : last ? 'Zum Endergebnis' : 'Nächste Bahn ' + Icons.svg('arrow_forward')}</span>`}
@@ -935,19 +985,22 @@
     state.phase = 'final'; clearTimeout(msgTimer); ui.msg.classList.remove('visible'); // keine Laufmeldung über der Tafel
     const parTotal = state.courses.reduce((a, c) => a + c.par, 0);
     // eigene Runde in die Bestenliste
-    let roundRec = null;
-    if (state.mode !== 'creative' && !state.editorReturn && state.world && state.world.id !== 'custom') {
+    const gewertet = state.mode !== 'creative' && !state.editorReturn;
+    const gesamtZeit = p => (p.times || []).reduce((a, b) => a + (b || 0), 0);
+    let roundRec = [];
+    if (gewertet && state.world && state.world.id !== 'custom') {
       const meP = state.players[myIndex()];
       if (meP && meP.scores.length === state.courses.length && meP.scores.every(v => v != null))
-        roundRec = Best.round(state.world.id, meP.scores.reduce((a, b) => a + b, 0));
+        roundRec = Best.round(state.world.id, meP.scores.reduce((a, b) => a + b, 0), gesamtZeit(meP));
     }
-    const ranked = state.players.map(p => ({ p, total: p.scores.reduce((a, b) => a + b, 0) })).sort((a, b) => a.total - b.total);
+    const ranked = state.players.map(p => ({ p, total: p.scores.reduce((a, b) => a + b, 0), ms: gesamtZeit(p) })).sort((a, b) => a.total - b.total);
     const medals = ['🥇', '🥈', '🥉', '4.'];
     const vsPar = d => d === 0 ? 'Par' : (d > 0 ? '+' : '') + d;
     const podium = ranked.map((r, i) => `<div class="pod ${i === 0 ? 'win' : ''}">
         <span class="pod-medal">${medals[i]}</span>
         <span class="pod-dot" style="background:${r.p.color}"></span>
         <span class="pod-name">${r.p.name}</span>
+        ${gewertet && r.ms ? `<span class="pod-time">${Best.formatTime(r.ms)} · Kombi ${String(Best.combo(r.total, r.ms)).replace('.', ',')}</span>` : ''}
         <span class="pod-total">${r.total}</span>
         <span class="pod-par ${r.total - parTotal < 0 ? 'under' : r.total - parTotal > 0 ? 'over' : ''}">${vsPar(r.total - parTotal)}</span>
       </div>`).join('');
@@ -969,7 +1022,7 @@
       ${best}
       <div class="hole-cards">${cards}</div>
       <div class="final-legend"><span class="hc-score ace">1</span> Hole-in-One <span class="hc-score eagle">–2</span> Eagle <span class="hc-score birdie">–1</span> Birdie <span class="hc-score par">0</span> Par <span class="hc-score bogey">+1</span> Bogey <span class="hc-score worse">+2</span> mehr</div>
-      ${roundRec ? `<div class="sub net-note">🏆 Neuer Rekord für ${roundRec.rec.n}: ${roundRec.rec.s} Schläge${roundRec.old ? ` (vorher ${roundRec.old.s})` : ''}</div>` : ''}
+      ${roundRec.length ? `<div class="sub net-note">🏆 Neuer Rundenrekord für ${roundRec[0].rec.n}: ${recordText(roundRec)}</div>` : ''}
       <span class="btn" id="again">Nochmal spielen</span>
     </div>`);
     $('again').addEventListener('click', () => { hideOverlay(); leaveOnline(); showTitle(); });
@@ -1085,6 +1138,7 @@
     if (state.ball && state.ball.sunk) state.ball.sinkT += dt;
     updateCamera(dt);
     if (state.phase === 'title') TitleScene.draw(R.ctx, R.w, R.h, state.t); else { R.drawFrame(state); if (state.phase === 'edit') editor.drawOverlay(R.ctx); }
+    syncClock();
     ui.power.classList.toggle('visible', !!state.aim);
     if (state.aim) ui.powerFill.style.width = `${Math.round(state.aim.power * 100)}%`;
     requestAnimationFrame(frame);
@@ -1164,6 +1218,8 @@
   }
   document.addEventListener('fullscreenchange', syncFullscreen);
   document.addEventListener('webkitfullscreenchange', syncFullscreen);
+  // Wandert die Seite in den Hintergrund (Anruf, anderer Tab), steht die Uhr still
+  document.addEventListener('visibilitychange', () => { if (document.hidden) clockPause(); else if (!ui.overlay.classList.contains('visible')) clockResume(); });
   $('fs-btn').addEventListener('click', () => { Sfx.unlock(); toggleFullscreen(); });
   function toggleOverview() { if (state.ball) setCamMode(state.camMode === 'overview' ? 'follow' : 'overview'); }
   function syncMusicBtn() { $('music-btn').classList.toggle('sel', Music.on); $('music-btn').innerHTML = Icons.svg(Music.on ? 'music_note' : 'music_off'); $('music-btn').title = Music.on ? 'Musik aus (J)' : 'Musik an (J)'; }
@@ -1190,6 +1246,15 @@
 
   // Test-Hook (für automatisierte Prüfungen): aktuelle Bahn für alle Spieler beenden
   window.__golfDebug = {
+    /* Bahn regulär mit dieser Schlagzahl abschließen – geht durch finishTurn, also mit Uhr und Rekorden */
+    finishHole(strokes) {
+      if (!state.level || state.phase === 'title' || !state.ball) return false;
+      if (!state.players[state.curPlayer] || state.phase === 'summary' || state.phase === 'final') return false;
+      clearTimeout(waitTimer);
+      state.strokes = strokes;
+      finishTurn(strokes);
+      return true;
+    },
     skipHole() {
       if (!state.level || state.phase === 'title') return false;
       clearTimeout(waitTimer);
