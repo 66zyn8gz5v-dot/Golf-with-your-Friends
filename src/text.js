@@ -1,7 +1,7 @@
 /* Alles, was Menschen eintippen oder was von fremden Geräten hereinkommt, geht hier durch.
 
    Warum an einer Stelle: Namen, Bahnnamen und Spielernamen tauchen an vielen Stellen in der
-   Anzeige auf – im Kopf, auf den Ergebnistafeln, in der Bestenliste, im Warteraum. Wären die
+   Anzeige auf – im Kopf, auf den Ergebnistafeln, in der Rangliste, im Warteraum. Wären die
    Regeln überall einzeln hingeschrieben, würde früher oder später eine Stelle vergessen. Darum
    gibt es genau eine Stelle, die entscheidet, was ein Name sein darf.
 

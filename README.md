@@ -48,9 +48,9 @@ nur eine Zeichenfunktion in `DEFS` und einen Eintrag in `LIST`; der Nullpunkt li
 eine Einheit entspricht dem Ballradius, und die Ballmitte liegt bei (0, 0.72). Wer die Spielerfarbe braucht,
 nimmt sie als zweiten Wert der Zeichenfunktion entgegen.
 
-## Bestenliste
+## Rangliste
 
-Über **🏆 Bestenliste** im Startbildschirm: für jede Bahn und für jede ganze Runde, mit Namen dabei, in
+Über **🏆 Rangliste** im Startbildschirm: für jede Bahn und für jede ganze Runde, mit Namen dabei, in
 **drei Wertungen**. Es gibt nichts auszuwählen – **alle drei laufen bei jedem Schlag gleichzeitig mit**,
 und die Liste zeigt sie nebeneinander. Einmal den Namen eintragen, dann einfach drauflos spielen:
 
@@ -80,6 +80,21 @@ keinen Server, der mitrechnet: Jedes Gerät meldet sein Ergebnis selbst. Wer den
 kann melden, was er will. Damit man das einordnen kann, steht an jedem Eintrag, woher er kommt: **🌐**
 heißt „in einer Runde gegeneinander erspielt" – da haben andere zugeschaut. Einträge ohne Zeichen sind
 allein am eigenen Gerät entstanden. Derselbe Hinweis steht auch im Spiel über der Liste.
+
+**Zurücksetzen.** Unten in der Rangliste steht **Rangliste zurücksetzen**. Das löscht alle Rekorde aller
+Welten – bei dir und bei allen anderen. Nützlich, wenn jemand Ergebnisse eingetragen hat, die nicht
+stimmen.
+
+Damit das hält, wird nicht nur gelöscht, sondern der **Zeitpunkt des Zurücksetzens geteilt**: Jedes Gerät
+merkt ihn sich und wirft alles weg, was davor eingetragen wurde. Ohne diesen Kniff käme der alte Stand
+vom nächsten Gerät sofort wieder zurück, denn jedes hält seine eigene Kopie und bietet sie an. Auch ein
+Gerät, das erst Tage später wieder online geht, bringt die alten Rekorde nicht mehr mit. Zeitstempel, die
+in der Zukunft liegen, werden auf „jetzt" gekappt – sonst würde ein gefälschter Eintrag jedes künftige
+Zurücksetzen überleben.
+
+**Grenzen der Glaubwürdigkeit:** Eine Bahn unter 2 Sekunden und eine ganze Runde unter 10 Sekunden werden
+für Zeit und Kombi nicht gewertet – so schnell geht es nicht. Die Schläge zählen trotzdem. Das hält
+niemanden auf, der den Code des Spiels ändert; es macht nur die einfachen Fälle unmöglich.
 
 **Wo die Rekorde liegen:** als „aufbewahrte" MQTT-Nachrichten beim Vermittler. Eine Nachricht mit
 Retain-Bit bleibt dort liegen und wird jedem zugestellt, der später zuhört – so gibt es eine gemeinsame
@@ -144,7 +159,7 @@ Unter **Bauen & Eigene Welt** liegen der Editor und die selbst zusammengestellte
   als SVG-Pfade in `src/icons.js` eingebettet – überall gleich, in der Textfarbe, ohne Schriftart aus dem Netz.
   Welten, Bahnen, Hüte und Rekordmeldungen behalten bewusst ihre bunten Zeichen: dafür hat kein Bedien-Icon-Satz Motive.
 - Online gegeneinander: **🌐 Online spielen** im Startbildschirm, Raumcode aufmachen oder eintippen.
-- Rekorde: **🏆 Bestenliste** im Startbildschirm, einmal den eigenen Namen eintragen. Drei Wertungen: Schläge, Zeit und Kombi (Schläge + Minuten).
+- Rekorde: **🏆 Rangliste** im Startbildschirm, einmal den eigenen Namen eintragen. Drei Wertungen: Schläge, Zeit und Kombi (Schläge + Minuten).
 - Musik an oder aus: Knopf `♪` unten links oder Taste `J`; im Startbildschirm auch unter „Musik". Die Wahl merkt sich der Browser.
 - 1–4 Spieler im Hotseat-Modus: Jeder spielt die Bahn nacheinander zu Ende.
 - Wasser, Lava und Abgrund: Ball zurück zur letzten Position, +1 Strafschlag.
@@ -374,7 +389,7 @@ Erkannt wird das am Pfad (`src/version.js`), es gibt also keinen Schalter, den m
 ## Sicherheit – was geprüft wird und was offen bleibt
 
 Das Spiel läuft ohne eigenen Server: reine Dateien auf GitHub Pages, dazu ein offener MQTT-Vermittler
-für Netzspiel und Bestenliste. Das prägt, was möglich ist und was nicht.
+für Netzspiel und Rangliste. Das prägt, was möglich ist und was nicht.
 
 **Was abgesichert ist**
 
@@ -449,7 +464,7 @@ src/version.js    Fassung und Ausgabe (Spiel oder Vorschau): Zahl, Speicher-Vors
 src/icons.js      Bedien-Sinnbilder: Material Symbols als eingebettete SVG-Pfade (Zurück, Kamera, Musik, Editor …)
 src/hats.js       Hüte für die Bälle: Zeichnungen und Vorschau fürs Menü
 src/net.js        Netzspiel: Raumcode und MQTT-Zugang für das Spiel zu mehreren
-src/best.js       Bestenliste: Rekorde je Bahn und je Welt in drei Wertungen (Schläge, Zeit, Kombi), über alle Geräte geteilt
+src/best.js       Rangliste: Rekorde je Bahn und je Welt in drei Wertungen (Schläge, Zeit, Kombi), über alle Geräte geteilt
 src/sfx.js        Klangeffekte (WebAudio)
 src/music.js      Musik: je Welt ein erzeugter Klangteppich (WebAudio)
 src/worldmap.js   Weltkarte: die schwebenden Scheiben in 2,5D und die Orte der Welten

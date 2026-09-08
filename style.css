@@ -397,7 +397,7 @@ body.editing #editor-panel { display: flex; flex-direction: column; }
 .net-note { color: #ffd98a; }
 @media (max-width: 600px) { .room-code { font-size: 32px; letter-spacing: 8px; } .seat { min-width: 66px; } .seat-ball { width: 44px; height: 44px; } }
 
-/* ---------- Bestenliste ---------- */
+/* ---------- Rangliste ---------- */
 #hud-best { font-size: 12px; color: #ffd98a; margin-top: 2px; }
 /* Laufende Zeit der eigenen Bahn */
 #hud-time { font-variant-numeric: tabular-nums; font-size: 15px; color: #cfe4ff; }

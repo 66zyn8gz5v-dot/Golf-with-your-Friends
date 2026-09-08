@@ -1,4 +1,4 @@
-/* Bestenliste: geteilt über alle Geräte eines Freundeskreises, in drei Wertungen.
+/* Rangliste: geteilt über alle Geräte eines Freundeskreises, in drei Wertungen.
 
    - Schläge: wer braucht die wenigsten? Die klassische Golfwertung.
    - Zeit:    wie lange dauert eine Bahn? Gemessen wird ab dem Aufsetzen des Balls bis zum
@@ -35,6 +35,9 @@ const Best = (() => {
   // Eigener Zweig für die Vorschau, damit Testläufe die Rekorde der Freunde nicht anfassen
   const TOPIC = world => `fantasygolf/v1/${APP_MARKE}/best/all/${world}`;
   const FILTER = `fantasygolf/v1/${APP_MARKE}/best/all/+`;
+  const RESET = `fantasygolf/v1/${APP_MARKE}/best/reset`;
+  /* Eine Bahn braucht Zeit: was darunter liegt, kann niemand wirklich gespielt haben */
+  const MIN_MS_BAHN = 2000, MIN_MS_RUNDE = 10000;
   const KINDS = ['strokes', 'time', 'combo'];
   /* Namen und Bahnnamen kommen von fremden Geräten und gehen in die Anzeige.
      Gefiltert wird an einer Stelle für das ganze Spiel: src/text.js */
@@ -45,8 +48,12 @@ const Best = (() => {
   const save = (key, v) => { try { localStorage.setItem(key, JSON.stringify(v)); } catch (e) { /* kein Speicher */ } };
 
   // Spiel und Vorschau liegen auf derselben Adresse: eigene Schlüssel halten die Stände getrennt
-  const K_NAME = speicherSchluessel('name'), K_BEST = speicherSchluessel('best');
+  const K_NAME = speicherSchluessel('name'), K_BEST = speicherSchluessel('best'), K_RESET = speicherSchluessel('bestreset');
   let name = cleanName(load(K_NAME, ''));
+  /* Zurücksetz-Zeitpunkt. Alles, was davor eingetragen wurde, zählt nicht mehr. Der Zeitpunkt wird
+     wie die Rekorde geteilt: Wer zurücksetzt, sagt es allen, und jedes Gerät wirft daraufhin seine
+     alten Einträge weg. Ohne das käme der alte Stand vom nächsten Gerät sofort wieder zurück. */
+  let epoche = +load(K_RESET, 0) || 0;
   let data = migrate(load(K_BEST, {}) || {});   // Welt-Kennung -> Rekorde
   let onChange = null, watching = '';
 
@@ -54,7 +61,10 @@ const Best = (() => {
      aus dem Browser oder von einem Gerät mit älterem Spielstand – werden hier eingereiht. */
   function cleanRec(r) {
     if (!r || !r.s) return null;
-    const out = { s: +r.s, n: cleanName(r.n), t: +r.t || 0 };
+    // Ein Zeitstempel in der Zukunft würde jedes Zurücksetzen überleben – darum gekappt
+    const jetzt = Date.now();
+    const out = { s: +r.s, n: cleanName(r.n), t: Math.min(+r.t || 0, jetzt + 300000) };
+    if (out.t && out.t < epoche) return null;      // vor dem letzten Zurücksetzen: zählt nicht mehr
     if (r.q === 'net') out.q = 'net';
     if (r.st != null) out.st = +r.st;
     if (r.ms != null) out.ms = +r.ms;
@@ -110,7 +120,20 @@ const Best = (() => {
     for (const kind of KINDS) msg[kind] = { holes: w[kind].holes, round: w[kind].round };
     Net.pub(TOPIC(id), msg, true);
   }
+  /* Jemand hat zurückgesetzt: Zeitpunkt übernehmen, alles Ältere wegwerfen und den nun leeren
+     Stand nachschicken, damit auch die aufbewahrten Nachrichten beim Vermittler aufräumen. */
+  function onReset(msg) {
+    const t = +(msg && msg.t) || 0;
+    if (!t || t <= epoche || t > Date.now() + 300000) return;
+    epoche = t; save(K_RESET, epoche);
+    const welten = Object.keys(data);
+    data = migrate(data);                       // wirft alles vor der Epoche weg
+    save(K_BEST, data);
+    setTimeout(() => { for (const id of welten) publish(id); }, 400);
+    if (onChange) onChange(null, []);
+  }
   function onNet(msg, topic) {
+    if (topic === RESET) { onReset(msg); return; }
     const id = topic.split('/').pop();
     if (!id) return;
     const { news, localBetter } = merge(id, msg);
@@ -154,18 +177,32 @@ const Best = (() => {
     },
 
     setName(v) { name = cleanName(v); save(K_NAME, name); },
+    /* Alles zurücksetzen – bei allen. Der Zeitpunkt wird geteilt, damit die alten Einträge nicht
+       vom nächsten Gerät wieder hereingetragen werden. */
+    reset() {
+      epoche = Date.now();
+      save(K_RESET, epoche);
+      const welten = Object.keys(data);
+      data = {};
+      save(K_BEST, data);
+      const gesendet = Net.pub(RESET, { t: epoche }, true);
+      for (const id of welten) publish(id);     // leere Stände nachschieben
+      return gesendet;
+    },
+    get resetZeit() { return epoche; },
     /* Verbindung aufbauen und die Rekorde abonnieren */
     start(handlers) {
       Net.connect(handlers || {});
       if (watching !== FILTER) {
         // Die eigenen aufbewahrten Nachrichten sollen mitkommen, darum skipSelf aus
         Net.sub(FILTER, onNet, { skipSelf: false });
+        Net.sub(RESET, onNet, { skipSelf: false });
         watching = FILTER;
       }
       // eigenen Stand einmal anbieten, damit neue Geräte ihn bekommen
       setTimeout(() => { for (const id of Object.keys(data)) publish(id); }, 1200);
     },
-    stop() { if (watching) { Net.unsub(watching); watching = ''; } },
+    stop() { if (watching) { Net.unsub(watching); Net.unsub(RESET); watching = ''; } },
     onChange(fn) { onChange = fn; },
 
     /* Ergebnis einer Bahn eintragen: Schläge und gebrauchte Zeit.
@@ -174,7 +211,7 @@ const Best = (() => {
       if (!name || !strokes) return [];
       const t = Date.now(), treffer = [], q = quelle === 'net' ? 'net' : undefined;
       const kandidaten = [['strokes', { s: strokes, n: name, t, q }]];
-      if (ms > 0) {
+      if (ms >= MIN_MS_BAHN) {
         kandidaten.push(['time', { s: ms, n: name, t, q }]);
         kandidaten.push(['combo', { s: comboValue(strokes, ms), n: name, t, q, st: strokes, ms }]);
       }
@@ -190,7 +227,7 @@ const Best = (() => {
       if (!name || !total) return [];
       const t = Date.now(), treffer = [], q = quelle === 'net' ? 'net' : undefined;
       const kandidaten = [['strokes', { s: total, n: name, t, q }]];
-      if (ms > 0) {
+      if (ms >= MIN_MS_RUNDE) {
         kandidaten.push(['time', { s: ms, n: name, t, q }]);
         kandidaten.push(['combo', { s: comboValue(total, ms), n: name, t, q, st: total, ms }]);
       }

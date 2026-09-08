@@ -5,7 +5,7 @@
    erst einmal nichts als ein Haufen Daten, und eine kaputte oder böswillige Bahn soll das Spiel
    weder zum Absturz bringen noch etwas anzeigen, was sie nicht anzeigen darf.
 
-   Die Werkstatt nutzt „aufbewahrte" Nachrichten wie die Bestenliste: Wer teilt, legt seine Bahn
+   Die Werkstatt nutzt „aufbewahrte" Nachrichten wie die Rangliste: Wer teilt, legt seine Bahn
    beim Vermittler ab, wo sie liegen bleibt und jedem zugestellt wird, der später zuhört. Es gibt
    keinen Code – wer das Spiel hat, sieht die Bahnen. Das reicht in einem Freundeskreis und spart
    die Tipperei.

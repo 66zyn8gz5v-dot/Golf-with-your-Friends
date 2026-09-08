@@ -298,7 +298,7 @@
         <span class="btn mode" id="to-build">${SCENE_CREATIVE}<span class="mode-label long">Bauen &amp; Eigene Welt</span></span>
       </div>
       <div class="atlas-extra"><span class="btn small ghost" id="to-online">${Icons.svg('public')} Online spielen</span>
-        <span class="btn small ghost" id="to-best">${Icons.svg('emoji_events')} Bestenliste</span></div>
+        <span class="btn small ghost" id="to-best">${Icons.svg('emoji_events')} Rangliste</span></div>
       <div class="legend">Alle Welten sind von Anfang an offen. Die Stufe an jedem Ort sagt nur, was dich erwartet.
         <span class="version">${typeof VORSCHAU !== 'undefined' && VORSCHAU ? 'Vorschau · ' : ''}Fassung ${typeof APP_VERSION !== 'undefined' ? APP_VERSION : '?'}</span></div>
     </div>`, 'title');
@@ -429,7 +429,7 @@
     startGame(1, 0);
   }
 
-  /* Bestenlisten-Bildschirm: Name, Gruppencode und die Rekorde aller Welten */
+  /* Ranglisten-Bildschirm: Name, Gruppencode und die Rekorde aller Welten */
   function showBestList(worldId) {
     state.phase = 'title'; document.body.classList.add('title');
     document.body.classList.remove('creative', 'editing', 'testing');
@@ -452,7 +452,7 @@
     const rundeZeile = Best.KINDS.map(k => zelle(k, rec[k].round)).join('');
     const parTotal = w.courses.reduce((a, c) => a + c.par, 0);
     overlay(`<div class="panel wide">
-      <div class="panel-head"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span><h2>${Icons.svg('emoji_events')} Bestenliste</h2></div>
+      <div class="panel-head"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span><h2>${Icons.svg('emoji_events')} Rangliste</h2></div>
       <div class="sub">Für jede Bahn zählen <b>alle drei Wertungen gleichzeitig</b> – Namen eintragen, losspielen,
         der Rest passiert von allein. Gewertet wird dein eigener Ball im Wettkampf.</div>
       <div class="sub warn-note">Diese Liste ist eine Anschreibetafel, kein Schiedsrichter: Jedes Gerät meldet sein
@@ -471,6 +471,7 @@
         ${rows}
         <tr class="ganze-runde"><td></td><td>Ganze Runde</td><td></td>${rundeZeile}</tr>
       </table></div>
+      <p style="margin-top:12px"><span class="btn ghost small" id="brs">${Icons.svg('restart_alt')} Rangliste zurücksetzen</span></p>
       <div class="legend"><b>${BEST_ICON.strokes} Schläge:</b> ${BEST_HELP.strokes}<br>
         <b>${BEST_ICON.time} Zeit:</b> ${BEST_HELP.time}<br>
         <b>${BEST_ICON.combo} Kombi:</b> ${BEST_HELP.combo}<br>
@@ -479,12 +480,34 @@
     </div>`, 'title');
     $('back').addEventListener('click', showTitle);
     ui.overlay.querySelectorAll('#bw .btn').forEach(b => b.addEventListener('click', () => showBestList(b.dataset.w)));
+    $('brs').addEventListener('click', () => fragenUndZuruecksetzen(w.id));
     $('bn').addEventListener('keydown', e => { if (e.key === 'Enter') $('bsave').click(); });
     $('bsave').addEventListener('click', () => {
       Sfx.unlock();
       Best.setName($('bn').value);
       Best.start(bestStatus);
       showBestList(w.id);
+    });
+  }
+
+  /* Zurücksetzen betrifft alle – darum wird deutlich gefragt, bevor etwas passiert */
+  function fragenUndZuruecksetzen(weltId) {
+    overlay(`<div class="panel">
+      <h2>Rangliste zurücksetzen?</h2>
+      <div class="sub">Alle Rekorde aller Welten werden gelöscht – <b>bei dir und bei allen anderen</b>.
+        Das lässt sich nicht rückgängig machen.</div>
+      <div class="sub warn-note">Nützlich, wenn jemand Ergebnisse eingetragen hat, die nicht stimmen.
+        Danach fangen alle wieder bei null an.</div>
+      <p style="margin-top:14px"><span class="btn ghost small" id="rs-nein">${Icons.svg('arrow_back')} Lieber nicht</span>
+        <span class="btn" id="rs-ja">Zurücksetzen</span></p>
+    </div>`, 'title');
+    $('rs-nein').addEventListener('click', () => showBestList(weltId));
+    $('rs-ja').addEventListener('click', () => {
+      Sfx.unlock();
+      const gesendet = Best.reset();
+      showBestList(weltId);
+      showMessage(gesendet ? 'Rangliste zurückgesetzt – auch bei den anderen'
+        : 'Auf diesem Gerät zurückgesetzt. Ohne Verbindung erfahren es die anderen erst später.', 3200);
     });
   }
 
@@ -498,7 +521,7 @@
     combo: 'gerechnet wie beim Speedgolf: <b>Schläge + Minuten</b>. Vier Schläge in 1:12 ergeben 4 + 1,2 = <b>5,2</b>. Wer trödelt, verliert – wer wild drauflos schlägt, aber auch.',
   };
 
-  /* ---------- Bestenliste ----------
+  /* ---------- Rangliste ----------
      Gewertet wird der eigene Ball im Wettkampf: am Gerät Spieler 1, online der eigene Platz.
      Im Kreativmodus zählt nichts, weil man dort beliebig oft neu setzen darf. */
   const myIndex = () => (online && online.started) ? online.players.findIndex(p => p.id === Net.id) : 0;
@@ -580,7 +603,7 @@
   function leaveOnline() {
     clearInterval(beatT); clearInterval(watchT); beatT = null; watchT = null;
     if (online) { netSend({ t: 'bye' }); Net.leaveRoom(); }
-    online = null;                      // die Verbindung bleibt für die Bestenliste bestehen
+    online = null;                      // die Verbindung bleibt für die Rangliste bestehen
   }
   function onlineLost(text) { leaveOnline(); showOnline(text); }
 
@@ -1141,7 +1164,7 @@
   function showFinal() {
     state.phase = 'final'; clearTimeout(msgTimer); ui.msg.classList.remove('visible'); // keine Laufmeldung über der Tafel
     const parTotal = state.courses.reduce((a, c) => a + c.par, 0);
-    // eigene Runde in die Bestenliste
+    // eigene Runde in die Rangliste
     const gewertet = state.mode !== 'creative' && !state.editorReturn;
     const gesamtZeit = p => (p.times || []).reduce((a, b) => a + (b || 0), 0);
     let roundRec = [];
