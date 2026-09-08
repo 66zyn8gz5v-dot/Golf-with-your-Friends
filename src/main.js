@@ -353,18 +353,18 @@
       ${note ? `<div class="sub net-note">${note}</div>` : ''}
       <p><span class="btn" id="host">Raum aufmachen</span></p>
       <p>oder Code eintippen:</p>
-      <p class="join-row"><input id="code" class="code-in" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABCD">
+      <p class="join-row"><input id="code" class="code-in" maxlength="4" inputmode="numeric" pattern="[0-9]*" autocomplete="off" spellcheck="false" placeholder="1234">
         <span class="btn" id="join">Beitreten</span></p>
       <div class="legend">Dafür braucht ihr Internet. Jeder spielt mit seinem eigenen Hut, die Welt sucht der Gastgeber aus.</div>
     </div>`, 'title');
     $('back').addEventListener('click', showTitle);
     $('host').addEventListener('click', () => { Sfx.unlock(); Music.start(); enterRoom(Net.makeCode(), true); });
     const go = () => {
-      const c = ($('code').value || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
-      if (c.length === 4) { Sfx.unlock(); Music.start(); enterRoom(c, false); } else showOnline('Der Code hat vier Zeichen.');
+      const c = ($('code').value || '').replace(/[^0-9]/g, '');
+      if (c.length === 4) { Sfx.unlock(); Music.start(); enterRoom(c, false); } else showOnline('Der Code besteht aus vier Ziffern.');
     };
     $('join').addEventListener('click', go);
-    $('code').addEventListener('input', e => { e.target.value = e.target.value.toUpperCase(); });
+    $('code').addEventListener('input', e => { e.target.value = e.target.value.replace(/[^0-9]/g, ''); });
     $('code').addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
   }
 

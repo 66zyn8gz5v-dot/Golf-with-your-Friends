@@ -15,8 +15,8 @@ const Net = (() => {
   const BROKER = 'wss://broker.emqx.io:8084/mqtt';
   const ROOM = code => `fantasygolf/v1/${code}`;
   const KEEPALIVE = 45;                 // Sekunden zwischen zwei Lebenszeichen
-  // Zeichen ohne Verwechslungsgefahr: kein O/0, kein I/1, kein S/5
-  const ALPHABET = 'ACDEFGHJKLMNPQRTUVWXY34679';
+  // Nur Ziffern: leicht durchzusagen und auf dem Handy mit der Zifferntastatur einzutippen
+  const ALPHABET = '0123456789';
 
   const enc = new TextEncoder(), dec = new TextDecoder();
 
@@ -101,7 +101,7 @@ const Net = (() => {
   }
 
   return {
-    /* Neuen Raumcode würfeln – vier Zeichen, gut vorlesbar */
+    /* Neuen Raumcode würfeln – vier Ziffern, gut durchzusagen */
     makeCode: () => rnd(4),
     /* Raum betreten. handlers: { message(obj), status(zustand, text) } */
     join(code, handlers) {

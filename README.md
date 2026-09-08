@@ -51,7 +51,8 @@ nimmt sie als zweiten Wert der Zeichenfunktion entgegen.
 ## Online gegeneinander
 
 Über **🌐 Online spielen** im Startbildschirm treten bis zu vier Geräte in einem Raum gegeneinander an.
-Einer macht den Raum auf und bekommt einen vierstelligen Code, die anderen tippen ihn ein. Der Gastgeber
+Einer macht den Raum auf und bekommt einen vierstelligen Zahlencode, die anderen tippen ihn ein
+(auf dem Handy kommt dafür die Zifferntastatur). Der Gastgeber
 wählt die Welt und startet; danach wird **reihum** gespielt: wer dran ist, zielt, die anderen sehen den
 Schlag mitlaufen. Punktetafel und Bahnwechsel bleiben überall gleich, den Takt zwischen den Bahnen gibt
 der Gastgeber vor. Jeder spielt mit seinem eigenen Hut, die Ballfarbe richtet sich nach der Sitzreihenfolge.
