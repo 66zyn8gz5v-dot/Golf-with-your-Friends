@@ -630,7 +630,7 @@
           break;
         case 'portal': Sfx.portal(); burst(ev.x, ev.y, ev.color, 12, true); break;
         case 'board': Sfx.bounce(6); showMessage('Eingestiegen – gute Fahrt!', 1400); break;
-        case 'jump': Sfx.portal(); showMessage('Sprung!', 900); break;
+        case 'jump': if (ev.updraft) { Sfx.whoosh(); burst(ev.x, ev.y, '#cdefff', 22, true); showMessage('Der Aufwind trägt dich!', 1100); } else { Sfx.portal(); showMessage('Sprung!', 900); } break;
         case 'land': Sfx.bounce(3); burst(ev.x, ev.y, 'rgba(255,255,255,0.7)', 6); break;
         case 'dropoff': Sfx.bounce(4); burst(ev.x, ev.y, '#ffd166', 8); break;
         case 'switch': Sfx.lever(); burst(ev.x, ev.y, '#9dffb5', 14); showMessage('Schalter gedrückt – das Zaubertor öffnet sich!', 1600); break;

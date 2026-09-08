@@ -139,16 +139,76 @@ Object.assign(Renderer.prototype, {
     }
     ctx.fillStyle = `rgba(255,255,255,${0.3 * (1 - ob.p)})`; ctx.fillRect(0, 0, this.w, this.h); // Bildblitz
   },
+  /* Aufwind: ein Schacht mit Metallrost, aus dem eine Böe schießt. Drei Luftsträhnen schrauben sich als Wirbel
+     nach oben und verjüngen sich, Federn tanzen darin, Druckwellen laufen über den Boden und drei Pfeile zeigen
+     die Richtung. Hebt der Wirbel gerade einen Ball, bläst er kurz auf und ein greller Ring springt nach außen. */
   drawUpdraft(ctx, ob, t) {
-    const s = this.scale, poly = [[ob.x, ob.y], [ob.x + ob.w, ob.y], [ob.x + ob.w, ob.y + ob.h], [ob.x, ob.y + ob.h]];
-    this.fillPoly(ctx, poly, 0.004, 'rgba(160,220,255,0.2)', false);
-    ctx.strokeStyle = 'rgba(200,240,255,0.7)'; ctx.lineWidth = Math.max(1.5, s * 0.05); this.pathPoly(ctx, poly, 0.005); ctx.stroke();
-    // aufsteigende Federn/Wirbel
-    for (let i = 0; i < 8; i++) {
-      const life = (t * 0.6 + this.hashL(i, 1)) % 1, px = ob.x + 0.2 + this.hashL(i, 2) * (ob.w - 0.4) + Math.sin(t * 3 + i) * 0.15, py = ob.y + 0.2 + this.hashL(i, 3) * (ob.h - 0.4);
-      const [ax, ay] = this.proj(px, py, life * 2.2);
-      ctx.globalAlpha = 1 - life; ctx.strokeStyle = '#e6f6ff'; ctx.lineWidth = Math.max(1.5, s * 0.06);
-      ctx.beginPath(); ctx.moveTo(ax - s * 0.12, ay + s * 0.12); ctx.lineTo(ax, ay - s * 0.1); ctx.lineTo(ax + s * 0.12, ay + s * 0.12); ctx.stroke();
+    const s = this.scale, cx = ob.x + ob.w / 2, cy = ob.y + ob.h / 2;
+    const R = Math.min(ob.w, ob.h) * 0.42, H = 3.4, pulse = 0.55 + 0.45 * Math.sin(t * 2.4);
+    const boom = Math.max(0, 1 - (t - (ob.liftAt ?? -10)) / 0.6); // kurz nach dem Abheben
+    const poly = [[ob.x, ob.y], [ob.x + ob.w, ob.y], [ob.x + ob.w, ob.y + ob.h], [ob.x, ob.y + ob.h]];
+    const [c0, c1] = this.proj(cx, cy, 0.004);
+    // Schacht: dunkler Grund, darüber der blaue Schein aus der Tiefe
+    this.fillPoly(ctx, poly, 0.003, 'rgba(12,16,30,0.8)', false);
+    const g = ctx.createRadialGradient(c0, c1, 0, c0, c1, s * R * 2.4);
+    g.addColorStop(0, `rgba(205,245,255,${0.45 + 0.2 * pulse + 0.45 * boom})`);
+    g.addColorStop(0.45, `rgba(110,190,255,${0.3 + 0.12 * pulse})`);
+    g.addColorStop(1, 'rgba(70,140,255,0)');
+    ctx.save(); this.pathPoly(ctx, poly, 0.004); ctx.clip(); ctx.fillStyle = g; ctx.fillRect(0, 0, this.w, this.h); ctx.restore();
+    // Metallrost quer über den Schacht
+    ctx.strokeStyle = 'rgba(38,46,70,0.92)'; ctx.lineWidth = Math.max(2, s * 0.09);
+    const bars = Math.max(3, Math.round(ob.h / 0.42));
+    for (let i = 1; i < bars; i++) {
+      const y = ob.y + (i / bars) * ob.h, [a0, a1] = this.proj(ob.x, y, 0.006), [b0, b1] = this.proj(ob.x + ob.w, y, 0.006);
+      ctx.beginPath(); ctx.moveTo(a0, a1); ctx.lineTo(b0, b1); ctx.stroke();
+    }
+    ctx.strokeStyle = `rgba(200,240,255,${0.7 + 0.3 * pulse})`; ctx.lineWidth = Math.max(2, s * 0.08); this.pathPoly(ctx, poly, 0.007); ctx.stroke();
+    // Druckwellen über dem Rost
+    for (let i = 0; i < 2; i++) {
+      const u = (t * 0.85 + i * 0.5) % 1, rr = s * R * (0.3 + u * 1.6);
+      ctx.strokeStyle = `rgba(185,238,255,${0.5 * (1 - u)})`; ctx.lineWidth = Math.max(1.5, s * 0.05);
+      ctx.beginPath(); ctx.ellipse(c0, c1, rr, rr * this.cam.tilt, 0, 0, TAU); ctx.stroke();
+    }
+    if (boom > 0) { // greller Ring beim Abheben
+      const rr = s * R * (0.4 + (1 - boom) * 3.2);
+      ctx.strokeStyle = `rgba(255,255,255,${0.85 * boom})`; ctx.lineWidth = Math.max(2, s * 0.1 * boom);
+      ctx.beginPath(); ctx.ellipse(c0, c1, rr, rr * this.cam.tilt, 0, 0, TAU); ctx.stroke();
+    }
+    // Luftsäule: ein Trichter, der sich nach oben verjüngt – so ist die Böe auch von Weitem zu sehen
+    const [bx, by] = this.proj(cx, cy, 0.02), [ux, uy] = this.proj(cx, cy, H);
+    const rb = s * R * 1.1, rt = s * R * 0.45;
+    const fg = ctx.createLinearGradient(0, by, 0, uy);
+    fg.addColorStop(0, `rgba(175,232,255,${0.26 + 0.1 * pulse + 0.22 * boom})`);
+    fg.addColorStop(0.55, `rgba(150,215,255,${0.12 + 0.06 * pulse})`);
+    fg.addColorStop(1, 'rgba(160,220,255,0)');
+    ctx.fillStyle = fg; ctx.beginPath();
+    ctx.moveTo(bx - rb, by); ctx.quadraticCurveTo(bx - rb * 0.75, (by + uy) / 2, ux - rt, uy);
+    ctx.lineTo(ux + rt, uy); ctx.quadraticCurveTo(bx + rb * 0.75, (by + uy) / 2, bx + rb, by); ctx.closePath(); ctx.fill();
+    // Wirbel: drei Strähnen, die sich nach oben schrauben und dünner werden
+    ctx.lineCap = 'round';
+    const swirl = (u, k) => { const a = t * 2.6 + k * TAU / 3 + u * 5.4, r = R * (1 - u * 0.55) * (1 + 0.4 * boom); return this.proj(cx + Math.cos(a) * r, cy + Math.sin(a) * r * 0.9, 0.05 + u * H * (1 + 0.25 * boom)); };
+    for (let k = 0; k < 3; k++) for (let j = 0; j < 24; j++) {
+      const u0 = j / 24, p0 = swirl(u0, k), p1 = swirl((j + 1) / 24, k), fade = (1 - u0 * 0.75) * (0.65 + 0.35 * pulse) * (0.75 + 0.45 * boom);
+      ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]);
+      ctx.strokeStyle = `rgba(140,205,255,${0.55 * fade})`; ctx.lineWidth = Math.max(2, s * 0.2 * (1 - u0 * 0.6)); ctx.stroke();
+      ctx.strokeStyle = `rgba(240,252,255,${0.95 * fade})`; ctx.lineWidth = Math.max(1, s * 0.075 * (1 - u0 * 0.6)); ctx.stroke();
+    }
+    // Federn, die im Wirbel nach oben tanzen
+    for (let i = 0; i < 10; i++) {
+      const life = (t * (0.5 + this.hashL(i, 7) * 0.35) + this.hashL(i, 1)) % 1;
+      const a = t * 3 + this.hashL(i, 2) * TAU + life * 4.5, r = R * (0.35 + this.hashL(i, 3) * 0.75) * (1 - life * 0.5);
+      const [px, py] = this.proj(cx + Math.cos(a) * r, cy + Math.sin(a) * r * 0.9, 0.1 + life * H);
+      ctx.globalAlpha = (1 - life) * (0.35 + 0.65 * Math.sin(life * Math.PI));
+      ctx.strokeStyle = '#eaf8ff'; ctx.lineWidth = Math.max(1, s * 0.05);
+      ctx.beginPath(); ctx.arc(px, py, s * (0.08 + this.hashL(i, 4) * 0.06), a, a + 2.4); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    // drei Pfeile in der Mitte, die nach oben davonziehen (immer zur Kamera ausgerichtet)
+    for (let i = 0; i < 3; i++) {
+      const life = (t * 0.95 + i / 3) % 1, [m0, m1] = this.proj(cx, cy, 0.15 + life * H * 0.85), wd = s * 0.4 * (1 - life * 0.35);
+      ctx.globalAlpha = (1 - life) * 0.9;
+      ctx.strokeStyle = 'rgba(255,255,255,0.95)'; ctx.lineWidth = Math.max(2, s * 0.09 * (1 - life * 0.4));
+      ctx.beginPath(); ctx.moveTo(m0 - wd, m1 + wd * 0.8); ctx.lineTo(m0, m1); ctx.lineTo(m0 + wd, m1 + wd * 0.8); ctx.stroke();
     }
     ctx.globalAlpha = 1;
   },

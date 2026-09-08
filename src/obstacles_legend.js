@@ -26,14 +26,15 @@ class Lightning {
 /* Aufwind: ein Ball, der mit Schwung in die Zone rollt, wird in seiner Rollrichtung in die Luft gehoben
    und landet 'land' Kacheln weiter – egal wie schnell er war (Flugtempo 'fly'). Fliegt über Klippen und Mauern. */
 class Updraft {
-  constructor(d) { Object.assign(this, { w: 2, h: 2, minSpeed: 2.5, land: 5, fly: 7 }, d); this.type = 'updraft'; }
+  constructor(d) { Object.assign(this, { w: 2, h: 2, minSpeed: 2.5, land: 5, fly: 7 }, d); this.type = 'updraft'; this.liftAt = -10; }
   inside(px, py) { return px >= this.x && px <= this.x + this.w && py >= this.y && py <= this.y + this.h; }
-  launch(ball, events) {
+  launch(ball, events, t) {
     if (ball.air || ball.rider || !this.inside(ball.x, ball.y)) return;
     const sp = Math.hypot(ball.vx, ball.vy); if (sp < this.minSpeed) return;
     const ux = ball.vx / sp, uy = ball.vy / sp, tFlight = this.land / this.fly;
     ball.vx = ux * this.fly; ball.vy = uy * this.fly;
     ball.vz = (12 * tFlight) / 2; ball.z = Math.max(ball.z, 0.01); ball.air = true;
+    this.liftAt = t;
     events.push({ type: 'jump', x: ball.x, y: ball.y, updraft: true });
   }
 }
