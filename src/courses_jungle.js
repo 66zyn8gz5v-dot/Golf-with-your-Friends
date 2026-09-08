@@ -1,4 +1,4 @@
-/* Dschungeltempel: zweite Profi-Welt – neun Bahnen durch den Urwald bis zur verlorenen Stadt.
+/* Dschungeltempel: zweite Welt der Stufe Profi – neun Bahnen durch den Urwald bis zur verlorenen Stadt.
    Neue Hindernisse: Stachelfallen, Krokodil, Lianen, Kokosnüsse, Steingötzen, Tempeltor mit Tempelhalle.
    Gleiche Kartenlegende wie in courses.js. */
 const JUNGLE_COURSES = [

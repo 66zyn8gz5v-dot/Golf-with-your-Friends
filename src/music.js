@@ -23,7 +23,7 @@ const Music = (() => {
     normal: { root: 53, scale: DUR, chords: [0, 4, 5, 3], bar: 4.0, pad: 'triangle', lead: 'triangle', steps: 8, density: 0.45, lift: 14, gain: 0.15, drum: null },
     // Meereswelt: weit und wiegend, langsame Wellen ohne Trommel
     sea: { root: 50, scale: DORISCH, chords: [0, 5, 3, 4], bar: 4.8, pad: 'sine', lead: 'sine', steps: 8, density: 0.34, lift: 14, gain: 0.15, drum: null },
-    // Profi-Welt: geheimnisvoll, mit ruhigem Puls
+    // Tüftlerreich: geheimnisvoll, mit ruhigem Puls
     pro: { root: 52, scale: MOLL, chords: [0, 5, 3, 4], bar: 3.8, pad: 'triangle', lead: 'triangle', steps: 8, density: 0.5, lift: 14, gain: 0.14, drum: 'puls' },
     // Dschungeltempel: Marimba über einer Rahmentrommel, Pentatonik
     jungle: { root: 50, scale: PENTA, chords: [0, 3, 4, 2], bar: 3.4, pad: 'triangle', lead: 'square', steps: 8, density: 0.6, lift: 10, gain: 0.13, drum: 'tribal' },

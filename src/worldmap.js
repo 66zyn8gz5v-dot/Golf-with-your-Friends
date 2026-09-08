@@ -10,7 +10,7 @@ const WorldMap = (() => {
   const spots = {
     normal: { x: 12, y: 52, icon: '🌼', col: '#8fe07a' },
     sea: { x: 27, y: 82, icon: '🌊', col: '#7fd8ff' },
-    pro: { x: 43, y: 50, icon: '🔥', col: '#ff9c5a' },
+    pro: { x: 43, y: 50, icon: '⚙️', col: '#ff9c5a' },
     jungle: { x: 59, y: 82, icon: '🗿', col: '#b6ff6e' },
     storm: { x: 75, y: 44, icon: '⛈️', col: '#ffe45e' },
     shadow: { x: 88, y: 74, icon: '🌑', col: '#c58bff' },
@@ -65,12 +65,17 @@ const WorldMap = (() => {
       <path d="M6.2 23.4 L7.55 20.8 L8.9 23.4 Z M10.8 23.4 L12.15 20.8 L13.5 23.4 Z M8.3 21.4 L10 18.2 L11.7 21.4 Z" fill="#c94a4a"/>
       <rect x="9.8" y="16.6" width="0.3" height="1.8" fill="#3a2a1a"/><path class="art-flag" d="M10.1 16.6 L12.4 17.3 L10.1 18 Z" fill="#ff4f6d"/>
       <g class="sway" fill="#2f7a3e"><path d="M2.6 30 L3.9 26 L5.2 30 Z"/></g><g class="sway s2" fill="#2f7a3e"><path d="M14.8 30.4 L16 26.6 L17.2 30.4 Z"/></g>
-      <!-- Profi-Welt: rauchender Berg mit Mühle davor -->
+      <!-- Tüftlerreich: Windmühle und Zahnrad vor dem rauchenden Berg -->
       <path d="M33 32 L42 17 L51 32 Z" fill="#6b5560"/><path d="M38 24.7 L42 17 L46 24.7 Z" fill="#a08a92"/>
       <ellipse cx="42" cy="17.6" rx="1.6" ry="0.5" fill="#ff8a3d"/>
       <path d="M42 16.8 q1.6 -2.4 0.2 -4.6 q-1.4 -2.2 0.8 -3.8" stroke="rgba(220,210,215,0.55)" stroke-width="0.5" fill="none"/>
-      <g><rect x="36.1" y="27.4" width="1.8" height="4.6" fill="#c9b48a"/><path d="M35.7 27.4 L37 25.2 L38.3 27.4 Z" fill="#8a5a3a"/>
-        <g class="mill-blades" style="transform-origin:37px 27.8px"><path d="M37 27.8 L37 24.4 M37 27.8 L40.4 27.8 M37 27.8 L37 31.2 M37 27.8 L33.6 27.8" stroke="#5a3a1e" stroke-width="0.35"/></g></g>
+      <g><rect x="29.2" y="25.6" width="2.6" height="6.4" fill="#d6c09a"/><path d="M28.6 25.6 L30.5 22.6 L32.4 25.6 Z" fill="#8a5a3a"/>
+        <rect x="30" y="29" width="1" height="1.2" fill="#ffd166"/>
+        <g class="mill-blades"><path d="M30.5 26.4 L30.5 21.9 M30.5 26.4 L35 26.4 M30.5 26.4 L30.5 30.9 M30.5 26.4 L26 26.4" stroke="#5a3a1e" stroke-width="0.45"/>
+          <path d="M30.7 22.3 L31.8 22.6 L30.7 25.6 Z M34.6 26.6 L34.3 27.7 M34.6 26.6 L31.3 26.6 L34.6 27.7 Z M30.3 30.5 L29.2 30.2 L30.3 27.2 Z M26.4 26.2 L26.7 25.1 L30 26.2 Z" fill="rgba(245,235,210,0.9)"/></g></g>
+      <g class="mill-blades" fill="none" stroke="#d9a24e" stroke-width="0.5" stroke-linecap="round">
+        <circle cx="52.6" cy="26.4" r="1.35"/><path d="M53.95 26.40 L54.65 26.40 M53.55 27.35 L54.05 27.85 M52.60 27.75 L52.60 28.45 M51.65 27.35 L51.15 27.85 M51.25 26.40 L50.55 26.40 M51.65 25.45 L51.15 24.95 M52.60 25.05 L52.60 24.35 M53.55 25.45 L54.05 24.95"/>
+        <circle cx="52.6" cy="26.4" r="0.4" fill="#d9a24e" stroke="none"/></g>
       <!-- Dschungel: Tempelstufen im Grün -->
       <ellipse cx="58" cy="44" rx="12" ry="6" fill="#2f6a2c" opacity="0.75"/>
       <path d="M52.5 43.6 L58 35.4 L63.5 43.6 Z" fill="#9a8a66"/><path d="M54.4 43.6 L58 38 L61.6 43.6 Z" fill="#b8a780"/>

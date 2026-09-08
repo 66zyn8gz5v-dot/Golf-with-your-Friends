@@ -1,4 +1,4 @@
-/* Profi-Welt: acht Bahnen mit eigenen Mechaniken – Windmühlen, Kanone, Magnete, Drehscheiben,
+/* Tüftlerreich (Stufe Profi): acht Bahnen mit eigenen Mechaniken – Windmühlen, Kanone, Magnete, Drehscheiben,
    Schrumpftrank, Schalter und Zaubertor. Gleiche Kartenlegende wie in courses.js. */
 const PRO_COURSES = [
   {
@@ -464,7 +464,7 @@ const PRO_COURSES = [
 const WORLDS = [
   { id: 'normal', name: 'Märchenland', short: 'Märchen', mode: 'normal', courses: COURSES },
   { id: 'sea', name: 'Meereswelt', short: 'Meer', mode: 'normal', courses: SEA_COURSES },
-  { id: 'pro', name: 'Profi-Welt', short: 'Profi', mode: 'pro', courses: PRO_COURSES },
+  { id: 'pro', name: 'Tüftlerreich', short: 'Tüftler', mode: 'pro', courses: PRO_COURSES },
   { id: 'jungle', name: 'Dschungeltempel', short: 'Dschungel', mode: 'pro', courses: JUNGLE_COURSES },
   { id: 'storm', name: 'Sturmhimmel', short: 'Sturm', mode: 'legend', courses: STORM_COURSES },
   { id: 'shadow', name: 'Schattenreich', short: 'Schatten', mode: 'legend', courses: SHADOW_COURSES },

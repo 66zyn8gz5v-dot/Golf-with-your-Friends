@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-const order = ['Märchenland', 'Meereswelt', 'Profi-Welt', 'Dschungeltempel'];
+const order = ['Märchenland', 'Meereswelt', 'Tüftlerreich', 'Dschungeltempel'];
 const byName = {};
 for (const dir of ['out', 'out2']) if (fs.existsSync(dir)) for (const f of fs.readdirSync(dir).filter(f => f.endsWith('.json'))) byName[f] = JSON.parse(fs.readFileSync(dir + '/' + f, 'utf8'));
 const rows = Object.values(byName);
