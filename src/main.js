@@ -7,6 +7,19 @@
   const maxStrokes = () => state.mode === 'creative' ? Infinity : (state.courses[state.holeIdx].maxStrokes || DEFAULT_MAX_STROKES);
   const PLAYER_COLORS = ['#ffffff', '#ff6b6b', '#4dd4ff', '#ffe066'];
   const PLAYER_NAMES = ['Spieler 1', 'Spieler 2', 'Spieler 3', 'Spieler 4'];
+  /* Hut je Spieler: die Wahl merkt sich der Browser, damit sie beim nächsten Mal wieder dasteht */
+  const DEFAULT_HATS = ['crown', 'pirate', 'wizard', 'party'];
+  const playerHats = DEFAULT_HATS.slice();
+  try {
+    const saved = JSON.parse(localStorage.getItem('fantasygolf.hats') || 'null');
+    if (Array.isArray(saved)) saved.forEach((h, i) => { if (i < 4 && typeof h === 'string' && Hats.has(h)) playerHats[i] = h; });
+  } catch (e) { /* kein Speicher, dann bleiben die Vorgaben */ }
+  function setHat(i, id) {
+    playerHats[i] = id;
+    if (state.players[i]) state.players[i].hat = id;
+    if (state.ball && state.curPlayer === i) state.ball.hat = id;
+    try { localStorage.setItem('fantasygolf.hats', JSON.stringify(playerHats)); } catch (e) { /* kein Speicher */ }
+  }
 
   const canvas = document.getElementById('game');
   const R = new Renderer(canvas);
@@ -47,7 +60,8 @@
     ui.strokes.textContent = def ? (state.mode === 'creative' ? `Kreativ · Schläge: ${state.strokes} · Par ${def.par}` : `Schläge: ${state.strokes} / ${maxStrokes()} · Par ${def.par}`) : '';
     ui.board.innerHTML = state.players.map((pl, i) => {
       const total = pl.scores.reduce((a, b) => a + b, 0);
-      return `<div class="row ${i === state.curPlayer ? 'active' : ''}"><span class="dot" style="background:${pl.color}"></span>${pl.name}<span class="score">${total}</span></div>`;
+      const hat = pl.hat && pl.hat !== 'none' ? `<span class="hat-icon" title="${Hats.name(pl.hat)}">${Hats.icon(pl.hat)}</span>` : '';
+      return `<div class="row ${i === state.curPlayer ? 'active' : ''}"><span class="dot" style="background:${pl.color}"></span>${hat}${pl.name}<span class="score">${total}</span></div>`;
     }).join('');
   }
   function overlay(html, cls) { ui.overlay.innerHTML = html; ui.overlay.className = 'screen visible' + (cls ? ' ' + cls : ''); }
@@ -317,6 +331,9 @@
         <p style="margin-top:10px">Spieler:</p>
         <div id="pc">${[1, 2, 3, 4].map(n => `<span class="btn ghost small ${n === playerCount ? 'sel' : ''}" data-n="${n}">${n}</span>`).join('')}</div>
       </div>
+      <p style="margin-top:10px">Hut:</p>
+      <div id="hat-who"></div>
+      <div id="hats" class="hat-grid">${Hats.LIST.map(h => `<button type="button" class="hat" data-h="${h.id}" title="${h.name}"><canvas></canvas><span>${h.name}</span></button>`).join('')}</div>
       <p style="margin-top:10px">Musik:</p>
       <div id="mu">
         <span class="btn ghost small ${Music.on ? 'sel' : ''}" data-v="1">An</span>
@@ -335,9 +352,35 @@
         Wasser, Lava und Abgrund kosten einen Strafschlag.
       </div>
     </div>`, 'title');
+    /* Hutwahl: oben steht, für welchen Spieler gewählt wird, darunter die Hüte als Ballvorschau */
+    let hatWho = 0;
+    const hatCount = () => gameMode === 'creative' ? 1 : playerCount;
+    function drawHats() {
+      const col = PLAYER_COLORS[hatWho];
+      ui.overlay.querySelectorAll('#hats .hat').forEach(b => {
+        b.classList.toggle('sel', b.dataset.h === playerHats[hatWho]);
+        Hats.preview(b.querySelector('canvas'), b.dataset.h, col);
+      });
+    }
+    function drawWho() {
+      const n = hatCount();
+      if (hatWho >= n) hatWho = 0;
+      const box = $('hat-who');
+      box.hidden = n < 2;
+      box.innerHTML = n < 2 ? '' : PLAYER_NAMES.slice(0, n).map((name, i) =>
+        `<span class="btn ghost small hat-who ${i === hatWho ? 'sel' : ''}" data-i="${i}"><span class="dot" style="background:${PLAYER_COLORS[i]}"></span>${name}</span>`).join('');
+      box.querySelectorAll('.hat-who').forEach(b => b.addEventListener('click', () => {
+        hatWho = +b.dataset.i; drawWho(); drawHats();
+      }));
+    }
+    ui.overlay.querySelectorAll('#hats .hat').forEach(b => b.addEventListener('click', () => {
+      Sfx.unlock(); setHat(hatWho, b.dataset.h); drawWho(); drawHats();
+    }));
+    drawWho(); drawHats();
     ui.overlay.querySelectorAll('#pc .btn').forEach(b => b.addEventListener('click', () => {
       playerCount = +b.dataset.n;
       ui.overlay.querySelectorAll('#pc .btn').forEach(x => x.classList.toggle('sel', +x.dataset.n === playerCount));
+      drawWho(); drawHats();
     }));
     ui.overlay.querySelectorAll('#cm .btn').forEach(b => b.addEventListener('click', () => {
       setControlMode(b.dataset.m);
@@ -351,6 +394,7 @@
       gameMode = b.dataset.g;
       ui.overlay.querySelectorAll('#gm .btn').forEach(x => x.classList.toggle('sel', x.dataset.g === gameMode));
       $('pc-row').hidden = gameMode === 'creative';
+      drawWho(); drawHats();
     }));
     for (const id of ['back', 'back-top']) $(id).addEventListener('click', showMap);
     $('start').addEventListener('click', () => { Sfx.unlock(); state.mode = gameMode; startGame(gameMode === 'creative' ? 1 : playerCount, 0); });
@@ -401,7 +445,7 @@
 
   /* ---------- Spielablauf ---------- */
   function startGame(n, first = 0) {
-    state.players = Array.from({ length: n }, (_, i) => ({ name: PLAYER_NAMES[i], color: PLAYER_COLORS[i], scores: [] }));
+    state.players = Array.from({ length: n }, (_, i) => ({ name: PLAYER_NAMES[i], color: PLAYER_COLORS[i], hat: playerHats[i], scores: [] }));
     state.holeIdx = first;
     document.body.classList.remove('title');
     document.body.classList.toggle('creative', state.mode === 'creative');
@@ -441,7 +485,7 @@
       R.setLevel(state.level, state.theme);
     }
     const p = state.players[state.curPlayer], lv = state.level;
-    state.ball = makeBall(lv.tee.x, lv.tee.y, p.color);
+    state.ball = makeBall(lv.tee.x, lv.tee.y, p.color, p.hat);
     state.strokes = 0; state.phase = 'aim'; state.aim = null; state.restTimer = 0; state.slowTimer = 0; state.rollT = 0; state.stuckRef = null;
     faceCup(); setCamMode('follow');
     if (state.players.length > 1) showMessage(`${p.name} ist dran`, 1300);
@@ -539,7 +583,8 @@
     const def = state.courses[state.holeIdx], last = state.holeIdx === state.courses.length - 1;
     const rows = state.players.map(p => {
       const total = p.scores.reduce((a, b) => a + b, 0);
-      return `<tr><td><span class="dot" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.color};margin-right:6px"></span>${p.name}</td><td class="num">${p.scores[state.holeIdx]}</td><td class="num">${total}</td></tr>`;
+      const hat = p.hat && p.hat !== 'none' ? `<span title="${Hats.name(p.hat)}">${Hats.icon(p.hat)}</span> ` : '';
+      return `<tr><td><span class="dot" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.color};margin-right:6px"></span>${hat}${p.name}</td><td class="num">${p.scores[state.holeIdx]}</td><td class="num">${total}</td></tr>`;
     }).join('');
     overlay(`<div class="panel ${worldClass()}">
       <h2>${holeIcon(def)} Bahn ${state.holeIdx + 1}: ${def.name}</h2>

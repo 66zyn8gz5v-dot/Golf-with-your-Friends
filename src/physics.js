@@ -3,8 +3,8 @@ const BALL_R = 0.3;
 const MAX_SPEED = 21;
 const FRICTION = { '#': 4.2, T: 4.2, H: 4.2, o: 4.2, s: 20, i: 0.75, w: 4, l: 4 }; // Bremsung je Untergrund, pro Bahn per friction überschreibbar
 
-function makeBall(x, y, color) {
-  return { x, y, z: 0, vx: 0, vy: 0, vz: 0, r: BALL_R, shrinkUntil: 0, portalCd: 0, rideCd: 0, rider: null, air: false, restX: x, restY: y, color, boosted: false };
+function makeBall(x, y, color, hat) {
+  return { x, y, z: 0, vx: 0, vy: 0, vz: 0, r: BALL_R, shrinkUntil: 0, portalCd: 0, rideCd: 0, rider: null, air: false, restX: x, restY: y, color, hat, boosted: false };
 }
 
 function collideSeg(ball, s, events) {

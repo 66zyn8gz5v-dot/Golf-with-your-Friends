@@ -790,6 +790,7 @@ class Renderer {
     }
     ctx.fillStyle = g; ctx.beginPath(); ctx.arc(sx, sy, r, 0, TAU); ctx.fill();
     ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 1; ctx.stroke();
+    if (b.hat && typeof Hats !== 'undefined') Hats.draw(ctx, b.hat, sx, sy, r); // gewählter Hut
     if (dark) ctx.globalAlpha = 1;
   }
   drawAim(ctx, ball, aim) {
