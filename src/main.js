@@ -243,7 +243,7 @@
             <circle cx="238" cy="40" r="3" fill="#c58bff" opacity="0.8"/><circle cx="286" cy="36" r="2.4" fill="#c58bff" opacity="0.7"/>
           </svg>`;
   function showTitle() {
-    state.phase = 'title'; state.editorReturn = false;
+    state.phase = 'title'; state.editorReturn = false; Music.set('title');
     document.body.classList.add('title');
     document.body.classList.remove('creative', 'editing', 'testing');
     overlay(`<div class="panel">
@@ -259,6 +259,7 @@
     </div>`, 'title');
     ui.overlay.querySelectorAll('.mode').forEach(b => b.addEventListener('click', () => {
       const m = b.dataset.mode;
+      Sfx.unlock(); Music.start();
       if (m === 'creative') { state.mode = 'creative'; showWorldSelect(); }
       else { state.mode = 'normal'; showModeWorldSelect(m === 'pro' ? 'pro' : m === 'legend' ? 'legend' : 'normal'); }
     }));
@@ -266,7 +267,7 @@
   const sceneFor = id => ({ normal: SCENE_NORMAL, sea: SCENE_SEA, pro: SCENE_PRO, jungle: SCENE_JUNGLE, storm: SCENE_STORM, shadow: SCENE_SHADOW })[id] || SCENE_NORMAL;
   const MODE_ICON = { normal: '🏆', pro: '🔥', legend: '⚡' };
   const worldMode = w => (w && w.mode) || 'normal';
-  function setWorld(id) { state.world = WORLDS.find(w => w.id === id) || WORLDS[0]; state.courses = state.world.courses; }
+  function setWorld(id) { state.world = WORLDS.find(w => w.id === id) || WORLDS[0]; state.courses = state.world.courses; Music.set(state.world.id); }
 
   /* Normal/Profi: Welt wählen (Märchenland, Meereswelt … bzw. Profi-Welt, Dschungeltempel …), dann Spieler und Steuerung */
   function showModeWorldSelect(mode) {
@@ -305,7 +306,7 @@
     $('build').addEventListener('click', () => { Sfx.unlock(); setControlMode('sling'); editor.open(null); });
     ui.overlay.querySelectorAll('#back, .back2').forEach(b => b.addEventListener('click', showTitle));
   }
-  function setCustomWorld(courses, name) { state.world = { id: 'custom', name, short: 'Eigene', courses }; state.courses = courses; }
+  function setCustomWorld(courses, name) { state.world = { id: 'custom', name, short: 'Eigene', courses }; state.courses = courses; Music.set('custom'); }
   function playWorld(courses) { state.mode = 'creative'; state.editorReturn = false; setCustomWorld(courses, 'Eigene Welt'); document.body.classList.remove('editing', 'testing'); startGame(1, 0); }
   /* Baumodus: eine Bahn probespielen, danach zurück in den Editor */
   function startTest(def) {
@@ -321,6 +322,11 @@
       <div class="sub">${state.world.name} · ${state.courses.length} Bahnen</div>
       <p>Spieler:</p>
       <div id="pc">${[1, 2, 3, 4].map(n => `<span class="btn ghost small ${n === playerCount ? 'sel' : ''}" data-n="${n}">${n}</span>`).join('')}</div>
+      <p style="margin-top:10px">Musik:</p>
+      <div id="mu">
+        <span class="btn ghost small ${Music.on ? 'sel' : ''}" data-v="1">An</span>
+        <span class="btn ghost small ${Music.on ? '' : 'sel'}" data-v="0">Aus</span>
+      </div>
       <p style="margin-top:10px">Steuerung:</p>
       <div id="cm">
         <span class="btn ghost small ${state.controlMode === 'sling' ? 'sel' : ''}" data-m="sling">Schleuder</span>
@@ -340,6 +346,10 @@
     ui.overlay.querySelectorAll('#cm .btn').forEach(b => b.addEventListener('click', () => {
       setControlMode(b.dataset.m);
       ui.overlay.querySelectorAll('#cm .btn').forEach(x => x.classList.toggle('sel', x.dataset.m === state.controlMode));
+    }));
+    ui.overlay.querySelectorAll('#mu .btn').forEach(b => b.addEventListener('click', () => {
+      Sfx.unlock(); Music.setOn(b.dataset.v === '1'); syncMusicBtn();
+      ui.overlay.querySelectorAll('#mu .btn').forEach(x => x.classList.toggle('sel', (x.dataset.v === '1') === Music.on));
     }));
     for (const id of ['back', 'back-top']) $(id).addEventListener('click', () => showModeWorldSelect(worldMode(state.world)));
     $('start').addEventListener('click', () => { Sfx.unlock(); startGame(playerCount, 0); });
@@ -733,6 +743,7 @@
     if (e.key === 'n' || e.key === 'N') jumpHole(1);
     if (e.key === 'p' || e.key === 'P') jumpHole(-1);
     if (e.key === 'r' || e.key === 'R') resetBall();
+    if (e.key === 'j' || e.key === 'J') toggleMusic();
     if (e.key === 'q' || e.key === 'ArrowLeft') rotateBy(-Math.PI / 4);
     if (e.key === 'e' || e.key === 'ArrowRight') rotateBy(Math.PI / 4);
   });
@@ -763,9 +774,12 @@
   document.addEventListener('webkitfullscreenchange', syncFullscreen);
   $('fs-btn').addEventListener('click', () => { Sfx.unlock(); toggleFullscreen(); });
   function toggleOverview() { if (state.ball) setCamMode(state.camMode === 'overview' ? 'follow' : 'overview'); }
+  function syncMusicBtn() { $('music-btn').classList.toggle('sel', Music.on); $('music-btn').title = Music.on ? 'Musik aus (J)' : 'Musik an (J)'; }
+  function toggleMusic() { Sfx.unlock(); Music.toggle(); syncMusicBtn(); showMessage(Music.on ? '♪ Musik an' : 'Musik aus', 1000); }
   function zoomBy(f) { state.zoomFactor = Math.max(0.5, Math.min(2.2, state.zoomFactor * f)); if (state.camMode === 'overview' && state.ball) setCamMode('follow'); }
   function rotateBy(a) { state.camTheta += a; if (state.camMode === 'overview' && state.ball) setCamMode('follow'); }
   $('cam-overview').addEventListener('click', toggleOverview);
+  $('music-btn').addEventListener('click', toggleMusic);
   $('cr-prev').addEventListener('click', () => jumpHole(-1));
   $('cr-next').addEventListener('click', () => jumpHole(1));
   $('cr-reset').addEventListener('click', resetBall);
@@ -796,6 +810,7 @@
   const editor = Editor({ state, R, $, showMessage, startTest, showWorldSelect, hideOverlay, overlay, playWorld });
   R.resize();
   setControlMode(state.controlMode);
+  syncMusicBtn();
   showTitle();
   updateHud();
   requestAnimationFrame(frame);
