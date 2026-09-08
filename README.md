@@ -120,6 +120,9 @@ Unter **Bauen & Eigene Welt** liegen der Editor und die selbst zusammengestellte
 - Finger oder Maus aufsetzen, ziehen, loslassen. Je weiter gezogen wird, desto kräftiger der Schlag (Kraftanzeige unten).
 - Steuerung im Startbildschirm wählbar: „Schleuder" (Standard, vom Ball wegziehen) oder „Schieben" (in Schussrichtung ziehen).
 - `Esc` bricht das Zielen ab; ohne begonnenen Zug führt `Esc` aus der Runde heraus.
+- Unten im Startbildschirm steht klein die **Fassung** (eine Zahl). Zeigt ein Gerät eine ältere Zahl als ein anderes,
+  hält es noch einen alten Stand fest: die Seite einmal im Browser öffnen und neu laden. Ist eine neue Fassung da,
+  lädt das Spiel sie im Startbildschirm von selbst nach – nie mitten in einer Runde.
 - Die Tastenkürzel gelten nur außerhalb von Eingabefeldern. Wer seinen Namen, einen Raumcode oder einen Bahnnamen
   eintippt, schaltet mit dem „f" in „Fynn" also nicht das Vollbild um.
 - **◀ Weltkarte** unten links verlässt die laufende Runde – der Weg zurück, wenn man in der falschen Welt gelandet ist.
@@ -297,6 +300,7 @@ src/obstacles_legend.js Blitzfeld, Aufwind, Falltür
 src/physics.js    Ballphysik und Kollision
 src/render.js     isometrische Darstellung
 src/render_legend.js Optik der Legende-Welten (Hintergründe, neue Hindernisse und Stile)
+src/version.js    Die Fassung des Spiels – eine Zahl, die bei jeder Auslieferung steigt; Service Worker und Startbildschirm lesen sie
 src/icons.js      Bedien-Sinnbilder: Material Symbols als eingebettete SVG-Pfade (Zurück, Kamera, Musik, Editor …)
 src/hats.js       Hüte für die Bälle: Zeichnungen und Vorschau fürs Menü
 src/net.js        Netzspiel: Raumcode und MQTT-Zugang für das Spiel zu mehreren

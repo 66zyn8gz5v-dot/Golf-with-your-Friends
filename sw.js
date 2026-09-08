@@ -1,9 +1,10 @@
 /* Service Worker: macht Fantasy Golf offline spielbar.
    Netz zuerst (damit Updates sofort ankommen), Cache als Ersatz ohne Verbindung. */
-const VERSION = 'fantasygolf-v15';
+importScripts('./src/version.js');
+const VERSION = 'fantasygolf-v' + APP_VERSION;
 const APP_FILES = [
   './', './index.html', './style.css', './manifest.webmanifest',
-  './src/themes.js', './src/courses.js', './src/courses_sea.js', './src/courses_jungle.js', './src/courses_storm.js', './src/courses_shadow.js', './src/courses_pro.js', './src/level.js', './src/obstacles.js', './src/obstacles_legend.js',
+  './src/version.js', './src/themes.js', './src/courses.js', './src/courses_sea.js', './src/courses_jungle.js', './src/courses_storm.js', './src/courses_shadow.js', './src/courses_pro.js', './src/level.js', './src/obstacles.js', './src/obstacles_legend.js',
   './src/physics.js', './src/render.js', './src/render_legend.js', './src/icons.js', './src/hats.js', './src/net.js', './src/best.js', './src/sfx.js', './src/music.js', './src/worldmap.js', './src/title.js', './src/editor.js', './src/main.js',
   './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png',
 ];
@@ -20,8 +21,11 @@ self.addEventListener('fetch', e => {
   const url = new URL(req.url);
   const isFont = url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com';
   if (url.origin !== location.origin && !isFont) return;
+  // Beim Server nachfragen statt den HTTP-Zwischenspeicher zu nehmen – sonst hält der Browser
+  // eine alte Datei noch Minuten fest, obwohl längst eine neue Fassung da ist
+  const frisch = req.mode === 'navigate' ? req : new Request(req, { cache: 'no-cache' });
   e.respondWith(
-    fetch(req).then(res => {
+    fetch(frisch).then(res => {
       if (res && res.ok) { const copy = res.clone(); caches.open(VERSION).then(c => c.put(req, copy)); }
       return res;
     }).catch(() => caches.match(req, { ignoreSearch: true }).then(hit => hit || (req.mode === 'navigate' ? caches.match('./index.html') : undefined)))

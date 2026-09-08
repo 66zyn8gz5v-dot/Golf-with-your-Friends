@@ -286,7 +286,8 @@
       </div>
       <div class="atlas-extra"><span class="btn small ghost" id="to-online">${Icons.svg('public')} Online spielen</span>
         <span class="btn small ghost" id="to-best">${Icons.svg('emoji_events')} Bestenliste</span></div>
-      <div class="legend">Alle Welten sind von Anfang an offen. Die Stufe an jedem Ort sagt nur, was dich erwartet.</div>
+      <div class="legend">Alle Welten sind von Anfang an offen. Die Stufe an jedem Ort sagt nur, was dich erwartet.
+        <span class="version">Fassung ${typeof APP_VERSION !== 'undefined' ? APP_VERSION : '?'}</span></div>
     </div>`, 'title');
     $('to-online').addEventListener('click', () => { Sfx.unlock(); Music.start(); showOnline(); });
     $('to-best').addEventListener('click', () => { Sfx.unlock(); Music.start(); showBestList(); });
@@ -383,6 +384,7 @@
         der Rest passiert von allein. Gewertet wird dein eigener Ball im Wettkampf.</div>
       <p class="join-row"><label class="lbl">Dein Name<input id="bn" class="name-in" maxlength="14" autocomplete="off" spellcheck="false" placeholder="z. B. Max" value="${(Best.name || '').replace(/"/g, '&quot;')}"></label>
         <span class="btn small" id="bsave">Merken</span></p>
+      ${speicherGeht() ? '' : '<div class="sub net-note">Dieser Browser darf hier nichts merken – der Name gilt nur, bis das Spiel geschlossen wird. Öffne das Spiel direkt im Browser, dann bleibt er.</div>'}
       <div class="sub net-note" id="bstate">${!Best.name ? 'Trag deinen Namen ein – ohne Namen wird nichts gewertet.'
         : Net.status === 'ready' ? 'Verbunden – alle mit dem Spiel teilen sich diese Liste.'
         : 'Keine Verbindung – die Rekorde bleiben vorerst auf diesem Gerät.'}</div>
@@ -411,6 +413,9 @@
   }
 
   const BEST_ICON = { strokes: '🏆', time: '⏱', combo: '⚡' };
+  function speicherGeht() {
+    try { localStorage.setItem('fantasygolf.probe', '1'); localStorage.removeItem('fantasygolf.probe'); return true; } catch (e) { return false; }
+  }
   const BEST_HELP = {
     strokes: 'die Schläge einer Bahn, wie beim Golf üblich.',
     time: 'die Uhr läuft, sobald dein Ball auf dem Abschlag liegt, und stoppt beim Einlochen. Im Menü und wenn die Seite in den Hintergrund geht, steht sie still.',
@@ -800,6 +805,7 @@
     if (state.editorReturn) { clearTimeout(waitTimer); hideOverlay(); editor.returnFromTest(); return; }
     if (!force && roundStarted()) { askLeave(); return; }
     clearTimeout(waitTimer); clearTimeout(msgTimer); ui.msg.classList.remove('visible');
+    drag = null; state.aim = null;          // kein hängen gebliebener Zug, der später Berührungen schluckt
     leaveOnline();
     hideOverlay();
     leaveTarget()();
@@ -1189,6 +1195,10 @@
     const tag = (el.tagName || '').toLowerCase();
     return tag === 'input' || tag === 'textarea' || tag === 'select' || el.isContentEditable;
   }
+  /* Doppelter Boden direkt an den Feldern: was dort getippt wird, steigt gar nicht erst zum Fenster
+     hoch – unabhängig davon, wer sonst noch am Fenster horcht. */
+  const istFeld = el => { const t = el && el.tagName ? el.tagName.toLowerCase() : ''; return t === 'input' || t === 'textarea' || t === 'select' || !!(el && el.isContentEditable); };
+  for (const typ of ['keydown', 'keyup', 'keypress']) ui.overlay.addEventListener(typ, e => { if (istFeld(e.target)) e.stopPropagation(); });
   window.addEventListener('keydown', e => {
     if (tipptGerade()) return;
     // Esc bricht erst das Zielen ab; ohne Zug ist es der Weg aus der Runde heraus
@@ -1252,6 +1262,16 @@
   /* Offline-Fähigkeit: nur wenn die Seite als eigene Web-App ausgeliefert wird (Manifest vorhanden, https oder localhost) */
   if ('serviceWorker' in navigator && document.querySelector('link[rel="manifest"]') && (location.protocol === 'https:' || location.hostname === 'localhost')) {
     navigator.serviceWorker.register('sw.js').catch(() => { /* ohne Service Worker läuft das Spiel trotzdem */ });
+    // Hat eine neue Fassung die alte abgelöst, gilt sie erst nach dem nächsten Laden. Das machen wir
+    // selbst – aber nur im Startbildschirm, nie mitten in einer Runde.
+    const hatteVorher = !!navigator.serviceWorker.controller;
+    let neuGeladen = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!hatteVorher || neuGeladen) return;
+      neuGeladen = true;
+      const jetzt = () => { if (state.phase === 'title' && !ui.overlay.querySelector('input:focus')) location.reload(); else setTimeout(jetzt, 3000); };
+      jetzt();
+    });
   }
 
   // Test-Hook (für automatisierte Prüfungen): aktuelle Bahn für alle Spieler beenden
