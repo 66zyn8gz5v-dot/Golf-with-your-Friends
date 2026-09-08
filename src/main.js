@@ -484,7 +484,7 @@
     else if (type === 'water') { Sfx.water(); burst(b.x, b.y, '#9fd3ff', 18); }
     else if (type === 'lava') { Sfx.lava(); burst(b.x, b.y, '#ffb347', 18); }
     else if (type === 'spiked' || type === 'zapped' || type === 'fell') { // zurück zum Start des letzten Schlags
-      if (type === 'zapped') { Sfx.lava(); burst(b.x, b.y, '#fff27a', 26, true); } else if (type === 'fell') { Sfx.oob(); burst(b.x, b.y, '#b56bff', 14, true); } else { Sfx.lava(); burst(b.x, b.y, '#e6e6e6', 18, true); }
+      if (type === 'zapped') { Sfx.thunder(); burst(b.x, b.y, '#fff27a', 34, true); burst(b.x, b.y, '#ffffff', 16, true); } else if (type === 'fell') { Sfx.oob(); burst(b.x, b.y, '#b56bff', 14, true); } else { Sfx.lava(); burst(b.x, b.y, '#e6e6e6', 18, true); }
       b.z = 0; b.vz = 0; b.air = false; if (b.shotX != null) { b.restX = b.shotX; b.restY = b.shotY; }
     }
     else if (type === 'beheaded' || type === 'seen') { // zurück zum Schlagstart – aber nie wieder unter die Klinge oder in den Blick des Auges

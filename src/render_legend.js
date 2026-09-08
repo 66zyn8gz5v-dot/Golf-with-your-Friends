@@ -24,10 +24,14 @@ Object.assign(Renderer.prototype, {
     const cyc = Math.floor(t / 4.7), ph = t - cyc * 4.7;
     if (ph < 0.22 && hash(cyc, 3) > 0.35) {
       const a = (0.22 - ph) / 0.22;
-      ctx.fillStyle = `rgba(220,230,255,${0.16 * a})`; ctx.fillRect(0, 0, w, h);
-      const x0 = w * (0.15 + hash(cyc, 4) * 0.7); ctx.strokeStyle = `rgba(255,255,220,${0.9 * a})`; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(x0, 0);
-      let x = x0, y = 0; for (let k = 0; k < 7; k++) { x += (hash(cyc, 10 + k) - 0.5) * 60; y += h * 0.07; ctx.lineTo(x, y); }
-      ctx.stroke();
+      ctx.fillStyle = `rgba(220,230,255,${0.3 * a})`; ctx.fillRect(0, 0, w, h);
+      const x0 = w * (0.15 + hash(cyc, 4) * 0.7);
+      const zig = [[x0, 0]]; let x = x0, y = 0;
+      for (let k = 0; k < 8; k++) { x += (hash(cyc, 10 + k) - 0.5) * 70; y += h * 0.07; zig.push([x, y]); }
+      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      for (const [lw, col] of [[9, `rgba(255,240,170,${0.28 * a})`], [4, `rgba(255,250,210,${0.7 * a})`], [1.8, `rgba(255,255,255,${a})`]]) {
+        ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.beginPath(); zig.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.stroke();
+      }
     }
   },
   drawFortress(ctx, t) {
@@ -95,21 +99,45 @@ Object.assign(Renderer.prototype, {
       ctx.strokeStyle = `rgba(255,255,200,${0.4 + 0.6 * ob.p})`; ctx.lineWidth = Math.max(1, s * 0.05);
       for (let i = 0; i < 5; i++) { const px = ob.x + (this.hashL(i, Math.floor(t * 20)) - 0.5) * ob.w, py = ob.y + (this.hashL(i, Math.floor(t * 20) + 9) - 0.5) * ob.h; const [a0, a1] = this.proj(px, py, 0.01), [b0, b1] = this.proj(px + 0.2, py - 0.1, 0.25); ctx.beginPath(); ctx.moveTo(a0, a1); ctx.lineTo(b0, b1); ctx.stroke(); }
     } else if (ob.state === 'strike') {
-      this.fillPoly(ctx, poly, 0.006, `rgba(255,255,230,${0.9 - 0.6 * ob.p})`, false);
+      this.fillPoly(ctx, poly, 0.006, `rgba(255,255,235,${0.95 - 0.5 * ob.p})`, false);
+      ctx.strokeStyle = `rgba(255,240,140,${0.9 * (1 - ob.p)})`; ctx.lineWidth = Math.max(2, s * 0.1); this.pathPoly(ctx, poly, 0.007); ctx.stroke();
     }
   },
   drawLightningBolt(ctx, ob, t) {
     if (ob.state !== 'strike') return;
-    const s = this.scale, k = Math.floor(t * 40);
-    const [gx, gy] = this.proj(ob.x, ob.y, 0), [tx, ty] = this.proj(ob.x, ob.y, 9);
-    ctx.lineCap = 'round';
-    for (const [lw, col] of [[Math.max(4, s * 0.22), 'rgba(255,240,150,0.45)'], [Math.max(2, s * 0.08), '#ffffff']]) {
-      ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.beginPath(); ctx.moveTo(tx, ty);
-      let x = tx, y = ty; for (let i = 1; i <= 6; i++) { const u = i / 6; x = tx + (gx - tx) * u + (this.hashL(i, k) - 0.5) * s * 1.2 * (1 - u * 0.7); y = ty + (gy - ty) * u; ctx.lineTo(x, y); }
-      ctx.lineTo(gx, gy); ctx.stroke();
+    const s = this.scale, k = Math.floor(t * 40), fade = 1 - ob.p * 0.5;
+    const [gx, gy] = this.proj(ob.x, ob.y, 0), [tx, ty] = this.proj(ob.x, ob.y, 12);
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    // Zickzack einmal berechnen, damit alle Lagen und die Äste demselben Verlauf folgen
+    const N = 9, main = [[tx, ty]];
+    for (let i = 1; i <= N; i++) { const u = i / N; main.push([tx + (gx - tx) * u + (this.hashL(i, k) - 0.5) * s * 1.7 * (1 - u * 0.6), ty + (gy - ty) * u]); }
+    main.push([gx, gy]);
+    const branches = []; // Nebenäste zweigen im oberen Teil ab und laufen schräg aus
+    for (let b = 0; b < 3; b++) {
+      const base = main[2 + b * 2], dir = this.hashL(b, k) > 0.5 ? 1 : -1, n = 2 + Math.floor(this.hashL(b, k + 5) * 2), br = [base];
+      for (let j = 1; j <= n; j++) br.push([base[0] + dir * j * s * (0.45 + this.hashL(b + j, k) * 0.5), base[1] + j * s * (0.4 + this.hashL(b, k + j) * 0.35)]);
+      branches.push(br);
     }
-    ctx.fillStyle = `rgba(255,255,255,${0.8 - 0.7 * ob.p})`; ctx.beginPath(); ctx.arc(gx, gy, s * (0.5 + ob.p * 0.6), 0, TAU); ctx.fill();
-    ctx.fillStyle = `rgba(255,255,255,${0.14 * (1 - ob.p)})`; ctx.fillRect(0, 0, this.w, this.h); // kurzer Bildblitz
+    const stroke = (pts, lw, col) => { ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.stroke(); };
+    // vier Lagen: breiter Schein, Glut, heller Mantel, gleißender Kern
+    for (const [lw, col] of [[Math.max(10, s * 0.62), `rgba(255,220,90,${0.2 * fade})`], [Math.max(6, s * 0.34), `rgba(255,238,150,${0.45 * fade})`],
+      [Math.max(3, s * 0.16), `rgba(255,252,215,${0.85 * fade})`], [Math.max(1.5, s * 0.07), `rgba(255,255,255,${fade})`]]) {
+      stroke(main, lw, col);
+      for (const br of branches) stroke(br, lw * 0.55, col);
+    }
+    // Einschlagstelle: Lichtkugel, Druckwelle über den Boden und wegspritzende Funken
+    const g = ctx.createRadialGradient(gx, gy, 0, gx, gy, s * (1.2 + ob.p * 1.6));
+    g.addColorStop(0, `rgba(255,255,255,${0.95 - 0.8 * ob.p})`); g.addColorStop(0.4, `rgba(255,235,120,${0.5 - 0.45 * ob.p})`); g.addColorStop(1, 'rgba(255,200,60,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(gx, gy, s * (1.2 + ob.p * 1.6), 0, TAU); ctx.fill();
+    ctx.strokeStyle = `rgba(255,245,180,${0.8 * (1 - ob.p)})`; ctx.lineWidth = Math.max(1.5, s * 0.07);
+    ctx.beginPath(); ctx.ellipse(gx, gy, s * (0.3 + ob.p * 2.2), s * (0.3 + ob.p * 2.2) * this.cam.tilt, 0, 0, TAU); ctx.stroke();
+    ctx.strokeStyle = `rgba(255,255,220,${0.85 * (1 - ob.p)})`; ctx.lineWidth = Math.max(1.5, s * 0.05);
+    for (let i = 0; i < 9; i++) {
+      const a = i * 0.7 + this.hashL(i, k) * 0.6, r0 = s * (0.25 + ob.p * 0.9), r1 = r0 + s * (0.5 + this.hashL(i, k + 3) * 0.7);
+      ctx.beginPath(); ctx.moveTo(gx + Math.cos(a) * r0, gy + Math.sin(a) * r0 * this.cam.tilt);
+      ctx.lineTo(gx + Math.cos(a) * r1, gy + Math.sin(a) * r1 * this.cam.tilt - s * 0.5 * (1 - ob.p)); ctx.stroke();
+    }
+    ctx.fillStyle = `rgba(255,255,255,${0.3 * (1 - ob.p)})`; ctx.fillRect(0, 0, this.w, this.h); // Bildblitz
   },
   drawUpdraft(ctx, ob, t) {
     const s = this.scale, poly = [[ob.x, ob.y], [ob.x + ob.w, ob.y], [ob.x + ob.w, ob.y + ob.h], [ob.x, ob.y + ob.h]];

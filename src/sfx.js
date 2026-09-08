@@ -43,5 +43,7 @@ const Sfx = (() => {
     twang() { tone(900, 0.18, 'triangle', 0.25, -500); noise(0.12, 0.2); setTimeout(() => tone(140, 0.25, 'sawtooth', 0.12, -60), 40); },
     screech() { tone(1800, 0.22, 'sawtooth', 0.12, 900); setTimeout(() => tone(2400, 0.18, 'square', 0.08, -900), 120); noise(0.2, 0.12); },
     hiss() { noise(0.45, 0.18); tone(1400, 0.4, 'sine', 0.05, -600); },
+    /* Donnerschlag: heller Knall, gefolgt von langem, tief rollendem Grollen */
+    thunder() { noise(0.12, 0.4); tone(2200, 0.09, 'square', 0.16, -1800); setTimeout(() => { noise(0.9, 0.3); tone(70, 1.1, 'sawtooth', 0.16, -35); tone(46, 1.3, 'sine', 0.14, -16); }, 70); },
   };
 })();
