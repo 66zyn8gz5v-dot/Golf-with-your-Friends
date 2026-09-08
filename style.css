@@ -283,3 +283,41 @@ body.editing #editor-panel { display: flex; flex-direction: column; }
 .wl-slots { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; }
 .wl-slots .btn.small { min-width: 40px; margin: 2px; }
 @media (max-width: 700px) { #editor-panel { width: 220px; font-size: 12px; } }
+
+/* ---------- Weltkarte: die Übersicht über alle Welten ---------- */
+.panel.atlas-panel, .screen.title .panel.atlas-panel { width: min(96vw, 900px); max-width: min(96vw, 900px); padding: 16px 18px; }
+.atlas {
+  position: relative; aspect-ratio: 100 / 62; margin: 4px 0 12px; border-radius: 14px; overflow: hidden;
+  border: 2px solid rgba(255, 224, 150, 0.6); box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.5), 0 6px 20px rgba(0, 0, 0, 0.45);
+}
+.atlas .atlas-bg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.spot {
+  position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 3px;
+  background: none; border: none; padding: 0; margin: 0; font: inherit; color: #fff6dc; cursor: pointer;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95), 0 0 10px rgba(0, 0, 0, 0.8); animation: spot-in 0.5s ease-out both;
+}
+.spot-pin {
+  width: clamp(30px, 5.4vw, 50px); height: clamp(30px, 5.4vw, 50px); border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; font-size: clamp(15px, 2.7vw, 25px); line-height: 1;
+  position: relative; background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.35), rgba(20, 16, 40, 0.85));
+  border: 2px solid var(--pin, #ffd166); box-shadow: 0 3px 12px rgba(0, 0, 0, 0.6), 0 0 14px var(--pin, #ffd166);
+  transition: transform 0.16s, box-shadow 0.16s;
+}
+.spot-pin::after { /* pulsierender Ring, damit die Orte als anwählbar auffallen */
+  content: ''; position: absolute; inset: -2px; border-radius: 50%;
+  border: 2px solid var(--pin, #ffd166); animation: spot-ring 2.6s ease-out infinite;
+}
+.spot:nth-child(3) .spot-pin::after { animation-delay: 0.4s; } .spot:nth-child(4) .spot-pin::after { animation-delay: 0.8s; }
+.spot:nth-child(5) .spot-pin::after { animation-delay: 1.2s; } .spot:nth-child(6) .spot-pin::after { animation-delay: 1.6s; }
+.spot:nth-child(7) .spot-pin::after { animation-delay: 2s; }
+.spot:hover .spot-pin, .spot:focus-visible .spot-pin { transform: scale(1.18); box-shadow: 0 4px 16px rgba(0, 0, 0, 0.7), 0 0 26px var(--pin, #ffd166); }
+.spot:active .spot-pin { transform: scale(1.02); }
+.spot-label { text-align: center; white-space: nowrap; pointer-events: none; max-width: 30vw; overflow: hidden; text-overflow: ellipsis; }
+.spot-label b { display: block; font-size: clamp(10px, 1.45vw, 15px); letter-spacing: 0.5px; }
+.spot-label i { display: block; font-style: normal; font-size: clamp(8px, 1.15vw, 12px); color: #ffe6b0; opacity: 0.9; }
+.atlas-extra { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+@keyframes spot-in { from { opacity: 0; transform: translate(-50%, calc(-50% - 14px)); } to { opacity: 1; transform: translate(-50%, -50%); } }
+@keyframes spot-ring { 0% { transform: scale(1); opacity: 0.75; } 70%, 100% { transform: scale(1.75); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .spot, .spot-pin::after { animation: none; } }
+@media (max-width: 700px) { .spot-label i { display: none; } .spot-label b { font-size: 10px; } }
+@media (max-width: 600px) { .panel.atlas-panel, .screen.title .panel.atlas-panel { padding: 10px 8px; } }

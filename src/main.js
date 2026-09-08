@@ -30,7 +30,7 @@
     try { localStorage.setItem('fantasygolf.control', m); } catch (e) { /* ignorieren */ }
     ui.hint.textContent = m === 'push' ? 'In Schussrichtung ziehen & loslassen' : 'Vom Ball wegziehen & loslassen';
   }
-  let playerCount = 1, msgTimer = null, waitTimer = null;
+  let playerCount = 1, gameMode = 'normal', msgTimer = null, waitTimer = null;
 
   /* ---------- UI ---------- */
   function showMessage(text, ms = 1600) {
@@ -228,84 +228,72 @@
             <g class="particles"><circle class="p" cx="60" cy="30" r="2.2" fill="#c58bff"/><circle class="p p2" cx="100" cy="36" r="1.8" fill="#c58bff"/><circle class="p p4" cx="205" cy="34" r="2" fill="#c58bff"/><circle class="p p3" cx="270" cy="40" r="1.6" fill="#c58bff"/></g>
             <path d="M92 52 a6 6 0 0 1 12 0 v8 l-2 -2 l-2 2 l-2 -2 l-2 2 l-2 -2 l-2 2 z" fill="rgba(230,235,255,0.85)"/><circle cx="96" cy="52" r="1.2" fill="#1a1030"/><circle cx="100" cy="52" r="1.2" fill="#1a1030"/>
           </svg>`;
-  const SCENE_LEGEND = `<svg class="mode-scene" viewBox="0 0 300 72" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-            <defs><linearGradient id="skyL" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#070a1e"/><stop offset="1" stop-color="#2a1a4a"/></linearGradient>
-              <linearGradient id="isleL" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6f7d63"/><stop offset="0.35" stop-color="#3b3f5a"/><stop offset="1" stop-color="#1c1f33"/></linearGradient></defs>
-            <rect width="300" height="72" fill="url(#skyL)"/>
-            <circle cx="248" cy="16" r="11" fill="#b8323c"/><circle cx="244" cy="13" r="2.5" fill="rgba(0,0,0,0.25)"/><circle cx="252" cy="20" r="1.8" fill="rgba(0,0,0,0.25)"/>
-            <g class="particles"><circle class="p" cx="30" cy="10" r="1.2" fill="#fff"/><circle class="p p2" cx="90" cy="6" r="1" fill="#fff"/><circle class="p p3" cx="150" cy="12" r="1.1" fill="#fff"/><circle class="p p4" cx="200" cy="8" r="0.9" fill="#fff"/></g>
-            <polyline points="118,0 112,18 120,20 108,40" fill="none" stroke="#fff6a8" stroke-width="2" stroke-linejoin="round" class="art-flash"/>
-            <path d="M40 38 L110 38 L100 60 L52 62 Z" fill="url(#isleL)"/><rect x="46" y="32" width="58" height="6" fill="#6f7d63"/>
-            <rect x="60" y="20" width="4" height="12" fill="#4e526d"/><circle cx="62" cy="19" r="2" fill="#fff6a8"/>
-            <ellipse cx="160" cy="30" rx="26" ry="9" fill="#9a8f7a"/><rect x="146" y="38" width="28" height="7" rx="2" fill="#6b4a2a"/>
-            <g fill="#0e0a18"><rect x="200" y="46" width="8" height="12"/><circle cx="204" cy="46" r="4"/><rect x="222" y="44" width="7" height="14"/><circle cx="225.5" cy="44" r="3.5"/><rect x="262" y="48" width="8" height="10"/><circle cx="266" cy="48" r="4"/></g>
-            <path d="M0 58 Q40 50 80 58 T160 58 T240 58 T300 58 L300 72 L0 72 Z" fill="#160f26"/>
-            <circle cx="238" cy="40" r="3" fill="#c58bff" opacity="0.8"/><circle cx="286" cy="36" r="2.4" fill="#c58bff" opacity="0.7"/>
-          </svg>`;
   function showTitle() {
     state.phase = 'title'; state.editorReturn = false; Music.set('title');
     document.body.classList.add('title');
     document.body.classList.remove('creative', 'editing', 'testing');
     overlay(`<div class="panel">
       <h1>⛳ Fantasy Golf</h1>
-      <div class="sub">Golf with your Friends · ${WORLDS.reduce((a, w) => a + w.courses.length, 0)} magische Bahnen in 2,5D</div>
-      <p>Modus wählen:</p>
+      <div class="sub">Golf with your Friends · ${WORLDS.length} Welten, ${WORLDS.reduce((a, w) => a + w.courses.length, 0)} magische Bahnen in 2,5D</div>
       <div class="modes">
-        <span class="btn mode" data-mode="normal">${SCENE_NORMAL}<span class="mode-label">Normal</span></span>
-        <span class="btn mode" data-mode="pro">${SCENE_PRO}<span class="mode-label">Profi</span></span>
-        <span class="btn mode" data-mode="legend">${SCENE_LEGEND}<span class="mode-label">Legende</span></span>
-        <span class="btn mode" data-mode="creative">${SCENE_CREATIVE}<span class="mode-label">Kreativ</span></span>
+        <span class="btn mode" id="to-map">${WorldMap.svg('mode-scene', 'xMidYMid slice')}<span class="mode-label">Weltkarte</span></span>
+        <span class="btn mode" id="to-build">${SCENE_CREATIVE}<span class="mode-label long">Bauen &amp; Eigene Welt</span></span>
       </div>
+      <div class="legend">Alle Welten sind von Anfang an offen. Die Stufe an jedem Ort sagt nur, was dich erwartet.</div>
     </div>`, 'title');
-    ui.overlay.querySelectorAll('.mode').forEach(b => b.addEventListener('click', () => {
-      const m = b.dataset.mode;
-      Sfx.unlock(); Music.start();
-      if (m === 'creative') { state.mode = 'creative'; showWorldSelect(); }
-      else { state.mode = 'normal'; showModeWorldSelect(m === 'pro' ? 'pro' : m === 'legend' ? 'legend' : 'normal'); }
-    }));
+    $('to-map').addEventListener('click', () => { Sfx.unlock(); Music.start(); showMap(); });
+    $('to-build').addEventListener('click', () => { Sfx.unlock(); Music.start(); showBuild(); });
   }
+
+  /* Weltkarte: alle Welten auf einen Blick, jede sofort spielbar */
+  const MODE_NAME = { normal: 'Normal', pro: 'Profi', legend: 'Legende' };
+  function showMap() {
+    state.phase = 'title'; state.editorReturn = false; Music.set('title');
+    document.body.classList.add('title');
+    document.body.classList.remove('creative', 'editing', 'testing');
+    const marks = WORLDS.map(w => {
+      const sp = WorldMap.spots[w.id]; if (!sp) return '';
+      const m = worldMode(w);
+      return `<button class="spot" style="left:${sp.x}%;top:${sp.y}%;--pin:${sp.col}" data-world="${w.id}" title="${w.name}">
+        <span class="spot-pin">${sp.icon}</span>
+        <span class="spot-label"><b>${w.name}</b><i>${MODE_ICON[m]} ${MODE_NAME[m]} · ${w.courses.length} Bahnen</i></span></button>`;
+    }).join('');
+    overlay(`<div class="panel atlas-panel">
+      <div class="panel-head"><span class="btn ghost small" id="back">◀ Zurück</span><h2>🗺 Weltkarte</h2></div>
+      <div class="sub">Tippe einen Ort an – alle ${WORLDS.length} Welten sind von Anfang an offen.</div>
+      <div class="atlas">${WorldMap.svg()}${marks}</div>
+      <div class="atlas-extra"><span class="btn small ghost" id="to-build2">🛠 Bauen &amp; Eigene Welt</span></div>
+    </div>`, 'title');
+    ui.overlay.querySelectorAll('.spot').forEach(b => b.addEventListener('click', () => { Sfx.unlock(); setWorld(b.dataset.world); showSetup(); }));
+    $('to-build2').addEventListener('click', showBuild);
+    $('back').addEventListener('click', showTitle);
+  }
+
+  /* Bauen und eigene Welt */
+  function showBuild() {
+    state.phase = 'title'; document.body.classList.add('title'); document.body.classList.remove('creative', 'editing', 'testing');
+    const own = editor.worldCourses();
+    overlay(`<div class="panel">
+      <div class="panel-head"><span class="btn ghost small" id="back">◀ Zurück</span><h2>🛠 Bauen &amp; Eigene Welt</h2></div>
+      <div class="sub">Baue eigene Bahnen und stelle daraus eine eigene Welt zusammen.</div>
+      <div class="modes">
+        <span class="btn mode build" id="build"><span class="mode-label">🛠 Bahn bauen</span></span>
+        ${own.length ? `<span class="btn mode own" id="own-play"><span class="mode-label">🌍 Eigene Welt (${own.length} Bahn${own.length > 1 ? 'en' : ''})</span></span>` : ''}
+      </div>
+      ${own.length ? '' : '<div class="legend">Noch keine eigene Bahn gebaut. Im Editor wird sie mit „Fertig“ in die Eigene Welt eingesetzt.</div>'}
+      <p><span class="btn ghost small back2">◀ Zurück</span></p>
+    </div>`, 'title');
+    $('build').addEventListener('click', () => { Sfx.unlock(); setControlMode('sling'); editor.open(null); });
+    if (own.length) $('own-play').addEventListener('click', () => { Sfx.unlock(); setControlMode('sling'); playWorld(own); });
+    ui.overlay.querySelectorAll('#back, .back2').forEach(b => b.addEventListener('click', showMap));
+  }
+
   const sceneFor = id => ({ normal: SCENE_NORMAL, sea: SCENE_SEA, pro: SCENE_PRO, jungle: SCENE_JUNGLE, storm: SCENE_STORM, shadow: SCENE_SHADOW })[id] || SCENE_NORMAL;
   const MODE_ICON = { normal: '🏆', pro: '🔥', legend: '⚡' };
   const worldMode = w => (w && w.mode) || 'normal';
   function setWorld(id) { state.world = WORLDS.find(w => w.id === id) || WORLDS[0]; state.courses = state.world.courses; Music.set(state.world.id); }
 
-  /* Normal/Profi: Welt wählen (Märchenland, Meereswelt … bzw. Profi-Welt, Dschungeltempel …), dann Spieler und Steuerung */
-  function showModeWorldSelect(mode) {
-    state.pickMode = mode;
-    const worlds = WORLDS.filter(w => worldMode(w) === mode);
-    overlay(`<div class="panel">
-      <div class="panel-head"><span class="btn ghost small" id="back">◀ Zurück</span><h2>${MODE_ICON[mode]} ${mode === 'pro' ? 'Profi' : mode === 'legend' ? 'Legende' : 'Normal'} – Welt wählen</h2></div>
-      ${mode === 'legend' ? '<div class="sub">Die höchste Stufe: extra große Bahnen, neue Gefahren, wenig Gnade.</div>' : ''}
-      <div class="modes">
-        ${worlds.map(w => `<span class="btn mode" data-world="${w.id}">${sceneFor(w.id)}<span class="mode-label ${w.name.length > 8 ? 'long' : ''}">${w.name}</span></span>`).join('')}
-      </div>
-      <div class="sub">${worlds.map(w => `${w.name}: ${w.courses.length} Bahnen`).join(' · ')}</div>
-      <p><span class="btn ghost small back2">◀ Zurück</span></p>
-    </div>`, 'title');
-    ui.overlay.querySelectorAll('.mode[data-world]').forEach(b => b.addEventListener('click', () => { setWorld(b.dataset.world); showSetup(); }));
-    ui.overlay.querySelectorAll('#back, .back2').forEach(b => b.addEventListener('click', showTitle));
-  }
-
-  /* Kreativ: Welt wählen, dann sofort los (ein Spieler, Schleuder, Bahn 1) */
-  function showWorldSelect() {
-    const own = editor.worldCourses();
-    overlay(`<div class="panel">
-      <div class="panel-head"><span class="btn ghost small" id="back">◀ Zurück</span><h2>🛠 Kreativ – Welt wählen</h2></div>
-      <div class="modes">
-        ${WORLDS.map(w => `<span class="btn mode" data-world="${w.id}">${sceneFor(w.id)}<span class="mode-label ${w.name.length > 8 ? 'long' : ''}">${w.name}</span></span>`).join('')}
-      </div>
-      <div class="sub">${WORLDS.map(w => `${w.name}: ${w.courses.length} Bahnen`).join(' · ')}</div>
-      <div class="modes">
-        ${own.length ? `<span class="btn mode own" id="own-play"><span class="mode-label">🌍 Eigene Welt (${own.length} Bahn${own.length > 1 ? 'en' : ''})</span></span>` : ''}
-        <span class="btn mode build" id="build"><span class="mode-label">🛠 Bahn bauen</span></span>
-      </div>
-      <p><span class="btn ghost small back2">◀ Zurück</span></p>
-    </div>`, 'title');
-    ui.overlay.querySelectorAll('.mode[data-world]').forEach(b => b.addEventListener('click', () => { setWorld(b.dataset.world); Sfx.unlock(); setControlMode('sling'); startGame(1, 0); }));
-    if (own.length) $('own-play').addEventListener('click', () => { Sfx.unlock(); setControlMode('sling'); playWorld(own); });
-    $('build').addEventListener('click', () => { Sfx.unlock(); setControlMode('sling'); editor.open(null); });
-    ui.overlay.querySelectorAll('#back, .back2').forEach(b => b.addEventListener('click', showTitle));
-  }
+  const showWorldSelect = () => showMap(); // der Editor kehrt über diesen Weg ins Menü zurück
   function setCustomWorld(courses, name) { state.world = { id: 'custom', name, short: 'Eigene', courses }; state.courses = courses; Music.set('custom'); }
   function playWorld(courses) { state.mode = 'creative'; state.editorReturn = false; setCustomWorld(courses, 'Eigene Welt'); document.body.classList.remove('editing', 'testing'); startGame(1, 0); }
   /* Baumodus: eine Bahn probespielen, danach zurück in den Editor */
@@ -319,9 +307,16 @@
   function showSetup() {
     overlay(`<div class="panel">
       <div class="panel-head"><span class="btn ghost small" id="back-top">◀ Zurück</span><h2>${MODE_ICON[worldMode(state.world)]} ${state.world.name}</h2></div>
-      <div class="sub">${state.world.name} · ${state.courses.length} Bahnen</div>
-      <p>Spieler:</p>
-      <div id="pc">${[1, 2, 3, 4].map(n => `<span class="btn ghost small ${n === playerCount ? 'sel' : ''}" data-n="${n}">${n}</span>`).join('')}</div>
+      <div class="sub">${MODE_NAME[worldMode(state.world)]} · ${state.courses.length} Bahnen</div>
+      <p>Modus:</p>
+      <div id="gm">
+        <span class="btn ghost small ${gameMode === 'normal' ? 'sel' : ''}" data-g="normal">🏆 Wettkampf</span>
+        <span class="btn ghost small ${gameMode === 'creative' ? 'sel' : ''}" data-g="creative">🛠 Kreativ</span>
+      </div>
+      <div id="pc-row" ${gameMode === 'creative' ? 'hidden' : ''}>
+        <p style="margin-top:10px">Spieler:</p>
+        <div id="pc">${[1, 2, 3, 4].map(n => `<span class="btn ghost small ${n === playerCount ? 'sel' : ''}" data-n="${n}">${n}</span>`).join('')}</div>
+      </div>
       <p style="margin-top:10px">Musik:</p>
       <div id="mu">
         <span class="btn ghost small ${Music.on ? 'sel' : ''}" data-v="1">An</span>
@@ -334,6 +329,7 @@
       </div>
       <p style="margin-top:14px"><span class="btn ghost small" id="back">◀ Zurück</span> <span class="btn" id="start">Los geht's!</span></p>
       <div class="legend">
+        <b>Wettkampf:</b> alle Bahnen der Reihe nach, mit Schlaglimit und Ergebnistafel. <b>Kreativ:</b> allein, ohne Limit, mit „◀ Bahn“ / „Bahn ▶“ frei springen.<br>
         Aufsetzen, ziehen, loslassen. Weiter ziehen = mehr Kraft.
         <b>Schleuder:</b> vom Ball wegziehen, er fliegt in die Gegenrichtung. <b>Schieben:</b> dorthin ziehen, wo der Ball hin soll.
         Wasser, Lava und Abgrund kosten einen Strafschlag.
@@ -351,8 +347,13 @@
       Sfx.unlock(); Music.setOn(b.dataset.v === '1'); syncMusicBtn();
       ui.overlay.querySelectorAll('#mu .btn').forEach(x => x.classList.toggle('sel', (x.dataset.v === '1') === Music.on));
     }));
-    for (const id of ['back', 'back-top']) $(id).addEventListener('click', () => showModeWorldSelect(worldMode(state.world)));
-    $('start').addEventListener('click', () => { Sfx.unlock(); startGame(playerCount, 0); });
+    ui.overlay.querySelectorAll('#gm .btn').forEach(b => b.addEventListener('click', () => {
+      gameMode = b.dataset.g;
+      ui.overlay.querySelectorAll('#gm .btn').forEach(x => x.classList.toggle('sel', x.dataset.g === gameMode));
+      $('pc-row').hidden = gameMode === 'creative';
+    }));
+    for (const id of ['back', 'back-top']) $(id).addEventListener('click', showMap);
+    $('start').addEventListener('click', () => { Sfx.unlock(); state.mode = gameMode; startGame(gameMode === 'creative' ? 1 : playerCount, 0); });
   }
 
   /* Endtafel: kleines Sinnbild je Bahn (nach Name, sonst nach Optik) */

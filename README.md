@@ -13,13 +13,25 @@ npx serve .          # oder: python3 -m http.server 8080
 
 ## Welten und Modi
 
-- **Märchenland** (9 Bahnen: Wiese, Pilzhain, Schmiede, Zauberwald, Drachenhöhle, Eisgrotte, Wolkenburg, Hexenturm, Burgberg), **Meereswelt** (10 Bahnen auf See und am Meeresgrund), **Profi-Welt** (9 schwerere Bahnen mit Windmühlen, Pendeln, schmalen Dämmen und Brücken) und **Dschungeltempel** (9 Profi-Bahnen durch den Urwald bis zur verlorenen Stadt). Darüber die Stufe **Legende** mit **Sturmhimmel** (9 extra große Bahnen über den Wolken) und **Schattenreich** (9 extra große Bahnen im Reich der Schatten).
-- **Normal**: erst eine Welt wählen (Märchenland oder Meereswelt), dann deren Bahnen der Reihe nach, mit Schlaglimit und Wertung. Jede Welt ist ein eigenes Thema; weitere Welten werden hier eingehängt.
-- **Profi**: erst eine Welt wählen (Profi-Welt oder Dschungeltempel), dann deren Bahnen der Reihe nach.
-- **Legende**: die höchste Stufe. Erst eine Welt wählen (Sturmhimmel oder Schattenreich), dann deren Bahnen der Reihe nach – neue Gefahren wie Blitzfelder, Aufwinde, Falltüren, Fallbeile, Rabenschwärme, verfluchte Ritterstatuen und den Turm des Auges, hohe Pars, wenig Gnade.
-- **Kreativ**: erst die Welt wählen, dann geht es sofort los mit einem Spieler, Schleuder-Steuerung und Bahn 1; im Spiel mit „◀ Bahn" / „Bahn ▶" (Tasten P / N) springen, „Ball zurück" (R) setzt an den Abschlag, kein Schlaglimit. Gedacht zum schnellen Prüfen einzelner Bahnen.
+Vom Titelbild führen zwei Wege: **🗺 Weltkarte** und **🛠 Bauen & Eigene Welt**.
 
-Die Weltauswahl im Normal-Modus ist der Platz, an dem weitere Themenwelten eingehängt werden.
+Auf der **Weltkarte** liegen alle Welten als Orte in einem gezeichneten Atlas, der von links (heller Tag im Märchenland) nach rechts (Nacht im Schattenreich) wandert; ein gestrichelter Reiseweg verbindet sie. **Jeder Ort ist von Anfang an anwählbar – nichts muss freigespielt werden.** Die Stufe am Ort ist nur ein Hinweis darauf, was einen erwartet:
+
+| Ort | Stufe | Bahnen |
+| --- | --- | --- |
+| Märchenland | Normal | 9 (Wiese, Pilzhain, Schmiede, Zauberwald, Drachenhöhle, Eisgrotte, Wolkenburg, Hexenturm, Burgberg) |
+| Meereswelt | Normal | 10 auf See und am Meeresgrund |
+| Profi-Welt | Profi | 9 schwerere Bahnen mit Windmühlen, Pendeln, schmalen Dämmen und Brücken |
+| Dschungeltempel | Profi | 9 Bahnen durch den Urwald bis zur verlorenen Stadt |
+| Sturmhimmel | Legende | 9 extra große Bahnen über den Wolken |
+| Schattenreich | Legende | 10 extra große Bahnen im Reich der Schatten |
+
+Nach dem Antippen eines Ortes folgt die Startaufstellung mit **Modus**, **Spielern**, **Musik** und **Steuerung**:
+
+- **🏆 Wettkampf**: alle Bahnen der Welt der Reihe nach, mit Schlaglimit, Zwischen- und Endtafel, 1–4 Spieler im Hotseat.
+- **🛠 Kreativ**: allein und ohne Schlaglimit; im Spiel mit „◀ Bahn" / „Bahn ▶" (Tasten P / N) frei springen, „Ball zurück" (R) setzt an den Abschlag. Gedacht zum Erkunden und zum schnellen Prüfen einzelner Bahnen.
+
+Unter **Bauen & Eigene Welt** liegen der Editor und die selbst zusammengestellte eigene Welt. Neue Themenwelten werden in `WORLDS` (in `src/courses_pro.js`) eingehängt und bekommen in `src/worldmap.js` einen Ort auf der Karte.
 
 ## Steuerung
 
@@ -191,6 +203,7 @@ src/render.js     isometrische Darstellung
 src/render_legend.js Optik der Legende-Welten (Hintergründe, neue Hindernisse und Stile)
 src/sfx.js        Klangeffekte (WebAudio)
 src/music.js      Musik: je Welt ein erzeugter Klangteppich (WebAudio)
+src/worldmap.js   Weltkarte: gezeichneter Atlas und die Orte der Welten
 src/title.js      animierte Startbildschirm-Szene mit Tag-Nacht-Wechsel
 src/main.js       Spielablauf, Eingabe, Punkte
 ```
