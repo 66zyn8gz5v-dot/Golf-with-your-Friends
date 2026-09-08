@@ -48,6 +48,36 @@ nur eine Zeichenfunktion in `DEFS` und einen Eintrag in `LIST`; der Nullpunkt li
 eine Einheit entspricht dem Ballradius, und die Ballmitte liegt bei (0, 0.72). Wer die Spielerfarbe braucht,
 nimmt sie als zweiten Wert der Zeichenfunktion entgegen.
 
+## Online gegeneinander
+
+Über **🌐 Online spielen** im Startbildschirm treten bis zu vier Geräte in einem Raum gegeneinander an.
+Einer macht den Raum auf und bekommt einen vierstelligen Code, die anderen tippen ihn ein. Der Gastgeber
+wählt die Welt und startet; danach wird **reihum** gespielt: wer dran ist, zielt, die anderen sehen den
+Schlag mitlaufen. Punktetafel und Bahnwechsel bleiben überall gleich, den Takt zwischen den Bahnen gibt
+der Gastgeber vor. Jeder spielt mit seinem eigenen Hut, die Ballfarbe richtet sich nach der Sitzreihenfolge.
+
+Wer den Raum verlässt oder die Verbindung verliert, wird nach gut zwanzig Sekunden bemerkt: sein Zug wird
+mit dem Schlaglimit gewertet und die Runde läuft weiter. Geht der Gastgeber, endet der Raum für alle.
+Eigene Bahnen lassen sich online nicht spielen, nur die sechs festen Welten.
+
+**Wie es ohne eigenen Server geht:** Das Spiel liegt als reine Dateien auf GitHub Pages. Der Verkehr läuft
+deshalb über einen offenen MQTT-Vermittler – jeder Raum ist ein Thema, in das alle schreiben und aus dem
+alle mitlesen. Reihum gespielt sind das nur ein paar kurze Nachrichten je Bahn. Der Zugang steht in
+`src/net.js` und ist von Hand geschrieben (MQTT 3.1.1, QoS 0), damit keine fremde Bibliothek dazukommt.
+Wer dran ist, ist für seinen Zug die verbindliche Quelle: er sagt den Schlag an, die anderen spielen ihn
+mit, und am Ende sagt er Ruheort, Schlagzahl und Ergebnis. So dürfen die Simulationen unterwegs ein wenig
+auseinanderlaufen, ohne dass die Punkte auseinanderlaufen.
+
+Die Adresse des Vermittlers steht oben in `src/net.js` und lässt sich im Browser überschreiben, ohne am
+Spiel etwas zu ändern:
+
+```js
+localStorage.setItem('fantasygolf.broker', 'wss://mein-vermittler:443/mqtt');
+```
+
+Online braucht Internet und funktioniert nur unter einer richtigen Adresse (etwa der GitHub-Pages-Seite),
+nicht in einer abgeschotteten Vorschau.
+
 Unter **Bauen & Eigene Welt** liegen der Editor und die selbst zusammengestellte eigene Welt. Neue Themenwelten werden in `WORLDS` (in `src/courses_pro.js`) eingehängt und bekommen in `src/worldmap.js` einen Ort auf der Karte.
 
 ## Steuerung
@@ -60,6 +90,7 @@ Unter **Bauen & Eigene Welt** liegen der Editor und die selbst zusammengestellte
   Die Neigung richtet sich nach dem Bildschirm: hochkant (Handy) bleibt die Sicht flach,
   quer auf Tablet oder Laptop wird sie steiler, damit das Feld nicht platt gedrückt wirkt.
 - Hut des eigenen Balls: in der Startaufstellung unter „Hut". Die Wahl merkt sich der Browser.
+- Online gegeneinander: **🌐 Online spielen** im Startbildschirm, Raumcode aufmachen oder eintippen.
 - Musik an oder aus: Knopf `♪` unten links oder Taste `J`; im Startbildschirm auch unter „Musik". Die Wahl merkt sich der Browser.
 - 1–4 Spieler im Hotseat-Modus: Jeder spielt die Bahn nacheinander zu Ende.
 - Wasser, Lava und Abgrund: Ball zurück zur letzten Position, +1 Strafschlag.
@@ -222,6 +253,7 @@ src/physics.js    Ballphysik und Kollision
 src/render.js     isometrische Darstellung
 src/render_legend.js Optik der Legende-Welten (Hintergründe, neue Hindernisse und Stile)
 src/hats.js       Hüte für die Bälle: Zeichnungen und Vorschau fürs Menü
+src/net.js        Netzspiel: Raumcode und MQTT-Zugang für das Spiel zu mehreren
 src/sfx.js        Klangeffekte (WebAudio)
 src/music.js      Musik: je Welt ein erzeugter Klangteppich (WebAudio)
 src/worldmap.js   Weltkarte: gezeichneter Atlas und die Orte der Welten

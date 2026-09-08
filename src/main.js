@@ -41,7 +41,14 @@
   function setControlMode(m) {
     state.controlMode = m;
     try { localStorage.setItem('fantasygolf.control', m); } catch (e) { /* ignorieren */ }
-    ui.hint.textContent = m === 'push' ? 'In Schussrichtung ziehen & loslassen' : 'Vom Ball wegziehen & loslassen';
+    syncHint();
+  }
+  /* Hinweiszeile unten links: im Netzspiel steht dort, wer gerade dran ist */
+  function syncHint() {
+    const base = state.controlMode === 'push' ? 'In Schussrichtung ziehen & loslassen' : 'Vom Ball wegziehen & loslassen';
+    ui.hint.textContent = (online && online.started && !myTurn())
+      ? `${(online.players[state.curPlayer] || {}).name || 'Jemand'} ist dran …`
+      : base;
   }
   let playerCount = 1, gameMode = 'normal', msgTimer = null, waitTimer = null;
 
@@ -253,8 +260,10 @@
         <span class="btn mode" id="to-map">${WorldMap.svg('mode-scene', 'xMidYMid slice')}<span class="mode-label">Weltkarte</span></span>
         <span class="btn mode" id="to-build">${SCENE_CREATIVE}<span class="mode-label long">Bauen &amp; Eigene Welt</span></span>
       </div>
+      <div class="atlas-extra"><span class="btn small ghost" id="to-online">🌐 Online spielen</span></div>
       <div class="legend">Alle Welten sind von Anfang an offen. Die Stufe an jedem Ort sagt nur, was dich erwartet.</div>
     </div>`, 'title');
+    $('to-online').addEventListener('click', () => { Sfx.unlock(); Music.start(); showOnline(); });
     $('to-map').addEventListener('click', () => { Sfx.unlock(); Music.start(); showMap(); });
     $('to-build').addEventListener('click', () => { Sfx.unlock(); Music.start(); showBuild(); });
   }
@@ -316,6 +325,209 @@
     setCustomWorld([def], 'Test');
     document.body.classList.add('testing');
     startGame(1, 0);
+  }
+
+  /* ---------- Online gegeneinander ----------
+     Alle Geräte im Raum spielen dieselbe Welt reihum. Wer dran ist, ist für seinen Zug die
+     verbindliche Quelle: er sagt den Schlag an, die anderen spielen ihn mit, und am Ende sagt er
+     Ruheort, Schlagzahl und Ergebnis. So dürfen die Simulationen unterwegs ein wenig
+     auseinanderlaufen, ohne dass die Punkte auseinanderlaufen. Zwischen den Bahnen gibt der
+     Gastgeber den Takt vor, damit alle auf derselben Bahn stehen. */
+  const ONLINE_MAX = 4;                 // so viele Geräte passen in einen Raum
+  const BEAT = 4000, LOST = 22000;      // Lebenszeichen alle 4 s, nach 22 s gilt jemand als weg
+  let online = null, beatT = null, watchT = null;
+  const myTurn = () => !online || !online.started || ((online.players[state.curPlayer] || {}).id === Net.id);
+  const netSend = m => { if (online) Net.send(m); };
+  const onlineWorlds = () => WORLDS.filter(w => w.id !== 'custom');
+  const renumber = () => online.players.forEach((p, i) => { p.name = PLAYER_NAMES[i]; });
+
+  /* Einstieg: Raum aufmachen oder einem Code beitreten */
+  function showOnline(note) {
+    leaveOnline();
+    state.phase = 'title'; document.body.classList.add('title');
+    document.body.classList.remove('creative', 'editing', 'testing');
+    overlay(`<div class="panel">
+      <div class="panel-head"><span class="btn ghost small" id="back">◀ Zurück</span><h2>🌐 Online spielen</h2></div>
+      <div class="sub">Einer macht einen Raum auf und sagt den Code durch, die anderen tippen ihn ein.
+        Bis zu ${ONLINE_MAX} Geräte, gespielt wird reihum.</div>
+      ${note ? `<div class="sub net-note">${note}</div>` : ''}
+      <p><span class="btn" id="host">Raum aufmachen</span></p>
+      <p>oder Code eintippen:</p>
+      <p class="join-row"><input id="code" class="code-in" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABCD">
+        <span class="btn" id="join">Beitreten</span></p>
+      <div class="legend">Dafür braucht ihr Internet. Jeder spielt mit seinem eigenen Hut, die Welt sucht der Gastgeber aus.</div>
+    </div>`, 'title');
+    $('back').addEventListener('click', showTitle);
+    $('host').addEventListener('click', () => { Sfx.unlock(); Music.start(); enterRoom(Net.makeCode(), true); });
+    const go = () => {
+      const c = ($('code').value || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+      if (c.length === 4) { Sfx.unlock(); Music.start(); enterRoom(c, false); } else showOnline('Der Code hat vier Zeichen.');
+    };
+    $('join').addEventListener('click', go);
+    $('code').addEventListener('input', e => { e.target.value = e.target.value.toUpperCase(); });
+    $('code').addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+  }
+
+  function enterRoom(code, host) {
+    online = { code, host, hostId: '', players: [], started: false, world: onlineWorlds()[0].id, seen: {}, note: 'Verbinde …' };
+    const id = Net.join(code, { message: netMessage, status: netStatus });
+    if (host) { online.hostId = id; online.players = [{ id, name: PLAYER_NAMES[0], hat: playerHats[0] }]; }
+    showLobby();
+    clearInterval(beatT); clearInterval(watchT);
+    beatT = setInterval(() => netSend({ t: 'alive' }), BEAT);
+    watchT = setInterval(checkPeers, 5000);
+  }
+  function leaveOnline() {
+    clearInterval(beatT); clearInterval(watchT); beatT = null; watchT = null;
+    if (online) { netSend({ t: 'bye' }); Net.leave(); }
+    online = null;
+  }
+  function onlineLost(text) { leaveOnline(); showOnline(text); }
+
+  function netStatus(s, text) {
+    if (!online) return;
+    if (s === 'ready') {
+      online.note = online.host ? '' : 'Suche den Raum …';
+      if (online.host) sendRoster(); else netSend({ t: 'hello', hat: playerHats[0] });
+    } else if (s === 'connecting') online.note = 'Verbinde …';
+    else if (s === 'retry') online.note = 'Die Verbindung wackelt, ich versuche es nochmal …';
+    else if (s === 'error') { onlineLost(text || 'Die Verbindung ist fehlgeschlagen.'); return; }
+    if (!online.started) showLobby();
+  }
+  function sendRoster() { if (online && online.host) netSend({ t: 'roster', players: online.players, w: online.world }); }
+
+  function netMessage(m) {
+    if (!online) return;
+    online.seen[m.from] = Date.now();
+    switch (m.t) {
+      case 'hello':
+        if (!online.host) break;
+        if (online.started) { netSend({ t: 'busy', to: m.from, why: 'Die Runde läuft schon.' }); break; }
+        if (!online.players.some(p => p.id === m.from) && online.players.length < ONLINE_MAX)
+          online.players.push({ id: m.from, name: PLAYER_NAMES[online.players.length], hat: Hats.has(m.hat) ? m.hat : 'none' });
+        sendRoster(); showLobby();
+        break;
+      case 'roster': {
+        if (online.host) break;
+        online.hostId = m.from; online.players = m.players || []; online.world = m.w || online.world;
+        const drin = online.players.some(p => p.id === Net.id);
+        online.note = drin ? '' : (online.players.length >= ONLINE_MAX ? 'Der Raum ist voll.' : 'Melde mich an …');
+        if (!online.started) showLobby();
+        break;
+      }
+      case 'busy':
+        if (!online.host && m.to === Net.id) onlineLost(m.why || 'Der Raum nimmt gerade niemanden auf.');
+        break;
+      case 'start':
+        if (online.host) break;
+        online.players = m.players || online.players; online.world = m.w || online.world;
+        startOnlineGame();
+        break;
+      case 'shot':
+        if (!myTurn() && state.ball && state.phase === 'aim' && m.h === state.holeIdx && m.pi === state.curPlayer)
+          shoot(m.dx, m.dy, m.power, true);
+        break;
+      case 'rest':
+        if (!myTurn() && state.ball && m.h === state.holeIdx && m.pi === state.curPlayer) {
+          const b = state.ball;
+          b.x = m.x; b.y = m.y; b.z = 0; b.vx = 0; b.vy = 0; b.vz = 0; b.air = false; b.rider = null;
+          b.restX = m.x; b.restY = m.y;
+          state.strokes = m.s; state.phase = 'aim'; clearTimeout(waitTimer); faceCup(); updateHud();
+        }
+        break;
+      case 'done':
+        if (!myTurn() && m.h === state.holeIdx && m.pi === state.curPlayer) {
+          const b = state.ball;
+          if (b && m.sunk && !b.sunk) { b.x = state.level.cup.x; b.y = state.level.cup.y; b.z = 0; b.vx = 0; b.vy = 0; b.sunk = true; b.sinkT = 0; Sfx.sink(); }
+          state.strokes = m.score; clearTimeout(waitTimer); finishTurn(m.score, true);
+        }
+        break;
+      case 'next':
+        if (online.host) break;
+        clearTimeout(waitTimer); hideOverlay();
+        if (m.h < 0) showFinal(); else loadHole(m.h);
+        break;
+      case 'bye':
+        if (!online.host) { if (m.from === online.hostId) onlineLost('Der Gastgeber hat den Raum verlassen.'); break; }
+        if (online.started) dropPlayer(m.from);
+        else { online.players = online.players.filter(p => p.id !== m.from); renumber(); sendRoster(); showLobby(); }
+        break;
+    }
+  }
+
+  /* Wer sich lange nicht meldet, gilt als weg */
+  function checkPeers() {
+    if (!online) return;
+    const now = Date.now();
+    if (!online.host) {
+      // solange ich nicht in der Liste stehe, melde ich mich weiter an
+      if (Net.status === 'ready' && !online.players.some(p => p.id === Net.id)) netSend({ t: 'hello', hat: playerHats[0] });
+      if (online.hostId && now - (online.seen[online.hostId] || now) > LOST) onlineLost('Der Gastgeber hat den Raum verlassen.');
+      return;
+    }
+    for (const p of online.players.slice()) {
+      if (p.id === Net.id || p.gone) continue;
+      if (now - (online.seen[p.id] || now) < LOST) continue;
+      if (online.started) dropPlayer(p.id);
+      else { online.players = online.players.filter(x => x.id !== p.id); renumber(); sendRoster(); showLobby(); }
+    }
+  }
+  function dropPlayer(id) {
+    const i = online.players.findIndex(p => p.id === id);
+    if (i < 0 || online.players[i].gone) return;
+    online.players[i].gone = true;
+    if (state.players[i]) state.players[i].gone = true;
+    showMessage(`${online.players[i].name} ist weg`, 1600);
+    if (state.curPlayer === i && state.phase !== 'summary' && state.phase !== 'final') skipGoneTurn();
+  }
+  /* Zug eines Weggegangenen: mit dem Schlaglimit werten und weiter */
+  function skipGoneTurn() {
+    if (!online || !online.host || !online.started) return;
+    const p = online.players[state.curPlayer];
+    if (!p || !p.gone || state.players[state.curPlayer].scores[state.holeIdx] != null) return;
+    const sc = maxStrokes() === Infinity ? state.courses[state.holeIdx].par : maxStrokes();
+    netSend({ t: 'done', h: state.holeIdx, pi: state.curPlayer, score: sc, sunk: false });
+    finishTurn(sc, true);
+  }
+
+  /* Warteraum: Code, Sitzplätze und – beim Gastgeber – die Weltwahl */
+  function showLobby() {
+    if (!online || online.started) return;
+    const ws = onlineWorlds();
+    const seats = online.players.map((p, i) => `<div class="seat${p.id === Net.id ? ' me' : ''}">
+        <canvas class="seat-ball" data-hat="${p.hat}" data-col="${PLAYER_COLORS[i]}"></canvas>
+        <b>${p.name}${p.id === online.hostId ? ' ★' : ''}</b></div>`).join('');
+    const free = Math.max(0, ONLINE_MAX - online.players.length);
+    overlay(`<div class="panel">
+      <div class="panel-head"><span class="btn ghost small" id="back">◀ Zurück</span><h2>🌐 Warteraum</h2></div>
+      <div class="sub">${online.host ? 'Sag diesen Code durch – wer beitritt, erscheint hier.'
+        : online.players.some(p => p.id === Net.id) ? 'Du bist im Raum. Der Gastgeber startet.' : 'Ich klopfe an …'}</div>
+      <div class="room-code">${online.code}</div>
+      <div class="seats">${seats}${'<div class="seat empty">frei</div>'.repeat(free)}</div>
+      ${online.note ? `<div class="sub net-note">${online.note}</div>` : ''}
+      ${online.host
+        ? `<p>Welt:</p><div id="ow" class="ow">${ws.map(w => `<span class="btn ghost small ${w.id === online.world ? 'sel' : ''}" data-w="${w.id}">${MODE_ICON[worldMode(w)]} ${w.name}</span>`).join('')}</div>
+           <p><span class="btn" id="go">Los geht's!</span></p>`
+        : `<div class="sub">Welt: <b>${(ws.find(w => w.id === online.world) || ws[0]).name}</b></div>`}
+      <div class="legend">Gespielt wird reihum: wer dran ist, zielt, die anderen schauen zu. Eigene Bahnen lassen sich online nicht spielen.</div>
+    </div>`, 'title');
+    ui.overlay.querySelectorAll('.seat-ball').forEach(cv => Hats.preview(cv, cv.dataset.hat, cv.dataset.col));
+    $('back').addEventListener('click', () => showOnline());
+    if (!online.host) return;
+    ui.overlay.querySelectorAll('#ow .btn').forEach(b => b.addEventListener('click', () => { online.world = b.dataset.w; sendRoster(); showLobby(); }));
+    $('go').addEventListener('click', () => {
+      if (online.players.length < 2) { online.note = 'Es fehlt noch jemand im Raum.'; showLobby(); return; }
+      Sfx.unlock();
+      netSend({ t: 'start', players: online.players, w: online.world });
+      startOnlineGame();
+    });
+  }
+  function startOnlineGame() {
+    if (!online) return;
+    online.started = true;
+    setWorld(online.world);
+    state.mode = 'normal';
+    startGame(online.players.length, 0, online.players);
   }
 
   function showSetup() {
@@ -444,8 +656,11 @@
   }
 
   /* ---------- Spielablauf ---------- */
-  function startGame(n, first = 0) {
-    state.players = Array.from({ length: n }, (_, i) => ({ name: PLAYER_NAMES[i], color: PLAYER_COLORS[i], hat: playerHats[i], scores: [] }));
+  function startGame(n, first = 0, roster = null) {
+    // roster: beim Netzspiel bringt jeder Spieler seinen eigenen Hut mit
+    state.players = roster
+      ? roster.map((p, i) => ({ name: p.name, color: PLAYER_COLORS[i], hat: p.hat, scores: [], gone: !!p.gone }))
+      : Array.from({ length: n }, (_, i) => ({ name: PLAYER_NAMES[i], color: PLAYER_COLORS[i], hat: playerHats[i], scores: [] }));
     state.holeIdx = first;
     document.body.classList.remove('title');
     document.body.classList.toggle('creative', state.mode === 'creative');
@@ -489,9 +704,13 @@
     state.strokes = 0; state.phase = 'aim'; state.aim = null; state.restTimer = 0; state.slowTimer = 0; state.rollT = 0; state.stuckRef = null;
     faceCup(); setCamMode('follow');
     if (state.players.length > 1) showMessage(`${p.name} ist dran`, 1300);
-    updateHud();
+    updateHud(); syncHint();
+    // Wer den Raum verlassen hat, bekommt seinen Zug vom Gastgeber mit dem Schlaglimit gewertet
+    if (online && online.started && online.host && p.gone) setTimeout(skipGoneTurn, 700);
   }
-  function shoot(dx, dy, power) {
+  function shoot(dx, dy, power, fromNet = false) {
+    if (online && online.started && !fromNet && !myTurn()) return; // Zuschauer schlagen nicht
+    if (online && online.started && !fromNet) netSend({ t: 'shot', h: state.holeIdx, pi: state.curPlayer, dx, dy, power });
     const b = state.ball;
     b.restX = b.x; b.restY = b.y; b.shotX = b.x; b.shotY = b.y; // Schlagstart (für Aufspießen am Ruheplatz)
     b.vx = dx * power * MAX_SHOT; b.vy = dy * power * MAX_SHOT;
@@ -519,10 +738,16 @@
     const b = state.ball;
     b.vx = 0; b.vy = 0; b.restX = b.x; b.restY = b.y;
     faceCup();
+    // Wer dran ist, sagt Ruheort und Schlagzahl an; die anderen uebernehmen sie
+    if (online && online.started && myTurn()) netSend({ t: 'rest', h: state.holeIdx, pi: state.curPlayer, x: b.x, y: b.y, s: state.strokes });
     if (state.strokes >= maxStrokes()) { showMessage(`Maximale Schlagzahl (${maxStrokes()}) erreicht`, 1800); finishTurn(maxStrokes()); return; }
     state.phase = 'aim';
   }
-  function finishTurn(score) {
+  function finishTurn(score, fromNet = false) {
+    if (online && online.started) {
+      if (!myTurn() && !fromNet) return;   // Zuschauer warten auf die Ansage des Schlagenden
+      if (myTurn() && !fromNet) netSend({ t: 'done', h: state.holeIdx, pi: state.curPlayer, score, sunk: !!(state.ball && state.ball.sunk) });
+    }
     state.players[state.curPlayer].scores[state.holeIdx] = score;
     state.phase = 'wait'; state.aim = null; updateHud();
     clearTimeout(waitTimer);
@@ -591,9 +816,12 @@
       <div class="sub">Par ${def.par}</div>
       <table class="scores"><tr><th>Spieler</th><th>Bahn</th><th>Gesamt</th></tr>${rows}</table>
       ${!last ? `<div class="sub">Als Nächstes: <b>${state.courses[state.holeIdx + 1].name}</b><br><i>${state.courses[state.holeIdx + 1].intro}</i></div>` : ''}
-      <span class="btn" id="next">${state.editorReturn ? '🛠 Zurück zum Editor' : last ? 'Zum Endergebnis' : 'Nächste Bahn ▶'}</span>
+      ${online && !online.host ? '<div class="sub">Der Gastgeber öffnet die nächste Bahn …</div>'
+        : `<span class="btn" id="next">${state.editorReturn ? '🛠 Zurück zum Editor' : last ? 'Zum Endergebnis' : 'Nächste Bahn ▶'}</span>`}
     </div>`);
-    $('next').addEventListener('click', () => { hideOverlay(); if (state.editorReturn) editor.returnFromTest(); else if (last) { if (state.mode === 'creative') loadHole(0); else showFinal(); } else loadHole(state.holeIdx + 1); });
+    const goOn = () => { hideOverlay(); if (state.editorReturn) editor.returnFromTest(); else if (last) { if (state.mode === 'creative') loadHole(0); else showFinal(); } else loadHole(state.holeIdx + 1); };
+    // Im Netzspiel gibt der Gastgeber den Takt vor, damit alle auf derselben Bahn stehen
+    if (!online || online.host) $('next').addEventListener('click', () => { if (online) netSend({ t: 'next', h: last ? -1 : state.holeIdx + 1 }); goOn(); });
   }
   function showFinal() {
     state.phase = 'final'; clearTimeout(msgTimer); ui.msg.classList.remove('visible'); // keine Laufmeldung über der Tafel
@@ -628,7 +856,7 @@
       <div class="final-legend"><span class="hc-score ace">1</span> Hole-in-One <span class="hc-score eagle">–2</span> Eagle <span class="hc-score birdie">–1</span> Birdie <span class="hc-score par">0</span> Par <span class="hc-score bogey">+1</span> Bogey <span class="hc-score worse">+2</span> mehr</div>
       <span class="btn" id="again">Nochmal spielen</span>
     </div>`);
-    $('again').addEventListener('click', () => { hideOverlay(); showTitle(); });
+    $('again').addEventListener('click', () => { hideOverlay(); leaveOnline(); showTitle(); });
   }
 
   /* ---------- Partikel ---------- */
@@ -752,6 +980,7 @@
   canvas.addEventListener('pointerdown', e => {
     if (state.phase === 'edit') { canvas.setPointerCapture(e.pointerId); const [x, y] = pointerPos(e); editor.pointer('down', e, x, y); return; }
     if (state.phase !== 'aim' || !state.ball) return;
+    if (online && online.started && !myTurn()) return;   // nur wer dran ist, darf zielen
     Sfx.unlock();
     canvas.setPointerCapture(e.pointerId);
     drag = { id: e.pointerId, start: pointerPos(e) };
