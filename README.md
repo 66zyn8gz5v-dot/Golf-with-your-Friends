@@ -15,7 +15,7 @@ npx serve .          # oder: python3 -m http.server 8080
 
 Vom Titelbild führen zwei Wege: **🗺 Weltkarte** und **🛠 Bauen & Eigene Welt**.
 
-Auf der **Weltkarte** schwebt jede Welt als eigene Insel im Himmel – links im hellen Tag das Märchenland, rechts in der Nacht das Schattenreich. In der Mitte liegt auf einem Sockel ein goldener Ball, von dem gestrichelte goldene Wege zu allen Inseln führen. Die Inseln sind durchgehend von links oben beleuchtet: Grasdecke, Erdkante und Felsflanke mit Zacken, dazu Kontaktschatten, Streiflicht und schwebende Brocken darunter. Die Tiefe kommt aus drei Sachen: hintere Inseln sind kleiner, ihre Decken liegen flacher (gemeinsame Horizontlinie), und sie versinken leicht im Dunst; dazwischen ziehen Wolkenbänder durch, die vorne noch einmal die ganze Szene überlagern. Auf den Decken liegen Grasbüschel, Blüten und Wege. Die Bauten sind bis ins Kleine ausgeführt: Mauerfugen, Zinnen, Bogen- und Spitzbogenfenster, Fallgatter und Gittertore, Bretterfassaden, Schießscharten. Dazu ein Dorf mit Brunnen, Zaun und Schafen, ein Steg mit Bojen und Leuchtfeuer, Fässer, Amboss und Schienenwagen, eine Steinfratze über dem Tempeltor, Fackeln und Gräber – lauter kleine Sachen, an denen das Auge Halt findet. **Jeder Ort ist von Anfang an anwählbar – nichts muss freigespielt werden.** Die Stufe am Ort ist nur ein Hinweis darauf, was einen erwartet:
+Auf der **Weltkarte** liegt jede Welt als schwebende Scheibe in derselben 2,5D-Sicht wie das Spiel selbst: Blick schräg von oben auf eine um 45° gedrehte Welt, dieselbe Projektion wie im Renderer. Jede Scheibe hat darum eine Deckfläche im Karomuster und darunter zwei sichtbare Seitenflächen – die linke hell, die rechte im Schatten – mit Streiflicht an der Oberkante und dunkler Vorderkante. Darauf stehen die Bauten als echte Körper: Quader mit Deckfläche und zwei Seiten, Kegeldächer und Baumkronen aus vier Dreiecken, hell zur Sonne und dunkel zur Schattenseite, dazu Fahnen und Kontaktschatten. Die Reise geht von links (heller Tag im Märchenland) nach rechts (Nacht im Schattenreich): Himmelsverlauf vom Tag in die Nacht, Sterne, Sonnenstrahlen links, Blutmond rechts, ein scharfer Bergkamm mit Schneekappen und dahinter ein zweiter im Dunst, ziehende Wolken, ein gestrichelter goldener Weg über die Vorderkanten der Scheiben, schwebende Flocken, Nebelbänder und eine Randabdunklung. **Jeder Ort ist von Anfang an anwählbar – nichts muss freigespielt werden.** Die Stufe am Ort ist nur ein Hinweis darauf, was einen erwartet:
 
 | Ort | Stufe | Bahnen |
 | --- | --- | --- |
@@ -277,7 +277,7 @@ src/net.js        Netzspiel: Raumcode und MQTT-Zugang für das Spiel zu mehreren
 src/best.js       Bestenliste: Rekorde je Bahn und je Welt, über alle Geräte geteilt
 src/sfx.js        Klangeffekte (WebAudio)
 src/music.js      Musik: je Welt ein erzeugter Klangteppich (WebAudio)
-src/worldmap.js   Weltkarte: die schwebenden Inseln und die Orte der Welten
+src/worldmap.js   Weltkarte: die schwebenden Scheiben in 2,5D und die Orte der Welten
 src/title.js      animierte Startbildschirm-Szene mit Tag-Nacht-Wechsel
 src/main.js       Spielablauf, Eingabe, Punkte
 ```
