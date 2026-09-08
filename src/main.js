@@ -263,8 +263,8 @@
         <span class="btn mode" id="to-map">${WorldMap.svg('mode-scene', 'xMidYMid slice')}<span class="mode-label">Weltkarte</span></span>
         <span class="btn mode" id="to-build">${SCENE_CREATIVE}<span class="mode-label long">Bauen &amp; Eigene Welt</span></span>
       </div>
-      <div class="atlas-extra"><span class="btn small ghost" id="to-online">🌐 Online spielen</span>
-        <span class="btn small ghost" id="to-best">🏆 Bestenliste</span></div>
+      <div class="atlas-extra"><span class="btn small ghost" id="to-online">${Icons.svg('public')} Online spielen</span>
+        <span class="btn small ghost" id="to-best">${Icons.svg('emoji_events')} Bestenliste</span></div>
       <div class="legend">Alle Welten sind von Anfang an offen. Die Stufe an jedem Ort sagt nur, was dich erwartet.</div>
     </div>`, 'title');
     $('to-online').addEventListener('click', () => { Sfx.unlock(); Music.start(); showOnline(); });
@@ -287,10 +287,10 @@
         <span class="spot-label"><b>${w.name}</b><i>${MODE_ICON[m]} ${MODE_NAME[m]} · ${w.courses.length} Bahnen</i></span></button>`;
     }).join('');
     overlay(`<div class="panel atlas-panel">
-      <div class="panel-head"><span class="btn ghost small" id="back">◀ Zurück</span><h2>🗺 Weltkarte</h2></div>
+      <div class="panel-head"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span><h2>${Icons.svg('map')} Weltkarte</h2></div>
       <div class="sub">Tippe einen Ort an – alle ${WORLDS.length} Welten sind von Anfang an offen.</div>
       <div class="atlas">${WorldMap.svg()}${marks}</div>
-      <div class="atlas-extra"><span class="btn small ghost" id="to-build2">🛠 Bauen &amp; Eigene Welt</span></div>
+      <div class="atlas-extra"><span class="btn small ghost" id="to-build2">${Icons.svg('construction')} Bauen &amp; Eigene Welt</span></div>
     </div>`, 'title');
     ui.overlay.querySelectorAll('.spot').forEach(b => b.addEventListener('click', () => { Sfx.unlock(); setWorld(b.dataset.world); showSetup(); }));
     $('to-build2').addEventListener('click', showBuild);
@@ -302,14 +302,14 @@
     state.phase = 'title'; document.body.classList.add('title'); document.body.classList.remove('creative', 'editing', 'testing');
     const own = editor.worldCourses();
     overlay(`<div class="panel">
-      <div class="panel-head"><span class="btn ghost small" id="back">◀ Zurück</span><h2>🛠 Bauen &amp; Eigene Welt</h2></div>
+      <div class="panel-head"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span><h2>${Icons.svg('construction')} Bauen &amp; Eigene Welt</h2></div>
       <div class="sub">Baue eigene Bahnen und stelle daraus eine eigene Welt zusammen.</div>
       <div class="modes">
-        <span class="btn mode build" id="build"><span class="mode-label">🛠 Bahn bauen</span></span>
-        ${own.length ? `<span class="btn mode own" id="own-play"><span class="mode-label">🌍 Eigene Welt (${own.length} Bahn${own.length > 1 ? 'en' : ''})</span></span>` : ''}
+        <span class="btn mode build" id="build"><span class="mode-label">${Icons.svg('construction')} Bahn bauen</span></span>
+        ${own.length ? `<span class="btn mode own" id="own-play"><span class="mode-label">${Icons.svg('language')} Eigene Welt (${own.length} Bahn${own.length > 1 ? 'en' : ''})</span></span>` : ''}
       </div>
       ${own.length ? '' : '<div class="legend">Noch keine eigene Bahn gebaut. Im Editor wird sie mit „Fertig“ in die Eigene Welt eingesetzt.</div>'}
-      <p><span class="btn ghost small back2">◀ Zurück</span></p>
+      <p><span class="btn ghost small back2">${Icons.svg('arrow_back')} Zurück</span></p>
     </div>`, 'title');
     $('build').addEventListener('click', () => { Sfx.unlock(); setControlMode('sling'); editor.open(null); });
     if (own.length) $('own-play').addEventListener('click', () => { Sfx.unlock(); setControlMode('sling'); playWorld(own); });
@@ -349,7 +349,7 @@
     }).join('');
     const parTotal = w.courses.reduce((a, c) => a + c.par, 0);
     overlay(`<div class="panel wide">
-      <div class="panel-head"><span class="btn ghost small" id="back">◀ Zurück</span><h2>🏆 Bestenliste</h2></div>
+      <div class="panel-head"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span><h2>${Icons.svg('emoji_events')} Bestenliste</h2></div>
       <div class="sub">Wer braucht die wenigsten Schläge? Gewertet wird dein eigener Ball im Wettkampf.</div>
       <p class="join-row"><label class="lbl">Dein Name<input id="bn" class="name-in" maxlength="14" autocomplete="off" spellcheck="false" placeholder="z. B. Max" value="${(Best.name || '').replace(/"/g, '&quot;')}"></label>
         <span class="btn small" id="bsave">Merken</span></p>
@@ -420,7 +420,7 @@
     state.phase = 'title'; document.body.classList.add('title');
     document.body.classList.remove('creative', 'editing', 'testing');
     overlay(`<div class="panel">
-      <div class="panel-head"><span class="btn ghost small" id="back">◀ Zurück</span><h2>🌐 Online spielen</h2></div>
+      <div class="panel-head"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span><h2>${Icons.svg('public')} Online spielen</h2></div>
       <div class="sub">Einer macht einen Raum auf und sagt den Code durch, die anderen tippen ihn ein.
         Bis zu ${ONLINE_MAX} Geräte, gespielt wird reihum.</div>
       ${note ? `<div class="sub net-note">${note}</div>` : ''}
@@ -569,10 +569,10 @@
     const ws = onlineWorlds();
     const seats = online.players.map((p, i) => `<div class="seat${p.id === Net.id ? ' me' : ''}">
         <canvas class="seat-ball" data-hat="${p.hat}" data-col="${PLAYER_COLORS[i]}"></canvas>
-        <b>${seatName(p, i)}${p.id === online.hostId ? ' ★' : ''}</b></div>`).join('');
+        <b>${seatName(p, i)}${p.id === online.hostId ? ' ' + Icons.svg('star') : ''}</b></div>`).join('');
     const free = Math.max(0, ONLINE_MAX - online.players.length);
     overlay(`<div class="panel">
-      <div class="panel-head"><span class="btn ghost small" id="back">◀ Zurück</span><h2>🌐 Warteraum</h2></div>
+      <div class="panel-head"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span><h2>${Icons.svg('public')} Warteraum</h2></div>
       <div class="sub">${online.host ? 'Sag diesen Code durch – wer beitritt, erscheint hier.'
         : online.players.some(p => p.id === Net.id) ? 'Du bist im Raum. Der Gastgeber startet.' : 'Ich klopfe an …'}</div>
       <div class="room-code">${online.code}</div>
@@ -605,12 +605,12 @@
 
   function showSetup() {
     overlay(`<div class="panel">
-      <div class="panel-head"><span class="btn ghost small" id="back-top">◀ Zurück</span><h2>${MODE_ICON[worldMode(state.world)]} ${state.world.name}</h2></div>
+      <div class="panel-head"><span class="btn ghost small" id="back-top">${Icons.svg('arrow_back')} Zurück</span><h2>${MODE_ICON[worldMode(state.world)]} ${state.world.name}</h2></div>
       <div class="sub">${MODE_NAME[worldMode(state.world)]} · ${state.courses.length} Bahnen</div>
       <p>Modus:</p>
       <div id="gm">
-        <span class="btn ghost small ${gameMode === 'normal' ? 'sel' : ''}" data-g="normal">🏆 Wettkampf</span>
-        <span class="btn ghost small ${gameMode === 'creative' ? 'sel' : ''}" data-g="creative">🛠 Kreativ</span>
+        <span class="btn ghost small ${gameMode === 'normal' ? 'sel' : ''}" data-g="normal">${Icons.svg('emoji_events')} Wettkampf</span>
+        <span class="btn ghost small ${gameMode === 'creative' ? 'sel' : ''}" data-g="creative">${Icons.svg('construction')} Kreativ</span>
       </div>
       <div id="pc-row" ${gameMode === 'creative' ? 'hidden' : ''}>
         <p style="margin-top:10px">Spieler:</p>
@@ -629,9 +629,9 @@
         <span class="btn ghost small ${state.controlMode === 'sling' ? 'sel' : ''}" data-m="sling">Schleuder</span>
         <span class="btn ghost small ${state.controlMode === 'push' ? 'sel' : ''}" data-m="push">Schieben</span>
       </div>
-      <p style="margin-top:14px"><span class="btn ghost small" id="back">◀ Zurück</span> <span class="btn" id="start">Los geht's!</span></p>
+      <p style="margin-top:14px"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span> <span class="btn" id="start">Los geht's!</span></p>
       <div class="legend">
-        <b>Wettkampf:</b> alle Bahnen der Reihe nach, mit Schlaglimit und Ergebnistafel. <b>Kreativ:</b> allein, ohne Limit, mit „◀ Bahn“ / „Bahn ▶“ frei springen.<br>
+        <b>Wettkampf:</b> alle Bahnen der Reihe nach, mit Schlaglimit und Ergebnistafel. <b>Kreativ:</b> allein, ohne Limit, mit den Bahn-Knöpfen (Tasten P / N) frei springen.<br>
         Aufsetzen, ziehen, loslassen. Weiter ziehen = mehr Kraft.
         <b>Schleuder:</b> vom Ball wegziehen, er fliegt in die Gegenrichtung. <b>Schieben:</b> dorthin ziehen, wo der Ball hin soll.
         Wasser, Lava und Abgrund kosten einen Strafschlag.
@@ -761,7 +761,7 @@
     overlay(`<div class="panel">
       <h2>Runde verlassen?</h2>
       <div class="sub">Zurück ${state.world && state.world.id === 'custom' ? 'zur Auswahl' : 'zur Weltkarte'} – der Punktestand dieser Runde geht dabei verloren.</div>
-      <p style="margin-top:14px"><span class="btn ghost small" id="stay">◀ Weiterspielen</span> <span class="btn" id="leave-yes">Verlassen</span></p>
+      <p style="margin-top:14px"><span class="btn ghost small" id="stay">${Icons.svg('arrow_back')} Weiterspielen</span> <span class="btn" id="leave-yes">Verlassen</span></p>
     </div>`);
     $('stay').addEventListener('click', hideOverlay);
     $('leave-yes').addEventListener('click', () => leaveRound(true));
@@ -918,8 +918,8 @@
       <table class="scores"><tr><th>Spieler</th><th>Bahn</th><th>Gesamt</th></tr>${rows}</table>
       ${!last ? `<div class="sub">Als Nächstes: <b>${state.courses[state.holeIdx + 1].name}</b><br><i>${state.courses[state.holeIdx + 1].intro}</i></div>` : ''}
       ${online && !online.host ? '<div class="sub">Der Gastgeber öffnet die nächste Bahn …</div>'
-        : `<span class="btn" id="next">${state.editorReturn ? '🛠 Zurück zum Editor' : last ? 'Zum Endergebnis' : 'Nächste Bahn ▶'}</span>`}
-      ${state.editorReturn ? '' : `<p style="margin-top:12px"><span class="btn ghost small" id="leave-here">◀ ${state.world && state.world.id === 'custom' ? 'Zurück zur Auswahl' : 'Zurück zur Weltkarte'}</span></p>`}
+        : `<span class="btn" id="next">${state.editorReturn ? Icons.svg('construction') + ' Zurück zum Editor' : last ? 'Zum Endergebnis' : 'Nächste Bahn ' + Icons.svg('arrow_forward')}</span>`}
+      ${state.editorReturn ? '' : `<p style="margin-top:12px"><span class="btn ghost small" id="leave-here">${Icons.svg('arrow_back')} ${state.world && state.world.id === 'custom' ? 'Zurück zur Auswahl' : 'Zurück zur Weltkarte'}</span></p>`}
     </div>`);
     if (!state.editorReturn) $('leave-here').addEventListener('click', () => leaveRound(true));
     const goOn = () => { hideOverlay(); if (state.editorReturn) editor.returnFromTest(); else if (last) { if (state.mode === 'creative') loadHole(0); else showFinal(); } else loadHole(state.holeIdx + 1); };
@@ -959,7 +959,7 @@
       return `<div class="tallies">${parts.join('')}</div>`;
     })();
     overlay(`<div class="panel final ${worldClass()}">
-      <div class="final-banner">${sceneFor(state.world && state.world.id)}<div class="final-head"><h1>🏆 Endergebnis</h1><div class="final-world">${state.world ? state.world.name : ''} · ${state.courses.length} Bahnen · Par ${parTotal}</div></div></div>
+      <div class="final-banner">${sceneFor(state.world && state.world.id)}<div class="final-head"><h1>${Icons.svg('emoji_events')} Endergebnis</h1><div class="final-world">${state.world ? state.world.name : ''} · ${state.courses.length} Bahnen · Par ${parTotal}</div></div></div>
       <div class="podium">${podium}</div>
       ${best}
       <div class="hole-cards">${cards}</div>
@@ -1154,14 +1154,14 @@
   function syncFullscreen() {
     const on = !!fsEl();
     document.body.classList.toggle('fullscreen', on);
-    $('fs-btn').textContent = on ? '⛶ Vollbild aus' : '⛶ Vollbild';
+    $('fs-btn').innerHTML = on ? Icons.svg('fullscreen_exit') + ' Vollbild aus' : Icons.svg('fullscreen') + ' Vollbild';
     R.resize();
   }
   document.addEventListener('fullscreenchange', syncFullscreen);
   document.addEventListener('webkitfullscreenchange', syncFullscreen);
   $('fs-btn').addEventListener('click', () => { Sfx.unlock(); toggleFullscreen(); });
   function toggleOverview() { if (state.ball) setCamMode(state.camMode === 'overview' ? 'follow' : 'overview'); }
-  function syncMusicBtn() { $('music-btn').classList.toggle('sel', Music.on); $('music-btn').title = Music.on ? 'Musik aus (J)' : 'Musik an (J)'; }
+  function syncMusicBtn() { $('music-btn').classList.toggle('sel', Music.on); $('music-btn').innerHTML = Icons.svg(Music.on ? 'music_note' : 'music_off'); $('music-btn').title = Music.on ? 'Musik aus (J)' : 'Musik an (J)'; }
   function toggleMusic() { Sfx.unlock(); Music.toggle(); syncMusicBtn(); showMessage(Music.on ? '♪ Musik an' : 'Musik aus', 1000); }
   function zoomBy(f) { state.zoomFactor = Math.max(0.5, Math.min(2.2, state.zoomFactor * f)); if (state.camMode === 'overview' && state.ball) setCamMode('follow'); }
   function rotateBy(a) { state.camTheta += a; if (state.camMode === 'overview' && state.ball) setCamMode('follow'); }
@@ -1198,6 +1198,7 @@
   Best.onChange(recordFromFriend);
   Best.start();                         // Rekorde im Hintergrund holen
   const editor = Editor({ state, R, $, showMessage, startTest, showWorldSelect, hideOverlay, overlay, playWorld });
+  Icons.mount();                        // Platzhalter im festen HTML durch die Sinnbilder ersetzen
   R.resize();
   setControlMode(state.controlMode);
   syncMusicBtn();

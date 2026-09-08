@@ -34,20 +34,20 @@
   <div id="scoreboard"></div>
   <div id="message"></div>
   <div id="controls">
-    <button class="cbtn leave" id="leave-btn" title="Zurück zur Weltkarte (Esc)">◀ <span class="lang">Weltkarte</span><span class="kurz">Karte</span></button>
-    <button class="cbtn" id="cam-overview" title="Ganze Bahn zeigen (M)"><span class="lang">Übersicht</span><span class="kurz">⤢</span></button>
-    <button class="cbtn" id="cam-left" title="Kamera nach links drehen (Q)">⟲</button>
-    <button class="cbtn" id="cam-right" title="Kamera nach rechts drehen (E)">⟳</button>
-    <button class="cbtn" id="cam-out" title="Herauszoomen (−)">−</button>
-    <button class="cbtn" id="cam-in" title="Hineinzoomen (+)">+</button>
-    <button class="cbtn" id="music-btn" title="Musik an/aus (J)">♪</button>
-    <button class="cbtn creative" id="cr-prev" title="Vorherige Bahn (P)">◀ Bahn</button>
-    <button class="cbtn creative" id="cr-next" title="Nächste Bahn (N)">Bahn ▶</button>
-    <button class="cbtn creative" id="cr-reset" title="Ball an den Abschlag (R)">Ball zurück</button>
-    <button class="cbtn testing" id="cr-editor" title="Zurück in den Baumodus">🛠 Editor</button>
+    <button class="cbtn leave" id="leave-btn" title="Zurück zur Weltkarte (Esc)"><i data-icon="arrow_back"></i> <span class="lang">Weltkarte</span><span class="kurz">Karte</span></button>
+    <button class="cbtn" id="cam-overview" title="Ganze Bahn zeigen (M)"><i data-icon="map"></i><span class="lang"> Übersicht</span></button>
+    <button class="cbtn" id="cam-left" title="Kamera nach links drehen (Q)"><i data-icon="rotate_left"></i></button>
+    <button class="cbtn" id="cam-right" title="Kamera nach rechts drehen (E)"><i data-icon="rotate_right"></i></button>
+    <button class="cbtn" id="cam-out" title="Herauszoomen (−)"><i data-icon="zoom_out"></i></button>
+    <button class="cbtn" id="cam-in" title="Hineinzoomen (+)"><i data-icon="zoom_in"></i></button>
+    <button class="cbtn" id="music-btn" title="Musik an/aus (J)"><i data-icon="music_note"></i></button>
+    <button class="cbtn creative" id="cr-prev" title="Vorherige Bahn (P)"><i data-icon="skip_previous"></i> Bahn</button>
+    <button class="cbtn creative" id="cr-next" title="Nächste Bahn (N)">Bahn <i data-icon="skip_next"></i></button>
+    <button class="cbtn creative" id="cr-reset" title="Ball an den Abschlag (R)"><i data-icon="restart_alt"></i> Ball zurück</button>
+    <button class="cbtn testing" id="cr-editor" title="Zurück in den Baumodus"><i data-icon="construction"></i> Editor</button>
   </div>
   <div id="hint">Vom Ball wegziehen &amp; loslassen</div>
-  <button class="cbtn" id="fs-btn" title="Vollbild an/aus (F)">⛶ Vollbild</button>
+  <button class="cbtn" id="fs-btn" title="Vollbild an/aus (F)"><i data-icon="fullscreen"></i> Vollbild</button>
 
   <div id="overlay" class="screen"></div>
 
@@ -64,6 +64,7 @@
   <script src="src/physics.js"></script>
   <script src="src/render.js"></script>
   <script src="src/render_legend.js"></script>
+  <script src="src/icons.js"></script>
   <script src="src/hats.js"></script>
   <script src="src/net.js"></script>
   <script src="src/best.js"></script>

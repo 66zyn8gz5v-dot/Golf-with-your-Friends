@@ -113,6 +113,9 @@ Unter **Bauen & Eigene Welt** liegen der Editor und die selbst zusammengestellte
   Die Neigung richtet sich nach dem Bildschirm: hochkant (Handy) bleibt die Sicht flach,
   quer auf Tablet oder Laptop wird sie steiler, damit das Feld nicht platt gedrückt wirkt.
 - Hut des eigenen Balls: in der Startaufstellung unter „Hut". Die Wahl merkt sich der Browser.
+- Die Bedienknöpfe (Zurück, Kamera, Zoom, Musik, Vollbild, Menüs, Editor-Werkzeuge) nutzen Material Symbols von Google,
+  als SVG-Pfade in `src/icons.js` eingebettet – überall gleich, in der Textfarbe, ohne Schriftart aus dem Netz.
+  Welten, Bahnen, Hüte und Rekordmeldungen behalten bewusst ihre bunten Zeichen: dafür hat kein Bedien-Icon-Satz Motive.
 - Online gegeneinander: **🌐 Online spielen** im Startbildschirm, Raumcode aufmachen oder eintippen.
 - Rekorde: **🏆 Bestenliste** im Startbildschirm, einmal den eigenen Namen eintragen.
 - Musik an oder aus: Knopf `♪` unten links oder Taste `J`; im Startbildschirm auch unter „Musik". Die Wahl merkt sich der Browser.
@@ -276,6 +279,7 @@ src/obstacles_legend.js Blitzfeld, Aufwind, Falltür
 src/physics.js    Ballphysik und Kollision
 src/render.js     isometrische Darstellung
 src/render_legend.js Optik der Legende-Welten (Hintergründe, neue Hindernisse und Stile)
+src/icons.js      Bedien-Sinnbilder: Material Symbols als eingebettete SVG-Pfade (Zurück, Kamera, Musik, Editor …)
 src/hats.js       Hüte für die Bälle: Zeichnungen und Vorschau fürs Menü
 src/net.js        Netzspiel: Raumcode und MQTT-Zugang für das Spiel zu mehreren
 src/best.js       Bestenliste: Rekorde je Bahn und je Welt, über alle Geräte geteilt

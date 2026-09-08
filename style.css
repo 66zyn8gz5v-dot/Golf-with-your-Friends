@@ -124,6 +124,10 @@ body.creative .cbtn.creative { display: inline-block; }
   min-width: 40px; height: 40px; padding: 0 10px; touch-action: manipulation;
 }
 .cbtn.sel { background: #ffd166; color: #3a2200; border-color: #8a5a10; }
+/* Bedien-Sinnbilder aus src/icons.js: Inline-SVG, das die Textfarbe und -größe übernimmt */
+.mi { display: inline-block; width: 1.2em; height: 1.2em; vertical-align: -0.25em; fill: currentColor; flex: none; }
+.cbtn .mi { width: 1.4em; height: 1.4em; vertical-align: -0.32em; }
+h1 .mi, h2 .mi { width: 1em; height: 1em; vertical-align: -0.1em; }
 /* Ausstieg aus der Runde – im Baumodus führt statt dessen „🛠 Editor“ zurück */
 .cbtn.leave { background: rgba(40, 24, 60, 0.78); }
 /* Auf schmalen Bildschirmen kurze Beschriftungen, damit die Leiste in eine Reihe passt */

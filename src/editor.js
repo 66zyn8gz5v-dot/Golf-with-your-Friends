@@ -199,15 +199,15 @@ const Editor = (deps) => {
     const name = id => { const c = list.find(x => x.id === id); return c ? `${c.name} (Par ${c.par})` : '?'; };
     const cur = insertId != null ? ids.indexOf(insertId) : -1;
     const rows = ids.map((id, i) => `<div class="wl-row ${id === insertId ? 'me' : ''}"><span class="wl-num">${i + 1}</span><span class="wl-name">${name(id)}</span>
-      <button class="cbtn small wl-up" data-i="${i}" title="nach oben">▲</button><button class="cbtn small wl-down" data-i="${i}" title="nach unten">▼</button><button class="cbtn small wl-out" data-i="${i}" title="aus der Welt nehmen">✕</button></div>`).join('');
+      <button class="cbtn small wl-up" data-i="${i}" title="nach oben">${Icons.svg('arrow_upward')}</button><button class="cbtn small wl-down" data-i="${i}" title="nach unten">${Icons.svg('arrow_downward')}</button><button class="cbtn small wl-out" data-i="${i}" title="aus der Welt nehmen">${Icons.svg('close')}</button></div>`).join('');
     const slots = insertId != null && cur < 0 ? `<p>„${name(insertId)}“ einsetzen als Bahn:</p><div class="wl-slots">${Array.from({ length: ids.length + 1 }, (_, k) => `<span class="btn small wl-slot" data-k="${k}">${k + 1}</span>`).join('')}</div>` : '';
-    const info = insertId != null && cur >= 0 ? `<p class="sub">„${name(insertId)}“ ist Bahn ${cur + 1} der Welt. Mit ▲ ▼ verschieben.</p>` : '';
+    const info = insertId != null && cur >= 0 ? `<p class="sub">„${name(insertId)}“ ist Bahn ${cur + 1} der Welt. Mit den Pfeilen verschieben.</p>` : '';
     deps.overlay(`<div class="panel wl">
-      <h2>🌍 Eigene Welt</h2>
+      <h2>${Icons.svg('language')} Eigene Welt</h2>
       <div class="sub">${ids.length ? `${ids.length} Bahn${ids.length > 1 ? 'en' : ''} in der Reihenfolge, in der sie gespielt werden` : 'Noch keine Bahn in der Welt'}</div>
       <div class="wl-list">${rows || ''}</div>
       ${slots}${info}
-      <p style="margin-top:12px"><span class="btn ghost small" id="wl-back">◀ Zurück zum Editor</span> ${ids.length ? '<span class="btn small" id="wl-play">▶ Welt spielen</span>' : ''}</p>
+      <p style="margin-top:12px"><span class="btn ghost small" id="wl-back">${Icons.svg('arrow_back')} Zurück zum Editor</span> ${ids.length ? `<span class="btn small" id="wl-play">${Icons.svg('play_arrow')} Welt spielen</span>` : ''}</p>
     </div>`);
     const rerender = () => showWorldDialog(insertId);
     ui().querySelectorAll('.wl-slot').forEach(b => b.addEventListener('click', () => { ids.splice(+b.dataset.k, 0, insertId); saveWorld(ids); showMessage('In die Eigene Welt eingesetzt', 1200); rerender(); }));
@@ -225,19 +225,19 @@ const Editor = (deps) => {
     if (ed.panel) return;
     const p = document.createElement('div'); p.id = 'editor-panel'; ed.panel = p; document.body.appendChild(p);
     p.innerHTML = `
-      <div class="ed-head"><b>🛠 Baumodus</b><span><button class="cbtn small" id="ed-view" title="Draufsicht / Schrägsicht">Schrägsicht</button><button class="cbtn small" id="ed-collapse" title="Panel einklappen, um frei zu bauen">▸</button></span></div>
+      <div class="ed-head"><b>${Icons.svg('construction')} Baumodus</b><span><button class="cbtn small" id="ed-view" title="Draufsicht / Schrägsicht">Schrägsicht</button><button class="cbtn small" id="ed-collapse" title="Panel einklappen, um frei zu bauen">${Icons.svg('chevron_right')}</button></span></div>
       <div class="ed-tabs"><button class="ed-tab sel" data-tab="build">Bauen</button><button class="ed-tab" data-tab="hole">Bahn</button><button class="ed-tab" data-tab="save">Speichern</button></div>
       <div class="ed-body">
         <div class="ed-page" data-page="build">
           <div class="ed-title">Boden malen</div>
           <div class="ed-grid ed-tiles">${TILES.map(([c, n]) => `<button class="cbtn small ed-tool" data-tool="${c}"><i style="background:${SWATCH[c]}"></i>${n}</button>`).join('')}</div>
           <div class="ed-title">Start und Ziel</div>
-          <div class="ed-grid"><button class="cbtn small ed-tool" data-tool="T">⛳ Abschlag</button><button class="cbtn small ed-tool" data-tool="H">🕳 Loch</button></div>
+          <div class="ed-grid"><button class="cbtn small ed-tool" data-tool="T">${Icons.svg('sports_golf')} Abschlag</button><button class="cbtn small ed-tool" data-tool="H">${Icons.svg('golf_course')} Loch</button></div>
           <div class="ed-title">Hindernisse</div>
           <select id="ed-obj">${OBJECTS.map(([k, n]) => `<option value="${k}">${n}</option>`).join('')}</select>
           <div class="ed-grid"><button class="cbtn small ed-tool" data-tool="obj">Setzen</button><button class="cbtn small ed-tool" data-tool="rotate">Drehen</button><button class="cbtn small ed-tool" data-tool="delete">Löschen</button></div>
           <div class="ed-title">Ansicht</div>
-          <div class="ed-grid"><button class="cbtn small ed-tool" data-tool="pan">✋ Verschieben</button></div>
+          <div class="ed-grid"><button class="cbtn small ed-tool" data-tool="pan">${Icons.svg('open_with')} Verschieben</button></div>
           <div class="ed-hint" id="ed-hint"></div>
         </div>
         <div class="ed-page" data-page="hole" hidden>
@@ -248,21 +248,21 @@ const Editor = (deps) => {
           <div class="ed-hint">Größe: Breite × Höhe in Kacheln. Beim Verkleinern wird rechts und unten abgeschnitten.</div>
         </div>
         <div class="ed-page" data-page="save" hidden>
-          <div class="ed-grid"><button class="cbtn small" id="ed-save">💾 Speichern</button><button class="cbtn small" id="ed-new">＋ Neue Bahn</button><button class="cbtn small" id="ed-world">🌍 Eigene Welt</button></div>
+          <div class="ed-grid"><button class="cbtn small" id="ed-save">${Icons.svg('save')} Speichern</button><button class="cbtn small" id="ed-new">${Icons.svg('add')} Neue Bahn</button><button class="cbtn small" id="ed-world">${Icons.svg('language')} Eigene Welt</button></div>
           <div class="ed-title">Gespeicherte Bahnen</div>
           <select id="ed-list"></select>
           <div class="ed-grid"><button class="cbtn small" id="ed-load">Laden</button><button class="cbtn small" id="ed-del">Löschen</button></div>
           <div class="ed-title">Bahn-Code (weitergeben)</div>
           <textarea id="ed-code" rows="3" spellcheck="false" placeholder="Code hier einfügen …"></textarea>
           <div class="ed-grid"><button class="cbtn small" id="ed-export">Exportieren</button><button class="cbtn small" id="ed-import">Importieren</button></div>
-          <div class="ed-grid" style="margin-top:10px"><button class="cbtn small" id="ed-back">◀ Zurück zum Menü</button></div>
+          <div class="ed-grid" style="margin-top:10px"><button class="cbtn small" id="ed-back">${Icons.svg('arrow_back')} Zurück zum Menü</button></div>
         </div>
       </div>
-      <div class="ed-foot"><button class="cbtn small ed-go" id="ed-test">▶ Testen</button><button class="cbtn small ed-done" id="ed-done">✔ Fertig</button></div>`;
+      <div class="ed-foot"><button class="cbtn small ed-go" id="ed-test">${Icons.svg('play_arrow')} Testen</button><button class="cbtn small ed-done" id="ed-done">${Icons.svg('check')} Fertig</button></div>`;
     p.querySelectorAll('.ed-tab').forEach(b => b.addEventListener('click', () => { p.querySelectorAll('.ed-tab').forEach(x => x.classList.toggle('sel', x === b)); p.querySelectorAll('.ed-page').forEach(x => { x.hidden = x.dataset.page !== b.dataset.tab; }); }));
     p.querySelectorAll('.ed-tool').forEach(b => b.addEventListener('click', () => { ed.tool = b.dataset.tool; ed.pending = null; syncPanel(); }));
     $('ed-obj').addEventListener('change', e => { ed.obj = e.target.value; ed.tool = 'obj'; ed.pending = null; syncPanel(); });
-    $('ed-collapse').addEventListener('click', () => { ed.collapsed = !ed.collapsed; p.classList.toggle('collapsed', ed.collapsed); $('ed-collapse').textContent = ed.collapsed ? '🛠 Werkzeuge' : '▸'; });
+    $('ed-collapse').addEventListener('click', () => { ed.collapsed = !ed.collapsed; p.classList.toggle('collapsed', ed.collapsed); $('ed-collapse').innerHTML = ed.collapsed ? Icons.svg('construction') + ' Werkzeuge' : Icons.svg('chevron_right'); });
     $('ed-view').addEventListener('click', () => setView(ed.view === 'top' ? 'iso' : 'top'));
     $('ed-name').addEventListener('input', e => { ed.def.name = e.target.value || 'Meine Bahn'; });
     $('ed-par').addEventListener('change', e => { ed.def.par = Math.max(1, Math.min(12, +e.target.value || 3)); });
@@ -299,7 +299,7 @@ const Editor = (deps) => {
     sel.innerHTML = list.length ? list.map(c => `<option value="${c.id}">${c.name} (Par ${c.par})${world.includes(c.id) ? ' · in Welt' : ''}</option>`).join('') : '<option value="">– noch keine –</option>';
     if (list.some(c => c.id === ed.def.id)) sel.value = String(ed.def.id);
     const k = world.indexOf(ed.def.id);
-    $('ed-done').textContent = k >= 0 ? `✔ Fertig · Bahn ${k + 1}` : '✔ Fertig';
+    $('ed-done').innerHTML = Icons.svg('check') + (k >= 0 ? ` Fertig · Bahn ${k + 1}` : ' Fertig');
   }
   function leave() { state.phase = 'title'; document.body.classList.remove('editing'); document.body.classList.add('title'); }
 
