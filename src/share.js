@@ -102,6 +102,17 @@ const Share = (() => {
       decor: dekor,
     };
     if (zahlOk(roh.maxStrokes)) bahn.maxStrokes = Math.max(1, Math.min(99, Math.round(roh.maxStrokes)));
+    // Höhenstufen: ein Ziffernraster genau über der Karte, dazu die Höhe je Stufe
+    if (roh.heights != null) {
+      const hh = roh.heights;
+      if (!Array.isArray(hh) || hh.length !== karte.length || !hh.every(z => typeof z === 'string')) return nein('Das Höhenraster passt nicht zur Karte.');
+      for (const zeile of hh) {
+        if (zeile.length > breite) return nein('Das Höhenraster ist breiter als die Karte.');
+        if (!/^[0-9. ]*$/.test(zeile)) return nein('Im Höhenraster stehen nur Ziffern.');
+      }
+      bahn.heights = hh.map(z => z.slice(0, W_MAX));
+      bahn.hStep = zahlOk(roh.hStep) ? Math.max(0.1, Math.min(2, roh.hStep)) : 0.5;
+    }
     if (JSON.stringify(bahn).length > BAHN_MAX) return nein('Die Bahn ist zu groß zum Teilen.');
     return bahn;
   }
