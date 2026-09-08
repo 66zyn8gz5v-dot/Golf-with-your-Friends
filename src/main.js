@@ -332,6 +332,28 @@
     $('back').addEventListener('click', showTitle);
   }
 
+  /* Jemand hat eine Bahn als Link geschickt */
+  function zeigeGeteilteBahn(bahn) {
+    state.phase = 'title'; document.body.classList.add('title');
+    overlay(`<div class="panel">
+      <div class="panel-head"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span><h2>${Icons.svg('language')} Geteilte Bahn</h2></div>
+      <div class="sub"><b>${Text.esc(bahn.name)}</b> · Par ${bahn.par} · ${bahn.map[0].length} × ${bahn.map.length} Kacheln</div>
+      <p><span class="btn" id="gb-play">${Icons.svg('play_arrow')} Jetzt spielen</span></p>
+      <p><span class="btn small ghost" id="gb-save">${Icons.svg('save')} Zu meinen Bahnen</span>
+        <span class="btn small ghost" id="gb-edit">${Icons.svg('construction')} Im Editor öffnen</span></p>
+      <div class="legend">Die Bahn kam über einen Link. Sie wurde geprüft, bevor sie hier steht.</div>
+    </div>`, 'title');
+    $('back').addEventListener('click', showTitle);
+    $('gb-play').addEventListener('click', () => {
+      Sfx.unlock(); state.mode = 'creative'; state.editorReturn = false;
+      setCustomWorld([bahn], bahn.name);
+      document.body.classList.remove('editing', 'testing');
+      startGame(1, 0);
+    });
+    $('gb-save').addEventListener('click', () => { Sfx.unlock(); editor.uebernimm(bahn); showMessage('Zu deinen Bahnen gelegt', 1800); showBuild(); });
+    $('gb-edit').addEventListener('click', () => { Sfx.unlock(); setControlMode('sling'); editor.open(Object.assign({}, bahn, { id: Date.now() })); });
+  }
+
   /* Bauen und eigene Welt */
   function showBuild() {
     state.phase = 'title'; document.body.classList.add('title'); document.body.classList.remove('creative', 'editing', 'testing');
@@ -344,11 +366,46 @@
         ${own.length ? `<span class="btn mode own" id="own-play"><span class="mode-label">${Icons.svg('language')} Eigene Welt (${own.length} Bahn${own.length > 1 ? 'en' : ''})</span></span>` : ''}
       </div>
       ${own.length ? '' : '<div class="legend">Noch keine eigene Bahn gebaut. Im Editor wird sie mit „Fertig“ in die Eigene Welt eingesetzt.</div>'}
+      <div id="freundesbahnen"></div>
       <p><span class="btn ghost small back2">${Icons.svg('arrow_back')} Zurück</span></p>
     </div>`, 'title');
+    zeigeFreundesbahnen();
+    Share.onChange(zeigeFreundesbahnen);
     $('build').addEventListener('click', () => { Sfx.unlock(); setControlMode('sling'); editor.open(null); });
     if (own.length) $('own-play').addEventListener('click', () => { Sfx.unlock(); setControlMode('sling'); playWorld(own); });
     ui.overlay.querySelectorAll('#back, .back2').forEach(b => b.addEventListener('click', showMap));
+  }
+
+  /* Bahnen, die andere geteilt haben: laden zum Bearbeiten oder gleich einmal probespielen */
+  function zeigeFreundesbahnen() {
+    const box = $('freundesbahnen');
+    if (!box) return;
+    const liste = Share.liste;
+    if (!liste.length) {
+      box.innerHTML = `<div class="legend">Noch keine Bahnen von Freunden da. Wer im Editor auf „Teilen“ tippt, erscheint hier –
+        das braucht eine Verbindung.</div>`;
+      return;
+    }
+    box.innerHTML = `<div class="sub" style="margin-top:14px"><b>Bahnen von Freunden</b> · ${liste.length}</div>
+      <div class="wl-list">${liste.map((b, i) => `<div class="wl-row">
+        <span class="wl-num">${holeIcon(b)}</span>
+        <span class="wl-name">${Text.esc(b.name)} <i>Par ${b.par} · von ${Text.esc(b.von)}</i></span>
+        <button class="cbtn small fb-play" data-i="${i}" title="einmal spielen">${Icons.svg('play_arrow')}</button>
+        <button class="cbtn small fb-load" data-i="${i}" title="in den Editor laden">${Icons.svg('construction')}</button>
+      </div>`).join('')}</div>`;
+    box.querySelectorAll('.fb-play').forEach(b => b.addEventListener('click', () => {
+      const bahn = Share.liste[+b.dataset.i]; if (!bahn) return;
+      Sfx.unlock(); state.mode = 'creative'; state.editorReturn = false;
+      setCustomWorld([bahn], 'Bahn von ' + bahn.von);
+      document.body.classList.remove('editing', 'testing');
+      startGame(1, 0);
+    }));
+    box.querySelectorAll('.fb-load').forEach(b => b.addEventListener('click', () => {
+      const bahn = Share.liste[+b.dataset.i]; if (!bahn) return;
+      Sfx.unlock(); setControlMode('sling');
+      editor.open(Object.assign({}, bahn, { id: Date.now(), name: bahn.name }));
+      showMessage('Bahn geladen – mit „Speichern“ behältst du sie', 2400);
+    }));
   }
 
   const sceneFor = id => ({ normal: SCENE_NORMAL, sea: SCENE_SEA, pro: SCENE_PRO, jungle: SCENE_JUNGLE, storm: SCENE_STORM, shadow: SCENE_SHADOW })[id] || SCENE_NORMAL;
@@ -1392,6 +1449,15 @@
 
   Best.onChange(recordFromFriend);
   Best.start();                         // Rekorde im Hintergrund holen
+  Share.start();                        // geteilte Bahnen der anderen mitbekommen
+  // Die eigenen geteilten Bahnen erneut anbieten – der Vermittler kann sie zwischendurch verloren haben
+  setTimeout(() => { if (Share.eigeneIds.length) Share.sende(editor.loadCustoms(), Best.name); }, 1800);
+  // Steckt eine Bahn im Anhang der Adresse (geteilter Link)? Dann anbieten.
+  Share.ausAdresse().then(bahn => {
+    Share.adresseAufraeumen();
+    if (bahn) zeigeGeteilteBahn(bahn);
+    else if (location.search.includes('bahn=')) showMessage(Share.grund || 'Der Link ließ sich nicht lesen', 2600);
+  }).catch(() => { /* kaputter Link, dann eben nicht */ });
   const editor = Editor({ state, R, $, showMessage, startTest, showWorldSelect, hideOverlay, overlay, playWorld });
   Icons.mount();                        // Platzhalter im festen HTML durch die Sinnbilder ersetzen
   // Vorschau deutlich kennzeichnen, damit sie nie mit dem Spiel der Freunde verwechselt wird

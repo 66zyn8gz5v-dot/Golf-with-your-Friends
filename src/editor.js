@@ -256,6 +256,9 @@ const Editor = (deps) => {
           <div class="ed-title">Bahn-Code (weitergeben)</div>
           <textarea id="ed-code" rows="3" spellcheck="false" placeholder="Code hier einfügen …"></textarea>
           <div class="ed-grid"><button class="cbtn small" id="ed-export">Exportieren</button><button class="cbtn small" id="ed-import">Importieren</button></div>
+          <div class="ed-title">Weitergeben</div>
+          <div class="ed-grid"><button class="cbtn small" id="ed-share">${Icons.svg('public')} Teilen</button><button class="cbtn small" id="ed-link">${Icons.svg('language')} Link kopieren</button></div>
+          <div class="ed-hint" id="ed-share-hint"></div>
           <div class="ed-grid" style="margin-top:10px"><button class="cbtn small" id="ed-back">${Icons.svg('arrow_back')} Zurück zum Menü</button></div>
         </div>
       </div>
@@ -279,12 +282,33 @@ const Editor = (deps) => {
     $('ed-del').addEventListener('click', () => { const id = +$('ed-list').value; saveCustoms(loadCustoms().filter(x => x.id !== id)); saveWorld(loadWorld().filter(x => x !== id)); syncPanel(); showMessage('Bahn gelöscht', 1000); });
     $('ed-export').addEventListener('click', () => { $('ed-code').value = JSON.stringify(cleanDef(ed.def)); $('ed-code').select(); showMessage('Code im Feld – markieren und kopieren', 1600); });
     $('ed-import').addEventListener('click', () => {
+      let roh = null;
+      try { roh = JSON.parse($('ed-code').value); } catch (e) { showMessage('Code nicht lesbar', 1400); return; }
+      // Fremder Code geht durch dieselbe Prüfung wie Werkstatt und Link
+      const bahn = Share.pruefe(roh);
+      if (!bahn) { showMessage(Share.grund || 'Code nicht lesbar', 1800); return; }
+      open(bahn); showMessage('Bahn übernommen', 1200);
+    });
+    /* Teilen: die gespeicherte Bahn den anderen anbieten oder wieder zurückziehen */
+    $('ed-share').addEventListener('click', () => {
+      const gespeichert = loadCustoms().some(c => c.id === ed.def.id);
+      if (!gespeichert) { showMessage('Erst speichern, dann teilen', 1800); return; }
+      const raus = Share.istGeteilt(ed.def.id)
+        ? Share.ziehZurueck(ed.def.id, loadCustoms(), Best.name)
+        : Share.teile(ed.def.id, loadCustoms(), Best.name);
+      if (raus.voll) { showMessage(`Mehr als ${Share.EIGENE_MAX} Bahnen gehen nicht – erst eine zurückziehen`, 2400); return; }
+      showMessage(Share.istGeteilt(ed.def.id) ? 'Geteilt – deine Freunde sehen die Bahn jetzt' : 'Nicht mehr geteilt', 2000);
+      syncPanel();
+    });
+    /* Link: die aktuelle Bahn als Adresse in die Zwischenablage */
+    $('ed-link').addEventListener('click', async () => {
       try {
-        const d = JSON.parse($('ed-code').value);
-        if (!Array.isArray(d.map) || !d.map.every(r => typeof r === 'string')) throw new Error('map');
-        d.id = Date.now(); d.obstacles = Array.isArray(d.obstacles) ? d.obstacles : []; d.theme = THEMES[d.theme] ? d.theme : 'meadow'; d.par = +d.par || 3; d.name = Text.label(d.name) || 'Importierte Bahn';   // fremder Code, darf kein Markup mitbringen
-        open(d); showMessage('Bahn importiert', 1200);
-      } catch (e) { showMessage('Code nicht lesbar', 1400); }
+        const link = await Share.link(ed.def);
+        let kopiert = false;
+        try { await navigator.clipboard.writeText(link); kopiert = true; } catch (e) { /* ohne Erlaubnis geht es nicht */ }
+        if (!kopiert) { $('ed-code').value = link; showMessage('Link steht im Code-Feld – von dort kopieren', 2600); }
+        else showMessage('Link kopiert – einfach verschicken', 2000);
+      } catch (e) { showMessage('Der Link ließ sich nicht bauen', 1800); }
     });
     for (const id of ['ed-name', 'ed-par', 'ed-w', 'ed-h', 'ed-code']) $(id).addEventListener('keydown', e => e.stopPropagation());
   }
@@ -303,6 +327,15 @@ const Editor = (deps) => {
     if (list.some(c => c.id === ed.def.id)) sel.value = String(ed.def.id);
     const k = world.indexOf(ed.def.id);
     $('ed-done').innerHTML = Icons.svg('check') + (k >= 0 ? ` Fertig · Bahn ${k + 1}` : ' Fertig');
+    const geteilt = Share.istGeteilt(ed.def.id), gespeichert = list.some(c => c.id === ed.def.id);
+    const sb = $('ed-share');
+    if (sb) {
+      sb.innerHTML = Icons.svg('public') + (geteilt ? ' Nicht mehr teilen' : ' Teilen');
+      sb.classList.toggle('sel', geteilt);
+      $('ed-share-hint').textContent = !gespeichert ? 'Zum Teilen die Bahn erst speichern.'
+        : geteilt ? 'Deine Freunde sehen diese Bahn in ihrer Liste.'
+        : 'Teilen legt die Bahn für alle ab, die das Spiel haben.';
+    }
   }
   function leave() { state.phase = 'title'; document.body.classList.remove('editing'); document.body.classList.add('title'); }
 
@@ -315,6 +348,14 @@ const Editor = (deps) => {
     startTest(cleanDef(ed.def));
   }
   function returnFromTest() { open(ed.def); }
+  /* Eine fremde Bahn (aus einem Link oder von einem Freund) unter die eigenen legen */
+  function uebernimm(def) {
+    const list = loadCustoms();
+    const kopie = Object.assign({}, def, { id: Date.now() + Math.floor(Math.random() * 1000) });
+    delete kopie.von; delete kopie.quelle;
+    list.push(kopie); saveCustoms(list);
+    return kopie;
+  }
 
-  return { open, loadCustoms, worldCourses, cameraTarget, drawOverlay, pointer, returnFromTest, get active() { return state.phase === 'edit'; } };
+  return { open, uebernimm, loadCustoms, worldCourses, cameraTarget, drawOverlay, pointer, returnFromTest, get active() { return state.phase === 'edit'; } };
 };

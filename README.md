@@ -285,6 +285,33 @@ Jede Welt hat einen eigenen, endlos weiterlaufenden Klangteppich – vollständi
 
 Farbwelten stehen in `src/themes.js`, jede mit einer dezenten Atmosphäre (`atmo`: `fog`, `mist`, `fireflies`, `spores`, `embers`, `sparks`, `ash`, `bubbles`, `sand`, `spray`, `snow`, `pollen`, `none`), die eine Bahn per `atmo` überschreiben kann. Mit `node tools/validate.mjs` lässt sich prüfen, ob jede Bahn lösbar ist; `node tools/audit/audit.mjs <welt|all> [Bahn]` spielt jede Bahn headless durch (Profi-Suche, simulierte Normalspieler mit Streuung, Prüfung von Engstellen, Zeitfenstern und Kamerazonen) und schreibt Ergebnisse nach `out/`.
 
+## Bahnen weitergeben
+
+Selbstgebaute Bahnen lassen sich auf zwei Wegen weitergeben – beide im Editor unter **Speichern**:
+
+**Teilen.** Ein Tipp auf **🌐 Teilen**, und die Bahn erscheint bei allen, die das Spiel haben, unter
+**Bauen & Eigene Welt** in der Liste **„Bahnen von Freunden"**. Dort steht neben jedem Eintrag, von wem
+er stammt; ein Knopf spielt die Bahn einmal, der andere lädt sie in den Editor. Kein Code, kein
+Einrichten – da nur der Freundeskreis das Spiel hat, bleibt es unter euch. **Nicht mehr teilen** nimmt
+die Bahn wieder heraus, und sie verschwindet bei allen.
+
+Höchstens 12 Bahnen je Gerät und 60 in der Liste, damit sie übersichtlich bleibt. Geteilte Bahnen liegen
+als aufbewahrte Nachrichten beim Vermittler, genau wie die Rekorde – startet er neu, bietet jedes Gerät
+seine Bahnen von selbst wieder an.
+
+**Link kopieren.** Macht aus der Bahn eine Adresse zum Verschicken. Wer sie antippt, bekommt die Bahn
+angeboten: gleich spielen, zu den eigenen Bahnen legen oder im Editor öffnen. Das braucht keine
+Verbindung zum Vermittler. Die Bahn steckt gepackt im Link (`CompressionStream`, wo der Browser ihn hat),
+was ihn etwa um zwei Drittel kürzt – eine große Bahn wie die Haifischbucht kommt so auf rund 1400
+Zeichen statt 4200.
+
+**Geprüft, bevor sie ins Spiel kommt.** Egal ob Werkstatt, Link oder eingefügter Textcode: Jede fremde
+Bahn geht durch dieselbe Prüfung in `src/share.js` – Kartenzeichen, Größe (6–48 × 4–36 Kacheln), genau
+ein Abschlag und genau ein Loch, bekannte Hindernistypen, Zahlen in sinnvollen Grenzen, keine tief
+verschachtelten Daten und kein Markup in Namen oder Textfeldern. Was nicht passt, wird mit Grund
+abgelehnt statt geladen. Bahnen mit Innenraum lassen sich nicht teilen, weil dafür zwei Karten nötig
+wären – der Editor baut ohnehin keine.
+
 ## Vorschau: erst prüfen, dann ins Spiel
 
 Es gibt zwei Stände unter derselben Adresse:
@@ -387,6 +414,7 @@ src/physics.js    Ballphysik und Kollision
 src/render.js     isometrische Darstellung
 src/render_legend.js Optik der Legende-Welten (Hintergründe, neue Hindernisse und Stile)
 src/text.js       Eine Stelle für alle Eingaben: Namen und Bahnnamen filtern, Anzeige entschärfen
+src/share.js      Bahnen weitergeben: prüfen, über den Vermittler teilen, als Link verpacken
 src/version.js    Fassung und Ausgabe (Spiel oder Vorschau): Zahl, Speicher-Vorsatz und Themen-Marke – von Seite und Service Worker gelesen
 src/icons.js      Bedien-Sinnbilder: Material Symbols als eingebettete SVG-Pfade (Zurück, Kamera, Musik, Editor …)
 src/hats.js       Hüte für die Bälle: Zeichnungen und Vorschau fürs Menü

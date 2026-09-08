@@ -10,7 +10,7 @@ const meiner = k => k.startsWith(MARKE) || (!VORSCHAU && k.startsWith('fantasygo
 const APP_FILES = [
   './', './index.html', './style.css', './manifest.webmanifest',
   './src/version.js', './src/text.js', './src/themes.js', './src/courses.js', './src/courses_sea.js', './src/courses_jungle.js', './src/courses_storm.js', './src/courses_shadow.js', './src/courses_pro.js', './src/level.js', './src/obstacles.js', './src/obstacles_legend.js',
-  './src/physics.js', './src/render.js', './src/render_legend.js', './src/icons.js', './src/hats.js', './src/net.js', './src/best.js', './src/sfx.js', './src/music.js', './src/worldmap.js', './src/title.js', './src/editor.js', './src/main.js',
+  './src/physics.js', './src/render.js', './src/render_legend.js', './src/icons.js', './src/hats.js', './src/net.js', './src/best.js', './src/share.js', './src/sfx.js', './src/music.js', './src/worldmap.js', './src/title.js', './src/editor.js', './src/main.js',
   './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png',
 ];
 
