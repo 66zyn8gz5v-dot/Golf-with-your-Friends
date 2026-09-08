@@ -3,7 +3,7 @@
    Wird von main.js mit den nötigen Spielfunktionen verdrahtet. */
 const Editor = (deps) => {
   const { state, R, $, showMessage, startTest, showWorldSelect } = deps;
-  const KEY = 'fantasygolf.custom';
+  const KEY = speicherSchluessel('custom');
   const TILES = [['#', 'Rasen'], ['s', 'Sand'], ['i', 'Eis'], ['w', 'Wasser'], ['l', 'Lava'], ['x', 'Block'], ['o', 'Klippe'], ['.', 'Leer']];
   const OBJECTS = [
     ['bumper', 'Pilz (Bumper)'], ['rotor', 'Windrad'], ['gate', 'Fallgatter'], ['mover', 'Lore'], ['wind', 'Windfeld'], ['ramp', 'Sprungrampe'],
@@ -190,7 +190,7 @@ const Editor = (deps) => {
   }
 
   /* ---------- Eigene Welt (Reihenfolge gespeicherter Bahnen) ---------- */
-  const WKEY = 'fantasygolf.world';
+  const WKEY = speicherSchluessel('world');
   function loadWorld() { try { const v = JSON.parse(localStorage.getItem(WKEY) || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
   function saveWorld(ids) { try { localStorage.setItem(WKEY, JSON.stringify(ids)); } catch (e) { /* kein Speicher */ } }
   function worldCourses() { const list = loadCustoms(); return loadWorld().map(id => list.find(c => c.id === id)).filter(Boolean); }

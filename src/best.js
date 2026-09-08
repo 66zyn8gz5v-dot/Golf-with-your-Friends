@@ -32,8 +32,9 @@
    Kleiner ist überall besser; bei Gleichstand gewinnt der ältere Eintrag, damit ein Rekord nicht
    ständig den Besitzer wechselt. */
 const Best = (() => {
-  const TOPIC = world => `fantasygolf/v1/best/all/${world}`;
-  const FILTER = 'fantasygolf/v1/best/all/+';
+  // Eigener Zweig für die Vorschau, damit Testläufe die Rekorde der Freunde nicht anfassen
+  const TOPIC = world => `fantasygolf/v1/${APP_MARKE}/best/all/${world}`;
+  const FILTER = `fantasygolf/v1/${APP_MARKE}/best/all/+`;
   const KINDS = ['strokes', 'time', 'combo'];
   /* Namen und Bahnnamen kommen von fremden Geräten und gehen in die Anzeige.
      Gefiltert wird an einer Stelle für das ganze Spiel: src/text.js */
@@ -43,8 +44,10 @@ const Best = (() => {
   const load = (key, fallback) => { try { const v = JSON.parse(localStorage.getItem(key)); return v == null ? fallback : v; } catch (e) { return fallback; } };
   const save = (key, v) => { try { localStorage.setItem(key, JSON.stringify(v)); } catch (e) { /* kein Speicher */ } };
 
-  let name = cleanName(load('fantasygolf.name', ''));
-  let data = migrate(load('fantasygolf.best', {}) || {});   // Welt-Kennung -> Rekorde
+  // Spiel und Vorschau liegen auf derselben Adresse: eigene Schlüssel halten die Stände getrennt
+  const K_NAME = speicherSchluessel('name'), K_BEST = speicherSchluessel('best');
+  let name = cleanName(load(K_NAME, ''));
+  let data = migrate(load(K_BEST, {}) || {});   // Welt-Kennung -> Rekorde
   let onChange = null, watching = '';
 
   /* Bis zur Zeitwertung gab es nur Schläge: { holes, round } ohne Kategorie. Solche Stände –
@@ -99,7 +102,7 @@ const Best = (() => {
         else if (better(w[kind].round, inc[kind].round)) localBetter = true;
       }
     }
-    if (news.length) save('fantasygolf.best', data);
+    if (news.length) save(K_BEST, data);
     return { news, localBetter };
   }
   function publish(id) {
@@ -150,7 +153,7 @@ const Best = (() => {
       return String(rec.s);
     },
 
-    setName(v) { name = cleanName(v); save('fantasygolf.name', name); },
+    setName(v) { name = cleanName(v); save(K_NAME, name); },
     /* Verbindung aufbauen und die Rekorde abonnieren */
     start(handlers) {
       Net.connect(handlers || {});
@@ -179,7 +182,7 @@ const Best = (() => {
         const hit = put(id, kind, holeName, rec);
         if (hit) treffer.push(Object.assign({ kind }, hit));
       }
-      if (treffer.length) { save('fantasygolf.best', data); publish(id); }
+      if (treffer.length) { save(K_BEST, data); publish(id); }
       return treffer;
     },
     /* Gesamtergebnis einer Runde eintragen */
@@ -195,7 +198,7 @@ const Best = (() => {
         const hit = put(id, kind, null, rec);
         if (hit) treffer.push(Object.assign({ kind }, hit));
       }
-      if (treffer.length) { save('fantasygolf.best', data); publish(id); }
+      if (treffer.length) { save(K_BEST, data); publish(id); }
       return treffer;
     },
   };

@@ -1,5 +1,11 @@
-# Veröffentlicht das Spiel bei jedem Push automatisch auf GitHub Pages.
-# Voraussetzung: Repository-Einstellungen → Pages → Source: "GitHub Actions".
+# Veröffentlicht zwei Stände nebeneinander auf GitHub Pages:
+#
+#   …/Golf-with-your-Friends/           das Spiel  (Zweig main)
+#   …/Golf-with-your-Friends/vorschau/  die Vorschau (Arbeitszweig)
+#
+# Beide werden bei jedem Push an einen der beiden Zweige neu gebaut – so passt das Ergebnis
+# immer zusammen, egal welcher Push den Lauf ausgelöst hat. Neues geht zuerst in die Vorschau;
+# ins Spiel kommt es erst, wenn der Arbeitszweig nach main übernommen wird.
 name: Fantasy Golf auf GitHub Pages
 
 on:
@@ -16,6 +22,9 @@ concurrency:
   group: pages
   cancel-in-progress: true
 
+env:
+  VORSCHAU_ZWEIG: claude/fantasy-golf-game-8-holes-t25aag
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -23,12 +32,33 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Das Spiel holen (main)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: spiel
+
+      - name: Die Vorschau holen (Arbeitszweig)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.VORSCHAU_ZWEIG }}
+          path: vorschau
+
       - uses: actions/configure-pages@v5
-      - name: Spieldateien einsammeln
+
+      - name: Beide Stände einsammeln
         run: |
+          set -e
+          dateien() {   # $1 = Quelle, $2 = Ziel
+            mkdir -p "$2"
+            cp -r "$1"/index.html "$1"/style.css "$1"/manifest.webmanifest "$1"/sw.js "$1"/src "$1"/icons "$2"/
+          }
           mkdir -p _site
-          cp -r index.html style.css manifest.webmanifest sw.js src icons _site/
+          dateien spiel _site
+          dateien vorschau _site/vorschau
+          echo "Spiel:    $(grep -o 'APP_VERSION = [0-9]*' _site/src/version.js)"
+          echo "Vorschau: $(grep -o 'APP_VERSION = [0-9]*' _site/vorschau/src/version.js)"
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site

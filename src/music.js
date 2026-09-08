@@ -38,7 +38,7 @@ const Music = (() => {
 
   let ctx = null, master = null, echo = null, on = true, cur = PALETTES.title;
   let running = false, timer = null, swapT = null, barIdx = 0, nextT = 0;
-  try { on = localStorage.getItem('fantasygolf.music') !== 'off'; } catch (e) { /* kein Speicher */ }
+  try { on = localStorage.getItem(speicherSchluessel('music')) !== 'off'; } catch (e) { /* kein Speicher */ }
 
   function ensure() {
     if (ctx) return ctx;
@@ -142,7 +142,7 @@ const Music = (() => {
   }
   function setOn(v) {
     on = !!v;
-    try { localStorage.setItem('fantasygolf.music', on ? 'on' : 'off'); } catch (e) { /* kein Speicher */ }
+    try { localStorage.setItem(speicherSchluessel('music'), on ? 'on' : 'off'); } catch (e) { /* kein Speicher */ }
     if (on) start(); else stop(0.4);
   }
   // Im Hintergrund (anderer Tab) schweigt die Musik

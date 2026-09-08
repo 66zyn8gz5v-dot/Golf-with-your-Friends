@@ -15,10 +15,10 @@
 
    Die Adresse des Vermittlers steht in BROKER und lässt sich im Browser überschreiben:
    localStorage.setItem('fantasygolf.broker', 'wss://…') – so kann man einen anderen Dienst
-   einsetzen, ohne am Spiel etwas zu ändern. */
+   einsetzen, ohne am Spiel etwas zu ändern (in der Vorschau: fantasygolf.vorschau.broker). */
 const Net = (() => {
   const BROKER = 'wss://broker.emqx.io:8084/mqtt';
-  const ROOM = code => `fantasygolf/v1/room/${code}`;
+  const ROOM = code => `fantasygolf/v1/${APP_MARKE}/room/${code}`;   // Vorschau spielt in eigenen Räumen
   const KEEPALIVE = 45;                 // Sekunden zwischen zwei Lebenszeichen
   // Nur Ziffern: leicht durchzusagen und auf dem Handy mit der Zifferntastatur einzutippen
   const ALPHABET = '0123456789';
@@ -135,7 +135,7 @@ const Net = (() => {
     if (ws) { try { if (ws.readyState === 1) ws.send(BYE); ws.close(); } catch (e) { /* schon zu */ } }
     ws = null; buf = new Uint8Array(0);
   }
-  function brokerUrl() { try { return localStorage.getItem('fantasygolf.broker') || BROKER; } catch (e) { return BROKER; } }
+  function brokerUrl() { try { return localStorage.getItem(speicherSchluessel('broker')) || BROKER; } catch (e) { return BROKER; } }
 
   return {
     /* Neuen Code würfeln – vier Ziffern, gut durchzusagen */

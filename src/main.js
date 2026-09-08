@@ -11,14 +11,14 @@
   const DEFAULT_HATS = ['crown', 'pirate', 'wizard', 'party'];
   const playerHats = DEFAULT_HATS.slice();
   try {
-    const saved = JSON.parse(localStorage.getItem('fantasygolf.hats') || 'null');
+    const saved = JSON.parse(localStorage.getItem(speicherSchluessel('hats')) || 'null');
     if (Array.isArray(saved)) saved.forEach((h, i) => { if (i < 4 && typeof h === 'string' && Hats.has(h)) playerHats[i] = h; });
   } catch (e) { /* kein Speicher, dann bleiben die Vorgaben */ }
   function setHat(i, id) {
     playerHats[i] = id;
     if (state.players[i]) state.players[i].hat = id;
     if (state.ball && state.curPlayer === i) state.ball.hat = id;
-    try { localStorage.setItem('fantasygolf.hats', JSON.stringify(playerHats)); } catch (e) { /* kein Speicher */ }
+    try { localStorage.setItem(speicherSchluessel('hats'), JSON.stringify(playerHats)); } catch (e) { /* kein Speicher */ }
   }
 
   const canvas = document.getElementById('game');
@@ -37,10 +37,10 @@
     mode: 'normal',       // 'normal' = Wettkampf, 'creative' = Kreativ (Bahnen frei wählen und überspringen, kein Schlaglimit)
     world: WORLDS[0], courses: WORLDS[0].courses,
   };
-  try { const m = localStorage.getItem('fantasygolf.control'); if (m === 'sling' || m === 'push') state.controlMode = m; } catch (e) { /* kein Speicher verfügbar */ }
+  try { const m = localStorage.getItem(speicherSchluessel('control')); if (m === 'sling' || m === 'push') state.controlMode = m; } catch (e) { /* kein Speicher verfügbar */ }
   function setControlMode(m) {
     state.controlMode = m;
-    try { localStorage.setItem('fantasygolf.control', m); } catch (e) { /* ignorieren */ }
+    try { localStorage.setItem(speicherSchluessel('control'), m); } catch (e) { /* ignorieren */ }
     syncHint();
   }
   /* Hinweiszeile unten links: im Netzspiel steht dort, wer gerade dran ist */
@@ -300,7 +300,7 @@
       <div class="atlas-extra"><span class="btn small ghost" id="to-online">${Icons.svg('public')} Online spielen</span>
         <span class="btn small ghost" id="to-best">${Icons.svg('emoji_events')} Bestenliste</span></div>
       <div class="legend">Alle Welten sind von Anfang an offen. Die Stufe an jedem Ort sagt nur, was dich erwartet.
-        <span class="version">Fassung ${typeof APP_VERSION !== 'undefined' ? APP_VERSION : '?'}</span></div>
+        <span class="version">${typeof VORSCHAU !== 'undefined' && VORSCHAU ? 'Vorschau · ' : ''}Fassung ${typeof APP_VERSION !== 'undefined' ? APP_VERSION : '?'}</span></div>
     </div>`, 'title');
     $('to-online').addEventListener('click', () => { Sfx.unlock(); Music.start(); showOnline(); });
     $('to-best').addEventListener('click', () => { Sfx.unlock(); Music.start(); showBestList(); });
@@ -433,7 +433,7 @@
 
   const BEST_ICON = { strokes: '🏆', time: '⏱', combo: '⚡' };
   function speicherGeht() {
-    try { localStorage.setItem('fantasygolf.probe', '1'); localStorage.removeItem('fantasygolf.probe'); return true; } catch (e) { return false; }
+    try { localStorage.setItem(speicherSchluessel('probe'), '1'); localStorage.removeItem(speicherSchluessel('probe')); return true; } catch (e) { return false; }
   }
   const BEST_HELP = {
     strokes: 'die Schläge einer Bahn, wie beim Golf üblich.',
@@ -1394,6 +1394,12 @@
   Best.start();                         // Rekorde im Hintergrund holen
   const editor = Editor({ state, R, $, showMessage, startTest, showWorldSelect, hideOverlay, overlay, playWorld });
   Icons.mount();                        // Platzhalter im festen HTML durch die Sinnbilder ersetzen
+  // Vorschau deutlich kennzeichnen, damit sie nie mit dem Spiel der Freunde verwechselt wird
+  if (typeof VORSCHAU !== 'undefined' && VORSCHAU) {
+    document.body.classList.add('vorschau');
+    const band = $('vorschau-band'); if (band) band.hidden = false;
+    document.title = 'VORSCHAU · ' + document.title;
+  }
   R.resize();
   setControlMode(state.controlMode);
   syncMusicBtn();
