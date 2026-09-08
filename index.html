@@ -8,6 +8,35 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Fantasy Golf">
   <meta name="theme-color" content="#1b2a4a">
+  <!-- Sicherheitsregeln für den Browser: was diese Seite laden und wohin sie sprechen darf.
+       Alles ist verboten, außer dem, was hier ausdrücklich steht (default-src 'none').
+
+       script-src 'self'       Programmcode nur aus diesem Verzeichnis – keine fremden Skripte,
+                               keine Inline-Skripte. Deshalb steht aller Code in src/*.js.
+       style-src 'unsafe-inline' ist nötig, weil Spielerfarben und Positionen als style-Attribut
+                               am Element hängen (z. B. die Farbpunkte der Spieler). Inline-Stile
+                               können keinen Code ausführen; das Risiko ist gering.
+       connect-src             nur der MQTT-Vermittler für Netzspiel und Bestenliste – und
+                               localhost fürs Testen. Wer einen anderen Vermittler einträgt
+                               (localStorage fantasygolf.broker), muss diese Zeile mit anpassen.
+       object-src 'none', base-uri 'none', form-action 'none': verbietet eingebettete Objekte,
+                               ein umgebogenes <base> und das Absenden von Formularen.
+
+       Nicht möglich: frame-ancestors (wer die Seite in einen Rahmen stellen darf) wirkt nur als
+       HTTP-Kopfzeile, nicht im Meta-Tag – GitHub Pages lässt keine eigenen Kopfzeilen zu. Das
+       Spiel kann also von fremden Seiten eingebettet werden. Da es keine Anmeldung und keine
+       Sitzung gibt, bringt das einem Angreifer nichts; nötig wäre dafür ein eigener Server. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none';
+    script-src 'self';
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    font-src https://fonts.gstatic.com;
+    img-src 'self';
+    connect-src 'self' wss://broker.emqx.io:8084 ws://localhost:9001;
+    manifest-src 'self';
+    worker-src 'self';
+    base-uri 'none';
+    object-src 'none';
+    form-action 'none'">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -53,6 +82,7 @@
   <div id="overlay" class="screen"></div>
 
   <script src="src/version.js"></script>
+  <script src="src/text.js"></script>
   <script src="src/themes.js"></script>
   <script src="src/courses.js"></script>
   <script src="src/courses_sea.js"></script>

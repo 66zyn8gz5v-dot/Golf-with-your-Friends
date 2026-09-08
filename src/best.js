@@ -18,10 +18,16 @@
 
    Aufbau je Welt: { strokes: KAT, time: KAT, combo: KAT }
    mit KAT = { holes: { Bahnname: EINTRAG }, round: EINTRAG }
-   und EINTRAG = { s, n, t, st?, ms? }
+   und EINTRAG = { s, n, t, q, st?, ms? }
    s  = der gewertete Wert (Schläge, Millisekunden oder Kombi-Punkte)
    n  = Name, t = Zeitpunkt des Eintrags
+   q  = woher er stammt: 'net' aus einer Runde gegeneinander, sonst allein am eigenen Gerät
    st, ms = Schläge und Millisekunden, aus denen ein Kombi-Wert entstanden ist (nur zur Anzeige)
+
+   Ehrlich gesagt: Kein Eintrag ist überprüfbar. Es gibt keinen Server, der mitrechnet – jedes
+   Gerät meldet sein Ergebnis selbst, und wer den Code des Spiels ändert, kann melden, was er
+   will. Die Liste ist eine Anschreibetafel unter Freunden, kein Schiedsrichter. Deshalb steht
+   an jedem Eintrag, woher er kommt, und in der Liste steht dieser Satz auch für jeden lesbar.
 
    Kleiner ist überall besser; bei Gleichstand gewinnt der ältere Eintrag, damit ein Rekord nicht
    ständig den Besitzer wechselt. */
@@ -29,9 +35,10 @@ const Best = (() => {
   const TOPIC = world => `fantasygolf/v1/best/all/${world}`;
   const FILTER = 'fantasygolf/v1/best/all/+';
   const KINDS = ['strokes', 'time', 'combo'];
-  /* Namen kommen von fremden Geräten. Sie landen in der Anzeige, darum hier kürzen und alles
-     entfernen, was in HTML eine Bedeutung hätte – ein Name ist ein Name, kein Markup. */
-  function cleanName(v) { return String(v == null ? '' : v).replace(/[<>&"']/g, '').slice(0, 14).trim(); }
+  /* Namen und Bahnnamen kommen von fremden Geräten und gehen in die Anzeige.
+     Gefiltert wird an einer Stelle für das ganze Spiel: src/text.js */
+  const cleanName = v => Text.name(v);
+  const cleanHole = v => Text.label(v);
 
   const load = (key, fallback) => { try { const v = JSON.parse(localStorage.getItem(key)); return v == null ? fallback : v; } catch (e) { return fallback; } };
   const save = (key, v) => { try { localStorage.setItem(key, JSON.stringify(v)); } catch (e) { /* kein Speicher */ } };
@@ -45,13 +52,14 @@ const Best = (() => {
   function cleanRec(r) {
     if (!r || !r.s) return null;
     const out = { s: +r.s, n: cleanName(r.n), t: +r.t || 0 };
+    if (r.q === 'net') out.q = 'net';
     if (r.st != null) out.st = +r.st;
     if (r.ms != null) out.ms = +r.ms;
     return out;
   }
   function cleanHoles(h) {
     const out = {};
-    for (const [k, v] of Object.entries(h || {})) { const r = cleanRec(v); if (r) out[String(k).slice(0, 40)] = r; }
+    for (const [k, v] of Object.entries(h || {})) { const r = cleanRec(v); const name = cleanHole(k); if (r && name) out[name] = r; }
     return out;
   }
   function shape(w) {
@@ -159,13 +167,13 @@ const Best = (() => {
 
     /* Ergebnis einer Bahn eintragen: Schläge und gebrauchte Zeit.
        Gibt zurück, welche Wertungen gefallen sind: [{ kind, old, rec }] */
-    hole(id, holeName, strokes, ms) {
+    hole(id, holeName, strokes, ms, quelle) {
       if (!name || !strokes) return [];
-      const t = Date.now(), treffer = [];
-      const kandidaten = [['strokes', { s: strokes, n: name, t }]];
+      const t = Date.now(), treffer = [], q = quelle === 'net' ? 'net' : undefined;
+      const kandidaten = [['strokes', { s: strokes, n: name, t, q }]];
       if (ms > 0) {
-        kandidaten.push(['time', { s: ms, n: name, t }]);
-        kandidaten.push(['combo', { s: comboValue(strokes, ms), n: name, t, st: strokes, ms }]);
+        kandidaten.push(['time', { s: ms, n: name, t, q }]);
+        kandidaten.push(['combo', { s: comboValue(strokes, ms), n: name, t, q, st: strokes, ms }]);
       }
       for (const [kind, rec] of kandidaten) {
         const hit = put(id, kind, holeName, rec);
@@ -175,13 +183,13 @@ const Best = (() => {
       return treffer;
     },
     /* Gesamtergebnis einer Runde eintragen */
-    round(id, total, ms) {
+    round(id, total, ms, quelle) {
       if (!name || !total) return [];
-      const t = Date.now(), treffer = [];
-      const kandidaten = [['strokes', { s: total, n: name, t }]];
+      const t = Date.now(), treffer = [], q = quelle === 'net' ? 'net' : undefined;
+      const kandidaten = [['strokes', { s: total, n: name, t, q }]];
       if (ms > 0) {
-        kandidaten.push(['time', { s: ms, n: name, t }]);
-        kandidaten.push(['combo', { s: comboValue(total, ms), n: name, t, st: total, ms }]);
+        kandidaten.push(['time', { s: ms, n: name, t, q }]);
+        kandidaten.push(['combo', { s: comboValue(total, ms), n: name, t, q, st: total, ms }]);
       }
       for (const [kind, rec] of kandidaten) {
         const hit = put(id, kind, null, rec);

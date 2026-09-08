@@ -39,6 +39,14 @@ const Net = (() => {
   const pPublish = (topic, text, retain) => packet(3, retain ? 1 : 0, [...str(topic), ...enc.encode(text)]);
   const PING = new Uint8Array([0xc0, 0x00]), BYE = new Uint8Array([0xe0, 0x00]);
 
+  /* Jede eigene Nachricht bekommt eine fortlaufende Nummer. Beim Empfang merken wir uns je
+     Absender die höchste gesehene und werfen alles weg, was nicht darüber liegt: so kann eine
+     verspätete Nachricht keine neuere überschreiben, und eine doppelt zugestellte wird nur
+     einmal verarbeitet. Die Kennung eines Geräts wird bei jedem Laden neu gewürfelt, darum
+     beginnt jeder Zähler bei null, ohne dass es Verwechslungen gibt. */
+  let outSeq = 0;
+  const lastSeq = new Map();          // Absender -> zuletzt gesehene Nummer
+
   let ws = null, buf = new Uint8Array(0), timer = null;
   let me = '', status = 'off', pid = 1;
   let onStatus = null, tries = 0, retryT = null, wasReady = false;
@@ -91,6 +99,14 @@ const Net = (() => {
       for (const [filter, s] of subs) {
         if (!wildcardHit(filter, topic)) continue;
         if (s.skipSelf && data.from === me) continue;
+        // Reihenfolge nur dort prüfen, wo sie zählt (Spielraum). Die Bestenliste kommt als
+        // aufbewahrte Nachrichten in beliebiger Folge und verträgt das von sich aus.
+        if (s.seq) {
+          if (typeof data.from !== 'string' || typeof data.n !== 'number' || !isFinite(data.n)) continue;
+          const last = lastSeq.get(data.from);
+          if (last != null && data.n <= last) continue;      // alt oder doppelt
+          lastSeq.set(data.from, data.n);
+        }
         s.handler(data, topic);
       }
     }
@@ -139,7 +155,7 @@ const Net = (() => {
     },
     /* Thema abonnieren. skipSelf blendet die eigenen Nachrichten aus (für Spielräume). */
     sub(topic, handler, opts = {}) {
-      subs.set(topic, { handler, skipSelf: opts.skipSelf !== false });
+      subs.set(topic, { handler, skipSelf: opts.skipSelf !== false, seq: !!opts.seq });
       if (ws && ws.readyState === 1 && status === 'ready') ws.send(pSubscribe(pid++, topic));
     },
     unsub(topic) {
@@ -149,7 +165,7 @@ const Net = (() => {
     /* Nachricht senden. retain = beim Vermittler liegen lassen (für die Bestenliste). */
     pub(topic, obj, retain = false) {
       if (!ws || ws.readyState !== 1 || status !== 'ready') return false;
-      try { ws.send(pPublish(topic, JSON.stringify(Object.assign({ from: me }, obj)), retain)); return true; } catch (e) { return false; }
+      try { ws.send(pPublish(topic, JSON.stringify(Object.assign({ from: me, n: ++outSeq }, obj)), retain)); return true; } catch (e) { return false; }
     },
 
     /* ---------- Spielraum ---------- */
@@ -157,11 +173,12 @@ const Net = (() => {
       const id = this.connect(handlers);
       if (room) this.unsub(room);
       room = ROOM(String(code || ''));
-      this.sub(room, handlers.message, { skipSelf: true });
+      lastSeq.clear();                 // neuer Raum, neue Zählung
+      this.sub(room, handlers.message, { skipSelf: true, seq: true });
       return id;
     },
     send(obj) { return room ? this.pub(room, obj) : false; },
-    leaveRoom() { if (room) { this.unsub(room); room = ''; } },
+    leaveRoom() { if (room) { this.unsub(room); room = ''; lastSeq.clear(); } },
     /* Alles beenden – auch die Bestenliste */
     leave() { status = 'off'; room = ''; subs.clear(); shut(); onStatus = null; },
 

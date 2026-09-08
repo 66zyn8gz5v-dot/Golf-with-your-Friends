@@ -420,6 +420,9 @@ table.best-table th, table.best-table td { padding: 5px 6px; }
 .panel.wide { max-width: min(94vw, 700px); }
 /* Passt die Rekordtafel doch einmal nicht, lässt sie sich schieben statt überzulaufen */
 .tabelle-schiebe { overflow-x: auto; max-width: 100%; }
+.warn-note { color: #ffd9a0; background: rgba(255, 180, 80, 0.1); border: 1px solid rgba(255, 180, 80, 0.3);
+  border-radius: 10px; padding: 8px 12px; margin: 8px auto; max-width: 560px; font-size: 13px; }
+.q-net { font-style: normal; }
 @media (max-width: 600px) {
   .name-in { width: 140px; }
   .best-table { font-size: 12px; }

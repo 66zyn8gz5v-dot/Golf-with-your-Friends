@@ -82,11 +82,24 @@
     ui.player.textContent = p ? p.name : '–';
     syncClock();
     ui.strokes.textContent = def ? (state.mode === 'creative' ? `Kreativ · Schläge: ${state.strokes} · Par ${def.par}` : `Schläge: ${state.strokes} / ${maxStrokes()} · Par ${def.par}`) : '';
-    ui.board.innerHTML = state.players.map((pl, i) => {
-      const total = pl.scores.reduce((a, b) => a + b, 0);
-      const hat = pl.hat && pl.hat !== 'none' ? `<span class="hat-icon" title="${Hats.name(pl.hat)}">${Hats.icon(pl.hat)}</span>` : '';
-      return `<div class="row ${i === state.curPlayer ? 'active' : ''}"><span class="dot" style="background:${pl.color}"></span>${hat}${pl.name}<span class="score">${total}</span></div>`;
-    }).join('');
+    // Namen kommen im Netzspiel von fremden Geräten: die Zeile wird gebaut, nicht aus Text geklebt
+    ui.board.replaceChildren(...state.players.map((pl, i) => {
+      const row = document.createElement('div');
+      row.className = 'row' + (i === state.curPlayer ? ' active' : '');
+      const dot = document.createElement('span');
+      dot.className = 'dot'; dot.style.background = pl.color;
+      row.appendChild(dot);
+      if (pl.hat && pl.hat !== 'none') {
+        const hut = document.createElement('span');
+        hut.className = 'hat-icon'; hut.title = Hats.name(pl.hat); hut.textContent = Hats.icon(pl.hat);
+        row.appendChild(hut);
+      }
+      row.appendChild(document.createTextNode(pl.name));
+      const score = document.createElement('span');
+      score.className = 'score'; score.textContent = pl.scores.reduce((a, b) => a + b, 0);
+      row.appendChild(score);
+      return row;
+    }));
   }
   /* Zeitanzeige im Kopf – nur im Wettkampf, im Kreativmodus wird nichts gewertet */
   let clockShown = '';
@@ -304,9 +317,9 @@
     const marks = WORLDS.map(w => {
       const sp = WorldMap.spots[w.id]; if (!sp) return '';
       const m = worldMode(w);
-      return `<button class="spot" style="left:${sp.x}%;top:${sp.y}%;--pin:${sp.col}" data-world="${w.id}" title="${w.name}">
+      return `<button class="spot" style="left:${sp.x}%;top:${sp.y}%;--pin:${sp.col}" data-world="${w.id}" title="${Text.esc(w.name)}">
         <span class="spot-pin">${sp.icon}</span>
-        <span class="spot-label"><b>${w.name}</b><i>${MODE_ICON[m]} ${MODE_NAME[m]} · ${w.courses.length} Bahnen</i></span></button>`;
+        <span class="spot-label"><b>${Text.esc(w.name)}</b><i>${MODE_ICON[m]} ${MODE_NAME[m]} · ${w.courses.length} Bahnen</i></span></button>`;
     }).join('');
     overlay(`<div class="panel atlas-panel">
       <div class="panel-head"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span><h2>${Icons.svg('map')} Weltkarte</h2></div>
@@ -370,10 +383,13 @@
       el.textContent = st === 'ready' ? 'Verbunden – alle mit dem Spiel teilen sich diese Liste.'
         : st === 'error' ? 'Keine Verbindung – die Rekorde bleiben vorerst auf diesem Gerät.' : 'Verbinde …'; } };
     /* Eine Zelle je Wertung: der Wert, darunter klein, wer ihn hält */
-    const zelle = (kind, r) => `<td class="num rec">${r ? `<b>${Best.format(kind, r)}</b><i>${r.n}</i>` : '–'}</td>`;
+    // Am Eintrag steht, woher er kommt: gegeneinander gespielt oder allein am eigenen Gerät
+    const zelle = (kind, r) => `<td class="num rec">${r
+      ? `<b>${Text.esc(Best.format(kind, r))}</b><i>${r.q === 'net' ? '<span class="q-net" title="in einer Runde gegeneinander erspielt">🌐</span> ' : ''}${Text.esc(r.n)}</i>`
+      : '–'}</td>`;
     const rows = w.courses.map((c, i) => {
       const h = k => rec[k].holes[c.name];
-      return `<tr><td>${i + 1}</td><td>${holeIcon(c)} ${c.name}</td><td class="num">${c.par}</td>
+      return `<tr><td>${i + 1}</td><td>${holeIcon(c)} ${Text.esc(c.name)}</td><td class="num">${c.par}</td>
         ${Best.KINDS.map(k => zelle(k, h(k))).join('')}</tr>`;
     }).join('');
     const rundeZeile = Best.KINDS.map(k => zelle(k, rec[k].round)).join('');
@@ -382,14 +398,17 @@
       <div class="panel-head"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span><h2>${Icons.svg('emoji_events')} Bestenliste</h2></div>
       <div class="sub">Für jede Bahn zählen <b>alle drei Wertungen gleichzeitig</b> – Namen eintragen, losspielen,
         der Rest passiert von allein. Gewertet wird dein eigener Ball im Wettkampf.</div>
-      <p class="join-row"><label class="lbl">Dein Name<input id="bn" class="name-in" maxlength="14" autocomplete="off" spellcheck="false" placeholder="z. B. Max" value="${(Best.name || '').replace(/"/g, '&quot;')}"></label>
+      <div class="sub warn-note">Diese Liste ist eine Anschreibetafel, kein Schiedsrichter: Jedes Gerät meldet sein
+        Ergebnis selbst, niemand prüft es nach. <b>🌐</b> heißt „in einer Runde gegeneinander erspielt", da haben
+        andere zugeschaut. Einträge ohne Zeichen sind allein am eigenen Gerät entstanden.</div>
+      <p class="join-row"><label class="lbl">Dein Name<input id="bn" class="name-in" autocomplete="off" spellcheck="false" placeholder="z. B. Max" maxlength="${Text.NAME_MAX}" value="${Text.esc(Best.name)}"></label>
         <span class="btn small" id="bsave">Merken</span></p>
       ${speicherGeht() ? '' : '<div class="sub net-note">Dieser Browser darf hier nichts merken – der Name gilt nur, bis das Spiel geschlossen wird. Öffne das Spiel direkt im Browser, dann bleibt er.</div>'}
       <div class="sub net-note" id="bstate">${!Best.name ? 'Trag deinen Namen ein – ohne Namen wird nichts gewertet.'
         : Net.status === 'ready' ? 'Verbunden – alle mit dem Spiel teilen sich diese Liste.'
         : 'Keine Verbindung – die Rekorde bleiben vorerst auf diesem Gerät.'}</div>
-      <div id="bw" class="ow">${WORLDS.filter(x => x.id !== 'custom').map(x => `<span class="btn ghost small ${x.id === w.id ? 'sel' : ''}" data-w="${x.id}">${MODE_ICON[worldMode(x)]} ${x.short}</span>`).join('')}</div>
-      <div class="sub" style="margin-top:10px"><b>${w.name}</b> · Par ${parTotal}</div>
+      <div id="bw" class="ow">${WORLDS.filter(x => x.id !== 'custom').map(x => `<span class="btn ghost small ${x.id === w.id ? 'sel' : ''}" data-w="${x.id}">${MODE_ICON[worldMode(x)]} ${Text.esc(x.short)}</span>`).join('')}</div>
+      <div class="sub" style="margin-top:10px"><b>${Text.esc(w.name)}</b> · Par ${parTotal}</div>
       <div class="tabelle-schiebe"><table class="scores best-table">
         <tr><th>#</th><th>Bahn</th><th>Par</th>${Best.KINDS.map(k => `<th class="num">${BEST_ICON[k]} <span class="kopf-wort">${Best.KIND_NAME[k]}</span></th>`).join('')}</tr>
         ${rows}
@@ -431,7 +450,7 @@
     if (!state.world || state.world.id === 'custom' || !Best.name) return;
     if (state.curPlayer !== myIndex()) return;
     const def = state.courses[state.holeIdx];
-    const treffer = Best.hole(state.world.id, def.name, score, ms);
+    const treffer = Best.hole(state.world.id, def.name, score, ms, (online && online.started) ? 'net' : 'lokal');
     if (treffer.length) { Sfx.sink(); showMessage(`🏆 ${def.name}: ${recordText(treffer)}`, 2600); }
   }
   /* „Schläge 2 (vorher 3), Zeit 0:14,2" – aus den gefallenen Rekorden einer Runde */
@@ -462,9 +481,8 @@
   const myTurn = () => !online || !online.started || ((online.players[state.curPlayer] || {}).id === Net.id);
   const netSend = m => { if (online) Net.send(m); };
   const onlineWorlds = () => WORLDS.filter(w => w.id !== 'custom');
-  /* Namen aus dem Netz gehen in die Anzeige – kürzen und Markup-Zeichen entfernen */
-  const cleanName = v => String(v == null ? '' : v).replace(/[<>&"']/g, '').slice(0, 14).trim();
-  const seatName = (p, i) => (p && cleanName(p.nick)) || PLAYER_NAMES[i];
+  /* Namen aus dem Netz gehen in die Anzeige – gefiltert wird zentral in src/text.js */
+  const seatName = (p, i) => (p && Text.name(p.nick)) || PLAYER_NAMES[i];
 
   /* Einstieg: Raum aufmachen oder einem Code beitreten */
   function showOnline(note) {
@@ -475,7 +493,7 @@
       <div class="panel-head"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span><h2>${Icons.svg('public')} Online spielen</h2></div>
       <div class="sub">Einer macht einen Raum auf und sagt den Code durch, die anderen tippen ihn ein.
         Bis zu ${ONLINE_MAX} Geräte, gespielt wird reihum.</div>
-      ${note ? `<div class="sub net-note">${note}</div>` : ''}
+      ${note ? `<div class="sub net-note">${Text.esc(note)}</div>` : ''}
       <p><span class="btn" id="host">Raum aufmachen</span></p>
       <p>oder Code eintippen:</p>
       <p class="join-row"><input id="code" class="code-in" maxlength="4" inputmode="numeric" pattern="[0-9]*" autocomplete="off" spellcheck="false" placeholder="1234">
@@ -521,20 +539,92 @@
   }
   function sendRoster() { if (online && online.host) netSend({ t: 'roster', players: online.players, w: online.world }); }
 
+  /* ---------- Eingehende Nachrichten prüfen ----------
+
+     Der Raum steht auf einem offenen Vermittler: wer den vierstelligen Code kennt (oder ihn
+     durchprobiert), kann hineinschreiben. Darum wird jede Nachricht geprüft, bevor sie etwas
+     bewegt – Aufbau, Datentypen, Wertebereiche und die Frage, ob der Absender das überhaupt
+     sagen darf. Was nicht passt, fällt still weg; ein Fehler im Netz soll das Spiel der anderen
+     nicht stören.
+
+     Was das nicht kann: Es hält niemanden davon ab, für sich selbst zu schummeln (siehe
+     README, Abschnitt „Was diese Prüfungen nicht leisten"). Es hält aber alles ab, was das
+     Spiel der anderen kaputtmacht: unmögliche Werte, Züge für fremde Spieler, alte Nachrichten,
+     Übernahme der Gastgeberrolle. */
+  const istZahl = (v, min, max) => typeof v === 'number' && isFinite(v) && v >= min && v <= max;
+  const istGanz = (v, min, max) => istZahl(v, min, max) && Number.isInteger(v);
+  const istText = (v, max) => typeof v === 'string' && v.length <= max;
+  /* Liegt der Punkt auf der Bahn? Etwas Luft, weil Bälle auch am Rand liegen dürfen. */
+  const aufBahn = (x, y) => {
+    const lv = state.level;
+    return !!lv && istZahl(x, -2, lv.W + 2) && istZahl(y, -2, lv.H + 2);
+  };
+  /* Sitzplatz des Absenders – nur wer laut eigenem Spielstand dran ist, darf Züge ansagen */
+  const platzVon = id => online ? online.players.findIndex(p => p.id === id) : -1;
+  function istAmZug(m) {
+    if (state.curPlayer !== m.pi) return false;
+    if (platzVon(m.from) === state.curPlayer) return true;
+    // Ausnahme: Ist jemand weggegangen, wertet der Gastgeber dessen Zug mit dem Schlaglimit
+    const p = online.players[state.curPlayer];
+    return istGastgeber(m) && !!p && !!p.gone;
+  }
+  /* Der Gastgeber steht nach dem ersten Roster fest; danach zählt nur noch seine Stimme */
+  const istGastgeber = m => !!online.hostId && m.from === online.hostId;
+
+  /* Eine Spielerliste aus dem Netz in eine ungefährliche Form bringen */
+  function pruefeRoster(liste) {
+    if (!Array.isArray(liste)) return null;
+    const raus = [], gesehen = new Set();
+    for (const p of liste.slice(0, ONLINE_MAX)) {
+      if (!p || !istText(p.id, 40) || !p.id || gesehen.has(p.id)) return null;   // ohne Kennung geht nichts
+      gesehen.add(p.id);
+      raus.push({ id: p.id, nick: Text.name(p.nick), hat: Hats.has(p.hat) ? p.hat : 'none', gone: !!p.gone });
+    }
+    return raus.length ? raus : null;
+  }
+  /* Erlaubte Welt-Kennung (eigene Welten lassen sich online nicht spielen) */
+  const pruefeWelt = id => onlineWorlds().some(w => w.id === id) ? id : null;
+
+  /* Passt die Nachricht zu ihrem Typ? Gibt true zurück, wenn sie weiterverarbeitet werden darf. */
+  function nachrichtOk(m) {
+    if (!m || typeof m !== 'object' || !istText(m.t, 20) || !istText(m.from, 40) || !m.from) return false;
+    switch (m.t) {
+      case 'hello':  return istText(m.nick == null ? '' : m.nick, 200) && (m.hat == null || istText(m.hat, 40));
+      case 'roster': return !online.hostId || istGastgeber(m);   // der erste Roster bestimmt den Gastgeber
+      case 'start':  return istGastgeber(m);
+      case 'next':   return istGastgeber(m) && istGanz(m.h, -1, state.courses.length - 1);
+      // Läuft die Runde schon, kommt die Absage, bevor ein Roster den Gastgeber festgelegt hat
+      case 'busy':   return (!online.hostId || istGastgeber(m)) && m.to === Net.id && istText(m.why == null ? '' : m.why, 200);
+      case 'shot':   return istGanz(m.h, 0, state.courses.length - 1) && istGanz(m.pi, 0, ONLINE_MAX - 1) &&
+                            istZahl(m.dx, -1.01, 1.01) && istZahl(m.dy, -1.01, 1.01) &&
+                            Math.abs(Math.hypot(m.dx, m.dy) - 1) < 0.02 && istZahl(m.power, 0, 1) && istAmZug(m);
+      case 'rest':   return istGanz(m.h, 0, state.courses.length - 1) && istGanz(m.pi, 0, ONLINE_MAX - 1) &&
+                            aufBahn(m.x, m.y) && istGanz(m.s, 0, 999) && istAmZug(m);
+      case 'done':   return istGanz(m.h, 0, state.courses.length - 1) && istGanz(m.pi, 0, ONLINE_MAX - 1) &&
+                            istGanz(m.score, 1, 999) && (m.ms == null || istZahl(m.ms, 0, 24 * 3600 * 1000)) && istAmZug(m);
+      case 'alive':  return true;
+      case 'bye':    return true;
+      default:       return false;                                // unbekannter Typ: weg damit
+    }
+  }
+
   function netMessage(m) {
     if (!online) return;
+    if (!nachrichtOk(m)) return;
     online.seen[m.from] = Date.now();
     switch (m.t) {
       case 'hello':
         if (!online.host) break;
         if (online.started) { netSend({ t: 'busy', to: m.from, why: 'Die Runde läuft schon.' }); break; }
         if (!online.players.some(p => p.id === m.from) && online.players.length < ONLINE_MAX)
-          online.players.push({ id: m.from, nick: cleanName(m.nick), hat: Hats.has(m.hat) ? m.hat : 'none' });
+          online.players.push({ id: m.from, nick: Text.name(m.nick), hat: Hats.has(m.hat) ? m.hat : 'none' });
         sendRoster(); showLobby();
         break;
       case 'roster': {
         if (online.host) break;
-        online.hostId = m.from; online.players = m.players || []; online.world = m.w || online.world;
+        const liste = pruefeRoster(m.players);
+        if (!liste) break;
+        online.hostId = m.from; online.players = liste; online.world = pruefeWelt(m.w) || online.world;
         const drin = online.players.some(p => p.id === Net.id);
         online.note = drin ? '' : (online.players.length >= ONLINE_MAX ? 'Der Raum ist voll.' : 'Melde mich an …');
         if (!online.started) showLobby();
@@ -543,17 +633,21 @@
       case 'busy':
         if (!online.host && m.to === Net.id) onlineLost(m.why || 'Der Raum nimmt gerade niemanden auf.');
         break;
-      case 'start':
-        if (online.host) break;
-        online.players = m.players || online.players; online.world = m.w || online.world;
+      case 'start': {
+        if (online.host || online.started) break;
+        const liste = pruefeRoster(m.players);
+        online.players = liste || online.players;
+        online.world = pruefeWelt(m.w) || online.world;
+        if (!online.players.length) break;
         startOnlineGame();
         break;
+      }
       case 'shot':
-        if (!myTurn() && state.ball && state.phase === 'aim' && m.h === state.holeIdx && m.pi === state.curPlayer)
+        if (!myTurn() && state.ball && state.phase === 'aim' && m.h === state.holeIdx)
           shoot(m.dx, m.dy, m.power, true);
         break;
       case 'rest':
-        if (!myTurn() && state.ball && m.h === state.holeIdx && m.pi === state.curPlayer) {
+        if (!myTurn() && state.ball && m.h === state.holeIdx) {
           const b = state.ball;
           b.x = m.x; b.y = m.y; b.z = 0; b.vx = 0; b.vy = 0; b.vz = 0; b.air = false; b.rider = null;
           b.restX = m.x; b.restY = m.y;
@@ -561,19 +655,20 @@
         }
         break;
       case 'done':
-        if (!myTurn() && m.h === state.holeIdx && m.pi === state.curPlayer) {
+        if (!myTurn() && m.h === state.holeIdx) {
           const b = state.ball;
           if (b && m.sunk && !b.sunk) { b.x = state.level.cup.x; b.y = state.level.cup.y; b.z = 0; b.vx = 0; b.vy = 0; b.sunk = true; b.sinkT = 0; Sfx.sink(); }
-          state.strokes = m.score; clearTimeout(waitTimer); finishTurn(m.score, true, m.ms);
+          state.strokes = m.score; clearTimeout(waitTimer); finishTurn(m.score, true, m.ms == null ? null : m.ms);
         }
         break;
       case 'next':
-        if (online.host) break;
+        if (online.host || !online.started) break;
         clearTimeout(waitTimer); hideOverlay();
         if (m.h < 0) showFinal(); else loadHole(m.h);
         break;
       case 'bye':
-        if (!online.host) { if (m.from === online.hostId) onlineLost('Der Gastgeber hat den Raum verlassen.'); break; }
+        if (!online.host) { if (istGastgeber(m)) onlineLost('Der Gastgeber hat den Raum verlassen.'); break; }
+        if (platzVon(m.from) < 0) break;                      // wer nicht im Raum ist, kann ihn nicht verlassen
         if (online.started) dropPlayer(m.from);
         else { online.players = online.players.filter(p => p.id !== m.from); sendRoster(); showLobby(); }
         break;
@@ -621,7 +716,7 @@
     const ws = onlineWorlds();
     const seats = online.players.map((p, i) => `<div class="seat${p.id === Net.id ? ' me' : ''}">
         <canvas class="seat-ball" data-hat="${p.hat}" data-col="${PLAYER_COLORS[i]}"></canvas>
-        <b>${seatName(p, i)}${p.id === online.hostId ? ' ' + Icons.svg('star') : ''}</b></div>`).join('');
+        <b>${Text.esc(seatName(p, i))}${p.id === online.hostId ? ' ' + Icons.svg('star') : ''}</b></div>`).join('');
     const free = Math.max(0, ONLINE_MAX - online.players.length);
     overlay(`<div class="panel">
       <div class="panel-head"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span><h2>${Icons.svg('public')} Warteraum</h2></div>
@@ -629,11 +724,11 @@
         : online.players.some(p => p.id === Net.id) ? 'Du bist im Raum. Der Gastgeber startet.' : 'Ich klopfe an …'}</div>
       <div class="room-code">${online.code}</div>
       <div class="seats">${seats}${'<div class="seat empty">frei</div>'.repeat(free)}</div>
-      ${online.note ? `<div class="sub net-note">${online.note}</div>` : ''}
+      ${online.note ? `<div class="sub net-note">${Text.esc(online.note)}</div>` : ''}
       ${online.host
-        ? `<p>Welt:</p><div id="ow" class="ow">${ws.map(w => `<span class="btn ghost small ${w.id === online.world ? 'sel' : ''}" data-w="${w.id}">${MODE_ICON[worldMode(w)]} ${w.name}</span>`).join('')}</div>
+        ? `<p>Welt:</p><div id="ow" class="ow">${ws.map(w => `<span class="btn ghost small ${w.id === online.world ? 'sel' : ''}" data-w="${w.id}">${MODE_ICON[worldMode(w)]} ${Text.esc(w.name)}</span>`).join('')}</div>
            <p><span class="btn" id="go">Los geht's!</span></p>`
-        : `<div class="sub">Welt: <b>${(ws.find(w => w.id === online.world) || ws[0]).name}</b></div>`}
+        : `<div class="sub">Welt: <b>${Text.esc((ws.find(w => w.id === online.world) || ws[0]).name)}</b></div>`}
       <div class="legend">Gespielt wird reihum: wer dran ist, zielt, die anderen schauen zu. Eigene Bahnen lassen sich online nicht spielen.</div>
     </div>`, 'title');
     ui.overlay.querySelectorAll('.seat-ball').forEach(cv => Hats.preview(cv, cv.dataset.hat, cv.dataset.col));
@@ -657,7 +752,7 @@
 
   function showSetup() {
     overlay(`<div class="panel">
-      <div class="panel-head"><span class="btn ghost small" id="back-top">${Icons.svg('arrow_back')} Zurück</span><h2>${MODE_ICON[worldMode(state.world)]} ${state.world.name}</h2></div>
+      <div class="panel-head"><span class="btn ghost small" id="back-top">${Icons.svg('arrow_back')} Zurück</span><h2>${MODE_ICON[worldMode(state.world)]} ${Text.esc(state.world.name)}</h2></div>
       <div class="sub">${MODE_NAME[worldMode(state.world)]} · ${state.courses.length} Bahnen</div>
       <p>Modus:</p>
       <div id="gm">
@@ -970,13 +1065,13 @@
       const total = p.scores.reduce((a, b) => a + b, 0);
       const hat = p.hat && p.hat !== 'none' ? `<span title="${Hats.name(p.hat)}">${Hats.icon(p.hat)}</span> ` : '';
       const ms = (p.times || [])[state.holeIdx];
-      return `<tr><td><span class="dot" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.color};margin-right:6px"></span>${hat}${p.name}</td><td class="num">${p.scores[state.holeIdx]}</td>${zeit ? `<td class="num">${ms ? Best.formatTime(ms) : '–'}</td>` : ''}<td class="num">${total}</td></tr>`;
+      return `<tr><td><span class="dot" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.color};margin-right:6px"></span>${hat}${Text.esc(p.name)}</td><td class="num">${p.scores[state.holeIdx]}</td>${zeit ? `<td class="num">${ms ? Best.formatTime(ms) : '–'}</td>` : ''}<td class="num">${total}</td></tr>`;
     }).join('');
     overlay(`<div class="panel ${worldClass()}">
-      <h2>${holeIcon(def)} Bahn ${state.holeIdx + 1}: ${def.name}</h2>
+      <h2>${holeIcon(def)} Bahn ${state.holeIdx + 1}: ${Text.esc(def.name)}</h2>
       <div class="sub">Par ${def.par}</div>
       <table class="scores"><tr><th>Spieler</th><th>Bahn</th>${zeit ? '<th>Zeit</th>' : ''}<th>Gesamt</th></tr>${rows}</table>
-      ${!last ? `<div class="sub">Als Nächstes: <b>${state.courses[state.holeIdx + 1].name}</b><br><i>${state.courses[state.holeIdx + 1].intro}</i></div>` : ''}
+      ${!last ? `<div class="sub">Als Nächstes: <b>${Text.esc(state.courses[state.holeIdx + 1].name)}</b><br><i>${Text.esc(state.courses[state.holeIdx + 1].intro || '')}</i></div>` : ''}
       ${online && !online.host ? '<div class="sub">Der Gastgeber öffnet die nächste Bahn …</div>'
         : `<span class="btn" id="next">${state.editorReturn ? Icons.svg('construction') + ' Zurück zum Editor' : last ? 'Zum Endergebnis' : 'Nächste Bahn ' + Icons.svg('arrow_forward')}</span>`}
       ${state.editorReturn ? '' : `<p style="margin-top:12px"><span class="btn ghost small" id="leave-here">${Icons.svg('arrow_back')} ${state.world && state.world.id === 'custom' ? 'Zurück zur Auswahl' : 'Zurück zur Weltkarte'}</span></p>`}
@@ -996,7 +1091,7 @@
     if (gewertet && state.world && state.world.id !== 'custom') {
       const meP = state.players[myIndex()];
       if (meP && meP.scores.length === state.courses.length && meP.scores.every(v => v != null))
-        roundRec = Best.round(state.world.id, meP.scores.reduce((a, b) => a + b, 0), gesamtZeit(meP));
+        roundRec = Best.round(state.world.id, meP.scores.reduce((a, b) => a + b, 0), gesamtZeit(meP), (online && online.started) ? 'net' : 'lokal');
     }
     const ranked = state.players.map(p => ({ p, total: p.scores.reduce((a, b) => a + b, 0), ms: gesamtZeit(p) })).sort((a, b) => a.total - b.total);
     const medals = ['🥇', '🥈', '🥉', '4.'];
@@ -1004,7 +1099,7 @@
     const podium = ranked.map((r, i) => `<div class="pod ${i === 0 ? 'win' : ''}">
         <span class="pod-medal">${medals[i]}</span>
         <span class="pod-dot" style="background:${r.p.color}"></span>
-        <span class="pod-name">${r.p.name}</span>
+        <span class="pod-name">${Text.esc(r.p.name)}</span>
         ${gewertet && r.ms ? `<span class="pod-time">${Best.formatTime(r.ms)} · Kombi ${String(Best.combo(r.total, r.ms)).replace('.', ',')}</span>` : ''}
         <span class="pod-total">${r.total}</span>
         <span class="pod-par ${r.total - parTotal < 0 ? 'under' : r.total - parTotal > 0 ? 'over' : ''}">${vsPar(r.total - parTotal)}</span>
@@ -1012,9 +1107,9 @@
     // je Bahn eine Karte: Nummer, Sinnbild, Name, Par und die Schläge aller Spieler (farbig nach Ergebnis)
     const cards = state.courses.map((c, i) => `<div class="hole-card">
         <div class="hc-top"><span class="hc-num">${i + 1}</span><span class="hc-icon">${holeIcon(c)}</span></div>
-        <div class="hc-name">${c.name}</div>
+        <div class="hc-name">${Text.esc(c.name)}</div>
         <div class="hc-par">Par ${c.par}</div>
-        <div class="hc-scores">${state.players.map(p => `<span class="hc-score ${diffClass(p.scores[i], c.par)}" style="border-color:${p.color}" title="${p.name}">${p.scores[i]}</span>`).join('')}</div>
+        <div class="hc-scores">${state.players.map(p => `<span class="hc-score ${diffClass(p.scores[i], c.par)}" style="border-color:${p.color}" title="${Text.esc(p.name)}">${p.scores[i]}</span>`).join('')}</div>
       </div>`).join('');
     const best = state.players.length > 1 ? '' : (() => { // Solo: kleine Bilanz
       const p = state.players[0]; const n = k => p.scores.filter((s, i) => diffClass(s, state.courses[i].par) === k).length;
@@ -1022,12 +1117,12 @@
       return `<div class="tallies">${parts.join('')}</div>`;
     })();
     overlay(`<div class="panel final ${worldClass()}">
-      <div class="final-banner">${sceneFor(state.world && state.world.id)}<div class="final-head"><h1>${Icons.svg('emoji_events')} Endergebnis</h1><div class="final-world">${state.world ? state.world.name : ''} · ${state.courses.length} Bahnen · Par ${parTotal}</div></div></div>
+      <div class="final-banner">${sceneFor(state.world && state.world.id)}<div class="final-head"><h1>${Icons.svg('emoji_events')} Endergebnis</h1><div class="final-world">${state.world ? Text.esc(state.world.name) : ''} · ${state.courses.length} Bahnen · Par ${parTotal}</div></div></div>
       <div class="podium">${podium}</div>
       ${best}
       <div class="hole-cards">${cards}</div>
       <div class="final-legend"><span class="hc-score ace">1</span> Hole-in-One <span class="hc-score eagle">–2</span> Eagle <span class="hc-score birdie">–1</span> Birdie <span class="hc-score par">0</span> Par <span class="hc-score bogey">+1</span> Bogey <span class="hc-score worse">+2</span> mehr</div>
-      ${roundRec.length ? `<div class="sub net-note">🏆 Neuer Rundenrekord für ${roundRec[0].rec.n}: ${recordText(roundRec)}</div>` : ''}
+      ${roundRec.length ? `<div class="sub net-note">🏆 Neuer Rundenrekord für ${Text.esc(roundRec[0].rec.n)}: ${Text.esc(recordText(roundRec))}</div>` : ''}
       <span class="btn" id="again">Nochmal spielen</span>
     </div>`);
     $('again').addEventListener('click', () => { hideOverlay(); leaveOnline(); showTitle(); });

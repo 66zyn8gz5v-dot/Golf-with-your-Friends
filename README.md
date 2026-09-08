@@ -75,6 +75,12 @@ Einmal den eigenen Namen eintragen, mehr ist nicht nötig. Der Name gilt auch on
 der Punktetafel steht dann er statt „Spieler 2". Gewertet wird **der eigene Ball im Wettkampf** – am Gerät
 Spieler 1, online der eigene Platz. Der Kreativmodus zählt nicht, weil man dort beliebig oft neu setzen darf.
 
+**Wie ehrlich ist die Liste?** Sie ist eine Anschreibetafel unter Freunden, kein Schiedsrichter. Es gibt
+keinen Server, der mitrechnet: Jedes Gerät meldet sein Ergebnis selbst. Wer den Code des Spiels ändert,
+kann melden, was er will. Damit man das einordnen kann, steht an jedem Eintrag, woher er kommt: **🌐**
+heißt „in einer Runde gegeneinander erspielt" – da haben andere zugeschaut. Einträge ohne Zeichen sind
+allein am eigenen Gerät entstanden. Derselbe Hinweis steht auch im Spiel über der Liste.
+
 **Wo die Rekorde liegen:** als „aufbewahrte" MQTT-Nachrichten beim Vermittler. Eine Nachricht mit
 Retain-Bit bleibt dort liegen und wird jedem zugestellt, der später zuhört – so gibt es eine gemeinsame
 Rekordtafel ohne Server. Zusätzlich hält jedes Gerät eine eigene Kopie im Browser
@@ -279,6 +285,57 @@ Jede Welt hat einen eigenen, endlos weiterlaufenden Klangteppich – vollständi
 
 Farbwelten stehen in `src/themes.js`, jede mit einer dezenten Atmosphäre (`atmo`: `fog`, `mist`, `fireflies`, `spores`, `embers`, `sparks`, `ash`, `bubbles`, `sand`, `spray`, `snow`, `pollen`, `none`), die eine Bahn per `atmo` überschreiben kann. Mit `node tools/validate.mjs` lässt sich prüfen, ob jede Bahn lösbar ist; `node tools/audit/audit.mjs <welt|all> [Bahn]` spielt jede Bahn headless durch (Profi-Suche, simulierte Normalspieler mit Streuung, Prüfung von Engstellen, Zeitfenstern und Kamerazonen) und schreibt Ergebnisse nach `out/`.
 
+## Sicherheit – was geprüft wird und was offen bleibt
+
+Das Spiel läuft ohne eigenen Server: reine Dateien auf GitHub Pages, dazu ein offener MQTT-Vermittler
+für Netzspiel und Bestenliste. Das prägt, was möglich ist und was nicht.
+
+**Was abgesichert ist**
+
+- **Alle Eingaben gehen durch eine Stelle** (`src/text.js`). Namen: höchstens 16 Zeichen, erlaubt sind
+  Buchstaben, Ziffern, Leerzeichen, `-` und `_`. Bahnnamen: höchstens 24 Zeichen, zusätzlich die üblichen
+  Satzzeichen. Alles andere fällt weg – schon beim Hereinkommen, nicht erst beim Anzeigen. Beim Anzeigen
+  wird zusätzlich entschärft, falls doch etwas aus einer alten Datei oder einem Gerät mit anderer Fassung
+  kommt. Die Punktetafel und die Bahnauswahl im Editor werden aus Bausteinen gebaut statt aus Text geklebt.
+- **Content-Security-Policy** in `index.html`: Alles ist verboten außer dem, was ausdrücklich dasteht.
+  Programmcode nur aus dem eigenen Verzeichnis (keine fremden und keine eingebetteten Skripte),
+  Verbindungen nur zum MQTT-Vermittler, keine eingebetteten Objekte, kein umgebogenes `<base>`, keine
+  Formulare. Ausnahme: `style-src 'unsafe-inline'`, weil Spielerfarben als `style`-Attribut am Element
+  hängen – Inline-Stile können keinen Code ausführen.
+- **Jede Netz-Nachricht wird geprüft**, bevor sie etwas bewegt: Aufbau, Datentypen, Wertebereiche
+  (Schlagzahl 1–999, Kraft 0–1, Richtungsvektor auf Länge 1, Ball innerhalb der Bahnmaße plus Rand,
+  Zeit höchstens 24 Stunden). Unbekannte Nachrichtentypen fallen weg. Züge werden nur angenommen, wenn
+  der Absender laut eigenem Spielstand am Zug ist; Rundenstart, Bahnwechsel und Spielerliste nur vom
+  Gastgeber, der mit der ersten Spielerliste feststeht und danach nicht mehr wechseln kann.
+- **Fortlaufende Nummern** in jeder Nachricht (`src/net.js`): Wer eine alte Nachricht wiederholt oder
+  eine doppelt zugestellte schickt, bewirkt nichts – nur streng steigende Nummern je Absender kommen durch.
+- **Keine Geheimnisse im Code**: keine Schlüssel, Zugangsdaten oder Tokens, auch nicht im Verlauf.
+  Nach außen führen nur drei Adressen: der MQTT-Vermittler, Google Fonts und `ws://localhost:9001` für
+  Tests auf dem eigenen Rechner.
+
+**Was das nicht leistet – ehrlich**
+
+- **Absender sind nicht überprüfbar.** Jede Nachricht sagt selbst, von wem sie kommt. Wer den Raumcode
+  kennt oder ihn durchprobiert (vier Ziffern sind schnell durchprobiert), kann mitlesen, die Kennung des
+  Gastgebers abschreiben und sich als er ausgeben. Alle inhaltlichen Prüfungen greifen weiter, aber die
+  Rolle lässt sich übernehmen. Dagegen hilft nur ein Server, der Teilnehmer kennt und Nachrichten
+  beglaubigt – oder ein Geheimnis, das nicht im Raumcode steckt und über einen anderen Weg geteilt wird.
+- **Gegen Schummeln beim eigenen Ergebnis ist nichts zu machen.** Es gibt keinen Schiedsrichter, der
+  nachrechnet. Wer den Code ändert, meldet 1 Schlag in 2 Sekunden, und alle anderen glauben es. Die
+  Prüfungen halten nur unmögliche Werte ab, nicht unwahrscheinliche.
+- **Der Vermittler ist öffentlich.** Alle Räume und alle Rekorde liegen bei einem fremden, offenen
+  Dienst. Wer dort mitliest, sieht Namen, Codes und Ergebnisse. Nichts davon ist geheim, aber es ist
+  auch nicht privat.
+- **Die Rekorde können jederzeit verschwinden** – der Vermittler bewahrt sie nur, solange er läuft.
+- **Wer die Seite einbetten darf, lässt sich nicht steuern.** `frame-ancestors` wirkt nur als
+  HTTP-Kopfzeile, und GitHub Pages lässt keine eigenen Kopfzeilen zu.
+
+**Was ein eigener Server ändern würde:** Er könnte Teilnehmer anmelden und jeder Nachricht ansehen, von
+wem sie wirklich stammt; er könnte die Bahn selbst nachrechnen und ein gemeldetes Ergebnis ablehnen, das
+physikalisch nicht geht; er könnte Rekorde dauerhaft und fälschungssicher speichern; und er könnte
+Kopfzeilen setzen, die das Einbetten unterbinden. Für einen Freundeskreis ist das viel Aufwand für wenig
+Gewinn – aber es ist der einzige Weg, diese Punkte wirklich zu schließen.
+
 ## Projektstruktur
 
 ```
@@ -300,6 +357,7 @@ src/obstacles_legend.js Blitzfeld, Aufwind, Falltür
 src/physics.js    Ballphysik und Kollision
 src/render.js     isometrische Darstellung
 src/render_legend.js Optik der Legende-Welten (Hintergründe, neue Hindernisse und Stile)
+src/text.js       Eine Stelle für alle Eingaben: Namen und Bahnnamen filtern, Anzeige entschärfen
 src/version.js    Die Fassung des Spiels – eine Zahl, die bei jeder Auslieferung steigt; Service Worker und Startbildschirm lesen sie
 src/icons.js      Bedien-Sinnbilder: Material Symbols als eingebettete SVG-Pfade (Zurück, Kamera, Musik, Editor …)
 src/hats.js       Hüte für die Bälle: Zeichnungen und Vorschau fürs Menü

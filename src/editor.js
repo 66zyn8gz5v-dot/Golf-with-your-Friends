@@ -196,7 +196,8 @@ const Editor = (deps) => {
   function worldCourses() { const list = loadCustoms(); return loadWorld().map(id => list.find(c => c.id === id)).filter(Boolean); }
   function showWorldDialog(insertId) {
     const list = loadCustoms(), ids = loadWorld().filter(id => list.some(c => c.id === id));
-    const name = id => { const c = list.find(x => x.id === id); return c ? `${c.name} (Par ${c.par})` : '?'; };
+    // Bahnnamen können aus einem geteilten Code stammen – hier entschärft anzeigen
+    const name = id => { const c = list.find(x => x.id === id); return c ? `${Text.esc(c.name)} (Par ${+c.par || 0})` : '?'; };
     const cur = insertId != null ? ids.indexOf(insertId) : -1;
     const rows = ids.map((id, i) => `<div class="wl-row ${id === insertId ? 'me' : ''}"><span class="wl-num">${i + 1}</span><span class="wl-name">${name(id)}</span>
       <button class="cbtn small wl-up" data-i="${i}" title="nach oben">${Icons.svg('arrow_upward')}</button><button class="cbtn small wl-down" data-i="${i}" title="nach unten">${Icons.svg('arrow_downward')}</button><button class="cbtn small wl-out" data-i="${i}" title="aus der Welt nehmen">${Icons.svg('close')}</button></div>`).join('');
@@ -264,7 +265,7 @@ const Editor = (deps) => {
     $('ed-obj').addEventListener('change', e => { ed.obj = e.target.value; ed.tool = 'obj'; ed.pending = null; syncPanel(); });
     $('ed-collapse').addEventListener('click', () => { ed.collapsed = !ed.collapsed; p.classList.toggle('collapsed', ed.collapsed); $('ed-collapse').innerHTML = ed.collapsed ? Icons.svg('construction') + ' Werkzeuge' : Icons.svg('chevron_right'); });
     $('ed-view').addEventListener('click', () => setView(ed.view === 'top' ? 'iso' : 'top'));
-    $('ed-name').addEventListener('input', e => { ed.def.name = e.target.value || 'Meine Bahn'; });
+    $('ed-name').addEventListener('input', e => { ed.def.name = Text.label(e.target.value) || 'Meine Bahn'; });
     $('ed-par').addEventListener('change', e => { ed.def.par = Math.max(1, Math.min(12, +e.target.value || 3)); });
     $('ed-theme').addEventListener('change', e => { ed.def.theme = e.target.value; rebuild(); });
     $('ed-resize').addEventListener('click', () => resize(+$('ed-w').value, +$('ed-h').value));
@@ -281,7 +282,7 @@ const Editor = (deps) => {
       try {
         const d = JSON.parse($('ed-code').value);
         if (!Array.isArray(d.map) || !d.map.every(r => typeof r === 'string')) throw new Error('map');
-        d.id = Date.now(); d.obstacles = Array.isArray(d.obstacles) ? d.obstacles : []; d.theme = THEMES[d.theme] ? d.theme : 'meadow'; d.par = +d.par || 3; d.name = String(d.name || 'Importierte Bahn').slice(0, 24);
+        d.id = Date.now(); d.obstacles = Array.isArray(d.obstacles) ? d.obstacles : []; d.theme = THEMES[d.theme] ? d.theme : 'meadow'; d.par = +d.par || 3; d.name = Text.label(d.name) || 'Importierte Bahn';   // fremder Code, darf kein Markup mitbringen
         open(d); showMessage('Bahn importiert', 1200);
       } catch (e) { showMessage('Code nicht lesbar', 1400); }
     });
@@ -296,7 +297,9 @@ const Editor = (deps) => {
     const t = ed.tool;
     $('ed-hint').textContent = t === 'obj' ? (HINTS[ed.obj] || HINTS.obj) : (HINTS[t] || HINTS.tile);
     const list = loadCustoms(), sel = $('ed-list'), world = loadWorld();
-    sel.innerHTML = list.length ? list.map(c => `<option value="${c.id}">${c.name} (Par ${c.par})${world.includes(c.id) ? ' · in Welt' : ''}</option>`).join('') : '<option value="">– noch keine –</option>';
+    // Aus Bausteinen bauen: der Bahnname kann aus einem geteilten Code stammen
+    if (!list.length) { sel.replaceChildren(new Option('– noch keine –', '')); }
+    else sel.replaceChildren(...list.map(c => new Option(`${Text.label(c.name)} (Par ${+c.par || 0})${world.includes(c.id) ? ' · in Welt' : ''}`, c.id)));
     if (list.some(c => c.id === ed.def.id)) sel.value = String(ed.def.id);
     const k = world.indexOf(ed.def.id);
     $('ed-done').innerHTML = Icons.svg('check') + (k >= 0 ? ` Fertig · Bahn ${k + 1}` : ' Fertig');
