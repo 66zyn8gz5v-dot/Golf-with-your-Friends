@@ -13,7 +13,9 @@ npx serve .          # oder: python3 -m http.server 8080
 
 ## Welten und Modi
 
-Vom Titelbild führen zwei Wege: **🗺 Weltkarte** und **🛠 Bauen & Eigene Welt**.
+Vom Titelbild führen zwei Wege: **🗺 Weltkarte** und **🛠 Bauen & Eigene Welt**. Darunter stehen drei
+kleine Knöpfe: **Turnier** führt ohne Umweg in die Arena (Kolosseum), **Online spielen** in den
+Warteraum, **Rangliste** zu den Rekorden.
 
 Auf der **Weltkarte** liegt jede Welt als schwebende Scheibe in derselben 2,5D-Sicht wie das Spiel selbst: Blick schräg von oben auf eine um 45° gedrehte Welt, dieselbe Projektion wie im Renderer. Jede Scheibe hat darum eine Deckfläche im Karomuster und darunter zwei sichtbare Seitenflächen – die linke hell, die rechte im Schatten – mit Streiflicht an der Oberkante und dunkler Vorderkante. Darauf stehen die Bauten als echte Körper: Quader mit Deckfläche und zwei Seiten, Kegeldächer und Baumkronen aus vier Dreiecken, hell zur Sonne und dunkel zur Schattenseite, dazu Fahnen und Kontaktschatten. Die Reise geht von links (heller Tag im Märchenland) nach rechts (Nacht im Schattenreich): Himmelsverlauf vom Tag in die Nacht, Sterne, Sonnenstrahlen links, Blutmond rechts, ein scharfer Bergkamm mit Schneekappen und dahinter ein zweiter im Dunst, ziehende Wolken, ein gestrichelter goldener Weg über die Vorderkanten der Scheiben, schwebende Flocken, Nebelbänder und eine Randabdunklung. **Jeder Ort ist von Anfang an anwählbar – nichts muss freigespielt werden.** Die Stufe am Ort ist nur ein Hinweis darauf, was einen erwartet:
 

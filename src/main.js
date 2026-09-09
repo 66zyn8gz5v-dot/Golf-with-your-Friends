@@ -286,6 +286,8 @@
             <g class="particles"><circle class="p" cx="60" cy="30" r="2.2" fill="#c58bff"/><circle class="p p2" cx="100" cy="36" r="1.8" fill="#c58bff"/><circle class="p p4" cx="205" cy="34" r="2" fill="#c58bff"/><circle class="p p3" cx="270" cy="40" r="1.6" fill="#c58bff"/></g>
             <path d="M92 52 a6 6 0 0 1 12 0 v8 l-2 -2 l-2 2 l-2 -2 l-2 2 l-2 -2 l-2 2 z" fill="rgba(230,235,255,0.85)"/><circle cx="96" cy="52" r="1.2" fill="#1a1030"/><circle cx="100" cy="52" r="1.2" fill="#1a1030"/>
           </svg>`;
+  /* Welt hinter dem Turnier-Knopf im Startbildschirm */
+  const TURNIER_WELT = 'colosseum';
   function showTitle() {
     state.phase = 'title'; state.editorReturn = false; Music.set('title');
     document.body.classList.add('title');
@@ -297,11 +299,14 @@
         <span class="btn mode" id="to-map">${WorldMap.svg('mode-scene', 'xMidYMid slice')}<span class="mode-label">Weltkarte</span></span>
         <span class="btn mode" id="to-build">${SCENE_CREATIVE}<span class="mode-label long">Bauen &amp; Eigene Welt</span></span>
       </div>
-      <div class="atlas-extra"><span class="btn small ghost" id="to-online">${Icons.svg('public')} Online spielen</span>
+      <div class="atlas-extra"><span class="btn small ghost" id="to-turnier">${Icons.svg('golf_course')} Turnier</span>
+        <span class="btn small ghost" id="to-online">${Icons.svg('public')} Online spielen</span>
         <span class="btn small ghost" id="to-best">${Icons.svg('emoji_events')} Rangliste</span></div>
       <div class="legend">Alle Welten sind von Anfang an offen. Die Stufe an jedem Ort sagt nur, was dich erwartet.
         <span class="version">${typeof VORSCHAU !== 'undefined' && VORSCHAU ? 'Vorschau · ' : ''}Fassung ${typeof APP_VERSION !== 'undefined' ? APP_VERSION : '?'}</span></div>
     </div>`, 'title');
+    // Turnier führt direkt in die Arena – ohne Umweg über die Weltkarte
+    $('to-turnier').addEventListener('click', () => { Sfx.unlock(); Music.start(); setWorld(TURNIER_WELT); showSetup(); });
     $('to-online').addEventListener('click', () => { Sfx.unlock(); Music.start(); showOnline(); });
     $('to-best').addEventListener('click', () => { Sfx.unlock(); Music.start(); showBestList(); });
     $('to-map').addEventListener('click', () => { Sfx.unlock(); Music.start(); showMap(); });
