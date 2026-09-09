@@ -927,7 +927,7 @@
       </div>
       <p style="margin-top:10px">Hut:</p>
       <div id="hat-who"></div>
-      <div id="hats" class="hat-grid">${Hats.LIST.map(h => `<button type="button" class="hat" data-h="${h.id}" title="${h.name}"><canvas></canvas><span>${h.name}</span></button>`).join('')}</div>
+      <div id="hats" class="hat-grid">${Hats.sichtbar().map(h => `<button type="button" class="hat" data-h="${h.id}" title="${h.name}"><canvas></canvas><span>${h.name}</span></button>`).join('')}</div>
       <p style="margin-top:10px">Musik:</p>
       <div id="mu">
         <span class="btn ghost small ${Music.on ? 'sel' : ''}" data-v="1">An</span>

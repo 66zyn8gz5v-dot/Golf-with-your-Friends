@@ -88,6 +88,84 @@ const Hats = (() => {
   }
 
   /* Jede Zeichenfunktion beginnt auf dem Ballkopf (0,0) und baut den Hut nach oben auf. */
+  /* Legionärshelm und Championhelm sind ein Paar: dieselbe Grundform, einmal in Silber und einmal
+     in Gold mit rotem Federkamm. Absichtlich wenige, große Formen – halbrunde Helmglocke, ein
+     goldener Rand über der Stirn, der breite Nackenschirm nach hinten unten, zwei Wangenklappen und
+     ein paar Nieten. Feine Verzierungen wären bei Ballgröße ohnehin nur Grieß.
+
+     Gezeichnet wird von vorn, wie alle Hüte. Der Nackenschirm sitzt hinten und schaut darum links
+     und rechts als Flügel unter der Glocke hervor – so liest man ihn in der Schrägsicht sofort. */
+  function galea(ctx, gold) {
+    // [dunkle Kante, Mitte, Glanz, Schatten, Rand] – von links nach rechts über die Glocke
+    const metall = gold ? ['#8a6110', '#e0aa2e', '#fff0b8', '#c2891a', '#7a5410']
+                        : ['#5c6371', '#aeb7c4', '#eef2f7', '#939bab', '#565d6b'];
+    const zier = gold ? '#ffe08a' : '#ffd45e', zierRand = gold ? '#8a5f0c' : '#b8842a';
+    const glocke = () => {
+      const g = ctx.createLinearGradient(-1, 0, 1, 0);
+      g.addColorStop(0, metall[0]); g.addColorStop(0.28, metall[1]); g.addColorStop(0.5, metall[2]);
+      g.addColorStop(0.74, metall[3]); g.addColorStop(1, metall[4]);
+      return g;
+    };
+
+    // Federkamm zuerst, damit sein Fuß hinter der Helmglocke verschwindet
+    if (gold) {
+      const zacken = [[-0.54, -0.06], [-0.50, -1.00], [-0.32, -0.72], [-0.24, -1.28], [-0.06, -0.84],
+        [0.03, -1.42], [0.20, -0.80], [0.32, -1.20], [0.47, -0.76], [0.54, -0.06]];
+      ctx.beginPath();
+      zacken.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y));
+      ctx.closePath();
+      const gk = ctx.createLinearGradient(0, -1.42, 0, -0.06);
+      gk.addColorStop(0, '#e8574a'); gk.addColorStop(1, '#a02a20');
+      fs(ctx, gk);
+    }
+
+    // Nackenschirm: je ein Flügel links und rechts, nach hinten unten ausgestellt
+    for (const s of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(s * 0.56, 0.12);
+      ctx.bezierCurveTo(s * 1.22, 0.20, s * 1.54, 0.60, s * 1.34, 1.02);
+      ctx.bezierCurveTo(s * 1.12, 1.18, s * 0.82, 1.04, s * 0.68, 0.78);
+      ctx.closePath();
+      fs(ctx, metall[s < 0 ? 1 : 3]);
+    }
+
+    // Helmglocke über dem oberen Ballteil
+    ctx.beginPath();
+    ctx.moveTo(-0.96, 0.58);
+    ctx.bezierCurveTo(-1.02, -0.04, -0.66, -0.54, 0, -0.54);
+    ctx.bezierCurveTo(0.66, -0.54, 1.02, -0.04, 0.96, 0.58);
+    ctx.bezierCurveTo(0.58, 0.74, -0.58, 0.74, -0.96, 0.58);
+    ctx.closePath();
+    fs(ctx, glocke());
+
+    // Wangenklappen seitlich, hängen vor den Wangen herunter
+    for (const s of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(s * 0.92, 0.44);
+      ctx.bezierCurveTo(s * 1.02, 0.84, s * 0.92, 1.14, s * 0.64, 1.24);
+      ctx.bezierCurveTo(s * 0.50, 1.10, s * 0.50, 0.78, s * 0.56, 0.48);
+      ctx.closePath();
+      fs(ctx, metall[s < 0 ? 1 : 3]);
+    }
+
+    // Goldener Rand über der Stirn
+    ctx.beginPath();
+    ctx.moveTo(-0.97, 0.28);
+    ctx.bezierCurveTo(-0.58, 0.48, 0.58, 0.48, 0.97, 0.28);
+    ctx.lineTo(0.97, 0.50);
+    ctx.bezierCurveTo(0.58, 0.70, -0.58, 0.70, -0.97, 0.50);
+    ctx.closePath();
+    ctx.strokeStyle = zierRand; ctx.lineWidth = 0.05; fs(ctx, zier);
+    ctx.strokeStyle = 'rgba(0,0,0,0.4)'; ctx.lineWidth = 0.07;
+
+    // Nieten auf dem Rand
+    ctx.fillStyle = zierRand;
+    for (let i = 0; i < 5; i++) {
+      const x = -0.68 + i * 0.34;
+      ctx.beginPath(); ctx.arc(x, 0.44 + Math.cos(x * 1.6) * 0.05, 0.065, 0, TAU2); ctx.fill();
+    }
+  }
+
   const DEFS = {
     none() { /* barhäuptig */ },
 
@@ -281,6 +359,9 @@ const Hats = (() => {
         bloom(ctx, Math.cos(a) * 0.82, 0.02 + Math.sin(a) * 0.5, 0.24, cols[i]);
       }
     },
+
+    legion(ctx) { galea(ctx, false); },   // Legionärshelm: Silber mit Gold – für die Teilnahme
+    champion(ctx) { galea(ctx, true); },  // Championhelm: Gold mit rotem Federkamm – der Siegerpreis
   };
 
   /* Reihenfolge und Namen für das Menü */
@@ -297,6 +378,10 @@ const Hats = (() => {
     { id: 'straw', name: 'Strohhut', icon: '👒' },
     { id: 'horns', name: 'Teufelshörner', icon: '😈' },
     { id: 'flower', name: 'Blumenkranz', icon: '🌸' },
+    { id: 'legion', name: 'Legionärshelm', icon: '🪖' },
+    /* Gesperrt: den Championhelm gibt es schon, er ist nur noch nicht zu sehen. Freigeschaltet wird
+       bisher nichts – wie man ihn gewinnt, kommt später. Hier steht nur die Sperre. */
+    { id: 'champion', name: 'Championhelm', icon: '🏅', locked: true },
   ];
   const byId = id => LIST.find(h => h.id === id);
 
@@ -332,8 +417,15 @@ const Hats = (() => {
     draw(ctx, id, cx, cy, r, color);
   }
 
+  /* Ist dieser Hut schon zu haben? Die eine Stelle, an der später die Freischaltung beantwortet
+     wird – bis dahin bleibt ein gesperrter Hut gesperrt. Gezeichnet wird er trotzdem: Kommt der
+     Hut eines Mitspielers übers Netz, soll er zu sehen sein, egal was hier steht. */
+  const freigeschaltet = id => { const h = byId(id); return !h || !h.locked; };
+  /* Nur die Hüte, die in der Auswahl auftauchen dürfen */
+  const sichtbar = () => LIST.filter(h => freigeschaltet(h.id));
+
   return {
-    LIST, draw, preview,
+    LIST, draw, preview, freigeschaltet, sichtbar,
     has: id => Object.prototype.hasOwnProperty.call(DEFS, id),
     name: id => (byId(id) || LIST[0]).name,
     icon: id => (byId(id) || LIST[0]).icon,

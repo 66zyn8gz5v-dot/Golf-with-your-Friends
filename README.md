@@ -38,13 +38,24 @@ Nach dem Antippen eines Ortes folgt die Startaufstellung mit **Modus**, **Spiele
 
 Die vier Bälle sind weiß, grün, hellblau und gelb. Jeder Spieler sucht sich vor dem Spiel einen Hut für seinen Ball aus: **Krone**, **Zauberhut**, **Piratenhut**,
 **Zylinder**, **Kappe**, **Wikingerhelm**, **Ritterhelm**, **Partyhut**, **Strohhut**, **Teufelshörner**,
-**Blumenkranz** – oder **Ohne** für den blanken Ball. Die Vorschau in der Startaufstellung zeigt den Ball
+**Blumenkranz**, **Legionärshelm** – oder **Ohne** für den blanken Ball. Die Vorschau in der Startaufstellung zeigt den Ball
 gleich in der Farbe des jeweiligen Spielers; bei mehreren Spielern wird oben umgeschaltet, für wen gerade
 gewählt wird. Die Wahl merkt sich der Browser, und in der Anzeigetafel steht neben jedem Spieler sein Hut.
 
 Der **Ritterhelm** ist ein Sonderfall: er legt sich um den ganzen Ball, als wäre der Ball der Kopf, und trägt
 einen Federbusch wie bei den Feldherren. Die beiden äußeren Federn nehmen die Farbe des Balls an (beim weißen
 Ball Rot), die mittlere bleibt immer weiß.
+
+**Legionärshelm** und **Championhelm** gehören zum Kolosseum und sind ein Paar: dieselbe Grundform –
+halbrunde Helmglocke, goldener Rand über der Stirn mit Nieten, breiter Nackenschirm nach hinten unten,
+seitliche Wangenklappen – einmal in Silber für die Teilnahme, einmal in Gold mit rotem Federkamm für den
+Sieg. Bewusst wenige, große Formen: Bei Ballgröße bleibt von feinen Verzierungen nichts übrig.
+
+**Gesperrte Hüte:** Der Championhelm steht schon in der Liste, taucht aber in der Auswahl noch nicht auf –
+er trägt `locked: true`. Wie man ihn gewinnt, ist noch nicht gebaut; vorgesehen ist nur die Sperre. Die
+einzige Stelle, die darüber entscheidet, ist `Hats.freigeschaltet(id)`; die Auswahl zeigt, was
+`Hats.sichtbar()` zurückgibt. Gezeichnet wird ein gesperrter Hut trotzdem – kommt der Hut eines
+Mitspielers übers Netz, soll er zu sehen sein, ganz gleich was hier steht.
 
 Die Hüte werden in `src/hats.js` gezeichnet – reine Canvas-Pfade, keine Bilddateien. Ein neuer Hut braucht
 nur eine Zeichenfunktion in `DEFS` und einen Eintrag in `LIST`; der Nullpunkt liegt auf dem Kopf des Balls,
