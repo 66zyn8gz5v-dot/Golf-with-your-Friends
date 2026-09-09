@@ -77,16 +77,6 @@ const Hats = (() => {
     ctx.stroke();
     ctx.strokeStyle = 'rgba(0,0,0,0.4)'; ctx.lineWidth = 0.07;
   }
-  /* eine Blüte aus fünf Blättern mit gelber Mitte */
-  function bloom(ctx, x, y, r, col) {
-    ctx.fillStyle = col;
-    for (let i = 0; i < 5; i++) {
-      const a = i * TAU2 / 5 - Math.PI / 2;
-      ctx.beginPath(); ctx.ellipse(x + Math.cos(a) * r * 0.62, y + Math.sin(a) * r * 0.62, r * 0.5, r * 0.38, a, 0, TAU2); ctx.fill();
-    }
-    ctx.beginPath(); ctx.arc(x, y, r * 0.34, 0, TAU2); ctx.fillStyle = '#ffd45e'; ctx.fill();
-  }
-
   /* Jede Zeichenfunktion beginnt auf dem Ballkopf (0,0) und baut den Hut nach oben auf. */
   /* Legionärshelm und Championhelm sind ein Paar: dieselbe Grundform, einmal in Silber und einmal
      in Gold mit rotem Federkamm. Absichtlich wenige, große Formen – halbrunde Helmglocke, ein
@@ -312,58 +302,6 @@ const Hats = (() => {
       ctx.beginPath(); ctx.ellipse(0, -0.32, 0.22, 0.12, 0, 0, TAU2); fs(ctx, '#e0b84a');
     },
 
-    party(ctx) { // Partyhut mit Streifen und Bommel
-      ctx.save();
-      ctx.beginPath(); ctx.moveTo(-0.64, 0.1); ctx.lineTo(0, -1.5); ctx.lineTo(0.64, 0.1); ctx.closePath();
-      ctx.save(); ctx.clip();
-      ctx.fillStyle = '#ffd166'; ctx.fillRect(-0.7, -1.6, 1.4, 1.8);
-      const cols = ['#e8455f', '#4ec9e0', '#7fe07a'];
-      for (let i = 0; i < 6; i++) { ctx.fillStyle = cols[i % 3]; ctx.save(); ctx.translate(0, 0.1 - i * 0.28); ctx.rotate(-0.35); ctx.fillRect(-1, -0.12, 2, 0.14); ctx.restore(); }
-      ctx.restore();
-      ctx.strokeStyle = 'rgba(0,0,0,0.4)'; ctx.lineWidth = 0.07; ctx.stroke();
-      ctx.restore();
-      ctx.beginPath(); ctx.arc(0, -1.56, 0.22, 0, TAU2); fs(ctx, '#ff5d8f');
-    },
-
-    straw(ctx) { // Strohhut mit Band
-      brim(ctx, 1.22, 0.34, '#d9b872', 0.02);
-      ctx.beginPath(); ctx.ellipse(0, 0.02, 0.62, 0.62, 0, Math.PI, TAU2); ctx.closePath();
-      const g = ctx.createLinearGradient(-0.6, 0, 0.6, -0.6);
-      g.addColorStop(0, '#d3ab63'); g.addColorStop(0.45, '#f0d79a'); g.addColorStop(1, '#c39c56');
-      fs(ctx, g);
-      ctx.save();
-      ctx.beginPath(); ctx.ellipse(0, 0.02, 0.62, 0.62, 0, Math.PI, TAU2); ctx.clip();
-      ctx.fillStyle = '#3f8f5a'; ctx.fillRect(-0.7, -0.24, 1.4, 0.22);
-      ctx.restore();
-      ctx.strokeStyle = 'rgba(120,90,40,0.45)'; ctx.lineWidth = 0.04;
-      for (const y of [-0.36, -0.5]) { ctx.beginPath(); ctx.ellipse(0, 0.02, 0.6, 0.6, 0, Math.PI + 0.5 + y * 0.4, TAU2 - 0.5 - y * 0.4); ctx.stroke(); }
-    },
-
-    horns(ctx) { // Teufelshörner
-      const horn = d => {
-        ctx.beginPath();
-        ctx.moveTo(d * 0.16, 0.04);
-        ctx.quadraticCurveTo(d * 0.72, -0.28, d * 0.66, -0.98);
-        ctx.quadraticCurveTo(d * 0.42, -0.44, d * 0.04, -0.06);
-        ctx.closePath();
-        const g = ctx.createLinearGradient(0, 0, d * 0.7, -0.9);
-        g.addColorStop(0, '#8e1f1a'); g.addColorStop(1, '#e0503f');
-        fs(ctx, g);
-      };
-      horn(-1); horn(1);
-    },
-
-    flower(ctx) { // Blumenkranz
-      ctx.strokeStyle = '#3f8f5a'; ctx.lineWidth = 0.14;
-      ctx.beginPath(); ctx.ellipse(0, 0.02, 0.82, 0.5, 0, Math.PI + 0.25, TAU2 - 0.25); ctx.stroke();
-      ctx.strokeStyle = 'rgba(0,0,0,0.4)'; ctx.lineWidth = 0.07;
-      const cols = ['#ff8ec4', '#fff2a8', '#a8d8ff', '#ffb36b', '#ff8ec4'];
-      for (let i = 0; i < 5; i++) {
-        const a = Math.PI + 0.32 + i * (Math.PI - 0.64) / 4;
-        bloom(ctx, Math.cos(a) * 0.82, 0.02 + Math.sin(a) * 0.5, 0.24, cols[i]);
-      }
-    },
-
     legion(ctx) { galea(ctx, false); },   // Legionärshelm: Silber mit Gold – für die Teilnahme
     champion(ctx, color) { galea(ctx, true, color); },  // Championhelm: Gold mit Federkamm in Ballfarbe – der Siegerpreis
   };
@@ -378,10 +316,6 @@ const Hats = (() => {
     { id: 'cap', name: 'Kappe', icon: '🧢' },
     { id: 'viking', name: 'Wikingerhelm', icon: '🐂' },
     { id: 'knight', name: 'Ritterhelm', icon: '⚔️' },
-    { id: 'party', name: 'Partyhut', icon: '🎉' },
-    { id: 'straw', name: 'Strohhut', icon: '👒' },
-    { id: 'horns', name: 'Teufelshörner', icon: '😈' },
-    { id: 'flower', name: 'Blumenkranz', icon: '🌸' },
     { id: 'legion', name: 'Legionärshelm', icon: '🪖' },
     /* Gesperrt: den Championhelm gibt es schon, er ist nur noch nicht zu sehen. Freigeschaltet wird
        bisher nichts – wie man ihn gewinnt, kommt später. Hier steht nur die Sperre. */

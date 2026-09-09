@@ -45,8 +45,8 @@ Nach dem Antippen eines Ortes folgt die Startaufstellung mit **Modus**, **Spiele
 ### Hüte
 
 Die vier Bälle sind weiß, grün, hellblau und gelb. Jeder Spieler sucht sich vor dem Spiel einen Hut für seinen Ball aus: **Krone**, **Zauberhut**, **Piratenhut**,
-**Zylinder**, **Kappe**, **Wikingerhelm**, **Ritterhelm**, **Partyhut**, **Strohhut**, **Teufelshörner**,
-**Blumenkranz**, **Legionärshelm** – oder **Ohne** für den blanken Ball. Die Vorschau in der Startaufstellung zeigt den Ball
+**Zylinder**, **Kappe**, **Wikingerhelm**, **Ritterhelm**, **Legionärshelm** – oder **Ohne** für den
+blanken Ball. Die Vorschau in der Startaufstellung zeigt den Ball
 gleich in der Farbe des jeweiligen Spielers; bei mehreren Spielern wird oben umgeschaltet, für wen gerade
 gewählt wird. Die Wahl merkt sich der Browser, und in der Anzeigetafel steht neben jedem Spieler sein Hut.
 

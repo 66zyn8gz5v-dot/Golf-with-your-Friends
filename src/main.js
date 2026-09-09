@@ -8,7 +8,7 @@
   const PLAYER_COLORS = ['#ffffff', '#5ce07a', '#4dd4ff', '#ffe066'];
   const PLAYER_NAMES = ['Spieler 1', 'Spieler 2', 'Spieler 3', 'Spieler 4'];
   /* Hut je Spieler: die Wahl merkt sich der Browser, damit sie beim nächsten Mal wieder dasteht */
-  const DEFAULT_HATS = ['crown', 'pirate', 'wizard', 'party'];
+  const DEFAULT_HATS = ['crown', 'pirate', 'wizard', 'viking'];
   const playerHats = DEFAULT_HATS.slice();
   try {
     const saved = JSON.parse(localStorage.getItem(speicherSchluessel('hats')) || 'null');
