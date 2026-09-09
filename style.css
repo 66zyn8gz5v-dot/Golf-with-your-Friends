@@ -374,6 +374,12 @@ body.editing #editor-panel { display: flex; flex-direction: column; }
 .hat.zu canvas { opacity: 0.3; filter: grayscale(0.85); }
 .hat.zu .hat-lock { display: flex; }
 .hat.zu:hover { transform: none; border-color: rgba(255, 224, 138, 0.35); }
+/* Prüfstand Vorschau: Die Sperre bleibt angezeigt, aber der Skin bleibt farbig – man soll ja
+   gerade sehen, was man da aufsetzt. Das Schloss rückt dafür klein in die Ecke. */
+.hat.zu.probe canvas { opacity: 1; filter: none; }
+.hat.zu.probe { color: #cfc4e6; }
+.hat.zu.probe .hat-lock { inset: 3px 3px auto auto; }
+.hat.zu.probe .hat-lock .mi { width: 15px; height: 15px; }
 #scoreboard .hat-icon { margin-right: 4px; font-size: 12px; }
 @media (max-width: 700px) { .hat-grid { grid-template-columns: repeat(4, 1fr); max-width: 340px; } .hat canvas { width: 50px; height: 50px; } }
 @media (max-width: 380px) { .hat-grid { grid-template-columns: repeat(3, 1fr); } }

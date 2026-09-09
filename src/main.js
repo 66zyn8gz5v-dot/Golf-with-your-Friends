@@ -9,6 +9,9 @@
   const PLAYER_NAMES = ['Spieler 1', 'Spieler 2', 'Spieler 3', 'Spieler 4'];
   /* Hut je Spieler: die Wahl merkt sich der Browser, damit sie beim nächsten Mal wieder dasteht */
   const DEFAULT_HATS = ['crown', 'pirate', 'wizard', 'viking'];
+  /* Die Vorschau ist der Prüfstand: dort lassen sich auch noch nicht verdiente Belohnungen
+     aufsetzen, damit man sie ansehen kann. Im Spiel gilt die Sperre. */
+  const TEST_FREI = typeof VORSCHAU !== 'undefined' && VORSCHAU;
   const playerHats = DEFAULT_HATS.slice();
   try {
     const saved = JSON.parse(localStorage.getItem(speicherSchluessel('hats')) || 'null');
@@ -959,10 +962,12 @@
       const col = PLAYER_COLORS[hatWho];
       ui.overlay.querySelectorAll('#hats .hat').forEach(b => {
         const frei = Hats.freigeschaltet(b.dataset.h);
-        b.classList.toggle('sel', frei && b.dataset.h === playerHats[hatWho]);
+        b.classList.toggle('sel', b.dataset.h === playerHats[hatWho]);
         b.classList.toggle('zu', !frei);
+        b.classList.toggle('probe', !frei && TEST_FREI); // Vorschau: Sperre zeigen, Skin trotzdem sehen
         // Gesperrt: der Platz bleibt sichtbar, damit man weiß, was es zu holen gibt
-        b.title = frei ? Hats.name(b.dataset.h) : `${Hats.name(b.dataset.h)} – ${Hats.bedingung(b.dataset.h)}`;
+        b.title = frei ? Hats.name(b.dataset.h)
+          : `${Hats.name(b.dataset.h)} – ${Hats.bedingung(b.dataset.h)}${TEST_FREI ? ' (in der Vorschau zum Ausprobieren)' : ''}`;
         Hats.preview(b.querySelector('canvas'), b.dataset.h, col);
       });
     }
@@ -979,7 +984,13 @@
     }
     ui.overlay.querySelectorAll('#hats .hat').forEach(b => b.addEventListener('click', () => {
       Sfx.unlock();
-      if (!Hats.freigeschaltet(b.dataset.h)) { showMessage(`${Hats.name(b.dataset.h)}: ${Hats.bedingung(b.dataset.h)}`, 2600); return; }
+      if (!Hats.freigeschaltet(b.dataset.h)) {
+        // In der Vorschau darf man eine gesperrte Belohnung trotzdem aufsetzen – sie ist der
+        // Prüfstand, hier soll man alles ansehen können. Im Spiel bleibt die Sperre: dort ist sie
+        // der halbe Reiz.
+        if (!TEST_FREI) { showMessage(`${Hats.name(b.dataset.h)}: ${Hats.bedingung(b.dataset.h)}`, 2600); return; }
+        showMessage(`${Hats.name(b.dataset.h)} – in der Vorschau zum Ausprobieren freigegeben`, 2400);
+      }
       setHat(hatWho, b.dataset.h); drawWho(); drawHats();
     }));
     drawWho(); drawHats();

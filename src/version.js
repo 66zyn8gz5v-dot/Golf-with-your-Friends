@@ -12,7 +12,7 @@
 
    Diese Datei wird sowohl von der Seite als auch vom Service Worker geladen (importScripts),
    darum steht hier nichts, was ein Fenster braucht. */
-const APP_VERSION = 39;
+const APP_VERSION = 40;
 
 /* location gibt es in der Seite und im Service Worker – in beiden Fällen mit dem Pfad, unter dem
    die Datei liegt. Fehlt es (etwa beim Prüfen mit Node), gilt „kein Vorschau-Stand". */

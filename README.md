@@ -93,6 +93,13 @@ Hinweis, welcher Rekord dafür nötig ist. Man soll sehen, was es zu holen gibt.
 gesperrter Skin trotzdem in voller Farbe – kommt er über das Netz vom Ball eines Mitspielers, soll man ihn
 sehen, ganz gleich was auf dem eigenen Gerät in der Rangliste steht.
 
+**In der Vorschau sind die Sperren offen.** Die Vorschau ist der Prüfstand – dort soll man alles ansehen
+können, ohne erst einen Rekord holen zu müssen. Entschieden wird das an einer Stelle in `src/main.js`:
+`TEST_FREI` ist nur wahr, wenn `VORSCHAU` wahr ist. Ein Klick auf eine gesperrte Belohnung setzt sie dann
+trotzdem auf und sagt kurz, dass sie nur zum Ausprobieren freigegeben ist; Schloss und Bedingung bleiben
+dabei sichtbar, damit man die Sperre nicht vergisst. Im Spiel bleibt es beim Hinweis auf die Bedingung –
+dort ist die Sperre der halbe Reiz.
+
 Die Hüte werden in `src/hats.js` gezeichnet – reine Canvas-Pfade, keine Bilddateien. Ein neuer Hut braucht
 nur eine Zeichenfunktion in `DEFS` und einen Eintrag in `LIST`; der Nullpunkt liegt auf dem Kopf des Balls,
 eine Einheit entspricht dem Ballradius, und die Ballmitte liegt bei (0, 0.72). Wer die Spielerfarbe braucht,
