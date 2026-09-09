@@ -83,6 +83,34 @@ macht die Welt. Bewegt wird nach `state.t`, der Spieluhr: dieselbe Zahl auf jede
 sehen also alle dasselbe. Weil ein Skin die Ballfarbe verdeckt, bekommt er einen dünnen Reif in der Farbe
 des Spielers – sonst wüsste bei vier Bällen niemand, welcher der eigene ist.
 
+**Was sich in jeder Kugel bewegt.** Nicht bloßes Hin und Her, sondern jeweils etwas, das man beobachten
+kann: In der Märchenkugel rieseln Flocken verschieden schnell und blassen unten aus, Sterne funkeln, die
+Burgfenster pulsen, die Fahne weht. Im Aquarium schlägt jedem Fisch der Schwanz im Takt, die Brustflosse
+kippt gegenläufig, Lichtstrahlen wandern, Pflanzen wiegen sich, Blasen steigen und werden dabei größer;
+ein kleiner Schwarm zieht im Hintergrund vorbei. Im Zahnradwerk **greifen die Räder wirklich ineinander**
+– der Radius folgt der Zähnezahl (gleicher Modul), und `eingriff()` rechnet aus, wie schnell und um wie
+viel versetzt das nächste Rad laufen muss, damit Zahn in Lücke steht; die Kurbel auf dem großen Rad treibt
+über ein Pleuel einen Kolben im Zylinder. Am Götzenkopf atmet das Augenglühen und flackert ab und zu auf,
+Ranken wiegen sich, Leuchtkäfer schwirren. In der Gewitterkugel ziehen zwei Wolkenreihen unterschiedlich
+schnell, es regnet durchgehend, und alle 2,2 Sekunden schlägt ein Blitz ein – seine Zackenform wird aus
+der Nummer des Schlags gewürfelt, jeder Blitz sieht also anders aus, und der Schein klingt in mehreren
+Stufen ab. In der Kristallkugel dreht sich die Iris, die Pupille weitet sich, und das Auge **blinzelt**
+alle gut vier Sekunden. Der Championhelm hat als einziger Hut eine Bewegung: sein Federkamm wiegt sich.
+
+**Zwei Feinheitsstufen.** `Hats.draw` liest aus der Leinwand, wie viele Bildpunkte der Ball wirklich breit
+ist (`bildpunkte()`), und gibt das als `fein` an die Zeichenfunktion weiter. Unter `FEIN_AB` (34 Punkte
+Radius) fallen Sterne, Kiesel, Muschel, Risse, Nieten, Ranken, Schraffuren und der Fischschwarm weg und
+die Zahl der Flocken, Regenstriche und Blasen sinkt. Das kostet nichts an Wirkung – bei einem Ball von
+vierzig Punkten ist eine Schneeflocke ein Bruchteil eines Punktes – und spart die Hälfte der Arbeit.
+
+**Eine Regel, die beim Zeichnen viel ausmacht:** `globalAlpha` ist auf der Leinwand teuer. Gemessen an
+zwanzig kleinen Kreisen: einzeln mit `globalAlpha` gefüllt 235 µs, einzeln mit `rgba()`-Farbe 120 µs, alle
+zwanzig in **einem** Pfad mit **einer** Füllung 17 µs. Darum sammeln die Skins gleichfarbige Formen in
+einem Pfad und füllen einmal; wo die Deckkraft je Stück schwanken müsste (Flocken, Funken, Sterne), steckt
+das Schwanken in der Größe oder es gibt zwei, drei Gruppen statt zwanzig Einzelfüllungen. Nebenwirkung zum
+Guten: Überlappende Teilformen decken sich in einem Pfad nicht mehr doppelt – die Wolkenbank der
+Gewitterkugel wirkt seither wie eine Wolke statt wie gestapelte Flecken.
+
 **Wie die Sperre funktioniert:** In `Hats.LIST` trägt eine Belohnung `welt: '<Weltkennung>'`, ein
 Ganzkörper-Skin zusätzlich `voll: true`. Die eine Stelle, die entscheidet, ist `Hats.freigeschaltet(id)`:
 Sie vergleicht `Best.name` mit dem Namen am Kombi-Rundenrekord der Welt. Die Auszeichnung gilt für den
