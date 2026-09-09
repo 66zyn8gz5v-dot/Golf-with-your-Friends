@@ -319,8 +319,8 @@ Zweite Welt der Stufe Legende und die schwerste: zehn Bahnen mit schmalen Wegen 
 
 ## Die Bahnen des Kolosseums
 
-Der Anfang der Turnierbahnen: drei Bahnen in der hellen Arena, Stufe Legende. Neu ist das **Löwentor**
-(siehe oben) – Tore in der Arenamauer, die einen Ball mit Schwung schlucken und an anderer Stelle wieder
+Der Anfang der Turnierbahnen: drei Bahnen in der hellen Arena, Stufe Legende. Neu sind das **Löwentor**
+und das **wandernde Tor** (siehe oben) – Tore in der Arenamauer, die einen Ball mit Schwung schlucken und an anderer Stelle wieder
 ausspucken. Dazu **Gladiatoren** (dieselbe Figur wie die Ritter auf dem Burgberg, nur in Sandfarben und
 Rot) und der **Streitwagen** (dieselbe Fähre wie die Lore in der Zwergenschmiede: Er fährt seine feste
 Strecke, nimmt den Ball an der Station auf und trägt ihn mit – seine Spur sind zwei Rillen im Sand).
@@ -329,7 +329,7 @@ Strecke, nimmt den Ball an der Station auf und trägt ihn mit – seine Spur sin
 |---|---|---|---|
 | 1 | Löwentor | 3 | zwei Gassen, dazwischen die Arenamauer; nur das Löwentor führt hinüber, und nur mit Schwung |
 | 2 | Streitwagen | 4 | Rundkurs um die Spina; unten fährt der Streitwagen in seinen Rillen, oben patrouillieren zwei Gladiatoren, quer durch die Spina das Löwentor |
-| 3 | Löwengrube | 5 | drei Kammern, zwei Torpaare: erst quer durch die Mauer, dann hinunter in die Grube; Steinrad und Gladiatoren |
+| 3 | Löwengrube | 5 | drei Kammern, zwei Torpaare: erst quer durch die Mauer, dann hinunter in die Grube; dort sperrt ein **wanderndes Tor** den Weg zum Loch, dazu Steinrad und Gladiatoren |
 
 ## Kostenlos als App aufs iPad oder Handy (GitHub Pages)
 
@@ -394,7 +394,7 @@ Blickzonen: Über `views` (Rechtecke mit `look`-Punkt) kann eine Bahn festlegen,
 
 Höhenstufen: Eine Bahn kann ein Ziffernraster `heights` (0–9) und `hStep` angeben. Stufen sind nur über `field`-Rampen mit `base`/`rise` zu erklimmen, Kanten nach oben wirken sonst wie Mauern; nach unten rollt der Ball frei.
 
-Hindernis-Typen: `lightning` (Blitzfeld `w`×`h`: `warn` Sekunden Knistern, dann `strike` Sekunden Einschlag je `period`; wer dann in der Zone ist, auch fliegend, kassiert einen Strafschlag zurück zum Schlagstart), `updraft` (Aufwind-Zone: ein Ball mit mindestens `minSpeed` wird in Rollrichtung `land` Kacheln weit geflogen, Flugtempo `fly`), `trapdoor` (Falltür `w`×`h`, offen für den `open`-Anteil der `period`; wer darüberrollt oder darauf liegt, stürzt: Strafschlag zurück zum Schlagstart), `field` mit `style: 'dark'` (Schattenzone: der Ball ist darin fast unsichtbar), `bumper` (`style`: `mushroom`, `rock`, `crystal`, `coral`, `idol`, `orb`, `grave`, `eye`), `mover` (`style` u. a. `cart`, `cannonball`, `boulder`, `barrel`, `shark`, `wave`, `dragon`, `knight`, `gladiator` (dieselbe Figur wie der Ritter, nur in Sandfarben und Rot – Helm mit rotem Kamm und Rundschild), `guard`, `coconut`, `ghost`, `bat`, `stormcloud`), `ferry` (`style`: `cart`, `chariot` (Streitwagen – dieselbe Lore, nur anders gezeichnet: die Räder drehen sich nach dem Fahrfortschritt, sie stehen also still, solange der Wagen wartet), `boat`, `ship`, `balloon`, `airship`), `wave` (wandernde Welle, keine Mauer: schiebt einen ruhenden oder langsamen Ball mit `push` in ihrer Laufrichtung mit; ein schnellerer Ball bricht hindurch und behält dabei nur den Anteil `brake` seines Tempos), `spikes` (Stachelfalle: Platte `w`×`h`, Stacheln sind `up`-Anteil der `period` draußen und blockieren dann wie eine Mauer; ein Ball, der auf der Platte liegt, wenn sie hochkommen, wird aufgespießt: Strafschlag und zurück zum Start des letzten Schlags), `sharkjump` (Hai, der im Takt `period` quer über eine Bucht springt; `style: 'croc'` zeichnet ein Krokodil und einen Ball frisst, der währenddessen über die Zone fliegt; Fressen kostet einen Strafschlag – eine `inner`-Map mit `stomach: true` würde den Ball stattdessen dorthin schicken), `rotor` (auch als Pendel mit `swing`; `style: 'tentacle'` macht daraus eine Krake, `style: 'vine'` eine Liane), `windmill`, `gate` (periodisch oder mit `linked` an einen Schalter gekoppelt), `portal`, `boost`, `field`, `ramp`, `rail`, `wall`, `cannon` (schwenkende Kanone, `base`/`amp`/`speed`/`range`; `style: 'catapult'` zeichnet ein Katapult), `magnet` (`strength` > 0 zieht an, < 0 stößt ab, `slow` bremst; `style: 'coral'` zeichnet eine Koralle, `style: 'pearl'` eine Perle; `curse: 2.0` macht den Ball nach Berührung für den Rest der Bahn träge), `turntable` (Drehscheibe mit Auswurfrinne `exit` in Grad; `style: 'whirl'` zeichnet einen Strudel), `field` (`style`: `wind`, `current` für Unterwasser-Strömung, `slope` für Rampen zwischen Höhenstufen; `gust` macht aus Dauerwind Windstöße), `potion` (Schrumpftrank, `scale`/`duration`), `cauldron` (Hexentopf: nur aus der Luft zu treffen, schrumpft und spuckt Richtung `exit` aus), `switch` (Druckplatte, `target`/`duration`), `door` (Tür in die Innen-Map `inner` einer Bahn; `style: 'pyramid'` mit `px`/`py`/`base` zeichnet eine Stufenpyramide um die Tür, `style: 'wreck'` mit `px`/`py` ein Schiffswrack, dessen Leck die Tür ist, `style: 'temple'` ein Tempeltor).
+Hindernis-Typen: `lightning` (Blitzfeld `w`×`h`: `warn` Sekunden Knistern, dann `strike` Sekunden Einschlag je `period`; wer dann in der Zone ist, auch fliegend, kassiert einen Strafschlag zurück zum Schlagstart), `updraft` (Aufwind-Zone: ein Ball mit mindestens `minSpeed` wird in Rollrichtung `land` Kacheln weit geflogen, Flugtempo `fly`), `trapdoor` (Falltür `w`×`h`, offen für den `open`-Anteil der `period`; wer darüberrollt oder darauf liegt, stürzt: Strafschlag zurück zum Schlagstart), `wandergate` (wanderndes Tor: Mauer mit gleitendem Durchlass, s. o.), `field` mit `style: 'dark'` (Schattenzone: der Ball ist darin fast unsichtbar), `bumper` (`style`: `mushroom`, `rock`, `crystal`, `coral`, `idol`, `orb`, `grave`, `eye`), `mover` (`style` u. a. `cart`, `cannonball`, `boulder`, `barrel`, `shark`, `wave`, `dragon`, `knight`, `gladiator` (dieselbe Figur wie der Ritter, nur in Sandfarben und Rot – Helm mit rotem Kamm und Rundschild), `guard`, `coconut`, `ghost`, `bat`, `stormcloud`), `ferry` (`style`: `cart`, `chariot` (Streitwagen – dieselbe Lore, nur anders gezeichnet: die Räder drehen sich nach dem Fahrfortschritt, sie stehen also still, solange der Wagen wartet), `boat`, `ship`, `balloon`, `airship`), `wave` (wandernde Welle, keine Mauer: schiebt einen ruhenden oder langsamen Ball mit `push` in ihrer Laufrichtung mit; ein schnellerer Ball bricht hindurch und behält dabei nur den Anteil `brake` seines Tempos), `spikes` (Stachelfalle: Platte `w`×`h`, Stacheln sind `up`-Anteil der `period` draußen und blockieren dann wie eine Mauer; ein Ball, der auf der Platte liegt, wenn sie hochkommen, wird aufgespießt: Strafschlag und zurück zum Start des letzten Schlags), `sharkjump` (Hai, der im Takt `period` quer über eine Bucht springt; `style: 'croc'` zeichnet ein Krokodil und einen Ball frisst, der währenddessen über die Zone fliegt; Fressen kostet einen Strafschlag – eine `inner`-Map mit `stomach: true` würde den Ball stattdessen dorthin schicken), `rotor` (auch als Pendel mit `swing`; `style: 'tentacle'` macht daraus eine Krake, `style: 'vine'` eine Liane), `windmill`, `gate` (periodisch oder mit `linked` an einen Schalter gekoppelt), `portal`, `boost`, `field`, `ramp`, `rail`, `wall`, `cannon` (schwenkende Kanone, `base`/`amp`/`speed`/`range`; `style: 'catapult'` zeichnet ein Katapult), `magnet` (`strength` > 0 zieht an, < 0 stößt ab, `slow` bremst; `style: 'coral'` zeichnet eine Koralle, `style: 'pearl'` eine Perle; `curse: 2.0` macht den Ball nach Berührung für den Rest der Bahn träge), `turntable` (Drehscheibe mit Auswurfrinne `exit` in Grad; `style: 'whirl'` zeichnet einen Strudel), `field` (`style`: `wind`, `current` für Unterwasser-Strömung, `slope` für Rampen zwischen Höhenstufen; `gust` macht aus Dauerwind Windstöße), `potion` (Schrumpftrank, `scale`/`duration`), `cauldron` (Hexentopf: nur aus der Luft zu treffen, schrumpft und spuckt Richtung `exit` aus), `switch` (Druckplatte, `target`/`duration`), `door` (Tür in die Innen-Map `inner` einer Bahn; `style: 'pyramid'` mit `px`/`py`/`base` zeichnet eine Stufenpyramide um die Tür, `style: 'wreck'` mit `px`/`py` ein Schiffswrack, dessen Leck die Tür ist, `style: 'temple'` ein Tempeltor).
 **Löwentor** (`liongate`): das einzige Hindernis, dessen Plätze nicht in der Hindernisliste stehen,
 sondern als Buchstaben in der Karte. Der Großbuchstabe ist der Eingang, der gleiche Kleinbuchstabe der
 Ausgang – `A`/`a`, `B`/`b`, `C`/`c`, mehrere Paare je Bahn erlaubt. In der Hindernisliste steht je Paar
@@ -415,6 +415,20 @@ das Tor ihn sanft entgegen seiner Anfahrt wieder heraus.
 
 `node tools/validate.mjs` prüft die Tore mit: ein Buchstabe ohne Gegenstück, derselbe Buchstabe mehrmals
 auf einer Karte oder ein Ausgang ohne Auswurfrichtung sind Fehler.
+
+**Wanderndes Tor** (`wandergate`): eine Mauer von (`x0`,`y0`) nach (`x1`,`y1`) wie ein festes Mauerstück,
+in der ein schmaler Durchlass (`gap`) steckt. Der Durchlass gleitet langsam an der Mauer entlang, kehrt am
+Ende um und kommt wieder zurück; die Mauer selbst ist massiv. Nicht die Umlaufzeit steht am Hindernis,
+sondern das Tempo als Konstante `WANDERTOR_TEMPO` (Kacheln je Sekunde) oben in
+`src/obstacles_legend.js` – so gleitet der Spalt an einer langen Mauer genauso schnell wie an einer
+kurzen, und eine längere Mauer wird von allein schwerer statt nur langsamer. Der Spalt läuft als
+Dreieckschwingung, also gleichmäßig hin und gleichmäßig zurück: An den Umkehrpunkten zu bremsen würde ihn
+dort unerreichbar machen.
+
+Auch das prüft `validate.mjs`: ein Durchlass so breit wie die Mauer (dann sperrt nichts mehr), ein
+Durchlass unter einer Kachel (dann kommt kein Ball hindurch), eine Mauer ohne Länge und eine Mauer, deren
+Mitte nicht auf dem Fairway liegt. Geprüft wird die Mitte, denn die Enden liegen absichtlich auf den
+Kanten der Bahn.
 
 ### Musik
 

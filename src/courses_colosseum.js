@@ -71,7 +71,7 @@ const COLOSSEUM_COURSES = [
   },
   {
     name: 'Löwengrube', par: 5, theme: 'colosseum', maxStrokes: 18,
-    intro: 'Drei Kammern, zwei Tore. Erst quer durch die Mauer, dann hinunter in die Grube – und jedes Mal braucht der Ball genug Schwung, sonst bleibt er, wo er ist.',
+    intro: 'Drei Kammern, zwei Löwentore. Erst quer durch die Mauer, dann hinunter in die Grube – und dort steht noch ein wanderndes Tor: Sein Durchlass gleitet langsam hin und her, und nur durch ihn geht es weiter.',
     map: [
       '............................',
       '..##########...##########...',
@@ -91,6 +91,9 @@ const COLOSSEUM_COURSES = [
     obstacles: [
       { type: 'liongate', pair: 'A', angle: 0 },
       { type: 'liongate', pair: 'B', angle: 90 },
+      // Wanderndes Tor quer durch die Grube: der Durchlass gleitet zwischen den beiden Wänden hin
+      // und her, und nur durch ihn kommt der Ball zum Loch
+      { type: 'wandergate', x0: 15, y0: 8, x1: 15, y1: 12, gap: 1.8 },
       { type: 'mover', x0: 16, y0: 1.5, x1: 23, y1: 1.5, w: 0.8, h: 0.8, period: 6, style: 'gladiator' },
       { type: 'mover', x0: 22, y0: 10.5, x1: 11, y1: 10.5, w: 0.8, h: 0.8, period: 7.5, phase: 0.4, style: 'gladiator' },
       { type: 'bumper', x: 17.5, y: 9.5, r: 0.38, style: 'rock' },

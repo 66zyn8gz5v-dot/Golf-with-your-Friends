@@ -861,6 +861,12 @@ class Renderer {
         const a = t * 2 + (i * TAU) / 3;
         ctx.beginPath(); ctx.ellipse(sx, sy, ob.r * 0.8 * s, ob.r * 0.8 * s * this.cam.tilt, 0, a, a + 1.2); ctx.stroke();
       }
+    } else if (ob.type === 'wandergate') {
+      // Der Durchlass wird auf dem Boden hell markiert – man soll von weitem sehen, wo er gerade steht
+      const q = ob.gap / 2, nx = -ob.uy * 0.45, ny = ob.ux * 0.45;
+      const poly = [[ob.gx - ob.ux * q + nx, ob.gy - ob.uy * q + ny], [ob.gx + ob.ux * q + nx, ob.gy + ob.uy * q + ny],
+        [ob.gx + ob.ux * q - nx, ob.gy + ob.uy * q - ny], [ob.gx - ob.ux * q - nx, ob.gy - ob.uy * q - ny]];
+      this.fillPoly(ctx, poly, 0.006, 'rgba(255,214,110,0.28)', false);
     } else if (ob.type === 'rail') {
       const horiz = ob.x0 !== undefined;
       const laengs = (off, z) => horiz
@@ -1047,6 +1053,37 @@ class Renderer {
         const p0 = [ob.x0 + (ob.x1 - ob.x0) * a, ob.y0 + (ob.y1 - ob.y0) * a], p1 = [ob.x0 + (ob.x1 - ob.x0) * b, ob.y0 + (ob.y1 - ob.y0) * b];
         const poly = [[p0[0] + nx, p0[1] + ny], [p1[0] + nx, p1[1] + ny], [p1[0] - nx, p1[1] - ny], [p0[0] - nx, p0[1] - ny]];
         items.push({ x: (p0[0] + p1[0]) / 2, y: (p0[1] + p1[1]) / 2, draw: () => this.prism(ctx, poly, 0, ob.h, th.wall.top, th.wall.side, { outline: shade(th.wall.side, 0.75) }) });
+      }
+    } else if (ob.type === 'wandergate') {
+      /* Zwei Mauerstücke, dazwischen der wandernde Durchlass. Die Stücke werden wie feste Mauern in
+         Häppchen zerlegt, damit die Sortierung nach Tiefe stimmt; an den Spaltkanten steht je ein
+         goldener Pfosten, damit man das Tor als Tor erkennt und nicht als Bruchstelle. */
+      const nx = -ob.uy * ob.t / 2, ny = ob.ux * ob.t / 2;
+      for (const [p, q] of ob.stuecke()) {
+        const L = Math.hypot(q[0] - p[0], q[1] - p[1]), n = Math.max(1, Math.ceil(L / 3));
+        for (let i = 0; i < n; i++) {
+          const a = i / n, b = (i + 1) / n;
+          const p0 = [p[0] + (q[0] - p[0]) * a, p[1] + (q[1] - p[1]) * a];
+          const p1 = [p[0] + (q[0] - p[0]) * b, p[1] + (q[1] - p[1]) * b];
+          const poly = [[p0[0] + nx, p0[1] + ny], [p1[0] + nx, p1[1] + ny], [p1[0] - nx, p1[1] - ny], [p0[0] - nx, p0[1] - ny]];
+          items.push({ x: (p0[0] + p1[0]) / 2, y: (p0[1] + p1[1]) / 2, draw: () => {
+            // Etwas dunkler als die Arenamauer und mit roter Deckleiste – sonst geht die Sperre im
+            // hellen Sandstein ringsum unter und man sieht nicht, wo der Weg zu ist.
+            this.prism(ctx, poly, 0, ob.h, th.block.top, th.block.side, { outline: shade(th.block.side, 0.7) });
+            this.prism(ctx, poly, ob.h, 0.12, '#c0392c', '#7a1e17');
+          } });
+        }
+      }
+      for (const sd of [-1, 1]) {   // Torpfosten an den Kanten des Durchlasses
+        const px = ob.gx + ob.ux * sd * ob.gap / 2, py = ob.gy + ob.uy * sd * ob.gap / 2;
+        const poly = [[px - 0.16, py - 0.16], [px + 0.16, py - 0.16], [px + 0.16, py + 0.16], [px - 0.16, py + 0.16]];
+        items.push({ x: px, y: py, bias: 0.1, draw: () => {
+          // prism nimmt die Seitenfarbe als Hex und hellt sie selbst je nach Wandrichtung auf –
+          // ein fertiges rgb(...) kann sie nicht lesen und würde schwarz.
+          this.prism(ctx, poly, 0, ob.h + 0.35, '#ffd45e', '#a8842a', { outline: '#6d5418' });
+          const [tx, ty] = this.proj(px, py, ob.h + 0.45);
+          ctx.fillStyle = '#fff0b8'; ctx.beginPath(); ctx.arc(tx, ty, this.scale * 0.09, 0, TAU); ctx.fill();
+        } });
       }
     } else if (ob.type === 'mover' || ob.type === 'ferry' || ob.type === 'wave') {
       items.push({ x: ob.x, y: ob.y, bias: 0.3, draw: () => { this.flat = ob.type === 'ferry' && ob.flat; this.drawMover(ctx, ob, t); this.flat = false; } });

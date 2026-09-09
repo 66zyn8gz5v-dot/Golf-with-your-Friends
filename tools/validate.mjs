@@ -37,6 +37,20 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
     if (!tor) problems.push(`Löwentor ${gross}: kein Hindernis vom Typ liongate mit pair '${gross}' – der Ausgang hat keine Auswurfrichtung`);
     else if (typeof tor.angle !== 'number' || !isFinite(tor.angle)) problems.push(`Löwentor ${gross}: der Ausgang hat keine Auswurfrichtung (angle fehlt)`);
   }
+  /* Wanderndes Tor: eine Mauer mit gleitendem Durchlass. Ist der Spalt so breit wie die Mauer,
+     sperrt nichts mehr; ist er zu schmal, kommt der Ball nie hindurch. Und die Mauer soll auf der
+     Bahn stehen, nicht daneben. Geprüft wird die Mitte, denn die Enden liegen absichtlich auf den
+     Kanten der Bahn – dort ist schon kein Fairway mehr. */
+  for (const o of (c.obstacles || []).filter(o => o.type === 'wandergate')) {
+    const len = Math.hypot((o.x1 ?? 0) - (o.x0 ?? 0), (o.y1 ?? 0) - (o.y0 ?? 0));
+    const spalt = o.gap == null ? 1.7 : o.gap;
+    if (!(len > 0)) { problems.push('wandergate ohne Länge (x0/y0 und x1/y1 gleich)'); continue; }
+    if (spalt >= len - 0.05) problems.push(`wandergate: Durchlass ${spalt} ist so breit wie die Mauer (${len.toFixed(1)}) – da sperrt nichts mehr`);
+    if (spalt < 1) problems.push(`wandergate: Durchlass ${spalt} ist zu schmal, da kommt kein Ball hindurch`);
+    const mx = ((o.x0 ?? 0) + (o.x1 ?? 0)) / 2, my = ((o.y0 ?? 0) + (o.y1 ?? 0)) / 2;
+    const ch = rows[Math.floor(my)] && rows[Math.floor(my)][Math.floor(mx)];
+    if (!FLOOR.has(ch)) problems.push(`wandergate: Mitte bei (${mx},${my}) liegt nicht auf dem Fairway (${ch})`);
+  }
   for (const o of (c.obstacles || []).filter(o => o.type === 'liongate')) {
     const g = String(o.pair || '').toUpperCase();
     if (!TOR_PAARE.includes(g)) problems.push(`Löwentor mit pair '${o.pair}' – erlaubt sind nur ${TOR_PAARE.join(', ')}`);

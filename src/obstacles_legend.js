@@ -247,3 +247,53 @@ class LionGate {
     ball.vx = (rx / L) * LOEWENTOR_SCHUB; ball.vy = (ry / L) * LOEWENTOR_SCHUB;
   }
 }
+
+/* Wanderndes Tor: eine Mauer quer über den Weg, in der ein schmaler Durchlass steckt. Der Durchlass
+   gleitet langsam an der Mauer entlang, kehrt am Ende um und kommt wieder zurück. Die Mauer selbst
+   ist massiv – hindurch geht es nur durch den Spalt, und der ist selten dort, wo man ihn braucht.
+
+   Gemauert wird wie beim festen Mauerstück von (x0,y0) nach (x1,y1), waagerecht oder senkrecht.
+   Nicht die Umlaufzeit steht am Hindernis, sondern das Tempo als Konstante: So gleitet der Spalt an
+   einer langen Mauer genauso schnell wie an einer kurzen, und eine längere Mauer wird von allein
+   schwerer statt nur langsamer. */
+const WANDERTOR_TEMPO = 1.15;     // Kacheln je Sekunde, mit denen der Durchlass wandert
+const WANDERTOR_SPALT = 1.7;      // Standardbreite des Durchlasses in Kacheln
+
+class WanderGate {
+  constructor(d) {
+    Object.assign(this, { gap: WANDERTOR_SPALT, t: 0.26, h: 0.75, phase: 0 }, d);
+    this.type = 'wandergate';
+    const dx = this.x1 - this.x0, dy = this.y1 - this.y0;
+    this.len = Math.hypot(dx, dy) || 1;
+    this.ux = dx / this.len; this.uy = dy / this.len;          // Richtung der Mauer
+    // Der Spalt läuft zwischen seinen beiden Endlagen; die Umlaufzeit folgt aus Weg und Tempo
+    this.weg = Math.max(0, this.len - this.gap);
+    this.period = this.weg > 0 ? (2 * this.weg) / WANDERTOR_TEMPO : 1;
+    this.mitte = this.gap / 2;                                  // Abstand des Spalts vom Maueranfang
+  }
+
+  update(t) {
+    // Dreieckschwingung: gleichmäßig hin, gleichmäßig zurück – kein Beschleunigen an den Enden,
+    // sonst wäre das Tor an den Umkehrpunkten kaum zu erwischen.
+    const u = (((t / this.period + this.phase) % 1) + 1) % 1;
+    const k = u < 0.5 ? u * 2 : 2 - u * 2;
+    this.mitte = this.gap / 2 + k * this.weg;
+    this.gx = this.x0 + this.ux * this.mitte;                   // Mitte des Durchlasses
+    this.gy = this.y0 + this.uy * this.mitte;
+  }
+
+  /* Die Mauer in zwei Stücken: vom Anfang bis zum Spalt und vom Spalt bis zum Ende. Ist ein Stück
+     kürzer als nichts (Spalt ganz am Rand), fällt es weg. */
+  stuecke() {
+    const a = this.mitte - this.gap / 2, b = this.mitte + this.gap / 2;
+    const punkt = s => [this.x0 + this.ux * s, this.y0 + this.uy * s];
+    const out = [];
+    if (a > 0.01) out.push([punkt(0), punkt(a)]);
+    if (b < this.len - 0.01) out.push([punkt(b), punkt(this.len)]);
+    return out;
+  }
+
+  segments(out) {
+    for (const [p, q] of this.stuecke()) out.push({ ax: p[0], ay: p[1], bx: q[0], by: q[1], e: 0.72, kind: 'wall' });
+  }
+}
