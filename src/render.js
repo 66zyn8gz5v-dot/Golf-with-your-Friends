@@ -1800,9 +1800,10 @@ class Renderer {
       case 'bannerRed': this.spriteBanner(ctx, sx, sy, s, d, t, '#c0392c'); break;
       case 'brazierBlue': this.spriteBrazierColored(ctx, sx, sy, s, t, ['#4fc3ff', '#b7ecff', '80,190,255']); break;
       case 'torchPurple': this.spriteBrazierColored(ctx, sx, sy, s, t, ['#a24bff', '#e0b8ff', '170,90,255']); break;
-      case 'pillar': this.spritePillar(ctx, sx, sy, s, d); break;
+      // Säulen werden in Weltkoordinaten gebaut, nicht am Bildschirmpunkt – sie bekommen darum d statt sx/sy
+      case 'pillar': this.spritePillar(ctx, d); break;
       // helle Arena-Ausführung fürs Kolosseum
-      case 'pillarLight': this.spritePillar(ctx, sx, sy, s, d, ['#eaddb8', '#c3ad82', '#f6ead0', 'rgba(255,212,94,0.4)']); break;
+      case 'pillarLight': this.spritePillar(ctx, d, ['#f2e5c4', '#b59b6c', '#f8efd6', '#8a7040']); break;
       case 'urnDark': this.spriteUrn(ctx, sx, sy, s, Object.assign({}, d, { dark: true })); break;
       default: break;
     }

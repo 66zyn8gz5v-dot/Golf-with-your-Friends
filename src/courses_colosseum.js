@@ -233,7 +233,7 @@ const COLOSSEUM_COURSES = [
   },
   {
     name: 'Tierpforten', par: 5, theme: 'colosseum', maxStrokes: 16,
-    intro: 'Drei Kammern, zwei Löwenpforten. Zwischen ihnen klafft ein Graben, über den nur der Streitwagen führt. Jede Pforte will Schwung sehen, sonst bleibt sie eine Wand.',
+    intro: 'Drei Kammern, zwei Löwenpforten. Jede will Schwung sehen, sonst bleibt sie eine Wand. In der mittleren Kammer zieht der Streitwagen seine Runden – wer aufspringt, kommt schneller voran.',
     map: [
       '..............................',
       '..............................',
@@ -243,10 +243,10 @@ const COLOSSEUM_COURSES = [
       '..##########..................',
       '..##########..................',
       '..............................',
-      '..##############....########..',
-      '.a##############....########B.',
-      '..##############....########..',
-      '..##############....########..',
+      '..##########################..',
+      '.a##########################B.',
+      '..##########################..',
+      '..##########################..',
       '..............................',
       '..............##############..',
       '.............b############H#..',
@@ -256,10 +256,9 @@ const COLOSSEUM_COURSES = [
     obstacles: [
       { type: 'liongate', pair: 'A', angle: 0 },
       { type: 'liongate', pair: 'B', angle: 0 },
-      { type: 'rail', y: 9.5, x0: 15, x1: 21 },
-      // Der Wagen wartet länger als er fährt: Wer den Graben erreicht, soll ihn meistens
-      // besetzt vorfinden statt vor einer leeren Station zu stehen.
-      { type: 'ferry', x0: 15.5, y0: 9.5, x1: 20.5, y1: 9.5, w: 1.4, h: 1.0, wait: 2.6, travel: 2.4, style: 'chariot' },
+      { type: 'rail', y: 9.5, x0: 12, x1: 21 },
+      // Der Wagen ist hier eine Mitfahrgelegenheit, keine Brücke: Wer ihn verpasst, rollt daneben weiter.
+      { type: 'ferry', x0: 12.5, y0: 9.5, x1: 20.5, y1: 9.5, w: 1.4, h: 1.0, wait: 2.2, travel: 3.0, style: 'chariot' },
       { type: 'mover', x0: 6.5, y0: 2.5, x1: 6.5, y1: 6.5, w: 0.8, h: 0.8, period: 4.6, style: 'gladiator' },
       { type: 'mover', x0: 22.5, y0: 15.5, x1: 22.5, y1: 13.5, w: 0.8, h: 0.8, period: 3.8, phase: 0.3, style: 'gladiator' },
     ],
@@ -267,7 +266,7 @@ const COLOSSEUM_COURSES = [
       { t: 'bannerRed', x: 1.2, y: 4.5, s: 1.2 },
       { t: 'bannerRed', x: 28.6, y: 14.5, s: 1.2 },
       { t: 'pillarLight', x: 15.0, y: 5.0, s: 1.3 },
-      { t: 'pillarLight', x: 15.0, y: 10.0, s: 1.3 },
+      { t: 'pillarLight', x: 15.0, y: 12.6, s: 1.3 },
       { t: 'brazier', x: 13.0, y: 6.6, s: 1.0 },
       { t: 'brazier', x: 29.0, y: 11.6, s: 1.0 },
       { t: 'urn', x: 5.5, y: 12.6, s: 1.1 },
@@ -352,7 +351,7 @@ const COLOSSEUM_COURSES = [
       { t: 'pillarLight', x: 23.5, y: 9.5, s: 1.4 },
       { t: 'bannerRed', x: 1.2, y: 8.5, s: 1.2 },
       { t: 'bannerRed', x: 32.6, y: 8.5, s: 1.2 },
-      { t: 'obelisk', x: 16.5, y: 8.5, s: 1.5 },
+      { t: 'obelisk', x: 11.0, y: 8.5, s: 1.5 },
       { t: 'brazier', x: 12.0, y: 6.6, s: 1.0 },
       { t: 'brazier', x: 21.5, y: 11.4, s: 1.0 },
       { t: 'urn', x: 5.5, y: 17.0, s: 1.1 },

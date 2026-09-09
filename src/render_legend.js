@@ -407,14 +407,22 @@ Object.assign(Renderer.prototype, {
   },
   /* cols = [linke Seite, rechte Seite, Kranz, Kannelur] – ohne Angabe die dunkle Säule des
      Schattenreichs, mit Angabe etwa der helle Kalkstein des Kolosseums. */
-  spritePillar(ctx, sx, sy, s, d, cols) {
-    const c = cols || ['#4a4060', '#2a2438', '#5e5474', 'rgba(197,139,255,0.35)'];
-    const w = s * 0.28, h = s * 2.0;
-    this.shadow(ctx, sx, sy, w * 1.4);
-    ctx.fillStyle = c[0]; ctx.fillRect(sx - w, sy - h, w, h); ctx.fillStyle = c[1]; ctx.fillRect(sx, sy - h, w, h);
-    ctx.fillStyle = c[2]; ctx.fillRect(sx - w * 1.3, sy - h, w * 2.6, s * 0.16); ctx.fillRect(sx - w * 1.3, sy - s * 0.16, w * 2.6, s * 0.16);
-    ctx.fillStyle = c[3]; ctx.fillRect(sx - w * 0.15, sy - h * 0.8, w * 0.3, h * 0.6);
+  /* Säule als echter Körper statt als flaches Bildchen: Sockel, Schaft und Kapitell sind drei
+     Prismen in Weltkoordinaten. Damit steht sie in derselben Sicht wie Mauern und Türme, dreht
+     sich mit der Kamera mit und bekommt ihre Schattenseite von selbst. Der Schaft hat acht Seiten
+     – die einzeln schattierten Flächen lesen sich wie die Kanneluren einer echten Säule.
+     cols: [Deck des Schafts, Schattenseite, Deck von Sockel und Kapitell, Umriss] */
+  spritePillar(ctx, d, cols) {
+    const c = cols || ['#5e5474', '#2a2438', '#6e6488', '#14101e'];
+    const g = d.s || 1, x = d.x, y = d.y;
+    const hoch = 2.0 * g, rSchaft = 0.2 * g, rBreit = 0.29 * g;
+    const sockel = 0.16 * g, kapitell = 0.17 * g;
+    this.isoEllipse(ctx, x, y, 0.004, rBreit * 1.5, 'rgba(0,0,0,0.24)');
+    this.prism(ctx, this.circlePoly(x, y, rBreit, 8, 0.39), 0, sockel, c[2], c[1], { outline: c[3] });
+    this.prism(ctx, this.circlePoly(x, y, rSchaft, 8, 0.39), sockel, hoch, c[0], c[1], { outline: c[3] });
+    this.prism(ctx, this.circlePoly(x, y, rBreit, 8, 0.39), sockel + hoch, kapitell, c[2], c[1], { outline: c[3] });
   },
+
   /* ---------- Schattenreich, zweiter Ausbau: Fallbeil, Augenturm, Ritterstatue, Raben ---------- */
   /* Fallbeil: zwei dunkle Holzpfosten mit Querbalken, dazwischen hängt die schräge Stahlklinge unter dem
      Gewichtsblock an einem Seil. Kurz vor dem Fall zittert sie, beim Aufschlag stieben Funken. */

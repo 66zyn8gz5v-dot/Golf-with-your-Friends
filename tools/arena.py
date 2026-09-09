@@ -157,31 +157,31 @@ bahn(name='Katapultbahn', par=4, maxStrokes=14, map=k.rows(),
 k = Karte(30, 17)
 k.rect(2, 2, 11, 6)       # Kammer 1 (Start)
 k.put(12, 4, 'A')         # Eingang am Ende von Kammer 1
-# Das linke Podest von Kammer 2 muss lang genug sein: Das Löwentor spuckt den Ball mit fester
-# Geschwindigkeit aus, und der rollt gut zehn Kacheln weit. Endete das Podest davor, flöge er
-# geradewegs in den Graben – ein Strafschlag, den der Spieler nicht abwenden kann.
-k.rect(2, 8, 15, 11)      # Kammer 2, linkes Podest
-k.rect(20, 8, 27, 11)     # Kammer 2, rechtes Podest
+# Kammer 2 hatte zuerst einen Graben, den nur der Streitwagen überbrückte. Zusammen mit den zwei
+# Löwenpforten waren das drei Stellen hintereinander, an denen ein Fehlschlag richtig teuer wird –
+# der Bot brauchte im Schnitt acht Schläge und kam in zwei von zehn Spielen gar nicht ins Loch.
+# Jetzt ist die Kammer durchgehend: Der Wagen fährt weiter seine Strecke und nimmt mit, wer
+# aufspringt, aber wer ihn verpasst, rollt einfach daneben weiter statt in die Tiefe zu fallen.
+k.rect(2, 8, 27, 11)      # Kammer 2, durchgehend
 k.put(1, 9, 'a')          # Ausgang von Tor A
 k.put(28, 9, 'B')         # Eingang von Tor B
 k.rect(14, 13, 27, 15)    # Kammer 3 (Ziel)
 k.put(13, 14, 'b')        # Ausgang von Tor B
 k.put(3, 4, 'T'); k.put(26, 14, 'H')
 bahn(name='Tierpforten', par=5, maxStrokes=16, map=k.rows(),
-     intro='Drei Kammern, zwei Löwenpforten. Zwischen ihnen klafft ein Graben, über den nur der '
-           'Streitwagen führt. Jede Pforte will Schwung sehen, sonst bleibt sie eine Wand.',
+     intro='Drei Kammern, zwei Löwenpforten. Jede will Schwung sehen, sonst bleibt sie eine Wand. '
+           'In der mittleren Kammer zieht der Streitwagen seine Runden – wer aufspringt, kommt schneller voran.',
      obstacles=[
         "{ type: 'liongate', pair: 'A', angle: 0 }",
         "{ type: 'liongate', pair: 'B', angle: 0 }",
-        "{ type: 'rail', y: 9.5, x0: 15, x1: 21 }",
-        "// Der Wagen wartet länger als er fährt: Wer den Graben erreicht, soll ihn meistens",
-        "// besetzt vorfinden statt vor einer leeren Station zu stehen.",
-        "{ type: 'ferry', x0: 15.5, y0: 9.5, x1: 20.5, y1: 9.5, w: 1.4, h: 1.0, wait: 2.6, travel: 2.4, style: 'chariot' }",
+        "{ type: 'rail', y: 9.5, x0: 12, x1: 21 }",
+        "// Der Wagen ist hier eine Mitfahrgelegenheit, keine Brücke: Wer ihn verpasst, rollt daneben weiter.",
+        "{ type: 'ferry', x0: 12.5, y0: 9.5, x1: 20.5, y1: 9.5, w: 1.4, h: 1.0, wait: 2.2, travel: 3.0, style: 'chariot' }",
         "{ type: 'mover', x0: 6.5, y0: 2.5, x1: 6.5, y1: 6.5, w: 0.8, h: 0.8, period: 4.6, style: 'gladiator' }",
         "{ type: 'mover', x0: 22.5, y0: 15.5, x1: 22.5, y1: 13.5, w: 0.8, h: 0.8, period: 3.8, phase: 0.3, style: 'gladiator' }",
      ],
      decor=[("bannerRed", 1.2, 4.5, 1.2), ("bannerRed", 28.6, 14.5, 1.2),
-            ("pillarLight", 15.0, 5.0, 1.3), ("pillarLight", 15.0, 10.0, 1.3),
+            ("pillarLight", 15.0, 5.0, 1.3), ("pillarLight", 15.0, 12.6, 1.3),
             ("brazier", 13.0, 6.6, 1.0), ("brazier", 29.0, 11.6, 1.0),
             ("urn", 5.5, 12.6, 1.1), ("obelisk", 20.0, 6.0, 1.3)],
      seed=808, dichte=0.06)
@@ -233,7 +233,7 @@ bahn(name='Die Spina', par=6, maxStrokes=18, map=k.rows(),
      decor=[("pillarLight", 10.5, 8.5, 1.4), ("pillarLight", 23.5, 8.5, 1.4),
             ("pillarLight", 10.5, 9.5, 1.4), ("pillarLight", 23.5, 9.5, 1.4),
             ("bannerRed", 1.2, 8.5, 1.2), ("bannerRed", 32.6, 8.5, 1.2),
-            ("obelisk", 16.5, 8.5, 1.5), ("brazier", 12.0, 6.6, 1.0), ("brazier", 21.5, 11.4, 1.0),
+            ("obelisk", 11.0, 8.5, 1.5), ("brazier", 12.0, 6.6, 1.0), ("brazier", 21.5, 11.4, 1.0),
             ("urn", 5.5, 17.0, 1.1), ("urn", 28.5, 17.0, 1.1)],
      seed=810, dichte=0.07)
 
@@ -297,11 +297,17 @@ bahn(name='Die Kaiserloge', par=7, maxStrokes=22, map=k.rows(),
      seed=812, dichte=0.06)
 
 # ---------------------------------------------------------------- Ausgabe
+FLOOR = set('#silwTHoABC')
 for b in BAHNEN:
     rows = b['map']
     txt = '\n'.join(rows)
     assert txt.count('T') == 1, b['name']
     assert txt.count('H') == 1, b['name']
+    # Deko steht neben der Bahn, nie darauf: Eine Säule im Sand sähe aus wie ein Hindernis, wäre
+    # aber keins – der Ball rollte einfach hindurch.
+    for (t, x, y, sc) in b['decor']:
+        ch = rows[int(y)][int(x)] if 0 <= int(y) < len(rows) and 0 <= int(x) < len(rows[0]) else '.'
+        assert ch not in FLOOR, f"{b['name']}: Deko {t} bei ({x},{y}) steht auf dem Fairway ('{ch}')"
     print(f"{b['name']:20s} {len(rows[0])}x{len(rows)} Par {b['par']}")
 
 def js_map(rows):
