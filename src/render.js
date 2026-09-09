@@ -164,6 +164,28 @@ class Renderer {
     if (opts.outline) { ctx.strokeStyle = opts.outline; ctx.lineWidth = 1; ctx.stroke(); }
     else { ctx.strokeStyle = top; ctx.lineWidth = 0.8; ctx.stroke(); }
   }
+  /* Kegelstumpf: dasselbe wie prism, aber Boden- und Deckfläche dürfen verschieden groß sein.
+     Damit lassen sich verjüngte Körper bauen – der Bauch eines Kruges, der Schaft eines Obelisken,
+     die Schale eines Feuerkorbs. 'unten' und 'oben' müssen gleich viele Punkte haben. */
+  frustum(ctx, unten, oben, z0, z1, top, side, opts = {}) {
+    const n = unten.length, orient = polyArea(unten) > 0 ? 1 : -1;
+    for (let i = 0; i < n; i++) {
+      const a = unten[i], b = unten[(i + 1) % n], c = oben[(i + 1) % n], d = oben[i];
+      const ex = b[0] - a[0], ey = b[1] - a[1];
+      let nx = ey * orient, ny = -ex * orient;
+      const L = Math.hypot(nx, ny) || 1; nx /= L; ny /= L;
+      if (nx * this.cam.sin + ny * this.cam.cos <= 0.001) continue;   // von der Kamera abgewandt
+      const light = 0.68 + 0.32 * (0.5 + 0.5 * (nx * 0.85 - ny * 0.53));
+      const p0 = this.proj(a[0], a[1], z0), p1 = this.proj(b[0], b[1], z0);
+      const p2 = this.proj(c[0], c[1], z1), p3 = this.proj(d[0], d[1], z1);
+      ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.lineTo(p2[0], p2[1]); ctx.lineTo(p3[0], p3[1]); ctx.closePath();
+      ctx.fillStyle = shade(side, light); ctx.fill();
+      ctx.strokeStyle = ctx.fillStyle; ctx.lineWidth = 0.8; ctx.stroke();
+    }
+    this.pathPoly(ctx, oben, z1);
+    ctx.fillStyle = top; ctx.fill();
+    ctx.strokeStyle = opts.outline || top; ctx.lineWidth = opts.outline ? 1 : 0.8; ctx.stroke();
+  }
   circlePoly(x, y, r, n = 10, a0 = 0) {
     const p = [];
     for (let i = 0; i < n; i++) { const a = a0 + (i * TAU) / n; p.push([x + Math.cos(a) * r, y + Math.sin(a) * r]); }
@@ -1746,7 +1768,7 @@ class Renderer {
       case 'stalagmite': this.spriteStalagmite(ctx, sx, sy, s); break;
       case 'bones': this.spriteBones(ctx, sx, sy, s); break;
       case 'anvil': this.spriteAnvil(ctx, sx, sy, s); break;
-      case 'brazier': this.spriteBrazier(ctx, sx, sy, s, t); break;
+      case 'brazier': this.spriteBrazier(ctx, d, t); break;
       case 'gold': this.spriteGold(ctx, sx, sy, s, t); break;
       case 'pumpkin': this.spritePumpkin(ctx, sx, sy, s, t); break;
       case 'cauldron': this.spriteCauldron(ctx, d, s, t); break;
@@ -1779,7 +1801,7 @@ class Renderer {
       case 'vent': this.spriteVent(ctx, sx, sy, s, t); break;
       case 'palm': this.spritePalm(ctx, sx, sy, s, d, t); break;
       case 'cactus': this.spriteCactus(ctx, sx, sy, s, d); break;
-      case 'urn': this.spriteUrn(ctx, sx, sy, s, d); break;
+      case 'urn': this.spriteUrn(ctx, d); break;
       case 'skull': this.spriteSkull(ctx, sx, sy, s); break;
       case 'shelf': this.spriteShelf(ctx, sx, sy, s, d); break;
       case 'bottle': this.spriteBottle(ctx, sx, sy, s, d); break;
@@ -1788,7 +1810,7 @@ class Renderer {
       case 'gearFlat': this.spriteGearFlat(ctx, d, s, t); break;
       case 'pipe': this.spritePipe(ctx, sx, sy, s, d, t); break;
       case 'clock': this.spriteClock(ctx, sx, sy, s, t); break;
-      case 'obelisk': this.spriteObelisk(ctx, sx, sy, s); break;
+      case 'obelisk': this.spriteObelisk(ctx, d); break;
       case 'sarcophagus': this.spriteSarcophagus(ctx, sx, sy, s, d, t); break;
       case 'gravestone': this.spriteGravestone(ctx, sx, sy, s, d); break;
       case 'gravecross': this.spriteGraveCross(ctx, sx, sy, s, d); break;
@@ -1798,13 +1820,13 @@ class Renderer {
       case 'windsock': this.spriteWindsock(ctx, sx, sy, s, d, t); break;
       case 'banner': this.spriteBanner(ctx, sx, sy, s, d, t); break;
       case 'bannerRed': this.spriteBanner(ctx, sx, sy, s, d, t, '#c0392c'); break;
-      case 'brazierBlue': this.spriteBrazierColored(ctx, sx, sy, s, t, ['#4fc3ff', '#b7ecff', '80,190,255']); break;
-      case 'torchPurple': this.spriteBrazierColored(ctx, sx, sy, s, t, ['#a24bff', '#e0b8ff', '170,90,255']); break;
+      case 'brazierBlue': this.spriteBrazier(ctx, d, t, ['#4fc3ff', '#b7ecff', '80,190,255']); break;
+      case 'torchPurple': this.spriteBrazier(ctx, d, t, ['#a24bff', '#e0b8ff', '170,90,255']); break;
       // Säulen werden in Weltkoordinaten gebaut, nicht am Bildschirmpunkt – sie bekommen darum d statt sx/sy
       case 'pillar': this.spritePillar(ctx, d); break;
       // helle Arena-Ausführung fürs Kolosseum
       case 'pillarLight': this.spritePillar(ctx, d, ['#f2e5c4', '#b59b6c', '#f8efd6', '#8a7040']); break;
-      case 'urnDark': this.spriteUrn(ctx, sx, sy, s, Object.assign({}, d, { dark: true })); break;
+      case 'urnDark': this.spriteUrn(ctx, Object.assign({}, d, { dark: true })); break;
       default: break;
     }
   }
@@ -2229,7 +2251,7 @@ class Renderer {
     ctx.strokeStyle = '#c9a15a'; ctx.lineWidth = Math.max(1.5, s * 0.06); ctx.stroke();
     ctx.fillStyle = 'rgba(255,209,102,0.7)'; // Glyphen auf dem Sturz
     for (let k = 0; k < 5; k++) { const [gx, gy] = this.proj(px - Wd / 2 + (k + 0.5) * Wd / 5, fy - 0.05, H + 0.35); ctx.beginPath(); if (k % 2) { ctx.arc(gx, gy, s * 0.08, 0, TAU); } else { ctx.moveTo(gx - s * 0.08, gy + s * 0.08); ctx.lineTo(gx, gy - s * 0.1); ctx.lineTo(gx + s * 0.08, gy + s * 0.08); ctx.closePath(); } ctx.fill(); }
-    for (const side of [-1, 1]) { const [bx, by] = this.proj(px + side * (Wd / 2 + 0.1), fy + 0.2, 0); this.spriteBrazier(ctx, bx, by, s * 0.9, t); } // Feuerschalen
+    for (const side of [-1, 1]) this.spriteBrazier(ctx, { x: px + side * (Wd / 2 + 0.1), y: fy + 0.2, s: 0.9 }, t); // Feuerschalen
     ctx.fillStyle = 'rgba(60,110,50,0.55)'; for (let k = 0; k < 4; k++) { const [mx, my] = this.proj(px - Wd / 2 - 0.3 + k * (Wd / 3), fy, H + 0.7 - (k % 2) * 0.4); ctx.beginPath(); ctx.ellipse(mx, my, s * 0.22, s * 0.09, 0, 0, TAU); ctx.fill(); } // Moos
   }
   /* Strudel: dunkler Wassertrichter mit drehenden Schaumspiralen, Auswurfrinne wie bei der Drehscheibe */
@@ -2392,21 +2414,39 @@ class Renderer {
     ctx.fillStyle = 'rgba(255,255,255,0.5)'; for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.arc(sx + (i % 2 ? -1 : 1) * w * 0.5, sy - h * (0.15 + i * 0.16), s * 0.02, 0, TAU); ctx.fill(); }
     if ((d.seed || 0) > 0.6) { ctx.fillStyle = '#ff5f8a'; ctx.beginPath(); ctx.arc(sx, sy - h - s * 0.02, s * 0.07, 0, TAU); ctx.fill(); }
   }
-  spriteUrn(ctx, sx, sy, s, d) {
-    this.shadow(ctx, sx, sy, s * 0.3);
-    ctx.fillStyle = '#b8683a'; ctx.beginPath(); ctx.moveTo(sx - s * 0.18, sy); ctx.quadraticCurveTo(sx - s * 0.4, sy - s * 0.35, sx - s * 0.16, sy - s * 0.6); ctx.lineTo(sx - s * 0.2, sy - s * 0.68); ctx.lineTo(sx + s * 0.2, sy - s * 0.68); ctx.lineTo(sx + s * 0.16, sy - s * 0.6); ctx.quadraticCurveTo(sx + s * 0.4, sy - s * 0.35, sx + s * 0.18, sy); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#e0a060'; ctx.beginPath(); ctx.moveTo(sx - s * 0.18, sy); ctx.quadraticCurveTo(sx - s * 0.4, sy - s * 0.35, sx - s * 0.16, sy - s * 0.6); ctx.lineTo(sx - s * 0.05, sy - s * 0.6); ctx.quadraticCurveTo(sx - s * 0.2, sy - s * 0.35, sx - s * 0.05, sy); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#2fb8c9'; ctx.fillRect(sx - s * 0.3, sy - s * 0.42, s * 0.6, s * 0.06);
+  /* Krug: gebrannter Ton als echter Körper – Fuß, bauchiger Leib, Hals und Rand als gestapelte
+     Kegelstümpfe. Der farbige Ring sitzt als flacher Reif etwas weiter außen auf dem Bauch. */
+  spriteUrn(ctx, d) {
+    const g = d.s || 1, x = d.x, y = d.y, dunkel = !!d.dark;
+    const deck = dunkel ? '#7a5a6e' : '#e0a060', seite = dunkel ? '#432f42' : '#b8683a';
+    const reif = dunkel ? '#8a6cff' : '#2fb8c9';
+    const K = r => this.circlePoly(x, y, r * g, 10);
+    this.isoEllipse(ctx, x, y, 0.003, 0.42 * g, 'rgba(0,0,0,0.22)');
+    this.frustum(ctx, K(0.19), K(0.24), 0, 0.08 * g, deck, seite);          // Fuß
+    this.frustum(ctx, K(0.24), K(0.40), 0.08 * g, 0.28 * g, deck, seite);   // Bauch, ausladend
+    // Zierreif: nur die Seiten sind farbig. Die Deckfläche bleibt Ton – ein farbiger Deckel würde
+    // von oben gesehen den halben Krug überdecken, denn frustum füllt seine Deckfläche immer.
+    this.frustum(ctx, K(0.40), K(0.40), 0.28 * g, 0.36 * g, deck, reif);    // Zierreif
+    this.frustum(ctx, K(0.40), K(0.26), 0.36 * g, 0.60 * g, deck, seite);   // Schulter
+    this.frustum(ctx, K(0.26), K(0.22), 0.60 * g, 0.68 * g, deck, seite);   // Hals
+    this.frustum(ctx, K(0.22), K(0.28), 0.68 * g, 0.74 * g, deck, seite);   // Rand
   }
 
   /* Obelisk: schlanke, spitz zulaufende Steinsäule mit goldener Spitze */
-  spriteObelisk(ctx, sx, sy, s) {
-    this.shadow(ctx, sx, sy, s * 0.35);
-    ctx.fillStyle = '#b8955a'; ctx.fillRect(sx - s * 0.32, sy - s * 0.18, s * 0.64, s * 0.18);
-    ctx.fillStyle = '#d9b979'; ctx.beginPath(); ctx.moveTo(sx - s * 0.18, sy - s * 0.18); ctx.lineTo(sx - s * 0.1, sy - s * 1.9); ctx.lineTo(sx + s * 0.1, sy - s * 1.9); ctx.lineTo(sx + s * 0.18, sy - s * 0.18); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#8a6a34'; ctx.beginPath(); ctx.moveTo(sx, sy - s * 0.18); ctx.lineTo(sx, sy - s * 1.9); ctx.lineTo(sx + s * 0.1, sy - s * 1.9); ctx.lineTo(sx + s * 0.18, sy - s * 0.18); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#ffd166'; ctx.beginPath(); ctx.moveTo(sx - s * 0.1, sy - s * 1.9); ctx.lineTo(sx, sy - s * 2.15); ctx.lineTo(sx + s * 0.1, sy - s * 1.9); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = 'rgba(40,24,8,0.45)'; for (let i = 0; i < 5; i++) { const y = sy - s * (0.45 + i * 0.28); ctx.fillRect(sx - s * 0.04, y, s * 0.08, s * (i % 2 ? 0.06 : 0.12)); }
+  spriteObelisk(ctx, d) {
+    const g = d.s || 1, x = d.x, y = d.y;
+    const Q = r => [[x - r * g, y - r * g], [x + r * g, y - r * g], [x + r * g, y + r * g], [x - r * g, y + r * g]];
+    this.isoEllipse(ctx, x, y, 0.003, 0.46 * g, 'rgba(0,0,0,0.24)');
+    this.frustum(ctx, Q(0.34), Q(0.31), 0, 0.20 * g, '#d9b979', '#8a6a34', { outline: '#5a4420' });   // Sockel
+    this.frustum(ctx, Q(0.23), Q(0.11), 0.20 * g, 2.06 * g, '#e6cf95', '#a8874a', { outline: '#5a4420' }); // Schaft, verjüngt
+    this.frustum(ctx, Q(0.11), Q(0.012), 2.06 * g, 2.34 * g, '#ffd166', '#c99a2a', { outline: '#5a4420' }); // goldene Spitze
+    // Eingemeißelte Zeichen auf der Vorderseite
+    ctx.fillStyle = 'rgba(60,40,12,0.42)';
+    for (let i = 0; i < 5; i++) {
+      const z = (0.55 + i * 0.3) * g, r = (0.22 - i * 0.024) * g;
+      const [px, py] = this.proj(x, y + r * 0.9, z);
+      ctx.beginPath(); ctx.ellipse(px, py, this.scale * 0.035 * g, this.scale * (i % 2 ? 0.03 : 0.055) * g, 0, 0, TAU); ctx.fill();
+    }
   }
   /* Sarkophag: goldener Kasten mit blauen Streifen und Pharaonenmaske */
   spriteSarcophagus(ctx, sx, sy, s, d, t) {
@@ -2725,13 +2765,22 @@ class Renderer {
     ctx.fillStyle = '#4a4a55'; ctx.beginPath(); ctx.moveTo(sx - s * 0.5, sy - s * 0.55); ctx.lineTo(sx + s * 0.45, sy - s * 0.55); ctx.lineTo(sx + s * 0.3, sy - s * 0.33); ctx.lineTo(sx - s * 0.25, sy - s * 0.33); ctx.closePath(); ctx.fill();
     ctx.fillStyle = '#6b6b78'; ctx.fillRect(sx - s * 0.5, sy - s * 0.62, s * 0.95, s * 0.08);
   }
-  spriteBrazier(ctx, sx, sy, s, t) {
-    ctx.fillStyle = '#3a3a44'; ctx.fillRect(sx - s * 0.06, sy - s * 0.5, s * 0.12, s * 0.5);
-    ctx.beginPath(); ctx.ellipse(sx, sy - s * 0.5, s * 0.28, s * 0.12, 0, 0, TAU); ctx.fill();
-    const f = 0.8 + 0.2 * Math.sin(t * 11 + sx);
-    ctx.fillStyle = 'rgba(255,140,40,0.25)'; ctx.beginPath(); ctx.arc(sx, sy - s * 0.7, s * 0.5 * f, 0, TAU); ctx.fill();
-    ctx.fillStyle = '#ff7a1f'; ctx.beginPath(); ctx.moveTo(sx - s * 0.2, sy - s * 0.5); ctx.quadraticCurveTo(sx - s * 0.1, sy - s * 0.9 * f, sx, sy - s * 1.05 * f); ctx.quadraticCurveTo(sx + s * 0.1, sy - s * 0.85 * f, sx + s * 0.2, sy - s * 0.5); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#ffe07a'; ctx.beginPath(); ctx.moveTo(sx - s * 0.1, sy - s * 0.5); ctx.quadraticCurveTo(sx, sy - s * 0.75 * f, sx + s * 0.1, sy - s * 0.5); ctx.closePath(); ctx.fill();
+  spriteBrazier(ctx, d, t, cols) {
+    const c = cols || ['#ff7a1f', '#ffe07a', '255,140,40'];
+    const g = d.s || 1, x = d.x, y = d.y, s = this.scale * g;
+    const K = r => this.circlePoly(x, y, r * g, 8);
+    this.isoEllipse(ctx, x, y, 0.003, 0.3 * g, 'rgba(0,0,0,0.22)');
+    this.frustum(ctx, K(0.15), K(0.07), 0, 0.46 * g, '#4a4a56', '#2a2a34', { outline: '#16161c' });   // Fuß
+    this.frustum(ctx, K(0.09), K(0.28), 0.46 * g, 0.62 * g, '#3a3a44', '#22222a', { outline: '#16161c' }); // Schale
+    // Flamme: im Bildschirmraum, denn Feuer hat keine Seiten, die man schattieren könnte
+    const [fx, fy] = this.proj(x, y, 0.62 * g);
+    const f = 0.8 + 0.2 * Math.sin(t * 11 + x * 3);
+    ctx.fillStyle = `rgba(${c[2]},0.25)`; ctx.beginPath(); ctx.arc(fx, fy - s * 0.2, s * 0.5 * f, 0, TAU); ctx.fill();
+    ctx.fillStyle = c[0]; ctx.beginPath(); ctx.moveTo(fx - s * 0.2, fy);
+    ctx.quadraticCurveTo(fx - s * 0.1, fy - s * 0.4 * f, fx, fy - s * 0.55 * f);
+    ctx.quadraticCurveTo(fx + s * 0.1, fy - s * 0.35 * f, fx + s * 0.2, fy); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = c[1]; ctx.beginPath(); ctx.moveTo(fx - s * 0.1, fy);
+    ctx.quadraticCurveTo(fx, fy - s * 0.25 * f, fx + s * 0.1, fy); ctx.closePath(); ctx.fill();
   }
   spriteGold(ctx, sx, sy, s, t) {
     ctx.fillStyle = '#e0a52a'; ctx.beginPath(); ctx.ellipse(sx, sy - s * 0.12, s * 0.45, s * 0.22, 0, 0, TAU); ctx.fill();

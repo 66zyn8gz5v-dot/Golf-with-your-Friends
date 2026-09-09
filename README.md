@@ -352,6 +352,17 @@ Spur sind zwei Rillen im Sand), dem **Katapult**, **Sprungschanzen** und **Stein
 | 11 | Der Feuerturm | 7 | grosse Schlussbahn: unten streicht der Feuerstrahl über den Sand, oben sperrt das Gitter, vor dem Loch klafft der Graben |
 | 12 | Die Kaiserloge | 7 | grosse Schlussbahn: drei Geraden, Löwenpforte, Streitwagen und Schanze – und oben dreht der Kaiser nach jedem Schlag den Daumen |
 
+Die Deko neben den Bahnen ist gebaut, nicht gemalt: Säulen, Krüge, Obelisken und Feuerschalen
+bestehen aus Prismen und Kegelstümpfen in Weltkoordinaten (`frustum` in `src/render.js` ist das
+Gegenstück zu `prism` für verjüngte Körper – Krugbauch, Obeliskenschaft, Feuerschale). Damit stehen
+sie in derselben Sicht wie Mauern und Türme, bekommen ihre Schattenseite von selbst und drehen sich
+mit der Kamera mit. Flach bleibt nur, was keine Seiten hat: die Flamme in der Schale und das Tuch
+der Banner.
+
+Ein Fallstrick dabei: `frustum` füllt immer seine Deckfläche. Ein farbiger Zierreif am Krugbauch
+darf deshalb nur an den Seiten farbig sein – sonst legt sich von oben gesehen ein bunter Deckel über
+den halben Krug.
+
 Auf den drei mehrteiligen Bahnen (10, 11, 12) führen **Blickzonen** die Kamera: Liegt der Ball in
 einer Zone, schaut sie auf deren Blickpunkt statt aufs Loch. Ohne das schaute man vom Start der
 Kaiserloge quer über zwei Mauern hinweg zum Loch, während man in die andere Richtung spielt – auf

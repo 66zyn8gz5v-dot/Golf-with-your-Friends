@@ -362,7 +362,7 @@ Object.assign(Renderer.prototype, {
     ctx.strokeStyle = crypt ? '#c58bff' : '#7fd8ff'; ctx.lineWidth = Math.max(1.5, s * 0.06); ctx.stroke();
     if (crypt) { const [kx, ky] = this.proj(px, fy - 0.05, H + 0.35); this.spriteSkull(ctx, kx, ky + s * 0.2, s * 0.9); }
     else { ctx.fillStyle = 'rgba(255,228,94,0.85)'; const [gx, gy] = this.proj(px, fy - 0.05, H + 0.35); ctx.beginPath(); ctx.moveTo(gx - s * 0.1, gy - s * 0.25); ctx.lineTo(gx + s * 0.08, gy - s * 0.02); ctx.lineTo(gx - s * 0.02, gy - s * 0.02); ctx.lineTo(gx + s * 0.1, gy + s * 0.25); ctx.lineTo(gx - s * 0.08, gy); ctx.lineTo(gx + s * 0.02, gy); ctx.closePath(); ctx.fill(); }
-    for (const side of [-1, 1]) { const [bx, by] = this.proj(px + side * (Wd / 2 + 0.1), fy + 0.2, 0); this.spriteBrazierColored(ctx, bx, by, s * 0.9, t, crypt ? ['#a24bff', '#e0b8ff', '170,90,255'] : ['#4fc3ff', '#b7ecff', '80,190,255']); }
+    for (const side of [-1, 1]) this.spriteBrazier(ctx, { x: px + side * (Wd / 2 + 0.1), y: fy + 0.2, s: 0.9 }, t, crypt ? ['#a24bff', '#e0b8ff', '170,90,255'] : ['#4fc3ff', '#b7ecff', '80,190,255']);
   },
 
   /* ---------- Dekos ---------- */
@@ -397,26 +397,17 @@ Object.assign(Renderer.prototype, {
     ctx.fillStyle = tuch || ((d.seed || 0) > 0.5 ? '#5a2a7a' : '#2a3a8a'); ctx.beginPath(); ctx.moveTo(sx, sy - s * 1.8); ctx.lineTo(sx + s * 0.55 + sw, sy - s * 1.7); ctx.lineTo(sx + s * 0.55 + sw, sy - s * 0.9); ctx.lineTo(sx + s * 0.28, sy - s * 1.05); ctx.lineTo(sx, sy - s * 0.95); ctx.closePath(); ctx.fill();
     ctx.fillStyle = '#ffe45e'; ctx.beginPath(); ctx.arc(sx + s * 0.27 + sw * 0.5, sy - s * 1.35, s * 0.1, 0, TAU); ctx.fill();
   },
-  spriteBrazierColored(ctx, sx, sy, s, t, cols) {
-    ctx.fillStyle = '#2a2a34'; ctx.fillRect(sx - s * 0.06, sy - s * 0.5, s * 0.12, s * 0.5);
-    ctx.beginPath(); ctx.ellipse(sx, sy - s * 0.5, s * 0.28, s * 0.12, 0, 0, TAU); ctx.fill();
-    const f = 0.8 + 0.2 * Math.sin(t * 11 + sx);
-    ctx.fillStyle = `rgba(${cols[2]},0.25)`; ctx.beginPath(); ctx.arc(sx, sy - s * 0.7, s * 0.5 * f, 0, TAU); ctx.fill();
-    ctx.fillStyle = cols[0]; ctx.beginPath(); ctx.moveTo(sx - s * 0.2, sy - s * 0.5); ctx.quadraticCurveTo(sx - s * 0.1, sy - s * 0.9 * f, sx, sy - s * 1.05 * f); ctx.quadraticCurveTo(sx + s * 0.1, sy - s * 0.85 * f, sx + s * 0.2, sy - s * 0.5); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = cols[1]; ctx.beginPath(); ctx.moveTo(sx - s * 0.1, sy - s * 0.5); ctx.quadraticCurveTo(sx, sy - s * 0.75 * f, sx + s * 0.1, sy - s * 0.5); ctx.closePath(); ctx.fill();
-  },
-  /* cols = [linke Seite, rechte Seite, Kranz, Kannelur] – ohne Angabe die dunkle Säule des
-     Schattenreichs, mit Angabe etwa der helle Kalkstein des Kolosseums. */
   /* Säule als echter Körper statt als flaches Bildchen: Sockel, Schaft und Kapitell sind drei
      Prismen in Weltkoordinaten. Damit steht sie in derselben Sicht wie Mauern und Türme, dreht
      sich mit der Kamera mit und bekommt ihre Schattenseite von selbst. Der Schaft hat acht Seiten
      – die einzeln schattierten Flächen lesen sich wie die Kanneluren einer echten Säule.
-     cols: [Deck des Schafts, Schattenseite, Deck von Sockel und Kapitell, Umriss] */
+     cols: [Deck des Schafts, Schattenseite, Deck von Sockel und Kapitell, Umriss] – ohne
+     Angabe die dunkle Säule des Schattenreichs, mit Angabe der helle Kalkstein der Arena. */
   spritePillar(ctx, d, cols) {
     const c = cols || ['#5e5474', '#2a2438', '#6e6488', '#14101e'];
     const g = d.s || 1, x = d.x, y = d.y;
-    const hoch = 2.0 * g, rSchaft = 0.2 * g, rBreit = 0.29 * g;
-    const sockel = 0.16 * g, kapitell = 0.17 * g;
+    const hoch = 2.1 * g, rSchaft = 0.23 * g, rBreit = 0.33 * g;
+    const sockel = 0.18 * g, kapitell = 0.19 * g;
     this.isoEllipse(ctx, x, y, 0.004, rBreit * 1.5, 'rgba(0,0,0,0.24)');
     this.prism(ctx, this.circlePoly(x, y, rBreit, 8, 0.39), 0, sockel, c[2], c[1], { outline: c[3] });
     this.prism(ctx, this.circlePoly(x, y, rSchaft, 8, 0.39), sockel, hoch, c[0], c[1], { outline: c[3] });
@@ -863,7 +854,7 @@ Object.assign(Renderer.prototype, {
     for (let k = -3; k <= 3; k++) { const [a0, a1] = this.proj(px + k * 0.27, fy, 2.6 - Math.abs(k) * 0.1), [b0, b1] = this.proj(px + k * 0.27, fy, 1.8); ctx.moveTo(a0, a1); ctx.lineTo(b0, b1); }
     const [q0, q1] = this.proj(px - 0.9, fy, 1.85), [q2, q3] = this.proj(px + 0.9, fy, 1.85); ctx.moveTo(q0, q1); ctx.lineTo(q2, q3); ctx.stroke();
     const [kx, ky] = this.proj(px, fy - 0.05, H + 0.3); this.spriteSkull(ctx, kx, ky + s * 0.2, s * 0.95);
-    for (const sd of [-1, 1]) { const [bx, by] = this.proj(px + sd * (Wd / 2 + 0.15), fy + 0.25, 0); this.spriteBrazierColored(ctx, bx, by, s * 0.9, t, ['#a24bff', '#e0b8ff', '170,90,255']); }
+    for (const sd of [-1, 1]) this.spriteBrazier(ctx, { x: px + sd * (Wd / 2 + 0.15), y: fy + 0.25, s: 0.9 }, t, ['#a24bff', '#e0b8ff', '170,90,255']);
   },
 
   /* ---------- Kolosseum ---------- */
