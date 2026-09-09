@@ -330,17 +330,64 @@ class FireTower {
     else { this.state = 'fire'; this.p = (u - ruhe - FEUERTURM_WARNUNG) / FEUERTURM_STOSS; }
   }
 
-  imFeuer(px, py) { return px >= this.zx && px <= this.zx + this.zw && py >= this.zy && py <= this.zy + this.zh; }
+  /* Liegt dieser Punkt in der Gefahrenflaeche? Denselben Namen tragen alle Hindernisse, die den
+     Ball ohne Strafschlag zurueckwerfen – main.js prueft damit, ob der Ruhepunkt selbst darin liegt. */
+  trifft(px, py) { return px >= this.zx && px <= this.zx + this.zw && py >= this.zy && py <= this.zy + this.zh; }
 
   trigger(ball, t, events) {
-    if (this.state !== 'fire' || ball.rider || !this.imFeuer(ball.x, ball.y)) return;
+    if (this.state !== 'fire' || ball.rider || !this.trifft(ball.x, ball.y)) return;
     events.push({ type: 'scorched', x: ball.x, y: ball.y, ob: this });
   }
 
   airTrigger(ball, t, events) {   // ein Feuerstoß erwischt auch einen fliegenden Ball
-    if (this.state !== 'fire' || !this.imFeuer(ball.x, ball.y)) return false;
+    if (this.state !== 'fire' || !this.trifft(ball.x, ball.y)) return false;
     events.push({ type: 'scorched', x: ball.x, y: ball.y, ob: this }); return true;
   }
 
   circles(out) { out.push({ x: this.x, y: this.y, r: this.r, e: 0.5, kind: 'tower' }); }
+}
+
+/* Kaiserloge: eine überdachte Tribüne am Bahnrand mit einer großen Daumen-Anzeige. Nach jedem
+   Schlag – gleich, welcher Spieler geschlagen hat – dreht der Kaiser den Daumen um. Bei „Daumen
+   runter" klappt eine festgelegte Falltür in der Bahn auf, bei „hoch" ist sie zu. Wer in die
+   offene Luke rollt, kommt an seinen letzten Ruhepunkt zurück – ohne Strafschlag.
+
+   Gezählt wird das Ende eines Schlags, nicht sein Anfang (main.js zählt in level.schlagZahl mit).
+   Das ist wichtig fürs Spielgefühl: So gilt der Daumenstand, den man beim Zielen sieht, für den
+   ganzen Schlag. Würde er im Moment des Abschlags umspringen, könnte man nichts planen.
+
+   Und weil die Zahl aus dem Spielstand kommt und nicht aus der Uhr, sehen beim Online-Spiel alle
+   denselben Daumen: Jedes Gerät führt dieselben Schläge aus, und mit Ruhemeldung und Schlag wird
+   der Zählerstand zur Sicherheit mitgeschickt.
+
+   Am Hindernis stehen der Platz der Loge (x, y) samt Grundfläche (w, h) und die Luke als Rechteck
+   von der linken oberen Ecke aus (lx, ly, lw, lh). 'start' sagt, wie der Daumen zu Beginn der Bahn
+   steht: 'hoch' (Luke zu, Standard) oder 'runter' (Luke offen). */
+const LOGE_SCHWENK = 0.28;        // Sekunden, in denen die Luke auf- bzw. zuschwenkt (nur Optik)
+
+class ImperialBox {
+  constructor(d) {
+    Object.assign(this, { w: 3.4, h: 1.6, lx: 0, ly: 0, lw: 2, lh: 2, start: 'hoch' }, d);
+    this.type = 'imperialbox';
+    this.hoch = this.start !== 'runter';
+    this.gap = this.hoch ? 0 : 1;   // 0 = Luke zu, 1 = ganz offen (nur zum Zeichnen)
+    this.wechselT = -99;
+    this.lmx = this.lx + this.lw / 2; this.lmy = this.ly + this.lh / 2;   // Mitte der Luke
+  }
+
+  update(t) {
+    const n = (this.level && this.level.schlagZahl) || 0;
+    const hoch = (n % 2 === 0) === (this.start !== 'runter');
+    if (hoch !== this.hoch) { this.hoch = hoch; this.wechselT = t; }
+    const u = Math.min(1, Math.max(0, (t - this.wechselT) / LOGE_SCHWENK));
+    this.gap = hoch ? 1 - u : u;
+  }
+
+  trifft(px, py) { return px >= this.lx && px <= this.lx + this.lw && py >= this.ly && py <= this.ly + this.lh; }
+
+  trigger(ball, t, events) {
+    // Ein fliegender Ball setzt über die offene Luke hinweg – ein Loch im Boden fängt nur, was rollt
+    if (this.hoch || ball.air || ball.rider || !this.trifft(ball.x, ball.y)) return;
+    events.push({ type: 'dropped', x: ball.x, y: ball.y, ob: this });
+  }
 }

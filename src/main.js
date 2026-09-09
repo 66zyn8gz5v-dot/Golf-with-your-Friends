@@ -711,6 +711,7 @@
      darf nie daran scheitern, dass die Uhr seltsam aussieht. Ob sie brauchbar ist, entscheidet
      taktGleichziehen – im Zweifel wird der Schlag ganz normal gespielt, nur ohne Abgleich. */
   const istTakt = v => v == null || (typeof v === 'number' && isFinite(v) && v >= 0);
+  const istZaehler = v => v == null || istGanz(v, 0, 99999);   // Schlagzähler der Bahn (Kaiserloge)
   /* Liegt der Punkt auf der Bahn? Etwas Luft, weil Bälle auch am Rand liegen dürfen. */
   const aufBahn = (x, y) => {
     const lv = state.level;
@@ -755,9 +756,9 @@
       case 'shot':   return istGanz(m.h, 0, state.courses.length - 1) && istGanz(m.pi, 0, ONLINE_MAX - 1) &&
                             istZahl(m.dx, -1.01, 1.01) && istZahl(m.dy, -1.01, 1.01) &&
                             Math.abs(Math.hypot(m.dx, m.dy) - 1) < 0.02 && istZahl(m.power, 0, 1) &&
-                            istTakt(m.st) && istAmZug(m);
+                            istTakt(m.st) && istZaehler(m.sz) && istAmZug(m);
       case 'rest':   return istGanz(m.h, 0, state.courses.length - 1) && istGanz(m.pi, 0, ONLINE_MAX - 1) &&
-                            aufBahn(m.x, m.y) && istGanz(m.s, 0, 999) && istTakt(m.st) && istAmZug(m);
+                            aufBahn(m.x, m.y) && istGanz(m.s, 0, 999) && istTakt(m.st) && istZaehler(m.sz) && istAmZug(m);
       case 'done':   return istGanz(m.h, 0, state.courses.length - 1) && istGanz(m.pi, 0, ONLINE_MAX - 1) &&
                             istGanz(m.score, 1, 999) && (m.ms == null || istZahl(m.ms, 0, 24 * 3600 * 1000)) && istAmZug(m);
       case 'alive':  return true;
@@ -803,12 +804,14 @@
       case 'shot':
         if (!myTurn() && state.ball && state.phase === 'aim' && m.h === state.holeIdx) {
           taktGleichziehen(m.st);          // erst den Takt der Hindernisse übernehmen
+          schlagZahlSetzen(m.sz);          // und den Daumenstand der Kaiserloge
           shoot(m.dx, m.dy, m.power, true);
         }
         break;
       case 'rest':
         if (!myTurn() && state.ball && m.h === state.holeIdx) {
           taktGleichziehen(m.st);
+          schlagZahlSetzen(m.sz);
           const b = state.ball;
           b.x = m.x; b.y = m.y; b.z = 0; b.vx = 0; b.vy = 0; b.vz = 0; b.air = false; b.rider = null;
           b.restX = m.x; b.restY = m.y;
@@ -1144,14 +1147,14 @@
     const lv = state.level;
     if (!lv) return;
     for (const k of Object.keys(lv.switches || {})) lv.switches[k] += d;
-    for (const ob of lv.obstacles) for (const k of ['activeUntil', 'lastUse', 'firedAt']) if (ob[k]) ob[k] += d;
+    for (const ob of lv.obstacles) for (const k of ['activeUntil', 'lastUse', 'firedAt', 'wechselT']) if (ob[k]) ob[k] += d;
     // Die Hindernisse sofort auf den neuen Takt stellen, damit der Schlag gleich richtig losgeht
     for (const ob of lv.obstacles) if (ob.update) ob.update(state.t);
   }
 
   function shoot(dx, dy, power, fromNet = false) {
     if (online && online.started && !fromNet && !myTurn()) return; // Zuschauer schlagen nicht
-    if (online && online.started && !fromNet) netSend({ t: 'shot', h: state.holeIdx, pi: state.curPlayer, dx, dy, power, st: state.t });
+    if (online && online.started && !fromNet) netSend({ t: 'shot', h: state.holeIdx, pi: state.curPlayer, dx, dy, power, st: state.t, sz: schlagZahl() });
     const b = state.ball;
     b.restX = b.x; b.restY = b.y; b.shotX = b.x; b.shotY = b.y; // Schlagstart (für Aufspießen am Ruheplatz)
     b.vx = dx * power * MAX_SHOT; b.vy = dy * power * MAX_SHOT;
@@ -1175,12 +1178,23 @@
     }
     ballAtRest();
   }
+  /* ---------- Schlagzähler der Bahn (Kaiserloge) ----------
+     Der Daumen des Kaisers wechselt nach jedem Schlag, gleich welcher Spieler geschlagen hat.
+     Gezählt wird das ENDE eines Schlags – so gilt der Stand, den man beim Zielen sieht, für den
+     ganzen Schlag. Der Zähler hängt an der Bahn und fängt mit ihr wieder bei null an.
+     Beim Online-Spiel läuft er von selbst gleich (jedes Gerät führt dieselben Schläge aus); mit
+     jedem Schlag und jeder Ruhemeldung wird der Stand zur Sicherheit trotzdem mitgeschickt. */
+  const schlagZahl = () => (state.level && state.level.schlagZahl) || 0;
+  function schlagVorbei() { const lv = state.level; if (lv) lv.schlagZahl = (lv.schlagZahl || 0) + 1; }
+  function schlagZahlSetzen(n) { if (state.level && typeof n === 'number') state.level.schlagZahl = n; }
+
   function ballAtRest() {
     const b = state.ball;
     b.vx = 0; b.vy = 0; b.restX = b.x; b.restY = b.y;
+    schlagVorbei();
     faceCup();
     // Wer dran ist, sagt Ruheort und Schlagzahl an; die anderen uebernehmen sie
-    if (online && online.started && myTurn()) netSend({ t: 'rest', h: state.holeIdx, pi: state.curPlayer, x: b.x, y: b.y, s: state.strokes, st: state.t });
+    if (online && online.started && myTurn()) netSend({ t: 'rest', h: state.holeIdx, pi: state.curPlayer, x: b.x, y: b.y, s: state.strokes, st: state.t, sz: schlagZahl() });
     if (state.strokes >= maxStrokes()) { showMessage(`Maximale Schlagzahl (${maxStrokes()}) erreicht`, 1800); finishTurn(maxStrokes()); return; }
     state.phase = 'aim';
   }
@@ -1227,6 +1241,7 @@
     }
     else { Sfx.oob(); burst(b.x, b.y, '#cccccc', 10); }
     state.strokes++;
+    schlagVorbei();
     showMessage(`${label} · +1 Strafschlag`, 1700);
     state.phase = 'wait'; state.aim = null;
     const rx = b.restX, ry = b.restY;
@@ -1239,22 +1254,27 @@
     }, 900);
     updateHud();
   }
-  /* Feuerstoß erwischt: zurück an den letzten Ruhepunkt, aber OHNE Strafschlag. Der Turm schlägt
-     nach der Uhr, nicht nach dem Können – wer hineinläuft, verliert Zeit und Weg, nicht die Wertung. */
-  function verbrannt(ob) {
+  /* Zurück an den letzten Ruhepunkt, aber OHNE Strafschlag. Feuerturm und Kaiserloge teilen sich
+     das: Beide schlagen nach der Uhr bzw. nach dem Willen des Kaisers, nicht nach dem Können des
+     Spielers – wer hineinläuft, verliert Zeit und Weg, nicht die Wertung.
+     'art' entscheidet nur über Klang, Funken und Text. */
+  function ohneStrafe(ob, art) {
     const b = state.ball, lv = state.level;
-    Sfx.lava(); burst(b.x, b.y, '#ffb347', 22, true); burst(b.x, b.y, '#ff5a2a', 12, true);
+    if (art === 'feuer') { Sfx.lava(); burst(b.x, b.y, '#ffb347', 22, true); burst(b.x, b.y, '#ff5a2a', 12, true); }
+    else { Sfx.oob(); burst(b.x, b.y, '#e6d5ab', 16, true); }
     b.z = 0; b.vz = 0; b.air = false;
     let rx = b.restX, ry = b.restY;
-    // Ist der Ball im beschossenen Stück zur Ruhe gekommen, liegt sein Ruhepunkt selbst im Feuer –
-    // ihn dorthin zurückzulegen hieße, ihn beim nächsten Stoß wieder zu treffen. Dann geht es zum
-    // Start des letzten Schlags zurück, notfalls zum Abschlag.
-    if (ob && ob.imFeuer(rx, ry)) {
-      if (b.shotX != null && !ob.imFeuer(b.shotX, b.shotY)) { rx = b.shotX; ry = b.shotY; }
+    // Ist der Ball in der Gefahrenfläche zur Ruhe gekommen, liegt sein Ruhepunkt selbst darin –
+    // ihn dorthin zurückzulegen hieße, ihn gleich wieder zu erwischen. Dann geht es zum Start des
+    // letzten Schlags zurück, notfalls zum Abschlag.
+    if (ob && ob.trifft(rx, ry)) {
+      if (b.shotX != null && !ob.trifft(b.shotX, b.shotY)) { rx = b.shotX; ry = b.shotY; }
       else { rx = lv.tee.x; ry = lv.tee.y; }
       b.restX = rx; b.restY = ry;
     }
-    showMessage('Vom Feuerstoß erwischt! Zurück – ohne Strafschlag.', 1700);
+    showMessage(art === 'feuer' ? 'Vom Feuerstoß erwischt! Zurück – ohne Strafschlag.'
+                                : 'Daumen runter – durch die Falltür! Zurück, ohne Strafschlag.', 1700);
+    schlagVorbei();
     state.phase = 'wait'; state.aim = null;
     clearTimeout(waitTimer);
     waitTimer = setTimeout(() => {
@@ -1416,7 +1436,8 @@
         case 'fire': if (ev.style === 'ballista') { Sfx.twang(); burst(ev.x, ev.y, '#e8e0ff', 20); showMessage('Abgeschossen!', 800); } else { Sfx.cannon(); burst(ev.x, ev.y, '#ffb347', 18); } break;
         case 'sunk': sunk(); return;
         case 'shark': { const inner = state.courses[state.holeIdx].inner; if (inner && inner.stomach && !state.inner) { const b = state.ball; b.z = 0; b.vz = 0; b.air = false; enterInner('Verschluckt! Ab in den Haimagen …'); } else hazard('shark'); return; }
-        case 'scorched': verbrannt(ev.ob); return;
+        case 'scorched': ohneStrafe(ev.ob, 'feuer'); return;
+        case 'dropped': ohneStrafe(ev.ob, 'luke'); return;
         case 'water': case 'lava': case 'oob': case 'spiked': case 'zapped': case 'fell': case 'beheaded': case 'seen': hazard(ev.type); return;
       }
     }

@@ -134,4 +134,30 @@ const COLOSSEUM_COURSES = [
     ],
     autoDecor: { density: 0.1, seed: 704 },
   },
+  {
+    /* Testbahn für die Kaiserloge: kurze, gerade Strecke, die Falltür quer im Weg, sonst nichts.
+       Der Daumen steht zu Beginn absichtlich unten – so ist die Luke gleich beim ersten Schlag
+       offen und man sieht die Mechanik sofort. Wird später ersetzt. */
+    name: 'Daumenprobe', par: 3, theme: 'colosseum', maxStrokes: 10,
+    intro: 'Der Kaiser sitzt auf seiner Loge und dreht nach jedem Schlag den Daumen um. Zeigt er nach unten, klafft die Falltür im Weg – zeigt er nach oben, trägt der Boden. Wer hineinfällt, liegt wieder hinten, aber ohne Strafschlag.',
+    map: [
+      '..................',
+      '..................',
+      '..##############..',
+      '..T############H..',
+      '..##############..',
+      '..................',
+      '..................',
+    ],
+    obstacles: [
+      // Loge oberhalb der Gasse, ihre Luke (lx,ly,lw,lh) quer über die ganze Bahnbreite
+      { type: 'imperialbox', x: 9, y: 0.6, w: 3.4, h: 1.6, lx: 8, ly: 2, lw: 2, lh: 3, start: 'runter' },
+    ],
+    decor: [
+      { t: 'pillarLight', x: 4.5, y: 5.4, s: 1.2 }, { t: 'pillarLight', x: 13.5, y: 5.4, s: 1.2 },
+      { t: 'bannerRed', x: 1.2, y: 3.5, s: 1.2 }, { t: 'bannerRed', x: 16.6, y: 3.5, s: 1.2 },
+      { t: 'brazier', x: 6.5, y: 5.4, s: 1.0 }, { t: 'brazier', x: 11.5, y: 5.4, s: 1.0 },
+    ],
+    autoDecor: { density: 0.1, seed: 705 },
+  },
 ];

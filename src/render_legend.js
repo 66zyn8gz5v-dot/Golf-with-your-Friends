@@ -1079,4 +1079,126 @@ Object.assign(Renderer.prototype, {
       }
     }
   },
+
+  /* Kaiserloge – die Falltür am Boden. Zu: eine bündige Steinplatte mit goldenem Rahmen und einer
+     Fuge in der Mitte. Offen: der dunkle Schacht darunter, die beiden Flügel zur Seite geschwenkt,
+     der Rahmen glüht rot. Man soll auf einen Blick sehen, ob der Weg trägt. */
+  drawLogeLuke(ctx, ob, t) {
+    const s = this.scale, g = ob.gap;
+    const x0 = ob.lx, y0 = ob.ly, x1 = ob.lx + ob.lw, y1 = ob.ly + ob.lh;
+    const rechteck = (a, b, c, d) => [[a, b], [c, b], [c, d], [a, d]];
+    const laengs = ob.lw >= ob.lh;   // Flügel schwenken zur langen Seite hin weg
+
+    if (g > 0.02) {   // Schacht
+      this.fillPoly(ctx, rechteck(x0, y0, x1, y1), 0.004, '#120b06', false);
+      const [cx, cy] = this.proj(ob.lmx, ob.lmy, 0.005);
+      const rg = ctx.createRadialGradient(cx, cy, 0, cx, cy, s * Math.max(ob.lw, ob.lh) * 0.5);
+      rg.addColorStop(0, `rgba(212,52,44,${0.4 * g})`); rg.addColorStop(1, 'rgba(212,52,44,0)');
+      ctx.fillStyle = rg; this.pathPoly(ctx, rechteck(x0, y0, x1, y1), 0.006); ctx.fill();
+    }
+    // Zwei Flügel, die um ihre äußere Kante wegklappen (verkürzt gezeichnet)
+    const halb = (laengs ? ob.lw : ob.lh) / 2, weg = g * (halb - 0.03);
+    for (const seite of [-1, 1]) {
+      const mitte = laengs ? ob.lmx : ob.lmy;
+      const innen = mitte + seite * weg, aussen = mitte + seite * halb;
+      if (Math.abs(aussen - innen) < 0.03) continue;
+      const a = Math.min(innen, aussen), b = Math.max(innen, aussen);
+      const poly = laengs ? rechteck(a, y0, b, y1) : rechteck(x0, a, x1, b);
+      this.fillPoly(ctx, poly, 0.007, '#dfcea4', false);
+      ctx.strokeStyle = '#a8842a'; ctx.lineWidth = Math.max(1, s * 0.05); this.pathPoly(ctx, poly, 0.008); ctx.stroke();
+      // Beschläge auf dem Flügel
+      ctx.fillStyle = '#c9a95e';
+      for (let k = 0; k < 3; k++) {
+        const u = (k + 0.5) / 3;
+        const px = laengs ? aussen - seite * 0.14 : x0 + ob.lw * u;
+        const py = laengs ? y0 + ob.lh * u : aussen - seite * 0.14;
+        const [nx, ny] = this.proj(px, py, 0.01);
+        ctx.beginPath(); ctx.arc(nx, ny, Math.max(1, s * 0.04), 0, TAU); ctx.fill();
+      }
+    }
+    // Rahmen: golden, wenn die Luke trägt – rot glühend, wenn sie offen steht
+    ctx.strokeStyle = g > 0.5 ? `rgba(212,52,44,${0.55 + 0.35 * Math.sin(t * 6)})` : 'rgba(255,212,94,0.85)';
+    ctx.lineWidth = Math.max(2, s * 0.09);
+    this.pathPoly(ctx, rechteck(x0, y0, x1, y1), 0.009); ctx.stroke();
+  },
+
+  /* Die Daumenscheibe: eine goldgefasste Marke, auf der eine Faust den Daumen hoch oder runter
+     hält. Sie wird im Bildschirmraum gezeichnet und schaut damit immer zum Betrachter – der
+     Daumenstand muss aus jeder Kameradrehung ablesbar bleiben. Die Farbe sagt dasselbe noch
+     einmal: heller Sandstein heißt „Weg frei", Rot heißt „Loch offen". */
+  daumenScheibe(ctx, cx, cy, R, hoch) {
+    ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.beginPath(); ctx.arc(cx, cy + R * 0.09, R * 1.02, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#a8842a'; ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#ffd45e'; ctx.beginPath(); ctx.arc(cx, cy, R * 0.9, 0, TAU); ctx.fill();
+    ctx.fillStyle = hoch ? '#f7edd0' : '#c0392c'; ctx.beginPath(); ctx.arc(cx, cy, R * 0.76, 0, TAU); ctx.fill();
+
+    /* Gezeichnet wird immer „Daumen runter"; „hoch" ist dasselbe gespiegelt. In den Hilfskoordinaten
+       zeigt +y in Daumenrichtung. Die Hand besteht aus drei klaren Blöcken – Manschette, Faust,
+       Daumen –, denn feine Finger wären bei dieser Größe nur ein Fleck. Die Manschette gibt der
+       Form ihr Oben und Unten: ohne sie liest sich die Faust in beide Richtungen gleich. */
+    const k = R * 0.6;
+    ctx.save(); ctx.translate(cx, cy + (hoch ? 1 : -1) * k * 0.075); ctx.scale(k, hoch ? -k : k);
+    const eck = (x0, y0, x1, y1, r) => {
+      const w = x1 - x0, h = y1 - y0;
+      ctx.beginPath(); ctx.moveTo(x0 + r, y0);
+      ctx.arcTo(x0 + w, y0, x0 + w, y0 + h, r); ctx.arcTo(x0 + w, y0 + h, x0, y0 + h, r);
+      ctx.arcTo(x0, y0 + h, x0, y0, r); ctx.arcTo(x0, y0, x0 + w, y0, r); ctx.closePath(); ctx.fill();
+    };
+    ctx.fillStyle = hoch ? '#8a6428' : '#e8c9b4';
+    eck(-0.68, -1.00, 0.68, -0.70, 0.1);                     // Manschette
+    ctx.fillStyle = hoch ? '#6b4a1e' : '#fff3dc';
+    eck(-0.62, -0.74, 0.62, 0.06, 0.24);                     // Faust
+    eck(-0.58, -0.16, -0.06, 0.86, 0.24);                    // Daumen
+    ctx.restore();
+  },
+
+  /* Kaiserloge – die Tribüne. Podest, vier Säulen, Dach mit goldenem Sims und rotem Sonnentuch;
+     vorn hängt die Daumenscheibe. Die Vorderseite zeigt zur Falltür, damit Loge und Luke als
+     zusammengehörig zu lesen sind. */
+  drawImperialBox(ctx, ob, t) {
+    const s = this.scale, w = ob.w, h = ob.h;
+    const rechteck = (cx, cy, bw, bh) => [[cx - bw / 2, cy - bh / 2], [cx + bw / 2, cy - bh / 2], [cx + bw / 2, cy + bh / 2], [cx - bw / 2, cy + bh / 2]];
+    const stein = ['#e6d5ab', '#a98f5f'], saeule = ['#f4ead0', '#c0aa78'], gold = ['#ffd45e', '#a8842a'];
+    // Vorderseite: die Richtung zur Luke, auf die Hauptachse gerundet
+    const dx = ob.lmx - ob.x, dy = ob.lmy - ob.y;
+    const vx = Math.abs(dx) > Math.abs(dy) ? Math.sign(dx) || 1 : 0;
+    const vy = vx ? 0 : (Math.sign(dy) || 1);
+
+    this.isoEllipse(ctx, ob.x, ob.y, 0.004, Math.max(w, h) * 0.62, 'rgba(0,0,0,0.26)');
+    this.prism(ctx, rechteck(ob.x, ob.y, w, h), 0, 0.62, stein[0], stein[1], { outline: '#6d5418' });          // Podest
+    this.prism(ctx, rechteck(ob.x, ob.y, w - 0.4, h - 0.4), 0.62, 0.18, '#d8c393', '#a98f5f');                  // Sitzstufe
+    const saeulenH = 1.7;
+    for (const sx of [-1, 1]) for (const sy of [-1, 1]) {                                                       // vier Säulen
+      const px = ob.x + sx * (w / 2 - 0.28), py = ob.y + sy * (h / 2 - 0.24);
+      this.prism(ctx, this.circlePoly(px, py, 0.17, 8), 0.8, saeulenH, saeule[0], saeule[1], { outline: '#8a7040' });
+    }
+    const dachZ = 0.8 + saeulenH;
+    this.prism(ctx, rechteck(ob.x, ob.y, w + 0.34, h + 0.34), dachZ, 0.16, gold[0], gold[1], { outline: '#6d5418' });   // Sims
+    this.prism(ctx, rechteck(ob.x, ob.y, w + 0.1, h + 0.1), dachZ + 0.16, 0.3, '#d4342c', '#8e211c', { outline: '#5a1512' }); // rotes Dach
+    // Wimpel auf dem First
+    for (const u of [-0.3, 0.3]) {
+      const px = ob.x + (vy ? u * w : 0.0), py = ob.y + (vy ? 0 : u * h);
+      const [m0, m1] = this.proj(px, py, dachZ + 0.46), [m2, m3] = this.proj(px, py, dachZ + 1.1);
+      ctx.strokeStyle = '#8a6a3a'; ctx.lineWidth = Math.max(1.5, s * 0.045);
+      ctx.beginPath(); ctx.moveTo(m0, m1); ctx.lineTo(m2, m3); ctx.stroke();
+      const weh = 0.16 + 0.08 * Math.sin(t * 5 + u * 6);
+      ctx.fillStyle = '#ffd45e'; ctx.beginPath(); ctx.moveTo(m2, m3);
+      ctx.lineTo(m2 + s * 0.4, m3 + s * weh); ctx.lineTo(m2, m3 + s * 0.28); ctx.closePath(); ctx.fill();
+    }
+    // Daumenscheibe vorn an der Loge, gut über der Brüstung
+    const fx = ob.x + vx * (w / 2 + 0.1), fy = ob.y + vy * (h / 2 + 0.1);
+    const [px, py] = this.proj(fx, fy, 1.55);
+    this.daumenScheibe(ctx, px, py, s * 0.52, ob.hoch);
+  },
+
+  /* Dieselbe Marke noch einmal klein über der Luke: Die Loge steht am Bahnrand und ist beim
+     Zielen oft aus dem Bild – der Daumenstand muss aber immer zu sehen sein. */
+  drawLogeMarke(ctx, ob, t) {
+    const [px, py] = this.proj(ob.lmx, ob.lmy, 1.5 + 0.06 * Math.sin(t * 2));
+    const s = this.scale;
+    ctx.strokeStyle = 'rgba(110,84,24,0.35)'; ctx.lineWidth = Math.max(1, s * 0.03);
+    const [b0, b1] = this.proj(ob.lmx, ob.lmy, 0.02);
+    ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(b0, b1); ctx.stroke();
+    this.daumenScheibe(ctx, px, py, s * 0.34, ob.hoch);
+  },
 });

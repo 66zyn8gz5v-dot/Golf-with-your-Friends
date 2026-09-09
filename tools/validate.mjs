@@ -68,6 +68,23 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
     if (cup && imStueck(cup[0] + 0.5, cup[1] + 0.5)) problems.push('firetower: das Loch liegt im beschossenen Bahnstück');
     if (o.phase != null && (typeof o.phase !== 'number' || !isFinite(o.phase) || o.phase < 0 || o.phase >= 1)) problems.push(`firetower: phase ${o.phase} muss zwischen 0 und 1 liegen (Anteil eines Takts)`);
   }
+  /* Kaiserloge: die Tribüne steht am Bahnrand, ihre Falltür (lx,ly,lw,lh) liegt in der Bahn. Eine
+     Luke ohne Fairway darunter tut nichts; eine Loge mitten auf der Bahn wäre eine Mauer im Weg.
+     Abschlag und Loch dürfen nicht in der Luke liegen: Der Ball wird an seinen letzten Ruhepunkt
+     zurückgesetzt – läge der in der Luke, fiele er beim nächsten Daumen wieder hinein. */
+  for (const o of (c.obstacles || []).filter(o => o.type === 'imperialbox')) {
+    const lx = o.lx ?? 0, ly = o.ly ?? 0, lw = o.lw ?? 2, lh = o.lh ?? 2;
+    if (!(lw > 0) || !(lh > 0)) { problems.push('imperialbox: die Falltür hat keine Größe (lw/lh)'); continue; }
+    const inLuke = (x, y) => x >= lx && x < lx + lw && y >= ly && y < ly + lh;
+    let boden = 0;
+    for (let y = Math.floor(ly); y < ly + lh; y++) for (let x = Math.floor(lx); x < lx + lw; x++) if (FLOOR.has(rows[y] && rows[y][x])) boden++;
+    if (!boden) problems.push(`imperialbox: die Falltür bei (${lx},${ly}) liegt nicht auf der Bahn`);
+    const lch = rows[Math.floor(o.y ?? 0)] && rows[Math.floor(o.y ?? 0)][Math.floor(o.x ?? 0)];
+    if (FLOOR.has(lch)) problems.push(`imperialbox: die Loge steht bei (${o.x},${o.y}) mitten auf der Bahn – sie gehört an den Rand`);
+    if (tee && inLuke(tee[0] + 0.5, tee[1] + 0.5)) problems.push('imperialbox: der Abschlag liegt in der Falltür');
+    if (cup && inLuke(cup[0] + 0.5, cup[1] + 0.5)) problems.push('imperialbox: das Loch liegt in der Falltür');
+    if (o.start != null && o.start !== 'hoch' && o.start !== 'runter') problems.push(`imperialbox: start '${o.start}' – erlaubt sind nur 'hoch' und 'runter'`);
+  }
   for (const o of (c.obstacles || []).filter(o => o.type === 'liongate')) {
     const g = String(o.pair || '').toUpperCase();
     if (!TOR_PAARE.includes(g)) problems.push(`Löwentor mit pair '${o.pair}' – erlaubt sind nur ${TOR_PAARE.join(', ')}`);

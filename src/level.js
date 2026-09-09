@@ -126,6 +126,7 @@ function buildLevel(def) {
 
   const level = {
     def, W, H, tiles, tee, cup, goal, blocks, segs, walls, obstacles, decor, switches: {},
+    schlagZahl: 0,   // Schläge auf dieser Bahn (die Kaiserloge dreht danach den Daumen)
     hasHeights, hStep, heightAt, cellH, slopeAt,
     charAt(x, y) { return at(Math.floor(x), Math.floor(y)); },
     isFloorChar(c) { return FLOOR_CHARS.has(c); },
