@@ -33,8 +33,8 @@ const COLOSSEUM_COURSES = [
     autoDecor: { density: 0.12, seed: 701 },
   },
   {
-    name: 'Wagenrennen', par: 4, theme: 'colosseum', maxStrokes: 15,
-    intro: 'Die Rennbahn um die Spina. Zwei Streitwagen donnern über die Geraden – außen herum ist der sichere Weg, quer durch das Löwentor der schnelle.',
+    name: 'Streitwagen', par: 4, theme: 'colosseum', maxStrokes: 15,
+    intro: 'Auf der unteren Geraden laufen zwei Rillen im Sand: Dort fährt der Streitwagen. Wer aufspringt, wird ein Stück mitgenommen. Oben patrouillieren zwei Gladiatoren, und quer durch die Spina führt das Löwentor.',
     map: [
       '..........................',
       '..######################..',
@@ -51,8 +51,13 @@ const COLOSSEUM_COURSES = [
     ],
     obstacles: [
       { type: 'liongate', pair: 'A', angle: -90 },
-      { type: 'mover', x0: 5, y0: 1.5, x1: 20, y1: 1.5, w: 1.5, h: 0.9, period: 8, style: 'chariot' },
-      { type: 'mover', x0: 20, y0: 9.5, x1: 5, y1: 9.5, w: 1.5, h: 0.9, period: 7, phase: 0.35, style: 'chariot' },
+      // Der Streitwagen ist die Lore aus der Zwergenschmiede: feste Strecke, nimmt den Ball an der
+      // Station auf und trägt ihn mit. Die Rillen im Sand sind seine Spur.
+      { type: 'rail', y: 8.5, x0: 6, x1: 19 },
+      { type: 'ferry', x0: 6.5, y0: 8.5, x1: 18.5, y1: 8.5, w: 1.4, h: 1.0, wait: 1.6, travel: 2.6, style: 'chariot' },
+      // Gladiatoren: dieselbe Figur wie die Ritter auf dem Burgberg, nur in Sandfarben und Rot
+      { type: 'mover', x0: 8, y0: 2.5, x1: 18, y1: 2.5, w: 0.8, h: 0.8, period: 7, style: 'gladiator' },
+      { type: 'mover', x0: 18, y0: 1.5, x1: 8, y1: 1.5, w: 0.8, h: 0.8, period: 8, phase: 0.35, style: 'gladiator' },
       { type: 'bumper', x: 3.5, y: 5.5, r: 0.36, style: 'rock' },
       { type: 'bumper', x: 22.5, y: 5.5, r: 0.36, style: 'rock' },
     ],
@@ -86,8 +91,8 @@ const COLOSSEUM_COURSES = [
     obstacles: [
       { type: 'liongate', pair: 'A', angle: 0 },
       { type: 'liongate', pair: 'B', angle: 90 },
-      { type: 'mover', x0: 16, y0: 1.5, x1: 23, y1: 1.5, w: 1.5, h: 0.9, period: 6, style: 'chariot' },
-      { type: 'mover', x0: 22, y0: 10.5, x1: 11, y1: 10.5, w: 1.5, h: 0.9, period: 7.5, phase: 0.4, style: 'chariot' },
+      { type: 'mover', x0: 16, y0: 1.5, x1: 23, y1: 1.5, w: 0.8, h: 0.8, period: 6, style: 'gladiator' },
+      { type: 'mover', x0: 22, y0: 10.5, x1: 11, y1: 10.5, w: 0.8, h: 0.8, period: 7.5, phase: 0.4, style: 'gladiator' },
       { type: 'bumper', x: 17.5, y: 9.5, r: 0.38, style: 'rock' },
       { type: 'rotor', x: 6.5, y: 4.5, blades: 3, len: 1.5, speed: 1.6, style: 'stone', height: 0.6 },
     ],

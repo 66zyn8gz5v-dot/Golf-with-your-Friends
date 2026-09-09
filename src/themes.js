@@ -348,6 +348,7 @@ const THEMES = {
     mover: { top: '#c0392c', side: '#7a1e17' },
     rotor: { top: '#ecd9ac', side: '#a88c56' },
     accent: '#ffd45e', flag: '#d4342c',
+    rails: 'groove',   // der Streitwagen läuft in Rillen im Sand, nicht auf Eisenschienen
     autoDecor: ['pillarLight', 'bannerRed', 'pillarLight', 'urn', 'obelisk', 'brazier'],
   },
 };

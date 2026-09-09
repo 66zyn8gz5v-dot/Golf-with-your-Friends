@@ -937,20 +937,24 @@ Object.assign(Renderer.prototype, {
     ctx.beginPath(); ctx.moveTo(sx, sy + s * 0.2); ctx.lineTo(sx, sy + s * 0.3); ctx.stroke();
   },
 
-  /* Streitwagen: dieselbe Lore wie überall, nur anders angezogen – ein zweirädriger Rennwagen mit
-     Deichsel, Radkranz und Standarte. Am Verhalten ändert das nichts, es ist reine Zeichnung. */
+  /* Streitwagen: das ist die Lore aus der Zwergenschmiede, nur anders angezogen – ein zweirädriger
+     Rennwagen mit Deichsel, goldenen Speichen und Standarte. Er fährt dieselbe feste Strecke, nimmt
+     den Ball an der Station auf und trägt ihn mit; am Verhalten ändert die Zeichnung nichts.
+
+     Die Räder drehen sich nach dem Fahrfortschritt der Fähre, nicht nach der Uhr: So stehen sie
+     still, solange der Wagen an der Station wartet, und laufen genau dann, wenn er rollt. */
   drawChariot(ctx, ob, t) {
     const s = this.scale, d = ob.dir || 1, w = ob.w, h = ob.h, cx = ob.x, cy = ob.y;
     const holz = ['#c0392c', '#7a1e17'], gold = '#ffd45e';
     const feld = (x, y, ww, hh) => [[x - ww / 2, y - hh / 2], [x + ww / 2, y - hh / 2], [x + ww / 2, y + hh / 2], [x - ww / 2, y + hh / 2]];
     this.isoEllipse(ctx, cx, cy, 0, Math.max(w, h) * 0.52, 'rgba(0,0,0,0.22)');
     // Deichsel nach vorn
-    this.prism(ctx, feld(cx + d * (w / 2 + 0.35), cy, 0.8, 0.12), 0.24, 0.1, '#8a6a3a', '#5a4420');
-    // Wagenkorb
-    this.prism(ctx, feld(cx, cy, w * 0.8, h * 0.8), 0.22, 0.62, holz[0], holz[1], { outline: '#4a1210' });
-    this.fillPoly(ctx, feld(cx, cy, w * 0.62, h * 0.5), 0.85, gold, false);
-    // Räder links und rechts, drehen mit der Fahrt
-    const dreh = t * 5 * d;
+    this.prism(ctx, feld(cx + d * (w / 2 + 0.35), cy, 0.8, 0.12), 0.2, 0.1, '#8a6a3a', '#5a4420');
+    // Wagenkorb: oben offen, damit der mitfahrende Ball über dem Rand steht
+    this.prism(ctx, feld(cx, cy, w * 0.8, h * 0.8), 0.18, 0.5, holz[0], holz[1], { outline: '#4a1210' });
+    this.fillPoly(ctx, feld(cx, cy, w * 0.62, h * 0.5), 0.69, gold, false);
+    // Räder links und rechts
+    const dreh = ob.progress != null ? ob.progress * 14 * d : t * 5 * d;
     for (const seite of [-1, 1]) {
       const rx = cx, ry = cy + seite * (h * 0.5 + 0.06);
       const [wx, wy] = this.proj(rx, ry, 0.34);
@@ -963,7 +967,7 @@ Object.assign(Renderer.prototype, {
       }
     }
     // Standarte mit wehendem Wimpel
-    const [m0, m1] = this.proj(cx - d * w * 0.3, cy, 0.84), [m2, m3] = this.proj(cx - d * w * 0.3, cy, 1.75);
+    const [m0, m1] = this.proj(cx - d * w * 0.3, cy, 0.68), [m2, m3] = this.proj(cx - d * w * 0.3, cy, 1.6);
     ctx.strokeStyle = '#8a6a3a'; ctx.lineWidth = Math.max(1.5, s * 0.05);
     ctx.beginPath(); ctx.moveTo(m0, m1); ctx.lineTo(m2, m3); ctx.stroke();
     const weh = 0.18 + 0.1 * Math.sin(t * 6);

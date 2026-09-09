@@ -862,18 +862,34 @@ class Renderer {
         ctx.beginPath(); ctx.ellipse(sx, sy, ob.r * 0.8 * s, ob.r * 0.8 * s * this.cam.tilt, 0, a, a + 1.2); ctx.stroke();
       }
     } else if (ob.type === 'rail') {
-      ctx.strokeStyle = 'rgba(40,30,25,0.8)'; ctx.lineWidth = Math.max(1, s * 0.05);
       const horiz = ob.x0 !== undefined;
-      for (const off of [-0.25, 0.25]) {
-        const [a0, a1] = horiz ? this.proj(ob.x0, ob.y + off, 0.01) : this.proj(ob.x + off, ob.y0, 0.01);
-        const [b0, b1] = horiz ? this.proj(ob.x1, ob.y + off, 0.01) : this.proj(ob.x + off, ob.y1, 0.01);
-        ctx.beginPath(); ctx.moveTo(a0, a1); ctx.lineTo(b0, b1); ctx.stroke();
-      }
-      const from = horiz ? ob.x0 : ob.y0, to = horiz ? ob.x1 : ob.y1;
-      for (let k = from + 0.3; k < to; k += 0.6) {
-        const [a0, a1] = horiz ? this.proj(k, ob.y - 0.35, 0.01) : this.proj(ob.x - 0.35, k, 0.01);
-        const [b0, b1] = horiz ? this.proj(k, ob.y + 0.35, 0.01) : this.proj(ob.x + 0.35, k, 0.01);
-        ctx.beginPath(); ctx.moveTo(a0, a1); ctx.lineTo(b0, b1); ctx.stroke();
+      const laengs = (off, z) => horiz
+        ? [this.proj(ob.x0, ob.y + off, z), this.proj(ob.x1, ob.y + off, z)]
+        : [this.proj(ob.x + off, ob.y0, z), this.proj(ob.x + off, ob.y1, z)];
+      if (this.theme.rails === 'groove') {
+        /* Im Kolosseum fährt der Streitwagen nicht auf Eisen: In den Sandboden sind zwei flache
+           Rillen eingelassen. Gezeichnet werden sie als helle Spur mit einem dünnen Schattenstrich
+           an der Oberkante – das liest sich als Vertiefung. Keine Schwellen, die gehören zur Lore. */
+        for (const off of [-0.24, 0.24]) {
+          const [a, b] = laengs(off, 0.012);
+          ctx.strokeStyle = 'rgba(255,244,214,0.65)'; ctx.lineWidth = Math.max(2, s * 0.13);
+          ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+          const [c, d] = laengs(off - 0.05, 0.013);
+          ctx.strokeStyle = 'rgba(120,96,56,0.30)'; ctx.lineWidth = Math.max(1, s * 0.05);
+          ctx.beginPath(); ctx.moveTo(c[0], c[1]); ctx.lineTo(d[0], d[1]); ctx.stroke();
+        }
+      } else {
+        ctx.strokeStyle = 'rgba(40,30,25,0.8)'; ctx.lineWidth = Math.max(1, s * 0.05);
+        for (const off of [-0.25, 0.25]) {
+          const [a, b] = laengs(off, 0.01);
+          ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+        }
+        const from = horiz ? ob.x0 : ob.y0, to = horiz ? ob.x1 : ob.y1;
+        for (let k = from + 0.3; k < to; k += 0.6) {   // Schwellen
+          const [a0, a1] = horiz ? this.proj(k, ob.y - 0.35, 0.01) : this.proj(ob.x - 0.35, k, 0.01);
+          const [b0, b1] = horiz ? this.proj(k, ob.y + 0.35, 0.01) : this.proj(ob.x + 0.35, k, 0.01);
+          ctx.beginPath(); ctx.moveTo(a0, a1); ctx.lineTo(b0, b1); ctx.stroke();
+        }
       }
     } else if (ob.type === 'ferry') {
       // Stationen markieren
@@ -1523,17 +1539,36 @@ class Renderer {
       ctx.strokeStyle = '#dfe6ee'; ctx.lineWidth = Math.max(2, s * 0.07); ctx.lineCap = 'round';
       ctx.beginPath(); ctx.moveTo(sx0, sy0); ctx.quadraticCurveTo(sx0 + s * 0.25, sy0 - s * 0.25, sx0 + s * 0.2 + Math.sin(t * 6) * s * 0.03, sy0 - s * 0.55); ctx.stroke();
       ctx.fillStyle = '#c9a15a'; ctx.beginPath(); ctx.arc(sx0, sy0, s * 0.05, 0, TAU); ctx.fill();
-    } else if (ob.style === 'knight') {
+    } else if (ob.style === 'knight' || ob.style === 'gladiator') {
+      /* Ein und dieselbe Figur, zweimal angezogen: Der Ritter aus dem Märchenland ist grauer Stahl
+         mit rotem Wappenschild, der Gladiator des Kolosseums trägt Sandfarben und Rot – Helm mit
+         rotem Kamm, dazu der Rundschild an der Seite. Am Verhalten ändert das nichts, es ist
+         dieselbe Lore auf derselben Strecke, nur anders gezeichnet. */
+      const glad = ob.style === 'gladiator';
+      const koerper = glad ? ['#c0392c', '#7a1e17', '#4a1210'] : ['#d9dde6', '#7f8694', '#4a505c'];
+      const helm = glad ? '#e3d2a9' : '#c9ced8', schlitz = glad ? '#5a4520' : '#2a2f3a';
+      const schild = glad ? '#e3d2a9' : '#d93b3b', schildZier = glad ? '#c0392c' : '#ffd166';
       const body = this.circlePoly(ob.x, ob.y, ob.w * 0.42, 8);
-      this.prism(ctx, body, 0.05, 0.7, '#d9dde6', '#7f8694', { outline: '#4a505c' });
+      this.prism(ctx, body, 0.05, 0.7, koerper[0], koerper[1], { outline: koerper[2] });
       const [hx, hy] = this.proj(ob.x, ob.y, 0.95);
-      ctx.fillStyle = '#c9ced8'; ctx.beginPath(); ctx.arc(hx, hy, s * 0.24, 0, TAU); ctx.fill();
-      ctx.fillStyle = '#2a2f3a'; ctx.fillRect(hx - s * 0.16, hy - s * 0.02, s * 0.32, s * 0.07);
+      ctx.fillStyle = helm; ctx.beginPath(); ctx.arc(hx, hy, s * 0.24, 0, TAU); ctx.fill();
+      ctx.fillStyle = schlitz; ctx.fillRect(hx - s * 0.16, hy - s * 0.02, s * 0.32, s * 0.07);
       ctx.strokeStyle = '#d93b3b'; ctx.lineWidth = Math.max(2, s * 0.08); ctx.lineCap = 'round';
-      ctx.beginPath(); ctx.moveTo(hx, hy - s * 0.22); ctx.quadraticCurveTo(hx - s * 0.2, hy - s * 0.5, hx - s * 0.35 + Math.sin(t * 8) * s * 0.03, hy - s * 0.3); ctx.stroke();
+      if (glad) { // Helmkamm: eine Bürste quer über den Helm, statt der wehenden Ritterfeder
+        ctx.lineWidth = Math.max(3, s * 0.13);
+        ctx.beginPath(); ctx.moveTo(hx - s * 0.2, hy - s * 0.16); ctx.quadraticCurveTo(hx, hy - s * 0.42, hx + s * 0.2, hy - s * 0.16); ctx.stroke();
+      } else {
+        ctx.beginPath(); ctx.moveTo(hx, hy - s * 0.22); ctx.quadraticCurveTo(hx - s * 0.2, hy - s * 0.5, hx - s * 0.35 + Math.sin(t * 8) * s * 0.03, hy - s * 0.3); ctx.stroke();
+      }
       const [shx, shy] = this.proj(ob.x + ob.dir * 0.05, ob.y + 0.35, 0.45);
-      ctx.fillStyle = '#d93b3b'; ctx.beginPath(); ctx.arc(shx, shy, s * 0.17, 0, TAU); ctx.fill();
-      ctx.strokeStyle = '#ffd166'; ctx.lineWidth = Math.max(1, s * 0.04); ctx.beginPath(); ctx.moveTo(shx - s * 0.1, shy); ctx.lineTo(shx + s * 0.1, shy); ctx.moveTo(shx, shy - s * 0.1); ctx.lineTo(shx, shy + s * 0.1); ctx.stroke();
+      ctx.fillStyle = schild; ctx.beginPath(); ctx.arc(shx, shy, s * 0.17, 0, TAU); ctx.fill();
+      ctx.strokeStyle = schildZier; ctx.lineWidth = Math.max(1, s * 0.04);
+      if (glad) { // Rundschild: Buckel in der Mitte und ein Ring darum
+        ctx.beginPath(); ctx.arc(shx, shy, s * 0.11, 0, TAU); ctx.stroke();
+        ctx.fillStyle = schildZier; ctx.beginPath(); ctx.arc(shx, shy, s * 0.05, 0, TAU); ctx.fill();
+      } else {
+        ctx.beginPath(); ctx.moveTo(shx - s * 0.1, shy); ctx.lineTo(shx + s * 0.1, shy); ctx.moveTo(shx, shy - s * 0.1); ctx.lineTo(shx, shy + s * 0.1); ctx.stroke();
+      }
     } else if (ob.style === 'balloon') { this.drawBalloon(ctx, ob, t); return;
     } else if (ob.style === 'airship') { this.drawAirship(ctx, ob, t); return;
     } else if (ob.style === 'ghost') { this.drawGhost(ctx, ob, t); return;
