@@ -824,7 +824,7 @@ class Renderer {
     if (ob.type === 'trapdoor') { this.drawTrapdoor(ctx, ob, t); return; }
     if (ob.type === 'guillotine') { this.drawGuillotineFloor(ctx, ob, t); return; }
     if (ob.type === 'eyetower') { this.drawEyeBeam(ctx, ob, t); return; }
-    if (ob.type === 'firetower') { this.drawFireZone(ctx, ob, t); return; }
+    if (ob.type === 'firetower') { this.drawFireSweep(ctx, ob, t); return; }
     if (ob.type === 'imperialbox') { this.drawLogeLuke(ctx, ob, t); return; }
     if (ob.type === 'field' && ob.style === 'dark') { this.drawDarkZone(ctx, ob, t); return; }
     if (ob.type === 'boost' || (ob.type === 'field' && (ob.style === 'wind' || ob.style === 'current'))) { this.drawWind(ctx, ob, t); return; }

@@ -975,108 +975,104 @@ Object.assign(Renderer.prototype, {
     ctx.lineTo(m2 + d * s * 0.5, m3 + s * weh); ctx.lineTo(m2, m3 + s * 0.32); ctx.closePath(); ctx.fill();
   },
 
-  /* Feuerturm – Bahnstück am Boden. Drei Zustände, die man auf einen Blick unterscheiden können muss:
-     Ruhe = nur ein rußiger Fleck, Vorwarnung = pulsierendes Glühen, das schneller wird, Stoß = Feuer.
-     Die Vorwarnung ist der eigentliche Sinn des Hindernisses: Man soll warten können, nicht raten. */
-  drawFireZone(ctx, ob, t) {
+  /* Feuerturm – der streichende Strahl am Boden. Zwei Dinge müssen ablesbar sein: wo der Strahl
+     gerade brennt (grelles Band mit Flammen) und wie weit er überhaupt kommt (rußiger Bereich mit
+     gestricheltem Rand). Nur mit beidem lässt sich vorausplanen – man sieht den Ort der Gefahr und
+     den freien Rest. Ein Winkelpaar an der Vorderkante zeigt, wohin der Strahl gerade läuft. */
+  drawFireSweep(ctx, ob, t) {
     const s = this.scale;
-    const poly = [[ob.zx, ob.zy], [ob.zx + ob.zw, ob.zy], [ob.zx + ob.zw, ob.zy + ob.zh], [ob.zx, ob.zy + ob.zh]];
-    // Rußfleck: das Stück ist auch in Ruhe als gefährlich erkennbar
-    this.fillPoly(ctx, poly, 0.004, 'rgba(70,40,25,0.16)', false);
-    ctx.strokeStyle = 'rgba(120,70,35,0.5)'; ctx.lineWidth = Math.max(1, s * 0.05);
-    this.pathPoly(ctx, poly, 0.005); ctx.stroke();
+    const bereich = [[ob.zx, ob.zy], [ob.zx + ob.zw, ob.zy], [ob.zx + ob.zw, ob.zy + ob.zh], [ob.zx, ob.zy + ob.zh]];
+    this.fillPoly(ctx, bereich, 0.004, 'rgba(70,40,25,0.14)', false);
+    ctx.save();
+    ctx.setLineDash([s * 0.3, s * 0.22]);
+    ctx.strokeStyle = 'rgba(150,90,45,0.55)'; ctx.lineWidth = Math.max(1, s * 0.05);
+    this.pathPoly(ctx, bereich, 0.005); ctx.stroke();
+    ctx.restore();
 
-    if (ob.state === 'warn') {
-      // Puls wird zum Stoß hin schneller – wie ein Herzschlag, der ankündigt
-      const takt = 2.5 + 7 * ob.p, puls = 0.5 + 0.5 * Math.sin(t * takt * TAU);
-      const a = (0.22 + 0.45 * ob.p) * (0.55 + 0.45 * puls);
-      this.fillPoly(ctx, poly, 0.006, `rgba(255,150,45,${a})`, false);
-      // Warnstreifen quer über das Stück: eine leere Fläche liest sich zu leicht als Bodenfarbe
-      const n = Math.max(2, Math.round(ob.zw + ob.zh));
-      ctx.strokeStyle = `rgba(255,240,190,${(0.3 + 0.5 * ob.p) * (0.5 + 0.5 * puls)})`;
-      ctx.lineWidth = Math.max(2, s * 0.09);
-      for (let i = 1; i < n; i++) {
-        const u = i / n;
-        const [p0, p1] = this.proj(ob.zx + ob.zw * u, ob.zy, 0.007);
-        const [q0, q1] = this.proj(ob.zx + ob.zw * u, ob.zy + ob.zh, 0.007);
-        ctx.beginPath(); ctx.moveTo(p0, p1); ctx.lineTo(q0, q1); ctx.stroke();
-      }
-      ctx.strokeStyle = `rgba(255,225,150,${0.5 + 0.5 * ob.p})`; ctx.lineWidth = Math.max(2, s * 0.11);
-      this.pathPoly(ctx, poly, 0.008); ctx.stroke();
-    } else if (ob.state === 'fire') {
-      const ab = Math.min(1, (1 - ob.p) * 2.5);   // gegen Ende verglüht der Stoß
-      const fl = 0.85 + 0.15 * Math.sin(t * 31);
-      this.fillPoly(ctx, poly, 0.006, `rgba(255,110,30,${0.62 * ab * fl})`, false);
-      this.fillPoly(ctx, [[ob.zx + ob.zw * 0.12, ob.zy + ob.zh * 0.12], [ob.zx + ob.zw * 0.88, ob.zy + ob.zh * 0.12],
-        [ob.zx + ob.zw * 0.88, ob.zy + ob.zh * 0.88], [ob.zx + ob.zw * 0.12, ob.zy + ob.zh * 0.88]],
-        0.008, `rgba(255,225,140,${0.5 * ab * fl})`, false);
-      // Züngelnde Flammen auf dem Stück (fester Raster, damit alle Geräte dasselbe sehen)
-      for (let k = 0; k < 14; k++) {
-        const u = ((k * 0.6180339887) % 1), v = ((k * 0.3819660113 + 0.21) % 1);
-        const fx = ob.zx + u * ob.zw, fy = ob.zy + v * ob.zh;
-        const h = (0.35 + 0.3 * Math.abs(Math.sin(t * 13 + k * 1.7))) * ab;
-        const [b0, b1] = this.proj(fx, fy, 0.01), [t0, t1] = this.proj(fx, fy, h);
-        ctx.fillStyle = k % 3 ? `rgba(255,170,50,${0.75 * ab})` : `rgba(255,240,190,${0.8 * ab})`;
-        ctx.beginPath(); ctx.moveTo(b0 - s * 0.16, b1);
-        ctx.quadraticCurveTo(t0 + Math.sin(t * 9 + k) * s * 0.12, t1, b0 + s * 0.16, b1);
-        ctx.closePath(); ctx.fill();
+    const laengs = ob.achse === 'x';
+    const a0 = ob.mitte - ob.breit / 2, a1 = ob.mitte + ob.breit / 2;
+    const band = (u0, u1) => laengs
+      ? [[u0, ob.zy], [u1, ob.zy], [u1, ob.zy + ob.zh], [u0, ob.zy + ob.zh]]
+      : [[ob.zx, u0], [ob.zx + ob.zw, u0], [ob.zx + ob.zw, u1], [ob.zx, u1]];
+    const fl = 0.86 + 0.14 * Math.sin(t * 27);
+    this.fillPoly(ctx, band(a0, a1), 0.006, `rgba(255,110,30,${0.62 * fl})`, false);
+    this.fillPoly(ctx, band(ob.mitte - ob.breit * 0.22, ob.mitte + ob.breit * 0.22), 0.008, `rgba(255,230,150,${0.55 * fl})`, false);
+    ctx.strokeStyle = `rgba(255,235,170,${0.85 * fl})`; ctx.lineWidth = Math.max(2, s * 0.09);
+    this.pathPoly(ctx, band(a0, a1), 0.009); ctx.stroke();
+
+    // Züngelnde Flammen im Band (fester Raster, damit alle Geräte dasselbe sehen)
+    const quer = laengs ? ob.zh : ob.zw;
+    const n = Math.max(4, Math.round(quer * 2));
+    for (let k = 0; k < n; k++) {
+      const v = (k + 0.5) / n, w = ((k * 0.6180339887) % 1);
+      const fx = laengs ? a0 + ob.breit * w : ob.zx + ob.zw * v;
+      const fy = laengs ? ob.zy + ob.zh * v : a0 + ob.breit * w;
+      const hh = 0.35 + 0.3 * Math.abs(Math.sin(t * 13 + k * 1.7));
+      const [b0, b1] = this.proj(fx, fy, 0.01), [t0, t1] = this.proj(fx, fy, hh);
+      ctx.fillStyle = k % 3 ? 'rgba(255,170,50,0.75)' : 'rgba(255,240,190,0.8)';
+      ctx.beginPath(); ctx.moveTo(b0 - s * 0.16, b1);
+      ctx.quadraticCurveTo(t0 + Math.sin(t * 9 + k) * s * 0.12, t1, b0 + s * 0.16, b1);
+      ctx.closePath(); ctx.fill();
+    }
+
+    // Laufrichtung: zwei ausgefüllte Pfeile vor der Vorderkante – so sieht man nicht nur, wo der
+    // Strahl steht, sondern auch, welche Seite des Bereichs als nächste frei wird
+    const spitzeAn = (ob.richtung > 0 ? a1 : a0) + ob.richtung * 0.92;
+    const grenze = ob.richtung > 0 ? (laengs ? ob.zx + ob.zw : ob.zy + ob.zh) : (laengs ? ob.zx : ob.zy);
+    // Am Umkehrpunkt bleibt kein Platz mehr für den Pfeil – dort zeigte er ohnehin aus dem Bereich heraus
+    if (ob.richtung && (ob.richtung > 0 ? spitzeAn <= grenze : spitzeAn >= grenze)) {
+      const kante = ob.richtung > 0 ? a1 : a0, d = ob.richtung;
+      ctx.fillStyle = 'rgba(255,225,150,0.85)';
+      for (const v of [0.3, 0.7]) {
+        const cx = laengs ? kante + d * 0.5 : ob.zx + ob.zw * v;
+        const cy = laengs ? ob.zy + ob.zh * v : kante + d * 0.5;
+        const spitze = laengs ? [cx + d * 0.42, cy] : [cx, cy + d * 0.42];
+        const p0 = laengs ? [cx, cy - 0.4] : [cx - 0.4, cy];
+        const p1 = laengs ? [cx, cy + 0.4] : [cx + 0.4, cy];
+        const A = this.proj(p0[0], p0[1], 0.011), B = this.proj(spitze[0], spitze[1], 0.011), C = this.proj(p1[0], p1[1], 0.011);
+        ctx.beginPath(); ctx.moveTo(A[0], A[1]); ctx.lineTo(B[0], B[1]); ctx.lineTo(C[0], C[1]); ctx.closePath(); ctx.fill();
       }
     }
   },
 
-  /* Feuerturm – das Bauwerk. Sandsteinschaft mit Fugen, goldener Kranz, darauf die brennende Schale.
-     Die Schale zeigt denselben Zustand wie das Bahnstück: kleines Feuer, aufloderndes Glühen mit
-     Funken, dann der Stoß, der als Feuerbogen zum Bahnstück hinüberfährt. */
+  /* Feuerturm – das Bauwerk. Sandsteinschaft mit Fugen, goldener Kranz, darauf die brennende
+     Schale. Sie brennt durchgehend, denn der Strahl geht nie aus – er wandert nur. Der Feuerbogen
+     von der Schale zeigt immer auf die Mitte des Strahls und wandert mit ihm. */
   drawFireTower(ctx, ob, t) {
     const s = this.scale, r = ob.r, H = ob.height;
     const stein = ['#e6d5ab', '#a98f5f'], gold = ['#ffd45e', '#a8842a'];
     this.isoEllipse(ctx, ob.x, ob.y, 0.004, r * 1.7, 'rgba(0,0,0,0.28)');
     this.prism(ctx, this.circlePoly(ob.x, ob.y, r * 1.32, 8), 0, 0.5, stein[0], stein[1], { outline: '#6d5418' });
     this.prism(ctx, this.circlePoly(ob.x, ob.y, r, 8), 0.5, H - 0.5, stein[0], stein[1], { outline: '#6d5418' });
-    // Waagerechte Fugen: sonst wirkt der Schaft wie eine glatte Röhre
     ctx.strokeStyle = 'rgba(110,84,24,0.30)'; ctx.lineWidth = 1;
-    for (let z = 1.1; z < H - 0.2; z += 0.7) {
+    for (let z = 1.1; z < H - 0.2; z += 0.7) {   // waagerechte Fugen, sonst wirkt der Schaft wie eine Röhre
       const q0 = this.proj(ob.x - r, ob.y, z), q1 = this.proj(ob.x + r, ob.y, z);
       ctx.beginPath(); ctx.moveTo(q0[0], q0[1]); ctx.lineTo(q1[0], q1[1]); ctx.stroke();
     }
     this.prism(ctx, this.circlePoly(ob.x, ob.y, r * 1.25, 8), H, 0.26, gold[0], gold[1], { outline: '#6d5418' });
-    // Feuerschale auf dem Kranz
     const bz = H + 0.26;
     this.prism(ctx, this.circlePoly(ob.x, ob.y, r * 0.4, 8), bz, 0.22, gold[0], gold[1], { outline: '#6d5418' });
     this.prism(ctx, this.circlePoly(ob.x, ob.y, r * 0.85, 10), bz + 0.22, 0.34, '#3a2a12', gold[1], { outline: '#6d5418' });
 
-    const st = ob.state, p = ob.p;
-    const gross = st === 'fire' ? 2.6 : st === 'warn' ? 0.75 + 1.0 * p : 0.7;
-    const hell = st === 'fire' ? 1 : st === 'warn' ? 0.45 + 0.55 * p : 0.35;
     const fz = bz + 0.56, [fx, fy] = this.proj(ob.x, ob.y, fz), R = s * r * 0.6;
-    const glow = ctx.createRadialGradient(fx, fy, R * 0.3, fx, fy, R * (1.6 + 1.6 * gross));
-    glow.addColorStop(0, `rgba(255,180,70,${0.35 * hell})`); glow.addColorStop(1, 'rgba(255,110,30,0)');
-    ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(fx, fy, R * (1.6 + 1.6 * gross), 0, TAU); ctx.fill();
+    const glow = ctx.createRadialGradient(fx, fy, R * 0.3, fx, fy, R * 4.2);
+    glow.addColorStop(0, 'rgba(255,180,70,0.4)'); glow.addColorStop(1, 'rgba(255,110,30,0)');
+    ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(fx, fy, R * 4.2, 0, TAU); ctx.fill();
     for (let k = 0; k < 7; k++) {
       const ff = 0.7 + 0.3 * Math.sin(t * 12 + k * 2.1);
       const px = fx + (k / 6 - 0.5) * R * 1.3, py = fy - R * 0.1;
-      ctx.fillStyle = k % 2 ? `rgba(255,205,80,${0.85 * hell})` : `rgba(255,120,35,${0.9 * hell})`;
+      ctx.fillStyle = k % 2 ? 'rgba(255,205,80,0.9)' : 'rgba(255,120,35,0.92)';
       ctx.beginPath(); ctx.moveTo(px - R * 0.3, py);
-      ctx.quadraticCurveTo(px + Math.sin(t * 9 + k) * R * 0.3, py - R * (0.7 + 1.5 * gross * ff), px + R * 0.3, py);
+      ctx.quadraticCurveTo(px + Math.sin(t * 9 + k) * R * 0.3, py - R * (0.7 + 2.6 * ff), px + R * 0.3, py);
       ctx.closePath(); ctx.fill();
     }
-    if (st === 'warn') {   // Funken steigen auf: sichtbares Aufladen
-      for (let k = 0; k < 6; k++) {
-        const u = ((t * 1.6 + k / 6) % 1), a = (1 - u) * p;
-        ctx.fillStyle = `rgba(255,220,140,${0.8 * a})`;
-        ctx.beginPath(); ctx.arc(fx + Math.sin(k * 2.3 + t * 3) * R * 0.7, fy - u * R * 3, Math.max(1, s * 0.045), 0, TAU); ctx.fill();
-      }
-    }
-    if (st === 'fire') {   // Der Stoß: ein Feuerbogen von der Schale auf das Bahnstück
-      const ab = Math.min(1, (1 - p) * 2.2);
-      const [gx, gy] = this.proj(ob.zmx, ob.zmy, 0.05);
-      for (let k = 0; k < 9; k++) {
-        const u = (k + 0.5) / 9;
-        const mx = fx + (gx - fx) * u, my = fy + (gy - fy) * u - Math.sin(u * Math.PI) * s * 0.5;
-        const w = s * (0.42 - 0.22 * u) * (0.8 + 0.2 * Math.sin(t * 25 + k));
-        ctx.fillStyle = k % 2 ? `rgba(255,150,40,${0.7 * ab})` : `rgba(255,235,170,${0.65 * ab})`;
-        ctx.beginPath(); ctx.arc(mx, my, w, 0, TAU); ctx.fill();
-      }
+    const [gx, gy] = this.proj(ob.smx, ob.smy, 0.05);   // Feuerbogen auf die Mitte des Strahls
+    for (let k = 0; k < 10; k++) {
+      const u = (k + 0.5) / 10;
+      const mx = fx + (gx - fx) * u, my = fy + (gy - fy) * u - Math.sin(u * Math.PI) * s * 0.5;
+      const w = s * (0.4 - 0.2 * u) * (0.8 + 0.2 * Math.sin(t * 25 + k));
+      ctx.fillStyle = k % 2 ? 'rgba(255,150,40,0.72)' : 'rgba(255,235,170,0.68)';
+      ctx.beginPath(); ctx.arc(mx, my, w, 0, TAU); ctx.fill();
     }
   },
 

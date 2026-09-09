@@ -109,28 +109,36 @@ const COLOSSEUM_COURSES = [
     autoDecor: { density: 0.12, seed: 703 },
   },
   {
-    /* Testbahn zum Einstellen des Feuerturms: absichtlich schmucklos. Eine gerade Gasse, in der Mitte
-       das Bahnstück, das der Turm beschießt – sonst nichts. So sieht man beim Spielen sofort, ob Takt
-       und Vorwarnzeit passen, ohne dass ein anderes Hindernis dazwischenfunkt. Wird später ersetzt. */
+    /* Testbahn für den Feuerturm: eine breite Arena statt einer Gasse. Der Strahl streicht quer
+       über die volle Höhe und wieder zurück – es gibt also keinen Rand, an dem man sich
+       vorbeimogeln kann. Wer durchwill, wartet, bis der Strahl am oberen oder unteren Ende wendet,
+       und schlägt dann kräftig durch. Bewusst schmucklos zum Einstellen von Tempo und Breite;
+       wird später ersetzt. */
     name: 'Feuerprobe', par: 3, theme: 'colosseum', maxStrokes: 10,
-    intro: 'Eine gerade Gasse, quer darüber der Feuerstoß vom Turm. Die Schale glüht auf, bevor sie wirft – wer dann wartet, kommt trocken durch. Wer hineinrollt, liegt wieder hinten, aber ohne Strafschlag.',
+    intro: 'Der Feuerstrahl streicht wie ein Scheinwerfer über die Arena und wieder zurück. Er geht nie aus – man muss den Moment abpassen, in dem er am Rand wendet, und dann kräftig durchschlagen. Wen er erwischt, den legt er zurück, aber ohne Strafschlag.',
     map: [
-      '........................',
-      '........................',
-      '..####################..',
-      '..T##################H..',
-      '..####################..',
-      '........................',
-      '........................',
+      '..........................',
+      '..........................',
+      '..######################..',
+      '..######################..',
+      '..######################..',
+      '..T####################H..',
+      '..######################..',
+      '..######################..',
+      '..######################..',
+      '..........................',
+      '..........................',
     ],
     obstacles: [
-      // Der Turm steht neben der Gasse, das beschossene Stück (zx,zy,zw,zh) liegt quer in der Mitte
-      { type: 'firetower', x: 12.5, y: 0.7, height: 3.4, zx: 10, zy: 2, zw: 4, zh: 3 },
+      // Der Turm steht oben neben der Arena; der Strahl wandert über die Achse 'y', also quer zur
+      // Spielrichtung, und überstreicht zwischen x = 8 und x = 16 die volle Höhe der Bahn
+      { type: 'firetower', x: 12, y: 0.7, height: 3.4, zx: 8, zy: 2, zw: 8, zh: 7, achse: 'y', breit: 2, tempo: 1.8 },
     ],
     decor: [
-      { t: 'pillarLight', x: 4.5, y: 0.6, s: 1.2 }, { t: 'pillarLight', x: 19.5, y: 0.6, s: 1.2 },
-      { t: 'bannerRed', x: 1.2, y: 3.5, s: 1.2 }, { t: 'bannerRed', x: 22.6, y: 3.5, s: 1.2 },
-      { t: 'urn', x: 8.5, y: 5.4, s: 1.1 }, { t: 'urn', x: 16.5, y: 5.4, s: 1.1 },
+      { t: 'pillarLight', x: 5.5, y: 0.6, s: 1.2 }, { t: 'pillarLight', x: 20.5, y: 0.6, s: 1.2 },
+      { t: 'bannerRed', x: 1.2, y: 5.5, s: 1.2 }, { t: 'bannerRed', x: 24.6, y: 5.5, s: 1.2 },
+      { t: 'urn', x: 8.5, y: 9.4, s: 1.1 }, { t: 'urn', x: 16.5, y: 9.4, s: 1.1 },
+      { t: 'brazier', x: 12.5, y: 9.4, s: 1.0 },
     ],
     autoDecor: { density: 0.1, seed: 704 },
   },

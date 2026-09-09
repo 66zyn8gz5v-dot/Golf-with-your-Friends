@@ -51,22 +51,30 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
     const ch = rows[Math.floor(my)] && rows[Math.floor(my)][Math.floor(mx)];
     if (!FLOOR.has(ch)) problems.push(`wandergate: Mitte bei (${mx},${my}) liegt nicht auf dem Fairway (${ch})`);
   }
-  /* Feuerturm: das Bauwerk steht neben der Bahn, beschossen wird ein Rechteck (zx,zy,zw,zh) auf der
-     Bahn. Ein Bahnstück ohne Fairway darunter beschießt nichts; ein Turm mitten auf dem Fairway
-     wäre eine Mauer im Weg. Und weder Abschlag noch Loch dürfen im Feuer liegen: Der Ball wird an
-     seinen letzten Ruhepunkt zurückgesetzt – läge der im Bahnstück, käme er nie wieder heraus. */
+  /* Feuerturm: das Bauwerk steht neben der Bahn, bestrichen wird ein Rechteck (zx,zy,zw,zh) auf der
+     Bahn. Ein Bereich ohne Fairway darunter wird von niemandem gesehen; ein Turm mitten auf dem
+     Fairway wäre eine Mauer im Weg. Der Abschlag darf nicht im Bereich liegen: Der Ball wird an
+     seinen letzten Ruhepunkt zurückgesetzt und notfalls zum Abschlag – läge der im Bereich, käme er
+     nie heraus. Und der Strahl muss schmaler sein als seine Laufstrecke, sonst steht er still und
+     verriegelt den Bereich für immer. */
   for (const o of (c.obstacles || []).filter(o => o.type === 'firetower')) {
-    const zx = o.zx ?? 0, zy = o.zy ?? 0, zw = o.zw ?? 3, zh = o.zh ?? 3;
-    if (!(zw > 0) || !(zh > 0)) { problems.push('firetower: das beschossene Bahnstück hat keine Größe (zw/zh)'); continue; }
-    const imStueck = (x, y) => x >= zx && x < zx + zw && y >= zy && y < zy + zh;
+    const zx = o.zx ?? 0, zy = o.zy ?? 0, zw = o.zw ?? 8, zh = o.zh ?? 4;
+    if (!(zw > 0) || !(zh > 0)) { problems.push('firetower: der bestrichene Bereich hat keine Größe (zw/zh)'); continue; }
+    if (o.achse != null && o.achse !== 'x' && o.achse !== 'y') { problems.push(`firetower: achse '${o.achse}' – erlaubt sind nur 'x' und 'y'`); continue; }
+    const achse = (o.achse === 'x' || o.achse === 'y') ? o.achse : (zw >= zh ? 'x' : 'y');
+    const breit = o.breit ?? 1.8, laenge = achse === 'x' ? zw : zh;
+    if (!(breit > 0)) problems.push(`firetower: Strahlbreite ${breit} muss größer als null sein`);
+    else if (breit >= laenge - 0.05) problems.push(`firetower: Strahlbreite ${breit} füllt die Laufstrecke (${laenge}) – dann steht der Strahl still und sperrt den Bereich für immer`);
+    if (o.tempo != null && !(o.tempo > 0)) problems.push(`firetower: tempo ${o.tempo} muss größer als null sein`);
+    const imBereich = (x, y) => x >= zx && x < zx + zw && y >= zy && y < zy + zh;
     let boden = 0;
     for (let y = Math.floor(zy); y < zy + zh; y++) for (let x = Math.floor(zx); x < zx + zw; x++) if (FLOOR.has(rows[y] && rows[y][x])) boden++;
-    if (!boden) problems.push(`firetower: das Bahnstück bei (${zx},${zy}) liegt nicht auf der Bahn – der Turm beschießt nichts`);
+    if (!boden) problems.push(`firetower: der Bereich bei (${zx},${zy}) liegt nicht auf der Bahn – der Strahl streicht über nichts`);
     const tch = rows[Math.floor(o.y ?? 0)] && rows[Math.floor(o.y ?? 0)][Math.floor(o.x ?? 0)];
     if (FLOOR.has(tch)) problems.push(`firetower: der Turm steht bei (${o.x},${o.y}) mitten auf der Bahn – er gehört an den Rand`);
-    if (tee && imStueck(tee[0] + 0.5, tee[1] + 0.5)) problems.push('firetower: der Abschlag liegt im beschossenen Bahnstück – der Ball käme dort nie heraus');
-    if (cup && imStueck(cup[0] + 0.5, cup[1] + 0.5)) problems.push('firetower: das Loch liegt im beschossenen Bahnstück');
-    if (o.phase != null && (typeof o.phase !== 'number' || !isFinite(o.phase) || o.phase < 0 || o.phase >= 1)) problems.push(`firetower: phase ${o.phase} muss zwischen 0 und 1 liegen (Anteil eines Takts)`);
+    if (tee && imBereich(tee[0] + 0.5, tee[1] + 0.5)) problems.push('firetower: der Abschlag liegt im bestrichenen Bereich – der Ball käme dort nie heraus');
+    if (cup && imBereich(cup[0] + 0.5, cup[1] + 0.5)) problems.push('firetower: das Loch liegt im bestrichenen Bereich');
+    if (o.phase != null && (typeof o.phase !== 'number' || !isFinite(o.phase) || o.phase < 0 || o.phase >= 1)) problems.push(`firetower: phase ${o.phase} muss zwischen 0 und 1 liegen (Anteil eines Durchlaufs)`);
   }
   /* Kaiserloge: die Tribüne steht am Bahnrand, ihre Falltür (lx,ly,lw,lh) liegt in der Bahn. Eine
      Luke ohne Fairway darunter tut nichts; eine Loge mitten auf der Bahn wäre eine Mauer im Weg.

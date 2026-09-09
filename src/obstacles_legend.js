@@ -298,49 +298,75 @@ class WanderGate {
   }
 }
 
-/* Feuerturm: ein hohes Bauwerk am Bahnrand mit einer brennenden Schale obenauf. Im festen Takt wirft
-   er einen Feuerstoß auf ein festgelegtes Stück der Bahn. Wer dann dort liegt, rollt oder fliegt,
-   wird zurück an seinen letzten Ruhepunkt gelegt – aber ohne Strafschlag. Der Turm ist ein
-   Zeitfenster, kein Fehler des Spielers: Er kostet den Schlag, nicht die Wertung.
+/* Feuerturm: ein hohes Bauwerk am Bahnrand mit einer brennenden Schale obenauf. Aus ihr fährt ein
+   Feuerstrahl auf die Bahn, der langsam über einen festgelegten Bereich streicht und wieder
+   zurück – wie ein Scheinwerfer. Er brennt ununterbrochen; gefährlich ist nicht ein Zeitpunkt,
+   sondern ein Ort. Wer im Strahl liegt, rollt oder fliegt, wird zurück an seinen letzten Ruhepunkt
+   gelegt – aber ohne Strafschlag. Der Turm kostet Weg und Zeit, nicht die Wertung.
 
-   Vor jedem Stoß glühen Schale und Bahnstück auf. Ohne diese Vorwarnung wäre der Turm reines Pech;
-   mit ihr ist er eine Frage des Abwartens.
+   Geprüft wird bei jedem Physikschritt, nicht nur einmal: Der Ball kann in den stehenden Strahl
+   hineinrollen, und der Strahl kann über einen ruhenden Ball hinwegstreichen. Beides muss zählen.
 
-   Am Hindernis stehen der Platz des Turms (x, y) und das Bahnstück (zx, zy, zw, zh) als Rechteck von
-   der linken oberen Ecke aus – wie bei Aufwind und Kraftfeld. Der Takt steht nicht am Hindernis,
-   sondern hier als Konstante: Alle Türme einer Arena sollen im selben Rhythmus schlagen, nur mit
-   verschobener Phase. */
-const FEUERTURM_TAKT = 6;         // Sekunden von einem Feuerstoß zum nächsten
-const FEUERTURM_WARNUNG = 1.5;    // so lange vorher glühen Schale und Bahnstück
-const FEUERTURM_STOSS = 0.7;      // so lange brennt der Stoß
+   Weil der Strahl immer sichtbar über den Boden wandert, braucht er keine Vorwarnung mehr – man
+   sieht jederzeit, wo er steht und wohin er geht, und wartet den Moment zum Durchschlüpfen ab.
+
+   Am Hindernis stehen der Platz des Turms (x, y) und der bestrichene Bereich (zx, zy, zw, zh) als
+   Rechteck von der linken oberen Ecke aus – wie bei Aufwind und Kraftfeld. 'achse' sagt, in welche
+   Richtung der Strahl wandert ('x' oder 'y'; ohne Angabe über die längere Seite), 'breit' wie breit
+   er ist und 'tempo', wie schnell er streicht. Der Grundwert fürs Tempo steht hier als Konstante,
+   damit alle Türme einer Arena von sich aus im selben Tritt streichen. */
+const FEUERTURM_TEMPO = 1.8;      // Kacheln je Sekunde, mit denen der Strahl über die Bahn streicht
+const FEUERTURM_BREITE = 1.8;     // Standardbreite des Strahls in Kacheln
 
 class FireTower {
   constructor(d) {
-    Object.assign(this, { r: 0.75, height: 3.4, zx: 0, zy: 0, zw: 3, zh: 3, phase: 0 }, d);
+    Object.assign(this, { r: 0.75, height: 3.4, zx: 0, zy: 0, zw: 8, zh: 4,
+      breit: FEUERTURM_BREITE, tempo: FEUERTURM_TEMPO, phase: 0 }, d);
     this.type = 'firetower';
-    this.state = 'idle'; this.p = 0;
-    this.zmx = this.zx + this.zw / 2; this.zmy = this.zy + this.zh / 2;   // Mitte des Bahnstücks
+    if (this.achse !== 'x' && this.achse !== 'y') this.achse = this.zw >= this.zh ? 'x' : 'y';
+    // Der Strahl bleibt mit seiner ganzen Breite im Bereich: seine Mitte läuft nur zwischen von und bis
+    const laenge = this.achse === 'x' ? this.zw : this.zh, start = this.achse === 'x' ? this.zx : this.zy;
+    this.von = start + this.breit / 2; this.bis = start + laenge - this.breit / 2;
+    this.mitte = (this.von + this.bis) / 2;
+    this.richtung = 0;
+    this.zmx = this.zx + this.zw / 2; this.zmy = this.zy + this.zh / 2;   // Mitte des Bereichs
   }
 
   update(t) {
-    const u = ((((t / FEUERTURM_TAKT + this.phase) % 1) + 1) % 1) * FEUERTURM_TAKT;
-    const ruhe = FEUERTURM_TAKT - FEUERTURM_WARNUNG - FEUERTURM_STOSS;
-    if (u < ruhe) { this.state = 'idle'; this.p = 0; }
-    else if (u < ruhe + FEUERTURM_WARNUNG) { this.state = 'warn'; this.p = (u - ruhe) / FEUERTURM_WARNUNG; }
-    else { this.state = 'fire'; this.p = (u - ruhe - FEUERTURM_WARNUNG) / FEUERTURM_STOSS; }
+    const weg = this.bis - this.von;
+    if (weg <= 0.001) { this.mitte = (this.von + this.bis) / 2; this.richtung = 0; return; }
+    /* Dreieckschwingung: gleichmäßig hin, gleichmäßig zurück. An den Umkehrpunkten abzubremsen
+       würde den Strahl dort kleben lassen – gerade am Rand soll er zügig wenden. */
+    const dauer = (2 * weg) / this.tempo;
+    const u = ((((t / dauer + this.phase) % 1) + 1) % 1);
+    const k = u < 0.5 ? u * 2 : 2 - u * 2;
+    this.mitte = this.von + weg * k;
+    this.richtung = u < 0.5 ? 1 : -1;
   }
 
-  /* Liegt dieser Punkt in der Gefahrenflaeche? Denselben Namen tragen alle Hindernisse, die den
-     Ball ohne Strafschlag zurueckwerfen – main.js prueft damit, ob der Ruhepunkt selbst darin liegt. */
+  /* Liegt dieser Punkt im bestrichenen Bereich? Denselben Namen tragen alle Hindernisse, die den
+     Ball ohne Strafschlag zurückwerfen – main.js prüft damit, ob der Ruhepunkt selbst darin liegt.
+     Absichtlich der ganze Bereich und nicht nur der Strahl: Ein Ruhepunkt im Bereich wäre früher
+     oder später wieder im Strahl, der Ball käme nie heraus. */
   trifft(px, py) { return px >= this.zx && px <= this.zx + this.zw && py >= this.zy && py <= this.zy + this.zh; }
 
+  /* Brennt es genau hier, jetzt? */
+  imStrahl(px, py) {
+    if (!this.trifft(px, py)) return false;
+    return Math.abs((this.achse === 'x' ? px : py) - this.mitte) <= this.breit / 2;
+  }
+
+  /* Mitte des Strahls in Weltkoordinaten (Zielpunkt des Feuerbogens von der Schale herab) */
+  get smx() { return this.achse === 'x' ? this.mitte : this.zmx; }
+  get smy() { return this.achse === 'x' ? this.zmy : this.mitte; }
+
   trigger(ball, t, events) {
-    if (this.state !== 'fire' || ball.rider || !this.trifft(ball.x, ball.y)) return;
+    if (ball.rider || !this.imStrahl(ball.x, ball.y)) return;
     events.push({ type: 'scorched', x: ball.x, y: ball.y, ob: this });
   }
 
-  airTrigger(ball, t, events) {   // ein Feuerstoß erwischt auch einen fliegenden Ball
-    if (this.state !== 'fire' || !this.trifft(ball.x, ball.y)) return false;
+  airTrigger(ball, t, events) {   // der Strahl erwischt auch einen fliegenden Ball
+    if (!this.imStrahl(ball.x, ball.y)) return false;
     events.push({ type: 'scorched', x: ball.x, y: ball.y, ob: this }); return true;
   }
 
