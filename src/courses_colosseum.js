@@ -243,10 +243,10 @@ const COLOSSEUM_COURSES = [
       '..##########..................',
       '..##########..................',
       '..............................',
-      '..###########.....##########..',
-      '.a###########.....##########B.',
-      '..###########.....##########..',
-      '..###########.....##########..',
+      '..##############....########..',
+      '.a##############....########B.',
+      '..##############....########..',
+      '..##############....########..',
       '..............................',
       '..............##############..',
       '.............b############H#..',
@@ -256,8 +256,10 @@ const COLOSSEUM_COURSES = [
     obstacles: [
       { type: 'liongate', pair: 'A', angle: 0 },
       { type: 'liongate', pair: 'B', angle: 0 },
-      { type: 'rail', y: 9.5, x0: 12, x1: 19 },
-      { type: 'ferry', x0: 12.5, y0: 9.5, x1: 18.5, y1: 9.5, w: 1.4, h: 1.0, wait: 1.6, travel: 2.8, style: 'chariot' },
+      { type: 'rail', y: 9.5, x0: 15, x1: 21 },
+      // Der Wagen wartet länger als er fährt: Wer den Graben erreicht, soll ihn meistens
+      // besetzt vorfinden statt vor einer leeren Station zu stehen.
+      { type: 'ferry', x0: 15.5, y0: 9.5, x1: 20.5, y1: 9.5, w: 1.4, h: 1.0, wait: 2.6, travel: 2.4, style: 'chariot' },
       { type: 'mover', x0: 6.5, y0: 2.5, x1: 6.5, y1: 6.5, w: 0.8, h: 0.8, period: 4.6, style: 'gladiator' },
       { type: 'mover', x0: 22.5, y0: 15.5, x1: 22.5, y1: 13.5, w: 0.8, h: 0.8, period: 3.8, phase: 0.3, style: 'gladiator' },
     ],

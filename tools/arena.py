@@ -157,8 +157,11 @@ bahn(name='Katapultbahn', par=4, maxStrokes=14, map=k.rows(),
 k = Karte(30, 17)
 k.rect(2, 2, 11, 6)       # Kammer 1 (Start)
 k.put(12, 4, 'A')         # Eingang am Ende von Kammer 1
-k.rect(2, 8, 12, 11)      # Kammer 2, linkes Podest
-k.rect(18, 8, 27, 11)     # Kammer 2, rechtes Podest
+# Das linke Podest von Kammer 2 muss lang genug sein: Das Löwentor spuckt den Ball mit fester
+# Geschwindigkeit aus, und der rollt gut zehn Kacheln weit. Endete das Podest davor, flöge er
+# geradewegs in den Graben – ein Strafschlag, den der Spieler nicht abwenden kann.
+k.rect(2, 8, 15, 11)      # Kammer 2, linkes Podest
+k.rect(20, 8, 27, 11)     # Kammer 2, rechtes Podest
 k.put(1, 9, 'a')          # Ausgang von Tor A
 k.put(28, 9, 'B')         # Eingang von Tor B
 k.rect(14, 13, 27, 15)    # Kammer 3 (Ziel)
@@ -170,8 +173,10 @@ bahn(name='Tierpforten', par=5, maxStrokes=16, map=k.rows(),
      obstacles=[
         "{ type: 'liongate', pair: 'A', angle: 0 }",
         "{ type: 'liongate', pair: 'B', angle: 0 }",
-        "{ type: 'rail', y: 9.5, x0: 12, x1: 19 }",
-        "{ type: 'ferry', x0: 12.5, y0: 9.5, x1: 18.5, y1: 9.5, w: 1.4, h: 1.0, wait: 1.6, travel: 2.8, style: 'chariot' }",
+        "{ type: 'rail', y: 9.5, x0: 15, x1: 21 }",
+        "// Der Wagen wartet länger als er fährt: Wer den Graben erreicht, soll ihn meistens",
+        "// besetzt vorfinden statt vor einer leeren Station zu stehen.",
+        "{ type: 'ferry', x0: 15.5, y0: 9.5, x1: 20.5, y1: 9.5, w: 1.4, h: 1.0, wait: 2.6, travel: 2.4, style: 'chariot' }",
         "{ type: 'mover', x0: 6.5, y0: 2.5, x1: 6.5, y1: 6.5, w: 0.8, h: 0.8, period: 4.6, style: 'gladiator' }",
         "{ type: 'mover', x0: 22.5, y0: 15.5, x1: 22.5, y1: 13.5, w: 0.8, h: 0.8, period: 3.8, phase: 0.3, style: 'gladiator' }",
      ],
@@ -332,7 +337,9 @@ for b in BAHNEN:
     teile.append("    name: '%s', par: %d, theme: 'colosseum', maxStrokes: %d,\n" % (b['name'], b['par'], b['maxStrokes']))
     teile.append("    intro: '%s',\n" % b['intro'].replace("'", "\\'"))
     teile.append("    map: [\n%s\n    ],\n" % js_map(b['map']))
-    teile.append("    obstacles: [\n" + '\n'.join('      %s,' % o for o in b['obstacles']) + "\n    ],\n")
+    # Zeilen, die mit // beginnen, sind Kommentare für die erzeugte Datei und bekommen kein Komma
+    zeilen = '\n'.join(('      %s' % o) if o.startswith('//') else ('      %s,' % o) for o in b['obstacles'])
+    teile.append("    obstacles: [\n" + zeilen + "\n    ],\n")
     teile.append("    decor: [\n%s\n    ],\n" % js_decor(b['decor']))
     teile.append("    autoDecor: { density: %s, seed: %d },\n" % (b['dichte'], b['seed']))
     teile.append("  },\n")
