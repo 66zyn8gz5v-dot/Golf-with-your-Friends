@@ -27,7 +27,15 @@ Auf der **Weltkarte** liegt jede Welt als schwebende Scheibe in derselben 2,5D-S
 | Dschungeltempel | Profi | 9 Bahnen durch den Urwald bis zur verlorenen Stadt |
 | Sturmhimmel | Legende | 9 extra große Bahnen über den Wolken |
 | Schattenreich | Legende | 10 extra große Bahnen im Reich der Schatten |
-| Kolosseum | Legende | 12 Turnierbahnen in der Arena |
+
+Das **Kolosseum** steht bewusst *nicht* auf der Weltkarte. Es ist die Turnierwelt und wird nur über
+den **Turnier**-Knopf im Startbildschirm betreten – die Weltkarte bleibt die Reise durch die sechs
+Landschaften, das Turnier ist ein eigener Wettkampf daneben. Technisch reicht dafür, dass die Welt
+keinen Eintrag in `WorldMap.spots` hat; die Karte zeichnet dann weder Marke noch Insel.
+
+| Turnier | Stufe | Bahnen |
+| --- | --- | --- |
+| Kolosseum | Legende | 12 Turnierbahnen in der Arena (nur über den Turnier-Knopf) |
 
 Nach dem Antippen eines Ortes folgt die Startaufstellung mit **Modus**, **Spielern**, **Hut**, **Musik** und **Steuerung**:
 

@@ -319,8 +319,11 @@
     state.phase = 'title'; state.editorReturn = false; Music.set('title');
     document.body.classList.add('title');
     document.body.classList.remove('creative', 'editing', 'testing');
-    const marks = WORLDS.map(w => {
-      const sp = WorldMap.spots[w.id]; if (!sp) return '';
+    // Nur Welten mit einem Ort auf der Karte: Das Kolosseum ist die Turnierwelt und wird über den
+    // Turnier-Knopf im Startbildschirm betreten, nicht über die Reise
+    const kartenWelten = WORLDS.filter(w => WorldMap.spots[w.id]);
+    const marks = kartenWelten.map(w => {
+      const sp = WorldMap.spots[w.id];
       const m = worldMode(w);
       return `<button class="spot" style="left:${sp.x}%;top:${sp.y}%;--pin:${sp.col}" data-world="${w.id}" title="${Text.esc(w.name)}">
         <span class="spot-pin">${sp.icon}</span>
@@ -328,7 +331,7 @@
     }).join('');
     overlay(`<div class="panel atlas-panel">
       <div class="panel-head"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span><h2>${Icons.svg('map')} Weltkarte</h2></div>
-      <div class="sub">Tippe einen Ort an – alle ${WORLDS.length} Welten sind von Anfang an offen.</div>
+      <div class="sub">Tippe einen Ort an – alle ${kartenWelten.length} Welten sind von Anfang an offen.</div>
       <div class="atlas">${WorldMap.svg()}${marks}</div>
       <div class="atlas-extra"><span class="btn small ghost" id="to-build2">${Icons.svg('construction')} Bauen &amp; Eigene Welt</span></div>
     </div>`, 'title');
