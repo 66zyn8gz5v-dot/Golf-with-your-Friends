@@ -62,11 +62,36 @@ nehmen die Farbe des Balls an, genau wie der Busch am Ritterhelm (ein weißer Ba
 der Kamm auf dem hellen Helm unter). Sonst bewusst wenige, große Formen: Bei Ballgröße bleibt von feinen
 Verzierungen nichts übrig.
 
-**Gesperrte Hüte:** Der Championhelm steht schon in der Liste, taucht aber in der Auswahl noch nicht auf –
-er trägt `locked: true`. Wie man ihn gewinnt, ist noch nicht gebaut; vorgesehen ist nur die Sperre. Die
-einzige Stelle, die darüber entscheidet, ist `Hats.freigeschaltet(id)`; die Auswahl zeigt, was
-`Hats.sichtbar()` zurückgibt. Gezeichnet wird ein gesperrter Hut trotzdem – kommt der Hut eines
-Mitspielers übers Netz, soll er zu sehen sein, ganz gleich was hier steht.
+### Belohnungen: ein Skin je Welt
+
+Wer in einer Welt den **Rundenrekord der Kombi-Wertung** hält, darf ihren Skin tragen. Sieben Welten,
+sieben Belohnungen – sechs davon sind **Ganzkörper-Skins**: Sie ersetzen den Ball, statt auf ihm zu
+sitzen, und bewegen sich.
+
+| Welt | Belohnung | was drin passiert |
+|---|---|---|
+| Märchenland | Märchenkugel | Schneekugel mit Burg, die Flocken rieseln |
+| Meereswelt | Aquarium | rundes Becken mit Sand, Pflanzen, drei schwimmenden Fischen und aufsteigenden Blasen |
+| Tüftlerreich | Zahnradkugel | drei Zahnräder mahlen ineinander |
+| Dschungeltempel | Götzenkopf | Steinkopf mit Moos, die Augen glühen im Takt |
+| Sturmhimmel | Gewitterkugel | Wolken ziehen, hin und wieder zuckt ein Blitz durch die Kugel |
+| Schattenreich | Kristallkugel | Schwaden waberen, ein Auge blickt umher |
+| Kolosseum | Championhelm | (ein Hut, kein Skin – der Siegerpreis des Turniers) |
+
+Alle sechs Skins teilen sich die Glaskugel-Form, damit sie als eine Familie zu erkennen sind – der Inhalt
+macht die Welt. Bewegt wird nach `state.t`, der Spieluhr: dieselbe Zahl auf jedem Gerät, beim Online-Spiel
+sehen also alle dasselbe. Weil ein Skin die Ballfarbe verdeckt, bekommt er einen dünnen Reif in der Farbe
+des Spielers – sonst wüsste bei vier Bällen niemand, welcher der eigene ist.
+
+**Wie die Sperre funktioniert:** In `Hats.LIST` trägt eine Belohnung `welt: '<Weltkennung>'`, ein
+Ganzkörper-Skin zusätzlich `voll: true`. Die eine Stelle, die entscheidet, ist `Hats.freigeschaltet(id)`:
+Sie vergleicht `Best.name` mit dem Namen am Kombi-Rundenrekord der Welt. Die Auszeichnung gilt für den
+aktuellen Bestand, nicht für die Ewigkeit – wer den Rekord verliert, verliert auch den Skin.
+
+In der Auswahl bleiben gesperrte Belohnungen **sichtbar**: blass, entfärbt, mit einem Schloss und dem
+Hinweis, welcher Rekord dafür nötig ist. Man soll sehen, was es zu holen gibt. Gezeichnet wird ein
+gesperrter Skin trotzdem in voller Farbe – kommt er über das Netz vom Ball eines Mitspielers, soll man ihn
+sehen, ganz gleich was auf dem eigenen Gerät in der Rangliste steht.
 
 Die Hüte werden in `src/hats.js` gezeichnet – reine Canvas-Pfade, keine Bilddateien. Ein neuer Hut braucht
 nur eine Zeichenfunktion in `DEFS` und einen Eintrag in `LIST`; der Nullpunkt liegt auf dem Kopf des Balls,

@@ -933,7 +933,7 @@
       </div>
       <p style="margin-top:10px">Hut:</p>
       <div id="hat-who"></div>
-      <div id="hats" class="hat-grid">${Hats.sichtbar().map(h => `<button type="button" class="hat" data-h="${h.id}" title="${h.name}"><canvas></canvas><span>${h.name}</span></button>`).join('')}</div>
+      <div id="hats" class="hat-grid">${Hats.LIST.map(h => `<button type="button" class="hat" data-h="${h.id}" title="${Text.esc(h.name)}"><canvas></canvas><span>${Text.esc(h.name)}</span><i class="hat-lock">${Icons.svg('lock')}</i></button>`).join('')}</div>
       <p style="margin-top:10px">Musik:</p>
       <div id="mu">
         <span class="btn ghost small ${Music.on ? 'sel' : ''}" data-v="1">An</span>
@@ -958,7 +958,11 @@
     function drawHats() {
       const col = PLAYER_COLORS[hatWho];
       ui.overlay.querySelectorAll('#hats .hat').forEach(b => {
-        b.classList.toggle('sel', b.dataset.h === playerHats[hatWho]);
+        const frei = Hats.freigeschaltet(b.dataset.h);
+        b.classList.toggle('sel', frei && b.dataset.h === playerHats[hatWho]);
+        b.classList.toggle('zu', !frei);
+        // Gesperrt: der Platz bleibt sichtbar, damit man weiß, was es zu holen gibt
+        b.title = frei ? Hats.name(b.dataset.h) : `${Hats.name(b.dataset.h)} – ${Hats.bedingung(b.dataset.h)}`;
         Hats.preview(b.querySelector('canvas'), b.dataset.h, col);
       });
     }
@@ -974,7 +978,9 @@
       }));
     }
     ui.overlay.querySelectorAll('#hats .hat').forEach(b => b.addEventListener('click', () => {
-      Sfx.unlock(); setHat(hatWho, b.dataset.h); drawWho(); drawHats();
+      Sfx.unlock();
+      if (!Hats.freigeschaltet(b.dataset.h)) { showMessage(`${Hats.name(b.dataset.h)}: ${Hats.bedingung(b.dataset.h)}`, 2600); return; }
+      setHat(hatWho, b.dataset.h); drawWho(); drawHats();
     }));
     drawWho(); drawHats();
     ui.overlay.querySelectorAll('#pc .btn').forEach(b => b.addEventListener('click', () => {

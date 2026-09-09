@@ -304,7 +304,190 @@ const Hats = (() => {
 
     legion(ctx) { galea(ctx, false); },   // Legionärshelm: Silber mit Gold – für die Teilnahme
     champion(ctx, color) { galea(ctx, true, color); },  // Championhelm: Gold mit Federkamm in Ballfarbe – der Siegerpreis
+
+    /* ---------- Ganzkörper-Skins: Belohnung für den Besten einer Welt ----------
+       Diese sechs ersetzen den Ball, statt auf ihm zu sitzen. Ihr Nullpunkt liegt darum in der
+       Ballmitte, eine Einheit ist der Ballradius – die Kugel geht also von -1 bis +1. Alle bewegen
+       sich nach der Spieluhr t: dieselbe Zahl auf jedem Gerät, also sehen beim Online-Spiel alle
+       dasselbe. Gemeinsam ist ihnen die Glaskugel-Form, damit sie als eine Familie zu erkennen
+       sind – der Inhalt macht die Welt. */
+
+    globe(ctx, color, t) {   // Märchenland: Schneekugel mit Burg und Flocken
+      glasKugel(ctx, '#bcdcff', '#6fa8dd');
+      ctx.save(); kugelMaske(ctx);
+      ctx.fillStyle = '#7ec27a'; ctx.beginPath(); ctx.ellipse(0, 0.72, 1.1, 0.42, 0, 0, TAU2); ctx.fill();
+      ctx.fillStyle = '#d9d2c4';                                  // Burgturm
+      ctx.fillRect(-0.30, -0.42, 0.24, 1.0); ctx.fillRect(0.08, -0.20, 0.20, 0.78);
+      ctx.fillStyle = '#c0392c';                                  // Kegeldächer
+      ctx.beginPath(); ctx.moveTo(-0.34, -0.42); ctx.lineTo(-0.18, -0.80); ctx.lineTo(-0.02, -0.42); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(0.04, -0.20); ctx.lineTo(0.18, -0.52); ctx.lineTo(0.32, -0.20); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#ffd166'; ctx.fillRect(-0.24, -0.10, 0.10, 0.14); ctx.fillRect(0.13, 0.06, 0.09, 0.12);
+      ctx.fillStyle = 'rgba(255,255,255,0.95)';                   // rieselnde Flocken
+      for (let i = 0; i < 9; i++) {
+        const x = -0.85 + ((i * 0.239) % 1.7);
+        const y = -0.9 + (((t * 0.35 + i * 0.31) % 1) * 1.9);
+        ctx.beginPath(); ctx.arc(x + Math.sin(t + i) * 0.05, y, 0.055, 0, TAU2); ctx.fill();
+      }
+      ctx.restore(); glasLicht(ctx);
+    },
+
+    aquarium(ctx, color, t) {   // Meereswelt: rundes Aquarium, in dem Fische schwimmen
+      glasKugel(ctx, '#bfeaff', '#4aa3d8');
+      ctx.save(); kugelMaske(ctx);
+      const wasser = ctx.createLinearGradient(0, -0.5, 0, 1);      // Wasser bis knapp unter den Rand
+      wasser.addColorStop(0, '#6fd0f0'); wasser.addColorStop(1, '#1f7ab8');
+      ctx.fillStyle = wasser; ctx.fillRect(-1, -0.45, 2, 1.6);
+      ctx.fillStyle = '#d9c48a'; ctx.beginPath(); ctx.ellipse(0, 1.05, 1, 0.42, 0, 0, TAU2); ctx.fill();  // Sand
+      ctx.strokeStyle = '#3f9f5a'; ctx.lineWidth = 0.1; ctx.lineCap = 'round';   // Wasserpflanzen
+      for (const [px, h] of [[-0.6, 0.5], [0.62, 0.38]]) {
+        ctx.beginPath(); ctx.moveTo(px, 0.82);
+        ctx.quadraticCurveTo(px + Math.sin(t * 1.6 + px) * 0.16, 0.82 - h * 0.6, px, 0.82 - h); ctx.stroke();
+      }
+      for (let i = 0; i < 3; i++) {   // Fische auf gestreckten Kreisbahnen, mit der Nase voran
+        const p = (t * (0.26 + i * 0.05) + i * 0.37) % 1, a = p * TAU2;
+        const fx = Math.cos(a) * (0.5 - i * 0.09), fy = 0.18 + Math.sin(a) * (0.3 - i * 0.06);
+        fisch(ctx, fx, fy, 0.3 - i * 0.05, Math.cos(a) >= 0 ? -1 : 1, ['#ff8b3d', '#ffd166', '#ff5d8f'][i]);
+      }
+      ctx.fillStyle = 'rgba(255,255,255,0.7)';   // aufsteigende Blasen
+      for (let i = 0; i < 5; i++) {
+        const p = ((t * 0.45 + i * 0.2) % 1);
+        ctx.beginPath(); ctx.arc(-0.42 + i * 0.2 + Math.sin(t * 2 + i) * 0.05, 1.0 - p * 1.45, 0.045 + (i % 2) * 0.02, 0, TAU2); ctx.fill();
+      }
+      ctx.restore(); glasLicht(ctx);
+    },
+
+    cog(ctx, color, t) {   // Tüftlerreich: Messingkugel, in der Zahnräder mahlen
+      glasKugel(ctx, '#f0dcae', '#a87c38');
+      ctx.save(); kugelMaske(ctx);
+      ctx.fillStyle = '#4a3a24'; ctx.fillRect(-1, -1, 2, 2);
+      zahnrad(ctx, -0.22, -0.10, 0.52, 9, t * 1.1, '#d9a441', '#8a6420');
+      zahnrad(ctx, 0.42, 0.34, 0.34, 7, -t * 1.45 + 0.3, '#c9c2b4', '#6d6558');
+      zahnrad(ctx, 0.34, -0.46, 0.24, 6, t * 1.9, '#d9a441', '#8a6420');
+      ctx.restore(); glasLicht(ctx);
+    },
+
+    idolhead(ctx, color, t) {   // Dschungeltempel: steinerner Götzenkopf mit glühenden Augen
+      const g = ctx.createRadialGradient(-0.35, -0.4, 0.1, 0, 0, 1);
+      g.addColorStop(0, '#b9b09a'); g.addColorStop(0.6, '#8d8571'); g.addColorStop(1, '#5c5546');
+      ctx.beginPath(); ctx.arc(0, 0, 1, 0, TAU2); ctx.fillStyle = g; ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.4)'; ctx.lineWidth = 0.07; ctx.stroke();
+      ctx.save(); kugelMaske(ctx);
+      ctx.fillStyle = '#6f6857'; ctx.fillRect(-1, -1, 2, 0.42);            // Stirnband
+      ctx.fillStyle = '#3f8f5a';                                            // Moos in den Fugen
+      for (const [mx, my, mr] of [[-0.7, 0.35, 0.22], [0.66, 0.1, 0.18], [-0.1, 0.86, 0.26]]) {
+        ctx.beginPath(); ctx.ellipse(mx, my, mr, mr * 0.6, 0, 0, TAU2); ctx.fill();
+      }
+      ctx.strokeStyle = 'rgba(50,44,32,0.5)'; ctx.lineWidth = 0.06;         // Meißelspuren
+      for (const y of [-0.72, 0.5]) { ctx.beginPath(); ctx.moveTo(-0.8, y); ctx.lineTo(0.8, y + 0.08); ctx.stroke(); }
+      ctx.fillStyle = '#4a4436';                                            // breite Nase und Mund
+      ctx.beginPath(); ctx.moveTo(0, -0.12); ctx.lineTo(-0.18, 0.3); ctx.lineTo(0.18, 0.3); ctx.closePath(); ctx.fill();
+      ctx.fillRect(-0.34, 0.5, 0.68, 0.13);
+      const gl = 0.55 + 0.45 * Math.abs(Math.sin(t * 1.3));                 // glühende Augen
+      for (const ex of [-0.42, 0.42]) {
+        ctx.fillStyle = `rgba(120,255,140,${0.35 * gl})`;
+        ctx.beginPath(); ctx.arc(ex, -0.24, 0.3, 0, TAU2); ctx.fill();
+        ctx.fillStyle = `rgb(${Math.round(150 + 60 * gl)},255,${Math.round(150 + 60 * gl)})`;
+        ctx.beginPath(); ctx.ellipse(ex, -0.24, 0.15, 0.11, 0, 0, TAU2); ctx.fill();
+      }
+      ctx.restore();
+    },
+
+    thunder(ctx, color, t) {   // Sturmhimmel: dunkle Wolkenkugel, in der es blitzt
+      const zuck = ((t * 0.9) % 1) < 0.12 ? 1 : ((t * 0.9 + 0.45) % 1) < 0.06 ? 0.6 : 0;
+      const g = ctx.createRadialGradient(-0.3, -0.4, 0.1, 0, 0, 1);
+      g.addColorStop(0, zuck ? '#8fa6d8' : '#5a627e'); g.addColorStop(0.6, '#3c4258'); g.addColorStop(1, '#20243a');
+      ctx.beginPath(); ctx.arc(0, 0, 1, 0, TAU2); ctx.fillStyle = g; ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.4)'; ctx.lineWidth = 0.07; ctx.stroke();
+      ctx.save(); kugelMaske(ctx);
+      ctx.fillStyle = 'rgba(255,255,255,0.14)';    // Wolkenballen
+      for (const [cx2, cy2, cr] of [[-0.45, -0.3, 0.42], [0.2, -0.5, 0.36], [0.45, 0.1, 0.4], [-0.2, 0.35, 0.45]]) {
+        ctx.beginPath(); ctx.arc(cx2 + Math.sin(t * 0.5 + cx2) * 0.06, cy2, cr, 0, TAU2); ctx.fill();
+      }
+      if (zuck) {                                   // Blitz quer durch die Kugel
+        ctx.globalAlpha = zuck;
+        ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.fillRect(-1, -1, 2, 2);
+        ctx.strokeStyle = '#fff27a'; ctx.lineWidth = 0.13; ctx.lineJoin = 'miter';
+        ctx.beginPath(); ctx.moveTo(-0.2, -0.85); ctx.lineTo(0.12, -0.2); ctx.lineTo(-0.14, -0.1);
+        ctx.lineTo(0.24, 0.8); ctx.stroke();
+        ctx.globalAlpha = 1; ctx.lineJoin = 'round';
+      }
+      ctx.fillStyle = 'rgba(180,210,255,0.7)';      // Regen
+      for (let i = 0; i < 7; i++) {
+        const x = -0.8 + i * 0.24, y = -0.2 + (((t * 1.6 + i * 0.27) % 1) * 1.4);
+        ctx.fillRect(x, y, 0.05, 0.2);
+      }
+      ctx.restore(); glasLicht(ctx);
+    },
+
+    orb(ctx, color, t) {   // Schattenreich: Kristallkugel mit wabernden Schwaden und einem Auge
+      glasKugel(ctx, '#d9bcff', '#6a3fa8');
+      ctx.save(); kugelMaske(ctx);
+      const g = ctx.createRadialGradient(0, 0, 0.1, 0, 0, 1);
+      g.addColorStop(0, '#4a2470'); g.addColorStop(1, '#1a0d2e');
+      ctx.fillStyle = g; ctx.fillRect(-1, -1, 2, 2);
+      ctx.fillStyle = 'rgba(180,120,255,0.3)';      // ziehende Schwaden
+      for (let i = 0; i < 4; i++) {
+        const a = t * 0.5 + i * 1.6;
+        ctx.beginPath(); ctx.ellipse(Math.cos(a) * 0.35, Math.sin(a * 0.8) * 0.32, 0.55, 0.24, a, 0, TAU2); ctx.fill();
+      }
+      const bl = 0.5 + 0.5 * Math.sin(t * 2.2);     // das Auge blickt umher
+      const bx = Math.sin(t * 0.7) * 0.22, by = Math.cos(t * 0.5) * 0.12;
+      ctx.fillStyle = '#ffeccd'; ctx.beginPath(); ctx.ellipse(0, 0.02, 0.46, 0.3, 0, 0, TAU2); ctx.fill();
+      ctx.fillStyle = '#7a2fd0'; ctx.beginPath(); ctx.arc(bx, 0.02 + by, 0.2, 0, TAU2); ctx.fill();
+      ctx.fillStyle = '#14061f'; ctx.beginPath(); ctx.ellipse(bx, 0.02 + by, 0.07, 0.16, 0, 0, TAU2); ctx.fill();
+      ctx.fillStyle = `rgba(255,255,255,${0.5 + 0.4 * bl})`; ctx.beginPath(); ctx.arc(bx - 0.09, by - 0.06, 0.05, 0, TAU2); ctx.fill();
+      ctx.restore(); glasLicht(ctx);
+    },
   };
+
+  /* ---------- Bausteine der Ganzkörper-Skins ---------- */
+  /* Glaskugel als Hintergrund: heller Rand, damit die Kugel rund wirkt */
+  function glasKugel(ctx, hell, dunkel) {
+    const g = ctx.createRadialGradient(-0.35, -0.4, 0.1, 0, 0, 1);
+    g.addColorStop(0, hell); g.addColorStop(1, dunkel);
+    ctx.beginPath(); ctx.arc(0, 0, 1, 0, TAU2); ctx.fillStyle = g; ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.4)'; ctx.lineWidth = 0.07; ctx.stroke();
+  }
+  /* Alles Weitere bleibt in der Kugel */
+  function kugelMaske(ctx) { ctx.beginPath(); ctx.arc(0, 0, 0.97, 0, TAU2); ctx.clip(); }
+  /* Glanzlicht und Rand obendrauf – erst damit sieht die Kugel nach Glas aus */
+  function glasLicht(ctx) {
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    ctx.beginPath(); ctx.ellipse(-0.38, -0.44, 0.3, 0.18, -0.6, 0, TAU2); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 0.06;
+    ctx.beginPath(); ctx.arc(0, 0, 0.94, Math.PI * 0.15, Math.PI * 0.85); ctx.stroke();
+    ctx.strokeStyle = 'rgba(0,0,0,0.4)'; ctx.lineWidth = 0.07;
+    ctx.beginPath(); ctx.arc(0, 0, 1, 0, TAU2); ctx.stroke();
+  }
+  /* Ein Fisch: Tropfenkörper mit Schwanzflosse, d = Blickrichtung (-1 links, 1 rechts) */
+  function fisch(ctx, x, y, gr, d, col) {
+    ctx.save(); ctx.translate(x, y); ctx.scale(d * gr, gr);
+    ctx.fillStyle = col;
+    ctx.beginPath(); ctx.ellipse(0, 0, 0.62, 0.36, 0, 0, TAU2); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-0.5, 0); ctx.lineTo(-1.05, -0.42); ctx.lineTo(-1.05, 0.42); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.75)';
+    ctx.beginPath(); ctx.arc(0.32, -0.09, 0.12, 0, TAU2); ctx.fill();
+    ctx.fillStyle = '#20242e'; ctx.beginPath(); ctx.arc(0.35, -0.09, 0.06, 0, TAU2); ctx.fill();
+    ctx.restore();
+  }
+  /* Ein Zahnrad mit z Zähnen, um w gedreht */
+  function zahnrad(ctx, x, y, r, z, w, hell, dunkel) {
+    ctx.save(); ctx.translate(x, y); ctx.rotate(w);
+    ctx.fillStyle = dunkel;
+    for (let i = 0; i < z; i++) {
+      const a = (i / z) * TAU2;
+      ctx.save(); ctx.rotate(a); ctx.fillRect(-r * 0.16, -r * 1.22, r * 0.32, r * 0.4); ctx.restore();
+    }
+    ctx.fillStyle = hell; ctx.beginPath(); ctx.arc(0, 0, r * 0.88, 0, TAU2); ctx.fill();
+    ctx.fillStyle = dunkel; ctx.beginPath(); ctx.arc(0, 0, r * 0.28, 0, TAU2); ctx.fill();
+    ctx.strokeStyle = dunkel; ctx.lineWidth = r * 0.1;
+    for (let i = 0; i < 4; i++) {
+      const a = (i / 4) * TAU2;
+      ctx.beginPath(); ctx.moveTo(Math.cos(a) * r * 0.3, Math.sin(a) * r * 0.3);
+      ctx.lineTo(Math.cos(a) * r * 0.8, Math.sin(a) * r * 0.8); ctx.stroke();
+    }
+    ctx.restore();
+  }
 
   /* Reihenfolge und Namen für das Menü */
   const LIST = [
@@ -317,22 +500,35 @@ const Hats = (() => {
     { id: 'viking', name: 'Wikingerhelm', icon: '🐂' },
     { id: 'knight', name: 'Ritterhelm', icon: '⚔️' },
     { id: 'legion', name: 'Legionärshelm', icon: '🪖' },
-    /* Gesperrt: den Championhelm gibt es schon, er ist nur noch nicht zu sehen. Freigeschaltet wird
-       bisher nichts – wie man ihn gewinnt, kommt später. Hier steht nur die Sperre. */
-    { id: 'champion', name: 'Championhelm', icon: '🏅', locked: true },
+    /* Belohnungen: Wer in einer Welt den Rundenrekord der Kombi-Wertung hält, darf ihren Skin
+       tragen. Verliert er ihn wieder, ist auch der Skin wieder weg – die Auszeichnung gilt für
+       den aktuellen Bestand, nicht für die Ewigkeit. */
+    { id: 'globe', name: 'Märchenkugel', icon: '🏰', welt: 'normal', voll: true },
+    { id: 'aquarium', name: 'Aquarium', icon: '🐠', welt: 'sea', voll: true },
+    { id: 'cog', name: 'Zahnradkugel', icon: '⚙️', welt: 'pro', voll: true },
+    { id: 'idolhead', name: 'Götzenkopf', icon: '🗿', welt: 'jungle', voll: true },
+    { id: 'thunder', name: 'Gewitterkugel', icon: '⛈️', welt: 'storm', voll: true },
+    { id: 'orb', name: 'Kristallkugel', icon: '🔮', welt: 'shadow', voll: true },
+    { id: 'champion', name: 'Championhelm', icon: '🏅', welt: 'colosseum' },
   ];
   const byId = id => LIST.find(h => h.id === id);
 
-  /* Hut auf einen Ball zeichnen: (cx, cy) ist die Ballmitte auf dem Schirm, r sein Radius */
-  function draw(ctx, id, cx, cy, r, color) {
+  /* Hut auf einen Ball zeichnen: (cx, cy) ist die Ballmitte auf dem Schirm, r sein Radius.
+     Ein Ganzkörper-Skin ersetzt den Ball, statt auf ihm zu sitzen – für ihn liegt der Nullpunkt
+     darum in der Ballmitte und nicht auf dem Kopf. t ist die Spieluhr für die Bewegung. */
+  function draw(ctx, id, cx, cy, r, color, t) {
     const d = DEFS[id];
     if (!d || id === 'none' || r < 1) return;
     ctx.save();
-    ctx.translate(cx, cy - r * 0.72);
+    if (voll(id)) ctx.translate(cx, cy); else ctx.translate(cx, cy - r * 0.72);
     ctx.scale(r, r);
     ctx.lineJoin = 'round'; ctx.lineCap = 'round';
     ctx.lineWidth = 0.07; ctx.strokeStyle = 'rgba(0,0,0,0.4)';
-    d(ctx, color);
+    d(ctx, color, t || 0);
+    if (voll(id)) {   // Reif in Spielerfarbe: sonst wüsste bei vier Spielern niemand, wem der Ball gehört
+      ctx.strokeStyle = color || '#ffffff'; ctx.lineWidth = 0.07;
+      ctx.beginPath(); ctx.arc(0, 0, 0.965, 0, TAU2); ctx.stroke();
+    }
     ctx.restore();
   }
 
@@ -347,23 +543,41 @@ const Hats = (() => {
     const r = w * 0.21, cx = w / 2, cy = h * 0.76; // etwas kleiner, damit auch der hohe Federbusch ins Bild passt
     ctx.beginPath(); ctx.ellipse(cx, cy + r * 1.05, r * 1.05, r * 0.3, 0, 0, TAU2);
     ctx.fillStyle = 'rgba(0,0,0,0.28)'; ctx.fill();
-    const g = ctx.createRadialGradient(cx - r * 0.35, cy - r * 0.4, r * 0.1, cx, cy, r);
-    g.addColorStop(0, '#ffffff'); g.addColorStop(0.35, color); g.addColorStop(1, dim(color, 0.55));
-    ctx.beginPath(); ctx.arc(cx, cy, r, 0, TAU2);
-    ctx.fillStyle = g; ctx.fill();
-    ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 1; ctx.stroke();
-    draw(ctx, id, cx, cy, r, color);
+    if (!voll(id)) {   // ein Ganzkörper-Skin bringt seine eigene Kugel mit
+      const g = ctx.createRadialGradient(cx - r * 0.35, cy - r * 0.4, r * 0.1, cx, cy, r);
+      g.addColorStop(0, '#ffffff'); g.addColorStop(0.35, color); g.addColorStop(1, dim(color, 0.55));
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, TAU2);
+      ctx.fillStyle = g; ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 1; ctx.stroke();
+    }
+    draw(ctx, id, cx, cy, r, color, 0);
   }
 
-  /* Ist dieser Hut schon zu haben? Die eine Stelle, an der später die Freischaltung beantwortet
-     wird – bis dahin bleibt ein gesperrter Hut gesperrt. Gezeichnet wird er trotzdem: Kommt der
-     Hut eines Mitspielers übers Netz, soll er zu sehen sein, egal was hier steht. */
-  const freigeschaltet = id => { const h = byId(id); return !h || !h.locked; };
-  /* Nur die Hüte, die in der Auswahl auftauchen dürfen */
-  const sichtbar = () => LIST.filter(h => freigeschaltet(h.id));
+  /* Ganzkörper-Skin: ersetzt den Ball, statt auf ihm zu sitzen */
+  const voll = id => { const h = byId(id); return !!(h && h.voll); };
+
+  /* Ist dieser Hut schon zu haben? Ein Skin gehört dem, der in seiner Welt den Rundenrekord der
+     Kombi-Wertung hält – und nur solange er ihn hält. Gezeichnet wird ein gesperrter Skin
+     trotzdem: Kommt er über das Netz vom Ball eines Mitspielers, soll man ihn sehen, egal was auf
+     dem eigenen Gerät in der Rangliste steht.
+     Best wird erst nach hats.js geladen, darum die Abfrage hier drin und nicht oben. */
+  function freigeschaltet(id) {
+    const h = byId(id);
+    if (!h || !h.welt) return true;
+    if (typeof Best === 'undefined' || !Best.name) return false;
+    const rekord = Best.of(h.welt).combo.round;
+    return !!(rekord && rekord.n && rekord.n === Best.name);
+  }
+  /* Wie man ihn bekommt – für den Hinweis am gesperrten Platz */
+  function bedingung(id) {
+    const h = byId(id);
+    if (!h || !h.welt) return '';
+    const w = (typeof WORLDS !== 'undefined' && WORLDS.find(x => x.id === h.welt)) || null;
+    return `Halte den Kombi-Rundenrekord: ${w ? w.name : 'dieser Welt'}`;
+  }
 
   return {
-    LIST, draw, preview, freigeschaltet, sichtbar,
+    LIST, draw, preview, freigeschaltet, bedingung, voll,
     has: id => Object.prototype.hasOwnProperty.call(DEFS, id),
     name: id => (byId(id) || LIST[0]).name,
     icon: id => (byId(id) || LIST[0]).icon,

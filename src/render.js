@@ -289,6 +289,7 @@ class Renderer {
   drawFrame(state) {
     const ctx = this.ctx, th = this.theme, lv = this.level, t = state.t;
     if (!lv) return;
+    this.t = t;   // Spieluhr merken: drawBall und die Ball-Skins brauchen sie für ihre Bewegung
     // Himmel
     const g = ctx.createLinearGradient(0, 0, 0, this.h);
     g.addColorStop(0, th.sky[0]); g.addColorStop(1, th.sky[1]);
@@ -806,13 +807,17 @@ class Renderer {
     const g = ctx.createRadialGradient(sx - r * 0.35, sy - r * 0.4, r * 0.1, sx, sy, r);
     g.addColorStop(0, '#ffffff'); g.addColorStop(0.35, b.color); g.addColorStop(1, shade(b.color, 0.55));
     if (b.curse && !b.sunk) { // Perlenfluch: perlmuttfarbener Schimmer um den Ball
-      const t = this.level.t || 0, gl = 0.5 + 0.3 * Math.sin(t * 4);
+      const gl = 0.5 + 0.3 * Math.sin((this.t || 0) * 4);
       ctx.fillStyle = `rgba(255,240,205,${0.28 * gl})`; ctx.beginPath(); ctx.arc(sx, sy, r * 2.1, 0, TAU); ctx.fill();
       ctx.strokeStyle = `rgba(255,255,255,${0.6 * gl})`; ctx.lineWidth = Math.max(1, s * 0.03); ctx.beginPath(); ctx.arc(sx, sy, r * 1.5, 0, TAU); ctx.stroke();
     }
-    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(sx, sy, r, 0, TAU); ctx.fill();
-    ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 1; ctx.stroke();
-    if (b.hat && typeof Hats !== 'undefined') Hats.draw(ctx, b.hat, sx, sy, r, b.color); // gewählter Hut
+    // Ein Ganzkörper-Skin bringt seine eigene Kugel mit – dann entfällt der gewöhnliche Ball
+    const skin = b.hat && typeof Hats !== 'undefined' && Hats.voll(b.hat);
+    if (!skin) {
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(sx, sy, r, 0, TAU); ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 1; ctx.stroke();
+    }
+    if (b.hat && typeof Hats !== 'undefined') Hats.draw(ctx, b.hat, sx, sy, r, b.color, this.t || 0); // gewählter Hut
     if (dark) ctx.globalAlpha = 1;
   }
   drawAim(ctx, ball, aim) {
