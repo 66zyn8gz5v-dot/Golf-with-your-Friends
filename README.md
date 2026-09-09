@@ -48,8 +48,11 @@ Ball Rot), die mittlere bleibt immer weiß.
 
 **Legionärshelm** und **Championhelm** gehören zum Kolosseum und sind ein Paar: dieselbe Grundform –
 halbrunde Helmglocke, goldener Rand über der Stirn mit Nieten, breiter Nackenschirm nach hinten unten,
-seitliche Wangenklappen – einmal in Silber für die Teilnahme, einmal in Gold mit rotem Federkamm für den
-Sieg. Bewusst wenige, große Formen: Bei Ballgröße bleibt von feinen Verzierungen nichts übrig.
+seitliche Wangenklappen – einmal in Silber für die Teilnahme, einmal in Gold für den Sieg. Der
+Championhelm trägt zusätzlich einen Federkamm: fünf Straußenfedern fächern längs über die Glocke auf und
+nehmen die Farbe des Balls an, genau wie der Busch am Ritterhelm (ein weißer Ball bekommt Rot, sonst ginge
+der Kamm auf dem hellen Helm unter). Sonst bewusst wenige, große Formen: Bei Ballgröße bleibt von feinen
+Verzierungen nichts übrig.
 
 **Gesperrte Hüte:** Der Championhelm steht schon in der Liste, taucht aber in der Auswahl noch nicht auf –
 er trägt `locked: true`. Wie man ihn gewinnt, ist noch nicht gebaut; vorgesehen ist nur die Sperre. Die

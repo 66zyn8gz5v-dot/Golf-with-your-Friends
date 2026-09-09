@@ -95,7 +95,7 @@ const Hats = (() => {
 
      Gezeichnet wird von vorn, wie alle Hüte. Der Nackenschirm sitzt hinten und schaut darum links
      und rechts als Flügel unter der Glocke hervor – so liest man ihn in der Schrägsicht sofort. */
-  function galea(ctx, gold) {
+  function galea(ctx, gold, color) {
     // [dunkle Kante, Mitte, Glanz, Schatten, Rand] – von links nach rechts über die Glocke
     const metall = gold ? ['#8a6110', '#e0aa2e', '#fff0b8', '#c2891a', '#7a5410']
                         : ['#5c6371', '#aeb7c4', '#eef2f7', '#939bab', '#565d6b'];
@@ -107,16 +107,20 @@ const Hats = (() => {
       return g;
     };
 
-    // Federkamm zuerst, damit sein Fuß hinter der Helmglocke verschwindet
+    /* Federkamm: ein Fächer aus fünf Straußenfedern längs über der Glocke. Sie nehmen die Farbe des
+       Balls an, genau wie der Busch am Ritterhelm – ein weißer Ball bekommt Rot, sonst ginge der
+       Kamm auf dem hellen Helm unter. Zuerst gezeichnet, damit die Federfüße hinter der Helmglocke
+       verschwinden – wie beim Ritterhelm braucht es dafür keinen extra Federhalter. */
     if (gold) {
-      const zacken = [[-0.54, -0.06], [-0.50, -1.00], [-0.32, -0.72], [-0.24, -1.28], [-0.06, -0.84],
-        [0.03, -1.42], [0.20, -0.80], [0.32, -1.20], [0.47, -0.76], [0.54, -0.06]];
-      ctx.beginPath();
-      zacken.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y));
-      ctx.closePath();
-      const gk = ctx.createLinearGradient(0, -1.42, 0, -0.06);
-      gk.addColorStop(0, '#e8574a'); gk.addColorStop(1, '#a02a20');
-      fs(ctx, gk);
+      const [fDunkel, fHell] = plumeColors(color);
+      const federn = [
+        [[-0.10, -0.28], [-0.54, -0.66], [-0.96, -0.94], [-0.86, -1.40], 0.25],
+        [[-0.05, -0.32], [-0.30, -0.84], [-0.48, -1.22], [-0.36, -1.62], 0.26],
+        [[0.00, -0.34], [-0.02, -0.98], [0.07, -1.42], [0.02, -1.86], 0.28],
+        [[0.05, -0.32], [0.32, -0.82], [0.52, -1.20], [0.40, -1.60], 0.26],
+        [[0.10, -0.28], [0.56, -0.64], [0.98, -0.92], [0.90, -1.38], 0.25],
+      ];
+      for (const [p0, c1, c2, p3, w] of federn) plume(ctx, p0, c1, c2, p3, w, fDunkel, fHell);
     }
 
     // Nackenschirm: je ein Flügel links und rechts, nach hinten unten ausgestellt
@@ -361,7 +365,7 @@ const Hats = (() => {
     },
 
     legion(ctx) { galea(ctx, false); },   // Legionärshelm: Silber mit Gold – für die Teilnahme
-    champion(ctx) { galea(ctx, true); },  // Championhelm: Gold mit rotem Federkamm – der Siegerpreis
+    champion(ctx, color) { galea(ctx, true, color); },  // Championhelm: Gold mit Federkamm in Ballfarbe – der Siegerpreis
   };
 
   /* Reihenfolge und Namen für das Menü */
