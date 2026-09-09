@@ -141,8 +141,26 @@ deshalb über einen offenen MQTT-Vermittler – jeder Raum ist ein Thema, in das
 alle mitlesen. Reihum gespielt sind das nur ein paar kurze Nachrichten je Bahn. Der Zugang steht in
 `src/net.js` und ist von Hand geschrieben (MQTT 3.1.1, QoS 0), damit keine fremde Bibliothek dazukommt.
 Wer dran ist, ist für seinen Zug die verbindliche Quelle: er sagt den Schlag an, die anderen spielen ihn
-mit, und am Ende sagt er Ruheort, Schlagzahl und Ergebnis. So dürfen die Simulationen unterwegs ein wenig
-auseinanderlaufen, ohne dass die Punkte auseinanderlaufen.
+mit, und am Ende sagt er Ruheort, Schlagzahl und Ergebnis. Die Punkte können damit gar nicht
+auseinanderlaufen, auch wenn unterwegs etwas verloren geht.
+
+**Gleicher Takt für die beweglichen Sachen.** Windmühlen, Fähren, Drehkreuze und Tore richten sich nach
+der Uhr der Physik. Die läuft auf jedem Gerät ab dem eigenen Seitenaufruf, stand also früher überall
+anders – wer später dazukam, war Sekunden versetzt. Gerechnet wird zwar überall gleich (in der Physik
+steckt kein Zufall), aber mit verschiedenem Takt fliegt derselbe Schlag woanders hin: Der Zuschauer sah
+den Ball an einer Stelle abprallen, wo beim Schlagenden gerade nichts war, und beim nächsten Schlag
+sprang der Ball plötzlich an eine ganz andere Stelle. Gezählt wurde trotzdem richtig – nur das Zuschauen
+war unbrauchbar.
+
+Darum schickt der Schlagende seine Uhr mit (`st` in der Nachricht), und die anderen stellen ihre danach,
+bevor sie den Schlag nachspielen. Abgeglichen wird außerdem in den ruhigen Momenten – wenn ein Ball zur
+Ruhe kommt und beim Bahnwechsel –, damit beim Schlag selbst gar kein Sprung mehr nötig ist. Zeitmarken,
+die einen festen Zeitpunkt meinen („dieser Schalter hält das Tor bis Sekunde 42 offen"), werden um
+denselben Betrag mitverschoben. Fehlt die Uhr in der Nachricht, weil das andere Gerät noch eine ältere
+Fassung hat, bleibt alles wie vorher – es bricht nichts.
+
+Die Rundenzeit für die Rangliste hängt nicht an dieser Uhr, sondern an einer eigenen; ein Abgleich kann
+also keine Zeiten verfälschen.
 
 Die Adresse des Vermittlers steht oben in `src/net.js` und lässt sich im Browser überschreiben, ohne am
 Spiel etwas zu ändern:

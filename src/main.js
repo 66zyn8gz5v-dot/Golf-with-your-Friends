@@ -701,6 +701,11 @@
   const istZahl = (v, min, max) => typeof v === 'number' && isFinite(v) && v >= min && v <= max;
   const istGanz = (v, min, max) => istZahl(v, min, max) && Number.isInteger(v);
   const istText = (v, max) => typeof v === 'string' && v.length <= max;
+  /* Die mitgeschickte Uhr der Hindernisse darf fehlen – dann hat das andere Gerät eine ältere
+     Fassung. Hier wird nur auf „Zahl und nicht negativ" geprüft, absichtlich großzügig: Ein Schlag
+     darf nie daran scheitern, dass die Uhr seltsam aussieht. Ob sie brauchbar ist, entscheidet
+     taktGleichziehen – im Zweifel wird der Schlag ganz normal gespielt, nur ohne Abgleich. */
+  const istTakt = v => v == null || (typeof v === 'number' && isFinite(v) && v >= 0);
   /* Liegt der Punkt auf der Bahn? Etwas Luft, weil Bälle auch am Rand liegen dürfen. */
   const aufBahn = (x, y) => {
     const lv = state.level;
@@ -739,14 +744,15 @@
       case 'hello':  return istText(m.nick == null ? '' : m.nick, 200) && (m.hat == null || istText(m.hat, 40));
       case 'roster': return !online.hostId || istGastgeber(m);   // der erste Roster bestimmt den Gastgeber
       case 'start':  return istGastgeber(m);
-      case 'next':   return istGastgeber(m) && istGanz(m.h, -1, state.courses.length - 1);
+      case 'next':   return istGastgeber(m) && istGanz(m.h, -1, state.courses.length - 1) && istTakt(m.st);
       // Läuft die Runde schon, kommt die Absage, bevor ein Roster den Gastgeber festgelegt hat
       case 'busy':   return (!online.hostId || istGastgeber(m)) && m.to === Net.id && istText(m.why == null ? '' : m.why, 200);
       case 'shot':   return istGanz(m.h, 0, state.courses.length - 1) && istGanz(m.pi, 0, ONLINE_MAX - 1) &&
                             istZahl(m.dx, -1.01, 1.01) && istZahl(m.dy, -1.01, 1.01) &&
-                            Math.abs(Math.hypot(m.dx, m.dy) - 1) < 0.02 && istZahl(m.power, 0, 1) && istAmZug(m);
+                            Math.abs(Math.hypot(m.dx, m.dy) - 1) < 0.02 && istZahl(m.power, 0, 1) &&
+                            istTakt(m.st) && istAmZug(m);
       case 'rest':   return istGanz(m.h, 0, state.courses.length - 1) && istGanz(m.pi, 0, ONLINE_MAX - 1) &&
-                            aufBahn(m.x, m.y) && istGanz(m.s, 0, 999) && istAmZug(m);
+                            aufBahn(m.x, m.y) && istGanz(m.s, 0, 999) && istTakt(m.st) && istAmZug(m);
       case 'done':   return istGanz(m.h, 0, state.courses.length - 1) && istGanz(m.pi, 0, ONLINE_MAX - 1) &&
                             istGanz(m.score, 1, 999) && (m.ms == null || istZahl(m.ms, 0, 24 * 3600 * 1000)) && istAmZug(m);
       case 'alive':  return true;
@@ -790,11 +796,14 @@
         break;
       }
       case 'shot':
-        if (!myTurn() && state.ball && state.phase === 'aim' && m.h === state.holeIdx)
+        if (!myTurn() && state.ball && state.phase === 'aim' && m.h === state.holeIdx) {
+          taktGleichziehen(m.st);          // erst den Takt der Hindernisse übernehmen
           shoot(m.dx, m.dy, m.power, true);
+        }
         break;
       case 'rest':
         if (!myTurn() && state.ball && m.h === state.holeIdx) {
+          taktGleichziehen(m.st);
           const b = state.ball;
           b.x = m.x; b.y = m.y; b.z = 0; b.vx = 0; b.vy = 0; b.vz = 0; b.air = false; b.rider = null;
           b.restX = m.x; b.restY = m.y;
@@ -810,6 +819,7 @@
         break;
       case 'next':
         if (online.host || !online.started) break;
+        taktGleichziehen(m.st);
         clearTimeout(waitTimer); hideOverlay();
         if (m.h < 0) showFinal(); else loadHole(m.h);
         break;
@@ -1104,9 +1114,39 @@
     // Wer den Raum verlassen hat, bekommt seinen Zug vom Gastgeber mit dem Schlaglimit gewertet
     if (online && online.started && online.host && p.gone) setTimeout(skipGoneTurn, 700);
   }
+  /* ---------- Gleicher Takt für alle ----------
+     Alle beweglichen Sachen – Windmühlen, Fähren, Drehkreuze, Tore – richten sich nach state.t,
+     der Uhr der Physik. Die läuft auf jedem Gerät ab dem eigenen Seitenaufruf, steht also überall
+     anders. Rechnerisch ist die Physik immer gleich (kein Zufall), aber mit verschiedenem Takt
+     fliegt derselbe Schlag woanders hin: Der Zuschauer sieht den Ball an einer Stelle abprallen,
+     wo beim Schlagenden gerade nichts war. Gezählt wurde trotzdem richtig, weil das Ergebnis
+     getrennt übertragen wird – nur zusehen war unbrauchbar.
+
+     Darum schickt der Schlagende seine Uhr mit, und die anderen stellen ihre danach.
+     Zeitmarken, die einen festen Zeitpunkt meinen (ein Schalter ist bis Sekunde 42 offen), werden
+     um denselben Betrag verschoben – sonst wäre ein Tor plötzlich für immer offen oder zu. */
+  function taktGleichziehen(fremd) {
+    // Über eine Woche Laufzeit gibt es nicht – so eine Uhr wird nicht übernommen, gespielt wird trotzdem
+    if (typeof fremd !== 'number' || !isFinite(fremd) || fremd < 0 || fremd > 7 * 86400) return;
+    const d = fremd - state.t;
+    if (!d) return;
+    state.t = fremd;
+    if (state.lastBounceSfx) state.lastBounceSfx += d;
+    if (state.lastMoverHit) state.lastMoverHit += d;
+    if (state.stuckRef) state.stuckRef.t += d;
+    const b = state.ball;
+    if (b) for (const k of ['shrinkUntil', 'fireAt', 'spitAt']) if (b[k]) b[k] += d;
+    const lv = state.level;
+    if (!lv) return;
+    for (const k of Object.keys(lv.switches || {})) lv.switches[k] += d;
+    for (const ob of lv.obstacles) for (const k of ['activeUntil', 'lastUse', 'firedAt']) if (ob[k]) ob[k] += d;
+    // Die Hindernisse sofort auf den neuen Takt stellen, damit der Schlag gleich richtig losgeht
+    for (const ob of lv.obstacles) if (ob.update) ob.update(state.t);
+  }
+
   function shoot(dx, dy, power, fromNet = false) {
     if (online && online.started && !fromNet && !myTurn()) return; // Zuschauer schlagen nicht
-    if (online && online.started && !fromNet) netSend({ t: 'shot', h: state.holeIdx, pi: state.curPlayer, dx, dy, power });
+    if (online && online.started && !fromNet) netSend({ t: 'shot', h: state.holeIdx, pi: state.curPlayer, dx, dy, power, st: state.t });
     const b = state.ball;
     b.restX = b.x; b.restY = b.y; b.shotX = b.x; b.shotY = b.y; // Schlagstart (für Aufspießen am Ruheplatz)
     b.vx = dx * power * MAX_SHOT; b.vy = dy * power * MAX_SHOT;
@@ -1135,7 +1175,7 @@
     b.vx = 0; b.vy = 0; b.restX = b.x; b.restY = b.y;
     faceCup();
     // Wer dran ist, sagt Ruheort und Schlagzahl an; die anderen uebernehmen sie
-    if (online && online.started && myTurn()) netSend({ t: 'rest', h: state.holeIdx, pi: state.curPlayer, x: b.x, y: b.y, s: state.strokes });
+    if (online && online.started && myTurn()) netSend({ t: 'rest', h: state.holeIdx, pi: state.curPlayer, x: b.x, y: b.y, s: state.strokes, st: state.t });
     if (state.strokes >= maxStrokes()) { showMessage(`Maximale Schlagzahl (${maxStrokes()}) erreicht`, 1800); finishTurn(maxStrokes()); return; }
     state.phase = 'aim';
   }
@@ -1226,7 +1266,7 @@
     if (!state.editorReturn) $('leave-here').addEventListener('click', () => leaveRound(true));
     const goOn = () => { hideOverlay(); if (state.editorReturn) editor.returnFromTest(); else if (last) { if (state.mode === 'creative') loadHole(0); else showFinal(); } else loadHole(state.holeIdx + 1); };
     // Im Netzspiel gibt der Gastgeber den Takt vor, damit alle auf derselben Bahn stehen
-    if (!online || online.host) $('next').addEventListener('click', () => { if (online) netSend({ t: 'next', h: last ? -1 : state.holeIdx + 1 }); goOn(); });
+    if (!online || online.host) $('next').addEventListener('click', () => { if (online) netSend({ t: 'next', h: last ? -1 : state.holeIdx + 1, st: state.t }); goOn(); });
   }
   function showFinal() {
     state.phase = 'final'; clearTimeout(msgTimer); ui.msg.classList.remove('visible'); // keine Laufmeldung über der Tafel
