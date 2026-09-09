@@ -824,6 +824,7 @@ class Renderer {
     if (ob.type === 'trapdoor') { this.drawTrapdoor(ctx, ob, t); return; }
     if (ob.type === 'guillotine') { this.drawGuillotineFloor(ctx, ob, t); return; }
     if (ob.type === 'eyetower') { this.drawEyeBeam(ctx, ob, t); return; }
+    if (ob.type === 'firetower') { this.drawFireZone(ctx, ob, t); return; }
     if (ob.type === 'field' && ob.style === 'dark') { this.drawDarkZone(ctx, ob, t); return; }
     if (ob.type === 'boost' || (ob.type === 'field' && (ob.style === 'wind' || ob.style === 'current'))) { this.drawWind(ctx, ob, t); return; }
     if (ob.type === 'field') {
@@ -1111,6 +1112,8 @@ class Renderer {
       this.pushGuillotine(items, ctx, ob, t);
     } else if (ob.type === 'eyetower') {
       items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => this.drawEyeTower(ctx, ob, t) });
+    } else if (ob.type === 'firetower') {
+      items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => this.drawFireTower(ctx, ob, t) });
     } else if (ob.type === 'liongate') {
       // Eingang und Ausgang stehen an verschiedenen Stellen der Karte – jeder wird für sich einsortiert
       if (ob.x != null) items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => this.drawLionGate(ctx, ob, t, false) });

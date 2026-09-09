@@ -51,6 +51,23 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
     const ch = rows[Math.floor(my)] && rows[Math.floor(my)][Math.floor(mx)];
     if (!FLOOR.has(ch)) problems.push(`wandergate: Mitte bei (${mx},${my}) liegt nicht auf dem Fairway (${ch})`);
   }
+  /* Feuerturm: das Bauwerk steht neben der Bahn, beschossen wird ein Rechteck (zx,zy,zw,zh) auf der
+     Bahn. Ein Bahnstück ohne Fairway darunter beschießt nichts; ein Turm mitten auf dem Fairway
+     wäre eine Mauer im Weg. Und weder Abschlag noch Loch dürfen im Feuer liegen: Der Ball wird an
+     seinen letzten Ruhepunkt zurückgesetzt – läge der im Bahnstück, käme er nie wieder heraus. */
+  for (const o of (c.obstacles || []).filter(o => o.type === 'firetower')) {
+    const zx = o.zx ?? 0, zy = o.zy ?? 0, zw = o.zw ?? 3, zh = o.zh ?? 3;
+    if (!(zw > 0) || !(zh > 0)) { problems.push('firetower: das beschossene Bahnstück hat keine Größe (zw/zh)'); continue; }
+    const imStueck = (x, y) => x >= zx && x < zx + zw && y >= zy && y < zy + zh;
+    let boden = 0;
+    for (let y = Math.floor(zy); y < zy + zh; y++) for (let x = Math.floor(zx); x < zx + zw; x++) if (FLOOR.has(rows[y] && rows[y][x])) boden++;
+    if (!boden) problems.push(`firetower: das Bahnstück bei (${zx},${zy}) liegt nicht auf der Bahn – der Turm beschießt nichts`);
+    const tch = rows[Math.floor(o.y ?? 0)] && rows[Math.floor(o.y ?? 0)][Math.floor(o.x ?? 0)];
+    if (FLOOR.has(tch)) problems.push(`firetower: der Turm steht bei (${o.x},${o.y}) mitten auf der Bahn – er gehört an den Rand`);
+    if (tee && imStueck(tee[0] + 0.5, tee[1] + 0.5)) problems.push('firetower: der Abschlag liegt im beschossenen Bahnstück – der Ball käme dort nie heraus');
+    if (cup && imStueck(cup[0] + 0.5, cup[1] + 0.5)) problems.push('firetower: das Loch liegt im beschossenen Bahnstück');
+    if (o.phase != null && (typeof o.phase !== 'number' || !isFinite(o.phase) || o.phase < 0 || o.phase >= 1)) problems.push(`firetower: phase ${o.phase} muss zwischen 0 und 1 liegen (Anteil eines Takts)`);
+  }
   for (const o of (c.obstacles || []).filter(o => o.type === 'liongate')) {
     const g = String(o.pair || '').toUpperCase();
     if (!TOR_PAARE.includes(g)) problems.push(`Löwentor mit pair '${o.pair}' – erlaubt sind nur ${TOR_PAARE.join(', ')}`);

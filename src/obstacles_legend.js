@@ -297,3 +297,50 @@ class WanderGate {
     for (const [p, q] of this.stuecke()) out.push({ ax: p[0], ay: p[1], bx: q[0], by: q[1], e: 0.72, kind: 'wall' });
   }
 }
+
+/* Feuerturm: ein hohes Bauwerk am Bahnrand mit einer brennenden Schale obenauf. Im festen Takt wirft
+   er einen Feuerstoß auf ein festgelegtes Stück der Bahn. Wer dann dort liegt, rollt oder fliegt,
+   wird zurück an seinen letzten Ruhepunkt gelegt – aber ohne Strafschlag. Der Turm ist ein
+   Zeitfenster, kein Fehler des Spielers: Er kostet den Schlag, nicht die Wertung.
+
+   Vor jedem Stoß glühen Schale und Bahnstück auf. Ohne diese Vorwarnung wäre der Turm reines Pech;
+   mit ihr ist er eine Frage des Abwartens.
+
+   Am Hindernis stehen der Platz des Turms (x, y) und das Bahnstück (zx, zy, zw, zh) als Rechteck von
+   der linken oberen Ecke aus – wie bei Aufwind und Kraftfeld. Der Takt steht nicht am Hindernis,
+   sondern hier als Konstante: Alle Türme einer Arena sollen im selben Rhythmus schlagen, nur mit
+   verschobener Phase. */
+const FEUERTURM_TAKT = 6;         // Sekunden von einem Feuerstoß zum nächsten
+const FEUERTURM_WARNUNG = 1.5;    // so lange vorher glühen Schale und Bahnstück
+const FEUERTURM_STOSS = 0.7;      // so lange brennt der Stoß
+
+class FireTower {
+  constructor(d) {
+    Object.assign(this, { r: 0.75, height: 3.4, zx: 0, zy: 0, zw: 3, zh: 3, phase: 0 }, d);
+    this.type = 'firetower';
+    this.state = 'idle'; this.p = 0;
+    this.zmx = this.zx + this.zw / 2; this.zmy = this.zy + this.zh / 2;   // Mitte des Bahnstücks
+  }
+
+  update(t) {
+    const u = ((((t / FEUERTURM_TAKT + this.phase) % 1) + 1) % 1) * FEUERTURM_TAKT;
+    const ruhe = FEUERTURM_TAKT - FEUERTURM_WARNUNG - FEUERTURM_STOSS;
+    if (u < ruhe) { this.state = 'idle'; this.p = 0; }
+    else if (u < ruhe + FEUERTURM_WARNUNG) { this.state = 'warn'; this.p = (u - ruhe) / FEUERTURM_WARNUNG; }
+    else { this.state = 'fire'; this.p = (u - ruhe - FEUERTURM_WARNUNG) / FEUERTURM_STOSS; }
+  }
+
+  imFeuer(px, py) { return px >= this.zx && px <= this.zx + this.zw && py >= this.zy && py <= this.zy + this.zh; }
+
+  trigger(ball, t, events) {
+    if (this.state !== 'fire' || ball.rider || !this.imFeuer(ball.x, ball.y)) return;
+    events.push({ type: 'scorched', x: ball.x, y: ball.y, ob: this });
+  }
+
+  airTrigger(ball, t, events) {   // ein Feuerstoß erwischt auch einen fliegenden Ball
+    if (this.state !== 'fire' || !this.imFeuer(ball.x, ball.y)) return false;
+    events.push({ type: 'scorched', x: ball.x, y: ball.y, ob: this }); return true;
+  }
+
+  circles(out) { out.push({ x: this.x, y: this.y, r: this.r, e: 0.5, kind: 'tower' }); }
+}

@@ -108,4 +108,30 @@ const COLOSSEUM_COURSES = [
     ],
     autoDecor: { density: 0.12, seed: 703 },
   },
+  {
+    /* Testbahn zum Einstellen des Feuerturms: absichtlich schmucklos. Eine gerade Gasse, in der Mitte
+       das Bahnstück, das der Turm beschießt – sonst nichts. So sieht man beim Spielen sofort, ob Takt
+       und Vorwarnzeit passen, ohne dass ein anderes Hindernis dazwischenfunkt. Wird später ersetzt. */
+    name: 'Feuerprobe', par: 3, theme: 'colosseum', maxStrokes: 10,
+    intro: 'Eine gerade Gasse, quer darüber der Feuerstoß vom Turm. Die Schale glüht auf, bevor sie wirft – wer dann wartet, kommt trocken durch. Wer hineinrollt, liegt wieder hinten, aber ohne Strafschlag.',
+    map: [
+      '........................',
+      '........................',
+      '..####################..',
+      '..T##################H..',
+      '..####################..',
+      '........................',
+      '........................',
+    ],
+    obstacles: [
+      // Der Turm steht neben der Gasse, das beschossene Stück (zx,zy,zw,zh) liegt quer in der Mitte
+      { type: 'firetower', x: 12.5, y: 0.7, height: 3.4, zx: 10, zy: 2, zw: 4, zh: 3 },
+    ],
+    decor: [
+      { t: 'pillarLight', x: 4.5, y: 0.6, s: 1.2 }, { t: 'pillarLight', x: 19.5, y: 0.6, s: 1.2 },
+      { t: 'bannerRed', x: 1.2, y: 3.5, s: 1.2 }, { t: 'bannerRed', x: 22.6, y: 3.5, s: 1.2 },
+      { t: 'urn', x: 8.5, y: 5.4, s: 1.1 }, { t: 'urn', x: 16.5, y: 5.4, s: 1.1 },
+    ],
+    autoDecor: { density: 0.1, seed: 704 },
+  },
 ];

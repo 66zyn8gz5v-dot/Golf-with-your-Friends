@@ -1239,6 +1239,32 @@
     }, 900);
     updateHud();
   }
+  /* Feuerstoß erwischt: zurück an den letzten Ruhepunkt, aber OHNE Strafschlag. Der Turm schlägt
+     nach der Uhr, nicht nach dem Können – wer hineinläuft, verliert Zeit und Weg, nicht die Wertung. */
+  function verbrannt(ob) {
+    const b = state.ball, lv = state.level;
+    Sfx.lava(); burst(b.x, b.y, '#ffb347', 22, true); burst(b.x, b.y, '#ff5a2a', 12, true);
+    b.z = 0; b.vz = 0; b.air = false;
+    let rx = b.restX, ry = b.restY;
+    // Ist der Ball im beschossenen Stück zur Ruhe gekommen, liegt sein Ruhepunkt selbst im Feuer –
+    // ihn dorthin zurückzulegen hieße, ihn beim nächsten Stoß wieder zu treffen. Dann geht es zum
+    // Start des letzten Schlags zurück, notfalls zum Abschlag.
+    if (ob && ob.imFeuer(rx, ry)) {
+      if (b.shotX != null && !ob.imFeuer(b.shotX, b.shotY)) { rx = b.shotX; ry = b.shotY; }
+      else { rx = lv.tee.x; ry = lv.tee.y; }
+      b.restX = rx; b.restY = ry;
+    }
+    showMessage('Vom Feuerstoß erwischt! Zurück – ohne Strafschlag.', 1700);
+    state.phase = 'wait'; state.aim = null;
+    clearTimeout(waitTimer);
+    waitTimer = setTimeout(() => {
+      b.x = rx; b.y = ry; b.vx = 0; b.vy = 0; b.z = 0.6; b.vz = 0; b.portalCd = 0.5;
+      faceCup();
+      state.phase = 'aim';
+      updateHud();
+    }, 900);
+    updateHud();
+  }
   function sunk() {
     const par = state.courses[state.holeIdx].par;
     Sfx.sink();
@@ -1390,6 +1416,7 @@
         case 'fire': if (ev.style === 'ballista') { Sfx.twang(); burst(ev.x, ev.y, '#e8e0ff', 20); showMessage('Abgeschossen!', 800); } else { Sfx.cannon(); burst(ev.x, ev.y, '#ffb347', 18); } break;
         case 'sunk': sunk(); return;
         case 'shark': { const inner = state.courses[state.holeIdx].inner; if (inner && inner.stomach && !state.inner) { const b = state.ball; b.z = 0; b.vz = 0; b.air = false; enterInner('Verschluckt! Ab in den Haimagen …'); } else hazard('shark'); return; }
+        case 'scorched': verbrannt(ev.ob); return;
         case 'water': case 'lava': case 'oob': case 'spiked': case 'zapped': case 'fell': case 'beheaded': case 'seen': hazard(ev.type); return;
       }
     }
