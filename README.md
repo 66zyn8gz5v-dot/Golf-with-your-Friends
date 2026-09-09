@@ -27,7 +27,7 @@ Auf der **Weltkarte** liegt jede Welt als schwebende Scheibe in derselben 2,5D-S
 | Dschungeltempel | Profi | 9 Bahnen durch den Urwald bis zur verlorenen Stadt |
 | Sturmhimmel | Legende | 9 extra große Bahnen über den Wolken |
 | Schattenreich | Legende | 10 extra große Bahnen im Reich der Schatten |
-| Kolosseum | Legende | 5 Bahnen in der Arena (Anfang der Turnierbahnen) |
+| Kolosseum | Legende | 12 Turnierbahnen in der Arena |
 
 Nach dem Antippen eines Ortes folgt die Startaufstellung mit **Modus**, **Spielern**, **Hut**, **Musik** und **Steuerung**:
 
@@ -319,19 +319,35 @@ Zweite Welt der Stufe Legende und die schwerste: zehn Bahnen mit schmalen Wegen 
 
 ## Die Bahnen des Kolosseums
 
-Der Anfang der Turnierbahnen: fünf Bahnen in der hellen Arena, Stufe Legende. Neu sind das **Löwentor**
-und das **wandernde Tor** (siehe oben) – Tore in der Arenamauer, die einen Ball mit Schwung schlucken und an anderer Stelle wieder
-ausspucken. Dazu **Gladiatoren** (dieselbe Figur wie die Ritter auf dem Burgberg, nur in Sandfarben und
-Rot) und der **Streitwagen** (dieselbe Fähre wie die Lore in der Zwergenschmiede: Er fährt seine feste
-Strecke, nimmt den Ball an der Station auf und trägt ihn mit – seine Spur sind zwei Rillen im Sand).
+Zwölf Turnierbahnen in der hellen Arena, Stufe Legende, aufsteigend gebaut: Bahn 1 bis 4 führen je
+ein bis zwei Hindernisarten ein, 5 bis 8 mischen sie, 9 und 10 kombinieren alles, und 11 und 12 sind
+die grossen Schlussbahnen mit langem Weg zum Ass. Zwei Hindernisse kommen bewusst spät und stehen
+nicht auf jeder Bahn: die **Löwenpforte** (Löwentor) ab Bahn 4, das **gleitende Gitter** (wanderndes
+Tor) ab Bahn 5. Der **Feuerturm** steht nur auf Bahn 11, die **Kaiserloge** nur auf Bahn 12.
+
+Sonst spielt die Arena mit **Gladiatoren** (dieselbe Figur wie die Ritter auf dem Burgberg, nur in
+Sandfarben und Rot), dem **Streitwagen** (dieselbe Fähre wie die Lore in der Zwergenschmiede – seine
+Spur sind zwei Rillen im Sand), dem **Katapult**, **Sprungschanzen** und **Steinrädern**.
 
 | Nr. | Bahn | Par | Besonderheit |
 |---|---|---|---|
-| 1 | Löwentor | 3 | zwei Gassen, dazwischen die Arenamauer; nur das Löwentor führt hinüber, und nur mit Schwung |
-| 2 | Streitwagen | 4 | Rundkurs um die Spina; unten fährt der Streitwagen in seinen Rillen, oben patrouillieren zwei Gladiatoren, quer durch die Spina das Löwentor |
-| 3 | Löwengrube | 5 | drei Kammern, zwei Torpaare: erst quer durch die Mauer, dann hinunter in die Grube; dort sperrt ein **wanderndes Tor** den Weg zum Loch, dazu Steinrad und Gladiatoren |
-| 4 | Feuerprobe | 3 | Testbahn zum Einstellen des **Feuerturms**: eine breite Arena, über die der Feuerstrahl in voller Höhe hin und her streicht, sonst nichts. Man muss den Moment abpassen, in dem er am Rand wendet. Bewusst schmucklos und später ersetzbar |
-| 5 | Daumenprobe | 3 | Testbahn für die **Kaiserloge**: kurze Gasse, die Falltür quer im Weg, sonst nichts. Der Daumen steht zu Beginn unten, die Luke ist also gleich offen. Ebenfalls später ersetzbar |
+| 1 | Gladiatorengasse | 2 | eine gerade Gasse, zwei Gladiatoren schreiten quer darüber |
+| 2 | Sprungpodest | 3 | drei Podeste, dazwischen nichts als Luft: zwei Sprungschanzen tragen hinüber |
+| 3 | Mahlsteine | 3 | zwei steinerne Mahlräder mitten im Sand |
+| 4 | Löwenpforte | 3 | zwei Gassen, dazwischen die Arenamauer; nur die Löwenpforte führt hinüber, und nur mit Schwung |
+| 5 | Gleitendes Gitter | 3 | ein Gitter mit einem einzigen Durchlass, der langsam hin und her gleitet; dahinter zwei Steinräder |
+| 6 | Wagenrennen | 4 | der Streitwagen pendelt über den Graben, danach hilft nur noch die Schanze |
+| 7 | Katapultbahn | 4 | aus der unteren Kammer geht es nur mit dem Katapult hinauf; oben patrouillieren die Wachen |
+| 8 | Tierpforten | 5 | drei Kammern, zwei Löwenpforten, dazwischen der Graben mit dem Streitwagen |
+| 9 | Sandsturm | 5 | Gitter, Mahlsteine und Gladiatoren auf einmal – und am Ende die Schanze über den Graben |
+| 10 | Die Spina | 6 | ein voller Rundkurs um die Spina: Katapult, Streitwagen, Steinräder, und die Pforte führt in die Kammer im Herzen der Arena |
+| 11 | Der Feuerturm | 6 | grosse Schlussbahn: unten streicht der Feuerstrahl über den Sand, oben sperrt das Gitter, vor dem Loch klafft der Graben |
+| 12 | Die Kaiserloge | 7 | grosse Schlussbahn: drei Geraden, Löwenpforte, Streitwagen und Schanze – und oben dreht der Kaiser nach jedem Schlag den Daumen |
+
+Die Karten dieser Welt werden nicht von Hand getippt, sondern von `tools/arena.py` aus Rechtecken
+zusammengesetzt und nach `src/courses_colosseum.js` geschrieben. So bleiben alle Zeilen gleich lang,
+und eine Änderung an einer Kammer zieht nicht Dutzende Zeichen nach sich. Nach jedem Lauf gehören
+`node tools/validate.mjs` und `node tools/audit/audit.mjs colosseum` dazu.
 
 ## Kostenlos als App aufs iPad oder Handy (GitHub Pages)
 
