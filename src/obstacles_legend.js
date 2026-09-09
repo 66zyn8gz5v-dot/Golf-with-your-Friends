@@ -1,5 +1,12 @@
-/* Hindernisse der Stufe „Legende“ (Sturmhimmel, Schattenreich):
-   Blitzschlag, Aufwind, Falltür. Schattenzone ist ein field mit style 'dark' (nur Optik). */
+/* Hindernisse der Stufe „Legende“ (Sturmhimmel, Schattenreich, Kolosseum):
+   Blitzschlag, Aufwind, Falltür, Fallbeil, Augenturm, Löwentor.
+   Schattenzone ist ein field mit style 'dark' (nur Optik). */
+
+/* Stellschrauben des Löwentors – bewusst hier oben, damit sie sich nachjustieren lassen,
+   ohne im Code zu suchen. */
+const LOEWENTOR_TEMPO = 4.5;      // ab diesem Tempo schluckt der Eingang; darunter ist er eine Wand
+const LOEWENTOR_AUSWURF = 9.5;    // mit diesem Tempo kommt der Ball am Ausgang heraus (immer gleich)
+const LOEWENTOR_SCHUB = 1.6;      // Tempo, mit dem ein steckengebliebener Ball herausgeschoben wird
 
 /* Blitzschlag: eine Zone, über der im Takt ein Blitz einschlägt. Vorher knistert und leuchtet der Boden
    ('warn' Sekunden), dann schlägt der Blitz 'strike' Sekunden lang ein – wer dann in der Zone ist
@@ -123,5 +130,120 @@ class EyeTower {
     this.seenT += this.dt || 0;
     if (this.seenT < this.dwell) return;
     this.seenT = 0; events.push({ type: 'seen', x: ball.x, y: ball.y, owner: this });
+  }
+}
+
+/* Löwentor: ein Torbogen in der Arenamauer, im Schlussstein ein Löwenkopf. Die Tore stehen paarweise.
+   Wo sie stehen, sagt nicht das Hindernis, sondern die Karte: Der Großbuchstabe ist der Eingang, der
+   gleiche Kleinbuchstabe der Ausgang (A/a, B/b, C/c). Mehrere Paare je Bahn sind erlaubt.
+
+   Geschluckt wird nur, wer Schwung hat. Unter LOEWENTOR_TEMPO sperrt der Torbogen und der Ball prallt
+   ab wie an einer Wand; ab LOEWENTOR_TEMPO verschwindet er im Tor und kommt am Ausgang wieder heraus –
+   immer mit LOEWENTOR_AUSWURF in die Richtung, die am Hindernis als 'angle' (Grad) steht, ganz gleich
+   wie schnell er hineingerollt ist. So bleibt der Auswurf berechenbar und die Bahn planbar.
+
+   Von außen ist der Ausgang eine massive Wand: Sein Feld ist in der Karte kein Boden, die Arenamauer
+   schließt ihn also von selbst – da kommt niemand hinein. */
+class LionGate {
+  constructor(d) {
+    Object.assign(this, { pair: 'A', angle: 0 }, d);
+    this.type = 'liongate';
+    const a = (this.angle * Math.PI) / 180;
+    this.dx = Math.cos(a); this.dy = Math.sin(a);
+    this.alwaysForce = true;          // siehe force(): dort wird nur das Balltempo abgelesen
+    this.offen = false; this.sperrt = false; this.bereit = false;
+    this.schluckAt = -10; this.speiAt = -10;
+    this.anfahrtX = 0; this.anfahrtY = 0;
+  }
+
+  /* Plätze aus der Karte holen. Nebenbei wird für beide Tore gemerkt, zu welcher Seite sie offen
+     stehen – das ist die Blickrichtung des Löwen und die Notrichtung fürs Herausschieben. */
+  setup(level) {
+    const gross = this.pair.toUpperCase(), klein = this.pair.toLowerCase();
+    for (let y = 0; y < level.H; y++) for (let x = 0; x < level.W; x++) {
+      const c = level.tiles[y][x];
+      if (c === gross) { this.x = x + 0.5; this.y = y + 0.5; }
+      else if (c === klein) { this.ax = x + 0.5; this.ay = y + 0.5; }
+    }
+    this.bereit = this.x != null && this.ax != null;
+    if (!this.bereit) return;
+    const offeneSeite = (cx, cy) => {
+      for (const [ox, oy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const c = level.charAt(cx + ox, cy + oy);
+        if (level.isFloorChar(c) && c !== gross && c !== klein) return [ox, oy];
+      }
+      return [0, 0];
+    };
+    [this.mundX, this.mundY] = offeneSeite(this.x, this.y);
+    [this.ausMundX, this.ausMundY] = offeneSeite(this.ax, this.ay);
+  }
+
+  imEingang(px, py) { return Math.abs(px - this.x) < 0.5 && Math.abs(py - this.y) < 0.5; }
+
+  /* Berührt der Ball gerade die Toröffnung? Gemessen wird an der Kante des Torfeldes, nicht an
+     seiner Mitte – sonst müsste der Ball nach der Berührung noch eine halbe Kachel weiterrollen und
+     würde dabei abbremsen, und der Schwellwert wäre in Wahrheit höher als er dasteht. */
+  beruehrtOeffnung(ball) {
+    const mx = this.mundX, my = this.mundY;
+    if (!mx && !my) return false;
+    const kx = this.x + mx * 0.5, ky = this.y + my * 0.5;
+    const vor = (ball.x - kx) * mx + (ball.y - ky) * my;      // > 0: noch vor dem Tor
+    if (vor > ball.r || vor < -1) return false;
+    return Math.abs((ball.x - kx) * -my + (ball.y - ky) * mx) < 0.5;
+  }
+
+  /* force ist der einzige Haken, der den Ball noch vor der Kollisionsrechnung zu sehen bekommt.
+     Darum wird hier nichts geschoben, sondern nur abgelesen und entschieden, ob das Tor in diesem
+     Schritt sperrt (siehe segments). Nebenbei merkt sich das Tor, aus welcher Richtung der Ball
+     anrollt – das braucht der Notausgang weiter unten. */
+  force(ball) {
+    if (!this.bereit) return;
+    const sp = Math.hypot(ball.vx, ball.vy);
+    const drin = this.imEingang(ball.x, ball.y);
+    this.offen = sp >= LOEWENTOR_TEMPO;
+    // Gesperrt wird nur gegen einen Ball, der von außen kommt. Liegt er schon im Torbogen, bleibt die
+    // Öffnung frei – sonst wäre er eingesperrt und der Notausgang könnte ihn nicht herausschieben.
+    this.sperrt = !this.offen && !drin;
+    if (sp > 0.2 && !drin) { this.anfahrtX = ball.vx / sp; this.anfahrtY = ball.vy / sp; }
+  }
+
+  /* Die Sperre ist eine Wand quer vor der Toröffnung, genau auf der Kante des Torfeldes. So prallt
+     ein zu langsamer Ball davor ab, statt in den Bogen hineingeschoben zu werden. */
+  segments(out) {
+    if (!this.bereit || !this.sperrt) return;
+    const mx = this.mundX, my = this.mundY;
+    if (!mx && !my) return;
+    const kx = this.x + mx * 0.5, ky = this.y + my * 0.5;   // Mitte der Öffnung
+    const qx = -my * 0.5, qy = mx * 0.5;                    // quer dazu, halbe Kachel
+    out.push({ ax: kx - qx, ay: ky - qy, bx: kx + qx, by: ky + qy, e: 0.55, kind: 'liongate', owner: this });
+  }
+
+  teleport(ball, t, events) {
+    if (!this.bereit || ball.air || ball.rider || ball.portalCd > 0) return;
+    // 'offen' ist das Tempo vom Anfang dieses Schritts – dieselbe Zahl, nach der oben die Sperre
+    // gesetzt wurde. So entscheiden Sperre und Tor immer gleich, ohne Grenzfall dazwischen.
+    if (!this.offen) return;
+    if (!this.imEingang(ball.x, ball.y) && !this.beruehrtOeffnung(ball)) return;
+    // Vor dem Ausgang absetzen, nicht darin: sein Feld ist Mauer, dort hätte der Ball keinen Boden
+    ball.x = this.ax + this.dx * 0.95; ball.y = this.ay + this.dy * 0.95;
+    ball.vx = this.dx * LOEWENTOR_AUSWURF; ball.vy = this.dy * LOEWENTOR_AUSWURF;
+    ball.z = 0; ball.vz = 0; ball.air = false;
+    ball.portalCd = 0.6;
+    this.schluckAt = t; this.speiAt = t;
+    events.push({ type: 'liongate', x: ball.x, y: ball.y, owner: this });
+  }
+
+  /* Notausgang: Der Ball ist im Torbogen zur Ruhe gekommen, ohne je schnell genug gewesen zu sein –
+     etwa von einem Streitwagen hineingeschoben oder von oben hineingefallen. Damit er dort nicht
+     liegen bleibt, schiebt ihn das Tor sanft entgegen seiner Anfahrt wieder heraus; weiß es die
+     nicht, nimmt es die offene Seite des Torbogens. */
+  trigger(ball, t, events) {
+    if (!this.bereit || ball.air || ball.rider) return;
+    if (!this.imEingang(ball.x, ball.y)) return;
+    if (Math.hypot(ball.vx, ball.vy) > 0.6) return;
+    let rx = -this.anfahrtX, ry = -this.anfahrtY;
+    if (Math.hypot(rx, ry) < 0.1) { rx = this.mundX; ry = this.mundY; }
+    const L = Math.hypot(rx, ry); if (L < 0.1) return;
+    ball.vx = (rx / L) * LOEWENTOR_SCHUB; ball.vy = (ry / L) * LOEWENTOR_SCHUB;
   }
 }

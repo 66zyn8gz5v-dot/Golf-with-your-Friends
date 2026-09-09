@@ -389,10 +389,12 @@ Object.assign(Renderer.prototype, {
     ctx.fillStyle = '#ff7a3a'; ctx.beginPath(); ctx.moveTo(sx, sy - s * 1.5); ctx.lineTo(sx + dir * s * 0.9, sy - s * 1.35 + fl); ctx.lineTo(sx + dir * s * 0.9, sy - s * 1.15 + fl); ctx.lineTo(sx, sy - s * 1.2); ctx.closePath(); ctx.fill();
     ctx.fillStyle = '#ffffff'; ctx.fillRect(sx + dir * s * 0.3, sy - s * 1.45 + fl * 0.4, dir * s * 0.18, s * 0.28);
   },
-  spriteBanner(ctx, sx, sy, s, d, t) {
-    ctx.strokeStyle = '#3a3c4a'; ctx.lineWidth = Math.max(1.5, s * 0.06); ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx, sy - s * 1.8); ctx.stroke();
+  /* tuch überschreibt die Farbe des Wimpels – das Kolosseum hängt rote Banner auf, sonst bleibt es
+     bei den dunkelblau-violetten des Schattenreichs. */
+  spriteBanner(ctx, sx, sy, s, d, t, tuch) {
+    ctx.strokeStyle = tuch ? '#8a6a3a' : '#3a3c4a'; ctx.lineWidth = Math.max(1.5, s * 0.06); ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx, sy - s * 1.8); ctx.stroke();
     const sw = Math.sin(t * 2 + sx) * s * 0.06;
-    ctx.fillStyle = (d.seed || 0) > 0.5 ? '#5a2a7a' : '#2a3a8a'; ctx.beginPath(); ctx.moveTo(sx, sy - s * 1.8); ctx.lineTo(sx + s * 0.55 + sw, sy - s * 1.7); ctx.lineTo(sx + s * 0.55 + sw, sy - s * 0.9); ctx.lineTo(sx + s * 0.28, sy - s * 1.05); ctx.lineTo(sx, sy - s * 0.95); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = tuch || ((d.seed || 0) > 0.5 ? '#5a2a7a' : '#2a3a8a'); ctx.beginPath(); ctx.moveTo(sx, sy - s * 1.8); ctx.lineTo(sx + s * 0.55 + sw, sy - s * 1.7); ctx.lineTo(sx + s * 0.55 + sw, sy - s * 0.9); ctx.lineTo(sx + s * 0.28, sy - s * 1.05); ctx.lineTo(sx, sy - s * 0.95); ctx.closePath(); ctx.fill();
     ctx.fillStyle = '#ffe45e'; ctx.beginPath(); ctx.arc(sx + s * 0.27 + sw * 0.5, sy - s * 1.35, s * 0.1, 0, TAU); ctx.fill();
   },
   spriteBrazierColored(ctx, sx, sy, s, t, cols) {
@@ -403,12 +405,15 @@ Object.assign(Renderer.prototype, {
     ctx.fillStyle = cols[0]; ctx.beginPath(); ctx.moveTo(sx - s * 0.2, sy - s * 0.5); ctx.quadraticCurveTo(sx - s * 0.1, sy - s * 0.9 * f, sx, sy - s * 1.05 * f); ctx.quadraticCurveTo(sx + s * 0.1, sy - s * 0.85 * f, sx + s * 0.2, sy - s * 0.5); ctx.closePath(); ctx.fill();
     ctx.fillStyle = cols[1]; ctx.beginPath(); ctx.moveTo(sx - s * 0.1, sy - s * 0.5); ctx.quadraticCurveTo(sx, sy - s * 0.75 * f, sx + s * 0.1, sy - s * 0.5); ctx.closePath(); ctx.fill();
   },
-  spritePillar(ctx, sx, sy, s, d) {
+  /* cols = [linke Seite, rechte Seite, Kranz, Kannelur] – ohne Angabe die dunkle Säule des
+     Schattenreichs, mit Angabe etwa der helle Kalkstein des Kolosseums. */
+  spritePillar(ctx, sx, sy, s, d, cols) {
+    const c = cols || ['#4a4060', '#2a2438', '#5e5474', 'rgba(197,139,255,0.35)'];
     const w = s * 0.28, h = s * 2.0;
     this.shadow(ctx, sx, sy, w * 1.4);
-    ctx.fillStyle = '#4a4060'; ctx.fillRect(sx - w, sy - h, w, h); ctx.fillStyle = '#2a2438'; ctx.fillRect(sx, sy - h, w, h);
-    ctx.fillStyle = '#5e5474'; ctx.fillRect(sx - w * 1.3, sy - h, w * 2.6, s * 0.16); ctx.fillRect(sx - w * 1.3, sy - s * 0.16, w * 2.6, s * 0.16);
-    ctx.fillStyle = 'rgba(197,139,255,0.35)'; ctx.fillRect(sx - w * 0.15, sy - h * 0.8, w * 0.3, h * 0.6);
+    ctx.fillStyle = c[0]; ctx.fillRect(sx - w, sy - h, w, h); ctx.fillStyle = c[1]; ctx.fillRect(sx, sy - h, w, h);
+    ctx.fillStyle = c[2]; ctx.fillRect(sx - w * 1.3, sy - h, w * 2.6, s * 0.16); ctx.fillRect(sx - w * 1.3, sy - s * 0.16, w * 2.6, s * 0.16);
+    ctx.fillStyle = c[3]; ctx.fillRect(sx - w * 0.15, sy - h * 0.8, w * 0.3, h * 0.6);
   },
   /* ---------- Schattenreich, zweiter Ausbau: Fallbeil, Augenturm, Ritterstatue, Raben ---------- */
   /* Fallbeil: zwei dunkle Holzpfosten mit Querbalken, dazwischen hängt die schräge Stahlklinge unter dem
@@ -851,5 +856,118 @@ Object.assign(Renderer.prototype, {
     const [q0, q1] = this.proj(px - 0.9, fy, 1.85), [q2, q3] = this.proj(px + 0.9, fy, 1.85); ctx.moveTo(q0, q1); ctx.lineTo(q2, q3); ctx.stroke();
     const [kx, ky] = this.proj(px, fy - 0.05, H + 0.3); this.spriteSkull(ctx, kx, ky + s * 0.2, s * 0.95);
     for (const sd of [-1, 1]) { const [bx, by] = this.proj(px + sd * (Wd / 2 + 0.15), fy + 0.25, 0); this.spriteBrazierColored(ctx, bx, by, s * 0.9, t, ['#a24bff', '#e0b8ff', '170,90,255']); }
+  },
+
+  /* ---------- Kolosseum ---------- */
+
+  /* Löwentor: ein Torbogen in der Arenamauer, im Schlussstein ein Löwenkopf.
+     ausgang = false zeichnet den Eingang (offener, dunkler Bogen), true den Ausgang (zugemauert,
+     denn von außen ist er massiv). Beide sitzen auf ihrem Kartenfeld und schauen zu der Seite, an
+     der die Arena offen ist. */
+  drawLionGate(ctx, ob, t, ausgang) {
+    const s = this.scale;
+    const cx = ausgang ? ob.ax : ob.x, cy = ausgang ? ob.ay : ob.y;
+    if (cx == null) return;
+    let ux = ausgang ? ob.ausMundX : ob.mundX, uy = ausgang ? ob.ausMundY : ob.mundY;
+    if (!ux && !uy) { ux = ob.dx; uy = ob.dy; }        // Notfall: die Auswurfrichtung
+    const L = Math.hypot(ux, uy) || 1; ux /= L; uy /= L;
+    const qx = -uy, qy = ux;                            // quer zur Toröffnung
+    const HOEHE = 2.1, PFOSTEN = 0.24, TIEFE = 0.4;
+    const stein = ['#f4e7c6', '#b79d6c'], kante = '#7d6740', gold = '#ffd45e';
+    // Rechteck um (mx,my), halbQ quer zur Öffnung, halbU in Blickrichtung
+    const feld = (mx, my, halbQ, halbU) => [
+      [mx - qx * halbQ - ux * halbU, my - qy * halbQ - uy * halbU],
+      [mx + qx * halbQ - ux * halbU, my + qy * halbQ - uy * halbU],
+      [mx + qx * halbQ + ux * halbU, my + qy * halbQ + uy * halbU],
+      [mx - qx * halbQ + ux * halbU, my - qy * halbQ + uy * halbU]];
+
+    this.isoEllipse(ctx, cx, cy, 0, 0.6, 'rgba(0,0,0,0.18)');
+    for (const seite of [-1, 1]) {                      // die beiden Pfosten
+      const mx = cx + qx * seite * 0.48, my = cy + qy * seite * 0.48;
+      this.prism(ctx, feld(mx, my, PFOSTEN, TIEFE), 0, HOEHE, stein[0], stein[1], { outline: kante });
+    }
+    this.prism(ctx, feld(cx, cy, 0.72, TIEFE), HOEHE, 0.4, stein[0], stein[1], { outline: kante }); // Sturz
+    this.prism(ctx, feld(cx, cy, 0.86, TIEFE + 0.08), HOEHE + 0.4, 0.18, gold, '#a8842a');          // Goldband oben
+
+    const fx = cx + ux * (TIEFE + 0.01), fy = cy + uy * (TIEFE + 0.01);   // Vorderkante des Tores
+    const bogenPunkte = [];
+    for (let i = 0; i <= 12; i++) {
+      const a = Math.PI * (i / 12);
+      bogenPunkte.push([fx + qx * Math.cos(a) * 0.46, fy + qy * Math.cos(a) * 0.46, 0.02 + Math.sin(a) * HOEHE * 0.82]);
+    }
+    const bogenPfad = () => { ctx.beginPath(); bogenPunkte.forEach((q, i) => { const r = this.proj(q[0], q[1], q[2]); i ? ctx.lineTo(r[0], r[1]) : ctx.moveTo(r[0], r[1]); }); ctx.closePath(); };
+
+    if (ausgang) {                                      // zugemauert: hier kommt niemand hinein
+      bogenPfad(); ctx.fillStyle = '#c9b384'; ctx.fill();
+      ctx.strokeStyle = kante; ctx.lineWidth = Math.max(1, s * 0.05); ctx.stroke();
+      ctx.strokeStyle = 'rgba(90,74,44,0.5)'; ctx.lineWidth = Math.max(1, s * 0.04);
+      for (const z of [0.5, 1.05, 1.6]) {                // Fugen der Quader
+        const [a0, a1] = this.proj(fx + qx * 0.44, fy + qy * 0.44, z), [b0, b1] = this.proj(fx - qx * 0.44, fy - qy * 0.44, z);
+        ctx.beginPath(); ctx.moveTo(a0, a1); ctx.lineTo(b0, b1); ctx.stroke();
+      }
+      const spei = Math.max(0, 1 - (t - (ob.speiAt ?? -10)) * 3);   // kurzes Aufleuchten beim Ausspucken
+      if (spei > 0) { bogenPfad(); ctx.fillStyle = `rgba(255,212,94,${0.75 * spei})`; ctx.fill(); }
+    } else {
+      bogenPfad(); ctx.fillStyle = '#241a0e'; ctx.fill();
+      ctx.strokeStyle = gold; ctx.lineWidth = Math.max(1.5, s * 0.055); ctx.stroke();
+      const schluck = Math.max(0, 1 - (t - (ob.schluckAt ?? -10)) * 3);
+      if (schluck > 0) { bogenPfad(); ctx.fillStyle = `rgba(255,180,60,${0.7 * schluck})`; ctx.fill(); }
+    }
+    const [kx, ky] = this.proj(cx, fy - uy * 0.02, HOEHE + 0.62);
+    this.spriteLoewenkopf(ctx, kx, ky, s * 0.85, ausgang ? 0 : 1);
+  },
+
+  /* Löwenkopf im Schlussstein: goldene Mähne, dunkle Schnauze. wach = 1 blickt hell (Eingang),
+     0 ist steinern (Ausgang). Bildschirmkoordinaten, verankert an der Kopfmitte. */
+  spriteLoewenkopf(ctx, sx, sy, s, wach) {
+    const gold = wach ? '#ffd45e' : '#c9b384', dunkel = wach ? '#b8842a' : '#93805a';
+    ctx.fillStyle = dunkel;                              // Mähne als Zackenkranz
+    ctx.beginPath();
+    for (let i = 0; i < 14; i++) {
+      const a = (i / 14) * TAU, r = s * (i % 2 ? 0.44 : 0.62);
+      const px = sx + Math.cos(a) * r, py = sy + Math.sin(a) * r * 0.9;
+      i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+    }
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = gold; ctx.beginPath(); ctx.ellipse(sx, sy, s * 0.36, s * 0.33, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = wach ? '#3a2408' : '#6a5a3a';        // Augen
+    for (const seite of [-1, 1]) { ctx.beginPath(); ctx.ellipse(sx + seite * s * 0.15, sy - s * 0.06, s * 0.06, s * 0.05, 0, 0, TAU); ctx.fill(); }
+    ctx.beginPath(); ctx.ellipse(sx, sy + s * 0.14, s * 0.13, s * 0.1, 0, 0, TAU); ctx.fill();  // Schnauze
+    ctx.strokeStyle = wach ? '#3a2408' : '#6a5a3a'; ctx.lineWidth = Math.max(1, s * 0.05);
+    ctx.beginPath(); ctx.moveTo(sx, sy + s * 0.2); ctx.lineTo(sx, sy + s * 0.3); ctx.stroke();
+  },
+
+  /* Streitwagen: dieselbe Lore wie überall, nur anders angezogen – ein zweirädriger Rennwagen mit
+     Deichsel, Radkranz und Standarte. Am Verhalten ändert das nichts, es ist reine Zeichnung. */
+  drawChariot(ctx, ob, t) {
+    const s = this.scale, d = ob.dir || 1, w = ob.w, h = ob.h, cx = ob.x, cy = ob.y;
+    const holz = ['#c0392c', '#7a1e17'], gold = '#ffd45e';
+    const feld = (x, y, ww, hh) => [[x - ww / 2, y - hh / 2], [x + ww / 2, y - hh / 2], [x + ww / 2, y + hh / 2], [x - ww / 2, y + hh / 2]];
+    this.isoEllipse(ctx, cx, cy, 0, Math.max(w, h) * 0.52, 'rgba(0,0,0,0.22)');
+    // Deichsel nach vorn
+    this.prism(ctx, feld(cx + d * (w / 2 + 0.35), cy, 0.8, 0.12), 0.24, 0.1, '#8a6a3a', '#5a4420');
+    // Wagenkorb
+    this.prism(ctx, feld(cx, cy, w * 0.8, h * 0.8), 0.22, 0.62, holz[0], holz[1], { outline: '#4a1210' });
+    this.fillPoly(ctx, feld(cx, cy, w * 0.62, h * 0.5), 0.85, gold, false);
+    // Räder links und rechts, drehen mit der Fahrt
+    const dreh = t * 5 * d;
+    for (const seite of [-1, 1]) {
+      const rx = cx, ry = cy + seite * (h * 0.5 + 0.06);
+      const [wx, wy] = this.proj(rx, ry, 0.34);
+      ctx.strokeStyle = '#2a1a10'; ctx.lineWidth = Math.max(2, s * 0.07);
+      ctx.beginPath(); ctx.arc(wx, wy, s * 0.34, 0, TAU); ctx.stroke();
+      ctx.strokeStyle = gold; ctx.lineWidth = Math.max(1, s * 0.04);
+      for (let k = 0; k < 6; k++) {
+        const a = dreh + (k / 6) * TAU;
+        ctx.beginPath(); ctx.moveTo(wx, wy); ctx.lineTo(wx + Math.cos(a) * s * 0.31, wy + Math.sin(a) * s * 0.31); ctx.stroke();
+      }
+    }
+    // Standarte mit wehendem Wimpel
+    const [m0, m1] = this.proj(cx - d * w * 0.3, cy, 0.84), [m2, m3] = this.proj(cx - d * w * 0.3, cy, 1.75);
+    ctx.strokeStyle = '#8a6a3a'; ctx.lineWidth = Math.max(1.5, s * 0.05);
+    ctx.beginPath(); ctx.moveTo(m0, m1); ctx.lineTo(m2, m3); ctx.stroke();
+    const weh = 0.18 + 0.1 * Math.sin(t * 6);
+    ctx.fillStyle = '#d4342c'; ctx.beginPath(); ctx.moveTo(m2, m3);
+    ctx.lineTo(m2 + d * s * 0.5, m3 + s * weh); ctx.lineTo(m2, m3 + s * 0.32); ctx.closePath(); ctx.fill();
   },
 });

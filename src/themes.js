@@ -336,4 +336,18 @@ const THEMES = {
     accent: '#ffd166', flag: '#3d7ad6',
     autoDecor: ['pine', 'pine', 'pine', 'tree', 'flowerbush', 'rock', 'lantern'],
   },
+  colosseum: { // Kolosseum: helle Arena bei Tageslicht – gekalkter Sandstein, scharfe Kanten,
+    //             Gold an den Rängen, rote Banner. Bewusst hell und gepflegt, damit die Arena
+    //             sich vom verwitterten, bemoosten Dschungeltempel deutlich unterscheidet.
+    atmo: 'pollen',
+    sky: ['#4aa8e8', '#f2e3c0'], ground: '#c2a271', groundEdge: '#8a6c42',
+    floor: ['#ecd9ac', '#e2cd9f'], sand: '#f2ddad', ice: '#c8ecff', snow: '#f1f7ff',
+    water: '#3f8fd9', lava: '#ff6a1f',
+    wall: { top: '#f6ead0', side: '#b59b6c', style: 'stone' },
+    block: { top: '#e3d2a9', side: '#9d8355' },
+    mover: { top: '#c0392c', side: '#7a1e17' },
+    rotor: { top: '#ecd9ac', side: '#a88c56' },
+    accent: '#ffd45e', flag: '#d4342c',
+    autoDecor: ['pillarLight', 'bannerRed', 'pillarLight', 'urn', 'obelisk', 'brazier'],
+  },
 };

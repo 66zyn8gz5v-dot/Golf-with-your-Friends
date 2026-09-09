@@ -1,5 +1,9 @@
 /* Wandelt eine ASCII-Karte in Kacheln, Kollisions-Segmente, Mauerstücke und Blöcke um. */
-const FLOOR_CHARS = new Set(['#', 's', 'i', 'w', 'l', 'T', 'H', 'o']); // o = Fairway ohne Randmauer (Klippe)
+/* o = Fairway ohne Randmauer (Klippe).
+   A, B, C sind die Eingänge der Löwentore: begehbarer Boden, damit ein Ball mit Schwung hineinrollen
+   kann. Ihre Ausgänge (a, b, c) stehen bewusst NICHT hier – als Nicht-Boden zieht die Arenamauer von
+   selbst eine Wand davor, und genau das soll ein Ausgang von außen sein: massiv. */
+const FLOOR_CHARS = new Set(['#', 's', 'i', 'w', 'l', 'T', 'H', 'o', 'A', 'B', 'C']);
 const WALL_T = 0.38;       // Dicke der Randmauern (nach außen)
 const WALL_CHUNK = 4;      // längere Mauern werden fürs Sortieren zerteilt
 
@@ -127,6 +131,8 @@ function buildLevel(def) {
     isFloorChar(c) { return FLOOR_CHARS.has(c); },
   };
   for (const ob of obstacles) ob.level = level;
+  // Manche Hindernisse holen sich ihre Plätze aus der Karte statt aus der Hindernisliste (Löwentor)
+  for (const ob of obstacles) if (ob.setup) ob.setup(level);
   return level;
 }
 

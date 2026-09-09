@@ -1058,6 +1058,10 @@ class Renderer {
       this.pushGuillotine(items, ctx, ob, t);
     } else if (ob.type === 'eyetower') {
       items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => this.drawEyeTower(ctx, ob, t) });
+    } else if (ob.type === 'liongate') {
+      // Eingang und Ausgang stehen an verschiedenen Stellen der Karte – jeder wird für sich einsortiert
+      if (ob.x != null) items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => this.drawLionGate(ctx, ob, t, false) });
+      if (ob.ax != null) items.push({ x: ob.ax, y: ob.ay, bias: 0.2, draw: () => this.drawLionGate(ctx, ob, t, true) });
     } else if (ob.type === 'gate') {
       const postH = ob.liftH + ob.barH + 0.2, pw = 0.28;
       const horizontal = ob.w >= ob.h;
@@ -1615,6 +1619,7 @@ class Renderer {
       if (nut) { ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, r * s, 0, TAU); ctx.fill(); ctx.fillStyle = '#2a180a'; for (const [ox, oy] of [[-0.25, -0.2], [0.2, -0.25], [0, 0.15]]) { ctx.beginPath(); ctx.arc(cx + ox * r * s, cy + oy * r * s, r * s * 0.12, 0, TAU); ctx.fill(); } }
       ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, r * s, 0, TAU); ctx.fill();
       ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(cx, cy, r * s * 0.9, t * 6 * (ob.dir || 1), t * 6 * (ob.dir || 1) + 1.2); ctx.stroke();
+    } else if (ob.style === 'chariot') { this.drawChariot(ctx, ob, t); return; // Streitwagen: nur eine andere Zeichnung derselben Lore
     } else if (ob.style === 'stone') { // Schiebestein aus Sandstein mit eingemeißeltem Auge
       this.prism(ctx, poly, 0, 0.9, '#d9b979', '#8a6a34', { outline: '#5a4420' });
       const [ex, ey] = this.proj(ob.x, ob.y, 0.91);
@@ -1712,9 +1717,12 @@ class Renderer {
       case 'lightningrod': this.spriteLightningRod(ctx, sx, sy, s, t); break;
       case 'windsock': this.spriteWindsock(ctx, sx, sy, s, d, t); break;
       case 'banner': this.spriteBanner(ctx, sx, sy, s, d, t); break;
+      case 'bannerRed': this.spriteBanner(ctx, sx, sy, s, d, t, '#c0392c'); break;
       case 'brazierBlue': this.spriteBrazierColored(ctx, sx, sy, s, t, ['#4fc3ff', '#b7ecff', '80,190,255']); break;
       case 'torchPurple': this.spriteBrazierColored(ctx, sx, sy, s, t, ['#a24bff', '#e0b8ff', '170,90,255']); break;
       case 'pillar': this.spritePillar(ctx, sx, sy, s, d); break;
+      // helle Arena-Ausführung fürs Kolosseum
+      case 'pillarLight': this.spritePillar(ctx, sx, sy, s, d, ['#eaddb8', '#c3ad82', '#f6ead0', 'rgba(255,212,94,0.4)']); break;
       case 'urnDark': this.spriteUrn(ctx, sx, sy, s, Object.assign({}, d, { dark: true })); break;
       default: break;
     }

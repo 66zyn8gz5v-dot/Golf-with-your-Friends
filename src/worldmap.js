@@ -20,6 +20,7 @@ const WorldMap = (() => {
     jungle: { x: 59, y: 82, icon: '🗿', col: '#9ee06f' },
     storm: { x: 75, y: 44, icon: '⛈️', col: '#8fb8ff' },
     shadow: { x: 88, y: 74, icon: '🔮', col: '#c58bff' },
+    colosseum: { x: 43, y: 87, icon: '🏟️', col: '#ffd45e' },
   };
 
   /* ---------- Projektion wie im Spiel ---------- */
@@ -92,6 +93,7 @@ const WorldMap = (() => {
     // Mitte jeder Scheibe auf der Karte – die Ortsschilder sitzen an ihrer Vorderkante
     const W = {
       storm: [76, 20], pro: [43, 23], normal: [14, 25], shadow: [87, 39], sea: [27, 44], jungle: [59, 44],
+      colosseum: [43, 47],
     };
     const stars = [];
     for (let i = 0; i < 28; i++) {
@@ -110,7 +112,7 @@ const WorldMap = (() => {
     }
     // Reiseweg: von Vorderkante zu Vorderkante, hinter den Scheiben durch
     const front = id => { const [x, y] = W[id]; return [x, y + 5.4]; };
-    const route = ['normal', 'sea', 'pro', 'jungle', 'storm', 'shadow'].map(id => front(id).map(v => v.toFixed(1)).join(' ')).join(' L ');
+    const route = ['normal', 'sea', 'colosseum', 'pro', 'jungle', 'storm', 'shadow'].map(id => front(id).map(v => v.toFixed(1)).join(' ')).join(' L ');
 
     return `<svg class="${cls}" viewBox="0 0 100 62" preserveAspectRatio="${par}" aria-hidden="true">
       <defs>
@@ -288,6 +290,21 @@ const WorldMap = (() => {
           ${tree(x, y, -1.8, 3.2, 0.85, '#5fbe52', '#26662c')}${tree(x, y, 3.2, 2.6, 0.8, '#5fbe52', '#26662c')}
           ${box(x, y, -3.2, -2.6, 0.5, 0.5, 0, 1.3, '#9a8f72', '#7e7359', '#57503c')}
           ${(() => { const p = P(x, y, -3.2, -2.6, 1.3); return `<g fill="#2f2a20"><circle cx="${(p[0] - 0.18).toFixed(2)}" cy="${(p[1] - 0.42).toFixed(2)}" r="0.1"/><circle cx="${(p[0] + 0.18).toFixed(2)}" cy="${(p[1] - 0.42).toFixed(2)}" r="0.1"/></g>`; })()}`; })()}
+      </g>
+
+      <!-- ===== Kolosseum: helle Arena im Sand, roter Wimpel auf dem Rang ===== -->
+      <g filter="url(#atDeep)">
+        ${slab(...W.colosseum, 8, 8, 2.4, '#d9bd85', '#cfb27b', '#ae9058', '#6d5833')}
+        ${(() => { const [x, y] = W.colosseum; return `
+          ${shade(x, y, 0.2, 0.2, 2.2)}
+          ${/* Rang: acht Mauerstücke im Kreis, vorn niedriger, damit man in die Arena sieht */ ''}
+          ${[[-2.2, -2.2, 1.7], [0, -2.6, 1.7], [2.2, -2.2, 1.7], [2.6, 0, 1.5], [-2.6, 0, 1.5], [2.2, 2.2, 1.0], [0, 2.6, 0.9], [-2.2, 2.2, 1.0]]
+            .map(([a, b, h]) => box(x, y, a, b, 1.5, 1.5, 0, h, '#f6ead0', '#dcc79c', '#a4885c')).join('')}
+          ${poly([P(x, y, -1.7, 0), P(x, y, 0, -1.7), P(x, y, 1.7, 0), P(x, y, 0, 1.7)], '#ecd9ac')}
+          ${poly([P(x, y, -0.9, 0), P(x, y, 0, -0.9), P(x, y, 0.9, 0), P(x, y, 0, 0.9)], '#e0c894')}
+          ${box(x, y, 0, 0, 0.3, 0.3, 0, 1.1, '#f2e3bf', '#d8c49a', '#a4885c')}
+          ${flag(x, y, -2.2, -2.2, 1.7, 1.5, '#d4342c')}
+          ${flag(x, y, 2.2, -2.2, 1.7, 1.5, '#d4342c')}`; })()}
       </g>
 
       <g>${motes.join('')}</g>

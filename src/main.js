@@ -1567,6 +1567,11 @@
       finishTurn(strokes);
       return true;
     },
+    /* Direkt auf eine Bahn springen – nur fürs automatische Prüfen */
+    openHole(i) {
+      if (!state.courses || !state.courses[i]) return false;
+      clearTimeout(waitTimer); loadHole(i); return true;
+    },
     skipHole() {
       if (!state.level || state.phase === 'title') return false;
       clearTimeout(waitTimer);
