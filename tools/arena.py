@@ -122,7 +122,7 @@ k.rect(2, 3, 10, 7)       # Podest A
 k.rect(16, 3, 21, 7)      # Podest B
 k.rect(24, 3, 27, 7)      # Podest C
 k.put(3, 5, 'T'); k.put(26, 5, 'H')
-bahn(name='Wagenrennen', par=4, maxStrokes=14, map=k.rows(),
+bahn(name='Wagenrennen', par=3, maxStrokes=14, map=k.rows(),
      intro='Der Streitwagen pendelt in seinen Rillen über den Graben und nimmt mit, wer rechtzeitig '
            'aufspringt. Wer die Fahrt verpasst, liegt im Sand. Am Ende hilft nur noch die Schanze.',
      obstacles=[
@@ -140,7 +140,7 @@ k = Karte(28, 14)
 k.rect(2, 9, 12, 12)      # untere Kammer mit Katapult
 k.rect(15, 2, 25, 6)      # obere Kammer mit dem Loch
 k.put(3, 11, 'T'); k.put(24, 4, 'H')
-bahn(name='Katapultbahn', par=4, maxStrokes=14, map=k.rows(),
+bahn(name='Katapultbahn', par=3, maxStrokes=14, map=k.rows(),
      intro='Vom Sand der unteren Kammer geht es nur mit dem Katapult hinauf. Es schwenkt langsam – '
            'wer im richtigen Moment geladen wird, fliegt in die obere Kammer. Dort warten die Wachen.',
      obstacles=[
@@ -244,7 +244,7 @@ k.rect(31, 7, 35, 10)     # Aufstieg rechts
 k.rect(10, 2, 35, 6)      # obere Gerade
 k.rect(2, 2, 5, 6)        # Zielpodest hinter dem Graben
 k.put(3, 14, 'T'); k.put(3, 4, 'H')
-bahn(name='Der Feuerturm', par=6, maxStrokes=20, map=k.rows(),
+bahn(name='Der Feuerturm', par=7, maxStrokes=20, map=k.rows(),
      intro='Die grosse Runde. Unten streicht der Feuerstrahl über den Sand – er geht nie aus, man '
            'muss den Moment abpassen, in dem er am Rand wendet. Oben sperrt das gleitende Gitter, '
            'und vor dem Loch klafft der Graben. Ein langer Weg zum Ass.',

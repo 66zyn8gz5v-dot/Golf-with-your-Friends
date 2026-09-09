@@ -344,13 +344,18 @@ Spur sind zwei Rillen im Sand), dem **Katapult**, **Sprungschanzen** und **Stein
 | 3 | Mahlsteine | 3 | zwei steinerne Mahlräder mitten im Sand |
 | 4 | Löwenpforte | 3 | zwei Gassen, dazwischen die Arenamauer; nur die Löwenpforte führt hinüber, und nur mit Schwung |
 | 5 | Gleitendes Gitter | 3 | ein Gitter mit einem einzigen Durchlass, der langsam hin und her gleitet; dahinter zwei Steinräder |
-| 6 | Wagenrennen | 4 | der Streitwagen pendelt über den Graben, danach hilft nur noch die Schanze |
-| 7 | Katapultbahn | 4 | aus der unteren Kammer geht es nur mit dem Katapult hinauf; oben patrouillieren die Wachen |
-| 8 | Tierpforten | 5 | drei Kammern, zwei Löwenpforten, dazwischen der Graben mit dem Streitwagen |
+| 6 | Wagenrennen | 3 | der Streitwagen pendelt über den Graben, danach hilft nur noch die Schanze |
+| 7 | Katapultbahn | 3 | aus der unteren Kammer geht es nur mit dem Katapult hinauf; oben patrouillieren die Wachen |
+| 8 | Tierpforten | 5 | drei Kammern, zwei Löwenpforten; in der mittleren zieht der Streitwagen seine Runden |
 | 9 | Sandsturm | 5 | Gitter, Mahlsteine und Gladiatoren auf einmal – und am Ende die Schanze über den Graben |
 | 10 | Die Spina | 6 | ein voller Rundkurs um die Spina: Katapult, Streitwagen, Steinräder, und die Pforte führt in die Kammer im Herzen der Arena |
-| 11 | Der Feuerturm | 6 | grosse Schlussbahn: unten streicht der Feuerstrahl über den Sand, oben sperrt das Gitter, vor dem Loch klafft der Graben |
+| 11 | Der Feuerturm | 7 | grosse Schlussbahn: unten streicht der Feuerstrahl über den Sand, oben sperrt das Gitter, vor dem Loch klafft der Graben |
 | 12 | Die Kaiserloge | 7 | grosse Schlussbahn: drei Geraden, Löwenpforte, Streitwagen und Schanze – und oben dreht der Kaiser nach jedem Schlag den Daumen |
+
+Das Par steht nicht nach Gefühl da, sondern nach Messung: `node tools/audit/audit.mjs colosseum`
+spielt jede Bahn mit einem Durchschnittsspieler-Bot durch, und das Par ist dessen gerundeter Schnitt.
+Wo der Bot deutlich unter dem Par blieb oder gar nicht ins Loch kam, wurde die Bahn geändert, nicht
+die Zahl.
 
 Die Karten dieser Welt werden nicht von Hand getippt, sondern von `tools/arena.py` aus Rechtecken
 zusammengesetzt und nach `src/courses_colosseum.js` geschrieben. So bleiben alle Zeilen gleich lang,

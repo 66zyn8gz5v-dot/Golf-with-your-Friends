@@ -166,7 +166,7 @@ const COLOSSEUM_COURSES = [
     autoDecor: { density: 0.11, seed: 805 },
   },
   {
-    name: 'Wagenrennen', par: 4, theme: 'colosseum', maxStrokes: 14,
+    name: 'Wagenrennen', par: 3, theme: 'colosseum', maxStrokes: 14,
     intro: 'Der Streitwagen pendelt in seinen Rillen über den Graben und nimmt mit, wer rechtzeitig aufspringt. Wer die Fahrt verpasst, liegt im Sand. Am Ende hilft nur noch die Schanze.',
     map: [
       '..............................',
@@ -197,7 +197,7 @@ const COLOSSEUM_COURSES = [
     autoDecor: { density: 0.11, seed: 806 },
   },
   {
-    name: 'Katapultbahn', par: 4, theme: 'colosseum', maxStrokes: 14,
+    name: 'Katapultbahn', par: 3, theme: 'colosseum', maxStrokes: 14,
     intro: 'Vom Sand der unteren Kammer geht es nur mit dem Katapult hinauf. Es schwenkt langsam – wer im richtigen Moment geladen wird, fliegt in die obere Kammer. Dort warten die Wachen.',
     map: [
       '............................',
@@ -360,7 +360,7 @@ const COLOSSEUM_COURSES = [
     autoDecor: { density: 0.07, seed: 810 },
   },
   {
-    name: 'Der Feuerturm', par: 6, theme: 'colosseum', maxStrokes: 20,
+    name: 'Der Feuerturm', par: 7, theme: 'colosseum', maxStrokes: 20,
     intro: 'Die grosse Runde. Unten streicht der Feuerstrahl über den Sand – er geht nie aus, man muss den Moment abpassen, in dem er am Rand wendet. Oben sperrt das gleitende Gitter, und vor dem Loch klafft der Graben. Ein langer Weg zum Ass.',
     map: [
       '......................................',
