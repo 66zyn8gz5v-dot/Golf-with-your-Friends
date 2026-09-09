@@ -352,6 +352,14 @@ Spur sind zwei Rillen im Sand), dem **Katapult**, **Sprungschanzen** und **Stein
 | 11 | Der Feuerturm | 7 | grosse Schlussbahn: unten streicht der Feuerstrahl über den Sand, oben sperrt das Gitter, vor dem Loch klafft der Graben |
 | 12 | Die Kaiserloge | 7 | grosse Schlussbahn: drei Geraden, Löwenpforte, Streitwagen und Schanze – und oben dreht der Kaiser nach jedem Schlag den Daumen |
 
+Auf den drei mehrteiligen Bahnen (10, 11, 12) führen **Blickzonen** die Kamera: Liegt der Ball in
+einer Zone, schaut sie auf deren Blickpunkt statt aufs Loch. Ohne das schaute man vom Start der
+Kaiserloge quer über zwei Mauern hinweg zum Loch, während man in die andere Richtung spielt – auf
+einem Rundkurs wie der Spina liegt das Loch sogar in der Mitte. Die Blickpunkte liegen bewusst weit
+außerhalb der Karte, damit die Richtung über die ganze Zone stabil bleibt und nicht umspringt,
+sobald der Ball an ihnen vorbeirollt. Das Feld heißt `views` und steht schon länger in `courses.js`
+zur Verfügung.
+
 Das Par steht nicht nach Gefühl da, sondern nach Messung: `node tools/audit/audit.mjs colosseum`
 spielt jede Bahn mit einem Durchschnittsspieler-Bot durch, und das Par ist dessen gerundeter Schnitt.
 Wo der Bot deutlich unter dem Par blieb oder gar nicht ins Loch kam, wurde die Bahn geändert, nicht

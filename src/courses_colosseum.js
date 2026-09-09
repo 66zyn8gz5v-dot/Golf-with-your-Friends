@@ -314,6 +314,7 @@ const COLOSSEUM_COURSES = [
   {
     name: 'Die Spina', par: 6, theme: 'colosseum', maxStrokes: 18,
     intro: 'Ein voller Rundkurs um die Spina. Das Katapult wirft die lange Gerade hinauf, oben zieht der Streitwagen seine Bahn, unten mahlt der Stein – und ganz am Ende führt die Pforte in die Kammer im Herzen der Arena.',
+    views: [{ x: 0, y: 0, w: 8, h: 18, look: { x: 4.5, y: -60 } }, { x: 26, y: 0, w: 12, h: 18, look: { x: 28.5, y: 80 } }, { x: 8, y: 0, w: 18, h: 6, look: { x: 90, y: 3.5 } }, { x: 8, y: 11.5, w: 18, h: 7, look: { x: 90, y: 13.5 } }],
     map: [
       '..................................',
       '..................................',
@@ -362,6 +363,7 @@ const COLOSSEUM_COURSES = [
   {
     name: 'Der Feuerturm', par: 7, theme: 'colosseum', maxStrokes: 20,
     intro: 'Die grosse Runde. Unten streicht der Feuerstrahl über den Sand – er geht nie aus, man muss den Moment abpassen, in dem er am Rand wendet. Oben sperrt das gleitende Gitter, und vor dem Loch klafft der Graben. Ein langer Weg zum Ass.',
+    views: [{ x: 30, y: 6.5, w: 8, h: 4.5, look: { x: 33, y: -60 } }, { x: 0, y: 10.5, w: 38, h: 9, look: { x: 90, y: 14 } }, { x: 0, y: 0, w: 38, h: 6.5, look: { x: -60, y: 4 } }],
     map: [
       '......................................',
       '......................................',
@@ -412,6 +414,7 @@ const COLOSSEUM_COURSES = [
   {
     name: 'Die Kaiserloge', par: 7, theme: 'colosseum', maxStrokes: 22,
     intro: 'Der Weg des Siegers: einmal unten hindurch, durch die Löwenpforte zurück nach links, über den Graben auf dem Streitwagen, mit der Schanze hinauf – und oben sitzt der Kaiser. Nach jedem Schlag dreht er den Daumen. Zeigt er nach unten, klafft die Falltür vor dem Loch.',
+    views: [{ x: 0, y: 13, w: 38, h: 6, look: { x: 90, y: 15.5 } }, { x: 0, y: 7.5, w: 38, h: 4.5, look: { x: 90, y: 9.5 } }, { x: 0, y: 0, w: 38, h: 7, look: { x: -60, y: 4 } }],
     map: [
       '......................................',
       '......................................',

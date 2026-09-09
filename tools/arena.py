@@ -217,6 +217,13 @@ k.put(13, 8, 'a')         # Ausgang der Pforte, wirft in die Kammer
 k.put(29, 13, 'A')        # Eingang unten rechts
 k.put(4, 14, 'T'); k.put(17, 8, 'H')
 bahn(name='Die Spina', par=6, maxStrokes=18, map=k.rows(),
+     # Blickzonen: Auf einem Rundkurs liegt das Loch in der Mitte – die Kamera würde also quer über
+     # die Spina schauen statt die Gerade entlang, auf der man gerade spielt. Jede Gerade bekommt
+     # darum einen Blickpunkt weit in ihrer Laufrichtung; in der Innenkammer gilt wieder das Loch.
+     views=[(0, 0, 8, 18, 4.5, -60),      # linke Gerade: nach oben
+            (26, 0, 12, 18, 28.5, 80),    # rechte Gerade: nach unten
+            (8, 0, 18, 6, 90, 3.5),       # obere Gerade: nach rechts
+            (8, 11.5, 18, 7, 90, 13.5)],  # untere Gerade: nach rechts zur Pforte
      intro='Ein voller Rundkurs um die Spina. Das Katapult wirft die lange Gerade hinauf, oben zieht '
            'der Streitwagen seine Bahn, unten mahlt der Stein – und ganz am Ende führt die Pforte in '
            'die Kammer im Herzen der Arena.',
@@ -245,6 +252,9 @@ k.rect(10, 2, 35, 6)      # obere Gerade
 k.rect(2, 2, 5, 6)        # Zielpodest hinter dem Graben
 k.put(3, 14, 'T'); k.put(3, 4, 'H')
 bahn(name='Der Feuerturm', par=7, maxStrokes=20, map=k.rows(),
+     views=[(30, 6.5, 8, 4.5, 33, -60),   # Aufstieg rechts: nach oben
+            (0, 10.5, 38, 9, 90, 14),     # untere Arena: nach rechts
+            (0, 0, 38, 6.5, -60, 4)],     # obere Gerade: nach links zum Loch
      intro='Die grosse Runde. Unten streicht der Feuerstrahl über den Sand – er geht nie aus, man '
            'muss den Moment abpassen, in dem er am Rand wendet. Oben sperrt das gleitende Gitter, '
            'und vor dem Loch klafft der Graben. Ein langer Weg zum Ass.',
@@ -274,6 +284,11 @@ k.put(1, 9, 'a')          # Ausgang der Pforte
 k.rect(2, 2, 35, 6)       # obere Gerade mit der Kaiserloge
 k.put(3, 15, 'T'); k.put(5, 4, 'H')
 bahn(name='Die Kaiserloge', par=7, maxStrokes=22, map=k.rows(),
+     # Ohne diese Zonen schaute die Kamera vom Start aus quer über zwei Mauern hinweg aufs Loch,
+     # während man in die andere Richtung spielt – das macht die Bahn unnötig unangenehm.
+     views=[(0, 13, 38, 6, 90, 15.5),     # untere Gerade: nach rechts zur Pforte
+            (0, 7.5, 38, 4.5, 90, 9.5),   # mittlere Gerade: nach rechts zur Schanze
+            (0, 0, 38, 7, -60, 4)],       # obere Gerade: nach links zum Loch
      intro='Der Weg des Siegers: einmal unten hindurch, durch die Löwenpforte zurück nach links, über '
            'den Graben auf dem Streitwagen, mit der Schanze hinauf – und oben sitzt der Kaiser. Nach '
            'jedem Schlag dreht er den Daumen. Zeigt er nach unten, klafft die Falltür vor dem Loch.',
@@ -342,6 +357,9 @@ for b in BAHNEN:
     teile.append("  {\n")
     teile.append("    name: '%s', par: %d, theme: 'colosseum', maxStrokes: %d,\n" % (b['name'], b['par'], b['maxStrokes']))
     teile.append("    intro: '%s',\n" % b['intro'].replace("'", "\\'"))
+    if b.get('views'):
+        teile.append("    views: [%s],\n" % ', '.join(
+            "{ x: %s, y: %s, w: %s, h: %s, look: { x: %s, y: %s } }" % v for v in b['views']))
     teile.append("    map: [\n%s\n    ],\n" % js_map(b['map']))
     # Zeilen, die mit // beginnen, sind Kommentare für die erzeugte Datei und bekommen kein Komma
     zeilen = '\n'.join(('      %s' % o) if o.startswith('//') else ('      %s,' % o) for o in b['obstacles'])
