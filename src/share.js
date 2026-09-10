@@ -29,7 +29,7 @@ const Share = (() => {
     // Die drei Maschinen der Uhrwerkstadt – auch geteilte Bahnen dürfen sie benutzen
     'gearlift', 'piston', 'hand',
     // Zahnradfeld, Pendel und Federwerk des Uhrenturms
-    'gearfield', 'pendulum', 'springwork', 'copperpipe', 'escapement']);
+    'gearfield', 'pendulum', 'springwork', 'copperpipe', 'escapement', 'sweephand', 'dial']);
   const W_MIN = 6, W_MAX = 48, H_MIN = 4, H_MAX = 36;
   const OBJ_MAX = 120, DEKOR_MAX = 120, FELDER_MAX = 24;
 

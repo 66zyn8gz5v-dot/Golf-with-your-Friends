@@ -966,6 +966,8 @@ class Renderer {
     if (ob.type === 'pendulum') { this.drawPendulumFloor(ctx, ob, t); return; }
     if (ob.type === 'springwork') { this.drawSpringWorkFloor(ctx, ob, t); return; }
     if (ob.type === 'escapement') { this.drawEscapementFloor(ctx, ob, t); return; }
+    if (ob.type === 'sweephand') { this.drawSweepHandFloor(ctx, ob, t); return; }
+    if (ob.type === 'dial') { this.drawDialFloor(ctx, ob, t); return; }
     if (ob.type === 'field' && ob.style === 'steam') { this.drawSteam(ctx, ob, t); return; }
     if (ob.type === 'field' && ob.style === 'dark') { this.drawDarkZone(ctx, ob, t); return; }
     if (ob.type === 'boost' || (ob.type === 'field' && (ob.style === 'wind' || ob.style === 'current'))) { this.drawWind(ctx, ob, t); return; }
@@ -1259,6 +1261,8 @@ class Renderer {
       // Rohrmund und Rohrende stehen an verschiedenen Stellen der Karte – jeder wird für sich einsortiert
       if (ob.x != null) items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => this.drawCopperPipe(ctx, ob, t, false) });
       if (ob.ax != null) items.push({ x: ob.ax, y: ob.ay, bias: 0.2, draw: () => this.drawCopperPipe(ctx, ob, t, true) });
+    } else if (ob.type === 'sweephand') {
+      items.push({ x: ob.x, y: ob.y, bias: 0.3, draw: () => this.drawSweepHand(ctx, ob, t) });
     } else if (ob.type === 'escapement') {
       items.push({ x: ob.x, y: ob.y, bias: 0.25, draw: () => this.drawEscapement(ctx, ob, t) });
     } else if (ob.type === 'pendulum') {

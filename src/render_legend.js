@@ -1615,4 +1615,77 @@ Object.assign(Renderer.prototype, {
     ctx.strokeStyle = '#ffdf9c'; ctx.lineWidth = Math.max(2, s * 0.09); ctx.lineCap = 'round';
     ctx.beginPath(); ctx.moveTo(c0, c1); ctx.lineTo(a0, a1); ctx.stroke(); ctx.lineCap = 'butt';
   },
+
+  /* ---------------------------------------------------------------------------
+     Zeigerarm und Zifferblatt.
+     --------------------------------------------------------------------------- */
+
+  /* Das Zifferblatt, auf dem beide arbeiten: ein Ring mit Stundenmarken, flach im Boden.
+     'gross' macht die Marken kräftiger – das Zifferblatt braucht sie deutlicher als der Arm. */
+  ziffernkreis(ctx, x, y, r, marken, gross) {
+    const s = this.scale;
+    this.isoEllipse(ctx, x, y, 0.002, r + 0.7, 'rgba(20,14,6,0.35)');
+    this.isoEllipse(ctx, x, y, 0.003, r + 0.5, 'rgba(246,236,205,0.10)');
+    ctx.strokeStyle = 'rgba(255,214,110,0.35)'; ctx.lineWidth = Math.max(1.5, s * 0.05);
+    ctx.beginPath();
+    for (let i = 0; i <= 48; i++) {
+      const a = (i * TAU) / 48;
+      const p = this.proj(x + Math.cos(a) * r, y + Math.sin(a) * r, 0.006);
+      i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]);
+    }
+    ctx.stroke();
+    for (let i = 0; i < marken; i++) {
+      const a = -Math.PI / 2 + (i * TAU) / marken, dick = i % 3 === 0 ? 1.6 : 1;
+      const p0 = this.proj(x + Math.cos(a) * (r - 0.45), y + Math.sin(a) * (r - 0.45), 0.007);
+      const p1 = this.proj(x + Math.cos(a) * (r + 0.35), y + Math.sin(a) * (r + 0.35), 0.007);
+      ctx.strokeStyle = `rgba(255,232,170,${gross ? 0.7 : 0.45})`;
+      ctx.lineWidth = Math.max(1.5, s * 0.06 * dick);
+      ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke();
+    }
+  },
+
+  drawSweepHandFloor(ctx, ob, t) { this.ziffernkreis(ctx, ob.x, ob.y, ob.r, 12, false); },
+  /* Zeigerarm: eine lange Stange mit Gegengewicht, wie der Minutenzeiger einer Turmuhr. Sie hat
+     Höhe, damit sie den Ball sichtbar vor sich herschiebt und nicht über ihn hinweggeht. */
+  drawSweepHand(ctx, ob, t) {
+    const s = this.scale, ca = Math.cos(ob.angle), sa = Math.sin(ob.angle), tk = ob.thick, L = ob.r;
+    const P = (d, q) => [ob.x + ca * d - sa * q, ob.y + sa * d + ca * q];
+    const profil = [[-1.2, tk * 1.0], [-0.2, tk * 1.6], [L * 0.5, tk * 1.15], [L - 0.6, tk * 0.8], [L, tk * 0.12]];
+    const platte = (schrumpf, kuerzer) => {
+      const p = [];
+      for (const [d, q] of profil) p.push(P(d - kuerzer * (d / L), q * schrumpf));
+      for (let i = profil.length - 1; i >= 0; i--) { const [d, q] = profil[i]; p.push(P(d - kuerzer * (d / L), -q * schrumpf)); }
+      return p;
+    };
+    const gw = P(-1.15, 0);
+    this.prism(ctx, this.circlePoly(gw[0], gw[1], 0.4, 14), 0.04, ob.hoehe * 0.9, '#e0b45c', '#7d5a20', { outline: '#33240e' });
+    this.frustum(ctx, platte(1, 0), platte(0.5, 0.12), 0.05, ob.hoehe, '#f0cd7d', '#8a6624', { outline: '#3a2a12' });
+    // heller Grat auf der Oberkante: er zeigt, wohin geschoben wird
+    this.fillPoly(ctx, [P(L - 1.1, tk * 0.4), P(L - 0.15, tk * 0.06), P(L - 0.15, -tk * 0.06), P(L - 1.1, -tk * 0.4)], ob.hoehe + 0.01, '#fff0c2', false);
+    // Nabe
+    this.prism(ctx, this.circlePoly(ob.x, ob.y, ob.nabe, 12), 0, ob.hoehe + 0.35, '#8a6624', '#4e3814', { outline: '#2a1d0a' });
+    this.prism(ctx, this.circlePoly(ob.x, ob.y, ob.nabe * 0.5, 10), ob.hoehe + 0.35, 0.12, '#ffdf9c', '#a8792c');
+  },
+
+  /* Zifferblatt: alle Marken, die nächste hell und mit schrumpfendem Ring. Der Ring ist die Uhr –
+     ist er zu, springt das Loch dorthin. Man soll den Schlag planen können, nicht raten. */
+  drawDialFloor(ctx, ob, t) {
+    const s = this.scale;
+    this.ziffernkreis(ctx, ob.x, ob.y, ob.r, ob.marken, true);
+    for (let i = 0; i < ob.marken; i++) {
+      const [px, py] = ob.markePos(i);
+      if (i === ob.i) continue;                              // dort steckt gerade das Loch
+      const naechste = i === ob.next;
+      this.isoEllipse(ctx, px, py, 0.008, naechste ? 0.55 : 0.34, naechste ? 'rgba(255,214,110,0.3)' : 'rgba(255,236,190,0.12)');
+      this.isoEllipse(ctx, px, py, 0.01, naechste ? 0.3 : 0.16, naechste ? 'rgba(255,246,215,0.6)' : 'rgba(255,236,190,0.22)');
+    }
+    // Der schrumpfende Ring an der nächsten Marke: so viel Zeit bleibt noch
+    const [nx, ny] = ob.markePos(ob.next);
+    const [sx, sy] = this.proj(nx, ny, 0.012);
+    const u = Math.max(0, Math.min(1, ob.rest / ZIFFERBLATT_TAKT));
+    ctx.strokeStyle = 'rgba(255,226,150,0.85)'; ctx.lineWidth = Math.max(2, s * 0.07);
+    ctx.beginPath();
+    ctx.ellipse(sx, sy, 0.8 * s, 0.8 * s * this.cam.tilt, 0, -Math.PI / 2, -Math.PI / 2 + u * TAU);
+    ctx.stroke();
+  },
 });

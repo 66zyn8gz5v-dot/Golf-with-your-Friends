@@ -741,3 +741,66 @@ class Escapement {
     }
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Zeigerarm und Zifferblatt – die dritte Lieferung für den Uhrenturm.
+   --------------------------------------------------------------------------- */
+
+/* Zeigerarm: ein großer Uhrzeiger, der über eine runde Fläche streicht. Er ist massiv und nimmt
+   den Ball vor sich her mit – nicht wie das Pendel, das ihn wegschlägt, sondern langsam und
+   stetig, weil er langsam geht. Getroffen wird der Ball mit der Bahngeschwindigkeit an der Stelle,
+   an der er die Stange berührt: weit außen schneller, nah an der Nabe fast gar nicht.
+
+   Die Umlaufdauer steht als Konstante hier und nicht in den Bahndaten – alle Zeigerarme einer Bahn
+   sollen gleich gehen. Je Arm unterscheiden sich Länge, Ort und Phase. */
+const ZEIGERARM_UMLAUF = 12;     // Sekunden für eine volle Runde, immer im Uhrzeigersinn
+
+class SweepHand {
+  constructor(d) {
+    Object.assign(this, { r: 4.5, thick: 0.24, phase: 0, e: 0.45, hoehe: 0.5, nabe: 0.55 }, d);
+    this.type = 'sweephand';
+    this.omega = TAU / ZEIGERARM_UMLAUF;
+    this.update(0);
+  }
+  update(t) { this.angle = this.phase * TAU + t * this.omega; }
+  spitze() { return [this.x + Math.cos(this.angle) * this.r, this.y + Math.sin(this.angle) * this.r]; }
+  segments(out) {
+    const [bx, by] = this.spitze();
+    out.push({ ax: this.x, ay: this.y, bx, by, rad: this.thick, omega: this.omega,
+      cx: this.x, cy: this.y, e: this.e, kind: 'rotor' });
+  }
+  circles(out) { out.push({ x: this.x, y: this.y, r: this.nabe, e: 0.6, kind: 'hub' }); }
+}
+
+/* Zifferblatt: das Loch liegt nicht fest, sondern springt alle ZIFFERBLATT_TAKT Sekunden auf die
+   nächste Stundenmarke – immer im Uhrzeigersinn, immer eine Marke weiter. Damit ist es kein
+   Glücksspiel: Die nächste Stelle ist von Anfang an zu sehen, und man kann den Schlag so legen,
+   dass der Ball dort ankommt, wenn das Loch dort ist.
+
+   Das Hindernis verschiebt das Loch der Bahn selbst (level.cup). Auf der Karte steht das 'H'
+   trotzdem – auf der ersten Marke, damit die Bahn auch ohne laufende Uhr stimmt und die
+   Bahnprüfung ihren Weg zum Loch findet. */
+const ZIFFERBLATT_TAKT = 10;     // Sekunden, die das Loch auf einer Marke bleibt
+
+class Dial {
+  constructor(d) {
+    Object.assign(this, { r: 6, marken: 12, phase: 0 }, d);
+    this.type = 'dial';
+    this.i = 0; this.next = 1; this.rest = ZIFFERBLATT_TAKT;
+  }
+  setup(level) { this.level = level; }
+  /* Marke 0 steht oben (12 Uhr); weiter geht es im Uhrzeigersinn. */
+  markePos(i) {
+    const a = -Math.PI / 2 + (i * TAU) / this.marken;
+    return [this.x + Math.cos(a) * this.r, this.y + Math.sin(a) * this.r];
+  }
+  update(t) {
+    const schritt = Math.floor(t / ZIFFERBLATT_TAKT + this.phase);
+    this.i = ((schritt % this.marken) + this.marken) % this.marken;
+    this.next = (this.i + 1) % this.marken;
+    this.rest = ZIFFERBLATT_TAKT * (1 - ((t / ZIFFERBLATT_TAKT + this.phase) - schritt));
+    if (!this.level || !this.level.cup) return;
+    const [px, py] = this.markePos(this.i);
+    this.level.cup.x = px; this.level.cup.y = py;
+  }
+}

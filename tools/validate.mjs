@@ -136,6 +136,40 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
     const ch = rows[Math.floor(o.y)] && rows[Math.floor(o.y)][Math.floor(o.x)];
     if (!FLOOR.has(ch)) problems.push(`escapement: Mitte bei (${o.x},${o.y}) liegt nicht auf dem Fairway (${ch})`);
   }
+  /* Zeigerarm: Die Nabe soll auf der Bahn stehen und der Arm über der Bahn streichen. Ein Arm,
+     dessen Spitze zum größten Teil über Mauern und Leere geht, sieht aus wie ein Fehler. */
+  for (const o of (c.obstacles || []).filter(o => o.type === 'sweephand')) {
+    const r = o.r == null ? 4.5 : o.r;
+    if (!(r > 1)) { problems.push(`sweephand bei (${o.x},${o.y}): r ${r} ist zu kurz`); continue; }
+    const nabe = rows[Math.floor(o.y)] && rows[Math.floor(o.y)][Math.floor(o.x)];
+    if (!FLOOR.has(nabe)) problems.push(`sweephand: Nabe bei (${o.x},${o.y}) liegt nicht auf dem Fairway (${nabe})`);
+    let drauf = 0;
+    for (let i = 0; i < 12; i++) {
+      const w = (i * Math.PI) / 6, sx = o.x + Math.cos(w) * r, sy = o.y + Math.sin(w) * r;
+      const ch = rows[Math.floor(sy)] && rows[Math.floor(sy)][Math.floor(sx)];
+      if (FLOOR.has(ch)) drauf++;
+    }
+    if (drauf < 8) problems.push(`sweephand bei (${o.x},${o.y}): die Spitze streicht nur an ${drauf} von 12 Stellen über die Bahn – der Arm ist zu lang oder steht falsch`);
+  }
+  /* Zifferblatt: Das Loch springt selbst von Marke zu Marke. Läge auch nur eine Marke in der
+     Mauer oder im Leeren, wäre die Bahn zehn Sekunden lang nicht zu gewinnen – und niemand
+     wüsste, warum. Darum müssen alle Marken auf der Bahn liegen. Und das 'H' der Karte gehört
+     auf die erste Marke, damit die Bahn auch ohne laufende Uhr stimmt. */
+  for (const o of (c.obstacles || []).filter(o => o.type === 'dial')) {
+    const r = o.r == null ? 6 : o.r, n = o.marken == null ? 12 : o.marken;
+    if (!(r > 1)) { problems.push(`dial bei (${o.x},${o.y}): r ${r} ist zu klein`); continue; }
+    if (!(n >= 4 && n <= 24)) { problems.push(`dial bei (${o.x},${o.y}): marken ${n} – sinnvoll sind 4 bis 24`); continue; }
+    const marke = i => { const w = -Math.PI / 2 + (i * 2 * Math.PI) / n; return [o.x + Math.cos(w) * r, o.y + Math.sin(w) * r]; };
+    for (let i = 0; i < n; i++) {
+      const [mx, my] = marke(i);
+      const ch = rows[Math.floor(my)] && rows[Math.floor(my)][Math.floor(mx)];
+      if (!FLOOR.has(ch) || ch === 'w' || ch === 'l') problems.push(`dial: Marke ${i} bei (${mx.toFixed(1)},${my.toFixed(1)}) liegt nicht auf der Bahn (${ch}) – dort wäre das Loch nicht zu erreichen`);
+    }
+    if (cup) {
+      const [m0x, m0y] = marke(0);
+      if (Math.floor(m0x) !== cup[0] || Math.floor(m0y) !== cup[1]) problems.push(`dial bei (${o.x},${o.y}): das 'H' steht auf (${cup[0]},${cup[1]}), die erste Marke aber auf (${Math.floor(m0x)},${Math.floor(m0y)})`);
+    }
+  }
   for (const o of (c.obstacles || []).filter(o => o.type === 'springwork')) {
     const range = o.range == null ? 8 : o.range, catchR = o.catchR == null ? 0.7 : o.catchR;
     if (!(range > 1)) problems.push(`springwork bei (${o.x},${o.y}): range ${range} – da fliegt nichts`);
