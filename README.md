@@ -82,7 +82,7 @@ Zwei Folgen, die man kennen sollte:
   Bahn steht dann eine Weile „Par 6", bis jemand besser spielt. Das ist so gewollt (die Alternative wäre eine
   Deckelung auf das gebaute Par).
 - Die Belohnung einer Welt rechnet gegen dieses Par. Verbessert jemand einen Rekord, kann eine bereits
-  verdiente Belohnung wieder wegfallen – so wie der Championhelm, wenn man den Rundenrekord verliert.
+  verdiente Belohnung wieder wegfallen. Der Championhelm hängt nicht am Par, sondern am Turnier.
 
 Ein Hole-in-One bleibt ein Hole-in-One: `diffClass` und `scoreName` prüfen zuerst auf einen Schlag und erst
 danach gegen Par.
@@ -112,6 +112,14 @@ richtet sich danach:
 Gewertet wird die **Kombi-Wertung** über die ganze Runde, darunter stehen die besten Einzelbahnen – wie in
 der Rangliste, nur eben nur für dieses Fenster. Der Kreativmodus ist ausgeschlossen; dort zählt ohnehin
 nichts, weil man beliebig oft neu setzen darf.
+
+**Der Championhelm ist der Siegerpreis.** Er geht erst nach dem Schlußpfiff über, und dann an den, der die
+Rundenwertung anführt – solange das Turnier läuft, trägt ihn niemand, auch der nicht, der gerade vorn liegt.
+Das ist der Sinn eines Preises: Er wird verliehen, nicht mitgenommen. `Hats.freigeschaltet('champion')`
+fragt darum `Turnier.zustand() === 'vorbei'` und vergleicht den eigenen Namen mit dem ersten Eintrag der
+Rundenwertung. Beim Schlußpfiff sagt das Spiel von sich aus Bescheid, wer gewonnen hat (`turnierEnde` in
+`main.js`) – auch dem, der nicht gewonnen hat. Ein neues Turnier bekommt ein neues `KENNUNG` und damit ein
+leeres Feld; der Helm ist dann wieder zu vergeben.
 
 **Warum je Spieler eine eigene aufbewahrte Nachricht.** Die Rangliste kennt je Bahn nur den einen Rekord und
 kommt deshalb mit einer gemeinsamen Tafel je Welt aus. Im Turnier soll ein Feld entstehen – Erster, Zweiter,
@@ -203,9 +211,12 @@ andere es hereinholen. Das steht auch in der Oberfläche ausdrücklich da (`lohn
 
 **Wie die Sperre funktioniert:** In `Hats.LIST` trägt eine Belohnung `welt: '<Weltkennung>'`, ein
 Ganzkörper-Skin zusätzlich `voll: true`. Die eine Stelle, die entscheidet, ist `Hats.freigeschaltet(id)`; sie
-fragt `Best.fortschritt(welt).geschafft`. Der Championhelm ist die Ausnahme: Er trägt `art: 'rekord'` und
-hängt weiter am Kombi-Rundenrekord der Arena – wer den Rekord verliert, verliert auch den Helm. Der
-Legionärshelm ist keine Belohnung und für alle da.
+fragt `Best.fortschritt(welt).geschafft`. Der Championhelm ist die Ausnahme: Er trägt `art: 'turnier'` und
+ist der **Siegerpreis des Turniers** – siehe unten. Der Legionärshelm ist keine Belohnung und für alle da.
+
+Ein Hut, der einem nicht (mehr) zusteht, wird beim Spielstart stillschweigend gegen den Vorgabehut
+getauscht (`hutOderErsatz` in `main.js`); dasselbe gilt für den Hut, den man ins Online-Spiel mitbringt.
+Ohne das trüge der Vorbesitzer den Preis weiter, nachdem er den Besitzer gewechselt hat.
 
 **Der eigene Stand liegt getrennt.** Die Rangliste kennt je Bahn nur den einen Rekord, egal von wem. Für die
 Belohnung zählt aber, was man *selbst* geschafft hat – darum führt jedes Gerät zusätzlich eine private Liste
@@ -271,7 +282,7 @@ aus der privaten Liste des Geräts und wird nirgends geteilt.
 | **Ganze Runde** | Eine einzige Runde am Stück, von Bahn 1 bis zum Schluß. Dafür führt das Gerät keinen eigenen Stand – die Zeile bleibt beim Rekord. |
 
 Die Belohnung einer Welt hängt an der **Gesamt**-Zeile, nicht an der ganzen Runde; einzig der Championhelm
-hängt am Kombi-Rundenrekord.
+hängt am Turnier.
 
 Die Uhr steht still, solange ein Menü offen ist oder die Seite im Hintergrund liegt – niemand soll dafür
 bestraft werden, dass das Telefon klingelt. Die laufende Zeit steht während des Zugs oben rechts, die
