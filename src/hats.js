@@ -483,96 +483,73 @@ const Hats = (() => {
       ctx.restore(); glasLicht(ctx);
     },
 
-    idolhead(ctx, color, t, fein) {   // Dschungeltempel: Götzenkopf aus Stein, von Ranken überwachsen
-      const g = ctx.createRadialGradient(-0.35, -0.4, 0.1, 0, 0, 1);
-      g.addColorStop(0, '#c0b79f'); g.addColorStop(0.55, '#8d8571'); g.addColorStop(1, '#514b3e');
+    /* Dschungeltempel: ein dunkler Tempelstein mit eingemeißelten Glyphen, darüber die Federkrone
+       des Tempelwächters in Türkis und Gold. Die Glyphen glimmen grün – schwach, wie etwas, das
+       seit Jahrhunderten dort liegt, nicht wie eine Leuchtreklame. Eine Welle läuft langsam durch
+       sie hindurch, so dass mal die eine, mal die andere heller steht.
+
+       Reihenfolge: erst die Federn, dann der Stein, dann das Stirnband. So verschwinden die
+       Federfüße hinter dem Stein und das Band liegt davor – es braucht keinen Halter. */
+    feathercrown(ctx, color, t, fein) {
+      federn(ctx, t, fein);
+
+      const g = ctx.createRadialGradient(-0.36, -0.42, 0.08, 0, 0, 1);
+      g.addColorStop(0, '#5c645b'); g.addColorStop(0.5, '#3b423c'); g.addColorStop(1, '#1b1f1b');
       ctx.beginPath(); ctx.arc(0, 0, 1, 0, TAU2); ctx.fillStyle = g; ctx.fill();
       ctx.strokeStyle = 'rgba(0,0,0,0.4)'; ctx.lineWidth = 0.07; ctx.stroke();
-      ctx.save(); kugelMaske(ctx);
-      // Kopfschmuck: breites Band mit Kerben und einem Jadestein in der Mitte
-      ctx.fillStyle = '#6f6857'; ctx.fillRect(-1, -1, 2, 0.46);
-      if (fein) { ctx.fillStyle = '#5b5546';
-        for (let i = -4; i <= 4; i++) ctx.fillRect(i * 0.2 - 0.03, -0.72, 0.07, 0.18); }
-      ctx.fillStyle = '#3f8f6a'; ctx.beginPath();
-      ctx.moveTo(0, -0.78); ctx.lineTo(0.15, -0.6); ctx.lineTo(0, -0.42); ctx.lineTo(-0.15, -0.6); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.beginPath();
-      ctx.moveTo(0, -0.74); ctx.lineTo(0.09, -0.61); ctx.lineTo(0, -0.55); ctx.closePath(); ctx.fill();
-      // Ohrscheiben aus Gold
-      ctx.fillStyle = '#c9a03c'; ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 0.05;
-      for (const ox of [-0.86, 0.86]) { ctx.beginPath(); ctx.ellipse(ox, 0.12, 0.11, 0.19, 0, 0, TAU2); ctx.fill(); ctx.stroke(); }
-      // Brauenwulst mit Schatten darunter – davon lebt das Gesicht
-      ctx.fillStyle = '#7d7563';
-      ctx.beginPath(); ctx.moveTo(-0.78, -0.5); ctx.quadraticCurveTo(0, -0.3, 0.78, -0.5);
-      ctx.lineTo(0.78, -0.3); ctx.quadraticCurveTo(0, -0.1, -0.78, -0.3); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = 'rgba(30,26,18,0.35)';
-      ctx.beginPath(); ctx.moveTo(-0.78, -0.3); ctx.quadraticCurveTo(0, -0.1, 0.78, -0.3);
-      ctx.lineTo(0.78, -0.18); ctx.quadraticCurveTo(0, 0.02, -0.78, -0.18); ctx.closePath(); ctx.fill();
-      // Nase mit Ring, Mund mit Zähnen
-      ctx.fillStyle = '#4a4436';
-      ctx.beginPath(); ctx.moveTo(0, -0.16); ctx.lineTo(-0.2, 0.3); ctx.lineTo(0.2, 0.3); ctx.closePath(); ctx.fill();
-      ctx.strokeStyle = '#c9a03c'; ctx.lineWidth = 0.042;
-      ctx.beginPath(); ctx.arc(0, 0.3, 0.075, 0.2, Math.PI - 0.2); ctx.stroke();
-      ctx.fillStyle = '#2e2a20'; ctx.fillRect(-0.36, 0.52, 0.72, 0.17);
-      ctx.fillStyle = '#cfc7ad';
-      for (let i = 0; i < 4; i++) ctx.fillRect(-0.32 + i * 0.18, 0.52, 0.1, 0.08);
-      // Risse und Meißelspuren
-      if (fein) {
-        ctx.strokeStyle = 'rgba(45,40,28,0.45)'; ctx.lineWidth = 0.045; ctx.lineCap = 'round';
-        ctx.beginPath();
-        ctx.moveTo(-0.9, 0.42); ctx.lineTo(-0.62, 0.5); ctx.lineTo(-0.5, 0.76);
-        ctx.moveTo(0.88, -0.1); ctx.lineTo(0.66, 0.16); ctx.lineTo(0.72, 0.44);
-        ctx.stroke();
-      }
-      // Moos in zwei Grüntönen
-      for (const [mc, flecken] of [['#3f8f5a', [[-0.72, 0.28, 0.24], [-0.12, 0.9, 0.3]]],
-                                   ['#4fa066', [[0.7, -0.24, 0.2], [0.5, 0.82, 0.2]]]]) {
-        ctx.fillStyle = mc; ctx.beginPath();
-        for (const [mx, my, mr] of flecken) { ctx.moveTo(mx + mr, my); ctx.ellipse(mx, my, mr, mr * 0.55, 0, 0, TAU2); }
-        ctx.fill();
-      }
-      // glühende Augen: langsamer Atem, dazu ab und zu ein helles Aufflackern
-      const atem = 0.55 + 0.45 * Math.sin(t * 1.1);
-      const flack = ((t * 0.37) % 1) < 0.09 ? 1 : 0;
-      const gl = Math.min(1, atem + flack * 0.8);
-      // beide Augen je Schicht in einem Zug – drei Füllungen statt sechs
-      const augen = (fn) => { ctx.beginPath(); for (const ex of [-0.42, 0.42]) fn(ex); ctx.fill(); };
-      ctx.fillStyle = `rgba(120,255,150,${(0.3 * gl).toFixed(2)})`;
-      augen(ex => { ctx.moveTo(ex + 0.34, -0.22); ctx.arc(ex, -0.22, 0.34, 0, TAU2); });
-      ctx.fillStyle = '#1d2b1e';
-      augen(ex => { ctx.moveTo(ex + 0.19, -0.22); ctx.ellipse(ex, -0.22, 0.19, 0.14, 0, 0, TAU2); });
-      ctx.fillStyle = `rgb(${Math.round(130 + 90 * gl)},255,${Math.round(140 + 80 * gl)})`;
-      augen(ex => { ctx.moveTo(ex + 0.13, -0.22); ctx.ellipse(ex, -0.22, 0.13, 0.09, 0, 0, TAU2); });
-      // Ranken, die von oben herabhängen und im Luftzug wiegen
-      if (fein) {
-      ctx.strokeStyle = '#2f7a44'; ctx.lineWidth = 0.055; ctx.beginPath();
-      for (let i = 0; i < 2; i++) {
-        const rx = i ? 0.8 : -0.8, sw = Math.sin(t * 1.2 + i * 1.4) * 0.11, len = 0.62 + i * 0.14;
-        ctx.moveTo(rx, -0.98);
-        ctx.quadraticCurveTo(rx + sw, -0.98 + len * 0.6, rx + sw * 1.6, -0.98 + len);
-      }
-      ctx.stroke();
-      ctx.fillStyle = '#4fa057'; ctx.beginPath();
-      for (let i = 0; i < 2; i++) {
-        const rx = i ? 0.8 : -0.8, sw = Math.sin(t * 1.2 + i * 1.4) * 0.11, len = 0.62 + i * 0.14;
-        for (let k = 1; k <= 2; k++) {
-          const u = k / 2.6, lx = rx + sw * u * 1.6, ly = -0.98 + len * u;
-          ctx.moveTo(lx + 0.19, ly); ctx.ellipse(lx + 0.09, ly, 0.1, 0.05, 0.5, 0, TAU2);
-          ctx.moveTo(lx + 0.01, ly + 0.08); ctx.ellipse(lx - 0.09, ly + 0.08, 0.1, 0.05, -0.5, 0, TAU2);
+
+      if (fein) {   // Poren und Abplatzer, damit die Fläche nicht wie lackiert wirkt
+        for (const [farbe, dreh] of [['rgba(0,0,0,0.22)', 40], ['rgba(255,255,255,0.07)', 43]]) {
+          ctx.fillStyle = farbe; ctx.beginPath();
+          for (let i = 0; i < 7; i++) {
+            const px = -0.85 + streu(i, dreh) * 1.7, py = -0.85 + streu(i, dreh + 1) * 1.7;
+            if (px * px + py * py > 0.78) continue;
+            const pr = 0.03 + streu(i, dreh + 2) * 0.05;
+            ctx.moveTo(px + pr, py); ctx.ellipse(px, py, pr, pr * 0.7, 0, 0, TAU2);
+          }
+          ctx.fill();
         }
       }
-      ctx.fill();
+
+      /* Die Glyphen: eine breite Spalte in der Mitte, zwei schmalere daneben. Nach außen werden
+         sie kleiner – so liest man die Wölbung des Steins. */
+      const glyphen = fein
+        ? [[0, -0.28, 0.19, 0], [0, 0.08, 0.19, 1], [0, 0.44, 0.19, 2],
+           [-0.47, -0.12, 0.14, 3], [-0.47, 0.3, 0.14, 4],
+           [0.47, -0.12, 0.14, 5], [0.47, 0.3, 0.14, 2]]
+        : [[0, -0.28, 0.19, 0], [0, 0.08, 0.19, 1], [0, 0.44, 0.19, 2]];
+      // Erst die Kerbe: dunkel und einen Hauch versetzt, das sieht nach Meißel aus
+      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      ctx.strokeStyle = 'rgba(8,12,8,0.7)'; ctx.lineWidth = 0.055;
+      ctx.beginPath();
+      for (const [gx, gy, gs, art] of glyphen) glyphePfad(ctx, art, gx, gy + 0.014, gs);
+      ctx.stroke();
+      // Dann das Glimmen, in drei Helligkeitsgruppen – drei Striche statt sieben
+      const gruppen = [[], [], []];
+      glyphen.forEach((gl, i) => {
+        const h = Math.max(0, Math.sin(t * 0.85 - i * 0.6));
+        gruppen[h < 0.25 ? 0 : h < 0.62 ? 1 : 2].push(gl);
+      });
+      if (fein && gruppen[2].length) {   // weicher Schein nur um die hellsten
+        ctx.strokeStyle = 'rgba(126,255,168,0.11)'; ctx.lineWidth = 0.15;
+        ctx.beginPath();
+        for (const [gx, gy, gs, art] of gruppen[2]) glyphePfad(ctx, art, gx, gy, gs);
+        ctx.stroke();
       }
-      ctx.restore();
+      ctx.lineWidth = 0.04;
+      for (let k = 0; k < 3; k++) {
+        if (!gruppen[k].length) continue;
+        ctx.strokeStyle = `rgba(126,255,168,${[0.16, 0.34, 0.6][k]})`;
+        ctx.beginPath();
+        for (const [gx, gy, gs, art] of gruppen[k]) glyphePfad(ctx, art, gx, gy, gs);
+        ctx.stroke();
+      }
+
       steinRand(ctx);
-      // Leuchtkäfer schwirren vor dem Kopf
-      ctx.fillStyle = '#d8ff8a'; ctx.beginPath();
-      for (let i = 0; fein && i < 3; i++) {
-        const a = t * (0.5 + i * 0.2) + i * 2.1;
-        const fx = Math.cos(a) * (0.75 + Math.sin(a * 1.7) * 0.2), fy = Math.sin(a * 1.3) * 0.7;
-        const fr = 0.02 + 0.032 * Math.abs(Math.sin(t * 3 + i * 2));   // Glimmen über die Größe
-        ctx.moveTo(fx + fr, fy); ctx.arc(fx, fy, fr, 0, TAU2);
-      }
-      ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.1)';   // schwaches Licht oben links, sonst wirkt er flach
+      ctx.beginPath(); ctx.ellipse(-0.38, -0.46, 0.3, 0.17, -0.6, 0, TAU2); ctx.fill();
+
+      stirnband(ctx, fein);
     },
 
     thunder(ctx, color, t, fein) {   // Sturmhimmel: Wolkenkugel mit Regen, Blitz und einer Kuppe darunter
@@ -879,6 +856,111 @@ const Hats = (() => {
     ctx.restore();
   }
 
+  /* Ein Glyphenzeichen an (x, y) in der Größe s an den laufenden Pfad anhängen. Gezeichnet wird
+     nur der Linienzug – gefüllt wird nichts, es sind Kerben im Stein. */
+  function glyphePfad(ctx, art, x, y, s) {
+    const m = (px, py) => ctx.moveTo(x + px * s, y + py * s);
+    const l = (px, py) => ctx.lineTo(x + px * s, y + py * s);
+    switch (art) {
+      case 0:   // Stufenmuster
+        m(-1, 0.8); l(-1, -0.1); l(-0.15, -0.1); l(-0.15, -0.8); l(1, -0.8); break;
+      case 1:   // Balken mit zwei Punkten darüber – wie ein Zahlzeichen
+        m(-1, 0.55); l(1, 0.55); m(-0.85, -0.45); l(-0.35, -0.45); m(0.15, -0.45); l(0.65, -0.45); break;
+      case 2:   // Raute mit Kern
+        m(0, -0.9); l(0.8, 0); l(0, 0.9); l(-0.8, 0); l(0, -0.9);
+        m(0.3, 0); ctx.arc(x, y, 0.3 * s, 0, TAU2); break;
+      case 3:   // Spirale
+        for (let i = 0; i <= 13; i++) {
+          const a = i * 0.58, rr = 0.1 + i * 0.065;
+          i ? l(Math.cos(a) * rr, Math.sin(a) * rr) : m(Math.cos(a) * rr, Math.sin(a) * rr);
+        }
+        break;
+      case 4:   // Zickzack
+        m(-1, -0.55); l(-0.33, 0.25); l(0.33, -0.55); l(1, 0.25); break;
+      default:  // Kreuz im Quadrat
+        m(-0.8, -0.8); l(0.8, -0.8); l(0.8, 0.8); l(-0.8, 0.8); l(-0.8, -0.8);
+        m(-0.8, -0.8); l(0.8, 0.8); m(0.8, -0.8); l(-0.8, 0.8);
+    }
+  }
+  /* Der Federfächer. Alle Federn liegen in einem Pfad und werden in einem Zug gefüllt, die
+     goldenen Spitzen in einem zweiten, alle Fahnenstrahlen in einem dritten – neun Federn kosten
+     so eine Handvoll Züge statt vierzig. Breit und leicht geschwungen, sonst sähen sie aus wie
+     Spieße; das Vorbild ist der Kopfschmuck aus Quetzalfedern. */
+  function federn(ctx, t, fein) {
+    const n = fein ? 9 : 5;
+    const fuss = [], spitz = [], breit = [];
+    for (let i = 0; i < n; i++) {
+      const u = (i / (n - 1)) * 2 - 1;                    // -1 ganz links, +1 ganz rechts
+      const a = -Math.PI / 2 + u * 1.2;                   // Ansatzwinkel auf dem Kopf
+      const lang = 0.95 - Math.abs(u) * 0.3;              // die mittlere Feder ist die längste
+      const wieg = Math.sin(t * 1.4 + i * 0.7) * 0.08;    // die Spitzen wiegen sich im Luftzug
+      fuss.push([Math.cos(a) * 0.74, Math.sin(a) * 0.74]);
+      spitz.push([Math.cos(a) * (0.74 + lang) + u * 0.3 + wieg, Math.sin(a) * (0.74 + lang)]);
+      breit.push(0.27 - Math.abs(u) * 0.06);
+    }
+    /* Ein Stück Federblatt als Linse aus zwei Bögen. Der Bauch sitzt nicht in der Mitte, sondern
+       weiter oben – das gibt der Feder die Tropfenform statt einer Raute. */
+    const blatt = (i, von, bis, schmal) => {
+      const [bx, by] = fuss[i], [tx, ty] = spitz[i];
+      const auf = (u2) => [bx + (tx - bx) * u2, by + (ty - by) * u2];
+      const [ax, ay] = auf(von), [cx2, cy2] = auf(bis);
+      const [hx, hy] = auf(von + (bis - von) * 0.62);      // Stelle des größten Bauchs
+      const dx = tx - bx, dy = ty - by, len = Math.hypot(dx, dy) || 1;
+      const w = breit[i] * schmal;
+      const nx = -dy / len * w, ny = dx / len * w;
+      ctx.moveTo(ax, ay);
+      ctx.quadraticCurveTo(hx + nx, hy + ny, cx2, cy2);
+      ctx.quadraticCurveTo(hx - nx, hy - ny, ax, ay);
+    };
+    ctx.fillStyle = '#2fc3b8'; ctx.beginPath();
+    for (let i = 0; i < n; i++) blatt(i, 0, 1, 1);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(8,44,44,0.5)'; ctx.lineWidth = 0.03; ctx.stroke();
+    ctx.fillStyle = '#e8b93f'; ctx.beginPath();           // goldene Spitzen
+    for (let i = 0; i < n; i++) blatt(i, 0.54, 1, 0.74);
+    ctx.fill();
+    if (!fein) return;
+    // Kiel und Fahnenstrahlen: alles in einem Zug, damit der Fächer nicht nach Blech aussieht
+    ctx.strokeStyle = 'rgba(14,92,92,0.55)'; ctx.lineWidth = 0.024;
+    ctx.beginPath();
+    for (let i = 0; i < n; i++) {
+      const [bx, by] = fuss[i], [tx, ty] = spitz[i];
+      const dx = tx - bx, dy = ty - by, len = Math.hypot(dx, dy) || 1;
+      const nx = -dy / len, ny = dx / len;
+      ctx.moveTo(bx, by); ctx.lineTo(bx + dx * 0.9, by + dy * 0.9);
+      for (let k = 1; k <= 4; k++) {
+        const u2 = 0.16 + k * 0.15, w = breit[i] * (1 - Math.abs(u2 - 0.62) * 0.9);
+        const px = bx + dx * u2, py = by + dy * u2;
+        for (const seite of [1, -1]) {
+          ctx.moveTo(px, py);
+          ctx.lineTo(px + nx * w * 0.85 * seite + dx * 0.09, py + ny * w * 0.85 * seite + dy * 0.09);
+        }
+      }
+    }
+    ctx.stroke();
+  }
+  /* Goldenes Stirnband quer über den Stein, mit Türkiseinlagen */
+  function stirnband(ctx, fein) {
+    const VON = Math.PI * 1.08, BIS = Math.PI * 1.92;
+    const g = ctx.createLinearGradient(-0.8, -0.9, 0.8, -0.5);
+    g.addColorStop(0, '#9c721a'); g.addColorStop(0.45, '#f4d878'); g.addColorStop(1, '#9c721a');
+    ctx.strokeStyle = g; ctx.lineWidth = 0.17; ctx.lineCap = 'butt';
+    ctx.beginPath(); ctx.arc(0, 0, 0.82, VON, BIS); ctx.stroke();
+    ctx.strokeStyle = 'rgba(50,34,6,0.5)'; ctx.lineWidth = 0.028;
+    ctx.beginPath();
+    ctx.arc(0, 0, 0.735, VON, BIS);
+    ctx.moveTo(Math.cos(VON) * 0.905, Math.sin(VON) * 0.905); ctx.arc(0, 0, 0.905, VON, BIS);
+    ctx.stroke();
+    ctx.lineCap = 'round';
+    if (!fein) return;
+    ctx.fillStyle = '#2fc3b8'; ctx.beginPath();
+    for (let i = 0; i < 5; i++) {
+      const a = Math.PI * (1.17 + i * 0.165), ix = Math.cos(a) * 0.82, iy = Math.sin(a) * 0.82, s = 0.058;
+      ctx.moveTo(ix, iy - s); ctx.lineTo(ix + s * 0.72, iy); ctx.lineTo(ix, iy + s); ctx.lineTo(ix - s * 0.72, iy);
+    }
+    ctx.fill();
+  }
+
   /* Reihenfolge und Namen für das Menü */
   const LIST = [
     { id: 'none', name: 'Ohne', icon: '⚪' },
@@ -896,7 +978,7 @@ const Hats = (() => {
     { id: 'globe', name: 'Märchenkugel', icon: '🏰', welt: 'normal', voll: true },
     { id: 'aquarium', name: 'Aquarium', icon: '🐠', welt: 'sea', voll: true },
     { id: 'cog', name: 'Zahnradkugel', icon: '⚙️', welt: 'pro', voll: true },
-    { id: 'idolhead', name: 'Götzenkopf', icon: '🗿', welt: 'jungle', voll: true },
+    { id: 'feathercrown', name: 'Federkrone', icon: '🪶', welt: 'jungle', voll: true },
     { id: 'thunder', name: 'Gewitterkugel', icon: '⛈️', welt: 'storm', voll: true },
     { id: 'orb', name: 'Kristallkugel', icon: '🔮', welt: 'shadow', voll: true },
     { id: 'champion', name: 'Championhelm', icon: '🏅', welt: 'colosseum' },
