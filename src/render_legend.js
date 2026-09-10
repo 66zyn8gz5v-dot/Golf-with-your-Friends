@@ -1206,64 +1206,63 @@ Object.assign(Renderer.prototype, {
      Wange mit Speichen und Nabe. Der Zahn, der gerade unten steht, wird hell hervorgehoben – an ihm
      sieht man, ob gerade eine Lücke bereitsteht. */
   drawGearLift(ctx, ob, t) {
-    const s = this.scale, R = ob.r, halb = ob.dicke / 2, w0 = ob.einWinkel();
-    // Punkt auf dem Rad: Winkel a wie im Verhalten (z = mitte + r·sin a), Radienfaktor f,
-    // seite -1 hinten … +1 vorn. Damit sitzt der Ball genau in der Lücke, die er gerade befährt.
-    const pkt = (a, f, seite) => this.proj(
-      ob.x + ob.dx * ob.laengs(a) * f + ob.qx * halb * seite,
-      ob.y + ob.dy * ob.laengs(a) * f + ob.qy * halb * seite,
-      Math.max(-0.05, ob.mitte() + (ob.hoehe(a) - ob.mitte()) * f));
-    // Der Kranz wird nur über dem Boden gezeichnet – darunter steckt er in der Mulde
-    const bogen = (seite, f, n = 30) => { const p = []; for (let i = 0; i <= n; i++) p.push(pkt(w0 + (i / n) * (Math.PI - 2 * w0), f, seite)); return p; };
+    const s = this.scale, halb = ob.dicke / 2;
+    /* Punkt auf dem Rad – dieselben Formeln wie im Verhalten, damit der Ball sichtbar in seiner
+       Lücke sitzt. w = 0 ist der Fußpunkt, w = π der Scheitel, f der Radienfaktor, seite -1
+       hinten … +1 vorn. Weil beides aus laengs/hoehe kommt, kann Zeichnung und Ballbahn nicht
+       mehr auseinanderlaufen. */
+    const pkt = (w, f, seite) => this.proj(
+      ob.x + ob.dx * ob.laengs(w) * f + ob.qx * halb * seite,
+      ob.y + ob.dy * ob.laengs(w) * f + ob.qy * halb * seite,
+      ob.r + (ob.hoehe(w) - ob.r) * f);
+    const ring = (seite, f, n = 36) => { const p = []; for (let i = 0; i < n; i++) p.push(pkt((i / n) * TAU, f, seite)); return p; };
     const zeichne = (pts, fill, stroke) => {
       ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.closePath();
       if (fill) { ctx.fillStyle = fill; ctx.fill(); }
       if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = Math.max(1, s * 0.04); ctx.stroke(); }
     };
-    const achseV = this.proj(ob.x + ob.qx * halb, ob.y + ob.qy * halb, ob.mitte());
-    const achseH = this.proj(ob.x - ob.qx * halb, ob.y - ob.qy * halb, ob.mitte());
+    const achseV = this.proj(ob.x + ob.qx * halb, ob.y + ob.qy * halb, ob.r);
+    const achseH = this.proj(ob.x - ob.qx * halb, ob.y - ob.qy * halb, ob.r);
 
-    // Mulde, in der das Rad steckt
-    this.isoEllipse(ctx, ob.x, ob.y, 0.004, R * 0.55, 'rgba(0,0,0,0.3)');
-    // Achsböcke: zwei kurze Pfeiler links und rechts des Rades
-    for (const q of [-1, 1]) {
-      const p = [[ob.x + ob.qx * (halb + 0.12) * q - ob.dx * 0.16, ob.y + ob.qy * (halb + 0.12) * q - ob.dy * 0.16],
-        [ob.x + ob.qx * (halb + 0.42) * q - ob.dx * 0.16, ob.y + ob.qy * (halb + 0.42) * q - ob.dy * 0.16],
-        [ob.x + ob.qx * (halb + 0.42) * q + ob.dx * 0.16, ob.y + ob.qy * (halb + 0.42) * q + ob.dy * 0.16],
-        [ob.x + ob.qx * (halb + 0.12) * q + ob.dx * 0.16, ob.y + ob.qy * (halb + 0.12) * q + ob.dy * 0.16]];
-      this.prism(ctx, p, 0, ob.mitte() + 0.18, '#5b6178', '#3a3f55', { outline: '#22263a' });
-    }
+    // Wandpfeiler hinter dem Rad: daran hängt die Achse
+    const pf = [[ob.x + ob.dx * 0.3 - ob.qx * (halb + 0.5), ob.y + ob.dy * 0.3 - ob.qy * (halb + 0.5)],
+      [ob.x + ob.dx * 0.3 + ob.qx * (halb + 0.5), ob.y + ob.dy * 0.3 + ob.qy * (halb + 0.5)],
+      [ob.x + ob.dx * 0.62 + ob.qx * (halb + 0.5), ob.y + ob.dy * 0.62 + ob.qy * (halb + 0.5)],
+      [ob.x + ob.dx * 0.62 - ob.qx * (halb + 0.5), ob.y + ob.dy * 0.62 - ob.qy * (halb + 0.5)]];
+    this.prism(ctx, pf, 0, ob.r * 1.25, '#4c5169', '#343850', '#23273a', { outline: '#191d2c' });
+    // Schatten am Fuß
+    this.isoEllipse(ctx, ob.x, ob.y, 0.004, ob.r * 0.5, 'rgba(0,0,0,0.26)');
+
     // hintere Wange
-    zeichne([...bogen(-1, 0.88), ...bogen(-1, 0.2).reverse()], '#5f4416');
+    zeichne(ring(-1, 0.88), '#5f4416');
     // Zahnband: jeder Zahn ein Körper mit Kopffläche und zwei Flanken
     const zn = ob.zaehne, teil = TAU / zn;
     for (let i = 0; i < zn; i++) {
       const m = ob.drehung + i * teil + teil * 0.5;               // Zahnmitte
       const a0 = m - teil * 0.22, a1 = m + teil * 0.22;
-      if (ob.hoehe(a0) < 0 && ob.hoehe(a1) < 0) continue;          // steckt in der Mulde
-      const unten = Math.abs(Math.atan2(Math.sin(m - w0), Math.cos(m - w0))) < 0.3;
+      const unten = Math.abs(Math.atan2(Math.sin(m), Math.cos(m))) < 0.3;
       zeichne([pkt(a0, 1.06, -1), pkt(a1, 1.06, -1), pkt(a1, 1.06, 1), pkt(a0, 1.06, 1)], unten ? '#ffdf9c' : '#a8762c', '#4a3410');
       zeichne([pkt(a0, 1.06, -1), pkt(a0, 0.86, -1), pkt(a0, 0.86, 1), pkt(a0, 1.06, 1)], '#7a5a2a');
       zeichne([pkt(a1, 1.06, -1), pkt(a1, 0.86, -1), pkt(a1, 0.86, 1), pkt(a1, 1.06, 1)], '#6b4d22');
     }
-    // vordere Wange mit Speichen und Nabe
-    zeichne([...bogen(1, 0.88), ...bogen(1, 0.2).reverse()], '#c9903f', '#5f4416');
-    ctx.strokeStyle = '#e0b45c'; ctx.lineWidth = Math.max(1.5, s * 0.07);
+    // vordere Wange: Kranz als Ring, damit man durch die Speichen sieht
+    zeichne(ring(1, 0.88), '#c9903f', '#5f4416');
+    zeichne(ring(1, 0.68), '#3a3f55');
+    ctx.strokeStyle = '#e0b45c'; ctx.lineWidth = Math.max(1.5, s * 0.08);
     for (let i = 0; i < 6; i++) {
-      const a = ob.drehung + (i * Math.PI) / 3;
-      if (ob.hoehe(a) < 0.05) continue;
-      const p = pkt(a, 0.84, 1);
+      const p = pkt(ob.drehung + (i * Math.PI) / 3, 0.82, 1);
       ctx.beginPath(); ctx.moveTo(achseV[0], achseV[1]); ctx.lineTo(p[0], p[1]); ctx.stroke();
     }
-    ctx.strokeStyle = '#6b6660'; ctx.lineWidth = Math.max(2, s * 0.14);
+    // Achse als kurzer Zylinder zwischen den Wangen
+    ctx.strokeStyle = '#6b6660'; ctx.lineWidth = Math.max(2, s * 0.16);
     ctx.beginPath(); ctx.moveTo(achseH[0], achseH[1]); ctx.lineTo(achseV[0], achseV[1]); ctx.stroke();
-    ctx.fillStyle = '#ffdf9c'; ctx.beginPath(); ctx.arc(achseV[0], achseV[1], s * 0.15, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#ffdf9c'; ctx.beginPath(); ctx.arc(achseV[0], achseV[1], s * 0.16, 0, TAU); ctx.fill();
   },
   /* Boden: der Einstieg unten und der Absetzpunkt oben, damit man beides sieht, bevor man schlägt */
   drawGearLiftFloor(ctx, ob) {
     const [ex, ey] = ob.ein(), [ax, ay] = ob.aus();
-    this.isoEllipse(ctx, ex, ey, 0.005, 0.5, ob.lueckeUnten() ? 'rgba(255,233,176,0.55)' : 'rgba(200,120,80,0.18)');
-    this.isoEllipse(ctx, ax, ay, 0.005, 0.5, 'rgba(120,255,190,0.2)');
+    this.isoEllipse(ctx, ex, ey, 0.005, 0.5, ob.lueckeUnten() ? 'rgba(255,233,176,0.55)' : 'rgba(200,120,80,0.2)');
+    this.isoEllipse(ctx, ax, ay, 0.005, 0.55, 'rgba(120,255,190,0.18)');
   },
 
   /* Dampfkolben: Zylinder in der Mauer, davor die Stange und der Stempelkopf. Beim Ausschlag steht
