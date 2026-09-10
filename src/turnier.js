@@ -24,14 +24,20 @@
 const Turnier = (() => {
 
   /* ---------- Zeitfenster ----------
-     Anfang und Ende des Turniers. Zum Verschieben genügt es, diese beiden Zeilen zu ändern –
+     Anfang und Laufzeit des Turniers. Zum Verschieben genügt es, diese beiden Zeilen zu ändern –
      alles andere richtet sich danach: der Hinweis vor dem Start, die Restlaufzeit, die Annahme
      von Ergebnissen und die Kennzeichnung als beendet.
 
-     Geschrieben mit Zeitzone, damit auf jedem Gerät derselbe Moment gemeint ist: +02:00 ist
-     deutsche Sommerzeit, im Winter +01:00. */
+     Der Start ist mit Zeitzone geschrieben, damit auf jedem Gerät derselbe Moment gemeint ist:
+     +02:00 ist deutsche Sommerzeit, im Winter +01:00.
+
+     Das Ende wird aus der Laufzeit gerechnet statt noch einmal als Datum hingeschrieben. So steht
+     die Regel „eine Woche" da, wo sie gilt, und kann beim Verschieben des Starts nicht aus dem
+     Tritt geraten. Soll das Turnier zu einem festen Zeitpunkt enden statt nach einer Dauer, ist
+     ENDE gegen ein Date.parse(...) zu tauschen – der Rest merkt davon nichts. */
   const START = Date.parse('2026-09-08T18:00:00+02:00');
-  const ENDE  = Date.parse('2026-09-30T22:00:00+02:00');
+  const TAGE = 7;                                  // Laufzeit: eine Woche
+  const ENDE = START + TAGE * 24 * 60 * 60 * 1000;
 
   /* Die Welt, in der das Turnier ausgetragen wird */
   const WELT = 'colosseum';
