@@ -426,26 +426,26 @@ class ImperialBox {
    Alle drei laufen auf der Spieluhr t – dieselbe Zahl auf jedem Gerät. Damit sehen beim Spiel
    gegeneinander alle denselben Ballweg, ohne dass etwas übertragen werden müsste. */
 
-/* Zahnradaufzug: ein Schöpfrad, das aufrecht vor einer senkrechten Wand steht – der Kante einer
-   Höhenstufe. Es berührt den Boden mit dem tiefsten Punkt des Kranzes und dreht sich unablässig.
+/* Zahnradaufzug: ein großes Zahnrad, das zum Teil im Boden steckt und vor einer geraden Wand
+   steht – der Kante einer Höhenstufe. Es dreht sich unablässig.
 
-   Dort unten muss der Ball in eine Zahnlücke gespielt werden. Trifft er einen Zahn, ist das Rad an
-   dieser Stelle eine Wand, und der herabkommende Zahn schiebt ihn wieder von sich weg. Liegt er in
-   der Lücke, fährt er mit: erst nach außen und aufwärts über die dem Spieler zugewandte Seite, dann
-   über den Scheitel – und dort oben wirft ihn das Rad über die Wand auf die obere Stufe.
+   Der Weg des Balles: Er rollt an die Stelle, wo der Kranz auf der Spielerseite aus dem Boden
+   kommt. Trifft er dort eine Zahnlücke, liegt er darin; das Rad trägt ihn die Außenflanke hinauf
+   bis über den Scheitel – und dort oben wirft es ihn nach vorn über die Wand auf die obere Stufe.
+   Trifft er einen Zahn, ist das Rad an dieser Stelle eine Wand, und der herabkommende Zahn schiebt
+   ihn wieder von sich weg; er kommt erst mit der nächsten Lücke mit.
 
-   Die Zeichnung benutzt genau dieselben Formeln (laengs/hoehe): Der Ball sitzt sichtbar in seiner
-   Lücke am Kranz, nicht daneben. Getragen wird im Takt des Rades – wer es langsamer stellt, macht
-   die Fahrt langsamer, und die Lücken kommen seltener unten an.
+   Die Zeichnung benutzt genau dieselben Formeln (laengs/hoehe) und schneidet den Kranz am Boden ab.
+   Damit sitzt der Ball sichtbar in seiner Lücke, und was unter dem Boden liegt, sieht man nicht.
 
    Warum das nicht die Fähre schon konnte: Die Fähre schiebt waagerecht. Eine Höhenstufe hinauf kam
    man bisher nur über eine Rampe, und die verlangt Anlauf – auf engen Bahnen ist dafür kein Platz.
 
-   x, y ist der Fußpunkt des Rades, also die Stelle, an der man einspielt. angle zeigt über die
-   Wand hinweg; dorthin wird oben abgeworfen. */
+   x, y ist die Achse des Rades (in der Aufsicht), angle zeigt über die Wand hinweg. */
 class GearLift {
   constructor(d) {
-    Object.assign(this, { r: 1.8, angle: 0, speed: 1.0472, zaehne: 8, phase: 0, fang: 7, dicke: 0.55, wurf: 3 }, d);
+    Object.assign(this, { r: 1.8, angle: 0, speed: 1.0472, zaehne: 8, phase: 0, fang: 7, dicke: 0.55,
+      wurf: 3, tief: 0.38 }, d);
     this.type = 'gearlift';
     const a = (this.angle * Math.PI) / 180;
     this.dx = Math.cos(a); this.dy = Math.sin(a);      // Richtung über die Wand
@@ -453,22 +453,25 @@ class GearLift {
     this.drehung = 0;
   }
   update(t) { this.drehung = t * this.speed + this.phase * TAU; }
-  /* Ein Punkt auf dem Kranz. w = 0 ist der Fußpunkt, w = π der Scheitel; dazwischen schwingt der
-     Kranz auf die Spielerseite aus (laengs wird negativ). */
+  /* Ein Punkt auf dem Kranz. w = 0 ist der tiefste Punkt (im Boden), w = π der Scheitel; dazwischen
+     schwingt der Kranz auf die Spielerseite aus, laengs wird also negativ. */
+  zAchse() { return this.r * (1 - this.tief); }        // Höhe der Achse über dem Boden
   laengs(w) { return -this.r * Math.sin(w); }
-  hoehe(w) { return this.r * (1 - Math.cos(w)); }
-  ein() { return [this.x, this.y]; }
-  aus() { return [this.x + this.dx * 1.2, this.y + this.dy * 1.2]; }
+  hoehe(w) { return this.zAchse() - this.r * Math.cos(w); }
+  /* Wo der Kranz den Boden schneidet: dort kommt er auf der Spielerseite heraus, dort spielt man ein */
+  wBoden() { return Math.acos(Math.max(-0.99, Math.min(0.99, this.zAchse() / this.r))); }
+  ein() { const l = this.laengs(this.wBoden()); return [this.x + this.dx * l, this.y + this.dy * l]; }
+  aus() { return [this.x + this.dx * 1.4, this.y + this.dy * 1.4]; }
   teilung() { return TAU / this.zaehne; }
-  /* Steht gerade eine Lücke unten? Die Lücke ist etwas mehr als ein halber Zahnabstand breit. */
-  lueckeUnten() {
+  /* Steht gerade eine Zahnlücke am Einstieg? Die Lücken sitzen bei drehung + i·Teilung. */
+  lueckeAmEinstieg() {
     const teil = this.teilung();
-    const rest = (((this.drehung % teil) + teil) % teil) / teil;   // 0 = Zahn unten, 0.5 = Lücke unten
-    return Math.abs(rest - 0.5) < 0.26;
+    const rest = ((((this.wBoden() - this.drehung) % teil) + teil) % teil) / teil;
+    return Math.min(rest, 1 - rest) < 0.26;
   }
   ride(ball, t, events) {
     if (ball.rider === this) {
-      const w = Math.abs(this.drehung - ball.liftD0);
+      const w = this.wBoden() + Math.abs(this.drehung - ball.liftD0);
       if (w < Math.PI) {
         const l = this.laengs(w);
         ball.x = this.x + this.dx * l; ball.y = this.y + this.dy * l;
@@ -476,36 +479,37 @@ class GearLift {
         ball.vx = 0; ball.vy = 0; ball.vz = 0;
         return true;
       }
-      // Am Scheitel über die Wand geworfen: der Ball fliegt und landet auf der oberen Stufe
+      // Am Scheitel nach vorn über die Wand geworfen; der Ball fliegt und landet auf der Stufe
       ball.rider = null; ball.rideCd = 1.2;
-      ball.x = this.x + this.dx * 0.35; ball.y = this.y + this.dy * 0.35;
-      ball.z = this.hoehe(Math.PI); ball.vz = 0.6; ball.air = true;
+      ball.x = this.x + this.dx * 0.3; ball.y = this.y + this.dy * 0.3;
+      ball.z = this.hoehe(Math.PI); ball.vz = 0.5; ball.air = true;
       ball.vx = this.dx * this.wurf; ball.vy = this.dy * this.wurf;
       events.push({ type: 'dropoff', x: ball.x, y: ball.y });
       return false;
     }
     if (ball.rideCd > 0 || ball.air) return false;
-    const dx = ball.x - this.x, dy = ball.y - this.y;
-    // Nah genug am Fußpunkt: quer zur Achse eng, längs der Achse so breit wie das Rad.
-    // Das Fenster reicht weiter als der Zahn, damit ein Ball, der vor einem Zahn liegt, von der
-    // nächsten Lücke noch erwischt wird, statt für immer davor zu warten.
+    const [ex, ey] = this.ein();
+    const dx = ball.x - ex, dy = ball.y - ey;
+    /* Nah genug an der Einstiegsstelle: quer zur Achse eng, längs der Achse so breit wie das Rad.
+       Das Fenster reicht weiter als der Zahn, damit ein Ball, der vor einem Zahn liegt, von der
+       nächsten Lücke noch erwischt wird, statt für immer davor zu warten. */
     if (Math.abs(dx * this.dx + dy * this.dy) > 0.55) return false;
     if (Math.abs(dx * this.qx + dy * this.qy) > this.dicke / 2 + ball.r) return false;
     if (Math.hypot(ball.vx, ball.vy) > this.fang) return false;
-    if (!this.lueckeUnten()) return false;
+    if (!this.lueckeAmEinstieg()) return false;
     ball.rider = this; ball.liftD0 = this.drehung;
-    ball.x = this.x; ball.y = this.y; ball.vx = 0; ball.vy = 0; ball.z = 0;
-    events.push({ type: 'board', x: this.x, y: this.y });
+    ball.x = ex; ball.y = ey; ball.vx = 0; ball.vy = 0; ball.z = 0;
+    events.push({ type: 'board', x: ex, y: ey });
     return true;
   }
-  /* Solange unten ein Zahn steht, ist das Rad an dieser Stelle eine Wand – und keine ruhige: Ein
-     Zahn, der von der Spielerseite herunterkommt, streicht am tiefsten Punkt rückwärts und schiebt
-     einen Ball, der dort liegt, wieder von sich weg. */
+  /* Solange am Einstieg ein Zahn steht, ist das Rad dort eine Wand – und keine ruhige: Ein Zahn,
+     der von oben herunterkommt, streicht an dieser Stelle nach außen und schiebt einen Ball, der
+     dort liegt, wieder von sich weg. */
   segments(out) {
-    if (this.lueckeUnten()) return;
-    const h = this.dicke / 2 + 0.1;
+    if (this.lueckeAmEinstieg()) return;
+    const [ex, ey] = this.ein(), h = this.dicke / 2 + 0.1;
     const weg = this.r * Math.abs(this.speed) * 0.25;
-    out.push({ ax: this.x + this.qx * h, ay: this.y + this.qy * h, bx: this.x - this.qx * h, by: this.y - this.qy * h,
+    out.push({ ax: ex + this.qx * h, ay: ey + this.qy * h, bx: ex - this.qx * h, by: ey - this.qy * h,
       rad: 0.16, e: 0.55, kind: 'mover', vx: -this.dx * weg, vy: -this.dy * weg, owner: this });
   }
 }
