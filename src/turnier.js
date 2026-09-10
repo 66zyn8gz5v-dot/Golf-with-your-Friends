@@ -35,7 +35,7 @@ const Turnier = (() => {
      die Regel „eine Woche" da, wo sie gilt, und kann beim Verschieben des Starts nicht aus dem
      Tritt geraten. Soll das Turnier zu einem festen Zeitpunkt enden statt nach einer Dauer, ist
      ENDE gegen ein Date.parse(...) zu tauschen – der Rest merkt davon nichts. */
-  const START = Date.parse('2026-09-08T18:00:00+02:00');
+  const START = Date.parse('2026-09-10T16:00:00+02:00');
   const TAGE = 7;                                  // Laufzeit: eine Woche
   const ENDE = START + TAGE * 24 * 60 * 60 * 1000;
 
