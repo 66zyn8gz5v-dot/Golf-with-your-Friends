@@ -157,7 +157,7 @@ const Editor = (deps) => {
       case 'switch': return { type: 'switch', x, y, r: 0.55, duration: 14, target: 'A' };
       /* Uhrwerkstadt. Der Aufzug trägt in Richtung 'angle' – der Einstieg liegt r Kacheln davor,
          der Ausstieg r dahinter. Sinnvoll ist er da, wo hinter ihm eine Höhenstufe beginnt. */
-      case 'gearlift': return { type: 'gearlift', x, y, r: 1.5, angle: 0, speed: 1.0472, eimer: 3, phase: 0 };
+      case 'gearlift': return { type: 'gearlift', x, y, r: 1.6, angle: 0, speed: 1.0472, zaehne: 6, phase: 0 };
       case 'piston': return { type: 'piston', x, y, w: 1.2, h: 1.2, angle: 0, hub: 2.4, period: 4, phase: 0 };
       case 'hand': return { type: 'hand', x, y, len: 2.6, speed: 1.0472, schub: 1.5, phase: 0 };
       default: return null;

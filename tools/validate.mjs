@@ -58,7 +58,10 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
   for (const o of (c.obstacles || []).filter(o => o.type === 'gearlift')) {
     const r = o.r == null ? 1.6 : o.r, a = ((o.angle || 0) * Math.PI) / 180;
     if (!(r > 0.4)) { problems.push(`gearlift bei (${o.x},${o.y}): Rad zu klein (r ${r})`); continue; }
-    if (!(o.eimer == null || (o.eimer >= 1 && o.eimer <= 8))) problems.push(`gearlift bei (${o.x},${o.y}): eimer ${o.eimer} – sinnvoll sind 1 bis 8`);
+    // Die Lücke muss breiter sein als der Ball, sonst passt er nie hinein
+    const zn = o.zaehne == null ? 8 : o.zaehne;
+    if (!(zn >= 4 && zn <= 24)) problems.push(`gearlift bei (${o.x},${o.y}): zaehne ${zn} – sinnvoll sind 4 bis 24`);
+    else { const luecke = (2 * Math.PI * r / zn) * 0.5; if (luecke < 0.7) problems.push(`gearlift bei (${o.x},${o.y}): Zahnlücke nur ${luecke.toFixed(2)} breit – der Ball (0,6) passt nicht hinein`); }
     if (o.speed != null && !(Math.abs(o.speed) > 0.05)) problems.push(`gearlift bei (${o.x},${o.y}): steht still (speed ${o.speed})`);
     for (const [name, sx, sy] of [['Einstieg', o.x - Math.cos(a) * r, o.y - Math.sin(a) * r], ['Ausstieg', o.x + Math.cos(a) * r, o.y + Math.sin(a) * r]]) {
       const ch = rows[Math.floor(sy)] && rows[Math.floor(sy)][Math.floor(sx)];

@@ -1199,51 +1199,70 @@ Object.assign(Renderer.prototype, {
 
   /* ---------- Die drei Maschinen der Uhrwerkstadt ---------- */
 
-  /* Zahnradaufzug: ein stehendes Rad, das man von der Seite sieht – Kranz mit Zähnen, Speichen und
-     drei Eimern, die mitlaufen. Gezeichnet wird in der Ebene aus Fahrtrichtung und Höhe: Der Kranz
-     ist darum kein Kreis auf dem Boden, sondern steht senkrecht auf der Bahn. */
+  /* Zahnradaufzug: ein stehendes Rad vor der Stufe, mit Dicke. Gezeichnet wird in der Ebene aus
+     Fahrtrichtung und Höhe; die Achse liegt quer dazu, also längs der Wand. Damit das Rad wie ein
+     Körper aussieht und nicht wie eine aufgemalte Scheibe, entstehen drei Lagen: die hintere
+     Wange, das Zahnband dazwischen (jeder Zahn bekommt seine eigene Seitenfläche) und die vordere
+     Wange mit Speichen und Nabe. Der Zahn, der gerade unten steht, wird hell hervorgehoben – an ihm
+     sieht man, ob gerade eine Lücke bereitsteht. */
   drawGearLift(ctx, ob, t) {
-    const s = this.scale, R = ob.r, mitte = ob.hub();
-    // Punkt auf dem Rad: Winkel a, gemessen von unten
-    const rad = (a, f = 1) => this.proj(ob.x - ob.dx * Math.cos(a) * R * f, ob.y - ob.dy * Math.cos(a) * R * f, mitte + Math.sin(a) * R * f);
-    // Bock unter der Achse
-    const fuss = this.proj(ob.x, ob.y, 0), achse = this.proj(ob.x, ob.y, mitte);
-    ctx.strokeStyle = '#4a4230'; ctx.lineWidth = Math.max(2, s * 0.14);
-    ctx.beginPath(); ctx.moveTo(fuss[0] - s * 0.3, fuss[1]); ctx.lineTo(achse[0], achse[1]);
-    ctx.moveTo(fuss[0] + s * 0.3, fuss[1]); ctx.lineTo(achse[0], achse[1]); ctx.stroke();
-    // Kranz: außen die Zähne, innen der Ring
-    const zaehne = 16;
-    ctx.fillStyle = '#8a6624'; ctx.beginPath();
-    for (let i = 0; i < zaehne * 2; i++) {
-      const a = (i / (zaehne * 2)) * Math.PI * 2, f = i % 2 ? 1.12 : 1;
-      const p = rad(a + ob.drehung, f);
-      i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]);
+    const s = this.scale, R = ob.r, halb = ob.dicke / 2, w0 = ob.einWinkel();
+    // Punkt auf dem Rad: Winkel a wie im Verhalten (z = mitte + r·sin a), Radienfaktor f,
+    // seite -1 hinten … +1 vorn. Damit sitzt der Ball genau in der Lücke, die er gerade befährt.
+    const pkt = (a, f, seite) => this.proj(
+      ob.x + ob.dx * ob.laengs(a) * f + ob.qx * halb * seite,
+      ob.y + ob.dy * ob.laengs(a) * f + ob.qy * halb * seite,
+      Math.max(-0.05, ob.mitte() + (ob.hoehe(a) - ob.mitte()) * f));
+    // Der Kranz wird nur über dem Boden gezeichnet – darunter steckt er in der Mulde
+    const bogen = (seite, f, n = 30) => { const p = []; for (let i = 0; i <= n; i++) p.push(pkt(w0 + (i / n) * (Math.PI - 2 * w0), f, seite)); return p; };
+    const zeichne = (pts, fill, stroke) => {
+      ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.closePath();
+      if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+      if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = Math.max(1, s * 0.04); ctx.stroke(); }
+    };
+    const achseV = this.proj(ob.x + ob.qx * halb, ob.y + ob.qy * halb, ob.mitte());
+    const achseH = this.proj(ob.x - ob.qx * halb, ob.y - ob.qy * halb, ob.mitte());
+
+    // Mulde, in der das Rad steckt
+    this.isoEllipse(ctx, ob.x, ob.y, 0.004, R * 0.55, 'rgba(0,0,0,0.3)');
+    // Achsböcke: zwei kurze Pfeiler links und rechts des Rades
+    for (const q of [-1, 1]) {
+      const p = [[ob.x + ob.qx * (halb + 0.12) * q - ob.dx * 0.16, ob.y + ob.qy * (halb + 0.12) * q - ob.dy * 0.16],
+        [ob.x + ob.qx * (halb + 0.42) * q - ob.dx * 0.16, ob.y + ob.qy * (halb + 0.42) * q - ob.dy * 0.16],
+        [ob.x + ob.qx * (halb + 0.42) * q + ob.dx * 0.16, ob.y + ob.qy * (halb + 0.42) * q + ob.dy * 0.16],
+        [ob.x + ob.qx * (halb + 0.12) * q + ob.dx * 0.16, ob.y + ob.qy * (halb + 0.12) * q + ob.dy * 0.16]];
+      this.prism(ctx, p, 0, ob.mitte() + 0.18, '#5b6178', '#3a3f55', { outline: '#22263a' });
     }
-    ctx.closePath(); ctx.fill();
-    ctx.strokeStyle = '#e0b45c'; ctx.lineWidth = Math.max(1.5, s * 0.07); ctx.beginPath();
-    for (let i = 0; i <= 24; i++) { const p = rad((i / 24) * Math.PI * 2, 0.86); i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); }
-    ctx.closePath(); ctx.stroke();
-    // Speichen
-    ctx.strokeStyle = '#c9903f'; ctx.lineWidth = Math.max(1.5, s * 0.06);
+    // hintere Wange
+    zeichne([...bogen(-1, 0.88), ...bogen(-1, 0.2).reverse()], '#5f4416');
+    // Zahnband: jeder Zahn ein Körper mit Kopffläche und zwei Flanken
+    const zn = ob.zaehne, teil = TAU / zn;
+    for (let i = 0; i < zn; i++) {
+      const m = ob.drehung + i * teil + teil * 0.5;               // Zahnmitte
+      const a0 = m - teil * 0.22, a1 = m + teil * 0.22;
+      if (ob.hoehe(a0) < 0 && ob.hoehe(a1) < 0) continue;          // steckt in der Mulde
+      const unten = Math.abs(Math.atan2(Math.sin(m - w0), Math.cos(m - w0))) < 0.3;
+      zeichne([pkt(a0, 1.06, -1), pkt(a1, 1.06, -1), pkt(a1, 1.06, 1), pkt(a0, 1.06, 1)], unten ? '#ffdf9c' : '#a8762c', '#4a3410');
+      zeichne([pkt(a0, 1.06, -1), pkt(a0, 0.86, -1), pkt(a0, 0.86, 1), pkt(a0, 1.06, 1)], '#7a5a2a');
+      zeichne([pkt(a1, 1.06, -1), pkt(a1, 0.86, -1), pkt(a1, 0.86, 1), pkt(a1, 1.06, 1)], '#6b4d22');
+    }
+    // vordere Wange mit Speichen und Nabe
+    zeichne([...bogen(1, 0.88), ...bogen(1, 0.2).reverse()], '#c9903f', '#5f4416');
+    ctx.strokeStyle = '#e0b45c'; ctx.lineWidth = Math.max(1.5, s * 0.07);
     for (let i = 0; i < 6; i++) {
-      const p = rad(ob.drehung + (i * Math.PI) / 3, 0.86);
-      ctx.beginPath(); ctx.moveTo(achse[0], achse[1]); ctx.lineTo(p[0], p[1]); ctx.stroke();
+      const a = ob.drehung + (i * Math.PI) / 3;
+      if (ob.hoehe(a) < 0.05) continue;
+      const p = pkt(a, 0.84, 1);
+      ctx.beginPath(); ctx.moveTo(achseV[0], achseV[1]); ctx.lineTo(p[0], p[1]); ctx.stroke();
     }
-    // Eimer am Kranz – an ihnen sieht man, wann unten einer bereitsteht
-    for (let i = 0; i < ob.eimer; i++) {
-      const a = ob.drehung + (i * Math.PI * 2) / ob.eimer;
-      const p = rad(a, 0.98), unten = Math.cos(a) > 0.86;
-      ctx.fillStyle = unten ? '#ffe9b0' : '#b5842f';
-      ctx.beginPath(); ctx.arc(p[0], p[1], s * 0.2, 0, TAU); ctx.fill();
-      ctx.strokeStyle = '#5f4416'; ctx.lineWidth = 1; ctx.stroke();
-    }
-    // Nabe
-    ctx.fillStyle = '#e0b45c'; ctx.beginPath(); ctx.arc(achse[0], achse[1], s * 0.16, 0, TAU); ctx.fill();
+    ctx.strokeStyle = '#6b6660'; ctx.lineWidth = Math.max(2, s * 0.14);
+    ctx.beginPath(); ctx.moveTo(achseH[0], achseH[1]); ctx.lineTo(achseV[0], achseV[1]); ctx.stroke();
+    ctx.fillStyle = '#ffdf9c'; ctx.beginPath(); ctx.arc(achseV[0], achseV[1], s * 0.15, 0, TAU); ctx.fill();
   },
   /* Boden: der Einstieg unten und der Absetzpunkt oben, damit man beides sieht, bevor man schlägt */
   drawGearLiftFloor(ctx, ob) {
     const [ex, ey] = ob.ein(), [ax, ay] = ob.aus();
-    this.isoEllipse(ctx, ex, ey, 0.005, 0.55, ob.eimerUnten() ? 'rgba(255,233,176,0.5)' : 'rgba(255,233,176,0.16)');
+    this.isoEllipse(ctx, ex, ey, 0.005, 0.5, ob.lueckeUnten() ? 'rgba(255,233,176,0.55)' : 'rgba(200,120,80,0.18)');
     this.isoEllipse(ctx, ax, ay, 0.005, 0.5, 'rgba(120,255,190,0.2)');
   },
 
