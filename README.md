@@ -62,6 +62,47 @@ nehmen die Farbe des Balls an, genau wie der Busch am Ritterhelm (ein weißer Ba
 der Kamm auf dem hellen Helm unter). Sonst bewusst wenige, große Formen: Bei Ballgröße bleibt von feinen
 Verzierungen nichts übrig.
 
+### Turnier auf Zeit
+
+Neben der Rangliste, die für immer läuft, gibt es ein **Turnier** in der Kolosseum-Welt: ein Ereignis mit
+Anfang und Ende. Alles daran hängt an zwei Zeilen ganz oben in `src/turnier.js`:
+
+```js
+const START = Date.parse('2026-09-08T18:00:00+02:00');
+const ENDE  = Date.parse('2026-09-30T22:00:00+02:00');
+```
+
+Mehr braucht es nicht, um es zu verschieben. Daraus ergeben sich drei Zustände, und jeder Teil der Anzeige
+richtet sich danach:
+
+| Zustand | Weltkarte und Startbildschirm | Turnierbildschirm | Ergebnisse |
+|---|---|---|---|
+| vor dem Start | Band mit dem Startdatum | „hat noch nicht begonnen", beide Termine | werden nicht angenommen |
+| während | Band mit der Restlaufzeit | Restlaufzeit als Uhr, dazu die Rangliste | zählen |
+| nach dem Ende | Band „Turnier beendet" | als beendet gekennzeichnet | werden nicht mehr angenommen |
+
+Gewertet wird die **Kombi-Wertung** über die ganze Runde, darunter stehen die besten Einzelbahnen – wie in
+der Rangliste, nur eben nur für dieses Fenster. Der Kreativmodus ist ausgeschlossen; dort zählt ohnehin
+nichts, weil man beliebig oft neu setzen darf.
+
+**Warum je Spieler eine eigene aufbewahrte Nachricht.** Die Rangliste kennt je Bahn nur den einen Rekord und
+kommt deshalb mit einer gemeinsamen Tafel je Welt aus. Im Turnier soll ein Feld entstehen – Erster, Zweiter,
+Dritter –, also braucht jeder Teilnehmer beim Vermittler seinen eigenen Platz, sonst überschriebe ein Eintrag
+den anderen. Das Thema lautet `fantasygolf/v1/<marke>/turnier/t<START>/e/<kennung>` und ist damit dreifach
+getrennt: von der Rangliste, von den Spielräumen und – durch den Startzeitpunkt im Namen – von jedem
+früheren Turnier.
+
+**Der Zeitstempel und eine Falle darin.** Jedes eingereichte Ergebnis trägt seinen Zeitpunkt; beim Anzeigen
+fällt alles weg, was außerhalb des Fensters liegt. Die Rangliste kappt einen Zeitstempel aus der Zukunft auf
+„jetzt", damit ein solcher Eintrag nicht jedes Zurücksetzen überlebt – diese Zeile aus `best.js` zu übernehmen
+war ein Fehler und ist beim Prüfen aufgefallen: Sie schob einen Nachzügler von hinter dem Schlusspfiff genau
+ins Fenster hinein und hebelte die Aussortierung aus. Im Turnier bleibt ein Zeitstempel darum stehen, wie er
+ist, und wird nur beurteilt.
+
+Geprüft wird alles Hereinkommende wie sonst auch – Namen und Bahnnamen durch `src/text.js`, Zahlen auf
+Bereiche, dazu Obergrenzen für Teilnehmer und Bahnen je Eintrag. Dieselbe Prüfung läuft auch über das, was aus
+dem Browser-Speicher kommt: Der überlebt Fassungswechsel und lässt sich von Hand ändern.
+
 ### Belohnungen: ein Skin je Welt
 
 Wer in einer Welt den **Rundenrekord der Kombi-Wertung** hält, darf ihren Skin tragen. Sieben Welten,

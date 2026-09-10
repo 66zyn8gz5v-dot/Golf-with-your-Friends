@@ -114,7 +114,11 @@
     const txt = zeigen ? Best.formatTime(clockRead()) : '';
     if (txt !== clockShown) { clockShown = txt; ui.time.textContent = txt; }
   }
-  function overlay(html, cls) { clockPause(); ui.overlay.innerHTML = html; ui.overlay.className = 'screen visible' + (cls ? ' ' + cls : ''); }
+  /* Welcher Bildschirm zeigt gerade etwas vom Turnier? Wechselt das Turnier den Zustand –
+     etwa vom Laufen ins Beendetsein –, wird genau dieser neu gezeichnet. Jeder Bildschirm setzt
+     den Merker nach seinem overlay() selbst; overlay() löscht ihn vorher. */
+  let turnierSchirm = null;
+  function overlay(html, cls) { clockPause(); turnierSchirm = null; ui.overlay.innerHTML = html; ui.overlay.className = 'screen visible' + (cls ? ' ' + cls : ''); }
   function hideOverlay() { ui.overlay.className = 'screen'; ui.overlay.innerHTML = ''; clockResume(); }
 
   const SCENE_NORMAL = `<svg class="mode-scene" viewBox="0 0 300 72" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
@@ -308,11 +312,14 @@
       <div class="atlas-extra"><span class="btn small ghost" id="to-turnier">${Icons.svg('golf_course')} Turnier</span>
         <span class="btn small ghost" id="to-online">${Icons.svg('public')} Online spielen</span>
         <span class="btn small ghost" id="to-best">${Icons.svg('emoji_events')} Rangliste</span></div>
+      ${turnierBand()}
       <div class="legend">Alle Welten sind von Anfang an offen. Die Stufe an jedem Ort sagt nur, was dich erwartet.
         <span class="version">${typeof VORSCHAU !== 'undefined' && VORSCHAU ? 'Vorschau · ' : ''}Fassung ${typeof APP_VERSION !== 'undefined' ? APP_VERSION : '?'}</span></div>
     </div>`, 'title');
-    // Turnier führt direkt in die Arena – ohne Umweg über die Weltkarte
-    $('to-turnier').addEventListener('click', () => { Sfx.unlock(); Music.start(); setWorld(TURNIER_WELT); showSetup(); });
+    turnierSchirm = showTitle;
+    // Der Turnier-Knopf führt auf den Turnierbildschirm: dort stehen Stand, Restlaufzeit und
+    // Rangliste, und von dort geht es in die Arena.
+    $('to-turnier').addEventListener('click', () => { Sfx.unlock(); Music.start(); showTurnier(); });
     $('to-online').addEventListener('click', () => { Sfx.unlock(); Music.start(); showOnline(); });
     $('to-best').addEventListener('click', () => { Sfx.unlock(); Music.start(); showBestList(); });
     $('to-map').addEventListener('click', () => { Sfx.unlock(); Music.start(); showMap(); });
@@ -339,8 +346,10 @@
       <div class="panel-head"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span><h2>${Icons.svg('map')} Weltkarte</h2></div>
       <div class="sub">Tippe einen Ort an – alle ${kartenWelten.length} Welten sind von Anfang an offen.</div>
       <div class="atlas">${WorldMap.svg()}${marks}</div>
+      ${turnierBand()}
       <div class="atlas-extra"><span class="btn small ghost" id="to-build2">${Icons.svg('construction')} Bauen &amp; Eigene Welt</span></div>
     </div>`, 'title');
+    turnierSchirm = showMap;
     ui.overlay.querySelectorAll('.spot').forEach(b => b.addEventListener('click', () => { Sfx.unlock(); setWorld(b.dataset.world); showSetup(); }));
     $('to-build2').addEventListener('click', showBuild);
     $('back').addEventListener('click', showTitle);
@@ -441,6 +450,105 @@
     setCustomWorld([def], 'Test');
     document.body.classList.add('testing');
     startGame(1, 0);
+  }
+
+  /* ---------- Turnier ----------
+     Ein Wettbewerb auf Zeit in der Arena. Was hier steht, ist nur die Anzeige – wann es läuft,
+     was angenommen wird und wer vorn liegt, entscheidet src/turnier.js. */
+
+  /* Das Band, das auf Startbildschirm und Weltkarte über den Stand des Turniers informiert.
+     Vor dem Start steht dort das Startdatum, während der Laufzeit die Restzeit, danach der Hinweis
+     auf das Ende. Die Restzeit trägt eine Klasse, an der die Uhr sie jede Sekunde nachträgt. */
+  function turnierBand() {
+    const z = Turnier.zustand();
+    if (z === 'vor') return `<div class="turnier-band vor">${Icons.svg('golf_course')}
+      <span><b>Turnier im Kolosseum</b> · Start am ${Text.esc(Turnier.startText)}</span></div>`;
+    if (z === 'laeuft') return `<div class="turnier-band an">${Icons.svg('golf_course')}
+      <span><b>Turnier läuft</b> · <span class="turnier-rest">${Text.esc(Turnier.restText())}</span></span></div>`;
+    return `<div class="turnier-band aus">${Icons.svg('golf_course')}
+      <span><b>Turnier beendet</b> · die Rangliste bleibt stehen</span></div>`;
+  }
+
+  /* Turnierbildschirm: Stand, Restlaufzeit, Rangliste und der Weg in die Arena */
+  function showTurnier() {
+    state.phase = 'title'; state.editorReturn = false; Music.set('title');
+    document.body.classList.add('title');
+    document.body.classList.remove('creative', 'editing', 'testing');
+    const z = Turnier.zustand();
+    const welt = WORLDS.find(w => w.id === Turnier.WELT) || WORLDS[0];
+    const liste = Turnier.rangliste();
+    const medaille = ['🥇', '🥈', '🥉'];
+    const zeit = ms => Best.formatTime(ms);
+    const kombi = s => String(s).replace('.', ',');
+
+    const rundenZeilen = liste.runde.length
+      ? liste.runde.slice(0, 20).map((r, i) => `<tr class="${r.ich ? 'me' : ''}">
+          <td>${medaille[i] || (i + 1) + '.'}</td>
+          <td>${Text.esc(r.n)}</td>
+          <td class="num"><b>${kombi(r.s)}</b></td>
+          <td class="num">${r.st}</td>
+          <td class="num">${zeit(r.ms)}</td></tr>`).join('')
+      : `<tr><td colspan="5" class="sub" style="text-align:center">Noch hat niemand eine ganze Runde eingereicht.</td></tr>`;
+
+    const bahnZeilen = welt.courses.map((c, i) => {
+      const b = liste.bahnen[c.name];
+      return `<tr class="${b && b.ich ? 'me' : ''}"><td>${i + 1}</td><td>${holeIcon(c)} ${Text.esc(c.name)}</td>
+        <td class="num">${c.par}</td>
+        <td class="num rec">${b ? `<b>${kombi(b.s)}</b><i>${Text.esc(b.n)}</i>` : '–'}</td>
+        <td class="num">${b ? b.st : '–'}</td>
+        <td class="num">${b ? zeit(b.ms) : '–'}</td></tr>`;
+    }).join('');
+
+    const kopf = z === 'vor'
+      ? `<div class="turnier-kopf vor"><b>Das Turnier hat noch nicht begonnen.</b><br>
+           Start am ${Text.esc(Turnier.startText)} · Ende am ${Text.esc(Turnier.endeText)}<br>
+           Bis dahin kannst du die Arena üben – gewertet wird noch nichts.</div>`
+      : z === 'laeuft'
+        ? `<div class="turnier-kopf an"><b>Das Turnier läuft.</b>
+           <span class="turnier-uhr turnier-rest">${Text.esc(Turnier.restText())}</span><br>
+           Noch bis ${Text.esc(Turnier.endeText)}</div>`
+        : `<div class="turnier-kopf aus"><b>Das Turnier ist beendet.</b><br>
+           Gelaufen vom ${Text.esc(Turnier.startText)} bis ${Text.esc(Turnier.endeText)}.
+           Die Rangliste bleibt stehen, neue Ergebnisse werden nicht mehr angenommen.</div>`;
+
+    overlay(`<div class="panel wide">
+      <div class="panel-head"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span>
+        <h2>${Icons.svg('golf_course')} Turnier · ${Text.esc(welt.name)}</h2></div>
+      ${kopf}
+      <div class="sub">Gewertet wird die <b>Kombi-Wertung</b>: Schläge plus angefangene Minuten. Vier Schläge
+        in 1:12 ergeben 4 + 1,2 = 5,2. Es zählt die <b>ganze Runde</b> über alle ${welt.courses.length} Bahnen;
+        darunter stehen die besten Einzelbahnen. Gespielt wird im <b>Wettkampf</b> – im Kreativmodus zählt nichts.</div>
+      ${!Best.name ? `<div class="sub warn-note">Ohne Namen wird nichts gewertet. Trag ihn in der
+        <span class="btn ghost small" id="zur-liste">${Icons.svg('emoji_events')} Rangliste</span> ein.</div>` : ''}
+      <div class="sub net-note" id="tstate">${Net.status === 'ready'
+        ? `Verbunden · ${liste.runde.length} ${liste.runde.length === 1 ? 'Teilnehmer' : 'Teilnehmer'} im Feld`
+        : 'Keine Verbindung – das Feld zeigt vorerst nur, was auf diesem Gerät liegt.'}</div>
+
+      <div class="sub" style="margin-top:12px"><b>Ganze Runde</b> · Par ${welt.courses.reduce((a, c) => a + c.par, 0)}</div>
+      <div class="tabelle-schiebe"><table class="scores best-table turnier-tafel">
+        <tr><th></th><th>Name</th><th class="num">${BEST_ICON.combo} Kombi</th><th class="num">${BEST_ICON.strokes}</th><th class="num">${BEST_ICON.time}</th></tr>
+        ${rundenZeilen}
+      </table></div>
+
+      <div class="sub" style="margin-top:14px"><b>Beste Einzelbahnen</b></div>
+      <div class="tabelle-schiebe"><table class="scores best-table turnier-tafel">
+        <tr><th>#</th><th>Bahn</th><th class="num">Par</th><th class="num">${BEST_ICON.combo} Kombi</th><th class="num">${BEST_ICON.strokes}</th><th class="num">${BEST_ICON.time}</th></tr>
+        ${bahnZeilen}
+      </table></div>
+
+      <p style="margin-top:14px"><span class="btn" id="t-los">${Icons.svg('golf_course')} ${z === 'laeuft' ? 'In die Arena' : 'Arena ansehen'}</span></p>
+      <div class="legend">Auch das Turnier ist eine Anschreibetafel, kein Schiedsrichter: Jedes Gerät meldet sein
+        Ergebnis selbst. Ergebnisse mit einem Zeitstempel außerhalb des Turnierfensters werden hier nicht angezeigt.
+        Das Turnier hat einen eigenen Platz beim Vermittler – die dauerhafte Rangliste bleibt davon unberührt.</div>
+    </div>`, 'title');
+    turnierSchirm = showTurnier;
+    $('back').addEventListener('click', showTitle);
+    if ($('zur-liste')) $('zur-liste').addEventListener('click', () => showBestList(Turnier.WELT));
+    $('t-los').addEventListener('click', () => {
+      Sfx.unlock(); Music.start();
+      gameMode = 'normal';            // im Turnier zählt nur der Wettkampf
+      setWorld(Turnier.WELT); showSetup();
+    });
   }
 
   /* Ranglisten-Bildschirm: Name, Gruppencode und die Rekorde aller Welten */
@@ -613,6 +721,9 @@
     const def = state.courses[state.holeIdx];
     const treffer = Best.hole(state.world.id, def.name, score, ms, (online && online.started) ? 'net' : 'lokal');
     if (treffer.length) { Sfx.sink(); showMessage(`🏆 ${def.name}: ${recordText(treffer)}`, 2600); }
+    // Läuft gerade das Turnier und sind wir in seiner Welt, zählt der Wert dort zusätzlich
+    if (state.world.id === Turnier.WELT && Turnier.bahn(def.name, score, ms) && !treffer.length)
+      showMessage(`⚔️ Turnier: ${def.name} verbessert`, 2200);
   }
   /* „Schläge 2 (vorher 3), Zeit 0:14,2" – aus den gefallenen Rekorden einer Runde */
   const recordText = treffer => treffer.map(h =>
@@ -1347,11 +1458,15 @@
     // eigene Runde in die Rangliste
     const gewertet = state.mode !== 'creative' && !state.editorReturn;
     const gesamtZeit = p => (p.times || []).reduce((a, b) => a + (b || 0), 0);
-    let roundRec = [];
+    let roundRec = [], turnierRunde = null;
     if (gewertet && state.world && state.world.id !== 'custom') {
       const meP = state.players[myIndex()];
-      if (meP && meP.scores.length === state.courses.length && meP.scores.every(v => v != null))
-        roundRec = Best.round(state.world.id, meP.scores.reduce((a, b) => a + b, 0), gesamtZeit(meP), (online && online.started) ? 'net' : 'lokal');
+      if (meP && meP.scores.length === state.courses.length && meP.scores.every(v => v != null)) {
+        const summe = meP.scores.reduce((a, b) => a + b, 0);
+        roundRec = Best.round(state.world.id, summe, gesamtZeit(meP), (online && online.started) ? 'net' : 'lokal');
+        // Die ganze Runde ist die Wertung des Turniers – aber nur in seiner Welt und im Fenster
+        if (state.world.id === Turnier.WELT) turnierRunde = Turnier.runde(summe, gesamtZeit(meP));
+      }
     }
     const ranked = state.players.map(p => ({ p, total: p.scores.reduce((a, b) => a + b, 0), ms: gesamtZeit(p) })).sort((a, b) => a.total - b.total);
     const medals = ['🥇', '🥈', '🥉', '4.'];
@@ -1383,6 +1498,7 @@
       <div class="hole-cards">${cards}</div>
       <div class="final-legend"><span class="hc-score ace">1</span> Hole-in-One <span class="hc-score eagle">–2</span> Eagle <span class="hc-score birdie">–1</span> Birdie <span class="hc-score par">0</span> Par <span class="hc-score bogey">+1</span> Bogey <span class="hc-score worse">+2</span> mehr</div>
       ${roundRec.length ? `<div class="sub net-note">🏆 Neuer Rundenrekord für ${Text.esc(roundRec[0].rec.n)}: ${Text.esc(recordText(roundRec))}</div>` : ''}
+      ${turnierRunde ? `<div class="sub net-note">⚔️ Im Turnier gewertet: Kombi ${Text.esc(String(turnierRunde.s).replace('.', ','))} · ${turnierRunde.st} Schläge in ${Text.esc(Best.formatTime(turnierRunde.ms))}</div>` : ''}
       <span class="btn" id="again">Nochmal spielen</span>
     </div>`);
     $('again').addEventListener('click', () => { hideOverlay(); leaveOnline(); showTitle(); });
@@ -1659,6 +1775,25 @@
 
   Best.onChange(recordFromFriend);
   Best.start();                         // Rekorde im Hintergrund holen
+  /* Turnierfeld im Hintergrund holen. Beim Verbinden kommen die aufbewahrten Einträge aller
+     Teilnehmer auf einen Schlag herein – darum wird nicht bei jeder einzelnen Nachricht neu
+     gezeichnet, sondern einmal, wenn der Schwall vorbei ist. */
+  let turnierMalen = null;
+  Turnier.onChange(() => {
+    clearTimeout(turnierMalen);
+    turnierMalen = setTimeout(() => { if (turnierSchirm) turnierSchirm(); }, 250);
+  });
+  Turnier.start();
+  /* Die Uhr des Turniers: trägt die Restlaufzeit jede Sekunde nach und zeichnet den Bildschirm
+     neu, sobald das Turnier beginnt oder endet – dann stimmt sonst alles darauf nicht mehr. */
+  let letzterZustand = Turnier.zustand();
+  setInterval(() => {
+    const jetzt = Turnier.zustand();
+    if (jetzt !== letzterZustand) { letzterZustand = jetzt; if (turnierSchirm) turnierSchirm(); return; }
+    if (jetzt !== 'laeuft') return;
+    const txt = Turnier.restText();
+    document.querySelectorAll('.turnier-rest').forEach(el => { el.textContent = txt; });
+  }, 1000);
   Share.start();                        // geteilte Bahnen der anderen mitbekommen
   // Die eigenen geteilten Bahnen erneut anbieten – der Vermittler kann sie zwischendurch verloren haben
   setTimeout(() => { if (Share.eigeneIds.length) Share.sende(editor.loadCustoms(), Best.name); }, 1800);
