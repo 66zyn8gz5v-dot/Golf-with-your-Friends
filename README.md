@@ -195,6 +195,12 @@ Gewitterkugel wirkt seither wie eine Wolke statt wie gestapelte Flecken.
 Bahnen wäre für die meisten unerreichbar – ein Patzer auf Bahn 8 wirft alles um. Bahn für Bahn dagegen ist es
 eine Übung, die man sich Stück für Stück vornehmen kann: Man weiß immer, welche Bahn noch klemmt.
 
+**Verglichen wird nur die Summe, nie eine einzelne Bahn.** `Best.fortschritt` addiert die eigenen besten
+Schlagzahlen aller Bahnen und stellt sie der Par-Summe gegenüber; `geschafft` ist wahr, sobald jede Bahn ein
+Ergebnis hat und `schlaege < par` gilt. Ob eine Bahn dabei drei über Par lag, spielt keine Rolle, solange
+andere es hereinholen. Das steht auch in der Oberfläche ausdrücklich da (`lohn-regel` im Belohnungsblock,
+`Hats.bedingung`), sonst versucht man es Bahn für Bahn und hält sich für gescheitert, obwohl man es nicht ist.
+
 **Wie die Sperre funktioniert:** In `Hats.LIST` trägt eine Belohnung `welt: '<Weltkennung>'`, ein
 Ganzkörper-Skin zusätzlich `voll: true`. Die eine Stelle, die entscheidet, ist `Hats.freigeschaltet(id)`; sie
 fragt `Best.fortschritt(welt).geschafft`. Der Championhelm ist die Ausnahme: Er trägt `art: 'rekord'` und
@@ -203,9 +209,11 @@ Legionärshelm ist keine Belohnung und für alle da.
 
 **Der eigene Stand liegt getrennt.** Die Rangliste kennt je Bahn nur den einen Rekord, egal von wem. Für die
 Belohnung zählt aber, was man *selbst* geschafft hat – darum führt jedes Gerät zusätzlich eine private Liste
-(`Best.fortschritt`, `Best.eigeneBahnen`): je Welt und Bahn die wenigsten Schläge, die man dort selbst
-gebraucht hat. Sie wird nicht geteilt; über das Netz wäre sie ohnehin nicht nachprüfbar, und sie geht
-niemanden etwas an.
+(`Best.fortschritt`, `Best.eigenerWert`, `Best.eigenSumme`): je Welt und Bahn die eigenen Bestwerte **aller
+drei Wertungen** als `{ s, ms, k }`. Sie können aus verschiedenen Versuchen stammen, genau wie in der
+geteilten Liste. Ältere Stände hielten dort nur die blanke Schlagzahl; die wird beim Laden eingereiht statt
+weggeworfen – sie ist ja mühsam erspielt. Geteilt wird nichts davon; über das Netz wäre es ohnehin nicht
+nachprüfbar, und es geht niemanden etwas an.
 
 **Der Kreativmodus wird beim Speichern abgewiesen**, nicht erst beim Anzeigen: `Best.hole` bekommt den Modus
 mitgegeben und trägt gar nicht erst ein. Dort darf man beliebig oft neu setzen – jede Bedingung wäre damit
@@ -250,6 +258,20 @@ und die Liste zeigt sie nebeneinander. Einmal den Namen eintragen, dann einfach 
 
 Wer einen Zeitrekord bricht, kann in derselben Bahn auch den Schläge- und den Kombi-Rekord holen – jede
 Wertung wird einzeln geprüft, und die Meldung im Spiel nennt alle, die gefallen sind.
+
+**In jeder Zelle steht der eigene Wert mit dabei**, grün unter dem Rekord – auch dann, wenn der Rekord einem
+selbst gehört; dann steht er in Gold. Ohne das müsste man raten, wie weit man weg ist. Der eigene Wert kommt
+aus der privaten Liste des Geräts und wird nirgends geteilt.
+
+**Zwei Summenzeilen am Fuß der Tafel, und sie messen Verschiedenes:**
+
+| Zeile | Was zusammengezählt wird |
+| --- | --- |
+| **Gesamt** | Die besten Einzelbahnen zusammen – je Bahn der beste Versuch, aus beliebig vielen Runden. Links der Rekord der Liste, rechts daneben der eigene Stand. Fehlt noch eine Bahn, steht die Summe trotzdem da, mit dem Zusatz „7 von 9". |
+| **Ganze Runde** | Eine einzige Runde am Stück, von Bahn 1 bis zum Schluß. Dafür führt das Gerät keinen eigenen Stand – die Zeile bleibt beim Rekord. |
+
+Die Belohnung einer Welt hängt an der **Gesamt**-Zeile, nicht an der ganzen Runde; einzig der Championhelm
+hängt am Kombi-Rundenrekord.
 
 Die Uhr steht still, solange ein Menü offen ist oder die Seite im Hintergrund liegt – niemand soll dafür
 bestraft werden, dass das Telefon klingelt. Die laufende Zeit steht während des Zugs oben rechts, die

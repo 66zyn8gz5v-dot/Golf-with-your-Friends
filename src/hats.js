@@ -1340,7 +1340,8 @@ const Hats = (() => {
     const w = (typeof WORLDS !== 'undefined' && WORLDS.find(x => x.id === h.welt)) || null;
     const name = w ? w.name : 'dieser Welt';
     if (h.art === 'rekord') return `Halte den Kombi-Rundenrekord: ${name}`;
-    return `Spiele jede Bahn in ${name} und bleib in der Summe unter Par`;
+    // Es zählt allein die Summe: Eine Bahn über Par ist keine verlorene Belohnung
+    return `Spiele jede Bahn in ${name}; nur die Summe zählt – bleib insgesamt unter Par`;
   }
   /* Wie weit man ist – kurz genug für eine Meldung im Spiel */
   function stand(id) {

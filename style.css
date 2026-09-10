@@ -399,6 +399,8 @@ body.editing #editor-panel { display: flex; flex-direction: column; }
 .lohn-text b { color: #f4efe6; }
 .lohn-text b.unter { color: #9dff9d; } .lohn-text b.ueber { color: #ffb0a0; }
 .lohn-text i { font-style: normal; color: #9c93b8; }
+/* Die Regel dahinter: Es zählt die Summe, nicht jede Bahn für sich */
+.lohn-text i.lohn-regel { display: inline-block; margin-top: 4px; color: #b7abd6; }
 /* Der Balken zeigt, wie viele Bahnen schon ein Ergebnis haben */
 .lohn-balken {
   position: relative; margin-top: 8px; height: 18px; border-radius: 999px; overflow: hidden;
@@ -503,7 +505,17 @@ table.best-table th, table.best-table td { padding: 5px 6px; }
 .best-table td.rec { color: #ffe08a; font-weight: bold; line-height: 1.15; white-space: nowrap; }
 .best-table td.rec b { display: block; }
 .best-table td.rec i { display: block; font-style: normal; font-weight: normal; font-size: 11px; color: #cbbfe6; }
-.best-table tr.ganze-runde td { border-top: 1px solid rgba(255,215,120,0.35); padding-top: 8px; font-weight: bold; }
+/* Der eigene Bestwert unter dem Rekord – abgesetzt, damit beides nebeneinander lesbar bleibt */
+.best-table td.rec em.mein { display: block; font-style: normal; font-weight: bold; font-size: 12px;
+  color: #9fe8c8; margin-top: 2px; padding-top: 2px; border-top: 1px dotted rgba(159,232,200,0.3); }
+.best-table td.rec em.mein.gleich { color: #ffe08a; }   /* eigener Wert ist zugleich der Rekord */
+.best-table td.rec em.mein.leer { color: #7d7697; font-weight: normal; }
+.best-table td.rec em.mein i { display: block; font-weight: normal; font-size: 11px; color: #7fbfa6; }
+/* Die beiden Summenzeilen: erst die besten Einzelbahnen zusammen, dann die ganze Runde am Stück */
+.best-table tr.gesamt td { border-top: 1px solid rgba(255,215,120,0.35); padding-top: 8px; font-weight: bold; }
+.best-table tr.ganze-runde td { padding-top: 6px; font-weight: bold; }
+.best-table tr.gesamt td i, .best-table tr.ganze-runde td i { display: block; font-style: normal;
+  font-weight: normal; font-size: 11px; color: #cbbfe6; }
 .panel.wide { max-width: min(94vw, 700px); }
 /* Passt die Rekordtafel doch einmal nicht, lässt sie sich schieben statt überzulaufen */
 .tabelle-schiebe { overflow-x: auto; max-width: 100%; }
@@ -521,6 +533,8 @@ table.best-table th, table.best-table td { padding: 5px 6px; }
   .best-table th:nth-child(1), .best-table td:nth-child(1) { display: none; }  /* Nummer weglassen, sonst wird es zu breit */
   .best-table th:nth-child(3), .best-table td:nth-child(3) { display: none; }  /* Par steht auch auf der Weltkarte */
   .best-table td.rec i { font-size: 10px; }
+  .best-table td.rec em.mein { font-size: 11px; }
+  .best-table td.rec em.mein .du { display: none; }   /* auf dem Handy zählt jeder Millimeter */
 }
 @media (max-width: 480px) {
   .best-table .kopf-wort { display: none; }   /* die Sinnbilder allein reichen */
