@@ -316,48 +316,21 @@ const Hats = (() => {
        dasselbe. Gemeinsam ist ihnen die Glaskugel-Form, damit sie als eine Familie zu erkennen
        sind – der Inhalt macht die Welt. */
 
-    globe(ctx, color, t, fein) {   // Märchenland: Schneekugel mit Burg, Wald und rieselndem Schnee
-      glasKugel(ctx, '#cfe6ff', '#5f96cc');
+    /* Märchenland: weißes Porzellan mit blauem Rankenmuster, darüber die goldene Zackenkrone mit
+       roten Steinen. Bewusst ruhig gehalten – das Stück lebt vom Kontrast aus kühlem Weiß, tiefem
+       Kobaltblau und warmem Gold, nicht von vielen Einzelteilen. Bewegt wird nur, was sich an
+       echtem Porzellan auch bewegen würde: der Glanz, wenn man es dreht. */
+    royal(ctx, color, t, fein) {
+      const g = ctx.createRadialGradient(-0.34, -0.4, 0.06, 0, 0, 1);
+      g.addColorStop(0, '#ffffff'); g.addColorStop(0.5, '#f4f7fb'); g.addColorStop(1, '#c2cddd');
+      ctx.beginPath(); ctx.arc(0, 0, 1, 0, TAU2); ctx.fillStyle = g; ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 0.07; ctx.stroke();
       ctx.save(); kugelMaske(ctx);
-      // Abendhimmel: oben tiefblau, unten hell – dagegen heben sich die Türme ab
-      const himmel = ctx.createLinearGradient(0, -1, 0, 0.7);
-      himmel.addColorStop(0, '#2b4b83'); himmel.addColorStop(0.55, '#77a9dd'); himmel.addColorStop(1, '#d6e8f7');
-      ctx.fillStyle = himmel; ctx.fillRect(-1, -1, 2, 2);
-      // Sterne, die langsam blinken: das Funkeln steckt in der Größe, nicht in der Deckkraft –
-      // so lassen sich alle in einem Zug füllen (eine Füllung mit halber Deckkraft kostet auf
-      // der Leinwand ein Vielfaches einer normalen).
-      ctx.fillStyle = '#ffffff'; ctx.beginPath();
-      for (let i = 0; fein && i < 6; i++) {
-        const sx = -0.85 + streu(i, 1) * 1.7, sy = -0.92 + streu(i, 2) * 0.55;
-        const gr = 0.014 + 0.026 * Math.abs(Math.sin(t * 1.3 + i * 1.7));
-        ctx.moveTo(sx + gr, sy); ctx.arc(sx, sy, gr, 0, TAU2);
-      }
-      ctx.fill();
-      // Sichelmond: voller Kreis, dem ein zweiter in Himmelsfarbe die Hälfte wegnimmt
-      ctx.fillStyle = '#fff6cf'; ctx.beginPath(); ctx.arc(0.56, -0.60, 0.16, 0, TAU2); ctx.fill();
-      ctx.fillStyle = himmel; ctx.beginPath(); ctx.arc(0.48, -0.66, 0.155, 0, TAU2); ctx.fill();
-      // ferne Hügel unter Schnee
-      ctx.fillStyle = '#a8c6de'; ctx.beginPath(); ctx.ellipse(-0.55, 0.72, 0.95, 0.46, 0, 0, TAU2); ctx.fill();
-      ctx.fillStyle = '#bcd6ea'; ctx.beginPath(); ctx.ellipse(0.68, 0.74, 0.75, 0.36, 0, 0, TAU2); ctx.fill();
-      burg(ctx, t, fein);
-      // Tannen als dunkle Silhouetten am Rand, davor der Schnee
-      for (const [tx, ty, ts] of [[-0.74, 0.62, 0.30], [-0.50, 0.70, 0.22], [0.64, 0.66, 0.26]]) tanne(ctx, tx, ty, ts, fein);
-      ctx.fillStyle = '#f4f9ff'; ctx.beginPath(); ctx.ellipse(0, 1.02, 1.2, 0.42, 0, 0, TAU2); ctx.fill();
-      // Flocken: jede mit eigener Größe, Fallzeit und seitlichem Wiegen, unten ausblendend
-      // Flocken in zwei Gruppen: volle und verblassende. Zwei Füllungen statt vierzehn.
-      for (const [von, bis, farbe] of [[0, 0.78, '#ffffff'], [0.78, 1, 'rgba(255,255,255,0.4)']]) {
-        ctx.fillStyle = farbe; ctx.beginPath();
-        for (let i = 0; i < (fein ? 14 : 6); i++) {
-          const p = (t * (0.16 + streu(i, 4) * 0.16) + streu(i, 5)) % 1;
-          if (p < von || p >= bis) continue;
-          const gr = 0.03 + streu(i, 3) * 0.035;
-          const x = -0.95 + streu(i, 6) * 1.9 + Math.sin(t * (0.8 + streu(i, 7)) + i) * 0.09;
-          ctx.moveTo(x + gr, -1 + p * 2.1); ctx.arc(x, -1 + p * 2.1, gr, 0, TAU2);
-        }
-        ctx.fill();
-      }
-      ctx.restore(); glasLicht(ctx);
-      return () => maerchenKrone(ctx, t, fein);   // der Hut liegt über dem Reif in Spielerfarbe
+      ranken(ctx, fein);
+      ctx.restore();
+      steinRand(ctx);
+      glasur(ctx, t);
+      return () => koenigskrone(ctx, t, fein);   // der Hut liegt über dem Reif in Spielerfarbe
     },
 
     aquarium(ctx, color, t, fein) {   // Meereswelt: rundes Becken mit Fischen, Pflanzen und Lichtstrahlen
@@ -722,51 +695,6 @@ const Hats = (() => {
     const p = (t % 4.3) / 4.3;
     return p > 0.94 ? 1 - Math.abs(p - 0.97) / 0.03 : 0;
   }
-  /* Burg in der Schneekugel: zwei Türme, Mauer mit Zinnen, leuchtende Fenster, wehende Fahne */
-  function burg(ctx, t, fein) {
-    const mauer = '#ded7c6', schatten = '#b5ae9d', dach = '#b8362c';
-    ctx.fillStyle = mauer; ctx.fillRect(-0.12, 0.2, 0.3, 0.52);          // Mauer zwischen den Türmen
-    ctx.fillStyle = schatten; ctx.fillRect(0.08, 0.2, 0.1, 0.52);
-    ctx.fillStyle = mauer;
-    for (let i = 0; fein && i < 3; i++) ctx.fillRect(-0.12 + i * 0.11, 0.12, 0.07, 0.1);   // Zinnen
-    for (const [x, w, oben, dh] of [[-0.38, 0.26, -0.36, 0.34], [0.16, 0.2, -0.1, 0.26]]) {
-      ctx.fillStyle = mauer; ctx.fillRect(x, oben, w, 0.72 - oben + 0.04);
-      ctx.fillStyle = schatten; ctx.fillRect(x + w * 0.66, oben, w * 0.34, 0.72 - oben + 0.04);
-      ctx.fillStyle = dach;                                                // Kegeldach
-      ctx.beginPath(); ctx.moveTo(x - 0.04, oben); ctx.lineTo(x + w / 2, oben - dh); ctx.lineTo(x + w + 0.04, oben); ctx.closePath(); ctx.fill();
-      if (fein) {   // Schnee auf dem Dach
-        ctx.fillStyle = '#f2f8ff';
-        ctx.beginPath(); ctx.moveTo(x + w / 2, oben - dh); ctx.lineTo(x + w * 0.78, oben - dh * 0.35);
-        ctx.quadraticCurveTo(x + w / 2, oben - dh * 0.5, x + w * 0.22, oben - dh * 0.35); ctx.closePath(); ctx.fill();
-      }
-    }
-    // Fenster: warmes Licht, das ruhig pulst
-    ctx.fillStyle = `rgba(255,214,110,${0.65 + 0.35 * Math.sin(t * 1.7)})`;
-    ctx.fillRect(-0.32, -0.16, 0.09, 0.13); ctx.fillRect(-0.32, 0.16, 0.09, 0.13); ctx.fillRect(0.2, 0.12, 0.08, 0.12);
-    ctx.fillStyle = '#6b4a2a';                                             // Tor
-    ctx.beginPath(); ctx.moveTo(-0.05, 0.72); ctx.lineTo(-0.05, 0.5);
-    ctx.quadraticCurveTo(0.02, 0.42, 0.09, 0.5); ctx.lineTo(0.09, 0.72); ctx.closePath(); ctx.fill();
-    // Fahnenmast mit wehender Fahne
-    if (!fein) return;
-    ctx.strokeStyle = '#7a6a52'; ctx.lineWidth = 0.025;
-    ctx.beginPath(); ctx.moveTo(-0.25, -0.7); ctx.lineTo(-0.25, -0.92); ctx.stroke();
-    ctx.fillStyle = '#ffd166';
-    ctx.beginPath(); ctx.moveTo(-0.25, -0.92);
-    ctx.quadraticCurveTo(-0.12, -0.88 + Math.sin(t * 4) * 0.03, -0.03 + Math.sin(t * 4) * 0.03, -0.86);
-    ctx.lineTo(-0.25, -0.78); ctx.closePath(); ctx.fill();
-  }
-  /* Tanne als dunkle Silhouette: drei Zweigkränze und ein Stamm, oben eine Schneehaube */
-  function tanne(ctx, x, y, s, fein) {
-    ctx.fillStyle = '#33241a'; ctx.fillRect(x - s * 0.07, y, s * 0.14, s * 0.5);
-    ctx.fillStyle = '#1f5233';
-    for (let i = 0; i < 3; i++) {
-      const yy = y - i * s * 0.5, w = s * (1 - i * 0.22);
-      ctx.beginPath(); ctx.moveTo(x - w, yy); ctx.lineTo(x, yy - s * 0.95); ctx.lineTo(x + w, yy); ctx.closePath(); ctx.fill();
-    }
-    if (!fein) return;
-    ctx.fillStyle = 'rgba(255,255,255,0.75)';
-    ctx.beginPath(); ctx.moveTo(x - s * 0.3, y - s * 1.6); ctx.lineTo(x, y - s * 1.95); ctx.lineTo(x + s * 0.3, y - s * 1.6); ctx.closePath(); ctx.fill();
-  }
   /* Muschel und Seestern auf dem Sand */
   function muschel(ctx, x, y) {
     ctx.fillStyle = '#f0c6cf'; ctx.strokeStyle = 'rgba(120,70,80,0.5)'; ctx.lineWidth = 0.022;
@@ -887,47 +815,135 @@ const Hats = (() => {
         m(-0.8, -0.8); l(0.8, 0.8); m(0.8, -0.8); l(-0.8, 0.8);
     }
   }
-  /* Krone der Märchenkugel: fünf Zacken mit Perlen, drei Steine, die funkeln, und ein Lichtpunkt,
-     der über das Gold wandert. Auf den Zacken liegt Schnee – es schneit ja in der Kugel. */
-  function maerchenKrone(ctx, t, fein) {
-    ctx.save(); ctx.translate(0, -0.74);
-    const spitzen = [[-0.44, -0.34], [-0.22, -0.47], [0, -0.56], [0.22, -0.47], [0.44, -0.34]];
-    const taeler = [-0.33, -0.11, 0.11, 0.33];
-    const gold = ctx.createLinearGradient(-0.55, 0, 0.55, 0);
-    gold.addColorStop(0, '#8a6118'); gold.addColorStop(0.38, '#ffe8a4'); gold.addColorStop(1, '#7d5714');
+
+  /* Das blaue Rankenmuster auf dem Porzellan: eine große Blüte in der Mitte, zwei Ranken, die
+     sich nach oben außen schwingen und in kleinen Blüten enden, und ein doppeltes Randband unten.
+     Alles in Kobaltblau, wie es auf altem Geschirr steht.
+
+     Beim ersten Versuch bildeten Band und Ranken zusammen ein Gesicht – zwei Knospen als Augen,
+     der Bogen als Mund. Darum liegt das Band jetzt eng am Rand und die Ranken schwingen nach
+     oben statt zur Seite. */
+  function ranken(ctx, fein) {
+    const BLAU = '#26499a', HELL = '#4a80cf';
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+
+    /* Eine Blüte mit n Blättern an den laufenden Pfad hängen. Die Blätter sind gedrehte Ellipsen –
+       dafür braucht es keine Drehung der Leinwand, das spart je Blatt ein save/restore. */
+    const bluete = (bx, by, r, n) => {
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * TAU2;
+        const px = bx + Math.cos(a) * r * 0.9, py = by + Math.sin(a) * r * 0.9;
+        ctx.moveTo(px + Math.cos(a) * r * 0.66, py + Math.sin(a) * r * 0.66);
+        ctx.ellipse(px, py, r * 0.66, r * 0.4, a, 0, TAU2);
+      }
+    };
+    // Die beiden Ranken – erst der Verlauf, dann hängen die Blätter daran
+    const stengel = [];
+    for (const seite of [-1, 1]) {
+      ctx.strokeStyle = BLAU; ctx.lineWidth = 0.055;
+      ctx.beginPath();
+      ctx.moveTo(seite * 0.04, 0.1);
+      ctx.bezierCurveTo(seite * 0.5, 0.02, seite * 0.72, -0.16, seite * 0.6, -0.46);
+      ctx.stroke();
+      stengel.push(seite);
+    }
+    // Blätter und die kleinen Blüten an den Rankenenden
+    ctx.fillStyle = HELL; ctx.beginPath();
+    for (const seite of stengel) {
+      for (const [lx, ly, rx, ry, dr] of [[0.3, 0.1, 0.15, 0.07, 0.9], [0.58, -0.06, 0.15, 0.07, 0.2],
+                                          [0.68, -0.3, 0.13, 0.06, -0.5]]) {
+        const a = dr * seite;
+        ctx.moveTo(seite * lx + Math.cos(a) * rx, ly + Math.sin(a) * rx);
+        ctx.ellipse(seite * lx, ly, rx, ry, a, 0, TAU2);
+      }
+      bluete(seite * 0.58, -0.52, 0.15, 5);
+    }
+    bluete(0, 0.24, 0.24, 8);           // Hauptblüte
+    ctx.fill();
+    ctx.fillStyle = BLAU; ctx.beginPath();
+    ctx.moveTo(0.1, 0.24); ctx.arc(0, 0.24, 0.1, 0, TAU2);
+    for (const seite of stengel) { ctx.moveTo(seite * 0.58 + 0.05, -0.52); ctx.arc(seite * 0.58, -0.52, 0.05, 0, TAU2); }
+    ctx.fill();
+
+    // Doppeltes Randband unten, eng am Rand
+    ctx.strokeStyle = BLAU; ctx.lineWidth = 0.032;
     ctx.beginPath();
-    ctx.moveTo(-0.53, 0.1); ctx.lineTo(-0.53, -0.12);
+    ctx.arc(0, 0, 0.92, 0.26, Math.PI - 0.26);
+    ctx.moveTo(Math.cos(0.26) * 0.8, Math.sin(0.26) * 0.8);
+    ctx.arc(0, 0, 0.8, 0.26, Math.PI - 0.26);
+    ctx.stroke();
+    if (!fein) return;
+    ctx.fillStyle = BLAU; ctx.beginPath();      // Punkte zwischen den Bändern
+    for (let i = 0; i < 8; i++) {
+      const a = 0.36 + i * ((Math.PI - 0.72) / 7), r = 0.86;
+      ctx.moveTo(Math.cos(a) * r + 0.033, Math.sin(a) * r);
+      ctx.arc(Math.cos(a) * r, Math.sin(a) * r, 0.033, 0, TAU2);
+    }
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(120,140,170,0.3)'; ctx.lineWidth = 0.018;   // feine Haarrisse in der Glasur
+    ctx.beginPath();
+    ctx.moveTo(-0.88, 0.02); ctx.lineTo(-0.66, 0.2); ctx.lineTo(-0.58, 0.5);
+    ctx.moveTo(0.86, 0.24); ctx.lineTo(0.66, 0.44);
+    ctx.stroke();
+  }
+  /* Glasur: ein weicher Lichtstreifen wandert langsam über das Porzellan, dazu das feste
+     Glanzlicht oben links. Mehr Bewegung verträgt so ein Stück nicht. */
+  function glasur(ctx, t) {
+    const u = ((t * 0.13) % 1) * 2.8 - 1.4;
+    const g = ctx.createLinearGradient(u - 0.45, -1, u + 0.45, 0.6);
+    g.addColorStop(0, 'rgba(255,255,255,0)');
+    g.addColorStop(0.5, 'rgba(255,255,255,0.45)');
+    g.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(0, 0, 0.97, 0, TAU2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.beginPath(); ctx.ellipse(-0.4, -0.46, 0.23, 0.13, -0.6, 0, TAU2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    ctx.beginPath(); ctx.ellipse(-0.15, -0.66, 0.08, 0.045, -0.5, 0, TAU2); ctx.fill();
+  }
+  /* Königskrone: fünf spitze Zacken aus Gold, im Reif drei rote Steine, auf der Mittelzacke ein
+     vierter. Die Steine blitzen auf, und über das Gold wandert ein Lichtpunkt. */
+  function koenigskrone(ctx, t, fein) {
+    ctx.save(); ctx.translate(0, -0.74);
+    const spitzen = [[-0.46, -0.42], [-0.23, -0.6], [0, -0.74], [0.23, -0.6], [0.46, -0.42]];
+    const taeler = [-0.345, -0.115, 0.115, 0.345];
+    const gold = ctx.createLinearGradient(-0.55, 0, 0.55, 0);
+    gold.addColorStop(0, '#8a6118'); gold.addColorStop(0.36, '#ffe8a4');
+    gold.addColorStop(0.62, '#e0b444'); gold.addColorStop(1, '#7d5714');
+    ctx.beginPath();
+    ctx.moveTo(-0.54, 0.12); ctx.lineTo(-0.54, -0.14);
     for (let i = 0; i < 5; i++) {
       ctx.lineTo(spitzen[i][0], spitzen[i][1]);
-      if (i < 4) ctx.lineTo(taeler[i], -0.09);
+      if (i < 4) ctx.lineTo(taeler[i], -0.08);
     }
-    ctx.lineTo(0.53, -0.12); ctx.lineTo(0.53, 0.1); ctx.closePath();
+    ctx.lineTo(0.54, -0.14); ctx.lineTo(0.54, 0.12); ctx.closePath();
     ctx.fillStyle = gold; ctx.fill();
-    ctx.strokeStyle = 'rgba(60,40,6,0.55)'; ctx.lineWidth = 0.05; ctx.stroke();
-    ctx.fillStyle = '#a67c22'; ctx.fillRect(-0.53, -0.02, 1.06, 0.1);   // Reif unten
-    ctx.fillStyle = '#fff6d8'; ctx.beginPath();                          // Perlen auf den Zacken
-    for (const [sx, sy] of spitzen) { ctx.moveTo(sx + 0.055, sy); ctx.arc(sx, sy, 0.055, 0, TAU2); }
-    ctx.fill();
-    // Steine im Reif: das Funkeln steckt in der Größe, damit alles in einem Zug geht
-    const steine = [['#d23b4e', -0.27], ['#3b7fd2', 0], ['#3fb56a', 0.27]];
-    steine.forEach(([farbe, sx], i) => {
-      const gr = 0.045 + 0.022 * Math.abs(Math.sin(t * 1.6 + i * 1.9));
-      ctx.fillStyle = farbe; ctx.beginPath(); ctx.ellipse(sx, 0.03, gr, gr * 1.15, 0, 0, TAU2); ctx.fill();
+    ctx.strokeStyle = 'rgba(60,40,6,0.55)'; ctx.lineWidth = 0.048; ctx.stroke();
+    ctx.fillStyle = '#a67c22'; ctx.fillRect(-0.54, 0, 1.08, 0.12);          // Reif unten
+    ctx.fillStyle = '#d9ab3a'; ctx.fillRect(-0.54, -0.02, 1.08, 0.025);
+    /* Die roten Steine: drei im Reif, einer auf der Mittelzacke. Das Blitzen steckt in der Größe,
+       damit alle vier in einem Zug gefüllt werden können. */
+    const steine = [[-0.29, 0.055], [0, 0.055], [0.29, 0.055], [0, -0.74]];
+    ctx.fillStyle = '#c9203a'; ctx.beginPath();
+    steine.forEach(([sx, sy], i) => {
+      const gr = 0.052 + 0.016 * Math.abs(Math.sin(t * 1.7 + i * 1.6));
+      ctx.moveTo(sx, sy - gr * 1.2); ctx.lineTo(sx + gr, sy);
+      ctx.lineTo(sx, sy + gr * 1.2); ctx.lineTo(sx - gr, sy); ctx.closePath();
     });
-    if (fein) {
-      const w = ((t * 0.35) % 1) * 1.06 - 0.53;                          // Lichtpunkt wandert
-      ctx.fillStyle = 'rgba(255,255,255,0.8)';
-      ctx.beginPath(); ctx.ellipse(w, 0.03, 0.05, 0.075, 0, 0, TAU2); ctx.fill();
-      ctx.fillStyle = '#f4faff'; ctx.beginPath();                        // Schnee auf den Zacken
-      for (const [sx, sy] of spitzen) {
-        ctx.moveTo(sx - 0.1, sy + 0.09); ctx.quadraticCurveTo(sx, sy - 0.05, sx + 0.1, sy + 0.09);
-        ctx.quadraticCurveTo(sx, sy + 0.05, sx - 0.1, sy + 0.09);
-      }
-      ctx.fill();
-    }
+    ctx.fill();
+    if (!fein) { ctx.restore(); return; }
+    ctx.fillStyle = 'rgba(255,190,200,0.85)'; ctx.beginPath();               // Glanz in den Steinen
+    steine.forEach(([sx, sy], i) => {
+      const f = Math.max(0, Math.sin(t * 1.7 + i * 1.6));
+      const gr = 0.012 + f * f * 0.022;
+      ctx.moveTo(sx - 0.014 + gr, sy - 0.022); ctx.arc(sx - 0.014, sy - 0.022, gr, 0, TAU2);
+    });
+    ctx.fill();
+    const w = ((t * 0.32) % 1) * 1.08 - 0.54;                                // Lichtpunkt auf dem Gold
+    ctx.fillStyle = 'rgba(255,255,255,0.75)';
+    ctx.beginPath(); ctx.ellipse(w, -0.05, 0.045, 0.085, 0, 0, TAU2); ctx.fill();
     ctx.restore();
   }
-
   /* Schiffchen auf dem Aquarium: Es rollt und hebt sich, als läge es im Seegang, das Segel
      bauscht sich im Takt und der Wimpel flattert. Gezeichnet wird um den Kopfpunkt herum, das
      Rollen kommt aus einer Drehung um den Rumpf. */
@@ -1225,7 +1241,7 @@ const Hats = (() => {
     /* Belohnungen: Wer in einer Welt den Rundenrekord der Kombi-Wertung hält, darf ihren Skin
        tragen. Verliert er ihn wieder, ist auch der Skin wieder weg – die Auszeichnung gilt für
        den aktuellen Bestand, nicht für die Ewigkeit. */
-    { id: 'globe', name: 'Märchenkugel', icon: '🏰', welt: 'normal', voll: true },
+    { id: 'royal', name: 'Königskrone', icon: '💎', welt: 'normal', voll: true },
     { id: 'aquarium', name: 'Aquarium', icon: '🐠', welt: 'sea', voll: true },
     { id: 'cog', name: 'Tüftlerzylinder', icon: '⚙️', welt: 'pro', voll: true },
     { id: 'feathercrown', name: 'Federkrone', icon: '🪶', welt: 'jungle', voll: true },

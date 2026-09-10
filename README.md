@@ -78,7 +78,7 @@ braucht das nicht – bei ihr liegen die Federn bewusst *hinter* dem Reif, das S
 
 | Welt | Belohnung | der Ball | der Hut |
 |---|---|---|---|
-| Märchenland | Märchenkugel | Schneekugel mit Burg, Wald und rieselnden Flocken | goldene Krone mit Perlen; die Steine funkeln, ein Lichtpunkt wandert über das Gold, auf den Zacken liegt Schnee |
+| Märchenland | Königskrone | weißes Porzellan mit blauem Rankenmuster: Blüte, Blätterranken, Randband; über die Glasur wandert ein Lichtstreifen | goldene Zackenkrone mit roten Steinen; die Steine blitzen auf, ein Lichtpunkt läuft über das Gold |
 | Meereswelt | Aquarium | Becken mit Sand, Pflanzen, Fischen und Blasen | ein Schiffchen, das im Seegang rollt und sich hebt; die Segel bauschen sich, der Wimpel flattert |
 | Tüftlerreich | Tüftlerzylinder | drei greifende Zahnräder und ein Kolben | Lederzylinder mit Messingband, Nieten und Schutzbrille; ein Rad an der Seite läuft mit, aus dem Schornstein dampft es |
 | Dschungeltempel | Federkrone | dunkler Tempelstein, dessen Glyphen schwach grün glimmen | Federkrone in Türkis und Gold, die Spitzen wiegen sich |
@@ -86,14 +86,15 @@ braucht das nicht – bei ihr liegen die Federn bewusst *hinter* dem Reif, das S
 | Schattenreich | Kristallkugel | Schwaden waberen, ein Auge blickt umher und blinzelt | Spitzhut mit Mondschnalle; die Spitze schwankt, Sterne funkeln darauf |
 | Kolosseum | Championhelm | (kein eigener Ball – der Helm sitzt auf dem Spielerball) | der Federkamm wiegt sich im Wind |
 
-Fünf der Skins teilen sich die Glaskugel-Form, damit sie als eine Familie zu erkennen sind – der Inhalt
-macht die Welt; die Federkrone tanzt bewusst aus der Reihe, sie ist Stein statt Glas. Bewegt wird nach `state.t`, der Spieluhr: dieselbe Zahl auf jedem Gerät, beim Online-Spiel
+Vier der Skins teilen sich die Glaskugel-Form, damit sie als eine Familie zu erkennen sind – der Inhalt
+macht die Welt. Zwei tanzen bewusst aus der Reihe: die Federkrone ist Stein, die Königskrone Porzellan. Bewegt wird nach `state.t`, der Spieluhr: dieselbe Zahl auf jedem Gerät, beim Online-Spiel
 sehen also alle dasselbe. Weil ein Skin die Ballfarbe verdeckt, bekommt er einen dünnen Reif in der Farbe
 des Spielers – sonst wüsste bei vier Bällen niemand, welcher der eigene ist.
 
 **Was sich in jeder Kugel bewegt.** Nicht bloßes Hin und Her, sondern jeweils etwas, das man beobachten
-kann: In der Märchenkugel rieseln Flocken verschieden schnell und blassen unten aus, Sterne funkeln, die
-Burgfenster pulsen, die Fahne weht. Im Aquarium schlägt jedem Fisch der Schwanz im Takt, die Brustflosse
+kann: An der Königskrone ist es bewusst wenig: Ein Porzellanstück lebt vom Kontrast aus kühlem Weiß, tiefem
+Kobaltblau und warmem Gold, nicht von vielen Einzelteilen – darum bewegt sich nur, was sich an echtem
+Porzellan auch bewegen würde, nämlich der Glanz, wenn man es dreht. Im Aquarium schlägt jedem Fisch der Schwanz im Takt, die Brustflosse
 kippt gegenläufig, Lichtstrahlen wandern, Pflanzen wiegen sich, Blasen steigen und werden dabei größer;
 ein kleiner Schwarm zieht im Hintergrund vorbei. Im Zahnradwerk **greifen die Räder wirklich ineinander**
 – der Radius folgt der Zähnezahl (gleicher Modul), und `eingriff()` rechnet aus, wie schnell und um wie
