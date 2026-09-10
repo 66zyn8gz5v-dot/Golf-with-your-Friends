@@ -9,7 +9,7 @@ const GAMES = +(process.env.GAMES || 20);
 const R = G.BALL_R;
 const OUT = process.env.OUT || 'out'; fs.mkdirSync(OUT, { recursive: true });
 
-const DYN = new Set(['mover', 'wave', 'sharkjump', 'spikes', 'rotor', 'gate', 'ferry', 'windmill', 'cannon', 'turntable', 'cauldron', 'lightning', 'trapdoor']);
+const DYN = new Set(['mover', 'wave', 'sharkjump', 'spikes', 'rotor', 'gate', 'ferry', 'windmill', 'cannon', 'turntable', 'cauldron', 'lightning', 'trapdoor', 'gearlift', 'piston', 'hand']);
 function isDynamic(def) { return (def.obstacles || []).some(o => DYN.has(o.type) || (o.type === 'field' && o.gust)); }
 function periodOf_unused(def) { let p = 0; for (const o of (def.obstacles || [])) { if (o.period) p = Math.max(p, o.period); if (o.type === 'ferry') p = Math.max(p, 2 * ((o.wait ?? 2.5) + (o.travel ?? 3))); if (o.type === 'rotor') p = Math.max(p, o.swing ? 2 * Math.PI / o.swing.speed : 2 * Math.PI / ((o.blades || 4) * Math.abs(o.speed || 1))); if (o.type === 'windmill') p = Math.max(p, 2 * Math.PI / ((o.blades || 4) * (o.speed || 1.2))); } return p || 6; }
 

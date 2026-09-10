@@ -4,7 +4,7 @@ import { newState, shoot, distMap, progress, activeMap } from './sim.mjs';
 let seed = 12345; export function setSeed(s) { seed = s >>> 0; }
 const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
 const gauss = () => { let u = 0, v = 0; while (u === 0) u = rnd(); while (v === 0) v = rnd(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
-export function periodOf(def) { let p = 0; for (const o of (def.obstacles || [])) { if (o.period) p = Math.max(p, o.period); if (o.type === 'ferry') p = Math.max(p, 2 * ((o.wait ?? 2.5) + (o.travel ?? 3))); if (o.type === 'rotor') p = Math.max(p, o.swing ? 2 * Math.PI / o.swing.speed : 2 * Math.PI / ((o.blades || 4) * Math.abs(o.speed || 1))); if (o.type === 'windmill') p = Math.max(p, 2 * Math.PI / ((o.blades || 4) * (o.speed || 1.2))); } return p || 6; }
+export function periodOf(def) { let p = 0; for (const o of (def.obstacles || [])) { if (o.period) p = Math.max(p, o.period); if (o.type === 'ferry') p = Math.max(p, 2 * ((o.wait ?? 2.5) + (o.travel ?? 3))); if (o.type === 'rotor') p = Math.max(p, o.swing ? 2 * Math.PI / o.swing.speed : 2 * Math.PI / ((o.blades || 4) * Math.abs(o.speed || 1))); if (o.type === 'windmill') p = Math.max(p, 2 * Math.PI / ((o.blades || 4) * (o.speed || 1.2))); if (o.type === 'gearlift') p = Math.max(p, 2 * Math.PI / ((o.eimer || 3) * Math.abs(o.speed || 1.05))); if (o.type === 'hand') p = Math.max(p, 2 * Math.PI / Math.abs(o.speed || 1.05)); } return p || 6; }
 export function intendedDir(st) {
   const dm = distMap(st.def), lv = dm.lv, b = st.ball, am = activeMap(st), goal = am.goal;
   let tx = Math.floor(b.x), ty = Math.floor(b.y);
