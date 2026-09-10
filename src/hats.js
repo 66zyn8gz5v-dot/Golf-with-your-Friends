@@ -1247,7 +1247,7 @@ const Hats = (() => {
     { id: 'feathercrown', name: 'Federkrone', icon: '🪶', welt: 'jungle', voll: true },
     { id: 'thunder', name: 'Gewitterkugel', icon: '⛈️', welt: 'storm', voll: true },
     { id: 'orb', name: 'Kristallkugel', icon: '🔮', welt: 'shadow', voll: true },
-    { id: 'champion', name: 'Championhelm', icon: '🏅', welt: 'colosseum' },
+    { id: 'champion', name: 'Championhelm', icon: '🏅', welt: 'colosseum', art: 'rekord' },
   ];
   const byId = id => LIST.find(h => h.id === id);
 
@@ -1308,28 +1308,54 @@ const Hats = (() => {
   /* Ganzkörper-Skin: ersetzt den Ball, statt auf ihm zu sitzen */
   const voll = id => { const h = byId(id); return !!(h && h.voll); };
 
-  /* Ist dieser Hut schon zu haben? Ein Skin gehört dem, der in seiner Welt den Rundenrekord der
-     Kombi-Wertung hält – und nur solange er ihn hält. Gezeichnet wird ein gesperrter Skin
-     trotzdem: Kommt er über das Netz vom Ball eines Mitspielers, soll man ihn sehen, egal was auf
-     dem eigenen Gerät in der Rangliste steht.
-     Best wird erst nach hats.js geladen, darum die Abfrage hier drin und nicht oben. */
+  /* Ist dieser Hut schon zu haben?
+
+     Die sechs Weltskins verdient man sich am eigenen Können: In der Summe der eigenen besten
+     Einzelbahnen muss man unter dem Par der Welt bleiben, und jede Bahn braucht ein Ergebnis.
+     Gezählt werden die besten Einzelbahnen – nicht eine Runde am Stück –, denn eine ganze Runde
+     ohne Patzer wäre für die meisten unerreichbar, Bahn für Bahn dagegen ist es eine Übung, die
+     man sich Stück für Stück vornehmen kann.
+
+     Der Championhelm bleibt beim alten: Er gehört dem, der in seiner Welt den Kombi-Rundenrekord
+     hält, und nur solange er ihn hält.
+
+     Gezeichnet wird ein gesperrter Skin trotzdem: Kommt er über das Netz vom Ball eines
+     Mitspielers, soll man ihn sehen, egal was auf dem eigenen Gerät steht.
+     Best wird erst nach hats.js geladen, darum die Abfragen hier drin und nicht oben. */
   function freigeschaltet(id) {
     const h = byId(id);
     if (!h || !h.welt) return true;
-    if (typeof Best === 'undefined' || !Best.name) return false;
-    const rekord = Best.of(h.welt).combo.round;
-    return !!(rekord && rekord.n && rekord.n === Best.name);
+    if (typeof Best === 'undefined') return false;
+    if (h.art === 'rekord') {
+      if (!Best.name) return false;
+      const rekord = Best.of(h.welt).combo.round;
+      return !!(rekord && rekord.n && rekord.n === Best.name);
+    }
+    return Best.fortschritt(h.welt).geschafft;
   }
   /* Wie man ihn bekommt – für den Hinweis am gesperrten Platz */
   function bedingung(id) {
     const h = byId(id);
     if (!h || !h.welt) return '';
     const w = (typeof WORLDS !== 'undefined' && WORLDS.find(x => x.id === h.welt)) || null;
-    return `Halte den Kombi-Rundenrekord: ${w ? w.name : 'dieser Welt'}`;
+    const name = w ? w.name : 'dieser Welt';
+    if (h.art === 'rekord') return `Halte den Kombi-Rundenrekord: ${name}`;
+    return `Spiele jede Bahn in ${name} und bleib in der Summe unter Par`;
   }
+  /* Wie weit man ist – kurz genug für eine Meldung im Spiel */
+  function stand(id) {
+    const h = byId(id);
+    if (!h || !h.welt || h.art === 'rekord' || typeof Best === 'undefined') return '';
+    const f = Best.fortschritt(h.welt);
+    if (f.offen.length) return `noch ${f.offen.length} ${f.offen.length === 1 ? 'Bahn' : 'Bahnen'} offen (${f.fertig} von ${f.gesamt})`;
+    if (f.diff < 0) return `${-f.diff} unter Par – geschafft`;
+    return `${f.schlaege} Schläge auf Par ${f.par} – ${f.diff === 0 ? 'ein Schlag fehlt' : `${f.diff + 1} Schläge fehlen`}`;
+  }
+  /* Welche Belohnung gehört zu dieser Welt? */
+  const belohnung = weltId => LIST.find(h => h.welt === weltId) || null;
 
   return {
-    LIST, draw, preview, freigeschaltet, bedingung, voll,
+    LIST, draw, preview, freigeschaltet, bedingung, stand, belohnung, voll,
     has: id => Object.prototype.hasOwnProperty.call(DEFS, id),
     name: id => (byId(id) || LIST[0]).name,
     icon: id => (byId(id) || LIST[0]).icon,

@@ -105,7 +105,8 @@ dem Browser-Speicher kommt: Der überlebt Fassungswechsel und lässt sich von Ha
 
 ### Belohnungen: ein Skin je Welt
 
-Wer in einer Welt den **Rundenrekord der Kombi-Wertung** hält, darf ihren Skin tragen. Sieben Welten,
+Jede Welt hat eine Belohnung, und man verdient sie sich am eigenen Können: **Die Summe der eigenen besten
+Einzelbahnen muss unter dem Par der Welt liegen, und jede Bahn braucht ein Ergebnis.** Sieben Welten,
 sieben Belohnungen – sechs davon sind **Ganzkörper-Skins**: Sie ersetzen den Ball, statt auf ihm zu
 sitzen, und bewegen sich. Der Championhelm ist der einzige, der nur ein Hut ist.
 
@@ -161,10 +162,31 @@ das Schwanken in der Größe oder es gibt zwei, drei Gruppen statt zwanzig Einze
 Guten: Überlappende Teilformen decken sich in einem Pfad nicht mehr doppelt – die Wolkenbank der
 Gewitterkugel wirkt seither wie eine Wolke statt wie gestapelte Flecken.
 
+**Warum die besten Einzelbahnen und nicht eine Runde am Stück.** Eine fehlerfreie Runde über neun oder zehn
+Bahnen wäre für die meisten unerreichbar – ein Patzer auf Bahn 8 wirft alles um. Bahn für Bahn dagegen ist es
+eine Übung, die man sich Stück für Stück vornehmen kann: Man weiß immer, welche Bahn noch klemmt.
+
 **Wie die Sperre funktioniert:** In `Hats.LIST` trägt eine Belohnung `welt: '<Weltkennung>'`, ein
-Ganzkörper-Skin zusätzlich `voll: true`. Die eine Stelle, die entscheidet, ist `Hats.freigeschaltet(id)`:
-Sie vergleicht `Best.name` mit dem Namen am Kombi-Rundenrekord der Welt. Die Auszeichnung gilt für den
-aktuellen Bestand, nicht für die Ewigkeit – wer den Rekord verliert, verliert auch den Skin.
+Ganzkörper-Skin zusätzlich `voll: true`. Die eine Stelle, die entscheidet, ist `Hats.freigeschaltet(id)`; sie
+fragt `Best.fortschritt(welt).geschafft`. Der Championhelm ist die Ausnahme: Er trägt `art: 'rekord'` und
+hängt weiter am Kombi-Rundenrekord der Arena – wer den Rekord verliert, verliert auch den Helm. Der
+Legionärshelm ist keine Belohnung und für alle da.
+
+**Der eigene Stand liegt getrennt.** Die Rangliste kennt je Bahn nur den einen Rekord, egal von wem. Für die
+Belohnung zählt aber, was man *selbst* geschafft hat – darum führt jedes Gerät zusätzlich eine private Liste
+(`Best.fortschritt`, `Best.eigeneBahnen`): je Welt und Bahn die wenigsten Schläge, die man dort selbst
+gebraucht hat. Sie wird nicht geteilt; über das Netz wäre sie ohnehin nicht nachprüfbar, und sie geht
+niemanden etwas an.
+
+**Der Kreativmodus wird beim Speichern abgewiesen**, nicht erst beim Anzeigen: `Best.hole` bekommt den Modus
+mitgegeben und trägt gar nicht erst ein. Dort darf man beliebig oft neu setzen – jede Bedingung wäre damit
+wertlos.
+
+**Fortschritt sieht man.** In der Rangliste steht unter jeder Welt ein Block mit Balken: wie viele Bahnen
+schon ein Ergebnis haben, welche noch fehlen, wie die Summe der eigenen besten Bahnen zum Par steht und wie
+viele Schläge noch nötig sind. In der Hutwahl steht dasselbe kurz am gesperrten Platz. Und in dem Moment, in
+dem die Bedingung fällt, sagt das Spiel es zweimal: sofort als Meldung und noch einmal als Zeile auf der
+Ergebnistafel der Bahn – die Meldung allein ginge unter, weil `showMessage` über der Tafel schweigt.
 
 In der Auswahl bleiben gesperrte Belohnungen **sichtbar**: blass, entfärbt, mit einem Schloss und dem
 Hinweis, welcher Rekord dafür nötig ist. Man soll sehen, was es zu holen gibt. Gezeichnet wird ein

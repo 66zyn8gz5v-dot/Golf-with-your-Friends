@@ -551,6 +551,47 @@
     });
   }
 
+  /* Der eigene Weg zur Belohnung einer Welt – als Block unter der Rekordtafel.
+     Sichtbar ist beides, was die Bedingung verlangt: wie viele Bahnen noch fehlen und wie die
+     Summe der eigenen besten Bahnen zum Par steht. Ohne das bliebe die Bedingung eine Behauptung. */
+  /* Ansage der frisch verdienten Belohnung – einmal, dann ist sie wieder weg */
+  function lohnZeile() {
+    if (!frischerLohn) return '';
+    const l = frischerLohn; frischerLohn = null;
+    return `<div class="sub lohn-frisch">${l.icon} <b>${Text.esc(l.name)} freigeschaltet!</b><br>
+      Du findest ihn bei der Hutwahl vor dem Start.</div>`;
+  }
+
+  function belohnungsStand(w) {
+    const lohn = Hats.belohnung(w.id);
+    if (!lohn) return '';
+    const frei = Hats.freigeschaltet(lohn.id);
+    const kopf = `<span class="lohn-name">${lohn.icon} ${Text.esc(lohn.name)}</span>
+      <span class="lohn-was">Belohnung dieser Welt</span>`;
+    // Der Championhelm hängt am Rundenrekord, nicht am Par – für ihn gibt es nichts zu zählen
+    if (lohn.art === 'rekord') return `<div class="lohn ${frei ? 'auf' : ''}">${kopf}
+      <div class="lohn-text">${frei ? 'Gehört dir, solange du den Rekord hältst.' : Text.esc(Hats.bedingung(lohn.id))}</div></div>`;
+
+    const f = Best.fortschritt(w.id);
+    const anteil = f.gesamt ? Math.round(f.fertig / f.gesamt * 100) : 0;
+    const offenText = f.offen.length
+      ? `Noch offen: ${f.offen.slice(0, 4).map(n => Text.esc(n)).join(', ')}${f.offen.length > 4 ? ` und ${f.offen.length - 4} weitere` : ''}`
+      : 'Jede Bahn hat ein Ergebnis.';
+    const summeText = f.fertig
+      ? `Deine besten Bahnen zusammen: <b>${f.schlaege}</b> auf Par ${f.par}` +
+        (f.offen.length ? ` <i>(erst ${f.fertig} von ${f.gesamt} Bahnen)</i>`
+          : ` · <b class="${f.diff < 0 ? 'unter' : 'ueber'}">${f.diff === 0 ? 'genau Par' : (f.diff > 0 ? '+' : '') + f.diff}</b>`)
+      : 'Noch kein eigenes Ergebnis in dieser Welt.';
+    const ziel = frei
+      ? 'Geschafft – der Skin ist deiner.'
+      : f.offen.length
+        ? `Für die Belohnung braucht jede Bahn ein Ergebnis, und die Summe muss unter Par ${f.par} liegen.`
+        : `Es fehlen noch ${f.diff + 1} ${f.diff + 1 === 1 ? 'Schlag' : 'Schläge'} bis unter Par.`;
+    return `<div class="lohn ${frei ? 'auf' : ''}">${kopf}
+      <div class="lohn-balken"><i style="width:${anteil}%"></i><span>${f.fertig} / ${f.gesamt} Bahnen</span></div>
+      <div class="lohn-text">${offenText}<br>${summeText}<br>${ziel}</div></div>`;
+  }
+
   /* Ranglisten-Bildschirm: Name, Gruppencode und die Rekorde aller Welten */
   function showBestList(worldId) {
     state.phase = 'title'; document.body.classList.add('title');
@@ -588,6 +629,7 @@
         : 'Keine Verbindung – die Rekorde bleiben vorerst auf diesem Gerät.'}</div>
       <div id="bw" class="ow">${WORLDS.filter(x => x.id !== 'custom').map(x => `<span class="btn ghost small ${x.id === w.id ? 'sel' : ''}" data-w="${x.id}">${MODE_ICON[worldMode(x)]} ${Text.esc(x.short)}</span>`).join('')}</div>
       <div class="sub" style="margin-top:10px"><b>${Text.esc(w.name)}</b> · Par ${parTotal}</div>
+      ${belohnungsStand(w)}
       <div class="tabelle-schiebe"><table class="scores best-table">
         <tr><th>#</th><th>Bahn</th><th>Par</th>${Best.KINDS.map(k => `<th class="num">${BEST_ICON[k]} <span class="kopf-wort">${Best.KIND_NAME[k]}</span></th>`).join('')}</tr>
         ${rows}
@@ -714,13 +756,27 @@
      Gewertet wird der eigene Ball im Wettkampf: am Gerät Spieler 1, online der eigene Platz.
      Im Kreativmodus zählt nichts, weil man dort beliebig oft neu setzen darf. */
   const myIndex = () => (online && online.started) ? online.players.findIndex(p => p.id === Net.id) : 0;
+  /* Gerade verdiente Belohnung – wird auf der nächsten Ergebnistafel angesagt und dann vergessen */
+  let frischerLohn = null;
   function noteRecord(score, ms) {
     if (state.mode === 'creative' || state.editorReturn) return;
-    if (!state.world || state.world.id === 'custom' || !Best.name) return;
+    if (!state.world || state.world.id === 'custom') return;
     if (state.curPlayer !== myIndex()) return;
     const def = state.courses[state.holeIdx];
-    const treffer = Best.hole(state.world.id, def.name, score, ms, (online && online.started) ? 'net' : 'lokal');
+    // Vorher merken, ob die Belohnung dieser Welt schon zu haben war – sonst fiele der Moment
+    // des Freischaltens nicht auf
+    const lohn = Hats.belohnung(state.world.id);
+    const vorherFrei = lohn ? Hats.freigeschaltet(lohn.id) : true;
+    const treffer = Best.hole(state.world.id, def.name, score, ms, (online && online.started) ? 'net' : 'lokal', state.mode);
     if (treffer.length) { Sfx.sink(); showMessage(`🏆 ${def.name}: ${recordText(treffer)}`, 2600); }
+    if (lohn && !vorherFrei && Hats.freigeschaltet(lohn.id)) {
+      /* Sofort melden, nicht verzögert: Gleich danach geht die Ergebnistafel auf, und über der
+         schweigt showMessage. Die Tafel bekommt die Nachricht darum noch einmal als Zeile –
+         so geht der Moment nicht unter, wenn man gerade woanders hinschaut. */
+      Sfx.sink();
+      showMessage(`${lohn.icon} ${lohn.name} freigeschaltet!`, 3400);
+      frischerLohn = lohn;
+    }
     // Läuft gerade das Turnier und sind wir in seiner Welt, zählt der Wert dort zusätzlich
     if (state.world.id === Turnier.WELT && Turnier.bahn(def.name, score, ms) && !treffer.length)
       showMessage(`⚔️ Turnier: ${def.name} verbessert`, 2200);
@@ -1080,8 +1136,9 @@
         b.classList.toggle('zu', !frei);
         b.classList.toggle('probe', !frei && TEST_FREI); // Vorschau: Sperre zeigen, Skin trotzdem sehen
         // Gesperrt: der Platz bleibt sichtbar, damit man weiß, was es zu holen gibt
+        const wie = Hats.stand(b.dataset.h);
         b.title = frei ? Hats.name(b.dataset.h)
-          : `${Hats.name(b.dataset.h)} – ${Hats.bedingung(b.dataset.h)}${TEST_FREI ? ' (hier zum Ausprobieren freigegeben)' : ''}`;
+          : `${Hats.name(b.dataset.h)} – ${Hats.bedingung(b.dataset.h)}${wie ? ' · ' + wie : ''}${TEST_FREI ? ' (hier zum Ausprobieren freigegeben)' : ''}`;
         Hats.preview(b.querySelector('canvas'), b.dataset.h, col);
       });
     }
@@ -1101,7 +1158,8 @@
       if (!Hats.freigeschaltet(b.dataset.h)) {
         // Auf dem Prüfstand darf man eine gesperrte Belohnung trotzdem aufsetzen – dort soll man
         // alles ansehen können. Im Spiel bleibt die Sperre: dort ist sie der halbe Reiz.
-        if (!TEST_FREI) { showMessage(`${Hats.name(b.dataset.h)}: ${Hats.bedingung(b.dataset.h)}`, 2600); return; }
+        const wie = Hats.stand(b.dataset.h);
+        if (!TEST_FREI) { showMessage(`${Hats.name(b.dataset.h)}: ${Hats.bedingung(b.dataset.h)}${wie ? ' · ' + wie : ''}`, 3200); return; }
         showMessage(`${Hats.name(b.dataset.h)} – zum Ausprobieren freigegeben`, 2400);
       }
       setHat(hatWho, b.dataset.h); drawWho(); drawHats();
@@ -1441,6 +1499,7 @@
     overlay(`<div class="panel ${worldClass()}">
       <h2>${holeIcon(def)} Bahn ${state.holeIdx + 1}: ${Text.esc(def.name)}</h2>
       <div class="sub">Par ${def.par}</div>
+      ${lohnZeile()}
       <table class="scores"><tr><th>Spieler</th><th>Bahn</th>${zeit ? '<th>Zeit</th>' : ''}<th>Gesamt</th></tr>${rows}</table>
       ${!last ? `<div class="sub">Als Nächstes: <b>${Text.esc(state.courses[state.holeIdx + 1].name)}</b><br><i>${Text.esc(state.courses[state.holeIdx + 1].intro || '')}</i></div>` : ''}
       ${online && !online.host ? '<div class="sub">Der Gastgeber öffnet die nächste Bahn …</div>'
@@ -1463,7 +1522,7 @@
       const meP = state.players[myIndex()];
       if (meP && meP.scores.length === state.courses.length && meP.scores.every(v => v != null)) {
         const summe = meP.scores.reduce((a, b) => a + b, 0);
-        roundRec = Best.round(state.world.id, summe, gesamtZeit(meP), (online && online.started) ? 'net' : 'lokal');
+        roundRec = Best.round(state.world.id, summe, gesamtZeit(meP), (online && online.started) ? 'net' : 'lokal', state.mode);
         // Die ganze Runde ist die Wertung des Turniers – aber nur in seiner Welt und im Fenster
         if (state.world.id === Turnier.WELT) turnierRunde = Turnier.runde(summe, gesamtZeit(meP));
       }
@@ -1497,6 +1556,7 @@
       ${best}
       <div class="hole-cards">${cards}</div>
       <div class="final-legend"><span class="hc-score ace">1</span> Hole-in-One <span class="hc-score eagle">–2</span> Eagle <span class="hc-score birdie">–1</span> Birdie <span class="hc-score par">0</span> Par <span class="hc-score bogey">+1</span> Bogey <span class="hc-score worse">+2</span> mehr</div>
+      ${lohnZeile()}
       ${roundRec.length ? `<div class="sub net-note">🏆 Neuer Rundenrekord für ${Text.esc(roundRec[0].rec.n)}: ${Text.esc(recordText(roundRec))}</div>` : ''}
       ${turnierRunde ? `<div class="sub net-note">⚔️ Im Turnier gewertet: Kombi ${Text.esc(String(turnierRunde.s).replace('.', ','))} · ${turnierRunde.st} Schläge in ${Text.esc(Best.formatTime(turnierRunde.ms))}</div>` : ''}
       <span class="btn" id="again">Nochmal spielen</span>
