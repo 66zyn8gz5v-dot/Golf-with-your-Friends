@@ -218,26 +218,49 @@ const WorldMap = (() => {
       <g filter="url(#atDeep)">
         ${slab(...W.clock, 8, 8, 2.6, '#6f7488', '#656a7e', '#3e4258', '#242838')}
         ${(() => { const [x, y] = W.clock; return `
-          ${shade(x, y, 0.3, 0.5, 1.8)}
-          <!-- Der Turm: Schaft, Zifferblatt, Grünspandach -->
-          ${box(x, y, -0.3, -0.3, 1.9, 1.9, 0, 3.4, '#525872', '#3d4258', '#2a2e40')}
-          ${(() => { const c = P(x, y, -0.3, -0.3, 2.6); return `
-            <circle cx="${c[0].toFixed(2)}" cy="${c[1].toFixed(2)}" r="0.95" fill="#8a6624"/>
-            <circle cx="${c[0].toFixed(2)}" cy="${c[1].toFixed(2)}" r="0.78" fill="#ffdf9c"/>
-            <line x1="${c[0].toFixed(2)}" y1="${c[1].toFixed(2)}" x2="${c[0].toFixed(2)}" y2="${(c[1] - 0.5).toFixed(2)}" stroke="#3a2a12" stroke-width="0.14"/>
-            <line x1="${c[0].toFixed(2)}" y1="${c[1].toFixed(2)}" x2="${(c[0] + 0.42).toFixed(2)}" y2="${(c[1] + 0.2).toFixed(2)}" stroke="#3a2a12" stroke-width="0.12"/>`; })()}
-          ${cone(x, y, -0.3, -0.3, 1.15, 3.4, 1.5, '#5ec9ac', '#2f7a68')}
-          <!-- Dächer ringsum, Kupfer auf Stein -->
-          ${box(x, y, 2.1, 0.6, 1.5, 1.5, 0, 1.5, '#4a4f66', '#373b4e', '#252838')}
-          ${cone(x, y, 2.1, 0.6, 0.95, 1.5, 0.9, '#4fb59b', '#276b5c')}
-          ${box(x, y, -2.4, 1.2, 1.3, 1.3, 0, 1.1, '#4a4f66', '#373b4e', '#252838')}
-          ${cone(x, y, -2.4, 1.2, 0.85, 1.1, 0.8, '#4fb59b', '#276b5c')}
-          ${box(x, y, 0.9, 2.6, 1.1, 1.1, 0, 0.9, '#4a4f66', '#373b4e', '#252838')}
+          ${shade(x, y, 0.4, 0.6, 2.1)}
+          <!-- Die Dächer der Stadt zuerst, damit der Turm davor steht und sie überragt -->
+          ${box(x, y, 2.4, 0.9, 1.6, 1.6, 0, 1.4, '#4a4f66', '#373b4e', '#252838')}
+          ${cone(x, y, 2.4, 0.9, 1.0, 1.4, 0.9, '#4fb59b', '#276b5c')}
+          ${box(x, y, -2.7, 1.4, 1.4, 1.4, 0, 1.1, '#4a4f66', '#373b4e', '#252838')}
+          ${cone(x, y, -2.7, 1.4, 0.9, 1.1, 0.8, '#4fb59b', '#276b5c')}
+          ${box(x, y, 1.0, 2.9, 1.2, 1.2, 0, 0.9, '#4a4f66', '#373b4e', '#252838')}
+          ${box(x, y, -1.6, -2.6, 1.1, 1.1, 0, 1.2, '#454a60', '#333749', '#222635')}
+
+          <!-- Der Uhrturm: Sockel, hoher Schaft, Zifferblatt, Galerie, Glockenstube, Spitze.
+               Er ist mit Abstand das Höchste auf der Scheibe – die Stadt heißt nach ihm. -->
+          ${box(x, y, -0.4, -0.4, 2.7, 2.7, 0, 0.8, '#5b6178', '#43485e', '#2c3042')}
+          ${box(x, y, -0.4, -0.4, 1.9, 1.9, 0.8, 4.2, '#535974', '#3e4359', '#2a2e40')}
+          <!-- schmale Fensterschlitze im Schaft -->
+          <g fill="#ffc46b" opacity="0.9">${[1.6, 2.6, 3.6].map(z => { const p = P(x, y, -1.35, -0.4, z);
+            return `<rect x="${(p[0] - 0.13).toFixed(2)}" y="${(p[1] - 0.42).toFixed(2)}" width="0.26" height="0.5" rx="0.12"/>`; }).join('')}</g>
+          <!-- Zifferblatt: goldener Ring, helles Blatt, Zeiger auf kurz vor zwölf -->
+          ${(() => { const c = P(x, y, -0.4, -0.4, 3.6); return `
+            <circle cx="${c[0].toFixed(2)}" cy="${c[1].toFixed(2)}" r="1.32" fill="#6d4d18"/>
+            <circle cx="${c[0].toFixed(2)}" cy="${c[1].toFixed(2)}" r="1.14" fill="#8a6624"/>
+            <circle cx="${c[0].toFixed(2)}" cy="${c[1].toFixed(2)}" r="0.98" fill="#fff1cd"/>
+            <g stroke="#3a2a12" stroke-width="0.11">${Array.from({ length: 12 }, (_, i) => { const a = i * Math.PI / 6;
+              return `<line x1="${(c[0] + Math.sin(a) * 0.72).toFixed(2)}" y1="${(c[1] - Math.cos(a) * 0.72).toFixed(2)}" x2="${(c[0] + Math.sin(a) * 0.88).toFixed(2)}" y2="${(c[1] - Math.cos(a) * 0.88).toFixed(2)}"/>`; }).join('')}</g>
+            <line x1="${c[0].toFixed(2)}" y1="${c[1].toFixed(2)}" x2="${(c[0] - 0.22).toFixed(2)}" y2="${(c[1] - 0.6).toFixed(2)}" stroke="#2a1d0c" stroke-width="0.17" stroke-linecap="round"/>
+            <line x1="${c[0].toFixed(2)}" y1="${c[1].toFixed(2)}" x2="${(c[0] + 0.12).toFixed(2)}" y2="${(c[1] - 0.86).toFixed(2)}" stroke="#2a1d0c" stroke-width="0.13" stroke-linecap="round"/>
+            <circle cx="${c[0].toFixed(2)}" cy="${c[1].toFixed(2)}" r="0.14" fill="#c9903f"/>`; })()}
+          <!-- Galerie und Glockenstube über dem Blatt -->
+          ${box(x, y, -0.4, -0.4, 2.3, 2.3, 5.0, 0.3, '#c9903f', '#8a6624', '#5f4416')}
+          ${box(x, y, -0.4, -0.4, 1.7, 1.7, 5.3, 1.1, '#4c5169', '#383c50', '#262a3a')}
+          ${(() => { const g = P(x, y, -1.25, -0.4, 5.5); return `<rect x="${(g[0] - 0.24).toFixed(2)}" y="${(g[1] - 0.9).toFixed(2)}" width="0.48" height="0.9" rx="0.24" fill="#1a1626"/>
+            <circle cx="${g[0].toFixed(2)}" cy="${(g[1] - 0.5).toFixed(2)}" r="0.2" fill="#e0b45c"/>`; })()}
+          <!-- Spitze mit Turmknopf und Wetterfahne -->
+          ${cone(x, y, -0.4, -0.4, 1.25, 6.4, 2.3, '#5ec9ac', '#2f7a68')}
+          ${(() => { const t0 = P(x, y, -0.4, -0.4, 8.7), t1 = P(x, y, -0.4, -0.4, 9.6); return `
+            <circle cx="${t0[0].toFixed(2)}" cy="${t0[1].toFixed(2)}" r="0.26" fill="#ffdf9c"/>
+            <line x1="${t0[0].toFixed(2)}" y1="${t0[1].toFixed(2)}" x2="${t1[0].toFixed(2)}" y2="${t1[1].toFixed(2)}" stroke="#d9a24e" stroke-width="0.14"/>
+            <path d="M${t1[0].toFixed(2)} ${t1[1].toFixed(2)} l0.9 0.3 l-0.9 0.3 Z" fill="#d9a24e"/>`; })()}
+
           <!-- Gaslaternen als warme Punkte -->
-          <g fill="#ffc46b">${[[-1.9, -1.9], [2.9, -1.4], [-0.6, 2.9]].map(([a, b]) => { const p = P(x, y, a, b, 0.7);
+          <g fill="#ffc46b">${[[-2.2, -2.0], [3.2, -1.5], [-0.6, 3.2]].map(([a, b]) => { const p = P(x, y, a, b, 0.7);
             return `<circle cx="${p[0].toFixed(2)}" cy="${p[1].toFixed(2)}" r="0.22"/>`; }).join('')}</g>
           <!-- ein Zahnrad an der Flanke, das sich dreht -->
-          ${(() => { const c = P(x, y, 3.1, -2.4, 0.5); return `<g class="mill-blades" fill="none" stroke="#d9a24e" stroke-width="0.2" stroke-linecap="round">
+          ${(() => { const c = P(x, y, 3.3, -2.6, 0.5); return `<g class="mill-blades" fill="none" stroke="#d9a24e" stroke-width="0.2" stroke-linecap="round">
             <circle cx="${c[0].toFixed(2)}" cy="${c[1].toFixed(2)}" r="0.7"/>
             ${Array.from({ length: 8 }, (_, i) => { const a = i * Math.PI / 4;
               return `<path d="M${(c[0] + Math.cos(a) * 0.7).toFixed(2)} ${(c[1] + Math.sin(a) * 0.7 * TILT).toFixed(2)} L${(c[0] + Math.cos(a) * 1.05).toFixed(2)} ${(c[1] + Math.sin(a) * 1.05 * TILT).toFixed(2)}"/>`; }).join('')}</g>`; })()}`; })()}
