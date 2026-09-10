@@ -1510,4 +1510,109 @@ Object.assign(Renderer.prototype, {
     // Achse in der Mitte
     this.prism(ctx, this.circlePoly(ob.x, ob.y, 0.16, 10), 0.22, 0.34, '#e8c774', '#8a6624', { outline: '#33240e' });
   },
+
+  /* ---------------------------------------------------------------------------
+     Kupferrohr und Hemmung.
+     --------------------------------------------------------------------------- */
+
+  /* Kupferrohr: ein liegendes Rohr, dessen Mund zur Bahn zeigt. Eingang und Ausgang werden
+     getrennt einsortiert und beide von hier gezeichnet – 'ausgang' sagt, welcher gerade dran ist.
+     Der Mund ist eine dunkle Scheibe in der Stirnfläche: So sieht man von jeder Kameradrehung aus,
+     dass das Rohr offen ist und wohin es zeigt. */
+  drawCopperPipe(ctx, ob, t, ausgang) {
+    const s = this.scale;
+    const cx = ausgang ? ob.ax : ob.x, cy = ausgang ? ob.ay : ob.y;
+    if (cx == null) return;
+    let ux = ausgang ? ob.ausMundX : ob.mundX, uy = ausgang ? ob.ausMundY : ob.mundY;
+    if (!ux && !uy) { ux = ob.dx; uy = ob.dy; }          // Notfall: die Auswurfrichtung
+    const L = Math.hypot(ux, uy) || 1; ux /= L; uy /= L;
+    const qx = -uy, qy = ux;                              // quer zur Rohrachse, waagerecht
+    const r = 0.42, z = r + 0.1;
+    const kupfer = ['#e08b4c', '#8a4a1e'], dunkel = '#3a1c08';
+    // Scheibe senkrecht zur Rohrachse (quer-Richtung und Höhe spannen sie auf)
+    const scheibe = (mx, my, rr, farbe) => {
+      ctx.beginPath();
+      for (let i = 0; i <= 16; i++) {
+        const w = (i * TAU) / 16;
+        const p = this.proj(mx + qx * Math.cos(w) * rr, my + qy * Math.cos(w) * rr, z + Math.sin(w) * rr);
+        i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]);
+      }
+      ctx.closePath(); ctx.fillStyle = farbe; ctx.fill();
+    };
+    // Sockel, damit das Rohr nicht schwebt
+    this.prism(ctx, [[cx - qx * 0.5 - ux * 0.45, cy - qy * 0.5 - uy * 0.45], [cx + qx * 0.5 - ux * 0.45, cy + qy * 0.5 - uy * 0.45],
+      [cx + qx * 0.5 + ux * 0.4, cy + qy * 0.5 + uy * 0.4], [cx - qx * 0.5 + ux * 0.4, cy - qy * 0.5 + uy * 0.4]],
+      0, 0.16, '#6b4a24', '#3e2a12', { outline: '#241708' });
+    // Rohrkörper: von hinten aus dem Boden bis zum Mund an der Kachelkante
+    const hx = cx - ux * 0.5, hy = cy - uy * 0.5, mx = cx + ux * 0.52, my = cy + uy * 0.52;
+    this.walze(ctx, hx, hy, mx, my, z, r, kupfer[0], kupfer[1], { n: 14, outline: dunkel });
+    // Nietenband kurz vor dem Mund
+    const nx = cx + ux * 0.24, ny = cy + uy * 0.24;
+    scheibe(nx, ny, r * 1.1, '#c9762f');
+    scheibe(nx + ux * 0.05, ny + uy * 0.05, r * 0.98, '#f0a35e');
+    for (let i = 0; i < 8; i++) {
+      const w = (i * TAU) / 8 + 0.2;
+      const p = this.proj(nx + ux * 0.06 + qx * Math.cos(w) * r * 1.04, ny + uy * 0.06 + qy * Math.cos(w) * r * 1.04, z + Math.sin(w) * r * 1.04);
+      ctx.fillStyle = '#7d4416'; ctx.beginPath(); ctx.arc(p[0], p[1], Math.max(1.2, s * 0.045), 0, TAU); ctx.fill();
+    }
+    // Der offene Mund
+    scheibe(mx, my, r * 0.92, '#3a1c08');
+    scheibe(mx + ux * 0.05, my + uy * 0.05, r * 0.74, '#180b03');
+    // Dampfaustritt aus dem Ventil oben – kräftig, wenn das Rohr gerade geschluckt oder gespien hat
+    const seit = t - (ausgang ? ob.speiAt : ob.schluckAt);
+    const stoss = Math.max(0, 1 - seit / 0.9);
+    const [vx, vy] = this.proj(cx - ux * 0.28, cy - uy * 0.28, z + r + 0.12);
+    ctx.fillStyle = '#8a4a1e'; ctx.beginPath(); ctx.arc(vx, vy, s * 0.09, 0, TAU); ctx.fill();
+    for (let i = 0; i < 4; i++) {
+      const u = ((t * 0.9 + i / 4) % 1);
+      const dicht = 0.12 + 0.5 * stoss;
+      const p = this.proj(cx - ux * (0.28 + u * 0.25) + qx * (i - 1.5) * 0.1, cy - uy * (0.28 + u * 0.25) + qy * (i - 1.5) * 0.1, z + r + 0.15 + u * 0.7);
+      ctx.fillStyle = `rgba(238,246,255,${(dicht * (1 - u)).toFixed(3)})`;
+      ctx.beginPath(); ctx.arc(p[0], p[1], s * (0.1 + u * 0.26), 0, TAU); ctx.fill();
+    }
+  },
+
+  /* Hemmung, Boden: die beiden Durchlässe. Der offene leuchtet, der gesperrte bleibt dunkel –
+     man soll von weitem sehen, welche Seite gerade dran ist, nicht erst aus zwei Kacheln Abstand. */
+  drawEscapementFloor(ctx, ob, t) {
+    for (const [auf, sd] of [[ob.aufA, -1], [ob.aufB, 1]]) {
+      const { cx, cy, laenge, dick } = ob.haelfte(sd);
+      const poly = ob.laengs
+        ? [[cx - laenge / 2, cy - dick], [cx + laenge / 2, cy - dick], [cx + laenge / 2, cy + dick], [cx - laenge / 2, cy + dick]]
+        : [[cx - dick, cy - laenge / 2], [cx + dick, cy - laenge / 2], [cx + dick, cy + laenge / 2], [cx - dick, cy + laenge / 2]];
+      const hell = auf * auf;
+      this.fillPoly(ctx, poly, 0.005, `rgba(255,214,110,${(0.06 + 0.24 * hell).toFixed(3)})`, false);
+    }
+  },
+  /* Hemmung: zwei Klinken, die aus den Pfosten fahren, dazwischen der Anker, der zur offenen Seite
+     kippt. Eine Klinke, die halb draußen ist, sperrt noch – dieselbe Regel wie beim Fallgatter. */
+  drawEscapement(ctx, ob, t) {
+    const s = this.scale, H = ob.hoehe;
+    const messing = ['#e0b45c', '#8a6624'], stahl = ['#c6ccda', '#5e6472'];
+    for (const [auf, sd] of [[ob.aufA, -1], [ob.aufB, 1]]) {
+      const { cx, cy, laenge, dick } = ob.haelfte(sd);
+      // Pfosten am äußeren Ende, in dem die Klinke steckt
+      const px = ob.x + (ob.laengs ? sd * laenge : 0), py = ob.y + (ob.laengs ? 0 : sd * laenge);
+      this.prism(ctx, this.circlePoly(px, py, dick * 0.75, 8), 0, H + 0.3, messing[0], messing[1], { outline: '#33240e' });
+      // Klinke: fährt vom Pfosten zur Mitte, je weiter 'auf', desto weiter zurückgezogen
+      const raus = laenge * (1 - auf);
+      if (raus > 0.05) {
+        const ex = px - (ob.laengs ? sd * raus : 0), ey = py - (ob.laengs ? 0 : sd * raus);
+        const mx = (px + ex) / 2, my = (py + ey) / 2;
+        const poly = ob.laengs ? [[Math.min(px, ex), my - dick / 2], [Math.max(px, ex), my - dick / 2], [Math.max(px, ex), my + dick / 2], [Math.min(px, ex), my + dick / 2]]
+          : [[mx - dick / 2, Math.min(py, ey)], [mx + dick / 2, Math.min(py, ey)], [mx + dick / 2, Math.max(py, ey)], [mx - dick / 2, Math.max(py, ey)]];
+        this.prism(ctx, poly, 0.04, H, stahl[0], stahl[1], { outline: '#22262f' });
+        // Zahn an der Spitze: daran erkennt man die Sperrklinke
+        this.prism(ctx, this.circlePoly(ex, ey, dick * 0.55, 6), 0.04, H + 0.12,
+          ob.zuA && sd < 0 || ob.zuB && sd > 0 ? '#ffdf9c' : '#9aa2b4', messing[1], { outline: '#33240e' });
+      }
+    }
+    // Anker in der Mitte: er kippt zur offenen Seite und sagt, was als Nächstes kommt
+    const k = ob.anker * 0.45;
+    const ax = ob.x + (ob.laengs ? k * 0.5 : 0), ay = ob.y + (ob.laengs ? 0 : k * 0.5);
+    this.prism(ctx, this.circlePoly(ob.x, ob.y, 0.2, 10), 0, H + 0.45, messing[0], messing[1], { outline: '#33240e' });
+    const [c0, c1] = this.proj(ob.x, ob.y, H + 0.45), [a0, a1] = this.proj(ax, ay, H + 0.5);
+    ctx.strokeStyle = '#ffdf9c'; ctx.lineWidth = Math.max(2, s * 0.09); ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(c0, c1); ctx.lineTo(a0, a1); ctx.stroke(); ctx.lineCap = 'butt';
+  },
 });

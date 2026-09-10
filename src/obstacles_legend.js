@@ -674,3 +674,70 @@ class SpringWork extends Cannon {
     this.type = 'springwork'; this.style = 'feder';
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Kupferrohre und Hemmung – die zweite Lieferung für den Uhrenturm.
+   --------------------------------------------------------------------------- */
+
+/* Kupferrohr: die Rohrpost der Stadt. Verhalten ist Zeichen für Zeichen das des Löwentors – zwei
+   Plätze auf der Karte als Groß- und Kleinbuchstabe eines Paares, der Eingang schluckt nur ab
+   LOEWENTOR_TEMPO, wirft mit LOEWENTOR_AUSWURF in Richtung 'angle' wieder aus, ist von außen eine
+   Wand, wenn der Ball zu langsam ankommt, und schiebt einen im Rohrmund liegengebliebenen Ball
+   sanft entgegen seiner Anfahrt wieder heraus.
+
+   Darum erbt es dieses Verhalten, statt es abzuschreiben: Wenn am Tempo, am Auswurf oder am
+   Notausgang je etwas geändert wird, soll sich das Rohr genauso ändern. Neu ist allein das
+   Gesicht – Kupfer statt Löwenmaul. */
+class CopperPipe extends LionGate {
+  constructor(d) { super(d); this.type = 'copperpipe'; }
+}
+
+/* Hemmung: zwei Sperrklinken nebeneinander in einem Durchlass. Immer ist genau eine Seite frei,
+   die andere gesperrt; alle HEMMUNG_TAKT Sekunden springt es um. Beim Umschlagen sind für einen
+   Augenblick beide Klinken unten – so wie in einer echten Hemmung die eine erst fasst, wenn die
+   andere losgelassen hat. Wer den Umschlag mitnimmt, prallt ab.
+
+   Der Takt steht als Konstante hier oben und nicht in den Bahndaten: Alle Hemmungen einer Bahn
+   sollen gleich gehen, damit man einmal mitzählt und es danach für die ganze Bahn weiß. Was sich
+   je Hemmung unterscheiden darf, ist die Phase – mit phase 0.5 startet die andere Seite offen. */
+const HEMMUNG_TAKT = 2.6;        // Sekunden, die eine Seite offen steht
+const HEMMUNG_UMSCHLAG = 0.35;   // Sekunden, in denen beide Klinken unten sind
+
+class Escapement {
+  constructor(d) {
+    Object.assign(this, { w: 3, h: 0.45, phase: 0, e: 0.55, hoehe: 0.8 }, d);
+    this.type = 'escapement';
+    this.laengs = this.w >= this.h;          // true: die Klinken stehen in x nebeneinander
+    this.update(0);
+  }
+  update(t) {
+    const zyklus = 2 * HEMMUNG_TAKT;
+    const s = ((((t / zyklus + this.phase) % 1) + 1) % 1) * zyklus;
+    /* Wie weit ist eine Klinke gehoben? 0 = unten und sperrt, 1 = ganz zurückgezogen.
+       Am Anfang und am Ende ihres Fensters braucht sie HEMMUNG_UMSCHLAG Sekunden dafür. */
+    const hebe = (von, bis) => {
+      if (s < von || s >= bis) return 0;
+      const k = Math.min(1, (s - von) / HEMMUNG_UMSCHLAG, (bis - s) / HEMMUNG_UMSCHLAG);
+      return k * k * (3 - 2 * k);
+    };
+    this.aufA = hebe(0, HEMMUNG_TAKT);
+    this.aufB = hebe(HEMMUNG_TAKT, zyklus);
+    this.zuA = this.aufA < 0.5; this.zuB = this.aufB < 0.5;
+    this.anker = this.aufB - this.aufA;      // -1 .. 1, zeigt zur offenen Seite (fürs Zeichnen)
+  }
+  /* Mitte und Maße einer der beiden Hälften. sd = -1 ist Klinke A, +1 ist Klinke B. */
+  haelfte(sd) {
+    const halb = (this.laengs ? this.w : this.h) / 2, dick = this.laengs ? this.h : this.w;
+    const cx = this.x + (this.laengs ? (sd * halb) / 2 : 0);
+    const cy = this.y + (this.laengs ? 0 : (sd * halb) / 2);
+    return { cx, cy, laenge: halb, dick };
+  }
+  segments(out) {
+    for (const [zu, sd] of [[this.zuA, -1], [this.zuB, 1]]) {
+      if (!zu) continue;
+      const { cx, cy, laenge, dick } = this.haelfte(sd);
+      polySegments(rectPoly(cx, cy, this.laengs ? laenge : dick, this.laengs ? dick : laenge),
+        out, { e: this.e, kind: 'gate', owner: this });
+    }
+  }
+}

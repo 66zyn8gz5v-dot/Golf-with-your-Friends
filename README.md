@@ -35,7 +35,7 @@ x-Angabe wird beim Zeichnen durch `BREITE` geteilt.
 | Dschungeltempel | Profi | 9 Bahnen durch den Urwald bis zur verlorenen Stadt |
 | Sturmhimmel | Legende | 9 extra große Bahnen über den Wolken |
 | Schattenreich | Legende | 10 extra große Bahnen im Reich der Schatten |
-| Uhrwerkstadt | Profi | wird neu gebaut – zur Zeit drei Testbahnen für Zahnradfeld, Pendel und Federwerk |
+| Uhrwerkstadt | Profi | wird neu gebaut – zur Zeit fünf Testbahnen für die neuen Maschinen |
 
 Das **Kolosseum** steht bewusst *nicht* auf der Weltkarte. Es ist die Turnierwelt und wird nur über
 den **Turnier**-Knopf im Startbildschirm betreten – die Weltkarte bleibt die Reise durch die sieben
@@ -603,6 +603,8 @@ Neulernen: Er weiß schon, was passiert, sobald er sie sieht.
 | **Zahnradfeld** (`gearfield`) | die Lore (`ferry`) | Trägt den Ball von einem Ende zum anderen und setzt ihn dort ab. Es hält an beiden Enden an – dort steigt man ein. | Eine Reihe ineinandergreifender Zahnräder in einer Rinne im Boden. Sie drehen sich genau so weit, wie der Ball wandert, abwechselnd gegenläufig; die helle Lücke, die mitwandert, ist die Stelle, die trägt. |
 | **Pendel** (`pendulum`) | der Ritter (`mover`) | Ein schwerer Körper auf fester Schwingbahn quer über die Bahn. Er stößt den Ball weg und gibt ihm seinen eigenen Schwung mit. | Messingstange von oben herab, schwere Linse unten. Auf dem Boden liegt der Bogen, den sie bestreicht – die Schwingbahn ist von weitem zu sehen, nicht erst, wenn man darin liegt. |
 | **Federwerk** (`springwork`) | die Kanone (`cannon`) | Fängt einen hineinrollenden Ball, spannt kurz und schleudert ihn davon. Der Federarm schwenkt dabei langsam hin und her. | Eine aufgezogene Spiralfeder in einem Topf im Boden: geladen zieht sie sich zusammen, nach dem Schuss schwingt sie weit auf. Die Punktreihe auf dem Boden zeigt, wo der Ball landen wird. |
+| **Kupferrohre** (`copperpipe`) | das Löwentor (`liongate`) | Rohrpost: Zwei Plätze auf der Karte als Groß- und Kleinbuchstabe eines Paares. Der Eingang schluckt nur ab `LOEWENTOR_TEMPO`, wirft mit `LOEWENTOR_AUSWURF` in Richtung `angle` wieder aus, ist von außen eine Wand, wenn der Ball zu langsam ankommt, und schiebt einen im Rohrmund liegengebliebenen Ball sanft entgegen seiner Anfahrt heraus. | Ein liegendes Kupferrohr mit Nietenband und dunklem, offenem Mund, der zur Bahn zeigt; aus dem Ventil obendrauf zischt Dampf, kräftig gleich nach dem Schlucken und Speien. |
+| **Hemmung** (`escapement`) | – (eigene Sperre) | Zwei Sperrklinken nebeneinander in einem Durchlass. Immer ist genau eine Seite frei; beim Umschlagen sind beide für einen Augenblick unten, so wie in einer echten Hemmung die eine erst fasst, wenn die andere loslässt. | Zwei Messingpfosten, aus denen die Klinken fahren, dazwischen der Anker, der zur offenen Seite kippt. Auf dem Boden leuchtet der offene Durchlass. |
 
 **Die Schwingdauer des Pendels ist eine Konstante**, `PENDEL_TAKT` in `src/obstacles_legend.js`
 (zur Zeit 3,4 s). Sie steht bewusst nicht in den Bahndaten: Alle Pendel einer Bahn sollen im selben
@@ -611,6 +613,16 @@ Pendel unterscheiden darf, ist die **Phase** (`phase`, 0 bis 1 = eine volle Schw
 Ruhelage (`ruhe`, Grad – 90 hängt nach unten), der Ausschlag (`amp`, Grad) und die Länge (`len`).
 `x`/`y` ist die **Aufhängung**, nicht die Linse; die Aufhängung hängt in der Luft und ist kein
 Hindernis.
+
+**Auch der Takt der Hemmung ist eine Konstante**: `HEMMUNG_TAKT` (2,6 s, wie lange eine Seite offen
+steht) und `HEMMUNG_UMSCHLAG` (0,35 s, in denen beide Klinken unten sind), beide in
+`src/obstacles_legend.js`. Je Hemmung unterscheidet sich nur die **Phase**: mit `phase: 0.5` startet
+die andere Seite offen.
+
+**Das Kupferrohr erbt sein Verhalten vom Löwentor**, statt es abzuschreiben. Wird am Schlucktempo,
+am Auswurf oder am Notausgang je etwas geändert, ändert sich das Rohr genauso mit. Es teilt sich
+darum auch die Buchstabenpaare `A`/`a`, `B`/`b`, `C`/`c` auf der Karte und lässt sich aus demselben
+Grund wie das Löwentor **nicht im Baumodus setzen** – es braucht zwei Zeichen in der Karte.
 
 Alle drei stehen auch im **Baumodus** in der Werkzeugliste, lassen sich mit dem Drehknopf ausrichten
 und dürfen in geteilten Bahnen vorkommen. `tools/validate.mjs` prüft, was sonst still scheitern
@@ -623,6 +635,8 @@ die Erreichbarkeitsprüfung zählen Zahnradfeld und Federwerk als Übergang – 
 | 1 | Zahnradfeld | 3 | Zwei Ufer, dazwischen nur Luft. Nur die Räder tragen hinüber. |
 | 2 | Pendelgasse | 3 | Zwei Linsen im selben Takt, um eine halbe Schwingung versetzt. |
 | 3 | Federkammer | 3 | Über die Lücke kommt nur, wer sich einspannen lässt. |
+| 4 | Rohrpost | 3 | Die Mauer hat kein Tor – hinüber führt nur das Rohr, und nur mit Schwung. |
+| 5 | Hemmungsgasse | 3 | Zwei Hemmungen, um einen halben Takt versetzt: Wer die erste erwischt, hat die zweite noch nicht. |
 
 Die alten Maschinen der Welt – Zahnradaufzug (`gearlift`), Dampfkolben (`piston`) und Zeiger
 (`hand`) – stehen weiter im Code und im Baumodus, werden von den neuen Bahnen aber nicht mehr

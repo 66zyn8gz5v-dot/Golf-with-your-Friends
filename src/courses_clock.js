@@ -82,4 +82,52 @@ const CLOCK_COURSES = [
     ],
     autoDecor: { density: 0.12, seed: 44 },
   },
+  {
+    name: 'Rohrpost', par: 3, theme: 'boiler', maxStrokes: 14,
+    intro: 'Testbahn für die Kupferrohre. Die Mauer hat kein Tor – hinüber führt nur das Rohr, und es schluckt nur, wer mit Schwung ankommt. Wer zu sacht rollt, prallt am Rohrmund ab.',
+    map: [
+      '..........................',
+      '..##########x###########..',
+      '..##########x#######a###..',
+      '..##########x###########..',
+      '..#T#######Ax###########..',
+      '..##########x###########..',
+      '..##########x########H##..',
+      '..##########x###########..',
+      '..........................',
+    ],
+    obstacles: [
+      { type: 'copperpipe', pair: 'A', angle: 90 },
+    ],
+    decor: [
+      { t: 'lantern', x: 4.5, y: 1.6 }, { t: 'lantern', x: 21.5, y: 7.4 },
+      { t: 'gearFlat', x: 6.5, y: 7.4, s: 1.2, speed: 0.45, seed: 0.3 },
+      { t: 'barrel', x: 24.6, y: 4.5 },
+    ],
+    autoDecor: { density: 0.12, seed: 88 },
+  },
+  {
+    name: 'Hemmungsgasse', par: 3, theme: 'escapement', maxStrokes: 14,
+    intro: 'Testbahn für die Hemmung. Zwei Klinken, immer ist genau eine Seite offen; beim Umschlagen sind für einen Augenblick beide unten. Die zweite Hemmung springt um einen halben Takt versetzt – wer die erste erwischt, hat die zweite noch nicht.',
+    map: [
+      '..........................',
+      '..........................',
+      '..........................',
+      '..######################..',
+      '..T####################H..',
+      '..######################..',
+      '..........................',
+      '..........................',
+      '..........................',
+    ],
+    obstacles: [
+      { type: 'escapement', x: 9, y: 4.5, w: 0.45, h: 3, phase: 0 },
+      { type: 'escapement', x: 17, y: 4.5, w: 0.45, h: 3, phase: 0.5 },
+    ],
+    decor: [
+      { t: 'lantern', x: 6.5, y: 2.4 }, { t: 'lantern', x: 20.5, y: 2.4 },
+      { t: 'gearFlat', x: 13, y: 1.6, s: 1.6, speed: 0.35, seed: 0.6 },
+    ],
+    autoDecor: { density: 0.1, seed: 12 },
+  },
 ];

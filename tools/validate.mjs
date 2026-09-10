@@ -33,9 +33,21 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
     if (hatEin && !hatAus) problems.push(`Löwentor ${gross}: Eingang ohne Ausgang (${klein} fehlt auf der Karte)`);
     if (hatAus && !hatEin) problems.push(`Löwentor ${klein}: Ausgang ohne Eingang (${gross} fehlt auf der Karte)`);
     if (!hatEin && !hatAus) continue;
-    const tor = (c.obstacles || []).find(o => o.type === 'liongate' && String(o.pair || '').toUpperCase() === gross);
-    if (!tor) problems.push(`Löwentor ${gross}: kein Hindernis vom Typ liongate mit pair '${gross}' – der Ausgang hat keine Auswurfrichtung`);
-    else if (typeof tor.angle !== 'number' || !isFinite(tor.angle)) problems.push(`Löwentor ${gross}: der Ausgang hat keine Auswurfrichtung (angle fehlt)`);
+    // Löwentor und Kupferrohr teilen sich das Verhalten und damit auch die Buchstabenpaare
+    const tor = (c.obstacles || []).find(o => (o.type === 'liongate' || o.type === 'copperpipe') && String(o.pair || '').toUpperCase() === gross);
+    const wie = tor && tor.type === 'copperpipe' ? 'Kupferrohr' : 'Löwentor';
+    if (!tor) problems.push(`Tor ${gross}: kein Hindernis vom Typ liongate oder copperpipe mit pair '${gross}' – der Ausgang hat keine Auswurfrichtung`);
+    else if (typeof tor.angle !== 'number' || !isFinite(tor.angle)) problems.push(`${wie} ${gross}: der Ausgang hat keine Auswurfrichtung (angle fehlt)`);
+    else {
+      // Wohin gespien wird, muss Bahn sein – sonst wirft das Rohr den Ball in die Wand oder ins Aus
+      let aus = null;
+      rows.forEach((r, y) => [...r].forEach((ch, x) => { if (ch === klein) aus = [x + 0.5, y + 0.5]; }));
+      if (aus) {
+        const w = (tor.angle * Math.PI) / 180, lx = aus[0] + Math.cos(w) * 0.95, ly = aus[1] + Math.sin(w) * 0.95;
+        const lch = rows[Math.floor(ly)] && rows[Math.floor(ly)][Math.floor(lx)];
+        if (!FLOOR.has(lch) || lch === klein || lch === gross) problems.push(`${wie} ${gross}: die Auswurfstelle bei (${lx.toFixed(1)},${ly.toFixed(1)}) ist keine Bahn (${lch})`);
+      }
+    }
   }
   /* Wanderndes Tor: eine Mauer mit gleitendem Durchlass. Ist der Spalt so breit wie die Mauer,
      sperrt nichts mehr; ist er zu schmal, kommt der Ball nie hindurch. Und die Mauer soll auf der
@@ -112,6 +124,17 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
       const ch = rows[Math.floor(sy)] && rows[Math.floor(sy)][Math.floor(sx)];
       if (!FLOOR.has(ch)) problems.push(`pendulum: ${name} bei (${sx.toFixed(1)},${sy.toFixed(1)}) liegt nicht auf dem Fairway (${ch})`);
     }
+  }
+  /* Hemmung: Der Durchlass wird in zwei Hälften geteilt; durch eine muss der Ball passen. Ist die
+     ganze Sperre schmaler als zwei Bälle, ist jede Hälfte zu eng und niemand kommt hindurch. */
+  for (const o of (c.obstacles || []).filter(o => o.type === 'escapement')) {
+    const w = o.w == null ? 3 : o.w, h = o.h == null ? 0.45 : o.h;
+    const breit = Math.max(w, h), dick = Math.min(w, h);
+    if (!(breit >= 1.6)) problems.push(`escapement bei (${o.x},${o.y}): Durchlass ${breit} breit – jede Hälfte wäre schmaler als ein Ball (0,6)`);
+    if (!(dick > 0.1)) problems.push(`escapement bei (${o.x},${o.y}): die Klinken haben keine Dicke (${dick})`);
+    if (o.phase != null && !(o.phase >= 0 && o.phase < 1)) problems.push(`escapement bei (${o.x},${o.y}): phase ${o.phase} – erlaubt ist 0 bis unter 1`);
+    const ch = rows[Math.floor(o.y)] && rows[Math.floor(o.y)][Math.floor(o.x)];
+    if (!FLOOR.has(ch)) problems.push(`escapement: Mitte bei (${o.x},${o.y}) liegt nicht auf dem Fairway (${ch})`);
   }
   for (const o of (c.obstacles || []).filter(o => o.type === 'springwork')) {
     const range = o.range == null ? 8 : o.range, catchR = o.catchR == null ? 0.7 : o.catchR;
@@ -203,7 +226,7 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
         const cx = o.x + (o.w || 2) / 2, cy = o.y + (o.h || 2) / 2, L = o.land || 5;
         return [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([dx, dy]) => ({ x: cx, y: cy, tx: cx + dx * L, ty: cy + dy * L }));
       }))
-      .concat((c.obstacles || []).filter(o => o.type === 'liongate').flatMap(o => { // Löwentor: vom Eingang vor den Ausgang
+      .concat((c.obstacles || []).filter(o => o.type === 'liongate' || o.type === 'copperpipe').flatMap(o => { // Löwentor und Kupferrohr: vom Eingang vor den Ausgang
         const g = String(o.pair || '').toUpperCase(), k = g.toLowerCase();
         let ein = null, aus = null;
         rows.forEach((r, y) => [...r].forEach((ch, x) => { if (ch === g) ein = [x + 0.5, y + 0.5]; if (ch === k) aus = [x + 0.5, y + 0.5]; }));

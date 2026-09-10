@@ -13,6 +13,7 @@ const Editor = (deps) => {
     // Die drei Maschinen der Uhrwerkstadt
     ['gearlift', 'Zahnradaufzug'], ['piston', 'Dampfkolben'], ['hand', 'Zeiger'],
     ['gearfield', 'Zahnradfeld'], ['pendulum', 'Pendel'], ['springwork', 'Federwerk'],
+    ['escapement', 'Hemmung'],
     ['portal', 'Portal (2× tippen)'], ['wall', 'Bande (2× tippen)'],
   ];
   const THEME_LABELS = { meadow: 'Elfenwiese', mushroom: 'Pilzhain', forge: 'Zwergenschmiede', forest: 'Zauberwald', dragon: 'Drachenhöhle', ice: 'Eisgrotte', sky: 'Wolkenburg', clockwork: 'Uhrwerk', witch: 'Hexenwald', hut: 'Hexenhütte', reef: 'Korallenriff', volcano: 'Vulkan', palace: 'Wüstenpalast', harbor: 'Piratenbucht', desert: 'Wüste', tomb: 'Grabkammer', castle: 'Burgberg', deck: 'Piratendeck', wreck: 'Schiffswrack', belly: 'Haimagen', jungle: 'Dschungel', temple: 'Tempelhalle', storm: 'Sturmhimmel', fortress: 'Sturmfestung', shadow: 'Schattenreich', throne: 'Thronsaal', darksea: 'Totensee', ghostship: 'Totenschiff', clocktown: 'Uhrwerkstadt', boiler: 'Kesselhaus', escapement: 'Turmkammer' };
@@ -35,6 +36,7 @@ const Editor = (deps) => {
     gearfield: 'Zahnradfeld trägt den Ball ans andere Ende. „Drehen“ kippt die Laufrichtung.',
     pendulum: 'Pendel schwingt quer über die Bahn und stößt den Ball weg. Getippt wird die Aufhängung.',
     springwork: 'Federwerk fängt den Ball und schleudert ihn davon. „Drehen“ ändert die Schussrichtung.',
+    escapement: 'Hemmung: zwei Klinken, immer ist eine Seite offen. „Drehen“ kippt den Durchlass.',
     switch: 'Schalter öffnet ein Fallgatter mit demselben Ziel-Buchstaben („Drehen“ wechselt A/B).', wall: 'Erst den Anfang, dann das Ende der Bande antippen.',
     delete: 'Tippen: Objekt in der Nähe löschen.', rotate: 'Tippen: Objekt in der Nähe drehen (Richtung, Achse, Anziehen/Abstoßen).', pan: 'Ziehen: Ansicht verschieben.',
   };
@@ -169,6 +171,10 @@ const Editor = (deps) => {
       case 'gearfield': return { type: 'gearfield', x0: x - 3, y0: y, x1: x + 3, y1: y, wait: 2.2, travel: 3.2, r: 0.9, zaehne: 10 };
       case 'pendulum': return { type: 'pendulum', x, y: Math.max(0.5, y - 3), len: 3, amp: 55, ruhe: 90, phase: 0, w: 1.2, h: 1.2 };
       case 'springwork': return { type: 'springwork', x, y, base: 0, amp: 0.45, speed: 0.9, range: 8, catchR: 0.7 };
+      /* Die Hemmung braucht nur Lage und Breite; ihr Takt steht als Konstante im Code.
+         Das Kupferrohr steht nicht in dieser Liste: Es braucht zwei Buchstaben auf der Karte
+         und lässt sich darum nur im Code setzen – wie das Löwentor. */
+      case 'escapement': return { type: 'escapement', x, y, w: 3, h: 0.45, phase: 0 };
       default: return null;
     }
   }
@@ -216,6 +222,7 @@ const Editor = (deps) => {
       case 'gearfield': { const cx = (o.x0 + o.x1) / 2, cy = (o.y0 + o.y1) / 2, L = Math.hypot(o.x1 - o.x0, o.y1 - o.y0) / 2;
         if (o.y0 === o.y1) { o.x0 = o.x1 = cx; o.y0 = cy - L; o.y1 = cy + L; } else { o.y0 = o.y1 = cy; o.x0 = cx - L; o.x1 = cx + L; } break; }
       case 'pendulum': o.ruhe = cyc(o.ruhe == null ? 90 : o.ruhe); break;
+      case 'escapement': { const w = o.w; o.w = o.h; o.h = w; break; }
       case 'springwork': o.base = Math.round((((o.base || 0) + Math.PI / 2) % (Math.PI * 2)) * 1000) / 1000; break;
       default: return false;
     }

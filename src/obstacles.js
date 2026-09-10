@@ -498,6 +498,9 @@ function createObstacles(defs) {
       case 'gearfield': out.push(new GearField(d)); break;
       case 'pendulum': out.push(new Pendulum(d)); break;
       case 'springwork': out.push(new SpringWork(d)); break;
+      // Kupferrohr und Hemmung des Uhrenturms
+      case 'copperpipe': out.push(new CopperPipe(d)); break;
+      case 'escapement': out.push(new Escapement(d)); break;
     case 'sharkjump': out.push(new SharkJump(d)); break;
     case 'spikes': out.push(new Spikes(d)); break;
     case 'mover': out.push(new Mover(d)); break;
