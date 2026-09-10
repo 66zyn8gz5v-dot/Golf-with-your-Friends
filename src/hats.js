@@ -1247,7 +1247,7 @@ const Hats = (() => {
     { id: 'feathercrown', name: 'Federkrone', icon: '🪶', welt: 'jungle', voll: true },
     { id: 'thunder', name: 'Gewitterkugel', icon: '⛈️', welt: 'storm', voll: true },
     { id: 'orb', name: 'Kristallkugel', icon: '🔮', welt: 'shadow', voll: true },
-    { id: 'champion', name: 'Championhelm', icon: '🏅', welt: 'colosseum', art: 'rekord' },
+    { id: 'champion', name: 'Championhelm', icon: '🏅', welt: 'colosseum', art: 'turnier' },
   ];
   const byId = id => LIST.find(h => h.id === id);
 
@@ -1326,10 +1326,14 @@ const Hats = (() => {
     const h = byId(id);
     if (!h || !h.welt) return true;
     if (typeof Best === 'undefined') return false;
-    if (h.art === 'rekord') {
-      if (!Best.name) return false;
-      const rekord = Best.of(h.welt).combo.round;
-      return !!(rekord && rekord.n && rekord.n === Best.name);
+    /* Der Championhelm ist der Siegerpreis des Turniers. Er geht erst nach dem Schlußpfiff über,
+       und dann an den, der die Rundenwertung anführt – solange das Turnier läuft, trägt ihn
+       niemand. Turnier wird erst hier gelesen, denn diese Datei lädt vor turnier.js. */
+    if (h.art === 'turnier') {
+      if (!Best.name || typeof Turnier === 'undefined') return false;
+      if (Turnier.zustand() !== 'vorbei') return false;
+      const sieger = Turnier.rangliste().runde[0];
+      return !!(sieger && sieger.n === Best.name);
     }
     return Best.fortschritt(h.welt).geschafft;
   }
@@ -1339,14 +1343,24 @@ const Hats = (() => {
     if (!h || !h.welt) return '';
     const w = (typeof WORLDS !== 'undefined' && WORLDS.find(x => x.id === h.welt)) || null;
     const name = w ? w.name : 'dieser Welt';
-    if (h.art === 'rekord') return `Halte den Kombi-Rundenrekord: ${name}`;
+    if (h.art === 'turnier') return `Gewinne das Turnier in der Arena – der Helm geht nach dem Ende an den Sieger`;
     // Es zählt allein die Summe: Eine Bahn über Par ist keine verlorene Belohnung
     return `Spiele jede Bahn in ${name}; nur die Summe zählt – bleib insgesamt unter Par`;
   }
   /* Wie weit man ist – kurz genug für eine Meldung im Spiel */
   function stand(id) {
     const h = byId(id);
-    if (!h || !h.welt || h.art === 'rekord' || typeof Best === 'undefined') return '';
+    if (!h || !h.welt || typeof Best === 'undefined') return '';
+    // Beim Turnierhelm sagt der Stand, woran es gerade liegt: noch nicht so weit oder schon vergeben
+    if (h.art === 'turnier') {
+      if (typeof Turnier === 'undefined') return '';
+      const z = Turnier.zustand();
+      if (z === 'vor') return `das Turnier beginnt am ${Turnier.startText}`;
+      if (z === 'laeuft') return `das Turnier läuft ${Turnier.restText()}`;   // restText sagt schon „noch …" 
+      const sieger = Turnier.rangliste().runde[0];
+      if (!sieger) return 'das Turnier ist vorbei, gespielt hat niemand';
+      return sieger.n === Best.name ? 'gewonnen – er gehört dir' : `${sieger.n} hat gewonnen`;
+    }
     const f = Best.fortschritt(h.welt);
     if (f.offen.length) return `noch ${f.offen.length} ${f.offen.length === 1 ? 'Bahn' : 'Bahnen'} offen (${f.fertig} von ${f.gesamt})`;
     if (f.diff < 0) return `${-f.diff} unter Par – geschafft`;

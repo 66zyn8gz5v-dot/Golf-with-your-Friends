@@ -20,6 +20,11 @@
     const saved = JSON.parse(localStorage.getItem(speicherSchluessel('hats')) || 'null');
     if (Array.isArray(saved)) saved.forEach((h, i) => { if (i < 4 && typeof h === 'string' && Hats.has(h)) playerHats[i] = h; });
   } catch (e) { /* kein Speicher, dann bleiben die Vorgaben */ }
+  /* Der Turnierhelm wechselt nach dem Schlußpfiff den Besitzer. Ein Hut, der einem nicht (mehr)
+     zusteht, wird darum beim Spielstart stillschweigend gegen den Vorgabehut getauscht – sonst
+     trüge der Vorbesitzer den Preis weiter. Auf dem Prüfstand bleibt alles erlaubt. */
+  const hutOderErsatz = (id, i) => (TEST_FREI || Hats.freigeschaltet(id)) ? id : DEFAULT_HATS[i % DEFAULT_HATS.length];
+
   function setHat(i, id) {
     playerHats[i] = id;
     if (state.players[i]) state.players[i].hat = id;
@@ -520,7 +525,9 @@
         in 1:12 ergeben 4 + 1,2 = 5,2. Es zählt die <b>ganze Runde</b> über alle ${welt.courses.length} Bahnen;
         darunter stehen die besten Einzelbahnen. Gespielt wird im <b>Wettkampf</b> – im Kreativmodus zählt nichts.<br>
         Das Par jeder Bahn kommt aus der Rangliste: einen Schlag über dem besten Ergebnis, das je dort
-        gespielt wurde.</div>
+        gespielt wurde.<br>
+        <b>${Hats.name('champion')} als Siegerpreis:</b> Er geht nach dem Ende an den, der die Rundenwertung
+        anführt. Solange das Turnier läuft, trägt ihn niemand.</div>
       ${!Best.name ? `<div class="sub warn-note">Ohne Namen wird nichts gewertet. Trag ihn in der
         <span class="btn ghost small" id="zur-liste">${Icons.svg('emoji_events')} Rangliste</span> ein.</div>` : ''}
       <div class="sub net-note" id="tstate">${Net.status === 'ready'
@@ -571,9 +578,10 @@
     const frei = Hats.freigeschaltet(lohn.id);
     const kopf = `<span class="lohn-name">${lohn.icon} ${Text.esc(lohn.name)}</span>
       <span class="lohn-was">Belohnung dieser Welt</span>`;
-    // Der Championhelm hängt am Rundenrekord, nicht am Par – für ihn gibt es nichts zu zählen
-    if (lohn.art === 'rekord') return `<div class="lohn ${frei ? 'auf' : ''}">${kopf}
-      <div class="lohn-text">${frei ? 'Gehört dir, solange du den Rekord hältst.' : Text.esc(Hats.bedingung(lohn.id))}</div></div>`;
+    // Der Championhelm hängt am Turnier, nicht am Par – für ihn gibt es nichts zu zählen
+    if (lohn.art === 'turnier') return `<div class="lohn ${frei ? 'auf' : ''}">${kopf}
+      <div class="lohn-text">${frei ? 'Gewonnen – er gehört dir.' : Text.esc(Hats.bedingung(lohn.id))}${
+        Hats.stand(lohn.id) ? `<br><i>${Text.esc(Hats.stand(lohn.id))}</i>` : ''}</div></div>`;
 
     const f = Best.fortschritt(w.id);
     const anteil = f.gesamt ? Math.round(f.fertig / f.gesamt * 100) : 0;
@@ -879,7 +887,7 @@
   function enterRoom(code, host) {
     online = { code, host, hostId: '', players: [], started: false, world: onlineWorlds()[0].id, seen: {}, note: 'Verbinde …' };
     const id = Net.join(code, { message: netMessage, status: netStatus });
-    if (host) { online.hostId = id; online.players = [{ id, nick: Best.name, hat: playerHats[0] }]; }
+    if (host) { online.hostId = id; online.players = [{ id, nick: Best.name, hat: hutOderErsatz(playerHats[0], 0) }]; }
     showLobby();
     clearInterval(beatT); clearInterval(watchT);
     beatT = setInterval(() => netSend({ t: 'alive' }), BEAT);
@@ -896,7 +904,7 @@
     if (!online) return;
     if (s === 'ready') {
       online.note = online.host ? '' : 'Suche den Raum …';
-      if (online.host) sendRoster(); else netSend({ t: 'hello', hat: playerHats[0], nick: Best.name });
+      if (online.host) sendRoster(); else netSend({ t: 'hello', hat: hutOderErsatz(playerHats[0], 0), nick: Best.name });
     } else if (s === 'connecting') online.note = 'Verbinde …';
     else if (s === 'retry') online.note = 'Die Verbindung wackelt, ich versuche es nochmal …';
     else if (s === 'error') { onlineLost(text || 'Die Verbindung ist fehlgeschlagen.'); return; }
@@ -1059,7 +1067,7 @@
     const now = Date.now();
     if (!online.host) {
       // solange ich nicht in der Liste stehe, melde ich mich weiter an
-      if (Net.status === 'ready' && !online.players.some(p => p.id === Net.id)) netSend({ t: 'hello', hat: playerHats[0], nick: Best.name });
+      if (Net.status === 'ready' && !online.players.some(p => p.id === Net.id)) netSend({ t: 'hello', hat: hutOderErsatz(playerHats[0], 0), nick: Best.name });
       if (online.hostId && now - (online.seen[online.hostId] || now) > LOST) onlineLost('Der Gastgeber hat den Raum verlassen.');
       return;
     }
@@ -1169,7 +1177,7 @@
       const col = PLAYER_COLORS[hatWho];
       ui.overlay.querySelectorAll('#hats .hat').forEach(b => {
         const frei = Hats.freigeschaltet(b.dataset.h);
-        b.classList.toggle('sel', b.dataset.h === playerHats[hatWho]);
+        b.classList.toggle('sel', b.dataset.h === hutOderErsatz(playerHats[hatWho], hatWho));
         b.classList.toggle('zu', !frei);
         b.classList.toggle('probe', !frei && TEST_FREI); // Vorschau: Sperre zeigen, Skin trotzdem sehen
         // Gesperrt: der Platz bleibt sichtbar, damit man weiß, was es zu holen gibt
@@ -1279,7 +1287,7 @@
     // roster: beim Netzspiel bringt jeder Spieler seinen eigenen Hut mit
     state.players = roster
       ? roster.map((p, i) => ({ name: seatName(p, i), color: PLAYER_COLORS[i], hat: p.hat, scores: [], times: [], gone: !!p.gone }))
-      : Array.from({ length: n }, (_, i) => ({ name: PLAYER_NAMES[i], color: PLAYER_COLORS[i], hat: playerHats[i], scores: [], times: [] }));
+      : Array.from({ length: n }, (_, i) => ({ name: PLAYER_NAMES[i], color: PLAYER_COLORS[i], hat: hutOderErsatz(playerHats[i], i), scores: [], times: [] }));
     state.holeIdx = first;
     document.body.classList.remove('title');
     document.body.classList.toggle('creative', state.mode === 'creative');
@@ -1888,12 +1896,30 @@
     turnierMalen = setTimeout(() => { if (turnierSchirm) turnierSchirm(); }, 250);
   });
   Turnier.start();
+  /* Was beim Schlußpfiff zu sagen ist: wer gewonnen hat und wer den Helm bekommt */
+  function turnierEnde() {
+    const sieger = Turnier.rangliste().runde[0];
+    if (!sieger) return;
+    const lohn = Hats.belohnung(Turnier.WELT);
+    const meins = Best.name && sieger.n === Best.name;
+    if (meins && lohn) frischerLohn = lohn;
+    showMessage(meins
+      ? `🏅 Turnier gewonnen! Der Championhelm gehört dir.`
+      : `🏅 Turnier vorbei – ${sieger.n} gewinnt den Championhelm.`, 4200);
+  }
+
   /* Die Uhr des Turniers: trägt die Restlaufzeit jede Sekunde nach und zeichnet den Bildschirm
      neu, sobald das Turnier beginnt oder endet – dann stimmt sonst alles darauf nicht mehr. */
   let letzterZustand = Turnier.zustand();
   setInterval(() => {
     const jetzt = Turnier.zustand();
-    if (jetzt !== letzterZustand) { letzterZustand = jetzt; if (turnierSchirm) turnierSchirm(); return; }
+    if (jetzt !== letzterZustand) {
+      const vorher = letzterZustand; letzterZustand = jetzt;
+      // Der Schlußpfiff vergibt den Championhelm – das soll man mitbekommen, auch ohne hinzusehen
+      if (vorher === 'laeuft' && jetzt === 'vorbei') turnierEnde();
+      if (turnierSchirm) turnierSchirm();
+      return;
+    }
     if (jetzt !== 'laeuft') return;
     const txt = Turnier.restText();
     document.querySelectorAll('.turnier-rest').forEach(el => { el.textContent = txt; });
