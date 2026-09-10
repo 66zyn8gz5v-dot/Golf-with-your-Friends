@@ -66,19 +66,25 @@ Verzierungen nichts übrig.
 
 Wer in einer Welt den **Rundenrekord der Kombi-Wertung** hält, darf ihren Skin tragen. Sieben Welten,
 sieben Belohnungen – sechs davon sind **Ganzkörper-Skins**: Sie ersetzen den Ball, statt auf ihm zu
-sitzen, und bewegen sich. Die Federkrone ist der einzige, der beides ist – Ball *und* Kopfschmuck: Gezeichnet
-wird erst der Federfächer, dann der Stein, dann das Stirnband. Dadurch verschwinden die Federfüße hinter dem
-Stein und das Band liegt davor; es braucht keinen extra Halter.
+sitzen, und bewegen sich. Der Championhelm ist der einzige, der nur ein Hut ist.
 
-| Welt | Belohnung | was drin passiert |
-|---|---|---|
-| Märchenland | Märchenkugel | Schneekugel mit Burg, die Flocken rieseln |
-| Meereswelt | Aquarium | rundes Becken mit Sand, Pflanzen, drei schwimmenden Fischen und aufsteigenden Blasen |
-| Tüftlerreich | Zahnradkugel | drei Zahnräder mahlen ineinander |
-| Dschungeltempel | Federkrone | dunkler Tempelstein mit eingemeißelten Glyphen, die schwach grün glimmen, darüber eine Federkrone in Türkis und Gold |
-| Sturmhimmel | Gewitterkugel | Wolken ziehen, hin und wieder zuckt ein Blitz durch die Kugel |
-| Schattenreich | Kristallkugel | Schwaden waberen, ein Auge blickt umher |
-| Kolosseum | Championhelm | (ein Hut, kein Skin – der Siegerpreis des Turniers) |
+**Wie der Hut über den Farbreif kommt.** Ein Ganzkörper-Skin bekommt nach dem Zeichnen einen dünnen Reif in
+der Spielerfarbe (sonst wüsste bei vier Bällen niemand, welcher der eigene ist). Läge der Hut darunter, liefe
+der Reif quer über die Hutkrempe. Darum darf eine Zeichenfunktion eine **Funktion zurückgeben**: `draw()` ruft
+sie erst nach dem Reif auf. Eine Zeile in `draw()`, und der Kopfschmuck sitzt, wo er hingehört. Die Federkrone
+braucht das nicht – bei ihr liegen die Federn bewusst *hinter* dem Reif, das Stirnband davor.
+
+**Jede Belohnung ist ein Paar aus Ball und Hut**, und beide bewegen sich:
+
+| Welt | Belohnung | der Ball | der Hut |
+|---|---|---|---|
+| Märchenland | Märchenkugel | Schneekugel mit Burg, Wald und rieselnden Flocken | goldene Krone mit Perlen; die Steine funkeln, ein Lichtpunkt wandert über das Gold, auf den Zacken liegt Schnee |
+| Meereswelt | Aquarium | Becken mit Sand, Pflanzen, Fischen und Blasen | ein Schiffchen, das im Seegang rollt und sich hebt; die Segel bauschen sich, der Wimpel flattert |
+| Tüftlerreich | Tüftlerzylinder | drei greifende Zahnräder und ein Kolben | Lederzylinder mit Messingband, Nieten und Schutzbrille; ein Rad an der Seite läuft mit, aus dem Schornstein dampft es |
+| Dschungeltempel | Federkrone | dunkler Tempelstein, dessen Glyphen schwach grün glimmen | Federkrone in Türkis und Gold, die Spitzen wiegen sich |
+| Sturmhimmel | Gewitterkugel | Wolken ziehen, es regnet, alle 2,2 s schlägt ein Blitz ein | ein Wetterhahn, der sich dreht – und beim Einschlag an der Spitze sprüht |
+| Schattenreich | Kristallkugel | Schwaden waberen, ein Auge blickt umher und blinzelt | Spitzhut mit Mondschnalle; die Spitze schwankt, Sterne funkeln darauf |
+| Kolosseum | Championhelm | (kein eigener Ball – der Helm sitzt auf dem Spielerball) | der Federkamm wiegt sich im Wind |
 
 Fünf der Skins teilen sich die Glaskugel-Form, damit sie als eine Familie zu erkennen sind – der Inhalt
 macht die Welt; die Federkrone tanzt bewusst aus der Reihe, sie ist Stein statt Glas. Bewegt wird nach `state.t`, der Spieluhr: dieselbe Zahl auf jedem Gerät, beim Online-Spiel

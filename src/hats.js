@@ -357,6 +357,7 @@ const Hats = (() => {
         ctx.fill();
       }
       ctx.restore(); glasLicht(ctx);
+      return () => maerchenKrone(ctx, t, fein);   // der Hut liegt über dem Reif in Spielerfarbe
     },
 
     aquarium(ctx, color, t, fein) {   // Meereswelt: rundes Becken mit Fischen, Pflanzen und Lichtstrahlen
@@ -427,6 +428,7 @@ const Hats = (() => {
       }
       ctx.fill(); ctx.stroke();
       ctx.restore(); glasLicht(ctx);
+      return () => schiffchen(ctx, t, fein);   // der Hut liegt über dem Reif in Spielerfarbe
     },
 
     cog(ctx, color, t, fein) {   // Tüftlerreich: Messingwerk, in dem Räder greifen und ein Kolben läuft
@@ -481,6 +483,7 @@ const Hats = (() => {
       }
       ctx.fill();
       ctx.restore(); glasLicht(ctx);
+      return () => tueftlerZylinder(ctx, t, fein);   // der Hut kommt nach dem Reif, er sitzt obenauf
     },
 
     /* Dschungeltempel: ein dunkler Tempelstein mit eingemeißelten Glyphen, darüber die Federkrone
@@ -614,6 +617,7 @@ const Hats = (() => {
         ctx.stroke();
       }
       ctx.restore(); glasLicht(ctx);
+      return () => wetterhahn(ctx, t, fein, blitz);   // der Hut liegt über dem Reif in Spielerfarbe
     },
 
     orb(ctx, color, t, fein) {   // Schattenreich: Kristallkugel mit Nebel, Funken und einem Auge, das blinzelt
@@ -671,6 +675,7 @@ const Hats = (() => {
       ctx.strokeStyle = 'rgba(20,8,36,0.7)'; ctx.lineWidth = 0.05;
       ctx.beginPath(); ctx.ellipse(0, 0.02, 0.48, 0.32, 0, 0, TAU2); ctx.stroke();
       ctx.restore(); glasLicht(ctx);
+      return () => schattenhut(ctx, t, fein);   // der Hut liegt über dem Reif in Spielerfarbe
     },
   };
 
@@ -882,6 +887,251 @@ const Hats = (() => {
         m(-0.8, -0.8); l(0.8, 0.8); m(0.8, -0.8); l(-0.8, 0.8);
     }
   }
+  /* Krone der Märchenkugel: fünf Zacken mit Perlen, drei Steine, die funkeln, und ein Lichtpunkt,
+     der über das Gold wandert. Auf den Zacken liegt Schnee – es schneit ja in der Kugel. */
+  function maerchenKrone(ctx, t, fein) {
+    ctx.save(); ctx.translate(0, -0.74);
+    const spitzen = [[-0.44, -0.34], [-0.22, -0.47], [0, -0.56], [0.22, -0.47], [0.44, -0.34]];
+    const taeler = [-0.33, -0.11, 0.11, 0.33];
+    const gold = ctx.createLinearGradient(-0.55, 0, 0.55, 0);
+    gold.addColorStop(0, '#8a6118'); gold.addColorStop(0.38, '#ffe8a4'); gold.addColorStop(1, '#7d5714');
+    ctx.beginPath();
+    ctx.moveTo(-0.53, 0.1); ctx.lineTo(-0.53, -0.12);
+    for (let i = 0; i < 5; i++) {
+      ctx.lineTo(spitzen[i][0], spitzen[i][1]);
+      if (i < 4) ctx.lineTo(taeler[i], -0.09);
+    }
+    ctx.lineTo(0.53, -0.12); ctx.lineTo(0.53, 0.1); ctx.closePath();
+    ctx.fillStyle = gold; ctx.fill();
+    ctx.strokeStyle = 'rgba(60,40,6,0.55)'; ctx.lineWidth = 0.05; ctx.stroke();
+    ctx.fillStyle = '#a67c22'; ctx.fillRect(-0.53, -0.02, 1.06, 0.1);   // Reif unten
+    ctx.fillStyle = '#fff6d8'; ctx.beginPath();                          // Perlen auf den Zacken
+    for (const [sx, sy] of spitzen) { ctx.moveTo(sx + 0.055, sy); ctx.arc(sx, sy, 0.055, 0, TAU2); }
+    ctx.fill();
+    // Steine im Reif: das Funkeln steckt in der Größe, damit alles in einem Zug geht
+    const steine = [['#d23b4e', -0.27], ['#3b7fd2', 0], ['#3fb56a', 0.27]];
+    steine.forEach(([farbe, sx], i) => {
+      const gr = 0.045 + 0.022 * Math.abs(Math.sin(t * 1.6 + i * 1.9));
+      ctx.fillStyle = farbe; ctx.beginPath(); ctx.ellipse(sx, 0.03, gr, gr * 1.15, 0, 0, TAU2); ctx.fill();
+    });
+    if (fein) {
+      const w = ((t * 0.35) % 1) * 1.06 - 0.53;                          // Lichtpunkt wandert
+      ctx.fillStyle = 'rgba(255,255,255,0.8)';
+      ctx.beginPath(); ctx.ellipse(w, 0.03, 0.05, 0.075, 0, 0, TAU2); ctx.fill();
+      ctx.fillStyle = '#f4faff'; ctx.beginPath();                        // Schnee auf den Zacken
+      for (const [sx, sy] of spitzen) {
+        ctx.moveTo(sx - 0.1, sy + 0.09); ctx.quadraticCurveTo(sx, sy - 0.05, sx + 0.1, sy + 0.09);
+        ctx.quadraticCurveTo(sx, sy + 0.05, sx - 0.1, sy + 0.09);
+      }
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  /* Schiffchen auf dem Aquarium: Es rollt und hebt sich, als läge es im Seegang, das Segel
+     bauscht sich im Takt und der Wimpel flattert. Gezeichnet wird um den Kopfpunkt herum, das
+     Rollen kommt aus einer Drehung um den Rumpf. */
+  function schiffchen(ctx, t, fein) {
+    ctx.save();
+    ctx.translate(0, -0.76 + Math.sin(t * 1.1 + 0.6) * 0.035);
+    ctx.rotate(Math.sin(t * 1.1) * 0.15);
+    const bauch = Math.sin(t * 2.3) * 0.045;
+    // Mast und Rah
+    ctx.strokeStyle = '#6b4a2a'; ctx.lineWidth = 0.045; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(-0.02, 0.02); ctx.lineTo(-0.02, -0.88); ctx.stroke();
+    // Großsegel und Focksegel, beide gebaucht
+    ctx.fillStyle = '#f6f1e4'; ctx.strokeStyle = 'rgba(90,70,40,0.5)'; ctx.lineWidth = 0.028;
+    ctx.beginPath();
+    ctx.moveTo(0.01, -0.82);
+    ctx.quadraticCurveTo(0.42 + bauch, -0.5, 0.03, -0.1);
+    ctx.quadraticCurveTo(0.16 + bauch * 0.5, -0.46, 0.01, -0.82);
+    ctx.moveTo(-0.05, -0.78);
+    ctx.quadraticCurveTo(-0.34 - bauch, -0.46, -0.07, -0.12);
+    ctx.quadraticCurveTo(-0.16 - bauch * 0.5, -0.44, -0.05, -0.78);
+    ctx.fill(); ctx.stroke();
+    // Wimpel an der Mastspitze
+    ctx.fillStyle = '#e04a5a'; ctx.beginPath();
+    ctx.moveTo(-0.02, -0.88);
+    ctx.quadraticCurveTo(0.1, -0.86 + Math.sin(t * 5) * 0.03, 0.22 + Math.sin(t * 5) * 0.04, -0.83);
+    ctx.lineTo(-0.02, -0.78); ctx.closePath(); ctx.fill();
+    // Rumpf
+    const holz = ctx.createLinearGradient(0, -0.06, 0, 0.26);
+    holz.addColorStop(0, '#8a5a30'); holz.addColorStop(1, '#4a2f18');
+    ctx.beginPath();
+    ctx.moveTo(-0.5, -0.04); ctx.lineTo(0.5, -0.04);
+    ctx.quadraticCurveTo(0.36, 0.24, 0, 0.26); ctx.quadraticCurveTo(-0.36, 0.24, -0.5, -0.04);
+    ctx.closePath();
+    ctx.fillStyle = holz; ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.45)'; ctx.lineWidth = 0.05; ctx.stroke();
+    ctx.fillStyle = '#c9452f'; ctx.fillRect(-0.48, -0.02, 0.96, 0.07);   // Zierstreifen
+    if (fein) {   // Bullaugen
+      ctx.fillStyle = '#ffd98a'; ctx.beginPath();
+      for (const bx of [-0.26, 0, 0.26]) { ctx.moveTo(bx + 0.038, 0.11); ctx.arc(bx, 0.11, 0.038, 0, TAU2); }
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  /* Wetterhahn auf der Gewitterkugel: Die Fahne dreht sich langsam – von vorn gesehen wird sie
+     dabei schmal und breit, wie eine Fahne, die sich wegdreht. Schlägt drinnen der Blitz ein,
+     sprüht es an der Spitze. */
+  function wetterhahn(ctx, t, fein, blitz) {
+    ctx.save(); ctx.translate(0, -0.78);
+    ctx.strokeStyle = '#8d93a6'; ctx.lineWidth = 0.055; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(0, 0.08); ctx.lineTo(0, -0.5); ctx.stroke();    // Stange
+    if (fein) {   // Himmelsrichtungen als kleines Kreuz
+      ctx.lineWidth = 0.035;
+      ctx.beginPath(); ctx.moveTo(-0.2, -0.26); ctx.lineTo(0.2, -0.26); ctx.stroke();
+    }
+    ctx.fillStyle = '#b9c0d2'; ctx.beginPath();                                  // Knauf
+    ctx.arc(0, -0.5, 0.055, 0, TAU2); ctx.fill();
+    /* Die Fahne dreht sich um die Stange. Von vorn sieht man davon nur die Stauchung: breit,
+       wenn sie quer steht, schmal, wenn sie auf den Betrachter zeigt – und seitenverkehrt,
+       sobald sie sich vorbeigedreht hat. Ein billiger Trick, der erstaunlich gut wirkt. */
+    const dreh = Math.cos(t * 0.55);
+    ctx.save(); ctx.translate(0, -0.6); ctx.scale(dreh * 0.9 + (dreh < 0 ? -0.1 : 0.1), 1);
+    /* Ohne Kontur: Beim Wegdrehen würde sie mitgestaucht und in der Breite aufreißen. Die Form
+       trägt sich allein, weil sie dunkel auf hellem Wolkengrund steht. */
+    ctx.beginPath();
+    ctx.moveTo(0.44, 0); ctx.lineTo(0.12, -0.15); ctx.lineTo(0.12, -0.045);     // Pfeilspitze
+    ctx.lineTo(-0.18, -0.045); ctx.lineTo(-0.18, -0.17);                         // Schaft und Fahne
+    ctx.lineTo(-0.46, 0); ctx.lineTo(-0.18, 0.17); ctx.lineTo(-0.18, 0.045);
+    ctx.lineTo(0.12, 0.045); ctx.lineTo(0.12, 0.15); ctx.closePath();
+    ctx.fillStyle = '#59617a'; ctx.fill();
+    ctx.restore();
+    if (blitz > 0) {   // Beim Einschlag sprüht es an der Spitze
+      ctx.strokeStyle = `rgba(255,255,190,${blitz.toFixed(2)})`; ctx.lineWidth = 0.04;
+      ctx.beginPath();
+      for (let i = 0; i < 5; i++) {
+        const a = -Math.PI / 2 + (i - 2) * 0.62;
+        const l1 = 0.1, l2 = 0.22;
+        ctx.moveTo(Math.cos(a) * l1, -0.5 + Math.sin(a) * l1);
+        ctx.lineTo(Math.cos(a + 0.3) * l2, -0.5 + Math.sin(a + 0.3) * l2);
+      }
+      ctx.stroke();
+      ctx.fillStyle = `rgba(255,255,255,${blitz.toFixed(2)})`;
+      ctx.beginPath(); ctx.arc(0, -0.5, 0.07, 0, TAU2); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  /* Spitzhut der Kristallkugel: Die Spitze schwankt, auf dem Filz funkeln Sterne, an der Krempe
+     sitzt eine Mondschnalle. */
+  function schattenhut(ctx, t, fein) {
+    ctx.save(); ctx.translate(0, -0.7);
+    const schwank = Math.sin(t * 0.95) * 0.13;
+    const filz = ctx.createLinearGradient(-0.4, 0, 0.4, -0.8);
+    filz.addColorStop(0, '#241040'); filz.addColorStop(0.5, '#4b2478'); filz.addColorStop(1, '#1b0c31');
+    ctx.beginPath();                                                             // Krempe
+    ctx.ellipse(0, 0, 0.92, 0.23, 0, 0, TAU2);
+    ctx.fillStyle = '#2c1450'; ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.45)'; ctx.lineWidth = 0.055; ctx.stroke();
+    ctx.beginPath();                                                             // Kegel mit Knick
+    ctx.moveTo(-0.4, -0.03);
+    ctx.quadraticCurveTo(-0.3, -0.62, 0.06 + schwank, -1.12);
+    ctx.quadraticCurveTo(0.02 + schwank * 0.5, -0.58, 0.4, -0.03);
+    ctx.closePath();
+    ctx.fillStyle = filz; ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#1b0c31'; ctx.fillRect(-0.42, -0.2, 0.84, 0.14);            // Hutband
+    ctx.fillStyle = '#ffd166'; ctx.beginPath();                                   // Mondschnalle
+    ctx.arc(0, -0.13, 0.1, 0, TAU2); ctx.fill();
+    ctx.fillStyle = '#1b0c31'; ctx.beginPath(); ctx.arc(0.035, -0.15, 0.082, 0, TAU2); ctx.fill();
+    if (!fein) { ctx.restore(); return; }
+    ctx.fillStyle = '#ffe9ff'; ctx.beginPath();                                   // funkelnde Sterne
+    for (let i = 0; i < 4; i++) {
+      const u = 0.2 + i * 0.19;
+      const sx = -0.4 + (0.06 + schwank - (-0.4)) * u + (i % 2 ? 0.1 : -0.08);
+      const sy = -0.03 + (-1.12 + 0.03) * u;
+      const gr = 0.018 + 0.028 * Math.abs(Math.sin(t * 2.1 + i * 1.6));
+      ctx.moveTo(sx + gr, sy); ctx.arc(sx, sy, gr, 0, TAU2);
+    }
+    ctx.fill();
+    ctx.restore();
+  }
+
+  /* Zylinder des Tüftlers: Lederhut mit Messingband, Nieten, Schutzbrille und einem kleinen Rad,
+     das mitläuft. Gezeichnet wird er um den Kopfpunkt (0, -0.72) herum – also genau dort, wo bei
+     einem gewöhnlichen Hut der Nullpunkt liegt. So sitzt er auf der Zahnradkugel wie ein Hut auf
+     einem Ball und nicht wie ein aufgemaltes Bild. */
+  function tueftlerZylinder(ctx, t, fein) {
+    /* Etwas höher angesetzt und keck verkantet: So gibt der Hut den Blick auf das Werk in der
+       Kugel frei, statt ein Drittel davon zuzudecken – und schief getragen passt er zum Tüftler
+       besser als kerzengerade. */
+    ctx.save(); ctx.translate(0.05, -0.82); ctx.rotate(-0.13);
+    const UNTEN = -0.04, OBEN = -0.78;                 // Höhe des Hutkopfs
+    const halb = y => 0.53 + (UNTEN - y) / (UNTEN - OBEN) * 0.055;  // er weitet sich nach oben
+    ctx.strokeStyle = 'rgba(0,0,0,0.45)'; ctx.lineWidth = 0.06;
+
+    // Krempe mit Messingkante
+    ctx.beginPath(); ctx.ellipse(0, 0, 0.88, 0.24, 0, 0, TAU2);
+    ctx.fillStyle = '#38281a'; ctx.fill(); ctx.stroke();
+    if (fein) {
+      ctx.strokeStyle = '#9c7124'; ctx.lineWidth = 0.045;
+      ctx.beginPath(); ctx.ellipse(0, 0.015, 0.83, 0.215, 0, 0, TAU2); ctx.stroke();
+    }
+
+    // Hutkopf aus dunklem Leder
+    const leder = ctx.createLinearGradient(-0.64, 0, 0.64, 0);
+    leder.addColorStop(0, '#241a10'); leder.addColorStop(0.42, '#5c422a'); leder.addColorStop(1, '#1f160d');
+    ctx.strokeStyle = 'rgba(0,0,0,0.45)'; ctx.lineWidth = 0.06;
+    ctx.beginPath();
+    ctx.moveTo(-halb(UNTEN), UNTEN); ctx.lineTo(-halb(OBEN), OBEN);
+    ctx.lineTo(halb(OBEN), OBEN); ctx.lineTo(halb(UNTEN), UNTEN); ctx.closePath();
+    ctx.fillStyle = leder; ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(0, OBEN, halb(OBEN), 0.155, 0, 0, TAU2);
+    ctx.fillStyle = '#6d4f30'; ctx.fill();
+
+    // Messingband, dem Kegel folgend
+    const y1 = -0.13, y2 = -0.38, w1 = halb(y1), w2 = halb(y2);
+    const messing = ctx.createLinearGradient(-0.62, 0, 0.62, 0);
+    messing.addColorStop(0, '#7a5620'); messing.addColorStop(0.38, '#f2cd76'); messing.addColorStop(1, '#6e4d1c');
+    ctx.beginPath();
+    ctx.moveTo(-w1, y1); ctx.lineTo(w1, y1); ctx.lineTo(w2, y2); ctx.lineTo(-w2, y2); ctx.closePath();
+    ctx.fillStyle = messing; ctx.fill();
+    if (fein) {   // Nieten auf dem Band
+      ctx.fillStyle = 'rgba(70,44,10,0.75)'; ctx.beginPath();
+      for (let i = -2; i <= 2; i++) {
+        const nx = i * 0.21;
+        ctx.moveTo(nx + 0.032, -0.255); ctx.arc(nx, -0.255, 0.032, 0, TAU2);
+      }
+      ctx.fill();
+    }
+
+    // Kleines Rad an der Seite, läuft mit
+    zahnrad(ctx, 0.31, -0.57, 0.15, 8, t * 1.6, '#d9a441', '#7a5620', fein);
+
+    // Schutzbrille auf dem Band – das Erkennungszeichen des Tüftlers
+    ctx.strokeStyle = '#4a3520'; ctx.lineWidth = 0.075;   // Riemen unter den Gläsern durch
+    ctx.beginPath(); ctx.moveTo(-0.54, -0.24); ctx.lineTo(0.14, -0.24); ctx.stroke();
+    const glaeser = [[-0.3, 0.175], [0.02, 0.155]];
+    ctx.beginPath();
+    for (const [gx, gr] of glaeser) { ctx.moveTo(gx + gr, -0.25); ctx.arc(gx, -0.25, gr, 0, TAU2); }
+    ctx.fillStyle = '#f0c265'; ctx.fill();              // Bernsteinglas
+    ctx.strokeStyle = '#9c7124'; ctx.lineWidth = 0.075; ctx.stroke();
+    if (fein) {                                          // Glanz im Glas
+      ctx.fillStyle = 'rgba(255,255,255,0.55)'; ctx.beginPath();
+      for (const [gx, gr] of glaeser) {
+        ctx.moveTo(gx - gr * 0.3 + gr * 0.42, -0.25 - gr * 0.34);
+        ctx.ellipse(gx - gr * 0.3, -0.25 - gr * 0.34, gr * 0.42, gr * 0.24, -0.6, 0, TAU2);
+      }
+      ctx.fill();
+    }
+    ctx.strokeStyle = 'rgba(0,0,0,0.45)'; ctx.lineWidth = 0.06;
+
+    if (fein) {   // Schornstein auf dem Deckel, aus dem es dampft
+      ctx.fillStyle = '#8a6420';
+      ctx.beginPath(); ctx.moveTo(-0.34, OBEN - 0.02); ctx.lineTo(-0.3, OBEN - 0.24);
+      ctx.lineTo(-0.16, OBEN - 0.24); ctx.lineTo(-0.12, OBEN - 0.02); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.beginPath();
+      for (let i = 0; i < 3; i++) {
+        const p = (t * 0.5 + i * 0.33) % 1;
+        const sx = -0.23 + Math.sin(p * 5) * 0.1, sy = OBEN - 0.28 - p * 0.34, sr = (0.045 + p * 0.12) * (1 - p * 0.7);
+        ctx.moveTo(sx + sr, sy); ctx.arc(sx, sy, sr, 0, TAU2);
+      }
+      ctx.fill();
+    }
+    ctx.restore();
+  }
   /* Der Federfächer. Alle Federn liegen in einem Pfad und werden in einem Zug gefüllt, die
      goldenen Spitzen in einem zweiten, alle Fahnenstrahlen in einem dritten – neun Federn kosten
      so eine Handvoll Züge statt vierzig. Breit und leicht geschwungen, sonst sähen sie aus wie
@@ -977,7 +1227,7 @@ const Hats = (() => {
        den aktuellen Bestand, nicht für die Ewigkeit. */
     { id: 'globe', name: 'Märchenkugel', icon: '🏰', welt: 'normal', voll: true },
     { id: 'aquarium', name: 'Aquarium', icon: '🐠', welt: 'sea', voll: true },
-    { id: 'cog', name: 'Zahnradkugel', icon: '⚙️', welt: 'pro', voll: true },
+    { id: 'cog', name: 'Tüftlerzylinder', icon: '⚙️', welt: 'pro', voll: true },
     { id: 'feathercrown', name: 'Federkrone', icon: '🪶', welt: 'jungle', voll: true },
     { id: 'thunder', name: 'Gewitterkugel', icon: '⛈️', welt: 'storm', voll: true },
     { id: 'orb', name: 'Kristallkugel', icon: '🔮', welt: 'shadow', voll: true },
@@ -1007,11 +1257,14 @@ const Hats = (() => {
     ctx.scale(r, r);
     ctx.lineJoin = 'round'; ctx.lineCap = 'round';
     ctx.lineWidth = 0.07; ctx.strokeStyle = 'rgba(0,0,0,0.4)';
-    d(ctx, color, t || 0, fein);
+    /* Gibt eine Zeichenfunktion etwas zurück, wird das erst nach dem Reif gezeichnet. Das
+       brauchen Skins, die einen Hut tragen: Sonst liefe der Reif quer über die Krempe. */
+    const obenauf = d(ctx, color, t || 0, fein);
     if (voll(id)) {   // Reif in Spielerfarbe: sonst wüsste bei vier Spielern niemand, wem der Ball gehört
       ctx.strokeStyle = color || '#ffffff'; ctx.lineWidth = 0.07;
       ctx.beginPath(); ctx.arc(0, 0, 0.965, 0, TAU2); ctx.stroke();
     }
+    if (typeof obenauf === 'function') obenauf();
     ctx.restore();
   }
 
