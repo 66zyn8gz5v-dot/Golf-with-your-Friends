@@ -107,17 +107,37 @@ const Best = (() => {
 
      Gezählt wird nur das normale Spiel. Im Kreativmodus darf man beliebig oft neu setzen; jede
      Bedingung wäre damit wertlos. Geprüft wird beim Speichern, nicht erst beim Anzeigen – so kann
-     ein Kreativ-Ergebnis gar nicht erst in die Liste geraten. */
-  const K_EIGEN = speicherSchluessel('eigen');
+     ein Kreativ-Ergebnis gar nicht erst in die Liste geraten.
 
+     Je Bahn stehen dort die eigenen Bestwerte aller drei Wertungen: { s, ms, k } für Schläge,
+     Zeit und Kombi. Sie können aus verschiedenen Versuchen stammen – genau wie in der geteilten
+     Liste, wo auch jede Wertung ihren eigenen Rekord hat. */
+  const K_EIGEN = speicherSchluessel('eigen');
+  /* Welches Feld gehört zu welcher Wertung */
+  const EIGEN_FELD = { strokes: 's', time: 'ms', combo: 'k' };
+
+  /* Bis Fassung 49 stand hier nur die Schlagzahl als blanke Zahl. Solche Einträge werden beim
+     Laden eingereiht, statt sie wegzuwerfen – sie sind ja mühsam erspielt. */
+  function eigenWert(v) {
+    if (typeof v === 'number' || typeof v === 'string') {
+      const s = Math.round(+v);
+      return s > 0 && s < 1000 ? { s } : null;
+    }
+    if (!v || typeof v !== 'object') return null;
+    const out = {};
+    const s = Math.round(+v.s); if (s > 0 && s < 1000) out.s = s;
+    const ms = Math.round(+v.ms); if (ms > 0 && ms < 36000000) out.ms = ms;
+    const k = Math.round(+v.k * 10) / 10; if (k > 0 && k < 10000) out.k = k;
+    return Object.keys(out).length ? out : null;
+  }
   function eigenSauber(all) {
     const out = {};
     for (const [welt, bahnen] of Object.entries(all || {})) {
       if (typeof WORLDS === 'undefined' || !WORLDS.some(x => x.id === welt)) continue;
       const w = {};
-      for (const [bahn, s] of Object.entries(bahnen || {})) {
-        const name = cleanHole(bahn), zahl = Math.round(+s);
-        if (name && zahl > 0 && zahl < 1000) w[name] = zahl;
+      for (const [bahn, v] of Object.entries(bahnen || {})) {
+        const name = cleanHole(bahn), wert = eigenWert(v);
+        if (name && wert) w[name] = wert;
       }
       if (Object.keys(w).length) out[welt] = w;
     }
@@ -125,14 +145,40 @@ const Best = (() => {
   }
   let eigen = eigenSauber(load(K_EIGEN, {}));
 
-  /* Ein eigenes Bahnergebnis eintragen, wenn es besser ist als das bisherige */
-  function eigenEintragen(id, bahn, schlaege) {
+  /* Ein eigenes Bahnergebnis eintragen. Jede Wertung wird einzeln geprüft: Wer schnell, aber mit
+     vielen Schlägen spielt, verbessert eben nur die Zeit. */
+  function eigenEintragen(id, bahn, schlaege, ms) {
     const name = cleanHole(bahn), s = Math.round(+schlaege);
     if (!id || !name || !(s > 0)) return false;
     const w = eigen[id] = eigen[id] || {};
-    if (w[name] != null && w[name] <= s) return false;
-    w[name] = s; save(K_EIGEN, eigen);
+    const alt = w[name] || {}, neu = Object.assign({}, alt);
+    if (alt.s == null || s < alt.s) neu.s = s;
+    if (ms >= MIN_MS_BAHN) {
+      const zeit = Math.round(ms), k = comboValue(s, ms);
+      if (alt.ms == null || zeit < alt.ms) neu.ms = zeit;
+      if (alt.k == null || k < alt.k) neu.k = k;
+    }
+    if (neu.s === alt.s && neu.ms === alt.ms && neu.k === alt.k) return false;
+    w[name] = neu; save(K_EIGEN, eigen);
     return true;
+  }
+  /* Eigener Bestwert einer Bahn in einer Wertung – oder null */
+  function eigenerWert(id, bahnName, kind) {
+    const w = eigen[id] && eigen[id][cleanHole(bahnName)];
+    const v = w && w[EIGEN_FELD[kind]];
+    return v > 0 ? v : null;
+  }
+  /* Summe über alle Bahnen einer Welt: { wert, fertig, gesamt }. Fehlende Bahnen werden
+     übersprungen, aber gezählt – so kann die Anzeige dazuschreiben, worüber die Summe geht.
+     Eine Summe über die halbe Welt ist keine Bestleistung; verschweigen darf man das nicht. */
+  function summe(courses, wert) {
+    const alle = courses || [];
+    let ganz = 0, fertig = 0;
+    for (const c of alle) {
+      const v = wert(c);
+      if (v > 0) { ganz += v; fertig++; }
+    }
+    return { wert: fertig ? Math.round(ganz * 10) / 10 : 0, fertig, gesamt: alle.length };
   }
 
   /* ---------- Par kommt aus der Rangliste ----------
@@ -164,7 +210,7 @@ const Best = (() => {
     const offen = [];
     for (const c of welt.courses) {
       par += parVon(id, c);
-      const s = w[c.name];
+      const s = w[c.name] && w[c.name].s;
       if (s > 0) { schlaege += s; fertig++; } else offen.push(c.name);
     }
     // Erst wenn jede Bahn ein Ergebnis hat, ist die Summe überhaupt vergleichbar
@@ -294,8 +340,18 @@ const Best = (() => {
     parSumme: (id, courses) => (courses || []).reduce((a, c) => a + parVon(id, c), 0),
     /* Der eigene Stand in einer Welt – Grundlage der Belohnungen */
     fortschritt,
-    /* Die eigenen besten Schläge je Bahn einer Welt (nur zur Anzeige) */
-    eigeneBahnen: id => Object.assign({}, eigen[id] || {}),
+    /* Die eigenen Bestwerte je Bahn einer Welt (nur zur Anzeige) */
+    eigeneBahnen: id => JSON.parse(JSON.stringify(eigen[id] || {})),
+    /* Eigener Bestwert einer Bahn in einer Wertung */
+    eigenerWert,
+    /* Summe der eigenen Bestwerte einer Welt: { wert, fertig, gesamt } */
+    eigenSumme: (id, courses, kind) => summe(courses, c => eigenerWert(id, c.name, kind)),
+    /* Summe der Rekorde einer Welt – die „Traumrunde" aus den besten Einzelbahnen */
+    rekordSumme(id, courses, kind) {
+      const w = data[id];
+      const holes = w && w[kind] && w[kind].holes;
+      return summe(courses, c => { const r = holes && holes[c.name]; return r && r.s > 0 ? r.s : 0; });
+    },
     /* Die drei Wertungen mit Beschriftung – für die Anzeige */
     KINDS,
     KIND_NAME: { strokes: 'Schläge', time: 'Zeit', combo: 'Kombi' },
@@ -311,10 +367,14 @@ const Best = (() => {
     },
     /* Wert einer Kategorie lesbar machen */
     format(kind, rec) {
-      if (!rec || rec.s == null) return '–';
-      if (kind === 'time') return this.formatTime(rec.s);
-      if (kind === 'combo') return String(rec.s).replace('.', ',');
-      return String(rec.s);
+      return this.formatWert(kind, rec && rec.s);
+    },
+    /* Dasselbe für einen blanken Wert ohne Eintrag – eigene Bestwerte und Summen */
+    formatWert(kind, v) {
+      if (v == null || !(v > 0)) return '–';
+      if (kind === 'time') return this.formatTime(v);
+      if (kind === 'combo') return String(v).replace('.', ',');
+      return String(v);
     },
 
     setName(v) { name = cleanName(v); save(K_NAME, name); },
@@ -400,7 +460,7 @@ const Best = (() => {
     hole(id, holeName, strokes, ms, quelle, modus) {
       /* Zuerst der eigene Stand: Er ist privat, geht in keine geteilte Liste und zählt darum auch
          ohne eingetragenen Namen. Der Kreativmodus wird genau hier abgewiesen, beim Speichern. */
-      if (modus !== 'creative' && strokes > 0) eigenEintragen(id, holeName, strokes);
+      if (modus !== 'creative' && strokes > 0) eigenEintragen(id, holeName, strokes, ms);
       if (!name || !strokes) return [];
       const t = Date.now(), treffer = [], q = quelle === 'net' ? 'net' : undefined;
       const kandidaten = [['strokes', { s: strokes, n: name, t, q }]];

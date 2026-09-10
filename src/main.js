@@ -590,9 +590,13 @@
       : f.offen.length
         ? `Für die Belohnung braucht jede Bahn ein Ergebnis, und die Summe muss unter Par ${f.par} liegen.`
         : `Es fehlen noch ${f.diff + 1} ${f.diff + 1 === 1 ? 'Schlag' : 'Schläge'} bis unter Par.`;
+    /* Gerechnet wird allein die Summe – wer auf einer Bahn über Par bleibt, holt es auf einer
+       anderen wieder herein. Das steht ausdrücklich da, sonst versucht man es Bahn für Bahn. */
+    const regel = frei ? '' : `<br><i class="lohn-regel">Es zählt nur das Ergebnis insgesamt: Eine Bahn über
+      Par macht nichts, wenn du auf einer anderen unter Par bleibst.</i>`;
     return `<div class="lohn ${frei ? 'auf' : ''}">${kopf}
       <div class="lohn-balken"><i style="width:${anteil}%"></i><span>${f.fertig} / ${f.gesamt} Bahnen</span></div>
-      <div class="lohn-text">${offenText}<br>${summeText}<br>${ziel}</div></div>`;
+      <div class="lohn-text">${offenText}<br>${summeText}<br>${ziel}${regel}</div></div>`;
   }
 
   /* Ranglisten-Bildschirm: Name, Gruppencode und die Rekorde aller Welten */
@@ -605,17 +609,37 @@
     const bestStatus = { status: st => { const el = $('bstate'); if (!el) return;
       el.textContent = st === 'ready' ? 'Verbunden – alle mit dem Spiel teilen sich diese Liste.'
         : st === 'error' ? 'Keine Verbindung – die Rekorde bleiben vorerst auf diesem Gerät.' : 'Verbinde …'; } };
-    /* Eine Zelle je Wertung: der Wert, darunter klein, wer ihn hält */
+    /* Der eigene Bestwert steht in jeder Zelle mit dabei – auch dann, wenn der Rekord einem
+       selbst gehört. Sonst müßte man raten, wie weit man vom Bestwert entfernt ist. */
+    const meinsZelle = (kind, mein, rekord) => mein > 0
+      ? `<em class="mein${rekord > 0 && mein <= rekord ? ' gleich' : ''}" title="dein bester Wert"><span class="du">du</span> ${Text.esc(Best.formatWert(kind, mein))}</em>`
+      : '<em class="mein leer" title="hier hast du noch kein Ergebnis"><span class="du">du</span> –</em>';
+    /* Eine Zelle je Wertung: der Wert, darunter klein, wer ihn hält, darunter der eigene */
     // Am Eintrag steht, woher er kommt: gegeneinander gespielt oder allein am eigenen Gerät
-    const zelle = (kind, r) => `<td class="num rec">${r
+    const zelle = (kind, r, mein) => `<td class="num rec">${r
       ? `<b>${Text.esc(Best.format(kind, r))}</b><i>${r.q === 'net' ? '<span class="q-net" title="in einer Runde gegeneinander erspielt">🌐</span> ' : ''}${Text.esc(r.n)}</i>`
-      : '–'}</td>`;
+      : '<b>–</b>'}${mein === false ? '' : meinsZelle(kind, mein, r && r.s)}</td>`;
     const rows = w.courses.map((c, i) => {
       const h = k => rec[k].holes[c.name];
       return `<tr><td>${i + 1}</td><td>${holeIcon(c)} ${Text.esc(c.name)}</td><td class="num">${Best.par(w.id, c)}</td>
-        ${Best.KINDS.map(k => zelle(k, h(k))).join('')}</tr>`;
+        ${Best.KINDS.map(k => zelle(k, h(k), Best.eigenerWert(w.id, c.name, k))).join('')}</tr>`;
     }).join('');
-    const rundeZeile = Best.KINDS.map(k => zelle(k, rec[k].round)).join('');
+    /* Gesamt: die besten Einzelbahnen zusammengezählt – erst die der Liste, daneben die eigenen.
+       Fehlt noch eine Bahn, steht die Summe trotzdem da; dazu, über wie viele Bahnen sie geht. */
+    // Steht die Summe über alle Bahnen, braucht es keinen Hinweis – sonst schon
+    const wieViele = s => s.fertig < s.gesamt ? `<i>${s.fertig} von ${s.gesamt}</i>` : '';
+    const gesamtZeile = Best.KINDS.map(k => {
+      const alle = Best.rekordSumme(w.id, w.courses, k), mein = Best.eigenSumme(w.id, w.courses, k);
+      const oben = alle.fertig
+        ? `<b>${Text.esc(Best.formatWert(k, alle.wert))}</b>${wieViele(alle)}`
+        : '<b>–</b>';
+      const unten = mein.fertig
+        ? `<em class="mein${alle.fertig === alle.gesamt && mein.fertig === mein.gesamt && mein.wert <= alle.wert ? ' gleich' : ''}" title="deine besten Bahnen zusammen"><span class="du">du</span> ${Text.esc(Best.formatWert(k, mein.wert))}${wieViele(mein)}</em>`
+        : '<em class="mein leer" title="hier hast du noch kein Ergebnis"><span class="du">du</span> –</em>';
+      return `<td class="num rec">${oben}${unten}</td>`;
+    }).join('');
+    // Für die ganze Runde am Stück führt das Gerät keinen eigenen Stand – da bleibt die Zeile leer
+    const rundeZeile = Best.KINDS.map(k => zelle(k, rec[k].round, false)).join('');
     const parTotal = Best.parSumme(w.id, w.courses);
     overlay(`<div class="panel wide">
       <div class="panel-head"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span><h2>${Icons.svg('emoji_events')} Rangliste</h2></div>
@@ -636,7 +660,8 @@
       <div class="tabelle-schiebe"><table class="scores best-table">
         <tr><th>#</th><th>Bahn</th><th>Par</th>${Best.KINDS.map(k => `<th class="num">${BEST_ICON[k]} <span class="kopf-wort">${Best.KIND_NAME[k]}</span></th>`).join('')}</tr>
         ${rows}
-        <tr class="ganze-runde"><td></td><td>Ganze Runde</td><td></td>${rundeZeile}</tr>
+        <tr class="gesamt"><td></td><td>Gesamt <i>beste Bahnen zusammen</i></td><td class="num">${parTotal}</td>${gesamtZeile}</tr>
+        <tr class="ganze-runde"><td></td><td>Ganze Runde <i>an einem Stück</i></td><td></td>${rundeZeile}</tr>
       </table></div>
       <p style="margin-top:12px">${Best.binBesitzer
         ? `<span class="btn ghost small" id="brs">${Icons.svg('restart_alt')} Rangliste zurücksetzen</span>
@@ -645,7 +670,13 @@
           ? `<span class="sub" style="display:block">Zurücksetzen kann nur, wer die Liste führt.
              <span class="btn ghost small" id="bkey">${Icons.svg('save')} Schlüssel einsetzen</span></span>`
           : `<span class="btn ghost small" id="bown">${Icons.svg('emoji_events')} Liste führen</span>`}</p>
-      <div class="legend"><b>Par kommt aus dieser Liste:</b> Es liegt immer einen Schlag über dem besten
+      <div class="legend"><b>Grün darunter steht dein eigener Wert</b> – in jeder Zelle, auch wenn der
+        Rekord dir selbst gehört. Er liegt nur auf diesem Gerät und wird nirgends geteilt. Steht er in
+        Gold, ist er zugleich der Rekord.<br>
+        <b>Gesamt</b> zählt die besten Einzelbahnen zusammen, jede Bahn ihr bester Versuch. Die
+        <b>ganze Runde</b> darunter ist eine einzige Runde am Stück – dafür führt das Spiel keinen
+        eigenen Stand.<br>
+        <b>Par kommt aus dieser Liste:</b> Es liegt immer einen Schlag über dem besten
         Ergebnis, das je auf einer Bahn gespielt wurde. Hat sie noch niemand gespielt, gilt das gebaute Par.
         Wird ein Rekord verbessert, wird Par im selben Moment schärfer – für alle.<br>
         <b>${BEST_ICON.strokes} Schläge:</b> ${BEST_HELP.strokes}<br>
