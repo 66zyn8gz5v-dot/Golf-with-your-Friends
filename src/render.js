@@ -192,6 +192,48 @@ class Renderer {
     return p;
   }
 
+  /* Liegende Walze: ein runder Körper, dessen Achse waagerecht in der Höhe z von A nach B läuft.
+     prism und frustum stellen Körper aufrecht – für Rohre, Kolbenstangen und Stempel braucht es
+     die liegende Form. Gezeichnet wird wie bei prism: erst der abgewandte Deckel, dann die
+     Mantelstreifen, deren Normale zur Kamera zeigt, zuletzt der nahe Deckel.
+     Die Blickrichtung dieser Projektion ist (sin, cos, tilt/zf) – daran hängt, was sichtbar ist. */
+  walze(ctx, ax, ay, bx, by, z, r, top, side, opts = {}) {
+    const n = opts.n || 14, c = this.cam, hoch = c.tilt / (c.zf ?? CAM_ZF);
+    let ux = bx - ax, uy = by - ay;
+    const L = Math.hypot(ux, uy) || 1; ux /= L; uy /= L;
+    const qx = -uy, qy = ux;                                   // quer zur Achse, waagerecht
+    const ring = (px, py) => {
+      const pts = [];
+      for (let i = 0; i < n; i++) {
+        const w = (i * TAU) / n, co = Math.cos(w), si = Math.sin(w);
+        pts.push(this.proj(px + qx * co * r, py + qy * co * r, z + si * r));
+      }
+      return pts;
+    };
+    const A = ring(ax, ay), B = ring(bx, by);
+    const nahB = (bx - ax) * c.sin + (by - ay) * c.cos < 0;    // welches Ende liegt vorn?
+    const [fern, nah] = nahB ? [A, B] : [B, A];
+    const deckel = (pts, farbe) => {
+      ctx.beginPath(); pts.forEach((p, i) => (i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]))); ctx.closePath();
+      ctx.fillStyle = farbe; ctx.fill();
+      ctx.strokeStyle = opts.outline || farbe; ctx.lineWidth = opts.outline ? 1 : 0.8; ctx.stroke();
+    };
+    deckel(fern, shade(side, 0.72));
+    for (let i = 0; i < n; i++) {
+      const w = ((i + 0.5) * TAU) / n, co = Math.cos(w), si = Math.sin(w);
+      const nx = qx * co, ny = qy * co;
+      if (nx * c.sin + ny * c.cos + si * hoch <= 0.001) continue;
+      const j = (i + 1) % n;
+      ctx.beginPath();
+      ctx.moveTo(A[i][0], A[i][1]); ctx.lineTo(A[j][0], A[j][1]);
+      ctx.lineTo(B[j][0], B[j][1]); ctx.lineTo(B[i][0], B[i][1]); ctx.closePath();
+      ctx.fillStyle = shade(side, 0.6 + 0.4 * (0.5 + 0.5 * (nx * 0.6 - ny * 0.38 + si * 0.66)));
+      ctx.fill(); ctx.strokeStyle = ctx.fillStyle; ctx.lineWidth = 0.8; ctx.stroke();
+    }
+    if (!opts.offen) deckel(nah, top);
+    return nah;
+  }
+
   /* ---------- Boden ---------- */
   drawFloor(ctx) {
     const { W, H, tiles } = this.level, th = this.theme;

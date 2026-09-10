@@ -1293,16 +1293,46 @@ Object.assign(Renderer.prototype, {
      ist. */
   drawPiston(ctx, ob, t) {
     const s = this.scale;
-    // Zylinder an der Ruhelage
-    const zyl = rectPoly(ob.x - ob.dx * 0.35, ob.y - ob.dy * 0.35, ob.w * 1.25, ob.h * 1.25);
-    this.prism(ctx, zyl, 0, 0.55, '#7a5a2a', '#4a3618', { outline: '#2e2210' });
-    // Stange von der Ruhelage zum Kopf
-    const st0 = this.proj(ob.x, ob.y, 0.3), st1 = this.proj(ob.px, ob.py, 0.3);
-    ctx.strokeStyle = '#cfd4de'; ctx.lineWidth = Math.max(2, s * 0.13);
-    ctx.beginPath(); ctx.moveTo(st0[0], st0[1]); ctx.lineTo(st1[0], st1[1]); ctx.stroke();
-    // Kopf
-    const kopf = rectPoly(ob.px, ob.py, ob.w, ob.h);
-    this.prism(ctx, kopf, 0, 0.62, ob.schlaegt ? '#ffdf9c' : '#c9903f', '#6e4a1c', { outline: '#3a2a10' });
+    const ux = ob.dx, uy = ob.dy, qx = -uy, qy = ux;
+    const laenge = Math.abs(ux) * ob.w + Math.abs(uy) * ob.h;    // entlang der Stossrichtung
+    const quer = Math.abs(ux) * ob.h + Math.abs(uy) * ob.w;      // Breite quer dazu
+    const r = quer / 2, z = r;                                   // die Walze liegt auf dem Boden
+    // Rechteck quer zur Achse, um Laenge la und Breite br
+    const kasten = (cx, cy, la, br) => [
+      [cx - ux * la / 2 - qx * br / 2, cy - uy * la / 2 - qy * br / 2],
+      [cx + ux * la / 2 - qx * br / 2, cy + uy * la / 2 - qy * br / 2],
+      [cx + ux * la / 2 + qx * br / 2, cy + uy * la / 2 + qy * br / 2],
+      [cx - ux * la / 2 + qx * br / 2, cy - uy * la / 2 + qy * br / 2]];
+    // Scheibe senkrecht zur Achse - dafuer stehen quer-Richtung und Hoehe
+    const scheibe = (cx, cy, rr, farbe) => {
+      ctx.beginPath();
+      for (let i = 0; i <= 16; i++) {
+        const w = (i * TAU) / 16;
+        const pt = this.proj(cx + qx * Math.cos(w) * rr, cy + qy * Math.cos(w) * rr, z + Math.sin(w) * rr);
+        i ? ctx.lineTo(pt[0], pt[1]) : ctx.moveTo(pt[0], pt[1]);
+      }
+      ctx.closePath(); ctx.fillStyle = farbe; ctx.fill();
+    };
+    // Gehaeuse: der Bock in der Wand, aus dem der Kolben faehrt
+    const gx = ob.x - ux * (laenge / 2 + 0.6), gy = ob.y - uy * (laenge / 2 + 0.6);
+    this.prism(ctx, kasten(gx, gy, 1.2, quer + 0.6), 0, 2 * r + 0.3, '#7a5a2a', '#4a3618', { outline: '#2e2210' });
+    this.prism(ctx, kasten(gx, gy, 1.32, quer + 0.16), 0, 0.16, '#8e6a34', '#553d1c');   // Sockelplatte
+    // Bohrung in der Stirnseite des Gehaeuses
+    const bx = ob.x - ux * laenge / 2, by = ob.y - uy * laenge / 2;
+    scheibe(bx + ux * 0.02, by + uy * 0.02, r * 1.05, '#241a0c');
+    scheibe(bx + ux * 0.06, by + uy * 0.06, r * 0.92, '#120c05');
+    // Kolbenstange
+    const kr = ob.px - ux * laenge / 2, kry = ob.py - uy * laenge / 2;   // hinteres Ende des Stempels
+    if (ob.aus > 0.02) this.walze(ctx, bx, by, kr, kry, z, r * 0.3, '#e3e8f2', '#9aa2b4', { n: 10 });
+    // Stempel: runder Kopf auf der Stange
+    const heiss = ob.schlaegt;
+    this.walze(ctx, kr, kry, ob.px + ux * laenge / 2, ob.py + uy * laenge / 2, z, r,
+      heiss ? '#ffdf9c' : '#c9903f', '#6e4a1c', { outline: '#3a2a10' });
+    // Ringwulst kurz vor dem Stempelkopf
+    scheibe(ob.px + ux * (laenge / 2 - 0.18), ob.py + uy * (laenge / 2 - 0.18), r * 1.08,
+      heiss ? 'rgba(255,226,168,0.9)' : 'rgba(160,116,52,0.9)');
+    scheibe(ob.px + ux * (laenge / 2 - 0.14), ob.py + uy * (laenge / 2 - 0.14), r * 0.98,
+      heiss ? '#ffdf9c' : '#c9903f');
     // Dampf beim Ausschlag
     if (ob.aus > 0.05) {
       const n = 4;
@@ -1329,28 +1359,34 @@ Object.assign(Renderer.prototype, {
      Stange läuft nach außen – er zeigt, wohin ein mitgenommener Ball geschoben wird. */
   drawHand(ctx, ob, t) {
     const s = this.scale, a = ob.angle, ca = Math.cos(a), sa = Math.sin(a), tk = ob.thick;
-    const stange = [[ob.x - sa * tk, ob.y + ca * tk], [ob.x + ca * ob.len - sa * tk, ob.y + sa * ob.len + ca * tk],
-      [ob.x + ca * ob.len + sa * tk, ob.y + sa * ob.len - ca * tk], [ob.x + sa * tk, ob.y - ca * tk]];
-    this.prism(ctx, stange, 0.03, 0.3, '#e0b45c', '#8a6624', { outline: '#3a2a12' });
-    // Gegengewicht auf der anderen Seite der Achse
-    const g = [[ob.x - ca * 0.9 - sa * tk * 1.5, ob.y - sa * 0.9 + ca * tk * 1.5],
-      [ob.x - sa * tk * 1.5, ob.y + ca * tk * 1.5], [ob.x + sa * tk * 1.5, ob.y - ca * tk * 1.5],
-      [ob.x - ca * 0.9 + sa * tk * 1.5, ob.y - sa * 0.9 - ca * tk * 1.5]];
-    this.prism(ctx, g, 0.03, 0.26, '#c9903f', '#6e4a1c');
-    // Spitze
-    const p0 = this.proj(ob.x + ca * ob.len, ob.y + sa * ob.len, 0.33);
-    const p1 = this.proj(ob.x + ca * (ob.len - 0.5) - sa * 0.24, ob.y + sa * (ob.len - 0.5) + ca * 0.24, 0.33);
-    const p2 = this.proj(ob.x + ca * (ob.len - 0.5) + sa * 0.24, ob.y + sa * (ob.len - 0.5) - ca * 0.24, 0.33);
-    ctx.fillStyle = '#ffe9b0'; ctx.beginPath();
-    ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.lineTo(p2[0], p2[1]); ctx.closePath(); ctx.fill();
-    // wanderndes Glanzlicht: der Schub nach außen
-    const u = (t * 0.8) % 1;
-    const q = this.proj(ob.x + ca * (0.5 + u * (ob.len - 0.8)), ob.y + sa * (0.5 + u * (ob.len - 0.8)), 0.34);
+    const L = ob.len;
+    // Punkt auf dem Zeiger: d entlang der Stange, q quer dazu
+    const P = (d, q) => [ob.x + ca * d - sa * q, ob.y + sa * d + ca * q];
+    // Halbprofil der Stange: sie wird nach aussen schmaler und laeuft in eine Spitze aus
+    const profil = [[-1.0, tk * 1.1], [-0.2, tk * 1.7], [L * 0.45, tk * 1.2], [L - 0.55, tk * 0.85], [L, tk * 0.1]];
+    const platte = (schrumpf, kuerzer) => {
+      const p = [];
+      for (const [d, q] of profil) p.push(P(d - kuerzer * (d / L), q * schrumpf));
+      for (let i = profil.length - 1; i >= 0; i--) {
+        const [d, q] = profil[i]; p.push(P(d - kuerzer * (d / L), -q * schrumpf));
+      }
+      return p;
+    };
+    // Gegengewicht: eine Trommel hinter der Achse
+    const gw = P(-0.95, 0);
+    this.prism(ctx, this.circlePoly(gw[0], gw[1], 0.36, 14), 0.04, 0.5, '#e0b45c', '#7d5a20', { outline: '#33240e' });
+    // Die Stange als Koerper mit abgeschraegter Oberkante
+    this.frustum(ctx, platte(1, 0), platte(0.52, 0.1), 0.05, 0.48, '#f0cd7d', '#8a6624', { outline: '#3a2a12' });
+    // Spitze: heller Keil auf der Oberkante
+    const sp = [P(L - 0.9, tk * 0.42), P(L - 0.1, tk * 0.05), P(L - 0.1, -tk * 0.05), P(L - 0.9, -tk * 0.42)];
+    this.fillPoly(ctx, sp, 0.49, '#fff0c2', false);
+    // wanderndes Glanzlicht auf der Oberkante: der Schub nach aussen
+    const u = (t * 0.8) % 1, gl = P(0.5 + u * (L - 0.8), 0);
+    const q = this.proj(gl[0], gl[1], 0.5);
     ctx.fillStyle = `rgba(255,255,235,${(0.7 * (1 - u)).toFixed(2)})`;
     ctx.beginPath(); ctx.arc(q[0], q[1], s * 0.12, 0, TAU); ctx.fill();
-    // Achse
-    const c = this.proj(ob.x, ob.y, 0.3);
-    ctx.fillStyle = '#8a6624'; ctx.beginPath(); ctx.arc(c[0], c[1], s * ob.hubR, 0, TAU); ctx.fill();
-    ctx.fillStyle = '#ffdf9c'; ctx.beginPath(); ctx.arc(c[0], c[1], s * ob.hubR * 0.5, 0, TAU); ctx.fill();
+    // Achse: eine Saeule, auf der der Zeiger sitzt
+    this.prism(ctx, this.circlePoly(ob.x, ob.y, ob.hubR, 12), 0, 0.6, '#8a6624', '#4e3814', { outline: '#2a1d0a' });
+    this.prism(ctx, this.circlePoly(ob.x, ob.y, ob.hubR * 0.55, 10), 0.6, 0.14, '#ffdf9c', '#a8792c');
   },
 });
