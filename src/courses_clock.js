@@ -45,7 +45,7 @@ const CLOCK_COURSES = [
   },
   {
     name: 'Zeigergasse', par: 3, theme: 'clocktown', maxStrokes: 14,
-    intro: 'Zwei große Zeiger drehen sich gegenläufig über der Gasse, Takt 4 Sekunden – einmal herum je Takt. Dazwischen fällt ein Tor im selben Takt: zwei Sekunden offen, zwei zu. Wer den ersten Zeiger richtig erwischt, hat auch den zweiten.',
+    intro: 'Zwei große Zeiger drehen sich gegenläufig über der Gasse, Takt 4 Sekunden – einmal herum je Takt, dazwischen ein Tor: zwei Sekunden offen, zwei zu. Der zweite Zeiger nimmt einen langsamen Ball mit und schleudert ihn am Ende der Stange davon; wer mit Schwung kommt, prallt einfach ab. Wer den ersten Zeiger richtig erwischt, hat auch den zweiten.',
     map: [
       '............................',
       '...######################...',
@@ -59,7 +59,7 @@ const CLOCK_COURSES = [
     ],
     obstacles: [
       { type: 'rotor', x: 9.5, y: 4.5, blades: 2, len: 3.2, thick: 0.15, speed: 1.5708, style: 'stone' },
-      { type: 'rotor', x: 18.5, y: 4.5, blades: 2, len: 3.2, thick: 0.15, speed: -1.5708, phase: 1.5708, style: 'stone' },
+      { type: 'hand', x: 18.5, y: 4.5, len: 3.2, thick: 0.16, speed: -1.5708, phase: 1.5708, schub: 1.6, fang: 5 },
       { type: 'gate', x: 14, y: 4.5, w: 0.32, h: 3.6, period: 4, open: 0.5, phase: 0.25, axis: 'y' },
     ],
     decor: [
@@ -253,7 +253,7 @@ const CLOCK_COURSES = [
   },
   {
     name: 'Kesselhaus', par: 5, theme: 'boiler', maxStrokes: 24,
-    intro: 'Über der Glut, Takt 5 Sekunden. Ein Zahnradaufzug trägt über die erste Rinne, ein Drehteller wirft nach oben aus, und über der zweiten Rinne bläst ein Ventil im Takt. Alles drei hängt zusammen – wer den Aufzug richtig erwischt, kommt auch am Ventil vorbei.',
+    intro: 'Über der Glut, Takt 5 Sekunden. Ein Zahnradaufzug trägt über die erste Rinne, ein Drehteller wirft nach oben aus, und über der zweiten Rinne schlägt ein Dampfkolben aus der Wand. Alles drei hängt zusammen – wer den Aufzug richtig erwischt, ist auch am Kolben vorbei, bevor er kommt.',
     map: [
       '..............................',
       '..###########lll##############',
@@ -273,7 +273,7 @@ const CLOCK_COURSES = [
       { type: 'rail', y: 3.5, x0: 11, x1: 18 },
       { type: 'ferry', x0: 11.5, y0: 3.5, x1: 17.5, y1: 3.5, w: 1.2, h: 1.2, wait: 1.9, travel: 2.6, style: 'cart' },
       { type: 'turntable', x: 20.5, y: 4.5, r: 1.6, speed: 1.2566, exit: -90 },
-      { type: 'field', x: 22.4, y: 5.4, w: 4.2, h: 2.6, fx: 7.5, fy: 0, style: 'steam', gust: 1.2566 },
+      { type: 'piston', x: 22.6, y: 6.5, w: 1.2, h: 1.4, angle: 0, hub: 3, period: 5, phase: 0.15 },
       { type: 'bumper', x: 20.5, y: 10.5, r: 0.5, style: 'feder' },
     ],
     decor: [
@@ -288,7 +288,7 @@ const CLOCK_COURSES = [
   },
   {
     name: 'Der große Turm', par: 6, theme: 'clocktown', maxStrokes: 30, hStep: 0.45,
-    intro: 'Die Schlussbahn, Takt 6 Sekunden. Über zwei Stufen hinauf auf den Turmsockel, mit dem Aufzug über den Lichthof, dann durch das Turmtor. Drinnen sitzt die Hemmung – und unter dem Zifferblatt das Loch.',
+    intro: 'Die Schlussbahn, Takt 6 Sekunden. Zwei Zahnradaufzüge tragen den Ball Stufe um Stufe auf den Turmsockel – leg ihn nur unten hin, wenn gerade ein Eimer bereitsteht. Oben ein Pendel, dann durch das Turmtor.',
     map: [
       '..................................',
       '..############....................',
@@ -316,12 +316,13 @@ const CLOCK_COURSES = [
       '..................................',
     ],
     obstacles: [
-      // Rampen auf die beiden Stufen
-      { type: 'field', x: 5, y: 4.6, w: 2, h: 1.4, fx: 0, fy: 2.4, style: 'slope', base: 0, rise: 1 },
-      { type: 'field', x: 12.6, y: 5.4, w: 1.6, h: 3.4, fx: 2.6, fy: 0, style: 'slope', base: 1, rise: 1 },
-      { type: 'rotor', x: 9, y: 4.7, blades: 1, len: 2.6, thick: 0.14, hubR: 0.32, style: 'pendel',
+      /* Zwei Aufzüge statt zweier Rampen: Auf so engem Raum bekommt man den Anlauf für eine Rampe
+         nicht zusammen – der Bot lief hier in sechs von sechs Runden ins Schlaglimit. Der Aufzug
+         nimmt einen ruhenden Ball mit, verlangt dafür aber den richtigen Augenblick. */
+      { type: 'gearlift', x: 6.5, y: 5.5, r: 1.5, angle: 90, speed: 1.0472, eimer: 3 },
+      { type: 'gearlift', x: 13.5, y: 6.5, r: 1.5, angle: 0, speed: 1.0472, eimer: 3, phase: 0.5 },
+      { type: 'rotor', x: 19, y: 5.4, blades: 1, len: 2.6, thick: 0.14, hubR: 0.32, style: 'pendel',
         phase: 1.5708, swing: { amp: 0.75, speed: 1.0472 } },
-      { type: 'gate', x: 20, y: 7, w: 0.32, h: 3, period: 6, open: 0.5, phase: 0.3, axis: 'y' },
       { type: 'door', x: 28.5, y: 6.5, r: 0.7, s: 3.6 },
     ],
     decor: [
@@ -334,7 +335,7 @@ const CLOCK_COURSES = [
     autoDecor: { density: 0.16, seed: 103 },
     inner: {
       name: 'Turmkammer', theme: 'escapement', look: { x: 8.5, y: 5.5 },
-      intro: 'Die Hemmung: zwei Pendel, spiegelbildlich zueinander – schlägt das eine nach links, schlägt das andere nach rechts. Dahinter dreht sich das große Rad einmal je Takt und legt den Ball auf die Bahn zum Loch.',
+      intro: 'Die Hemmung: zwei Pendel, spiegelbildlich zueinander – schlägt das eine nach links, schlägt das andere nach rechts. Dahinter dreht sich der große Zeiger einmal je Takt: Er nimmt einen langsamen Ball mit, schiebt ihn nach außen und schleudert ihn am Ende der Stange davon.',
       map: [
         '....................',
         '..T###############..',
@@ -353,7 +354,7 @@ const CLOCK_COURSES = [
         { type: 'rotor', x: 13, y: 1.4, blades: 1, len: 3.2, thick: 0.16, hubR: 0.35, style: 'pendel',
           phase: 1.5708, swing: { amp: -0.9, speed: 1.0472 } },
         // Das grosse Rad nimmt einen langsamen Ball mit und wirft ihn an der Rinne zum Loch aus
-        { type: 'turntable', x: 9.5, y: 6.5, r: 1.6, speed: 1.0472, exit: 0 },
+        { type: 'hand', x: 9.5, y: 6.5, len: 2.6, thick: 0.17, speed: 1.0472, schub: 1.4, fang: 5 },
       ],
       decor: [
         { t: 'gearFlat', x: 4.5, y: 4.5, s: 2.2, speed: 0.35, seed: 0.2 },

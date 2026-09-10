@@ -598,12 +598,23 @@ Das ist der Unterschied zum **Tüftlerreich**, das ihr am nächsten kommt. Dort 
 eigene Erfindung, die man erst einmal verstehen muss. Hier ist es immer dieselbe Frage – *wann?* –
 und nur die Antwort ändert sich.
 
-**Gebaut ist die Welt aus Teilen, die es schon gab.** Das Pendel ist ein `rotor` mit `swing`, das
-Dampfventil ein `field` mit `gust`, der Zahnradaufzug eine `ferry`, die Spannfeder ein `bumper`. Neu
-sind nur ihre Gesichter – die Zeichenstile `pendel`, `steam` und `feder`, die Deko `bell` und
-`weight`, die drei Farbpaletten – und die Bahnen selbst. Ein Hindernis dazuzuerfinden, das sich am
-Ende doch wie ein Rotor benimmt, hätte der Welt nichts gegeben und dem Spiel eine Klasse mehr zu
-warten. Zwei Kleinigkeiten sind dabei nützlich zu wissen:
+**Drei Maschinen gehören nur ihr.** Sie können etwas, das es im Spiel noch nicht gab:
+
+| Hindernis | Was es tut | Warum es neu ist |
+|---|---|---|
+| **Zahnradaufzug** (`gearlift`) | Ein stehendes Rad mit Eimern am Kranz. Ein Ball, der langsam unten ankommt, während dort gerade ein Eimer steht, wird über den Scheitel getragen und **eine Höhenstufe höher** abgesetzt. | Hinauf kam man bisher nur über eine Rampe, und die verlangt Anlauf. Der Aufzug nimmt einen ruhenden Ball mit – möglich, weil ein mitfahrender Ball in `physics.js` vor der Kantenregel behandelt wird. |
+| **Dampfkolben** (`piston`) | Ein Stempel, der auf den Schlag aus der Mauer fährt, kurz steht und langsamer zurückgeht. Dazwischen ist er selbst Mauer. | Das Dampfventil schiebt weich über eine Fläche; der Kolben trifft hart und nur einen schmalen Streifen. Die Stoßgeschwindigkeit wird gerechnet, nicht aus der Bildfolge geschätzt – so ist der Schlag auf jedem Gerät gleich stark. |
+| **Zeiger** (`hand`) | Ein Uhrzeiger. Wer **langsam** an ihn stößt, wird mitgenommen und dabei nach außen geschoben; am Ende der Stange fliegt er tangential davon. Wer **mit Schwung** kommt, prallt ab wie an einem Drehkreuz. | Der Drehteller wirft immer an derselben Stelle und gleich weit aus. Hier bestimmt der Spieler beides: Wo er den Zeiger trifft, entscheidet, wie lange er mitfährt – nah an der Achse heißt lange Fahrt und weiter Wurf. |
+
+Alle drei stehen auch im **Baumodus** in der Werkzeugliste, lassen sich mit dem Drehknopf ausrichten
+und dürfen in geteilten Bahnen vorkommen. `tools/validate.mjs` prüft, was sonst still scheitern
+würde: ein Aufzug, dessen Ein- oder Ausstieg neben der Bahn liegt, ein Kolben ohne Hub oder mit
+einem Takt, der kürzer ist als ein ganzer Schlag, ein Zeiger ohne Schub.
+
+**Sonst ist die Welt aus Teilen gebaut, die es schon gab.** Das Pendel ist ein `rotor` mit `swing`, das
+Dampfventil ein `field` mit `gust`, die Spannfeder ein `bumper`, die Zahnradfähre eine `ferry`. Deren
+Gesichter sind neu – die Zeichenstile `pendel`, `steam` und `feder`, die Deko `bell` und `weight`,
+die drei Farbpaletten. Zwei Kleinigkeiten sind dabei nützlich zu wissen:
 
 - Ein Pendel schwingt nach `angle = phase + amp · sin(t · speed)`. `phase: 1.5708` lässt die Stange
   senkrecht nach unten hängen, `speed = 2π / Takt`. Ein **negatives `amp`** spiegelt die Schwingung –

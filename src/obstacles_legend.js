@@ -417,3 +417,152 @@ class ImperialBox {
     events.push({ type: 'dropped', x: ball.x, y: ball.y, ob: this });
   }
 }
+
+/* ---------- Die drei Maschinen der Uhrwerkstadt ----------
+   Alles andere in dieser Welt ist eine bekannte Mechanik mit neuem Gesicht. Diese drei sind wirklich
+   neu, weil sie etwas können, das es im Spiel noch nicht gab: eine Höhenstufe hinauftragen, im Takt
+   hart zuschlagen, und einen Ball mit wachsendem Radius nach außen schleudern.
+
+   Alle drei laufen auf der Spieluhr t – dieselbe Zahl auf jedem Gerät. Damit sehen beim Spiel
+   gegeneinander alle denselben Ballweg, ohne dass etwas übertragen werden müsste. */
+
+/* Zahnradaufzug: ein stehendes Rad am Fuß einer Höhenstufe, mit Eimern am Kranz. Es dreht sich
+   immerzu. Kommt ein Ball langsam unten an, während gerade ein Eimer dort steht, wird er
+   aufgenommen, über den Scheitel getragen und oben abgesetzt.
+
+   Warum das nicht die Fähre schon konnte: Die Fähre schiebt waagerecht. Eine Höhenstufe hinauf kam
+   man bisher nur über eine Rampe, und die verlangt Anlauf – auf engen Bahnen ist dafür kein Platz.
+   Der Aufzug nimmt einen ruhenden Ball mit. Möglich ist das, weil ein mitfahrender Ball in
+   physics.js vor der Kantenregel behandelt wird: Wer getragen wird, den hält die Stufe nicht auf. */
+class GearLift {
+  constructor(d) {
+    Object.assign(this, { r: 1.6, angle: 0, speed: 1.0472, eimer: 3, phase: 0, fang: 6 }, d);
+    this.type = 'gearlift';
+    const a = (this.angle * Math.PI) / 180;
+    this.dx = Math.cos(a); this.dy = Math.sin(a);      // Richtung von unten nach oben
+    this.drehung = 0;
+  }
+  update(t) { this.drehung = t * this.speed + this.phase * TAU; }
+  ein() { return [this.x - this.dx * this.r, this.y - this.dy * this.r]; }
+  aus() { return [this.x + this.dx * this.r, this.y + this.dy * this.r]; }
+  dauer() { return Math.PI / this.speed; }             // eine halbe Umdrehung
+  hub() { return this.r * 0.9; }
+  /* Steht gerade ein Eimer unten? Die Eimer sitzen gleichmäßig auf dem Kranz. */
+  eimerUnten() {
+    const teil = TAU / this.eimer;
+    const rest = ((this.drehung % teil) + teil) % teil;
+    return Math.min(rest, teil - rest) < 0.5;
+  }
+  ride(ball, t, events) {
+    if (ball.rider === this) {
+      const u = Math.min(1, (t - ball.liftT0) / this.dauer());
+      const w = Math.PI * u;                           // 0 = unten, π = oben
+      ball.x = this.x - this.dx * this.r * Math.cos(w);
+      ball.y = this.y - this.dy * this.r * Math.cos(w);
+      ball.z = this.hub() * Math.sin(w);
+      ball.vx = 0; ball.vy = 0; ball.vz = 0;
+      if (u < 1) return true;
+      const [ax, ay] = this.aus();
+      ball.rider = null; ball.rideCd = 1.2;
+      ball.x = ax + this.dx * 0.45; ball.y = ay + this.dy * 0.45;
+      ball.vx = this.dx * 2.2; ball.vy = this.dy * 2.2; ball.z = 0; ball.vz = 0;
+      events.push({ type: 'dropoff', x: ball.x, y: ball.y });
+      return false;
+    }
+    if (ball.rideCd > 0 || ball.air) return false;
+    const [ex, ey] = this.ein();
+    if (Math.hypot(ball.x - ex, ball.y - ey) > this.r * 0.6) return false;
+    if (Math.hypot(ball.vx, ball.vy) > this.fang) return false;
+    if (!this.eimerUnten()) return false;
+    ball.rider = this; ball.liftT0 = t;
+    ball.x = ex; ball.y = ey; ball.vx = 0; ball.vy = 0; ball.z = 0;
+    events.push({ type: 'board', x: ex, y: ey });
+    return true;
+  }
+}
+
+/* Dampfkolben: ein Stempel, der auf den Schlag aus der Mauer fährt und dazwischen selbst Mauer ist.
+   Anders als das Dampfventil trifft er hart und nur einen schmalen Streifen – entweder man ist weg,
+   oder man fliegt quer über die Bahn.
+
+   Die Stoßgeschwindigkeit wird gerechnet, nicht aus der Bildfolge geschätzt: Beim Ausfahren legt er
+   'hub' Kacheln in 'stoss' Sekunden zurück, beim Zurückziehen dieselbe Strecke in der doppelten
+   Zeit. Damit bleibt der Stoß auf jedem Gerät gleich stark, egal wie flüssig es läuft. */
+class Piston {
+  constructor(d) {
+    Object.assign(this, { w: 1.2, h: 1.2, angle: 0, hub: 2.4, period: 4, phase: 0, stoss: 0.28, halt: 0.22, e: 0.45 }, d);
+    this.type = 'piston';
+    const a = (this.angle * Math.PI) / 180;
+    this.dx = Math.cos(a); this.dy = Math.sin(a);
+    this.aus = 0; this.vx = 0; this.vy = 0; this.px = this.x; this.py = this.y;
+  }
+  update(t) {
+    const s = ((((t / this.period + this.phase) % 1) + 1) % 1) * this.period;
+    const rein = this.stoss * 2;
+    let anteil = 0, tempo = 0;
+    if (s < this.stoss) { anteil = s / this.stoss; tempo = this.hub / this.stoss; }
+    else if (s < this.stoss + this.halt) { anteil = 1; tempo = 0; }
+    else if (s < this.stoss + this.halt + rein) { anteil = 1 - (s - this.stoss - this.halt) / rein; tempo = -this.hub / rein; }
+    this.aus = anteil * this.hub;
+    this.px = this.x + this.dx * this.aus; this.py = this.y + this.dy * this.aus;
+    this.vx = this.dx * tempo; this.vy = this.dy * tempo;
+    this.schlaegt = tempo > 0;
+  }
+  poly() { return rectPoly(this.px, this.py, this.w, this.h); }
+  segments(out) { polySegments(this.poly(), out, { vx: this.vx, vy: this.vy, e: this.e, kind: 'mover', owner: this }); }
+}
+
+/* Zeiger: ein Uhrzeiger, der sich dreht. Wer langsam an ihn stößt, wird mitgenommen und dabei nach
+   außen geschoben; am Ende der Stange fliegt er tangential davon. Wer mit Schwung kommt, prallt an
+   der Stange ab wie an einem Drehkreuz.
+
+   Der Unterschied zum Drehteller: Der wirft immer an derselben Stelle und immer gleich weit aus.
+   Hier entscheidet der Spieler beides selbst – wo er den Zeiger trifft, bestimmt, wie lange er
+   mitfährt, und daraus folgen Richtung und Weite. Nah an der Achse getroffen heißt: lange Fahrt,
+   weiter Wurf. */
+class Hand {
+  constructor(d) {
+    Object.assign(this, { len: 3, speed: 1.0472, phase: 0, thick: 0.18, schub: 1.5, fang: 5, hubR: 0.4, e: 0.85 }, d);
+    this.type = 'hand'; this.angle = this.phase; this.omega = this.speed;
+  }
+  update(t) { this.angle = t * this.speed + this.phase; this.omega = this.speed; }
+  spitze() { return [this.x + Math.cos(this.angle) * this.len, this.y + Math.sin(this.angle) * this.len]; }
+  ride(ball, t, events) {
+    if (ball.rider === this) {
+      ball.handR += this.schub * Math.max(0, t - ball.handT); ball.handT = t;
+      if (ball.handR >= this.len) {
+        const a = this.angle, tang = this.omega * this.len;
+        ball.rider = null; ball.rideCd = 1.2;
+        ball.x = this.x + Math.cos(a) * (this.len + 0.25); ball.y = this.y + Math.sin(a) * (this.len + 0.25);
+        ball.vx = -Math.sin(a) * tang + Math.cos(a) * this.schub * 2.2;
+        ball.vy = Math.cos(a) * tang + Math.sin(a) * this.schub * 2.2;
+        ball.z = 0; ball.vz = 0;
+        events.push({ type: 'spinout', x: ball.x, y: ball.y });
+        return false;
+      }
+      ball.x = this.x + Math.cos(this.angle) * ball.handR;
+      ball.y = this.y + Math.sin(this.angle) * ball.handR;
+      ball.vx = -Math.sin(this.angle) * this.omega * ball.handR;
+      ball.vy = Math.cos(this.angle) * this.omega * ball.handR;
+      ball.z = 0.05; ball.vz = 0;
+      return true;
+    }
+    if (ball.rideCd > 0 || ball.air) return false;
+    if (Math.hypot(ball.vx, ball.vy) > this.fang) return false;   // mit Schwung prallt man ab
+    const dx = ball.x - this.x, dy = ball.y - this.y, d = Math.hypot(dx, dy);
+    if (d < this.hubR || d > this.len) return false;
+    // Abstand von der Stange: Winkelabweichung mal Radius
+    const ab = Math.atan2(dy, dx) - this.angle;
+    const quer = Math.abs(Math.atan2(Math.sin(ab), Math.cos(ab))) * d;
+    if (quer > this.thick + ball.r + 0.2) return false;
+    ball.rider = this; ball.handR = d; ball.handT = t;
+    events.push({ type: 'spin', x: ball.x, y: ball.y });
+    return true;
+  }
+  segments(out) {
+    const [bx, by] = this.spitze();
+    out.push({ ax: this.x, ay: this.y, bx, by, rad: this.thick, omega: this.omega,
+      cx: this.x, cy: this.y, e: this.e, kind: 'rotor' });
+  }
+  circles(out) { out.push({ x: this.x, y: this.y, r: this.hubR, e: 0.6, kind: 'hub' }); }
+}

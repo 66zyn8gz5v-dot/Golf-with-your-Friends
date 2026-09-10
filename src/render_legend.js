@@ -1196,4 +1196,120 @@ Object.assign(Renderer.prototype, {
     ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(b0, b1); ctx.stroke();
     this.daumenScheibe(ctx, px, py, s * 0.34, ob.hoch);
   },
+
+  /* ---------- Die drei Maschinen der Uhrwerkstadt ---------- */
+
+  /* Zahnradaufzug: ein stehendes Rad, das man von der Seite sieht – Kranz mit Zähnen, Speichen und
+     drei Eimern, die mitlaufen. Gezeichnet wird in der Ebene aus Fahrtrichtung und Höhe: Der Kranz
+     ist darum kein Kreis auf dem Boden, sondern steht senkrecht auf der Bahn. */
+  drawGearLift(ctx, ob, t) {
+    const s = this.scale, R = ob.r, mitte = ob.hub();
+    // Punkt auf dem Rad: Winkel a, gemessen von unten
+    const rad = (a, f = 1) => this.proj(ob.x - ob.dx * Math.cos(a) * R * f, ob.y - ob.dy * Math.cos(a) * R * f, mitte + Math.sin(a) * R * f);
+    // Bock unter der Achse
+    const fuss = this.proj(ob.x, ob.y, 0), achse = this.proj(ob.x, ob.y, mitte);
+    ctx.strokeStyle = '#4a4230'; ctx.lineWidth = Math.max(2, s * 0.14);
+    ctx.beginPath(); ctx.moveTo(fuss[0] - s * 0.3, fuss[1]); ctx.lineTo(achse[0], achse[1]);
+    ctx.moveTo(fuss[0] + s * 0.3, fuss[1]); ctx.lineTo(achse[0], achse[1]); ctx.stroke();
+    // Kranz: außen die Zähne, innen der Ring
+    const zaehne = 16;
+    ctx.fillStyle = '#8a6624'; ctx.beginPath();
+    for (let i = 0; i < zaehne * 2; i++) {
+      const a = (i / (zaehne * 2)) * Math.PI * 2, f = i % 2 ? 1.12 : 1;
+      const p = rad(a + ob.drehung, f);
+      i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]);
+    }
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#e0b45c'; ctx.lineWidth = Math.max(1.5, s * 0.07); ctx.beginPath();
+    for (let i = 0; i <= 24; i++) { const p = rad((i / 24) * Math.PI * 2, 0.86); i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); }
+    ctx.closePath(); ctx.stroke();
+    // Speichen
+    ctx.strokeStyle = '#c9903f'; ctx.lineWidth = Math.max(1.5, s * 0.06);
+    for (let i = 0; i < 6; i++) {
+      const p = rad(ob.drehung + (i * Math.PI) / 3, 0.86);
+      ctx.beginPath(); ctx.moveTo(achse[0], achse[1]); ctx.lineTo(p[0], p[1]); ctx.stroke();
+    }
+    // Eimer am Kranz – an ihnen sieht man, wann unten einer bereitsteht
+    for (let i = 0; i < ob.eimer; i++) {
+      const a = ob.drehung + (i * Math.PI * 2) / ob.eimer;
+      const p = rad(a, 0.98), unten = Math.cos(a) > 0.86;
+      ctx.fillStyle = unten ? '#ffe9b0' : '#b5842f';
+      ctx.beginPath(); ctx.arc(p[0], p[1], s * 0.2, 0, TAU); ctx.fill();
+      ctx.strokeStyle = '#5f4416'; ctx.lineWidth = 1; ctx.stroke();
+    }
+    // Nabe
+    ctx.fillStyle = '#e0b45c'; ctx.beginPath(); ctx.arc(achse[0], achse[1], s * 0.16, 0, TAU); ctx.fill();
+  },
+  /* Boden: der Einstieg unten und der Absetzpunkt oben, damit man beides sieht, bevor man schlägt */
+  drawGearLiftFloor(ctx, ob) {
+    const [ex, ey] = ob.ein(), [ax, ay] = ob.aus();
+    this.isoEllipse(ctx, ex, ey, 0.005, 0.55, ob.eimerUnten() ? 'rgba(255,233,176,0.5)' : 'rgba(255,233,176,0.16)');
+    this.isoEllipse(ctx, ax, ay, 0.005, 0.5, 'rgba(120,255,190,0.2)');
+  },
+
+  /* Dampfkolben: Zylinder in der Mauer, davor die Stange und der Stempelkopf. Beim Ausschlag steht
+     eine Dampfwolke am Zylinder – so sieht man den Schlag auch dann, wenn der Kopf gerade verdeckt
+     ist. */
+  drawPiston(ctx, ob, t) {
+    const s = this.scale;
+    // Zylinder an der Ruhelage
+    const zyl = rectPoly(ob.x - ob.dx * 0.35, ob.y - ob.dy * 0.35, ob.w * 1.25, ob.h * 1.25);
+    this.prism(ctx, zyl, 0, 0.55, '#7a5a2a', '#4a3618', { outline: '#2e2210' });
+    // Stange von der Ruhelage zum Kopf
+    const st0 = this.proj(ob.x, ob.y, 0.3), st1 = this.proj(ob.px, ob.py, 0.3);
+    ctx.strokeStyle = '#cfd4de'; ctx.lineWidth = Math.max(2, s * 0.13);
+    ctx.beginPath(); ctx.moveTo(st0[0], st0[1]); ctx.lineTo(st1[0], st1[1]); ctx.stroke();
+    // Kopf
+    const kopf = rectPoly(ob.px, ob.py, ob.w, ob.h);
+    this.prism(ctx, kopf, 0, 0.62, ob.schlaegt ? '#ffdf9c' : '#c9903f', '#6e4a1c', { outline: '#3a2a10' });
+    // Dampf beim Ausschlag
+    if (ob.aus > 0.05) {
+      const n = 4;
+      for (let i = 0; i < n; i++) {
+        const u = ((t * 1.6 + i / n) % 1);
+        const p = this.proj(ob.x - ob.dx * (0.4 + u * 0.5) + ob.dy * (i - 1.5) * 0.22,
+          ob.y - ob.dy * (0.4 + u * 0.5) - ob.dx * (i - 1.5) * 0.22, 0.3 + u * 0.3);
+        ctx.fillStyle = `rgba(246,250,255,${(0.45 * (1 - u) * Math.min(1, ob.aus / ob.hub + 0.3)).toFixed(3)})`;
+        ctx.beginPath(); ctx.arc(p[0], p[1], s * (0.14 + u * 0.3), 0, TAU); ctx.fill();
+      }
+    }
+  },
+  /* Boden: der Streifen, den der Kolben bestreicht – kurz vor dem Schlag leuchtet er auf */
+  drawPistonFloor(ctx, ob) {
+    const bx = ob.dx * ob.hub, by = ob.dy * ob.hub;
+    const qx = -ob.dy * ob.h / 2, qy = ob.dx * ob.w / 2;
+    const poly = [[ob.x + qx, ob.y + qy], [ob.x + bx + qx, ob.y + by + qy],
+      [ob.x + bx - qx, ob.y + by - qy], [ob.x - qx, ob.y - qy]];
+    const warm = ob.aus > 0.05 ? 0.3 : 0.12;
+    this.fillPoly(ctx, poly, 0.005, `rgba(255,180,90,${warm})`, false);
+  },
+
+  /* Zeiger: Stange mit Gegengewicht und einer Spitze wie ein Uhrzeiger. Der helle Streifen an der
+     Stange läuft nach außen – er zeigt, wohin ein mitgenommener Ball geschoben wird. */
+  drawHand(ctx, ob, t) {
+    const s = this.scale, a = ob.angle, ca = Math.cos(a), sa = Math.sin(a), tk = ob.thick;
+    const stange = [[ob.x - sa * tk, ob.y + ca * tk], [ob.x + ca * ob.len - sa * tk, ob.y + sa * ob.len + ca * tk],
+      [ob.x + ca * ob.len + sa * tk, ob.y + sa * ob.len - ca * tk], [ob.x + sa * tk, ob.y - ca * tk]];
+    this.prism(ctx, stange, 0.03, 0.3, '#e0b45c', '#8a6624', { outline: '#3a2a12' });
+    // Gegengewicht auf der anderen Seite der Achse
+    const g = [[ob.x - ca * 0.9 - sa * tk * 1.5, ob.y - sa * 0.9 + ca * tk * 1.5],
+      [ob.x - sa * tk * 1.5, ob.y + ca * tk * 1.5], [ob.x + sa * tk * 1.5, ob.y - ca * tk * 1.5],
+      [ob.x - ca * 0.9 + sa * tk * 1.5, ob.y - sa * 0.9 - ca * tk * 1.5]];
+    this.prism(ctx, g, 0.03, 0.26, '#c9903f', '#6e4a1c');
+    // Spitze
+    const p0 = this.proj(ob.x + ca * ob.len, ob.y + sa * ob.len, 0.33);
+    const p1 = this.proj(ob.x + ca * (ob.len - 0.5) - sa * 0.24, ob.y + sa * (ob.len - 0.5) + ca * 0.24, 0.33);
+    const p2 = this.proj(ob.x + ca * (ob.len - 0.5) + sa * 0.24, ob.y + sa * (ob.len - 0.5) - ca * 0.24, 0.33);
+    ctx.fillStyle = '#ffe9b0'; ctx.beginPath();
+    ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.lineTo(p2[0], p2[1]); ctx.closePath(); ctx.fill();
+    // wanderndes Glanzlicht: der Schub nach außen
+    const u = (t * 0.8) % 1;
+    const q = this.proj(ob.x + ca * (0.5 + u * (ob.len - 0.8)), ob.y + sa * (0.5 + u * (ob.len - 0.8)), 0.34);
+    ctx.fillStyle = `rgba(255,255,235,${(0.7 * (1 - u)).toFixed(2)})`;
+    ctx.beginPath(); ctx.arc(q[0], q[1], s * 0.12, 0, TAU); ctx.fill();
+    // Achse
+    const c = this.proj(ob.x, ob.y, 0.3);
+    ctx.fillStyle = '#8a6624'; ctx.beginPath(); ctx.arc(c[0], c[1], s * ob.hubR, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#ffdf9c'; ctx.beginPath(); ctx.arc(c[0], c[1], s * ob.hubR * 0.5, 0, TAU); ctx.fill();
+  },
 });

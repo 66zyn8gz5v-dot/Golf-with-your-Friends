@@ -917,6 +917,9 @@ class Renderer {
     if (ob.type === 'eyetower') { this.drawEyeBeam(ctx, ob, t); return; }
     if (ob.type === 'firetower') { this.drawFireSweep(ctx, ob, t); return; }
     if (ob.type === 'imperialbox') { this.drawLogeLuke(ctx, ob, t); return; }
+    if (ob.type === 'gearlift') { this.drawGearLiftFloor(ctx, ob, t); return; }
+    if (ob.type === 'piston') { this.drawPistonFloor(ctx, ob, t); return; }
+    if (ob.type === 'hand') { this.isoEllipse(ctx, ob.x, ob.y, 0.004, ob.len + 0.2, 'rgba(0,0,0,0.1)'); return; }
     if (ob.type === 'field' && ob.style === 'steam') { this.drawSteam(ctx, ob, t); return; }
     if (ob.type === 'field' && ob.style === 'dark') { this.drawDarkZone(ctx, ob, t); return; }
     if (ob.type === 'boost' || (ob.type === 'field' && (ob.style === 'wind' || ob.style === 'current'))) { this.drawWind(ctx, ob, t); return; }
@@ -1206,6 +1209,12 @@ class Renderer {
       this.pushGuillotine(items, ctx, ob, t);
     } else if (ob.type === 'eyetower') {
       items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => this.drawEyeTower(ctx, ob, t) });
+    } else if (ob.type === 'gearlift') {
+      items.push({ x: ob.x, y: ob.y, bias: 0.3, draw: () => this.drawGearLift(ctx, ob, t) });
+    } else if (ob.type === 'piston') {
+      items.push({ x: ob.px, y: ob.py, bias: 0.3, draw: () => this.drawPiston(ctx, ob, t) });
+    } else if (ob.type === 'hand') {
+      items.push({ x: ob.x, y: ob.y, bias: 0.25, draw: () => this.drawHand(ctx, ob, t) });
     } else if (ob.type === 'firetower') {
       items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => this.drawFireTower(ctx, ob, t) });
     } else if (ob.type === 'imperialbox') {

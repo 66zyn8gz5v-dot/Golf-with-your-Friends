@@ -10,6 +10,8 @@ const Editor = (deps) => {
     ['boost', 'Beschleuniger'], ['windmill', 'Windmühle'], ['cannon', 'Kanone'], ['magnet', 'Magnet'], ['turntable', 'Drehscheibe'], ['potion', 'Schrumpftrank'],
     ['ferry', 'Fähre'], ['rail', 'Schiene'], ['wave', 'Welle'], ['sharkjump', 'Hai (springt)'], ['spikes', 'Stacheln'],
     ['updraft', 'Aufwind'], ['lightning', 'Blitz'], ['guillotine', 'Fallbeil'], ['eyetower', 'Turm des Auges'], ['switch', 'Schalter'],
+    // Die drei Maschinen der Uhrwerkstadt
+    ['gearlift', 'Zahnradaufzug'], ['piston', 'Dampfkolben'], ['hand', 'Zeiger'],
     ['portal', 'Portal (2× tippen)'], ['wall', 'Bande (2× tippen)'],
   ];
   const THEME_LABELS = { meadow: 'Elfenwiese', mushroom: 'Pilzhain', forge: 'Zwergenschmiede', forest: 'Zauberwald', dragon: 'Drachenhöhle', ice: 'Eisgrotte', sky: 'Wolkenburg', clockwork: 'Uhrwerk', witch: 'Hexenwald', hut: 'Hexenhütte', reef: 'Korallenriff', volcano: 'Vulkan', palace: 'Wüstenpalast', harbor: 'Piratenbucht', desert: 'Wüste', tomb: 'Grabkammer', castle: 'Burgberg', deck: 'Piratendeck', wreck: 'Schiffswrack', belly: 'Haimagen', jungle: 'Dschungel', temple: 'Tempelhalle', storm: 'Sturmhimmel', fortress: 'Sturmfestung', shadow: 'Schattenreich', throne: 'Thronsaal', darksea: 'Totensee', ghostship: 'Totenschiff', clocktown: 'Uhrwerkstadt', boiler: 'Kesselhaus', escapement: 'Turmkammer' };
@@ -153,6 +155,11 @@ const Editor = (deps) => {
       case 'guillotine': return { type: 'guillotine', x, y, w: 0.35, h: 2, period: 5, phase: 0, hold: 0.32 };
       case 'eyetower': return { type: 'eyetower', x, y, r: 1.1, range: 9, fov: 0.6, speed: 0.42, phase: 0 };
       case 'switch': return { type: 'switch', x, y, r: 0.55, duration: 14, target: 'A' };
+      /* Uhrwerkstadt. Der Aufzug trägt in Richtung 'angle' – der Einstieg liegt r Kacheln davor,
+         der Ausstieg r dahinter. Sinnvoll ist er da, wo hinter ihm eine Höhenstufe beginnt. */
+      case 'gearlift': return { type: 'gearlift', x, y, r: 1.5, angle: 0, speed: 1.0472, eimer: 3, phase: 0 };
+      case 'piston': return { type: 'piston', x, y, w: 1.2, h: 1.2, angle: 0, hub: 2.4, period: 4, phase: 0 };
+      case 'hand': return { type: 'hand', x, y, len: 2.6, speed: 1.0472, schub: 1.5, phase: 0 };
       default: return null;
     }
   }
@@ -194,6 +201,8 @@ const Editor = (deps) => {
       case 'spikes': case 'updraft': case 'lightning': case 'guillotine': { const w = o.w; o.w = o.h; o.h = w; break; }
       case 'eyetower': o.phase = Math.round((((o.phase || 0) + Math.PI / 2) % (Math.PI * 2)) * 100) / 100; break;
       case 'switch': o.target = o.target === 'A' ? 'B' : 'A'; break;
+      case 'gearlift': case 'piston': o.angle = cyc(o.angle || 0); break;
+      case 'hand': o.speed = -o.speed; break;
       default: return false;
     }
     return true;

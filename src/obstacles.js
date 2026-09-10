@@ -490,6 +490,10 @@ function createObstacles(defs) {
       case 'wandergate': out.push(new WanderGate(d)); break;
       case 'firetower': out.push(new FireTower(d)); break;
       case 'imperialbox': out.push(new ImperialBox(d)); break;
+      // Die drei Maschinen der Uhrwerkstadt
+      case 'gearlift': out.push(new GearLift(d)); break;
+      case 'piston': out.push(new Piston(d)); break;
+      case 'hand': out.push(new Hand(d)); break;
     case 'sharkjump': out.push(new SharkJump(d)); break;
     case 'spikes': out.push(new Spikes(d)); break;
     case 'mover': out.push(new Mover(d)); break;

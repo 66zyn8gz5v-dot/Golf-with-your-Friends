@@ -51,6 +51,36 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
     const ch = rows[Math.floor(my)] && rows[Math.floor(my)][Math.floor(mx)];
     if (!FLOOR.has(ch)) problems.push(`wandergate: Mitte bei (${mx},${my}) liegt nicht auf dem Fairway (${ch})`);
   }
+  /* Die drei Maschinen der Uhrwerkstadt. Geprüft wird, was sonst still scheitert: ein Aufzug, der
+     nirgendwohin trägt, ein Kolben ohne Hub, ein Zeiger ohne Länge – und ob Ein- und Ausstieg des
+     Aufzugs überhaupt auf der Bahn liegen. Ein Aufzug, der neben die Bahn absetzt, wirft den Ball
+     ins Nichts, und das sähe wie ein Fehler im Spiel aus statt wie einer in der Bahn. */
+  for (const o of (c.obstacles || []).filter(o => o.type === 'gearlift')) {
+    const r = o.r == null ? 1.6 : o.r, a = ((o.angle || 0) * Math.PI) / 180;
+    if (!(r > 0.4)) { problems.push(`gearlift bei (${o.x},${o.y}): Rad zu klein (r ${r})`); continue; }
+    if (!(o.eimer == null || (o.eimer >= 1 && o.eimer <= 8))) problems.push(`gearlift bei (${o.x},${o.y}): eimer ${o.eimer} – sinnvoll sind 1 bis 8`);
+    if (o.speed != null && !(Math.abs(o.speed) > 0.05)) problems.push(`gearlift bei (${o.x},${o.y}): steht still (speed ${o.speed})`);
+    for (const [name, sx, sy] of [['Einstieg', o.x - Math.cos(a) * r, o.y - Math.sin(a) * r], ['Ausstieg', o.x + Math.cos(a) * r, o.y + Math.sin(a) * r]]) {
+      const ch = rows[Math.floor(sy)] && rows[Math.floor(sy)][Math.floor(sx)];
+      if (!FLOOR.has(ch)) problems.push(`gearlift: ${name} bei (${sx.toFixed(1)},${sy.toFixed(1)}) liegt nicht auf dem Fairway (${ch})`);
+    }
+  }
+  for (const o of (c.obstacles || []).filter(o => o.type === 'piston')) {
+    const hub = o.hub == null ? 2.4 : o.hub, st = o.stoss == null ? 0.28 : o.stoss;
+    if (!(hub > 0.3)) problems.push(`piston bei (${o.x},${o.y}): hub ${hub} – da schlägt nichts aus`);
+    if (!(st > 0.05)) problems.push(`piston bei (${o.x},${o.y}): stoss ${st} ist zu kurz`);
+    const p = o.period == null ? 4 : o.period;
+    if (!(p > st * 3 + (o.halt == null ? 0.22 : o.halt))) problems.push(`piston bei (${o.x},${o.y}): period ${p} ist kürzer als ein ganzer Schlag – er käme nie zur Ruhe`);
+  }
+  for (const o of (c.obstacles || []).filter(o => o.type === 'hand')) {
+    const len = o.len == null ? 3 : o.len, sch = o.schub == null ? 1.5 : o.schub;
+    if (!(len > 0.8)) problems.push(`hand bei (${o.x},${o.y}): len ${len} ist zu kurz`);
+    if (!(sch > 0.1)) problems.push(`hand bei (${o.x},${o.y}): schub ${sch} – der Ball käme nie wieder von der Stange`);
+    if (o.speed != null && !(Math.abs(o.speed) > 0.05)) problems.push(`hand bei (${o.x},${o.y}): steht still (speed ${o.speed})`);
+    const ch = rows[Math.floor(o.y)] && rows[Math.floor(o.y)][Math.floor(o.x)];
+    if (!FLOOR.has(ch)) problems.push(`hand: Achse bei (${o.x},${o.y}) liegt nicht auf dem Fairway (${ch})`);
+  }
+
   /* Feuerturm: das Bauwerk steht neben der Bahn, bestrichen wird ein Rechteck (zx,zy,zw,zh) auf der
      Bahn. Ein Bereich ohne Fairway darunter wird von niemandem gesehen; ein Turm mitten auf dem
      Fairway wäre eine Mauer im Weg. Der Abschlag darf nicht im Bereich liegen: Der Ball wird an
