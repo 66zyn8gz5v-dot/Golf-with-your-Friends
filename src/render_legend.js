@@ -1209,54 +1209,72 @@ Object.assign(Renderer.prototype, {
     const s = this.scale, halb = ob.dicke / 2;
     /* Punkt auf dem Rad – dieselben Formeln wie im Verhalten, damit der Ball sichtbar in seiner
        Lücke sitzt. w = 0 ist der Fußpunkt, w = π der Scheitel, f der Radienfaktor, seite -1
-       hinten … +1 vorn. Weil beides aus laengs/hoehe kommt, kann Zeichnung und Ballbahn nicht
-       mehr auseinanderlaufen. */
+       hinten … +1 vorn. Weil Zeichnung und Ballbahn aus denselben zwei Formeln kommen, können sie
+       nicht auseinanderlaufen. */
     const pkt = (w, f, seite) => this.proj(
       ob.x + ob.dx * ob.laengs(w) * f + ob.qx * halb * seite,
       ob.y + ob.dy * ob.laengs(w) * f + ob.qy * halb * seite,
       ob.r + (ob.hoehe(w) - ob.r) * f);
-    const ring = (seite, f, n = 36) => { const p = []; for (let i = 0; i < n; i++) p.push(pkt((i / n) * TAU, f, seite)); return p; };
-    const zeichne = (pts, fill, stroke) => {
+    const zeichne = (pts, fill, stroke, regel) => {
       ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.closePath();
-      if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+      if (fill) { ctx.fillStyle = fill; ctx.fill(regel); }
       if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = Math.max(1, s * 0.04); ctx.stroke(); }
     };
-    const achseV = this.proj(ob.x + ob.qx * halb, ob.y + ob.qy * halb, ob.r);
-    const achseH = this.proj(ob.x - ob.qx * halb, ob.y - ob.qy * halb, ob.r);
+    // Messing von dunkel nach hell; k = 0 … 1 ist die Zuwendung zum Licht
+    const messing = k => { const a = [0x4a, 0x34, 0x10], b = [0xff, 0xe3, 0xa8], m = Math.max(0, Math.min(1, k));
+      return `rgb(${Math.round(a[0] + (b[0] - a[0]) * m)},${Math.round(a[1] + (b[1] - a[1]) * m)},${Math.round(a[2] + (b[2] - a[2]) * m)})`; };
+    const licht = w => 0.28 + 0.62 * Math.max(0, Math.cos(w - 2.2));   // Licht von links oben
 
-    // Wandpfeiler hinter dem Rad: daran hängt die Achse
-    const pf = [[ob.x + ob.dx * 0.3 - ob.qx * (halb + 0.5), ob.y + ob.dy * 0.3 - ob.qy * (halb + 0.5)],
-      [ob.x + ob.dx * 0.3 + ob.qx * (halb + 0.5), ob.y + ob.dy * 0.3 + ob.qy * (halb + 0.5)],
-      [ob.x + ob.dx * 0.62 + ob.qx * (halb + 0.5), ob.y + ob.dy * 0.62 + ob.qy * (halb + 0.5)],
-      [ob.x + ob.dx * 0.62 - ob.qx * (halb + 0.5), ob.y + ob.dy * 0.62 - ob.qy * (halb + 0.5)]];
-    this.prism(ctx, pf, 0, ob.r * 1.25, '#4c5169', '#343850', '#23273a', { outline: '#191d2c' });
-    // Schatten am Fuß
+    // Der Zahnkranz als Linienzug: je Zahn Fuß, Kopf, Kopf, Fuß – wie beim echten Rad
+    /* Zahnprofil über die volle Teilung: Fußkreis, Flanke hinauf, Kopf, Flanke hinab, wieder
+       Fußkreis. Vorher endete jeder Zahn nach 44 % der Teilung, und der Rest wurde als lange
+       Sehne überbrückt – daher sah das Rad eckig aus statt gezahnt. */
+    const zn = ob.zaehne, teil = TAU / zn, KOPF = 1.06, FUSS = 0.84, BOHR = 0.44;
+    const kontur = [];
+    for (let i = 0; i < zn; i++) {
+      const m = ob.drehung + i * teil;
+      kontur.push({ w: m, f: FUSS }, { w: m + teil * 0.30, f: FUSS }, { w: m + teil * 0.38, f: KOPF },
+        { w: m + teil * 0.62, f: KOPF }, { w: m + teil * 0.70, f: FUSS });
+    }
+    const kreis = (f, seite, n = 28) => { const p = []; for (let i = 0; i < n; i++) p.push(pkt((i / n) * TAU, f, seite)); return p; };
+
+    // Wandpfeiler hinter dem Rad, an dem die Achse hängt
+    const pf = [[ob.x + ob.dx * 0.32 - ob.qx * (halb + 0.5), ob.y + ob.dy * 0.32 - ob.qy * (halb + 0.5)],
+      [ob.x + ob.dx * 0.32 + ob.qx * (halb + 0.5), ob.y + ob.dy * 0.32 + ob.qy * (halb + 0.5)],
+      [ob.x + ob.dx * 0.64 + ob.qx * (halb + 0.5), ob.y + ob.dy * 0.64 + ob.qy * (halb + 0.5)],
+      [ob.x + ob.dx * 0.64 - ob.qx * (halb + 0.5), ob.y + ob.dy * 0.64 - ob.qy * (halb + 0.5)]];
+    this.prism(ctx, pf, 0, ob.r * 1.2, '#4c5169', '#343850', '#23273a', { outline: '#191d2c' });
     this.isoEllipse(ctx, ob.x, ob.y, 0.004, ob.r * 0.5, 'rgba(0,0,0,0.26)');
 
-    // hintere Wange
-    zeichne(ring(-1, 0.88), '#5f4416');
-    // Zahnband: jeder Zahn ein Körper mit Kopffläche und zwei Flanken
-    const zn = ob.zaehne, teil = TAU / zn;
-    for (let i = 0; i < zn; i++) {
-      const m = ob.drehung + i * teil + teil * 0.5;               // Zahnmitte
-      const a0 = m - teil * 0.22, a1 = m + teil * 0.22;
-      const unten = Math.abs(Math.atan2(Math.sin(m), Math.cos(m))) < 0.3;
-      zeichne([pkt(a0, 1.06, -1), pkt(a1, 1.06, -1), pkt(a1, 1.06, 1), pkt(a0, 1.06, 1)], unten ? '#ffdf9c' : '#a8762c', '#4a3410');
-      zeichne([pkt(a0, 1.06, -1), pkt(a0, 0.86, -1), pkt(a0, 0.86, 1), pkt(a0, 1.06, 1)], '#7a5a2a');
-      zeichne([pkt(a1, 1.06, -1), pkt(a1, 0.86, -1), pkt(a1, 0.86, 1), pkt(a1, 1.06, 1)], '#6b4d22');
+    // 1) hintere Wange, ganz gefüllt – sie schließt das Rad nach hinten ab
+    zeichne(kontur.map(k => pkt(k.w, k.f, -1)), '#4a3410');
+    // 2) Innenwand der Bohrung: das Band zwischen hinterem und vorderem Lochrand.
+    //    Die vordere Wange deckt später die nahe Hälfte zu – übrig bleibt die ferne, und genau so
+    //    schaut man durch ein Zahnrad hindurch.
+    const bh = kreis(BOHR, -1), bv = kreis(BOHR, 1);
+    for (let i = 0; i < bh.length; i++) {
+      const j = (i + 1) % bh.length, w = (i / bh.length) * TAU;
+      zeichne([bh[i], bh[j], bv[j], bv[i]], messing(licht(w + Math.PI) * 0.55));
     }
-    // vordere Wange: Kranz als Ring, damit man durch die Speichen sieht
-    zeichne(ring(1, 0.88), '#c9903f', '#5f4416');
-    zeichne(ring(1, 0.68), '#3a3f55');
-    ctx.strokeStyle = '#e0b45c'; ctx.lineWidth = Math.max(1.5, s * 0.08);
-    for (let i = 0; i < 6; i++) {
-      const p = pkt(ob.drehung + (i * Math.PI) / 3, 0.82, 1);
-      ctx.beginPath(); ctx.moveTo(achseV[0], achseV[1]); ctx.lineTo(p[0], p[1]); ctx.stroke();
+    // 3) Das Zahnband: jede Kante der Kontur bekommt ihre eigene Seitenfläche
+    for (let i = 0; i < kontur.length; i++) {
+      const a = kontur[i], b = kontur[(i + 1) % kontur.length];
+      const ha = pkt(a.w, a.f, -1), hb = pkt(b.w, b.f, -1), va = pkt(a.w, a.f, 1), vb = pkt(b.w, b.f, 1);
+      const wm = a.w + 0.5 * (b.w - a.w < -Math.PI ? b.w + TAU - a.w : b.w - a.w);
+      const unten = Math.abs(Math.atan2(Math.sin(wm), Math.cos(wm))) < 0.32 && a.f === KOPF;
+      zeichne([ha, hb, vb, va], unten ? '#ffdf9c' : messing(licht(wm) * 0.8), 'rgba(40,26,8,0.5)');
     }
-    // Achse als kurzer Zylinder zwischen den Wangen
-    ctx.strokeStyle = '#6b6660'; ctx.lineWidth = Math.max(2, s * 0.16);
-    ctx.beginPath(); ctx.moveTo(achseH[0], achseH[1]); ctx.lineTo(achseV[0], achseV[1]); ctx.stroke();
-    ctx.fillStyle = '#ffdf9c'; ctx.beginPath(); ctx.arc(achseV[0], achseV[1], s * 0.16, 0, TAU); ctx.fill();
+    // 4) vordere Wange als Ring: Zahnkontur außen, Loch innen (evenodd)
+    ctx.beginPath();
+    kontur.forEach((k, i) => { const p = pkt(k.w, k.f, 1); i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); });
+    ctx.closePath();
+    const bore = kreis(BOHR, 1);
+    ctx.moveTo(bore[0][0], bore[0][1]); for (let i = bore.length - 1; i > 0; i--) ctx.lineTo(bore[i][0], bore[i][1]);
+    ctx.closePath();
+    const g = ctx.createLinearGradient(...pkt(2.2, 1.0, 1), ...pkt(2.2 + Math.PI, 1.0, 1));
+    g.addColorStop(0, '#ffe3a8'); g.addColorStop(0.5, '#c9903f'); g.addColorStop(1, '#6b4d22');
+    ctx.fillStyle = g; ctx.fill('evenodd');
+    ctx.strokeStyle = '#3a2a12'; ctx.lineWidth = Math.max(1, s * 0.04); ctx.stroke();
   },
   /* Boden: der Einstieg unten und der Absetzpunkt oben, damit man beides sieht, bevor man schlägt */
   drawGearLiftFloor(ctx, ob) {

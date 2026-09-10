@@ -319,8 +319,8 @@ const CLOCK_COURSES = [
       /* Zwei Aufzüge statt zweier Rampen: Auf so engem Raum bekommt man den Anlauf für eine Rampe
          nicht zusammen – der Bot lief hier in sechs von sechs Runden ins Schlaglimit. Der Aufzug
          nimmt einen ruhenden Ball mit, verlangt dafür aber den richtigen Augenblick. */
-      { type: 'gearlift', x: 6.5, y: 4.6, r: 1.5, angle: 90, speed: 1.0472, zaehne: 6 },
-      { type: 'gearlift', x: 12.6, y: 6.5, r: 1.5, angle: 0, speed: 1.0472, zaehne: 6, phase: 0.5 },
+      { type: 'gearlift', x: 6.5, y: 4.6, r: 1.8, angle: 90, speed: 1.0472, zaehne: 8 },
+      { type: 'gearlift', x: 12.6, y: 6.5, r: 1.8, angle: 0, speed: 1.0472, zaehne: 8, phase: 0.5 },
       { type: 'rotor', x: 19, y: 5.4, blades: 1, len: 2.6, thick: 0.14, hubR: 0.32, style: 'pendel',
         phase: 1.5708, swing: { amp: 0.75, speed: 1.0472 } },
       { type: 'door', x: 28.5, y: 6.5, r: 0.7, s: 3.6 },

@@ -61,7 +61,7 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
     // Die Lücke muss breiter sein als der Ball, sonst passt er nie hinein
     const zn = o.zaehne == null ? 8 : o.zaehne;
     if (!(zn >= 4 && zn <= 24)) problems.push(`gearlift bei (${o.x},${o.y}): zaehne ${zn} – sinnvoll sind 4 bis 24`);
-    else { const luecke = (2 * Math.PI * r / zn) * 0.5; if (luecke < 0.7) problems.push(`gearlift bei (${o.x},${o.y}): Zahnlücke nur ${luecke.toFixed(2)} breit – der Ball (0,6) passt nicht hinein`); }
+    else { const luecke = (2 * Math.PI * r / zn) * 0.55; if (luecke < 0.7) problems.push(`gearlift bei (${o.x},${o.y}): Zahnlücke nur ${luecke.toFixed(2)} breit – der Ball (0,6) passt nicht hinein`); }
     if (o.speed != null && !(Math.abs(o.speed) > 0.05)) problems.push(`gearlift bei (${o.x},${o.y}): steht still (speed ${o.speed})`);
     for (const [name, sx, sy] of [['Fußpunkt', o.x, o.y], ['Abwurfstelle', o.x + Math.cos(a) * 1.6, o.y + Math.sin(a) * 1.6]]) {
       const ch = rows[Math.floor(sy)] && rows[Math.floor(sy)][Math.floor(sx)];

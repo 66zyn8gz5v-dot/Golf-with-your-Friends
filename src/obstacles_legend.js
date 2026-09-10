@@ -445,7 +445,7 @@ class ImperialBox {
    Wand hinweg; dorthin wird oben abgeworfen. */
 class GearLift {
   constructor(d) {
-    Object.assign(this, { r: 1.5, angle: 0, speed: 1.0472, zaehne: 6, phase: 0, fang: 7, dicke: 0.5, wurf: 3 }, d);
+    Object.assign(this, { r: 1.8, angle: 0, speed: 1.0472, zaehne: 8, phase: 0, fang: 7, dicke: 0.55, wurf: 3 }, d);
     this.type = 'gearlift';
     const a = (this.angle * Math.PI) / 180;
     this.dx = Math.cos(a); this.dy = Math.sin(a);      // Richtung über die Wand
