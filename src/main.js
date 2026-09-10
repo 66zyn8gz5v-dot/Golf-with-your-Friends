@@ -344,14 +344,19 @@
     const marks = kartenWelten.map(w => {
       const sp = WorldMap.spots[w.id];
       const m = worldMode(w);
-      return `<button class="spot" style="left:${sp.x}%;top:${sp.y}%;--pin:${sp.col}" data-world="${w.id}" title="${Text.esc(w.name)}">
+      // sp.x steht in Karteneinheiten (0 … WorldMap.BREITE), die Marke braucht Prozent der Karte
+      const links = (sp.x / WorldMap.BREITE * 100).toFixed(2);
+      return `<button class="spot" style="left:${links}%;top:${sp.y}%;--pin:${sp.col}" data-world="${w.id}" title="${Text.esc(w.name)}">
         <span class="spot-pin">${sp.icon}</span>
         <span class="spot-label"><b>${Text.esc(w.name)}</b><i>${MODE_ICON[m]} ${MODE_NAME[m]} · ${w.courses.length} Bahnen</i></span></button>`;
     }).join('');
     overlay(`<div class="panel atlas-panel">
       <div class="panel-head"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span><h2>${Icons.svg('map')} Weltkarte</h2></div>
-      <div class="sub">Tippe einen Ort an – alle ${kartenWelten.length} Welten sind von Anfang an offen.</div>
-      <div class="atlas">${WorldMap.svg()}${marks}</div>
+      <div class="sub">Tippe einen Ort an – alle ${kartenWelten.length} Welten sind von Anfang an offen.
+        Die Karte ist breiter als der Schirm: <b>nach links wischen</b>, dann geht die Reise weiter.</div>
+      <!-- Die Karte ist BREITE Einheiten breit, der Kasten so breit wie die Tafel: Bei BREITE = 128
+           ist die Karte 128 % des Kastens, der Rest wird gewischt. Die Höhe folgt dem Seitenverhältnis. -->
+      <div class="atlas-schiebe"><div class="atlas" style="aspect-ratio:${WorldMap.BREITE} / 62;width:${WorldMap.BREITE}%">${WorldMap.svg()}${marks}</div></div>
       ${turnierBand()}
       <div class="atlas-extra"><span class="btn small ghost" id="to-build2">${Icons.svg('construction')} Bauen &amp; Eigene Welt</span></div>
     </div>`, 'title');

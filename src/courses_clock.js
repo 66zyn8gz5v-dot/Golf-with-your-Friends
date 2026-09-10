@@ -178,27 +178,30 @@ const CLOCK_COURSES = [
   },
   {
     name: 'Rohrpost', par: 4, theme: 'boiler', maxStrokes: 20,
-    intro: 'Im Kesselhaus, Takt 4 Sekunden. Die Wand hat kein Tor – hinüber führen nur die beiden Rohre. Das blaue endet vor dem Loch, das rote in der hinteren Ecke. Vor jeder Öffnung bläst ein Ventil, aber nie beide zugleich.',
+    intro: 'Im Kesselhaus, Takt 4 Sekunden. Die Wand hat kein Tor – hinüber führen nur die beiden Rohre, und beide setzen einen weit weg vom Loch ab: das blaue oben links, das rote unten rechts. Vor den Öffnungen bläst je ein Ventil, aber nie beide zugleich, und über dem Loch dreht sich ein Rad.',
     map: [
       '..............................',
       '..###########x##############..',
       '..T##########x##############..',
       '..###########x##############..',
       '..#####lll###x##############..',
-      '..#####lll###x##############..',
+      '..#####lll###x######H#######..',
       '..#####lll###x##############..',
       '..###########x##############..',
-      '..###########x#####H########..',
+      '..###########x##############..',
       '..###########x##############..',
       '..............................',
     ],
     obstacles: [
-      { type: 'portal', x: 4.5, y: 2.5, tx: 21.5, ty: 8.5, color: '#4fd0ff' },
-      { type: 'portal', x: 4.5, y: 7.5, tx: 25.5, ty: 2.5, color: '#ff7a4f' },
+      // Beide Rohre setzen in einer Ecke ab, nicht am Loch – sonst waere die Bahn nach einem Schlag vorbei
+      { type: 'portal', x: 4.5, y: 2.5, tx: 15.5, ty: 1.5, color: '#4fd0ff' },
+      { type: 'portal', x: 4.5, y: 7.5, tx: 27.5, ty: 9.5, color: '#ff7a4f' },
       // die beiden Ventile blasen abwechselnd: phase 0 gegen phase π
       { type: 'field', x: 3, y: 3.4, w: 3, h: 2.2, fx: 0, fy: -7, style: 'steam', gust: 1.5708 },
       { type: 'field', x: 3, y: 5.6, w: 3, h: 2.2, fx: 0, fy: 7, style: 'steam', gust: 1.5708, phase: 3.1416 },
-      { type: 'bumper', x: 24, y: 6, r: 0.5, style: 'feder' },
+      // das Rad ueber dem Loch dreht sich einmal je Takt – zwischen seinen Armen muss der Ball hindurch
+      { type: 'rotor', x: 20.5, y: 3.4, blades: 3, len: 1.8, thick: 0.15, speed: 1.5708, style: 'stone' },
+      { type: 'bumper', x: 25.5, y: 5.5, r: 0.5, style: 'feder' },
     ],
     decor: [
       { t: 'pipe', x: 4.4, y: 0.6, s: 1.5, seed: 0.15 }, { t: 'pipe', x: 9.4, y: 0.6, s: 1.3, seed: 0.45 },
@@ -234,6 +237,10 @@ const CLOCK_COURSES = [
       { type: 'bumper', x: 5.5, y: 5.5, r: 0.55, style: 'feder' }, { type: 'bumper', x: 12.5, y: 4.5, r: 0.6, style: 'feder' },
       { type: 'bumper', x: 19.5, y: 5.5, r: 0.55, style: 'feder' }, { type: 'bumper', x: 8.5, y: 7.5, r: 0.5, style: 'feder' },
       { type: 'bumper', x: 15.5, y: 7.5, r: 0.5, style: 'feder' }, { type: 'bumper', x: 21.5, y: 8.5, r: 0.5, style: 'feder' },
+      /* Das Loch liegt in einer Tasche: links und oben zu, offen bleibt nur der Schlitz bei x 22–23.
+         Ohne sie war die Kammer ein Raum mit Federn darin, und der Ball rollte quer hindurch. */
+      { type: 'wall', x0: 20, y0: 9.6, x1: 20, y1: 12, extend: 0, h: 0.7 },
+      { type: 'wall', x0: 20, y0: 9.6, x1: 22, y1: 9.6, extend: 0, h: 0.7 },
     ],
     decor: [
       { t: 'gear', x: 1.3, y: 2.5, s: 1.5, seed: 0.2 }, { t: 'gear', x: 24.6, y: 3.5, s: 1.5, seed: 0.6 },

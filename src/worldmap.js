@@ -12,6 +12,12 @@
    Die Orte liegen in Prozent der Kartenfläche (spots), die Zeichnung nutzt denselben Maßstab
    (viewBox 100 × 62, preserveAspectRatio="none"), damit Marke und Untergrund zusammenpassen. */
 const WorldMap = (() => {
+  /* Breite der Karte in Karteneinheiten. Die Höhe bleibt 62. Solange die Reise nur bis zum
+     Schattenreich ging, war die Karte 100 breit und passte auf einen Schirm. Mit der Uhrwerkstadt
+     am Ende ist sie breiter als das Fenster – der Kasten darum schiebt sich waagerecht, man wischt
+     nach links und die Reise geht weiter. Wer eine achte Welt anhängt, erhöht hier die Zahl und
+     setzt ihre Scheibe rechts daneben; Orte und Seitenverhältnis richten sich danach. */
+  const BREITE = 128;
   /* x, y in Prozent der Karte; icon = Zeichen der Marke, col = Farbe des Rings.
      Wer hier fehlt, steht nicht auf der Karte: Das Kolosseum ist die Turnierwelt und wird nur
      über den Turnier-Knopf im Startbildschirm betreten, nicht über einen Ort auf der Reise. */
@@ -22,7 +28,9 @@ const WorldMap = (() => {
     jungle: { x: 59, y: 82, icon: '🗿', col: '#9ee06f' },
     storm: { x: 75, y: 44, icon: '⛈️', col: '#8fb8ff' },
     shadow: { x: 88, y: 74, icon: '🔮', col: '#c58bff' },
-    clock: { x: 61, y: 31, icon: '🕰️', col: '#ffc46b' },
+    // Die Uhrwerkstadt liegt hinter dem Schattenreich – dorthin wischt man nach links
+    clock: { x: 106, y: 54, icon: '🕰️', col: '#ffc46b' },
+
   };
 
   /* ---------- Projektion wie im Spiel ---------- */
@@ -94,11 +102,11 @@ const WorldMap = (() => {
   function svg(cls = 'atlas-bg', par = 'none') {
     // Mitte jeder Scheibe auf der Karte – die Ortsschilder sitzen an ihrer Vorderkante
     const W = {
-      storm: [76, 20], pro: [43, 23], normal: [14, 25], shadow: [87, 39], sea: [27, 44], jungle: [59, 44], clock: [61, 12],
+      storm: [76, 20], pro: [43, 23], normal: [14, 25], shadow: [87, 39], sea: [27, 44], jungle: [59, 44], clock: [108, 26],
     };
     const stars = [];
     for (let i = 0; i < 28; i++) {
-      const x = 54 + ((i * 37) % 45), y = 2 + ((i * 17) % 26), r = 0.15 + ((i * 7) % 3) * 0.11;
+      const x = 54 + ((i * 37) % (BREITE - 56)), y = 2 + ((i * 17) % 26), r = 0.15 + ((i * 7) % 3) * 0.11;
       stars.push(`<circle class="twinkle ${i % 3 ? 't' + (i % 3 + 1) : ''}" cx="${x}" cy="${y}" r="${r}" fill="#fff" opacity="${0.4 + (i % 4) * 0.15}"/>`);
     }
     const rays = [];
@@ -108,18 +116,18 @@ const WorldMap = (() => {
     }
     const motes = [];
     for (let i = 0; i < 24; i++) {
-      const x = 3 + ((i * 61) % 95), y = 8 + ((i * 29) % 48), r = (0.13 + ((i * 5) % 3) * 0.06).toFixed(2);
+      const x = 3 + ((i * 61) % (BREITE - 6)), y = 8 + ((i * 29) % 48), r = (0.13 + ((i * 5) % 3) * 0.06).toFixed(2);
       motes.push(`<circle class="twinkle ${i % 3 ? 't' + (i % 3 + 1) : ''}" cx="${x}" cy="${y}" r="${r}" fill="${x < 48 ? '#ffe9a8' : '#bcd4ff'}" opacity="${(0.28 + (i % 4) * 0.1).toFixed(2)}"/>`);
     }
     // Reiseweg: von Vorderkante zu Vorderkante, hinter den Scheiben durch
     const front = id => { const [x, y] = W[id]; return [x, y + 5.4]; };
-    const route = ['normal', 'sea', 'pro', 'jungle', 'clock', 'storm', 'shadow'].map(id => front(id).map(v => v.toFixed(1)).join(' ')).join(' L ');
+    const route = ['normal', 'sea', 'pro', 'jungle', 'storm', 'shadow', 'clock'].map(id => front(id).map(v => v.toFixed(1)).join(' ')).join(' L ');
 
-    return `<svg class="${cls}" viewBox="0 0 100 62" preserveAspectRatio="${par}" aria-hidden="true">
+    return `<svg class="${cls}" viewBox="0 0 ${BREITE} 62" preserveAspectRatio="${par}" aria-hidden="true">
       <defs>
         <linearGradient id="atSky" x1="0" y1="0" x2="1" y2="0">
           <stop offset="0" stop-color="#63b6f0"/><stop offset="0.22" stop-color="#b8e2ff"/><stop offset="0.44" stop-color="#f0a95f"/>
-          <stop offset="0.6" stop-color="#8a4a5e"/><stop offset="0.78" stop-color="#241a42"/><stop offset="1" stop-color="#07050f"/></linearGradient>
+          <stop offset="0.6" stop-color="#8a4a5e"/><stop offset="0.74" stop-color="#241a42"/><stop offset="0.86" stop-color="#07050f"/><stop offset="1" stop-color="#141024"/></linearGradient>
         <linearGradient id="atFar" x1="0" y1="0" x2="1" y2="0">
           <stop offset="0" stop-color="#9fc4ea"/><stop offset="0.3" stop-color="#c0aa92"/><stop offset="0.6" stop-color="#7a6a8e"/><stop offset="1" stop-color="#1a1436"/></linearGradient>
         <radialGradient id="atSun" cx="0.5" cy="0.5" r="0.5">
@@ -138,20 +146,20 @@ const WorldMap = (() => {
           <feDropShadow dx="1" dy="1.8" stdDeviation="1" flood-color="#0a0818" flood-opacity="0.5"/></filter>
       </defs>
 
-      <rect width="100" height="62" fill="url(#atSky)"/>
+      <rect width="${BREITE}" height="62" fill="url(#atSky)"/>
       ${stars.join('')}
       <g>${rays.join('')}</g>
       <circle cx="12" cy="6" r="12" fill="url(#atSun)"/><circle cx="12" cy="6" r="3.4" fill="#fff8d8"/>
       <circle cx="88" cy="6" r="10" fill="url(#atMoon)"/><circle cx="88" cy="6" r="3" fill="#c8434c"/>
       <!-- ferner Gebirgszug als Rückwand, weich und hell wie in der Ferne -->
       <g filter="url(#atNear)" opacity="0.95">
-        <path d="M0 24 L7 15 L13 21 L20 12 L27 22 L34 14 L42 23 L50 11 L58 21 L66 13 L74 22 L82 12 L90 21 L100 15 L100 34 L0 34 Z" fill="url(#atFar)"/>
-        <path d="M7 15 L9.6 18.9 L4.4 18.9 Z M20 12 L23 16.5 L17 16.5 Z M50 11 L53.2 15.8 L46.8 15.8 Z M82 12 L85 16.5 L79 16.5 Z"
+        <path d="M0 24 L7 15 L13 21 L20 12 L27 22 L34 14 L42 23 L50 11 L58 21 L66 13 L74 22 L82 12 L90 21 L98 14 L106 22 L114 13 L122 21 L${BREITE} 16 L${BREITE} 34 L0 34 Z" fill="url(#atFar)"/>
+        <path d="M7 15 L9.6 18.9 L4.4 18.9 Z M20 12 L23 16.5 L17 16.5 Z M50 11 L53.2 15.8 L46.8 15.8 Z M82 12 L85 16.5 L79 16.5 Z M114 13 L117 17.5 L111 17.5 Z"
           fill="rgba(255,255,255,0.5)"/>
-        <path d="M0 24 L7 15 L13 21 L20 12 L27 22 L34 14 L42 23 L50 11 L58 21 L66 13 L74 22 L82 12 L90 21 L100 15"
+        <path d="M0 24 L7 15 L13 21 L20 12 L27 22 L34 14 L42 23 L50 11 L58 21 L66 13 L74 22 L82 12 L90 21 L98 14 L106 22 L114 13 L122 21 L${BREITE} 16"
           fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="0.25"/></g>
       <g filter="url(#atSoft)" opacity="0.35">
-        <path d="M0 27 L10 20 L18 26 L28 19 L38 27 L48 18 L58 26 L68 19 L78 27 L88 19 L100 25 L100 36 L0 36 Z" fill="url(#atFar)"/></g>
+        <path d="M0 27 L10 20 L18 26 L28 19 L38 27 L48 18 L58 26 L68 19 L78 27 L88 19 L98 26 L108 19 L118 26 L${BREITE} 21 L${BREITE} 36 L0 36 Z" fill="url(#atFar)"/></g>
       <g filter="url(#atSoft)" opacity="0.28">
         <g class="drift"><ellipse cx="30" cy="17" rx="13" ry="2.1" fill="#fff"/></g>
         <g class="drift d2"><ellipse cx="66" cy="14" rx="11" ry="1.8" fill="#e0d2f0"/></g></g>
@@ -326,8 +334,8 @@ const WorldMap = (() => {
       <g filter="url(#atNear)" opacity="0.2">
         <g class="drift"><ellipse cx="46" cy="38" rx="14" ry="1" fill="#dceafa"/></g>
         <g class="drift d2"><ellipse cx="72" cy="30" rx="11" ry="0.8" fill="#c8d8f0"/></g></g>
-      <rect width="100" height="62" fill="url(#atVig)"/>
+      <rect width="${BREITE}" height="62" fill="url(#atVig)"/>
     </svg>`;
   }
-  return { spots, svg };
+  return { spots, svg, BREITE };
 })();
