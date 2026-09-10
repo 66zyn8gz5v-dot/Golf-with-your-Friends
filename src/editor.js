@@ -12,6 +12,7 @@ const Editor = (deps) => {
     ['updraft', 'Aufwind'], ['lightning', 'Blitz'], ['guillotine', 'Fallbeil'], ['eyetower', 'Turm des Auges'], ['switch', 'Schalter'],
     // Die drei Maschinen der Uhrwerkstadt
     ['gearlift', 'Zahnradaufzug'], ['piston', 'Dampfkolben'], ['hand', 'Zeiger'],
+    ['gearfield', 'Zahnradfeld'], ['pendulum', 'Pendel'], ['springwork', 'Federwerk'],
     ['portal', 'Portal (2× tippen)'], ['wall', 'Bande (2× tippen)'],
   ];
   const THEME_LABELS = { meadow: 'Elfenwiese', mushroom: 'Pilzhain', forge: 'Zwergenschmiede', forest: 'Zauberwald', dragon: 'Drachenhöhle', ice: 'Eisgrotte', sky: 'Wolkenburg', clockwork: 'Uhrwerk', witch: 'Hexenwald', hut: 'Hexenhütte', reef: 'Korallenriff', volcano: 'Vulkan', palace: 'Wüstenpalast', harbor: 'Piratenbucht', desert: 'Wüste', tomb: 'Grabkammer', castle: 'Burgberg', deck: 'Piratendeck', wreck: 'Schiffswrack', belly: 'Haimagen', jungle: 'Dschungel', temple: 'Tempelhalle', storm: 'Sturmhimmel', fortress: 'Sturmfestung', shadow: 'Schattenreich', throne: 'Thronsaal', darksea: 'Totensee', ghostship: 'Totenschiff', clocktown: 'Uhrwerkstadt', boiler: 'Kesselhaus', escapement: 'Turmkammer' };
@@ -31,6 +32,9 @@ const Editor = (deps) => {
     lightning: 'Blitz schlägt im Takt ein – erst das Warnzeichen, dann der Schlag.',
     guillotine: 'Fallbeil fällt im Takt. Nie darunter liegen bleiben.',
     eyetower: 'Der Blick wandert im Kreis. Wer darin liegen bleibt, fliegt zurück.',
+    gearfield: 'Zahnradfeld trägt den Ball ans andere Ende. „Drehen“ kippt die Laufrichtung.',
+    pendulum: 'Pendel schwingt quer über die Bahn und stößt den Ball weg. Getippt wird die Aufhängung.',
+    springwork: 'Federwerk fängt den Ball und schleudert ihn davon. „Drehen“ ändert die Schussrichtung.',
     switch: 'Schalter öffnet ein Fallgatter mit demselben Ziel-Buchstaben („Drehen“ wechselt A/B).', wall: 'Erst den Anfang, dann das Ende der Bande antippen.',
     delete: 'Tippen: Objekt in der Nähe löschen.', rotate: 'Tippen: Objekt in der Nähe drehen (Richtung, Achse, Anziehen/Abstoßen).', pan: 'Ziehen: Ansicht verschieben.',
   };
@@ -160,12 +164,17 @@ const Editor = (deps) => {
       case 'gearlift': return { type: 'gearlift', x, y, r: 1.8, angle: 0, speed: 1.0472, zaehne: 8, phase: 0 };
       case 'piston': return { type: 'piston', x, y, w: 1.2, h: 1.2, angle: 0, hub: 2.4, period: 4, phase: 0 };
       case 'hand': return { type: 'hand', x, y, len: 2.6, speed: 1.0472, schub: 1.5, phase: 0 };
+      /* Zahnradfeld trägt wie eine Lore von einem Ende zum anderen, das Pendel schwingt quer
+         über die Bahn (x/y ist die Aufhängung), das Federwerk schleudert wie eine Kanone. */
+      case 'gearfield': return { type: 'gearfield', x0: x - 3, y0: y, x1: x + 3, y1: y, wait: 2.2, travel: 3.2, r: 0.9, zaehne: 10 };
+      case 'pendulum': return { type: 'pendulum', x, y: Math.max(0.5, y - 3), len: 3, amp: 55, ruhe: 90, phase: 0, w: 1.2, h: 1.2 };
+      case 'springwork': return { type: 'springwork', x, y, base: 0, amp: 0.45, speed: 0.9, range: 8, catchR: 0.7 };
       default: return null;
     }
   }
   function anchors(o) {
     if (o.type === 'field' || o.type === 'ramp' || o.type === 'boost') return [[o.x + o.w / 2, o.y + o.h / 2]];
-    if (o.type === 'mover' || o.type === 'ferry' || o.type === 'wave') return [[o.x0, o.y0], [o.x1, o.y1], [(o.x0 + o.x1) / 2, (o.y0 + o.y1) / 2]];
+    if (o.type === 'mover' || o.type === 'ferry' || o.type === 'wave' || o.type === 'gearfield') return [[o.x0, o.y0], [o.x1, o.y1], [(o.x0 + o.x1) / 2, (o.y0 + o.y1) / 2]];
     if (o.type === 'rail') return [[o.x0, o.y], [o.x1, o.y], [(o.x0 + o.x1) / 2, o.y]];
     if (o.type === 'spikes' || o.type === 'updraft') return [[o.x + o.w / 2, o.y + o.h / 2]];
     if (o.type === 'wall') return [[o.x0, o.y0], [o.x1, o.y1], [(o.x0 + o.x1) / 2, (o.y0 + o.y1) / 2]];
@@ -203,6 +212,11 @@ const Editor = (deps) => {
       case 'switch': o.target = o.target === 'A' ? 'B' : 'A'; break;
       case 'gearlift': case 'piston': o.angle = cyc(o.angle || 0); break;
       case 'hand': o.speed = -o.speed; break;
+      // Zahnradfeld kippt wie die Fähre, das Pendel dreht seine Ruhelage, das Federwerk seine Schussrichtung
+      case 'gearfield': { const cx = (o.x0 + o.x1) / 2, cy = (o.y0 + o.y1) / 2, L = Math.hypot(o.x1 - o.x0, o.y1 - o.y0) / 2;
+        if (o.y0 === o.y1) { o.x0 = o.x1 = cx; o.y0 = cy - L; o.y1 = cy + L; } else { o.y0 = o.y1 = cy; o.x0 = cx - L; o.x1 = cx + L; } break; }
+      case 'pendulum': o.ruhe = cyc(o.ruhe == null ? 90 : o.ruhe); break;
+      case 'springwork': o.base = Math.round((((o.base || 0) + Math.PI / 2) % (Math.PI * 2)) * 1000) / 1000; break;
       default: return false;
     }
     return true;

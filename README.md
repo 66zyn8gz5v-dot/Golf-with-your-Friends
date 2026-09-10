@@ -35,7 +35,7 @@ x-Angabe wird beim Zeichnen durch `BREITE` geteilt.
 | Dschungeltempel | Profi | 9 Bahnen durch den Urwald bis zur verlorenen Stadt |
 | Sturmhimmel | Legende | 9 extra große Bahnen über den Wolken |
 | Schattenreich | Legende | 10 extra große Bahnen im Reich der Schatten |
-| Uhrwerkstadt | Profi | 9 Bahnen in einer Stadt, die im Takt läuft – Pendel, Zeiger, Dampf, Zahnradfähren |
+| Uhrwerkstadt | Profi | wird neu gebaut – zur Zeit drei Testbahnen für Zahnradfeld, Pendel und Federwerk |
 
 Das **Kolosseum** steht bewusst *nicht* auf der Weltkarte. Es ist die Turnierwelt und wird nur über
 den **Turnier**-Knopf im Startbildschirm betreten – die Weltkarte bleibt die Reise durch die sieben
@@ -586,57 +586,48 @@ zusammengesetzt und nach `src/courses_colosseum.js` geschrieben. So bleiben alle
 und eine Änderung an einer Kammer zieht nicht Dutzende Zeichen nach sich. Nach jedem Lauf gehören
 `node tools/validate.mjs` und `node tools/audit/audit.mjs colosseum` dazu.
 
-## Die Bahnen der Uhrwerkstadt
+## Die Uhrwerkstadt wird neu gebaut
 
-Neun Bahnen, Stufe Profi. Was diese Welt von allen anderen trennt, ist keine Maschine, sondern eine
-Regel: **Auf jeder Bahn geht alles auf denselben Takt.** Pendel, Zeiger, Läden, Fähren und
-Dampfventile teilen sich eine Grundzeit; was nicht darauf läuft, läuft auf ihrer Hälfte oder ihrem
-Doppelten. Damit ist keine Bahn ein Ratespiel: einmal zusehen, mitzählen, auf den Schlag schlagen.
-Der Takt steht in jeder Einleitung.
+Die alten neun Bahnen sind aus `src/courses_clock.js` verschwunden. Die Welt entsteht noch einmal,
+diesmal **Maschine für Maschine**: Zu jedem neuen Hindernis gehört zuerst eine schlichte Testbahn –
+nur so viel Bahn, dass die Maschine allein wirkt und sich ihre Werte einstellen lassen. Die
+richtigen Bahnen kommen erst, wenn alle Maschinen stehen.
 
-Das ist der Unterschied zum **Tüftlerreich**, das ihr am nächsten kommt. Dort ist jede Bahn eine
-eigene Erfindung, die man erst einmal verstehen muss. Hier ist es immer dieselbe Frage – *wann?* –
-und nur die Antwort ändert sich.
+**Die drei Maschinen dieses Schritts** sind bewusst keine neuen Verhalten. Sie borgen sich je ein
+Verhalten, das sich im Spiel längst bewährt hat, und geben ihm ein Uhrwerk-Gesicht und eine neue
+Bahn. Das spart dem Spiel eine Klasse Regeln, die niemand mehr durchschaut, und dem Spieler das
+Neulernen: Er weiß schon, was passiert, sobald er sie sieht.
 
-**Drei Maschinen gehören nur ihr.** Sie können etwas, das es im Spiel noch nicht gab:
+| Hindernis | Verhalten wie | Was es tut | Optik |
+|---|---|---|---|
+| **Zahnradfeld** (`gearfield`) | die Lore (`ferry`) | Trägt den Ball von einem Ende zum anderen und setzt ihn dort ab. Es hält an beiden Enden an – dort steigt man ein. | Eine Reihe ineinandergreifender Zahnräder in einer Rinne im Boden. Sie drehen sich genau so weit, wie der Ball wandert, abwechselnd gegenläufig; die helle Lücke, die mitwandert, ist die Stelle, die trägt. |
+| **Pendel** (`pendulum`) | der Ritter (`mover`) | Ein schwerer Körper auf fester Schwingbahn quer über die Bahn. Er stößt den Ball weg und gibt ihm seinen eigenen Schwung mit. | Messingstange von oben herab, schwere Linse unten. Auf dem Boden liegt der Bogen, den sie bestreicht – die Schwingbahn ist von weitem zu sehen, nicht erst, wenn man darin liegt. |
+| **Federwerk** (`springwork`) | die Kanone (`cannon`) | Fängt einen hineinrollenden Ball, spannt kurz und schleudert ihn davon. Der Federarm schwenkt dabei langsam hin und her. | Eine aufgezogene Spiralfeder in einem Topf im Boden: geladen zieht sie sich zusammen, nach dem Schuss schwingt sie weit auf. Die Punktreihe auf dem Boden zeigt, wo der Ball landen wird. |
 
-| Hindernis | Was es tut | Warum es neu ist |
-|---|---|---|
-| **Zahnradaufzug** (`gearlift`) | Ein stehendes Rad mit Eimern am Kranz. Ein Ball, der langsam unten ankommt, während dort gerade ein Eimer steht, wird über den Scheitel getragen und **eine Höhenstufe höher** abgesetzt. | Hinauf kam man bisher nur über eine Rampe, und die verlangt Anlauf. Der Aufzug nimmt einen ruhenden Ball mit – möglich, weil ein mitfahrender Ball in `physics.js` vor der Kantenregel behandelt wird. |
-| **Dampfkolben** (`piston`) | Ein Stempel, der auf den Schlag aus der Mauer fährt, kurz steht und langsamer zurückgeht. Dazwischen ist er selbst Mauer. | Das Dampfventil schiebt weich über eine Fläche; der Kolben trifft hart und nur einen schmalen Streifen. Die Stoßgeschwindigkeit wird gerechnet, nicht aus der Bildfolge geschätzt – so ist der Schlag auf jedem Gerät gleich stark. |
-| **Zeiger** (`hand`) | Ein Uhrzeiger. Wer **langsam** an ihn stößt, wird mitgenommen und dabei nach außen geschoben; am Ende der Stange fliegt er tangential davon. Wer **mit Schwung** kommt, prallt ab wie an einem Drehkreuz. | Der Drehteller wirft immer an derselben Stelle und gleich weit aus. Hier bestimmt der Spieler beides: Wo er den Zeiger trifft, entscheidet, wie lange er mitfährt – nah an der Achse heißt lange Fahrt und weiter Wurf. |
+**Die Schwingdauer des Pendels ist eine Konstante**, `PENDEL_TAKT` in `src/obstacles_legend.js`
+(zur Zeit 3,4 s). Sie steht bewusst nicht in den Bahndaten: Alle Pendel einer Bahn sollen im selben
+Takt gehen, damit man einmal mitzählen kann und es danach für die ganze Bahn weiß. Was sich je
+Pendel unterscheiden darf, ist die **Phase** (`phase`, 0 bis 1 = eine volle Schwingung), die
+Ruhelage (`ruhe`, Grad – 90 hängt nach unten), der Ausschlag (`amp`, Grad) und die Länge (`len`).
+`x`/`y` ist die **Aufhängung**, nicht die Linse; die Aufhängung hängt in der Luft und ist kein
+Hindernis.
 
 Alle drei stehen auch im **Baumodus** in der Werkzeugliste, lassen sich mit dem Drehknopf ausrichten
 und dürfen in geteilten Bahnen vorkommen. `tools/validate.mjs` prüft, was sonst still scheitern
-würde: ein Aufzug, dessen Ein- oder Ausstieg neben der Bahn liegt, ein Kolben ohne Hub oder mit
-einem Takt, der kürzer ist als ein ganzer Schlag, ein Zeiger ohne Schub.
+würde: ein Zahnradfeld ohne Strecke oder mit Enden neben der Bahn, ein Pendel, das nicht ausschlägt
+oder dessen Bogen ins Nichts streicht, ein Federwerk, dessen Landepunkt neben der Bahn liegt. Für
+die Erreichbarkeitsprüfung zählen Zahnradfeld und Federwerk als Übergang – wie Fähre und Kanone.
 
-**Sonst ist die Welt aus Teilen gebaut, die es schon gab.** Das Pendel ist ein `rotor` mit `swing`, das
-Dampfventil ein `field` mit `gust`, die Spannfeder ein `bumper`, die Zahnradfähre eine `ferry`. Deren
-Gesichter sind neu – die Zeichenstile `pendel`, `steam` und `feder`, die Deko `bell` und `weight`,
-die drei Farbpaletten. Zwei Kleinigkeiten sind dabei nützlich zu wissen:
+| Nr. | Testbahn | Par | Wozu |
+|---|---|---|---|
+| 1 | Zahnradfeld | 3 | Zwei Ufer, dazwischen nur Luft. Nur die Räder tragen hinüber. |
+| 2 | Pendelgasse | 3 | Zwei Linsen im selben Takt, um eine halbe Schwingung versetzt. |
+| 3 | Federkammer | 3 | Über die Lücke kommt nur, wer sich einspannen lässt. |
 
-- Ein Pendel schwingt nach `angle = phase + amp · sin(t · speed)`. `phase: 1.5708` lässt die Stange
-  senkrecht nach unten hängen, `speed = 2π / Takt`. Ein **negatives `amp`** spiegelt die Schwingung –
-  so laufen zwei Pendel gegengleich, ohne dass es dafür einen Zeitversatz bräuchte.
-- Ein Dampfventil pulst mit `k = max(0, sin(t · gust + phase))²`. Zwei Ventile mit `phase: 0` und
-  `phase: 3.1416` blasen abwechselnd: Wenn das eine steht, bläst das andere.
+Die alten Maschinen der Welt – Zahnradaufzug (`gearlift`), Dampfkolben (`piston`) und Zeiger
+(`hand`) – stehen weiter im Code und im Baumodus, werden von den neuen Bahnen aber nicht mehr
+benutzt.
 
-| Nr. | Bahn | Par | Takt | Besonderheit |
-|---|---|---|---|---|
-| 1 | Marktplatz | 2 | 4 s | ein einziges Pendel über dem Pflaster – die Einführung |
-| 2 | Zeigergasse | 3 | 4 s | zwei gegenläufige Zeiger, dazwischen ein Tor: zwei Sekunden offen, zwei zu |
-| 3 | Dampfgasse | 3 | 3 s | ein Ventil drückt an die Mauer, das zweite bläst um die Ecke: die Abkürzung |
-| 4 | Zahnradbrücke | 5 | 5 s | zwei Zahnradfähren über den Stadtkanal, versetzt; drüben ein Pendel am Anleger |
-| 5 | Glockenturm | 4 | 6 s | eine Wand teilt die Kammer, nur zwei Läden führen hindurch – sie öffnen gegengleich |
-| 6 | Rohrpost | 4 | 4 s | die Wand hat kein Tor – hinüber führen nur die Rohre; davor blasen zwei Ventile abwechselnd |
-| 7 | Federwerk | 4 | 3 s | sechs Spannfedern, zwei gegengleiche Pendel: hier hilft der Winkel, nicht die Kraft |
-| 8 | Kesselhaus | 5 | 5 s | Aufzug über die Glut, Drehteller nach oben, Ventil über der zweiten Rinne |
-| 9 | Der große Turm | 6 | 6 s | zwei Höhenstufen hinauf, durch das Turmtor, drinnen die Hemmung aus zwei Pendeln |
-
-Die Schlussbahn hat einen Innenteil (`inner`) wie die Hexenküche im Tüftlerreich: Wer durch das
-Turmtor trifft, landet in der **Turmkammer** mit eigener Karte, eigener Palette (`escapement`) und
-dem großen Rad, das den Ball auf die Bahn zum Loch legt.
 
 ## Kostenlos als App aufs iPad oder Handy (GitHub Pages)
 

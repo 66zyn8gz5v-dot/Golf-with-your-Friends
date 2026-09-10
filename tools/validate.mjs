@@ -84,6 +84,47 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
     if (!FLOOR.has(ch)) problems.push(`hand: Achse bei (${o.x},${o.y}) liegt nicht auf dem Fairway (${ch})`);
   }
 
+  /* Zahnradfeld, Pendel und Federwerk. Geprüft wird, was im Spiel still scheitert und beim
+     Bauen nicht auffällt: ein Feld ohne Strecke, dessen Enden neben der Bahn liegen; ein Pendel,
+     das gar nicht ausschlägt oder dessen Bogen ins Nichts streicht; ein Federwerk, das den Ball
+     an eine Wand oder über den Rand schießt. */
+  for (const o of (c.obstacles || []).filter(o => o.type === 'gearfield')) {
+    const len = Math.hypot((o.x1 ?? 0) - (o.x0 ?? 0), (o.y1 ?? 0) - (o.y0 ?? 0));
+    const r = o.r == null ? 0.9 : o.r, zn = o.zaehne == null ? 10 : o.zaehne;
+    if (!(len > 1)) { problems.push(`gearfield bei (${o.x0},${o.y0}): Strecke ${len.toFixed(1)} – da wird nichts getragen`); continue; }
+    if (!(r > 0.3)) problems.push(`gearfield bei (${o.x0},${o.y0}): Räder zu klein (r ${r})`);
+    if (!(zn >= 6 && zn <= 24)) problems.push(`gearfield bei (${o.x0},${o.y0}): zaehne ${zn} – sinnvoll sind 6 bis 24`);
+    const w = o.wait == null ? 2.2 : o.wait;
+    if (!(w >= 1)) problems.push(`gearfield bei (${o.x0},${o.y0}): wait ${w} – so kurz hält es nicht an, da kommt kein Ball hinein`);
+    for (const [name, sx, sy] of [['Anfang', o.x0, o.y0], ['Ende', o.x1, o.y1]]) {
+      const ch = rows[Math.floor(sy)] && rows[Math.floor(sy)][Math.floor(sx)];
+      if (!FLOOR.has(ch)) problems.push(`gearfield: ${name} bei (${sx},${sy}) liegt nicht auf dem Fairway (${ch})`);
+    }
+  }
+  for (const o of (c.obstacles || []).filter(o => o.type === 'pendulum')) {
+    const len = o.len == null ? 3.2 : o.len, amp = o.amp == null ? 55 : o.amp, ruhe = o.ruhe == null ? 90 : o.ruhe;
+    if (!(len > 0.8)) { problems.push(`pendulum bei (${o.x},${o.y}): len ${len} ist zu kurz`); continue; }
+    if (!(Math.abs(amp) >= 5)) problems.push(`pendulum bei (${o.x},${o.y}): amp ${amp}° – so steht es praktisch still`);
+    if (Math.abs(amp) > 89) problems.push(`pendulum bei (${o.x},${o.y}): amp ${amp}° – über 89° schlägt es nach oben durch`);
+    // Ruhelage und beide Umkehrpunkte sollen über der Bahn liegen, sonst schwingt es ins Leere
+    for (const [name, gr] of [['Ruhelage', ruhe], ['linker Umkehrpunkt', ruhe - amp], ['rechter Umkehrpunkt', ruhe + amp]]) {
+      const a = (gr * Math.PI) / 180, sx = o.x + Math.cos(a) * len, sy = o.y + Math.sin(a) * len;
+      const ch = rows[Math.floor(sy)] && rows[Math.floor(sy)][Math.floor(sx)];
+      if (!FLOOR.has(ch)) problems.push(`pendulum: ${name} bei (${sx.toFixed(1)},${sy.toFixed(1)}) liegt nicht auf dem Fairway (${ch})`);
+    }
+  }
+  for (const o of (c.obstacles || []).filter(o => o.type === 'springwork')) {
+    const range = o.range == null ? 8 : o.range, catchR = o.catchR == null ? 0.7 : o.catchR;
+    if (!(range > 1)) problems.push(`springwork bei (${o.x},${o.y}): range ${range} – da fliegt nichts`);
+    if (!(catchR > 0.3)) problems.push(`springwork bei (${o.x},${o.y}): catchR ${catchR} – so klein fängt es keinen Ball`);
+    const ch = rows[Math.floor(o.y)] && rows[Math.floor(o.y)][Math.floor(o.x)];
+    if (!FLOOR.has(ch)) problems.push(`springwork: Topf bei (${o.x},${o.y}) liegt nicht auf dem Fairway (${ch})`);
+    // Der Landepunkt in Ruhelage soll auf der Bahn liegen – sonst schießt es den Ball ins Aus
+    const a = o.base || 0, lx = o.x + Math.cos(a) * (range + 0.9), ly = o.y + Math.sin(a) * (range + 0.9);
+    const lch = rows[Math.floor(ly)] && rows[Math.floor(ly)][Math.floor(lx)];
+    if (!FLOOR.has(lch)) problems.push(`springwork: Landepunkt bei (${lx.toFixed(1)},${ly.toFixed(1)}) liegt nicht auf dem Fairway (${lch})`);
+  }
+
   /* Feuerturm: das Bauwerk steht neben der Bahn, bestrichen wird ein Rechteck (zx,zy,zw,zh) auf der
      Bahn. Ein Bereich ohne Fairway darunter wird von niemandem gesehen; ein Turm mitten auf dem
      Fairway wäre eine Mauer im Weg. Der Abschlag darf nicht im Bereich liegen: Der Ball wird an
@@ -147,6 +188,12 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
     // Portale und Fähren verbinden Gebiete
     const portals = (c.obstacles || []).filter(o => o.type === 'portal')
       .concat((c.obstacles || []).filter(o => o.type === 'ferry').map(o => ({ x: o.x0, y: o.y0, tx: o.x1, ty: o.y1, twoWay: true })))
+      // Zahnradfeld trägt wie die Fähre von einem Ende zum anderen, das Federwerk wirft wie die Kanone
+      .concat((c.obstacles || []).filter(o => o.type === 'gearfield').map(o => ({ x: o.x0, y: o.y0, tx: o.x1, ty: o.y1, twoWay: true })))
+      .concat((c.obstacles || []).filter(o => o.type === 'springwork').map(o => {
+        const a = o.base || 0, R = 0.9 + (o.range || 8);
+        return { x: o.x, y: o.y, tx: o.x + Math.cos(a) * R, ty: o.y + Math.sin(a) * R };
+      }))
       .concat((c.obstacles || []).filter(o => o.type === 'ramp').map(o => { // Rampe: Landepunkt hinter dem Rampenende
         const a = (o.angle || 0) * Math.PI / 180, dx = Math.cos(a), dy = Math.sin(a), cx = o.x + o.w / 2, cy = o.y + o.h / 2;
         const half = Math.abs(dx) > 0.5 ? o.w / 2 : o.h / 2;

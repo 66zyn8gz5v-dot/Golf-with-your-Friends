@@ -432,7 +432,7 @@ class Wall {
    an der nächsten Station wieder ab. Keine Kollision – der Ball rollt hinein. */
 class Ferry {
   constructor(d) {
-    Object.assign(this, { w: 1.1, h: 1.1, wait: 2.5, travel: 3, phase: 0, style: 'cart' }, d);
+    Object.assign(this, { w: 1.1, h: 1.1, wait: 2.5, travel: 3, phase: 0, style: 'cart', tragHoehe: 0.7 }, d);
     this.type = 'ferry'; this.x = this.x0; this.y = this.y0; this.docked = true; this.station = 'A'; this.dir = 1;
     this.len = Math.hypot(this.x1 - this.x0, this.y1 - this.y0) || 1;
     this.ux = (this.x1 - this.x0) / this.len; this.uy = (this.y1 - this.y0) / this.len;
@@ -452,13 +452,13 @@ class Ferry {
   /* Ein- und Aussteigen; liefert true, wenn der Ball gerade mitfährt */
   ride(ball, t, events) {
     if (ball.rider === this) {
-      ball.x = this.x; ball.y = this.y; ball.vx = 0; ball.vy = 0; ball.z = 0.7; ball.vz = 0;
+      ball.x = this.x; ball.y = this.y; ball.vx = 0; ball.vy = 0; ball.z = this.tragHoehe; ball.vz = 0;
       if (this.docked && this.station !== ball.boardStation) {
         // Absetzen jenseits der Station in Fahrtrichtung
         const d = this.station === 'B' ? 1 : -1;
         ball.rider = null; ball.rideCd = 1.5;
         ball.x = this.x + this.ux * d * (this.w / 2 + 0.6); ball.y = this.y + this.uy * d * (this.h / 2 + 0.6);
-        ball.vx = this.ux * d * 2.2; ball.vy = this.uy * d * 2.2; ball.z = 0.7; ball.vz = 1;
+        ball.vx = this.ux * d * 2.2; ball.vy = this.uy * d * 2.2; ball.z = this.tragHoehe; ball.vz = 1;
         events.push({ type: 'dropoff', x: ball.x, y: ball.y });
         return false;
       }
@@ -468,7 +468,7 @@ class Ferry {
     const dx = ball.x - this.x, dy = ball.y - this.y;
     if (Math.abs(dx) < this.w / 2 + 0.15 && Math.abs(dy) < this.h / 2 + 0.15) {
       ball.rider = this; ball.boardStation = this.docked ? this.station : 'transit';
-      ball.x = this.x; ball.y = this.y; ball.vx = 0; ball.vy = 0; ball.z = 0.7;
+      ball.x = this.x; ball.y = this.y; ball.vx = 0; ball.vy = 0; ball.z = this.tragHoehe;
       events.push({ type: 'board', x: this.x, y: this.y });
       return true;
     }
@@ -494,6 +494,10 @@ function createObstacles(defs) {
       case 'gearlift': out.push(new GearLift(d)); break;
       case 'piston': out.push(new Piston(d)); break;
       case 'hand': out.push(new Hand(d)); break;
+      // Zahnradfeld, Pendel und Federwerk: dieselben Verhalten wie Lore, Ritter und Kanone
+      case 'gearfield': out.push(new GearField(d)); break;
+      case 'pendulum': out.push(new Pendulum(d)); break;
+      case 'springwork': out.push(new SpringWork(d)); break;
     case 'sharkjump': out.push(new SharkJump(d)); break;
     case 'spikes': out.push(new Spikes(d)); break;
     case 'mover': out.push(new Mover(d)); break;

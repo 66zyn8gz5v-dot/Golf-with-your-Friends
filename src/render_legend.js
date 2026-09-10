@@ -1389,4 +1389,125 @@ Object.assign(Renderer.prototype, {
     this.prism(ctx, this.circlePoly(ob.x, ob.y, ob.hubR, 12), 0, 0.6, '#8a6624', '#4e3814', { outline: '#2a1d0a' });
     this.prism(ctx, this.circlePoly(ob.x, ob.y, ob.hubR * 0.55, 10), 0.6, 0.14, '#ffdf9c', '#a8792c');
   },
+
+  /* ---------------------------------------------------------------------------
+     Zahnradfeld, Pendel und Federwerk. Alle drei liegen flach in der Welt oder
+     hängen über ihr – nichts steht senkrecht vor der Kamera, denn die Projektion
+     legt jede stehende Scheibe schief. Runde Teile liegen deshalb im Boden.
+     --------------------------------------------------------------------------- */
+
+  /* Ein Zahnrad als Weltpolygon: abwechselnd Fuß- und Kopfkreis, vier Punkte je Zahn.
+     Weil es in der Bodenebene liegt, macht die Projektion von selbst eine Ellipse daraus. */
+  zahnPoly(x, y, r, zn, winkel) {
+    const p = [], ri = r * 0.78, schritt = TAU / zn;
+    for (let i = 0; i < zn; i++) {
+      for (const [u, rr] of [[0, ri], [0.16, r], [0.34, r], [0.5, ri]]) {
+        const a = winkel + (i + u) * schritt;
+        p.push([x + Math.cos(a) * rr, y + Math.sin(a) * rr]);
+      }
+    }
+    return p;
+  },
+
+  /* Zahnradfeld: die Räder liegen in einer Rinne im Boden und greifen ineinander. Der helle
+     Mitnehmer wandert mit dem Feld – dort wird der Ball gefasst, dort setzt es ihn wieder ab. */
+  drawGearFieldFloor(ctx, ob, t) {
+    const s = this.scale, r = ob.r;
+    const qx = -ob.uy * (r + 0.22), qy = ob.ux * (r + 0.22);
+    const e0x = ob.x0 - ob.ux * (r + 0.22), e0y = ob.y0 - ob.uy * (r + 0.22);
+    const e1x = ob.x1 + ob.ux * (r + 0.22), e1y = ob.y1 + ob.uy * (r + 0.22);
+    // Rinne, in der die Räder sitzen
+    this.fillPoly(ctx, [[e0x + qx, e0y + qy], [e1x + qx, e1y + qy], [e1x - qx, e1y - qy], [e0x - qx, e0y - qy]],
+      0.004, 'rgba(28,18,8,0.55)', false);
+    for (const [i, rad] of ob.raeder.entries()) {
+      const w = ob.winkel * rad.dreh + (i % 2 ? Math.PI / ob.zaehne : 0);
+      this.fillPoly(ctx, this.zahnPoly(rad.x, rad.y, r + 0.05, ob.zaehne, w), 0.006, 'rgba(0,0,0,0.35)', false);
+      this.fillPoly(ctx, this.zahnPoly(rad.x, rad.y, r, ob.zaehne, w), 0.012, '#b8842f', false);
+      this.isoEllipse(ctx, rad.x, rad.y, 0.016, r * 0.62, '#d8a441');
+      // Speichen: sie machen die Drehung sichtbar
+      const [cx, cy] = this.proj(rad.x, rad.y, 0.018);
+      ctx.strokeStyle = '#7a5418'; ctx.lineWidth = Math.max(1.5, s * 0.05);
+      for (let k = 0; k < 4; k++) {
+        const a = w + (k * Math.PI) / 2;
+        const [px, py] = this.proj(rad.x + Math.cos(a) * r * 0.58, rad.y + Math.sin(a) * r * 0.58, 0.018);
+        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(px, py); ctx.stroke();
+      }
+      this.isoEllipse(ctx, rad.x, rad.y, 0.02, r * 0.2, '#4e3814');
+    }
+    // Mitnehmer: die Lücke, die den Ball trägt
+    const puls = ob.docked ? 0.55 + 0.45 * Math.sin(t * 5) : 0.9;
+    this.isoEllipse(ctx, ob.x, ob.y, 0.026, 0.5, `rgba(255,226,150,${(0.32 * puls).toFixed(2)})`);
+    this.isoEllipse(ctx, ob.x, ob.y, 0.028, 0.3, `rgba(255,244,210,${(0.75 * puls).toFixed(2)})`);
+  },
+
+  /* Pendel: die Linse hängt an einer Stange, die von oben herunterkommt – über dem Ball, nicht
+     in seinem Weg. Auf dem Boden liegt der Bogen, den sie bestreicht, damit man die Schwingbahn
+     schon von weitem sieht und nicht erst, wenn man darin liegt. */
+  drawPendulumFloor(ctx, ob, t) {
+    const s = this.scale, br = ob.w * 0.55;
+    ctx.strokeStyle = 'rgba(255,214,110,0.16)'; ctx.lineWidth = Math.max(2, s * br * 2 * this.cam.tilt);
+    ctx.lineCap = 'round'; ctx.beginPath();
+    const n = 18;
+    for (let i = 0; i <= n; i++) {
+      const a = ob.ruheR - ob.ampR + (2 * ob.ampR * i) / n;
+      const [px, py] = this.proj(ob.ax + Math.cos(a) * ob.len, ob.ay + Math.sin(a) * ob.len, 0.004);
+      i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+    }
+    ctx.stroke(); ctx.lineCap = 'butt';
+    this.isoEllipse(ctx, ob.x, ob.y, 0.006, br * 1.1, 'rgba(0,0,0,0.3)');
+  },
+  drawPendulum(ctx, ob, t) {
+    const s = this.scale, r = ob.w * 0.45;
+    // Stange: von der Aufhängung hoch oben herab zur Linse
+    const [ax, ay] = this.proj(ob.ax, ob.ay, ob.hoehe + 1.6);
+    const [bx, by] = this.proj(ob.x, ob.y, 0.75);
+    ctx.strokeStyle = '#8a6624'; ctx.lineWidth = Math.max(2.5, s * 0.1); ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+    ctx.strokeStyle = '#e0b45c'; ctx.lineWidth = Math.max(1, s * 0.04);
+    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+    ctx.lineCap = 'butt';
+    // Aufhängung: ein Lagerbock, der oben in der Luft hängt (die Bahn darunter bleibt frei)
+    ctx.fillStyle = '#5a4520'; ctx.beginPath(); ctx.arc(ax, ay, s * 0.16, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#ffdf9c'; ctx.beginPath(); ctx.arc(ax, ay, s * 0.07, 0, TAU); ctx.fill();
+    // Linse: der schwere Körper, der den Ball wegräumt
+    this.prism(ctx, this.circlePoly(ob.x, ob.y, r, 14), 0, 0.72, '#e8c774', '#8a6624', { outline: '#33240e' });
+    this.isoEllipse(ctx, ob.x, ob.y, 0.735, r * 0.55, '#fff1c4');
+    this.isoEllipse(ctx, ob.x, ob.y, 0.74, r * 0.22, '#a8792c');
+  },
+
+  /* Federwerk: eine Spiralfeder, die in den Boden eingelassen ist. Geladen zieht sie sich
+     zusammen, nach dem Schuss schwingt sie kurz weit auf. Der Arm zeigt, wohin es geht. */
+  drawSpringWorkFloor(ctx, ob, t) {
+    const s = this.scale, dx = Math.cos(ob.angle), dy = Math.sin(ob.angle), R = 0.9 + ob.range;
+    this.isoEllipse(ctx, ob.x, ob.y, 0.004, ob.catchR + 0.35, 'rgba(0,0,0,0.25)');
+    ctx.fillStyle = 'rgba(255,210,120,0.55)';
+    for (let d = 1.6; d < R - 0.5; d += 0.7) { const [px, py] = this.proj(ob.x + dx * d, ob.y + dy * d, 0.01); ctx.beginPath(); ctx.arc(px, py, s * 0.05, 0, TAU); ctx.fill(); }
+    this.isoEllipse(ctx, ob.x + dx * R, ob.y + dy * R, 0.006, 0.45, 'rgba(255,210,120,0.3)');
+    this.isoEllipse(ctx, ob.x + dx * R, ob.y + dy * R, 0.008, 0.2, 'rgba(255,240,200,0.55)');
+  },
+  drawSpringWork(ctx, ob, t) {
+    const s = this.scale, r = ob.catchR + 0.45;
+    // Topf im Boden
+    this.prism(ctx, this.circlePoly(ob.x, ob.y, r, 14), 0, 0.22, '#6e5220', '#3e2e11', { outline: '#241a09' });
+    this.isoEllipse(ctx, ob.x, ob.y, 0.225, r * 0.86, '#241a09');
+    // Spirale: eng, wenn gespannt – weit, kurz nach dem Schuss
+    const nach = Math.max(0, 1 - (t - ob.firedAt) * 3);
+    const eng = ob.loaded ? 1 : 0.55 + 0.45 * nach;
+    const wind = 3.2, r0 = r * 0.14, r1 = r * 0.82 * (1 - 0.32 * eng);
+    ctx.strokeStyle = ob.loaded ? '#ffe9b0' : '#d8a441';
+    ctx.lineWidth = Math.max(2, s * 0.09); ctx.lineJoin = 'round';
+    ctx.beginPath();
+    const N = 90;
+    for (let i = 0; i <= N; i++) {
+      const u = i / N, a = ob.angle + u * TAU * wind, rr = r0 + (r1 - r0) * u;
+      const [px, py] = this.proj(ob.x + Math.cos(a) * rr, ob.y + Math.sin(a) * rr, 0.24);
+      i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+    }
+    ctx.stroke();
+    // Federarm am äußeren Ende: er zeigt die Schussrichtung
+    const ex = ob.x + Math.cos(ob.angle) * r1, ey = ob.y + Math.sin(ob.angle) * r1;
+    this.prism(ctx, this.circlePoly(ex, ey, 0.17, 8), 0.24, 0.26, '#ffdf9c', '#a8792c');
+    // Achse in der Mitte
+    this.prism(ctx, this.circlePoly(ob.x, ob.y, 0.16, 10), 0.22, 0.34, '#e8c774', '#8a6624', { outline: '#33240e' });
+  },
 });

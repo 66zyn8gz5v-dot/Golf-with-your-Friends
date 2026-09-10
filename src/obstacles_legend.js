@@ -599,3 +599,78 @@ class Hand {
   }
   circles(out) { out.push({ x: this.x, y: this.y, r: this.hubR, e: 0.6, kind: 'hub' }); }
 }
+
+/* ---------------------------------------------------------------------------
+   Drei Maschinen aus bewährten Verhalten. Neu ist nur die Optik und die Bahn,
+   auf der sie sich bewegen – wie sie sich anfühlen, kennt der Spieler schon.
+   --------------------------------------------------------------------------- */
+
+/* Schwingdauer des Pendels: eine volle Schwingung hin und zurück, in Sekunden.
+   Bewusst eine Konstante und keine Angabe je Bahn – alle Pendel einer Bahn sollen
+   im selben Takt gehen, nur ihre Phase darf sich unterscheiden. */
+const PENDEL_TAKT = 3.4;
+
+/* Zahnradfeld: eine Reihe ineinandergreifender Zahnräder, die im Boden liegen. Wer hineinrollt,
+   wird von den Zähnen gefasst und ans andere Ende getragen – dasselbe Verhalten wie die Lore,
+   nur ohne Wagen: Der Ball liegt zwischen den Zähnen und wird von ihnen weitergereicht.
+
+   Die Räder drehen sich genau so weit, wie der Ball wandert (Umfang = Weg), und abwechselnd
+   in die andere Richtung – so greifen sie ineinander, statt gegeneinander zu laufen. Steht das
+   Feld an einer Station, stehen auch die Räder still; das ist der Moment zum Einsteigen. */
+class GearField extends Ferry {
+  constructor(d) {
+    super(Object.assign({ w: 1.5, h: 1.5, wait: 2.2, travel: 3.2, r: 0.9, zaehne: 10 }, d));
+    this.type = 'gearfield';
+    this.tragHoehe = 0.18;                 // kein Wagen: der Ball liegt fast auf dem Boden
+    this.raeder = [];
+    const n = Math.max(2, Math.round(this.len / (this.r * 1.72)) + 1);
+    for (let i = 0; i < n; i++) {
+      const u = i / (n - 1);
+      this.raeder.push({ x: this.x0 + (this.x1 - this.x0) * u, y: this.y0 + (this.y1 - this.y0) * u, dreh: i % 2 ? -1 : 1 });
+    }
+    this.winkel = 0;
+  }
+  update(t) { super.update(t); this.winkel = (this.progress * this.len) / this.r; }
+}
+
+/* Pendel: ein schwerer Körper an einer Stange, der quer über die Bahn schwingt. Er verhält sich
+   wie der Ritter – ein bewegliches Hindernis, das den Ball wegstößt und ihm dabei seinen eigenen
+   Schwung mitgibt. Die Stange hängt hoch über dem Boden und trifft nichts; nur die Linse unten
+   räumt den Weg.
+
+   x/y ist die Aufhängung und bleibt stehen, ruhe die Richtung der Ruhelage in Grad (90 = nach
+   unten auf dem Bildschirm), amp der Ausschlag nach jeder Seite in Grad, len die Pendellänge. */
+class Pendulum {
+  constructor(d) {
+    Object.assign(this, { len: 3.2, amp: 55, ruhe: 90, phase: 0, w: 1.2, h: 1.2, e: 0.7, hoehe: 0.8 }, d);
+    this.type = 'pendulum';
+    this.ax = this.x; this.ay = this.y;                 // Aufhängung
+    this.ampR = (this.amp * Math.PI) / 180;
+    this.ruheR = (this.ruhe * Math.PI) / 180;
+    this.omega = TAU / PENDEL_TAKT;
+    this.update(0);
+  }
+  update(t) {
+    const w = this.omega * t + this.phase * TAU;
+    this.angle = this.ruheR + this.ampR * Math.sin(w);
+    const dw = this.ampR * this.omega * Math.cos(w);    // Winkelgeschwindigkeit
+    this.x = this.ax + Math.cos(this.angle) * this.len;
+    this.y = this.ay + Math.sin(this.angle) * this.len;
+    this.vx = -Math.sin(this.angle) * this.len * dw;
+    this.vy = Math.cos(this.angle) * this.len * dw;
+    this.dir = Math.sign(dw) || 1;
+    this.schwung = Math.abs(dw) / (this.ampR * this.omega || 1);   // 0 an den Umkehrpunkten, 1 in der Mitte
+  }
+  poly() { return rectPoly(this.x, this.y, this.w, this.h); }
+  segments(out) { polySegments(this.poly(), out, { vx: this.vx, vy: this.vy, e: this.e, kind: 'mover', owner: this }); }
+}
+
+/* Federwerk: eine aufgezogene Spiralfeder, die in den Boden eingelassen ist. Wer hineinrollt,
+   wird eingespannt; die Feder zieht sich zusammen und schnellt den Ball dann davon – dasselbe
+   Verhalten wie die Kanone, nur schwenkt hier kein Rohr, sondern der Federarm. */
+class SpringWork extends Cannon {
+  constructor(d) {
+    super(Object.assign({ amp: 0.45, speed: 0.9, range: 8, loadTime: 0.9, catchR: 0.7, flySpeed: 8 }, d));
+    this.type = 'springwork'; this.style = 'feder';
+  }
+}

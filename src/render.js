@@ -962,6 +962,9 @@ class Renderer {
     if (ob.type === 'gearlift') { this.drawGearLiftFloor(ctx, ob, t); return; }
     if (ob.type === 'piston') { this.drawPistonFloor(ctx, ob, t); return; }
     if (ob.type === 'hand') { this.isoEllipse(ctx, ob.x, ob.y, 0.004, ob.len + 0.2, 'rgba(0,0,0,0.1)'); return; }
+    if (ob.type === 'gearfield') { this.drawGearFieldFloor(ctx, ob, t); return; }
+    if (ob.type === 'pendulum') { this.drawPendulumFloor(ctx, ob, t); return; }
+    if (ob.type === 'springwork') { this.drawSpringWorkFloor(ctx, ob, t); return; }
     if (ob.type === 'field' && ob.style === 'steam') { this.drawSteam(ctx, ob, t); return; }
     if (ob.type === 'field' && ob.style === 'dark') { this.drawDarkZone(ctx, ob, t); return; }
     if (ob.type === 'boost' || (ob.type === 'field' && (ob.style === 'wind' || ob.style === 'current'))) { this.drawWind(ctx, ob, t); return; }
@@ -1251,6 +1254,10 @@ class Renderer {
       this.pushGuillotine(items, ctx, ob, t);
     } else if (ob.type === 'eyetower') {
       items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => this.drawEyeTower(ctx, ob, t) });
+    } else if (ob.type === 'pendulum') {
+      items.push({ x: ob.x, y: ob.y, bias: 0.3, draw: () => this.drawPendulum(ctx, ob, t) });
+    } else if (ob.type === 'springwork') {
+      items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => this.drawSpringWork(ctx, ob, t) });
     } else if (ob.type === 'gearlift') {
       items.push({ x: ob.x, y: ob.y, bias: 0.3, draw: () => this.drawGearLift(ctx, ob, t) });
     } else if (ob.type === 'piston') {
