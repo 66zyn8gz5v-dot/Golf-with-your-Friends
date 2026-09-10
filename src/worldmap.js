@@ -22,6 +22,7 @@ const WorldMap = (() => {
     jungle: { x: 59, y: 82, icon: '🗿', col: '#9ee06f' },
     storm: { x: 75, y: 44, icon: '⛈️', col: '#8fb8ff' },
     shadow: { x: 88, y: 74, icon: '🔮', col: '#c58bff' },
+    clock: { x: 62, y: 30, icon: '🕰️', col: '#ffc46b' },
   };
 
   /* ---------- Projektion wie im Spiel ---------- */

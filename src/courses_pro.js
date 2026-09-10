@@ -468,5 +468,6 @@ const WORLDS = [
   { id: 'jungle', name: 'Dschungeltempel', short: 'Dschungel', mode: 'pro', courses: JUNGLE_COURSES },
   { id: 'storm', name: 'Sturmhimmel', short: 'Sturm', mode: 'legend', courses: STORM_COURSES },
   { id: 'shadow', name: 'Schattenreich', short: 'Schatten', mode: 'legend', courses: SHADOW_COURSES },
+  { id: 'clock', name: 'Uhrwerkstadt', short: 'Uhrwerk', mode: 'pro', courses: CLOCK_COURSES },
   { id: 'colosseum', name: 'Kolosseum', short: 'Arena', mode: 'legend', courses: COLOSSEUM_COURSES },
 ];

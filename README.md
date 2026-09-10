@@ -27,9 +27,10 @@ Auf der **Weltkarte** liegt jede Welt als schwebende Scheibe in derselben 2,5D-S
 | Dschungeltempel | Profi | 9 Bahnen durch den Urwald bis zur verlorenen Stadt |
 | Sturmhimmel | Legende | 9 extra große Bahnen über den Wolken |
 | Schattenreich | Legende | 10 extra große Bahnen im Reich der Schatten |
+| Uhrwerkstadt | Profi | 9 Bahnen in einer Stadt, die im Takt läuft – Pendel, Zeiger, Dampf, Zahnradfähren |
 
 Das **Kolosseum** steht bewusst *nicht* auf der Weltkarte. Es ist die Turnierwelt und wird nur über
-den **Turnier**-Knopf im Startbildschirm betreten – die Weltkarte bleibt die Reise durch die sechs
+den **Turnier**-Knopf im Startbildschirm betreten – die Weltkarte bleibt die Reise durch die sieben
 Landschaften, das Turnier ist ein eigener Wettkampf daneben. Technisch reicht dafür, dass die Welt
 keinen Eintrag in `WorldMap.spots` hat; die Karte zeichnet dann weder Marke noch Insel.
 
@@ -576,6 +577,47 @@ Die Karten dieser Welt werden nicht von Hand getippt, sondern von `tools/arena.p
 zusammengesetzt und nach `src/courses_colosseum.js` geschrieben. So bleiben alle Zeilen gleich lang,
 und eine Änderung an einer Kammer zieht nicht Dutzende Zeichen nach sich. Nach jedem Lauf gehören
 `node tools/validate.mjs` und `node tools/audit/audit.mjs colosseum` dazu.
+
+## Die Bahnen der Uhrwerkstadt
+
+Neun Bahnen, Stufe Profi. Was diese Welt von allen anderen trennt, ist keine Maschine, sondern eine
+Regel: **Auf jeder Bahn geht alles auf denselben Takt.** Pendel, Zeiger, Läden, Fähren und
+Dampfventile teilen sich eine Grundzeit; was nicht darauf läuft, läuft auf ihrer Hälfte oder ihrem
+Doppelten. Damit ist keine Bahn ein Ratespiel: einmal zusehen, mitzählen, auf den Schlag schlagen.
+Der Takt steht in jeder Einleitung.
+
+Das ist der Unterschied zum **Tüftlerreich**, das ihr am nächsten kommt. Dort ist jede Bahn eine
+eigene Erfindung, die man erst einmal verstehen muss. Hier ist es immer dieselbe Frage – *wann?* –
+und nur die Antwort ändert sich.
+
+**Gebaut ist die Welt aus Teilen, die es schon gab.** Das Pendel ist ein `rotor` mit `swing`, das
+Dampfventil ein `field` mit `gust`, der Zahnradaufzug eine `ferry`, die Spannfeder ein `bumper`. Neu
+sind nur ihre Gesichter – die Zeichenstile `pendel`, `steam` und `feder`, die Deko `bell` und
+`weight`, die drei Farbpaletten – und die Bahnen selbst. Ein Hindernis dazuzuerfinden, das sich am
+Ende doch wie ein Rotor benimmt, hätte der Welt nichts gegeben und dem Spiel eine Klasse mehr zu
+warten. Zwei Kleinigkeiten sind dabei nützlich zu wissen:
+
+- Ein Pendel schwingt nach `angle = phase + amp · sin(t · speed)`. `phase: 1.5708` lässt die Stange
+  senkrecht nach unten hängen, `speed = 2π / Takt`. Ein **negatives `amp`** spiegelt die Schwingung –
+  so laufen zwei Pendel gegengleich, ohne dass es dafür einen Zeitversatz bräuchte.
+- Ein Dampfventil pulst mit `k = max(0, sin(t · gust + phase))²`. Zwei Ventile mit `phase: 0` und
+  `phase: 3.1416` blasen abwechselnd: Wenn das eine steht, bläst das andere.
+
+| Nr. | Bahn | Par | Takt | Besonderheit |
+|---|---|---|---|---|
+| 1 | Marktplatz | 2 | 4 s | ein einziges Pendel über dem Pflaster – die Einführung |
+| 2 | Zeigergasse | 3 | 4 s | zwei gegenläufige Zeiger, dazwischen ein Tor: zwei Sekunden offen, zwei zu |
+| 3 | Dampfgasse | 3 | 3 s | ein Ventil drückt an die Mauer, das zweite bläst um die Ecke: die Abkürzung |
+| 4 | Zahnradbrücke | 5 | 5 s | zwei Zahnradfähren über den Stadtkanal, versetzt; drüben ein Pendel am Anleger |
+| 5 | Glockenturm | 4 | 6 s | eine Wand teilt die Kammer, nur zwei Läden führen hindurch – sie öffnen gegengleich |
+| 6 | Rohrpost | 4 | 4 s | die Wand hat kein Tor – hinüber führen nur die Rohre; davor blasen zwei Ventile abwechselnd |
+| 7 | Federwerk | 4 | 3 s | sechs Spannfedern, zwei gegengleiche Pendel: hier hilft der Winkel, nicht die Kraft |
+| 8 | Kesselhaus | 5 | 5 s | Aufzug über die Glut, Drehteller nach oben, Ventil über der zweiten Rinne |
+| 9 | Der große Turm | 6 | 6 s | zwei Höhenstufen hinauf, durch das Turmtor, drinnen die Hemmung aus zwei Pendeln |
+
+Die Schlussbahn hat einen Innenteil (`inner`) wie die Hexenküche im Tüftlerreich: Wer durch das
+Turmtor trifft, landet in der **Turmkammer** mit eigener Karte, eigener Palette (`escapement`) und
+dem großen Rad, das den Ball auf die Bahn zum Loch legt.
 
 ## Kostenlos als App aufs iPad oder Handy (GitHub Pages)
 

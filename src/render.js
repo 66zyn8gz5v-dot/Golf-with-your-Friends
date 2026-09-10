@@ -843,6 +843,70 @@ class Renderer {
     ctx.beginPath(); ctx.ellipse(bx, by, 0.5 * this.scale, 0.5 * this.scale * this.cam.tilt, 0, 0, TAU); ctx.stroke();
   }
 
+  /* Pendel: ein Rotor mit einer einzigen Stange, die im Takt hin und her schwingt (rotor.swing).
+     Gezeichnet werden die Aufhängung, die Messingstange und die schwere Linse am Ende. Die Linse
+     sitzt genau am Stangenende, denn dort endet auch der Balken, an dem der Ball abprallt – was man
+     sieht, muss das sein, was trifft. */
+  drawPendel(ctx, ob, t) {
+    const s = this.scale, th = this.theme;
+    const a = ob.bladeAngle(0), ca = Math.cos(a), sa = Math.sin(a);
+    const ex = ob.x + ca * ob.len, ey = ob.y + sa * ob.len;
+    // Stange als flaches Prisma, damit sie sich in die Schrägsicht einfügt
+    const tk = ob.thick * 0.7;
+    const stange = [[ob.x - sa * tk, ob.y + ca * tk], [ex - sa * tk, ey + ca * tk], [ex + sa * tk, ey - ca * tk], [ob.x + sa * tk, ob.y - ca * tk]];
+    this.prism(ctx, stange, 0.55, 0.1, th.rotor.top, th.rotor.side);
+    // Aufhängung: ein Bock über dem Drehpunkt
+    const hub = this.circlePoly(ob.x, ob.y, ob.hubR * 0.8, 8);
+    this.prism(ctx, hub, 0, 0.85, th.rotor.top, th.rotor.side);
+    // Linse: eine schwere Messingscheibe am Stangenende, hochkant
+    const [lx, ly] = this.proj(ex, ey, 0.62);
+    const r = s * Math.max(0.34, ob.thick * 2.4);
+    const g = ctx.createRadialGradient(lx - r * 0.3, ly - r * 0.35, r * 0.1, lx, ly, r);
+    g.addColorStop(0, '#ffe9b0'); g.addColorStop(0.55, th.rotor.top); g.addColorStop(1, th.rotor.side);
+    ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(lx, ly, r, r * 0.92, 0, 0, TAU); ctx.fill();
+    ctx.strokeStyle = 'rgba(40,26,8,0.55)'; ctx.lineWidth = Math.max(1, s * 0.03); ctx.stroke();
+    // Der Glanzpunkt wandert mit der Schwingung – daran sieht man die Richtung auf einen Blick
+    ctx.fillStyle = 'rgba(255,255,235,0.75)';
+    ctx.beginPath(); ctx.ellipse(lx - r * 0.32 * Math.sign(ob.omega || 1), ly - r * 0.3, r * 0.24, r * 0.16, 0, 0, TAU); ctx.fill();
+  }
+
+  /* Dampfventil: ein Feld mit gust – die Kraft schwillt im Takt an und ab (ob.k von 0 bis 1).
+     Gezeichnet wird eine Düse an der windzugewandten Kante und davor Dampfschwaden, die mit dem
+     Stoß wachsen. Bei k = 0 bleibt nur ein Rest Schwaden stehen: Man soll sehen, wo es gleich
+     bläst, auch wenn es gerade nicht bläst. */
+  drawSteam(ctx, ob, t) {
+    const s = this.scale;
+    const L = Math.hypot(ob.fx, ob.fy) || 1, ux = ob.fx / L, uy = ob.fy / L, px = -uy, py = ux;
+    const cx = ob.x + ob.w / 2, cy = ob.y + ob.h / 2;
+    const laengs = Math.abs(ux) > Math.abs(uy) ? ob.w : ob.h;
+    const quer = Math.abs(ux) > Math.abs(uy) ? ob.h : ob.w;
+    const k = ob.k ?? 1;
+    // Düse: ein kurzes Rohr am Anfang des Feldes
+    const dx = cx - ux * laengs / 2, dy = cy - uy * laengs / 2;
+    const duese = [[dx - px * quer * 0.3 - ux * 0.28, dy - py * quer * 0.3 - uy * 0.28],
+      [dx + px * quer * 0.3 - ux * 0.28, dy + py * quer * 0.3 - uy * 0.28],
+      [dx + px * quer * 0.3, dy + py * quer * 0.3], [dx - px * quer * 0.3, dy - py * quer * 0.3]];
+    this.prism(ctx, duese, 0, 0.34, '#c08a3e', '#6e4a1c');
+    // Schwaden: Ballen, die aus der Düse wachsen und mit der Entfernung verwehen
+    const n = Math.max(5, Math.round(laengs * 2.2));
+    for (let i = 0; i < n; i++) {
+      const u = (((t * 0.75 + i / n) % 1) + 1) % 1;         // 0 an der Düse, 1 am Ende
+      const lat = ((i * 0.618) % 1 - 0.5) * quer * 0.7;
+      const bx = dx + ux * u * laengs + px * lat, by = dy + uy * u * laengs + py * lat;
+      const [sx, sy] = this.proj(bx, by, 0.12 + u * 0.22);
+      const gross = s * (0.2 + u * 0.62) * (0.5 + 0.5 * k);
+      const deck = (0.9 - 0.72 * u) * (0.3 + 0.7 * k);
+      ctx.fillStyle = `rgba(246,250,255,${deck.toFixed(3)})`;
+      ctx.beginPath(); ctx.arc(sx, sy, gross, 0, TAU); ctx.fill();
+    }
+    // Beim vollen Stoß ein heller Kern direkt vor der Düse
+    if (k > 0.35) {
+      const [kx, ky] = this.proj(dx + ux * 0.35, dy + uy * 0.35, 0.16);
+      ctx.fillStyle = `rgba(255,255,255,${(0.85 * (k - 0.35) / 0.65).toFixed(3)})`;
+      ctx.beginPath(); ctx.arc(kx, ky, s * 0.32, 0, TAU); ctx.fill();
+    }
+  }
+
   /* ---------- Hindernisse ---------- */
   drawObstacleFloor(ctx, ob, t) {
     const s = this.scale;
@@ -853,6 +917,7 @@ class Renderer {
     if (ob.type === 'eyetower') { this.drawEyeBeam(ctx, ob, t); return; }
     if (ob.type === 'firetower') { this.drawFireSweep(ctx, ob, t); return; }
     if (ob.type === 'imperialbox') { this.drawLogeLuke(ctx, ob, t); return; }
+    if (ob.type === 'field' && ob.style === 'steam') { this.drawSteam(ctx, ob, t); return; }
     if (ob.type === 'field' && ob.style === 'dark') { this.drawDarkZone(ctx, ob, t); return; }
     if (ob.type === 'boost' || (ob.type === 'field' && (ob.style === 'wind' || ob.style === 'current'))) { this.drawWind(ctx, ob, t); return; }
     if (ob.type === 'field') {
@@ -1124,6 +1189,7 @@ class Renderer {
         if (ob.style === 'vine') { this.drawVineRotor(ctx, ob, t); return; }
         if (ob.style === 'propeller') { this.drawPropeller(ctx, ob, t); return; }
         if (ob.style === 'scythe') { this.drawScythe(ctx, ob, t); return; }
+        if (ob.style === 'pendel') { this.drawPendel(ctx, ob, t); return; }
         this.prism(ctx, hub, 0, ob.height + 0.25, th.rotor.top, th.rotor.side);
         for (let i = 0; i < ob.blades; i++) {
           const a = ob.bladeAngle(i), ca = Math.cos(a), sa = Math.sin(a), tk = ob.thick;
@@ -1182,6 +1248,7 @@ class Renderer {
         else if (ob.style === 'orb') this.drawOrb(ctx, ob, t, sc);
         else if (ob.style === 'grave') { const [rx, ry] = this.proj(ob.x, ob.y + 0.2, 0); this.spriteGravestone(ctx, rx, ry, this.scale * ob.r * 2.4 * sc, { seed: 0.3 }); }
         else if (ob.style === 'eye') this.drawEye(ctx, ob, t, sc);
+        else if (ob.style === 'feder') this.spriteFeder(ctx, ob, sq);
         else this.spriteMushroom(ctx, ob.x, ob.y, 0, ob.r * 1.7 * sc, '#e63b5a', true);
       } });
     } else if (ob.type === 'portal') {
@@ -1815,6 +1882,8 @@ class Renderer {
       case 'gearFlat': this.spriteGearFlat(ctx, d, s, t); break;
       case 'pipe': this.spritePipe(ctx, sx, sy, s, d, t); break;
       case 'clock': this.spriteClock(ctx, sx, sy, s, t); break;
+      case 'bell': this.spriteBell(ctx, sx, sy, s, d, t); break;
+      case 'weight': this.spriteWeight(ctx, sx, sy, s, d, t); break;
       case 'obelisk': this.spriteObelisk(ctx, d); break;
       case 'sarcophagus': this.spriteSarcophagus(ctx, sx, sy, s, d, t); break;
       case 'gravestone': this.spriteGravestone(ctx, sx, sy, s, d); break;
@@ -1835,6 +1904,28 @@ class Renderer {
       default: break;
     }
   }
+  /* Spannfeder statt Pilz: eine Messingspirale auf einem Teller. Beim Treffer staucht sie sich
+     zusammen und federt zurück – dieselbe Zahl (sq), die den Pilz aufblähen lässt, drückt sie
+     zusammen. So sieht man die Wirkung dort, wo sie herkommt. */
+  spriteFeder(ctx, ob, sq) {
+    const s = this.scale, [sx, sy] = this.proj(ob.x, ob.y, 0);
+    const r = s * ob.r * 1.15, hoch = s * ob.r * 1.9 * (1 - sq * 0.45);
+    this.shadow(ctx, sx, sy, r * 0.95);
+    // Teller unten
+    ctx.fillStyle = '#6e4a1c'; ctx.beginPath(); ctx.ellipse(sx, sy, r, r * 0.5, 0, 0, TAU); ctx.fill();
+    // Windungen von unten nach oben, jede etwas kleiner
+    const n = 5;
+    ctx.lineWidth = Math.max(1.5, s * 0.08);
+    for (let i = 0; i < n; i++) {
+      const u = i / (n - 1), y = sy - hoch * u, rr = r * (1 - u * 0.22);
+      ctx.strokeStyle = i % 2 ? '#8a6624' : '#e0b45c';
+      ctx.beginPath(); ctx.ellipse(sx, y, rr, rr * 0.5, 0, 0, TAU); ctx.stroke();
+    }
+    // Kappe
+    ctx.fillStyle = '#e0b45c'; ctx.beginPath(); ctx.ellipse(sx, sy - hoch, r * 0.82, r * 0.42, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = 'rgba(255,246,214,0.55)'; ctx.beginPath(); ctx.ellipse(sx - r * 0.25, sy - hoch - r * 0.05, r * 0.26, r * 0.13, 0, 0, TAU); ctx.fill();
+  }
+
   shadow(ctx, sx, sy, r) { ctx.fillStyle = 'rgba(0,0,0,0.22)'; ctx.beginPath(); ctx.ellipse(sx, sy, r, r * 0.5, 0, 0, TAU); ctx.fill(); }
   /* Meeresgrund */
   spriteCoral(ctx, sx, sy, s, d) {
@@ -2649,6 +2740,65 @@ class Renderer {
     }
   }
   /* Große Turmuhr auf einem Pfosten */
+  /* Glocke im Turmstuhl: hängt an einem Joch und schaukelt langsam. Der Klöppel hängt etwas
+     nach, sonst sähe die Bewegung wie ein starres Bild aus, das man hin und her schiebt. */
+  spriteBell(ctx, sx, sy, s, d, t) {
+    const seed = d.seed ?? 0.3;
+    const a = Math.sin(t * 0.9 + seed * 6.283) * 0.16;
+    const jochY = sy - s * 1.55, r = s * 0.52;
+    this.shadow(ctx, sx, sy, r * 0.9);
+    // Turmstuhl: zwei Pfosten und das Joch darüber
+    ctx.fillStyle = '#4a3a2a';
+    ctx.fillRect(sx - s * 0.72, jochY, s * 0.14, s * 1.55);
+    ctx.fillRect(sx + s * 0.58, jochY, s * 0.14, s * 1.55);
+    ctx.fillRect(sx - s * 0.78, jochY - s * 0.12, s * 1.56, s * 0.16);
+    ctx.save();
+    ctx.translate(sx, jochY + s * 0.05); ctx.rotate(a);
+    // Glockenmantel
+    const g = ctx.createLinearGradient(-r, 0, r, 0);
+    g.addColorStop(0, '#8a6624'); g.addColorStop(0.45, '#e0b45c'); g.addColorStop(1, '#7a5a22');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(-r * 0.22, 0); ctx.lineTo(r * 0.22, 0);
+    ctx.quadraticCurveTo(r * 0.42, s * 0.55, r, s * 0.95);
+    ctx.lineTo(-r, s * 0.95);
+    ctx.quadraticCurveTo(-r * 0.42, s * 0.55, -r * 0.22, 0);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#6d4d18'; ctx.fillRect(-r, s * 0.95, r * 2, s * 0.14);
+    ctx.fillStyle = 'rgba(255,246,214,0.4)';
+    ctx.beginPath(); ctx.ellipse(-r * 0.42, s * 0.6, r * 0.12, s * 0.34, 0.12, 0, TAU); ctx.fill();
+    // Klöppel, der der Glocke nachhängt
+    const kl = Math.sin(t * 0.9 + seed * 6.283 - 0.5) * 0.3;
+    ctx.strokeStyle = '#3a2f22'; ctx.lineWidth = Math.max(1, s * 0.05);
+    ctx.beginPath(); ctx.moveTo(0, s * 0.15); ctx.lineTo(Math.sin(kl) * r * 0.5, s * 0.9); ctx.stroke();
+    ctx.fillStyle = '#5a4a34';
+    ctx.beginPath(); ctx.arc(Math.sin(kl) * r * 0.5, s * 0.95, s * 0.11, 0, TAU); ctx.fill();
+    ctx.restore();
+  }
+
+  /* Gewicht an der Kette: der Antrieb jeder Turmuhr. Es sinkt ganz langsam und springt dann
+     wieder hoch – so, wie man es beim Aufziehen sieht. */
+  spriteWeight(ctx, sx, sy, s, d, t) {
+    const seed = d.seed ?? 0.5;
+    const u = (((t / 22 + seed) % 1) + 1) % 1;          // 0 = oben, 1 = ganz unten
+    const fall = s * 1.05 * (u < 0.94 ? u / 0.94 : (1 - (u - 0.94) / 0.06));
+    const kopf = sy - s * 1.85 + fall, w = s * 0.3, h = s * 0.62;
+    this.shadow(ctx, sx, sy, w * 0.8);
+    // Kette bis zur Decke
+    ctx.strokeStyle = '#6b6660'; ctx.lineWidth = Math.max(1, s * 0.05);
+    ctx.beginPath(); ctx.moveTo(sx, sy - s * 2.6); ctx.lineTo(sx, kopf); ctx.stroke();
+    for (let i = 0; i < 5; i++) {
+      const y = sy - s * 2.6 + (kopf - (sy - s * 2.6)) * (i + 0.5) / 5;
+      ctx.beginPath(); ctx.ellipse(sx, y, s * 0.07, s * 0.05, 0, 0, TAU); ctx.stroke();
+    }
+    // Der Zylinder selbst
+    const g = ctx.createLinearGradient(sx - w, 0, sx + w, 0);
+    g.addColorStop(0, '#5a4a34'); g.addColorStop(0.4, '#c9903f'); g.addColorStop(1, '#6a4f24');
+    ctx.fillStyle = g; ctx.fillRect(sx - w, kopf, w * 2, h);
+    ctx.fillStyle = '#8a6624'; ctx.fillRect(sx - w, kopf, w * 2, s * 0.08);
+    ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.fillRect(sx - w, kopf + h - s * 0.08, w * 2, s * 0.08);
+  }
+
   spriteClock(ctx, sx, sy, s, t) {
     const r = s * 0.6, cy = sy - s * 1.4;
     this.shadow(ctx, sx, sy, r * 0.8);

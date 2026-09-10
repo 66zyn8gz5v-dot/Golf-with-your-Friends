@@ -437,7 +437,32 @@
     }));
   }
 
-  const sceneFor = id => ({ normal: SCENE_NORMAL, sea: SCENE_SEA, pro: SCENE_PRO, jungle: SCENE_JUNGLE, storm: SCENE_STORM, shadow: SCENE_SHADOW })[id] || SCENE_NORMAL;
+  /* Uhrwerkstadt: Dächer in der Dämmerung, davor der Turm mit dem beleuchteten Zifferblatt.
+     Die Zeiger stehen still – ein Bild, kein Uhrwerk; bewegt wird nur der Dampf über den Dächern. */
+  const SCENE_CLOCK = `<svg class="mode-scene" viewBox="0 0 300 72" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+            <defs>
+              <linearGradient id="skyU" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d1526"/><stop offset="0.55" stop-color="#2c3a5c"/><stop offset="1" stop-color="#6b6a72"/></linearGradient>
+              <linearGradient id="turmU" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#20263a"/><stop offset="0.5" stop-color="#39415c"/><stop offset="1" stop-color="#1a2032"/></linearGradient>
+              <radialGradient id="blattU" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fff4d0"/><stop offset="0.75" stop-color="#ffcf7a"/><stop offset="1" stop-color="#c98a30"/></radialGradient>
+              <filter id="softU" x="-30%" y="-30%" width="160%" height="180%"><feGaussianBlur stdDeviation="2"/></filter>
+            </defs>
+            <rect width="300" height="72" fill="url(#skyU)"/>
+            <g fill="#e8eeff" opacity="0.55"><circle cx="34" cy="12" r="0.9"/><circle cx="88" cy="7" r="0.7"/><circle cx="146" cy="15" r="0.8"/><circle cx="212" cy="9" r="0.7"/><circle cx="268" cy="17" r="0.9"/></g>
+            <g class="drift" opacity="0.35" filter="url(#softU)"><ellipse cx="60" cy="26" rx="22" ry="6" fill="#9fb0cc"/><ellipse cx="236" cy="20" rx="26" ry="6" fill="#9fb0cc"/></g>
+            <path d="M0 58 L14 58 L14 44 L26 44 L26 58 L44 58 L44 38 L58 38 L58 58 L76 58 L76 48 L90 48 L90 58 L300 58 V72 H0 Z" fill="#161c2c"/>
+            <path d="M214 58 L214 40 L226 40 L226 58 L246 58 L246 46 L258 46 L258 58 L276 58 L276 36 L290 36 L290 58 L300 58 V72 H214 Z" fill="#1b2234"/>
+            <g fill="#4fb59b" opacity="0.85"><path d="M44 38 L51 32 L58 38 Z"/><path d="M276 36 L283 30 L290 36 Z"/><path d="M14 44 L20 39 L26 44 Z"/></g>
+            <rect x="132" y="10" width="36" height="62" fill="url(#turmU)"/>
+            <path d="M128 12 L150 0 L172 12 Z" fill="#4fb59b"/>
+            <circle cx="150" cy="30" r="13" fill="#8a6624"/>
+            <circle cx="150" cy="30" r="11" fill="url(#blattU)"/>
+            <g stroke="#3a2a12" stroke-linecap="round"><line x1="150" y1="30" x2="150" y2="22" stroke-width="1.6"/><line x1="150" y1="30" x2="156" y2="33" stroke-width="1.4"/></g>
+            <g fill="#ffc46b" opacity="0.9"><rect x="139" y="48" width="4" height="6"/><rect x="157" y="48" width="4" height="6"/><rect x="20" y="50" width="3" height="5"/><rect x="49" y="44" width="3" height="5"/><rect x="251" y="52" width="3" height="5"/><rect x="281" y="42" width="3" height="5"/></g>
+            <g class="drift" opacity="0.28" filter="url(#softU)"><ellipse cx="104" cy="46" rx="12" ry="7" fill="#e6eefc"/><ellipse cx="196" cy="50" rx="10" ry="6" fill="#e6eefc"/></g>
+            <g stroke="#c9903f" stroke-width="1.2" fill="none" opacity="0.75"><circle cx="100" cy="62" r="6"/><circle cx="204" cy="64" r="5"/></g>
+          </svg>`;
+
+  const sceneFor = id => ({ normal: SCENE_NORMAL, sea: SCENE_SEA, pro: SCENE_PRO, jungle: SCENE_JUNGLE, storm: SCENE_STORM, shadow: SCENE_SHADOW, clock: SCENE_CLOCK })[id] || SCENE_NORMAL;
   const MODE_ICON = { normal: '🏆', pro: '🔥', legend: '⚡' };
   const worldMode = w => (w && w.mode) || 'normal';
   function setWorld(id) { state.world = WORLDS.find(w => w.id === id) || WORLDS[0]; state.courses = state.world.courses; Music.set(state.world.id); }
@@ -1239,7 +1264,7 @@
     Mühlenwiese: '🌾', Nebelmoor: '🌫️', Zwergenkanone: '💣', Korallenriff: '🪸', Uhrwerk: '⚙️', Piratenbucht: '⚓', Hexenküche: '🧪', Sultanspalast: '🕌', Pyramide: '🔺',
     Urwaldpfad: '🌿', Affenbrücke: '🐒', Krokodilfluss: '🐊', Stachelpfad: '🗡️', Felskugelschlucht: '🪨', Treibsandbecken: '⏳', Totemplatz: '🗿', Wasserfallterrassen: '💧', 'Der Tempel': '🏛️',
     Friedhofspforte: '🪦', Knochensteg: '🦴', Fallbeilgasse: '🔪', Rabenschlucht: '🐦‍⬛', Ritterhalle: '⚔️', Totenfähre: '⚰️', 'Turm des Auges': '👁️', Schattenschloss: '🏰', 'Gruft der Sensen': '🕯️', 'Herz der Finsternis': '🖤' };
-  const THEME_ICONS = { meadow: '🌼', mushroom: '🍄', forge: '⚒️', forest: '🌲', dragon: '🐉', ice: '❄️', sky: '☁️', witch: '🧙', castle: '🏰', harbor: '⚓', reef: '🐠', clockwork: '⚙️', palace: '🕌', desert: '🏜️', tomb: '⚱️', deck: '🏴‍☠️', wreck: '🚢', belly: '🦈', jungle: '🌴', temple: '🗿', hut: '🧪', storm: '⛈️', fortress: '🏯', shadow: '🌑', throne: '👑', darksea: '🌊', ghostship: '⚓' };
+  const THEME_ICONS = { meadow: '🌼', mushroom: '🍄', forge: '⚒️', forest: '🌲', dragon: '🐉', ice: '❄️', sky: '☁️', witch: '🧙', castle: '🏰', harbor: '⚓', reef: '🐠', clockwork: '⚙️', palace: '🕌', desert: '🏜️', tomb: '⚱️', deck: '🏴‍☠️', wreck: '🚢', belly: '🦈', jungle: '🌴', temple: '🗿', hut: '🧪', storm: '⛈️', fortress: '🏯', shadow: '🌑', throne: '👑', darksea: '🌊', ghostship: '⚓', clocktown: '🕰️', boiler: '🔥', escapement: '⚙️' };
   const holeIcon = def => HOLE_ICONS[def.name] || THEME_ICONS[def.theme] || '⛳';
   const worldClass = () => 'world-' + ((state.world && state.world.id) || 'custom');
   /* Das geltende Par: Es steht nicht mehr fest in der Bahn, sondern kommt aus der Rangliste –

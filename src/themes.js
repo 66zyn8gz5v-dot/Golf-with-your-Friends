@@ -351,4 +351,45 @@ const THEMES = {
     rails: 'groove',   // der Streitwagen läuft in Rillen im Sand, nicht auf Eisenschienen
     autoDecor: ['pillarLight', 'bannerRed', 'pillarLight', 'urn', 'obelisk', 'brazier'],
   },
+
+  /* ---------- Uhrwerkstadt ----------
+     Drei Paletten für eine Welt, die in der Dämmerung spielt. Sie halten bewusst Abstand zum
+     'clockwork' des Tüftlerreichs: Das ist eine warme Werkstatt bei Kerzenlicht, die Stadt hier ist
+     kühl und blau, und das Messing leuchtet dagegen. */
+  clocktown: { // Gassen und Dächer der Stadt: Kupferdächer, Pflaster, Gaslaternen, blaue Abendluft
+    atmo: 'sparks',
+    sky: ['#101a2e', '#3c4a6b'], ground: '#3a4056', groundEdge: '#20253a',
+    floor: ['#8d8577', '#847c6e'], sand: '#b9ac8e', ice: '#c8ecff', snow: '#f1f7ff',
+    water: '#2f5f9e', lava: '#ff8a2f',
+    wall: { top: '#4fb59b', side: '#276b5c', style: 'brass' },   // Grünspan auf Kupferdächern
+    block: { top: '#575d70', side: '#31364a' },
+    mover: { top: '#c9903f', side: '#7a531d' },
+    rotor: { top: '#d8ab52', side: '#7e5a22' },
+    accent: '#ffc46b', flag: '#e8624a', stars: true, gears: true,
+    autoDecor: ['pipe', 'barrel', 'crate', 'gear', 'lantern', 'barrel'],
+  },
+  boiler: { // Kesselhaus: Eisen, Rohre, Kohleglut. Das einzige Warme in der Welt.
+    atmo: 'embers',
+    sky: ['#180f0c', '#4a2416'], ground: '#332a26', groundEdge: '#1a1512',
+    floor: ['#7a6552', '#715d4b'], sand: '#b8a481', ice: '#c8ecff', snow: '#f1f7ff',
+    water: '#2f6f9e', lava: '#ff7a24',
+    wall: { top: '#a8763a', side: '#5e3f18', style: 'brass' },
+    block: { top: '#4e4740', side: '#2b2722' },
+    mover: { top: '#b8843f', side: '#6b4a25' },
+    rotor: { top: '#c08a3e', side: '#6e4a1c' },
+    accent: '#ff9a3d', flag: '#ff9a3d', gears: true,
+    autoDecor: ['pipe', 'barrel', 'brazier', 'pipe', 'gear', 'crate'],
+  },
+  escapement: { // Im großen Turm: nachtblaues Gehäuse, dahinter das Zifferblatt, überall Messing
+    atmo: 'sparks',
+    sky: ['#080c18', '#1b2440'], ground: '#1d2338', groundEdge: '#0d1120',
+    floor: ['#48506b', '#414962'], sand: '#a89c82', ice: '#c8ecff', snow: '#f1f7ff',
+    water: '#2a5590', lava: '#ff8a2f',
+    wall: { top: '#e0b45c', side: '#8a6624', style: 'brass' },
+    block: { top: '#3a4159', side: '#20263a' },
+    mover: { top: '#d8ab52', side: '#7e5a22' },
+    rotor: { top: '#e6c56e', side: '#8a6624' },
+    accent: '#ffe08a', flag: '#7fd8ff', gears: true,
+    autoDecor: ['gearFlat', 'gear', 'pipe', 'gearFlat', 'lantern'],
+  },
 };

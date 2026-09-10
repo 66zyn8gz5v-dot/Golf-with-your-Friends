@@ -5,7 +5,7 @@
 import fs from 'node:fs'; import vm from 'node:vm'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
 const SRC = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'src');
 const ctx = { console, performance: { now: () => 0 }, window: {} }; vm.createContext(ctx);
-for (const f of ['themes', 'courses', 'courses_sea', 'courses_jungle', 'courses_storm', 'courses_shadow', 'courses_colosseum', 'courses_pro', 'level', 'obstacles', 'obstacles_legend', 'physics'])
+for (const f of ['themes', 'courses', 'courses_sea', 'courses_jungle', 'courses_storm', 'courses_shadow', 'courses_colosseum', 'courses_clock', 'courses_pro', 'level', 'obstacles', 'obstacles_legend', 'physics'])
   vm.runInContext(fs.readFileSync(path.join(SRC, `${f}.js`), 'utf8'), ctx);
 export const G = vm.runInContext('({buildLevel, makeBall, stepPhysics, createObstacles, PRO_COURSES, COURSES, SEA_COURSES, JUNGLE_COURSES, STORM_COURSES, SHADOW_COURSES, COLOSSEUM_COURSES, WORLDS, BALL_R})', ctx);
 export const WORLDS = G.WORLDS;
