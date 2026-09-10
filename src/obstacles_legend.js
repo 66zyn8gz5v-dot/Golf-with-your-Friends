@@ -1,5 +1,12 @@
-/* Hindernisse der Stufe „Legende“ (Sturmhimmel, Schattenreich):
-   Blitzschlag, Aufwind, Falltür. Schattenzone ist ein field mit style 'dark' (nur Optik). */
+/* Hindernisse der Stufe „Legende“ (Sturmhimmel, Schattenreich, Kolosseum):
+   Blitzschlag, Aufwind, Falltür, Fallbeil, Augenturm, Löwentor.
+   Schattenzone ist ein field mit style 'dark' (nur Optik). */
+
+/* Stellschrauben des Löwentors – bewusst hier oben, damit sie sich nachjustieren lassen,
+   ohne im Code zu suchen. */
+const LOEWENTOR_TEMPO = 4.5;      // ab diesem Tempo schluckt der Eingang; darunter ist er eine Wand
+const LOEWENTOR_AUSWURF = 9.5;    // mit diesem Tempo kommt der Ball am Ausgang heraus (immer gleich)
+const LOEWENTOR_SCHUB = 1.6;      // Tempo, mit dem ein steckengebliebener Ball herausgeschoben wird
 
 /* Blitzschlag: eine Zone, über der im Takt ein Blitz einschlägt. Vorher knistert und leuchtet der Boden
    ('warn' Sekunden), dann schlägt der Blitz 'strike' Sekunden lang ein – wer dann in der Zone ist
@@ -123,5 +130,290 @@ class EyeTower {
     this.seenT += this.dt || 0;
     if (this.seenT < this.dwell) return;
     this.seenT = 0; events.push({ type: 'seen', x: ball.x, y: ball.y, owner: this });
+  }
+}
+
+/* Löwentor: ein Torbogen in der Arenamauer, im Schlussstein ein Löwenkopf. Die Tore stehen paarweise.
+   Wo sie stehen, sagt nicht das Hindernis, sondern die Karte: Der Großbuchstabe ist der Eingang, der
+   gleiche Kleinbuchstabe der Ausgang (A/a, B/b, C/c). Mehrere Paare je Bahn sind erlaubt.
+
+   Geschluckt wird nur, wer Schwung hat. Unter LOEWENTOR_TEMPO sperrt der Torbogen und der Ball prallt
+   ab wie an einer Wand; ab LOEWENTOR_TEMPO verschwindet er im Tor und kommt am Ausgang wieder heraus –
+   immer mit LOEWENTOR_AUSWURF in die Richtung, die am Hindernis als 'angle' (Grad) steht, ganz gleich
+   wie schnell er hineingerollt ist. So bleibt der Auswurf berechenbar und die Bahn planbar.
+
+   Von außen ist der Ausgang eine massive Wand: Sein Feld ist in der Karte kein Boden, die Arenamauer
+   schließt ihn also von selbst – da kommt niemand hinein. */
+class LionGate {
+  constructor(d) {
+    Object.assign(this, { pair: 'A', angle: 0 }, d);
+    this.type = 'liongate';
+    const a = (this.angle * Math.PI) / 180;
+    this.dx = Math.cos(a); this.dy = Math.sin(a);
+    this.alwaysForce = true;          // siehe force(): dort wird nur das Balltempo abgelesen
+    this.offen = false; this.sperrt = false; this.bereit = false;
+    this.schluckAt = -10; this.speiAt = -10;
+    this.anfahrtX = 0; this.anfahrtY = 0;
+  }
+
+  /* Plätze aus der Karte holen. Nebenbei wird für beide Tore gemerkt, zu welcher Seite sie offen
+     stehen – das ist die Blickrichtung des Löwen und die Notrichtung fürs Herausschieben. */
+  setup(level) {
+    const gross = this.pair.toUpperCase(), klein = this.pair.toLowerCase();
+    for (let y = 0; y < level.H; y++) for (let x = 0; x < level.W; x++) {
+      const c = level.tiles[y][x];
+      if (c === gross) { this.x = x + 0.5; this.y = y + 0.5; }
+      else if (c === klein) { this.ax = x + 0.5; this.ay = y + 0.5; }
+    }
+    this.bereit = this.x != null && this.ax != null;
+    if (!this.bereit) return;
+    const offeneSeite = (cx, cy) => {
+      for (const [ox, oy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const c = level.charAt(cx + ox, cy + oy);
+        if (level.isFloorChar(c) && c !== gross && c !== klein) return [ox, oy];
+      }
+      return [0, 0];
+    };
+    [this.mundX, this.mundY] = offeneSeite(this.x, this.y);
+    [this.ausMundX, this.ausMundY] = offeneSeite(this.ax, this.ay);
+  }
+
+  imEingang(px, py) { return Math.abs(px - this.x) < 0.5 && Math.abs(py - this.y) < 0.5; }
+
+  /* Berührt der Ball gerade die Toröffnung? Gemessen wird an der Kante des Torfeldes, nicht an
+     seiner Mitte – sonst müsste der Ball nach der Berührung noch eine halbe Kachel weiterrollen und
+     würde dabei abbremsen, und der Schwellwert wäre in Wahrheit höher als er dasteht. */
+  beruehrtOeffnung(ball) {
+    const mx = this.mundX, my = this.mundY;
+    if (!mx && !my) return false;
+    const kx = this.x + mx * 0.5, ky = this.y + my * 0.5;
+    const vor = (ball.x - kx) * mx + (ball.y - ky) * my;      // > 0: noch vor dem Tor
+    if (vor > ball.r || vor < -1) return false;
+    return Math.abs((ball.x - kx) * -my + (ball.y - ky) * mx) < 0.5;
+  }
+
+  /* force ist der einzige Haken, der den Ball noch vor der Kollisionsrechnung zu sehen bekommt.
+     Darum wird hier nichts geschoben, sondern nur abgelesen und entschieden, ob das Tor in diesem
+     Schritt sperrt (siehe segments). Nebenbei merkt sich das Tor, aus welcher Richtung der Ball
+     anrollt – das braucht der Notausgang weiter unten. */
+  force(ball) {
+    if (!this.bereit) return;
+    const sp = Math.hypot(ball.vx, ball.vy);
+    const drin = this.imEingang(ball.x, ball.y);
+    this.offen = sp >= LOEWENTOR_TEMPO;
+    // Gesperrt wird nur gegen einen Ball, der von außen kommt. Liegt er schon im Torbogen, bleibt die
+    // Öffnung frei – sonst wäre er eingesperrt und der Notausgang könnte ihn nicht herausschieben.
+    this.sperrt = !this.offen && !drin;
+    if (sp > 0.2 && !drin) { this.anfahrtX = ball.vx / sp; this.anfahrtY = ball.vy / sp; }
+  }
+
+  /* Die Sperre ist eine Wand quer vor der Toröffnung, genau auf der Kante des Torfeldes. So prallt
+     ein zu langsamer Ball davor ab, statt in den Bogen hineingeschoben zu werden. */
+  segments(out) {
+    if (!this.bereit || !this.sperrt) return;
+    const mx = this.mundX, my = this.mundY;
+    if (!mx && !my) return;
+    const kx = this.x + mx * 0.5, ky = this.y + my * 0.5;   // Mitte der Öffnung
+    const qx = -my * 0.5, qy = mx * 0.5;                    // quer dazu, halbe Kachel
+    out.push({ ax: kx - qx, ay: ky - qy, bx: kx + qx, by: ky + qy, e: 0.55, kind: 'liongate', owner: this });
+  }
+
+  teleport(ball, t, events) {
+    if (!this.bereit || ball.air || ball.rider || ball.portalCd > 0) return;
+    // 'offen' ist das Tempo vom Anfang dieses Schritts – dieselbe Zahl, nach der oben die Sperre
+    // gesetzt wurde. So entscheiden Sperre und Tor immer gleich, ohne Grenzfall dazwischen.
+    if (!this.offen) return;
+    if (!this.imEingang(ball.x, ball.y) && !this.beruehrtOeffnung(ball)) return;
+    // Vor dem Ausgang absetzen, nicht darin: sein Feld ist Mauer, dort hätte der Ball keinen Boden
+    ball.x = this.ax + this.dx * 0.95; ball.y = this.ay + this.dy * 0.95;
+    ball.vx = this.dx * LOEWENTOR_AUSWURF; ball.vy = this.dy * LOEWENTOR_AUSWURF;
+    ball.z = 0; ball.vz = 0; ball.air = false;
+    ball.portalCd = 0.6;
+    this.schluckAt = t; this.speiAt = t;
+    events.push({ type: 'liongate', x: ball.x, y: ball.y, owner: this });
+  }
+
+  /* Notausgang: Der Ball ist im Torbogen zur Ruhe gekommen, ohne je schnell genug gewesen zu sein –
+     etwa von einem Streitwagen hineingeschoben oder von oben hineingefallen. Damit er dort nicht
+     liegen bleibt, schiebt ihn das Tor sanft entgegen seiner Anfahrt wieder heraus; weiß es die
+     nicht, nimmt es die offene Seite des Torbogens. */
+  trigger(ball, t, events) {
+    if (!this.bereit || ball.air || ball.rider) return;
+    if (!this.imEingang(ball.x, ball.y)) return;
+    if (Math.hypot(ball.vx, ball.vy) > 0.6) return;
+    let rx = -this.anfahrtX, ry = -this.anfahrtY;
+    if (Math.hypot(rx, ry) < 0.1) { rx = this.mundX; ry = this.mundY; }
+    const L = Math.hypot(rx, ry); if (L < 0.1) return;
+    ball.vx = (rx / L) * LOEWENTOR_SCHUB; ball.vy = (ry / L) * LOEWENTOR_SCHUB;
+  }
+}
+
+/* Wanderndes Tor: eine Mauer quer über den Weg, in der ein schmaler Durchlass steckt. Der Durchlass
+   gleitet langsam an der Mauer entlang, kehrt am Ende um und kommt wieder zurück. Die Mauer selbst
+   ist massiv – hindurch geht es nur durch den Spalt, und der ist selten dort, wo man ihn braucht.
+
+   Gemauert wird wie beim festen Mauerstück von (x0,y0) nach (x1,y1), waagerecht oder senkrecht.
+   Nicht die Umlaufzeit steht am Hindernis, sondern das Tempo als Konstante: So gleitet der Spalt an
+   einer langen Mauer genauso schnell wie an einer kurzen, und eine längere Mauer wird von allein
+   schwerer statt nur langsamer. */
+const WANDERTOR_TEMPO = 1.15;     // Kacheln je Sekunde, mit denen der Durchlass wandert
+const WANDERTOR_SPALT = 1.7;      // Standardbreite des Durchlasses in Kacheln
+
+class WanderGate {
+  constructor(d) {
+    Object.assign(this, { gap: WANDERTOR_SPALT, t: 0.26, h: 0.75, phase: 0 }, d);
+    this.type = 'wandergate';
+    const dx = this.x1 - this.x0, dy = this.y1 - this.y0;
+    this.len = Math.hypot(dx, dy) || 1;
+    this.ux = dx / this.len; this.uy = dy / this.len;          // Richtung der Mauer
+    // Der Spalt läuft zwischen seinen beiden Endlagen; die Umlaufzeit folgt aus Weg und Tempo
+    this.weg = Math.max(0, this.len - this.gap);
+    this.period = this.weg > 0 ? (2 * this.weg) / WANDERTOR_TEMPO : 1;
+    this.mitte = this.gap / 2;                                  // Abstand des Spalts vom Maueranfang
+  }
+
+  update(t) {
+    // Dreieckschwingung: gleichmäßig hin, gleichmäßig zurück – kein Beschleunigen an den Enden,
+    // sonst wäre das Tor an den Umkehrpunkten kaum zu erwischen.
+    const u = (((t / this.period + this.phase) % 1) + 1) % 1;
+    const k = u < 0.5 ? u * 2 : 2 - u * 2;
+    this.mitte = this.gap / 2 + k * this.weg;
+    this.gx = this.x0 + this.ux * this.mitte;                   // Mitte des Durchlasses
+    this.gy = this.y0 + this.uy * this.mitte;
+  }
+
+  /* Die Mauer in zwei Stücken: vom Anfang bis zum Spalt und vom Spalt bis zum Ende. Ist ein Stück
+     kürzer als nichts (Spalt ganz am Rand), fällt es weg. */
+  stuecke() {
+    const a = this.mitte - this.gap / 2, b = this.mitte + this.gap / 2;
+    const punkt = s => [this.x0 + this.ux * s, this.y0 + this.uy * s];
+    const out = [];
+    if (a > 0.01) out.push([punkt(0), punkt(a)]);
+    if (b < this.len - 0.01) out.push([punkt(b), punkt(this.len)]);
+    return out;
+  }
+
+  segments(out) {
+    for (const [p, q] of this.stuecke()) out.push({ ax: p[0], ay: p[1], bx: q[0], by: q[1], e: 0.72, kind: 'wall' });
+  }
+}
+
+/* Feuerturm: ein hohes Bauwerk am Bahnrand mit einer brennenden Schale obenauf. Aus ihr fährt ein
+   Feuerstrahl auf die Bahn, der langsam über einen festgelegten Bereich streicht und wieder
+   zurück – wie ein Scheinwerfer. Er brennt ununterbrochen; gefährlich ist nicht ein Zeitpunkt,
+   sondern ein Ort. Wer im Strahl liegt, rollt oder fliegt, wird zurück an seinen letzten Ruhepunkt
+   gelegt – aber ohne Strafschlag. Der Turm kostet Weg und Zeit, nicht die Wertung.
+
+   Geprüft wird bei jedem Physikschritt, nicht nur einmal: Der Ball kann in den stehenden Strahl
+   hineinrollen, und der Strahl kann über einen ruhenden Ball hinwegstreichen. Beides muss zählen.
+
+   Weil der Strahl immer sichtbar über den Boden wandert, braucht er keine Vorwarnung mehr – man
+   sieht jederzeit, wo er steht und wohin er geht, und wartet den Moment zum Durchschlüpfen ab.
+
+   Am Hindernis stehen der Platz des Turms (x, y) und der bestrichene Bereich (zx, zy, zw, zh) als
+   Rechteck von der linken oberen Ecke aus – wie bei Aufwind und Kraftfeld. 'achse' sagt, in welche
+   Richtung der Strahl wandert ('x' oder 'y'; ohne Angabe über die längere Seite), 'breit' wie breit
+   er ist und 'tempo', wie schnell er streicht. Der Grundwert fürs Tempo steht hier als Konstante,
+   damit alle Türme einer Arena von sich aus im selben Tritt streichen. */
+const FEUERTURM_TEMPO = 1.8;      // Kacheln je Sekunde, mit denen der Strahl über die Bahn streicht
+const FEUERTURM_BREITE = 1.8;     // Standardbreite des Strahls in Kacheln
+
+class FireTower {
+  constructor(d) {
+    Object.assign(this, { r: 0.75, height: 3.4, zx: 0, zy: 0, zw: 8, zh: 4,
+      breit: FEUERTURM_BREITE, tempo: FEUERTURM_TEMPO, phase: 0 }, d);
+    this.type = 'firetower';
+    if (this.achse !== 'x' && this.achse !== 'y') this.achse = this.zw >= this.zh ? 'x' : 'y';
+    // Der Strahl bleibt mit seiner ganzen Breite im Bereich: seine Mitte läuft nur zwischen von und bis
+    const laenge = this.achse === 'x' ? this.zw : this.zh, start = this.achse === 'x' ? this.zx : this.zy;
+    this.von = start + this.breit / 2; this.bis = start + laenge - this.breit / 2;
+    this.mitte = (this.von + this.bis) / 2;
+    this.richtung = 0;
+    this.zmx = this.zx + this.zw / 2; this.zmy = this.zy + this.zh / 2;   // Mitte des Bereichs
+  }
+
+  update(t) {
+    const weg = this.bis - this.von;
+    if (weg <= 0.001) { this.mitte = (this.von + this.bis) / 2; this.richtung = 0; return; }
+    /* Dreieckschwingung: gleichmäßig hin, gleichmäßig zurück. An den Umkehrpunkten abzubremsen
+       würde den Strahl dort kleben lassen – gerade am Rand soll er zügig wenden. */
+    const dauer = (2 * weg) / this.tempo;
+    const u = ((((t / dauer + this.phase) % 1) + 1) % 1);
+    const k = u < 0.5 ? u * 2 : 2 - u * 2;
+    this.mitte = this.von + weg * k;
+    this.richtung = u < 0.5 ? 1 : -1;
+  }
+
+  /* Liegt dieser Punkt im bestrichenen Bereich? Denselben Namen tragen alle Hindernisse, die den
+     Ball ohne Strafschlag zurückwerfen – main.js prüft damit, ob der Ruhepunkt selbst darin liegt.
+     Absichtlich der ganze Bereich und nicht nur der Strahl: Ein Ruhepunkt im Bereich wäre früher
+     oder später wieder im Strahl, der Ball käme nie heraus. */
+  trifft(px, py) { return px >= this.zx && px <= this.zx + this.zw && py >= this.zy && py <= this.zy + this.zh; }
+
+  /* Brennt es genau hier, jetzt? */
+  imStrahl(px, py) {
+    if (!this.trifft(px, py)) return false;
+    return Math.abs((this.achse === 'x' ? px : py) - this.mitte) <= this.breit / 2;
+  }
+
+  /* Mitte des Strahls in Weltkoordinaten (Zielpunkt des Feuerbogens von der Schale herab) */
+  get smx() { return this.achse === 'x' ? this.mitte : this.zmx; }
+  get smy() { return this.achse === 'x' ? this.zmy : this.mitte; }
+
+  trigger(ball, t, events) {
+    if (ball.rider || !this.imStrahl(ball.x, ball.y)) return;
+    events.push({ type: 'scorched', x: ball.x, y: ball.y, ob: this });
+  }
+
+  airTrigger(ball, t, events) {   // der Strahl erwischt auch einen fliegenden Ball
+    if (!this.imStrahl(ball.x, ball.y)) return false;
+    events.push({ type: 'scorched', x: ball.x, y: ball.y, ob: this }); return true;
+  }
+
+  circles(out) { out.push({ x: this.x, y: this.y, r: this.r, e: 0.5, kind: 'tower' }); }
+}
+
+/* Kaiserloge: eine überdachte Tribüne am Bahnrand mit einer großen Daumen-Anzeige. Nach jedem
+   Schlag – gleich, welcher Spieler geschlagen hat – dreht der Kaiser den Daumen um. Bei „Daumen
+   runter" klappt eine festgelegte Falltür in der Bahn auf, bei „hoch" ist sie zu. Wer in die
+   offene Luke rollt, kommt an seinen letzten Ruhepunkt zurück – ohne Strafschlag.
+
+   Gezählt wird das Ende eines Schlags, nicht sein Anfang (main.js zählt in level.schlagZahl mit).
+   Das ist wichtig fürs Spielgefühl: So gilt der Daumenstand, den man beim Zielen sieht, für den
+   ganzen Schlag. Würde er im Moment des Abschlags umspringen, könnte man nichts planen.
+
+   Und weil die Zahl aus dem Spielstand kommt und nicht aus der Uhr, sehen beim Online-Spiel alle
+   denselben Daumen: Jedes Gerät führt dieselben Schläge aus, und mit Ruhemeldung und Schlag wird
+   der Zählerstand zur Sicherheit mitgeschickt.
+
+   Am Hindernis stehen der Platz der Loge (x, y) samt Grundfläche (w, h) und die Luke als Rechteck
+   von der linken oberen Ecke aus (lx, ly, lw, lh). 'start' sagt, wie der Daumen zu Beginn der Bahn
+   steht: 'hoch' (Luke zu, Standard) oder 'runter' (Luke offen). */
+const LOGE_SCHWENK = 0.28;        // Sekunden, in denen die Luke auf- bzw. zuschwenkt (nur Optik)
+
+class ImperialBox {
+  constructor(d) {
+    Object.assign(this, { w: 3.4, h: 1.6, lx: 0, ly: 0, lw: 2, lh: 2, start: 'hoch' }, d);
+    this.type = 'imperialbox';
+    this.hoch = this.start !== 'runter';
+    this.gap = this.hoch ? 0 : 1;   // 0 = Luke zu, 1 = ganz offen (nur zum Zeichnen)
+    this.wechselT = -99;
+    this.lmx = this.lx + this.lw / 2; this.lmy = this.ly + this.lh / 2;   // Mitte der Luke
+  }
+
+  update(t) {
+    const n = (this.level && this.level.schlagZahl) || 0;
+    const hoch = (n % 2 === 0) === (this.start !== 'runter');
+    if (hoch !== this.hoch) { this.hoch = hoch; this.wechselT = t; }
+    const u = Math.min(1, Math.max(0, (t - this.wechselT) / LOGE_SCHWENK));
+    this.gap = hoch ? 1 - u : u;
+  }
+
+  trifft(px, py) { return px >= this.lx && px <= this.lx + this.lw && py >= this.ly && py <= this.ly + this.lh; }
+
+  trigger(ball, t, events) {
+    // Ein fliegender Ball setzt über die offene Luke hinweg – ein Loch im Boden fängt nur, was rollt
+    if (this.hoch || ball.air || ball.rider || !this.trifft(ball.x, ball.y)) return;
+    events.push({ type: 'dropped', x: ball.x, y: ball.y, ob: this });
   }
 }

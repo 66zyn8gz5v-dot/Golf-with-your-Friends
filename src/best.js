@@ -99,6 +99,79 @@ const Best = (() => {
   let data = migrate(load(K_BEST, {}) || {});   // Welt-Kennung -> Rekorde
   let onChange = null, watching = '';
 
+  /* ---------- Der eigene Stand ----------
+     Für die Belohnungen zählt nicht, wer den Rekord hält, sondern was man selbst geschafft hat.
+     Darum führt jedes Gerät zusätzlich eine eigene, private Liste: je Welt und Bahn die wenigsten
+     Schläge, die man dort selbst gebraucht hat. Sie wird nicht geteilt – sie geht niemanden etwas
+     an, und über das Netz wäre sie ohnehin nicht nachprüfbar.
+
+     Gezählt wird nur das normale Spiel. Im Kreativmodus darf man beliebig oft neu setzen; jede
+     Bedingung wäre damit wertlos. Geprüft wird beim Speichern, nicht erst beim Anzeigen – so kann
+     ein Kreativ-Ergebnis gar nicht erst in die Liste geraten. */
+  const K_EIGEN = speicherSchluessel('eigen');
+
+  function eigenSauber(all) {
+    const out = {};
+    for (const [welt, bahnen] of Object.entries(all || {})) {
+      if (typeof WORLDS === 'undefined' || !WORLDS.some(x => x.id === welt)) continue;
+      const w = {};
+      for (const [bahn, s] of Object.entries(bahnen || {})) {
+        const name = cleanHole(bahn), zahl = Math.round(+s);
+        if (name && zahl > 0 && zahl < 1000) w[name] = zahl;
+      }
+      if (Object.keys(w).length) out[welt] = w;
+    }
+    return out;
+  }
+  let eigen = eigenSauber(load(K_EIGEN, {}));
+
+  /* Ein eigenes Bahnergebnis eintragen, wenn es besser ist als das bisherige */
+  function eigenEintragen(id, bahn, schlaege) {
+    const name = cleanHole(bahn), s = Math.round(+schlaege);
+    if (!id || !name || !(s > 0)) return false;
+    const w = eigen[id] = eigen[id] || {};
+    if (w[name] != null && w[name] <= s) return false;
+    w[name] = s; save(K_EIGEN, eigen);
+    return true;
+  }
+
+  /* ---------- Par kommt aus der Rangliste ----------
+     Par steht nicht mehr fest in der Bahn, sondern richtet sich danach, was auf ihr schon
+     erreicht wurde: Es liegt immer einen Schlag über dem besten Ergebnis, das je jemand dort
+     gespielt hat. Solange niemand die Bahn gespielt hat, gilt das gebaute Par als Anhalt.
+
+     Damit wandert die Meßlatte mit. Wird ein Rekord verbessert, wird Par im selben Moment
+     schärfer – für alle. Das ist der Sinn der Sache: Par sagt dann nicht mehr, was sich der
+     Erbauer gedacht hat, sondern was hier tatsächlich möglich ist. */
+  function parVon(id, bahn) {
+    if (!bahn) return 0;
+    const gebaut = Math.max(1, Math.round(+bahn.par) || 1);
+    const w = data[id];
+    const rec = w && w.strokes && w.strokes.holes ? w.strokes.holes[bahn.name] : null;
+    const best = rec && rec.s > 0 ? Math.round(rec.s) : 0;
+    return best ? best + 1 : gebaut;
+  }
+
+  /* Wie weit ist man in einer Welt? Für die Belohnung zählt die Summe der eigenen besten
+     Einzelbahnen – nicht eine Runde am Stück –, und jede Bahn muss ein Ergebnis haben.
+     Gerechnet wird gegen das geltende Par, also gegen die Rangliste. */
+  function fortschritt(id) {
+    const welt = (typeof WORLDS !== 'undefined' && WORLDS.find(x => x.id === id)) || null;
+    const leer = { gesamt: 0, fertig: 0, offen: [], schlaege: 0, par: 0, diff: 0, geschafft: false };
+    if (!welt) return leer;
+    const w = eigen[id] || {};
+    let schlaege = 0, par = 0, fertig = 0;
+    const offen = [];
+    for (const c of welt.courses) {
+      par += parVon(id, c);
+      const s = w[c.name];
+      if (s > 0) { schlaege += s; fertig++; } else offen.push(c.name);
+    }
+    // Erst wenn jede Bahn ein Ergebnis hat, ist die Summe überhaupt vergleichbar
+    return { gesamt: welt.courses.length, fertig, offen, schlaege, par,
+             diff: schlaege - par, geschafft: offen.length === 0 && schlaege < par };
+  }
+
   /* Bis zur Zeitwertung gab es nur Schläge: { holes, round } ohne Kategorie. Solche Stände –
      aus dem Browser oder von einem Gerät mit älterem Spielstand – werden hier eingereiht. */
   function cleanRec(r) {
@@ -215,6 +288,14 @@ const Best = (() => {
     get all() { return data; },
     /* Rekorde einer Welt: { strokes, time, combo } mit je { holes, round } */
     of: id => data[id] || shape(null),
+    /* Das geltende Par einer Bahn: einen Schlag über dem besten Ergebnis der Rangliste */
+    par: parVon,
+    /* Die Par-Summe einer Reihe von Bahnen */
+    parSumme: (id, courses) => (courses || []).reduce((a, c) => a + parVon(id, c), 0),
+    /* Der eigene Stand in einer Welt – Grundlage der Belohnungen */
+    fortschritt,
+    /* Die eigenen besten Schläge je Bahn einer Welt (nur zur Anzeige) */
+    eigeneBahnen: id => Object.assign({}, eigen[id] || {}),
     /* Die drei Wertungen mit Beschriftung – für die Anzeige */
     KINDS,
     KIND_NAME: { strokes: 'Schläge', time: 'Zeit', combo: 'Kombi' },
@@ -316,7 +397,10 @@ const Best = (() => {
 
     /* Ergebnis einer Bahn eintragen: Schläge und gebrauchte Zeit.
        Gibt zurück, welche Wertungen gefallen sind: [{ kind, old, rec }] */
-    hole(id, holeName, strokes, ms, quelle) {
+    hole(id, holeName, strokes, ms, quelle, modus) {
+      /* Zuerst der eigene Stand: Er ist privat, geht in keine geteilte Liste und zählt darum auch
+         ohne eingetragenen Namen. Der Kreativmodus wird genau hier abgewiesen, beim Speichern. */
+      if (modus !== 'creative' && strokes > 0) eigenEintragen(id, holeName, strokes);
       if (!name || !strokes) return [];
       const t = Date.now(), treffer = [], q = quelle === 'net' ? 'net' : undefined;
       const kandidaten = [['strokes', { s: strokes, n: name, t, q }]];
@@ -331,8 +415,11 @@ const Best = (() => {
       if (treffer.length) { save(K_BEST, data); publish(id); }
       return treffer;
     },
-    /* Gesamtergebnis einer Runde eintragen */
-    round(id, total, ms, quelle) {
+    /* Gesamtergebnis einer Runde eintragen.
+       Der Modus wird mitgegeben, damit alle Aufrufe dieselbe Form haben – für den eigenen Stand
+       zählt er hier aber nicht: Die Belohnung hängt an den besten Einzelbahnen, nicht an einer
+       Runde am Stück. */
+    round(id, total, ms, quelle, modus) {
       if (!name || !total) return [];
       const t = Date.now(), treffer = [], q = quelle === 'net' ? 'net' : undefined;
       const kandidaten = [['strokes', { s: total, n: name, t, q }]];

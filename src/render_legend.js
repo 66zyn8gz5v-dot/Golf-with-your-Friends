@@ -362,7 +362,7 @@ Object.assign(Renderer.prototype, {
     ctx.strokeStyle = crypt ? '#c58bff' : '#7fd8ff'; ctx.lineWidth = Math.max(1.5, s * 0.06); ctx.stroke();
     if (crypt) { const [kx, ky] = this.proj(px, fy - 0.05, H + 0.35); this.spriteSkull(ctx, kx, ky + s * 0.2, s * 0.9); }
     else { ctx.fillStyle = 'rgba(255,228,94,0.85)'; const [gx, gy] = this.proj(px, fy - 0.05, H + 0.35); ctx.beginPath(); ctx.moveTo(gx - s * 0.1, gy - s * 0.25); ctx.lineTo(gx + s * 0.08, gy - s * 0.02); ctx.lineTo(gx - s * 0.02, gy - s * 0.02); ctx.lineTo(gx + s * 0.1, gy + s * 0.25); ctx.lineTo(gx - s * 0.08, gy); ctx.lineTo(gx + s * 0.02, gy); ctx.closePath(); ctx.fill(); }
-    for (const side of [-1, 1]) { const [bx, by] = this.proj(px + side * (Wd / 2 + 0.1), fy + 0.2, 0); this.spriteBrazierColored(ctx, bx, by, s * 0.9, t, crypt ? ['#a24bff', '#e0b8ff', '170,90,255'] : ['#4fc3ff', '#b7ecff', '80,190,255']); }
+    for (const side of [-1, 1]) this.spriteBrazier(ctx, { x: px + side * (Wd / 2 + 0.1), y: fy + 0.2, s: 0.9 }, t, crypt ? ['#a24bff', '#e0b8ff', '170,90,255'] : ['#4fc3ff', '#b7ecff', '80,190,255']);
   },
 
   /* ---------- Dekos ---------- */
@@ -389,27 +389,31 @@ Object.assign(Renderer.prototype, {
     ctx.fillStyle = '#ff7a3a'; ctx.beginPath(); ctx.moveTo(sx, sy - s * 1.5); ctx.lineTo(sx + dir * s * 0.9, sy - s * 1.35 + fl); ctx.lineTo(sx + dir * s * 0.9, sy - s * 1.15 + fl); ctx.lineTo(sx, sy - s * 1.2); ctx.closePath(); ctx.fill();
     ctx.fillStyle = '#ffffff'; ctx.fillRect(sx + dir * s * 0.3, sy - s * 1.45 + fl * 0.4, dir * s * 0.18, s * 0.28);
   },
-  spriteBanner(ctx, sx, sy, s, d, t) {
-    ctx.strokeStyle = '#3a3c4a'; ctx.lineWidth = Math.max(1.5, s * 0.06); ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx, sy - s * 1.8); ctx.stroke();
+  /* tuch überschreibt die Farbe des Wimpels – das Kolosseum hängt rote Banner auf, sonst bleibt es
+     bei den dunkelblau-violetten des Schattenreichs. */
+  spriteBanner(ctx, sx, sy, s, d, t, tuch) {
+    ctx.strokeStyle = tuch ? '#8a6a3a' : '#3a3c4a'; ctx.lineWidth = Math.max(1.5, s * 0.06); ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx, sy - s * 1.8); ctx.stroke();
     const sw = Math.sin(t * 2 + sx) * s * 0.06;
-    ctx.fillStyle = (d.seed || 0) > 0.5 ? '#5a2a7a' : '#2a3a8a'; ctx.beginPath(); ctx.moveTo(sx, sy - s * 1.8); ctx.lineTo(sx + s * 0.55 + sw, sy - s * 1.7); ctx.lineTo(sx + s * 0.55 + sw, sy - s * 0.9); ctx.lineTo(sx + s * 0.28, sy - s * 1.05); ctx.lineTo(sx, sy - s * 0.95); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = tuch || ((d.seed || 0) > 0.5 ? '#5a2a7a' : '#2a3a8a'); ctx.beginPath(); ctx.moveTo(sx, sy - s * 1.8); ctx.lineTo(sx + s * 0.55 + sw, sy - s * 1.7); ctx.lineTo(sx + s * 0.55 + sw, sy - s * 0.9); ctx.lineTo(sx + s * 0.28, sy - s * 1.05); ctx.lineTo(sx, sy - s * 0.95); ctx.closePath(); ctx.fill();
     ctx.fillStyle = '#ffe45e'; ctx.beginPath(); ctx.arc(sx + s * 0.27 + sw * 0.5, sy - s * 1.35, s * 0.1, 0, TAU); ctx.fill();
   },
-  spriteBrazierColored(ctx, sx, sy, s, t, cols) {
-    ctx.fillStyle = '#2a2a34'; ctx.fillRect(sx - s * 0.06, sy - s * 0.5, s * 0.12, s * 0.5);
-    ctx.beginPath(); ctx.ellipse(sx, sy - s * 0.5, s * 0.28, s * 0.12, 0, 0, TAU); ctx.fill();
-    const f = 0.8 + 0.2 * Math.sin(t * 11 + sx);
-    ctx.fillStyle = `rgba(${cols[2]},0.25)`; ctx.beginPath(); ctx.arc(sx, sy - s * 0.7, s * 0.5 * f, 0, TAU); ctx.fill();
-    ctx.fillStyle = cols[0]; ctx.beginPath(); ctx.moveTo(sx - s * 0.2, sy - s * 0.5); ctx.quadraticCurveTo(sx - s * 0.1, sy - s * 0.9 * f, sx, sy - s * 1.05 * f); ctx.quadraticCurveTo(sx + s * 0.1, sy - s * 0.85 * f, sx + s * 0.2, sy - s * 0.5); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = cols[1]; ctx.beginPath(); ctx.moveTo(sx - s * 0.1, sy - s * 0.5); ctx.quadraticCurveTo(sx, sy - s * 0.75 * f, sx + s * 0.1, sy - s * 0.5); ctx.closePath(); ctx.fill();
+  /* Säule als echter Körper statt als flaches Bildchen: Sockel, Schaft und Kapitell sind drei
+     Prismen in Weltkoordinaten. Damit steht sie in derselben Sicht wie Mauern und Türme, dreht
+     sich mit der Kamera mit und bekommt ihre Schattenseite von selbst. Der Schaft hat acht Seiten
+     – die einzeln schattierten Flächen lesen sich wie die Kanneluren einer echten Säule.
+     cols: [Deck des Schafts, Schattenseite, Deck von Sockel und Kapitell, Umriss] – ohne
+     Angabe die dunkle Säule des Schattenreichs, mit Angabe der helle Kalkstein der Arena. */
+  spritePillar(ctx, d, cols) {
+    const c = cols || ['#5e5474', '#2a2438', '#6e6488', '#14101e'];
+    const g = d.s || 1, x = d.x, y = d.y;
+    const hoch = 2.1 * g, rSchaft = 0.23 * g, rBreit = 0.33 * g;
+    const sockel = 0.18 * g, kapitell = 0.19 * g;
+    this.isoEllipse(ctx, x, y, 0.004, rBreit * 1.5, 'rgba(0,0,0,0.24)');
+    this.prism(ctx, this.circlePoly(x, y, rBreit, 8, 0.39), 0, sockel, c[2], c[1], { outline: c[3] });
+    this.prism(ctx, this.circlePoly(x, y, rSchaft, 8, 0.39), sockel, hoch, c[0], c[1], { outline: c[3] });
+    this.prism(ctx, this.circlePoly(x, y, rBreit, 8, 0.39), sockel + hoch, kapitell, c[2], c[1], { outline: c[3] });
   },
-  spritePillar(ctx, sx, sy, s, d) {
-    const w = s * 0.28, h = s * 2.0;
-    this.shadow(ctx, sx, sy, w * 1.4);
-    ctx.fillStyle = '#4a4060'; ctx.fillRect(sx - w, sy - h, w, h); ctx.fillStyle = '#2a2438'; ctx.fillRect(sx, sy - h, w, h);
-    ctx.fillStyle = '#5e5474'; ctx.fillRect(sx - w * 1.3, sy - h, w * 2.6, s * 0.16); ctx.fillRect(sx - w * 1.3, sy - s * 0.16, w * 2.6, s * 0.16);
-    ctx.fillStyle = 'rgba(197,139,255,0.35)'; ctx.fillRect(sx - w * 0.15, sy - h * 0.8, w * 0.3, h * 0.6);
-  },
+
   /* ---------- Schattenreich, zweiter Ausbau: Fallbeil, Augenturm, Ritterstatue, Raben ---------- */
   /* Fallbeil: zwei dunkle Holzpfosten mit Querbalken, dazwischen hängt die schräge Stahlklinge unter dem
      Gewichtsblock an einem Seil. Kurz vor dem Fall zittert sie, beim Aufschlag stieben Funken. */
@@ -850,6 +854,346 @@ Object.assign(Renderer.prototype, {
     for (let k = -3; k <= 3; k++) { const [a0, a1] = this.proj(px + k * 0.27, fy, 2.6 - Math.abs(k) * 0.1), [b0, b1] = this.proj(px + k * 0.27, fy, 1.8); ctx.moveTo(a0, a1); ctx.lineTo(b0, b1); }
     const [q0, q1] = this.proj(px - 0.9, fy, 1.85), [q2, q3] = this.proj(px + 0.9, fy, 1.85); ctx.moveTo(q0, q1); ctx.lineTo(q2, q3); ctx.stroke();
     const [kx, ky] = this.proj(px, fy - 0.05, H + 0.3); this.spriteSkull(ctx, kx, ky + s * 0.2, s * 0.95);
-    for (const sd of [-1, 1]) { const [bx, by] = this.proj(px + sd * (Wd / 2 + 0.15), fy + 0.25, 0); this.spriteBrazierColored(ctx, bx, by, s * 0.9, t, ['#a24bff', '#e0b8ff', '170,90,255']); }
+    for (const sd of [-1, 1]) this.spriteBrazier(ctx, { x: px + sd * (Wd / 2 + 0.15), y: fy + 0.25, s: 0.9 }, t, ['#a24bff', '#e0b8ff', '170,90,255']);
+  },
+
+  /* ---------- Kolosseum ---------- */
+
+  /* Löwentor: ein Torbogen in der Arenamauer, im Schlussstein ein Löwenkopf.
+     ausgang = false zeichnet den Eingang (offener, dunkler Bogen), true den Ausgang (zugemauert,
+     denn von außen ist er massiv). Beide sitzen auf ihrem Kartenfeld und schauen zu der Seite, an
+     der die Arena offen ist. */
+  drawLionGate(ctx, ob, t, ausgang) {
+    const s = this.scale;
+    const cx = ausgang ? ob.ax : ob.x, cy = ausgang ? ob.ay : ob.y;
+    if (cx == null) return;
+    let ux = ausgang ? ob.ausMundX : ob.mundX, uy = ausgang ? ob.ausMundY : ob.mundY;
+    if (!ux && !uy) { ux = ob.dx; uy = ob.dy; }        // Notfall: die Auswurfrichtung
+    const L = Math.hypot(ux, uy) || 1; ux /= L; uy /= L;
+    const qx = -uy, qy = ux;                            // quer zur Toröffnung
+    const HOEHE = 2.1, PFOSTEN = 0.24, TIEFE = 0.4;
+    const stein = ['#f4e7c6', '#b79d6c'], kante = '#7d6740', gold = '#ffd45e';
+    // Rechteck um (mx,my), halbQ quer zur Öffnung, halbU in Blickrichtung
+    const feld = (mx, my, halbQ, halbU) => [
+      [mx - qx * halbQ - ux * halbU, my - qy * halbQ - uy * halbU],
+      [mx + qx * halbQ - ux * halbU, my + qy * halbQ - uy * halbU],
+      [mx + qx * halbQ + ux * halbU, my + qy * halbQ + uy * halbU],
+      [mx - qx * halbQ + ux * halbU, my - qy * halbQ + uy * halbU]];
+
+    this.isoEllipse(ctx, cx, cy, 0, 0.6, 'rgba(0,0,0,0.18)');
+    for (const seite of [-1, 1]) {                      // die beiden Pfosten
+      const mx = cx + qx * seite * 0.48, my = cy + qy * seite * 0.48;
+      this.prism(ctx, feld(mx, my, PFOSTEN, TIEFE), 0, HOEHE, stein[0], stein[1], { outline: kante });
+    }
+    this.prism(ctx, feld(cx, cy, 0.72, TIEFE), HOEHE, 0.4, stein[0], stein[1], { outline: kante }); // Sturz
+    this.prism(ctx, feld(cx, cy, 0.86, TIEFE + 0.08), HOEHE + 0.4, 0.18, gold, '#a8842a');          // Goldband oben
+
+    const fx = cx + ux * (TIEFE + 0.01), fy = cy + uy * (TIEFE + 0.01);   // Vorderkante des Tores
+    const bogenPunkte = [];
+    for (let i = 0; i <= 12; i++) {
+      const a = Math.PI * (i / 12);
+      bogenPunkte.push([fx + qx * Math.cos(a) * 0.46, fy + qy * Math.cos(a) * 0.46, 0.02 + Math.sin(a) * HOEHE * 0.82]);
+    }
+    const bogenPfad = () => { ctx.beginPath(); bogenPunkte.forEach((q, i) => { const r = this.proj(q[0], q[1], q[2]); i ? ctx.lineTo(r[0], r[1]) : ctx.moveTo(r[0], r[1]); }); ctx.closePath(); };
+
+    if (ausgang) {                                      // zugemauert: hier kommt niemand hinein
+      bogenPfad(); ctx.fillStyle = '#c9b384'; ctx.fill();
+      ctx.strokeStyle = kante; ctx.lineWidth = Math.max(1, s * 0.05); ctx.stroke();
+      ctx.strokeStyle = 'rgba(90,74,44,0.5)'; ctx.lineWidth = Math.max(1, s * 0.04);
+      for (const z of [0.5, 1.05, 1.6]) {                // Fugen der Quader
+        const [a0, a1] = this.proj(fx + qx * 0.44, fy + qy * 0.44, z), [b0, b1] = this.proj(fx - qx * 0.44, fy - qy * 0.44, z);
+        ctx.beginPath(); ctx.moveTo(a0, a1); ctx.lineTo(b0, b1); ctx.stroke();
+      }
+      const spei = Math.max(0, 1 - (t - (ob.speiAt ?? -10)) * 3);   // kurzes Aufleuchten beim Ausspucken
+      if (spei > 0) { bogenPfad(); ctx.fillStyle = `rgba(255,212,94,${0.75 * spei})`; ctx.fill(); }
+    } else {
+      bogenPfad(); ctx.fillStyle = '#241a0e'; ctx.fill();
+      ctx.strokeStyle = gold; ctx.lineWidth = Math.max(1.5, s * 0.055); ctx.stroke();
+      const schluck = Math.max(0, 1 - (t - (ob.schluckAt ?? -10)) * 3);
+      if (schluck > 0) { bogenPfad(); ctx.fillStyle = `rgba(255,180,60,${0.7 * schluck})`; ctx.fill(); }
+    }
+    const [kx, ky] = this.proj(cx, fy - uy * 0.02, HOEHE + 0.62);
+    this.spriteLoewenkopf(ctx, kx, ky, s * 0.85, ausgang ? 0 : 1);
+  },
+
+  /* Löwenkopf im Schlussstein: goldene Mähne, dunkle Schnauze. wach = 1 blickt hell (Eingang),
+     0 ist steinern (Ausgang). Bildschirmkoordinaten, verankert an der Kopfmitte. */
+  spriteLoewenkopf(ctx, sx, sy, s, wach) {
+    const gold = wach ? '#ffd45e' : '#c9b384', dunkel = wach ? '#b8842a' : '#93805a';
+    ctx.fillStyle = dunkel;                              // Mähne als Zackenkranz
+    ctx.beginPath();
+    for (let i = 0; i < 14; i++) {
+      const a = (i / 14) * TAU, r = s * (i % 2 ? 0.44 : 0.62);
+      const px = sx + Math.cos(a) * r, py = sy + Math.sin(a) * r * 0.9;
+      i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+    }
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = gold; ctx.beginPath(); ctx.ellipse(sx, sy, s * 0.36, s * 0.33, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = wach ? '#3a2408' : '#6a5a3a';        // Augen
+    for (const seite of [-1, 1]) { ctx.beginPath(); ctx.ellipse(sx + seite * s * 0.15, sy - s * 0.06, s * 0.06, s * 0.05, 0, 0, TAU); ctx.fill(); }
+    ctx.beginPath(); ctx.ellipse(sx, sy + s * 0.14, s * 0.13, s * 0.1, 0, 0, TAU); ctx.fill();  // Schnauze
+    ctx.strokeStyle = wach ? '#3a2408' : '#6a5a3a'; ctx.lineWidth = Math.max(1, s * 0.05);
+    ctx.beginPath(); ctx.moveTo(sx, sy + s * 0.2); ctx.lineTo(sx, sy + s * 0.3); ctx.stroke();
+  },
+
+  /* Streitwagen: das ist die Lore aus der Zwergenschmiede, nur anders angezogen – ein zweirädriger
+     Rennwagen mit Deichsel, goldenen Speichen und Standarte. Er fährt dieselbe feste Strecke, nimmt
+     den Ball an der Station auf und trägt ihn mit; am Verhalten ändert die Zeichnung nichts.
+
+     Die Räder drehen sich nach dem Fahrfortschritt der Fähre, nicht nach der Uhr: So stehen sie
+     still, solange der Wagen an der Station wartet, und laufen genau dann, wenn er rollt. */
+  drawChariot(ctx, ob, t) {
+    const s = this.scale, d = ob.dir || 1, w = ob.w, h = ob.h, cx = ob.x, cy = ob.y;
+    const holz = ['#c0392c', '#7a1e17'], gold = '#ffd45e';
+    const feld = (x, y, ww, hh) => [[x - ww / 2, y - hh / 2], [x + ww / 2, y - hh / 2], [x + ww / 2, y + hh / 2], [x - ww / 2, y + hh / 2]];
+    this.isoEllipse(ctx, cx, cy, 0, Math.max(w, h) * 0.52, 'rgba(0,0,0,0.22)');
+    // Deichsel nach vorn
+    this.prism(ctx, feld(cx + d * (w / 2 + 0.35), cy, 0.8, 0.12), 0.2, 0.1, '#8a6a3a', '#5a4420');
+    // Wagenkorb: oben offen, damit der mitfahrende Ball über dem Rand steht
+    this.prism(ctx, feld(cx, cy, w * 0.8, h * 0.8), 0.18, 0.5, holz[0], holz[1], { outline: '#4a1210' });
+    this.fillPoly(ctx, feld(cx, cy, w * 0.62, h * 0.5), 0.69, gold, false);
+    // Räder links und rechts
+    const dreh = ob.progress != null ? ob.progress * 14 * d : t * 5 * d;
+    for (const seite of [-1, 1]) {
+      const rx = cx, ry = cy + seite * (h * 0.5 + 0.06);
+      const [wx, wy] = this.proj(rx, ry, 0.34);
+      ctx.strokeStyle = '#2a1a10'; ctx.lineWidth = Math.max(2, s * 0.07);
+      ctx.beginPath(); ctx.arc(wx, wy, s * 0.34, 0, TAU); ctx.stroke();
+      ctx.strokeStyle = gold; ctx.lineWidth = Math.max(1, s * 0.04);
+      for (let k = 0; k < 6; k++) {
+        const a = dreh + (k / 6) * TAU;
+        ctx.beginPath(); ctx.moveTo(wx, wy); ctx.lineTo(wx + Math.cos(a) * s * 0.31, wy + Math.sin(a) * s * 0.31); ctx.stroke();
+      }
+    }
+    // Standarte mit wehendem Wimpel
+    const [m0, m1] = this.proj(cx - d * w * 0.3, cy, 0.68), [m2, m3] = this.proj(cx - d * w * 0.3, cy, 1.6);
+    ctx.strokeStyle = '#8a6a3a'; ctx.lineWidth = Math.max(1.5, s * 0.05);
+    ctx.beginPath(); ctx.moveTo(m0, m1); ctx.lineTo(m2, m3); ctx.stroke();
+    const weh = 0.18 + 0.1 * Math.sin(t * 6);
+    ctx.fillStyle = '#d4342c'; ctx.beginPath(); ctx.moveTo(m2, m3);
+    ctx.lineTo(m2 + d * s * 0.5, m3 + s * weh); ctx.lineTo(m2, m3 + s * 0.32); ctx.closePath(); ctx.fill();
+  },
+
+  /* Feuerturm – der streichende Strahl am Boden. Zwei Dinge müssen ablesbar sein: wo der Strahl
+     gerade brennt (grelles Band mit Flammen) und wie weit er überhaupt kommt (rußiger Bereich mit
+     gestricheltem Rand). Nur mit beidem lässt sich vorausplanen – man sieht den Ort der Gefahr und
+     den freien Rest. Ein Winkelpaar an der Vorderkante zeigt, wohin der Strahl gerade läuft. */
+  drawFireSweep(ctx, ob, t) {
+    const s = this.scale;
+    const bereich = [[ob.zx, ob.zy], [ob.zx + ob.zw, ob.zy], [ob.zx + ob.zw, ob.zy + ob.zh], [ob.zx, ob.zy + ob.zh]];
+    this.fillPoly(ctx, bereich, 0.004, 'rgba(70,40,25,0.14)', false);
+    ctx.save();
+    ctx.setLineDash([s * 0.3, s * 0.22]);
+    ctx.strokeStyle = 'rgba(150,90,45,0.55)'; ctx.lineWidth = Math.max(1, s * 0.05);
+    this.pathPoly(ctx, bereich, 0.005); ctx.stroke();
+    ctx.restore();
+
+    const laengs = ob.achse === 'x';
+    const a0 = ob.mitte - ob.breit / 2, a1 = ob.mitte + ob.breit / 2;
+    const band = (u0, u1) => laengs
+      ? [[u0, ob.zy], [u1, ob.zy], [u1, ob.zy + ob.zh], [u0, ob.zy + ob.zh]]
+      : [[ob.zx, u0], [ob.zx + ob.zw, u0], [ob.zx + ob.zw, u1], [ob.zx, u1]];
+    const fl = 0.86 + 0.14 * Math.sin(t * 27);
+    this.fillPoly(ctx, band(a0, a1), 0.006, `rgba(255,110,30,${0.62 * fl})`, false);
+    this.fillPoly(ctx, band(ob.mitte - ob.breit * 0.22, ob.mitte + ob.breit * 0.22), 0.008, `rgba(255,230,150,${0.55 * fl})`, false);
+    ctx.strokeStyle = `rgba(255,235,170,${0.85 * fl})`; ctx.lineWidth = Math.max(2, s * 0.09);
+    this.pathPoly(ctx, band(a0, a1), 0.009); ctx.stroke();
+
+    // Züngelnde Flammen im Band (fester Raster, damit alle Geräte dasselbe sehen)
+    const quer = laengs ? ob.zh : ob.zw;
+    const n = Math.max(4, Math.round(quer * 2));
+    for (let k = 0; k < n; k++) {
+      const v = (k + 0.5) / n, w = ((k * 0.6180339887) % 1);
+      const fx = laengs ? a0 + ob.breit * w : ob.zx + ob.zw * v;
+      const fy = laengs ? ob.zy + ob.zh * v : a0 + ob.breit * w;
+      const hh = 0.35 + 0.3 * Math.abs(Math.sin(t * 13 + k * 1.7));
+      const [b0, b1] = this.proj(fx, fy, 0.01), [t0, t1] = this.proj(fx, fy, hh);
+      ctx.fillStyle = k % 3 ? 'rgba(255,170,50,0.75)' : 'rgba(255,240,190,0.8)';
+      ctx.beginPath(); ctx.moveTo(b0 - s * 0.16, b1);
+      ctx.quadraticCurveTo(t0 + Math.sin(t * 9 + k) * s * 0.12, t1, b0 + s * 0.16, b1);
+      ctx.closePath(); ctx.fill();
+    }
+
+    // Laufrichtung: zwei ausgefüllte Pfeile vor der Vorderkante – so sieht man nicht nur, wo der
+    // Strahl steht, sondern auch, welche Seite des Bereichs als nächste frei wird
+    const spitzeAn = (ob.richtung > 0 ? a1 : a0) + ob.richtung * 0.92;
+    const grenze = ob.richtung > 0 ? (laengs ? ob.zx + ob.zw : ob.zy + ob.zh) : (laengs ? ob.zx : ob.zy);
+    // Am Umkehrpunkt bleibt kein Platz mehr für den Pfeil – dort zeigte er ohnehin aus dem Bereich heraus
+    if (ob.richtung && (ob.richtung > 0 ? spitzeAn <= grenze : spitzeAn >= grenze)) {
+      const kante = ob.richtung > 0 ? a1 : a0, d = ob.richtung;
+      ctx.fillStyle = 'rgba(255,225,150,0.85)';
+      for (const v of [0.3, 0.7]) {
+        const cx = laengs ? kante + d * 0.5 : ob.zx + ob.zw * v;
+        const cy = laengs ? ob.zy + ob.zh * v : kante + d * 0.5;
+        const spitze = laengs ? [cx + d * 0.42, cy] : [cx, cy + d * 0.42];
+        const p0 = laengs ? [cx, cy - 0.4] : [cx - 0.4, cy];
+        const p1 = laengs ? [cx, cy + 0.4] : [cx + 0.4, cy];
+        const A = this.proj(p0[0], p0[1], 0.011), B = this.proj(spitze[0], spitze[1], 0.011), C = this.proj(p1[0], p1[1], 0.011);
+        ctx.beginPath(); ctx.moveTo(A[0], A[1]); ctx.lineTo(B[0], B[1]); ctx.lineTo(C[0], C[1]); ctx.closePath(); ctx.fill();
+      }
+    }
+  },
+
+  /* Feuerturm – das Bauwerk. Sandsteinschaft mit Fugen, goldener Kranz, darauf die brennende
+     Schale. Sie brennt durchgehend, denn der Strahl geht nie aus – er wandert nur. Der Feuerbogen
+     von der Schale zeigt immer auf die Mitte des Strahls und wandert mit ihm. */
+  drawFireTower(ctx, ob, t) {
+    const s = this.scale, r = ob.r, H = ob.height;
+    const stein = ['#e6d5ab', '#a98f5f'], gold = ['#ffd45e', '#a8842a'];
+    this.isoEllipse(ctx, ob.x, ob.y, 0.004, r * 1.7, 'rgba(0,0,0,0.28)');
+    this.prism(ctx, this.circlePoly(ob.x, ob.y, r * 1.32, 8), 0, 0.5, stein[0], stein[1], { outline: '#6d5418' });
+    this.prism(ctx, this.circlePoly(ob.x, ob.y, r, 8), 0.5, H - 0.5, stein[0], stein[1], { outline: '#6d5418' });
+    ctx.strokeStyle = 'rgba(110,84,24,0.30)'; ctx.lineWidth = 1;
+    for (let z = 1.1; z < H - 0.2; z += 0.7) {   // waagerechte Fugen, sonst wirkt der Schaft wie eine Röhre
+      const q0 = this.proj(ob.x - r, ob.y, z), q1 = this.proj(ob.x + r, ob.y, z);
+      ctx.beginPath(); ctx.moveTo(q0[0], q0[1]); ctx.lineTo(q1[0], q1[1]); ctx.stroke();
+    }
+    this.prism(ctx, this.circlePoly(ob.x, ob.y, r * 1.25, 8), H, 0.26, gold[0], gold[1], { outline: '#6d5418' });
+    const bz = H + 0.26;
+    this.prism(ctx, this.circlePoly(ob.x, ob.y, r * 0.4, 8), bz, 0.22, gold[0], gold[1], { outline: '#6d5418' });
+    this.prism(ctx, this.circlePoly(ob.x, ob.y, r * 0.85, 10), bz + 0.22, 0.34, '#3a2a12', gold[1], { outline: '#6d5418' });
+
+    const fz = bz + 0.56, [fx, fy] = this.proj(ob.x, ob.y, fz), R = s * r * 0.6;
+    const glow = ctx.createRadialGradient(fx, fy, R * 0.3, fx, fy, R * 4.2);
+    glow.addColorStop(0, 'rgba(255,180,70,0.4)'); glow.addColorStop(1, 'rgba(255,110,30,0)');
+    ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(fx, fy, R * 4.2, 0, TAU); ctx.fill();
+    for (let k = 0; k < 7; k++) {
+      const ff = 0.7 + 0.3 * Math.sin(t * 12 + k * 2.1);
+      const px = fx + (k / 6 - 0.5) * R * 1.3, py = fy - R * 0.1;
+      ctx.fillStyle = k % 2 ? 'rgba(255,205,80,0.9)' : 'rgba(255,120,35,0.92)';
+      ctx.beginPath(); ctx.moveTo(px - R * 0.3, py);
+      ctx.quadraticCurveTo(px + Math.sin(t * 9 + k) * R * 0.3, py - R * (0.7 + 2.6 * ff), px + R * 0.3, py);
+      ctx.closePath(); ctx.fill();
+    }
+    const [gx, gy] = this.proj(ob.smx, ob.smy, 0.05);   // Feuerbogen auf die Mitte des Strahls
+    for (let k = 0; k < 10; k++) {
+      const u = (k + 0.5) / 10;
+      const mx = fx + (gx - fx) * u, my = fy + (gy - fy) * u - Math.sin(u * Math.PI) * s * 0.5;
+      const w = s * (0.4 - 0.2 * u) * (0.8 + 0.2 * Math.sin(t * 25 + k));
+      ctx.fillStyle = k % 2 ? 'rgba(255,150,40,0.72)' : 'rgba(255,235,170,0.68)';
+      ctx.beginPath(); ctx.arc(mx, my, w, 0, TAU); ctx.fill();
+    }
+  },
+
+  /* Kaiserloge – die Falltür am Boden. Zu: eine bündige Steinplatte mit goldenem Rahmen und einer
+     Fuge in der Mitte. Offen: der dunkle Schacht darunter, die beiden Flügel zur Seite geschwenkt,
+     der Rahmen glüht rot. Man soll auf einen Blick sehen, ob der Weg trägt. */
+  drawLogeLuke(ctx, ob, t) {
+    const s = this.scale, g = ob.gap;
+    const x0 = ob.lx, y0 = ob.ly, x1 = ob.lx + ob.lw, y1 = ob.ly + ob.lh;
+    const rechteck = (a, b, c, d) => [[a, b], [c, b], [c, d], [a, d]];
+    const laengs = ob.lw >= ob.lh;   // Flügel schwenken zur langen Seite hin weg
+
+    if (g > 0.02) {   // Schacht
+      this.fillPoly(ctx, rechteck(x0, y0, x1, y1), 0.004, '#120b06', false);
+      const [cx, cy] = this.proj(ob.lmx, ob.lmy, 0.005);
+      const rg = ctx.createRadialGradient(cx, cy, 0, cx, cy, s * Math.max(ob.lw, ob.lh) * 0.5);
+      rg.addColorStop(0, `rgba(212,52,44,${0.4 * g})`); rg.addColorStop(1, 'rgba(212,52,44,0)');
+      ctx.fillStyle = rg; this.pathPoly(ctx, rechteck(x0, y0, x1, y1), 0.006); ctx.fill();
+    }
+    // Zwei Flügel, die um ihre äußere Kante wegklappen (verkürzt gezeichnet)
+    const halb = (laengs ? ob.lw : ob.lh) / 2, weg = g * (halb - 0.03);
+    for (const seite of [-1, 1]) {
+      const mitte = laengs ? ob.lmx : ob.lmy;
+      const innen = mitte + seite * weg, aussen = mitte + seite * halb;
+      if (Math.abs(aussen - innen) < 0.03) continue;
+      const a = Math.min(innen, aussen), b = Math.max(innen, aussen);
+      const poly = laengs ? rechteck(a, y0, b, y1) : rechteck(x0, a, x1, b);
+      this.fillPoly(ctx, poly, 0.007, '#dfcea4', false);
+      ctx.strokeStyle = '#a8842a'; ctx.lineWidth = Math.max(1, s * 0.05); this.pathPoly(ctx, poly, 0.008); ctx.stroke();
+      // Beschläge auf dem Flügel
+      ctx.fillStyle = '#c9a95e';
+      for (let k = 0; k < 3; k++) {
+        const u = (k + 0.5) / 3;
+        const px = laengs ? aussen - seite * 0.14 : x0 + ob.lw * u;
+        const py = laengs ? y0 + ob.lh * u : aussen - seite * 0.14;
+        const [nx, ny] = this.proj(px, py, 0.01);
+        ctx.beginPath(); ctx.arc(nx, ny, Math.max(1, s * 0.04), 0, TAU); ctx.fill();
+      }
+    }
+    // Rahmen: golden, wenn die Luke trägt – rot glühend, wenn sie offen steht
+    ctx.strokeStyle = g > 0.5 ? `rgba(212,52,44,${0.55 + 0.35 * Math.sin(t * 6)})` : 'rgba(255,212,94,0.85)';
+    ctx.lineWidth = Math.max(2, s * 0.09);
+    this.pathPoly(ctx, rechteck(x0, y0, x1, y1), 0.009); ctx.stroke();
+  },
+
+  /* Die Daumenscheibe: eine goldgefasste Marke, auf der eine Faust den Daumen hoch oder runter
+     hält. Sie wird im Bildschirmraum gezeichnet und schaut damit immer zum Betrachter – der
+     Daumenstand muss aus jeder Kameradrehung ablesbar bleiben. Die Farbe sagt dasselbe noch
+     einmal: heller Sandstein heißt „Weg frei", Rot heißt „Loch offen". */
+  daumenScheibe(ctx, cx, cy, R, hoch) {
+    ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.beginPath(); ctx.arc(cx, cy + R * 0.09, R * 1.02, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#a8842a'; ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#ffd45e'; ctx.beginPath(); ctx.arc(cx, cy, R * 0.9, 0, TAU); ctx.fill();
+    ctx.fillStyle = hoch ? '#f7edd0' : '#c0392c'; ctx.beginPath(); ctx.arc(cx, cy, R * 0.76, 0, TAU); ctx.fill();
+
+    /* Gezeichnet wird immer „Daumen runter"; „hoch" ist dasselbe gespiegelt. In den Hilfskoordinaten
+       zeigt +y in Daumenrichtung. Die Hand besteht aus drei klaren Blöcken – Manschette, Faust,
+       Daumen –, denn feine Finger wären bei dieser Größe nur ein Fleck. Die Manschette gibt der
+       Form ihr Oben und Unten: ohne sie liest sich die Faust in beide Richtungen gleich. */
+    const k = R * 0.6;
+    ctx.save(); ctx.translate(cx, cy + (hoch ? 1 : -1) * k * 0.075); ctx.scale(k, hoch ? -k : k);
+    const eck = (x0, y0, x1, y1, r) => {
+      const w = x1 - x0, h = y1 - y0;
+      ctx.beginPath(); ctx.moveTo(x0 + r, y0);
+      ctx.arcTo(x0 + w, y0, x0 + w, y0 + h, r); ctx.arcTo(x0 + w, y0 + h, x0, y0 + h, r);
+      ctx.arcTo(x0, y0 + h, x0, y0, r); ctx.arcTo(x0, y0, x0 + w, y0, r); ctx.closePath(); ctx.fill();
+    };
+    ctx.fillStyle = hoch ? '#8a6428' : '#e8c9b4';
+    eck(-0.68, -1.00, 0.68, -0.70, 0.1);                     // Manschette
+    ctx.fillStyle = hoch ? '#6b4a1e' : '#fff3dc';
+    eck(-0.62, -0.74, 0.62, 0.06, 0.24);                     // Faust
+    eck(-0.58, -0.16, -0.06, 0.86, 0.24);                    // Daumen
+    ctx.restore();
+  },
+
+  /* Kaiserloge – die Tribüne. Podest, vier Säulen, Dach mit goldenem Sims und rotem Sonnentuch;
+     vorn hängt die Daumenscheibe. Die Vorderseite zeigt zur Falltür, damit Loge und Luke als
+     zusammengehörig zu lesen sind. */
+  drawImperialBox(ctx, ob, t) {
+    const s = this.scale, w = ob.w, h = ob.h;
+    const rechteck = (cx, cy, bw, bh) => [[cx - bw / 2, cy - bh / 2], [cx + bw / 2, cy - bh / 2], [cx + bw / 2, cy + bh / 2], [cx - bw / 2, cy + bh / 2]];
+    const stein = ['#e6d5ab', '#a98f5f'], saeule = ['#f4ead0', '#c0aa78'], gold = ['#ffd45e', '#a8842a'];
+    // Vorderseite: die Richtung zur Luke, auf die Hauptachse gerundet
+    const dx = ob.lmx - ob.x, dy = ob.lmy - ob.y;
+    const vx = Math.abs(dx) > Math.abs(dy) ? Math.sign(dx) || 1 : 0;
+    const vy = vx ? 0 : (Math.sign(dy) || 1);
+
+    this.isoEllipse(ctx, ob.x, ob.y, 0.004, Math.max(w, h) * 0.62, 'rgba(0,0,0,0.26)');
+    this.prism(ctx, rechteck(ob.x, ob.y, w, h), 0, 0.62, stein[0], stein[1], { outline: '#6d5418' });          // Podest
+    this.prism(ctx, rechteck(ob.x, ob.y, w - 0.4, h - 0.4), 0.62, 0.18, '#d8c393', '#a98f5f');                  // Sitzstufe
+    const saeulenH = 1.7;
+    for (const sx of [-1, 1]) for (const sy of [-1, 1]) {                                                       // vier Säulen
+      const px = ob.x + sx * (w / 2 - 0.28), py = ob.y + sy * (h / 2 - 0.24);
+      this.prism(ctx, this.circlePoly(px, py, 0.17, 8), 0.8, saeulenH, saeule[0], saeule[1], { outline: '#8a7040' });
+    }
+    const dachZ = 0.8 + saeulenH;
+    this.prism(ctx, rechteck(ob.x, ob.y, w + 0.34, h + 0.34), dachZ, 0.16, gold[0], gold[1], { outline: '#6d5418' });   // Sims
+    this.prism(ctx, rechteck(ob.x, ob.y, w + 0.1, h + 0.1), dachZ + 0.16, 0.3, '#d4342c', '#8e211c', { outline: '#5a1512' }); // rotes Dach
+    // Wimpel auf dem First
+    for (const u of [-0.3, 0.3]) {
+      const px = ob.x + (vy ? u * w : 0.0), py = ob.y + (vy ? 0 : u * h);
+      const [m0, m1] = this.proj(px, py, dachZ + 0.46), [m2, m3] = this.proj(px, py, dachZ + 1.1);
+      ctx.strokeStyle = '#8a6a3a'; ctx.lineWidth = Math.max(1.5, s * 0.045);
+      ctx.beginPath(); ctx.moveTo(m0, m1); ctx.lineTo(m2, m3); ctx.stroke();
+      const weh = 0.16 + 0.08 * Math.sin(t * 5 + u * 6);
+      ctx.fillStyle = '#ffd45e'; ctx.beginPath(); ctx.moveTo(m2, m3);
+      ctx.lineTo(m2 + s * 0.4, m3 + s * weh); ctx.lineTo(m2, m3 + s * 0.28); ctx.closePath(); ctx.fill();
+    }
+    // Daumenscheibe vorn an der Loge, gut über der Brüstung
+    const fx = ob.x + vx * (w / 2 + 0.1), fy = ob.y + vy * (h / 2 + 0.1);
+    const [px, py] = this.proj(fx, fy, 1.55);
+    this.daumenScheibe(ctx, px, py, s * 0.52, ob.hoch);
+  },
+
+  /* Dieselbe Marke noch einmal klein über der Luke: Die Loge steht am Bahnrand und ist beim
+     Zielen oft aus dem Bild – der Daumenstand muss aber immer zu sehen sein. */
+  drawLogeMarke(ctx, ob, t) {
+    const [px, py] = this.proj(ob.lmx, ob.lmy, 1.5 + 0.06 * Math.sin(t * 2));
+    const s = this.scale;
+    ctx.strokeStyle = 'rgba(110,84,24,0.35)'; ctx.lineWidth = Math.max(1, s * 0.03);
+    const [b0, b1] = this.proj(ob.lmx, ob.lmy, 0.02);
+    ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(b0, b1); ctx.stroke();
+    this.daumenScheibe(ctx, px, py, s * 0.34, ob.hoch);
   },
 });

@@ -13,7 +13,9 @@ npx serve .          # oder: python3 -m http.server 8080
 
 ## Welten und Modi
 
-Vom Titelbild führen zwei Wege: **🗺 Weltkarte** und **🛠 Bauen & Eigene Welt**.
+Vom Titelbild führen zwei Wege: **🗺 Weltkarte** und **🛠 Bauen & Eigene Welt**. Darunter stehen drei
+kleine Knöpfe: **Turnier** führt ohne Umweg in die Arena (Kolosseum), **Online spielen** in den
+Warteraum, **Rangliste** zu den Rekorden.
 
 Auf der **Weltkarte** liegt jede Welt als schwebende Scheibe in derselben 2,5D-Sicht wie das Spiel selbst: Blick schräg von oben auf eine um 45° gedrehte Welt, dieselbe Projektion wie im Renderer. Jede Scheibe hat darum eine Deckfläche im Karomuster und darunter zwei sichtbare Seitenflächen – die linke hell, die rechte im Schatten – mit Streiflicht an der Oberkante und dunkler Vorderkante. Darauf stehen die Bauten als echte Körper: Quader mit Deckfläche und zwei Seiten, Kegeldächer und Baumkronen aus vier Dreiecken, hell zur Sonne und dunkel zur Schattenseite, dazu Fahnen und Kontaktschatten. Die Reise geht von links (heller Tag im Märchenland) nach rechts (Nacht im Schattenreich): Himmelsverlauf vom Tag in die Nacht, Sterne, Sonnenstrahlen links, Blutmond rechts, ein scharfer Bergkamm mit Schneekappen und dahinter ein zweiter im Dunst, ziehende Wolken, ein gestrichelter goldener Weg über die Vorderkanten der Scheiben, schwebende Flocken, Nebelbänder und eine Randabdunklung. **Jeder Ort ist von Anfang an anwählbar – nichts muss freigespielt werden.** Die Stufe am Ort ist nur ein Hinweis darauf, was einen erwartet:
 
@@ -26,6 +28,15 @@ Auf der **Weltkarte** liegt jede Welt als schwebende Scheibe in derselben 2,5D-S
 | Sturmhimmel | Legende | 9 extra große Bahnen über den Wolken |
 | Schattenreich | Legende | 10 extra große Bahnen im Reich der Schatten |
 
+Das **Kolosseum** steht bewusst *nicht* auf der Weltkarte. Es ist die Turnierwelt und wird nur über
+den **Turnier**-Knopf im Startbildschirm betreten – die Weltkarte bleibt die Reise durch die sechs
+Landschaften, das Turnier ist ein eigener Wettkampf daneben. Technisch reicht dafür, dass die Welt
+keinen Eintrag in `WorldMap.spots` hat; die Karte zeichnet dann weder Marke noch Insel.
+
+| Turnier | Stufe | Bahnen |
+| --- | --- | --- |
+| Kolosseum | Legende | 12 Turnierbahnen in der Arena (nur über den Turnier-Knopf) |
+
 Nach dem Antippen eines Ortes folgt die Startaufstellung mit **Modus**, **Spielern**, **Hut**, **Musik** und **Steuerung**:
 
 - **🏆 Wettkampf**: alle Bahnen der Welt der Reihe nach, mit Schlaglimit, Zwischen- und Endtafel, 1–4 Spieler im Hotseat.
@@ -34,14 +45,191 @@ Nach dem Antippen eines Ortes folgt die Startaufstellung mit **Modus**, **Spiele
 ### Hüte
 
 Die vier Bälle sind weiß, grün, hellblau und gelb. Jeder Spieler sucht sich vor dem Spiel einen Hut für seinen Ball aus: **Krone**, **Zauberhut**, **Piratenhut**,
-**Zylinder**, **Kappe**, **Wikingerhelm**, **Ritterhelm**, **Partyhut**, **Strohhut**, **Teufelshörner**,
-**Blumenkranz** – oder **Ohne** für den blanken Ball. Die Vorschau in der Startaufstellung zeigt den Ball
+**Zylinder**, **Kappe**, **Wikingerhelm**, **Ritterhelm**, **Legionärshelm** – oder **Ohne** für den
+blanken Ball. Die Vorschau in der Startaufstellung zeigt den Ball
 gleich in der Farbe des jeweiligen Spielers; bei mehreren Spielern wird oben umgeschaltet, für wen gerade
 gewählt wird. Die Wahl merkt sich der Browser, und in der Anzeigetafel steht neben jedem Spieler sein Hut.
 
 Der **Ritterhelm** ist ein Sonderfall: er legt sich um den ganzen Ball, als wäre der Ball der Kopf, und trägt
 einen Federbusch wie bei den Feldherren. Die beiden äußeren Federn nehmen die Farbe des Balls an (beim weißen
 Ball Rot), die mittlere bleibt immer weiß.
+
+**Legionärshelm** und **Championhelm** gehören zum Kolosseum und sind ein Paar: dieselbe Grundform –
+halbrunde Helmglocke, goldener Rand über der Stirn mit Nieten, breiter Nackenschirm nach hinten unten,
+seitliche Wangenklappen – einmal in Silber für die Teilnahme, einmal in Gold für den Sieg. Der
+Championhelm trägt zusätzlich einen Federkamm: fünf Straußenfedern fächern längs über die Glocke auf und
+nehmen die Farbe des Balls an, genau wie der Busch am Ritterhelm (ein weißer Ball bekommt Rot, sonst ginge
+der Kamm auf dem hellen Helm unter). Sonst bewusst wenige, große Formen: Bei Ballgröße bleibt von feinen
+Verzierungen nichts übrig.
+
+### Par kommt aus der Rangliste
+
+Par steht nicht mehr fest in der Bahn. Es richtet sich danach, was auf ihr schon erreicht wurde:
+
+> **Par = bestes je gespieltes Ergebnis + 1.** Hat die Bahn noch niemand gespielt, gilt das gebaute Par.
+
+Damit sagt Par nicht mehr, was sich der Erbauer gedacht hat, sondern was hier tatsächlich möglich ist. Die
+Meßlatte wandert mit: Wird ein Rekord verbessert, wird Par im selben Moment schärfer – für alle. Die Zahl in
+der Bahn (`c.par`) bleibt als Anhalt für unbespielte Bahnen und für die Bahnprüfung stehen.
+
+Entschieden wird das an **einer** Stelle, `Best.par(weltId, bahn)`; alles andere fragt dort nach – Kopfzeile,
+Ergebnistafel, Endtafel, Rangliste, Turnierbildschirm und die Bedingung der Belohnungen. Für Bahnen aus der
+Werkstatt gibt es keine Rangliste, dort bleibt das gebaute Par.
+
+Zwei Folgen, die man kennen sollte:
+
+- Ist der beste Wert **schlechter** als das gebaute Par, wird Par großzügiger – auf einer als Par 3 gebauten
+  Bahn steht dann eine Weile „Par 6", bis jemand besser spielt. Das ist so gewollt (die Alternative wäre eine
+  Deckelung auf das gebaute Par).
+- Die Belohnung einer Welt rechnet gegen dieses Par. Verbessert jemand einen Rekord, kann eine bereits
+  verdiente Belohnung wieder wegfallen – so wie der Championhelm, wenn man den Rundenrekord verliert.
+
+Ein Hole-in-One bleibt ein Hole-in-One: `diffClass` und `scoreName` prüfen zuerst auf einen Schlag und erst
+danach gegen Par.
+
+### Turnier auf Zeit
+
+Neben der Rangliste, die für immer läuft, gibt es ein **Turnier** in der Kolosseum-Welt: ein Ereignis mit
+Anfang und Ende, und es dauert **eine Woche**. Alles daran hängt an zwei Zeilen ganz oben in `src/turnier.js`:
+
+```js
+const START = Date.parse('2026-09-08T18:00:00+02:00');
+const TAGE = 7;                                  // Laufzeit: eine Woche
+```
+
+Das Ende wird aus der Laufzeit gerechnet statt noch einmal als Datum hingeschrieben. So steht die Regel
+„eine Woche" da, wo sie gilt, und kann beim Verschieben des Starts nicht aus dem Tritt geraten. Soll das
+Turnier zu einem festen Zeitpunkt enden statt nach einer Dauer, tauscht man `ENDE` gegen ein `Date.parse(…)` –
+der Rest merkt davon nichts. Mehr braucht es nicht, um es zu verschieben. Daraus ergeben sich drei Zustände, und jeder Teil der Anzeige
+richtet sich danach:
+
+| Zustand | Weltkarte und Startbildschirm | Turnierbildschirm | Ergebnisse |
+|---|---|---|---|
+| vor dem Start | Band mit dem Startdatum | „hat noch nicht begonnen", beide Termine | werden nicht angenommen |
+| während | Band mit der Restlaufzeit | Restlaufzeit als Uhr, dazu die Rangliste | zählen |
+| nach dem Ende | Band „Turnier beendet" | als beendet gekennzeichnet | werden nicht mehr angenommen |
+
+Gewertet wird die **Kombi-Wertung** über die ganze Runde, darunter stehen die besten Einzelbahnen – wie in
+der Rangliste, nur eben nur für dieses Fenster. Der Kreativmodus ist ausgeschlossen; dort zählt ohnehin
+nichts, weil man beliebig oft neu setzen darf.
+
+**Warum je Spieler eine eigene aufbewahrte Nachricht.** Die Rangliste kennt je Bahn nur den einen Rekord und
+kommt deshalb mit einer gemeinsamen Tafel je Welt aus. Im Turnier soll ein Feld entstehen – Erster, Zweiter,
+Dritter –, also braucht jeder Teilnehmer beim Vermittler seinen eigenen Platz, sonst überschriebe ein Eintrag
+den anderen. Das Thema lautet `fantasygolf/v1/<marke>/turnier/t<START>/e/<kennung>` und ist damit dreifach
+getrennt: von der Rangliste, von den Spielräumen und – durch den Startzeitpunkt im Namen – von jedem
+früheren Turnier.
+
+**Der Zeitstempel und eine Falle darin.** Jedes eingereichte Ergebnis trägt seinen Zeitpunkt; beim Anzeigen
+fällt alles weg, was außerhalb des Fensters liegt. Die Rangliste kappt einen Zeitstempel aus der Zukunft auf
+„jetzt", damit ein solcher Eintrag nicht jedes Zurücksetzen überlebt – diese Zeile aus `best.js` zu übernehmen
+war ein Fehler und ist beim Prüfen aufgefallen: Sie schob einen Nachzügler von hinter dem Schlusspfiff genau
+ins Fenster hinein und hebelte die Aussortierung aus. Im Turnier bleibt ein Zeitstempel darum stehen, wie er
+ist, und wird nur beurteilt.
+
+Geprüft wird alles Hereinkommende wie sonst auch – Namen und Bahnnamen durch `src/text.js`, Zahlen auf
+Bereiche, dazu Obergrenzen für Teilnehmer und Bahnen je Eintrag. Dieselbe Prüfung läuft auch über das, was aus
+dem Browser-Speicher kommt: Der überlebt Fassungswechsel und lässt sich von Hand ändern.
+
+### Belohnungen: ein Skin je Welt
+
+Jede Welt hat eine Belohnung, und man verdient sie sich am eigenen Können: **Die Summe der eigenen besten
+Einzelbahnen muss unter dem Par der Welt liegen, und jede Bahn braucht ein Ergebnis.** Gerechnet wird gegen
+das geltende Par – also gegen die Rangliste, siehe oben. Sieben Welten,
+sieben Belohnungen – sechs davon sind **Ganzkörper-Skins**: Sie ersetzen den Ball, statt auf ihm zu
+sitzen, und bewegen sich. Der Championhelm ist der einzige, der nur ein Hut ist.
+
+**Wie der Hut über den Farbreif kommt.** Ein Ganzkörper-Skin bekommt nach dem Zeichnen einen dünnen Reif in
+der Spielerfarbe (sonst wüsste bei vier Bällen niemand, welcher der eigene ist). Läge der Hut darunter, liefe
+der Reif quer über die Hutkrempe. Darum darf eine Zeichenfunktion eine **Funktion zurückgeben**: `draw()` ruft
+sie erst nach dem Reif auf. Eine Zeile in `draw()`, und der Kopfschmuck sitzt, wo er hingehört. Die Federkrone
+braucht das nicht – bei ihr liegen die Federn bewusst *hinter* dem Reif, das Stirnband davor.
+
+**Jede Belohnung ist ein Paar aus Ball und Hut**, und beide bewegen sich:
+
+| Welt | Belohnung | der Ball | der Hut |
+|---|---|---|---|
+| Märchenland | Königskrone | weißes Porzellan mit blauem Rankenmuster: Blüte, Blätterranken, Randband; über die Glasur wandert ein Lichtstreifen | goldene Zackenkrone mit roten Steinen; die Steine blitzen auf, ein Lichtpunkt läuft über das Gold |
+| Meereswelt | Aquarium | Becken mit Sand, Pflanzen, Fischen und Blasen | ein Schiffchen, das im Seegang rollt und sich hebt; die Segel bauschen sich, der Wimpel flattert |
+| Tüftlerreich | Tüftlerzylinder | drei greifende Zahnräder und ein Kolben | Lederzylinder mit Messingband, Nieten und Schutzbrille; ein Rad an der Seite läuft mit, aus dem Schornstein dampft es |
+| Dschungeltempel | Federkrone | dunkler Tempelstein, dessen Glyphen schwach grün glimmen | Federkrone in Türkis und Gold, die Spitzen wiegen sich |
+| Sturmhimmel | Gewitterkugel | Wolken ziehen, es regnet, alle 2,2 s schlägt ein Blitz ein | ein Wetterhahn, der sich dreht – und beim Einschlag an der Spitze sprüht |
+| Schattenreich | Kristallkugel | Schwaden waberen, ein Auge blickt umher und blinzelt | Spitzhut mit Mondschnalle; die Spitze schwankt, Sterne funkeln darauf |
+| Kolosseum | Championhelm | (kein eigener Ball – der Helm sitzt auf dem Spielerball) | der Federkamm wiegt sich im Wind |
+
+Vier der Skins teilen sich die Glaskugel-Form, damit sie als eine Familie zu erkennen sind – der Inhalt
+macht die Welt. Zwei tanzen bewusst aus der Reihe: die Federkrone ist Stein, die Königskrone Porzellan. Bewegt wird nach `state.t`, der Spieluhr: dieselbe Zahl auf jedem Gerät, beim Online-Spiel
+sehen also alle dasselbe. Weil ein Skin die Ballfarbe verdeckt, bekommt er einen dünnen Reif in der Farbe
+des Spielers – sonst wüsste bei vier Bällen niemand, welcher der eigene ist.
+
+**Was sich in jeder Kugel bewegt.** Nicht bloßes Hin und Her, sondern jeweils etwas, das man beobachten
+kann: An der Königskrone ist es bewusst wenig: Ein Porzellanstück lebt vom Kontrast aus kühlem Weiß, tiefem
+Kobaltblau und warmem Gold, nicht von vielen Einzelteilen – darum bewegt sich nur, was sich an echtem
+Porzellan auch bewegen würde, nämlich der Glanz, wenn man es dreht. Im Aquarium schlägt jedem Fisch der Schwanz im Takt, die Brustflosse
+kippt gegenläufig, Lichtstrahlen wandern, Pflanzen wiegen sich, Blasen steigen und werden dabei größer;
+ein kleiner Schwarm zieht im Hintergrund vorbei. Im Zahnradwerk **greifen die Räder wirklich ineinander**
+– der Radius folgt der Zähnezahl (gleicher Modul), und `eingriff()` rechnet aus, wie schnell und um wie
+viel versetzt das nächste Rad laufen muss, damit Zahn in Lücke steht; die Kurbel auf dem großen Rad treibt
+über ein Pleuel einen Kolben im Zylinder. An der Federkrone wiegen sich die Federn im Luftzug, und durch die
+sieben Glyphen im Stein läuft langsam eine Welle: mal steht die eine heller, mal die andere. In der Gewitterkugel ziehen zwei Wolkenreihen unterschiedlich
+schnell, es regnet durchgehend, und alle 2,2 Sekunden schlägt ein Blitz ein – seine Zackenform wird aus
+der Nummer des Schlags gewürfelt, jeder Blitz sieht also anders aus, und der Schein klingt in mehreren
+Stufen ab. In der Kristallkugel dreht sich die Iris, die Pupille weitet sich, und das Auge **blinzelt**
+alle gut vier Sekunden. Der Championhelm hat als einziger Hut eine Bewegung: sein Federkamm wiegt sich.
+
+**Zwei Feinheitsstufen.** `Hats.draw` liest aus der Leinwand, wie viele Bildpunkte der Ball wirklich breit
+ist (`bildpunkte()`), und gibt das als `fein` an die Zeichenfunktion weiter. Unter `FEIN_AB` (34 Punkte
+Radius) fallen Sterne, Kiesel, Muschel, Risse, Nieten, Ranken, Schraffuren und der Fischschwarm weg und
+die Zahl der Flocken, Regenstriche und Blasen sinkt. Das kostet nichts an Wirkung – bei einem Ball von
+vierzig Punkten ist eine Schneeflocke ein Bruchteil eines Punktes – und spart die Hälfte der Arbeit.
+
+**Eine Regel, die beim Zeichnen viel ausmacht:** `globalAlpha` ist auf der Leinwand teuer. Gemessen an
+zwanzig kleinen Kreisen: einzeln mit `globalAlpha` gefüllt 235 µs, einzeln mit `rgba()`-Farbe 120 µs, alle
+zwanzig in **einem** Pfad mit **einer** Füllung 17 µs. Darum sammeln die Skins gleichfarbige Formen in
+einem Pfad und füllen einmal; wo die Deckkraft je Stück schwanken müsste (Flocken, Funken, Sterne), steckt
+das Schwanken in der Größe oder es gibt zwei, drei Gruppen statt zwanzig Einzelfüllungen. Nebenwirkung zum
+Guten: Überlappende Teilformen decken sich in einem Pfad nicht mehr doppelt – die Wolkenbank der
+Gewitterkugel wirkt seither wie eine Wolke statt wie gestapelte Flecken.
+
+**Warum die besten Einzelbahnen und nicht eine Runde am Stück.** Eine fehlerfreie Runde über neun oder zehn
+Bahnen wäre für die meisten unerreichbar – ein Patzer auf Bahn 8 wirft alles um. Bahn für Bahn dagegen ist es
+eine Übung, die man sich Stück für Stück vornehmen kann: Man weiß immer, welche Bahn noch klemmt.
+
+**Wie die Sperre funktioniert:** In `Hats.LIST` trägt eine Belohnung `welt: '<Weltkennung>'`, ein
+Ganzkörper-Skin zusätzlich `voll: true`. Die eine Stelle, die entscheidet, ist `Hats.freigeschaltet(id)`; sie
+fragt `Best.fortschritt(welt).geschafft`. Der Championhelm ist die Ausnahme: Er trägt `art: 'rekord'` und
+hängt weiter am Kombi-Rundenrekord der Arena – wer den Rekord verliert, verliert auch den Helm. Der
+Legionärshelm ist keine Belohnung und für alle da.
+
+**Der eigene Stand liegt getrennt.** Die Rangliste kennt je Bahn nur den einen Rekord, egal von wem. Für die
+Belohnung zählt aber, was man *selbst* geschafft hat – darum führt jedes Gerät zusätzlich eine private Liste
+(`Best.fortschritt`, `Best.eigeneBahnen`): je Welt und Bahn die wenigsten Schläge, die man dort selbst
+gebraucht hat. Sie wird nicht geteilt; über das Netz wäre sie ohnehin nicht nachprüfbar, und sie geht
+niemanden etwas an.
+
+**Der Kreativmodus wird beim Speichern abgewiesen**, nicht erst beim Anzeigen: `Best.hole` bekommt den Modus
+mitgegeben und trägt gar nicht erst ein. Dort darf man beliebig oft neu setzen – jede Bedingung wäre damit
+wertlos.
+
+**Fortschritt sieht man.** In der Rangliste steht unter jeder Welt ein Block mit Balken: wie viele Bahnen
+schon ein Ergebnis haben, welche noch fehlen, wie die Summe der eigenen besten Bahnen zum Par steht und wie
+viele Schläge noch nötig sind. In der Hutwahl steht dasselbe kurz am gesperrten Platz. Und in dem Moment, in
+dem die Bedingung fällt, sagt das Spiel es zweimal: sofort als Meldung und noch einmal als Zeile auf der
+Ergebnistafel der Bahn – die Meldung allein ginge unter, weil `showMessage` über der Tafel schweigt.
+
+In der Auswahl bleiben gesperrte Belohnungen **sichtbar**: blass, entfärbt, mit einem Schloss und dem
+Hinweis, welcher Rekord dafür nötig ist. Man soll sehen, was es zu holen gibt. Gezeichnet wird ein
+gesperrter Skin trotzdem in voller Farbe – kommt er über das Netz vom Ball eines Mitspielers, soll man ihn
+sehen, ganz gleich was auf dem eigenen Gerät in der Rangliste steht.
+
+**Auf dem Prüfstand sind die Sperren offen.** Vorschau und Einzeldatei sind zum Ansehen da – dort soll man
+eine Belohnung aufsetzen können, ohne erst den Rekord zu holen. Entschieden wird das an einer Stelle in
+`src/main.js`: `TEST_FREI` ist wahr, wenn `VORSCHAU` wahr ist (Pfad `…/vorschau/`) oder wenn `PRUEFSTAND`
+gesetzt ist – diese Kennung schreibt nur der Bündel-Bau in die Einzeldatei, auf der echten Seite gibt es
+sie nicht. Ein Klick auf eine gesperrte Belohnung setzt sie dann trotzdem auf und sagt kurz, dass sie nur
+zum Ausprobieren freigegeben ist. Schloss und Bedingung bleiben sichtbar, damit man die Sperre nicht
+vergisst; der Skin bleibt dabei farbig (`.hat.zu.probe`), sonst könnte man ja gerade nicht sehen, was man
+aufsetzt. Im Spiel bleibt es beim Hinweis auf die Bedingung – dort ist die Sperre der halbe Reiz.
 
 Die Hüte werden in `src/hats.js` gezeichnet – reine Canvas-Pfade, keine Bilddateien. Ein neuer Hut braucht
 nur eine Zeichenfunktion in `DEFS` und einen Eintrag in `LIST`; der Nullpunkt liegt auf dem Kopf des Balls,
@@ -300,6 +488,62 @@ Zweite Welt der Stufe Legende und die schwerste: zehn Bahnen mit schmalen Wegen 
 | 9 | Gruft der Sensen | 5 | schmale Gruftgänge: Sensen quer, Schattenportal, Fallbeil, Knochenstacheln, Druckplatte hebt das Fallgatter vor der Grabkammer, Geist |
 | 10 | Herz der Finsternis | 9 | zweiteilig: Abstieg von der schwarzen Zinne über drei Stufen (Raben auf dem Grat, Fallbeil am Steg, Sprung mit Fledermaus), unten schießt der Basilisk über den Totensee ins Wrack; drinnen drei Gänge im Zickzack hinauf, das brennende Auge in der Mitte, Sensen, Druckplatte und Fallgatter vor dem Loch |
 
+## Die Bahnen des Kolosseums
+
+Zwölf Turnierbahnen in der hellen Arena, Stufe Legende, aufsteigend gebaut: Bahn 1 bis 4 führen je
+ein bis zwei Hindernisarten ein, 5 bis 8 mischen sie, 9 und 10 kombinieren alles, und 11 und 12 sind
+die grossen Schlussbahnen mit langem Weg zum Ass. Zwei Hindernisse kommen bewusst spät und stehen
+nicht auf jeder Bahn: die **Löwenpforte** (Löwentor) ab Bahn 4, das **gleitende Gitter** (wanderndes
+Tor) ab Bahn 5. Der **Feuerturm** steht nur auf Bahn 11, die **Kaiserloge** nur auf Bahn 12.
+
+Sonst spielt die Arena mit **Gladiatoren** (dieselbe Figur wie die Ritter auf dem Burgberg, nur in
+Sandfarben und Rot), dem **Streitwagen** (dieselbe Fähre wie die Lore in der Zwergenschmiede – seine
+Spur sind zwei Rillen im Sand), dem **Katapult**, **Sprungschanzen** und **Steinrädern**.
+
+| Nr. | Bahn | Par | Besonderheit |
+|---|---|---|---|
+| 1 | Gladiatorengasse | 2 | eine gerade Gasse, zwei Gladiatoren schreiten quer darüber |
+| 2 | Sprungpodest | 3 | drei Podeste, dazwischen nichts als Luft: zwei Sprungschanzen tragen hinüber |
+| 3 | Mahlsteine | 3 | zwei steinerne Mahlräder mitten im Sand |
+| 4 | Löwenpforte | 3 | zwei Gassen, dazwischen die Arenamauer; nur die Löwenpforte führt hinüber, und nur mit Schwung |
+| 5 | Gleitendes Gitter | 3 | ein Gitter mit einem einzigen Durchlass, der langsam hin und her gleitet; dahinter zwei Steinräder |
+| 6 | Wagenrennen | 3 | der Streitwagen pendelt über den Graben, danach hilft nur noch die Schanze |
+| 7 | Katapultbahn | 3 | aus der unteren Kammer geht es nur mit dem Katapult hinauf; oben patrouillieren die Wachen |
+| 8 | Tierpforten | 5 | drei Kammern, zwei Löwenpforten; in der mittleren zieht der Streitwagen seine Runden |
+| 9 | Sandsturm | 5 | Gitter, Mahlsteine und Gladiatoren auf einmal – und am Ende die Schanze über den Graben |
+| 10 | Die Spina | 6 | ein voller Rundkurs um die Spina: Katapult, Streitwagen, Steinräder, und die Pforte führt in die Kammer im Herzen der Arena |
+| 11 | Der Feuerturm | 7 | grosse Schlussbahn: unten streicht der Feuerstrahl über den Sand, oben sperrt das Gitter, vor dem Loch klafft der Graben |
+| 12 | Die Kaiserloge | 7 | grosse Schlussbahn: drei Geraden, Löwenpforte, Streitwagen und Schanze – und oben dreht der Kaiser nach jedem Schlag den Daumen |
+
+Die Deko neben den Bahnen ist gebaut, nicht gemalt: Säulen, Krüge, Obelisken und Feuerschalen
+bestehen aus Prismen und Kegelstümpfen in Weltkoordinaten (`frustum` in `src/render.js` ist das
+Gegenstück zu `prism` für verjüngte Körper – Krugbauch, Obeliskenschaft, Feuerschale). Damit stehen
+sie in derselben Sicht wie Mauern und Türme, bekommen ihre Schattenseite von selbst und drehen sich
+mit der Kamera mit. Flach bleibt nur, was keine Seiten hat: die Flamme in der Schale und das Tuch
+der Banner.
+
+Ein Fallstrick dabei: `frustum` füllt immer seine Deckfläche. Ein farbiger Zierreif am Krugbauch
+darf deshalb nur an den Seiten farbig sein – sonst legt sich von oben gesehen ein bunter Deckel über
+den halben Krug.
+
+Auf den drei mehrteiligen Bahnen (10, 11, 12) führen **Blickzonen** die Kamera: Liegt der Ball in
+einer Zone, schaut sie auf deren Blickpunkt statt aufs Loch. Ohne das schaute man vom Start der
+Kaiserloge quer über zwei Mauern hinweg zum Loch, während man in die andere Richtung spielt – auf
+einem Rundkurs wie der Spina liegt das Loch sogar in der Mitte. Die Blickpunkte liegen bewusst weit
+außerhalb der Karte, damit die Richtung über die ganze Zone stabil bleibt und nicht umspringt,
+sobald der Ball an ihnen vorbeirollt. Das Feld heißt `views` und steht schon länger in `courses.js`
+zur Verfügung.
+
+Das Par steht nicht nach Gefühl da, sondern nach Messung: `node tools/audit/audit.mjs colosseum`
+spielt jede Bahn mit einem Durchschnittsspieler-Bot durch, und das Par ist dessen gerundeter Schnitt.
+Wo der Bot deutlich unter dem Par blieb oder gar nicht ins Loch kam, wurde die Bahn geändert, nicht
+die Zahl.
+
+Die Karten dieser Welt werden nicht von Hand getippt, sondern von `tools/arena.py` aus Rechtecken
+zusammengesetzt und nach `src/courses_colosseum.js` geschrieben. So bleiben alle Zeilen gleich lang,
+und eine Änderung an einer Kammer zieht nicht Dutzende Zeichen nach sich. Nach jedem Lauf gehören
+`node tools/validate.mjs` und `node tools/audit/audit.mjs colosseum` dazu.
+
 ## Kostenlos als App aufs iPad oder Handy (GitHub Pages)
 
 Das Spiel ist eine Web-App: Manifest (`manifest.webmanifest`), App-Symbole (`icons/`) und ein Service Worker (`sw.js`) sorgen dafür, dass es sich wie eine App installieren lässt und offline läuft. Der Workflow `.github/workflows/pages.yml` veröffentlicht bei jedem Push automatisch auf GitHub Pages.
@@ -347,13 +591,14 @@ Schattenschloss) und die Tür dorthin. Solche Bahnen lassen sich deshalb auch ni
 
 ## Eigene Bahnen im Code bauen
 
-Bahnen stehen in `src/courses.js` (Märchenland), `src/courses_sea.js` (Meereswelt) und `src/courses_pro.js` (Tüftlerreich) als ASCII-Karte plus Hindernisliste. Die Liste `WORLDS` in `src/courses_pro.js` registriert die Welten für die Weltkarte; `mode` (`normal`, `pro`, `legend`) steht dort nur noch als Schwierigkeitshinweis am Ort, gespielt werden kann jede Welt von Anfang an.
+Bahnen stehen in `src/courses.js` (Märchenland), `src/courses_sea.js` (Meereswelt), `src/courses_colosseum.js` (Kolosseum) und `src/courses_pro.js` (Tüftlerreich) als ASCII-Karte plus Hindernisliste. Die Liste `WORLDS` in `src/courses_pro.js` registriert die Welten für die Weltkarte; `mode` (`normal`, `pro`, `legend`) steht dort nur noch als Schwierigkeitshinweis am Ort, gespielt werden kann jede Welt von Anfang an.
 
 ```
 .  Leere / Abgrund     #  Fairway      s  Sand      i  Eis
 w  Wasser              l  Lava         x  Steinblock
 o  Fairway ohne Randmauer (Klippe)
 T  Abschlag            H  Loch
+A B C  Eingang eines Löwentors   a b c  der zugehörige Ausgang
 ```
 
 Pro Bahn lässt sich die Bremsung eines Untergrunds überschreiben, z. B. `friction: { s: 32 }` für besonders tiefen Sand.
@@ -362,10 +607,105 @@ Blickzonen: Über `views` (Rechtecke mit `look`-Punkt) kann eine Bahn festlegen,
 
 Höhenstufen: Eine Bahn kann ein Ziffernraster `heights` (0–9) und `hStep` angeben. Stufen sind nur über `field`-Rampen mit `base`/`rise` zu erklimmen, Kanten nach oben wirken sonst wie Mauern; nach unten rollt der Ball frei.
 
-Hindernis-Typen: `lightning` (Blitzfeld `w`×`h`: `warn` Sekunden Knistern, dann `strike` Sekunden Einschlag je `period`; wer dann in der Zone ist, auch fliegend, kassiert einen Strafschlag zurück zum Schlagstart), `updraft` (Aufwind-Zone: ein Ball mit mindestens `minSpeed` wird in Rollrichtung `land` Kacheln weit geflogen, Flugtempo `fly`), `trapdoor` (Falltür `w`×`h`, offen für den `open`-Anteil der `period`; wer darüberrollt oder darauf liegt, stürzt: Strafschlag zurück zum Schlagstart), `field` mit `style: 'dark'` (Schattenzone: der Ball ist darin fast unsichtbar), `bumper` (`style`: `mushroom`, `rock`, `crystal`, `coral`, `idol`, `orb`, `grave`, `eye`), `mover` (`style` u. a. `cart`, `cannonball`, `boulder`, `barrel`, `shark`, `wave`, `dragon`, `knight`, `guard`, `coconut`, `ghost`, `bat`, `stormcloud`), `ferry` (`style`: `cart`, `boat`, `ship`, `balloon`, `airship`), `wave` (wandernde Welle, keine Mauer: schiebt einen ruhenden oder langsamen Ball mit `push` in ihrer Laufrichtung mit; ein schnellerer Ball bricht hindurch und behält dabei nur den Anteil `brake` seines Tempos), `spikes` (Stachelfalle: Platte `w`×`h`, Stacheln sind `up`-Anteil der `period` draußen und blockieren dann wie eine Mauer; ein Ball, der auf der Platte liegt, wenn sie hochkommen, wird aufgespießt: Strafschlag und zurück zum Start des letzten Schlags), `sharkjump` (Hai, der im Takt `period` quer über eine Bucht springt; `style: 'croc'` zeichnet ein Krokodil und einen Ball frisst, der währenddessen über die Zone fliegt; Fressen kostet einen Strafschlag – eine `inner`-Map mit `stomach: true` würde den Ball stattdessen dorthin schicken), `rotor` (auch als Pendel mit `swing`; `style: 'tentacle'` macht daraus eine Krake, `style: 'vine'` eine Liane), `windmill`, `gate` (periodisch oder mit `linked` an einen Schalter gekoppelt), `portal`, `boost`, `field`, `ramp`, `rail`, `wall`, `cannon` (schwenkende Kanone, `base`/`amp`/`speed`/`range`; `style: 'catapult'` zeichnet ein Katapult), `magnet` (`strength` > 0 zieht an, < 0 stößt ab, `slow` bremst; `style: 'coral'` zeichnet eine Koralle, `style: 'pearl'` eine Perle; `curse: 2.0` macht den Ball nach Berührung für den Rest der Bahn träge), `turntable` (Drehscheibe mit Auswurfrinne `exit` in Grad; `style: 'whirl'` zeichnet einen Strudel), `field` (`style`: `wind`, `current` für Unterwasser-Strömung, `slope` für Rampen zwischen Höhenstufen; `gust` macht aus Dauerwind Windstöße), `potion` (Schrumpftrank, `scale`/`duration`), `cauldron` (Hexentopf: nur aus der Luft zu treffen, schrumpft und spuckt Richtung `exit` aus), `switch` (Druckplatte, `target`/`duration`), `door` (Tür in die Innen-Map `inner` einer Bahn; `style: 'pyramid'` mit `px`/`py`/`base` zeichnet eine Stufenpyramide um die Tür, `style: 'wreck'` mit `px`/`py` ein Schiffswrack, dessen Leck die Tür ist, `style: 'temple'` ein Tempeltor).
+Hindernis-Typen: `lightning` (Blitzfeld `w`×`h`: `warn` Sekunden Knistern, dann `strike` Sekunden Einschlag je `period`; wer dann in der Zone ist, auch fliegend, kassiert einen Strafschlag zurück zum Schlagstart), `updraft` (Aufwind-Zone: ein Ball mit mindestens `minSpeed` wird in Rollrichtung `land` Kacheln weit geflogen, Flugtempo `fly`), `trapdoor` (Falltür `w`×`h`, offen für den `open`-Anteil der `period`; wer darüberrollt oder darauf liegt, stürzt: Strafschlag zurück zum Schlagstart), `wandergate` (wanderndes Tor: Mauer mit gleitendem Durchlass, s. o.), `firetower` (Feuerturm: ein Feuerstrahl streicht über einen Bereich der Bahn und wieder zurück, s. o.), `imperialbox` (Kaiserloge: der Daumen des Kaisers öffnet und schließt eine Falltür, s. o.), `field` mit `style: 'dark'` (Schattenzone: der Ball ist darin fast unsichtbar), `bumper` (`style`: `mushroom`, `rock`, `crystal`, `coral`, `idol`, `orb`, `grave`, `eye`), `mover` (`style` u. a. `cart`, `cannonball`, `boulder`, `barrel`, `shark`, `wave`, `dragon`, `knight`, `gladiator` (dieselbe Figur wie der Ritter, nur in Sandfarben und Rot – Helm mit rotem Kamm und Rundschild), `guard`, `coconut`, `ghost`, `bat`, `stormcloud`), `ferry` (`style`: `cart`, `chariot` (Streitwagen – dieselbe Lore, nur anders gezeichnet: die Räder drehen sich nach dem Fahrfortschritt, sie stehen also still, solange der Wagen wartet), `boat`, `ship`, `balloon`, `airship`), `wave` (wandernde Welle, keine Mauer: schiebt einen ruhenden oder langsamen Ball mit `push` in ihrer Laufrichtung mit; ein schnellerer Ball bricht hindurch und behält dabei nur den Anteil `brake` seines Tempos), `spikes` (Stachelfalle: Platte `w`×`h`, Stacheln sind `up`-Anteil der `period` draußen und blockieren dann wie eine Mauer; ein Ball, der auf der Platte liegt, wenn sie hochkommen, wird aufgespießt: Strafschlag und zurück zum Start des letzten Schlags), `sharkjump` (Hai, der im Takt `period` quer über eine Bucht springt; `style: 'croc'` zeichnet ein Krokodil und einen Ball frisst, der währenddessen über die Zone fliegt; Fressen kostet einen Strafschlag – eine `inner`-Map mit `stomach: true` würde den Ball stattdessen dorthin schicken), `rotor` (auch als Pendel mit `swing`; `style: 'tentacle'` macht daraus eine Krake, `style: 'vine'` eine Liane), `windmill`, `gate` (periodisch oder mit `linked` an einen Schalter gekoppelt), `portal`, `boost`, `field`, `ramp`, `rail`, `wall`, `cannon` (schwenkende Kanone, `base`/`amp`/`speed`/`range`; `style: 'catapult'` zeichnet ein Katapult), `magnet` (`strength` > 0 zieht an, < 0 stößt ab, `slow` bremst; `style: 'coral'` zeichnet eine Koralle, `style: 'pearl'` eine Perle; `curse: 2.0` macht den Ball nach Berührung für den Rest der Bahn träge), `turntable` (Drehscheibe mit Auswurfrinne `exit` in Grad; `style: 'whirl'` zeichnet einen Strudel), `field` (`style`: `wind`, `current` für Unterwasser-Strömung, `slope` für Rampen zwischen Höhenstufen; `gust` macht aus Dauerwind Windstöße), `potion` (Schrumpftrank, `scale`/`duration`), `cauldron` (Hexentopf: nur aus der Luft zu treffen, schrumpft und spuckt Richtung `exit` aus), `switch` (Druckplatte, `target`/`duration`), `door` (Tür in die Innen-Map `inner` einer Bahn; `style: 'pyramid'` mit `px`/`py`/`base` zeichnet eine Stufenpyramide um die Tür, `style: 'wreck'` mit `px`/`py` ein Schiffswrack, dessen Leck die Tür ist, `style: 'temple'` ein Tempeltor).
+**Löwentor** (`liongate`): das einzige Hindernis, dessen Plätze nicht in der Hindernisliste stehen,
+sondern als Buchstaben in der Karte. Der Großbuchstabe ist der Eingang, der gleiche Kleinbuchstabe der
+Ausgang – `A`/`a`, `B`/`b`, `C`/`c`, mehrere Paare je Bahn erlaubt. In der Hindernisliste steht je Paar
+nur `{ type: 'liongate', pair: 'A', angle: 0 }`: `angle` (Grad, wie bei Rampe und Beschleuniger) sagt,
+in welche Richtung der Ausgang ausspuckt.
+
+Berührt ein Ball den Eingang mit mindestens `LOEWENTOR_TEMPO`, verschwindet er und kommt am Ausgang
+wieder heraus – immer mit `LOEWENTOR_AUSWURF` in die eingestellte Richtung, ganz gleich wie schnell er
+hineinrollte. Damit bleibt planbar, wo er landet. Ist er langsamer, sperrt eine Wand quer vor der
+Toröffnung und er prallt ab. Beide Werte stehen als benannte Konstanten oben in
+`src/obstacles_legend.js` und lassen sich dort nachjustieren.
+
+Der Eingangsbuchstabe ist begehbarer Boden (er steht dafür in `FLOOR_CHARS`), der Ausgang bewusst
+nicht: Als Nicht-Boden zieht die Bahnmauer von selbst eine Wand davor, und genau das soll ein Ausgang
+von außen sein – massiv. Der Ball wird deshalb nicht *in* den Ausgang gesetzt, sondern eine knappe
+Kachel davor. Bleibt ein Ball doch einmal im Torbogen liegen (hineingefallen, hineingeschoben), schiebt
+das Tor ihn sanft entgegen seiner Anfahrt wieder heraus.
+
+`node tools/validate.mjs` prüft die Tore mit: ein Buchstabe ohne Gegenstück, derselbe Buchstabe mehrmals
+auf einer Karte oder ein Ausgang ohne Auswurfrichtung sind Fehler.
+
+**Wanderndes Tor** (`wandergate`): eine Mauer von (`x0`,`y0`) nach (`x1`,`y1`) wie ein festes Mauerstück,
+in der ein schmaler Durchlass (`gap`) steckt. Der Durchlass gleitet langsam an der Mauer entlang, kehrt am
+Ende um und kommt wieder zurück; die Mauer selbst ist massiv. Nicht die Umlaufzeit steht am Hindernis,
+sondern das Tempo als Konstante `WANDERTOR_TEMPO` (Kacheln je Sekunde) oben in
+`src/obstacles_legend.js` – so gleitet der Spalt an einer langen Mauer genauso schnell wie an einer
+kurzen, und eine längere Mauer wird von allein schwerer statt nur langsamer. Der Spalt läuft als
+Dreieckschwingung, also gleichmäßig hin und gleichmäßig zurück: An den Umkehrpunkten zu bremsen würde ihn
+dort unerreichbar machen.
+
+**Feuerturm** (`firetower`): ein hohes Bauwerk am Bahnrand mit einer brennenden Schale obenauf. Aus ihr
+fährt ein Feuerstrahl auf die Bahn, der langsam über einen festgelegten Bereich streicht und wieder
+zurück – wie ein Scheinwerfer. Der Bereich ist ein Rechteck (`zx`,`zy`,`zw`,`zh`) von der linken oberen
+Ecke aus, wie bei Aufwind und Kraftfeld. Wer im Strahl liegt, rollt oder fliegt, wird an seinen letzten
+Ruhepunkt zurückgelegt – **ohne Strafschlag**. Der Turm kostet Weg und Zeit, nicht die Wertung.
+
+Der Strahl geht nie aus: Gefährlich ist nicht ein Zeitpunkt, sondern ein Ort. Geprüft wird deshalb bei
+jedem Physikschritt und nicht nur einmal – der Ball kann in den stehenden Strahl hineinrollen, und der
+Strahl kann über einen ruhenden Ball hinwegstreichen. Beides zählt.
+
+Am Hindernis stehen `achse` (`'x'` oder `'y'` – in welche Richtung der Strahl wandert; ohne Angabe über
+die längere Seite des Bereichs), `breit` (Breite des Strahls in Kacheln), `tempo` (Kacheln je Sekunde)
+und `phase` (0 bis unter 1, verschiebt einen einzelnen Turm gegen die anderen). Die Grundwerte stehen
+oben in `src/obstacles_legend.js` als benannte Konstanten: `FEUERTURM_TEMPO` und `FEUERTURM_BREITE` – so
+streichen alle Türme einer Arena von sich aus im selben Tritt. Der Strahl läuft als Dreieckschwingung,
+also gleichmäßig hin und gleichmäßig zurück; an den Umkehrpunkten zu bremsen würde ihn dort kleben
+lassen, und gerade am Rand soll er zügig wenden.
+
+Auf dem Boden ist beides zu sehen: das grelle Band, wo er gerade brennt, und der rußige Bereich mit
+gestricheltem Rand, wie weit er überhaupt kommt. Ein Pfeilpaar an der Vorderkante zeigt die
+Laufrichtung. Erst zusammen lässt sich vorausplanen – man sieht den Ort der Gefahr und den freien Rest.
+
+`validate.mjs` prüft: ein Bereich ohne Größe, eine `achse`, die weder `'x'` noch `'y'` ist, eine
+Strahlbreite von null oder eine, die die ganze Laufstrecke füllt (dann steht der Strahl still und sperrt
+den Bereich für immer), ein `tempo` von null, ein Bereich ohne Fairway darunter, ein Turm mitten auf der
+Bahn statt am Rand, ein Abschlag im bestrichenen Bereich (der Ball käme dort nie wieder heraus, weil er
+notfalls dorthin zurückgelegt wird), ein Loch im Bereich und eine `phase` außerhalb von 0 bis 1.
+
+Auch das prüft `validate.mjs`: ein Durchlass so breit wie die Mauer (dann sperrt nichts mehr), ein
+Durchlass unter einer Kachel (dann kommt kein Ball hindurch), eine Mauer ohne Länge und eine Mauer, deren
+Mitte nicht auf dem Fairway liegt. Geprüft wird die Mitte, denn die Enden liegen absichtlich auf den
+Kanten der Bahn.
+
+**Kaiserloge** (`imperialbox`): eine überdachte Tribüne am Bahnrand mit einer großen Daumen-Anzeige.
+Nach jedem Schlag – gleich, welcher Spieler geschlagen hat – dreht der Kaiser den Daumen um. Bei
+„Daumen runter" klappt eine festgelegte Falltür in der Bahn auf, bei „hoch" ist sie zu. Wer in die
+offene Luke rollt, kommt an seinen letzten Ruhepunkt zurück – **ohne Strafschlag**; ein fliegender
+Ball setzt darüber hinweg.
+
+Am Hindernis stehen der Platz der Loge (`x`,`y`) samt Grundfläche (`w`,`h`) und die Falltür als
+Rechteck (`lx`,`ly`,`lw`,`lh`) von der linken oberen Ecke aus. `start` sagt, wie der Daumen zu Beginn
+der Bahn steht: `'hoch'` (Luke zu, Standard) oder `'runter'` (Luke offen).
+
+Gezählt wird das **Ende** eines Schlags, nicht sein Anfang (`level.schlagZahl`, hochgezählt in
+`main.js`). Das ist der Kern des Hindernisses: So gilt der Daumenstand, den man beim Zielen sieht, für
+den ganzen Schlag. Würde er im Moment des Abschlags umspringen, ließe sich nichts planen. Der Zähler
+gehört der Bahn, nicht dem Spieler – er läuft über den Spielerwechsel hinweg weiter und fängt erst mit
+der nächsten Bahn wieder bei null an.
+
+Der Daumen hängt zweimal im Bild: groß vorn an der Loge und noch einmal klein über der Falltür. Beim
+Zielen ist die Loge am Bahnrand oft aus dem Bild, der Stand muss aber immer ablesbar sein. Beide Marken
+werden im Bildschirmraum gezeichnet und schauen damit aus jeder Kameradrehung zum Betrachter; die Farbe
+sagt dasselbe noch einmal (heller Sandstein = Weg frei, Rot = Loch offen).
+
+Beim Online-Spiel läuft der Daumen von selbst gleich, weil jedes Gerät dieselben Schläge ausführt.
+Zur Sicherheit wird der Zählerstand trotzdem mit jedem Schlag und jeder Ruhemeldung mitgeschickt.
+
+`validate.mjs` prüft: eine Falltür ohne Größe, eine Falltür ohne Fairway darunter, eine Loge mitten auf
+der Bahn statt am Rand, Abschlag oder Loch in der Falltür (der Ball käme dort nie heraus) und ein
+`start`, das weder `'hoch'` noch `'runter'` ist.
+
 ### Musik
 
 Jede Welt hat einen eigenen, endlos weiterlaufenden Klangteppich – vollständig mit WebAudio erzeugt, ohne eine einzige Audiodatei (die App bleibt klein und offline spielbar). Pro Takt erklingen ein Flächenakkord aus drei Tönen, ein Bass auf dem Grundton, gezupfte Melodietöne aus der Tonleiter des gerade klingenden Akkords und je nach Welt eine Trommel, eine Rassel oder eine Glocke; ein Echo legt sich darüber. Die Akkorde wandern Takt für Takt durch eine kurze Wendung. Märchenland klingt in Dur und hell, die Meereswelt dorisch und wiegend, das Tüftlerreich in Moll mit ruhigem Puls, der Dschungeltempel pentatonisch mit Rahmentrommel, der Sturmhimmel weit mit tiefer Pauke, das Schattenreich phrygisch mit ferner Grabglocke. Beim Weltwechsel blendet der alte Klang aus und der neue auf; im Hintergrundtab schweigt die Musik. Die Paletten stehen in `src/music.js`.
+
+Ein Thema kann außerdem `rails: 'groove'` setzen: Dann werden die Schienen einer Fähre nicht als
+Eisenschienen mit Schwellen gezeichnet, sondern als zwei helle, leicht vertiefte Rillen im Boden – so
+läuft der Streitwagen im Kolosseum durch den Sand statt über Gleise.
 
 Farbwelten stehen in `src/themes.js`, jede mit einer dezenten Atmosphäre (`atmo`: `fog`, `mist`, `fireflies`, `spores`, `embers`, `sparks`, `ash`, `bubbles`, `sand`, `spray`, `snow`, `pollen`, `none`), die eine Bahn per `atmo` überschreiben kann. Mit `node tools/validate.mjs` lässt sich prüfen, ob jede Bahn lösbar ist; `node tools/audit/audit.mjs <welt|all> [Bahn]` spielt jede Bahn headless durch (Profi-Suche, simulierte Normalspieler mit Streuung, Prüfung von Engstellen, Zeitfenstern und Kamerazonen) und schreibt Ergebnisse nach `out/`.
 
@@ -499,13 +839,14 @@ src/courses_sea.js die Bahnen der Meereswelt
 src/courses_jungle.js die Bahnen des Dschungeltempels
 src/courses_storm.js die Bahnen des Sturmhimmels (Legende)
 src/courses_shadow.js die Bahnen des Schattenreichs (Legende)
+src/courses_colosseum.js die Bahnen des Kolosseums (Legende)
 src/courses_pro.js die Bahnen des Tüftlerreichs und die Weltenliste
 src/editor.js     Baumodus (Editor für eigene Bahnen)
 manifest.webmanifest, sw.js, icons/   Web-App: Installieren und offline spielen
 .github/workflows/pages.yml           Veröffentlichung auf GitHub Pages
 src/level.js      Karte → Kacheln, Mauern, Kollisionssegmente
 src/obstacles.js  bewegliche und statische Hindernisse
-src/obstacles_legend.js Blitzfeld, Aufwind, Falltür
+src/obstacles_legend.js Blitzfeld, Aufwind, Falltür, Fallbeil, Augenturm, Löwentor
 src/physics.js    Ballphysik und Kollision
 src/render.js     isometrische Darstellung
 src/render_legend.js Optik der Legende-Welten (Hintergründe, neue Hindernisse und Stile)

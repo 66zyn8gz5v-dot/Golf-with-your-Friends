@@ -365,10 +365,87 @@ body.editing #editor-panel { display: flex; flex-direction: column; }
 .hat span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hat:hover { border-color: rgba(255, 224, 138, 0.6); transform: translateY(-2px); }
 .hat.sel { border-color: #ffe08a; background: rgba(255, 224, 138, 0.16); color: #ffe08a; box-shadow: 0 0 0 2px rgba(255, 224, 138, 0.22); }
+/* Noch nicht verdient: der Platz bleibt stehen, damit man sieht, was es zu holen gibt.
+   Der Skin darunter ist blass und entfärbt, das Schloss liegt darüber. */
+.hat { position: relative; }
+.hat-lock { display: none; position: absolute; inset: 0; align-items: center; justify-content: center; pointer-events: none; }
+.hat-lock .mi { width: 26px; height: 26px; fill: rgba(255, 224, 138, 0.85); filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
+.hat.zu { border-style: dashed; border-color: rgba(255, 255, 255, 0.12); color: #7d7494; }
+.hat.zu canvas { opacity: 0.3; filter: grayscale(0.85); }
+.hat.zu .hat-lock { display: flex; }
+.hat.zu:hover { transform: none; border-color: rgba(255, 224, 138, 0.35); }
+/* Prüfstand Vorschau: Die Sperre bleibt angezeigt, aber der Skin bleibt farbig – man soll ja
+   gerade sehen, was man da aufsetzt. Das Schloss rückt dafür klein in die Ecke. */
+.hat.zu.probe canvas { opacity: 1; filter: none; }
+.hat.zu.probe { color: #cfc4e6; }
+.hat.zu.probe .hat-lock { inset: 3px 3px auto auto; }
+.hat.zu.probe .hat-lock .mi { width: 15px; height: 15px; }
 #scoreboard .hat-icon { margin-right: 4px; font-size: 12px; }
 @media (max-width: 700px) { .hat-grid { grid-template-columns: repeat(4, 1fr); max-width: 340px; } .hat canvas { width: 50px; height: 50px; } }
 @media (max-width: 380px) { .hat-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (prefers-reduced-motion: reduce) { .hat { transition: none; } .hat:hover { transform: none; } }
+
+/* ---------- Belohnung einer Welt ----------
+   Der eigene Weg dorthin: wie viele Bahnen fehlen und wie die Summe zum Par steht. */
+.lohn {
+  margin: 8px 0 4px; padding: 10px 14px; border-radius: 12px; text-align: left; font-size: 13px;
+  border: 2px solid rgba(255, 255, 255, 0.16); background: rgba(20, 16, 40, 0.45);
+}
+.lohn.auf { border-color: rgba(140, 230, 150, 0.55); background: rgba(30, 70, 40, 0.4); }
+.lohn-name { font-weight: bold; color: #ffe08a; margin-right: 8px; }
+.lohn.auf .lohn-name { color: #9fe8a8; }
+.lohn-was { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: #9c93b8; }
+.lohn-text { margin-top: 6px; color: #cbbfe6; line-height: 1.5; }
+.lohn-text b { color: #f4efe6; }
+.lohn-text b.unter { color: #9dff9d; } .lohn-text b.ueber { color: #ffb0a0; }
+.lohn-text i { font-style: normal; color: #9c93b8; }
+/* Der Balken zeigt, wie viele Bahnen schon ein Ergebnis haben */
+.lohn-balken {
+  position: relative; margin-top: 8px; height: 18px; border-radius: 999px; overflow: hidden;
+  background: rgba(0, 0, 0, 0.35); border: 1px solid rgba(255, 255, 255, 0.14);
+}
+.lohn-balken i { display: block; height: 100%; background: linear-gradient(90deg, #6fa8dd, #ffd166); }
+.lohn-balken span {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: bold; color: #f4efe6; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+.lohn.auf .lohn-balken i { background: linear-gradient(90deg, #5fc06f, #9fe8a8); }
+/* Die Ansage auf der Ergebnistafel, wenn gerade etwas verdient wurde */
+.lohn-frisch {
+  margin: 8px auto; padding: 8px 14px; max-width: 420px; border-radius: 12px; line-height: 1.5;
+  color: #9fe8a8; border: 2px solid rgba(140, 230, 150, 0.55); background: rgba(30, 70, 40, 0.45);
+}
+.lohn-frisch b { color: #d8ffdc; }
+
+/* ---------- Turnier ----------
+   Ein Band auf Startbildschirm und Weltkarte sagt, ob das Turnier bevorsteht, läuft oder vorbei
+   ist. Drei Zustände, drei Farben: erwartungsvolles Gold, laufendes Rot, ausgelaufenes Grau. */
+.turnier-band {
+  display: flex; align-items: center; gap: 8px; justify-content: center;
+  margin: 8px auto 0; padding: 6px 14px; max-width: 100%; border-radius: 999px;
+  font-size: 13px; line-height: 1.25; text-align: left;
+  border: 2px solid rgba(255, 215, 120, 0.55); background: rgba(20, 16, 40, 0.55);
+}
+.turnier-band .mi { width: 18px; height: 18px; flex: none; }
+.turnier-band.vor { color: #ffe08a; }
+.turnier-band.an { color: #ffd0c0; border-color: rgba(255, 120, 90, 0.65); background: rgba(90, 24, 24, 0.45); }
+.turnier-band.aus { color: #b9b2c8; border-color: rgba(255, 255, 255, 0.2); }
+.turnier-kopf {
+  margin: 6px 0 10px; padding: 10px 14px; border-radius: 12px; font-size: 14px; line-height: 1.45;
+  border: 2px solid rgba(255, 215, 120, 0.5); background: rgba(20, 16, 40, 0.5);
+}
+.turnier-kopf.an { border-color: rgba(255, 120, 90, 0.6); background: rgba(90, 24, 24, 0.4); }
+.turnier-kopf.aus { border-color: rgba(255, 255, 255, 0.18); color: #cbbfe6; }
+/* Die Restlaufzeit: groß genug, dass man sie im Vorbeigehen sieht */
+.turnier-uhr {
+  display: inline-block; margin-left: 6px; padding: 2px 10px; border-radius: 999px;
+  font-weight: bold; font-variant-numeric: tabular-nums; color: #fff3c4;
+  background: rgba(255, 120, 90, 0.25); border: 1px solid rgba(255, 160, 120, 0.5);
+}
+/* Die eigene Zeile im Feld hervorheben – man sucht sich ja selbst zuerst */
+.turnier-tafel tr.me { background: rgba(255, 224, 138, 0.14); }
+.turnier-tafel tr.me td { color: #ffe08a; }
+@media (max-width: 600px) { .turnier-band { font-size: 12px; padding: 5px 10px; } }
 
 /* ---------- Online spielen ---------- */
 .join-row { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }

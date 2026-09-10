@@ -164,6 +164,28 @@ class Renderer {
     if (opts.outline) { ctx.strokeStyle = opts.outline; ctx.lineWidth = 1; ctx.stroke(); }
     else { ctx.strokeStyle = top; ctx.lineWidth = 0.8; ctx.stroke(); }
   }
+  /* Kegelstumpf: dasselbe wie prism, aber Boden- und Deckfläche dürfen verschieden groß sein.
+     Damit lassen sich verjüngte Körper bauen – der Bauch eines Kruges, der Schaft eines Obelisken,
+     die Schale eines Feuerkorbs. 'unten' und 'oben' müssen gleich viele Punkte haben. */
+  frustum(ctx, unten, oben, z0, z1, top, side, opts = {}) {
+    const n = unten.length, orient = polyArea(unten) > 0 ? 1 : -1;
+    for (let i = 0; i < n; i++) {
+      const a = unten[i], b = unten[(i + 1) % n], c = oben[(i + 1) % n], d = oben[i];
+      const ex = b[0] - a[0], ey = b[1] - a[1];
+      let nx = ey * orient, ny = -ex * orient;
+      const L = Math.hypot(nx, ny) || 1; nx /= L; ny /= L;
+      if (nx * this.cam.sin + ny * this.cam.cos <= 0.001) continue;   // von der Kamera abgewandt
+      const light = 0.68 + 0.32 * (0.5 + 0.5 * (nx * 0.85 - ny * 0.53));
+      const p0 = this.proj(a[0], a[1], z0), p1 = this.proj(b[0], b[1], z0);
+      const p2 = this.proj(c[0], c[1], z1), p3 = this.proj(d[0], d[1], z1);
+      ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.lineTo(p2[0], p2[1]); ctx.lineTo(p3[0], p3[1]); ctx.closePath();
+      ctx.fillStyle = shade(side, light); ctx.fill();
+      ctx.strokeStyle = ctx.fillStyle; ctx.lineWidth = 0.8; ctx.stroke();
+    }
+    this.pathPoly(ctx, oben, z1);
+    ctx.fillStyle = top; ctx.fill();
+    ctx.strokeStyle = opts.outline || top; ctx.lineWidth = opts.outline ? 1 : 0.8; ctx.stroke();
+  }
   circlePoly(x, y, r, n = 10, a0 = 0) {
     const p = [];
     for (let i = 0; i < n; i++) { const a = a0 + (i * TAU) / n; p.push([x + Math.cos(a) * r, y + Math.sin(a) * r]); }
@@ -267,6 +289,7 @@ class Renderer {
   drawFrame(state) {
     const ctx = this.ctx, th = this.theme, lv = this.level, t = state.t;
     if (!lv) return;
+    this.t = t;   // Spieluhr merken: drawBall und die Ball-Skins brauchen sie für ihre Bewegung
     // Himmel
     const g = ctx.createLinearGradient(0, 0, 0, this.h);
     g.addColorStop(0, th.sky[0]); g.addColorStop(1, th.sky[1]);
@@ -784,13 +807,17 @@ class Renderer {
     const g = ctx.createRadialGradient(sx - r * 0.35, sy - r * 0.4, r * 0.1, sx, sy, r);
     g.addColorStop(0, '#ffffff'); g.addColorStop(0.35, b.color); g.addColorStop(1, shade(b.color, 0.55));
     if (b.curse && !b.sunk) { // Perlenfluch: perlmuttfarbener Schimmer um den Ball
-      const t = this.level.t || 0, gl = 0.5 + 0.3 * Math.sin(t * 4);
+      const gl = 0.5 + 0.3 * Math.sin((this.t || 0) * 4);
       ctx.fillStyle = `rgba(255,240,205,${0.28 * gl})`; ctx.beginPath(); ctx.arc(sx, sy, r * 2.1, 0, TAU); ctx.fill();
       ctx.strokeStyle = `rgba(255,255,255,${0.6 * gl})`; ctx.lineWidth = Math.max(1, s * 0.03); ctx.beginPath(); ctx.arc(sx, sy, r * 1.5, 0, TAU); ctx.stroke();
     }
-    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(sx, sy, r, 0, TAU); ctx.fill();
-    ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 1; ctx.stroke();
-    if (b.hat && typeof Hats !== 'undefined') Hats.draw(ctx, b.hat, sx, sy, r, b.color); // gewählter Hut
+    // Ein Ganzkörper-Skin bringt seine eigene Kugel mit – dann entfällt der gewöhnliche Ball
+    const skin = b.hat && typeof Hats !== 'undefined' && Hats.voll(b.hat);
+    if (!skin) {
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(sx, sy, r, 0, TAU); ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 1; ctx.stroke();
+    }
+    if (b.hat && typeof Hats !== 'undefined') Hats.draw(ctx, b.hat, sx, sy, r, b.color, this.t || 0); // gewählter Hut
     if (dark) ctx.globalAlpha = 1;
   }
   drawAim(ctx, ball, aim) {
@@ -824,6 +851,8 @@ class Renderer {
     if (ob.type === 'trapdoor') { this.drawTrapdoor(ctx, ob, t); return; }
     if (ob.type === 'guillotine') { this.drawGuillotineFloor(ctx, ob, t); return; }
     if (ob.type === 'eyetower') { this.drawEyeBeam(ctx, ob, t); return; }
+    if (ob.type === 'firetower') { this.drawFireSweep(ctx, ob, t); return; }
+    if (ob.type === 'imperialbox') { this.drawLogeLuke(ctx, ob, t); return; }
     if (ob.type === 'field' && ob.style === 'dark') { this.drawDarkZone(ctx, ob, t); return; }
     if (ob.type === 'boost' || (ob.type === 'field' && (ob.style === 'wind' || ob.style === 'current'))) { this.drawWind(ctx, ob, t); return; }
     if (ob.type === 'field') {
@@ -861,19 +890,41 @@ class Renderer {
         const a = t * 2 + (i * TAU) / 3;
         ctx.beginPath(); ctx.ellipse(sx, sy, ob.r * 0.8 * s, ob.r * 0.8 * s * this.cam.tilt, 0, a, a + 1.2); ctx.stroke();
       }
+    } else if (ob.type === 'wandergate') {
+      // Der Durchlass wird auf dem Boden hell markiert – man soll von weitem sehen, wo er gerade steht
+      const q = ob.gap / 2, nx = -ob.uy * 0.45, ny = ob.ux * 0.45;
+      const poly = [[ob.gx - ob.ux * q + nx, ob.gy - ob.uy * q + ny], [ob.gx + ob.ux * q + nx, ob.gy + ob.uy * q + ny],
+        [ob.gx + ob.ux * q - nx, ob.gy + ob.uy * q - ny], [ob.gx - ob.ux * q - nx, ob.gy - ob.uy * q - ny]];
+      this.fillPoly(ctx, poly, 0.006, 'rgba(255,214,110,0.28)', false);
     } else if (ob.type === 'rail') {
-      ctx.strokeStyle = 'rgba(40,30,25,0.8)'; ctx.lineWidth = Math.max(1, s * 0.05);
       const horiz = ob.x0 !== undefined;
-      for (const off of [-0.25, 0.25]) {
-        const [a0, a1] = horiz ? this.proj(ob.x0, ob.y + off, 0.01) : this.proj(ob.x + off, ob.y0, 0.01);
-        const [b0, b1] = horiz ? this.proj(ob.x1, ob.y + off, 0.01) : this.proj(ob.x + off, ob.y1, 0.01);
-        ctx.beginPath(); ctx.moveTo(a0, a1); ctx.lineTo(b0, b1); ctx.stroke();
-      }
-      const from = horiz ? ob.x0 : ob.y0, to = horiz ? ob.x1 : ob.y1;
-      for (let k = from + 0.3; k < to; k += 0.6) {
-        const [a0, a1] = horiz ? this.proj(k, ob.y - 0.35, 0.01) : this.proj(ob.x - 0.35, k, 0.01);
-        const [b0, b1] = horiz ? this.proj(k, ob.y + 0.35, 0.01) : this.proj(ob.x + 0.35, k, 0.01);
-        ctx.beginPath(); ctx.moveTo(a0, a1); ctx.lineTo(b0, b1); ctx.stroke();
+      const laengs = (off, z) => horiz
+        ? [this.proj(ob.x0, ob.y + off, z), this.proj(ob.x1, ob.y + off, z)]
+        : [this.proj(ob.x + off, ob.y0, z), this.proj(ob.x + off, ob.y1, z)];
+      if (this.theme.rails === 'groove') {
+        /* Im Kolosseum fährt der Streitwagen nicht auf Eisen: In den Sandboden sind zwei flache
+           Rillen eingelassen. Gezeichnet werden sie als helle Spur mit einem dünnen Schattenstrich
+           an der Oberkante – das liest sich als Vertiefung. Keine Schwellen, die gehören zur Lore. */
+        for (const off of [-0.24, 0.24]) {
+          const [a, b] = laengs(off, 0.012);
+          ctx.strokeStyle = 'rgba(255,244,214,0.65)'; ctx.lineWidth = Math.max(2, s * 0.13);
+          ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+          const [c, d] = laengs(off - 0.05, 0.013);
+          ctx.strokeStyle = 'rgba(120,96,56,0.30)'; ctx.lineWidth = Math.max(1, s * 0.05);
+          ctx.beginPath(); ctx.moveTo(c[0], c[1]); ctx.lineTo(d[0], d[1]); ctx.stroke();
+        }
+      } else {
+        ctx.strokeStyle = 'rgba(40,30,25,0.8)'; ctx.lineWidth = Math.max(1, s * 0.05);
+        for (const off of [-0.25, 0.25]) {
+          const [a, b] = laengs(off, 0.01);
+          ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+        }
+        const from = horiz ? ob.x0 : ob.y0, to = horiz ? ob.x1 : ob.y1;
+        for (let k = from + 0.3; k < to; k += 0.6) {   // Schwellen
+          const [a0, a1] = horiz ? this.proj(k, ob.y - 0.35, 0.01) : this.proj(ob.x - 0.35, k, 0.01);
+          const [b0, b1] = horiz ? this.proj(k, ob.y + 0.35, 0.01) : this.proj(ob.x + 0.35, k, 0.01);
+          ctx.beginPath(); ctx.moveTo(a0, a1); ctx.lineTo(b0, b1); ctx.stroke();
+        }
       }
     } else if (ob.type === 'ferry') {
       // Stationen markieren
@@ -1032,6 +1083,37 @@ class Renderer {
         const poly = [[p0[0] + nx, p0[1] + ny], [p1[0] + nx, p1[1] + ny], [p1[0] - nx, p1[1] - ny], [p0[0] - nx, p0[1] - ny]];
         items.push({ x: (p0[0] + p1[0]) / 2, y: (p0[1] + p1[1]) / 2, draw: () => this.prism(ctx, poly, 0, ob.h, th.wall.top, th.wall.side, { outline: shade(th.wall.side, 0.75) }) });
       }
+    } else if (ob.type === 'wandergate') {
+      /* Zwei Mauerstücke, dazwischen der wandernde Durchlass. Die Stücke werden wie feste Mauern in
+         Häppchen zerlegt, damit die Sortierung nach Tiefe stimmt; an den Spaltkanten steht je ein
+         goldener Pfosten, damit man das Tor als Tor erkennt und nicht als Bruchstelle. */
+      const nx = -ob.uy * ob.t / 2, ny = ob.ux * ob.t / 2;
+      for (const [p, q] of ob.stuecke()) {
+        const L = Math.hypot(q[0] - p[0], q[1] - p[1]), n = Math.max(1, Math.ceil(L / 3));
+        for (let i = 0; i < n; i++) {
+          const a = i / n, b = (i + 1) / n;
+          const p0 = [p[0] + (q[0] - p[0]) * a, p[1] + (q[1] - p[1]) * a];
+          const p1 = [p[0] + (q[0] - p[0]) * b, p[1] + (q[1] - p[1]) * b];
+          const poly = [[p0[0] + nx, p0[1] + ny], [p1[0] + nx, p1[1] + ny], [p1[0] - nx, p1[1] - ny], [p0[0] - nx, p0[1] - ny]];
+          items.push({ x: (p0[0] + p1[0]) / 2, y: (p0[1] + p1[1]) / 2, draw: () => {
+            // Etwas dunkler als die Arenamauer und mit roter Deckleiste – sonst geht die Sperre im
+            // hellen Sandstein ringsum unter und man sieht nicht, wo der Weg zu ist.
+            this.prism(ctx, poly, 0, ob.h, th.block.top, th.block.side, { outline: shade(th.block.side, 0.7) });
+            this.prism(ctx, poly, ob.h, 0.12, '#c0392c', '#7a1e17');
+          } });
+        }
+      }
+      for (const sd of [-1, 1]) {   // Torpfosten an den Kanten des Durchlasses
+        const px = ob.gx + ob.ux * sd * ob.gap / 2, py = ob.gy + ob.uy * sd * ob.gap / 2;
+        const poly = [[px - 0.16, py - 0.16], [px + 0.16, py - 0.16], [px + 0.16, py + 0.16], [px - 0.16, py + 0.16]];
+        items.push({ x: px, y: py, bias: 0.1, draw: () => {
+          // prism nimmt die Seitenfarbe als Hex und hellt sie selbst je nach Wandrichtung auf –
+          // ein fertiges rgb(...) kann sie nicht lesen und würde schwarz.
+          this.prism(ctx, poly, 0, ob.h + 0.35, '#ffd45e', '#a8842a', { outline: '#6d5418' });
+          const [tx, ty] = this.proj(px, py, ob.h + 0.45);
+          ctx.fillStyle = '#fff0b8'; ctx.beginPath(); ctx.arc(tx, ty, this.scale * 0.09, 0, TAU); ctx.fill();
+        } });
+      }
     } else if (ob.type === 'mover' || ob.type === 'ferry' || ob.type === 'wave') {
       items.push({ x: ob.x, y: ob.y, bias: 0.3, draw: () => { this.flat = ob.type === 'ferry' && ob.flat; this.drawMover(ctx, ob, t); this.flat = false; } });
     } else if (ob.type === 'rotor') {
@@ -1058,6 +1140,16 @@ class Renderer {
       this.pushGuillotine(items, ctx, ob, t);
     } else if (ob.type === 'eyetower') {
       items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => this.drawEyeTower(ctx, ob, t) });
+    } else if (ob.type === 'firetower') {
+      items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => this.drawFireTower(ctx, ob, t) });
+    } else if (ob.type === 'imperialbox') {
+      // Tribüne und schwebende Daumenmarke stehen an verschiedenen Stellen – jede wird für sich einsortiert
+      items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => this.drawImperialBox(ctx, ob, t) });
+      items.push({ x: ob.lmx, y: ob.lmy, bias: 0.3, draw: () => this.drawLogeMarke(ctx, ob, t) });
+    } else if (ob.type === 'liongate') {
+      // Eingang und Ausgang stehen an verschiedenen Stellen der Karte – jeder wird für sich einsortiert
+      if (ob.x != null) items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => this.drawLionGate(ctx, ob, t, false) });
+      if (ob.ax != null) items.push({ x: ob.ax, y: ob.ay, bias: 0.2, draw: () => this.drawLionGate(ctx, ob, t, true) });
     } else if (ob.type === 'gate') {
       const postH = ob.liftH + ob.barH + 0.2, pw = 0.28;
       const horizontal = ob.w >= ob.h;
@@ -1519,17 +1611,36 @@ class Renderer {
       ctx.strokeStyle = '#dfe6ee'; ctx.lineWidth = Math.max(2, s * 0.07); ctx.lineCap = 'round';
       ctx.beginPath(); ctx.moveTo(sx0, sy0); ctx.quadraticCurveTo(sx0 + s * 0.25, sy0 - s * 0.25, sx0 + s * 0.2 + Math.sin(t * 6) * s * 0.03, sy0 - s * 0.55); ctx.stroke();
       ctx.fillStyle = '#c9a15a'; ctx.beginPath(); ctx.arc(sx0, sy0, s * 0.05, 0, TAU); ctx.fill();
-    } else if (ob.style === 'knight') {
+    } else if (ob.style === 'knight' || ob.style === 'gladiator') {
+      /* Ein und dieselbe Figur, zweimal angezogen: Der Ritter aus dem Märchenland ist grauer Stahl
+         mit rotem Wappenschild, der Gladiator des Kolosseums trägt Sandfarben und Rot – Helm mit
+         rotem Kamm, dazu der Rundschild an der Seite. Am Verhalten ändert das nichts, es ist
+         dieselbe Lore auf derselben Strecke, nur anders gezeichnet. */
+      const glad = ob.style === 'gladiator';
+      const koerper = glad ? ['#c0392c', '#7a1e17', '#4a1210'] : ['#d9dde6', '#7f8694', '#4a505c'];
+      const helm = glad ? '#e3d2a9' : '#c9ced8', schlitz = glad ? '#5a4520' : '#2a2f3a';
+      const schild = glad ? '#e3d2a9' : '#d93b3b', schildZier = glad ? '#c0392c' : '#ffd166';
       const body = this.circlePoly(ob.x, ob.y, ob.w * 0.42, 8);
-      this.prism(ctx, body, 0.05, 0.7, '#d9dde6', '#7f8694', { outline: '#4a505c' });
+      this.prism(ctx, body, 0.05, 0.7, koerper[0], koerper[1], { outline: koerper[2] });
       const [hx, hy] = this.proj(ob.x, ob.y, 0.95);
-      ctx.fillStyle = '#c9ced8'; ctx.beginPath(); ctx.arc(hx, hy, s * 0.24, 0, TAU); ctx.fill();
-      ctx.fillStyle = '#2a2f3a'; ctx.fillRect(hx - s * 0.16, hy - s * 0.02, s * 0.32, s * 0.07);
+      ctx.fillStyle = helm; ctx.beginPath(); ctx.arc(hx, hy, s * 0.24, 0, TAU); ctx.fill();
+      ctx.fillStyle = schlitz; ctx.fillRect(hx - s * 0.16, hy - s * 0.02, s * 0.32, s * 0.07);
       ctx.strokeStyle = '#d93b3b'; ctx.lineWidth = Math.max(2, s * 0.08); ctx.lineCap = 'round';
-      ctx.beginPath(); ctx.moveTo(hx, hy - s * 0.22); ctx.quadraticCurveTo(hx - s * 0.2, hy - s * 0.5, hx - s * 0.35 + Math.sin(t * 8) * s * 0.03, hy - s * 0.3); ctx.stroke();
+      if (glad) { // Helmkamm: eine Bürste quer über den Helm, statt der wehenden Ritterfeder
+        ctx.lineWidth = Math.max(3, s * 0.13);
+        ctx.beginPath(); ctx.moveTo(hx - s * 0.2, hy - s * 0.16); ctx.quadraticCurveTo(hx, hy - s * 0.42, hx + s * 0.2, hy - s * 0.16); ctx.stroke();
+      } else {
+        ctx.beginPath(); ctx.moveTo(hx, hy - s * 0.22); ctx.quadraticCurveTo(hx - s * 0.2, hy - s * 0.5, hx - s * 0.35 + Math.sin(t * 8) * s * 0.03, hy - s * 0.3); ctx.stroke();
+      }
       const [shx, shy] = this.proj(ob.x + ob.dir * 0.05, ob.y + 0.35, 0.45);
-      ctx.fillStyle = '#d93b3b'; ctx.beginPath(); ctx.arc(shx, shy, s * 0.17, 0, TAU); ctx.fill();
-      ctx.strokeStyle = '#ffd166'; ctx.lineWidth = Math.max(1, s * 0.04); ctx.beginPath(); ctx.moveTo(shx - s * 0.1, shy); ctx.lineTo(shx + s * 0.1, shy); ctx.moveTo(shx, shy - s * 0.1); ctx.lineTo(shx, shy + s * 0.1); ctx.stroke();
+      ctx.fillStyle = schild; ctx.beginPath(); ctx.arc(shx, shy, s * 0.17, 0, TAU); ctx.fill();
+      ctx.strokeStyle = schildZier; ctx.lineWidth = Math.max(1, s * 0.04);
+      if (glad) { // Rundschild: Buckel in der Mitte und ein Ring darum
+        ctx.beginPath(); ctx.arc(shx, shy, s * 0.11, 0, TAU); ctx.stroke();
+        ctx.fillStyle = schildZier; ctx.beginPath(); ctx.arc(shx, shy, s * 0.05, 0, TAU); ctx.fill();
+      } else {
+        ctx.beginPath(); ctx.moveTo(shx - s * 0.1, shy); ctx.lineTo(shx + s * 0.1, shy); ctx.moveTo(shx, shy - s * 0.1); ctx.lineTo(shx, shy + s * 0.1); ctx.stroke();
+      }
     } else if (ob.style === 'balloon') { this.drawBalloon(ctx, ob, t); return;
     } else if (ob.style === 'airship') { this.drawAirship(ctx, ob, t); return;
     } else if (ob.style === 'ghost') { this.drawGhost(ctx, ob, t); return;
@@ -1615,6 +1726,7 @@ class Renderer {
       if (nut) { ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, r * s, 0, TAU); ctx.fill(); ctx.fillStyle = '#2a180a'; for (const [ox, oy] of [[-0.25, -0.2], [0.2, -0.25], [0, 0.15]]) { ctx.beginPath(); ctx.arc(cx + ox * r * s, cy + oy * r * s, r * s * 0.12, 0, TAU); ctx.fill(); } }
       ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, r * s, 0, TAU); ctx.fill();
       ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(cx, cy, r * s * 0.9, t * 6 * (ob.dir || 1), t * 6 * (ob.dir || 1) + 1.2); ctx.stroke();
+    } else if (ob.style === 'chariot') { this.drawChariot(ctx, ob, t); return; // Streitwagen: nur eine andere Zeichnung derselben Lore
     } else if (ob.style === 'stone') { // Schiebestein aus Sandstein mit eingemeißeltem Auge
       this.prism(ctx, poly, 0, 0.9, '#d9b979', '#8a6a34', { outline: '#5a4420' });
       const [ex, ey] = this.proj(ob.x, ob.y, 0.91);
@@ -1661,7 +1773,7 @@ class Renderer {
       case 'stalagmite': this.spriteStalagmite(ctx, sx, sy, s); break;
       case 'bones': this.spriteBones(ctx, sx, sy, s); break;
       case 'anvil': this.spriteAnvil(ctx, sx, sy, s); break;
-      case 'brazier': this.spriteBrazier(ctx, sx, sy, s, t); break;
+      case 'brazier': this.spriteBrazier(ctx, d, t); break;
       case 'gold': this.spriteGold(ctx, sx, sy, s, t); break;
       case 'pumpkin': this.spritePumpkin(ctx, sx, sy, s, t); break;
       case 'cauldron': this.spriteCauldron(ctx, d, s, t); break;
@@ -1694,7 +1806,7 @@ class Renderer {
       case 'vent': this.spriteVent(ctx, sx, sy, s, t); break;
       case 'palm': this.spritePalm(ctx, sx, sy, s, d, t); break;
       case 'cactus': this.spriteCactus(ctx, sx, sy, s, d); break;
-      case 'urn': this.spriteUrn(ctx, sx, sy, s, d); break;
+      case 'urn': this.spriteUrn(ctx, d); break;
       case 'skull': this.spriteSkull(ctx, sx, sy, s); break;
       case 'shelf': this.spriteShelf(ctx, sx, sy, s, d); break;
       case 'bottle': this.spriteBottle(ctx, sx, sy, s, d); break;
@@ -1703,7 +1815,7 @@ class Renderer {
       case 'gearFlat': this.spriteGearFlat(ctx, d, s, t); break;
       case 'pipe': this.spritePipe(ctx, sx, sy, s, d, t); break;
       case 'clock': this.spriteClock(ctx, sx, sy, s, t); break;
-      case 'obelisk': this.spriteObelisk(ctx, sx, sy, s); break;
+      case 'obelisk': this.spriteObelisk(ctx, d); break;
       case 'sarcophagus': this.spriteSarcophagus(ctx, sx, sy, s, d, t); break;
       case 'gravestone': this.spriteGravestone(ctx, sx, sy, s, d); break;
       case 'gravecross': this.spriteGraveCross(ctx, sx, sy, s, d); break;
@@ -1712,10 +1824,14 @@ class Renderer {
       case 'lightningrod': this.spriteLightningRod(ctx, sx, sy, s, t); break;
       case 'windsock': this.spriteWindsock(ctx, sx, sy, s, d, t); break;
       case 'banner': this.spriteBanner(ctx, sx, sy, s, d, t); break;
-      case 'brazierBlue': this.spriteBrazierColored(ctx, sx, sy, s, t, ['#4fc3ff', '#b7ecff', '80,190,255']); break;
-      case 'torchPurple': this.spriteBrazierColored(ctx, sx, sy, s, t, ['#a24bff', '#e0b8ff', '170,90,255']); break;
-      case 'pillar': this.spritePillar(ctx, sx, sy, s, d); break;
-      case 'urnDark': this.spriteUrn(ctx, sx, sy, s, Object.assign({}, d, { dark: true })); break;
+      case 'bannerRed': this.spriteBanner(ctx, sx, sy, s, d, t, '#c0392c'); break;
+      case 'brazierBlue': this.spriteBrazier(ctx, d, t, ['#4fc3ff', '#b7ecff', '80,190,255']); break;
+      case 'torchPurple': this.spriteBrazier(ctx, d, t, ['#a24bff', '#e0b8ff', '170,90,255']); break;
+      // Säulen werden in Weltkoordinaten gebaut, nicht am Bildschirmpunkt – sie bekommen darum d statt sx/sy
+      case 'pillar': this.spritePillar(ctx, d); break;
+      // helle Arena-Ausführung fürs Kolosseum
+      case 'pillarLight': this.spritePillar(ctx, d, ['#f2e5c4', '#b59b6c', '#f8efd6', '#8a7040']); break;
+      case 'urnDark': this.spriteUrn(ctx, Object.assign({}, d, { dark: true })); break;
       default: break;
     }
   }
@@ -2140,7 +2256,7 @@ class Renderer {
     ctx.strokeStyle = '#c9a15a'; ctx.lineWidth = Math.max(1.5, s * 0.06); ctx.stroke();
     ctx.fillStyle = 'rgba(255,209,102,0.7)'; // Glyphen auf dem Sturz
     for (let k = 0; k < 5; k++) { const [gx, gy] = this.proj(px - Wd / 2 + (k + 0.5) * Wd / 5, fy - 0.05, H + 0.35); ctx.beginPath(); if (k % 2) { ctx.arc(gx, gy, s * 0.08, 0, TAU); } else { ctx.moveTo(gx - s * 0.08, gy + s * 0.08); ctx.lineTo(gx, gy - s * 0.1); ctx.lineTo(gx + s * 0.08, gy + s * 0.08); ctx.closePath(); } ctx.fill(); }
-    for (const side of [-1, 1]) { const [bx, by] = this.proj(px + side * (Wd / 2 + 0.1), fy + 0.2, 0); this.spriteBrazier(ctx, bx, by, s * 0.9, t); } // Feuerschalen
+    for (const side of [-1, 1]) this.spriteBrazier(ctx, { x: px + side * (Wd / 2 + 0.1), y: fy + 0.2, s: 0.9 }, t); // Feuerschalen
     ctx.fillStyle = 'rgba(60,110,50,0.55)'; for (let k = 0; k < 4; k++) { const [mx, my] = this.proj(px - Wd / 2 - 0.3 + k * (Wd / 3), fy, H + 0.7 - (k % 2) * 0.4); ctx.beginPath(); ctx.ellipse(mx, my, s * 0.22, s * 0.09, 0, 0, TAU); ctx.fill(); } // Moos
   }
   /* Strudel: dunkler Wassertrichter mit drehenden Schaumspiralen, Auswurfrinne wie bei der Drehscheibe */
@@ -2303,21 +2419,39 @@ class Renderer {
     ctx.fillStyle = 'rgba(255,255,255,0.5)'; for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.arc(sx + (i % 2 ? -1 : 1) * w * 0.5, sy - h * (0.15 + i * 0.16), s * 0.02, 0, TAU); ctx.fill(); }
     if ((d.seed || 0) > 0.6) { ctx.fillStyle = '#ff5f8a'; ctx.beginPath(); ctx.arc(sx, sy - h - s * 0.02, s * 0.07, 0, TAU); ctx.fill(); }
   }
-  spriteUrn(ctx, sx, sy, s, d) {
-    this.shadow(ctx, sx, sy, s * 0.3);
-    ctx.fillStyle = '#b8683a'; ctx.beginPath(); ctx.moveTo(sx - s * 0.18, sy); ctx.quadraticCurveTo(sx - s * 0.4, sy - s * 0.35, sx - s * 0.16, sy - s * 0.6); ctx.lineTo(sx - s * 0.2, sy - s * 0.68); ctx.lineTo(sx + s * 0.2, sy - s * 0.68); ctx.lineTo(sx + s * 0.16, sy - s * 0.6); ctx.quadraticCurveTo(sx + s * 0.4, sy - s * 0.35, sx + s * 0.18, sy); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#e0a060'; ctx.beginPath(); ctx.moveTo(sx - s * 0.18, sy); ctx.quadraticCurveTo(sx - s * 0.4, sy - s * 0.35, sx - s * 0.16, sy - s * 0.6); ctx.lineTo(sx - s * 0.05, sy - s * 0.6); ctx.quadraticCurveTo(sx - s * 0.2, sy - s * 0.35, sx - s * 0.05, sy); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#2fb8c9'; ctx.fillRect(sx - s * 0.3, sy - s * 0.42, s * 0.6, s * 0.06);
+  /* Krug: gebrannter Ton als echter Körper – Fuß, bauchiger Leib, Hals und Rand als gestapelte
+     Kegelstümpfe. Der farbige Ring sitzt als flacher Reif etwas weiter außen auf dem Bauch. */
+  spriteUrn(ctx, d) {
+    const g = d.s || 1, x = d.x, y = d.y, dunkel = !!d.dark;
+    const deck = dunkel ? '#7a5a6e' : '#e0a060', seite = dunkel ? '#432f42' : '#b8683a';
+    const reif = dunkel ? '#8a6cff' : '#2fb8c9';
+    const K = r => this.circlePoly(x, y, r * g, 10);
+    this.isoEllipse(ctx, x, y, 0.003, 0.42 * g, 'rgba(0,0,0,0.22)');
+    this.frustum(ctx, K(0.19), K(0.24), 0, 0.08 * g, deck, seite);          // Fuß
+    this.frustum(ctx, K(0.24), K(0.40), 0.08 * g, 0.28 * g, deck, seite);   // Bauch, ausladend
+    // Zierreif: nur die Seiten sind farbig. Die Deckfläche bleibt Ton – ein farbiger Deckel würde
+    // von oben gesehen den halben Krug überdecken, denn frustum füllt seine Deckfläche immer.
+    this.frustum(ctx, K(0.40), K(0.40), 0.28 * g, 0.36 * g, deck, reif);    // Zierreif
+    this.frustum(ctx, K(0.40), K(0.26), 0.36 * g, 0.60 * g, deck, seite);   // Schulter
+    this.frustum(ctx, K(0.26), K(0.22), 0.60 * g, 0.68 * g, deck, seite);   // Hals
+    this.frustum(ctx, K(0.22), K(0.28), 0.68 * g, 0.74 * g, deck, seite);   // Rand
   }
 
   /* Obelisk: schlanke, spitz zulaufende Steinsäule mit goldener Spitze */
-  spriteObelisk(ctx, sx, sy, s) {
-    this.shadow(ctx, sx, sy, s * 0.35);
-    ctx.fillStyle = '#b8955a'; ctx.fillRect(sx - s * 0.32, sy - s * 0.18, s * 0.64, s * 0.18);
-    ctx.fillStyle = '#d9b979'; ctx.beginPath(); ctx.moveTo(sx - s * 0.18, sy - s * 0.18); ctx.lineTo(sx - s * 0.1, sy - s * 1.9); ctx.lineTo(sx + s * 0.1, sy - s * 1.9); ctx.lineTo(sx + s * 0.18, sy - s * 0.18); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#8a6a34'; ctx.beginPath(); ctx.moveTo(sx, sy - s * 0.18); ctx.lineTo(sx, sy - s * 1.9); ctx.lineTo(sx + s * 0.1, sy - s * 1.9); ctx.lineTo(sx + s * 0.18, sy - s * 0.18); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#ffd166'; ctx.beginPath(); ctx.moveTo(sx - s * 0.1, sy - s * 1.9); ctx.lineTo(sx, sy - s * 2.15); ctx.lineTo(sx + s * 0.1, sy - s * 1.9); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = 'rgba(40,24,8,0.45)'; for (let i = 0; i < 5; i++) { const y = sy - s * (0.45 + i * 0.28); ctx.fillRect(sx - s * 0.04, y, s * 0.08, s * (i % 2 ? 0.06 : 0.12)); }
+  spriteObelisk(ctx, d) {
+    const g = d.s || 1, x = d.x, y = d.y;
+    const Q = r => [[x - r * g, y - r * g], [x + r * g, y - r * g], [x + r * g, y + r * g], [x - r * g, y + r * g]];
+    this.isoEllipse(ctx, x, y, 0.003, 0.46 * g, 'rgba(0,0,0,0.24)');
+    this.frustum(ctx, Q(0.34), Q(0.31), 0, 0.20 * g, '#d9b979', '#8a6a34', { outline: '#5a4420' });   // Sockel
+    this.frustum(ctx, Q(0.23), Q(0.11), 0.20 * g, 2.06 * g, '#e6cf95', '#a8874a', { outline: '#5a4420' }); // Schaft, verjüngt
+    this.frustum(ctx, Q(0.11), Q(0.012), 2.06 * g, 2.34 * g, '#ffd166', '#c99a2a', { outline: '#5a4420' }); // goldene Spitze
+    // Eingemeißelte Zeichen auf der Vorderseite
+    ctx.fillStyle = 'rgba(60,40,12,0.42)';
+    for (let i = 0; i < 5; i++) {
+      const z = (0.55 + i * 0.3) * g, r = (0.22 - i * 0.024) * g;
+      const [px, py] = this.proj(x, y + r * 0.9, z);
+      ctx.beginPath(); ctx.ellipse(px, py, this.scale * 0.035 * g, this.scale * (i % 2 ? 0.03 : 0.055) * g, 0, 0, TAU); ctx.fill();
+    }
   }
   /* Sarkophag: goldener Kasten mit blauen Streifen und Pharaonenmaske */
   spriteSarcophagus(ctx, sx, sy, s, d, t) {
@@ -2636,13 +2770,22 @@ class Renderer {
     ctx.fillStyle = '#4a4a55'; ctx.beginPath(); ctx.moveTo(sx - s * 0.5, sy - s * 0.55); ctx.lineTo(sx + s * 0.45, sy - s * 0.55); ctx.lineTo(sx + s * 0.3, sy - s * 0.33); ctx.lineTo(sx - s * 0.25, sy - s * 0.33); ctx.closePath(); ctx.fill();
     ctx.fillStyle = '#6b6b78'; ctx.fillRect(sx - s * 0.5, sy - s * 0.62, s * 0.95, s * 0.08);
   }
-  spriteBrazier(ctx, sx, sy, s, t) {
-    ctx.fillStyle = '#3a3a44'; ctx.fillRect(sx - s * 0.06, sy - s * 0.5, s * 0.12, s * 0.5);
-    ctx.beginPath(); ctx.ellipse(sx, sy - s * 0.5, s * 0.28, s * 0.12, 0, 0, TAU); ctx.fill();
-    const f = 0.8 + 0.2 * Math.sin(t * 11 + sx);
-    ctx.fillStyle = 'rgba(255,140,40,0.25)'; ctx.beginPath(); ctx.arc(sx, sy - s * 0.7, s * 0.5 * f, 0, TAU); ctx.fill();
-    ctx.fillStyle = '#ff7a1f'; ctx.beginPath(); ctx.moveTo(sx - s * 0.2, sy - s * 0.5); ctx.quadraticCurveTo(sx - s * 0.1, sy - s * 0.9 * f, sx, sy - s * 1.05 * f); ctx.quadraticCurveTo(sx + s * 0.1, sy - s * 0.85 * f, sx + s * 0.2, sy - s * 0.5); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#ffe07a'; ctx.beginPath(); ctx.moveTo(sx - s * 0.1, sy - s * 0.5); ctx.quadraticCurveTo(sx, sy - s * 0.75 * f, sx + s * 0.1, sy - s * 0.5); ctx.closePath(); ctx.fill();
+  spriteBrazier(ctx, d, t, cols) {
+    const c = cols || ['#ff7a1f', '#ffe07a', '255,140,40'];
+    const g = d.s || 1, x = d.x, y = d.y, s = this.scale * g;
+    const K = r => this.circlePoly(x, y, r * g, 8);
+    this.isoEllipse(ctx, x, y, 0.003, 0.3 * g, 'rgba(0,0,0,0.22)');
+    this.frustum(ctx, K(0.15), K(0.07), 0, 0.46 * g, '#4a4a56', '#2a2a34', { outline: '#16161c' });   // Fuß
+    this.frustum(ctx, K(0.09), K(0.28), 0.46 * g, 0.62 * g, '#3a3a44', '#22222a', { outline: '#16161c' }); // Schale
+    // Flamme: im Bildschirmraum, denn Feuer hat keine Seiten, die man schattieren könnte
+    const [fx, fy] = this.proj(x, y, 0.62 * g);
+    const f = 0.8 + 0.2 * Math.sin(t * 11 + x * 3);
+    ctx.fillStyle = `rgba(${c[2]},0.25)`; ctx.beginPath(); ctx.arc(fx, fy - s * 0.2, s * 0.5 * f, 0, TAU); ctx.fill();
+    ctx.fillStyle = c[0]; ctx.beginPath(); ctx.moveTo(fx - s * 0.2, fy);
+    ctx.quadraticCurveTo(fx - s * 0.1, fy - s * 0.4 * f, fx, fy - s * 0.55 * f);
+    ctx.quadraticCurveTo(fx + s * 0.1, fy - s * 0.35 * f, fx + s * 0.2, fy); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = c[1]; ctx.beginPath(); ctx.moveTo(fx - s * 0.1, fy);
+    ctx.quadraticCurveTo(fx, fy - s * 0.25 * f, fx + s * 0.1, fy); ctx.closePath(); ctx.fill();
   }
   spriteGold(ctx, sx, sy, s, t) {
     ctx.fillStyle = '#e0a52a'; ctx.beginPath(); ctx.ellipse(sx, sy - s * 0.12, s * 0.45, s * 0.22, 0, 0, TAU); ctx.fill();

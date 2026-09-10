@@ -486,6 +486,10 @@ function createObstacles(defs) {
       case 'trapdoor': out.push(new Trapdoor(d)); break;
       case 'guillotine': out.push(new Guillotine(d)); break;
       case 'eyetower': out.push(new EyeTower(d)); break;
+      case 'liongate': out.push(new LionGate(d)); break;
+      case 'wandergate': out.push(new WanderGate(d)); break;
+      case 'firetower': out.push(new FireTower(d)); break;
+      case 'imperialbox': out.push(new ImperialBox(d)); break;
     case 'sharkjump': out.push(new SharkJump(d)); break;
     case 'spikes': out.push(new Spikes(d)); break;
     case 'mover': out.push(new Mover(d)); break;

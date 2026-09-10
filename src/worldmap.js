@@ -12,7 +12,9 @@
    Die Orte liegen in Prozent der Kartenfläche (spots), die Zeichnung nutzt denselben Maßstab
    (viewBox 100 × 62, preserveAspectRatio="none"), damit Marke und Untergrund zusammenpassen. */
 const WorldMap = (() => {
-  /* x, y in Prozent der Karte; icon = Zeichen der Marke, col = Farbe des Rings */
+  /* x, y in Prozent der Karte; icon = Zeichen der Marke, col = Farbe des Rings.
+     Wer hier fehlt, steht nicht auf der Karte: Das Kolosseum ist die Turnierwelt und wird nur
+     über den Turnier-Knopf im Startbildschirm betreten, nicht über einen Ort auf der Reise. */
   const spots = {
     normal: { x: 12, y: 52, icon: '🏰', col: '#ffd166' },
     pro: { x: 43, y: 50, icon: '⚙️', col: '#e0a05a' },

@@ -5,9 +5,9 @@
 import fs from 'node:fs'; import vm from 'node:vm'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
 const SRC = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'src');
 const ctx = { console, performance: { now: () => 0 }, window: {} }; vm.createContext(ctx);
-for (const f of ['themes', 'courses', 'courses_sea', 'courses_jungle', 'courses_storm', 'courses_shadow', 'courses_pro', 'level', 'obstacles', 'obstacles_legend', 'physics'])
+for (const f of ['themes', 'courses', 'courses_sea', 'courses_jungle', 'courses_storm', 'courses_shadow', 'courses_colosseum', 'courses_pro', 'level', 'obstacles', 'obstacles_legend', 'physics'])
   vm.runInContext(fs.readFileSync(path.join(SRC, `${f}.js`), 'utf8'), ctx);
-export const G = vm.runInContext('({buildLevel, makeBall, stepPhysics, createObstacles, PRO_COURSES, COURSES, SEA_COURSES, JUNGLE_COURSES, STORM_COURSES, SHADOW_COURSES, WORLDS, BALL_R})', ctx);
+export const G = vm.runInContext('({buildLevel, makeBall, stepPhysics, createObstacles, PRO_COURSES, COURSES, SEA_COURSES, JUNGLE_COURSES, STORM_COURSES, SHADOW_COURSES, COLOSSEUM_COURSES, WORLDS, BALL_R})', ctx);
 export const WORLDS = G.WORLDS;
 export const MAX_SHOT = 19, STEP = 1 / 240, DEFAULT_MAX = 15;
 
@@ -17,8 +17,9 @@ export function getLevel(def) {
   if (!lv) { lv = G.buildLevel(def); LV.set(def, lv); }
   return lv;
 }
-function resetLevel(lv, switches) {
+function resetLevel(lv, switches, schlagZahl) {
   lv.switches = Object.assign({}, switches);
+  lv.schlagZahl = schlagZahl || 0;   // Daumenstand der Kaiserloge: sie zählt die Schläge der Bahn mit
   for (const ob of lv.obstacles) {
     if (ob.type === 'switch') ob.activeUntil = lv.switches[ob.target] || 0;
     if (ob.type === 'portal' || ob.type === 'potion') ob.lastUse = -10;
@@ -29,7 +30,7 @@ function resetLevel(lv, switches) {
 export function newState(hole) {
   const lv = getLevel(hole);
   const b = G.makeBall(lv.tee.x, lv.tee.y, '#fff');
-  return { hole, def: hole, ball: b, t: 0, strokes: 0, switches: {}, inner: false, done: false, log: [] };
+  return { hole, def: hole, ball: b, t: 0, strokes: 0, schlagZahl: 0, switches: {}, inner: false, done: false, log: [] };
 }
 export function maxStrokes(hole) { return hole.maxStrokes || DEFAULT_MAX; }
 export function cloneState(st) { return { ...st, ball: { ...st.ball, rider: null }, switches: { ...st.switches }, log: st.log.slice() }; }
@@ -39,24 +40,28 @@ export function cloneState(st) { return { ...st, ball: { ...st.ball, rider: null
 export function shoot(st0, ang, pow, wait = 0, wantTrace = false) {
   const st = cloneState(st0);
   const lv = getLevel(st.def);
-  resetLevel(lv, st.switches);
+  resetLevel(lv, st.switches, st.schlagZahl);
   const b = st.ball;
   st.t += wait;
   b.restX = b.x; b.restY = b.y; b.air = false; b.z = 0; b.vz = 0; b.rider = null;
   b.vx = Math.cos(ang) * pow * MAX_SHOT; b.vy = Math.sin(ang) * pow * MAX_SHOT;
   st.strokes++;
+  // Der Zähler der Kaiserloge zählt das Ende eines Schlags; die Bahn liest ihn erst beim nächsten
+  st.schlagZahl = (st.schlagZahl || 0) + 1;
   let t = st.t, restT = 0, slowT = 0, trace = [];
   const maxT = 26;
   for (let i = 0; i < 240 * maxT; i++) {
     const ev = G.stepPhysics(lv, b, STEP, t, true); t += STEP;
     if (wantTrace && i % 12 === 0) trace.push([+b.x.toFixed(2), +b.y.toFixed(2), b.air ? 1 : 0]);
-    let out = null;
+    let out = null, ausOb = null;
     for (const e of ev) {
       if (e.type === 'sunk') { out = 'sunk'; break; }
       if (e.type === 'switch') st.switches = Object.assign({}, lv.switches);
       if (e.type === 'enter') { out = 'enter'; break; }
       if (e.type === 'shark') { out = (st.hole.inner && st.hole.inner.stomach && !st.inner) ? 'stomach' : 'shark'; break; }
       if (e.type === 'water' || e.type === 'lava' || e.type === 'oob' || e.type === 'spiked' || e.type === 'zapped' || e.type === 'fell') { out = e.type; break; }
+      // Feuerturm und Kaiserloge werfen zurück, aber ohne Strafschlag
+      if (e.type === 'scorched' || e.type === 'dropped') { out = e.type; ausOb = e.ob; break; }
     }
     if (out) {
       st.t = t; st.trace = trace;
@@ -67,6 +72,17 @@ export function shoot(st0, ang, pow, wait = 0, wantTrace = false) {
         Object.assign(b, { x: ilv.tee.x, y: ilv.tee.y, vx: 0, vy: 0, z: 0, vz: 0, air: false, rider: null, entered: false, portalCd: 0.5 });
         b.restX = b.x; b.restY = b.y;
         st.switches = {}; st.t += 0.7; st.last = out; st.log.push(out);
+        return st;
+      }
+      if (out === 'scorched' || out === 'dropped') {
+        // Ohne Strafschlag zurück an den Ruhepunkt; lag der selbst in der Gefahrenfläche, weiter
+        // zurück zum Schlagstart – genau wie im Spiel, sonst käme der Ball dort nie heraus.
+        let rx = b.restX, ry = b.restY;
+        if (ausOb && ausOb.trifft(rx, ry)) { rx = lv.tee.x; ry = lv.tee.y; }
+        Object.assign(b, { x: rx, y: ry, vx: 0, vy: 0, z: 0, vz: 0, air: false, rider: null, portalCd: 0.5 });
+        b.restX = rx; b.restY = ry;
+        st.t += 0.9; st.last = out; st.log.push(out);
+        if (st.strokes >= maxStrokes(st.hole)) { st.done = true; st.last = 'max'; st.strokes = maxStrokes(st.hole); }
         return st;
       }
       // Strafschlag: zurück zur Ruheposition
