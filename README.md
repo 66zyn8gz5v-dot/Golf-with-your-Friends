@@ -62,6 +62,31 @@ nehmen die Farbe des Balls an, genau wie der Busch am Ritterhelm (ein weißer Ba
 der Kamm auf dem hellen Helm unter). Sonst bewusst wenige, große Formen: Bei Ballgröße bleibt von feinen
 Verzierungen nichts übrig.
 
+### Par kommt aus der Rangliste
+
+Par steht nicht mehr fest in der Bahn. Es richtet sich danach, was auf ihr schon erreicht wurde:
+
+> **Par = bestes je gespieltes Ergebnis + 1.** Hat die Bahn noch niemand gespielt, gilt das gebaute Par.
+
+Damit sagt Par nicht mehr, was sich der Erbauer gedacht hat, sondern was hier tatsächlich möglich ist. Die
+Meßlatte wandert mit: Wird ein Rekord verbessert, wird Par im selben Moment schärfer – für alle. Die Zahl in
+der Bahn (`c.par`) bleibt als Anhalt für unbespielte Bahnen und für die Bahnprüfung stehen.
+
+Entschieden wird das an **einer** Stelle, `Best.par(weltId, bahn)`; alles andere fragt dort nach – Kopfzeile,
+Ergebnistafel, Endtafel, Rangliste, Turnierbildschirm und die Bedingung der Belohnungen. Für Bahnen aus der
+Werkstatt gibt es keine Rangliste, dort bleibt das gebaute Par.
+
+Zwei Folgen, die man kennen sollte:
+
+- Ist der beste Wert **schlechter** als das gebaute Par, wird Par großzügiger – auf einer als Par 3 gebauten
+  Bahn steht dann eine Weile „Par 6", bis jemand besser spielt. Das ist so gewollt (die Alternative wäre eine
+  Deckelung auf das gebaute Par).
+- Die Belohnung einer Welt rechnet gegen dieses Par. Verbessert jemand einen Rekord, kann eine bereits
+  verdiente Belohnung wieder wegfallen – so wie der Championhelm, wenn man den Rundenrekord verliert.
+
+Ein Hole-in-One bleibt ein Hole-in-One: `diffClass` und `scoreName` prüfen zuerst auf einen Schlag und erst
+danach gegen Par.
+
 ### Turnier auf Zeit
 
 Neben der Rangliste, die für immer läuft, gibt es ein **Turnier** in der Kolosseum-Welt: ein Ereignis mit
@@ -106,7 +131,8 @@ dem Browser-Speicher kommt: Der überlebt Fassungswechsel und lässt sich von Ha
 ### Belohnungen: ein Skin je Welt
 
 Jede Welt hat eine Belohnung, und man verdient sie sich am eigenen Können: **Die Summe der eigenen besten
-Einzelbahnen muss unter dem Par der Welt liegen, und jede Bahn braucht ein Ergebnis.** Sieben Welten,
+Einzelbahnen muss unter dem Par der Welt liegen, und jede Bahn braucht ein Ergebnis.** Gerechnet wird gegen
+das geltende Par – also gegen die Rangliste, siehe oben. Sieben Welten,
 sieben Belohnungen – sechs davon sind **Ganzkörper-Skins**: Sie ersetzen den Ball, statt auf ihm zu
 sitzen, und bewegen sich. Der Championhelm ist der einzige, der nur ein Hut ist.
 

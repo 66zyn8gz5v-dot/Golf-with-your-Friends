@@ -87,7 +87,8 @@
     const p = state.players[state.curPlayer];
     ui.player.textContent = p ? p.name : '–';
     syncClock();
-    ui.strokes.textContent = def ? (state.mode === 'creative' ? `Kreativ · Schläge: ${state.strokes} · Par ${def.par}` : `Schläge: ${state.strokes} / ${maxStrokes()} · Par ${def.par}`) : '';
+    const parJetzt = def ? Best.par(weltId(), def) : 0;
+    ui.strokes.textContent = def ? (state.mode === 'creative' ? `Kreativ · Schläge: ${state.strokes} · Par ${parJetzt}` : `Schläge: ${state.strokes} / ${maxStrokes()} · Par ${parJetzt}`) : '';
     // Namen kommen im Netzspiel von fremden Geräten: die Zeile wird gebaut, nicht aus Text geklebt
     ui.board.replaceChildren(...state.players.map((pl, i) => {
       const row = document.createElement('div');
@@ -493,7 +494,7 @@
     const bahnZeilen = welt.courses.map((c, i) => {
       const b = liste.bahnen[c.name];
       return `<tr class="${b && b.ich ? 'me' : ''}"><td>${i + 1}</td><td>${holeIcon(c)} ${Text.esc(c.name)}</td>
-        <td class="num">${c.par}</td>
+        <td class="num">${Best.par(welt.id, c)}</td>
         <td class="num rec">${b ? `<b>${kombi(b.s)}</b><i>${Text.esc(b.n)}</i>` : '–'}</td>
         <td class="num">${b ? b.st : '–'}</td>
         <td class="num">${b ? zeit(b.ms) : '–'}</td></tr>`;
@@ -517,14 +518,16 @@
       ${kopf}
       <div class="sub">Gewertet wird die <b>Kombi-Wertung</b>: Schläge plus angefangene Minuten. Vier Schläge
         in 1:12 ergeben 4 + 1,2 = 5,2. Es zählt die <b>ganze Runde</b> über alle ${welt.courses.length} Bahnen;
-        darunter stehen die besten Einzelbahnen. Gespielt wird im <b>Wettkampf</b> – im Kreativmodus zählt nichts.</div>
+        darunter stehen die besten Einzelbahnen. Gespielt wird im <b>Wettkampf</b> – im Kreativmodus zählt nichts.<br>
+        Das Par jeder Bahn kommt aus der Rangliste: einen Schlag über dem besten Ergebnis, das je dort
+        gespielt wurde.</div>
       ${!Best.name ? `<div class="sub warn-note">Ohne Namen wird nichts gewertet. Trag ihn in der
         <span class="btn ghost small" id="zur-liste">${Icons.svg('emoji_events')} Rangliste</span> ein.</div>` : ''}
       <div class="sub net-note" id="tstate">${Net.status === 'ready'
         ? `Verbunden · ${liste.runde.length} ${liste.runde.length === 1 ? 'Teilnehmer' : 'Teilnehmer'} im Feld`
         : 'Keine Verbindung – das Feld zeigt vorerst nur, was auf diesem Gerät liegt.'}</div>
 
-      <div class="sub" style="margin-top:12px"><b>Ganze Runde</b> · Par ${welt.courses.reduce((a, c) => a + c.par, 0)}</div>
+      <div class="sub" style="margin-top:12px"><b>Ganze Runde</b> · Par ${Best.parSumme(welt.id, welt.courses)}</div>
       <div class="tabelle-schiebe"><table class="scores best-table turnier-tafel">
         <tr><th></th><th>Name</th><th class="num">${BEST_ICON.combo} Kombi</th><th class="num">${BEST_ICON.strokes}</th><th class="num">${BEST_ICON.time}</th></tr>
         ${rundenZeilen}
@@ -609,11 +612,11 @@
       : '–'}</td>`;
     const rows = w.courses.map((c, i) => {
       const h = k => rec[k].holes[c.name];
-      return `<tr><td>${i + 1}</td><td>${holeIcon(c)} ${Text.esc(c.name)}</td><td class="num">${c.par}</td>
+      return `<tr><td>${i + 1}</td><td>${holeIcon(c)} ${Text.esc(c.name)}</td><td class="num">${Best.par(w.id, c)}</td>
         ${Best.KINDS.map(k => zelle(k, h(k))).join('')}</tr>`;
     }).join('');
     const rundeZeile = Best.KINDS.map(k => zelle(k, rec[k].round)).join('');
-    const parTotal = w.courses.reduce((a, c) => a + c.par, 0);
+    const parTotal = Best.parSumme(w.id, w.courses);
     overlay(`<div class="panel wide">
       <div class="panel-head"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span><h2>${Icons.svg('emoji_events')} Rangliste</h2></div>
       <div class="sub">Für jede Bahn zählen <b>alle drei Wertungen gleichzeitig</b> – Namen eintragen, losspielen,
@@ -642,7 +645,10 @@
           ? `<span class="sub" style="display:block">Zurücksetzen kann nur, wer die Liste führt.
              <span class="btn ghost small" id="bkey">${Icons.svg('save')} Schlüssel einsetzen</span></span>`
           : `<span class="btn ghost small" id="bown">${Icons.svg('emoji_events')} Liste führen</span>`}</p>
-      <div class="legend"><b>${BEST_ICON.strokes} Schläge:</b> ${BEST_HELP.strokes}<br>
+      <div class="legend"><b>Par kommt aus dieser Liste:</b> Es liegt immer einen Schlag über dem besten
+        Ergebnis, das je auf einer Bahn gespielt wurde. Hat sie noch niemand gespielt, gilt das gebaute Par.
+        Wird ein Rekord verbessert, wird Par im selben Moment schärfer – für alle.<br>
+        <b>${BEST_ICON.strokes} Schläge:</b> ${BEST_HELP.strokes}<br>
         <b>${BEST_ICON.time} Zeit:</b> ${BEST_HELP.time}<br>
         <b>${BEST_ICON.combo} Kombi:</b> ${BEST_HELP.combo}<br>
         Alle, die das Spiel haben, teilen sich diese Liste. Die Rekorde liegen beim Vermittler und
@@ -1046,7 +1052,7 @@
     if (!online || !online.host || !online.started) return;
     const p = online.players[state.curPlayer];
     if (!p || !p.gone || state.players[state.curPlayer].scores[state.holeIdx] != null) return;
-    const sc = maxStrokes() === Infinity ? state.courses[state.holeIdx].par : maxStrokes();
+    const sc = maxStrokes() === Infinity ? parHier() : maxStrokes();
     netSend({ t: 'done', h: state.holeIdx, pi: state.curPlayer, score: sc, sunk: false });
     finishTurn(sc, true);
   }
@@ -1197,6 +1203,12 @@
   const THEME_ICONS = { meadow: '🌼', mushroom: '🍄', forge: '⚒️', forest: '🌲', dragon: '🐉', ice: '❄️', sky: '☁️', witch: '🧙', castle: '🏰', harbor: '⚓', reef: '🐠', clockwork: '⚙️', palace: '🕌', desert: '🏜️', tomb: '⚱️', deck: '🏴‍☠️', wreck: '🚢', belly: '🦈', jungle: '🌴', temple: '🗿', hut: '🧪', storm: '⛈️', fortress: '🏯', shadow: '🌑', throne: '👑', darksea: '🌊', ghostship: '⚓' };
   const holeIcon = def => HOLE_ICONS[def.name] || THEME_ICONS[def.theme] || '⛳';
   const worldClass = () => 'world-' + ((state.world && state.world.id) || 'custom');
+  /* Das geltende Par: Es steht nicht mehr fest in der Bahn, sondern kommt aus der Rangliste –
+     immer einen Schlag über dem besten Ergebnis, das je auf ihr gespielt wurde. Entschieden wird
+     das an einer Stelle, in Best.par; hier stehen nur die Kurzformen für die laufende Runde. */
+  const weltId = () => (state.world && state.world.id) || '';
+  const parHier = () => Best.par(weltId(), state.courses[state.holeIdx]);
+
   const diffClass = (strokes, par) => strokes === 1 ? 'ace' : strokes - par <= -2 ? 'eagle' : strokes - par === -1 ? 'birdie' : strokes === par ? 'par' : strokes - par === 1 ? 'bogey' : 'worse';
 
   function scoreName(strokes, par) {
@@ -1477,7 +1489,7 @@
     updateHud();
   }
   function sunk() {
-    const par = state.courses[state.holeIdx].par;
+    const par = parHier();
     Sfx.sink();
     burst(state.level.cup.x, state.level.cup.y, state.theme.accent, 26, true);
     showMessage(`${scoreName(state.strokes, par)}  (${state.strokes} Schläge)`, 1800);
@@ -1498,7 +1510,7 @@
     }).join('');
     overlay(`<div class="panel ${worldClass()}">
       <h2>${holeIcon(def)} Bahn ${state.holeIdx + 1}: ${Text.esc(def.name)}</h2>
-      <div class="sub">Par ${def.par}</div>
+      <div class="sub">Par ${Best.par(weltId(), def)}</div>
       ${lohnZeile()}
       <table class="scores"><tr><th>Spieler</th><th>Bahn</th>${zeit ? '<th>Zeit</th>' : ''}<th>Gesamt</th></tr>${rows}</table>
       ${!last ? `<div class="sub">Als Nächstes: <b>${Text.esc(state.courses[state.holeIdx + 1].name)}</b><br><i>${Text.esc(state.courses[state.holeIdx + 1].intro || '')}</i></div>` : ''}
@@ -1513,7 +1525,7 @@
   }
   function showFinal() {
     state.phase = 'final'; clearTimeout(msgTimer); ui.msg.classList.remove('visible'); // keine Laufmeldung über der Tafel
-    const parTotal = state.courses.reduce((a, c) => a + c.par, 0);
+    const parTotal = Best.parSumme(weltId(), state.courses);
     // eigene Runde in die Rangliste
     const gewertet = state.mode !== 'creative' && !state.editorReturn;
     const gesamtZeit = p => (p.times || []).reduce((a, b) => a + (b || 0), 0);
@@ -1539,14 +1551,15 @@
         <span class="pod-par ${r.total - parTotal < 0 ? 'under' : r.total - parTotal > 0 ? 'over' : ''}">${vsPar(r.total - parTotal)}</span>
       </div>`).join('');
     // je Bahn eine Karte: Nummer, Sinnbild, Name, Par und die Schläge aller Spieler (farbig nach Ergebnis)
+    const kartenPar = state.courses.map(c => Best.par(weltId(), c));
     const cards = state.courses.map((c, i) => `<div class="hole-card">
         <div class="hc-top"><span class="hc-num">${i + 1}</span><span class="hc-icon">${holeIcon(c)}</span></div>
         <div class="hc-name">${Text.esc(c.name)}</div>
-        <div class="hc-par">Par ${c.par}</div>
-        <div class="hc-scores">${state.players.map(p => `<span class="hc-score ${diffClass(p.scores[i], c.par)}" style="border-color:${p.color}" title="${Text.esc(p.name)}">${p.scores[i]}</span>`).join('')}</div>
+        <div class="hc-par">Par ${kartenPar[i]}</div>
+        <div class="hc-scores">${state.players.map(p => `<span class="hc-score ${diffClass(p.scores[i], kartenPar[i])}" style="border-color:${p.color}" title="${Text.esc(p.name)}">${p.scores[i]}</span>`).join('')}</div>
       </div>`).join('');
     const best = state.players.length > 1 ? '' : (() => { // Solo: kleine Bilanz
-      const p = state.players[0]; const n = k => p.scores.filter((s, i) => diffClass(s, state.courses[i].par) === k).length;
+      const p = state.players[0]; const n = k => p.scores.filter((s, i) => diffClass(s, kartenPar[i]) === k).length;
       const parts = [['ace', 'Hole-in-One'], ['eagle', 'Eagle'], ['birdie', 'Birdie'], ['par', 'Par'], ['bogey', 'Bogey'], ['worse', 'Schlechter']].filter(([k]) => n(k)).map(([k, l]) => `<span class="tally ${k}">${n(k)}× ${l}</span>`);
       return `<div class="tallies">${parts.join('')}</div>`;
     })();
@@ -1826,7 +1839,7 @@
     skipHole() {
       if (!state.level || state.phase === 'title') return false;
       clearTimeout(waitTimer);
-      const par = state.courses[state.holeIdx].par;
+      const par = parHier();
       for (let i = 0; i < state.players.length; i++) if (state.players[i].scores[state.holeIdx] == null) state.players[i].scores[state.holeIdx] = par;
       showHoleDone(); return true;
     },
