@@ -22,7 +22,7 @@ const WorldMap = (() => {
     jungle: { x: 59, y: 82, icon: '🗿', col: '#9ee06f' },
     storm: { x: 75, y: 44, icon: '⛈️', col: '#8fb8ff' },
     shadow: { x: 88, y: 74, icon: '🔮', col: '#c58bff' },
-    clock: { x: 62, y: 30, icon: '🕰️', col: '#ffc46b' },
+    clock: { x: 61, y: 31, icon: '🕰️', col: '#ffc46b' },
   };
 
   /* ---------- Projektion wie im Spiel ---------- */
@@ -94,7 +94,7 @@ const WorldMap = (() => {
   function svg(cls = 'atlas-bg', par = 'none') {
     // Mitte jeder Scheibe auf der Karte – die Ortsschilder sitzen an ihrer Vorderkante
     const W = {
-      storm: [76, 20], pro: [43, 23], normal: [14, 25], shadow: [87, 39], sea: [27, 44], jungle: [59, 44],
+      storm: [76, 20], pro: [43, 23], normal: [14, 25], shadow: [87, 39], sea: [27, 44], jungle: [59, 44], clock: [61, 12],
     };
     const stars = [];
     for (let i = 0; i < 28; i++) {
@@ -113,7 +113,7 @@ const WorldMap = (() => {
     }
     // Reiseweg: von Vorderkante zu Vorderkante, hinter den Scheiben durch
     const front = id => { const [x, y] = W[id]; return [x, y + 5.4]; };
-    const route = ['normal', 'sea', 'pro', 'jungle', 'storm', 'shadow'].map(id => front(id).map(v => v.toFixed(1)).join(' ')).join(' L ');
+    const route = ['normal', 'sea', 'pro', 'jungle', 'clock', 'storm', 'shadow'].map(id => front(id).map(v => v.toFixed(1)).join(' ')).join(' L ');
 
     return `<svg class="${cls}" viewBox="0 0 100 62" preserveAspectRatio="${par}" aria-hidden="true">
       <defs>
@@ -204,6 +204,35 @@ const WorldMap = (() => {
             ${Array.from({ length: 8 }, (_, i) => { const a = i * Math.PI / 4;
               return `<path d="M${(c[0] + Math.cos(a) * 0.85).toFixed(2)} ${(c[1] + Math.sin(a) * 0.85 * TILT).toFixed(2)} L${(c[0] + Math.cos(a) * 1.25).toFixed(2)} ${(c[1] + Math.sin(a) * 1.25 * TILT).toFixed(2)}"/>`; }).join('')}</g>`; })()}
           ${tree(x, y, 2.8, -2.6, 0.85)}${tree(x, y, -3, -2.2, 0.75)}`; })()}
+      </g>
+
+      <!-- ===== Uhrwerkstadt: Turmuhr über den Dächern ===== -->
+      <g filter="url(#atDeep)">
+        ${slab(...W.clock, 8, 8, 2.6, '#6f7488', '#656a7e', '#3e4258', '#242838')}
+        ${(() => { const [x, y] = W.clock; return `
+          ${shade(x, y, 0.3, 0.5, 1.8)}
+          <!-- Der Turm: Schaft, Zifferblatt, Grünspandach -->
+          ${box(x, y, -0.3, -0.3, 1.9, 1.9, 0, 3.4, '#525872', '#3d4258', '#2a2e40')}
+          ${(() => { const c = P(x, y, -0.3, -0.3, 2.6); return `
+            <circle cx="${c[0].toFixed(2)}" cy="${c[1].toFixed(2)}" r="0.95" fill="#8a6624"/>
+            <circle cx="${c[0].toFixed(2)}" cy="${c[1].toFixed(2)}" r="0.78" fill="#ffdf9c"/>
+            <line x1="${c[0].toFixed(2)}" y1="${c[1].toFixed(2)}" x2="${c[0].toFixed(2)}" y2="${(c[1] - 0.5).toFixed(2)}" stroke="#3a2a12" stroke-width="0.14"/>
+            <line x1="${c[0].toFixed(2)}" y1="${c[1].toFixed(2)}" x2="${(c[0] + 0.42).toFixed(2)}" y2="${(c[1] + 0.2).toFixed(2)}" stroke="#3a2a12" stroke-width="0.12"/>`; })()}
+          ${cone(x, y, -0.3, -0.3, 1.15, 3.4, 1.5, '#5ec9ac', '#2f7a68')}
+          <!-- Dächer ringsum, Kupfer auf Stein -->
+          ${box(x, y, 2.1, 0.6, 1.5, 1.5, 0, 1.5, '#4a4f66', '#373b4e', '#252838')}
+          ${cone(x, y, 2.1, 0.6, 0.95, 1.5, 0.9, '#4fb59b', '#276b5c')}
+          ${box(x, y, -2.4, 1.2, 1.3, 1.3, 0, 1.1, '#4a4f66', '#373b4e', '#252838')}
+          ${cone(x, y, -2.4, 1.2, 0.85, 1.1, 0.8, '#4fb59b', '#276b5c')}
+          ${box(x, y, 0.9, 2.6, 1.1, 1.1, 0, 0.9, '#4a4f66', '#373b4e', '#252838')}
+          <!-- Gaslaternen als warme Punkte -->
+          <g fill="#ffc46b">${[[-1.9, -1.9], [2.9, -1.4], [-0.6, 2.9]].map(([a, b]) => { const p = P(x, y, a, b, 0.7);
+            return `<circle cx="${p[0].toFixed(2)}" cy="${p[1].toFixed(2)}" r="0.22"/>`; }).join('')}</g>
+          <!-- ein Zahnrad an der Flanke, das sich dreht -->
+          ${(() => { const c = P(x, y, 3.1, -2.4, 0.5); return `<g class="mill-blades" fill="none" stroke="#d9a24e" stroke-width="0.2" stroke-linecap="round">
+            <circle cx="${c[0].toFixed(2)}" cy="${c[1].toFixed(2)}" r="0.7"/>
+            ${Array.from({ length: 8 }, (_, i) => { const a = i * Math.PI / 4;
+              return `<path d="M${(c[0] + Math.cos(a) * 0.7).toFixed(2)} ${(c[1] + Math.sin(a) * 0.7 * TILT).toFixed(2)} L${(c[0] + Math.cos(a) * 1.05).toFixed(2)} ${(c[1] + Math.sin(a) * 1.05 * TILT).toFixed(2)}"/>`; }).join('')}</g>`; })()}`; })()}
       </g>
 
       <!-- ===== Märchenland: Burg auf grüner Scheibe ===== -->
