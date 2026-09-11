@@ -814,6 +814,19 @@ wie ein Fehler. Ein Fallstrick dabei: Die obere Fläche darf nicht Kachel für K
 gezeichnet werden – bei halber Durchsicht sähe man ein Gitter aus lauter inneren Seitenflächen. Nur
 der Rand bekommt seine Schürze.
 
+**Ein Ruhepunkt ist ein Ort UND eine Ebene.** Der Ball merkt sich, wo er zuletzt lag, und wird
+nach einem Strafschlag dorthin zurückgelegt. Die Ebene dazu wurde nie mitgeschrieben – er landete
+also immer auf der untersten. Solange darunter Boden war, fiel das niemandem auf; über den Wolken
+ist darunter nichts. Dann lag er im Leeren, war sofort wieder „aus", bekam den nächsten
+Strafschlag, wurde wieder dorthin gelegt – bis zur Höchstschlagzahl, ohne dass man etwas tun
+konnte. Fünf von sieben Bahnen mit einer Klippe waren betroffen, auch zwei im Uhrenturm. Jetzt
+trägt jeder Ruhepunkt seine Ebene mit (`restEbene`, `shotEbene`, und über das Netz das Feld `e`),
+und `sichererRuhepunkt` prüft vor dem Zurücklegen noch einmal nach: Liegt der gemerkte Punkt auf
+seiner Ebene doch nicht auf Boden, geht es zum Start des letzten Schlags und notfalls an den
+Abschlag. Geprüft wird es mit `scratchpad/absturz.mjs`, das auf jeder Bahn mit einer echten Klippe
+den Ball darüber schiebt und danach zweimal nachsieht: Liegt er auf Boden, ist wieder „Zielen" dran
+– und ist die Schlagzahl vier Sekunden später immer noch dieselbe?
+
 **Die Zielhilfe kommt ganz zum Schluss.** Sie wurde bis Fassung 74 beim Boden gezeichnet, also
 unter allem, was danach kam. Stand der Ball auf einer oberen Ebene, malte deren Scholle den Pfeil
 zu – man konnte ganz normal aufladen und schießen, sah nur nicht mehr, wohin. Das ist schlimmer als

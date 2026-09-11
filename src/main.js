@@ -1009,7 +1009,8 @@
                             Math.abs(Math.hypot(m.dx, m.dy) - 1) < 0.02 && istZahl(m.power, 0, 1) &&
                             istTakt(m.st) && istZaehler(m.sz) && istAmZug(m);
       case 'rest':   return istGanz(m.h, 0, state.courses.length - 1) && istGanz(m.pi, 0, ONLINE_MAX - 1) &&
-                            aufBahn(m.x, m.y) && istGanz(m.s, 0, 999) && istTakt(m.st) && istZaehler(m.sz) && istAmZug(m);
+                            aufBahn(m.x, m.y) && (m.e == null || istGanz(m.e, 0, 8)) &&
+                            istGanz(m.s, 0, 999) && istTakt(m.st) && istZaehler(m.sz) && istAmZug(m);
       case 'done':   return istGanz(m.h, 0, state.courses.length - 1) && istGanz(m.pi, 0, ONLINE_MAX - 1) &&
                             istGanz(m.score, 1, 999) && (m.ms == null || istZahl(m.ms, 0, 24 * 3600 * 1000)) && istAmZug(m);
       case 'alive':  return true;
@@ -1072,6 +1073,8 @@
           const b = state.ball;
           b.x = m.x; b.y = m.y; b.z = 0; b.vx = 0; b.vy = 0; b.vz = 0; b.air = false; b.rider = null;
           b.restX = m.x; b.restY = m.y;
+          b.ebene = b.restEbene = (typeof m.e === 'number' && m.e >= 0 && m.e < (state.level.flaechen || [0]).length) ? m.e : 0;
+          state.level.setzeEbene(b.ebene);
           state.strokes = m.s; state.phase = 'aim'; clearTimeout(waitTimer); faceCup(); updateHud();
         }
         break;
@@ -1502,6 +1505,7 @@
     if (online && online.started && !fromNet) netSend({ t: 'shot', h: state.holeIdx, pi: state.curPlayer, dx, dy, power, st: state.t, sz: schlagZahl() });
     const b = state.ball;
     b.restX = b.x; b.restY = b.y; b.shotX = b.x; b.shotY = b.y; // Schlagstart (für Aufspießen am Ruheplatz)
+    b.restEbene = b.shotEbene = b.ebene || 0;   // ein Ruhepunkt ist Ort UND Ebene
     b.vx = dx * power * MAX_SHOT; b.vy = dy * power * MAX_SHOT;
     state.strokes++; state.phase = 'rolling'; state.aim = null; state.restTimer = 0; state.slowTimer = 0; state.rollT = 0; state.stuckRef = null;
     Sfx.hit(power); updateHud();
@@ -1535,11 +1539,11 @@
 
   function ballAtRest() {
     const b = state.ball;
-    b.vx = 0; b.vy = 0; b.restX = b.x; b.restY = b.y;
+    b.vx = 0; b.vy = 0; b.restX = b.x; b.restY = b.y; b.restEbene = b.ebene || 0;
     schlagVorbei();
     faceCup();
     // Wer dran ist, sagt Ruheort und Schlagzahl an; die anderen uebernehmen sie
-    if (online && online.started && myTurn()) netSend({ t: 'rest', h: state.holeIdx, pi: state.curPlayer, x: b.x, y: b.y, s: state.strokes, st: state.t, sz: schlagZahl() });
+    if (online && online.started && myTurn()) netSend({ t: 'rest', h: state.holeIdx, pi: state.curPlayer, x: b.x, y: b.y, e: b.ebene || 0, s: state.strokes, st: state.t, sz: schlagZahl() });
     if (state.strokes >= maxStrokes()) { showMessage(`Maximale Schlagzahl (${maxStrokes()}) erreicht`, 1800); finishTurn(maxStrokes()); return; }
     state.phase = 'aim';
   }
@@ -1561,6 +1565,21 @@
       if (state.curPlayer < state.players.length) beginTurn(); else showHoleDone();
     }, 1700);
   }
+  /* Ein Ruhepunkt ist Ort UND Ebene – die zweite Sicherung dafür.
+     Wird der Ball nach einem Strafschlag an seine Stelle zurückgelegt, aber stillschweigend auf
+     die unterste Ebene gesetzt, steht er über dem Nichts: sofort wieder „aus", wieder
+     zurückgelegt, und das ohne Ende. Über den Wolken lag jeder Ruhepunkt oben, darum fiel es dort
+     auf. Liegt der gemerkte Punkt auf seiner Ebene doch nicht auf Boden, geht es zum Start des
+     letzten Schlags zurück und notfalls an den Abschlag – ein Ball muss immer irgendwo liegen
+     können. */
+  function sichererRuhepunkt(b) {
+    const lv = state.level;
+    for (const [x, y, e] of [[b.restX, b.restY, b.restEbene || 0], [b.shotX, b.shotY, b.shotEbene || 0], [lv.tee.x, lv.tee.y, 0]]) {
+      if (x == null || y == null) continue;
+      if (lv.isFloorChar(lv.charAtEbene(e, x, y))) return { x, y, e };
+    }
+    return { x: lv.tee.x, y: lv.tee.y, e: 0 };
+  }
   function hazard(type) {
     const b = state.ball;
     const custom = state.level.def.hazardText && state.level.def.hazardText[type];
@@ -1570,13 +1589,14 @@
     else if (type === 'lava') { Sfx.lava(); burst(b.x, b.y, '#ffb347', 18); }
     else if (type === 'spiked' || type === 'zapped' || type === 'fell') { // zurück zum Start des letzten Schlags
       if (type === 'zapped') { Sfx.thunder(); burst(b.x, b.y, '#fff27a', 34, true); burst(b.x, b.y, '#ffffff', 16, true); } else if (type === 'fell') { Sfx.oob(); burst(b.x, b.y, '#b56bff', 14, true); } else { Sfx.lava(); burst(b.x, b.y, '#e6e6e6', 18, true); }
-      b.z = 0; b.vz = 0; b.air = false; if (b.shotX != null) { b.restX = b.shotX; b.restY = b.shotY; }
+      b.z = 0; b.vz = 0; b.air = false; if (b.shotX != null) { b.restX = b.shotX; b.restY = b.shotY; b.restEbene = b.shotEbene || 0; }
     }
     else if (type === 'beheaded' || type === 'seen') { // zurück zum Schlagstart – aber nie wieder unter die Klinge oder in den Blick des Auges
       Sfx.lava(); burst(b.x, b.y, type === 'seen' ? '#ff9a3a' : '#ff4a4a', 26, true);
       b.z = 0; b.vz = 0; b.air = false;
       const lv = state.level; let rx = b.shotX != null ? b.shotX : b.restX, ry = b.shotX != null ? b.shotY : b.restY;
-      if (type === 'seen') { if (lv.obstacles.some(o => o.type === 'eyetower' && Math.hypot(rx - o.x, ry - o.y) <= o.range + 0.5)) { rx = lv.tee.x; ry = lv.tee.y; label += ' Zurück zum Anfang.'; } }
+      b.restEbene = b.shotX != null ? (b.shotEbene || 0) : (b.restEbene || 0);
+      if (type === 'seen') { if (lv.obstacles.some(o => o.type === 'eyetower' && Math.hypot(rx - o.x, ry - o.y) <= o.range + 0.5)) { rx = lv.tee.x; ry = lv.tee.y; b.restEbene = 0; label += ' Zurück zum Anfang.'; } }
       else for (const g of lv.obstacles) {
         if (g.type !== 'guillotine' || !g.under(rx, ry, 0.7)) continue;
         const vert = g.w < g.h, side = (vert ? Math.sign(lv.tee.x - g.x) : Math.sign(lv.tee.y - g.y)) || -1;
@@ -1589,11 +1609,13 @@
     schlagVorbei();
     showMessage(`${label} · +1 Strafschlag`, 1700);
     state.phase = 'wait'; state.aim = null;
-    const rx = b.restX, ry = b.restY;
+    const r = sichererRuhepunkt(b);
     clearTimeout(waitTimer);
     waitTimer = setTimeout(() => {
-      b.x = rx; b.y = ry; b.vx = 0; b.vy = 0; b.z = 0.6; b.vz = 0; b.portalCd = 0.5;
-      b.ebene = b.restEbene || 0;   // auf der Ebene weiterspielen, auf der der Ruhepunkt liegt
+      b.x = r.x; b.y = r.y; b.vx = 0; b.vy = 0; b.z = 0.6; b.vz = 0; b.portalCd = 0.5;
+      b.ebene = b.restEbene = r.e;   // auf der Ebene weiterspielen, auf der der Ruhepunkt liegt
+      b.restX = r.x; b.restY = r.y;
+      state.level.setzeEbene(b.ebene);
       faceCup();
       if (state.strokes >= maxStrokes()) finishTurn(maxStrokes()); else state.phase = 'aim';
       updateHud();
@@ -1614,18 +1636,22 @@
     // ihn dorthin zurückzulegen hieße, ihn gleich wieder zu erwischen. Dann geht es zum Start des
     // letzten Schlags zurück, notfalls zum Abschlag.
     if (ob && ob.trifft(rx, ry)) {
-      if (b.shotX != null && !ob.trifft(b.shotX, b.shotY)) { rx = b.shotX; ry = b.shotY; }
-      else { rx = lv.tee.x; ry = lv.tee.y; }
+      if (b.shotX != null && !ob.trifft(b.shotX, b.shotY)) { rx = b.shotX; ry = b.shotY; b.restEbene = b.shotEbene || 0; }
+      else { rx = lv.tee.x; ry = lv.tee.y; b.restEbene = 0; }
       b.restX = rx; b.restY = ry;
     }
     showMessage(art === 'feuer' ? 'Vom Feuerstoß erwischt! Zurück – ohne Strafschlag.'
                                 : 'Daumen runter – durch die Falltür! Zurück, ohne Strafschlag.', 1700);
     schlagVorbei();
     state.phase = 'wait'; state.aim = null;
+    b.restX = rx; b.restY = ry;
+    const r = sichererRuhepunkt(b);
     clearTimeout(waitTimer);
     waitTimer = setTimeout(() => {
-      b.x = rx; b.y = ry; b.vx = 0; b.vy = 0; b.z = 0.6; b.vz = 0; b.portalCd = 0.5;
-      b.ebene = b.restEbene || 0;   // auf der Ebene weiterspielen, auf der der Ruhepunkt liegt
+      b.x = r.x; b.y = r.y; b.vx = 0; b.vy = 0; b.z = 0.6; b.vz = 0; b.portalCd = 0.5;
+      b.ebene = b.restEbene = r.e;   // auf der Ebene weiterspielen, auf der der Ruhepunkt liegt
+      b.restX = r.x; b.restY = r.y;
+      state.level.setzeEbene(b.ebene);
       faceCup();
       state.phase = 'aim';
       updateHud();
@@ -1753,6 +1779,7 @@
       const b = state.ball, lv = state.level;
       b.x = lv.tee.x; b.y = lv.tee.y; b.vx = 0; b.vy = 0; b.z = 0; b.vz = 0; b.air = false; b.rider = null; b.sunk = false; b.sinkT = 0; b.entered = false; // die nächste Tür (z. B. die Luke) darf wieder auslösen
       b.restX = b.x; b.restY = b.y; b.portalCd = 0.5;
+      b.ebene = b.restEbene = 0; lv.setzeEbene(0);   // der Innenbereich ist eine eigene Bahn und fängt unten an
       state.particles = [];
       // Startblick: auf den ersten Aufgabenpunkt (z. B. Rampe/Hexentopf), sonst aufs Loch
       const look = def.look || lv.cup;
