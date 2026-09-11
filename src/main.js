@@ -1026,8 +1026,14 @@
       case 'hello':
         if (!online.host) break;
         if (online.started) { netSend({ t: 'busy', to: m.from, why: 'Die Runde läuft schon.' }); break; }
-        if (!online.players.some(p => p.id === m.from) && online.players.length < ONLINE_MAX)
-          online.players.push({ id: m.from, nick: Text.name(m.nick), hat: Hats.has(m.hat) ? m.hat : 'none' });
+        {
+          /* Eine zweite Anmeldung ist kein Fehler: So sagt ein Gast, dass er im Warteraum den Hut
+             gewechselt hat. Wer schon sitzt, behält seinen Platz und bekommt nur Name und Hut neu. */
+          const da = online.players.find(p => p.id === m.from);
+          const hut = Hats.has(m.hat) ? m.hat : 'none';
+          if (da) { da.nick = Text.name(m.nick); da.hat = hut; }
+          else if (online.players.length < ONLINE_MAX) online.players.push({ id: m.from, nick: Text.name(m.nick), hat: hut });
+        }
         sendRoster(); showLobby();
         break;
       case 'roster': {
@@ -1129,7 +1135,11 @@
   /* Warteraum: Code, Sitzplätze und – beim Gastgeber – die Weltwahl */
   function showLobby() {
     if (!online || online.started) return;
+    /* Steht die Hutwahl offen, bleibt sie offen: Sonst schöbe sich der Warteraum davor, sobald
+       der Gastgeber die Liste neu schickt - und das tut er bei jedem Hutwechsel. */
+    if (online.hutwahl) return;
     const ws = onlineWorlds();
+    const meinPlatz = online.players.findIndex(p => p.id === Net.id);
     const seats = online.players.map((p, i) => `<div class="seat${p.id === Net.id ? ' me' : ''}">
         <canvas class="seat-ball" data-hat="${p.hat}" data-col="${PLAYER_COLORS[i]}"></canvas>
         <b>${Text.esc(seatName(p, i))}${p.id === online.hostId ? ' ' + Icons.svg('star') : ''}</b></div>`).join('');
@@ -1140,6 +1150,7 @@
         : online.players.some(p => p.id === Net.id) ? 'Du bist im Raum. Der Gastgeber startet.' : 'Ich klopfe an …'}</div>
       <div class="room-code">${online.code}</div>
       <div class="seats">${seats}${'<div class="seat empty">frei</div>'.repeat(free)}</div>
+      ${meinPlatz >= 0 ? `<p class="mein-hut"><span class="btn ghost small" id="hutwahl">${Icons.svg('sports_golf')} Hut wechseln</span></p>` : ''}
       ${online.note ? `<div class="sub net-note">${Text.esc(online.note)}</div>` : ''}
       ${online.host
         ? `<p>Welt:</p><div id="ow" class="ow">${ws.map(w => `<span class="btn ghost small ${w.id === online.world ? 'sel' : ''}" data-w="${w.id}">${MODE_ICON[worldMode(w)]} ${Text.esc(w.name)}</span>`).join('')}</div>
@@ -1149,6 +1160,7 @@
     </div>`, 'title');
     ui.overlay.querySelectorAll('.seat-ball').forEach(cv => Hats.preview(cv, cv.dataset.hat, cv.dataset.col));
     $('back').addEventListener('click', () => showOnline());
+    if ($('hutwahl')) $('hutwahl').addEventListener('click', () => { Sfx.unlock(); showLobbyHats(); });
     if (!online.host) return;
     ui.overlay.querySelectorAll('#ow .btn').forEach(b => b.addEventListener('click', () => { online.world = b.dataset.w; sendRoster(); showLobby(); }));
     $('go').addEventListener('click', () => {
@@ -1158,9 +1170,63 @@
       startOnlineGame();
     });
   }
+  /* Hutwahl im Warteraum. Bis hierher stand der Hut nur im Startbildschirm fest – wer sah, dass
+     ein anderer denselben trägt, musste den Raum verlassen, um zu wechseln. Jetzt geht es hier.
+
+     Der eigene Platz wird sofort umgestellt, damit der Wechsel unmittelbar zu sehen ist; verteilt
+     wird er wie alles andere: Der Gastgeber schickt die Liste neu, ein Gast meldet sich einfach
+     noch einmal an. Die Anmeldung trägt Name und Hut ohnehin schon bei sich. */
+  function showLobbyHats() {
+    if (!online || online.started) return;
+    const i = online.players.findIndex(p => p.id === Net.id);
+    if (i < 0) { showLobby(); return; }
+    online.hutwahl = true;
+    const col = PLAYER_COLORS[i];
+    overlay(`<div class="panel">
+      <div class="panel-head"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span><h2>${Icons.svg('sports_golf')} Dein Hut</h2></div>
+      <div class="sub">Der Wechsel ist gleich bei allen im Raum zu sehen.</div>
+      <div id="hats" class="hat-grid">${Hats.LIST.map(h => `<button type="button" class="hat" data-h="${h.id}" title="${Text.esc(h.name)}"><canvas></canvas><span>${Text.esc(h.name)}</span><i class="hat-lock">${Icons.svg('lock')}</i></button>`).join('')}</div>
+      <p style="margin-top:14px"><span class="btn" id="fertig">Fertig</span></p>
+    </div>`, 'title');
+    const zeichne = () => {
+      const jetzt = hutOderErsatz(playerHats[0], 0);
+      ui.overlay.querySelectorAll('#hats .hat').forEach(b => {
+        const frei = Hats.freigeschaltet(b.dataset.h);
+        b.classList.toggle('sel', b.dataset.h === jetzt);
+        b.classList.toggle('zu', !frei);
+        b.classList.toggle('probe', !frei && TEST_FREI);
+        const wie = Hats.stand(b.dataset.h);
+        b.title = frei ? Hats.name(b.dataset.h)
+          : `${Hats.name(b.dataset.h)} – ${Hats.bedingung(b.dataset.h)}${wie ? ' · ' + wie : ''}${TEST_FREI ? ' (hier zum Ausprobieren freigegeben)' : ''}`;
+        Hats.preview(b.querySelector('canvas'), b.dataset.h, col);
+      });
+    };
+    ui.overlay.querySelectorAll('#hats .hat').forEach(b => b.addEventListener('click', () => {
+      Sfx.unlock();
+      if (!Hats.freigeschaltet(b.dataset.h)) {
+        const wie = Hats.stand(b.dataset.h);
+        if (!TEST_FREI) { showMessage(`${Hats.name(b.dataset.h)}: ${Hats.bedingung(b.dataset.h)}${wie ? ' · ' + wie : ''}`, 3200); return; }
+        showMessage(`${Hats.name(b.dataset.h)} – zum Ausprobieren freigegeben`, 2400);
+      }
+      setHat(0, b.dataset.h);
+      meinHutMelden();
+      zeichne();
+    }));
+    zeichne();
+    for (const id of ['back', 'fertig']) $(id).addEventListener('click', () => { online.hutwahl = false; showLobby(); });
+  }
+  /* Den eigenen Hut im Raum bekanntgeben – als Gastgeber über die Liste, als Gast über die Anmeldung */
+  function meinHutMelden() {
+    if (!online || online.started) return;
+    const hut = hutOderErsatz(playerHats[0], 0);
+    const p = online.players.find(x => x.id === Net.id);
+    if (p) p.hat = hut;
+    if (online.host) sendRoster(); else netSend({ t: 'hello', hat: hut, nick: Best.name });
+  }
+
   function startOnlineGame() {
     if (!online) return;
-    online.started = true;
+    online.started = true; online.hutwahl = false;
     setWorld(online.world);
     state.mode = 'normal';
     startGame(online.players.length, 0, online.players);

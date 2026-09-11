@@ -362,6 +362,14 @@ wählt die Welt und startet; danach wird **reihum** gespielt: wer dran ist, ziel
 Schlag mitlaufen. Punktetafel und Bahnwechsel bleiben überall gleich, den Takt zwischen den Bahnen gibt
 der Gastgeber vor. Jeder spielt mit seinem eigenen Hut, die Ballfarbe richtet sich nach der Sitzreihenfolge.
 
+**Den Hut wechselt man im Warteraum.** Vorher stand er nur im Startbildschirm fest: Wer erst im Raum sah,
+dass ein anderer denselben trägt, musste hinaus, umwählen und neu beitreten. Jetzt steht unter den Sitzen
+**Hut wechseln**; der eigene Platz stellt sich sofort um, und verteilt wird der Wechsel wie alles andere –
+der Gastgeber schickt die Liste neu, ein Gast meldet sich einfach noch einmal an (seine Anmeldung trägt
+Name und Hut ohnehin bei sich). Der Gastgeber behandelt eine zweite Anmeldung darum nicht als Fehler,
+sondern übernimmt daraus Name und Hut, ohne den Platz zu ändern. Solange die Hutwahl offen ist, schiebt
+sich der Warteraum nicht davor – sonst fiele man bei jedem Wechsel aus der Wahl heraus.
+
 Wer den Raum verlässt oder die Verbindung verliert, wird nach gut zwanzig Sekunden bemerkt: sein Zug wird
 mit dem Schlaglimit gewertet und die Runde läuft weiter. Geht der Gastgeber, endet der Raum für alle.
 Eigene Bahnen lassen sich online nicht spielen, nur die sechs festen Welten.
