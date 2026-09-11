@@ -285,6 +285,22 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
     if (!TOR_PAARE.includes(g)) problems.push(`Löwentor mit pair '${o.pair}' – erlaubt sind nur ${TOR_PAARE.join(', ')}`);
     else if (!torZaehler[g] && !torZaehler[g.toLowerCase()]) problems.push(`Löwentor ${g}: steht in der Hindernisliste, aber nicht auf der Karte`);
   }
+  /* Höhenstufen: Eine Stufe hinauf wirkt wie eine Mauer, hinüber kommt der Ball nur über eine
+     Rampe (ein 'field' mit 'rise'). So steht es in src/physics.js, und so muss die Bahnprüfung es
+     auch sehen – sonst hielte sie ein Loch für erreichbar, vor dem in Wahrheit eine Kante steht.
+     Hinunter geht es überall: Eine Stufe abwärts ist ein Weg, keine Sperre. */
+  const hoehenRaster = c.heights || null;
+  const stufeVon = (x, y) => {
+    if (!hoehenRaster) return 0;
+    const r = hoehenRaster[y], ch = r && r[x];
+    return ch >= '0' && ch <= '9' ? +ch : 0;
+  };
+  const schraegen = (c.obstacles || []).filter(o => o.type === 'field' && o.rise);
+  const aufSchraege = (x, y) => schraegen.some(f => x + 0.5 >= f.x && x + 0.5 <= f.x + f.w && y + 0.5 >= f.y && y + 0.5 <= f.y + f.h);
+  /* true, wenn zwischen den beiden Kacheln eine Stufe steht, über die der Ball nicht hinaufkommt */
+  const stufeSperrt = (x, y, nx, ny) =>
+    stufeVon(nx, ny) > stufeVon(x, y) && !aufSchraege(x, y) && !aufSchraege(nx, ny);
+
   if (tee && cup) {
     const seen = new Set([tee.join()]), q = [tee];
     while (q.length) {
@@ -294,6 +310,7 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
         if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
         const ch = rows[ny][nx];
         if (!FLOOR.has(ch) || ch === 'w' || ch === 'l') continue;
+        if (stufeSperrt(x, y, nx, ny)) continue;
         const k = `${nx},${ny}`; if (seen.has(k)) continue; seen.add(k); q.push([nx, ny]);
       }
     }
@@ -416,6 +433,7 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
           const nx = x + dx, ny = y + dy;
           if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
           if (!bodenAuf(n, nx, ny)) continue;
+          if (stufeSperrt(x, y, nx, ny)) continue;   // das Höhenraster gilt auf allen Ebenen zugleich
           const k = `${nx},${ny}`; if (set.has(k)) continue; set.add(k); q.push([nx, ny]); neu = true;
         }
       }

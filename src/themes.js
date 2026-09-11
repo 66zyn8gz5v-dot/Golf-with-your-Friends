@@ -415,7 +415,7 @@ const THEMES = {
     rotor: { top: '#f0f6ff', side: '#9db3ca' },
     accent: '#4fb0ff', flag: '#ff5a5a',
     blockStil: 'fels',
-    autoDecor: ['pineSnow', 'pineSnow', 'rockSnow', 'pineSnow', 'windsock', 'rockSnow'],
+    autoDecor: ['pineSnow', 'pineSnow', 'pineSnow', 'rockSnow', 'pineSnow', 'pineSnow', 'rockSnow', 'windsock'],
   },
   snowrock: { // Felsband: die Bäume bleiben unten, der Fels tritt hervor, Schnee nur in den Rinnen
     atmo: 'snow',
@@ -428,7 +428,7 @@ const THEMES = {
     rotor: { top: '#e6eef8', side: '#8793a3' },
     accent: '#5ec2ff', flag: '#ff5a5a',
     blockStil: 'fels',
-    autoDecor: ['rockSnow', 'rockSnow', 'pineSnow', 'crystalBlue', 'rockSnow', 'windsock'],
+    autoDecor: ['rockSnow', 'rockSnow', 'rockSnow', 'pineSnow', 'rockSnow', 'pineSnow', 'crystalBlue', 'windsock'],
   },
   glacier: { // Gletscher: blankes Blaueis, Spalten, kaltes Streiflicht
     atmo: 'blizzard',
@@ -441,7 +441,7 @@ const THEMES = {
     rotor: { top: '#e8faff', side: '#78b6e4' },
     accent: '#8fe8ff', flag: '#ff5a5a', stars: false,
     blockStil: 'fels',
-    autoDecor: ['crystalBlue', 'crystalBlue', 'rockSnow', 'crystalBlue', 'windsock'],
+    autoDecor: ['crystalBlue', 'crystalBlue', 'crystalBlue', 'rockSnow', 'crystalBlue', 'rockSnow', 'crystalBlue', 'windsock'],
   },
   summit: { // Gipfelgrat: dünne Luft, fast schwarzblauer Himmel, Windharsch, Sterne am Tag
     atmo: 'blizzard',
@@ -454,7 +454,7 @@ const THEMES = {
     rotor: { top: '#f6fbff', side: '#9ab0c5' },
     accent: '#9fe0ff', flag: '#ff5a5a', stars: true, ebeneStil: 'wolke',
     blockStil: 'fels',
-    autoDecor: ['rockSnow', 'crystalBlue', 'windsock', 'rockSnow', 'windsock'],
+    autoDecor: ['rockSnow', 'rockSnow', 'cloud', 'crystalBlue', 'rockSnow', 'cloud', 'crystalBlue', 'windsock'],
   },
   cloud: { // Über den Wolken: nichts mehr fest außer dem, worauf man steht
     atmo: 'none',
@@ -467,6 +467,6 @@ const THEMES = {
     rotor: { top: '#ffffff', side: '#cddcf0' },
     accent: '#ffd166', flag: '#ff4f6d', clouds: true, floating: true, ebeneStil: 'wolke',
     blockStil: 'fels',
-    autoDecor: ['cloud', 'cloud', 'cloud', 'windsock', 'cloud'],
+    autoDecor: ['cloud', 'cloud', 'cloud', 'cloud', 'cloud', 'cloud', 'cloud', 'windsock'],
   },
 };

@@ -619,6 +619,33 @@ und sie werden nach oben hin kälter, schmaler und ausgesetzter:
 | 7–9 | `glacier` – Blaueis, Spalten, Schneetreiben | Blankeis (`i`) rutscht; zwei Wächten hintereinander |
 | 10–12 | `summit` – dünne Luft, fast schwarzblauer Himmel, Sterne am Tag | Der Grat, und darüber die Wolkenetagen |
 
+**Der Berg steigt auch wirklich an.** Zuerst war die Höhe nur Farbe und Erzählung – die Bahnen
+selbst lagen flach. Jetzt trägt jede ein Höhenraster (`heights`), das nach rechts, also zum Loch
+hin, um zwei oder drei Stufen ansteigt; der Abschlag liegt immer unten, das Loch immer auf der
+obersten Stufe. Verbunden sind die Stufen durch **Schrägen** (`field` mit `rise`), denn eine
+Höhenkante wirkt sonst wie eine Mauer – so steht es in `src/physics.js`, und `tools/validate.mjs`
+rechnet es seit dieser Fassung genauso, sonst hielte es ein Loch für erreichbar, vor dem in
+Wahrheit eine Stufe steht.
+
+Wichtiger als das Aussehen ist, was die Schräge *tut*: Wer zu schwach schlägt, rollt wieder
+herunter. Damit das stimmt, mussten zwei Dinge zusammenkommen, und beide waren beim ersten Anlauf
+falsch. Die Schräge braucht `alwaysForce` – ohne das wirkt sie nur auf einen rollenden Ball, und
+wer auf halber Höhe zur Ruhe kommt, klebt dort fest. Und ihr Gefälle muss **über der Reibung des
+Untergrunds** liegen (Schnee bremst mit 4,2): darunter hält der Boden den Ball fest, so steil es
+auch aussieht. Deshalb liegt keine Schräge auf Blankeis oder in Tiefschnee, deren Reibung ganz
+anders ist – `tools/schneeberg.py` weist das beim Bauen ab.
+
+Nach oben wird beides größer, denn der Berg wird steiler: am Fuß eine Stufenhöhe von 0,6 und ein
+Gefälle von 4,8, am Gipfel 1,1 und 7,2. Wo eine Schlucht zwischen zwei Stufen liegt, gibt es keine
+Schräge – dort fährt die Gondel, und genau das ist ihr Sinn. Geprüft wird jede einzelne Schräge mit
+`scratchpad/schraege.mjs`: ein schwacher Schlag hinauf muss unterhalb der Rampe wieder zur Ruhe
+kommen, ein kräftiger über sie hinweg.
+
+Die Umgebung erzählt dieselbe Geschichte: Unten steht dichter Nadelwald, in der Felszone treten
+Blöcke hervor, auf dem Gletscher stehen Eiskristalle, und oben wird es kahl. Der Windsack war dabei
+zuerst jede fünfte Streudeko – auf dem Gipfel standen dadurch Dutzende herum, wo eigentlich nichts
+mehr steht. Jetzt ist er selten genug, um wieder etwas zu bedeuten.
+
 ### Die vier Maschinen (`src/obstacles_snow.js`)
 
 | Maschine | Was sie tut |
