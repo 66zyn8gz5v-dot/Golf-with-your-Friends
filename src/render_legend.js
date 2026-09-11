@@ -1632,6 +1632,93 @@ Object.assign(Renderer.prototype, {
     ctx.closePath(); ctx.stroke();
   },
 
+  /* Kettenzug: zwei Kettenräder übereinander, dazwischen die umlaufende Kette mit ihren Haken.
+     Der Haken unten ist hell – nur wenn er dort steht, nimmt der Zug mit, und das soll man sehen,
+     bevor man losrollt. Gezeichnet wird von der Ebene des Fußes bis zur nächsten darüber. */
+  drawKettenzug(ctx, ob, t) {
+    const s = this.scale, lv = this.level;
+    const z0 = (ob.ebene || 0) * lv.ebeneZ, z1 = z0 + lv.ebeneZ;
+    const K = r => this.circlePoly(ob.x, ob.y, r, 10);
+    this.isoEllipse(ctx, ob.x, ob.y, z0 + 0.004, ob.r + 0.25, 'rgba(0,0,0,0.22)');
+    this.prism(ctx, K(ob.r + 0.2), z0, 0.12, '#6b5334', '#33261a', { outline: '#160f08' });   // Fuß
+    // Ständer: zwei Pfosten links und rechts der Kette, im Bildschirmraum versetzt
+    const [ex, ey] = [this.cam.cos, -this.cam.sin];
+    const W = (a, b) => [ob.x + ex * a - ey * b, ob.y + ey * a + ex * b];
+    for (const sd of [-1, 1]) {
+      const m = W(sd * (ob.r + 0.1), 0);
+      this.prism(ctx, this.circlePoly(m[0], m[1], 0.1, 8), z0 + 0.1, z1 - z0 + 0.5, '#7a6248', '#3d3021', { outline: '#160f08' });
+    }
+    // Kettenräder oben und unten
+    for (const z of [z0 + 0.25, z1 + 0.5]) {
+      const p = this.proj(ob.x, ob.y, z), rr = s * 0.28;
+      ctx.fillStyle = '#6d4d18'; ctx.beginPath(); ctx.arc(p[0], p[1], rr, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#e0b45c'; ctx.beginPath(); ctx.arc(p[0] - rr * 0.1, p[1] - rr * 0.1, rr * 0.78, 0, TAU); ctx.fill();
+      ctx.strokeStyle = '#8a6624'; ctx.lineWidth = Math.max(1, s * 0.04);
+      for (let i = 0; i < 6; i++) { const a = (i * TAU) / 6 + t * 1.2; ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(p[0] + Math.cos(a) * rr * 0.7, p[1] + Math.sin(a) * rr * 0.7); ctx.stroke(); }
+    }
+    // Kette mit Haken: sie läuft an beiden Seiten hoch und wieder herunter
+    for (const sd of [-1, 1]) {
+      const m = W(sd * ob.r * 0.55, 0);
+      const a = this.proj(m[0], m[1], z0 + 0.25), b = this.proj(m[0], m[1], z1 + 0.5);
+      ctx.strokeStyle = '#4a3a2a'; ctx.lineWidth = Math.max(1.5, s * 0.06);
+      ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+      for (let i = 0; i < 4; i++) {
+        let u = ((ob.hakenU + i / 4) % 1);
+        if (sd < 0) u = 1 - u;                                   // eine Seite läuft hoch, die andere zurück
+        const p = this.proj(m[0], m[1], z0 + 0.25 + u * (z1 + 0.25 - z0));
+        const unten = sd > 0 && u < 0.12;
+        ctx.fillStyle = unten ? '#ffe08a' : '#8a6f46';
+        ctx.beginPath(); ctx.arc(p[0], p[1], s * (unten ? 0.13 : 0.09), 0, TAU); ctx.fill();
+      }
+    }
+    // Der Ball hängt am Haken: ein heller Ring um ihn, damit man die Fahrt sieht
+    if (ob.fahrt >= 0) {
+      const p = this.proj(ob.x, ob.y, z0 + ob.fahrt * lv.ebeneZ);
+      ctx.strokeStyle = 'rgba(255,224,138,0.8)'; ctx.lineWidth = Math.max(1.5, s * 0.06);
+      ctx.beginPath(); ctx.arc(p[0], p[1], s * 0.34, 0, TAU); ctx.stroke();
+    }
+  },
+
+  /* Zahnstange: eine gezahnte Schiene, an der ein Zahnrad mit einer Schaufel auf und ab läuft.
+     Unten wartet die Schaufel – nur wer dann daraufsteht, fährt mit. Steht sie oben, ist unten
+     nichts, worauf man kommt, und man muss die nächste Runde abwarten. */
+  drawZahnstange(ctx, ob, t) {
+    const s = this.scale, lv = this.level;
+    const z0 = (ob.ebene || 0) * lv.ebeneZ, z1 = z0 + lv.ebeneZ;
+    const [ex, ey] = [this.cam.cos, -this.cam.sin];
+    const W = (a, b) => [ob.x + ex * a - ey * b, ob.y + ey * a + ex * b];
+    this.isoEllipse(ctx, ob.x, ob.y, z0 + 0.004, Math.max(ob.w, ob.h) * 0.7, 'rgba(0,0,0,0.22)');
+    // Schiene: ein Pfosten hinter der Schaufel, mit Zähnen
+    const m = W(0, -0.42);
+    this.prism(ctx, this.circlePoly(m[0], m[1], 0.32, 8), z0, 0.14, '#6b5334', '#33261a', { outline: '#160f08' });
+    this.prism(ctx, [W(-0.16, -0.52), W(0.16, -0.52), W(0.16, -0.32), W(-0.16, -0.32)],
+      z0 + 0.1, z1 - z0 + 0.6, '#8a6f46', '#3d3021', { outline: '#160f08' });
+    ctx.strokeStyle = '#5c4318'; ctx.lineWidth = Math.max(1, s * 0.05);
+    for (let i = 0; i * 0.3 < z1 - z0 + 0.6; i++) {
+      const zz = z0 + 0.2 + i * 0.3;
+      const a = this.proj(...W(-0.18, -0.3), zz), b = this.proj(...W(0.18, -0.3), zz);
+      ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+    }
+    // Schaufel mit Zahnrad, auf ihrer Höhe
+    const zs = z0 + ob.p * (z1 - z0);
+    const schaufel = [[ob.x - ob.w / 2, ob.y - ob.h / 2], [ob.x + ob.w / 2, ob.y - ob.h / 2],
+      [ob.x + ob.w / 2, ob.y + ob.h / 2], [ob.x - ob.w / 2, ob.y + ob.h / 2]];
+    this.prism(ctx, schaufel, zs - 0.16, 0.16, '#c9903f', '#7d5a20', { outline: '#2a1d0a' });
+    const [gx, gy] = this.proj(...W(0, -0.42), zs + 0.1);
+    const gr = s * 0.26;
+    ctx.fillStyle = '#8a6624'; ctx.beginPath(); ctx.arc(gx, gy, gr, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#e0b45c'; ctx.beginPath(); ctx.arc(gx - gr * 0.1, gy - gr * 0.1, gr * 0.72, 0, TAU); ctx.fill();
+    ctx.strokeStyle = '#7d5a20'; ctx.lineWidth = Math.max(1, s * 0.04);
+    for (let i = 0; i < 6; i++) { const a = (i * TAU) / 6 + ob.p * 9; ctx.beginPath(); ctx.moveTo(gx, gy); ctx.lineTo(gx + Math.cos(a) * gr * 0.7, gy + Math.sin(a) * gr * 0.7); ctx.stroke(); }
+    // Wartet sie unten, leuchtet ihr Rand: jetzt kann man auffahren
+    if (ob.wartet === 'unten') {
+      ctx.strokeStyle = 'rgba(255,214,110,0.8)'; ctx.lineWidth = Math.max(1.5, s * 0.07);
+      ctx.beginPath();
+      schaufel.forEach((q, i) => { const p = this.proj(q[0], q[1], zs + 0.01); i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); });
+      ctx.closePath(); ctx.stroke();
+    }
+  },
+
   /* Turbine, Boden: ein Gitterschacht mit laufendem Gebläserad. Er liegt bündig im Boden, damit
      der Ball ungehindert darüberrollt – gehoben wird er ja vom Wind, nicht von einer Kante. */
   drawTurbineFloor(ctx, ob, t) {

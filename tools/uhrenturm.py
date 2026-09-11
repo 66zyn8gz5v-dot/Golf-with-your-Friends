@@ -178,21 +178,47 @@ def luke(karten, name, x, y, ebene=1, phase=0, w=1.6, h=1.6):
     eb = "" if ebene == 0 else ", ebene: %d" % ebene
     return "{ type: 'luke', x: %s, y: %s, w: %s, h: %s%s%s }" % (g(x), g(y), g(w), g(h), eb, ph)
 
-def rohr(k, name, paar, grad):
-    """Kupferrohr: Die beiden Plaetze stehen als Gross- und Kleinbuchstabe in der Karte. Geprueft
-    wird, dass es beide gibt und dass die Auswurfstelle Bahn ist. Das Rohr ist eine Fahrt, kein Tor:
-    Man kommt immer hinein, der Ball faehrt sichtbar hindurch und wird am Ende ausgeworfen."""
+def rohr(k, name, paar, grad, ziel=None, ebene=0):
+    """Kupferrohr: Die beiden Plaetze stehen als Gross- und Kleinbuchstabe in der Karte. Der
+    Rohrmund steht auf Karte k (Ebene 'ebene'), das Rohrende auf Karte 'ziel' - das darf dieselbe
+    sein oder eine hoehere. Geprueft wird, dass es beide gibt und dass die Auswurfstelle Bahn ist.
+    Das Rohr ist eine Fahrt, kein Tor: Man kommt immer hinein, der Ball faehrt sichtbar hindurch
+    und wird am Ende ausgeworfen."""
     gross, klein = paar.upper(), paar.lower()
+    zk, zeb = (k, ebene) if ziel is None else ziel
     ein = aus = None
     for y in range(k.h):
         for x in range(k.w):
             if k.g[y][x] == gross: ein = (x + 0.5, y + 0.5)
-            if k.g[y][x] == klein: aus = (x + 0.5, y + 0.5)
-    assert ein and aus, f'{name}: Kupferrohr {paar} braucht {gross} und {klein} auf der Karte'
+    for y in range(zk.h):
+        for x in range(zk.w):
+            if zk.g[y][x] == klein: aus = (x + 0.5, y + 0.5)
+    assert ein, f'{name}: Kupferrohr {paar} braucht {gross} auf Ebene {ebene}'
+    assert aus, f'{name}: Kupferrohr {paar} braucht {klein} auf Ebene {zeb}'
     a = math.radians(grad)
     lx, ly = aus[0] + math.cos(a) * 0.95, aus[1] + math.sin(a) * 0.95
-    assert k.at(lx, ly) in HART, f'{name}: Kupferrohr {paar} spuckt auf "{k.at(lx, ly)}" bei ({lx:.1f},{ly:.1f})'
-    return "{ type: 'copperpipe', pair: '%s', angle: %d }" % (gross, grad)
+    assert zk.at(lx, ly) in HART, f'{name}: Kupferrohr {paar} spuckt auf "{zk.at(lx, ly)}" bei ({lx:.1f},{ly:.1f})'
+    eb = "" if ebene == 0 else ", ebene: %d" % ebene
+    zi = "" if zeb == ebene else ", ziel: %d" % zeb
+    return "{ type: 'copperpipe', pair: '%s', angle: %d%s%s }" % (gross, grad, eb, zi)
+
+def kettenzug(k, o, name, x, y, ebene=0, grad=0, phase=0):
+    """Kettenzug: Haken laufen im Takt um; wer die Stelle beruehrt, waehrend gerade einer unten ist,
+    wird eine Etage hoeher gebracht. Geprueft wird Boden unten wie oben."""
+    assert k.frei(x, y), f'{name}: Kettenzug bei ({x},{y}) steht auf Ebene {ebene} auf "{k.at(x, y)}"'
+    assert o.frei(x, y), f'{name}: ueber dem Kettenzug bei ({x},{y}) ist auf Ebene {ebene + 1} kein Boden'
+    eb = "" if ebene == 0 else ", ebene: %d" % ebene
+    ph = "" if phase == 0 else ", phase: %s" % g(phase)
+    return "{ type: 'kettenzug', x: %s, y: %s, angle: %d%s%s }" % (g(x), g(y), grad, eb, ph)
+
+def zahnstange(k, o, name, x, y, ebene=0, grad=0, phase=0):
+    """Zahnstange: Die Schaufel wartet unten, faehrt hoch, kommt zurueck. Mitgenommen wird, wer
+    beim Losfahren daraufsteht. Geprueft wird Boden unten wie oben."""
+    assert k.frei(x, y), f'{name}: Zahnstange bei ({x},{y}) steht auf Ebene {ebene} auf "{k.at(x, y)}"'
+    assert o.frei(x, y), f'{name}: ueber der Zahnstange bei ({x},{y}) ist auf Ebene {ebene + 1} kein Boden'
+    eb = "" if ebene == 0 else ", ebene: %d" % ebene
+    ph = "" if phase == 0 else ", phase: %s" % g(phase)
+    return "{ type: 'zahnstange', x: %s, y: %s, angle: %d%s%s }" % (g(x), g(y), grad, eb, ph)
 
 def g(v):
     """Zahl fuer die JS-Ausgabe: ganze Zahlen ohne Komma."""
@@ -420,35 +446,37 @@ bahn(name='Das große Zifferblatt', par=6, theme='escapement', maxStrokes=26, se
             ('lantern', 4.5, 17.5, 1), ('lantern', 25.5, 17.5, 1)],
      map=k.rows())
 
-# ---------------------------------------------------------------- 13 Turbinenprobe (Testbahn Ebenen)
-# Schlicht mit Absicht: unten nur der Weg zur Turbine, oben eine kurze Strecke mit dem Loch am Ende
-# und einer offenen Kante zum Zurueckfallen. Wer zu weit schiebt, faellt hinunter und faengt an der
-# Turbine neu an - ohne Strafschlag.
-k = Karte(22, 9)
-k.rect(2, 2, 19, 6)                                # untere Ebene: breiter als die obere, damit man
-k.put(3, 4, 'T')                                   # nach dem Fall auch wirklich auf Boden landet
+# ---------------------------------------------------------------- 13 Maschinenprobe (Testbahn Ebenen)
+# Schlicht mit Absicht: Sie zeigt alle vier Wege nach oben und den einen nach unten, nebeneinander.
+# Unten drei Aufstiege zur Wahl, oben die Luke im Weg und das Rohr auf die oberste Etage.
+k = Karte(30, 13)
+k.rect(2, 3, 28, 9)                                # unterste Ebene: groesser als die daruber,
+k.put(3, 6, 'T')                                   # damit man nach jedem Sturz auch Boden trifft
 
-o = Karte(22, 9)                                   # mittlere Ebene, gleich gross wie die unterste
-o.rect(9, 3, 16, 5)                                # Strecke ueber dem hinteren Teil
-o.rect(17, 3, 17, 5, 'o')                          # offene Kante: 'o' ist Boden ohne Bande -
-                                                   # wer darueber hinausrollt, faellt nach unten
+o = Karte(30, 13)                                  # mittlere Ebene
+o.rect(7, 4, 24, 8)
+o.rect(25, 4, 25, 8, 'o')                          # offene Kante nach unten
+o.put(23, 6, 'A')                                  # Rohrmund hinauf zur obersten Ebene
 
-p = Karte(22, 9)                                   # oberste Ebene: nur das kurze Stueck mit dem Loch
-p.rect(15, 3, 16, 5)
-p.rect(17, 3, 17, 5, 'o')                          # auch hier offen - von oben faellt man zwei Etagen
-p.put(16, 4, 'H')                                  # das Loch liegt ganz oben
-bahn(name='Turbinenprobe', par=3, theme='escapement', maxStrokes=12, seed=77, dichte=0.1,
-     intro='Eine Probe für die gestapelten Ebenen. Jede Turbine hebt eine Etage höher – wer '
-           'darüberrollt, wird an derselben Stelle gehoben und behält Tempo und Richtung. Auf der '
-           'mittleren Etage liegt eine Luke im Weg: Zu ist sie Boden, offen ein Loch. Wer im '
-           'falschen Moment darüberrollt, fällt wieder ganz nach unten. Ganz oben liegt das Loch am '
-           'Ende einer kurzen Strecke, und die Kanten dahinter sind offen. Gestürzt wird hier nie '
-           'mit Strafschlag – nur mit Zeitverlust.',
-     obstacles=[turbine(k, o, 'Turbinenprobe unten', 10.5, 4.5),
-                luke([k, o, p], 'Turbinenprobe', 12.5, 4.5, ebene=1),
-                turbine(o, p, 'Turbinenprobe oben', 15.5, 4.5, ebene=1)],
-     decor=[('lantern', 5.5, 1.5, 1), ('lantern', 16.5, 7.5, 1), ('gearFlat', 9, 7.6, 1.4)],
-     map=k.rows(), ebenen=[o.rows(), p.rows()])
+p2 = Karte(30, 13)                                 # oberste Ebene
+p2.rect(18, 4, 26, 8)
+p2.rect(27, 4, 27, 8, 'o')                         # offene Kante: von hier faellt man ganz nach unten
+p2.put(19, 6, 'a')                                 # Rohrende (Mauer, der Ball wird davor gesetzt)
+p2.put(25, 6, 'H')                                 # das Loch liegt ganz oben, kurz vor der Kante
+
+bahn(name='Maschinenprobe', par=4, theme='escapement', maxStrokes=14, seed=77, dichte=0.1,
+     intro='Eine Probe für die Maschinen zwischen den Ebenen. Unten stehen drei Aufstiege '
+           'nebeneinander: Die Turbine hebt sofort, der Kettenzug nur, wenn gerade ein Haken unten '
+           'ist, und die Zahnstange nimmt mit, wer beim Losfahren auf der Schaufel steht. Oben liegt '
+           'die Luke im Weg – zu ist sie Boden, offen ein Loch. Ganz nach oben führt nur das '
+           'Kupferrohr. Gestürzt wird hier nie mit Strafschlag, nur mit Zeitverlust.',
+     obstacles=[turbine(k, o, 'Maschinenprobe', 8.5, 6.5),
+                kettenzug(k, o, 'Maschinenprobe', 13.5, 6.5),
+                zahnstange(k, o, 'Maschinenprobe', 18.5, 6.5),
+                luke([k, o, p2], 'Maschinenprobe', 16.5, 6.5, ebene=1),
+                rohr(o, 'Maschinenprobe', 'A', 0, ziel=(p2, 2), ebene=1)],
+     decor=[('lantern', 5.5, 2.5, 1), ('lantern', 22.5, 10.5, 1), ('gearFlat', 12, 11.0, 1.4)],
+     map=k.rows(), ebenen=[o.rows(), p2.rows()])
 
 # ================================================================ Ausgabe
 for b in BAHNEN:
@@ -463,8 +491,13 @@ for b in BAHNEN:
     for e in ebenen:
         assert len(e) == len(rows) and all(len(a) == len(c) for a, c in zip(e, rows)), b['name']
     if ebenen:
-        n = sum(1 for o in b['obstacles'] if "'turbine'" in o)
-        assert n >= len(ebenen), f"{b['name']}: {len(ebenen)} Ebenen ueber der untersten, aber nur {n} Turbine(n)"
+        # Jede Ebene ueber der untersten braucht einen Aufstieg von der Ebene darunter. Turbine,
+        # Kettenzug, Zahnstange und ein Rohr mit 'ziel' zaehlen gleichermassen.
+        heber = [o for o in b['obstacles']
+                 if any(t in o for t in ("'turbine'", "'kettenzug'", "'zahnstange'")) or "ziel:" in o]
+        for n in range(1, len(ebenen) + 1):
+            drauf = [o for o in heber if ("ebene: %d" % (n - 1)) in o or (n == 1 and 'ebene:' not in o)]
+            assert drauf, f"{b['name']}: kein Aufstieg von Ebene {n - 1} auf Ebene {n}"
     # Deko steht neben der Bahn, nie darauf: Eine Laterne auf dem Pflaster sähe aus wie ein
     # Hindernis, wäre aber keins - der Ball rollte einfach hindurch.
     for (t, x, y, sc) in b['decor']:

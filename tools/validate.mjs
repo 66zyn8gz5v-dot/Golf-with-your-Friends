@@ -353,24 +353,47 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
        zweitens muss man sie unten erreichen können, drittens muss über ihr auch Boden sein – sonst
        fiele der Ball im selben Augenblick wieder herunter –, und viertens muss das Loch von dort
        aus über die obere Fläche erreichbar sein. */
-    const turbinen = (c.obstacles || []).filter(o => o.type === 'turbine');
+    /* Wege nach oben: Turbine, Kettenzug, Zahnstange und das Kupferrohr, dessen Ende eine Etage
+       höher liegt. Sie alle setzen den Ball von ihrer Ebene auf eine höhere – deshalb werden sie
+       hier gleich behandelt. Ein Aufstieg zählt nur, wenn er auf seiner eigenen Ebene erreichbar
+       ist und oben auch Boden unter dem Ball hat. */
     const bodenAuf = (n, x, y) => {
       const r = karten[n] && karten[n][y], ch = r && r[x];
       return !!ch && FLOOR.has(ch) && ch !== 'w' && ch !== 'l';
     };
+    const HEBER = ['turbine', 'kettenzug', 'zahnstange'];
+    const aufstiege = [];                       // { typ, von, nach, x, y, zx, zy }
+    for (const o of (c.obstacles || []).filter(o => HEBER.includes(o.type))) {
+      const von = o.ebene || 0, tx = Math.floor(o.x), ty = Math.floor(o.y);
+      aufstiege.push({ typ: o.type, von, nach: von + 1, x: tx, y: ty, zx: tx, zy: ty, ob: o });
+    }
+    for (const o of (c.obstacles || []).filter(o => o.type === 'copperpipe')) {
+      const von = o.ebene || 0, nach = o.ziel == null ? von : o.ziel;
+      if (nach === von) continue;               // Rohr auf derselben Ebene: kein Aufstieg
+      const g = String(o.pair || '').toUpperCase(), k = g.toLowerCase();
+      let ein = null, aus = null;
+      (karten[von] || []).forEach((r, y) => [...r].forEach((ch, x) => { if (ch === g) ein = [x, y]; }));
+      (karten[nach] || []).forEach((r, y) => [...r].forEach((ch, x) => { if (ch === k) aus = [x, y]; }));
+      if (!ein || !aus) { problems.push(`copperpipe ${g}/${k}: Mund auf Ebene ${von} oder Ende auf Ebene ${nach} fehlt`); continue; }
+      const a = ((o.angle || 0) * Math.PI) / 180;
+      aufstiege.push({ typ: 'copperpipe', von, nach, x: ein[0], y: ein[1],
+        zx: Math.floor(aus[0] + 0.5 + Math.cos(a) * 0.95), zy: Math.floor(aus[1] + 0.5 + Math.sin(a) * 0.95), ob: o });
+    }
+    for (const a of aufstiege) {
+      if (a.nach >= karten.length) { problems.push(`${a.typ} bei (${a.ob.x ?? a.x},${a.ob.y ?? a.y}) hebt auf Ebene ${a.nach}, die es nicht gibt`); continue; }
+      if (!bodenAuf(a.von, a.x, a.y)) problems.push(`${a.typ} bei (${a.x},${a.y}) steht auf Ebene ${a.von} nicht auf der Bahn`);
+      if (!bodenAuf(a.nach, a.zx, a.zy)) problems.push(`${a.typ} bei (${a.x},${a.y}): auf Ebene ${a.nach} ist bei (${a.zx},${a.zy}) kein Boden – der Ball fiele sofort zurück`);
+    }
     /* Erreichbarkeit Ebene für Ebene: Auf Ebene 0 kommt man vom Abschlag, auf jede höhere nur über
-       eine Turbine, die auf der Ebene darunter steht und dort selbst erreichbar ist. Von dort aus
-       fließt es über die eigene Fläche weiter. */
+       einen Aufstieg, der auf der Ebene darunter steht und dort selbst erreichbar ist. */
     const erreichbar = [seen];
     for (let n = 1; n < karten.length; n++) {
-      if (!turbinen.some(o => (o.ebene || 0) === n - 1)) problems.push(`Ebene ${n} ohne Turbine auf Ebene ${n - 1} – dort käme nie jemand hin`);
+      const dran = aufstiege.filter(a => a.nach === n);
+      if (!dran.length) problems.push(`Ebene ${n} ohne Aufstieg von Ebene ${n - 1} – dort käme nie jemand hin`);
       const einstiege = [];
-      for (const o of turbinen.filter(o => (o.ebene || 0) === n - 1)) {
-        const tx = Math.floor(o.x), ty = Math.floor(o.y);
-        if (!bodenAuf(n - 1, tx, ty)) { problems.push(`turbine bei (${o.x},${o.y}) steht auf Ebene ${n - 1} nicht auf der Bahn`); continue; }
-        if (!bodenAuf(n, tx, ty)) { problems.push(`turbine bei (${o.x},${o.y}): über ihr ist auf Ebene ${n} kein Boden – der Ball fiele sofort zurück`); continue; }
-        if (!erreichbar[n - 1].has(`${tx},${ty}`)) { problems.push(`turbine bei (${o.x},${o.y}) ist auf Ebene ${n - 1} nicht erreichbar`); continue; }
-        einstiege.push([tx, ty]);
+      for (const a of dran) {
+        if (!erreichbar[a.von] || !erreichbar[a.von].has(`${a.x},${a.y}`)) { problems.push(`${a.typ} bei (${a.x},${a.y}) ist auf Ebene ${a.von} nicht erreichbar`); continue; }
+        if (bodenAuf(n, a.zx, a.zy)) einstiege.push([a.zx, a.zy]);
       }
       const gesehen = new Set(einstiege.map(p => p.join()));
       const q3 = einstiege.slice();
@@ -385,10 +408,8 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
       }
       erreichbar.push(gesehen);
     }
-    for (const o of turbinen) {
-      const n = o.ebene || 0;
-      if (n >= karten.length - 1) problems.push(`turbine bei (${o.x},${o.y}) steht auf der obersten Ebene ${n} – sie hätte nichts, wohin sie hebt`);
-    }
+    if (lochEbene > 0 && !erreichbar[lochEbene].has(cup.join()))
+      problems.push(`Loch auf Ebene ${lochEbene} nicht erreichbar – dorthin führt kein erreichbarer Aufstieg oder kein Weg auf der Ebene`);
     /* Luken: Sie sind ein Weg nach unten, keine Strafe. Also muss es unten auch etwas geben, worauf
        man landet – sonst wäre die Luke ein Sturz ins Aus, und das wäre eine Falltür und keine Luke. */
     for (const o of (c.obstacles || []).filter(o => o.type === 'luke')) {

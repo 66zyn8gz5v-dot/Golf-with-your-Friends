@@ -711,10 +711,32 @@ class CopperPipe extends LionGate {
     this.type = 'copperpipe';
     this.alwaysForce = false;     // das Rohr liest kein Balltempo ab, es sperrt ja nie
     this.fahrt = -1;              // 0..1 während einer Fahrt, sonst -1 (für die Zeichnung)
+    if (this.ebene == null) this.ebene = 0;
+    if (this.ziel == null) this.ziel = this.ebene;   // Rohrende auf derselben Ebene, wenn nichts dasteht
   }
+  /* Die beiden Enden können auf verschiedenen Ebenen liegen: Der Rohrmund steht auf 'ebene', das
+     Rohrende auf 'ziel'. Deshalb wird jedes Ende auf seiner eigenen Karte gesucht und nicht auf
+     der gerade aktiven – sonst fände eine Leitung zwischen zwei Etagen ihre Hälfte nicht. */
   setup(level) {
-    super.setup(level);
+    const gross = this.pair.toUpperCase(), klein = this.pair.toLowerCase();
+    const flEin = level.flaechen[this.ebene], flAus = level.flaechen[this.ziel];
+    this.bereit = false;
+    if (!flEin || !flAus) return;
+    for (let y = 0; y < level.H; y++) for (let x = 0; x < level.W; x++) {
+      if (flEin.tiles[y][x] === gross) { this.x = x + 0.5; this.y = y + 0.5; }
+      if (flAus.tiles[y][x] === klein) { this.ax = x + 0.5; this.ay = y + 0.5; }
+    }
+    this.bereit = this.x != null && this.ax != null;
     if (!this.bereit) return;
+    const offeneSeite = (fl, cx, cy) => {
+      for (const [ox, oy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const c = fl.at(Math.floor(cx + ox), Math.floor(cy + oy));
+        if (level.isFloorChar(c) && c !== gross && c !== klein) return [ox, oy];
+      }
+      return [0, 0];
+    };
+    [this.mundX, this.mundY] = offeneSeite(flEin, this.x, this.y);
+    [this.ausMundX, this.ausMundY] = offeneSeite(flAus, this.ax, this.ay);
     this.bauWeg(level);
     /* Wie lange die Fahrt dauert, richtet sich nach dem **direkten** Abstand der beiden Enden,
        nicht nach der Länge des Umwegs. Sonst hinge die Spielzeit daran, wie weit das Rohr außen
@@ -806,8 +828,13 @@ class CopperPipe extends LionGate {
   /* Höhe der Leitung an der Stelle u: Am Rohrmund liegt sie auf Mundhöhe, dazwischen läuft sie
      oben – sonst stieße sie an der Bande an, durch die sie die Bahn verlässt. */
   hoehe(u) {
-    const rampe = Math.min(1, u / 0.1, (1 - u) / 0.1);
-    return ROHR_MUND_Z + (ROHR_HOEHE - ROHR_MUND_Z) * Math.max(0, rampe);
+    /* Die Leitung läuft zwischen den Höhen ihrer beiden Enden und hebt sich dazwischen über die
+       Banden. Liegen die Enden auf verschiedenen Ebenen, steigt sie unterwegs entsprechend an. */
+    const zEin = this.ebene * (this.level ? this.level.ebeneZ : 0) + ROHR_MUND_Z;
+    const zAus = this.ziel * (this.level ? this.level.ebeneZ : 0) + ROHR_MUND_Z;
+    const grund = zEin + (zAus - zEin) * u;
+    const rampe = Math.max(0, Math.min(1, u / 0.1, (1 - u) / 0.1));
+    return grund + (ROHR_HOEHE - ROHR_MUND_Z) * rampe;
   }
   punkt(u) {
     const s = Math.max(0, Math.min(1, u)) * this.len;
@@ -833,6 +860,7 @@ class CopperPipe extends LionGate {
       // Am Rohrende absetzen, nicht darin: das Feld des Endes ist Mauer, dort hätte er keinen Boden
       this.fahrt = -1;
       ball.rider = null; ball.rideCd = 0.6; ball.portalCd = 0.4;
+      ball.ebene = this.ziel; this.level.setzeEbene(this.ziel);   // das Rohrende darf eine Etage höher liegen
       ball.x = this.ax + this.dx * 0.95; ball.y = this.ay + this.dy * 0.95;
       ball.vx = this.dx * LOEWENTOR_AUSWURF; ball.vy = this.dy * LOEWENTOR_AUSWURF;
       ball.z = 0; ball.vz = 0; ball.air = false;
@@ -841,6 +869,7 @@ class CopperPipe extends LionGate {
       return false;
     }
     if (ball.rideCd > 0 || ball.air || ball.portalCd > 0) return false;
+    if ((ball.ebene || 0) !== this.ebene) return false;
     if (!this.imEingang(ball.x, ball.y) && !this.beruehrtOeffnung(ball)) return false;
     ball.rider = this; ball.rohrStart = t; this.fahrt = 0; this.schluckAt = t;
     const [px, py, pz] = this.punkt(0);
@@ -889,6 +918,114 @@ class Turbine {
     ball.z = 0; ball.vz = 0;
     this.hebtAt = t;
     events.push({ type: 'turbine', x: ball.x, y: ball.y, nach });
+  }
+}
+
+/* Zwei weitere Wege nach oben, beide aus dem Uhrwerk geborgt – und beide fragen, wie alles in
+   dieser Welt, nach dem richtigen Moment. Sie unterscheiden sich genau darin, *wie* man ihn
+   treffen muss:
+
+   - Der **Kettenzug** greift im Vorbeirollen. Die Haken laufen im Takt um; ist gerade einer unten,
+     nimmt er mit, wer die Stelle berührt. Man muss also im richtigen Augenblick **durchrollen**.
+   - Die **Zahnstange** nimmt mit, wer draufsteht, wenn sie losfährt. Die Schaufel wartet unten,
+     fährt hoch, kommt zurück. Man muss also rechtzeitig **daraufkommen und warten**.
+
+   Beides ist eine Fahrt wie im Kupferrohr: Der Ball hängt am Hindernis (ball.rider), wird sichtbar
+   nach oben gebracht und erst oben wieder abgesetzt – auf der nächsten Ebene, an derselben Stelle. */
+const KETTE_TAKT = 3.2;          // Sekunden zwischen zwei Haken unten
+const KETTE_FENSTER = 0.7;       // so lange steht ein Haken unten bereit
+const KETTE_FAHRT = 1.1;         // Sekunden für den Weg nach oben
+const KETTE_ABWURF = 2.2;        // Tempo, mit dem der Haken den Ball oben abrollen lässt
+
+class ChainLift {
+  constructor(d) {
+    Object.assign(this, { r: 0.75, ebene: 0, phase: 0, angle: 0 }, d);
+    this.type = 'kettenzug';
+    const a = (this.angle * Math.PI) / 180;
+    this.dx = Math.cos(a); this.dy = Math.sin(a);
+    this.update(0);
+  }
+  update(t) {
+    const u = ((((t / KETTE_TAKT + this.phase) % 1) + 1) % 1) * KETTE_TAKT;
+    this.unten = u < KETTE_FENSTER;            // steht gerade ein Haken bereit?
+    this.hakenU = u / KETTE_TAKT;              // 0..1 für die Zeichnung: wo die Haken umlaufen
+  }
+  ride(ball, t, events) {
+    if (!this.level || !this.level.flaechen[(this.ebene || 0) + 1]) return false;
+    if (ball.rider === this) {
+      const u = Math.min(1, (t - ball.kettStart) / KETTE_FAHRT);
+      this.fahrt = u;
+      ball.x = this.x; ball.y = this.y; ball.vx = 0; ball.vy = 0; ball.vz = 0;
+      ball.z = u * this.level.ebeneZ;
+      if (u < 1) return true;
+      // Oben absetzen: eine Ebene höher, an derselben Stelle, mit einem kleinen Schubs vom Haken
+      this.fahrt = -1;
+      ball.rider = null; ball.rideCd = 0.5;
+      ball.ebene = (this.ebene || 0) + 1; this.level.setzeEbene(ball.ebene);
+      ball.z = 0; ball.vz = 0;
+      ball.vx = this.dx * KETTE_ABWURF; ball.vy = this.dy * KETTE_ABWURF;
+      events.push({ type: 'dropoff', x: ball.x, y: ball.y });
+      return false;
+    }
+    if (ball.rideCd > 0 || ball.air) return false;
+    if ((ball.ebene || 0) !== (this.ebene || 0) || !this.unten) return false;
+    if (Math.hypot(ball.x - this.x, ball.y - this.y) > this.r) return false;
+    ball.rider = this; ball.kettStart = t; this.fahrt = 0;
+    ball.x = this.x; ball.y = this.y; ball.vx = 0; ball.vy = 0; ball.z = 0;
+    events.push({ type: 'board', x: this.x, y: this.y });
+    return true;
+  }
+}
+
+const ZAHNSTANGE_TAKT = 2.6;     // Sekunden, die die Schaufel unten bzw. oben wartet
+const ZAHNSTANGE_FAHRT = 1.3;    // Sekunden für eine Fahrt
+
+class RackLift {
+  constructor(d) {
+    Object.assign(this, { w: 1.3, h: 1.3, ebene: 0, phase: 0, angle: 0 }, d);
+    this.type = 'zahnstange';
+    const a = (this.angle * Math.PI) / 180;
+    this.dx = Math.cos(a); this.dy = Math.sin(a);
+    this.update(0);
+  }
+  update(t) {
+    const zyklus = 2 * (ZAHNSTANGE_TAKT + ZAHNSTANGE_FAHRT);
+    const u = ((((t / zyklus + this.phase) % 1) + 1) % 1) * zyklus;
+    /* 0 = unten, 1 = oben. Sie wartet unten, fährt hoch, wartet oben, fährt zurück – wie eine
+       Fähre, nur senkrecht. Die Wartezeit unten ist das Fenster zum Aufrollen. */
+    if (u < ZAHNSTANGE_TAKT) { this.p = 0; this.wartet = 'unten'; }
+    else if (u < ZAHNSTANGE_TAKT + ZAHNSTANGE_FAHRT) {
+      const q = (u - ZAHNSTANGE_TAKT) / ZAHNSTANGE_FAHRT; this.p = q * q * (3 - 2 * q); this.wartet = null;
+    } else if (u < 2 * ZAHNSTANGE_TAKT + ZAHNSTANGE_FAHRT) { this.p = 1; this.wartet = 'oben'; }
+    else {
+      const q = (u - 2 * ZAHNSTANGE_TAKT - ZAHNSTANGE_FAHRT) / ZAHNSTANGE_FAHRT;
+      this.p = 1 - q * q * (3 - 2 * q); this.wartet = null;
+    }
+  }
+  aufSchaufel(ball) {
+    return Math.abs(ball.x - this.x) <= this.w / 2 && Math.abs(ball.y - this.y) <= this.h / 2;
+  }
+  ride(ball, t, events) {
+    if (!this.level || !this.level.flaechen[(this.ebene || 0) + 1]) return false;
+    if (ball.rider === this) {
+      ball.x = this.x; ball.y = this.y; ball.vx = 0; ball.vy = 0; ball.vz = 0;
+      ball.z = this.p * this.level.ebeneZ;
+      if (this.wartet !== 'oben') return true;
+      // Oben angekommen: eine Ebene höher absetzen und herunterrollen lassen
+      ball.rider = null; ball.rideCd = 0.5;
+      ball.ebene = (this.ebene || 0) + 1; this.level.setzeEbene(ball.ebene);
+      ball.z = 0; ball.vz = 0;
+      ball.vx = this.dx * KETTE_ABWURF; ball.vy = this.dy * KETTE_ABWURF;
+      events.push({ type: 'dropoff', x: ball.x, y: ball.y });
+      return false;
+    }
+    if (ball.rideCd > 0 || ball.air) return false;
+    // Mitgenommen wird nur, wer unten auf der Schaufel steht, während sie noch wartet
+    if ((ball.ebene || 0) !== (this.ebene || 0) || this.wartet !== 'unten') return false;
+    if (!this.aufSchaufel(ball)) return false;
+    ball.rider = this; ball.x = this.x; ball.y = this.y; ball.vx = 0; ball.vy = 0; ball.z = 0;
+    events.push({ type: 'board', x: this.x, y: this.y });
+    return true;
   }
 }
 

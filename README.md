@@ -716,6 +716,9 @@ Bild eng.
 |---|---|
 | **Hinauf** | nur über die **Turbine** (`turbine`), ein Gebläseschacht. Sie steht auf der Ebene `ebene` (ohne Angabe der untersten) und hebt auf die nächste darüber. Wer darüberrollt, wird an derselben Stelle gehoben – Tempo und Richtung bleiben. Kein Katapult, ein Aufzug. Für jede Etage steht eine eigene Turbine. |
 | **Herunter** | an jeder **offenen Kante**. Offen heißt: die Karte hat dort ein `o` (Boden ohne Bande) oder nichts. Der Ball fällt an derselben Stelle **so weit, bis wieder Boden unter ihm ist** – über mehrere Etagen hinweg, wenn es sein muss – und rollt dort weiter, **ohne Strafschlag**. |
+| **Der Kettenzug** | (`kettenzug`) sind Haken an einer umlaufenden Kette. Ist gerade einer unten (`KETTE_TAKT`, Fenster `KETTE_FENSTER`), nimmt er mit, wer die Stelle berührt, und bringt ihn in `KETTE_FAHRT` Sekunden eine Etage höher. Man muss also im richtigen Augenblick **durchrollen**. |
+| **Die Zahnstange** | (`zahnstange`) ist eine Schaufel an einer gezahnten Schiene. Sie wartet unten (`ZAHNSTANGE_TAKT`), fährt hoch (`ZAHNSTANGE_FAHRT`), wartet oben, kommt zurück. Mitgenommen wird, wer beim Losfahren daraufsteht – man muss also rechtzeitig **daraufkommen und warten**. |
+| **Das Kupferrohr** | darf sein Ende eine Etage höher haben: `ebene` ist die Ebene des Rohrmunds, `ziel` die des Rohrendes. Jedes Ende wird auf seiner eigenen Karte gesucht. |
 | **Die Luke** | (`luke`) ist eine Klappe im Boden einer Ebene, die im Takt auf- und zugeht. Zu ist sie fester Boden, offen ein Loch – wer dann darüberrollt, fällt wie an einer offenen Kante, ohne Strafschlag. `LUKE_TAKT` und `LUKE_SCHWENK` als Konstanten, `phase` je Luke. |
 | **Das Loch** | liegt auf genau einer Ebene (das `H` steht in genau einer der Karten) und zieht nur, wenn der Ball auch dort ist. |
 
