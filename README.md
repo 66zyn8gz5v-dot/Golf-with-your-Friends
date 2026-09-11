@@ -940,8 +940,13 @@ Zwei Dinge, die beim Zeichnen wichtig sind:
   dunkle Kontur, Kupfer, Glanz. In der Kurve fielen die Deckel sonst am meisten auf.
 
 Jeder Lauf geht für sich in die Tiefensortierung – sonst läge die ganze Leitung entweder vor oder
-hinter allem, was sie überquert. Und während einer Fahrt läuft ein heller Schein mit dem Ball durch
-das Rohr, damit man ihn auch dann findet, wenn eine Mauer davorsteht.
+hinter allem, was sie überquert.
+
+**Den Ball sieht man während der Fahrt nicht.** Er steckt im Kupfer, und durch Kupfer schaut
+niemand – zu sehen ist nur, was man auch an einer echten Rohrpost sieht: eine glühende Stelle, die
+durch die Leitung wandert. Dazu gehört zweierlei: Der Ball wird gar nicht erst gezeichnet, und die
+Regel „Objekte, die vor dem Ball stehen, werden durchsichtig" gilt für ihn dann nicht – sonst risse
+ausgerechnet die Leitung ein Loch um ihn herum und verriete ihn doch.
 
 Das Löwentor der Arena bleibt davon unberührt: Dort ist das Mindesttempo der Reiz, hier wäre es nur
 im Weg.

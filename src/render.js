@@ -462,7 +462,13 @@ class Renderer {
     // Der Ball wird zum Schluss gezeichnet, damit er nie hinter Bäumen oder Mauern verschwindet
     for (const it of items) { it.k = this.depth(it.x, it.y) + (it.bias || 0); const p = this.proj(it.x, it.y); it.sx = p[0]; it.sy = p[1]; }
     items.sort((a, b) => a.k - b.k);
-    const b = state.ball, bp = b ? this.proj(b.x, b.y, 0) : null, bk = b ? this.depth(b.x, b.y) : 0;
+    const b = state.ball;
+    /* Im Kupferrohr steckt der Ball und ist von außen nicht zu sehen – so wie eine Rohrpostbüchse
+       auch nicht durch das Kupfer scheint. Sichtbar ist dann nur der helle Schein, der in der
+       Leitung mitläuft (Renderer.drawPipeLauf). Und weil er nicht zu sehen ist, darf auch nichts
+       für ihn durchsichtig werden: Sonst risse ausgerechnet die Leitung ein Loch um ihn herum. */
+    const imRohr = !!(b && b.rider && b.rider.type === 'copperpipe');
+    const bp = b && !imRohr ? this.proj(b.x, b.y, 0) : null, bk = b ? this.depth(b.x, b.y) : 0;
     this.ballPos = bp;
     const cullM = this.scale * 3.5, fadeW = this.scale * 2.2, fadeH = this.scale * 3.2;
     for (const it of items) {
@@ -473,7 +479,7 @@ class Renderer {
       it.draw();
       if (fade) ctx.globalAlpha = 1;
     }
-    if (b) { this.flat = !!(b.rider && b.rider.type === 'ferry' && b.rider.flat); this.drawBall(ctx, b); this.flat = false; }
+    if (b && !imRohr) { this.flat = !!(b.rider && b.rider.type === 'ferry' && b.rider.flat); this.drawBall(ctx, b); this.flat = false; }
 
     if (state.phase !== 'edit') this.drawDepthCues(ctx);
     // Atmosphäre (dezent, über der Szene, unter den Effektpartikeln)

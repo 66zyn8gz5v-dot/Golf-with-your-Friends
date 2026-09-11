@@ -1635,14 +1635,35 @@ Object.assign(Renderer.prototype, {
       ctx.beginPath(); ctx.moveTo(q0[0], q0[1]); ctx.lineTo(q1[0], q1[1]); ctx.stroke();
     }
     ctx.lineCap = 'butt'; ctx.lineJoin = 'miter';
-    /* Fährt gerade ein Ball darin, läuft ein heller Schein mit ihm durch das Rohr. Der Ball selbst
-       steckt im Rohr und ist von außen kaum zu sehen – der Schein sagt, wo er gerade ist. */
-    if (ob.fahrt >= u0 && ob.fahrt <= u1) {
-      const g = ob.punkt(ob.fahrt), p = this.proj(g[0], g[1], g[2]);
-      const gr = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], s * 0.85);
-      gr.addColorStop(0, 'rgba(255,240,200,0.85)'); gr.addColorStop(1, 'rgba(255,200,120,0)');
-      ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(p[0], p[1], s * 0.85, 0, TAU); ctx.fill();
+    /* Fährt gerade ein Ball darin, ist er selbst nicht zu sehen – er steckt im Kupfer, und durch
+       Kupfer schaut niemand. Zu sehen ist nur, was man auch an einer echten Rohrpost sieht: eine
+       helle Stelle, die durch die Leitung wandert. Sie ist ein Stück Rohr in Glut plus ein weicher
+       Schein darum, damit man sie auch dann findet, wenn eine Mauer davorsteht. */
+    if (ob.fahrt >= 0) this.drawPipeSchein(ctx, ob, u0, u1);
+  },
+  /* Die glühende Stelle, die mit dem Ball durch die Leitung wandert. Sie wird nur von dem Lauf
+     gezeichnet, in dem sie gerade steckt – so bleibt sie richtig einsortiert und verschwindet
+     hinter einer Mauer, wenn der Lauf dort hinter ihr liegt. */
+  drawPipeSchein(ctx, ob, u0, u1) {
+    const s = this.scale, r = this.ROHR_R;
+    const lang = 0.8 / Math.max(0.001, ob.len);                 // gut acht Zehntel Kacheln
+    const a = Math.max(u0, ob.fahrt - lang), b = Math.min(u1, ob.fahrt + lang);
+    if (b <= a) return;
+    const g = ob.punkt(ob.fahrt), p = this.proj(g[0], g[1], g[2]);
+    const halo = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], s * 0.9);
+    halo.addColorStop(0, 'rgba(255,226,150,0.5)'); halo.addColorStop(1, 'rgba(255,190,90,0)');
+    ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(p[0], p[1], s * 0.9, 0, TAU); ctx.fill();
+    ctx.lineCap = 'round';
+    for (const [hoch, breit, farbe] of [[r * 0.3, r * 1.5, 'rgba(255,180,90,0.85)'], [r * 0.52, r * 0.8, 'rgba(255,240,200,0.95)']]) {
+      ctx.strokeStyle = farbe; ctx.lineWidth = Math.max(1, s * breit);
+      ctx.beginPath();
+      for (let i = 0; i <= 5; i++) {
+        const q = ob.punkt(a + (b - a) * (i / 5)), z = this.proj(q[0], q[1], q[2] + hoch);
+        i ? ctx.lineTo(z[0], z[1]) : ctx.moveTo(z[0], z[1]);
+      }
+      ctx.stroke();
     }
+    ctx.lineCap = 'butt';
   },
   /* Stütze unter der Leitung: ein Pfosten mit Fuß und einer Schelle, die das Rohr umfasst. */
   drawPipeStuetze(ctx, ob, u) {
