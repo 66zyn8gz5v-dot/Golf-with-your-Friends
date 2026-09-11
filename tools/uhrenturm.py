@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Baut die zwoelf Bahnen des Uhrenturms und schreibt src/courses_clock.js.
+"""Baut die dreizehn Bahnen des Uhrenturms und schreibt src/courses_clock.js.
 
 Die Karten werden aus Rechtecken und Scheiben zusammengesetzt statt von Hand getippt. Der Gewinn
 ist nicht die Tipparbeit, sondern die Pruefung: Jede Bahn wird hier schon beim Bauen gegen
@@ -224,259 +224,290 @@ def g(v):
     """Zahl fuer die JS-Ausgabe: ganze Zahlen ohne Komma."""
     return str(int(v)) if float(v) == int(v) else str(round(float(v), 4))
 
-# ================================================================ Die zwoelf Bahnen
-# 1-4 fuehren ein bis zwei Maschinen ein, 5-8 mischen sie, 9-11 kombinieren, 12 ist der Hoehepunkt.
-# Das Kupferrohr kommt ab Bahn 4 vor, die Hemmung ab Bahn 5 - beide nicht auf jeder Bahn.
+# ================================================================ Die Bahnen des Uhrenturms
+# Die letzte Welt des Spiels, und darum durchweg groesser gebaut als die uebrigen: die schmalste
+# Bahn ist 34 Kacheln breit, die weiten Bahnen 40 bis 42, das Zifferblatt 36 auf 26.
+#
+# Der Aufbau folgt dem, was neu dazugelernt werden muss:
+#   1-4   flach, je ein bis zwei Maschinen: Pendel, Zahnradfeld, Kupferrohr.
+#   5     die erste zweite Ebene - eine einzige Turbine, sonst nichts Neues.
+#   6     eine flache Atempause mit dem wandernden Loch.
+#   7-8   die anderen beiden Aufzuege: Kettenzug und Zahnstange, dazu die Luke.
+#   9-11  mischen, was da ist.
+#   12    drei Ebenen, verbunden nur durch Kupferrohre.
+#   13    das Zifferblatt: unten der Werkgang, ueber allem ein Steg, und vom Steg faellt man
+#         auf das Blatt, auf dem das Loch wandert.
+# Keine Bahn ist eine blosse Probe - was frueher die Testbahn "Maschinenprobe" zeigte, zeigen
+# jetzt die Bahnen 5, 7, 8 und 12 im Spiel.
 
 # ---------------------------------------------------------------- 1 Marktplatz (einfach)
-k = Karte(28, 11)
-k.rect(2, 2, 25, 8)
-k.rect(13, 2, 13, 8, 'x'); k.put(13, 5, '#')      # Mauer mit einer einzigen Tuer
-k.put(4, 5, 'T'); k.put(23, 5, 'H')
+k = Karte(34, 13)
+k.rect(2, 3, 31, 9)
+k.rect(17, 3, 17, 9, 'x'); k.put(17, 6, '#')      # Mauer mit einer einzigen Tuer
+k.put(4, 6, 'T'); k.put(29, 6, 'H')
 bahn(name='Marktplatz', par=3, theme='clocktown', maxStrokes=12, seed=71, dichte=0.12,
      intro='Der Platz unter der Stadtuhr. Durch die Mauer führt eine einzige Tür, und vor ihr schwingt '
            'das große Pendel. Zweimal je Schwingung gibt es die Tür frei – dann muss der Ball hindurch.',
-     obstacles=[pendeltor(k, 'Marktplatz', 13.5, 5.5, 2.0)],
-     decor=[('clock', 13, 0.5, 2.2), ('lantern', 4.5, 0.6, 1), ('lantern', 23.5, 0.6, 1),
-            ('barrel', 0.9, 5.5, 1), ('crate', 26.8, 3.4, 1)],
+     obstacles=[pendeltor(k, 'Marktplatz', 17.5, 6.5, 2.5)],
+     decor=[('clock', 17, 0.5, 2.4), ('lantern', 4.5, 0.6, 1), ('lantern', 29.5, 0.6, 1),
+            ('barrel', 0.9, 6.5, 1), ('crate', 32.8, 4.4, 1)],
      map=k.rows())
 
 # ---------------------------------------------------------------- 2 Glockengasse (einfach)
-k = Karte(32, 11)
-k.rect(2, 2, 29, 8)
-for cx in (11, 21):
-    k.rect(cx, 2, cx, 8, 'x'); k.put(cx, 5, '#')
-k.put(4, 5, 'T'); k.put(27, 5, 'H')
-bahn(name='Glockengasse', par=3, theme='clocktown', maxStrokes=14, seed=23, dichte=0.12,
+k = Karte(38, 13)
+k.rect(2, 3, 35, 9)
+for cx in (13, 25):
+    k.rect(cx, 3, cx, 9, 'x'); k.put(cx, 6, '#')
+k.put(4, 6, 'T'); k.put(33, 6, 'H')
+bahn(name='Glockengasse', par=4, theme='clocktown', maxStrokes=14, seed=23, dichte=0.12,
      intro='Zwei Türen, zwei Pendel – und sie gehen versetzt. Wer die erste im richtigen Moment nimmt, '
            'steht vor der zweiten zur falschen Zeit. Einmal zusehen lohnt sich mehr als jeder feste Schlag.',
-     obstacles=[pendeltor(k, 'Glockengasse A', 11.5, 5.5, 2.0),
-                pendeltor(k, 'Glockengasse B', 21.5, 5.5, 2.0, phase=0.5)],
-     decor=[('clock', 16, 0.5, 2.2), ('bell', 8.5, 9.6, 1.2), ('bell', 24.5, 9.6, 1.2),
-            ('lantern', 16, 9.7, 1)],
+     obstacles=[pendeltor(k, 'Glockengasse A', 13.5, 6.5, 2.5),
+                pendeltor(k, 'Glockengasse B', 25.5, 6.5, 2.5, phase=0.5)],
+     decor=[('clock', 19, 0.5, 2.4), ('bell', 9.5, 11.6, 1.2), ('bell', 29.5, 11.6, 1.2),
+            ('lantern', 19, 11.7, 1)],
      map=k.rows())
 
 # ---------------------------------------------------------------- 3 Raederwerkstatt (einfach)
-k = Karte(32, 11)
-k.rect(2, 2, 11, 8)                                # diesseits
-k.rect(19, 2, 29, 8)                               # jenseits
-k.rect(25, 2, 25, 8, 'x'); k.put(25, 5, '#')       # Tür vor dem Loch
-k.put(4, 5, 'T'); k.put(28, 5, 'H')
+k = Karte(38, 13)
+k.rect(2, 3, 13, 9)                                # diesseits
+k.rect(22, 3, 35, 9)                               # jenseits
+k.rect(30, 3, 30, 9, 'x'); k.put(30, 6, '#')       # Tuer vor dem Loch
+k.put(4, 6, 'T'); k.put(33, 6, 'H')
 bahn(name='Räderwerkstatt', par=4, theme='clocktown', maxStrokes=16, seed=44, dichte=0.12,
      intro='Zwischen den Hallen liegt nichts als Luft; hinüber tragen nur die Zahnräder. Sie halten an '
            'jedem Ufer kurz an – das ist der Moment zum Einsteigen. Drüben wartet noch ein Pendel.',
-     obstacles=[zahnradfeld(k, 'Räderwerkstatt', 11.5, 5.5, 19.5, 5.5, wait=2.8),
-                pendeltor(k, 'Räderwerkstatt', 25.5, 5.5, 2.0, phase=0.35)],
-     decor=[('clock', 15, 0.5, 2.0), ('lantern', 5.5, 0.6, 1), ('lantern', 27.5, 0.6, 1),
-            ('gearFlat', 15, 9.5, 1.6), ('crate', 0.9, 5.5, 1)],
+     obstacles=[zahnradfeld(k, 'Räderwerkstatt', 13.5, 6.5, 22.5, 6.5, wait=2.8, travel=3.6),
+                pendeltor(k, 'Räderwerkstatt', 30.5, 6.5, 2.5, phase=0.35)],
+     decor=[('clock', 18, 0.5, 2.2), ('lantern', 5.5, 0.6, 1), ('lantern', 32.5, 0.6, 1),
+            ('gearFlat', 18, 11.5, 1.8), ('crate', 0.9, 6.5, 1)],
      map=k.rows())
 
 # ---------------------------------------------------------------- 4 Rohrpost (einfach, erstes Kupferrohr)
-k = Karte(32, 11)
-k.rect(2, 2, 12, 8)
-k.rect(13, 2, 13, 8, 'x')                          # geschlossene Wand: kein Tor
-k.rect(14, 2, 29, 8)
-k.rect(25, 2, 25, 8, 'x'); k.put(25, 5, '#')
-k.put(12, 5, 'A'); k.put(20, 2, 'a')               # Rohrmund und Rohrende
-k.put(4, 5, 'T'); k.put(28, 5, 'H')
+k = Karte(38, 13)
+k.rect(2, 3, 14, 9)
+k.rect(15, 3, 15, 9, 'x')                          # geschlossene Wand: kein Tor
+k.rect(16, 3, 35, 9)
+k.rect(30, 3, 30, 9, 'x'); k.put(30, 6, '#')
+k.put(14, 6, 'A'); k.put(24, 3, 'a')               # Rohrmund und Rohrende
+k.put(4, 6, 'T'); k.put(33, 6, 'H')
 bahn(name='Rohrpost', par=4, theme='boiler', maxStrokes=16, seed=88, dichte=0.12,
      intro='Die Wand hat kein Tor. Hinüber führt nur das Kupferrohr – und in das kommt man immer, '
            'auch ganz sacht. Die Leitung läuft über die Wand hinweg, man sieht den Ball darin fahren '
            'und weiß schon vorher, wo er ankommt. Hinter der Wand wirft ihn das Rohrende in die '
            'Kesselhalle, wo wieder ein Pendel vor der Tür steht.',
      obstacles=[rohr(k, 'Rohrpost', 'A', 90),
-                pendeltor(k, 'Rohrpost', 25.5, 5.5, 2.0)],
-     decor=[('lantern', 5.5, 0.6, 1), ('lantern', 21.5, 9.6, 1), ('barrel', 30.8, 5.5, 1),
-            ('gearFlat', 8.5, 9.5, 1.4)],
+                pendeltor(k, 'Rohrpost', 30.5, 6.5, 2.5)],
+     decor=[('lantern', 5.5, 0.6, 1), ('lantern', 25.5, 11.6, 1), ('barrel', 36.8, 6.5, 1),
+            ('gearFlat', 9.5, 11.5, 1.4)],
      map=k.rows())
 
-# ---------------------------------------------------------------- 5 Hemmwerk (mittel, erste Hemmung)
-k = Karte(32, 11)
-k.rect(2, 3, 29, 7)
-k.rect(22, 3, 22, 7, 'x'); k.put(22, 5, '#')
-k.put(4, 5, 'T'); k.put(27, 5, 'H')
+# ---------------------------------------------------------------- 5 Turbinenhalle (die erste zweite Ebene)
+k = Karte(38, 15)                                  # unten: die Halle
+k.rect(2, 4, 35, 11)
+k.rect(20, 4, 20, 11, 'x'); k.put(20, 7, '#')      # Tuer mit Pendel
+k.put(4, 7, 'T')
+o = Karte(38, 15)                                  # oben: die Galerie mit dem Loch
+o.rect(24, 6, 33, 9)
+o.rect(34, 6, 34, 9, 'o')                          # offene Kante: hier faellt man zurueck
+o.put(31, 7, 'H')
+bahn(name='Turbinenhalle', par=4, theme='boiler', maxStrokes=16, seed=105, dichte=0.12,
+     intro='Hier geht es zum ersten Mal nach oben. Das Loch liegt auf der Galerie, und hinauf bringt '
+           'nur die Turbine: Wer über ihr Gitter rollt, wird mit einem Windstoß eine Etage höher '
+           'gesetzt – mit derselben Richtung und demselben Tempo. Zu schnell, und man schießt oben '
+           'über die offene Kante wieder hinunter. Das kostet keinen Strafschlag, nur den Weg.',
+     obstacles=[pendeltor(k, 'Turbinenhalle', 20.5, 7.5, 3.5),
+                turbine(k, o, 'Turbinenhalle', 26.5, 7.5)],
+     decor=[('lantern', 5.5, 1.5, 1), ('lantern', 15.5, 13.5, 1), ('barrel', 36.8, 7.5, 1),
+            ('gearFlat', 10, 13.4, 1.5)],
+     map=k.rows(), ebenen=[o.rows()])
+
+# ---------------------------------------------------------------- 6 Hemmwerk (mittel, flache Atempause)
+k = Karte(38, 13)
+k.rect(2, 3, 35, 9)
+k.rect(27, 3, 27, 9, 'x'); k.put(27, 6, '#')
+k.put(4, 6, 'T'); k.put(32, 6, 'H')
 bahn(name='Hemmwerk', par=4, theme='escapement', maxStrokes=16, seed=12, dichte=0.1,
      intro='Die Hemmung sperrt immer eine Hälfte des Ganges und gibt die andere frei; alle paar '
            'Sekunden wechselt sie. Beim Umschlagen sind beide Klinken kurz unten. Dahinter steht das '
            'Pendel vor der Tür – und hinter der Tür bleibt das Loch nicht liegen: Es springt alle '
            'zehn Sekunden eine Stelle weiter. Der leuchtende Ring sagt, wohin als Nächstes.',
-     obstacles=[hemmung(k, 'Hemmwerk', 12.5, 5.5, ('y', 5)),
-                pendeltor(k, 'Hemmwerk', 22.5, 5.5, 3.0, amp=60),
-                wanderloch(k, 'Hemmwerk', [(27.5, 3.5), (27.5, 5.5), (27.5, 7.5)])],
-     decor=[('gearFlat', 16, 1.4, 1.8), ('lantern', 8.5, 9.5, 1), ('lantern', 24.5, 9.5, 1)],
+     obstacles=[hemmung(k, 'Hemmwerk', 15.5, 6.5, ('y', 7)),
+                pendeltor(k, 'Hemmwerk', 27.5, 6.5, 3.0, amp=60),
+                wanderloch(k, 'Hemmwerk', [(32.5, 4.5), (32.5, 6.5), (32.5, 8.5)])],
+     decor=[('gearFlat', 19, 1.4, 1.8), ('lantern', 9.5, 11.5, 1), ('lantern', 29.5, 11.5, 1)],
      map=k.rows())
 
-# ---------------------------------------------------------------- 6 Federkammer (mittel)
-k = Karte(32, 13)
-k.rect(2, 4, 12, 9)                                # Abschlagskammer
-k.rect(21, 3, 29, 10)                              # Landekammer
-k.put(4, 6, 'T'); k.put(28, 7, 'H')
-bahn(name='Federkammer', par=4, theme='boiler', maxStrokes=16, seed=61, dichte=0.12,
-     intro='Über die Kluft kommt nur, wer sich einspannen lässt. Die Feder schwenkt langsam hin und '
-           'her – der leuchtende Punkt zeigt, wo der Ball landen wird. Drüben teilt die Hemmung die '
-           'Kammer, und der Weg zum Loch führt nur durch die offene Hälfte.',
-     obstacles=[federwerk(k, 'Federkammer', 8.5, 6.5, 0, rng=12, amp=0.22, speed=0.8),
-                hemmung(k, 'Federkammer', 25.5, 7, ('y', 8))],
-     decor=[('lantern', 5.5, 2.5, 1), ('lantern', 24.5, 1.5, 1), ('barrel', 16, 6.5, 1),
-            ('gearFlat', 16, 10.5, 1.4)],
-     map=k.rows())
+# ---------------------------------------------------------------- 7 Federkammer (mittel, Kettenzug und Luke)
+k = Karte(40, 17)                                  # unten
+k.rect(2, 5, 14, 12)                               # Abschlagskammer
+k.rect(23, 4, 37, 13)                              # Landekammer
+k.put(4, 8, 'T')
+o = Karte(40, 17)                                  # oben: der Umgang mit dem Loch
+o.rect(27, 7, 37, 10)
+o.rect(26, 7, 26, 10, 'o')                         # offene Kante zurueck nach unten
+o.put(36, 8, 'H')
+bahn(name='Federkammer', par=5, theme='boiler', maxStrokes=18, seed=61, dichte=0.12,
+     intro='Über die Kluft kommt nur, wer sich einspannen lässt; der leuchtende Punkt zeigt, wo der '
+           'Ball landen wird. Drüben hängt der Kettenzug: Seine Haken laufen im Takt um, und nur wer '
+           'die Stelle trifft, während gerade einer unten ist, wird mitgenommen. Oben liegt die Luke '
+           'im Weg – zu ist sie Boden, offen ein Loch. Und hinter ihr wartet das Ziel.',
+     obstacles=[federwerk(k, 'Federkammer', 10.5, 8.5, 0, rng=12, amp=0.22, speed=0.8),
+                kettenzug(k, o, 'Federkammer', 30.5, 8.5),
+                luke([k, o], 'Federkammer', 33.5, 8.5, ebene=1)],
+     decor=[('lantern', 5.5, 2.5, 1), ('lantern', 30.5, 1.5, 1), ('barrel', 18, 8.5, 1),
+            ('crate', 18, 12.5, 1), ('gearFlat', 18, 15.4, 1.5)],
+     map=k.rows(), ebenen=[o.rows()])
 
-# ---------------------------------------------------------------- 7 Zeigerhof (mittel)
-k = Karte(32, 15)
-k.rect(2, 6, 9, 8)                                 # Gasse zum Hof
-k.scheibe(16, 7.5, 6)                              # der runde Hof
-k.rect(26, 6, 29, 9)                               # Podest mit dem Loch
-k.put(4, 7, 'T'); k.put(28, 7, 'H')
-bahn(name='Zeigerhof', par=3, theme='clocktown', maxStrokes=14, seed=5, dichte=0.1,
+# ---------------------------------------------------------------- 8 Zeigerhof (mittel, Zahnstange)
+k = Karte(40, 19)                                  # unten
+k.rect(2, 8, 12, 12)                               # Gasse zum Hof
+k.scheibe(20, 9.5, 7)                              # der runde Hof
+k.rect(27, 7, 37, 12)                              # Vorplatz
+k.put(4, 10, 'T')
+o = Karte(40, 19)                                  # oben: das Podest mit dem Loch
+o.rect(31, 9, 36, 11)
+o.rect(37, 9, 37, 11, 'o')                         # offene Kante
+o.put(35, 10, 'H')
+bahn(name='Zeigerhof', par=5, theme='clocktown', maxStrokes=18, seed=5, dichte=0.1,
      intro='Der runde Hof unter dem großen Zeiger. Er braucht zwölf Sekunden für eine Runde und '
            'schiebt alles vor sich her, was auf dem Pflaster liegt – hinüber kommt man nur hinter '
-           'ihm her. Am anderen Rand tragen die Zahnräder auf das Podest.',
-     obstacles=[zeigerarm(k, 'Zeigerhof', 16, 7.5, r=4.5),
-                zahnradfeld(k, 'Zeigerhof', 21.5, 7.5, 26.5, 7.5, wait=2.0, travel=2.6)],
-     decor=[('clock', 16, 0.6, 2.4), ('lantern', 5.5, 4.5, 1), ('lantern', 27.5, 4.5, 1),
-            ('gearFlat', 16, 13.6, 1.6)],
-     map=k.rows())
+           'ihm her. Am Vorplatz steht die Zahnstange: Ihre Schaufel wartet unten, fährt hoch und '
+           'kommt zurück, und sie nimmt mit, wer beim Losfahren daraufsteht. Oben liegt das Loch.',
+     obstacles=[zeigerarm(k, 'Zeigerhof', 20, 9.5, r=5.5),
+                zahnstange(k, o, 'Zeigerhof', 33.5, 10.5)],
+     decor=[('clock', 20, 0.6, 2.6), ('lantern', 5.5, 5.5, 1), ('lantern', 31.5, 4.5, 1),
+            ('gearFlat', 20, 17.4, 1.8), ('crate', 0.9, 10.5, 1)],
+     map=k.rows(), ebenen=[o.rows()])
 
-# ---------------------------------------------------------------- 8 Kesselhaus (mittel)
-k = Karte(34, 13)
-k.rect(2, 4, 11, 9)                                # Vorhalle
-k.rect(12, 4, 12, 9, 'x')                          # dichte Wand
-k.rect(13, 2, 22, 10)                              # Kesselhalle
-k.rect(27, 4, 31, 9)                               # Podest
-k.rect(7, 4, 7, 9, 'x'); k.put(7, 6, '#')          # Tür in der Vorhalle
-k.put(11, 6, 'A'); k.put(17, 2, 'a')
-k.put(3, 6, 'T'); k.put(30, 6, 'H')
-bahn(name='Kesselhaus', par=4, theme='boiler', maxStrokes=16, seed=93, dichte=0.12,
+# ---------------------------------------------------------------- 9 Kesselhaus (mittel)
+k = Karte(40, 15)
+k.rect(2, 4, 13, 11)                               # Vorhalle
+k.rect(14, 4, 14, 11, 'x')                         # dichte Wand
+k.rect(15, 2, 27, 12)                              # Kesselhalle
+k.rect(31, 4, 37, 11)                              # Podest
+k.rect(8, 4, 8, 11, 'x'); k.put(8, 7, '#')         # Tuer in der Vorhalle
+k.put(13, 7, 'A'); k.put(21, 2, 'a')
+k.put(3, 7, 'T'); k.put(35, 7, 'H')
+bahn(name='Kesselhaus', par=5, theme='boiler', maxStrokes=18, seed=93, dichte=0.12,
      intro='Erst durch die Tür, dann ins Rohr – die Tür will abgepasst sein, das Rohr nimmt einen '
            'immer. In der Kesselhalle wartet die Feder, die als Einzige über die Glut auf das Podest '
-           'wirft. Und auf dem Podest wandert das Loch zwischen zwei Stellen hin und her: Die helle '
-           'ist die nächste.',
-     obstacles=[pendeltor(k, 'Kesselhaus', 7.5, 6.5, 4.0, amp=60),
+           'wirft. Und auf dem Podest wandert das Loch zwischen drei Stellen: Die helle ist die '
+           'nächste.',
+     obstacles=[pendeltor(k, 'Kesselhaus', 8.5, 7.5, 4.0, amp=60),
                 rohr(k, 'Kesselhaus', 'A', 90),
-                federwerk(k, 'Kesselhaus', 20.5, 6.5, 0, rng=9, amp=0.2, speed=0.75),
-                wanderloch(k, 'Kesselhaus', [(30.5, 5.5), (30.5, 7.5)])],
-     decor=[('lantern', 4.5, 2.5, 1), ('barrel', 24.5, 6.5, 1), ('crate', 24.5, 9.5, 1),
-            ('gearFlat', 17, 11.6, 1.5)],
+                federwerk(k, 'Kesselhaus', 25.5, 7.5, 0, rng=9, amp=0.2, speed=0.75),
+                wanderloch(k, 'Kesselhaus', [(35.5, 5.5), (35.5, 7.5), (35.5, 9.5)])],
+     decor=[('lantern', 4.5, 2.5, 1), ('barrel', 29, 7.5, 1), ('crate', 29, 10.5, 1),
+            ('gearFlat', 21, 13.4, 1.6)],
      map=k.rows())
 
-# ---------------------------------------------------------------- 9 Glockenturm (schwer)
-k = Karte(34, 15)
-k.rect(2, 3, 31, 11)
-k.rect(12, 3, 12, 11, 'x'); k.put(12, 7, '#')
-k.put(4, 7, 'T'); k.put(30, 10, 'H')
+# ---------------------------------------------------------------- 10 Glockenturm (schwer)
+k = Karte(42, 17)
+k.rect(2, 4, 39, 12)
+k.rect(15, 4, 15, 12, 'x'); k.put(15, 8, '#')
+k.put(4, 8, 'T')
+o = Karte(42, 17)                                  # die Glockenstube oben
+o.rect(27, 7, 38, 10)
+o.rect(39, 7, 39, 10, 'o')
+o.put(37, 8, 'H')
 bahn(name='Glockenturm', par=5, theme='clocktown', maxStrokes=20, seed=145, dichte=0.1,
-     intro='Die Glockenstube: erst das Pendel vor der Tür, dann die Hemmung quer durch die Halle, '
-           'und vor dem Loch schwingt noch ein zweites Pendel. Drei Takte, und keiner passt zum '
-           'anderen – hier gewinnt, wer wartet, nicht wer fest schlägt.',
-     obstacles=[pendeltor(k, 'Glockenturm Tür', 12.5, 7.5, 3.0, amp=60),
-                hemmung(k, 'Glockenturm', 22.5, 7.5, ('y', 9), phase=0.5),
-                pendeltor(k, 'Glockenturm Loch', 28, 7.5, 3.0, amp=60, phase=0.25)],
-     decor=[('bell', 6.5, 1.4, 1.4), ('bell', 27.5, 1.4, 1.4), ('clock', 17, 0.8, 2.2),
-            ('lantern', 17, 13.6, 1)],
-     map=k.rows())
+     intro='Die Glockenstube liegt eine Etage höher. Unten stehen erst das Pendel vor der Tür und '
+           'dann die Hemmung quer durch die Halle; hinauf bringt der Kettenzug, und oben liegt die '
+           'Luke zwischen dem Haken und dem Loch. Drei Takte, und keiner passt zum anderen – hier '
+           'gewinnt, wer wartet, nicht wer fest schlägt.',
+     obstacles=[pendeltor(k, 'Glockenturm Tür', 15.5, 8.5, 4.0, amp=60),
+                hemmung(k, 'Glockenturm', 24.5, 8.5, ('y', 9), phase=0.5),
+                kettenzug(k, o, 'Glockenturm', 30.5, 8.5),
+                luke([k, o], 'Glockenturm', 34.5, 8.5, ebene=1, phase=0.35)],
+     decor=[('bell', 7.5, 1.4, 1.4), ('bell', 33.5, 1.4, 1.4), ('clock', 20, 0.8, 2.4),
+            ('lantern', 20, 15.4, 1)],
+     map=k.rows(), ebenen=[o.rows()])
 
-# ---------------------------------------------------------------- 10 Raederschacht (schwer)
-k = Karte(36, 15)
-k.rect(2, 5, 8, 10)                                # Einstieg
-k.scheibe(17, 7.5, 5.5)                            # Zwischenscheibe unter dem Zeiger
-k.rect(27, 4, 33, 11)                              # Ausstieg
-k.put(4, 7, 'T'); k.put(32, 8, 'H')
-bahn(name='Räderschacht', par=5, theme='escapement', maxStrokes=20, seed=207, dichte=0.1,
-     intro='Zwei Zahnradfelder, dazwischen die Scheibe unter dem Zeiger. Beide Felder halten nur '
-           'kurz an, und der Zeiger räumt die Scheibe alle zwölf Sekunden einmal leer. Am Ausstieg '
-           'teilt die Hemmung den Weg zum Loch – und das Loch selbst wandert dort zwischen drei '
-           'Stellen. Die helle Stelle ist die nächste.',
-     obstacles=[zahnradfeld(k, 'Räderschacht A', 8.5, 7.5, 11.5, 7.5, wait=2.0, travel=2.2),
-                zeigerarm(k, 'Räderschacht', 17, 7.5, r=4.2, phase=0.25),
-                zahnradfeld(k, 'Räderschacht B', 22.5, 7.5, 27.5, 7.5, wait=2.0, travel=2.8, phase=0.4),
-                hemmung(k, 'Räderschacht', 30, 8, ('y', 8), phase=0.5),
-                wanderloch(k, 'Räderschacht', [(32.5, 5.5), (32.5, 7.5), (32.5, 9.5)])],
-     decor=[('gearFlat', 17, 1.4, 1.8), ('gearFlat', 17, 13.6, 1.6),
-            ('lantern', 5.5, 2.5, 1), ('lantern', 30.5, 2.5, 1)],
-     map=k.rows())
+# ---------------------------------------------------------------- 11 Raederschacht (schwer)
+k = Karte(42, 17)
+k.rect(2, 6, 11, 12)                               # Einstieg
+k.scheibe(21, 9.5, 6.5)                            # Scheibe unter dem Zeiger
+k.rect(32, 5, 39, 13)                              # Endkammer - von unten gibt es keinen Weg hinein
+k.put(4, 9, 'T')
+o = Karte(42, 17)                                  # der Steg darueber
+o.rect(20, 9, 24, 10)                              # kleine Aufsetzflaeche ueber der Scheibe
+o.rect(25, 9, 35, 10, 'o')                         # schmaler Steg ohne Gelaender
+bahn(name='Räderschacht', par=6, theme='escapement', maxStrokes=22, seed=207, dichte=0.1,
+     intro='In die Endkammer führt unten keine Tür. Erst über die Zahnräder auf die Scheibe, dort am '
+           'Zeiger vorbei auf die Zahnstange – und oben über den schmalen Steg ohne Geländer. Wer '
+           'zu weit rollt, fällt seitlich hinunter; wer weit genug kommt, fällt am Ende genau in die '
+           'Kammer. Dort wandert das Loch zwischen drei Stellen.',
+     obstacles=[zahnradfeld(k, 'Räderschacht', 11.5, 9.5, 15.5, 9.5, wait=2.2, travel=2.6),
+                zeigerarm(k, 'Räderschacht', 21, 9.5, r=5, phase=0.25),
+                zahnstange(k, o, 'Räderschacht', 21.5, 9.5),
+                wanderloch(k, 'Räderschacht', [(35.5, 7.5), (35.5, 9.5), (35.5, 11.5)])],
+     decor=[('gearFlat', 21, 1.4, 1.8), ('gearFlat', 13.5, 15.4, 1.6),
+            ('lantern', 5.5, 3.5, 1), ('lantern', 35.5, 2.5, 1), ('crate', 29, 15.4, 1)],
+     map=k.rows(), ebenen=[o.rows()])
 
-# ---------------------------------------------------------------- 11 Kupferlabyrinth (schwer)
-k = Karte(36, 15)
-k.rect(2, 4, 10, 10)                               # Kammer A
-k.rect(11, 4, 11, 10, 'x')
-k.rect(12, 2, 22, 12)                              # Kammer B
-k.rect(23, 2, 23, 12, 'x')
-k.rect(24, 4, 29, 10)                              # Kammer C, diesseits
-k.rect(32, 4, 34, 10)                              # Kammer C, jenseits
-k.put(10, 7, 'A'); k.put(16, 2, 'a')
-k.put(22, 7, 'B'); k.put(27, 4, 'b')
-k.put(4, 7, 'T'); k.put(34, 9, 'H')
-bahn(name='Kupferlabyrinth', par=5, theme='boiler', maxStrokes=20, seed=311, dichte=0.12,
-     intro='Drei Kammern, und zwischen ihnen führt kein Weg – nur die Rohre. Hinein kommt man immer; '
-           'schwer ist, was dazwischen liegt: Zwischen den beiden Leitungen steht die Hemmung, und '
-           'nur durch die offene Hälfte geht es weiter zum zweiten Rohrmund. Am Ende wirft die '
-           'Feder über die letzte Kluft.',
+# ---------------------------------------------------------------- 12 Kupferlabyrinth (schwer, drei Ebenen)
+k = Karte(42, 17)                                  # Ebene 0
+k.rect(2, 5, 12, 12)                               # Kammer A
+k.rect(16, 4, 28, 13)                              # Kammer B
+k.put(12, 8, 'A'); k.put(22, 4, 'a')               # Rohr A: Kammer A -> Kammer B, gleiche Ebene
+k.put(28, 8, 'B')                                  # Rohrmund hinauf auf Ebene 1
+k.put(4, 8, 'T')
+o = Karte(42, 17)                                  # Ebene 1
+o.rect(20, 6, 36, 11)
+o.rect(37, 6, 37, 11, 'o')                         # offene Kante: von hier faellt man ganz hinunter
+o.put(24, 8, 'b')                                  # Rohrende von unten
+o.put(34, 8, 'C')                                  # Rohrmund hinauf auf Ebene 2
+p2 = Karte(42, 17)                                 # Ebene 2
+p2.rect(26, 7, 38, 10)
+p2.rect(39, 7, 39, 10, 'o')
+p2.put(28, 8, 'c')                                 # Rohrende ganz oben
+p2.put(37, 8, 'H')
+bahn(name='Kupferlabyrinth', par=6, theme='boiler', maxStrokes=22, seed=311, dichte=0.12,
+     intro='Drei Kammern übereinander, und zwischen ihnen führt kein Weg – nur die Rohre. Hinein '
+           'kommt man immer, auch ganz sacht; man sieht den Ball außen an der Halle entlangfahren '
+           'und weiß schon, wo er ankommt. Schwer ist, was dazwischen liegt: Zwischen dem ersten und '
+           'dem zweiten Rohrmund steht die Hemmung, und die offenen Kanten oben verzeihen keinen '
+           'zu festen Schlag.',
      obstacles=[rohr(k, 'Kupferlabyrinth A', 'A', 90),
-                hemmung(k, 'Kupferlabyrinth', 19, 7.5, ('y', 11)),
-                rohr(k, 'Kupferlabyrinth B', 'B', 90),
-                federwerk(k, 'Kupferlabyrinth', 27.5, 7.5, 0, rng=5, amp=0.2, speed=0.85)],
-     decor=[('lantern', 5.5, 2.5, 1), ('lantern', 17, 13.6, 1), ('barrel', 30.5, 7.5, 1),
-            ('crate', 30.5, 4.5, 1)],
-     map=k.rows())
-
-# ---------------------------------------------------------------- 12 Das grosse Zifferblatt (Hoehepunkt)
-k = Karte(30, 22)
-k.scheibe(15, 10.5, 9.7)                           # groesser als vorher: Der Abschlag braucht Platz
-k.put(15, 4, 'H')                                  # erste Marke, oben auf zwoelf Uhr
-k.put(15, 20, 'T')                                 # ganz aussen am Blattrand. Er darf weder auf einer
-                                                   # Marke stehen (dort laege der Ball beim Start schon
-                                                   # im Loch) noch unter dem grossen Zeiger, der bis
-                                                   # r=7.2 streicht - beides prueft das Skript unten.
-bahn(name='Das große Zifferblatt', par=6, theme='escapement', maxStrokes=26, seed=1200, dichte=0.08,
-     intro='Die Schlussbahn steht auf dem Zifferblatt des Turms – und hier bleibt das Loch nicht '
-           'liegen. Alle zehn Sekunden springt es eine Stundenmarke weiter, immer im Uhrzeigersinn. '
-           'Der leuchtende Ring zeigt, wohin als Nächstes und wie lange noch. Über die Marken selbst '
-           'streicht der große Zeiger und schiebt alles vor sich her – wer zu früh dort liegt, wird '
-           'weggeräumt. Darunter gehen '
-           'die drei Zeiger des Werks – jeder anders schnell und jeder anders: Der blaue '
-           'Stundenzeiger bremst, was in seinem Feld liegt, der grüne Minutenzeiger drückt den Ball '
-           'weg, und der rote Sekundenzeiger reißt ihn mit sich herum. Dazu zwei Pendel über dem '
-           'Blatt. Hier zählt nur eines: im richtigen Moment am richtigen Ort zu sein.',
-     obstacles=[zifferblatt(k, 'Zifferblatt', 15, 10.5, r=6.5),
-                zeigerarm(k, 'Zifferblatt', 15, 10.5, r=7.2),
-                zeigerwerk(k, 'Zifferblatt', 15, 10.5, r=6.2),
-                pendeltor(k, 'Zifferblatt links', 10, 10.5, 6.5, amp=45),
-                pendeltor(k, 'Zifferblatt rechts', 20, 10.5, 6.5, amp=45, phase=0.5)],
-     decor=[('clock', 15, 0.8, 2.6), ('bell', 4.5, 3.5, 1.3), ('bell', 25.5, 3.5, 1.3),
-            ('lantern', 4.5, 17.5, 1), ('lantern', 25.5, 17.5, 1)],
-     map=k.rows())
-
-# ---------------------------------------------------------------- 13 Maschinenprobe (Testbahn Ebenen)
-# Schlicht mit Absicht: Sie zeigt alle vier Wege nach oben und den einen nach unten, nebeneinander.
-# Unten drei Aufstiege zur Wahl, oben die Luke im Weg und das Rohr auf die oberste Etage.
-k = Karte(30, 13)
-k.rect(2, 3, 28, 9)                                # unterste Ebene: groesser als die daruber,
-k.put(3, 6, 'T')                                   # damit man nach jedem Sturz auch Boden trifft
-
-o = Karte(30, 13)                                  # mittlere Ebene
-o.rect(7, 4, 24, 8)
-o.rect(25, 4, 25, 8, 'o')                          # offene Kante nach unten
-o.put(23, 6, 'A')                                  # Rohrmund hinauf zur obersten Ebene
-
-p2 = Karte(30, 13)                                 # oberste Ebene
-p2.rect(18, 4, 26, 8)
-p2.rect(27, 4, 27, 8, 'o')                         # offene Kante: von hier faellt man ganz nach unten
-p2.put(19, 6, 'a')                                 # Rohrende (Mauer, der Ball wird davor gesetzt)
-p2.put(25, 6, 'H')                                 # das Loch liegt ganz oben, kurz vor der Kante
-
-bahn(name='Maschinenprobe', par=4, theme='escapement', maxStrokes=14, seed=77, dichte=0.1,
-     intro='Eine Probe für die Maschinen zwischen den Ebenen. Unten stehen drei Aufstiege '
-           'nebeneinander: Die Turbine hebt sofort, der Kettenzug nur, wenn gerade ein Haken unten '
-           'ist, und die Zahnstange nimmt mit, wer beim Losfahren auf der Schaufel steht. Oben liegt '
-           'die Luke im Weg – zu ist sie Boden, offen ein Loch. Ganz nach oben führt nur das '
-           'Kupferrohr. Gestürzt wird hier nie mit Strafschlag, nur mit Zeitverlust.',
-     obstacles=[turbine(k, o, 'Maschinenprobe', 8.5, 6.5),
-                kettenzug(k, o, 'Maschinenprobe', 13.5, 6.5),
-                zahnstange(k, o, 'Maschinenprobe', 18.5, 6.5),
-                luke([k, o, p2], 'Maschinenprobe', 16.5, 6.5, ebene=1),
-                rohr(o, 'Maschinenprobe', 'A', 0, ziel=(p2, 2), ebene=1)],
-     decor=[('lantern', 5.5, 2.5, 1), ('lantern', 22.5, 10.5, 1), ('gearFlat', 12, 11.0, 1.4)],
+                hemmung(k, 'Kupferlabyrinth', 25, 8.5, ('y', 10)),
+                rohr(k, 'Kupferlabyrinth B', 'B', 0, ziel=(o, 1)),
+                rohr(o, 'Kupferlabyrinth C', 'C', 0, ziel=(p2, 2), ebene=1)],
+     decor=[('lantern', 5.5, 2.5, 1), ('lantern', 22, 15.4, 1), ('barrel', 32.5, 15.4, 1),
+            ('crate', 14, 2.5, 1)],
      map=k.rows(), ebenen=[o.rows(), p2.rows()])
+
+# ---------------------------------------------------------------- 13 Das grosse Zifferblatt (Hoehepunkt)
+k = Karte(36, 26)                                  # unten: Werkgang oben am Rand, darunter das Blatt
+k.rect(2, 2, 33, 4)                                # der Werkgang - hier steht der Abschlag
+k.rect(10, 2, 10, 4, 'x'); k.put(10, 3, '#')       # eine Tuer im Werkgang, davor das kleine Pendel
+k.scheibe(18, 15, 9)                               # das Zifferblatt, ohne Verbindung zum Werkgang
+k.put(4, 3, 'T')
+k.put(18, 8, 'H')                                  # erste Stundenmarke, oben auf zwoelf Uhr
+o = Karte(36, 26)                                  # oben: der Steg ueber das Blatt
+o.rect(24, 2, 27, 9)                               # Bruestung, solange unter dem Steg nichts ist
+o.rect(25, 10, 26, 19, 'o')                        # ueber dem Blatt: kein Gelaender, hier springt man ab
+bahn(name='Das große Zifferblatt', par=6, theme='escapement', maxStrokes=26, seed=1200, dichte=0.08,
+     intro='Die Schlussbahn. Unten läuft der Werkgang am Rand entlang, und vom Blatt trennt ihn die '
+           'Leere – hinüber kommt nur, wer die Turbine nimmt und oben über den Steg fährt. Der Steg '
+           'hat über dem Blatt kein Geländer: Dort lässt man sich fallen, und wo man sich fallen '
+           'lässt, entscheidet alles. Denn auf dem Blatt bleibt das Loch nicht liegen – alle zehn '
+           'Sekunden springt es eine Stundenmarke weiter, immer im Uhrzeigersinn, und der leuchtende '
+           'Ring zeigt, wohin als Nächstes. Über die Marken streicht der große Zeiger und schiebt '
+           'alles vor sich her. Darunter gehen die drei Zeiger des Werks – der blaue Stundenzeiger '
+           'bremst, der grüne Minutenzeiger drückt weg, der rote Sekundenzeiger reißt mit sich '
+           'herum. Dazu zwei Pendel über dem Blatt. Hier zählt nur eines: im richtigen Moment am '
+           'richtigen Ort zu sein.',
+     obstacles=[pendeltor(k, 'Werkgang', 10.5, 3.5, 1.0, amp=60),
+                turbine(k, o, 'Zifferblatt', 25.5, 3.5),
+                zifferblatt(k, 'Zifferblatt', 18, 15, r=6.5),
+                zeigerarm(k, 'Zifferblatt', 18, 15, r=7.2),
+                zeigerwerk(k, 'Zifferblatt', 18, 15, r=8.4),
+                pendeltor(k, 'Zifferblatt links', 14, 15, 10.0, amp=30),
+                pendeltor(k, 'Zifferblatt rechts', 22, 15, 10.0, amp=30, phase=0.5)],
+     decor=[('clock', 18, 0.6, 2.6), ('bell', 4.5, 7.5, 1.3), ('bell', 31.5, 7.5, 1.3),
+            ('lantern', 2.5, 21.5, 1), ('lantern', 33.5, 21.5, 1)],
+     map=k.rows(), ebenen=[o.rows()])
 
 # ================================================================ Ausgabe
 for b in BAHNEN:
@@ -511,34 +542,45 @@ def js_map(rows, extra=""):
 def js_decor(d):
     return '\n'.join("      { t: '%s', x: %s, y: %s, s: %s }," % (t, g(x), g(y), g(s)) for (t, x, y, s) in d)
 
-kopf = '''/* Uhrenturm (Weltkennung 'clock'): zwölf Bahnen in einer Stadt, die im Takt läuft.
+kopf = '''/* Uhrenturm (Weltkennung 'clock'): dreizehn Bahnen in einer Stadt, die im Takt läuft.
 
    Der rote Faden ist die Zeit. Jede andere Welt fragt, wie fest und wohin man schlägt; diese fragt
    zuerst *wann*. Darum steht auf jeder Bahn mindestens eine Maschine vor einer Stelle, an der kein
-   Weg vorbeiführt – eine Tür, eine Lücke, ein Rohr –, und sie gibt diese Stelle nur zeitweise frei.
-   Wer zusieht und mitzählt, kommt durch; wer nur fest schlägt, nicht.
+   Weg vorbeiführt – eine Tür, eine Lücke, ein Rohr, eine Etage –, und sie gibt diese Stelle nur
+   zeitweise frei. Wer zusieht und mitzählt, kommt durch; wer nur fest schlägt, nicht.
 
-   Aufbau: Bahn 1 bis 4 führen je ein bis zwei Maschinen ein, 5 bis 8 mischen sie, 9 bis 11
-   kombinieren, und 12 ist der Höhepunkt. Das Kupferrohr kommt erst ab Bahn 4 vor, die Hemmung erst
-   ab Bahn 5 – und beide bewusst nicht auf jeder Bahn, damit sie nicht zur Gewohnheit werden.
+   Es ist die letzte Welt des Spiels, darum sind ihre Karten durchweg weiter gebaut als die der
+   übrigen Welten: die schmalste 34 Kacheln breit, die weiten 40 bis 42, das Zifferblatt 36 auf 26.
 
-   Das wandernde Loch steht auf Bahn 5, 8, 10 und - als ganzes Zifferblatt mit zwoelf Stundenmarken
-   - auf Bahn 12. Es springt alle zehn Sekunden eine Stelle weiter. Was das Loch tut, macht das
-   Hindernis 'wanderloch' selbst; das 'H' der Karte steht auf seiner ersten Stelle, damit die Bahn
-   auch ohne laufende Uhr ein Ziel hat.
+   Aufbau: Bahn 1 bis 4 sind flach und führen je ein bis zwei Maschinen ein. Bahn 5 bringt die
+   erste zweite Ebene (eine einzige Turbine, sonst nichts Neues), Bahn 6 ist eine flache Atempause,
+   Bahn 7 und 8 bringen Kettenzug und Zahnstange samt Luke. Bahn 9 bis 11 mischen, Bahn 12 stapelt
+   drei Etagen, die nur Kupferrohre verbinden, und Bahn 13 ist der Höhepunkt. Das Kupferrohr kommt
+   ab Bahn 4 vor, die Hemmung ab Bahn 6 – beide bewusst nicht auf jeder Bahn.
 
-   Auf Bahn 12 gehen ausserdem die drei Zeiger des Turms ('handclock'): Sie sind keine Mauern,
+   Gestapelte Ebenen: 'map' ist die unterste Fläche, 'ebenen' sind die darüber, alle deckungsgleich.
+   Der Ball ist immer auf genau einer und kollidiert nur mit deren Wänden. Hinauf geht es über
+   Turbine, Kettenzug, Zahnstange oder ein Kupferrohr mit 'ziel'; hinunter an jeder offenen Kante
+   ('o' in der Karte) und durch eine offene Luke, beides ohne Strafschlag.
+
+   Das wandernde Loch steht auf Bahn 6, 9 und 11 und - als ganzes Zifferblatt mit zwoelf
+   Stundenmarken - auf Bahn 13. Es springt alle zehn Sekunden eine Stelle weiter. Was das Loch tut,
+   macht das Hindernis 'wanderloch' selbst; das 'H' der Karte steht auf seiner ersten Stelle, damit
+   die Bahn auch ohne laufende Uhr ein Ziel hat.
+
+   Auf Bahn 13 gehen ausserdem die drei Zeiger des Turms ('handclock'): Sie sind keine Mauern,
    sondern fuehren Felder mit sich - der langsame Stundenzeiger bremst, der Minutenzeiger stoesst
    weg, der schnelle Sekundenzeiger zieht an.
 
    Die Kupferrohre stehen nicht als Koordinaten in der Hindernisliste, sondern als Buchstaben in der
-   Karte: Der Großbuchstabe ist der Rohrmund, der gleiche Kleinbuchstabe das Rohrende (A/a, B/b).
-   In der Liste steht je Paar nur, in welche Richtung es ausspuckt ('angle' in Grad).
+   Karte: Der Großbuchstabe ist der Rohrmund, der gleiche Kleinbuchstabe das Rohrende (A/a, B/b,
+   C/c). Bei einem Rohr zwischen Ebenen steht der Mund auf der Karte von 'ebene', das Ende auf der
+   von 'ziel'. In der Liste steht je Paar nur, in welche Richtung es ausspuckt ('angle' in Grad).
 
    Die Karten dieser Datei entstehen mit tools/uhrenturm.py aus Rechtecken und Scheiben. Das Skript
    prüft schon beim Bauen, was sonst erst im Spiel auffiele: dass jeder Punkt, den eine Maschine
    braucht, auf der Bahn liegt – der Umkehrpunkt eines Pendels, das Ende eines Zahnradfelds, der
-   Landepunkt einer Feder, jede Marke des Zifferblatts.
+   Landepunkt einer Feder, jede Marke des Zifferblatts, der Boden über einem Aufzug.
 
    Sonst gilt dieselbe Kartenlegende wie in courses.js. Winkel in Grad, wo nicht anders vermerkt
    (Feder und Rohr rechnen intern im Bogenmaß), Zeiten in Sekunden, Koordinaten in Kacheln. */

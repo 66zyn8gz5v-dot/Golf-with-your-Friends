@@ -35,7 +35,7 @@ x-Angabe wird beim Zeichnen durch `BREITE` geteilt.
 | Dschungeltempel | Profi | 9 Bahnen durch den Urwald bis zur verlorenen Stadt |
 | Sturmhimmel | Legende | 9 extra große Bahnen über den Wolken |
 | Schattenreich | Legende | 10 extra große Bahnen im Reich der Schatten |
-| Uhrwerkstadt | Profi | 12 Bahnen im Uhrenturm – alles eine Frage des Takts, zum Schluss wandert das Loch |
+| Uhrwerkstadt | Profi | 13 Bahnen im Uhrenturm – alles eine Frage des Takts, gestapelte Ebenen, zum Schluss wandert das Loch |
 
 Das **Kolosseum** steht bewusst *nicht* auf der Weltkarte. Es ist die Turnierwelt und wird nur über
 den **Turnier**-Knopf im Startbildschirm betreten – die Weltkarte bleibt die Reise durch die sieben
@@ -596,62 +596,59 @@ und eine Änderung an einer Kammer zieht nicht Dutzende Zeichen nach sich. Nach 
 
 ## Die Bahnen des Uhrenturms
 
-Zwölf Bahnen, Stufe Profi. Was diese Welt von allen anderen trennt, ist die Frage, die sie stellt.
-Jede andere Welt fragt, **wie fest und wohin** man schlägt; diese fragt zuerst **wann**. Darum steht
-auf jeder Bahn mindestens eine Maschine vor einer Stelle, an der kein Weg vorbeiführt – eine Tür,
-eine Lücke, ein Rohr –, und sie gibt diese Stelle nur zeitweise frei. Wer zusieht und mitzählt,
-kommt durch; wer nur fest schlägt, nicht.
+Dreizehn Bahnen, Stufe Profi, und die letzte Welt des Spiels. Was sie von allen anderen trennt,
+ist die Frage, die sie stellt. Jede andere Welt fragt, **wie fest und wohin** man schlägt; diese
+fragt zuerst **wann**. Darum steht auf jeder Bahn mindestens eine Maschine vor einer Stelle, an der
+kein Weg vorbeiführt – eine Tür, eine Lücke, ein Rohr, eine Etage –, und sie gibt diese Stelle nur
+zeitweise frei. Wer zusieht und mitzählt, kommt durch; wer nur fest schlägt, nicht.
 
 Das ist der Unterschied zum **Tüftlerreich**, das ihr am nächsten kommt: Dort ist jede Bahn eine
 eigene Erfindung, die man erst verstehen muss. Hier ist es immer dieselbe Frage, und nur die
 Antwort ändert sich.
 
-**Aufbau.** Bahn 1 bis 4 führen je ein bis zwei Maschinen ein, 5 bis 8 mischen sie, 9 bis 11
-kombinieren, und 12 ist der Höhepunkt. Das **Kupferrohr** kommt erst ab Bahn 4 vor, die **Hemmung**
-erst ab Bahn 5 – und beide bewusst nicht auf jeder Bahn, damit sie nicht zur Gewohnheit werden.
-Das **wandernde Loch** steht auf vier Bahnen: klein auf 5, 8 und 10, und als ganzes Zifferblatt
-auf 12.
+**Größer als der Rest.** Weil es die Schlusswelt ist, sind ihre Karten durchweg weiter gebaut als
+die der übrigen Welten: die schmalste ist 34 Kacheln breit, die weiten 40 bis 42, das Zifferblatt
+36 auf 26. Zum Vergleich liegt das Märchenland bei 24 bis 26, das Kolosseum bei 24 bis 38.
 
-| Nr. | Bahn | Par | Maschinen | Der Moment, auf den man wartet |
-|---|---|---|---|---|
-| 1 | Marktplatz | 3 | Pendel | Die einzige Tür in der Mauer, vor der das Pendel schwingt |
-| 2 | Glockengasse | 3 | Pendel ×2 | Zwei Türen, versetzte Pendel – die eine passt, wenn die andere nicht passt |
-| 3 | Räderwerkstatt | 4 | Zahnradfeld, Pendel | Das Feld hält am Ufer an: einsteigen, tragen lassen |
-| 4 | Rohrpost | 4 | Kupferrohr, Pendel | Das Rohr nimmt einen immer – man sieht schon vorher, wo es endet |
-| 5 | Hemmwerk | 4 | Hemmung, Pendel, wanderndes Loch | Die offene Hälfte des Ganges, dann die Tür – und dahinter bleibt das Loch nicht liegen |
-| 6 | Federkammer | 4 | Federwerk, Hemmung | Die Feder schwenkt: schießen, wenn der Punkt richtig steht |
-| 7 | Zeigerhof | 3 | Zeigerarm, Zahnradfeld | Hinter dem Zeiger herlaufen, nicht vor ihm |
-| 8 | Kesselhaus | 4 | Pendel, Kupferrohr, Federwerk, wanderndes Loch | Erst durch die Tür, dann ins Rohr – und auf dem Podest pendelt das Loch |
-| 9 | Glockenturm | 5 | Pendel ×2, Hemmung | Drei Takte, von denen keiner zum anderen passt |
-| 10 | Räderschacht | 5 | Zahnradfeld ×2, Zeigerarm, Hemmung, wanderndes Loch | Zwei Felder, ein Zeiger, der die Scheibe leerräumt – und ein Loch, das nicht wartet |
-| 11 | Kupferlabyrinth | 5 | Kupferrohr ×2, Hemmung, Federwerk | Zwischen den beiden Leitungen steht die Hemmung |
-| 12 | Das große Zifferblatt | 6 | wanderndes Loch (Zifferblatt), Zeigerwerk, Pendel ×2 | Das Loch springt alle zehn Sekunden eine Stundenmarke weiter, und drei Zeiger gehen darüber |
+**Aufbau.** Bahn 1 bis 4 sind flach und führen je ein bis zwei Maschinen ein. Bahn 5 bringt die
+**erste zweite Ebene** – eine einzige Turbine, sonst nichts Neues. Bahn 6 ist eine flache
+Atempause. Bahn 7 und 8 bringen die beiden anderen Aufzüge, **Kettenzug** und **Zahnstange**, dazu
+die **Luke**. Bahn 9 bis 11 mischen, was da ist; Bahn 12 stapelt drei Etagen, die nur durch
+Kupferrohre verbunden sind; Bahn 13 ist der Höhepunkt. Das **Kupferrohr** kommt ab Bahn 4 vor, die
+**Hemmung** ab Bahn 6 – beide bewusst nicht auf jeder Bahn, damit sie nicht zur Gewohnheit werden.
+Das **wandernde Loch** steht auf vier Bahnen: klein auf 6, 9 und 11, und als ganzes Zifferblatt
+auf 13.
+
+| Nr. | Bahn | Größe | Par | Maschinen | Der Moment, auf den man wartet |
+|---|---|---|---|---|---|
+| 1 | Marktplatz | 34×13 | 3 | Pendel | Die einzige Tür in der Mauer, vor der das Pendel schwingt |
+| 2 | Glockengasse | 38×13 | 4 | Pendel ×2 | Zwei Türen, versetzte Pendel – die eine passt, wenn die andere nicht passt |
+| 3 | Räderwerkstatt | 38×13 | 4 | Zahnradfeld, Pendel | Das Feld hält am Ufer an: einsteigen, tragen lassen |
+| 4 | Rohrpost | 38×13 | 4 | Kupferrohr, Pendel | Das Rohr nimmt einen immer – man sieht schon vorher, wo es endet |
+| 5 | Turbinenhalle | 38×15 | 4 | Pendel, **Turbine**, zweite Ebene | Der Windstoß hebt eine Etage – zu schnell, und man schießt oben über die offene Kante zurück |
+| 6 | Hemmwerk | 38×13 | 4 | Hemmung, Pendel, wanderndes Loch | Die offene Hälfte des Ganges, dann die Tür – und dahinter bleibt das Loch nicht liegen |
+| 7 | Federkammer | 40×17 | 5 | Federwerk, **Kettenzug**, **Luke** | Ein Haken muss gerade unten sein – und oben die Luke gerade zu |
+| 8 | Zeigerhof | 40×19 | 5 | Zeigerarm, **Zahnstange** | Hinter dem Zeiger her, dann rechtzeitig auf die Schaufel und warten |
+| 9 | Kesselhaus | 40×15 | 5 | Pendel, Kupferrohr, Federwerk, wanderndes Loch | Erst durch die Tür, dann ins Rohr – und auf dem Podest wandert das Loch |
+| 10 | Glockenturm | 42×17 | 5 | Pendel, Hemmung, Kettenzug, Luke | Drei Takte, von denen keiner zum anderen passt – und die Glockenstube liegt eine Etage höher |
+| 11 | Räderschacht | 42×17 | 6 | Zahnradfeld, Zeigerarm, Zahnstange, wanderndes Loch | In die Endkammer führt unten keine Tür; hinein kommt nur, wer vom Steg ohne Geländer fällt |
+| 12 | Kupferlabyrinth | 42×17 | 6 | Kupferrohr ×3 (zwei davon zwischen Ebenen), Hemmung | Drei Kammern übereinander, verbunden allein durch Rohre |
+| 13 | Das große Zifferblatt | 36×26 | 6 | Turbine, Zifferblatt, Zeigerwerk, Zeigerarm, Pendel ×3 | Vom Steg auf das Blatt fallen lassen – und wo man sich fallen lässt, entscheidet alles |
+
+**Warum die Welt neu gebaut wurde.** Die erste Fassung hatte zwölf flache Bahnen plus eine
+Testbahn „Maschinenprobe", die am Ende hing und im Par mitzählte. Nachgemessen stimmten außerdem
+drei Pars nicht: Kesselhaus lag im Median bei 6 statt 4, Räderschacht bei 7 statt 5, und die
+Schlussbahn bei 3 statt 6 – zwölf Marken auf einem Ring mit Radius 6,5 liegen so dicht, dass von
+jedem Punkt am Blattrand eine kurze, freie Linie zu irgendeiner Marke führt. Beides ist mit dem
+Umbau erledigt: Die Testbahn ist aufgelöst, ihre vier Maschinen stehen jetzt in richtigen Bahnen
+(5, 7, 8 und 12), und die Schlussbahn hat den abgemauerten Anlauf bekommen, den sie brauchte –
+der Abschlag liegt im **Werkgang** am Rand, und vom Blatt trennt ihn die Leere. Hinüber kommt nur,
+wer die Turbine nimmt und über den Steg fährt.
 
 **Die Pars stehen auf dem Bot-Durchlauf.** `node tools/audit/audit.mjs clock` spielt jede Bahn
-sechsmal mit einem Normalspieler und sucht dazu die beste Lösung. Gewertet wurde danach: Par ist
+sechsmal mit einem Normalspieler und sucht dazu die beste Lösung. Gewertet wird danach: Par ist
 grob die beste Lösung plus zwei, bei den schweren Bahnen plus drei, und nie unter dem, was ein
-mittlerer Spieler braucht. Zusammen ergibt das Par 50 für die ganze Welt, während die Bots im
-Median bei 49 landen – der Weltpreis ist damit erreichbar, aber nicht geschenkt. Keine Bahn hat im
-Durchlauf einen Hazard.
-
-Nachgemessen (je sechs Spiele) stimmen allerdings drei Pars nicht mehr, und zwar in beide
-Richtungen:
-
-- **Bahn 8 und Bahn 10 liegen über ihrem Par**: Kesselhaus Median 6 statt 4, Räderschacht Median 7
-  statt 5, und bei Kesselhaus erreichte ein Lauf von sechs das Schlaglimit. Das gilt auch ohne das
-  wandernde Loch, hat mit ihm also nichts zu tun – die beiden Bahnen sind seit dem Umbau der
-  Zahnradfelder zäher geworden.
-- **Bahn 12 liegt weit darunter**: Median 3 bei Par 6, und die beste Lösung ist ein einziger
-  Schlag. Der Grund steckt in der Form: Zwölf Marken auf einem Ring mit Radius 6,5 liegen so dicht,
-  dass von jedem Punkt am Blattrand eine kurze, freie Linie zu irgendeiner Marke führt. Der
-  Abschlag stand zudem bis Fassung 64 **genau auf der Sechs-Uhr-Marke** – wer Glück hatte, lag beim
-  Start schon im Loch. Das ist behoben (der Abschlag liegt jetzt außen, und sowohl `uhrenturm.py`
-  als auch `validate.mjs` weisen einen Abschlag auf einer Wanderloch-Stelle künftig ab), aber der
-  Rest bleibt: Die Schwierigkeit dieser Bahn kommt allein aus dem Takt, nicht aus der Entfernung.
-  Entweder bekommt die Bahn einen abgemauerten Anlauf, aus dem keine kurze Linie auf den Ring
-  führt, oder ihr Par gehört auf 4.
-
-Alle drei gehören neu vermessen; bis dahin stimmt die Zahl 50 für die Welt nicht ganz.
+mittlerer Spieler braucht.
 
 **Der Weltpreis** ist die **Taschenuhr** (`pocketwatch`) – eine Kugel mit durchbrochenem Zifferblatt,
 laufenden Rädern, schwingender Unruh und der Aufzugkrone obendrauf. Sie hängt an derselben Regel
@@ -665,12 +662,12 @@ Das Loch ist in dieser Welt nicht immer ein fester Punkt. Die Maschine `wanderlo
 nächste Stelle ihrer Liste und beginnt danach wieder vorn. Sie kennt zwei Formen:
 
 - **Freie Stellen.** `{ type: 'wanderloch', stellen: [[x, y], …] }` nimmt zwei oder mehr beliebige
-  Punkte auf der Bahn. So steht sie auf **Bahn 5** (drei Stellen im Gang hinter der Tür), **Bahn 8**
-  (zwei auf dem Podest über der Glut) und **Bahn 10** (drei in der Ausstiegskammer). Auf dem Boden
+  Punkte auf der Bahn. So steht sie auf **Bahn 6** (drei Stellen im Gang hinter der Tür), **Bahn 9**
+  (drei auf dem Podest über der Glut) und **Bahn 11** (drei in der Endkammer). Auf dem Boden
   verbindet eine gestrichelte Linie die Stellen in der Reihenfolge, in der sie drankommen.
 - **Der Ziffernkreis.** `{ type: 'wanderloch', x, y, r, marken: 12 }` legt die Stellen selbst auf
   die Stundenmarken eines Zifferblatts, beginnend oben und im Uhrzeigersinn. Das ist die
-  Schlussbahn 12. Der alte Typname `dial` tut dasselbe und bleibt gültig, damit ältere Bahnen
+  Schlussbahn 13. Der alte Typname `dial` tut dasselbe und bleibt gültig, damit ältere Bahnen
   weiterlaufen.
 
 **Man muss vorher sehen, wohin es geht**, sonst ist es Glück statt Timing. Darum leuchtet die
@@ -692,11 +689,11 @@ Es kostet also höchstens einen Schlag, und zwar auch den nur, wo ohnehin schon 
 stehen. Der Grund ist die Vorschau: Wer die helle Stelle sieht, legt den Schlag hin und der Ball
 kommt an, wenn das Loch da ist – warten kostet nichts, nur Geduld.
 
-**Nicht auf die Messung hereinfallen.** Der erste Durchlauf von Bahn 8 mit wanderndem Loch sah aus
-wie ein Ausreißer nach oben (Median 6 bei Par 4, ein Lauf am Schlaglimit) – bis die Gegenprobe ohne
-das Loch dasselbe Bild lieferte. Bahn 8 und Bahn 10 liegen schon länger über ihrem Par, unabhängig
-von dieser Maschine. Ein Bot-Durchlauf mit sechs Spielen streut stark; eine einzelne Zahl trägt
-keine Entscheidung, nur der Vergleich mit und ohne.
+**Nicht auf die Messung hereinfallen.** Der erste Durchlauf des Kesselhauses mit wanderndem Loch sah aus
+wie eine Verschlechterung, und das Loch wurde daraufhin auf eine andere Bahn geschoben. Der
+Kontrolllauf **ohne** das Loch lieferte danach dasselbe Bild: Die Bahn war aus einem anderen Grund
+zäh. Seither gilt hier die Regel, vor jeder Zuweisung erst die Vergleichsmessung zu machen – eine
+einzelne Bot-Runde über sechs Spiele trägt keine Ursachenbehauptung.
 
 Zwei Dinge prüft `tools/validate.mjs` dafür: Jede Stelle muss auf hartem Boden liegen, und keine
 zwei dürfen auf derselben Kachel sitzen – sonst stünde das Loch zweimal hintereinander am selben
@@ -739,9 +736,12 @@ der Rand bekommt seine Schürze.
 
 `tools/validate.mjs` prüft die beiden Fehler, die man im Spiel erst merkt, wenn man ratlos
 davorsteht: eine **Ebene ohne Turbine auf der darunter** (dort käme nie jemand hin) und ein **Loch
-auf einer Ebene, zu der kein Weg führt**. Die Erreichbarkeit wird Etage für Etage gerechnet: Auf
-die unterste kommt man vom Abschlag, auf jede höhere nur über eine Turbine, die auf der Ebene
-darunter steht und dort selbst erreichbar ist. Dazu die Kleinigkeiten, die dasselbe bewirken: alle
+auf einer Ebene, zu der kein Weg führt**. Die Erreichbarkeit wird über alle Etagen zugleich gerechnet, und
+zwar in beide Richtungen: hinauf über einen Aufzug, hinunter über eine offene Kante oder eine
+Luke. Beides muss zusammen gerechnet werden, denn ein Sturz öffnet auch wieder eine untere Ebene –
+die Endkammer auf Bahn 11 hat unten keine Tür und ist trotzdem erreichbar, weil ein Steg darüber
+endet. Darum läuft die Prüfung nicht einmal von unten nach oben, sondern so lange, bis sich nichts
+mehr ändert. Dazu die Kleinigkeiten, die dasselbe bewirken: alle
 Karten müssen deckungsgleich sein, der Abschlag gehört ganz nach unten, das `H` darf nur einmal
 vorkommen, über jeder Turbine muss Boden sein (sonst fiele der Ball im selben Augenblick zurück),
 und auf der obersten Ebene hat eine Turbine nichts verloren. Für Luken dasselbe in Grün: Sie
@@ -755,19 +755,22 @@ des Schattenreichs unterscheidet sich die Luke genau in einem Punkt – die Fall
 (Strafschlag, zurück zum Schlagstart), die Luke ist ein Weg. Wo es eine Ebene darunter gibt, ist
 Hinunterfallen kein Unglück mehr, sondern Zeitverlust.
 
-**Bahn 13 „Turbinenprobe"** ist die Testbahn dazu, mit Absicht schlicht: drei Etagen, je eine
-Turbine dazwischen, auf der mittleren eine Luke im Weg, das Loch ganz oben am Ende einer kurzen
-Strecke und hinter jeder Etage eine offene Kante. Wer zu weit schiebt oder im falschen Moment über
-die Luke rollt, fällt – von ganz oben auch gleich zwei Etagen tief.
+**Eine Testbahn gibt es nicht mehr.** Bis Fassung 71 hing am Ende der Welt eine schlichte
+„Maschinenprobe", die alle Wege nach oben nebeneinander zeigte und im Par der Welt mitzählte. Mit
+dem Umbau der Welt ist sie aufgelöst: Die Turbine steht jetzt auf Bahn 5 und 13, Kettenzug und
+Luke auf 7 und 10, die Zahnstange auf 8 und 11, und die Rohre zwischen den Ebenen auf 12. Jede
+Maschine wird da eingeführt, wo sie gebraucht wird, und keine Bahn ist mehr bloß eine Probe.
 
 **Was noch fehlt:** Der Baumodus kann keine Ebenen – das kommt erst, wenn sich die Sache bewährt.
-Geteilte Bahnen mit zwei Ebenen werden deshalb abgelehnt statt stillschweigend um ihre obere Karte
-gebracht. Und die Testbahn hängt am Ende der Welt und zählt in deren Par mit; wenn die Ebenen
-bleiben sollen, gehört sie an einen sinnvolleren Platz oder heraus.
+Geteilte Bahnen mit mehreren Ebenen werden deshalb abgelehnt statt stillschweigend um ihre oberen
+Karten gebracht. Und gezeichnet werden ein paar Maschinen bisher nur auf der untersten Ebene
+richtig: Turbine, Hemmung, Pendel, Zeiger und das wandernde Loch liegen im Boden und kennen keine
+Etage. Darum stehen sie in den Karten auch immer unten; Kettenzug, Zahnstange, Luke und Kupferrohr
+dagegen können auf jeder Ebene sitzen.
 
 ### Das Zeigerwerk: drei Zeiger, drei Wirkungen
 
-Der **Zeigerarm** von Bahn 7 und 10 ist eine Mauer, die sich dreht – er schiebt den Ball vor sich
+Der **Zeigerarm** von Bahn 8 und 11 ist eine Mauer, die sich dreht – er schiebt den Ball vor sich
 her. Das **Zeigerwerk** der Schlussbahn ist das Gegenteil: drei Zeiger auf einer Achse, die gar
 nichts anstoßen, sondern **Felder** mit sich führen, so wie die Korallen im Korallenriff. Man
 rollt hindurch, und unterwegs passiert etwas.
@@ -875,7 +878,7 @@ Bildschirm waagerecht und sonst gar nicht.
 
 ### Wie die Karten entstehen
 
-`tools/uhrenturm.py` baut die zwölf Karten aus Rechtecken und Scheiben und schreibt
+`tools/uhrenturm.py` baut die dreizehn Bahnen mit allen ihren Ebenen aus Rechtecken und Scheiben und schreibt
 `src/courses_clock.js`. Der Gewinn ist nicht die Tipparbeit, sondern die Prüfung: Das Skript hält
 jede Bahn schon beim Bauen gegen dieselben Regeln, die später `tools/validate.mjs` anlegt, und
 bricht mit einer klaren Meldung ab, wenn ein Punkt danebenliegt, den eine Maschine braucht – der
@@ -890,8 +893,18 @@ Wiederkehrende Bausteine des Skripts:
   Schwingung ist die Tür frei. Alle drei Punkte, die `validate.mjs` prüft (Ruhelage und beide
   Umkehrpunkte), liegen dabei von selbst auf der Bahn.
 - **`zahnradfeld`, `federwerk`, `zeigerarm`, `zeigerwerk`, `hemmung`, `zifferblatt`, `wanderloch`,
-  `rohr`** – je ein Baustein,
-  der seine eigenen Bedingungen prüft und die fertige JS-Zeile liefert.
+  `rohr`** – je ein Baustein, der seine eigenen Bedingungen prüft und die fertige JS-Zeile liefert.
+- **`turbine`, `kettenzug`, `zahnstange`** – die Aufzüge. Sie bekommen zwei Karten, die der eigenen
+  Ebene und die darüber, und prüfen beide: unten Bahn, oben Boden. Steht über einem Aufzug nichts,
+  fiele der Ball im selben Augenblick zurück – das fällt hier auf und nicht erst im Spiel.
+- **`luke`** – bekommt alle Karten und prüft, dass sie auf ihrer Ebene auf der Bahn liegt und dass
+  irgendwo darunter Boden ist. Sonst wäre sie ein Sturz ins Aus statt ein Weg nach unten.
+- **`rohr`** mit `ziel=(karte, ebene)` – ein Kupferrohr zwischen zwei Ebenen. Der Mund wird auf der
+  einen Karte gesucht, das Ende auf der anderen, und die Auswurfstelle muss dort Bahn sein.
+
+Am Ende prüft das Skript noch die ganze Bahn: genau ein `T` ganz unten, genau ein `H` über alle
+Ebenen zusammen, alle Karten deckungsgleich, für jede Ebene ein Aufstieg von der darunter, und
+keine Deko auf dem Fairway.
 
 
 ## Kostenlos als App aufs iPad oder Handy (GitHub Pages)
