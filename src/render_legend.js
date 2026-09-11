@@ -465,7 +465,7 @@ Object.assign(Renderer.prototype, {
      brennende Auge, das sich langsam dreht. Sieht es den Ball, flackert der Kegel rot. */
   drawEyeBeam(ctx, ob, t) {
     const s = this.scale, n = 22, pts = [];
-    const lv = this.level, tiles = lv.tiles;
+    const lv = this.level, tiles = lv.untenFl ? lv.untenFl.tiles : lv.tiles;
     for (let i = 0; i <= n; i++) {
       const a = ob.dir - ob.fov / 2 + ob.fov * i / n; let R = ob.r;
       for (; R < ob.range; R += 0.2) { const c = lv.charAt(ob.x + Math.cos(a) * R, ob.y + Math.sin(a) * R); if (c === 'x') break; }
@@ -1592,6 +1592,107 @@ Object.assign(Renderer.prototype, {
      getragen wird. Wichtig ist, dass ein gerader Lauf als ein einziger Zylinder gezeichnet wird –
      sonst sieht man an jedem Stoß den Deckel des nächsten und das Rohr wird zur Perlenkette. */
   ROHR_R: 0.33,
+  /* Turbine, Boden: ein Gitterschacht mit laufendem Gebläserad. Er liegt bündig im Boden, damit
+     der Ball ungehindert darüberrollt – gehoben wird er ja vom Wind, nicht von einer Kante. */
+  drawTurbineFloor(ctx, ob, t) {
+    const s = this.scale, w = ob.w / 2, h = ob.h / 2;
+    const poly = [[ob.x - w, ob.y - h], [ob.x + w, ob.y - h], [ob.x + w, ob.y + h], [ob.x - w, ob.y + h]];
+    this.fillPoly(ctx, poly, 0.004, '#2a2118');
+    this.fillPoly(ctx, [[ob.x - w * 0.86, ob.y - h * 0.86], [ob.x + w * 0.86, ob.y - h * 0.86],
+      [ob.x + w * 0.86, ob.y + h * 0.86], [ob.x - w * 0.86, ob.y + h * 0.86]], 0.006, '#120d08');
+    // Gebläserad: drei Schaufeln, die sich drehen
+    const dreh = t * 3.4;
+    for (let i = 0; i < 3; i++) {
+      const a = dreh + (i * TAU) / 3, r = Math.min(w, h) * 0.78;
+      const p = [];
+      for (const [d, q] of [[0.12, 0.0], [1.0, 0.34], [1.0, -0.06]]) {
+        const ca = Math.cos(a), sa = Math.sin(a);
+        p.push([ob.x + (ca * d - sa * q) * r, ob.y + (sa * d + ca * q) * r]);
+      }
+      this.fillPoly(ctx, p, 0.008, '#7a6a52');
+    }
+    this.isoEllipse(ctx, ob.x, ob.y, 0.01, Math.min(w, h) * 0.18, '#c9a15a');
+    // Gitterstäbe quer darüber
+    ctx.strokeStyle = 'rgba(200,180,140,0.55)'; ctx.lineWidth = Math.max(1, s * 0.05);
+    for (let i = 1; i < 4; i++) {
+      const u = ob.y - h + (2 * h * i) / 4;
+      const p0 = this.proj(ob.x - w, u, 0.012), p1 = this.proj(ob.x + w, u, 0.012);
+      ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke();
+    }
+    /* Der Windstoß: immer ein leises Wehen, und kräftig für einen Augenblick, wenn die Turbine
+       gerade jemanden hochgehoben hat. Man soll sehen, wo es nach oben geht, bevor man hinrollt. */
+    const stoss = Math.max(0, 1 - (t - ob.hebtAt) / TURBINE_STOSS);
+    const hoch = (this.level.ebeneZ || 2) * 1.1;
+    for (let i = 0; i < 7; i++) {
+      const u = ((t * (0.5 + 0.35 * stoss) + i / 7) % 1);
+      const rr = Math.min(w, h) * (0.2 + 0.7 * ((i * 0.37) % 1));
+      const a = (i * 2.4) + t * 0.6;
+      const p = this.proj(ob.x + Math.cos(a) * rr, ob.y + Math.sin(a) * rr, u * hoch);
+      ctx.fillStyle = `rgba(226,240,255,${((0.1 + 0.35 * stoss) * (1 - u)).toFixed(3)})`;
+      ctx.beginPath(); ctx.arc(p[0], p[1], s * (0.08 + u * 0.2), 0, TAU); ctx.fill();
+    }
+  },
+
+  /* Die obere Ebene als angehobene Scholle. Sie wird immer gezeichnet, nicht nur wenn man oben
+     ist – man soll von unten sehen, wohin die Turbine führt, und von oben sehen, wo man
+     herunterkommt. Was zählt, ist der Unterschied: Die Ebene, auf der der Ball gerade ist, wird
+     voll gezeichnet, die andere halb durchsichtig. Sonst wüsste man nie, welche Wände gerade gelten.
+
+     Gezeichnet wird sie nicht Kachel für Kachel als Körper – das gäbe bei halber Durchsicht ein
+     Gitter aus lauter inneren Seitenflächen, die man nie sehen sollte. Stattdessen bekommt nur der
+     *Rand* seine Schürze nach unten, und die Fläche obenauf wird flach gefüllt. */
+  drawEbeneOben(ctx, t) {
+    const lv = this.level, fl = lv.obenFl;
+    if (!fl) return;
+    const th = this.theme, z = lv.ebeneZ, aktiv = lv.ebene === 1, tief = 1.15;
+    ctx.globalAlpha = aktiv ? 1 : 0.5;
+    const kante = aktiv ? th.groundEdge : shade(th.groundEdge, 1.25);
+    const kacheln = [];
+    for (let y = 0; y < lv.H; y++) for (let x = 0; x < lv.W; x++) if (fl.isFloor(x, y)) kacheln.push([x, y]);
+    kacheln.sort((a, b) => this.depth(a[0] + 0.5, a[1] + 0.5) - this.depth(b[0] + 0.5, b[1] + 0.5));
+    // Schürze: nur an den Kanten nach außen, von hinten nach vorn
+    const quad = (ax, ay, bx, by) => {
+      const p = [this.proj(ax, ay, z), this.proj(bx, by, z), this.proj(bx, by, z - tief), this.proj(ax, ay, z - tief)];
+      ctx.beginPath(); p.forEach((q, i) => i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1])); ctx.closePath();
+      ctx.fillStyle = kante; ctx.fill();
+      ctx.strokeStyle = shade(kante, 0.75); ctx.lineWidth = 1; ctx.stroke();
+    };
+    for (const [x, y] of kacheln) {
+      if (!fl.isFloor(x, y + 1)) quad(x, y + 1, x + 1, y + 1);
+      if (!fl.isFloor(x + 1, y)) quad(x + 1, y, x + 1, y + 1);
+      if (!fl.isFloor(x - 1, y)) quad(x, y, x, y + 1);
+      if (!fl.isFloor(x, y - 1)) quad(x, y, x + 1, y);
+    }
+    // Belag obenauf
+    for (const [x, y] of kacheln) {
+      const belag = th.floor[(x + y) & 1];
+      this.fillPoly(ctx, [[x, y], [x + 1, y], [x + 1, y + 1], [x, y + 1]], z, aktiv ? belag : shade(belag, 1.1));
+    }
+    // Brüstung an den geschlossenen Kanten
+    for (const wr of fl.walls) {
+      const poly = [[wr.x, wr.y], [wr.x + wr.w, wr.y], [wr.x + wr.w, wr.y + wr.h], [wr.x, wr.y + wr.h]];
+      this.prism(ctx, poly, z, 0.42, th.wall.top, th.wall.side, { outline: shade(th.wall.side, 0.7) });
+    }
+    /* Offene Kanten hell stricheln: Dort geht es hinunter, und das muss man sehen, bevor man
+       darüberrollt – sonst wirkt der Fall wie ein Fehler des Spiels statt wie ein Weg. */
+    ctx.strokeStyle = aktiv ? 'rgba(255,214,110,0.85)' : 'rgba(255,214,110,0.45)';
+    ctx.lineWidth = Math.max(1.5, this.scale * 0.08);
+    ctx.setLineDash([this.scale * 0.26, this.scale * 0.18]);
+    for (const [x, y] of kacheln) {
+      for (const [ox, oy, a, b] of [[0, -1, [x, y], [x + 1, y]], [0, 1, [x, y + 1], [x + 1, y + 1]],
+        [-1, 0, [x, y], [x, y + 1]], [1, 0, [x + 1, y], [x + 1, y + 1]]]) {
+        if (fl.isFloor(x + ox, y + oy)) continue;
+        if (fl.at(x + ox, y + oy) === 'x') continue;                 // Block: da ist eine Wand, kein Abgrund
+        const wand = fl.walls.some(w => a[0] >= w.x - 0.4 && a[0] <= w.x + w.w + 0.4 && a[1] >= w.y - 0.4 && a[1] <= w.y + w.h + 0.4);
+        if (wand) continue;
+        const p0 = this.proj(a[0], a[1], z + 0.02), p1 = this.proj(b[0], b[1], z + 0.02);
+        ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke();
+      }
+    }
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+  },
+
   drawPipeLauf(ctx, ob, k, t) {
     const s = this.scale, r = this.ROHR_R;
     const { u0, u1, bogen, teile } = ob.stuecke[k];

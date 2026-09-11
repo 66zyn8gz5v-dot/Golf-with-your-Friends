@@ -4,7 +4,7 @@ const MAX_SPEED = 21;
 const FRICTION = { '#': 4.2, T: 4.2, H: 4.2, o: 4.2, s: 20, i: 0.75, w: 4, l: 4 }; // Bremsung je Untergrund, pro Bahn per friction überschreibbar
 
 function makeBall(x, y, color, hat) {
-  return { x, y, z: 0, vx: 0, vy: 0, vz: 0, r: BALL_R, shrinkUntil: 0, portalCd: 0, rideCd: 0, rider: null, air: false, restX: x, restY: y, color, hat, boosted: false };
+  return { x, y, z: 0, vx: 0, vy: 0, vz: 0, r: BALL_R, shrinkUntil: 0, portalCd: 0, rideCd: 0, rider: null, air: false, restX: x, restY: y, ebene: 0, restEbene: 0, color, hat, boosted: false };
 }
 
 function collideSeg(ball, s, events) {
@@ -84,6 +84,14 @@ function resolveCrush(level, ball, events) {
 /* Ein Physik-Schritt. allowForces: Windfelder/Beschleuniger nur, wenn der Ball "im Spiel" ist. */
 function stepPhysics(level, ball, dt, t, allowForces) {
   const events = [];
+  /* Ebenen: Der Ball ist immer auf genau einer Fläche. Das Level trägt die Kacheln und Wände
+     dieser Fläche – hier wird nur nachgezogen, falls der Ball die Ebene gewechselt hat (Turbine,
+     offene Kante, neuer Schlag). Die Maschinen laufen auf beiden Ebenen weiter, damit die andere
+     Ebene nicht stehenbleibt, während man nicht hinschaut; gewirkt wird aber nur auf der eigenen. */
+  if (ball.ebene == null) ball.ebene = 0;
+  if (ball.ebene !== level.ebene) level.setzeEbene(ball.ebene);
+  const eb = ball.ebene;
+  const hier = ob => (ob.ebene || 0) === eb;
   for (const ob of level.obstacles) if (ob.update) ob.update(t);
 
   // Schrumpfzauber läuft ab
@@ -92,10 +100,10 @@ function stepPhysics(level, ball, dt, t, allowForces) {
   // Fähren und Kanonen: mitfahren bzw. geladen sein (dann keine weitere Physik) oder einsteigen
   ball.rideCd = Math.max(0, (ball.rideCd || 0) - dt);
   if (ball.rider) { if (ball.rider.ride(ball, t, events)) return events; }
-  else for (const ob of level.obstacles) if (ob.ride && ob.ride(ball, t, events)) return events;
+  else for (const ob of level.obstacles) if (hier(ob) && ob.ride && ob.ride(ball, t, events)) return events;
 
   // Sprungschanzen und Flugphase: in der Luft gibt es keine Reibung, keine Mauern, keine Hindernisse
-  for (const ob of level.obstacles) if (ob.launch) ob.launch(ball, events, t); // Rampen und Aufwinde
+  for (const ob of level.obstacles) if (hier(ob) && ob.launch) ob.launch(ball, events, t); // Rampen und Aufwinde
   if (ball.air) {
     ball.x += ball.vx * dt; ball.y += ball.vy * dt;
     ball.vz -= 12 * dt; ball.z += ball.vz * dt;
@@ -103,15 +111,15 @@ function stepPhysics(level, ball, dt, t, allowForces) {
       ball.z = 0; ball.vz = 0; ball.air = false;
       ball.vx *= 0.6; ball.vy *= 0.6;
       events.push({ type: 'land', x: ball.x, y: ball.y });
-      for (const ob of level.obstacles) if (typeof ob.catch === 'function' && ob.catch(ball, t, events)) return events;
+      for (const ob of level.obstacles) if (hier(ob) && typeof ob.catch === 'function' && ob.catch(ball, t, events)) return events;
     } else { // im Flug: nur der springende Hai kann den Ball erwischen
-      for (const ob of level.obstacles) if (ob.airTrigger && ob.airTrigger(ball, t, events)) break;
+      for (const ob of level.obstacles) if (hier(ob) && ob.airTrigger && ob.airTrigger(ball, t, events)) break;
       return events;
     }
   }
 
   ball.boosted = false;
-  for (const ob of level.obstacles) if (ob.force && (allowForces || ob.alwaysForce)) ob.force(ball, dt); // Wellen schieben auch einen ruhenden Ball
+  for (const ob of level.obstacles) if (hier(ob) && ob.force && (allowForces || ob.alwaysForce)) ob.force(ball, dt); // Wellen schieben auch einen ruhenden Ball
 
   const c = level.charAt(ball.x, ball.y);
   let sp = Math.hypot(ball.vx, ball.vy);
@@ -141,6 +149,7 @@ function stepPhysics(level, ball, dt, t, allowForces) {
 
   const dyn = [], circles = [];
   for (const ob of level.obstacles) {
+    if (!hier(ob)) continue;
     if (ob.segments) ob.segments(dyn);
     if (ob.circles) ob.circles(circles);
   }
@@ -153,10 +162,10 @@ function stepPhysics(level, ball, dt, t, allowForces) {
   resolveCrush(level, ball, events);
 
   ball.portalCd = Math.max(0, ball.portalCd - dt);
-  for (const ob of level.obstacles) { if (ob.teleport) ob.teleport(ball, t, events); if (ob.trigger) ob.trigger(ball, t, events); }
+  for (const ob of level.obstacles) { if (!hier(ob)) continue; if (ob.teleport) ob.teleport(ball, t, events); if (ob.trigger) ob.trigger(ball, t, events); }
 
-  // Loch
-  if (level.cup) {
+  // Loch – es liegt auf einer festgelegten Ebene und zieht nur, wenn der Ball auch dort ist
+  if (level.cup && ball.ebene === (level.cupEbene || 0)) {
     const cdx = ball.x - level.cup.x, cdy = ball.y - level.cup.y;
     const cd = Math.hypot(cdx, cdy);
     sp = Math.hypot(ball.vx, ball.vy);
@@ -167,8 +176,17 @@ function stepPhysics(level, ball, dt, t, allowForces) {
     if (cd < cr && sp < 7.5) { events.push({ type: 'sunk' }); return events; }
   }
 
-  // Hindernisse / Aus
-  const c2 = level.charAt(ball.x, ball.y);
+  /* Zurück nach unten: An einer offenen Kante der oberen Ebene gibt es nichts, worauf der Ball
+     stehen könnte – er fällt an derselben Stelle auf die untere und rollt dort weiter. Ort und
+     Tempo bleiben, ein Strafschlag fällt nicht an. Gefallen wird nur nach unten: Was auch unten
+     kein Boden ist, ist wirklich aus. */
+  let c2 = level.charAt(ball.x, ball.y);
+  if (!level.isFloorChar(c2) && ball.ebene > 0) {
+    ball.ebene -= 1; level.setzeEbene(ball.ebene);
+    ball.z = Math.max(ball.z, level.ebeneZ); ball.vz = 0;   // sichtbar herunterfallen, ohne Flugphase
+    events.push({ type: 'ebeneAb', x: ball.x, y: ball.y });
+    c2 = level.charAt(ball.x, ball.y);
+  }
   if (!level.isFloorChar(c2)) events.push({ type: 'oob' });
   else if (c2 === 'w') events.push({ type: 'water' });
   else if (c2 === 'l') events.push({ type: 'lava' });

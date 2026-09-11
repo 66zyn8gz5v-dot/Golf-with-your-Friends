@@ -850,6 +850,42 @@ class CopperPipe extends LionGate {
   }
 }
 
+/* Turbine: ein Gebläseschacht im Boden der unteren Ebene. Rollt der Ball darüber, hebt ihn der
+   Windstoß auf die obere Ebene – an derselben Stelle, mit demselben Tempo in dieselbe Richtung.
+   Er wird also nicht abgeschossen und nicht gebremst; die Turbine ist der Aufzug zwischen den
+   beiden Flächen, kein Katapult.
+
+   Zurück nach unten geht es nicht über die Turbine, sondern über jede offene Kante der oberen
+   Ebene (siehe stepPhysics): Wo oben kein Boden ist, fällt der Ball auf die untere Fläche und
+   rollt dort weiter, ohne Strafschlag.
+
+   Zwei Dinge prüft sie selbst, damit eine schiefe Bahn nicht im Spiel auffällt:
+   - Gibt es überhaupt eine obere Ebene? Ohne sie tut die Turbine nichts.
+   - Ist über ihr auch Boden? Wäre dort ein Loch in der oberen Fläche, würde der Ball im selben
+     Augenblick wieder herunterfallen – ein Zittern, das niemand versteht. */
+const TURBINE_STOSS = 0.55;      // Sekunden, die der Windstoß nach dem Heben noch zu sehen ist
+
+class Turbine {
+  constructor(d) {
+    Object.assign(this, { w: 1.4, h: 1.4 }, d);
+    this.type = 'turbine';
+    this.hebtAt = -10;           // wann zuletzt gehoben wurde (für die Zeichnung)
+  }
+  ueber(ball) {
+    return Math.abs(ball.x - this.x) <= this.w / 2 && Math.abs(ball.y - this.y) <= this.h / 2;
+  }
+  trigger(ball, t, events) {
+    if (ball.air || ball.rider) return;
+    if ((ball.ebene || 0) !== 0 || !this.level || !this.level.flaechen[1]) return;
+    if (!this.ueber(ball)) return;
+    if (!this.level.isFloorChar(this.level.charAtEbene(1, ball.x, ball.y))) return;
+    ball.ebene = 1; this.level.setzeEbene(1);
+    ball.z = 0; ball.vz = 0;
+    this.hebtAt = t;
+    events.push({ type: 'turbine', x: ball.x, y: ball.y });
+  }
+}
+
 /* Hemmung: zwei Sperrklinken nebeneinander in einem Durchlass. Immer ist genau eine Seite frei,
    die andere gesperrt; alle HEMMUNG_TAKT Sekunden springt es um. Beim Umschlagen sind für einen
    Augenblick beide Klinken unten – so wie in einer echten Hemmung die eine erst fasst, wenn die

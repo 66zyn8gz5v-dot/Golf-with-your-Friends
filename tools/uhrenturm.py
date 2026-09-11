@@ -156,6 +156,14 @@ def wanderloch(k, name, stellen):
     liste = ', '.join('[%s, %s]' % (g(mx), g(my)) for mx, my in stellen)
     return "{ type: 'wanderloch', stellen: [%s] }" % liste
 
+def turbine(k, o, name, x, y, w=1.4, h=1.4):
+    """Turbine: hebt den Ball von der unteren auf die obere Ebene. Geprueft wird, dass sie unten
+    auf der Bahn steht UND dass genau darueber auch oben Boden ist - sonst fiele der Ball im
+    selben Augenblick wieder herunter."""
+    assert k.frei(x, y), f'{name}: Turbine bei ({x},{y}) steht unten auf "{k.at(x, y)}"'
+    assert o.frei(x, y), f'{name}: ueber der Turbine bei ({x},{y}) ist oben kein Boden ("{o.at(x, y)}")'
+    return "{ type: 'turbine', x: %s, y: %s, w: %s, h: %s }" % (g(x), g(y), g(w), g(h))
+
 def rohr(k, name, paar, grad):
     """Kupferrohr: Die beiden Plaetze stehen als Gross- und Kleinbuchstabe in der Karte. Geprueft
     wird, dass es beide gibt und dass die Auswurfstelle Bahn ist. Das Rohr ist eine Fahrt, kein Tor:
@@ -398,12 +406,41 @@ bahn(name='Das große Zifferblatt', par=6, theme='escapement', maxStrokes=26, se
             ('lantern', 4.5, 17.5, 1), ('lantern', 25.5, 17.5, 1)],
      map=k.rows())
 
+# ---------------------------------------------------------------- 13 Turbinenprobe (Testbahn Ebenen)
+# Schlicht mit Absicht: unten nur der Weg zur Turbine, oben eine kurze Strecke mit dem Loch am Ende
+# und einer offenen Kante zum Zurueckfallen. Wer zu weit schiebt, faellt hinunter und faengt an der
+# Turbine neu an - ohne Strafschlag.
+k = Karte(22, 9)
+k.rect(2, 2, 19, 6)                                # untere Ebene: breiter als die obere, damit man
+k.put(3, 4, 'T')                                   # nach dem Fall auch wirklich auf Boden landet
+
+o = Karte(22, 9)                                   # obere Ebene, gleich gross wie die untere
+o.rect(12, 3, 16, 5)                               # kurze Strecke ueber dem hinteren Teil
+o.rect(17, 3, 17, 5, 'o')                          # offene Kante: 'o' ist Boden ohne Bande -
+                                                   # wer darueber hinausrollt, faellt nach unten
+o.put(16, 4, 'H')                                  # das Loch liegt oben, kurz vor der Kante
+bahn(name='Turbinenprobe', par=3, theme='escapement', maxStrokes=12, seed=77, dichte=0.1,
+     intro='Eine Probe für die zweite Ebene. Unten führt der Weg über die Turbine – wer darüberrollt, '
+           'wird an derselben Stelle nach oben gehoben und behält Tempo und Richtung. Oben liegt das '
+           'Loch am Ende einer kurzen Strecke. Die Kante dahinter ist offen: Wer zu weit schiebt, '
+           'fällt an derselben Stelle wieder nach unten und fängt von vorn an – ohne Strafschlag.',
+     obstacles=[turbine(k, o, 'Turbinenprobe', 12.5, 4.5)],
+     decor=[('lantern', 5.5, 1.5, 1), ('lantern', 16.5, 7.5, 1), ('gearFlat', 9, 7.6, 1.4)],
+     map=k.rows(), oben=o.rows())
+
 # ================================================================ Ausgabe
 for b in BAHNEN:
     rows = b['map']
     txt = '\n'.join(rows)
+    oben = b.get('oben') or []
+    otxt = '\n'.join(oben)
     assert txt.count('T') == 1, b['name']
-    assert txt.count('H') == 1, b['name']
+    # Das Loch liegt auf genau einer Ebene - beide Karten zusammen haben genau ein 'H'
+    assert txt.count('H') + otxt.count('H') == 1, b['name']
+    assert otxt.count('T') == 0, b['name']
+    if oben:
+        assert len(oben) == len(rows) and all(len(a) == len(c) for a, c in zip(oben, rows)), b['name']
+        assert any("'turbine'" in o for o in b['obstacles']), f"{b['name']}: obere Ebene ohne Turbine"
     # Deko steht neben der Bahn, nie darauf: Eine Laterne auf dem Pflaster sähe aus wie ein
     # Hindernis, wäre aber keins - der Ball rollte einfach hindurch.
     for (t, x, y, sc) in b['decor']:
@@ -458,6 +495,8 @@ for b in BAHNEN:
                  % (b['name'], b['par'], b['theme'], b['maxStrokes']))
     teile.append("    intro: '%s',\n" % b['intro'].replace("'", "\\'"))
     teile.append("    map: [\n%s\n    ],\n" % js_map(b['map']))
+    if b.get('oben'):                                  # zweite Spielebene, gleich gross wie die untere
+        teile.append("    oben: [\n%s\n    ],\n" % js_map(b['oben']))
     teile.append("    obstacles: [\n" + '\n'.join('      %s,' % o for o in b['obstacles']) + "\n    ],\n")
     teile.append("    decor: [\n%s\n    ],\n" % js_decor(b['decor']))
     teile.append("    autoDecor: { density: %s, seed: %d },\n" % (b['dichte'], b['seed']))

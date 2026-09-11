@@ -1452,6 +1452,7 @@
     }
     const p = state.players[state.curPlayer], lv = state.level;
     state.ball = makeBall(lv.tee.x, lv.tee.y, p.color, p.hat);
+    lv.setzeEbene(0);   // jeder Spieler beginnt unten, auch wenn der vorige oben aufgehört hat
     state.strokes = 0; state.phase = 'aim'; state.aim = null; state.restTimer = 0; state.slowTimer = 0; state.rollT = 0; state.stuckRef = null;
     faceCup(); setCamMode('follow');
     clockStart();
@@ -1586,6 +1587,7 @@
     clearTimeout(waitTimer);
     waitTimer = setTimeout(() => {
       b.x = rx; b.y = ry; b.vx = 0; b.vy = 0; b.z = 0.6; b.vz = 0; b.portalCd = 0.5;
+      b.ebene = b.restEbene || 0;   // auf der Ebene weiterspielen, auf der der Ruhepunkt liegt
       faceCup();
       if (state.strokes >= maxStrokes()) finishTurn(maxStrokes()); else state.phase = 'aim';
       updateHud();
@@ -1617,6 +1619,7 @@
     clearTimeout(waitTimer);
     waitTimer = setTimeout(() => {
       b.x = rx; b.y = ry; b.vx = 0; b.vy = 0; b.z = 0.6; b.vz = 0; b.portalCd = 0.5;
+      b.ebene = b.restEbene || 0;   // auf der Ebene weiterspielen, auf der der Ruhepunkt liegt
       faceCup();
       state.phase = 'aim';
       updateHud();

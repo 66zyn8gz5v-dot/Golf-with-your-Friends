@@ -298,7 +298,8 @@ class Renderer {
 
   /* ---------- Boden ---------- */
   drawFloor(ctx) {
-    const { W, H, tiles } = this.level, th = this.theme;
+    // Gezeichnet wird immer die untere Ebene; die obere kommt als eigene, angehobene Scholle dazu
+    const { W, H } = this.level, tiles = this.level.untenFl.tiles, th = this.theme;
     const cull = this.scale * 1.5;
     // Erdscholle. In den Uhrwerk-Welten reicht sie weiter: Dort liegt das Räderwerk rings um die
     // Bahn, und auf einer knappen Scholle stünde es halb in der Luft.
@@ -423,7 +424,7 @@ class Renderer {
     // animierte Flüssigkeiten
     const fires = [];
     for (let y = 0; y < lv.H; y++) for (let x = 0; x < lv.W; x++) {
-      const c = lv.tiles[y][x];
+      const c = lv.untenFl.tiles[y][x];
       if (c !== 'w' && c !== 'l') continue;
       const [lsx, lsy] = this.proj(x + 0.5, y + 0.5);
       if (!this.onScreen(lsx, lsy, this.scale * 1.5)) continue;
@@ -442,23 +443,24 @@ class Renderer {
     if (state.phase !== 'edit') this.drawCastShadows(ctx);
     // Boden-Overlays
     for (const ob of lv.obstacles) this.drawObstacleFloor(ctx, ob, t);
-    if (lv.cup) this.drawCupHole(ctx);
+    // Loch und Fahne der oberen Ebene kommen erst nach der Scholle, sonst lägen sie darunter
+    if (lv.cup && !lv.cupEbene) this.drawCupHole(ctx);
     if (state.aim) this.drawAim(ctx, state.ball, state.aim);
 
     // sortierte 3D-Objekte
     const items = [];
     const wall = th.wall;
-    for (const wr of lv.walls) {
+    for (const wr of lv.untenFl.walls) {
       const poly = [[wr.x, wr.y], [wr.x + wr.w, wr.y], [wr.x + wr.w, wr.y + wr.h], [wr.x, wr.y + wr.h]];
       items.push({ x: wr.x + wr.w / 2, y: wr.y + wr.h / 2, draw: () => this.drawWall(ctx, poly, wall) });
     }
-    for (const b of lv.blocks) {
+    for (const b of lv.untenFl.blocks) {
       const poly = [[b.x, b.y], [b.x + 1, b.y], [b.x + 1, b.y + 1], [b.x, b.y + 1]];
       items.push({ x: b.x + 0.5, y: b.y + 0.5, draw: () => this.prism(ctx, poly, 0, 1.0, th.block.top, th.block.side, { outline: shade(th.block.side, 0.7) }) });
     }
     for (const d of lv.decor) items.push({ x: d.x, y: d.y, draw: () => this.drawDecor(ctx, d, t) });
     for (const ob of lv.obstacles) this.pushObstacle(items, ctx, ob, t);
-    if (lv.cup) items.push({ x: lv.cup.x, y: lv.cup.y, bias: 0.01, draw: () => this.drawFlag(ctx, t) });
+    if (lv.cup && !lv.cupEbene) items.push({ x: lv.cup.x, y: lv.cup.y, bias: 0.01, draw: () => this.drawFlag(ctx, t) });
     // Der Ball wird zum Schluss gezeichnet, damit er nie hinter Bäumen oder Mauern verschwindet
     for (const it of items) { it.k = this.depth(it.x, it.y) + (it.bias || 0); const p = this.proj(it.x, it.y); it.sx = p[0]; it.sy = p[1]; }
     items.sort((a, b) => a.k - b.k);
@@ -479,6 +481,8 @@ class Renderer {
       it.draw();
       if (fade) ctx.globalAlpha = 1;
     }
+    this.drawEbeneOben(ctx, t);   // die zweite Spielebene über allem, was unten steht
+    if (lv.cup && lv.cupEbene) { this.drawCupHole(ctx); this.drawFlag(ctx, t); }
     if (b && !imRohr) { this.flat = !!(b.rider && b.rider.type === 'ferry' && b.rider.flat); this.drawBall(ctx, b); this.flat = false; }
 
     if (state.phase !== 'edit') this.drawDepthCues(ctx);
@@ -499,8 +503,8 @@ class Renderer {
   drawCastShadows(ctx) {
     const lv = this.level, th = this.theme, LX = 0.42, LY = 0.3; // Schattenversatz je Höheneinheit (Weltkoordinaten)
     const boxes = [];
-    for (const w of lv.walls) boxes.push([w.x, w.y, w.x + w.w, w.y + w.h, th.wall.style === 'hedge' ? 0.55 : 0.6]);
-    for (const b of lv.blocks) boxes.push([b.x, b.y, b.x + 1, b.y + 1, 1.0]);
+    for (const w of lv.untenFl.walls) boxes.push([w.x, w.y, w.x + w.w, w.y + w.h, th.wall.style === 'hedge' ? 0.55 : 0.6]);
+    for (const b of lv.untenFl.blocks) boxes.push([b.x, b.y, b.x + 1, b.y + 1, 1.0]);
     for (const o of lv.obstacles) {
       if (o.type === 'wall') { const nx = -(o.y1 - o.y0), ny = o.x1 - o.x0, L = Math.hypot(nx, ny) || 1, tx = nx / L * o.t / 2, ty = ny / L * o.t / 2; boxes.push({ poly: [[o.x0 + tx, o.y0 + ty], [o.x1 + tx, o.y1 + ty], [o.x1 - tx, o.y1 - ty], [o.x0 - tx, o.y0 - ty]], h: o.h }); }
       else if (o.type === 'eyetower') boxes.push([o.x - o.r, o.y - o.r, o.x + o.r, o.y + o.r, o.height]);
@@ -510,7 +514,7 @@ class Renderer {
     ctx.save();
     ctx.beginPath(); // Schatten nur auf Bodenkacheln
     for (let y = 0; y < lv.H; y++) for (let x = 0; x < lv.W; x++) {
-      const c = lv.tiles[y][x]; if (!lv.isFloorChar(c) || c === 'w' || c === 'l') continue;
+      const c = lv.untenFl.tiles[y][x]; if (!lv.isFloorChar(c) || c === 'w' || c === 'l') continue;
       const [tsx, tsy] = this.proj(x + 0.5, y + 0.5); if (!this.onScreen(tsx, tsy, this.scale * 2)) continue;
       const p0 = this.proj(x, y, 0.002), p1 = this.proj(x + 1, y, 0.002), p2 = this.proj(x + 1, y + 1, 0.002), p3 = this.proj(x, y + 1, 0.002);
       ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.lineTo(p2[0], p2[1]); ctx.lineTo(p3[0], p3[1]); ctx.closePath();
@@ -889,16 +893,18 @@ class Renderer {
 
   drawCupHole(ctx) {
     const c = this.level.cup, k = (c.r || 0.42) / 0.42; // größere Löcher (Schattenreich) auch größer zeichnen
-    this.isoEllipse(ctx, c.x, c.y, 0.005, 0.5 * k, 'rgba(255,255,255,0.35)');
-    this.isoEllipse(ctx, c.x, c.y, 0.01, 0.42 * k, '#0e0b16');
-    this.isoEllipse(ctx, c.x, c.y - 0.05 * k, 0.012, 0.32 * k, '#241c35');
+    const e = (this.level.cupEbene || 0) * (this.level.ebeneZ || 0);   // das Loch liegt auf seiner Ebene
+    this.isoEllipse(ctx, c.x, c.y, e + 0.005, 0.5 * k, 'rgba(255,255,255,0.35)');
+    this.isoEllipse(ctx, c.x, c.y, e + 0.01, 0.42 * k, '#0e0b16');
+    this.isoEllipse(ctx, c.x, c.y - 0.05 * k, e + 0.012, 0.32 * k, '#241c35');
   }
   /* Fahne am Loch: Stange mit Messingspitze und Fuß am Lochrand, wehendes Tuch mit Falten – Farben, Muster und
      Wappen kommen aus FLAG_DESIGNS je Thema (Krone fürs Märchenland, Anker am Meer, Totenkopf im Schattenreich …) */
   drawFlag(ctx, t) {
     const c = this.level.cup, th = this.theme, s = this.scale, d = FLAG_DESIGNS[this.level.def.theme] || { main: th.flag, second: th.accent, emblem: 'star', pattern: 'band' };
     const flag = d.main, dark = shade(flag, 0.6), light = shade(flag, 1.25), sec = d.second, emCol = d.emblemColor || sec;
-    const [bx, by] = this.proj(c.x, c.y, 0), [tx, ty] = this.proj(c.x, c.y, 1.9);
+    const e = (this.level.cupEbene || 0) * (this.level.ebeneZ || 0);
+    const [bx, by] = this.proj(c.x, c.y, e), [tx, ty] = this.proj(c.x, c.y, e + 1.9);
     const H = by - ty, top = ty + H * 0.06, w = s * 0.95, h = s * 0.5, ph = t * 3.2 + c.x;
     const wv = u => Math.sin(ph - u * 4.5) * s * 0.07 * u; // Wellenversatz entlang des Tuchs (am Stock 0)
     ctx.fillStyle = 'rgba(0,0,0,0.18)'; ctx.beginPath(); ctx.ellipse(bx + w * 0.45, by + s * 0.05, w * 0.42, s * 0.09, 0, 0, TAU); ctx.fill(); // Schatten des Tuchs
@@ -966,6 +972,8 @@ class Renderer {
   drawBall(ctx, b) {
     const s = this.scale;
     const br = b.r || BALL_R;
+    // Auf der oberen Ebene liegt der Ball eine Etage höher – sonst klebte er am unteren Boden
+    const ebZ = (b.ebene || 0) * (this.level.ebeneZ || 0);
     const dark = !b.sunk && this.level.obstacles.some(o => o.type === 'field' && o.style === 'dark' && o.inside(b.x, b.y));
     if (dark) ctx.globalAlpha = 0.14;
     let r = br * s, z = b.z + br;
@@ -973,8 +981,8 @@ class Renderer {
       const p = Math.min(1, b.sinkT / 0.35);
       if (p >= 1) return;
       r *= 1 - p * 0.8; z = 0.3 - p * 0.6;
-    } else this.isoEllipse(ctx, b.x, b.y, 0, br * Math.max(0.15, 1 - b.z * 0.2), 'rgba(0,0,0,0.3)');
-    const [sx, sy] = this.proj(b.x, b.y, z);
+    } else this.isoEllipse(ctx, b.x, b.y, ebZ, br * Math.max(0.15, 1 - b.z * 0.2), 'rgba(0,0,0,0.3)');
+    const [sx, sy] = this.proj(b.x, b.y, z + ebZ);
     const g = ctx.createRadialGradient(sx - r * 0.35, sy - r * 0.4, r * 0.1, sx, sy, r);
     g.addColorStop(0, '#ffffff'); g.addColorStop(0.35, b.color); g.addColorStop(1, shade(b.color, 0.55));
     if (b.curse && !b.sunk) { // Perlenfluch: perlmuttfarbener Schimmer um den Ball
@@ -994,23 +1002,24 @@ class Renderer {
   drawAim(ctx, ball, aim) {
     const { dx, dy, power } = aim;
     if (power <= 0.01) return;
+    const e = (ball.ebene || 0) * (this.level.ebeneZ || 0);   // die Ziellinie liegt auf der Ebene des Balls
     const len = 1.2 + power * 6.5;
     const col = power < 0.5 ? `rgb(${Math.round(120 + power * 2 * 135)},230,90)` : `rgb(255,${Math.round(230 - (power - 0.5) * 2 * 160)},70)`;
     ctx.fillStyle = col; ctx.strokeStyle = col;
     const step = 0.45;
     for (let d = 0.5; d < len; d += step) {
-      const [sx, sy] = this.proj(ball.x + dx * d, ball.y + dy * d, 0.02);
+      const [sx, sy] = this.proj(ball.x + dx * d, ball.y + dy * d, e + 0.02);
       ctx.globalAlpha = 0.9 - (d / len) * 0.5;
       ctx.beginPath(); ctx.arc(sx, sy, this.scale * 0.08, 0, TAU); ctx.fill();
     }
     ctx.globalAlpha = 1;
     // Pfeilspitze
-    const [hx, hy] = this.proj(ball.x + dx * len, ball.y + dy * len, 0.02);
-    const [lx, ly] = this.proj(ball.x + dx * (len - 0.5) - dy * 0.3, ball.y + dy * (len - 0.5) + dx * 0.3, 0.02);
-    const [rx, ry] = this.proj(ball.x + dx * (len - 0.5) + dy * 0.3, ball.y + dy * (len - 0.5) - dx * 0.3, 0.02);
+    const [hx, hy] = this.proj(ball.x + dx * len, ball.y + dy * len, e + 0.02);
+    const [lx, ly] = this.proj(ball.x + dx * (len - 0.5) - dy * 0.3, ball.y + dy * (len - 0.5) + dx * 0.3, e + 0.02);
+    const [rx, ry] = this.proj(ball.x + dx * (len - 0.5) + dy * 0.3, ball.y + dy * (len - 0.5) - dx * 0.3, e + 0.02);
     ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(lx, ly); ctx.lineTo(rx, ry); ctx.closePath(); ctx.fill();
     ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255,255,255,0.7)';
-    const [bx, by] = this.proj(ball.x, ball.y, 0.01);
+    const [bx, by] = this.proj(ball.x, ball.y, e + 0.01);
     ctx.beginPath(); ctx.ellipse(bx, by, 0.5 * this.scale, 0.5 * this.scale * this.cam.tilt, 0, 0, TAU); ctx.stroke();
   }
 
@@ -1096,6 +1105,7 @@ class Renderer {
     if (ob.type === 'escapement') { this.drawEscapementFloor(ctx, ob, t); return; }
     if (ob.type === 'sweephand') { this.drawSweepHandFloor(ctx, ob, t); return; }
     if (ob.type === 'handclock') { this.drawHandClockFloor(ctx, ob, t); return; }
+    if (ob.type === 'turbine') { this.drawTurbineFloor(ctx, ob, t); return; }
     if (ob.type === 'dial' || ob.type === 'wanderloch') { this.drawWanderlochFloor(ctx, ob, t); return; }
     if (ob.type === 'field' && ob.style === 'steam') { this.drawSteam(ctx, ob, t); return; }
     if (ob.type === 'field' && ob.style === 'dark') { this.drawDarkZone(ctx, ob, t); return; }

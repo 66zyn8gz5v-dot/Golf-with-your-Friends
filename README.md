@@ -703,6 +703,50 @@ zwei dürfen auf derselben Kachel sitzen – sonst stünde das Loch zweimal hint
 Fleck. Das `H` der Karte gehört auf die **erste** Stelle, denn von dort startet die Maschine; in
 `tools/uhrenturm.py` verschiebt der Baustein `wanderloch` es von selbst dorthin.
 
+### Zwei Ebenen (Versuch)
+
+Der Uhrenturm bekommt eine zweite Spielfläche. Das ist **keine Höhenphysik**, sondern ein
+Umschalter: Der Ball ist immer auf genau einer der beiden Flächen und kollidiert nur mit deren
+Wänden. Jede Bahn kann pro Ebene eine eigene ASCII-Karte haben – `map` ist die untere, `oben` die
+obere, beide gleich groß und deckungsgleich.
+
+| | |
+|---|---|
+| **Hinauf** | nur über die **Turbine** (`turbine`), ein Gebläseschacht auf der unteren Ebene. Wer darüberrollt, wird an derselben Stelle nach oben gesetzt – Tempo und Richtung bleiben. Kein Katapult, ein Aufzug. |
+| **Herunter** | an jeder **offenen Kante** der oberen Ebene. Offen heißt: die Karte hat dort ein `o` (Boden ohne Bande) oder nichts. Der Ball fällt an derselben Stelle auf die untere Fläche und rollt weiter – **ohne Strafschlag**. |
+| **Das Loch** | liegt auf genau einer Ebene (das `H` steht in genau einer der beiden Karten) und zieht nur, wenn der Ball auch dort ist. |
+
+**Wie das im Code aussieht.** `buildLevel` baut aus jeder Karte eine Fläche mit eigenen Kacheln,
+Kollisionskanten, Mauern und Blöcken. Das Level trägt immer die Felder der Ebene, auf der der Ball
+gerade ist; `level.setzeEbene(n)` hängt sie um. Die Physik liest sie in jedem Schritt neu – deshalb
+braucht sie keinen zweiten Satz Regeln und keine Sonderfälle, nur einen Filter: Es wirken nur die
+Hindernisse der eigenen Ebene (`ob.ebene`, ohne Angabe 0). Laufen tun alle, damit die andere Ebene
+nicht stehenbleibt, während man nicht hinschaut.
+
+**Gezeichnet** werden immer beide Flächen: die untere wie bisher, die obere als angehobene Scholle
+mit Schürze und Brüstung. Voll gezeichnet wird die, auf der der Ball ist, die andere halb
+durchsichtig – man soll von unten sehen, wohin die Turbine führt, und von oben, wo man
+herunterkommt. Die offenen Kanten sind hell gestrichelt: Der Fall soll wie ein Weg aussehen, nicht
+wie ein Fehler. Ein Fallstrick dabei: Die obere Fläche darf nicht Kachel für Kachel als Körper
+gezeichnet werden – bei halber Durchsicht sähe man ein Gitter aus lauter inneren Seitenflächen. Nur
+der Rand bekommt seine Schürze.
+
+`tools/validate.mjs` prüft die beiden Fehler, die man im Spiel erst merkt, wenn man ratlos
+davorsteht: eine **obere Ebene ohne Turbine** (dort käme nie jemand hin) und ein **Loch auf einer
+Ebene, zu der kein Weg führt**. Dazu die Kleinigkeiten, die dasselbe bewirken: beide Karten müssen
+deckungsgleich sein, der Abschlag gehört nach unten, das `H` darf nur einmal vorkommen, über jeder
+Turbine muss oben Boden sein (sonst fiele der Ball im selben Augenblick zurück), und die Turbine
+selbst muss vom Abschlag aus erreichbar sein.
+
+**Bahn 13 „Turbinenprobe"** ist die Testbahn dazu, mit Absicht schlicht: unten der Weg zur Turbine,
+oben eine kurze Strecke mit dem Loch am Ende und einer offenen Kante dahinter. Wer zu weit schiebt,
+fällt hinunter und fängt an der Turbine neu an.
+
+**Was noch fehlt:** Der Baumodus kann keine Ebenen – das kommt erst, wenn sich die Sache bewährt.
+Geteilte Bahnen mit zwei Ebenen werden deshalb abgelehnt statt stillschweigend um ihre obere Karte
+gebracht. Und die Testbahn hängt am Ende der Welt und zählt in deren Par mit; wenn die Ebenen
+bleiben sollen, gehört sie an einen sinnvolleren Platz oder heraus.
+
 ### Das Zeigerwerk: drei Zeiger, drei Wirkungen
 
 Der **Zeigerarm** von Bahn 7 und 10 ist eine Mauer, die sich dreht – er schiebt den Ball vor sich
