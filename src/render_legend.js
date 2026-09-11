@@ -1396,19 +1396,6 @@ Object.assign(Renderer.prototype, {
      legt jede stehende Scheibe schief. Runde Teile liegen deshalb im Boden.
      --------------------------------------------------------------------------- */
 
-  /* Ein Zahnrad als Weltpolygon: abwechselnd Fuß- und Kopfkreis, vier Punkte je Zahn.
-     Weil es in der Bodenebene liegt, macht die Projektion von selbst eine Ellipse daraus. */
-  zahnPoly(x, y, r, zn, winkel) {
-    const p = [], ri = r * 0.78, schritt = TAU / zn;
-    for (let i = 0; i < zn; i++) {
-      for (const [u, rr] of [[0, ri], [0.16, r], [0.34, r], [0.5, ri]]) {
-        const a = winkel + (i + u) * schritt;
-        p.push([x + Math.cos(a) * rr, y + Math.sin(a) * rr]);
-      }
-    }
-    return p;
-  },
-
   /* Zahnradfeld: die Räder liegen in einer Rinne im Boden und greifen ineinander. Der helle
      Mitnehmer wandert mit dem Feld – dort wird der Ball gefasst, dort setzt es ihn wieder ab. */
   drawGearFieldFloor(ctx, ob, t) {

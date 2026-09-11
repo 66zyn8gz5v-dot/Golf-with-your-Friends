@@ -192,6 +192,68 @@ class Renderer {
     return p;
   }
 
+  /* Ein Zahnrad als Weltpolygon: abwechselnd Fuß- und Kopfkreis, vier Punkte je Zahn. Weil es in
+     der Bodenebene liegt, macht die Projektion von selbst eine Ellipse daraus. */
+  zahnPoly(x, y, r, zn, winkel) {
+    const p = [], ri = r * 0.78, schritt = TAU / zn;
+    for (let i = 0; i < zn; i++) {
+      for (const [u, rr] of [[0, ri], [0.16, r], [0.34, r], [0.5, ri]]) {
+        const a = winkel + (i + u) * schritt;
+        p.push([x + Math.cos(a) * rr, y + Math.sin(a) * rr]);
+      }
+    }
+    return p;
+  }
+
+  /* Liegendes Zahnrad als Körper statt als Scheibe: Der Zahnkranz ist ein prism über zahnPoly,
+     also bekommt jeder einzelne Zahn seine eigene Seitenfläche. Von schräg vorn sieht man dadurch
+     echte Zähne mit Tiefe – eine flache Scheibe mit Zacken sieht von dort aus wie Papier.
+     Darüber sitzt die Nabe als kurze Säule, auf der Deckfläche liegen die Speichen. */
+  zahnrad(ctx, x, y, z0, r, hoehe, zn, winkel, top, side, opts = {}) {
+    this.prism(ctx, this.zahnPoly(x, y, r, zn, winkel), z0, hoehe, top, side, opts);
+    const oben = z0 + hoehe;
+    // Speichen: sie machen die Drehung sichtbar, ohne dass es mehr Körper braucht
+    const [cx, cy] = this.proj(x, y, oben + 0.001);
+    ctx.strokeStyle = shade(side, 1.15); ctx.lineWidth = Math.max(1.5, this.scale * r * 0.11);
+    ctx.lineCap = 'round';
+    for (let i = 0; i < 4; i++) {
+      const a = winkel + (i * TAU) / 4;
+      const [px, py] = this.proj(x + Math.cos(a) * r * 0.62, y + Math.sin(a) * r * 0.62, oben + 0.001);
+      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(px, py); ctx.stroke();
+    }
+    ctx.lineCap = 'butt';
+    this.prism(ctx, this.circlePoly(x, y, r * 0.26, 10), z0, hoehe * 1.6, shade(top, 1.08), side);
+    this.isoEllipse(ctx, x, y, z0 + hoehe * 1.6 + 0.002, r * 0.1, shade(side, 0.7));
+  }
+
+  /* Stehendes Zahnrad im Bildraum (Deko auf einem Pfosten). Es steht senkrecht vor der Kamera,
+     und eine senkrechte Scheibe legt diese Projektion immer schief – darum wird die Tiefe hier
+     nicht gerechnet, sondern gemalt: dieselbe Zahnform mehrfach gegeneinander versetzt, von
+     hinten dunkel nach vorn hell. Das liest sich als Rad mit Dicke und bleibt aus jeder
+     Kamerarichtung richtig. */
+  zahnradScheibe(ctx, cx, cy, r, zn, winkel, tiefe, hell, dunkel) {
+    const n = 5;
+    for (let i = n; i >= 1; i--) {
+      const u = i / n;
+      ctx.fillStyle = shade(dunkel, 0.55 + 0.45 * (1 - u));
+      this.gearPath(ctx, cx + tiefe * u, cy + tiefe * u * 0.45, r, zn, winkel); ctx.fill();
+    }
+    const g = ctx.createRadialGradient(cx - r * 0.35, cy - r * 0.4, r * 0.1, cx, cy, r);
+    g.addColorStop(0, hell); g.addColorStop(1, dunkel);
+    ctx.fillStyle = g; this.gearPath(ctx, cx, cy, r, zn, winkel); ctx.fill();
+    ctx.strokeStyle = shade(dunkel, 0.5); ctx.lineWidth = Math.max(1, r * 0.06); ctx.stroke();
+    // Speichen und Nabe
+    ctx.strokeStyle = shade(dunkel, 0.75); ctx.lineWidth = Math.max(1.5, r * 0.13); ctx.lineCap = 'round';
+    for (let i = 0; i < 4; i++) {
+      const a = winkel + (i * TAU) / 4;
+      ctx.beginPath(); ctx.moveTo(cx + Math.cos(a) * r * 0.2, cy + Math.sin(a) * r * 0.2);
+      ctx.lineTo(cx + Math.cos(a) * r * 0.66, cy + Math.sin(a) * r * 0.66); ctx.stroke();
+    }
+    ctx.lineCap = 'butt';
+    ctx.fillStyle = shade(dunkel, 0.45); ctx.beginPath(); ctx.arc(cx, cy, r * 0.2, 0, TAU); ctx.fill();
+    ctx.fillStyle = shade(hell, 1.0); ctx.beginPath(); ctx.arc(cx - r * 0.03, cy - r * 0.03, r * 0.09, 0, TAU); ctx.fill();
+  }
+
   /* Liegende Walze: ein runder Körper, dessen Achse waagerecht in der Höhe z von A nach B läuft.
      prism und frustum stellen Körper aufrecht – für Rohre, Kolbenstangen und Stempel braucht es
      die liegende Form. Gezeichnet wird wie bei prism: erst der abgewandte Deckel, dann die
@@ -238,8 +300,9 @@ class Renderer {
   drawFloor(ctx) {
     const { W, H, tiles } = this.level, th = this.theme;
     const cull = this.scale * 1.5;
-    // Erdscholle
-    const m = 1.4;
+    // Erdscholle. In den Uhrwerk-Welten reicht sie weiter: Dort liegt das Räderwerk rings um die
+    // Bahn, und auf einer knappen Scholle stünde es halb in der Luft.
+    const m = th.gears ? 3.6 : 1.4;
     const slab = [[-m, -m], [W + m, -m], [W + m, H + m], [-m, H + m]];
     if (th.floating) {
       // Schwebende Inseln: jede Fairway-Kachel bekommt einen Fels-Sockel
@@ -251,6 +314,7 @@ class Renderer {
         if (this.onScreen(sx, sy, cull * 2)) this.prism(ctx, [[x, y], [x + 1, y], [x + 1, y + 1], [x, y + 1]], -1.3, 1.3, th.ground, th.groundEdge);
       }
     } else this.prism(ctx, slab, -1.0, 1.0, th.ground, th.groundEdge);
+    if (th.gears) this.drawGroundGears(ctx, this.t || 0);
     if (th.sea) { // Wellenkämme auf dem Meer (die Scholle ist das Wasser)
       const t = this.level.t || 0;
       ctx.strokeStyle = th.darkSea ? 'rgba(170,140,220,0.3)' : 'rgba(255,255,255,0.35)'; ctx.lineWidth = Math.max(1, this.scale * 0.04); ctx.lineCap = 'round';
@@ -559,15 +623,74 @@ class Renderer {
     }
     ctx.closePath();
   }
+  /* Räderwerk hinter der Welt: drei Ebenen ineinandergreifender Räder, dazu Wellen und Träger.
+     Die Räder sind keine Scheiben mehr, sondern haben Dicke – jedes wird mehrfach gegeneinander
+     versetzt gezeichnet, von hinten dunkel nach vorn hell. Je weiter hinten eine Ebene liegt,
+     desto blasser und langsamer ist sie; das gibt dem Hintergrund Tiefe, ohne dass er die Bahn
+     überstrahlt. Alles läuft nach der Spieluhr t, also auf jedem Gerät gleich. */
   drawSkyGears(ctx, t) {
-    const w = this.w, h = this.h;
-    const gears = [[0.12, 0.22, 0.17, 12, 0.15], [0.3, 0.08, 0.1, 9, -0.22], [0.82, 0.18, 0.2, 14, -0.12], [0.62, 0.05, 0.09, 8, 0.28], [0.95, 0.55, 0.13, 10, 0.18], [0.05, 0.7, 0.11, 9, -0.2]];
-    for (const [gx, gy, gr, teeth, sp] of gears) {
-      const r = gr * Math.min(w, h) * 1.4, x = gx * w, y = gy * h;
-      ctx.fillStyle = 'rgba(190,140,70,0.13)'; this.gearPath(ctx, x, y, r, teeth, t * sp); ctx.fill();
-      ctx.fillStyle = 'rgba(20,16,12,0.5)'; ctx.beginPath(); ctx.arc(x, y, r * 0.18, 0, TAU); ctx.fill();
-      ctx.strokeStyle = 'rgba(190,140,70,0.16)'; ctx.lineWidth = Math.max(2, r * 0.06);
-      for (let i = 0; i < 5; i++) { const a = t * sp + (i * TAU) / 5; ctx.beginPath(); ctx.moveTo(x + Math.cos(a) * r * 0.2, y + Math.sin(a) * r * 0.2); ctx.lineTo(x + Math.cos(a) * r * 0.72, y + Math.sin(a) * r * 0.72); ctx.stroke(); }
+    const w = this.w, h = this.h, m = Math.min(w, h);
+    /* [x, y, Radius, Zähne, Tempo] je Anteil der Bildfläche, in drei Ebenen: hinten groß, blass
+       und langsam, vorn kleiner, kräftiger und schneller. Die Paare stehen so, dass ihre Kränze
+       einander berühren – ein Räderwerk, kein Haufen Räder.
+       Tiefe kostet hier Fläche, und Fläche ist auf dem Hintergrund teuer: Darum bekommt jedes Rad
+       genau einen versetzten Körper und darüber die helle Stirnfläche, nicht eine ganze Staffel. */
+    const ebenen = [
+      [0.05, 0.06, '150,110,60', [[0.1, 0.12, 0.26, 16, 0.06], [0.4, 0.03, 0.2, 13, -0.08], [0.82, 0.1, 0.3, 18, -0.05]]],
+      [0.09, 0.1, '186,140,72', [[0.03, 0.44, 0.16, 11, -0.13], [0.32, 0.21, 0.13, 10, 0.16], [0.93, 0.42, 0.15, 11, -0.15]]],
+      [0.15, 0.14, '214,166,86', [[0.19, 0.05, 0.09, 8, 0.3], [0.63, 0.12, 0.08, 9, 0.26]]],
+    ];
+    // Wellen und Träger zuerst, damit die Räder darauf zu sitzen scheinen
+    ctx.strokeStyle = 'rgba(150,110,60,0.09)'; ctx.lineWidth = Math.max(2, m * 0.012);
+    for (const [x0, y0, x1, y1] of [[0.1, 0.12, 0.4, 0.03], [0.4, 0.03, 0.82, 0.1], [0.03, 0.44, 0.32, 0.21]]) {
+      ctx.beginPath(); ctx.moveTo(x0 * w, y0 * h); ctx.lineTo(x1 * w, y1 * h); ctx.stroke();
+    }
+    ctx.fillStyle = 'rgba(120,88,48,0.06)';
+    for (const gx of [0.24, 0.58, 0.88]) ctx.fillRect(gx * w - m * 0.015, 0, m * 0.03, h * 0.5);
+    for (const [tiefe, kraft, farbe, raeder] of ebenen) {
+      for (const [gx, gy, gr, zn, sp] of raeder) {
+        const r = gr * m * 1.4, x = gx * w, y = gy * h, wk = t * sp;
+        if (x + r < 0 || x - r > w || y - r > h) continue;
+        const tf = r * tiefe;
+        ctx.fillStyle = `rgba(${farbe},${(kraft * 0.55).toFixed(3)})`;      // Körper, nach hinten versetzt
+        this.gearPath(ctx, x + tf, y + tf * 0.5, r, zn, wk); ctx.fill();
+        ctx.fillStyle = `rgba(${farbe},${kraft.toFixed(3)})`;               // Stirnfläche
+        this.gearPath(ctx, x, y, r, zn, wk); ctx.fill();
+        ctx.fillStyle = 'rgba(20,16,12,0.4)'; ctx.beginPath(); ctx.arc(x, y, r * 0.17, 0, TAU); ctx.fill();
+        if (kraft < 0.09) continue;                                         // ferne Ebene: keine Speichen
+        ctx.strokeStyle = `rgba(${farbe},${(kraft * 1.3).toFixed(3)})`;
+        ctx.lineWidth = Math.max(2, r * 0.07); ctx.lineCap = 'round';
+        for (let i = 0; i < 5; i++) {
+          const a = wk + (i * TAU) / 5;
+          ctx.beginPath();
+          ctx.moveTo(x + Math.cos(a) * r * 0.2, y + Math.sin(a) * r * 0.2);
+          ctx.lineTo(x + Math.cos(a) * r * 0.72, y + Math.sin(a) * r * 0.72);
+          ctx.stroke();
+        }
+        ctx.lineCap = 'butt';
+      }
+    }
+  }
+
+  /* Das Räderwerk rings um die Bahn: große Zahnräder, die halb in der Erdscholle stecken und sich
+     langsam drehen. Sie liegen bewusst außerhalb der Bahn – der Ball berührt sie nie, sie sollen
+     nur zeigen, dass die Bahn in einer Maschine liegt und nicht auf einer Wiese. Platz und Größe
+     folgen aus der Kartengröße, nicht aus Zufall: dieselbe Bahn sieht auf jedem Gerät gleich aus. */
+  drawGroundGears(ctx, t) {
+    const { W, H } = this.level, th = this.theme;
+    const rand = 2.0;                                   // so weit außerhalb der Karte
+    const stellen = [
+      [-rand, H * 0.24, 1.7, 11, 0.22], [-rand * 0.7, H * 0.72, 1.2, 9, -0.3],
+      [W + rand, H * 0.34, 1.9, 12, -0.2], [W + rand * 0.7, H * 0.78, 1.3, 10, 0.28],
+      [W * 0.24, -rand, 1.5, 10, -0.26], [W * 0.62, -rand * 0.75, 1.1, 9, 0.33],
+      [W * 0.34, H + rand * 0.8, 1.4, 10, 0.24], [W * 0.74, H + rand, 1.8, 12, -0.18],
+    ];
+    for (const [x, y, r, zn, sp] of stellen) {
+      const [sx, sy] = this.projRaw(x, y, 0);
+      if (!this.onScreen(sx, sy, this.scale * (r + 2))) continue;
+      // Die Räder stecken im Boden: unten in der Scholle, oben ragt der Kranz heraus
+      this.zahnrad(ctx, x, y, -0.5, r, 0.62, zn, t * sp, th.mover.top, th.mover.side,
+        { outline: shade(th.mover.side, 0.6) });
     }
   }
   /* Küste: Horizont, ferne Segel und Möwen */
@@ -2771,30 +2894,26 @@ class Renderer {
 
   /* Stehendes Messing-Zahnrad auf einer Achse */
   spriteGear(ctx, sx, sy, s, d, t) {
-    const r = s * 0.55, teeth = 8 + Math.floor((d.seed || 0) * 5), sp = ((d.seed || 0) > 0.5 ? 1 : -1) * (0.5 + (d.seed || 0));
+    const r = s * 0.55, teeth = 8 + Math.floor((d.seed || 0) * 5);
+    const sp = ((d.seed || 0) > 0.5 ? 1 : -1) * (0.5 + (d.seed || 0));
     this.shadow(ctx, sx, sy, r * 0.9);
-    ctx.fillStyle = '#3a3036'; ctx.fillRect(sx - s * 0.07, sy - s * 0.75, s * 0.14, s * 0.75);
-    const cy = sy - s * 0.75 - r * 0.6;
-    const g = ctx.createRadialGradient(sx - r * 0.3, cy - r * 0.3, r * 0.1, sx, cy, r);
-    g.addColorStop(0, '#e6bd6a'); g.addColorStop(1, '#8a5f22');
-    ctx.fillStyle = g; this.gearPath(ctx, sx, cy, r, teeth, t * sp); ctx.fill();
-    ctx.strokeStyle = '#4a3212'; ctx.lineWidth = Math.max(1, s * 0.03); ctx.stroke();
-    ctx.fillStyle = '#2a2026'; ctx.beginPath(); ctx.arc(sx, cy, r * 0.18, 0, TAU); ctx.fill();
-    ctx.strokeStyle = '#6a4a1a'; ctx.lineWidth = Math.max(1, r * 0.1);
-    for (let i = 0; i < 4; i++) { const a = t * sp + (i * TAU) / 4; ctx.beginPath(); ctx.moveTo(sx + Math.cos(a) * r * 0.22, cy + Math.sin(a) * r * 0.22); ctx.lineTo(sx + Math.cos(a) * r * 0.7, cy + Math.sin(a) * r * 0.7); ctx.stroke(); }
+    // Welle mit Fuß und Kragen – das Rad soll auf etwas sitzen, nicht schweben
+    ctx.fillStyle = '#2e262c'; ctx.beginPath(); ctx.ellipse(sx, sy, s * 0.22, s * 0.09, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#4a3f46'; ctx.fillRect(sx - s * 0.08, sy - s * 0.78, s * 0.16, s * 0.78);
+    ctx.fillStyle = '#6b5c64'; ctx.fillRect(sx - s * 0.08, sy - s * 0.78, s * 0.05, s * 0.78);
+    const cy = sy - s * 0.78 - r * 0.6;
+    this.zahnradScheibe(ctx, sx, cy, r, teeth, t * sp, r * 0.22, '#f0cd7d', '#8a5f22');
+    ctx.fillStyle = '#3a3036'; ctx.fillRect(sx - s * 0.05, cy + r * 0.55, s * 0.1, s * 0.3);   // Lager
   }
   /* Liegendes Zahnrad im Boden (dreht sich langsam) */
   spriteGearFlat(ctx, d, s, t) {
-    const [sx, sy] = this.proj(d.x, d.y, (d.z || 0) + 0.02), r = s * 0.7, teeth = 10 + Math.floor((d.seed || 0) * 6);
+    const r = (d.s || 1) * 0.7, zn = 9 + Math.floor((d.seed || 0) * 4);
     const sp = d.speed ?? (((d.seed || 0) > 0.5 ? 1 : -1) * (0.25 + (d.seed || 0) * 0.4));
-    ctx.save(); ctx.translate(sx, sy); ctx.scale(1, this.cam.tilt);
-    ctx.fillStyle = '#4a3a20'; this.gearPath(ctx, 0, r * 0.12 / this.cam.tilt, r, teeth, t * sp); ctx.fill();
-    ctx.fillStyle = '#b8873a'; this.gearPath(ctx, 0, 0, r, teeth, t * sp); ctx.fill();
-    ctx.strokeStyle = '#5a3f18'; ctx.lineWidth = Math.max(1, s * 0.03); ctx.stroke();
-    ctx.fillStyle = '#2a2026'; ctx.beginPath(); ctx.arc(0, 0, r * 0.2, 0, TAU); ctx.fill();
-    ctx.strokeStyle = '#7a5522'; ctx.lineWidth = Math.max(1, r * 0.09);
-    for (let i = 0; i < 5; i++) { const a = t * sp + (i * TAU) / 5; ctx.beginPath(); ctx.moveTo(Math.cos(a) * r * 0.25, Math.sin(a) * r * 0.25); ctx.lineTo(Math.cos(a) * r * 0.7, Math.sin(a) * r * 0.7); ctx.stroke(); }
-    ctx.restore();
+    const [sx, sy] = this.proj(d.x, d.y, (d.z || 0) + 0.02);
+    if (!this.onScreen(sx, sy, this.scale * (r + 2))) return;
+    this.isoEllipse(ctx, d.x, d.y, (d.z || 0) + 0.004, r * 1.1, 'rgba(0,0,0,0.28)');
+    this.zahnrad(ctx, d.x, d.y, (d.z || 0) + 0.01, r, r * 0.3, zn, t * sp, '#c9963f', '#6e4a18',
+      { outline: '#3a2610' });
   }
   /* Dampfrohr mit Ventil und Dampfwölkchen */
   spritePipe(ctx, sx, sy, s, d, t) {

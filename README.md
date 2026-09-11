@@ -623,6 +623,32 @@ laufenden Rädern, schwingender Unruh und der Aufzugkrone obendrauf. Sie hängt 
 wie die Preise der anderen Welten: jede Bahn braucht ein Ergebnis, und die Summe muss unter Par
 liegen. In der Rangliste steht der Uhrenturm mit allen drei Wertungen zwischen den übrigen Welten.
 
+### Das Räderwerk ringsum
+
+Die Welt liegt in einer Maschine, und das soll man sehen. Alle Zahnräder der Uhrwerk-Paletten sind
+darum **Körper statt Scheiben**:
+
+- **Liegende Räder** (`gearFlat`, und das Räderwerk rings um die Bahn) sind ein `prism` über
+  `Renderer.zahnPoly`. Dadurch bekommt jeder einzelne Zahn seine eigene Seitenfläche, und von
+  schräg vorn sieht man echte Zähne mit Tiefe – eine flache Scheibe mit Zacken sieht von dort aus
+  wie Papier. Nabe und Speichen sitzen obenauf.
+- **Stehende Räder** auf Pfosten (`gear`) stehen senkrecht vor der Kamera, und eine senkrechte
+  Scheibe legt diese Projektion immer schief (siehe *Was die Projektion mit stehenden Scheiben
+  macht*). Ihre Tiefe wird darum nicht gerechnet, sondern gemalt: dieselbe Zahnform mehrfach
+  gegeneinander versetzt, von hinten dunkel nach vorn hell (`Renderer.zahnradScheibe`). Das liest
+  sich als Rad mit Dicke und bleibt aus jeder Kamerarichtung richtig.
+- **Rings um die Bahn** stecken acht große Räder halb in der Erdscholle und drehen sich langsam
+  (`Renderer.drawGroundGears`). Sie liegen immer außerhalb der Bahn – der Ball berührt sie nie.
+  Damit sie nicht in der Luft hängen, reicht die Erdscholle in diesen Welten weiter als sonst
+  (Rand 3,6 statt 1,4 Kacheln).
+- **Im Hintergrund** laufen drei Ebenen ineinandergreifender Räder mit Wellen und Trägern, hinten
+  blass und langsam, vorn kräftiger und schneller. Tiefe kostet dort Fläche, und Fläche ist auf dem
+  Hintergrund teuer: Darum bekommt jedes Rad genau einen versetzten Körper und darüber die helle
+  Stirnfläche, nicht eine ganze Staffel.
+
+Gemessen im Prüfstand (weiche Bildausgabe, also strenger als jedes echte Gerät) kostet die
+Schlussbahn mit dem vollen Räderwerk rund fünf Prozent mehr Bildzeit als eine Bahn der Elfenwiese.
+
 ### Wie die Karten entstehen
 
 `tools/uhrenturm.py` baut die zwölf Karten aus Rechtecken und Scheiben und schreibt
