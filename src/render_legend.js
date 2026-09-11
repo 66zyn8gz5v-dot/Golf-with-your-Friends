@@ -1418,11 +1418,85 @@ Object.assign(Renderer.prototype, {
       const w = ob.winkel * rad.dreh + (i % 2 ? Math.PI / ob.zaehne : 0);
       this.zahnrad(ctx, rad.x, rad.y, 0.01, r, r * 0.34, ob.zaehne, w, '#d8a441', '#7a5418', { outline: '#3a2610' });
     }
-    // Mitnehmer: die Lücke, die den Ball trägt
-    const puls = ob.docked ? 0.55 + 0.45 * Math.sin(t * 5) : 0.9;
-    const zh = r * 0.34 + 0.02;
-    this.isoEllipse(ctx, ob.x, ob.y, zh, 0.5, `rgba(255,226,150,${(0.32 * puls).toFixed(2)})`);
-    this.isoEllipse(ctx, ob.x, ob.y, zh + 0.002, 0.3, `rgba(255,244,210,${(0.75 * puls).toFixed(2)})`);
+    /* Der Käfer ist der Mitnehmer: Wo er steht, wird der Ball gefasst. Steht das Feld an einer
+       Station, leuchtet der Boden unter ihm – das ist die Einladung zum Einsteigen. */
+    if (ob.docked) {
+      const puls = 0.55 + 0.45 * Math.sin(t * 5);
+      this.isoEllipse(ctx, ob.x, ob.y, 0.008, 0.75, `rgba(255,226,150,${(0.22 * puls).toFixed(2)})`);
+    }
+    const vx = ob.ux * (ob.dir || 1), vy = ob.uy * (ob.dir || 1);
+    this.drawKaefer(ctx, ob.x, ob.y, vx, vy, !ob.docked, t);
+  },
+
+  /* Aufziehkäfer: das Gefährt des Zahnradfelds. Ein Messingkäfer mit Grünspan-Panzer, der den
+     Ball auf dem Rücken trägt und auf sechs Beinen über die Räder läuft. Er löst drei Dinge auf
+     einmal: Man sieht, dass man mitfährt; man sieht von weitem, wo der Mitnehmer gerade steht;
+     und die Welt bekommt eine Figur, so wie das Kolosseum seinen Gladiator hat.
+
+     Er läuft nur, während das Feld fährt - steht es an einer Station, bleibt er stehen und zuckt
+     nur mit den Fühlern. Genau dann darf man einsteigen, und das soll man ihm ansehen.
+     ux/uy ist seine Blickrichtung, 'laufen' sagt, ob die Beine gehen. */
+  drawKaefer(ctx, x, y, ux, uy, laufen, t) {
+    const s = this.scale;
+    const qx = -uy, qy = ux;                                   // quer zur Blickrichtung
+    // Punkt im Käferkoordinatensystem: a nach vorn, b nach rechts, z hoch
+    const P = (a, b, z) => this.proj(x + ux * a + qx * b, y + uy * a + qy * b, z);
+    const W = (a, b) => [x + ux * a + qx * b, y + uy * a + qy * b];
+    // Ellipse in Käferrichtung als Weltpolygon – daraus wird der Panzer ein Körper
+    const oval = (la, br, n = 14) => {
+      const p = [];
+      for (let i = 0; i < n; i++) { const w = (i * TAU) / n; p.push(W(Math.cos(w) * la, Math.sin(w) * br)); }
+      return p;
+    };
+    this.isoEllipse(ctx, x, y, 0.004, 0.78, 'rgba(0,0,0,0.26)');
+    // Beine: drei je Seite, im Wechselschritt. Sie setzen auf dem Boden auf, damit der Käfer nicht
+    // über den Rädern zu schweben scheint.
+    ctx.strokeStyle = '#6b4a14'; ctx.lineWidth = Math.max(1.5, s * 0.055); ctx.lineCap = 'round';
+    for (const seite of [-1, 1]) {
+      for (let i = 0; i < 3; i++) {
+        const a0 = -0.34 + i * 0.34;
+        const schwung = laufen ? Math.sin(t * 9 + i * 2.1 + (seite > 0 ? Math.PI : 0)) * 0.15 : 0;
+        const h = P(a0, seite * 0.32, 0.2);
+        const k = P(a0 + schwung * 0.5, seite * 0.56, 0.26);
+        const f = P(a0 + schwung, seite * 0.7, 0.005);
+        ctx.beginPath(); ctx.moveTo(h[0], h[1]); ctx.lineTo(k[0], k[1]); ctx.lineTo(f[0], f[1]); ctx.stroke();
+      }
+    }
+    ctx.lineCap = 'butt';
+    // Kopf mit Fühlern und Augen
+    const kopf = W(0.78, 0);
+    this.prism(ctx, this.circlePoly(kopf[0], kopf[1], 0.22, 9), 0.05, 0.24, '#c9963f', '#7a5418', { outline: '#3a2610' });
+    ctx.strokeStyle = '#8a6624'; ctx.lineWidth = Math.max(1, s * 0.04); ctx.lineCap = 'round';
+    for (const seite of [-1, 1]) {
+      const zuck = Math.sin(t * (laufen ? 7 : 2.4) + seite) * 0.06;
+      const a = P(0.82, seite * 0.09, 0.29), b = P(1.18 + zuck, seite * (0.32 + zuck), 0.46);
+      ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+      ctx.fillStyle = '#ffdf9c'; ctx.beginPath(); ctx.arc(b[0], b[1], s * 0.05, 0, TAU); ctx.fill();
+    }
+    ctx.lineCap = 'butt';
+    for (const seite of [-1, 1]) {
+      const e = P(0.9, seite * 0.11, 0.27);
+      ctx.fillStyle = '#2a1d0a'; ctx.beginPath(); ctx.arc(e[0], e[1], s * 0.045, 0, TAU); ctx.fill();
+    }
+    // Panzer: Grünspan über Messing, mit Naht in der Mitte
+    this.prism(ctx, oval(0.66, 0.5), 0.04, 0.26, '#3f9d86', '#1d5a4d', { outline: '#0d2f28' });
+    this.prism(ctx, oval(0.5, 0.37), 0.3, 0.07, '#5cc0a6', '#256d5e');
+    const n0 = P(-0.46, 0, 0.375), n1 = P(0.44, 0, 0.375);
+    ctx.strokeStyle = 'rgba(18,58,50,0.7)'; ctx.lineWidth = Math.max(1, s * 0.045);
+    ctx.beginPath(); ctx.moveTo(n0[0], n0[1]); ctx.lineTo(n1[0], n1[1]); ctx.stroke();
+    // Aufziehschlüssel hinten auf dem Rücken: Stift und zwei Flügel, die sich langsam drehen
+    const sch = W(-0.6, 0);
+    this.prism(ctx, this.circlePoly(sch[0], sch[1], 0.07, 8), 0.2, 0.3, '#ffdf9c', '#a8792c');
+    const [kx, ky] = this.proj(sch[0], sch[1], 0.53);
+    const dreh = laufen ? t * 1.9 : t * 0.5;
+    ctx.save(); ctx.translate(kx, ky); ctx.rotate(dreh);
+    ctx.fillStyle = '#e0b45c'; ctx.strokeStyle = '#7d5a20'; ctx.lineWidth = Math.max(1, s * 0.03);
+    for (const seite of [-1, 1]) {
+      ctx.beginPath(); ctx.ellipse(seite * s * 0.14, 0, s * 0.13, s * 0.07, 0, 0, TAU);
+      ctx.fill(); ctx.stroke();
+    }
+    ctx.fillStyle = '#ffdf9c'; ctx.beginPath(); ctx.arc(0, 0, s * 0.04, 0, TAU); ctx.fill();
+    ctx.restore();
   },
 
   /* Pendel: die Linse hängt an einer Stange, die von oben herunterkommt – über dem Ball, nicht

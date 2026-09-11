@@ -237,7 +237,7 @@ k.rect(2, 6, 9, 8)                                 # Gasse zum Hof
 k.scheibe(16, 7.5, 6)                              # der runde Hof
 k.rect(26, 6, 29, 9)                               # Podest mit dem Loch
 k.put(4, 7, 'T'); k.put(28, 7, 'H')
-bahn(name='Zeigerhof', par=4, theme='clocktown', maxStrokes=16, seed=5, dichte=0.1,
+bahn(name='Zeigerhof', par=3, theme='clocktown', maxStrokes=14, seed=5, dichte=0.1,
      intro='Der runde Hof unter dem großen Zeiger. Er braucht zwölf Sekunden für eine Runde und '
            'schiebt alles vor sich her, was auf dem Pflaster liegt – hinüber kommt man nur hinter '
            'ihm her. Am anderen Rand tragen die Zahnräder auf das Podest.',

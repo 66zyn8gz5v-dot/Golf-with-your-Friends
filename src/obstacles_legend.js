@@ -621,7 +621,7 @@ class GearField extends Ferry {
   constructor(d) {
     super(Object.assign({ w: 1.5, h: 1.5, wait: 2.2, travel: 3.2, r: 0.9, zaehne: 10 }, d));
     this.type = 'gearfield';
-    this.tragHoehe = 0.18;                 // kein Wagen: der Ball liegt fast auf dem Boden
+    this.tragHoehe = 0.37;                 // der Ball sitzt auf dem Panzer des Aufziehkäfers
     this.raeder = [];
     const n = Math.max(2, Math.round(this.len / (this.r * 1.72)) + 1);
     for (let i = 0; i < n; i++) {

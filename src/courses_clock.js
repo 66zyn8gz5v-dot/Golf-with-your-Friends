@@ -196,7 +196,7 @@ const CLOCK_COURSES = [
     autoDecor: { density: 0.12, seed: 61 },
   },
   {
-    name: 'Zeigerhof', par: 4, theme: 'clocktown', maxStrokes: 16,
+    name: 'Zeigerhof', par: 3, theme: 'clocktown', maxStrokes: 14,
     intro: 'Der runde Hof unter dem großen Zeiger. Er braucht zwölf Sekunden für eine Runde und schiebt alles vor sich her, was auf dem Pflaster liegt – hinüber kommt man nur hinter ihm her. Am anderen Rand tragen die Zahnräder auf das Podest.',
     map: [
       '................................',

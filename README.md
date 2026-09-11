@@ -611,7 +611,7 @@ erst ab Bahn 5 – und beide bewusst nicht auf jeder Bahn, damit sie nicht zur G
 | 4 | Rohrpost | 4 | Kupferrohr, Pendel | Mit Schwung in den Rohrmund – zu sacht prallt ab |
 | 5 | Hemmwerk | 4 | Hemmung, Pendel | Die offene Hälfte des Ganges, dann die Tür |
 | 6 | Federkammer | 4 | Federwerk, Hemmung | Die Feder schwenkt: schießen, wenn der Punkt richtig steht |
-| 7 | Zeigerhof | 4 | Zeigerarm, Zahnradfeld | Hinter dem Zeiger herlaufen, nicht vor ihm |
+| 7 | Zeigerhof | 3 | Zeigerarm, Zahnradfeld | Hinter dem Zeiger herlaufen, nicht vor ihm |
 | 8 | Kesselhaus | 4 | Pendel, Kupferrohr, Federwerk | Erst durch die Tür, dann mit Rest-Schwung ins Rohr |
 | 9 | Glockenturm | 5 | Pendel ×2, Hemmung | Drei Takte, von denen keiner zum anderen passt |
 | 10 | Räderschacht | 5 | Zahnradfeld ×2, Zeigerarm, Hemmung | Zwei Felder und ein Zeiger, der die Scheibe leerräumt |
@@ -621,8 +621,8 @@ erst ab Bahn 5 – und beide bewusst nicht auf jeder Bahn, damit sie nicht zur G
 **Die Pars stehen auf dem Bot-Durchlauf.** `node tools/audit/audit.mjs clock` spielt jede Bahn
 sechsmal mit einem Normalspieler und sucht dazu die beste Lösung. Gewertet wurde danach: Par ist
 grob die beste Lösung plus zwei, bei den schweren Bahnen plus drei, und nie unter dem, was ein
-mittlerer Spieler braucht. Zusammen ergibt das Par 51 für die ganze Welt, während die Bots im
-Median bei 50 landen – der Weltpreis ist damit erreichbar, aber nicht geschenkt. Keine Bahn hat im
+mittlerer Spieler braucht. Zusammen ergibt das Par 50 für die ganze Welt, während die Bots im
+Median bei 49 landen – der Weltpreis ist damit erreichbar, aber nicht geschenkt. Keine Bahn hat im
 Durchlauf ihr Schlaglimit erreicht, und keine hat einen Hazard.
 
 **Der Weltpreis** ist die **Taschenuhr** (`pocketwatch`) – eine Kugel mit durchbrochenem Zifferblatt,
@@ -644,6 +644,14 @@ darum **Körper statt Scheiben**:
   macht*). Ihre Tiefe wird darum nicht gerechnet, sondern gemalt: dieselbe Zahnform mehrfach
   gegeneinander versetzt, von hinten dunkel nach vorn hell (`Renderer.zahnradScheibe`). Das liest
   sich als Rad mit Dicke und bleibt aus jeder Kamerarichtung richtig.
+- **Der Aufziehkäfer** ist das Gefährt des Zahnradfelds: ein Messingkäfer mit Grünspan-Panzer, der
+  den Ball auf dem Rücken trägt, auf sechs Beinen über die Räder läuft und den Aufziehschlüssel
+  hinten mitdreht. Vorher war der Mitnehmer nur ein heller Fleck, und man sah dem fahrenden Ball
+  nicht an, dass er fährt. Der Käfer löst drei Dinge auf einmal: Man sieht, **dass** man mitfährt;
+  man sieht von weitem, **wo** der Mitnehmer gerade steht; und die Welt bekommt eine Figur, so wie
+  das Kolosseum seinen Gladiator hat. Er läuft nur, während das Feld fährt – steht es an einer
+  Station, bleibt er stehen und zuckt nur mit den Fühlern. Genau dann darf man einsteigen, und das
+  soll man ihm ansehen.
 - **Das Zahnradfeld** ist aus denselben Körpern gebaut und wird nach Tiefe sortiert gezeichnet,
   damit sich die Räder richtig überdecken. An seiner Ein- und Ausstiegskachel steht ein `o`
   (Klippe) in der Karte: Dort baut `level.js` weder Bande noch Kollisionskante. Ohne das stünde
