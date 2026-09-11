@@ -82,6 +82,20 @@ function resolveCrush(level, ball, events) {
 }
 
 /* Ein Physik-Schritt. allowForces: Windfelder/Beschleuniger nur, wenn der Ball "im Spiel" ist. */
+/* Eine Ebene tiefer – und weiter, bis wieder Boden unter dem Ball ist. Ort und Tempo bleiben, ein
+   Strafschlag fällt nicht an. Das gilt für die offene Kante genauso wie für die Luke, darum steht
+   es hier einmal und nicht zweimal. Das z setzt nur die Optik: Der Ball sinkt sichtbar herunter,
+   rollt dabei aber schon auf der neuen Ebene und stößt sich an deren Wänden. */
+function ebeneFallen(level, ball, events) {
+  if (!ball.ebene) return false;
+  const von = ball.ebene;
+  do { ball.ebene -= 1; level.setzeEbene(ball.ebene); }
+  while (ball.ebene > 0 && !level.isFloorChar(level.charAt(ball.x, ball.y)));
+  ball.z = Math.max(ball.z, (von - ball.ebene) * level.ebeneZ); ball.vz = 0;
+  events.push({ type: 'ebeneAb', x: ball.x, y: ball.y, von, nach: ball.ebene });
+  return true;
+}
+
 function stepPhysics(level, ball, dt, t, allowForces) {
   const events = [];
   /* Ebenen: Der Ball ist immer auf genau einer Fläche. Das Level trägt die Kacheln und Wände
@@ -181,16 +195,7 @@ function stepPhysics(level, ball, dt, t, allowForces) {
      Tempo bleiben, ein Strafschlag fällt nicht an. Gefallen wird nur nach unten: Was auch unten
      kein Boden ist, ist wirklich aus. */
   let c2 = level.charAt(ball.x, ball.y);
-  if (!level.isFloorChar(c2) && ball.ebene > 0) {
-    const von = ball.ebene;
-    // Bei mehreren Ebenen fällt der Ball so weit, bis wieder Boden unter ihm ist
-    while (ball.ebene > 0 && !level.isFloorChar(c2)) {
-      ball.ebene -= 1; level.setzeEbene(ball.ebene);
-      c2 = level.charAt(ball.x, ball.y);
-    }
-    ball.z = Math.max(ball.z, (von - ball.ebene) * level.ebeneZ); ball.vz = 0;   // sichtbar fallen, ohne Flugphase
-    events.push({ type: 'ebeneAb', x: ball.x, y: ball.y, von, nach: ball.ebene });
-  }
+  if (!level.isFloorChar(c2) && ball.ebene > 0) { ebeneFallen(level, ball, events); c2 = level.charAt(ball.x, ball.y); }
   if (!level.isFloorChar(c2)) events.push({ type: 'oob' });
   else if (c2 === 'w') events.push({ type: 'water' });
   else if (c2 === 'l') events.push({ type: 'lava' });

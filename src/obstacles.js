@@ -505,6 +505,7 @@ function createObstacles(defs) {
       case 'sweephand': out.push(new SweepHand(d)); break;
       case 'handclock': out.push(new HandClock(d)); break;
       case 'turbine': out.push(new Turbine(d)); break;
+      case 'luke': out.push(new Hatch(d)); break;
       case 'dial': case 'wanderloch': out.push(new MovingHole(d)); break;
     case 'sharkjump': out.push(new SharkJump(d)); break;
     case 'spikes': out.push(new Spikes(d)); break;

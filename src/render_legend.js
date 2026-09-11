@@ -1592,6 +1592,46 @@ Object.assign(Renderer.prototype, {
      getragen wird. Wichtig ist, dass ein gerader Lauf als ein einziger Zylinder gezeichnet wird –
      sonst sieht man an jedem Stoß den Deckel des nächsten und das Rohr wird zur Perlenkette. */
   ROHR_R: 0.33,
+  /* Luke: der Rahmen liegt bündig im Boden, darin zwei Klappen, die zur Seite wegschwenken. Offen
+     sieht man den Schacht hinunter – man soll dem Loch ansehen, dass es eines ist, und der zu
+     klappenden Luke, dass sie gleich wieder Boden ist. Gezeichnet wird sie auf der Höhe ihrer
+     eigenen Ebene, denn dort liegt sie. */
+  drawLuke(ctx, ob, z) {
+    const s = this.scale, w = ob.w / 2, h = ob.h / 2, auf = ob.auf;
+    const rahmen = [[ob.x - w, ob.y - h], [ob.x + w, ob.y - h], [ob.x + w, ob.y + h], [ob.x - w, ob.y + h]];
+    // Schacht: je weiter offen, desto tiefer sieht man hinein
+    this.fillPoly(ctx, rahmen, z + 0.004, '#14100a');
+    if (auf > 0.05) {
+      const t2 = Math.min(1, auf) * 0.9;
+      this.fillPoly(ctx, [[ob.x - w * 0.92, ob.y - h * 0.92], [ob.x + w * 0.92, ob.y - h * 0.92],
+        [ob.x + w * 0.92, ob.y + h * 0.92], [ob.x - w * 0.92, ob.y + h * 0.92]], z - t2 * 0.5, '#080604');
+    }
+    // Die beiden Klappen: sie schrumpfen zur Seite hin weg
+    const rest = 1 - auf;
+    for (const sd of [-1, 1]) {
+      if (rest < 0.02) continue;
+      const a = ob.y + sd * h * (1 - rest), b = ob.y + sd * h;
+      const klappe = [[ob.x - w * 0.96, Math.min(a, b)], [ob.x + w * 0.96, Math.min(a, b)],
+        [ob.x + w * 0.96, Math.max(a, b)], [ob.x - w * 0.96, Math.max(a, b)]];
+      this.prism(ctx, klappe, z + 0.006, 0.09, '#c9903f', '#7d5a20', { outline: '#2a1d0a' });
+    }
+    // Scharniere und ein Griff je Klappe, damit man sieht, wohin sie klappen
+    ctx.fillStyle = '#5c4318';
+    for (const sd of [-1, 1]) {
+      for (const q of [-0.55, 0.55]) {
+        const p = this.proj(ob.x + q * w, ob.y + sd * h * 0.98, z + 0.1);
+        ctx.beginPath(); ctx.arc(p[0], p[1], Math.max(1, s * 0.05), 0, TAU); ctx.fill();
+      }
+    }
+    /* Ein heller Rand sagt, was gleich passiert: Offen leuchtet er, zu ist er ruhig. Ohne das
+       müsste man die Luke im Kopf mitzählen, statt sie zu sehen. */
+    ctx.strokeStyle = `rgba(255,214,110,${(0.25 + 0.55 * auf).toFixed(2)})`;
+    ctx.lineWidth = Math.max(1.5, s * 0.07);
+    ctx.beginPath();
+    rahmen.forEach((p, i) => { const q = this.proj(p[0], p[1], z + 0.012); i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); });
+    ctx.closePath(); ctx.stroke();
+  },
+
   /* Turbine, Boden: ein Gitterschacht mit laufendem Gebläserad. Er liegt bündig im Boden, damit
      der Ball ungehindert darüberrollt – gehoben wird er ja vom Wind, nicht von einer Kante. */
   drawTurbineFloor(ctx, ob, t) {
@@ -1673,6 +1713,8 @@ Object.assign(Renderer.prototype, {
       const belag = th.floor[(x + y) & 1];
       this.fillPoly(ctx, [[x, y], [x + 1, y], [x + 1, y + 1], [x, y + 1]], z, aktiv ? belag : shade(belag, 1.1));
     }
+    // Luken dieser Ebene: sie liegen im Boden, also direkt nach dem Belag
+    for (const ob of lv.obstacles) if (ob.type === 'luke' && (ob.ebene || 0) === n) this.drawLuke(ctx, ob, z);
     // Brüstung an den geschlossenen Kanten
     for (const wr of fl.walls) {
       const poly = [[wr.x, wr.y], [wr.x + wr.w, wr.y], [wr.x + wr.w, wr.y + wr.h], [wr.x, wr.y + wr.h]];

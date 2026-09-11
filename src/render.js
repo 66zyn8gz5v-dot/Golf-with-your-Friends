@@ -1106,6 +1106,7 @@ class Renderer {
     if (ob.type === 'sweephand') { this.drawSweepHandFloor(ctx, ob, t); return; }
     if (ob.type === 'handclock') { this.drawHandClockFloor(ctx, ob, t); return; }
     if (ob.type === 'turbine') { this.drawTurbineFloor(ctx, ob, t); return; }
+    if (ob.type === 'luke') { if (!(ob.ebene || 0)) this.drawLuke(ctx, ob, 0); return; }   // höhere Ebenen zeichnet zeichneEbene
     if (ob.type === 'dial' || ob.type === 'wanderloch') { this.drawWanderlochFloor(ctx, ob, t); return; }
     if (ob.type === 'field' && ob.style === 'steam') { this.drawSteam(ctx, ob, t); return; }
     if (ob.type === 'field' && ob.style === 'dark') { this.drawDarkZone(ctx, ob, t); return; }

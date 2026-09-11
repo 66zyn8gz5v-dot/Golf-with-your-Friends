@@ -389,6 +389,16 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
       const n = o.ebene || 0;
       if (n >= karten.length - 1) problems.push(`turbine bei (${o.x},${o.y}) steht auf der obersten Ebene ${n} – sie hätte nichts, wohin sie hebt`);
     }
+    /* Luken: Sie sind ein Weg nach unten, keine Strafe. Also muss es unten auch etwas geben, worauf
+       man landet – sonst wäre die Luke ein Sturz ins Aus, und das wäre eine Falltür und keine Luke. */
+    for (const o of (c.obstacles || []).filter(o => o.type === 'luke')) {
+      const n = o.ebene || 0, lx = Math.floor(o.x), ly = Math.floor(o.y);
+      if (n < 1) { problems.push(`luke bei (${o.x},${o.y}) liegt auf der untersten Ebene – sie führte ins Nichts`); continue; }
+      if (!bodenAuf(n, lx, ly)) problems.push(`luke bei (${o.x},${o.y}) liegt auf Ebene ${n} nicht auf der Bahn – zu wäre sie kein Boden`);
+      let landet = false;
+      for (let m = n - 1; m >= 0; m--) if (bodenAuf(m, lx, ly)) { landet = true; break; }
+      if (!landet) problems.push(`luke bei (${o.x},${o.y}): unter ihr ist auf keiner Ebene Boden – wer hindurchfällt, ist aus`);
+    }
     if (lochEbene > 0 && !erreichbar[lochEbene].has(cup.join()))
       problems.push(`Loch auf Ebene ${lochEbene} nicht erreichbar – dorthin führt keine erreichbare Turbine oder kein Weg auf der Ebene`);
     for (const o of c.obstacles || []) {

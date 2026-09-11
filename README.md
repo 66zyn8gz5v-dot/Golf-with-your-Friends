@@ -716,6 +716,7 @@ Bild eng.
 |---|---|
 | **Hinauf** | nur über die **Turbine** (`turbine`), ein Gebläseschacht. Sie steht auf der Ebene `ebene` (ohne Angabe der untersten) und hebt auf die nächste darüber. Wer darüberrollt, wird an derselben Stelle gehoben – Tempo und Richtung bleiben. Kein Katapult, ein Aufzug. Für jede Etage steht eine eigene Turbine. |
 | **Herunter** | an jeder **offenen Kante**. Offen heißt: die Karte hat dort ein `o` (Boden ohne Bande) oder nichts. Der Ball fällt an derselben Stelle **so weit, bis wieder Boden unter ihm ist** – über mehrere Etagen hinweg, wenn es sein muss – und rollt dort weiter, **ohne Strafschlag**. |
+| **Die Luke** | (`luke`) ist eine Klappe im Boden einer Ebene, die im Takt auf- und zugeht. Zu ist sie fester Boden, offen ein Loch – wer dann darüberrollt, fällt wie an einer offenen Kante, ohne Strafschlag. `LUKE_TAKT` und `LUKE_SCHWENK` als Konstanten, `phase` je Luke. |
 | **Das Loch** | liegt auf genau einer Ebene (das `H` steht in genau einer der Karten) und zieht nur, wenn der Ball auch dort ist. |
 
 **Wie das im Code aussieht.** `buildLevel` baut aus jeder Karte eine Fläche mit eigenen Kacheln,
@@ -740,11 +741,21 @@ die unterste kommt man vom Abschlag, auf jede höhere nur über eine Turbine, di
 darunter steht und dort selbst erreichbar ist. Dazu die Kleinigkeiten, die dasselbe bewirken: alle
 Karten müssen deckungsgleich sein, der Abschlag gehört ganz nach unten, das `H` darf nur einmal
 vorkommen, über jeder Turbine muss Boden sein (sonst fiele der Ball im selben Augenblick zurück),
-und auf der obersten Ebene hat eine Turbine nichts verloren.
+und auf der obersten Ebene hat eine Turbine nichts verloren. Für Luken dasselbe in Grün: Sie
+müssen auf ihrer Ebene auf der Bahn liegen (zu wären sie sonst kein Boden), dürfen nicht auf der
+untersten Ebene sitzen, und unter ihnen muss irgendwo Boden sein – sonst wäre die Luke ein Sturz
+ins Aus, und das wäre eine Falltür und keine Luke.
+
+**Turbine und Luke sind das Paar.** Die eine hebt eine Etage, die andere wirft eine hinunter, und
+beide fragen dasselbe wie der Rest der Welt: nicht wie fest, sondern wann. Vom Falltür-Hindernis
+des Schattenreichs unterscheidet sich die Luke genau in einem Punkt – die Falltür ist eine Strafe
+(Strafschlag, zurück zum Schlagstart), die Luke ist ein Weg. Wo es eine Ebene darunter gibt, ist
+Hinunterfallen kein Unglück mehr, sondern Zeitverlust.
 
 **Bahn 13 „Turbinenprobe"** ist die Testbahn dazu, mit Absicht schlicht: drei Etagen, je eine
-Turbine dazwischen, das Loch ganz oben am Ende einer kurzen Strecke und hinter jeder Etage eine
-offene Kante. Wer zu weit schiebt, fällt – von ganz oben auch gleich zwei Etagen tief.
+Turbine dazwischen, auf der mittleren eine Luke im Weg, das Loch ganz oben am Ende einer kurzen
+Strecke und hinter jeder Etage eine offene Kante. Wer zu weit schiebt oder im falschen Moment über
+die Luke rollt, fällt – von ganz oben auch gleich zwei Etagen tief.
 
 **Was noch fehlt:** Der Baumodus kann keine Ebenen – das kommt erst, wenn sich die Sache bewährt.
 Geteilte Bahnen mit zwei Ebenen werden deshalb abgelehnt statt stillschweigend um ihre obere Karte

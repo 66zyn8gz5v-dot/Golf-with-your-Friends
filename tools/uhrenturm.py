@@ -165,6 +165,19 @@ def turbine(k, o, name, x, y, ebene=0, w=1.4, h=1.4):
     eb = "" if ebene == 0 else ", ebene: %d" % ebene
     return "{ type: 'turbine', x: %s, y: %s, w: %s, h: %s%s }" % (g(x), g(y), g(w), g(h), eb)
 
+def luke(karten, name, x, y, ebene=1, phase=0, w=1.6, h=1.6):
+    """Luke: eine Klappe im Boden einer Ebene, die im Takt auf- und zugeht. Zu ist sie Boden, offen
+    ein Loch. Geprueft wird, dass sie auf ihrer Ebene auf der Bahn liegt, dass es ueberhaupt eine
+    Ebene darunter gibt und dass man irgendwo darunter auch landet - sonst waere sie kein Weg nach
+    unten, sondern ein Sturz ins Aus."""
+    assert ebene >= 1, f'{name}: eine Luke auf der untersten Ebene fuehrt ins Nichts'
+    assert karten[ebene].frei(x, y), f'{name}: Luke bei ({x},{y}) liegt auf Ebene {ebene} auf "{karten[ebene].at(x, y)}"'
+    assert any(karten[n].frei(x, y) for n in range(ebene)), \
+        f'{name}: unter der Luke bei ({x},{y}) ist auf keiner Ebene Boden'
+    ph = "" if phase == 0 else ", phase: %s" % g(phase)
+    eb = "" if ebene == 0 else ", ebene: %d" % ebene
+    return "{ type: 'luke', x: %s, y: %s, w: %s, h: %s%s%s }" % (g(x), g(y), g(w), g(h), eb, ph)
+
 def rohr(k, name, paar, grad):
     """Kupferrohr: Die beiden Plaetze stehen als Gross- und Kleinbuchstabe in der Karte. Geprueft
     wird, dass es beide gibt und dass die Auswurfstelle Bahn ist. Das Rohr ist eine Fahrt, kein Tor:
@@ -421,17 +434,19 @@ o.rect(17, 3, 17, 5, 'o')                          # offene Kante: 'o' ist Boden
                                                    # wer darueber hinausrollt, faellt nach unten
 
 p = Karte(22, 9)                                   # oberste Ebene: nur das kurze Stueck mit dem Loch
-p.rect(13, 3, 16, 5)
+p.rect(15, 3, 16, 5)
 p.rect(17, 3, 17, 5, 'o')                          # auch hier offen - von oben faellt man zwei Etagen
 p.put(16, 4, 'H')                                  # das Loch liegt ganz oben
 bahn(name='Turbinenprobe', par=3, theme='escapement', maxStrokes=12, seed=77, dichte=0.1,
      intro='Eine Probe für die gestapelten Ebenen. Jede Turbine hebt eine Etage höher – wer '
-           'darüberrollt, wird an derselben Stelle gehoben und behält Tempo und Richtung. Ganz oben '
-           'liegt das Loch am Ende einer kurzen Strecke. Die Kanten dahinter sind offen: Wer zu weit '
-           'schiebt, fällt an derselben Stelle so weit hinunter, bis wieder Boden unter ihm ist – '
-           'ohne Strafschlag.',
+           'darüberrollt, wird an derselben Stelle gehoben und behält Tempo und Richtung. Auf der '
+           'mittleren Etage liegt eine Luke im Weg: Zu ist sie Boden, offen ein Loch. Wer im '
+           'falschen Moment darüberrollt, fällt wieder ganz nach unten. Ganz oben liegt das Loch am '
+           'Ende einer kurzen Strecke, und die Kanten dahinter sind offen. Gestürzt wird hier nie '
+           'mit Strafschlag – nur mit Zeitverlust.',
      obstacles=[turbine(k, o, 'Turbinenprobe unten', 10.5, 4.5),
-                turbine(o, p, 'Turbinenprobe oben', 13.5, 4.5, ebene=1)],
+                luke([k, o, p], 'Turbinenprobe', 12.5, 4.5, ebene=1),
+                turbine(o, p, 'Turbinenprobe oben', 15.5, 4.5, ebene=1)],
      decor=[('lantern', 5.5, 1.5, 1), ('lantern', 16.5, 7.5, 1), ('gearFlat', 9, 7.6, 1.4)],
      map=k.rows(), ebenen=[o.rows(), p.rows()])
 

@@ -412,7 +412,7 @@ const CLOCK_COURSES = [
   },
   {
     name: 'Turbinenprobe', par: 3, theme: 'escapement', maxStrokes: 12,
-    intro: 'Eine Probe für die gestapelten Ebenen. Jede Turbine hebt eine Etage höher – wer darüberrollt, wird an derselben Stelle gehoben und behält Tempo und Richtung. Ganz oben liegt das Loch am Ende einer kurzen Strecke. Die Kanten dahinter sind offen: Wer zu weit schiebt, fällt an derselben Stelle so weit hinunter, bis wieder Boden unter ihm ist – ohne Strafschlag.',
+    intro: 'Eine Probe für die gestapelten Ebenen. Jede Turbine hebt eine Etage höher – wer darüberrollt, wird an derselben Stelle gehoben und behält Tempo und Richtung. Auf der mittleren Etage liegt eine Luke im Weg: Zu ist sie Boden, offen ein Loch. Wer im falschen Moment darüberrollt, fällt wieder ganz nach unten. Ganz oben liegt das Loch am Ende einer kurzen Strecke, und die Kanten dahinter sind offen. Gestürzt wird hier nie mit Strafschlag – nur mit Zeitverlust.',
     map: [
       '......................',
       '......................',
@@ -440,9 +440,9 @@ const CLOCK_COURSES = [
         '......................',
         '......................',
         '......................',
-        '.............####o....',
-        '.............###Ho....',
-        '.............####o....',
+        '...............##o....',
+        '...............#Ho....',
+        '...............##o....',
         '......................',
         '......................',
         '......................',
@@ -450,7 +450,8 @@ const CLOCK_COURSES = [
     ],
     obstacles: [
       { type: 'turbine', x: 10.5, y: 4.5, w: 1.4, h: 1.4 },
-      { type: 'turbine', x: 13.5, y: 4.5, w: 1.4, h: 1.4, ebene: 1 },
+      { type: 'luke', x: 12.5, y: 4.5, w: 1.6, h: 1.6, ebene: 1 },
+      { type: 'turbine', x: 15.5, y: 4.5, w: 1.4, h: 1.4, ebene: 1 },
     ],
     decor: [
       { t: 'lantern', x: 5.5, y: 1.5, s: 1 },

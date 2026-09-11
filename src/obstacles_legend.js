@@ -892,6 +892,54 @@ class Turbine {
   }
 }
 
+/* Luke: eine Klappe im Boden einer Ebene, die im Takt auf- und zugeht. Zu ist sie fester Boden –
+   man rollt darüber hinweg, als wäre nichts. Offen ist sie ein Loch: Wer darüberrollt, fällt an
+   derselben Stelle auf die Ebene darunter und rollt dort weiter, **ohne Strafschlag**. Es ist
+   dieselbe Regel wie an einer offenen Kante, nur dass die Kante hier kommt und geht.
+
+   Damit ist sie das Gegenstück zur Turbine: Die hebt eine Etage, die Luke wirft eine hinunter.
+   Und sie ist der rote Faden der Welt in Reinform – nicht wie fest, sondern wann.
+
+   Vom Falltür-Hindernis des Schattenreichs unterscheidet sie sich genau darin: Die Falltür ist eine
+   Strafe (Strafschlag, zurück zum Schlagstart), die Luke ist ein Weg. Wo es eine Ebene darunter
+   gibt, ist Hinunterfallen kein Unglück mehr.
+
+   Der Takt steht als Konstante hier und nicht in den Bahndaten: Alle Luken einer Bahn sollen gleich
+   gehen, damit man einmal mitzählt und es danach für die ganze Bahn weiß. Was sich je Luke
+   unterscheiden darf, ist die Phase. */
+const LUKE_TAKT = 3.0;         // Sekunden, die die Luke offen bzw. zu ist
+const LUKE_SCHWENK = 0.4;      // Sekunden fürs Auf- und Zuklappen
+
+class Hatch {
+  constructor(d) {
+    Object.assign(this, { w: 1.6, h: 1.6, phase: 0, ebene: 1 }, d);
+    this.type = 'luke';
+    this.update(0);
+  }
+  update(t) {
+    const zyklus = 2 * LUKE_TAKT;
+    const u = ((((t / zyklus + this.phase) % 1) + 1) % 1) * zyklus;
+    /* 0 = ganz zu, 1 = ganz offen. Die erste Hälfte des Takts ist sie zu, die zweite offen. Das
+       Klappen dauert LUKE_SCHWENK und liegt am *Ende* der jeweiligen Hälfte – so ist sie zu Beginn
+       jeder Hälfte wirklich ganz zu bzw. ganz offen, und man sieht das Klappen kommen. */
+    const auf = u < LUKE_TAKT
+      ? Math.max(0, (u - (LUKE_TAKT - LUKE_SCHWENK)) / LUKE_SCHWENK)          // öffnet am Ende der ersten Hälfte
+      : 1 - Math.max(0, (u - (2 * LUKE_TAKT - LUKE_SCHWENK)) / LUKE_SCHWENK); // schließt am Ende der zweiten
+    this.auf = Math.max(0, Math.min(1, auf));
+    this.offen = this.auf > 0.55;                                 // erst weit genug offen fällt man
+  }
+  ueber(ball) {
+    return Math.abs(ball.x - this.x) <= this.w / 2 && Math.abs(ball.y - this.y) <= this.h / 2;
+  }
+  trigger(ball, t, events) {
+    if (!this.offen || ball.air || ball.rider) return;
+    if ((ball.ebene || 0) !== (this.ebene || 0) || !this.ebene) return;
+    if (!this.ueber(ball)) return;
+    ebeneFallen(this.level, ball, events);
+    events.push({ type: 'luke', x: ball.x, y: ball.y });
+  }
+}
+
 /* Hemmung: zwei Sperrklinken nebeneinander in einem Durchlass. Immer ist genau eine Seite frei,
    die andere gesperrt; alle HEMMUNG_TAKT Sekunden springt es um. Beim Umschlagen sind für einen
    Augenblick beide Klinken unten – so wie in einer echten Hemmung die eine erst fasst, wenn die
