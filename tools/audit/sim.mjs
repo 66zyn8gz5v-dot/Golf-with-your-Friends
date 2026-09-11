@@ -5,7 +5,7 @@
 import fs from 'node:fs'; import vm from 'node:vm'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
 const SRC = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'src');
 const ctx = { console, performance: { now: () => 0 }, window: {} }; vm.createContext(ctx);
-for (const f of ['themes', 'courses', 'courses_sea', 'courses_jungle', 'courses_storm', 'courses_shadow', 'courses_colosseum', 'courses_clock', 'courses_pro', 'level', 'obstacles', 'obstacles_legend', 'physics'])
+for (const f of ['themes', 'courses', 'courses_sea', 'courses_jungle', 'courses_storm', 'courses_shadow', 'courses_colosseum', 'courses_clock', 'courses_snow', 'courses_pro', 'level', 'obstacles', 'obstacles_legend', 'obstacles_snow', 'physics'])
   vm.runInContext(fs.readFileSync(path.join(SRC, `${f}.js`), 'utf8'), ctx);
 export const G = vm.runInContext('({buildLevel, makeBall, stepPhysics, createObstacles, PRO_COURSES, COURSES, SEA_COURSES, JUNGLE_COURSES, STORM_COURSES, SHADOW_COURSES, COLOSSEUM_COURSES, WORLDS, BALL_R})', ctx);
 export const WORLDS = G.WORLDS;
@@ -51,7 +51,7 @@ export function shoot(st0, ang, pow, wait = 0, wantTrace = false) {
   st.schlagZahl = (st.schlagZahl || 0) + 1;
   let t = st.t, restT = 0, slowT = 0, wartet = false, trace = [];
   const maxT = 26;
-  const WARTEN = ['aufzug', 'zahnstange', 'turbine', 'luke'];   // Maschinen, die einen ruhenden Ball noch holen
+  const WARTEN = ['aufzug', 'zahnstange', 'turbine', 'luke', 'seilbahn'];   // Maschinen, die einen ruhenden Ball noch holen
   for (let i = 0; i < 240 * maxT; i++) {
     const ev = G.stepPhysics(lv, b, STEP, t, true); t += STEP;
     if (wantTrace && i % 12 === 0) trace.push([+b.x.toFixed(2), +b.y.toFixed(2), b.air ? 1 : 0]);
@@ -171,6 +171,8 @@ export function distMap(def) {
     const n = eb(o);
     if (o.type === 'portal') { links.push([o.x, o.y, n, o.tx, o.ty, n]); if (o.twoWay) links.push([o.tx, o.ty, n, o.x, o.y, n]); }
     if (o.type === 'ferry') { links.push([o.x0, o.y0, n, o.x1, o.y1, n]); links.push([o.x1, o.y1, n, o.x0, o.y0, n]); }
+    // Seilbahn: wie die Fähre, darf dabei aber die Ebene wechseln
+    if (o.type === 'seilbahn') { const zl = o.ziel == null ? n : o.ziel; links.push([o.x0, o.y0, n, o.x1, o.y1, zl]); links.push([o.x1, o.y1, zl, o.x0, o.y0, n]); }
     if (o.type === 'gearfield') { links.push([o.x0, o.y0, n, o.x1, o.y1, n]); links.push([o.x1, o.y1, n, o.x0, o.y0, n]); }
     if (o.type === 'ramp') { const a = (o.angle ?? 90) * Math.PI / 180, cx = o.x + (o.w || 2) / 2, cy = o.y + (o.h || 2) / 2, half = Math.abs(Math.cos(a)) > 0.5 ? (o.w || 2) / 2 : (o.h || 2) / 2; const L = half + (o.land ?? 1.7); links.push([cx, cy, n, cx + Math.cos(a) * L, cy + Math.sin(a) * L, n]); }
     if (o.type === 'updraft') { const cx = o.x + (o.w || 2) / 2, cy = o.y + (o.h || 2) / 2; for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) links.push([cx, cy, n, cx + dx * (o.land ?? 5), cy + dy * (o.land ?? 5), n]); }

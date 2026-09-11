@@ -465,6 +465,7 @@ const WORLDS = [
   { id: 'normal', name: 'Märchenland', short: 'Märchen', mode: 'normal', courses: COURSES },
   { id: 'sea', name: 'Meereswelt', short: 'Meer', mode: 'normal', courses: SEA_COURSES },
   { id: 'pro', name: 'Tüftlerreich', short: 'Tüftler', mode: 'pro', courses: PRO_COURSES },
+  { id: 'snow', name: 'Schneeberg', short: 'Schnee', mode: 'pro', courses: SNOW_COURSES },
   { id: 'jungle', name: 'Dschungeltempel', short: 'Dschungel', mode: 'pro', courses: JUNGLE_COURSES },
   { id: 'storm', name: 'Sturmhimmel', short: 'Sturm', mode: 'legend', courses: STORM_COURSES },
   { id: 'shadow', name: 'Schattenreich', short: 'Schatten', mode: 'legend', courses: SHADOW_COURSES },

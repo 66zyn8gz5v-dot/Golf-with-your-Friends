@@ -3,17 +3,17 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 const ctx = { console };
 vm.createContext(ctx);
-const GLOBAL = { courses_pro: 'PRO_COURSES', courses_sea: 'SEA_COURSES', courses_jungle: 'JUNGLE_COURSES', courses_storm: 'STORM_COURSES', courses_shadow: 'SHADOW_COURSES', courses_colosseum: 'COLOSSEUM_COURSES', courses_clock: 'CLOCK_COURSES' };
+const GLOBAL = { courses_pro: 'PRO_COURSES', courses_sea: 'SEA_COURSES', courses_jungle: 'JUNGLE_COURSES', courses_storm: 'STORM_COURSES', courses_shadow: 'SHADOW_COURSES', courses_colosseum: 'COLOSSEUM_COURSES', courses_clock: 'CLOCK_COURSES', courses_snow: 'SNOW_COURSES' };
 const load = f => vm.runInContext(fs.readFileSync(new URL(`../src/${f}.js`, import.meta.url), 'utf8') + `\n;${GLOBAL[f] || f.toUpperCase()}`, ctx);
 // Reihenfolge wie in index.html: courses_pro.js baut die Weltliste und braucht die anderen schon
-const THEMES = load('themes'), COURSES = load('courses'), SEA = load('courses_sea'), JUNGLE = load('courses_jungle'), STORM = load('courses_storm'), SHADOW = load('courses_shadow'), COLOSSEUM = load('courses_colosseum'), CLOCK = load('courses_clock'), PRO = load('courses_pro');
+const THEMES = load('themes'), COURSES = load('courses'), SEA = load('courses_sea'), JUNGLE = load('courses_jungle'), STORM = load('courses_storm'), SHADOW = load('courses_shadow'), COLOSSEUM = load('courses_colosseum'), CLOCK = load('courses_clock'), SNOW = load('courses_snow'), PRO = load('courses_pro');
 // A bis F sind die Eingänge der Löwentore und Kupferrohre und begehbar; ihre Ausgänge (a bis f)
 // sind Mauer.
 const FLOOR = new Set(['#', 's', 'i', 'w', 'l', 'T', 'H', 'o', 'A', 'B', 'C', 'D', 'E', 'F']);
 const TOR_PAARE = ['A', 'B', 'C', 'D', 'E', 'F'];
 let ok = true;
 const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, world }]; let d = c.inner, n = 1; while (d) { out.push({ ...d, par: c.par, name: `${c.name} (innen${n > 1 ? ' ' + n : ''})`, world }); d = d.inner; n++; } return out; });
-[...COURSES.map(c => ({ ...c, world: 'Märchenland' })), ...withInner(SEA, 'Meereswelt'), ...withInner(JUNGLE, 'Dschungel'), ...withInner(STORM, 'Sturmhimmel'), ...withInner(SHADOW, 'Schattenreich'), ...withInner(COLOSSEUM, 'Kolosseum'), ...withInner(CLOCK, 'Uhrwerkstadt'), ...PRO.flatMap(c => c.inner ? [{ ...c, world: 'Profi' }, { ...c.inner, par: c.par, name: `${c.name} (innen)`, world: 'Profi' }] : [{ ...c, world: 'Profi' }])].forEach((c, i) => {
+[...COURSES.map(c => ({ ...c, world: 'Märchenland' })), ...withInner(SEA, 'Meereswelt'), ...withInner(JUNGLE, 'Dschungel'), ...withInner(STORM, 'Sturmhimmel'), ...withInner(SHADOW, 'Schattenreich'), ...withInner(COLOSSEUM, 'Kolosseum'), ...withInner(CLOCK, 'Uhrwerkstadt'), ...withInner(SNOW, 'Schneeberg'), ...PRO.flatMap(c => c.inner ? [{ ...c, world: 'Profi' }, { ...c.inner, par: c.par, name: `${c.name} (innen)`, world: 'Profi' }] : [{ ...c, world: 'Profi' }])].forEach((c, i) => {
   const rows = c.map, H = rows.length, W = rows[0].length;
   const problems = [];
   if (!THEMES[c.theme]) problems.push(`Theme ${c.theme} fehlt`);
@@ -301,6 +301,10 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
     // Portale und Fähren verbinden Gebiete
     const portals = (c.obstacles || []).filter(o => o.type === 'portal')
       .concat((c.obstacles || []).filter(o => o.type === 'ferry').map(o => ({ x: o.x0, y: o.y0, tx: o.x1, ty: o.y1, twoWay: true })))
+      // Seilbahn: wie die Fähre, solange sie auf ihrer Ebene bleibt – wechselt sie die Etage,
+      // zählt sie weiter unten als Aufstieg
+      .concat((c.obstacles || []).filter(o => o.type === 'seilbahn' && (o.ziel == null || o.ziel === (o.ebene || 0)) && !(o.ebene || 0))
+        .map(o => ({ x: o.x0, y: o.y0, tx: o.x1, ty: o.y1, twoWay: true })))
       // Zahnradfeld trägt wie die Fähre von einem Ende zum anderen, das Federwerk wirft wie die Kanone
       .concat((c.obstacles || []).filter(o => o.type === 'gearfield').map(o => ({ x: o.x0, y: o.y0, tx: o.x1, ty: o.y1, twoWay: true })))
       .concat((c.obstacles || []).filter(o => o.type === 'springwork').map(o => {
@@ -365,6 +369,18 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
     for (const o of (c.obstacles || []).filter(o => HEBER.includes(o.type))) {
       const von = o.ebene || 0, tx = Math.floor(o.x), ty = Math.floor(o.y);
       aufstiege.push({ typ: o.type, von, nach: von + 1, x: tx, y: ty, zx: tx, zy: ty, ob: o });
+    }
+    /* Die Seilbahn des Schneebergs darf beim Fahren die Ebene wechseln ('ziel'). Sie ist damit ein
+       Aufstieg wie Turbine und Rohr – und weil sie fährt und nicht nur hebt, stehen Tal- und
+       Bergstation an verschiedenen Stellen. */
+    for (const o of (c.obstacles || []).filter(o => o.type === 'seilbahn')) {
+      const von = o.ebene || 0, nach = o.ziel == null ? von : o.ziel;
+      if (nach === von) continue;                 // dann ist sie oben schon als Portal gezählt
+      aufstiege.push({ typ: 'seilbahn', von, nach, x: Math.floor(o.x0), y: Math.floor(o.y0),
+        zx: Math.floor(o.x1), zy: Math.floor(o.y1), ob: o });
+      // und zurück: die Gondel fährt ja wieder hinunter
+      aufstiege.push({ typ: 'seilbahn', von: nach, nach: von, x: Math.floor(o.x1), y: Math.floor(o.y1),
+        zx: Math.floor(o.x0), zy: Math.floor(o.y0), ob: o });
     }
     for (const o of (c.obstacles || []).filter(o => o.type === 'copperpipe')) {
       const von = o.ebene || 0, nach = o.ziel == null ? von : o.ziel;

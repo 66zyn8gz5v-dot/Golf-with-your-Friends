@@ -1778,6 +1778,8 @@ Object.assign(Renderer.prototype, {
   },
   zeichneEbene(ctx, fl, n) {
     const lv = this.level;
+    // Am Berg sind die oberen Ebenen Wolken, keine Schollen - eigene Zeichnung, gleiche Regeln.
+    if (this.theme.ebeneStil === 'wolke') return this.zeichneWolke(ctx, fl, n);
     // Die Schürze wächst mit dem Ebenenabstand mit: Bei weit gestapelten Etagen (Rohrturm) sähe
     // eine dünne Kante aus wie eine schwebende Platte statt wie ein Stockwerk.
     const th = this.theme, z = n * lv.ebeneZ, aktiv = lv.ebene === n;
@@ -2153,5 +2155,64 @@ Object.assign(Renderer.prototype, {
     ctx.beginPath();
     ctx.ellipse(sx, sy, 0.8 * s, 0.8 * s * this.cam.tilt, 0, -Math.PI / 2, -Math.PI / 2 + u * TAU);
     ctx.stroke();
+  },
+
+  /* Eine Wolkenetage. Dieselben Regeln wie bei der Steinscholle - voll gezeichnet, wo der Ball
+     ist, halb durchsichtig sonst, offene Kanten hell gestrichelt -, nur sieht sie aus, wie sie
+     sich anfuehlen soll: eine Bank aus weichen Ballen, unten ins Blaue auslaufend. Die Bruestung
+     an den geschlossenen Kanten ist hier ein Wall aus dichteren Ballen: Man soll sehen, wo die
+     Wolke traegt und wo sie aufhoert, sonst waere jeder Rand eine Ueberraschung. */
+  zeichneWolke(ctx, fl, n) {
+    const lv = this.level, s = this.scale;
+    const z = n * lv.ebeneZ, aktiv = lv.ebene === n;
+    ctx.globalAlpha = aktiv ? 1 : 0.45;
+    const kacheln = [];
+    for (let y = 0; y < lv.H; y++) for (let x = 0; x < lv.W; x++) if (fl.isFloor(x, y)) kacheln.push([x, y]);
+    kacheln.sort((a, b) => this.depth(a[0] + 0.5, a[1] + 0.5) - this.depth(b[0] + 0.5, b[1] + 0.5));
+    const rand = (x, y) => !fl.isFloor(x, y);
+    // Unterseite: weiche Ballen unter den Randkacheln, die ins Blaue auslaufen
+    for (const [x, y] of kacheln) {
+      if (!rand(x, y + 1) && !rand(x - 1, y) && !rand(x + 1, y) && !rand(x, y - 1)) continue;
+      for (let i = 0; i < 3; i++) {
+        const h = Math.abs(Math.sin((x * 31.7 + y * 17.3 + i * 5.1)) * 43758.5453) % 1;
+        const p = this.proj(x + 0.2 + h * 0.6, y + 0.2 + ((h * 7) % 1) * 0.6, z - 0.25 - i * 0.42);
+        ctx.fillStyle = `rgba(${220 - i * 22},${232 - i * 20},${248 - i * 14},${0.85 - i * 0.24})`;
+        ctx.beginPath(); ctx.arc(p[0], p[1], s * (0.55 - i * 0.08), 0, TAU); ctx.fill();
+      }
+    }
+    // Oberseite: flach gefuellt, damit man Wege und Kanten klar sieht
+    for (const [x, y] of kacheln)
+      this.fillPoly(ctx, [[x, y], [x + 1, y], [x + 1, y + 1], [x, y + 1]], z, aktiv ? '#ffffff' : '#eaf2fd');
+    for (const ob of lv.obstacles) if (ob.type === 'luke' && (ob.ebene || 0) === n) this.drawLuke(ctx, ob, z);
+    // Wall aus dichten Ballen an den geschlossenen Kanten
+    for (const wr of fl.walls) {
+      const n2 = Math.max(2, Math.round(Math.max(wr.w, wr.h) * 1.6));
+      for (let i = 0; i < n2; i++) {
+        const u = (i + 0.5) / n2;
+        const p = this.proj(wr.x + wr.w * (wr.w >= wr.h ? u : 0.5), wr.y + wr.h * (wr.h > wr.w ? u : 0.5), z + 0.2);
+        ctx.fillStyle = aktiv ? 'rgba(255,255,255,0.95)' : 'rgba(240,246,255,0.8)';
+        ctx.beginPath(); ctx.arc(p[0], p[1], s * 0.36, 0, TAU); ctx.fill();
+        ctx.fillStyle = 'rgba(198,216,238,0.6)';
+        ctx.beginPath(); ctx.arc(p[0], p[1] + s * 0.1, s * 0.3, 0, TAU); ctx.fill();
+      }
+    }
+    // Offene Kanten hell gestrichelt - dort geht es hinunter
+    ctx.strokeStyle = aktiv ? 'rgba(255,214,110,0.85)' : 'rgba(255,214,110,0.45)';
+    ctx.lineWidth = Math.max(1.5, s * 0.08);
+    ctx.setLineDash([s * 0.26, s * 0.18]);
+    for (const [x, y] of kacheln) {
+      const ch = fl.at(x, y);
+      if (ch !== 'o') continue;
+      const kante = (ax, ay, bx, by) => {
+        const a = this.proj(ax, ay, z + 0.02), b = this.proj(bx, by, z + 0.02);
+        ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+      };
+      if (rand(x, y + 1)) kante(x, y + 1, x + 1, y + 1);
+      if (rand(x + 1, y)) kante(x + 1, y, x + 1, y + 1);
+      if (rand(x - 1, y)) kante(x, y, x, y + 1);
+      if (rand(x, y - 1)) kante(x, y, x + 1, y);
+    }
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
   },
 });

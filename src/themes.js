@@ -392,4 +392,81 @@ const THEMES = {
     accent: '#ffe08a', flag: '#7fd8ff', gears: true,
     autoDecor: ['gearFlat', 'gear', 'pipe', 'gearFlat', 'lantern'],
   },
+
+  /* ---------------------------------------------------------------------------
+     Der Schneeberg. Eine Welt, eine Bahn nach oben: Die vier Paletten sind die vier Abschnitte
+     des Aufstiegs, und sie werden von unten nach oben kälter, härter und heller. Am Fuß steht
+     noch Wald und die Sonne kommt durch; auf dem Grat ist der Himmel fast schwarzblau und der
+     Boden nur noch Windharsch. Wer die Bilder nebeneinanderlegt, soll sehen, wie weit er
+     gekommen ist.
+
+     Zwei Bodenzeichen bekommen hier ihre eigene Bedeutung: 's' ist Tiefschnee (bremst) und 'i'
+     ist blankes Eis (rutscht). Beide gibt es in der Engine längst - sie brauchen nur die
+     richtigen Farben.
+     --------------------------------------------------------------------------- */
+  snowfoot: { // Am Fuß: Nadelwald, festgetretener Schnee, Mittagslicht über den Wipfeln
+    atmo: 'snow',
+    sky: ['#9fc6ee', '#e8f3ff'], ground: '#cfdcea', groundEdge: '#9fb2c8', cliff: '#8fa2ba',
+    floor: ['#f4f9ff', '#e8f1fb'], sand: '#dfe9f5', ice: '#bfe6ff', snow: '#ffffff',
+    water: '#3f7fc8', lava: '#ff7a3d',
+    wall: { top: '#e9f2fb', side: '#8aa3bd', style: 'stone' },
+    block: { top: '#b9cadd', side: '#6d8199' },
+    mover: { top: '#e4eefa', side: '#93a9c1' },
+    rotor: { top: '#f0f6ff', side: '#9db3ca' },
+    accent: '#4fb0ff', flag: '#ff5a5a',
+    blockStil: 'fels',
+    autoDecor: ['pineSnow', 'pineSnow', 'rockSnow', 'pineSnow', 'windsock', 'rockSnow'],
+  },
+  snowrock: { // Felsband: die Bäume bleiben unten, der Fels tritt hervor, Schnee nur in den Rinnen
+    atmo: 'snow',
+    sky: ['#6d9bd0', '#cfe3f7'], ground: '#8c94a4', groundEdge: '#5b6373', cliff: '#6a7382',
+    floor: ['#e2ecf7', '#d3e1f0'], sand: '#c9d6e4', ice: '#b0dfff', snow: '#f6fbff',
+    water: '#356fb4', lava: '#ff7a3d',
+    wall: { top: '#b6bfcc', side: '#5e6774', style: 'stone' },
+    block: { top: '#98a2b1', side: '#525b68' },
+    mover: { top: '#dce6f2', side: '#7f8b9b' },
+    rotor: { top: '#e6eef8', side: '#8793a3' },
+    accent: '#5ec2ff', flag: '#ff5a5a',
+    blockStil: 'fels',
+    autoDecor: ['rockSnow', 'rockSnow', 'pineSnow', 'crystalBlue', 'rockSnow', 'windsock'],
+  },
+  glacier: { // Gletscher: blankes Blaueis, Spalten, kaltes Streiflicht
+    atmo: 'blizzard',
+    sky: ['#2f5f9e', '#a9d7f5'], ground: '#7fb6dd', groundEdge: '#3f7aae', cliff: '#5f9ac8',
+    floor: ['#d8f0ff', '#c6e7ff'], sand: '#cfe3f0', ice: '#9fdcff', snow: '#f2fbff',
+    water: '#1f5fae', lava: '#ff7a3d',
+    wall: { top: '#d6f2ff', side: '#5ba3d8', style: 'ice' },
+    block: { top: '#a8daf6', side: '#4a8dc4' },
+    mover: { top: '#dff5ff', side: '#6aabdc' },
+    rotor: { top: '#e8faff', side: '#78b6e4' },
+    accent: '#8fe8ff', flag: '#ff5a5a', stars: false,
+    blockStil: 'fels',
+    autoDecor: ['crystalBlue', 'crystalBlue', 'rockSnow', 'crystalBlue', 'windsock'],
+  },
+  summit: { // Gipfelgrat: dünne Luft, fast schwarzblauer Himmel, Windharsch, Sterne am Tag
+    atmo: 'blizzard',
+    sky: ['#122a5c', '#7fb4e8'], ground: '#b9cbdd', groundEdge: '#7b8ea3', cliff: '#8fa3b8',
+    floor: ['#f7fbff', '#eaf3fd'], sand: '#dbe7f2', ice: '#b6e6ff', snow: '#ffffff',
+    water: '#2a5fa8', lava: '#ff7a3d',
+    wall: { top: '#f2f8ff', side: '#8ba2b9', style: 'ice' },
+    block: { top: '#c8d8e8', side: '#76889b' },
+    mover: { top: '#eef5fd', side: '#90a5ba' },
+    rotor: { top: '#f6fbff', side: '#9ab0c5' },
+    accent: '#9fe0ff', flag: '#ff5a5a', stars: true, ebeneStil: 'wolke',
+    blockStil: 'fels',
+    autoDecor: ['rockSnow', 'crystalBlue', 'windsock', 'rockSnow', 'windsock'],
+  },
+  cloud: { // Über den Wolken: nichts mehr fest außer dem, worauf man steht
+    atmo: 'none',
+    sky: ['#3d74c4', '#ffe3ef'], ground: '#f2f7ff', groundEdge: '#c4d6ee', cliff: '#d6e4f6',
+    floor: ['#ffffff', '#f0f6ff'], sand: '#e4ecf7', ice: '#c8ecff', snow: '#ffffff',
+    water: '#5fb0ff', lava: '#ff7a3d',
+    wall: { top: '#ffffff', side: '#bcd0e8', style: 'stone' },
+    block: { top: '#e6eefb', side: '#a9c0dd' },
+    mover: { top: '#ffffff', side: '#c4d6ee' },
+    rotor: { top: '#ffffff', side: '#cddcf0' },
+    accent: '#ffd166', flag: '#ff4f6d', clouds: true, floating: true, ebeneStil: 'wolke',
+    blockStil: 'fels',
+    autoDecor: ['cloud', 'cloud', 'cloud', 'windsock', 'cloud'],
+  },
 };

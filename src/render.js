@@ -455,6 +455,9 @@ class Renderer {
     }
     for (const b of lv.untenFl.blocks) {
       const poly = [[b.x, b.y], [b.x + 1, b.y], [b.x + 1, b.y + 1], [b.x, b.y + 1]];
+      // Am Berg sind Blöcke keine Kisten, sondern verschneite Felsbrocken - und weil man sich
+      // hinter ihnen vor der Lawine versteckt, müssen sie auch danach aussehen.
+      if (th.blockStil === 'fels') { items.push({ x: b.x + 0.5, y: b.y + 0.5, draw: () => this.drawSchneefels(ctx, b) }); continue; }
       items.push({ x: b.x + 0.5, y: b.y + 0.5, draw: () => this.prism(ctx, poly, 0, 1.0, th.block.top, th.block.side, { outline: shade(th.block.side, 0.7) }) });
     }
     for (const d of lv.decor) items.push({ x: d.x, y: d.y, draw: () => this.drawDecor(ctx, d, t) });
@@ -579,6 +582,20 @@ class Renderer {
       for (let i = 0; i < 60; i++) {
         const sp = 18 + hash(i, 1) * 22, x = (hash(i, 2) * w + Math.sin(t * 0.7 + i) * 18 + t * 6) % w, y = (hash(i, 3) * h + t * sp) % h;
         ctx.fillStyle = `rgba(255,255,255,${0.35 + hash(i, 4) * 0.45})`; ctx.beginPath(); ctx.arc(x, y, 1.2 + hash(i, 5) * 1.8, 0, TAU); ctx.fill();
+      }
+    } else if (kind === 'blizzard') {
+      /* Schneetreiben statt Schneefall: Am Berg fällt der Schnee nicht, er wird geweht. Darum
+         laufen die Flocken hier flach von links nach rechts statt von oben nach unten, in Böen
+         (der langsame Sinus), und ein paar lange Schlieren zeigen die Richtung. */
+      const boe = 0.75 + 0.45 * Math.sin(t * 0.45) + 0.2 * Math.sin(t * 1.7);
+      for (let i = 0; i < 70; i++) {
+        const sp = (150 + hash(i, 1) * 210) * boe;
+        const x = ((hash(i, 2) * (w + 200) + t * sp) % (w + 200)) - 100;
+        const y = (hash(i, 3) * h + t * (14 + hash(i, 6) * 16) + Math.sin(t * 1.3 + i) * 9) % h;
+        const lang = hash(i, 7) > 0.72;
+        ctx.fillStyle = `rgba(255,255,255,${0.3 + hash(i, 4) * 0.45})`;
+        if (lang) { ctx.fillRect(x, y, 9 + hash(i, 5) * 14, 1.2); }
+        else { ctx.beginPath(); ctx.arc(x, y, 1 + hash(i, 5) * 1.6, 0, TAU); ctx.fill(); }
       }
     } else if (kind === 'sparks') {
       for (let i = 0; i < 18; i++) {
@@ -1112,6 +1129,10 @@ class Renderer {
     if (ob.type === 'handclock') { this.drawHandClockFloor(ctx, ob, t); return; }
     if (ob.type === 'turbine') { this.drawTurbineFloor(ctx, ob, t); return; }
     if (ob.type === 'luke') { if (!(ob.ebene || 0)) this.drawLuke(ctx, ob, 0); return; }   // höhere Ebenen zeichnet zeichneEbene
+    if (ob.type === 'windfahne') { this.drawWindfahneFloor(ctx, ob, t); return; }
+    if (ob.type === 'lawine') { this.drawLawineFloor(ctx, ob, t); return; }
+    if (ob.type === 'seilbahn') { this.drawSeilbahnFloor(ctx, ob, t); return; }
+    if (ob.type === 'schneebruecke') { this.drawSchneebrueckeFloor(ctx, ob, t); return; }
     if (ob.type === 'dial' || ob.type === 'wanderloch') { this.drawWanderlochFloor(ctx, ob, t); return; }
     if (ob.type === 'field' && ob.style === 'steam') { this.drawSteam(ctx, ob, t); return; }
     if (ob.type === 'field' && ob.style === 'dark') { this.drawDarkZone(ctx, ob, t); return; }
@@ -1425,6 +1446,12 @@ class Renderer {
       items.push({ x: ob.x, y: ob.y, bias: 0.3, draw: () => this.drawHandClock(ctx, ob, t) });
     } else if (ob.type === 'aufzug') {
       items.push({ x: ob.x, y: ob.y, bias: 0.4, draw: () => this.drawAufzug(ctx, ob, t) });
+    } else if (ob.type === 'windfahne') {
+      items.push({ x: ob.x, y: ob.y, bias: 0.4, draw: () => this.drawWindfahne(ctx, ob, t) });
+    } else if (ob.type === 'lawine') {
+      items.push({ x: ob.fx || ob.cx, y: ob.fy || ob.cy, bias: 0.5, noFade: true, draw: () => this.drawLawine(ctx, ob, t) });
+    } else if (ob.type === 'seilbahn') {
+      items.push({ x: ob.x, y: ob.y, bias: 0.45, draw: () => this.drawSeilbahn(ctx, ob, t) });
     } else if (ob.type === 'zahnstange') {
       items.push({ x: ob.x, y: ob.y, bias: 0.4, draw: () => this.drawZahnstange(ctx, ob, t) });
     } else if (ob.type === 'escapement') {

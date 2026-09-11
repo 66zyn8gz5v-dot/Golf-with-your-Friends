@@ -35,6 +35,7 @@ x-Angabe wird beim Zeichnen durch `BREITE` geteilt.
 | Dschungeltempel | Profi | 9 Bahnen durch den Urwald bis zur verlorenen Stadt |
 | Sturmhimmel | Legende | 9 extra große Bahnen über den Wolken |
 | Schattenreich | Legende | 10 extra große Bahnen im Reich der Schatten |
+| Schneeberg | Profi | 12 Bahnen den Berg hinauf – der Wind dreht im Takt, oben liegen die Wolkenetagen |
 | Uhrwerkstadt | Profi | 14 Bahnen im Uhrenturm – alles eine Frage des Takts, gestapelte Ebenen, zum Schluss wandert das Loch |
 
 Das **Kolosseum** steht bewusst *nicht* auf der Weltkarte. Es ist die Turnierwelt und wird nur über
@@ -593,6 +594,66 @@ Die Karten dieser Welt werden nicht von Hand getippt, sondern von `tools/arena.p
 zusammengesetzt und nach `src/courses_colosseum.js` geschrieben. So bleiben alle Zeilen gleich lang,
 und eine Änderung an einer Kammer zieht nicht Dutzende Zeichen nach sich. Nach jedem Lauf gehören
 `node tools/validate.mjs` und `node tools/audit/audit.mjs colosseum` dazu.
+
+## Der Schneeberg
+
+Zwölf Bahnen, Stufe Profi, und sie liegen zwischen Tüftlerreich und Dschungeltempel – die Reise
+macht ihretwegen einen Bogen nach oben, so wie man einen Berg hinauf und wieder hinunter geht.
+
+**Die Frage der Welt ist *wohin*.** Das Märchenland fragt, wie fest man schlägt, der Uhrenturm
+fragt, wann – hier versetzt der Wind jeden rollenden Ball, und wer geradeaus zielt, kommt nicht an.
+Entscheidend ist, dass er **ablesbar** ist: Der Wind dreht im festen Takt durch Ost, Süd, West und
+Nord, die Fahne zeigt die nächste Richtung als blassen Pfeil, bevor sie kommt, und zwischen zwei
+Richtungen ist **einen Augenblick Flaute**. Wer wartet, kann gerade schlagen; wer nicht warten
+will, zielt daneben. Darum steht der Wind auf jeder Bahn quer zum Weg und nie längs – sonst wäre er
+nur Rücken- oder Gegenwind und man könnte ihn aussitzen. Einen liegenden Ball rührt er nie an; das
+wäre Schikane statt Aufgabe.
+
+**Der zweite Faden ist die Höhe.** Vier Abschnitte zu je drei Bahnen, jeder mit eigener Palette,
+und sie werden nach oben hin kälter, schmaler und ausgesetzter:
+
+| Bahnen | Palette | Was dort neu ist |
+|---|---|---|
+| 1–3 | `snowfoot` – Nadelwald, festgetretener Schnee, Mittagslicht | Der Wind; Tiefschnee (`s`) bremst; die erste Lawine |
+| 4–6 | `snowrock` – Fels tritt hervor, Schnee nur in den Rinnen | Schmale Bänder, die Seilbahn, die erste Schneebrücke |
+| 7–9 | `glacier` – Blaueis, Spalten, Schneetreiben | Blankeis (`i`) rutscht; zwei Wächten hintereinander |
+| 10–12 | `summit` – dünne Luft, fast schwarzblauer Himmel, Sterne am Tag | Der Grat, und darüber die Wolkenetagen |
+
+### Die vier Maschinen (`src/obstacles_snow.js`)
+
+| Maschine | Was sie tut |
+|---|---|
+| **Windfahne** (`windfahne`) | Dreht den Wind alle `WIND_HALT` Sekunden weiter, mit `WIND_DREH` Sekunden Flaute dazwischen. Sie wirkt auf der ganzen Bahn, nicht in einem Feld – das ist der Unterschied zum Wind-`field` der anderen Welten: Dort ist Wind eine Stelle, hier ist er das Wetter. Fahne, Windsack und der über den Boden treibende Schnee zeigen alle dasselbe. |
+| **Lawine** (`lawine`) | Fegt alle `LAWINE_TAKT` Sekunden durch ihren Streifen; `LAWINE_WARNUNG` Sekunden vorher staubt es an der Abrisskante. Wer offen liegt, wird ein Stück mitgenommen – kein Strafschlag, nur Weg. **Hinter einem Felsblock (`x`) passiert nichts:** Vom Ball aus wird bis `LAWINE_SCHUTZ` Kacheln gegen die Laufrichtung geschaut, und die hellen Keile im Schnee zeigen, wie weit die Deckung reicht. Damit ist es die erste Maschine, vor der man sich *versteckt* statt sie zu umgehen – und die Felsen sind nicht mehr Deko, sondern Deckung. |
+| **Seilbahn** (`seilbahn`) | Gondel am Stahlseil zwischen zwei Stationen, Verhalten wie die Fähre. Dazu darf sie mit `ziel` die **Ebene wechseln**: Die Bergstation liegt dann eine oder mehrere Wolkenetagen höher, und das Seil steigt sichtbar dorthin. Sie ist damit zugleich Brücke und Aufstieg – was eine Bergbahn eben tut. |
+| **Schneebrücke** (`schneebruecke`) | Trägt genau einen Schlag lang. Hat der Ball sie überquert, bricht sie hinter ihm ein; beim nächsten Schlag liegt sie wieder da. Sie ist das Gegenstück zur Luke des Uhrenturms: Die fragt *wann*, diese fragt, ob man den Weg zu Ende denkt. Gibt es eine Ebene darunter, fällt man ohne Strafschlag dorthin; gibt es keine, ist es ein Loch im Berg wie jedes andere – **genau dieser zweite Fall fehlte zuerst**, und die gebrochene Brücke tat auf einer Bahn ohne untere Ebene gar nichts. |
+
+### Die Wolkenetagen
+
+Oben sind die Ebenen dieselbe Mechanik wie im Uhrenturm – `map` ist die unterste Fläche, `ebenen`
+sind die darüber, alle deckungsgleich, und hinunter geht es an jeder offenen Kante (`o`) ohne
+Strafschlag. Nur **gezeichnet** werden sie anders: Eine Palette mit `ebeneStil: 'wolke'` lässt
+`Renderer.zeichneWolke` statt der Steinscholle eine Wolkenbank malen – weiche Ballen, die nach
+unten ins Blaue auslaufen, und an den geschlossenen Kanten ein Wall aus dichteren Ballen statt
+einer Brüstung. Man soll sehen, wo die Wolke trägt und wo sie aufhört.
+
+Hinauf führt hier die Seilbahn statt der Turbine: Bahn 11 hat eine Wolke, Bahn 12 zwei
+übereinander, verbunden durch eine Gondel und getrennt durch eine Schneebrücke.
+
+### Was die alten Sachen hier anders machen
+
+Der Boden braucht nichts Neues, nur die richtigen Farben: **`s` ist Tiefschnee** (bremst),
+**`i` blankes Eis** (rutscht), **`x` ein Felsblock** – und der ist jetzt keine Kiste mehr. Mit
+`blockStil: 'fels'` zeichnet `Renderer.drawSchneefels` einen verschneiten Brocken aus zwei
+gekippten Prismen mit Schneehaube, und keine zwei sehen gleich aus. Das ist nicht nur hübscher:
+Hinter diesen Brocken versteckt man sich vor der Lawine, also müssen sie auch danach aussehen.
+Dazu eine neue Atmosphäre `blizzard` – Schnee, der nicht fällt, sondern in Böen waagerecht weht.
+
+Die Karten entstehen mit `tools/schneeberg.py` und werden dort schon beim Bauen geprüft: Jede
+Windfahne muss auf der Bahn stehen, in jedem Lawinenstreifen muss Bahn **und mindestens ein Block**
+liegen (ohne Deckung wäre sie keine Aufgabe, sondern Warten), beide Stationen einer Seilbahn müssen
+auf ihrer jeweiligen Ebene Bahn sein, und eine Schneebrücke muss auf Bahn liegen – sonst wäre sie
+von Anfang an ein Loch.
 
 ## Die Bahnen des Uhrenturms
 

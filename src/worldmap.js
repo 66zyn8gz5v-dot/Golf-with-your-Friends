@@ -25,6 +25,9 @@ const WorldMap = (() => {
     normal: { x: 12, y: 52, icon: '🏰', col: '#ffd166' },
     pro: { x: 43, y: 50, icon: '⚙️', col: '#e0a05a' },
     sea: { x: 27, y: 82, icon: '🌊', col: '#7fd8ff' },
+    // Der Schneeberg steht hoch oben zwischen Tüftlerreich und Dschungel – die Reise macht
+    // seinetwegen einen Bogen nach oben, so wie man einen Berg eben hinauf und wieder hinunter geht
+    snow: { x: 51, y: 18, icon: '🏔️', col: '#bfe6ff' },
     jungle: { x: 59, y: 82, icon: '🗿', col: '#9ee06f' },
     storm: { x: 75, y: 44, icon: '⛈️', col: '#8fb8ff' },
     shadow: { x: 88, y: 74, icon: '🔮', col: '#c58bff' },
@@ -102,7 +105,7 @@ const WorldMap = (() => {
   function svg(cls = 'atlas-bg', par = 'none') {
     // Mitte jeder Scheibe auf der Karte – die Ortsschilder sitzen an ihrer Vorderkante
     const W = {
-      storm: [76, 20], pro: [43, 23], normal: [14, 25], shadow: [87, 39], sea: [27, 44], jungle: [59, 44], clock: [108, 26],
+      storm: [76, 20], pro: [43, 23], normal: [14, 25], shadow: [87, 39], sea: [27, 44], jungle: [59, 44], clock: [108, 26], snow: [52, 8],
     };
     const stars = [];
     for (let i = 0; i < 28; i++) {
@@ -121,7 +124,7 @@ const WorldMap = (() => {
     }
     // Reiseweg: von Vorderkante zu Vorderkante, hinter den Scheiben durch
     const front = id => { const [x, y] = W[id]; return [x, y + 5.4]; };
-    const route = ['normal', 'sea', 'pro', 'jungle', 'storm', 'shadow', 'clock'].map(id => front(id).map(v => v.toFixed(1)).join(' ')).join(' L ');
+    const route = ['normal', 'sea', 'pro', 'snow', 'jungle', 'storm', 'shadow', 'clock'].map(id => front(id).map(v => v.toFixed(1)).join(' ')).join(' L ');
 
     return `<svg class="${cls}" viewBox="0 0 ${BREITE} 62" preserveAspectRatio="${par}" aria-hidden="true">
       <defs>
@@ -212,6 +215,34 @@ const WorldMap = (() => {
             ${Array.from({ length: 8 }, (_, i) => { const a = i * Math.PI / 4;
               return `<path d="M${(c[0] + Math.cos(a) * 0.85).toFixed(2)} ${(c[1] + Math.sin(a) * 0.85 * TILT).toFixed(2)} L${(c[0] + Math.cos(a) * 1.25).toFixed(2)} ${(c[1] + Math.sin(a) * 1.25 * TILT).toFixed(2)}"/>`; }).join('')}</g>`; })()}
           ${tree(x, y, 2.8, -2.6, 0.85)}${tree(x, y, -3, -2.2, 0.75)}`; })()}
+      </g>
+
+      <!-- ===== Schneeberg: drei Gipfel über der Baumgrenze ===== -->
+      <g filter="url(#atDeep)">
+        ${slab(...W.snow, 8, 8, 2.6, '#dbe8f5', '#cfdeee', '#9db3c8', '#7d94ab')}
+        ${(() => { const [x, y] = W.snow; return `
+          ${shade(x, y, 0.2, 0.4, 2.4)}
+          <!-- Der Hauptgipfel: zwei Kegel übereinander, oben die Schneehaube.
+               Er steht bewusst hinten und hoch - die Welt heißt nach ihm. -->
+          ${cone(x, y, -0.2, -0.6, 2.5, 0, 3.6, '#93a7bc', '#61748a')}
+          ${cone(x, y, -0.2, -0.6, 1.15, 2.6, 1.7, '#ffffff', '#d3e2f0')}
+          <!-- zwei Nebengipfel, kleiner und weiter vorn -->
+          ${cone(x, y, -2.6, 1.4, 1.5, 0, 2.1, '#8b9fb4', '#5b6e84')}
+          ${cone(x, y, -2.6, 1.4, 0.7, 1.5, 1.0, '#ffffff', '#d3e2f0')}
+          ${cone(x, y, 2.5, 0.9, 1.3, 0, 1.8, '#8b9fb4', '#5b6e84')}
+          ${cone(x, y, 2.5, 0.9, 0.6, 1.3, 0.85, '#ffffff', '#d3e2f0')}
+          <!-- Die Seilbahn: zwei Masten und das Seil dazwischen, daran eine Gondel.
+               Sie ist das Wahrzeichen der Welt, also steht sie vorn und quer. -->
+          ${(() => { const t0 = P(x, y, 2.9, 3.0, 0.9), t1 = P(x, y, -0.2, -0.6, 4.2); return `
+            ${box(x, y, 2.9, 3.0, 0.18, 0.18, 0, 0.9, '#c9d8e8', '#8ea3b8', '#6d8199')}
+            <line x1="${t0[0].toFixed(2)}" y1="${t0[1].toFixed(2)}" x2="${t1[0].toFixed(2)}" y2="${t1[1].toFixed(2)}" stroke="#4a5766" stroke-width="0.14"/>
+            ${(() => { const g0 = [t0[0] + (t1[0] - t0[0]) * 0.42, t0[1] + (t1[1] - t0[1]) * 0.42]; return `
+              <line x1="${g0[0].toFixed(2)}" y1="${g0[1].toFixed(2)}" x2="${g0[0].toFixed(2)}" y2="${(g0[1] + 0.55).toFixed(2)}" stroke="#4a5766" stroke-width="0.12"/>
+              <rect x="${(g0[0] - 0.42).toFixed(2)}" y="${(g0[1] + 0.5).toFixed(2)}" width="0.84" height="0.7" rx="0.14" fill="#ff8a5a" stroke="#b8482a" stroke-width="0.1"/>
+              <rect x="${(g0[0] - 0.26).toFixed(2)}" y="${(g0[1] + 0.62).toFixed(2)}" width="0.52" height="0.34" rx="0.08" fill="#cfe6ff"/>`; })()}`; })()}
+          <!-- Ein paar verschneite Tannen an der Baumgrenze, unten an der Scheibe -->
+          ${tree(x, y, 3.0, -2.4, 0.7, '#3f8a5e', '#2a6a44')}${tree(x, y, -3.2, -1.4, 0.6, '#3f8a5e', '#2a6a44')}
+          ${tree(x, y, 1.2, 3.2, 0.65, '#3f8a5e', '#2a6a44')}`; })()}
       </g>
 
       <!-- ===== Uhrwerkstadt: Turmuhr über den Dächern ===== -->
