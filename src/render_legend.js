@@ -1778,7 +1778,10 @@ Object.assign(Renderer.prototype, {
   },
   zeichneEbene(ctx, fl, n) {
     const lv = this.level;
-    const th = this.theme, z = n * lv.ebeneZ, aktiv = lv.ebene === n, tief = 1.15;
+    // Die Schürze wächst mit dem Ebenenabstand mit: Bei weit gestapelten Etagen (Rohrturm) sähe
+    // eine dünne Kante aus wie eine schwebende Platte statt wie ein Stockwerk.
+    const th = this.theme, z = n * lv.ebeneZ, aktiv = lv.ebene === n;
+    const tief = Math.max(1.15, Math.min(2.4, lv.ebeneZ * 0.55));
     ctx.globalAlpha = aktiv ? 1 : 0.5;
     const kante = aktiv ? th.groundEdge : shade(th.groundEdge, 1.25);
     const kacheln = [];

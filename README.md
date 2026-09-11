@@ -35,7 +35,7 @@ x-Angabe wird beim Zeichnen durch `BREITE` geteilt.
 | Dschungeltempel | Profi | 9 Bahnen durch den Urwald bis zur verlorenen Stadt |
 | Sturmhimmel | Legende | 9 extra große Bahnen über den Wolken |
 | Schattenreich | Legende | 10 extra große Bahnen im Reich der Schatten |
-| Uhrwerkstadt | Profi | 13 Bahnen im Uhrenturm – alles eine Frage des Takts, gestapelte Ebenen, zum Schluss wandert das Loch |
+| Uhrwerkstadt | Profi | 14 Bahnen im Uhrenturm – alles eine Frage des Takts, gestapelte Ebenen, zum Schluss wandert das Loch |
 
 Das **Kolosseum** steht bewusst *nicht* auf der Weltkarte. Es ist die Turnierwelt und wird nur über
 den **Turnier**-Knopf im Startbildschirm betreten – die Weltkarte bleibt die Reise durch die sieben
@@ -596,7 +596,7 @@ und eine Änderung an einer Kammer zieht nicht Dutzende Zeichen nach sich. Nach 
 
 ## Die Bahnen des Uhrenturms
 
-Dreizehn Bahnen, Stufe Profi, und die letzte Welt des Spiels. Was sie von allen anderen trennt,
+Vierzehn Bahnen, Stufe Profi, und die letzte Welt des Spiels. Was sie von allen anderen trennt,
 ist die Frage, die sie stellt. Jede andere Welt fragt, **wie fest und wohin** man schlägt; diese
 fragt zuerst **wann**. Darum steht auf jeder Bahn mindestens eine Maschine vor einer Stelle, an der
 kein Weg vorbeiführt – eine Tür, eine Lücke, ein Rohr, eine Etage –, und sie gibt diese Stelle nur
@@ -614,7 +614,7 @@ die der übrigen Welten: die schmalste ist 34 Kacheln breit, die weiten 40 bis 4
 **erste zweite Ebene** – eine einzige Turbine, sonst nichts Neues. Bahn 6 ist eine flache
 Atempause. Bahn 7 und 8 bringen die beiden anderen Wege hinauf, **Aufzug** und **Zahnstange**, dazu
 die **Luke**. Bahn 9 bis 11 mischen, was da ist; Bahn 12 stapelt drei Etagen, die nur durch
-Kupferrohre verbunden sind; Bahn 13 ist der Höhepunkt. Das **Kupferrohr** kommt ab Bahn 4 vor, die
+Kupferrohre verbunden sind; Bahn 13 ist der Rohrturm, und Bahn 14 ist der Höhepunkt. Das **Kupferrohr** kommt ab Bahn 4 vor, die
 **Hemmung** ab Bahn 6 – beide bewusst nicht auf jeder Bahn, damit sie nicht zur Gewohnheit werden.
 Das **wandernde Loch** steht auf vier Bahnen: klein auf 6, 9 und 11, und als ganzes Zifferblatt
 auf 13.
@@ -633,7 +633,8 @@ auf 13.
 | 10 | Glockenturm | 42×17 | 5 | Pendel, Hemmung, Aufzug, Luke | Drei Takte, von denen keiner zum anderen passt – und die Glockenstube liegt eine Etage höher |
 | 11 | Räderschacht | 42×17 | 6 | Zahnradfeld, Zeigerarm, Zahnstange, wanderndes Loch | In die Endkammer führt unten keine Tür; hinein kommt nur, wer vom Steg ohne Geländer fällt |
 | 12 | Kupferlabyrinth | 42×17 | 6 | Kupferrohr ×3 (zwei davon zwischen Ebenen), Hemmung | Drei Kammern übereinander, verbunden allein durch Rohre |
-| 13 | Das große Zifferblatt | 36×26 | 6 | Turbine, Zifferblatt, Zeigerwerk, Zeigerarm, Pendel ×3 | Vom Steg auf das Blatt fallen lassen – und wo man sich fallen lässt, entscheidet alles |
+| 13 | Der Rohrturm | 42×19 | 6 | Kupferrohr ×3 (zwei zwischen Ebenen), Luke, weit gestapelte Etagen | Das Loch liegt auf der mittleren Etage – hinein kommt man nur von oben, durch die Luke im Steg |
+| 14 | Das große Zifferblatt | 36×26 | 6 | Turbine, Zifferblatt, Zeigerwerk, Zeigerarm, Pendel ×3 | Vom Steg auf das Blatt fallen lassen – und wo man sich fallen lässt, entscheidet alles |
 
 **Warum die Welt neu gebaut wurde.** Die erste Fassung hatte zwölf flache Bahnen plus eine
 Testbahn „Maschinenprobe", die am Ende hing und im Par mitzählte. Nachgemessen stimmten außerdem
@@ -718,6 +719,7 @@ Bild eng.
 | **Das Kupferrohr** | darf sein Ende eine Etage höher haben: `ebene` ist die Ebene des Rohrmunds, `ziel` die des Rohrendes. Jedes Ende wird auf seiner eigenen Karte gesucht. |
 | **Die Luke** | (`luke`) ist eine Klappe im Boden einer Ebene, die im Takt auf- und zugeht. Zu ist sie fester Boden, offen ein Loch – wer dann darüberrollt, fällt wie an einer offenen Kante, ohne Strafschlag. `LUKE_TAKT` und `LUKE_SCHWENK` als Konstanten, `phase` je Luke. |
 | **Das Loch** | liegt auf genau einer Ebene (das `H` steht in genau einer der Karten) und zieht nur, wenn der Ball auch dort ist. |
+| **Der Abstand** | ist standardmäßig 2 Kacheln (`EBENE_Z`). Eine Bahn darf ihn mit `ebeneZ` überschreiben (1 bis 6). Das ist reine Optik – die Physik kennt keine Höhe zwischen den Ebenen. Der **Rohrturm** stapelt mit 4,2, damit man sieht, dass zwischen seinen Etagen nichts ist außer dem Rohr, das hindurchsteigt. Die Schürze der Schollen wächst dabei mit, sonst sähe eine weit gehobene Ebene aus wie eine schwebende Platte. |
 
 **Wie das im Code aussieht.** `buildLevel` baut aus jeder Karte eine Fläche mit eigenen Kacheln,
 Kollisionskanten, Mauern und Blöcken. Das Level trägt immer die Felder der Ebene, auf der der Ball
@@ -742,8 +744,11 @@ gezeichnet. Geprüft wird das mit Pixeln: `scratchpad/aim.mjs` zählt die Punkte
 Zielhilfe vor und nach dem Aufladen, auf der untersten Ebene wie auf einer oberen.
 
 `tools/validate.mjs` prüft die beiden Fehler, die man im Spiel erst merkt, wenn man ratlos
-davorsteht: eine **Ebene ohne Turbine auf der darunter** (dort käme nie jemand hin) und ein **Loch
-auf einer Ebene, zu der kein Weg führt**. Die Erreichbarkeit wird über alle Etagen zugleich gerechnet, und
+davorsteht: eine **Ebene, die von nirgends erreichbar ist**, und ein **Loch auf einer Ebene, zu der
+kein Weg führt**. „Erreichbar" heißt dabei ausdrücklich nicht „hat einen Aufzug von direkt
+darunter": Der Rohrturm führt mit einem Rohr von ganz unten auf die oberste Etage und von dort
+durch eine Luke auf die mittlere – seine mittlere Ebene hat gar keinen Aufstieg und ist trotzdem
+in Ordnung. Die Erreichbarkeit wird über alle Etagen zugleich gerechnet, und
 zwar in beide Richtungen: hinauf über einen Aufzug, hinunter über eine offene Kante oder eine
 Luke. Beides muss zusammen gerechnet werden, denn ein Sturz öffnet auch wieder eine untere Ebene –
 die Endkammer auf Bahn 11 hat unten keine Tür und ist trotzdem erreichbar, weil ein Steg darüber

@@ -477,6 +477,43 @@ bahn(name='Kupferlabyrinth', par=6, theme='boiler', maxStrokes=22, seed=311, dic
             ('crate', 14, 2.5, 1)],
      map=k.rows(), ebenen=[o.rows(), p2.rows()])
 
+# ---------------------------------------------------------------- 13 Der Rohrturm (nur Rohre, weit gestapelt)
+# Die einzige Bahn mit weit auseinanderliegenden Etagen (ebeneZ 4,2 statt 2,0). Zwischen ihnen ist
+# nichts als Luft und das Kupferrohr, das hindurchsteigt - man soll dem Rohr mit den Augen folgen
+# koennen. Das Loch liegt auf der MITTLEREN Etage, und dorthin fuehrt kein Aufstieg: Das Rohr geht
+# von ganz unten gleich auf die oberste, und von da faellt man durch die Luke eine Etage zurueck.
+k = Karte(42, 19)                                  # Ebene 0: die Halle
+k.rect(2, 6, 16, 15)                               # Kammer A mit dem Abschlag
+k.rect(20, 4, 33, 16)                              # Kammer B - nur durch das erste Rohr zu erreichen
+k.put(16, 10, 'A'); k.put(26, 4, 'a')              # Rohr A: quer hinueber, gleiche Ebene
+k.put(33, 10, 'B')                                 # Rohr B: von hier steigt es bis ganz nach oben
+k.put(4, 10, 'T')
+
+o1 = Karte(42, 19)                                 # Ebene 1: nur die Galerie mit dem Loch
+o1.rect(22, 8, 34, 12)
+o1.put(32, 10, 'H')
+o1.put(34, 10, 'C')                                # Rohr C: von der Galerie wieder hinauf auf den Steg
+
+o2 = Karte(42, 19)                                 # Ebene 2: der Steg ganz oben
+o2.rect(24, 9, 36, 11)
+o2.put(25, 10, 'b')                                # Rohrende von unten (Mauer, der Ball wird davor gesetzt)
+o2.put(36, 10, 'c')                                # Rohrende der Galerie-Leitung
+
+bahn(name='Der Rohrturm', par=6, theme='boiler', maxStrokes=22, seed=417, dichte=0.12, ebeneZ=4.2,
+     intro='Hier stehen die Etagen weit auseinander, und dazwischen ist nichts als Luft – nur das '
+           'Kupferrohr steigt hindurch, und man kann ihm mit den Augen folgen. Drei Leitungen, sonst '
+           'kein Weg: Die erste bringt quer in die Kesselhalle, die zweite von dort in einem Zug bis '
+           'ganz nach oben auf den Steg. Das Loch aber liegt auf der mittleren Etage, und hinauf '
+           'führt dorthin nichts – man kommt nur von oben hinein, durch die Luke im Steg. Wer unten '
+           'auf der Galerie am Loch vorbeirollt, nimmt die dritte Leitung und ist wieder oben.',
+     obstacles=[rohr(k, 'Rohrturm A', 'A', 90),
+                rohr(k, 'Rohrturm B', 'B', 0, ziel=(o2, 2)),
+                luke([k, o1, o2], 'Rohrturm', 30.5, 10.5, ebene=2),
+                rohr(o1, 'Rohrturm C', 'C', 180, ziel=(o2, 2), ebene=1)],
+     decor=[('lantern', 5.5, 3.5, 1), ('lantern', 36.5, 2.5, 1), ('barrel', 18, 17.4, 1),
+            ('crate', 22, 17.4, 1), ('gearFlat', 10, 17.4, 1.6)],
+     map=k.rows(), ebenen=[o1.rows(), o2.rows()])
+
 # ---------------------------------------------------------------- 13 Das grosse Zifferblatt (Hoehepunkt)
 k = Karte(36, 26)                                  # unten: Werkgang oben am Rand, darunter das Blatt
 k.rect(2, 2, 33, 4)                                # der Werkgang - hier steht der Abschlag
@@ -522,13 +559,12 @@ for b in BAHNEN:
     for e in ebenen:
         assert len(e) == len(rows) and all(len(a) == len(c) for a, c in zip(e, rows)), b['name']
     if ebenen:
-        # Jede Ebene ueber der untersten braucht einen Aufstieg von der Ebene darunter. Turbine,
-        # Aufzug, Zahnstange und ein Rohr mit 'ziel' zaehlen gleichermassen.
+        # Es muss ueberhaupt einen Weg nach oben geben. Welche Ebene wie erreichbar ist, rechnet
+        # tools/validate.mjs aus - dort zaehlen auch Stuerze, denn eine Ebene darf von oben
+        # erschlossen sein statt von unten (so macht es der Rohrturm mit seiner mittleren Etage).
         heber = [o for o in b['obstacles']
                  if any(t in o for t in ("'turbine'", "'aufzug'", "'zahnstange'")) or "ziel:" in o]
-        for n in range(1, len(ebenen) + 1):
-            drauf = [o for o in heber if ("ebene: %d" % (n - 1)) in o or (n == 1 and 'ebene:' not in o)]
-            assert drauf, f"{b['name']}: kein Aufstieg von Ebene {n - 1} auf Ebene {n}"
+        assert heber, f"{b['name']}: obere Ebenen, aber kein Weg hinauf"
     # Deko steht neben der Bahn, nie darauf: Eine Laterne auf dem Pflaster sähe aus wie ein
     # Hindernis, wäre aber keins - der Ball rollte einfach hindurch.
     for (t, x, y, sc) in b['decor']:
@@ -594,6 +630,8 @@ for b in BAHNEN:
                  % (b['name'], b['par'], b['theme'], b['maxStrokes']))
     teile.append("    intro: '%s',\n" % b['intro'].replace("'", "\\'"))
     teile.append("    map: [\n%s\n    ],\n" % js_map(b['map']))
+    if b.get('ebeneZ'):                                # nur wo die Etagen bewusst weiter auseinanderliegen
+        teile.append("    ebeneZ: %s,\n" % g(b['ebeneZ']))
     if b.get('ebenen'):                                # weitere Spielebenen, gleich gross wie die unterste
         teile.append("    ebenen: [\n%s\n    ],\n"
                      % '\n'.join("      [\n%s\n      ]," % js_map(e, "  ") for e in b['ebenen']))

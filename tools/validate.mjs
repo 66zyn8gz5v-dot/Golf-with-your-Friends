@@ -406,8 +406,7 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
       for (let m = n - 1; m >= 0; m--) if (bodenAuf(m, x, y)) return flute(m, [[x, y]]);
       return false;                            // nirgends Boden: das ist ein Sturz ins Aus, kein Weg
     };
-    for (let n = 1; n < karten.length; n++)
-      if (!aufstiege.some(a => a.nach === n)) problems.push(`Ebene ${n} ohne Aufstieg von Ebene ${n - 1} – dort käme nie jemand hin`);
+
     for (let runde = 0, wieder = true; wieder && runde < 40; runde++) {
       wieder = false;
       for (const a of aufstiege) {
@@ -433,6 +432,13 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
     for (const a of aufstiege)
       if (a.nach < karten.length && !erreichbar[a.von].has(`${a.x},${a.y}`))
         problems.push(`${a.typ} bei (${a.x},${a.y}) ist auf Ebene ${a.von} nicht erreichbar`);
+    /* Jede Ebene muss erreichbar sein – aber nicht unbedingt von der direkt darunter. Der Rohrturm
+       führt mit einem Rohr von ganz unten auf die oberste Etage und von dort durch eine Luke auf
+       die mittlere; die mittlere hat also gar keinen Aufstieg und ist trotzdem in Ordnung. */
+    for (let n = 1; n < karten.length; n++) if (!erreichbar[n].size)
+      problems.push(`Ebene ${n} ist von nirgends erreichbar – weder über einen Aufstieg noch über einen Sturz`);
+    if (c.ebeneZ != null && !(+c.ebeneZ >= 1 && +c.ebeneZ <= 6))
+      problems.push(`ebeneZ ${c.ebeneZ} liegt außerhalb von 1 bis 6 – so hoch oder so flach lässt sich nicht mehr zielen`);
     if (cup && !erreichbar[lochEbene].has(cup.join()))
       problems.push(lochEbene === 0 ? 'Loch vom Abschlag nicht erreichbar'
         : `Loch auf Ebene ${lochEbene} nicht erreichbar – dorthin führt kein erreichbarer Auf- oder Abstieg, oder kein Weg auf der Ebene`);

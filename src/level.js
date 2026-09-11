@@ -8,8 +8,11 @@ const WALL_T = 0.38;       // Dicke der Randmauern (nach außen)
 /* Die Uhrenturm-Welt spielt auf zwei Ebenen. Das ist keine Höhenphysik, sondern ein Umschalter:
    Der Ball ist immer auf genau einer Fläche und kollidiert nur mit deren Wänden. Es dürfen mehr
    als zwei sein; sie stapeln sich der Reihe nach. EBENE_Z ist nur fürs Auge – so hoch liegt jede
-   Ebene über der darunter. */
+   Ebene über der darunter. Eine Bahn darf das mit `ebeneZ` überschreiben: Der Rohrturm stapelt
+   seine drei Etagen weiter auseinander, damit man sieht, dass zwischen ihnen nichts ist außer dem
+   Rohr. Auf die Physik hat das keinen Einfluss – nur darauf, wie hoch gezeichnet wird. */
 const EBENE_Z = 2.0;
+const EBENE_Z_MAX = 6;
 const WALL_CHUNK = 4;      // längere Mauern werden fürs Sortieren zerteilt
 
 function seededRandom(seed) {
@@ -157,7 +160,8 @@ function buildLevel(def) {
   const level = {
     def, W, H, tiles: unten.tiles, tee: tee2, cup, goal, blocks: unten.blocks,
     segs: unten.segs, walls: unten.walls, obstacles, decor, switches: {},
-    flaechen, ebene: 0, cupEbene, ebeneZ: EBENE_Z, untenFl: unten,
+    flaechen, ebene: 0, cupEbene, untenFl: unten,
+    ebeneZ: Math.min(EBENE_Z_MAX, Math.max(1, +def.ebeneZ || EBENE_Z)),
     schlagZahl: 0,   // Schläge auf dieser Bahn (die Kaiserloge dreht danach den Daumen)
     hasHeights, hStep, heightAt, cellH, slopeAt,
     /* Umschalten zwischen unterer und oberer Ebene. Mehr ist ein Ebenenwechsel nicht: Der Ball

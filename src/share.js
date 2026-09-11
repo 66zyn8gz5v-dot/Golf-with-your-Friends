@@ -90,8 +90,9 @@ const Share = (() => {
     /* Ebenen lassen sich noch nicht teilen: Der Baumodus kann sie nicht bauen, also kann eine
        geteilte Bahn sie auch nicht ehrlich mitbringen. Die zweite Karte wird darum nicht etwa
        stillschweigend weggeworfen – dann käme eine Bahn an, deren Loch auf einer Ebene läge, die
-       es nicht mehr gibt –, sondern die Bahn wird abgelehnt. */
-    if (roh.oben != null) return nein('Bahnen mit zwei Ebenen lassen sich noch nicht teilen.');
+       es nicht mehr gibt –, sondern die Bahn wird abgelehnt. Geprüft werden beide Schreibweisen
+       ('oben' für genau eine, 'ebenen' für beliebig viele) und der Ebenenabstand dazu. */
+    if (roh.oben != null || roh.ebenen != null || roh.ebeneZ != null) return nein('Bahnen mit mehreren Ebenen lassen sich noch nicht teilen.');
 
     const hindernisse = roh.obstacles == null ? [] : roh.obstacles;
     if (!Array.isArray(hindernisse) || hindernisse.length > OBJ_MAX) return nein('Zu viele Hindernisse.');
