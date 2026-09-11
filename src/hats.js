@@ -650,7 +650,105 @@ const Hats = (() => {
       ctx.restore(); glasLicht(ctx);
       return () => schattenhut(ctx, t, fein);   // der Hut liegt über dem Reif in Spielerfarbe
     },
+
+    /* Uhrenturm: eine Taschenuhr als Kugel – Messinggehäuse, darin ein durchbrochenes Zifferblatt,
+       hinter dem die Räder laufen. Alles bewegt sich nach der Spieluhr t, also auf jedem Gerät
+       gleich: die Räder greifen ineinander, die Zeiger gehen im Verhältnis zwölf zu eins, und die
+       Unruh unten schwingt hin und her. Der rote Sekundenzeiger ist das einzige Bunte – er soll
+       das Auge fangen, wie an einer echten Uhr. */
+    pocketwatch(ctx, color, t, fein) {
+      glasKugel(ctx, '#fff0cf', '#6b4a1c');
+      ctx.save(); kugelMaske(ctx);
+      // Werktiefe: dunkles Messing hinter dem Blatt
+      const g = ctx.createRadialGradient(0, 0, 0.05, 0, 0, 1);
+      g.addColorStop(0, '#4a3818'); g.addColorStop(0.65, '#2d2210'); g.addColorStop(1, '#170f06');
+      ctx.fillStyle = g; ctx.fillRect(-1, -1, 2, 2);
+      /* Ein Zahnrad im Werk: Kranz mit Zähnen, Nabe, drei Speichen. Die Zähne sind Kreise auf dem
+         Kranz – das liest sich klein besser als echte Zahnflanken und kostet weniger Pfad. */
+      const rad = (cx, cy, r, zn, w, hell, dunkel) => {
+        ctx.fillStyle = dunkel; ctx.beginPath();
+        for (let i = 0; i < zn; i++) {
+          const a = w + (i * TAU2) / zn;
+          ctx.moveTo(cx + Math.cos(a) * r + r * 0.17, cy + Math.sin(a) * r);
+          ctx.arc(cx + Math.cos(a) * r, cy + Math.sin(a) * r, r * 0.17, 0, TAU2);
+        }
+        ctx.fill();
+        ctx.fillStyle = hell; ctx.beginPath(); ctx.arc(cx, cy, r * 0.92, 0, TAU2); ctx.fill();
+        ctx.fillStyle = dunkel; ctx.beginPath(); ctx.arc(cx, cy, r * 0.66, 0, TAU2); ctx.fill();
+        ctx.strokeStyle = hell; ctx.lineWidth = r * 0.16; ctx.beginPath();
+        for (let i = 0; i < 3; i++) {
+          const a = w * 1.0 + (i * TAU2) / 3;
+          ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(a) * r * 0.7, cy + Math.sin(a) * r * 0.7);
+        }
+        ctx.stroke();
+        ctx.fillStyle = hell; ctx.beginPath(); ctx.arc(cx, cy, r * 0.16, 0, TAU2); ctx.fill();
+      };
+      // Zwei ineinandergreifende Räder hinter dem Blatt – gegenläufig, wie es sich gehört
+      rad(-0.42, 0.34, 0.34, 10, t * 0.5, '#c08b3c', '#7a5418');
+      rad(0.38, 0.42, 0.26, 8, -t * 0.625, '#a87a33', '#6b4a14');
+      // Unruh: der schwingende Ring unten
+      if (fein) {
+        const u = Math.sin(t * 1.9) * 0.5;
+        ctx.strokeStyle = '#d8a441'; ctx.lineWidth = 0.06;
+        ctx.beginPath(); ctx.ellipse(0.02, 0.66, 0.26, 0.26 * Math.abs(Math.cos(u)) + 0.05, u, 0, TAU2); ctx.stroke();
+      }
+      // Zifferblatt: ein Ring, kein voller Kreis – so bleibt das Werk sichtbar
+      ctx.fillStyle = '#f6ecd2'; ctx.beginPath(); ctx.arc(0, 0, 0.86, 0, TAU2);
+      ctx.arc(0, 0, 0.44, 0, TAU2, true); ctx.fill();
+      ctx.strokeStyle = '#8a6624'; ctx.lineWidth = 0.05;
+      ctx.beginPath(); ctx.arc(0, 0, 0.86, 0, TAU2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(0, 0, 0.44, 0, TAU2); ctx.stroke();
+      // Stundenmarken: die vollen Stunden kräftig, die Zwischenstriche fein
+      ctx.strokeStyle = '#3a2a12'; ctx.lineCap = 'butt';
+      for (let i = 0; i < 12; i++) {
+        const a = -Math.PI / 2 + (i * TAU2) / 12, lang = i % 3 === 0;
+        ctx.lineWidth = lang ? 0.09 : 0.05;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(a) * 0.78, Math.sin(a) * 0.78);
+        ctx.lineTo(Math.cos(a) * (lang ? 0.56 : 0.64), Math.sin(a) * (lang ? 0.56 : 0.64));
+        ctx.stroke();
+      }
+      // Zeiger: Minutenzeiger einmal je zwölf Sekunden, Stundenzeiger zwölfmal langsamer
+      const zeiger = (a, len, breit, farbe) => {
+        ctx.fillStyle = farbe;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(a) * len, Math.sin(a) * len);
+        ctx.lineTo(Math.cos(a + 2.4) * breit, Math.sin(a + 2.4) * breit);
+        ctx.lineTo(Math.cos(a - 2.4) * breit, Math.sin(a - 2.4) * breit);
+        ctx.closePath(); ctx.fill();
+      };
+      // Umlaufzeiten wie an einer Uhr, nur gerafft: Sekunde 2,5 s – Minute 30 s – Stunde 360 s
+      zeiger(-Math.PI / 2 + (t * TAU2) / 360, 0.5, 0.12, '#2a1d0a');    // Stundenzeiger
+      zeiger(-Math.PI / 2 + (t * TAU2) / 30, 0.74, 0.1, '#3a2a12');     // Minutenzeiger
+      ctx.strokeStyle = '#d0402a'; ctx.lineWidth = 0.045; ctx.lineCap = 'round';
+      const sek = -Math.PI / 2 + (t * TAU2) / 2.5;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(sek + Math.PI) * 0.18, Math.sin(sek + Math.PI) * 0.18);
+      ctx.lineTo(Math.cos(sek) * 0.8, Math.sin(sek) * 0.8); ctx.stroke();
+      ctx.fillStyle = '#d0402a'; ctx.beginPath(); ctx.arc(0, 0, 0.075, 0, TAU2); ctx.fill();
+      ctx.restore(); glasLicht(ctx);
+      return () => uhrkrone(ctx, t, fein);   // die Aufzugkrone sitzt oben auf dem Gehäuse
+    },
   };
+
+  /* Aufzugkrone der Taschenuhr: der geriffelte Knopf mit Bügel, wie am Gehäuserand einer echten
+     Uhr. Er sitzt da, wo bei den anderen Kugeln der Hut sitzt, und dreht sich ganz langsam. */
+  function uhrkrone(ctx, t, fein) {
+    ctx.save();
+    ctx.translate(0, -1.02);
+    ctx.strokeStyle = '#8a6624'; ctx.lineWidth = 0.1;
+    ctx.beginPath(); ctx.arc(0, -0.3, 0.22, Math.PI * 0.15, Math.PI * 0.85, true); ctx.stroke();   // Bügel
+    ctx.fillStyle = '#e0b45c';
+    ctx.beginPath(); ctx.ellipse(0, -0.04, 0.2, 0.13, 0, 0, TAU2); ctx.fill();
+    ctx.strokeStyle = '#7d5a20'; ctx.lineWidth = 0.035;
+    for (let i = 0; fein && i < 6; i++) {
+      const x = -0.16 + (i / 5) * 0.32 + ((t * 0.08) % (0.32 / 5));
+      ctx.beginPath(); ctx.moveTo(x, -0.14); ctx.lineTo(x, 0.06); ctx.stroke();
+    }
+    ctx.strokeStyle = '#7d5a20'; ctx.lineWidth = 0.04;
+    ctx.beginPath(); ctx.ellipse(0, -0.04, 0.2, 0.13, 0, 0, TAU2); ctx.stroke();
+    ctx.restore();
+  }
 
   /* ---------- Bausteine der Ganzkörper-Skins ---------- */
 
@@ -1247,6 +1345,7 @@ const Hats = (() => {
     { id: 'feathercrown', name: 'Federkrone', icon: '🪶', welt: 'jungle', voll: true },
     { id: 'thunder', name: 'Gewitterkugel', icon: '⛈️', welt: 'storm', voll: true },
     { id: 'orb', name: 'Kristallkugel', icon: '🔮', welt: 'shadow', voll: true },
+    { id: 'pocketwatch', name: 'Taschenuhr', icon: '🕰️', welt: 'clock', voll: true },
     { id: 'champion', name: 'Championhelm', icon: '🏅', welt: 'colosseum', art: 'turnier' },
   ];
   const byId = id => LIST.find(h => h.id === id);

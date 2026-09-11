@@ -35,7 +35,7 @@ x-Angabe wird beim Zeichnen durch `BREITE` geteilt.
 | Dschungeltempel | Profi | 9 Bahnen durch den Urwald bis zur verlorenen Stadt |
 | Sturmhimmel | Legende | 9 extra große Bahnen über den Wolken |
 | Schattenreich | Legende | 10 extra große Bahnen im Reich der Schatten |
-| Uhrwerkstadt | Profi | wird neu gebaut – zur Zeit sieben Testbahnen für die neuen Maschinen |
+| Uhrwerkstadt | Profi | 12 Bahnen im Uhrenturm – alles eine Frage des Takts, zum Schluss wandert das Loch |
 
 Das **Kolosseum** steht bewusst *nicht* auf der Weltkarte. Es ist die Turnierwelt und wird nur über
 den **Turnier**-Knopf im Startbildschirm betreten – die Weltkarte bleibt die Reise durch die sieben
@@ -586,76 +586,61 @@ zusammengesetzt und nach `src/courses_colosseum.js` geschrieben. So bleiben alle
 und eine Änderung an einer Kammer zieht nicht Dutzende Zeichen nach sich. Nach jedem Lauf gehören
 `node tools/validate.mjs` und `node tools/audit/audit.mjs colosseum` dazu.
 
-## Die Uhrwerkstadt wird neu gebaut
+## Die Bahnen des Uhrenturms
 
-Die alten neun Bahnen sind aus `src/courses_clock.js` verschwunden. Die Welt entsteht noch einmal,
-diesmal **Maschine für Maschine**: Zu jedem neuen Hindernis gehört zuerst eine schlichte Testbahn –
-nur so viel Bahn, dass die Maschine allein wirkt und sich ihre Werte einstellen lassen. Die
-richtigen Bahnen kommen erst, wenn alle Maschinen stehen.
+Zwölf Bahnen, Stufe Profi. Was diese Welt von allen anderen trennt, ist die Frage, die sie stellt.
+Jede andere Welt fragt, **wie fest und wohin** man schlägt; diese fragt zuerst **wann**. Darum steht
+auf jeder Bahn mindestens eine Maschine vor einer Stelle, an der kein Weg vorbeiführt – eine Tür,
+eine Lücke, ein Rohr –, und sie gibt diese Stelle nur zeitweise frei. Wer zusieht und mitzählt,
+kommt durch; wer nur fest schlägt, nicht.
 
-**Die drei Maschinen dieses Schritts** sind bewusst keine neuen Verhalten. Sie borgen sich je ein
-Verhalten, das sich im Spiel längst bewährt hat, und geben ihm ein Uhrwerk-Gesicht und eine neue
-Bahn. Das spart dem Spiel eine Klasse Regeln, die niemand mehr durchschaut, und dem Spieler das
-Neulernen: Er weiß schon, was passiert, sobald er sie sieht.
+Das ist der Unterschied zum **Tüftlerreich**, das ihr am nächsten kommt: Dort ist jede Bahn eine
+eigene Erfindung, die man erst verstehen muss. Hier ist es immer dieselbe Frage, und nur die
+Antwort ändert sich.
 
-| Hindernis | Verhalten wie | Was es tut | Optik |
-|---|---|---|---|
-| **Zahnradfeld** (`gearfield`) | die Lore (`ferry`) | Trägt den Ball von einem Ende zum anderen und setzt ihn dort ab. Es hält an beiden Enden an – dort steigt man ein. | Eine Reihe ineinandergreifender Zahnräder in einer Rinne im Boden. Sie drehen sich genau so weit, wie der Ball wandert, abwechselnd gegenläufig; die helle Lücke, die mitwandert, ist die Stelle, die trägt. |
-| **Pendel** (`pendulum`) | der Ritter (`mover`) | Ein schwerer Körper auf fester Schwingbahn quer über die Bahn. Er stößt den Ball weg und gibt ihm seinen eigenen Schwung mit. | Messingstange von oben herab, schwere Linse unten. Auf dem Boden liegt der Bogen, den sie bestreicht – die Schwingbahn ist von weitem zu sehen, nicht erst, wenn man darin liegt. |
-| **Federwerk** (`springwork`) | die Kanone (`cannon`) | Fängt einen hineinrollenden Ball, spannt kurz und schleudert ihn davon. Der Federarm schwenkt dabei langsam hin und her. | Eine aufgezogene Spiralfeder in einem Topf im Boden: geladen zieht sie sich zusammen, nach dem Schuss schwingt sie weit auf. Die Punktreihe auf dem Boden zeigt, wo der Ball landen wird. |
-| **Kupferrohre** (`copperpipe`) | das Löwentor (`liongate`) | Rohrpost: Zwei Plätze auf der Karte als Groß- und Kleinbuchstabe eines Paares. Der Eingang schluckt nur ab `LOEWENTOR_TEMPO`, wirft mit `LOEWENTOR_AUSWURF` in Richtung `angle` wieder aus, ist von außen eine Wand, wenn der Ball zu langsam ankommt, und schiebt einen im Rohrmund liegengebliebenen Ball sanft entgegen seiner Anfahrt heraus. | Ein liegendes Kupferrohr mit Nietenband und dunklem, offenem Mund, der zur Bahn zeigt; aus dem Ventil obendrauf zischt Dampf, kräftig gleich nach dem Schlucken und Speien. |
-| **Zeigerarm** (`sweephand`) | – (eigener Dreharm) | Ein großer Uhrzeiger, der über eine runde Fläche streicht und alles vor sich herschiebt, was darauf liegt. Getroffen wird der Ball mit der Bahngeschwindigkeit an der Stelle, an der er die Stange berührt: weit außen schneller, nah an der Nabe fast gar nicht. | Lange Messingstange mit Gegengewicht und hellem Grat auf der Oberkante, darunter das Zifferblatt mit Stundenmarken. |
-| **Zifferblatt** (`dial`) | – (verschiebt das Loch) | Das Loch liegt nicht fest: Alle `ZIFFERBLATT_TAKT` Sekunden springt es auf die nächste Stundenmarke, immer im Uhrzeigersinn. Das Hindernis verschiebt `level.cup` selbst. | Ring mit Stundenmarken; die **nächste** Marke leuchtet, und ein schrumpfender Ring darum sagt, wie lange noch. So ist der Schlag planbar und kein Glücksspiel. |
-| **Hemmung** (`escapement`) | – (eigene Sperre) | Zwei Sperrklinken nebeneinander in einem Durchlass. Immer ist genau eine Seite frei; beim Umschlagen sind beide für einen Augenblick unten, so wie in einer echten Hemmung die eine erst fasst, wenn die andere loslässt. | Zwei Messingpfosten, aus denen die Klinken fahren, dazwischen der Anker, der zur offenen Seite kippt. Auf dem Boden leuchtet der offene Durchlass. |
+**Aufbau.** Bahn 1 bis 4 führen je ein bis zwei Maschinen ein, 5 bis 8 mischen sie, 9 bis 11
+kombinieren, und 12 ist der Höhepunkt. Das **Kupferrohr** kommt erst ab Bahn 4 vor, die **Hemmung**
+erst ab Bahn 5 – und beide bewusst nicht auf jeder Bahn, damit sie nicht zur Gewohnheit werden.
+**Bahn 12 ist die einzige mit dem wandernden Loch.**
 
-**Die Schwingdauer des Pendels ist eine Konstante**, `PENDEL_TAKT` in `src/obstacles_legend.js`
-(zur Zeit 3,4 s). Sie steht bewusst nicht in den Bahndaten: Alle Pendel einer Bahn sollen im selben
-Takt gehen, damit man einmal mitzählen kann und es danach für die ganze Bahn weiß. Was sich je
-Pendel unterscheiden darf, ist die **Phase** (`phase`, 0 bis 1 = eine volle Schwingung), die
-Ruhelage (`ruhe`, Grad – 90 hängt nach unten), der Ausschlag (`amp`, Grad) und die Länge (`len`).
-`x`/`y` ist die **Aufhängung**, nicht die Linse; die Aufhängung hängt in der Luft und ist kein
-Hindernis.
+| Nr. | Bahn | Par | Maschinen | Der Moment, auf den man wartet |
+|---|---|---|---|---|
+| 1 | Marktplatz | 3 | Pendel | Die einzige Tür in der Mauer, vor der das Pendel schwingt |
+| 2 | Glockengasse | 3 | Pendel ×2 | Zwei Türen, versetzte Pendel – die eine passt, wenn die andere nicht passt |
+| 3 | Räderwerkstatt | 4 | Zahnradfeld, Pendel | Das Feld hält am Ufer an: einsteigen, tragen lassen |
+| 4 | Rohrpost | 4 | Kupferrohr, Pendel | Mit Schwung in den Rohrmund – zu sacht prallt ab |
+| 5 | Hemmwerk | 4 | Hemmung, Pendel | Die offene Hälfte des Ganges, dann die Tür |
+| 6 | Federkammer | 4 | Federwerk, Hemmung | Die Feder schwenkt: schießen, wenn der Punkt richtig steht |
+| 7 | Zeigerhof | 5 | Zeigerarm, Zahnradfeld | Hinter dem Zeiger herlaufen, nicht vor ihm |
+| 8 | Kesselhaus | 5 | Pendel, Kupferrohr, Federwerk | Erst durch die Tür, dann mit Rest-Schwung ins Rohr |
+| 9 | Glockenturm | 5 | Pendel ×2, Hemmung | Drei Takte, von denen keiner zum anderen passt |
+| 10 | Räderschacht | 6 | Zahnradfeld ×2, Zeigerarm, Hemmung | Zwei Felder und ein Zeiger, der die Scheibe leerräumt |
+| 11 | Kupferlabyrinth | 6 | Kupferrohr ×2, Hemmung, Federwerk | Durch die offene Hälfte schießen und noch Tempo fürs zweite Rohr haben |
+| 12 | Das große Zifferblatt | 6 | Zifferblatt, Zeigerarm, Pendel ×2 | Das Loch springt alle zehn Sekunden eine Stundenmarke weiter |
 
-**Auch der Takt der Hemmung ist eine Konstante**: `HEMMUNG_TAKT` (2,6 s, wie lange eine Seite offen
-steht) und `HEMMUNG_UMSCHLAG` (0,35 s, in denen beide Klinken unten sind), beide in
-`src/obstacles_legend.js`. Je Hemmung unterscheidet sich nur die **Phase**: mit `phase: 0.5` startet
-die andere Seite offen.
+**Der Weltpreis** ist die **Taschenuhr** (`pocketwatch`) – eine Kugel mit durchbrochenem Zifferblatt,
+laufenden Rädern, schwingender Unruh und der Aufzugkrone obendrauf. Sie hängt an derselben Regel
+wie die Preise der anderen Welten: jede Bahn braucht ein Ergebnis, und die Summe muss unter Par
+liegen. In der Rangliste steht der Uhrenturm mit allen drei Wertungen zwischen den übrigen Welten.
 
-**Auch Zeigerarm und Zifferblatt gehen auf Konstanten**: `ZEIGERARM_UMLAUF` (12 s für eine volle
-Runde, immer im Uhrzeigersinn) und `ZIFFERBLATT_TAKT` (10 s, die das Loch auf einer Marke bleibt),
-beide in `src/obstacles_legend.js` und dort nachjustierbar, ohne eine Bahn anzufassen. Je Hindernis
-ändern sich nur Ort, Radius und Phase.
+### Wie die Karten entstehen
 
-**Das Zifferblatt braucht trotzdem ein `H` auf der Karte**, und zwar auf seiner ersten Marke (oben,
-12 Uhr). Sonst hätte die Bahn ohne laufende Uhr kein Ziel und die Bahnprüfung fände keinen Weg
-dorthin. `tools/validate.mjs` besteht darauf und rechnet außerdem nach, dass **jede** Marke auf der
-Bahn liegt: Läge auch nur eine in der Mauer, wäre die Bahn zehn Sekunden lang nicht zu gewinnen –
-und niemand wüsste, warum.
+`tools/uhrenturm.py` baut die zwölf Karten aus Rechtecken und Scheiben und schreibt
+`src/courses_clock.js`. Der Gewinn ist nicht die Tipparbeit, sondern die Prüfung: Das Skript hält
+jede Bahn schon beim Bauen gegen dieselben Regeln, die später `tools/validate.mjs` anlegt, und
+bricht mit einer klaren Meldung ab, wenn ein Punkt danebenliegt, den eine Maschine braucht – der
+Umkehrpunkt eines Pendels, das Ende eines Zahnradfelds, der Landepunkt einer Feder, jede Marke des
+Zifferblatts. Nach jedem Lauf gehören `node tools/validate.mjs` und
+`node tools/audit/audit.mjs clock` dazu.
 
-**Das Kupferrohr erbt sein Verhalten vom Löwentor**, statt es abzuschreiben. Wird am Schlucktempo,
-am Auswurf oder am Notausgang je etwas geändert, ändert sich das Rohr genauso mit. Es teilt sich
-darum auch die Buchstabenpaare `A`/`a`, `B`/`b`, `C`/`c` auf der Karte und lässt sich aus demselben
-Grund wie das Löwentor **nicht im Baumodus setzen** – es braucht zwei Zeichen in der Karte.
+Wiederkehrende Bausteine des Skripts:
 
-Alle drei stehen auch im **Baumodus** in der Werkzeugliste, lassen sich mit dem Drehknopf ausrichten
-und dürfen in geteilten Bahnen vorkommen. `tools/validate.mjs` prüft, was sonst still scheitern
-würde: ein Zahnradfeld ohne Strecke oder mit Enden neben der Bahn, ein Pendel, das nicht ausschlägt
-oder dessen Bogen ins Nichts streicht, ein Federwerk, dessen Landepunkt neben der Bahn liegt. Für
-die Erreichbarkeitsprüfung zählen Zahnradfeld und Federwerk als Übergang – wie Fähre und Kanone.
-
-| Nr. | Testbahn | Par | Wozu |
-|---|---|---|---|
-| 1 | Zahnradfeld | 3 | Zwei Ufer, dazwischen nur Luft. Nur die Räder tragen hinüber. |
-| 2 | Pendelgasse | 3 | Zwei Linsen im selben Takt, um eine halbe Schwingung versetzt. |
-| 3 | Federkammer | 3 | Über die Lücke kommt nur, wer sich einspannen lässt. |
-| 4 | Rohrpost | 3 | Die Mauer hat kein Tor – hinüber führt nur das Rohr, und nur mit Schwung. |
-| 5 | Hemmungsgasse | 3 | Zwei Hemmungen, um einen halben Takt versetzt: Wer die erste erwischt, hat die zweite noch nicht. |
-| 6 | Zeigerscheibe | 3 | Abschlag und Loch liegen knapp außerhalb der Reichweite – dazwischen muss man hindurch. |
-| 7 | Zifferblatt | 4 | Vom Mittelpunkt aus auf ein Loch, das im Uhrzeigersinn weiterwandert. |
-
-Die alten Maschinen der Welt – Zahnradaufzug (`gearlift`), Dampfkolben (`piston`) und Zeiger
-(`hand`) – stehen weiter im Code und im Baumodus, werden von den neuen Bahnen aber nicht mehr
-benutzt.
+- **`pendeltor`** – das Muster der Welt: eine Mauer mit einer einzigen Tür, davor ein Pendel, dessen
+  Linse in Ruhe genau in der Tür hängt und zu beiden Seiten darüber hinausschwingt. Zweimal je
+  Schwingung ist die Tür frei. Alle drei Punkte, die `validate.mjs` prüft (Ruhelage und beide
+  Umkehrpunkte), liegen dabei von selbst auf der Bahn.
+- **`zahnradfeld`, `federwerk`, `zeigerarm`, `hemmung`, `zifferblatt`, `rohr`** – je ein Baustein,
+  der seine eigenen Bedingungen prüft und die fertige JS-Zeile liefert.
 
 
 ## Kostenlos als App aufs iPad oder Handy (GitHub Pages)
