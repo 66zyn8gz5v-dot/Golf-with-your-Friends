@@ -117,7 +117,7 @@ const CLOCK_COURSES = [
   },
   {
     name: 'Rohrpost', par: 4, theme: 'boiler', maxStrokes: 16,
-    intro: 'Die Wand hat kein Tor. Hinüber führt nur das Kupferrohr, und es schluckt nur, wer mit Schwung ankommt – wer zu sacht rollt, prallt am Rohrmund ab. Hinter der Wand wirft es den Ball von oben in die Kesselhalle, wo wieder ein Pendel vor der Tür steht.',
+    intro: 'Die Wand hat kein Tor. Hinüber führt nur das Kupferrohr – und in das kommt man immer, auch ganz sacht. Die Leitung läuft über die Wand hinweg, man sieht den Ball darin fahren und weiß schon vorher, wo er ankommt. Hinter der Wand wirft ihn das Rohrende in die Kesselhalle, wo wieder ein Pendel vor der Tür steht.',
     map: [
       '................................',
       '................................',
@@ -235,7 +235,7 @@ const CLOCK_COURSES = [
   },
   {
     name: 'Kesselhaus', par: 4, theme: 'boiler', maxStrokes: 16,
-    intro: 'Erst durch die Tür, dann mit Schwung ins Rohr – beides will abgepasst sein. In der Kesselhalle wartet die Feder, die als Einzige über die Glut auf das Podest wirft. Und auf dem Podest wandert das Loch zwischen zwei Stellen hin und her: Die helle ist die nächste.',
+    intro: 'Erst durch die Tür, dann ins Rohr – die Tür will abgepasst sein, das Rohr nimmt einen immer. In der Kesselhalle wartet die Feder, die als Einzige über die Glut auf das Podest wirft. Und auf dem Podest wandert das Loch zwischen zwei Stellen hin und her: Die helle ist die nächste.',
     map: [
       '..................................',
       '..................................',
@@ -335,7 +335,7 @@ const CLOCK_COURSES = [
   },
   {
     name: 'Kupferlabyrinth', par: 5, theme: 'boiler', maxStrokes: 20,
-    intro: 'Drei Kammern, und zwischen ihnen führt kein Weg – nur die Rohre. Beide schlucken nur mit Schwung, und zwischen ihnen steht die Hemmung: Man muss also durch die offene Hälfte schießen und gleich danach noch genug Tempo für das zweite Rohr haben. Am Ende wirft die Feder über die letzte Kluft.',
+    intro: 'Drei Kammern, und zwischen ihnen führt kein Weg – nur die Rohre. Hinein kommt man immer; schwer ist, was dazwischen liegt: Zwischen den beiden Leitungen steht die Hemmung, und nur durch die offene Hälfte geht es weiter zum zweiten Rohrmund. Am Ende wirft die Feder über die letzte Kluft.',
     map: [
       '....................................',
       '....................................',

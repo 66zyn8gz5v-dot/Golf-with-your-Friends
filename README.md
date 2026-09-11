@@ -617,14 +617,14 @@ auf 12.
 | 1 | Marktplatz | 3 | Pendel | Die einzige Tür in der Mauer, vor der das Pendel schwingt |
 | 2 | Glockengasse | 3 | Pendel ×2 | Zwei Türen, versetzte Pendel – die eine passt, wenn die andere nicht passt |
 | 3 | Räderwerkstatt | 4 | Zahnradfeld, Pendel | Das Feld hält am Ufer an: einsteigen, tragen lassen |
-| 4 | Rohrpost | 4 | Kupferrohr, Pendel | Mit Schwung in den Rohrmund – zu sacht prallt ab |
+| 4 | Rohrpost | 4 | Kupferrohr, Pendel | Das Rohr nimmt einen immer – man sieht schon vorher, wo es endet |
 | 5 | Hemmwerk | 4 | Hemmung, Pendel, wanderndes Loch | Die offene Hälfte des Ganges, dann die Tür – und dahinter bleibt das Loch nicht liegen |
 | 6 | Federkammer | 4 | Federwerk, Hemmung | Die Feder schwenkt: schießen, wenn der Punkt richtig steht |
 | 7 | Zeigerhof | 3 | Zeigerarm, Zahnradfeld | Hinter dem Zeiger herlaufen, nicht vor ihm |
-| 8 | Kesselhaus | 4 | Pendel, Kupferrohr, Federwerk, wanderndes Loch | Erst durch die Tür, dann mit Rest-Schwung ins Rohr – und auf dem Podest pendelt das Loch |
+| 8 | Kesselhaus | 4 | Pendel, Kupferrohr, Federwerk, wanderndes Loch | Erst durch die Tür, dann ins Rohr – und auf dem Podest pendelt das Loch |
 | 9 | Glockenturm | 5 | Pendel ×2, Hemmung | Drei Takte, von denen keiner zum anderen passt |
 | 10 | Räderschacht | 5 | Zahnradfeld ×2, Zeigerarm, Hemmung, wanderndes Loch | Zwei Felder, ein Zeiger, der die Scheibe leerräumt – und ein Loch, das nicht wartet |
-| 11 | Kupferlabyrinth | 5 | Kupferrohr ×2, Hemmung, Federwerk | Durch die offene Hälfte schießen und noch Tempo fürs zweite Rohr haben |
+| 11 | Kupferlabyrinth | 5 | Kupferrohr ×2, Hemmung, Federwerk | Zwischen den beiden Leitungen steht die Hemmung |
 | 12 | Das große Zifferblatt | 6 | wanderndes Loch (Zifferblatt), Zeigerwerk, Pendel ×2 | Das Loch springt alle zehn Sekunden eine Stundenmarke weiter, und drei Zeiger gehen darüber |
 
 **Die Pars stehen auf dem Bot-Durchlauf.** `node tools/audit/audit.mjs clock` spielt jede Bahn
@@ -780,6 +780,37 @@ darum **Körper statt Scheiben**:
 Gemessen im Prüfstand (weiche Bildausgabe, also strenger als jedes echte Gerät) kostet die
 Schlussbahn mit dem vollen Räderwerk rund fünf Prozent mehr Bildzeit als eine Bahn der Elfenwiese.
 
+### Die Gegenstände am Rand
+
+Die Deko neben der Bahn war lange eine flache Zeichnung im Bildschirmraum: ein Rechteck fürs Fass,
+ein Quadrat für die Kiste, ein Strich für den Laternenpfosten. Von schräg oben sah man ihr das
+sofort an, und beim Drehen der Kamera drehte sie sich nicht mit. Seit Fassung 65 sind die
+Gegenstände am Rand aus denselben Bausteinen gebaut wie Mauern und Türme – `prism` für gerade
+Körper, `frustum` für verjüngte:
+
+- **Fass** – drei Ringe übereinander geben den Bauch, zwei dunkle Eisenreifen halten ihn zusammen,
+  obendrauf der Deckel mit seinen Dauben.
+- **Kiste** – ein Kasten mit Latten auf dem Deckel und einer zweiten, kleineren Kiste schräg
+  obendrauf. Zwei Körper stehen lebendiger als einer.
+- **Standrohr** – Fuß, Schaft mit zwei genieteten Flanschen, ein Bogen nach der Seite, ein rotes
+  Handrad und Dampf aus dem Bogen.
+- **Laterne** – Pfosten mit Fuß, darauf der Käfig aus zwei Kegelstümpfen mit Streben, dazwischen
+  das Licht.
+- **Glocke** – der Turmstuhl ist gebaut: zwei Pfosten mit Füßen, das Joch darüber, zwei Streben.
+- **Turmuhr** – Sockel und Pfosten stehen als Körper in der Welt.
+
+Flach bleibt nur, was keine Seiten hat: Flammen, Dampf, Licht – und die Dinge, die hängen und
+schwingen. Die **Glocke** selbst und das **Zifferblatt** der Turmuhr sind weiter Zeichnungen im
+Bildschirmraum, denn beide sind stehende Scheiben, und die legt diese Projektion immer schief
+(siehe *Was die Projektion mit stehenden Scheiben macht*). Beim Zifferblatt wird die Tiefe deshalb
+gemalt statt gerechnet: derselbe Messingring mehrfach versetzt, von hinten dunkel nach vorn hell.
+
+Ein Fallstrick dabei, an dem der Glockenstuhl zuerst gescheitert ist: Ein Körper, der eine
+Bildschirmzeichnung einfassen soll, darf nicht einfach in Weltrichtung `x` versetzt werden – in
+dieser Projektion wandert er dann schräg weg, und die Pfosten stehen neben der Glocke statt links
+und rechts davon. Der Versatz muss entlang `(cos, −sin)` gehen: Genau der verschiebt auf dem
+Bildschirm waagerecht und sonst gar nicht.
+
 ### Wie die Karten entstehen
 
 `tools/uhrenturm.py` baut die zwölf Karten aus Rechtecken und Scheiben und schreibt
@@ -876,6 +907,24 @@ wieder heraus – immer mit `LOEWENTOR_AUSWURF` in die eingestellte Richtung, ga
 hineinrollte. Damit bleibt planbar, wo er landet. Ist er langsamer, sperrt eine Wand quer vor der
 Toröffnung und er prallt ab. Beide Werte stehen als benannte Konstanten oben in
 `src/obstacles_legend.js` und lassen sich dort nachjustieren.
+
+**Kupferrohr** (`copperpipe`) benutzt dieselben Buchstaben und dasselbe `angle`, ist aber kein Tor,
+sondern eine **Fahrt** – seit Fassung 65 eine eigene Klasse und keine Abwandlung des Löwentors mehr:
+
+- **Man kommt immer hinein.** Kein Mindesttempo, keine Sperre davor. Wer den Rohrmund berührt, fährt
+  mit, auch wer nur hineintröpfelt. Das Rohr ist ein Weg, kein Prüfstein.
+- **Man sieht die Fahrt.** Der Ball verschwindet nicht, sondern fährt sichtbar mit `ROHR_TEMPO`
+  Kacheln je Sekunde durch die Leitung, im Bogen über alles hinweg, was zwischen den beiden Enden
+  liegt (`ROHR_HOEHE`, `ROHR_BOGEN`). Erst am Rohrende wird er mit `LOEWENTOR_AUSWURF` ausgeworfen –
+  die Landestelle bleibt also so planbar wie vorher.
+
+Deshalb ist die Leitung auch gebaut und nicht nur angedeutet: ein Rohr von Mund zu Mund, auf Stützen,
+mit Nietenbändern, und darin ein heller Schein, der mit dem Ball mitläuft. Gezeichnet wird sie in
+Stücken, die einzeln in die Tiefensortierung gehen – sonst läge die ganze Leitung entweder vor oder
+hinter allem, was sie überquert. Man soll vor dem Schlag sehen, wohin sie führt.
+
+Das Löwentor der Arena bleibt davon unberührt: Dort ist das Mindesttempo der Reiz, hier wäre es nur
+im Weg.
 
 Der Eingangsbuchstabe ist begehbarer Boden (er steht dafür in `FLOOR_CHARS`), der Ausgang bewusst
 nicht: Als Nicht-Boden zieht die Bahnmauer von selbst eine Wand davor, und genau das soll ein Ausgang

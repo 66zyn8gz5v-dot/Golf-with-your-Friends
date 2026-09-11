@@ -158,7 +158,8 @@ def wanderloch(k, name, stellen):
 
 def rohr(k, name, paar, grad):
     """Kupferrohr: Die beiden Plaetze stehen als Gross- und Kleinbuchstabe in der Karte. Geprueft
-    wird, dass es beide gibt und dass die Auswurfstelle Bahn ist."""
+    wird, dass es beide gibt und dass die Auswurfstelle Bahn ist. Das Rohr ist eine Fahrt, kein Tor:
+    Man kommt immer hinein, der Ball faehrt sichtbar hindurch und wird am Ende ausgeworfen."""
     gross, klein = paar.upper(), paar.lower()
     ein = aus = None
     for y in range(k.h):
@@ -231,9 +232,10 @@ k.rect(25, 2, 25, 8, 'x'); k.put(25, 5, '#')
 k.put(12, 5, 'A'); k.put(20, 2, 'a')               # Rohrmund und Rohrende
 k.put(4, 5, 'T'); k.put(28, 5, 'H')
 bahn(name='Rohrpost', par=4, theme='boiler', maxStrokes=16, seed=88, dichte=0.12,
-     intro='Die Wand hat kein Tor. Hinüber führt nur das Kupferrohr, und es schluckt nur, wer mit '
-           'Schwung ankommt – wer zu sacht rollt, prallt am Rohrmund ab. Hinter der Wand wirft es den '
-           'Ball von oben in die Kesselhalle, wo wieder ein Pendel vor der Tür steht.',
+     intro='Die Wand hat kein Tor. Hinüber führt nur das Kupferrohr – und in das kommt man immer, '
+           'auch ganz sacht. Die Leitung läuft über die Wand hinweg, man sieht den Ball darin fahren '
+           'und weiß schon vorher, wo er ankommt. Hinter der Wand wirft ihn das Rohrende in die '
+           'Kesselhalle, wo wieder ein Pendel vor der Tür steht.',
      obstacles=[rohr(k, 'Rohrpost', 'A', 90),
                 pendeltor(k, 'Rohrpost', 25.5, 5.5, 2.0)],
      decor=[('lantern', 5.5, 0.6, 1), ('lantern', 21.5, 9.6, 1), ('barrel', 30.8, 5.5, 1),
@@ -297,10 +299,10 @@ k.rect(7, 4, 7, 9, 'x'); k.put(7, 6, '#')          # Tür in der Vorhalle
 k.put(11, 6, 'A'); k.put(17, 2, 'a')
 k.put(3, 6, 'T'); k.put(30, 6, 'H')
 bahn(name='Kesselhaus', par=4, theme='boiler', maxStrokes=16, seed=93, dichte=0.12,
-     intro='Erst durch die Tür, dann mit Schwung ins Rohr – beides will abgepasst sein. In der '
-           'Kesselhalle wartet die Feder, die als Einzige über die Glut auf das Podest wirft. Und '
-           'auf dem Podest wandert das Loch zwischen zwei Stellen hin und her: Die helle ist die '
-           'nächste.',
+     intro='Erst durch die Tür, dann ins Rohr – die Tür will abgepasst sein, das Rohr nimmt einen '
+           'immer. In der Kesselhalle wartet die Feder, die als Einzige über die Glut auf das Podest '
+           'wirft. Und auf dem Podest wandert das Loch zwischen zwei Stellen hin und her: Die helle '
+           'ist die nächste.',
      obstacles=[pendeltor(k, 'Kesselhaus', 7.5, 6.5, 4.0, amp=60),
                 rohr(k, 'Kesselhaus', 'A', 90),
                 federwerk(k, 'Kesselhaus', 20.5, 6.5, 0, rng=9, amp=0.2, speed=0.75),
@@ -357,9 +359,9 @@ k.put(10, 7, 'A'); k.put(16, 2, 'a')
 k.put(22, 7, 'B'); k.put(27, 4, 'b')
 k.put(4, 7, 'T'); k.put(34, 9, 'H')
 bahn(name='Kupferlabyrinth', par=5, theme='boiler', maxStrokes=20, seed=311, dichte=0.12,
-     intro='Drei Kammern, und zwischen ihnen führt kein Weg – nur die Rohre. Beide schlucken nur mit '
-           'Schwung, und zwischen ihnen steht die Hemmung: Man muss also durch die offene Hälfte '
-           'schießen und gleich danach noch genug Tempo für das zweite Rohr haben. Am Ende wirft die '
+     intro='Drei Kammern, und zwischen ihnen führt kein Weg – nur die Rohre. Hinein kommt man immer; '
+           'schwer ist, was dazwischen liegt: Zwischen den beiden Leitungen steht die Hemmung, und '
+           'nur durch die offene Hälfte geht es weiter zum zweiten Rohrmund. Am Ende wirft die '
            'Feder über die letzte Kluft.',
      obstacles=[rohr(k, 'Kupferlabyrinth A', 'A', 90),
                 hemmung(k, 'Kupferlabyrinth', 19, 7.5, ('y', 11)),

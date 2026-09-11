@@ -679,17 +679,76 @@ class SpringWork extends Cannon {
    Kupferrohre und Hemmung – die zweite Lieferung für den Uhrenturm.
    --------------------------------------------------------------------------- */
 
-/* Kupferrohr: die Rohrpost der Stadt. Verhalten ist Zeichen für Zeichen das des Löwentors – zwei
-   Plätze auf der Karte als Groß- und Kleinbuchstabe eines Paares, der Eingang schluckt nur ab
-   LOEWENTOR_TEMPO, wirft mit LOEWENTOR_AUSWURF in Richtung 'angle' wieder aus, ist von außen eine
-   Wand, wenn der Ball zu langsam ankommt, und schiebt einen im Rohrmund liegengebliebenen Ball
-   sanft entgegen seiner Anfahrt wieder heraus.
+/* Kupferrohr: die Rohrpost des Uhrenturms. Es steht wie das Löwentor paarweise in der Karte – der
+   Großbuchstabe ist der Rohrmund, der gleiche Kleinbuchstabe das Rohrende (A/a, B/b) – und wirft am
+   Ende immer mit LOEWENTOR_AUSWURF in die Richtung, die als 'angle' (Grad) daneben steht. So bleibt
+   die Landestelle planbar.
 
-   Darum erbt es dieses Verhalten, statt es abzuschreiben: Wenn am Tempo, am Auswurf oder am
-   Notausgang je etwas geändert wird, soll sich das Rohr genauso ändern. Neu ist allein das
-   Gesicht – Kupfer statt Löwenmaul. */
+   Sonst ist es aber kein Tor, sondern eine Fahrt. Der Unterschied ist wichtig genug für eine eigene
+   Klasse:
+
+   - **Man kommt immer hinein.** Kein Mindesttempo, keine Sperre davor. Wer den Rohrmund berührt,
+     fährt mit – auch wer nur hineintröpfelt. Das Rohr ist ein Weg, kein Prüfstein.
+   - **Man sieht die Fahrt.** Der Ball verschwindet nicht und taucht anderswo wieder auf, sondern
+     fährt sichtbar durch das Rohr: ROHR_TEMPO Kacheln je Sekunde, in einem Bogen über alles hinweg,
+     was zwischen den beiden Enden liegt. Erst am Rohrende wird er ausgeworfen.
+
+   Das Rohr selbst ist darum auch gebaut und nicht nur angedeutet: eine Leitung von Mund zu Mund,
+   auf Stützen, mit Nietenbändern. Man soll auf einen Blick sehen, wohin sie führt, bevor man
+   hineinschießt. */
+const ROHR_TEMPO = 11;           // Kacheln je Sekunde, mit denen der Ball durch das Rohr fährt
+const ROHR_HOEHE = 0.62;         // Höhe der Rohrachse über dem Boden
+const ROHR_BOGEN = 1.1;          // wie weit sich die Leitung in der Mitte hebt
+
 class CopperPipe extends LionGate {
-  constructor(d) { super(d); this.type = 'copperpipe'; }
+  constructor(d) {
+    super(d);
+    this.type = 'copperpipe';
+    this.alwaysForce = false;     // das Rohr liest kein Balltempo ab, es sperrt ja nie
+    this.fahrt = -1;              // 0..1 während einer Fahrt, sonst -1 (für die Zeichnung)
+  }
+  setup(level) {
+    super.setup(level);
+    if (!this.bereit) return;
+    this.len = Math.hypot(this.ax - this.x, this.ay - this.y) || 1;
+    this.dauer = Math.max(0.12, this.len / ROHR_TEMPO);
+  }
+  /* Der Weg durch das Rohr: gerade von Mund zu Mund, in der Mitte angehoben. Der Bogen ist nicht
+     nur Zierde – er hebt die Leitung über Mauern hinweg, die zwischen den Enden stehen. */
+  punkt(u) {
+    return [this.x + (this.ax - this.x) * u, this.y + (this.ay - this.y) * u,
+      ROHR_HOEHE + ROHR_BOGEN * Math.sin(Math.PI * u)];
+  }
+  force() { }                     // kein Tempo ablesen, keine Anfahrt merken
+  segments() { }                  // nie gesperrt: der Rohrmund steht immer offen
+  teleport() { }                  // nichts zu versetzen, der Ball fährt
+  trigger() { }                   // kein Notausgang nötig, liegenbleiben kann hier niemand
+  ride(ball, t, events) {
+    if (!this.bereit) return false;
+    if (ball.rider === this) {
+      const u = Math.min(1, (t - ball.rohrStart) / this.dauer);
+      this.fahrt = u;
+      const [px, py, pz] = this.punkt(u);
+      ball.x = px; ball.y = py; ball.z = pz; ball.vx = 0; ball.vy = 0; ball.vz = 0;
+      if (u < 1) return true;
+      // Am Rohrende absetzen, nicht darin: das Feld des Endes ist Mauer, dort hätte er keinen Boden
+      this.fahrt = -1;
+      ball.rider = null; ball.rideCd = 0.6; ball.portalCd = 0.4;
+      ball.x = this.ax + this.dx * 0.95; ball.y = this.ay + this.dy * 0.95;
+      ball.vx = this.dx * LOEWENTOR_AUSWURF; ball.vy = this.dy * LOEWENTOR_AUSWURF;
+      ball.z = 0; ball.vz = 0; ball.air = false;
+      this.speiAt = t;
+      events.push({ type: 'liongate', x: ball.x, y: ball.y, owner: this });
+      return false;
+    }
+    if (ball.rideCd > 0 || ball.air || ball.portalCd > 0) return false;
+    if (!this.imEingang(ball.x, ball.y) && !this.beruehrtOeffnung(ball)) return false;
+    ball.rider = this; ball.rohrStart = t; this.fahrt = 0; this.schluckAt = t;
+    const [px, py, pz] = this.punkt(0);
+    ball.x = px; ball.y = py; ball.z = pz; ball.vx = 0; ball.vy = 0; ball.vz = 0;
+    events.push({ type: 'board', x: px, y: py });
+    return true;
+  }
 }
 
 /* Hemmung: zwei Sperrklinken nebeneinander in einem Durchlass. Immer ist genau eine Seite frei,

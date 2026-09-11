@@ -606,7 +606,7 @@ Object.assign(Renderer.prototype, {
     ctx.strokeStyle = '#8a7a5a'; ctx.lineWidth = Math.max(1, s * 0.05);
     for (const k of [-0.3, 0.3]) { const q0 = this.proj(ob.x + k * r, ob.y + r * 0.5, 0.15), q1 = this.proj(ob.x + k * r, ob.y + r * 0.1, -0.5); ctx.beginPath(); ctx.moveTo(q0[0], q0[1]); ctx.lineTo(q1[0], q1[1]); ctx.stroke(); }
     for (let i = 0; i < 3; i++) { const u = i / 3; const q0 = this.proj(ob.x - 0.3 * r, ob.y + r * (0.5 - 0.4 * u), 0.15 - 0.65 * u), q1 = this.proj(ob.x + 0.3 * r, ob.y + r * (0.5 - 0.4 * u), 0.15 - 0.65 * u); ctx.beginPath(); ctx.moveTo(q0[0], q0[1]); ctx.lineTo(q1[0], q1[1]); ctx.stroke(); }
-    const [lx, ly] = this.proj(ob.x + r * 0.9, ob.y - r * 0.7, 0); this.spriteLantern(ctx, lx, ly, s * 0.8, t);
+    this.spriteLantern(ctx, { x: ob.x + r * 0.9, y: ob.y - r * 0.7, s: 0.8 }, t);
   },
   /* Schattenfeuer: die violette Glut des Schattenreichs. Durchgang 0: dunkler Grund, der über alle Kacheln
      gleichmäßig wogt. Durchgang 1 (nach allen Grundflächen): wabernde Glutkerne, die über die Kachelränder
@@ -1583,6 +1583,36 @@ Object.assign(Renderer.prototype, {
      getrennt einsortiert und beide von hier gezeichnet – 'ausgang' sagt, welcher gerade dran ist.
      Der Mund ist eine dunkle Scheibe in der Stirnfläche: So sieht man von jeder Kameradrehung aus,
      dass das Rohr offen ist und wohin es zeigt. */
+  /* Die Leitung zwischen den beiden Rohrenden, in Stücke zerlegt. Jedes Stück wird für sich in die
+     Tiefensortierung gegeben, sonst läge die ganze Leitung entweder vor oder hinter allem, was sie
+     überquert. Alle drei Stücke steht eine Stütze und sitzt ein Nietenband – daran sieht man, wie
+     schnell der Ball gerade fährt, und ohne sie wäre es nur ein glattes Rohr. */
+  drawPipeStueck(ctx, ob, i, n, t) {
+    const s = this.scale;
+    const [ax, ay, az] = ob.punkt(i / n), [bx, by, bz] = ob.punkt((i + 1) / n);
+    const r = 0.34;
+    // Stütze: ein Pfosten vom Boden bis unter die Leitung, mit Fuß
+    if (i % 3 === 1 && i > 0 && i < n - 1) {
+      this.prism(ctx, this.circlePoly(ax, ay, 0.19, 8), 0, az - r * 0.8, '#7a5326', '#43301a', { outline: '#241708' });
+      this.prism(ctx, this.circlePoly(ax, ay, 0.3, 10), 0, 0.1, '#8a6132', '#43301a', { outline: '#241708' });
+    }
+    this.walze(ctx, ax, ay, bx, by, (az + bz) / 2, r, '#e08b4c', '#8a4a1e', { n: 10, outline: '#3a1c08' });
+    if (i % 3 === 0) this.walze(ctx, ax, ay, ax + (bx - ax) * 0.16, ay + (by - ay) * 0.16, az, r * 1.13, '#c9762f', '#7d4416', { n: 10 });
+    /* Fährt gerade ein Ball darin, läuft ein heller Schein mit ihm durch das Rohr. Der Ball selbst
+       ist schon zu sehen – der Schein sagt zusätzlich, wo im Rohr er steckt, auch wenn eine Mauer
+       davorsteht. */
+    if (ob.fahrt >= 0) {
+      const u0 = i / n, u1 = (i + 1) / n;
+      if (ob.fahrt >= u0 - 0.06 && ob.fahrt <= u1 + 0.06) {
+        const [gx, gy, gz] = ob.punkt(ob.fahrt);
+        const p = this.proj(gx, gy, gz);
+        const g = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], s * 0.75);
+        g.addColorStop(0, 'rgba(255,232,180,0.75)'); g.addColorStop(1, 'rgba(255,200,120,0)');
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p[0], p[1], s * 0.75, 0, TAU); ctx.fill();
+      }
+    }
+  },
+
   drawCopperPipe(ctx, ob, t, ausgang) {
     const s = this.scale;
     const cx = ausgang ? ob.ax : ob.x, cy = ausgang ? ob.ay : ob.y;
