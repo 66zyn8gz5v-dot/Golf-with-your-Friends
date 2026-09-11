@@ -98,7 +98,7 @@ const CLOCK_COURSES = [
       '................................',
     ],
     obstacles: [
-      { type: 'gearfield', x0: 11.5, y0: 5.5, x1: 19.5, y1: 5.5, wait: 2.2, travel: 3.2, r: 0.9, zaehne: 10, phase: 0 },
+      { type: 'gearfield', x0: 11.5, y0: 5.5, x1: 19.5, y1: 5.5, wait: 2.8, travel: 3.2, r: 0.9, zaehne: 10, phase: 0 },
       { type: 'pendulum', x: 25.5, y: 2, len: 3.5, amp: 60, ruhe: 90, phase: 0.35, w: 1.2, h: 1.2 },
     ],
     decor: [
@@ -196,7 +196,7 @@ const CLOCK_COURSES = [
     autoDecor: { density: 0.12, seed: 61 },
   },
   {
-    name: 'Zeigerhof', par: 5, theme: 'clocktown', maxStrokes: 20,
+    name: 'Zeigerhof', par: 4, theme: 'clocktown', maxStrokes: 16,
     intro: 'Der runde Hof unter dem großen Zeiger. Er braucht zwölf Sekunden für eine Runde und schiebt alles vor sich her, was auf dem Pflaster liegt – hinüber kommt man nur hinter ihm her. Am anderen Rand tragen die Zahnräder auf das Podest.',
     map: [
       '................................',
@@ -228,7 +228,7 @@ const CLOCK_COURSES = [
     autoDecor: { density: 0.1, seed: 5 },
   },
   {
-    name: 'Kesselhaus', par: 5, theme: 'boiler', maxStrokes: 20,
+    name: 'Kesselhaus', par: 4, theme: 'boiler', maxStrokes: 16,
     intro: 'Erst durch die Tür, dann mit Schwung ins Rohr – beides will abgepasst sein. In der Kesselhalle wartet die Feder, die als Einzige über die Glut auf das Podest wirft.',
     map: [
       '..................................',
@@ -292,7 +292,7 @@ const CLOCK_COURSES = [
     autoDecor: { density: 0.1, seed: 145 },
   },
   {
-    name: 'Räderschacht', par: 6, theme: 'escapement', maxStrokes: 24,
+    name: 'Räderschacht', par: 5, theme: 'escapement', maxStrokes: 20,
     intro: 'Zwei Zahnradfelder, dazwischen die Scheibe unter dem Zeiger. Beide Felder halten nur kurz an, und der Zeiger räumt die Scheibe alle zwölf Sekunden einmal leer. Am Ausstieg teilt die Hemmung den Weg zum Loch.',
     map: [
       '....................................',
@@ -326,7 +326,7 @@ const CLOCK_COURSES = [
     autoDecor: { density: 0.1, seed: 207 },
   },
   {
-    name: 'Kupferlabyrinth', par: 6, theme: 'boiler', maxStrokes: 24,
+    name: 'Kupferlabyrinth', par: 5, theme: 'boiler', maxStrokes: 20,
     intro: 'Drei Kammern, und zwischen ihnen führt kein Weg – nur die Rohre. Beide schlucken nur mit Schwung, und zwischen ihnen steht die Hemmung: Man muss also durch die offene Hälfte schießen und gleich danach noch genug Tempo für das zweite Rohr haben. Am Ende wirft die Feder über die letzte Kluft.',
     map: [
       '....................................',

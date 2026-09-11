@@ -170,7 +170,7 @@ k.put(4, 5, 'T'); k.put(28, 5, 'H')
 bahn(name='Räderwerkstatt', par=4, theme='clocktown', maxStrokes=16, seed=44, dichte=0.12,
      intro='Zwischen den Hallen liegt nichts als Luft; hinüber tragen nur die Zahnräder. Sie halten an '
            'jedem Ufer kurz an – das ist der Moment zum Einsteigen. Drüben wartet noch ein Pendel.',
-     obstacles=[zahnradfeld(k, 'Räderwerkstatt', 11.5, 5.5, 19.5, 5.5),
+     obstacles=[zahnradfeld(k, 'Räderwerkstatt', 11.5, 5.5, 19.5, 5.5, wait=2.8),
                 pendeltor(k, 'Räderwerkstatt', 25.5, 5.5, 2.0, phase=0.35)],
      decor=[('clock', 15, 0.5, 2.0), ('lantern', 5.5, 0.6, 1), ('lantern', 27.5, 0.6, 1),
             ('gearFlat', 15, 9.5, 1.6), ('crate', 0.9, 5.5, 1)],
@@ -229,7 +229,7 @@ k.rect(2, 6, 9, 8)                                 # Gasse zum Hof
 k.scheibe(16, 7.5, 6)                              # der runde Hof
 k.rect(26, 6, 29, 9)                               # Podest mit dem Loch
 k.put(4, 7, 'T'); k.put(28, 7, 'H')
-bahn(name='Zeigerhof', par=5, theme='clocktown', maxStrokes=20, seed=5, dichte=0.1,
+bahn(name='Zeigerhof', par=4, theme='clocktown', maxStrokes=16, seed=5, dichte=0.1,
      intro='Der runde Hof unter dem großen Zeiger. Er braucht zwölf Sekunden für eine Runde und '
            'schiebt alles vor sich her, was auf dem Pflaster liegt – hinüber kommt man nur hinter '
            'ihm her. Am anderen Rand tragen die Zahnräder auf das Podest.',
@@ -248,7 +248,7 @@ k.rect(27, 4, 31, 9)                               # Podest
 k.rect(7, 4, 7, 9, 'x'); k.put(7, 6, '#')          # Tür in der Vorhalle
 k.put(11, 6, 'A'); k.put(17, 2, 'a')
 k.put(3, 6, 'T'); k.put(30, 6, 'H')
-bahn(name='Kesselhaus', par=5, theme='boiler', maxStrokes=20, seed=93, dichte=0.12,
+bahn(name='Kesselhaus', par=4, theme='boiler', maxStrokes=16, seed=93, dichte=0.12,
      intro='Erst durch die Tür, dann mit Schwung ins Rohr – beides will abgepasst sein. In der '
            'Kesselhalle wartet die Feder, die als Einzige über die Glut auf das Podest wirft.',
      obstacles=[pendeltor(k, 'Kesselhaus', 7.5, 6.5, 4.0, amp=60),
@@ -280,7 +280,7 @@ k.rect(2, 5, 8, 10)                                # Einstieg
 k.scheibe(17, 7.5, 5.5)                            # Zwischenscheibe unter dem Zeiger
 k.rect(27, 4, 33, 11)                              # Ausstieg
 k.put(4, 7, 'T'); k.put(32, 8, 'H')
-bahn(name='Räderschacht', par=6, theme='escapement', maxStrokes=24, seed=207, dichte=0.1,
+bahn(name='Räderschacht', par=5, theme='escapement', maxStrokes=20, seed=207, dichte=0.1,
      intro='Zwei Zahnradfelder, dazwischen die Scheibe unter dem Zeiger. Beide Felder halten nur '
            'kurz an, und der Zeiger räumt die Scheibe alle zwölf Sekunden einmal leer. Am Ausstieg '
            'teilt die Hemmung den Weg zum Loch.',
@@ -303,7 +303,7 @@ k.rect(32, 4, 34, 10)                              # Kammer C, jenseits
 k.put(10, 7, 'A'); k.put(16, 2, 'a')
 k.put(22, 7, 'B'); k.put(27, 4, 'b')
 k.put(4, 7, 'T'); k.put(34, 9, 'H')
-bahn(name='Kupferlabyrinth', par=6, theme='boiler', maxStrokes=24, seed=311, dichte=0.12,
+bahn(name='Kupferlabyrinth', par=5, theme='boiler', maxStrokes=20, seed=311, dichte=0.12,
      intro='Drei Kammern, und zwischen ihnen führt kein Weg – nur die Rohre. Beide schlucken nur mit '
            'Schwung, und zwischen ihnen steht die Hemmung: Man muss also durch die offene Hälfte '
            'schießen und gleich danach noch genug Tempo für das zweite Rohr haben. Am Ende wirft die '

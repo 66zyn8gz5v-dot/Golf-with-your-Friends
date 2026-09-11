@@ -611,12 +611,19 @@ erst ab Bahn 5 – und beide bewusst nicht auf jeder Bahn, damit sie nicht zur G
 | 4 | Rohrpost | 4 | Kupferrohr, Pendel | Mit Schwung in den Rohrmund – zu sacht prallt ab |
 | 5 | Hemmwerk | 4 | Hemmung, Pendel | Die offene Hälfte des Ganges, dann die Tür |
 | 6 | Federkammer | 4 | Federwerk, Hemmung | Die Feder schwenkt: schießen, wenn der Punkt richtig steht |
-| 7 | Zeigerhof | 5 | Zeigerarm, Zahnradfeld | Hinter dem Zeiger herlaufen, nicht vor ihm |
-| 8 | Kesselhaus | 5 | Pendel, Kupferrohr, Federwerk | Erst durch die Tür, dann mit Rest-Schwung ins Rohr |
+| 7 | Zeigerhof | 4 | Zeigerarm, Zahnradfeld | Hinter dem Zeiger herlaufen, nicht vor ihm |
+| 8 | Kesselhaus | 4 | Pendel, Kupferrohr, Federwerk | Erst durch die Tür, dann mit Rest-Schwung ins Rohr |
 | 9 | Glockenturm | 5 | Pendel ×2, Hemmung | Drei Takte, von denen keiner zum anderen passt |
-| 10 | Räderschacht | 6 | Zahnradfeld ×2, Zeigerarm, Hemmung | Zwei Felder und ein Zeiger, der die Scheibe leerräumt |
-| 11 | Kupferlabyrinth | 6 | Kupferrohr ×2, Hemmung, Federwerk | Durch die offene Hälfte schießen und noch Tempo fürs zweite Rohr haben |
+| 10 | Räderschacht | 5 | Zahnradfeld ×2, Zeigerarm, Hemmung | Zwei Felder und ein Zeiger, der die Scheibe leerräumt |
+| 11 | Kupferlabyrinth | 5 | Kupferrohr ×2, Hemmung, Federwerk | Durch die offene Hälfte schießen und noch Tempo fürs zweite Rohr haben |
 | 12 | Das große Zifferblatt | 6 | Zifferblatt, Zeigerarm, Pendel ×2 | Das Loch springt alle zehn Sekunden eine Stundenmarke weiter |
+
+**Die Pars stehen auf dem Bot-Durchlauf.** `node tools/audit/audit.mjs clock` spielt jede Bahn
+sechsmal mit einem Normalspieler und sucht dazu die beste Lösung. Gewertet wurde danach: Par ist
+grob die beste Lösung plus zwei, bei den schweren Bahnen plus drei, und nie unter dem, was ein
+mittlerer Spieler braucht. Zusammen ergibt das Par 51 für die ganze Welt, während die Bots im
+Median bei 50 landen – der Weltpreis ist damit erreichbar, aber nicht geschenkt. Keine Bahn hat im
+Durchlauf ihr Schlaglimit erreicht, und keine hat einen Hazard.
 
 **Der Weltpreis** ist die **Taschenuhr** (`pocketwatch`) – eine Kugel mit durchbrochenem Zifferblatt,
 laufenden Rädern, schwingender Unruh und der Aufzugkrone obendrauf. Sie hängt an derselben Regel
