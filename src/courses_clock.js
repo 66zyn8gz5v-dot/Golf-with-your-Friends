@@ -453,7 +453,7 @@ const CLOCK_COURSES = [
   },
   {
     name: 'Räderschacht', par: 6, theme: 'escapement', maxStrokes: 22,
-    intro: 'In die Endkammer führt unten keine Tür. Erst über die Zahnräder auf die Scheibe, dort am Zeiger vorbei auf die Zahnstange – und oben über den schmalen Steg ohne Geländer. Wer zu weit rollt, fällt seitlich hinunter; wer weit genug kommt, fällt am Ende genau in die Kammer. Dort wandert das Loch zwischen drei Stellen.',
+    intro: 'In die Endkammer führt unten keine Tür. Erst über die Zahnräder auf die Scheibe, dort am Zeiger vorbei auf die Zahnstange – und oben über den Steg. Sein letztes Stück hat kein Geländer mehr, und genau dort liegt die Kammer darunter: Dort lässt man sich fallen. Unten wandert das Loch zwischen drei Stellen.',
     map: [
       '..........................................',
       '..........................................',
@@ -484,8 +484,8 @@ const CLOCK_COURSES = [
         '..........................................',
         '..........................................',
         '..........................................',
-        '....................#####ooooooooooo......',
-        '....................#####ooooooooooo......',
+        '....................############oooo......',
+        '....................############oooo......',
         '..........................................',
         '..........................................',
         '..........................................',

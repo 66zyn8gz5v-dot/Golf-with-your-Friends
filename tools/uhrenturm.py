@@ -432,12 +432,13 @@ k.rect(32, 5, 39, 13)                              # Endkammer - von unten gibt 
 k.put(4, 9, 'T')
 o = Karte(42, 17)                                  # der Steg darueber
 o.rect(20, 9, 24, 10)                              # kleine Aufsetzflaeche ueber der Scheibe
-o.rect(25, 9, 35, 10, 'o')                         # schmaler Steg ohne Gelaender
+o.rect(25, 9, 31, 10)                              # Steg mit Gelaender - darunter ist nichts
+o.rect(32, 9, 35, 10, 'o')                         # erst ueber der Endkammer faellt das Gelaender weg
 bahn(name='Räderschacht', par=6, theme='escapement', maxStrokes=22, seed=207, dichte=0.1,
      intro='In die Endkammer führt unten keine Tür. Erst über die Zahnräder auf die Scheibe, dort am '
-           'Zeiger vorbei auf die Zahnstange – und oben über den schmalen Steg ohne Geländer. Wer '
-           'zu weit rollt, fällt seitlich hinunter; wer weit genug kommt, fällt am Ende genau in die '
-           'Kammer. Dort wandert das Loch zwischen drei Stellen.',
+           'Zeiger vorbei auf die Zahnstange – und oben über den Steg. Sein letztes Stück hat kein '
+           'Geländer mehr, und genau dort liegt die Kammer darunter: Dort lässt man sich fallen. '
+           'Unten wandert das Loch zwischen drei Stellen.',
      obstacles=[zahnradfeld(k, 'Räderschacht', 11.5, 9.5, 15.5, 9.5, wait=2.2, travel=2.6),
                 zeigerarm(k, 'Räderschacht', 21, 9.5, r=5, phase=0.25),
                 zahnstange(k, o, 'Räderschacht', 21.5, 9.5),
