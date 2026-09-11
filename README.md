@@ -633,7 +633,7 @@ auf 13.
 | 10 | Glockenturm | 42×17 | 5 | Pendel, Hemmung, Aufzug, Luke | Drei Takte, von denen keiner zum anderen passt – und die Glockenstube liegt eine Etage höher |
 | 11 | Räderschacht | 42×17 | 6 | Zahnradfeld, Zeigerarm, Zahnstange, wanderndes Loch | In die Endkammer führt unten keine Tür; hinein kommt nur, wer vom Steg ohne Geländer fällt |
 | 12 | Kupferlabyrinth | 42×17 | 6 | Kupferrohr ×3 (zwei davon zwischen Ebenen), Hemmung | Drei Kammern übereinander, verbunden allein durch Rohre |
-| 13 | Der Rohrturm | 42×19 | 6 | Kupferrohr ×3 (zwei zwischen Ebenen), Luke, weit gestapelte Etagen | Das Loch liegt auf der mittleren Etage – hinein kommt man nur von oben, durch die Luke im Steg |
+| 13 | Der Rohrturm | 42×19 | 6 | Kupferrohr ×6, Luke, weit gestapelte Etagen | Sieben kleine Inseln, keine berührt die andere – und das Loch liegt auf der mittleren Etage |
 | 14 | Das große Zifferblatt | 36×26 | 6 | Turbine, Zifferblatt, Zeigerwerk, Zeigerarm, Pendel ×3 | Vom Steg auf das Blatt fallen lassen – und wo man sich fallen lässt, entscheidet alles |
 
 **Warum die Welt neu gebaut wurde.** Die erste Fassung hatte zwölf flache Bahnen plus eine
@@ -760,6 +760,19 @@ und auf der obersten Ebene hat eine Turbine nichts verloren. Für Luken dasselbe
 müssen auf ihrer Ebene auf der Bahn liegen (zu wären sie sonst kein Boden), dürfen nicht auf der
 untersten Ebene sitzen, und unter ihnen muss irgendwo Boden sein – sonst wäre die Luke ein Sturz
 ins Aus, und das wäre eine Falltür und keine Luke.
+
+**Der Rohrturm** treibt beides auf die Spitze. Sieben kleine Inseln, keine berührt die andere, und
+dazwischen gibt es nichts als sechs Kupferleitungen – auf dem Abschlagsfleck führt genau ein Weg
+weg, und das ist der Rohrmund. Dafür kennt die Karte jetzt **sechs** Buchstabenpaare (`A`/`a` bis
+`F`/`f`) statt drei; die Großbuchstaben sind begehbar, die Kleinbuchstaben Mauer. Zwei Leitungen
+bleiben auf ihrer Ebene, eine springt von ganz unten auf den obersten Steg, eine verbindet die
+beiden Stege oben, eine die beiden Galerien in der Mitte, und die letzte bringt von der Lochgalerie
+wieder hinauf. Das Loch liegt auf der mittleren Etage, und hinauf führt dorthin nichts: Man kommt
+nur von oben hinein, durch die Luke im Steg.
+
+Dabei fiel ein Loch in der Bahnprüfung auf: Ein Rohr, das auf **seiner** Ebene bleibt, zählte gar
+nicht als Verbindung – die Portalrechnung sieht nur die unterste Karte. Eine Insel, zu der nur so
+ein Rohr führt, hätte als unerreichbar gegolten. Jetzt zählen alle Rohre auf allen Ebenen.
 
 **Warum der Kettenzug wieder weg ist.** Bis Fassung 73 stand an der Stelle des Aufzugs ein
 Kettenzug: Haken an einer umlaufenden Kette, die nur für einen Augenblick unten stehen. Wer die
@@ -993,7 +1006,7 @@ Höhenstufen: Eine Bahn kann ein Ziffernraster `heights` (0–9) und `hStep` ang
 Hindernis-Typen: `lightning` (Blitzfeld `w`×`h`: `warn` Sekunden Knistern, dann `strike` Sekunden Einschlag je `period`; wer dann in der Zone ist, auch fliegend, kassiert einen Strafschlag zurück zum Schlagstart), `updraft` (Aufwind-Zone: ein Ball mit mindestens `minSpeed` wird in Rollrichtung `land` Kacheln weit geflogen, Flugtempo `fly`), `trapdoor` (Falltür `w`×`h`, offen für den `open`-Anteil der `period`; wer darüberrollt oder darauf liegt, stürzt: Strafschlag zurück zum Schlagstart), `wandergate` (wanderndes Tor: Mauer mit gleitendem Durchlass, s. o.), `firetower` (Feuerturm: ein Feuerstrahl streicht über einen Bereich der Bahn und wieder zurück, s. o.), `imperialbox` (Kaiserloge: der Daumen des Kaisers öffnet und schließt eine Falltür, s. o.), `field` mit `style: 'dark'` (Schattenzone: der Ball ist darin fast unsichtbar), `bumper` (`style`: `mushroom`, `rock`, `crystal`, `coral`, `idol`, `orb`, `grave`, `eye`), `mover` (`style` u. a. `cart`, `cannonball`, `boulder`, `barrel`, `shark`, `wave`, `dragon`, `knight`, `gladiator` (dieselbe Figur wie der Ritter, nur in Sandfarben und Rot – Helm mit rotem Kamm und Rundschild), `guard`, `coconut`, `ghost`, `bat`, `stormcloud`), `ferry` (`style`: `cart`, `chariot` (Streitwagen – dieselbe Lore, nur anders gezeichnet: die Räder drehen sich nach dem Fahrfortschritt, sie stehen also still, solange der Wagen wartet), `boat`, `ship`, `balloon`, `airship`), `wave` (wandernde Welle, keine Mauer: schiebt einen ruhenden oder langsamen Ball mit `push` in ihrer Laufrichtung mit; ein schnellerer Ball bricht hindurch und behält dabei nur den Anteil `brake` seines Tempos), `spikes` (Stachelfalle: Platte `w`×`h`, Stacheln sind `up`-Anteil der `period` draußen und blockieren dann wie eine Mauer; ein Ball, der auf der Platte liegt, wenn sie hochkommen, wird aufgespießt: Strafschlag und zurück zum Start des letzten Schlags), `sharkjump` (Hai, der im Takt `period` quer über eine Bucht springt; `style: 'croc'` zeichnet ein Krokodil und einen Ball frisst, der währenddessen über die Zone fliegt; Fressen kostet einen Strafschlag – eine `inner`-Map mit `stomach: true` würde den Ball stattdessen dorthin schicken), `rotor` (auch als Pendel mit `swing`; `style: 'tentacle'` macht daraus eine Krake, `style: 'vine'` eine Liane), `windmill`, `gate` (periodisch oder mit `linked` an einen Schalter gekoppelt), `portal`, `boost`, `field`, `ramp`, `rail`, `wall`, `cannon` (schwenkende Kanone, `base`/`amp`/`speed`/`range`; `style: 'catapult'` zeichnet ein Katapult), `magnet` (`strength` > 0 zieht an, < 0 stößt ab, `slow` bremst; `style: 'coral'` zeichnet eine Koralle, `style: 'pearl'` eine Perle; `curse: 2.0` macht den Ball nach Berührung für den Rest der Bahn träge), `turntable` (Drehscheibe mit Auswurfrinne `exit` in Grad; `style: 'whirl'` zeichnet einen Strudel), `field` (`style`: `wind`, `current` für Unterwasser-Strömung, `slope` für Rampen zwischen Höhenstufen; `gust` macht aus Dauerwind Windstöße), `potion` (Schrumpftrank, `scale`/`duration`), `cauldron` (Hexentopf: nur aus der Luft zu treffen, schrumpft und spuckt Richtung `exit` aus), `switch` (Druckplatte, `target`/`duration`), `door` (Tür in die Innen-Map `inner` einer Bahn; `style: 'pyramid'` mit `px`/`py`/`base` zeichnet eine Stufenpyramide um die Tür, `style: 'wreck'` mit `px`/`py` ein Schiffswrack, dessen Leck die Tür ist, `style: 'temple'` ein Tempeltor).
 **Löwentor** (`liongate`): das einzige Hindernis, dessen Plätze nicht in der Hindernisliste stehen,
 sondern als Buchstaben in der Karte. Der Großbuchstabe ist der Eingang, der gleiche Kleinbuchstabe der
-Ausgang – `A`/`a`, `B`/`b`, `C`/`c`, mehrere Paare je Bahn erlaubt. In der Hindernisliste steht je Paar
+Ausgang – `A`/`a` bis `F`/`f`, also sechs Paare je Bahn (der Rohrturm braucht sie alle). In der Hindernisliste steht je Paar
 nur `{ type: 'liongate', pair: 'A', angle: 0 }`: `angle` (Grad, wie bei Rampe und Beschleuniger) sagt,
 in welche Richtung der Ausgang ausspuckt.
 

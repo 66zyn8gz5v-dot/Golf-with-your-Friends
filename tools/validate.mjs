@@ -7,9 +7,10 @@ const GLOBAL = { courses_pro: 'PRO_COURSES', courses_sea: 'SEA_COURSES', courses
 const load = f => vm.runInContext(fs.readFileSync(new URL(`../src/${f}.js`, import.meta.url), 'utf8') + `\n;${GLOBAL[f] || f.toUpperCase()}`, ctx);
 // Reihenfolge wie in index.html: courses_pro.js baut die Weltliste und braucht die anderen schon
 const THEMES = load('themes'), COURSES = load('courses'), SEA = load('courses_sea'), JUNGLE = load('courses_jungle'), STORM = load('courses_storm'), SHADOW = load('courses_shadow'), COLOSSEUM = load('courses_colosseum'), CLOCK = load('courses_clock'), PRO = load('courses_pro');
-// A, B, C sind die Eingänge der Löwentore und begehbar; ihre Ausgänge (a, b, c) sind Mauer.
-const FLOOR = new Set(['#', 's', 'i', 'w', 'l', 'T', 'H', 'o', 'A', 'B', 'C']);
-const TOR_PAARE = ['A', 'B', 'C'];
+// A bis F sind die Eingänge der Löwentore und Kupferrohre und begehbar; ihre Ausgänge (a bis f)
+// sind Mauer.
+const FLOOR = new Set(['#', 's', 'i', 'w', 'l', 'T', 'H', 'o', 'A', 'B', 'C', 'D', 'E', 'F']);
+const TOR_PAARE = ['A', 'B', 'C', 'D', 'E', 'F'];
 let ok = true;
 const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, world }]; let d = c.inner, n = 1; while (d) { out.push({ ...d, par: c.par, name: `${c.name} (innen${n > 1 ? ' ' + n : ''})`, world }); d = d.inner; n++; } return out; });
 [...COURSES.map(c => ({ ...c, world: 'Märchenland' })), ...withInner(SEA, 'Meereswelt'), ...withInner(JUNGLE, 'Dschungel'), ...withInner(STORM, 'Sturmhimmel'), ...withInner(SHADOW, 'Schattenreich'), ...withInner(COLOSSEUM, 'Kolosseum'), ...withInner(CLOCK, 'Uhrwerkstadt'), ...PRO.flatMap(c => c.inner ? [{ ...c, world: 'Profi' }, { ...c.inner, par: c.par, name: `${c.name} (innen)`, world: 'Profi' }] : [{ ...c, world: 'Profi' }])].forEach((c, i) => {
@@ -46,7 +47,7 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
      Auswurfrichtung wüsste nicht, wohin er den Ball spuckt. */
   const torZaehler = {};
   // ueber alle Ebenen: Ein Kupferrohr darf seinen Mund unten und sein Ende eine Etage hoeher haben
-  karten.forEach(km => km.forEach(r => [...r].forEach(ch => { if ('ABCabc'.includes(ch)) torZaehler[ch] = (torZaehler[ch] || 0) + 1; })));
+  karten.forEach(km => km.forEach(r => [...r].forEach(ch => { if ('ABCDEFabcdef'.includes(ch)) torZaehler[ch] = (torZaehler[ch] || 0) + 1; })));
   for (const [ch, n] of Object.entries(torZaehler)) if (n > 1) problems.push(`Zeichen ${ch} steht ${n}-mal auf der Karte – jedes Löwentor-Zeichen darf nur einmal vorkommen`);
   for (const gross of TOR_PAARE) {
     const klein = gross.toLowerCase(), hatEin = !!torZaehler[gross], hatAus = !!torZaehler[klein];
@@ -367,7 +368,9 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
     }
     for (const o of (c.obstacles || []).filter(o => o.type === 'copperpipe')) {
       const von = o.ebene || 0, nach = o.ziel == null ? von : o.ziel;
-      if (nach === von) continue;               // Rohr auf derselben Ebene: kein Aufstieg
+      // Auch ein Rohr, das auf seiner Ebene bleibt, ist eine Verbindung - und auf einer oberen
+      // Ebene die einzige, die die Erreichbarkeitsrechnung kennt (die Portale unten sehen nur
+      // die unterste Karte). Ohne das gaelte eine Insel, zu der nur ein Rohr fuehrt, als tot.
       const g = String(o.pair || '').toUpperCase(), k = g.toLowerCase();
       let ein = null, aus = null;
       (karten[von] || []).forEach((r, y) => [...r].forEach((ch, x) => { if (ch === g) ein = [x, y]; }));

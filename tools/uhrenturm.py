@@ -13,8 +13,8 @@ vorbeifuehrt - eine Tuer, eine Luecke, ein Rohr. Kraft allein hilft nirgends.
 """
 import math, os
 
-FLOOR = set('#silwTHoABC')          # was der Ball betreten darf (wie in validate.mjs)
-HART = set('#siTHoABC')             # davon das, worauf er auch liegen bleiben kann
+FLOOR = set('#silwTHoABCDEF')       # was der Ball betreten darf (wie in validate.mjs)
+HART = set('#siTHoABCDEF')          # davon das, worauf er auch liegen bleiben kann
 
 class Karte:
     def __init__(self, w, h):
@@ -478,40 +478,54 @@ bahn(name='Kupferlabyrinth', par=6, theme='boiler', maxStrokes=22, seed=311, dic
      map=k.rows(), ebenen=[o.rows(), p2.rows()])
 
 # ---------------------------------------------------------------- 13 Der Rohrturm (nur Rohre, weit gestapelt)
-# Die einzige Bahn mit weit auseinanderliegenden Etagen (ebeneZ 4,2 statt 2,0). Zwischen ihnen ist
-# nichts als Luft und das Kupferrohr, das hindurchsteigt - man soll dem Rohr mit den Augen folgen
-# koennen. Das Loch liegt auf der MITTLEREN Etage, und dorthin fuehrt kein Aufstieg: Das Rohr geht
-# von ganz unten gleich auf die oberste, und von da faellt man durch die Luke eine Etage zurueck.
-k = Karte(42, 19)                                  # Ebene 0: die Halle
-k.rect(2, 6, 16, 15)                               # Kammer A mit dem Abschlag
-k.rect(20, 4, 33, 16)                              # Kammer B - nur durch das erste Rohr zu erreichen
-k.put(16, 10, 'A'); k.put(26, 4, 'a')              # Rohr A: quer hinueber, gleiche Ebene
-k.put(33, 10, 'B')                                 # Rohr B: von hier steigt es bis ganz nach oben
-k.put(4, 10, 'T')
+# Die Bahn der kleinen Inseln: sieben Stueck, keine beruehrt die andere, und zwischen ihnen gibt es
+# nichts als sechs Kupferleitungen. Der Abschlag steht mit Absicht auf der kleinsten Insel - es gibt
+# dort genau einen Weg, und das ist der Rohrmund.
+#
+# Die Etagen liegen weit auseinander (ebeneZ 4,2 statt 2,0), damit man sieht, dass dazwischen nichts
+# ist ausser dem Rohr, das hindurchsteigt. Das Loch liegt auf der MITTLEREN Etage, und dorthin
+# fuehrt kein Aufstieg: Die Leitung springt von ganz unten gleich auf die oberste, und von da faellt
+# man durch die Luke eine Etage zurueck.
+k = Karte(42, 19)                                  # Ebene 0: drei Inseln
+k.rect(3, 9, 7, 13)                                # die Abschlaginsel, fuenf auf fuenf
+k.rect(11, 6, 17, 12)                              # Kesselinsel
+k.rect(21, 9, 27, 15)                              # Steiginsel
+k.put(3, 11, 'T')
+k.put(7, 11, 'A'); k.put(13, 6, 'a')               # Rohr A: Abschlag -> Kesselinsel
+k.put(17, 9, 'B'); k.put(21, 12, 'b')              # Rohr B: Kesselinsel -> Steiginsel
+k.put(27, 12, 'C')                                 # Rohr C: von hier in einem Zug ganz nach oben
 
-o1 = Karte(42, 19)                                 # Ebene 1: nur die Galerie mit dem Loch
-o1.rect(22, 8, 34, 12)
-o1.put(32, 10, 'H')
-o1.put(34, 10, 'C')                                # Rohr C: von der Galerie wieder hinauf auf den Steg
+o1 = Karte(42, 19)                                 # Ebene 1: zwei Galerien, auf der zweiten das Loch
+o1.rect(31, 4, 38, 10)                             # Fanggalerie - hier kommt man durch die Luke an
+o1.rect(22, 10, 30, 16)                            # Lochgalerie
+o1.put(31, 7, 'E'); o1.put(30, 11, 'e')            # Rohr E: Fanggalerie -> Lochgalerie
+o1.put(25, 14, 'H')
+o1.put(22, 12, 'F')                                # Rohr F: der Rueckweg nach oben
 
-o2 = Karte(42, 19)                                 # Ebene 2: der Steg ganz oben
-o2.rect(24, 9, 36, 11)
-o2.put(25, 10, 'b')                                # Rohrende von unten (Mauer, der Ball wird davor gesetzt)
-o2.put(36, 10, 'c')                                # Rohrende der Galerie-Leitung
+o2 = Karte(42, 19)                                 # Ebene 2: zwei Stege ganz oben
+o2.rect(21, 3, 27, 9)
+o2.rect(32, 3, 38, 9)
+o2.put(21, 6, 'c')                                 # Rohrende von ganz unten
+o2.put(27, 6, 'D'); o2.put(32, 6, 'd')             # Rohr D: Steg 1 -> Steg 2
+o2.put(21, 3, 'f')                                 # Rohrende des Rueckwegs
 
 bahn(name='Der Rohrturm', par=6, theme='boiler', maxStrokes=22, seed=417, dichte=0.12, ebeneZ=4.2,
-     intro='Hier stehen die Etagen weit auseinander, und dazwischen ist nichts als Luft – nur das '
-           'Kupferrohr steigt hindurch, und man kann ihm mit den Augen folgen. Drei Leitungen, sonst '
-           'kein Weg: Die erste bringt quer in die Kesselhalle, die zweite von dort in einem Zug bis '
-           'ganz nach oben auf den Steg. Das Loch aber liegt auf der mittleren Etage, und hinauf '
-           'führt dorthin nichts – man kommt nur von oben hinein, durch die Luke im Steg. Wer unten '
-           'auf der Galerie am Loch vorbeirollt, nimmt die dritte Leitung und ist wieder oben.',
+     intro='Sieben kleine Inseln, und keine berührt die andere. Dazwischen gibt es nichts als sechs '
+           'Kupferleitungen – auf dem Abschlagsfleck führt genau ein Weg weg, und das ist der '
+           'Rohrmund. Die Etagen stehen weit auseinander, dazwischen ist nur Luft und das Rohr, das '
+           'hindurchsteigt; man kann ihm mit den Augen folgen. Das Loch aber liegt auf der mittleren '
+           'Etage, und hinauf führt dorthin nichts: Die dritte Leitung springt von ganz unten gleich '
+           'auf den obersten Steg, und von da fällt man durch die Luke eine Etage zurück. Wer unten '
+           'am Loch vorbeirollt, nimmt die letzte Leitung und ist wieder oben.',
      obstacles=[rohr(k, 'Rohrturm A', 'A', 90),
-                rohr(k, 'Rohrturm B', 'B', 0, ziel=(o2, 2)),
-                luke([k, o1, o2], 'Rohrturm', 30.5, 10.5, ebene=2),
-                rohr(o1, 'Rohrturm C', 'C', 180, ziel=(o2, 2), ebene=1)],
-     decor=[('lantern', 5.5, 3.5, 1), ('lantern', 36.5, 2.5, 1), ('barrel', 18, 17.4, 1),
-            ('crate', 22, 17.4, 1), ('gearFlat', 10, 17.4, 1.6)],
+                rohr(k, 'Rohrturm B', 'B', 0),
+                rohr(k, 'Rohrturm C', 'C', 0, ziel=(o2, 2)),
+                rohr(o2, 'Rohrturm D', 'D', 0, ebene=2),
+                luke([k, o1, o2], 'Rohrturm', 35.5, 6.5, ebene=2),
+                rohr(o1, 'Rohrturm E', 'E', 180, ebene=1),
+                rohr(o1, 'Rohrturm F', 'F', 90, ziel=(o2, 2), ebene=1)],
+     decor=[('lantern', 9, 3.5, 1), ('lantern', 30, 3.5, 1), ('barrel', 18, 17.4, 1),
+            ('crate', 9, 16.4, 1), ('gearFlat', 34, 16.4, 1.6)],
      map=k.rows(), ebenen=[o1.rows(), o2.rows()])
 
 # ---------------------------------------------------------------- 13 Das grosse Zifferblatt (Hoehepunkt)

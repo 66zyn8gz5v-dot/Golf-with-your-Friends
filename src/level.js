@@ -3,7 +3,9 @@
    A, B, C sind die Eingänge der Löwentore: begehbarer Boden, damit ein Ball mit Schwung hineinrollen
    kann. Ihre Ausgänge (a, b, c) stehen bewusst NICHT hier – als Nicht-Boden zieht die Arenamauer von
    selbst eine Wand davor, und genau das soll ein Ausgang von außen sein: massiv. */
-const FLOOR_CHARS = new Set(['#', 's', 'i', 'w', 'l', 'T', 'H', 'o', 'A', 'B', 'C']);
+// A bis F sind die Münder der Löwentore und Kupferrohre und begehbar; ihre Ausgänge (a bis f)
+// sind Mauer. Sechs Paare, weil der Rohrturm allein sechs Leitungen hat.
+const FLOOR_CHARS = new Set(['#', 's', 'i', 'w', 'l', 'T', 'H', 'o', 'A', 'B', 'C', 'D', 'E', 'F']);
 const WALL_T = 0.38;       // Dicke der Randmauern (nach außen)
 /* Die Uhrenturm-Welt spielt auf zwei Ebenen. Das ist keine Höhenphysik, sondern ein Umschalter:
    Der Ball ist immer auf genau einer Fläche und kollidiert nur mit deren Wänden. Es dürfen mehr
