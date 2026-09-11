@@ -734,6 +734,13 @@ wie ein Fehler. Ein Fallstrick dabei: Die obere Fläche darf nicht Kachel für K
 gezeichnet werden – bei halber Durchsicht sähe man ein Gitter aus lauter inneren Seitenflächen. Nur
 der Rand bekommt seine Schürze.
 
+**Die Zielhilfe kommt ganz zum Schluss.** Sie wurde bis Fassung 74 beim Boden gezeichnet, also
+unter allem, was danach kam. Stand der Ball auf einer oberen Ebene, malte deren Scholle den Pfeil
+zu – man konnte ganz normal aufladen und schießen, sah nur nicht mehr, wohin. Das ist schlimmer als
+gar keine Hilfe, weil man den Fehler dann bei sich sucht. Jetzt wird sie nach Ball und Schollen
+gezeichnet. Geprüft wird das mit Pixeln: `scratchpad/aim.mjs` zählt die Punkte in der Farbe der
+Zielhilfe vor und nach dem Aufladen, auf der untersten Ebene wie auf einer oberen.
+
 `tools/validate.mjs` prüft die beiden Fehler, die man im Spiel erst merkt, wenn man ratlos
 davorsteht: eine **Ebene ohne Turbine auf der darunter** (dort käme nie jemand hin) und ein **Loch
 auf einer Ebene, zu der kein Weg führt**. Die Erreichbarkeit wird über alle Etagen zugleich gerechnet, und

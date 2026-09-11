@@ -445,7 +445,6 @@ class Renderer {
     for (const ob of lv.obstacles) this.drawObstacleFloor(ctx, ob, t);
     // Loch und Fahne der oberen Ebene kommen erst nach der Scholle, sonst lägen sie darunter
     if (lv.cup && !lv.cupEbene) this.drawCupHole(ctx);
-    if (state.aim) this.drawAim(ctx, state.ball, state.aim);
 
     // sortierte 3D-Objekte
     const items = [];
@@ -484,6 +483,12 @@ class Renderer {
     this.drawEbeneOben(ctx, t);   // die zweite Spielebene über allem, was unten steht
     if (lv.cup && lv.cupEbene) { this.drawCupHole(ctx); this.drawFlag(ctx, t); }
     if (b && !imRohr) { this.flat = !!(b.rider && b.rider.type === 'ferry' && b.rider.flat); this.drawBall(ctx, b); this.flat = false; }
+    /* Die Zielhilfe ganz zum Schluss, nach Ball und Schollen. Sie lag früher beim Boden, also unter
+       allem, was danach kommt: Stand der Ball auf einer oberen Ebene, malte deren Scholle den Pfeil
+       zu, und auch unten verdeckte ihn jedes Hindernis, das davor gezeichnet wurde. Man konnte dann
+       ganz normal aufladen und schießen, sah nur nicht, wohin - und das ist schlimmer als gar keine
+       Hilfe, weil man den Fehler bei sich sucht. */
+    if (state.aim) this.drawAim(ctx, state.ball, state.aim);
 
     if (state.phase !== 'edit') this.drawDepthCues(ctx);
     // Atmosphäre (dezent, über der Szene, unter den Effektpartikeln)
