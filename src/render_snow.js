@@ -14,23 +14,37 @@ Object.assign(Renderer.prototype, {
   drawWindfahneFloor(ctx, ob, t) {
     const s = this.scale, lv = this.level;
     const st = ob.staerke, dx = ob.dx, dy = ob.dy;
+    /* Der treibende Schnee auf dem Boden ist das eigentliche Messgerät: Man liest die Richtung ab,
+       ohne zur Fahne zu schauen, und in der Flaute steht alles still. Wichtig ist der Kontrast –
+       weiße Striche auf weißem Schnee sieht man nicht. Darum ist jede Fahne eine flache Rille:
+       erst ein blaugrauer Schatten, darüber versetzt ein heller Kamm. So liest sie sich als
+       Schneewehe und nicht als Kratzer. */
     if (st > 0.02) {
       ctx.save();
       ctx.lineCap = 'round';
-      for (let i = 0; i < 46; i++) {
-        const h1 = Math.abs(Math.sin(i * 127.1) * 43758.5453) % 1;
-        const h2 = Math.abs(Math.sin(i * 311.7 + 2.3) * 43758.5453) % 1;
-        const lauf = ((h1 + t * (0.10 + h2 * 0.09) * (0.4 + st)) % 1);
-        // quer zur Windrichtung verteilt, in Windrichtung laufend
-        const quer = (h2 - 0.5) * Math.max(lv.W, lv.H) * 1.5;
-        const mx = lv.W / 2 - dy * quer + dx * (lauf - 0.5) * lv.W * 1.6;
-        const my = lv.H / 2 + dx * quer + dy * (lauf - 0.5) * lv.H * 1.6;
+      /* Über jede zweite Bahnkachel treibt eine Schneefahne. Verteilt wird über die Kacheln selbst
+         und nicht über die Fläche ringsum – sonst landet der meiste Schnee neben der Bahn und man
+         sieht kaum etwas. Jede Fahne wandert in Windrichtung durch ihre Kachel und springt am Ende
+         zurück; weil jede ihren eigenen Startpunkt hat, sieht man kein Muster, sondern Treiben. */
+      for (let y = 0; y < lv.H; y++) for (let x = 0; x < lv.W; x++) {
+        if (!lv.isFloorChar(lv.charAt(x + 0.5, y + 0.5))) continue;
+        const h1 = Math.abs(Math.sin(x * 127.1 + y * 311.7) * 43758.5453) % 1;
+        if (h1 > 0.55) continue;                       // nur auf gut der Hälfte der Kacheln
+        const h2 = Math.abs(Math.sin(x * 71.3 + y * 19.7 + 4.4) * 43758.5453) % 1;
+        const lauf = ((h2 + t * (0.22 + h1 * 0.5) * (0.3 + st)) % 1) - 0.5;
+        const mx = x + 0.5 + dx * lauf * 2.4 - dy * (h2 - 0.5) * 0.7;
+        const my = y + 0.5 + dy * lauf * 2.4 + dx * (h2 - 0.5) * 0.7;
         if (!lv.isFloorChar(lv.charAt(mx, my))) continue;
-        const lang = 0.5 + h1 * 1.1;
+        const lang = 0.8 + h1 * 2.2;
         const a = this.proj(mx, my, 0.012), b = this.proj(mx + dx * lang, my + dy * lang, 0.012);
-        ctx.strokeStyle = `rgba(255,255,255,${(0.10 + h1 * 0.22) * st})`;
-        ctx.lineWidth = Math.max(1, s * 0.05);
+        ctx.lineWidth = Math.max(1.5, s * 0.09);
+        ctx.strokeStyle = `rgba(104,142,182,${(0.20 + h1 * 0.5) * st})`;
         ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+        const a2 = this.proj(mx - dy * 0.13, my + dx * 0.13, 0.013);
+        const b2 = this.proj(mx + dx * lang * 0.8 - dy * 0.13, my + dy * lang * 0.8 + dx * 0.13, 0.013);
+        ctx.lineWidth = Math.max(1, s * 0.055);
+        ctx.strokeStyle = `rgba(255,255,255,${(0.45 + h1 * 0.5) * st})`;
+        ctx.beginPath(); ctx.moveTo(a2[0], a2[1]); ctx.lineTo(b2[0], b2[1]); ctx.stroke();
       }
       ctx.restore();
     }

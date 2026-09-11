@@ -623,10 +623,27 @@ und sie werden nach oben hin kälter, schmaler und ausgesetzter:
 
 | Maschine | Was sie tut |
 |---|---|
-| **Windfahne** (`windfahne`) | Dreht den Wind alle `WIND_HALT` Sekunden weiter, mit `WIND_DREH` Sekunden Flaute dazwischen. Sie wirkt auf der ganzen Bahn, nicht in einem Feld – das ist der Unterschied zum Wind-`field` der anderen Welten: Dort ist Wind eine Stelle, hier ist er das Wetter. Fahne, Windsack und der über den Boden treibende Schnee zeigen alle dasselbe. |
+| **Windfahne** (`windfahne`) | Dreht den Wind alle `WIND_HALT` Sekunden weiter, mit `WIND_DREH` Sekunden Flaute dazwischen. Sie wirkt auf der ganzen Bahn, nicht in einem Feld – das ist der Unterschied zum Wind-`field` der anderen Welten: Dort ist Wind eine Stelle, hier ist er das Wetter. |
 | **Lawine** (`lawine`) | Fegt alle `LAWINE_TAKT` Sekunden durch ihren Streifen; `LAWINE_WARNUNG` Sekunden vorher staubt es an der Abrisskante. Wer offen liegt, wird ein Stück mitgenommen – kein Strafschlag, nur Weg. **Hinter einem Felsblock (`x`) passiert nichts:** Vom Ball aus wird bis `LAWINE_SCHUTZ` Kacheln gegen die Laufrichtung geschaut, und die hellen Keile im Schnee zeigen, wie weit die Deckung reicht. Damit ist es die erste Maschine, vor der man sich *versteckt* statt sie zu umgehen – und die Felsen sind nicht mehr Deko, sondern Deckung. |
 | **Seilbahn** (`seilbahn`) | Gondel am Stahlseil zwischen zwei Stationen, Verhalten wie die Fähre. Dazu darf sie mit `ziel` die **Ebene wechseln**: Die Bergstation liegt dann eine oder mehrere Wolkenetagen höher, und das Seil steigt sichtbar dorthin. Sie ist damit zugleich Brücke und Aufstieg – was eine Bergbahn eben tut. |
 | **Schneebrücke** (`schneebruecke`) | Trägt genau einen Schlag lang. Hat der Ball sie überquert, bricht sie hinter ihm ein; beim nächsten Schlag liegt sie wieder da. Sie ist das Gegenstück zur Luke des Uhrenturms: Die fragt *wann*, diese fragt, ob man den Weg zu Ende denkt. Gibt es eine Ebene darunter, fällt man ohne Strafschlag dorthin; gibt es keine, ist es ein Loch im Berg wie jedes andere – **genau dieser zweite Fall fehlte zuerst**, und die gebrochene Brücke tat auf einer Bahn ohne untere Ebene gar nichts. |
+
+**Man muss den Wind sehen, nicht nur den Pfeil.** Die erste Fassung zeigte ihn allein an der
+Fahne – zu wenig: Wer auf den Ball schaut, schaut nicht auf den Mast. Darum hält der Renderer den
+Wind der Bahn einmal je Bild in `R.wind` fest, und drei Dinge zeigen ihn:
+
+- **Der treibende Schnee auf dem Boden** ist das eigentliche Messgerät. Über jede zweite Bahnkachel
+  läuft eine Schneefahne in Windrichtung, und in der Flaute steht alles still. Wichtig war der
+  Kontrast: Weiße Striche auf weißem Schnee sieht man nicht, also ist jede Fahne eine flache Rille –
+  erst ein blaugrauer Schatten, darüber versetzt ein heller Kamm.
+- **Der Schneefall am Himmel** weht in dieselbe Richtung und flaut mit ab (`atmo: 'snow'` und
+  `'blizzard'` lesen `R.wind`).
+- **Die Windsäcke am Rand** drehen sich mit und hängen bei Flaute schlaff herunter – die
+  Windrichtung wird dafür mit derselben Drehung wie die Projektion in Bildrichtung umgerechnet.
+
+Geprüft wird das nicht nach Augenmaß, sondern als Bildvergleich (`scratchpad/wind_sicht.mjs`):
+dieselbe Bahn, dieselbe eingefrorene Zeit, einmal mit und einmal ohne Windfahne. Bei vollem Wind
+unterscheiden sich über 53 000 Pixel, in der Flaute nur noch 4 400 – dann bleibt eben nur der Mast.
 
 ### Die Wolkenetagen
 

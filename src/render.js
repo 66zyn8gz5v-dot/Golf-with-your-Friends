@@ -471,6 +471,12 @@ class Renderer {
        auch nicht durch das Kupfer scheint. Sichtbar ist dann nur der helle Schein, der in der
        Leitung mitläuft (Renderer.drawPipeLauf). Und weil er nicht zu sehen ist, darf auch nichts
        für ihn durchsichtig werden: Sonst risse ausgerechnet die Leitung ein Loch um ihn herum. */
+    /* Der Wind des Schneebergs gilt für die ganze Bahn, nicht nur für die Fahne. Damit ihn auch
+       das Schneetreiben am Himmel und die Windsäcke am Rand zeigen können, wird er hier einmal je
+       Bild festgehalten – sonst wüsste nur das Hindernis selbst davon, und der Wind wäre ein
+       Zeiger statt Wetter. */
+    const wf = lv.obstacles.find(o => o.type === 'windfahne');
+    this.wind = wf ? { dx: wf.dx, dy: wf.dy, staerke: wf.staerke } : null;
     const imRohr = !!(b && b.rider && b.rider.type === 'copperpipe');
     const bp = b && !imRohr ? this.proj(b.x, b.y, 0) : null, bk = b ? this.depth(b.x, b.y) : 0;
     this.ballPos = bp;
@@ -579,22 +585,34 @@ class Renderer {
         ctx.beginPath(); ctx.arc(x, y, 1.5 + hash(i, 5) * 1.5, 0, TAU); ctx.fill();
       }
     } else if (kind === 'snow') {
+      /* Gibt es auf der Bahn eine Windfahne, weht der Schnee in ihre Richtung und flaut mit ihr ab
+         – so sieht man den Wind auch dann, wenn man gerade nicht zur Fahne schaut. Ohne Fahne
+         fällt er wie eh und je. */
+      const wnd = this.wind, seit = wnd ? wnd.dx * 260 * wnd.staerke : 6;
       for (let i = 0; i < 60; i++) {
-        const sp = 18 + hash(i, 1) * 22, x = (hash(i, 2) * w + Math.sin(t * 0.7 + i) * 18 + t * 6) % w, y = (hash(i, 3) * h + t * sp) % h;
-        ctx.fillStyle = `rgba(255,255,255,${0.35 + hash(i, 4) * 0.45})`; ctx.beginPath(); ctx.arc(x, y, 1.2 + hash(i, 5) * 1.8, 0, TAU); ctx.fill();
+        const sp = (18 + hash(i, 1) * 22) * (wnd ? 0.5 + 0.5 * Math.abs(wnd.dy) * wnd.staerke + 0.4 : 1);
+        const x = (((hash(i, 2) * (w + 300) + t * seit) % (w + 300)) + w + 300) % (w + 300) - 150;
+        const y = (hash(i, 3) * h + t * sp + Math.sin(t * 0.7 + i) * 10) % h;
+        ctx.fillStyle = `rgba(255,255,255,${0.35 + hash(i, 4) * 0.45})`;
+        ctx.beginPath(); ctx.arc(x, y, 1.2 + hash(i, 5) * 1.8, 0, TAU); ctx.fill();
       }
     } else if (kind === 'blizzard') {
       /* Schneetreiben statt Schneefall: Am Berg fällt der Schnee nicht, er wird geweht. Darum
          laufen die Flocken hier flach von links nach rechts statt von oben nach unten, in Böen
          (der langsame Sinus), und ein paar lange Schlieren zeigen die Richtung. */
-      const boe = 0.75 + 0.45 * Math.sin(t * 0.45) + 0.2 * Math.sin(t * 1.7);
+      const wnd = this.wind;
+      const boe = wnd ? 0.25 + 1.15 * wnd.staerke : 0.75 + 0.45 * Math.sin(t * 0.45) + 0.2 * Math.sin(t * 1.7);
+      const quer = wnd ? wnd.dx : 1, laengs = wnd ? wnd.dy : 0.12;
       for (let i = 0; i < 70; i++) {
         const sp = (150 + hash(i, 1) * 210) * boe;
-        const x = ((hash(i, 2) * (w + 200) + t * sp) % (w + 200)) - 100;
-        const y = (hash(i, 3) * h + t * (14 + hash(i, 6) * 16) + Math.sin(t * 1.3 + i) * 9) % h;
+        const x = ((((hash(i, 2) * (w + 400) + t * sp * quer) % (w + 400)) + w + 400) % (w + 400)) - 200;
+        const y = (((hash(i, 3) * h + t * (14 + hash(i, 6) * 16 + sp * 0.55 * laengs) + Math.sin(t * 1.3 + i) * 9) % h) + h) % h;
         const lang = hash(i, 7) > 0.72;
         ctx.fillStyle = `rgba(255,255,255,${0.3 + hash(i, 4) * 0.45})`;
-        if (lang) { ctx.fillRect(x, y, 9 + hash(i, 5) * 14, 1.2); }
+        if (lang) {
+          const l = 9 + hash(i, 5) * 14;
+          ctx.save(); ctx.translate(x, y); ctx.rotate(Math.atan2(laengs * 0.5, quer)); ctx.fillRect(0, 0, l, 1.2); ctx.restore();
+        }
         else { ctx.beginPath(); ctx.arc(x, y, 1 + hash(i, 5) * 1.6, 0, TAU); ctx.fill(); }
       }
     } else if (kind === 'sparks') {

@@ -383,11 +383,36 @@ Object.assign(Renderer.prototype, {
     ctx.strokeStyle = '#c8ccdd'; ctx.lineWidth = Math.max(1.5, s * 0.06); ctx.beginPath(); ctx.moveTo(sx, sy - s * 1.6); ctx.lineTo(sx, sy - s * 2.3); ctx.stroke();
     const gl = Math.sin(t * 5 + sx) > 0.6; ctx.fillStyle = gl ? '#fff6a8' : '#8a8ea6'; ctx.beginPath(); ctx.arc(sx, sy - s * 2.35, s * (gl ? 0.13 : 0.08), 0, TAU); ctx.fill();
   },
+  /* Windsack. Weht auf der Bahn ein echter Wind (Schneeberg), richtet er sich danach: Er zeigt in
+     die Windrichtung und hängt bei Flaute schlaff herunter. Ohne Wind bleibt er, was er war – eine
+     Fahne, die sich im Zufallswind bewegt. */
   spriteWindsock(ctx, sx, sy, s, d, t) {
+    const w = this.wind;
     ctx.strokeStyle = '#8a8ea6'; ctx.lineWidth = Math.max(1.5, s * 0.06); ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx, sy - s * 1.5); ctx.stroke();
-    const fl = Math.sin(t * 4 + sx) * s * 0.1, dir = (d.seed || 0.5) > 0.5 ? 1 : -1;
-    ctx.fillStyle = '#ff7a3a'; ctx.beginPath(); ctx.moveTo(sx, sy - s * 1.5); ctx.lineTo(sx + dir * s * 0.9, sy - s * 1.35 + fl); ctx.lineTo(sx + dir * s * 0.9, sy - s * 1.15 + fl); ctx.lineTo(sx, sy - s * 1.2); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#ffffff'; ctx.fillRect(sx + dir * s * 0.3, sy - s * 1.45 + fl * 0.4, dir * s * 0.18, s * 0.28);
+    const fl = Math.sin(t * 4 + sx) * s * 0.1;
+    if (!w) {
+      const dir = (d.seed || 0.5) > 0.5 ? 1 : -1;
+      ctx.fillStyle = '#ff7a3a'; ctx.beginPath(); ctx.moveTo(sx, sy - s * 1.5); ctx.lineTo(sx + dir * s * 0.9, sy - s * 1.35 + fl); ctx.lineTo(sx + dir * s * 0.9, sy - s * 1.15 + fl); ctx.lineTo(sx, sy - s * 1.2); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(sx + dir * s * 0.3, sy - s * 1.45 + fl * 0.4, dir * s * 0.18, s * 0.28);
+      return;
+    }
+    // Windrichtung in Bildrichtung umrechnen (dieselbe Drehung wie die Projektion)
+    const ex = w.dx * this.cam.cos - w.dy * this.cam.sin;
+    const ey = (w.dx * this.cam.sin + w.dy * this.cam.cos) * this.cam.tilt;
+    const L = Math.hypot(ex, ey) || 1, ux = ex / L, uy = ey / L;
+    const lang = s * (0.28 + 0.75 * w.staerke), haenge = s * 0.55 * (1 - w.staerke);
+    const kopf = [sx, sy - s * 1.5];
+    for (let i = 0; i < 3; i++) {
+      const u0 = i / 3, u1 = (i + 1) / 3;
+      const p0 = [kopf[0] + ux * lang * u0, kopf[1] + uy * lang * u0 + haenge * u0 * u0 + fl * u0];
+      const p1 = [kopf[0] + ux * lang * u1, kopf[1] + uy * lang * u1 + haenge * u1 * u1 + fl * u1];
+      const r0 = s * (0.16 - u0 * 0.05), r1 = s * (0.16 - u1 * 0.05);
+      ctx.fillStyle = i % 2 ? '#ffffff' : '#ff7a3a';
+      ctx.beginPath();
+      ctx.moveTo(p0[0] - uy * r0, p0[1] + ux * r0); ctx.lineTo(p1[0] - uy * r1, p1[1] + ux * r1);
+      ctx.lineTo(p1[0] + uy * r1, p1[1] - ux * r1); ctx.lineTo(p0[0] + uy * r0, p0[1] - ux * r0);
+      ctx.closePath(); ctx.fill();
+    }
   },
   /* tuch überschreibt die Farbe des Wimpels – das Kolosseum hängt rote Banner auf, sonst bleibt es
      bei den dunkelblau-violetten des Schattenreichs. */
