@@ -10,13 +10,13 @@
 
    Aufbau: Bahn 1 bis 4 sind flach und führen je ein bis zwei Maschinen ein. Bahn 5 bringt die
    erste zweite Ebene (eine einzige Turbine, sonst nichts Neues), Bahn 6 ist eine flache Atempause,
-   Bahn 7 und 8 bringen Kettenzug und Zahnstange samt Luke. Bahn 9 bis 11 mischen, Bahn 12 stapelt
+   Bahn 7 und 8 bringen Aufzug und Zahnstange samt Luke. Bahn 9 bis 11 mischen, Bahn 12 stapelt
    drei Etagen, die nur Kupferrohre verbinden, und Bahn 13 ist der Höhepunkt. Das Kupferrohr kommt
    ab Bahn 4 vor, die Hemmung ab Bahn 6 – beide bewusst nicht auf jeder Bahn.
 
    Gestapelte Ebenen: 'map' ist die unterste Fläche, 'ebenen' sind die darüber, alle deckungsgleich.
    Der Ball ist immer auf genau einer und kollidiert nur mit deren Wänden. Hinauf geht es über
-   Turbine, Kettenzug, Zahnstange oder ein Kupferrohr mit 'ziel'; hinunter an jeder offenen Kante
+   Turbine, Aufzug, Zahnstange oder ein Kupferrohr mit 'ziel'; hinunter an jeder offenen Kante
    ('o' in der Karte) und durch eine offene Luke, beides ohne Strafschlag.
 
    Das wandernde Loch steht auf Bahn 6, 9 und 11 und - als ganzes Zifferblatt mit zwoelf
@@ -245,7 +245,7 @@ const CLOCK_COURSES = [
   },
   {
     name: 'Federkammer', par: 5, theme: 'boiler', maxStrokes: 18,
-    intro: 'Über die Kluft kommt nur, wer sich einspannen lässt; der leuchtende Punkt zeigt, wo der Ball landen wird. Drüben hängt der Kettenzug: Seine Haken laufen im Takt um, und nur wer die Stelle trifft, während gerade einer unten ist, wird mitgenommen. Oben liegt die Luke im Weg – zu ist sie Boden, offen ein Loch. Und hinter ihr wartet das Ziel.',
+    intro: 'Über die Kluft kommt nur, wer sich einspannen lässt; der leuchtende Punkt zeigt, wo der Ball landen wird. Drüben steht der Aufzug: Die Kabine wartet unten, und wer hineinrollt, fährt mit – hier muss man nichts abpassen. Oben liegt dafür die Luke im Weg: zu ist sie Boden, offen ein Loch. Und hinter ihr wartet das Ziel.',
     map: [
       '........................................',
       '........................................',
@@ -288,7 +288,7 @@ const CLOCK_COURSES = [
     ],
     obstacles: [
       { type: 'springwork', x: 10.5, y: 8.5, base: 0, amp: 0.22, speed: 0.8, range: 12, catchR: 0.7, loadTime: 0.9 },
-      { type: 'kettenzug', x: 30.5, y: 8.5, angle: 0 },
+      { type: 'aufzug', x: 30.5, y: 8.5, angle: 0 },
       { type: 'luke', x: 33.5, y: 8.5, w: 1.6, h: 1.6, ebene: 1 },
     ],
     decor: [
@@ -396,7 +396,7 @@ const CLOCK_COURSES = [
   },
   {
     name: 'Glockenturm', par: 5, theme: 'clocktown', maxStrokes: 20,
-    intro: 'Die Glockenstube liegt eine Etage höher. Unten stehen erst das Pendel vor der Tür und dann die Hemmung quer durch die Halle; hinauf bringt der Kettenzug, und oben liegt die Luke zwischen dem Haken und dem Loch. Drei Takte, und keiner passt zum anderen – hier gewinnt, wer wartet, nicht wer fest schlägt.',
+    intro: 'Die Glockenstube liegt eine Etage höher. Unten stehen erst das Pendel vor der Tür und dann die Hemmung quer durch die Halle; hinauf bringt der Aufzug, und oben liegt die Luke zwischen der Kabine und dem Loch. Drei Takte, und keiner passt zum anderen – hier gewinnt, wer wartet, nicht wer fest schlägt.',
     map: [
       '..........................................',
       '..........................................',
@@ -440,7 +440,7 @@ const CLOCK_COURSES = [
     obstacles: [
       { type: 'pendulum', x: 15.5, y: 4, len: 4.5, amp: 60, ruhe: 90, phase: 0, w: 1.2, h: 1.2 },
       { type: 'escapement', x: 24.5, y: 8.5, w: 0.45, h: 9, phase: 0.5 },
-      { type: 'kettenzug', x: 30.5, y: 8.5, angle: 0 },
+      { type: 'aufzug', x: 30.5, y: 8.5, angle: 0 },
       { type: 'luke', x: 34.5, y: 8.5, w: 1.6, h: 1.6, ebene: 1, phase: 0.35 },
     ],
     decor: [

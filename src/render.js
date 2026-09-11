@@ -1418,8 +1418,8 @@ class Renderer {
       items.push({ x: ob.x, y: ob.y, bias: 0.3, draw: () => this.drawSweepHand(ctx, ob, t) });
     } else if (ob.type === 'handclock') {
       items.push({ x: ob.x, y: ob.y, bias: 0.3, draw: () => this.drawHandClock(ctx, ob, t) });
-    } else if (ob.type === 'kettenzug') {
-      items.push({ x: ob.x, y: ob.y, bias: 0.4, draw: () => this.drawKettenzug(ctx, ob, t) });
+    } else if (ob.type === 'aufzug') {
+      items.push({ x: ob.x, y: ob.y, bias: 0.4, draw: () => this.drawAufzug(ctx, ob, t) });
     } else if (ob.type === 'zahnstange') {
       items.push({ x: ob.x, y: ob.y, bias: 0.4, draw: () => this.drawZahnstange(ctx, ob, t) });
     } else if (ob.type === 'escapement') {

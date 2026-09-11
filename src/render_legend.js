@@ -1632,51 +1632,53 @@ Object.assign(Renderer.prototype, {
     ctx.closePath(); ctx.stroke();
   },
 
-  /* Kettenzug: zwei Kettenräder übereinander, dazwischen die umlaufende Kette mit ihren Haken.
-     Der Haken unten ist hell – nur wenn er dort steht, nimmt der Zug mit, und das soll man sehen,
-     bevor man losrollt. Gezeichnet wird von der Ebene des Fußes bis zur nächsten darüber. */
-  drawKettenzug(ctx, ob, t) {
+  /* Aufzug: eine Kabine zwischen zwei Führungsschienen, oben die Umlenkrolle mit dem Seil. Der
+     Boden der Kabine ist hell, solange sie unten steht und aufnehmen kann – man soll von weitem
+     sehen, ob man einsteigen kann, und nicht erst beim Danebenrollen merken, dass sie oben ist.
+     Gezeichnet wird von der Ebene des Schachtfußes bis zur nächsten darüber. */
+  drawAufzug(ctx, ob, t) {
     const s = this.scale, lv = this.level;
     const z0 = (ob.ebene || 0) * lv.ebeneZ, z1 = z0 + lv.ebeneZ;
-    const K = r => this.circlePoly(ob.x, ob.y, r, 10);
-    this.isoEllipse(ctx, ob.x, ob.y, z0 + 0.004, ob.r + 0.25, 'rgba(0,0,0,0.22)');
-    this.prism(ctx, K(ob.r + 0.2), z0, 0.12, '#6b5334', '#33261a', { outline: '#160f08' });   // Fuß
-    // Ständer: zwei Pfosten links und rechts der Kette, im Bildschirmraum versetzt
-    const [ex, ey] = [this.cam.cos, -this.cam.sin];
+    const hw = (ob.w || 1.5) / 2, hh = (ob.h || 1.5) / 2;
+    const [ex, ey] = [this.cam.cos, -this.cam.sin];               // Richtung, die auf dem Bild waagerecht liegt
     const W = (a, b) => [ob.x + ex * a - ey * b, ob.y + ey * a + ex * b];
+    this.isoEllipse(ctx, ob.x, ob.y, z0 + 0.004, Math.max(hw, hh) + 0.25, 'rgba(0,0,0,0.24)');
+    // Schachtfuß
+    const fuss = [[ob.x - hw, ob.y - hh], [ob.x + hw, ob.y - hh], [ob.x + hw, ob.y + hh], [ob.x - hw, ob.y + hh]];
+    this.prism(ctx, fuss, z0, 0.14, '#6b5334', '#33261a', { outline: '#160f08' });
+    // Zwei Führungsschienen bis über die obere Ebene
     for (const sd of [-1, 1]) {
-      const m = W(sd * (ob.r + 0.1), 0);
-      this.prism(ctx, this.circlePoly(m[0], m[1], 0.1, 8), z0 + 0.1, z1 - z0 + 0.5, '#7a6248', '#3d3021', { outline: '#160f08' });
+      const m = W(sd * (hw + 0.08), 0);
+      this.prism(ctx, this.circlePoly(m[0], m[1], 0.09, 8), z0 + 0.12, z1 - z0 + 0.62, '#8a7050', '#3d3021', { outline: '#160f08' });
     }
-    // Kettenräder oben und unten
-    for (const z of [z0 + 0.25, z1 + 0.5]) {
-      const p = this.proj(ob.x, ob.y, z), rr = s * 0.28;
-      ctx.fillStyle = '#6d4d18'; ctx.beginPath(); ctx.arc(p[0], p[1], rr, 0, TAU); ctx.fill();
-      ctx.fillStyle = '#e0b45c'; ctx.beginPath(); ctx.arc(p[0] - rr * 0.1, p[1] - rr * 0.1, rr * 0.78, 0, TAU); ctx.fill();
-      ctx.strokeStyle = '#8a6624'; ctx.lineWidth = Math.max(1, s * 0.04);
-      for (let i = 0; i < 6; i++) { const a = (i * TAU) / 6 + t * 1.2; ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(p[0] + Math.cos(a) * rr * 0.7, p[1] + Math.sin(a) * rr * 0.7); ctx.stroke(); }
+    // Querträger und Umlenkrolle ganz oben
+    const rq = z1 + 0.62;
+    const a0 = this.proj(W(-(hw + 0.08), 0)[0], W(-(hw + 0.08), 0)[1], rq);
+    const a1 = this.proj(W(hw + 0.08, 0)[0], W(hw + 0.08, 0)[1], rq);
+    ctx.strokeStyle = '#7a6248'; ctx.lineWidth = Math.max(2, s * 0.1);
+    ctx.beginPath(); ctx.moveTo(a0[0], a0[1]); ctx.lineTo(a1[0], a1[1]); ctx.stroke();
+    const rolle = this.proj(ob.x, ob.y, rq), rr = s * 0.2;
+    ctx.fillStyle = '#6d4d18'; ctx.beginPath(); ctx.arc(rolle[0], rolle[1], rr, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#e0b45c'; ctx.beginPath(); ctx.arc(rolle[0] - rr * 0.12, rolle[1] - rr * 0.12, rr * 0.7, 0, TAU); ctx.fill();
+    // Seil von der Rolle auf das Kabinendach
+    const kz = z0 + (ob.p || 0) * lv.ebeneZ;
+    const dach = this.proj(ob.x, ob.y, kz + 0.62);
+    ctx.strokeStyle = '#cdbb95'; ctx.lineWidth = Math.max(1, s * 0.035);
+    ctx.beginPath(); ctx.moveTo(rolle[0], rolle[1]); ctx.lineTo(dach[0], dach[1]); ctx.stroke();
+    // Die Kabine: Boden, vier Eckpfosten, Dach. Unten wartend leuchtet der Boden.
+    const wartet = ob.zustand === 'unten';
+    const boden = [[ob.x - hw * 0.86, ob.y - hh * 0.86], [ob.x + hw * 0.86, ob.y - hh * 0.86],
+                   [ob.x + hw * 0.86, ob.y + hh * 0.86], [ob.x - hw * 0.86, ob.y + hh * 0.86]];
+    this.prism(ctx, boden, kz, 0.16, wartet ? '#f0d089' : '#9a8358', '#4a3a24', { outline: '#160f08' });
+    for (const [sx, sy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
+      const px = ob.x + sx * hw * 0.8, py = ob.y + sy * hh * 0.8;
+      this.prism(ctx, this.circlePoly(px, py, 0.07, 6), kz + 0.16, 0.46, '#b79a6a', '#4a3a24', { outline: '#160f08' });
     }
-    // Kette mit Haken: sie läuft an beiden Seiten hoch und wieder herunter
-    for (const sd of [-1, 1]) {
-      const m = W(sd * ob.r * 0.55, 0);
-      const a = this.proj(m[0], m[1], z0 + 0.25), b = this.proj(m[0], m[1], z1 + 0.5);
-      ctx.strokeStyle = '#4a3a2a'; ctx.lineWidth = Math.max(1.5, s * 0.06);
-      ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
-      for (let i = 0; i < 4; i++) {
-        let u = ((ob.hakenU + i / 4) % 1);
-        if (sd < 0) u = 1 - u;                                   // eine Seite läuft hoch, die andere zurück
-        const p = this.proj(m[0], m[1], z0 + 0.25 + u * (z1 + 0.25 - z0));
-        const unten = sd > 0 && u < 0.12;
-        ctx.fillStyle = unten ? '#ffe08a' : '#8a6f46';
-        ctx.beginPath(); ctx.arc(p[0], p[1], s * (unten ? 0.13 : 0.09), 0, TAU); ctx.fill();
-      }
-    }
-    // Der Ball hängt am Haken: ein heller Ring um ihn, damit man die Fahrt sieht
-    if (ob.fahrt >= 0) {
-      const p = this.proj(ob.x, ob.y, z0 + ob.fahrt * lv.ebeneZ);
-      ctx.strokeStyle = 'rgba(255,224,138,0.8)'; ctx.lineWidth = Math.max(1.5, s * 0.06);
-      ctx.beginPath(); ctx.arc(p[0], p[1], s * 0.34, 0, TAU); ctx.stroke();
-    }
+    this.prism(ctx, boden, kz + 0.62, 0.1, '#8a7050', '#3d3021', { outline: '#160f08' });
+    // Lämpchen am Schachtfuß: hell, solange die Kabine aufnehmen kann
+    const lampe = this.proj(ob.x + hw + 0.22, ob.y, z0 + 0.4);
+    ctx.fillStyle = wartet ? '#ffe08a' : '#5a4a34';
+    ctx.beginPath(); ctx.arc(lampe[0], lampe[1], s * 0.09, 0, TAU); ctx.fill();
   },
 
   /* Zahnstange: eine gezahnte Schiene, an der ein Zahnrad mit einer Schaufel auf und ab läuft.

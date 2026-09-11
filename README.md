@@ -612,7 +612,7 @@ die der übrigen Welten: die schmalste ist 34 Kacheln breit, die weiten 40 bis 4
 
 **Aufbau.** Bahn 1 bis 4 sind flach und führen je ein bis zwei Maschinen ein. Bahn 5 bringt die
 **erste zweite Ebene** – eine einzige Turbine, sonst nichts Neues. Bahn 6 ist eine flache
-Atempause. Bahn 7 und 8 bringen die beiden anderen Aufzüge, **Kettenzug** und **Zahnstange**, dazu
+Atempause. Bahn 7 und 8 bringen die beiden anderen Wege hinauf, **Aufzug** und **Zahnstange**, dazu
 die **Luke**. Bahn 9 bis 11 mischen, was da ist; Bahn 12 stapelt drei Etagen, die nur durch
 Kupferrohre verbunden sind; Bahn 13 ist der Höhepunkt. Das **Kupferrohr** kommt ab Bahn 4 vor, die
 **Hemmung** ab Bahn 6 – beide bewusst nicht auf jeder Bahn, damit sie nicht zur Gewohnheit werden.
@@ -627,10 +627,10 @@ auf 13.
 | 4 | Rohrpost | 38×13 | 4 | Kupferrohr, Pendel | Das Rohr nimmt einen immer – man sieht schon vorher, wo es endet |
 | 5 | Turbinenhalle | 38×15 | 4 | Pendel, **Turbine**, zweite Ebene | Der Windstoß hebt eine Etage – zu schnell, und man schießt oben über die offene Kante zurück |
 | 6 | Hemmwerk | 38×13 | 4 | Hemmung, Pendel, wanderndes Loch | Die offene Hälfte des Ganges, dann die Tür – und dahinter bleibt das Loch nicht liegen |
-| 7 | Federkammer | 40×17 | 5 | Federwerk, **Kettenzug**, **Luke** | Ein Haken muss gerade unten sein – und oben die Luke gerade zu |
+| 7 | Federkammer | 40×17 | 5 | Federwerk, **Aufzug**, **Luke** | Hinauf ist einfach – oben muss die Luke gerade zu sein |
 | 8 | Zeigerhof | 40×19 | 5 | Zeigerarm, **Zahnstange** | Hinter dem Zeiger her, dann rechtzeitig auf die Schaufel und warten |
 | 9 | Kesselhaus | 40×15 | 5 | Pendel, Kupferrohr, Federwerk, wanderndes Loch | Erst durch die Tür, dann ins Rohr – und auf dem Podest wandert das Loch |
-| 10 | Glockenturm | 42×17 | 5 | Pendel, Hemmung, Kettenzug, Luke | Drei Takte, von denen keiner zum anderen passt – und die Glockenstube liegt eine Etage höher |
+| 10 | Glockenturm | 42×17 | 5 | Pendel, Hemmung, Aufzug, Luke | Drei Takte, von denen keiner zum anderen passt – und die Glockenstube liegt eine Etage höher |
 | 11 | Räderschacht | 42×17 | 6 | Zahnradfeld, Zeigerarm, Zahnstange, wanderndes Loch | In die Endkammer führt unten keine Tür; hinein kommt nur, wer vom Steg ohne Geländer fällt |
 | 12 | Kupferlabyrinth | 42×17 | 6 | Kupferrohr ×3 (zwei davon zwischen Ebenen), Hemmung | Drei Kammern übereinander, verbunden allein durch Rohre |
 | 13 | Das große Zifferblatt | 36×26 | 6 | Turbine, Zifferblatt, Zeigerwerk, Zeigerarm, Pendel ×3 | Vom Steg auf das Blatt fallen lassen – und wo man sich fallen lässt, entscheidet alles |
@@ -713,7 +713,7 @@ Bild eng.
 |---|---|
 | **Hinauf** | nur über die **Turbine** (`turbine`), ein Gebläseschacht. Sie steht auf der Ebene `ebene` (ohne Angabe der untersten) und hebt auf die nächste darüber. Wer darüberrollt, wird an derselben Stelle gehoben – Tempo und Richtung bleiben. Kein Katapult, ein Aufzug. Für jede Etage steht eine eigene Turbine. |
 | **Herunter** | an jeder **offenen Kante**. Offen heißt: die Karte hat dort ein `o` (Boden ohne Bande) oder nichts. Der Ball fällt an derselben Stelle **so weit, bis wieder Boden unter ihm ist** – über mehrere Etagen hinweg, wenn es sein muss – und rollt dort weiter, **ohne Strafschlag**. |
-| **Der Kettenzug** | (`kettenzug`) sind Haken an einer umlaufenden Kette. Ist gerade einer unten (`KETTE_TAKT`, Fenster `KETTE_FENSTER`), nimmt er mit, wer die Stelle berührt, und bringt ihn in `KETTE_FAHRT` Sekunden eine Etage höher. Man muss also im richtigen Augenblick **durchrollen**. |
+| **Der Aufzug** | (`aufzug`) ist eine Kabine zwischen zwei Führungsschienen, oben die Umlenkrolle. Er ist der **verlässliche** Weg nach oben: Die Kabine wartet unten, wer hineinrollt fährt mit (`AUFZUG_FAHRT`), oben setzt sie ab und kommt nach `AUFZUG_HALT` von selbst zurück. Kein Takt, den man abpassen muss – das macht in dieser Welt die Zahnstange. Der helle Kabinenboden und das Lämpchen am Schacht sagen, ob sie gerade aufnehmen kann. |
 | **Die Zahnstange** | (`zahnstange`) ist eine Schaufel an einer gezahnten Schiene. Sie wartet unten (`ZAHNSTANGE_TAKT`), fährt hoch (`ZAHNSTANGE_FAHRT`), wartet oben, kommt zurück. Mitgenommen wird, wer beim Losfahren daraufsteht – man muss also rechtzeitig **daraufkommen und warten**. |
 | **Das Kupferrohr** | darf sein Ende eine Etage höher haben: `ebene` ist die Ebene des Rohrmunds, `ziel` die des Rohrendes. Jedes Ende wird auf seiner eigenen Karte gesucht. |
 | **Die Luke** | (`luke`) ist eine Klappe im Boden einer Ebene, die im Takt auf- und zugeht. Zu ist sie fester Boden, offen ein Loch – wer dann darüberrollt, fällt wie an einer offenen Kante, ohne Strafschlag. `LUKE_TAKT` und `LUKE_SCHWENK` als Konstanten, `phase` je Luke. |
@@ -749,6 +749,14 @@ müssen auf ihrer Ebene auf der Bahn liegen (zu wären sie sonst kein Boden), d�
 untersten Ebene sitzen, und unter ihnen muss irgendwo Boden sein – sonst wäre die Luke ein Sturz
 ins Aus, und das wäre eine Falltür und keine Luke.
 
+**Warum der Kettenzug wieder weg ist.** Bis Fassung 73 stand an der Stelle des Aufzugs ein
+Kettenzug: Haken an einer umlaufenden Kette, die nur für einen Augenblick unten stehen. Wer die
+Stelle in diesem Fenster berührte, wurde mitgenommen, sonst nicht. Im Spiel traf das fast nie, und
+schlimmer: Wer danebenrollte, konnte nicht unterscheiden, ob er etwas falsch gemacht hatte oder nur
+Pech hatte. Eine Maschine, deren Misserfolg man sich nicht erklären kann, lehrt nichts – und die
+ganze Welt lebt davon, dass man aus dem Zusehen lernt. Der Aufzug macht dasselbe verlässlich; das
+Abpassen übernimmt die Zahnstange, wo man es wenigstens kommen sieht.
+
 **Turbine und Luke sind das Paar.** Die eine hebt eine Etage, die andere wirft eine hinunter, und
 beide fragen dasselbe wie der Rest der Welt: nicht wie fest, sondern wann. Vom Falltür-Hindernis
 des Schattenreichs unterscheidet sich die Luke genau in einem Punkt – die Falltür ist eine Strafe
@@ -757,7 +765,7 @@ Hinunterfallen kein Unglück mehr, sondern Zeitverlust.
 
 **Eine Testbahn gibt es nicht mehr.** Bis Fassung 71 hing am Ende der Welt eine schlichte
 „Maschinenprobe", die alle Wege nach oben nebeneinander zeigte und im Par der Welt mitzählte. Mit
-dem Umbau der Welt ist sie aufgelöst: Die Turbine steht jetzt auf Bahn 5 und 13, Kettenzug und
+dem Umbau der Welt ist sie aufgelöst: Die Turbine steht jetzt auf Bahn 5 und 13, Aufzug und
 Luke auf 7 und 10, die Zahnstange auf 8 und 11, und die Rohre zwischen den Ebenen auf 12. Jede
 Maschine wird da eingeführt, wo sie gebraucht wird, und keine Bahn ist mehr bloß eine Probe.
 
@@ -765,7 +773,7 @@ Maschine wird da eingeführt, wo sie gebraucht wird, und keine Bahn ist mehr blo
 Geteilte Bahnen mit mehreren Ebenen werden deshalb abgelehnt statt stillschweigend um ihre oberen
 Karten gebracht. Und gezeichnet werden ein paar Maschinen bisher nur auf der untersten Ebene
 richtig: Turbine, Hemmung, Pendel, Zeiger und das wandernde Loch liegen im Boden und kennen keine
-Etage. Darum stehen sie in den Karten auch immer unten; Kettenzug, Zahnstange, Luke und Kupferrohr
+Etage. Darum stehen sie in den Karten auch immer unten; Aufzug, Zahnstange, Luke und Kupferrohr
 dagegen können auf jeder Ebene sitzen.
 
 ### Das Zeigerwerk: drei Zeiger, drei Wirkungen

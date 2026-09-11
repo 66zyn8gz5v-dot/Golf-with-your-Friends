@@ -351,7 +351,7 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
       }
     }
 
-    /* Wege nach oben: Turbine, Kettenzug, Zahnstange und das Kupferrohr, dessen Ende eine Etage
+    /* Wege nach oben: Turbine, Aufzug, Zahnstange und das Kupferrohr, dessen Ende eine Etage
        höher liegt. Sie alle setzen den Ball von ihrer Ebene auf eine höhere – deshalb werden sie
        hier gleich behandelt. Ein Aufstieg zählt nur, wenn er auf seiner eigenen Ebene erreichbar
        ist und oben auch Boden unter dem Ball hat. */
@@ -359,7 +359,7 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
       const r = karten[n] && karten[n][y], ch = r && r[x];
       return !!ch && FLOOR.has(ch) && ch !== 'w' && ch !== 'l';
     };
-    const HEBER = ['turbine', 'kettenzug', 'zahnstange'];
+    const HEBER = ['turbine', 'aufzug', 'zahnstange'];
     const aufstiege = [];                       // { typ, von, nach, x, y, zx, zy }
     for (const o of (c.obstacles || []).filter(o => HEBER.includes(o.type))) {
       const von = o.ebene || 0, tx = Math.floor(o.x), ty = Math.floor(o.y);

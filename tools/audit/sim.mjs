@@ -24,6 +24,7 @@ function resetLevel(lv, switches, schlagZahl) {
     if (ob.type === 'switch') ob.activeUntil = lv.switches[ob.target] || 0;
     if (ob.type === 'portal' || ob.type === 'potion') ob.lastUse = -10;
     if (ob.type === 'cannon' || ob.type === 'cauldron') ob.loaded = false;
+    if (ob.type === 'aufzug' && ob.zurueck) ob.zurueck();   // Kabine steht zu jedem Schlag wieder unten
   }
 }
 
@@ -50,7 +51,7 @@ export function shoot(st0, ang, pow, wait = 0, wantTrace = false) {
   st.schlagZahl = (st.schlagZahl || 0) + 1;
   let t = st.t, restT = 0, slowT = 0, wartet = false, trace = [];
   const maxT = 26;
-  const WARTEN = ['kettenzug', 'zahnstange', 'turbine', 'luke'];   // Maschinen, die einen ruhenden Ball noch holen
+  const WARTEN = ['aufzug', 'zahnstange', 'turbine', 'luke'];   // Maschinen, die einen ruhenden Ball noch holen
   for (let i = 0; i < 240 * maxT; i++) {
     const ev = G.stepPhysics(lv, b, STEP, t, true); t += STEP;
     if (wantTrace && i % 12 === 0) trace.push([+b.x.toFixed(2), +b.y.toFixed(2), b.air ? 1 : 0]);
@@ -97,8 +98,8 @@ export function shoot(st0, ang, pow, wait = 0, wantTrace = false) {
     const sp = Math.hypot(b.vx, b.vy);
     /* Liegenbleiben heißt nicht immer, dass der Schlag zu Ende ist. Im Spiel läuft die Physik auch
        beim Zielen weiter (main.js ruft stepPhysics in 'aim' wie in 'rolling'), und genau darauf
-       bauen die Aufzüge des Uhrenturms: Wer auf dem Kettenzug liegenbleibt, wird beim nächsten
-       Haken mitgenommen, wer auf der Zahnstange wartet, beim nächsten Losfahren. Bräche hier bei
+       bauen die Aufzüge des Uhrenturms: Wer in der Aufzugkabine liegenbleibt, wird hochgefahren,
+       wer auf der Zahnstange wartet, beim nächsten Losfahren. Bräche hier bei
        Ruhe sofort ab, wären diese Bahnen für den Bot unlösbar, obwohl sie es im Spiel nicht sind.
        Also wird bei Ruhe auf einem Aufzug oder einer Luke noch so lange weitergerechnet, wie der
        langsamste von ihnen für einen Umlauf braucht. */
@@ -175,7 +176,7 @@ export function distMap(def) {
     if (o.type === 'updraft') { const cx = o.x + (o.w || 2) / 2, cy = o.y + (o.h || 2) / 2; for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) links.push([cx, cy, n, cx + dx * (o.land ?? 5), cy + dy * (o.land ?? 5), n]); }
     if (o.type === 'cannon' || o.type === 'springwork') { const R = (o.range || 9) * 0.9; links.push([o.x, o.y, n, o.x + Math.cos(o.base || 0) * R, o.y + Math.sin(o.base || 0) * R, n]); }
     // Aufzüge des Uhrenturms: eine Etage höher, an derselben Stelle
-    if (o.type === 'turbine' || o.type === 'kettenzug' || o.type === 'zahnstange') { if (n + 1 < E) links.push([o.x, o.y, n, o.x, o.y, n + 1]); }
+    if (o.type === 'turbine' || o.type === 'aufzug' || o.type === 'zahnstange') { if (n + 1 < E) links.push([o.x, o.y, n, o.x, o.y, n + 1]); }
     // Kupferrohr: Mund auf seiner Ebene, Auswurf auf der Zielebene
     if (o.type === 'liongate' || o.type === 'copperpipe') {
       const g = String(o.pair || '').toUpperCase(), kl = g.toLowerCase(), ziel = o.ziel == null ? n : o.ziel;

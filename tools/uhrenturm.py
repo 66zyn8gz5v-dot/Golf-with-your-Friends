@@ -202,14 +202,13 @@ def rohr(k, name, paar, grad, ziel=None, ebene=0):
     zi = "" if zeb == ebene else ", ziel: %d" % zeb
     return "{ type: 'copperpipe', pair: '%s', angle: %d%s%s }" % (gross, grad, eb, zi)
 
-def kettenzug(k, o, name, x, y, ebene=0, grad=0, phase=0):
-    """Kettenzug: Haken laufen im Takt um; wer die Stelle beruehrt, waehrend gerade einer unten ist,
-    wird eine Etage hoeher gebracht. Geprueft wird Boden unten wie oben."""
-    assert k.frei(x, y), f'{name}: Kettenzug bei ({x},{y}) steht auf Ebene {ebene} auf "{k.at(x, y)}"'
-    assert o.frei(x, y), f'{name}: ueber dem Kettenzug bei ({x},{y}) ist auf Ebene {ebene + 1} kein Boden'
+def aufzug(k, o, name, x, y, ebene=0, grad=0):
+    """Aufzug: eine Kabine, die unten wartet. Wer hineinrollt, faehrt mit - kein Takt, den man
+    abpassen muss. Geprueft wird Boden unten wie oben."""
+    assert k.frei(x, y), f'{name}: Aufzug bei ({x},{y}) steht auf Ebene {ebene} auf "{k.at(x, y)}"'
+    assert o.frei(x, y), f'{name}: ueber dem Aufzug bei ({x},{y}) ist auf Ebene {ebene + 1} kein Boden'
     eb = "" if ebene == 0 else ", ebene: %d" % ebene
-    ph = "" if phase == 0 else ", phase: %s" % g(phase)
-    return "{ type: 'kettenzug', x: %s, y: %s, angle: %d%s%s }" % (g(x), g(y), grad, eb, ph)
+    return "{ type: 'aufzug', x: %s, y: %s, angle: %d%s }" % (g(x), g(y), grad, eb)
 
 def zahnstange(k, o, name, x, y, ebene=0, grad=0, phase=0):
     """Zahnstange: Die Schaufel wartet unten, faehrt hoch, kommt zurueck. Mitgenommen wird, wer
@@ -232,7 +231,7 @@ def g(v):
 #   1-4   flach, je ein bis zwei Maschinen: Pendel, Zahnradfeld, Kupferrohr.
 #   5     die erste zweite Ebene - eine einzige Turbine, sonst nichts Neues.
 #   6     eine flache Atempause mit dem wandernden Loch.
-#   7-8   die anderen beiden Aufzuege: Kettenzug und Zahnstange, dazu die Luke.
+#   7-8   die anderen beiden Wege hinauf: Aufzug und Zahnstange, dazu die Luke.
 #   9-11  mischen, was da ist.
 #   12    drei Ebenen, verbunden nur durch Kupferrohre.
 #   13    das Zifferblatt: unten der Werkgang, ueber allem ein Steg, und vom Steg faellt man
@@ -338,7 +337,7 @@ bahn(name='Hemmwerk', par=4, theme='escapement', maxStrokes=16, seed=12, dichte=
      decor=[('gearFlat', 19, 1.4, 1.8), ('lantern', 9.5, 11.5, 1), ('lantern', 29.5, 11.5, 1)],
      map=k.rows())
 
-# ---------------------------------------------------------------- 7 Federkammer (mittel, Kettenzug und Luke)
+# ---------------------------------------------------------------- 7 Federkammer (mittel, Aufzug und Luke)
 k = Karte(40, 17)                                  # unten
 k.rect(2, 5, 14, 12)                               # Abschlagskammer
 k.rect(23, 4, 37, 13)                              # Landekammer
@@ -349,11 +348,11 @@ o.rect(26, 7, 26, 10, 'o')                         # offene Kante zurueck nach u
 o.put(36, 8, 'H')
 bahn(name='Federkammer', par=5, theme='boiler', maxStrokes=18, seed=61, dichte=0.12,
      intro='Über die Kluft kommt nur, wer sich einspannen lässt; der leuchtende Punkt zeigt, wo der '
-           'Ball landen wird. Drüben hängt der Kettenzug: Seine Haken laufen im Takt um, und nur wer '
-           'die Stelle trifft, während gerade einer unten ist, wird mitgenommen. Oben liegt die Luke '
-           'im Weg – zu ist sie Boden, offen ein Loch. Und hinter ihr wartet das Ziel.',
+           'Ball landen wird. Drüben steht der Aufzug: Die Kabine wartet unten, und wer hineinrollt, '
+           'fährt mit – hier muss man nichts abpassen. Oben liegt dafür die Luke im Weg: zu ist sie '
+           'Boden, offen ein Loch. Und hinter ihr wartet das Ziel.',
      obstacles=[federwerk(k, 'Federkammer', 10.5, 8.5, 0, rng=12, amp=0.22, speed=0.8),
-                kettenzug(k, o, 'Federkammer', 30.5, 8.5),
+                aufzug(k, o, 'Federkammer', 30.5, 8.5),
                 luke([k, o], 'Federkammer', 33.5, 8.5, ebene=1)],
      decor=[('lantern', 5.5, 2.5, 1), ('lantern', 30.5, 1.5, 1), ('barrel', 18, 2.5, 1),
             ('crate', 18, 15.4, 1), ('gearFlat', 20, 15.4, 1.5)],
@@ -413,12 +412,12 @@ o.rect(39, 7, 39, 10, 'o')
 o.put(37, 8, 'H')
 bahn(name='Glockenturm', par=5, theme='clocktown', maxStrokes=20, seed=145, dichte=0.1,
      intro='Die Glockenstube liegt eine Etage höher. Unten stehen erst das Pendel vor der Tür und '
-           'dann die Hemmung quer durch die Halle; hinauf bringt der Kettenzug, und oben liegt die '
-           'Luke zwischen dem Haken und dem Loch. Drei Takte, und keiner passt zum anderen – hier '
+           'dann die Hemmung quer durch die Halle; hinauf bringt der Aufzug, und oben liegt die '
+           'Luke zwischen der Kabine und dem Loch. Drei Takte, und keiner passt zum anderen – hier '
            'gewinnt, wer wartet, nicht wer fest schlägt.',
      obstacles=[pendeltor(k, 'Glockenturm Tür', 15.5, 8.5, 4.0, amp=60),
                 hemmung(k, 'Glockenturm', 24.5, 8.5, ('y', 9), phase=0.5),
-                kettenzug(k, o, 'Glockenturm', 30.5, 8.5),
+                aufzug(k, o, 'Glockenturm', 30.5, 8.5),
                 luke([k, o], 'Glockenturm', 34.5, 8.5, ebene=1, phase=0.35)],
      decor=[('bell', 7.5, 1.4, 1.4), ('bell', 33.5, 1.4, 1.4), ('clock', 20, 0.8, 2.4),
             ('lantern', 20, 15.4, 1)],
@@ -523,9 +522,9 @@ for b in BAHNEN:
         assert len(e) == len(rows) and all(len(a) == len(c) for a, c in zip(e, rows)), b['name']
     if ebenen:
         # Jede Ebene ueber der untersten braucht einen Aufstieg von der Ebene darunter. Turbine,
-        # Kettenzug, Zahnstange und ein Rohr mit 'ziel' zaehlen gleichermassen.
+        # Aufzug, Zahnstange und ein Rohr mit 'ziel' zaehlen gleichermassen.
         heber = [o for o in b['obstacles']
-                 if any(t in o for t in ("'turbine'", "'kettenzug'", "'zahnstange'")) or "ziel:" in o]
+                 if any(t in o for t in ("'turbine'", "'aufzug'", "'zahnstange'")) or "ziel:" in o]
         for n in range(1, len(ebenen) + 1):
             drauf = [o for o in heber if ("ebene: %d" % (n - 1)) in o or (n == 1 and 'ebene:' not in o)]
             assert drauf, f"{b['name']}: kein Aufstieg von Ebene {n - 1} auf Ebene {n}"
@@ -554,13 +553,13 @@ kopf = '''/* Uhrenturm (Weltkennung 'clock'): dreizehn Bahnen in einer Stadt, di
 
    Aufbau: Bahn 1 bis 4 sind flach und führen je ein bis zwei Maschinen ein. Bahn 5 bringt die
    erste zweite Ebene (eine einzige Turbine, sonst nichts Neues), Bahn 6 ist eine flache Atempause,
-   Bahn 7 und 8 bringen Kettenzug und Zahnstange samt Luke. Bahn 9 bis 11 mischen, Bahn 12 stapelt
+   Bahn 7 und 8 bringen Aufzug und Zahnstange samt Luke. Bahn 9 bis 11 mischen, Bahn 12 stapelt
    drei Etagen, die nur Kupferrohre verbinden, und Bahn 13 ist der Höhepunkt. Das Kupferrohr kommt
    ab Bahn 4 vor, die Hemmung ab Bahn 6 – beide bewusst nicht auf jeder Bahn.
 
    Gestapelte Ebenen: 'map' ist die unterste Fläche, 'ebenen' sind die darüber, alle deckungsgleich.
    Der Ball ist immer auf genau einer und kollidiert nur mit deren Wänden. Hinauf geht es über
-   Turbine, Kettenzug, Zahnstange oder ein Kupferrohr mit 'ziel'; hinunter an jeder offenen Kante
+   Turbine, Aufzug, Zahnstange oder ein Kupferrohr mit 'ziel'; hinunter an jeder offenen Kante
    ('o' in der Karte) und durch eine offene Luke, beides ohne Strafschlag.
 
    Das wandernde Loch steht auf Bahn 6, 9 und 11 und - als ganzes Zifferblatt mit zwoelf

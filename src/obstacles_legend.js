@@ -921,56 +921,67 @@ class Turbine {
   }
 }
 
-/* Zwei weitere Wege nach oben, beide aus dem Uhrwerk geborgt – und beide fragen, wie alles in
-   dieser Welt, nach dem richtigen Moment. Sie unterscheiden sich genau darin, *wie* man ihn
-   treffen muss:
+/* Zwei weitere Wege nach oben, beide aus dem Uhrwerk geborgt. Sie unterscheiden sich genau darin,
+   wie viel man abpassen muss:
 
-   - Der **Kettenzug** greift im Vorbeirollen. Die Haken laufen im Takt um; ist gerade einer unten,
-     nimmt er mit, wer die Stelle berührt. Man muss also im richtigen Augenblick **durchrollen**.
+   - Der **Aufzug** verlangt gar nichts. Die Kabine wartet unten; wer hineinrollt, fährt mit.
    - Die **Zahnstange** nimmt mit, wer draufsteht, wenn sie losfährt. Die Schaufel wartet unten,
      fährt hoch, kommt zurück. Man muss also rechtzeitig **daraufkommen und warten**.
 
    Beides ist eine Fahrt wie im Kupferrohr: Der Ball hängt am Hindernis (ball.rider), wird sichtbar
    nach oben gebracht und erst oben wieder abgesetzt – auf der nächsten Ebene, an derselben Stelle. */
-const KETTE_TAKT = 3.2;          // Sekunden zwischen zwei Haken unten
-const KETTE_FENSTER = 0.7;       // so lange steht ein Haken unten bereit
-const KETTE_FAHRT = 1.1;         // Sekunden für den Weg nach oben
-const KETTE_ABWURF = 2.2;        // Tempo, mit dem der Haken den Ball oben abrollen lässt
+/* Aufzug: eine Kabine im Schacht, die zwischen zwei Ebenen pendelt. Er ist mit Absicht der
+   verlässliche Weg nach oben – kein Takt, den man abpassen muss, sondern ein Dienst: Wer in die
+   Kabine rollt, fährt mit; ist sie gerade oben, kommt sie von selbst wieder herunter und wartet.
+   Das Abpassen macht in dieser Welt die Zahnstange, das Tempo die Turbine.
 
-class ChainLift {
+   Vorgänger war der Kettenzug, bei dem ein Haken nur für einen Augenblick unten stand. Der traf im
+   Spiel fast nie, und wer danebenrollte, wusste nicht, ob er etwas falsch gemacht hatte oder nur
+   Pech. Deshalb ist er ersetzt. */
+const AUFZUG_FAHRT = 1.4;        // Sekunden für eine Fahrt zwischen zwei Ebenen
+const AUFZUG_HALT = 1.0;         // so lange steht die Kabine oben, bevor sie zurückkommt
+const AUFZUG_AUSROLL = 2.2;      // Tempo, mit dem sie den Ball oben aussetzt
+
+class Elevator {
   constructor(d) {
-    Object.assign(this, { r: 0.75, ebene: 0, phase: 0, angle: 0 }, d);
-    this.type = 'kettenzug';
+    Object.assign(this, { w: 1.5, h: 1.5, ebene: 0, angle: 0 }, d);
+    this.type = 'aufzug';
     const a = (this.angle * Math.PI) / 180;
     this.dx = Math.cos(a); this.dy = Math.sin(a);
-    this.update(0);
+    this.zurueck();
   }
+  zurueck() { this.zustand = 'unten'; this.p = 0; this.seit = 0; this.fahrgast = false; }
   update(t) {
-    const u = ((((t / KETTE_TAKT + this.phase) % 1) + 1) % 1) * KETTE_TAKT;
-    this.unten = u < KETTE_FENSTER;            // steht gerade ein Haken bereit?
-    this.hakenU = u / KETTE_TAKT;              // 0..1 für die Zeichnung: wo die Haken umlaufen
+    if (this.zustand === 'hoch' || this.zustand === 'runter') {
+      const u = Math.min(1, (t - this.seit) / AUFZUG_FAHRT), q = u * u * (3 - 2 * u);
+      this.p = this.zustand === 'hoch' ? q : 1 - q;
+      if (u >= 1) { this.zustand = this.zustand === 'hoch' ? 'oben' : 'unten'; this.seit = t; }
+    } else if (this.zustand === 'oben' && !this.fahrgast && t - this.seit > AUFZUG_HALT) {
+      this.zustand = 'runter'; this.seit = t;
+    }
+  }
+  inKabine(ball) {
+    return Math.abs(ball.x - this.x) <= this.w / 2 && Math.abs(ball.y - this.y) <= this.h / 2;
   }
   ride(ball, t, events) {
     if (!this.level || !this.level.flaechen[(this.ebene || 0) + 1]) return false;
     if (ball.rider === this) {
-      const u = Math.min(1, (t - ball.kettStart) / KETTE_FAHRT);
-      this.fahrt = u;
       ball.x = this.x; ball.y = this.y; ball.vx = 0; ball.vy = 0; ball.vz = 0;
-      ball.z = u * this.level.ebeneZ;
-      if (u < 1) return true;
-      // Oben absetzen: eine Ebene höher, an derselben Stelle, mit einem kleinen Schubs vom Haken
-      this.fahrt = -1;
-      ball.rider = null; ball.rideCd = 0.5;
+      ball.z = this.p * this.level.ebeneZ;
+      if (this.zustand !== 'oben') return true;
+      // Oben: eine Ebene höher absetzen und in Richtung 'angle' herausrollen lassen
+      ball.rider = null; ball.rideCd = 0.5; this.fahrgast = false; this.seit = t;
       ball.ebene = (this.ebene || 0) + 1; this.level.setzeEbene(ball.ebene);
       ball.z = 0; ball.vz = 0;
-      ball.vx = this.dx * KETTE_ABWURF; ball.vy = this.dy * KETTE_ABWURF;
+      ball.vx = this.dx * AUFZUG_AUSROLL; ball.vy = this.dy * AUFZUG_AUSROLL;
       events.push({ type: 'dropoff', x: ball.x, y: ball.y });
       return false;
     }
     if (ball.rideCd > 0 || ball.air) return false;
-    if ((ball.ebene || 0) !== (this.ebene || 0) || !this.unten) return false;
-    if (Math.hypot(ball.x - this.x, ball.y - this.y) > this.r) return false;
-    ball.rider = this; ball.kettStart = t; this.fahrt = 0;
+    // Einsteigen geht nur, wenn die Kabine unten steht - und dann immer, ohne Fenster
+    if ((ball.ebene || 0) !== (this.ebene || 0) || this.zustand !== 'unten') return false;
+    if (!this.inKabine(ball)) return false;
+    ball.rider = this; this.fahrgast = true; this.zustand = 'hoch'; this.seit = t; this.p = 0;
     ball.x = this.x; ball.y = this.y; ball.vx = 0; ball.vy = 0; ball.z = 0;
     events.push({ type: 'board', x: this.x, y: this.y });
     return true;
@@ -1015,7 +1026,7 @@ class RackLift {
       ball.rider = null; ball.rideCd = 0.5;
       ball.ebene = (this.ebene || 0) + 1; this.level.setzeEbene(ball.ebene);
       ball.z = 0; ball.vz = 0;
-      ball.vx = this.dx * KETTE_ABWURF; ball.vy = this.dy * KETTE_ABWURF;
+      ball.vx = this.dx * AUFZUG_AUSROLL; ball.vy = this.dy * AUFZUG_AUSROLL;
       events.push({ type: 'dropoff', x: ball.x, y: ball.y });
       return false;
     }
