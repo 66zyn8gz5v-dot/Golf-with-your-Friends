@@ -1396,9 +1396,12 @@ Object.assign(Renderer.prototype, {
      legt jede stehende Scheibe schief. Runde Teile liegen deshalb im Boden.
      --------------------------------------------------------------------------- */
 
-  /* Zahnradfeld: die Räder liegen in einer Rinne im Boden und greifen ineinander. Der helle
-     Mitnehmer wandert mit dem Feld – dort wird der Ball gefasst, dort setzt es ihn wieder ab. */
-  drawGearFieldFloor(ctx, ob, t) {
+  /* Zahnradfeld: die Räder liegen in einer Rinne im Boden und greifen ineinander. Sie sind Körper,
+     keine Scheiben – jeder Zahn hat seine eigene Seitenfläche, sonst sähe das Feld von schräg vorn
+     aus wie aufgemalt. Der helle Mitnehmer wandert mit dem Feld: Dort wird der Ball gefasst, dort
+     setzt es ihn wieder ab. Gezeichnet wird von hinten nach vorn, damit sich die Räder richtig
+     überdecken. */
+  drawGearField(ctx, ob, t) {
     const s = this.scale, r = ob.r;
     const qx = -ob.uy * (r + 0.22), qy = ob.ux * (r + 0.22);
     const e0x = ob.x0 - ob.ux * (r + 0.22), e0y = ob.y0 - ob.uy * (r + 0.22);
@@ -1406,25 +1409,17 @@ Object.assign(Renderer.prototype, {
     // Rinne, in der die Räder sitzen
     this.fillPoly(ctx, [[e0x + qx, e0y + qy], [e1x + qx, e1y + qy], [e1x - qx, e1y - qy], [e0x - qx, e0y - qy]],
       0.004, 'rgba(28,18,8,0.55)', false);
-    for (const [i, rad] of ob.raeder.entries()) {
+    const reihe = ob.raeder.map((rad, i) => ({ rad, i })).sort((a, b) => this.depth(a.rad.x, a.rad.y) - this.depth(b.rad.x, b.rad.y));
+    for (const { rad, i } of reihe) {
       const w = ob.winkel * rad.dreh + (i % 2 ? Math.PI / ob.zaehne : 0);
-      this.fillPoly(ctx, this.zahnPoly(rad.x, rad.y, r + 0.05, ob.zaehne, w), 0.006, 'rgba(0,0,0,0.35)', false);
-      this.fillPoly(ctx, this.zahnPoly(rad.x, rad.y, r, ob.zaehne, w), 0.012, '#b8842f', false);
-      this.isoEllipse(ctx, rad.x, rad.y, 0.016, r * 0.62, '#d8a441');
-      // Speichen: sie machen die Drehung sichtbar
-      const [cx, cy] = this.proj(rad.x, rad.y, 0.018);
-      ctx.strokeStyle = '#7a5418'; ctx.lineWidth = Math.max(1.5, s * 0.05);
-      for (let k = 0; k < 4; k++) {
-        const a = w + (k * Math.PI) / 2;
-        const [px, py] = this.proj(rad.x + Math.cos(a) * r * 0.58, rad.y + Math.sin(a) * r * 0.58, 0.018);
-        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(px, py); ctx.stroke();
-      }
-      this.isoEllipse(ctx, rad.x, rad.y, 0.02, r * 0.2, '#4e3814');
+      this.isoEllipse(ctx, rad.x, rad.y, 0.006, r * 1.05, 'rgba(0,0,0,0.3)');
+      this.zahnrad(ctx, rad.x, rad.y, 0.01, r, r * 0.34, ob.zaehne, w, '#d8a441', '#7a5418', { outline: '#3a2610' });
     }
     // Mitnehmer: die Lücke, die den Ball trägt
     const puls = ob.docked ? 0.55 + 0.45 * Math.sin(t * 5) : 0.9;
-    this.isoEllipse(ctx, ob.x, ob.y, 0.026, 0.5, `rgba(255,226,150,${(0.32 * puls).toFixed(2)})`);
-    this.isoEllipse(ctx, ob.x, ob.y, 0.028, 0.3, `rgba(255,244,210,${(0.75 * puls).toFixed(2)})`);
+    const zh = r * 0.34 + 0.02;
+    this.isoEllipse(ctx, ob.x, ob.y, zh, 0.5, `rgba(255,226,150,${(0.32 * puls).toFixed(2)})`);
+    this.isoEllipse(ctx, ob.x, ob.y, zh + 0.002, 0.3, `rgba(255,244,210,${(0.75 * puls).toFixed(2)})`);
   },
 
   /* Pendel: die Linse hängt an einer Stange, die von oben herunterkommt – über dem Ball, nicht

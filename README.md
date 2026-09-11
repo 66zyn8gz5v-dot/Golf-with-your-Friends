@@ -644,6 +644,12 @@ darum **Körper statt Scheiben**:
   macht*). Ihre Tiefe wird darum nicht gerechnet, sondern gemalt: dieselbe Zahnform mehrfach
   gegeneinander versetzt, von hinten dunkel nach vorn hell (`Renderer.zahnradScheibe`). Das liest
   sich als Rad mit Dicke und bleibt aus jeder Kamerarichtung richtig.
+- **Das Zahnradfeld** ist aus denselben Körpern gebaut und wird nach Tiefe sortiert gezeichnet,
+  damit sich die Räder richtig überdecken. An seiner Ein- und Ausstiegskachel steht ein `o`
+  (Klippe) in der Karte: Dort baut `level.js` weder Bande noch Kollisionskante. Ohne das stünde
+  quer vor dem Feld ein Geländer, und der getragene Ball führe mitten hindurch – er wird ja
+  gesetzt und nicht geschoben, also hält ihn keine Wand auf. Mit der offenen Kante sieht man,
+  wofür die Lücke da ist, und wer danebenrollt, fällt auch wirklich hinunter.
 - **Rings um die Bahn** stecken acht große Räder halb in der Erdscholle und drehen sich langsam
   (`Renderer.drawGroundGears`). Sie liegen immer außerhalb der Bahn – der Ball berührt sie nie.
   Damit sie nicht in der Luft hängen, reicht die Erdscholle in diesen Welten weiter als sonst

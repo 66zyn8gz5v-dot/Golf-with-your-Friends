@@ -67,9 +67,17 @@ def pendeltor(k, name, gx, gy, ph, amp=60, phase=0, w=1.2):
 
 def zahnradfeld(k, name, x0, y0, x1, y1, wait=2.2, travel=3.2, r=0.9, zaehne=10, phase=0):
     """Zahnradfeld traegt ueber eine Luecke. Beide Enden muessen auf der Bahn liegen, sonst
-    setzt es den Ball ins Nichts."""
+    setzt es den Ball ins Nichts.
+
+    Ein- und Ausstiegskachel werden zu 'o' (Klippe): Dort baut level.js keine Bande und keine
+    Kollisionskante. Sonst stuende quer vor dem Feld ein Gelaender, und der getragene Ball fuehre
+    mitten hindurch - er wird ja gesetzt und nicht geschoben, also haelt ihn keine Wand auf. Mit
+    der offenen Kante sieht man, wofuer die Luecke da ist, und wer danebenrollt, faellt auch
+    wirklich hinunter."""
     for etikett, wx, wy in [('Anfang', x0, y0), ('Ende', x1, y1)]:
         assert k.frei(wx, wy), f'{name}: Zahnradfeld-{etikett} bei ({wx},{wy}) liegt auf "{k.at(wx, wy)}"'
+        if k.at(wx, wy) == '#':
+            k.put(int(wx), int(wy), 'o')
     assert math.hypot(x1 - x0, y1 - y0) > 1, name
     return ("{ type: 'gearfield', x0: %s, y0: %s, x1: %s, y1: %s, wait: %s, travel: %s, r: %s, zaehne: %d, phase: %s }"
             % (g(x0), g(y0), g(x1), g(y1), g(wait), g(travel), g(r), zaehne, g(phase)))

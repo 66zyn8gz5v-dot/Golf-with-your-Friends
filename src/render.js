@@ -1085,7 +1085,6 @@ class Renderer {
     if (ob.type === 'gearlift') { this.drawGearLiftFloor(ctx, ob, t); return; }
     if (ob.type === 'piston') { this.drawPistonFloor(ctx, ob, t); return; }
     if (ob.type === 'hand') { this.isoEllipse(ctx, ob.x, ob.y, 0.004, ob.len + 0.2, 'rgba(0,0,0,0.1)'); return; }
-    if (ob.type === 'gearfield') { this.drawGearFieldFloor(ctx, ob, t); return; }
     if (ob.type === 'pendulum') { this.drawPendulumFloor(ctx, ob, t); return; }
     if (ob.type === 'springwork') { this.drawSpringWorkFloor(ctx, ob, t); return; }
     if (ob.type === 'escapement') { this.drawEscapementFloor(ctx, ob, t); return; }
@@ -1384,6 +1383,8 @@ class Renderer {
       // Rohrmund und Rohrende stehen an verschiedenen Stellen der Karte – jeder wird für sich einsortiert
       if (ob.x != null) items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => this.drawCopperPipe(ctx, ob, t, false) });
       if (ob.ax != null) items.push({ x: ob.ax, y: ob.ay, bias: 0.2, draw: () => this.drawCopperPipe(ctx, ob, t, true) });
+    } else if (ob.type === 'gearfield') {
+      items.push({ x: (ob.x0 + ob.x1) / 2, y: (ob.y0 + ob.y1) / 2, bias: -0.2, draw: () => this.drawGearField(ctx, ob, t) });
     } else if (ob.type === 'sweephand') {
       items.push({ x: ob.x, y: ob.y, bias: 0.3, draw: () => this.drawSweepHand(ctx, ob, t) });
     } else if (ob.type === 'escapement') {
