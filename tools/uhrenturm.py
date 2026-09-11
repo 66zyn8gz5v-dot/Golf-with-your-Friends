@@ -247,7 +247,7 @@ k.put(4, 6, 'T'); k.put(29, 6, 'H')
 bahn(name='Marktplatz', par=3, theme='clocktown', maxStrokes=12, seed=71, dichte=0.12,
      intro='Der Platz unter der Stadtuhr. Durch die Mauer führt eine einzige Tür, und vor ihr schwingt '
            'das große Pendel. Zweimal je Schwingung gibt es die Tür frei – dann muss der Ball hindurch.',
-     obstacles=[pendeltor(k, 'Marktplatz', 17.5, 6.5, 2.5)],
+     obstacles=[pendeltor(k, 'Marktplatz', 17.5, 6.5, 3.0, amp=50)],
      decor=[('clock', 17, 0.5, 2.4), ('lantern', 4.5, 0.6, 1), ('lantern', 29.5, 0.6, 1),
             ('barrel', 0.9, 6.5, 1), ('crate', 32.8, 4.4, 1)],
      map=k.rows())
@@ -255,14 +255,14 @@ bahn(name='Marktplatz', par=3, theme='clocktown', maxStrokes=12, seed=71, dichte
 # ---------------------------------------------------------------- 2 Glockengasse (einfach)
 k = Karte(38, 13)
 k.rect(2, 3, 35, 9)
-for cx in (13, 25):
+for cx in (12, 24):
     k.rect(cx, 3, cx, 9, 'x'); k.put(cx, 6, '#')
-k.put(4, 6, 'T'); k.put(33, 6, 'H')
+k.put(4, 6, 'T'); k.put(32, 6, 'H')
 bahn(name='Glockengasse', par=4, theme='clocktown', maxStrokes=14, seed=23, dichte=0.12,
      intro='Zwei Türen, zwei Pendel – und sie gehen versetzt. Wer die erste im richtigen Moment nimmt, '
            'steht vor der zweiten zur falschen Zeit. Einmal zusehen lohnt sich mehr als jeder feste Schlag.',
-     obstacles=[pendeltor(k, 'Glockengasse A', 13.5, 6.5, 2.5),
-                pendeltor(k, 'Glockengasse B', 25.5, 6.5, 2.5, phase=0.5)],
+     obstacles=[pendeltor(k, 'Glockengasse A', 12.5, 6.5, 3.0, amp=50),
+                pendeltor(k, 'Glockengasse B', 24.5, 6.5, 3.0, amp=50, phase=0.5)],
      decor=[('clock', 19, 0.5, 2.4), ('bell', 9.5, 11.6, 1.2), ('bell', 29.5, 11.6, 1.2),
             ('lantern', 19, 11.7, 1)],
      map=k.rows())
@@ -307,14 +307,15 @@ k.rect(2, 4, 35, 11)
 k.rect(20, 4, 20, 11, 'x'); k.put(20, 7, '#')      # Tuer mit Pendel
 k.put(4, 7, 'T')
 o = Karte(38, 15)                                  # oben: die Galerie mit dem Loch
-o.rect(24, 6, 33, 9)
-o.rect(34, 6, 34, 9, 'o')                          # offene Kante: hier faellt man zurueck
-o.put(31, 7, 'H')
+o.rect(24, 6, 34, 9)                               # Galerie, ringsum Bruestung
+o.rect(24, 10, 34, 10, 'o')                        # offene Kante nach Sueden: der Weg zurueck
+o.put(32, 7, 'H')
 bahn(name='Turbinenhalle', par=4, theme='boiler', maxStrokes=16, seed=105, dichte=0.12,
      intro='Hier geht es zum ersten Mal nach oben. Das Loch liegt auf der Galerie, und hinauf bringt '
            'nur die Turbine: Wer über ihr Gitter rollt, wird mit einem Windstoß eine Etage höher '
-           'gesetzt – mit derselben Richtung und demselben Tempo. Zu schnell, und man schießt oben '
-           'über die offene Kante wieder hinunter. Das kostet keinen Strafschlag, nur den Weg.',
+           'gesetzt – mit derselben Richtung und demselben Tempo. Oben hält die Brüstung, nur die '
+           'gestrichelte Südkante ist offen: Von dort geht es ohne Strafschlag zurück nach unten, '
+           'wenn man sich verschätzt hat.',
      obstacles=[pendeltor(k, 'Turbinenhalle', 20.5, 7.5, 3.5),
                 turbine(k, o, 'Turbinenhalle', 26.5, 7.5)],
      decor=[('lantern', 5.5, 1.5, 1), ('lantern', 15.5, 13.5, 1), ('barrel', 36.8, 7.5, 1),
