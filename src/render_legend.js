@@ -1406,13 +1406,16 @@ Object.assign(Renderer.prototype, {
     const qx = -ob.uy * (r + 0.22), qy = ob.ux * (r + 0.22);
     const e0x = ob.x0 - ob.ux * (r + 0.22), e0y = ob.y0 - ob.uy * (r + 0.22);
     const e1x = ob.x1 + ob.ux * (r + 0.22), e1y = ob.y1 + ob.uy * (r + 0.22);
-    // Rinne, in der die Räder sitzen
-    this.fillPoly(ctx, [[e0x + qx, e0y + qy], [e1x + qx, e1y + qy], [e1x - qx, e1y - qy], [e0x - qx, e0y - qy]],
-      0.004, 'rgba(28,18,8,0.55)', false);
+    /* Rinne, in der die Räder sitzen. Sie ist schmal und hell gehalten: Die Räder sind inzwischen
+       Körper mit eigenen Seitenflächen, die brauchen keinen dunklen Grund mehr, um zu wirken. Ein
+       breiter dunkler Streifen sah aus wie ein Schmutzfleck unter der Maschine. */
+    const br = r * 0.92;
+    this.fillPoly(ctx, [[e0x + ob.uy * -br, e0y + ob.ux * br], [e1x + ob.uy * -br, e1y + ob.ux * br],
+      [e1x - ob.uy * -br, e1y - ob.ux * br], [e0x - ob.uy * -br, e0y - ob.ux * br]],
+      0.004, 'rgba(40,28,14,0.28)', false);
     const reihe = ob.raeder.map((rad, i) => ({ rad, i })).sort((a, b) => this.depth(a.rad.x, a.rad.y) - this.depth(b.rad.x, b.rad.y));
     for (const { rad, i } of reihe) {
       const w = ob.winkel * rad.dreh + (i % 2 ? Math.PI / ob.zaehne : 0);
-      this.isoEllipse(ctx, rad.x, rad.y, 0.006, r * 1.05, 'rgba(0,0,0,0.3)');
       this.zahnrad(ctx, rad.x, rad.y, 0.01, r, r * 0.34, ob.zaehne, w, '#d8a441', '#7a5418', { outline: '#3a2610' });
     }
     // Mitnehmer: die Lücke, die den Ball trägt
@@ -1425,18 +1428,23 @@ Object.assign(Renderer.prototype, {
   /* Pendel: die Linse hängt an einer Stange, die von oben herunterkommt – über dem Ball, nicht
      in seinem Weg. Auf dem Boden liegt der Bogen, den sie bestreicht, damit man die Schwingbahn
      schon von weitem sieht und nicht erst, wenn man darin liegt. */
+  /* Der Bogen, den die Linse bestreicht. Gezeichnet werden zwei feine Schienen an seinen Rändern
+     statt eines breiten weichen Streifens: Der sah auf dem Pflaster aus wie ein Wischer, und man
+     konnte an ihm nicht ablesen, wie breit die Linse wirklich ist. Zwei Linien sagen genau das. */
   drawPendulumFloor(ctx, ob, t) {
-    const s = this.scale, br = ob.w * 0.55;
-    ctx.strokeStyle = 'rgba(255,214,110,0.16)'; ctx.lineWidth = Math.max(2, s * br * 2 * this.cam.tilt);
-    ctx.lineCap = 'round'; ctx.beginPath();
-    const n = 18;
-    for (let i = 0; i <= n; i++) {
-      const a = ob.ruheR - ob.ampR + (2 * ob.ampR * i) / n;
-      const [px, py] = this.proj(ob.ax + Math.cos(a) * ob.len, ob.ay + Math.sin(a) * ob.len, 0.004);
-      i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+    const s = this.scale, br = ob.w * 0.5;
+    ctx.strokeStyle = 'rgba(255,214,110,0.3)'; ctx.lineWidth = Math.max(1, s * 0.045);
+    const n = 20;
+    for (const sd of [-1, 1]) {
+      ctx.beginPath();
+      for (let i = 0; i <= n; i++) {
+        const a = ob.ruheR - ob.ampR + (2 * ob.ampR * i) / n;
+        const [px, py] = this.proj(ob.ax + Math.cos(a) * (ob.len + sd * br), ob.ay + Math.sin(a) * (ob.len + sd * br), 0.004);
+        i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+      }
+      ctx.stroke();
     }
-    ctx.stroke(); ctx.lineCap = 'butt';
-    this.isoEllipse(ctx, ob.x, ob.y, 0.006, br * 1.1, 'rgba(0,0,0,0.3)');
+    this.isoEllipse(ctx, ob.x, ob.y, 0.006, br * 0.95, 'rgba(0,0,0,0.22)');
   },
   drawPendulum(ctx, ob, t) {
     const s = this.scale, r = ob.w * 0.45;
