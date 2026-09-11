@@ -641,6 +641,11 @@ Schräge – dort fährt die Gondel, und genau das ist ihr Sinn. Geprüft wird j
 `scratchpad/schraege.mjs`: ein schwacher Schlag hinauf muss unterhalb der Rampe wieder zur Ruhe
 kommen, ein kräftiger über sie hinweg.
 
+Gezeichnet wird die Schräge nicht als Erdrampe: Die Standardfarbe ist erdbraun, und auf einem
+Schneeberg sah das aus wie ein Feldweg quer über den Hang. Die fünf Schnee-Paletten tragen darum
+`hangStil: 'schnee'` – dann wird daraus eine Schneerinne, blaugraue Mulde mit hellem Kamm, dieselbe
+Sprache wie die Windfahnen auf dem Boden.
+
 Die Umgebung erzählt dieselbe Geschichte: Unten steht dichter Nadelwald, in der Felszone treten
 Blöcke hervor, auf dem Gletscher stehen Eiskristalle, und oben wird es kahl. Der Windsack war dabei
 zuerst jede fünfte Streudeko – auf dem Gipfel standen dadurch Dutzende herum, wo eigentlich nichts

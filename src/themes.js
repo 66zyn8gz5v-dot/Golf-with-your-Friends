@@ -404,7 +404,8 @@ const THEMES = {
      ist blankes Eis (rutscht). Beide gibt es in der Engine längst - sie brauchen nur die
      richtigen Farben.
      --------------------------------------------------------------------------- */
-  snowfoot: { // Am Fuß: Nadelwald, festgetretener Schnee, Mittagslicht über den Wipfeln
+  snowfoot: {
+    hangStil: 'schnee',   // Schrägen als Schneerinne, nicht als Erdrampe // Am Fuß: Nadelwald, festgetretener Schnee, Mittagslicht über den Wipfeln
     atmo: 'snow',
     sky: ['#9fc6ee', '#e8f3ff'], ground: '#cfdcea', groundEdge: '#9fb2c8', cliff: '#8fa2ba',
     floor: ['#f4f9ff', '#e8f1fb'], sand: '#dfe9f5', ice: '#bfe6ff', snow: '#ffffff',
@@ -417,7 +418,8 @@ const THEMES = {
     blockStil: 'fels',
     autoDecor: ['pineSnow', 'pineSnow', 'pineSnow', 'rockSnow', 'pineSnow', 'pineSnow', 'rockSnow', 'windsock'],
   },
-  snowrock: { // Felsband: die Bäume bleiben unten, der Fels tritt hervor, Schnee nur in den Rinnen
+  snowrock: {
+    hangStil: 'schnee',   // Schrägen als Schneerinne, nicht als Erdrampe // Felsband: die Bäume bleiben unten, der Fels tritt hervor, Schnee nur in den Rinnen
     atmo: 'snow',
     sky: ['#6d9bd0', '#cfe3f7'], ground: '#8c94a4', groundEdge: '#5b6373', cliff: '#6a7382',
     floor: ['#e2ecf7', '#d3e1f0'], sand: '#c9d6e4', ice: '#b0dfff', snow: '#f6fbff',
@@ -430,7 +432,8 @@ const THEMES = {
     blockStil: 'fels',
     autoDecor: ['rockSnow', 'rockSnow', 'rockSnow', 'pineSnow', 'rockSnow', 'pineSnow', 'crystalBlue', 'windsock'],
   },
-  glacier: { // Gletscher: blankes Blaueis, Spalten, kaltes Streiflicht
+  glacier: {
+    hangStil: 'schnee',   // Schrägen als Schneerinne, nicht als Erdrampe // Gletscher: blankes Blaueis, Spalten, kaltes Streiflicht
     atmo: 'blizzard',
     sky: ['#2f5f9e', '#a9d7f5'], ground: '#7fb6dd', groundEdge: '#3f7aae', cliff: '#5f9ac8',
     floor: ['#d8f0ff', '#c6e7ff'], sand: '#cfe3f0', ice: '#9fdcff', snow: '#f2fbff',
@@ -443,7 +446,8 @@ const THEMES = {
     blockStil: 'fels',
     autoDecor: ['crystalBlue', 'crystalBlue', 'crystalBlue', 'rockSnow', 'crystalBlue', 'rockSnow', 'crystalBlue', 'windsock'],
   },
-  summit: { // Gipfelgrat: dünne Luft, fast schwarzblauer Himmel, Windharsch, Sterne am Tag
+  summit: {
+    hangStil: 'schnee',   // Schrägen als Schneerinne, nicht als Erdrampe // Gipfelgrat: dünne Luft, fast schwarzblauer Himmel, Windharsch, Sterne am Tag
     atmo: 'blizzard',
     sky: ['#122a5c', '#7fb4e8'], ground: '#b9cbdd', groundEdge: '#7b8ea3', cliff: '#8fa3b8',
     floor: ['#f7fbff', '#eaf3fd'], sand: '#dbe7f2', ice: '#b6e6ff', snow: '#ffffff',
@@ -456,7 +460,8 @@ const THEMES = {
     blockStil: 'fels',
     autoDecor: ['rockSnow', 'rockSnow', 'cloud', 'crystalBlue', 'rockSnow', 'cloud', 'crystalBlue', 'windsock'],
   },
-  cloud: { // Über den Wolken: nichts mehr fest außer dem, worauf man steht
+  cloud: {
+    hangStil: 'schnee',   // Schrägen als Schneerinne, nicht als Erdrampe // Über den Wolken: nichts mehr fest außer dem, worauf man steht
     atmo: 'none',
     sky: ['#3d74c4', '#ffe3ef'], ground: '#f2f7ff', groundEdge: '#c4d6ee', cliff: '#d6e4f6',
     floor: ['#ffffff', '#f0f6ff'], sand: '#e4ecf7', ice: '#c8ecff', snow: '#ffffff',

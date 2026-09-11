@@ -1185,8 +1185,15 @@ class Renderer {
       const dx = isBoost ? ob.dx : ob.fx, dy = isBoost ? ob.dy : ob.fy;
       const L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L;
       const slope = ob.style === 'slope';
-      this.fillPoly(ctx, poly, 0.005, isBoost ? 'rgba(255,220,90,0.28)' : slope ? 'rgba(90,60,20,0.22)' : 'rgba(200,230,255,0.22)', false);
-      ctx.strokeStyle = isBoost ? 'rgba(255,240,160,0.9)' : slope ? 'rgba(80,50,20,0.75)' : 'rgba(230,245,255,0.7)'; ctx.lineWidth = Math.max(1.5, s * 0.06);
+      /* Eine Schräge ist sonst erdbraun – auf einem Schneeberg sähe das aus wie ein Feldweg.
+         Wo die Palette es sagt ('hangStil'), wird sie zur Schneerinne: blaugraue Mulde, heller
+         Kamm. Dieselbe Sprache wie die Windfahnen auf dem Boden. */
+      const schneehang = slope && this.theme.hangStil === 'schnee';
+      this.fillPoly(ctx, poly, 0.005, isBoost ? 'rgba(255,220,90,0.28)'
+        : schneehang ? 'rgba(126,162,204,0.26)' : slope ? 'rgba(90,60,20,0.22)' : 'rgba(200,230,255,0.22)', false);
+      ctx.strokeStyle = isBoost ? 'rgba(255,240,160,0.9)'
+        : schneehang ? 'rgba(255,255,255,0.85)' : slope ? 'rgba(80,50,20,0.75)' : 'rgba(230,245,255,0.7)';
+      ctx.lineWidth = Math.max(1.5, s * 0.06);
       const cx = ob.x + ob.w / 2, cy = ob.y + ob.h / 2;
       const span = Math.abs(ux) > Math.abs(uy) ? ob.w : ob.h;
       const n = Math.max(2, Math.round(span / 0.9));
