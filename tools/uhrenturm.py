@@ -355,8 +355,8 @@ bahn(name='Federkammer', par=5, theme='boiler', maxStrokes=18, seed=61, dichte=0
      obstacles=[federwerk(k, 'Federkammer', 10.5, 8.5, 0, rng=12, amp=0.22, speed=0.8),
                 kettenzug(k, o, 'Federkammer', 30.5, 8.5),
                 luke([k, o], 'Federkammer', 33.5, 8.5, ebene=1)],
-     decor=[('lantern', 5.5, 2.5, 1), ('lantern', 30.5, 1.5, 1), ('barrel', 18, 8.5, 1),
-            ('crate', 18, 12.5, 1), ('gearFlat', 18, 15.4, 1.5)],
+     decor=[('lantern', 5.5, 2.5, 1), ('lantern', 30.5, 1.5, 1), ('barrel', 18, 2.5, 1),
+            ('crate', 18, 15.4, 1), ('gearFlat', 20, 15.4, 1.5)],
      map=k.rows(), ebenen=[o.rows()])
 
 # ---------------------------------------------------------------- 8 Zeigerhof (mittel, Zahnstange)

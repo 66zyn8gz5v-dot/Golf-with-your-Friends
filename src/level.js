@@ -196,12 +196,33 @@ function pushWallChunks(walls, x, y, w, h) {
   }
 }
 
+/* Abstand eines Punktes zu einer Strecke – für die Freihaltezonen der Deko. */
+function abstandStrecke(px, py, f) {
+  const dx = f.x1 - f.x0, dy = f.y1 - f.y0, L = dx * dx + dy * dy;
+  let u = L ? ((px - f.x0) * dx + (py - f.y0) * dy) / L : 0;
+  u = Math.max(0, Math.min(1, u));
+  return Math.hypot(px - (f.x0 + dx * u), py - (f.y0 + dy * u));
+}
+
 /* Deko: explizite Objekte plus automatisch verstreute Objekte auf leeren Kacheln
    (innerhalb der Karte und in einem Ring von 2 Kacheln außen herum). */
 function buildDecor(def, tiles, W, H, isFloor) {
   const theme = THEMES[def.theme];
   const out = [];
   for (const d of def.decor || []) out.push(Object.assign({ s: 1, z: 0 }, d));
+  /* Freihalten, wo eine Maschine über den Fairway hinausgreift. Das Zahnradfeld trägt quer über
+     eine Lücke, Feder und Kanone werfen darüber hinweg – und genau dort ist kein Boden, also
+     streut die Zufallsdeko sonst mitten hinein. Dann verschwindet die Strecke im Gerümpel und
+     man sieht nicht mehr, wohin der Weg führt. */
+  const frei = [];
+  for (const o of def.obstacles || []) {
+    if (o.type === 'gearfield') frei.push({ x0: o.x0, y0: o.y0, x1: o.x1, y1: o.y1, r: 1.9 });
+    if (o.type === 'springwork' || o.type === 'cannon') {
+      const a = o.base || 0, R = 0.9 + (o.range || 9);
+      frei.push({ x0: o.x, y0: o.y, x1: o.x + Math.cos(a) * R, y1: o.y + Math.sin(a) * R, r: 1.4 });
+    }
+  }
+  const imWeg = (px, py) => frei.some(f => abstandStrecke(px, py, f) < f.r);
   const auto = def.autoDecor;
   if (auto && theme.autoDecor.length) {
     const rnd = seededRandom(auto.seed || 1);
@@ -220,8 +241,9 @@ function buildDecor(def, tiles, W, H, isFloor) {
         if (near) continue;
       }
       const px = x + 0.25 + rnd() * 0.5, py = y + 0.25 + rnd() * 0.5;
-      // Abstand zu Abschlag/Loch-Sicht: nichts direkt vor dem Loch (nur Optik)
-      out.push({ t, x: px, y: py, s: 0.75 + rnd() * 0.6, z: 0, seed: rnd() });
+      const gr = 0.75 + rnd() * 0.6, sd = rnd();   // erst ziehen, dann verwerfen: sonst
+      if (imWeg(px, py)) continue;                 // verschöbe sich die ganze Streuung
+      out.push({ t, x: px, y: py, s: gr, z: 0, seed: sd });
     }
   }
   return out;

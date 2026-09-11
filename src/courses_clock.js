@@ -294,9 +294,9 @@ const CLOCK_COURSES = [
     decor: [
       { t: 'lantern', x: 5.5, y: 2.5, s: 1 },
       { t: 'lantern', x: 30.5, y: 1.5, s: 1 },
-      { t: 'barrel', x: 18, y: 8.5, s: 1 },
-      { t: 'crate', x: 18, y: 12.5, s: 1 },
-      { t: 'gearFlat', x: 18, y: 15.4, s: 1.5 },
+      { t: 'barrel', x: 18, y: 2.5, s: 1 },
+      { t: 'crate', x: 18, y: 15.4, s: 1 },
+      { t: 'gearFlat', x: 20, y: 15.4, s: 1.5 },
     ],
     autoDecor: { density: 0.12, seed: 61 },
   },
