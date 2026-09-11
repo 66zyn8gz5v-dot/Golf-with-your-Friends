@@ -609,7 +609,8 @@ Antwort ändert sich.
 **Aufbau.** Bahn 1 bis 4 führen je ein bis zwei Maschinen ein, 5 bis 8 mischen sie, 9 bis 11
 kombinieren, und 12 ist der Höhepunkt. Das **Kupferrohr** kommt erst ab Bahn 4 vor, die **Hemmung**
 erst ab Bahn 5 – und beide bewusst nicht auf jeder Bahn, damit sie nicht zur Gewohnheit werden.
-**Bahn 12 ist die einzige mit dem wandernden Loch.**
+Das **wandernde Loch** steht auf vier Bahnen: klein auf 5, 8 und 10, und als ganzes Zifferblatt
+auf 12.
 
 | Nr. | Bahn | Par | Maschinen | Der Moment, auf den man wartet |
 |---|---|---|---|---|
@@ -617,26 +618,78 @@ erst ab Bahn 5 – und beide bewusst nicht auf jeder Bahn, damit sie nicht zur G
 | 2 | Glockengasse | 3 | Pendel ×2 | Zwei Türen, versetzte Pendel – die eine passt, wenn die andere nicht passt |
 | 3 | Räderwerkstatt | 4 | Zahnradfeld, Pendel | Das Feld hält am Ufer an: einsteigen, tragen lassen |
 | 4 | Rohrpost | 4 | Kupferrohr, Pendel | Mit Schwung in den Rohrmund – zu sacht prallt ab |
-| 5 | Hemmwerk | 4 | Hemmung, Pendel | Die offene Hälfte des Ganges, dann die Tür |
+| 5 | Hemmwerk | 4 | Hemmung, Pendel, wanderndes Loch | Die offene Hälfte des Ganges, dann die Tür – und dahinter bleibt das Loch nicht liegen |
 | 6 | Federkammer | 4 | Federwerk, Hemmung | Die Feder schwenkt: schießen, wenn der Punkt richtig steht |
 | 7 | Zeigerhof | 3 | Zeigerarm, Zahnradfeld | Hinter dem Zeiger herlaufen, nicht vor ihm |
-| 8 | Kesselhaus | 4 | Pendel, Kupferrohr, Federwerk | Erst durch die Tür, dann mit Rest-Schwung ins Rohr |
+| 8 | Kesselhaus | 4 | Pendel, Kupferrohr, Federwerk, wanderndes Loch | Erst durch die Tür, dann mit Rest-Schwung ins Rohr – und auf dem Podest pendelt das Loch |
 | 9 | Glockenturm | 5 | Pendel ×2, Hemmung | Drei Takte, von denen keiner zum anderen passt |
-| 10 | Räderschacht | 5 | Zahnradfeld ×2, Zeigerarm, Hemmung | Zwei Felder und ein Zeiger, der die Scheibe leerräumt |
+| 10 | Räderschacht | 5 | Zahnradfeld ×2, Zeigerarm, Hemmung, wanderndes Loch | Zwei Felder, ein Zeiger, der die Scheibe leerräumt – und ein Loch, das nicht wartet |
 | 11 | Kupferlabyrinth | 5 | Kupferrohr ×2, Hemmung, Federwerk | Durch die offene Hälfte schießen und noch Tempo fürs zweite Rohr haben |
-| 12 | Das große Zifferblatt | 6 | Zifferblatt, Zeigerarm, Pendel ×2 | Das Loch springt alle zehn Sekunden eine Stundenmarke weiter |
+| 12 | Das große Zifferblatt | 6 | wanderndes Loch (Zifferblatt), Zeigerarm, Pendel ×2 | Das Loch springt alle zehn Sekunden eine Stundenmarke weiter |
 
 **Die Pars stehen auf dem Bot-Durchlauf.** `node tools/audit/audit.mjs clock` spielt jede Bahn
 sechsmal mit einem Normalspieler und sucht dazu die beste Lösung. Gewertet wurde danach: Par ist
 grob die beste Lösung plus zwei, bei den schweren Bahnen plus drei, und nie unter dem, was ein
 mittlerer Spieler braucht. Zusammen ergibt das Par 50 für die ganze Welt, während die Bots im
 Median bei 49 landen – der Weltpreis ist damit erreichbar, aber nicht geschenkt. Keine Bahn hat im
-Durchlauf ihr Schlaglimit erreicht, und keine hat einen Hazard.
+Durchlauf einen Hazard.
+
+Nachgemessen (Fassung 63, je sechs Spiele) liegen allerdings **Bahn 8 und Bahn 10 über ihrem Par**:
+Kesselhaus Median 6 statt 4, Räderschacht Median 7 statt 5, und bei Kesselhaus erreichte ein Lauf
+von sechs das Schlaglimit. Das gilt auch ohne das wandernde Loch, hat mit ihm also nichts zu tun –
+die beiden Bahnen sind seit dem Umbau der Zahnradfelder zäher geworden. Beide gehören neu
+vermessen und entweder entschärft oder im Par nachgezogen; bis dahin stimmt die Zahl 50 für die
+Welt nicht ganz.
 
 **Der Weltpreis** ist die **Taschenuhr** (`pocketwatch`) – eine Kugel mit durchbrochenem Zifferblatt,
 laufenden Rädern, schwingender Unruh und der Aufzugkrone obendrauf. Sie hängt an derselben Regel
 wie die Preise der anderen Welten: jede Bahn braucht ein Ergebnis, und die Summe muss unter Par
 liegen. In der Rangliste steht der Uhrenturm mit allen drei Wertungen zwischen den übrigen Welten.
+
+### Das wandernde Loch
+
+Das Loch ist in dieser Welt nicht immer ein fester Punkt. Die Maschine `wanderloch`
+(`src/obstacles_legend.js`) setzt `level.cup` alle `WANDERLOCH_TAKT` Sekunden – zehn – auf die
+nächste Stelle ihrer Liste und beginnt danach wieder vorn. Sie kennt zwei Formen:
+
+- **Freie Stellen.** `{ type: 'wanderloch', stellen: [[x, y], …] }` nimmt zwei oder mehr beliebige
+  Punkte auf der Bahn. So steht sie auf **Bahn 5** (drei Stellen im Gang hinter der Tür), **Bahn 8**
+  (zwei auf dem Podest über der Glut) und **Bahn 10** (drei in der Ausstiegskammer). Auf dem Boden
+  verbindet eine gestrichelte Linie die Stellen in der Reihenfolge, in der sie drankommen.
+- **Der Ziffernkreis.** `{ type: 'wanderloch', x, y, r, marken: 12 }` legt die Stellen selbst auf
+  die Stundenmarken eines Zifferblatts, beginnend oben und im Uhrzeigersinn. Das ist die
+  Schlussbahn 12. Der alte Typname `dial` tut dasselbe und bleibt gültig, damit ältere Bahnen
+  weiterlaufen.
+
+**Man muss vorher sehen, wohin es geht**, sonst ist es Glück statt Timing. Darum leuchtet die
+**nächste** Stelle heller als die übrigen, und um das aktuelle Loch schrumpft ein Ring, der abläuft,
+bis gewechselt wird. Beides zeichnet `Renderer.drawWanderlochFloor` in den Boden, also unter alles
+andere.
+
+**Was es kostet.** Der Bot wartet nie – er puttet sofort auf das Loch, das gerade da ist. Das ist
+der härteste denkbare Maßstab für ein wanderndes Loch, und gemessen wurde jede Bahn einmal mit und
+einmal ohne:
+
+| Bahn | ohne wanderndes Loch | mit | Aufschlag |
+|---|---|---|---|
+| 5 Hemmwerk (3 Stellen) | – | Median 4 bei Par 4 | keiner |
+| 8 Kesselhaus (2 Stellen) | Median 6 | Median 6 | keiner |
+| 10 Räderschacht (3 Stellen) | Median 7 | Median 8 | ein Schlag |
+
+Es kostet also höchstens einen Schlag, und zwar auch den nur, wo ohnehin schon vier Maschinen
+stehen. Der Grund ist die Vorschau: Wer die helle Stelle sieht, legt den Schlag hin und der Ball
+kommt an, wenn das Loch da ist – warten kostet nichts, nur Geduld.
+
+**Nicht auf die Messung hereinfallen.** Der erste Durchlauf von Bahn 8 mit wanderndem Loch sah aus
+wie ein Ausreißer nach oben (Median 6 bei Par 4, ein Lauf am Schlaglimit) – bis die Gegenprobe ohne
+das Loch dasselbe Bild lieferte. Bahn 8 und Bahn 10 liegen schon länger über ihrem Par, unabhängig
+von dieser Maschine. Ein Bot-Durchlauf mit sechs Spielen streut stark; eine einzelne Zahl trägt
+keine Entscheidung, nur der Vergleich mit und ohne.
+
+Zwei Dinge prüft `tools/validate.mjs` dafür: Jede Stelle muss auf hartem Boden liegen, und keine
+zwei dürfen auf derselben Kachel sitzen – sonst stünde das Loch zweimal hintereinander am selben
+Fleck. Das `H` der Karte gehört auf die **erste** Stelle, denn von dort startet die Maschine; in
+`tools/uhrenturm.py` verschiebt der Baustein `wanderloch` es von selbst dorthin.
 
 ### Das Räderwerk ringsum
 
@@ -694,7 +747,7 @@ Wiederkehrende Bausteine des Skripts:
   Linse in Ruhe genau in der Tür hängt und zu beiden Seiten darüber hinausschwingt. Zweimal je
   Schwingung ist die Tür frei. Alle drei Punkte, die `validate.mjs` prüft (Ruhelage und beide
   Umkehrpunkte), liegen dabei von selbst auf der Bahn.
-- **`zahnradfeld`, `federwerk`, `zeigerarm`, `hemmung`, `zifferblatt`, `rohr`** – je ein Baustein,
+- **`zahnradfeld`, `federwerk`, `zeigerarm`, `hemmung`, `zifferblatt`, `wanderloch`, `rohr`** – je ein Baustein,
   der seine eigenen Bedingungen prüft und die fertige JS-Zeile liefert.
 
 

@@ -116,7 +116,27 @@ def zifferblatt(k, name, x, y, r=6, marken=12):
         mx, my = x + math.cos(a) * r, y + math.sin(a) * r
         ch = k.at(mx, my)
         assert ch in HART, f'{name}: Zifferblatt-Marke {i} bei ({mx:.1f},{my:.1f}) liegt auf "{ch}"'
-    return "{ type: 'dial', x: %s, y: %s, r: %s, marken: %d }" % (g(x), g(y), g(r), marken)
+    return "{ type: 'wanderloch', x: %s, y: %s, r: %s, marken: %d }" % (g(x), g(y), g(r), marken)
+
+def wanderloch(k, name, stellen):
+    """Wanderloch: Das Loch springt der Reihe nach von Stelle zu Stelle und am Ende wieder auf die
+    erste. Alle Stellen muessen Bahn sein - laege auch nur eine in der Mauer, waere die Bahn zehn
+    Sekunden lang nicht zu gewinnen. Das 'H' der Karte wird hier gleich auf die erste Stelle
+    gesetzt: So steht es immer da, wo das Loch ohne laufende Uhr liegt, und die Bahnpruefung
+    findet ihren Weg dorthin."""
+    assert len(stellen) >= 2, name
+    for i, (mx, my) in enumerate(stellen):
+        ch = k.at(mx, my)
+        assert ch in HART, f'{name}: Wanderloch-Stelle {i} bei ({mx},{my}) liegt auf "{ch}"'
+    kacheln = [(int(mx), int(my)) for mx, my in stellen]
+    assert len(set(kacheln)) == len(kacheln), f'{name}: zwei Stellen auf derselben Kachel'
+    for y in range(k.h):                                  # altes 'H' weg, es zieht auf Stelle 0
+        for x in range(k.w):
+            if k.g[y][x] == 'H':
+                k.g[y][x] = '#'
+    k.put(kacheln[0][0], kacheln[0][1], 'H')
+    liste = ', '.join('[%s, %s]' % (g(mx), g(my)) for mx, my in stellen)
+    return "{ type: 'wanderloch', stellen: [%s] }" % liste
 
 def rohr(k, name, paar, grad):
     """Kupferrohr: Die beiden Plaetze stehen als Gross- und Kleinbuchstabe in der Karte. Geprueft
@@ -210,9 +230,11 @@ k.put(4, 5, 'T'); k.put(27, 5, 'H')
 bahn(name='Hemmwerk', par=4, theme='escapement', maxStrokes=16, seed=12, dichte=0.1,
      intro='Die Hemmung sperrt immer eine Hälfte des Ganges und gibt die andere frei; alle paar '
            'Sekunden wechselt sie. Beim Umschlagen sind beide Klinken kurz unten. Dahinter steht das '
-           'Pendel vor der Tür – zwei Takte, die nicht zusammenpassen.',
+           'Pendel vor der Tür – und hinter der Tür bleibt das Loch nicht liegen: Es springt alle '
+           'zehn Sekunden eine Stelle weiter. Der leuchtende Ring sagt, wohin als Nächstes.',
      obstacles=[hemmung(k, 'Hemmwerk', 12.5, 5.5, ('y', 5)),
-                pendeltor(k, 'Hemmwerk', 22.5, 5.5, 3.0, amp=60)],
+                pendeltor(k, 'Hemmwerk', 22.5, 5.5, 3.0, amp=60),
+                wanderloch(k, 'Hemmwerk', [(27.5, 3.5), (27.5, 5.5), (27.5, 7.5)])],
      decor=[('gearFlat', 16, 1.4, 1.8), ('lantern', 8.5, 9.5, 1), ('lantern', 24.5, 9.5, 1)],
      map=k.rows())
 
@@ -258,10 +280,13 @@ k.put(11, 6, 'A'); k.put(17, 2, 'a')
 k.put(3, 6, 'T'); k.put(30, 6, 'H')
 bahn(name='Kesselhaus', par=4, theme='boiler', maxStrokes=16, seed=93, dichte=0.12,
      intro='Erst durch die Tür, dann mit Schwung ins Rohr – beides will abgepasst sein. In der '
-           'Kesselhalle wartet die Feder, die als Einzige über die Glut auf das Podest wirft.',
+           'Kesselhalle wartet die Feder, die als Einzige über die Glut auf das Podest wirft. Und '
+           'auf dem Podest wandert das Loch zwischen zwei Stellen hin und her: Die helle ist die '
+           'nächste.',
      obstacles=[pendeltor(k, 'Kesselhaus', 7.5, 6.5, 4.0, amp=60),
                 rohr(k, 'Kesselhaus', 'A', 90),
-                federwerk(k, 'Kesselhaus', 20.5, 6.5, 0, rng=9, amp=0.2, speed=0.75)],
+                federwerk(k, 'Kesselhaus', 20.5, 6.5, 0, rng=9, amp=0.2, speed=0.75),
+                wanderloch(k, 'Kesselhaus', [(30.5, 5.5), (30.5, 7.5)])],
      decor=[('lantern', 4.5, 2.5, 1), ('barrel', 24.5, 6.5, 1), ('crate', 24.5, 9.5, 1),
             ('gearFlat', 17, 11.6, 1.5)],
      map=k.rows())
@@ -291,11 +316,13 @@ k.put(4, 7, 'T'); k.put(32, 8, 'H')
 bahn(name='Räderschacht', par=5, theme='escapement', maxStrokes=20, seed=207, dichte=0.1,
      intro='Zwei Zahnradfelder, dazwischen die Scheibe unter dem Zeiger. Beide Felder halten nur '
            'kurz an, und der Zeiger räumt die Scheibe alle zwölf Sekunden einmal leer. Am Ausstieg '
-           'teilt die Hemmung den Weg zum Loch.',
+           'teilt die Hemmung den Weg zum Loch – und das Loch selbst wandert dort zwischen drei '
+           'Stellen. Die helle Stelle ist die nächste.',
      obstacles=[zahnradfeld(k, 'Räderschacht A', 8.5, 7.5, 11.5, 7.5, wait=2.0, travel=2.2),
                 zeigerarm(k, 'Räderschacht', 17, 7.5, r=4.2, phase=0.25),
                 zahnradfeld(k, 'Räderschacht B', 22.5, 7.5, 27.5, 7.5, wait=2.0, travel=2.8, phase=0.4),
-                hemmung(k, 'Räderschacht', 30, 8, ('y', 8), phase=0.5)],
+                hemmung(k, 'Räderschacht', 30, 8, ('y', 8), phase=0.5),
+                wanderloch(k, 'Räderschacht', [(32.5, 5.5), (32.5, 7.5), (32.5, 9.5)])],
      decor=[('gearFlat', 17, 1.4, 1.8), ('gearFlat', 17, 13.6, 1.6),
             ('lantern', 5.5, 2.5, 1), ('lantern', 30.5, 2.5, 1)],
      map=k.rows())
@@ -374,7 +401,7 @@ kopf = '''/* Uhrenturm (Weltkennung 'clock'): zwölf Bahnen in einer Stadt, die 
    ab Bahn 5 – und beide bewusst nicht auf jeder Bahn, damit sie nicht zur Gewohnheit werden.
 
    Bahn 12 ist die einzige mit dem wandernden Loch: Dort springt es alle zehn Sekunden eine
-   Stundenmarke weiter. Was das Loch tut, macht das Hindernis 'dial' selbst; das 'H' der Karte steht
+   Stundenmarke weiter. Was das Loch tut, macht das Hindernis 'wanderloch' selbst; das 'H' der Karte steht
    auf seiner ersten Marke, damit die Bahn auch ohne laufende Uhr ein Ziel hat.
 
    Die Kupferrohre stehen nicht als Koordinaten in der Hindernisliste, sondern als Buchstaben in der

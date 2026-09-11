@@ -503,7 +503,7 @@ function createObstacles(defs) {
       case 'escapement': out.push(new Escapement(d)); break;
       // Zeigerarm und Zifferblatt des Uhrenturms
       case 'sweephand': out.push(new SweepHand(d)); break;
-      case 'dial': out.push(new Dial(d)); break;
+      case 'dial': case 'wanderloch': out.push(new MovingHole(d)); break;
     case 'sharkjump': out.push(new SharkJump(d)); break;
     case 'spikes': out.push(new Spikes(d)); break;
     case 'mover': out.push(new Mover(d)); break;

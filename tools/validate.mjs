@@ -151,24 +151,33 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
     }
     if (drauf < 8) problems.push(`sweephand bei (${o.x},${o.y}): die Spitze streicht nur an ${drauf} von 12 Stellen über die Bahn – der Arm ist zu lang oder steht falsch`);
   }
-  /* Zifferblatt: Das Loch springt selbst von Marke zu Marke. Läge auch nur eine Marke in der
-     Mauer oder im Leeren, wäre die Bahn zehn Sekunden lang nicht zu gewinnen – und niemand
-     wüsste, warum. Darum müssen alle Marken auf der Bahn liegen. Und das 'H' der Karte gehört
-     auf die erste Marke, damit die Bahn auch ohne laufende Uhr stimmt. */
-  for (const o of (c.obstacles || []).filter(o => o.type === 'dial')) {
-    const r = o.r == null ? 6 : o.r, n = o.marken == null ? 12 : o.marken;
-    if (!(r > 1)) { problems.push(`dial bei (${o.x},${o.y}): r ${r} ist zu klein`); continue; }
-    if (!(n >= 4 && n <= 24)) { problems.push(`dial bei (${o.x},${o.y}): marken ${n} – sinnvoll sind 4 bis 24`); continue; }
-    const marke = i => { const w = -Math.PI / 2 + (i * 2 * Math.PI) / n; return [o.x + Math.cos(w) * r, o.y + Math.sin(w) * r]; };
-    for (let i = 0; i < n; i++) {
-      const [mx, my] = marke(i);
+  /* Wanderloch (und das Zifferblatt als seine runde Form): Das Loch springt selbst von Stelle zu
+     Stelle. Läge auch nur eine Stelle in der Mauer oder im Leeren, wäre die Bahn zehn Sekunden lang
+     nicht zu gewinnen – und niemand wüsste, warum. Darum müssen alle Stellen auf der Bahn liegen.
+     Und das 'H' der Karte gehört auf die erste, damit die Bahn auch ohne laufende Uhr stimmt. */
+  for (const o of (c.obstacles || []).filter(o => o.type === 'dial' || o.type === 'wanderloch')) {
+    let orte = null;
+    if (Array.isArray(o.stellen) && o.stellen.length >= 2) orte = o.stellen.map(p => [+p[0], +p[1]]);
+    else {
+      const r = o.r == null ? 6 : o.r, n = o.marken == null ? 12 : o.marken;
+      if (!(r > 1)) { problems.push(`${o.type} bei (${o.x},${o.y}): r ${r} ist zu klein`); continue; }
+      if (!(n >= 4 && n <= 24)) { problems.push(`${o.type} bei (${o.x},${o.y}): marken ${n} – sinnvoll sind 4 bis 24`); continue; }
+      orte = [];
+      for (let i = 0; i < n; i++) { const w = -Math.PI / 2 + (i * 2 * Math.PI) / n; orte.push([o.x + Math.cos(w) * r, o.y + Math.sin(w) * r]); }
+    }
+    if (!orte || orte.length < 2 || orte.some(p => !isFinite(p[0]) || !isFinite(p[1]))) {
+      problems.push(`${o.type}: braucht entweder 'stellen' mit mindestens zwei Punkten oder x/y/r/marken`); continue;
+    }
+    orte.forEach(([mx, my], i) => {
       const ch = rows[Math.floor(my)] && rows[Math.floor(my)][Math.floor(mx)];
-      if (!FLOOR.has(ch) || ch === 'w' || ch === 'l') problems.push(`dial: Marke ${i} bei (${mx.toFixed(1)},${my.toFixed(1)}) liegt nicht auf der Bahn (${ch}) – dort wäre das Loch nicht zu erreichen`);
-    }
-    if (cup) {
-      const [m0x, m0y] = marke(0);
-      if (Math.floor(m0x) !== cup[0] || Math.floor(m0y) !== cup[1]) problems.push(`dial bei (${o.x},${o.y}): das 'H' steht auf (${cup[0]},${cup[1]}), die erste Marke aber auf (${Math.floor(m0x)},${Math.floor(m0y)})`);
-    }
+      if (!FLOOR.has(ch) || ch === 'w' || ch === 'l') problems.push(`${o.type}: Stelle ${i} bei (${mx.toFixed(1)},${my.toFixed(1)}) liegt nicht auf der Bahn (${ch}) – dort wäre das Loch nicht zu erreichen`);
+    });
+    // Zwei Stellen auf derselben Kachel sind ein Tippfehler: Das Loch spränge scheinbar nicht
+    for (let i = 0; i < orte.length; i++) for (let j = i + 1; j < orte.length; j++)
+      if (Math.floor(orte[i][0]) === Math.floor(orte[j][0]) && Math.floor(orte[i][1]) === Math.floor(orte[j][1]))
+        problems.push(`${o.type}: Stelle ${i} und ${j} liegen auf derselben Kachel`);
+    if (cup && (Math.floor(orte[0][0]) !== cup[0] || Math.floor(orte[0][1]) !== cup[1]))
+      problems.push(`${o.type}: das 'H' steht auf (${cup[0]},${cup[1]}), die erste Stelle aber auf (${Math.floor(orte[0][0])},${Math.floor(orte[0][1])})`);
   }
   for (const o of (c.obstacles || []).filter(o => o.type === 'springwork')) {
     const range = o.range == null ? 8 : o.range, catchR = o.catchR == null ? 0.7 : o.catchR;

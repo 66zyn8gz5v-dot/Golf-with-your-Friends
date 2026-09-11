@@ -1731,22 +1731,36 @@ Object.assign(Renderer.prototype, {
     this.prism(ctx, this.circlePoly(ob.x, ob.y, ob.nabe * 0.5, 10), ob.hoehe + 0.35, 0.12, '#ffdf9c', '#a8792c');
   },
 
-  /* Zifferblatt: alle Marken, die nächste hell und mit schrumpfendem Ring. Der Ring ist die Uhr –
-     ist er zu, springt das Loch dorthin. Man soll den Schlag planen können, nicht raten. */
-  drawDialFloor(ctx, ob, t) {
+  /* Wanderloch: alle Stellen, die nächste hell und mit schrumpfendem Ring. Der Ring ist die Uhr –
+     ist er zu, springt das Loch dorthin. Man soll den Schlag planen können, nicht raten.
+     Auf einem Kreis (dem Zifferblatt des Turms) kommt der Ziffernkreis dazu; bei frei gesetzten
+     Stellen verbindet stattdessen eine feine Linie die Stellen in ihrer Reihenfolge – sonst müßte
+     man erst zusehen, um zu wissen, wohin es überhaupt geht. */
+  drawWanderlochFloor(ctx, ob, t) {
     const s = this.scale;
-    this.ziffernkreis(ctx, ob.x, ob.y, ob.r, ob.marken, true);
-    for (let i = 0; i < ob.marken; i++) {
-      const [px, py] = ob.markePos(i);
+    if (ob.ring) this.ziffernkreis(ctx, ob.x, ob.y, ob.r, ob.marken, true);
+    else {
+      ctx.strokeStyle = 'rgba(255,214,110,0.22)'; ctx.lineWidth = Math.max(1, s * 0.05);
+      ctx.setLineDash([s * 0.22, s * 0.22]);
+      ctx.beginPath();
+      for (let i = 0; i <= ob.orte.length; i++) {
+        const [px, py] = ob.orte[i % ob.orte.length];
+        const p = this.proj(px, py, 0.006);
+        i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]);
+      }
+      ctx.stroke(); ctx.setLineDash([]);
+    }
+    for (let i = 0; i < ob.orte.length; i++) {
+      const [px, py] = ob.orte[i];
       if (i === ob.i) continue;                              // dort steckt gerade das Loch
       const naechste = i === ob.next;
       this.isoEllipse(ctx, px, py, 0.008, naechste ? 0.55 : 0.34, naechste ? 'rgba(255,214,110,0.3)' : 'rgba(255,236,190,0.12)');
       this.isoEllipse(ctx, px, py, 0.01, naechste ? 0.3 : 0.16, naechste ? 'rgba(255,246,215,0.6)' : 'rgba(255,236,190,0.22)');
     }
-    // Der schrumpfende Ring an der nächsten Marke: so viel Zeit bleibt noch
-    const [nx, ny] = ob.markePos(ob.next);
+    // Der schrumpfende Ring an der nächsten Stelle: so viel Zeit bleibt noch
+    const [nx, ny] = ob.orte[ob.next];
     const [sx, sy] = this.proj(nx, ny, 0.012);
-    const u = Math.max(0, Math.min(1, ob.rest / ZIFFERBLATT_TAKT));
+    const u = Math.max(0, Math.min(1, ob.rest / WANDERLOCH_TAKT));
     ctx.strokeStyle = 'rgba(255,226,150,0.85)'; ctx.lineWidth = Math.max(2, s * 0.07);
     ctx.beginPath();
     ctx.ellipse(sx, sy, 0.8 * s, 0.8 * s * this.cam.tilt, 0, -Math.PI / 2, -Math.PI / 2 + u * TAU);

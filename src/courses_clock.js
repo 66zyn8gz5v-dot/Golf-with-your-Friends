@@ -10,7 +10,7 @@
    ab Bahn 5 – und beide bewusst nicht auf jeder Bahn, damit sie nicht zur Gewohnheit werden.
 
    Bahn 12 ist die einzige mit dem wandernden Loch: Dort springt es alle zehn Sekunden eine
-   Stundenmarke weiter. Was das Loch tut, macht das Hindernis 'dial' selbst; das 'H' der Karte steht
+   Stundenmarke weiter. Was das Loch tut, macht das Hindernis 'wanderloch' selbst; das 'H' der Karte steht
    auf seiner ersten Marke, damit die Bahn auch ohne laufende Uhr ein Ziel hat.
 
    Die Kupferrohre stehen nicht als Koordinaten in der Hindernisliste, sondern als Buchstaben in der
@@ -140,14 +140,14 @@ const CLOCK_COURSES = [
   },
   {
     name: 'Hemmwerk', par: 4, theme: 'escapement', maxStrokes: 16,
-    intro: 'Die Hemmung sperrt immer eine Hälfte des Ganges und gibt die andere frei; alle paar Sekunden wechselt sie. Beim Umschlagen sind beide Klinken kurz unten. Dahinter steht das Pendel vor der Tür – zwei Takte, die nicht zusammenpassen.',
+    intro: 'Die Hemmung sperrt immer eine Hälfte des Ganges und gibt die andere frei; alle paar Sekunden wechselt sie. Beim Umschlagen sind beide Klinken kurz unten. Dahinter steht das Pendel vor der Tür – und hinter der Tür bleibt das Loch nicht liegen: Es springt alle zehn Sekunden eine Stelle weiter. Der leuchtende Ring sagt, wohin als Nächstes.',
     map: [
       '................................',
       '................................',
       '................................',
+      '..####################x####H##..',
       '..####################x#######..',
-      '..####################x#######..',
-      '..##T######################H##..',
+      '..##T#########################..',
       '..####################x#######..',
       '..####################x#######..',
       '................................',
@@ -157,6 +157,7 @@ const CLOCK_COURSES = [
     obstacles: [
       { type: 'escapement', x: 12.5, y: 5.5, w: 0.45, h: 5, phase: 0 },
       { type: 'pendulum', x: 22.5, y: 3, len: 2.5, amp: 60, ruhe: 90, phase: 0, w: 1.2, h: 1.2 },
+      { type: 'wanderloch', stellen: [[27.5, 3.5], [27.5, 5.5], [27.5, 7.5]] },
     ],
     decor: [
       { t: 'gearFlat', x: 16, y: 1.4, s: 1.8 },
@@ -229,15 +230,15 @@ const CLOCK_COURSES = [
   },
   {
     name: 'Kesselhaus', par: 4, theme: 'boiler', maxStrokes: 16,
-    intro: 'Erst durch die Tür, dann mit Schwung ins Rohr – beides will abgepasst sein. In der Kesselhalle wartet die Feder, die als Einzige über die Glut auf das Podest wirft.',
+    intro: 'Erst durch die Tür, dann mit Schwung ins Rohr – beides will abgepasst sein. In der Kesselhalle wartet die Feder, die als Einzige über die Glut auf das Podest wirft. Und auf dem Podest wandert das Loch zwischen zwei Stellen hin und her: Die helle ist die nächste.',
     map: [
       '..................................',
       '..................................',
       '.............####a#####...........',
       '.............##########...........',
       '..#####x####x##########....#####..',
-      '..#####x####x##########....#####..',
-      '..#T#######Ax##########....###H#..',
+      '..#####x####x##########....###H#..',
+      '..#T#######Ax##########....#####..',
       '..#####x####x##########....#####..',
       '..#####x####x##########....#####..',
       '..#####x####x##########....#####..',
@@ -249,6 +250,7 @@ const CLOCK_COURSES = [
       { type: 'pendulum', x: 7.5, y: 4, len: 2.5, amp: 60, ruhe: 90, phase: 0, w: 1.2, h: 1.2 },
       { type: 'copperpipe', pair: 'A', angle: 90 },
       { type: 'springwork', x: 20.5, y: 6.5, base: 0, amp: 0.2, speed: 0.75, range: 9, catchR: 0.7, loadTime: 0.9 },
+      { type: 'wanderloch', stellen: [[30.5, 5.5], [30.5, 7.5]] },
     ],
     decor: [
       { t: 'lantern', x: 4.5, y: 2.5, s: 1 },
@@ -293,17 +295,17 @@ const CLOCK_COURSES = [
   },
   {
     name: 'Räderschacht', par: 5, theme: 'escapement', maxStrokes: 20,
-    intro: 'Zwei Zahnradfelder, dazwischen die Scheibe unter dem Zeiger. Beide Felder halten nur kurz an, und der Zeiger räumt die Scheibe alle zwölf Sekunden einmal leer. Am Ausstieg teilt die Hemmung den Weg zum Loch.',
+    intro: 'Zwei Zahnradfelder, dazwischen die Scheibe unter dem Zeiger. Beide Felder halten nur kurz an, und der Zeiger räumt die Scheibe alle zwölf Sekunden einmal leer. Am Ausstieg teilt die Hemmung den Weg zum Loch – und das Loch selbst wandert dort zwischen drei Stellen. Die helle Stelle ist die nächste.',
     map: [
       '....................................',
       '....................................',
       '...............####.................',
       '.............########...............',
       '............##########.....#######..',
-      '..#######...##########.....#######..',
+      '..#######...##########.....#####H#..',
       '..#######...##########.....#######..',
       '..##T###o..o##########o....o######..',
-      '..#######...##########.....#####H#..',
+      '..#######...##########.....#######..',
       '..#######...##########.....#######..',
       '..#######...##########.....#######..',
       '.............########......#######..',
@@ -316,6 +318,7 @@ const CLOCK_COURSES = [
       { type: 'sweephand', x: 17, y: 7.5, r: 4.2, thick: 0.24, phase: 0.25 },
       { type: 'gearfield', x0: 22.5, y0: 7.5, x1: 27.5, y1: 7.5, wait: 2, travel: 2.8, r: 0.9, zaehne: 10, phase: 0.4 },
       { type: 'escapement', x: 30, y: 8, w: 0.45, h: 8, phase: 0.5 },
+      { type: 'wanderloch', stellen: [[32.5, 5.5], [32.5, 7.5], [32.5, 9.5]] },
     ],
     decor: [
       { t: 'gearFlat', x: 17, y: 1.4, s: 1.8 },
@@ -386,7 +389,7 @@ const CLOCK_COURSES = [
       '..............................',
     ],
     obstacles: [
-      { type: 'dial', x: 15, y: 10.5, r: 6.5, marken: 12 },
+      { type: 'wanderloch', x: 15, y: 10.5, r: 6.5, marken: 12 },
       { type: 'sweephand', x: 15, y: 10.5, r: 4.6, thick: 0.24, phase: 0 },
       { type: 'pendulum', x: 10, y: 6.5, len: 4, amp: 45, ruhe: 90, phase: 0, w: 1.2, h: 1.2 },
       { type: 'pendulum', x: 20, y: 6.5, len: 4, amp: 45, ruhe: 90, phase: 0.5, w: 1.2, h: 1.2 },

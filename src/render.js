@@ -1089,7 +1089,7 @@ class Renderer {
     if (ob.type === 'springwork') { this.drawSpringWorkFloor(ctx, ob, t); return; }
     if (ob.type === 'escapement') { this.drawEscapementFloor(ctx, ob, t); return; }
     if (ob.type === 'sweephand') { this.drawSweepHandFloor(ctx, ob, t); return; }
-    if (ob.type === 'dial') { this.drawDialFloor(ctx, ob, t); return; }
+    if (ob.type === 'dial' || ob.type === 'wanderloch') { this.drawWanderlochFloor(ctx, ob, t); return; }
     if (ob.type === 'field' && ob.style === 'steam') { this.drawSteam(ctx, ob, t); return; }
     if (ob.type === 'field' && ob.style === 'dark') { this.drawDarkZone(ctx, ob, t); return; }
     if (ob.type === 'boost' || (ob.type === 'field' && (ob.style === 'wind' || ob.style === 'current'))) { this.drawWind(ctx, ob, t); return; }

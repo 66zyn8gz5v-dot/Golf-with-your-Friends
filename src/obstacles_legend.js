@@ -772,35 +772,51 @@ class SweepHand {
   circles(out) { out.push({ x: this.x, y: this.y, r: this.nabe, e: 0.6, kind: 'hub' }); }
 }
 
-/* Zifferblatt: das Loch liegt nicht fest, sondern springt alle ZIFFERBLATT_TAKT Sekunden auf die
-   nächste Stundenmarke – immer im Uhrzeigersinn, immer eine Marke weiter. Damit ist es kein
-   Glücksspiel: Die nächste Stelle ist von Anfang an zu sehen, und man kann den Schlag so legen,
-   dass der Ball dort ankommt, wenn das Loch dort ist.
+/* Wanderloch: Das Loch der Bahn liegt nicht fest, sondern springt alle WANDERLOCH_TAKT Sekunden
+   auf die nächste seiner Stellen und am Ende wieder auf die erste. Damit ist es kein Glücksspiel:
+   Die nächste Stelle leuchtet von Anfang an, und ein schrumpfender Ring darum sagt, wie lange noch.
+   Man kann den Schlag also so legen, dass der Ball ankommt, wenn das Loch dort ist.
+
+   Zwei Arten, die Stellen anzugeben - beide landen in derselben Liste:
+   - 'stellen': [[x,y], …]   frei gesetzt, irgendwo auf der Bahn.
+   - x, y, r, marken         auf einem Kreis, oben beginnend und im Uhrzeigersinn: das Zifferblatt
+                             des Uhrenturms. Nur dann wird auch der Ziffernkreis gezeichnet.
 
    Das Hindernis verschiebt das Loch der Bahn selbst (level.cup). Auf der Karte steht das 'H'
-   trotzdem – auf der ersten Marke, damit die Bahn auch ohne laufende Uhr stimmt und die
+   trotzdem - auf der ersten Stelle, damit die Bahn auch ohne laufende Uhr stimmt und die
    Bahnprüfung ihren Weg zum Loch findet. */
-const ZIFFERBLATT_TAKT = 10;     // Sekunden, die das Loch auf einer Marke bleibt
+const WANDERLOCH_TAKT = 10;      // Sekunden, die das Loch an einer Stelle bleibt
 
-class Dial {
+class MovingHole {
   constructor(d) {
     Object.assign(this, { r: 6, marken: 12, phase: 0 }, d);
-    this.type = 'dial';
-    this.i = 0; this.next = 1; this.rest = ZIFFERBLATT_TAKT;
+    if (Array.isArray(this.stellen) && this.stellen.length >= 2) {
+      this.ring = false;
+      this.orte = this.stellen.map(p => [+p[0], +p[1]]);
+      // Ohne x/y (freie Liste) ist die Mitte der Stellen der Ort des Hindernisses – die Sortierung
+      // nach Tiefe und das Wegschneiden am Bildrand brauchen einen.
+      if (this.x == null) this.x = this.orte.reduce((a, p) => a + p[0], 0) / this.orte.length;
+      if (this.y == null) this.y = this.orte.reduce((a, p) => a + p[1], 0) / this.orte.length;
+    } else {
+      this.ring = true;
+      this.orte = [];
+      for (let i = 0; i < this.marken; i++) {
+        const a = -Math.PI / 2 + (i * TAU) / this.marken;
+        this.orte.push([this.x + Math.cos(a) * this.r, this.y + Math.sin(a) * this.r]);
+      }
+    }
+    this.i = 0; this.next = this.orte.length > 1 ? 1 : 0; this.rest = WANDERLOCH_TAKT;
   }
   setup(level) { this.level = level; }
-  /* Marke 0 steht oben (12 Uhr); weiter geht es im Uhrzeigersinn. */
-  markePos(i) {
-    const a = -Math.PI / 2 + (i * TAU) / this.marken;
-    return [this.x + Math.cos(a) * this.r, this.y + Math.sin(a) * this.r];
-  }
+  markePos(i) { return this.orte[((i % this.orte.length) + this.orte.length) % this.orte.length]; }
   update(t) {
-    const schritt = Math.floor(t / ZIFFERBLATT_TAKT + this.phase);
-    this.i = ((schritt % this.marken) + this.marken) % this.marken;
-    this.next = (this.i + 1) % this.marken;
-    this.rest = ZIFFERBLATT_TAKT * (1 - ((t / ZIFFERBLATT_TAKT + this.phase) - schritt));
+    const n = this.orte.length;
+    const schritt = Math.floor(t / WANDERLOCH_TAKT + this.phase);
+    this.i = ((schritt % n) + n) % n;
+    this.next = (this.i + 1) % n;
+    this.rest = WANDERLOCH_TAKT * (1 - ((t / WANDERLOCH_TAKT + this.phase) - schritt));
     if (!this.level || !this.level.cup) return;
-    const [px, py] = this.markePos(this.i);
+    const [px, py] = this.orte[this.i];
     this.level.cup.x = px; this.level.cup.y = py;
   }
 }
