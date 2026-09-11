@@ -774,6 +774,18 @@ Dabei fiel ein Loch in der Bahnprüfung auf: Ein Rohr, das auf **seiner** Ebene 
 nicht als Verbindung – die Portalrechnung sieht nur die unterste Karte. Eine Insel, zu der nur so
 ein Rohr führt, hätte als unerreichbar gegolten. Jetzt zählen alle Rohre auf allen Ebenen.
 
+**Die Kamera schaut in Bahnrichtung, nicht aufs Loch.** Vorgabe ist der Blick aufs Loch; wo die
+Bahn woanders hinläuft, setzt `views` eine Blickzone. Im **Werkgang** des Zifferblatts etwa geht es
+nach Osten zur Turbine, das Blatt liegt aber im Süden – ohne Zone zielte man quer zur Gasse. Zwei
+Dinge waren dafür neu: Eine Zone darf sich mit `ebene` auf eine Etage beschränken (auf gestapelten
+Bahnen liegen Steg und Galerie im Bild übereinander, und man will dort in ganz verschiedene
+Richtungen schauen), und der Blickpunkt ist jetzt **das Ziel selbst** statt einer Richtung in der
+Ferne: Auf einer kleinen Insel steht man mal nördlich, mal westlich des Rohrmunds, und die Kamera
+soll sich danach richten. Geprüft wird das mit `scratchpad/blickpruef.mjs`: Es vergleicht auf jeder
+begehbaren Kachel jeder Ebene die Blickrichtung mit dem Gefälle der BFS-Distanzkarte und zählt, wo
+beides um mehr als 70° auseinanderliegt. Der Rohrturm ging dabei von 16 % der Kacheln auf 1 %,
+Federkammer, Glockenturm, Räderschacht und Turbinenhalle auf 0 %.
+
 **Warum der Kettenzug wieder weg ist.** Bis Fassung 73 stand an der Stelle des Aufzugs ein
 Kettenzug: Haken an einer umlaufenden Kette, die nur für einen Augenblick unten stehen. Wer die
 Stelle in diesem Fenster berührte, wurde mitgenommen, sonst nicht. Im Spiel traf das fast nie, und

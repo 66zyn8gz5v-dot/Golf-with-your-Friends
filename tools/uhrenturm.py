@@ -219,6 +219,15 @@ def zahnstange(k, o, name, x, y, ebene=0, grad=0, phase=0):
     ph = "" if phase == 0 else ", phase: %s" % g(phase)
     return "{ type: 'zahnstange', x: %s, y: %s, angle: %d%s%s }" % (g(x), g(y), grad, eb, ph)
 
+def blick(x, y, w, h, zx, zy, ebene=None):
+    """Blickzone: Liegt der Ball darin, schaut die Kamera auf (zx, zy) statt aufs Loch. Gebraucht
+    wird das ueberall dort, wo die Bahn in eine andere Richtung laeuft als das Loch liegt - im
+    Werkgang des Zifferblatts etwa geht es nach Osten, das Blatt liegt aber im Sueden. Mit 'ebene'
+    gilt die Zone nur auf einer Ebene; bei gestapelten Bahnen liegen Steg und Galerie im Bild
+    uebereinander, und man will dort in ganz verschiedene Richtungen schauen."""
+    eb = "" if ebene is None else ", ebene: %d" % ebene
+    return "{ x: %s, y: %s, w: %s, h: %s%s, look: { x: %s, y: %s } }" % (g(x), g(y), g(w), g(h), eb, g(zx), g(zy))
+
 def g(v):
     """Zahl fuer die JS-Ausgabe: ganze Zahlen ohne Komma."""
     return str(int(v)) if float(v) == int(v) else str(round(float(v), 4))
@@ -318,6 +327,7 @@ bahn(name='Turbinenhalle', par=4, theme='boiler', maxStrokes=16, seed=105, dicht
            'wenn man sich verschätzt hat.',
      obstacles=[pendeltor(k, 'Turbinenhalle', 20.5, 7.5, 3.5),
                 turbine(k, o, 'Turbinenhalle', 26.5, 7.5)],
+     views=[blick(0, 0, 42, 15, 26.5, 7.5, ebene=0)],   # unten geht es zur Turbine, nicht zum Loch
      decor=[('lantern', 5.5, 1.5, 1), ('lantern', 15.5, 13.5, 1), ('barrel', 36.8, 7.5, 1),
             ('gearFlat', 10, 13.4, 1.5)],
      map=k.rows(), ebenen=[o.rows()])
@@ -355,6 +365,8 @@ bahn(name='Federkammer', par=5, theme='boiler', maxStrokes=18, seed=61, dichte=0
      obstacles=[federwerk(k, 'Federkammer', 10.5, 8.5, 0, rng=12, amp=0.22, speed=0.8),
                 aufzug(k, o, 'Federkammer', 30.5, 8.5),
                 luke([k, o], 'Federkammer', 33.5, 8.5, ebene=1)],
+     views=[blick(0, 0, 21, 17, 10.5, 8.5, ebene=0),    # Abschlagskammer -> die Feder
+            blick(21, 0, 21, 17, 30.5, 8.5, ebene=0)],  # Landekammer     -> der Aufzug
      decor=[('lantern', 5.5, 2.5, 1), ('lantern', 30.5, 1.5, 1), ('barrel', 18, 2.5, 1),
             ('crate', 18, 15.4, 1), ('gearFlat', 20, 15.4, 1.5)],
      map=k.rows(), ebenen=[o.rows()])
@@ -398,6 +410,8 @@ bahn(name='Kesselhaus', par=5, theme='boiler', maxStrokes=18, seed=93, dichte=0.
                 rohr(k, 'Kesselhaus', 'A', 90),
                 federwerk(k, 'Kesselhaus', 25.5, 7.5, 0, rng=9, amp=0.2, speed=0.75),
                 wanderloch(k, 'Kesselhaus', [(35.5, 5.5), (35.5, 7.5), (35.5, 9.5)])],
+     views=[blick(0, 0, 15, 15, 13.5, 7.5, ebene=0),    # Vorhalle    -> der Rohrmund
+            blick(15, 0, 14, 15, 25.5, 7.5, ebene=0)],  # Kesselhalle -> die Feder
      decor=[('lantern', 4.5, 2.5, 1), ('barrel', 29, 7.5, 1), ('crate', 29, 10.5, 1),
             ('gearFlat', 21, 13.4, 1.6)],
      map=k.rows())
@@ -420,6 +434,7 @@ bahn(name='Glockenturm', par=5, theme='clocktown', maxStrokes=20, seed=145, dich
                 hemmung(k, 'Glockenturm', 24.5, 8.5, ('y', 9), phase=0.5),
                 aufzug(k, o, 'Glockenturm', 30.5, 8.5),
                 luke([k, o], 'Glockenturm', 34.5, 8.5, ebene=1, phase=0.35)],
+     views=[blick(0, 0, 42, 17, 30.5, 8.5, ebene=0)],   # unten geht es zum Aufzug
      decor=[('bell', 7.5, 1.4, 1.4), ('bell', 33.5, 1.4, 1.4), ('clock', 20, 0.8, 2.4),
             ('lantern', 20, 15.4, 1)],
      map=k.rows(), ebenen=[o.rows()])
@@ -443,6 +458,9 @@ bahn(name='Räderschacht', par=6, theme='escapement', maxStrokes=22, seed=207, d
                 zeigerarm(k, 'Räderschacht', 21, 9.5, r=5, phase=0.25),
                 zahnstange(k, o, 'Räderschacht', 21.5, 9.5),
                 wanderloch(k, 'Räderschacht', [(35.5, 7.5), (35.5, 9.5), (35.5, 11.5)])],
+     views=[blick(0, 0, 13, 17, 11.5, 9.5, ebene=0),    # Einstieg -> das Zahnradfeld
+            blick(13, 0, 17, 17, 21.5, 9.5, ebene=0),   # Scheibe  -> die Zahnstange
+            blick(18, 0, 20, 17, 35.5, 9.5, ebene=1)],  # Steg     -> das offene Ende
      decor=[('gearFlat', 21, 1.4, 1.8), ('gearFlat', 13.5, 15.4, 1.6),
             ('lantern', 5.5, 3.5, 1), ('lantern', 35.5, 2.5, 1), ('crate', 29, 15.4, 1)],
      map=k.rows(), ebenen=[o.rows()])
@@ -527,6 +545,16 @@ bahn(name='Der Rohrturm', par=6, theme='boiler', maxStrokes=22, seed=417, dichte
                 rohr(o1, 'Rohrturm F', 'F', 90, ziel=(o2, 2), ebene=1)],
      decor=[('lantern', 9, 3.5, 1), ('lantern', 30, 3.5, 1), ('barrel', 18, 17.4, 1),
             ('crate', 9, 16.4, 1), ('gearFlat', 34, 16.4, 1.6)],
+     # Auf jeder Insel schaut die Kamera zum naechsten Rohrmund, nicht zum Loch - das liegt oft
+     # genau in der anderen Richtung, und man zielte dann quer zur Bahn.
+     # Der Blickpunkt ist der Rohrmund selbst, nicht eine Richtung in der Ferne: Auf einer kleinen
+     # Insel steht man mal noerdlich, mal westlich davon, und die Kamera soll sich danach richten.
+     views=[blick(2, 8, 9, 7, 7.5, 11.5, ebene=0),       # Abschlaginsel -> Rohrmund A
+            blick(10, 5, 9, 9, 17.5, 9.5, ebene=0),      # Kesselinsel   -> Rohrmund B
+            blick(20, 8, 9, 9, 27.5, 12.5, ebene=0),     # Steiginsel    -> Rohrmund C
+            blick(20, 2, 9, 8, 27.5, 6.5, ebene=2),      # Steg 1        -> Rohrmund D
+            blick(31, 2, 9, 9, 35.5, 6.5, ebene=2),      # Steg 2        -> die Luke
+            blick(30, 3, 10, 9, 31.5, 7.5, ebene=1)],    # Fanggalerie   -> Rohrmund E
      map=k.rows(), ebenen=[o1.rows(), o2.rows()])
 
 # ---------------------------------------------------------------- 13 Das grosse Zifferblatt (Hoehepunkt)
@@ -559,6 +587,11 @@ bahn(name='Das große Zifferblatt', par=6, theme='escapement', maxStrokes=26, se
                 pendeltor(k, 'Zifferblatt rechts', 22, 15, 10.0, amp=30, phase=0.5)],
      decor=[('clock', 18, 0.6, 2.6), ('bell', 4.5, 7.5, 1.3), ('bell', 31.5, 7.5, 1.3),
             ('lantern', 2.5, 21.5, 1), ('lantern', 33.5, 21.5, 1)],
+     # Im Werkgang laeuft die Bahn nach Osten, das Blatt liegt aber im Sueden: Ohne Blickzone
+     # zielte man dort quer zur Gasse. Auf dem gelaenderten Stueck des Stegs geht es nach Sueden;
+     # sobald der Steg ueber dem Blatt ist, schaut die Kamera wieder aufs Loch.
+     views=[blick(0, 0, 36, 5, 25.5, 3.5, ebene=0),      # Werkgang -> die Turbine, nicht das Blatt
+            blick(23, 0, 6, 10, 25.5, 24, ebene=1)],     # Steg -> nach Sueden auf das Blatt zu
      map=k.rows(), ebenen=[o.rows()])
 
 # ================================================================ Ausgabe
@@ -652,6 +685,8 @@ for b in BAHNEN:
                      % '\n'.join("      [\n%s\n      ]," % js_map(e, "  ") for e in b['ebenen']))
     teile.append("    obstacles: [\n" + '\n'.join('      %s,' % o for o in b['obstacles']) + "\n    ],\n")
     teile.append("    decor: [\n%s\n    ],\n" % js_decor(b['decor']))
+    if b.get('views'):                                 # Blickrichtung, wo die Bahn anders laeuft als das Loch liegt
+        teile.append("    views: [\n" + '\n'.join('      %s,' % v for v in b['views']) + "\n    ],\n")
     teile.append("    autoDecor: { density: %s, seed: %d },\n" % (b['dichte'], b['seed']))
     teile.append("  },\n")
 teile.append("];\n")

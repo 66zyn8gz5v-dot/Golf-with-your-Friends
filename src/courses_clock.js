@@ -211,6 +211,9 @@ const CLOCK_COURSES = [
       { t: 'barrel', x: 36.8, y: 7.5, s: 1 },
       { t: 'gearFlat', x: 10, y: 13.4, s: 1.5 },
     ],
+    views: [
+      { x: 0, y: 0, w: 42, h: 15, ebene: 0, look: { x: 26.5, y: 7.5 } },
+    ],
     autoDecor: { density: 0.12, seed: 105 },
   },
   {
@@ -297,6 +300,10 @@ const CLOCK_COURSES = [
       { t: 'barrel', x: 18, y: 2.5, s: 1 },
       { t: 'crate', x: 18, y: 15.4, s: 1 },
       { t: 'gearFlat', x: 20, y: 15.4, s: 1.5 },
+    ],
+    views: [
+      { x: 0, y: 0, w: 21, h: 17, ebene: 0, look: { x: 10.5, y: 8.5 } },
+      { x: 21, y: 0, w: 21, h: 17, ebene: 0, look: { x: 30.5, y: 8.5 } },
     ],
     autoDecor: { density: 0.12, seed: 61 },
   },
@@ -392,6 +399,10 @@ const CLOCK_COURSES = [
       { t: 'crate', x: 29, y: 10.5, s: 1 },
       { t: 'gearFlat', x: 21, y: 13.4, s: 1.6 },
     ],
+    views: [
+      { x: 0, y: 0, w: 15, h: 15, ebene: 0, look: { x: 13.5, y: 7.5 } },
+      { x: 15, y: 0, w: 14, h: 15, ebene: 0, look: { x: 25.5, y: 7.5 } },
+    ],
     autoDecor: { density: 0.12, seed: 93 },
   },
   {
@@ -448,6 +459,9 @@ const CLOCK_COURSES = [
       { t: 'bell', x: 33.5, y: 1.4, s: 1.4 },
       { t: 'clock', x: 20, y: 0.8, s: 2.4 },
       { t: 'lantern', x: 20, y: 15.4, s: 1 },
+    ],
+    views: [
+      { x: 0, y: 0, w: 42, h: 17, ebene: 0, look: { x: 30.5, y: 8.5 } },
     ],
     autoDecor: { density: 0.1, seed: 145 },
   },
@@ -506,6 +520,11 @@ const CLOCK_COURSES = [
       { t: 'lantern', x: 5.5, y: 3.5, s: 1 },
       { t: 'lantern', x: 35.5, y: 2.5, s: 1 },
       { t: 'crate', x: 29, y: 15.4, s: 1 },
+    ],
+    views: [
+      { x: 0, y: 0, w: 13, h: 17, ebene: 0, look: { x: 11.5, y: 9.5 } },
+      { x: 13, y: 0, w: 17, h: 17, ebene: 0, look: { x: 21.5, y: 9.5 } },
+      { x: 18, y: 0, w: 20, h: 17, ebene: 1, look: { x: 35.5, y: 9.5 } },
     ],
     autoDecor: { density: 0.1, seed: 207 },
   },
@@ -670,6 +689,14 @@ const CLOCK_COURSES = [
       { t: 'crate', x: 9, y: 16.4, s: 1 },
       { t: 'gearFlat', x: 34, y: 16.4, s: 1.6 },
     ],
+    views: [
+      { x: 2, y: 8, w: 9, h: 7, ebene: 0, look: { x: 7.5, y: 11.5 } },
+      { x: 10, y: 5, w: 9, h: 9, ebene: 0, look: { x: 17.5, y: 9.5 } },
+      { x: 20, y: 8, w: 9, h: 9, ebene: 0, look: { x: 27.5, y: 12.5 } },
+      { x: 20, y: 2, w: 9, h: 8, ebene: 2, look: { x: 27.5, y: 6.5 } },
+      { x: 31, y: 2, w: 9, h: 9, ebene: 2, look: { x: 35.5, y: 6.5 } },
+      { x: 30, y: 3, w: 10, h: 9, ebene: 1, look: { x: 31.5, y: 7.5 } },
+    ],
     autoDecor: { density: 0.12, seed: 417 },
   },
   {
@@ -748,6 +775,10 @@ const CLOCK_COURSES = [
       { t: 'bell', x: 31.5, y: 7.5, s: 1.3 },
       { t: 'lantern', x: 2.5, y: 21.5, s: 1 },
       { t: 'lantern', x: 33.5, y: 21.5, s: 1 },
+    ],
+    views: [
+      { x: 0, y: 0, w: 36, h: 5, ebene: 0, look: { x: 25.5, y: 3.5 } },
+      { x: 23, y: 0, w: 6, h: 10, ebene: 1, look: { x: 25.5, y: 24 } },
     ],
     autoDecor: { density: 0.08, seed: 1200 },
   },

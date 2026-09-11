@@ -1361,8 +1361,14 @@
   }
   function faceCup() {
     const b = state.ball;
-    // Blickzonen: liegt der Ball in einer Zone, schaut die Kamera auf deren Zielpunkt (z. B. Mühlentür, Fähre), sonst aufs Loch
-    const zone = (state.level.def.views || []).find(v => b.x >= v.x && b.x <= v.x + v.w && b.y >= v.y && b.y <= v.y + v.h);
+    /* Blickzonen: liegt der Ball in einer Zone, schaut die Kamera auf deren Zielpunkt (z. B.
+       Mühlentür, Fähre, der nächste Rohrmund), sonst aufs Loch. Eine Zone darf sich auf eine Ebene
+       beschränken ('ebene'): Bei gestapelten Bahnen liegen Steg und Galerie im Bild übereinander,
+       aber man will dort in ganz verschiedene Richtungen schauen. Ohne 'ebene' gilt die Zone
+       weiterhin auf jeder Ebene. */
+    const eb = b.ebene || 0;
+    const zone = (state.level.def.views || []).find(v => (v.ebene == null || v.ebene === eb)
+      && b.x >= v.x && b.x <= v.x + v.w && b.y >= v.y && b.y <= v.y + v.h);
     const c = zone ? zone.look : (state.level.cup || state.level.goal);
     state.camTheta = thetaTowards(b.x, b.y, c.x, c.y);
   }
