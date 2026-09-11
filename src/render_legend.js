@@ -1583,34 +1583,74 @@ Object.assign(Renderer.prototype, {
      getrennt einsortiert und beide von hier gezeichnet – 'ausgang' sagt, welcher gerade dran ist.
      Der Mund ist eine dunkle Scheibe in der Stirnfläche: So sieht man von jeder Kameradrehung aus,
      dass das Rohr offen ist und wohin es zeigt. */
-  /* Die Leitung zwischen den beiden Rohrenden, in Stücke zerlegt. Jedes Stück wird für sich in die
-     Tiefensortierung gegeben, sonst läge die ganze Leitung entweder vor oder hinter allem, was sie
-     überquert. Alle drei Stücke steht eine Stütze und sitzt ein Nietenband – daran sieht man, wie
-     schnell der Ball gerade fährt, und ohne sie wäre es nur ein glattes Rohr. */
-  drawPipeStueck(ctx, ob, i, n, t) {
-    const s = this.scale;
-    const [ax, ay, az] = ob.punkt(i / n), [bx, by, bz] = ob.punkt((i + 1) / n);
-    const r = 0.34;
-    // Stütze: ein Pfosten vom Boden bis unter die Leitung, mit Fuß
-    if (i % 3 === 1 && i > 0 && i < n - 1) {
-      this.prism(ctx, this.circlePoly(ax, ay, 0.19, 8), 0, az - r * 0.8, '#7a5326', '#43301a', { outline: '#241708' });
-      this.prism(ctx, this.circlePoly(ax, ay, 0.3, 10), 0, 0.1, '#8a6132', '#43301a', { outline: '#241708' });
+  /* Ein Lauf der Leitung – ein gerades Stück oder ein Teilstück eines Bogens. Jeder Lauf geht für
+     sich in die Tiefensortierung, sonst läge die ganze Leitung entweder vor oder hinter allem,
+     was sie überquert.
+
+     Ein Rohr erkennt man an drei Dingen: am Glanzstreifen auf dem Scheitel, der aus dem Zylinder
+     erst Kupfer macht; an den Muffen, mit denen zwei Stücke verschraubt sind; und daran, dass es
+     getragen wird. Wichtig ist, dass ein gerader Lauf als ein einziger Zylinder gezeichnet wird –
+     sonst sieht man an jedem Stoß den Deckel des nächsten und das Rohr wird zur Perlenkette. */
+  ROHR_R: 0.33,
+  drawPipeLauf(ctx, ob, k, t) {
+    const s = this.scale, r = this.ROHR_R;
+    const { u0, u1, bogen, teile } = ob.stuecke[k];
+    const a = ob.punkt(u0), b = ob.punkt(u1);
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    if (bogen) {
+      /* Ein Bogen wird als durchgehender Strang gezeichnet: erst die dunkle Kontur, dann das
+         Kupfer, dann der Glanz. Aus Zylindern zusammengesetzt sähe man an jedem Teilstück den
+         Deckel des nächsten – gerade in der Kurve fällt das am meisten auf. */
+      const n = Math.max(4, teile || 6);
+      const bahn = (hoch, w, farbe) => {
+        ctx.strokeStyle = farbe; ctx.lineWidth = Math.max(1, w);
+        ctx.beginPath();
+        for (let i = 0; i <= n; i++) {
+          const g = ob.punkt(u0 + (u1 - u0) * (i / n));
+          const p = this.proj(g[0], g[1], g[2] + hoch);
+          i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]);
+        }
+        ctx.stroke();
+      };
+      bahn(0, s * r * 2.24, '#3a1c08');
+      bahn(0, s * r * 1.95, '#8a4a1e');
+      bahn(r * 0.34, s * r * 1.1, '#d9853f');
+      bahn(r * 0.62, s * 0.08, 'rgba(255,206,150,0.7)');
+      ctx.lineCap = 'butt'; ctx.lineJoin = 'miter';
+      return;
     }
-    this.walze(ctx, ax, ay, bx, by, (az + bz) / 2, r, '#e08b4c', '#8a4a1e', { n: 10, outline: '#3a1c08' });
-    if (i % 3 === 0) this.walze(ctx, ax, ay, ax + (bx - ax) * 0.16, ay + (by - ay) * 0.16, az, r * 1.13, '#c9762f', '#7d4416', { n: 10 });
+    this.walze(ctx, a[0], a[1], b[0], b[1], (a[2] + b[2]) / 2, r, '#d9853f', '#8a4a1e', { n: 12, outline: '#3a1c08' });
+    // Glanzstreifen auf dem Scheitel
+    const p0 = this.proj(a[0], a[1], a[2] + r * 0.6), p1 = this.proj(b[0], b[1], b[2] + r * 0.6);
+    ctx.strokeStyle = 'rgba(255,206,150,0.7)'; ctx.lineWidth = Math.max(1, s * 0.07);
+    ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke();
+    // Muffen, die in diesen Lauf fallen
+    const halb = 0.16 / Math.max(0.001, ob.len);
+    for (const m of ob.muffen) {
+      if (m < u0 + halb || m > u1 - halb) continue;
+      const c0 = ob.punkt(m - halb), c1 = ob.punkt(m + halb);
+      this.walze(ctx, c0[0], c0[1], c1[0], c1[1], (c0[2] + c1[2]) / 2, r * 1.25, '#e8a15c', '#7d4416', { n: 12, outline: '#3a1c08' });
+      const q0 = this.proj(c0[0], c0[1], c0[2] + r * 0.78), q1 = this.proj(c1[0], c1[1], c1[2] + r * 0.78);
+      ctx.strokeStyle = 'rgba(255,226,190,0.8)'; ctx.lineWidth = Math.max(1, s * 0.075);
+      ctx.beginPath(); ctx.moveTo(q0[0], q0[1]); ctx.lineTo(q1[0], q1[1]); ctx.stroke();
+    }
+    ctx.lineCap = 'butt'; ctx.lineJoin = 'miter';
     /* Fährt gerade ein Ball darin, läuft ein heller Schein mit ihm durch das Rohr. Der Ball selbst
-       ist schon zu sehen – der Schein sagt zusätzlich, wo im Rohr er steckt, auch wenn eine Mauer
-       davorsteht. */
-    if (ob.fahrt >= 0) {
-      const u0 = i / n, u1 = (i + 1) / n;
-      if (ob.fahrt >= u0 - 0.06 && ob.fahrt <= u1 + 0.06) {
-        const [gx, gy, gz] = ob.punkt(ob.fahrt);
-        const p = this.proj(gx, gy, gz);
-        const g = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], s * 0.75);
-        g.addColorStop(0, 'rgba(255,232,180,0.75)'); g.addColorStop(1, 'rgba(255,200,120,0)');
-        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p[0], p[1], s * 0.75, 0, TAU); ctx.fill();
-      }
+       steckt im Rohr und ist von außen kaum zu sehen – der Schein sagt, wo er gerade ist. */
+    if (ob.fahrt >= u0 && ob.fahrt <= u1) {
+      const g = ob.punkt(ob.fahrt), p = this.proj(g[0], g[1], g[2]);
+      const gr = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], s * 0.85);
+      gr.addColorStop(0, 'rgba(255,240,200,0.85)'); gr.addColorStop(1, 'rgba(255,200,120,0)');
+      ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(p[0], p[1], s * 0.85, 0, TAU); ctx.fill();
     }
+  },
+  /* Stütze unter der Leitung: ein Pfosten mit Fuß und einer Schelle, die das Rohr umfasst. */
+  drawPipeStuetze(ctx, ob, u) {
+    const [x, y, z] = ob.punkt(u), r = this.ROHR_R;
+    this.isoEllipse(ctx, x, y, 0.003, 0.3, 'rgba(0,0,0,0.22)');
+    this.prism(ctx, this.circlePoly(x, y, 0.3, 10), 0, 0.1, '#8a6132', '#43301a', { outline: '#241708' });
+    this.prism(ctx, this.circlePoly(x, y, 0.15, 8), 0.1, z - r * 0.9 - 0.1, '#7a5326', '#43301a', { outline: '#241708' });
+    this.prism(ctx, this.circlePoly(x, y, 0.24, 10), z - r * 0.9, 0.14, '#a7772f', '#5c3a12', { outline: '#241708' });
   },
 
   drawCopperPipe(ctx, ob, t, ausgang) {

@@ -913,15 +913,35 @@ sondern eine **Fahrt** – seit Fassung 65 eine eigene Klasse und keine Abwandlu
 
 - **Man kommt immer hinein.** Kein Mindesttempo, keine Sperre davor. Wer den Rohrmund berührt, fährt
   mit, auch wer nur hineintröpfelt. Das Rohr ist ein Weg, kein Prüfstein.
-- **Man sieht die Fahrt.** Der Ball verschwindet nicht, sondern fährt sichtbar mit `ROHR_TEMPO`
-  Kacheln je Sekunde durch die Leitung, im Bogen über alles hinweg, was zwischen den beiden Enden
-  liegt (`ROHR_HOEHE`, `ROHR_BOGEN`). Erst am Rohrende wird er mit `LOEWENTOR_AUSWURF` ausgeworfen –
-  die Landestelle bleibt also so planbar wie vorher.
+- **Man sieht die Fahrt.** Der Ball verschwindet nicht, sondern fährt sichtbar durch die Leitung.
+  Erst am Rohrende wird er mit `LOEWENTOR_AUSWURF` ausgeworfen – die Landestelle bleibt also so
+  planbar wie vorher.
+- **Wie lange die Fahrt dauert, hängt am direkten Abstand der beiden Enden** (`ROHR_TEMPO` Kacheln
+  je Sekunde Luftlinie), nicht an der Länge des Umwegs. Sonst hinge die Spielzeit daran, wie die
+  Leitung verlegt ist – und das ist eine Frage der Optik, keine des Spiels. Der Bot-Durchlauf hat
+  das gleich bestätigt: Mit der Umwegzeit sprang Bahn 4 von Median 3 auf Median 7, weil das Pendel
+  hinter dem Rohrende nicht mehr im Takt stand. Mit der Luftlinienzeit ist sie wieder bei 3.
+- **Die Leitung läuft außen herum.** Sie verlässt die Bahn am Rohrmund, geht `ROHR_AUSSEN` Kacheln
+  über den Kartenrand hinaus, läuft dort neben der Karte entlang und kommt beim Rohrende wieder
+  herein. So liegt sie niemandem im Bild, man sieht sie über ihre ganze Länge, und es ist der Weg,
+  den eine Rohrpost in einem Haus auch nähme. Zur nächsten Kante geht es hinaus – dort ist der
+  Umweg am kürzesten und die Erdscholle trägt die Leitung noch.
 
-Deshalb ist die Leitung auch gebaut und nicht nur angedeutet: ein Rohr von Mund zu Mund, auf Stützen,
-mit Nietenbändern, und darin ein heller Schein, der mit dem Ball mitläuft. Gezeichnet wird sie in
-Stücken, die einzeln in die Tiefensortierung gehen – sonst läge die ganze Leitung entweder vor oder
-hinter allem, was sie überquert. Man soll vor dem Schlag sehen, wohin sie führt.
+Gebaut ist sie wie echte Rohre: **gerade Läufe und rechtwinklige Bögen**, keine Diagonale, dazu
+Muffen an jedem Stoß (`ROHR_MUFFE`), Stützen darunter (`ROHR_STUETZE`) und ein Glanzstreifen auf
+dem Scheitel – der macht aus dem Zylinder erst Kupfer. Die Ecken sind mit `ROHR_ECKE` gerundet.
+
+Zwei Dinge, die beim Zeichnen wichtig sind:
+
+- Ein **gerader Lauf muss ein einziger Zylinder** sein. Zerlegt man ihn in Stücke, sieht man an
+  jedem Stoß den Deckel des nächsten Zylinders, und aus dem Rohr wird eine Perlenkette. Darum
+  zerlegt `bauWeg` den Weg nicht gleichmäßig, sondern in seine geraden Läufe und seine Bögen.
+- Ein **Bogen wird gar nicht aus Zylindern gebaut**, sondern als durchgehender Strang gezeichnet:
+  dunkle Kontur, Kupfer, Glanz. In der Kurve fielen die Deckel sonst am meisten auf.
+
+Jeder Lauf geht für sich in die Tiefensortierung – sonst läge die ganze Leitung entweder vor oder
+hinter allem, was sie überquert. Und während einer Fahrt läuft ein heller Schein mit dem Ball durch
+das Rohr, damit man ihn auch dann findet, wenn eine Mauer davorsteht.
 
 Das Löwentor der Arena bleibt davon unberührt: Dort ist das Mindesttempo der Reiz, hier wäre es nur
 im Weg.

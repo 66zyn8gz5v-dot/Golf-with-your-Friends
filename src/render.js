@@ -1384,13 +1384,16 @@ class Renderer {
       // Rohrmund und Rohrende stehen an verschiedenen Stellen der Karte – jeder wird für sich einsortiert
       if (ob.x != null) items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => this.drawCopperPipe(ctx, ob, t, false) });
       if (ob.ax != null) items.push({ x: ob.ax, y: ob.ay, bias: 0.2, draw: () => this.drawCopperPipe(ctx, ob, t, true) });
-      // Die Leitung dazwischen: Stück für Stück, damit sie sich richtig mit Mauern überdeckt
-      if (ob.bereit && ob.punkt) {
-        const n = Math.max(3, Math.round(ob.len * 1.2));
-        for (let i = 0; i < n; i++) {
-          const [px, py] = ob.punkt((i + 0.5) / n);
-          items.push({ x: px, y: py, bias: 0.45, draw: () => this.drawPipeStueck(ctx, ob, i, n, t) });
+      // Die Leitung dazwischen: Lauf für Lauf, damit sie sich richtig mit Mauern überdeckt
+      if (ob.bereit && ob.stuecke) {
+        for (const u of ob.stuetzen) {
+          const [px, py] = ob.punkt(u);
+          items.push({ x: px, y: py, bias: 0.4, draw: () => this.drawPipeStuetze(ctx, ob, u) });
         }
+        ob.stuecke.forEach((st, k) => {
+          const [px, py] = ob.punkt((st.u0 + st.u1) / 2);
+          items.push({ x: px, y: py, bias: 0.45, draw: () => this.drawPipeLauf(ctx, ob, k, t) });
+        });
       }
     } else if (ob.type === 'gearfield') {
       items.push({ x: (ob.x0 + ob.x1) / 2, y: (ob.y0 + ob.y1) / 2, bias: -0.2, draw: () => this.drawGearField(ctx, ob, t) });

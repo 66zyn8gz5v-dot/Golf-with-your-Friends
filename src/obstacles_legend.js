@@ -690,15 +690,20 @@ class SpringWork extends Cannon {
    - **Man kommt immer hinein.** Kein Mindesttempo, keine Sperre davor. Wer den Rohrmund berührt,
      fährt mit – auch wer nur hineintröpfelt. Das Rohr ist ein Weg, kein Prüfstein.
    - **Man sieht die Fahrt.** Der Ball verschwindet nicht und taucht anderswo wieder auf, sondern
-     fährt sichtbar durch das Rohr: ROHR_TEMPO Kacheln je Sekunde, in einem Bogen über alles hinweg,
-     was zwischen den beiden Enden liegt. Erst am Rohrende wird er ausgeworfen.
+     fährt sichtbar durch das Rohr: ROHR_TEMPO Kacheln je Sekunde. Erst am Rohrende wird er
+     ausgeworfen.
 
-   Das Rohr selbst ist darum auch gebaut und nicht nur angedeutet: eine Leitung von Mund zu Mund,
-   auf Stützen, mit Nietenbändern. Man soll auf einen Blick sehen, wohin sie führt, bevor man
-   hineinschießt. */
-const ROHR_TEMPO = 11;           // Kacheln je Sekunde, mit denen der Ball durch das Rohr fährt
-const ROHR_HOEHE = 0.62;         // Höhe der Rohrachse über dem Boden
-const ROHR_BOGEN = 1.1;          // wie weit sich die Leitung in der Mitte hebt
+   Das Rohr selbst ist darum auch gebaut und nicht nur angedeutet: gerade Läufe, rechtwinklige
+   Bögen und Muffen an den Stößen, auf Stützen. Und es läuft **außen um die Karte herum** statt
+   quer über die Bahn – so liegt es niemandem im Bild und man sieht es über die ganze Länge.
+   Wohin es führt, soll man sehen, bevor man hineinschießt. */
+const ROHR_TEMPO = 11;           // Kacheln je Sekunde Luftlinie, die die Fahrt dauert
+const ROHR_MUND_Z = 0.52;        // Höhe der Rohrachse am Rohrmund – so hoch liegt dort der Körper
+const ROHR_HOEHE = 1.35;         // Höhe der Leitung dazwischen: über die Bande hinweg
+const ROHR_AUSSEN = 2.2;         // so viele Kacheln außerhalb der Karte läuft sie entlang
+const ROHR_ECKE = 1.1;           // Radius der Bögen an den Ecken
+const ROHR_MUFFE = 4.5;          // Abstand der Muffen auf einem geraden Lauf, in Kacheln
+const ROHR_STUETZE = 3.6;        // Abstand der Stützen unter der Leitung, in Kacheln
 
 class CopperPipe extends LionGate {
   constructor(d) {
@@ -710,14 +715,108 @@ class CopperPipe extends LionGate {
   setup(level) {
     super.setup(level);
     if (!this.bereit) return;
-    this.len = Math.hypot(this.ax - this.x, this.ay - this.y) || 1;
-    this.dauer = Math.max(0.12, this.len / ROHR_TEMPO);
+    this.bauWeg(level);
+    /* Wie lange die Fahrt dauert, richtet sich nach dem **direkten** Abstand der beiden Enden,
+       nicht nach der Länge des Umwegs. Sonst hinge die Spielzeit daran, wie weit das Rohr außen
+       herumläuft – und das ist eine Frage der Optik, keine des Spiels: Eine Bahn, deren Pendel
+       hinter dem Rohrende im Takt steht, dürfte nicht kippen, bloß weil die Leitung anders
+       verlegt wird. Der Ball fährt auf dem längeren Weg entsprechend schneller. */
+    this.direkt = Math.hypot(this.ax - this.x, this.ay - this.y) || 1;
+    this.dauer = Math.max(0.15, this.direkt / ROHR_TEMPO);
   }
-  /* Der Weg durch das Rohr: gerade von Mund zu Mund, in der Mitte angehoben. Der Bogen ist nicht
-     nur Zierde – er hebt die Leitung über Mauern hinweg, die zwischen den Enden stehen. */
+
+  /* Der Weg der Leitung. Sie läuft nicht quer über die Bahn, sondern **außen herum**: Sie
+     verlässt die Bahn am Rohrmund, geht über den Rand hinaus, läuft ein Stück neben der Karte
+     entlang und kommt beim Rohrende wieder herein. So liegt sie niemandem im Bild, man sieht sie
+     über ihre ganze Länge, und es ist der Weg, den eine Rohrpost in einem Haus auch nähme.
+
+     Gebaut wird sie wie echte Rohre: gerade Läufe und rechtwinklige Bögen, keine Diagonale. Die
+     Ecken werden gerundet, damit der Ball nicht anstößt und die Leitung Bögen hat statt Knicke. */
+  bauWeg(level) {
+    const M = ROHR_AUSSEN;
+    const mx = (this.x + this.ax) / 2, my = (this.y + this.ay) / 2;
+    // Nach welcher Seite geht die Leitung hinaus? Zur nächsten Kante der Karte – dort ist der
+    // Umweg am kürzesten und die Erdscholle trägt die Leitung noch.
+    const kanten = [['oben', my], ['unten', level.H - my], ['links', mx], ['rechts', level.W - mx]];
+    kanten.sort((a, b) => a[1] - b[1]);
+    const seite = kanten[0][0];
+    let p1, p2;
+    if (seite === 'oben') { p1 = [this.x, -M]; p2 = [this.ax, -M]; }
+    else if (seite === 'unten') { p1 = [this.x, level.H + M]; p2 = [this.ax, level.H + M]; }
+    else if (seite === 'links') { p1 = [-M, this.y]; p2 = [-M, this.ay]; }
+    else { p1 = [level.W + M, this.y]; p2 = [level.W + M, this.ay]; }
+    const ecken = [[this.x, this.y], p1, p2, [this.ax, this.ay]];
+    // Läuft der mittlere Lauf ins Leere (beide Enden liegen gleich), fällt eine Ecke weg
+    if (Math.hypot(p2[0] - p1[0], p2[1] - p1[1]) < 0.05) ecken.splice(2, 1);
+
+    const abst = (a, b) => Math.hypot(b[0] - a[0], b[1] - a[1]);
+    const weg = [ecken[0]], muffen = [], boegen = [];
+    for (let i = 1; i < ecken.length - 1; i++) {
+      const a = ecken[i - 1], b = ecken[i], c = ecken[i + 1];
+      const r = Math.min(ROHR_ECKE, abst(a, b) * 0.45, abst(b, c) * 0.45);
+      const ein = [b[0] + (a[0] - b[0]) / abst(a, b) * r, b[1] + (a[1] - b[1]) / abst(a, b) * r];
+      const aus = [b[0] + (c[0] - b[0]) / abst(b, c) * r, b[1] + (c[1] - b[1]) / abst(b, c) * r];
+      muffen.push(weg.length);                      // vor dem Bogen sitzt eine Muffe
+      const bogenVon = weg.length;
+      weg.push(ein);
+      for (let k = 1; k < 6; k++) {                 // Viertelbogen als Bézier über die Ecke
+        const s = k / 6, g = 1 - s;
+        weg.push([g * g * ein[0] + 2 * g * s * b[0] + s * s * aus[0],
+          g * g * ein[1] + 2 * g * s * b[1] + s * s * aus[1]]);
+      }
+      weg.push(aus);
+      boegen.push([bogenVon, weg.length - 1]);
+      muffen.push(weg.length - 1);                  // und hinter dem Bogen die zweite
+    }
+    weg.push(ecken[ecken.length - 1]);
+
+    // Längen aufsummieren, damit punkt(u) den Weg gleichmäßig abfährt
+    this.weg = weg; this.strecke = [0];
+    for (let i = 1; i < weg.length; i++) this.strecke.push(this.strecke[i - 1] + abst(weg[i - 1], weg[i]));
+    this.len = this.strecke[this.strecke.length - 1] || 1;
+    this.ecken = ecken;
+    /* Wo sitzen die Muffen? An jedem Bogen zwei – so wie an einem echten Rohr, wo zwei gerade
+       Stücke mit einem Winkelstück verschraubt sind – und dazwischen regelmäßig weitere, damit
+       auch ein langer gerader Lauf nicht wie ein glattes Kabel aussieht. */
+    this.muffen = muffen.map(i => this.strecke[i] / this.len);
+    for (let d = ROHR_MUFFE; d < this.len - 0.6; d += ROHR_MUFFE) {
+      const u = d / this.len;
+      if (this.muffen.every(m => Math.abs(m - u) > 0.9 / this.len)) this.muffen.push(u);
+    }
+    this.muffen.sort((a, b) => a - b);
+    /* Für die Zeichnung wird der Weg in Läufe zerlegt: die geraden Stücke und die Bögen. Ein
+       gerader Lauf muss als **ein** Zylinder gezeichnet werden – zerlegt man ihn, sieht man an
+       jedem Stoß den Deckel des nächsten, und aus dem Rohr wird eine Perlenkette. Ein Bogen
+       bekommt dasselbe Problem in klein und wird darum gar nicht aus Zylindern gebaut, sondern
+       als durchgehender Strang gezeichnet (siehe Renderer.drawPipeLauf). */
+    const uv = i => this.strecke[i] / this.len;
+    this.stuecke = [];
+    let von = 0;
+    for (const [bv, bb] of boegen) {
+      if (bv > von) this.stuecke.push({ u0: uv(von), u1: uv(bv), bogen: false });
+      this.stuecke.push({ u0: uv(bv), u1: uv(bb), bogen: true, teile: bb - bv });
+      von = bb;
+    }
+    if (von < weg.length - 1) this.stuecke.push({ u0: uv(von), u1: 1, bogen: false });
+    // Stützen: alle paar Kacheln eine, aber nicht dicht an den Rohrenden
+    this.stuetzen = [];
+    for (let d = ROHR_STUETZE; d < this.len - ROHR_STUETZE * 0.6; d += ROHR_STUETZE) this.stuetzen.push(d / this.len);
+  }
+
+  /* Höhe der Leitung an der Stelle u: Am Rohrmund liegt sie auf Mundhöhe, dazwischen läuft sie
+     oben – sonst stieße sie an der Bande an, durch die sie die Bahn verlässt. */
+  hoehe(u) {
+    const rampe = Math.min(1, u / 0.1, (1 - u) / 0.1);
+    return ROHR_MUND_Z + (ROHR_HOEHE - ROHR_MUND_Z) * Math.max(0, rampe);
+  }
   punkt(u) {
-    return [this.x + (this.ax - this.x) * u, this.y + (this.ay - this.y) * u,
-      ROHR_HOEHE + ROHR_BOGEN * Math.sin(Math.PI * u)];
+    const s = Math.max(0, Math.min(1, u)) * this.len;
+    let i = 1;
+    while (i < this.strecke.length - 1 && this.strecke[i] < s) i++;
+    const a = this.weg[i - 1], b = this.weg[i];
+    const d = this.strecke[i] - this.strecke[i - 1] || 1;
+    const k = (s - this.strecke[i - 1]) / d;
+    return [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, this.hoehe(u)];
   }
   force() { }                     // kein Tempo ablesen, keine Anfahrt merken
   segments() { }                  // nie gesperrt: der Rohrmund steht immer offen
