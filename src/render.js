@@ -1089,6 +1089,7 @@ class Renderer {
     if (ob.type === 'springwork') { this.drawSpringWorkFloor(ctx, ob, t); return; }
     if (ob.type === 'escapement') { this.drawEscapementFloor(ctx, ob, t); return; }
     if (ob.type === 'sweephand') { this.drawSweepHandFloor(ctx, ob, t); return; }
+    if (ob.type === 'handclock') { this.drawHandClockFloor(ctx, ob, t); return; }
     if (ob.type === 'dial' || ob.type === 'wanderloch') { this.drawWanderlochFloor(ctx, ob, t); return; }
     if (ob.type === 'field' && ob.style === 'steam') { this.drawSteam(ctx, ob, t); return; }
     if (ob.type === 'field' && ob.style === 'dark') { this.drawDarkZone(ctx, ob, t); return; }
@@ -1387,6 +1388,8 @@ class Renderer {
       items.push({ x: (ob.x0 + ob.x1) / 2, y: (ob.y0 + ob.y1) / 2, bias: -0.2, draw: () => this.drawGearField(ctx, ob, t) });
     } else if (ob.type === 'sweephand') {
       items.push({ x: ob.x, y: ob.y, bias: 0.3, draw: () => this.drawSweepHand(ctx, ob, t) });
+    } else if (ob.type === 'handclock') {
+      items.push({ x: ob.x, y: ob.y, bias: 0.3, draw: () => this.drawHandClock(ctx, ob, t) });
     } else if (ob.type === 'escapement') {
       items.push({ x: ob.x, y: ob.y, bias: 0.25, draw: () => this.drawEscapement(ctx, ob, t) });
     } else if (ob.type === 'pendulum') {

@@ -151,6 +151,24 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
     }
     if (drauf < 8) problems.push(`sweephand bei (${o.x},${o.y}): die Spitze streicht nur an ${drauf} von 12 Stellen über die Bahn – der Arm ist zu lang oder steht falsch`);
   }
+  /* Zeigerwerk: drei Zeiger auf einem Zifferblatt. Sie sind keine Mauern, aber ihre Wirkfelder
+     fegen den ganzen Kreis ab. Liegt ein Teil davon in der Mauer oder im Leeren, wirkt die Bahn
+     kaputt: Der Ball wird von etwas gezogen oder gebremst, das man nicht sieht. Darum muss der
+     Kreis unter dem längsten Zeiger auf der Bahn liegen, und die Nabe sowieso. */
+  for (const o of (c.obstacles || []).filter(o => o.type === 'handclock')) {
+    const r = o.r == null ? 6 : o.r;
+    if (!(r > 1)) { problems.push(`handclock bei (${o.x},${o.y}): r ${r} ist zu klein`); continue; }
+    const chAt = (x, y) => rows[Math.floor(y)] && rows[Math.floor(y)][Math.floor(x)];
+    const hart = ch => FLOOR.has(ch) && ch !== 'w' && ch !== 'l';
+    if (!hart(chAt(o.x, o.y))) problems.push(`handclock: die Nabe bei (${o.x},${o.y}) liegt nicht auf der Bahn (${chAt(o.x, o.y)})`);
+    const lang = r * 0.95;                       // der Sekundenzeiger, der längste der drei
+    let daneben = 0;
+    for (let i = 0; i < 24; i++) {
+      const a = (i * 2 * Math.PI) / 24;
+      if (!hart(chAt(o.x + Math.cos(a) * lang, o.y + Math.sin(a) * lang))) daneben++;
+    }
+    if (daneben) problems.push(`handclock bei (${o.x},${o.y}): die Spitze des längsten Zeigers streicht an ${daneben} von 24 Stellen über Mauer oder Leere – der Kreis passt nicht auf die Bahn`);
+  }
   /* Wanderloch (und das Zifferblatt als seine runde Form): Das Loch springt selbst von Stelle zu
      Stelle. Läge auch nur eine Stelle in der Mauer oder im Leeren, wäre die Bahn zehn Sekunden lang
      nicht zu gewinnen – und niemand wüsste, warum. Darum müssen alle Stellen auf der Bahn liegen.
@@ -178,6 +196,12 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
         problems.push(`${o.type}: Stelle ${i} und ${j} liegen auf derselben Kachel`);
     if (cup && (Math.floor(orte[0][0]) !== cup[0] || Math.floor(orte[0][1]) !== cup[1]))
       problems.push(`${o.type}: das 'H' steht auf (${cup[0]},${cup[1]}), die erste Stelle aber auf (${Math.floor(orte[0][0])},${Math.floor(orte[0][1])})`);
+    /* Der Abschlag darf auf keiner Stelle stehen: Sonst läge der Ball beim Start schon im Loch,
+       sobald das Loch dorthin springt - ein Ass ohne einen einzigen Schlag. */
+    if (tee) orte.forEach(([mx, my], i) => {
+      if (Math.floor(mx) === tee[0] && Math.floor(my) === tee[1])
+        problems.push(`${o.type}: der Abschlag (${tee[0]},${tee[1]}) steht auf Stelle ${i} - dort läge der Ball beim Start im Loch`);
+    });
   }
   for (const o of (c.obstacles || []).filter(o => o.type === 'springwork')) {
     const range = o.range == null ? 8 : o.range, catchR = o.catchR == null ? 0.7 : o.catchR;

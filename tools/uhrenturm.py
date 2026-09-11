@@ -108,6 +108,19 @@ def zeigerarm(k, name, x, y, r=4.5, phase=0, thick=0.24):
     assert drauf >= 8, f'{name}: Zeigerarm streicht nur an {drauf} von 12 Stellen ueber die Bahn'
     return "{ type: 'sweephand', x: %s, y: %s, r: %s, thick: %s, phase: %s }" % (g(x), g(y), g(r), g(thick), g(phase))
 
+def zeigerwerk(k, name, x, y, r=5, phase=0):
+    """Zeigerwerk: drei Zeiger auf einer Achse, jeder mit eigener Umlaufdauer und eigener Wirkung.
+    Sie sind keine Mauern, aber ihre Felder fegen den ganzen Kreis ab - liegt ein Stueck davon in
+    der Mauer, zieht oder bremst dort etwas, das man nicht sieht. Der Kreis unter dem laengsten
+    Zeiger (Sekundenzeiger, 0.95 * r) muss darum ganz auf der Bahn liegen."""
+    assert k.frei(x, y), f'{name}: Zeigerwerk-Nabe bei ({x},{y}) liegt auf "{k.at(x, y)}"'
+    lang = r * 0.95
+    for i in range(24):
+        a = i * math.pi / 12
+        mx, my = x + math.cos(a) * lang, y + math.sin(a) * lang
+        assert k.frei(mx, my), f'{name}: Zeigerspitze bei ({mx:.1f},{my:.1f}) liegt auf "{k.at(mx, my)}"'
+    return "{ type: 'handclock', x: %s, y: %s, r: %s, phase: %s }" % (g(x), g(y), g(r), g(phase))
+
 def zifferblatt(k, name, x, y, r=6, marken=12):
     """Zifferblatt: Das Loch springt von Marke zu Marke. Jede Marke muss Bahn sein, und das 'H'
     der Karte gehoert auf die erste (oben, 12 Uhr)."""
@@ -116,6 +129,7 @@ def zifferblatt(k, name, x, y, r=6, marken=12):
         mx, my = x + math.cos(a) * r, y + math.sin(a) * r
         ch = k.at(mx, my)
         assert ch in HART, f'{name}: Zifferblatt-Marke {i} bei ({mx:.1f},{my:.1f}) liegt auf "{ch}"'
+        assert k.at(mx, my) != 'T', f'{name}: der Abschlag steht auf Marke {i} - der Ball laege beim Start im Loch'
     return "{ type: 'wanderloch', x: %s, y: %s, r: %s, marken: %d }" % (g(x), g(y), g(r), marken)
 
 def wanderloch(k, name, stellen):
@@ -130,6 +144,10 @@ def wanderloch(k, name, stellen):
         assert ch in HART, f'{name}: Wanderloch-Stelle {i} bei ({mx},{my}) liegt auf "{ch}"'
     kacheln = [(int(mx), int(my)) for mx, my in stellen]
     assert len(set(kacheln)) == len(kacheln), f'{name}: zwei Stellen auf derselben Kachel'
+    for y in range(k.h):                                  # Abschlag darf auf keiner Stelle stehen -
+        for x in range(k.w):                              # sonst laege der Ball beim Start im Loch
+            if k.g[y][x] == 'T':
+                assert (x, y) not in kacheln, f'{name}: der Abschlag ({x},{y}) steht auf einer Stelle des Wanderlochs'
     for y in range(k.h):                                  # altes 'H' weg, es zieht auf Stelle 0
         for x in range(k.w):
             if k.g[y][x] == 'H':
@@ -352,18 +370,26 @@ bahn(name='Kupferlabyrinth', par=5, theme='boiler', maxStrokes=20, seed=311, dic
      map=k.rows())
 
 # ---------------------------------------------------------------- 12 Das grosse Zifferblatt (Hoehepunkt)
-k = Karte(30, 21)
-k.scheibe(15, 10.5, 8.6)
+k = Karte(30, 22)
+k.scheibe(15, 10.5, 9.7)                           # groesser als vorher: Der Abschlag braucht Platz
 k.put(15, 4, 'H')                                  # erste Marke, oben auf zwoelf Uhr
-k.put(15, 17, 'T')
+k.put(15, 20, 'T')                                 # ganz aussen am Blattrand. Er darf weder auf einer
+                                                   # Marke stehen (dort laege der Ball beim Start schon
+                                                   # im Loch) noch unter dem grossen Zeiger, der bis
+                                                   # r=7.2 streicht - beides prueft das Skript unten.
 bahn(name='Das große Zifferblatt', par=6, theme='escapement', maxStrokes=26, seed=1200, dichte=0.08,
      intro='Die Schlussbahn steht auf dem Zifferblatt des Turms – und hier bleibt das Loch nicht '
            'liegen. Alle zehn Sekunden springt es eine Stundenmarke weiter, immer im Uhrzeigersinn. '
-           'Der leuchtende Ring zeigt, wohin als Nächstes und wie lange noch. Dazwischen streicht '
-           'der große Zeiger über die Mitte, und zwei Pendel hängen über dem Blatt. Hier zählt nur '
-           'eines: im richtigen Moment am richtigen Ort zu sein.',
+           'Der leuchtende Ring zeigt, wohin als Nächstes und wie lange noch. Über die Marken selbst '
+           'streicht der große Zeiger und schiebt alles vor sich her – wer zu früh dort liegt, wird '
+           'weggeräumt. Darunter gehen '
+           'die drei Zeiger des Werks – jeder anders schnell und jeder anders: Der blaue '
+           'Stundenzeiger bremst, was in seinem Feld liegt, der grüne Minutenzeiger drückt den Ball '
+           'weg, und der rote Sekundenzeiger reißt ihn mit sich herum. Dazu zwei Pendel über dem '
+           'Blatt. Hier zählt nur eines: im richtigen Moment am richtigen Ort zu sein.',
      obstacles=[zifferblatt(k, 'Zifferblatt', 15, 10.5, r=6.5),
-                zeigerarm(k, 'Zifferblatt', 15, 10.5, r=4.6),
+                zeigerarm(k, 'Zifferblatt', 15, 10.5, r=7.2),
+                zeigerwerk(k, 'Zifferblatt', 15, 10.5, r=6.2),
                 pendeltor(k, 'Zifferblatt links', 10, 10.5, 6.5, amp=45),
                 pendeltor(k, 'Zifferblatt rechts', 20, 10.5, 6.5, amp=45, phase=0.5)],
      decor=[('clock', 15, 0.8, 2.6), ('bell', 4.5, 3.5, 1.3), ('bell', 25.5, 3.5, 1.3),
@@ -400,9 +426,14 @@ kopf = '''/* Uhrenturm (Weltkennung 'clock'): zwölf Bahnen in einer Stadt, die 
    kombinieren, und 12 ist der Höhepunkt. Das Kupferrohr kommt erst ab Bahn 4 vor, die Hemmung erst
    ab Bahn 5 – und beide bewusst nicht auf jeder Bahn, damit sie nicht zur Gewohnheit werden.
 
-   Bahn 12 ist die einzige mit dem wandernden Loch: Dort springt es alle zehn Sekunden eine
-   Stundenmarke weiter. Was das Loch tut, macht das Hindernis 'wanderloch' selbst; das 'H' der Karte steht
-   auf seiner ersten Marke, damit die Bahn auch ohne laufende Uhr ein Ziel hat.
+   Das wandernde Loch steht auf Bahn 5, 8, 10 und - als ganzes Zifferblatt mit zwoelf Stundenmarken
+   - auf Bahn 12. Es springt alle zehn Sekunden eine Stelle weiter. Was das Loch tut, macht das
+   Hindernis 'wanderloch' selbst; das 'H' der Karte steht auf seiner ersten Stelle, damit die Bahn
+   auch ohne laufende Uhr ein Ziel hat.
+
+   Auf Bahn 12 gehen ausserdem die drei Zeiger des Turms ('handclock'): Sie sind keine Mauern,
+   sondern fuehren Felder mit sich - der langsame Stundenzeiger bremst, der Minutenzeiger stoesst
+   weg, der schnelle Sekundenzeiger zieht an.
 
    Die Kupferrohre stehen nicht als Koordinaten in der Hindernisliste, sondern als Buchstaben in der
    Karte: Der Großbuchstabe ist der Rohrmund, der gleiche Kleinbuchstabe das Rohrende (A/a, B/b).

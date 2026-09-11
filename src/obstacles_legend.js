@@ -772,6 +772,89 @@ class SweepHand {
   circles(out) { out.push({ x: this.x, y: this.y, r: this.nabe, e: 0.6, kind: 'hub' }); }
 }
 
+/* Zeigerwerk: ein großes Zifferblatt mit drei Zeigern, die sich unterschiedlich schnell drehen –
+   der Stundenzeiger am langsamsten, der Minutenzeiger doppelt so schnell, der Sekundenzeiger
+   noch einmal dreimal so schnell. Anders als der einzelne Zeigerarm sind diese drei nicht fest:
+   Sie schieben den Ball nicht weg, sondern wirken als Felder, so wie die Korallen im Korallenriff,
+   und jeder Zeiger wirkt anders:
+
+   - Stundenzeiger (langsam, kurz, schwer)  bremst    – wer in seinem Schatten liegt, bleibt liegen
+   - Minutenzeiger (mittelschnell)          stößt weg – drückt den Ball von seiner Linie fort
+   - Sekundenzeiger (schnell, lang, dünn)   zieht an  – reißt den Ball mit sich herum
+
+   Die drei Farben sind dieselben wie bei den Korallen (blau bremst, grün stößt, rot zieht), damit
+   man sie nicht neu lernen muss. Fest ist nur die Nabe in der Mitte.
+
+   Gemessen wird der Abstand zur Zeigerlinie, nicht zur Mitte: Ein Feld liegt also längs unter dem
+   Zeiger und wandert mit ihm, statt rund um das Zifferblatt zu stehen. Die Umlaufdauern stehen als
+   Konstanten hier, damit alle Zeigerwerke einer Welt gleich gehen und man sie an einer Stelle
+   nachstellen kann. */
+const ZEIGERWERK_STUNDE  = 24;   // Sekunden für eine Umdrehung des Stundenzeigers
+const ZEIGERWERK_MINUTE  = 12;   // doppelt so schnell
+const ZEIGERWERK_SEKUNDE = 4;    // noch einmal dreimal so schnell wie der Minutenzeiger
+const ZEIGERWERK_BREMSE  = 5.5;  // wie hart der Stundenzeiger bremst (wie 'slow' der Koralle)
+const ZEIGERWERK_STOSS   = 15;   // wie stark der Minutenzeiger wegdrückt
+const ZEIGERWERK_ZUG     = 12;   // wie stark der Sekundenzeiger anzieht
+
+class HandClock {
+  constructor(d) {
+    Object.assign(this, { r: 6, nabe: 0.5, phase: 0 }, d);
+    this.type = 'handclock';
+    // Länge, Breite des Wirkfelds, Umlaufdauer und Wirkung je Zeiger. Der kürzeste ist der
+    // langsamste – so steht es auf jeder Uhr, und so ist das Bremsfeld auch das kleinste.
+    this.zeiger = [
+      { name: 'stunde',  laenge: this.r * 0.52, feld: 2.2, dauer: ZEIGERWERK_STUNDE,  wirkung: 'bremsen' },
+      { name: 'minute',  laenge: this.r * 0.78, feld: 1.8, dauer: ZEIGERWERK_MINUTE,  wirkung: 'stossen' },
+      { name: 'sekunde', laenge: this.r * 0.95, feld: 1.4, dauer: ZEIGERWERK_SEKUNDE, wirkung: 'ziehen' },
+    ];
+    for (const z of this.zeiger) z.omega = TAU / z.dauer;
+    this.update(0);
+  }
+  update(t) {
+    // Alle drei starten oben (12 Uhr) und laufen im Uhrzeigersinn. 'phase' verschiebt das ganze
+    // Werk, nicht die Zeiger gegeneinander – sonst ginge die Uhr falsch.
+    for (const z of this.zeiger) z.angle = -Math.PI / 2 + (this.phase + t / z.dauer) * TAU;
+  }
+  spitze(z) { return [this.x + Math.cos(z.angle) * z.laenge, this.y + Math.sin(z.angle) * z.laenge]; }
+  /* Abstand des Balls zur Zeigerlinie (Strecke Nabe–Spitze) und der nächste Punkt darauf. */
+  amZeiger(z, ball) {
+    const dx = Math.cos(z.angle), dy = Math.sin(z.angle);
+    let u = (ball.x - this.x) * dx + (ball.y - this.y) * dy;
+    u = Math.max(0, Math.min(z.laenge, u));
+    const px = this.x + dx * u, py = this.y + dy * u;
+    return { px, py, u, d: Math.hypot(ball.x - px, ball.y - py) };
+  }
+  force(ball, dt) {
+    for (const z of this.zeiger) {
+      const { px, py, u, d } = this.amZeiger(z, ball);
+      if (d > z.feld) continue;
+      const naehe = 1 - d / z.feld;                       // 0 am Rand des Felds, 1 auf der Linie
+      if (z.wirkung === 'bremsen') {
+        const k = Math.max(0, 1 - ZEIGERWERK_BREMSE * naehe * dt);
+        ball.vx *= k; ball.vy *= k;
+      } else if (z.wirkung === 'stossen') {
+        // Vom Zeiger weg. Liegt der Ball genau auf der Linie, gibt es keine Richtung – dann
+        // schiebt der Zeiger quer zu sich selbst, in die Richtung, in die er sich dreht.
+        let nx = ball.x - px, ny = ball.y - py, len = Math.hypot(nx, ny);
+        if (len < 0.001) { nx = -Math.sin(z.angle); ny = Math.cos(z.angle); len = 1; }
+        const a = ZEIGERWERK_STOSS * naehe * dt;
+        ball.vx += (nx / len) * a; ball.vy += (ny / len) * a;
+      } else {
+        // Zum Zeiger hin und mit ihm herum: der Zug allein hielte den Ball nur fest, erst die
+        // Bahngeschwindigkeit an dieser Stelle reißt ihn mit. Beide wirken auf derselben Achse –
+        // ein Zeiger ist ja ein Radius –, darum ist der Mitnahmeanteil bewusst der schwächere:
+        // Sonst würde der Ball nur weggeschleudert und nie eingesammelt.
+        let nx = px - ball.x, ny = py - ball.y, len = Math.hypot(nx, ny);
+        const a = ZEIGERWERK_ZUG * naehe * dt;
+        if (len > 0.001) { ball.vx += (nx / len) * a; ball.vy += (ny / len) * a; }
+        const v = z.omega * u * naehe * dt * 1.1;
+        ball.vx += -Math.sin(z.angle) * v; ball.vy += Math.cos(z.angle) * v;
+      }
+    }
+  }
+  circles(out) { out.push({ x: this.x, y: this.y, r: this.nabe, e: 0.6, kind: 'hub' }); }
+}
+
 /* Wanderloch: Das Loch der Bahn liegt nicht fest, sondern springt alle WANDERLOCH_TAKT Sekunden
    auf die nächste seiner Stellen und am Ende wieder auf die erste. Damit ist es kein Glücksspiel:
    Die nächste Stelle leuchtet von Anfang an, und ein schrumpfender Ring darum sagt, wie lange noch.

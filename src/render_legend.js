@@ -1731,6 +1731,63 @@ Object.assign(Renderer.prototype, {
     this.prism(ctx, this.circlePoly(ob.x, ob.y, ob.nabe * 0.5, 10), ob.hoehe + 0.35, 0.12, '#ffdf9c', '#a8792c');
   },
 
+  /* Zeigerwerk, Boden: das Zifferblatt und darauf die drei Wirkfelder. Die Felder müssen sichtbar
+     sein, sonst wirkt die Bahn willkürlich – man soll den Zeiger kommen sehen und ihm ausweichen
+     oder ihn mitnehmen. Die Farben sind die der Korallen: blau bremst, grün stößt, rot zieht. */
+  ZEIGERWERK_FARBEN: { bremsen: '110,180,255', stossen: '110,230,130', ziehen: '255,110,110' },
+  drawHandClockFloor(ctx, ob, t) {
+    const s = this.scale;
+    this.ziffernkreis(ctx, ob.x, ob.y, ob.r, 12, true);
+    for (const z of ob.zeiger) {
+      const col = this.ZEIGERWERK_FARBEN[z.wirkung];
+      const ca = Math.cos(z.angle), sa = Math.sin(z.angle);
+      const P = (d, q) => this.proj(ob.x + ca * d - sa * q, ob.y + sa * d + ca * q, 0.005);
+      // Das Feld ist die Fläche im Abstand 'feld' um die Zeigerstrecke: ein Rechteck mit rundem Kopf.
+      const rand = [];
+      for (let i = 0; i <= 10; i++) { const a = -Math.PI / 2 + (i / 10) * Math.PI; rand.push(P(z.laenge + Math.cos(a) * z.feld, Math.sin(a) * z.feld)); }
+      for (let i = 0; i <= 10; i++) { const a = Math.PI / 2 + (i / 10) * Math.PI; rand.push(P(Math.cos(a) * z.feld, Math.sin(a) * z.feld)); }
+      ctx.fillStyle = `rgba(${col},0.12)`;
+      ctx.beginPath(); rand.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.closePath(); ctx.fill();
+      // Ein wandernder Strich im Feld sagt, wohin es wirkt: nach außen beim Stoßen, zur Linie beim
+      // Ziehen, und beim Bremsen stehende Querstriche, die nur pulsieren.
+      ctx.lineWidth = Math.max(1, s * 0.045);
+      for (let i = 0; i < 4; i++) {
+        let u = (t * 0.5 + i / 4) % 1;
+        if (z.wirkung === 'ziehen') u = 1 - u;
+        if (z.wirkung === 'bremsen') u = (i + 1) / 5;
+        const q = z.feld * (z.wirkung === 'bremsen' ? 1 : u);
+        ctx.strokeStyle = `rgba(${col},${z.wirkung === 'bremsen' ? 0.18 + 0.14 * Math.sin(t * 2 + i) : 0.4 * (1 - u) + 0.08})`;
+        for (const vz of [1, -1]) {
+          const a = P(z.laenge * 0.18, vz * q), b = P(z.laenge * 0.92, vz * q);
+          ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+        }
+      }
+    }
+  },
+  /* Zeigerwerk, Körper: drei Zeiger auf einer Achse. Der kurze dicke unten, der lange dünne oben –
+     so verdecken sie einander nicht, und man sieht auf einen Blick, welcher welcher ist. Farbig ist
+     nur die Spitze: Das Messing bleibt Messing, die Wirkung steht vorn. */
+  drawHandClock(ctx, ob, t) {
+    const ZF = { bremsen: ['#7fb6ff', '#2b5c9e'], stossen: ['#8be6a4', '#256f3c'], ziehen: ['#ff9b9b', '#8f2b2b'] };
+    const stufen = [{ z0: 0.22, h: 0.16, tk: 0.30 }, { z0: 0.44, h: 0.13, tk: 0.22 }, { z0: 0.63, h: 0.10, tk: 0.14 }];
+    // Achse unter allem: ein Messingzylinder, auf dem die drei Zeiger sitzen
+    this.prism(ctx, this.circlePoly(ob.x, ob.y, ob.nabe, 14), 0, 0.22, '#8a6624', '#4e3814', { outline: '#2a1d0a' });
+    for (let i = 0; i < ob.zeiger.length; i++) {
+      const z = ob.zeiger[i], st = stufen[i], [hell, dunkel] = ZF[z.wirkung];
+      const ca = Math.cos(z.angle), sa = Math.sin(z.angle), L = z.laenge;
+      const P = (d, q) => [ob.x + ca * d - sa * q, ob.y + sa * d + ca * q];
+      const platte = (k) => [P(-L * 0.14, st.tk * k), P(L * 0.55, st.tk * 0.85 * k), P(L, st.tk * 0.1 * k),
+        P(L, -st.tk * 0.1 * k), P(L * 0.55, -st.tk * 0.85 * k), P(-L * 0.14, -st.tk * k)];
+      this.prism(ctx, platte(1), st.z0, st.h, '#f0cd7d', '#8a6624', { outline: '#3a2a12' });
+      // Spitze in der Farbe der Wirkung
+      const sp = [P(L * 0.62, st.tk * 0.7), P(L, st.tk * 0.1), P(L, -st.tk * 0.1), P(L * 0.62, -st.tk * 0.7)];
+      this.prism(ctx, sp, st.z0 + st.h, 0.05, hell, dunkel);
+      // Nabenring dieses Zeigers, damit die Achse nicht nackt dasteht
+      this.prism(ctx, this.circlePoly(ob.x, ob.y, ob.nabe * (0.9 - i * 0.18), 12), st.z0, st.h, '#d8b263', '#6d4d18');
+    }
+    this.prism(ctx, this.circlePoly(ob.x, ob.y, ob.nabe * 0.36, 10), 0.73, 0.14, '#ffdf9c', '#a8792c', { outline: '#2a1d0a' });
+  },
+
   /* Wanderloch: alle Stellen, die nächste hell und mit schrumpfendem Ring. Der Ring ist die Uhr –
      ist er zu, springt das Loch dorthin. Man soll den Schlag planen können, nicht raten.
      Auf einem Kreis (dem Zifferblatt des Turms) kommt der Ziffernkreis dazu; bei frei gesetzten

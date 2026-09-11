@@ -9,9 +9,14 @@
    kombinieren, und 12 ist der Höhepunkt. Das Kupferrohr kommt erst ab Bahn 4 vor, die Hemmung erst
    ab Bahn 5 – und beide bewusst nicht auf jeder Bahn, damit sie nicht zur Gewohnheit werden.
 
-   Bahn 12 ist die einzige mit dem wandernden Loch: Dort springt es alle zehn Sekunden eine
-   Stundenmarke weiter. Was das Loch tut, macht das Hindernis 'wanderloch' selbst; das 'H' der Karte steht
-   auf seiner ersten Marke, damit die Bahn auch ohne laufende Uhr ein Ziel hat.
+   Das wandernde Loch steht auf Bahn 5, 8, 10 und - als ganzes Zifferblatt mit zwoelf Stundenmarken
+   - auf Bahn 12. Es springt alle zehn Sekunden eine Stelle weiter. Was das Loch tut, macht das
+   Hindernis 'wanderloch' selbst; das 'H' der Karte steht auf seiner ersten Stelle, damit die Bahn
+   auch ohne laufende Uhr ein Ziel hat.
+
+   Auf Bahn 12 gehen ausserdem die drei Zeiger des Turms ('handclock'): Sie sind keine Mauern,
+   sondern fuehren Felder mit sich - der langsame Stundenzeiger bremst, der Minutenzeiger stoesst
+   weg, der schnelle Sekundenzeiger zieht an.
 
    Die Kupferrohre stehen nicht als Koordinaten in der Hindernisliste, sondern als Buchstaben in der
    Karte: Der Großbuchstabe ist der Rohrmund, der gleiche Kleinbuchstabe das Rohrende (A/a, B/b).
@@ -364,33 +369,35 @@ const CLOCK_COURSES = [
   },
   {
     name: 'Das große Zifferblatt', par: 6, theme: 'escapement', maxStrokes: 26,
-    intro: 'Die Schlussbahn steht auf dem Zifferblatt des Turms – und hier bleibt das Loch nicht liegen. Alle zehn Sekunden springt es eine Stundenmarke weiter, immer im Uhrzeigersinn. Der leuchtende Ring zeigt, wohin als Nächstes und wie lange noch. Dazwischen streicht der große Zeiger über die Mitte, und zwei Pendel hängen über dem Blatt. Hier zählt nur eines: im richtigen Moment am richtigen Ort zu sein.',
+    intro: 'Die Schlussbahn steht auf dem Zifferblatt des Turms – und hier bleibt das Loch nicht liegen. Alle zehn Sekunden springt es eine Stundenmarke weiter, immer im Uhrzeigersinn. Der leuchtende Ring zeigt, wohin als Nächstes und wie lange noch. Über die Marken selbst streicht der große Zeiger und schiebt alles vor sich her – wer zu früh dort liegt, wird weggeräumt. Darunter gehen die drei Zeiger des Werks – jeder anders schnell und jeder anders: Der blaue Stundenzeiger bremst, was in seinem Feld liegt, der grüne Minutenzeiger drückt den Ball weg, und der rote Sekundenzeiger reißt ihn mit sich herum. Dazu zwei Pendel über dem Blatt. Hier zählt nur eines: im richtigen Moment am richtigen Ort zu sein.',
     map: [
       '..............................',
-      '..............................',
-      '............######............',
+      '...........########...........',
       '..........##########..........',
-      '.........######H#####.........',
       '........##############........',
-      '.......################.......',
-      '.......################.......',
+      '.......########H#######.......',
       '.......################.......',
       '......##################......',
       '......##################......',
       '......##################......',
-      '.......################.......',
+      '.....####################.....',
+      '.....####################.....',
+      '.....####################.....',
+      '......##################......',
+      '......##################......',
+      '......##################......',
       '.......################.......',
       '.......################.......',
       '........##############........',
-      '.........############.........',
-      '..........#####T####..........',
-      '............######............',
-      '..............................',
+      '..........##########..........',
+      '...........########...........',
+      '...............T..............',
       '..............................',
     ],
     obstacles: [
       { type: 'wanderloch', x: 15, y: 10.5, r: 6.5, marken: 12 },
-      { type: 'sweephand', x: 15, y: 10.5, r: 4.6, thick: 0.24, phase: 0 },
+      { type: 'sweephand', x: 15, y: 10.5, r: 7.2, thick: 0.24, phase: 0 },
+      { type: 'handclock', x: 15, y: 10.5, r: 6.2, phase: 0 },
       { type: 'pendulum', x: 10, y: 6.5, len: 4, amp: 45, ruhe: 90, phase: 0, w: 1.2, h: 1.2 },
       { type: 'pendulum', x: 20, y: 6.5, len: 4, amp: 45, ruhe: 90, phase: 0.5, w: 1.2, h: 1.2 },
     ],

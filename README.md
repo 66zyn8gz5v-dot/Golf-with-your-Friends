@@ -625,7 +625,7 @@ auf 12.
 | 9 | Glockenturm | 5 | Pendel ×2, Hemmung | Drei Takte, von denen keiner zum anderen passt |
 | 10 | Räderschacht | 5 | Zahnradfeld ×2, Zeigerarm, Hemmung, wanderndes Loch | Zwei Felder, ein Zeiger, der die Scheibe leerräumt – und ein Loch, das nicht wartet |
 | 11 | Kupferlabyrinth | 5 | Kupferrohr ×2, Hemmung, Federwerk | Durch die offene Hälfte schießen und noch Tempo fürs zweite Rohr haben |
-| 12 | Das große Zifferblatt | 6 | wanderndes Loch (Zifferblatt), Zeigerarm, Pendel ×2 | Das Loch springt alle zehn Sekunden eine Stundenmarke weiter |
+| 12 | Das große Zifferblatt | 6 | wanderndes Loch (Zifferblatt), Zeigerwerk, Pendel ×2 | Das Loch springt alle zehn Sekunden eine Stundenmarke weiter, und drei Zeiger gehen darüber |
 
 **Die Pars stehen auf dem Bot-Durchlauf.** `node tools/audit/audit.mjs clock` spielt jede Bahn
 sechsmal mit einem Normalspieler und sucht dazu die beste Lösung. Gewertet wurde danach: Par ist
@@ -634,12 +634,24 @@ mittlerer Spieler braucht. Zusammen ergibt das Par 50 für die ganze Welt, währ
 Median bei 49 landen – der Weltpreis ist damit erreichbar, aber nicht geschenkt. Keine Bahn hat im
 Durchlauf einen Hazard.
 
-Nachgemessen (Fassung 63, je sechs Spiele) liegen allerdings **Bahn 8 und Bahn 10 über ihrem Par**:
-Kesselhaus Median 6 statt 4, Räderschacht Median 7 statt 5, und bei Kesselhaus erreichte ein Lauf
-von sechs das Schlaglimit. Das gilt auch ohne das wandernde Loch, hat mit ihm also nichts zu tun –
-die beiden Bahnen sind seit dem Umbau der Zahnradfelder zäher geworden. Beide gehören neu
-vermessen und entweder entschärft oder im Par nachgezogen; bis dahin stimmt die Zahl 50 für die
-Welt nicht ganz.
+Nachgemessen (je sechs Spiele) stimmen allerdings drei Pars nicht mehr, und zwar in beide
+Richtungen:
+
+- **Bahn 8 und Bahn 10 liegen über ihrem Par**: Kesselhaus Median 6 statt 4, Räderschacht Median 7
+  statt 5, und bei Kesselhaus erreichte ein Lauf von sechs das Schlaglimit. Das gilt auch ohne das
+  wandernde Loch, hat mit ihm also nichts zu tun – die beiden Bahnen sind seit dem Umbau der
+  Zahnradfelder zäher geworden.
+- **Bahn 12 liegt weit darunter**: Median 3 bei Par 6, und die beste Lösung ist ein einziger
+  Schlag. Der Grund steckt in der Form: Zwölf Marken auf einem Ring mit Radius 6,5 liegen so dicht,
+  dass von jedem Punkt am Blattrand eine kurze, freie Linie zu irgendeiner Marke führt. Der
+  Abschlag stand zudem bis Fassung 64 **genau auf der Sechs-Uhr-Marke** – wer Glück hatte, lag beim
+  Start schon im Loch. Das ist behoben (der Abschlag liegt jetzt außen, und sowohl `uhrenturm.py`
+  als auch `validate.mjs` weisen einen Abschlag auf einer Wanderloch-Stelle künftig ab), aber der
+  Rest bleibt: Die Schwierigkeit dieser Bahn kommt allein aus dem Takt, nicht aus der Entfernung.
+  Entweder bekommt die Bahn einen abgemauerten Anlauf, aus dem keine kurze Linie auf den Ring
+  führt, oder ihr Par gehört auf 4.
+
+Alle drei gehören neu vermessen; bis dahin stimmt die Zahl 50 für die Welt nicht ganz.
 
 **Der Weltpreis** ist die **Taschenuhr** (`pocketwatch`) – eine Kugel mit durchbrochenem Zifferblatt,
 laufenden Rädern, schwingender Unruh und der Aufzugkrone obendrauf. Sie hängt an derselben Regel
@@ -690,6 +702,43 @@ Zwei Dinge prüft `tools/validate.mjs` dafür: Jede Stelle muss auf hartem Boden
 zwei dürfen auf derselben Kachel sitzen – sonst stünde das Loch zweimal hintereinander am selben
 Fleck. Das `H` der Karte gehört auf die **erste** Stelle, denn von dort startet die Maschine; in
 `tools/uhrenturm.py` verschiebt der Baustein `wanderloch` es von selbst dorthin.
+
+### Das Zeigerwerk: drei Zeiger, drei Wirkungen
+
+Der **Zeigerarm** von Bahn 7 und 10 ist eine Mauer, die sich dreht – er schiebt den Ball vor sich
+her. Das **Zeigerwerk** der Schlussbahn ist das Gegenteil: drei Zeiger auf einer Achse, die gar
+nichts anstoßen, sondern **Felder** mit sich führen, so wie die Korallen im Korallenriff. Man
+rollt hindurch, und unterwegs passiert etwas.
+
+| Zeiger | Umlauf | Feld | Wirkung |
+|---|---|---|---|
+| Stundenzeiger, kurz und dick | `ZEIGERWERK_STUNDE` = 24 s | breit, blau | **bremst** – wer darin liegt, bleibt liegen |
+| Minutenzeiger, mittel | `ZEIGERWERK_MINUTE` = 12 s | mittel, grün | **stößt weg** – drückt den Ball von seiner Linie fort |
+| Sekundenzeiger, lang und dünn | `ZEIGERWERK_SEKUNDE` = 4 s | schmal, rot | **zieht an** – sammelt den Ball auf seine Linie und reißt ihn mit herum |
+
+Die drei Farben sind die der Korallen (blau bremst, grün stößt, rot zieht), damit niemand sie neu
+lernen muss. Alle drei starten auf zwölf Uhr und gehen im Uhrzeigersinn; `phase` verschiebt das
+ganze Werk, nicht die Zeiger gegeneinander – sonst ginge die Uhr falsch. Die Stärken stehen als
+`ZEIGERWERK_BREMSE`, `ZEIGERWERK_STOSS` und `ZEIGERWERK_ZUG` daneben.
+
+**Gemessen wird zur Zeigerlinie, nicht zur Mitte.** Ein Magnet ist ein Kreis um einen Punkt; hier
+liegt das Feld als langes Band unter dem Zeiger und wandert mit ihm. Erst das macht aus drei
+Feldern eine Uhr statt drei Pfützen.
+
+**Zug und Mitnahme wirken auf derselben Achse**, denn ein Zeiger ist ein Radius: „zur Linie hin"
+und „mit dem Zeiger herum" zeigen beide quer zum Zeiger. Deshalb ist der Mitnahmeanteil bewusst
+der schwächere von beiden. Wäre er stärker, würde der Ball nur weggeschleudert und nie
+eingesammelt – und der rote Zeiger unterschiede sich nicht mehr vom grünen.
+
+Fest ist an dem Ding nur die Nabe. Die Zeiger selbst haben keine Kollisionskante, sonst wäre das
+Zifferblatt mit drei rotierenden Mauern unspielbar. Damit man die Felder trotzdem kommen sieht,
+zeichnet `drawHandClockFloor` sie in den Boden: die Fläche blass eingefärbt, darin wandernde
+Striche, die die Richtung zeigen – nach außen beim Stoßen, zur Linie hin beim Ziehen, und beim
+Bremsen stehende Querstriche, die nur pulsieren.
+
+`tools/validate.mjs` prüft, dass die Nabe auf der Bahn liegt und dass der Kreis unter dem längsten
+Zeiger an allen 24 Prüfstellen Bahn ist. Läge ein Stück davon in der Mauer, zöge oder bremste dort
+etwas, das man nicht sieht.
 
 ### Das Räderwerk ringsum
 
@@ -747,7 +796,8 @@ Wiederkehrende Bausteine des Skripts:
   Linse in Ruhe genau in der Tür hängt und zu beiden Seiten darüber hinausschwingt. Zweimal je
   Schwingung ist die Tür frei. Alle drei Punkte, die `validate.mjs` prüft (Ruhelage und beide
   Umkehrpunkte), liegen dabei von selbst auf der Bahn.
-- **`zahnradfeld`, `federwerk`, `zeigerarm`, `hemmung`, `zifferblatt`, `wanderloch`, `rohr`** – je ein Baustein,
+- **`zahnradfeld`, `federwerk`, `zeigerarm`, `zeigerwerk`, `hemmung`, `zifferblatt`, `wanderloch`,
+  `rohr`** – je ein Baustein,
   der seine eigenen Bedingungen prüft und die fertige JS-Zeile liefert.
 
 
