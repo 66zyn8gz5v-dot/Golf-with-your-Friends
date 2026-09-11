@@ -859,8 +859,11 @@ class CopperPipe extends LionGate {
    Ebene (siehe stepPhysics): Wo oben kein Boden ist, fällt der Ball auf die untere Fläche und
    rollt dort weiter, ohne Strafschlag.
 
+   Sie steht auf der Ebene 'ebene' (ohne Angabe der untersten) und hebt auf die nächste darüber.
+   Bei mehr als zwei Ebenen stapeln sich also mehrere Turbinen, jede eine Etage höher.
+
    Zwei Dinge prüft sie selbst, damit eine schiefe Bahn nicht im Spiel auffällt:
-   - Gibt es überhaupt eine obere Ebene? Ohne sie tut die Turbine nichts.
+   - Gibt es überhaupt eine Ebene darüber? Ohne sie tut die Turbine nichts.
    - Ist über ihr auch Boden? Wäre dort ein Loch in der oberen Fläche, würde der Ball im selben
      Augenblick wieder herunterfallen – ein Zittern, das niemand versteht. */
 const TURBINE_STOSS = 0.55;      // Sekunden, die der Windstoß nach dem Heben noch zu sehen ist
@@ -876,13 +879,16 @@ class Turbine {
   }
   trigger(ball, t, events) {
     if (ball.air || ball.rider) return;
-    if ((ball.ebene || 0) !== 0 || !this.level || !this.level.flaechen[1]) return;
+    // Sie hebt von ihrer eigenen Ebene auf die nächste darüber – bei mehr als zwei Ebenen stehen
+    // mehrere übereinander, jede mit ihrem eigenen 'ebene'.
+    const von = this.ebene || 0, nach = von + 1;
+    if ((ball.ebene || 0) !== von || !this.level || !this.level.flaechen[nach]) return;
     if (!this.ueber(ball)) return;
-    if (!this.level.isFloorChar(this.level.charAtEbene(1, ball.x, ball.y))) return;
-    ball.ebene = 1; this.level.setzeEbene(1);
+    if (!this.level.isFloorChar(this.level.charAtEbene(nach, ball.x, ball.y))) return;
+    ball.ebene = nach; this.level.setzeEbene(nach);
     ball.z = 0; ball.vz = 0;
     this.hebtAt = t;
-    events.push({ type: 'turbine', x: ball.x, y: ball.y });
+    events.push({ type: 'turbine', x: ball.x, y: ball.y, nach });
   }
 }
 

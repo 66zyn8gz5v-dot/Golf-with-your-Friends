@@ -412,7 +412,7 @@ const CLOCK_COURSES = [
   },
   {
     name: 'Turbinenprobe', par: 3, theme: 'escapement', maxStrokes: 12,
-    intro: 'Eine Probe für die zweite Ebene. Unten führt der Weg über die Turbine – wer darüberrollt, wird an derselben Stelle nach oben gehoben und behält Tempo und Richtung. Oben liegt das Loch am Ende einer kurzen Strecke. Die Kante dahinter ist offen: Wer zu weit schiebt, fällt an derselben Stelle wieder nach unten und fängt von vorn an – ohne Strafschlag.',
+    intro: 'Eine Probe für die gestapelten Ebenen. Jede Turbine hebt eine Etage höher – wer darüberrollt, wird an derselben Stelle gehoben und behält Tempo und Richtung. Ganz oben liegt das Loch am Ende einer kurzen Strecke. Die Kanten dahinter sind offen: Wer zu weit schiebt, fällt an derselben Stelle so weit hinunter, bis wieder Boden unter ihm ist – ohne Strafschlag.',
     map: [
       '......................',
       '......................',
@@ -424,19 +424,33 @@ const CLOCK_COURSES = [
       '......................',
       '......................',
     ],
-    oben: [
-      '......................',
-      '......................',
-      '......................',
-      '............#####o....',
-      '............####Ho....',
-      '............#####o....',
-      '......................',
-      '......................',
-      '......................',
+    ebenen: [
+      [
+        '......................',
+        '......................',
+        '......................',
+        '.........########o....',
+        '.........########o....',
+        '.........########o....',
+        '......................',
+        '......................',
+        '......................',
+      ],
+      [
+        '......................',
+        '......................',
+        '......................',
+        '.............####o....',
+        '.............###Ho....',
+        '.............####o....',
+        '......................',
+        '......................',
+        '......................',
+      ],
     ],
     obstacles: [
-      { type: 'turbine', x: 12.5, y: 4.5, w: 1.4, h: 1.4 },
+      { type: 'turbine', x: 10.5, y: 4.5, w: 1.4, h: 1.4 },
+      { type: 'turbine', x: 13.5, y: 4.5, w: 1.4, h: 1.4, ebene: 1 },
     ],
     decor: [
       { t: 'lantern', x: 5.5, y: 1.5, s: 1 },

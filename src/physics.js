@@ -182,10 +182,14 @@ function stepPhysics(level, ball, dt, t, allowForces) {
      kein Boden ist, ist wirklich aus. */
   let c2 = level.charAt(ball.x, ball.y);
   if (!level.isFloorChar(c2) && ball.ebene > 0) {
-    ball.ebene -= 1; level.setzeEbene(ball.ebene);
-    ball.z = Math.max(ball.z, level.ebeneZ); ball.vz = 0;   // sichtbar herunterfallen, ohne Flugphase
-    events.push({ type: 'ebeneAb', x: ball.x, y: ball.y });
-    c2 = level.charAt(ball.x, ball.y);
+    const von = ball.ebene;
+    // Bei mehreren Ebenen fällt der Ball so weit, bis wieder Boden unter ihm ist
+    while (ball.ebene > 0 && !level.isFloorChar(c2)) {
+      ball.ebene -= 1; level.setzeEbene(ball.ebene);
+      c2 = level.charAt(ball.x, ball.y);
+    }
+    ball.z = Math.max(ball.z, (von - ball.ebene) * level.ebeneZ); ball.vz = 0;   // sichtbar fallen, ohne Flugphase
+    events.push({ type: 'ebeneAb', x: ball.x, y: ball.y, von, nach: ball.ebene });
   }
   if (!level.isFloorChar(c2)) events.push({ type: 'oob' });
   else if (c2 === 'w') events.push({ type: 'water' });

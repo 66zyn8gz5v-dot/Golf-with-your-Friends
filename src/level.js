@@ -6,8 +6,9 @@
 const FLOOR_CHARS = new Set(['#', 's', 'i', 'w', 'l', 'T', 'H', 'o', 'A', 'B', 'C']);
 const WALL_T = 0.38;       // Dicke der Randmauern (nach außen)
 /* Die Uhrenturm-Welt spielt auf zwei Ebenen. Das ist keine Höhenphysik, sondern ein Umschalter:
-   Der Ball ist immer auf genau einer Fläche und kollidiert nur mit deren Wänden. EBENE_Z ist nur
-   fürs Auge – so hoch wird die obere Fläche über der unteren gezeichnet. */
+   Der Ball ist immer auf genau einer Fläche und kollidiert nur mit deren Wänden. Es dürfen mehr
+   als zwei sein; sie stapeln sich der Reihe nach. EBENE_Z ist nur fürs Auge – so hoch liegt jede
+   Ebene über der darunter. */
 const EBENE_Z = 2.0;
 const WALL_CHUNK = 4;      // längere Mauern werden fürs Sortieren zerteilt
 
@@ -92,17 +93,18 @@ function buildLevel(def) {
   const H = rows.length;
   const W = Math.max(...rows.map(r => r.length));
   const unten = bauFlaeche(rows, W, H, def);
-  /* Zweite Ebene (optional). Sie ist dieselbe Fläche noch einmal, nur eine Etage höher – der Ball
-     ist immer auf genau einer von beiden und stößt sich nur an deren Wänden. */
-  const oben = def.oben ? bauFlaeche(def.oben, W, H, def) : null;
-  const flaechen = oben ? [unten, oben] : [unten];
+  /* Weitere Ebenen (optional). Jede ist dieselbe Fläche noch einmal, eine Etage höher – der Ball
+     ist immer auf genau einer und stößt sich nur an deren Wänden. 'ebenen' ist die Liste der
+     Ebenen über der untersten; 'oben' ist die Kurzform für genau eine. */
+  const obenRohe = Array.isArray(def.ebenen) ? def.ebenen : (def.oben ? [def.oben] : []);
+  const flaechen = [unten, ...obenRohe.map(r => bauFlaeche(r, W, H, def))];
   const tiles = unten.tiles;
   const at = unten.at, isFloor = unten.isFloor;
   const blocks = unten.blocks;
   const tee = unten.tee;
   // Das Loch liegt auf genau einer Ebene und ist nur von dort zu erreichen.
-  const cupEbene = oben && oben.cup ? 1 : 0;
-  const cup = cupEbene ? oben.cup : unten.cup;
+  const cupEbene = Math.max(0, flaechen.findIndex(f => f.cup));
+  const cup = flaechen[cupEbene] ? flaechen[cupEbene].cup : null;
 
   let goal = cup;
   if (!cup) { // Bahnabschnitt ohne Loch: die Tür (Hexenhütte) ist das Ziel
@@ -155,7 +157,7 @@ function buildLevel(def) {
   const level = {
     def, W, H, tiles: unten.tiles, tee: tee2, cup, goal, blocks: unten.blocks,
     segs: unten.segs, walls: unten.walls, obstacles, decor, switches: {},
-    flaechen, ebene: 0, cupEbene, ebeneZ: EBENE_Z, untenFl: unten, obenFl: oben,
+    flaechen, ebene: 0, cupEbene, ebeneZ: EBENE_Z, untenFl: unten,
     schlagZahl: 0,   // Schläge auf dieser Bahn (die Kaiserloge dreht danach den Daumen)
     hasHeights, hStep, heightAt, cellH, slopeAt,
     /* Umschalten zwischen unterer und oberer Ebene. Mehr ist ein Ebenenwechsel nicht: Der Ball

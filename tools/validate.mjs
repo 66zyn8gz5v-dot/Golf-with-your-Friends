@@ -26,16 +26,19 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
      es nur über eine Turbine. Daraus folgen die Regeln, die hier geprüft werden – sie fangen die
      zwei Fehler ab, die man im Spiel erst merkt, wenn man ratlos davorsteht:
      eine obere Ebene, die niemand betreten kann, und ein Loch auf einer Ebene, zu der kein Weg führt. */
-  const obenRows = c.oben || null;
-  let cupOben = null;
-  if (obenRows) {
-    obenRows.forEach((r, y) => [...r].forEach((ch, x) => { if (ch === 'H') cupOben = [x, y]; }));
-    if (obenRows.length !== H || obenRows.some(r => r.length !== W)) problems.push(`obere Ebene ist ${obenRows[0] ? obenRows[0].length : 0}x${obenRows.length} statt ${W}x${H} – beide Ebenen müssen deckungsgleich sein`);
-    if (obenRows.join('').includes('T')) problems.push('der Abschlag steht auf der oberen Ebene – angefangen wird immer unten');
-    if (cup && cupOben) problems.push(`'H' steht auf beiden Ebenen – das Loch liegt auf genau einer`);
-  }
-  const lochEbene = cupOben ? 1 : 0;
-  if (!cup && cupOben) cup = cupOben;
+  const obere = Array.isArray(c.ebenen) ? c.ebenen : (c.oben ? [c.oben] : []);
+  const karten = [rows, ...obere];          // Ebene 0 ist die unterste
+  let lochEbene = 0;
+  obere.forEach((ebRows, i) => {
+    const n = i + 1;
+    if (ebRows.length !== H || ebRows.some(r => r.length !== W)) problems.push(`Ebene ${n} ist ${ebRows[0] ? ebRows[0].length : 0}x${ebRows.length} statt ${W}x${H} – alle Ebenen müssen deckungsgleich sein`);
+    if (ebRows.join('').includes('T')) problems.push(`der Abschlag steht auf Ebene ${n} – angefangen wird immer ganz unten`);
+    ebRows.forEach((r, y) => [...r].forEach((ch, x) => {
+      if (ch !== 'H') return;
+      if (cup) problems.push(`'H' steht auf mehreren Ebenen – das Loch liegt auf genau einer`);
+      cup = [x, y]; lochEbene = n;
+    }));
+  });
   if (!tee) problems.push('kein T'); if (!cup) problems.push('kein H (oder Tür)');
 
   /* Löwentore: Großbuchstabe = Eingang, gleicher Kleinbuchstabe = Ausgang. Jedes Zeichen darf genau
@@ -351,35 +354,43 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
        fiele der Ball im selben Augenblick wieder herunter –, und viertens muss das Loch von dort
        aus über die obere Fläche erreichbar sein. */
     const turbinen = (c.obstacles || []).filter(o => o.type === 'turbine');
-    if (obenRows && !turbinen.length) problems.push('obere Ebene ohne Turbine – dort käme nie jemand hin');
-    if (turbinen.length && !obenRows) problems.push('Turbine ohne obere Ebene – sie hätte nichts, wohin sie hebt');
-    const obenFloor = (x, y) => obenRows && obenRows[y] && FLOOR.has(obenRows[y][x]) && obenRows[y][x] !== 'w' && obenRows[y][x] !== 'l';
-    const einstiege = [];
-    for (const o of turbinen) {
-      const tx = Math.floor(o.x), ty = Math.floor(o.y);
-      const unten = rows[ty] && rows[ty][tx];
-      if (!FLOOR.has(unten)) { problems.push(`turbine bei (${o.x},${o.y}) steht unten nicht auf der Bahn (${unten})`); continue; }
-      if (!obenFloor(tx, ty)) { problems.push(`turbine bei (${o.x},${o.y}): über ihr ist auf der oberen Ebene kein Boden – der Ball fiele sofort zurück`); continue; }
-      if (!seen.has(`${tx},${ty}`)) { problems.push(`turbine bei (${o.x},${o.y}) ist vom Abschlag nicht erreichbar`); continue; }
-      einstiege.push([tx, ty]);
-    }
-    if (lochEbene === 1) {
-      if (!einstiege.length) problems.push('das Loch liegt auf der oberen Ebene, dorthin führt aber keine erreichbare Turbine');
-      else {
-        const gesehenOben = new Set(einstiege.map(p => p.join()));
-        const q3 = einstiege.slice();
-        while (q3.length) {
-          const [x, y] = q3.shift();
-          for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
-            const nx = x + dx, ny = y + dy;
-            if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
-            if (!obenFloor(nx, ny)) continue;
-            const k = `${nx},${ny}`; if (gesehenOben.has(k)) continue; gesehenOben.add(k); q3.push([nx, ny]);
-          }
-        }
-        if (!gesehenOben.has(cup.join())) problems.push('Loch auf der oberen Ebene von der Turbine aus nicht erreichbar');
+    const bodenAuf = (n, x, y) => {
+      const r = karten[n] && karten[n][y], ch = r && r[x];
+      return !!ch && FLOOR.has(ch) && ch !== 'w' && ch !== 'l';
+    };
+    /* Erreichbarkeit Ebene für Ebene: Auf Ebene 0 kommt man vom Abschlag, auf jede höhere nur über
+       eine Turbine, die auf der Ebene darunter steht und dort selbst erreichbar ist. Von dort aus
+       fließt es über die eigene Fläche weiter. */
+    const erreichbar = [seen];
+    for (let n = 1; n < karten.length; n++) {
+      if (!turbinen.some(o => (o.ebene || 0) === n - 1)) problems.push(`Ebene ${n} ohne Turbine auf Ebene ${n - 1} – dort käme nie jemand hin`);
+      const einstiege = [];
+      for (const o of turbinen.filter(o => (o.ebene || 0) === n - 1)) {
+        const tx = Math.floor(o.x), ty = Math.floor(o.y);
+        if (!bodenAuf(n - 1, tx, ty)) { problems.push(`turbine bei (${o.x},${o.y}) steht auf Ebene ${n - 1} nicht auf der Bahn`); continue; }
+        if (!bodenAuf(n, tx, ty)) { problems.push(`turbine bei (${o.x},${o.y}): über ihr ist auf Ebene ${n} kein Boden – der Ball fiele sofort zurück`); continue; }
+        if (!erreichbar[n - 1].has(`${tx},${ty}`)) { problems.push(`turbine bei (${o.x},${o.y}) ist auf Ebene ${n - 1} nicht erreichbar`); continue; }
+        einstiege.push([tx, ty]);
       }
+      const gesehen = new Set(einstiege.map(p => p.join()));
+      const q3 = einstiege.slice();
+      while (q3.length) {
+        const [x, y] = q3.shift();
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          const nx = x + dx, ny = y + dy;
+          if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
+          if (!bodenAuf(n, nx, ny)) continue;
+          const k = `${nx},${ny}`; if (gesehen.has(k)) continue; gesehen.add(k); q3.push([nx, ny]);
+        }
+      }
+      erreichbar.push(gesehen);
     }
+    for (const o of turbinen) {
+      const n = o.ebene || 0;
+      if (n >= karten.length - 1) problems.push(`turbine bei (${o.x},${o.y}) steht auf der obersten Ebene ${n} – sie hätte nichts, wohin sie hebt`);
+    }
+    if (lochEbene > 0 && !erreichbar[lochEbene].has(cup.join()))
+      problems.push(`Loch auf Ebene ${lochEbene} nicht erreichbar – dorthin führt keine erreichbare Turbine oder kein Weg auf der Ebene`);
     for (const o of c.obstacles || []) {
       const pts = o.type === 'portal' ? [[o.x, o.y], [o.tx, o.ty]] : ['bumper', 'rotor', 'switch', 'potion', 'turntable', 'magnet', 'cannon', 'cauldron', 'door', 'spikes', 'lightning', 'trapdoor', 'guillotine', 'eyetower'].includes(o.type) ? [[o.x, o.y]] : o.type === 'mover' && o.style !== 'shark' ? [[o.x0, o.y0], [o.x1, o.y1]] : []; // Haie schwimmen im Wasser neben der Bahn
       if (o.type === 'rotor' && o.style === 'darktentacle') pts.length = 0; // dunkle Tentakel kriechen von außen (aus dem Wrack) auf die Bahn

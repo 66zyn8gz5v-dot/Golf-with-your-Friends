@@ -1633,18 +1633,23 @@ Object.assign(Renderer.prototype, {
     }
   },
 
-  /* Die obere Ebene als angehobene Scholle. Sie wird immer gezeichnet, nicht nur wenn man oben
-     ist – man soll von unten sehen, wohin die Turbine führt, und von oben sehen, wo man
-     herunterkommt. Was zählt, ist der Unterschied: Die Ebene, auf der der Ball gerade ist, wird
-     voll gezeichnet, die andere halb durchsichtig. Sonst wüsste man nie, welche Wände gerade gelten.
+  /* Die Ebenen über der untersten als angehobene Schollen. Sie werden immer gezeichnet, nicht nur
+     wenn man oben ist – man soll von unten sehen, wohin die Turbine führt, und von oben sehen, wo
+     man herunterkommt. Was zählt, ist der Unterschied: Die Ebene, auf der der Ball gerade ist, wird
+     voll gezeichnet, die anderen halb durchsichtig. Sonst wüsste man nie, welche Wände gerade
+     gelten. Gezeichnet wird von unten nach oben, damit eine höhere Ebene die darunter verdeckt.
 
-     Gezeichnet wird sie nicht Kachel für Kachel als Körper – das gäbe bei halber Durchsicht ein
-     Gitter aus lauter inneren Seitenflächen, die man nie sehen sollte. Stattdessen bekommt nur der
-     *Rand* seine Schürze nach unten, und die Fläche obenauf wird flach gefüllt. */
+     Eine Scholle wird nicht Kachel für Kachel als Körper gezeichnet – das gäbe bei halber
+     Durchsicht ein Gitter aus lauter inneren Seitenflächen, die man nie sehen sollte. Stattdessen
+     bekommt nur der *Rand* seine Schürze nach unten, und die Fläche obenauf wird flach gefüllt. */
   drawEbeneOben(ctx, t) {
-    const lv = this.level, fl = lv.obenFl;
-    if (!fl) return;
-    const th = this.theme, z = lv.ebeneZ, aktiv = lv.ebene === 1, tief = 1.15;
+    const lv = this.level;
+    if (!lv.flaechen || lv.flaechen.length < 2) return;
+    for (let n = 1; n < lv.flaechen.length; n++) this.zeichneEbene(ctx, lv.flaechen[n], n);
+  },
+  zeichneEbene(ctx, fl, n) {
+    const lv = this.level;
+    const th = this.theme, z = n * lv.ebeneZ, aktiv = lv.ebene === n, tief = 1.15;
     ctx.globalAlpha = aktiv ? 1 : 0.5;
     const kante = aktiv ? th.groundEdge : shade(th.groundEdge, 1.25);
     const kacheln = [];
