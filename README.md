@@ -821,6 +821,19 @@ gar keine Hilfe, weil man den Fehler dann bei sich sucht. Jetzt wird sie nach Ba
 gezeichnet. Geprüft wird das mit Pixeln: `scratchpad/aim.mjs` zählt die Punkte in der Farbe der
 Zielhilfe vor und nach dem Aufladen, auf der untersten Ebene wie auf einer oberen.
 
+**Maschinen, die zwischen zwei Ebenen stehen, auch.** Derselbe Fehler kam ein zweites Mal, diesmal
+bei der Seilbahn auf dem Gipfel: Man fährt auf die Wolke hinauf, und dort oben ist die Gondel weg.
+Ursache war wieder die Reihenfolge – eine Scholle, auf der der Ball steht, wird voll deckend
+gezeichnet und übermalte alles, was vorher dran war, auch die Gondel, die sichtbar über ihr hängen
+müsste. Betroffen ist jede Maschine, die nicht auf einer Ebene liegt, sondern zwei verbindet:
+**Seilbahn, Aufzug, Zahnstange**. Die drei werden auf mehrstöckigen Bahnen aus der normalen
+Tiefensortierung herausgenommen (`spanntEbenen`) und in `drawSpannendeMaschinen` gleich nach den
+Schollen gezeichnet, untereinander nach ihrer oberen Ebene sortiert. Auf einstöckigen Bahnen ändert
+sich nichts – dort gibt es keine Scholle, die stören könnte, und die normale Sortierung ist
+genauer. Geprüft wird es wie beim Wind mit einem Bildvergleich: `scratchpad/gondel_sicht.mjs`
+zeichnet dieselbe Bahn mit und ohne die Maschine, während der Ball oben steht, und zählt die
+Pixel, die sich unterscheiden.
+
 `tools/validate.mjs` prüft die beiden Fehler, die man im Spiel erst merkt, wenn man ratlos
 davorsteht: eine **Ebene, die von nirgends erreichbar ist**, und ein **Loch auf einer Ebene, zu der
 kein Weg führt**. „Erreichbar" heißt dabei ausdrücklich nicht „hat einen Aufzug von direkt

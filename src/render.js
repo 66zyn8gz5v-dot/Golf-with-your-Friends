@@ -490,6 +490,7 @@ class Renderer {
       if (fade) ctx.globalAlpha = 1;
     }
     this.drawEbeneOben(ctx, t);   // die zweite Spielebene über allem, was unten steht
+    this.drawSpannendeMaschinen(ctx, t);   // Seilbahn, Aufzug, Zahnstange stehen zwischen den Ebenen
     if (lv.cup && lv.cupEbene) { this.drawCupHole(ctx); this.drawFlag(ctx, t); }
     if (b && !imRohr) { this.flat = !!(b.rider && b.rider.type === 'ferry' && b.rider.flat); this.drawBall(ctx, b); this.flat = false; }
     /* Die Zielhilfe ganz zum Schluss, nach Ball und Schollen. Sie lag früher beim Boden, also unter
@@ -1128,6 +1129,29 @@ class Renderer {
   }
 
   /* ---------- Hindernisse ---------- */
+  /* Eine Maschine „spannt Ebenen", wenn sie von einer Etage zur nächsten reicht: Seilbahn mit
+     'ziel', Aufzug und Zahnstange. Solche Körper dürfen nicht in die normale Tiefensortierung –
+     die Schollen und Wolkenbänke werden danach gezeichnet und übermalten sie. Am schlimmsten auf
+     einer Wolke: Die wird voll deckend gezeichnet, wenn der Ball darauf steht, und dann ist die
+     Gondel, mit der man gekommen ist, spurlos weg. Also kommen sie nach den Ebenen dran. */
+  spanntEbenen(ob) {
+    const lv = this.level;
+    if (!lv || !lv.flaechen || lv.flaechen.length < 2) return false;
+    if (ob.type === 'seilbahn') return ob.ziel != null && ob.ziel !== (ob.ebene || 0);
+    return ob.type === 'aufzug' || ob.type === 'zahnstange';
+  }
+  drawSpannendeMaschinen(ctx, t) {
+    const lv = this.level;
+    if (!lv || !lv.flaechen || lv.flaechen.length < 2) return;
+    const dran = lv.obstacles.filter(o => this.spanntEbenen(o));
+    // von unten nach oben, damit eine höher endende Maschine vor einer tieferen steht
+    dran.sort((a, b) => ((a.ziel != null ? a.ziel : (a.ebene || 0)) - (b.ziel != null ? b.ziel : (b.ebene || 0))));
+    for (const ob of dran) {
+      if (ob.type === 'seilbahn') this.drawSeilbahn(ctx, ob, t);
+      else if (ob.type === 'aufzug') this.drawAufzug(ctx, ob, t);
+      else if (ob.type === 'zahnstange') this.drawZahnstange(ctx, ob, t);
+    }
+  }
   drawObstacleFloor(ctx, ob, t) {
     const s = this.scale;
     if (ob.type === 'lightning') { this.drawLightningFloor(ctx, ob, t); return; }
@@ -1463,14 +1487,17 @@ class Renderer {
     } else if (ob.type === 'handclock') {
       items.push({ x: ob.x, y: ob.y, bias: 0.3, draw: () => this.drawHandClock(ctx, ob, t) });
     } else if (ob.type === 'aufzug') {
+      if (this.spanntEbenen(ob)) return;
       items.push({ x: ob.x, y: ob.y, bias: 0.4, draw: () => this.drawAufzug(ctx, ob, t) });
     } else if (ob.type === 'windfahne') {
       items.push({ x: ob.x, y: ob.y, bias: 0.4, draw: () => this.drawWindfahne(ctx, ob, t) });
     } else if (ob.type === 'lawine') {
       items.push({ x: ob.fx || ob.cx, y: ob.fy || ob.cy, bias: 0.5, noFade: true, draw: () => this.drawLawine(ctx, ob, t) });
     } else if (ob.type === 'seilbahn') {
+      if (this.spanntEbenen(ob)) return;
       items.push({ x: ob.x, y: ob.y, bias: 0.45, draw: () => this.drawSeilbahn(ctx, ob, t) });
     } else if (ob.type === 'zahnstange') {
+      if (this.spanntEbenen(ob)) return;
       items.push({ x: ob.x, y: ob.y, bias: 0.4, draw: () => this.drawZahnstange(ctx, ob, t) });
     } else if (ob.type === 'escapement') {
       items.push({ x: ob.x, y: ob.y, bias: 0.25, draw: () => this.drawEscapement(ctx, ob, t) });
