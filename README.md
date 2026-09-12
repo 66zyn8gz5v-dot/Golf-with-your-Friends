@@ -13,11 +13,22 @@ npx serve .          # oder: python3 -m http.server 8080
 
 ## Ladebild
 
-Beim Öffnen steht zuerst ein Ladebild: der Schriftzug, eine kleine Nachtszene mit Burg, und ein Ball,
-der anrollt, zweimal aufsetzt und im Loch verschwindet. Es liegt im festen HTML (`index.html`) und
-bewegt sich **allein mit CSS** – kein JavaScript, keine Bilddatei, kein Netzzugriff. Das ist der
-ganze Punkt: Ein Ladebild, das erst läuft, wenn die Skripte da sind, kommt genau dann nicht, wenn man
-es braucht.
+Beim Öffnen steht zuerst ein Ladebild: der Schriftzug auf einer Tafel, darunter ein Grün, über das
+ein Ball rollt, zweimal aufsetzt und im Loch verschwindet. Dahinter liegt ein **scharfer Ausschnitt
+aus dem gemalten Titelbild** – der Vordergrund mit Laterne, Gras, Ball auf dem Tee und Meer. Der
+Schriftzug des Bildes liegt außerhalb des Ausschnitts, sonst stünde er zweimal da; der Ausschnitt
+steht im `viewBox` und nicht in `background-position`, damit er sich jedem Fensterschnitt von selbst
+anpasst und die Zahlen Bildkoordinaten bleiben, die man nachschlagen kann.
+
+Vorher war es eine gezeichnete Nachtszene aus flachen Flächen. Die tat ihren Dienst, sah neben dem
+gemalten Startbildschirm aber aus wie ein Fremdkörper – und ein Fortschrittsbalken sagt in einem
+Golfspiel weniger als ein Ball, der ins Loch fällt.
+
+Alles daran bewegt sich **allein mit CSS** – kein JavaScript. Das ist der ganze Punkt: Ein Ladebild,
+das erst läuft, wenn die Skripte da sind, kommt genau dann nicht, wenn man es braucht. Beim
+allerersten Öffnen ist das Bild noch unterwegs; bis dahin steht der dunkle Verlauf darunter, damit da
+kein Loch ist. Nebenbei ist das Bild dadurch schon geladen, wenn gleich darauf der Startbildschirm
+kommt.
 
 Damit das auch stimmt, musste die Zierschrift aus dem Seitenkopf verschwinden. Ein `<link
 rel="stylesheet">` auf Google hält das erste Bild auf, bis die Antwort da ist – und solange nichts
