@@ -1090,6 +1090,11 @@ Zwei Dinge fielen erst auf, als die Deko Körper waren – vorher verzieh die fl
   Körper mit Bodenschatten stehen 1123 Stück sichtbar in der Luft. `buildDecor` verwirft sie jetzt –
   und zwar **nach** dem Ziehen der Zufallszahlen, sonst verschöbe sich die ganze Streuung aller
   Welten. Geprüft wird es über alle 91 Bahnen mit Scholle (`scratchpad/randpruef.mjs`).
+- **Deko auf der Spielfläche sieht aus wie ein Hindernis.** Der Blumenbusch stand als grüner Hügel
+  mitten auf der Elfenwiese – man zielt darum herum, obwohl der Ball einfach hindurchrollt. Das ist
+  schlimmer als hässlich: Es ist eine Lüge über die Bahn. Die Streudeko hält sich von selbst
+  daran (`buildDecor` überspringt Bodenkacheln); von Hand gesetzte Deko nicht.
+  `scratchpad/aufbahn.mjs` zählt sie und nennt Welt, Bahn und Stelle.
 - **Die Blüten sahen aus wie Golfbälle.** Der Blumenbusch trug seine Blüten als kleine Kugeln mit
   weißem Glanzpunkt – auf einer Minigolfbahn ist das kein Schönheitsfehler, sondern eine falsche
   Ansage: Man sucht nach einem zweiten Ball. Blüten liegen jetzt flach in der Bodenebene, als

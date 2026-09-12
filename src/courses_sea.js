@@ -329,7 +329,7 @@ const SEA_COURSES = [
       { type: 'bumper', x: 22.5, y: 9.6, r: 0.36, style: 'rock' },
     ],
     decor: [
-      { t: 'lighthouse', x: 26.4, y: 8.6, s: 1.7 }, { t: 'rock', x: 26.5, y: 9.3, s: 1.5 }, { t: 'rock', x: 19.4, y: 12.0, s: 1.4 }, { t: 'rock', x: 8.5, y: 8.6, s: 1.3 },
+      { t: 'lighthouse', x: 26.4, y: 8.6, s: 1.7 }, { t: 'rock', x: 19.4, y: 12.0, s: 1.4 }, { t: 'rock', x: 8.5, y: 8.6, s: 1.3 },
       { t: 'palm', x: 1.0, y: 0.8, s: 1.4, seed: 0.4 }, { t: 'palm', x: 4.5, y: 4.4, s: 1.2, seed: 0.9 }, { t: 'bollard', x: 9.7, y: 1.4, s: 1.1 }, { t: 'bollard', x: 9.7, y: 3.6, s: 1.1 },
       { t: 'bollard', x: 17.6, y: 5.4, s: 1.1 }, { t: 'bollard', x: 17.6, y: 7.6, s: 1.1 }, { t: 'lantern', x: 14.0, y: 4.5 }, { t: 'lantern', x: 20.5, y: 12.4 },
       { t: 'buoy', x: 14.5, y: 2.5, s: 1.1 }, { t: 'buoy', x: 5.5, y: 7.5, s: 1.0 }, { t: 'buoy', x: 23.5, y: 5.5, s: 1.0 }, { t: 'anchor', x: 1.3, y: 4.6, s: 1.1 }, { t: 'crate', x: 24.5, y: 12.4, s: 1.0 },
