@@ -22,7 +22,9 @@ const THEMES = {
     mover: { top: '#e08fb8', side: '#a4507f' },
     rotor: { top: '#e8c98a', side: '#a37a3c' },
     accent: '#ff7fd8', flag: '#ffd166',
-    autoDecor: ['mushroom', 'mushroom', 'mushroomBig', 'tree', 'crystal', 'lantern'],
+    // Im Pilzhain wachsen Pilze, keine Bäume: Der Laubbaum stand hier als Fremdkörper zwischen
+    // den Hüten. Kristall und Laterne bleiben – die gehören zum Hain, sind aber keine Bäume.
+    autoDecor: ['mushroom', 'mushroom', 'mushroomBig', 'mushroom', 'mushroomBig', 'crystal', 'mushroom', 'lantern'],
   },
   forge: {
     atmo: 'embers',
