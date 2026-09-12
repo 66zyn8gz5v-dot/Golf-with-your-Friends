@@ -39,6 +39,12 @@ for (const m of lies('style.css').matchAll(/url\(\s*['"]?(?!https?:|data:)([^)'"
   verlangt.add(m[1].trim());
 }
 
+// 2c. Und die Zeichen aus dem Manifest. Auch die stehen nirgends im HTML – das Manifest ist die
+//     einzige Stelle, an der etwa das maskable-Zeichen überhaupt vorkommt.
+for (const z of JSON.parse(lies('manifest.webmanifest')).icons ?? []) {
+  if (z.src && !/^(https?:|data:)/.test(z.src)) verlangt.add(z.src);
+}
+
 for (const datei of [...verlangt].sort()) {
   if (!existsSync(join(wurzel, datei))) { fehler.push(`gebraucht wird ${datei} – die Datei gibt es nicht`); continue; }
   const oben = datei.split('/')[0];
@@ -56,4 +62,4 @@ for (const m of sw.matchAll(/'\.\/([^']+)'/g)) {
 }
 
 if (fehler.length) { console.error(fehler.map(f => '  FEHLER ' + f).join('\n')); process.exit(1); }
-console.log(`ok – ${verlangt.size} Dateien aus index.html und style.css, alle vorhanden und in der Auslieferung (kopiert: ${[...kopiert].join(', ')})`);
+console.log(`ok – ${verlangt.size} Dateien aus index.html, style.css und manifest.webmanifest, alle vorhanden und in der Auslieferung (kopiert: ${[...kopiert].join(', ')})`);

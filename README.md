@@ -1336,6 +1336,21 @@ keine Deko auf dem Fairway.
 
 Das Spiel ist eine Web-App: Manifest (`manifest.webmanifest`), App-Symbole (`icons/`) und ein Service Worker (`sw.js`) sorgen dafür, dass es sich wie eine App installieren lässt und offline läuft. Der Workflow `.github/workflows/pages.yml` veröffentlicht bei jedem Push automatisch auf GitHub Pages.
 
+**Das App-Zeichen ist ein Ausschnitt aus dem gemalten Titelbild** – dem hochkanten, weil das Wappen
+darin am größten liegt. Es gibt **zwei Zuschnitte**, und das ist kein Zufall: Das gewöhnliche Zeichen
+(`icon-192`, `icon-512`, `apple-touch-icon`) führt das Wappen bis fast an den Rand, denn iOS und
+Android runden es nur ab. Das **maskable**-Zeichen darf das nicht – davon schneidet Android einen
+Kreis aus, und was außerhalb der inneren 80 % liegt, ist weg. Dort sitzt dasselbe Wappen darum in
+einem weiteren Ausschnitt: 870 von 1170 Bildpunkten Breite, also 74 %. Gegengeprüft, indem beide
+Masken – Kreis und abgerundetes Quadrat – über die fertigen Zeichen gelegt wurden; das Wappen
+bleibt in beiden ganz.
+
+Die beiden 512er wiegen als PNG je gut 700 kB. Sie stehen darum **nicht** in der Vorratsliste des
+Service Workers: Gebraucht werden sie nur beim Einrichten auf dem Startbildschirm, nicht beim
+Spielen, und der `fetch`-Griff legt jede geholte Datei ohnehin ab. PNG bleibt es trotzdem – JPEG
+wäre viermal kleiner, aber das Zeichen ist das eine, was auf jedem Gerät sitzen muss, und für
+`apple-touch-icon` schreibt Apple PNG.
+
 Einmalig einrichten (auf github.com im Repository):
 1. **Settings → General → Danger Zone → Change visibility → Public** (GitHub Pages ist nur bei öffentlichen Repositories kostenlos).
 2. **Settings → Pages → Build and deployment → Source: „GitHub Actions“**.
