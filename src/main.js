@@ -124,8 +124,39 @@
      etwa vom Laufen ins Beendetsein –, wird genau dieser neu gezeichnet. Jeder Bildschirm setzt
      den Merker nach seinem overlay() selbst; overlay() löscht ihn vorher. */
   let turnierSchirm = null;
-  function overlay(html, cls) { clockPause(); turnierSchirm = null; ui.overlay.innerHTML = html; ui.overlay.className = 'screen visible' + (cls ? ' ' + cls : ''); }
-  function hideOverlay() { ui.overlay.className = 'screen'; ui.overlay.innerHTML = ''; clockResume(); }
+  function overlay(html, cls) { clockPause(); turnierSchirm = null; ui.overlay.innerHTML = html; ui.overlay.className = 'screen visible' + (cls ? ' ' + cls : ''); document.body.classList.remove('startbild'); }
+  function hideOverlay() { ui.overlay.className = 'screen'; ui.overlay.innerHTML = ''; document.body.classList.remove('startbild'); clockResume(); }
+
+  /* ---------- Startbild ----------
+     Das gemalte Titelbild liegt nur auf dem Startbildschirm. overlay() nimmt es bei jedem Wechsel
+     weg, showTitle() setzt es wieder – so muss nicht jeder einzelne Bildschirm daran denken.
+
+     Der Zuschnitt hängt vom Schirm ab: Breit wird das Bild formatfüllend beschnitten ('slice'),
+     hoch würde das aber links und rechts so viel wegnehmen, dass der Schriftzug in der Mitte
+     zerschnitten wäre. Darum steht es dort oben als ganzes Band ('meet'), und der Verlauf hinter
+     dem SVG führt seine Farben nach unten weiter.
+
+     Lädt das Bild nicht, fällt der Startbildschirm auf die gezeichnete Szene zurück – dann steht
+     der Schriftzug wieder in der Tafel, und niemand sieht ein Loch. */
+  let bildKaputt = false;
+  function titelbildPassen() {
+    const svg = $('tb-svg');
+    if (!svg) return;
+    const breit = innerWidth / Math.max(1, innerHeight) >= 1.45;
+    svg.setAttribute('preserveAspectRatio', breit ? 'xMidYMid slice' : 'xMidYMin meet');
+  }
+  function startbildAn() {
+    if (bildKaputt || !$('tb-svg')) return;
+    document.body.classList.add('startbild');
+    titelbildPassen();
+  }
+  (() => {
+    const svg = $('tb-svg');
+    if (!svg) return;
+    for (const bild of svg.querySelectorAll('image'))
+      bild.addEventListener('error', () => { bildKaputt = true; document.body.classList.remove('startbild'); }, { once: true });
+    addEventListener('resize', titelbildPassen);
+  })();
 
   const SCENE_NORMAL = `<svg class="mode-scene" viewBox="0 0 300 72" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
             <defs>
@@ -336,6 +367,7 @@
     $('to-best').addEventListener('click', () => { Sfx.unlock(); Music.start(); showBestList(); });
     $('to-map').addEventListener('click', () => { Sfx.unlock(); Music.start(); showMap(); });
     $('to-build').addEventListener('click', () => { Sfx.unlock(); Music.start(); showBuild(); });
+    startbildAn();
   }
 
   /* Weltkarte: alle Welten auf einen Blick, jede sofort spielbar */
@@ -1865,7 +1897,10 @@
     updateParticles(dt);
     if (state.ball && state.ball.sunk) state.ball.sinkT += dt;
     updateCamera(dt);
-    if (state.phase === 'title') TitleScene.draw(R.ctx, R.w, R.h, state.t); else { R.drawFrame(state); if (state.phase === 'edit') editor.drawOverlay(R.ctx); }
+    // Liegt das gemalte Startbild darüber, ist die gezeichnete Szene ohnehin verdeckt – dann wird
+    // sie auch nicht gezeichnet. Das spart auf dem Startbildschirm die ganze Arbeit pro Bild.
+    if (state.phase === 'title') { if (!document.body.classList.contains('startbild')) TitleScene.draw(R.ctx, R.w, R.h, state.t); }
+    else { R.drawFrame(state); if (state.phase === 'edit') editor.drawOverlay(R.ctx); }
     syncClock();
     ui.power.classList.toggle('visible', !!state.aim);
     if (state.aim) ui.powerFill.style.width = `${Math.round(state.aim.power * 100)}%`;

@@ -34,6 +34,30 @@ schlechter als gar keines. Bleibt es länger als 14 Sekunden stehen, erscheint d
 die Seite neu zu laden. Wer im Betriebssystem weniger Bewegung eingestellt hat, bekommt dasselbe Bild
 ruhig: Ball am Loch, Balken voll.
 
+## Startbild
+
+Der Startbildschirm zeigt ein gemaltes Titelbild (`bilder/titelbild.jpg`, 1170 × 639). Es liegt als
+`<image>` in einem SVG, und **alles, was sich bewegt, liegt im selben Koordinatensystem darüber** –
+denselben 1170 × 639. Darum sitzt jede Bewegung immer genau an ihrer Stelle, egal wie der Schirm
+geschnitten ist: Bild und Auflagen werden gemeinsam beschnitten. Bewegt werden: die Fahne, Wolken
+über dem Himmel, drei Möwen, Sonnenfunkeln auf dem Wasser, der Schein der Laterne am Zaun,
+Lichtpunkte über der Wiese, und die ganze Ansicht fährt langsam heran.
+
+**Die Fahne wird nicht nachgezeichnet** – das ginge nie genau genug, und eine daneben liegende
+Zeichnung fällt mehr auf als gar keine Bewegung. Statt dessen liegt dasselbe Bild ein zweites Mal
+darüber, auf die Fahne beschnitten (`clipPath`) und durch ein Wellenfeld geschickt (`feTurbulence`
+und `feDisplacementMap`, das Rauschen wandert per SMIL). Verschoben werden also die gemalten Pixel
+selbst, mitsamt Löwe und Zaddeln; darunter steht unverändert das Original und füllt die Ränder, wo
+die Welle Stoff wegzieht.
+
+Der Zuschnitt hängt vom Schirm ab und wird in `titelbildPassen()` gesetzt: Ab einem Verhältnis von
+1,45 füllt das Bild alles (`slice`, es wird beschnitten). Bei einem hohen Schirm – dem Handy – würde
+`slice` links und rechts so viel wegnehmen, dass der Schriftzug in der Mitte zerschnitten wäre; dort
+steht das Bild darum oben als ganzes Band (`meet`), und die Tafel rückt genau darunter
+(`padding-top: calc(100vw * 639 / 1170)`). Lädt das Bild nicht, fällt der Startbildschirm auf die
+gezeichnete Szene aus `src/title.js` zurück, und der Schriftzug steht wieder in der Tafel. Liegt das
+Bild, wird die Szene gar nicht erst gezeichnet – sie wäre ohnehin verdeckt.
+
 ## Welten und Modi
 
 Vom Titelbild führen zwei Wege: **🗺 Weltkarte** und **🛠 Bauen & Eigene Welt**, jeder mit seiner Szene
@@ -42,6 +66,10 @@ lesbar bleibt, liegt ein Schleier dazwischen, der nach rechts hin dunkler wird �
 „Weltkarte" mitten in den Ortsnamen der Karte. Darunter stehen drei kleine Knöpfe: **Turnier** führt
 ohne Umweg in die Arena (Kolosseum), **Online spielen** in den Warteraum, **Rangliste** zu den
 Rekorden.
+
+Liegt das gemalte Startbild, trägt es den Schriftzug schon: Die Tafel lässt ihn dann weg, wird flach
+und stellt die beiden großen Knöpfe auf breiten Schirmen nebeneinander – das halbiert ihre Höhe, und
+vom Bild bleibt mehr zu sehen.
 
 Die Tafel selbst war lange ein heller Schleier vor der Szene: hübsch, aber die Schrift lag auf Wolken,
 Tannen und Schafen. Jetzt ist sie dicht genug zum Lesen und hat den Doppelrahmen alter
@@ -1565,7 +1593,8 @@ Sinnbilder, ein laufendes Spiel, die Rangliste und der Editor da sind.
 ## Projektstruktur
 
 ```
-index.html        Seite, HUD und das Ladebild (läuft ohne JavaScript)
+index.html        Seite, HUD, Ladebild und Startbild (beide laufen ohne JavaScript)
+bilder/titelbild.jpg  gemaltes Titelbild des Startbildschirms
 style.css         Oberfläche
 src/themes.js     Farbpaletten und Deko je Welt
 src/courses.js    die Bahnen des Märchenlands

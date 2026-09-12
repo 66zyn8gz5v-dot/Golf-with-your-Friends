@@ -8,6 +8,61 @@ html, body {
 }
 #game { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: crosshair; }
 
+/* ---------- Startbild ----------
+   Das gemalte Titelbild liegt über der Leinwand und unter den Tafeln (z-index 5 gegen 10). Es ist
+   nur auf dem Startbildschirm zu sehen; wer auf die Weltkarte oder in die Werkstatt geht, sieht
+   wieder die gezeichnete Szene. Angeklickt werden kann es nicht – die Knöpfe liegen darüber.
+
+   Der Grund dahinter ist der Rand: Auf einem breiten Schirm füllt das Bild alles ('slice', es wird
+   beschnitten). Auf einem hohen – dem Handy – würde 'slice' links und rechts so viel wegschneiden,
+   dass der Schriftzug in der Mitte zerschnitten wäre. Darum stellt main.js dort auf 'meet' um: Das
+   Bild steht dann ganz oben als Band, und der Verlauf darunter führt seine Farben weiter. */
+#titelbild {
+  position: fixed; inset: 0; z-index: 5; display: none; pointer-events: none;
+  background: linear-gradient(180deg, #7cc3ea 0%, #4f9fd0 30%, #1f6ea6 60%, #123f61 100%);
+}
+body.startbild #titelbild { display: block; }
+#tb-svg { width: 100%; height: 100%; display: block; }
+
+/* Ein langsames Heranfahren, damit das Bild nicht wie ein Poster steht */
+.tb-kamera { transform-box: view-box; transform-origin: 50% 50%; animation: tb-kamera 38s ease-in-out infinite alternate; }
+@keyframes tb-kamera { from { transform: scale(1); } to { transform: scale(1.045) translate(-6px, 4px); } }
+
+.tb-zug { animation: tb-zug 96s linear infinite; }
+.tb-zug.z2 { animation-duration: 132s; animation-delay: -40s; }
+.tb-zug.z3 { animation-duration: 78s; animation-delay: -25s; }
+@keyframes tb-zug { from { transform: translateX(-420px); } to { transform: translateX(1400px); } }
+
+.tb-vogel { animation: tb-vogel 26s linear infinite; }
+.tb-vogel.v2 { animation-duration: 34s; animation-delay: -11s; }
+.tb-vogel.v3 { animation-duration: 21s; animation-delay: -17s; }
+@keyframes tb-vogel {
+  from { transform: translate(-60px, 150px); }
+  50%  { transform: translate(560px, 96px); }
+  to   { transform: translate(1230px, 132px); }
+}
+
+.tb-funken ellipse { opacity: 0; animation: tb-blink 4.2s ease-in-out infinite; }
+.tb-funken .f2 { animation-delay: 0.7s; } .tb-funken .f3 { animation-delay: 1.5s; }
+.tb-funken .f4 { animation-delay: 2.3s; } .tb-funken .f5 { animation-delay: 3.1s; }
+@keyframes tb-blink { 0%, 100% { opacity: 0; } 45% { opacity: 0.55; } 55% { opacity: 0.35; } }
+
+.tb-lampe { transform-box: view-box; transform-origin: 159px 438px; animation: tb-lampe 3.4s ease-in-out infinite; }
+@keyframes tb-lampe { 0%, 100% { opacity: 0.8; transform: scale(0.94); } 50% { opacity: 1; transform: scale(1.06); } }
+
+.tb-staub circle { opacity: 0; animation: tb-staub 9s ease-out infinite; }
+.tb-staub .s2 { animation-delay: 1.8s; } .tb-staub .s3 { animation-delay: 3.4s; }
+.tb-staub .s4 { animation-delay: 5.1s; } .tb-staub .s5 { animation-delay: 6.8s; }
+@keyframes tb-staub {
+  0% { opacity: 0; transform: translate(0, 0); }
+  20% { opacity: 0.85; } 100% { opacity: 0; transform: translate(14px, -120px); }
+}
+/* Ruhig gestellt bleibt das Bild stehen – die Fahne weht dann nicht, das Bild ist aber vollständig. */
+@media (prefers-reduced-motion: reduce) {
+  .tb-kamera, .tb-zug, .tb-vogel, .tb-funken ellipse, .tb-lampe, .tb-staub circle { animation: none; }
+  .tb-funken ellipse, .tb-staub circle { opacity: 0; }
+}
+
 /* ---------- Ladebild ----------
    Steht ganz oben in dieser Datei, weil es das Erste ist, was jemand sieht: ein Stylesheet, das
    der Browser von oben nach unten liest, hat die Regeln dafür schon parat, bevor der Rest kommt.
@@ -276,6 +331,33 @@ body.editing .cbtn.leave, body.testing .cbtn.leave { display: none; }
 .screen.title .atlas-extra .btn.small { margin: 0; }
 .screen.title .legend { margin-top: 10px; font-size: 12px; line-height: 1.45; }
 body.title #hud, body.title #scoreboard, body.title #controls, body.title #hint { display: none; }
+
+/* Liegt das Startbild, trägt es den Schriftzug schon – die Tafel lässt ihn dann weg und wird flach,
+   damit das Bild zu sehen bleibt. Auf breiten Schirmen stehen die beiden großen Knöpfe nebeneinander
+   statt untereinander; das halbiert die Höhe der Tafel. */
+body.startbild .screen.title .panel > h1,
+body.startbild .screen.title .panel > .sub { display: none; }
+body.startbild .screen.title .panel { max-width: min(95vw, 1040px); padding: 14px 18px 16px; }
+body.startbild .screen.title { padding-bottom: 2vh; }
+@media (min-width: 720px) and (min-aspect-ratio: 5/4) {
+  body.startbild .screen.title .panel { width: min(95vw, 980px); }
+  body.startbild .modes { flex-direction: row; gap: 12px; margin-top: 0; }
+  body.startbild .btn.mode { flex: 1 1 0; min-width: 0; height: 78px; font-size: 22px; }
+  /* Nebeneinander sind die Knöpfe halb so breit: Die Beschriftung rückt in die Mitte, und der
+     Schleier fällt von oben nach unten statt von links nach rechts. */
+  body.startbild .mode-label { left: 10px; right: 10px; max-width: none; text-align: center; }
+  body.startbild .mode-label.long { font-size: 19px; }
+  body.startbild .mode-label small { font-size: 11.5px; }
+  body.startbild .mode-schleier { background: linear-gradient(180deg, rgba(8,6,20,0.3) 0%, rgba(8,6,20,0.68) 55%, rgba(8,6,20,0.78) 100%); }
+  body.startbild .screen.title .legend { text-align: center; }
+}
+/* Hochkant steht das Bild als Band ganz oben ('meet'). Die Tafel gehört direkt darunter – sonst
+   klafft zwischen beiden ein leeres Stück Blau. 639/1170 ist das Seitenverhältnis des Bildes, also
+   ist 100vw * 639/1170 genau die Höhe des Bandes. */
+@media (max-aspect-ratio: 1/1) {
+  body.startbild .screen.title { align-items: flex-start; padding-top: calc(100vw * 639 / 1170 + 10px); padding-bottom: 0; }
+  body.startbild .screen.title .panel { max-height: calc(100vh - 100vw * 639 / 1170 - 24px); }
+}
 .panel {
   background: linear-gradient(180deg, #2c2450, #171232);
   border: 3px solid #ffd166; border-radius: 18px; padding: 28px 36px; text-align: center;
