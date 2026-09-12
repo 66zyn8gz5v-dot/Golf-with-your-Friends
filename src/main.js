@@ -538,9 +538,14 @@
 
   const sceneFor = id => ({ normal: SCENE_NORMAL, sea: SCENE_SEA, pro: SCENE_PRO, jungle: SCENE_JUNGLE, storm: SCENE_STORM, shadow: SCENE_SHADOW, clock: SCENE_CLOCK })[id] || SCENE_NORMAL;
   const MODE_ICON = { normal: 'emoji_events', pro: 'local_fire_department', legend: 'bolt' };
-  /* Die Marke einer Welt: dieselbe wie auf der Karte. Das Kolosseum steht nicht auf der Karte –
-     es ist die Turnierwelt – und bringt seine Marke darum hier mit. */
-  const WELT_ICON = id => (WorldMap.spots[id] && WorldMap.spots[id].icon) || (id === 'colosseum' ? 'stadium' : 'golf_course');
+  /* Die Marke einer Welt auf den Weltknöpfen: dieselbe wie auf der Karte. Das Kolosseum steht nicht
+     auf der Karte – es ist die Turnierwelt – und bringt seine Marke darum hier mit.
+
+     Drei Welten behalten ausdrücklich das Zeichen ihrer Stufe: Märchenland den Pokal, Sturmhimmel
+     und Arena den Blitz. So hat Lüddecke es gewählt; die Marke steht dort auf der Karte. */
+  const WELT_ICON_AUSNAHME = { normal: 'emoji_events', storm: 'bolt', colosseum: 'bolt' };
+  const WELT_ICON = id => WELT_ICON_AUSNAHME[id]
+    || (WorldMap.spots[id] && WorldMap.spots[id].icon) || 'golf_course';
   const worldMode = w => (w && w.mode) || 'normal';
   function setWorld(id) { state.world = WORLDS.find(w => w.id === id) || WORLDS[0]; state.courses = state.world.courses; Music.set(state.world.id); }
 

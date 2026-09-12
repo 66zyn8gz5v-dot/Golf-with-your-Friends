@@ -592,7 +592,9 @@ Unter **Bauen & Eigene Welt** liegen der Editor und die selbst zusammengestellte
   Marken der Welten, die Stufen (Normal, Profi, Legende), die Zeichen der drei Wertungen, die Ränge
   in den Ergebnissen und die Sinnbilder in Laufmeldungen. Die Weltknöpfe in Rangliste, Warteraum
   und Weltüberschrift tragen die **Marke ihrer Welt**, nicht die ihrer Stufe: Fünf Profi-Welten
-  trugen sonst dieselbe Flamme, und das sagte über die Welt nichts aus. Vorher waren das
+  trugen sonst dieselbe Flamme, und das sagte über die Welt nichts aus. Drei Welten behalten
+  ausdrücklich das Zeichen ihrer Stufe – Märchenland den Pokal, Sturmhimmel und Arena den Blitz
+  (`WELT_ICON_AUSNAHME` in `src/main.js`); auf der Karte steht dort die Marke. Vorher waren das
   Emoji, und die zeichnet jedes Betriebssystem selbst: Apple, Google und Microsoft bilden dasselbe
   Zeichen verschieden ab, mal bunt, mal flach, mal in anderer Größe.
 - Zwei Dinge sind bewusst **nicht** ersetzt:
