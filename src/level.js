@@ -229,6 +229,12 @@ function buildDecor(def, tiles, W, H, isFloor) {
     }
   }
   const imWeg = (px, py) => frei.some(f => abstandStrecke(px, py, f) < f.r);
+  /* Nichts darf neben der Erdscholle stehen. Die reicht 1,4 Kacheln über die Karte hinaus (in den
+     Uhrwerk-Welten 3,6, dort liegt das Räderwerk drumherum) – gestreut wurde aber bis zwei Kacheln
+     weit. Solange die Deko flach war, fiel das kaum auf; als Körper mit Bodenschatten steht sie
+     sichtbar in der Luft. Schwebende Welten haben gar keine Scholle, dort gilt die Regel nicht. */
+  const rand = theme.floating ? 99 : (theme.gears ? 3.6 : 1.4) - 0.35;
+  const aufDerScholle = (px, py) => px > -rand && px < W + rand && py > -rand && py < H + rand;
   const auto = def.autoDecor;
   if (auto && theme.autoDecor.length) {
     const rnd = seededRandom(auto.seed || 1);
@@ -248,7 +254,7 @@ function buildDecor(def, tiles, W, H, isFloor) {
       }
       const px = x + 0.25 + rnd() * 0.5, py = y + 0.25 + rnd() * 0.5;
       const gr = 0.75 + rnd() * 0.6, sd = rnd();   // erst ziehen, dann verwerfen: sonst
-      if (imWeg(px, py)) continue;                 // verschöbe sich die ganze Streuung
+      if (imWeg(px, py) || !aufDerScholle(px, py)) continue;   // verschöbe sich die ganze Streuung
       out.push({ t, x: px, y: py, s: gr, z: 0, seed: sd });
     }
   }

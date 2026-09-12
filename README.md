@@ -1083,7 +1083,18 @@ Hinterkopf, und das ist richtig so. **Flach bleibt nur, was keine Seiten hat:** 
 Leuchtfeuer, Rauch, der Schirm der Qualle. Die sitzen jetzt aber an einem Punkt im Raum statt an
 einem Punkt auf dem Bild.
 
-Zwei Fehler sind dabei entstanden, beide lehrreich:
+Zwei Dinge fielen erst auf, als die Deko Körper waren – vorher verzieh die flache Zeichnung sie:
+
+- **Deko stand neben der Erdscholle.** Gestreut wurde bis zwei Kacheln über die Karte hinaus, die
+  Scholle reicht aber nur 1,4 (in den Uhrwerk-Welten 3,6). Flach gezeichnet sah man das kaum; als
+  Körper mit Bodenschatten stehen 1123 Stück sichtbar in der Luft. `buildDecor` verwirft sie jetzt –
+  und zwar **nach** dem Ziehen der Zufallszahlen, sonst verschöbe sich die ganze Streuung aller
+  Welten. Geprüft wird es über alle 91 Bahnen mit Scholle (`scratchpad/randpruef.mjs`).
+- **Die Tannen wurden schwarz.** `frustum` dunkelt die abgewandten Seiten selbst auf bis zu 0,68 ab.
+  Gibt man ihm schon eine abgedunkelte Farbe, bleibt nichts Helles übrig. Die Seitenfarbe eines
+  Kegels ist deshalb die **volle** Farbe – das Licht macht die Zeichnung, nicht die Palette.
+
+Zwei weitere Fehler beim Umbau selbst, beide lehrreich:
 
 - **`shade()` ließ sich nicht schachteln.** Es gab `rgb(...)` zurück; `prism`, `frustum` und `walze`
   dunkeln die Farbe, die sie bekommen, aber selbst noch einmal ab und lasen daraus NaN – der ganze

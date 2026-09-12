@@ -775,7 +775,10 @@ Object.assign(Renderer.prototype, {
     this.saeule(ctx, d.x, d.y, z, k * 0.1, k * 0.08, k * 0.55, '#5a3a1e', '#3e2712', 7);
     for (let i = 0; i < 3; i++) {
       const r = k * (0.46 - i * 0.11), h = k * (0.78 - i * 0.06), z0 = z + k * (0.42 + i * 0.5);
-      this.kegel(ctx, d.x, d.y, z0, r, h, i % 2 ? c1 : shade(c1, 1.14), shade(c1, 0.78));
+      // Die Seitenfarbe ist die volle Nadelfarbe: frustum dunkelt die abgewandten Seiten selbst auf
+      // bis zu 0,68 ab. Gibt man ihm schon eine abgedunkelte Farbe, wird der ganze Baum schwarz.
+      const nadel = i % 2 ? shade(c1, 1.18) : c1;
+      this.kegel(ctx, d.x, d.y, z0, r, h, nadel, nadel);
       if (snow) this.kegel(ctx, d.x, d.y, z0 + h * 0.02, r * 0.99, h * 0.24, '#f4faff', '#d2e4f4');
     }
   },
