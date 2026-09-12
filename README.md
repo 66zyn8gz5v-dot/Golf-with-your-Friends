@@ -1090,6 +1090,10 @@ Zwei Dinge fielen erst auf, als die Deko Körper waren – vorher verzieh die fl
   Körper mit Bodenschatten stehen 1123 Stück sichtbar in der Luft. `buildDecor` verwirft sie jetzt –
   und zwar **nach** dem Ziehen der Zufallszahlen, sonst verschöbe sich die ganze Streuung aller
   Welten. Geprüft wird es über alle 91 Bahnen mit Scholle (`scratchpad/randpruef.mjs`).
+- **Die Blüten sahen aus wie Golfbälle.** Der Blumenbusch trug seine Blüten als kleine Kugeln mit
+  weißem Glanzpunkt – auf einer Minigolfbahn ist das kein Schönheitsfehler, sondern eine falsche
+  Ansage: Man sucht nach einem zweiten Ball. Blüten liegen jetzt flach in der Bodenebene, als
+  Teller mit dunklerem Herz. Der einzige weiße Ball auf dem Grün ist der Spielball.
 - **Die Tannen wurden schwarz.** `frustum` dunkelt die abgewandten Seiten selbst auf bis zu 0,68 ab.
   Gibt man ihm schon eine abgedunkelte Farbe, bleibt nichts Helles übrig. Die Seitenfarbe eines
   Kegels ist deshalb die **volle** Farbe – das Licht macht die Zeichnung, nicht die Palette.

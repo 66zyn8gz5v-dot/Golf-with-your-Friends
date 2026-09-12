@@ -3298,20 +3298,24 @@ class Renderer {
   }
   /* Blumenbusch: ein flacher Blattballen mit Blüten darauf – die Blüten sitzen an Weltpunkten
      rundherum, nicht nebeneinander auf dem Bildschirm. */
+  /* Blumenbusch: ein flaches Blattpolster mit Blüten darauf. Die Blüten waren zuerst kleine
+     Kugeln mit weißem Glanzpunkt – und sahen damit aus wie Golfbälle, die im Gras liegen. Auf
+     einer Minigolfbahn ist das kein Schönheitsfehler, sondern eine falsche Ansage: Man sucht nach
+     einem zweiten Ball. Jetzt liegen sie flach in der Bodenebene, als Teller mit dunklerem Herz –
+     von schräg oben sieht eine Blüte genau so aus, und rund ist daran nichts mehr. */
   spriteFlowers(ctx, d) {
     const k = d.s, z = d.z || 0, seed = d.seed || 0;
     this.frustum(ctx, this.circlePoly(d.x, d.y, k * 0.44, 9), this.circlePoly(d.x, d.y, k * 0.3, 9),
                  z, z + k * 0.18, '#6fc257', '#468a3c');
-    const cols = ['#ff6b9d', '#ffd166', '#ffffff', '#c77dff'];
+    const cols = ['#ff6b9d', '#ffd166', '#c77dff', '#ff9a3a'];
     for (let i = 0; i < 5; i++) {
-      const a = seed * 6 + i * 1.27, rr = k * 0.3 * (0.4 + ((i * 7) % 3) * 0.3);
-      this.kugel(ctx, d.x + Math.cos(a) * rr, d.y + Math.sin(a) * rr, z + k * (0.22 + ((i * 5) % 3) * 0.05),
-                 k * 0.07, '#ffffff', cols[(i + Math.floor(seed * 4)) % 4], shade(cols[(i + Math.floor(seed * 4)) % 4], 0.7));
+      const a = seed * 6 + i * 1.27, rr = k * 0.3 * (0.35 + ((i * 7) % 3) * 0.3);
+      const bx = d.x + Math.cos(a) * rr, by = d.y + Math.sin(a) * rr;
+      const col = cols[(i + Math.floor(seed * 4)) % 4];
+      this.isoEllipse(ctx, bx, by, z + k * 0.19, k * 0.085, col);
+      this.isoEllipse(ctx, bx, by, z + k * 0.2, k * 0.03, shade(col, 0.55));
     }
   }
-  /* Fels: ein Brocken mit unregelmäßigem Umriss, nicht mehr zwei übereinandergelegte Ellipsen.
-     Der Startwert der Deko bestimmt die Form, also sieht jeder Stein anders aus und bleibt sich
-     beim Drehen treu. */
   spriteRock(ctx, d, c1, c2, snow = false) {
     const k = d.s, z = d.z || 0;
     this.bodenSchatten(ctx, d.x, d.y, k * 0.48);
