@@ -137,8 +137,14 @@
      dem SVG führt seine Farben nach unten weiter.
 
      Lädt das Bild nicht, fällt der Startbildschirm auf die gezeichnete Szene zurück – dann steht
-     der Schriftzug wieder in der Tafel, und niemand sieht ein Loch. */
-  let bildKaputt = false;
+     der Schriftzug wieder in der Tafel, und niemand sieht ein Loch.
+
+     Geprüft wird das **vorher**, mit einem eigenen Image-Objekt, nicht mit einem 'error' am <image>
+     im SVG. Genau daran ist es einmal gescheitert: Auf dem iPad hat das SVG-Element kein 'error'
+     gemeldet, das Bild fehlte trotzdem, und Safari malte sein Fragezeichen quer über den halben
+     Schirm. Ein Image-Objekt meldet überall verlässlich, und das Bild kommt erst auf den Schirm,
+     wenn es wirklich da ist. */
+  let bildBereit = false;
   function titelbildPassen() {
     const svg = $('tb-svg');
     if (!svg) return;
@@ -146,15 +152,20 @@
     svg.setAttribute('preserveAspectRatio', breit ? 'xMidYMid slice' : 'xMidYMin meet');
   }
   function startbildAn() {
-    if (bildKaputt || !$('tb-svg')) return;
+    if (!bildBereit || !$('tb-svg')) return;
     document.body.classList.add('startbild');
     titelbildPassen();
   }
   (() => {
     const svg = $('tb-svg');
-    if (!svg) return;
-    for (const bild of svg.querySelectorAll('image'))
-      bild.addEventListener('error', () => { bildKaputt = true; document.body.classList.remove('startbild'); }, { once: true });
+    const quelle = svg && svg.querySelector('image');
+    if (!quelle) return;
+    const probe = new Image();
+    probe.addEventListener('load', () => {
+      bildBereit = true;
+      if (state.phase === 'title' && ui.overlay.classList.contains('title')) startbildAn();
+    });
+    probe.src = quelle.getAttribute('href');
     addEventListener('resize', titelbildPassen);
   })();
 

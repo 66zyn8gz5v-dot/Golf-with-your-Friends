@@ -36,7 +36,7 @@ ruhig: Ball am Loch, Balken voll.
 
 ## Startbild
 
-Der Startbildschirm zeigt ein gemaltes Titelbild (`bilder/titelbild.jpg`, 1170 × 639). Es liegt als
+Der Startbildschirm zeigt ein gemaltes Titelbild (`icons/titelbild.jpg`, 1170 × 639). Es liegt als
 `<image>` in einem SVG, und **alles, was sich bewegt, liegt im selben Koordinatensystem darüber** –
 denselben 1170 × 639. Darum sitzt jede Bewegung immer genau an ihrer Stelle, egal wie der Schirm
 geschnitten ist: Bild und Auflagen werden gemeinsam beschnitten. Bewegt werden: die Fahne, Wolken
@@ -57,6 +57,20 @@ steht das Bild darum oben als ganzes Band (`meet`), und die Tafel rückt genau d
 (`padding-top: calc(100vw * 639 / 1170)`). Lädt das Bild nicht, fällt der Startbildschirm auf die
 gezeichnete Szene aus `src/title.js` zurück, und der Schriftzug steht wieder in der Tafel. Liegt das
 Bild, wird die Szene gar nicht erst gezeichnet – sie wäre ohnehin verdeckt.
+
+**Zwei Fehler auf dem Weg dahin, und beide zeigten sich erst in der Vorschau:**
+
+- **Das Bild lag in einem eigenen Ordner `bilder/`.** Die Auslieferung nach GitHub Pages kopiert
+  aber nicht den ganzen Baum, sondern eine Liste (`cp -r … index.html style.css … src icons`), und
+  in der stand `bilder` nicht. Auf dem eigenen Rechner war alles in Ordnung, auf der Seite fehlte
+  das Bild. Es liegt darum bei den `icons` – dem Ordner, der ohnehin mitgeht. Dagegen prüft jetzt
+  `node tools/auslieferung.mjs`: Es liest, was `index.html` und `sw.js` verlangen, und was die
+  `cp`-Zeile in `.github/workflows/pages.yml` kopiert. Was nur auf einer Seite steht, ist ein
+  Fehler. (Gegengeprüft: Mit dem alten Pfad schlägt die Prüfung an.)
+- **Die Notbremse griff nicht.** Sie hing an einem `error`-Ereignis am `<image>` im SVG – und das
+  meldet Safari auf dem iPad nicht. Das Bild fehlte, der Rückfall blieb aus, und Safari malte sein
+  Fragezeichen quer über den halben Schirm. Geprüft wird jetzt **vorher**, mit einem eigenen
+  `Image`-Objekt: Das Bild kommt erst auf den Schirm, wenn es wirklich geladen ist.
 
 ## Welten und Modi
 
@@ -1594,7 +1608,8 @@ Sinnbilder, ein laufendes Spiel, die Rangliste und der Editor da sind.
 
 ```
 index.html        Seite, HUD, Ladebild und Startbild (beide laufen ohne JavaScript)
-bilder/titelbild.jpg  gemaltes Titelbild des Startbildschirms
+icons/titelbild.jpg   gemaltes Titelbild des Startbildschirms
+tools/auslieferung.mjs  prüft, ob alles, was die Seite braucht, auch ausgeliefert wird
 style.css         Oberfläche
 src/themes.js     Farbpaletten und Deko je Welt
 src/courses.js    die Bahnen des Märchenlands
