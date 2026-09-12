@@ -17,13 +17,50 @@ Vom Titelbild führen zwei Wege: **🗺 Weltkarte** und **🛠 Bauen & Eigene We
 kleine Knöpfe: **Turnier** führt ohne Umweg in die Arena (Kolosseum), **Online spielen** in den
 Warteraum, **Rangliste** zu den Rekorden.
 
-Auf der **Weltkarte** liegt jede Welt als schwebende Scheibe in derselben 2,5D-Sicht wie das Spiel selbst: Blick schräg von oben auf eine um 45° gedrehte Welt, dieselbe Projektion wie im Renderer. Jede Scheibe hat darum eine Deckfläche im Karomuster und darunter zwei sichtbare Seitenflächen – die linke hell, die rechte im Schatten – mit Streiflicht an der Oberkante und dunkler Vorderkante. Darauf stehen die Bauten als echte Körper: Quader mit Deckfläche und zwei Seiten, Kegeldächer und Baumkronen aus vier Dreiecken, hell zur Sonne und dunkel zur Schattenseite, dazu Fahnen und Kontaktschatten. Die Reise geht von links (heller Tag im Märchenland) nach rechts (tiefe Nacht in der Uhrwerkstadt): Himmelsverlauf vom Tag in die Nacht, Sterne, Sonnenstrahlen links, Blutmond rechts, ein scharfer Bergkamm mit Schneekappen und dahinter ein zweiter im Dunst, ziehende Wolken, ein gestrichelter goldener Weg über die Vorderkanten der Scheiben, schwebende Flocken, Nebelbänder und eine Randabdunklung. **Die Karte ist breiter als der Schirm.** Sie misst `WorldMap.BREITE` × 62 Karteneinheiten (zur Zeit
-128 × 62); der Kasten darum ist so breit wie die Tafel und schiebt sich waagerecht – man wischt nach
-links, und die Reise geht weiter bis zur Uhrwerkstadt am Ende. Wer eine achte Welt anhängt, erhöht
-`BREITE` in `src/worldmap.js` und setzt ihre Scheibe rechts daneben; Seitenverhältnis, Hintergrund
-und die Umrechnung der Ortsmarken in Prozent richten sich danach von selbst. Die Orte in
-`WorldMap.spots` stehen darum in **Karteneinheiten** (x) und in **Prozent der Höhe** (y) – die
-x-Angabe wird beim Zeichnen durch `BREITE` geteilt.
+Auf der **Weltkarte** liegen die Welten als Landstriche auf einer gezeichneten Landkarte – ein Meer,
+ein Festland, eine Nebeninsel. Das Märchenland hat die Wiesen im Westen, der Schneeberg das Gebirge
+im Norden, der Dschungel den feuchten Süden, das Schattenreich das Moor am Ostrand; die Meereswelt
+liegt als eigene Insel davor, und dorthin führt kein Weg, sondern eine gestrichelte Schiffslinie.
+
+Vorher lag jede Welt als schwebende Scheibe in der Luft, aufgereiht von links nach rechts. Das war
+übersichtlich, aber es war keine Welt – es waren acht Inseln ohne Zusammenhang, und mit jeder neuen
+wurde die Reihe länger, bis die Karte breiter war als der Schirm und man wischen musste.
+
+**Die Küste wird gerechnet, nicht gezeichnet.** Jede Welt ist in `src/worldmap.js` ein Eintrag in
+`LAND`: Mittelpunkt, Reichweite, Biom. Daraus entsteht ein Feld, das in der Mitte eines Landstücks 1
+ist und an seiner Reichweite auf 0 fällt; die Linie, an der die Summe aller Felder die Höhe `WASSER`
+hat, ist die Küste (Marching Squares, danach zweimal Chaikin geglättet). Landstücke, die nah
+beieinander liegen, wachsen dabei von selbst zu einem Festland zusammen, ein weit abseits gesetztes
+wird zur Nebeninsel, und was von Land umschlossen bleibt, ist ein Binnensee. Landstücke ohne `id`
+tragen keine Welt – sie geben dem Festland nur seine Form: eine Landzunge, eine Bucht, eine
+Landbrücke in den Süden.
+
+Zwei Dinge sind daran wichtig, und beide waren beim ersten Versuch falsch:
+
+- **Das Feld muss endlich weit reichen.** Mit `1/Abstand²` – dem klassischen Metaball – summieren
+  sich elf Landstücke so weit auf, dass die ganze Karte zu Land wird. Mit `(1 − (d/r)²)³` wirkt
+  jedes Landstück nur in seiner Umgebung, und ob zwei zusammenwachsen, entscheidet allein ihr
+  Abstand.
+- **Die Küstenstücke laufen nicht alle gleich herum.** Werden sie gerichtet aneinandergehängt,
+  zerfällt die Küste in Fetzen. Gesucht wird darum ungerichtet: Ob ein Stück an diesem Punkt
+  anfängt oder aufhört, ist egal.
+
+Daraus folgt der eigentliche Gewinn: **Eine neue Welt braucht einen einzigen Eintrag in `LAND`.**
+Küste, Flachwasser, Strand, Färbung, Gelände, Flüsse, Wege und Beschriftung folgen daraus. Wer eine
+Welt anhängt, zeichnet keine Landkarte – er sagt, wo sie liegt und wie es dort aussieht.
+
+Das Gelände kommt aus dem Biom: `wiese` streut Bäume und Büsche, `gebirge` Berge mit Schneekappe,
+`stadt` Häuser und Türme, `dschungel` Palmen und Tempel, `moor` tote Bäume und Grabsteine, `kueste`
+Dünen und Palmen. Die Plätze zieht ein Zufall mit festem Startwert – dieselbe Karte sieht auf jedem
+Gerät gleich aus –, und jeder Platz muss weit genug im Land liegen, sonst stünde ein Baum mit den
+Füßen im Wasser. Die Flüsse suchen sich ihren Weg aus demselben Feld: Sie laufen dorthin, wo es
+kleiner wird, also bergab, und hören auf, wo sie das Meer erreichen. Die Reisewege verbinden die
+Welten in ihrer Reihenfolge; ob ein Stück zur Straße oder zur Schiffslinie wird, tastet die Karte
+selbst ab.
+
+Die Karte misst `WorldMap.BREITE` × 62 Karteneinheiten (zur Zeit 100 × 62) und passt damit ganz auf
+den Schirm. Die Orte in `WorldMap.spots` stehen in **Karteneinheiten** (x) und in **Prozent der
+Höhe** (y) – die x-Angabe wird beim Zeichnen durch `BREITE` geteilt.
 
 **Jeder Ort ist von Anfang an anwählbar – nichts muss freigespielt werden.** Die Stufe am Ort ist nur ein Hinweis darauf, was einen erwartet:
 
@@ -1506,7 +1543,7 @@ src/net.js        Netzspiel: Raumcode und MQTT-Zugang für das Spiel zu mehreren
 src/best.js       Rangliste: Rekorde je Bahn und je Welt in drei Wertungen (Schläge, Zeit, Kombi), über alle Geräte geteilt
 src/sfx.js        Klangeffekte (WebAudio)
 src/music.js      Musik: je Welt ein erzeugter Klangteppich (WebAudio)
-src/worldmap.js   Weltkarte: die schwebenden Scheiben in 2,5D und die Orte der Welten
+src/worldmap.js   Weltkarte: Landkarte aus gerechneter Küste, Gelände je Biom und die Orte der Welten
 src/title.js      animierte Startbildschirm-Szene mit Tag-Nacht-Wechsel
 src/main.js       Spielablauf, Eingabe, Punkte
 ```

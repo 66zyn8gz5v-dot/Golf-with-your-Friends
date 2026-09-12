@@ -353,9 +353,9 @@
     overlay(`<div class="panel atlas-panel">
       <div class="panel-head"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span><h2>${Icons.svg('map')} Weltkarte</h2></div>
       <div class="sub">Tippe einen Ort an – alle ${kartenWelten.length} Welten sind von Anfang an offen.
-        Die Karte ist breiter als der Schirm: <b>nach links wischen</b>, dann geht die Reise weiter.</div>
-      <!-- Die Karte ist BREITE Einheiten breit, der Kasten so breit wie die Tafel: Bei BREITE = 128
-           ist die Karte 128 % des Kastens, der Rest wird gewischt. Die Höhe folgt dem Seitenverhältnis. -->
+        Sie liegen als Landstriche auf der Karte: <b>gestrichelte Wege</b> verbinden sie, über Wasser geht es per Schiff.</div>
+      <!-- Die Karte ist BREITE Einheiten breit, der Kasten so breit wie die Tafel. Bei BREITE = 100
+           passt sie ganz hinein; wird sie einmal breiter, schiebt der Kasten waagerecht. -->
       <div class="atlas-schiebe"><div class="atlas" style="aspect-ratio:${WorldMap.BREITE} / 62;width:${WorldMap.BREITE}%">${WorldMap.svg()}${marks}</div></div>
       ${turnierBand()}
       <div class="atlas-extra"><span class="btn small ghost" id="to-build2">${Icons.svg('construction')} Bauen &amp; Eigene Welt</span></div>
