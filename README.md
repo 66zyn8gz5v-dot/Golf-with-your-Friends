@@ -587,11 +587,21 @@ Unter **Bauen & Eigene Welt** liegen der Editor und die selbst zusammengestellte
   Die Neigung richtet sich nach dem Bildschirm: hochkant (Handy) bleibt die Sicht flach,
   quer auf Tablet oder Laptop wird sie steiler, damit das Feld nicht platt gedrückt wirkt.
 - Hut des eigenen Balls: in der Startaufstellung unter „Hut". Die Wahl merkt sich der Browser.
-- Die Bedienknöpfe (Zurück, Kamera, Zoom, Musik, Vollbild, Menüs, Editor-Werkzeuge) nutzen Material Symbols von Google,
-  als SVG-Pfade in `src/icons.js` eingebettet – überall gleich, in der Textfarbe, ohne Schriftart aus dem Netz.
-  Welten, Bahnen, Hüte und Rekordmeldungen behalten bewusst ihre bunten Zeichen: dafür hat kein Bedien-Icon-Satz Motive.
-- Online gegeneinander: **🌐 Online spielen** im Startbildschirm, Raumcode aufmachen oder eintippen.
-- Rekorde: **🏆 Rangliste** im Startbildschirm, einmal den eigenen Namen eintragen. Drei Wertungen: Schläge, Zeit und Kombi (Schläge + Minuten).
+- Fast die ganze Oberfläche trägt **Material Symbols** von Google, als SVG-Pfade in `src/icons.js`
+  eingebettet – überall gleich, in der Textfarbe, ohne Schriftart aus dem Netz: Bedienknöpfe, die
+  Marken der acht Welten auf der Karte, die Stufen (Normal, Profi, Legende), die Zeichen der drei
+  Wertungen, die Ränge in den Ergebnissen und die Sinnbilder in Laufmeldungen. Vorher waren das
+  Emoji, und die zeichnet jedes Betriebssystem selbst: Apple, Google und Microsoft bilden dasselbe
+  Zeichen verschieden ab, mal bunt, mal flach, mal in anderer Größe.
+- Zwei Dinge sind bewusst **nicht** ersetzt:
+  - Die **Hüte** in Listen, Ergebnissen und Belohnungen. Material hat weder Krone noch Zauberhut
+    noch Piratenhut – und es braucht sie nicht: Die Hüte werden ohnehin gezeichnet, also zeigen die
+    Abzeichen jetzt den echten Hut in klein, gemalt vom selben Code wie der auf dem Ball.
+  - Die **Sinnbilder der Bahnen** (Pilz, Drache, Krake, Krokodil, Sarg, Rabe …). So etwas kennt
+    Material Symbols nicht, und ein Einheitszeichen für alle wäre kein Ersatz, sondern ein Verlust:
+    In der Bahnliste erkennt man die Bahn am Zeichen.
+- Online gegeneinander: **Online spielen** im Startbildschirm, Raumcode aufmachen oder eintippen.
+- Rekorde: **Rangliste** im Startbildschirm, einmal den eigenen Namen eintragen. Drei Wertungen: Schläge, Zeit und Kombi (Schläge + Minuten).
 - Zurücksetzen darf nur, wer die Liste führt: einmal unten in der Rangliste auf **Liste führen** tippen, dann den Schlüssel über **Schlüssel sichern** wegkopieren.
 - Musik an oder aus: Knopf `♪` unten links oder Taste `J`; im Startbildschirm auch unter „Musik". Die Wahl merkt sich der Browser.
 - 1–4 Spieler im Hotseat-Modus: Jeder spielt die Bahn nacheinander zu Ende.
@@ -1658,7 +1668,7 @@ src/render_legend.js Optik der Legende-Welten (Hintergründe, neue Hindernisse u
 src/text.js       Eine Stelle für alle Eingaben: Namen und Bahnnamen filtern, Anzeige entschärfen
 src/share.js      Bahnen weitergeben: prüfen, über den Vermittler teilen, als Link verpacken
 src/version.js    Fassung und Ausgabe (Spiel oder Vorschau): Zahl, Speicher-Vorsatz und Themen-Marke – von Seite und Service Worker gelesen
-src/icons.js      Bedien-Sinnbilder: Material Symbols als eingebettete SVG-Pfade (Zurück, Kamera, Musik, Editor …)
+src/icons.js      Sinnbilder der Oberfläche: Material Symbols als eingebettete SVG-Pfade (Bedienung, Welten, Ränge, Wertungen)
 src/hats.js       Hüte für die Bälle: Zeichnungen und Vorschau fürs Menü
 src/net.js        Netzspiel: Raumcode und MQTT-Zugang für das Spiel zu mehreren
 src/best.js       Rangliste: Rekorde je Bahn und je Welt in drei Wertungen (Schläge, Zeit, Kombi), über alle Geräte geteilt

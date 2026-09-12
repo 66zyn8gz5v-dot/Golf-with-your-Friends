@@ -22,26 +22,27 @@ const WorldMap = (() => {
 
   /* Ein Landstück. 'biom' bestimmt die Färbung und die Geländezeichen, 'marke' und 'farbe' den
      anklickbaren Ort. Landstücke ohne 'id' tragen keine Welt – sie geben dem Festland nur seine
-     Form: eine Landzunge, eine Bucht, ein Bergrücken. Ohne sie wäre die Insel eine Kette von
+     Form: eine Landzunge, eine Bucht, ein Bergrücken. 'marke' ist der Name eines Sinnbilds aus
+     src/icons.js – früher stand hier ein Emoji, das auf jedem Gerät anders aussah. Ohne sie wäre die Insel eine Kette von
      Kreisen, mit ihnen bekommt sie eine Küste, die man sich merken kann. */
   const LAND = [
     // ---- Festland, von West nach Ost. 'r' ist die Reichweite im Feld, die sichtbare Küste liegt
     //      bei etwa 0,78 davon – zwei Landstücke wachsen also zusammen, wenn ihr Abstand kleiner
     //      ist als 0,78 mal die Summe ihrer Reichweiten.
-    { id: 'normal', name: 'Märchenland', x: 27, y: 28, r: 15, biom: 'wiese', marke: '🏰', farbe: '#ffd166' },
+    { id: 'normal', name: 'Märchenland', x: 27, y: 28, r: 15, biom: 'wiese', marke: 'castle', farbe: '#ffd166' },
     { x: 37, y: 36, r: 11, biom: 'wiese' },                     // Hügelland zwischen Wiese und Süden
-    { id: 'pro', name: 'Tüftlerreich', x: 45, y: 22, r: 13, biom: 'werkland', marke: '⚙️', farbe: '#e0a05a' },
+    { id: 'pro', name: 'Tüftlerreich', x: 45, y: 22, r: 13, biom: 'werkland', marke: 'settings', farbe: '#e0a05a' },
     // 'nameAn' setzt die Beschriftung an eine freie Stelle: Der Schneeberg liegt zwischen drei
     // Marken, sein Name stünde sonst unter zweien davon.
-    { id: 'snow', name: 'Schneeberg', x: 60, y: 14, r: 14, biom: 'gebirge', marke: '🏔️', farbe: '#bfe6ff', nameAn: [52, 9] },
-    { id: 'clock', name: 'Uhrwerkstadt', x: 75, y: 21, r: 13, biom: 'stadt', marke: '🕰️', farbe: '#ffc46b' },
+    { id: 'snow', name: 'Schneeberg', x: 60, y: 14, r: 14, biom: 'gebirge', marke: 'filter_hdr', farbe: '#bfe6ff', nameAn: [52, 9] },
+    { id: 'clock', name: 'Uhrwerkstadt', x: 75, y: 21, r: 13, biom: 'stadt', marke: 'schedule', farbe: '#ffc46b' },
     { x: 66, y: 30, r: 10, biom: 'werkland' },                  // Talsenke unter dem Gebirge
-    { id: 'storm', name: 'Sturmhimmel', x: 84, y: 38, r: 13, biom: 'sturm', marke: '⛈️', farbe: '#8fb8ff' },
+    { id: 'storm', name: 'Sturmhimmel', x: 84, y: 38, r: 13, biom: 'sturm', marke: 'thunderstorm', farbe: '#8fb8ff' },
     { x: 47, y: 41, r: 10, biom: 'dschungel' },                 // Landbrücke in den Süden
-    { id: 'jungle', name: 'Dschungeltempel', x: 57, y: 45, r: 14, biom: 'dschungel', marke: '🗿', farbe: '#9ee06f' },
-    { id: 'shadow', name: 'Schattenreich', x: 80, y: 49, r: 13, biom: 'moor', marke: '🔮', farbe: '#c58bff' },
+    { id: 'jungle', name: 'Dschungeltempel', x: 57, y: 45, r: 14, biom: 'dschungel', marke: 'temple_buddhist', farbe: '#9ee06f' },
+    { id: 'shadow', name: 'Schattenreich', x: 80, y: 49, r: 13, biom: 'moor', marke: 'dark_mode', farbe: '#c58bff' },
     // ---- Nebeninsel im Südwesten: weit genug weg, damit sie eine eigene Insel bleibt
-    { id: 'sea', name: 'Meereswelt', x: 14, y: 50, r: 11, biom: 'kueste', marke: '🌊', farbe: '#7fd8ff' },
+    { id: 'sea', name: 'Meereswelt', x: 14, y: 50, r: 11, biom: 'kueste', marke: 'waves', farbe: '#7fd8ff' },
     // ---- Schären: zu klein für eine Welt, groß genug fürs Auge. Sie brechen die leere See auf
     //      und zeigen, dass die Küste gerechnet wird – auch ein Punkt mit r=4 bekommt ein Ufer.
     { x: 19, y: 12, r: 4.2, biom: 'kueste' }, { x: 8, y: 34, r: 3.4, biom: 'kueste' },

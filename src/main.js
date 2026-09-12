@@ -76,9 +76,13 @@
   function clockStop() { clockPause(); clock.active = false; return Math.round(clock.acc); }
 
   /* ---------- UI ---------- */
-  function showMessage(text, ms = 1600) {
+  /* Die Meldung trägt auf Wunsch ein Sinnbild vor dem Text. Der Text geht durch Text.esc, weil
+     hier nicht mehr textContent gesetzt wird, sondern innerHTML – sonst stünde ein Spielername
+     mit spitzer Klammer als Markup in der Meldung. */
+  function showMessage(text, ms = 1600, sinnbild = '') {
     if (state.phase === 'summary' || state.phase === 'final') return; // keine Laufmeldung über den Ergebnistafeln
-    ui.msg.textContent = text; ui.msg.classList.add('visible'); ui.msg.classList.toggle('small', text.length > 40);
+    ui.msg.innerHTML = (sinnbild ? Icons.svg(sinnbild) + ' ' : '') + Text.esc(text);
+    ui.msg.classList.add('visible'); ui.msg.classList.toggle('small', text.length > 40);
     clearTimeout(msgTimer); msgTimer = setTimeout(() => ui.msg.classList.remove('visible'), ms);
   }
   function updateHud() {
@@ -88,7 +92,8 @@
     // Rekordzeile: der beste Wert des Freundeskreises auf dieser Bahn
     const w = def && state.world && state.world.id !== 'custom' ? Best.of(state.world.id) : null;
     const recS = w ? w.strokes.holes[def.name] : null, recT = w ? w.time.holes[def.name] : null;
-    ui.best.textContent = [recS ? `🏆 ${recS.s} · ${recS.n}` : '', recT ? `⏱ ${Best.formatTime(recT.s)} · ${recT.n}` : ''].filter(Boolean).join('   ');
+    ui.best.innerHTML = [recS ? `${Icons.svg('emoji_events')} ${Text.esc(recS.s + ' · ' + recS.n)}` : '',
+      recT ? `${Icons.svg('timer')} ${Text.esc(Best.formatTime(recT.s) + ' · ' + recT.n)}` : ''].filter(Boolean).join('&nbsp;&nbsp;&nbsp;');
     const p = state.players[state.curPlayer];
     ui.player.textContent = p ? p.name : '–';
     syncClock();
@@ -102,9 +107,12 @@
       dot.className = 'dot'; dot.style.background = pl.color;
       row.appendChild(dot);
       if (pl.hat && pl.hat !== 'none') {
-        const hut = document.createElement('span');
-        hut.className = 'hat-icon'; hut.title = Hats.name(pl.hat); hut.textContent = Hats.icon(pl.hat);
+        // Der echte Hut in klein, gemalt vom selben Code wie der auf dem Ball. Material Symbols
+        // hat weder Krone noch Zauberhut, und ein Emoji sah auf jedem Gerät anders aus.
+        const hut = document.createElement('canvas');
+        hut.className = 'hat-icon'; hut.title = Hats.name(pl.hat);
         row.appendChild(hut);
+        Hats.preview(hut, pl.hat, pl.color);
       }
       row.appendChild(document.createTextNode(pl.name));
       const score = document.createElement('span');
@@ -124,7 +132,20 @@
      etwa vom Laufen ins Beendetsein –, wird genau dieser neu gezeichnet. Jeder Bildschirm setzt
      den Merker nach seinem overlay() selbst; overlay() löscht ihn vorher. */
   let turnierSchirm = null;
-  function overlay(html, cls) { clockPause(); turnierSchirm = null; ui.overlay.innerHTML = html; ui.overlay.className = 'screen visible' + (cls ? ' ' + cls : ''); document.body.classList.remove('startbild'); }
+  function overlay(html, cls) {
+    clockPause(); turnierSchirm = null;
+    ui.overlay.innerHTML = html;
+    ui.overlay.className = 'screen visible' + (cls ? ' ' + cls : '');
+    document.body.classList.remove('startbild');
+    hutAbzeichenMalen(ui.overlay);
+  }
+  /* Hut-Abzeichen in einer frisch gebauten Tafel malen. Im Markup stehen sie nur als
+     <canvas data-hut>, weil dort Text zusammengesetzt wird; gezeichnet werden kann erst, wenn sie
+     im Baum hängen – vorher hat die Leinwand keine Größe. */
+  function hutAbzeichenMalen(wurzel) {
+    wurzel.querySelectorAll('canvas[data-hut]').forEach(c =>
+      Hats.preview(c, c.dataset.hut, c.dataset.farbe || '#f4efe6'));
+  }
   function hideOverlay() { ui.overlay.className = 'screen'; ui.overlay.innerHTML = ''; document.body.classList.remove('startbild'); clockResume(); }
 
   /* ---------- Startbild ----------
@@ -354,7 +375,7 @@
        das Wort „Weltkarte" mitten in den Ortsnamen der Karte. Die zweite Zeile sagt, was einen
        dahinter erwartet; das spart den Erklärsatz darunter. */
     overlay(`<div class="panel">
-      <h1><span class="h1-ball">⛳</span> Fantasy Golf</h1>
+      <h1>${Icons.svg('sports_golf', 'h1-ball')} Fantasy Golf</h1>
       <div class="sub">Golf with your Friends · Minigolf in 2,5D</div>
       <div class="modes">
         <span class="btn mode" id="to-map">${WorldMap.svg('mode-scene', 'xMidYMid slice')}<span class="mode-schleier"></span>
@@ -395,8 +416,8 @@
       // sp.x steht in Karteneinheiten (0 … WorldMap.BREITE), die Marke braucht Prozent der Karte
       const links = (sp.x / WorldMap.BREITE * 100).toFixed(2);
       return `<button class="spot" style="left:${links}%;top:${sp.y}%;--pin:${sp.col}" data-world="${w.id}" title="${Text.esc(w.name)}">
-        <span class="spot-pin">${sp.icon}</span>
-        <span class="spot-label"><b>${Text.esc(w.name)}</b><i>${MODE_ICON[m]} ${MODE_NAME[m]} · ${w.courses.length} Bahnen</i></span></button>`;
+        <span class="spot-pin">${Icons.svg(sp.icon)}</span>
+        <span class="spot-label"><b>${Text.esc(w.name)}</b><i>${Icons.svg(MODE_ICON[m])} ${MODE_NAME[m]} · ${w.courses.length} Bahnen</i></span></button>`;
     }).join('');
     overlay(`<div class="panel atlas-panel">
       <div class="panel-head"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span><h2>${Icons.svg('map')} Weltkarte</h2></div>
@@ -516,7 +537,7 @@
           </svg>`;
 
   const sceneFor = id => ({ normal: SCENE_NORMAL, sea: SCENE_SEA, pro: SCENE_PRO, jungle: SCENE_JUNGLE, storm: SCENE_STORM, shadow: SCENE_SHADOW, clock: SCENE_CLOCK })[id] || SCENE_NORMAL;
-  const MODE_ICON = { normal: '🏆', pro: '🔥', legend: '⚡' };
+  const MODE_ICON = { normal: 'emoji_events', pro: 'local_fire_department', legend: 'bolt' };
   const worldMode = w => (w && w.mode) || 'normal';
   function setWorld(id) { state.world = WORLDS.find(w => w.id === id) || WORLDS[0]; state.courses = state.world.courses; Music.set(state.world.id); }
 
@@ -561,7 +582,7 @@
     const z = Turnier.zustand();
     const welt = WORLDS.find(w => w.id === Turnier.WELT) || WORLDS[0];
     const liste = Turnier.rangliste();
-    const medaille = ['🥇', '🥈', '🥉'];
+    const medaille = ['gold', 'silber', 'bronze'].map(r => `<span class="rang ${r}">${Icons.svg('workspace_premium')}</span>`);
     const zeit = ms => Best.formatTime(ms);
     const kombi = s => String(s).replace('.', ',');
 
@@ -614,13 +635,13 @@
 
       <div class="sub" style="margin-top:12px"><b>Ganze Runde</b> · Par ${Best.parSumme(welt.id, welt.courses)}</div>
       <div class="tabelle-schiebe"><table class="scores best-table turnier-tafel">
-        <tr><th></th><th>Name</th><th class="num">${BEST_ICON.combo} Kombi</th><th class="num">${BEST_ICON.strokes}</th><th class="num">${BEST_ICON.time}</th></tr>
+        <tr><th></th><th>Name</th><th class="num">${Icons.svg(BEST_ICON.combo)} Kombi</th><th class="num">${Icons.svg(BEST_ICON.strokes)}</th><th class="num">${Icons.svg(BEST_ICON.time)}</th></tr>
         ${rundenZeilen}
       </table></div>
 
       <div class="sub" style="margin-top:14px"><b>Beste Einzelbahnen</b></div>
       <div class="tabelle-schiebe"><table class="scores best-table turnier-tafel">
-        <tr><th>#</th><th>Bahn</th><th class="num">Par</th><th class="num">${BEST_ICON.combo} Kombi</th><th class="num">${BEST_ICON.strokes}</th><th class="num">${BEST_ICON.time}</th></tr>
+        <tr><th>#</th><th>Bahn</th><th class="num">Par</th><th class="num">${Icons.svg(BEST_ICON.combo)} Kombi</th><th class="num">${Icons.svg(BEST_ICON.strokes)}</th><th class="num">${Icons.svg(BEST_ICON.time)}</th></tr>
         ${bahnZeilen}
       </table></div>
 
@@ -646,7 +667,7 @@
   function lohnZeile() {
     if (!frischerLohn) return '';
     const l = frischerLohn; frischerLohn = null;
-    return `<div class="sub lohn-frisch">${l.icon} <b>${Text.esc(l.name)} freigeschaltet!</b><br>
+    return `<div class="sub lohn-frisch"><canvas class="hat-icon gross" data-hut="${l.id}"></canvas> <b>${Text.esc(l.name)} freigeschaltet!</b><br>
       Du findest ihn bei der Hutwahl vor dem Start.</div>`;
   }
 
@@ -654,7 +675,7 @@
     const lohn = Hats.belohnung(w.id);
     if (!lohn) return '';
     const frei = Hats.freigeschaltet(lohn.id);
-    const kopf = `<span class="lohn-name">${lohn.icon} ${Text.esc(lohn.name)}</span>
+    const kopf = `<span class="lohn-name"><canvas class="hat-icon" data-hut="${lohn.id}"></canvas> ${Text.esc(lohn.name)}</span>
       <span class="lohn-was">Belohnung dieser Welt</span>`;
     // Der Championhelm hängt am Turnier, nicht am Par – für ihn gibt es nichts zu zählen
     if (lohn.art === 'turnier') return `<div class="lohn ${frei ? 'auf' : ''}">${kopf}
@@ -703,7 +724,7 @@
     /* Eine Zelle je Wertung: der Wert, darunter klein, wer ihn hält, darunter der eigene */
     // Am Eintrag steht, woher er kommt: gegeneinander gespielt oder allein am eigenen Gerät
     const zelle = (kind, r, mein) => `<td class="num rec">${r
-      ? `<b>${Text.esc(Best.format(kind, r))}</b><i>${r.q === 'net' ? '<span class="q-net" title="in einer Runde gegeneinander erspielt">🌐</span> ' : ''}${Text.esc(r.n)}</i>`
+      ? `<b>${Text.esc(Best.format(kind, r))}</b><i>${r.q === 'net' ? `<span class="q-net" title="in einer Runde gegeneinander erspielt">${Icons.svg('public')}</span> ` : ''}${Text.esc(r.n)}</i>`
       : '<b>–</b>'}${mein === false ? '' : meinsZelle(kind, mein, r && r.s)}</td>`;
     const rows = w.courses.map((c, i) => {
       const h = k => rec[k].holes[c.name];
@@ -732,7 +753,7 @@
       <div class="sub">Für jede Bahn zählen <b>alle drei Wertungen gleichzeitig</b> – Namen eintragen, losspielen,
         der Rest passiert von allein. Gewertet wird dein eigener Ball im Wettkampf.</div>
       <div class="sub warn-note">Diese Liste ist eine Anschreibetafel, kein Schiedsrichter: Jedes Gerät meldet sein
-        Ergebnis selbst, niemand prüft es nach. <b>🌐</b> heißt „in einer Runde gegeneinander erspielt", da haben
+          Ergebnis selbst, niemand prüft es nach. <b class="q-net">${Icons.svg('public')}</b> heißt „in einer Runde gegeneinander erspielt", da haben
         andere zugeschaut. Einträge ohne Zeichen sind allein am eigenen Gerät entstanden.</div>
       <p class="join-row"><label class="lbl">Dein Name<input id="bn" class="name-in" autocomplete="off" spellcheck="false" placeholder="z. B. Max" maxlength="${Text.NAME_MAX}" value="${Text.esc(Best.name)}"></label>
         <span class="btn small" id="bsave">Merken</span></p>
@@ -740,11 +761,11 @@
       <div class="sub net-note" id="bstate">${!Best.name ? 'Trag deinen Namen ein – ohne Namen wird nichts gewertet.'
         : Net.status === 'ready' ? 'Verbunden – alle mit dem Spiel teilen sich diese Liste.'
         : 'Keine Verbindung – die Rekorde bleiben vorerst auf diesem Gerät.'}</div>
-      <div id="bw" class="ow">${WORLDS.filter(x => x.id !== 'custom').map(x => `<span class="btn ghost small ${x.id === w.id ? 'sel' : ''}" data-w="${x.id}">${MODE_ICON[worldMode(x)]} ${Text.esc(x.short)}</span>`).join('')}</div>
+      <div id="bw" class="ow">${WORLDS.filter(x => x.id !== 'custom').map(x => `<span class="btn ghost small ${x.id === w.id ? 'sel' : ''}" data-w="${x.id}">${Icons.svg(MODE_ICON[worldMode(x)])} ${Text.esc(x.short)}</span>`).join('')}</div>
       <div class="sub" style="margin-top:10px"><b>${Text.esc(w.name)}</b> · Par ${parTotal}</div>
       ${belohnungsStand(w)}
       <div class="tabelle-schiebe"><table class="scores best-table">
-        <tr><th>#</th><th>Bahn</th><th>Par</th>${Best.KINDS.map(k => `<th class="num">${BEST_ICON[k]} <span class="kopf-wort">${Best.KIND_NAME[k]}</span></th>`).join('')}</tr>
+        <tr><th>#</th><th>Bahn</th><th>Par</th>${Best.KINDS.map(k => `<th class="num">${Icons.svg(BEST_ICON[k])} <span class="kopf-wort">${Best.KIND_NAME[k]}</span></th>`).join('')}</tr>
         ${rows}
         <tr class="gesamt"><td></td><td>Gesamt <i>beste Bahnen zusammen</i></td><td class="num">${parTotal}</td>${gesamtZeile}</tr>
         <tr class="ganze-runde"><td></td><td>Ganze Runde <i>an einem Stück</i></td><td></td>${rundeZeile}</tr>
@@ -765,9 +786,9 @@
         <b>Par kommt aus dieser Liste:</b> Es liegt immer einen Schlag über dem besten
         Ergebnis, das je auf einer Bahn gespielt wurde. Hat sie noch niemand gespielt, gilt das gebaute Par.
         Wird ein Rekord verbessert, wird Par im selben Moment schärfer – für alle.<br>
-        <b>${BEST_ICON.strokes} Schläge:</b> ${BEST_HELP.strokes}<br>
-        <b>${BEST_ICON.time} Zeit:</b> ${BEST_HELP.time}<br>
-        <b>${BEST_ICON.combo} Kombi:</b> ${BEST_HELP.combo}<br>
+        <b>${Icons.svg(BEST_ICON.strokes)} Schläge:</b> ${BEST_HELP.strokes}<br>
+        <b>${Icons.svg(BEST_ICON.time)} Zeit:</b> ${BEST_HELP.time}<br>
+        <b>${Icons.svg(BEST_ICON.combo)} Kombi:</b> ${BEST_HELP.combo}<br>
         Alle, die das Spiel haben, teilen sich diese Liste. Die Rekorde liegen beim Vermittler und
         zusätzlich hier im Browser – startet der Vermittler neu, können sie dort verloren gehen.</div>
     </div>`, 'title');
@@ -865,7 +886,7 @@
     });
   }
 
-  const BEST_ICON = { strokes: '🏆', time: '⏱', combo: '⚡' };
+  const BEST_ICON = { strokes: 'emoji_events', time: 'timer', combo: 'bolt' };
   function speicherGeht() {
     try { localStorage.setItem(speicherSchluessel('probe'), '1'); localStorage.removeItem(speicherSchluessel('probe')); return true; } catch (e) { return false; }
   }
@@ -891,18 +912,18 @@
     const lohn = Hats.belohnung(state.world.id);
     const vorherFrei = lohn ? Hats.freigeschaltet(lohn.id) : true;
     const treffer = Best.hole(state.world.id, def.name, score, ms, (online && online.started) ? 'net' : 'lokal', state.mode);
-    if (treffer.length) { Sfx.sink(); showMessage(`🏆 ${def.name}: ${recordText(treffer)}`, 2600); }
+    if (treffer.length) { Sfx.sink(); showMessage(`${def.name}: ${recordText(treffer)}`, 2600, 'emoji_events'); }
     if (lohn && !vorherFrei && Hats.freigeschaltet(lohn.id)) {
       /* Sofort melden, nicht verzögert: Gleich danach geht die Ergebnistafel auf, und über der
          schweigt showMessage. Die Tafel bekommt die Nachricht darum noch einmal als Zeile –
          so geht der Moment nicht unter, wenn man gerade woanders hinschaut. */
       Sfx.sink();
-      showMessage(`${lohn.icon} ${lohn.name} freigeschaltet!`, 3400);
+      showMessage(`${lohn.name} freigeschaltet!`, 3400, 'star');
       frischerLohn = lohn;
     }
     // Läuft gerade das Turnier und sind wir in seiner Welt, zählt der Wert dort zusätzlich
     if (state.world.id === Turnier.WELT && Turnier.bahn(def.name, score, ms) && !treffer.length)
-      showMessage(`⚔️ Turnier: ${def.name} verbessert`, 2200);
+      showMessage(`Turnier: ${def.name} verbessert`, 2200, 'swords');
   }
   /* „Schläge 2 (vorher 3), Zeit 0:14,2" – aus den gefallenen Rekorden einer Runde */
   const recordText = treffer => treffer.map(h =>
@@ -915,7 +936,7 @@
     for (const n of news.slice(0, 1)) {
       if (n.rec.n === Best.name) continue;   // der eigene Eintrag von einem anderen Gerät
       const wert = `${Best.KIND_NAME[n.kind] || 'Schläge'} ${Best.format(n.kind, n.rec)}`;
-      showMessage(n.hole ? `🏆 ${n.rec.n}: ${n.hole} – ${wert}` : `🏆 ${n.rec.n}: ${w ? w.name : 'Welt'} gesamt – ${wert}`, 2600);
+      showMessage(n.hole ? `${n.rec.n}: ${n.hole} – ${wert}` : `${n.rec.n}: ${w ? w.name : 'Welt'} gesamt – ${wert}`, 2600, 'emoji_events');
     }
     updateHud();
   }
@@ -1204,7 +1225,7 @@
       ${meinPlatz >= 0 ? `<p class="mein-hut"><span class="btn ghost small" id="hutwahl">${Icons.svg('sports_golf')} Hut wechseln</span></p>` : ''}
       ${online.note ? `<div class="sub net-note">${Text.esc(online.note)}</div>` : ''}
       ${online.host
-        ? `<p>Welt:</p><div id="ow" class="ow">${ws.map(w => `<span class="btn ghost small ${w.id === online.world ? 'sel' : ''}" data-w="${w.id}">${MODE_ICON[worldMode(w)]} ${Text.esc(w.name)}</span>`).join('')}</div>
+        ? `<p>Welt:</p><div id="ow" class="ow">${ws.map(w => `<span class="btn ghost small ${w.id === online.world ? 'sel' : ''}" data-w="${w.id}">${Icons.svg(MODE_ICON[worldMode(w)])} ${Text.esc(w.name)}</span>`).join('')}</div>
            <p><span class="btn" id="go">Los geht's!</span></p>`
         : `<div class="sub">Welt: <b>${Text.esc((ws.find(w => w.id === online.world) || ws[0]).name)}</b></div>`}
       <div class="legend">Gespielt wird reihum: wer dran ist, zielt, die anderen schauen zu. Eigene Bahnen lassen sich online nicht spielen.</div>
@@ -1285,7 +1306,7 @@
 
   function showSetup() {
     overlay(`<div class="panel">
-      <div class="panel-head"><span class="btn ghost small" id="back-top">${Icons.svg('arrow_back')} Zurück</span><h2>${MODE_ICON[worldMode(state.world)]} ${Text.esc(state.world.name)}</h2></div>
+      <div class="panel-head"><span class="btn ghost small" id="back-top">${Icons.svg('arrow_back')} Zurück</span><h2>${Icons.svg(MODE_ICON[worldMode(state.world)])} ${Text.esc(state.world.name)}</h2></div>
       <div class="sub">${MODE_NAME[worldMode(state.world)]} · ${state.courses.length} Bahnen</div>
       <p>Modus:</p>
       <div id="gm">
@@ -1722,7 +1743,7 @@
     const zeit = state.mode !== 'creative' && !state.editorReturn;   // im Kreativmodus wird nichts gestoppt
     const rows = state.players.map(p => {
       const total = p.scores.reduce((a, b) => a + b, 0);
-      const hat = p.hat && p.hat !== 'none' ? `<span title="${Hats.name(p.hat)}">${Hats.icon(p.hat)}</span> ` : '';
+      const hat = p.hat && p.hat !== 'none' ? `<canvas class="hat-icon" data-hut="${p.hat}" data-farbe="${p.color}" title="${Text.esc(Hats.name(p.hat))}"></canvas> ` : '';
       const ms = (p.times || [])[state.holeIdx];
       return `<tr><td><span class="dot" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.color};margin-right:6px"></span>${hat}${Text.esc(p.name)}</td><td class="num">${p.scores[state.holeIdx]}</td>${zeit ? `<td class="num">${ms ? Best.formatTime(ms) : '–'}</td>` : ''}<td class="num">${total}</td></tr>`;
     }).join('');
@@ -1758,7 +1779,7 @@
       }
     }
     const ranked = state.players.map(p => ({ p, total: p.scores.reduce((a, b) => a + b, 0), ms: gesamtZeit(p) })).sort((a, b) => a.total - b.total);
-    const medals = ['🥇', '🥈', '🥉', '4.'];
+      const medals = ['gold', 'silber', 'bronze'].map(r => `<span class="rang ${r}">${Icons.svg('workspace_premium')}</span>`).concat('4.');
     const vsPar = d => d === 0 ? 'Par' : (d > 0 ? '+' : '') + d;
     const podium = ranked.map((r, i) => `<div class="pod ${i === 0 ? 'win' : ''}">
         <span class="pod-medal">${medals[i]}</span>
@@ -1788,8 +1809,8 @@
       <div class="hole-cards">${cards}</div>
       <div class="final-legend"><span class="hc-score ace">1</span> Hole-in-One <span class="hc-score eagle">–2</span> Eagle <span class="hc-score birdie">–1</span> Birdie <span class="hc-score par">0</span> Par <span class="hc-score bogey">+1</span> Bogey <span class="hc-score worse">+2</span> mehr</div>
       ${lohnZeile()}
-      ${roundRec.length ? `<div class="sub net-note">🏆 Neuer Rundenrekord für ${Text.esc(roundRec[0].rec.n)}: ${Text.esc(recordText(roundRec))}</div>` : ''}
-      ${turnierRunde ? `<div class="sub net-note">⚔️ Im Turnier gewertet: Kombi ${Text.esc(String(turnierRunde.s).replace('.', ','))} · ${turnierRunde.st} Schläge in ${Text.esc(Best.formatTime(turnierRunde.ms))}</div>` : ''}
+      ${roundRec.length ? `<div class="sub net-note">${Icons.svg('emoji_events')} Neuer Rundenrekord für ${Text.esc(roundRec[0].rec.n)}: ${Text.esc(recordText(roundRec))}</div>` : ''}
+      ${turnierRunde ? `<div class="sub net-note">${Icons.svg('swords')} Im Turnier gewertet: Kombi ${Text.esc(String(turnierRunde.s).replace('.', ','))} · ${turnierRunde.st} Schläge in ${Text.esc(Best.formatTime(turnierRunde.ms))}</div>` : ''}
       <span class="btn" id="again">Nochmal spielen</span>
     </div>`);
     $('again').addEventListener('click', () => { hideOverlay(); leaveOnline(); showTitle(); });
@@ -2011,7 +2032,7 @@
   $('fs-btn').addEventListener('click', () => { Sfx.unlock(); toggleFullscreen(); });
   function toggleOverview() { if (state.ball) setCamMode(state.camMode === 'overview' ? 'follow' : 'overview'); }
   function syncMusicBtn() { $('music-btn').classList.toggle('sel', Music.on); $('music-btn').innerHTML = Icons.svg(Music.on ? 'music_note' : 'music_off'); $('music-btn').title = Music.on ? 'Musik aus (J)' : 'Musik an (J)'; }
-  function toggleMusic() { Sfx.unlock(); Music.toggle(); syncMusicBtn(); showMessage(Music.on ? '♪ Musik an' : 'Musik aus', 1000); }
+  function toggleMusic() { Sfx.unlock(); Music.toggle(); syncMusicBtn(); showMessage(Music.on ? 'Musik an' : 'Musik aus', 1000, Music.on ? 'music_note' : 'music_off'); }
   function zoomBy(f) { state.zoomFactor = Math.max(0.5, Math.min(2.2, state.zoomFactor * f)); if (state.camMode === 'overview' && state.ball) setCamMode('follow'); }
   function rotateBy(a) { state.camTheta += a; if (state.camMode === 'overview' && state.ball) setCamMode('follow'); }
   $('cam-overview').addEventListener('click', toggleOverview);
@@ -2087,8 +2108,8 @@
     const meins = Best.name && sieger.n === Best.name;
     if (meins && lohn) frischerLohn = lohn;
     showMessage(meins
-      ? `🏅 Turnier gewonnen! Der Championhelm gehört dir.`
-      : `🏅 Turnier vorbei – ${sieger.n} gewinnt den Championhelm.`, 4200);
+      ? `Turnier gewonnen! Der Championhelm gehört dir.`
+      : `Turnier vorbei – ${sieger.n} gewinnt den Championhelm.`, 4200, 'military_tech');
   }
 
   /* Die Uhr des Turniers: trägt die Restlaufzeit jede Sekunde nach und zeichnet den Bildschirm

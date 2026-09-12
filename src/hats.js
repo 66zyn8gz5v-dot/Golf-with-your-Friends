@@ -1327,26 +1327,26 @@ const Hats = (() => {
 
   /* Reihenfolge und Namen für das Menü */
   const LIST = [
-    { id: 'none', name: 'Ohne', icon: '⚪' },
-    { id: 'crown', name: 'Krone', icon: '👑' },
-    { id: 'wizard', name: 'Zauberhut', icon: '🧙' },
-    { id: 'pirate', name: 'Piratenhut', icon: '🏴‍☠️' },
-    { id: 'top', name: 'Zylinder', icon: '🎩' },
-    { id: 'cap', name: 'Kappe', icon: '🧢' },
-    { id: 'viking', name: 'Wikingerhelm', icon: '🐂' },
-    { id: 'knight', name: 'Ritterhelm', icon: '⚔️' },
-    { id: 'legion', name: 'Legionärshelm', icon: '🪖' },
+    { id: 'none', name: 'Ohne' },
+    { id: 'crown', name: 'Krone' },
+    { id: 'wizard', name: 'Zauberhut' },
+    { id: 'pirate', name: 'Piratenhut' },
+    { id: 'top', name: 'Zylinder' },
+    { id: 'cap', name: 'Kappe' },
+    { id: 'viking', name: 'Wikingerhelm' },
+    { id: 'knight', name: 'Ritterhelm' },
+    { id: 'legion', name: 'Legionärshelm' },
     /* Belohnungen: Wer in einer Welt den Rundenrekord der Kombi-Wertung hält, darf ihren Skin
        tragen. Verliert er ihn wieder, ist auch der Skin wieder weg – die Auszeichnung gilt für
        den aktuellen Bestand, nicht für die Ewigkeit. */
-    { id: 'royal', name: 'Königskrone', icon: '💎', welt: 'normal', voll: true },
-    { id: 'aquarium', name: 'Aquarium', icon: '🐠', welt: 'sea', voll: true },
-    { id: 'cog', name: 'Tüftlerzylinder', icon: '⚙️', welt: 'pro', voll: true },
-    { id: 'feathercrown', name: 'Federkrone', icon: '🪶', welt: 'jungle', voll: true },
-    { id: 'thunder', name: 'Gewitterkugel', icon: '⛈️', welt: 'storm', voll: true },
-    { id: 'orb', name: 'Kristallkugel', icon: '🔮', welt: 'shadow', voll: true },
-    { id: 'pocketwatch', name: 'Taschenuhr', icon: '🕰️', welt: 'clock', voll: true },
-    { id: 'champion', name: 'Championhelm', icon: '🏅', welt: 'colosseum', art: 'turnier' },
+    { id: 'royal', name: 'Königskrone', welt: 'normal', voll: true },
+    { id: 'aquarium', name: 'Aquarium', welt: 'sea', voll: true },
+    { id: 'cog', name: 'Tüftlerzylinder', welt: 'pro', voll: true },
+    { id: 'feathercrown', name: 'Federkrone', welt: 'jungle', voll: true },
+    { id: 'thunder', name: 'Gewitterkugel', welt: 'storm', voll: true },
+    { id: 'orb', name: 'Kristallkugel', welt: 'shadow', voll: true },
+    { id: 'pocketwatch', name: 'Taschenuhr', welt: 'clock', voll: true },
+    { id: 'champion', name: 'Championhelm', welt: 'colosseum', art: 'turnier' },
   ];
   const byId = id => LIST.find(h => h.id === id);
 
@@ -1472,6 +1472,5 @@ const Hats = (() => {
     LIST, draw, preview, freigeschaltet, bedingung, stand, belohnung, voll,
     has: id => Object.prototype.hasOwnProperty.call(DEFS, id),
     name: id => (byId(id) || LIST[0]).name,
-    icon: id => (byId(id) || LIST[0]).icon,
   };
 })();
