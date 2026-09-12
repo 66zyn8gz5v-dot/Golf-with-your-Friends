@@ -360,7 +360,7 @@ Object.assign(Renderer.prototype, {
     const fy = py + D * 0.4, o = [[px - 0.8, fy, 0], [px - 0.8, fy, 1.7], [px, fy, 2.25], [px + 0.8, fy, 1.7], [px + 0.8, fy, 0]];
     ctx.fillStyle = '#04030a'; ctx.beginPath(); o.forEach((q, i) => { const r = this.proj(q[0], q[1], q[2] + 0.01); i ? ctx.lineTo(r[0], r[1]) : ctx.moveTo(r[0], r[1]); }); ctx.closePath(); ctx.fill();
     ctx.strokeStyle = crypt ? '#c58bff' : '#7fd8ff'; ctx.lineWidth = Math.max(1.5, s * 0.06); ctx.stroke();
-    if (crypt) { const [kx, ky] = this.proj(px, fy - 0.05, H + 0.35); this.spriteSkull(ctx, kx, ky + s * 0.2, s * 0.9); }
+    if (crypt) this.spriteSkull(ctx, { x: px, y: fy - 0.05, z: H + 0.1, s: 0.9 });
     else { ctx.fillStyle = 'rgba(255,228,94,0.85)'; const [gx, gy] = this.proj(px, fy - 0.05, H + 0.35); ctx.beginPath(); ctx.moveTo(gx - s * 0.1, gy - s * 0.25); ctx.lineTo(gx + s * 0.08, gy - s * 0.02); ctx.lineTo(gx - s * 0.02, gy - s * 0.02); ctx.lineTo(gx + s * 0.1, gy + s * 0.25); ctx.lineTo(gx - s * 0.08, gy); ctx.lineTo(gx + s * 0.02, gy); ctx.closePath(); ctx.fill(); }
     for (const side of [-1, 1]) this.spriteBrazier(ctx, { x: px + side * (Wd / 2 + 0.1), y: fy + 0.2, s: 0.9 }, t, crypt ? ['#a24bff', '#e0b8ff', '170,90,255'] : ['#4fc3ff', '#b7ecff', '80,190,255']);
   },
@@ -456,7 +456,7 @@ Object.assign(Renderer.prototype, {
     const ends = vert ? [[ob.x, ob.y - ob.h / 2 - pw / 2], [ob.x, ob.y + ob.h / 2 + pw / 2]] : [[ob.x - ob.w / 2 - pw / 2, ob.y], [ob.x + ob.w / 2 + pw / 2, ob.y]];
     for (const [px, py] of ends) items.push({ x: px, y: py, draw: () => {
       this.prism(ctx, [[px - pw / 2, py - pw / 2], [px + pw / 2, py - pw / 2], [px + pw / 2, py + pw / 2], [px - pw / 2, py + pw / 2]], 0, top, '#3a2a20', '#1e140e', { outline: '#0a0604' });
-      const [kx, ky] = this.proj(px, py + pw / 2, top - 0.3); this.spriteSkull(ctx, kx, ky, this.scale * 0.55); // Schädel am Pfosten
+      this.spriteSkull(ctx, { x: px, y: py + pw / 2, z: top - 0.55, s: 0.55 });   // Schädel am Pfosten
     } });
     items.push({ x: ob.x, y: ob.y, bias: 0.05, draw: () => this.drawGuillotineBlade(ctx, ob, t, vert, pw, top, ends) });
   },
@@ -558,7 +558,7 @@ Object.assign(Renderer.prototype, {
     const [h0, h1] = this.proj(x - sa * 0.5, y + ca * 0.5, 1.95), [h2, h3] = this.proj(x + ca * 0.5, y + sa * 0.5, 0.4);
     ctx.strokeStyle = '#7a8098'; ctx.lineWidth = Math.max(2, s * 0.14); ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(h0, h1); ctx.lineTo(h2, h3); ctx.stroke();
     // Wappenrock mit Totenkopf
-    const [cx, cy] = this.proj(x, y + 0.42, 1.7); ctx.fillStyle = '#3a1f4d'; ctx.fillRect(cx - s * 0.2, cy - s * 0.25, s * 0.4, s * 0.5); this.spriteSkull(ctx, cx, cy + s * 0.12, s * 0.45);
+    const [cx, cy] = this.proj(x, y + 0.42, 1.7); ctx.fillStyle = '#3a1f4d'; ctx.fillRect(cx - s * 0.2, cy - s * 0.25, s * 0.4, s * 0.5); this.spriteSkull(ctx, { x, y: y + 0.42, z: 1.62, s: 0.45 });
     // Helm mit Visier und Federbusch
     this.prism(ctx, this.circlePoly(x, y, 0.3, 8), 2.15, 0.55, '#b0b6cc', '#4a5068', { outline: '#1c202c' });
     const [vx, vy] = this.proj(x, y + 0.3, 2.45);
@@ -733,36 +733,67 @@ Object.assign(Renderer.prototype, {
     ctx.strokeStyle = 'rgba(255,255,255,0.18)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(cx - w * 0.8, baseY - h * 0.05); ctx.lineTo(cx - w * 0.05, baseY - h * 0.95); ctx.stroke(); // Lichtkante
     if (snow) { ctx.fillStyle = '#f4faff'; ctx.beginPath(); ctx.moveTo(cx - w * 0.55, baseY - h * 0.4); ctx.quadraticCurveTo(cx, baseY - h * 0.25, cx + w * 0.55, baseY - h * 0.4); ctx.lineTo(cx, baseY - h); ctx.closePath(); ctx.fill(); }
   },
-  spriteTree(ctx, sx, sy, s, d, t) {
-    const k = s / this.scale;
-    this.shadow(ctx, sx + s * 0.3, sy + s * 0.05, s * 0.65);
-    this.slab3(ctx, sx, sy, 0.22 * k, 0.22 * k, 1.05 * k, c => { c.rect(-0.5, 0, 1, 1); }, { light: '#8a5c33', front: '#6b4423', side: '#4a2e14', back: '#3a2410' });
-    const cols = d.glow ? [['#8fe0e0', '#3fb3b0', '#1f6a70'], ['#6fd0d0', '#2e8f9a', '#164a55']] : [['#8fe07a', '#3f9a4e', '#1f5a2c'], ['#63c261', '#2f7a3e', '#163f20']];
-    const blobs = [[0.25, -1.75, 0.48, 1], [-0.2, -1.72, 0.5, 1], [0.4, -1.2, 0.52, 0], [-0.38, -1.15, 0.5, 0], [0, -1.35, 0.72, 0], [-0.1, -1.85, 0.34, 1]];
-    for (const [ox, oy, r, li] of blobs) this.ball3(ctx, sx + ox * s, sy + oy * s, r * s, cols[li][0], cols[li][1], cols[li][2]);
-    if (d.glow) for (let i = 0; i < 4; i++) { const a = t * 1.5 + i * 1.6; ctx.fillStyle = 'rgba(255,255,180,0.9)'; ctx.beginPath(); ctx.arc(sx + Math.cos(a) * s * 0.7, sy - s * 1.3 + Math.sin(a * 1.3) * s * 0.4, s * 0.06, 0, TAU); ctx.fill(); }
+  /* Laubbaum: Stamm als Säule, Krone aus Kugeln. Kugeln dürfen Scheiben bleiben (eine Kugel sieht
+     von jeder Seite gleich aus), stehen aber an Weltpunkten – also wandert die Krone beim Drehen
+     richtig um den Stamm herum. Gezeichnet wird von hinten nach vorn, sonst überdeckt die falsche. */
+  spriteTree(ctx, d, t) {
+    const k = d.s, z = d.z || 0;
+    this.bodenSchatten(ctx, d.x, d.y, k * 0.62);
+    this.saeule(ctx, d.x, d.y, z, k * 0.14, k * 0.1, k * 0.85, '#6b4423', '#4a2e14', 7);
+    const cols = d.glow ? [['#8fe0e0', '#3fb3b0', '#1f6a70'], ['#6fd0d0', '#2e8f9a', '#164a55']]
+                        : [['#8fe07a', '#3f9a4e', '#1f5a2c'], ['#63c261', '#2f7a3e', '#163f20']];
+    const blobs = [[0, 0, 1.35, 0.72, 0], [0.3, 0.22, 1.75, 0.48, 1], [-0.28, -0.2, 1.72, 0.5, 1],
+                   [0.34, -0.26, 1.2, 0.52, 0], [-0.3, 0.28, 1.15, 0.5, 0], [0.02, 0.04, 1.9, 0.34, 1]];
+    blobs.map(b => ({ b, tiefe: this.depth(d.x + b[0] * k, d.y + b[1] * k) }))
+      .sort((a, b) => a.tiefe - b.tiefe)
+      .forEach(({ b }) => this.kugel(ctx, d.x + b[0] * k, d.y + b[1] * k, z + b[2] * k, b[3] * k, ...cols[b[4]]));
+    if (d.glow) for (let i = 0; i < 4; i++) {
+      const a = t * 1.5 + i * 1.6;
+      const [gx, gy] = this.proj(d.x + Math.cos(a) * k * 0.7, d.y + Math.sin(a) * k * 0.7, z + k * (1.5 + 0.3 * Math.sin(a * 1.3)));
+      ctx.fillStyle = 'rgba(255,255,180,0.9)'; ctx.beginPath(); ctx.arc(gx, gy, this.scale * k * 0.06, 0, TAU); ctx.fill();
+    }
   },
-  spritePine(ctx, sx, sy, s, c1, c2, snow = false) {
-    const k = s / this.scale;
-    this.shadow(ctx, sx + s * 0.25, sy + s * 0.04, s * 0.5);
-    this.slab3(ctx, sx, sy, 0.18 * k, 0.18 * k, 0.5 * k, c => { c.rect(-0.5, 0, 1, 1); }, { light: '#7a5230', front: '#5a3a1e', side: '#3e2712', back: '#2e1c0c' });
-    for (let i = 0; i < 3; i++) { const w = s * (0.75 - i * 0.18), y0 = sy - s * (0.45 + i * 0.55); this.cone3(ctx, sx, y0, w, s * 0.8, i % 2 ? c1 : shade(c1, 1.15), shade(c2, 0.8), snow); }
+  /* Nadelbaum: Stamm und drei Kegel übereinander. Der Kegel ist rundherum gleich, also braucht er
+     keine Vorderseite – er muss nur an der richtigen Stelle im Raum stehen und mit dem Zoom wachsen.
+     Liegt Schnee, bekommt jede Etage einen weißen Rand: Schnee liegt auf den Zweigen, nicht auf der
+     Spitze. */
+  spritePine(ctx, d, c1, c2, snow = false) {
+    const k = d.s, z = d.z || 0;
+    this.bodenSchatten(ctx, d.x, d.y, k * 0.46);
+    this.saeule(ctx, d.x, d.y, z, k * 0.1, k * 0.08, k * 0.55, '#5a3a1e', '#3e2712', 7);
+    for (let i = 0; i < 3; i++) {
+      const r = k * (0.46 - i * 0.11), h = k * (0.78 - i * 0.06), z0 = z + k * (0.42 + i * 0.5);
+      this.kegel(ctx, d.x, d.y, z0, r, h, i % 2 ? c1 : shade(c1, 1.14), shade(c1, 0.78));
+      if (snow) this.kegel(ctx, d.x, d.y, z0 + h * 0.02, r * 0.99, h * 0.24, '#f4faff', '#d2e4f4');
+    }
   },
-  spriteDeadTree(ctx, sx, sy, s, col = '#2a2030', embers = false) {
-    this.shadow(ctx, sx + s * 0.2, sy + s * 0.03, s * 0.4);
-    const light = shade(col, 1.9), dark = shade(col, 0.6);
-    const limb = (x0, y0, x1, y1, w0, w1) => { // sich verjüngender Ast mit Licht- und Schattenseite
-      const dx = x1 - x0, dy = y1 - y0, L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L;
-      const g = ctx.createLinearGradient(x0 + nx * w0, y0 + ny * w0, x0 - nx * w0, y0 - ny * w0); g.addColorStop(0, light); g.addColorStop(0.5, col); g.addColorStop(1, dark);
-      ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(x0 + nx * w0, y0 + ny * w0); ctx.lineTo(x1 + nx * w1, y1 + ny * w1); ctx.lineTo(x1 - nx * w1, y1 - ny * w1); ctx.lineTo(x0 - nx * w0, y0 - ny * w0); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = dark; ctx.beginPath(); ctx.ellipse(x0, y0, w0, w0 * 0.45, 0, 0, TAU); ctx.fill();
-    };
-    limb(sx, sy, sx + s * 0.1, sy - s * 1.2, s * 0.13, s * 0.06);
-    limb(sx + s * 0.05, sy - s * 0.7, sx - s * 0.5, sy - s * 1.3, s * 0.06, s * 0.025);
-    limb(sx + s * 0.08, sy - s * 0.95, sx + s * 0.55, sy - s * 1.5, s * 0.055, s * 0.025);
-    limb(sx + s * 0.1, sy - s * 1.2, sx - s * 0.1, sy - s * 1.7, s * 0.05, s * 0.02);
-    limb(sx - s * 0.3, sy - s * 1.05, sx - s * 0.62, sy - s * 1.0, s * 0.035, s * 0.015);
-    if (embers) { ctx.fillStyle = 'rgba(255,120,40,0.85)'; for (const [ox, oy] of [[-0.5, -1.3], [0.55, -1.5], [-0.1, -1.7]]) { ctx.beginPath(); ctx.arc(sx + ox * s, sy + oy * s, s * 0.05, 0, TAU); ctx.fill(); } }
+  /* Toter Baum: Stamm und Äste als liegende bzw. stehende Walzen. Vorher waren es flache
+     Trapeze mit Verlauf – die sahen beim Drehen aus wie aufgemalte Risse. Ein Ast ist eine Walze
+     von A nach B in der Höhe, genau wie ein Rohr im Uhrenturm. */
+  spriteDeadTree(ctx, d, col = '#2a2030', embers = false) {
+    const k = d.s, z = d.z || 0, hell = shade(col, 1.7);
+    this.bodenSchatten(ctx, d.x, d.y, k * 0.4);
+    this.saeule(ctx, d.x, d.y, z, k * 0.15, k * 0.07, k * 1.35, hell, col, 7);
+    // Äste: (Richtung quer, Richtung längs, Höhe unten) → (…, Höhe oben), Halbmesser
+    const aeste = [[0.06, 0.04, 0.8, -0.55, -0.3, 1.35, 0.06],
+                   [0.08, -0.05, 1.02, 0.6, 0.36, 1.5, 0.055],
+                   [0.05, 0.02, 1.2, -0.14, 0.3, 1.75, 0.045],
+                   [-0.3, 0.1, 1.05, -0.66, 0.28, 1.12, 0.035]];
+    for (const [ax, ay, az, bx, by, bz, r] of aeste) {
+      // walze liegt waagerecht; ein schräger Ast wird als kurze Folge von Stücken gebaut
+      const n = 3;
+      for (let i = 0; i < n; i++) {
+        const u0 = i / n, u1 = (i + 1) / n;
+        const x0 = d.x + (ax + (bx - ax) * u0) * k, y0 = d.y + (ay + (by - ay) * u0) * k;
+        const x1 = d.x + (ax + (bx - ax) * u1) * k, y1 = d.y + (ay + (by - ay) * u1) * k;
+        const zz = z + (az + (bz - az) * (u0 + u1) / 2) * k;
+        this.walze(ctx, x0, y0, x1, y1, zz, r * k * (1 - u0 * 0.4), hell, col, { n: 8 });
+      }
+    }
+    if (embers) for (const [ox, oy, oz] of [[-0.5, -0.3, 1.35], [0.6, 0.36, 1.5], [-0.14, 0.3, 1.75]]) {
+      const [ex, ey] = this.proj(d.x + ox * k, d.y + oy * k, z + oz * k);
+      ctx.fillStyle = 'rgba(255,120,40,0.85)'; ctx.beginPath(); ctx.arc(ex, ey, this.scale * k * 0.05, 0, TAU); ctx.fill();
+    }
   },
   /* Räumliche Riesenfledermaus im kantigen Stil des Krokodils: Rumpf, Kopf und Ohren als Quader, Flughäute als flache
      Dreiecksplatten zwischen Schulter und Fingerspitzen (die mit dem Flügelschlag steigen und sinken), Finger als Balken.
@@ -878,7 +909,7 @@ Object.assign(Renderer.prototype, {
     ctx.strokeStyle = '#2a2438'; ctx.lineWidth = Math.max(1.5, s * 0.05); ctx.beginPath(); // halb hochgezogenes Fallgitter
     for (let k = -3; k <= 3; k++) { const [a0, a1] = this.proj(px + k * 0.27, fy, 2.6 - Math.abs(k) * 0.1), [b0, b1] = this.proj(px + k * 0.27, fy, 1.8); ctx.moveTo(a0, a1); ctx.lineTo(b0, b1); }
     const [q0, q1] = this.proj(px - 0.9, fy, 1.85), [q2, q3] = this.proj(px + 0.9, fy, 1.85); ctx.moveTo(q0, q1); ctx.lineTo(q2, q3); ctx.stroke();
-    const [kx, ky] = this.proj(px, fy - 0.05, H + 0.3); this.spriteSkull(ctx, kx, ky + s * 0.2, s * 0.95);
+    this.spriteSkull(ctx, { x: px, y: fy - 0.05, z: H + 0.05, s: 0.95 });
     for (const sd of [-1, 1]) this.spriteBrazier(ctx, { x: px + sd * (Wd / 2 + 0.15), y: fy + 0.25, s: 0.9 }, t, ['#a24bff', '#e0b8ff', '170,90,255']);
   },
 
