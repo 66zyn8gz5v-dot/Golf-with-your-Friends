@@ -18,9 +18,11 @@ kleine Knöpfe: **Turnier** führt ohne Umweg in die Arena (Kolosseum), **Online
 Warteraum, **Rangliste** zu den Rekorden.
 
 Auf der **Weltkarte** liegen die Welten als Landstriche auf einer gezeichneten Landkarte – ein Meer,
-ein Festland, eine Nebeninsel. Das Märchenland hat die Wiesen im Westen, der Schneeberg das Gebirge
-im Norden, der Dschungel den feuchten Süden, das Schattenreich das Moor am Ostrand; die Meereswelt
-liegt als eigene Insel davor, und dorthin führt kein Weg, sondern eine gestrichelte Schiffslinie.
+ein Festland, ein paar Nebeninseln. Das Märchenland hat die Wiesen im Westen, der Schneeberg das
+Gebirge im Norden, der Dschungel den feuchten Süden, das Schattenreich das Moor am Ostrand; die
+Meereswelt liegt als eigene Insel davor, und dorthin führt kein Weg, sondern eine gestrichelte
+Schiffslinie. Ein Meeresarm schneidet quer durchs Festland: Der Osten – Uhrwerkstadt, Sturmhimmel,
+Schattenreich – hängt nur noch an einer schmalen Landenge.
 
 Vorher lag jede Welt als schwebende Scheibe in der Luft, aufgereiht von links nach rechts. Das war
 übersichtlich, aber es war keine Welt – es waren acht Inseln ohne Zusammenhang, und mit jeder neuen
@@ -29,7 +31,7 @@ wurde die Reihe länger, bis die Karte breiter war als der Schirm und man wische
 **Die Küste wird gerechnet, nicht gezeichnet.** Jede Welt ist in `src/worldmap.js` ein Eintrag in
 `LAND`: Mittelpunkt, Reichweite, Biom. Daraus entsteht ein Feld, das in der Mitte eines Landstücks 1
 ist und an seiner Reichweite auf 0 fällt; die Linie, an der die Summe aller Felder die Höhe `WASSER`
-hat, ist die Küste (Marching Squares, danach zweimal Chaikin geglättet). Landstücke, die nah
+hat, ist die Küste (Marching Squares, danach einmal Chaikin geglättet). Landstücke, die nah
 beieinander liegen, wachsen dabei von selbst zu einem Festland zusammen, ein weit abseits gesetztes
 wird zur Nebeninsel, und was von Land umschlossen bleibt, ist ein Binnensee. Landstücke ohne `id`
 tragen keine Welt – sie geben dem Festland nur seine Form: eine Landzunge, eine Bucht, eine
@@ -45,15 +47,32 @@ Zwei Dinge sind daran wichtig, und beide waren beim ersten Versuch falsch:
   zerfällt die Küste in Fetzen. Gesucht wird darum ungerichtet: Ob ein Stück an diesem Punkt
   anfängt oder aufhört, ist egal.
 
+**Runde Landstücke geben eine runde Küste** – acht Kugeln, aneinandergeklebt. Eine Karte lebt aber
+von Buchten und Landzungen. Verbogen wird darum nicht das Feld, sondern der *Ort*, an dem man es
+fragt: Ein Punkt erkundigt sich ein paar Einheiten weiter drüben (`versatz`, drei Lagen Rauschen).
+Tief im Land, wo das Feld flach und hoch ist, ändert das nichts; am Ufer, wo es steil abfällt,
+wandert die Küste dadurch weit. Die grobe Lage ist bewusst kräftig eingestellt – sie ist es, die den
+Meeresarm quer durchs Festland schneidet. Wer an diesen Zahlen dreht, dreht an der Form der Welt.
+
 Daraus folgt der eigentliche Gewinn: **Eine neue Welt braucht einen einzigen Eintrag in `LAND`.**
 Küste, Flachwasser, Strand, Färbung, Gelände, Flüsse, Wege und Beschriftung folgen daraus. Wer eine
 Welt anhängt, zeichnet keine Landkarte – er sagt, wo sie liegt und wie es dort aussieht.
 
-Das Gelände kommt aus dem Biom: `wiese` streut Bäume und Büsche, `gebirge` Berge mit Schneekappe,
-`stadt` Häuser und Türme, `dschungel` Palmen und Tempel, `moor` tote Bäume und Grabsteine, `kueste`
-Dünen und Palmen. Die Plätze zieht ein Zufall mit festem Startwert – dieselbe Karte sieht auf jedem
-Gerät gleich aus –, und jeder Platz muss weit genug im Land liegen, sonst stünde ein Baum mit den
-Füßen im Wasser. Die Flüsse suchen sich ihren Weg aus demselben Feld: Sie laufen dorthin, wo es
+Das Gelände kommt aus dem Biom: `wiese` streut Bäume und Büsche, `gebirge` Bergrücken mit
+Schneekappe, `stadt` Häuser und Türme, `dschungel` Palmen und Tempel, `moor` tote Bäume, Grabsteine
+und Ruinen, `kueste` Dünen und Palmen. Die Plätze zieht ein Zufall mit festem Startwert – dieselbe
+Karte sieht auf jedem Gerät gleich aus –, und jeder Platz muss weit genug im Land liegen, sonst
+stünde ein Baum mit den Füßen im Wasser.
+
+**Die Zeichen stehen in der Landschaft, sie liegen nicht darin.** Jeder Baum, jeder Berg, jedes Haus
+wird von der Seite gezeigt, mit dem Fuß auf dem Punkt und dem Wipfel darüber – so, wie man eine
+Landkarte von Hand zeichnet. Vorher war es eine Draufsicht aus Kreisen: ein Baum sah aus wie eine
+Kugel auf einem Stock, ein Hügel wie ein Fleck. Jedes Zeichen hat darum drei Teile – einen Umriss in
+Tinte, eine helle Sonnenseite und eine schraffierte Schattenseite. Auf einer gestochenen Karte ist
+die Schraffur die ganze Beleuchtung: Eine Bergflanke wird nicht dunkler gefärbt, sie wird
+schraffiert. Laubkronen, Büsche und Wolken entstehen aus `lappen()` – n nach außen gewölbte Bogen um
+einen Mittelpunkt, also gerade kein Kreis. Das Land ist dazu papierfarben statt wiesengrün; die
+Biome färben es nur an, und ein Gradnetz alle zehn Einheiten liegt darüber. Die Flüsse suchen sich ihren Weg aus demselben Feld: Sie laufen dorthin, wo es
 kleiner wird, also bergab, und hören auf, wo sie das Meer erreichen. Die Reisewege verbinden die
 Welten in ihrer Reihenfolge; ob ein Stück zur Straße oder zur Schiffslinie wird, tastet die Karte
 selbst ab.
