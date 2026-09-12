@@ -428,18 +428,18 @@ Object.assign(Renderer.prototype, {
   },
   /* tuch überschreibt die Farbe des Wimpels – das Kolosseum hängt rote Banner auf, sonst bleibt es
      bei den dunkelblau-violetten des Schattenreichs. */
-  spriteBanner(ctx, sx, sy, s, d, t, tuch) {
-    ctx.strokeStyle = tuch ? '#8a6a3a' : '#3a3c4a'; ctx.lineWidth = Math.max(1.5, s * 0.06); ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx, sy - s * 1.8); ctx.stroke();
-    const sw = Math.sin(t * 2 + sx) * s * 0.06;
-    ctx.fillStyle = tuch || ((d.seed || 0) > 0.5 ? '#5a2a7a' : '#2a3a8a'); ctx.beginPath(); ctx.moveTo(sx, sy - s * 1.8); ctx.lineTo(sx + s * 0.55 + sw, sy - s * 1.7); ctx.lineTo(sx + s * 0.55 + sw, sy - s * 0.9); ctx.lineTo(sx + s * 0.28, sy - s * 1.05); ctx.lineTo(sx, sy - s * 0.95); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#ffe45e'; ctx.beginPath(); ctx.arc(sx + s * 0.27 + sw * 0.5, sy - s * 1.35, s * 0.1, 0, TAU); ctx.fill();
+  /* Fahne: Stange als Säule, Tuch als dünner Quader quer zur Stange. Es weht damit in eine
+     Weltrichtung und dreht sich mit, statt immer zur Seite zu zeigen. */
+  spriteBanner(ctx, d, t, tuch) {
+    const k = d.s, z = d.z || 0, a = (d.seed || 0) * 6 + Math.sin(t * 2 + d.x) * 0.12;
+    const co = Math.cos(a), si = Math.sin(a);
+    this.saeule(ctx, d.x, d.y, z, k * 0.05, k * 0.04, k * 1.8, tuch ? '#a08050' : '#4a4c5c', tuch ? '#6a4a20' : '#2a2c38', 6);
+    const farbe = tuch || ((d.seed || 0) > 0.5 ? '#5a2a7a' : '#2a3a8a');
+    const poly = [[0, -0.035], [0.55, -0.035], [0.55, 0.035], [0, 0.035]]
+      .map(([u, v]) => [d.x + (u * co - v * si) * k, d.y + (u * si + v * co) * k]);
+    this.prism(ctx, poly, z + k * 0.95, k * 0.8, farbe, shade(farbe, 0.72));
+    this.kugel(ctx, d.x + co * k * 0.27, d.y + si * k * 0.27, z + k * 1.45, k * 0.1, '#fff6c0', '#ffe45e', '#c9a815');
   },
-  /* Säule als echter Körper statt als flaches Bildchen: Sockel, Schaft und Kapitell sind drei
-     Prismen in Weltkoordinaten. Damit steht sie in derselben Sicht wie Mauern und Türme, dreht
-     sich mit der Kamera mit und bekommt ihre Schattenseite von selbst. Der Schaft hat acht Seiten
-     – die einzeln schattierten Flächen lesen sich wie die Kanneluren einer echten Säule.
-     cols: [Deck des Schafts, Schattenseite, Deck von Sockel und Kapitell, Umriss] – ohne
-     Angabe die dunkle Säule des Schattenreichs, mit Angabe der helle Kalkstein der Arena. */
   spritePillar(ctx, d, cols) {
     const c = cols || ['#5e5474', '#2a2438', '#6e6488', '#14101e'];
     const g = d.s || 1, x = d.x, y = d.y;

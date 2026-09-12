@@ -575,6 +575,170 @@ class Renderer {
       }
     }
   }
+  drawBelly(ctx, t) {
+    const w = this.w, h = this.h, pulse = 1 + 0.02 * Math.sin(t * 1.6);
+    ctx.lineCap = 'round';
+    for (let i = 0; i < 9; i++) { // Rippen: helle Bögen von oben, schwingen leicht mit dem Puls
+      const x = w * (0.05 + i * 0.115), rw = w * 0.07 * pulse, rh = h * (0.55 + 0.05 * Math.sin(i * 1.3));
+      ctx.strokeStyle = `rgba(244,237,224,${0.22 + 0.06 * Math.sin(t * 1.6 + i)})`; ctx.lineWidth = Math.max(4, w * 0.012);
+      ctx.beginPath(); ctx.moveTo(x - rw, 0); ctx.quadraticCurveTo(x + rw * 0.4, rh * 0.5, x - rw * 0.2, rh); ctx.stroke();
+    }
+    for (let i = 0; i < 14; i++) { // Magenwand: weiche Wölbungen
+      const x = ((i * 0.173) % 1) * w, y = h * (0.35 + (i * 0.11) % 0.5), r = w * (0.05 + (i % 3) * 0.02) * pulse;
+      const g = ctx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, 'rgba(150,40,55,0.35)'); g.addColorStop(1, 'rgba(150,40,55,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+    }
+    ctx.fillStyle = 'rgba(159,224,74,0.08)'; ctx.fillRect(0, h * 0.7, w, h * 0.3); // Säuredunst unten
+  }
+  drawJungle(ctx, t) {
+    const w = this.w, h = this.h, hash = (i, k) => Math.abs(Math.sin(i * 127.1 + k * 311.7) * 43758.5453) % 1;
+    for (let i = 0; i < 6; i++) { // goldene Lichtstrahlen durchs Blätterdach
+      const x = w * (0.1 + i * 0.16) + Math.sin(t * 0.25 + i) * w * 0.02, sw = w * 0.04;
+      const g = ctx.createLinearGradient(0, 0, 0, h * 0.7); g.addColorStop(0, `rgba(255,240,170,${0.16 + 0.05 * Math.sin(t * 0.6 + i)})`); g.addColorStop(1, 'rgba(255,240,170,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(x - sw, 0); ctx.lineTo(x + sw, 0); ctx.lineTo(x + sw * 2.5 + w * 0.05, h * 0.7); ctx.lineTo(x - sw * 2.5 + w * 0.05, h * 0.7); ctx.closePath(); ctx.fill();
+    }
+    // drei Blätterschichten am Horizont, hinten dunkel, vorn heller
+    const layers = [['#123a1e', 0.36, 22], ['#1d5a2c', 0.42, 18], ['#2a7a38', 0.47, 14]];
+    layers.forEach(([col, base, n], li) => {
+      ctx.fillStyle = col; ctx.beginPath();
+      for (let i = 0; i <= n; i++) { const x = (i / n) * w, r = w * (0.05 + hash(i, li) * 0.05), y = h * base - r * 0.4 + Math.sin(t * 0.4 + i + li) * 2; ctx.moveTo(x + r, y); ctx.arc(x, y, r, 0, TAU); }
+      ctx.rect(0, h * base, w, h * 0.3); ctx.fill();
+    });
+    ctx.lineCap = 'round'; // hängende Lianen von oben
+    for (let i = 0; i < 7; i++) {
+      const x = w * (0.04 + i * 0.15) + hash(i, 9) * w * 0.05, L = h * (0.18 + hash(i, 3) * 0.2), sw = Math.sin(t * 0.8 + i) * w * 0.01;
+      ctx.strokeStyle = 'rgba(30,70,35,0.9)'; ctx.lineWidth = Math.max(2, w * 0.004);
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.quadraticCurveTo(x + sw * 2, L * 0.6, x + sw, L); ctx.stroke();
+      ctx.fillStyle = '#2f8a3a'; for (let k = 1; k <= 3; k++) { const u = k / 3.5; ctx.beginPath(); ctx.ellipse(x + sw * u * 1.5 + (k % 2 ? 6 : -6), L * u, 7, 3.5, k % 2 ? 0.6 : -0.6, 0, TAU); ctx.fill(); }
+    }
+    for (let i = 0; i < 3; i++) { // Papageien ziehen vorbei
+      const x = ((i * 0.33 + t * 0.03) % 1) * w, y = h * (0.08 + i * 0.06) + Math.sin(t * 2 + i) * 5, fl = Math.sin(t * 8 + i) * 5;
+      ctx.fillStyle = i ? '#ff4f4f' : '#2f9ae0'; ctx.beginPath(); ctx.ellipse(x, y, 7, 3, 0, 0, TAU); ctx.fill();
+      ctx.strokeStyle = ctx.fillStyle; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x - 4, y); ctx.lineTo(x - 8, y - 4 - fl); ctx.moveTo(x + 4, y); ctx.lineTo(x + 8, y - 4 - fl); ctx.stroke();
+    }
+  }
+  drawKraken(ctx, ob, t) {
+    const s = this.scale, segs = [], dark = ob.style === 'darktentacle'; // dunkle Tentakel: aus dem Rumpf des Totenschiffs, ohne Kopf
+    for (let i = 0; i < ob.blades; i++) {
+      const a = ob.bladeAngle(i), ca = Math.cos(a), sa = Math.sin(a), n = 9;
+      for (let k = 1; k <= n; k++) {
+        const u = k / n, wave = Math.sin(t * 3 + u * 5 + i) * 0.18 * u;
+        const px = ob.x + ca * ob.len * u - sa * wave, py = ob.y + sa * ob.len * u + ca * wave;
+        segs.push({ px, py, r: ob.thick * (1.35 - u * 0.95) + 0.05, z: ob.height * 0.5 + 0.08 * Math.sin(t * 2 + u * 4 + i), u, k: this.depth(px, py) });
+      }
+    }
+    segs.sort((p, q) => p.k - q.k);
+    for (const sg of segs) {
+      this.isoEllipse(ctx, sg.px, sg.py, 0.005, sg.r * 1.1, 'rgba(0,0,0,0.14)');
+      const [cx, cy] = this.proj(sg.px, sg.py, sg.z), R = sg.r * s;
+      const g = ctx.createRadialGradient(cx - R * 0.35, cy - R * 0.4, R * 0.1, cx, cy, R);
+      if (dark) { g.addColorStop(0, '#4a2a5a'); g.addColorStop(1, '#0c0612'); } else { g.addColorStop(0, '#d98ad0'); g.addColorStop(1, '#6a2a78'); }
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.fill();
+      if (sg.u > 0.15) { ctx.fillStyle = dark ? `rgba(197,139,255,${0.45 + 0.35 * Math.sin(t * 4 + sg.u * 9)})` : 'rgba(255,220,240,0.7)'; ctx.beginPath(); ctx.arc(cx, cy + R * 0.45, R * 0.28, 0, TAU); ctx.fill(); } // Saugnapf
+    }
+    if (dark) { // statt Kopf: ein finsteres Loch, aus dem die Arme kriechen
+      this.isoEllipse(ctx, ob.x, ob.y, 0.01, ob.hubR * 1.4, '#04030a');
+      const [hx, hy] = this.proj(ob.x, ob.y, 0.012); const rg = ctx.createRadialGradient(hx, hy, 0, hx, hy, ob.hubR * 2.2 * s); rg.addColorStop(0, 'rgba(140,60,255,0.35)'); rg.addColorStop(1, 'rgba(140,60,255,0)'); ctx.fillStyle = rg; ctx.beginPath(); ctx.arc(hx, hy, ob.hubR * 2.2 * s, 0, TAU); ctx.fill();
+      return;
+    }
+    // Kopf: Kuppel mit Augen, die dem Ball nachschauen
+    const hr = ob.hubR, [hx, hy] = this.proj(ob.x, ob.y, ob.height * 0.5 + 0.1), HR = hr * s;
+    this.isoEllipse(ctx, ob.x, ob.y, 0.006, hr * 1.15, 'rgba(0,0,0,0.2)');
+    const g = ctx.createRadialGradient(hx - HR * 0.35, hy - HR * 0.6, HR * 0.1, hx, hy - HR * 0.2, HR * 1.25);
+    g.addColorStop(0, '#e29ad8'); g.addColorStop(0.6, '#9a48a8'); g.addColorStop(1, '#4a1a58');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(hx, hy - HR * 0.35, HR * 1.05, HR * 1.2, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.18)'; for (let i = 0; i < 5; i++) { const a = t * 0.8 + i * 1.26; ctx.beginPath(); ctx.arc(hx + Math.cos(a) * HR * 0.55, hy - HR * 0.4 + Math.sin(a) * HR * 0.5, HR * 0.13, 0, TAU); ctx.fill(); }
+    const b = this.ballPos, look = b ? Math.atan2(b[1] - hy, b[0] - hx) : t;
+    for (const side of [-1, 1]) {
+      const ex = hx + side * HR * 0.45, ey = hy - HR * 0.1;
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.ellipse(ex, ey, HR * 0.26, HR * 0.3, 0, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#1a0a20'; ctx.beginPath(); ctx.arc(ex + Math.cos(look) * HR * 0.09, ey + Math.sin(look) * HR * 0.09, HR * 0.14, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(ex + Math.cos(look) * HR * 0.09 - HR * 0.05, ey + Math.sin(look) * HR * 0.09 - HR * 0.06, HR * 0.045, 0, TAU); ctx.fill();
+    }
+  }
+  drawSharkJump(ctx, ob, t) {
+    const s = this.scale;
+    if (!ob.jumping) { // Flosse zieht Kreise in der Bucht
+      const a = t * 1.4, fx = ob.x + Math.cos(a) * ob.w * 0.25, fy = ob.y + Math.sin(a) * ob.h * 0.25, d = Math.sin(a) >= 0 ? -1 : 1;
+      this.isoEllipse(ctx, fx, fy, -0.05, 1.4, 'rgba(20,40,60,0.45)', 0.6);
+      const fin = [[fx + d * 0.2, fy, 0.06], [fx - d * 0.25, fy, 0.95], [fx - d * 0.85, fy, 0.06]];
+      ctx.fillStyle = '#5d6b78'; ctx.beginPath(); fin.forEach((q, i) => { const pp = this.proj(q[0], q[1], q[2]); i ? ctx.lineTo(pp[0], pp[1]) : ctx.moveTo(pp[0], pp[1]); }); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = Math.max(1, s * 0.04);
+      const [w0, w1] = this.proj(fx - d * 0.3, fy, 0.01), [w2, w3] = this.proj(fx - d * 1.1, fy + 0.25, 0.01); ctx.beginPath(); ctx.moveTo(w0, w1); ctx.lineTo(w2, w3); ctx.stroke();
+      return;
+    }
+    // Comic-Hai aus Blöcken wie der Drache: Schwanz, Rumpf, Kopf, Schnauze entlang der Sprungachse, Neigung folgt dem Bogen
+    const vert = ob.axis === 'y', p = ob.p, z = ob.z, tilt = (0.5 - p) * 1.1, px = ob.px, py = ob.py;
+    const ax = vert ? 0 : 1, ay = vert ? 1 : 0, sx = vert ? 1 : 0, sy = vert ? 0 : 1; // Achse (Sprungrichtung) und Seite
+    const W = (u, v) => [px + ax * u + sx * v, py + ay * u + sy * v]; // Weltpunkt: u entlang der Achse, v seitlich
+    const zAt = u => z + tilt * u;
+    // Alles unter der Wasseroberfläche (z < 0) wird weggeschnitten: beim Auftauchen erscheint erst die Nase, beim Eintauchen verschwindet der Schwanz zuletzt
+    const seg = (u0, u1, wd, z0, h, top, side, opts) => { let zb = zAt((u0 + u1) / 2) + z0; const zt = zb + h; if (zt <= 0.03) return; if (zb < 0) zb = 0; this.prism(ctx, [W(u0, -wd / 2), W(u1, -wd / 2), W(u1, wd / 2), W(u0, wd / 2)], zb, zt - zb, top, side, opts); };
+    const above = zz => Math.max(0, zz);
+    const faces = (nx, ny) => nx * this.cam.sin + ny * this.cam.cos > 0.05; // zeigt diese Seite zur Kamera? (wie bei den Blockseiten)
+    const grey = ['#7d8fa0', '#3f4d5a'], dark = ['#5c6c7a', '#2e3a44'], belly = '#e6edf2';
+    this.isoEllipse(ctx, px, py, 0.004, 1.9, `rgba(0,0,0,${0.28 * Math.max(0, 1 - z / (ob.height * 1.3))})`, 0.8);
+    seg(-2.1, -1.3, 0.55, 0.25, 0.5, grey[0], grey[1]);                                  // Schwanzwurzel
+    seg(-1.3, 0.5, 1.15, 0.05, 1.0, grey[0], grey[1], { outline: '#25303a' });             // Rumpf
+    if (zAt(-0.4) + 1.06 > 0) this.fillPoly(ctx, [W(-1.2, -0.5), W(0.4, -0.5), W(0.4, 0.5), W(-1.2, 0.5)], zAt(-0.4) + 1.06, '#93a4b3', false); // heller Rücken
+    seg(0.5, 1.5, 0.95, 0.15, 0.8, grey[0], grey[1], { outline: '#25303a' });              // Kopf
+    seg(1.5, 2.0, 0.6, 0.35, 0.45, dark[0], dark[1]);                                       // Schnauze
+    // Bauchstreifen an den Flanken
+    for (const side of [-1, 1]) { if (!faces(sx * side, sy * side)) continue; if (zAt(-1.2) + 0.15 < 0 && zAt(1.4) + 0.2 < 0) continue; const q0 = this.proj(...W(-1.2, side * 0.58), above(zAt(-1.2) + 0.15)), q1 = this.proj(...W(1.4, side * 0.48), above(zAt(1.4) + 0.2)); ctx.strokeStyle = 'rgba(230,237,242,0.75)'; ctx.lineWidth = Math.max(1.5, s * 0.07); ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(q0[0], q0[1]); ctx.lineTo(q1[0], q1[1]); ctx.stroke(); }
+    // Rückenflosse: senkrechte Dreiecksplatte
+    const tri = (pts, col, edge) => { if (pts.every(q => q[1] <= 0.03)) return; ctx.fillStyle = col; ctx.beginPath(); pts.forEach((q, i) => { const r = this.proj(q[0][0], q[0][1], above(q[1])); i ? ctx.lineTo(r[0], r[1]) : ctx.moveTo(r[0], r[1]); }); ctx.closePath(); ctx.fill(); if (edge) { ctx.strokeStyle = edge; ctx.lineWidth = 1; ctx.stroke(); } };
+    for (const off of [-0.06, 0.06]) tri([[W(-0.5, off), zAt(-0.5) + 1.0], [W(-0.35, off), zAt(-0.35) + 1.9], [W(0.45, off), zAt(0.45) + 1.0]], off < 0 ? dark[1] : dark[0], '#25303a');
+    // Schwanzflosse: Sichel senkrecht am Ende
+    for (const off of [-0.05, 0.05]) tri([[W(-2.1, off), zAt(-2.1) + 0.5], [W(-2.7, off), zAt(-2.7) + 1.35], [W(-2.45, off), zAt(-2.45) + 0.5], [W(-2.6, off), zAt(-2.6) - 0.1]], off < 0 ? dark[1] : dark[0], '#25303a');
+    // Brustflossen: flache Platten schräg nach außen
+    if (zAt(-0.4) + 0.3 > 0) for (const side of [-1, 1]) this.prism(ctx, [W(0.1, side * 0.55), W(-0.6, side * 1.35), W(-0.95, side * 1.2), W(-0.7, side * 0.55)], zAt(-0.4) + 0.3, 0.1, dark[0], dark[1]);
+    // Kiemen
+    ctx.strokeStyle = '#2e3a44'; ctx.lineWidth = Math.max(1, s * 0.04);
+    for (const side of [-1, 1]) for (let k = 0; k < 3; k++) { if (!faces(sx * side, sy * side)) continue; const u = 0.55 + k * 0.18; if (zAt(u) + 0.8 < 0.03) continue; const q0 = this.proj(...W(u, side * 0.48), above(zAt(u) + 0.35)), q1 = this.proj(...W(u, side * 0.48), zAt(u) + 0.8); ctx.beginPath(); ctx.moveTo(q0[0], q0[1]); ctx.lineTo(q1[0], q1[1]); ctx.stroke(); }
+    // Augen auf beiden Seiten des Kopfs, Blick nach vorn
+    if (zAt(1.25) + 0.6 > 0) for (const side of [-1, 1]) {
+      if (!faces(sx * side, sy * side)) continue; // nur das Auge auf der sichtbaren Seite
+      const [ex, ey] = this.proj(...W(1.25, side * 0.5), zAt(1.25) + 0.7);
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(ex, ey, s * 0.13, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(ex + s * 0.03 * (vert ? 0 : 1), ey - s * 0.02, s * 0.065, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(ex - s * 0.02, ey - s * 0.05, s * 0.025, 0, TAU); ctx.fill();
+    }
+    // Maul mit Zähnen an der Schnauze
+    const m0 = this.proj(...W(2.02, -0.3), zAt(2.0) + 0.35), m1 = this.proj(...W(2.02, 0.3), zAt(2.0) + 0.35);
+    if (zAt(2.0) + 0.24 > 0 && faces(ax, ay)) { // Maul nur, wenn die Schnauze zur Kamera zeigt
+    ctx.strokeStyle = '#8a1a24'; ctx.lineWidth = Math.max(2, s * 0.09); ctx.beginPath(); ctx.moveTo(m0[0], m0[1]); ctx.lineTo(m1[0], m1[1]); ctx.stroke();
+    ctx.fillStyle = '#fff'; for (let k = 0; k < 5; k++) { const v = -0.26 + k * 0.13, a0 = this.proj(...W(2.03, v - 0.05), zAt(2.0) + 0.37), a1 = this.proj(...W(2.03, v + 0.05), zAt(2.0) + 0.37), a2 = this.proj(...W(2.03, v), zAt(2.0) + 0.24); ctx.beginPath(); ctx.moveTo(a0[0], a0[1]); ctx.lineTo(a1[0], a1[1]); ctx.lineTo(a2[0], a2[1]); ctx.closePath(); ctx.fill(); }
+    }
+    if (p < 0.2 || p > 0.8) { // Gischt beim Auftauchen und Eintauchen
+      const q = p < 0.2 ? 1 - p / 0.2 : (p - 0.8) / 0.2, [bx, by] = this.proj(ob.px, ob.py, 0.05);
+      ctx.fillStyle = `rgba(255,255,255,${0.8 * q})`;
+      for (let i = 0; i < 7; i++) { const a = i * 0.9, rr = s * (0.3 + 0.5 * q); ctx.beginPath(); ctx.arc(bx + Math.cos(a) * rr, by + Math.sin(a) * rr * 0.5 - s * 0.3 * q, s * 0.07, 0, TAU); ctx.fill(); }
+    }
+  }
+  drawTemple(ctx, t) {
+    const w = this.w, h = this.h, hash = (i, k) => Math.abs(Math.sin(i * 127.1 + k * 311.7) * 43758.5453) % 1;
+    const g = ctx.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#1a1408'); g.addColorStop(0.5, '#3a2f16'); g.addColorStop(1, '#1a1408'); ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+    const bh = Math.max(40, h * 0.07), bw = bh * 2.4; ctx.lineWidth = 2; // Quader mit Moosfugen
+    for (let r = 0; r < h / bh + 1; r++) for (let c = -1; c < w / bw + 1; c++) {
+      const x = c * bw + (r % 2 ? bw / 2 : 0), y = r * bh;
+      ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.strokeRect(x, y, bw, bh);
+      if (hash(r, c) > 0.7) { ctx.fillStyle = 'rgba(60,110,50,0.35)'; ctx.fillRect(x + 2, y + bh - 6, bw * hash(c, r) * 0.6, 4); }
+    }
+    ctx.fillStyle = 'rgba(255,200,110,0.14)'; // Glyphenbänder
+    for (const band of [0.2, 0.6]) {
+      const y = h * band; ctx.fillRect(0, y - bh * 0.3, w, bh * 0.6);
+      for (let i = 0; i < 36; i++) { const x = (i / 36) * w + bh * 0.2, k = Math.floor(hash(i, band * 10) * 4), sz = bh * 0.18; ctx.fillStyle = 'rgba(40,24,8,0.6)';
+        if (k === 0) { ctx.beginPath(); ctx.moveTo(x, y + sz); ctx.lineTo(x + sz * 0.6, y - sz); ctx.lineTo(x + sz * 1.2, y + sz); ctx.closePath(); ctx.fill(); }
+        else if (k === 1) { ctx.beginPath(); ctx.arc(x + sz * 0.5, y, sz * 0.6, 0, TAU); ctx.fill(); ctx.fillStyle = 'rgba(255,200,110,0.3)'; ctx.beginPath(); ctx.arc(x + sz * 0.5, y, sz * 0.25, 0, TAU); ctx.fill(); }
+        else if (k === 2) ctx.fillRect(x, y - sz * 0.8, sz * 1.1, sz * 1.6);
+        else { ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + sz * 0.6, y - sz); ctx.lineTo(x + sz * 1.2, y); ctx.lineTo(x + sz * 0.6, y + sz); ctx.closePath(); ctx.fill(); }
+        ctx.fillStyle = 'rgba(255,200,110,0.14)'; }
+    }
+    for (const [fx, fy, ph] of [[0.1, 0.35, 0], [0.5, 0.22, 2], [0.9, 0.38, 4]]) { // Fackelschein
+      const gl = 0.8 + 0.2 * Math.sin(t * 7 + ph) * Math.sin(t * 3.3 + ph);
+      const rg = ctx.createRadialGradient(fx * w, fy * h, 0, fx * w, fy * h, w * 0.3); rg.addColorStop(0, `rgba(255,170,70,${0.22 * gl})`); rg.addColorStop(1, 'rgba(255,170,70,0)'); ctx.fillStyle = rg; ctx.fillRect(0, 0, w, h);
+    }
+  }
   /* ---------- Boden ---------- */
   drawFloor(ctx) {
     // Gezeichnet wird immer die untere Ebene; die obere kommt als eigene, angehobene Scholle dazu
@@ -1858,7 +2022,7 @@ class Renderer {
     } else if (ob.type === 'magnet') {
       items.push({ x: ob.x, y: ob.y, draw: () => {
         const kind = ob.slow ? 'slow' : ob.strength > 0 ? 'attract' : 'repel', s = this.scale;
-        if (ob.style === 'pearl') { const [sx, sy] = this.proj(ob.x, ob.y, 0); this.spritePearl(ctx, sx, sy, s * ob.core * 3.4, t, true); return; }
+        if (ob.style === 'pearl') { this.spritePearl(ctx, { x: ob.x, y: ob.y, z: 0, s: ob.core * 3.4, seed: 0.4 }, t, true); return; }
         if (ob.style === 'coral') {
           const cols = kind === 'attract' ? ['#ff6a6a', '#a8202a'] : kind === 'repel' ? ['#6fe07a', '#1f7a30'] : ['#6fb0ff', '#1f4a9a'];
           const [sx, sy] = this.proj(ob.x, ob.y, 0);
@@ -2435,7 +2599,7 @@ class Renderer {
       case 'gold': this.spriteGold(ctx, d, t); break;
       case 'pumpkin': this.spritePumpkin(ctx, d, t); break;
       case 'cauldron': this.spriteCauldron(ctx, d, s, t); break;
-      case 'gear': this.spriteGear(ctx, sx, sy, s, d, t); break;
+      case 'gear': this.spriteGear(ctx, d, t); break;
       case 'candle': this.spriteCandle(ctx, d, t); break;
       case 'coral': this.spriteCoral(ctx, d); break;
       case 'fish': this.spriteFish(ctx, d, t); break;
@@ -2447,7 +2611,7 @@ class Renderer {
       case 'ropepost': this.spriteRopepost(ctx, d); break;
       case 'jelly': this.spriteJelly(ctx, d, t); break;
       case 'mast': this.spriteMast(ctx, d, t); break;
-      case 'pearl': this.spritePearl(ctx, sx, sy, s * 0.7, t, false); break;
+      case 'pearl': this.spritePearl(ctx, Object.assign({}, d, { s: d.s * 0.7 }), t, false); break;
       case 'lighthouse': this.spriteLighthouse(ctx, d, t); break;
       case 'barrel': this.spriteBarrel(ctx, d); break;
       case 'crate': this.spriteCrate(ctx, d); break;
@@ -2474,7 +2638,7 @@ class Renderer {
       case 'pipe': this.spritePipe(ctx, d, t); break;
       case 'clock': this.spriteClock(ctx, d, t); break;
       case 'bell': this.spriteBell(ctx, d, t); break;
-      case 'weight': this.spriteWeight(ctx, sx, sy, s, d, t); break;
+      case 'weight': this.spriteWeight(ctx, d, t); break;
       case 'obelisk': this.spriteObelisk(ctx, d); break;
       case 'sarcophagus': this.spriteSarcophagus(ctx, d, t); break;
       case 'gravestone': this.spriteGravestone(ctx, sx, sy, s, d); break;
@@ -2483,8 +2647,8 @@ class Renderer {
       case 'cloudDark': this.spriteCloudDark(ctx, d, t); break;
       case 'lightningrod': this.spriteLightningRod(ctx, d, t); break;
       case 'windsock': this.spriteWindsock(ctx, sx, sy, s, Object.assign({ welt: [d.x, d.y, d.z || 0] }, d), t); break;
-      case 'banner': this.spriteBanner(ctx, sx, sy, s, d, t); break;
-      case 'bannerRed': this.spriteBanner(ctx, sx, sy, s, d, t, '#c0392c'); break;
+      case 'banner': this.spriteBanner(ctx, d, t); break;
+      case 'bannerRed': this.spriteBanner(ctx, d, t, '#c0392c'); break;
       case 'brazierBlue': this.spriteBrazier(ctx, d, t, ['#4fc3ff', '#b7ecff', '80,190,255']); break;
       case 'torchPurple': this.spriteBrazier(ctx, d, t, ['#a24bff', '#e0b8ff', '170,90,255']); break;
       // Säulen werden in Weltkoordinaten gebaut, nicht am Bildschirmpunkt – sie bekommen darum d statt sx/sy
@@ -2606,192 +2770,16 @@ class Renderer {
     const [fx, fy] = this.proj(d.x, d.y, z + H), sc = this.scale * k;
     ctx.fillStyle = '#1a1a1a'; ctx.beginPath(); ctx.moveTo(fx, fy); ctx.lineTo(fx + sc * 0.5, fy + sc * 0.12); ctx.lineTo(fx, fy + sc * 0.26); ctx.fill();
   }
-  spritePearl(ctx, sx, sy, s, t, big) {
-    this.shadow(ctx, sx, sy, s * 0.5);
-    const gl = 0.6 + 0.4 * Math.sin(t * 2 + sx * 0.01);
-    ctx.fillStyle = `rgba(255,245,210,${(big ? 0.28 : 0.14) * gl})`; ctx.beginPath(); ctx.arc(sx, sy - s * 0.35, s * (big ? 1.1 : 0.7), 0, TAU); ctx.fill();
-    ctx.fillStyle = '#f2d9c4'; ctx.beginPath(); ctx.ellipse(sx, sy - s * 0.5, s * 0.5, s * 0.55, 0, Math.PI * 1.05, Math.PI * 1.95); ctx.lineTo(sx, sy - s * 0.15); ctx.closePath(); ctx.fill(); // oberer Deckel
-    ctx.strokeStyle = 'rgba(170,110,90,0.45)'; ctx.lineWidth = 1;
-    for (let i = 0; i < 5; i++) { const a = Math.PI * (1.1 + i * 0.2); ctx.beginPath(); ctx.moveTo(sx, sy - s * 0.15); ctx.lineTo(sx + Math.cos(a) * s * 0.5, sy - s * 0.5 + Math.sin(a) * s * 0.55); ctx.stroke(); }
-    const r = s * 0.24, g = ctx.createRadialGradient(sx - r * 0.35, sy - s * 0.2 - r * 0.4, r * 0.1, sx, sy - s * 0.2, r);
-    g.addColorStop(0, '#ffffff'); g.addColorStop(0.7, '#efe6f5'); g.addColorStop(1, '#c9bcd6');
-    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(sx, sy - s * 0.2, r, 0, TAU); ctx.fill();
-    ctx.fillStyle = '#f7e2cf'; ctx.beginPath(); ctx.ellipse(sx, sy, s * 0.52, s * 0.22, 0, 0, TAU); ctx.fill(); // untere Schale
-    ctx.strokeStyle = 'rgba(170,110,90,0.4)'; for (let i = -2; i <= 2; i++) { ctx.beginPath(); ctx.moveTo(sx, sy - s * 0.2); ctx.lineTo(sx + i * s * 0.2, sy + s * 0.18); ctx.stroke(); }
-    if (big) for (let i = 0; i < 4; i++) { // Funkeln
-      const a = t * 1.2 + i * 1.57, px = sx + Math.cos(a) * s * 0.75, py = sy - s * 0.35 + Math.sin(a) * s * 0.3, k = s * 0.06 * (0.6 + 0.4 * Math.sin(t * 5 + i));
-      ctx.fillStyle = 'rgba(255,255,255,0.9)'; ctx.beginPath(); ctx.moveTo(px, py - k * 2); ctx.lineTo(px + k, py); ctx.lineTo(px, py + k * 2); ctx.lineTo(px - k, py); ctx.closePath(); ctx.fill();
-    }
+  /* Perlmuschel: zwei Schalen als flache Körper, die Perle als Kugel dazwischen. */
+  spritePearl(ctx, d, t, big) {
+    const k = d.s, z = d.z || 0, a = (d.seed || 0) * 6, gl = 0.6 + 0.4 * Math.sin(t * 2 + d.x * 0.01);
+    const faecher = (rr, w0, w1) => { const q = [[d.x, d.y]]; for (let i = 0; i <= 6; i++) { const w = a + w0 + (i / 6) * (w1 - w0); q.push([d.x + Math.cos(w) * rr, d.y + Math.sin(w) * rr]); } return q; };
+    this.bodenSchatten(ctx, d.x, d.y, k * 0.5);
+    this.isoEllipse(ctx, d.x, d.y, z + k * 0.3, k * (big ? 1.1 : 0.7), `rgba(255,245,210,${(big ? 0.28 : 0.14) * gl})`);
+    this.prism(ctx, faecher(k * 0.52, -1.5, 0), z, k * 0.12, '#f2d9c4', '#c9a68c');          // untere Schale
+    this.kugel(ctx, d.x, d.y, z + k * 0.24, k * 0.22, '#ffffff', '#f6ecdc', '#c9b8a4');      // die Perle
+    this.prism(ctx, faecher(k * 0.5, 0.4, 1.9), z + k * 0.26, k * 0.1, '#f7e4d2', '#cfae94'); // obere Schale
   }
-  /* Krake: Kopf in der Mitte, die Rotorflügel sind schlängelnde Fangarme mit Saugnäpfen */
-  drawKraken(ctx, ob, t) {
-    const s = this.scale, segs = [], dark = ob.style === 'darktentacle'; // dunkle Tentakel: aus dem Rumpf des Totenschiffs, ohne Kopf
-    for (let i = 0; i < ob.blades; i++) {
-      const a = ob.bladeAngle(i), ca = Math.cos(a), sa = Math.sin(a), n = 9;
-      for (let k = 1; k <= n; k++) {
-        const u = k / n, wave = Math.sin(t * 3 + u * 5 + i) * 0.18 * u;
-        const px = ob.x + ca * ob.len * u - sa * wave, py = ob.y + sa * ob.len * u + ca * wave;
-        segs.push({ px, py, r: ob.thick * (1.35 - u * 0.95) + 0.05, z: ob.height * 0.5 + 0.08 * Math.sin(t * 2 + u * 4 + i), u, k: this.depth(px, py) });
-      }
-    }
-    segs.sort((p, q) => p.k - q.k);
-    for (const sg of segs) {
-      this.isoEllipse(ctx, sg.px, sg.py, 0.005, sg.r * 1.1, 'rgba(0,0,0,0.14)');
-      const [cx, cy] = this.proj(sg.px, sg.py, sg.z), R = sg.r * s;
-      const g = ctx.createRadialGradient(cx - R * 0.35, cy - R * 0.4, R * 0.1, cx, cy, R);
-      if (dark) { g.addColorStop(0, '#4a2a5a'); g.addColorStop(1, '#0c0612'); } else { g.addColorStop(0, '#d98ad0'); g.addColorStop(1, '#6a2a78'); }
-      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.fill();
-      if (sg.u > 0.15) { ctx.fillStyle = dark ? `rgba(197,139,255,${0.45 + 0.35 * Math.sin(t * 4 + sg.u * 9)})` : 'rgba(255,220,240,0.7)'; ctx.beginPath(); ctx.arc(cx, cy + R * 0.45, R * 0.28, 0, TAU); ctx.fill(); } // Saugnapf
-    }
-    if (dark) { // statt Kopf: ein finsteres Loch, aus dem die Arme kriechen
-      this.isoEllipse(ctx, ob.x, ob.y, 0.01, ob.hubR * 1.4, '#04030a');
-      const [hx, hy] = this.proj(ob.x, ob.y, 0.012); const rg = ctx.createRadialGradient(hx, hy, 0, hx, hy, ob.hubR * 2.2 * s); rg.addColorStop(0, 'rgba(140,60,255,0.35)'); rg.addColorStop(1, 'rgba(140,60,255,0)'); ctx.fillStyle = rg; ctx.beginPath(); ctx.arc(hx, hy, ob.hubR * 2.2 * s, 0, TAU); ctx.fill();
-      return;
-    }
-    // Kopf: Kuppel mit Augen, die dem Ball nachschauen
-    const hr = ob.hubR, [hx, hy] = this.proj(ob.x, ob.y, ob.height * 0.5 + 0.1), HR = hr * s;
-    this.isoEllipse(ctx, ob.x, ob.y, 0.006, hr * 1.15, 'rgba(0,0,0,0.2)');
-    const g = ctx.createRadialGradient(hx - HR * 0.35, hy - HR * 0.6, HR * 0.1, hx, hy - HR * 0.2, HR * 1.25);
-    g.addColorStop(0, '#e29ad8'); g.addColorStop(0.6, '#9a48a8'); g.addColorStop(1, '#4a1a58');
-    ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(hx, hy - HR * 0.35, HR * 1.05, HR * 1.2, 0, 0, TAU); ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,255,0.18)'; for (let i = 0; i < 5; i++) { const a = t * 0.8 + i * 1.26; ctx.beginPath(); ctx.arc(hx + Math.cos(a) * HR * 0.55, hy - HR * 0.4 + Math.sin(a) * HR * 0.5, HR * 0.13, 0, TAU); ctx.fill(); }
-    const b = this.ballPos, look = b ? Math.atan2(b[1] - hy, b[0] - hx) : t;
-    for (const side of [-1, 1]) {
-      const ex = hx + side * HR * 0.45, ey = hy - HR * 0.1;
-      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.ellipse(ex, ey, HR * 0.26, HR * 0.3, 0, 0, TAU); ctx.fill();
-      ctx.fillStyle = '#1a0a20'; ctx.beginPath(); ctx.arc(ex + Math.cos(look) * HR * 0.09, ey + Math.sin(look) * HR * 0.09, HR * 0.14, 0, TAU); ctx.fill();
-      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(ex + Math.cos(look) * HR * 0.09 - HR * 0.05, ey + Math.sin(look) * HR * 0.09 - HR * 0.06, HR * 0.045, 0, TAU); ctx.fill();
-    }
-  }
-  /* Springender Hai: im Wasser kreist nur die Flosse, beim Sprung fliegt der ganze Hai im Bogen über die Bucht */
-  drawSharkJump(ctx, ob, t) {
-    const s = this.scale;
-    if (!ob.jumping) { // Flosse zieht Kreise in der Bucht
-      const a = t * 1.4, fx = ob.x + Math.cos(a) * ob.w * 0.25, fy = ob.y + Math.sin(a) * ob.h * 0.25, d = Math.sin(a) >= 0 ? -1 : 1;
-      this.isoEllipse(ctx, fx, fy, -0.05, 1.4, 'rgba(20,40,60,0.45)', 0.6);
-      const fin = [[fx + d * 0.2, fy, 0.06], [fx - d * 0.25, fy, 0.95], [fx - d * 0.85, fy, 0.06]];
-      ctx.fillStyle = '#5d6b78'; ctx.beginPath(); fin.forEach((q, i) => { const pp = this.proj(q[0], q[1], q[2]); i ? ctx.lineTo(pp[0], pp[1]) : ctx.moveTo(pp[0], pp[1]); }); ctx.closePath(); ctx.fill();
-      ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = Math.max(1, s * 0.04);
-      const [w0, w1] = this.proj(fx - d * 0.3, fy, 0.01), [w2, w3] = this.proj(fx - d * 1.1, fy + 0.25, 0.01); ctx.beginPath(); ctx.moveTo(w0, w1); ctx.lineTo(w2, w3); ctx.stroke();
-      return;
-    }
-    // Comic-Hai aus Blöcken wie der Drache: Schwanz, Rumpf, Kopf, Schnauze entlang der Sprungachse, Neigung folgt dem Bogen
-    const vert = ob.axis === 'y', p = ob.p, z = ob.z, tilt = (0.5 - p) * 1.1, px = ob.px, py = ob.py;
-    const ax = vert ? 0 : 1, ay = vert ? 1 : 0, sx = vert ? 1 : 0, sy = vert ? 0 : 1; // Achse (Sprungrichtung) und Seite
-    const W = (u, v) => [px + ax * u + sx * v, py + ay * u + sy * v]; // Weltpunkt: u entlang der Achse, v seitlich
-    const zAt = u => z + tilt * u;
-    // Alles unter der Wasseroberfläche (z < 0) wird weggeschnitten: beim Auftauchen erscheint erst die Nase, beim Eintauchen verschwindet der Schwanz zuletzt
-    const seg = (u0, u1, wd, z0, h, top, side, opts) => { let zb = zAt((u0 + u1) / 2) + z0; const zt = zb + h; if (zt <= 0.03) return; if (zb < 0) zb = 0; this.prism(ctx, [W(u0, -wd / 2), W(u1, -wd / 2), W(u1, wd / 2), W(u0, wd / 2)], zb, zt - zb, top, side, opts); };
-    const above = zz => Math.max(0, zz);
-    const faces = (nx, ny) => nx * this.cam.sin + ny * this.cam.cos > 0.05; // zeigt diese Seite zur Kamera? (wie bei den Blockseiten)
-    const grey = ['#7d8fa0', '#3f4d5a'], dark = ['#5c6c7a', '#2e3a44'], belly = '#e6edf2';
-    this.isoEllipse(ctx, px, py, 0.004, 1.9, `rgba(0,0,0,${0.28 * Math.max(0, 1 - z / (ob.height * 1.3))})`, 0.8);
-    seg(-2.1, -1.3, 0.55, 0.25, 0.5, grey[0], grey[1]);                                  // Schwanzwurzel
-    seg(-1.3, 0.5, 1.15, 0.05, 1.0, grey[0], grey[1], { outline: '#25303a' });             // Rumpf
-    if (zAt(-0.4) + 1.06 > 0) this.fillPoly(ctx, [W(-1.2, -0.5), W(0.4, -0.5), W(0.4, 0.5), W(-1.2, 0.5)], zAt(-0.4) + 1.06, '#93a4b3', false); // heller Rücken
-    seg(0.5, 1.5, 0.95, 0.15, 0.8, grey[0], grey[1], { outline: '#25303a' });              // Kopf
-    seg(1.5, 2.0, 0.6, 0.35, 0.45, dark[0], dark[1]);                                       // Schnauze
-    // Bauchstreifen an den Flanken
-    for (const side of [-1, 1]) { if (!faces(sx * side, sy * side)) continue; if (zAt(-1.2) + 0.15 < 0 && zAt(1.4) + 0.2 < 0) continue; const q0 = this.proj(...W(-1.2, side * 0.58), above(zAt(-1.2) + 0.15)), q1 = this.proj(...W(1.4, side * 0.48), above(zAt(1.4) + 0.2)); ctx.strokeStyle = 'rgba(230,237,242,0.75)'; ctx.lineWidth = Math.max(1.5, s * 0.07); ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(q0[0], q0[1]); ctx.lineTo(q1[0], q1[1]); ctx.stroke(); }
-    // Rückenflosse: senkrechte Dreiecksplatte
-    const tri = (pts, col, edge) => { if (pts.every(q => q[1] <= 0.03)) return; ctx.fillStyle = col; ctx.beginPath(); pts.forEach((q, i) => { const r = this.proj(q[0][0], q[0][1], above(q[1])); i ? ctx.lineTo(r[0], r[1]) : ctx.moveTo(r[0], r[1]); }); ctx.closePath(); ctx.fill(); if (edge) { ctx.strokeStyle = edge; ctx.lineWidth = 1; ctx.stroke(); } };
-    for (const off of [-0.06, 0.06]) tri([[W(-0.5, off), zAt(-0.5) + 1.0], [W(-0.35, off), zAt(-0.35) + 1.9], [W(0.45, off), zAt(0.45) + 1.0]], off < 0 ? dark[1] : dark[0], '#25303a');
-    // Schwanzflosse: Sichel senkrecht am Ende
-    for (const off of [-0.05, 0.05]) tri([[W(-2.1, off), zAt(-2.1) + 0.5], [W(-2.7, off), zAt(-2.7) + 1.35], [W(-2.45, off), zAt(-2.45) + 0.5], [W(-2.6, off), zAt(-2.6) - 0.1]], off < 0 ? dark[1] : dark[0], '#25303a');
-    // Brustflossen: flache Platten schräg nach außen
-    if (zAt(-0.4) + 0.3 > 0) for (const side of [-1, 1]) this.prism(ctx, [W(0.1, side * 0.55), W(-0.6, side * 1.35), W(-0.95, side * 1.2), W(-0.7, side * 0.55)], zAt(-0.4) + 0.3, 0.1, dark[0], dark[1]);
-    // Kiemen
-    ctx.strokeStyle = '#2e3a44'; ctx.lineWidth = Math.max(1, s * 0.04);
-    for (const side of [-1, 1]) for (let k = 0; k < 3; k++) { if (!faces(sx * side, sy * side)) continue; const u = 0.55 + k * 0.18; if (zAt(u) + 0.8 < 0.03) continue; const q0 = this.proj(...W(u, side * 0.48), above(zAt(u) + 0.35)), q1 = this.proj(...W(u, side * 0.48), zAt(u) + 0.8); ctx.beginPath(); ctx.moveTo(q0[0], q0[1]); ctx.lineTo(q1[0], q1[1]); ctx.stroke(); }
-    // Augen auf beiden Seiten des Kopfs, Blick nach vorn
-    if (zAt(1.25) + 0.6 > 0) for (const side of [-1, 1]) {
-      if (!faces(sx * side, sy * side)) continue; // nur das Auge auf der sichtbaren Seite
-      const [ex, ey] = this.proj(...W(1.25, side * 0.5), zAt(1.25) + 0.7);
-      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(ex, ey, s * 0.13, 0, TAU); ctx.fill();
-      ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(ex + s * 0.03 * (vert ? 0 : 1), ey - s * 0.02, s * 0.065, 0, TAU); ctx.fill();
-      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(ex - s * 0.02, ey - s * 0.05, s * 0.025, 0, TAU); ctx.fill();
-    }
-    // Maul mit Zähnen an der Schnauze
-    const m0 = this.proj(...W(2.02, -0.3), zAt(2.0) + 0.35), m1 = this.proj(...W(2.02, 0.3), zAt(2.0) + 0.35);
-    if (zAt(2.0) + 0.24 > 0 && faces(ax, ay)) { // Maul nur, wenn die Schnauze zur Kamera zeigt
-    ctx.strokeStyle = '#8a1a24'; ctx.lineWidth = Math.max(2, s * 0.09); ctx.beginPath(); ctx.moveTo(m0[0], m0[1]); ctx.lineTo(m1[0], m1[1]); ctx.stroke();
-    ctx.fillStyle = '#fff'; for (let k = 0; k < 5; k++) { const v = -0.26 + k * 0.13, a0 = this.proj(...W(2.03, v - 0.05), zAt(2.0) + 0.37), a1 = this.proj(...W(2.03, v + 0.05), zAt(2.0) + 0.37), a2 = this.proj(...W(2.03, v), zAt(2.0) + 0.24); ctx.beginPath(); ctx.moveTo(a0[0], a0[1]); ctx.lineTo(a1[0], a1[1]); ctx.lineTo(a2[0], a2[1]); ctx.closePath(); ctx.fill(); }
-    }
-    if (p < 0.2 || p > 0.8) { // Gischt beim Auftauchen und Eintauchen
-      const q = p < 0.2 ? 1 - p / 0.2 : (p - 0.8) / 0.2, [bx, by] = this.proj(ob.px, ob.py, 0.05);
-      ctx.fillStyle = `rgba(255,255,255,${0.8 * q})`;
-      for (let i = 0; i < 7; i++) { const a = i * 0.9, rr = s * (0.3 + 0.5 * q); ctx.beginPath(); ctx.arc(bx + Math.cos(a) * rr, by + Math.sin(a) * rr * 0.5 - s * 0.3 * q, s * 0.07, 0, TAU); ctx.fill(); }
-    }
-  }
-  /* Haimagen: pulsierende Rippenbögen und Magenwände im Hintergrund */
-  drawBelly(ctx, t) {
-    const w = this.w, h = this.h, pulse = 1 + 0.02 * Math.sin(t * 1.6);
-    ctx.lineCap = 'round';
-    for (let i = 0; i < 9; i++) { // Rippen: helle Bögen von oben, schwingen leicht mit dem Puls
-      const x = w * (0.05 + i * 0.115), rw = w * 0.07 * pulse, rh = h * (0.55 + 0.05 * Math.sin(i * 1.3));
-      ctx.strokeStyle = `rgba(244,237,224,${0.22 + 0.06 * Math.sin(t * 1.6 + i)})`; ctx.lineWidth = Math.max(4, w * 0.012);
-      ctx.beginPath(); ctx.moveTo(x - rw, 0); ctx.quadraticCurveTo(x + rw * 0.4, rh * 0.5, x - rw * 0.2, rh); ctx.stroke();
-    }
-    for (let i = 0; i < 14; i++) { // Magenwand: weiche Wölbungen
-      const x = ((i * 0.173) % 1) * w, y = h * (0.35 + (i * 0.11) % 0.5), r = w * (0.05 + (i % 3) * 0.02) * pulse;
-      const g = ctx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, 'rgba(150,40,55,0.35)'); g.addColorStop(1, 'rgba(150,40,55,0)');
-      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
-    }
-    ctx.fillStyle = 'rgba(159,224,74,0.08)'; ctx.fillRect(0, h * 0.7, w, h * 0.3); // Säuredunst unten
-  }
-  /* ---------- Dschungeltempel ---------- */
-  drawJungle(ctx, t) {
-    const w = this.w, h = this.h, hash = (i, k) => Math.abs(Math.sin(i * 127.1 + k * 311.7) * 43758.5453) % 1;
-    for (let i = 0; i < 6; i++) { // goldene Lichtstrahlen durchs Blätterdach
-      const x = w * (0.1 + i * 0.16) + Math.sin(t * 0.25 + i) * w * 0.02, sw = w * 0.04;
-      const g = ctx.createLinearGradient(0, 0, 0, h * 0.7); g.addColorStop(0, `rgba(255,240,170,${0.16 + 0.05 * Math.sin(t * 0.6 + i)})`); g.addColorStop(1, 'rgba(255,240,170,0)');
-      ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(x - sw, 0); ctx.lineTo(x + sw, 0); ctx.lineTo(x + sw * 2.5 + w * 0.05, h * 0.7); ctx.lineTo(x - sw * 2.5 + w * 0.05, h * 0.7); ctx.closePath(); ctx.fill();
-    }
-    // drei Blätterschichten am Horizont, hinten dunkel, vorn heller
-    const layers = [['#123a1e', 0.36, 22], ['#1d5a2c', 0.42, 18], ['#2a7a38', 0.47, 14]];
-    layers.forEach(([col, base, n], li) => {
-      ctx.fillStyle = col; ctx.beginPath();
-      for (let i = 0; i <= n; i++) { const x = (i / n) * w, r = w * (0.05 + hash(i, li) * 0.05), y = h * base - r * 0.4 + Math.sin(t * 0.4 + i + li) * 2; ctx.moveTo(x + r, y); ctx.arc(x, y, r, 0, TAU); }
-      ctx.rect(0, h * base, w, h * 0.3); ctx.fill();
-    });
-    ctx.lineCap = 'round'; // hängende Lianen von oben
-    for (let i = 0; i < 7; i++) {
-      const x = w * (0.04 + i * 0.15) + hash(i, 9) * w * 0.05, L = h * (0.18 + hash(i, 3) * 0.2), sw = Math.sin(t * 0.8 + i) * w * 0.01;
-      ctx.strokeStyle = 'rgba(30,70,35,0.9)'; ctx.lineWidth = Math.max(2, w * 0.004);
-      ctx.beginPath(); ctx.moveTo(x, 0); ctx.quadraticCurveTo(x + sw * 2, L * 0.6, x + sw, L); ctx.stroke();
-      ctx.fillStyle = '#2f8a3a'; for (let k = 1; k <= 3; k++) { const u = k / 3.5; ctx.beginPath(); ctx.ellipse(x + sw * u * 1.5 + (k % 2 ? 6 : -6), L * u, 7, 3.5, k % 2 ? 0.6 : -0.6, 0, TAU); ctx.fill(); }
-    }
-    for (let i = 0; i < 3; i++) { // Papageien ziehen vorbei
-      const x = ((i * 0.33 + t * 0.03) % 1) * w, y = h * (0.08 + i * 0.06) + Math.sin(t * 2 + i) * 5, fl = Math.sin(t * 8 + i) * 5;
-      ctx.fillStyle = i ? '#ff4f4f' : '#2f9ae0'; ctx.beginPath(); ctx.ellipse(x, y, 7, 3, 0, 0, TAU); ctx.fill();
-      ctx.strokeStyle = ctx.fillStyle; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x - 4, y); ctx.lineTo(x - 8, y - 4 - fl); ctx.moveTo(x + 4, y); ctx.lineTo(x + 8, y - 4 - fl); ctx.stroke();
-    }
-  }
-  drawTemple(ctx, t) {
-    const w = this.w, h = this.h, hash = (i, k) => Math.abs(Math.sin(i * 127.1 + k * 311.7) * 43758.5453) % 1;
-    const g = ctx.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#1a1408'); g.addColorStop(0.5, '#3a2f16'); g.addColorStop(1, '#1a1408'); ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
-    const bh = Math.max(40, h * 0.07), bw = bh * 2.4; ctx.lineWidth = 2; // Quader mit Moosfugen
-    for (let r = 0; r < h / bh + 1; r++) for (let c = -1; c < w / bw + 1; c++) {
-      const x = c * bw + (r % 2 ? bw / 2 : 0), y = r * bh;
-      ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.strokeRect(x, y, bw, bh);
-      if (hash(r, c) > 0.7) { ctx.fillStyle = 'rgba(60,110,50,0.35)'; ctx.fillRect(x + 2, y + bh - 6, bw * hash(c, r) * 0.6, 4); }
-    }
-    ctx.fillStyle = 'rgba(255,200,110,0.14)'; // Glyphenbänder
-    for (const band of [0.2, 0.6]) {
-      const y = h * band; ctx.fillRect(0, y - bh * 0.3, w, bh * 0.6);
-      for (let i = 0; i < 36; i++) { const x = (i / 36) * w + bh * 0.2, k = Math.floor(hash(i, band * 10) * 4), sz = bh * 0.18; ctx.fillStyle = 'rgba(40,24,8,0.6)';
-        if (k === 0) { ctx.beginPath(); ctx.moveTo(x, y + sz); ctx.lineTo(x + sz * 0.6, y - sz); ctx.lineTo(x + sz * 1.2, y + sz); ctx.closePath(); ctx.fill(); }
-        else if (k === 1) { ctx.beginPath(); ctx.arc(x + sz * 0.5, y, sz * 0.6, 0, TAU); ctx.fill(); ctx.fillStyle = 'rgba(255,200,110,0.3)'; ctx.beginPath(); ctx.arc(x + sz * 0.5, y, sz * 0.25, 0, TAU); ctx.fill(); }
-        else if (k === 2) ctx.fillRect(x, y - sz * 0.8, sz * 1.1, sz * 1.6);
-        else { ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + sz * 0.6, y - sz); ctx.lineTo(x + sz * 1.2, y); ctx.lineTo(x + sz * 0.6, y + sz); ctx.closePath(); ctx.fill(); }
-        ctx.fillStyle = 'rgba(255,200,110,0.14)'; }
-    }
-    for (const [fx, fy, ph] of [[0.1, 0.35, 0], [0.5, 0.22, 2], [0.9, 0.38, 4]]) { // Fackelschein
-      const gl = 0.8 + 0.2 * Math.sin(t * 7 + ph) * Math.sin(t * 3.3 + ph);
-      const rg = ctx.createRadialGradient(fx * w, fy * h, 0, fx * w, fy * h, w * 0.3); rg.addColorStop(0, `rgba(255,170,70,${0.22 * gl})`); rg.addColorStop(1, 'rgba(255,170,70,0)'); ctx.fillStyle = rg; ctx.fillRect(0, 0, w, h);
-    }
-  }
-  /* Farn: sechs Wedel, die im Kreis nach außen stehen und sich im Wind wiegen. */
   spriteFern(ctx, d, t) {
     const k = d.s, z = d.z || 0, seed = d.seed || 0, sw = Math.sin(t * 1.2 + seed * 7) * 0.12;
     for (let i = 0; i < 6; i++) {
@@ -3173,19 +3161,17 @@ class Renderer {
     }
     this.frustum(ctx, this.circlePoly(d.x, d.y, k * 0.16, 8), this.circlePoly(d.x, d.y, k * 0.06, 8), z, z + k * 0.4, '#d8b878', '#9a7a3a');
   }
-  spriteGear(ctx, sx, sy, s, d, t) {
-    const r = s * 0.55, teeth = 8 + Math.floor((d.seed || 0) * 5);
+  /* Zahnrad auf einer Welle: Fuß und Welle sind Körper, das Rad selbst bleibt eine Scheibe zur
+     Kamera – ein Zahnrad von der Kante gesehen wäre ein Strich, und darum geht es hier nicht. */
+  spriteGear(ctx, d, t) {
+    const k = d.s, z = d.z || 0, teeth = 8 + Math.floor((d.seed || 0) * 5);
     const sp = ((d.seed || 0) > 0.5 ? 1 : -1) * (0.5 + (d.seed || 0));
-    this.shadow(ctx, sx, sy, r * 0.9);
-    // Welle mit Fuß und Kragen – das Rad soll auf etwas sitzen, nicht schweben
-    ctx.fillStyle = '#2e262c'; ctx.beginPath(); ctx.ellipse(sx, sy, s * 0.22, s * 0.09, 0, 0, TAU); ctx.fill();
-    ctx.fillStyle = '#4a3f46'; ctx.fillRect(sx - s * 0.08, sy - s * 0.78, s * 0.16, s * 0.78);
-    ctx.fillStyle = '#6b5c64'; ctx.fillRect(sx - s * 0.08, sy - s * 0.78, s * 0.05, s * 0.78);
-    const cy = sy - s * 0.78 - r * 0.6;
-    this.zahnradScheibe(ctx, sx, cy, r, teeth, t * sp, r * 0.22, '#f0cd7d', '#8a5f22');
-    ctx.fillStyle = '#3a3036'; ctx.fillRect(sx - s * 0.05, cy + r * 0.55, s * 0.1, s * 0.3);   // Lager
+    this.bodenSchatten(ctx, d.x, d.y, k * 0.34);
+    this.saeule(ctx, d.x, d.y, z, k * 0.22, k * 0.2, k * 0.1, '#3a3036', '#2e262c', 9);
+    this.saeule(ctx, d.x, d.y, z + k * 0.1, k * 0.09, k * 0.08, k * 0.68, '#6b5c64', '#3a3036', 7);
+    const r = this.scale * k * 0.55, [cx, cy] = this.proj(d.x, d.y, z + k * 0.78 + k * 0.33);
+    this.zahnradScheibe(ctx, cx, cy, r, teeth, t * sp, r * 0.22, '#f0cd7d', '#8a5f22');
   }
-  /* Liegendes Zahnrad im Boden (dreht sich langsam) */
   spriteGearFlat(ctx, d, s, t) {
     const r = (d.s || 1) * 0.7, zn = 9 + Math.floor((d.seed || 0) * 4);
     const sp = d.speed ?? (((d.seed || 0) > 0.5 ? 1 : -1) * (0.25 + (d.seed || 0) * 0.4));
@@ -3259,30 +3245,23 @@ class Renderer {
 
   /* Gewicht an der Kette: der Antrieb jeder Turmuhr. Es sinkt ganz langsam und springt dann
      wieder hoch – so, wie man es beim Aufziehen sieht. */
-  spriteWeight(ctx, sx, sy, s, d, t) {
-    const seed = d.seed ?? 0.5;
-    const u = (((t / 22 + seed) % 1) + 1) % 1;          // 0 = oben, 1 = ganz unten
-    const fall = s * 1.05 * (u < 0.94 ? u / 0.94 : (1 - (u - 0.94) / 0.06));
-    const kopf = sy - s * 1.85 + fall, w = s * 0.3, h = s * 0.62;
-    this.shadow(ctx, sx, sy, w * 0.8);
-    // Kette bis zur Decke
-    ctx.strokeStyle = '#6b6660'; ctx.lineWidth = Math.max(1, s * 0.05);
-    ctx.beginPath(); ctx.moveTo(sx, sy - s * 2.6); ctx.lineTo(sx, kopf); ctx.stroke();
+  /* Gewicht an der Kette: ein Messingzylinder, der langsam sinkt und oben wieder aufgezogen wird.
+     Zylinder und Kettenglieder liegen jetzt im Raum, die Kette hängt senkrecht über dem Gewicht. */
+  spriteWeight(ctx, d, t) {
+    const k = d.s, z = d.z || 0, seed = d.seed ?? 0.5;
+    const u = (((t / 22 + seed) % 1) + 1) % 1;
+    const fall = k * 1.05 * (u < 0.94 ? u / 0.94 : (1 - (u - 0.94) / 0.06));
+    const kopf = z + k * 1.85 - fall;
+    this.bodenSchatten(ctx, d.x, d.y, k * 0.26);
+    const [o0, o1] = this.proj(d.x, d.y, z + k * 2.6), [u0, u1] = this.proj(d.x, d.y, kopf + k * 0.62);
+    ctx.strokeStyle = '#6b6660'; ctx.lineWidth = Math.max(1, this.scale * k * 0.05);
+    ctx.beginPath(); ctx.moveTo(o0, o1); ctx.lineTo(u0, u1); ctx.stroke();
     for (let i = 0; i < 5; i++) {
-      const y = sy - s * 2.6 + (kopf - (sy - s * 2.6)) * (i + 0.5) / 5;
-      ctx.beginPath(); ctx.ellipse(sx, y, s * 0.07, s * 0.05, 0, 0, TAU); ctx.stroke();
+      const zz = z + k * 2.6 + (kopf + k * 0.62 - (z + k * 2.6)) * (i + 0.5) / 5;
+      this.isoEllipse(ctx, d.x, d.y, zz, k * 0.07, '#6b6660');
     }
-    // Der Zylinder selbst
-    const g = ctx.createLinearGradient(sx - w, 0, sx + w, 0);
-    g.addColorStop(0, '#5a4a34'); g.addColorStop(0.4, '#c9903f'); g.addColorStop(1, '#6a4f24');
-    ctx.fillStyle = g; ctx.fillRect(sx - w, kopf, w * 2, h);
-    ctx.fillStyle = '#8a6624'; ctx.fillRect(sx - w, kopf, w * 2, s * 0.08);
-    ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.fillRect(sx - w, kopf + h - s * 0.08, w * 2, s * 0.08);
+    this.saeule(ctx, d.x, d.y, kopf, k * 0.3, k * 0.3, k * 0.62, '#e0b45c', '#8a6624', 10);
   }
-
-  /* Turmuhr auf einem Pfosten. Pfosten und Sockel stehen als Körper in der Welt, das Zifferblatt
-     bleibt eine stehende Scheibe – ihre Tiefe wird gemalt statt gerechnet: derselbe Messingring
-     mehrfach versetzt, von hinten dunkel nach vorn hell. */
   spriteClock(ctx, d, t) {
     const g = d.s || 1, x = d.x, y = d.y, s = this.scale * g;
     const K = (rr, n) => this.circlePoly(x, y, rr * g, n || 10);

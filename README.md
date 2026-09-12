@@ -1057,6 +1057,46 @@ dieser Projektion wandert er dann schräg weg, und die Pfosten stehen neben der 
 und rechts davon. Der Versatz muss entlang `(cos, −sin)` gehen: Genau der verschiebt auf dem
 Bildschirm waagerecht und sonst gar nicht.
 
+### Räumliche Deko in allen Welten
+
+Was im Uhrenturm mit Fass, Kiste und Laterne anfing, gilt jetzt für **alle** Gegenstände am Rand,
+in jeder Welt. Der Anlass ist derselbe geblieben: Solange man nicht dreht, fällt eine flache
+Zeichnung kaum auf – dreht man, bleibt ein Felsblock eine Scheibe, die sich mitdreht, und der
+ganze Raum wird wieder zum Bild.
+
+Dafür gibt es vier Bausteine neben `prism`, `frustum` und `walze`, gemacht für das, was Deko
+braucht – rund, unregelmäßig, schnell hingeschrieben, alle Maße in Kacheln:
+
+| Baustein | Wofür |
+|---|---|
+| `kegel` | Baumkrone, Tropfstein, Kristallspitze, Hexenhut. Die Spitze ist ein winziger Kreis statt eines Punktes, sonst flackert der Umriss beim Drehen. |
+| `saeule` | Stamm, Mast, Poller, Flaschenbauch, Leuchtturmring – Zylinder oder Kegelstumpf. |
+| `brocken` | Ein Fels. Der Umriss wird aus dem Startwert der Deko verzogen, also sieht jeder Stein anders aus und behält seine Form. |
+| `kugel` | Beere, Perle, Schädel, Wolkenballen. Eine Kugel sieht von jeder Seite gleich aus, darf also eine schattierte Scheibe bleiben – Mittelpunkt und Halbmesser kommen aber aus der Welt, nicht vom Bildschirm. |
+
+Dazu `ast` für gebogene Zweige, Wedel und Taue: eine Kette kurzer Walzen entlang einer Weltrichtung.
+Ein Palmwedel, der nach Norden zeigt, zeigt auch nach dem Drehen nach Norden.
+
+**Wo ein Gesicht hingehört, liegt es auf der Seite, die zur Kamera zeigt** – beim Steinkopf, beim
+Totempfahl, beim Schädel, beim Kürbis, beim Turmfenster. Dreht man herum, sieht man den
+Hinterkopf, und das ist richtig so. **Flach bleibt nur, was keine Seiten hat:** Flammen, Irrlichter,
+Leuchtfeuer, Rauch, der Schirm der Qualle. Die sitzen jetzt aber an einem Punkt im Raum statt an
+einem Punkt auf dem Bild.
+
+Zwei Fehler sind dabei entstanden, beide lehrreich:
+
+- **`shade()` ließ sich nicht schachteln.** Es gab `rgb(...)` zurück; `prism`, `frustum` und `walze`
+  dunkeln die Farbe, die sie bekommen, aber selbst noch einmal ab und lasen daraus NaN – der ganze
+  Körper wurde schwarz. Die Korallen der Meereswelt standen als schwarze Büsche im Riff. `shade()`
+  liefert jetzt wieder Hex, und damit ist die ganze Klasse erledigt.
+- **Beim Ersetzen von Blöcken gingen Nachbarfunktionen verloren.** Zweimal: erst Rohr, Fass, Kiste
+  und Laterne, dann Krokodil, Stacheln, Tempeltor, Lianenrotor, Strudel, Wrack, Katapult und
+  Pyramide. So etwas fällt sonst erst auf, wenn jemand genau die eine Bahn öffnet. Dagegen steht
+  jetzt `scratchpad/deko_pruef.mjs`: Es prüft, dass jede Deko-Art in `drawDecor` eine Funktion hat,
+  die es auch gibt, dass jede in einer Bahn oder Palette benutzte Art dort vorkommt – und
+  allgemein, dass **jedes `this.xxx()` im Renderer eine Funktion findet**. Beide Male hätte das
+  sofort gemeldet.
+
 ### Wie die Karten entstehen
 
 `tools/uhrenturm.py` baut die dreizehn Bahnen mit allen ihren Ebenen aus Rechtecken und Scheiben und schreibt
