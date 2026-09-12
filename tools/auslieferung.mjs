@@ -32,8 +32,15 @@ for (const m of html.matchAll(/(?:src|href)="(?!https?:|data:|#)([^"]+)"/g)) ver
 verlangt.add('manifest.webmanifest');
 verlangt.add('sw.js');
 
+// 2b. Bilder, die nur im Stilblatt stehen. Genau hier lag die Lücke: Das Titelbild hing an einer
+//     url(...) in style.css, im HTML stand es nirgends – gefunden wurde es nur, weil es zufällig
+//     auch im Service Worker steht. Ein Bild ohne diesen Zufall wäre durchgerutscht.
+for (const m of lies('style.css').matchAll(/url\(\s*['"]?(?!https?:|data:)([^)'"]+)['"]?\s*\)/g)) {
+  verlangt.add(m[1].trim());
+}
+
 for (const datei of [...verlangt].sort()) {
-  if (!existsSync(join(wurzel, datei))) { fehler.push(`index.html verlangt ${datei} – die Datei gibt es nicht`); continue; }
+  if (!existsSync(join(wurzel, datei))) { fehler.push(`gebraucht wird ${datei} – die Datei gibt es nicht`); continue; }
   const oben = datei.split('/')[0];
   if (!kopiert.has(oben)) fehler.push(`${datei} wird nicht ausgeliefert: "${oben}" fehlt in der cp-Zeile von pages.yml`);
 }
@@ -49,4 +56,4 @@ for (const m of sw.matchAll(/'\.\/([^']+)'/g)) {
 }
 
 if (fehler.length) { console.error(fehler.map(f => '  FEHLER ' + f).join('\n')); process.exit(1); }
-console.log(`ok – ${verlangt.size} Dateien aus index.html, alle vorhanden und in der Auslieferung (kopiert: ${[...kopiert].join(', ')})`);
+console.log(`ok – ${verlangt.size} Dateien aus index.html und style.css, alle vorhanden und in der Auslieferung (kopiert: ${[...kopiert].join(', ')})`);

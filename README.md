@@ -427,6 +427,16 @@ nimmt sie als zweiten Wert der Zeichenfunktion entgegen.
 
 ## Rangliste
 
+**Hinter der Tafel liegt ein eigenes Bild** (`icons/rangliste.jpg`, 1170 × 1477). Vorher stand dort,
+was gerade auf der Leinwand lag – das Spielfeld oder die Weltkarte – und wanderte unter der Tafel
+herum, obwohl es mit Rekorden nichts zu tun hat. Das Bild bekommt die Kennung `rangliste` am
+Überlagerungs-Schirm; dieselbe tragen die drei Tafeln, die von der Rangliste abzweigen (Liste
+führen, Schlüssel, Zurücksetzen), sonst spränge der Hintergrund bei jedem Schritt. Darüber liegt ein
+Schleier, der nach außen hin dichter wird: In der Mitte soll das Bild hell bleiben, am Rand ist es
+so bunt, dass der goldene Rahmen der Tafel darin unterginge. Anders als beim Startbild gibt es nur
+*ein* Bild – es ist hochkant, und `cover` schneidet daraus im Querformat den mittleren Streifen mit
+Burg und Meer heraus.
+
 Über **🏆 Rangliste** im Startbildschirm: für jede Bahn und für jede ganze Runde, mit Namen dabei, in
 **drei Wertungen**. Es gibt nichts auszuwählen – **alle drei laufen bei jedem Schlag gleichzeitig mit**,
 und die Liste zeigt sie nebeneinander. Einmal den Namen eintragen, dann einfach drauflos spielen:

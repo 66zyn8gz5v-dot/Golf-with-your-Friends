@@ -799,7 +799,7 @@
         <b>${Icons.svg(BEST_ICON.combo)} Kombi:</b> ${BEST_HELP.combo}<br>
         Alle, die das Spiel haben, teilen sich diese Liste. Die Rekorde liegen beim Vermittler und
         zusätzlich hier im Browser – startet der Vermittler neu, können sie dort verloren gehen.</div>
-    </div>`, 'title');
+    </div>`, 'title rangliste');
     $('back').addEventListener('click', showTitle);
     ui.overlay.querySelectorAll('#bw .btn').forEach(b => b.addEventListener('click', () => showBestList(b.dataset.w)));
     if ($('brs')) $('brs').addEventListener('click', () => fragenUndZuruecksetzen(w.id));
@@ -826,7 +826,7 @@
       <p style="margin-top:14px"><span class="btn" id="lf-ja">Liste übernehmen</span></p>
       <div class="legend">Wer zuerst übernimmt, führt die Liste. Sag deinen Freunden Bescheid, damit
         es nicht jemand anderes tut.</div>
-    </div>`, 'title');
+    </div>`, 'title rangliste');
     $('back').addEventListener('click', () => showBestList(weltId));
     $('lf-ja').addEventListener('click', async () => {
       Sfx.unlock();
@@ -857,7 +857,7 @@
       <p><span class="btn small ghost" id="k-set">Einsetzen</span></p>
       <div class="legend">Der Schlüssel liegt nur in diesem Browser. Löschst du die Daten der Seite,
         ist er weg – dann kann niemand mehr zurücksetzen.</div>
-    </div>`, 'title');
+    </div>`, 'title rangliste');
     $('back').addEventListener('click', () => showBestList(weltId));
     if ($('k-copy')) $('k-copy').addEventListener('click', async () => {
       try { await navigator.clipboard.writeText(meiner); showMessage('Schlüssel kopiert', 1800); }
@@ -882,7 +882,7 @@
         Danach fangen alle wieder bei null an.</div>
       <p style="margin-top:14px"><span class="btn ghost small" id="rs-nein">${Icons.svg('arrow_back')} Lieber nicht</span>
         <span class="btn" id="rs-ja">Zurücksetzen</span></p>
-    </div>`, 'title');
+    </div>`, 'title rangliste');
     $('rs-nein').addEventListener('click', () => showBestList(weltId));
     $('rs-ja').addEventListener('click', async () => {
       Sfx.unlock();

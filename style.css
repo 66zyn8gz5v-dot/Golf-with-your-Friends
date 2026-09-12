@@ -373,6 +373,25 @@ body.editing .cbtn.leave, body.testing .cbtn.leave { display: none; }
 .screen.title .legend { margin-top: 10px; font-size: 12px; line-height: 1.45; }
 body.title #hud, body.title #scoreboard, body.title #controls, body.title #hint { display: none; }
 
+/* Hinter der Rangliste stand bisher, was gerade auf der Leinwand lag: das Spielfeld oder die
+   Weltkarte. Beides hat mit Rekorden nichts zu tun und wanderte unter der Tafel herum. Jetzt liegt
+   dort ein festes Bild – und die Tafel rückt in die Mitte, damit oben wie unten etwas davon zu
+   sehen bleibt. Dieselbe Kennung tragen die drei Tafeln, die von der Rangliste abzweigen, sonst
+   spränge der Hintergrund bei jedem Schritt. */
+.screen.title.rangliste {
+  background: #0a0f1e url(icons/rangliste.jpg) center / cover no-repeat;
+  align-items: center; padding-bottom: 0;
+}
+/* Ein Schleier darüber, nach außen hin dichter: In der Mitte soll das Bild hell bleiben, am Rand
+   aber ist es so bunt, dass der goldene Rahmen der Tafel darin untergeht. */
+.screen.title.rangliste::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(125% 95% at 50% 45%, rgba(8, 6, 20, 0.3) 0%, rgba(8, 6, 20, 0.66) 100%);
+}
+/* Ohne eigene Lage läge die Tafel unter dem Schleier – ein unpositioniertes Kind wird vor einem
+   positionierten Pseudo-Element gezeichnet, nicht dahinter. */
+.screen.title.rangliste > .panel { position: relative; }
+
 /* Liegt das Startbild, trägt es den Schriftzug schon – die Tafel lässt ihn dann weg und wird flach,
    damit das Bild zu sehen bleibt. Auf breiten Schirmen stehen die beiden großen Knöpfe nebeneinander
    statt untereinander; das halbiert die Höhe der Tafel. */
