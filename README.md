@@ -56,6 +56,15 @@ und `feDisplacementMap`, das Rauschen wandert per SMIL). Verschoben werden also 
 selbst, mitsamt Löwe und Zaddeln; darunter steht unverändert das Original und füllt die Ränder, wo
 die Welle Stoff wegzieht.
 
+Der Ausschlag (`scale` am `feDisplacementMap`) ist je Bild ein anderer: 6 im queren, 20 im hohen.
+Nicht willkürlich – die Fahne nimmt im hohen Bild ein Viertel der Breite ein, im queren nur ein
+Achtel, und beide werden auf dieselbe Schirmbreite gebracht. Gleicher Ausschlag hieße also halb so
+viel Wellenbild. Nachgemessen an einem Ausschnitt um die Fahne, über sechs Augenblicke: Mit
+Wellenfeld ändern sich 10,5 % (quer) und 6,7 % (hoch) der Pixel, mit abgeschaltetem Wellenfeld genau
+0,0 %. Beim ersten Messversuch war der Vergleichspunkt der Kompass – der bewegt sich aber mit, weil
+das langsame Heranfahren das ganze Bild verschiebt und Wolken und Möwen durch den Himmel ziehen. Erst
+der Gegenversuch mit abgeschaltetem Filter am selben Ausschnitt sagt wirklich etwas.
+
 Hochkant liegt das Schöne am Bild unten: Fahne, Laterne, Ball auf dem Tee. Eine Tafel in voller Höhe
 deckt genau das zu – sie wird dort darum so knapp wie möglich: kleinere Knöpfe, engere Abstände, und
 der Erklärsatz fällt weg (er sagt nichts, was nicht schon auf dem Weltkarten-Knopf steht). Der
