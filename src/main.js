@@ -15,6 +15,12 @@
      dafür PRUEFSTAND; auf der echten Seite gibt es diese Kennung nicht. */
   const TEST_FREI = (typeof VORSCHAU !== 'undefined' && VORSCHAU)
     || (typeof PRUEFSTAND !== 'undefined' && PRUEFSTAND);
+  /* Was fertig ist, aber noch nicht ins Spiel soll: in der Vorschau (und in der Einzeldatei zum
+     Ansehen) da, im fertigen Spiel nicht. Es ist derselbe Stand – eine Sache in der Vorschau
+     herauszuschneiden und im Spiel nicht, hieße zwei Stände von Hand auseinanderzuhalten, und
+     genau daran geht so etwas nach drei Auslieferungen kaputt. Ein Schalter ist eine Zeile;
+     zwei Stände sind eine Dauerpflicht. */
+  const NUR_VORSCHAU = TEST_FREI;
   const playerHats = DEFAULT_HATS.slice();
   try {
     const saved = JSON.parse(localStorage.getItem(speicherSchluessel('hats')) || 'null');
@@ -1346,6 +1352,7 @@
   }
 
   function showSetup() {
+    if (gameMode === 'boule' && !NUR_VORSCHAU) gameMode = 'normal';   // im Spiel gibt es den Modus nicht
     overlay(`<div class="panel">
       <div class="panel-head"><span class="btn ghost small" id="back-top">${Icons.svg('arrow_back')} Zurück</span><h2>${Icons.svg(WELT_ICON(state.world.id))} ${Text.esc(state.world.name)}</h2></div>
       <div class="sub">${MODE_NAME[worldMode(state.world)]} · ${state.courses.length} Bahnen</div>
@@ -1353,7 +1360,7 @@
       <div id="gm">
         <span class="btn ghost small ${gameMode === 'normal' ? 'sel' : ''}" data-g="normal">${Icons.svg('emoji_events')} Wettkampf</span>
         <span class="btn ghost small ${gameMode === 'creative' ? 'sel' : ''}" data-g="creative">${Icons.svg('construction')} Kreativ</span>
-        <span class="btn ghost small ${gameMode === 'boule' ? 'sel' : ''}" data-g="boule">${Icons.svg('sports_score')} Boule</span>
+        ${NUR_VORSCHAU ? `<span class="btn ghost small ${gameMode === 'boule' ? 'sel' : ''}" data-g="boule">${Icons.svg('sports_score')} Boule</span>` : ''}
       </div>
       <div id="pc-row" ${gameMode === 'creative' ? 'hidden' : ''}>
         <p style="margin-top:10px">Spieler:</p>
@@ -1375,10 +1382,10 @@
       <p style="margin-top:14px"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span> <span class="btn" id="start">Los geht's!</span></p>
       <div class="legend">
         <b>Wettkampf:</b> alle Bahnen der Reihe nach, mit Schlaglimit und Ergebnistafel. <b>Kreativ:</b> allein, ohne Limit, mit den Bahn-Knöpfen (Tasten P / N) frei springen.<br>
-        <b>Boule:</b> Eine Kanone schießt die Zielkugel auf die Bahn, dann spielen alle reihum je
+        ${NUR_VORSCHAU ? `<b>Boule:</b> Eine Kanone schießt die Zielkugel auf die Bahn, dann spielen alle reihum je
         drei Kugeln. Jede Kugel bleibt liegen und darf angestoßen werden, auch die Zielkugel. Wer am
         Ende am nächsten liegt, gewinnt. Kugeln, die von der Bahn fallen oder im Loch landen,
-        zählen nicht mehr mit – es gibt keine Schläge und keinen Rekord. Nur am selben Gerät.<br>
+        zählen nicht mehr mit – es gibt keine Schläge und keinen Rekord. Nur am selben Gerät.<br>` : ''}
         <b>Hüte zu mehreren:</b> Am selben Gerät steht jeder Skin offen – auch die noch nicht
         verdienten Belohnungen und die Helme der Arena. Das gilt nur für diese Partie und wird nicht
         gespeichert. Zwei Spieler dürfen nicht denselben tragen; tippt man auf einen belegten, wird

@@ -452,6 +452,14 @@ nimmt sie als zweiten Wert der Zeichenfunktion entgegen.
 
 ## Boule
 
+**Noch nicht im Spiel.** Der Modus steht in der Vorschau (und in der Einzeldatei zum Ansehen), im
+fertigen Spiel nicht – der Schalter dafür heißt `NUR_VORSCHAU` in `src/main.js` und zeigt auf
+dieselbe Bedingung wie `TEST_FREI`. Es ist derselbe Stand: Ihn für das Spiel aufzutrennen hieße,
+zwei Stände von Hand auseinanderzuhalten, und genau daran geht so etwas nach drei Auslieferungen
+kaputt. Ein Schalter ist eine Zeile; zwei Stände sind eine Dauerpflicht. Soll Boule ins Spiel, fällt
+die Bedingung an den drei Stellen weg, an denen sie steht (Modusknopf, Erklärtext, Rückfall auf
+„Wettkampf").
+
 Ein eigener Modus, wählbar in der Aufstellung neben **Wettkampf** und **Kreativ** – aber **nur am
 selben Gerät**, nicht über den Raumcode. Der Grund steht im Spiel selbst: Boule lebt davon, dass
 alle Kugeln liegen bleiben und sich gegenseitig wegstoßen. Beim Netzspiel müsste dafür jedes Gerät
