@@ -11,11 +11,42 @@ Alternativ lokal über einen kleinen Server:
 npx serve .          # oder: python3 -m http.server 8080
 ```
 
+## Ladebild
+
+Beim Öffnen steht zuerst ein Ladebild: der Schriftzug, eine kleine Nachtszene mit Burg, und ein Ball,
+der anrollt, zweimal aufsetzt und im Loch verschwindet. Es liegt im festen HTML (`index.html`) und
+bewegt sich **allein mit CSS** – kein JavaScript, keine Bilddatei, kein Netzzugriff. Das ist der
+ganze Punkt: Ein Ladebild, das erst läuft, wenn die Skripte da sind, kommt genau dann nicht, wenn man
+es braucht.
+
+Damit das auch stimmt, musste die Zierschrift aus dem Seitenkopf verschwinden. Ein `<link
+rel="stylesheet">` auf Google hält das erste Bild auf, bis die Antwort da ist – und solange nichts
+gezeichnet wird, läuft auch `requestAnimationFrame` nicht, das Spiel käme also gar nicht erst zum
+Zug. Gemessen mit einer Antwort, die fünf Sekunden auf sich warten lässt: **erstes Bild nach 5039 ms
+mit dem `<link>` im Kopf, nach 97 ms ohne ihn.** Die Schrift wird jetzt aus `main.js` nachgeladen, mit
+dem Umweg über `media="print"` – ein Blatt für den Drucker hält den Bildschirm nicht auf und wird
+umgehängt, sobald es da ist.
+
+Weg ist das Ladebild, wenn der Startbildschirm gebaut, zwei Bilder gezeichnet und die Schrift da ist
+(höchstens 1,2 s darauf gewartet), dabei aber nie vor **1,7 Sekunden** ab Seitenaufruf: Auf einem
+schnellen Gerät ist das Spiel in 200 ms bereit, und ein Bild, das man nur als Zucken wahrnimmt, ist
+schlechter als gar keines. Bleibt es länger als 14 Sekunden stehen, erscheint darunter der Hinweis,
+die Seite neu zu laden. Wer im Betriebssystem weniger Bewegung eingestellt hat, bekommt dasselbe Bild
+ruhig: Ball am Loch, Balken voll.
+
 ## Welten und Modi
 
-Vom Titelbild führen zwei Wege: **🗺 Weltkarte** und **🛠 Bauen & Eigene Welt**. Darunter stehen drei
-kleine Knöpfe: **Turnier** führt ohne Umweg in die Arena (Kolosseum), **Online spielen** in den
-Warteraum, **Rangliste** zu den Rekorden.
+Vom Titelbild führen zwei Wege: **🗺 Weltkarte** und **🛠 Bauen & Eigene Welt**, jeder mit seiner Szene
+als Hintergrund und einer zweiten Zeile, die sagt, was dahinter liegt. Damit die Beschriftung darauf
+lesbar bleibt, liegt ein Schleier dazwischen, der nach rechts hin dunkler wird – vorher stand das Wort
+„Weltkarte" mitten in den Ortsnamen der Karte. Darunter stehen drei kleine Knöpfe: **Turnier** führt
+ohne Umweg in die Arena (Kolosseum), **Online spielen** in den Warteraum, **Rangliste** zu den
+Rekorden.
+
+Die Tafel selbst war lange ein heller Schleier vor der Szene: hübsch, aber die Schrift lag auf Wolken,
+Tannen und Schafen. Jetzt ist sie dicht genug zum Lesen und hat den Doppelrahmen alter
+Anschlagtafeln. Der Schriftzug ist kein einfarbiger Text mehr – Gold ist ein Verlauf von hell nach
+dunkel und wieder hell, in die Buchstaben geschnitten (`background-clip: text`), der langsam wandert.
 
 Auf der **Weltkarte** liegen die Welten als Landstriche auf einer gezeichneten Landkarte – ein Meer,
 ein Festland, ein paar Nebeninseln. Das Märchenland hat die Wiesen im Westen, der Schneeberg das
@@ -1534,7 +1565,7 @@ Sinnbilder, ein laufendes Spiel, die Rangliste und der Editor da sind.
 ## Projektstruktur
 
 ```
-index.html        Seite und HUD
+index.html        Seite, HUD und das Ladebild (läuft ohne JavaScript)
 style.css         Oberfläche
 src/themes.js     Farbpaletten und Deko je Welt
 src/courses.js    die Bahnen des Märchenlands

@@ -308,18 +308,24 @@
     state.phase = 'title'; state.editorReturn = false; Music.set('title');
     document.body.classList.add('title');
     document.body.classList.remove('creative', 'editing', 'testing');
+    /* Die beiden großen Knöpfe zeigen je eine Szene als Hintergrund. Damit die Beschriftung darauf
+       lesbar bleibt, liegt ein Schleier dazwischen, der nach rechts hin dunkler wird – vorher stand
+       das Wort „Weltkarte" mitten in den Ortsnamen der Karte. Die zweite Zeile sagt, was einen
+       dahinter erwartet; das spart den Erklärsatz darunter. */
     overlay(`<div class="panel">
-      <h1>⛳ Fantasy Golf</h1>
-      <div class="sub">Golf with your Friends · ${WORLDS.length} Welten, ${TOTAL_HOLES} magische Bahnen in 2,5D</div>
+      <h1><span class="h1-ball">⛳</span> Fantasy Golf</h1>
+      <div class="sub">Golf with your Friends · Minigolf in 2,5D</div>
       <div class="modes">
-        <span class="btn mode" id="to-map">${WorldMap.svg('mode-scene', 'xMidYMid slice')}<span class="mode-label">Weltkarte</span></span>
-        <span class="btn mode" id="to-build">${SCENE_CREATIVE}<span class="mode-label long">Bauen &amp; Eigene Welt</span></span>
+        <span class="btn mode" id="to-map">${WorldMap.svg('mode-scene', 'xMidYMid slice')}<span class="mode-schleier"></span>
+          <span class="mode-label">Weltkarte<small>${WORLDS.length} Welten · ${TOTAL_HOLES} Bahnen · alle offen</small></span></span>
+        <span class="btn mode" id="to-build">${SCENE_CREATIVE}<span class="mode-schleier"></span>
+          <span class="mode-label long">Bauen &amp; Eigene Welt<small>Eigene Bahnen bauen und verschicken</small></span></span>
       </div>
       <div class="atlas-extra"><span class="btn small ghost" id="to-turnier">${Icons.svg('golf_course')} Turnier</span>
         <span class="btn small ghost" id="to-online">${Icons.svg('public')} Online spielen</span>
         <span class="btn small ghost" id="to-best">${Icons.svg('emoji_events')} Rangliste</span></div>
       ${turnierBand()}
-      <div class="legend">Alle Welten sind von Anfang an offen. Die Stufe an jedem Ort sagt nur, was dich erwartet.
+      <div class="legend">Die Stufe an jedem Ort sagt nur, was dich erwartet – gespielt werden kann jede Welt sofort.
         <span class="version">${typeof VORSCHAU !== 'undefined' && VORSCHAU ? 'Vorschau · ' : ''}Fassung ${typeof APP_VERSION !== 'undefined' ? APP_VERSION : '?'}</span></div>
     </div>`, 'title');
     turnierSchirm = showTitle;
@@ -2073,10 +2079,50 @@
     const band = $('vorschau-band'); if (band) band.hidden = false;
     document.title = 'VORSCHAU · ' + document.title;
   }
+  /* Das Ladebild wegnehmen. Es steht im festen HTML und läuft ohne JavaScript, damit sofort etwas
+     zu sehen ist; hier endet es. Gewartet wird auf dreierlei:
+
+     - der Startbildschirm ist gebaut (wir sind an dieser Stelle),
+     - zwei Bilder sind gezeichnet (sonst blitzt kurz die leere Leinwand durch),
+     - die Zierschrift ist da, sonst springt die Überschrift hinterher – aber höchstens 1,2 s,
+       denn sie kommt von Google und muss nicht kommen.
+
+     Dazu eine Mindeststandzeit. Auf einem schnellen Gerät ist das Spiel in 200 ms bereit, und ein
+     Bild, das man nur als Zucken wahrnimmt, ist schlechter als gar keines. performance.now() zählt
+     ab dem Seitenaufruf, misst also genau die Zeit, die der Betrachter schon gewartet hat. */
+  /* Zierschrift nachladen, statt sie im Kopf der Seite zu verlinken – siehe die Begründung dort.
+     'display=swap' steht schon in der Adresse: Der Text ist sofort da, in der Ersatzschrift, und
+     wechselt, sobald die Zierschrift ankommt.
+     Der Umweg über media='print' ist nötig: Der Browser hält das Zeichnen an, solange irgendein
+     Stylesheet noch aussteht – auch ein nachträglich eingehängtes. Ein Blatt für den Drucker gilt
+     für den Bildschirm nicht und hält darum nichts auf; sobald es da ist, wird es umgehängt. */
+  (() => {
+    const l = document.createElement('link');
+    l.rel = 'stylesheet';
+    l.media = 'print';
+    l.addEventListener('load', () => { l.media = 'all'; });
+    l.href = 'https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=MedievalSharp&display=swap';
+    document.head.appendChild(l);
+  })();
+
+  const LADE_MIN = 1700;
+  function ladebildWeg() {
+    const el = $('lade');
+    if (!el) return;
+    const schrift = document.fonts ? document.fonts.ready : Promise.resolve();
+    Promise.race([schrift, new Promise(r => setTimeout(r, 1200))]).then(() => {
+      setTimeout(() => {
+        el.classList.add('weg');
+        setTimeout(() => el.remove(), 700);
+      }, Math.max(0, LADE_MIN - performance.now()));
+    });
+  }
+
   R.resize();
   setControlMode(state.controlMode);
   syncMusicBtn();
   showTitle();
   updateHud();
   requestAnimationFrame(frame);
+  requestAnimationFrame(() => requestAnimationFrame(ladebildWeg));
 })();
