@@ -425,6 +425,52 @@ nur eine Zeichenfunktion in `DEFS` und einen Eintrag in `LIST`; der Nullpunkt li
 eine Einheit entspricht dem Ballradius, und die Ballmitte liegt bei (0, 0.72). Wer die Spielerfarbe braucht,
 nimmt sie als zweiten Wert der Zeichenfunktion entgegen.
 
+## Mehrere Bälle auf einer Bahn
+
+In allen heutigen Spielarten rollt genau ein Ball: Es wird reihum geschlagen, der nächste kommt
+erst dran, wenn der vorige liegt. `src/physics.js` kann seit Fassung 106 aber auch mehrere Bälle
+gleichzeitig führen, samt Stoß untereinander.
+
+**Der Stoß.** `ballStoss(a, b, events)` ist ein elastischer Stoß: Der Impuls geht **nur längs der
+Verbindungslinie** über, quer dazu behält jeder Ball sein Tempo – das ist der Unterschied zwischen
+einem Stoß und einem Zusammenkleben. Die Masse kommt aus dem Radius hoch drei, also aus dem
+Rauminhalt; ein geschrumpfter Ball wiegt damit von selbst weniger und wird stärker weggestoßen, als
+er selbst stößt, ohne dass man das eigens regeln müsste. Die Stoßzahl `BALL_E` ist 0.86 – etwas
+lebhafter als eine Mauer (0.72), aber nicht verlustfrei. Vor dem Impuls werden die beiden
+auseinandergeschoben; ohne das blieben sie ineinander stecken, der Stoß liefe im nächsten Schritt
+erneut, und aus einem Stoß würde ein Zittern.
+
+**Die Reihenfolge.** `stepBaelle(level, baelle, dt, t, allowForces)` bewegt erst **jeden Ball für
+sich** – Reibung, Wände und Hindernisse sind für ihn dieselben wie beim Spiel allein – und löst
+**erst danach** die Bälle untereinander auf. Das ist Absicht: Würde man mitten im Bewegen stoßen,
+hinge das Ergebnis davon ab, welcher Ball zufällig zuerst an der Reihe ist, und beim Netzspiel sähen
+zwei Geräte verschiedene Bahnen. Nach einem Stoß wird jeder verschobene Ball noch einmal aus den
+Wänden herausgedrückt (sonst steckte er darin), und weil das ihn wieder gegen einen dritten Ball
+schieben kann, läuft das Ganze mehrmals – bis nichts mehr überlappt, höchstens aber viermal. Drei
+Bälle in einer Reihe brauchen zwei Durchgänge; die Schranke ist nur dafür da, dass ein Ball, der in
+einer Ecke zwischen Mauer und Ball klemmt, nicht das Bild anhält.
+
+**Wer nicht mitstößt:** wer fliegt (der sieht unter sich keine Bälle), wer in einer Fähre oder
+Kanone steckt, wer schon im Loch ist, und wer in diesem Schritt eingelocht ist oder die Bahn
+verlassen hat. Zwei Bälle auf verschiedenen Ebenen sehen einander gar nicht.
+
+**Eine Falle beim Bauen.** Die Maschinen laufen einmal je **Schritt**, nicht einmal je Ball –
+`stepBaelle` ruft `update(t)` selbst auf und schaltet es in `stepPhysics` ab. Drei Hindernisse
+tragen nämlich etwas von einem Aufruf zum nächsten mit: Stacheln und Fallbeil merken sich, ob sie
+im Bild davor schon zu waren (daran hängt der Strafschlag), und ein Tor am Schalter schiebt sein
+Blatt Schritt für Schritt weiter. Je Ball aufgerufen liefe das Tor doppelt so schnell – und die
+Stacheln spießten nur noch den **ersten** Ball auf, weil der zweite Aufruf die Erinnerung „vorher
+war ich offen" schon gelöscht hätte. `node tools/stoss.mjs` prüft genau das, mit Gegenprobe: ohne
+den Kunstgriff bekommt der zweite Ball null statt zwei Strafschlägen.
+
+**Dass sich für einen Ball nichts ändert, wird gemessen, nicht behauptet.** Ein um 1e-15
+verschobener Aufprall führt nach zwei Sekunden in eine andere Ecke der Bahn – Hinsehen genügt
+nicht. `node tools/stoss.mjs` spielt darum jede Bahn aller neun Welten mit acht Richtungen und zwei
+Stärken einmal durch und vergleicht `stepPhysics` (wie bisher) gegen `stepBaelle` mit einem einzigen
+Ball, Schritt für Schritt und Nachkommastelle für Nachkommastelle. `src/main.js` ruft weiterhin
+`stepPhysics` auf; am Spiel ändert sich also nichts, solange es keine Spielart mit mehreren Bällen
+gibt.
+
 ## Rangliste
 
 **Hinter der Tafel liegt ein eigenes Bild** (`icons/rangliste.jpg`, 1170 × 1477). Vorher stand dort,
@@ -1696,7 +1742,7 @@ manifest.webmanifest, sw.js, icons/   Web-App: Installieren und offline spielen
 src/level.js      Karte → Kacheln, Mauern, Kollisionssegmente
 src/obstacles.js  bewegliche und statische Hindernisse
 src/obstacles_legend.js Blitzfeld, Aufwind, Falltür, Fallbeil, Augenturm, Löwentor
-src/physics.js    Ballphysik und Kollision
+src/physics.js    Ballphysik und Kollision (auch Ball gegen Ball, wenn mehrere zugleich rollen)
 src/render.js     isometrische Darstellung
 src/render_legend.js Optik der Legende-Welten (Hintergründe, neue Hindernisse und Stile)
 src/text.js       Eine Stelle für alle Eingaben: Namen und Bahnnamen filtern, Anzeige entschärfen
