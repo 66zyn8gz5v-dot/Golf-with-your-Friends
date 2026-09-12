@@ -672,6 +672,16 @@ body.editing #editor-panel { display: flex; flex-direction: column; }
 .hat.zu.probe { color: #cfc4e6; }
 .hat.zu.probe .hat-lock { inset: 3px 3px auto auto; }
 .hat.zu.probe .hat-lock .mi { width: 15px; height: 15px; }
+/* Geliehen: Zu mehreren am selben Gerät darf jeder Skin aufgesetzt werden, auch ein nicht
+   verdienter. Er wird darum voll gezeichnet – nur ein kleines Schloss in der Ecke sagt, dass er
+   nur für diese Partie da ist. */
+.hat.geliehen .hat-lock { display: flex; inset: 3px 3px auto auto; }
+.hat.geliehen .hat-lock .mi { width: 14px; height: 14px; fill: rgba(255, 224, 138, 0.6); }
+/* Belegt: Diesen Skin trägt schon ein anderer Spieler. Er bleibt anklickbar – dann wird
+   getauscht –, ist aber als vergeben zu erkennen. */
+.hat.belegt { opacity: 0.55; border-style: dotted; }
+.hat.belegt::after { content: ''; position: absolute; inset: auto auto 4px 4px; width: 8px; height: 8px;
+  border-radius: 50%; background: rgba(255, 224, 138, 0.75); box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35); }
 /* Hut-Abzeichen: eine kleine Leinwand, auf die Hats.preview den echten Hut malt. */
 .hat-icon { width: 22px; height: 22px; vertical-align: -6px; flex: none; }
 .hat-icon.gross { width: 30px; height: 30px; vertical-align: -8px; }

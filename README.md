@@ -411,6 +411,31 @@ Hinweis, welcher Rekord dafür nötig ist. Man soll sehen, was es zu holen gibt.
 gesperrter Skin trotzdem in voller Farbe – kommt er über das Netz vom Ball eines Mitspielers, soll man ihn
 sehen, ganz gleich was auf dem eigenen Gerät in der Rangliste steht.
 
+**Am selben Gerät zu mehreren ist alles offen – und nichts doppelt.** Sobald in der Aufstellung mehr
+als ein Spieler eingestellt ist, steht jeder Skin zur Wahl: auch die Belohnungen, die noch niemand
+verdient hat, und beide Helme der Arena. Am Küchentisch soll keiner mit dem Vorgabehut dasitzen, nur
+weil der andere die Welt schon durchgespielt hat. Geliehene Skins werden voll gezeichnet, tragen aber
+ein kleines Schloss in der Ecke.
+
+Die Leihgabe gilt **nur für diese Partie**: Sie steht in `playerHats`, also im Arbeitsspeicher, und
+geht nicht in den Browserspeicher – `hueteMerken()` legt für einen geliehenen Platz einen verdienten
+Ersatz ab, und zwar einen, den noch keiner hat. Nach dem Neuladen ist sie weg, und allein wie im
+Netzspiel tauscht `hutOderErsatz()` sie ohnehin gegen den Vorgabehut. **An der Freischaltung selbst
+ändert sich dabei gar nichts**, und das ist keine Sorgfalt, sondern Bauart: Freischaltung wird nirgends
+gespeichert, sondern bei jeder Abfrage aus der Rangliste und dem Turnierstand berechnet
+(`Hats.freigeschaltet`). Es gibt also keinen Freischaltspeicher, den man versehentlich beschreiben
+könnte.
+
+Dazu darf **kein Skin zweimal** vergeben werden. Vier Bälle mit demselben Hut sind auf der Bahn nicht
+auseinanderzuhalten – die Spielerfarbe allein reicht dafür nicht, erst recht nicht bei den
+Ganzkörper-Skins, die den Ball ganz ersetzen. Ein schon vergebener Platz ist als solcher zu erkennen
+und bleibt anklickbar: Dann wird **getauscht**, der andere bekommt den eigenen. Eine Absage wäre hier
+die schlechtere Antwort – man sieht ja, dass der Platz belegt ist, und will genau tauschen. Beim
+Öffnen und bei jedem Wechsel der Spielerzahl räumt `doppelAufloesen()` auf, falls aus einem früheren
+Stand zwei Plätze denselben Hut tragen.
+
+Allein bleibt alles wie bisher: gesperrt ist gesperrt.
+
 **Auf dem Prüfstand sind die Sperren offen.** Vorschau und Einzeldatei sind zum Ansehen da – dort soll man
 eine Belohnung aufsetzen können, ohne erst den Rekord zu holen. Entschieden wird das an einer Stelle in
 `src/main.js`: `TEST_FREI` ist wahr, wenn `VORSCHAU` wahr ist (Pfad `…/vorschau/`) oder wenn `PRUEFSTAND`
@@ -424,6 +449,48 @@ Die Hüte werden in `src/hats.js` gezeichnet – reine Canvas-Pfade, keine Bildd
 nur eine Zeichenfunktion in `DEFS` und einen Eintrag in `LIST`; der Nullpunkt liegt auf dem Kopf des Balls,
 eine Einheit entspricht dem Ballradius, und die Ballmitte liegt bei (0, 0.72). Wer die Spielerfarbe braucht,
 nimmt sie als zweiten Wert der Zeichenfunktion entgegen.
+
+## Boule
+
+Ein eigener Modus, wählbar in der Aufstellung neben **Wettkampf** und **Kreativ** – aber **nur am
+selben Gerät**, nicht über den Raumcode. Der Grund steht im Spiel selbst: Boule lebt davon, dass
+alle Kugeln liegen bleiben und sich gegenseitig wegstoßen. Beim Netzspiel müsste dafür jedes Gerät
+dieselben acht bis zwölf Kugeln in derselben Reihenfolge rechnen; heute wird über das Netz genau
+ein Ball übertragen. Der Modus steht darum im Warteraum gar nicht erst zur Wahl.
+
+**Ablauf.** Eine Kanone am Abschlag schießt die kleine Zielkugel auf die Bahn – grob Richtung Loch,
+mit kräftiger Streuung, damit sie jede Runde woanders liegt. Landet sie zu dicht am Abschlag (unter
+drei Feldern), wird neu geschossen, höchstens sechsmal; danach gilt, was liegt. Dann spielen alle
+reihum je drei Kugeln: erst jeder seine erste, dann jeder seine zweite, dann jeder seine dritte.
+Jede geschlagene Kugel bleibt liegen und darf von jeder späteren angestoßen werden – die Zielkugel
+eingeschlossen.
+
+**Wertung.** Nach der letzten Kugel gewinnt, wessen Kugel am nächsten an der Zielkugel liegt.
+Gemessen wird von Mitte zu Mitte, in Feldern der Bahn; die Tafel zeigt **alle** Kugeln nach Abstand
+geordnet, danach die ausgeschiedenen. Während der Runde steht in der Seitentafel je Spieler sein
+bisher bester Abstand – das ist die einzige Zahl, auf die es ankommt, und man will sie beim Zielen
+sehen.
+
+**Ausgeschieden.** Eine Kugel, die von der Bahn fällt oder im Loch landet, zählt nicht mehr mit.
+Strafschläge gibt es hier nicht – es gibt ja keine Schläge, die man bestrafen könnte. Dieselbe Regel
+gilt für alles andere, was einen Ball im Golf zurückwerfen würde (Wasser, Lava, Stacheln, Blitz,
+Hai, Fallbeil, das brennende Auge) und für die Tür in eine Innenkarte: Die würde mitten in der Runde
+die ganze Bahn austauschen. Trifft es die **Zielkugel**, kommt sie an ihren letzten Ruheplatz
+zurück – im richtigen Boule wäre das Ende dann ungültig, aber mitten in einer angefangenen Runde ist
+das hier die freundlichere Regel.
+
+**Was es in Boule nicht gibt:** Schläge, Par, Schlaglimit, Uhr und Rekorde. Ein Boule-Ergebnis ist
+mit einer Golfrunde nicht vergleichbar, und eine Zahl, die in dieselbe Rangliste liefe, wäre schlicht
+falsch. Die Rangliste bleibt darum unberührt.
+
+**Wann ein Wurf zu Ende ist.** Nicht, wenn die eigene Kugel liegt, sondern wenn **alle** liegen –
+sonst schlüge der Nächste in ein noch rollendes Feld hinein. Nach vierzehn Sekunden wird abgebrochen
+und alles angehalten: Auf einer Bahn mit Windfeld oder Förderband käme sonst nie Ruhe ein.
+
+**Im Code:** der ganze Modus in einem Block in `src/main.js` (`bouleRundeStarten` bis `bouleEnde`),
+die Physik über `stepBaelle` aus `src/physics.js`. Der Renderer bekommt die liegenden Kugeln über
+`state.liegendeBaelle` und muss dafür nichts über Spielarten wissen – er zeichnet sie in dieselbe
+Tiefensortierung wie alles andere, damit eine Kugel hinter einer Mauer auch hinter der Mauer liegt.
 
 ## Mehrere Bälle auf einer Bahn
 

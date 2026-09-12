@@ -25,11 +25,36 @@
      trüge der Vorbesitzer den Preis weiter. Auf dem Prüfstand bleibt alles erlaubt. */
   const hutOderErsatz = (id, i) => (TEST_FREI || Hats.freigeschaltet(id)) ? id : DEFAULT_HATS[i % DEFAULT_HATS.length];
 
+  /* Am selben Gerät zu mehreren darf jeder Spieler jeden Skin aufsetzen – auch die Belohnungen,
+     die noch niemand verdient hat, und die beiden Helme der Arena. Am Küchentisch soll niemand
+     mit dem Vorgabehut dasitzen, nur weil der andere die Welt schon durchgespielt hat.
+
+     Geliehen heißt geliehen: So eine Wahl steht nur in playerHats, also im Arbeitsspeicher, und
+     geht *nicht* in den Browserspeicher. Nach dem Neuladen ist sie weg, und überall sonst
+     (allein, im Netzspiel) tauscht hutOderErsatz sie ohnehin gegen den Vorgabehut. An der
+     Freischaltung selbst ändert sich nichts: Die wird gar nicht gespeichert, sondern jedes Mal
+     aus der Rangliste und dem Turnierstand berechnet. */
   function setHat(i, id) {
     playerHats[i] = id;
     if (state.players[i]) state.players[i].hat = id;
     if (state.ball && state.curPlayer === i) state.ball.hat = id;
-    try { localStorage.setItem(speicherSchluessel('hats'), JSON.stringify(playerHats)); } catch (e) { /* kein Speicher */ }
+    hueteMerken();
+  }
+  /* Gemerkt wird nur Verdientes. Für einen geliehenen Platz kommt ein Ersatz hinein – und zwar
+     einer, den noch keiner hat: Stünde stur der Vorgabehut da, läge nach einer Partie mit
+     geliehener Königskrone zweimal „Krone" im Speicher, und die Aufstellung müsste das beim
+     nächsten Öffnen erst wieder auseinanderdividieren. */
+  function hueteMerken() {
+    const vergeben = new Set(), dauerhaft = [];
+    for (let i = 0; i < playerHats.length; i++) {
+      let h = playerHats[i];
+      if (!Hats.freigeschaltet(h) || vergeben.has(h)) {
+        const ersatz = Hats.LIST.find(x => !vergeben.has(x.id) && Hats.freigeschaltet(x.id) && x.id !== 'none');
+        h = ersatz ? ersatz.id : DEFAULT_HATS[i % DEFAULT_HATS.length];
+      }
+      vergeben.add(h); dauerhaft.push(h);
+    }
+    try { localStorage.setItem(speicherSchluessel('hats'), JSON.stringify(dauerhaft)); } catch (e) { /* kein Speicher */ }
   }
 
   const canvas = document.getElementById('game');
@@ -45,8 +70,12 @@
     particles: [], curPlayer: 0, strokes: 0, restTimer: 0, slowTimer: 0, lastBounceSfx: 0,
     camMode: 'overview', camTheta: Math.PI / 4, zoomFactor: 1,
     controlMode: 'sling', // 'sling' = Schleuder (vom Ball wegziehen), 'push' = Schieben (in Schussrichtung ziehen)
-    mode: 'normal',       // 'normal' = Wettkampf, 'creative' = Kreativ (Bahnen frei wählen und überspringen, kein Schlaglimit)
+    mode: 'normal',       // 'normal' = Wettkampf, 'creative' = Kreativ (Bahnen frei wählen und überspringen, kein Schlaglimit), 'boule' = Boule
     world: WORLDS[0], courses: WORLDS[0].courses,
+    boule: null,          // im Boule-Modus der ganze Stand dieser Runde, sonst null
+    /* Bälle, die außer dem eigenen noch auf der Bahn liegen. Der Renderer zeichnet sie einfach
+       mit; er muss dafür nichts über Spielarten wissen. Außerhalb von Boule ist die Liste leer. */
+    liegendeBaelle: [],
   };
   try { const m = localStorage.getItem(speicherSchluessel('control')); if (m === 'sling' || m === 'push') state.controlMode = m; } catch (e) { /* kein Speicher verfügbar */ }
   function setControlMode(m) {
@@ -98,7 +127,10 @@
     ui.player.textContent = p ? p.name : '–';
     syncClock();
     const parJetzt = def ? Best.par(weltId(), def) : 0;
-    ui.strokes.textContent = def ? (state.mode === 'creative' ? `Kreativ · Schläge: ${state.strokes} · Par ${parJetzt}` : `Schläge: ${state.strokes} / ${maxStrokes()} · Par ${parJetzt}`) : '';
+    ui.strokes.textContent = !def ? ''
+      : state.mode === 'boule' ? bouleKopfzeile()
+      : state.mode === 'creative' ? `Kreativ · Schläge: ${state.strokes} · Par ${parJetzt}`
+      : `Schläge: ${state.strokes} / ${maxStrokes()} · Par ${parJetzt}`;
     // Namen kommen im Netzspiel von fremden Geräten: die Zeile wird gebaut, nicht aus Text geklebt
     ui.board.replaceChildren(...state.players.map((pl, i) => {
       const row = document.createElement('div');
@@ -116,7 +148,8 @@
       }
       row.appendChild(document.createTextNode(pl.name));
       const score = document.createElement('span');
-      score.className = 'score'; score.textContent = pl.scores.reduce((a, b) => a + b, 0);
+      score.className = 'score';
+      score.textContent = state.mode === 'boule' ? bouleTafelWert(i) : pl.scores.reduce((a, b) => a + b, 0);
       row.appendChild(score);
       return row;
     }));
@@ -124,7 +157,7 @@
   /* Zeitanzeige im Kopf – nur im Wettkampf, im Kreativmodus wird nichts gewertet */
   let clockShown = '';
   function syncClock() {
-    const zeigen = clock.active && state.mode !== 'creative' && !state.editorReturn;
+    const zeigen = clock.active && state.mode !== 'creative' && state.mode !== 'boule' && !state.editorReturn;
     const txt = zeigen ? Best.formatTime(clockRead()) : '';
     if (txt !== clockShown) { clockShown = txt; ui.time.textContent = txt; }
   }
@@ -1320,10 +1353,11 @@
       <div id="gm">
         <span class="btn ghost small ${gameMode === 'normal' ? 'sel' : ''}" data-g="normal">${Icons.svg('emoji_events')} Wettkampf</span>
         <span class="btn ghost small ${gameMode === 'creative' ? 'sel' : ''}" data-g="creative">${Icons.svg('construction')} Kreativ</span>
+        <span class="btn ghost small ${gameMode === 'boule' ? 'sel' : ''}" data-g="boule">${Icons.svg('sports_score')} Boule</span>
       </div>
       <div id="pc-row" ${gameMode === 'creative' ? 'hidden' : ''}>
         <p style="margin-top:10px">Spieler:</p>
-        <div id="pc">${[1, 2, 3, 4].map(n => `<span class="btn ghost small ${n === playerCount ? 'sel' : ''}" data-n="${n}">${n}</span>`).join('')}</div>
+        <div id="pc"></div>
       </div>
       <p style="margin-top:10px">Hut:</p>
       <div id="hat-who"></div>
@@ -1341,26 +1375,68 @@
       <p style="margin-top:14px"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span> <span class="btn" id="start">Los geht's!</span></p>
       <div class="legend">
         <b>Wettkampf:</b> alle Bahnen der Reihe nach, mit Schlaglimit und Ergebnistafel. <b>Kreativ:</b> allein, ohne Limit, mit den Bahn-Knöpfen (Tasten P / N) frei springen.<br>
+        <b>Boule:</b> Eine Kanone schießt die Zielkugel auf die Bahn, dann spielen alle reihum je
+        drei Kugeln. Jede Kugel bleibt liegen und darf angestoßen werden, auch die Zielkugel. Wer am
+        Ende am nächsten liegt, gewinnt. Kugeln, die von der Bahn fallen oder im Loch landen,
+        zählen nicht mehr mit – es gibt keine Schläge und keinen Rekord. Nur am selben Gerät.<br>
+        <b>Hüte zu mehreren:</b> Am selben Gerät steht jeder Skin offen – auch die noch nicht
+        verdienten Belohnungen und die Helme der Arena. Das gilt nur für diese Partie und wird nicht
+        gespeichert. Zwei Spieler dürfen nicht denselben tragen; tippt man auf einen belegten, wird
+        getauscht.<br>
         Aufsetzen, ziehen, loslassen. Weiter ziehen = mehr Kraft.
         <b>Schleuder:</b> vom Ball wegziehen, er fliegt in die Gegenrichtung. <b>Schieben:</b> dorthin ziehen, wo der Ball hin soll.
         Wasser, Lava und Abgrund kosten einen Strafschlag.
       </div>
     </div>`, 'title');
-    /* Hutwahl: oben steht, für welchen Spieler gewählt wird, darunter die Hüte als Ballvorschau */
+    /* Hutwahl: oben steht, für welchen Spieler gewählt wird, darunter die Hüte als Ballvorschau.
+       Zu mehreren am selben Gerät gelten zwei eigene Regeln:
+       - **Alle Skins stehen offen**, auch die Belohnungen, die noch niemand verdient hat, und die
+         beiden Helme der Arena. Am Küchentisch soll keiner mit dem Vorgabehut dasitzen, nur weil
+         der andere die Welt schon durchgespielt hat. Die Leihgabe gilt für diese Partie und wird
+         nicht gespeichert (siehe setHat).
+       - **Kein Skin doppelt.** Vier weiße Bälle mit demselben Hut sind auf der Bahn nicht
+         auseinanderzuhalten – die Farbe allein reicht dafür nicht, erst recht nicht bei den
+         Ganzkörper-Skins, die den Ball ganz ersetzen. */
     let hatWho = 0;
-    const hatCount = () => gameMode === 'creative' ? 1 : playerCount;
+    const hatCount = () => gameMode === 'creative' ? 1 : playerCount;   // Boule zählt wie Wettkampf: jeder seinen eigenen
+    const zuMehreren = () => hatCount() > 1;
+    const darfTragen = id => zuMehreren() || TEST_FREI || Hats.freigeschaltet(id);
+    // Wer hat diesen Hut schon auf? (nur unter den Spielern, die überhaupt mitspielen)
+    const traegtSchon = id => playerHats.findIndex((h, i) => i < hatCount() && i !== hatWho && h === id);
+
+    /* Doppelte auflösen: Beim Öffnen und bei jedem Wechsel der Spielerzahl kann es sein, dass zwei
+       Plätze denselben Hut tragen – aus einem früheren Spielstand oder weil ein dritter Spieler
+       dazugekommen ist. Jeder Platz, der einen schon vergebenen Hut hat, bekommt den nächsten
+       freien aus der Liste. */
+    function doppelAufloesen() {
+      if (!zuMehreren()) return;
+      const vergeben = new Set();
+      for (let i = 0; i < hatCount(); i++) {
+        if (!vergeben.has(playerHats[i]) && darfTragen(playerHats[i])) { vergeben.add(playerHats[i]); continue; }
+        const frei = Hats.LIST.find(h => !vergeben.has(h.id) && darfTragen(h.id));
+        playerHats[i] = frei ? frei.id : DEFAULT_HATS[i % DEFAULT_HATS.length];
+        vergeben.add(playerHats[i]);
+      }
+      hueteMerken();
+    }
     function drawHats() {
       const col = PLAYER_COLORS[hatWho];
+      const meiner = zuMehreren() ? playerHats[hatWho] : hutOderErsatz(playerHats[hatWho], hatWho);
       ui.overlay.querySelectorAll('#hats .hat').forEach(b => {
-        const frei = Hats.freigeschaltet(b.dataset.h);
-        b.classList.toggle('sel', b.dataset.h === hutOderErsatz(playerHats[hatWho], hatWho));
-        b.classList.toggle('zu', !frei);
-        b.classList.toggle('probe', !frei && TEST_FREI); // Vorschau: Sperre zeigen, Skin trotzdem sehen
-        // Gesperrt: der Platz bleibt sichtbar, damit man weiß, was es zu holen gibt
-        const wie = Hats.stand(b.dataset.h);
-        b.title = frei ? Hats.name(b.dataset.h)
-          : `${Hats.name(b.dataset.h)} – ${Hats.bedingung(b.dataset.h)}${wie ? ' · ' + wie : ''}${TEST_FREI ? ' (hier zum Ausprobieren freigegeben)' : ''}`;
-        Hats.preview(b.querySelector('canvas'), b.dataset.h, col);
+        const id = b.dataset.h;
+        const frei = Hats.freigeschaltet(id), erlaubt = darfTragen(id), wer = traegtSchon(id);
+        b.classList.toggle('sel', id === meiner);
+        b.classList.toggle('zu', !erlaubt);
+        b.classList.toggle('probe', !erlaubt && TEST_FREI); // Vorschau: Sperre zeigen, Skin trotzdem sehen
+        // Geliehen: der Skin ist hier offen, aber nicht verdient – das Schloss bleibt klein sichtbar
+        b.classList.toggle('geliehen', erlaubt && !frei);
+        b.classList.toggle('belegt', wer >= 0);
+        const wie = Hats.stand(id);
+        b.title = wer >= 0 ? `${Hats.name(id)} – hat schon ${PLAYER_NAMES[wer]}; zum Tauschen antippen`
+          : erlaubt && !frei ? `${Hats.name(id)} – noch nicht verdient, aber zu mehreren am selben Gerät erlaubt (nur für diese Partie)`
+          : erlaubt ? Hats.name(id)
+          : `${Hats.name(id)} – ${Hats.bedingung(id)}${wie ? ' · ' + wie : ''}`;
+        Hats.preview(b.querySelector('canvas'), id, col);
       });
     }
     function drawWho() {
@@ -1376,21 +1452,43 @@
     }
     ui.overlay.querySelectorAll('#hats .hat').forEach(b => b.addEventListener('click', () => {
       Sfx.unlock();
-      if (!Hats.freigeschaltet(b.dataset.h)) {
-        // Auf dem Prüfstand darf man eine gesperrte Belohnung trotzdem aufsetzen – dort soll man
-        // alles ansehen können. Im Spiel bleibt die Sperre: dort ist sie der halbe Reiz.
-        const wie = Hats.stand(b.dataset.h);
-        if (!TEST_FREI) { showMessage(`${Hats.name(b.dataset.h)}: ${Hats.bedingung(b.dataset.h)}${wie ? ' · ' + wie : ''}`, 3200); return; }
-        showMessage(`${Hats.name(b.dataset.h)} – zum Ausprobieren freigegeben`, 2400);
+      const id = b.dataset.h;
+      if (!darfTragen(id)) {
+        /* Allein bleibt die Sperre: Dort ist sie der halbe Reiz. Auf dem Prüfstand darf man eine
+           gesperrte Belohnung trotzdem aufsetzen – dort soll man alles ansehen können. */
+        const wie = Hats.stand(id);
+        showMessage(`${Hats.name(id)}: ${Hats.bedingung(id)}${wie ? ' · ' + wie : ''}`, 3200);
+        return;
       }
-      setHat(hatWho, b.dataset.h); drawWho(); drawHats();
+      /* Trägt ihn schon jemand, wird getauscht statt abgelehnt. Eine Absage wäre hier die
+         schlechtere Antwort: Man sieht ja, dass der Platz belegt ist, und will genau tauschen. */
+      const wer = traegtSchon(id);
+      if (wer >= 0) {
+        const meiner = playerHats[hatWho];
+        setHat(wer, meiner);
+        showMessage(`Getauscht: ${PLAYER_NAMES[wer]} trägt jetzt ${Hats.name(meiner)}`, 1800);
+      } else if (!Hats.freigeschaltet(id)) {
+        showMessage(`${Hats.name(id)} – geliehen für diese Partie`, 2200);
+      }
+      setHat(hatWho, id); drawWho(); drawHats();
     }));
+    doppelAufloesen();
     drawWho(); drawHats();
-    ui.overlay.querySelectorAll('#pc .btn').forEach(b => b.addEventListener('click', () => {
-      playerCount = +b.dataset.n;
-      ui.overlay.querySelectorAll('#pc .btn').forEach(x => x.classList.toggle('sel', +x.dataset.n === playerCount));
-      drawWho(); drawHats();
-    }));
+    /* Boule braucht Gegner: Zu zweit gegen sich selbst zu spielen ergibt kein Ergebnis, und der
+       ganze Reiz liegt darin, die Kugel des anderen wegzuschieben. Also fängt die Auswahl dort
+       bei zwei an – und wer vorher allein gespielt hat, wird stillschweigend auf zwei gesetzt. */
+    function drawSpielerzahl() {
+      const von = gameMode === 'boule' ? 2 : 1;
+      if (playerCount < von) playerCount = von;
+      $('pc').innerHTML = [1, 2, 3, 4].filter(n => n >= von)
+        .map(n => `<span class="btn ghost small ${n === playerCount ? 'sel' : ''}" data-n="${n}">${n}</span>`).join('');
+      $('pc').querySelectorAll('.btn').forEach(b => b.addEventListener('click', () => {
+        playerCount = +b.dataset.n;
+        $('pc').querySelectorAll('.btn').forEach(x => x.classList.toggle('sel', +x.dataset.n === playerCount));
+        doppelAufloesen(); drawWho(); drawHats();
+      }));
+    }
+    drawSpielerzahl();
     ui.overlay.querySelectorAll('#cm .btn').forEach(b => b.addEventListener('click', () => {
       setControlMode(b.dataset.m);
       ui.overlay.querySelectorAll('#cm .btn').forEach(x => x.classList.toggle('sel', x.dataset.m === state.controlMode));
@@ -1403,10 +1501,14 @@
       gameMode = b.dataset.g;
       ui.overlay.querySelectorAll('#gm .btn').forEach(x => x.classList.toggle('sel', x.dataset.g === gameMode));
       $('pc-row').hidden = gameMode === 'creative';
-      drawWho(); drawHats();
+      drawSpielerzahl(); doppelAufloesen(); drawWho(); drawHats();
     }));
     for (const id of ['back', 'back-top']) $(id).addEventListener('click', showMap);
-    $('start').addEventListener('click', () => { Sfx.unlock(); state.mode = gameMode; startGame(gameMode === 'creative' ? 1 : playerCount, 0); });
+    $('start').addEventListener('click', () => {
+      Sfx.unlock(); state.mode = gameMode;
+      state.boule = null;   // eine alte Boule-Runde darf nicht in die neue hineinreichen
+      startGame(gameMode === 'creative' ? 1 : playerCount, 0);
+    });
   }
 
   /* Endtafel: kleines Sinnbild je Bahn (nach Name, sonst nach Optik) */
@@ -1467,9 +1569,12 @@
   /* ---------- Spielablauf ---------- */
   function startGame(n, first = 0, roster = null) {
     // roster: beim Netzspiel bringt jeder Spieler seinen eigenen Hut mit
+    /* Zu mehreren am selben Gerät gilt die Wahl aus der Aufstellung, auch wenn sie geliehen ist.
+       Allein und im Netzspiel bleibt es beim Tausch: Dort geht der Hut als Auszeichnung durch. */
+    const geliehenErlaubt = !roster && n > 1;
     state.players = roster
       ? roster.map((p, i) => ({ name: seatName(p, i), color: PLAYER_COLORS[i], hat: p.hat, scores: [], times: [], gone: !!p.gone }))
-      : Array.from({ length: n }, (_, i) => ({ name: PLAYER_NAMES[i], color: PLAYER_COLORS[i], hat: hutOderErsatz(playerHats[i], i), scores: [], times: [] }));
+      : Array.from({ length: n }, (_, i) => ({ name: PLAYER_NAMES[i], color: PLAYER_COLORS[i], hat: geliehenErlaubt ? playerHats[i] : hutOderErsatz(playerHats[i], i), scores: [], times: [] }));
     state.holeIdx = first;
     document.body.classList.remove('title');
     document.body.classList.toggle('creative', state.mode === 'creative');
@@ -1480,8 +1585,10 @@
      Wer aus Versehen in die falsche Welt gegangen ist, kommt so ohne Neuladen wieder heraus.
      Ist schon etwas gespielt, wird vorher gefragt – der Punktestand einer Runde kommt nicht zurück. */
   const leaveTarget = () => (state.world && state.world.id === 'custom' ? showBuild : showMap);
-  const roundStarted = () => state.mode !== 'creative' &&
-    (state.holeIdx > 0 || state.strokes > 0 || state.players.some(p => p.scores.some(v => v != null)));
+  const roundStarted = () => state.mode === 'boule'
+    ? !!(state.boule && (state.boule.liegen.length || state.boule.aus.length))
+    : state.mode !== 'creative' &&
+      (state.holeIdx > 0 || state.strokes > 0 || state.players.some(p => p.scores.some(v => v != null)));
   function leaveRound(force) {
     if (state.phase === 'title' || state.phase === 'edit' || !state.level) return;
     // Liegt schon eine Tafel obenauf (Bahn fertig, Endergebnis), hat die ihren eigenen Weg zurück
@@ -1519,7 +1626,7 @@
     const def = state.courses[i];
     state.level = buildLevel(def); state.theme = THEMES[def.theme]; state.inner = false;
     R.setLevel(state.level, state.theme);
-    state.ball = null; state.aim = null;
+    state.ball = null; state.aim = null; state.liegendeBaelle = [];
     setCamMode('overview'); R.target = R.overviewTarget(); R.snapCamera();
   }
   function loadHole(i) {
@@ -1528,7 +1635,7 @@
     state.particles = [];
     state.curPlayer = 0;
     showMessage(`Bahn ${i + 1}: ${state.courses[i].name}`, 2200);
-    setTimeout(beginTurn, 900);
+    setTimeout(state.mode === 'boule' ? bouleRundeStarten : beginTurn, 900);
   }
   function beginTurn() {
     if (state.inner) { // zurück in den Außenbereich der Bahn
@@ -1867,6 +1974,363 @@
   }
 
   /* ---------- Physik-Ereignisse ---------- */
+  /* ---------- Boule ----------
+   *
+   * Ein eigener Modus für den Tisch, nicht fürs Netz: Er lebt davon, dass alle Bälle liegen
+   * bleiben und sich gegenseitig wegstoßen, und dafür müssten beim Netzspiel alle Geräte
+   * dieselben Bälle in derselben Reihenfolge rechnen. Darum steht er nur in der Aufstellung des
+   * lokalen Spiels und nicht im Warteraum mit Raumcode.
+   *
+   * Ablauf: Eine Kanone am Abschlag schießt die kleine Zielkugel auf die Bahn. Danach spielen die
+   * Spieler reihum, jeder drei Kugeln. Jede geschlagene Kugel bleibt liegen, und jede spätere darf
+   * sie anstoßen – die Zielkugel eingeschlossen. Am Ende gewinnt, wessen Kugel am nächsten liegt.
+   *
+   * Es gibt hier keine Schläge, kein Par, keine Zeit und keinen Rekord: Ein Boule-Ergebnis ist mit
+   * einer Golfrunde nicht vergleichbar, und eine Zahl, die in dieselbe Rangliste liefe, wäre
+   * schlicht falsch.
+   */
+  const BOULE_KUGELN = 3;          // Kugeln je Spieler
+  const BOULE_ZIEL_R = 0.17;       // die Zielkugel ist kleiner und damit leichter – sie fliegt weiter, wenn man sie trifft
+  const BOULE_RUHE = 0.09;         // langsamer als das gilt als "liegt"
+  const BOULE_GEDULD = 14;         // nach so vielen Sekunden wird der Wurf für beendet erklärt
+
+  /* Alles, was einen Ball aus dem Spiel nimmt. Im Golf kostet das einen Strafschlag und der Ball
+     kommt zurück; in Boule gibt es keine Schläge, die man bestrafen könnte – wer die Bahn
+     verlässt oder im Loch landet, ist raus und zählt nicht mehr mit. Die Tür in eine Innenkarte
+     steht mit in der Liste: Sie würde mitten in der Runde die ganze Bahn austauschen. */
+  const BOULE_RAUS = new Set(['sunk', 'oob', 'water', 'lava', 'fell', 'spiked', 'zapped',
+    'shark', 'beheaded', 'seen', 'enter']);
+  const BOULE_GRUND = {
+    sunk: 'im Loch verschwunden', oob: 'von der Bahn gefallen', water: 'im Wasser gelandet',
+    lava: 'in der Lava gelandet', fell: 'in die Tiefe gestürzt', spiked: 'aufgespießt',
+    zapped: 'vom Blitz getroffen', shark: 'vom Hai geholt', beheaded: 'vom Fallbeil erwischt',
+    seen: 'vom brennenden Auge erblickt', enter: 'durch die Tür verschwunden',
+  };
+
+  const bouleZahl = x => x.toFixed(2).replace('.', ',');
+  const bouleAbstand = k => { const z = state.boule && state.boule.ziel; return z ? Math.hypot(k.x - z.x, k.y - z.y) : Infinity; };
+
+  /* Die Bälle, die dieser Schritt bewegen soll: der eigene, alle liegenden und die Zielkugel. */
+  function bouleAlleBaelle() {
+    const bl = state.boule;
+    const alle = bl.liegen.slice();
+    if (bl.ziel) alle.push(bl.ziel);
+    if (state.ball) alle.unshift(state.ball);
+    return alle;
+  }
+  function bouleAllesRuht(baelle) {
+    return baelle.every(b => !b.air && !b.rider && Math.hypot(b.vx, b.vy) < BOULE_RUHE);
+  }
+
+  /* Kopfzeile und Seitentafel. Die Zahl in der Tafel ist der beste Abstand des Spielers – das ist
+     die einzige Zahl, auf die es in Boule ankommt, und man will sie beim Zielen sehen. */
+  function bouleKopfzeile() {
+    const bl = state.boule;
+    if (!bl) return 'Boule';
+    if (bl.stand === 'ziel') return 'Boule · die Zielkugel wird geschossen';
+    if (bl.stand === 'ende') return 'Boule · Ergebnis';
+    return `Boule · Kugel ${Math.min(bl.runde + 1, BOULE_KUGELN)} von ${BOULE_KUGELN}`;
+  }
+  function bouleTafelWert(i) {
+    const bl = state.boule;
+    if (!bl || !bl.ziel) return '–';
+    const meine = bl.liegen.filter(k => k.spieler === i);
+    if (!meine.length) return '–';
+    return bouleZahl(Math.min(...meine.map(bouleAbstand)));
+  }
+
+  /* Ein Platz, an dem eine Kugel liegen darf: fester Boden, kein Wasser, keine Lava – und weit
+     genug weg von allem, was schon liegt.
+     Das braucht es, weil in Boule die Kugeln liegen bleiben: Setzte man die nächste stur auf den
+     Abschlag, käme sie irgendwann genau in einer schon liegenden zu liegen. Zwei Bälle auf
+     demselben Punkt kann die Physik nicht auflösen – sie drückt beide Bild für Bild
+     auseinander, die Mauer drückt zurück, und nach ein paar Sekunden steht der Ball bei x =
+     397646. Genau das ist auf der Affenbrücke passiert, bevor es diese Funktion gab. */
+  function bouleFrei(x, y, r, ausser) {
+    const lv = state.level;
+    const c = lv.charAtEbene(0, x, y);
+    if (!lv.isFloorChar(c) || c === 'w' || c === 'l') return false;
+    for (const k of bouleAlleBaelle()) {
+      if (k === ausser) continue;
+      if (Math.hypot(k.x - x, k.y - y) < k.r + r + 0.06) return false;
+    }
+    return true;
+  }
+  /* Vom Abschlag aus in Ringen nach außen suchen, bis ein freier Platz gefunden ist. Die Ringe
+     sind eng genug, dass die Kugel praktisch immer noch auf dem Abschlagfeld liegt. */
+  function bouleFreierPlatz(r) {
+    const lv = state.level, tx = lv.tee.x, ty = lv.tee.y;
+    if (bouleFrei(tx, ty, r)) return { x: tx, y: ty };
+    for (let ring = 1; ring <= 12; ring++) {
+      const rad = ring * 0.35;
+      for (let k = 0; k < 12; k++) {
+        const a = (k / 12) * Math.PI * 2 + ring * 0.26;
+        const x = tx + Math.cos(a) * rad, y = ty + Math.sin(a) * rad;
+        if (bouleFrei(x, y, r)) return { x, y };
+      }
+    }
+    return { x: tx, y: ty };   // sollte nicht vorkommen; dann lieber eng als gar nicht
+  }
+
+  /* ----- Die Zielkugel ----- */
+  function bouleRundeStarten() {
+    state.boule = { ziel: null, liegen: [], aus: [], spieler: 0, runde: 0, versuche: 0, stand: 'ziel', wurfT: 0 };
+    state.liegendeBaelle = [];
+    state.players.forEach(p => { p.scores = []; p.times = []; });
+    bouleZielSchiessen();
+  }
+  /* Die Kanone. Sie zielt grob aufs Loch und streut kräftig – so liegt die Zielkugel jede Runde
+     woanders, aber nie hinter dem Spieler. Wo sie landet, entscheidet die Physik; ob das ein
+     brauchbarer Platz war, sieht man erst, wenn sie liegt. */
+  function bouleZielSchiessen() {
+    const lv = state.level, bl = state.boule;
+    bl.stand = 'ziel'; bl.versuche++;
+    const ziel = makeBall(lv.tee.x, lv.tee.y, '#ffb703', 'none');
+    ziel.r = BOULE_ZIEL_R; ziel.istZiel = true;
+    const c = lv.cup || lv.goal || { x: lv.tee.x + 5, y: lv.tee.y };
+    const grund = Math.atan2(c.y - ziel.y, c.x - ziel.x);
+    const winkel = grund + (Math.random() - 0.5) * 1.5;          // ±43° um die Richtung zum Loch
+    const kraft = 0.42 + Math.random() * 0.34;
+    ziel.vx = Math.cos(winkel) * kraft * MAX_SHOT; ziel.vy = Math.sin(winkel) * kraft * MAX_SHOT;
+    ziel.restX = ziel.x; ziel.restY = ziel.y; ziel.restEbene = 0;
+    bl.ziel = ziel;
+    state.ball = null; state.aim = null;
+    state.liegendeBaelle = [ziel];
+    bl.wurfT = 0;
+    setCamMode('overview');
+    Sfx.cannon(); burst(lv.tee.x, lv.tee.y, '#ffd166', 20, true);
+    showMessage(bl.versuche > 1 ? 'Die Zielkugel lag schlecht – noch einmal!' : 'Die Kanone schießt die Zielkugel …', 1800);
+    updateHud();
+  }
+  /* Die Zielkugel liegt. Taugt der Platz nichts (zu dicht am Abschlag), wird neu geschossen –
+     sonst stünden alle Spieler von Anfang an auf der Zielkugel. Nach ein paar Fehlversuchen wird
+     genommen, was da ist: Lieber eine mäßige Lage als eine Bahn, die nicht anfängt. */
+  const BOULE_VERSUCHE = 6;        // so oft darf die Kanone es probieren, dann wird gelegt
+  function bouleZielLiegt() {
+    const bl = state.boule, lv = state.level, z = bl.ziel;
+    const weg = Math.hypot(z.x - lv.tee.x, z.y - lv.tee.y);
+    const c = lv.charAtEbene(z.ebene || 0, z.x, z.y);
+    if (!(weg >= 3 && lv.isFloorChar(c) && c !== 'w' && c !== 'l')) { bouleZielNochmal(); return; }
+    bouleZielFest('Die Zielkugel liegt – auf geht’s!');
+  }
+  /* Noch ein Schuss – oder, wenn die Kanone es oft genug versucht hat, hingelegt.
+     Beides an einer Stelle, weil es zwei Wege hierher gibt: Die Zielkugel kann schlecht liegen
+     bleiben, und sie kann gleich ganz von der Bahn fliegen. Zählte nur der erste Weg mit, drehte
+     sich die Kanone auf einer engen Bahn endlos im Kreis. */
+  function bouleZielNochmal() {
+    if (state.boule.versuche < BOULE_VERSUCHE) { bouleZielSchiessen(); return; }
+    const platz = bouleZielNotplatz(), z = state.boule.ziel;
+    z.x = platz.x; z.y = platz.y; z.ebene = 0; z.z = 0; z.vz = 0; z.air = false; z.rider = null;
+    burst(z.x, z.y, '#ffb703', 14, true);
+    bouleZielFest('Die Kanone wollte nicht – die Zielkugel wird gelegt.');
+  }
+  function bouleZielFest(text) {
+    const bl = state.boule, z = bl.ziel;
+    z.vx = 0; z.vy = 0;
+    z.restX = z.x; z.restY = z.y; z.restEbene = z.ebene || 0;
+    bl.stand = 'spiel'; bl.spieler = 0; bl.runde = 0;
+    showMessage(text, 1800);
+    setTimeout(bouleZug, 900);
+  }
+  /* Der Notplatz: das Bodenfeld, das am ehesten in der Mitte zwischen Abschlag und Loch liegt und
+     weit genug vom Abschlag entfernt ist. Damit fängt jede Bahn an, auch wenn die Kanone auf ihr
+     partout nichts trifft. */
+  function bouleZielNotplatz() {
+    const lv = state.level;
+    const ziel = lv.cup || lv.goal || { x: lv.W - 2, y: lv.H / 2 };
+    const mx = (lv.tee.x + ziel.x) / 2, my = (lv.tee.y + ziel.y) / 2;
+    let best = null, bd = Infinity;
+    for (let ty = 0; ty < lv.H; ty++) for (let tx = 0; tx < lv.W; tx++) {
+      const x = tx + 0.5, y = ty + 0.5;
+      if (Math.hypot(x - lv.tee.x, y - lv.tee.y) < 3.5) continue;
+      if (!bouleFrei(x, y, BOULE_ZIEL_R)) continue;
+      const d = Math.hypot(x - mx, y - my);
+      if (d < bd) { bd = d; best = { x, y }; }
+    }
+    return best || { x: lv.tee.x + 4, y: lv.tee.y };
+  }
+  /* Die Zielkugel ist selbst aus der Bahn geflogen. Ohne sie gibt es nichts zu messen, also kommt
+     sie dorthin zurück, wo sie zuletzt lag. (Im richtigen Boule wäre das Ende ungültig – mitten
+     in einer angefangenen Runde ist das hier die freundlichere Regel.) */
+  function bouleZielZurueck(grund) {
+    const bl = state.boule, z = bl.ziel;
+    /* Fliegt sie schon auf ihrem ersten Weg hinaus, hat sie noch gar keinen Ruheplatz – dann ist
+       der gemerkte Punkt der Abschlag, und dorthin darf sie nicht. Statt dessen feuert die Kanone
+       noch einmal. */
+    if (bl.stand === 'ziel') { bouleZielNochmal(); return; }
+    z.x = z.restX; z.y = z.restY; z.ebene = z.restEbene || 0;
+    z.vx = 0; z.vy = 0; z.z = 0.4; z.vz = 0; z.air = false; z.rider = null;
+    burst(z.x, z.y, '#ffb703', 12, true);
+    showMessage(`Die Zielkugel ist ${BOULE_GRUND[grund] || 'verschwunden'} – sie kommt zurück.`, 1900);
+  }
+
+  /* ----- Ein Zug ----- */
+  function bouleZug() {
+    const bl = state.boule, lv = state.level;
+    if (bl.runde >= BOULE_KUGELN) { bouleEnde(); return; }
+    const p = state.players[bl.spieler];
+    state.curPlayer = bl.spieler;
+    const platz = bouleFreierPlatz(BALL_R);   // nie in eine Kugel hinein, die schon liegt
+    const k = makeBall(platz.x, platz.y, p.color, p.hat);
+    k.spieler = bl.spieler; k.nummer = bl.runde + 1;
+    state.ball = k;
+    lv.setzeEbene(0);
+    state.strokes = 0; state.phase = 'aim'; state.aim = null;
+    state.restTimer = 0; state.slowTimer = 0; state.rollT = 0; state.stuckRef = null;
+    bl.wurfT = 0;
+    bouleSichtAktualisieren();
+    faceZiel(); setCamMode('follow');
+    showMessage(`${p.name} · Kugel ${bl.runde + 1} von ${BOULE_KUGELN}`, 1400);
+    updateHud(); syncHint();
+  }
+  /* In Boule schaut die Kamera auf die Zielkugel, nicht aufs Loch – das Loch ist hier kein Ziel,
+     sondern eine Falle. */
+  function faceZiel() {
+    const b = state.ball, z = state.boule && state.boule.ziel;
+    if (!b || !z) return;
+    state.camTheta = thetaTowards(b.x, b.y, z.x, z.y);
+  }
+  /* Was der Renderer zeichnen soll: alles außer dem Ball, der gerade dran ist (den malt er selbst). */
+  function bouleSichtAktualisieren() {
+    const bl = state.boule;
+    state.liegendeBaelle = bl.ziel ? bl.liegen.concat([bl.ziel]) : bl.liegen.slice();
+  }
+  function bouleKugelLiegt() {
+    const bl = state.boule, k = state.ball;
+    k.vx = 0; k.vy = 0; k.restX = k.x; k.restY = k.y; k.restEbene = k.ebene || 0;
+    bl.liegen.push(k);
+    state.ball = null; state.aim = null;
+    bouleSichtAktualisieren();
+    schlagVorbei();
+    bouleWeiter();
+  }
+  function bouleKugelRaus(k, grund) {
+    const bl = state.boule;
+    Sfx.oob(); burst(k.x, k.y, '#cccccc', 12, true);
+    bl.aus.push({ spieler: k.spieler, nummer: k.nummer, grund });
+    const i = bl.liegen.indexOf(k);
+    if (i >= 0) bl.liegen.splice(i, 1);
+    const eigene = k === state.ball;
+    if (eigene) { state.ball = null; state.aim = null; }
+    bouleSichtAktualisieren();
+    const wer = state.players[k.spieler];
+    showMessage(`${wer ? wer.name : 'Kugel'} · Kugel ${k.nummer} ${BOULE_GRUND[grund] || 'ist raus'} – sie zählt nicht mehr.`, 2000);
+    if (eigene) { schlagVorbei(); bouleWeiter(); }
+  }
+  /* Der Nächste ist dran: reihum, und wenn alle einmal gespielt haben, beginnt die nächste Runde. */
+  function bouleWeiter() {
+    const bl = state.boule;
+    bl.spieler++;
+    if (bl.spieler >= state.players.length) { bl.spieler = 0; bl.runde++; }
+    state.phase = 'wait';
+    clearTimeout(waitTimer);
+    waitTimer = setTimeout(bouleZug, 1400);
+    updateHud();
+  }
+
+  /* ----- Ereignisse eines Schritts ----- */
+  function bouleEreignisse(baelle, listen) {
+    const bl = state.boule;
+    for (let i = 0; i < baelle.length; i++) {
+      const b = baelle[i], evs = listen[i];
+      let raus = null;
+      for (const ev of evs) {
+        if (BOULE_RAUS.has(ev.type)) { raus = ev.type; break; }
+        if (ev.type === 'bounce' || ev.type === 'ballStoss') {
+          if (ev.speed > 1.5 && state.t - state.lastBounceSfx > 0.06) {
+            state.lastBounceSfx = state.t;
+            if (ev.type === 'ballStoss') { Sfx.bumper(); burst(ev.x, ev.y, '#ffffff', 4); }
+            else if (ev.kind === 'bumper') Sfx.bumper(); else Sfx.bounce(ev.speed);
+          }
+        } else if (ev.type === 'portal') { Sfx.portal(); burst(ev.x, ev.y, ev.color, 12, true); }
+        else if (ev.type === 'land') { Sfx.bounce(3); burst(ev.x, ev.y, 'rgba(255,255,255,0.7)', 6); }
+      }
+      if (!raus) continue;
+      if (b.istZiel) { bouleZielZurueck(raus); return true; }
+      bouleKugelRaus(b, raus);
+      return true;   // der Schritt ist zu Ende: die Listen stimmen nicht mehr zu den Bällen
+    }
+    return false;
+  }
+
+  /* Ein Physikschritt im Boule-Modus. Steht hier und nicht in der Hauptschleife, weil er mit dem
+     Golf-Ablauf nichts gemein hat: kein Strafschlag, kein Schlaglimit, kein Zurücklegen. */
+  function bouleSchritt(lv) {
+    const bl = state.boule;
+    if (!bl || bl.stand === 'ende') return;
+    const baelle = bouleAlleBaelle();
+    if (!baelle.length) return;
+    const rollt = state.phase === 'rolling' || bl.stand === 'ziel';
+    const listen = stepBaelle(lv, baelle, STEP, state.t, rollt);
+    if (bouleEreignisse(baelle, listen)) return;
+    if (state.phase === 'aim' && state.ball && Math.hypot(state.ball.vx, state.ball.vy) > 0.3) {
+      state.phase = 'rolling'; state.aim = null;
+    }
+    if (state.phase !== 'rolling' && bl.stand !== 'ziel') return;
+    bl.wurfT += STEP;
+    /* Fertig ist ein Wurf erst, wenn wirklich alles liegt – sonst schlüge der Nächste in eine noch
+       rollende Kugel hinein. Nach BOULE_GEDULD Sekunden wird abgebrochen: Auf einer Bahn mit
+       Windfeld oder Förderband kommt sonst nie Ruhe ein. */
+    if (bouleAllesRuht(baelle)) {
+      state.restTimer += STEP;
+      if (state.restTimer > 0.35) { bouleRuhe(baelle); return; }
+    } else state.restTimer = 0;
+    if (bl.wurfT > BOULE_GEDULD) { for (const b of baelle) { b.vx = 0; b.vy = 0; } bouleRuhe(baelle); }
+  }
+  function bouleRuhe(baelle) {
+    const bl = state.boule;
+    state.restTimer = 0;
+    for (const b of baelle) { b.vx = 0; b.vy = 0; b.restX = b.x; b.restY = b.y; b.restEbene = b.ebene || 0; }
+    if (bl.stand === 'ziel') { bouleZielLiegt(); return; }
+    if (state.ball) bouleKugelLiegt();
+  }
+
+  /* ----- Das Ergebnis ----- */
+  function bouleEnde() {
+    const bl = state.boule;
+    bl.stand = 'ende';
+    state.phase = 'summary'; state.ball = null; state.aim = null;
+    bouleSichtAktualisieren();
+    setCamMode('overview');
+    clearTimeout(msgTimer); ui.msg.classList.remove('visible');
+    // Alle liegenden Kugeln nach Abstand, die ausgeschiedenen hinten dran
+    const liste = bl.liegen.map(k => ({ spieler: k.spieler, nummer: k.nummer, d: bouleAbstand(k) }))
+      .sort((a, b) => a.d - b.d);
+    const sieger = liste.length ? state.players[liste[0].spieler] : null;
+    const zeile = (r, i) => {
+      const p = state.players[r.spieler];
+      const hut = p.hat && p.hat !== 'none' ? `<canvas class="hat-icon" data-hut="${p.hat}" data-farbe="${p.color}"></canvas> ` : '';
+      return `<tr class="${i === 0 ? 'gesamt' : ''}"><td class="num">${i + 1}</td>
+        <td><span class="dot" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.color};margin-right:6px"></span>${hut}${Text.esc(p.name)}</td>
+        <td class="num">${r.nummer}</td><td class="num">${bouleZahl(r.d)}</td></tr>`;
+    };
+    const ausZeile = r => {
+      const p = state.players[r.spieler];
+      return `<tr class="boule-aus"><td class="num">–</td>
+        <td><span class="dot" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.color};margin-right:6px"></span>${Text.esc(p.name)}</td>
+        <td class="num">${r.nummer}</td><td>${Text.esc(BOULE_GRUND[r.grund] || 'ausgeschieden')}</td></tr>`;
+    };
+    const letzte = state.holeIdx === state.courses.length - 1;
+    overlay(`<div class="panel wide ${worldClass()}">
+      <h2>${Icons.svg('sports_score')} Boule · ${Text.esc(state.courses[state.holeIdx].name)}</h2>
+      ${sieger ? `<div class="sub"><b>${Text.esc(sieger.name)}</b> liegt am nächsten – ${bouleZahl(liste[0].d)} Felder von der Zielkugel.</div>`
+               : '<div class="sub">Keine einzige Kugel ist liegen geblieben – niemand gewinnt diese Runde.</div>'}
+      <table class="scores"><tr><th>#</th><th>Spieler</th><th>Kugel</th><th>Abstand</th></tr>
+        ${liste.map(zeile).join('')}${bl.aus.map(ausZeile).join('')}</table>
+      <p style="margin-top:12px">
+        <span class="btn" id="boule-noch">${Icons.svg('replay')} Noch eine Runde</span>
+        ${letzte ? '' : `<span class="btn ghost small" id="boule-weiter">Nächste Bahn ${Icons.svg('arrow_forward')}</span>`}
+      </p>
+      <p style="margin-top:8px"><span class="btn ghost small" id="boule-raus">${Icons.svg('arrow_back')} ${state.world && state.world.id === 'custom' ? 'Zurück zur Auswahl' : 'Zurück zur Weltkarte'}</span></p>
+      <div class="legend">Gemessen wird von der Mitte der Kugel zur Mitte der Zielkugel, in Feldern
+        der Bahn. Kugeln, die von der Bahn gefallen oder im Loch gelandet sind, zählen nicht mit.</div>
+    </div>`);
+    $('boule-noch').addEventListener('click', () => { hideOverlay(); loadHole(state.holeIdx); });
+    if (!letzte) $('boule-weiter').addEventListener('click', () => { hideOverlay(); loadHole(state.holeIdx + 1); });
+    $('boule-raus').addEventListener('click', () => leaveRound(true));
+    updateHud();
+  }
+
   function handleEvents(events) {
     for (const ev of events) {
       if (state.phase !== 'aim' && state.phase !== 'rolling') return;
@@ -1910,7 +2374,11 @@
       acc -= STEP; if (!window.__golfDebug || !window.__golfDebug.freeze) state.t += STEP;
       const b = state.ball, lv = state.level;
       if (!lv) continue;
-      if (b && (state.phase === 'aim' || state.phase === 'rolling')) {
+      if (state.boule) {
+        // Boule rechnet alle Bälle zusammen und kennt weder Strafschlag noch Schlaglimit
+        if (state.phase === 'aim' || state.phase === 'rolling' || state.boule.stand === 'ziel') bouleSchritt(lv);
+        else for (const ob of lv.obstacles) if (ob.update) ob.update(state.t);
+      } else if (b && (state.phase === 'aim' || state.phase === 'rolling')) {
         const ev = stepPhysics(lv, b, STEP, state.t, state.phase === 'rolling');
         handleEvents(ev);
         if (ev.some(e => e.type === 'contact' && e.kind === 'mover')) state.lastMoverHit = state.t;
@@ -2093,6 +2561,15 @@
       const par = parHier();
       for (let i = 0; i < state.players.length; i++) if (state.players[i].scores[state.holeIdx] == null) state.players[i].scores[state.holeIdx] = par;
       showHoleDone(); return true;
+    },
+    /* Die gewählten Hüte – fürs Prüfen der Regel „keiner doppelt" */
+    huete: () => playerHats.slice(),
+    /* Einen Schlag ausführen, ohne zu ziehen – für das automatische Durchspielen (Boule-Prüfung) */
+    shoot(dx, dy, power) {
+      if (state.phase !== 'aim' || !state.ball) return false;
+      const L = Math.hypot(dx, dy) || 1;
+      shoot(dx / L, dy / L, Math.max(0.05, Math.min(1, power)));
+      return true;
     },
     state, R,
   };

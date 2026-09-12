@@ -906,6 +906,14 @@ class Renderer {
     for (const d of lv.decor) items.push({ x: d.x, y: d.y, draw: () => this.drawDecor(ctx, d, t) });
     for (const ob of lv.obstacles) this.pushObstacle(items, ctx, ob, t);
     if (lv.cup && !lv.cupEbene) items.push({ x: lv.cup.x, y: lv.cup.y, bias: 0.01, draw: () => this.drawFlag(ctx, t) });
+    /* Bälle, die außer dem eigenen auf der Bahn liegen (Boule). Sie kommen in dieselbe Sortierung
+       wie alles andere, damit sie hinter einer Mauer auch hinter der Mauer liegen. 'ball: true'
+       nimmt sie von der Durchsichtigkeit aus, mit der Hindernisse vor dem eigenen Ball
+       zurücktreten – ein halb durchsichtiger Ball sähe aus wie ein Fehler. */
+    for (const lb of (state.liegendeBaelle || [])) {
+      if (!lb || lb.sunk) continue;
+      items.push({ x: lb.x, y: lb.y, ball: true, noFade: true, bias: 0.02, draw: () => this.drawBall(ctx, lb) });
+    }
     // Der Ball wird zum Schluss gezeichnet, damit er nie hinter Bäumen oder Mauern verschwindet
     for (const it of items) { it.k = this.depth(it.x, it.y) + (it.bias || 0); const p = this.proj(it.x, it.y); it.sx = p[0]; it.sy = p[1]; }
     items.sort((a, b) => a.k - b.k);
