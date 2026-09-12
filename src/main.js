@@ -15,6 +15,12 @@
      dafür PRUEFSTAND; auf der echten Seite gibt es diese Kennung nicht. */
   const TEST_FREI = (typeof VORSCHAU !== 'undefined' && VORSCHAU)
     || (typeof PRUEFSTAND !== 'undefined' && PRUEFSTAND);
+  /* Was fertig ist, aber noch nicht ins Spiel soll: in der Vorschau (und in der Einzeldatei zum
+     Ansehen) da, im fertigen Spiel nicht. Es ist derselbe Stand – eine Sache in der Vorschau
+     herauszuschneiden und im Spiel nicht, hieße zwei Stände von Hand auseinanderzuhalten, und
+     genau daran geht so etwas nach drei Auslieferungen kaputt. Ein Schalter ist eine Zeile;
+     zwei Stände sind eine Dauerpflicht. */
+  const NUR_VORSCHAU = TEST_FREI;
   const playerHats = DEFAULT_HATS.slice();
   try {
     const saved = JSON.parse(localStorage.getItem(speicherSchluessel('hats')) || 'null');
@@ -25,11 +31,36 @@
      trüge der Vorbesitzer den Preis weiter. Auf dem Prüfstand bleibt alles erlaubt. */
   const hutOderErsatz = (id, i) => (TEST_FREI || Hats.freigeschaltet(id)) ? id : DEFAULT_HATS[i % DEFAULT_HATS.length];
 
+  /* Am selben Gerät zu mehreren darf jeder Spieler jeden Skin aufsetzen – auch die Belohnungen,
+     die noch niemand verdient hat, und die beiden Helme der Arena. Am Küchentisch soll niemand
+     mit dem Vorgabehut dasitzen, nur weil der andere die Welt schon durchgespielt hat.
+
+     Geliehen heißt geliehen: So eine Wahl steht nur in playerHats, also im Arbeitsspeicher, und
+     geht *nicht* in den Browserspeicher. Nach dem Neuladen ist sie weg, und überall sonst
+     (allein, im Netzspiel) tauscht hutOderErsatz sie ohnehin gegen den Vorgabehut. An der
+     Freischaltung selbst ändert sich nichts: Die wird gar nicht gespeichert, sondern jedes Mal
+     aus der Rangliste und dem Turnierstand berechnet. */
   function setHat(i, id) {
     playerHats[i] = id;
     if (state.players[i]) state.players[i].hat = id;
     if (state.ball && state.curPlayer === i) state.ball.hat = id;
-    try { localStorage.setItem(speicherSchluessel('hats'), JSON.stringify(playerHats)); } catch (e) { /* kein Speicher */ }
+    hueteMerken();
+  }
+  /* Gemerkt wird nur Verdientes. Für einen geliehenen Platz kommt ein Ersatz hinein – und zwar
+     einer, den noch keiner hat: Stünde stur der Vorgabehut da, läge nach einer Partie mit
+     geliehener Königskrone zweimal „Krone" im Speicher, und die Aufstellung müsste das beim
+     nächsten Öffnen erst wieder auseinanderdividieren. */
+  function hueteMerken() {
+    const vergeben = new Set(), dauerhaft = [];
+    for (let i = 0; i < playerHats.length; i++) {
+      let h = playerHats[i];
+      if (!Hats.freigeschaltet(h) || vergeben.has(h)) {
+        const ersatz = Hats.LIST.find(x => !vergeben.has(x.id) && Hats.freigeschaltet(x.id) && x.id !== 'none');
+        h = ersatz ? ersatz.id : DEFAULT_HATS[i % DEFAULT_HATS.length];
+      }
+      vergeben.add(h); dauerhaft.push(h);
+    }
+    try { localStorage.setItem(speicherSchluessel('hats'), JSON.stringify(dauerhaft)); } catch (e) { /* kein Speicher */ }
   }
 
   const canvas = document.getElementById('game');
@@ -45,8 +76,12 @@
     particles: [], curPlayer: 0, strokes: 0, restTimer: 0, slowTimer: 0, lastBounceSfx: 0,
     camMode: 'overview', camTheta: Math.PI / 4, zoomFactor: 1,
     controlMode: 'sling', // 'sling' = Schleuder (vom Ball wegziehen), 'push' = Schieben (in Schussrichtung ziehen)
-    mode: 'normal',       // 'normal' = Wettkampf, 'creative' = Kreativ (Bahnen frei wählen und überspringen, kein Schlaglimit)
+    mode: 'normal',       // 'normal' = Wettkampf, 'creative' = Kreativ (Bahnen frei wählen und überspringen, kein Schlaglimit), 'boule' = Boule
     world: WORLDS[0], courses: WORLDS[0].courses,
+    boule: null,          // im Boule-Modus der ganze Stand dieser Runde, sonst null
+    /* Bälle, die außer dem eigenen noch auf der Bahn liegen. Der Renderer zeichnet sie einfach
+       mit; er muss dafür nichts über Spielarten wissen. Außerhalb von Boule ist die Liste leer. */
+    liegendeBaelle: [],
   };
   try { const m = localStorage.getItem(speicherSchluessel('control')); if (m === 'sling' || m === 'push') state.controlMode = m; } catch (e) { /* kein Speicher verfügbar */ }
   function setControlMode(m) {
@@ -76,9 +111,13 @@
   function clockStop() { clockPause(); clock.active = false; return Math.round(clock.acc); }
 
   /* ---------- UI ---------- */
-  function showMessage(text, ms = 1600) {
+  /* Die Meldung trägt auf Wunsch ein Sinnbild vor dem Text. Der Text geht durch Text.esc, weil
+     hier nicht mehr textContent gesetzt wird, sondern innerHTML – sonst stünde ein Spielername
+     mit spitzer Klammer als Markup in der Meldung. */
+  function showMessage(text, ms = 1600, sinnbild = '') {
     if (state.phase === 'summary' || state.phase === 'final') return; // keine Laufmeldung über den Ergebnistafeln
-    ui.msg.textContent = text; ui.msg.classList.add('visible'); ui.msg.classList.toggle('small', text.length > 40);
+    ui.msg.innerHTML = (sinnbild ? Icons.svg(sinnbild) + ' ' : '') + Text.esc(text);
+    ui.msg.classList.add('visible'); ui.msg.classList.toggle('small', text.length > 40);
     clearTimeout(msgTimer); msgTimer = setTimeout(() => ui.msg.classList.remove('visible'), ms);
   }
   function updateHud() {
@@ -88,12 +127,16 @@
     // Rekordzeile: der beste Wert des Freundeskreises auf dieser Bahn
     const w = def && state.world && state.world.id !== 'custom' ? Best.of(state.world.id) : null;
     const recS = w ? w.strokes.holes[def.name] : null, recT = w ? w.time.holes[def.name] : null;
-    ui.best.textContent = [recS ? `🏆 ${recS.s} · ${recS.n}` : '', recT ? `⏱ ${Best.formatTime(recT.s)} · ${recT.n}` : ''].filter(Boolean).join('   ');
+    ui.best.innerHTML = [recS ? `${Icons.svg('emoji_events')} ${Text.esc(recS.s + ' · ' + recS.n)}` : '',
+      recT ? `${Icons.svg('timer')} ${Text.esc(Best.formatTime(recT.s) + ' · ' + recT.n)}` : ''].filter(Boolean).join('&nbsp;&nbsp;&nbsp;');
     const p = state.players[state.curPlayer];
     ui.player.textContent = p ? p.name : '–';
     syncClock();
     const parJetzt = def ? Best.par(weltId(), def) : 0;
-    ui.strokes.textContent = def ? (state.mode === 'creative' ? `Kreativ · Schläge: ${state.strokes} · Par ${parJetzt}` : `Schläge: ${state.strokes} / ${maxStrokes()} · Par ${parJetzt}`) : '';
+    ui.strokes.textContent = !def ? ''
+      : state.mode === 'boule' ? bouleKopfzeile()
+      : state.mode === 'creative' ? `Kreativ · Schläge: ${state.strokes} · Par ${parJetzt}`
+      : `Schläge: ${state.strokes} / ${maxStrokes()} · Par ${parJetzt}`;
     // Namen kommen im Netzspiel von fremden Geräten: die Zeile wird gebaut, nicht aus Text geklebt
     ui.board.replaceChildren(...state.players.map((pl, i) => {
       const row = document.createElement('div');
@@ -102,13 +145,17 @@
       dot.className = 'dot'; dot.style.background = pl.color;
       row.appendChild(dot);
       if (pl.hat && pl.hat !== 'none') {
-        const hut = document.createElement('span');
-        hut.className = 'hat-icon'; hut.title = Hats.name(pl.hat); hut.textContent = Hats.icon(pl.hat);
+        // Der echte Hut in klein, gemalt vom selben Code wie der auf dem Ball. Material Symbols
+        // hat weder Krone noch Zauberhut, und ein Emoji sah auf jedem Gerät anders aus.
+        const hut = document.createElement('canvas');
+        hut.className = 'hat-icon'; hut.title = Hats.name(pl.hat);
         row.appendChild(hut);
+        Hats.preview(hut, pl.hat, pl.color);
       }
       row.appendChild(document.createTextNode(pl.name));
       const score = document.createElement('span');
-      score.className = 'score'; score.textContent = pl.scores.reduce((a, b) => a + b, 0);
+      score.className = 'score';
+      score.textContent = state.mode === 'boule' ? bouleTafelWert(i) : pl.scores.reduce((a, b) => a + b, 0);
       row.appendChild(score);
       return row;
     }));
@@ -116,7 +163,7 @@
   /* Zeitanzeige im Kopf – nur im Wettkampf, im Kreativmodus wird nichts gewertet */
   let clockShown = '';
   function syncClock() {
-    const zeigen = clock.active && state.mode !== 'creative' && !state.editorReturn;
+    const zeigen = clock.active && state.mode !== 'creative' && state.mode !== 'boule' && !state.editorReturn;
     const txt = zeigen ? Best.formatTime(clockRead()) : '';
     if (txt !== clockShown) { clockShown = txt; ui.time.textContent = txt; }
   }
@@ -124,8 +171,62 @@
      etwa vom Laufen ins Beendetsein –, wird genau dieser neu gezeichnet. Jeder Bildschirm setzt
      den Merker nach seinem overlay() selbst; overlay() löscht ihn vorher. */
   let turnierSchirm = null;
-  function overlay(html, cls) { clockPause(); turnierSchirm = null; ui.overlay.innerHTML = html; ui.overlay.className = 'screen visible' + (cls ? ' ' + cls : ''); }
-  function hideOverlay() { ui.overlay.className = 'screen'; ui.overlay.innerHTML = ''; clockResume(); }
+  function overlay(html, cls) {
+    clockPause(); turnierSchirm = null;
+    ui.overlay.innerHTML = html;
+    ui.overlay.className = 'screen visible' + (cls ? ' ' + cls : '');
+    document.body.classList.remove('startbild');
+    hutAbzeichenMalen(ui.overlay);
+  }
+  /* Hut-Abzeichen in einer frisch gebauten Tafel malen. Im Markup stehen sie nur als
+     <canvas data-hut>, weil dort Text zusammengesetzt wird; gezeichnet werden kann erst, wenn sie
+     im Baum hängen – vorher hat die Leinwand keine Größe. */
+  function hutAbzeichenMalen(wurzel) {
+    wurzel.querySelectorAll('canvas[data-hut]').forEach(c =>
+      Hats.preview(c, c.dataset.hut, c.dataset.farbe || '#f4efe6'));
+  }
+  function hideOverlay() { ui.overlay.className = 'screen'; ui.overlay.innerHTML = ''; document.body.classList.remove('startbild'); clockResume(); }
+
+  /* ---------- Startbild ----------
+     Das gemalte Titelbild liegt nur auf dem Startbildschirm. overlay() nimmt es bei jedem Wechsel
+     weg, showTitle() setzt es wieder – so muss nicht jeder einzelne Bildschirm daran denken.
+
+     Es gibt zwei Bilder: eines quer, eines hoch. Ein einziges täte es nicht – vom Querbild bliebe
+     auf dem Handy ein schmaler Streifen übrig, mit zerschnittenem Schriftzug darin. Welches gilt,
+     entscheidet allein das Seitenverhältnis des Fensters; beide füllen ihren Schirm dann ganz.
+
+     Lädt das Bild nicht, fällt der Startbildschirm auf die gezeichnete Szene zurück – dann steht
+     der Schriftzug wieder in der Tafel, und niemand sieht ein Loch.
+
+     Geprüft wird das **vorher**, mit einem eigenen Image-Objekt, nicht mit einem 'error' am <image>
+     im SVG. Genau daran ist es einmal gescheitert: Auf dem iPad hat das SVG-Element kein 'error'
+     gemeldet, das Bild fehlte trotzdem, und Safari malte sein Fragezeichen quer über den halben
+     Schirm. Ein Image-Objekt meldet überall verlässlich, und das Bild kommt erst auf den Schirm,
+     wenn es wirklich da ist. */
+  const bildBereit = { quer: false, hoch: false };
+  function titelbildPassen() {
+    // Hochkant nur, wenn es auch das hohe Bild gibt – sonst lieber das quere beschnitten als nichts.
+    const hoch = innerWidth < innerHeight && bildBereit.hoch;
+    document.body.classList.toggle('hoch', hoch);
+  }
+  function startbildAn() {
+    if (!bildBereit.quer || !$('tb-svg')) return;
+    document.body.classList.add('startbild');
+    titelbildPassen();
+  }
+  (() => {
+    for (const [welches, id] of [['quer', 'tb-svg'], ['hoch', 'tb-hoch']]) {
+      const svg = $(id), quelle = svg && svg.querySelector('image');
+      if (!quelle) continue;
+      const probe = new Image();
+      probe.addEventListener('load', () => {
+        bildBereit[welches] = true;
+        if (state.phase === 'title' && ui.overlay.classList.contains('title')) startbildAn();
+      });
+      probe.src = quelle.getAttribute('href');
+    }
+    addEventListener('resize', titelbildPassen);
+  })();
 
   const SCENE_NORMAL = `<svg class="mode-scene" viewBox="0 0 300 72" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
             <defs>
@@ -308,18 +409,24 @@
     state.phase = 'title'; state.editorReturn = false; Music.set('title');
     document.body.classList.add('title');
     document.body.classList.remove('creative', 'editing', 'testing');
+    /* Die beiden großen Knöpfe zeigen je eine Szene als Hintergrund. Damit die Beschriftung darauf
+       lesbar bleibt, liegt ein Schleier dazwischen, der nach rechts hin dunkler wird – vorher stand
+       das Wort „Weltkarte" mitten in den Ortsnamen der Karte. Die zweite Zeile sagt, was einen
+       dahinter erwartet; das spart den Erklärsatz darunter. */
     overlay(`<div class="panel">
-      <h1>⛳ Fantasy Golf</h1>
-      <div class="sub">Golf with your Friends · ${WORLDS.length} Welten, ${TOTAL_HOLES} magische Bahnen in 2,5D</div>
+      <h1>${Icons.svg('sports_golf', 'h1-ball')} Fantasy Golf</h1>
+      <div class="sub">Golf with your Friends · Minigolf in 2,5D</div>
       <div class="modes">
-        <span class="btn mode" id="to-map">${WorldMap.svg('mode-scene', 'xMidYMid slice')}<span class="mode-label">Weltkarte</span></span>
-        <span class="btn mode" id="to-build">${SCENE_CREATIVE}<span class="mode-label long">Bauen &amp; Eigene Welt</span></span>
+        <span class="btn mode" id="to-map">${WorldMap.svg('mode-scene', 'xMidYMid slice')}<span class="mode-schleier"></span>
+          <span class="mode-label">Weltkarte<small>${WORLDS.length} Welten · ${TOTAL_HOLES} Bahnen · alle offen</small></span></span>
+        <span class="btn mode" id="to-build">${SCENE_CREATIVE}<span class="mode-schleier"></span>
+          <span class="mode-label long">Bauen &amp; Eigene Welt<small>Eigene Bahnen bauen und verschicken</small></span></span>
       </div>
       <div class="atlas-extra"><span class="btn small ghost" id="to-turnier">${Icons.svg('golf_course')} Turnier</span>
         <span class="btn small ghost" id="to-online">${Icons.svg('public')} Online spielen</span>
         <span class="btn small ghost" id="to-best">${Icons.svg('emoji_events')} Rangliste</span></div>
       ${turnierBand()}
-      <div class="legend">Alle Welten sind von Anfang an offen. Die Stufe an jedem Ort sagt nur, was dich erwartet.
+      <div class="legend">Die Stufe an jedem Ort sagt nur, was dich erwartet – gespielt werden kann jede Welt sofort.
         <span class="version">${typeof VORSCHAU !== 'undefined' && VORSCHAU ? 'Vorschau · ' : ''}Fassung ${typeof APP_VERSION !== 'undefined' ? APP_VERSION : '?'}</span></div>
     </div>`, 'title');
     turnierSchirm = showTitle;
@@ -330,6 +437,7 @@
     $('to-best').addEventListener('click', () => { Sfx.unlock(); Music.start(); showBestList(); });
     $('to-map').addEventListener('click', () => { Sfx.unlock(); Music.start(); showMap(); });
     $('to-build').addEventListener('click', () => { Sfx.unlock(); Music.start(); showBuild(); });
+    startbildAn();
   }
 
   /* Weltkarte: alle Welten auf einen Blick, jede sofort spielbar */
@@ -344,14 +452,19 @@
     const marks = kartenWelten.map(w => {
       const sp = WorldMap.spots[w.id];
       const m = worldMode(w);
-      return `<button class="spot" style="left:${sp.x}%;top:${sp.y}%;--pin:${sp.col}" data-world="${w.id}" title="${Text.esc(w.name)}">
-        <span class="spot-pin">${sp.icon}</span>
-        <span class="spot-label"><b>${Text.esc(w.name)}</b><i>${MODE_ICON[m]} ${MODE_NAME[m]} · ${w.courses.length} Bahnen</i></span></button>`;
+      // sp.x steht in Karteneinheiten (0 … WorldMap.BREITE), die Marke braucht Prozent der Karte
+      const links = (sp.x / WorldMap.BREITE * 100).toFixed(2);
+      return `<button class="spot" style="left:${links}%;top:${sp.y}%;--pin:${sp.col}" data-world="${w.id}" title="${Text.esc(w.name)}">
+        <span class="spot-pin">${Icons.svg(sp.icon)}</span>
+        <span class="spot-label"><b>${Text.esc(w.name)}</b><i>${Icons.svg(MODE_ICON[m])} ${MODE_NAME[m]} · ${w.courses.length} Bahnen</i></span></button>`;
     }).join('');
     overlay(`<div class="panel atlas-panel">
       <div class="panel-head"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span><h2>${Icons.svg('map')} Weltkarte</h2></div>
-      <div class="sub">Tippe einen Ort an – alle ${kartenWelten.length} Welten sind von Anfang an offen.</div>
-      <div class="atlas">${WorldMap.svg()}${marks}</div>
+      <div class="sub">Tippe einen Ort an – alle ${kartenWelten.length} Welten sind offen.<span class="lang">
+        Sie liegen als Landstriche auf der Karte: <b>gestrichelte Wege</b> verbinden sie, über Wasser geht es per Schiff.</span></div>
+      <!-- Die Karte ist BREITE Einheiten breit, der Kasten so breit wie die Tafel. Bei BREITE = 100
+           passt sie ganz hinein; wird sie einmal breiter, schiebt der Kasten waagerecht. -->
+      <div class="atlas-schiebe"><div class="atlas" style="aspect-ratio:${WorldMap.BREITE} / 62;width:${WorldMap.BREITE}%">${WorldMap.svg()}${marks}</div></div>
       ${turnierBand()}
       <div class="atlas-extra"><span class="btn small ghost" id="to-build2">${Icons.svg('construction')} Bauen &amp; Eigene Welt</span></div>
     </div>`, 'title');
@@ -437,8 +550,41 @@
     }));
   }
 
-  const sceneFor = id => ({ normal: SCENE_NORMAL, sea: SCENE_SEA, pro: SCENE_PRO, jungle: SCENE_JUNGLE, storm: SCENE_STORM, shadow: SCENE_SHADOW })[id] || SCENE_NORMAL;
-  const MODE_ICON = { normal: '🏆', pro: '🔥', legend: '⚡' };
+  /* Uhrwerkstadt: Dächer in der Dämmerung, davor der Turm mit dem beleuchteten Zifferblatt.
+     Die Zeiger stehen still – ein Bild, kein Uhrwerk; bewegt wird nur der Dampf über den Dächern. */
+  const SCENE_CLOCK = `<svg class="mode-scene" viewBox="0 0 300 72" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+            <defs>
+              <linearGradient id="skyU" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d1526"/><stop offset="0.55" stop-color="#2c3a5c"/><stop offset="1" stop-color="#6b6a72"/></linearGradient>
+              <linearGradient id="turmU" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#20263a"/><stop offset="0.5" stop-color="#39415c"/><stop offset="1" stop-color="#1a2032"/></linearGradient>
+              <radialGradient id="blattU" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fff4d0"/><stop offset="0.75" stop-color="#ffcf7a"/><stop offset="1" stop-color="#c98a30"/></radialGradient>
+              <filter id="softU" x="-30%" y="-30%" width="160%" height="180%"><feGaussianBlur stdDeviation="2"/></filter>
+            </defs>
+            <rect width="300" height="72" fill="url(#skyU)"/>
+            <g fill="#e8eeff" opacity="0.55"><circle cx="34" cy="12" r="0.9"/><circle cx="88" cy="7" r="0.7"/><circle cx="146" cy="15" r="0.8"/><circle cx="212" cy="9" r="0.7"/><circle cx="268" cy="17" r="0.9"/></g>
+            <g class="drift" opacity="0.35" filter="url(#softU)"><ellipse cx="60" cy="26" rx="22" ry="6" fill="#9fb0cc"/><ellipse cx="236" cy="20" rx="26" ry="6" fill="#9fb0cc"/></g>
+            <path d="M0 58 L14 58 L14 44 L26 44 L26 58 L44 58 L44 38 L58 38 L58 58 L76 58 L76 48 L90 48 L90 58 L300 58 V72 H0 Z" fill="#161c2c"/>
+            <path d="M214 58 L214 40 L226 40 L226 58 L246 58 L246 46 L258 46 L258 58 L276 58 L276 36 L290 36 L290 58 L300 58 V72 H214 Z" fill="#1b2234"/>
+            <g fill="#4fb59b" opacity="0.85"><path d="M44 38 L51 32 L58 38 Z"/><path d="M276 36 L283 30 L290 36 Z"/><path d="M14 44 L20 39 L26 44 Z"/></g>
+            <rect x="132" y="10" width="36" height="62" fill="url(#turmU)"/>
+            <path d="M128 12 L150 0 L172 12 Z" fill="#4fb59b"/>
+            <circle cx="150" cy="30" r="13" fill="#8a6624"/>
+            <circle cx="150" cy="30" r="11" fill="url(#blattU)"/>
+            <g stroke="#3a2a12" stroke-linecap="round"><line x1="150" y1="30" x2="150" y2="22" stroke-width="1.6"/><line x1="150" y1="30" x2="156" y2="33" stroke-width="1.4"/></g>
+            <g fill="#ffc46b" opacity="0.9"><rect x="139" y="48" width="4" height="6"/><rect x="157" y="48" width="4" height="6"/><rect x="20" y="50" width="3" height="5"/><rect x="49" y="44" width="3" height="5"/><rect x="251" y="52" width="3" height="5"/><rect x="281" y="42" width="3" height="5"/></g>
+            <g class="drift" opacity="0.28" filter="url(#softU)"><ellipse cx="104" cy="46" rx="12" ry="7" fill="#e6eefc"/><ellipse cx="196" cy="50" rx="10" ry="6" fill="#e6eefc"/></g>
+            <g stroke="#c9903f" stroke-width="1.2" fill="none" opacity="0.75"><circle cx="100" cy="62" r="6"/><circle cx="204" cy="64" r="5"/></g>
+          </svg>`;
+
+  const sceneFor = id => ({ normal: SCENE_NORMAL, sea: SCENE_SEA, pro: SCENE_PRO, jungle: SCENE_JUNGLE, storm: SCENE_STORM, shadow: SCENE_SHADOW, clock: SCENE_CLOCK })[id] || SCENE_NORMAL;
+  const MODE_ICON = { normal: 'emoji_events', pro: 'local_fire_department', legend: 'bolt' };
+  /* Die Marke einer Welt auf den Weltknöpfen: dieselbe wie auf der Karte. Das Kolosseum steht nicht
+     auf der Karte – es ist die Turnierwelt – und bringt seine Marke darum hier mit.
+
+     Drei Welten behalten ausdrücklich das Zeichen ihrer Stufe: Märchenland den Pokal, Sturmhimmel
+     und Arena den Blitz. So hat Lüddecke es gewählt; die Marke steht dort auf der Karte. */
+  const WELT_ICON_AUSNAHME = { normal: 'emoji_events', storm: 'bolt', colosseum: 'bolt' };
+  const WELT_ICON = id => WELT_ICON_AUSNAHME[id]
+    || (WorldMap.spots[id] && WorldMap.spots[id].icon) || 'golf_course';
   const worldMode = w => (w && w.mode) || 'normal';
   function setWorld(id) { state.world = WORLDS.find(w => w.id === id) || WORLDS[0]; state.courses = state.world.courses; Music.set(state.world.id); }
 
@@ -483,7 +629,7 @@
     const z = Turnier.zustand();
     const welt = WORLDS.find(w => w.id === Turnier.WELT) || WORLDS[0];
     const liste = Turnier.rangliste();
-    const medaille = ['🥇', '🥈', '🥉'];
+    const medaille = ['gold', 'silber', 'bronze'].map(r => `<span class="rang ${r}">${Icons.svg('workspace_premium')}</span>`);
     const zeit = ms => Best.formatTime(ms);
     const kombi = s => String(s).replace('.', ',');
 
@@ -536,13 +682,13 @@
 
       <div class="sub" style="margin-top:12px"><b>Ganze Runde</b> · Par ${Best.parSumme(welt.id, welt.courses)}</div>
       <div class="tabelle-schiebe"><table class="scores best-table turnier-tafel">
-        <tr><th></th><th>Name</th><th class="num">${BEST_ICON.combo} Kombi</th><th class="num">${BEST_ICON.strokes}</th><th class="num">${BEST_ICON.time}</th></tr>
+        <tr><th></th><th>Name</th><th class="num">${Icons.svg(BEST_ICON.combo)} Kombi</th><th class="num">${Icons.svg(BEST_ICON.strokes)}</th><th class="num">${Icons.svg(BEST_ICON.time)}</th></tr>
         ${rundenZeilen}
       </table></div>
 
       <div class="sub" style="margin-top:14px"><b>Beste Einzelbahnen</b></div>
       <div class="tabelle-schiebe"><table class="scores best-table turnier-tafel">
-        <tr><th>#</th><th>Bahn</th><th class="num">Par</th><th class="num">${BEST_ICON.combo} Kombi</th><th class="num">${BEST_ICON.strokes}</th><th class="num">${BEST_ICON.time}</th></tr>
+        <tr><th>#</th><th>Bahn</th><th class="num">Par</th><th class="num">${Icons.svg(BEST_ICON.combo)} Kombi</th><th class="num">${Icons.svg(BEST_ICON.strokes)}</th><th class="num">${Icons.svg(BEST_ICON.time)}</th></tr>
         ${bahnZeilen}
       </table></div>
 
@@ -568,7 +714,7 @@
   function lohnZeile() {
     if (!frischerLohn) return '';
     const l = frischerLohn; frischerLohn = null;
-    return `<div class="sub lohn-frisch">${l.icon} <b>${Text.esc(l.name)} freigeschaltet!</b><br>
+    return `<div class="sub lohn-frisch"><canvas class="hat-icon gross" data-hut="${l.id}"></canvas> <b>${Text.esc(l.name)} freigeschaltet!</b><br>
       Du findest ihn bei der Hutwahl vor dem Start.</div>`;
   }
 
@@ -576,7 +722,7 @@
     const lohn = Hats.belohnung(w.id);
     if (!lohn) return '';
     const frei = Hats.freigeschaltet(lohn.id);
-    const kopf = `<span class="lohn-name">${lohn.icon} ${Text.esc(lohn.name)}</span>
+    const kopf = `<span class="lohn-name"><canvas class="hat-icon" data-hut="${lohn.id}"></canvas> ${Text.esc(lohn.name)}</span>
       <span class="lohn-was">Belohnung dieser Welt</span>`;
     // Der Championhelm hängt am Turnier, nicht am Par – für ihn gibt es nichts zu zählen
     if (lohn.art === 'turnier') return `<div class="lohn ${frei ? 'auf' : ''}">${kopf}
@@ -625,7 +771,7 @@
     /* Eine Zelle je Wertung: der Wert, darunter klein, wer ihn hält, darunter der eigene */
     // Am Eintrag steht, woher er kommt: gegeneinander gespielt oder allein am eigenen Gerät
     const zelle = (kind, r, mein) => `<td class="num rec">${r
-      ? `<b>${Text.esc(Best.format(kind, r))}</b><i>${r.q === 'net' ? '<span class="q-net" title="in einer Runde gegeneinander erspielt">🌐</span> ' : ''}${Text.esc(r.n)}</i>`
+      ? `<b>${Text.esc(Best.format(kind, r))}</b><i>${r.q === 'net' ? `<span class="q-net" title="in einer Runde gegeneinander erspielt">${Icons.svg('public')}</span> ` : ''}${Text.esc(r.n)}</i>`
       : '<b>–</b>'}${mein === false ? '' : meinsZelle(kind, mein, r && r.s)}</td>`;
     const rows = w.courses.map((c, i) => {
       const h = k => rec[k].holes[c.name];
@@ -654,7 +800,7 @@
       <div class="sub">Für jede Bahn zählen <b>alle drei Wertungen gleichzeitig</b> – Namen eintragen, losspielen,
         der Rest passiert von allein. Gewertet wird dein eigener Ball im Wettkampf.</div>
       <div class="sub warn-note">Diese Liste ist eine Anschreibetafel, kein Schiedsrichter: Jedes Gerät meldet sein
-        Ergebnis selbst, niemand prüft es nach. <b>🌐</b> heißt „in einer Runde gegeneinander erspielt", da haben
+          Ergebnis selbst, niemand prüft es nach. <b class="q-net">${Icons.svg('public')}</b> heißt „in einer Runde gegeneinander erspielt", da haben
         andere zugeschaut. Einträge ohne Zeichen sind allein am eigenen Gerät entstanden.</div>
       <p class="join-row"><label class="lbl">Dein Name<input id="bn" class="name-in" autocomplete="off" spellcheck="false" placeholder="z. B. Max" maxlength="${Text.NAME_MAX}" value="${Text.esc(Best.name)}"></label>
         <span class="btn small" id="bsave">Merken</span></p>
@@ -662,11 +808,11 @@
       <div class="sub net-note" id="bstate">${!Best.name ? 'Trag deinen Namen ein – ohne Namen wird nichts gewertet.'
         : Net.status === 'ready' ? 'Verbunden – alle mit dem Spiel teilen sich diese Liste.'
         : 'Keine Verbindung – die Rekorde bleiben vorerst auf diesem Gerät.'}</div>
-      <div id="bw" class="ow">${WORLDS.filter(x => x.id !== 'custom').map(x => `<span class="btn ghost small ${x.id === w.id ? 'sel' : ''}" data-w="${x.id}">${MODE_ICON[worldMode(x)]} ${Text.esc(x.short)}</span>`).join('')}</div>
+      <div id="bw" class="ow">${WORLDS.filter(x => x.id !== 'custom').map(x => `<span class="btn ghost small ${x.id === w.id ? 'sel' : ''}" data-w="${x.id}">${Icons.svg(WELT_ICON(x.id))} ${Text.esc(x.short)}</span>`).join('')}</div>
       <div class="sub" style="margin-top:10px"><b>${Text.esc(w.name)}</b> · Par ${parTotal}</div>
       ${belohnungsStand(w)}
       <div class="tabelle-schiebe"><table class="scores best-table">
-        <tr><th>#</th><th>Bahn</th><th>Par</th>${Best.KINDS.map(k => `<th class="num">${BEST_ICON[k]} <span class="kopf-wort">${Best.KIND_NAME[k]}</span></th>`).join('')}</tr>
+        <tr><th>#</th><th>Bahn</th><th>Par</th>${Best.KINDS.map(k => `<th class="num">${Icons.svg(BEST_ICON[k])} <span class="kopf-wort">${Best.KIND_NAME[k]}</span></th>`).join('')}</tr>
         ${rows}
         <tr class="gesamt"><td></td><td>Gesamt <i>beste Bahnen zusammen</i></td><td class="num">${parTotal}</td>${gesamtZeile}</tr>
         <tr class="ganze-runde"><td></td><td>Ganze Runde <i>an einem Stück</i></td><td></td>${rundeZeile}</tr>
@@ -687,12 +833,12 @@
         <b>Par kommt aus dieser Liste:</b> Es liegt immer einen Schlag über dem besten
         Ergebnis, das je auf einer Bahn gespielt wurde. Hat sie noch niemand gespielt, gilt das gebaute Par.
         Wird ein Rekord verbessert, wird Par im selben Moment schärfer – für alle.<br>
-        <b>${BEST_ICON.strokes} Schläge:</b> ${BEST_HELP.strokes}<br>
-        <b>${BEST_ICON.time} Zeit:</b> ${BEST_HELP.time}<br>
-        <b>${BEST_ICON.combo} Kombi:</b> ${BEST_HELP.combo}<br>
+        <b>${Icons.svg(BEST_ICON.strokes)} Schläge:</b> ${BEST_HELP.strokes}<br>
+        <b>${Icons.svg(BEST_ICON.time)} Zeit:</b> ${BEST_HELP.time}<br>
+        <b>${Icons.svg(BEST_ICON.combo)} Kombi:</b> ${BEST_HELP.combo}<br>
         Alle, die das Spiel haben, teilen sich diese Liste. Die Rekorde liegen beim Vermittler und
         zusätzlich hier im Browser – startet der Vermittler neu, können sie dort verloren gehen.</div>
-    </div>`, 'title');
+    </div>`, 'title rangliste');
     $('back').addEventListener('click', showTitle);
     ui.overlay.querySelectorAll('#bw .btn').forEach(b => b.addEventListener('click', () => showBestList(b.dataset.w)));
     if ($('brs')) $('brs').addEventListener('click', () => fragenUndZuruecksetzen(w.id));
@@ -719,7 +865,7 @@
       <p style="margin-top:14px"><span class="btn" id="lf-ja">Liste übernehmen</span></p>
       <div class="legend">Wer zuerst übernimmt, führt die Liste. Sag deinen Freunden Bescheid, damit
         es nicht jemand anderes tut.</div>
-    </div>`, 'title');
+    </div>`, 'title rangliste');
     $('back').addEventListener('click', () => showBestList(weltId));
     $('lf-ja').addEventListener('click', async () => {
       Sfx.unlock();
@@ -750,7 +896,7 @@
       <p><span class="btn small ghost" id="k-set">Einsetzen</span></p>
       <div class="legend">Der Schlüssel liegt nur in diesem Browser. Löschst du die Daten der Seite,
         ist er weg – dann kann niemand mehr zurücksetzen.</div>
-    </div>`, 'title');
+    </div>`, 'title rangliste');
     $('back').addEventListener('click', () => showBestList(weltId));
     if ($('k-copy')) $('k-copy').addEventListener('click', async () => {
       try { await navigator.clipboard.writeText(meiner); showMessage('Schlüssel kopiert', 1800); }
@@ -775,7 +921,7 @@
         Danach fangen alle wieder bei null an.</div>
       <p style="margin-top:14px"><span class="btn ghost small" id="rs-nein">${Icons.svg('arrow_back')} Lieber nicht</span>
         <span class="btn" id="rs-ja">Zurücksetzen</span></p>
-    </div>`, 'title');
+    </div>`, 'title rangliste');
     $('rs-nein').addEventListener('click', () => showBestList(weltId));
     $('rs-ja').addEventListener('click', async () => {
       Sfx.unlock();
@@ -787,7 +933,7 @@
     });
   }
 
-  const BEST_ICON = { strokes: '🏆', time: '⏱', combo: '⚡' };
+  const BEST_ICON = { strokes: 'emoji_events', time: 'timer', combo: 'bolt' };
   function speicherGeht() {
     try { localStorage.setItem(speicherSchluessel('probe'), '1'); localStorage.removeItem(speicherSchluessel('probe')); return true; } catch (e) { return false; }
   }
@@ -813,18 +959,18 @@
     const lohn = Hats.belohnung(state.world.id);
     const vorherFrei = lohn ? Hats.freigeschaltet(lohn.id) : true;
     const treffer = Best.hole(state.world.id, def.name, score, ms, (online && online.started) ? 'net' : 'lokal', state.mode);
-    if (treffer.length) { Sfx.sink(); showMessage(`🏆 ${def.name}: ${recordText(treffer)}`, 2600); }
+    if (treffer.length) { Sfx.sink(); showMessage(`${def.name}: ${recordText(treffer)}`, 2600, 'emoji_events'); }
     if (lohn && !vorherFrei && Hats.freigeschaltet(lohn.id)) {
       /* Sofort melden, nicht verzögert: Gleich danach geht die Ergebnistafel auf, und über der
          schweigt showMessage. Die Tafel bekommt die Nachricht darum noch einmal als Zeile –
          so geht der Moment nicht unter, wenn man gerade woanders hinschaut. */
       Sfx.sink();
-      showMessage(`${lohn.icon} ${lohn.name} freigeschaltet!`, 3400);
+      showMessage(`${lohn.name} freigeschaltet!`, 3400, 'star');
       frischerLohn = lohn;
     }
     // Läuft gerade das Turnier und sind wir in seiner Welt, zählt der Wert dort zusätzlich
     if (state.world.id === Turnier.WELT && Turnier.bahn(def.name, score, ms) && !treffer.length)
-      showMessage(`⚔️ Turnier: ${def.name} verbessert`, 2200);
+      showMessage(`Turnier: ${def.name} verbessert`, 2200, 'swords');
   }
   /* „Schläge 2 (vorher 3), Zeit 0:14,2" – aus den gefallenen Rekorden einer Runde */
   const recordText = treffer => treffer.map(h =>
@@ -837,7 +983,7 @@
     for (const n of news.slice(0, 1)) {
       if (n.rec.n === Best.name) continue;   // der eigene Eintrag von einem anderen Gerät
       const wert = `${Best.KIND_NAME[n.kind] || 'Schläge'} ${Best.format(n.kind, n.rec)}`;
-      showMessage(n.hole ? `🏆 ${n.rec.n}: ${n.hole} – ${wert}` : `🏆 ${n.rec.n}: ${w ? w.name : 'Welt'} gesamt – ${wert}`, 2600);
+      showMessage(n.hole ? `${n.rec.n}: ${n.hole} – ${wert}` : `${n.rec.n}: ${w ? w.name : 'Welt'} gesamt – ${wert}`, 2600, 'emoji_events');
     }
     updateHud();
   }
@@ -979,7 +1125,8 @@
                             Math.abs(Math.hypot(m.dx, m.dy) - 1) < 0.02 && istZahl(m.power, 0, 1) &&
                             istTakt(m.st) && istZaehler(m.sz) && istAmZug(m);
       case 'rest':   return istGanz(m.h, 0, state.courses.length - 1) && istGanz(m.pi, 0, ONLINE_MAX - 1) &&
-                            aufBahn(m.x, m.y) && istGanz(m.s, 0, 999) && istTakt(m.st) && istZaehler(m.sz) && istAmZug(m);
+                            aufBahn(m.x, m.y) && (m.e == null || istGanz(m.e, 0, 8)) &&
+                            istGanz(m.s, 0, 999) && istTakt(m.st) && istZaehler(m.sz) && istAmZug(m);
       case 'done':   return istGanz(m.h, 0, state.courses.length - 1) && istGanz(m.pi, 0, ONLINE_MAX - 1) &&
                             istGanz(m.score, 1, 999) && (m.ms == null || istZahl(m.ms, 0, 24 * 3600 * 1000)) && istAmZug(m);
       case 'alive':  return true;
@@ -996,8 +1143,14 @@
       case 'hello':
         if (!online.host) break;
         if (online.started) { netSend({ t: 'busy', to: m.from, why: 'Die Runde läuft schon.' }); break; }
-        if (!online.players.some(p => p.id === m.from) && online.players.length < ONLINE_MAX)
-          online.players.push({ id: m.from, nick: Text.name(m.nick), hat: Hats.has(m.hat) ? m.hat : 'none' });
+        {
+          /* Eine zweite Anmeldung ist kein Fehler: So sagt ein Gast, dass er im Warteraum den Hut
+             gewechselt hat. Wer schon sitzt, behält seinen Platz und bekommt nur Name und Hut neu. */
+          const da = online.players.find(p => p.id === m.from);
+          const hut = Hats.has(m.hat) ? m.hat : 'none';
+          if (da) { da.nick = Text.name(m.nick); da.hat = hut; }
+          else if (online.players.length < ONLINE_MAX) online.players.push({ id: m.from, nick: Text.name(m.nick), hat: hut });
+        }
         sendRoster(); showLobby();
         break;
       case 'roster': {
@@ -1036,6 +1189,8 @@
           const b = state.ball;
           b.x = m.x; b.y = m.y; b.z = 0; b.vx = 0; b.vy = 0; b.vz = 0; b.air = false; b.rider = null;
           b.restX = m.x; b.restY = m.y;
+          b.ebene = b.restEbene = (typeof m.e === 'number' && m.e >= 0 && m.e < (state.level.flaechen || [0]).length) ? m.e : 0;
+          state.level.setzeEbene(b.ebene);
           state.strokes = m.s; state.phase = 'aim'; clearTimeout(waitTimer); faceCup(); updateHud();
         }
         break;
@@ -1099,7 +1254,11 @@
   /* Warteraum: Code, Sitzplätze und – beim Gastgeber – die Weltwahl */
   function showLobby() {
     if (!online || online.started) return;
+    /* Steht die Hutwahl offen, bleibt sie offen: Sonst schöbe sich der Warteraum davor, sobald
+       der Gastgeber die Liste neu schickt - und das tut er bei jedem Hutwechsel. */
+    if (online.hutwahl) return;
     const ws = onlineWorlds();
+    const meinPlatz = online.players.findIndex(p => p.id === Net.id);
     const seats = online.players.map((p, i) => `<div class="seat${p.id === Net.id ? ' me' : ''}">
         <canvas class="seat-ball" data-hat="${p.hat}" data-col="${PLAYER_COLORS[i]}"></canvas>
         <b>${Text.esc(seatName(p, i))}${p.id === online.hostId ? ' ' + Icons.svg('star') : ''}</b></div>`).join('');
@@ -1110,15 +1269,17 @@
         : online.players.some(p => p.id === Net.id) ? 'Du bist im Raum. Der Gastgeber startet.' : 'Ich klopfe an …'}</div>
       <div class="room-code">${online.code}</div>
       <div class="seats">${seats}${'<div class="seat empty">frei</div>'.repeat(free)}</div>
+      ${meinPlatz >= 0 ? `<p class="mein-hut"><span class="btn ghost small" id="hutwahl">${Icons.svg('sports_golf')} Hut wechseln</span></p>` : ''}
       ${online.note ? `<div class="sub net-note">${Text.esc(online.note)}</div>` : ''}
       ${online.host
-        ? `<p>Welt:</p><div id="ow" class="ow">${ws.map(w => `<span class="btn ghost small ${w.id === online.world ? 'sel' : ''}" data-w="${w.id}">${MODE_ICON[worldMode(w)]} ${Text.esc(w.name)}</span>`).join('')}</div>
+        ? `<p>Welt:</p><div id="ow" class="ow">${ws.map(w => `<span class="btn ghost small ${w.id === online.world ? 'sel' : ''}" data-w="${w.id}">${Icons.svg(WELT_ICON(w.id))} ${Text.esc(w.name)}</span>`).join('')}</div>
            <p><span class="btn" id="go">Los geht's!</span></p>`
         : `<div class="sub">Welt: <b>${Text.esc((ws.find(w => w.id === online.world) || ws[0]).name)}</b></div>`}
       <div class="legend">Gespielt wird reihum: wer dran ist, zielt, die anderen schauen zu. Eigene Bahnen lassen sich online nicht spielen.</div>
     </div>`, 'title');
     ui.overlay.querySelectorAll('.seat-ball').forEach(cv => Hats.preview(cv, cv.dataset.hat, cv.dataset.col));
     $('back').addEventListener('click', () => showOnline());
+    if ($('hutwahl')) $('hutwahl').addEventListener('click', () => { Sfx.unlock(); showLobbyHats(); });
     if (!online.host) return;
     ui.overlay.querySelectorAll('#ow .btn').forEach(b => b.addEventListener('click', () => { online.world = b.dataset.w; sendRoster(); showLobby(); }));
     $('go').addEventListener('click', () => {
@@ -1128,26 +1289,82 @@
       startOnlineGame();
     });
   }
+  /* Hutwahl im Warteraum. Bis hierher stand der Hut nur im Startbildschirm fest – wer sah, dass
+     ein anderer denselben trägt, musste den Raum verlassen, um zu wechseln. Jetzt geht es hier.
+
+     Der eigene Platz wird sofort umgestellt, damit der Wechsel unmittelbar zu sehen ist; verteilt
+     wird er wie alles andere: Der Gastgeber schickt die Liste neu, ein Gast meldet sich einfach
+     noch einmal an. Die Anmeldung trägt Name und Hut ohnehin schon bei sich. */
+  function showLobbyHats() {
+    if (!online || online.started) return;
+    const i = online.players.findIndex(p => p.id === Net.id);
+    if (i < 0) { showLobby(); return; }
+    online.hutwahl = true;
+    const col = PLAYER_COLORS[i];
+    overlay(`<div class="panel">
+      <div class="panel-head"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span><h2>${Icons.svg('sports_golf')} Dein Hut</h2></div>
+      <div class="sub">Der Wechsel ist gleich bei allen im Raum zu sehen.</div>
+      <div id="hats" class="hat-grid">${Hats.LIST.map(h => `<button type="button" class="hat" data-h="${h.id}" title="${Text.esc(h.name)}"><canvas></canvas><span>${Text.esc(h.name)}</span><i class="hat-lock">${Icons.svg('lock')}</i></button>`).join('')}</div>
+      <p style="margin-top:14px"><span class="btn" id="fertig">Fertig</span></p>
+    </div>`, 'title');
+    const zeichne = () => {
+      const jetzt = hutOderErsatz(playerHats[0], 0);
+      ui.overlay.querySelectorAll('#hats .hat').forEach(b => {
+        const frei = Hats.freigeschaltet(b.dataset.h);
+        b.classList.toggle('sel', b.dataset.h === jetzt);
+        b.classList.toggle('zu', !frei);
+        b.classList.toggle('probe', !frei && TEST_FREI);
+        const wie = Hats.stand(b.dataset.h);
+        b.title = frei ? Hats.name(b.dataset.h)
+          : `${Hats.name(b.dataset.h)} – ${Hats.bedingung(b.dataset.h)}${wie ? ' · ' + wie : ''}${TEST_FREI ? ' (hier zum Ausprobieren freigegeben)' : ''}`;
+        Hats.preview(b.querySelector('canvas'), b.dataset.h, col);
+      });
+    };
+    ui.overlay.querySelectorAll('#hats .hat').forEach(b => b.addEventListener('click', () => {
+      Sfx.unlock();
+      if (!Hats.freigeschaltet(b.dataset.h)) {
+        const wie = Hats.stand(b.dataset.h);
+        if (!TEST_FREI) { showMessage(`${Hats.name(b.dataset.h)}: ${Hats.bedingung(b.dataset.h)}${wie ? ' · ' + wie : ''}`, 3200); return; }
+        showMessage(`${Hats.name(b.dataset.h)} – zum Ausprobieren freigegeben`, 2400);
+      }
+      setHat(0, b.dataset.h);
+      meinHutMelden();
+      zeichne();
+    }));
+    zeichne();
+    for (const id of ['back', 'fertig']) $(id).addEventListener('click', () => { online.hutwahl = false; showLobby(); });
+  }
+  /* Den eigenen Hut im Raum bekanntgeben – als Gastgeber über die Liste, als Gast über die Anmeldung */
+  function meinHutMelden() {
+    if (!online || online.started) return;
+    const hut = hutOderErsatz(playerHats[0], 0);
+    const p = online.players.find(x => x.id === Net.id);
+    if (p) p.hat = hut;
+    if (online.host) sendRoster(); else netSend({ t: 'hello', hat: hut, nick: Best.name });
+  }
+
   function startOnlineGame() {
     if (!online) return;
-    online.started = true;
+    online.started = true; online.hutwahl = false;
     setWorld(online.world);
     state.mode = 'normal';
     startGame(online.players.length, 0, online.players);
   }
 
   function showSetup() {
+    if (gameMode === 'boule' && !NUR_VORSCHAU) gameMode = 'normal';   // im Spiel gibt es den Modus nicht
     overlay(`<div class="panel">
-      <div class="panel-head"><span class="btn ghost small" id="back-top">${Icons.svg('arrow_back')} Zurück</span><h2>${MODE_ICON[worldMode(state.world)]} ${Text.esc(state.world.name)}</h2></div>
+      <div class="panel-head"><span class="btn ghost small" id="back-top">${Icons.svg('arrow_back')} Zurück</span><h2>${Icons.svg(WELT_ICON(state.world.id))} ${Text.esc(state.world.name)}</h2></div>
       <div class="sub">${MODE_NAME[worldMode(state.world)]} · ${state.courses.length} Bahnen</div>
       <p>Modus:</p>
       <div id="gm">
         <span class="btn ghost small ${gameMode === 'normal' ? 'sel' : ''}" data-g="normal">${Icons.svg('emoji_events')} Wettkampf</span>
         <span class="btn ghost small ${gameMode === 'creative' ? 'sel' : ''}" data-g="creative">${Icons.svg('construction')} Kreativ</span>
+        ${NUR_VORSCHAU ? `<span class="btn ghost small ${gameMode === 'boule' ? 'sel' : ''}" data-g="boule">${Icons.svg('sports_score')} Boule</span>` : ''}
       </div>
       <div id="pc-row" ${gameMode === 'creative' ? 'hidden' : ''}>
         <p style="margin-top:10px">Spieler:</p>
-        <div id="pc">${[1, 2, 3, 4].map(n => `<span class="btn ghost small ${n === playerCount ? 'sel' : ''}" data-n="${n}">${n}</span>`).join('')}</div>
+        <div id="pc"></div>
       </div>
       <p style="margin-top:10px">Hut:</p>
       <div id="hat-who"></div>
@@ -1165,26 +1382,68 @@
       <p style="margin-top:14px"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span> <span class="btn" id="start">Los geht's!</span></p>
       <div class="legend">
         <b>Wettkampf:</b> alle Bahnen der Reihe nach, mit Schlaglimit und Ergebnistafel. <b>Kreativ:</b> allein, ohne Limit, mit den Bahn-Knöpfen (Tasten P / N) frei springen.<br>
+        ${NUR_VORSCHAU ? `<b>Boule:</b> Eine Kanone schießt die Zielkugel auf die Bahn, dann spielen alle reihum je
+        drei Kugeln. Jede Kugel bleibt liegen und darf angestoßen werden, auch die Zielkugel. Wer am
+        Ende am nächsten liegt, gewinnt. Kugeln, die von der Bahn fallen oder im Loch landen,
+        zählen nicht mehr mit – es gibt keine Schläge und keinen Rekord. Nur am selben Gerät.<br>` : ''}
+        <b>Hüte zu mehreren:</b> Am selben Gerät steht jeder Skin offen – auch die noch nicht
+        verdienten Belohnungen und die Helme der Arena. Das gilt nur für diese Partie und wird nicht
+        gespeichert. Zwei Spieler dürfen nicht denselben tragen; tippt man auf einen belegten, wird
+        getauscht.<br>
         Aufsetzen, ziehen, loslassen. Weiter ziehen = mehr Kraft.
         <b>Schleuder:</b> vom Ball wegziehen, er fliegt in die Gegenrichtung. <b>Schieben:</b> dorthin ziehen, wo der Ball hin soll.
         Wasser, Lava und Abgrund kosten einen Strafschlag.
       </div>
     </div>`, 'title');
-    /* Hutwahl: oben steht, für welchen Spieler gewählt wird, darunter die Hüte als Ballvorschau */
+    /* Hutwahl: oben steht, für welchen Spieler gewählt wird, darunter die Hüte als Ballvorschau.
+       Zu mehreren am selben Gerät gelten zwei eigene Regeln:
+       - **Alle Skins stehen offen**, auch die Belohnungen, die noch niemand verdient hat, und die
+         beiden Helme der Arena. Am Küchentisch soll keiner mit dem Vorgabehut dasitzen, nur weil
+         der andere die Welt schon durchgespielt hat. Die Leihgabe gilt für diese Partie und wird
+         nicht gespeichert (siehe setHat).
+       - **Kein Skin doppelt.** Vier weiße Bälle mit demselben Hut sind auf der Bahn nicht
+         auseinanderzuhalten – die Farbe allein reicht dafür nicht, erst recht nicht bei den
+         Ganzkörper-Skins, die den Ball ganz ersetzen. */
     let hatWho = 0;
-    const hatCount = () => gameMode === 'creative' ? 1 : playerCount;
+    const hatCount = () => gameMode === 'creative' ? 1 : playerCount;   // Boule zählt wie Wettkampf: jeder seinen eigenen
+    const zuMehreren = () => hatCount() > 1;
+    const darfTragen = id => zuMehreren() || TEST_FREI || Hats.freigeschaltet(id);
+    // Wer hat diesen Hut schon auf? (nur unter den Spielern, die überhaupt mitspielen)
+    const traegtSchon = id => playerHats.findIndex((h, i) => i < hatCount() && i !== hatWho && h === id);
+
+    /* Doppelte auflösen: Beim Öffnen und bei jedem Wechsel der Spielerzahl kann es sein, dass zwei
+       Plätze denselben Hut tragen – aus einem früheren Spielstand oder weil ein dritter Spieler
+       dazugekommen ist. Jeder Platz, der einen schon vergebenen Hut hat, bekommt den nächsten
+       freien aus der Liste. */
+    function doppelAufloesen() {
+      if (!zuMehreren()) return;
+      const vergeben = new Set();
+      for (let i = 0; i < hatCount(); i++) {
+        if (!vergeben.has(playerHats[i]) && darfTragen(playerHats[i])) { vergeben.add(playerHats[i]); continue; }
+        const frei = Hats.LIST.find(h => !vergeben.has(h.id) && darfTragen(h.id));
+        playerHats[i] = frei ? frei.id : DEFAULT_HATS[i % DEFAULT_HATS.length];
+        vergeben.add(playerHats[i]);
+      }
+      hueteMerken();
+    }
     function drawHats() {
       const col = PLAYER_COLORS[hatWho];
+      const meiner = zuMehreren() ? playerHats[hatWho] : hutOderErsatz(playerHats[hatWho], hatWho);
       ui.overlay.querySelectorAll('#hats .hat').forEach(b => {
-        const frei = Hats.freigeschaltet(b.dataset.h);
-        b.classList.toggle('sel', b.dataset.h === hutOderErsatz(playerHats[hatWho], hatWho));
-        b.classList.toggle('zu', !frei);
-        b.classList.toggle('probe', !frei && TEST_FREI); // Vorschau: Sperre zeigen, Skin trotzdem sehen
-        // Gesperrt: der Platz bleibt sichtbar, damit man weiß, was es zu holen gibt
-        const wie = Hats.stand(b.dataset.h);
-        b.title = frei ? Hats.name(b.dataset.h)
-          : `${Hats.name(b.dataset.h)} – ${Hats.bedingung(b.dataset.h)}${wie ? ' · ' + wie : ''}${TEST_FREI ? ' (hier zum Ausprobieren freigegeben)' : ''}`;
-        Hats.preview(b.querySelector('canvas'), b.dataset.h, col);
+        const id = b.dataset.h;
+        const frei = Hats.freigeschaltet(id), erlaubt = darfTragen(id), wer = traegtSchon(id);
+        b.classList.toggle('sel', id === meiner);
+        b.classList.toggle('zu', !erlaubt);
+        b.classList.toggle('probe', !erlaubt && TEST_FREI); // Vorschau: Sperre zeigen, Skin trotzdem sehen
+        // Geliehen: der Skin ist hier offen, aber nicht verdient – das Schloss bleibt klein sichtbar
+        b.classList.toggle('geliehen', erlaubt && !frei);
+        b.classList.toggle('belegt', wer >= 0);
+        const wie = Hats.stand(id);
+        b.title = wer >= 0 ? `${Hats.name(id)} – hat schon ${PLAYER_NAMES[wer]}; zum Tauschen antippen`
+          : erlaubt && !frei ? `${Hats.name(id)} – noch nicht verdient, aber zu mehreren am selben Gerät erlaubt (nur für diese Partie)`
+          : erlaubt ? Hats.name(id)
+          : `${Hats.name(id)} – ${Hats.bedingung(id)}${wie ? ' · ' + wie : ''}`;
+        Hats.preview(b.querySelector('canvas'), id, col);
       });
     }
     function drawWho() {
@@ -1200,21 +1459,43 @@
     }
     ui.overlay.querySelectorAll('#hats .hat').forEach(b => b.addEventListener('click', () => {
       Sfx.unlock();
-      if (!Hats.freigeschaltet(b.dataset.h)) {
-        // Auf dem Prüfstand darf man eine gesperrte Belohnung trotzdem aufsetzen – dort soll man
-        // alles ansehen können. Im Spiel bleibt die Sperre: dort ist sie der halbe Reiz.
-        const wie = Hats.stand(b.dataset.h);
-        if (!TEST_FREI) { showMessage(`${Hats.name(b.dataset.h)}: ${Hats.bedingung(b.dataset.h)}${wie ? ' · ' + wie : ''}`, 3200); return; }
-        showMessage(`${Hats.name(b.dataset.h)} – zum Ausprobieren freigegeben`, 2400);
+      const id = b.dataset.h;
+      if (!darfTragen(id)) {
+        /* Allein bleibt die Sperre: Dort ist sie der halbe Reiz. Auf dem Prüfstand darf man eine
+           gesperrte Belohnung trotzdem aufsetzen – dort soll man alles ansehen können. */
+        const wie = Hats.stand(id);
+        showMessage(`${Hats.name(id)}: ${Hats.bedingung(id)}${wie ? ' · ' + wie : ''}`, 3200);
+        return;
       }
-      setHat(hatWho, b.dataset.h); drawWho(); drawHats();
+      /* Trägt ihn schon jemand, wird getauscht statt abgelehnt. Eine Absage wäre hier die
+         schlechtere Antwort: Man sieht ja, dass der Platz belegt ist, und will genau tauschen. */
+      const wer = traegtSchon(id);
+      if (wer >= 0) {
+        const meiner = playerHats[hatWho];
+        setHat(wer, meiner);
+        showMessage(`Getauscht: ${PLAYER_NAMES[wer]} trägt jetzt ${Hats.name(meiner)}`, 1800);
+      } else if (!Hats.freigeschaltet(id)) {
+        showMessage(`${Hats.name(id)} – geliehen für diese Partie`, 2200);
+      }
+      setHat(hatWho, id); drawWho(); drawHats();
     }));
+    doppelAufloesen();
     drawWho(); drawHats();
-    ui.overlay.querySelectorAll('#pc .btn').forEach(b => b.addEventListener('click', () => {
-      playerCount = +b.dataset.n;
-      ui.overlay.querySelectorAll('#pc .btn').forEach(x => x.classList.toggle('sel', +x.dataset.n === playerCount));
-      drawWho(); drawHats();
-    }));
+    /* Boule braucht Gegner: Zu zweit gegen sich selbst zu spielen ergibt kein Ergebnis, und der
+       ganze Reiz liegt darin, die Kugel des anderen wegzuschieben. Also fängt die Auswahl dort
+       bei zwei an – und wer vorher allein gespielt hat, wird stillschweigend auf zwei gesetzt. */
+    function drawSpielerzahl() {
+      const von = gameMode === 'boule' ? 2 : 1;
+      if (playerCount < von) playerCount = von;
+      $('pc').innerHTML = [1, 2, 3, 4].filter(n => n >= von)
+        .map(n => `<span class="btn ghost small ${n === playerCount ? 'sel' : ''}" data-n="${n}">${n}</span>`).join('');
+      $('pc').querySelectorAll('.btn').forEach(b => b.addEventListener('click', () => {
+        playerCount = +b.dataset.n;
+        $('pc').querySelectorAll('.btn').forEach(x => x.classList.toggle('sel', +x.dataset.n === playerCount));
+        doppelAufloesen(); drawWho(); drawHats();
+      }));
+    }
+    drawSpielerzahl();
     ui.overlay.querySelectorAll('#cm .btn').forEach(b => b.addEventListener('click', () => {
       setControlMode(b.dataset.m);
       ui.overlay.querySelectorAll('#cm .btn').forEach(x => x.classList.toggle('sel', x.dataset.m === state.controlMode));
@@ -1227,10 +1508,14 @@
       gameMode = b.dataset.g;
       ui.overlay.querySelectorAll('#gm .btn').forEach(x => x.classList.toggle('sel', x.dataset.g === gameMode));
       $('pc-row').hidden = gameMode === 'creative';
-      drawWho(); drawHats();
+      drawSpielerzahl(); doppelAufloesen(); drawWho(); drawHats();
     }));
     for (const id of ['back', 'back-top']) $(id).addEventListener('click', showMap);
-    $('start').addEventListener('click', () => { Sfx.unlock(); state.mode = gameMode; startGame(gameMode === 'creative' ? 1 : playerCount, 0); });
+    $('start').addEventListener('click', () => {
+      Sfx.unlock(); state.mode = gameMode;
+      state.boule = null;   // eine alte Boule-Runde darf nicht in die neue hineinreichen
+      startGame(gameMode === 'creative' ? 1 : playerCount, 0);
+    });
   }
 
   /* Endtafel: kleines Sinnbild je Bahn (nach Name, sonst nach Optik) */
@@ -1239,7 +1524,7 @@
     Mühlenwiese: '🌾', Nebelmoor: '🌫️', Zwergenkanone: '💣', Korallenriff: '🪸', Uhrwerk: '⚙️', Piratenbucht: '⚓', Hexenküche: '🧪', Sultanspalast: '🕌', Pyramide: '🔺',
     Urwaldpfad: '🌿', Affenbrücke: '🐒', Krokodilfluss: '🐊', Stachelpfad: '🗡️', Felskugelschlucht: '🪨', Treibsandbecken: '⏳', Totemplatz: '🗿', Wasserfallterrassen: '💧', 'Der Tempel': '🏛️',
     Friedhofspforte: '🪦', Knochensteg: '🦴', Fallbeilgasse: '🔪', Rabenschlucht: '🐦‍⬛', Ritterhalle: '⚔️', Totenfähre: '⚰️', 'Turm des Auges': '👁️', Schattenschloss: '🏰', 'Gruft der Sensen': '🕯️', 'Herz der Finsternis': '🖤' };
-  const THEME_ICONS = { meadow: '🌼', mushroom: '🍄', forge: '⚒️', forest: '🌲', dragon: '🐉', ice: '❄️', sky: '☁️', witch: '🧙', castle: '🏰', harbor: '⚓', reef: '🐠', clockwork: '⚙️', palace: '🕌', desert: '🏜️', tomb: '⚱️', deck: '🏴‍☠️', wreck: '🚢', belly: '🦈', jungle: '🌴', temple: '🗿', hut: '🧪', storm: '⛈️', fortress: '🏯', shadow: '🌑', throne: '👑', darksea: '🌊', ghostship: '⚓' };
+  const THEME_ICONS = { meadow: '🌼', mushroom: '🍄', forge: '⚒️', forest: '🌲', dragon: '🐉', ice: '❄️', sky: '☁️', witch: '🧙', castle: '🏰', harbor: '⚓', reef: '🐠', clockwork: '⚙️', palace: '🕌', desert: '🏜️', tomb: '⚱️', deck: '🏴‍☠️', wreck: '🚢', belly: '🦈', jungle: '🌴', temple: '🗿', hut: '🧪', storm: '⛈️', fortress: '🏯', shadow: '🌑', throne: '👑', darksea: '🌊', ghostship: '⚓', clocktown: '🕰️', boiler: '🔥', escapement: '⚙️' };
   const holeIcon = def => HOLE_ICONS[def.name] || THEME_ICONS[def.theme] || '⛳';
   const worldClass = () => 'world-' + ((state.world && state.world.id) || 'custom');
   /* Das geltende Par: Es steht nicht mehr fest in der Bahn, sondern kommt aus der Rangliste –
@@ -1265,8 +1550,14 @@
   }
   function faceCup() {
     const b = state.ball;
-    // Blickzonen: liegt der Ball in einer Zone, schaut die Kamera auf deren Zielpunkt (z. B. Mühlentür, Fähre), sonst aufs Loch
-    const zone = (state.level.def.views || []).find(v => b.x >= v.x && b.x <= v.x + v.w && b.y >= v.y && b.y <= v.y + v.h);
+    /* Blickzonen: liegt der Ball in einer Zone, schaut die Kamera auf deren Zielpunkt (z. B.
+       Mühlentür, Fähre, der nächste Rohrmund), sonst aufs Loch. Eine Zone darf sich auf eine Ebene
+       beschränken ('ebene'): Bei gestapelten Bahnen liegen Steg und Galerie im Bild übereinander,
+       aber man will dort in ganz verschiedene Richtungen schauen. Ohne 'ebene' gilt die Zone
+       weiterhin auf jeder Ebene. */
+    const eb = b.ebene || 0;
+    const zone = (state.level.def.views || []).find(v => (v.ebene == null || v.ebene === eb)
+      && b.x >= v.x && b.x <= v.x + v.w && b.y >= v.y && b.y <= v.y + v.h);
     const c = zone ? zone.look : (state.level.cup || state.level.goal);
     state.camTheta = thetaTowards(b.x, b.y, c.x, c.y);
   }
@@ -1285,9 +1576,12 @@
   /* ---------- Spielablauf ---------- */
   function startGame(n, first = 0, roster = null) {
     // roster: beim Netzspiel bringt jeder Spieler seinen eigenen Hut mit
+    /* Zu mehreren am selben Gerät gilt die Wahl aus der Aufstellung, auch wenn sie geliehen ist.
+       Allein und im Netzspiel bleibt es beim Tausch: Dort geht der Hut als Auszeichnung durch. */
+    const geliehenErlaubt = !roster && n > 1;
     state.players = roster
       ? roster.map((p, i) => ({ name: seatName(p, i), color: PLAYER_COLORS[i], hat: p.hat, scores: [], times: [], gone: !!p.gone }))
-      : Array.from({ length: n }, (_, i) => ({ name: PLAYER_NAMES[i], color: PLAYER_COLORS[i], hat: hutOderErsatz(playerHats[i], i), scores: [], times: [] }));
+      : Array.from({ length: n }, (_, i) => ({ name: PLAYER_NAMES[i], color: PLAYER_COLORS[i], hat: geliehenErlaubt ? playerHats[i] : hutOderErsatz(playerHats[i], i), scores: [], times: [] }));
     state.holeIdx = first;
     document.body.classList.remove('title');
     document.body.classList.toggle('creative', state.mode === 'creative');
@@ -1298,8 +1592,10 @@
      Wer aus Versehen in die falsche Welt gegangen ist, kommt so ohne Neuladen wieder heraus.
      Ist schon etwas gespielt, wird vorher gefragt – der Punktestand einer Runde kommt nicht zurück. */
   const leaveTarget = () => (state.world && state.world.id === 'custom' ? showBuild : showMap);
-  const roundStarted = () => state.mode !== 'creative' &&
-    (state.holeIdx > 0 || state.strokes > 0 || state.players.some(p => p.scores.some(v => v != null)));
+  const roundStarted = () => state.mode === 'boule'
+    ? !!(state.boule && (state.boule.liegen.length || state.boule.aus.length))
+    : state.mode !== 'creative' &&
+      (state.holeIdx > 0 || state.strokes > 0 || state.players.some(p => p.scores.some(v => v != null)));
   function leaveRound(force) {
     if (state.phase === 'title' || state.phase === 'edit' || !state.level) return;
     // Liegt schon eine Tafel obenauf (Bahn fertig, Endergebnis), hat die ihren eigenen Weg zurück
@@ -1337,7 +1633,7 @@
     const def = state.courses[i];
     state.level = buildLevel(def); state.theme = THEMES[def.theme]; state.inner = false;
     R.setLevel(state.level, state.theme);
-    state.ball = null; state.aim = null;
+    state.ball = null; state.aim = null; state.liegendeBaelle = [];
     setCamMode('overview'); R.target = R.overviewTarget(); R.snapCamera();
   }
   function loadHole(i) {
@@ -1346,7 +1642,7 @@
     state.particles = [];
     state.curPlayer = 0;
     showMessage(`Bahn ${i + 1}: ${state.courses[i].name}`, 2200);
-    setTimeout(beginTurn, 900);
+    setTimeout(state.mode === 'boule' ? bouleRundeStarten : beginTurn, 900);
   }
   function beginTurn() {
     if (state.inner) { // zurück in den Außenbereich der Bahn
@@ -1356,6 +1652,7 @@
     }
     const p = state.players[state.curPlayer], lv = state.level;
     state.ball = makeBall(lv.tee.x, lv.tee.y, p.color, p.hat);
+    lv.setzeEbene(0);   // jeder Spieler beginnt unten, auch wenn der vorige oben aufgehört hat
     state.strokes = 0; state.phase = 'aim'; state.aim = null; state.restTimer = 0; state.slowTimer = 0; state.rollT = 0; state.stuckRef = null;
     faceCup(); setCamMode('follow');
     clockStart();
@@ -1399,6 +1696,7 @@
     if (online && online.started && !fromNet) netSend({ t: 'shot', h: state.holeIdx, pi: state.curPlayer, dx, dy, power, st: state.t, sz: schlagZahl() });
     const b = state.ball;
     b.restX = b.x; b.restY = b.y; b.shotX = b.x; b.shotY = b.y; // Schlagstart (für Aufspießen am Ruheplatz)
+    b.restEbene = b.shotEbene = b.ebene || 0;   // ein Ruhepunkt ist Ort UND Ebene
     b.vx = dx * power * MAX_SHOT; b.vy = dy * power * MAX_SHOT;
     state.strokes++; state.phase = 'rolling'; state.aim = null; state.restTimer = 0; state.slowTimer = 0; state.rollT = 0; state.stuckRef = null;
     Sfx.hit(power); updateHud();
@@ -1432,11 +1730,11 @@
 
   function ballAtRest() {
     const b = state.ball;
-    b.vx = 0; b.vy = 0; b.restX = b.x; b.restY = b.y;
+    b.vx = 0; b.vy = 0; b.restX = b.x; b.restY = b.y; b.restEbene = b.ebene || 0;
     schlagVorbei();
     faceCup();
     // Wer dran ist, sagt Ruheort und Schlagzahl an; die anderen uebernehmen sie
-    if (online && online.started && myTurn()) netSend({ t: 'rest', h: state.holeIdx, pi: state.curPlayer, x: b.x, y: b.y, s: state.strokes, st: state.t, sz: schlagZahl() });
+    if (online && online.started && myTurn()) netSend({ t: 'rest', h: state.holeIdx, pi: state.curPlayer, x: b.x, y: b.y, e: b.ebene || 0, s: state.strokes, st: state.t, sz: schlagZahl() });
     if (state.strokes >= maxStrokes()) { showMessage(`Maximale Schlagzahl (${maxStrokes()}) erreicht`, 1800); finishTurn(maxStrokes()); return; }
     state.phase = 'aim';
   }
@@ -1458,6 +1756,21 @@
       if (state.curPlayer < state.players.length) beginTurn(); else showHoleDone();
     }, 1700);
   }
+  /* Ein Ruhepunkt ist Ort UND Ebene – die zweite Sicherung dafür.
+     Wird der Ball nach einem Strafschlag an seine Stelle zurückgelegt, aber stillschweigend auf
+     die unterste Ebene gesetzt, steht er über dem Nichts: sofort wieder „aus", wieder
+     zurückgelegt, und das ohne Ende. Über den Wolken lag jeder Ruhepunkt oben, darum fiel es dort
+     auf. Liegt der gemerkte Punkt auf seiner Ebene doch nicht auf Boden, geht es zum Start des
+     letzten Schlags zurück und notfalls an den Abschlag – ein Ball muss immer irgendwo liegen
+     können. */
+  function sichererRuhepunkt(b) {
+    const lv = state.level;
+    for (const [x, y, e] of [[b.restX, b.restY, b.restEbene || 0], [b.shotX, b.shotY, b.shotEbene || 0], [lv.tee.x, lv.tee.y, 0]]) {
+      if (x == null || y == null) continue;
+      if (lv.isFloorChar(lv.charAtEbene(e, x, y))) return { x, y, e };
+    }
+    return { x: lv.tee.x, y: lv.tee.y, e: 0 };
+  }
   function hazard(type) {
     const b = state.ball;
     const custom = state.level.def.hazardText && state.level.def.hazardText[type];
@@ -1467,13 +1780,14 @@
     else if (type === 'lava') { Sfx.lava(); burst(b.x, b.y, '#ffb347', 18); }
     else if (type === 'spiked' || type === 'zapped' || type === 'fell') { // zurück zum Start des letzten Schlags
       if (type === 'zapped') { Sfx.thunder(); burst(b.x, b.y, '#fff27a', 34, true); burst(b.x, b.y, '#ffffff', 16, true); } else if (type === 'fell') { Sfx.oob(); burst(b.x, b.y, '#b56bff', 14, true); } else { Sfx.lava(); burst(b.x, b.y, '#e6e6e6', 18, true); }
-      b.z = 0; b.vz = 0; b.air = false; if (b.shotX != null) { b.restX = b.shotX; b.restY = b.shotY; }
+      b.z = 0; b.vz = 0; b.air = false; if (b.shotX != null) { b.restX = b.shotX; b.restY = b.shotY; b.restEbene = b.shotEbene || 0; }
     }
     else if (type === 'beheaded' || type === 'seen') { // zurück zum Schlagstart – aber nie wieder unter die Klinge oder in den Blick des Auges
       Sfx.lava(); burst(b.x, b.y, type === 'seen' ? '#ff9a3a' : '#ff4a4a', 26, true);
       b.z = 0; b.vz = 0; b.air = false;
       const lv = state.level; let rx = b.shotX != null ? b.shotX : b.restX, ry = b.shotX != null ? b.shotY : b.restY;
-      if (type === 'seen') { if (lv.obstacles.some(o => o.type === 'eyetower' && Math.hypot(rx - o.x, ry - o.y) <= o.range + 0.5)) { rx = lv.tee.x; ry = lv.tee.y; label += ' Zurück zum Anfang.'; } }
+      b.restEbene = b.shotX != null ? (b.shotEbene || 0) : (b.restEbene || 0);
+      if (type === 'seen') { if (lv.obstacles.some(o => o.type === 'eyetower' && Math.hypot(rx - o.x, ry - o.y) <= o.range + 0.5)) { rx = lv.tee.x; ry = lv.tee.y; b.restEbene = 0; label += ' Zurück zum Anfang.'; } }
       else for (const g of lv.obstacles) {
         if (g.type !== 'guillotine' || !g.under(rx, ry, 0.7)) continue;
         const vert = g.w < g.h, side = (vert ? Math.sign(lv.tee.x - g.x) : Math.sign(lv.tee.y - g.y)) || -1;
@@ -1486,10 +1800,13 @@
     schlagVorbei();
     showMessage(`${label} · +1 Strafschlag`, 1700);
     state.phase = 'wait'; state.aim = null;
-    const rx = b.restX, ry = b.restY;
+    const r = sichererRuhepunkt(b);
     clearTimeout(waitTimer);
     waitTimer = setTimeout(() => {
-      b.x = rx; b.y = ry; b.vx = 0; b.vy = 0; b.z = 0.6; b.vz = 0; b.portalCd = 0.5;
+      b.x = r.x; b.y = r.y; b.vx = 0; b.vy = 0; b.z = 0.6; b.vz = 0; b.portalCd = 0.5;
+      b.ebene = b.restEbene = r.e;   // auf der Ebene weiterspielen, auf der der Ruhepunkt liegt
+      b.restX = r.x; b.restY = r.y;
+      state.level.setzeEbene(b.ebene);
       faceCup();
       if (state.strokes >= maxStrokes()) finishTurn(maxStrokes()); else state.phase = 'aim';
       updateHud();
@@ -1510,17 +1827,22 @@
     // ihn dorthin zurückzulegen hieße, ihn gleich wieder zu erwischen. Dann geht es zum Start des
     // letzten Schlags zurück, notfalls zum Abschlag.
     if (ob && ob.trifft(rx, ry)) {
-      if (b.shotX != null && !ob.trifft(b.shotX, b.shotY)) { rx = b.shotX; ry = b.shotY; }
-      else { rx = lv.tee.x; ry = lv.tee.y; }
+      if (b.shotX != null && !ob.trifft(b.shotX, b.shotY)) { rx = b.shotX; ry = b.shotY; b.restEbene = b.shotEbene || 0; }
+      else { rx = lv.tee.x; ry = lv.tee.y; b.restEbene = 0; }
       b.restX = rx; b.restY = ry;
     }
     showMessage(art === 'feuer' ? 'Vom Feuerstoß erwischt! Zurück – ohne Strafschlag.'
                                 : 'Daumen runter – durch die Falltür! Zurück, ohne Strafschlag.', 1700);
     schlagVorbei();
     state.phase = 'wait'; state.aim = null;
+    b.restX = rx; b.restY = ry;
+    const r = sichererRuhepunkt(b);
     clearTimeout(waitTimer);
     waitTimer = setTimeout(() => {
-      b.x = rx; b.y = ry; b.vx = 0; b.vy = 0; b.z = 0.6; b.vz = 0; b.portalCd = 0.5;
+      b.x = r.x; b.y = r.y; b.vx = 0; b.vy = 0; b.z = 0.6; b.vz = 0; b.portalCd = 0.5;
+      b.ebene = b.restEbene = r.e;   // auf der Ebene weiterspielen, auf der der Ruhepunkt liegt
+      b.restX = r.x; b.restY = r.y;
+      state.level.setzeEbene(b.ebene);
       faceCup();
       state.phase = 'aim';
       updateHud();
@@ -1543,7 +1865,7 @@
     const zeit = state.mode !== 'creative' && !state.editorReturn;   // im Kreativmodus wird nichts gestoppt
     const rows = state.players.map(p => {
       const total = p.scores.reduce((a, b) => a + b, 0);
-      const hat = p.hat && p.hat !== 'none' ? `<span title="${Hats.name(p.hat)}">${Hats.icon(p.hat)}</span> ` : '';
+      const hat = p.hat && p.hat !== 'none' ? `<canvas class="hat-icon" data-hut="${p.hat}" data-farbe="${p.color}" title="${Text.esc(Hats.name(p.hat))}"></canvas> ` : '';
       const ms = (p.times || [])[state.holeIdx];
       return `<tr><td><span class="dot" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.color};margin-right:6px"></span>${hat}${Text.esc(p.name)}</td><td class="num">${p.scores[state.holeIdx]}</td>${zeit ? `<td class="num">${ms ? Best.formatTime(ms) : '–'}</td>` : ''}<td class="num">${total}</td></tr>`;
     }).join('');
@@ -1579,7 +1901,7 @@
       }
     }
     const ranked = state.players.map(p => ({ p, total: p.scores.reduce((a, b) => a + b, 0), ms: gesamtZeit(p) })).sort((a, b) => a.total - b.total);
-    const medals = ['🥇', '🥈', '🥉', '4.'];
+      const medals = ['gold', 'silber', 'bronze'].map(r => `<span class="rang ${r}">${Icons.svg('workspace_premium')}</span>`).concat('4.');
     const vsPar = d => d === 0 ? 'Par' : (d > 0 ? '+' : '') + d;
     const podium = ranked.map((r, i) => `<div class="pod ${i === 0 ? 'win' : ''}">
         <span class="pod-medal">${medals[i]}</span>
@@ -1609,8 +1931,8 @@
       <div class="hole-cards">${cards}</div>
       <div class="final-legend"><span class="hc-score ace">1</span> Hole-in-One <span class="hc-score eagle">–2</span> Eagle <span class="hc-score birdie">–1</span> Birdie <span class="hc-score par">0</span> Par <span class="hc-score bogey">+1</span> Bogey <span class="hc-score worse">+2</span> mehr</div>
       ${lohnZeile()}
-      ${roundRec.length ? `<div class="sub net-note">🏆 Neuer Rundenrekord für ${Text.esc(roundRec[0].rec.n)}: ${Text.esc(recordText(roundRec))}</div>` : ''}
-      ${turnierRunde ? `<div class="sub net-note">⚔️ Im Turnier gewertet: Kombi ${Text.esc(String(turnierRunde.s).replace('.', ','))} · ${turnierRunde.st} Schläge in ${Text.esc(Best.formatTime(turnierRunde.ms))}</div>` : ''}
+      ${roundRec.length ? `<div class="sub net-note">${Icons.svg('emoji_events')} Neuer Rundenrekord für ${Text.esc(roundRec[0].rec.n)}: ${Text.esc(recordText(roundRec))}</div>` : ''}
+      ${turnierRunde ? `<div class="sub net-note">${Icons.svg('swords')} Im Turnier gewertet: Kombi ${Text.esc(String(turnierRunde.s).replace('.', ','))} · ${turnierRunde.st} Schläge in ${Text.esc(Best.formatTime(turnierRunde.ms))}</div>` : ''}
       <span class="btn" id="again">Nochmal spielen</span>
     </div>`);
     $('again').addEventListener('click', () => { hideOverlay(); leaveOnline(); showTitle(); });
@@ -1648,6 +1970,7 @@
       const b = state.ball, lv = state.level;
       b.x = lv.tee.x; b.y = lv.tee.y; b.vx = 0; b.vy = 0; b.z = 0; b.vz = 0; b.air = false; b.rider = null; b.sunk = false; b.sinkT = 0; b.entered = false; // die nächste Tür (z. B. die Luke) darf wieder auslösen
       b.restX = b.x; b.restY = b.y; b.portalCd = 0.5;
+      b.ebene = b.restEbene = 0; lv.setzeEbene(0);   // der Innenbereich ist eine eigene Bahn und fängt unten an
       state.particles = [];
       // Startblick: auf den ersten Aufgabenpunkt (z. B. Rampe/Hexentopf), sonst aufs Loch
       const look = def.look || lv.cup;
@@ -1658,6 +1981,363 @@
   }
 
   /* ---------- Physik-Ereignisse ---------- */
+  /* ---------- Boule ----------
+   *
+   * Ein eigener Modus für den Tisch, nicht fürs Netz: Er lebt davon, dass alle Bälle liegen
+   * bleiben und sich gegenseitig wegstoßen, und dafür müssten beim Netzspiel alle Geräte
+   * dieselben Bälle in derselben Reihenfolge rechnen. Darum steht er nur in der Aufstellung des
+   * lokalen Spiels und nicht im Warteraum mit Raumcode.
+   *
+   * Ablauf: Eine Kanone am Abschlag schießt die kleine Zielkugel auf die Bahn. Danach spielen die
+   * Spieler reihum, jeder drei Kugeln. Jede geschlagene Kugel bleibt liegen, und jede spätere darf
+   * sie anstoßen – die Zielkugel eingeschlossen. Am Ende gewinnt, wessen Kugel am nächsten liegt.
+   *
+   * Es gibt hier keine Schläge, kein Par, keine Zeit und keinen Rekord: Ein Boule-Ergebnis ist mit
+   * einer Golfrunde nicht vergleichbar, und eine Zahl, die in dieselbe Rangliste liefe, wäre
+   * schlicht falsch.
+   */
+  const BOULE_KUGELN = 3;          // Kugeln je Spieler
+  const BOULE_ZIEL_R = 0.17;       // die Zielkugel ist kleiner und damit leichter – sie fliegt weiter, wenn man sie trifft
+  const BOULE_RUHE = 0.09;         // langsamer als das gilt als "liegt"
+  const BOULE_GEDULD = 14;         // nach so vielen Sekunden wird der Wurf für beendet erklärt
+
+  /* Alles, was einen Ball aus dem Spiel nimmt. Im Golf kostet das einen Strafschlag und der Ball
+     kommt zurück; in Boule gibt es keine Schläge, die man bestrafen könnte – wer die Bahn
+     verlässt oder im Loch landet, ist raus und zählt nicht mehr mit. Die Tür in eine Innenkarte
+     steht mit in der Liste: Sie würde mitten in der Runde die ganze Bahn austauschen. */
+  const BOULE_RAUS = new Set(['sunk', 'oob', 'water', 'lava', 'fell', 'spiked', 'zapped',
+    'shark', 'beheaded', 'seen', 'enter']);
+  const BOULE_GRUND = {
+    sunk: 'im Loch verschwunden', oob: 'von der Bahn gefallen', water: 'im Wasser gelandet',
+    lava: 'in der Lava gelandet', fell: 'in die Tiefe gestürzt', spiked: 'aufgespießt',
+    zapped: 'vom Blitz getroffen', shark: 'vom Hai geholt', beheaded: 'vom Fallbeil erwischt',
+    seen: 'vom brennenden Auge erblickt', enter: 'durch die Tür verschwunden',
+  };
+
+  const bouleZahl = x => x.toFixed(2).replace('.', ',');
+  const bouleAbstand = k => { const z = state.boule && state.boule.ziel; return z ? Math.hypot(k.x - z.x, k.y - z.y) : Infinity; };
+
+  /* Die Bälle, die dieser Schritt bewegen soll: der eigene, alle liegenden und die Zielkugel. */
+  function bouleAlleBaelle() {
+    const bl = state.boule;
+    const alle = bl.liegen.slice();
+    if (bl.ziel) alle.push(bl.ziel);
+    if (state.ball) alle.unshift(state.ball);
+    return alle;
+  }
+  function bouleAllesRuht(baelle) {
+    return baelle.every(b => !b.air && !b.rider && Math.hypot(b.vx, b.vy) < BOULE_RUHE);
+  }
+
+  /* Kopfzeile und Seitentafel. Die Zahl in der Tafel ist der beste Abstand des Spielers – das ist
+     die einzige Zahl, auf die es in Boule ankommt, und man will sie beim Zielen sehen. */
+  function bouleKopfzeile() {
+    const bl = state.boule;
+    if (!bl) return 'Boule';
+    if (bl.stand === 'ziel') return 'Boule · die Zielkugel wird geschossen';
+    if (bl.stand === 'ende') return 'Boule · Ergebnis';
+    return `Boule · Kugel ${Math.min(bl.runde + 1, BOULE_KUGELN)} von ${BOULE_KUGELN}`;
+  }
+  function bouleTafelWert(i) {
+    const bl = state.boule;
+    if (!bl || !bl.ziel) return '–';
+    const meine = bl.liegen.filter(k => k.spieler === i);
+    if (!meine.length) return '–';
+    return bouleZahl(Math.min(...meine.map(bouleAbstand)));
+  }
+
+  /* Ein Platz, an dem eine Kugel liegen darf: fester Boden, kein Wasser, keine Lava – und weit
+     genug weg von allem, was schon liegt.
+     Das braucht es, weil in Boule die Kugeln liegen bleiben: Setzte man die nächste stur auf den
+     Abschlag, käme sie irgendwann genau in einer schon liegenden zu liegen. Zwei Bälle auf
+     demselben Punkt kann die Physik nicht auflösen – sie drückt beide Bild für Bild
+     auseinander, die Mauer drückt zurück, und nach ein paar Sekunden steht der Ball bei x =
+     397646. Genau das ist auf der Affenbrücke passiert, bevor es diese Funktion gab. */
+  function bouleFrei(x, y, r, ausser) {
+    const lv = state.level;
+    const c = lv.charAtEbene(0, x, y);
+    if (!lv.isFloorChar(c) || c === 'w' || c === 'l') return false;
+    for (const k of bouleAlleBaelle()) {
+      if (k === ausser) continue;
+      if (Math.hypot(k.x - x, k.y - y) < k.r + r + 0.06) return false;
+    }
+    return true;
+  }
+  /* Vom Abschlag aus in Ringen nach außen suchen, bis ein freier Platz gefunden ist. Die Ringe
+     sind eng genug, dass die Kugel praktisch immer noch auf dem Abschlagfeld liegt. */
+  function bouleFreierPlatz(r) {
+    const lv = state.level, tx = lv.tee.x, ty = lv.tee.y;
+    if (bouleFrei(tx, ty, r)) return { x: tx, y: ty };
+    for (let ring = 1; ring <= 12; ring++) {
+      const rad = ring * 0.35;
+      for (let k = 0; k < 12; k++) {
+        const a = (k / 12) * Math.PI * 2 + ring * 0.26;
+        const x = tx + Math.cos(a) * rad, y = ty + Math.sin(a) * rad;
+        if (bouleFrei(x, y, r)) return { x, y };
+      }
+    }
+    return { x: tx, y: ty };   // sollte nicht vorkommen; dann lieber eng als gar nicht
+  }
+
+  /* ----- Die Zielkugel ----- */
+  function bouleRundeStarten() {
+    state.boule = { ziel: null, liegen: [], aus: [], spieler: 0, runde: 0, versuche: 0, stand: 'ziel', wurfT: 0 };
+    state.liegendeBaelle = [];
+    state.players.forEach(p => { p.scores = []; p.times = []; });
+    bouleZielSchiessen();
+  }
+  /* Die Kanone. Sie zielt grob aufs Loch und streut kräftig – so liegt die Zielkugel jede Runde
+     woanders, aber nie hinter dem Spieler. Wo sie landet, entscheidet die Physik; ob das ein
+     brauchbarer Platz war, sieht man erst, wenn sie liegt. */
+  function bouleZielSchiessen() {
+    const lv = state.level, bl = state.boule;
+    bl.stand = 'ziel'; bl.versuche++;
+    const ziel = makeBall(lv.tee.x, lv.tee.y, '#ffb703', 'none');
+    ziel.r = BOULE_ZIEL_R; ziel.istZiel = true;
+    const c = lv.cup || lv.goal || { x: lv.tee.x + 5, y: lv.tee.y };
+    const grund = Math.atan2(c.y - ziel.y, c.x - ziel.x);
+    const winkel = grund + (Math.random() - 0.5) * 1.5;          // ±43° um die Richtung zum Loch
+    const kraft = 0.42 + Math.random() * 0.34;
+    ziel.vx = Math.cos(winkel) * kraft * MAX_SHOT; ziel.vy = Math.sin(winkel) * kraft * MAX_SHOT;
+    ziel.restX = ziel.x; ziel.restY = ziel.y; ziel.restEbene = 0;
+    bl.ziel = ziel;
+    state.ball = null; state.aim = null;
+    state.liegendeBaelle = [ziel];
+    bl.wurfT = 0;
+    setCamMode('overview');
+    Sfx.cannon(); burst(lv.tee.x, lv.tee.y, '#ffd166', 20, true);
+    showMessage(bl.versuche > 1 ? 'Die Zielkugel lag schlecht – noch einmal!' : 'Die Kanone schießt die Zielkugel …', 1800);
+    updateHud();
+  }
+  /* Die Zielkugel liegt. Taugt der Platz nichts (zu dicht am Abschlag), wird neu geschossen –
+     sonst stünden alle Spieler von Anfang an auf der Zielkugel. Nach ein paar Fehlversuchen wird
+     genommen, was da ist: Lieber eine mäßige Lage als eine Bahn, die nicht anfängt. */
+  const BOULE_VERSUCHE = 6;        // so oft darf die Kanone es probieren, dann wird gelegt
+  function bouleZielLiegt() {
+    const bl = state.boule, lv = state.level, z = bl.ziel;
+    const weg = Math.hypot(z.x - lv.tee.x, z.y - lv.tee.y);
+    const c = lv.charAtEbene(z.ebene || 0, z.x, z.y);
+    if (!(weg >= 3 && lv.isFloorChar(c) && c !== 'w' && c !== 'l')) { bouleZielNochmal(); return; }
+    bouleZielFest('Die Zielkugel liegt – auf geht’s!');
+  }
+  /* Noch ein Schuss – oder, wenn die Kanone es oft genug versucht hat, hingelegt.
+     Beides an einer Stelle, weil es zwei Wege hierher gibt: Die Zielkugel kann schlecht liegen
+     bleiben, und sie kann gleich ganz von der Bahn fliegen. Zählte nur der erste Weg mit, drehte
+     sich die Kanone auf einer engen Bahn endlos im Kreis. */
+  function bouleZielNochmal() {
+    if (state.boule.versuche < BOULE_VERSUCHE) { bouleZielSchiessen(); return; }
+    const platz = bouleZielNotplatz(), z = state.boule.ziel;
+    z.x = platz.x; z.y = platz.y; z.ebene = 0; z.z = 0; z.vz = 0; z.air = false; z.rider = null;
+    burst(z.x, z.y, '#ffb703', 14, true);
+    bouleZielFest('Die Kanone wollte nicht – die Zielkugel wird gelegt.');
+  }
+  function bouleZielFest(text) {
+    const bl = state.boule, z = bl.ziel;
+    z.vx = 0; z.vy = 0;
+    z.restX = z.x; z.restY = z.y; z.restEbene = z.ebene || 0;
+    bl.stand = 'spiel'; bl.spieler = 0; bl.runde = 0;
+    showMessage(text, 1800);
+    setTimeout(bouleZug, 900);
+  }
+  /* Der Notplatz: das Bodenfeld, das am ehesten in der Mitte zwischen Abschlag und Loch liegt und
+     weit genug vom Abschlag entfernt ist. Damit fängt jede Bahn an, auch wenn die Kanone auf ihr
+     partout nichts trifft. */
+  function bouleZielNotplatz() {
+    const lv = state.level;
+    const ziel = lv.cup || lv.goal || { x: lv.W - 2, y: lv.H / 2 };
+    const mx = (lv.tee.x + ziel.x) / 2, my = (lv.tee.y + ziel.y) / 2;
+    let best = null, bd = Infinity;
+    for (let ty = 0; ty < lv.H; ty++) for (let tx = 0; tx < lv.W; tx++) {
+      const x = tx + 0.5, y = ty + 0.5;
+      if (Math.hypot(x - lv.tee.x, y - lv.tee.y) < 3.5) continue;
+      if (!bouleFrei(x, y, BOULE_ZIEL_R)) continue;
+      const d = Math.hypot(x - mx, y - my);
+      if (d < bd) { bd = d; best = { x, y }; }
+    }
+    return best || { x: lv.tee.x + 4, y: lv.tee.y };
+  }
+  /* Die Zielkugel ist selbst aus der Bahn geflogen. Ohne sie gibt es nichts zu messen, also kommt
+     sie dorthin zurück, wo sie zuletzt lag. (Im richtigen Boule wäre das Ende ungültig – mitten
+     in einer angefangenen Runde ist das hier die freundlichere Regel.) */
+  function bouleZielZurueck(grund) {
+    const bl = state.boule, z = bl.ziel;
+    /* Fliegt sie schon auf ihrem ersten Weg hinaus, hat sie noch gar keinen Ruheplatz – dann ist
+       der gemerkte Punkt der Abschlag, und dorthin darf sie nicht. Statt dessen feuert die Kanone
+       noch einmal. */
+    if (bl.stand === 'ziel') { bouleZielNochmal(); return; }
+    z.x = z.restX; z.y = z.restY; z.ebene = z.restEbene || 0;
+    z.vx = 0; z.vy = 0; z.z = 0.4; z.vz = 0; z.air = false; z.rider = null;
+    burst(z.x, z.y, '#ffb703', 12, true);
+    showMessage(`Die Zielkugel ist ${BOULE_GRUND[grund] || 'verschwunden'} – sie kommt zurück.`, 1900);
+  }
+
+  /* ----- Ein Zug ----- */
+  function bouleZug() {
+    const bl = state.boule, lv = state.level;
+    if (bl.runde >= BOULE_KUGELN) { bouleEnde(); return; }
+    const p = state.players[bl.spieler];
+    state.curPlayer = bl.spieler;
+    const platz = bouleFreierPlatz(BALL_R);   // nie in eine Kugel hinein, die schon liegt
+    const k = makeBall(platz.x, platz.y, p.color, p.hat);
+    k.spieler = bl.spieler; k.nummer = bl.runde + 1;
+    state.ball = k;
+    lv.setzeEbene(0);
+    state.strokes = 0; state.phase = 'aim'; state.aim = null;
+    state.restTimer = 0; state.slowTimer = 0; state.rollT = 0; state.stuckRef = null;
+    bl.wurfT = 0;
+    bouleSichtAktualisieren();
+    faceZiel(); setCamMode('follow');
+    showMessage(`${p.name} · Kugel ${bl.runde + 1} von ${BOULE_KUGELN}`, 1400);
+    updateHud(); syncHint();
+  }
+  /* In Boule schaut die Kamera auf die Zielkugel, nicht aufs Loch – das Loch ist hier kein Ziel,
+     sondern eine Falle. */
+  function faceZiel() {
+    const b = state.ball, z = state.boule && state.boule.ziel;
+    if (!b || !z) return;
+    state.camTheta = thetaTowards(b.x, b.y, z.x, z.y);
+  }
+  /* Was der Renderer zeichnen soll: alles außer dem Ball, der gerade dran ist (den malt er selbst). */
+  function bouleSichtAktualisieren() {
+    const bl = state.boule;
+    state.liegendeBaelle = bl.ziel ? bl.liegen.concat([bl.ziel]) : bl.liegen.slice();
+  }
+  function bouleKugelLiegt() {
+    const bl = state.boule, k = state.ball;
+    k.vx = 0; k.vy = 0; k.restX = k.x; k.restY = k.y; k.restEbene = k.ebene || 0;
+    bl.liegen.push(k);
+    state.ball = null; state.aim = null;
+    bouleSichtAktualisieren();
+    schlagVorbei();
+    bouleWeiter();
+  }
+  function bouleKugelRaus(k, grund) {
+    const bl = state.boule;
+    Sfx.oob(); burst(k.x, k.y, '#cccccc', 12, true);
+    bl.aus.push({ spieler: k.spieler, nummer: k.nummer, grund });
+    const i = bl.liegen.indexOf(k);
+    if (i >= 0) bl.liegen.splice(i, 1);
+    const eigene = k === state.ball;
+    if (eigene) { state.ball = null; state.aim = null; }
+    bouleSichtAktualisieren();
+    const wer = state.players[k.spieler];
+    showMessage(`${wer ? wer.name : 'Kugel'} · Kugel ${k.nummer} ${BOULE_GRUND[grund] || 'ist raus'} – sie zählt nicht mehr.`, 2000);
+    if (eigene) { schlagVorbei(); bouleWeiter(); }
+  }
+  /* Der Nächste ist dran: reihum, und wenn alle einmal gespielt haben, beginnt die nächste Runde. */
+  function bouleWeiter() {
+    const bl = state.boule;
+    bl.spieler++;
+    if (bl.spieler >= state.players.length) { bl.spieler = 0; bl.runde++; }
+    state.phase = 'wait';
+    clearTimeout(waitTimer);
+    waitTimer = setTimeout(bouleZug, 1400);
+    updateHud();
+  }
+
+  /* ----- Ereignisse eines Schritts ----- */
+  function bouleEreignisse(baelle, listen) {
+    const bl = state.boule;
+    for (let i = 0; i < baelle.length; i++) {
+      const b = baelle[i], evs = listen[i];
+      let raus = null;
+      for (const ev of evs) {
+        if (BOULE_RAUS.has(ev.type)) { raus = ev.type; break; }
+        if (ev.type === 'bounce' || ev.type === 'ballStoss') {
+          if (ev.speed > 1.5 && state.t - state.lastBounceSfx > 0.06) {
+            state.lastBounceSfx = state.t;
+            if (ev.type === 'ballStoss') { Sfx.bumper(); burst(ev.x, ev.y, '#ffffff', 4); }
+            else if (ev.kind === 'bumper') Sfx.bumper(); else Sfx.bounce(ev.speed);
+          }
+        } else if (ev.type === 'portal') { Sfx.portal(); burst(ev.x, ev.y, ev.color, 12, true); }
+        else if (ev.type === 'land') { Sfx.bounce(3); burst(ev.x, ev.y, 'rgba(255,255,255,0.7)', 6); }
+      }
+      if (!raus) continue;
+      if (b.istZiel) { bouleZielZurueck(raus); return true; }
+      bouleKugelRaus(b, raus);
+      return true;   // der Schritt ist zu Ende: die Listen stimmen nicht mehr zu den Bällen
+    }
+    return false;
+  }
+
+  /* Ein Physikschritt im Boule-Modus. Steht hier und nicht in der Hauptschleife, weil er mit dem
+     Golf-Ablauf nichts gemein hat: kein Strafschlag, kein Schlaglimit, kein Zurücklegen. */
+  function bouleSchritt(lv) {
+    const bl = state.boule;
+    if (!bl || bl.stand === 'ende') return;
+    const baelle = bouleAlleBaelle();
+    if (!baelle.length) return;
+    const rollt = state.phase === 'rolling' || bl.stand === 'ziel';
+    const listen = stepBaelle(lv, baelle, STEP, state.t, rollt);
+    if (bouleEreignisse(baelle, listen)) return;
+    if (state.phase === 'aim' && state.ball && Math.hypot(state.ball.vx, state.ball.vy) > 0.3) {
+      state.phase = 'rolling'; state.aim = null;
+    }
+    if (state.phase !== 'rolling' && bl.stand !== 'ziel') return;
+    bl.wurfT += STEP;
+    /* Fertig ist ein Wurf erst, wenn wirklich alles liegt – sonst schlüge der Nächste in eine noch
+       rollende Kugel hinein. Nach BOULE_GEDULD Sekunden wird abgebrochen: Auf einer Bahn mit
+       Windfeld oder Förderband kommt sonst nie Ruhe ein. */
+    if (bouleAllesRuht(baelle)) {
+      state.restTimer += STEP;
+      if (state.restTimer > 0.35) { bouleRuhe(baelle); return; }
+    } else state.restTimer = 0;
+    if (bl.wurfT > BOULE_GEDULD) { for (const b of baelle) { b.vx = 0; b.vy = 0; } bouleRuhe(baelle); }
+  }
+  function bouleRuhe(baelle) {
+    const bl = state.boule;
+    state.restTimer = 0;
+    for (const b of baelle) { b.vx = 0; b.vy = 0; b.restX = b.x; b.restY = b.y; b.restEbene = b.ebene || 0; }
+    if (bl.stand === 'ziel') { bouleZielLiegt(); return; }
+    if (state.ball) bouleKugelLiegt();
+  }
+
+  /* ----- Das Ergebnis ----- */
+  function bouleEnde() {
+    const bl = state.boule;
+    bl.stand = 'ende';
+    state.phase = 'summary'; state.ball = null; state.aim = null;
+    bouleSichtAktualisieren();
+    setCamMode('overview');
+    clearTimeout(msgTimer); ui.msg.classList.remove('visible');
+    // Alle liegenden Kugeln nach Abstand, die ausgeschiedenen hinten dran
+    const liste = bl.liegen.map(k => ({ spieler: k.spieler, nummer: k.nummer, d: bouleAbstand(k) }))
+      .sort((a, b) => a.d - b.d);
+    const sieger = liste.length ? state.players[liste[0].spieler] : null;
+    const zeile = (r, i) => {
+      const p = state.players[r.spieler];
+      const hut = p.hat && p.hat !== 'none' ? `<canvas class="hat-icon" data-hut="${p.hat}" data-farbe="${p.color}"></canvas> ` : '';
+      return `<tr class="${i === 0 ? 'gesamt' : ''}"><td class="num">${i + 1}</td>
+        <td><span class="dot" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.color};margin-right:6px"></span>${hut}${Text.esc(p.name)}</td>
+        <td class="num">${r.nummer}</td><td class="num">${bouleZahl(r.d)}</td></tr>`;
+    };
+    const ausZeile = r => {
+      const p = state.players[r.spieler];
+      return `<tr class="boule-aus"><td class="num">–</td>
+        <td><span class="dot" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.color};margin-right:6px"></span>${Text.esc(p.name)}</td>
+        <td class="num">${r.nummer}</td><td>${Text.esc(BOULE_GRUND[r.grund] || 'ausgeschieden')}</td></tr>`;
+    };
+    const letzte = state.holeIdx === state.courses.length - 1;
+    overlay(`<div class="panel wide ${worldClass()}">
+      <h2>${Icons.svg('sports_score')} Boule · ${Text.esc(state.courses[state.holeIdx].name)}</h2>
+      ${sieger ? `<div class="sub"><b>${Text.esc(sieger.name)}</b> liegt am nächsten – ${bouleZahl(liste[0].d)} Felder von der Zielkugel.</div>`
+               : '<div class="sub">Keine einzige Kugel ist liegen geblieben – niemand gewinnt diese Runde.</div>'}
+      <table class="scores"><tr><th>#</th><th>Spieler</th><th>Kugel</th><th>Abstand</th></tr>
+        ${liste.map(zeile).join('')}${bl.aus.map(ausZeile).join('')}</table>
+      <p style="margin-top:12px">
+        <span class="btn" id="boule-noch">${Icons.svg('replay')} Noch eine Runde</span>
+        ${letzte ? '' : `<span class="btn ghost small" id="boule-weiter">Nächste Bahn ${Icons.svg('arrow_forward')}</span>`}
+      </p>
+      <p style="margin-top:8px"><span class="btn ghost small" id="boule-raus">${Icons.svg('arrow_back')} ${state.world && state.world.id === 'custom' ? 'Zurück zur Auswahl' : 'Zurück zur Weltkarte'}</span></p>
+      <div class="legend">Gemessen wird von der Mitte der Kugel zur Mitte der Zielkugel, in Feldern
+        der Bahn. Kugeln, die von der Bahn gefallen oder im Loch gelandet sind, zählen nicht mit.</div>
+    </div>`);
+    $('boule-noch').addEventListener('click', () => { hideOverlay(); loadHole(state.holeIdx); });
+    if (!letzte) $('boule-weiter').addEventListener('click', () => { hideOverlay(); loadHole(state.holeIdx + 1); });
+    $('boule-raus').addEventListener('click', () => leaveRound(true));
+    updateHud();
+  }
+
   function handleEvents(events) {
     for (const ev of events) {
       if (state.phase !== 'aim' && state.phase !== 'rolling') return;
@@ -1701,7 +2381,11 @@
       acc -= STEP; if (!window.__golfDebug || !window.__golfDebug.freeze) state.t += STEP;
       const b = state.ball, lv = state.level;
       if (!lv) continue;
-      if (b && (state.phase === 'aim' || state.phase === 'rolling')) {
+      if (state.boule) {
+        // Boule rechnet alle Bälle zusammen und kennt weder Strafschlag noch Schlaglimit
+        if (state.phase === 'aim' || state.phase === 'rolling' || state.boule.stand === 'ziel') bouleSchritt(lv);
+        else for (const ob of lv.obstacles) if (ob.update) ob.update(state.t);
+      } else if (b && (state.phase === 'aim' || state.phase === 'rolling')) {
         const ev = stepPhysics(lv, b, STEP, state.t, state.phase === 'rolling');
         handleEvents(ev);
         if (ev.some(e => e.type === 'contact' && e.kind === 'mover')) state.lastMoverHit = state.t;
@@ -1727,7 +2411,10 @@
     updateParticles(dt);
     if (state.ball && state.ball.sunk) state.ball.sinkT += dt;
     updateCamera(dt);
-    if (state.phase === 'title') TitleScene.draw(R.ctx, R.w, R.h, state.t); else { R.drawFrame(state); if (state.phase === 'edit') editor.drawOverlay(R.ctx); }
+    // Liegt das gemalte Startbild darüber, ist die gezeichnete Szene ohnehin verdeckt – dann wird
+    // sie auch nicht gezeichnet. Das spart auf dem Startbildschirm die ganze Arbeit pro Bild.
+    if (state.phase === 'title') { if (!document.body.classList.contains('startbild')) TitleScene.draw(R.ctx, R.w, R.h, state.t); }
+    else { R.drawFrame(state); if (state.phase === 'edit') editor.drawOverlay(R.ctx); }
     syncClock();
     ui.power.classList.toggle('visible', !!state.aim);
     if (state.aim) ui.powerFill.style.width = `${Math.round(state.aim.power * 100)}%`;
@@ -1828,7 +2515,7 @@
   $('fs-btn').addEventListener('click', () => { Sfx.unlock(); toggleFullscreen(); });
   function toggleOverview() { if (state.ball) setCamMode(state.camMode === 'overview' ? 'follow' : 'overview'); }
   function syncMusicBtn() { $('music-btn').classList.toggle('sel', Music.on); $('music-btn').innerHTML = Icons.svg(Music.on ? 'music_note' : 'music_off'); $('music-btn').title = Music.on ? 'Musik aus (J)' : 'Musik an (J)'; }
-  function toggleMusic() { Sfx.unlock(); Music.toggle(); syncMusicBtn(); showMessage(Music.on ? '♪ Musik an' : 'Musik aus', 1000); }
+  function toggleMusic() { Sfx.unlock(); Music.toggle(); syncMusicBtn(); showMessage(Music.on ? 'Musik an' : 'Musik aus', 1000, Music.on ? 'music_note' : 'music_off'); }
   function zoomBy(f) { state.zoomFactor = Math.max(0.5, Math.min(2.2, state.zoomFactor * f)); if (state.camMode === 'overview' && state.ball) setCamMode('follow'); }
   function rotateBy(a) { state.camTheta += a; if (state.camMode === 'overview' && state.ball) setCamMode('follow'); }
   $('cam-overview').addEventListener('click', toggleOverview);
@@ -1882,6 +2569,15 @@
       for (let i = 0; i < state.players.length; i++) if (state.players[i].scores[state.holeIdx] == null) state.players[i].scores[state.holeIdx] = par;
       showHoleDone(); return true;
     },
+    /* Die gewählten Hüte – fürs Prüfen der Regel „keiner doppelt" */
+    huete: () => playerHats.slice(),
+    /* Einen Schlag ausführen, ohne zu ziehen – für das automatische Durchspielen (Boule-Prüfung) */
+    shoot(dx, dy, power) {
+      if (state.phase !== 'aim' || !state.ball) return false;
+      const L = Math.hypot(dx, dy) || 1;
+      shoot(dx / L, dy / L, Math.max(0.05, Math.min(1, power)));
+      return true;
+    },
     state, R,
   };
 
@@ -1904,8 +2600,8 @@
     const meins = Best.name && sieger.n === Best.name;
     if (meins && lohn) frischerLohn = lohn;
     showMessage(meins
-      ? `🏅 Turnier gewonnen! Der Championhelm gehört dir.`
-      : `🏅 Turnier vorbei – ${sieger.n} gewinnt den Championhelm.`, 4200);
+      ? `Turnier gewonnen! Der Championhelm gehört dir.`
+      : `Turnier vorbei – ${sieger.n} gewinnt den Championhelm.`, 4200, 'military_tech');
   }
 
   /* Die Uhr des Turniers: trägt die Restlaufzeit jede Sekunde nach und zeichnet den Bildschirm
@@ -1941,10 +2637,50 @@
     const band = $('vorschau-band'); if (band) band.hidden = false;
     document.title = 'VORSCHAU · ' + document.title;
   }
+  /* Das Ladebild wegnehmen. Es steht im festen HTML und läuft ohne JavaScript, damit sofort etwas
+     zu sehen ist; hier endet es. Gewartet wird auf dreierlei:
+
+     - der Startbildschirm ist gebaut (wir sind an dieser Stelle),
+     - zwei Bilder sind gezeichnet (sonst blitzt kurz die leere Leinwand durch),
+     - die Zierschrift ist da, sonst springt die Überschrift hinterher – aber höchstens 1,2 s,
+       denn sie kommt von Google und muss nicht kommen.
+
+     Dazu eine Mindeststandzeit. Auf einem schnellen Gerät ist das Spiel in 200 ms bereit, und ein
+     Bild, das man nur als Zucken wahrnimmt, ist schlechter als gar keines. performance.now() zählt
+     ab dem Seitenaufruf, misst also genau die Zeit, die der Betrachter schon gewartet hat. */
+  /* Zierschrift nachladen, statt sie im Kopf der Seite zu verlinken – siehe die Begründung dort.
+     'display=swap' steht schon in der Adresse: Der Text ist sofort da, in der Ersatzschrift, und
+     wechselt, sobald die Zierschrift ankommt.
+     Der Umweg über media='print' ist nötig: Der Browser hält das Zeichnen an, solange irgendein
+     Stylesheet noch aussteht – auch ein nachträglich eingehängtes. Ein Blatt für den Drucker gilt
+     für den Bildschirm nicht und hält darum nichts auf; sobald es da ist, wird es umgehängt. */
+  (() => {
+    const l = document.createElement('link');
+    l.rel = 'stylesheet';
+    l.media = 'print';
+    l.addEventListener('load', () => { l.media = 'all'; });
+    l.href = 'https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=MedievalSharp&display=swap';
+    document.head.appendChild(l);
+  })();
+
+  const LADE_MIN = 1700;
+  function ladebildWeg() {
+    const el = $('lade');
+    if (!el) return;
+    const schrift = document.fonts ? document.fonts.ready : Promise.resolve();
+    Promise.race([schrift, new Promise(r => setTimeout(r, 1200))]).then(() => {
+      setTimeout(() => {
+        el.classList.add('weg');
+        setTimeout(() => el.remove(), 700);
+      }, Math.max(0, LADE_MIN - performance.now()));
+    });
+  }
+
   R.resize();
   setControlMode(state.controlMode);
   syncMusicBtn();
   showTitle();
   updateHud();
   requestAnimationFrame(frame);
+  requestAnimationFrame(() => requestAnimationFrame(ladebildWeg));
 })();

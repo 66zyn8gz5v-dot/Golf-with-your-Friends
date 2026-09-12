@@ -417,3 +417,885 @@ class ImperialBox {
     events.push({ type: 'dropped', x: ball.x, y: ball.y, ob: this });
   }
 }
+
+/* ---------- Die drei Maschinen der Uhrwerkstadt ----------
+   Alles andere in dieser Welt ist eine bekannte Mechanik mit neuem Gesicht. Diese drei sind wirklich
+   neu, weil sie etwas können, das es im Spiel noch nicht gab: eine Höhenstufe hinauftragen, im Takt
+   hart zuschlagen, und einen Ball mit wachsendem Radius nach außen schleudern.
+
+   Alle drei laufen auf der Spieluhr t – dieselbe Zahl auf jedem Gerät. Damit sehen beim Spiel
+   gegeneinander alle denselben Ballweg, ohne dass etwas übertragen werden müsste. */
+
+/* Zahnradaufzug: ein großes Zahnrad, das zum Teil im Boden steckt und vor einer geraden Wand
+   steht – der Kante einer Höhenstufe. Es dreht sich unablässig.
+
+   Der Weg des Balles: Er rollt an die Stelle, wo der Kranz auf der Spielerseite aus dem Boden
+   kommt. Trifft er dort eine Zahnlücke, liegt er darin; das Rad trägt ihn die Außenflanke hinauf
+   bis über den Scheitel – und dort oben wirft es ihn nach vorn über die Wand auf die obere Stufe.
+   Trifft er einen Zahn, ist das Rad an dieser Stelle eine Wand, und der herabkommende Zahn schiebt
+   ihn wieder von sich weg; er kommt erst mit der nächsten Lücke mit.
+
+   Die Zeichnung benutzt genau dieselben Formeln (laengs/hoehe) und schneidet den Kranz am Boden ab.
+   Damit sitzt der Ball sichtbar in seiner Lücke, und was unter dem Boden liegt, sieht man nicht.
+
+   Warum das nicht die Fähre schon konnte: Die Fähre schiebt waagerecht. Eine Höhenstufe hinauf kam
+   man bisher nur über eine Rampe, und die verlangt Anlauf – auf engen Bahnen ist dafür kein Platz.
+
+   x, y ist die Achse des Rades (in der Aufsicht), angle zeigt über die Wand hinweg. */
+class GearLift {
+  constructor(d) {
+    Object.assign(this, { r: 1.8, angle: 0, speed: 1.0472, zaehne: 8, phase: 0, fang: 7, dicke: 0.55,
+      wurf: 3, tief: 0.38 }, d);
+    this.type = 'gearlift';
+    const a = (this.angle * Math.PI) / 180;
+    this.dx = Math.cos(a); this.dy = Math.sin(a);      // Richtung über die Wand
+    this.qx = -this.dy; this.qy = this.dx;             // längs der Wand, also längs der Achse
+    this.drehung = 0;
+  }
+  update(t) { this.drehung = t * this.speed + this.phase * TAU; }
+  /* Ein Punkt auf dem Kranz. w = 0 ist der tiefste Punkt (im Boden), w = π der Scheitel; dazwischen
+     schwingt der Kranz auf die Spielerseite aus, laengs wird also negativ. */
+  zAchse() { return this.r * (1 - this.tief); }        // Höhe der Achse über dem Boden
+  laengs(w) { return -this.r * Math.sin(w); }
+  hoehe(w) { return this.zAchse() - this.r * Math.cos(w); }
+  /* Wo der Kranz den Boden schneidet: dort kommt er auf der Spielerseite heraus, dort spielt man ein */
+  wBoden() { return Math.acos(Math.max(-0.99, Math.min(0.99, this.zAchse() / this.r))); }
+  ein() { const l = this.laengs(this.wBoden()); return [this.x + this.dx * l, this.y + this.dy * l]; }
+  aus() { return [this.x + this.dx * 1.4, this.y + this.dy * 1.4]; }
+  teilung() { return TAU / this.zaehne; }
+  /* Steht gerade eine Zahnlücke am Einstieg? Die Lücken sitzen bei drehung + i·Teilung. */
+  lueckeAmEinstieg() {
+    const teil = this.teilung();
+    const rest = ((((this.wBoden() - this.drehung) % teil) + teil) % teil) / teil;
+    return Math.min(rest, 1 - rest) < 0.26;
+  }
+  ride(ball, t, events) {
+    if (ball.rider === this) {
+      const w = this.wBoden() + Math.abs(this.drehung - ball.liftD0);
+      if (w < Math.PI) {
+        const l = this.laengs(w);
+        ball.x = this.x + this.dx * l; ball.y = this.y + this.dy * l;
+        ball.z = this.hoehe(w);
+        ball.vx = 0; ball.vy = 0; ball.vz = 0;
+        return true;
+      }
+      // Am Scheitel nach vorn über die Wand geworfen; der Ball fliegt und landet auf der Stufe
+      ball.rider = null; ball.rideCd = 1.2;
+      ball.x = this.x + this.dx * 0.3; ball.y = this.y + this.dy * 0.3;
+      ball.z = this.hoehe(Math.PI); ball.vz = 0.5; ball.air = true;
+      ball.vx = this.dx * this.wurf; ball.vy = this.dy * this.wurf;
+      events.push({ type: 'dropoff', x: ball.x, y: ball.y });
+      return false;
+    }
+    if (ball.rideCd > 0 || ball.air) return false;
+    const [ex, ey] = this.ein();
+    const dx = ball.x - ex, dy = ball.y - ey;
+    /* Nah genug an der Einstiegsstelle: quer zur Achse eng, längs der Achse so breit wie das Rad.
+       Das Fenster reicht weiter als der Zahn, damit ein Ball, der vor einem Zahn liegt, von der
+       nächsten Lücke noch erwischt wird, statt für immer davor zu warten. */
+    if (Math.abs(dx * this.dx + dy * this.dy) > 0.55) return false;
+    if (Math.abs(dx * this.qx + dy * this.qy) > this.dicke / 2 + ball.r) return false;
+    if (Math.hypot(ball.vx, ball.vy) > this.fang) return false;
+    if (!this.lueckeAmEinstieg()) return false;
+    ball.rider = this; ball.liftD0 = this.drehung;
+    ball.x = ex; ball.y = ey; ball.vx = 0; ball.vy = 0; ball.z = 0;
+    events.push({ type: 'board', x: ex, y: ey });
+    return true;
+  }
+  /* Solange am Einstieg ein Zahn steht, ist das Rad dort eine Wand – und keine ruhige: Ein Zahn,
+     der von oben herunterkommt, streicht an dieser Stelle nach außen und schiebt einen Ball, der
+     dort liegt, wieder von sich weg. */
+  segments(out) {
+    if (this.lueckeAmEinstieg()) return;
+    const [ex, ey] = this.ein(), h = this.dicke / 2 + 0.1;
+    const weg = this.r * Math.abs(this.speed) * 0.25;
+    out.push({ ax: ex + this.qx * h, ay: ey + this.qy * h, bx: ex - this.qx * h, by: ey - this.qy * h,
+      rad: 0.16, e: 0.55, kind: 'mover', vx: -this.dx * weg, vy: -this.dy * weg, owner: this });
+  }
+}
+
+/* Dampfkolben: ein Stempel, der auf den Schlag aus der Mauer fährt und dazwischen selbst Mauer ist.
+   Anders als das Dampfventil trifft er hart und nur einen schmalen Streifen – entweder man ist weg,
+   oder man fliegt quer über die Bahn.
+
+   Die Stoßgeschwindigkeit wird gerechnet, nicht aus der Bildfolge geschätzt: Beim Ausfahren legt er
+   'hub' Kacheln in 'stoss' Sekunden zurück, beim Zurückziehen dieselbe Strecke in der doppelten
+   Zeit. Damit bleibt der Stoß auf jedem Gerät gleich stark, egal wie flüssig es läuft. */
+class Piston {
+  constructor(d) {
+    Object.assign(this, { w: 1.2, h: 1.2, angle: 0, hub: 2.4, period: 4, phase: 0, stoss: 0.28, halt: 0.22, e: 0.45 }, d);
+    this.type = 'piston';
+    const a = (this.angle * Math.PI) / 180;
+    this.dx = Math.cos(a); this.dy = Math.sin(a);
+    this.aus = 0; this.vx = 0; this.vy = 0; this.px = this.x; this.py = this.y;
+  }
+  update(t) {
+    const s = ((((t / this.period + this.phase) % 1) + 1) % 1) * this.period;
+    const rein = this.stoss * 2;
+    let anteil = 0, tempo = 0;
+    if (s < this.stoss) { anteil = s / this.stoss; tempo = this.hub / this.stoss; }
+    else if (s < this.stoss + this.halt) { anteil = 1; tempo = 0; }
+    else if (s < this.stoss + this.halt + rein) { anteil = 1 - (s - this.stoss - this.halt) / rein; tempo = -this.hub / rein; }
+    this.aus = anteil * this.hub;
+    this.px = this.x + this.dx * this.aus; this.py = this.y + this.dy * this.aus;
+    this.vx = this.dx * tempo; this.vy = this.dy * tempo;
+    this.schlaegt = tempo > 0;
+  }
+  poly() { return rectPoly(this.px, this.py, this.w, this.h); }
+  segments(out) { polySegments(this.poly(), out, { vx: this.vx, vy: this.vy, e: this.e, kind: 'mover', owner: this }); }
+}
+
+/* Zeiger: ein Uhrzeiger, der sich dreht. Wer langsam an ihn stößt, wird mitgenommen und dabei nach
+   außen geschoben; am Ende der Stange fliegt er tangential davon. Wer mit Schwung kommt, prallt an
+   der Stange ab wie an einem Drehkreuz.
+
+   Der Unterschied zum Drehteller: Der wirft immer an derselben Stelle und immer gleich weit aus.
+   Hier entscheidet der Spieler beides selbst – wo er den Zeiger trifft, bestimmt, wie lange er
+   mitfährt, und daraus folgen Richtung und Weite. Nah an der Achse getroffen heißt: lange Fahrt,
+   weiter Wurf. */
+class Hand {
+  constructor(d) {
+    Object.assign(this, { len: 3, speed: 1.0472, phase: 0, thick: 0.18, schub: 1.5, fang: 5, hubR: 0.4, e: 0.85 }, d);
+    this.type = 'hand'; this.angle = this.phase; this.omega = this.speed;
+  }
+  update(t) { this.angle = t * this.speed + this.phase; this.omega = this.speed; }
+  spitze() { return [this.x + Math.cos(this.angle) * this.len, this.y + Math.sin(this.angle) * this.len]; }
+  ride(ball, t, events) {
+    if (ball.rider === this) {
+      ball.handR += this.schub * Math.max(0, t - ball.handT); ball.handT = t;
+      if (ball.handR >= this.len) {
+        const a = this.angle, tang = this.omega * this.len;
+        ball.rider = null; ball.rideCd = 1.2;
+        ball.x = this.x + Math.cos(a) * (this.len + 0.25); ball.y = this.y + Math.sin(a) * (this.len + 0.25);
+        ball.vx = -Math.sin(a) * tang + Math.cos(a) * this.schub * 2.2;
+        ball.vy = Math.cos(a) * tang + Math.sin(a) * this.schub * 2.2;
+        ball.z = 0; ball.vz = 0;
+        events.push({ type: 'spinout', x: ball.x, y: ball.y });
+        return false;
+      }
+      ball.x = this.x + Math.cos(this.angle) * ball.handR;
+      ball.y = this.y + Math.sin(this.angle) * ball.handR;
+      ball.vx = -Math.sin(this.angle) * this.omega * ball.handR;
+      ball.vy = Math.cos(this.angle) * this.omega * ball.handR;
+      ball.z = 0.05; ball.vz = 0;
+      return true;
+    }
+    if (ball.rideCd > 0 || ball.air) return false;
+    if (Math.hypot(ball.vx, ball.vy) > this.fang) return false;   // mit Schwung prallt man ab
+    const dx = ball.x - this.x, dy = ball.y - this.y, d = Math.hypot(dx, dy);
+    if (d < this.hubR || d > this.len) return false;
+    // Abstand von der Stange: Winkelabweichung mal Radius
+    const ab = Math.atan2(dy, dx) - this.angle;
+    const quer = Math.abs(Math.atan2(Math.sin(ab), Math.cos(ab))) * d;
+    if (quer > this.thick + ball.r + 0.2) return false;
+    ball.rider = this; ball.handR = d; ball.handT = t;
+    events.push({ type: 'spin', x: ball.x, y: ball.y });
+    return true;
+  }
+  segments(out) {
+    const [bx, by] = this.spitze();
+    out.push({ ax: this.x, ay: this.y, bx, by, rad: this.thick, omega: this.omega,
+      cx: this.x, cy: this.y, e: this.e, kind: 'rotor' });
+  }
+  circles(out) { out.push({ x: this.x, y: this.y, r: this.hubR, e: 0.6, kind: 'hub' }); }
+}
+
+/* ---------------------------------------------------------------------------
+   Drei Maschinen aus bewährten Verhalten. Neu ist nur die Optik und die Bahn,
+   auf der sie sich bewegen – wie sie sich anfühlen, kennt der Spieler schon.
+   --------------------------------------------------------------------------- */
+
+/* Schwingdauer des Pendels: eine volle Schwingung hin und zurück, in Sekunden.
+   Bewusst eine Konstante und keine Angabe je Bahn – alle Pendel einer Bahn sollen
+   im selben Takt gehen, nur ihre Phase darf sich unterscheiden. */
+const PENDEL_TAKT = 3.4;
+
+/* Zahnradfeld: eine Reihe ineinandergreifender Zahnräder, die im Boden liegen. Wer hineinrollt,
+   wird von den Zähnen gefasst und ans andere Ende getragen – dasselbe Verhalten wie die Lore,
+   nur ohne Wagen: Der Ball liegt zwischen den Zähnen und wird von ihnen weitergereicht.
+
+   Die Räder drehen sich genau so weit, wie der Ball wandert (Umfang = Weg), und abwechselnd
+   in die andere Richtung – so greifen sie ineinander, statt gegeneinander zu laufen. Steht das
+   Feld an einer Station, stehen auch die Räder still; das ist der Moment zum Einsteigen. */
+class GearField extends Ferry {
+  constructor(d) {
+    super(Object.assign({ w: 1.5, h: 1.5, wait: 2.2, travel: 3.2, r: 0.9, zaehne: 10 }, d));
+    this.type = 'gearfield';
+    this.tragHoehe = 0.37;                 // der Ball sitzt auf dem Panzer des Aufziehkäfers
+    this.raeder = [];
+    const n = Math.max(2, Math.round(this.len / (this.r * 1.72)) + 1);
+    for (let i = 0; i < n; i++) {
+      const u = i / (n - 1);
+      this.raeder.push({ x: this.x0 + (this.x1 - this.x0) * u, y: this.y0 + (this.y1 - this.y0) * u, dreh: i % 2 ? -1 : 1 });
+    }
+    this.winkel = 0;
+  }
+  update(t) { super.update(t); this.winkel = (this.progress * this.len) / this.r; }
+}
+
+/* Pendel: ein schwerer Körper an einer Stange, der quer über die Bahn schwingt. Er verhält sich
+   wie der Ritter – ein bewegliches Hindernis, das den Ball wegstößt und ihm dabei seinen eigenen
+   Schwung mitgibt. Die Stange hängt hoch über dem Boden und trifft nichts; nur die Linse unten
+   räumt den Weg.
+
+   x/y ist die Aufhängung und bleibt stehen, ruhe die Richtung der Ruhelage in Grad (90 = nach
+   unten auf dem Bildschirm), amp der Ausschlag nach jeder Seite in Grad, len die Pendellänge. */
+class Pendulum {
+  constructor(d) {
+    Object.assign(this, { len: 3.2, amp: 55, ruhe: 90, phase: 0, w: 1.2, h: 1.2, e: 0.7, hoehe: 0.8 }, d);
+    this.type = 'pendulum';
+    this.ax = this.x; this.ay = this.y;                 // Aufhängung
+    this.ampR = (this.amp * Math.PI) / 180;
+    this.ruheR = (this.ruhe * Math.PI) / 180;
+    this.omega = TAU / PENDEL_TAKT;
+    this.update(0);
+  }
+  update(t) {
+    const w = this.omega * t + this.phase * TAU;
+    this.angle = this.ruheR + this.ampR * Math.sin(w);
+    const dw = this.ampR * this.omega * Math.cos(w);    // Winkelgeschwindigkeit
+    this.x = this.ax + Math.cos(this.angle) * this.len;
+    this.y = this.ay + Math.sin(this.angle) * this.len;
+    this.vx = -Math.sin(this.angle) * this.len * dw;
+    this.vy = Math.cos(this.angle) * this.len * dw;
+    this.dir = Math.sign(dw) || 1;
+    this.schwung = Math.abs(dw) / (this.ampR * this.omega || 1);   // 0 an den Umkehrpunkten, 1 in der Mitte
+  }
+  poly() { return rectPoly(this.x, this.y, this.w, this.h); }
+  segments(out) { polySegments(this.poly(), out, { vx: this.vx, vy: this.vy, e: this.e, kind: 'mover', owner: this }); }
+}
+
+/* Federwerk: eine aufgezogene Spiralfeder, die in den Boden eingelassen ist. Wer hineinrollt,
+   wird eingespannt; die Feder zieht sich zusammen und schnellt den Ball dann davon – dasselbe
+   Verhalten wie die Kanone, nur schwenkt hier kein Rohr, sondern der Federarm. */
+class SpringWork extends Cannon {
+  constructor(d) {
+    super(Object.assign({ amp: 0.45, speed: 0.9, range: 8, loadTime: 0.9, catchR: 0.7, flySpeed: 8 }, d));
+    this.type = 'springwork'; this.style = 'feder';
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Kupferrohre und Hemmung – die zweite Lieferung für den Uhrenturm.
+   --------------------------------------------------------------------------- */
+
+/* Kupferrohr: die Rohrpost des Uhrenturms. Es steht wie das Löwentor paarweise in der Karte – der
+   Großbuchstabe ist der Rohrmund, der gleiche Kleinbuchstabe das Rohrende (A/a, B/b) – und wirft am
+   Ende immer mit LOEWENTOR_AUSWURF in die Richtung, die als 'angle' (Grad) daneben steht. So bleibt
+   die Landestelle planbar.
+
+   Sonst ist es aber kein Tor, sondern eine Fahrt. Der Unterschied ist wichtig genug für eine eigene
+   Klasse:
+
+   - **Man kommt immer hinein.** Kein Mindesttempo, keine Sperre davor. Wer den Rohrmund berührt,
+     fährt mit – auch wer nur hineintröpfelt. Das Rohr ist ein Weg, kein Prüfstein.
+   - **Man sieht die Fahrt.** Der Ball verschwindet nicht und taucht anderswo wieder auf, sondern
+     fährt sichtbar durch das Rohr: ROHR_TEMPO Kacheln je Sekunde. Erst am Rohrende wird er
+     ausgeworfen.
+
+   Das Rohr selbst ist darum auch gebaut und nicht nur angedeutet: gerade Läufe, rechtwinklige
+   Bögen und Muffen an den Stößen, auf Stützen. Und es läuft **außen um die Karte herum** statt
+   quer über die Bahn – so liegt es niemandem im Bild und man sieht es über die ganze Länge.
+   Wohin es führt, soll man sehen, bevor man hineinschießt. */
+const ROHR_TEMPO = 11;           // Kacheln je Sekunde Luftlinie, die die Fahrt dauert
+const ROHR_MUND_Z = 0.52;        // Höhe der Rohrachse am Rohrmund – so hoch liegt dort der Körper
+const ROHR_HOEHE = 1.35;         // Höhe der Leitung dazwischen: über die Bande hinweg
+const ROHR_AUSSEN = 2.2;         // so viele Kacheln außerhalb der Karte läuft sie entlang
+const ROHR_ECKE = 1.1;           // Radius der Bögen an den Ecken
+const ROHR_MUFFE = 4.5;          // Abstand der Muffen auf einem geraden Lauf, in Kacheln
+const ROHR_STUETZE = 3.6;        // Abstand der Stützen unter der Leitung, in Kacheln
+
+class CopperPipe extends LionGate {
+  constructor(d) {
+    super(d);
+    this.type = 'copperpipe';
+    this.alwaysForce = false;     // das Rohr liest kein Balltempo ab, es sperrt ja nie
+    this.fahrt = -1;              // 0..1 während einer Fahrt, sonst -1 (für die Zeichnung)
+    if (this.ebene == null) this.ebene = 0;
+    if (this.ziel == null) this.ziel = this.ebene;   // Rohrende auf derselben Ebene, wenn nichts dasteht
+  }
+  /* Die beiden Enden können auf verschiedenen Ebenen liegen: Der Rohrmund steht auf 'ebene', das
+     Rohrende auf 'ziel'. Deshalb wird jedes Ende auf seiner eigenen Karte gesucht und nicht auf
+     der gerade aktiven – sonst fände eine Leitung zwischen zwei Etagen ihre Hälfte nicht. */
+  setup(level) {
+    const gross = this.pair.toUpperCase(), klein = this.pair.toLowerCase();
+    const flEin = level.flaechen[this.ebene], flAus = level.flaechen[this.ziel];
+    this.bereit = false;
+    if (!flEin || !flAus) return;
+    for (let y = 0; y < level.H; y++) for (let x = 0; x < level.W; x++) {
+      if (flEin.tiles[y][x] === gross) { this.x = x + 0.5; this.y = y + 0.5; }
+      if (flAus.tiles[y][x] === klein) { this.ax = x + 0.5; this.ay = y + 0.5; }
+    }
+    this.bereit = this.x != null && this.ax != null;
+    if (!this.bereit) return;
+    const offeneSeite = (fl, cx, cy) => {
+      for (const [ox, oy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const c = fl.at(Math.floor(cx + ox), Math.floor(cy + oy));
+        if (level.isFloorChar(c) && c !== gross && c !== klein) return [ox, oy];
+      }
+      return [0, 0];
+    };
+    [this.mundX, this.mundY] = offeneSeite(flEin, this.x, this.y);
+    [this.ausMundX, this.ausMundY] = offeneSeite(flAus, this.ax, this.ay);
+    this.bauWeg(level);
+    /* Wie lange die Fahrt dauert, richtet sich nach dem **direkten** Abstand der beiden Enden,
+       nicht nach der Länge des Umwegs. Sonst hinge die Spielzeit daran, wie weit das Rohr außen
+       herumläuft – und das ist eine Frage der Optik, keine des Spiels: Eine Bahn, deren Pendel
+       hinter dem Rohrende im Takt steht, dürfte nicht kippen, bloß weil die Leitung anders
+       verlegt wird. Der Ball fährt auf dem längeren Weg entsprechend schneller. */
+    this.direkt = Math.hypot(this.ax - this.x, this.ay - this.y) || 1;
+    this.dauer = Math.max(0.15, this.direkt / ROHR_TEMPO);
+  }
+
+  /* Der Weg der Leitung. Sie läuft nicht quer über die Bahn, sondern **außen herum**: Sie
+     verlässt die Bahn am Rohrmund, geht über den Rand hinaus, läuft ein Stück neben der Karte
+     entlang und kommt beim Rohrende wieder herein. So liegt sie niemandem im Bild, man sieht sie
+     über ihre ganze Länge, und es ist der Weg, den eine Rohrpost in einem Haus auch nähme.
+
+     Gebaut wird sie wie echte Rohre: gerade Läufe und rechtwinklige Bögen, keine Diagonale. Die
+     Ecken werden gerundet, damit der Ball nicht anstößt und die Leitung Bögen hat statt Knicke. */
+  bauWeg(level) {
+    const M = ROHR_AUSSEN;
+    const mx = (this.x + this.ax) / 2, my = (this.y + this.ay) / 2;
+    // Nach welcher Seite geht die Leitung hinaus? Zur nächsten Kante der Karte – dort ist der
+    // Umweg am kürzesten und die Erdscholle trägt die Leitung noch.
+    const kanten = [['oben', my], ['unten', level.H - my], ['links', mx], ['rechts', level.W - mx]];
+    kanten.sort((a, b) => a[1] - b[1]);
+    const seite = kanten[0][0];
+    let p1, p2;
+    if (seite === 'oben') { p1 = [this.x, -M]; p2 = [this.ax, -M]; }
+    else if (seite === 'unten') { p1 = [this.x, level.H + M]; p2 = [this.ax, level.H + M]; }
+    else if (seite === 'links') { p1 = [-M, this.y]; p2 = [-M, this.ay]; }
+    else { p1 = [level.W + M, this.y]; p2 = [level.W + M, this.ay]; }
+    const ecken = [[this.x, this.y], p1, p2, [this.ax, this.ay]];
+    // Läuft der mittlere Lauf ins Leere (beide Enden liegen gleich), fällt eine Ecke weg
+    if (Math.hypot(p2[0] - p1[0], p2[1] - p1[1]) < 0.05) ecken.splice(2, 1);
+
+    const abst = (a, b) => Math.hypot(b[0] - a[0], b[1] - a[1]);
+    const weg = [ecken[0]], muffen = [], boegen = [];
+    for (let i = 1; i < ecken.length - 1; i++) {
+      const a = ecken[i - 1], b = ecken[i], c = ecken[i + 1];
+      const r = Math.min(ROHR_ECKE, abst(a, b) * 0.45, abst(b, c) * 0.45);
+      const ein = [b[0] + (a[0] - b[0]) / abst(a, b) * r, b[1] + (a[1] - b[1]) / abst(a, b) * r];
+      const aus = [b[0] + (c[0] - b[0]) / abst(b, c) * r, b[1] + (c[1] - b[1]) / abst(b, c) * r];
+      muffen.push(weg.length);                      // vor dem Bogen sitzt eine Muffe
+      const bogenVon = weg.length;
+      weg.push(ein);
+      for (let k = 1; k < 6; k++) {                 // Viertelbogen als Bézier über die Ecke
+        const s = k / 6, g = 1 - s;
+        weg.push([g * g * ein[0] + 2 * g * s * b[0] + s * s * aus[0],
+          g * g * ein[1] + 2 * g * s * b[1] + s * s * aus[1]]);
+      }
+      weg.push(aus);
+      boegen.push([bogenVon, weg.length - 1]);
+      muffen.push(weg.length - 1);                  // und hinter dem Bogen die zweite
+    }
+    weg.push(ecken[ecken.length - 1]);
+
+    // Längen aufsummieren, damit punkt(u) den Weg gleichmäßig abfährt
+    this.weg = weg; this.strecke = [0];
+    for (let i = 1; i < weg.length; i++) this.strecke.push(this.strecke[i - 1] + abst(weg[i - 1], weg[i]));
+    this.len = this.strecke[this.strecke.length - 1] || 1;
+    this.ecken = ecken;
+    /* Wo sitzen die Muffen? An jedem Bogen zwei – so wie an einem echten Rohr, wo zwei gerade
+       Stücke mit einem Winkelstück verschraubt sind – und dazwischen regelmäßig weitere, damit
+       auch ein langer gerader Lauf nicht wie ein glattes Kabel aussieht. */
+    this.muffen = muffen.map(i => this.strecke[i] / this.len);
+    for (let d = ROHR_MUFFE; d < this.len - 0.6; d += ROHR_MUFFE) {
+      const u = d / this.len;
+      if (this.muffen.every(m => Math.abs(m - u) > 0.9 / this.len)) this.muffen.push(u);
+    }
+    this.muffen.sort((a, b) => a - b);
+    /* Für die Zeichnung wird der Weg in Läufe zerlegt: die geraden Stücke und die Bögen. Ein
+       gerader Lauf muss als **ein** Zylinder gezeichnet werden – zerlegt man ihn, sieht man an
+       jedem Stoß den Deckel des nächsten, und aus dem Rohr wird eine Perlenkette. Ein Bogen
+       bekommt dasselbe Problem in klein und wird darum gar nicht aus Zylindern gebaut, sondern
+       als durchgehender Strang gezeichnet (siehe Renderer.drawPipeLauf). */
+    const uv = i => this.strecke[i] / this.len;
+    this.stuecke = [];
+    let von = 0;
+    for (const [bv, bb] of boegen) {
+      if (bv > von) this.stuecke.push({ u0: uv(von), u1: uv(bv), bogen: false });
+      this.stuecke.push({ u0: uv(bv), u1: uv(bb), bogen: true, teile: bb - bv });
+      von = bb;
+    }
+    if (von < weg.length - 1) this.stuecke.push({ u0: uv(von), u1: 1, bogen: false });
+    // Stützen: alle paar Kacheln eine, aber nicht dicht an den Rohrenden
+    this.stuetzen = [];
+    for (let d = ROHR_STUETZE; d < this.len - ROHR_STUETZE * 0.6; d += ROHR_STUETZE) this.stuetzen.push(d / this.len);
+  }
+
+  /* Höhe der Leitung an der Stelle u: Am Rohrmund liegt sie auf Mundhöhe, dazwischen läuft sie
+     oben – sonst stieße sie an der Bande an, durch die sie die Bahn verlässt. */
+  hoehe(u) {
+    /* Die Leitung läuft zwischen den Höhen ihrer beiden Enden und hebt sich dazwischen über die
+       Banden. Liegen die Enden auf verschiedenen Ebenen, steigt sie unterwegs entsprechend an. */
+    const zEin = this.ebene * (this.level ? this.level.ebeneZ : 0) + ROHR_MUND_Z;
+    const zAus = this.ziel * (this.level ? this.level.ebeneZ : 0) + ROHR_MUND_Z;
+    const grund = zEin + (zAus - zEin) * u;
+    const rampe = Math.max(0, Math.min(1, u / 0.1, (1 - u) / 0.1));
+    return grund + (ROHR_HOEHE - ROHR_MUND_Z) * rampe;
+  }
+  punkt(u) {
+    const s = Math.max(0, Math.min(1, u)) * this.len;
+    let i = 1;
+    while (i < this.strecke.length - 1 && this.strecke[i] < s) i++;
+    const a = this.weg[i - 1], b = this.weg[i];
+    const d = this.strecke[i] - this.strecke[i - 1] || 1;
+    const k = (s - this.strecke[i - 1]) / d;
+    return [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, this.hoehe(u)];
+  }
+  force() { }                     // kein Tempo ablesen, keine Anfahrt merken
+  segments() { }                  // nie gesperrt: der Rohrmund steht immer offen
+  teleport() { }                  // nichts zu versetzen, der Ball fährt
+  trigger() { }                   // kein Notausgang nötig, liegenbleiben kann hier niemand
+  ride(ball, t, events) {
+    if (!this.bereit) return false;
+    if (ball.rider === this) {
+      const u = Math.min(1, (t - ball.rohrStart) / this.dauer);
+      this.fahrt = u;
+      const [px, py, pz] = this.punkt(u);
+      ball.x = px; ball.y = py; ball.z = pz; ball.vx = 0; ball.vy = 0; ball.vz = 0;
+      if (u < 1) return true;
+      // Am Rohrende absetzen, nicht darin: das Feld des Endes ist Mauer, dort hätte er keinen Boden
+      this.fahrt = -1;
+      ball.rider = null; ball.rideCd = 0.6; ball.portalCd = 0.4;
+      ball.ebene = this.ziel; this.level.setzeEbene(this.ziel);   // das Rohrende darf eine Etage höher liegen
+      ball.x = this.ax + this.dx * 0.95; ball.y = this.ay + this.dy * 0.95;
+      ball.vx = this.dx * LOEWENTOR_AUSWURF; ball.vy = this.dy * LOEWENTOR_AUSWURF;
+      ball.z = 0; ball.vz = 0; ball.air = false;
+      this.speiAt = t;
+      events.push({ type: 'liongate', x: ball.x, y: ball.y, owner: this });
+      return false;
+    }
+    if (ball.rideCd > 0 || ball.air || ball.portalCd > 0) return false;
+    if ((ball.ebene || 0) !== this.ebene) return false;
+    if (!this.imEingang(ball.x, ball.y) && !this.beruehrtOeffnung(ball)) return false;
+    ball.rider = this; ball.rohrStart = t; this.fahrt = 0; this.schluckAt = t;
+    const [px, py, pz] = this.punkt(0);
+    ball.x = px; ball.y = py; ball.z = pz; ball.vx = 0; ball.vy = 0; ball.vz = 0;
+    events.push({ type: 'board', x: px, y: py });
+    return true;
+  }
+}
+
+/* Turbine: ein Gebläseschacht im Boden der unteren Ebene. Rollt der Ball darüber, hebt ihn der
+   Windstoß auf die obere Ebene – an derselben Stelle, mit demselben Tempo in dieselbe Richtung.
+   Er wird also nicht abgeschossen und nicht gebremst; die Turbine ist der Aufzug zwischen den
+   beiden Flächen, kein Katapult.
+
+   Zurück nach unten geht es nicht über die Turbine, sondern über jede offene Kante der oberen
+   Ebene (siehe stepPhysics): Wo oben kein Boden ist, fällt der Ball auf die untere Fläche und
+   rollt dort weiter, ohne Strafschlag.
+
+   Sie steht auf der Ebene 'ebene' (ohne Angabe der untersten) und hebt auf die nächste darüber.
+   Bei mehr als zwei Ebenen stapeln sich also mehrere Turbinen, jede eine Etage höher.
+
+   Zwei Dinge prüft sie selbst, damit eine schiefe Bahn nicht im Spiel auffällt:
+   - Gibt es überhaupt eine Ebene darüber? Ohne sie tut die Turbine nichts.
+   - Ist über ihr auch Boden? Wäre dort ein Loch in der oberen Fläche, würde der Ball im selben
+     Augenblick wieder herunterfallen – ein Zittern, das niemand versteht. */
+const TURBINE_STOSS = 0.55;      // Sekunden, die der Windstoß nach dem Heben noch zu sehen ist
+
+class Turbine {
+  constructor(d) {
+    Object.assign(this, { w: 1.4, h: 1.4 }, d);
+    this.type = 'turbine';
+    this.hebtAt = -10;           // wann zuletzt gehoben wurde (für die Zeichnung)
+  }
+  ueber(ball) {
+    return Math.abs(ball.x - this.x) <= this.w / 2 && Math.abs(ball.y - this.y) <= this.h / 2;
+  }
+  trigger(ball, t, events) {
+    if (ball.air || ball.rider) return;
+    // Sie hebt von ihrer eigenen Ebene auf die nächste darüber – bei mehr als zwei Ebenen stehen
+    // mehrere übereinander, jede mit ihrem eigenen 'ebene'.
+    const von = this.ebene || 0, nach = von + 1;
+    if ((ball.ebene || 0) !== von || !this.level || !this.level.flaechen[nach]) return;
+    if (!this.ueber(ball)) return;
+    if (!this.level.isFloorChar(this.level.charAtEbene(nach, ball.x, ball.y))) return;
+    ball.ebene = nach; this.level.setzeEbene(nach);
+    ball.z = 0; ball.vz = 0;
+    this.hebtAt = t;
+    events.push({ type: 'turbine', x: ball.x, y: ball.y, nach });
+  }
+}
+
+/* Zwei weitere Wege nach oben, beide aus dem Uhrwerk geborgt. Sie unterscheiden sich genau darin,
+   wie viel man abpassen muss:
+
+   - Der **Aufzug** verlangt gar nichts. Die Kabine wartet unten; wer hineinrollt, fährt mit.
+   - Die **Zahnstange** nimmt mit, wer draufsteht, wenn sie losfährt. Die Schaufel wartet unten,
+     fährt hoch, kommt zurück. Man muss also rechtzeitig **daraufkommen und warten**.
+
+   Beides ist eine Fahrt wie im Kupferrohr: Der Ball hängt am Hindernis (ball.rider), wird sichtbar
+   nach oben gebracht und erst oben wieder abgesetzt – auf der nächsten Ebene, an derselben Stelle. */
+/* Aufzug: eine Kabine im Schacht, die zwischen zwei Ebenen pendelt. Er ist mit Absicht der
+   verlässliche Weg nach oben – kein Takt, den man abpassen muss, sondern ein Dienst: Wer in die
+   Kabine rollt, fährt mit; ist sie gerade oben, kommt sie von selbst wieder herunter und wartet.
+   Das Abpassen macht in dieser Welt die Zahnstange, das Tempo die Turbine.
+
+   Vorgänger war der Kettenzug, bei dem ein Haken nur für einen Augenblick unten stand. Der traf im
+   Spiel fast nie, und wer danebenrollte, wusste nicht, ob er etwas falsch gemacht hatte oder nur
+   Pech. Deshalb ist er ersetzt. */
+const AUFZUG_FAHRT = 1.4;        // Sekunden für eine Fahrt zwischen zwei Ebenen
+const AUFZUG_HALT = 1.0;         // so lange steht die Kabine oben, bevor sie zurückkommt
+const AUFZUG_AUSROLL = 2.2;      // Tempo, mit dem sie den Ball oben aussetzt
+
+class Elevator {
+  constructor(d) {
+    Object.assign(this, { w: 1.5, h: 1.5, ebene: 0, angle: 0 }, d);
+    this.type = 'aufzug';
+    const a = (this.angle * Math.PI) / 180;
+    this.dx = Math.cos(a); this.dy = Math.sin(a);
+    this.zurueck();
+  }
+  zurueck() { this.zustand = 'unten'; this.p = 0; this.seit = 0; this.fahrgast = false; }
+  update(t) {
+    if (this.zustand === 'hoch' || this.zustand === 'runter') {
+      const u = Math.min(1, (t - this.seit) / AUFZUG_FAHRT), q = u * u * (3 - 2 * u);
+      this.p = this.zustand === 'hoch' ? q : 1 - q;
+      if (u >= 1) { this.zustand = this.zustand === 'hoch' ? 'oben' : 'unten'; this.seit = t; }
+    } else if (this.zustand === 'oben' && !this.fahrgast && t - this.seit > AUFZUG_HALT) {
+      this.zustand = 'runter'; this.seit = t;
+    }
+  }
+  inKabine(ball) {
+    return Math.abs(ball.x - this.x) <= this.w / 2 && Math.abs(ball.y - this.y) <= this.h / 2;
+  }
+  ride(ball, t, events) {
+    if (!this.level || !this.level.flaechen[(this.ebene || 0) + 1]) return false;
+    if (ball.rider === this) {
+      ball.x = this.x; ball.y = this.y; ball.vx = 0; ball.vy = 0; ball.vz = 0;
+      ball.z = this.p * this.level.ebeneZ;
+      if (this.zustand !== 'oben') return true;
+      // Oben: eine Ebene höher absetzen und in Richtung 'angle' herausrollen lassen
+      ball.rider = null; ball.rideCd = 0.5; this.fahrgast = false; this.seit = t;
+      ball.ebene = (this.ebene || 0) + 1; this.level.setzeEbene(ball.ebene);
+      ball.z = 0; ball.vz = 0;
+      ball.vx = this.dx * AUFZUG_AUSROLL; ball.vy = this.dy * AUFZUG_AUSROLL;
+      events.push({ type: 'dropoff', x: ball.x, y: ball.y });
+      return false;
+    }
+    if (ball.rideCd > 0 || ball.air) return false;
+    // Einsteigen geht nur, wenn die Kabine unten steht - und dann immer, ohne Fenster
+    if ((ball.ebene || 0) !== (this.ebene || 0) || this.zustand !== 'unten') return false;
+    if (!this.inKabine(ball)) return false;
+    ball.rider = this; this.fahrgast = true; this.zustand = 'hoch'; this.seit = t; this.p = 0;
+    ball.x = this.x; ball.y = this.y; ball.vx = 0; ball.vy = 0; ball.z = 0;
+    events.push({ type: 'board', x: this.x, y: this.y });
+    return true;
+  }
+}
+
+const ZAHNSTANGE_TAKT = 2.6;     // Sekunden, die die Schaufel unten bzw. oben wartet
+const ZAHNSTANGE_FAHRT = 1.3;    // Sekunden für eine Fahrt
+
+class RackLift {
+  constructor(d) {
+    Object.assign(this, { w: 1.3, h: 1.3, ebene: 0, phase: 0, angle: 0 }, d);
+    this.type = 'zahnstange';
+    const a = (this.angle * Math.PI) / 180;
+    this.dx = Math.cos(a); this.dy = Math.sin(a);
+    this.update(0);
+  }
+  update(t) {
+    const zyklus = 2 * (ZAHNSTANGE_TAKT + ZAHNSTANGE_FAHRT);
+    const u = ((((t / zyklus + this.phase) % 1) + 1) % 1) * zyklus;
+    /* 0 = unten, 1 = oben. Sie wartet unten, fährt hoch, wartet oben, fährt zurück – wie eine
+       Fähre, nur senkrecht. Die Wartezeit unten ist das Fenster zum Aufrollen. */
+    if (u < ZAHNSTANGE_TAKT) { this.p = 0; this.wartet = 'unten'; }
+    else if (u < ZAHNSTANGE_TAKT + ZAHNSTANGE_FAHRT) {
+      const q = (u - ZAHNSTANGE_TAKT) / ZAHNSTANGE_FAHRT; this.p = q * q * (3 - 2 * q); this.wartet = null;
+    } else if (u < 2 * ZAHNSTANGE_TAKT + ZAHNSTANGE_FAHRT) { this.p = 1; this.wartet = 'oben'; }
+    else {
+      const q = (u - 2 * ZAHNSTANGE_TAKT - ZAHNSTANGE_FAHRT) / ZAHNSTANGE_FAHRT;
+      this.p = 1 - q * q * (3 - 2 * q); this.wartet = null;
+    }
+  }
+  aufSchaufel(ball) {
+    return Math.abs(ball.x - this.x) <= this.w / 2 && Math.abs(ball.y - this.y) <= this.h / 2;
+  }
+  ride(ball, t, events) {
+    if (!this.level || !this.level.flaechen[(this.ebene || 0) + 1]) return false;
+    if (ball.rider === this) {
+      ball.x = this.x; ball.y = this.y; ball.vx = 0; ball.vy = 0; ball.vz = 0;
+      ball.z = this.p * this.level.ebeneZ;
+      if (this.wartet !== 'oben') return true;
+      // Oben angekommen: eine Ebene höher absetzen und herunterrollen lassen
+      ball.rider = null; ball.rideCd = 0.5;
+      ball.ebene = (this.ebene || 0) + 1; this.level.setzeEbene(ball.ebene);
+      ball.z = 0; ball.vz = 0;
+      ball.vx = this.dx * AUFZUG_AUSROLL; ball.vy = this.dy * AUFZUG_AUSROLL;
+      events.push({ type: 'dropoff', x: ball.x, y: ball.y });
+      return false;
+    }
+    if (ball.rideCd > 0 || ball.air) return false;
+    // Mitgenommen wird nur, wer unten auf der Schaufel steht, während sie noch wartet
+    if ((ball.ebene || 0) !== (this.ebene || 0) || this.wartet !== 'unten') return false;
+    if (!this.aufSchaufel(ball)) return false;
+    ball.rider = this; ball.x = this.x; ball.y = this.y; ball.vx = 0; ball.vy = 0; ball.z = 0;
+    events.push({ type: 'board', x: this.x, y: this.y });
+    return true;
+  }
+}
+
+/* Luke: eine Klappe im Boden einer Ebene, die im Takt auf- und zugeht. Zu ist sie fester Boden –
+   man rollt darüber hinweg, als wäre nichts. Offen ist sie ein Loch: Wer darüberrollt, fällt an
+   derselben Stelle auf die Ebene darunter und rollt dort weiter, **ohne Strafschlag**. Es ist
+   dieselbe Regel wie an einer offenen Kante, nur dass die Kante hier kommt und geht.
+
+   Damit ist sie das Gegenstück zur Turbine: Die hebt eine Etage, die Luke wirft eine hinunter.
+   Und sie ist der rote Faden der Welt in Reinform – nicht wie fest, sondern wann.
+
+   Vom Falltür-Hindernis des Schattenreichs unterscheidet sie sich genau darin: Die Falltür ist eine
+   Strafe (Strafschlag, zurück zum Schlagstart), die Luke ist ein Weg. Wo es eine Ebene darunter
+   gibt, ist Hinunterfallen kein Unglück mehr.
+
+   Der Takt steht als Konstante hier und nicht in den Bahndaten: Alle Luken einer Bahn sollen gleich
+   gehen, damit man einmal mitzählt und es danach für die ganze Bahn weiß. Was sich je Luke
+   unterscheiden darf, ist die Phase. */
+const LUKE_TAKT = 3.0;         // Sekunden, die die Luke offen bzw. zu ist
+const LUKE_SCHWENK = 0.4;      // Sekunden fürs Auf- und Zuklappen
+
+class Hatch {
+  constructor(d) {
+    Object.assign(this, { w: 1.6, h: 1.6, phase: 0, ebene: 1 }, d);
+    this.type = 'luke';
+    this.update(0);
+  }
+  update(t) {
+    const zyklus = 2 * LUKE_TAKT;
+    const u = ((((t / zyklus + this.phase) % 1) + 1) % 1) * zyklus;
+    /* 0 = ganz zu, 1 = ganz offen. Die erste Hälfte des Takts ist sie zu, die zweite offen. Das
+       Klappen dauert LUKE_SCHWENK und liegt am *Ende* der jeweiligen Hälfte – so ist sie zu Beginn
+       jeder Hälfte wirklich ganz zu bzw. ganz offen, und man sieht das Klappen kommen. */
+    const auf = u < LUKE_TAKT
+      ? Math.max(0, (u - (LUKE_TAKT - LUKE_SCHWENK)) / LUKE_SCHWENK)          // öffnet am Ende der ersten Hälfte
+      : 1 - Math.max(0, (u - (2 * LUKE_TAKT - LUKE_SCHWENK)) / LUKE_SCHWENK); // schließt am Ende der zweiten
+    this.auf = Math.max(0, Math.min(1, auf));
+    this.offen = this.auf > 0.55;                                 // erst weit genug offen fällt man
+  }
+  ueber(ball) {
+    return Math.abs(ball.x - this.x) <= this.w / 2 && Math.abs(ball.y - this.y) <= this.h / 2;
+  }
+  trigger(ball, t, events) {
+    if (!this.offen || ball.air || ball.rider) return;
+    if ((ball.ebene || 0) !== (this.ebene || 0) || !this.ebene) return;
+    if (!this.ueber(ball)) return;
+    ebeneFallen(this.level, ball, events);
+    events.push({ type: 'luke', x: ball.x, y: ball.y });
+  }
+}
+
+/* Hemmung: zwei Sperrklinken nebeneinander in einem Durchlass. Immer ist genau eine Seite frei,
+   die andere gesperrt; alle HEMMUNG_TAKT Sekunden springt es um. Beim Umschlagen sind für einen
+   Augenblick beide Klinken unten – so wie in einer echten Hemmung die eine erst fasst, wenn die
+   andere losgelassen hat. Wer den Umschlag mitnimmt, prallt ab.
+
+   Der Takt steht als Konstante hier oben und nicht in den Bahndaten: Alle Hemmungen einer Bahn
+   sollen gleich gehen, damit man einmal mitzählt und es danach für die ganze Bahn weiß. Was sich
+   je Hemmung unterscheiden darf, ist die Phase – mit phase 0.5 startet die andere Seite offen. */
+const HEMMUNG_TAKT = 2.6;        // Sekunden, die eine Seite offen steht
+const HEMMUNG_UMSCHLAG = 0.35;   // Sekunden, in denen beide Klinken unten sind
+
+class Escapement {
+  constructor(d) {
+    Object.assign(this, { w: 3, h: 0.45, phase: 0, e: 0.55, hoehe: 0.8 }, d);
+    this.type = 'escapement';
+    this.laengs = this.w >= this.h;          // true: die Klinken stehen in x nebeneinander
+    this.update(0);
+  }
+  update(t) {
+    const zyklus = 2 * HEMMUNG_TAKT;
+    const s = ((((t / zyklus + this.phase) % 1) + 1) % 1) * zyklus;
+    /* Wie weit ist eine Klinke gehoben? 0 = unten und sperrt, 1 = ganz zurückgezogen.
+       Am Anfang und am Ende ihres Fensters braucht sie HEMMUNG_UMSCHLAG Sekunden dafür. */
+    const hebe = (von, bis) => {
+      if (s < von || s >= bis) return 0;
+      const k = Math.min(1, (s - von) / HEMMUNG_UMSCHLAG, (bis - s) / HEMMUNG_UMSCHLAG);
+      return k * k * (3 - 2 * k);
+    };
+    this.aufA = hebe(0, HEMMUNG_TAKT);
+    this.aufB = hebe(HEMMUNG_TAKT, zyklus);
+    this.zuA = this.aufA < 0.5; this.zuB = this.aufB < 0.5;
+    this.anker = this.aufB - this.aufA;      // -1 .. 1, zeigt zur offenen Seite (fürs Zeichnen)
+  }
+  /* Mitte und Maße einer der beiden Hälften. sd = -1 ist Klinke A, +1 ist Klinke B. */
+  haelfte(sd) {
+    const halb = (this.laengs ? this.w : this.h) / 2, dick = this.laengs ? this.h : this.w;
+    const cx = this.x + (this.laengs ? (sd * halb) / 2 : 0);
+    const cy = this.y + (this.laengs ? 0 : (sd * halb) / 2);
+    return { cx, cy, laenge: halb, dick };
+  }
+  segments(out) {
+    for (const [zu, sd] of [[this.zuA, -1], [this.zuB, 1]]) {
+      if (!zu) continue;
+      const { cx, cy, laenge, dick } = this.haelfte(sd);
+      polySegments(rectPoly(cx, cy, this.laengs ? laenge : dick, this.laengs ? dick : laenge),
+        out, { e: this.e, kind: 'gate', owner: this });
+    }
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Zeigerarm und Zifferblatt – die dritte Lieferung für den Uhrenturm.
+   --------------------------------------------------------------------------- */
+
+/* Zeigerarm: ein großer Uhrzeiger, der über eine runde Fläche streicht. Er ist massiv und nimmt
+   den Ball vor sich her mit – nicht wie das Pendel, das ihn wegschlägt, sondern langsam und
+   stetig, weil er langsam geht. Getroffen wird der Ball mit der Bahngeschwindigkeit an der Stelle,
+   an der er die Stange berührt: weit außen schneller, nah an der Nabe fast gar nicht.
+
+   Die Umlaufdauer steht als Konstante hier und nicht in den Bahndaten – alle Zeigerarme einer Bahn
+   sollen gleich gehen. Je Arm unterscheiden sich Länge, Ort und Phase. */
+const ZEIGERARM_UMLAUF = 12;     // Sekunden für eine volle Runde, immer im Uhrzeigersinn
+
+class SweepHand {
+  constructor(d) {
+    Object.assign(this, { r: 4.5, thick: 0.24, phase: 0, e: 0.45, hoehe: 0.5, nabe: 0.55 }, d);
+    this.type = 'sweephand';
+    this.omega = TAU / ZEIGERARM_UMLAUF;
+    this.update(0);
+  }
+  update(t) { this.angle = this.phase * TAU + t * this.omega; }
+  spitze() { return [this.x + Math.cos(this.angle) * this.r, this.y + Math.sin(this.angle) * this.r]; }
+  segments(out) {
+    const [bx, by] = this.spitze();
+    out.push({ ax: this.x, ay: this.y, bx, by, rad: this.thick, omega: this.omega,
+      cx: this.x, cy: this.y, e: this.e, kind: 'rotor' });
+  }
+  circles(out) { out.push({ x: this.x, y: this.y, r: this.nabe, e: 0.6, kind: 'hub' }); }
+}
+
+/* Zeigerwerk: ein großes Zifferblatt mit drei Zeigern, die sich unterschiedlich schnell drehen –
+   der Stundenzeiger am langsamsten, der Minutenzeiger doppelt so schnell, der Sekundenzeiger
+   noch einmal dreimal so schnell. Anders als der einzelne Zeigerarm sind diese drei nicht fest:
+   Sie schieben den Ball nicht weg, sondern wirken als Felder, so wie die Korallen im Korallenriff,
+   und jeder Zeiger wirkt anders:
+
+   - Stundenzeiger (langsam, kurz, schwer)  bremst    – wer in seinem Schatten liegt, bleibt liegen
+   - Minutenzeiger (mittelschnell)          stößt weg – drückt den Ball von seiner Linie fort
+   - Sekundenzeiger (schnell, lang, dünn)   zieht an  – reißt den Ball mit sich herum
+
+   Die drei Farben sind dieselben wie bei den Korallen (blau bremst, grün stößt, rot zieht), damit
+   man sie nicht neu lernen muss. Fest ist nur die Nabe in der Mitte.
+
+   Gemessen wird der Abstand zur Zeigerlinie, nicht zur Mitte: Ein Feld liegt also längs unter dem
+   Zeiger und wandert mit ihm, statt rund um das Zifferblatt zu stehen. Die Umlaufdauern stehen als
+   Konstanten hier, damit alle Zeigerwerke einer Welt gleich gehen und man sie an einer Stelle
+   nachstellen kann. */
+const ZEIGERWERK_STUNDE  = 24;   // Sekunden für eine Umdrehung des Stundenzeigers
+const ZEIGERWERK_MINUTE  = 12;   // doppelt so schnell
+const ZEIGERWERK_SEKUNDE = 4;    // noch einmal dreimal so schnell wie der Minutenzeiger
+const ZEIGERWERK_BREMSE  = 5.5;  // wie hart der Stundenzeiger bremst (wie 'slow' der Koralle)
+const ZEIGERWERK_STOSS   = 15;   // wie stark der Minutenzeiger wegdrückt
+const ZEIGERWERK_ZUG     = 12;   // wie stark der Sekundenzeiger anzieht
+
+class HandClock {
+  constructor(d) {
+    Object.assign(this, { r: 6, nabe: 0.5, phase: 0 }, d);
+    this.type = 'handclock';
+    // Länge, Breite des Wirkfelds, Umlaufdauer und Wirkung je Zeiger. Der kürzeste ist der
+    // langsamste – so steht es auf jeder Uhr, und so ist das Bremsfeld auch das kleinste.
+    this.zeiger = [
+      { name: 'stunde',  laenge: this.r * 0.52, feld: 2.2, dauer: ZEIGERWERK_STUNDE,  wirkung: 'bremsen' },
+      { name: 'minute',  laenge: this.r * 0.78, feld: 1.8, dauer: ZEIGERWERK_MINUTE,  wirkung: 'stossen' },
+      { name: 'sekunde', laenge: this.r * 0.95, feld: 1.4, dauer: ZEIGERWERK_SEKUNDE, wirkung: 'ziehen' },
+    ];
+    for (const z of this.zeiger) z.omega = TAU / z.dauer;
+    this.update(0);
+  }
+  update(t) {
+    // Alle drei starten oben (12 Uhr) und laufen im Uhrzeigersinn. 'phase' verschiebt das ganze
+    // Werk, nicht die Zeiger gegeneinander – sonst ginge die Uhr falsch.
+    for (const z of this.zeiger) z.angle = -Math.PI / 2 + (this.phase + t / z.dauer) * TAU;
+  }
+  spitze(z) { return [this.x + Math.cos(z.angle) * z.laenge, this.y + Math.sin(z.angle) * z.laenge]; }
+  /* Abstand des Balls zur Zeigerlinie (Strecke Nabe–Spitze) und der nächste Punkt darauf. */
+  amZeiger(z, ball) {
+    const dx = Math.cos(z.angle), dy = Math.sin(z.angle);
+    let u = (ball.x - this.x) * dx + (ball.y - this.y) * dy;
+    u = Math.max(0, Math.min(z.laenge, u));
+    const px = this.x + dx * u, py = this.y + dy * u;
+    return { px, py, u, d: Math.hypot(ball.x - px, ball.y - py) };
+  }
+  force(ball, dt) {
+    for (const z of this.zeiger) {
+      const { px, py, u, d } = this.amZeiger(z, ball);
+      if (d > z.feld) continue;
+      const naehe = 1 - d / z.feld;                       // 0 am Rand des Felds, 1 auf der Linie
+      if (z.wirkung === 'bremsen') {
+        const k = Math.max(0, 1 - ZEIGERWERK_BREMSE * naehe * dt);
+        ball.vx *= k; ball.vy *= k;
+      } else if (z.wirkung === 'stossen') {
+        // Vom Zeiger weg. Liegt der Ball genau auf der Linie, gibt es keine Richtung – dann
+        // schiebt der Zeiger quer zu sich selbst, in die Richtung, in die er sich dreht.
+        let nx = ball.x - px, ny = ball.y - py, len = Math.hypot(nx, ny);
+        if (len < 0.001) { nx = -Math.sin(z.angle); ny = Math.cos(z.angle); len = 1; }
+        const a = ZEIGERWERK_STOSS * naehe * dt;
+        ball.vx += (nx / len) * a; ball.vy += (ny / len) * a;
+      } else {
+        // Zum Zeiger hin und mit ihm herum: der Zug allein hielte den Ball nur fest, erst die
+        // Bahngeschwindigkeit an dieser Stelle reißt ihn mit. Beide wirken auf derselben Achse –
+        // ein Zeiger ist ja ein Radius –, darum ist der Mitnahmeanteil bewusst der schwächere:
+        // Sonst würde der Ball nur weggeschleudert und nie eingesammelt.
+        let nx = px - ball.x, ny = py - ball.y, len = Math.hypot(nx, ny);
+        const a = ZEIGERWERK_ZUG * naehe * dt;
+        if (len > 0.001) { ball.vx += (nx / len) * a; ball.vy += (ny / len) * a; }
+        const v = z.omega * u * naehe * dt * 1.1;
+        ball.vx += -Math.sin(z.angle) * v; ball.vy += Math.cos(z.angle) * v;
+      }
+    }
+  }
+  circles(out) { out.push({ x: this.x, y: this.y, r: this.nabe, e: 0.6, kind: 'hub' }); }
+}
+
+/* Wanderloch: Das Loch der Bahn liegt nicht fest, sondern springt alle WANDERLOCH_TAKT Sekunden
+   auf die nächste seiner Stellen und am Ende wieder auf die erste. Damit ist es kein Glücksspiel:
+   Die nächste Stelle leuchtet von Anfang an, und ein schrumpfender Ring darum sagt, wie lange noch.
+   Man kann den Schlag also so legen, dass der Ball ankommt, wenn das Loch dort ist.
+
+   Zwei Arten, die Stellen anzugeben - beide landen in derselben Liste:
+   - 'stellen': [[x,y], …]   frei gesetzt, irgendwo auf der Bahn.
+   - x, y, r, marken         auf einem Kreis, oben beginnend und im Uhrzeigersinn: das Zifferblatt
+                             des Uhrenturms. Nur dann wird auch der Ziffernkreis gezeichnet.
+
+   Das Hindernis verschiebt das Loch der Bahn selbst (level.cup). Auf der Karte steht das 'H'
+   trotzdem - auf der ersten Stelle, damit die Bahn auch ohne laufende Uhr stimmt und die
+   Bahnprüfung ihren Weg zum Loch findet. */
+const WANDERLOCH_TAKT = 10;      // Sekunden, die das Loch an einer Stelle bleibt
+
+class MovingHole {
+  constructor(d) {
+    Object.assign(this, { r: 6, marken: 12, phase: 0 }, d);
+    if (Array.isArray(this.stellen) && this.stellen.length >= 2) {
+      this.ring = false;
+      this.orte = this.stellen.map(p => [+p[0], +p[1]]);
+      // Ohne x/y (freie Liste) ist die Mitte der Stellen der Ort des Hindernisses – die Sortierung
+      // nach Tiefe und das Wegschneiden am Bildrand brauchen einen.
+      if (this.x == null) this.x = this.orte.reduce((a, p) => a + p[0], 0) / this.orte.length;
+      if (this.y == null) this.y = this.orte.reduce((a, p) => a + p[1], 0) / this.orte.length;
+    } else {
+      this.ring = true;
+      this.orte = [];
+      for (let i = 0; i < this.marken; i++) {
+        const a = -Math.PI / 2 + (i * TAU) / this.marken;
+        this.orte.push([this.x + Math.cos(a) * this.r, this.y + Math.sin(a) * this.r]);
+      }
+    }
+    this.i = 0; this.next = this.orte.length > 1 ? 1 : 0; this.rest = WANDERLOCH_TAKT;
+  }
+  setup(level) { this.level = level; }
+  markePos(i) { return this.orte[((i % this.orte.length) + this.orte.length) % this.orte.length]; }
+  update(t) {
+    const n = this.orte.length;
+    const schritt = Math.floor(t / WANDERLOCH_TAKT + this.phase);
+    this.i = ((schritt % n) + n) % n;
+    this.next = (this.i + 1) % n;
+    this.rest = WANDERLOCH_TAKT * (1 - ((t / WANDERLOCH_TAKT + this.phase) - schritt));
+    if (!this.level || !this.level.cup) return;
+    const [px, py] = this.orte[this.i];
+    this.level.cup.x = px; this.level.cup.y = py;
+  }
+}

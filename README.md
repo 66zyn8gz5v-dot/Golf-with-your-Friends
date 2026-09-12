@@ -11,13 +11,176 @@ Alternativ lokal über einen kleinen Server:
 npx serve .          # oder: python3 -m http.server 8080
 ```
 
+## Ladebild
+
+Beim Öffnen steht zuerst ein Ladebild: der Schriftzug, darunter eine kleine Szene – eine Insel mit
+Burg im Meer, davor ein Grün, über das ein Ball rollt, zweimal aufsetzt und im Loch verschwindet –
+und darunter ein Balken. Dahinter liegt das **gemalte Titelbild, weich gezeichnet und abgedunkelt**:
+Es macht die Stimmung, die Szene sagt, was hier gespielt wird. Die Szene ist in den Farben des
+Bildes gehalten, bis hin zur roten Fahne mit Gold, wie das Banner darin.
+
+Vorher war die Szene eine Nachtaufnahme in kalten Blautönen; neben dem gemalten Startbildschirm sah
+das aus wie ein Fremdkörper aus flachen Flächen. Ein Zwischenstand ohne Szene – nur der gemalte
+Vordergrund, scharf, mit einem Grün als Fortschrittsanzeige – wurde verworfen: Die kleine Szene ist
+das, was das Ladebild ausmacht.
+
+Alles daran bewegt sich **allein mit CSS** – kein JavaScript. Das ist der ganze Punkt: Ein Ladebild,
+das erst läuft, wenn die Skripte da sind, kommt genau dann nicht, wenn man es braucht. Beim
+allerersten Öffnen ist das Bild noch unterwegs; bis dahin steht der dunkle Verlauf darunter, damit da
+kein Loch ist. Welches der beiden Titelbilder den Grund gibt, entscheidet `@media (orientation:
+portrait)` – also auch das ohne JavaScript. Nebenbei ist das Bild dadurch schon geladen, wenn gleich
+darauf der Startbildschirm kommt.
+
+Damit das auch stimmt, musste die Zierschrift aus dem Seitenkopf verschwinden. Ein `<link
+rel="stylesheet">` auf Google hält das erste Bild auf, bis die Antwort da ist – und solange nichts
+gezeichnet wird, läuft auch `requestAnimationFrame` nicht, das Spiel käme also gar nicht erst zum
+Zug. Gemessen mit einer Antwort, die fünf Sekunden auf sich warten lässt: **erstes Bild nach 5039 ms
+mit dem `<link>` im Kopf, nach 97 ms ohne ihn.** Die Schrift wird jetzt aus `main.js` nachgeladen, mit
+dem Umweg über `media="print"` – ein Blatt für den Drucker hält den Bildschirm nicht auf und wird
+umgehängt, sobald es da ist.
+
+Weg ist das Ladebild, wenn der Startbildschirm gebaut, zwei Bilder gezeichnet und die Schrift da ist
+(höchstens 1,2 s darauf gewartet), dabei aber nie vor **1,7 Sekunden** ab Seitenaufruf: Auf einem
+schnellen Gerät ist das Spiel in 200 ms bereit, und ein Bild, das man nur als Zucken wahrnimmt, ist
+schlechter als gar keines. Bleibt es länger als 14 Sekunden stehen, erscheint darunter der Hinweis,
+die Seite neu zu laden. Wer im Betriebssystem weniger Bewegung eingestellt hat, bekommt dasselbe Bild
+ruhig: Ball am Loch, Balken voll.
+
+## Startbild
+
+Der Startbildschirm zeigt ein gemaltes Titelbild. Es gibt **zwei davon**: `icons/titelbild.jpg`
+(1170 × 639) fürs Querformat und `icons/titelbild-hoch.jpg` (1170 × 2078) fürs Hochformat. Eines
+allein täte es nicht – vom queren bliebe auf dem Handy ein schmaler Streifen übrig, mit
+zerschnittenem Schriftzug darin. Welches gilt, entscheidet allein das Seitenverhältnis des Fensters
+(`titelbildPassen()` setzt die Klasse `hoch`); beide füllen ihren Schirm dann ganz. Jedes bringt
+seine eigenen Maße mit, also auch eigene Stellen für Fahne, Laterne und Funkeln – und einen eigenen
+Filter, denn ein SVG-Filter gilt nur innerhalb seines eigenen SVG. Das Bild liegt als
+`<image>` in einem SVG, und **alles, was sich bewegt, liegt im selben Koordinatensystem darüber** –
+denselben 1170 × 639. Darum sitzt jede Bewegung immer genau an ihrer Stelle, egal wie der Schirm
+geschnitten ist: Bild und Auflagen werden gemeinsam beschnitten. Bewegt werden: die Fahne, Wolken
+über dem Himmel, drei Möwen, Sonnenfunkeln auf dem Wasser, der Schein der Laterne am Zaun,
+Lichtpunkte über der Wiese, und die ganze Ansicht fährt langsam heran.
+
+**Die Fahne wird nicht nachgezeichnet** – das ginge nie genau genug, und eine daneben liegende
+Zeichnung fällt mehr auf als gar keine Bewegung. Statt dessen liegt dasselbe Bild ein zweites Mal
+darüber, auf die Fahne beschnitten (`clipPath`) und durch ein Wellenfeld geschickt (`feTurbulence`
+und `feDisplacementMap`, das Rauschen wandert per SMIL). Verschoben werden also die gemalten Pixel
+selbst, mitsamt Löwe und Zaddeln; darunter steht unverändert das Original und füllt die Ränder, wo
+die Welle Stoff wegzieht.
+
+Der Ausschlag (`scale` am `feDisplacementMap`) ist je Bild ein anderer: 6 im queren, 20 im hohen.
+Nicht willkürlich – die Fahne nimmt im hohen Bild ein Viertel der Breite ein, im queren nur ein
+Achtel, und beide werden auf dieselbe Schirmbreite gebracht. Gleicher Ausschlag hieße also halb so
+viel Wellenbild. Nachgemessen an einem Ausschnitt um die Fahne, über sechs Augenblicke: Mit
+Wellenfeld ändern sich 10,5 % (quer) und 6,7 % (hoch) der Pixel, mit abgeschaltetem Wellenfeld genau
+0,0 %. Beim ersten Messversuch war der Vergleichspunkt der Kompass – der bewegt sich aber mit, weil
+das langsame Heranfahren das ganze Bild verschiebt und Wolken und Möwen durch den Himmel ziehen. Erst
+der Gegenversuch mit abgeschaltetem Filter am selben Ausschnitt sagt wirklich etwas.
+
+Hochkant liegt das Schöne am Bild unten: Fahne, Laterne, Ball auf dem Tee. Eine Tafel in voller Höhe
+deckt genau das zu – sie wird dort darum so knapp wie möglich: kleinere Knöpfe, engere Abstände, und
+der Erklärsatz fällt weg (er sagt nichts, was nicht schon auf dem Weltkarten-Knopf steht). Der
+Vollbild-Knopf geht nach oben links, sonst säße er auf dem Turnierband. Lädt das Bild nicht, fällt der Startbildschirm auf die
+gezeichnete Szene aus `src/title.js` zurück, und der Schriftzug steht wieder in der Tafel. Liegt das
+Bild, wird die Szene gar nicht erst gezeichnet – sie wäre ohnehin verdeckt.
+
+**Zwei Fehler auf dem Weg dahin, und beide zeigten sich erst in der Vorschau:**
+
+- **Das Bild lag in einem eigenen Ordner `bilder/`.** Die Auslieferung nach GitHub Pages kopiert
+  aber nicht den ganzen Baum, sondern eine Liste (`cp -r … index.html style.css … src icons`), und
+  in der stand `bilder` nicht. Auf dem eigenen Rechner war alles in Ordnung, auf der Seite fehlte
+  das Bild. Es liegt darum bei den `icons` – dem Ordner, der ohnehin mitgeht. Dagegen prüft jetzt
+  `node tools/auslieferung.mjs`: Es liest, was `index.html` und `sw.js` verlangen, und was die
+  `cp`-Zeile in `.github/workflows/pages.yml` kopiert. Was nur auf einer Seite steht, ist ein
+  Fehler. (Gegengeprüft: Mit dem alten Pfad schlägt die Prüfung an.)
+- **Die Notbremse griff nicht.** Sie hing an einem `error`-Ereignis am `<image>` im SVG – und das
+  meldet Safari auf dem iPad nicht. Das Bild fehlte, der Rückfall blieb aus, und Safari malte sein
+  Fragezeichen quer über den halben Schirm. Geprüft wird jetzt **vorher**, mit einem eigenen
+  `Image`-Objekt: Das Bild kommt erst auf den Schirm, wenn es wirklich geladen ist.
+
 ## Welten und Modi
 
-Vom Titelbild führen zwei Wege: **🗺 Weltkarte** und **🛠 Bauen & Eigene Welt**. Darunter stehen drei
-kleine Knöpfe: **Turnier** führt ohne Umweg in die Arena (Kolosseum), **Online spielen** in den
-Warteraum, **Rangliste** zu den Rekorden.
+Vom Titelbild führen zwei Wege: **🗺 Weltkarte** und **🛠 Bauen & Eigene Welt**, jeder mit seiner Szene
+als Hintergrund und einer zweiten Zeile, die sagt, was dahinter liegt. Damit die Beschriftung darauf
+lesbar bleibt, liegt ein Schleier dazwischen, der nach rechts hin dunkler wird – vorher stand das Wort
+„Weltkarte" mitten in den Ortsnamen der Karte. Darunter stehen drei kleine Knöpfe: **Turnier** führt
+ohne Umweg in die Arena (Kolosseum), **Online spielen** in den Warteraum, **Rangliste** zu den
+Rekorden.
 
-Auf der **Weltkarte** liegt jede Welt als schwebende Scheibe in derselben 2,5D-Sicht wie das Spiel selbst: Blick schräg von oben auf eine um 45° gedrehte Welt, dieselbe Projektion wie im Renderer. Jede Scheibe hat darum eine Deckfläche im Karomuster und darunter zwei sichtbare Seitenflächen – die linke hell, die rechte im Schatten – mit Streiflicht an der Oberkante und dunkler Vorderkante. Darauf stehen die Bauten als echte Körper: Quader mit Deckfläche und zwei Seiten, Kegeldächer und Baumkronen aus vier Dreiecken, hell zur Sonne und dunkel zur Schattenseite, dazu Fahnen und Kontaktschatten. Die Reise geht von links (heller Tag im Märchenland) nach rechts (Nacht im Schattenreich): Himmelsverlauf vom Tag in die Nacht, Sterne, Sonnenstrahlen links, Blutmond rechts, ein scharfer Bergkamm mit Schneekappen und dahinter ein zweiter im Dunst, ziehende Wolken, ein gestrichelter goldener Weg über die Vorderkanten der Scheiben, schwebende Flocken, Nebelbänder und eine Randabdunklung. **Jeder Ort ist von Anfang an anwählbar – nichts muss freigespielt werden.** Die Stufe am Ort ist nur ein Hinweis darauf, was einen erwartet:
+Liegt das gemalte Startbild, trägt es den Schriftzug schon: Die Tafel lässt ihn dann weg, wird flach
+und stellt die beiden großen Knöpfe auf breiten Schirmen nebeneinander – das halbiert ihre Höhe, und
+vom Bild bleibt mehr zu sehen.
+
+Die Tafel selbst war lange ein heller Schleier vor der Szene: hübsch, aber die Schrift lag auf Wolken,
+Tannen und Schafen. Jetzt ist sie dicht genug zum Lesen und hat den Doppelrahmen alter
+Anschlagtafeln. Der Schriftzug ist kein einfarbiger Text mehr – Gold ist ein Verlauf von hell nach
+dunkel und wieder hell, in die Buchstaben geschnitten (`background-clip: text`), der langsam wandert.
+
+Auf der **Weltkarte** liegen die Welten als Landstriche auf einer gezeichneten Landkarte – ein Meer,
+ein Festland, ein paar Nebeninseln. Das Märchenland hat die Wiesen im Westen, der Schneeberg das
+Gebirge im Norden, der Dschungel den feuchten Süden, das Schattenreich das Moor am Ostrand; die
+Meereswelt liegt als eigene Insel davor, und dorthin führt kein Weg, sondern eine gestrichelte
+Schiffslinie. Ein Meeresarm schneidet quer durchs Festland: Der Osten – Uhrwerkstadt, Sturmhimmel,
+Schattenreich – hängt nur noch an einer schmalen Landenge.
+
+Vorher lag jede Welt als schwebende Scheibe in der Luft, aufgereiht von links nach rechts. Das war
+übersichtlich, aber es war keine Welt – es waren acht Inseln ohne Zusammenhang, und mit jeder neuen
+wurde die Reihe länger, bis die Karte breiter war als der Schirm und man wischen musste.
+
+**Die Küste wird gerechnet, nicht gezeichnet.** Jede Welt ist in `src/worldmap.js` ein Eintrag in
+`LAND`: Mittelpunkt, Reichweite, Biom. Daraus entsteht ein Feld, das in der Mitte eines Landstücks 1
+ist und an seiner Reichweite auf 0 fällt; die Linie, an der die Summe aller Felder die Höhe `WASSER`
+hat, ist die Küste (Marching Squares, danach einmal Chaikin geglättet). Landstücke, die nah
+beieinander liegen, wachsen dabei von selbst zu einem Festland zusammen, ein weit abseits gesetztes
+wird zur Nebeninsel, und was von Land umschlossen bleibt, ist ein Binnensee. Landstücke ohne `id`
+tragen keine Welt – sie geben dem Festland nur seine Form: eine Landzunge, eine Bucht, eine
+Landbrücke in den Süden.
+
+Zwei Dinge sind daran wichtig, und beide waren beim ersten Versuch falsch:
+
+- **Das Feld muss endlich weit reichen.** Mit `1/Abstand²` – dem klassischen Metaball – summieren
+  sich elf Landstücke so weit auf, dass die ganze Karte zu Land wird. Mit `(1 − (d/r)²)³` wirkt
+  jedes Landstück nur in seiner Umgebung, und ob zwei zusammenwachsen, entscheidet allein ihr
+  Abstand.
+- **Die Küstenstücke laufen nicht alle gleich herum.** Werden sie gerichtet aneinandergehängt,
+  zerfällt die Küste in Fetzen. Gesucht wird darum ungerichtet: Ob ein Stück an diesem Punkt
+  anfängt oder aufhört, ist egal.
+
+**Runde Landstücke geben eine runde Küste** – acht Kugeln, aneinandergeklebt. Eine Karte lebt aber
+von Buchten und Landzungen. Verbogen wird darum nicht das Feld, sondern der *Ort*, an dem man es
+fragt: Ein Punkt erkundigt sich ein paar Einheiten weiter drüben (`versatz`, drei Lagen Rauschen).
+Tief im Land, wo das Feld flach und hoch ist, ändert das nichts; am Ufer, wo es steil abfällt,
+wandert die Küste dadurch weit. Die grobe Lage ist bewusst kräftig eingestellt – sie ist es, die den
+Meeresarm quer durchs Festland schneidet. Wer an diesen Zahlen dreht, dreht an der Form der Welt.
+
+Daraus folgt der eigentliche Gewinn: **Eine neue Welt braucht einen einzigen Eintrag in `LAND`.**
+Küste, Flachwasser, Strand, Färbung, Gelände, Flüsse, Wege und Beschriftung folgen daraus. Wer eine
+Welt anhängt, zeichnet keine Landkarte – er sagt, wo sie liegt und wie es dort aussieht.
+
+Das Gelände kommt aus dem Biom: `wiese` streut Bäume und Büsche, `gebirge` Bergrücken mit
+Schneekappe, `stadt` Häuser und Türme, `dschungel` Palmen und Tempel, `moor` tote Bäume, Grabsteine
+und Ruinen, `kueste` Dünen und Palmen. Die Plätze zieht ein Zufall mit festem Startwert – dieselbe
+Karte sieht auf jedem Gerät gleich aus –, und jeder Platz muss weit genug im Land liegen, sonst
+stünde ein Baum mit den Füßen im Wasser.
+
+**Die Zeichen stehen in der Landschaft, sie liegen nicht darin.** Jeder Baum, jeder Berg, jedes Haus
+wird von der Seite gezeigt, mit dem Fuß auf dem Punkt und dem Wipfel darüber – so, wie man eine
+Landkarte von Hand zeichnet. Vorher war es eine Draufsicht aus Kreisen: ein Baum sah aus wie eine
+Kugel auf einem Stock, ein Hügel wie ein Fleck. Jedes Zeichen hat darum drei Teile – einen Umriss in
+Tinte, eine helle Sonnenseite und eine schraffierte Schattenseite. Auf einer gestochenen Karte ist
+die Schraffur die ganze Beleuchtung: Eine Bergflanke wird nicht dunkler gefärbt, sie wird
+schraffiert. Laubkronen, Büsche und Wolken entstehen aus `lappen()` – n nach außen gewölbte Bogen um
+einen Mittelpunkt, also gerade kein Kreis. Das Land ist dazu papierfarben statt wiesengrün; die
+Biome färben es nur an, und ein Gradnetz alle zehn Einheiten liegt darüber. Die Flüsse suchen sich ihren Weg aus demselben Feld: Sie laufen dorthin, wo es
+kleiner wird, also bergab, und hören auf, wo sie das Meer erreichen. Die Reisewege verbinden die
+Welten in ihrer Reihenfolge; ob ein Stück zur Straße oder zur Schiffslinie wird, tastet die Karte
+selbst ab.
+
+Die Karte misst `WorldMap.BREITE` × 62 Karteneinheiten (zur Zeit 100 × 62) und passt damit ganz auf
+den Schirm. Die Orte in `WorldMap.spots` stehen in **Karteneinheiten** (x) und in **Prozent der
+Höhe** (y) – die x-Angabe wird beim Zeichnen durch `BREITE` geteilt.
+
+**Jeder Ort ist von Anfang an anwählbar – nichts muss freigespielt werden.** Die Stufe am Ort ist nur ein Hinweis darauf, was einen erwartet:
 
 | Ort | Stufe | Bahnen |
 | --- | --- | --- |
@@ -27,9 +190,11 @@ Auf der **Weltkarte** liegt jede Welt als schwebende Scheibe in derselben 2,5D-S
 | Dschungeltempel | Profi | 9 Bahnen durch den Urwald bis zur verlorenen Stadt |
 | Sturmhimmel | Legende | 9 extra große Bahnen über den Wolken |
 | Schattenreich | Legende | 10 extra große Bahnen im Reich der Schatten |
+| Schneeberg | Profi | 12 Bahnen den Berg hinauf – der Wind dreht im Takt, oben liegen die Wolkenetagen |
+| Uhrwerkstadt | Profi | 14 Bahnen im Uhrenturm – alles eine Frage des Takts, gestapelte Ebenen, zum Schluss wandert das Loch |
 
 Das **Kolosseum** steht bewusst *nicht* auf der Weltkarte. Es ist die Turnierwelt und wird nur über
-den **Turnier**-Knopf im Startbildschirm betreten – die Weltkarte bleibt die Reise durch die sechs
+den **Turnier**-Knopf im Startbildschirm betreten – die Weltkarte bleibt die Reise durch die sieben
 Landschaften, das Turnier ist ein eigener Wettkampf daneben. Technisch reicht dafür, dass die Welt
 keinen Eintrag in `WorldMap.spots` hat; die Karte zeichnet dann weder Marke noch Insel.
 
@@ -143,8 +308,8 @@ dem Browser-Speicher kommt: Der überlebt Fassungswechsel und lässt sich von Ha
 
 Jede Welt hat eine Belohnung, und man verdient sie sich am eigenen Können: **Die Summe der eigenen besten
 Einzelbahnen muss unter dem Par der Welt liegen, und jede Bahn braucht ein Ergebnis.** Gerechnet wird gegen
-das geltende Par – also gegen die Rangliste, siehe oben. Sieben Welten,
-sieben Belohnungen – sechs davon sind **Ganzkörper-Skins**: Sie ersetzen den Ball, statt auf ihm zu
+das geltende Par – also gegen die Rangliste, siehe oben. Neun Welten,
+neun Belohnungen – acht davon sind **Ganzkörper-Skins**: Sie ersetzen den Ball, statt auf ihm zu
 sitzen, und bewegen sich. Der Championhelm ist der einzige, der nur ein Hut ist.
 
 **Wie der Hut über den Farbreif kommt.** Ein Ganzkörper-Skin bekommt nach dem Zeichnen einen dünnen Reif in
@@ -161,12 +326,15 @@ braucht das nicht – bei ihr liegen die Federn bewusst *hinter* dem Reif, das S
 | Meereswelt | Aquarium | Becken mit Sand, Pflanzen, Fischen und Blasen | ein Schiffchen, das im Seegang rollt und sich hebt; die Segel bauschen sich, der Wimpel flattert |
 | Tüftlerreich | Tüftlerzylinder | drei greifende Zahnräder und ein Kolben | Lederzylinder mit Messingband, Nieten und Schutzbrille; ein Rad an der Seite läuft mit, aus dem Schornstein dampft es |
 | Dschungeltempel | Federkrone | dunkler Tempelstein, dessen Glyphen schwach grün glimmen | Federkrone in Türkis und Gold, die Spitzen wiegen sich |
+| Schneeberg | Runenstein | vereister Granit mit Poren und Abplatzern; sechs blaue Glyphen sind eingekerbt, und ein Glimmen wandert in drei Gruppen durch sie hindurch; unten liegt Raureif an | eine blaue Bommelmütze mit Strickrippen und umgeschlagenem weißem Rand; die Spitze neigt sich, der Bommel schwingt ihr nach |
 | Sturmhimmel | Gewitterkugel | Wolken ziehen, es regnet, alle 2,2 s schlägt ein Blitz ein | ein Wetterhahn, der sich dreht – und beim Einschlag an der Spitze sprüht |
 | Schattenreich | Kristallkugel | Schwaden waberen, ein Auge blickt umher und blinzelt | Spitzhut mit Mondschnalle; die Spitze schwankt, Sterne funkeln darauf |
+| Uhrwerkstadt | Taschenuhr | durchbrochenes Zifferblatt, hinter dem das Werk läuft | Bügel und Krone wie an einer Taschenuhr |
 | Kolosseum | Championhelm | (kein eigener Ball – der Helm sitzt auf dem Spielerball) | der Federkamm wiegt sich im Wind |
 
 Vier der Skins teilen sich die Glaskugel-Form, damit sie als eine Familie zu erkennen sind – der Inhalt
-macht die Welt. Zwei tanzen bewusst aus der Reihe: die Federkrone ist Stein, die Königskrone Porzellan. Bewegt wird nach `state.t`, der Spieluhr: dieselbe Zahl auf jedem Gerät, beim Online-Spiel
+macht die Welt. Drei tanzen bewusst aus der Reihe: Federkrone und Runenstein sind Stein, die Königskrone
+Porzellan. Bewegt wird nach `state.t`, der Spieluhr: dieselbe Zahl auf jedem Gerät, beim Online-Spiel
 sehen also alle dasselbe. Weil ein Skin die Ballfarbe verdeckt, bekommt er einen dünnen Reif in der Farbe
 des Spielers – sonst wüsste bei vier Bällen niemand, welcher der eigene ist.
 
@@ -179,7 +347,9 @@ ein kleiner Schwarm zieht im Hintergrund vorbei. Im Zahnradwerk **greifen die R�
 – der Radius folgt der Zähnezahl (gleicher Modul), und `eingriff()` rechnet aus, wie schnell und um wie
 viel versetzt das nächste Rad laufen muss, damit Zahn in Lücke steht; die Kurbel auf dem großen Rad treibt
 über ein Pleuel einen Kolben im Zylinder. An der Federkrone wiegen sich die Federn im Luftzug, und durch die
-sieben Glyphen im Stein läuft langsam eine Welle: mal steht die eine heller, mal die andere. In der Gewitterkugel ziehen zwei Wolkenreihen unterschiedlich
+sieben Glyphen im Stein läuft langsam eine Welle: mal steht die eine heller, mal die andere. Der
+Runenstein macht es in Blau und mit größeren Kerben, damit man ihn nicht für den Tempelstein hält – und
+weil die Mütze ihm die Kuppe nimmt, sitzen seine Glyphen tiefer als beim Tempelstein. In der Gewitterkugel ziehen zwei Wolkenreihen unterschiedlich
 schnell, es regnet durchgehend, und alle 2,2 Sekunden schlägt ein Blitz ein – seine Zackenform wird aus
 der Nummer des Schlags gewürfelt, jeder Blitz sieht also anders aus, und der Schein klingt in mehreren
 Stufen ab. In der Kristallkugel dreht sich die Iris, die Pupille weitet sich, und das Auge **blinzelt**
@@ -241,6 +411,31 @@ Hinweis, welcher Rekord dafür nötig ist. Man soll sehen, was es zu holen gibt.
 gesperrter Skin trotzdem in voller Farbe – kommt er über das Netz vom Ball eines Mitspielers, soll man ihn
 sehen, ganz gleich was auf dem eigenen Gerät in der Rangliste steht.
 
+**Am selben Gerät zu mehreren ist alles offen – und nichts doppelt.** Sobald in der Aufstellung mehr
+als ein Spieler eingestellt ist, steht jeder Skin zur Wahl: auch die Belohnungen, die noch niemand
+verdient hat, und beide Helme der Arena. Am Küchentisch soll keiner mit dem Vorgabehut dasitzen, nur
+weil der andere die Welt schon durchgespielt hat. Geliehene Skins werden voll gezeichnet, tragen aber
+ein kleines Schloss in der Ecke.
+
+Die Leihgabe gilt **nur für diese Partie**: Sie steht in `playerHats`, also im Arbeitsspeicher, und
+geht nicht in den Browserspeicher – `hueteMerken()` legt für einen geliehenen Platz einen verdienten
+Ersatz ab, und zwar einen, den noch keiner hat. Nach dem Neuladen ist sie weg, und allein wie im
+Netzspiel tauscht `hutOderErsatz()` sie ohnehin gegen den Vorgabehut. **An der Freischaltung selbst
+ändert sich dabei gar nichts**, und das ist keine Sorgfalt, sondern Bauart: Freischaltung wird nirgends
+gespeichert, sondern bei jeder Abfrage aus der Rangliste und dem Turnierstand berechnet
+(`Hats.freigeschaltet`). Es gibt also keinen Freischaltspeicher, den man versehentlich beschreiben
+könnte.
+
+Dazu darf **kein Skin zweimal** vergeben werden. Vier Bälle mit demselben Hut sind auf der Bahn nicht
+auseinanderzuhalten – die Spielerfarbe allein reicht dafür nicht, erst recht nicht bei den
+Ganzkörper-Skins, die den Ball ganz ersetzen. Ein schon vergebener Platz ist als solcher zu erkennen
+und bleibt anklickbar: Dann wird **getauscht**, der andere bekommt den eigenen. Eine Absage wäre hier
+die schlechtere Antwort – man sieht ja, dass der Platz belegt ist, und will genau tauschen. Beim
+Öffnen und bei jedem Wechsel der Spielerzahl räumt `doppelAufloesen()` auf, falls aus einem früheren
+Stand zwei Plätze denselben Hut tragen.
+
+Allein bleibt alles wie bisher: gesperrt ist gesperrt.
+
 **Auf dem Prüfstand sind die Sperren offen.** Vorschau und Einzeldatei sind zum Ansehen da – dort soll man
 eine Belohnung aufsetzen können, ohne erst den Rekord zu holen. Entschieden wird das an einer Stelle in
 `src/main.js`: `TEST_FREI` ist wahr, wenn `VORSCHAU` wahr ist (Pfad `…/vorschau/`) oder wenn `PRUEFSTAND`
@@ -255,7 +450,113 @@ nur eine Zeichenfunktion in `DEFS` und einen Eintrag in `LIST`; der Nullpunkt li
 eine Einheit entspricht dem Ballradius, und die Ballmitte liegt bei (0, 0.72). Wer die Spielerfarbe braucht,
 nimmt sie als zweiten Wert der Zeichenfunktion entgegen.
 
+## Boule
+
+**Noch nicht im Spiel.** Der Modus steht in der Vorschau (und in der Einzeldatei zum Ansehen), im
+fertigen Spiel nicht – der Schalter dafür heißt `NUR_VORSCHAU` in `src/main.js` und zeigt auf
+dieselbe Bedingung wie `TEST_FREI`. Es ist derselbe Stand: Ihn für das Spiel aufzutrennen hieße,
+zwei Stände von Hand auseinanderzuhalten, und genau daran geht so etwas nach drei Auslieferungen
+kaputt. Ein Schalter ist eine Zeile; zwei Stände sind eine Dauerpflicht. Soll Boule ins Spiel, fällt
+die Bedingung an den drei Stellen weg, an denen sie steht (Modusknopf, Erklärtext, Rückfall auf
+„Wettkampf").
+
+Ein eigener Modus, wählbar in der Aufstellung neben **Wettkampf** und **Kreativ** – aber **nur am
+selben Gerät**, nicht über den Raumcode. Der Grund steht im Spiel selbst: Boule lebt davon, dass
+alle Kugeln liegen bleiben und sich gegenseitig wegstoßen. Beim Netzspiel müsste dafür jedes Gerät
+dieselben acht bis zwölf Kugeln in derselben Reihenfolge rechnen; heute wird über das Netz genau
+ein Ball übertragen. Der Modus steht darum im Warteraum gar nicht erst zur Wahl.
+
+**Ablauf.** Eine Kanone am Abschlag schießt die kleine Zielkugel auf die Bahn – grob Richtung Loch,
+mit kräftiger Streuung, damit sie jede Runde woanders liegt. Landet sie zu dicht am Abschlag (unter
+drei Feldern), wird neu geschossen, höchstens sechsmal; danach gilt, was liegt. Dann spielen alle
+reihum je drei Kugeln: erst jeder seine erste, dann jeder seine zweite, dann jeder seine dritte.
+Jede geschlagene Kugel bleibt liegen und darf von jeder späteren angestoßen werden – die Zielkugel
+eingeschlossen.
+
+**Wertung.** Nach der letzten Kugel gewinnt, wessen Kugel am nächsten an der Zielkugel liegt.
+Gemessen wird von Mitte zu Mitte, in Feldern der Bahn; die Tafel zeigt **alle** Kugeln nach Abstand
+geordnet, danach die ausgeschiedenen. Während der Runde steht in der Seitentafel je Spieler sein
+bisher bester Abstand – das ist die einzige Zahl, auf die es ankommt, und man will sie beim Zielen
+sehen.
+
+**Ausgeschieden.** Eine Kugel, die von der Bahn fällt oder im Loch landet, zählt nicht mehr mit.
+Strafschläge gibt es hier nicht – es gibt ja keine Schläge, die man bestrafen könnte. Dieselbe Regel
+gilt für alles andere, was einen Ball im Golf zurückwerfen würde (Wasser, Lava, Stacheln, Blitz,
+Hai, Fallbeil, das brennende Auge) und für die Tür in eine Innenkarte: Die würde mitten in der Runde
+die ganze Bahn austauschen. Trifft es die **Zielkugel**, kommt sie an ihren letzten Ruheplatz
+zurück – im richtigen Boule wäre das Ende dann ungültig, aber mitten in einer angefangenen Runde ist
+das hier die freundlichere Regel.
+
+**Was es in Boule nicht gibt:** Schläge, Par, Schlaglimit, Uhr und Rekorde. Ein Boule-Ergebnis ist
+mit einer Golfrunde nicht vergleichbar, und eine Zahl, die in dieselbe Rangliste liefe, wäre schlicht
+falsch. Die Rangliste bleibt darum unberührt.
+
+**Wann ein Wurf zu Ende ist.** Nicht, wenn die eigene Kugel liegt, sondern wenn **alle** liegen –
+sonst schlüge der Nächste in ein noch rollendes Feld hinein. Nach vierzehn Sekunden wird abgebrochen
+und alles angehalten: Auf einer Bahn mit Windfeld oder Förderband käme sonst nie Ruhe ein.
+
+**Im Code:** der ganze Modus in einem Block in `src/main.js` (`bouleRundeStarten` bis `bouleEnde`),
+die Physik über `stepBaelle` aus `src/physics.js`. Der Renderer bekommt die liegenden Kugeln über
+`state.liegendeBaelle` und muss dafür nichts über Spielarten wissen – er zeichnet sie in dieselbe
+Tiefensortierung wie alles andere, damit eine Kugel hinter einer Mauer auch hinter der Mauer liegt.
+
+## Mehrere Bälle auf einer Bahn
+
+In allen heutigen Spielarten rollt genau ein Ball: Es wird reihum geschlagen, der nächste kommt
+erst dran, wenn der vorige liegt. `src/physics.js` kann seit Fassung 106 aber auch mehrere Bälle
+gleichzeitig führen, samt Stoß untereinander.
+
+**Der Stoß.** `ballStoss(a, b, events)` ist ein elastischer Stoß: Der Impuls geht **nur längs der
+Verbindungslinie** über, quer dazu behält jeder Ball sein Tempo – das ist der Unterschied zwischen
+einem Stoß und einem Zusammenkleben. Die Masse kommt aus dem Radius hoch drei, also aus dem
+Rauminhalt; ein geschrumpfter Ball wiegt damit von selbst weniger und wird stärker weggestoßen, als
+er selbst stößt, ohne dass man das eigens regeln müsste. Die Stoßzahl `BALL_E` ist 0.86 – etwas
+lebhafter als eine Mauer (0.72), aber nicht verlustfrei. Vor dem Impuls werden die beiden
+auseinandergeschoben; ohne das blieben sie ineinander stecken, der Stoß liefe im nächsten Schritt
+erneut, und aus einem Stoß würde ein Zittern.
+
+**Die Reihenfolge.** `stepBaelle(level, baelle, dt, t, allowForces)` bewegt erst **jeden Ball für
+sich** – Reibung, Wände und Hindernisse sind für ihn dieselben wie beim Spiel allein – und löst
+**erst danach** die Bälle untereinander auf. Das ist Absicht: Würde man mitten im Bewegen stoßen,
+hinge das Ergebnis davon ab, welcher Ball zufällig zuerst an der Reihe ist, und beim Netzspiel sähen
+zwei Geräte verschiedene Bahnen. Nach einem Stoß wird jeder verschobene Ball noch einmal aus den
+Wänden herausgedrückt (sonst steckte er darin), und weil das ihn wieder gegen einen dritten Ball
+schieben kann, läuft das Ganze mehrmals – bis nichts mehr überlappt, höchstens aber viermal. Drei
+Bälle in einer Reihe brauchen zwei Durchgänge; die Schranke ist nur dafür da, dass ein Ball, der in
+einer Ecke zwischen Mauer und Ball klemmt, nicht das Bild anhält.
+
+**Wer nicht mitstößt:** wer fliegt (der sieht unter sich keine Bälle), wer in einer Fähre oder
+Kanone steckt, wer schon im Loch ist, und wer in diesem Schritt eingelocht ist oder die Bahn
+verlassen hat. Zwei Bälle auf verschiedenen Ebenen sehen einander gar nicht.
+
+**Eine Falle beim Bauen.** Die Maschinen laufen einmal je **Schritt**, nicht einmal je Ball –
+`stepBaelle` ruft `update(t)` selbst auf und schaltet es in `stepPhysics` ab. Drei Hindernisse
+tragen nämlich etwas von einem Aufruf zum nächsten mit: Stacheln und Fallbeil merken sich, ob sie
+im Bild davor schon zu waren (daran hängt der Strafschlag), und ein Tor am Schalter schiebt sein
+Blatt Schritt für Schritt weiter. Je Ball aufgerufen liefe das Tor doppelt so schnell – und die
+Stacheln spießten nur noch den **ersten** Ball auf, weil der zweite Aufruf die Erinnerung „vorher
+war ich offen" schon gelöscht hätte. `node tools/stoss.mjs` prüft genau das, mit Gegenprobe: ohne
+den Kunstgriff bekommt der zweite Ball null statt zwei Strafschlägen.
+
+**Dass sich für einen Ball nichts ändert, wird gemessen, nicht behauptet.** Ein um 1e-15
+verschobener Aufprall führt nach zwei Sekunden in eine andere Ecke der Bahn – Hinsehen genügt
+nicht. `node tools/stoss.mjs` spielt darum jede Bahn aller neun Welten mit acht Richtungen und zwei
+Stärken einmal durch und vergleicht `stepPhysics` (wie bisher) gegen `stepBaelle` mit einem einzigen
+Ball, Schritt für Schritt und Nachkommastelle für Nachkommastelle. `src/main.js` ruft weiterhin
+`stepPhysics` auf; am Spiel ändert sich also nichts, solange es keine Spielart mit mehreren Bällen
+gibt.
+
 ## Rangliste
+
+**Hinter der Tafel liegt ein eigenes Bild** (`icons/rangliste.jpg`, 1170 × 1477). Vorher stand dort,
+was gerade auf der Leinwand lag – das Spielfeld oder die Weltkarte – und wanderte unter der Tafel
+herum, obwohl es mit Rekorden nichts zu tun hat. Das Bild bekommt die Kennung `rangliste` am
+Überlagerungs-Schirm; dieselbe tragen die drei Tafeln, die von der Rangliste abzweigen (Liste
+führen, Schlüssel, Zurücksetzen), sonst spränge der Hintergrund bei jedem Schritt. Darüber liegt ein
+Schleier, der nach außen hin dichter wird: In der Mitte soll das Bild hell bleiben, am Rand ist es
+so bunt, dass der goldene Rahmen der Tafel darin unterginge. Anders als beim Startbild gibt es nur
+*ein* Bild – es ist hochkant, und `cover` schneidet daraus im Querformat den mittleren Streifen mit
+Burg und Meer heraus.
 
 Über **🏆 Rangliste** im Startbildschirm: für jede Bahn und für jede ganze Runde, mit Namen dabei, in
 **drei Wertungen**. Es gibt nichts auszuwählen – **alle drei laufen bei jedem Schlag gleichzeitig mit**,
@@ -353,6 +654,14 @@ wählt die Welt und startet; danach wird **reihum** gespielt: wer dran ist, ziel
 Schlag mitlaufen. Punktetafel und Bahnwechsel bleiben überall gleich, den Takt zwischen den Bahnen gibt
 der Gastgeber vor. Jeder spielt mit seinem eigenen Hut, die Ballfarbe richtet sich nach der Sitzreihenfolge.
 
+**Den Hut wechselt man im Warteraum.** Vorher stand er nur im Startbildschirm fest: Wer erst im Raum sah,
+dass ein anderer denselben trägt, musste hinaus, umwählen und neu beitreten. Jetzt steht unter den Sitzen
+**Hut wechseln**; der eigene Platz stellt sich sofort um, und verteilt wird der Wechsel wie alles andere –
+der Gastgeber schickt die Liste neu, ein Gast meldet sich einfach noch einmal an (seine Anmeldung trägt
+Name und Hut ohnehin bei sich). Der Gastgeber behandelt eine zweite Anmeldung darum nicht als Fehler,
+sondern übernimmt daraus Name und Hut, ohne den Platz zu ändern. Solange die Hutwahl offen ist, schiebt
+sich der Warteraum nicht davor – sonst fiele man bei jedem Wechsel aus der Wahl heraus.
+
 Wer den Raum verlässt oder die Verbindung verliert, wird nach gut zwanzig Sekunden bemerkt: sein Zug wird
 mit dem Schlaglimit gewertet und die Runde läuft weiter. Geht der Gastgeber, endet der Raum für alle.
 Eigene Bahnen lassen sich online nicht spielen, nur die sechs festen Welten.
@@ -414,11 +723,25 @@ Unter **Bauen & Eigene Welt** liegen der Editor und die selbst zusammengestellte
   Die Neigung richtet sich nach dem Bildschirm: hochkant (Handy) bleibt die Sicht flach,
   quer auf Tablet oder Laptop wird sie steiler, damit das Feld nicht platt gedrückt wirkt.
 - Hut des eigenen Balls: in der Startaufstellung unter „Hut". Die Wahl merkt sich der Browser.
-- Die Bedienknöpfe (Zurück, Kamera, Zoom, Musik, Vollbild, Menüs, Editor-Werkzeuge) nutzen Material Symbols von Google,
-  als SVG-Pfade in `src/icons.js` eingebettet – überall gleich, in der Textfarbe, ohne Schriftart aus dem Netz.
-  Welten, Bahnen, Hüte und Rekordmeldungen behalten bewusst ihre bunten Zeichen: dafür hat kein Bedien-Icon-Satz Motive.
-- Online gegeneinander: **🌐 Online spielen** im Startbildschirm, Raumcode aufmachen oder eintippen.
-- Rekorde: **🏆 Rangliste** im Startbildschirm, einmal den eigenen Namen eintragen. Drei Wertungen: Schläge, Zeit und Kombi (Schläge + Minuten).
+- Fast die ganze Oberfläche trägt **Material Symbols** von Google, als SVG-Pfade in `src/icons.js`
+  eingebettet – überall gleich, in der Textfarbe, ohne Schriftart aus dem Netz: Bedienknöpfe, die
+  Marken der Welten, die Stufen (Normal, Profi, Legende), die Zeichen der drei Wertungen, die Ränge
+  in den Ergebnissen und die Sinnbilder in Laufmeldungen. Die Weltknöpfe in Rangliste, Warteraum
+  und Weltüberschrift tragen die **Marke ihrer Welt**, nicht die ihrer Stufe: Fünf Profi-Welten
+  trugen sonst dieselbe Flamme, und das sagte über die Welt nichts aus. Drei Welten behalten
+  ausdrücklich das Zeichen ihrer Stufe – Märchenland den Pokal, Sturmhimmel und Arena den Blitz
+  (`WELT_ICON_AUSNAHME` in `src/main.js`); auf der Karte steht dort die Marke. Vorher waren das
+  Emoji, und die zeichnet jedes Betriebssystem selbst: Apple, Google und Microsoft bilden dasselbe
+  Zeichen verschieden ab, mal bunt, mal flach, mal in anderer Größe.
+- Zwei Dinge sind bewusst **nicht** ersetzt:
+  - Die **Hüte** in Listen, Ergebnissen und Belohnungen. Material hat weder Krone noch Zauberhut
+    noch Piratenhut – und es braucht sie nicht: Die Hüte werden ohnehin gezeichnet, also zeigen die
+    Abzeichen jetzt den echten Hut in klein, gemalt vom selben Code wie der auf dem Ball.
+  - Die **Sinnbilder der Bahnen** (Pilz, Drache, Krake, Krokodil, Sarg, Rabe …). So etwas kennt
+    Material Symbols nicht, und ein Einheitszeichen für alle wäre kein Ersatz, sondern ein Verlust:
+    In der Bahnliste erkennt man die Bahn am Zeichen.
+- Online gegeneinander: **Online spielen** im Startbildschirm, Raumcode aufmachen oder eintippen.
+- Rekorde: **Rangliste** im Startbildschirm, einmal den eigenen Namen eintragen. Drei Wertungen: Schläge, Zeit und Kombi (Schläge + Minuten).
 - Zurücksetzen darf nur, wer die Liste führt: einmal unten in der Rangliste auf **Liste führen** tippen, dann den Schlüssel über **Schlüssel sichern** wegkopieren.
 - Musik an oder aus: Knopf `♪` unten links oder Taste `J`; im Startbildschirm auch unter „Musik". Die Wahl merkt sich der Browser.
 - 1–4 Spieler im Hotseat-Modus: Jeder spielt die Bahn nacheinander zu Ende.
@@ -577,9 +900,577 @@ zusammengesetzt und nach `src/courses_colosseum.js` geschrieben. So bleiben alle
 und eine Änderung an einer Kammer zieht nicht Dutzende Zeichen nach sich. Nach jedem Lauf gehören
 `node tools/validate.mjs` und `node tools/audit/audit.mjs colosseum` dazu.
 
+## Der Schneeberg
+
+Zwölf Bahnen, Stufe Profi, und sie liegen zwischen Tüftlerreich und Dschungeltempel – die Reise
+macht ihretwegen einen Bogen nach oben, so wie man einen Berg hinauf und wieder hinunter geht.
+
+**Die Frage der Welt ist *wohin*.** Das Märchenland fragt, wie fest man schlägt, der Uhrenturm
+fragt, wann – hier versetzt der Wind jeden rollenden Ball, und wer geradeaus zielt, kommt nicht an.
+Entscheidend ist, dass er **ablesbar** ist: Der Wind dreht im festen Takt durch Ost, Süd, West und
+Nord, die Fahne zeigt die nächste Richtung als blassen Pfeil, bevor sie kommt, und zwischen zwei
+Richtungen ist **einen Augenblick Flaute**. Wer wartet, kann gerade schlagen; wer nicht warten
+will, zielt daneben. Darum steht der Wind auf jeder Bahn quer zum Weg und nie längs – sonst wäre er
+nur Rücken- oder Gegenwind und man könnte ihn aussitzen. Einen liegenden Ball rührt er nie an; das
+wäre Schikane statt Aufgabe.
+
+**Der zweite Faden ist die Höhe.** Vier Abschnitte zu je drei Bahnen, jeder mit eigener Palette,
+und sie werden nach oben hin kälter, schmaler und ausgesetzter:
+
+| Bahnen | Palette | Was dort neu ist |
+|---|---|---|
+| 1–3 | `snowfoot` – Nadelwald, festgetretener Schnee, Mittagslicht | Der Wind; Tiefschnee (`s`) bremst; die erste Lawine |
+| 4–6 | `snowrock` – Fels tritt hervor, Schnee nur in den Rinnen | Schmale Bänder, die Seilbahn, die erste Schneebrücke |
+| 7–9 | `glacier` – Blaueis, Spalten, Schneetreiben | Blankeis (`i`) rutscht; zwei Wächten hintereinander |
+| 10–12 | `summit` – dünne Luft, fast schwarzblauer Himmel, Sterne am Tag | Der Grat, und darüber die Wolkenetagen |
+
+**Der Berg steigt auch wirklich an.** Zuerst war die Höhe nur Farbe und Erzählung – die Bahnen
+selbst lagen flach. Jetzt trägt jede ein Höhenraster (`heights`), das nach rechts, also zum Loch
+hin, um zwei oder drei Stufen ansteigt; der Abschlag liegt immer unten, das Loch immer auf der
+obersten Stufe. Verbunden sind die Stufen durch **Schrägen** (`field` mit `rise`), denn eine
+Höhenkante wirkt sonst wie eine Mauer – so steht es in `src/physics.js`, und `tools/validate.mjs`
+rechnet es seit dieser Fassung genauso, sonst hielte es ein Loch für erreichbar, vor dem in
+Wahrheit eine Stufe steht.
+
+Wichtiger als das Aussehen ist, was die Schräge *tut*: Wer zu schwach schlägt, rollt wieder
+herunter. Damit das stimmt, mussten zwei Dinge zusammenkommen, und beide waren beim ersten Anlauf
+falsch. Die Schräge braucht `alwaysForce` – ohne das wirkt sie nur auf einen rollenden Ball, und
+wer auf halber Höhe zur Ruhe kommt, klebt dort fest. Und ihr Gefälle muss **über der Reibung des
+Untergrunds** liegen (Schnee bremst mit 4,2): darunter hält der Boden den Ball fest, so steil es
+auch aussieht. Deshalb liegt keine Schräge auf Blankeis oder in Tiefschnee, deren Reibung ganz
+anders ist – `tools/schneeberg.py` weist das beim Bauen ab.
+
+Nach oben wird beides größer, denn der Berg wird steiler: am Fuß eine Stufenhöhe von 0,6 und ein
+Gefälle von 4,8, am Gipfel 1,1 und 7,2. Wo eine Schlucht zwischen zwei Stufen liegt, gibt es keine
+Schräge – dort fährt die Gondel, und genau das ist ihr Sinn. Geprüft wird jede einzelne Schräge mit
+`scratchpad/schraege.mjs`: ein schwacher Schlag hinauf muss unterhalb der Rampe wieder zur Ruhe
+kommen, ein kräftiger über sie hinweg.
+
+Gezeichnet wird die Schräge nicht als Erdrampe: Die Standardfarbe ist erdbraun, und auf einem
+Schneeberg sah das aus wie ein Feldweg quer über den Hang. Die fünf Schnee-Paletten tragen darum
+`hangStil: 'schnee'` – dann wird daraus eine Schneerinne, blaugraue Mulde mit hellem Kamm, dieselbe
+Sprache wie die Windfahnen auf dem Boden.
+
+Die Umgebung erzählt dieselbe Geschichte: Unten steht dichter Nadelwald, in der Felszone treten
+Blöcke hervor, auf dem Gletscher stehen Eiskristalle, und oben wird es kahl. Der Windsack war dabei
+zuerst jede fünfte Streudeko – auf dem Gipfel standen dadurch Dutzende herum, wo eigentlich nichts
+mehr steht. Jetzt ist er selten genug, um wieder etwas zu bedeuten.
+
+### Die vier Maschinen (`src/obstacles_snow.js`)
+
+| Maschine | Was sie tut |
+|---|---|
+| **Windfahne** (`windfahne`) | Dreht den Wind alle `WIND_HALT` Sekunden weiter, mit `WIND_DREH` Sekunden Flaute dazwischen. Sie wirkt auf der ganzen Bahn, nicht in einem Feld – das ist der Unterschied zum Wind-`field` der anderen Welten: Dort ist Wind eine Stelle, hier ist er das Wetter. |
+| **Lawine** (`lawine`) | Fegt alle `LAWINE_TAKT` Sekunden durch ihren Streifen; `LAWINE_WARNUNG` Sekunden vorher staubt es an der Abrisskante. Wer offen liegt, wird ein Stück mitgenommen – kein Strafschlag, nur Weg. **Hinter einem Felsblock (`x`) passiert nichts:** Vom Ball aus wird bis `LAWINE_SCHUTZ` Kacheln gegen die Laufrichtung geschaut, und die hellen Keile im Schnee zeigen, wie weit die Deckung reicht. Damit ist es die erste Maschine, vor der man sich *versteckt* statt sie zu umgehen – und die Felsen sind nicht mehr Deko, sondern Deckung. |
+| **Seilbahn** (`seilbahn`) | Gondel am Stahlseil zwischen zwei Stationen, Verhalten wie die Fähre. Dazu darf sie mit `ziel` die **Ebene wechseln**: Die Bergstation liegt dann eine oder mehrere Wolkenetagen höher, und das Seil steigt sichtbar dorthin. Sie ist damit zugleich Brücke und Aufstieg – was eine Bergbahn eben tut. |
+| **Schneebrücke** (`schneebruecke`) | Trägt genau einen Schlag lang. Hat der Ball sie überquert, bricht sie hinter ihm ein; beim nächsten Schlag liegt sie wieder da. Sie ist das Gegenstück zur Luke des Uhrenturms: Die fragt *wann*, diese fragt, ob man den Weg zu Ende denkt. Gibt es eine Ebene darunter, fällt man ohne Strafschlag dorthin; gibt es keine, ist es ein Loch im Berg wie jedes andere – **genau dieser zweite Fall fehlte zuerst**, und die gebrochene Brücke tat auf einer Bahn ohne untere Ebene gar nichts. |
+
+**Man muss den Wind sehen, nicht nur den Pfeil.** Die erste Fassung zeigte ihn allein an der
+Fahne – zu wenig: Wer auf den Ball schaut, schaut nicht auf den Mast. Darum hält der Renderer den
+Wind der Bahn einmal je Bild in `R.wind` fest, und drei Dinge zeigen ihn:
+
+- **Der treibende Schnee auf dem Boden** ist das eigentliche Messgerät. Über jede zweite Bahnkachel
+  läuft eine Schneefahne in Windrichtung, und in der Flaute steht alles still. Wichtig war der
+  Kontrast: Weiße Striche auf weißem Schnee sieht man nicht, also ist jede Fahne eine flache Rille –
+  erst ein blaugrauer Schatten, darüber versetzt ein heller Kamm.
+- **Der Schneefall am Himmel** weht in dieselbe Richtung und flaut mit ab (`atmo: 'snow'` und
+  `'blizzard'` lesen `R.wind`).
+- **Die Windsäcke am Rand** drehen sich mit und hängen bei Flaute schlaff herunter – die
+  Windrichtung wird dafür mit derselben Drehung wie die Projektion in Bildrichtung umgerechnet.
+
+Geprüft wird das nicht nach Augenmaß, sondern als Bildvergleich (`scratchpad/wind_sicht.mjs`):
+dieselbe Bahn, dieselbe eingefrorene Zeit, einmal mit und einmal ohne Windfahne. Bei vollem Wind
+unterscheiden sich über 53 000 Pixel, in der Flaute nur noch 4 400 – dann bleibt eben nur der Mast.
+
+### Die Wolkenetagen
+
+Oben sind die Ebenen dieselbe Mechanik wie im Uhrenturm – `map` ist die unterste Fläche, `ebenen`
+sind die darüber, alle deckungsgleich, und hinunter geht es an jeder offenen Kante (`o`) ohne
+Strafschlag. Nur **gezeichnet** werden sie anders: Eine Palette mit `ebeneStil: 'wolke'` lässt
+`Renderer.zeichneWolke` statt der Steinscholle eine Wolkenbank malen – weiche Ballen, die nach
+unten ins Blaue auslaufen, und an den geschlossenen Kanten ein Wall aus dichteren Ballen statt
+einer Brüstung. Man soll sehen, wo die Wolke trägt und wo sie aufhört.
+
+Hinauf führt hier die Seilbahn statt der Turbine: Bahn 11 hat eine Wolke, Bahn 12 zwei
+übereinander, verbunden durch eine Gondel und getrennt durch eine Schneebrücke.
+
+### Was die alten Sachen hier anders machen
+
+Der Boden braucht nichts Neues, nur die richtigen Farben: **`s` ist Tiefschnee** (bremst),
+**`i` blankes Eis** (rutscht), **`x` ein Felsblock** – und der ist jetzt keine Kiste mehr. Mit
+`blockStil: 'fels'` zeichnet `Renderer.drawSchneefels` einen verschneiten Brocken aus zwei
+gekippten Prismen mit Schneehaube, und keine zwei sehen gleich aus. Das ist nicht nur hübscher:
+Hinter diesen Brocken versteckt man sich vor der Lawine, also müssen sie auch danach aussehen.
+Dazu eine neue Atmosphäre `blizzard` – Schnee, der nicht fällt, sondern in Böen waagerecht weht.
+
+Die Karten entstehen mit `tools/schneeberg.py` und werden dort schon beim Bauen geprüft: Jede
+Windfahne muss auf der Bahn stehen, in jedem Lawinenstreifen muss Bahn **und mindestens ein Block**
+liegen (ohne Deckung wäre sie keine Aufgabe, sondern Warten), beide Stationen einer Seilbahn müssen
+auf ihrer jeweiligen Ebene Bahn sein, und eine Schneebrücke muss auf Bahn liegen – sonst wäre sie
+von Anfang an ein Loch.
+
+## Die Bahnen des Uhrenturms
+
+Vierzehn Bahnen, Stufe Profi, und die letzte Welt des Spiels. Was sie von allen anderen trennt,
+ist die Frage, die sie stellt. Jede andere Welt fragt, **wie fest und wohin** man schlägt; diese
+fragt zuerst **wann**. Darum steht auf jeder Bahn mindestens eine Maschine vor einer Stelle, an der
+kein Weg vorbeiführt – eine Tür, eine Lücke, ein Rohr, eine Etage –, und sie gibt diese Stelle nur
+zeitweise frei. Wer zusieht und mitzählt, kommt durch; wer nur fest schlägt, nicht.
+
+Das ist der Unterschied zum **Tüftlerreich**, das ihr am nächsten kommt: Dort ist jede Bahn eine
+eigene Erfindung, die man erst verstehen muss. Hier ist es immer dieselbe Frage, und nur die
+Antwort ändert sich.
+
+**Größer als der Rest.** Weil es die Schlusswelt ist, sind ihre Karten durchweg weiter gebaut als
+die der übrigen Welten: die schmalste ist 34 Kacheln breit, die weiten 40 bis 42, das Zifferblatt
+36 auf 26. Zum Vergleich liegt das Märchenland bei 24 bis 26, das Kolosseum bei 24 bis 38.
+
+**Aufbau.** Bahn 1 bis 4 sind flach und führen je ein bis zwei Maschinen ein. Bahn 5 bringt die
+**erste zweite Ebene** – eine einzige Turbine, sonst nichts Neues. Bahn 6 ist eine flache
+Atempause. Bahn 7 und 8 bringen die beiden anderen Wege hinauf, **Aufzug** und **Zahnstange**, dazu
+die **Luke**. Bahn 9 bis 11 mischen, was da ist; Bahn 12 stapelt drei Etagen, die nur durch
+Kupferrohre verbunden sind; Bahn 13 ist der Rohrturm, und Bahn 14 ist der Höhepunkt. Das **Kupferrohr** kommt ab Bahn 4 vor, die
+**Hemmung** ab Bahn 6 – beide bewusst nicht auf jeder Bahn, damit sie nicht zur Gewohnheit werden.
+Das **wandernde Loch** steht auf vier Bahnen: klein auf 6, 9 und 11, und als ganzes Zifferblatt
+auf 13.
+
+| Nr. | Bahn | Größe | Par | Maschinen | Der Moment, auf den man wartet |
+|---|---|---|---|---|---|
+| 1 | Marktplatz | 34×13 | 3 | Pendel | Die einzige Tür in der Mauer, vor der das Pendel schwingt |
+| 2 | Glockengasse | 38×13 | 4 | Pendel ×2 | Zwei Türen, versetzte Pendel – die eine passt, wenn die andere nicht passt |
+| 3 | Räderwerkstatt | 38×13 | 4 | Zahnradfeld, Pendel | Das Feld hält am Ufer an: einsteigen, tragen lassen |
+| 4 | Rohrpost | 38×13 | 4 | Kupferrohr, Pendel | Das Rohr nimmt einen immer – man sieht schon vorher, wo es endet |
+| 5 | Turbinenhalle | 38×15 | 4 | Pendel, **Turbine**, zweite Ebene | Der Windstoß hebt eine Etage – zu schnell, und man schießt oben über die offene Kante zurück |
+| 6 | Hemmwerk | 38×13 | 4 | Hemmung, Pendel, wanderndes Loch | Die offene Hälfte des Ganges, dann die Tür – und dahinter bleibt das Loch nicht liegen |
+| 7 | Federkammer | 40×17 | 5 | Federwerk, **Aufzug**, **Luke** | Hinauf ist einfach – oben muss die Luke gerade zu sein |
+| 8 | Zeigerhof | 40×19 | 5 | Zeigerarm, **Zahnstange** | Hinter dem Zeiger her, dann rechtzeitig auf die Schaufel und warten |
+| 9 | Kesselhaus | 40×15 | 5 | Pendel, Kupferrohr, Federwerk, wanderndes Loch | Erst durch die Tür, dann ins Rohr – und auf dem Podest wandert das Loch |
+| 10 | Glockenturm | 42×17 | 5 | Pendel, Hemmung, Aufzug, Luke | Drei Takte, von denen keiner zum anderen passt – und die Glockenstube liegt eine Etage höher |
+| 11 | Räderschacht | 42×17 | 6 | Zahnradfeld, Zeigerarm, Zahnstange, wanderndes Loch | In die Endkammer führt unten keine Tür; hinein kommt nur, wer vom Steg ohne Geländer fällt |
+| 12 | Kupferlabyrinth | 42×17 | 6 | Kupferrohr ×3 (zwei davon zwischen Ebenen), Hemmung | Drei Kammern übereinander, verbunden allein durch Rohre |
+| 13 | Der Rohrturm | 42×19 | 6 | Kupferrohr ×6, Luke, weit gestapelte Etagen | Sieben kleine Inseln, keine berührt die andere – und das Loch liegt auf der mittleren Etage |
+| 14 | Das große Zifferblatt | 36×26 | 6 | Turbine, Zifferblatt, Zeigerwerk, Zeigerarm, Pendel ×3 | Vom Steg auf das Blatt fallen lassen – und wo man sich fallen lässt, entscheidet alles |
+
+**Warum die Welt neu gebaut wurde.** Die erste Fassung hatte zwölf flache Bahnen plus eine
+Testbahn „Maschinenprobe", die am Ende hing und im Par mitzählte. Nachgemessen stimmten außerdem
+drei Pars nicht: Kesselhaus lag im Median bei 6 statt 4, Räderschacht bei 7 statt 5, und die
+Schlussbahn bei 3 statt 6 – zwölf Marken auf einem Ring mit Radius 6,5 liegen so dicht, dass von
+jedem Punkt am Blattrand eine kurze, freie Linie zu irgendeiner Marke führt. Beides ist mit dem
+Umbau erledigt: Die Testbahn ist aufgelöst, ihre vier Maschinen stehen jetzt in richtigen Bahnen
+(5, 7, 8 und 12), und die Schlussbahn hat den abgemauerten Anlauf bekommen, den sie brauchte –
+der Abschlag liegt im **Werkgang** am Rand, und vom Blatt trennt ihn die Leere. Hinüber kommt nur,
+wer die Turbine nimmt und über den Steg fährt.
+
+**Die Pars stehen auf dem Bot-Durchlauf.** `node tools/audit/audit.mjs clock` spielt jede Bahn
+sechsmal mit einem Normalspieler und sucht dazu die beste Lösung. Gewertet wird danach: Par ist
+grob die beste Lösung plus zwei, bei den schweren Bahnen plus drei, und nie unter dem, was ein
+mittlerer Spieler braucht.
+
+**Der Weltpreis** ist die **Taschenuhr** (`pocketwatch`) – eine Kugel mit durchbrochenem Zifferblatt,
+laufenden Rädern, schwingender Unruh und der Aufzugkrone obendrauf. Sie hängt an derselben Regel
+wie die Preise der anderen Welten: jede Bahn braucht ein Ergebnis, und die Summe muss unter Par
+liegen. In der Rangliste steht der Uhrenturm mit allen drei Wertungen zwischen den übrigen Welten.
+
+### Das wandernde Loch
+
+Das Loch ist in dieser Welt nicht immer ein fester Punkt. Die Maschine `wanderloch`
+(`src/obstacles_legend.js`) setzt `level.cup` alle `WANDERLOCH_TAKT` Sekunden – zehn – auf die
+nächste Stelle ihrer Liste und beginnt danach wieder vorn. Sie kennt zwei Formen:
+
+- **Freie Stellen.** `{ type: 'wanderloch', stellen: [[x, y], …] }` nimmt zwei oder mehr beliebige
+  Punkte auf der Bahn. So steht sie auf **Bahn 6** (drei Stellen im Gang hinter der Tür), **Bahn 9**
+  (drei auf dem Podest über der Glut) und **Bahn 11** (drei in der Endkammer). Auf dem Boden
+  verbindet eine gestrichelte Linie die Stellen in der Reihenfolge, in der sie drankommen.
+- **Der Ziffernkreis.** `{ type: 'wanderloch', x, y, r, marken: 12 }` legt die Stellen selbst auf
+  die Stundenmarken eines Zifferblatts, beginnend oben und im Uhrzeigersinn. Das ist die
+  Schlussbahn 13. Der alte Typname `dial` tut dasselbe und bleibt gültig, damit ältere Bahnen
+  weiterlaufen.
+
+**Man muss vorher sehen, wohin es geht**, sonst ist es Glück statt Timing. Darum leuchtet die
+**nächste** Stelle heller als die übrigen, und um das aktuelle Loch schrumpft ein Ring, der abläuft,
+bis gewechselt wird. Beides zeichnet `Renderer.drawWanderlochFloor` in den Boden, also unter alles
+andere.
+
+**Was es kostet.** Der Bot wartet nie – er puttet sofort auf das Loch, das gerade da ist. Das ist
+der härteste denkbare Maßstab für ein wanderndes Loch, und gemessen wurde jede Bahn einmal mit und
+einmal ohne:
+
+| Bahn | ohne wanderndes Loch | mit | Aufschlag |
+|---|---|---|---|
+| 5 Hemmwerk (3 Stellen) | – | Median 4 bei Par 4 | keiner |
+| 8 Kesselhaus (2 Stellen) | Median 6 | Median 6 | keiner |
+| 10 Räderschacht (3 Stellen) | Median 7 | Median 8 | ein Schlag |
+
+Es kostet also höchstens einen Schlag, und zwar auch den nur, wo ohnehin schon vier Maschinen
+stehen. Der Grund ist die Vorschau: Wer die helle Stelle sieht, legt den Schlag hin und der Ball
+kommt an, wenn das Loch da ist – warten kostet nichts, nur Geduld.
+
+**Nicht auf die Messung hereinfallen.** Der erste Durchlauf des Kesselhauses mit wanderndem Loch sah aus
+wie eine Verschlechterung, und das Loch wurde daraufhin auf eine andere Bahn geschoben. Der
+Kontrolllauf **ohne** das Loch lieferte danach dasselbe Bild: Die Bahn war aus einem anderen Grund
+zäh. Seither gilt hier die Regel, vor jeder Zuweisung erst die Vergleichsmessung zu machen – eine
+einzelne Bot-Runde über sechs Spiele trägt keine Ursachenbehauptung.
+
+Zwei Dinge prüft `tools/validate.mjs` dafür: Jede Stelle muss auf hartem Boden liegen, und keine
+zwei dürfen auf derselben Kachel sitzen – sonst stünde das Loch zweimal hintereinander am selben
+Fleck. Das `H` der Karte gehört auf die **erste** Stelle, denn von dort startet die Maschine; in
+`tools/uhrenturm.py` verschiebt der Baustein `wanderloch` es von selbst dorthin.
+
+### Gestapelte Ebenen (Versuch)
+
+Der Uhrenturm bekommt weitere Spielflächen übereinander. Das ist **keine Höhenphysik**, sondern ein
+Umschalter: Der Ball ist immer auf genau einer Fläche und kollidiert nur mit deren Wänden. Jede
+Bahn kann pro Ebene eine eigene ASCII-Karte haben – `map` ist die unterste, `ebenen: [...]` sind
+die darüber (`oben` ist die Kurzform für genau eine). Alle sind gleich groß und deckungsgleich.
+Wie viele es sein dürfen, steht nirgends fest; zwei bis drei sind gut zu lesen, darüber wird das
+Bild eng.
+
+| | |
+|---|---|
+| **Hinauf** | nur über die **Turbine** (`turbine`), ein Gebläseschacht. Sie steht auf der Ebene `ebene` (ohne Angabe der untersten) und hebt auf die nächste darüber. Wer darüberrollt, wird an derselben Stelle gehoben – Tempo und Richtung bleiben. Kein Katapult, ein Aufzug. Für jede Etage steht eine eigene Turbine. |
+| **Herunter** | an jeder **offenen Kante**. Offen heißt: die Karte hat dort ein `o` (Boden ohne Bande) oder nichts. Der Ball fällt an derselben Stelle **so weit, bis wieder Boden unter ihm ist** – über mehrere Etagen hinweg, wenn es sein muss – und rollt dort weiter, **ohne Strafschlag**. |
+| **Der Aufzug** | (`aufzug`) ist eine Kabine zwischen zwei Führungsschienen, oben die Umlenkrolle. Er ist der **verlässliche** Weg nach oben: Die Kabine wartet unten, wer hineinrollt fährt mit (`AUFZUG_FAHRT`), oben setzt sie ab und kommt nach `AUFZUG_HALT` von selbst zurück. Kein Takt, den man abpassen muss – das macht in dieser Welt die Zahnstange. Der helle Kabinenboden und das Lämpchen am Schacht sagen, ob sie gerade aufnehmen kann. |
+| **Die Zahnstange** | (`zahnstange`) ist eine Schaufel an einer gezahnten Schiene. Sie wartet unten (`ZAHNSTANGE_TAKT`), fährt hoch (`ZAHNSTANGE_FAHRT`), wartet oben, kommt zurück. Mitgenommen wird, wer beim Losfahren daraufsteht – man muss also rechtzeitig **daraufkommen und warten**. |
+| **Das Kupferrohr** | darf sein Ende eine Etage höher haben: `ebene` ist die Ebene des Rohrmunds, `ziel` die des Rohrendes. Jedes Ende wird auf seiner eigenen Karte gesucht. |
+| **Die Luke** | (`luke`) ist eine Klappe im Boden einer Ebene, die im Takt auf- und zugeht. Zu ist sie fester Boden, offen ein Loch – wer dann darüberrollt, fällt wie an einer offenen Kante, ohne Strafschlag. `LUKE_TAKT` und `LUKE_SCHWENK` als Konstanten, `phase` je Luke. |
+| **Das Loch** | liegt auf genau einer Ebene (das `H` steht in genau einer der Karten) und zieht nur, wenn der Ball auch dort ist. |
+| **Der Abstand** | ist standardmäßig 2 Kacheln (`EBENE_Z`). Eine Bahn darf ihn mit `ebeneZ` überschreiben (1 bis 6). Das ist reine Optik – die Physik kennt keine Höhe zwischen den Ebenen. Der **Rohrturm** stapelt mit 4,2, damit man sieht, dass zwischen seinen Etagen nichts ist außer dem Rohr, das hindurchsteigt. Die Schürze der Schollen wächst dabei mit, sonst sähe eine weit gehobene Ebene aus wie eine schwebende Platte. |
+
+**Wie das im Code aussieht.** `buildLevel` baut aus jeder Karte eine Fläche mit eigenen Kacheln,
+Kollisionskanten, Mauern und Blöcken. Das Level trägt immer die Felder der Ebene, auf der der Ball
+gerade ist; `level.setzeEbene(n)` hängt sie um. Die Physik liest sie in jedem Schritt neu – deshalb
+braucht sie keinen zweiten Satz Regeln und keine Sonderfälle, nur einen Filter: Es wirken nur die
+Hindernisse der eigenen Ebene (`ob.ebene`, ohne Angabe 0). Laufen tun alle, damit die andere Ebene
+nicht stehenbleibt, während man nicht hinschaut.
+
+**Gezeichnet** werden immer alle Flächen: die unterste wie bisher, jede weitere als angehobene
+Scholle mit Schürze und Brüstung, von unten nach oben, damit eine höhere die darunter verdeckt.
+Voll gezeichnet wird die, auf der der Ball ist, die anderen halb durchsichtig – man soll von unten
+sehen, wohin die Turbine führt, und von oben, wo man herunterkommt. Die offenen Kanten sind hell gestrichelt: Der Fall soll wie ein Weg aussehen, nicht
+wie ein Fehler. Ein Fallstrick dabei: Die obere Fläche darf nicht Kachel für Kachel als Körper
+gezeichnet werden – bei halber Durchsicht sähe man ein Gitter aus lauter inneren Seitenflächen. Nur
+der Rand bekommt seine Schürze.
+
+**Ein Ruhepunkt ist ein Ort UND eine Ebene.** Der Ball merkt sich, wo er zuletzt lag, und wird
+nach einem Strafschlag dorthin zurückgelegt. Die Ebene dazu wurde nie mitgeschrieben – er landete
+also immer auf der untersten. Solange darunter Boden war, fiel das niemandem auf; über den Wolken
+ist darunter nichts. Dann lag er im Leeren, war sofort wieder „aus", bekam den nächsten
+Strafschlag, wurde wieder dorthin gelegt – bis zur Höchstschlagzahl, ohne dass man etwas tun
+konnte. Fünf von sieben Bahnen mit einer Klippe waren betroffen, auch zwei im Uhrenturm. Jetzt
+trägt jeder Ruhepunkt seine Ebene mit (`restEbene`, `shotEbene`, und über das Netz das Feld `e`),
+und `sichererRuhepunkt` prüft vor dem Zurücklegen noch einmal nach: Liegt der gemerkte Punkt auf
+seiner Ebene doch nicht auf Boden, geht es zum Start des letzten Schlags und notfalls an den
+Abschlag. Geprüft wird es mit `scratchpad/absturz.mjs`, das auf jeder Bahn mit einer echten Klippe
+den Ball darüber schiebt und danach zweimal nachsieht: Liegt er auf Boden, ist wieder „Zielen" dran
+– und ist die Schlagzahl vier Sekunden später immer noch dieselbe?
+
+**Die Zielhilfe kommt ganz zum Schluss.** Sie wurde bis Fassung 74 beim Boden gezeichnet, also
+unter allem, was danach kam. Stand der Ball auf einer oberen Ebene, malte deren Scholle den Pfeil
+zu – man konnte ganz normal aufladen und schießen, sah nur nicht mehr, wohin. Das ist schlimmer als
+gar keine Hilfe, weil man den Fehler dann bei sich sucht. Jetzt wird sie nach Ball und Schollen
+gezeichnet. Geprüft wird das mit Pixeln: `scratchpad/aim.mjs` zählt die Punkte in der Farbe der
+Zielhilfe vor und nach dem Aufladen, auf der untersten Ebene wie auf einer oberen.
+
+**Maschinen, die zwischen zwei Ebenen stehen, auch.** Derselbe Fehler kam ein zweites Mal, diesmal
+bei der Seilbahn auf dem Gipfel: Man fährt auf die Wolke hinauf, und dort oben ist die Gondel weg.
+Ursache war wieder die Reihenfolge – eine Scholle, auf der der Ball steht, wird voll deckend
+gezeichnet und übermalte alles, was vorher dran war, auch die Gondel, die sichtbar über ihr hängen
+müsste. Betroffen ist jede Maschine, die nicht auf einer Ebene liegt, sondern zwei verbindet:
+**Seilbahn, Aufzug, Zahnstange**. Die drei werden auf mehrstöckigen Bahnen aus der normalen
+Tiefensortierung herausgenommen (`spanntEbenen`) und in `drawSpannendeMaschinen` gleich nach den
+Schollen gezeichnet, untereinander nach ihrer oberen Ebene sortiert. Auf einstöckigen Bahnen ändert
+sich nichts – dort gibt es keine Scholle, die stören könnte, und die normale Sortierung ist
+genauer. Geprüft wird es wie beim Wind mit einem Bildvergleich: `scratchpad/gondel_sicht.mjs`
+zeichnet dieselbe Bahn mit und ohne die Maschine, während der Ball oben steht, und zählt die
+Pixel, die sich unterscheiden.
+
+`tools/validate.mjs` prüft die beiden Fehler, die man im Spiel erst merkt, wenn man ratlos
+davorsteht: eine **Ebene, die von nirgends erreichbar ist**, und ein **Loch auf einer Ebene, zu der
+kein Weg führt**. „Erreichbar" heißt dabei ausdrücklich nicht „hat einen Aufzug von direkt
+darunter": Der Rohrturm führt mit einem Rohr von ganz unten auf die oberste Etage und von dort
+durch eine Luke auf die mittlere – seine mittlere Ebene hat gar keinen Aufstieg und ist trotzdem
+in Ordnung. Die Erreichbarkeit wird über alle Etagen zugleich gerechnet, und
+zwar in beide Richtungen: hinauf über einen Aufzug, hinunter über eine offene Kante oder eine
+Luke. Beides muss zusammen gerechnet werden, denn ein Sturz öffnet auch wieder eine untere Ebene –
+die Endkammer auf Bahn 11 hat unten keine Tür und ist trotzdem erreichbar, weil ein Steg darüber
+endet. Darum läuft die Prüfung nicht einmal von unten nach oben, sondern so lange, bis sich nichts
+mehr ändert. Dazu die Kleinigkeiten, die dasselbe bewirken: alle
+Karten müssen deckungsgleich sein, der Abschlag gehört ganz nach unten, das `H` darf nur einmal
+vorkommen, über jeder Turbine muss Boden sein (sonst fiele der Ball im selben Augenblick zurück),
+und auf der obersten Ebene hat eine Turbine nichts verloren. Für Luken dasselbe in Grün: Sie
+müssen auf ihrer Ebene auf der Bahn liegen (zu wären sie sonst kein Boden), dürfen nicht auf der
+untersten Ebene sitzen, und unter ihnen muss irgendwo Boden sein – sonst wäre die Luke ein Sturz
+ins Aus, und das wäre eine Falltür und keine Luke.
+
+**Der Rohrturm** treibt beides auf die Spitze. Sieben kleine Inseln, keine berührt die andere, und
+dazwischen gibt es nichts als sechs Kupferleitungen – auf dem Abschlagsfleck führt genau ein Weg
+weg, und das ist der Rohrmund. Dafür kennt die Karte jetzt **sechs** Buchstabenpaare (`A`/`a` bis
+`F`/`f`) statt drei; die Großbuchstaben sind begehbar, die Kleinbuchstaben Mauer. Zwei Leitungen
+bleiben auf ihrer Ebene, eine springt von ganz unten auf den obersten Steg, eine verbindet die
+beiden Stege oben, eine die beiden Galerien in der Mitte, und die letzte bringt von der Lochgalerie
+wieder hinauf. Das Loch liegt auf der mittleren Etage, und hinauf führt dorthin nichts: Man kommt
+nur von oben hinein, durch die Luke im Steg.
+
+Dabei fiel ein Loch in der Bahnprüfung auf: Ein Rohr, das auf **seiner** Ebene bleibt, zählte gar
+nicht als Verbindung – die Portalrechnung sieht nur die unterste Karte. Eine Insel, zu der nur so
+ein Rohr führt, hätte als unerreichbar gegolten. Jetzt zählen alle Rohre auf allen Ebenen.
+
+**Die Kamera schaut in Bahnrichtung, nicht aufs Loch.** Vorgabe ist der Blick aufs Loch; wo die
+Bahn woanders hinläuft, setzt `views` eine Blickzone. Im **Werkgang** des Zifferblatts etwa geht es
+nach Osten zur Turbine, das Blatt liegt aber im Süden – ohne Zone zielte man quer zur Gasse. Zwei
+Dinge waren dafür neu: Eine Zone darf sich mit `ebene` auf eine Etage beschränken (auf gestapelten
+Bahnen liegen Steg und Galerie im Bild übereinander, und man will dort in ganz verschiedene
+Richtungen schauen), und der Blickpunkt ist jetzt **das Ziel selbst** statt einer Richtung in der
+Ferne: Auf einer kleinen Insel steht man mal nördlich, mal westlich des Rohrmunds, und die Kamera
+soll sich danach richten. Geprüft wird das mit `scratchpad/blickpruef.mjs`: Es vergleicht auf jeder
+begehbaren Kachel jeder Ebene die Blickrichtung mit dem Gefälle der BFS-Distanzkarte und zählt, wo
+beides um mehr als 70° auseinanderliegt. Der Rohrturm ging dabei von 16 % der Kacheln auf 1 %,
+Federkammer, Glockenturm, Räderschacht und Turbinenhalle auf 0 %.
+
+**Warum der Kettenzug wieder weg ist.** Bis Fassung 73 stand an der Stelle des Aufzugs ein
+Kettenzug: Haken an einer umlaufenden Kette, die nur für einen Augenblick unten stehen. Wer die
+Stelle in diesem Fenster berührte, wurde mitgenommen, sonst nicht. Im Spiel traf das fast nie, und
+schlimmer: Wer danebenrollte, konnte nicht unterscheiden, ob er etwas falsch gemacht hatte oder nur
+Pech hatte. Eine Maschine, deren Misserfolg man sich nicht erklären kann, lehrt nichts – und die
+ganze Welt lebt davon, dass man aus dem Zusehen lernt. Der Aufzug macht dasselbe verlässlich; das
+Abpassen übernimmt die Zahnstange, wo man es wenigstens kommen sieht.
+
+**Turbine und Luke sind das Paar.** Die eine hebt eine Etage, die andere wirft eine hinunter, und
+beide fragen dasselbe wie der Rest der Welt: nicht wie fest, sondern wann. Vom Falltür-Hindernis
+des Schattenreichs unterscheidet sich die Luke genau in einem Punkt – die Falltür ist eine Strafe
+(Strafschlag, zurück zum Schlagstart), die Luke ist ein Weg. Wo es eine Ebene darunter gibt, ist
+Hinunterfallen kein Unglück mehr, sondern Zeitverlust.
+
+**Eine Testbahn gibt es nicht mehr.** Bis Fassung 71 hing am Ende der Welt eine schlichte
+„Maschinenprobe", die alle Wege nach oben nebeneinander zeigte und im Par der Welt mitzählte. Mit
+dem Umbau der Welt ist sie aufgelöst: Die Turbine steht jetzt auf Bahn 5 und 13, Aufzug und
+Luke auf 7 und 10, die Zahnstange auf 8 und 11, und die Rohre zwischen den Ebenen auf 12. Jede
+Maschine wird da eingeführt, wo sie gebraucht wird, und keine Bahn ist mehr bloß eine Probe.
+
+**Was noch fehlt:** Der Baumodus kann keine Ebenen – das kommt erst, wenn sich die Sache bewährt.
+Geteilte Bahnen mit mehreren Ebenen werden deshalb abgelehnt statt stillschweigend um ihre oberen
+Karten gebracht. Und gezeichnet werden ein paar Maschinen bisher nur auf der untersten Ebene
+richtig: Turbine, Hemmung, Pendel, Zeiger und das wandernde Loch liegen im Boden und kennen keine
+Etage. Darum stehen sie in den Karten auch immer unten; Aufzug, Zahnstange, Luke und Kupferrohr
+dagegen können auf jeder Ebene sitzen.
+
+### Das Zeigerwerk: drei Zeiger, drei Wirkungen
+
+Der **Zeigerarm** von Bahn 8 und 11 ist eine Mauer, die sich dreht – er schiebt den Ball vor sich
+her. Das **Zeigerwerk** der Schlussbahn ist das Gegenteil: drei Zeiger auf einer Achse, die gar
+nichts anstoßen, sondern **Felder** mit sich führen, so wie die Korallen im Korallenriff. Man
+rollt hindurch, und unterwegs passiert etwas.
+
+| Zeiger | Umlauf | Feld | Wirkung |
+|---|---|---|---|
+| Stundenzeiger, kurz und dick | `ZEIGERWERK_STUNDE` = 24 s | breit, blau | **bremst** – wer darin liegt, bleibt liegen |
+| Minutenzeiger, mittel | `ZEIGERWERK_MINUTE` = 12 s | mittel, grün | **stößt weg** – drückt den Ball von seiner Linie fort |
+| Sekundenzeiger, lang und dünn | `ZEIGERWERK_SEKUNDE` = 4 s | schmal, rot | **zieht an** – sammelt den Ball auf seine Linie und reißt ihn mit herum |
+
+Die drei Farben sind die der Korallen (blau bremst, grün stößt, rot zieht), damit niemand sie neu
+lernen muss. Alle drei starten auf zwölf Uhr und gehen im Uhrzeigersinn; `phase` verschiebt das
+ganze Werk, nicht die Zeiger gegeneinander – sonst ginge die Uhr falsch. Die Stärken stehen als
+`ZEIGERWERK_BREMSE`, `ZEIGERWERK_STOSS` und `ZEIGERWERK_ZUG` daneben.
+
+**Gemessen wird zur Zeigerlinie, nicht zur Mitte.** Ein Magnet ist ein Kreis um einen Punkt; hier
+liegt das Feld als langes Band unter dem Zeiger und wandert mit ihm. Erst das macht aus drei
+Feldern eine Uhr statt drei Pfützen.
+
+**Zug und Mitnahme wirken auf derselben Achse**, denn ein Zeiger ist ein Radius: „zur Linie hin"
+und „mit dem Zeiger herum" zeigen beide quer zum Zeiger. Deshalb ist der Mitnahmeanteil bewusst
+der schwächere von beiden. Wäre er stärker, würde der Ball nur weggeschleudert und nie
+eingesammelt – und der rote Zeiger unterschiede sich nicht mehr vom grünen.
+
+Fest ist an dem Ding nur die Nabe. Die Zeiger selbst haben keine Kollisionskante, sonst wäre das
+Zifferblatt mit drei rotierenden Mauern unspielbar. Damit man die Felder trotzdem kommen sieht,
+zeichnet `drawHandClockFloor` sie in den Boden: die Fläche blass eingefärbt, darin wandernde
+Striche, die die Richtung zeigen – nach außen beim Stoßen, zur Linie hin beim Ziehen, und beim
+Bremsen stehende Querstriche, die nur pulsieren.
+
+`tools/validate.mjs` prüft, dass die Nabe auf der Bahn liegt und dass der Kreis unter dem längsten
+Zeiger an allen 24 Prüfstellen Bahn ist. Läge ein Stück davon in der Mauer, zöge oder bremste dort
+etwas, das man nicht sieht.
+
+### Das Räderwerk ringsum
+
+Die Welt liegt in einer Maschine, und das soll man sehen. Alle Zahnräder der Uhrwerk-Paletten sind
+darum **Körper statt Scheiben**:
+
+- **Liegende Räder** (`gearFlat`, und das Räderwerk rings um die Bahn) sind ein `prism` über
+  `Renderer.zahnPoly`. Dadurch bekommt jeder einzelne Zahn seine eigene Seitenfläche, und von
+  schräg vorn sieht man echte Zähne mit Tiefe – eine flache Scheibe mit Zacken sieht von dort aus
+  wie Papier. Nabe und Speichen sitzen obenauf.
+- **Stehende Räder** auf Pfosten (`gear`) stehen senkrecht vor der Kamera, und eine senkrechte
+  Scheibe legt diese Projektion immer schief (siehe *Was die Projektion mit stehenden Scheiben
+  macht*). Ihre Tiefe wird darum nicht gerechnet, sondern gemalt: dieselbe Zahnform mehrfach
+  gegeneinander versetzt, von hinten dunkel nach vorn hell (`Renderer.zahnradScheibe`). Das liest
+  sich als Rad mit Dicke und bleibt aus jeder Kamerarichtung richtig.
+- **Der Aufziehkäfer** ist das Gefährt des Zahnradfelds: ein Messingkäfer mit Grünspan-Panzer, der
+  den Ball auf dem Rücken trägt, auf sechs Beinen über die Räder läuft und den Aufziehschlüssel
+  hinten mitdreht. Vorher war der Mitnehmer nur ein heller Fleck, und man sah dem fahrenden Ball
+  nicht an, dass er fährt. Der Käfer löst drei Dinge auf einmal: Man sieht, **dass** man mitfährt;
+  man sieht von weitem, **wo** der Mitnehmer gerade steht; und die Welt bekommt eine Figur, so wie
+  das Kolosseum seinen Gladiator hat. Er läuft nur, während das Feld fährt – steht es an einer
+  Station, bleibt er stehen und zuckt nur mit den Fühlern. Genau dann darf man einsteigen, und das
+  soll man ihm ansehen.
+- **Das Zahnradfeld** ist aus denselben Körpern gebaut und wird nach Tiefe sortiert gezeichnet,
+  damit sich die Räder richtig überdecken. An seiner Ein- und Ausstiegskachel steht ein `o`
+  (Klippe) in der Karte: Dort baut `level.js` weder Bande noch Kollisionskante. Ohne das stünde
+  quer vor dem Feld ein Geländer, und der getragene Ball führe mitten hindurch – er wird ja
+  gesetzt und nicht geschoben, also hält ihn keine Wand auf. Mit der offenen Kante sieht man,
+  wofür die Lücke da ist, und wer danebenrollt, fällt auch wirklich hinunter.
+- **Rings um die Bahn** stecken acht große Räder halb in der Erdscholle und drehen sich langsam
+  (`Renderer.drawGroundGears`). Sie liegen immer außerhalb der Bahn – der Ball berührt sie nie.
+  Damit sie nicht in der Luft hängen, reicht die Erdscholle in diesen Welten weiter als sonst
+  (Rand 3,6 statt 1,4 Kacheln).
+- **Im Hintergrund** laufen drei Ebenen ineinandergreifender Räder mit Wellen und Trägern, hinten
+  blass und langsam, vorn kräftiger und schneller. Tiefe kostet dort Fläche, und Fläche ist auf dem
+  Hintergrund teuer: Darum bekommt jedes Rad genau einen versetzten Körper und darüber die helle
+  Stirnfläche, nicht eine ganze Staffel.
+
+Gemessen im Prüfstand (weiche Bildausgabe, also strenger als jedes echte Gerät) kostet die
+Schlussbahn mit dem vollen Räderwerk rund fünf Prozent mehr Bildzeit als eine Bahn der Elfenwiese.
+
+### Die Gegenstände am Rand
+
+Die Deko neben der Bahn war lange eine flache Zeichnung im Bildschirmraum: ein Rechteck fürs Fass,
+ein Quadrat für die Kiste, ein Strich für den Laternenpfosten. Von schräg oben sah man ihr das
+sofort an, und beim Drehen der Kamera drehte sie sich nicht mit. Seit Fassung 65 sind die
+Gegenstände am Rand aus denselben Bausteinen gebaut wie Mauern und Türme – `prism` für gerade
+Körper, `frustum` für verjüngte:
+
+- **Fass** – drei Ringe übereinander geben den Bauch, zwei dunkle Eisenreifen halten ihn zusammen,
+  obendrauf der Deckel mit seinen Dauben.
+- **Kiste** – ein Kasten mit Latten auf dem Deckel und einer zweiten, kleineren Kiste schräg
+  obendrauf. Zwei Körper stehen lebendiger als einer.
+- **Standrohr** – Fuß, Schaft mit zwei genieteten Flanschen, ein Bogen nach der Seite, ein rotes
+  Handrad und Dampf aus dem Bogen.
+- **Laterne** – Pfosten mit Fuß, darauf der Käfig aus zwei Kegelstümpfen mit Streben, dazwischen
+  das Licht.
+- **Glocke** – der Turmstuhl ist gebaut: zwei Pfosten mit Füßen, das Joch darüber, zwei Streben.
+- **Turmuhr** – Sockel und Pfosten stehen als Körper in der Welt.
+
+Flach bleibt nur, was keine Seiten hat: Flammen, Dampf, Licht – und die Dinge, die hängen und
+schwingen. Die **Glocke** selbst und das **Zifferblatt** der Turmuhr sind weiter Zeichnungen im
+Bildschirmraum, denn beide sind stehende Scheiben, und die legt diese Projektion immer schief
+(siehe *Was die Projektion mit stehenden Scheiben macht*). Beim Zifferblatt wird die Tiefe deshalb
+gemalt statt gerechnet: derselbe Messingring mehrfach versetzt, von hinten dunkel nach vorn hell.
+
+Ein Fallstrick dabei, an dem der Glockenstuhl zuerst gescheitert ist: Ein Körper, der eine
+Bildschirmzeichnung einfassen soll, darf nicht einfach in Weltrichtung `x` versetzt werden – in
+dieser Projektion wandert er dann schräg weg, und die Pfosten stehen neben der Glocke statt links
+und rechts davon. Der Versatz muss entlang `(cos, −sin)` gehen: Genau der verschiebt auf dem
+Bildschirm waagerecht und sonst gar nicht.
+
+### Räumliche Deko in allen Welten
+
+Was im Uhrenturm mit Fass, Kiste und Laterne anfing, gilt jetzt für **alle** Gegenstände am Rand,
+in jeder Welt. Der Anlass ist derselbe geblieben: Solange man nicht dreht, fällt eine flache
+Zeichnung kaum auf – dreht man, bleibt ein Felsblock eine Scheibe, die sich mitdreht, und der
+ganze Raum wird wieder zum Bild.
+
+Dafür gibt es vier Bausteine neben `prism`, `frustum` und `walze`, gemacht für das, was Deko
+braucht – rund, unregelmäßig, schnell hingeschrieben, alle Maße in Kacheln:
+
+| Baustein | Wofür |
+|---|---|
+| `kegel` | Baumkrone, Tropfstein, Kristallspitze, Hexenhut. Die Spitze ist ein winziger Kreis statt eines Punktes, sonst flackert der Umriss beim Drehen. |
+| `saeule` | Stamm, Mast, Poller, Flaschenbauch, Leuchtturmring – Zylinder oder Kegelstumpf. |
+| `brocken` | Ein Fels. Der Umriss wird aus dem Startwert der Deko verzogen, also sieht jeder Stein anders aus und behält seine Form. |
+| `kugel` | Beere, Perle, Schädel, Wolkenballen. Eine Kugel sieht von jeder Seite gleich aus, darf also eine schattierte Scheibe bleiben – Mittelpunkt und Halbmesser kommen aber aus der Welt, nicht vom Bildschirm. |
+
+Dazu `ast` für gebogene Zweige, Wedel und Taue: eine Kette kurzer Walzen entlang einer Weltrichtung.
+Ein Palmwedel, der nach Norden zeigt, zeigt auch nach dem Drehen nach Norden.
+
+**Wo ein Gesicht hingehört, liegt es auf der Seite, die zur Kamera zeigt** – beim Steinkopf, beim
+Totempfahl, beim Schädel, beim Kürbis, beim Turmfenster. Dreht man herum, sieht man den
+Hinterkopf, und das ist richtig so. **Flach bleibt nur, was keine Seiten hat:** Flammen, Irrlichter,
+Leuchtfeuer, Rauch, der Schirm der Qualle. Die sitzen jetzt aber an einem Punkt im Raum statt an
+einem Punkt auf dem Bild.
+
+Zwei Dinge fielen erst auf, als die Deko Körper waren – vorher verzieh die flache Zeichnung sie:
+
+- **Deko stand neben der Erdscholle.** Gestreut wurde bis zwei Kacheln über die Karte hinaus, die
+  Scholle reicht aber nur 1,4 (in den Uhrwerk-Welten 3,6). Flach gezeichnet sah man das kaum; als
+  Körper mit Bodenschatten stehen 1123 Stück sichtbar in der Luft. `buildDecor` verwirft sie jetzt –
+  und zwar **nach** dem Ziehen der Zufallszahlen, sonst verschöbe sich die ganze Streuung aller
+  Welten. Geprüft wird es über alle 91 Bahnen mit Scholle (`scratchpad/randpruef.mjs`).
+- **Deko auf der Spielfläche sieht aus wie ein Hindernis.** Der Blumenbusch stand als grüner Hügel
+  mitten auf der Elfenwiese – man zielt darum herum, obwohl der Ball einfach hindurchrollt. Das ist
+  schlimmer als hässlich: Es ist eine Lüge über die Bahn. Die Streudeko hält sich von selbst
+  daran (`buildDecor` überspringt Bodenkacheln); von Hand gesetzte Deko nicht.
+  `scratchpad/aufbahn.mjs` zählt sie und nennt Welt, Bahn und Stelle.
+- **Die Blüten sahen aus wie Golfbälle.** Der Blumenbusch trug seine Blüten als kleine Kugeln mit
+  weißem Glanzpunkt – auf einer Minigolfbahn ist das kein Schönheitsfehler, sondern eine falsche
+  Ansage: Man sucht nach einem zweiten Ball. Blüten liegen jetzt flach in der Bodenebene, als
+  Teller mit dunklerem Herz. Der einzige weiße Ball auf dem Grün ist der Spielball.
+- **Die Tannen wurden schwarz.** `frustum` dunkelt die abgewandten Seiten selbst auf bis zu 0,68 ab.
+  Gibt man ihm schon eine abgedunkelte Farbe, bleibt nichts Helles übrig. Die Seitenfarbe eines
+  Kegels ist deshalb die **volle** Farbe – das Licht macht die Zeichnung, nicht die Palette.
+
+Zwei weitere Fehler beim Umbau selbst, beide lehrreich:
+
+- **`shade()` ließ sich nicht schachteln.** Es gab `rgb(...)` zurück; `prism`, `frustum` und `walze`
+  dunkeln die Farbe, die sie bekommen, aber selbst noch einmal ab und lasen daraus NaN – der ganze
+  Körper wurde schwarz. Die Korallen der Meereswelt standen als schwarze Büsche im Riff. `shade()`
+  liefert jetzt wieder Hex, und damit ist die ganze Klasse erledigt.
+- **Beim Ersetzen von Blöcken gingen Nachbarfunktionen verloren.** Zweimal: erst Rohr, Fass, Kiste
+  und Laterne, dann Krokodil, Stacheln, Tempeltor, Lianenrotor, Strudel, Wrack, Katapult und
+  Pyramide. So etwas fällt sonst erst auf, wenn jemand genau die eine Bahn öffnet. Dagegen steht
+  jetzt `scratchpad/deko_pruef.mjs`: Es prüft, dass jede Deko-Art in `drawDecor` eine Funktion hat,
+  die es auch gibt, dass jede in einer Bahn oder Palette benutzte Art dort vorkommt – und
+  allgemein, dass **jedes `this.xxx()` im Renderer eine Funktion findet**. Beide Male hätte das
+  sofort gemeldet.
+
+### Wie die Karten entstehen
+
+`tools/uhrenturm.py` baut die dreizehn Bahnen mit allen ihren Ebenen aus Rechtecken und Scheiben und schreibt
+`src/courses_clock.js`. Der Gewinn ist nicht die Tipparbeit, sondern die Prüfung: Das Skript hält
+jede Bahn schon beim Bauen gegen dieselben Regeln, die später `tools/validate.mjs` anlegt, und
+bricht mit einer klaren Meldung ab, wenn ein Punkt danebenliegt, den eine Maschine braucht – der
+Umkehrpunkt eines Pendels, das Ende eines Zahnradfelds, der Landepunkt einer Feder, jede Marke des
+Zifferblatts. Nach jedem Lauf gehören `node tools/validate.mjs` und
+`node tools/audit/audit.mjs clock` dazu.
+
+Wiederkehrende Bausteine des Skripts:
+
+- **`pendeltor`** – das Muster der Welt: eine Mauer mit einer einzigen Tür, davor ein Pendel, dessen
+  Linse in Ruhe genau in der Tür hängt und zu beiden Seiten darüber hinausschwingt. Zweimal je
+  Schwingung ist die Tür frei. Alle drei Punkte, die `validate.mjs` prüft (Ruhelage und beide
+  Umkehrpunkte), liegen dabei von selbst auf der Bahn.
+- **`zahnradfeld`, `federwerk`, `zeigerarm`, `zeigerwerk`, `hemmung`, `zifferblatt`, `wanderloch`,
+  `rohr`** – je ein Baustein, der seine eigenen Bedingungen prüft und die fertige JS-Zeile liefert.
+- **`turbine`, `kettenzug`, `zahnstange`** – die Aufzüge. Sie bekommen zwei Karten, die der eigenen
+  Ebene und die darüber, und prüfen beide: unten Bahn, oben Boden. Steht über einem Aufzug nichts,
+  fiele der Ball im selben Augenblick zurück – das fällt hier auf und nicht erst im Spiel.
+- **`luke`** – bekommt alle Karten und prüft, dass sie auf ihrer Ebene auf der Bahn liegt und dass
+  irgendwo darunter Boden ist. Sonst wäre sie ein Sturz ins Aus statt ein Weg nach unten.
+- **`rohr`** mit `ziel=(karte, ebene)` – ein Kupferrohr zwischen zwei Ebenen. Der Mund wird auf der
+  einen Karte gesucht, das Ende auf der anderen, und die Auswurfstelle muss dort Bahn sein.
+
+Am Ende prüft das Skript noch die ganze Bahn: genau ein `T` ganz unten, genau ein `H` über alle
+Ebenen zusammen, alle Karten deckungsgleich, für jede Ebene ein Aufstieg von der darunter, und
+keine Deko auf dem Fairway.
+
+
 ## Kostenlos als App aufs iPad oder Handy (GitHub Pages)
 
 Das Spiel ist eine Web-App: Manifest (`manifest.webmanifest`), App-Symbole (`icons/`) und ein Service Worker (`sw.js`) sorgen dafür, dass es sich wie eine App installieren lässt und offline läuft. Der Workflow `.github/workflows/pages.yml` veröffentlicht bei jedem Push automatisch auf GitHub Pages.
+
+**Das App-Zeichen ist ein Ausschnitt aus dem gemalten Titelbild** – dem hochkanten, weil das Wappen
+darin am größten liegt. Es gibt **zwei Zuschnitte**, und das ist kein Zufall: Das gewöhnliche Zeichen
+(`icon-192`, `icon-512`, `apple-touch-icon`) führt das Wappen bis fast an den Rand, denn iOS und
+Android runden es nur ab. Das **maskable**-Zeichen darf das nicht – davon schneidet Android einen
+Kreis aus, und was außerhalb der inneren 80 % liegt, ist weg. Dort sitzt dasselbe Wappen darum in
+einem weiteren Ausschnitt: 870 von 1170 Bildpunkten Breite, also 74 %. Gegengeprüft, indem beide
+Masken – Kreis und abgerundetes Quadrat – über die fertigen Zeichen gelegt wurden; das Wappen
+bleibt in beiden ganz.
+
+Die beiden 512er wiegen als PNG je gut 700 kB. Sie stehen darum **nicht** in der Vorratsliste des
+Service Workers: Gebraucht werden sie nur beim Einrichten auf dem Startbildschirm, nicht beim
+Spielen, und der `fetch`-Griff legt jede geholte Datei ohnehin ab. PNG bleibt es trotzdem – JPEG
+wäre viermal kleiner, aber das Zeichen ist das eine, was auf jedem Gerät sitzen muss, und für
+`apple-touch-icon` schreibt Apple PNG.
 
 Einmalig einrichten (auf github.com im Repository):
 1. **Settings → General → Danger Zone → Change visibility → Public** (GitHub Pages ist nur bei öffentlichen Repositories kostenlos).
@@ -643,7 +1534,7 @@ Höhenstufen: Eine Bahn kann ein Ziffernraster `heights` (0–9) und `hStep` ang
 Hindernis-Typen: `lightning` (Blitzfeld `w`×`h`: `warn` Sekunden Knistern, dann `strike` Sekunden Einschlag je `period`; wer dann in der Zone ist, auch fliegend, kassiert einen Strafschlag zurück zum Schlagstart), `updraft` (Aufwind-Zone: ein Ball mit mindestens `minSpeed` wird in Rollrichtung `land` Kacheln weit geflogen, Flugtempo `fly`), `trapdoor` (Falltür `w`×`h`, offen für den `open`-Anteil der `period`; wer darüberrollt oder darauf liegt, stürzt: Strafschlag zurück zum Schlagstart), `wandergate` (wanderndes Tor: Mauer mit gleitendem Durchlass, s. o.), `firetower` (Feuerturm: ein Feuerstrahl streicht über einen Bereich der Bahn und wieder zurück, s. o.), `imperialbox` (Kaiserloge: der Daumen des Kaisers öffnet und schließt eine Falltür, s. o.), `field` mit `style: 'dark'` (Schattenzone: der Ball ist darin fast unsichtbar), `bumper` (`style`: `mushroom`, `rock`, `crystal`, `coral`, `idol`, `orb`, `grave`, `eye`), `mover` (`style` u. a. `cart`, `cannonball`, `boulder`, `barrel`, `shark`, `wave`, `dragon`, `knight`, `gladiator` (dieselbe Figur wie der Ritter, nur in Sandfarben und Rot – Helm mit rotem Kamm und Rundschild), `guard`, `coconut`, `ghost`, `bat`, `stormcloud`), `ferry` (`style`: `cart`, `chariot` (Streitwagen – dieselbe Lore, nur anders gezeichnet: die Räder drehen sich nach dem Fahrfortschritt, sie stehen also still, solange der Wagen wartet), `boat`, `ship`, `balloon`, `airship`), `wave` (wandernde Welle, keine Mauer: schiebt einen ruhenden oder langsamen Ball mit `push` in ihrer Laufrichtung mit; ein schnellerer Ball bricht hindurch und behält dabei nur den Anteil `brake` seines Tempos), `spikes` (Stachelfalle: Platte `w`×`h`, Stacheln sind `up`-Anteil der `period` draußen und blockieren dann wie eine Mauer; ein Ball, der auf der Platte liegt, wenn sie hochkommen, wird aufgespießt: Strafschlag und zurück zum Start des letzten Schlags), `sharkjump` (Hai, der im Takt `period` quer über eine Bucht springt; `style: 'croc'` zeichnet ein Krokodil und einen Ball frisst, der währenddessen über die Zone fliegt; Fressen kostet einen Strafschlag – eine `inner`-Map mit `stomach: true` würde den Ball stattdessen dorthin schicken), `rotor` (auch als Pendel mit `swing`; `style: 'tentacle'` macht daraus eine Krake, `style: 'vine'` eine Liane), `windmill`, `gate` (periodisch oder mit `linked` an einen Schalter gekoppelt), `portal`, `boost`, `field`, `ramp`, `rail`, `wall`, `cannon` (schwenkende Kanone, `base`/`amp`/`speed`/`range`; `style: 'catapult'` zeichnet ein Katapult), `magnet` (`strength` > 0 zieht an, < 0 stößt ab, `slow` bremst; `style: 'coral'` zeichnet eine Koralle, `style: 'pearl'` eine Perle; `curse: 2.0` macht den Ball nach Berührung für den Rest der Bahn träge), `turntable` (Drehscheibe mit Auswurfrinne `exit` in Grad; `style: 'whirl'` zeichnet einen Strudel), `field` (`style`: `wind`, `current` für Unterwasser-Strömung, `slope` für Rampen zwischen Höhenstufen; `gust` macht aus Dauerwind Windstöße), `potion` (Schrumpftrank, `scale`/`duration`), `cauldron` (Hexentopf: nur aus der Luft zu treffen, schrumpft und spuckt Richtung `exit` aus), `switch` (Druckplatte, `target`/`duration`), `door` (Tür in die Innen-Map `inner` einer Bahn; `style: 'pyramid'` mit `px`/`py`/`base` zeichnet eine Stufenpyramide um die Tür, `style: 'wreck'` mit `px`/`py` ein Schiffswrack, dessen Leck die Tür ist, `style: 'temple'` ein Tempeltor).
 **Löwentor** (`liongate`): das einzige Hindernis, dessen Plätze nicht in der Hindernisliste stehen,
 sondern als Buchstaben in der Karte. Der Großbuchstabe ist der Eingang, der gleiche Kleinbuchstabe der
-Ausgang – `A`/`a`, `B`/`b`, `C`/`c`, mehrere Paare je Bahn erlaubt. In der Hindernisliste steht je Paar
+Ausgang – `A`/`a` bis `F`/`f`, also sechs Paare je Bahn (der Rohrturm braucht sie alle). In der Hindernisliste steht je Paar
 nur `{ type: 'liongate', pair: 'A', angle: 0 }`: `angle` (Grad, wie bei Rampe und Beschleuniger) sagt,
 in welche Richtung der Ausgang ausspuckt.
 
@@ -652,6 +1543,49 @@ wieder heraus – immer mit `LOEWENTOR_AUSWURF` in die eingestellte Richtung, ga
 hineinrollte. Damit bleibt planbar, wo er landet. Ist er langsamer, sperrt eine Wand quer vor der
 Toröffnung und er prallt ab. Beide Werte stehen als benannte Konstanten oben in
 `src/obstacles_legend.js` und lassen sich dort nachjustieren.
+
+**Kupferrohr** (`copperpipe`) benutzt dieselben Buchstaben und dasselbe `angle`, ist aber kein Tor,
+sondern eine **Fahrt** – seit Fassung 65 eine eigene Klasse und keine Abwandlung des Löwentors mehr:
+
+- **Man kommt immer hinein.** Kein Mindesttempo, keine Sperre davor. Wer den Rohrmund berührt, fährt
+  mit, auch wer nur hineintröpfelt. Das Rohr ist ein Weg, kein Prüfstein.
+- **Man sieht die Fahrt.** Der Ball verschwindet nicht, sondern fährt sichtbar durch die Leitung.
+  Erst am Rohrende wird er mit `LOEWENTOR_AUSWURF` ausgeworfen – die Landestelle bleibt also so
+  planbar wie vorher.
+- **Wie lange die Fahrt dauert, hängt am direkten Abstand der beiden Enden** (`ROHR_TEMPO` Kacheln
+  je Sekunde Luftlinie), nicht an der Länge des Umwegs. Sonst hinge die Spielzeit daran, wie die
+  Leitung verlegt ist – und das ist eine Frage der Optik, keine des Spiels. Der Bot-Durchlauf hat
+  das gleich bestätigt: Mit der Umwegzeit sprang Bahn 4 von Median 3 auf Median 7, weil das Pendel
+  hinter dem Rohrende nicht mehr im Takt stand. Mit der Luftlinienzeit ist sie wieder bei 3.
+- **Die Leitung läuft außen herum.** Sie verlässt die Bahn am Rohrmund, geht `ROHR_AUSSEN` Kacheln
+  über den Kartenrand hinaus, läuft dort neben der Karte entlang und kommt beim Rohrende wieder
+  herein. So liegt sie niemandem im Bild, man sieht sie über ihre ganze Länge, und es ist der Weg,
+  den eine Rohrpost in einem Haus auch nähme. Zur nächsten Kante geht es hinaus – dort ist der
+  Umweg am kürzesten und die Erdscholle trägt die Leitung noch.
+
+Gebaut ist sie wie echte Rohre: **gerade Läufe und rechtwinklige Bögen**, keine Diagonale, dazu
+Muffen an jedem Stoß (`ROHR_MUFFE`), Stützen darunter (`ROHR_STUETZE`) und ein Glanzstreifen auf
+dem Scheitel – der macht aus dem Zylinder erst Kupfer. Die Ecken sind mit `ROHR_ECKE` gerundet.
+
+Zwei Dinge, die beim Zeichnen wichtig sind:
+
+- Ein **gerader Lauf muss ein einziger Zylinder** sein. Zerlegt man ihn in Stücke, sieht man an
+  jedem Stoß den Deckel des nächsten Zylinders, und aus dem Rohr wird eine Perlenkette. Darum
+  zerlegt `bauWeg` den Weg nicht gleichmäßig, sondern in seine geraden Läufe und seine Bögen.
+- Ein **Bogen wird gar nicht aus Zylindern gebaut**, sondern als durchgehender Strang gezeichnet:
+  dunkle Kontur, Kupfer, Glanz. In der Kurve fielen die Deckel sonst am meisten auf.
+
+Jeder Lauf geht für sich in die Tiefensortierung – sonst läge die ganze Leitung entweder vor oder
+hinter allem, was sie überquert.
+
+**Den Ball sieht man während der Fahrt nicht.** Er steckt im Kupfer, und durch Kupfer schaut
+niemand – zu sehen ist nur, was man auch an einer echten Rohrpost sieht: eine glühende Stelle, die
+durch die Leitung wandert. Dazu gehört zweierlei: Der Ball wird gar nicht erst gezeichnet, und die
+Regel „Objekte, die vor dem Ball stehen, werden durchsichtig" gilt für ihn dann nicht – sonst risse
+ausgerechnet die Leitung ein Loch um ihn herum und verriete ihn doch.
+
+Das Löwentor der Arena bleibt davon unberührt: Dort ist das Mindesttempo der Reiz, hier wäre es nur
+im Weg.
 
 Der Eingangsbuchstabe ist begehbarer Boden (er steht dafür in `FLOOR_CHARS`), der Ausgang bewusst
 nicht: Als Nicht-Boden zieht die Bahnmauer von selbst eine Wand davor, und genau das soll ein Ausgang
@@ -864,7 +1798,10 @@ Sinnbilder, ein laufendes Spiel, die Rangliste und der Editor da sind.
 ## Projektstruktur
 
 ```
-index.html        Seite und HUD
+index.html        Seite, HUD, Ladebild und Startbild (beide laufen ohne JavaScript)
+icons/titelbild.jpg   gemaltes Titelbild des Startbildschirms (quer)
+icons/titelbild-hoch.jpg  dasselbe fürs Hochformat
+tools/auslieferung.mjs  prüft, ob alles, was die Seite braucht, auch ausgeliefert wird
 style.css         Oberfläche
 src/themes.js     Farbpaletten und Deko je Welt
 src/courses.js    die Bahnen des Märchenlands
@@ -880,19 +1817,19 @@ manifest.webmanifest, sw.js, icons/   Web-App: Installieren und offline spielen
 src/level.js      Karte → Kacheln, Mauern, Kollisionssegmente
 src/obstacles.js  bewegliche und statische Hindernisse
 src/obstacles_legend.js Blitzfeld, Aufwind, Falltür, Fallbeil, Augenturm, Löwentor
-src/physics.js    Ballphysik und Kollision
+src/physics.js    Ballphysik und Kollision (auch Ball gegen Ball, wenn mehrere zugleich rollen)
 src/render.js     isometrische Darstellung
 src/render_legend.js Optik der Legende-Welten (Hintergründe, neue Hindernisse und Stile)
 src/text.js       Eine Stelle für alle Eingaben: Namen und Bahnnamen filtern, Anzeige entschärfen
 src/share.js      Bahnen weitergeben: prüfen, über den Vermittler teilen, als Link verpacken
 src/version.js    Fassung und Ausgabe (Spiel oder Vorschau): Zahl, Speicher-Vorsatz und Themen-Marke – von Seite und Service Worker gelesen
-src/icons.js      Bedien-Sinnbilder: Material Symbols als eingebettete SVG-Pfade (Zurück, Kamera, Musik, Editor …)
+src/icons.js      Sinnbilder der Oberfläche: Material Symbols als eingebettete SVG-Pfade (Bedienung, Welten, Ränge, Wertungen)
 src/hats.js       Hüte für die Bälle: Zeichnungen und Vorschau fürs Menü
 src/net.js        Netzspiel: Raumcode und MQTT-Zugang für das Spiel zu mehreren
 src/best.js       Rangliste: Rekorde je Bahn und je Welt in drei Wertungen (Schläge, Zeit, Kombi), über alle Geräte geteilt
 src/sfx.js        Klangeffekte (WebAudio)
 src/music.js      Musik: je Welt ein erzeugter Klangteppich (WebAudio)
-src/worldmap.js   Weltkarte: die schwebenden Scheiben in 2,5D und die Orte der Welten
+src/worldmap.js   Weltkarte: Landkarte aus gerechneter Küste, Gelände je Biom und die Orte der Welten
 src/title.js      animierte Startbildschirm-Szene mit Tag-Nacht-Wechsel
 src/main.js       Spielablauf, Eingabe, Punkte
 ```

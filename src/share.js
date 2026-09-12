@@ -25,7 +25,12 @@ const Share = (() => {
   const TYPEN = new Set(['bumper', 'rotor', 'gate', 'mover', 'wind', 'ramp', 'boost', 'windmill',
     'cannon', 'magnet', 'turntable', 'potion', 'portal', 'wall', 'field', 'rail', 'wave',
     'sharkjump', 'door', 'cauldron', 'spikes', 'switch', 'trapdoor', 'guillotine', 'lightning',
-    'updraft', 'eyetower', 'ferry']);
+    'updraft', 'eyetower', 'ferry',
+    // Die drei Maschinen der Uhrwerkstadt – auch geteilte Bahnen dürfen sie benutzen
+    'gearlift', 'piston', 'hand',
+    // Zahnradfeld, Pendel und Federwerk des Uhrenturms
+    'gearfield', 'pendulum', 'springwork', 'copperpipe', 'escapement', 'sweephand', 'dial', 'wanderloch', 'handclock', 'turbine', 'luke', 'aufzug', 'zahnstange',
+    'windfahne', 'lawine', 'seilbahn', 'schneebruecke']);
   const W_MIN = 6, W_MAX = 48, H_MIN = 4, H_MAX = 36;
   const OBJ_MAX = 120, DEKOR_MAX = 120, FELDER_MAX = 24;
 
@@ -82,6 +87,13 @@ const Share = (() => {
     if ((platt.match(/T/g) || []).length !== 1) return nein('Die Bahn braucht genau einen Abschlag.');
     if ((platt.match(/H/g) || []).length !== 1)
       return nein('Die Bahn braucht genau ein Loch. Bahnen mit Innenraum lassen sich nicht teilen.');
+
+    /* Ebenen lassen sich noch nicht teilen: Der Baumodus kann sie nicht bauen, also kann eine
+       geteilte Bahn sie auch nicht ehrlich mitbringen. Die zweite Karte wird darum nicht etwa
+       stillschweigend weggeworfen – dann käme eine Bahn an, deren Loch auf einer Ebene läge, die
+       es nicht mehr gibt –, sondern die Bahn wird abgelehnt. Geprüft werden beide Schreibweisen
+       ('oben' für genau eine, 'ebenen' für beliebig viele) und der Ebenenabstand dazu. */
+    if (roh.oben != null || roh.ebenen != null || roh.ebeneZ != null) return nein('Bahnen mit mehreren Ebenen lassen sich noch nicht teilen.');
 
     const hindernisse = roh.obstacles == null ? [] : roh.obstacles;
     if (!Array.isArray(hindernisse) || hindernisse.length > OBJ_MAX) return nein('Zu viele Hindernisse.');

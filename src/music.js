@@ -31,6 +31,8 @@ const Music = (() => {
     storm: { root: 45, scale: MOLL, chords: [0, 4, 2, 5], bar: 5.2, pad: 'sawtooth', lead: 'sine', steps: 8, density: 0.26, lift: 21, gain: 0.13, drum: 'pauke' },
     // Schattenreich: phrygisch und düster, dazu eine ferne Grabglocke
     shadow: { root: 41, scale: PHRYGISCH, chords: [0, 1, 0, 6], bar: 5.6, pad: 'sawtooth', lead: 'sine', steps: 8, density: 0.22, lift: 21, gain: 0.13, drum: 'glocke' },
+    // Uhrwerkstadt: ein Ticken als Puls, dazu klare Quarten – die Stadt läuft im Takt
+    clock: { root: 48, scale: DORISCH, chords: [0, 3, 5, 4], bar: 4.0, pad: 'square', lead: 'triangle', steps: 8, density: 0.55, lift: 12, gain: 0.12, drum: 'puls' },
     // Titelbild und eigene Bahnen: ruhige Fassung des Märchenlands
     title: { root: 53, scale: DUR, chords: [0, 3, 4, 3], bar: 4.6, pad: 'triangle', lead: 'triangle', steps: 8, density: 0.35, lift: 14, gain: 0.13, drum: null },
   };

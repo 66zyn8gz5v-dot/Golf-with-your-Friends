@@ -22,7 +22,9 @@ const THEMES = {
     mover: { top: '#e08fb8', side: '#a4507f' },
     rotor: { top: '#e8c98a', side: '#a37a3c' },
     accent: '#ff7fd8', flag: '#ffd166',
-    autoDecor: ['mushroom', 'mushroom', 'mushroomBig', 'tree', 'crystal', 'lantern'],
+    // Im Pilzhain wachsen Pilze, keine Bäume: Der Laubbaum stand hier als Fremdkörper zwischen
+    // den Hüten. Kristall und Laterne bleiben – die gehören zum Hain, sind aber keine Bäume.
+    autoDecor: ['mushroom', 'mushroom', 'mushroomBig', 'mushroom', 'mushroomBig', 'crystal', 'mushroom', 'lantern'],
   },
   forge: {
     atmo: 'embers',
@@ -350,5 +352,128 @@ const THEMES = {
     accent: '#ffd45e', flag: '#d4342c',
     rails: 'groove',   // der Streitwagen läuft in Rillen im Sand, nicht auf Eisenschienen
     autoDecor: ['pillarLight', 'bannerRed', 'pillarLight', 'urn', 'obelisk', 'brazier'],
+  },
+
+  /* ---------- Uhrwerkstadt ----------
+     Drei Paletten für eine Welt, die in der Dämmerung spielt. Sie halten bewusst Abstand zum
+     'clockwork' des Tüftlerreichs: Das ist eine warme Werkstatt bei Kerzenlicht, die Stadt hier ist
+     kühl und blau, und das Messing leuchtet dagegen. */
+  clocktown: { // Gassen und Dächer der Stadt: Kupferdächer, Pflaster, Gaslaternen, blaue Abendluft
+    atmo: 'sparks',
+    sky: ['#101a2e', '#3c4a6b'], ground: '#3a4056', groundEdge: '#20253a',
+    floor: ['#8d8577', '#847c6e'], sand: '#b9ac8e', ice: '#c8ecff', snow: '#f1f7ff',
+    water: '#2f5f9e', lava: '#ff8a2f',
+    wall: { top: '#4fb59b', side: '#276b5c', style: 'brass' },   // Grünspan auf Kupferdächern
+    block: { top: '#575d70', side: '#31364a' },
+    mover: { top: '#c9903f', side: '#7a531d' },
+    rotor: { top: '#d8ab52', side: '#7e5a22' },
+    accent: '#ffc46b', flag: '#e8624a', stars: true, gears: true,
+    autoDecor: ['pipe', 'barrel', 'crate', 'gear', 'lantern', 'barrel'],
+  },
+  boiler: { // Kesselhaus: Eisen, Rohre, Kohleglut. Das einzige Warme in der Welt.
+    atmo: 'embers',
+    sky: ['#180f0c', '#4a2416'], ground: '#332a26', groundEdge: '#1a1512',
+    floor: ['#7a6552', '#715d4b'], sand: '#b8a481', ice: '#c8ecff', snow: '#f1f7ff',
+    water: '#2f6f9e', lava: '#ff7a24',
+    wall: { top: '#a8763a', side: '#5e3f18', style: 'brass' },
+    block: { top: '#4e4740', side: '#2b2722' },
+    mover: { top: '#b8843f', side: '#6b4a25' },
+    rotor: { top: '#c08a3e', side: '#6e4a1c' },
+    accent: '#ff9a3d', flag: '#ff9a3d', gears: true,
+    autoDecor: ['pipe', 'barrel', 'brazier', 'pipe', 'gear', 'crate'],
+  },
+  escapement: { // Im großen Turm: nachtblaues Gehäuse, dahinter das Zifferblatt, überall Messing
+    atmo: 'sparks',
+    sky: ['#080c18', '#1b2440'], ground: '#1d2338', groundEdge: '#0d1120',
+    floor: ['#48506b', '#414962'], sand: '#a89c82', ice: '#c8ecff', snow: '#f1f7ff',
+    water: '#2a5590', lava: '#ff8a2f',
+    wall: { top: '#e0b45c', side: '#8a6624', style: 'brass' },
+    block: { top: '#3a4159', side: '#20263a' },
+    mover: { top: '#d8ab52', side: '#7e5a22' },
+    rotor: { top: '#e6c56e', side: '#8a6624' },
+    accent: '#ffe08a', flag: '#7fd8ff', gears: true,
+    autoDecor: ['gearFlat', 'gear', 'pipe', 'gearFlat', 'lantern'],
+  },
+
+  /* ---------------------------------------------------------------------------
+     Der Schneeberg. Eine Welt, eine Bahn nach oben: Die vier Paletten sind die vier Abschnitte
+     des Aufstiegs, und sie werden von unten nach oben kälter, härter und heller. Am Fuß steht
+     noch Wald und die Sonne kommt durch; auf dem Grat ist der Himmel fast schwarzblau und der
+     Boden nur noch Windharsch. Wer die Bilder nebeneinanderlegt, soll sehen, wie weit er
+     gekommen ist.
+
+     Zwei Bodenzeichen bekommen hier ihre eigene Bedeutung: 's' ist Tiefschnee (bremst) und 'i'
+     ist blankes Eis (rutscht). Beide gibt es in der Engine längst - sie brauchen nur die
+     richtigen Farben.
+     --------------------------------------------------------------------------- */
+  snowfoot: {
+    hangStil: 'schnee',   // Schrägen als Schneerinne, nicht als Erdrampe // Am Fuß: Nadelwald, festgetretener Schnee, Mittagslicht über den Wipfeln
+    atmo: 'snow',
+    sky: ['#9fc6ee', '#e8f3ff'], ground: '#cfdcea', groundEdge: '#9fb2c8', cliff: '#8fa2ba',
+    floor: ['#f4f9ff', '#e8f1fb'], sand: '#dfe9f5', ice: '#bfe6ff', snow: '#ffffff',
+    water: '#3f7fc8', lava: '#ff7a3d',
+    wall: { top: '#e9f2fb', side: '#8aa3bd', style: 'stone' },
+    block: { top: '#b9cadd', side: '#6d8199' },
+    mover: { top: '#e4eefa', side: '#93a9c1' },
+    rotor: { top: '#f0f6ff', side: '#9db3ca' },
+    accent: '#4fb0ff', flag: '#ff5a5a',
+    blockStil: 'fels',
+    autoDecor: ['pineSnow', 'pineSnow', 'pineSnow', 'rockSnow', 'pineSnow', 'pineSnow', 'rockSnow', 'windsock'],
+  },
+  snowrock: {
+    hangStil: 'schnee',   // Schrägen als Schneerinne, nicht als Erdrampe // Felsband: die Bäume bleiben unten, der Fels tritt hervor, Schnee nur in den Rinnen
+    atmo: 'snow',
+    sky: ['#6d9bd0', '#cfe3f7'], ground: '#8c94a4', groundEdge: '#5b6373', cliff: '#6a7382',
+    floor: ['#e2ecf7', '#d3e1f0'], sand: '#c9d6e4', ice: '#b0dfff', snow: '#f6fbff',
+    water: '#356fb4', lava: '#ff7a3d',
+    wall: { top: '#b6bfcc', side: '#5e6774', style: 'stone' },
+    block: { top: '#98a2b1', side: '#525b68' },
+    mover: { top: '#dce6f2', side: '#7f8b9b' },
+    rotor: { top: '#e6eef8', side: '#8793a3' },
+    accent: '#5ec2ff', flag: '#ff5a5a',
+    blockStil: 'fels',
+    autoDecor: ['rockSnow', 'rockSnow', 'rockSnow', 'pineSnow', 'rockSnow', 'pineSnow', 'crystalBlue', 'windsock'],
+  },
+  glacier: {
+    hangStil: 'schnee',   // Schrägen als Schneerinne, nicht als Erdrampe // Gletscher: blankes Blaueis, Spalten, kaltes Streiflicht
+    atmo: 'blizzard',
+    sky: ['#2f5f9e', '#a9d7f5'], ground: '#7fb6dd', groundEdge: '#3f7aae', cliff: '#5f9ac8',
+    floor: ['#d8f0ff', '#c6e7ff'], sand: '#cfe3f0', ice: '#9fdcff', snow: '#f2fbff',
+    water: '#1f5fae', lava: '#ff7a3d',
+    wall: { top: '#d6f2ff', side: '#5ba3d8', style: 'ice' },
+    block: { top: '#a8daf6', side: '#4a8dc4' },
+    mover: { top: '#dff5ff', side: '#6aabdc' },
+    rotor: { top: '#e8faff', side: '#78b6e4' },
+    accent: '#8fe8ff', flag: '#ff5a5a', stars: false,
+    blockStil: 'fels',
+    autoDecor: ['crystalBlue', 'crystalBlue', 'crystalBlue', 'rockSnow', 'crystalBlue', 'rockSnow', 'crystalBlue', 'windsock'],
+  },
+  summit: {
+    hangStil: 'schnee',   // Schrägen als Schneerinne, nicht als Erdrampe // Gipfelgrat: dünne Luft, fast schwarzblauer Himmel, Windharsch, Sterne am Tag
+    atmo: 'blizzard',
+    sky: ['#122a5c', '#7fb4e8'], ground: '#b9cbdd', groundEdge: '#7b8ea3', cliff: '#8fa3b8',
+    floor: ['#f7fbff', '#eaf3fd'], sand: '#dbe7f2', ice: '#b6e6ff', snow: '#ffffff',
+    water: '#2a5fa8', lava: '#ff7a3d',
+    wall: { top: '#f2f8ff', side: '#8ba2b9', style: 'ice' },
+    block: { top: '#c8d8e8', side: '#76889b' },
+    mover: { top: '#eef5fd', side: '#90a5ba' },
+    rotor: { top: '#f6fbff', side: '#9ab0c5' },
+    accent: '#9fe0ff', flag: '#ff5a5a', stars: true, ebeneStil: 'wolke',
+    blockStil: 'fels',
+    autoDecor: ['rockSnow', 'rockSnow', 'cloud', 'crystalBlue', 'rockSnow', 'cloud', 'crystalBlue', 'windsock'],
+  },
+  cloud: {
+    hangStil: 'schnee',   // Schrägen als Schneerinne, nicht als Erdrampe // Über den Wolken: nichts mehr fest außer dem, worauf man steht
+    atmo: 'none',
+    sky: ['#3d74c4', '#ffe3ef'], ground: '#f2f7ff', groundEdge: '#c4d6ee', cliff: '#d6e4f6',
+    floor: ['#ffffff', '#f0f6ff'], sand: '#e4ecf7', ice: '#c8ecff', snow: '#ffffff',
+    water: '#5fb0ff', lava: '#ff7a3d',
+    wall: { top: '#ffffff', side: '#bcd0e8', style: 'stone' },
+    block: { top: '#e6eefb', side: '#a9c0dd' },
+    mover: { top: '#ffffff', side: '#c4d6ee' },
+    rotor: { top: '#ffffff', side: '#cddcf0' },
+    accent: '#ffd166', flag: '#ff4f6d', clouds: true, floating: true, ebeneStil: 'wolke',
+    blockStil: 'fels',
+    autoDecor: ['cloud', 'cloud', 'cloud', 'cloud', 'cloud', 'cloud', 'cloud', 'windsock'],
   },
 };

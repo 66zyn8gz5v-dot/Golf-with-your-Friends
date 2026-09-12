@@ -10,9 +10,14 @@ const Editor = (deps) => {
     ['boost', 'Beschleuniger'], ['windmill', 'Windmühle'], ['cannon', 'Kanone'], ['magnet', 'Magnet'], ['turntable', 'Drehscheibe'], ['potion', 'Schrumpftrank'],
     ['ferry', 'Fähre'], ['rail', 'Schiene'], ['wave', 'Welle'], ['sharkjump', 'Hai (springt)'], ['spikes', 'Stacheln'],
     ['updraft', 'Aufwind'], ['lightning', 'Blitz'], ['guillotine', 'Fallbeil'], ['eyetower', 'Turm des Auges'], ['switch', 'Schalter'],
+    // Die drei Maschinen der Uhrwerkstadt
+    ['gearlift', 'Zahnradaufzug'], ['piston', 'Dampfkolben'], ['hand', 'Zeiger'],
+    ['gearfield', 'Zahnradfeld'], ['pendulum', 'Pendel'], ['springwork', 'Federwerk'],
+    ['escapement', 'Hemmung'], ['sweephand', 'Zeigerarm'], ['dial', 'Zifferblatt'],
+    ['handclock', 'Zeigerwerk'],
     ['portal', 'Portal (2× tippen)'], ['wall', 'Bande (2× tippen)'],
   ];
-  const THEME_LABELS = { meadow: 'Elfenwiese', mushroom: 'Pilzhain', forge: 'Zwergenschmiede', forest: 'Zauberwald', dragon: 'Drachenhöhle', ice: 'Eisgrotte', sky: 'Wolkenburg', clockwork: 'Uhrwerk', witch: 'Hexenwald', hut: 'Hexenhütte', reef: 'Korallenriff', volcano: 'Vulkan', palace: 'Wüstenpalast', harbor: 'Piratenbucht', desert: 'Wüste', tomb: 'Grabkammer', castle: 'Burgberg', deck: 'Piratendeck', wreck: 'Schiffswrack', belly: 'Haimagen', jungle: 'Dschungel', temple: 'Tempelhalle', storm: 'Sturmhimmel', fortress: 'Sturmfestung', shadow: 'Schattenreich', throne: 'Thronsaal', darksea: 'Totensee', ghostship: 'Totenschiff' };
+  const THEME_LABELS = { meadow: 'Elfenwiese', mushroom: 'Pilzhain', forge: 'Zwergenschmiede', forest: 'Zauberwald', dragon: 'Drachenhöhle', ice: 'Eisgrotte', sky: 'Wolkenburg', clockwork: 'Uhrwerk', witch: 'Hexenwald', hut: 'Hexenhütte', reef: 'Korallenriff', volcano: 'Vulkan', palace: 'Wüstenpalast', harbor: 'Piratenbucht', desert: 'Wüste', tomb: 'Grabkammer', castle: 'Burgberg', deck: 'Piratendeck', wreck: 'Schiffswrack', belly: 'Haimagen', jungle: 'Dschungel', temple: 'Tempelhalle', storm: 'Sturmhimmel', fortress: 'Sturmfestung', shadow: 'Schattenreich', throne: 'Thronsaal', darksea: 'Totensee', ghostship: 'Totenschiff', clocktown: 'Uhrwerkstadt', boiler: 'Kesselhaus', escapement: 'Turmkammer' };
   const HINTS = {
     tile: 'Tippen oder ziehen, um Kacheln zu malen.', T: 'Tippen: Abschlag setzen.', H: 'Tippen: Loch setzen.',
     'h+': 'Ziehen hebt den Boden um eine Stufe. Der Ball rollt Hänge hinunter.',
@@ -29,6 +34,13 @@ const Editor = (deps) => {
     lightning: 'Blitz schlägt im Takt ein – erst das Warnzeichen, dann der Schlag.',
     guillotine: 'Fallbeil fällt im Takt. Nie darunter liegen bleiben.',
     eyetower: 'Der Blick wandert im Kreis. Wer darin liegen bleibt, fliegt zurück.',
+    gearfield: 'Zahnradfeld trägt den Ball ans andere Ende. „Drehen“ kippt die Laufrichtung.',
+    pendulum: 'Pendel schwingt quer über die Bahn und stößt den Ball weg. Getippt wird die Aufhängung.',
+    springwork: 'Federwerk fängt den Ball und schleudert ihn davon. „Drehen“ ändert die Schussrichtung.',
+    escapement: 'Hemmung: zwei Klinken, immer ist eine Seite offen. „Drehen“ kippt den Durchlass.',
+    sweephand: 'Zeigerarm streicht über eine runde Fläche und schiebt den Ball mit. „Drehen“ versetzt ihn.',
+    dial: 'Zifferblatt: das Loch springt im Takt zur nächsten Stundenmarke. Das „H“ gehört auf die Marke oben.',
+    handclock: 'Zeigerwerk: drei Zeiger, jeder dreht anders schnell – blau bremst, grün stößt weg, rot zieht mit.',
     switch: 'Schalter öffnet ein Fallgatter mit demselben Ziel-Buchstaben („Drehen“ wechselt A/B).', wall: 'Erst den Anfang, dann das Ende der Bande antippen.',
     delete: 'Tippen: Objekt in der Nähe löschen.', rotate: 'Tippen: Objekt in der Nähe drehen (Richtung, Achse, Anziehen/Abstoßen).', pan: 'Ziehen: Ansicht verschieben.',
   };
@@ -153,12 +165,32 @@ const Editor = (deps) => {
       case 'guillotine': return { type: 'guillotine', x, y, w: 0.35, h: 2, period: 5, phase: 0, hold: 0.32 };
       case 'eyetower': return { type: 'eyetower', x, y, r: 1.1, range: 9, fov: 0.6, speed: 0.42, phase: 0 };
       case 'switch': return { type: 'switch', x, y, r: 0.55, duration: 14, target: 'A' };
+      /* Uhrwerkstadt. Der Aufzug trägt in Richtung 'angle' – der Einstieg liegt r Kacheln davor,
+         der Ausstieg r dahinter. Sinnvoll ist er da, wo hinter ihm eine Höhenstufe beginnt. */
+      case 'gearlift': return { type: 'gearlift', x, y, r: 1.8, angle: 0, speed: 1.0472, zaehne: 8, phase: 0 };
+      case 'piston': return { type: 'piston', x, y, w: 1.2, h: 1.2, angle: 0, hub: 2.4, period: 4, phase: 0 };
+      case 'hand': return { type: 'hand', x, y, len: 2.6, speed: 1.0472, schub: 1.5, phase: 0 };
+      /* Zahnradfeld trägt wie eine Lore von einem Ende zum anderen, das Pendel schwingt quer
+         über die Bahn (x/y ist die Aufhängung), das Federwerk schleudert wie eine Kanone. */
+      case 'gearfield': return { type: 'gearfield', x0: x - 3, y0: y, x1: x + 3, y1: y, wait: 2.2, travel: 3.2, r: 0.9, zaehne: 10 };
+      case 'pendulum': return { type: 'pendulum', x, y: Math.max(0.5, y - 3), len: 3, amp: 55, ruhe: 90, phase: 0, w: 1.2, h: 1.2 };
+      case 'springwork': return { type: 'springwork', x, y, base: 0, amp: 0.45, speed: 0.9, range: 8, catchR: 0.7 };
+      /* Die Hemmung braucht nur Lage und Breite; ihr Takt steht als Konstante im Code.
+         Das Kupferrohr steht nicht in dieser Liste: Es braucht zwei Buchstaben auf der Karte
+         und lässt sich darum nur im Code setzen – wie das Löwentor. */
+      case 'escapement': return { type: 'escapement', x, y, w: 3, h: 0.45, phase: 0 };
+      /* Zeigerarm und Zifferblatt gehen beide auf ihrer eigenen Konstante; einzustellen sind
+         nur Ort, Radius und Phase. Das Zifferblatt verschiebt das Loch der Bahn - es braucht
+         darum ein 'H' auf der ersten Marke, sonst hat die Bahn ohne laufende Uhr kein Ziel. */
+      case 'sweephand': return { type: 'sweephand', x, y, r: 4.5, thick: 0.24, phase: 0 };
+      case 'dial': return { type: 'dial', x, y, r: 5, marken: 12, phase: 0 };
+      case 'handclock': return { type: 'handclock', x, y, r: 5, phase: 0 };
       default: return null;
     }
   }
   function anchors(o) {
     if (o.type === 'field' || o.type === 'ramp' || o.type === 'boost') return [[o.x + o.w / 2, o.y + o.h / 2]];
-    if (o.type === 'mover' || o.type === 'ferry' || o.type === 'wave') return [[o.x0, o.y0], [o.x1, o.y1], [(o.x0 + o.x1) / 2, (o.y0 + o.y1) / 2]];
+    if (o.type === 'mover' || o.type === 'ferry' || o.type === 'wave' || o.type === 'gearfield') return [[o.x0, o.y0], [o.x1, o.y1], [(o.x0 + o.x1) / 2, (o.y0 + o.y1) / 2]];
     if (o.type === 'rail') return [[o.x0, o.y], [o.x1, o.y], [(o.x0 + o.x1) / 2, o.y]];
     if (o.type === 'spikes' || o.type === 'updraft') return [[o.x + o.w / 2, o.y + o.h / 2]];
     if (o.type === 'wall') return [[o.x0, o.y0], [o.x1, o.y1], [(o.x0 + o.x1) / 2, (o.y0 + o.y1) / 2]];
@@ -194,6 +226,15 @@ const Editor = (deps) => {
       case 'spikes': case 'updraft': case 'lightning': case 'guillotine': { const w = o.w; o.w = o.h; o.h = w; break; }
       case 'eyetower': o.phase = Math.round((((o.phase || 0) + Math.PI / 2) % (Math.PI * 2)) * 100) / 100; break;
       case 'switch': o.target = o.target === 'A' ? 'B' : 'A'; break;
+      case 'gearlift': case 'piston': o.angle = cyc(o.angle || 0); break;
+      case 'hand': o.speed = -o.speed; break;
+      // Zahnradfeld kippt wie die Fähre, das Pendel dreht seine Ruhelage, das Federwerk seine Schussrichtung
+      case 'gearfield': { const cx = (o.x0 + o.x1) / 2, cy = (o.y0 + o.y1) / 2, L = Math.hypot(o.x1 - o.x0, o.y1 - o.y0) / 2;
+        if (o.y0 === o.y1) { o.x0 = o.x1 = cx; o.y0 = cy - L; o.y1 = cy + L; } else { o.y0 = o.y1 = cy; o.x0 = cx - L; o.x1 = cx + L; } break; }
+      case 'pendulum': o.ruhe = cyc(o.ruhe == null ? 90 : o.ruhe); break;
+      case 'escapement': { const w = o.w; o.w = o.h; o.h = w; break; }
+      case 'sweephand': case 'dial': case 'handclock': o.phase = Math.round((((o.phase || 0) + 0.25) % 1) * 100) / 100; break;
+      case 'springwork': o.base = Math.round((((o.base || 0) + Math.PI / 2) % (Math.PI * 2)) * 1000) / 1000; break;
       default: return false;
     }
     return true;

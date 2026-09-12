@@ -360,49 +360,86 @@ Object.assign(Renderer.prototype, {
     const fy = py + D * 0.4, o = [[px - 0.8, fy, 0], [px - 0.8, fy, 1.7], [px, fy, 2.25], [px + 0.8, fy, 1.7], [px + 0.8, fy, 0]];
     ctx.fillStyle = '#04030a'; ctx.beginPath(); o.forEach((q, i) => { const r = this.proj(q[0], q[1], q[2] + 0.01); i ? ctx.lineTo(r[0], r[1]) : ctx.moveTo(r[0], r[1]); }); ctx.closePath(); ctx.fill();
     ctx.strokeStyle = crypt ? '#c58bff' : '#7fd8ff'; ctx.lineWidth = Math.max(1.5, s * 0.06); ctx.stroke();
-    if (crypt) { const [kx, ky] = this.proj(px, fy - 0.05, H + 0.35); this.spriteSkull(ctx, kx, ky + s * 0.2, s * 0.9); }
+    if (crypt) this.spriteSkull(ctx, { x: px, y: fy - 0.05, z: H + 0.1, s: 0.9 });
     else { ctx.fillStyle = 'rgba(255,228,94,0.85)'; const [gx, gy] = this.proj(px, fy - 0.05, H + 0.35); ctx.beginPath(); ctx.moveTo(gx - s * 0.1, gy - s * 0.25); ctx.lineTo(gx + s * 0.08, gy - s * 0.02); ctx.lineTo(gx - s * 0.02, gy - s * 0.02); ctx.lineTo(gx + s * 0.1, gy + s * 0.25); ctx.lineTo(gx - s * 0.08, gy); ctx.lineTo(gx + s * 0.02, gy); ctx.closePath(); ctx.fill(); }
     for (const side of [-1, 1]) this.spriteBrazier(ctx, { x: px + side * (Wd / 2 + 0.1), y: fy + 0.2, s: 0.9 }, t, crypt ? ['#a24bff', '#e0b8ff', '170,90,255'] : ['#4fc3ff', '#b7ecff', '80,190,255']);
   },
 
   /* ---------- Dekos ---------- */
-  spriteGhostLight(ctx, sx, sy, s, d, t) {
-    const yy = sy - s * (0.9 + 0.15 * Math.sin(t * 1.7 + sx)), a = 0.5 + 0.4 * Math.abs(Math.sin(t * 1.1 + (d.seed || 0) * 6));
-    const g = ctx.createRadialGradient(sx, yy, 0, sx, yy, s * 0.7); g.addColorStop(0, `rgba(190,140,255,${a})`); g.addColorStop(1, 'rgba(190,140,255,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(sx, yy, s * 0.7, 0, TAU); ctx.fill();
-    ctx.fillStyle = `rgba(240,225,255,${a})`; ctx.beginPath(); ctx.arc(sx, yy, s * 0.12, 0, TAU); ctx.fill();
+  /* Irrlicht: reines Licht. Es bleibt ein Farbverlauf – aber es schwebt jetzt an einem Punkt im
+     Raum, nicht an einem Punkt auf dem Bild. */
+  spriteGhostLight(ctx, d, t) {
+    const k = d.s, a = 0.5 + 0.4 * Math.abs(Math.sin(t * 1.1 + (d.seed || 0) * 6));
+    const [sx, sy] = this.proj(d.x, d.y, (d.z || 0) + k * (0.9 + 0.15 * Math.sin(t * 1.7 + d.x)));
+    const r = this.scale * k * 0.7;
+    const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, r); g.addColorStop(0, `rgba(190,140,255,${a})`); g.addColorStop(1, 'rgba(190,140,255,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(sx, sy, r, 0, TAU); ctx.fill();
+    ctx.fillStyle = `rgba(240,225,255,${a})`; ctx.beginPath(); ctx.arc(sx, sy, r * 0.17, 0, TAU); ctx.fill();
   },
-  spriteCloudDark(ctx, sx, sy, s, t) {
-    const yy = sy + Math.sin(t * 0.8 + sx) * s * 0.1;
-    ctx.fillStyle = 'rgba(70,76,110,0.9)';
-    ctx.beginPath(); ctx.ellipse(sx, yy, s * 1.1, s * 0.4, 0, 0, TAU); ctx.ellipse(sx - s * 0.5, yy - s * 0.1, s * 0.6, s * 0.35, 0, 0, TAU); ctx.ellipse(sx + s * 0.45, yy - s * 0.15, s * 0.7, s * 0.4, 0, 0, TAU); ctx.fill();
-    ctx.fillStyle = 'rgba(120,128,165,0.6)'; ctx.beginPath(); ctx.ellipse(sx - s * 0.2, yy - s * 0.25, s * 0.55, s * 0.22, 0, 0, TAU); ctx.fill();
+  /* Gewitterwolke: wie die helle Wolke ein Haufen Kugeln, nur dunkel und mit heller Oberkante. */
+  spriteCloudDark(ctx, d, t) {
+    const k = d.s, z = (d.z || 0) + k * 0.5 + Math.sin(t * 0.8 + d.x) * k * 0.1;
+    const ballen = [[0, 0, 0, 0.62], [-0.55, 0.16, -0.06, 0.42], [0.5, -0.14, -0.04, 0.46],
+                    [0.12, 0.5, -0.08, 0.36], [-0.14, -0.48, -0.06, 0.34], [-0.2, 0, 0.22, 0.4]];
+    ballen.map(b => ({ b, tiefe: this.depth(d.x + b[0] * k, d.y + b[1] * k) }))
+      .sort((a, b) => a.tiefe - b.tiefe)
+      .forEach(({ b }, i) => this.kugel(ctx, d.x + b[0] * k, d.y + b[1] * k, z + b[2] * k, b[3] * k,
+        i === 5 ? 'rgba(150,158,195,0.95)' : 'rgba(110,118,155,0.95)', 'rgba(70,76,110,0.92)', 'rgba(44,48,76,0.9)'));
   },
-  spriteLightningRod(ctx, sx, sy, s, t) {
-    this.shadow(ctx, sx, sy, s * 0.35);
-    ctx.fillStyle = '#4e526d'; ctx.beginPath(); ctx.moveTo(sx - s * 0.25, sy); ctx.lineTo(sx + s * 0.25, sy); ctx.lineTo(sx + s * 0.1, sy - s * 1.6); ctx.lineTo(sx - s * 0.1, sy - s * 1.6); ctx.closePath(); ctx.fill();
-    ctx.strokeStyle = '#c8ccdd'; ctx.lineWidth = Math.max(1.5, s * 0.06); ctx.beginPath(); ctx.moveTo(sx, sy - s * 1.6); ctx.lineTo(sx, sy - s * 2.3); ctx.stroke();
-    const gl = Math.sin(t * 5 + sx) > 0.6; ctx.fillStyle = gl ? '#fff6a8' : '#8a8ea6'; ctx.beginPath(); ctx.arc(sx, sy - s * 2.35, s * (gl ? 0.13 : 0.08), 0, TAU); ctx.fill();
+  /* Blitzableiter: ein sich verjüngender Mast mit Spitze und Kugel. */
+  spriteLightningRod(ctx, d, t) {
+    const k = d.s, z = d.z || 0;
+    this.bodenSchatten(ctx, d.x, d.y, k * 0.35);
+    this.saeule(ctx, d.x, d.y, z, k * 0.25, k * 0.1, k * 1.6, '#5e6480', '#3a3e56', 7);
+    this.saeule(ctx, d.x, d.y, z + k * 1.6, k * 0.04, k * 0.03, k * 0.7, '#c8ccdd', '#8a8ea6', 6);
+    const gl = Math.sin(t * 5 + d.x) > 0.6;
+    this.kugel(ctx, d.x, d.y, z + k * 2.35, k * (gl ? 0.13 : 0.08), '#fffce0', gl ? '#fff6a8' : '#8a8ea6', '#5a5e76');
   },
   spriteWindsock(ctx, sx, sy, s, d, t) {
-    ctx.strokeStyle = '#8a8ea6'; ctx.lineWidth = Math.max(1.5, s * 0.06); ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx, sy - s * 1.5); ctx.stroke();
-    const fl = Math.sin(t * 4 + sx) * s * 0.1, dir = (d.seed || 0.5) > 0.5 ? 1 : -1;
-    ctx.fillStyle = '#ff7a3a'; ctx.beginPath(); ctx.moveTo(sx, sy - s * 1.5); ctx.lineTo(sx + dir * s * 0.9, sy - s * 1.35 + fl); ctx.lineTo(sx + dir * s * 0.9, sy - s * 1.15 + fl); ctx.lineTo(sx, sy - s * 1.2); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#ffffff'; ctx.fillRect(sx + dir * s * 0.3, sy - s * 1.45 + fl * 0.4, dir * s * 0.18, s * 0.28);
+    const w = this.wind;
+    // Der Mast ist ein Körper; der Sack selbst hängt in Windrichtung und wird weiter unten in
+    // Bildrichtung umgerechnet - er zeigt also schon immer dorthin, wo der Wind wirklich hinweht.
+    if (d.welt) this.saeule(ctx, d.welt[0], d.welt[1], d.welt[2], s / this.scale * 0.06, s / this.scale * 0.045, s / this.scale * 1.5, '#a0a4bc', '#6a6e86', 6);
+    else { ctx.strokeStyle = '#8a8ea6'; ctx.lineWidth = Math.max(1.5, s * 0.06); ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx, sy - s * 1.5); ctx.stroke(); }
+    const fl = Math.sin(t * 4 + sx) * s * 0.1;
+    if (!w) {
+      const dir = (d.seed || 0.5) > 0.5 ? 1 : -1;
+      ctx.fillStyle = '#ff7a3a'; ctx.beginPath(); ctx.moveTo(sx, sy - s * 1.5); ctx.lineTo(sx + dir * s * 0.9, sy - s * 1.35 + fl); ctx.lineTo(sx + dir * s * 0.9, sy - s * 1.15 + fl); ctx.lineTo(sx, sy - s * 1.2); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(sx + dir * s * 0.3, sy - s * 1.45 + fl * 0.4, dir * s * 0.18, s * 0.28);
+      return;
+    }
+    // Windrichtung in Bildrichtung umrechnen (dieselbe Drehung wie die Projektion)
+    const ex = w.dx * this.cam.cos - w.dy * this.cam.sin;
+    const ey = (w.dx * this.cam.sin + w.dy * this.cam.cos) * this.cam.tilt;
+    const L = Math.hypot(ex, ey) || 1, ux = ex / L, uy = ey / L;
+    const lang = s * (0.28 + 0.75 * w.staerke), haenge = s * 0.55 * (1 - w.staerke);
+    const kopf = [sx, sy - s * 1.5];
+    for (let i = 0; i < 3; i++) {
+      const u0 = i / 3, u1 = (i + 1) / 3;
+      const p0 = [kopf[0] + ux * lang * u0, kopf[1] + uy * lang * u0 + haenge * u0 * u0 + fl * u0];
+      const p1 = [kopf[0] + ux * lang * u1, kopf[1] + uy * lang * u1 + haenge * u1 * u1 + fl * u1];
+      const r0 = s * (0.16 - u0 * 0.05), r1 = s * (0.16 - u1 * 0.05);
+      ctx.fillStyle = i % 2 ? '#ffffff' : '#ff7a3a';
+      ctx.beginPath();
+      ctx.moveTo(p0[0] - uy * r0, p0[1] + ux * r0); ctx.lineTo(p1[0] - uy * r1, p1[1] + ux * r1);
+      ctx.lineTo(p1[0] + uy * r1, p1[1] - ux * r1); ctx.lineTo(p0[0] + uy * r0, p0[1] - ux * r0);
+      ctx.closePath(); ctx.fill();
+    }
   },
   /* tuch überschreibt die Farbe des Wimpels – das Kolosseum hängt rote Banner auf, sonst bleibt es
      bei den dunkelblau-violetten des Schattenreichs. */
-  spriteBanner(ctx, sx, sy, s, d, t, tuch) {
-    ctx.strokeStyle = tuch ? '#8a6a3a' : '#3a3c4a'; ctx.lineWidth = Math.max(1.5, s * 0.06); ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx, sy - s * 1.8); ctx.stroke();
-    const sw = Math.sin(t * 2 + sx) * s * 0.06;
-    ctx.fillStyle = tuch || ((d.seed || 0) > 0.5 ? '#5a2a7a' : '#2a3a8a'); ctx.beginPath(); ctx.moveTo(sx, sy - s * 1.8); ctx.lineTo(sx + s * 0.55 + sw, sy - s * 1.7); ctx.lineTo(sx + s * 0.55 + sw, sy - s * 0.9); ctx.lineTo(sx + s * 0.28, sy - s * 1.05); ctx.lineTo(sx, sy - s * 0.95); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#ffe45e'; ctx.beginPath(); ctx.arc(sx + s * 0.27 + sw * 0.5, sy - s * 1.35, s * 0.1, 0, TAU); ctx.fill();
+  /* Fahne: Stange als Säule, Tuch als dünner Quader quer zur Stange. Es weht damit in eine
+     Weltrichtung und dreht sich mit, statt immer zur Seite zu zeigen. */
+  spriteBanner(ctx, d, t, tuch) {
+    const k = d.s, z = d.z || 0, a = (d.seed || 0) * 6 + Math.sin(t * 2 + d.x) * 0.12;
+    const co = Math.cos(a), si = Math.sin(a);
+    this.saeule(ctx, d.x, d.y, z, k * 0.05, k * 0.04, k * 1.8, tuch ? '#a08050' : '#4a4c5c', tuch ? '#6a4a20' : '#2a2c38', 6);
+    const farbe = tuch || ((d.seed || 0) > 0.5 ? '#5a2a7a' : '#2a3a8a');
+    const poly = [[0, -0.035], [0.55, -0.035], [0.55, 0.035], [0, 0.035]]
+      .map(([u, v]) => [d.x + (u * co - v * si) * k, d.y + (u * si + v * co) * k]);
+    this.prism(ctx, poly, z + k * 0.95, k * 0.8, farbe, shade(farbe, 0.72));
+    this.kugel(ctx, d.x + co * k * 0.27, d.y + si * k * 0.27, z + k * 1.45, k * 0.1, '#fff6c0', '#ffe45e', '#c9a815');
   },
-  /* Säule als echter Körper statt als flaches Bildchen: Sockel, Schaft und Kapitell sind drei
-     Prismen in Weltkoordinaten. Damit steht sie in derselben Sicht wie Mauern und Türme, dreht
-     sich mit der Kamera mit und bekommt ihre Schattenseite von selbst. Der Schaft hat acht Seiten
-     – die einzeln schattierten Flächen lesen sich wie die Kanneluren einer echten Säule.
-     cols: [Deck des Schafts, Schattenseite, Deck von Sockel und Kapitell, Umriss] – ohne
-     Angabe die dunkle Säule des Schattenreichs, mit Angabe der helle Kalkstein der Arena. */
   spritePillar(ctx, d, cols) {
     const c = cols || ['#5e5474', '#2a2438', '#6e6488', '#14101e'];
     const g = d.s || 1, x = d.x, y = d.y;
@@ -431,7 +468,7 @@ Object.assign(Renderer.prototype, {
     const ends = vert ? [[ob.x, ob.y - ob.h / 2 - pw / 2], [ob.x, ob.y + ob.h / 2 + pw / 2]] : [[ob.x - ob.w / 2 - pw / 2, ob.y], [ob.x + ob.w / 2 + pw / 2, ob.y]];
     for (const [px, py] of ends) items.push({ x: px, y: py, draw: () => {
       this.prism(ctx, [[px - pw / 2, py - pw / 2], [px + pw / 2, py - pw / 2], [px + pw / 2, py + pw / 2], [px - pw / 2, py + pw / 2]], 0, top, '#3a2a20', '#1e140e', { outline: '#0a0604' });
-      const [kx, ky] = this.proj(px, py + pw / 2, top - 0.3); this.spriteSkull(ctx, kx, ky, this.scale * 0.55); // Schädel am Pfosten
+      this.spriteSkull(ctx, { x: px, y: py + pw / 2, z: top - 0.55, s: 0.55 });   // Schädel am Pfosten
     } });
     items.push({ x: ob.x, y: ob.y, bias: 0.05, draw: () => this.drawGuillotineBlade(ctx, ob, t, vert, pw, top, ends) });
   },
@@ -465,7 +502,7 @@ Object.assign(Renderer.prototype, {
      brennende Auge, das sich langsam dreht. Sieht es den Ball, flackert der Kegel rot. */
   drawEyeBeam(ctx, ob, t) {
     const s = this.scale, n = 22, pts = [];
-    const lv = this.level, tiles = lv.tiles;
+    const lv = this.level, tiles = lv.untenFl ? lv.untenFl.tiles : lv.tiles;
     for (let i = 0; i <= n; i++) {
       const a = ob.dir - ob.fov / 2 + ob.fov * i / n; let R = ob.r;
       for (; R < ob.range; R += 0.2) { const c = lv.charAt(ob.x + Math.cos(a) * R, ob.y + Math.sin(a) * R); if (c === 'x') break; }
@@ -533,7 +570,7 @@ Object.assign(Renderer.prototype, {
     const [h0, h1] = this.proj(x - sa * 0.5, y + ca * 0.5, 1.95), [h2, h3] = this.proj(x + ca * 0.5, y + sa * 0.5, 0.4);
     ctx.strokeStyle = '#7a8098'; ctx.lineWidth = Math.max(2, s * 0.14); ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(h0, h1); ctx.lineTo(h2, h3); ctx.stroke();
     // Wappenrock mit Totenkopf
-    const [cx, cy] = this.proj(x, y + 0.42, 1.7); ctx.fillStyle = '#3a1f4d'; ctx.fillRect(cx - s * 0.2, cy - s * 0.25, s * 0.4, s * 0.5); this.spriteSkull(ctx, cx, cy + s * 0.12, s * 0.45);
+    const [cx, cy] = this.proj(x, y + 0.42, 1.7); ctx.fillStyle = '#3a1f4d'; ctx.fillRect(cx - s * 0.2, cy - s * 0.25, s * 0.4, s * 0.5); this.spriteSkull(ctx, { x, y: y + 0.42, z: 1.62, s: 0.45 });
     // Helm mit Visier und Federbusch
     this.prism(ctx, this.circlePoly(x, y, 0.3, 8), 2.15, 0.55, '#b0b6cc', '#4a5068', { outline: '#1c202c' });
     const [vx, vy] = this.proj(x, y + 0.3, 2.45);
@@ -606,7 +643,7 @@ Object.assign(Renderer.prototype, {
     ctx.strokeStyle = '#8a7a5a'; ctx.lineWidth = Math.max(1, s * 0.05);
     for (const k of [-0.3, 0.3]) { const q0 = this.proj(ob.x + k * r, ob.y + r * 0.5, 0.15), q1 = this.proj(ob.x + k * r, ob.y + r * 0.1, -0.5); ctx.beginPath(); ctx.moveTo(q0[0], q0[1]); ctx.lineTo(q1[0], q1[1]); ctx.stroke(); }
     for (let i = 0; i < 3; i++) { const u = i / 3; const q0 = this.proj(ob.x - 0.3 * r, ob.y + r * (0.5 - 0.4 * u), 0.15 - 0.65 * u), q1 = this.proj(ob.x + 0.3 * r, ob.y + r * (0.5 - 0.4 * u), 0.15 - 0.65 * u); ctx.beginPath(); ctx.moveTo(q0[0], q0[1]); ctx.lineTo(q1[0], q1[1]); ctx.stroke(); }
-    const [lx, ly] = this.proj(ob.x + r * 0.9, ob.y - r * 0.7, 0); this.spriteLantern(ctx, lx, ly, s * 0.8, t);
+    this.spriteLantern(ctx, { x: ob.x + r * 0.9, y: ob.y - r * 0.7, s: 0.8 }, t);
   },
   /* Schattenfeuer: die violette Glut des Schattenreichs. Durchgang 0: dunkler Grund, der über alle Kacheln
      gleichmäßig wogt. Durchgang 1 (nach allen Grundflächen): wabernde Glutkerne, die über die Kachelränder
@@ -708,36 +745,70 @@ Object.assign(Renderer.prototype, {
     ctx.strokeStyle = 'rgba(255,255,255,0.18)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(cx - w * 0.8, baseY - h * 0.05); ctx.lineTo(cx - w * 0.05, baseY - h * 0.95); ctx.stroke(); // Lichtkante
     if (snow) { ctx.fillStyle = '#f4faff'; ctx.beginPath(); ctx.moveTo(cx - w * 0.55, baseY - h * 0.4); ctx.quadraticCurveTo(cx, baseY - h * 0.25, cx + w * 0.55, baseY - h * 0.4); ctx.lineTo(cx, baseY - h); ctx.closePath(); ctx.fill(); }
   },
-  spriteTree(ctx, sx, sy, s, d, t) {
-    const k = s / this.scale;
-    this.shadow(ctx, sx + s * 0.3, sy + s * 0.05, s * 0.65);
-    this.slab3(ctx, sx, sy, 0.22 * k, 0.22 * k, 1.05 * k, c => { c.rect(-0.5, 0, 1, 1); }, { light: '#8a5c33', front: '#6b4423', side: '#4a2e14', back: '#3a2410' });
-    const cols = d.glow ? [['#8fe0e0', '#3fb3b0', '#1f6a70'], ['#6fd0d0', '#2e8f9a', '#164a55']] : [['#8fe07a', '#3f9a4e', '#1f5a2c'], ['#63c261', '#2f7a3e', '#163f20']];
-    const blobs = [[0.25, -1.75, 0.48, 1], [-0.2, -1.72, 0.5, 1], [0.4, -1.2, 0.52, 0], [-0.38, -1.15, 0.5, 0], [0, -1.35, 0.72, 0], [-0.1, -1.85, 0.34, 1]];
-    for (const [ox, oy, r, li] of blobs) this.ball3(ctx, sx + ox * s, sy + oy * s, r * s, cols[li][0], cols[li][1], cols[li][2]);
-    if (d.glow) for (let i = 0; i < 4; i++) { const a = t * 1.5 + i * 1.6; ctx.fillStyle = 'rgba(255,255,180,0.9)'; ctx.beginPath(); ctx.arc(sx + Math.cos(a) * s * 0.7, sy - s * 1.3 + Math.sin(a * 1.3) * s * 0.4, s * 0.06, 0, TAU); ctx.fill(); }
+  /* Laubbaum: Stamm als Säule, Krone aus Kugeln. Kugeln dürfen Scheiben bleiben (eine Kugel sieht
+     von jeder Seite gleich aus), stehen aber an Weltpunkten – also wandert die Krone beim Drehen
+     richtig um den Stamm herum. Gezeichnet wird von hinten nach vorn, sonst überdeckt die falsche. */
+  spriteTree(ctx, d, t) {
+    const k = d.s, z = d.z || 0;
+    this.bodenSchatten(ctx, d.x, d.y, k * 0.62);
+    this.saeule(ctx, d.x, d.y, z, k * 0.14, k * 0.1, k * 0.85, '#6b4423', '#4a2e14', 7);
+    const cols = d.glow ? [['#8fe0e0', '#3fb3b0', '#1f6a70'], ['#6fd0d0', '#2e8f9a', '#164a55']]
+                        : [['#8fe07a', '#3f9a4e', '#1f5a2c'], ['#63c261', '#2f7a3e', '#163f20']];
+    const blobs = [[0, 0, 1.35, 0.72, 0], [0.3, 0.22, 1.75, 0.48, 1], [-0.28, -0.2, 1.72, 0.5, 1],
+                   [0.34, -0.26, 1.2, 0.52, 0], [-0.3, 0.28, 1.15, 0.5, 0], [0.02, 0.04, 1.9, 0.34, 1]];
+    blobs.map(b => ({ b, tiefe: this.depth(d.x + b[0] * k, d.y + b[1] * k) }))
+      .sort((a, b) => a.tiefe - b.tiefe)
+      .forEach(({ b }) => this.kugel(ctx, d.x + b[0] * k, d.y + b[1] * k, z + b[2] * k, b[3] * k, ...cols[b[4]]));
+    if (d.glow) for (let i = 0; i < 4; i++) {
+      const a = t * 1.5 + i * 1.6;
+      const [gx, gy] = this.proj(d.x + Math.cos(a) * k * 0.7, d.y + Math.sin(a) * k * 0.7, z + k * (1.5 + 0.3 * Math.sin(a * 1.3)));
+      ctx.fillStyle = 'rgba(255,255,180,0.9)'; ctx.beginPath(); ctx.arc(gx, gy, this.scale * k * 0.06, 0, TAU); ctx.fill();
+    }
   },
-  spritePine(ctx, sx, sy, s, c1, c2, snow = false) {
-    const k = s / this.scale;
-    this.shadow(ctx, sx + s * 0.25, sy + s * 0.04, s * 0.5);
-    this.slab3(ctx, sx, sy, 0.18 * k, 0.18 * k, 0.5 * k, c => { c.rect(-0.5, 0, 1, 1); }, { light: '#7a5230', front: '#5a3a1e', side: '#3e2712', back: '#2e1c0c' });
-    for (let i = 0; i < 3; i++) { const w = s * (0.75 - i * 0.18), y0 = sy - s * (0.45 + i * 0.55); this.cone3(ctx, sx, y0, w, s * 0.8, i % 2 ? c1 : shade(c1, 1.15), shade(c2, 0.8), snow); }
+  /* Nadelbaum: Stamm und drei Kegel übereinander. Der Kegel ist rundherum gleich, also braucht er
+     keine Vorderseite – er muss nur an der richtigen Stelle im Raum stehen und mit dem Zoom wachsen.
+     Liegt Schnee, bekommt jede Etage einen weißen Rand: Schnee liegt auf den Zweigen, nicht auf der
+     Spitze. */
+  spritePine(ctx, d, c1, c2, snow = false) {
+    const k = d.s, z = d.z || 0;
+    this.bodenSchatten(ctx, d.x, d.y, k * 0.46);
+    this.saeule(ctx, d.x, d.y, z, k * 0.1, k * 0.08, k * 0.55, '#5a3a1e', '#3e2712', 7);
+    for (let i = 0; i < 3; i++) {
+      const r = k * (0.46 - i * 0.11), h = k * (0.78 - i * 0.06), z0 = z + k * (0.42 + i * 0.5);
+      // Die Seitenfarbe ist die volle Nadelfarbe: frustum dunkelt die abgewandten Seiten selbst auf
+      // bis zu 0,68 ab. Gibt man ihm schon eine abgedunkelte Farbe, wird der ganze Baum schwarz.
+      const nadel = i % 2 ? shade(c1, 1.18) : c1;
+      this.kegel(ctx, d.x, d.y, z0, r, h, nadel, nadel);
+      if (snow) this.kegel(ctx, d.x, d.y, z0 + h * 0.02, r * 0.99, h * 0.24, '#f4faff', '#d2e4f4');
+    }
   },
-  spriteDeadTree(ctx, sx, sy, s, col = '#2a2030', embers = false) {
-    this.shadow(ctx, sx + s * 0.2, sy + s * 0.03, s * 0.4);
-    const light = shade(col, 1.9), dark = shade(col, 0.6);
-    const limb = (x0, y0, x1, y1, w0, w1) => { // sich verjüngender Ast mit Licht- und Schattenseite
-      const dx = x1 - x0, dy = y1 - y0, L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L;
-      const g = ctx.createLinearGradient(x0 + nx * w0, y0 + ny * w0, x0 - nx * w0, y0 - ny * w0); g.addColorStop(0, light); g.addColorStop(0.5, col); g.addColorStop(1, dark);
-      ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(x0 + nx * w0, y0 + ny * w0); ctx.lineTo(x1 + nx * w1, y1 + ny * w1); ctx.lineTo(x1 - nx * w1, y1 - ny * w1); ctx.lineTo(x0 - nx * w0, y0 - ny * w0); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = dark; ctx.beginPath(); ctx.ellipse(x0, y0, w0, w0 * 0.45, 0, 0, TAU); ctx.fill();
-    };
-    limb(sx, sy, sx + s * 0.1, sy - s * 1.2, s * 0.13, s * 0.06);
-    limb(sx + s * 0.05, sy - s * 0.7, sx - s * 0.5, sy - s * 1.3, s * 0.06, s * 0.025);
-    limb(sx + s * 0.08, sy - s * 0.95, sx + s * 0.55, sy - s * 1.5, s * 0.055, s * 0.025);
-    limb(sx + s * 0.1, sy - s * 1.2, sx - s * 0.1, sy - s * 1.7, s * 0.05, s * 0.02);
-    limb(sx - s * 0.3, sy - s * 1.05, sx - s * 0.62, sy - s * 1.0, s * 0.035, s * 0.015);
-    if (embers) { ctx.fillStyle = 'rgba(255,120,40,0.85)'; for (const [ox, oy] of [[-0.5, -1.3], [0.55, -1.5], [-0.1, -1.7]]) { ctx.beginPath(); ctx.arc(sx + ox * s, sy + oy * s, s * 0.05, 0, TAU); ctx.fill(); } }
+  /* Toter Baum: Stamm und Äste als liegende bzw. stehende Walzen. Vorher waren es flache
+     Trapeze mit Verlauf – die sahen beim Drehen aus wie aufgemalte Risse. Ein Ast ist eine Walze
+     von A nach B in der Höhe, genau wie ein Rohr im Uhrenturm. */
+  spriteDeadTree(ctx, d, col = '#2a2030', embers = false) {
+    const k = d.s, z = d.z || 0, hell = shade(col, 1.7);
+    this.bodenSchatten(ctx, d.x, d.y, k * 0.4);
+    this.saeule(ctx, d.x, d.y, z, k * 0.15, k * 0.07, k * 1.35, hell, col, 7);
+    // Äste: (Richtung quer, Richtung längs, Höhe unten) → (…, Höhe oben), Halbmesser
+    const aeste = [[0.06, 0.04, 0.8, -0.55, -0.3, 1.35, 0.06],
+                   [0.08, -0.05, 1.02, 0.6, 0.36, 1.5, 0.055],
+                   [0.05, 0.02, 1.2, -0.14, 0.3, 1.75, 0.045],
+                   [-0.3, 0.1, 1.05, -0.66, 0.28, 1.12, 0.035]];
+    for (const [ax, ay, az, bx, by, bz, r] of aeste) {
+      // walze liegt waagerecht; ein schräger Ast wird als kurze Folge von Stücken gebaut
+      const n = 3;
+      for (let i = 0; i < n; i++) {
+        const u0 = i / n, u1 = (i + 1) / n;
+        const x0 = d.x + (ax + (bx - ax) * u0) * k, y0 = d.y + (ay + (by - ay) * u0) * k;
+        const x1 = d.x + (ax + (bx - ax) * u1) * k, y1 = d.y + (ay + (by - ay) * u1) * k;
+        const zz = z + (az + (bz - az) * (u0 + u1) / 2) * k;
+        this.walze(ctx, x0, y0, x1, y1, zz, r * k * (1 - u0 * 0.4), hell, col, { n: 8 });
+      }
+    }
+    if (embers) for (const [ox, oy, oz] of [[-0.5, -0.3, 1.35], [0.6, 0.36, 1.5], [-0.14, 0.3, 1.75]]) {
+      const [ex, ey] = this.proj(d.x + ox * k, d.y + oy * k, z + oz * k);
+      ctx.fillStyle = 'rgba(255,120,40,0.85)'; ctx.beginPath(); ctx.arc(ex, ey, this.scale * k * 0.05, 0, TAU); ctx.fill();
+    }
   },
   /* Räumliche Riesenfledermaus im kantigen Stil des Krokodils: Rumpf, Kopf und Ohren als Quader, Flughäute als flache
      Dreiecksplatten zwischen Schulter und Fingerspitzen (die mit dem Flügelschlag steigen und sinken), Finger als Balken.
@@ -853,7 +924,7 @@ Object.assign(Renderer.prototype, {
     ctx.strokeStyle = '#2a2438'; ctx.lineWidth = Math.max(1.5, s * 0.05); ctx.beginPath(); // halb hochgezogenes Fallgitter
     for (let k = -3; k <= 3; k++) { const [a0, a1] = this.proj(px + k * 0.27, fy, 2.6 - Math.abs(k) * 0.1), [b0, b1] = this.proj(px + k * 0.27, fy, 1.8); ctx.moveTo(a0, a1); ctx.lineTo(b0, b1); }
     const [q0, q1] = this.proj(px - 0.9, fy, 1.85), [q2, q3] = this.proj(px + 0.9, fy, 1.85); ctx.moveTo(q0, q1); ctx.lineTo(q2, q3); ctx.stroke();
-    const [kx, ky] = this.proj(px, fy - 0.05, H + 0.3); this.spriteSkull(ctx, kx, ky + s * 0.2, s * 0.95);
+    this.spriteSkull(ctx, { x: px, y: fy - 0.05, z: H + 0.05, s: 0.95 });
     for (const sd of [-1, 1]) this.spriteBrazier(ctx, { x: px + sd * (Wd / 2 + 0.15), y: fy + 0.25, s: 0.9 }, t, ['#a24bff', '#e0b8ff', '170,90,255']);
   },
 
@@ -1195,5 +1266,1024 @@ Object.assign(Renderer.prototype, {
     const [b0, b1] = this.proj(ob.lmx, ob.lmy, 0.02);
     ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(b0, b1); ctx.stroke();
     this.daumenScheibe(ctx, px, py, s * 0.34, ob.hoch);
+  },
+
+  /* ---------- Die drei Maschinen der Uhrwerkstadt ---------- */
+
+  /* Zahnradaufzug: ein stehendes Rad vor der Stufe, mit Dicke. Gezeichnet wird in der Ebene aus
+     Fahrtrichtung und Höhe; die Achse liegt quer dazu, also längs der Wand. Damit das Rad wie ein
+     Körper aussieht und nicht wie eine aufgemalte Scheibe, entstehen drei Lagen: die hintere
+     Wange, das Zahnband dazwischen (jeder Zahn bekommt seine eigene Seitenfläche) und die vordere
+     Wange mit Speichen und Nabe. Der Zahn, der gerade unten steht, wird hell hervorgehoben – an ihm
+     sieht man, ob gerade eine Lücke bereitsteht. */
+  drawGearLift(ctx, ob, t) {
+    const s = this.scale, halb = ob.dicke / 2;
+    /* Punkt auf dem Rad – dieselben Formeln wie im Verhalten, damit der Ball sichtbar in seiner
+       Lücke sitzt. w = 0 ist der tiefste Punkt (im Boden), w = π der Scheitel; f ist der
+       Radienfaktor, seite -1 hinten … +1 vorn. */
+    const zA = ob.zAchse();
+    const pkt = (w, f, seite) => this.proj(
+      ob.x + ob.dx * ob.laengs(w) * f + ob.qx * halb * seite,
+      ob.y + ob.dy * ob.laengs(w) * f + ob.qy * halb * seite,
+      zA + (ob.hoehe(w) - zA) * f);
+    const zeichne = (pts, fill, stroke, regel) => {
+      if (pts.length < 3) return;
+      ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.closePath();
+      if (fill) { ctx.fillStyle = fill; ctx.fill(regel); }
+      if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = Math.max(1, s * 0.04); ctx.stroke(); }
+    };
+    const messing = k => { const a = [0x4a, 0x34, 0x10], b = [0xff, 0xe3, 0xa8], m = Math.max(0, Math.min(1, k));
+      return `rgb(${Math.round(a[0] + (b[0] - a[0]) * m)},${Math.round(a[1] + (b[1] - a[1]) * m)},${Math.round(a[2] + (b[2] - a[2]) * m)})`; };
+    const licht = w => 0.3 + 0.6 * Math.max(0, Math.sin(w - 0.5));   // Licht auf die Spielerseite
+
+    /* Zahnprofil über die volle Teilung: Fußkreis, Flanke hinauf, Kopf, Flanke hinab, Fußkreis.
+       Die Lücken sitzen bei drehung + i·Teilung – dort liegt der Ball. Gezeichnet wird nur, was
+       über dem Boden liegt: Der Rest steckt in der Erde, wie bei einem eingelassenen Rad. */
+    const zn = ob.zaehne, teil = TAU / zn, KOPF = 1.06, FUSS = 0.84, BOHR = 0.44;
+    const wB = ob.wBoden();
+    const roh = [];
+    for (let i = 0; i < zn * 2; i++) {          // zwei Umläufe, damit der sichtbare Bogen sicher drin ist
+      const m = ob.drehung + i * teil;
+      roh.push({ w: m, f: FUSS }, { w: m + teil * 0.30, f: FUSS }, { w: m + teil * 0.38, f: KOPF },
+        { w: m + teil * 0.62, f: KOPF }, { w: m + teil * 0.70, f: FUSS });
+    }
+    // auf den sichtbaren Bogen wB … 2π-wB einkürzen und an den Enden genau auf den Boden setzen
+    const norm = a => { let v = a % TAU; if (v < 0) v += TAU; return v; };
+    const kontur = [{ w: wB, f: FUSS }];
+    for (const k of roh) { const v = norm(k.w); if (v > wB + 0.001 && v < TAU - wB - 0.001) kontur.push({ w: v, f: k.f }); }
+    kontur.sort((a, b) => a.w - b.w);
+    kontur.push({ w: TAU - wB, f: FUSS });
+    const kreis = (f, seite, n = 26) => { const p = []; for (let i = 0; i < n; i++) p.push(pkt((i / n) * TAU, f, seite)); return p; };
+
+    // Wandpfeiler hinter dem Rad, an dem die Achse hängt
+    const pf = [[ob.x + ob.dx * 0.34 - ob.qx * (halb + 0.5), ob.y + ob.dy * 0.34 - ob.qy * (halb + 0.5)],
+      [ob.x + ob.dx * 0.34 + ob.qx * (halb + 0.5), ob.y + ob.dy * 0.34 + ob.qy * (halb + 0.5)],
+      [ob.x + ob.dx * 0.66 + ob.qx * (halb + 0.5), ob.y + ob.dy * 0.66 + ob.qy * (halb + 0.5)],
+      [ob.x + ob.dx * 0.66 - ob.qx * (halb + 0.5), ob.y + ob.dy * 0.66 - ob.qy * (halb + 0.5)]];
+    this.prism(ctx, pf, 0, zA * 1.5, '#4c5169', '#343850', '#23273a', { outline: '#191d2c' });
+
+    // 1) hintere Wange – der sichtbare Bogen, unten am Boden geschlossen
+    zeichne(kontur.map(k => pkt(k.w, k.f, -1)), '#4a3410');
+    // 2) Innenwand der Bohrung: das Band zwischen hinterem und vorderem Lochrand. Die vordere
+    //    Wange deckt später die nahe Hälfte zu – übrig bleibt die ferne, und genau so schaut man
+    //    durch ein Zahnrad hindurch.
+    const bh = kreis(BOHR, -1), bv = kreis(BOHR, 1);
+    for (let i = 0; i < bh.length; i++) {
+      const j = (i + 1) % bh.length, w = (i / bh.length) * TAU;
+      if (ob.hoehe(w) * BOHR + zA * (1 - BOHR) < 0.02) continue;      // steckt im Boden
+      zeichne([bh[i], bh[j], bv[j], bv[i]], messing(licht(w) * 0.4));
+    }
+    // 3) Zahnband: jede Kante der Kontur bekommt ihre eigene Seitenfläche
+    for (let i = 0; i + 1 < kontur.length; i++) {
+      const a = kontur[i], b = kontur[i + 1];
+      const wm = (a.w + b.w) / 2;
+      const amEinstieg = Math.abs(wm - wB) < teil * 0.4 && a.f === KOPF;
+      zeichne([pkt(a.w, a.f, -1), pkt(b.w, b.f, -1), pkt(b.w, b.f, 1), pkt(a.w, a.f, 1)],
+        amEinstieg ? '#ffdf9c' : messing(licht(wm) * 0.85), 'rgba(40,26,8,0.45)');
+    }
+    // 4) vordere Wange als Ring: Zahnkontur außen, Loch innen (evenodd)
+    ctx.beginPath();
+    kontur.forEach((k, i) => { const p = pkt(k.w, k.f, 1); i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); });
+    ctx.closePath();
+    ctx.moveTo(bv[0][0], bv[0][1]); for (let i = bv.length - 1; i > 0; i--) ctx.lineTo(bv[i][0], bv[i][1]);
+    ctx.closePath();
+    const g = ctx.createLinearGradient(...pkt(2.4, 1.0, 1), ...pkt(5.2, 1.0, 1));
+    g.addColorStop(0, '#ffe3a8'); g.addColorStop(0.55, '#c9903f'); g.addColorStop(1, '#6b4d22');
+    ctx.fillStyle = g; ctx.fill('evenodd');
+    ctx.strokeStyle = '#3a2a12'; ctx.lineWidth = Math.max(1, s * 0.04); ctx.stroke();
+  },
+  /* Boden: der Einstieg unten und der Absetzpunkt oben, damit man beides sieht, bevor man schlägt */
+  drawGearLiftFloor(ctx, ob) {
+    const [ex, ey] = ob.ein(), [ax, ay] = ob.aus();
+    this.isoEllipse(ctx, ex, ey, 0.005, 0.5, ob.lueckeAmEinstieg() ? 'rgba(255,233,176,0.55)' : 'rgba(200,120,80,0.2)');
+    this.isoEllipse(ctx, ax, ay, 0.005, 0.55, 'rgba(120,255,190,0.18)');
+  },
+
+  /* Dampfkolben: Zylinder in der Mauer, davor die Stange und der Stempelkopf. Beim Ausschlag steht
+     eine Dampfwolke am Zylinder – so sieht man den Schlag auch dann, wenn der Kopf gerade verdeckt
+     ist. */
+  drawPiston(ctx, ob, t) {
+    const s = this.scale;
+    const ux = ob.dx, uy = ob.dy, qx = -uy, qy = ux;
+    const laenge = Math.abs(ux) * ob.w + Math.abs(uy) * ob.h;    // entlang der Stossrichtung
+    const quer = Math.abs(ux) * ob.h + Math.abs(uy) * ob.w;      // Breite quer dazu
+    const r = quer / 2, z = r;                                   // die Walze liegt auf dem Boden
+    // Rechteck quer zur Achse, um Laenge la und Breite br
+    const kasten = (cx, cy, la, br) => [
+      [cx - ux * la / 2 - qx * br / 2, cy - uy * la / 2 - qy * br / 2],
+      [cx + ux * la / 2 - qx * br / 2, cy + uy * la / 2 - qy * br / 2],
+      [cx + ux * la / 2 + qx * br / 2, cy + uy * la / 2 + qy * br / 2],
+      [cx - ux * la / 2 + qx * br / 2, cy - uy * la / 2 + qy * br / 2]];
+    // Scheibe senkrecht zur Achse - dafuer stehen quer-Richtung und Hoehe
+    const scheibe = (cx, cy, rr, farbe) => {
+      ctx.beginPath();
+      for (let i = 0; i <= 16; i++) {
+        const w = (i * TAU) / 16;
+        const pt = this.proj(cx + qx * Math.cos(w) * rr, cy + qy * Math.cos(w) * rr, z + Math.sin(w) * rr);
+        i ? ctx.lineTo(pt[0], pt[1]) : ctx.moveTo(pt[0], pt[1]);
+      }
+      ctx.closePath(); ctx.fillStyle = farbe; ctx.fill();
+    };
+    // Gehaeuse: der Bock in der Wand, aus dem der Kolben faehrt
+    const gx = ob.x - ux * (laenge / 2 + 0.6), gy = ob.y - uy * (laenge / 2 + 0.6);
+    this.prism(ctx, kasten(gx, gy, 1.2, quer + 0.6), 0, 2 * r + 0.3, '#7a5a2a', '#4a3618', { outline: '#2e2210' });
+    this.prism(ctx, kasten(gx, gy, 1.32, quer + 0.16), 0, 0.16, '#8e6a34', '#553d1c');   // Sockelplatte
+    // Bohrung in der Stirnseite des Gehaeuses
+    const bx = ob.x - ux * laenge / 2, by = ob.y - uy * laenge / 2;
+    scheibe(bx + ux * 0.02, by + uy * 0.02, r * 1.05, '#241a0c');
+    scheibe(bx + ux * 0.06, by + uy * 0.06, r * 0.92, '#120c05');
+    // Kolbenstange
+    const kr = ob.px - ux * laenge / 2, kry = ob.py - uy * laenge / 2;   // hinteres Ende des Stempels
+    if (ob.aus > 0.02) this.walze(ctx, bx, by, kr, kry, z, r * 0.3, '#e3e8f2', '#9aa2b4', { n: 10 });
+    // Stempel: runder Kopf auf der Stange
+    const heiss = ob.schlaegt;
+    this.walze(ctx, kr, kry, ob.px + ux * laenge / 2, ob.py + uy * laenge / 2, z, r,
+      heiss ? '#ffdf9c' : '#c9903f', '#6e4a1c', { outline: '#3a2a10' });
+    // Ringwulst kurz vor dem Stempelkopf
+    scheibe(ob.px + ux * (laenge / 2 - 0.18), ob.py + uy * (laenge / 2 - 0.18), r * 1.08,
+      heiss ? 'rgba(255,226,168,0.9)' : 'rgba(160,116,52,0.9)');
+    scheibe(ob.px + ux * (laenge / 2 - 0.14), ob.py + uy * (laenge / 2 - 0.14), r * 0.98,
+      heiss ? '#ffdf9c' : '#c9903f');
+    // Dampf beim Ausschlag
+    if (ob.aus > 0.05) {
+      const n = 4;
+      for (let i = 0; i < n; i++) {
+        const u = ((t * 1.6 + i / n) % 1);
+        const p = this.proj(ob.x - ob.dx * (0.4 + u * 0.5) + ob.dy * (i - 1.5) * 0.22,
+          ob.y - ob.dy * (0.4 + u * 0.5) - ob.dx * (i - 1.5) * 0.22, 0.3 + u * 0.3);
+        ctx.fillStyle = `rgba(246,250,255,${(0.45 * (1 - u) * Math.min(1, ob.aus / ob.hub + 0.3)).toFixed(3)})`;
+        ctx.beginPath(); ctx.arc(p[0], p[1], s * (0.14 + u * 0.3), 0, TAU); ctx.fill();
+      }
+    }
+  },
+  /* Boden: der Streifen, den der Kolben bestreicht – kurz vor dem Schlag leuchtet er auf */
+  drawPistonFloor(ctx, ob) {
+    const bx = ob.dx * ob.hub, by = ob.dy * ob.hub;
+    const qx = -ob.dy * ob.h / 2, qy = ob.dx * ob.w / 2;
+    const poly = [[ob.x + qx, ob.y + qy], [ob.x + bx + qx, ob.y + by + qy],
+      [ob.x + bx - qx, ob.y + by - qy], [ob.x - qx, ob.y - qy]];
+    const warm = ob.aus > 0.05 ? 0.3 : 0.12;
+    this.fillPoly(ctx, poly, 0.005, `rgba(255,180,90,${warm})`, false);
+  },
+
+  /* Zeiger: Stange mit Gegengewicht und einer Spitze wie ein Uhrzeiger. Der helle Streifen an der
+     Stange läuft nach außen – er zeigt, wohin ein mitgenommener Ball geschoben wird. */
+  drawHand(ctx, ob, t) {
+    const s = this.scale, a = ob.angle, ca = Math.cos(a), sa = Math.sin(a), tk = ob.thick;
+    const L = ob.len;
+    // Punkt auf dem Zeiger: d entlang der Stange, q quer dazu
+    const P = (d, q) => [ob.x + ca * d - sa * q, ob.y + sa * d + ca * q];
+    // Halbprofil der Stange: sie wird nach aussen schmaler und laeuft in eine Spitze aus
+    const profil = [[-1.0, tk * 1.1], [-0.2, tk * 1.7], [L * 0.45, tk * 1.2], [L - 0.55, tk * 0.85], [L, tk * 0.1]];
+    const platte = (schrumpf, kuerzer) => {
+      const p = [];
+      for (const [d, q] of profil) p.push(P(d - kuerzer * (d / L), q * schrumpf));
+      for (let i = profil.length - 1; i >= 0; i--) {
+        const [d, q] = profil[i]; p.push(P(d - kuerzer * (d / L), -q * schrumpf));
+      }
+      return p;
+    };
+    // Gegengewicht: eine Trommel hinter der Achse
+    const gw = P(-0.95, 0);
+    this.prism(ctx, this.circlePoly(gw[0], gw[1], 0.36, 14), 0.04, 0.5, '#e0b45c', '#7d5a20', { outline: '#33240e' });
+    // Die Stange als Koerper mit abgeschraegter Oberkante
+    this.frustum(ctx, platte(1, 0), platte(0.52, 0.1), 0.05, 0.48, '#f0cd7d', '#8a6624', { outline: '#3a2a12' });
+    // Spitze: heller Keil auf der Oberkante
+    const sp = [P(L - 0.9, tk * 0.42), P(L - 0.1, tk * 0.05), P(L - 0.1, -tk * 0.05), P(L - 0.9, -tk * 0.42)];
+    this.fillPoly(ctx, sp, 0.49, '#fff0c2', false);
+    // wanderndes Glanzlicht auf der Oberkante: der Schub nach aussen
+    const u = (t * 0.8) % 1, gl = P(0.5 + u * (L - 0.8), 0);
+    const q = this.proj(gl[0], gl[1], 0.5);
+    ctx.fillStyle = `rgba(255,255,235,${(0.7 * (1 - u)).toFixed(2)})`;
+    ctx.beginPath(); ctx.arc(q[0], q[1], s * 0.12, 0, TAU); ctx.fill();
+    // Achse: eine Saeule, auf der der Zeiger sitzt
+    this.prism(ctx, this.circlePoly(ob.x, ob.y, ob.hubR, 12), 0, 0.6, '#8a6624', '#4e3814', { outline: '#2a1d0a' });
+    this.prism(ctx, this.circlePoly(ob.x, ob.y, ob.hubR * 0.55, 10), 0.6, 0.14, '#ffdf9c', '#a8792c');
+  },
+
+  /* ---------------------------------------------------------------------------
+     Zahnradfeld, Pendel und Federwerk. Alle drei liegen flach in der Welt oder
+     hängen über ihr – nichts steht senkrecht vor der Kamera, denn die Projektion
+     legt jede stehende Scheibe schief. Runde Teile liegen deshalb im Boden.
+     --------------------------------------------------------------------------- */
+
+  /* Zahnradfeld: die Räder liegen in einer Rinne im Boden und greifen ineinander. Sie sind Körper,
+     keine Scheiben – jeder Zahn hat seine eigene Seitenfläche, sonst sähe das Feld von schräg vorn
+     aus wie aufgemalt. Der helle Mitnehmer wandert mit dem Feld: Dort wird der Ball gefasst, dort
+     setzt es ihn wieder ab. Gezeichnet wird von hinten nach vorn, damit sich die Räder richtig
+     überdecken. */
+  drawGearField(ctx, ob, t) {
+    const s = this.scale, r = ob.r;
+    const qx = -ob.uy * (r + 0.22), qy = ob.ux * (r + 0.22);
+    const e0x = ob.x0 - ob.ux * (r + 0.22), e0y = ob.y0 - ob.uy * (r + 0.22);
+    const e1x = ob.x1 + ob.ux * (r + 0.22), e1y = ob.y1 + ob.uy * (r + 0.22);
+    /* Rinne, in der die Räder sitzen. Sie ist schmal und hell gehalten: Die Räder sind inzwischen
+       Körper mit eigenen Seitenflächen, die brauchen keinen dunklen Grund mehr, um zu wirken. Ein
+       breiter dunkler Streifen sah aus wie ein Schmutzfleck unter der Maschine. */
+    const br = r * 0.92;
+    this.fillPoly(ctx, [[e0x + ob.uy * -br, e0y + ob.ux * br], [e1x + ob.uy * -br, e1y + ob.ux * br],
+      [e1x - ob.uy * -br, e1y - ob.ux * br], [e0x - ob.uy * -br, e0y - ob.ux * br]],
+      0.004, 'rgba(40,28,14,0.28)', false);
+    const reihe = ob.raeder.map((rad, i) => ({ rad, i })).sort((a, b) => this.depth(a.rad.x, a.rad.y) - this.depth(b.rad.x, b.rad.y));
+    for (const { rad, i } of reihe) {
+      const w = ob.winkel * rad.dreh + (i % 2 ? Math.PI / ob.zaehne : 0);
+      this.zahnrad(ctx, rad.x, rad.y, 0.01, r, r * 0.34, ob.zaehne, w, '#d8a441', '#7a5418', { outline: '#3a2610' });
+    }
+    /* Der Käfer ist der Mitnehmer: Wo er steht, wird der Ball gefasst. Steht das Feld an einer
+       Station, leuchtet der Boden unter ihm – das ist die Einladung zum Einsteigen. */
+    if (ob.docked) {
+      const puls = 0.55 + 0.45 * Math.sin(t * 5);
+      this.isoEllipse(ctx, ob.x, ob.y, 0.008, 0.75, `rgba(255,226,150,${(0.22 * puls).toFixed(2)})`);
+    }
+    const vx = ob.ux * (ob.dir || 1), vy = ob.uy * (ob.dir || 1);
+    this.drawKaefer(ctx, ob.x, ob.y, vx, vy, !ob.docked, t);
+  },
+
+  /* Aufziehkäfer: das Gefährt des Zahnradfelds. Ein Messingkäfer mit Grünspan-Panzer, der den
+     Ball auf dem Rücken trägt und auf sechs Beinen über die Räder läuft. Er löst drei Dinge auf
+     einmal: Man sieht, dass man mitfährt; man sieht von weitem, wo der Mitnehmer gerade steht;
+     und die Welt bekommt eine Figur, so wie das Kolosseum seinen Gladiator hat.
+
+     Er läuft nur, während das Feld fährt - steht es an einer Station, bleibt er stehen und zuckt
+     nur mit den Fühlern. Genau dann darf man einsteigen, und das soll man ihm ansehen.
+     ux/uy ist seine Blickrichtung, 'laufen' sagt, ob die Beine gehen. */
+  drawKaefer(ctx, x, y, ux, uy, laufen, t) {
+    const s = this.scale;
+    const qx = -uy, qy = ux;                                   // quer zur Blickrichtung
+    // Punkt im Käferkoordinatensystem: a nach vorn, b nach rechts, z hoch
+    const P = (a, b, z) => this.proj(x + ux * a + qx * b, y + uy * a + qy * b, z);
+    const W = (a, b) => [x + ux * a + qx * b, y + uy * a + qy * b];
+    // Ellipse in Käferrichtung als Weltpolygon – daraus wird der Panzer ein Körper
+    const oval = (la, br, n = 14) => {
+      const p = [];
+      for (let i = 0; i < n; i++) { const w = (i * TAU) / n; p.push(W(Math.cos(w) * la, Math.sin(w) * br)); }
+      return p;
+    };
+    this.isoEllipse(ctx, x, y, 0.004, 0.78, 'rgba(0,0,0,0.26)');
+    // Beine: drei je Seite, im Wechselschritt. Sie setzen auf dem Boden auf, damit der Käfer nicht
+    // über den Rädern zu schweben scheint.
+    ctx.strokeStyle = '#6b4a14'; ctx.lineWidth = Math.max(1.5, s * 0.055); ctx.lineCap = 'round';
+    for (const seite of [-1, 1]) {
+      for (let i = 0; i < 3; i++) {
+        const a0 = -0.34 + i * 0.34;
+        const schwung = laufen ? Math.sin(t * 9 + i * 2.1 + (seite > 0 ? Math.PI : 0)) * 0.15 : 0;
+        const h = P(a0, seite * 0.32, 0.2);
+        const k = P(a0 + schwung * 0.5, seite * 0.56, 0.26);
+        const f = P(a0 + schwung, seite * 0.7, 0.005);
+        ctx.beginPath(); ctx.moveTo(h[0], h[1]); ctx.lineTo(k[0], k[1]); ctx.lineTo(f[0], f[1]); ctx.stroke();
+      }
+    }
+    ctx.lineCap = 'butt';
+    // Kopf mit Fühlern und Augen
+    const kopf = W(0.78, 0);
+    this.prism(ctx, this.circlePoly(kopf[0], kopf[1], 0.22, 9), 0.05, 0.24, '#c9963f', '#7a5418', { outline: '#3a2610' });
+    ctx.strokeStyle = '#8a6624'; ctx.lineWidth = Math.max(1, s * 0.04); ctx.lineCap = 'round';
+    for (const seite of [-1, 1]) {
+      const zuck = Math.sin(t * (laufen ? 7 : 2.4) + seite) * 0.06;
+      const a = P(0.82, seite * 0.09, 0.29), b = P(1.18 + zuck, seite * (0.32 + zuck), 0.46);
+      ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+      ctx.fillStyle = '#ffdf9c'; ctx.beginPath(); ctx.arc(b[0], b[1], s * 0.05, 0, TAU); ctx.fill();
+    }
+    ctx.lineCap = 'butt';
+    for (const seite of [-1, 1]) {
+      const e = P(0.9, seite * 0.11, 0.27);
+      ctx.fillStyle = '#2a1d0a'; ctx.beginPath(); ctx.arc(e[0], e[1], s * 0.045, 0, TAU); ctx.fill();
+    }
+    // Panzer: Grünspan über Messing, mit Naht in der Mitte
+    this.prism(ctx, oval(0.66, 0.5), 0.04, 0.26, '#3f9d86', '#1d5a4d', { outline: '#0d2f28' });
+    this.prism(ctx, oval(0.5, 0.37), 0.3, 0.07, '#5cc0a6', '#256d5e');
+    const n0 = P(-0.46, 0, 0.375), n1 = P(0.44, 0, 0.375);
+    ctx.strokeStyle = 'rgba(18,58,50,0.7)'; ctx.lineWidth = Math.max(1, s * 0.045);
+    ctx.beginPath(); ctx.moveTo(n0[0], n0[1]); ctx.lineTo(n1[0], n1[1]); ctx.stroke();
+    // Aufziehschlüssel hinten auf dem Rücken: Stift und zwei Flügel, die sich langsam drehen
+    const sch = W(-0.6, 0);
+    this.prism(ctx, this.circlePoly(sch[0], sch[1], 0.07, 8), 0.2, 0.3, '#ffdf9c', '#a8792c');
+    const [kx, ky] = this.proj(sch[0], sch[1], 0.53);
+    const dreh = laufen ? t * 1.9 : t * 0.5;
+    ctx.save(); ctx.translate(kx, ky); ctx.rotate(dreh);
+    ctx.fillStyle = '#e0b45c'; ctx.strokeStyle = '#7d5a20'; ctx.lineWidth = Math.max(1, s * 0.03);
+    for (const seite of [-1, 1]) {
+      ctx.beginPath(); ctx.ellipse(seite * s * 0.14, 0, s * 0.13, s * 0.07, 0, 0, TAU);
+      ctx.fill(); ctx.stroke();
+    }
+    ctx.fillStyle = '#ffdf9c'; ctx.beginPath(); ctx.arc(0, 0, s * 0.04, 0, TAU); ctx.fill();
+    ctx.restore();
+  },
+
+  /* Pendel: die Linse hängt an einer Stange, die von oben herunterkommt – über dem Ball, nicht
+     in seinem Weg. Auf dem Boden liegt der Bogen, den sie bestreicht, damit man die Schwingbahn
+     schon von weitem sieht und nicht erst, wenn man darin liegt. */
+  /* Der Bogen, den die Linse bestreicht. Gezeichnet werden zwei feine Schienen an seinen Rändern
+     statt eines breiten weichen Streifens: Der sah auf dem Pflaster aus wie ein Wischer, und man
+     konnte an ihm nicht ablesen, wie breit die Linse wirklich ist. Zwei Linien sagen genau das. */
+  drawPendulumFloor(ctx, ob, t) {
+    const s = this.scale, br = ob.w * 0.5;
+    ctx.strokeStyle = 'rgba(255,214,110,0.3)'; ctx.lineWidth = Math.max(1, s * 0.045);
+    const n = 20;
+    for (const sd of [-1, 1]) {
+      ctx.beginPath();
+      for (let i = 0; i <= n; i++) {
+        const a = ob.ruheR - ob.ampR + (2 * ob.ampR * i) / n;
+        const [px, py] = this.proj(ob.ax + Math.cos(a) * (ob.len + sd * br), ob.ay + Math.sin(a) * (ob.len + sd * br), 0.004);
+        i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+      }
+      ctx.stroke();
+    }
+    this.isoEllipse(ctx, ob.x, ob.y, 0.006, br * 0.95, 'rgba(0,0,0,0.22)');
+  },
+  drawPendulum(ctx, ob, t) {
+    const s = this.scale, r = ob.w * 0.45;
+    // Stange: von der Aufhängung hoch oben herab zur Linse
+    const [ax, ay] = this.proj(ob.ax, ob.ay, ob.hoehe + 1.6);
+    const [bx, by] = this.proj(ob.x, ob.y, 0.75);
+    ctx.strokeStyle = '#8a6624'; ctx.lineWidth = Math.max(2.5, s * 0.1); ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+    ctx.strokeStyle = '#e0b45c'; ctx.lineWidth = Math.max(1, s * 0.04);
+    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+    ctx.lineCap = 'butt';
+    // Aufhängung: ein Lagerbock, der oben in der Luft hängt (die Bahn darunter bleibt frei)
+    ctx.fillStyle = '#5a4520'; ctx.beginPath(); ctx.arc(ax, ay, s * 0.16, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#ffdf9c'; ctx.beginPath(); ctx.arc(ax, ay, s * 0.07, 0, TAU); ctx.fill();
+    // Linse: der schwere Körper, der den Ball wegräumt
+    this.prism(ctx, this.circlePoly(ob.x, ob.y, r, 14), 0, 0.72, '#e8c774', '#8a6624', { outline: '#33240e' });
+    this.isoEllipse(ctx, ob.x, ob.y, 0.735, r * 0.55, '#fff1c4');
+    this.isoEllipse(ctx, ob.x, ob.y, 0.74, r * 0.22, '#a8792c');
+  },
+
+  /* Federwerk: eine Spiralfeder, die in den Boden eingelassen ist. Geladen zieht sie sich
+     zusammen, nach dem Schuss schwingt sie kurz weit auf. Der Arm zeigt, wohin es geht. */
+  drawSpringWorkFloor(ctx, ob, t) {
+    const s = this.scale, dx = Math.cos(ob.angle), dy = Math.sin(ob.angle), R = 0.9 + ob.range;
+    this.isoEllipse(ctx, ob.x, ob.y, 0.004, ob.catchR + 0.35, 'rgba(0,0,0,0.25)');
+    ctx.fillStyle = 'rgba(255,210,120,0.55)';
+    for (let d = 1.6; d < R - 0.5; d += 0.7) { const [px, py] = this.proj(ob.x + dx * d, ob.y + dy * d, 0.01); ctx.beginPath(); ctx.arc(px, py, s * 0.05, 0, TAU); ctx.fill(); }
+    this.isoEllipse(ctx, ob.x + dx * R, ob.y + dy * R, 0.006, 0.45, 'rgba(255,210,120,0.3)');
+    this.isoEllipse(ctx, ob.x + dx * R, ob.y + dy * R, 0.008, 0.2, 'rgba(255,240,200,0.55)');
+  },
+  drawSpringWork(ctx, ob, t) {
+    const s = this.scale, r = ob.catchR + 0.45;
+    // Topf im Boden
+    this.prism(ctx, this.circlePoly(ob.x, ob.y, r, 14), 0, 0.22, '#6e5220', '#3e2e11', { outline: '#241a09' });
+    this.isoEllipse(ctx, ob.x, ob.y, 0.225, r * 0.86, '#241a09');
+    // Spirale: eng, wenn gespannt – weit, kurz nach dem Schuss
+    const nach = Math.max(0, 1 - (t - ob.firedAt) * 3);
+    const eng = ob.loaded ? 1 : 0.55 + 0.45 * nach;
+    const wind = 3.2, r0 = r * 0.14, r1 = r * 0.82 * (1 - 0.32 * eng);
+    ctx.strokeStyle = ob.loaded ? '#ffe9b0' : '#d8a441';
+    ctx.lineWidth = Math.max(2, s * 0.09); ctx.lineJoin = 'round';
+    ctx.beginPath();
+    const N = 90;
+    for (let i = 0; i <= N; i++) {
+      const u = i / N, a = ob.angle + u * TAU * wind, rr = r0 + (r1 - r0) * u;
+      const [px, py] = this.proj(ob.x + Math.cos(a) * rr, ob.y + Math.sin(a) * rr, 0.24);
+      i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+    }
+    ctx.stroke();
+    // Federarm am äußeren Ende: er zeigt die Schussrichtung
+    const ex = ob.x + Math.cos(ob.angle) * r1, ey = ob.y + Math.sin(ob.angle) * r1;
+    this.prism(ctx, this.circlePoly(ex, ey, 0.17, 8), 0.24, 0.26, '#ffdf9c', '#a8792c');
+    // Achse in der Mitte
+    this.prism(ctx, this.circlePoly(ob.x, ob.y, 0.16, 10), 0.22, 0.34, '#e8c774', '#8a6624', { outline: '#33240e' });
+  },
+
+  /* ---------------------------------------------------------------------------
+     Kupferrohr und Hemmung.
+     --------------------------------------------------------------------------- */
+
+  /* Kupferrohr: ein liegendes Rohr, dessen Mund zur Bahn zeigt. Eingang und Ausgang werden
+     getrennt einsortiert und beide von hier gezeichnet – 'ausgang' sagt, welcher gerade dran ist.
+     Der Mund ist eine dunkle Scheibe in der Stirnfläche: So sieht man von jeder Kameradrehung aus,
+     dass das Rohr offen ist und wohin es zeigt. */
+  /* Ein Lauf der Leitung – ein gerades Stück oder ein Teilstück eines Bogens. Jeder Lauf geht für
+     sich in die Tiefensortierung, sonst läge die ganze Leitung entweder vor oder hinter allem,
+     was sie überquert.
+
+     Ein Rohr erkennt man an drei Dingen: am Glanzstreifen auf dem Scheitel, der aus dem Zylinder
+     erst Kupfer macht; an den Muffen, mit denen zwei Stücke verschraubt sind; und daran, dass es
+     getragen wird. Wichtig ist, dass ein gerader Lauf als ein einziger Zylinder gezeichnet wird –
+     sonst sieht man an jedem Stoß den Deckel des nächsten und das Rohr wird zur Perlenkette. */
+  ROHR_R: 0.33,
+  /* Luke: der Rahmen liegt bündig im Boden, darin zwei Klappen, die zur Seite wegschwenken. Offen
+     sieht man den Schacht hinunter – man soll dem Loch ansehen, dass es eines ist, und der zu
+     klappenden Luke, dass sie gleich wieder Boden ist. Gezeichnet wird sie auf der Höhe ihrer
+     eigenen Ebene, denn dort liegt sie. */
+  drawLuke(ctx, ob, z) {
+    const s = this.scale, w = ob.w / 2, h = ob.h / 2, auf = ob.auf;
+    const rahmen = [[ob.x - w, ob.y - h], [ob.x + w, ob.y - h], [ob.x + w, ob.y + h], [ob.x - w, ob.y + h]];
+    // Schacht: je weiter offen, desto tiefer sieht man hinein
+    this.fillPoly(ctx, rahmen, z + 0.004, '#14100a');
+    if (auf > 0.05) {
+      const t2 = Math.min(1, auf) * 0.9;
+      this.fillPoly(ctx, [[ob.x - w * 0.92, ob.y - h * 0.92], [ob.x + w * 0.92, ob.y - h * 0.92],
+        [ob.x + w * 0.92, ob.y + h * 0.92], [ob.x - w * 0.92, ob.y + h * 0.92]], z - t2 * 0.5, '#080604');
+    }
+    // Die beiden Klappen: sie schrumpfen zur Seite hin weg
+    const rest = 1 - auf;
+    for (const sd of [-1, 1]) {
+      if (rest < 0.02) continue;
+      const a = ob.y + sd * h * (1 - rest), b = ob.y + sd * h;
+      const klappe = [[ob.x - w * 0.96, Math.min(a, b)], [ob.x + w * 0.96, Math.min(a, b)],
+        [ob.x + w * 0.96, Math.max(a, b)], [ob.x - w * 0.96, Math.max(a, b)]];
+      this.prism(ctx, klappe, z + 0.006, 0.09, '#c9903f', '#7d5a20', { outline: '#2a1d0a' });
+    }
+    // Scharniere und ein Griff je Klappe, damit man sieht, wohin sie klappen
+    ctx.fillStyle = '#5c4318';
+    for (const sd of [-1, 1]) {
+      for (const q of [-0.55, 0.55]) {
+        const p = this.proj(ob.x + q * w, ob.y + sd * h * 0.98, z + 0.1);
+        ctx.beginPath(); ctx.arc(p[0], p[1], Math.max(1, s * 0.05), 0, TAU); ctx.fill();
+      }
+    }
+    /* Ein heller Rand sagt, was gleich passiert: Offen leuchtet er, zu ist er ruhig. Ohne das
+       müsste man die Luke im Kopf mitzählen, statt sie zu sehen. */
+    ctx.strokeStyle = `rgba(255,214,110,${(0.25 + 0.55 * auf).toFixed(2)})`;
+    ctx.lineWidth = Math.max(1.5, s * 0.07);
+    ctx.beginPath();
+    rahmen.forEach((p, i) => { const q = this.proj(p[0], p[1], z + 0.012); i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); });
+    ctx.closePath(); ctx.stroke();
+  },
+
+  /* Aufzug: eine Kabine zwischen zwei Führungsschienen, oben die Umlenkrolle mit dem Seil. Der
+     Boden der Kabine ist hell, solange sie unten steht und aufnehmen kann – man soll von weitem
+     sehen, ob man einsteigen kann, und nicht erst beim Danebenrollen merken, dass sie oben ist.
+     Gezeichnet wird von der Ebene des Schachtfußes bis zur nächsten darüber. */
+  drawAufzug(ctx, ob, t) {
+    const s = this.scale, lv = this.level;
+    const z0 = (ob.ebene || 0) * lv.ebeneZ, z1 = z0 + lv.ebeneZ;
+    const hw = (ob.w || 1.5) / 2, hh = (ob.h || 1.5) / 2;
+    const [ex, ey] = [this.cam.cos, -this.cam.sin];               // Richtung, die auf dem Bild waagerecht liegt
+    const W = (a, b) => [ob.x + ex * a - ey * b, ob.y + ey * a + ex * b];
+    this.isoEllipse(ctx, ob.x, ob.y, z0 + 0.004, Math.max(hw, hh) + 0.25, 'rgba(0,0,0,0.24)');
+    // Schachtfuß
+    const fuss = [[ob.x - hw, ob.y - hh], [ob.x + hw, ob.y - hh], [ob.x + hw, ob.y + hh], [ob.x - hw, ob.y + hh]];
+    this.prism(ctx, fuss, z0, 0.14, '#6b5334', '#33261a', { outline: '#160f08' });
+    // Zwei Führungsschienen bis über die obere Ebene
+    for (const sd of [-1, 1]) {
+      const m = W(sd * (hw + 0.08), 0);
+      this.prism(ctx, this.circlePoly(m[0], m[1], 0.09, 8), z0 + 0.12, z1 - z0 + 0.62, '#8a7050', '#3d3021', { outline: '#160f08' });
+    }
+    // Querträger und Umlenkrolle ganz oben
+    const rq = z1 + 0.62;
+    const a0 = this.proj(W(-(hw + 0.08), 0)[0], W(-(hw + 0.08), 0)[1], rq);
+    const a1 = this.proj(W(hw + 0.08, 0)[0], W(hw + 0.08, 0)[1], rq);
+    ctx.strokeStyle = '#7a6248'; ctx.lineWidth = Math.max(2, s * 0.1);
+    ctx.beginPath(); ctx.moveTo(a0[0], a0[1]); ctx.lineTo(a1[0], a1[1]); ctx.stroke();
+    const rolle = this.proj(ob.x, ob.y, rq), rr = s * 0.2;
+    ctx.fillStyle = '#6d4d18'; ctx.beginPath(); ctx.arc(rolle[0], rolle[1], rr, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#e0b45c'; ctx.beginPath(); ctx.arc(rolle[0] - rr * 0.12, rolle[1] - rr * 0.12, rr * 0.7, 0, TAU); ctx.fill();
+    // Seil von der Rolle auf das Kabinendach
+    const kz = z0 + (ob.p || 0) * lv.ebeneZ;
+    const dach = this.proj(ob.x, ob.y, kz + 0.62);
+    ctx.strokeStyle = '#cdbb95'; ctx.lineWidth = Math.max(1, s * 0.035);
+    ctx.beginPath(); ctx.moveTo(rolle[0], rolle[1]); ctx.lineTo(dach[0], dach[1]); ctx.stroke();
+    // Die Kabine: Boden, vier Eckpfosten, Dach. Unten wartend leuchtet der Boden.
+    const wartet = ob.zustand === 'unten';
+    const boden = [[ob.x - hw * 0.86, ob.y - hh * 0.86], [ob.x + hw * 0.86, ob.y - hh * 0.86],
+                   [ob.x + hw * 0.86, ob.y + hh * 0.86], [ob.x - hw * 0.86, ob.y + hh * 0.86]];
+    this.prism(ctx, boden, kz, 0.16, wartet ? '#f0d089' : '#9a8358', '#4a3a24', { outline: '#160f08' });
+    for (const [sx, sy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
+      const px = ob.x + sx * hw * 0.8, py = ob.y + sy * hh * 0.8;
+      this.prism(ctx, this.circlePoly(px, py, 0.07, 6), kz + 0.16, 0.46, '#b79a6a', '#4a3a24', { outline: '#160f08' });
+    }
+    this.prism(ctx, boden, kz + 0.62, 0.1, '#8a7050', '#3d3021', { outline: '#160f08' });
+    // Lämpchen am Schachtfuß: hell, solange die Kabine aufnehmen kann
+    const lampe = this.proj(ob.x + hw + 0.22, ob.y, z0 + 0.4);
+    ctx.fillStyle = wartet ? '#ffe08a' : '#5a4a34';
+    ctx.beginPath(); ctx.arc(lampe[0], lampe[1], s * 0.09, 0, TAU); ctx.fill();
+  },
+
+  /* Zahnstange: eine gezahnte Schiene, an der ein Zahnrad mit einer Schaufel auf und ab läuft.
+     Unten wartet die Schaufel – nur wer dann daraufsteht, fährt mit. Steht sie oben, ist unten
+     nichts, worauf man kommt, und man muss die nächste Runde abwarten. */
+  drawZahnstange(ctx, ob, t) {
+    const s = this.scale, lv = this.level;
+    const z0 = (ob.ebene || 0) * lv.ebeneZ, z1 = z0 + lv.ebeneZ;
+    const [ex, ey] = [this.cam.cos, -this.cam.sin];
+    const W = (a, b) => [ob.x + ex * a - ey * b, ob.y + ey * a + ex * b];
+    this.isoEllipse(ctx, ob.x, ob.y, z0 + 0.004, Math.max(ob.w, ob.h) * 0.7, 'rgba(0,0,0,0.22)');
+    // Schiene: ein Pfosten hinter der Schaufel, mit Zähnen
+    const m = W(0, -0.42);
+    this.prism(ctx, this.circlePoly(m[0], m[1], 0.32, 8), z0, 0.14, '#6b5334', '#33261a', { outline: '#160f08' });
+    this.prism(ctx, [W(-0.16, -0.52), W(0.16, -0.52), W(0.16, -0.32), W(-0.16, -0.32)],
+      z0 + 0.1, z1 - z0 + 0.6, '#8a6f46', '#3d3021', { outline: '#160f08' });
+    ctx.strokeStyle = '#5c4318'; ctx.lineWidth = Math.max(1, s * 0.05);
+    for (let i = 0; i * 0.3 < z1 - z0 + 0.6; i++) {
+      const zz = z0 + 0.2 + i * 0.3;
+      const a = this.proj(...W(-0.18, -0.3), zz), b = this.proj(...W(0.18, -0.3), zz);
+      ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+    }
+    // Schaufel mit Zahnrad, auf ihrer Höhe
+    const zs = z0 + ob.p * (z1 - z0);
+    const schaufel = [[ob.x - ob.w / 2, ob.y - ob.h / 2], [ob.x + ob.w / 2, ob.y - ob.h / 2],
+      [ob.x + ob.w / 2, ob.y + ob.h / 2], [ob.x - ob.w / 2, ob.y + ob.h / 2]];
+    this.prism(ctx, schaufel, zs - 0.16, 0.16, '#c9903f', '#7d5a20', { outline: '#2a1d0a' });
+    const [gx, gy] = this.proj(...W(0, -0.42), zs + 0.1);
+    const gr = s * 0.26;
+    ctx.fillStyle = '#8a6624'; ctx.beginPath(); ctx.arc(gx, gy, gr, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#e0b45c'; ctx.beginPath(); ctx.arc(gx - gr * 0.1, gy - gr * 0.1, gr * 0.72, 0, TAU); ctx.fill();
+    ctx.strokeStyle = '#7d5a20'; ctx.lineWidth = Math.max(1, s * 0.04);
+    for (let i = 0; i < 6; i++) { const a = (i * TAU) / 6 + ob.p * 9; ctx.beginPath(); ctx.moveTo(gx, gy); ctx.lineTo(gx + Math.cos(a) * gr * 0.7, gy + Math.sin(a) * gr * 0.7); ctx.stroke(); }
+    // Wartet sie unten, leuchtet ihr Rand: jetzt kann man auffahren
+    if (ob.wartet === 'unten') {
+      ctx.strokeStyle = 'rgba(255,214,110,0.8)'; ctx.lineWidth = Math.max(1.5, s * 0.07);
+      ctx.beginPath();
+      schaufel.forEach((q, i) => { const p = this.proj(q[0], q[1], zs + 0.01); i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); });
+      ctx.closePath(); ctx.stroke();
+    }
+  },
+
+  /* Turbine, Boden: ein Gitterschacht mit laufendem Gebläserad. Er liegt bündig im Boden, damit
+     der Ball ungehindert darüberrollt – gehoben wird er ja vom Wind, nicht von einer Kante. */
+  drawTurbineFloor(ctx, ob, t) {
+    const s = this.scale, w = ob.w / 2, h = ob.h / 2;
+    const poly = [[ob.x - w, ob.y - h], [ob.x + w, ob.y - h], [ob.x + w, ob.y + h], [ob.x - w, ob.y + h]];
+    this.fillPoly(ctx, poly, 0.004, '#2a2118');
+    this.fillPoly(ctx, [[ob.x - w * 0.86, ob.y - h * 0.86], [ob.x + w * 0.86, ob.y - h * 0.86],
+      [ob.x + w * 0.86, ob.y + h * 0.86], [ob.x - w * 0.86, ob.y + h * 0.86]], 0.006, '#120d08');
+    // Gebläserad: drei Schaufeln, die sich drehen
+    const dreh = t * 3.4;
+    for (let i = 0; i < 3; i++) {
+      const a = dreh + (i * TAU) / 3, r = Math.min(w, h) * 0.78;
+      const p = [];
+      for (const [d, q] of [[0.12, 0.0], [1.0, 0.34], [1.0, -0.06]]) {
+        const ca = Math.cos(a), sa = Math.sin(a);
+        p.push([ob.x + (ca * d - sa * q) * r, ob.y + (sa * d + ca * q) * r]);
+      }
+      this.fillPoly(ctx, p, 0.008, '#7a6a52');
+    }
+    this.isoEllipse(ctx, ob.x, ob.y, 0.01, Math.min(w, h) * 0.18, '#c9a15a');
+    // Gitterstäbe quer darüber
+    ctx.strokeStyle = 'rgba(200,180,140,0.55)'; ctx.lineWidth = Math.max(1, s * 0.05);
+    for (let i = 1; i < 4; i++) {
+      const u = ob.y - h + (2 * h * i) / 4;
+      const p0 = this.proj(ob.x - w, u, 0.012), p1 = this.proj(ob.x + w, u, 0.012);
+      ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke();
+    }
+    /* Der Windstoß: immer ein leises Wehen, und kräftig für einen Augenblick, wenn die Turbine
+       gerade jemanden hochgehoben hat. Man soll sehen, wo es nach oben geht, bevor man hinrollt. */
+    const stoss = Math.max(0, 1 - (t - ob.hebtAt) / TURBINE_STOSS);
+    const hoch = (this.level.ebeneZ || 2) * 1.1;
+    for (let i = 0; i < 7; i++) {
+      const u = ((t * (0.5 + 0.35 * stoss) + i / 7) % 1);
+      const rr = Math.min(w, h) * (0.2 + 0.7 * ((i * 0.37) % 1));
+      const a = (i * 2.4) + t * 0.6;
+      const p = this.proj(ob.x + Math.cos(a) * rr, ob.y + Math.sin(a) * rr, u * hoch);
+      ctx.fillStyle = `rgba(226,240,255,${((0.1 + 0.35 * stoss) * (1 - u)).toFixed(3)})`;
+      ctx.beginPath(); ctx.arc(p[0], p[1], s * (0.08 + u * 0.2), 0, TAU); ctx.fill();
+    }
+  },
+
+  /* Die Ebenen über der untersten als angehobene Schollen. Sie werden immer gezeichnet, nicht nur
+     wenn man oben ist – man soll von unten sehen, wohin die Turbine führt, und von oben sehen, wo
+     man herunterkommt. Was zählt, ist der Unterschied: Die Ebene, auf der der Ball gerade ist, wird
+     voll gezeichnet, die anderen halb durchsichtig. Sonst wüsste man nie, welche Wände gerade
+     gelten. Gezeichnet wird von unten nach oben, damit eine höhere Ebene die darunter verdeckt.
+
+     Eine Scholle wird nicht Kachel für Kachel als Körper gezeichnet – das gäbe bei halber
+     Durchsicht ein Gitter aus lauter inneren Seitenflächen, die man nie sehen sollte. Stattdessen
+     bekommt nur der *Rand* seine Schürze nach unten, und die Fläche obenauf wird flach gefüllt. */
+  drawEbeneOben(ctx, t) {
+    const lv = this.level;
+    if (!lv.flaechen || lv.flaechen.length < 2) return;
+    for (let n = 1; n < lv.flaechen.length; n++) this.zeichneEbene(ctx, lv.flaechen[n], n);
+  },
+  zeichneEbene(ctx, fl, n) {
+    const lv = this.level;
+    // Am Berg sind die oberen Ebenen Wolken, keine Schollen - eigene Zeichnung, gleiche Regeln.
+    if (this.theme.ebeneStil === 'wolke') return this.zeichneWolke(ctx, fl, n);
+    // Die Schürze wächst mit dem Ebenenabstand mit: Bei weit gestapelten Etagen (Rohrturm) sähe
+    // eine dünne Kante aus wie eine schwebende Platte statt wie ein Stockwerk.
+    const th = this.theme, z = n * lv.ebeneZ, aktiv = lv.ebene === n;
+    const tief = Math.max(1.15, Math.min(2.4, lv.ebeneZ * 0.55));
+    ctx.globalAlpha = aktiv ? 1 : 0.5;
+    const kante = aktiv ? th.groundEdge : shade(th.groundEdge, 1.25);
+    const kacheln = [];
+    for (let y = 0; y < lv.H; y++) for (let x = 0; x < lv.W; x++) if (fl.isFloor(x, y)) kacheln.push([x, y]);
+    kacheln.sort((a, b) => this.depth(a[0] + 0.5, a[1] + 0.5) - this.depth(b[0] + 0.5, b[1] + 0.5));
+    // Schürze: nur an den Kanten nach außen, von hinten nach vorn
+    const quad = (ax, ay, bx, by) => {
+      const p = [this.proj(ax, ay, z), this.proj(bx, by, z), this.proj(bx, by, z - tief), this.proj(ax, ay, z - tief)];
+      ctx.beginPath(); p.forEach((q, i) => i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1])); ctx.closePath();
+      ctx.fillStyle = kante; ctx.fill();
+      ctx.strokeStyle = shade(kante, 0.75); ctx.lineWidth = 1; ctx.stroke();
+    };
+    for (const [x, y] of kacheln) {
+      if (!fl.isFloor(x, y + 1)) quad(x, y + 1, x + 1, y + 1);
+      if (!fl.isFloor(x + 1, y)) quad(x + 1, y, x + 1, y + 1);
+      if (!fl.isFloor(x - 1, y)) quad(x, y, x, y + 1);
+      if (!fl.isFloor(x, y - 1)) quad(x, y, x + 1, y);
+    }
+    // Belag obenauf
+    for (const [x, y] of kacheln) {
+      const belag = th.floor[(x + y) & 1];
+      this.fillPoly(ctx, [[x, y], [x + 1, y], [x + 1, y + 1], [x, y + 1]], z, aktiv ? belag : shade(belag, 1.1));
+    }
+    // Luken dieser Ebene: sie liegen im Boden, also direkt nach dem Belag
+    for (const ob of lv.obstacles) if (ob.type === 'luke' && (ob.ebene || 0) === n) this.drawLuke(ctx, ob, z);
+    // Brüstung an den geschlossenen Kanten
+    for (const wr of fl.walls) {
+      const poly = [[wr.x, wr.y], [wr.x + wr.w, wr.y], [wr.x + wr.w, wr.y + wr.h], [wr.x, wr.y + wr.h]];
+      this.prism(ctx, poly, z, 0.42, th.wall.top, th.wall.side, { outline: shade(th.wall.side, 0.7) });
+    }
+    /* Offene Kanten hell stricheln: Dort geht es hinunter, und das muss man sehen, bevor man
+       darüberrollt – sonst wirkt der Fall wie ein Fehler des Spiels statt wie ein Weg. */
+    ctx.strokeStyle = aktiv ? 'rgba(255,214,110,0.85)' : 'rgba(255,214,110,0.45)';
+    ctx.lineWidth = Math.max(1.5, this.scale * 0.08);
+    ctx.setLineDash([this.scale * 0.26, this.scale * 0.18]);
+    for (const [x, y] of kacheln) {
+      for (const [ox, oy, a, b] of [[0, -1, [x, y], [x + 1, y]], [0, 1, [x, y + 1], [x + 1, y + 1]],
+        [-1, 0, [x, y], [x, y + 1]], [1, 0, [x + 1, y], [x + 1, y + 1]]]) {
+        if (fl.isFloor(x + ox, y + oy)) continue;
+        if (fl.at(x + ox, y + oy) === 'x') continue;                 // Block: da ist eine Wand, kein Abgrund
+        const wand = fl.walls.some(w => a[0] >= w.x - 0.4 && a[0] <= w.x + w.w + 0.4 && a[1] >= w.y - 0.4 && a[1] <= w.y + w.h + 0.4);
+        if (wand) continue;
+        const p0 = this.proj(a[0], a[1], z + 0.02), p1 = this.proj(b[0], b[1], z + 0.02);
+        ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke();
+      }
+    }
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+  },
+
+  drawPipeLauf(ctx, ob, k, t) {
+    const s = this.scale, r = this.ROHR_R;
+    const { u0, u1, bogen, teile } = ob.stuecke[k];
+    const a = ob.punkt(u0), b = ob.punkt(u1);
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    if (bogen) {
+      /* Ein Bogen wird als durchgehender Strang gezeichnet: erst die dunkle Kontur, dann das
+         Kupfer, dann der Glanz. Aus Zylindern zusammengesetzt sähe man an jedem Teilstück den
+         Deckel des nächsten – gerade in der Kurve fällt das am meisten auf. */
+      const n = Math.max(4, teile || 6);
+      const bahn = (hoch, w, farbe) => {
+        ctx.strokeStyle = farbe; ctx.lineWidth = Math.max(1, w);
+        ctx.beginPath();
+        for (let i = 0; i <= n; i++) {
+          const g = ob.punkt(u0 + (u1 - u0) * (i / n));
+          const p = this.proj(g[0], g[1], g[2] + hoch);
+          i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]);
+        }
+        ctx.stroke();
+      };
+      bahn(0, s * r * 2.24, '#3a1c08');
+      bahn(0, s * r * 1.95, '#8a4a1e');
+      bahn(r * 0.34, s * r * 1.1, '#d9853f');
+      bahn(r * 0.62, s * 0.08, 'rgba(255,206,150,0.7)');
+      ctx.lineCap = 'butt'; ctx.lineJoin = 'miter';
+      return;
+    }
+    this.walze(ctx, a[0], a[1], b[0], b[1], (a[2] + b[2]) / 2, r, '#d9853f', '#8a4a1e', { n: 12, outline: '#3a1c08' });
+    // Glanzstreifen auf dem Scheitel
+    const p0 = this.proj(a[0], a[1], a[2] + r * 0.6), p1 = this.proj(b[0], b[1], b[2] + r * 0.6);
+    ctx.strokeStyle = 'rgba(255,206,150,0.7)'; ctx.lineWidth = Math.max(1, s * 0.07);
+    ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke();
+    // Muffen, die in diesen Lauf fallen
+    const halb = 0.16 / Math.max(0.001, ob.len);
+    for (const m of ob.muffen) {
+      if (m < u0 + halb || m > u1 - halb) continue;
+      const c0 = ob.punkt(m - halb), c1 = ob.punkt(m + halb);
+      this.walze(ctx, c0[0], c0[1], c1[0], c1[1], (c0[2] + c1[2]) / 2, r * 1.25, '#e8a15c', '#7d4416', { n: 12, outline: '#3a1c08' });
+      const q0 = this.proj(c0[0], c0[1], c0[2] + r * 0.78), q1 = this.proj(c1[0], c1[1], c1[2] + r * 0.78);
+      ctx.strokeStyle = 'rgba(255,226,190,0.8)'; ctx.lineWidth = Math.max(1, s * 0.075);
+      ctx.beginPath(); ctx.moveTo(q0[0], q0[1]); ctx.lineTo(q1[0], q1[1]); ctx.stroke();
+    }
+    ctx.lineCap = 'butt'; ctx.lineJoin = 'miter';
+    /* Fährt gerade ein Ball darin, ist er selbst nicht zu sehen – er steckt im Kupfer, und durch
+       Kupfer schaut niemand. Zu sehen ist nur, was man auch an einer echten Rohrpost sieht: eine
+       helle Stelle, die durch die Leitung wandert. Sie ist ein Stück Rohr in Glut plus ein weicher
+       Schein darum, damit man sie auch dann findet, wenn eine Mauer davorsteht. */
+    if (ob.fahrt >= 0) this.drawPipeSchein(ctx, ob, u0, u1);
+  },
+  /* Die glühende Stelle, die mit dem Ball durch die Leitung wandert. Sie wird nur von dem Lauf
+     gezeichnet, in dem sie gerade steckt – so bleibt sie richtig einsortiert und verschwindet
+     hinter einer Mauer, wenn der Lauf dort hinter ihr liegt. */
+  drawPipeSchein(ctx, ob, u0, u1) {
+    const s = this.scale, r = this.ROHR_R;
+    const lang = 0.8 / Math.max(0.001, ob.len);                 // gut acht Zehntel Kacheln
+    const a = Math.max(u0, ob.fahrt - lang), b = Math.min(u1, ob.fahrt + lang);
+    if (b <= a) return;
+    const g = ob.punkt(ob.fahrt), p = this.proj(g[0], g[1], g[2]);
+    const halo = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], s * 0.9);
+    halo.addColorStop(0, 'rgba(255,226,150,0.5)'); halo.addColorStop(1, 'rgba(255,190,90,0)');
+    ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(p[0], p[1], s * 0.9, 0, TAU); ctx.fill();
+    ctx.lineCap = 'round';
+    for (const [hoch, breit, farbe] of [[r * 0.3, r * 1.5, 'rgba(255,180,90,0.85)'], [r * 0.52, r * 0.8, 'rgba(255,240,200,0.95)']]) {
+      ctx.strokeStyle = farbe; ctx.lineWidth = Math.max(1, s * breit);
+      ctx.beginPath();
+      for (let i = 0; i <= 5; i++) {
+        const q = ob.punkt(a + (b - a) * (i / 5)), z = this.proj(q[0], q[1], q[2] + hoch);
+        i ? ctx.lineTo(z[0], z[1]) : ctx.moveTo(z[0], z[1]);
+      }
+      ctx.stroke();
+    }
+    ctx.lineCap = 'butt';
+  },
+  /* Stütze unter der Leitung: ein Pfosten mit Fuß und einer Schelle, die das Rohr umfasst. */
+  drawPipeStuetze(ctx, ob, u) {
+    const [x, y, z] = ob.punkt(u), r = this.ROHR_R;
+    this.isoEllipse(ctx, x, y, 0.003, 0.3, 'rgba(0,0,0,0.22)');
+    this.prism(ctx, this.circlePoly(x, y, 0.3, 10), 0, 0.1, '#8a6132', '#43301a', { outline: '#241708' });
+    this.prism(ctx, this.circlePoly(x, y, 0.15, 8), 0.1, z - r * 0.9 - 0.1, '#7a5326', '#43301a', { outline: '#241708' });
+    this.prism(ctx, this.circlePoly(x, y, 0.24, 10), z - r * 0.9, 0.14, '#a7772f', '#5c3a12', { outline: '#241708' });
+  },
+
+  drawCopperPipe(ctx, ob, t, ausgang) {
+    const s = this.scale;
+    const cx = ausgang ? ob.ax : ob.x, cy = ausgang ? ob.ay : ob.y;
+    if (cx == null) return;
+    let ux = ausgang ? ob.ausMundX : ob.mundX, uy = ausgang ? ob.ausMundY : ob.mundY;
+    if (!ux && !uy) { ux = ob.dx; uy = ob.dy; }          // Notfall: die Auswurfrichtung
+    const L = Math.hypot(ux, uy) || 1; ux /= L; uy /= L;
+    const qx = -uy, qy = ux;                              // quer zur Rohrachse, waagerecht
+    const r = 0.42, z = r + 0.1;
+    const kupfer = ['#e08b4c', '#8a4a1e'], dunkel = '#3a1c08';
+    // Scheibe senkrecht zur Rohrachse (quer-Richtung und Höhe spannen sie auf)
+    const scheibe = (mx, my, rr, farbe) => {
+      ctx.beginPath();
+      for (let i = 0; i <= 16; i++) {
+        const w = (i * TAU) / 16;
+        const p = this.proj(mx + qx * Math.cos(w) * rr, my + qy * Math.cos(w) * rr, z + Math.sin(w) * rr);
+        i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]);
+      }
+      ctx.closePath(); ctx.fillStyle = farbe; ctx.fill();
+    };
+    // Sockel, damit das Rohr nicht schwebt
+    this.prism(ctx, [[cx - qx * 0.5 - ux * 0.45, cy - qy * 0.5 - uy * 0.45], [cx + qx * 0.5 - ux * 0.45, cy + qy * 0.5 - uy * 0.45],
+      [cx + qx * 0.5 + ux * 0.4, cy + qy * 0.5 + uy * 0.4], [cx - qx * 0.5 + ux * 0.4, cy - qy * 0.5 + uy * 0.4]],
+      0, 0.16, '#6b4a24', '#3e2a12', { outline: '#241708' });
+    // Rohrkörper: von hinten aus dem Boden bis zum Mund an der Kachelkante
+    const hx = cx - ux * 0.5, hy = cy - uy * 0.5, mx = cx + ux * 0.52, my = cy + uy * 0.52;
+    this.walze(ctx, hx, hy, mx, my, z, r, kupfer[0], kupfer[1], { n: 14, outline: dunkel });
+    // Nietenband kurz vor dem Mund
+    const nx = cx + ux * 0.24, ny = cy + uy * 0.24;
+    scheibe(nx, ny, r * 1.1, '#c9762f');
+    scheibe(nx + ux * 0.05, ny + uy * 0.05, r * 0.98, '#f0a35e');
+    for (let i = 0; i < 8; i++) {
+      const w = (i * TAU) / 8 + 0.2;
+      const p = this.proj(nx + ux * 0.06 + qx * Math.cos(w) * r * 1.04, ny + uy * 0.06 + qy * Math.cos(w) * r * 1.04, z + Math.sin(w) * r * 1.04);
+      ctx.fillStyle = '#7d4416'; ctx.beginPath(); ctx.arc(p[0], p[1], Math.max(1.2, s * 0.045), 0, TAU); ctx.fill();
+    }
+    // Der offene Mund
+    scheibe(mx, my, r * 0.92, '#3a1c08');
+    scheibe(mx + ux * 0.05, my + uy * 0.05, r * 0.74, '#180b03');
+    // Dampfaustritt aus dem Ventil oben – kräftig, wenn das Rohr gerade geschluckt oder gespien hat
+    const seit = t - (ausgang ? ob.speiAt : ob.schluckAt);
+    const stoss = Math.max(0, 1 - seit / 0.9);
+    const [vx, vy] = this.proj(cx - ux * 0.28, cy - uy * 0.28, z + r + 0.12);
+    ctx.fillStyle = '#8a4a1e'; ctx.beginPath(); ctx.arc(vx, vy, s * 0.09, 0, TAU); ctx.fill();
+    for (let i = 0; i < 4; i++) {
+      const u = ((t * 0.9 + i / 4) % 1);
+      const dicht = 0.12 + 0.5 * stoss;
+      const p = this.proj(cx - ux * (0.28 + u * 0.25) + qx * (i - 1.5) * 0.1, cy - uy * (0.28 + u * 0.25) + qy * (i - 1.5) * 0.1, z + r + 0.15 + u * 0.7);
+      ctx.fillStyle = `rgba(238,246,255,${(dicht * (1 - u)).toFixed(3)})`;
+      ctx.beginPath(); ctx.arc(p[0], p[1], s * (0.1 + u * 0.26), 0, TAU); ctx.fill();
+    }
+  },
+
+  /* Hemmung, Boden: die beiden Durchlässe. Der offene leuchtet, der gesperrte bleibt dunkel –
+     man soll von weitem sehen, welche Seite gerade dran ist, nicht erst aus zwei Kacheln Abstand. */
+  drawEscapementFloor(ctx, ob, t) {
+    for (const [auf, sd] of [[ob.aufA, -1], [ob.aufB, 1]]) {
+      const { cx, cy, laenge, dick } = ob.haelfte(sd);
+      const poly = ob.laengs
+        ? [[cx - laenge / 2, cy - dick], [cx + laenge / 2, cy - dick], [cx + laenge / 2, cy + dick], [cx - laenge / 2, cy + dick]]
+        : [[cx - dick, cy - laenge / 2], [cx + dick, cy - laenge / 2], [cx + dick, cy + laenge / 2], [cx - dick, cy + laenge / 2]];
+      const hell = auf * auf;
+      this.fillPoly(ctx, poly, 0.005, `rgba(255,214,110,${(0.06 + 0.24 * hell).toFixed(3)})`, false);
+    }
+  },
+  /* Hemmung: zwei Klinken, die aus den Pfosten fahren, dazwischen der Anker, der zur offenen Seite
+     kippt. Eine Klinke, die halb draußen ist, sperrt noch – dieselbe Regel wie beim Fallgatter. */
+  drawEscapement(ctx, ob, t) {
+    const s = this.scale, H = ob.hoehe;
+    const messing = ['#e0b45c', '#8a6624'], stahl = ['#c6ccda', '#5e6472'];
+    for (const [auf, sd] of [[ob.aufA, -1], [ob.aufB, 1]]) {
+      const { cx, cy, laenge, dick } = ob.haelfte(sd);
+      // Pfosten am äußeren Ende, in dem die Klinke steckt
+      const px = ob.x + (ob.laengs ? sd * laenge : 0), py = ob.y + (ob.laengs ? 0 : sd * laenge);
+      this.prism(ctx, this.circlePoly(px, py, dick * 0.75, 8), 0, H + 0.3, messing[0], messing[1], { outline: '#33240e' });
+      // Klinke: fährt vom Pfosten zur Mitte, je weiter 'auf', desto weiter zurückgezogen
+      const raus = laenge * (1 - auf);
+      if (raus > 0.05) {
+        const ex = px - (ob.laengs ? sd * raus : 0), ey = py - (ob.laengs ? 0 : sd * raus);
+        const mx = (px + ex) / 2, my = (py + ey) / 2;
+        const poly = ob.laengs ? [[Math.min(px, ex), my - dick / 2], [Math.max(px, ex), my - dick / 2], [Math.max(px, ex), my + dick / 2], [Math.min(px, ex), my + dick / 2]]
+          : [[mx - dick / 2, Math.min(py, ey)], [mx + dick / 2, Math.min(py, ey)], [mx + dick / 2, Math.max(py, ey)], [mx - dick / 2, Math.max(py, ey)]];
+        this.prism(ctx, poly, 0.04, H, stahl[0], stahl[1], { outline: '#22262f' });
+        // Zahn an der Spitze: daran erkennt man die Sperrklinke
+        this.prism(ctx, this.circlePoly(ex, ey, dick * 0.55, 6), 0.04, H + 0.12,
+          ob.zuA && sd < 0 || ob.zuB && sd > 0 ? '#ffdf9c' : '#9aa2b4', messing[1], { outline: '#33240e' });
+      }
+    }
+    // Anker in der Mitte: er kippt zur offenen Seite und sagt, was als Nächstes kommt
+    const k = ob.anker * 0.45;
+    const ax = ob.x + (ob.laengs ? k * 0.5 : 0), ay = ob.y + (ob.laengs ? 0 : k * 0.5);
+    this.prism(ctx, this.circlePoly(ob.x, ob.y, 0.2, 10), 0, H + 0.45, messing[0], messing[1], { outline: '#33240e' });
+    const [c0, c1] = this.proj(ob.x, ob.y, H + 0.45), [a0, a1] = this.proj(ax, ay, H + 0.5);
+    ctx.strokeStyle = '#ffdf9c'; ctx.lineWidth = Math.max(2, s * 0.09); ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(c0, c1); ctx.lineTo(a0, a1); ctx.stroke(); ctx.lineCap = 'butt';
+  },
+
+  /* ---------------------------------------------------------------------------
+     Zeigerarm und Zifferblatt.
+     --------------------------------------------------------------------------- */
+
+  /* Das Zifferblatt, auf dem beide arbeiten: ein Ring mit Stundenmarken, flach im Boden.
+     'gross' macht die Marken kräftiger – das Zifferblatt braucht sie deutlicher als der Arm. */
+  ziffernkreis(ctx, x, y, r, marken, gross) {
+    const s = this.scale;
+    this.isoEllipse(ctx, x, y, 0.002, r + 0.7, 'rgba(20,14,6,0.35)');
+    this.isoEllipse(ctx, x, y, 0.003, r + 0.5, 'rgba(246,236,205,0.10)');
+    ctx.strokeStyle = 'rgba(255,214,110,0.35)'; ctx.lineWidth = Math.max(1.5, s * 0.05);
+    ctx.beginPath();
+    for (let i = 0; i <= 48; i++) {
+      const a = (i * TAU) / 48;
+      const p = this.proj(x + Math.cos(a) * r, y + Math.sin(a) * r, 0.006);
+      i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]);
+    }
+    ctx.stroke();
+    for (let i = 0; i < marken; i++) {
+      const a = -Math.PI / 2 + (i * TAU) / marken, dick = i % 3 === 0 ? 1.6 : 1;
+      const p0 = this.proj(x + Math.cos(a) * (r - 0.45), y + Math.sin(a) * (r - 0.45), 0.007);
+      const p1 = this.proj(x + Math.cos(a) * (r + 0.35), y + Math.sin(a) * (r + 0.35), 0.007);
+      ctx.strokeStyle = `rgba(255,232,170,${gross ? 0.7 : 0.45})`;
+      ctx.lineWidth = Math.max(1.5, s * 0.06 * dick);
+      ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke();
+    }
+  },
+
+  drawSweepHandFloor(ctx, ob, t) { this.ziffernkreis(ctx, ob.x, ob.y, ob.r, 12, false); },
+  /* Zeigerarm: eine lange Stange mit Gegengewicht, wie der Minutenzeiger einer Turmuhr. Sie hat
+     Höhe, damit sie den Ball sichtbar vor sich herschiebt und nicht über ihn hinweggeht. */
+  drawSweepHand(ctx, ob, t) {
+    const s = this.scale, ca = Math.cos(ob.angle), sa = Math.sin(ob.angle), tk = ob.thick, L = ob.r;
+    const P = (d, q) => [ob.x + ca * d - sa * q, ob.y + sa * d + ca * q];
+    const profil = [[-1.2, tk * 1.0], [-0.2, tk * 1.6], [L * 0.5, tk * 1.15], [L - 0.6, tk * 0.8], [L, tk * 0.12]];
+    const platte = (schrumpf, kuerzer) => {
+      const p = [];
+      for (const [d, q] of profil) p.push(P(d - kuerzer * (d / L), q * schrumpf));
+      for (let i = profil.length - 1; i >= 0; i--) { const [d, q] = profil[i]; p.push(P(d - kuerzer * (d / L), -q * schrumpf)); }
+      return p;
+    };
+    const gw = P(-1.15, 0);
+    this.prism(ctx, this.circlePoly(gw[0], gw[1], 0.4, 14), 0.04, ob.hoehe * 0.9, '#e0b45c', '#7d5a20', { outline: '#33240e' });
+    this.frustum(ctx, platte(1, 0), platte(0.5, 0.12), 0.05, ob.hoehe, '#f0cd7d', '#8a6624', { outline: '#3a2a12' });
+    // heller Grat auf der Oberkante: er zeigt, wohin geschoben wird
+    this.fillPoly(ctx, [P(L - 1.1, tk * 0.4), P(L - 0.15, tk * 0.06), P(L - 0.15, -tk * 0.06), P(L - 1.1, -tk * 0.4)], ob.hoehe + 0.01, '#fff0c2', false);
+    // Nabe
+    this.prism(ctx, this.circlePoly(ob.x, ob.y, ob.nabe, 12), 0, ob.hoehe + 0.35, '#8a6624', '#4e3814', { outline: '#2a1d0a' });
+    this.prism(ctx, this.circlePoly(ob.x, ob.y, ob.nabe * 0.5, 10), ob.hoehe + 0.35, 0.12, '#ffdf9c', '#a8792c');
+  },
+
+  /* Zeigerwerk, Boden: das Zifferblatt und darauf die drei Wirkfelder. Die Felder müssen sichtbar
+     sein, sonst wirkt die Bahn willkürlich – man soll den Zeiger kommen sehen und ihm ausweichen
+     oder ihn mitnehmen. Die Farben sind die der Korallen: blau bremst, grün stößt, rot zieht. */
+  ZEIGERWERK_FARBEN: { bremsen: '110,180,255', stossen: '110,230,130', ziehen: '255,110,110' },
+  drawHandClockFloor(ctx, ob, t) {
+    const s = this.scale;
+    this.ziffernkreis(ctx, ob.x, ob.y, ob.r, 12, true);
+    for (const z of ob.zeiger) {
+      const col = this.ZEIGERWERK_FARBEN[z.wirkung];
+      const ca = Math.cos(z.angle), sa = Math.sin(z.angle);
+      const P = (d, q) => this.proj(ob.x + ca * d - sa * q, ob.y + sa * d + ca * q, 0.005);
+      // Das Feld ist die Fläche im Abstand 'feld' um die Zeigerstrecke: ein Rechteck mit rundem Kopf.
+      const rand = [];
+      for (let i = 0; i <= 10; i++) { const a = -Math.PI / 2 + (i / 10) * Math.PI; rand.push(P(z.laenge + Math.cos(a) * z.feld, Math.sin(a) * z.feld)); }
+      for (let i = 0; i <= 10; i++) { const a = Math.PI / 2 + (i / 10) * Math.PI; rand.push(P(Math.cos(a) * z.feld, Math.sin(a) * z.feld)); }
+      ctx.fillStyle = `rgba(${col},0.12)`;
+      ctx.beginPath(); rand.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.closePath(); ctx.fill();
+      // Ein wandernder Strich im Feld sagt, wohin es wirkt: nach außen beim Stoßen, zur Linie beim
+      // Ziehen, und beim Bremsen stehende Querstriche, die nur pulsieren.
+      ctx.lineWidth = Math.max(1, s * 0.045);
+      for (let i = 0; i < 4; i++) {
+        let u = (t * 0.5 + i / 4) % 1;
+        if (z.wirkung === 'ziehen') u = 1 - u;
+        if (z.wirkung === 'bremsen') u = (i + 1) / 5;
+        const q = z.feld * (z.wirkung === 'bremsen' ? 1 : u);
+        ctx.strokeStyle = `rgba(${col},${z.wirkung === 'bremsen' ? 0.18 + 0.14 * Math.sin(t * 2 + i) : 0.4 * (1 - u) + 0.08})`;
+        for (const vz of [1, -1]) {
+          const a = P(z.laenge * 0.18, vz * q), b = P(z.laenge * 0.92, vz * q);
+          ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+        }
+      }
+    }
+  },
+  /* Zeigerwerk, Körper: drei Zeiger auf einer Achse. Der kurze dicke unten, der lange dünne oben –
+     so verdecken sie einander nicht, und man sieht auf einen Blick, welcher welcher ist. Farbig ist
+     nur die Spitze: Das Messing bleibt Messing, die Wirkung steht vorn. */
+  drawHandClock(ctx, ob, t) {
+    const ZF = { bremsen: ['#7fb6ff', '#2b5c9e'], stossen: ['#8be6a4', '#256f3c'], ziehen: ['#ff9b9b', '#8f2b2b'] };
+    const stufen = [{ z0: 0.22, h: 0.16, tk: 0.30 }, { z0: 0.44, h: 0.13, tk: 0.22 }, { z0: 0.63, h: 0.10, tk: 0.14 }];
+    // Achse unter allem: ein Messingzylinder, auf dem die drei Zeiger sitzen
+    this.prism(ctx, this.circlePoly(ob.x, ob.y, ob.nabe, 14), 0, 0.22, '#8a6624', '#4e3814', { outline: '#2a1d0a' });
+    for (let i = 0; i < ob.zeiger.length; i++) {
+      const z = ob.zeiger[i], st = stufen[i], [hell, dunkel] = ZF[z.wirkung];
+      const ca = Math.cos(z.angle), sa = Math.sin(z.angle), L = z.laenge;
+      const P = (d, q) => [ob.x + ca * d - sa * q, ob.y + sa * d + ca * q];
+      const platte = (k) => [P(-L * 0.14, st.tk * k), P(L * 0.55, st.tk * 0.85 * k), P(L, st.tk * 0.1 * k),
+        P(L, -st.tk * 0.1 * k), P(L * 0.55, -st.tk * 0.85 * k), P(-L * 0.14, -st.tk * k)];
+      this.prism(ctx, platte(1), st.z0, st.h, '#f0cd7d', '#8a6624', { outline: '#3a2a12' });
+      // Spitze in der Farbe der Wirkung
+      const sp = [P(L * 0.62, st.tk * 0.7), P(L, st.tk * 0.1), P(L, -st.tk * 0.1), P(L * 0.62, -st.tk * 0.7)];
+      this.prism(ctx, sp, st.z0 + st.h, 0.05, hell, dunkel);
+      // Nabenring dieses Zeigers, damit die Achse nicht nackt dasteht
+      this.prism(ctx, this.circlePoly(ob.x, ob.y, ob.nabe * (0.9 - i * 0.18), 12), st.z0, st.h, '#d8b263', '#6d4d18');
+    }
+    this.prism(ctx, this.circlePoly(ob.x, ob.y, ob.nabe * 0.36, 10), 0.73, 0.14, '#ffdf9c', '#a8792c', { outline: '#2a1d0a' });
+  },
+
+  /* Wanderloch: alle Stellen, die nächste hell und mit schrumpfendem Ring. Der Ring ist die Uhr –
+     ist er zu, springt das Loch dorthin. Man soll den Schlag planen können, nicht raten.
+     Auf einem Kreis (dem Zifferblatt des Turms) kommt der Ziffernkreis dazu; bei frei gesetzten
+     Stellen verbindet stattdessen eine feine Linie die Stellen in ihrer Reihenfolge – sonst müßte
+     man erst zusehen, um zu wissen, wohin es überhaupt geht. */
+  drawWanderlochFloor(ctx, ob, t) {
+    const s = this.scale;
+    if (ob.ring) this.ziffernkreis(ctx, ob.x, ob.y, ob.r, ob.marken, true);
+    else {
+      ctx.strokeStyle = 'rgba(255,214,110,0.22)'; ctx.lineWidth = Math.max(1, s * 0.05);
+      ctx.setLineDash([s * 0.22, s * 0.22]);
+      ctx.beginPath();
+      for (let i = 0; i <= ob.orte.length; i++) {
+        const [px, py] = ob.orte[i % ob.orte.length];
+        const p = this.proj(px, py, 0.006);
+        i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]);
+      }
+      ctx.stroke(); ctx.setLineDash([]);
+    }
+    for (let i = 0; i < ob.orte.length; i++) {
+      const [px, py] = ob.orte[i];
+      if (i === ob.i) continue;                              // dort steckt gerade das Loch
+      const naechste = i === ob.next;
+      this.isoEllipse(ctx, px, py, 0.008, naechste ? 0.55 : 0.34, naechste ? 'rgba(255,214,110,0.3)' : 'rgba(255,236,190,0.12)');
+      this.isoEllipse(ctx, px, py, 0.01, naechste ? 0.3 : 0.16, naechste ? 'rgba(255,246,215,0.6)' : 'rgba(255,236,190,0.22)');
+    }
+    // Der schrumpfende Ring an der nächsten Stelle: so viel Zeit bleibt noch
+    const [nx, ny] = ob.orte[ob.next];
+    const [sx, sy] = this.proj(nx, ny, 0.012);
+    const u = Math.max(0, Math.min(1, ob.rest / WANDERLOCH_TAKT));
+    ctx.strokeStyle = 'rgba(255,226,150,0.85)'; ctx.lineWidth = Math.max(2, s * 0.07);
+    ctx.beginPath();
+    ctx.ellipse(sx, sy, 0.8 * s, 0.8 * s * this.cam.tilt, 0, -Math.PI / 2, -Math.PI / 2 + u * TAU);
+    ctx.stroke();
+  },
+
+  /* Eine Wolkenetage. Dieselben Regeln wie bei der Steinscholle - voll gezeichnet, wo der Ball
+     ist, halb durchsichtig sonst, offene Kanten hell gestrichelt -, nur sieht sie aus, wie sie
+     sich anfuehlen soll: eine Bank aus weichen Ballen, unten ins Blaue auslaufend. Die Bruestung
+     an den geschlossenen Kanten ist hier ein Wall aus dichteren Ballen: Man soll sehen, wo die
+     Wolke traegt und wo sie aufhoert, sonst waere jeder Rand eine Ueberraschung. */
+  zeichneWolke(ctx, fl, n) {
+    const lv = this.level, s = this.scale;
+    const z = n * lv.ebeneZ, aktiv = lv.ebene === n;
+    ctx.globalAlpha = aktiv ? 1 : 0.45;
+    const kacheln = [];
+    for (let y = 0; y < lv.H; y++) for (let x = 0; x < lv.W; x++) if (fl.isFloor(x, y)) kacheln.push([x, y]);
+    kacheln.sort((a, b) => this.depth(a[0] + 0.5, a[1] + 0.5) - this.depth(b[0] + 0.5, b[1] + 0.5));
+    const rand = (x, y) => !fl.isFloor(x, y);
+    // Unterseite: weiche Ballen unter den Randkacheln, die ins Blaue auslaufen
+    for (const [x, y] of kacheln) {
+      if (!rand(x, y + 1) && !rand(x - 1, y) && !rand(x + 1, y) && !rand(x, y - 1)) continue;
+      for (let i = 0; i < 3; i++) {
+        const h = Math.abs(Math.sin((x * 31.7 + y * 17.3 + i * 5.1)) * 43758.5453) % 1;
+        const p = this.proj(x + 0.2 + h * 0.6, y + 0.2 + ((h * 7) % 1) * 0.6, z - 0.25 - i * 0.42);
+        ctx.fillStyle = `rgba(${220 - i * 22},${232 - i * 20},${248 - i * 14},${0.85 - i * 0.24})`;
+        ctx.beginPath(); ctx.arc(p[0], p[1], s * (0.55 - i * 0.08), 0, TAU); ctx.fill();
+      }
+    }
+    // Oberseite: flach gefuellt, damit man Wege und Kanten klar sieht
+    for (const [x, y] of kacheln)
+      this.fillPoly(ctx, [[x, y], [x + 1, y], [x + 1, y + 1], [x, y + 1]], z, aktiv ? '#ffffff' : '#eaf2fd');
+    for (const ob of lv.obstacles) if (ob.type === 'luke' && (ob.ebene || 0) === n) this.drawLuke(ctx, ob, z);
+    // Wall aus dichten Ballen an den geschlossenen Kanten
+    for (const wr of fl.walls) {
+      const n2 = Math.max(2, Math.round(Math.max(wr.w, wr.h) * 1.6));
+      for (let i = 0; i < n2; i++) {
+        const u = (i + 0.5) / n2;
+        const p = this.proj(wr.x + wr.w * (wr.w >= wr.h ? u : 0.5), wr.y + wr.h * (wr.h > wr.w ? u : 0.5), z + 0.2);
+        ctx.fillStyle = aktiv ? 'rgba(255,255,255,0.95)' : 'rgba(240,246,255,0.8)';
+        ctx.beginPath(); ctx.arc(p[0], p[1], s * 0.36, 0, TAU); ctx.fill();
+        ctx.fillStyle = 'rgba(198,216,238,0.6)';
+        ctx.beginPath(); ctx.arc(p[0], p[1] + s * 0.1, s * 0.3, 0, TAU); ctx.fill();
+      }
+    }
+    // Offene Kanten hell gestrichelt - dort geht es hinunter
+    ctx.strokeStyle = aktiv ? 'rgba(255,214,110,0.85)' : 'rgba(255,214,110,0.45)';
+    ctx.lineWidth = Math.max(1.5, s * 0.08);
+    ctx.setLineDash([s * 0.26, s * 0.18]);
+    for (const [x, y] of kacheln) {
+      const ch = fl.at(x, y);
+      if (ch !== 'o') continue;
+      const kante = (ax, ay, bx, by) => {
+        const a = this.proj(ax, ay, z + 0.02), b = this.proj(bx, by, z + 0.02);
+        ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+      };
+      if (rand(x, y + 1)) kante(x, y + 1, x + 1, y + 1);
+      if (rand(x + 1, y)) kante(x + 1, y, x + 1, y + 1);
+      if (rand(x - 1, y)) kante(x, y, x, y + 1);
+      if (rand(x, y - 1)) kante(x, y, x + 1, y);
+    }
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
   },
 });

@@ -29,8 +29,7 @@ const COURSES = [
     decor: [
       { t: 'tower', x: 21, y: 2.5 },
       { t: 'tree', x: 16, y: 1.5, s: 1.3 },
-      { t: 'flowerbush', x: 5.5, y: 6.5 }, { t: 'flowerbush', x: 10.5, y: 8.4 },
-      { t: 'flowerbush', x: 14.5, y: 3.6 }, { t: 'flowerbush', x: 16.5, y: 6.4 },
+      { t: 'flowerbush', x: 14.5, y: 3.6 },
     ],
     autoDecor: { density: 0.42, seed: 11 },
   },

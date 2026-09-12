@@ -5,7 +5,7 @@
 import fs from 'node:fs'; import vm from 'node:vm'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
 const SRC = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'src');
 const ctx = { console, performance: { now: () => 0 }, window: {} }; vm.createContext(ctx);
-for (const f of ['themes', 'courses', 'courses_sea', 'courses_jungle', 'courses_storm', 'courses_shadow', 'courses_colosseum', 'courses_pro', 'level', 'obstacles', 'obstacles_legend', 'physics'])
+for (const f of ['themes', 'courses', 'courses_sea', 'courses_jungle', 'courses_storm', 'courses_shadow', 'courses_colosseum', 'courses_clock', 'courses_snow', 'courses_pro', 'level', 'obstacles', 'obstacles_legend', 'obstacles_snow', 'physics'])
   vm.runInContext(fs.readFileSync(path.join(SRC, `${f}.js`), 'utf8'), ctx);
 export const G = vm.runInContext('({buildLevel, makeBall, stepPhysics, createObstacles, PRO_COURSES, COURSES, SEA_COURSES, JUNGLE_COURSES, STORM_COURSES, SHADOW_COURSES, COLOSSEUM_COURSES, WORLDS, BALL_R})', ctx);
 export const WORLDS = G.WORLDS;
@@ -24,6 +24,7 @@ function resetLevel(lv, switches, schlagZahl) {
     if (ob.type === 'switch') ob.activeUntil = lv.switches[ob.target] || 0;
     if (ob.type === 'portal' || ob.type === 'potion') ob.lastUse = -10;
     if (ob.type === 'cannon' || ob.type === 'cauldron') ob.loaded = false;
+    if (ob.type === 'aufzug' && ob.zurueck) ob.zurueck();   // Kabine steht zu jedem Schlag wieder unten
   }
 }
 
@@ -48,8 +49,9 @@ export function shoot(st0, ang, pow, wait = 0, wantTrace = false) {
   st.strokes++;
   // Der Zähler der Kaiserloge zählt das Ende eines Schlags; die Bahn liest ihn erst beim nächsten
   st.schlagZahl = (st.schlagZahl || 0) + 1;
-  let t = st.t, restT = 0, slowT = 0, trace = [];
+  let t = st.t, restT = 0, slowT = 0, wartet = false, trace = [];
   const maxT = 26;
+  const WARTEN = ['aufzug', 'zahnstange', 'turbine', 'luke', 'seilbahn'];   // Maschinen, die einen ruhenden Ball noch holen
   for (let i = 0; i < 240 * maxT; i++) {
     const ev = G.stepPhysics(lv, b, STEP, t, true); t += STEP;
     if (wantTrace && i % 12 === 0) trace.push([+b.x.toFixed(2), +b.y.toFixed(2), b.air ? 1 : 0]);
@@ -94,8 +96,20 @@ export function shoot(st0, ang, pow, wait = 0, wantTrace = false) {
     }
     if (b.rider || b.air) { restT = 0; slowT = 0; continue; }
     const sp = Math.hypot(b.vx, b.vy);
-    if (sp < 0.08) { restT += STEP; if (restT > 0.25) break; } else restT = 0;
-    if (sp < 0.5 && !b.boosted) { slowT += STEP; if (slowT > 3) break; } else slowT = 0;
+    /* Liegenbleiben heißt nicht immer, dass der Schlag zu Ende ist. Im Spiel läuft die Physik auch
+       beim Zielen weiter (main.js ruft stepPhysics in 'aim' wie in 'rolling'), und genau darauf
+       bauen die Aufzüge des Uhrenturms: Wer in der Aufzugkabine liegenbleibt, wird hochgefahren,
+       wer auf der Zahnstange wartet, beim nächsten Losfahren. Bräche hier bei
+       Ruhe sofort ab, wären diese Bahnen für den Bot unlösbar, obwohl sie es im Spiel nicht sind.
+       Also wird bei Ruhe auf einem Aufzug oder einer Luke noch so lange weitergerechnet, wie der
+       langsamste von ihnen für einen Umlauf braucht. */
+    if (sp < 0.08 || (sp < 0.5 && !b.boosted)) {
+      const eb = b.ebene || 0;
+      if (!wartet) wartet = lv.obstacles.some(o => WARTEN.includes(o.type) && (o.ebene || 0) === eb
+        && Math.abs(o.x - b.x) < 1.4 && Math.abs(o.y - b.y) < 1.4);
+    } else wartet = false;
+    if (sp < 0.08) { restT += STEP; if (restT > (wartet ? 6 : 0.25)) break; } else restT = 0;
+    if (sp < 0.5 && !b.boosted) { slowT += STEP; if (slowT > (wartet ? 8 : 3)) break; } else slowT = 0;
   }
   b.vx = 0; b.vy = 0; b.rider = null; b.air = false; b.z = 0;
   st.t = t + 0.3; st.trace = trace; st.last = 'rest';
@@ -128,7 +142,21 @@ export function distMap(def) {
   if (DIST.has(def)) return DIST.get(def);
   const lv = getLevel(def), W = lv.W, H = lv.H;
   const walls = blockers(def), solids = walls.filter(w => w.solid);
-  const walk = (x, y) => { if (x < 0 || y < 0 || x >= W || y >= H) return false; const c = lv.tiles[y][x]; if (!(lv.isFloorChar(c) && c !== 'w' && c !== 'l')) return false; if (!solids.length) return true; for (const fx of [0.2, 0.5, 0.8]) for (const fy of [0.2, 0.5, 0.8]) { const cx = x + fx, cy = y + fy; if (!solids.some(b => cx > b.x0 && cx < b.x1 && cy > b.y0 && cy < b.y1)) return true; } return false; };
+  /* Ebenen: Der Uhrenturm stapelt Spielflächen übereinander, und das Loch kann auf jeder davon
+     liegen. Die Distanzkarte wird darum nicht für eine Fläche gerechnet, sondern für alle, mit
+     Kanten dazwischen – sonst stünde der Bot vor einem Loch, das für ihn gar nicht existiert,
+     und spielte blind bis zum Schlaglimit. */
+  const flaechen = (lv.flaechen && lv.flaechen.length) ? lv.flaechen : [{ tiles: lv.tiles }];
+  const E = flaechen.length;
+  const chAuf = (n, x, y) => (x < 0 || y < 0 || x >= W || y >= H) ? '.' : flaechen[n].tiles[y][x];
+  const walkE = (n, x, y) => {
+    const c = chAuf(n, x, y);
+    if (!(lv.isFloorChar(c) && c !== 'w' && c !== 'l')) return false;
+    if (!solids.length || n > 0) return true;                 // Mühlen stehen nur unten
+    for (const fx of [0.2, 0.5, 0.8]) for (const fy of [0.2, 0.5, 0.8]) { const cx = x + fx, cy = y + fy; if (!solids.some(b => cx > b.x0 && cx < b.x1 && cy > b.y0 && cy < b.y1)) return true; }
+    return false;
+  };
+  const walk = (x, y) => walkE(0, x, y);
   const edgeOpen = (x, y, nx, ny) => { // Kante zwischen Nachbarkacheln (orthogonal) frei?
     if (!walls.length) return true;
     let ax, ay, bx, by;
@@ -136,26 +164,52 @@ export function distMap(def) {
     for (const w of walls) if (segCover(w, ax, ay, bx, by) > 0.85) return false;
     return true;
   };
+  // Verbindungen: [ax, ay, an, bx, by, bn] heißt "von A auf Ebene an kommt man nach B auf Ebene bn"
   const links = [];
+  const eb = o => o.ebene || 0;
   for (const o of def.obstacles || []) {
-    if (o.type === 'portal') { links.push([o.x, o.y, o.tx, o.ty]); if (o.twoWay) links.push([o.tx, o.ty, o.x, o.y]); }
-    if (o.type === 'ferry') { links.push([o.x0, o.y0, o.x1, o.y1]); links.push([o.x1, o.y1, o.x0, o.y0]); }
-    if (o.type === 'ramp') { const a = (o.angle ?? 90) * Math.PI / 180, cx = o.x + (o.w || 2) / 2, cy = o.y + (o.h || 2) / 2, half = Math.abs(Math.cos(a)) > 0.5 ? (o.w || 2) / 2 : (o.h || 2) / 2; const L = half + (o.land ?? 1.7); links.push([cx, cy, cx + Math.cos(a) * L, cy + Math.sin(a) * L]); }
-    if (o.type === 'updraft') { const cx = o.x + (o.w || 2) / 2, cy = o.y + (o.h || 2) / 2; for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) links.push([cx, cy, cx + dx * (o.land ?? 5), cy + dy * (o.land ?? 5)]); }
-    if (o.type === 'cannon') { links.push([o.x, o.y, o.x + Math.cos(o.base || 0) * (o.range || 9) * 0.9, o.y + Math.sin(o.base || 0) * (o.range || 9) * 0.9]); }
+    const n = eb(o);
+    if (o.type === 'portal') { links.push([o.x, o.y, n, o.tx, o.ty, n]); if (o.twoWay) links.push([o.tx, o.ty, n, o.x, o.y, n]); }
+    if (o.type === 'ferry') { links.push([o.x0, o.y0, n, o.x1, o.y1, n]); links.push([o.x1, o.y1, n, o.x0, o.y0, n]); }
+    // Seilbahn: wie die Fähre, darf dabei aber die Ebene wechseln
+    if (o.type === 'seilbahn') { const zl = o.ziel == null ? n : o.ziel; links.push([o.x0, o.y0, n, o.x1, o.y1, zl]); links.push([o.x1, o.y1, zl, o.x0, o.y0, n]); }
+    if (o.type === 'gearfield') { links.push([o.x0, o.y0, n, o.x1, o.y1, n]); links.push([o.x1, o.y1, n, o.x0, o.y0, n]); }
+    if (o.type === 'ramp') { const a = (o.angle ?? 90) * Math.PI / 180, cx = o.x + (o.w || 2) / 2, cy = o.y + (o.h || 2) / 2, half = Math.abs(Math.cos(a)) > 0.5 ? (o.w || 2) / 2 : (o.h || 2) / 2; const L = half + (o.land ?? 1.7); links.push([cx, cy, n, cx + Math.cos(a) * L, cy + Math.sin(a) * L, n]); }
+    if (o.type === 'updraft') { const cx = o.x + (o.w || 2) / 2, cy = o.y + (o.h || 2) / 2; for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) links.push([cx, cy, n, cx + dx * (o.land ?? 5), cy + dy * (o.land ?? 5), n]); }
+    if (o.type === 'cannon' || o.type === 'springwork') { const R = (o.range || 9) * 0.9; links.push([o.x, o.y, n, o.x + Math.cos(o.base || 0) * R, o.y + Math.sin(o.base || 0) * R, n]); }
+    // Aufzüge des Uhrenturms: eine Etage höher, an derselben Stelle
+    if (o.type === 'turbine' || o.type === 'aufzug' || o.type === 'zahnstange') { if (n + 1 < E) links.push([o.x, o.y, n, o.x, o.y, n + 1]); }
+    // Kupferrohr: Mund auf seiner Ebene, Auswurf auf der Zielebene
+    if (o.type === 'liongate' || o.type === 'copperpipe') {
+      const g = String(o.pair || '').toUpperCase(), kl = g.toLowerCase(), ziel = o.ziel == null ? n : o.ziel;
+      let ein = null, aus = null;
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { if (chAuf(n, x, y) === g) ein = [x + 0.5, y + 0.5]; if (ziel < E && chAuf(ziel, x, y) === kl) aus = [x + 0.5, y + 0.5]; }
+      if (ein && aus) { const a = ((o.angle || 0) * Math.PI) / 180; links.push([ein[0], ein[1], n, aus[0] + Math.cos(a) * 0.95, aus[1] + Math.sin(a) * 0.95, ziel]); }
+    }
+    // Luke: von ihrer Ebene auf die nächste darunter, auf der Boden ist
+    if (o.type === 'luke' && n >= 1) { for (let m = n - 1; m >= 0; m--) if (walkE(m, Math.floor(o.x), Math.floor(o.y))) { links.push([o.x, o.y, n, o.x, o.y, m]); break; } }
   }
-  const tgt = lv.goal;
-  const run = (diag, sx = tgt.x, sy = tgt.y) => {
-    const d = Array.from({ length: H }, () => new Array(W).fill(Infinity));
-    const par = Array.from({ length: H }, () => new Array(W).fill(null));
+  // Offene Kanten ('o'): dort baut level.js keine Bande, dort geht es hinunter
+  for (let n = 1; n < E; n++) for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    if (chAuf(n, x, y) !== 'o') continue;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const nx = x + dx, ny = y + dy;
+      if (nx < 0 || ny < 0 || nx >= W || ny >= H || walkE(n, nx, ny)) continue;
+      for (let m = n - 1; m >= 0; m--) if (walkE(m, nx, ny)) { links.push([x + 0.5, y + 0.5, n, nx + 0.5, ny + 0.5, m]); break; }
+    }
+  }
+  const tgt = lv.goal, tgtE = lv.cupEbene || 0;
+  const run = (diag, sx = tgt.x, sy = tgt.y, sn = tgtE) => {
+    const d = Array.from({ length: E }, () => Array.from({ length: H }, () => new Array(W).fill(Infinity)));
+    const par = Array.from({ length: E }, () => Array.from({ length: H }, () => new Array(W).fill(null)));
     const q = [];
-    const push = (x, y, v, from) => { if (!walk(x, y) || d[y][x] <= v) return; d[y][x] = v; par[y][x] = from; q.push([x, y]); };
-    push(Math.floor(sx), Math.floor(sy), 0, null);
+    const push = (n, x, y, v, from) => { if (n < 0 || n >= E || !walkE(n, x, y) || d[n][y][x] <= v) return; d[n][y][x] = v; par[n][y][x] = from; q.push([n, x, y]); };
+    push(sn, Math.floor(sx), Math.floor(sy), 0, null);
     while (q.length) {
-      const [x, y] = q.shift(); const v = d[y][x];
-      for (const [ox, oy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) if (edgeOpen(x, y, x + ox, y + oy)) push(x + ox, y + oy, v + 1, [x, y]);
-      if (diag) for (const [ox, oy] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) if (walk(x + ox, y) && walk(x, y + oy) && edgeOpen(x, y, x + ox, y) && edgeOpen(x + ox, y, x + ox, y + oy)) push(x + ox, y + oy, v + 1.414, [x, y]);
-      for (const [ax, ay, bx, by] of links) { const bxT = Math.floor(bx), byT = Math.floor(by); if (Math.abs(bxT - x) <= 1 && Math.abs(byT - y) <= 1) push(Math.floor(ax), Math.floor(ay), v + 1.5, [x, y]); }
+      const [n, x, y] = q.shift(); const v = d[n][y][x];
+      for (const [ox, oy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) if (edgeOpen(x, y, x + ox, y + oy)) push(n, x + ox, y + oy, v + 1, [n, x, y]);
+      if (diag) for (const [ox, oy] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) if (walkE(n, x + ox, y) && walkE(n, x, y + oy) && edgeOpen(x, y, x + ox, y) && edgeOpen(x + ox, y, x + ox, y + oy)) push(n, x + ox, y + oy, v + 1.414, [n, x, y]);
+      for (const [ax, ay, an, bx, by, bn] of links) { if (bn !== n) continue; const bxT = Math.floor(bx), byT = Math.floor(by); if (Math.abs(bxT - x) <= 1 && Math.abs(byT - y) <= 1) push(an, Math.floor(ax), Math.floor(ay), v + 1.5, [n, x, y]); }
     }
     return { d, par };
   };
@@ -171,17 +225,18 @@ export function distMap(def) {
     walls.length = 0; walls.push(...saved);
   }
   // Pfad vom Abschlag zum Ziel (geradlinig)
-  const path = []; let cx = Math.floor(lv.tee.x), cy = Math.floor(lv.tee.y);
-  for (let i = 0; i < 2000 && cx !== null; i++) { path.push([cx, cy]); const p = straight.par[cy] && straight.par[cy][cx]; if (!p) break; [cx, cy] = p; }
+  const path = []; let cn = 0, cx = Math.floor(lv.tee.x), cy = Math.floor(lv.tee.y);
+  for (let i = 0; i < 2000 && cx !== null; i++) { path.push([cx, cy]); const pr = straight.par[cn] && straight.par[cn][cy] && straight.par[cn][cy][cx]; if (!pr) break; [cn, cx, cy] = pr; }
   // Schalter-Rätsel: für jedes verknüpfte Tor die Distanzkarte zur Druckplatte plus Weg Platte→Ziel
   const linked = [];
   for (const g of (def.obstacles || []).filter(o => o.type === 'gate' && o.linked)) {
     const sw = (def.obstacles || []).find(o => o.type === 'switch' && o.target === g.linked); if (!sw) continue;
-    const m = run(true, sw.x, sw.y).d, sx = Math.floor(sw.x), sy = Math.floor(sw.y);
-    linked.push({ id: g.linked, sw: { x: sw.x, y: sw.y }, dSw: m, swToGoal: d[sy][sx] });
+    const m = run(true, sw.x, sw.y, 0).d, sx = Math.floor(sw.x), sy = Math.floor(sw.y);
+    linked.push({ id: g.linked, sw: { x: sw.x, y: sw.y }, dSw: m, swToGoal: d[0][sy][sx] });
   }
   const puzzle = { shrink: (def.obstacles || []).some(o => o.type === 'cauldron' || o.type === 'potion'), linked };
-  const res = { d, dClosed, walk, lv, path, puzzle, at(x, y) { const tx = Math.floor(x), ty = Math.floor(y); if (tx < 0 || ty < 0 || tx >= W || ty >= H) return Infinity; return d[ty][tx]; } };
+  const res = { dE: d, d: d[0], dClosedE: dClosed, dClosed: dClosed[0], walk, lv, path, puzzle, ebenen: E,
+    at(x, y, n = 0) { const tx = Math.floor(x), ty = Math.floor(y); if (tx < 0 || ty < 0 || tx >= W || ty >= H) return Infinity; return d[n][ty][tx]; } };
   DIST.set(def, res); return res;
 }
 /* Fortschrittsmaß eines Zustands: BFS-Distanz zum Ziel + Feinanteil; Innen-Map zählt als "näher";
@@ -189,12 +244,13 @@ export function distMap(def) {
 /* aktive Zielkarte: normalerweise das Loch; ist ein Schalter-Tor noch zu, erst die Druckplatte */
 export function activeMap(st) {
   const dm = distMap(st.def), lv = dm.lv;
+  const n = Math.min(st.ball && st.ball.ebene || 0, dm.ebenen - 1);   // die Fläche, auf der der Ball steht
   for (const L of dm.puzzle.linked) if (!(st.switches[L.id] > st.t)) {
     const tx = Math.floor(st.ball.x), ty = Math.floor(st.ball.y), inside = tx >= 0 && ty >= 0 && tx < lv.W && ty < lv.H;
-    if (inside && isFinite(dm.dClosed[ty][tx])) return { d: dm.dClosed, goal: lv.goal, extra: 0 }; // schon hinter dem Tor
-    return { d: L.dSw, goal: L.sw, extra: L.swToGoal + 1 };
+    if (inside && isFinite(dm.dClosedE[n][ty][tx])) return { d: dm.dClosedE[n], goal: lv.goal, extra: 0 }; // schon hinter dem Tor
+    return { d: L.dSw[n] || L.dSw[0], goal: L.sw, extra: L.swToGoal + 1 };
   }
-  return { d: dm.d, goal: lv.goal, extra: 0 };
+  return { d: dm.dE[n], goal: lv.goal, extra: 0 };
 }
 export function progress(st) {
   const dm = distMap(st.def), lv = dm.lv, b = st.ball, am = activeMap(st);

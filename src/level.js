@@ -3,8 +3,18 @@
    A, B, C sind die Eingänge der Löwentore: begehbarer Boden, damit ein Ball mit Schwung hineinrollen
    kann. Ihre Ausgänge (a, b, c) stehen bewusst NICHT hier – als Nicht-Boden zieht die Arenamauer von
    selbst eine Wand davor, und genau das soll ein Ausgang von außen sein: massiv. */
-const FLOOR_CHARS = new Set(['#', 's', 'i', 'w', 'l', 'T', 'H', 'o', 'A', 'B', 'C']);
+// A bis F sind die Münder der Löwentore und Kupferrohre und begehbar; ihre Ausgänge (a bis f)
+// sind Mauer. Sechs Paare, weil der Rohrturm allein sechs Leitungen hat.
+const FLOOR_CHARS = new Set(['#', 's', 'i', 'w', 'l', 'T', 'H', 'o', 'A', 'B', 'C', 'D', 'E', 'F']);
 const WALL_T = 0.38;       // Dicke der Randmauern (nach außen)
+/* Die Uhrenturm-Welt spielt auf zwei Ebenen. Das ist keine Höhenphysik, sondern ein Umschalter:
+   Der Ball ist immer auf genau einer Fläche und kollidiert nur mit deren Wänden. Es dürfen mehr
+   als zwei sein; sie stapeln sich der Reihe nach. EBENE_Z ist nur fürs Auge – so hoch liegt jede
+   Ebene über der darunter. Eine Bahn darf das mit `ebeneZ` überschreiben: Der Rohrturm stapelt
+   seine drei Etagen weiter auseinander, damit man sieht, dass zwischen ihnen nichts ist außer dem
+   Rohr. Auf die Physik hat das keinen Einfluss – nur darauf, wie hoch gezeichnet wird. */
+const EBENE_Z = 2.0;
+const EBENE_Z_MAX = 6;
 const WALL_CHUNK = 4;      // längere Mauern werden fürs Sortieren zerteilt
 
 function seededRandom(seed) {
@@ -12,10 +22,10 @@ function seededRandom(seed) {
   return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
 }
 
-function buildLevel(def) {
-  const rows = def.map;
-  const H = rows.length;
-  const W = Math.max(...rows.map(r => r.length));
+/* Eine Spielfläche: aus einem ASCII-Raster werden Kacheln, Kollisions-Segmente, Mauerstücke und
+   Blöcke. Eine Bahn hat mindestens eine solche Fläche (die untere) und kann eine zweite haben
+   (die obere, def.oben). Beide sind gleich groß und liegen deckungsgleich übereinander. */
+function bauFlaeche(rows, W, H, def) {
   const tiles = rows.map(r => r.padEnd(W, '.').split(''));
   const at = (x, y) => (x < 0 || y < 0 || x >= W || y >= H) ? '.' : tiles[y][x];
   const isFloor = (x, y) => FLOOR_CHARS.has(at(x, y));
@@ -27,15 +37,6 @@ function buildLevel(def) {
     if (c === 'T') tee = { x: x + 0.5, y: y + 0.5 };
     if (c === 'H') cup = { x: x + 0.5, y: y + 0.5, r: def.cupR || 0.42, pull: def.cupPull || 0.62 }; // cupR/cupPull: größeres Loch (Schattenreich)
     if (c === 'x') blocks.push({ x, y });
-  }
-  let goal = cup;
-  if (!cup) { // Bahnabschnitt ohne Loch: die Tür (Hexenhütte) ist das Ziel
-    const door = (def.obstacles || []).find(o => o.type === 'door');
-    if (door) goal = { x: door.x, y: door.y };
-  }
-  if (!tee || !goal) {
-    if (!def.editing) throw new Error(`Bahn "${def.name}": Abschlag (T) oder Loch (H) fehlt`);
-    tee = tee || { x: -100, y: -100 }; goal = goal || tee; // Baumodus: noch unfertige Bahn darstellen
   }
 
   const segs = [];   // Kollision
@@ -89,6 +90,37 @@ function buildLevel(def) {
       }
     }
   }
+  return { tiles, at, isFloor, segs, walls, blocks, tee, cup };
+}
+
+function buildLevel(def) {
+  const rows = def.map;
+  const H = rows.length;
+  const W = Math.max(...rows.map(r => r.length));
+  const unten = bauFlaeche(rows, W, H, def);
+  /* Weitere Ebenen (optional). Jede ist dieselbe Fläche noch einmal, eine Etage höher – der Ball
+     ist immer auf genau einer und stößt sich nur an deren Wänden. 'ebenen' ist die Liste der
+     Ebenen über der untersten; 'oben' ist die Kurzform für genau eine. */
+  const obenRohe = Array.isArray(def.ebenen) ? def.ebenen : (def.oben ? [def.oben] : []);
+  const flaechen = [unten, ...obenRohe.map(r => bauFlaeche(r, W, H, def))];
+  const tiles = unten.tiles;
+  const at = unten.at, isFloor = unten.isFloor;
+  const blocks = unten.blocks;
+  const tee = unten.tee;
+  // Das Loch liegt auf genau einer Ebene und ist nur von dort zu erreichen.
+  const cupEbene = Math.max(0, flaechen.findIndex(f => f.cup));
+  const cup = flaechen[cupEbene] ? flaechen[cupEbene].cup : null;
+
+  let goal = cup;
+  if (!cup) { // Bahnabschnitt ohne Loch: die Tür (Hexenhütte) ist das Ziel
+    const door = (def.obstacles || []).find(o => o.type === 'door');
+    if (door) goal = { x: door.x, y: door.y };
+  }
+  let tee2 = tee;
+  if (!tee2 || !goal) {
+    if (!def.editing) throw new Error(`Bahn "${def.name}": Abschlag (T) oder Loch (H) fehlt`);
+    tee2 = tee2 || { x: -100, y: -100 }; goal = goal || tee2; // Baumodus: noch unfertige Bahn darstellen
+  }
 
   const obstacles = createObstacles(def.obstacles || []);
   const decor = buildDecor(def, tiles, W, H, isFloor);
@@ -124,13 +156,30 @@ function buildLevel(def) {
     return m;
   };
 
+  /* Das Level trägt immer die Felder der Ebene, auf der der Ball gerade ist: tiles, segs, walls,
+     blocks. Die Physik liest sie in jedem Schritt neu, also genügt es, sie beim Ebenenwechsel
+     umzuhängen – kein zweiter Satz Regeln, keine Sonderfälle in der Physik. */
   const level = {
-    def, W, H, tiles, tee, cup, goal, blocks, segs, walls, obstacles, decor, switches: {},
+    def, W, H, tiles: unten.tiles, tee: tee2, cup, goal, blocks: unten.blocks,
+    segs: unten.segs, walls: unten.walls, obstacles, decor, switches: {},
+    flaechen, ebene: 0, cupEbene, untenFl: unten,
+    ebeneZ: Math.min(EBENE_Z_MAX, Math.max(1, +def.ebeneZ || EBENE_Z)),
     schlagZahl: 0,   // Schläge auf dieser Bahn (die Kaiserloge dreht danach den Daumen)
     hasHeights, hStep, heightAt, cellH, slopeAt,
-    charAt(x, y) { return at(Math.floor(x), Math.floor(y)); },
+    /* Umschalten zwischen unterer und oberer Ebene. Mehr ist ein Ebenenwechsel nicht: Der Ball
+       behält Ort und Tempo, nur die Fläche unter ihm ist eine andere. */
+    setzeEbene(n) {
+      const fl = this.flaechen[n] || this.flaechen[0];
+      this.ebene = this.flaechen[n] ? n : 0;
+      this.tiles = fl.tiles; this.segs = fl.segs; this.walls = fl.walls; this.blocks = fl.blocks;
+      this.aktiv = fl;
+    },
+    charAt(x, y) { return this.aktiv.at(Math.floor(x), Math.floor(y)); },
+    /* Die Kachel einer bestimmten Ebene – die Turbine muss wissen, ob oben überhaupt Boden ist. */
+    charAtEbene(n, x, y) { const fl = this.flaechen[n]; return fl ? fl.at(Math.floor(x), Math.floor(y)) : '.'; },
     isFloorChar(c) { return FLOOR_CHARS.has(c); },
   };
+  level.aktiv = unten;
   for (const ob of obstacles) ob.level = level;
   // Manche Hindernisse holen sich ihre Plätze aus der Karte statt aus der Hindernisliste (Löwentor)
   for (const ob of obstacles) if (ob.setup) ob.setup(level);
@@ -153,12 +202,39 @@ function pushWallChunks(walls, x, y, w, h) {
   }
 }
 
+/* Abstand eines Punktes zu einer Strecke – für die Freihaltezonen der Deko. */
+function abstandStrecke(px, py, f) {
+  const dx = f.x1 - f.x0, dy = f.y1 - f.y0, L = dx * dx + dy * dy;
+  let u = L ? ((px - f.x0) * dx + (py - f.y0) * dy) / L : 0;
+  u = Math.max(0, Math.min(1, u));
+  return Math.hypot(px - (f.x0 + dx * u), py - (f.y0 + dy * u));
+}
+
 /* Deko: explizite Objekte plus automatisch verstreute Objekte auf leeren Kacheln
    (innerhalb der Karte und in einem Ring von 2 Kacheln außen herum). */
 function buildDecor(def, tiles, W, H, isFloor) {
   const theme = THEMES[def.theme];
   const out = [];
   for (const d of def.decor || []) out.push(Object.assign({ s: 1, z: 0 }, d));
+  /* Freihalten, wo eine Maschine über den Fairway hinausgreift. Das Zahnradfeld trägt quer über
+     eine Lücke, Feder und Kanone werfen darüber hinweg – und genau dort ist kein Boden, also
+     streut die Zufallsdeko sonst mitten hinein. Dann verschwindet die Strecke im Gerümpel und
+     man sieht nicht mehr, wohin der Weg führt. */
+  const frei = [];
+  for (const o of def.obstacles || []) {
+    if (o.type === 'gearfield') frei.push({ x0: o.x0, y0: o.y0, x1: o.x1, y1: o.y1, r: 1.9 });
+    if (o.type === 'springwork' || o.type === 'cannon') {
+      const a = o.base || 0, R = 0.9 + (o.range || 9);
+      frei.push({ x0: o.x, y0: o.y, x1: o.x + Math.cos(a) * R, y1: o.y + Math.sin(a) * R, r: 1.4 });
+    }
+  }
+  const imWeg = (px, py) => frei.some(f => abstandStrecke(px, py, f) < f.r);
+  /* Nichts darf neben der Erdscholle stehen. Die reicht 1,4 Kacheln über die Karte hinaus (in den
+     Uhrwerk-Welten 3,6, dort liegt das Räderwerk drumherum) – gestreut wurde aber bis zwei Kacheln
+     weit. Solange die Deko flach war, fiel das kaum auf; als Körper mit Bodenschatten steht sie
+     sichtbar in der Luft. Schwebende Welten haben gar keine Scholle, dort gilt die Regel nicht. */
+  const rand = theme.floating ? 99 : (theme.gears ? 3.6 : 1.4) - 0.35;
+  const aufDerScholle = (px, py) => px > -rand && px < W + rand && py > -rand && py < H + rand;
   const auto = def.autoDecor;
   if (auto && theme.autoDecor.length) {
     const rnd = seededRandom(auto.seed || 1);
@@ -177,8 +253,9 @@ function buildDecor(def, tiles, W, H, isFloor) {
         if (near) continue;
       }
       const px = x + 0.25 + rnd() * 0.5, py = y + 0.25 + rnd() * 0.5;
-      // Abstand zu Abschlag/Loch-Sicht: nichts direkt vor dem Loch (nur Optik)
-      out.push({ t, x: px, y: py, s: 0.75 + rnd() * 0.6, z: 0, seed: rnd() });
+      const gr = 0.75 + rnd() * 0.6, sd = rnd();   // erst ziehen, dann verwerfen: sonst
+      if (imWeg(px, py) || !aufDerScholle(px, py)) continue;   // verschöbe sich die ganze Streuung
+      out.push({ t, x: px, y: py, s: gr, z: 0, seed: sd });
     }
   }
   return out;
