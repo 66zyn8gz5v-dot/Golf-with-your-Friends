@@ -545,11 +545,14 @@ body.editing #editor-panel { display: flex; flex-direction: column; }
 @media (max-width: 700px) { #editor-panel { width: 220px; font-size: 12px; } }
 
 /* ---------- Weltkarte: die Übersicht über alle Welten ---------- */
-.panel.atlas-panel, .screen.title .panel.atlas-panel { width: min(96vw, 900px); max-width: min(96vw, 900px); padding: 16px 18px; }
+.panel.atlas-panel, .screen.title .panel.atlas-panel { width: min(97vw, 1200px); max-width: min(97vw, 1200px); padding: 12px 14px; }
+/* Auf der Kartentafel zählt jede Zeile Text gegen die Karte: knapper Kopf, knapper Hinweis. */
+.atlas-panel .panel-head { margin-bottom: 4px; }
+.atlas-panel .sub { margin-bottom: 6px; font-size: 13px; line-height: 1.35; }
 /* Die Karte ist breiter als der Schirm – dieser Kasten schiebt sich waagerecht.
    Rand und Schatten sitzen am Kasten, nicht an der Karte, sonst wanderten sie beim Wischen mit. */
 .atlas-schiebe {
-  overflow-x: auto; overflow-y: hidden; margin: 4px 0 12px; border-radius: 14px;
+  overflow-x: auto; overflow-y: hidden; margin: 2px 0 8px; border-radius: 14px;
   border: 2px solid rgba(255, 224, 150, 0.6); box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.5), 0 6px 20px rgba(0, 0, 0, 0.45);
   -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; scroll-snap-type: x proximity;
 }
@@ -574,6 +577,7 @@ body.editing #editor-panel { display: flex; flex-direction: column; }
   position: relative; background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.4), rgba(20, 16, 40, 0.9));
   border: 2px solid var(--pin, #ffd166); box-shadow: 0 0 10px var(--pin, #ffd166);
 }
+.spot-pin .mi { width: clamp(15px, 2.2vw, 21px); height: clamp(15px, 2.2vw, 21px); }
 .spot-pin::after { /* pulsierender Ring, damit die Orte als anwählbar auffallen */
   content: ''; position: absolute; inset: -2px; border-radius: 50%;
   border: 2px solid var(--pin, #ffd166); animation: spot-ring 2.6s ease-out infinite;
@@ -592,13 +596,32 @@ body.editing #editor-panel { display: flex; flex-direction: column; }
 @media (prefers-reduced-motion: reduce) { .spot, .spot-pin::after { animation: none; } }
 @media (max-width: 700px) {
   /* am Handy steht der Name unter dem Wappen, sonst werden die Schilder zu breit */
-  .spot { flex-direction: column; gap: 2px; padding: 4px 5px 5px; border-radius: 14px; }
-  .spot-label { text-align: center; max-width: 22vw; }
+  /* am Handy steht der Name unter dem Wappen, sonst werden die Schilder zu breit */
+  .spot { flex-direction: column; gap: 1px; padding: 2px 4px 3px; border-radius: 11px; border-width: 1px; }
+  .spot-label { text-align: center; max-width: 19vw; }
   .spot-label i { display: none; }
-  .spot-label b { font-size: 10px; }
+  .spot-label b { font-size: 9px; letter-spacing: 0.2px; }
+  .spot-pin { width: 22px; height: 22px; border-width: 1px; }
+  .spot-pin .mi { width: 15px; height: 15px; }
   .spot:hover, .spot:focus-visible, .spot:active { transform: translate(-50%, -50%); }
 }
-@media (max-width: 600px) { .panel.atlas-panel, .screen.title .panel.atlas-panel { padding: 10px 8px; } }
+/* Tablet: die Schilder bleiben nebeneinander, werden aber deutlich schmaler – dort ist die Karte
+   groß genug, dass jedes Pixel Schild, das wegfällt, sichtbar Landschaft freigibt. */
+@media (min-width: 701px) and (max-width: 1200px) {
+  .spot { gap: 5px; padding: 3px 9px 3px 3px; }
+  .spot-pin { width: 26px; height: 26px; }
+  .spot-pin .mi { width: 17px; height: 17px; }
+  .spot-label b { font-size: 12px; }
+  .spot-label i { font-size: 9.5px; }
+}
+@media (max-width: 600px) {
+  /* Bis an den Rand: Die Karte ist breitenbegrenzt, jeder Punkt Polster ist Karte, die fehlt. */
+  .panel.atlas-panel, .screen.title .panel.atlas-panel { padding: 5px 3px; width: 99vw; max-width: 99vw; }
+  .atlas-schiebe { border-width: 1px; margin: 2px 0 6px; }
+  /* Der zweite Satz des Hinweises fällt weg – vier Zeilen Text kosten hier mehr, als sie erklären. */
+  .atlas-panel .sub .lang { display: none; }
+  .atlas-panel .sub { font-size: 12px; }
+}
 
 /* ---------- Hutauswahl im Startbildschirm ---------- */
 #hat-who { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-bottom: 8px; }

@@ -589,8 +589,10 @@ Unter **Bauen & Eigene Welt** liegen der Editor und die selbst zusammengestellte
 - Hut des eigenen Balls: in der Startaufstellung unter „Hut". Die Wahl merkt sich der Browser.
 - Fast die ganze Oberfläche trägt **Material Symbols** von Google, als SVG-Pfade in `src/icons.js`
   eingebettet – überall gleich, in der Textfarbe, ohne Schriftart aus dem Netz: Bedienknöpfe, die
-  Marken der acht Welten auf der Karte, die Stufen (Normal, Profi, Legende), die Zeichen der drei
-  Wertungen, die Ränge in den Ergebnissen und die Sinnbilder in Laufmeldungen. Vorher waren das
+  Marken der Welten, die Stufen (Normal, Profi, Legende), die Zeichen der drei Wertungen, die Ränge
+  in den Ergebnissen und die Sinnbilder in Laufmeldungen. Die Weltknöpfe in Rangliste, Warteraum
+  und Weltüberschrift tragen die **Marke ihrer Welt**, nicht die ihrer Stufe: Fünf Profi-Welten
+  trugen sonst dieselbe Flamme, und das sagte über die Welt nichts aus. Vorher waren das
   Emoji, und die zeichnet jedes Betriebssystem selbst: Apple, Google und Microsoft bilden dasselbe
   Zeichen verschieden ab, mal bunt, mal flach, mal in anderer Größe.
 - Zwei Dinge sind bewusst **nicht** ersetzt:

@@ -421,8 +421,8 @@
     }).join('');
     overlay(`<div class="panel atlas-panel">
       <div class="panel-head"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span><h2>${Icons.svg('map')} Weltkarte</h2></div>
-      <div class="sub">Tippe einen Ort an – alle ${kartenWelten.length} Welten sind von Anfang an offen.
-        Sie liegen als Landstriche auf der Karte: <b>gestrichelte Wege</b> verbinden sie, über Wasser geht es per Schiff.</div>
+      <div class="sub">Tippe einen Ort an – alle ${kartenWelten.length} Welten sind offen.<span class="lang">
+        Sie liegen als Landstriche auf der Karte: <b>gestrichelte Wege</b> verbinden sie, über Wasser geht es per Schiff.</span></div>
       <!-- Die Karte ist BREITE Einheiten breit, der Kasten so breit wie die Tafel. Bei BREITE = 100
            passt sie ganz hinein; wird sie einmal breiter, schiebt der Kasten waagerecht. -->
       <div class="atlas-schiebe"><div class="atlas" style="aspect-ratio:${WorldMap.BREITE} / 62;width:${WorldMap.BREITE}%">${WorldMap.svg()}${marks}</div></div>
@@ -538,6 +538,9 @@
 
   const sceneFor = id => ({ normal: SCENE_NORMAL, sea: SCENE_SEA, pro: SCENE_PRO, jungle: SCENE_JUNGLE, storm: SCENE_STORM, shadow: SCENE_SHADOW, clock: SCENE_CLOCK })[id] || SCENE_NORMAL;
   const MODE_ICON = { normal: 'emoji_events', pro: 'local_fire_department', legend: 'bolt' };
+  /* Die Marke einer Welt: dieselbe wie auf der Karte. Das Kolosseum steht nicht auf der Karte –
+     es ist die Turnierwelt – und bringt seine Marke darum hier mit. */
+  const WELT_ICON = id => (WorldMap.spots[id] && WorldMap.spots[id].icon) || (id === 'colosseum' ? 'stadium' : 'golf_course');
   const worldMode = w => (w && w.mode) || 'normal';
   function setWorld(id) { state.world = WORLDS.find(w => w.id === id) || WORLDS[0]; state.courses = state.world.courses; Music.set(state.world.id); }
 
@@ -761,7 +764,7 @@
       <div class="sub net-note" id="bstate">${!Best.name ? 'Trag deinen Namen ein – ohne Namen wird nichts gewertet.'
         : Net.status === 'ready' ? 'Verbunden – alle mit dem Spiel teilen sich diese Liste.'
         : 'Keine Verbindung – die Rekorde bleiben vorerst auf diesem Gerät.'}</div>
-      <div id="bw" class="ow">${WORLDS.filter(x => x.id !== 'custom').map(x => `<span class="btn ghost small ${x.id === w.id ? 'sel' : ''}" data-w="${x.id}">${Icons.svg(MODE_ICON[worldMode(x)])} ${Text.esc(x.short)}</span>`).join('')}</div>
+      <div id="bw" class="ow">${WORLDS.filter(x => x.id !== 'custom').map(x => `<span class="btn ghost small ${x.id === w.id ? 'sel' : ''}" data-w="${x.id}">${Icons.svg(WELT_ICON(x.id))} ${Text.esc(x.short)}</span>`).join('')}</div>
       <div class="sub" style="margin-top:10px"><b>${Text.esc(w.name)}</b> · Par ${parTotal}</div>
       ${belohnungsStand(w)}
       <div class="tabelle-schiebe"><table class="scores best-table">
@@ -1225,7 +1228,7 @@
       ${meinPlatz >= 0 ? `<p class="mein-hut"><span class="btn ghost small" id="hutwahl">${Icons.svg('sports_golf')} Hut wechseln</span></p>` : ''}
       ${online.note ? `<div class="sub net-note">${Text.esc(online.note)}</div>` : ''}
       ${online.host
-        ? `<p>Welt:</p><div id="ow" class="ow">${ws.map(w => `<span class="btn ghost small ${w.id === online.world ? 'sel' : ''}" data-w="${w.id}">${Icons.svg(MODE_ICON[worldMode(w)])} ${Text.esc(w.name)}</span>`).join('')}</div>
+        ? `<p>Welt:</p><div id="ow" class="ow">${ws.map(w => `<span class="btn ghost small ${w.id === online.world ? 'sel' : ''}" data-w="${w.id}">${Icons.svg(WELT_ICON(w.id))} ${Text.esc(w.name)}</span>`).join('')}</div>
            <p><span class="btn" id="go">Los geht's!</span></p>`
         : `<div class="sub">Welt: <b>${Text.esc((ws.find(w => w.id === online.world) || ws[0]).name)}</b></div>`}
       <div class="legend">Gespielt wird reihum: wer dran ist, zielt, die anderen schauen zu. Eigene Bahnen lassen sich online nicht spielen.</div>
@@ -1306,7 +1309,7 @@
 
   function showSetup() {
     overlay(`<div class="panel">
-      <div class="panel-head"><span class="btn ghost small" id="back-top">${Icons.svg('arrow_back')} Zurück</span><h2>${Icons.svg(MODE_ICON[worldMode(state.world)])} ${Text.esc(state.world.name)}</h2></div>
+      <div class="panel-head"><span class="btn ghost small" id="back-top">${Icons.svg('arrow_back')} Zurück</span><h2>${Icons.svg(WELT_ICON(state.world.id))} ${Text.esc(state.world.name)}</h2></div>
       <div class="sub">${MODE_NAME[worldMode(state.world)]} · ${state.courses.length} Bahnen</div>
       <p>Modus:</p>
       <div id="gm">
