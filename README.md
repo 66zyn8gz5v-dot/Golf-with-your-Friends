@@ -466,6 +466,34 @@ alle Kugeln liegen bleiben und sich gegenseitig wegstoßen. Beim Netzspiel müss
 dieselben acht bis zwölf Kugeln in derselben Reihenfolge rechnen; heute wird über das Netz genau
 ein Ball übertragen. Der Modus steht darum im Warteraum gar nicht erst zur Wahl.
 
+**Die Boule-Welt: neun Bahnen, die dafür gebaut sind.** Sie steht in **Bauen & Eigene Welt**, gleich
+neben der eigenen Welt, und ist bei jedem da – sie wird mitgeliefert, nicht gebaut. Von dort geht es
+in die Aufstellung (Spielerzahl, Hüte), und zwar nur nach Boule: Wettkampf auf einer Bahn ohne
+sinnvolles Par wäre nicht verboten, aber sinnlos.
+
+Die Bahnen liegen in `src/courses_boule.js`, gebaut von `tools/boule.py`. Was sie von einer
+Golfbahn unterscheidet, steht dort ausführlich; in Kürze:
+
+* **Platz.** Bei vier Spielern liegen am Ende zwölf Kugeln plus die Zielkugel auf der Bahn. Eine
+  enge Golfbahn wäre nach der vierten Kugel verstopft. Die Boule-Bahnen haben darum 175 bis 226
+  Rasenfelder, und der Erzeuger prüft das auch nach.
+* **Freier Abschlag.** Jede neue Kugel wird neben dem Abschlag eingesetzt und sucht sich dort einen
+  freien Platz; steht der Abschlag in einer Nische, wird es nach acht Kugeln eng. Geprüft wird auf
+  mindestens 15 freie Felder im Umkreis von zwei.
+* **Nur Gras.** Kein Eis (darauf rollt eine Kugel ewig, Bremsung 0.75) und kein Sand (darauf bleibt
+  sie sofort liegen, Bremsung 20). Beides nähme dem Spiel das Abschätzen, worum es gerade geht.
+  Themen sind nur `meadow` und `forest`.
+* **Das Loch ist eine Falle**, kein Ziel: Wer hineinrollt, scheidet aus. Es liegt darum weit vom
+  Abschlag und etwas abseits – die Kanone zielt grob darauf, und die Zielkugel soll nicht bei jedem
+  Schuss darin verschwinden.
+* **Nichts Bewegtes.** Nur Blöcke (Bäume, Findlinge) und Prellsteine. Loren, Fähren, Kanonen oder
+  Stacheln würden liegende Kugeln verschieben oder verschlucken, während gerade jemand anderes
+  zielt.
+
+Die Welt trägt die Kennung `custom` wie eine selbst gebaute. Das ist kein Behelf, sondern genau
+richtig: Daran hängt, dass keine Rekorde geschrieben werden (Abstände in Feldern sind mit Schlägen
+nicht vergleichbar) und dass „Zurück" in die Werkstatt führt statt auf die Weltkarte.
+
 **Ablauf.** Eine Kanone am Abschlag schießt die kleine Zielkugel auf die Bahn – grob Richtung Loch,
 mit kräftiger Streuung, damit sie jede Runde woanders liegt. Landet sie zu dicht am Abschlag (unter
 drei Feldern), wird neu geschossen, höchstens sechsmal; danach gilt, was liegt. Dann spielen alle
@@ -1810,6 +1838,7 @@ src/courses_jungle.js die Bahnen des Dschungeltempels
 src/courses_storm.js die Bahnen des Sturmhimmels (Legende)
 src/courses_shadow.js die Bahnen des Schattenreichs (Legende)
 src/courses_colosseum.js die Bahnen des Kolosseums (Legende)
+src/courses_boule.js die neun Bahnen der Boule-Welt (erzeugt von tools/boule.py)
 src/courses_pro.js die Bahnen des Tüftlerreichs und die Weltenliste
 src/editor.js     Baumodus (Editor für eigene Bahnen)
 manifest.webmanifest, sw.js, icons/   Web-App: Installieren und offline spielen

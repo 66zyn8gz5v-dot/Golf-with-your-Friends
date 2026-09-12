@@ -506,6 +506,7 @@
       <div class="modes">
         <span class="btn mode build" id="build"><span class="mode-label">${Icons.svg('construction')} Bahn bauen</span></span>
         ${own.length ? `<span class="btn mode own" id="own-play"><span class="mode-label">${Icons.svg('language')} Eigene Welt (${own.length} Bahn${own.length > 1 ? 'en' : ''})</span></span>` : ''}
+        ${NUR_VORSCHAU ? `<span class="btn mode boule-welt" id="boule-welt"><span class="mode-label">${Icons.svg('sports_score')} Boule-Welt (9 Bahnen)<small>Kugeln schieben statt einlochen</small></span></span>` : ''}
       </div>
       ${own.length ? '' : '<div class="legend">Noch keine eigene Bahn gebaut. Im Editor wird sie mit „Fertig“ in die Eigene Welt eingesetzt.</div>'}
       <div id="freundesbahnen"></div>
@@ -515,6 +516,14 @@
     Share.onChange(zeigeFreundesbahnen);
     $('build').addEventListener('click', () => { Sfx.unlock(); setControlMode('sling'); editor.open(null); });
     if (own.length) $('own-play').addEventListener('click', () => { Sfx.unlock(); setControlMode('sling'); playWorld(own); });
+    /* Die Boule-Welt geht nicht direkt ins Spiel, sondern über die Aufstellung: Boule braucht
+       mindestens zwei Spieler, und jeder will seinen eigenen Hut aussuchen. */
+    if ($('boule-welt')) $('boule-welt').addEventListener('click', () => {
+      Sfx.unlock(); setControlMode('sling');
+      setCustomWorld(BOULE_COURSES, 'Boule-Welt', 'Boule', 'normal');
+      gameMode = 'boule';
+      showSetup();
+    });
     ui.overlay.querySelectorAll('#back, .back2').forEach(b => b.addEventListener('click', showMap));
   }
 
@@ -594,7 +603,15 @@
   const TOTAL_HOLES = WORLDS.reduce((n, w) => n + countHoles(w.courses), 0);
 
   const showWorldSelect = () => showMap(); // der Editor kehrt über diesen Weg ins Menü zurück
-  function setCustomWorld(courses, name) { state.world = { id: 'custom', name, short: 'Eigene', courses }; state.courses = courses; Music.set('custom'); }
+  /* Eigene Welten tragen die Kennung 'custom'. Daran hängt mehr als der Name: Alles, was Rekorde
+     schreibt oder Par aus der Rangliste holt, lässt Welten mit dieser Kennung aus. Die Boule-Welt
+     nutzt das mit – sie wird mitgeliefert, gehört aber nicht in die Rangliste (Abstände in Feldern
+     sind mit Schlägen nicht vergleichbar), und „Zurück" führt von dort in die Werkstatt statt auf
+     die Weltkarte. Beides ist genau richtig. */
+  function setCustomWorld(courses, name, kurz = 'Eigene', klang = 'custom') {
+    state.world = { id: 'custom', name, short: kurz, courses };
+    state.courses = courses; Music.set(klang);
+  }
   function playWorld(courses) { state.mode = 'creative'; state.editorReturn = false; setCustomWorld(courses, 'Eigene Welt'); document.body.classList.remove('editing', 'testing'); startGame(1, 0); }
   /* Baumodus: eine Bahn probespielen, danach zurück in den Editor */
   function startTest(def) {
@@ -1353,13 +1370,17 @@
 
   function showSetup() {
     if (gameMode === 'boule' && !NUR_VORSCHAU) gameMode = 'normal';   // im Spiel gibt es den Modus nicht
+    /* Die Boule-Welt ist zum Kugelschieben gebaut: offene Wiesen ohne Par, mit dem Loch als Falle.
+       Sie im Wettkampf zu spielen wäre nicht verboten, aber sinnlos – darum steht dort nur Boule. */
+    const nurBoule = state.world.short === 'Boule';
+    if (nurBoule) gameMode = 'boule';
     overlay(`<div class="panel">
       <div class="panel-head"><span class="btn ghost small" id="back-top">${Icons.svg('arrow_back')} Zurück</span><h2>${Icons.svg(WELT_ICON(state.world.id))} ${Text.esc(state.world.name)}</h2></div>
-      <div class="sub">${MODE_NAME[worldMode(state.world)]} · ${state.courses.length} Bahnen</div>
+      <div class="sub">${nurBoule ? 'Kugeln schieben' : MODE_NAME[worldMode(state.world)]} · ${state.courses.length} Bahnen</div>
       <p>Modus:</p>
       <div id="gm">
-        <span class="btn ghost small ${gameMode === 'normal' ? 'sel' : ''}" data-g="normal">${Icons.svg('emoji_events')} Wettkampf</span>
-        <span class="btn ghost small ${gameMode === 'creative' ? 'sel' : ''}" data-g="creative">${Icons.svg('construction')} Kreativ</span>
+        ${nurBoule ? '' : `<span class="btn ghost small ${gameMode === 'normal' ? 'sel' : ''}" data-g="normal">${Icons.svg('emoji_events')} Wettkampf</span>
+        <span class="btn ghost small ${gameMode === 'creative' ? 'sel' : ''}" data-g="creative">${Icons.svg('construction')} Kreativ</span>`}
         ${NUR_VORSCHAU ? `<span class="btn ghost small ${gameMode === 'boule' ? 'sel' : ''}" data-g="boule">${Icons.svg('sports_score')} Boule</span>` : ''}
       </div>
       <div id="pc-row" ${gameMode === 'creative' ? 'hidden' : ''}>
@@ -1510,7 +1531,7 @@
       $('pc-row').hidden = gameMode === 'creative';
       drawSpielerzahl(); doppelAufloesen(); drawWho(); drawHats();
     }));
-    for (const id of ['back', 'back-top']) $(id).addEventListener('click', showMap);
+    for (const id of ['back', 'back-top']) $(id).addEventListener('click', nurBoule ? showBuild : showMap);
     $('start').addEventListener('click', () => {
       Sfx.unlock(); state.mode = gameMode;
       state.boule = null;   // eine alte Boule-Runde darf nicht in die neue hineinreichen
