@@ -179,6 +179,69 @@
         </g>
       </g>
     </svg>
+
+    <!-- Dasselbe noch einmal fürs Hochformat. Ein eigenes Bild statt eines Ausschnitts: Beschnitten
+         wäre vom Querbild auf dem Handy nur ein schmaler Streifen übrig, und der Schriftzug läge
+         zerschnitten darin. Die Maße sind andere (1170 x 2078), also braucht es auch eigene Stellen
+         für Fahne, Laterne und Funkeln – und einen eigenen Filter, denn ein Filter gilt nur
+         innerhalb seines eigenen SVG. -->
+    <svg id="tb-hoch" viewBox="0 0 1170 2078" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <filter id="thWeh" x="-12%" y="-12%" width="124%" height="124%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.008 0.021" numOctaves="2" seed="7" result="wind">
+            <animate attributeName="baseFrequency" dur="6s" repeatCount="indefinite"
+              values="0.008 0.021;0.013 0.030;0.007 0.018;0.011 0.026;0.008 0.021"/>
+          </feTurbulence>
+          <feDisplacementMap in="SourceGraphic" in2="wind" scale="11" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+        <clipPath id="thFahne">
+          <path d="M74 1270 L160 1305 L250 1337 L330 1378 L362 1402
+                   L326 1424 L350 1452 L318 1476 L344 1516 L300 1536 L342 1602
+                   L252 1548 L170 1516 L104 1497 L72 1488 L66 1380 Z"/>
+        </clipPath>
+        <radialGradient id="thSchein">
+          <stop offset="0" stop-color="#ffd88a" stop-opacity="0.55"/>
+          <stop offset="0.45" stop-color="#ffbe5a" stop-opacity="0.22"/>
+          <stop offset="1" stop-color="#ffbe5a" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+
+      <g class="tb-kamera">
+        <image href="icons/titelbild-hoch.jpg" x="0" y="0" width="1170" height="2078" preserveAspectRatio="none"/>
+
+        <g filter="url(#thWeh)">
+          <g clip-path="url(#thFahne)">
+            <image href="icons/titelbild-hoch.jpg" x="0" y="0" width="1170" height="2078" preserveAspectRatio="none"/>
+          </g>
+        </g>
+
+        <g fill="#ffffff">
+          <g class="tb-zug"><ellipse cx="200" cy="90" rx="150" ry="30" opacity="0.11"/><ellipse cx="300" cy="72" rx="86" ry="20" opacity="0.09"/></g>
+          <g class="tb-zug z2"><ellipse cx="700" cy="60" rx="170" ry="26" opacity="0.09"/></g>
+          <g class="tb-zug z3"><ellipse cx="480" cy="215" rx="120" ry="22" opacity="0.08"/></g>
+        </g>
+
+        <g class="tb-voegel" fill="none" stroke="#f2f7ff" stroke-width="2.4" stroke-linecap="round" opacity="0.75">
+          <path class="tb-vogel" d="M0 0 q7 -5 14 0 q7 -5 14 0"/>
+          <path class="tb-vogel v2" d="M0 0 q5 -4 10 0 q5 -4 10 0"/>
+        </g>
+
+        <g class="tb-funken" fill="#ffffff">
+          <ellipse cx="190" cy="912" rx="13" ry="2.2"/><ellipse cx="506" cy="1608" rx="11" ry="2" class="f2"/>
+          <ellipse cx="1013" cy="1545" rx="14" ry="2.3" class="f3"/><ellipse cx="152" cy="558" rx="10" ry="1.8" class="f4"/>
+          <ellipse cx="660" cy="1180" rx="12" ry="2.1" class="f2"/><ellipse cx="1089" cy="700" rx="11" ry="2" class="f5"/>
+          <ellipse cx="430" cy="1440" rx="9" ry="1.7" class="f4"/><ellipse cx="860" cy="1300" rx="12" ry="2.1" class="f3"/>
+        </g>
+
+        <circle class="tb-lampe hoch" cx="251" cy="1734" r="58" fill="url(#thSchein)"/>
+
+        <g class="tb-staub" fill="#fff3c4">
+          <circle cx="420" cy="2000" r="3.2"/><circle cx="700" cy="1970" r="2.6" class="s2"/>
+          <circle cx="900" cy="2020" r="2.9" class="s3"/><circle cx="230" cy="1960" r="2.4" class="s4"/>
+          <circle cx="1050" cy="2030" r="2.7" class="s5"/>
+        </g>
+      </g>
+    </svg>
   </div>
 
   <canvas id="game"></canvas>

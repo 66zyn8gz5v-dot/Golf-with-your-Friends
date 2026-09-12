@@ -13,16 +13,18 @@ html, body {
    nur auf dem Startbildschirm zu sehen; wer auf die Weltkarte oder in die Werkstatt geht, sieht
    wieder die gezeichnete Szene. Angeklickt werden kann es nicht – die Knöpfe liegen darüber.
 
-   Der Grund dahinter ist der Rand: Auf einem breiten Schirm füllt das Bild alles ('slice', es wird
-   beschnitten). Auf einem hohen – dem Handy – würde 'slice' links und rechts so viel wegschneiden,
-   dass der Schriftzug in der Mitte zerschnitten wäre. Darum stellt main.js dort auf 'meet' um: Das
-   Bild steht dann ganz oben als Band, und der Verlauf darunter führt seine Farben weiter. */
+   Es gibt zwei Bilder: eines quer, eines hoch. Ein einziges täte es nicht – vom Querbild bliebe
+   auf dem Handy ein schmaler Streifen übrig, mit zerschnittenem Schriftzug darin. main.js setzt je
+   nach Seitenverhältnis die Klasse 'hoch', und beide Bilder füllen dann ihren Schirm ganz. */
 #titelbild {
   position: fixed; inset: 0; z-index: 5; display: none; pointer-events: none;
   background: linear-gradient(180deg, #7cc3ea 0%, #4f9fd0 30%, #1f6ea6 60%, #123f61 100%);
 }
 body.startbild #titelbild { display: block; }
-#tb-svg { width: 100%; height: 100%; display: block; }
+#tb-svg, #tb-hoch { width: 100%; height: 100%; display: block; }
+#tb-hoch { display: none; }
+body.hoch #tb-svg { display: none; }
+body.hoch #tb-hoch { display: block; }
 
 /* Ein langsames Heranfahren, damit das Bild nicht wie ein Poster steht */
 .tb-kamera { transform-box: view-box; transform-origin: 50% 50%; animation: tb-kamera 38s ease-in-out infinite alternate; }
@@ -41,6 +43,12 @@ body.startbild #titelbild { display: block; }
   50%  { transform: translate(560px, 96px); }
   to   { transform: translate(1230px, 132px); }
 }
+body.hoch .tb-vogel { animation-name: th-vogel; }
+@keyframes th-vogel {
+  from { transform: translate(-80px, 300px); }
+  50%  { transform: translate(560px, 200px); }
+  to   { transform: translate(1250px, 265px); }
+}
 
 .tb-funken ellipse { opacity: 0; animation: tb-blink 4.2s ease-in-out infinite; }
 .tb-funken .f2 { animation-delay: 0.7s; } .tb-funken .f3 { animation-delay: 1.5s; }
@@ -48,6 +56,7 @@ body.startbild #titelbild { display: block; }
 @keyframes tb-blink { 0%, 100% { opacity: 0; } 45% { opacity: 0.55; } 55% { opacity: 0.35; } }
 
 .tb-lampe { transform-box: view-box; transform-origin: 159px 438px; animation: tb-lampe 3.4s ease-in-out infinite; }
+.tb-lampe.hoch { transform-origin: 251px 1734px; }
 @keyframes tb-lampe { 0%, 100% { opacity: 0.8; transform: scale(0.94); } 50% { opacity: 1; transform: scale(1.06); } }
 
 .tb-staub circle { opacity: 0; animation: tb-staub 9s ease-out infinite; }
@@ -184,6 +193,10 @@ body.startbild #titelbild { display: block; }
 body.editing #fs-btn { left: 12px; transform: none; }
 body.fullscreen #fs-btn { opacity: 0.55; }
 @media (max-width: 600px) { #fs-btn { top: auto; bottom: 58px; left: auto; right: 12px; transform: none; } body.editing #fs-btn { left: auto; bottom: 12px; } body.title #fs-btn { bottom: 12px; } }
+/* Hochkant reicht die Tafel bis an den unteren Rand – der Vollbild-Knopf säße sonst mitten auf dem
+   Turnierband. Er geht darum nach oben links, in den Himmel. */
+body.startbild.hoch #fs-btn { top: 10px; bottom: auto; left: 10px; right: auto; transform: none; }
+body.vorschau.startbild.hoch #fs-btn { top: 34px; }
 
 #controls { position: fixed; left: 12px; bottom: 44px; display: flex; gap: 6px; flex-wrap: wrap; max-width: calc(100vw - 24px); }
 .cbtn.creative { display: none; background: rgba(60, 30, 90, 0.8); border-color: #c77dff; }
@@ -339,6 +352,19 @@ body.startbild .screen.title .panel > h1,
 body.startbild .screen.title .panel > .sub { display: none; }
 body.startbild .screen.title .panel { max-width: min(95vw, 1040px); padding: 14px 18px 16px; }
 body.startbild .screen.title { padding-bottom: 2vh; }
+/* Hochkant liegt das Schöne am Bild unten: Fahne, Laterne, Ball auf dem Tee. Eine Tafel in
+   voller Höhe deckt genau das zu. Also wird sie hier so knapp wie möglich – kleinere Knöpfe,
+   engere Abstände, und der Erklärsatz fällt weg. Er sagt nichts, was nicht schon auf dem
+   Weltkarten-Knopf steht. */
+body.startbild.hoch .screen.title .panel { padding: 10px 12px 12px; }
+body.startbild.hoch .btn.mode { height: 66px; font-size: 22px; }
+body.startbild.hoch .mode-label.long { font-size: 18px; }
+body.startbild.hoch .mode-label small { font-size: 10.5px; margin-top: 1px; }
+body.startbild.hoch .modes { gap: 7px; margin: 0 0 8px; }
+body.startbild.hoch .screen.title .atlas-extra { margin: 8px 0 2px; padding-top: 8px; gap: 6px; }
+body.startbild.hoch .screen.title .atlas-extra .btn.small { padding: 5px 10px; font-size: 13.5px; }
+body.startbild.hoch .screen.title .legend { display: none; }
+body.startbild.hoch .turnier-band { margin-top: 8px; padding: 5px 10px; font-size: 13px; }
 @media (min-width: 720px) and (min-aspect-ratio: 5/4) {
   body.startbild .screen.title .panel { width: min(95vw, 980px); }
   body.startbild .modes { flex-direction: row; gap: 12px; margin-top: 0; }
@@ -351,13 +377,7 @@ body.startbild .screen.title { padding-bottom: 2vh; }
   body.startbild .mode-schleier { background: linear-gradient(180deg, rgba(8,6,20,0.3) 0%, rgba(8,6,20,0.68) 55%, rgba(8,6,20,0.78) 100%); }
   body.startbild .screen.title .legend { text-align: center; }
 }
-/* Hochkant steht das Bild als Band ganz oben ('meet'). Die Tafel gehört direkt darunter – sonst
-   klafft zwischen beiden ein leeres Stück Blau. 639/1170 ist das Seitenverhältnis des Bildes, also
-   ist 100vw * 639/1170 genau die Höhe des Bandes. */
-@media (max-aspect-ratio: 1/1) {
-  body.startbild .screen.title { align-items: flex-start; padding-top: calc(100vw * 639 / 1170 + 10px); padding-bottom: 0; }
-  body.startbild .screen.title .panel { max-height: calc(100vh - 100vw * 639 / 1170 - 24px); }
-}
+
 .panel {
   background: linear-gradient(180deg, #2c2450, #171232);
   border: 3px solid #ffd166; border-radius: 18px; padding: 28px 36px; text-align: center;

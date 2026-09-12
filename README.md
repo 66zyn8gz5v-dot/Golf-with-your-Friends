@@ -36,7 +36,13 @@ ruhig: Ball am Loch, Balken voll.
 
 ## Startbild
 
-Der Startbildschirm zeigt ein gemaltes Titelbild (`icons/titelbild.jpg`, 1170 × 639). Es liegt als
+Der Startbildschirm zeigt ein gemaltes Titelbild. Es gibt **zwei davon**: `icons/titelbild.jpg`
+(1170 × 639) fürs Querformat und `icons/titelbild-hoch.jpg` (1170 × 2078) fürs Hochformat. Eines
+allein täte es nicht – vom queren bliebe auf dem Handy ein schmaler Streifen übrig, mit
+zerschnittenem Schriftzug darin. Welches gilt, entscheidet allein das Seitenverhältnis des Fensters
+(`titelbildPassen()` setzt die Klasse `hoch`); beide füllen ihren Schirm dann ganz. Jedes bringt
+seine eigenen Maße mit, also auch eigene Stellen für Fahne, Laterne und Funkeln – und einen eigenen
+Filter, denn ein SVG-Filter gilt nur innerhalb seines eigenen SVG. Das Bild liegt als
 `<image>` in einem SVG, und **alles, was sich bewegt, liegt im selben Koordinatensystem darüber** –
 denselben 1170 × 639. Darum sitzt jede Bewegung immer genau an ihrer Stelle, egal wie der Schirm
 geschnitten ist: Bild und Auflagen werden gemeinsam beschnitten. Bewegt werden: die Fahne, Wolken
@@ -50,11 +56,10 @@ und `feDisplacementMap`, das Rauschen wandert per SMIL). Verschoben werden also 
 selbst, mitsamt Löwe und Zaddeln; darunter steht unverändert das Original und füllt die Ränder, wo
 die Welle Stoff wegzieht.
 
-Der Zuschnitt hängt vom Schirm ab und wird in `titelbildPassen()` gesetzt: Ab einem Verhältnis von
-1,45 füllt das Bild alles (`slice`, es wird beschnitten). Bei einem hohen Schirm – dem Handy – würde
-`slice` links und rechts so viel wegnehmen, dass der Schriftzug in der Mitte zerschnitten wäre; dort
-steht das Bild darum oben als ganzes Band (`meet`), und die Tafel rückt genau darunter
-(`padding-top: calc(100vw * 639 / 1170)`). Lädt das Bild nicht, fällt der Startbildschirm auf die
+Hochkant liegt das Schöne am Bild unten: Fahne, Laterne, Ball auf dem Tee. Eine Tafel in voller Höhe
+deckt genau das zu – sie wird dort darum so knapp wie möglich: kleinere Knöpfe, engere Abstände, und
+der Erklärsatz fällt weg (er sagt nichts, was nicht schon auf dem Weltkarten-Knopf steht). Der
+Vollbild-Knopf geht nach oben links, sonst säße er auf dem Turnierband. Lädt das Bild nicht, fällt der Startbildschirm auf die
 gezeichnete Szene aus `src/title.js` zurück, und der Schriftzug steht wieder in der Tafel. Liegt das
 Bild, wird die Szene gar nicht erst gezeichnet – sie wäre ohnehin verdeckt.
 
@@ -1608,7 +1613,8 @@ Sinnbilder, ein laufendes Spiel, die Rangliste und der Editor da sind.
 
 ```
 index.html        Seite, HUD, Ladebild und Startbild (beide laufen ohne JavaScript)
-icons/titelbild.jpg   gemaltes Titelbild des Startbildschirms
+icons/titelbild.jpg   gemaltes Titelbild des Startbildschirms (quer)
+icons/titelbild-hoch.jpg  dasselbe fürs Hochformat
 tools/auslieferung.mjs  prüft, ob alles, was die Seite braucht, auch ausgeliefert wird
 style.css         Oberfläche
 src/themes.js     Farbpaletten und Deko je Welt

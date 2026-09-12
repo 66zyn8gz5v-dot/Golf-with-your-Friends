@@ -131,10 +131,9 @@
      Das gemalte Titelbild liegt nur auf dem Startbildschirm. overlay() nimmt es bei jedem Wechsel
      weg, showTitle() setzt es wieder – so muss nicht jeder einzelne Bildschirm daran denken.
 
-     Der Zuschnitt hängt vom Schirm ab: Breit wird das Bild formatfüllend beschnitten ('slice'),
-     hoch würde das aber links und rechts so viel wegnehmen, dass der Schriftzug in der Mitte
-     zerschnitten wäre. Darum steht es dort oben als ganzes Band ('meet'), und der Verlauf hinter
-     dem SVG führt seine Farben nach unten weiter.
+     Es gibt zwei Bilder: eines quer, eines hoch. Ein einziges täte es nicht – vom Querbild bliebe
+     auf dem Handy ein schmaler Streifen übrig, mit zerschnittenem Schriftzug darin. Welches gilt,
+     entscheidet allein das Seitenverhältnis des Fensters; beide füllen ihren Schirm dann ganz.
 
      Lädt das Bild nicht, fällt der Startbildschirm auf die gezeichnete Szene zurück – dann steht
      der Schriftzug wieder in der Tafel, und niemand sieht ein Loch.
@@ -144,28 +143,28 @@
      gemeldet, das Bild fehlte trotzdem, und Safari malte sein Fragezeichen quer über den halben
      Schirm. Ein Image-Objekt meldet überall verlässlich, und das Bild kommt erst auf den Schirm,
      wenn es wirklich da ist. */
-  let bildBereit = false;
+  const bildBereit = { quer: false, hoch: false };
   function titelbildPassen() {
-    const svg = $('tb-svg');
-    if (!svg) return;
-    const breit = innerWidth / Math.max(1, innerHeight) >= 1.45;
-    svg.setAttribute('preserveAspectRatio', breit ? 'xMidYMid slice' : 'xMidYMin meet');
+    // Hochkant nur, wenn es auch das hohe Bild gibt – sonst lieber das quere beschnitten als nichts.
+    const hoch = innerWidth < innerHeight && bildBereit.hoch;
+    document.body.classList.toggle('hoch', hoch);
   }
   function startbildAn() {
-    if (!bildBereit || !$('tb-svg')) return;
+    if (!bildBereit.quer || !$('tb-svg')) return;
     document.body.classList.add('startbild');
     titelbildPassen();
   }
   (() => {
-    const svg = $('tb-svg');
-    const quelle = svg && svg.querySelector('image');
-    if (!quelle) return;
-    const probe = new Image();
-    probe.addEventListener('load', () => {
-      bildBereit = true;
-      if (state.phase === 'title' && ui.overlay.classList.contains('title')) startbildAn();
-    });
-    probe.src = quelle.getAttribute('href');
+    for (const [welches, id] of [['quer', 'tb-svg'], ['hoch', 'tb-hoch']]) {
+      const svg = $(id), quelle = svg && svg.querySelector('image');
+      if (!quelle) continue;
+      const probe = new Image();
+      probe.addEventListener('load', () => {
+        bildBereit[welches] = true;
+        if (state.phase === 'title' && ui.overlay.classList.contains('title')) startbildAn();
+      });
+      probe.src = quelle.getAttribute('href');
+    }
     addEventListener('resize', titelbildPassen);
   })();
 
