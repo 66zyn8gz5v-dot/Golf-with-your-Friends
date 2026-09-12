@@ -593,6 +593,73 @@ const Hats = (() => {
       return () => wetterhahn(ctx, t, fein, blitz);   // der Hut liegt über dem Reif in Spielerfarbe
     },
 
+    runenstein(ctx, color, t, fein) {   // Schneeberg: vereister Stein mit blauen Glyphen, dazu die Bommelmütze
+      // Kalter Stein statt warmem Tempelstein: blaugrauer Granit, oben von der Mütze beschattet
+      const g = ctx.createRadialGradient(-0.36, -0.34, 0.08, 0, 0, 1);
+      g.addColorStop(0, '#6d7d90'); g.addColorStop(0.5, '#46545f'); g.addColorStop(1, '#232b33');
+      ctx.beginPath(); ctx.arc(0, 0, 1, 0, TAU2); ctx.fillStyle = g; ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.4)'; ctx.lineWidth = 0.07; ctx.stroke();
+
+      if (fein) {   // Poren und Abplatzer, damit die Fläche nicht wie lackiert wirkt
+        for (const [farbe, dreh] of [['rgba(0,0,0,0.24)', 70], ['rgba(255,255,255,0.09)', 73]]) {
+          ctx.fillStyle = farbe; ctx.beginPath();
+          for (let i = 0; i < 7; i++) {
+            const px = -0.85 + streu(i, dreh) * 1.7, py = -0.85 + streu(i, dreh + 1) * 1.7;
+            if (px * px + py * py > 0.78) continue;
+            const pr = 0.03 + streu(i, dreh + 2) * 0.05;
+            ctx.moveTo(px + pr, py); ctx.ellipse(px, py, pr, pr * 0.7, 0, 0, TAU2);
+          }
+          ctx.fill();
+        }
+      }
+
+      /* Die Glyphen sitzen tiefer als beim Tempelstein: Oben liegt die Mütze, dort sähe man sie
+         nicht. Eine breite Spalte in der Mitte, zwei schmalere daneben; nach außen kleiner, damit
+         man die Wölbung des Steins liest. */
+      const glyphen = fein
+        ? [[0, 0.06, 0.18, 1], [0, 0.44, 0.18, 2],
+           [-0.45, 0.1, 0.13, 3], [-0.42, 0.46, 0.13, 4],
+           [0.45, 0.1, 0.13, 5], [0.42, 0.46, 0.13, 0]]
+        : [[0, 0.06, 0.18, 1], [0, 0.44, 0.18, 2]];
+      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      ctx.strokeStyle = 'rgba(6,10,16,0.7)'; ctx.lineWidth = 0.055;   // erst die Kerbe
+      ctx.beginPath();
+      for (const [gx, gy, gs, art] of glyphen) glyphePfad(ctx, art, gx, gy + 0.014, gs);
+      ctx.stroke();
+      // Dann das Glimmen in drei Helligkeitsgruppen – drei Striche statt sechs
+      const gruppen = [[], [], []];
+      glyphen.forEach((gl, i) => {
+        const h = Math.max(0, Math.sin(t * 0.85 - i * 0.6));
+        gruppen[h < 0.25 ? 0 : h < 0.62 ? 1 : 2].push(gl);
+      });
+      if (fein && gruppen[2].length) {
+        ctx.strokeStyle = 'rgba(120,195,255,0.13)'; ctx.lineWidth = 0.15;
+        ctx.beginPath();
+        for (const [gx, gy, gs, art] of gruppen[2]) glyphePfad(ctx, art, gx, gy, gs);
+        ctx.stroke();
+      }
+      ctx.lineWidth = 0.04;
+      for (let k = 0; k < 3; k++) {
+        if (!gruppen[k].length) continue;
+        ctx.strokeStyle = `rgba(140,205,255,${[0.18, 0.38, 0.68][k]})`;
+        ctx.beginPath();
+        for (const [gx, gy, gs, art] of gruppen[k]) glyphePfad(ctx, art, gx, gy, gs);
+        ctx.stroke();
+      }
+      if (fein) {   // Raureif in den Mulden unten: der Stein liegt im Schnee
+        ctx.fillStyle = 'rgba(226,242,255,0.5)';
+        ctx.beginPath(); ctx.ellipse(-0.18, 0.82, 0.5, 0.14, 0.1, 0, TAU2); ctx.fill();
+        ctx.fillStyle = 'rgba(226,242,255,0.3)';
+        ctx.beginPath(); ctx.ellipse(0.46, 0.66, 0.26, 0.09, -0.4, 0, TAU2); ctx.fill();
+      }
+
+      steinRand(ctx);
+      ctx.fillStyle = 'rgba(255,255,255,0.12)';   // schwaches Licht oben links, sonst wirkt er flach
+      ctx.beginPath(); ctx.ellipse(-0.38, -0.42, 0.3, 0.17, -0.6, 0, TAU2); ctx.fill();
+
+      return () => bommelmuetze(ctx, t, fein);   // die Mütze liegt über dem Reif in Spielerfarbe
+    },
+
     orb(ctx, color, t, fein) {   // Schattenreich: Kristallkugel mit Nebel, Funken und einem Auge, das blinzelt
       glasKugel(ctx, '#e2c8ff', '#5c34a0');
       ctx.save(); kugelMaske(ctx);
@@ -1089,6 +1156,67 @@ const Hats = (() => {
   /* Wetterhahn auf der Gewitterkugel: Die Fahne dreht sich langsam – von vorn gesehen wird sie
      dabei schmal und breit, wie eine Fahne, die sich wegdreht. Schlägt drinnen der Blitz ein,
      sprüht es an der Spitze. */
+  /* Bommelmütze: gestrickter Kegel mit umgeschlagenem Rand. Die Spitze neigt sich, der Bommel
+     schwingt eine Spur hinterher – das macht aus einer Form eine Mütze. Bewegt wird nach der
+     Spieluhr, nicht nach Zufall: online sehen alle dasselbe. */
+  function bommelmuetze(ctx, t, fein) {
+    ctx.save(); ctx.translate(0, -0.62);
+    const neig = Math.sin(t * 1.7) * 0.07;
+    const spitzeX = 0.16 + neig, spitzeY = -0.62;
+    // Mützenkörper
+    const g = ctx.createLinearGradient(-0.55, 0, 0.5, 0);
+    g.addColorStop(0, '#27496f'); g.addColorStop(0.42, '#4f8ac6'); g.addColorStop(1, '#22405f');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(-0.56, 0.12);
+    ctx.quadraticCurveTo(-0.52, -0.34, spitzeX - 0.1, spitzeY + 0.06);
+    ctx.quadraticCurveTo(spitzeX + 0.16, spitzeY + 0.12, 0.56, 0.12);
+    ctx.closePath(); ctx.fill();
+    if (fein) {   // Strickrippen: ein paar Bögen, die der Wölbung folgen
+      ctx.strokeStyle = 'rgba(12,26,44,0.35)'; ctx.lineWidth = 0.032;
+      ctx.beginPath();
+      for (const u of [-0.34, -0.12, 0.1, 0.32]) {
+        const x0 = -0.5 + (u + 0.5) * 0.06;
+        ctx.moveTo(u * 1.05, 0.1);
+        ctx.quadraticCurveTo(u * 0.8 + spitzeX * 0.3, -0.2, spitzeX * 0.75 + u * 0.3, spitzeY + 0.18);
+      }
+      ctx.stroke();
+    }
+    // Umgeschlagener Rand, heller und dicker – er sitzt auf dem Stein auf
+    ctx.fillStyle = '#eaf4ff';
+    ctx.beginPath(); ctx.moveTo(-0.62, 0.2);
+    ctx.quadraticCurveTo(0, 0.4, 0.62, 0.2);
+    ctx.quadraticCurveTo(0.62, -0.02, 0.58, -0.04);
+    ctx.quadraticCurveTo(0, 0.16, -0.58, -0.04);
+    ctx.quadraticCurveTo(-0.62, -0.02, -0.62, 0.2);
+    ctx.closePath(); ctx.fill();
+    if (fein) {   // Rippen im Rand, quer zur Mütze
+      ctx.strokeStyle = 'rgba(150,180,210,0.55)'; ctx.lineWidth = 0.028;
+      ctx.beginPath();
+      for (let i = -4; i <= 4; i++) {
+        const x = i * 0.132;
+        ctx.moveTo(x, 0.02 + Math.abs(x) * 0.16); ctx.lineTo(x, 0.2 + Math.abs(x) * 0.1);
+      }
+      ctx.stroke();
+    }
+    // Der Bommel: schwingt der Spitze hinterher, darum ein eigener, größerer Ausschlag
+    const bx = spitzeX + Math.sin(t * 1.7 - 0.6) * 0.05, by = spitzeY - 0.07;
+    const bg = ctx.createRadialGradient(bx - 0.05, by - 0.05, 0.01, bx, by, 0.17);
+    bg.addColorStop(0, '#ffffff'); bg.addColorStop(1, '#c3d8ec');
+    ctx.fillStyle = bg; ctx.beginPath(); ctx.arc(bx, by, 0.16, 0, TAU2); ctx.fill();
+    if (fein) {   // Kurze, ungleich lange Fusseln – gleich lange Strahlen sähen wie ein Stern aus
+      ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 0.022; ctx.lineCap = 'round';
+      ctx.beginPath();
+      for (let i = 0; i < 16; i++) {
+        const w = i / 16 * TAU2 + 0.3, l = 0.175 + streu(i, 16) * 0.035;
+        ctx.moveTo(bx + Math.cos(w) * 0.12, by + Math.sin(w) * 0.12);
+        ctx.lineTo(bx + Math.cos(w) * l, by + Math.sin(w) * l);
+      }
+      ctx.stroke(); ctx.lineCap = 'butt';
+    }
+    ctx.restore();
+  }
+
   function wetterhahn(ctx, t, fein, blitz) {
     ctx.save(); ctx.translate(0, -0.78);
     ctx.strokeStyle = '#8d93a6'; ctx.lineWidth = 0.055; ctx.lineCap = 'round';
@@ -1343,6 +1471,7 @@ const Hats = (() => {
     { id: 'aquarium', name: 'Aquarium', welt: 'sea', voll: true },
     { id: 'cog', name: 'Tüftlerzylinder', welt: 'pro', voll: true },
     { id: 'feathercrown', name: 'Federkrone', welt: 'jungle', voll: true },
+    { id: 'runenstein', name: 'Runenstein', welt: 'snow', voll: true },
     { id: 'thunder', name: 'Gewitterkugel', welt: 'storm', voll: true },
     { id: 'orb', name: 'Kristallkugel', welt: 'shadow', voll: true },
     { id: 'pocketwatch', name: 'Taschenuhr', welt: 'clock', voll: true },

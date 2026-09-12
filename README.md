@@ -308,8 +308,8 @@ dem Browser-Speicher kommt: Der überlebt Fassungswechsel und lässt sich von Ha
 
 Jede Welt hat eine Belohnung, und man verdient sie sich am eigenen Können: **Die Summe der eigenen besten
 Einzelbahnen muss unter dem Par der Welt liegen, und jede Bahn braucht ein Ergebnis.** Gerechnet wird gegen
-das geltende Par – also gegen die Rangliste, siehe oben. Sieben Welten,
-sieben Belohnungen – sechs davon sind **Ganzkörper-Skins**: Sie ersetzen den Ball, statt auf ihm zu
+das geltende Par – also gegen die Rangliste, siehe oben. Neun Welten,
+neun Belohnungen – acht davon sind **Ganzkörper-Skins**: Sie ersetzen den Ball, statt auf ihm zu
 sitzen, und bewegen sich. Der Championhelm ist der einzige, der nur ein Hut ist.
 
 **Wie der Hut über den Farbreif kommt.** Ein Ganzkörper-Skin bekommt nach dem Zeichnen einen dünnen Reif in
@@ -326,12 +326,15 @@ braucht das nicht – bei ihr liegen die Federn bewusst *hinter* dem Reif, das S
 | Meereswelt | Aquarium | Becken mit Sand, Pflanzen, Fischen und Blasen | ein Schiffchen, das im Seegang rollt und sich hebt; die Segel bauschen sich, der Wimpel flattert |
 | Tüftlerreich | Tüftlerzylinder | drei greifende Zahnräder und ein Kolben | Lederzylinder mit Messingband, Nieten und Schutzbrille; ein Rad an der Seite läuft mit, aus dem Schornstein dampft es |
 | Dschungeltempel | Federkrone | dunkler Tempelstein, dessen Glyphen schwach grün glimmen | Federkrone in Türkis und Gold, die Spitzen wiegen sich |
+| Schneeberg | Runenstein | vereister Granit mit Poren und Abplatzern; sechs blaue Glyphen sind eingekerbt, und ein Glimmen wandert in drei Gruppen durch sie hindurch; unten liegt Raureif an | eine blaue Bommelmütze mit Strickrippen und umgeschlagenem weißem Rand; die Spitze neigt sich, der Bommel schwingt ihr nach |
 | Sturmhimmel | Gewitterkugel | Wolken ziehen, es regnet, alle 2,2 s schlägt ein Blitz ein | ein Wetterhahn, der sich dreht – und beim Einschlag an der Spitze sprüht |
 | Schattenreich | Kristallkugel | Schwaden waberen, ein Auge blickt umher und blinzelt | Spitzhut mit Mondschnalle; die Spitze schwankt, Sterne funkeln darauf |
+| Uhrwerkstadt | Taschenuhr | durchbrochenes Zifferblatt, hinter dem das Werk läuft | Bügel und Krone wie an einer Taschenuhr |
 | Kolosseum | Championhelm | (kein eigener Ball – der Helm sitzt auf dem Spielerball) | der Federkamm wiegt sich im Wind |
 
 Vier der Skins teilen sich die Glaskugel-Form, damit sie als eine Familie zu erkennen sind – der Inhalt
-macht die Welt. Zwei tanzen bewusst aus der Reihe: die Federkrone ist Stein, die Königskrone Porzellan. Bewegt wird nach `state.t`, der Spieluhr: dieselbe Zahl auf jedem Gerät, beim Online-Spiel
+macht die Welt. Drei tanzen bewusst aus der Reihe: Federkrone und Runenstein sind Stein, die Königskrone
+Porzellan. Bewegt wird nach `state.t`, der Spieluhr: dieselbe Zahl auf jedem Gerät, beim Online-Spiel
 sehen also alle dasselbe. Weil ein Skin die Ballfarbe verdeckt, bekommt er einen dünnen Reif in der Farbe
 des Spielers – sonst wüsste bei vier Bällen niemand, welcher der eigene ist.
 
@@ -344,7 +347,9 @@ ein kleiner Schwarm zieht im Hintergrund vorbei. Im Zahnradwerk **greifen die R�
 – der Radius folgt der Zähnezahl (gleicher Modul), und `eingriff()` rechnet aus, wie schnell und um wie
 viel versetzt das nächste Rad laufen muss, damit Zahn in Lücke steht; die Kurbel auf dem großen Rad treibt
 über ein Pleuel einen Kolben im Zylinder. An der Federkrone wiegen sich die Federn im Luftzug, und durch die
-sieben Glyphen im Stein läuft langsam eine Welle: mal steht die eine heller, mal die andere. In der Gewitterkugel ziehen zwei Wolkenreihen unterschiedlich
+sieben Glyphen im Stein läuft langsam eine Welle: mal steht die eine heller, mal die andere. Der
+Runenstein macht es in Blau und mit größeren Kerben, damit man ihn nicht für den Tempelstein hält – und
+weil die Mütze ihm die Kuppe nimmt, sitzen seine Glyphen tiefer als beim Tempelstein. In der Gewitterkugel ziehen zwei Wolkenreihen unterschiedlich
 schnell, es regnet durchgehend, und alle 2,2 Sekunden schlägt ein Blitz ein – seine Zackenform wird aus
 der Nummer des Schlags gewürfelt, jeder Blitz sieht also anders aus, und der Schein klingt in mehreren
 Stufen ab. In der Kristallkugel dreht sich die Iris, die Pupille weitet sich, und das Auge **blinzelt**
