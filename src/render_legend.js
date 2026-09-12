@@ -366,29 +366,41 @@ Object.assign(Renderer.prototype, {
   },
 
   /* ---------- Dekos ---------- */
-  spriteGhostLight(ctx, sx, sy, s, d, t) {
-    const yy = sy - s * (0.9 + 0.15 * Math.sin(t * 1.7 + sx)), a = 0.5 + 0.4 * Math.abs(Math.sin(t * 1.1 + (d.seed || 0) * 6));
-    const g = ctx.createRadialGradient(sx, yy, 0, sx, yy, s * 0.7); g.addColorStop(0, `rgba(190,140,255,${a})`); g.addColorStop(1, 'rgba(190,140,255,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(sx, yy, s * 0.7, 0, TAU); ctx.fill();
-    ctx.fillStyle = `rgba(240,225,255,${a})`; ctx.beginPath(); ctx.arc(sx, yy, s * 0.12, 0, TAU); ctx.fill();
+  /* Irrlicht: reines Licht. Es bleibt ein Farbverlauf – aber es schwebt jetzt an einem Punkt im
+     Raum, nicht an einem Punkt auf dem Bild. */
+  spriteGhostLight(ctx, d, t) {
+    const k = d.s, a = 0.5 + 0.4 * Math.abs(Math.sin(t * 1.1 + (d.seed || 0) * 6));
+    const [sx, sy] = this.proj(d.x, d.y, (d.z || 0) + k * (0.9 + 0.15 * Math.sin(t * 1.7 + d.x)));
+    const r = this.scale * k * 0.7;
+    const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, r); g.addColorStop(0, `rgba(190,140,255,${a})`); g.addColorStop(1, 'rgba(190,140,255,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(sx, sy, r, 0, TAU); ctx.fill();
+    ctx.fillStyle = `rgba(240,225,255,${a})`; ctx.beginPath(); ctx.arc(sx, sy, r * 0.17, 0, TAU); ctx.fill();
   },
-  spriteCloudDark(ctx, sx, sy, s, t) {
-    const yy = sy + Math.sin(t * 0.8 + sx) * s * 0.1;
-    ctx.fillStyle = 'rgba(70,76,110,0.9)';
-    ctx.beginPath(); ctx.ellipse(sx, yy, s * 1.1, s * 0.4, 0, 0, TAU); ctx.ellipse(sx - s * 0.5, yy - s * 0.1, s * 0.6, s * 0.35, 0, 0, TAU); ctx.ellipse(sx + s * 0.45, yy - s * 0.15, s * 0.7, s * 0.4, 0, 0, TAU); ctx.fill();
-    ctx.fillStyle = 'rgba(120,128,165,0.6)'; ctx.beginPath(); ctx.ellipse(sx - s * 0.2, yy - s * 0.25, s * 0.55, s * 0.22, 0, 0, TAU); ctx.fill();
+  /* Gewitterwolke: wie die helle Wolke ein Haufen Kugeln, nur dunkel und mit heller Oberkante. */
+  spriteCloudDark(ctx, d, t) {
+    const k = d.s, z = (d.z || 0) + k * 0.5 + Math.sin(t * 0.8 + d.x) * k * 0.1;
+    const ballen = [[0, 0, 0, 0.62], [-0.55, 0.16, -0.06, 0.42], [0.5, -0.14, -0.04, 0.46],
+                    [0.12, 0.5, -0.08, 0.36], [-0.14, -0.48, -0.06, 0.34], [-0.2, 0, 0.22, 0.4]];
+    ballen.map(b => ({ b, tiefe: this.depth(d.x + b[0] * k, d.y + b[1] * k) }))
+      .sort((a, b) => a.tiefe - b.tiefe)
+      .forEach(({ b }, i) => this.kugel(ctx, d.x + b[0] * k, d.y + b[1] * k, z + b[2] * k, b[3] * k,
+        i === 5 ? 'rgba(150,158,195,0.95)' : 'rgba(110,118,155,0.95)', 'rgba(70,76,110,0.92)', 'rgba(44,48,76,0.9)'));
   },
-  spriteLightningRod(ctx, sx, sy, s, t) {
-    this.shadow(ctx, sx, sy, s * 0.35);
-    ctx.fillStyle = '#4e526d'; ctx.beginPath(); ctx.moveTo(sx - s * 0.25, sy); ctx.lineTo(sx + s * 0.25, sy); ctx.lineTo(sx + s * 0.1, sy - s * 1.6); ctx.lineTo(sx - s * 0.1, sy - s * 1.6); ctx.closePath(); ctx.fill();
-    ctx.strokeStyle = '#c8ccdd'; ctx.lineWidth = Math.max(1.5, s * 0.06); ctx.beginPath(); ctx.moveTo(sx, sy - s * 1.6); ctx.lineTo(sx, sy - s * 2.3); ctx.stroke();
-    const gl = Math.sin(t * 5 + sx) > 0.6; ctx.fillStyle = gl ? '#fff6a8' : '#8a8ea6'; ctx.beginPath(); ctx.arc(sx, sy - s * 2.35, s * (gl ? 0.13 : 0.08), 0, TAU); ctx.fill();
+  /* Blitzableiter: ein sich verjüngender Mast mit Spitze und Kugel. */
+  spriteLightningRod(ctx, d, t) {
+    const k = d.s, z = d.z || 0;
+    this.bodenSchatten(ctx, d.x, d.y, k * 0.35);
+    this.saeule(ctx, d.x, d.y, z, k * 0.25, k * 0.1, k * 1.6, '#5e6480', '#3a3e56', 7);
+    this.saeule(ctx, d.x, d.y, z + k * 1.6, k * 0.04, k * 0.03, k * 0.7, '#c8ccdd', '#8a8ea6', 6);
+    const gl = Math.sin(t * 5 + d.x) > 0.6;
+    this.kugel(ctx, d.x, d.y, z + k * 2.35, k * (gl ? 0.13 : 0.08), '#fffce0', gl ? '#fff6a8' : '#8a8ea6', '#5a5e76');
   },
-  /* Windsack. Weht auf der Bahn ein echter Wind (Schneeberg), richtet er sich danach: Er zeigt in
-     die Windrichtung und hängt bei Flaute schlaff herunter. Ohne Wind bleibt er, was er war – eine
-     Fahne, die sich im Zufallswind bewegt. */
   spriteWindsock(ctx, sx, sy, s, d, t) {
     const w = this.wind;
-    ctx.strokeStyle = '#8a8ea6'; ctx.lineWidth = Math.max(1.5, s * 0.06); ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx, sy - s * 1.5); ctx.stroke();
+    // Der Mast ist ein Körper; der Sack selbst hängt in Windrichtung und wird weiter unten in
+    // Bildrichtung umgerechnet - er zeigt also schon immer dorthin, wo der Wind wirklich hinweht.
+    if (d.welt) this.saeule(ctx, d.welt[0], d.welt[1], d.welt[2], s / this.scale * 0.06, s / this.scale * 0.045, s / this.scale * 1.5, '#a0a4bc', '#6a6e86', 6);
+    else { ctx.strokeStyle = '#8a8ea6'; ctx.lineWidth = Math.max(1.5, s * 0.06); ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx, sy - s * 1.5); ctx.stroke(); }
     const fl = Math.sin(t * 4 + sx) * s * 0.1;
     if (!w) {
       const dir = (d.seed || 0.5) > 0.5 ? 1 : -1;

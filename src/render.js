@@ -369,6 +369,212 @@ class Renderer {
     return nah;
   }
 
+  drawCroc(ctx, ob, t) {
+    const s = this.scale;
+    if (!ob.jumping) { // nur Augen und Schnauzenspitze über Wasser, treibt langsam
+      const a = t * 0.6, fx = ob.x + Math.cos(a) * ob.w * 0.2, fy = ob.y + Math.sin(a * 1.3) * ob.h * 0.2;
+      this.isoEllipse(ctx, fx, fy, -0.05, 1.3, 'rgba(20,50,30,0.5)', 0.5);
+      for (const side of [-0.28, 0.28]) { const [ex, ey] = this.proj(fx, fy + side, 0.12); ctx.fillStyle = '#4f8a3a'; ctx.beginPath(); ctx.ellipse(ex, ey, s * 0.13, s * 0.09, 0, 0, TAU); ctx.fill(); ctx.fillStyle = '#ffd12a'; ctx.beginPath(); ctx.ellipse(ex, ey - s * 0.02, s * 0.07, s * 0.05, 0, 0, TAU); ctx.fill(); ctx.fillStyle = '#000'; ctx.beginPath(); ctx.ellipse(ex, ey - s * 0.02, s * 0.02, s * 0.045, 0, 0, TAU); ctx.fill(); }
+      const [nx, ny] = this.proj(fx + 0.9, fy, 0.08); ctx.fillStyle = '#4f8a3a'; ctx.beginPath(); ctx.ellipse(nx, ny, s * 0.16, s * 0.07, 0, 0, TAU); ctx.fill();
+      return;
+    }
+    const vert = ob.axis === 'y', p = ob.p, z = ob.z * 0.55, tilt = (0.5 - p) * 0.7, px = ob.px, py = ob.py;
+    const ax = vert ? 0 : 1, ay = vert ? 1 : 0, sx = vert ? 1 : 0, sy = vert ? 0 : 1;
+    const W = (u, v) => [px + ax * u + sx * v, py + ay * u + sy * v], zAt = u => z + tilt * u, above = zz => Math.max(0, zz);
+    const faces = (nx, ny) => nx * this.cam.sin + ny * this.cam.cos > 0.05;
+    const seg = (u0, u1, wd, z0, h, top, side, opts) => { let zb = zAt((u0 + u1) / 2) + z0; const zt = zb + h; if (zt <= 0.03) return; if (zb < 0) zb = 0; this.prism(ctx, [W(u0, -wd / 2), W(u1, -wd / 2), W(u1, wd / 2), W(u0, wd / 2)], zb, zt - zb, top, side, opts); };
+    const green = ['#5a9a3a', '#2e5a22'], dark = ['#3f7a2a', '#1f3f16'], belly = '#c9d58a';
+    this.isoEllipse(ctx, px, py, 0.004, 2.2, `rgba(0,0,0,${0.25 * Math.max(0, 1 - z / ob.height)})`, 0.7);
+    seg(-2.6, -1.4, 0.45, 0.1, 0.35, dark[0], dark[1]);                                  // Schwanz
+    seg(-1.4, 0.6, 1.1, 0.0, 0.6, green[0], green[1], { outline: '#1a3a12' });            // Rumpf
+    for (const side of [-1, 1]) for (const u of [-1.0, 0.3]) if (zAt(u) + 0.25 > 0) this.prism(ctx, [W(u - 0.25, side * 0.55), W(u + 0.25, side * 0.55), W(u + 0.25, side * 0.95), W(u - 0.25, side * 0.95)], above(zAt(u) - 0.05), 0.3, dark[0], dark[1]); // Beine
+    if (zAt(-0.4) + 0.62 > 0) { ctx.fillStyle = '#2f6a22'; for (let k = 0; k < 5; k++) { const [rx, ry] = this.proj(...W(-1.2 + k * 0.45, 0), zAt(-1.2 + k * 0.45) + 0.62); ctx.beginPath(); ctx.moveTo(rx - s * 0.08, ry); ctx.lineTo(rx, ry - s * 0.16); ctx.lineTo(rx + s * 0.08, ry); ctx.closePath(); ctx.fill(); } } // Rückenzacken
+    seg(0.6, 1.4, 0.9, 0.05, 0.55, green[0], green[1], { outline: '#1a3a12' });            // Kopf
+    seg(1.4, 2.6, 0.7, 0.05, 0.22, green[0], green[1]);                                    // Unterkiefer
+    // Oberkiefer: aufgeklappt, als schräge Platte mit Zähnen
+    const open = 0.55 + 0.35 * Math.sin(p * Math.PI);
+    const jaw = [[W(1.4, -0.36), zAt(1.4) + 0.5], [W(2.6, -0.3), zAt(2.6) + 0.5 + open], [W(2.6, 0.3), zAt(2.6) + 0.5 + open], [W(1.4, 0.36), zAt(1.4) + 0.5]];
+    if (jaw.some(q => q[1] > 0.03)) {
+      ctx.fillStyle = green[0]; ctx.beginPath(); jaw.forEach((q, i) => { const r = this.proj(q[0][0], q[0][1], above(q[1])); i ? ctx.lineTo(r[0], r[1]) : ctx.moveTo(r[0], r[1]); }); ctx.closePath(); ctx.fill(); ctx.strokeStyle = '#1a3a12'; ctx.lineWidth = 1; ctx.stroke();
+      ctx.fillStyle = '#c93a3a'; const mouth = [[W(1.45, -0.3), zAt(1.45) + 0.27], [W(2.55, -0.25), zAt(2.55) + 0.28], [W(2.55, 0.25), zAt(2.55) + 0.28], [W(1.45, 0.3), zAt(1.45) + 0.27]];
+      ctx.beginPath(); mouth.forEach((q, i) => { const r = this.proj(q[0][0], q[0][1], above(q[1])); i ? ctx.lineTo(r[0], r[1]) : ctx.moveTo(r[0], r[1]); }); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#fff'; for (let k = 0; k < 6; k++) { const u = 1.55 + k * 0.18; for (const side of [-1, 1]) { const zb = zAt(u) + 0.27, zt = zb + 0.16; const a0 = this.proj(...W(u - 0.05, side * 0.28), zb), a1 = this.proj(...W(u + 0.05, side * 0.28), zb), a2 = this.proj(...W(u, side * 0.26), zt); ctx.beginPath(); ctx.moveTo(a0[0], a0[1]); ctx.lineTo(a1[0], a1[1]); ctx.lineTo(a2[0], a2[1]); ctx.closePath(); ctx.fill(); } }
+    }
+    for (const side of [-1, 1]) { // Augen oben auf dem Kopf
+      if (zAt(1.1) + 0.6 < 0) continue;
+      const [ex, ey] = this.proj(...W(1.1, side * 0.3), zAt(1.1) + 0.68);
+      ctx.fillStyle = '#ffd12a'; ctx.beginPath(); ctx.ellipse(ex, ey, s * 0.1, s * 0.08, 0, 0, TAU); ctx.fill(); ctx.fillStyle = '#000'; ctx.beginPath(); ctx.ellipse(ex, ey, s * 0.025, s * 0.065, 0, 0, TAU); ctx.fill();
+    }
+    if (p < 0.2 || p > 0.8) { const q = p < 0.2 ? 1 - p / 0.2 : (p - 0.8) / 0.2, [bx, by] = this.proj(px, py, 0.05); ctx.fillStyle = `rgba(255,255,255,${0.7 * q})`; for (let i = 0; i < 7; i++) { const a = i * 0.9, rr = s * (0.3 + 0.5 * q); ctx.beginPath(); ctx.arc(bx + Math.cos(a) * rr, by + Math.sin(a) * rr * 0.5 - s * 0.3 * q, s * 0.07, 0, TAU); ctx.fill(); } }
+  }
+  drawSpikes(ctx, ob, t) {
+    const s = this.scale, H = ob.height * ob.lift;
+    if (H < 0.02) return;
+    const pts = [];
+    for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) pts.push([ob.x - ob.w / 2 + (i + 0.5) * ob.w / 3, ob.y - ob.h / 2 + (j + 0.5) * ob.h / 3]);
+    pts.sort((a, b) => this.depth(a[0], a[1]) - this.depth(b[0], b[1]));
+    for (const [px, py] of pts) {
+      const r = 0.12, base = [this.proj(px - r, py, 0), this.proj(px + r, py, 0), this.proj(px, py + r, 0), this.proj(px, py - r, 0)], tip = this.proj(px, py, H);
+      ctx.fillStyle = '#8a8a92'; ctx.beginPath(); ctx.moveTo(base[0][0], base[0][1]); ctx.lineTo(tip[0], tip[1]); ctx.lineTo(base[2][0], base[2][1]); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#c9c9d2'; ctx.beginPath(); ctx.moveTo(base[2][0], base[2][1]); ctx.lineTo(tip[0], tip[1]); ctx.lineTo(base[1][0], base[1][1]); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = '#3a3a44'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(base[0][0], base[0][1]); ctx.lineTo(tip[0], tip[1]); ctx.lineTo(base[1][0], base[1][1]); ctx.stroke();
+      if (ob.lift > 0.9) { ctx.fillStyle = 'rgba(255,255,255,0.9)'; ctx.beginPath(); ctx.arc(tip[0], tip[1], Math.max(1, s * 0.03), 0, TAU); ctx.fill(); }
+    }
+  }
+  drawTempleGate(ctx, ob, t) {
+    const s = this.scale, px = ob.px, py = ob.py, Wd = ob.gw || 3.2, D = 1.2, H = 2.6;
+    const top = ['#9a8a66', '#5a4c34'];
+    this.prism(ctx, [[px - Wd / 2 - 0.5, py - D], [px - Wd / 2 + 0.3, py - D], [px - Wd / 2 + 0.3, py + D], [px - Wd / 2 - 0.5, py + D]], 0, H, top[0], top[1], { outline: '#2a2218' });
+    this.prism(ctx, [[px + Wd / 2 - 0.3, py - D], [px + Wd / 2 + 0.5, py - D], [px + Wd / 2 + 0.5, py + D], [px + Wd / 2 - 0.3, py + D]], 0, H, top[0], top[1], { outline: '#2a2218' });
+    this.prism(ctx, [[px - Wd / 2 - 0.7, py - D - 0.1], [px + Wd / 2 + 0.7, py - D - 0.1], [px + Wd / 2 + 0.7, py + D + 0.1], [px - Wd / 2 - 0.7, py + D + 0.1]], H, 0.7, '#a89a74', '#6a5a3c', { outline: '#2a2218' }); // Sturz
+    this.prism(ctx, [[px - Wd / 2 - 0.2, py - D + 0.2], [px + Wd / 2 + 0.2, py - D + 0.2], [px + Wd / 2 + 0.2, py + D - 0.2], [px - Wd / 2 - 0.2, py + D - 0.2]], H + 0.7, 0.5, '#8a7a56', '#4a3e28'); // Aufsatz
+    // Rückwand zwischen den Pfeilern, davor der dunkle Eingang mit Glyphenrahmen
+    this.prism(ctx, [[px - Wd / 2 + 0.3, py - D], [px + Wd / 2 - 0.3, py - D], [px + Wd / 2 - 0.3, py + D * 0.4], [px - Wd / 2 + 0.3, py + D * 0.4]], 0, H, '#7a6a4a', '#3f3524');
+    const fy = py + D * 0.4, o = [[px - 0.75, fy, 0], [px - 0.75, fy, 1.6], [px, fy, 2.05], [px + 0.75, fy, 1.6], [px + 0.75, fy, 0]];
+    ctx.fillStyle = '#07050a'; ctx.beginPath(); o.forEach((q, i) => { const r = this.proj(q[0], q[1], q[2] + 0.01); i ? ctx.lineTo(r[0], r[1]) : ctx.moveTo(r[0], r[1]); }); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#c9a15a'; ctx.lineWidth = Math.max(1.5, s * 0.06); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,209,102,0.7)'; // Glyphen auf dem Sturz
+    for (let k = 0; k < 5; k++) { const [gx, gy] = this.proj(px - Wd / 2 + (k + 0.5) * Wd / 5, fy - 0.05, H + 0.35); ctx.beginPath(); if (k % 2) { ctx.arc(gx, gy, s * 0.08, 0, TAU); } else { ctx.moveTo(gx - s * 0.08, gy + s * 0.08); ctx.lineTo(gx, gy - s * 0.1); ctx.lineTo(gx + s * 0.08, gy + s * 0.08); ctx.closePath(); } ctx.fill(); }
+    for (const side of [-1, 1]) this.spriteBrazier(ctx, { x: px + side * (Wd / 2 + 0.1), y: fy + 0.2, s: 0.9 }, t); // Feuerschalen
+    ctx.fillStyle = 'rgba(60,110,50,0.55)'; for (let k = 0; k < 4; k++) { const [mx, my] = this.proj(px - Wd / 2 - 0.3 + k * (Wd / 3), fy, H + 0.7 - (k % 2) * 0.4); ctx.beginPath(); ctx.ellipse(mx, my, s * 0.22, s * 0.09, 0, 0, TAU); ctx.fill(); } // Moos
+  }
+  drawVineRotor(ctx, ob, t) {
+    const s = this.scale, [hx, hy] = this.proj(ob.x, ob.y, ob.height + 1.4);
+    ctx.strokeStyle = '#5a3a1e'; ctx.lineWidth = Math.max(2, s * 0.1); ctx.lineCap = 'round'; // Ast oben
+    const [b0, b1] = this.proj(ob.x - 0.8, ob.y, ob.height + 1.45), [b2, b3] = this.proj(ob.x + 0.8, ob.y, ob.height + 1.35); ctx.beginPath(); ctx.moveTo(b0, b1); ctx.lineTo(b2, b3); ctx.stroke();
+    for (let i = 0; i < ob.blades; i++) {
+      const a = ob.bladeAngle(i), ex = ob.x + Math.cos(a) * ob.len, ey = ob.y + Math.sin(a) * ob.len;
+      this.isoEllipse(ctx, ex, ey, 0.004, 0.35, 'rgba(0,0,0,0.18)');
+      const [tx, ty] = this.proj(ex, ey, ob.height * 0.5);
+      ctx.strokeStyle = '#3f7a2a'; ctx.lineWidth = Math.max(3, s * 0.12); ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(tx, ty); ctx.stroke();
+      ctx.strokeStyle = '#6fbf4a'; ctx.lineWidth = Math.max(1, s * 0.04); ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(tx, ty); ctx.stroke();
+      ctx.fillStyle = '#3fa848'; // Blätter entlang des Seils und Büschel am Ende
+      for (let k = 1; k <= 4; k++) { const u = k / 5, px = hx + (tx - hx) * u, py = hy + (ty - hy) * u; ctx.beginPath(); ctx.ellipse(px + (k % 2 ? s * 0.12 : -s * 0.12), py, s * 0.12, s * 0.06, k % 2 ? 0.7 : -0.7, 0, TAU); ctx.fill(); }
+      for (let k = 0; k < 5; k++) { ctx.fillStyle = k % 2 ? '#2f8a3a' : '#4aa84a'; ctx.beginPath(); ctx.ellipse(tx + Math.cos(k * 1.26) * s * 0.18, ty + Math.sin(k * 1.26) * s * 0.12, s * 0.2, s * 0.1, k * 0.6, 0, TAU); ctx.fill(); }
+    }
+  }
+  drawWhirl(ctx, ob, t) {
+    const s = this.scale, [cx, cy] = this.proj(ob.x, ob.y, 0.006);
+    const pal = ob.style === 'tornado' ? ['rgba(200,210,240,0.25)', '#2a2f4a', '230,235,255'] : ob.style === 'void' ? ['rgba(150,90,255,0.25)', '#120a24', '210,170,255'] : ['rgba(120,200,240,0.25)', '#0b3a55', '230,245,255'];
+    this.isoEllipse(ctx, ob.x, ob.y, 0.003, ob.r + 0.3, pal[0]);
+    this.isoEllipse(ctx, ob.x, ob.y, 0.004, ob.r + 0.1, pal[1]);
+    ctx.save(); ctx.translate(cx, cy); ctx.scale(1, this.cam.tilt);
+    for (let arm = 0; arm < 3; arm++) { // drei Spiralarme
+      ctx.strokeStyle = `rgba(${pal[2]},${0.55 + 0.25 * Math.sin(t * 4 + arm)})`; ctx.lineWidth = Math.max(1.5, s * 0.07); ctx.lineCap = 'round';
+      ctx.beginPath();
+      for (let k = 0; k <= 24; k++) { const u = k / 24, a = ob.angle * 1.4 + arm * TAU / 3 + u * 3.2, rr = (0.15 + u * 0.8) * ob.r * s; k ? ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr) : ctx.moveTo(Math.cos(a) * rr, Math.sin(a) * rr); }
+      ctx.stroke();
+    }
+    for (let i = 0; i < 8; i++) { // Gischtflocken am Rand
+      const a = -ob.angle * 1.4 + i * 0.785, rr = ob.r * s * (0.92 + 0.06 * Math.sin(t * 5 + i));
+      ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.beginPath(); ctx.arc(Math.cos(a) * rr, Math.sin(a) * rr, s * 0.05, 0, TAU); ctx.fill();
+    }
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, ob.r * s * 0.45); g.addColorStop(0, '#02101c'); g.addColorStop(1, 'rgba(11,58,85,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, ob.r * s * 0.45, 0, TAU); ctx.fill();
+    ctx.restore();
+    const ex = Math.cos(ob.exitA), ey = Math.sin(ob.exitA), px = -ey, py = ex; // Auswurfrinne
+    ctx.strokeStyle = 'rgba(255,240,200,0.9)'; ctx.lineWidth = Math.max(2, s * 0.09);
+    for (const side of [-0.32, 0.32]) {
+      const a0 = this.proj(ob.x + ex * (ob.r - 0.4) + px * side, ob.y + ey * (ob.r - 0.4) + py * side, 0.014);
+      const a1 = this.proj(ob.x + ex * (ob.r + 0.45) + px * side, ob.y + ey * (ob.r + 0.45) + py * side, 0.014);
+      ctx.beginPath(); ctx.moveTo(a0[0], a0[1]); ctx.lineTo(a1[0], a1[1]); ctx.stroke();
+    }
+  }
+  drawWreck(ctx, ob, t) {
+    const s = this.scale, px = ob.px, py = ob.py, L = 3.4, Wd = 1.45;
+    const hull = [[px - L, py - Wd * 0.5], [px - L * 0.7, py - Wd], [px + L * 0.7, py - Wd], [px + L * 1.15, py], [px + L * 0.7, py + Wd], [px - L * 0.7, py + Wd], [px - L, py + Wd * 0.5]];
+    this.isoEllipse(ctx, px, py, 0.003, L * 1.1, 'rgba(0,0,0,0.2)', Wd * 1.1);
+    this.prism(ctx, hull, 0, 1.4, '#5a4030', '#2e1c0e', { outline: '#140c06' });
+    ctx.strokeStyle = 'rgba(20,12,6,0.5)'; ctx.lineWidth = 1; // Deckplanken und Plankenlinien vorn
+    for (let k = -0.8; k <= 0.8; k += 0.4) { const a = this.proj(px - L * 0.65, py + k * Wd, 1.41), b = this.proj(px + L * 0.75, py + k * Wd, 1.41); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke(); }
+    for (const z of [0.35, 0.7, 1.05]) { const a = this.proj(px - L * 0.7, py + Wd, z), b = this.proj(px + L * 0.7, py + Wd, z); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke(); }
+    // Leck: dunkle Öffnung an der Vorderseite über der Tür
+    const dx = ob.x, gap = Math.max(0.62, ob.r * 0.95);
+    const o = [[dx - gap, py + Wd, 0], [dx - gap * 0.7, py + Wd, 0.95], [dx, py + Wd, 1.15], [dx + gap * 0.7, py + Wd, 0.95], [dx + gap, py + Wd, 0]];
+    ctx.fillStyle = '#03070c'; ctx.beginPath(); o.forEach((q, i) => { const pp = this.proj(q[0], q[1], q[2] + 0.01); i ? ctx.lineTo(pp[0], pp[1]) : ctx.moveTo(pp[0], pp[1]); }); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#6a4a2a'; ctx.lineWidth = Math.max(1.5, s * 0.06); ctx.stroke(); // gesplitterte Planken
+    for (let i = 0; i < 3; i++) { const q = this.proj(dx - gap * 0.6 + i * gap * 0.6, py + Wd, 0.95 + (i === 1 ? 0.2 : 0)), r = this.proj(dx - gap * 0.6 + i * gap * 0.6 + 0.12, py + Wd, 0.6); ctx.beginPath(); ctx.moveTo(q[0], q[1]); ctx.lineTo(r[0], r[1]); ctx.stroke(); }
+    // Maststumpf mit Fetzen Segel, schief
+    const [m0, m1] = this.proj(px + 0.4, py - 0.2, 1.4), [m2, m3] = this.proj(px + 1.0, py - 0.4, 3.4);
+    ctx.strokeStyle = '#2a1a0c'; ctx.lineWidth = Math.max(2, s * 0.09); ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(m0, m1); ctx.lineTo(m2, m3); ctx.stroke();
+    const sw = Math.sin(t * 1.2) * s * 0.1;
+    ctx.fillStyle = 'rgba(200,190,170,0.7)'; ctx.beginPath(); ctx.moveTo(m2, m3 + s * 0.2); ctx.quadraticCurveTo(m2 - s * 0.7 + sw, m3 + s * 0.6, m2 - s * 0.4, m3 + s * 1.3); ctx.lineTo(m2 - s * 0.05, m3 + s * 1.0); ctx.closePath(); ctx.fill();
+    // Seepocken und Tang am Rumpf, aufsteigende Blasen aus dem Leck
+    ctx.fillStyle = 'rgba(230,220,200,0.6)'; for (let i = 0; i < 6; i++) { const q = this.proj(px - L * 0.6 + i * 0.55, py + Wd, 0.2 + (i % 2) * 0.25); ctx.beginPath(); ctx.arc(q[0], q[1], s * 0.05, 0, TAU); ctx.fill(); }
+    const [w0, w1] = this.proj(px - L * 0.85, py + Wd * 0.7, 0); this.spriteSeaweed(ctx, w0, w1, s * 1.1, { seed: 0.4 }, t);
+    ctx.strokeStyle = 'rgba(220,245,255,0.6)'; ctx.lineWidth = 1;
+    for (let i = 0; i < 4; i++) { const u = (t * 0.35 + i * 0.25) % 1, q = this.proj(dx + Math.sin(t + i) * 0.15, py + Wd - 0.1, 0.4 + u * 2.2); ctx.globalAlpha = 1 - u; ctx.beginPath(); ctx.arc(q[0], q[1], s * (0.04 + i * 0.012), 0, TAU); ctx.stroke(); }
+    ctx.globalAlpha = 1;
+  }
+  drawCatapult(ctx, ob, t) {
+    const s = this.scale, dx = Math.cos(ob.angle), dy = Math.sin(ob.angle), nx = -dy, ny = dx;
+    const rect = (px, py, w, h) => [[px - dx * w / 2 - nx * h / 2, py - dy * w / 2 - ny * h / 2], [px + dx * w / 2 - nx * h / 2, py + dy * w / 2 - ny * h / 2], [px + dx * w / 2 + nx * h / 2, py + dy * w / 2 + ny * h / 2], [px - dx * w / 2 + nx * h / 2, py - dy * w / 2 + ny * h / 2]];
+    // Sockel und zwei Balken quer zur Wurfrichtung
+    this.prism(ctx, rect(ob.x, ob.y, 1.5, 1.2), 0, 0.2, '#8a6a3a', '#4a3418', { outline: '#2a1c0c' });
+    for (const side of [-0.42, 0.42]) this.prism(ctx, rect(ob.x + nx * side, ob.y + ny * side, 0.18, 0.18), 0.2, 0.75, '#a8804a', '#5a3e1c');
+    // Wurfarm: in Ruhe steil nach hinten, beim Abschuss klappt er nach vorn
+    const ph = t - ob.firedAt, fwd = ph < 0 ? 0 : ph < 0.3 ? ph / 0.3 : ph < 1.1 ? 1 - (ph - 0.3) / 0.8 : 0;
+    const restX = ob.x - dx * 0.35, restY = ob.y - dy * 0.35, restZ = 1.05, fireX = ob.x + dx * 0.95, fireY = ob.y + dy * 0.95, fireZ = 1.3;
+    const tipX = restX + (fireX - restX) * fwd, tipY = restY + (fireY - restY) * fwd, tipZ = restZ + (fireZ - restZ) * fwd;
+    const pivot = this.proj(ob.x, ob.y, 0.95), tip = this.proj(tipX, tipY, tipZ);
+    const cwX = ob.x - (tipX - ob.x) * 0.5, cwY = ob.y - (tipY - ob.y) * 0.5, cwZ = 0.95 - (tipZ - 0.95) * 0.5, cw = this.proj(cwX, cwY, cwZ);
+    ctx.lineCap = 'round'; ctx.strokeStyle = '#6b4a22'; ctx.lineWidth = Math.max(3, s * 0.11);
+    ctx.beginPath(); ctx.moveTo(cw[0], cw[1]); ctx.lineTo(tip[0], tip[1]); ctx.stroke();
+    ctx.fillStyle = '#4a4a52'; ctx.beginPath(); ctx.arc(cw[0], cw[1], s * 0.16, 0, TAU); ctx.fill(); // Gegengewicht
+    ctx.fillStyle = '#3a2a14'; ctx.beginPath(); ctx.arc(pivot[0], pivot[1], s * 0.07, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#8a6a3a'; ctx.beginPath(); ctx.ellipse(tip[0], tip[1] + s * 0.02, s * 0.2, s * 0.1, 0, 0, TAU); ctx.fill(); // Schale
+    ctx.strokeStyle = '#3a2a14'; ctx.lineWidth = 1; ctx.stroke();
+    if (ob.loaded) { const f = 0.6 + 0.4 * Math.sin(t * 14); ctx.strokeStyle = `rgba(255,220,120,${f})`; ctx.lineWidth = Math.max(1.5, s * 0.05); ctx.beginPath(); ctx.ellipse(tip[0], tip[1], s * 0.3, s * 0.16, 0, 0, TAU); ctx.stroke(); }
+  }
+  drawPyramid(ctx, ob, t) {
+    const s = this.scale, cx = ob.px, cy = ob.py, B = ob.base;
+    const tiers = [[B, 1.3], [B * 0.76, 1.2], [B * 0.53, 1.1], [B * 0.31, 1.0]];
+    let z = 0;
+    for (const [w, hh] of tiers) {
+      const half = w / 2, poly = [[cx - half, cy - half], [cx + half, cy - half], [cx + half, cy + half], [cx - half, cy + half]];
+      this.prism(ctx, poly, z, hh, '#e3c48f', '#a37a3e', { outline: '#7a5a2a' });
+      // Fugen auf den sichtbaren Seiten
+      ctx.strokeStyle = 'rgba(60,40,10,0.25)'; ctx.lineWidth = 1;
+      for (const [ax, ay, bx, by, nx, ny] of [[cx - half, cy + half, cx + half, cy + half, 0, 1], [cx + half, cy - half, cx + half, cy + half, 1, 0], [cx - half, cy - half, cx + half, cy - half, 0, -1], [cx - half, cy - half, cx - half, cy + half, -1, 0]]) {
+        if (nx * this.cam.sin + ny * this.cam.cos <= 0.001) continue;
+        for (let k = 1; k < 3; k++) { const zz = z + hh * k / 3; const p0 = this.proj(ax, ay, zz), p1 = this.proj(bx, by, zz); ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke(); }
+      }
+      z += hh;
+    }
+    // goldene Spitze
+    const capHalf = B * 0.11, cap = [[cx - capHalf, cy - capHalf], [cx + capHalf, cy - capHalf], [cx + capHalf, cy + capHalf], [cx - capHalf, cy + capHalf]];
+    const apex = this.proj(cx, cy, z + 1.0), corners = cap.map(p => this.proj(p[0], p[1], z));
+    for (let i = 0; i < 4; i++) { const a = corners[i], b = corners[(i + 1) % 4]; ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.lineTo(apex[0], apex[1]); ctx.closePath(); ctx.fillStyle = i % 2 ? '#e0b84a' : '#b8892a'; ctx.fill(); ctx.strokeStyle = '#7a5a10'; ctx.lineWidth = 0.8; ctx.stroke(); }
+    const gl = 0.7 + 0.3 * Math.sin(t * 2);
+    ctx.fillStyle = `rgba(255,230,140,${0.35 * gl})`; ctx.beginPath(); ctx.arc(apex[0], apex[1], s * 0.5 * gl, 0, TAU); ctx.fill();
+    // Torhaus an der Nordseite: Vorbau mit Pfeilern, Gesims, Hieroglyphenband, dunklem Tor mit Treppe und Fackeln
+    const fy = cy - B / 2, gx0 = ob.x - 1.9, gx1 = ob.x + 1.9, gd = 1.3;
+    this.fillPoly(ctx, [[ob.x - 1.2, fy - 1.0], [ob.x + 1.2, fy - 1.0], [ob.x + 1.2, fy], [ob.x - 1.2, fy]], 0.01, 'rgba(90,60,20,0.22)', false); // Schwelle
+    this.prism(ctx, [[gx0, fy], [gx1, fy], [gx1, fy + gd], [gx0, fy + gd]], 0, 2.1, '#e3c48f', '#a37a3e', { outline: '#7a5a2a' });
+    for (const px of [gx0 + 0.35, gx1 - 0.35]) this.prism(ctx, [[px - 0.3, fy - 0.35], [px + 0.3, fy - 0.35], [px + 0.3, fy + 0.25], [px - 0.3, fy + 0.25]], 0, 2.35, '#d9b979', '#8a6a34', { outline: '#5a4420' });
+    this.prism(ctx, [[gx0 - 0.15, fy - 0.45], [gx1 + 0.15, fy - 0.45], [gx1 + 0.15, fy + gd], [gx0 - 0.15, fy + gd]], 2.1, 0.3, '#c9a468', '#7a5a2a', { outline: '#5a4420' });
+    if (-this.cam.cos > 0.001) { // Frontseite zeigt zur Kamera
+      const ff = fy - 0.02, w2 = 0.95, top = 1.6, P = (u, zz) => this.proj(ob.x + u, ff, zz);
+      // Hieroglyphenband über dem Tor
+      const b0 = P(-1.25, 1.72), b1 = P(1.25, 1.72), b2 = P(1.25, 2.02), b3 = P(-1.25, 2.02);
+      ctx.fillStyle = 'rgba(60,40,10,0.35)'; ctx.beginPath(); ctx.moveTo(b0[0], b0[1]); ctx.lineTo(b1[0], b1[1]); ctx.lineTo(b2[0], b2[1]); ctx.lineTo(b3[0], b3[1]); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#ffd166';
+      for (let k = 0; k < 7; k++) { const q = P(-1.05 + k * 0.35, 1.87); const r = s * 0.05; if (k % 3 === 0) ctx.fillRect(q[0] - r * 0.5, q[1] - r * 1.4, r, r * 2.8); else if (k % 3 === 1) { ctx.beginPath(); ctx.arc(q[0], q[1], r, 0, TAU); ctx.fill(); } else { ctx.beginPath(); ctx.moveTo(q[0] - r, q[1] + r); ctx.lineTo(q[0], q[1] - r * 1.3); ctx.lineTo(q[0] + r, q[1] + r); ctx.closePath(); ctx.fill(); } }
+      // Tor: dunkle Öffnung, nach oben leicht verjüngt, innen eine Treppe hinab
+      const gate = [[-w2, 0], [-w2 * 0.78, top], [w2 * 0.78, top], [w2, 0]];
+      ctx.fillStyle = '#120a04'; ctx.beginPath(); gate.forEach(([u, zz], i) => { const q = P(u, zz); i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); }); ctx.closePath(); ctx.fill();
+      for (let k = 0; k < 4; k++) { const zz = 0.12 + k * 0.16, a = P(-w2 * (1 - zz / top * 0.22), zz), c = P(w2 * (1 - zz / top * 0.22), zz); ctx.strokeStyle = `rgba(200,160,90,${0.35 - k * 0.07})`; ctx.lineWidth = Math.max(1, s * 0.03); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(c[0], c[1]); ctx.stroke(); }
+      ctx.strokeStyle = '#7a5a2a'; ctx.lineWidth = Math.max(1.5, s * 0.06); ctx.beginPath(); gate.forEach(([u, zz], i) => { const q = P(u, zz); i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); }); ctx.closePath(); ctx.stroke();
+      // Fackeln an den Pfeilern
+      for (const side of [-1, 1]) {
+        const [tx, ty] = this.proj(ob.x + side * 1.55, fy - 0.37, 1.5), f = 0.8 + 0.2 * Math.sin(t * 9 + side);
+        ctx.fillStyle = '#5a3a1a'; ctx.fillRect(tx - s * 0.035, ty, s * 0.07, s * 0.32);
+        ctx.fillStyle = `rgba(255,150,40,${0.3 * f})`; ctx.beginPath(); ctx.arc(tx, ty - s * 0.06, s * 0.34 * f, 0, TAU); ctx.fill();
+        ctx.fillStyle = '#ff9a2a'; ctx.beginPath(); ctx.ellipse(tx, ty - s * 0.1, s * 0.07, s * 0.15 * f, 0, 0, TAU); ctx.fill();
+        ctx.fillStyle = '#fff1a0'; ctx.beginPath(); ctx.ellipse(tx, ty - s * 0.07, s * 0.03, s * 0.07 * f, 0, 0, TAU); ctx.fill();
+      }
+    }
+  }
   /* ---------- Boden ---------- */
   drawFloor(ctx) {
     // Gezeichnet wird immer die untere Ebene; die obere kommt als eigene, angehobene Scholle dazu
@@ -1629,7 +1835,7 @@ class Renderer {
         if (ob.style === 'crystal') this.spriteCrystal(ctx, ob.x, ob.y, 0, ob.r * 1.6 * sc, '#cfeeff', '#5b90c6');
         else if (ob.style === 'rock') this.spriteRock(ctx, { x: ob.x, y: ob.y, z: 0, s: ob.r * 2.1 * sc, seed: ((ob.x * 7 + ob.y * 13) % 10) / 10 }, '#9a948a', '#5f5a52');
         else if (ob.style === 'coral') this.spriteCoral(ctx, { x: ob.x, y: ob.y, z: 0, s: ob.r * 2.6 * sc, seed: ((ob.x * 7 + ob.y * 13) % 10) / 10 });
-        else if (ob.style === 'idol') { const [rx, ry] = this.proj(ob.x, ob.y, 0); this.spriteIdol(ctx, rx, ry, this.scale * ob.r * 2.2 * sc, { seed: 0.5 }, t); }
+        else if (ob.style === 'idol') this.spriteIdol(ctx, { x: ob.x, y: ob.y, z: 0, s: ob.r * 2.2 * sc, seed: 0.5 }, t);
         else if (ob.style === 'orb') this.drawOrb(ctx, ob, t, sc);
         else if (ob.style === 'grave') { const [rx, ry] = this.proj(ob.x, ob.y + 0.2, 0); this.spriteGravestone(ctx, rx, ry, this.scale * ob.r * 2.4 * sc, { seed: 0.3 }); }
         else if (ob.style === 'eye') this.drawEye(ctx, ob, t, sc);
@@ -1680,7 +1886,7 @@ class Renderer {
       else if (ob.style === 'fortress' || ob.style === 'crypt') items.push({ x: ob.px, y: ob.py, noFade: true, draw: () => this.drawStoneGate(ctx, ob, t) });
       else if (ob.style === 'hatch') items.push({ x: ob.x, y: ob.y, bias: 0.1, noFade: true, draw: () => this.drawHatch(ctx, ob, t) });
       else if (ob.style === 'castle') items.push({ x: ob.px, y: ob.py, noFade: true, draw: () => this.drawCastleGate(ctx, ob, t) });
-      else items.push({ x: ob.x, y: ob.y, bias: 0.15, noFade: true, draw: () => { const [sx, sy] = this.proj(ob.x, ob.y + 0.35, 0); this.spriteHut(ctx, sx, sy, this.scale * ob.s, t); } });
+      else items.push({ x: ob.x, y: ob.y, bias: 0.15, noFade: true, draw: () => this.spriteHut(ctx, { x: ob.x, y: ob.y + 0.35, z: 0, s: ob.s }, t) });
     } else if (ob.type === 'cauldron') {
       items.push({ x: ob.x, y: ob.y, draw: () => this.drawCauldronPot(ctx, ob, t) });
     } else if (ob.type === 'sharkjump') {
@@ -2232,17 +2438,17 @@ class Renderer {
       case 'gear': this.spriteGear(ctx, sx, sy, s, d, t); break;
       case 'candle': this.spriteCandle(ctx, d, t); break;
       case 'coral': this.spriteCoral(ctx, d); break;
-      case 'fish': this.spriteFish(ctx, sx, sy, s, d, t); break;
+      case 'fish': this.spriteFish(ctx, d, t); break;
       case 'fern': this.spriteFern(ctx, d, t); break;
       case 'jungleTree': this.spriteJungleTree(ctx, d, t); break;
-      case 'idol': this.spriteIdol(ctx, sx, sy, s, d, t); break;
-      case 'totem': this.spriteTotem(ctx, sx, sy, s, d, t); break;
-      case 'monkey': this.spriteMonkey(ctx, sx, sy, s, d, t); break;
+      case 'idol': this.spriteIdol(ctx, d, t); break;
+      case 'totem': this.spriteTotem(ctx, d, t); break;
+      case 'monkey': this.spriteMonkey(ctx, d, t); break;
       case 'ropepost': this.spriteRopepost(ctx, d); break;
-      case 'jelly': this.spriteJelly(ctx, sx, sy, s, d, t); break;
+      case 'jelly': this.spriteJelly(ctx, d, t); break;
       case 'mast': this.spriteMast(ctx, d, t); break;
       case 'pearl': this.spritePearl(ctx, sx, sy, s * 0.7, t, false); break;
-      case 'lighthouse': this.spriteLighthouse(ctx, sx, sy, s, t); break;
+      case 'lighthouse': this.spriteLighthouse(ctx, d, t); break;
       case 'barrel': this.spriteBarrel(ctx, d); break;
       case 'crate': this.spriteCrate(ctx, d); break;
       case 'bollard': this.spriteBollard(ctx, d, t); break;
@@ -2263,20 +2469,20 @@ class Renderer {
       case 'shelf': this.spriteShelf(ctx, d); break;
       case 'bottle': this.spriteBottle(ctx, d); break;
       case 'broom': this.spriteBroom(ctx, d); break;
-      case 'hut': this.spriteHut(ctx, sx, sy, s, t); break;
+      case 'hut': this.spriteHut(ctx, d, t); break;
       case 'gearFlat': this.spriteGearFlat(ctx, d, s, t); break;
       case 'pipe': this.spritePipe(ctx, d, t); break;
       case 'clock': this.spriteClock(ctx, d, t); break;
       case 'bell': this.spriteBell(ctx, d, t); break;
       case 'weight': this.spriteWeight(ctx, sx, sy, s, d, t); break;
       case 'obelisk': this.spriteObelisk(ctx, d); break;
-      case 'sarcophagus': this.spriteSarcophagus(ctx, sx, sy, s, d, t); break;
+      case 'sarcophagus': this.spriteSarcophagus(ctx, d, t); break;
       case 'gravestone': this.spriteGravestone(ctx, sx, sy, s, d); break;
       case 'gravecross': this.spriteGraveCross(ctx, sx, sy, s, d); break;
-      case 'ghostlight': this.spriteGhostLight(ctx, sx, sy, s, d, t); break;
-      case 'cloudDark': this.spriteCloudDark(ctx, sx, sy, s, t); break;
-      case 'lightningrod': this.spriteLightningRod(ctx, sx, sy, s, t); break;
-      case 'windsock': this.spriteWindsock(ctx, sx, sy, s, d, t); break;
+      case 'ghostlight': this.spriteGhostLight(ctx, d, t); break;
+      case 'cloudDark': this.spriteCloudDark(ctx, d, t); break;
+      case 'lightningrod': this.spriteLightningRod(ctx, d, t); break;
+      case 'windsock': this.spriteWindsock(ctx, sx, sy, s, Object.assign({ welt: [d.x, d.y, d.z || 0] }, d), t); break;
       case 'banner': this.spriteBanner(ctx, sx, sy, s, d, t); break;
       case 'bannerRed': this.spriteBanner(ctx, sx, sy, s, d, t, '#c0392c'); break;
       case 'brazierBlue': this.spriteBrazier(ctx, d, t, ['#4fc3ff', '#b7ecff', '80,190,255']); break;
@@ -2326,52 +2532,65 @@ class Renderer {
     }
   }
   /* Hafen */
-  spriteLighthouse(ctx, sx, sy, s, t) {
-    const w = s * 0.4, hgt = s * 2.6;
-    this.shadow(ctx, sx, sy, w * 1.3);
-    for (let i = 0; i < 6; i++) { const y0 = sy - hgt * (i + 1) / 6, ww = w * (1 - i * 0.05); ctx.fillStyle = i % 2 ? '#d93b3b' : '#f4efe6'; ctx.fillRect(sx - ww, y0, 2 * ww, hgt / 6 + 1); }
-    ctx.fillStyle = 'rgba(0,0,0,0.18)'; ctx.fillRect(sx, sy - hgt, w * 0.75, hgt);
-    ctx.fillStyle = '#3a3a44'; ctx.fillRect(sx - w * 0.95, sy - hgt - s * 0.08, w * 1.9, s * 0.1);
-    const beam = (t * 1.2) % TAU, gl = 0.5 + 0.5 * Math.cos(beam);
-    ctx.fillStyle = `rgba(255,240,170,${0.25 + 0.5 * gl})`; ctx.beginPath(); ctx.arc(sx, sy - hgt - s * 0.3, s * 0.55 * (0.6 + gl * 0.6), 0, TAU); ctx.fill();
-    ctx.fillStyle = '#ffe9a8'; ctx.fillRect(sx - w * 0.55, sy - hgt - s * 0.5, w * 1.1, s * 0.42);
-    ctx.fillStyle = '#3a3a44'; ctx.beginPath(); ctx.moveTo(sx - w * 0.8, sy - hgt - s * 0.5); ctx.lineTo(sx + w * 0.8, sy - hgt - s * 0.5); ctx.lineTo(sx, sy - hgt - s * 0.85); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = `rgba(255,240,170,${0.12 * gl})`; ctx.beginPath(); ctx.moveTo(sx, sy - hgt - s * 0.3); ctx.lineTo(sx + Math.cos(beam) * s * 3, sy - hgt - s * 0.3 + Math.sin(beam) * s * 0.9 - s * 0.35); ctx.lineTo(sx + Math.cos(beam) * s * 3, sy - hgt - s * 0.3 + Math.sin(beam) * s * 0.9 + s * 0.35); ctx.closePath(); ctx.fill();
+  /* Leuchtturm: ein Turm aus Ringen mit roten und weißen Bändern, Galerie, Laterne und Dach –
+     und ein Lichtkegel, der herumläuft. Das Licht bleibt flach, es ist Schein, kein Körper. */
+  spriteLighthouse(ctx, d, t) {
+    const k = d.s, z = d.z || 0, H = k * 2.6;
+    this.bodenSchatten(ctx, d.x, d.y, k * 0.55);
+    for (let i = 0; i < 6; i++) {
+      const r0 = k * 0.4 * (1 - i * 0.05), r1 = k * 0.4 * (1 - (i + 1) * 0.05);
+      this.saeule(ctx, d.x, d.y, z + H * i / 6, r0, r1, H / 6, i % 2 ? '#e04040' : '#f4efe6', i % 2 ? '#a82a2a' : '#cfc6b8', 10);
+    }
+    this.saeule(ctx, d.x, d.y, z + H, k * 0.46, k * 0.46, k * 0.06, '#4a4a55', '#2f2f38', 10);
+    this.saeule(ctx, d.x, d.y, z + H + k * 0.06, k * 0.24, k * 0.24, k * 0.42, '#ffe9a8', '#d8c078', 9);
+    this.kegel(ctx, d.x, d.y, z + H + k * 0.48, k * 0.34, k * 0.34, '#4a4a55', '#2f2f38', 9);
+    const beam = (t * 1.2) % TAU, gl = 0.5 + 0.5 * Math.cos(beam), sc = this.scale * k;
+    const [lx, ly] = this.proj(d.x, d.y, z + H + k * 0.28);
+    ctx.fillStyle = `rgba(255,240,170,${0.25 + 0.5 * gl})`; ctx.beginPath(); ctx.arc(lx, ly, sc * 0.55 * (0.6 + gl * 0.6), 0, TAU); ctx.fill();
+    const [bx, by] = this.proj(d.x + Math.cos(beam) * k * 3, d.y + Math.sin(beam) * k * 3, z + H + k * 0.28);
+    ctx.fillStyle = `rgba(255,240,170,${0.12 * gl})`;
+    ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(bx, by - sc * 0.35); ctx.lineTo(bx, by + sc * 0.35); ctx.closePath(); ctx.fill();
   }
-  /* Poller mit Tau: der Pfosten als Säule, das Tau als hängender Bogen. */
   spriteBollard(ctx, d, t) {
     const k = d.s, z = d.z || 0, a = (d.seed || 0) * 6;
     this.saeule(ctx, d.x, d.y, z, k * 0.1, k * 0.12, k * 0.4, '#5e5e68', '#3a3a42', 8);
     this.ast(ctx, d.x, d.y, z + k * 0.32, Math.cos(a), Math.sin(a), k * 0.7, 0, k * 0.3 + Math.sin(t + d.x) * k * 0.03, k * 0.03, '#d8b878', '#9a7a3a', 3);
   }
-  spriteFish(ctx, sx, sy, s, d, t) {
-    const seed = d.seed || 0, sw = Math.sin(t * 0.9 + seed * 6.3), dir = Math.cos(t * 0.9 + seed * 6.3) >= 0 ? 1 : -1;
-    const x = sx + sw * s * 0.5, y = sy - s * (0.7 + 0.15 * Math.sin(t * 2 + seed * 9)), L = s * 0.32, Hh = s * 0.17;
+  /* Fisch: Körper als Kugel, Flosse und Schwanz als flache Weltdreiecke quer zur Schwimmrichtung.
+     Er schwimmt jetzt wirklich im Raum über dem Grund – vorher lag er auf dem Bild. */
+  spriteFish(ctx, d, t) {
+    const k = d.s, seed = d.seed || 0, ph = t * 0.9 + seed * 6.3;
+    const a = seed * 6, co = Math.cos(a), si = Math.sin(a), sw = Math.sin(ph);
+    const x = d.x + co * sw * k * 0.5, y = d.y + si * sw * k * 0.5;
+    const z = (d.z || 0) + k * (0.7 + 0.15 * Math.sin(t * 2 + seed * 9));
+    const dir = Math.cos(ph) >= 0 ? 1 : -1, L = k * 0.32, Hh = k * 0.17;
     const cols = seed < 0.33 ? ['#ff8a3d', '#c25a1a'] : seed < 0.66 ? ['#ffd23d', '#c29a1a'] : ['#5fb8ff', '#2a6fc0'];
-    ctx.fillStyle = 'rgba(0,0,0,0.15)'; ctx.beginPath(); ctx.ellipse(sx, sy, L * 0.9, Hh * 0.5, 0, 0, TAU); ctx.fill();
+    this.isoEllipse(ctx, d.x, d.y, 0.008, L * 0.9, 'rgba(0,0,0,0.15)');
     const flap = Math.sin(t * 8 + seed * 5) * 0.3;
-    ctx.fillStyle = cols[1]; ctx.beginPath(); ctx.moveTo(x - dir * L * 0.8, y); ctx.lineTo(x - dir * L * 1.35, y - Hh * (0.9 + flap)); ctx.lineTo(x - dir * L * 1.35, y + Hh * (0.9 - flap)); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = cols[0]; ctx.beginPath(); ctx.ellipse(x, y, L, Hh, 0, 0, TAU); ctx.fill();
-    ctx.fillStyle = cols[1]; ctx.beginPath(); ctx.moveTo(x - dir * L * 0.2, y - Hh); ctx.lineTo(x + dir * L * 0.05, y - Hh * 1.6); ctx.lineTo(x + dir * L * 0.3, y - Hh * 0.9); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.beginPath(); ctx.ellipse(x - dir * L * 0.1, y, L * 0.12, Hh * 0.95, 0, 0, TAU); ctx.fill();
-    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x + dir * L * 0.55, y - Hh * 0.2, Hh * 0.3, 0, TAU); ctx.fill();
-    ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(x + dir * L * 0.6, y - Hh * 0.2, Hh * 0.15, 0, TAU); ctx.fill();
+    const schwanz = [[-1.35 * dir, -(0.9 + flap)], [-1.35 * dir, (0.9 - flap)], [-0.8 * dir, 0]]
+      .map(([u, v]) => [x + (u * L * co - v * Hh * si), y + (u * L * si + v * Hh * co)]);
+    this.fillPoly(ctx, schwanz, z, cols[1]);
+    this.kugel(ctx, x, y, z, L * 0.62, '#ffffff', cols[0], cols[1]);
+    const [ax, ay] = this.proj(x + co * L * 0.55 * dir, y + si * L * 0.55 * dir, z + Hh * 0.2), sc = this.scale * k;
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(ax, ay, sc * 0.05, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#1a1a1a'; ctx.beginPath(); ctx.arc(ax, ay, sc * 0.025, 0, TAU); ctx.fill();
   }
-  spriteJelly(ctx, sx, sy, s, d, t) {
-    const seed = d.seed || 0, y = sy - s * (1.1 + 0.25 * Math.sin(t * 1.1 + seed * 7)), r = s * 0.3, pulse = 1 + 0.08 * Math.sin(t * 3 + seed * 4);
+  /* Qualle: Schirm als Kugel, Tentakel als hängende Fäden an Weltpunkten. Der Schirm ist durch-
+     scheinend – darum bleibt er ein Farbverlauf und wird kein Körper mit Kanten. */
+  spriteJelly(ctx, d, t) {
+    const k = d.s, seed = d.seed || 0, r = k * 0.3;
+    const z = (d.z || 0) + k * (1.1 + 0.25 * Math.sin(t * 1.1 + seed * 7));
     const col = seed > 0.5 ? '255,140,200' : '190,150,255';
-    ctx.fillStyle = `rgba(${col},0.18)`; ctx.beginPath(); ctx.arc(sx, y, r * 1.8, 0, TAU); ctx.fill();
-    ctx.strokeStyle = `rgba(${col},0.7)`; ctx.lineWidth = Math.max(1, s * 0.03); ctx.lineCap = 'round';
-    for (let i = -2; i <= 2; i++) { // Tentakel schlängeln
-      const x0 = sx + i * r * 0.35, wv = Math.sin(t * 2.5 + i + seed * 5) * r * 0.3;
-      ctx.beginPath(); ctx.moveTo(x0, y + r * 0.2); ctx.quadraticCurveTo(x0 + wv, y + r * 0.9, x0 - wv * 0.6, y + r * (1.5 + Math.abs(i) * 0.2)); ctx.stroke();
+    this.isoEllipse(ctx, d.x, d.y, z, r * 1.8, `rgba(${col},0.18)`);
+    ctx.strokeStyle = `rgba(${col},0.7)`; ctx.lineWidth = Math.max(1, this.scale * k * 0.03); ctx.lineCap = 'round';
+    for (let i = 0; i < 5; i++) {
+      const a = seed * 6 + (i * TAU) / 5, wv = Math.sin(t * 2.5 + i + seed * 5) * r * 0.3;
+      const px = d.x + Math.cos(a) * r * 0.35, py = d.y + Math.sin(a) * r * 0.35;
+      const [o0, o1] = this.proj(px, py, z - r * 0.2), [u0, u1] = this.proj(px + wv, py + wv, z - r * 1.5);
+      ctx.beginPath(); ctx.moveTo(o0, o1); ctx.quadraticCurveTo(o0 + wv * 6, (o1 + u1) / 2, u0, u1); ctx.stroke();
     }
-    const g = ctx.createRadialGradient(sx - r * 0.3, y - r * 0.4, r * 0.1, sx, y, r * pulse);
-    g.addColorStop(0, `rgba(255,255,255,0.9)`); g.addColorStop(1, `rgba(${col},0.55)`);
-    ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(sx, y, r * pulse, r * 0.8 * pulse, 0, Math.PI, TAU); ctx.lineTo(sx + r * pulse, y + r * 0.15); ctx.quadraticCurveTo(sx, y + r * 0.35, sx - r * pulse, y + r * 0.15); ctx.closePath(); ctx.fill();
+    this.kugel(ctx, d.x, d.y, z, r * (1 + 0.08 * Math.sin(t * 3 + seed * 4)), 'rgba(255,255,255,0.9)', `rgba(${col},0.75)`, `rgba(${col},0.4)`);
   }
-  /* Mast mit Segel: Mast und Rah als Walzen, das Segel als flacher Quader längs der Rah – es
-     dreht sich also mit, statt immer von vorn zu zeigen. */
   spriteMast(ctx, d, t) {
     const k = d.s, z = d.z || 0, H = k * 3.2, a = (d.seed || 0) * 6;
     const co = Math.cos(a), si = Math.sin(a), sw = Math.sin(t * 1.5 + (d.seed || 0) * 6) * 0.12;
@@ -2608,45 +2827,68 @@ class Renderer {
       this.kugel(ctx, d.x + Math.cos(a) * k * 0.9, d.y + Math.sin(a) * k * 0.9, z + k * (2.5 + Math.sin(i * 2.3) * 0.4), k * 0.09, '#ffb8cc', '#ff5f8a', '#c03a66');
     }
   }
-  spriteIdol(ctx, sx, sy, s, d, t) {
-    this.shadow(ctx, sx, sy, s * 0.5);
-    ctx.fillStyle = '#7a7a6a'; ctx.fillRect(sx - s * 0.42, sy - s * 0.25, s * 0.84, s * 0.25); // Sockel
-    ctx.fillStyle = '#8f8f7c'; ctx.beginPath(); ctx.moveTo(sx - s * 0.35, sy - s * 0.25); ctx.lineTo(sx - s * 0.3, sy - s * 1.05); ctx.lineTo(sx + s * 0.3, sy - s * 1.05); ctx.lineTo(sx + s * 0.35, sy - s * 0.25); ctx.closePath(); ctx.fill(); // Kopf
-    ctx.fillStyle = '#6a6a5a'; ctx.fillRect(sx - s * 0.36, sy - s * 1.15, s * 0.72, s * 0.14); // Stirnband
-    ctx.fillStyle = '#2a2a24'; ctx.fillRect(sx - s * 0.24, sy - s * 0.88, s * 0.16, s * 0.1); ctx.fillRect(sx + s * 0.08, sy - s * 0.88, s * 0.16, s * 0.1); // Augen
-    ctx.fillRect(sx - s * 0.06, sy - s * 0.75, s * 0.12, s * 0.22); ctx.fillRect(sx - s * 0.2, sy - s * 0.48, s * 0.4, s * 0.08); // Nase, Mund
-    const gl = 0.5 + 0.5 * Math.sin(t * 2 + sx); ctx.fillStyle = `rgba(255,209,102,${0.5 + 0.5 * gl})`; ctx.fillRect(sx - s * 0.22, sy - s * 0.87, s * 0.12, s * 0.08); ctx.fillRect(sx + s * 0.1, sy - s * 0.87, s * 0.12, s * 0.08); // Goldglanz in den Augen
-    ctx.fillStyle = 'rgba(60,110,50,0.6)'; ctx.beginPath(); ctx.ellipse(sx + s * 0.2, sy - s * 1.05, s * 0.18, s * 0.08, 0, 0, TAU); ctx.fill(); // Moos
-  }
-  spriteTotem(ctx, sx, sy, s, d, t) {
-    this.shadow(ctx, sx, sy, s * 0.45);
-    const cols = ['#c94a3a', '#e8a63a', '#3a8fb0', '#6a9a3a'];
-    for (let k = 0; k < 4; k++) {
-      const y = sy - s * 0.5 * (k + 1), col = cols[(k + Math.floor((d.seed || 0) * 4)) % 4];
-      ctx.fillStyle = col; ctx.fillRect(sx - s * 0.3, y, s * 0.6, s * 0.5);
-      ctx.fillStyle = shade(col, 0.7); ctx.fillRect(sx + s * 0.15, y, s * 0.15, s * 0.5);
-      ctx.fillStyle = '#fff'; ctx.fillRect(sx - s * 0.2, y + s * 0.12, s * 0.12, s * 0.1); ctx.fillRect(sx + s * 0.02, y + s * 0.12, s * 0.12, s * 0.1);
-      ctx.fillStyle = '#1a1a1a'; ctx.fillRect(sx - s * 0.16, y + s * 0.14, s * 0.06, s * 0.06); ctx.fillRect(sx + s * 0.06, y + s * 0.14, s * 0.06, s * 0.06); ctx.fillRect(sx - s * 0.12, y + s * 0.33, s * 0.24, s * 0.05);
+  /* Steinkopf: Sockel und Kopf als Quader, das Gesicht auf der Seite, die zur Kamera zeigt –
+     dreht man herum, sieht man den Hinterkopf, und das ist auch richtig so. */
+  spriteIdol(ctx, d, t) {
+    const k = d.s, z = d.z || 0, a = (d.seed || 0) * 3, co = Math.cos(a), si = Math.sin(a);
+    const kasten = (w, h) => [[-w, -h], [w, -h], [w, h], [-w, h]].map(([u, v]) => [d.x + u * co - v * si, d.y + u * si + v * co]);
+    this.bodenSchatten(ctx, d.x, d.y, k * 0.5);
+    this.prism(ctx, kasten(k * 0.42, k * 0.3), z, k * 0.25, '#8f8f7c', '#6a6a5a');
+    this.frustum(ctx, kasten(k * 0.35, k * 0.26), kasten(k * 0.3, k * 0.24), z + k * 0.25, z + k * 1.05, '#9c9c88', '#70705f');
+    this.prism(ctx, kasten(k * 0.36, k * 0.27), z + k * 1.05, k * 0.14, '#7a7a68', '#565648');
+    // Gesicht auf der Kameraseite
+    const c = this.cam, vx = d.x - c.sin * k * 0.27, vy = d.y - c.cos * k * 0.27, sc = this.scale * k;
+    const gl = 0.5 + 0.5 * Math.sin(t * 2 + d.x);
+    for (const vz of [-1, 1]) {
+      const [ex, ey] = this.proj(vx + c.cos * k * 0.16 * vz, vy - c.sin * k * 0.16 * vz, z + k * 0.82);
+      ctx.fillStyle = '#2a2a24'; ctx.fillRect(ex - sc * 0.08, ey - sc * 0.05, sc * 0.16, sc * 0.1);
+      ctx.fillStyle = `rgba(255,209,102,${0.5 + 0.5 * gl})`; ctx.fillRect(ex - sc * 0.06, ey - sc * 0.035, sc * 0.12, sc * 0.07);
     }
-    ctx.fillStyle = '#e8a63a'; ctx.beginPath(); ctx.moveTo(sx - s * 0.5, sy - s * 2.0); ctx.lineTo(sx, sy - s * 2.35); ctx.lineTo(sx + s * 0.5, sy - s * 2.0); ctx.lineTo(sx, sy - s * 2.1); ctx.closePath(); ctx.fill(); // Flügel oben
+    const [mx, my] = this.proj(vx, vy, z + k * 0.5);
+    ctx.fillStyle = '#2a2a24'; ctx.fillRect(mx - sc * 0.2, my - sc * 0.04, sc * 0.4, sc * 0.08);
+    const [nx2, ny2] = this.proj(vx, vy, z + k * 0.66);
+    ctx.fillRect(nx2 - sc * 0.06, ny2 - sc * 0.11, sc * 0.12, sc * 0.22);
   }
-  spriteMonkey(ctx, sx, sy, s, d, t) {
-    const seed = d.seed || 0, arm = Math.sin(t * 4 + seed * 6), y = sy - s * 0.15;
-    ctx.strokeStyle = '#5a3a1e'; ctx.lineWidth = Math.max(2, s * 0.09); ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(sx - s * 0.7, y + s * 0.1); ctx.lineTo(sx + s * 0.7, y + s * 0.1); ctx.stroke(); // Ast
-    ctx.strokeStyle = '#7a4a2a'; ctx.lineWidth = Math.max(1.5, s * 0.06); ctx.beginPath(); ctx.moveTo(sx + s * 0.2, y - s * 0.1); ctx.quadraticCurveTo(sx + s * 0.6, y - s * 0.5, sx + s * 0.45, y - s * 0.85 + arm * s * 0.1); ctx.stroke(); // Schwanz
-    ctx.fillStyle = '#7a4a2a'; ctx.beginPath(); ctx.ellipse(sx, y - s * 0.3, s * 0.28, s * 0.32, 0, 0, TAU); ctx.fill(); // Körper
-    ctx.fillStyle = '#d9b48a'; ctx.beginPath(); ctx.ellipse(sx, y - s * 0.25, s * 0.16, s * 0.2, 0, 0, TAU); ctx.fill(); // Bauch
-    ctx.fillStyle = '#7a4a2a'; ctx.beginPath(); ctx.arc(sx, y - s * 0.72, s * 0.22, 0, TAU); ctx.fill(); // Kopf
-    ctx.beginPath(); ctx.arc(sx - s * 0.22, y - s * 0.78, s * 0.08, 0, TAU); ctx.arc(sx + s * 0.22, y - s * 0.78, s * 0.08, 0, TAU); ctx.fill(); // Ohren
-    ctx.fillStyle = '#d9b48a'; ctx.beginPath(); ctx.ellipse(sx, y - s * 0.68, s * 0.14, s * 0.12, 0, 0, TAU); ctx.fill(); // Gesicht
-    ctx.fillStyle = '#1a1a1a'; ctx.beginPath(); ctx.arc(sx - s * 0.06, y - s * 0.74, s * 0.03, 0, TAU); ctx.arc(sx + s * 0.06, y - s * 0.74, s * 0.03, 0, TAU); ctx.fill();
-    ctx.strokeStyle = '#7a4a2a'; ctx.lineWidth = Math.max(2, s * 0.08); // Wurfarm mit Kokosnuss
-    const ax = sx - s * 0.25, ay = y - s * 0.4, hx = ax - s * 0.3, hy = ay - s * 0.35 * (0.5 + 0.5 * arm);
-    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(hx, hy); ctx.stroke();
-    ctx.fillStyle = '#5a3a1e'; ctx.beginPath(); ctx.arc(hx, hy - s * 0.06, s * 0.09, 0, TAU); ctx.fill();
+  /* Totempfahl: vier bemalte Blöcke übereinander, oben die Flügel. Die Gesichter schauen zur
+     Kamera, der Pfahl selbst ist ein Körper. */
+  spriteTotem(ctx, d, t) {
+    const k = d.s, z = d.z || 0, a = (d.seed || 0) * 3, co = Math.cos(a), si = Math.sin(a);
+    const cols = ['#c94a3a', '#e8a63a', '#3a8fb0', '#6a9a3a'];
+    const kasten = (w, h) => [[-w, -h], [w, -h], [w, h], [-w, h]].map(([u, v]) => [d.x + u * co - v * si, d.y + u * si + v * co]);
+    this.bodenSchatten(ctx, d.x, d.y, k * 0.45);
+    const c = this.cam, sc = this.scale * k;
+    for (let m = 0; m < 4; m++) {
+      const col = cols[(m + Math.floor((d.seed || 0) * 4)) % 4], z0 = z + k * 0.5 * m;
+      this.prism(ctx, kasten(k * 0.3, k * 0.26), z0, k * 0.5, col, shade(col, 0.72));
+      const vx = d.x - c.sin * k * 0.27, vy = d.y - c.cos * k * 0.27;
+      for (const vz of [-1, 1]) {
+        const [ex, ey] = this.proj(vx + c.cos * k * 0.14 * vz, vy - c.sin * k * 0.14 * vz, z0 + k * 0.33);
+        ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(ex, ey, sc * 0.07, 0, TAU); ctx.fill();
+        ctx.fillStyle = '#1a1a1a'; ctx.beginPath(); ctx.arc(ex, ey, sc * 0.035, 0, TAU); ctx.fill();
+      }
+      const [mx, my] = this.proj(vx, vy, z0 + k * 0.14);
+      ctx.fillStyle = '#1a1a1a'; ctx.fillRect(mx - sc * 0.12, my - sc * 0.025, sc * 0.24, sc * 0.05);
+    }
+    for (const vz of [-1, 1]) this.ast(ctx, d.x, d.y, z + k * 2.05, co * vz, si * vz, k * 0.5, k * 0.28, k * 0.05, k * 0.05, '#e8a63a', '#b07a1a', 2);
   }
-  /* Seilpfosten: Säule mit zwei Tauringen. */
+  /* Affe auf einem Ast: Ast als Walze, Körper und Kopf als Kugeln, Gesicht zur Kamera. */
+  spriteMonkey(ctx, d, t) {
+    const k = d.s, z = (d.z || 0) + k * 0.9, seed = d.seed || 0, c = this.cam;
+    const a = seed * 6, co = Math.cos(a), si = Math.sin(a), sc = this.scale * k;
+    this.walze(ctx, d.x - co * k * 0.7, d.y - si * k * 0.7, d.x + co * k * 0.7, d.y + si * k * 0.7, z, k * 0.07, '#7a4a2a', '#5a3a1e', { n: 7 });
+    this.kugel(ctx, d.x, d.y, z + k * 0.28, k * 0.28, '#a06a44', '#7a4a2a', '#4a2a12');
+    this.kugel(ctx, d.x - c.sin * k * 0.18, d.y - c.cos * k * 0.18, z + k * 0.26, k * 0.16, '#eecfae', '#d9b48a', '#a88a62');
+    this.kugel(ctx, d.x, d.y, z + k * 0.7, k * 0.22, '#a06a44', '#7a4a2a', '#4a2a12');
+    for (const vz of [-1, 1]) this.kugel(ctx, d.x + c.cos * k * 0.22 * vz, d.y - c.sin * k * 0.22 * vz, z + k * 0.76, k * 0.08, '#a06a44', '#7a4a2a', '#4a2a12');
+    const vx = d.x - c.sin * k * 0.16, vy = d.y - c.cos * k * 0.16;
+    this.kugel(ctx, vx, vy, z + k * 0.68, k * 0.13, '#f4dcc0', '#d9b48a', '#a88a62');
+    for (const vz of [-1, 1]) {
+      const [ex, ey] = this.proj(vx + c.cos * k * 0.06 * vz, vy - c.sin * k * 0.06 * vz, z + k * 0.74);
+      ctx.fillStyle = '#1a1a1a'; ctx.beginPath(); ctx.arc(ex, ey, sc * 0.03, 0, TAU); ctx.fill();
+    }
+    const arm = Math.sin(t * 4 + seed * 6);
+    this.ast(ctx, d.x, d.y, z + k * 0.2, co, si, k * 0.5, k * 0.5 + arm * k * 0.1, k * 0.1, k * 0.05, '#8a5a34', '#5a3a1e', 3);
+  }
   spriteRopepost(ctx, d) {
     const k = d.s, z = d.z || 0;
     this.bodenSchatten(ctx, d.x, d.y, k * 0.2, 0.18);
@@ -2837,124 +3079,42 @@ class Renderer {
     }
   }
   /* Sarkophag: goldener Kasten mit blauen Streifen und Pharaonenmaske */
-  spriteSarcophagus(ctx, sx, sy, s, d, t) {
-    this.shadow(ctx, sx, sy, s * 0.55);
-    const w = s * 0.42, h = s * 0.5;
-    ctx.fillStyle = '#8a6a2a'; ctx.fillRect(sx - w, sy - h, 2 * w, h);
-    ctx.fillStyle = '#e0b84a'; ctx.beginPath(); ctx.moveTo(sx - w, sy - h); ctx.lineTo(sx - w * 0.85, sy - h - s * 0.55); ctx.lineTo(sx + w * 0.85, sy - h - s * 0.55); ctx.lineTo(sx + w, sy - h); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#2f6fb0'; for (let i = 0; i < 3; i++) ctx.fillRect(sx - w * 0.8 + i * w * 0.6, sy - h - s * 0.5, w * 0.18, s * 0.45);
-    ctx.fillStyle = '#c99a3a'; ctx.fillRect(sx - w, sy - h * 0.55, 2 * w, h * 0.12);
-    // Maske
-    ctx.fillStyle = '#ffd166'; ctx.beginPath(); ctx.ellipse(sx, sy - h - s * 0.28, s * 0.14, s * 0.17, 0, 0, TAU); ctx.fill();
-    ctx.fillStyle = '#1e3a6a'; ctx.fillRect(sx - s * 0.2, sy - h - s * 0.45, s * 0.4, s * 0.07);
-    ctx.fillStyle = '#2a1a08'; ctx.beginPath(); ctx.arc(sx - s * 0.05, sy - h - s * 0.3, s * 0.02, 0, TAU); ctx.arc(sx + s * 0.05, sy - h - s * 0.3, s * 0.02, 0, TAU); ctx.fill();
+  /* Sarkophag: Kasten mit schräg zulaufendem Deckel, Maske auf der Kameraseite. */
+  spriteSarcophagus(ctx, d, t) {
+    const k = d.s, z = d.z || 0, a = (d.seed || 0) * 3, co = Math.cos(a), si = Math.sin(a), c = this.cam;
+    const kasten = (w, h) => [[-w, -h], [w, -h], [w, h], [-w, h]].map(([u, v]) => [d.x + u * co - v * si, d.y + u * si + v * co]);
+    this.bodenSchatten(ctx, d.x, d.y, k * 0.55);
+    this.prism(ctx, kasten(k * 0.42, k * 0.3), z, k * 0.5, '#a8862e', '#7a5c1e');
+    this.frustum(ctx, kasten(k * 0.42, k * 0.3), kasten(k * 0.34, k * 0.22), z + k * 0.5, z + k * 1.05, '#e0b84a', '#a8862e');
+    const vx = d.x - c.sin * k * 0.24, vy = d.y - c.cos * k * 0.24, sc = this.scale * k;
+    const [mx, my] = this.proj(vx, vy, z + k * 0.82);
+    ctx.fillStyle = '#ffd166'; ctx.beginPath(); ctx.ellipse(mx, my, sc * 0.14, sc * 0.17, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#1e3a6a'; ctx.fillRect(mx - sc * 0.2, my - sc * 0.19, sc * 0.4, sc * 0.07);
+    ctx.fillStyle = '#2a1a08'; ctx.beginPath(); ctx.arc(mx - sc * 0.05, my - sc * 0.02, sc * 0.02, 0, TAU); ctx.arc(mx + sc * 0.05, my - sc * 0.02, sc * 0.02, 0, TAU); ctx.fill();
   }
-
-  /* Stufenpyramide aus Sandstein: vier kantige Stufen, goldene Spitze und der dunkle Eingang an der Nordseite.
-     ob.px/ob.py = Mittelpunkt der Grundfläche, ob.base = Kantenlänge, ob.x/ob.y = Tür */
-  drawPyramid(ctx, ob, t) {
-    const s = this.scale, cx = ob.px, cy = ob.py, B = ob.base;
-    const tiers = [[B, 1.3], [B * 0.76, 1.2], [B * 0.53, 1.1], [B * 0.31, 1.0]];
-    let z = 0;
-    for (const [w, hh] of tiers) {
-      const half = w / 2, poly = [[cx - half, cy - half], [cx + half, cy - half], [cx + half, cy + half], [cx - half, cy + half]];
-      this.prism(ctx, poly, z, hh, '#e3c48f', '#a37a3e', { outline: '#7a5a2a' });
-      // Fugen auf den sichtbaren Seiten
-      ctx.strokeStyle = 'rgba(60,40,10,0.25)'; ctx.lineWidth = 1;
-      for (const [ax, ay, bx, by, nx, ny] of [[cx - half, cy + half, cx + half, cy + half, 0, 1], [cx + half, cy - half, cx + half, cy + half, 1, 0], [cx - half, cy - half, cx + half, cy - half, 0, -1], [cx - half, cy - half, cx - half, cy + half, -1, 0]]) {
-        if (nx * this.cam.sin + ny * this.cam.cos <= 0.001) continue;
-        for (let k = 1; k < 3; k++) { const zz = z + hh * k / 3; const p0 = this.proj(ax, ay, zz), p1 = this.proj(bx, by, zz); ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke(); }
-      }
-      z += hh;
+  /* Hexenhütte: Bohlenwand als achteckiger Körper, darüber ein hoher Kegel als Hut. Tür, Fenster
+     und der Schein darin liegen auf der Seite, die zur Kamera zeigt. */
+  spriteHut(ctx, d, t) {
+    const k = d.s, z = d.z || 0, gl = 0.85 + 0.15 * Math.sin(t * 4), c = this.cam, sc = this.scale * k;
+    const acht = rr => this.circlePoly(d.x, d.y, rr, 8, 0.4);
+    this.bodenSchatten(ctx, d.x, d.y, k * 0.75);
+    this.frustum(ctx, acht(k * 0.62), acht(k * 0.58), z, z + k * 0.62, '#5a4030', '#3a2a1c');
+    this.kegel(ctx, d.x, d.y, z + k * 0.62, k * 0.95, k * 1.15, '#4a3466', '#2e1f3f', 8);
+    // Rauch aus dem Schornstein
+    for (let i = 0; i < 3; i++) {
+      const u = (t * 0.35 + i * 0.33) % 1, rr = k * (0.06 + u * 0.16);
+      this.isoEllipse(ctx, d.x + k * 0.35 + Math.sin(u * 5 + i) * k * 0.1, d.y, z + k * (1.3 + u * 0.6), rr, `rgba(150,255,120,${0.35 * (1 - u)})`, rr / this.cam.tilt);
     }
-    // goldene Spitze
-    const capHalf = B * 0.11, cap = [[cx - capHalf, cy - capHalf], [cx + capHalf, cy - capHalf], [cx + capHalf, cy + capHalf], [cx - capHalf, cy + capHalf]];
-    const apex = this.proj(cx, cy, z + 1.0), corners = cap.map(p => this.proj(p[0], p[1], z));
-    for (let i = 0; i < 4; i++) { const a = corners[i], b = corners[(i + 1) % 4]; ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.lineTo(apex[0], apex[1]); ctx.closePath(); ctx.fillStyle = i % 2 ? '#e0b84a' : '#b8892a'; ctx.fill(); ctx.strokeStyle = '#7a5a10'; ctx.lineWidth = 0.8; ctx.stroke(); }
-    const gl = 0.7 + 0.3 * Math.sin(t * 2);
-    ctx.fillStyle = `rgba(255,230,140,${0.35 * gl})`; ctx.beginPath(); ctx.arc(apex[0], apex[1], s * 0.5 * gl, 0, TAU); ctx.fill();
-    // Torhaus an der Nordseite: Vorbau mit Pfeilern, Gesims, Hieroglyphenband, dunklem Tor mit Treppe und Fackeln
-    const fy = cy - B / 2, gx0 = ob.x - 1.9, gx1 = ob.x + 1.9, gd = 1.3;
-    this.fillPoly(ctx, [[ob.x - 1.2, fy - 1.0], [ob.x + 1.2, fy - 1.0], [ob.x + 1.2, fy], [ob.x - 1.2, fy]], 0.01, 'rgba(90,60,20,0.22)', false); // Schwelle
-    this.prism(ctx, [[gx0, fy], [gx1, fy], [gx1, fy + gd], [gx0, fy + gd]], 0, 2.1, '#e3c48f', '#a37a3e', { outline: '#7a5a2a' });
-    for (const px of [gx0 + 0.35, gx1 - 0.35]) this.prism(ctx, [[px - 0.3, fy - 0.35], [px + 0.3, fy - 0.35], [px + 0.3, fy + 0.25], [px - 0.3, fy + 0.25]], 0, 2.35, '#d9b979', '#8a6a34', { outline: '#5a4420' });
-    this.prism(ctx, [[gx0 - 0.15, fy - 0.45], [gx1 + 0.15, fy - 0.45], [gx1 + 0.15, fy + gd], [gx0 - 0.15, fy + gd]], 2.1, 0.3, '#c9a468', '#7a5a2a', { outline: '#5a4420' });
-    if (-this.cam.cos > 0.001) { // Frontseite zeigt zur Kamera
-      const ff = fy - 0.02, w2 = 0.95, top = 1.6, P = (u, zz) => this.proj(ob.x + u, ff, zz);
-      // Hieroglyphenband über dem Tor
-      const b0 = P(-1.25, 1.72), b1 = P(1.25, 1.72), b2 = P(1.25, 2.02), b3 = P(-1.25, 2.02);
-      ctx.fillStyle = 'rgba(60,40,10,0.35)'; ctx.beginPath(); ctx.moveTo(b0[0], b0[1]); ctx.lineTo(b1[0], b1[1]); ctx.lineTo(b2[0], b2[1]); ctx.lineTo(b3[0], b3[1]); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = '#ffd166';
-      for (let k = 0; k < 7; k++) { const q = P(-1.05 + k * 0.35, 1.87); const r = s * 0.05; if (k % 3 === 0) ctx.fillRect(q[0] - r * 0.5, q[1] - r * 1.4, r, r * 2.8); else if (k % 3 === 1) { ctx.beginPath(); ctx.arc(q[0], q[1], r, 0, TAU); ctx.fill(); } else { ctx.beginPath(); ctx.moveTo(q[0] - r, q[1] + r); ctx.lineTo(q[0], q[1] - r * 1.3); ctx.lineTo(q[0] + r, q[1] + r); ctx.closePath(); ctx.fill(); } }
-      // Tor: dunkle Öffnung, nach oben leicht verjüngt, innen eine Treppe hinab
-      const gate = [[-w2, 0], [-w2 * 0.78, top], [w2 * 0.78, top], [w2, 0]];
-      ctx.fillStyle = '#120a04'; ctx.beginPath(); gate.forEach(([u, zz], i) => { const q = P(u, zz); i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); }); ctx.closePath(); ctx.fill();
-      for (let k = 0; k < 4; k++) { const zz = 0.12 + k * 0.16, a = P(-w2 * (1 - zz / top * 0.22), zz), c = P(w2 * (1 - zz / top * 0.22), zz); ctx.strokeStyle = `rgba(200,160,90,${0.35 - k * 0.07})`; ctx.lineWidth = Math.max(1, s * 0.03); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(c[0], c[1]); ctx.stroke(); }
-      ctx.strokeStyle = '#7a5a2a'; ctx.lineWidth = Math.max(1.5, s * 0.06); ctx.beginPath(); gate.forEach(([u, zz], i) => { const q = P(u, zz); i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); }); ctx.closePath(); ctx.stroke();
-      // Fackeln an den Pfeilern
-      for (const side of [-1, 1]) {
-        const [tx, ty] = this.proj(ob.x + side * 1.55, fy - 0.37, 1.5), f = 0.8 + 0.2 * Math.sin(t * 9 + side);
-        ctx.fillStyle = '#5a3a1a'; ctx.fillRect(tx - s * 0.035, ty, s * 0.07, s * 0.32);
-        ctx.fillStyle = `rgba(255,150,40,${0.3 * f})`; ctx.beginPath(); ctx.arc(tx, ty - s * 0.06, s * 0.34 * f, 0, TAU); ctx.fill();
-        ctx.fillStyle = '#ff9a2a'; ctx.beginPath(); ctx.ellipse(tx, ty - s * 0.1, s * 0.07, s * 0.15 * f, 0, 0, TAU); ctx.fill();
-        ctx.fillStyle = '#fff1a0'; ctx.beginPath(); ctx.ellipse(tx, ty - s * 0.07, s * 0.03, s * 0.07 * f, 0, 0, TAU); ctx.fill();
-      }
-    }
+    const vx = d.x - c.sin * k * 0.56, vy = d.y - c.cos * k * 0.56;
+    const [tx, ty] = this.proj(vx, vy, z);
+    ctx.fillStyle = '#1a1010'; ctx.beginPath();
+    ctx.moveTo(tx - sc * 0.14, ty); ctx.lineTo(tx - sc * 0.14, ty - sc * 0.34); ctx.arc(tx, ty - sc * 0.34, sc * 0.14, Math.PI, 0); ctx.lineTo(tx + sc * 0.14, ty); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = `rgba(255,170,60,${0.4 * gl})`; ctx.beginPath(); ctx.ellipse(tx, ty - sc * 0.2, sc * 0.1, sc * 0.18, 0, 0, TAU); ctx.fill();
+    const [wx, wy] = this.proj(vx + c.cos * k * 0.32, vy - c.sin * k * 0.32, z + k * 0.42);
+    ctx.fillStyle = `rgba(255,220,110,${0.25 * gl})`; ctx.beginPath(); ctx.arc(wx, wy, sc * 0.26, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#ffd86a'; ctx.fillRect(wx - sc * 0.11, wy - sc * 0.11, sc * 0.22, sc * 0.22);
+    ctx.fillStyle = '#4a3322'; ctx.fillRect(wx - sc * 0.015, wy - sc * 0.11, sc * 0.03, sc * 0.22); ctx.fillRect(wx - sc * 0.11, wy - sc * 0.015, sc * 0.22, sc * 0.03);
   }
-
-  /* Katapult: Holzgestell mit Wurfarm, der sich in Zielrichtung dreht; der geladene Ball liegt in der Schale */
-  drawCatapult(ctx, ob, t) {
-    const s = this.scale, dx = Math.cos(ob.angle), dy = Math.sin(ob.angle), nx = -dy, ny = dx;
-    const rect = (px, py, w, h) => [[px - dx * w / 2 - nx * h / 2, py - dy * w / 2 - ny * h / 2], [px + dx * w / 2 - nx * h / 2, py + dy * w / 2 - ny * h / 2], [px + dx * w / 2 + nx * h / 2, py + dy * w / 2 + ny * h / 2], [px - dx * w / 2 + nx * h / 2, py - dy * w / 2 + ny * h / 2]];
-    // Sockel und zwei Balken quer zur Wurfrichtung
-    this.prism(ctx, rect(ob.x, ob.y, 1.5, 1.2), 0, 0.2, '#8a6a3a', '#4a3418', { outline: '#2a1c0c' });
-    for (const side of [-0.42, 0.42]) this.prism(ctx, rect(ob.x + nx * side, ob.y + ny * side, 0.18, 0.18), 0.2, 0.75, '#a8804a', '#5a3e1c');
-    // Wurfarm: in Ruhe steil nach hinten, beim Abschuss klappt er nach vorn
-    const ph = t - ob.firedAt, fwd = ph < 0 ? 0 : ph < 0.3 ? ph / 0.3 : ph < 1.1 ? 1 - (ph - 0.3) / 0.8 : 0;
-    const restX = ob.x - dx * 0.35, restY = ob.y - dy * 0.35, restZ = 1.05, fireX = ob.x + dx * 0.95, fireY = ob.y + dy * 0.95, fireZ = 1.3;
-    const tipX = restX + (fireX - restX) * fwd, tipY = restY + (fireY - restY) * fwd, tipZ = restZ + (fireZ - restZ) * fwd;
-    const pivot = this.proj(ob.x, ob.y, 0.95), tip = this.proj(tipX, tipY, tipZ);
-    const cwX = ob.x - (tipX - ob.x) * 0.5, cwY = ob.y - (tipY - ob.y) * 0.5, cwZ = 0.95 - (tipZ - 0.95) * 0.5, cw = this.proj(cwX, cwY, cwZ);
-    ctx.lineCap = 'round'; ctx.strokeStyle = '#6b4a22'; ctx.lineWidth = Math.max(3, s * 0.11);
-    ctx.beginPath(); ctx.moveTo(cw[0], cw[1]); ctx.lineTo(tip[0], tip[1]); ctx.stroke();
-    ctx.fillStyle = '#4a4a52'; ctx.beginPath(); ctx.arc(cw[0], cw[1], s * 0.16, 0, TAU); ctx.fill(); // Gegengewicht
-    ctx.fillStyle = '#3a2a14'; ctx.beginPath(); ctx.arc(pivot[0], pivot[1], s * 0.07, 0, TAU); ctx.fill();
-    ctx.fillStyle = '#8a6a3a'; ctx.beginPath(); ctx.ellipse(tip[0], tip[1] + s * 0.02, s * 0.2, s * 0.1, 0, 0, TAU); ctx.fill(); // Schale
-    ctx.strokeStyle = '#3a2a14'; ctx.lineWidth = 1; ctx.stroke();
-    if (ob.loaded) { const f = 0.6 + 0.4 * Math.sin(t * 14); ctx.strokeStyle = `rgba(255,220,120,${f})`; ctx.lineWidth = Math.max(1.5, s * 0.05); ctx.beginPath(); ctx.ellipse(tip[0], tip[1], s * 0.3, s * 0.16, 0, 0, TAU); ctx.stroke(); }
-  }
-
-  /* Hexenhütte: schiefe Bretterhütte mit Schindeldach, Schornstein, leuchtendem Fenster und Tür */
-  spriteHut(ctx, sx, sy, s, t) {
-    const w = s * 0.62, h = s * 0.62, gl = 0.85 + 0.15 * Math.sin(t * 4);
-    this.shadow(ctx, sx, sy, w * 1.2);
-    ctx.fillStyle = '#4a3322'; ctx.fillRect(sx - w, sy - h, 2 * w, h);
-    ctx.fillStyle = '#5a4030'; ctx.fillRect(sx - w, sy - h, w * 0.5, h);
-    ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 1;
-    for (let k = 1; k < 6; k++) { const yy = sy - h + (k / 6) * h; ctx.beginPath(); ctx.moveTo(sx - w, yy); ctx.lineTo(sx + w, yy); ctx.stroke(); }
-    // schiefes Schindeldach: hoher, leicht gekrümmter Hexenhut-Giebel
-    const ax = sx - w * 0.15, ay = sy - h - s * 0.95, eL = sx - w * 1.3, eR = sx + w * 1.25, ey = sy - h + s * 0.06;
-    ctx.fillStyle = '#2e1f3f'; ctx.beginPath(); ctx.moveTo(eL, ey); ctx.quadraticCurveTo(sx - w * 0.9, ay + s * 0.35, ax, ay); ctx.quadraticCurveTo(sx + w * 0.55, ay + s * 0.3, eR, ey - s * 0.06); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#4a3466'; ctx.beginPath(); ctx.moveTo(eL, ey); ctx.quadraticCurveTo(sx - w * 0.9, ay + s * 0.35, ax, ay); ctx.lineTo(ax + w * 0.1, ay + s * 0.25); ctx.quadraticCurveTo(sx - w * 0.6, ey - s * 0.25, eL + w * 0.15, ey); ctx.closePath(); ctx.fill();
-    ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 1;
-    for (let k = 1; k < 4; k++) { const u = k / 4, yy = ey - (ey - ay) * u; const half = (eR - eL) / 2 * (1 - u * 0.85); ctx.beginPath(); ctx.moveTo(ax - half, yy); ctx.lineTo(ax + half, yy); ctx.stroke(); }
-    ctx.fillStyle = '#1e1430'; ctx.fillRect(eL - s * 0.04, ey - s * 0.04, eR - eL + s * 0.08, s * 0.08);
-    // Schornstein mit grünem Rauch
-    ctx.fillStyle = '#5a4a48'; ctx.fillRect(sx + w * 0.62, sy - h - s * 0.55, s * 0.16, s * 0.42);
-    for (let i = 0; i < 3; i++) { const u = (t * 0.35 + i * 0.33) % 1; ctx.fillStyle = `rgba(150,255,120,${0.35 * (1 - u)})`; ctx.beginPath(); ctx.arc(sx + w * 0.7 + Math.sin(u * 5 + i) * s * 0.1, sy - h - s * 0.55 - u * s * 0.6, s * (0.06 + u * 0.16), 0, TAU); ctx.fill(); }
-    // Fenster
-    ctx.fillStyle = `rgba(255,220,110,${0.25 * gl})`; ctx.beginPath(); ctx.arc(sx - w * 0.55, sy - h * 0.62, s * 0.26, 0, TAU); ctx.fill();
-    ctx.fillStyle = '#ffd86a'; ctx.fillRect(sx - w * 0.72, sy - h * 0.8, w * 0.34, h * 0.32);
-    ctx.fillStyle = '#4a3322'; ctx.fillRect(sx - w * 0.57, sy - h * 0.8, w * 0.04, h * 0.32); ctx.fillRect(sx - w * 0.72, sy - h * 0.66, w * 0.34, h * 0.04);
-    // Tür mit warmem Schein
-    ctx.fillStyle = '#1a1010'; ctx.beginPath(); ctx.moveTo(sx - w * 0.22, sy); ctx.lineTo(sx - w * 0.22, sy - h * 0.55); ctx.arc(sx, sy - h * 0.55, w * 0.22, Math.PI, 0); ctx.lineTo(sx + w * 0.22, sy); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = `rgba(255,170,60,${0.4 * gl})`; ctx.beginPath(); ctx.ellipse(sx, sy - h * 0.28, w * 0.16, h * 0.28, 0, 0, TAU); ctx.fill();
-    // Laterne neben der Tür
-    ctx.fillStyle = '#ffd166'; ctx.beginPath(); ctx.arc(sx + w * 0.45, sy - h * 0.7, s * 0.05, 0, TAU); ctx.fill();
-    ctx.fillStyle = `rgba(255,200,90,${0.2 * gl})`; ctx.beginPath(); ctx.arc(sx + w * 0.45, sy - h * 0.7, s * 0.16, 0, TAU); ctx.fill();
-  }
-  /* Kerze: Wachsstock als Säule, Flamme als Licht (die darf flach bleiben – eine Flamme hat
-     keine Rückseite). */
   spriteCandle(ctx, d, t) {
     const k = d.s, z = d.z || 0, f = 0.8 + 0.2 * Math.sin(t * 9 + d.x);
     this.saeule(ctx, d.x, d.y, z, k * 0.07, k * 0.06, k * 0.32, '#f7efd8', '#d6c9a8', 7);
