@@ -496,14 +496,24 @@ richtig: Daran hängt, dass keine Rekorde geschrieben werden (Abstände in Felde
 nicht vergleichbar) und dass „Zurück" in die Werkstatt führt statt auf die Weltkarte.
 
 **Ablauf.** Zu Beginn wird ein Spieler **ausgelost**, der die kleine Zielkugel mit der Kanone auf die
-Bahn schießt. Die Kanone steht am Abschlag und zeigt **fest nach vorn** – in die Mitte der Wiese;
-gewählt wird allein die **Stärke**, durch Ziehen wie bei jedem Schlag. Genau das macht sie zur
-Kanone und nicht zum Schläger: Wie weit die Zielkugel hinausgeht, ist eine Entscheidung, wohin sie
-geht, nicht.
+Bahn schießt. Die Kanone steht am Abschlag und zeigt von Haus aus in die Mitte der Wiese. Gezogen
+wird wie bei jedem Schlag, und zwar für beides: **Stärke** und **Richtung**. Die Richtung ist aber
+nicht frei, sondern auf **±0,65 rad (rund 37°) nach links und rechts** um die Grundrichtung
+beschnitten (`BOULE_SCHWENK`). Das macht sie zur Kanone und nicht zum Schläger: Sie steht, sie
+schwenkt nur – und die Zielkugel kann nicht hinter den Abschlag fliegen, wo sie niemandem nützt.
+
+Die Kanone ist auch zu **sehen**: Sie steht 1,15 Felder hinter dem Abschlag, sodass die Zielkugel in
+ihrer Mündung liegt, und ihr Rohr dreht sich beim Schwenken mit (`state.kanone` mit Ort und
+Richtung, gezeichnet in `Renderer.drawFrame` mit `drawCannon` – derselben Zeichnung wie beim
+gleichnamigen Hindernis, denn wer sie einmal gesehen hat, weiß sofort, was sie tut).
+
+Dafür bleibt im Boule-Modus die **Abschlagmatte** weg (`state.abschlagMatte === false`, ausgewertet
+in `drawFloor`): Der helle Ring sah aus wie ein Loch, auf das man zielen soll – und ein Loch gibt es
+hier gerade nicht.
 
 Technisch wird die Zielkugel für diesen einen Schuss zum „Ball" des Spielers – dann gilt für sie die
-gewohnte Bedienung, ohne dass es dafür eine zweite Eingabeart braucht; nur die Richtung wird beim
-Ziehen festgehalten (`bouleKanone()`).
+gewohnte Bedienung, ohne dass es dafür eine zweite Eingabeart braucht; nur der Schwenkbereich wird
+beim Ziehen dazwischengeschaltet (`bouleKanone()`).
 
 Bleibt sie zu dicht am Abschlag liegen (unter drei Feldern) oder nicht auf Gras, schießt derselbe
 Spieler noch einmal, höchstens sechsmal; danach wird sie hingelegt. Wer geschossen hat, **spielt

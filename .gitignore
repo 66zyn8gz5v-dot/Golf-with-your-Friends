@@ -1,2 +1,5 @@
 # Ergebnisse des Bot-Audits (node tools/audit/audit.mjs) – nur lokal
 out/
+
+# Bilder, die die Sinnbild-Prüfung ablegt (scratchpad-Kram, nichts fürs Spiel)
+deko/

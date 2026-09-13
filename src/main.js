@@ -82,6 +82,12 @@
     /* Bälle, die außer dem eigenen noch auf der Bahn liegen. Der Renderer zeichnet sie einfach
        mit; er muss dafür nichts über Spielarten wissen. Außerhalb von Boule ist die Liste leer. */
     liegendeBaelle: [],
+    /* Steht gerade eine Kanone auf der Bahn? { x, y, dx, dy } – der Renderer malt sie, ohne etwas
+       über Boule zu wissen. Sonst null. */
+    kanone: null,
+    /* Die Abschlag-Matte: der helle Ring, der zeigt, wo abgeschlagen wird. In Boule steht dort die
+       Kanone, und der Ring sähe daneben aus wie ein Loch im Rasen – also bleibt er dort weg. */
+    abschlagMatte: true,
   };
   try { const m = localStorage.getItem(speicherSchluessel('control')); if (m === 'sling' || m === 'push') state.controlMode = m; } catch (e) { /* kein Speicher verfügbar */ }
   function setControlMode(m) {
@@ -91,7 +97,7 @@
   }
   /* Hinweiszeile unten links: im Netzspiel steht dort, wer gerade dran ist */
   function syncHint() {
-    if (bouleKanone()) { ui.hint.textContent = 'Die Kanone zeigt nach vorn – ziehen für die Stärke, loslassen zum Schuss'; return; }
+    if (bouleKanone()) { ui.hint.textContent = 'Kanone: ziehen für Stärke und Richtung (schwenkt nach links und rechts), loslassen zum Schuss'; return; }
     const base = state.controlMode === 'push' ? 'In Schussrichtung ziehen & loslassen' : 'Vom Ball wegziehen & loslassen';
     ui.hint.textContent = (online && online.started && !myTurn())
       ? `${seatName(online.players[state.curPlayer], state.curPlayer)} ist dran …`
@@ -1660,7 +1666,8 @@
     const def = state.courses[i];
     state.level = buildLevel(def); state.theme = THEMES[def.theme]; state.inner = false;
     R.setLevel(state.level, state.theme);
-    state.ball = null; state.aim = null; state.liegendeBaelle = [];
+    state.ball = null; state.aim = null; state.liegendeBaelle = []; state.kanone = null;
+    state.abschlagMatte = state.mode !== 'boule';   // im Boule steht dort die Kanone, kein heller Ring
     setCamMode('overview'); R.target = R.overviewTarget(); R.snapCamera();
   }
   function loadHole(i) {
@@ -2031,6 +2038,7 @@
   const BOULE_ZIEL_R = 0.17;       // die Zielkugel ist kleiner und damit leichter – sie fliegt weiter, wenn man sie trifft
   const BOULE_RUHE = 0.09;         // langsamer als das gilt als "liegt"
   const BOULE_GEDULD = 14;         // nach so vielen Sekunden wird der Wurf für beendet erklärt
+  const BOULE_SCHWENK = 0.65;      // so weit lässt sich die Kanone nach links und rechts schwenken (rund 37°)
 
   /* Alles, was einen Ball aus dem Spiel nimmt. Im Golf kostet das einen Strafschlag und der Ball
      kommt zurück; in Boule gibt es keine Schläge, die man bestrafen könnte – wer die Bahn
@@ -2123,11 +2131,13 @@
     state.boule = { ziel: null, liegen: [], aus: [], spieler: kanonier, kanonier,
                     runde: 0, versuche: 0, stand: 'ziel', wurfT: 0 };
     state.liegendeBaelle = [];
+    state.abschlagMatte = false;
     state.players.forEach(p => { p.scores = []; p.times = []; });
     bouleZielSchiessen();
   }
-  /* Wohin die Kanone zeigt: vom Abschlag in die Mitte der Wiese. Die Richtung steht fest – gewählt
-     wird nur die Stärke. Genau das macht sie zur Kanone und nicht zum Schläger. */
+  /* Wohin die Kanone von Haus aus zeigt: vom Abschlag in die Mitte der Wiese. Von dieser
+     Grundrichtung aus lässt sie sich nur ein Stück nach links und rechts schwenken – eine Kanone
+     steht nun einmal, sie ist kein Schläger, der in jede Richtung schlägt. */
   function bouleKanoneRichtung() {
     const lv = state.level;
     let sx = 0, sy = 0, n = 0;
@@ -2163,12 +2173,13 @@
     state.strokes = 0; state.phase = 'aim';
     state.restTimer = 0; state.slowTimer = 0; state.rollT = 0; state.stuckRef = null;
     bl.wurfT = 0;
+    state.kanone = { x: lv.tee.x, y: lv.tee.y, dx: bl.richtung.dx, dy: bl.richtung.dy };
     bouleSichtAktualisieren();
     state.camTheta = thetaTowards(lv.tee.x, lv.tee.y, lv.tee.x + bl.richtung.dx, lv.tee.y + bl.richtung.dy);
     setCamMode('follow');
     const wer = state.players[bl.kanonier];
     showMessage(bl.versuche > 1 ? 'Zu kurz oder daneben – noch einmal!'
-      : `${wer ? wer.name : 'Ein Spieler'} an der Kanone: Stärke ziehen und loslassen`, 2400);
+      : `${wer ? wer.name : 'Ein Spieler'} an der Kanone: schwenken und Stärke ziehen`, 2400);
     updateHud(); syncHint();
   }
   /* Die Zielkugel liegt. Taugt der Platz nichts (zu dicht am Abschlag), wird neu geschossen –
@@ -2200,6 +2211,7 @@
     z.restX = z.x; z.restY = z.y; z.restEbene = z.ebene || 0;
     bl.stand = 'spiel'; bl.spieler = bl.kanonier; bl.runde = 0;
     state.ball = null; state.aim = null;     // die Zielkugel war nur für den Schuss der eigene Ball
+    state.kanone = null;                     // und die Kanone hat ihren Dienst getan
     bouleSichtAktualisieren();
     showMessage(text, 1800);
     setTimeout(bouleZug, 900);
@@ -2510,10 +2522,24 @@
     const len = Math.hypot(wx, wy);
     if (len < 0.05) { state.aim = { dx: 0, dy: 0, power: 0 }; return; }
     const sign = state.controlMode === 'push' ? 1 : -1;
-    const kanone = bouleKanone();   // beim Zielkugel-Schuss zeigt die Kanone fest nach vorn
-    state.aim = kanone
-      ? { dx: kanone.dx, dy: kanone.dy, power: Math.min(1, len / MAX_DRAG) }
-      : { dx: sign * wx / len, dy: sign * wy / len, power: Math.min(1, len / MAX_DRAG) };
+    const kraft = Math.min(1, len / MAX_DRAG);
+    const kanone = bouleKanone();
+    if (kanone) {
+      /* Die Kanone lässt sich schwenken, aber nicht drehen: Der gewünschte Winkel wird auf
+         ±BOULE_SCHWENK um die Grundrichtung beschnitten. Volle Freiheit wäre kein Kanonenschuss
+         mehr, sondern ein gewöhnlicher Schlag – und die Zielkugel könnte hinter den Abschlag
+         fliegen, wo sie niemandem nützt. */
+      const grund = Math.atan2(kanone.dy, kanone.dx);
+      let d = Math.atan2(sign * wy, sign * wx) - grund;
+      while (d > Math.PI) d -= TAU;
+      while (d < -Math.PI) d += TAU;
+      d = Math.max(-BOULE_SCHWENK, Math.min(BOULE_SCHWENK, d));
+      const a = grund + d;
+      if (state.kanone) { state.kanone.dx = Math.cos(a); state.kanone.dy = Math.sin(a); }
+      state.aim = { dx: Math.cos(a), dy: Math.sin(a), power: kraft };
+    } else {
+      state.aim = { dx: sign * wx / len, dy: sign * wy / len, power: kraft };
+    }
   });
   function endDrag(e, cancel) {
     if (state.phase === 'edit') { const [x, y] = pointerPos(e); editor.pointer(cancel ? 'cancel' : 'up', e, x, y); return; }
