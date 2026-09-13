@@ -91,6 +91,7 @@
   }
   /* Hinweiszeile unten links: im Netzspiel steht dort, wer gerade dran ist */
   function syncHint() {
+    if (bouleKanone()) { ui.hint.textContent = 'Die Kanone zeigt nach vorn – ziehen für die Stärke, loslassen zum Schuss'; return; }
     const base = state.controlMode === 'push' ? 'In Schussrichtung ziehen & loslassen' : 'Vom Ball wegziehen & loslassen';
     ui.hint.textContent = (online && online.started && !myTurn())
       ? `${seatName(online.players[state.curPlayer], state.curPlayer)} ist dran …`
@@ -1403,10 +1404,11 @@
       <p style="margin-top:14px"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span> <span class="btn" id="start">Los geht's!</span></p>
       <div class="legend">
         <b>Wettkampf:</b> alle Bahnen der Reihe nach, mit Schlaglimit und Ergebnistafel. <b>Kreativ:</b> allein, ohne Limit, mit den Bahn-Knöpfen (Tasten P / N) frei springen.<br>
-        ${NUR_VORSCHAU ? `<b>Boule:</b> Eine Kanone schießt die Zielkugel auf die Bahn, dann spielen alle reihum je
-        drei Kugeln. Jede Kugel bleibt liegen und darf angestoßen werden, auch die Zielkugel. Wer am
-        Ende am nächsten liegt, gewinnt. Kugeln, die von der Bahn fallen oder im Loch landen,
-        zählen nicht mehr mit – es gibt keine Schläge und keinen Rekord. Nur am selben Gerät.<br>` : ''}
+        ${NUR_VORSCHAU ? `<b>Boule:</b> Ein ausgeloster Spieler schießt die Zielkugel mit der Kanone auf die
+        Bahn – sie zeigt fest nach vorn, gewählt wird nur die Stärke. Er fängt auch an; danach spielen
+        alle reihum je drei Kugeln. Jede Kugel bleibt liegen und darf angestoßen werden, auch die
+        Zielkugel. Wer am Ende am nächsten liegt, gewinnt. Kugeln, die von der Bahn fallen, zählen
+        nicht mehr mit – es gibt keine Schläge und keinen Rekord. Nur am selben Gerät.<br>` : ''}
         <b>Hüte zu mehreren:</b> Am selben Gerät steht jeder Skin offen – auch die noch nicht
         verdienten Belohnungen und die Helme der Arena. Das gilt nur für diese Partie und wird nicht
         gespeichert. Zwei Spieler dürfen nicht denselben tragen; tippt man auf einen belegten, wird
@@ -1579,7 +1581,11 @@
     const eb = b.ebene || 0;
     const zone = (state.level.def.views || []).find(v => (v.ebene == null || v.ebene === eb)
       && b.x >= v.x && b.x <= v.x + v.w && b.y >= v.y && b.y <= v.y + v.h);
-    const c = zone ? zone.look : (state.level.cup || state.level.goal);
+    /* Ohne Loch (Boule-Bahnen) gibt es keinen festen Zielpunkt – dann schaut die Kamera in die
+       Mitte der Bahn. Boule setzt den Blick zwar selbst (faceZiel), aber faceCup wird von einem
+       halben Dutzend Stellen gerufen, und eine davon ohne Loch hieße ein Absturz mitten im Spiel. */
+    const mitte = { x: state.level.W / 2, y: state.level.H / 2 };
+    const c = zone ? zone.look : (state.level.cup || state.level.goal || mitte);
     state.camTheta = thetaTowards(b.x, b.y, c.x, c.y);
   }
   function setCamMode(mode) {
@@ -1714,6 +1720,10 @@
 
   function shoot(dx, dy, power, fromNet = false) {
     if (online && online.started && !fromNet && !myTurn()) return; // Zuschauer schlagen nicht
+    if (bouleKanone()) {   // der Zielkugel-Schuss: Kanonendonner statt Schlägerschlag
+      const lv = state.level;
+      Sfx.cannon(); burst(lv.tee.x, lv.tee.y, '#ffd166', 22, true);
+    }
     if (online && online.started && !fromNet) netSend({ t: 'shot', h: state.holeIdx, pi: state.curPlayer, dx, dy, power, st: state.t, sz: schlagZahl() });
     const b = state.ball;
     b.restX = b.x; b.restY = b.y; b.shotX = b.x; b.shotY = b.y; // Schlagstart (für Aufspießen am Ruheplatz)
@@ -1994,7 +2004,7 @@
       b.ebene = b.restEbene = 0; lv.setzeEbene(0);   // der Innenbereich ist eine eigene Bahn und fängt unten an
       state.particles = [];
       // Startblick: auf den ersten Aufgabenpunkt (z. B. Rampe/Hexentopf), sonst aufs Loch
-      const look = def.look || lv.cup;
+      const look = def.look || lv.cup || { x: lv.W / 2, y: lv.H / 2 };
       state.camTheta = thetaTowards(b.x, b.y, look.x, look.y);
       setCamMode('follow'); updateCamera(0); R.snapCamera();
       state.phase = 'aim'; updateHud();
@@ -2040,10 +2050,11 @@
 
   /* Die Bälle, die dieser Schritt bewegen soll: der eigene, alle liegenden und die Zielkugel. */
   function bouleAlleBaelle() {
-    const bl = state.boule;
-    const alle = bl.liegen.slice();
-    if (bl.ziel) alle.push(bl.ziel);
-    if (state.ball) alle.unshift(state.ball);
+    const bl = state.boule, alle = [];
+    // Beim Zielkugel-Schuss ist die Zielkugel zugleich state.ball – sie darf nicht zweimal drin stehen
+    if (state.ball) alle.push(state.ball);
+    for (const k of bl.liegen) if (k !== state.ball) alle.push(k);
+    if (bl.ziel && bl.ziel !== state.ball) alle.push(bl.ziel);
     return alle;
   }
   function bouleAllesRuht(baelle) {
@@ -2055,7 +2066,10 @@
   function bouleKopfzeile() {
     const bl = state.boule;
     if (!bl) return 'Boule';
-    if (bl.stand === 'ziel') return 'Boule · die Zielkugel wird geschossen';
+    if (bl.stand === 'ziel') {
+      const wer = state.players[bl.kanonier];
+      return `Boule · ${wer ? wer.name : 'Kanone'} schießt die Zielkugel`;
+    }
     if (bl.stand === 'ende') return 'Boule · Ergebnis';
     return `Boule · Kugel ${Math.min(bl.runde + 1, BOULE_KUGELN)} von ${BOULE_KUGELN}`;
   }
@@ -2102,33 +2116,60 @@
 
   /* ----- Die Zielkugel ----- */
   function bouleRundeStarten() {
-    state.boule = { ziel: null, liegen: [], aus: [], spieler: 0, runde: 0, versuche: 0, stand: 'ziel', wurfT: 0 };
+    /* Wer die Zielkugel schießt, wird ausgelost – und spielt danach als erster. So wie beim
+       richtigen Boule: Wer den Sauball wirft, legt auch die erste Kugel. Damit ist das Los nicht
+       bloß Beiwerk, sondern verteilt den Anfangsvorteil von Runde zu Runde neu. */
+    const kanonier = Math.floor(Math.random() * state.players.length);
+    state.boule = { ziel: null, liegen: [], aus: [], spieler: kanonier, kanonier,
+                    runde: 0, versuche: 0, stand: 'ziel', wurfT: 0 };
     state.liegendeBaelle = [];
     state.players.forEach(p => { p.scores = []; p.times = []; });
     bouleZielSchiessen();
   }
-  /* Die Kanone. Sie zielt grob aufs Loch und streut kräftig – so liegt die Zielkugel jede Runde
-     woanders, aber nie hinter dem Spieler. Wo sie landet, entscheidet die Physik; ob das ein
-     brauchbarer Platz war, sieht man erst, wenn sie liegt. */
+  /* Wohin die Kanone zeigt: vom Abschlag in die Mitte der Wiese. Die Richtung steht fest – gewählt
+     wird nur die Stärke. Genau das macht sie zur Kanone und nicht zum Schläger. */
+  function bouleKanoneRichtung() {
+    const lv = state.level;
+    let sx = 0, sy = 0, n = 0;
+    for (let y = 0; y < lv.H; y++) for (let x = 0; x < lv.W; x++) {
+      const c = lv.tiles[y][x];
+      if (c !== '#' && c !== 'T') continue;
+      sx += x + 0.5; sy += y + 0.5; n++;
+    }
+    const zx = n ? sx / n : lv.tee.x + 5, zy = n ? sy / n : lv.tee.y;
+    const dx = zx - lv.tee.x, dy = zy - lv.tee.y;
+    const L = Math.hypot(dx, dy) || 1;
+    return { dx: dx / L, dy: dy / L };
+  }
+  /* Steht die Kanone gerade bereit? Das Ziehen fragt hier nach, um die Richtung festzuhalten. */
+  function bouleKanone() {
+    const bl = state.boule;
+    return bl && bl.stand === 'ziel' && state.ball === bl.ziel ? bl.richtung : null;
+  }
+  /* Die Zielkugel wird nicht mehr von selbst verschossen, sondern von einem Spieler: Die Kanone
+     liegt am Abschlag und zeigt fest nach vorn, gezogen wird nur für die Stärke. Dafür wird die
+     Zielkugel für diesen einen Schuss zum „Ball" des Spielers – dann gilt für sie die gewohnte
+     Bedienung (ziehen, loslassen), ohne dass es dafür eine zweite Eingabe braucht. */
   function bouleZielSchiessen() {
     const lv = state.level, bl = state.boule;
     bl.stand = 'ziel'; bl.versuche++;
+    bl.richtung = bouleKanoneRichtung();
     const ziel = makeBall(lv.tee.x, lv.tee.y, '#ffb703', 'none');
     ziel.r = BOULE_ZIEL_R; ziel.istZiel = true;
-    const c = lv.cup || lv.goal || { x: lv.tee.x + 5, y: lv.tee.y };
-    const grund = Math.atan2(c.y - ziel.y, c.x - ziel.x);
-    const winkel = grund + (Math.random() - 0.5) * 1.5;          // ±43° um die Richtung zum Loch
-    const kraft = 0.42 + Math.random() * 0.34;
-    ziel.vx = Math.cos(winkel) * kraft * MAX_SHOT; ziel.vy = Math.sin(winkel) * kraft * MAX_SHOT;
     ziel.restX = ziel.x; ziel.restY = ziel.y; ziel.restEbene = 0;
     bl.ziel = ziel;
-    state.ball = null; state.aim = null;
-    state.liegendeBaelle = [ziel];
+    state.curPlayer = bl.kanonier;
+    state.ball = ziel; state.aim = null;
+    state.strokes = 0; state.phase = 'aim';
+    state.restTimer = 0; state.slowTimer = 0; state.rollT = 0; state.stuckRef = null;
     bl.wurfT = 0;
-    setCamMode('overview');
-    Sfx.cannon(); burst(lv.tee.x, lv.tee.y, '#ffd166', 20, true);
-    showMessage(bl.versuche > 1 ? 'Die Zielkugel lag schlecht – noch einmal!' : 'Die Kanone schießt die Zielkugel …', 1800);
-    updateHud();
+    bouleSichtAktualisieren();
+    state.camTheta = thetaTowards(lv.tee.x, lv.tee.y, lv.tee.x + bl.richtung.dx, lv.tee.y + bl.richtung.dy);
+    setCamMode('follow');
+    const wer = state.players[bl.kanonier];
+    showMessage(bl.versuche > 1 ? 'Zu kurz oder daneben – noch einmal!'
+      : `${wer ? wer.name : 'Ein Spieler'} an der Kanone: Stärke ziehen und loslassen`, 2400);
+    updateHud(); syncHint();
   }
   /* Die Zielkugel liegt. Taugt der Platz nichts (zu dicht am Abschlag), wird neu geschossen –
      sonst stünden alle Spieler von Anfang an auf der Zielkugel. Nach ein paar Fehlversuchen wird
@@ -2139,7 +2180,8 @@
     const weg = Math.hypot(z.x - lv.tee.x, z.y - lv.tee.y);
     const c = lv.charAtEbene(z.ebene || 0, z.x, z.y);
     if (!(weg >= 3 && lv.isFloorChar(c) && c !== 'w' && c !== 'l')) { bouleZielNochmal(); return; }
-    bouleZielFest('Die Zielkugel liegt – auf geht’s!');
+    const wer = state.players[bl.kanonier];
+    bouleZielFest(`Die Zielkugel liegt – ${wer ? wer.name : 'der Schütze'} fängt an.`);
   }
   /* Noch ein Schuss – oder, wenn die Kanone es oft genug versucht hat, hingelegt.
      Beides an einer Stelle, weil es zwei Wege hierher gibt: Die Zielkugel kann schlecht liegen
@@ -2156,7 +2198,9 @@
     const bl = state.boule, z = bl.ziel;
     z.vx = 0; z.vy = 0;
     z.restX = z.x; z.restY = z.y; z.restEbene = z.ebene || 0;
-    bl.stand = 'spiel'; bl.spieler = 0; bl.runde = 0;
+    bl.stand = 'spiel'; bl.spieler = bl.kanonier; bl.runde = 0;
+    state.ball = null; state.aim = null;     // die Zielkugel war nur für den Schuss der eigene Ball
+    bouleSichtAktualisieren();
     showMessage(text, 1800);
     setTimeout(bouleZug, 900);
   }
@@ -2221,7 +2265,8 @@
   /* Was der Renderer zeichnen soll: alles außer dem Ball, der gerade dran ist (den malt er selbst). */
   function bouleSichtAktualisieren() {
     const bl = state.boule;
-    state.liegendeBaelle = bl.ziel ? bl.liegen.concat([bl.ziel]) : bl.liegen.slice();
+    const alle = bl.ziel ? bl.liegen.concat([bl.ziel]) : bl.liegen.slice();
+    state.liegendeBaelle = alle.filter(k => k !== state.ball);   // der eigene Ball wird eigens gezeichnet
   }
   function bouleKugelLiegt() {
     const bl = state.boule, k = state.ball;
@@ -2247,9 +2292,10 @@
   }
   /* Der Nächste ist dran: reihum, und wenn alle einmal gespielt haben, beginnt die nächste Runde. */
   function bouleWeiter() {
-    const bl = state.boule;
-    bl.spieler++;
-    if (bl.spieler >= state.players.length) { bl.spieler = 0; bl.runde++; }
+    const bl = state.boule, n = state.players.length;
+    bl.spieler = (bl.spieler + 1) % n;
+    // Eine Runde ist um, wenn wir wieder beim Schützen angekommen sind – er hat angefangen
+    if (bl.spieler === bl.kanonier) bl.runde++;
     state.phase = 'wait';
     clearTimeout(waitTimer);
     waitTimer = setTimeout(bouleZug, 1400);
@@ -2288,13 +2334,15 @@
     if (!bl || bl.stand === 'ende') return;
     const baelle = bouleAlleBaelle();
     if (!baelle.length) return;
-    const rollt = state.phase === 'rolling' || bl.stand === 'ziel';
-    const listen = stepBaelle(lv, baelle, STEP, state.t, rollt);
+    const listen = stepBaelle(lv, baelle, STEP, state.t, state.phase === 'rolling');
     if (bouleEreignisse(baelle, listen)) return;
     if (state.phase === 'aim' && state.ball && Math.hypot(state.ball.vx, state.ball.vy) > 0.3) {
       state.phase = 'rolling'; state.aim = null;
     }
-    if (state.phase !== 'rolling' && bl.stand !== 'ziel') return;
+    /* Auf Ruhe wird erst geprüft, wenn wirklich etwas rollt. Solange jemand zielt – auch beim
+       Zielkugel-Schuss, denn dort zielt seit Neuestem ein Spieler –, liegt ohnehin alles still,
+       und die Prüfung würde den Wurf für beendet erklären, bevor er begonnen hat. */
+    if (state.phase !== 'rolling') return;
     bl.wurfT += STEP;
     /* Fertig ist ein Wurf erst, wenn wirklich alles liegt – sonst schlüge der Nächste in eine noch
        rollende Kugel hinein. Nach BOULE_GEDULD Sekunden wird abgebrochen: Auf einer Bahn mit
@@ -2351,7 +2399,7 @@
       </p>
       <p style="margin-top:8px"><span class="btn ghost small" id="boule-raus">${Icons.svg('arrow_back')} ${state.world && state.world.id === 'custom' ? 'Zurück zur Auswahl' : 'Zurück zur Weltkarte'}</span></p>
       <div class="legend">Gemessen wird von der Mitte der Kugel zur Mitte der Zielkugel, in Feldern
-        der Bahn. Kugeln, die von der Bahn gefallen oder im Loch gelandet sind, zählen nicht mit.</div>
+        der Bahn. Kugeln, die von der Bahn gefallen sind, zählen nicht mit.</div>
     </div>`);
     $('boule-noch').addEventListener('click', () => { hideOverlay(); loadHole(state.holeIdx); });
     if (!letzte) $('boule-weiter').addEventListener('click', () => { hideOverlay(); loadHole(state.holeIdx + 1); });
@@ -2462,7 +2510,10 @@
     const len = Math.hypot(wx, wy);
     if (len < 0.05) { state.aim = { dx: 0, dy: 0, power: 0 }; return; }
     const sign = state.controlMode === 'push' ? 1 : -1;
-    state.aim = { dx: sign * wx / len, dy: sign * wy / len, power: Math.min(1, len / MAX_DRAG) };
+    const kanone = bouleKanone();   // beim Zielkugel-Schuss zeigt die Kanone fest nach vorn
+    state.aim = kanone
+      ? { dx: kanone.dx, dy: kanone.dy, power: Math.min(1, len / MAX_DRAG) }
+      : { dx: sign * wx / len, dy: sign * wy / len, power: Math.min(1, len / MAX_DRAG) };
   });
   function endDrag(e, cancel) {
     if (state.phase === 'edit') { const [x, y] = pointerPos(e); editor.pointer(cancel ? 'cancel' : 'up', e, x, y); return; }

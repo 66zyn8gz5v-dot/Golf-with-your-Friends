@@ -40,7 +40,12 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
       cup = [x, y]; lochEbene = n;
     }));
   });
-  if (!tee) problems.push('kein T'); if (!cup) problems.push('kein H (oder Tür)');
+  /* Boule-Bahnen haben kein Loch – dort wäre es eine Falle, die mit dem Spiel nichts zu tun hat.
+     Sie sagen das mit 'ohneLoch: true'; dann entfallen alle Prüfungen, die am Loch hängen, und es
+     wird umgekehrt verlangt, dass wirklich keines eingezeichnet ist. */
+  if (!tee) problems.push('kein T');
+  if (c.ohneLoch) { if (cup) problems.push("ohneLoch gesetzt, aber ein 'H' steht in der Karte"); }
+  else if (!cup) problems.push('kein H (oder Tür)');
 
   /* Löwentore: Großbuchstabe = Eingang, gleicher Kleinbuchstabe = Ausgang. Jedes Zeichen darf genau
      einmal auf der Karte stehen, ein Tor ohne Gegenstück ist eine Sackgasse, und ein Ausgang ohne
@@ -301,7 +306,7 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
   const stufeSperrt = (x, y, nx, ny) =>
     stufeVon(nx, ny) > stufeVon(x, y) && !aufSchraege(x, y) && !aufSchraege(nx, ny);
 
-  if (tee && cup) {
+  if (tee && cup && !c.ohneLoch) {
     const seen = new Set([tee.join()]), q = [tee];
     while (q.length) {
       const [x, y] = q.shift();
@@ -476,7 +481,7 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
       problems.push(`Ebene ${n} ist von nirgends erreichbar – weder über einen Aufstieg noch über einen Sturz`);
     if (c.ebeneZ != null && !(+c.ebeneZ >= 1 && +c.ebeneZ <= 6))
       problems.push(`ebeneZ ${c.ebeneZ} liegt außerhalb von 1 bis 6 – so hoch oder so flach lässt sich nicht mehr zielen`);
-    if (cup && !erreichbar[lochEbene].has(cup.join()))
+    if (cup && !c.ohneLoch && !erreichbar[lochEbene].has(cup.join()))
       problems.push(lochEbene === 0 ? 'Loch vom Abschlag nicht erreichbar'
         : `Loch auf Ebene ${lochEbene} nicht erreichbar – dorthin führt kein erreichbarer Auf- oder Abstieg, oder kein Weg auf der Ebene`);
     /* Luken: Sie sind ein Weg nach unten, keine Strafe. Also muss es unten auch etwas geben, worauf

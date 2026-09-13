@@ -15,9 +15,9 @@ Was eine Boule-Bahn von einer Golfbahn unterscheidet:
   * **Kein Eis, kein Sand.** Auf Eis rollt eine Kugel ewig weiter (Bremsung 0.75), auf Sand bleibt
     sie nach einem Meter liegen (Bremsung 20). Beides macht das Abschätzen unmöglich, worum es in
     Boule aber gerade geht. Also nur Gras.
-  * **Das Loch ist hier eine Falle**, kein Ziel: Wer hineinrollt, scheidet aus. Es liegt darum weit
-    vom Abschlag und etwas abseits – die Kanone zielt grob auf das Loch, und die Zielkugel soll
-    nicht bei jedem Schuss darin verschwinden.
+  * **Kein Loch.** Eine Boule-Bahn hat keines: Es wäre eine Falle, die mit dem Spiel nichts zu tun
+    hat – wer Pech hat, verliert eine Kugel an ein Ziel, das er gar nicht anspielt. Die Bahnen
+    tragen darum `ohneLoch: true`; die Bahnprüfung weiß davon und verlangt für sie kein 'H'.
 Hindernisse gibt es nur zwei Arten: Blöcke ('x', Bäume und Findlinge) und Prellsteine. Alles
 Bewegte – Loren, Fähren, Kanonen, Stacheln – würde liegende Kugeln verschieben oder verschlucken,
 während gerade jemand anderes zielt.
@@ -48,37 +48,37 @@ def txt(f):
 BAHNEN = []
 
 def bahn(name, theme, karte, hindernisse=None, par=3):
-    BAHNEN.append({'name': name, 'par': par, 'theme': theme, 'map': txt(karte),
-                   'obstacles': hindernisse or []})
+    BAHNEN.append({'name': name, 'par': par, 'theme': theme, 'ohneLoch': True,
+                   'map': txt(karte), 'obstacles': hindernisse or []})
 
 # 1 – Der Anger: nichts als Rasen. Wer hier danebenlegt, hat nur sich selbst.
 f = leer(22, 13); rasen(f, 1, 1, 20, 11)
-setz(f, 2, 6, 'T'); setz(f, 18, 3, 'H')
+setz(f, 2, 6, 'T')
 bahn('Der Anger', 'meadow', f)
 
 # 2 – Steinmal: ein Steinquader in der Mitte, um den herum gespielt wird. (Der Name folgt dem, was
 #     gezeichnet wird: Blöcke sind im Waldthema blaue Quader, keine Bäume.)
 f = leer(22, 13); rasen(f, 1, 1, 20, 11)
 block(f, 10, 5, 12, 7)
-setz(f, 2, 6, 'T'); setz(f, 18, 9, 'H')
+setz(f, 2, 6, 'T')
 bahn('Steinmal', 'forest', f)
 
 # 3 – Steilrand: an der oberen Seite fehlt der Boden. Wer zu fest spielt, ist weg.
 f = leer(22, 13); rasen(f, 1, 1, 20, 11)
 rasen(f, 6, 1, 15, 2, '.')
-setz(f, 2, 7, 'T'); setz(f, 17, 5, 'H')
+setz(f, 2, 7, 'T')
 bahn('Steilrand', 'meadow', f)
 
 # 4 – Die Zwillinge: zwei gleiche Quader, dazwischen eine Gasse.
 f = leer(23, 13); rasen(f, 1, 1, 21, 11)
 block(f, 9, 1, 11, 4); block(f, 9, 8, 11, 11)
-setz(f, 2, 6, 'T'); setz(f, 19, 6, 'H')
+setz(f, 2, 6, 'T')
 bahn('Die Zwillinge', 'forest', f)
 
 # 5 – Hufeisen: der Rasen läuft um einen Hain herum.
 f = leer(23, 14); rasen(f, 1, 1, 21, 12)
 block(f, 7, 1, 15, 7)
-setz(f, 3, 10, 'T'); setz(f, 19, 3, 'H')
+setz(f, 3, 10, 'T')
 bahn('Hufeisen', 'forest', f)
 
 # 6 – Waldlichtung: eine runde Lichtung, vom Wald umstanden.
@@ -88,18 +88,18 @@ for y in range(15):
     for x in range(21):
         if ((x - mx) / rx) ** 2 + ((y - my) / ry) ** 2 <= 1.0:
             f[y][x] = '#'
-setz(f, 3, 7, 'T'); setz(f, 16, 9, 'H')
+setz(f, 3, 7, 'T')
 bahn('Waldlichtung', 'forest', f)
 
 # 7 – Die Hecke: eine Steinreihe quer über den Rasen, mit einer Lücke.
 f = leer(23, 13); rasen(f, 1, 1, 21, 11)
 block(f, 11, 1, 11, 4); block(f, 11, 8, 11, 11)
-setz(f, 2, 6, 'T'); setz(f, 19, 9, 'H')
+setz(f, 2, 6, 'T')
 bahn('Die Hecke', 'meadow', f)
 
 # 8 – Findlinge: drei Prellsteine auf freier Wiese – die Kugeln springen ab.
 f = leer(22, 13); rasen(f, 1, 1, 20, 11)
-setz(f, 2, 6, 'T'); setz(f, 18, 8, 'H')
+setz(f, 2, 6, 'T')
 bahn('Findlinge', 'meadow', f, [
     {'type': 'bumper', 'x': 9.5, 'y': 3.5, 'r': 0.6},
     {'type': 'bumper', 'x': 12.5, 'y': 8.5, 'r': 0.6},
@@ -109,7 +109,7 @@ bahn('Findlinge', 'meadow', f, [
 # 9 – Langer Anger: die weiteste Bahn, das Loch ganz hinten.
 f = leer(28, 11); rasen(f, 1, 1, 26, 9)
 block(f, 13, 1, 14, 2); block(f, 13, 8, 14, 9)
-setz(f, 2, 5, 'T'); setz(f, 24, 3, 'H')
+setz(f, 2, 5, 'T')
 bahn('Langer Anger', 'meadow', f, par=4)
 
 # ---------------------------------------------------------------- Prüfen
@@ -120,14 +120,16 @@ def pruefe(b):
     assert all(len(r) == breit for r in m), f"{b['name']}: Zeilen verschieden lang"
     ganz = ''.join(m)
     assert ganz.count('T') == 1, f"{b['name']}: {ganz.count('T')} Abschläge"
-    assert ganz.count('H') == 1, f"{b['name']}: {ganz.count('H')} Löcher"
+    assert 'H' not in ganz, f"{b['name']}: eine Boule-Bahn hat kein Loch"
     assert 'i' not in ganz and 's' not in ganz, f"{b['name']}: Eis oder Sand auf einer Boule-Bahn"
-    # Weg vom Abschlag zum Loch
-    start = ziel = None
+    # Aller Rasen muss vom Abschlag aus zu erreichen sein. Ohne Loch gibt es kein Ziel mehr, das
+    # man prüfen könnte – wohl aber die Gefahr, dass ein abgetrenntes Stück Wiese entsteht, auf das
+    # keine Kugel je käme. Das wäre kein Fehler, der auffällt: Es sähe nur aus, als spiele niemand
+    # dorthin.
+    start = None
     for y, r in enumerate(m):
         for x, c in enumerate(r):
             if c == 'T': start = (x, y)
-            if c == 'H': ziel = (x, y)
     gesehen = {start}; q = deque([start])
     while q:
         x, y = q.popleft()
@@ -136,7 +138,8 @@ def pruefe(b):
             if n in gesehen or not (0 <= n[0] < breit and 0 <= n[1] < len(m)): continue
             if m[n[1]][n[0]] not in FEST: continue
             gesehen.add(n); q.append(n)
-    assert ziel in gesehen, f"{b['name']}: das Loch ist vom Abschlag nicht zu erreichen"
+    alle = sum(1 for r in m for c in r if c in FEST)
+    assert len(gesehen) == alle, f"{b['name']}: {alle - len(gesehen)} Rasenfelder hängen nicht am Abschlag"
     # Platz: genug Rasen für zwölf Kugeln und die Zielkugel
     rasenfelder = sum(r.count('#') for r in m) + 2
     assert rasenfelder >= 120, f"{b['name']}: nur {rasenfelder} Rasenfelder – zu eng für zwölf Kugeln"
@@ -165,7 +168,7 @@ def js(b):
                              for k, v in o.items()) + ' }' for o in b['obstacles'])
         hind = f",\n    obstacles: [\n      {zeilen},\n    ]"
     karte = ',\n      '.join(f"'{r}'" for r in b['map'])
-    return (f"  {{\n    name: '{b['name']}', par: {b['par']}, theme: '{b['theme']}',\n"
+    return (f"  {{\n    name: '{b['name']}', par: {b['par']}, theme: '{b['theme']}', ohneLoch: true,\n"
             f"    map: [\n      {karte},\n    ]{hind},\n  }}")
 
 kopf = """/* Die Boule-Welt: neun Bahnen, die zum Kugelschieben gebaut sind und nicht zum Einlochen.
@@ -177,7 +180,9 @@ kopf = """/* Die Boule-Welt: neun Bahnen, die zum Kugelschieben gebaut sind und 
    eine Kugel ewig) und kein Sand (darauf bleibt sie sofort liegen). Beides nähme dem Spiel
    genau das, worum es geht: das Abschätzen.
 
-   Das Loch ist hier eine Falle, kein Ziel: Wer hineinrollt, scheidet aus. */
+   Und sie haben kein Loch: Es wäre eine Falle, die mit dem Spiel nichts zu tun hat – wer Pech hat,
+   verlöre eine Kugel an ein Ziel, das er gar nicht anspielt. Daher 'ohneLoch: true'; die
+   Bahnprüfung weiß davon und verlangt für diese Bahnen kein 'H'. */
 const BOULE_COURSES = [
 """
 io.open('src/courses_boule.js', 'w', encoding='utf-8').write(kopf + ',\n'.join(js(b) for b in BAHNEN) + ',\n];\n')

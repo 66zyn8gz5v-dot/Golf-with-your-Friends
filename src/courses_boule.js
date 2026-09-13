@@ -7,15 +7,17 @@
    eine Kugel ewig) und kein Sand (darauf bleibt sie sofort liegen). Beides nähme dem Spiel
    genau das, worum es geht: das Abschätzen.
 
-   Das Loch ist hier eine Falle, kein Ziel: Wer hineinrollt, scheidet aus. */
+   Und sie haben kein Loch: Es wäre eine Falle, die mit dem Spiel nichts zu tun hat – wer Pech hat,
+   verlöre eine Kugel an ein Ziel, das er gar nicht anspielt. Daher 'ohneLoch: true'; die
+   Bahnprüfung weiß davon und verlangt für diese Bahnen kein 'H'. */
 const BOULE_COURSES = [
   {
-    name: 'Der Anger', par: 3, theme: 'meadow',
+    name: 'Der Anger', par: 3, theme: 'meadow', ohneLoch: true,
     map: [
       '......................',
       '.####################.',
       '.####################.',
-      '.#################H##.',
+      '.####################.',
       '.####################.',
       '.####################.',
       '.#T##################.',
@@ -28,7 +30,7 @@ const BOULE_COURSES = [
     ],
   },
   {
-    name: 'Steinmal', par: 3, theme: 'forest',
+    name: 'Steinmal', par: 3, theme: 'forest', ohneLoch: true,
     map: [
       '......................',
       '.####################.',
@@ -39,21 +41,21 @@ const BOULE_COURSES = [
       '.#T#######xxx########.',
       '.#########xxx########.',
       '.####################.',
-      '.#################H##.',
+      '.####################.',
       '.####################.',
       '.####################.',
       '......................',
     ],
   },
   {
-    name: 'Steilrand', par: 3, theme: 'meadow',
+    name: 'Steilrand', par: 3, theme: 'meadow', ohneLoch: true,
     map: [
       '......................',
       '.#####..........#####.',
       '.#####..........#####.',
       '.####################.',
       '.####################.',
-      '.################H###.',
+      '.####################.',
       '.####################.',
       '.#T##################.',
       '.####################.',
@@ -64,7 +66,7 @@ const BOULE_COURSES = [
     ],
   },
   {
-    name: 'Die Zwillinge', par: 3, theme: 'forest',
+    name: 'Die Zwillinge', par: 3, theme: 'forest', ohneLoch: true,
     map: [
       '.......................',
       '.########xxx##########.',
@@ -72,7 +74,7 @@ const BOULE_COURSES = [
       '.########xxx##########.',
       '.########xxx##########.',
       '.#####################.',
-      '.#T################H##.',
+      '.#T###################.',
       '.#####################.',
       '.########xxx##########.',
       '.########xxx##########.',
@@ -82,12 +84,12 @@ const BOULE_COURSES = [
     ],
   },
   {
-    name: 'Hufeisen', par: 3, theme: 'forest',
+    name: 'Hufeisen', par: 3, theme: 'forest', ohneLoch: true,
     map: [
       '.......................',
       '.######xxxxxxxxx######.',
       '.######xxxxxxxxx######.',
-      '.######xxxxxxxxx###H##.',
+      '.######xxxxxxxxx######.',
       '.######xxxxxxxxx######.',
       '.######xxxxxxxxx######.',
       '.######xxxxxxxxx######.',
@@ -101,7 +103,7 @@ const BOULE_COURSES = [
     ],
   },
   {
-    name: 'Waldlichtung', par: 3, theme: 'forest',
+    name: 'Waldlichtung', par: 3, theme: 'forest', ohneLoch: true,
     map: [
       '.....................',
       '........#####........',
@@ -112,7 +114,7 @@ const BOULE_COURSES = [
       '..#################..',
       '.##T################.',
       '..#################..',
-      '..##############H##..',
+      '..#################..',
       '...###############...',
       '....#############....',
       '.....###########.....',
@@ -121,7 +123,7 @@ const BOULE_COURSES = [
     ],
   },
   {
-    name: 'Die Hecke', par: 3, theme: 'meadow',
+    name: 'Die Hecke', par: 3, theme: 'meadow', ohneLoch: true,
     map: [
       '.......................',
       '.##########x##########.',
@@ -132,14 +134,14 @@ const BOULE_COURSES = [
       '.#T###################.',
       '.#####################.',
       '.##########x##########.',
-      '.##########x#######H##.',
+      '.##########x##########.',
       '.##########x##########.',
       '.##########x##########.',
       '.......................',
     ],
   },
   {
-    name: 'Findlinge', par: 3, theme: 'meadow',
+    name: 'Findlinge', par: 3, theme: 'meadow', ohneLoch: true,
     map: [
       '......................',
       '.####################.',
@@ -149,7 +151,7 @@ const BOULE_COURSES = [
       '.####################.',
       '.#T##################.',
       '.####################.',
-      '.#################H##.',
+      '.####################.',
       '.####################.',
       '.####################.',
       '.####################.',
@@ -162,12 +164,12 @@ const BOULE_COURSES = [
     ],
   },
   {
-    name: 'Langer Anger', par: 4, theme: 'meadow',
+    name: 'Langer Anger', par: 4, theme: 'meadow', ohneLoch: true,
     map: [
       '............................',
       '.############xx############.',
       '.############xx############.',
-      '.#######################H##.',
+      '.##########################.',
       '.##########################.',
       '.#T########################.',
       '.##########################.',

@@ -483,9 +483,10 @@ Golfbahn unterscheidet, steht dort ausführlich; in Kürze:
 * **Nur Gras.** Kein Eis (darauf rollt eine Kugel ewig, Bremsung 0.75) und kein Sand (darauf bleibt
   sie sofort liegen, Bremsung 20). Beides nähme dem Spiel das Abschätzen, worum es gerade geht.
   Themen sind nur `meadow` und `forest`.
-* **Das Loch ist eine Falle**, kein Ziel: Wer hineinrollt, scheidet aus. Es liegt darum weit vom
-  Abschlag und etwas abseits – die Kanone zielt grob darauf, und die Zielkugel soll nicht bei jedem
-  Schuss darin verschwinden.
+* **Kein Loch.** Eine Boule-Bahn hat keines: Es wäre eine Falle, die mit dem Spiel nichts zu tun hat
+  – wer Pech hat, verlöre eine Kugel an ein Ziel, das er gar nicht anspielt. Die Bahnen tragen
+  `ohneLoch: true`; `buildLevel` und die Bahnprüfung wissen davon und verlangen für sie kein 'H'.
+  Ausscheiden kann eine Kugel weiterhin – über den Rand.
 * **Nichts Bewegtes.** Nur Blöcke (Bäume, Findlinge) und Prellsteine. Loren, Fähren, Kanonen oder
   Stacheln würden liegende Kugeln verschieben oder verschlucken, während gerade jemand anderes
   zielt.
@@ -494,12 +495,22 @@ Die Welt trägt die Kennung `custom` wie eine selbst gebaute. Das ist kein Behel
 richtig: Daran hängt, dass keine Rekorde geschrieben werden (Abstände in Feldern sind mit Schlägen
 nicht vergleichbar) und dass „Zurück" in die Werkstatt führt statt auf die Weltkarte.
 
-**Ablauf.** Eine Kanone am Abschlag schießt die kleine Zielkugel auf die Bahn – grob Richtung Loch,
-mit kräftiger Streuung, damit sie jede Runde woanders liegt. Landet sie zu dicht am Abschlag (unter
-drei Feldern), wird neu geschossen, höchstens sechsmal; danach gilt, was liegt. Dann spielen alle
-reihum je drei Kugeln: erst jeder seine erste, dann jeder seine zweite, dann jeder seine dritte.
-Jede geschlagene Kugel bleibt liegen und darf von jeder späteren angestoßen werden – die Zielkugel
-eingeschlossen.
+**Ablauf.** Zu Beginn wird ein Spieler **ausgelost**, der die kleine Zielkugel mit der Kanone auf die
+Bahn schießt. Die Kanone steht am Abschlag und zeigt **fest nach vorn** – in die Mitte der Wiese;
+gewählt wird allein die **Stärke**, durch Ziehen wie bei jedem Schlag. Genau das macht sie zur
+Kanone und nicht zum Schläger: Wie weit die Zielkugel hinausgeht, ist eine Entscheidung, wohin sie
+geht, nicht.
+
+Technisch wird die Zielkugel für diesen einen Schuss zum „Ball" des Spielers – dann gilt für sie die
+gewohnte Bedienung, ohne dass es dafür eine zweite Eingabeart braucht; nur die Richtung wird beim
+Ziehen festgehalten (`bouleKanone()`).
+
+Bleibt sie zu dicht am Abschlag liegen (unter drei Feldern) oder nicht auf Gras, schießt derselbe
+Spieler noch einmal, höchstens sechsmal; danach wird sie hingelegt. Wer geschossen hat, **spielt
+auch als erster** – so wie beim richtigen Boule, wo der Werfer des Sauballs die erste Kugel legt.
+Damit ist das Los nicht bloß Beiwerk, sondern verteilt den Anfangsvorteil von Runde zu Runde neu.
+Danach geht es reihum: jeder drei Kugeln, jede bleibt liegen und darf von jeder späteren angestoßen
+werden – die Zielkugel eingeschlossen.
 
 **Wertung.** Nach der letzten Kugel gewinnt, wessen Kugel am nächsten an der Zielkugel liegt.
 Gemessen wird von Mitte zu Mitte, in Feldern der Bahn; die Tafel zeigt **alle** Kugeln nach Abstand
