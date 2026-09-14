@@ -59,6 +59,10 @@ const Welt3D = (() => {
     'w': { name: 'Wasser', zaeh: 1.2, reibung: 1.2, haft: 1.2, wasser: true, farbe: '#3a7a52', farbe2: '#33694a' },
     'x': { name: 'Fels', zaeh: 0.6, reibung: 0.6, haft: 1.2, wand: true, farbe: '#6f9a45', farbe2: '#638c3e' },
     'o': { name: 'Kante', zaeh: 0.38, reibung: 0.40, haft: 1.25, gemaeht: 1, offen: true, farbe: '#79c247', farbe2: '#6bb33d' },
+    /* Die Rampe ist gebautes Holz, kein Gras: Sie rollt schneller als das Fairway und hält
+       weniger – wer oben nicht ankommt, kommt zurück. Ihre Höhe steht nicht hier, sondern in
+       'gelaende.rampen'; dieses Zeichen sagt nur, wo die Bretter liegen. */
+    'r': { name: 'Rampe', zaeh: 0.3, reibung: 0.3, haft: 1.6, farbe: '#a9793f', farbe2: '#9a6c37' },
     '.': { name: 'Wiese', zaeh: 1.8, reibung: 2.2, haft: 2.8, aus: true, farbe: '#5fa03a', farbe2: '#549132' },
   };
   const artVon = ch => ART[ch] || ART['.'];
@@ -109,6 +113,20 @@ const Welt3D = (() => {
     const karte = bahn.karte, T = karte.length, B = karte[0].length;
     const g = bahn.gelaende || {};
     const huegel = g.huegel || [], grund = g.grund || 0, welle = g.welle || 0;
+    /* Rampen: ein Podest mit einer Auffahrt an einer Seite. Es steht nicht als Klotz in der
+       Landschaft, sondern ist ein Summand in der Höhenformel – und deshalb muss die Kugelrechnung
+       davon nichts wissen. Sie fragt nach Höhe und Neigung, bekommt beides, und der Ball rollt
+       hinauf, bleibt oben liegen oder rollt zurück, ganz von selbst.
+
+       Genau das ist der Grund, warum die Ränder weich sind und nicht senkrecht: Eine senkrechte
+       Wand hat an ihrer Kante unendliche Neigung, und die Kugelrechnung bekäme Unsinn zu essen.
+       Die Abbruchkanten sind darum steil (gut siebzig Prozent), aber endlich – hinunter rollt der
+       Ball, hinauf kommt er dort nicht. */
+    const rampen = (g.rampen || []).map(rp => {
+      const w = rp.dreh || 0;
+      return { c: Math.cos(w), si: Math.sin(w), x: rp.x, z: rp.z,
+        lang: rp.lang, breit: rp.breit, hoch: rp.hoch, auf: rp.auffahrt === undefined ? 2.5 : rp.auffahrt };
+    });
     const rausch = M3.rauschen(9001 + (bahn.name || '').length * 37);
 
     /* Die Abfrage steht bewusst verneint (!(ix >= 0) statt ix < 0): So fällt auch eine Stelle
@@ -137,6 +155,14 @@ const Welt3D = (() => {
       for (const h of huegel) {
         const dx = x - h.x, dz = z - h.z, q = (dx * dx + dz * dz) / (h.r * h.r);
         if (q < 1) { const u = 1 - q; y += h.h * u * u; }
+      }
+      for (const rp of rampen) {
+        const dx = x - rp.x, dz = z - rp.z;
+        const u = dx * rp.si + dz * rp.c, v = dx * rp.c - dz * rp.si;
+        const rauf = stufe(u, -rp.lang / 2 - rp.auf, -rp.lang / 2);
+        const runter = 1 - stufe(u, rp.lang / 2, rp.lang / 2 + 0.8);
+        const seite = 1 - stufe(Math.abs(v), rp.breit / 2, rp.breit / 2 + 0.7);
+        y += rp.hoch * rauf * runter * seite;
       }
       if (welle) y += welle * (rausch(x * 0.33, z * 0.33) + rausch(x * 0.9, z * 0.9) * 0.4);
       y -= SENKE * stufe(zumRand(x, z), 0.35, 1.8);
@@ -475,6 +501,186 @@ const Welt3D = (() => {
   function burgNetz(B, gl, burg) {
     if (!burg) return [];
     const fussHoehe = gl.hoehe(burg.x, burg.z);
+    const bergH = burg.berg === undefined ? 3 : burg.berg;
+    const g = burg.g || 1;
+    /* Steht die Burg auf einem Berg oder auf der Wiese? Beides kommt vor, und beides soll
+       vorkommen: Aus der Ferne ist die Burg auf dem Kegel das Wahrzeichen der ganzen Welt, aber
+       eine Bahn, die am Burgtor endet, braucht die Burg auf Augenhöhe. Steht sie dort oben, sieht
+       man vom Spielfeld aus nur die Felswand.
+
+       Unter einem halben Meter Berg wird deshalb gar keiner gebaut, sondern nur eine flache
+       Grasterrasse mit einer Böschung aus Steinen – gerade genug, dass die Burg einen Fuß hat. */
+    const berg = bergH > 0.5;
+    if (berg) {
+      /* Der Burgberg ist ein Kegelstumpf, der tief genug im Boden steckt, dass auch am Hang keine
+         Fuge bleibt – oben grün, unter der Krone Fels. Zwei aufeinandergestapelte Scheiben (der
+         erste Versuch) sahen aus wie eine Torte; ein Kegel, dessen Wand nach oben einzieht, sieht
+         aus wie ein Berg. */
+      B.stelle(burg.x, fussHoehe - 2.2, burg.z, 0, 1, b => {
+        b.walze(6.6 * g, 4.4 * g, bergH * 0.62 + 2.2, 13, '#69933f', '#7cae4b');
+        b.mit(M3.verschieben(0, bergH * 0.62 + 2.2, 0), c => {
+          c.walze(4.4 * g, 3.9 * g, bergH * 0.26, 13, '#9a9488', '#a8a296');
+          c.mit(M3.verschieben(0, bergH * 0.26, 0), d => d.walze(3.9 * g, 3.7 * g, bergH * 0.12, 13, '#7cae4b', '#88bb53'));
+        });
+      });
+      /* Felsbrocken am Übergang von Grün zu Fels – sie verstecken die Kante zwischen den Walzen. */
+      const rb = M3.zufall(919);
+      for (let i = 0; i < 14; i++) {
+        const a = rb() * M3.TAU3, d = (4.3 + rb() * 0.5) * g;
+        B.stelle(burg.x + Math.cos(a) * d, fussHoehe - 2.2 + bergH * 0.62 + 2.2 - 0.3 + rb() * 0.5,
+          burg.z + Math.sin(a) * d, 0, 1, b => Deko3D.fels(b, (0.35 + rb() * 0.4) * g, i * 11 + 3));
+      }
+    } else {
+      // Flache Terrasse: eine kaum merkliche Stufe, damit die Mauer nicht im Gras schwimmt
+      B.stelle(burg.x, fussHoehe - 1.0, burg.z, 0, 1,
+        b => b.walze(4.6 * g, 4.2 * g, 1.0 + bergH, 13, '#69933f', '#7cae4b'));
+      const rb = M3.zufall(919);
+      for (let i = 0; i < 10; i++) {
+        const a = rb() * M3.TAU3, d = (4.1 + rb() * 0.4) * g;
+        B.stelle(burg.x + Math.cos(a) * d, fussHoehe + bergH - 0.25, burg.z + Math.sin(a) * d, 0, 1,
+          b => Deko3D.fels(b, (0.2 + rb() * 0.25) * g, i * 11 + 3));
+      }
+    }
+    let fahnen = [];
+    B.stelle(burg.x, fussHoehe + bergH, burg.z, burg.dreh === undefined ? 0.35 : burg.dreh, 1,
+      b => { fahnen = Deko3D.burg(b, g).fahnen; });
+    /* Bewuchs am Fuß. Auf dem Berg ist es Nadelwald, wie auf den gemalten Vorlagen; auf der Wiese
+       sind es Laubbäume in Gruppen – ein Tannenkranz um eine ebenerdige Burg sähe aus wie eine
+       Verteidigungsanlage aus Bürsten. */
+    const r = M3.zufall(555);
+    for (let i = 0; i < (berg ? 26 : 14); i++) {
+      const a = r() * M3.TAU3, d = (berg ? 4.4 + r() * 1.8 : 5.0 + r() * 2.2) * g;
+      const x = burg.x + Math.cos(a) * d, z = burg.z + Math.sin(a) * d;
+      const y = berg ? fussHoehe - 0.6 + Math.max(0, bergH * 0.22 * (1 - d / (6.5 * g))) : gl.hoehe(x, z);
+      const art = berg ? (r() < 0.25 ? 'kiefer' : 'tanne') : (r() < 0.4 ? 'eiche' : 'laubbaum');
+      B.stelle(x, y, z, r() * 6, 1, b => Deko3D.baum(b, art, 1.8 + r() * 1.4, i * 3 + 1));
+    }
+    /* Von der Burgmitte aus in Weltkoordinaten umrechnen – die Fahnen kommen in Burgkoordinaten
+       zurück, gedreht um denselben Winkel wie die Burg. */
+    const w = burg.dreh === undefined ? 0.35 : burg.dreh, c = Math.cos(w), s = Math.sin(w);
+    return fahnen.map(f => ({
+      x: burg.x + f.x * c + f.z * s,
+      z: burg.z - f.x * s + f.z * c,
+      y: fussHoehe + bergH + f.y, h: f.h, farbe: f.farbe,
+    }));
+  }
+
+  /* ---------- Das Loch ----------
+     Drei Teile: der Flicken Wiese mit der runden Öffnung, der Becher darunter und der helle Rand
+     obenauf. Der Becher zeigt nach innen – man schaut ja hinein –, und weil Rückseiten nicht
+     gezeichnet werden, müsste man sonst durch den Boden auf die Landschaft dahinter sehen.
+
+     Der Flicken ersetzt genau die neun Maschen, die gelaendeNetz ausgespart hat. Gebaut wird er
+     in Ringen um das Loch herum: innen der Kreis, außen das Quadrat, dazwischen drei Lagen. Die
+     Höhe wird für jeden Punkt beim Gelände erfragt, damit der Flicken die Mulde mitmacht, in der
+     das Loch liegt. */
+  function lochNetz(B, gl) {
+    const [hx, hz] = gl.lochFeld;
+    const R = Physik3D.LOCH_R + 0.015;       // ein Hauch weiter als der Becher, sonst klemmt der Rand
+    const K = 20, TIEF = 0.42, LAGEN = 3;
+    const GRUEN = ART['H'].farbe, DUNKEL = '#241f16', BODEN = '#15130d', KRAGEN = '#e9e4d4';
+
+    const aufQuadrat = w => {
+      const c = Math.cos(w), sn = Math.sin(w);
+      const t = LOCH_FELD / Math.max(Math.abs(c), Math.abs(sn));
+      return [hx + c * t, hz + sn * t];
+    };
+    const amKreis = w => [hx + Math.cos(w) * R, hz + Math.sin(w) * R];
+    const misch = (a, b, u) => [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u];
+    const hoch = p => [p[0], gl.hoehe(p[0], p[1]), p[1]];
+
+    for (let i = 0; i < K; i++) {
+      const w0 = i / K * M3.TAU3, w1 = (i + 1) / K * M3.TAU3;
+      const k0 = amKreis(w0), k1 = amKreis(w1), q0 = aufQuadrat(w0), q1 = aufQuadrat(w1);
+      /* Der Flicken Wiese. Die innerste Lage ist schmal und ein wenig heller – das ausgetretene
+         Gras rings um ein Loch. Ohne diesen Ring verschwindet die Öffnung aus ein paar Feldern
+         Entfernung im Grün; mit ihm sieht man von Weitem, wo man hin will. */
+      const RAND = 0.09 / LOCH_FELD;
+      B.viereck(hoch(misch(k0, q0, 0)), hoch(misch(k1, q1, 0)),
+        hoch(misch(k1, q1, RAND)), hoch(misch(k0, q0, RAND)), '#a8dd6a', [0, 1, 0]);
+      for (let l = 0; l < LAGEN; l++) {
+        const ua = RAND + (1 - RAND) * l / LAGEN, ub = RAND + (1 - RAND) * (l + 1) / LAGEN;
+        B.viereck(hoch(misch(k0, q0, ua)), hoch(misch(k1, q1, ua)),
+          hoch(misch(k1, q1, ub)), hoch(misch(k0, q0, ub)), GRUEN, [0, 1, 0]);
+      }
+      // Der Becher: Wand nach innen gerichtet, oben ein heller Kragen wie bei einem echten Loch
+      const y0 = gl.hoehe(k0[0], k0[1]), y1 = gl.hoehe(k1[0], k1[1]);
+      const nachInnen = [hx * 2 - k0[0] - k1[0], 0, hz * 2 - k0[1] - k1[1]];
+      const KRAGEN_TIEF = 0.11;
+      B.viereck([k0[0], y0, k0[1]], [k1[0], y1, k1[1]],
+        [k1[0], y1 - KRAGEN_TIEF, k1[1]], [k0[0], y0 - KRAGEN_TIEF, k0[1]], KRAGEN, nachInnen);
+      B.viereck([k0[0], y0 - KRAGEN_TIEF, k0[1]], [k1[0], y1 - KRAGEN_TIEF, k1[1]],
+        [k1[0], y1 - TIEF, k1[1]], [k0[0], y0 - TIEF, k0[1]], DUNKEL, nachInnen);
+      const tiefe = Math.min(y0, y1) - TIEF;
+      B.flaeche([[hx, tiefe, hz], [k0[0], tiefe, k0[1]], [k1[0], tiefe, k1[1]]], BODEN, [0, 1, 0]);
+    }
+  }
+
+  /* ---------- Die Banden ----------
+     Für jede Kante ein Balken, dazu Pfosten dort, wo eine Reihe von Balken endet oder um die Ecke
+     geht. Das ist kein Zierrat: Ohne die Pfosten stoßen an jeder Ecke zwei Balken stumpf
+     aneinander, und man sieht durch die Fuge hindurch.
+
+     Der Balken sitzt mit seiner Innenseite genau auf der Bandenlinie – dort, wo die Kugelrechnung
+     den Ball anhalten lässt. Läge er mittig auf der Linie, prallte der Ball sichtbar in der Luft
+     ab; läge er ganz außen, führe er sichtbar in das Holz hinein. */
+  function bandenNetz(B, gl) {
+    const DICK = 0.30, HOCH = gl.BANDE_HOCH, TIEF = 0.10;     // TIEF: so weit steckt er im Boden
+    const HOLZ = '#8a5f38', HOLZ_OBEN = '#b1865a', HOLZ_TIEF = '#6a4526';
+    /* Trägt das Nachbarfeld dieselbe Kante? Dann läuft der Balken dort weiter und braucht hier
+       keinen Pfosten. */
+    const kantenSatz = new Set(gl.kanten.map(k => `${k.ix}:${k.iz}:${k.dx}:${k.dz}`));
+    const laeuftWeiter = (k, qx, qz) => kantenSatz.has(`${k.ix + qx}:${k.iz + qz}:${k.dx}:${k.dz}`);
+
+    for (const k of gl.kanten) {
+      // Mitte der Kante und ihre Richtung: quer zur Feldseite
+      const mx = k.ix + 0.5 + k.dx * (0.5 + DICK / 2);
+      const mz = k.iz + 0.5 + k.dz * (0.5 + DICK / 2);
+      const laengs = k.dx ? 0 : Math.PI / 2;                   // Balken liegt quer zur Seitenrichtung
+      /* Der Balken ist nicht ein Brett, sondern zwei übereinander – mit einer dunklen Fuge
+         dazwischen und einer schmalen Deckleiste obenauf. Genau so ist die Bande auf Fynns
+         Vorbildfoto gebaut, und es ist der Unterschied zwischen „Holzfarbene Mauer" und „Holz".
+
+         Die Fuge ist eingerückt, nicht aufgesetzt: ein dünnes dunkles Brettchen, das schmaler ist
+         als der Balken. Aufgesetzt sähe es aus wie ein Gürtel. */
+      const bretterFarbe = Bauen.stufe(HOLZ, 0.94 + ((k.ix * 7 + k.iz * 3) % 5) * 0.03);
+      B.stelle(mx, k.y - TIEF, mz, laengs, 1, b => {
+        const unten = (HOCH + TIEF) * 0.56;
+        b.kasten(DICK, unten, 1.0, bretterFarbe, HOLZ_TIEF);
+        b.mit(M3.verschieben(0, unten, 0),
+          c => c.kasten(DICK * 0.97, (HOCH + TIEF) - unten - 0.03, 1.0, bretterFarbe, HOLZ_TIEF));
+        /* Deckleiste: ein Stück breiter als der Balken, damit die Oberkante eine Linie bekommt.
+           Der Ball prallt an der senkrechten Fläche darunter ab – die Leiste ist reine Optik und
+           steht in der Kugelrechnung nicht. */
+        b.mit(M3.verschieben(0, (HOCH + TIEF) - 0.03, 0),
+          c => c.kasten(DICK * 1.1, 0.03, 1.0, HOLZ_OBEN, HOLZ_OBEN));
+      });
+      /* Pfosten – abgesägte Stämme wie auf dem Vorbild. Sie stehen an jedem Ende einer Reihe
+         (dort stoßen sonst zwei Balken stumpf aneinander und man sieht durch die Fuge) und
+         zusätzlich alle drei Felder. Das zweite ist reine Optik, aber es ist die Optik, die aus
+         einer langen Latte eine Bande macht. */
+      const quer = k.dx ? [[0, -1], [0, 1]] : [[-1, 0], [1, 0]];
+      for (const [qx, qz] of quer) {
+        const ende = !laeuftWeiter(k, qx, qz);
+        const regel = (qx > 0 || qz > 0) && (k.ix + k.iz) % 3 === 0;
+        if (!ende && !regel) continue;
+        B.stelle(mx + qx * 0.5, k.y - TIEF - 0.05, mz + qz * 0.5, 0, 1, b => {
+          const h = HOCH + TIEF + 0.10;
+          b.walze(DICK * 0.66, DICK * 0.62, h, 8, HOLZ, null);
+          /* Eine abgesetzte Kuppe: Ein glatt abgeschnittener Pfosten sieht aus wie ein Rohr, ein
+             angefaster wie ein gesägter Stamm. */
+          b.mit(M3.verschieben(0, h, 0), c => c.walze(DICK * 0.62, DICK * 0.46, DICK * 0.2, 8, HOLZ, HOLZ_OBEN));
+        });
+      }
+    }
+  }
+
+  /* Die Burg auf ihrem Felsen. Sie liegt immer außerhalb der Bahn und ist nie zu erreichen –
+     sie ist Orientierung und Versprechen, nicht Hindernis. Zurück kommen die Stellen ihrer
+     Fahnen, damit die wehen können. */
+  function burgNetz(B, gl, burg) {
+    if (!burg) return [];
+    const fussHoehe = gl.hoehe(burg.x, burg.z);
     const bergH = burg.berg || 3;
     const g = burg.g || 1;
     /* Der Burgberg ist ein Kegelstumpf, der tief genug im Boden steckt, dass auch am Hang keine
@@ -522,7 +728,8 @@ const Welt3D = (() => {
   function dekoNetz(B, gl, beweglich) {
     for (const d of gl.bahn.deko || []) {
       const y = (x, z) => gl.hoehe(x, z);
-      if (d.t === 'zaun') { Deko3D.zaun(B, d.von[0], d.von[1], d.nach[0], d.nach[1], y); continue; }
+      if (d.t === 'zaun') { Deko3D.zaun(B, d.von[0], d.von[1], d.nach[0], d.nach[1], y, d.h); continue; }
+      if (d.t === 'mauer') { Deko3D.steinmauer(B, d.von[0], d.von[1], d.nach[0], d.nach[1], y, d.h); continue; }
       const h = y(d.x, d.z);
       switch (d.t) {
         case 'muehle': {
@@ -533,7 +740,21 @@ const Welt3D = (() => {
             dreh: w, g: d.g || 1, tempo: 0.55 + (d.g || 1) * 0.1 });
           break;
         }
-        case 'haus': B.stelle(d.x, h, d.z, d.dreh || 0, d.g || 1, b => Deko3D.haus(b)); break;
+        case 'haus': B.stelle(d.x, h, d.z, d.dreh || 0, d.g || 1, b => Deko3D.haus(b, 1, 0.8, 0.8, d.dach)); break;
+        case 'scheune': B.stelle(d.x, h, d.z, d.dreh || 0, 1, b => Deko3D.scheune(b, d.g || 1, d.dach)); break;
+        case 'brunnen': B.stelle(d.x, h, d.z, d.dreh || 0, 1, b => Deko3D.brunnen(b, d.g || 1)); break;
+        case 'heuhaufen': B.stelle(d.x, h, d.z, d.dreh || 0, 1, b => Deko3D.heuhaufen(b, d.g || 1, Math.round(d.x * 17 + d.z * 5))); break;
+        case 'karren': B.stelle(d.x, h, d.z, d.dreh || 0, 1, b => Deko3D.karren(b, d.g || 1)); break;
+        case 'baum': B.stelle(d.x, h, d.z, d.dreh || 0, 1, b => Deko3D.baum(b, d.art || 'laubbaum', d.g || 2, Math.round(d.x * 29 + d.z * 11))); break;
+        case 'obstbaum': B.stelle(d.x, h, d.z, d.dreh || 0, 1, b => Deko3D.obstbaum(b, d.g || 2, Math.round(d.x * 29 + d.z * 11))); break;
+        case 'zelt': {
+          /* Auf jedem Zelt weht ein Wimpel – deshalb kommt die Spitze zurück und wandert in die
+             Liste der Fahnen, die im beweglichen Gitter gezeichnet werden. */
+          let spitze = 1.5;
+          B.stelle(d.x, h, d.z, d.dreh || 0, 1, b => { spitze = Deko3D.zelt(b, d.g || 1, d.farbe, Math.round(d.x * 13 + d.z * 7)).spitze; });
+          beweglich.fahnen.push({ x: d.x, y: h + spitze + 0.02, z: d.z, h: 0.26, farbe: d.farbe || '#c8503f' });
+          break;
+        }
         case 'felsgruppe': B.stelle(d.x, h, d.z, 0, 1, b => Deko3D.felsgruppe(b, (d.g || 1) * 0.6, Math.round(d.x * 13 + d.z * 7))); break;
         case 'bruecke': bruecke(B, gl, d); break;
         case 'mast':
@@ -605,6 +826,14 @@ const Welt3D = (() => {
     const r = M3.zufall((a.saat || 1) * 7717 + 3);
     const burg = gl.bahn.burg;
     const weitVonBurg = (x, z) => !burg || Math.hypot(x - burg.x, z - burg.z) > 7.5 * (burg.g || 1);
+    /* Um jedes Gebäude bleibt eine Lichtung frei. Ohne das wächst der Wald den Häusern bis an die
+       Wand, und aus einem Dorf wird eine Ansammlung von Dächern zwischen Tannen – man sieht dann
+       nicht mehr, dass dort jemand wohnt. Ein Hof ist eine Lichtung mit Gebäuden darauf, und
+       genau das ist hier gemeint. */
+    const LICHTUNG = { haus: 2.6, scheune: 3.4, muehle: 3.0, brunnen: 1.8, zelt: 2.4, karren: 1.2, heuhaufen: 1.6 };
+    const lichtungen = (gl.bahn.deko || []).filter(d => LICHTUNG[d.t] !== undefined)
+      .map(d => ({ x: d.x, z: d.z, r: LICHTUNG[d.t] * (d.g || 1) }));
+    const imFreien = (x, z) => !lichtungen.some(l => Math.hypot(x - l.x, z - l.z) < l.r);
 
     for (let z = -aussenRand; z < gl.T + aussenRand; z += 1) for (let x = -aussenRand; x < gl.B + aussenRand; x += 1) {
       const px = x + r(), pz = z + r();
@@ -646,7 +875,7 @@ const Welt3D = (() => {
          irgendeinen Schlag, sondern immer denselben. */
       const zumAbschlag = gl.abschlag ? Math.hypot(px - gl.abschlag[0], pz - gl.abschlag[1]) : 99;
       const waldNeigung = M3.klemm((abstand - 2.8) / 9, 0, 1);
-      if (abstand > 2.8 && zumAbschlag > 7 && wuerfel < dichte * (0.14 + waldNeigung * 0.6)) {
+      if (abstand > 2.8 && zumAbschlag > 7 && imFreien(px, pz) && wuerfel < dichte * (0.14 + waldNeigung * 0.6)) {
         const art = baumArt(r(), waldNeigung);
         const [tief, spanne] = BAUM_HOCH[art];
         /* Jeder fünfte Baum ist ein Jungbaum. Ein Wald, in dem alle Wipfel auf derselben Höhe
@@ -712,25 +941,36 @@ const Welt3D = (() => {
     }
   }
 
-  /* Ferne Hügel. Ohne sie endet die Wiese in einer geraden Kante gegen den Himmel, und die Welt
-     sieht aus wie eine Tischplatte.
+  /* Die Kulisse am Horizont. Ohne sie endet die Wiese in einer geraden Kante gegen den Himmel,
+     und die Welt sieht aus wie eine Tischplatte.
 
-     Sie stehen in drei Reihen hintereinander, und das ist der ganze Trick: Je weiter hinten, desto
-     höher, desto blasser und desto blauer. So entsteht Luftperspektive – dieselbe, die auf jedem
-     gemalten Bild die Ferne macht. Eine einzige Reihe gleich grüner Kegel liest sich dagegen als
-     Zaun aus Dreiecken.
+     Welche Kulisse, sagt die Welt selbst – und das ist keine Kleinigkeit, sondern der Unterschied
+     zwischen zwei Landschaften: Im Grasland stehen weiche, weit auseinanderliegende Hügel mit
+     Wald darauf. Berge gehören in die Welt „Wolkengipfel" und nirgendwo sonst; ein Gebirgszug
+     hinter einer Kuhweide sagt dem Auge „Alpen", und dann ist es eben keine Wiese mehr.
 
-     Die hinterste Reihe bekommt zusätzlich graue Felsflanken und helle Gipfel. Sie ist zu weit weg,
-     als dass man Einzelheiten sähe, aber die Farbe sagt „Gebirge" statt „noch mehr Wiese". */
-  function fernNetz(B, gl) {
+     Gemeinsam ist beiden der Aufbau in Reihen: Je weiter hinten, desto höher, blasser und blauer.
+     So entsteht Luftperspektive – dieselbe, die auf jedem gemalten Bild die Ferne macht. */
+  const KULISSEN = {
+    /* Sanfte Kuppen, nichts Spitzes. Die Kuppe ist eine flachgedrückte Kugel, deren untere Hälfte
+       im Boden steckt: eine Form ohne Kante und ohne Spitze, und genau das macht einen Hügel. */
+    huegel: [
+      { saat: 6173, n: 22, d: 0.92, h: [2.6, 2.4], breit: 3.2, fuss: '#63954b', spitze: '#77aa57', wald: 0.5 },
+      { saat: 9241, n: 18, d: 1.34, h: [3.6, 3.0], breit: 3.6, fuss: '#5f8f57', spitze: '#7ba86c', wald: 0.3 },
+      { saat: 4517, n: 16, d: 1.78, h: [4.6, 3.4], breit: 4.0, fuss: '#6d9070', spitze: '#8fae8c', wald: 0 },
+    ],
+    berge: [
+      { saat: 6173, n: 30, d: 0.86, h: [4, 7], fuss: '#5c8b47', spitze: '#6d9c52' },
+      { saat: 9241, n: 26, d: 1.22, h: [8, 11], fuss: '#5b8560', spitze: '#78a37e' },
+      { saat: 4517, n: 22, d: 1.62, h: [15, 15], fuss: '#6f8d94', spitze: '#cfdce1', fels: '#8fa2ab' },
+    ],
+  };
+
+  function fernNetz(B, gl, welt) {
     const mx = gl.B / 2, mz = gl.T / 2;
     const grund = gl.hoehe(mx, mz);
     const weite = Math.max(gl.B, gl.T) * 0.5 + 34;
-    const reihen = [
-      { saat: 6173, n: 30, d: 0.86, h: [4, 7], fuss: '#5c8b47', spitze: '#6d9c52', fels: null },
-      { saat: 9241, n: 26, d: 1.22, h: [8, 11], fuss: '#5b8560', spitze: '#78a37e', fels: null },
-      { saat: 4517, n: 22, d: 1.62, h: [15, 15], fuss: '#6f8d94', spitze: '#cfdce1', fels: '#8fa2ab' },
-    ];
+    const reihen = KULISSEN[(welt && welt.ferne) || 'berge'] || KULISSEN.berge;
     for (const reihe of reihen) {
       const r = M3.zufall(reihe.saat);
       for (let i = 0; i < reihe.n; i++) {
@@ -738,13 +978,30 @@ const Welt3D = (() => {
         const d = weite * reihe.d * (0.9 + r() * 0.3);
         const h = reihe.h[0] + r() * reihe.h[1];
         const x = mx + Math.cos(a) * d, z = mz + Math.sin(a) * d;
-        B.stelle(x, grund - 3 - reihe.d * 2, z, r() * 6, 1, b => {
-          b.walze(h * (0.9 + r() * 0.7), h * 0.12, h + 3, 7, reihe.fuss, null, 0, reihe.spitze);
-          /* Ein Felskragen auf zwei Dritteln der Höhe: Darüber liegt der helle Gipfel, darunter
-             das bewachsene Fußstück. Die Grenze ist das, was einen Berg von einem Hügel trennt. */
-          if (reihe.fels) b.mit(M3.verschieben(0, (h + 3) * 0.66, 0),
-            c => c.walze(h * 0.32, h * 0.16, (h + 3) * 0.2, 7, reihe.fels, null, 0, reihe.spitze));
+        if (reihe.breit === undefined) {
+          B.stelle(x, grund - 3 - reihe.d * 2, z, r() * 6, 1, b => {
+            b.walze(h * (0.9 + r() * 0.7), h * 0.12, h + 3, 7, reihe.fuss, null, 0, reihe.spitze);
+            /* Ein Felskragen auf zwei Dritteln der Höhe: Darüber liegt der helle Gipfel, darunter
+               das bewachsene Fußstück. Die Grenze ist das, was einen Berg von einem Hügel trennt. */
+            if (reihe.fels) b.mit(M3.verschieben(0, (h + 3) * 0.66, 0),
+              c => c.walze(h * 0.32, h * 0.16, (h + 3) * 0.2, 7, reihe.fels, null, 0, reihe.spitze));
+          });
+          continue;
+        }
+        const rr = h * reihe.breit * (0.8 + r() * 0.5);
+        B.stelle(x, grund - h * 0.55, z, r() * 6, 1, b => {
+          b.mit(M3.skalieren(1, (h + h * 0.55) / rr, 1),
+            c => c.kugel(rr, 4, 9, reihe.fuss, 0.07, i * 17 + 5, reihe.spitze));
         });
+        /* Ein paar Bäume auf der Kuppe. Ein nackter grüner Buckel sieht aus wie ein Golfplatz;
+           erst der Bewuchs macht daraus Landschaft. */
+        if (reihe.wald) for (let k = 0; k < 7; k++) {
+          if (r() > reihe.wald) continue;
+          const wa = r() * M3.TAU3, wd = rr * (0.15 + r() * 0.5);
+          const wy = grund + h * Math.sqrt(Math.max(0, 1 - (wd / rr) ** 2)) - 0.3;
+          B.stelle(x + Math.cos(wa) * wd, wy, z + Math.sin(wa) * wd, r() * 6, 1,
+            b => Deko3D.fernbaum(b, 1.6 + r() * 1.6, r() < 0.55, i * 31 + k));
+        }
       }
     }
   }

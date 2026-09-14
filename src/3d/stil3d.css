@@ -194,10 +194,40 @@ button { font: inherit; color: inherit; border: none; background: none; }
 .g3-bahnzahl { flex: none; text-align: right; font-size: 14px; color: #f4efe6; display: flex; flex-direction: column; }
 .g3-bahnzahl em { font-style: normal; font-size: 11px; color: #9ee06f; }
 
+/* ---- Zu mehreren ----
+   Die Spielerliste in der Seitentafel, die Einrichtung und die Tabelle am Ende.
+   Die Tabelle bekommt eine eigene Hülle mit waagerechtem Rollen: Neun Bahnen mal vier Spieler
+   passen auf einem Telefon nicht in die Breite, und eine Tabelle, die den Schirm sprengt, ist
+   schlimmer als eine, die man schieben muss. */
+#g3-spieler { display: flex; flex-direction: column; gap: 3px; margin-top: 6px;
+  padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.15); }
+#g3-spieler[hidden] { display: none; }
+.g3-spielerchip { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #cbbfe6; }
+.g3-spielerchip i { flex: none; width: 10px; height: 10px; border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.5); }
+.g3-spielerchip b { margin-left: auto; color: #e8dcff; font-size: 13px; }
+.g3-spielerchip.dran { color: #ffe08a; font-weight: bold; }
+.g3-spielerchip.dran b { color: #ffe08a; }
+
+.g3-spielerzeile { display: flex; align-items: center; gap: 10px; padding: 7px 10px; margin-bottom: 6px;
+  border-radius: 10px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255, 209, 102, 0.3); }
+.g3-spielerzeile.aus { opacity: 0.35; }
+.g3-spielerzeile input { flex: 1; min-width: 0; font: inherit; font-size: 15px; color: #f4efe6;
+  background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.2); border-radius: 7px; padding: 6px 8px; }
+.g3-spielerzeile em { font-style: normal; font-size: 12px; color: #cbbfe6; flex: none; width: 42px; text-align: right; }
+.g3-ballpunkt { flex: none; width: 20px; height: 20px; border-radius: 50%;
+  box-shadow: inset -3px -3px 5px rgba(0,0,0,0.35), 0 0 0 2px rgba(0,0,0,0.4); }
+.g3-ballpunkt.klein { display: inline-block; width: 11px; height: 11px; margin-right: 5px; vertical-align: -1px; }
+#g3-anzahl .g3-btn.an { background: linear-gradient(180deg, #ffd166, #e39a2a); color: #3a2200;
+  border-color: #8a5a10; box-shadow: 0 3px 0 #8a5a10; }
+
+.g3-karte-huelle { max-width: 100%; overflow-x: auto; touch-action: pan-x pan-y; }
 table.g3-karte { margin: 8px auto 4px; border-collapse: collapse; font-size: 14px; }
 table.g3-karte th, table.g3-karte td { padding: 4px 9px; border-bottom: 1px solid rgba(255,255,255,0.15); }
 table.g3-karte th { color: #ffd98a; font-weight: normal; font-size: 12px; }
 table.g3-karte tr.ist td { color: #ffe08a; font-weight: bold; }
+table.g3-karte tr.ist td:first-child { text-align: left; white-space: nowrap; }
+table.g3-karte tr.sieger td { color: #9ee06f; }
 
 @media (max-width: 560px) {
   #g3-titel b { font-size: 16px; }

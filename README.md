@@ -1531,16 +1531,26 @@ aber auf `main` und damit Lüddecke.
 
 * Eine **Weltkarte in drei Dimensionen** – eine Insel im Meer, über der die Kamera langsam kreist.
   Sechs Landstriche tragen je eine Welt; ihre Namen stehen als Schilder darüber und wandern mit.
-  Offen ist bisher das **Grasland** mit drei Bahnen, die übrigen fünf sagen „bald zu erkunden".
-* **Drei Bahnen im Grasland** – lang, schmal und von Holzbanden eingefasst, alle im Blick auf
-  dieselbe Königsburg in der Mitte der Welt:
-  * *Burgwiese* (Par 3) – zwanzig Felder schnurgerade unter die Burg. Drei Felsnadeln stehen im
-    Weg, in der Mitte wächst hohes Gras; an der Bande entlang ist es frei.
-  * *Der Mühlbach* (Par 4) – erst geradeaus, dann im rechten Winkel nach rechts. Hinter dem Knick
-    liegt der Bach quer, links an der Bande; rechts daneben bleibt eine Gasse trocken.
-  * *Zum Burgtor* (Par 5) – die längste: bergauf, um die Ecke, durch ein Tor aus zwei Felsnadeln,
-    an zwei Sandgruben vorbei.
-* **Eine ganze Runde** über alle drei Bahnen mit Zählkarte, oder jede Bahn einzeln. Rekorde je
+  Offen ist bisher das **Grasland** mit neun Bahnen, die übrigen fünf sagen „bald zu erkunden".
+* **Neun Bahnen im Grasland** – lang, schmal und von Holzbanden eingefasst. Jede spielt an einem
+  anderen Ort derselben Landschaft; die Burg sieht man nur auf dreien, und wo man sie sieht, steht
+  sie einmal auf ihrem Hügel und zweimal ebenerdig am Wegesrand:
+  * *Burgwiese* (Par 3) – schnurgerade unter die Burg, drei Felsnadeln im Weg.
+  * *Der Mühlbach* (Par 4) – rechter Winkel nach rechts, dahinter der Bach quer.
+  * *Zum Burgtor* (Par 5) – bergauf, um die Ecke, durch ein Felsentor bis vors Tor der Burg.
+  * *Der Pferdehof* (Par 3) – über eine Holzrampe auf die Terrasse, Scheune und Heuhaufen ringsum.
+  * *Die Schafweide* (Par 4) – ein weiter Bogen über die Koppeln, mit Trockenmauern und Sandkuhle.
+  * *Der Obstgarten* (Par 3) – ein Graben quer, dann die Rampe hinauf zwischen die Apfelbäume.
+  * *Das Dorf* (Par 4) – am Brunnen vorbei, Knick nach rechts, Felsentor vor dem Loch.
+  * *Die Alte Brücke* (Par 3) – der Bach läuft die ganze linke Seite entlang.
+  * *Der Turnierplatz* (Par 4) – die längste: Sand, Knick, Felsentor, Rampe, Zelte und die Burg.
+* **Rampen** heben die Bahn auf eine Terrasse. Sie stehen nicht als Klotz in der Landschaft,
+  sondern sind ein Summand in der Höhenformel – die Kugelrechnung weiß nichts von ihnen und der
+  Ball rollt trotzdem hinauf, bleibt oben liegen oder kommt zurück.
+* **Zu mehreren an einem Gerät**, bis zu vier. Jeder hat einen Namen und eine Ballfarbe und spielt
+  eine Bahn ganz zu Ende, dann ist der nächste dran; nach Par plus sechs Schlägen geht es weiter,
+  damit niemand die anderen aufhält. Am Ende eine Zählkarte über alle neun Bahnen.
+* **Eine ganze Runde** über alle neun Bahnen mit Zählkarte, oder jede Bahn einzeln. Rekorde je
   Bahn werden gespeichert (getrennt von der Rangliste des 2,5D-Spiels – es sind zwei Spiele).
 
 ### Steuerung
@@ -2069,8 +2079,8 @@ src/3d/manifest3d.webmanifest  damit sich die 3D-Welt als eigene App einrichten 
 src/3d/mathe3d.js   Vektoren, Matrizen, Rauschen – die Rechnung für drei Dimensionen
 src/3d/gl3d.js      der 3D-Zeichner: WebGL, Sonne, Schattenwurf, Nebel (ohne fremde Bibliothek)
 src/3d/bauen3d.js   die Bauhütte: Grundkörper und der Sammler, der die feste Welt zusammenbackt
-src/3d/deko3d.js    Burg, Türme, Häuser, Bäume, Felsen, Zäune, Fahnen, Wolken, Schilf
-src/3d/bahnen3d.js  die Welt „Grasland" mit ihren drei Bahnen und die Liste aller Welten
+src/3d/deko3d.js    Burg, Türme, Häuser, Scheunen, Bäume, Felsen, Zäune, Zelte, Fahnen, Wolken
+src/3d/bahnen3d.js  die Welt „Grasland" mit ihren neun Bahnen und die Liste aller Welten
 src/3d/welt3d.js    aus Kartenzeichen wird Landschaft: Gelände, Wasser, Bewuchs, Höhe und Neigung
 src/3d/physik3d.js  wie der Ball in 3D rollt, springt, abprallt und einlocht
 src/3d/karte3d.js   die Weltkarte als Insel im Meer, aus gerechneter Küste

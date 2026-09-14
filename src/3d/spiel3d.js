@@ -39,7 +39,28 @@ const Golf3D = (() => {
   const stand = {
     welt: null, bahnNr: 0, schlaege: 0, gesamt: [], ball: null,
     ziel: null, phase: 'zielen', letzterOrt: null, meldungBis: 0,
+    /* Zu mehreren an einem Gerät: Jeder spielt die Bahn ganz zu Ende, dann ist der nächste dran.
+       Das ist derselbe Ablauf wie im 2,5D-Spiel nebenan, und für zwei Kinder auf einem Sofa ist
+       er der einzige, der ohne Erklärung funktioniert – abwechselnd Schlag für Schlag müsste man
+       nach jedem Schlag das Gerät weiterreichen und wüsste nie, wessen Ball gerade rollt. */
+    spieler: null,        // null = allein; sonst eine Liste von { name, farbe, karte }
+    amZug: 0,
   };
+
+  /* Vier Ballfarben, klar unterscheidbar und alle hell genug, dass man den Ball im Gras findet.
+     Die Namen stehen daneben, damit auf der Tafel nicht nur ein Farbklecks steht. */
+  const SPIELERFARBEN = [
+    { name: 'Weiß', ton: [1.0, 0.99, 0.96] },
+    { name: 'Rot', ton: [1.0, 0.42, 0.34] },
+    { name: 'Blau', ton: [0.46, 0.68, 1.0] },
+    { name: 'Gelb', ton: [1.0, 0.85, 0.32] },
+  ];
+  const amZug = () => (stand.spieler ? stand.spieler[stand.amZug] : null);
+  const zuMehreren = () => !!(stand.spieler && stand.spieler.length > 1);
+  /* Im Spiel zu mehreren braucht es eine Obergrenze: Sonst hält ein Spieler, der eine Bahn nicht
+     schafft, alle anderen auf. Allein gibt es keine – wer allein spielt, darf so lange üben, wie
+     er will. */
+  const hoechstZahl = par => par + 6;
 
   const kamera = { zx: 0, zy: 0, zz: 0, winkel: 0, neigung: 0.5, abstand: 9,
     zielWinkel: 0, zielAbstand: 9, zielNeigung: 0.5, proj: null, sicht: null, auge: [0, 0, 0] };
@@ -85,6 +106,7 @@ const Golf3D = (() => {
         <div class="g3-feld"><span>Schläge</span><b id="g3-schlaege">0</b></div>
         <div class="g3-feld"><span>Par</span><b id="g3-par">3</b></div>
         <div class="g3-feld g3-rekord"><span>Rekord</span><b id="g3-rekord">–</b></div>
+        <div id="g3-spieler" hidden></div>
       </div>
       <div id="g3-kraft"><i></i></div>
       <div id="g3-hinweis"></div>
@@ -191,19 +213,92 @@ const Golf3D = (() => {
       </div>
       <p class="g3-reihe">
         <button class="g3-btn" id="g3-runde">${symbol('sports_golf')} Ganze Runde spielen</button>
+        <button class="g3-btn hell" id="g3-mehrere">${symbol('sports_golf')} Zu mehreren spielen</button>
         <button class="g3-btn hell" id="g3-zurKarte">${symbol('arrow_back')} Zur Weltkarte</button>
       </p>
     </div>`);
     schirmFeld().querySelectorAll('[data-bahn]').forEach(el =>
-      el.addEventListener('click', () => { stand.gesamt = []; bahnStarten(welt, +el.dataset.bahn, false); }));
-    beiKlick('g3-runde', () => { stand.gesamt = []; bahnStarten(welt, 0, true); });
+      el.addEventListener('click', () => { alleinSpielen(); bahnStarten(welt, +el.dataset.bahn, false); }));
+    beiKlick('g3-runde', () => { alleinSpielen(); bahnStarten(welt, 0, true); });
+    beiKlick('g3-mehrere', () => rundeEinrichten(welt));
     beiKlick('g3-zurKarte', karteZeigen);
   }
 
+  function alleinSpielen() { stand.spieler = null; stand.amZug = 0; stand.gesamt = []; }
+
+  /* ---------- Zu mehreren an einem Gerät ----------
+
+     Die Einrichtung ist absichtlich eine einzige Seite: Anzahl, Namen, Ballfarben, los. Wer zu
+     zweit spielen will, soll nicht durch drei Bildschirme klicken müssen.
+
+     Die Namen bleiben im Speicher stehen. Beim zweiten Mal steht dort wieder „Fynn" und nicht
+     wieder „Spieler 1" – dieselbe Überlegung wie bei den Hüten im 2,5D-Spiel. */
+  const NAMEN_SCHLUESSEL = (typeof speicherSchluessel === 'function' ? speicherSchluessel('3d.namen') : 'fantasygolf.3d.namen');
+  function namenLaden() {
+    try {
+      const v = JSON.parse(localStorage.getItem(NAMEN_SCHLUESSEL) || 'null');
+      if (Array.isArray(v)) return v.slice(0, 4).map(n => String(n).slice(0, 14));
+    } catch (e) { /* nichts gespeichert – dann eben die Vorgaben */ }
+    return null;
+  }
+  function namenMerken(namen) {
+    try { localStorage.setItem(NAMEN_SCHLUESSEL, JSON.stringify(namen)); } catch (e) { /* voller Speicher */ }
+  }
+
+  function rundeEinrichten(welt) {
+    const gemerkt = namenLaden() || [];
+    const namen = [0, 1, 2, 3].map(i => gemerkt[i] || 'Spieler ' + (i + 1));
+    let anzahl = Math.max(2, Math.min(4, gemerkt.length || 2));
+
+    const zeichneReihen = () => {
+      const feld = schirmFeld().querySelector('#g3-spielerliste');
+      if (!feld) return;
+      feld.innerHTML = namen.map((n, i) => `
+        <label class="g3-spielerzeile${i < anzahl ? '' : ' aus'}">
+          <span class="g3-ballpunkt" style="background:${tonFarbe(SPIELERFARBEN[i].ton)}"></span>
+          <input type="text" maxlength="14" data-nr="${i}" value="${n.replace(/"/g, '&quot;')}"${i < anzahl ? '' : ' disabled'}>
+          <em>${SPIELERFARBEN[i].name}</em>
+        </label>`).join('');
+      feld.querySelectorAll('input').forEach(el => el.addEventListener('input', () => { namen[+el.dataset.nr] = el.value; }));
+      schirmFeld().querySelectorAll('[data-anzahl]').forEach(el =>
+        el.classList.toggle('an', +el.dataset.anzahl === anzahl));
+    };
+
+    schirmZeigen(`<div class="g3-tafel-gross schmal">
+      <h2>${symbol('sports_golf')} Zu mehreren spielen</h2>
+      <p class="g3-unter">Alle an einem Gerät. Jeder spielt eine Bahn ganz zu Ende, dann ist der
+        nächste dran – nach spätestens Par plus sechs Schlägen geht es weiter.</p>
+      <p class="g3-reihe" id="g3-anzahl">
+        ${[2, 3, 4].map(n => `<button class="g3-btn hell" data-anzahl="${n}">${n} Spieler</button>`).join('')}
+      </p>
+      <div id="g3-spielerliste"></div>
+      <p class="g3-reihe">
+        <button class="g3-btn" id="g3-losgehts">${symbol('sports_golf')} Runde starten</button>
+        <button class="g3-btn hell" id="g3-abbruch">${symbol('arrow_back')} Zurück</button>
+      </p>
+    </div>`);
+    zeichneReihen();
+    schirmFeld().querySelectorAll('[data-anzahl]').forEach(el => el.addEventListener('click', () => {
+      anzahl = +el.dataset.anzahl; zeichneReihen();
+    }));
+    beiKlick('g3-abbruch', () => weltZeigen(welt));
+    beiKlick('g3-losgehts', () => {
+      const liste = namen.slice(0, anzahl).map((n, i) => ({
+        name: (n || '').trim() || 'Spieler ' + (i + 1), ton: SPIELERFARBEN[i].ton, karte: [],
+      }));
+      namenMerken(liste.map(p => p.name));
+      stand.spieler = liste; stand.amZug = 0; stand.gesamt = [];
+      bahnStarten(welt, 0, true);
+    });
+  }
+
+  const tonFarbe = t => `rgb(${Math.round(t[0] * 230)},${Math.round(t[1] * 230)},${Math.round(t[2] * 230)})`;
+
   /* ---------- Eine Bahn ---------- */
 
-  function bahnStarten(welt, nr, runde) {
+  function bahnStarten(welt, nr, runde, wer = 0) {
     stand.welt = welt; stand.bahnNr = nr; stand.schlaege = 0; stand.runde = runde;
+    stand.amZug = stand.spieler ? Math.min(wer, stand.spieler.length - 1) : 0;
     schirm = 'bahn';
     schirmWeg();
     huelle.querySelector('#g3-marken').hidden = true;
@@ -236,7 +331,8 @@ const Golf3D = (() => {
 
     titelSetzen(bahn.name, welt.name + ' · Bahn ' + (nr + 1) + ' von ' + welt.bahnen.length);
     tafelFrischen();
-    meldung(bahn.intro, 5);
+    const ich = amZug();
+    meldung(ich ? ich.name + ' ist dran. ' + bahn.intro : bahn.intro, 5);
   }
 
   function bahnBauen(welt, bahn) {
@@ -256,7 +352,7 @@ const Golf3D = (() => {
     Welt3D.dekoNetz(B, gl, beweglich);
     Welt3D.streuenNetz(B, gl, AUSSEN);
     Welt3D.uferNetz(B, gl);
-    Welt3D.fernNetz(B, gl);
+    Welt3D.fernNetz(B, gl, welt);
     // Das Loch mitsamt Fahnenmast
     const lochH = gl.hoehe(gl.lochFeld[0], gl.lochFeld[1]);
     /* Die Fahne ist absichtlich groß. Sie ist von jeder Stelle der Bahn das einzige, woran man
@@ -351,6 +447,20 @@ const Golf3D = (() => {
     huelle.querySelector('#g3-schlaege').textContent = stand.schlaege;
     huelle.querySelector('#g3-par').textContent = b.par;
     huelle.querySelector('#g3-rekord').textContent = r === undefined ? '–' : r;
+    /* Zu mehreren steht statt des Rekords die Reihe der Mitspieler da: Wer dran ist, steht hell,
+       die anderen mit ihrem Stand auf dieser Bahn. Der Rekord gehört ohnehin dem Gerät und nicht
+       einem der vier – ihn dort stehen zu lassen, verwirrt nur. */
+    const feld = huelle.querySelector('#g3-spieler');
+    const rekordFeld = huelle.querySelector('.g3-rekord');
+    if (rekordFeld) rekordFeld.hidden = zuMehreren();
+    if (feld) {
+      feld.hidden = !zuMehreren();
+      if (zuMehreren()) feld.innerHTML = stand.spieler.map((p, i) => `
+        <span class="g3-spielerchip${i === stand.amZug ? ' dran' : ''}">
+          <i style="background:${tonFarbe(p.ton)}"></i>${p.name}
+          <b>${i === stand.amZug ? stand.schlaege : (p.karte[stand.bahnNr] === undefined ? '–' : p.karte[stand.bahnNr])}</b>
+        </span>`).join('');
+    }
   }
 
   /* ---------- Spielzüge ---------- */
@@ -416,15 +526,16 @@ const Golf3D = (() => {
 
   /* ---------- Ergebnis einer Bahn ---------- */
 
-  function bahnFertig() {
+  function bahnFertig(abgebrochen = false) {
     const b = stand.welt.bahnen[stand.bahnNr];
+    const letzte = stand.bahnNr >= stand.welt.bahnen.length - 1;
+
+    if (zuMehreren()) { zugFertig(b, letzte, abgebrochen); return; }
+
     const neu = rekordMerken(stand.welt.id, stand.bahnNr, stand.schlaege);
     stand.gesamt[stand.bahnNr] = stand.schlaege;
-    const d = stand.schlaege - b.par;
-    const wort = stand.schlaege === 1 ? 'Ass!' : d <= -2 ? 'Eagle!' : d === -1 ? 'Birdie!' : d === 0 ? 'Par' : d === 1 ? 'Bogey' : d + ' über Par';
-    const letzte = stand.bahnNr >= stand.welt.bahnen.length - 1;
     schirmZeigen(`<div class="g3-tafel-gross schmal">
-      <h2>${symbol('sports_score')} ${wort}</h2>
+      <h2>${symbol('sports_score')} ${ergebnisWort(stand.schlaege, b.par)}</h2>
       <p class="g3-unter">${b.name} – ${stand.schlaege} ${stand.schlaege === 1 ? 'Schlag' : 'Schläge'} bei Par ${b.par}${neu ? ' · neuer Rekord!' : ''}</p>
       ${stand.runde ? rundenTafel(letzte) : ''}
       <p class="g3-reihe">
@@ -438,17 +549,84 @@ const Golf3D = (() => {
     beiKlick('g3-liste', () => weltZeigen(stand.welt));
   }
 
+  const ergebnisWort = (schlaege, par) => {
+    const d = schlaege - par;
+    return schlaege === 1 ? 'Ass!' : d <= -2 ? 'Eagle!' : d === -1 ? 'Birdie!' : d === 0 ? 'Par'
+      : d === 1 ? 'Bogey' : d + ' über Par';
+  };
+
+  /* Ein Spieler hat die Bahn beendet. Entweder kommt der nächste an den Abschlag, oder die Bahn
+     ist für alle vorbei – dann die Zwischentafel, und nach der letzten Bahn der Endstand. */
+  function zugFertig(b, letzte, abgebrochen) {
+    const ich = stand.spieler[stand.amZug];
+    ich.karte[stand.bahnNr] = stand.schlaege;
+    const naechster = stand.amZug + 1;
+    if (naechster < stand.spieler.length) {
+      schirmZeigen(`<div class="g3-tafel-gross schmal">
+        <h2>${symbol('sports_score')} ${abgebrochen ? 'Aufgegeben' : ergebnisWort(stand.schlaege, b.par)}</h2>
+        <p class="g3-unter">${ich.name}: ${stand.schlaege} ${stand.schlaege === 1 ? 'Schlag' : 'Schläge'} bei Par ${b.par}${abgebrochen ? ' – die Höchstzahl war erreicht' : ''}</p>
+        ${standTafel()}
+        <p class="g3-reihe">
+          <button class="g3-btn" id="g3-naechster">${symbol('arrow_forward')} ${stand.spieler[naechster].name} ist dran</button>
+        </p>
+      </div>`);
+      beiKlick('g3-naechster', () => bahnStarten(stand.welt, stand.bahnNr, true, naechster));
+      return;
+    }
+    // Alle durch: Bahn ausgewertet
+    const beste = Math.min(...stand.spieler.map(p => p.karte[stand.bahnNr]));
+    const sieger = stand.spieler.filter(p => p.karte[stand.bahnNr] === beste);
+    schirmZeigen(`<div class="g3-tafel-gross${letzte ? '' : ' schmal'}">
+      <h2>${symbol(letzte ? 'emoji_events' : 'sports_score')} ${letzte ? 'Runde beendet' : 'Bahn ' + (stand.bahnNr + 1) + ' ist durch'}</h2>
+      <p class="g3-unter">${letzte ? gesamtSatz() : sieger.map(p => p.name).join(' und ') + (sieger.length > 1 ? ' teilen sich' : ' gewinnt') + ' die Bahn mit ' + beste + (beste === 1 ? ' Schlag' : ' Schlägen')}</p>
+      ${standTafel(letzte)}
+      <p class="g3-reihe">
+        ${letzte ? '' : `<button class="g3-btn" id="g3-weiter">${symbol('arrow_forward')} Bahn ${stand.bahnNr + 2}</button>`}
+        <button class="g3-btn hell" id="g3-liste">${symbol('golf_course')} Bahnwahl</button>
+      </p>
+    </div>`);
+    beiKlick('g3-weiter', () => bahnStarten(stand.welt, stand.bahnNr + 1, true, 0));
+    beiKlick('g3-liste', () => { alleinSpielen(); weltZeigen(stand.welt); });
+  }
+
+  /* Der Satz unter dem Endstand. Er nennt die Sieger beim Namen – eine Tabelle allein sagt nicht,
+     wer gewonnen hat, und genau das will man nach neun Bahnen als Erstes wissen. */
+  function gesamtSatz() {
+    const summe = p => p.karte.reduce((a, v) => a + (v || 0), 0);
+    const beste = Math.min(...stand.spieler.map(summe));
+    const sieger = stand.spieler.filter(p => summe(p) === beste);
+    return sieger.map(p => p.name).join(' und ')
+      + (sieger.length > 1 ? ' gewinnen gemeinsam mit ' : ' gewinnt mit ') + beste + ' Schlägen.';
+  }
+
+  /* Die Tafel zu mehreren: eine Zeile je Spieler, eine Spalte je Bahn. Sie ist quer scrollbar,
+     weil neun Bahnen mal vier Spieler auf einem Telefon nicht in die Breite passen. */
+  function standTafel(letzte = false) {
+    const w = stand.welt;
+    const summe = p => p.karte.reduce((a, v) => a + (v || 0), 0);
+    const parSumme = w.bahnen.reduce((a, b) => a + b.par, 0);
+    const rang = [...stand.spieler].sort((x, y) => summe(x) - summe(y));
+    return `<div class="g3-karte-huelle"><table class="g3-karte">
+      <tr><th>Bahn</th>${w.bahnen.map((b, i) => `<th>${i + 1}</th>`).join('')}<th>Σ</th></tr>
+      <tr><td>Par</td>${w.bahnen.map(b => `<td>${b.par}</td>`).join('')}<td>${parSumme}</td></tr>
+      ${stand.spieler.map(p => `<tr class="ist${letzte && summe(p) === summe(rang[0]) ? ' sieger' : ''}">
+        <td><i class="g3-ballpunkt klein" style="background:${tonFarbe(p.ton)}"></i>${p.name}</td>
+        ${w.bahnen.map((b, i) => `<td>${p.karte[i] === undefined ? '–' : p.karte[i]}</td>`).join('')}
+        <td>${summe(p)}</td></tr>`).join('')}
+    </table></div>`;
+  }
+
   function rundenTafel(letzte) {
     const w = stand.welt;
     const gespielt = stand.gesamt.filter(v => v !== undefined);
     const summe = gespielt.reduce((a, b) => a + b, 0);
     const par = w.bahnen.slice(0, gespielt.length).reduce((a, b) => a + b.par, 0);
     const d = summe - par;
-    return `<table class="g3-karte">
+    return `<div class="g3-karte-huelle"><table class="g3-karte">
       <tr><th>Bahn</th>${w.bahnen.map((b, i) => `<th>${i + 1}</th>`).join('')}<th>Σ</th></tr>
       <tr><td>Par</td>${w.bahnen.map(b => `<td>${b.par}</td>`).join('')}<td>${w.bahnen.reduce((a, b) => a + b.par, 0)}</td></tr>
       <tr class="ist"><td>Du</td>${w.bahnen.map((b, i) => `<td>${stand.gesamt[i] === undefined ? '–' : stand.gesamt[i]}</td>`).join('')}<td>${summe}</td></tr>
-    </table>${letzte ? `<p class="g3-unter">Runde beendet: ${summe} Schläge, ${d === 0 ? 'genau Par' : d > 0 ? d + ' über Par' : -d + ' unter Par'}.</p>` : ''}`;
+    </table></div>${letzte ? `<p class="g3-unter">Runde beendet: ${summe} Schläge, ${d === 0 ? 'genau Par' : d > 0 ? d + ' über Par' : -d + ' unter Par'}.</p>` : ''}`;
   }
 
   /* ---------- Kamera ---------- */
@@ -685,6 +863,11 @@ const Golf3D = (() => {
         stand.phase = 'zielen';
         zumLochDrehen();
         tafelFrischen();
+        if (zuMehreren() && stand.schlaege >= hoechstZahl(stand.welt.bahnen[stand.bahnNr].par)) {
+          stand.phase = 'fertig';
+          meldung('Höchstzahl erreicht – der Nächste ist dran.');
+          setTimeout(() => { if (laeuft && schirm === 'bahn') bahnFertig(true); }, 900);
+        }
       }
     }
     /* Der Schattenwurf folgt dem Ball. Ein Schattenbild, das die ganze Bahn umfasst, wäre auf
@@ -715,7 +898,8 @@ const Golf3D = (() => {
       let m = M3.verschieben(b.x, b.y, b.z);
       m = M3.mult(m, M3.drehenX(b.drehX), m);
       m = M3.mult(m, M3.drehenZ(b.drehZ), m);
-      raus.push({ netz: szene.ballNetz, modell: m });
+      const ich = amZug();
+      raus.push({ netz: szene.ballNetz, modell: m, ton: ich ? ich.ton : undefined });
 
       if (zug && zug.art === 'zielen' && zug.kraft > 0.02 && stand.phase === 'zielen') {
         const laenge = 0.9 + zug.kraft * 4.2;

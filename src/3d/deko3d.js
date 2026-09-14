@@ -605,6 +605,121 @@ const Deko3D = (() => {
     return B;
   }
 
+  /* ---------- Hof, Dorf und Turnierplatz ----------
+
+     Die neun Bahnen des Graslands spielen an neun verschiedenen Orten, und ein Ort ist nicht die
+     Bahn, sondern das, was drumherum steht: ein Hof ist ein Hof, weil dort eine Scheune, ein
+     Heuhaufen und ein Karren stehen. Darum sind das hier keine Zierstücke, sondern die eigentliche
+     Aussage jeder Bahn. */
+
+  /* Die Scheune: ein langes Haus mit großem Tor und einer Luke im Giebel. Alles daran ist breiter
+     und flacher als am Wohnhaus – daran erkennt man sie, noch bevor man das Tor sieht. */
+  function scheune(B, g = 1, dachFarbe = F.dachRot) {
+    const b0 = 2.6 * g, t0 = 1.7 * g, h = 1.1 * g;
+    B.kasten(b0, h, t0, '#cbb89a', '#ded6c4');
+    // Ständerwerk: senkrechte Balken und ein umlaufender Riegel
+    for (let i = -2; i <= 2; i++) for (const sz of [-1, 1])
+      B.mit(M3.verschieben(i * b0 * 0.22, 0, sz * t0 * 0.5), x => x.kasten(0.08 * g, h, 0.05 * g, F.fachwerk));
+    for (const sx of [-1, 1])
+      B.mit(M3.verschieben(sx * b0 * 0.5, 0, 0), x => x.kasten(0.05 * g, h, t0 * 0.98, F.fachwerk));
+    // Satteldach, weit überstehend
+    const hb = b0 * 0.56, ht = t0 * 0.62, first = h + t0 * 0.5;
+    B.viereck([-hb, h, -ht], [-hb, h, ht], [-hb, first, ht], [-hb, first, -ht], dachFarbe, [-1, 0, 0]);
+    for (const sz of [-1, 1]) B.viereck([-hb, h, sz * ht], [hb, h, sz * ht], [hb, first, 0], [-hb, first, 0], dachFarbe, [0, 0.7, sz]);
+    B.flaeche([[hb, h, -ht], [hb, h, ht], [hb, first, 0]], F.dachDunkel, [1, 0, 0]);
+    B.flaeche([[-hb, h, ht], [-hb, h, -ht], [-hb, first, 0]], F.dachDunkel, [-1, 0, 0]);
+    // Tor und Heuluke
+    B.mit(M3.verschieben(0, 0, t0 * 0.5), x => x.kasten(b0 * 0.34, h * 0.78, 0.04 * g, F.holzDunkel, F.holz));
+    B.mit(M3.verschieben(0, h * 0.12, t0 * 0.51), x => x.kasten(b0 * 0.36, 0.05 * g, 0.03 * g, F.holz));
+    B.mit(M3.verschieben(-hb * 0.98, h * 0.55, 0), x => x.kasten(0.04 * g, h * 0.3, t0 * 0.24, '#3a3128'));
+    return B;
+  }
+
+  /* Der Ziehbrunnen: Ring aus Bruchstein, zwei Pfosten, ein Dächlein, ein Eimer an der Kurbel. */
+  function brunnen(B, g = 1) {
+    B.walze(0.42 * g, 0.4 * g, 0.36 * g, 9, '#b3a992', '#9a9488');
+    B.mit(M3.verschieben(0, 0.3 * g, 0), b => b.walze(0.31 * g, 0.31 * g, 0.07 * g, 9, '#2b2620', '#4a4238'));
+    for (const sx of [-1, 1]) B.mit(M3.verschieben(sx * 0.34 * g, 0.36 * g, 0), b => b.kasten(0.07 * g, 0.62 * g, 0.07 * g, F.holz, F.holzHell));
+    B.mit(M3.verschieben(0, 0.9 * g, 0), b => b.walze(0.12 * g, 0.12 * g, 0.62 * g, 6, F.holzDunkel, null));   // Haspel
+    // Satteldächlein
+    const hb = 0.5 * g, ht = 0.4 * g, y0 = 0.98 * g, first = 1.26 * g;
+    for (const sx of [-1, 1]) B.viereck([sx * hb, y0, -ht], [sx * hb, y0, ht], [0, first, ht], [0, first, -ht], F.dachRot, [sx, 1, 0]);
+    for (const sz of [-1, 1]) B.flaeche(sz > 0 ? [[-hb, y0, ht], [hb, y0, ht], [0, first, ht]] : [[hb, y0, -ht], [-hb, y0, -ht], [0, first, -ht]], F.dachDunkel, [0, 0, sz]);
+    B.mit(M3.verschieben(0, 0.55 * g, 0), b => b.walze(0.11 * g, 0.13 * g, 0.16 * g, 7, F.holzDunkel, F.holz));  // Eimer
+    return B;
+  }
+
+  /* Der Heuhaufen: eine Garbe um eine Stange, oben zusammengebunden. Aus dem Drehkörper, weil die
+     Form ganz von ihrem Umriss lebt. */
+  function heuhaufen(B, g = 1, saat = 1) {
+    const z = M3.zufall(saat * 337 + 3);
+    const r = (0.55 + z() * 0.25) * g, h = (1.0 + z() * 0.5) * g;
+    B.drehkoerper([{ r: r * 0.7, y: 0 }, { r, y: h * 0.22 }, { r: r * 0.92, y: h * 0.55 },
+      { r: r * 0.45, y: h * 0.85 }, { r: 0, y: h }], 9, '#c0994e', '#e8cf7a');
+    B.walze(0.035 * g, 0.03 * g, h * 1.12, 4, F.holzDunkel, null);
+    return B;
+  }
+
+  /* Eine Trockenmauer aus Bruchsteinen, entlang einer Linie. Wie der Zaun, nur schwerer – sie
+     gehört zur Schafweide, wo ein Lattenzaun zu fein aussähe. */
+  function steinmauer(B, x0, z0, x1, z1, hoeheAn, h = 0.38) {
+    const dx = x1 - x0, dz = z1 - z0, laenge = Math.hypot(dx, dz);
+    const n = Math.max(1, Math.round(laenge / 0.55));
+    const w = Math.atan2(dx, dz);
+    const r = M3.zufall(Math.round(Math.abs(x0 * 71 + z0 * 13)) + 5);
+    for (let i = 0; i < n; i++) {
+      const u = (i + 0.5) / n, x = x0 + dx * u, z = z0 + dz * u;
+      B.stelle(x, hoeheAn(x, z) - 0.05, z, w + (r() - 0.5) * 0.2, 1, b => {
+        b.kasten(0.34, h * (0.85 + r() * 0.3), laenge / n * 1.06, r() < 0.5 ? '#b3a992' : '#c2b9a5', '#ded6c4');
+      });
+    }
+    return B;
+  }
+
+  /* Ein Turnierzelt: kegelförmig, gestreift, mit Wimpel. Vier davon nebeneinander, und aus einer
+     Wiese wird ein Turnierplatz. */
+  function zelt(B, g = 1, farbe = '#c8503f', saat = 1) {
+    const z = M3.zufall(saat * 787 + 9);
+    const r = (0.8 + z() * 0.25) * g, h = (1.5 + z() * 0.4) * g;
+    B.walze(r, r * 0.96, h * 0.28, 10, '#f0e6d2', null);
+    B.mit(M3.verschieben(0, h * 0.28, 0), b => b.walze(r * 1.06, 0, h * 0.72, 10, farbe, null, 0, Bauen.stufe(farbe, 1.25)));
+    // Senkrechte Bahnen in der zweiten Farbe – ein einfarbiges Zelt sieht aus wie ein Hut
+    for (let i = 0; i < 5; i++) {
+      const a = i / 5 * M3.TAU3;
+      B.mit(M3.mult(M3.verschieben(Math.cos(a) * r * 0.54, h * 0.28, Math.sin(a) * r * 0.54), M3.drehenY(-a)),
+        b => b.walze(r * 0.5, 0, h * 0.7, 3, '#f0e6d2', null));
+    }
+    B.mit(M3.verschieben(0, 0, r * 0.97), b => b.kasten(r * 0.5, h * 0.26, 0.03 * g, '#3a3128'));   // Eingang
+    // Die Stange für den Wimpel: Ohne sie hinge das Tuch in der Luft über der Zeltspitze.
+    B.mit(M3.verschieben(0, h, 0), b => b.walze(0.025 * g, 0.02 * g, 0.3 * g, 4, F.holzDunkel, null));
+    return { spitze: h + 0.3 * g };
+  }
+
+  /* Ein Leiterwagen: Kasten, zwei Räder, eine Deichsel. */
+  function karren(B, g = 1) {
+    B.mit(M3.verschieben(0, 0.34 * g, 0), b => {
+      b.kasten(1.1 * g, 0.36 * g, 0.62 * g, F.holz, F.holzHell);
+      for (let i = -2; i <= 2; i++) b.mit(M3.verschieben(i * 0.22 * g, 0.12 * g, 0), c => c.kasten(0.05 * g, 0.3 * g, 0.66 * g, F.holzDunkel));
+    });
+    for (const sz of [-1, 1]) B.mit(M3.mult(M3.verschieben(-0.22 * g, 0.28 * g, sz * 0.36 * g), M3.drehenX(Math.PI / 2)),
+      b => b.walze(0.28 * g, 0.28 * g, 0.07 * g, 9, F.holzDunkel, F.holz));
+    B.mit(M3.mult(M3.verschieben(0.62 * g, 0.3 * g, 0), M3.drehenZ(-0.35)), b => b.kasten(0.7 * g, 0.06 * g, 0.06 * g, F.holz));
+    return B;
+  }
+
+  /* Ein Obstbaum: ein Laubbaum mit roten Früchten. Eine Reihe davon ist ein Obstgarten – und ein
+     Obstgarten ist der einzige Wald, den man an seiner Ordnung erkennt. */
+  function obstbaum(B, hoehe = 1, saat = 1) {
+    const r = M3.zufall(saat * 4231 + 17);
+    laubbaum(B, hoehe, saat);
+    for (let i = 0; i < 7; i++) {
+      const a = r() * M3.TAU3, d = hoehe * (0.1 + r() * 0.18), y = hoehe * (0.55 + r() * 0.3);
+      B.mit(M3.verschieben(Math.cos(a) * d, y, Math.sin(a) * d),
+        b => b.kugel(hoehe * 0.035, 2, 5, r() < 0.6 ? '#d0473a' : '#e8a23c'));
+    }
+    return B;
+  }
+
   /* Fahnenmast ohne Tuch – das Tuch weht und liegt darum im beweglichen Gitter. */
   function mast(B, h, col = F.stein) {
     B.walze(0.032, 0.022, h, 6, col, null);
@@ -613,6 +728,7 @@ const Deko3D = (() => {
   }
 
   return { F, BAUMARTEN, baum, fernbaum, tanne, kiefer, pappel, tropfenbaum, birke, laubbaum, eiche, blume, grasbueschel, stumpf, totholz,
-    busch, fels, felsgruppe, turm, haus, burg, muehle, muehlenfluegel,
+    busch, fels, felsgruppe, turm, haus, scheune, brunnen, heuhaufen, steinmauer, zelt, karren, obstbaum,
+    burg, muehle, muehlenfluegel,
     zaun, wolke, mast, schilf };
 })();

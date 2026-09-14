@@ -57,7 +57,7 @@ const melde = (bahn, text) => fehler.push(`${bahn}: ${text}`);
    unspielbar – auch wenn man auf der Karte scheinbar durchkommt. Genau dieser Fehler ist beim
    Bauen von „Der Mühlbach" passiert: Die Landzunge in der Mitte war rundherum von Wasser umgeben
    und damit eine Insel. */
-const BEGEHBAR = new Set(['#', ',', 's', 'o', 'T', 'H']);
+const BEGEHBAR = new Set(['#', ',', 's', 'o', 'T', 'H', 'r']);
 
 for (const welt of BAHNEN3D.WELTEN) {
   if (welt.bald) continue;
@@ -150,7 +150,13 @@ function bauwerkPruefen(name, tu, vorzeichen = 1) {
   if (!tris.length) { melde(name, 'baut gar nichts'); return; }
   let v = 0;
   for (const t of tris) { const n = flaechenNormale(t); v += (t[0][0] * n[0] + t[0][1] * n[1] + t[0][2] * n[2]) / 6; }
-  if (!(v * vorzeichen > 0.005)) melde(name, `Rauminhalt ${v.toFixed(3)} – da liegt mindestens ein Körper verkehrt herum`);
+  /* Gemessen wird gegen die Größe des Stücks, nicht gegen eine feste Schranke: Ein Grasbüschel hat
+     einen Rauminhalt von wenigen Zehntausendsteln und ist trotzdem richtig herum gebaut. Eine
+     feste Untergrenze würde jedes kleine Ding für falsch erklären. */
+  let lo = [1e9, 1e9, 1e9], hi = [-1e9, -1e9, -1e9];
+  for (const t of tris) for (const e of t) for (let k = 0; k < 3; k++) { lo[k] = Math.min(lo[k], e[k]); hi[k] = Math.max(hi[k], e[k]); }
+  const kasten = Math.max(1e-9, (hi[0] - lo[0]) * (hi[1] - lo[1]) * (hi[2] - lo[2]));
+  if (!(v * vorzeichen > kasten * 0.004)) melde(name, `Rauminhalt ${v.toFixed(4)} bei einem Hüllkasten von ${kasten.toFixed(4)} – da liegt mindestens ein Körper verkehrt herum`);
   zeile.push(`  ${name.padEnd(18)} ${String(tris.length).padStart(5)} Dreiecke, Rauminhalt ${v.toFixed(2)}`);
 }
 
