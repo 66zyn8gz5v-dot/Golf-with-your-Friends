@@ -41,7 +41,10 @@ const Physik3D = (() => {
   const RUHE_ZEIT = 0.12;
   const SCHRITT = 1 / 240;
   const MAX_V = 13;               // Geschwindigkeit bei voller Kraft: gut 27 Felder auf Fairway
-  const LOCH_R = 0.155;           // Halbmesser des Bechers
+  /* Halbmesser des Bechers. Beim Golf ist das Loch gut zweieinhalbmal so breit wie der Ball;
+     beim Minigolf eher mehr. Mit 0,155 war es kaum größer als der Ball und aus drei Feldern
+     Entfernung nicht mehr zu erkennen – jetzt knapp das Doppelte des Balls. */
+  const LOCH_R = 0.2;
   const LOCH_V = 2.8;             // schneller als das, und der Ball springt über das Loch hinweg
   const MAX_ZEIT = 30;            // Notbremse: nach so vielen Sekunden gilt ein Schlag als beendet
 

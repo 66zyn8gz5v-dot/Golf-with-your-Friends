@@ -316,26 +316,6 @@ const Deko3D = (() => {
     return B;
   }
 
-  /* Das Loch: ein dunkler Becher im Boden mit weißem Rand. Er wird etwas tiefer gebaut, als er
-     aussieht – sonst blitzt bei flacher Kamera die Wiese durch den Boden des Bechers. */
-  function loch(B, r = 0.16) {
-    const K = 14, tief = 0.34;
-    for (let i = 0; i < K; i++) {
-      const a0 = i / K * M3.TAU3, a1 = (i + 1) / K * M3.TAU3;
-      const c0 = Math.cos(a0) * r, s0 = Math.sin(a0) * r, c1 = Math.cos(a1) * r, s1 = Math.sin(a1) * r;
-      /* Die Wand des Bechers zeigt nach innen – man schaut ja hinein. Eine gewöhnliche Walze
-         hätte ihre sichtbare Seite außen, und weil Rückseiten nicht gezeichnet werden, sähe man
-         glatt durch den Boden hindurch auf die Landschaft dahinter. */
-      B.viereck([c0, 0, s0], [c1, 0, s1], [c1, -tief, s1], [c0, -tief, s0], '#241f16', [-(c0 + c1), 0, -(s0 + s1)]);
-      B.flaeche([[0, -tief, 0], [c0, -tief, s0], [c1, -tief, s1]], '#15130d', [0, 1, 0]);
-      // Der weiße Rand als flacher Kranz, ein Hauch über der Wiese
-      const ra = r * 1.3;
-      B.viereck([c0, 0.004, s0], [c1, 0.004, s1], [Math.cos(a1) * ra, 0.004, Math.sin(a1) * ra],
-        [Math.cos(a0) * ra, 0.004, Math.sin(a0) * ra], '#f3f0e4', [0, 1, 0]);
-    }
-    return B;
-  }
-
   return { F, tanne, laubbaum, busch, fels, felsgruppe, turm, haus, burg, muehle, muehlenfluegel,
-    zaun, wolke, mast, loch, schilf };
+    zaun, wolke, mast, schilf };
 })();

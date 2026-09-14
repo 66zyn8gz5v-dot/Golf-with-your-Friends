@@ -1582,6 +1582,18 @@ o  wie #, aber ohne Bande: hier ist die Bahn offen und der Ball kann hinausfalle
 T  Abschlag                                  H  Loch
 ```
 
+### Das Loch
+
+Ein Loch ist ein Loch, kein Zeichen auf dem Rasen: Der Boden wird an dieser Stelle **wirklich
+aufgeschnitten**. `gelaendeNetz` lässt neun Maschen rings um den Becher weg, und `lochNetz` setzt
+an ihre Stelle einen Flicken mit runder Öffnung, darunter den Becher (nach innen gerichtet – man
+schaut ja hinein) und obenauf einen Ring aus ausgetretenem Gras, damit man die Öffnung auch aus
+zehn Feldern Entfernung findet.
+
+Das war zuerst nicht so: Der Becher war gebaut, aber die Wiese lag als geschlossene Decke darüber,
+und zu sehen war nur ein Fahnenmast, der im Gras steckt. `tools/3d.mjs` prüft seitdem, ob über der
+Mitte des Bechers wirklich kein Bodendreieck liegt.
+
 ### Die Banden
 
 Eine Bahn ist von Holzbanden eingefasst, und die entstehen von selbst: **Jedes Feld außerhalb, das

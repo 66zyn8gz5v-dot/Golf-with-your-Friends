@@ -222,8 +222,12 @@ const Welt3D = (() => {
      genug, dass ein Telefon es zweimal je Bild zeichnen kann (einmal für den Schatten). Die Farbe
      kommt vom Feld, in dem die Mitte des Vierecks liegt; das Rauschen darauf nimmt der Wiese das
      Gleichmäßige, das sie sonst wie Filz aussehen lässt. */
+  /* Wie groß das Stück Wiese ist, das um das Loch herum ausgespart und durch einen eigenen
+     Flicken ersetzt wird: drei mal drei Maschen des feinen Gitters. */
+  const LOCH_FELD = 0.75;
+
   function gelaendeNetz(B, gl, aussenRand) {
-    gitter(B, gl, 0.5, -aussenRand, gl.B + aussenRand, -aussenRand, gl.T + aussenRand, null);
+    gitter(B, gl, 0.5, -aussenRand, gl.B + aussenRand, -aussenRand, gl.T + aussenRand, null, gl.lochFeld);
     /* Und weit draußen dasselbe noch einmal, grob: bis zu den fernen Hügeln. Ohne das hört der
        Boden ein Stück vor dem Horizont auf, und in den Ecken des Bildes schaut der Himmel unter
        der Landschaft hervor. Zwei Einheiten Schrittweite reichen dort – im Nebel und aus vierzig
@@ -231,12 +235,12 @@ const Welt3D = (() => {
     const innen = [-aussenRand, gl.B + aussenRand, -aussenRand, gl.T + aussenRand];
     const weit = Math.max(gl.B, gl.T) * 0.5 + 52;
     const mx = gl.B / 2, mz = gl.T / 2;
-    gitter(B, gl, 2, mx - weit, mx + weit, mz - weit, mz + weit, innen);
+    gitter(B, gl, 2, mx - weit, mx + weit, mz - weit, mz + weit, innen, null);
   }
 
   /* Ein Stück Gelände als Gitter. 'aussparen' lässt einen Bereich frei – so kann das grobe
      Gitter um das feine herumgelegt werden, ohne es zu überdecken. */
-  function gitter(B, gl, S, xa, xb, za, zb, aussparen) {
+  function gitter(B, gl, S, xa, xb, za, zb, aussparen, loch) {
     const x0 = Math.floor(xa / S) * S, x1 = Math.ceil(xb / S) * S;
     const z0 = Math.floor(za / S) * S, z1 = Math.ceil(zb / S) * S;
     const nx = Math.round((x1 - x0) / S), nz = Math.round((z1 - z0) / S);
@@ -252,6 +256,10 @@ const Welt3D = (() => {
     for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
       const mx = x0 + (i + 0.5) * S, mz = z0 + (j + 0.5) * S;
       if (aussparen && mx > aussparen[0] && mx < aussparen[1] && mz > aussparen[2] && mz < aussparen[3]) continue;
+      /* Um das Loch herum bleibt die Wiese weg – dort kommt ein eigener Flicken hin, der eine
+         runde Öffnung hat. Ohne das liegt die Wiese als geschlossene Decke über dem Becher, und
+         vom Loch ist nichts zu sehen als der Fahnenmast, der im Gras steckt. */
+      if (loch && Math.abs(mx - loch[0]) < LOCH_FELD && Math.abs(mz - loch[1]) < LOCH_FELD) continue;
       const a = gl.art(mx, mz);
       /* Unter Wasser liegt Bachgrund, kein Gras – die Farbe dafür steckt schon in ART['w'].
 
@@ -348,6 +356,57 @@ const Welt3D = (() => {
         B.stelle(mx + Math.cos(a) * d, gl.hoehe(mx + Math.cos(a) * d, mz + Math.sin(a) * d) - 0.04,
           mz + Math.sin(a) * d, 0, 1, b => Deko3D.busch(b, 0.12 + r() * 0.07, '#4e8f33', saat + i * 13));
       }
+    }
+  }
+
+  /* ---------- Das Loch ----------
+     Drei Teile: der Flicken Wiese mit der runden Öffnung, der Becher darunter und der helle Rand
+     obenauf. Der Becher zeigt nach innen – man schaut ja hinein –, und weil Rückseiten nicht
+     gezeichnet werden, müsste man sonst durch den Boden auf die Landschaft dahinter sehen.
+
+     Der Flicken ersetzt genau die neun Maschen, die gelaendeNetz ausgespart hat. Gebaut wird er
+     in Ringen um das Loch herum: innen der Kreis, außen das Quadrat, dazwischen drei Lagen. Die
+     Höhe wird für jeden Punkt beim Gelände erfragt, damit der Flicken die Mulde mitmacht, in der
+     das Loch liegt. */
+  function lochNetz(B, gl) {
+    const [hx, hz] = gl.lochFeld;
+    const R = Physik3D.LOCH_R + 0.015;       // ein Hauch weiter als der Becher, sonst klemmt der Rand
+    const K = 20, TIEF = 0.42, LAGEN = 3;
+    const GRUEN = ART['H'].farbe, DUNKEL = '#241f16', BODEN = '#15130d', KRAGEN = '#e9e4d4';
+
+    const aufQuadrat = w => {
+      const c = Math.cos(w), sn = Math.sin(w);
+      const t = LOCH_FELD / Math.max(Math.abs(c), Math.abs(sn));
+      return [hx + c * t, hz + sn * t];
+    };
+    const amKreis = w => [hx + Math.cos(w) * R, hz + Math.sin(w) * R];
+    const misch = (a, b, u) => [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u];
+    const hoch = p => [p[0], gl.hoehe(p[0], p[1]), p[1]];
+
+    for (let i = 0; i < K; i++) {
+      const w0 = i / K * M3.TAU3, w1 = (i + 1) / K * M3.TAU3;
+      const k0 = amKreis(w0), k1 = amKreis(w1), q0 = aufQuadrat(w0), q1 = aufQuadrat(w1);
+      /* Der Flicken Wiese. Die innerste Lage ist schmal und ein wenig heller – das ausgetretene
+         Gras rings um ein Loch. Ohne diesen Ring verschwindet die Öffnung aus ein paar Feldern
+         Entfernung im Grün; mit ihm sieht man von Weitem, wo man hin will. */
+      const RAND = 0.09 / LOCH_FELD;
+      B.viereck(hoch(misch(k0, q0, 0)), hoch(misch(k1, q1, 0)),
+        hoch(misch(k1, q1, RAND)), hoch(misch(k0, q0, RAND)), '#a8dd6a', [0, 1, 0]);
+      for (let l = 0; l < LAGEN; l++) {
+        const ua = RAND + (1 - RAND) * l / LAGEN, ub = RAND + (1 - RAND) * (l + 1) / LAGEN;
+        B.viereck(hoch(misch(k0, q0, ua)), hoch(misch(k1, q1, ua)),
+          hoch(misch(k1, q1, ub)), hoch(misch(k0, q0, ub)), GRUEN, [0, 1, 0]);
+      }
+      // Der Becher: Wand nach innen gerichtet, oben ein heller Kragen wie bei einem echten Loch
+      const y0 = gl.hoehe(k0[0], k0[1]), y1 = gl.hoehe(k1[0], k1[1]);
+      const nachInnen = [hx * 2 - k0[0] - k1[0], 0, hz * 2 - k0[1] - k1[1]];
+      const KRAGEN_TIEF = 0.11;
+      B.viereck([k0[0], y0, k0[1]], [k1[0], y1, k1[1]],
+        [k1[0], y1 - KRAGEN_TIEF, k1[1]], [k0[0], y0 - KRAGEN_TIEF, k0[1]], KRAGEN, nachInnen);
+      B.viereck([k0[0], y0 - KRAGEN_TIEF, k0[1]], [k1[0], y1 - KRAGEN_TIEF, k1[1]],
+        [k1[0], y1 - TIEF, k1[1]], [k0[0], y0 - TIEF, k0[1]], DUNKEL, nachInnen);
+      const tiefe = Math.min(y0, y1) - TIEF;
+      B.flaeche([[hx, tiefe, hz], [k0[0], tiefe, k0[1]], [k1[0], tiefe, k1[1]]], BODEN, [0, 1, 0]);
     }
   }
 
@@ -668,6 +727,6 @@ const Welt3D = (() => {
     return e;
   }
 
-  return { ART, artVon, gelaende, gelaendeNetz, wasserNetz, felsenNetz, bandenNetz, burgNetz, dekoNetz,
+  return { ART, artVon, gelaende, gelaendeNetz, lochNetz, wasserNetz, felsenNetz, bandenNetz, burgNetz, dekoNetz,
     streuenNetz, uferNetz, fernNetz, himmelNetz, wolkenNetz, tuchNeu, tuchFrisch };
 })();

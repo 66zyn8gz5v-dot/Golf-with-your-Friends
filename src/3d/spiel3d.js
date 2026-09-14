@@ -249,6 +249,7 @@ const Golf3D = (() => {
        wenige Gitter daraus werden. */
     const B = Bauen.sammler();
     Welt3D.gelaendeNetz(B, gl, AUSSEN);
+    Welt3D.lochNetz(B, gl);
     Welt3D.felsenNetz(B, gl);
     Welt3D.bandenNetz(B, gl);
     const burgFahnen = Welt3D.burgNetz(B, gl, bahn.burg);
@@ -262,7 +263,7 @@ const Golf3D = (() => {
        sieht, wo man hin will – aus dreißig Feldern Entfernung wird aus einem zierlichen Mast ein
        Strich von zwei Bildpunkten, und dann sucht man. */
     const MAST = 1.9;
-    B.stelle(gl.lochFeld[0], lochH, gl.lochFeld[1], 0, 1, b => { Deko3D.loch(b); Deko3D.mast(b, MAST); });
+    B.stelle(gl.lochFeld[0], lochH, gl.lochFeld[1], 0, 1, b => Deko3D.mast(b, MAST));
     beweglich.fahnen.push({ x: gl.lochFeld[0], y: lochH + MAST, z: gl.lochFeld[1], h: 0.58, farbe: '#b63a30' });
     for (const f of burgFahnen) beweglich.fahnen.push(f);
     /* Zwei Abschlagsmarken, wie auf einem richtigen Platz. Vorher lag hier eine weiße Scheibe;
@@ -292,9 +293,12 @@ const Golf3D = (() => {
     const himmel = HS.fertig(zeichner).map(netz => ({ netz, licht: false, wirftSchatten: false, himmel: true }));
 
     /* Ball, Fahnentücher, Mühlenflügel und der Zielpfeil bekommen eigene, kleine Gitter. */
+    /* Der Ball: weiß, mit einem kleinen dunklen Zeichen an der Seite. Das Zeichen ist kein
+       Schmuck – ohne es sieht man nicht, dass der Ball rollt, sondern nur, dass er sich bewegt.
+       Oben aufgesetzt sah es aus wie eine Kirsche; an der Seite ist es ein Aufdruck. */
     const BA = Bauen.sammler();
     BA.kugel(Physik3D.BALL_R, 8, 12, '#fbf9f0');
-    BA.mit(M3.verschieben(0, Physik3D.BALL_R * 0.9, 0), b => b.kugel(Physik3D.BALL_R * 0.34, 4, 6, '#c8402f'));
+    BA.mit(M3.verschieben(Physik3D.BALL_R * 0.93, 0, 0), b => b.kugel(Physik3D.BALL_R * 0.26, 4, 6, '#b8342a'));
     const ballNetz = BA.fertig(zeichner)[0];
 
     const PF = Bauen.sammler();

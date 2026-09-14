@@ -162,10 +162,9 @@ koerperPruefen('Kugel', b => b.kugel(1, 8, 12, '#888'));
 koerperPruefen('Beulenkugel', b => b.kugel(1, 7, 9, '#888', 0.25, 42));
 koerperPruefen('Keil', b => b.keil(1, 0.2, 1, 2, '#888'));
 koerperPruefen('Felsen', b => Deko3D.fels(b, 0.5, 3));
-/* Der Becher im Boden ist mit Absicht nach innen gebaut – man schaut ja hinein. Sein weißer Rand
-   liegt dagegen obenauf und zeigt nach oben; ein Schwerpunkttest käme damit nicht zurecht. Also
-   wird der Rauminhalt geprüft, und der muss hier negativ sein: Ein Loch ist ein fehlender Körper. */
-bauwerkPruefen('Loch', b => Deko3D.loch(b), -1);
+/* Das Loch ist kein Bauteil mehr, sondern wird aus dem Gelände geschnitten (Welt3D.lochNetz) –
+   es braucht die Höhen der Bahn und lässt sich nicht für sich allein bauen. Geprüft wird es
+   stattdessen weiter unten zusammen mit dem Gelände. */
 
 bauwerkPruefen('Tanne', b => Deko3D.tanne(b, 2, 3));
 bauwerkPruefen('Laubbaum', b => Deko3D.laubbaum(b, 2, 5));
@@ -207,6 +206,29 @@ for (const welt of BAHNEN3D.WELTEN) {
     for (let i = 0; i < 600; i++) Physik3D.bewegen(probe, gl, null, 1 / 60);
     const gelaufen = Math.hypot(probe.x - gl.abschlag[0], probe.z - gl.abschlag[1]);
     if (gelaufen > 0.5) melde(name, `ein abgelegter Ball rollt vom Abschlag ${gelaufen.toFixed(2)} Felder weg`);
+    /* Ist über dem Loch wirklich ein Loch? Der Boden wird gebaut und nachgesehen, ob eines seiner
+       Dreiecke über der Mitte des Bechers liegt. Genau das war der Fehler, den Fynn gesehen hat:
+       Der Becher war da, aber die Wiese lag als geschlossene Decke darüber, und zu sehen war nur
+       ein Fahnenmast, der im Gras steckt. */
+    {
+      const boden = Bauen.sammler();
+      Welt3D.gelaendeNetz(boden, gl, 4);
+      const [hx, hz] = gl.lochFeld;
+      let drueber = 0;
+      for (const t of boden.rohfertig()) {
+        for (let k = 0; k < t.ix.length; k += 3) {
+          const p = j => { const o = t.ix[k + j] * 9; return [t.e[o], t.e[o + 2]]; };
+          const a = p(0), c = p(1), d = p(2);
+          if (Math.min(a[0], c[0], d[0]) > hx || Math.max(a[0], c[0], d[0]) < hx) continue;
+          if (Math.min(a[1], c[1], d[1]) > hz || Math.max(a[1], c[1], d[1]) < hz) continue;
+          const kreuz = (u, v, w) => (v[0] - u[0]) * (w[1] - u[1]) - (v[1] - u[1]) * (w[0] - u[0]);
+          const s1 = kreuz(a, c, [hx, hz]), s2 = kreuz(c, d, [hx, hz]), s3 = kreuz(d, a, [hx, hz]);
+          if ((s1 >= 0 && s2 >= 0 && s3 >= 0) || (s1 <= 0 && s2 <= 0 && s3 <= 0)) drueber++;
+        }
+      }
+      if (drueber) melde(name, `über dem Loch liegen ${drueber} Bodendreiecke – da ist kein Loch, sondern nur eine Fahne im Gras`);
+    }
+
     zeile.push(`  ${name.padEnd(34)} ${gl.B}x${gl.T} Par ${b.par}  Hang am Loch ${(amLoch * 100).toFixed(0)} %  Felsnadeln ${gl.felsen.length}, Banden ${gl.wand.length - gl.felsen.length}`);
   }
 }
