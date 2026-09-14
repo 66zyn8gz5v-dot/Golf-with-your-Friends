@@ -1,0 +1,329 @@
+/* Prüft Fantasy Golf 3D, ohne dass ein Browser dabei sein muss.
+ *
+ *   node tools/3d.mjs
+ *
+ * Geprüft wird viererlei, und jedes davon hat einen Anlass:
+ *
+ * 1. **Die Bahnen.** Karte rechteckig, Abschlag und Loch vorhanden, Loch vom Abschlag aus über
+ *    begehbare Felder erreichbar. Dasselbe, was tools/validate.mjs für das 2,5D-Spiel tut.
+ *
+ * 2. **Die Dreiecke.** Jeder Grundkörper wird gebaut und nachgerechnet, ob alle seine Dreiecke
+ *    nach außen zeigen. Der Grund: Ein verkehrt herum gebauter Körper ist nicht falsch
+ *    beleuchtet, sondern unsichtbar – man sieht ihn im Spiel schlicht nicht und sucht den Fehler
+ *    dann beim Licht. Hier fällt er in einer Zehntelsekunde auf.
+ *
+ * 3. **Das Gelände.** Höhen endlich, Abschlag flach genug zum Liegenbleiben, Loch nicht am Hang.
+ *    Ein Loch, aus dem der Ball von selbst herausrollt, merkt man sonst erst beim Spielen – und
+ *    dann hat man schon eine Viertelstunde lang gedacht, man könne nicht zielen.
+ *
+ * 4. **Die Spielbarkeit.** Ein einfacher Rechen-Golfer spielt jede Bahn: Er probiert bei jedem
+ *    Schlag ein Raster aus Richtungen und Kräften durch, rechnet jeden davon zu Ende und nimmt
+ *    den, der am nächsten ans Loch führt. Schafft er es nicht in fünfzehn Schlägen, stimmt mit
+ *    der Bahn etwas nicht. Das ist die wichtigste der vier Prüfungen: Sie fängt genau die Fehler,
+ *    die man beim Bauen einer Bahn wirklich macht – eine Mulde, aus der nichts mehr herauskommt,
+ *    ein Loch hinter einer Wand, ein Hang, der jeden Ball ins Wasser trägt.
+ *
+ * 5. **Das Par.** Der gründliche Golfer sagt nur, ob eine Bahn überhaupt zu schaffen ist – er
+ *    trifft jede Lücke, weil er dreihundertfünfzig Schläge durchrechnet und den besten nimmt.
+ *    Also spielt noch ein zweiter: einer, der aufs Loch zielt und sich dabei um ein paar Grad
+ *    und ein paar Prozent vertut, so wie ein Mensch. Zweihundert Runden davon geben einen
+ *    ehrlichen Mittelwert, und daran lässt sich das Par messen: Es soll ungefähr dort liegen,
+ *    wo dieser Spieler landet – ein gutes Par ist eines, das man mit einem guten Schlag erreicht
+ *    und mit einem schlechten verfehlt.
+ */
+import fs from 'node:fs';
+import vm from 'node:vm';
+
+const ctx = { console, Math, Date, JSON, performance };
+ctx.globalThis = ctx;
+vm.createContext(ctx);
+for (const f of ['mathe3d', 'bauen3d', 'deko3d', 'bahnen3d', 'welt3d', 'physik3d', 'karte3d']) {
+  vm.runInContext(fs.readFileSync(new URL(`../src/3d/${f}.js`, import.meta.url), 'utf8'), ctx);
+}
+/* Die Module erklären ihre Namen mit 'const'. Solche Namen leben zwar für alle Skripte derselben
+   Umgebung, hängen aber nicht am globalen Objekt – von außen kommt man nur heran, indem man sie
+   in der Umgebung selbst ausliest. Genauso macht es tools/validate.mjs. */
+const hole = name => vm.runInContext(name, ctx);
+const [M3, Bauen, Deko3D, BAHNEN3D, Welt3D, Physik3D, Karte3D] =
+  ['M3', 'Bauen', 'Deko3D', 'BAHNEN3D', 'Welt3D', 'Physik3D', 'Karte3D'].map(hole);
+
+const fehler = [];
+const zeile = [];
+const melde = (bahn, text) => fehler.push(`${bahn}: ${text}`);
+
+/* ---------- 1. Die Bahnen ---------- */
+/* Wasser zählt hier NICHT als begehbar. Der Ball rollt; er kann einen Bach nicht überqueren,
+   sondern versinkt darin. Eine Bahn, deren Loch nur über Wasser zu erreichen wäre, ist darum
+   unspielbar – auch wenn man auf der Karte scheinbar durchkommt. Genau dieser Fehler ist beim
+   Bauen von „Der Mühlbach" passiert: Die Landzunge in der Mitte war rundherum von Wasser umgeben
+   und damit eine Insel. */
+const BEGEHBAR = new Set(['#', ',', 's', 'T', 'H']);
+
+for (const welt of BAHNEN3D.WELTEN) {
+  if (welt.bald) continue;
+  for (const [nr, b] of welt.bahnen.entries()) {
+    const name = `${welt.name} ${nr + 1} „${b.name}"`;
+    const H = b.karte.length, B = b.karte[0].length;
+    b.karte.forEach((r, y) => { if (r.length !== B) melde(name, `Zeile ${y} ist ${r.length} lang statt ${B}`); });
+    for (const r of b.karte) for (const ch of r) if (!Welt3D.ART[ch]) melde(name, `unbekanntes Zeichen '${ch}' in der Karte`);
+
+    let abschlag = null, loch = null;
+    b.karte.forEach((r, y) => [...r].forEach((ch, x) => {
+      if (ch === 'T') { if (abschlag) melde(name, 'mehr als ein Abschlag'); abschlag = [x, y]; }
+      if (ch === 'H') { if (loch) melde(name, 'mehr als ein Loch'); loch = [x, y]; }
+    }));
+    if (!abschlag) { melde(name, 'kein Abschlag (T)'); continue; }
+    if (!loch) { melde(name, 'kein Loch (H)'); continue; }
+
+    // Flutfüllung vom Abschlag aus – kommt sie am Loch an?
+    const gesehen = new Set([abschlag.join(',')]);
+    const rand = [abschlag];
+    while (rand.length) {
+      const [x, y] = rand.pop();
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const nx = x + dx, ny = y + dy, k = nx + ',' + ny;
+        if (nx < 0 || ny < 0 || nx >= B || ny >= H || gesehen.has(k)) continue;
+        if (!BEGEHBAR.has(b.karte[ny][nx])) continue;
+        gesehen.add(k); rand.push([nx, ny]);
+      }
+    }
+    if (!gesehen.has(loch.join(','))) melde(name, 'das Loch ist vom Abschlag aus nicht erreichbar');
+
+    if (!b.par || b.par < 2 || b.par > 8) melde(name, `Par ${b.par} ist unglaubwürdig`);
+    if (!b.intro) melde(name, 'kein Einleitungstext');
+  }
+}
+
+/* ---------- 2. Die Dreiecke ---------- */
+const fakeZeichner = { netz: (e, ix) => ({ e, ix }) };
+
+/* Zwei Prüfungen, weil zwei verschiedene Dinge schiefgehen können.
+ *
+ * 'koerperPruefen' ist die scharfe: Sie gilt für einen einzelnen, geschlossenen Körper. Jedes
+ * Dreieck muss vom Schwerpunkt aus nach außen zeigen. Das findet auch ein einziges verdrehtes
+ * Dreieck unter zweihundert.
+ *
+ * 'bauwerkPruefen' ist die für Zusammengesetztes – eine Tanne aus vier Kegeln, ein Haus mit
+ * Fenstern, eine Burg aus achtzig Teilen. Dort hilft der Schwerpunkt nicht: Die Innenseite einer
+ * Fensterhöhle zeigt selbstverständlich zur Mitte des Hauses hin, und das ist richtig so. Geprüft
+ * wird darum das Rauminhaltszeichen: Der aus allen Dreiecken gerechnete Rauminhalt ist positiv,
+ * solange alle Körper richtig herum liegen, und wird negativ, sobald ein größerer verdreht ist.
+ * Das ist gröber, aber es schlägt genau bei dem Fehler an, der beim Bauen wirklich passiert –
+ * ein Körper, den man verkehrt herum zusammengesetzt hat und der deshalb im Spiel fehlt. */
+function dreiecke(tu) {
+  const b = Bauen.sammler();
+  tu(b);
+  const teile = b.rohfertig();
+  const raus = [];
+  for (const t of teile) for (let k = 0; k < t.ix.length; k += 3) {
+    const p = j => { const o = t.ix[k + j] * 9; return [t.e[o], t.e[o + 1], t.e[o + 2]]; };
+    raus.push([p(0), p(1), p(2)]);
+  }
+  return raus;
+}
+const flaechenNormale = ([a, c, d]) => {
+  const ux = c[0] - a[0], uy = c[1] - a[1], uz = c[2] - a[2];
+  const vx = d[0] - a[0], vy = d[1] - a[1], vz = d[2] - a[2];
+  return [uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx];
+};
+
+function koerperPruefen(name, tu, innenGemeint = false) {
+  const tris = dreiecke(tu);
+  if (!tris.length) { melde(name, 'baut gar nichts'); return; }
+  const mitte = [0, 0, 0];
+  for (const t of tris) for (const p of t) { mitte[0] += p[0] / 3; mitte[1] += p[1] / 3; mitte[2] += p[2] / 3; }
+  for (let i = 0; i < 3; i++) mitte[i] /= tris.length;
+  let falsch = 0, entartet = 0;
+  for (const t of tris) {
+    const n = flaechenNormale(t);
+    if (Math.hypot(...n) < 1e-9) { entartet++; continue; }
+    const s = [0, 1, 2].map(i => (t[0][i] + t[1][i] + t[2][i]) / 3 - mitte[i]);
+    const d = n[0] * s[0] + n[1] * s[1] + n[2] * s[2];
+    if (innenGemeint ? d > 1e-9 : d < -1e-9) falsch++;
+  }
+  if (falsch) melde(name, `${falsch} von ${tris.length} Dreiecken zeigen nach ${innenGemeint ? 'außen' : 'innen'}`);
+  zeile.push(`  ${name.padEnd(18)} ${String(tris.length).padStart(5)} Dreiecke${entartet ? ` (${entartet} ohne Fläche)` : ''}`);
+}
+
+function bauwerkPruefen(name, tu, vorzeichen = 1) {
+  const tris = dreiecke(tu);
+  if (!tris.length) { melde(name, 'baut gar nichts'); return; }
+  let v = 0;
+  for (const t of tris) { const n = flaechenNormale(t); v += (t[0][0] * n[0] + t[0][1] * n[1] + t[0][2] * n[2]) / 6; }
+  if (!(v * vorzeichen > 0.005)) melde(name, `Rauminhalt ${v.toFixed(3)} – da liegt mindestens ein Körper verkehrt herum`);
+  zeile.push(`  ${name.padEnd(18)} ${String(tris.length).padStart(5)} Dreiecke, Rauminhalt ${v.toFixed(2)}`);
+}
+
+koerperPruefen('Quader', b => b.kasten(1, 1, 1, '#888'));
+koerperPruefen('Walze', b => b.walze(0.5, 0.5, 2, 12, '#888'));
+koerperPruefen('Kegel', b => b.walze(0.6, 0, 1.5, 10, '#888'));
+koerperPruefen('Kegelstumpf', b => b.walze(0.6, 0.3, 1.2, 10, '#888'));
+koerperPruefen('Kugel', b => b.kugel(1, 8, 12, '#888'));
+koerperPruefen('Beulenkugel', b => b.kugel(1, 7, 9, '#888', 0.25, 42));
+koerperPruefen('Keil', b => b.keil(1, 0.2, 1, 2, '#888'));
+koerperPruefen('Felsen', b => Deko3D.fels(b, 0.5, 3));
+/* Der Becher im Boden ist mit Absicht nach innen gebaut – man schaut ja hinein. Sein weißer Rand
+   liegt dagegen obenauf und zeigt nach oben; ein Schwerpunkttest käme damit nicht zurecht. Also
+   wird der Rauminhalt geprüft, und der muss hier negativ sein: Ein Loch ist ein fehlender Körper. */
+bauwerkPruefen('Loch', b => Deko3D.loch(b), -1);
+
+bauwerkPruefen('Tanne', b => Deko3D.tanne(b, 2, 3));
+bauwerkPruefen('Laubbaum', b => Deko3D.laubbaum(b, 2, 5));
+bauwerkPruefen('Felsgruppe', b => Deko3D.felsgruppe(b, 0.7, 9));
+bauwerkPruefen('Haus', b => Deko3D.haus(b));
+bauwerkPruefen('Turm', b => Deko3D.turm(b, 0.5, 3));
+bauwerkPruefen('Mühle', b => Deko3D.muehle(b));
+bauwerkPruefen('Mühlenflügel', b => Deko3D.muehlenfluegel(b));
+bauwerkPruefen('Wolke', b => Deko3D.wolke(b, 1, 4));
+bauwerkPruefen('Burg', b => Deko3D.burg(b, 1));
+bauwerkPruefen('Brücke', b => { const gl = Welt3D.gelaende(BAHNEN3D.WIESE.bahnen[0]); Welt3D.dekoNetz(b, gl, { fahnen: [], muehlen: [] }); });
+
+/* ---------- 3. Das Gelände ---------- */
+const gelaende = [];
+for (const welt of BAHNEN3D.WELTEN) {
+  if (welt.bald) continue;
+  for (const [nr, b] of welt.bahnen.entries()) {
+    const name = `${welt.name} ${nr + 1} „${b.name}"`;
+    const gl = Welt3D.gelaende(b);
+    gelaende.push({ name, gl, bahn: b, welt, nr });
+    let schlimmste = 0;
+    for (let z = -2; z < gl.T + 2; z += 0.5) for (let x = -2; x < gl.B + 2; x += 0.5) {
+      const h = gl.hoehe(x, z);
+      if (!Number.isFinite(h)) { melde(name, `die Höhe bei ${x}/${z} ist keine Zahl`); z = 1e9; break; }
+      if (Math.abs(h) > 40) melde(name, `die Höhe bei ${x}/${z} ist ${h.toFixed(1)} – das ist keine Wiese mehr`);
+    }
+    const n = [0, 0, 0];
+    const neigungBei = (x, z) => { gl.neigung(x, z, n); return Math.hypot(n[0], n[2]) / Math.max(n[1], 1e-6); };
+    const amAbschlag = neigungBei(gl.abschlag[0], gl.abschlag[1]);
+    const amLoch = neigungBei(gl.lochFeld[0], gl.lochFeld[1]);
+    if (amAbschlag > 0.16) melde(name, `der Abschlag hängt mit ${(amAbschlag * 100).toFixed(0)} % – dort bleibt kein Ball liegen`);
+    if (amLoch > 0.20) melde(name, `das Loch liegt an einem Hang von ${(amLoch * 100).toFixed(0)} % – der Ball rollt heraus`);
+    schlimmste = Math.max(amAbschlag, amLoch);
+
+    /* Bleibt ein abgelegter Ball auf dem Abschlag wirklich liegen? Die Neigung allein sagt es
+       nicht sicher, weil auch die Reibung des Untergrunds mitspielt. Also wird es ausprobiert. */
+    const probe = Physik3D.ball(gl, gl.abschlag[0], gl.abschlag[1]);
+    probe.ruht = false;
+    for (let i = 0; i < 600; i++) Physik3D.bewegen(probe, gl, null, 1 / 60);
+    const gelaufen = Math.hypot(probe.x - gl.abschlag[0], probe.z - gl.abschlag[1]);
+    if (gelaufen > 0.5) melde(name, `ein abgelegter Ball rollt vom Abschlag ${gelaufen.toFixed(2)} Felder weg`);
+    zeile.push(`  ${name.padEnd(34)} ${gl.B}x${gl.T} Par ${b.par}  Hang am Loch ${(amLoch * 100).toFixed(0)} %  Felsen ${gl.felsen.length}`);
+  }
+}
+
+/* ---------- 4. Die Spielbarkeit ---------- */
+
+/* Ein Schlag wird vollständig durchgerechnet: Der Ball rollt, bis er ruht oder bis die Geduld
+   zu Ende ist. Zurück kommt, wo er liegen geblieben ist und was unterwegs passiert ist. */
+function schlagRechnen(gl, loch, startX, startZ, winkel, kraft) {
+  const b = Physik3D.ball(gl, startX, startZ);
+  Physik3D.schlag(b, Math.sin(winkel), Math.cos(winkel), kraft);
+  let t = 0;
+  while (!b.ruht && t < 30) { Physik3D.bewegen(b, gl, loch, 1 / 120); t += 1 / 120; }
+  return b;
+}
+
+for (const { name, gl, bahn } of gelaende) {
+  const loch = gl.lochFeld;
+  let x = gl.abschlag[0], z = gl.abschlag[1];
+  let schlaege = 0, drin = false, letzterOrt = [x, z];
+  const spur = [];
+
+  while (schlaege < 15 && !drin) {
+    const zumLoch = Math.atan2(loch[0] - x, loch[1] - z);
+    let bestes = null;
+    /* Ein Raster aus 35 Richtungen (gut 70 Grad nach jeder Seite) und 10 Kräften. Das ist kein
+       kluger Golfer, aber ein gründlicher – und genau das soll er sein: Findet er keinen Weg,
+       findet ihn auch niemand. */
+    for (let w = -17; w <= 17; w++) for (let k = 1; k <= 10; k++) {
+      const winkel = zumLoch + w * 0.075;
+      const kraft = k / 10;
+      const b = schlagRechnen(gl, loch, x, z, winkel, kraft);
+      if (b.ein) { bestes = { b, winkel, kraft, d: -1 }; w = 99; break; }
+      if (b.wasser || gl.art(b.x, b.z).aus) continue;
+      const d = Math.hypot(b.x - loch[0], b.z - loch[1]);
+      if (!bestes || d < bestes.d) bestes = { b, winkel, kraft, d };
+    }
+    schlaege++;
+    if (!bestes) {
+      /* Jeder mögliche Schlag endet im Wasser oder im Aus – das ist eine kaputte Bahn. */
+      melde(name, `nach ${schlaege - 1} Schlägen führt kein einziger Schlag mehr auf spielbaren Grund`);
+      break;
+    }
+    if (bestes.b.ein) { drin = true; spur.push(`${schlaege}. eingelocht`); break; }
+    const fortschritt = Math.hypot(x - loch[0], z - loch[1]) - bestes.d;
+    x = bestes.b.x; z = bestes.b.z;
+    spur.push(`${schlaege}. ${bestes.d.toFixed(1)} Felder`);
+    /* Zwei Schläge nacheinander ohne jeden Fortschritt heißt: Der Ball steckt fest. */
+    if (fortschritt < 0.02 && schlaege > 2 && Math.hypot(x - letzterOrt[0], z - letzterOrt[1]) < 0.05) {
+      melde(name, `der Ball kommt bei ${x.toFixed(1)}/${z.toFixed(1)} nicht mehr weiter`);
+      break;
+    }
+    letzterOrt = [x, z];
+  }
+  if (!drin) melde(name, `in 15 Schlägen nicht eingelocht (${spur.slice(-4).join(', ')})`);
+  else zeile.push(`  ${name.padEnd(34)} eingelocht in ${schlaege} (Par ${bahn.par}): ${spur.join(', ')}`);
+}
+
+/* ---------- 5. Das Par ----------
+   Ein Spieler, der zielt und sich vertut. Er nimmt die Luftlinie zum Loch, schätzt die Kraft nach
+   der Entfernung und legt auf beides einen Fehler. Wasser und Aus kosten ihn einen Strafschlag,
+   genau wie im Spiel. */
+function zufallsRunde(gl, loch, wuerfel) {
+  let x = gl.abschlag[0], z = gl.abschlag[1], schlaege = 0, letzterOrt = [x, z];
+  while (schlaege < 20) {
+    const d = Math.hypot(loch[0] - x, loch[1] - z);
+    const winkel = Math.atan2(loch[0] - x, loch[1] - z) + (wuerfel() - 0.5) * 0.20;
+    /* Kraft aus der Entfernung: voller Schlag sind rund 27 Felder, und die Weite wächst ungefähr
+       mit dem Quadrat der Kraft. Dazu ein Fehler von gut einem Zehntel. */
+    const kraft = Math.min(1, Math.sqrt(Math.min(d, 27) / 27) * (0.92 + wuerfel() * 0.22));
+    const b = schlagRechnen(gl, loch, x, z, winkel, kraft);
+    schlaege++;
+    if (b.ein) return schlaege;
+    if (b.wasser || gl.art(b.x, b.z).aus) { schlaege++; x = b.sicher[0]; z = b.sicher[1]; letzterOrt = [x, z]; continue; }
+    letzterOrt = [x, z]; x = b.x; z = b.z;
+  }
+  return 20;
+}
+
+for (const { name, gl, bahn } of gelaende) {
+  const wuerfel = M3.zufall(20260914);
+  const RUNDEN = 200;
+  let summe = 0, schlimmste = 0, imPar = 0;
+  for (let i = 0; i < RUNDEN; i++) {
+    const n = zufallsRunde(gl, gl.lochFeld, wuerfel);
+    summe += n; schlimmste = Math.max(schlimmste, n);
+    if (n <= bahn.par) imPar++;
+  }
+  const mittel = summe / RUNDEN;
+  zeile.push(`  ${name.padEnd(34)} Zufallsspieler: im Mittel ${mittel.toFixed(1)} Schläge, ` +
+    `${Math.round(imPar / RUNDEN * 100)} % in Par ${bahn.par}, schlechteste Runde ${schlimmste}`);
+  if (mittel > bahn.par + 2.5) melde(name, `Par ${bahn.par} ist zu knapp – ein Spieler mit kleinen Fehlern braucht im Mittel ${mittel.toFixed(1)} Schläge`);
+  if (mittel < bahn.par - 1.2) melde(name, `Par ${bahn.par} ist zu großzügig – ein Spieler mit kleinen Fehlern braucht im Mittel nur ${mittel.toFixed(1)} Schläge`);
+  if (schlimmste >= 20) melde(name, 'eine von zweihundert Runden kam in zwanzig Schlägen nicht ins Loch');
+}
+
+/* ---------- 6. Die Weltkarte ---------- */
+for (const l of Karte3D.LAND) {
+  if (!l.id) continue;
+  if (!BAHNEN3D.WELTEN.some(w => w.id === l.id)) melde('Weltkarte', `der Landstrich '${l.id}' gehört zu keiner Welt`);
+  if (!Karte3D.BIOM[l.biom]) melde('Weltkarte', `'${l.id}' hat das unbekannte Biom '${l.biom}'`);
+}
+for (const w of BAHNEN3D.WELTEN) {
+  if (!Karte3D.LAND.some(l => l.id === w.id)) melde('Weltkarte', `die Welt '${w.id}' liegt auf keinem Landstrich`);
+  if (!w.bald && (!w.bahnen || !w.bahnen.length)) melde('Weltkarte', `die Welt '${w.id}' gilt als offen, hat aber keine Bahnen`);
+}
+/* Jede Welt muss über Wasser liegen – ein Wegweiser im Meer wäre schlecht zu erreichen. */
+for (const l of Karte3D.LAND) {
+  if (!l.id) continue;
+  const h = Karte3D.hoehe(l.x, l.z + l.r * 0.34);
+  if (h < 0.2) melde('Weltkarte', `der Wegweiser von '${l.id}' stünde bei Höhe ${h.toFixed(2)} im Wasser`);
+}
+
+/* ---------- Ergebnis ---------- */
+console.log(zeile.join('\n'));
+if (fehler.length) {
+  console.error('\n' + fehler.map(f => '  FEHLER ' + f).join('\n'));
+  process.exit(1);
+}
+console.log(`\nok – ${gelaende.length} Bahnen, ${BAHNEN3D.WELTEN.length} Welten auf der Karte, alle Körper richtig herum.`);

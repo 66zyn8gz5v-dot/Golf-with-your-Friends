@@ -1,0 +1,551 @@
+/* Aus einer Bahnbeschreibung wird eine Landschaft.
+
+   Hier läuft alles zusammen: das Textfeld mit den Spielfeldern, die Hügelliste, die Bauteile aus
+   deko3d.js und der Zeichner. Heraus kommt ein Gebilde, das zwei Dinge kann – sich zeichnen und
+   Fragen beantworten: Wie hoch ist der Boden hier? Wie ist er geneigt? Was für ein Untergrund ist
+   das? Die Kugelrechnung in physik3d.js fragt nur diese drei Dinge; sie weiß nichts von Karten
+   und Hügeln, und genau deshalb bleibt sie kurz.
+
+   ---- Wie die Landschaft entsteht ----
+
+   **Die Höhe ist eine Formel, keine Tabelle.** Grundhöhe, plus für jeden Hügel eine Glocke, plus
+   ein feines Rauschen, minus zwei Absenkungen: eine am Rand der Bahn (damit die Spielfläche als
+   Terrasse in der Wiese liegt und nicht als aufgeklebtes Rechteck) und eine im Wasser (damit der
+   Bach ein Bett hat). Eine Formel hat einen großen Vorteil gegenüber einer Tabelle: Man kann sie
+   an jeder beliebigen Stelle fragen, nicht nur an den Gitterpunkten – und der Ball rollt nun
+   einmal nicht auf Gitterpunkten.
+
+   **Die beiden Absenkungen kommen aus einem Abstandsfeld.** Für jedes Feld wird einmal
+   ausgerechnet, wie weit es von der nächsten Spielfläche entfernt ist (und wie weit vom nächsten
+   trockenen Feld). Dazwischen wird weich abgelesen. Das ist derselbe Gedanke wie bei der
+   gerechneten Küste der 2,5D-Weltkarte: Man sagt, wo etwas liegt, und die Form folgt daraus.
+
+   **Felsen sind keine Höhe, sondern Klötze.** Ein Fels im Höhenfeld wäre eine senkrechte Wand in
+   einer Formel – dort ist die Neigung unendlich, und die Kugelrechnung bekäme Unsinn zu essen.
+   Darum steht jeder Fels als eigener Klotz daneben, und der Ball prallt an seinen vier Seiten ab
+   wie an einer Bande. Das rollt sauber und sieht genauso aus. */
+const Welt3D = (() => {
+
+  /* ---------- Untergründe ----------
+     Zwei Zahlen bremsen den Ball, und beide braucht es:
+
+     'zaeh' wirkt mit der Geschwindigkeit – ein schneller Ball verliert viel, ein langsamer wenig.
+     Das gibt den langen, weich auslaufenden Roll, den man vom Golf kennt.
+
+     'reibung' wirkt gleichmäßig, egal wie schnell. Sie bringt den Ball am Ende wirklich zum
+     Stehen (mit 'zaeh' allein würde er unendlich lange immer langsamer werden) und entscheidet
+     zugleich, ab welchem Gefälle ein liegender Ball von selbst anrollt: genau dann, wenn die
+     Hangkraft größer ist als sie. Auf Fairway sind das rund sechs Prozent Gefälle – flach genug,
+     dass eine Mulde um das Loch wirkt, steil genug, dass nichts von allein davonläuft.
+
+     Geeicht ist es so: **Voller Schlag auf ebenem Fairway = gut 27 Felder.** Das ist etwas mehr
+     als die längste Bahn, man kann also immer übers Ziel hinausschlagen. Ein halber Schlag kommt
+     rund elf Felder weit – der Kraftbalken ist damit auf seiner ganzen Länge brauchbar und nicht
+     nur im ersten Viertel. */
+  const ART = {
+    '#': { name: 'Fairway', zaeh: 0.38, reibung: 0.40, gemaeht: 1, farbe: '#79c247', farbe2: '#6bb33d' },
+    'T': { name: 'Abschlag', zaeh: 0.38, reibung: 0.40, gemaeht: 1, farbe: '#8ed158', farbe2: '#80c34c' },
+    'H': { name: 'Grün', zaeh: 0.33, reibung: 0.34, gemaeht: 0.5, farbe: '#8ad455', farbe2: '#7cc849' },
+    ',': { name: 'Rough', zaeh: 1.5, reibung: 1.6, farbe: '#4e8f33', farbe2: '#447f2c', rau: 0.055 },
+    's': { name: 'Sand', zaeh: 3.0, reibung: 5.0, farbe: '#e6d3a0', farbe2: '#d8c28c', rau: 0.02 },
+    'w': { name: 'Wasser', zaeh: 1.2, reibung: 1.2, wasser: true, farbe: '#3a7a52', farbe2: '#33694a' },
+    'x': { name: 'Fels', zaeh: 0.6, reibung: 0.6, wand: true, farbe: '#6f9a45', farbe2: '#638c3e' },
+    '.': { name: 'Wiese', zaeh: 1.8, reibung: 2.2, aus: true, farbe: '#5fa03a', farbe2: '#549132' },
+  };
+  const artVon = ch => ART[ch] || ART['.'];
+
+  /* ---------- Abstandsfeld ----------
+     Zwei Durchgänge über das Gitter, vorwärts und rückwärts; jede Zelle nimmt den kleinsten Wert
+     ihrer schon fertigen Nachbarn plus deren Abstand. Das ist die übliche Näherung und für
+     unsere Zwecke genau genug – auf den Zehntelfeld kommt es nicht an, weil der Wert ohnehin nur
+     eine weiche Böschung steuert. */
+  function abstandsFeld(drin, breite, tiefe, rand) {
+    const B = breite + rand * 2, T = tiefe + rand * 2, GROSS = 1e6;
+    const d = new Float32Array(B * T).fill(GROSS);
+    const bei = (i, j) => d[j * B + i];
+    for (let j = 0; j < T; j++) for (let i = 0; i < B; i++) if (drin(i - rand, j - rand)) d[j * B + i] = 0;
+    const S = Math.SQRT2;
+    for (let j = 0; j < T; j++) for (let i = 0; i < B; i++) {
+      let v = bei(i, j);
+      if (i > 0) v = Math.min(v, bei(i - 1, j) + 1);
+      if (j > 0) v = Math.min(v, bei(i, j - 1) + 1);
+      if (i > 0 && j > 0) v = Math.min(v, bei(i - 1, j - 1) + S);
+      if (i < B - 1 && j > 0) v = Math.min(v, bei(i + 1, j - 1) + S);
+      d[j * B + i] = v;
+    }
+    for (let j = T - 1; j >= 0; j--) for (let i = B - 1; i >= 0; i--) {
+      let v = bei(i, j);
+      if (i < B - 1) v = Math.min(v, bei(i + 1, j) + 1);
+      if (j < T - 1) v = Math.min(v, bei(i, j + 1) + 1);
+      if (i < B - 1 && j < T - 1) v = Math.min(v, bei(i + 1, j + 1) + S);
+      if (i > 0 && j < T - 1) v = Math.min(v, bei(i - 1, j + 1) + S);
+      d[j * B + i] = v;
+    }
+    /* Abgelesen wird an beliebiger Stelle, weich zwischen den Feldmitten. Außerhalb des gerechneten
+       Bereichs gilt der Randwert – dort ist ohnehin längst alles weit weg. */
+    const klemm = (v, a, b) => v < a ? a : v > b ? b : v;
+    return (x, z) => {
+      const fx = klemm(x + rand - 0.5, 0, B - 1.001), fz = klemm(z + rand - 0.5, 0, T - 1.001);
+      const i = Math.floor(fx), j = Math.floor(fz), ux = fx - i, uz = fz - j;
+      const a = bei(i, j) + (bei(i + 1, j) - bei(i, j)) * ux;
+      const b = bei(i, j + 1) + (bei(i + 1, j + 1) - bei(i, j + 1)) * ux;
+      return a + (b - a) * uz;
+    };
+  }
+
+  /* ---------- Das Gelände einer Bahn ----------
+     Nur Zahlen, keine Dreiecke. Diesen Teil braucht auch das Prüfskript, das ohne Browser
+     nachrechnet, ob jede Bahn spielbar ist. */
+  function gelaende(bahn) {
+    const karte = bahn.karte, T = karte.length, B = karte[0].length;
+    const g = bahn.gelaende || {};
+    const huegel = g.huegel || [], grund = g.grund || 0, welle = g.welle || 0;
+    const rausch = M3.rauschen(9001 + (bahn.name || '').length * 37);
+
+    /* Die Abfrage steht bewusst verneint (!(ix >= 0) statt ix < 0): So fällt auch eine Stelle
+       heraus, die gar keine Zahl ist. Das kann nach einem Rechenfehler anderswo passieren, und
+       dann soll die Bahn leer aussehen und nicht die ganze Seite stehen bleiben. */
+    const zeichen = (ix, iz) => (!(ix >= 0) || !(iz >= 0) || ix >= B || iz >= T) ? '.' : karte[iz][ix];
+    const zeichenAn = (x, z) => zeichen(Math.floor(x), Math.floor(z));
+
+    const spielbar = (ix, iz) => { const c = zeichen(ix, iz); return c !== '.' && c !== 'x'; };
+    const trocken = (ix, iz) => zeichen(ix, iz) !== 'w';
+
+    const RAND = 22;
+    const zumRand = abstandsFeld(spielbar, B, T, RAND);
+    const zumUfer = abstandsFeld(trocken, B, T, 2);
+
+    /* Böschung: Von einem halben Feld hinter der Spielfläche fällt der Boden über zweieinhalb
+       Felder um SENKE ab. Steiler sähe nach Tortenstück aus, flacher nach Fußmatte. */
+    const SENKE = 1.35, WASSERTIEFE = 0.5;
+    const s = M3.weich;
+    const stufe = (v, a, b) => s(M3.klemm((v - a) / (b - a), 0, 1));
+
+    function hoehe(x, z) {
+      let y = grund;
+      for (const h of huegel) {
+        const dx = x - h.x, dz = z - h.z, q = (dx * dx + dz * dz) / (h.r * h.r);
+        if (q < 1) { const u = 1 - q; y += h.h * u * u; }
+      }
+      if (welle) y += welle * (rausch(x * 0.33, z * 0.33) + rausch(x * 0.9, z * 0.9) * 0.4);
+      y -= SENKE * stufe(zumRand(x, z), 0.45, 3.0);
+      y -= WASSERTIEFE * stufe(zumUfer(x, z), 0.0, 1.3);
+      return y;
+    }
+
+    /* Die Neigung wird gemessen, nicht hergeleitet: vier Stützstellen ringsum, daraus der
+       Gradient. Das ist unempfindlich dagegen, dass oben Glocken, Rauschen und zwei Abstandsfelder
+       zusammenkommen – eine abgeleitete Formel müsste bei jeder Änderung mit nachgezogen werden,
+       diese hier nicht. */
+    const EPS = 0.06;
+    function neigung(x, z, raus) {
+      const hx = (hoehe(x + EPS, z) - hoehe(x - EPS, z)) / (2 * EPS);
+      const hz = (hoehe(x, z + EPS) - hoehe(x, z - EPS)) / (2 * EPS);
+      const l = Math.hypot(hx, 1, hz);
+      raus[0] = -hx / l; raus[1] = 1 / l; raus[2] = -hz / l;
+      return raus;
+    }
+
+    /* Alle Felsklötze der Bahn als Rechtecke, damit die Kugelrechnung sie ohne Kartensuche
+       abklappern kann. Es sind nie viele. */
+    const felsen = [];
+    for (let iz = 0; iz < T; iz++) for (let ix = 0; ix < B; ix++) if (zeichen(ix, iz) === 'x') {
+      felsen.push({ x0: ix, z0: iz, x1: ix + 1, z1: iz + 1, oben: hoehe(ix + 0.5, iz + 0.5) + 0.95 });
+    }
+
+    const finde = ch => {
+      for (let iz = 0; iz < T; iz++) { const ix = karte[iz].indexOf(ch); if (ix >= 0) return [ix + 0.5, iz + 0.5]; }
+      return null;
+    };
+
+    return { bahn, B, T, zeichen, zeichenAn, art: (x, z) => artVon(zeichenAn(x, z)),
+      hoehe, neigung, felsen, zumRand, RAND,
+      abschlag: finde('T'), lochFeld: finde('H') };
+  }
+
+  /* ---------- Die Landschaft als Dreiecke ---------- */
+
+  /* Das Gelände wird in halben Feldern vergittert – fein genug, dass Hügel rund aussehen, grob
+     genug, dass ein Telefon es zweimal je Bild zeichnen kann (einmal für den Schatten). Die Farbe
+     kommt vom Feld, in dem die Mitte des Vierecks liegt; das Rauschen darauf nimmt der Wiese das
+     Gleichmäßige, das sie sonst wie Filz aussehen lässt. */
+  function gelaendeNetz(B, gl, aussenRand) {
+    const S = 0.5;
+    const x0 = -aussenRand, x1 = gl.B + aussenRand, z0 = -aussenRand, z1 = gl.T + aussenRand;
+    const nx = Math.round((x1 - x0) / S), nz = Math.round((z1 - z0) / S);
+    const rausch = M3.rauschen(4242);
+
+    /* Höhen und Normalen einmal vorrechnen: Jeder Gitterpunkt gehört zu vier Vierecken, und
+       hoehe() ist wegen der Hügelschleife und zweier Abstandsfelder nicht geschenkt. */
+    const hh = new Float32Array((nx + 1) * (nz + 1));
+    for (let j = 0; j <= nz; j++) for (let i = 0; i <= nx; i++) hh[j * (nx + 1) + i] = gl.hoehe(x0 + i * S, z0 + j * S);
+    const H = (i, j) => hh[j * (nx + 1) + i];
+
+    const p = (i, j) => [x0 + i * S, H(i, j), z0 + j * S];
+    for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
+      const mx = x0 + (i + 0.5) * S, mz = z0 + (j + 0.5) * S;
+      const a = gl.art(mx, mz);
+      /* Unter Wasser liegt Bachgrund, kein Gras – die Farbe dafür steckt schon in ART['w'].
+
+         Auf den gemähten Flächen laufen Mähstreifen quer zur Bahn: zwei Felder hell, zwei Felder
+         dunkel. Vorher wechselte die Farbe von Viereck zu Viereck, und das ergab ein Schachbrett,
+         das über die ganze Wiese schrie. Streifen dagegen erklären sich von selbst – jeder hat so
+         etwas schon auf einem Rasen gesehen – und sie zeigen nebenbei, wo die kurz geschnittene
+         Fläche aufhört. */
+      let f = Bauen.farbe(a.gemaeht && Math.floor(mz / 2) % 2 === 0 ? a.farbe2 : a.farbe);
+      const v = 1 + rausch(mx * 0.7, mz * 0.7) * (a.gemaeht ? 0.03 : 0.09)
+                  + rausch(mx * 2.3, mz * 2.3) * (a.gemaeht ? 0.015 : 0.05);
+      f = [f[0] * v, f[1] * v, f[2] * v];
+      /* Das Viereck wird über die kürzere Diagonale geteilt. Über die falsche geteilt bekommt ein
+         Hügelkamm eine Delle und eine Mulde einen Grat – auf einer Golfbahn sieht man das sofort,
+         weil der Ball dort abknickt. */
+      const A = p(i, j), Bp = p(i + 1, j), C = p(i + 1, j + 1), D = p(i, j + 1);
+      if (Math.abs(A[1] - C[1]) <= Math.abs(Bp[1] - D[1])) { B.dreieck(A, D, C, f); B.dreieck(A, C, Bp, f); }
+      else { B.dreieck(A, D, Bp, f); B.dreieck(D, C, Bp, f); }
+    }
+  }
+
+  /* Die Wasserfläche liegt als eigene, durchscheinende Decke über dem Bachbett – ein Feld mehr
+     nach außen, damit sie unter dem Ufer verschwindet statt an ihm abzubrechen. */
+  function wasserNetz(B, gl) {
+    const S = 0.5;
+    const felder = [];
+    for (let iz = -1; iz <= gl.T; iz++) for (let ix = -1; ix <= gl.B; ix++) {
+      if (gl.zeichen(ix, iz) === 'w') felder.push([ix, iz]);
+    }
+    if (!felder.length) return false;
+    /* Der Spiegel liegt auf der Höhe der Uferkante – gerechnet als die Höhe, die das Gelände ohne
+       die Wasserabsenkung hätte. Näherungsweise ist das die Höhe am Ufer; genommen wird der
+       höchste Randwert ringsum, damit nirgends trockener Bachgrund stehen bleibt. */
+    let spiegel = -1e9;
+    for (const [ix, iz] of felder) for (const [dx, dz] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+      if (gl.zeichen(ix + dx, iz + dz) !== 'w') spiegel = Math.max(spiegel, gl.hoehe(ix + 0.5 + dx * 0.9, iz + 0.5 + dz * 0.9));
+    }
+    if (spiegel < -1e8) spiegel = 0;
+    spiegel -= 0.10;
+    const drin = new Set(felder.map(([a, b]) => a + ':' + b));
+    for (const [ix, iz] of felder) {
+      for (let j = 0; j < 1 / S; j++) for (let i = 0; i < 1 / S; i++) {
+        const ax = ix + i * S, az = iz + j * S;
+        // Über den Rand hinaus verbreitern, wo das Nachbarfeld kein Wasser ist
+        const w0 = drin.has((ix - 1) + ':' + iz) || i > 0 ? 0 : -0.35;
+        const w1 = drin.has((ix + 1) + ':' + iz) || i < 1 / S - 1 ? 0 : 0.35;
+        const t0 = drin.has(ix + ':' + (iz - 1)) || j > 0 ? 0 : -0.35;
+        const t1 = drin.has(ix + ':' + (iz + 1)) || j < 1 / S - 1 ? 0 : 0.35;
+        B.viereck([ax + w0, spiegel, az + t0], [ax + S + w1, spiegel, az + t0],
+          [ax + S + w1, spiegel, az + S + t1], [ax + w0, spiegel, az + S + t1], '#2f86c4', [0, 1, 0]);
+      }
+    }
+    return spiegel;
+  }
+
+  /* ---------- Was herumsteht ---------- */
+
+  /* Ein Fels ist zum Abprallen da, also muss sein Fuß genau das Feld ausfüllen, das die
+     Kugelrechnung als Wand kennt – sonst prallt der Ball an Luft ab oder rollt in den Stein.
+     Darum bleibt im Kern ein Klotz. Damit er nicht wie ein Betonblock aussieht, wird er nach oben
+     schmaler, bekommt eine warme Steinfarbe und wird von Brocken und Grasbüscheln überwachsen,
+     die seine Kanten verdecken. Die Brocken sitzen nur oben; unten bleibt die Bande senkrecht. */
+  function felsenNetz(B, gl) {
+    for (const f of gl.felsen) {
+      const mx = (f.x0 + f.x1) / 2, mz = (f.z0 + f.z1) / 2;
+      const saat = Math.round(Math.abs(mx) * 131 + Math.abs(mz) * 17);
+      const r = M3.zufall(saat + 5);
+      const unten = gl.hoehe(mx, mz) - 0.5;
+      const hoch = f.oben - unten;
+      // Der Kern: unten feldfüllend, oben eingezogen
+      B.mit(M3.verschieben(mx, unten, mz), b => {
+        const u = 0.49, o = 0.33 + r() * 0.06;
+        for (const [ax, az] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          const qx = -az, qz = ax;
+          b.viereck([ax * u - qx * u, 0, az * u - qz * u], [ax * u + qx * u, 0, az * u + qz * u],
+            [ax * o + qx * o, hoch, az * o + qz * o], [ax * o - qx * o, hoch, az * o - qz * o],
+            '#9b9184', [ax, 0.25, az]);
+        }
+        b.viereck([-o, hoch, -o], [o, hoch, -o], [o, hoch, o], [-o, hoch, o], '#aaa193', [0, 1, 0]);
+      });
+      // Brocken auf der Krone und am Fuß, die die Kanten brechen
+      for (let i = 0; i < 3; i++) {
+        const a = r() * M3.TAU3, d = 0.28 + r() * 0.2;
+        B.stelle(mx + Math.cos(a) * d, f.oben - 0.12 - r() * 0.1, mz + Math.sin(a) * d, 0, 1,
+          b => Deko3D.fels(b, 0.20 + r() * 0.18, saat + i * 7));
+      }
+      B.stelle(mx, f.oben - 0.05, mz, r() * 6, 1, b => Deko3D.fels(b, 0.30 + r() * 0.1, saat + 41));
+      for (let i = 0; i < 4; i++) {
+        const a = (i + r() * 0.6) / 4 * M3.TAU3, d = 0.46;
+        B.stelle(mx + Math.cos(a) * d, gl.hoehe(mx + Math.cos(a) * d, mz + Math.sin(a) * d) - 0.04,
+          mz + Math.sin(a) * d, 0, 1, b => Deko3D.busch(b, 0.12 + r() * 0.07, '#4e8f33', saat + i * 13));
+      }
+    }
+  }
+
+  /* Die Burg auf ihrem Felsen. Sie liegt immer außerhalb der Bahn und ist nie zu erreichen –
+     sie ist Orientierung und Versprechen, nicht Hindernis. Zurück kommen die Stellen ihrer
+     Fahnen, damit die wehen können. */
+  function burgNetz(B, gl, burg) {
+    if (!burg) return [];
+    const fussHoehe = gl.hoehe(burg.x, burg.z);
+    const bergH = burg.berg || 3;
+    const g = burg.g || 1;
+    /* Der Burgberg ist ein Kegelstumpf, der tief genug im Boden steckt, dass auch am Hang keine
+       Fuge bleibt – oben grün, unter der Krone Fels. Zwei aufeinandergestapelte Scheiben (der
+       erste Versuch) sahen aus wie eine Torte; ein Kegel, dessen Wand nach oben einzieht, sieht
+       aus wie ein Berg. */
+    B.stelle(burg.x, fussHoehe - 2.2, burg.z, 0, 1, b => {
+      b.walze(6.6 * g, 4.4 * g, bergH * 0.62 + 2.2, 13, '#69933f', '#7cae4b');
+      b.mit(M3.verschieben(0, bergH * 0.62 + 2.2, 0), c => {
+        c.walze(4.4 * g, 3.9 * g, bergH * 0.26, 13, '#9a9488', '#a8a296');
+        c.mit(M3.verschieben(0, bergH * 0.26, 0), d => d.walze(3.9 * g, 3.7 * g, bergH * 0.12, 13, '#7cae4b', '#88bb53'));
+      });
+    });
+    /* Felsbrocken am Übergang von Grün zu Fels – sie verstecken die Kante zwischen den Walzen. */
+    const rb = M3.zufall(919);
+    for (let i = 0; i < 14; i++) {
+      const a = rb() * M3.TAU3, d = (4.3 + rb() * 0.5) * g;
+      B.stelle(burg.x + Math.cos(a) * d, fussHoehe - 2.2 + bergH * 0.62 + 2.2 - 0.3 + rb() * 0.5,
+        burg.z + Math.sin(a) * d, 0, 1, b => Deko3D.fels(b, (0.35 + rb() * 0.4) * g, i * 11 + 3));
+    }
+    let fahnen = [];
+    B.stelle(burg.x, fussHoehe + bergH, burg.z, 0.35, 1, b => { fahnen = Deko3D.burg(b, g).fahnen; });
+    /* Tannen am Burgberg, wie auf den gemalten Vorlagen. */
+    const r = M3.zufall(555);
+    for (let i = 0; i < 26; i++) {
+      const a = r() * M3.TAU3, d = (4.4 + r() * 1.8) * g;
+      const x = burg.x + Math.cos(a) * d, z = burg.z + Math.sin(a) * d;
+      B.stelle(x, fussHoehe - 0.6 + Math.max(0, bergH * 0.22 * (1 - d / (6.5 * g))), z, 0, 1,
+        b => Deko3D.tanne(b, 1.5 + r() * 1.3, i * 3 + 1));
+    }
+    /* Von der Burgmitte aus in Weltkoordinaten umrechnen – die Fahnen kommen in Burgkoordinaten
+       zurück, gedreht um denselben Winkel wie die Burg. */
+    const w = 0.35, c = Math.cos(w), s = Math.sin(w);
+    return fahnen.map(f => ({
+      x: burg.x + f.x * c + f.z * s,
+      z: burg.z - f.x * s + f.z * c,
+      y: fussHoehe + bergH + f.y, h: f.h, farbe: f.farbe,
+    }));
+  }
+
+  /* Alles, was in der Bahnbeschreibung unter 'deko' steht. */
+  function dekoNetz(B, gl, beweglich) {
+    for (const d of gl.bahn.deko || []) {
+      const y = (x, z) => gl.hoehe(x, z);
+      if (d.t === 'zaun') { Deko3D.zaun(B, d.von[0], d.von[1], d.nach[0], d.nach[1], y); continue; }
+      const h = y(d.x, d.z);
+      switch (d.t) {
+        case 'muehle': {
+          let nabe = null;
+          B.stelle(d.x, h, d.z, d.dreh || 0, 1, b => { nabe = Deko3D.muehle(b, d.g || 1).nabe; });
+          const w = d.dreh || 0, c = Math.cos(w), si = Math.sin(w);
+          beweglich.muehlen.push({ x: d.x + nabe[0] * c + nabe[2] * si, y: h + nabe[1], z: d.z - nabe[0] * si + nabe[2] * c,
+            dreh: w, g: d.g || 1, tempo: 0.55 + (d.g || 1) * 0.1 });
+          break;
+        }
+        case 'haus': B.stelle(d.x, h, d.z, d.dreh || 0, d.g || 1, b => Deko3D.haus(b)); break;
+        case 'felsgruppe': B.stelle(d.x, h, d.z, 0, 1, b => Deko3D.felsgruppe(b, (d.g || 1) * 0.6, Math.round(d.x * 13 + d.z * 7))); break;
+        case 'bruecke': bruecke(B, gl, d); break;
+        case 'mast':
+          B.stelle(d.x, h, d.z, 0, 1, b => Deko3D.mast(b, d.h || 1.4));
+          beweglich.fahnen.push({ x: d.x, y: h + (d.h || 1.4), z: d.z, h: (d.h || 1.4) * 0.42, farbe: d.farbe || '#b63a30' });
+          break;
+        default: break;
+      }
+    }
+  }
+
+  /* Eine Steinbrücke über den Bach. Sie ist reine Zier: Der Ball läuft unter ihr durch, nicht
+     über sie. Über sie zu laufen hieße, eine zweite Spielebene zu führen – das kann das 2,5D-Spiel
+     mit seinen Türmen, und es kommt hier später dazu, aber nicht in der ersten Fassung. */
+  function bruecke(B, gl, d) {
+    const g = d.g || 1, w = d.dreh || 0;
+    const h = gl.hoehe(d.x, d.z) + 0.55 * g;
+    B.stelle(d.x, h, d.z, w, g, b => {
+      for (const sx of [-1, 1]) b.mit(M3.verschieben(sx * 1.1, -0.9, 0), c => c.kasten(0.5, 1.1, 1.5, '#b3a992', '#ded6c4'));
+      b.kasten(3.0, 0.22, 1.4, '#c9c1ae', '#ded6c4');
+      for (const sx of [-1, 1]) b.mit(M3.verschieben(0, 0.22, sx * 0.62), c => c.kasten(3.0, 0.3, 0.16, '#b3a992', '#ded6c4'));
+      // Der Bogen als Reihe schmaler Klötze – von der Seite ein Halbkreis
+      for (let i = 0; i < 7; i++) {
+        const a = Math.PI * (i + 0.5) / 7;
+        b.mit(M3.mult(M3.verschieben(-Math.cos(a) * 0.92, -0.9 + Math.sin(a) * 0.62, 0), M3.drehenZ(-a + Math.PI / 2)),
+          c => c.kasten(0.3, 0.18, 1.4, '#c9c1ae', '#ded6c4'));
+      }
+    });
+  }
+
+  /* Bäume, Büsche, Blumen und Steine, verteilt nach Zufall mit festem Startwert.
+
+     Zwei Regeln halten die Bahn spielbar: Auf der Spielfläche wächst nur Kleinkram (Blumen,
+     Grasbüschel), und Bäume halten mindestens ein Feld Abstand zum Rand. Sonst steht irgendwann
+     eine Eiche im Anspiel, und niemand versteht, warum der Ball nicht durchkommt. */
+  function streuenNetz(B, gl, aussenRand) {
+    const a = gl.bahn.autoDeko || {};
+    const dichte = a.dichte === undefined ? 0.5 : a.dichte;
+    const r = M3.zufall((a.saat || 1) * 7717 + 3);
+    const burg = gl.bahn.burg;
+    const weitVonBurg = (x, z) => !burg || Math.hypot(x - burg.x, z - burg.z) > 7.5 * (burg.g || 1);
+
+    for (let z = -aussenRand; z < gl.T + aussenRand; z += 1) for (let x = -aussenRand; x < gl.B + aussenRand; x += 1) {
+      const px = x + r(), pz = z + r();
+      const abstand = gl.zumRand(px, pz);
+      const wuerfel = r();
+      if (abstand < 0.1) {
+        // auf der Spielfläche: nur Blumen, und auch die nur im Rough
+        if (gl.art(px, pz).name === 'Rough' && wuerfel < dichte * 0.35) {
+          const y = gl.hoehe(px, pz);
+          B.stelle(px, y, pz, r() * 6, 0.6 + r() * 0.4, b => Deko3D.busch(b, 0.1, r() < 0.5 ? '#5fa03a' : '#6fb045', Math.round(px * 91 + pz * 13)));
+        }
+        continue;
+      }
+      if (!weitVonBurg(px, pz)) continue;
+      const y = gl.hoehe(px, pz);
+      /* Je weiter draußen, desto dichter der Wald: Innen bleibt der Blick frei, außen schließt
+         sich die Landschaft. Das ist billiger als eine Kulisse und wirkt dreimal so tief.
+
+         Die ersten zweieinhalb Felder hinter dem Bahnrand bleiben baumfrei. Das ist keine
+         Schönheitsregel, sondern eine Notwendigkeit: Die Kamera steht beim Zielen hinter dem Ball,
+         also oft genau dort – und stand dort eine Tanne, sah man die Bahn nicht mehr. Büsche und
+         Steine dürfen bleiben, über die schaut man hinweg. */
+      const waldNeigung = M3.klemm((abstand - 2.5) / 9, 0, 1);
+      if (abstand > 2.5 && wuerfel < dichte * (0.12 + waldNeigung * 0.55)) {
+        if (r() < 0.62) B.stelle(px, y, pz, 0, 1, b => Deko3D.tanne(b, 1.5 + r() * 1.6, Math.round(px * 53 + pz * 29)));
+        else B.stelle(px, y, pz, r() * 6, 1, b => Deko3D.laubbaum(b, 1.6 + r() * 1.4, Math.round(px * 71 + pz * 17)));
+      } else if (wuerfel < dichte * 0.75) {
+        B.stelle(px, y, pz, r() * 6, 1, b => Deko3D.busch(b, 0.18 + r() * 0.25, r() < 0.5 ? '#4f8f35' : '#3f8a2d', Math.round(px * 37 + pz * 91)));
+      } else if (wuerfel < dichte * 0.85) {
+        B.stelle(px, y - 0.1, pz, 0, 1, b => Deko3D.fels(b, 0.18 + r() * 0.3, Math.round(px * 23 + pz * 41)));
+      }
+    }
+  }
+
+  /* Das Ufer bepflanzen. Gegangen wird über jedes Landfeld, das an ein Wasserfeld grenzt; dort
+     kommen Schilf und Kiesel hin. Der Ball rollt durch beides hindurch – sie stehen ein paar
+     Zentimeter neben der Kante und zählen für die Kugelrechnung nicht. */
+  function uferNetz(B, gl) {
+    const r = M3.zufall(1543);
+    for (let iz = -1; iz <= gl.T; iz++) for (let ix = -1; ix <= gl.B; ix++) {
+      if (gl.zeichen(ix, iz) === 'w') continue;
+      for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        if (gl.zeichen(ix + dx, iz + dz) !== 'w') continue;
+        for (let k = 0; k < 3; k++) {
+          /* Auf die dem Wasser zugewandte Hälfte des Feldes setzen, quer dazu gestreut. */
+          const x = ix + (dx ? 0.5 + dx * (0.2 + r() * 0.3) : r()), zz = iz + (dz ? 0.5 + dz * (0.2 + r() * 0.3) : r());
+          const y = gl.hoehe(x, zz);
+          if (r() < 0.62) B.stelle(x, y - 0.04, zz, 0, 1, b => Deko3D.schilf(b, 0.8 + r() * 0.7, Math.round(x * 71 + zz * 29) + k));
+          else B.stelle(x, y - 0.06, zz, 0, 1, b => Deko3D.fels(b, 0.08 + r() * 0.09, Math.round(x * 37 + zz * 13) + k));
+        }
+        break;      // ein Ufer je Feld genügt
+      }
+    }
+  }
+
+  /* Ferne Hügel. Ohne sie endet die Wiese in einer geraden Kante gegen den Himmel, und die Welt
+     sieht aus wie eine Tischplatte. Die Hügel stehen weit draußen, sind sehr grob und liegen im
+     Nebel – man erkennt nur, dass es dahinter weitergeht, und genau das ist ihre Aufgabe. */
+  function fernNetz(B, gl) {
+    const r = M3.zufall(6173);
+    const mx = gl.B / 2, mz = gl.T / 2;
+    const weite = Math.max(gl.B, gl.T) * 0.5 + 34;
+    for (let i = 0; i < 34; i++) {
+      const a = (i + r() * 0.8) / 34 * M3.TAU3;
+      const d = weite * (0.86 + r() * 0.4);
+      const h = 5 + r() * 11;
+      const grund = gl.hoehe(mx + Math.cos(a) * d, mz + Math.sin(a) * d);
+      B.stelle(mx + Math.cos(a) * d, grund - 3, mz + Math.sin(a) * d, 0, 1,
+        b => b.walze(h * (0.9 + r() * 0.7), h * 0.12, h + 3, 7, '#5c8b47', '#6d9c52'));
+    }
+  }
+
+  /* Der Himmel: eine Halbkugel, deren Ecken schon die fertige Farbe tragen, und ein paar Wolken
+     weit draußen. Beides bekommt kein Licht und wirft keinen Schatten. Weil die Halbkugel mit der
+     Kamera mitwandert, reicht ein kleiner Halbmesser – sie ist immer gleich weit weg. */
+  function himmelNetz(B, welt) {
+    const oben = Bauen.farbe(welt.himmelOben || '#2f7fc8'), unten = Bauen.farbe(welt.himmelUnten || '#bfe3f5');
+    /* Viele schmale Ringe. Der Himmel ist ein Farbverlauf, und ein Verlauf aus zehn Stufen sieht
+       man als Streifen – gerade an einem großen, ruhigen Himmel fällt das sofort auf. Zwanzig
+       Ringe kosten achthundert Dreiecke, also nichts, und der Verlauf ist glatt. */
+    const R = 1, ringe = 20, kanten = 22;
+    const punkt = (i, j) => {
+      const t = i / ringe * (Math.PI * 0.54), a = j / kanten * M3.TAU3;
+      const st = Math.sin(t);
+      return [st * Math.cos(a) * R, Math.cos(t) * R * 0.62 - 0.12, st * Math.sin(a) * R];
+    };
+    for (let i = 0; i < ringe; i++) for (let j = 0; j < kanten; j++) {
+      /* Die Farbe wird in der Mitte des jeweiligen Dreiecks genommen, nicht an seiner Oberkante –
+         sonst liegt der Verlauf um einen halben Ring daneben. */
+      const f0 = Bauen.mischen(unten, oben, M3.weich(1 - (i + 0.33) / ringe) ** 0.8);
+      const f1 = Bauen.mischen(unten, oben, M3.weich(1 - (i + 0.67) / ringe) ** 0.8);
+      const a = punkt(i, j), b = punkt(i, j + 1), c = punkt(i + 1, j + 1), d = punkt(i + 1, j);
+      /* Von innen gesehen – die Kamera steht in der Kuppel. Darum die umgekehrte Windung. */
+      B.dreieck(a, d, c, f0); B.dreieck(a, c, b, f1);
+    }
+  }
+
+  function wolkenNetz(B, gl) {
+    const r = M3.zufall(31337);
+    const mx = gl.B / 2, mz = gl.T / 2;
+    for (let i = 0; i < 16; i++) {
+      const a = r() * M3.TAU3, d = 26 + r() * 34;
+      B.stelle(mx + Math.cos(a) * d, 15 + r() * 11, mz + Math.sin(a) * d, r() * 6, 1.6 + r() * 2.4,
+        b => Deko3D.wolke(b, 1, i * 7 + 2));
+    }
+  }
+
+  /* ---------- Das bewegliche Beiwerk ----------
+     Ball, Fahnentücher und Mühlenflügel. Sie bekommen je ein kleines eigenes Gitter, das mit einer
+     Lage verschoben und gedreht wird – das Tuch wird zusätzlich bei jedem Bild neu gerechnet. */
+
+  const TUCH_LAENGS = 7, TUCH_QUER = 3;
+  /* Jede Masche wird viermal gebaut: zwei Dreiecke vorn, zwei hinten. Ein Tuch hat zwei Seiten,
+     und beide sollen zu sehen sein – die Rückseite bekommt einen dunkleren Ton, sonst wirkt die
+     Fahne beim Umschlagen wie aus Papier. */
+  const TUCH_ECKEN = TUCH_LAENGS * TUCH_QUER * 12;
+
+  /* Ein Tuch entsteht einmal und wird danach nur noch nachgerechnet. Das ist kein vorgezogenes
+     Sparen: Bei sechs Fahnen und sechzig Bildern wären es sonst über tausend neu erzeugte Felder
+     je Sekunde, und die Aufräumarbeit dafür sieht man als Ruckeln. */
+  function tuchNeu(farbe) {
+    const e = new Float32Array(TUCH_ECKEN * 9);
+    const ix = new Uint16Array(TUCH_ECKEN);
+    for (let i = 0; i < TUCH_ECKEN; i++) ix[i] = i;
+    const v = Bauen.farbe(farbe), h = Bauen.stufe(farbe, 0.74);
+    for (let z = 0; z < TUCH_ECKEN; z++) {
+      const c = (z % 12) < 6 ? v : h;
+      e[z * 9 + 6] = c[0]; e[z * 9 + 7] = c[1]; e[z * 9 + 8] = c[2];
+    }
+    return { e, ix };
+  }
+
+  /* Die Welle läuft vom Mast zur Spitze und wird dabei größer – am Mast ist das Tuch
+     festgebunden, am freien Ende schlägt es aus. Die Normalen werden je Dreieck aus den drei
+     Ecken gerechnet; ein Tuch ist flächig, kein runder Körper. */
+  function tuchFrisch(e, laenge, hoehe, zeit, phase) {
+    const punkt = (i, j, raus) => {
+      const u = i / TUCH_LAENGS, v = j / TUCH_QUER;
+      const w = Math.sin(u * 5.2 - zeit * 6 + phase) * u * 0.26 + Math.sin(u * 2.4 - zeit * 3.4 + phase) * u * 0.14;
+      raus[0] = u * laenge; raus[1] = -v * hoehe + w * 0.5 * (0.4 + v); raus[2] = w;
+      return raus;
+    };
+    const a = [0, 0, 0], b = [0, 0, 0], c = [0, 0, 0], d = [0, 0, 0];
+    let z = 0;
+    const dreieck = (p0, p1, p2) => {
+      const ux = p1[0] - p0[0], uy = p1[1] - p0[1], uz = p1[2] - p0[2];
+      const vx = p2[0] - p0[0], vy = p2[1] - p0[1], vz = p2[2] - p0[2];
+      let nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
+      const l = Math.hypot(nx, ny, nz) || 1; nx /= l; ny /= l; nz /= l;
+      for (const p of [p0, p1, p2]) {
+        const o = z * 9;
+        e[o] = p[0]; e[o + 1] = p[1]; e[o + 2] = p[2];
+        e[o + 3] = nx; e[o + 4] = ny; e[o + 5] = nz;
+        z++;
+      }
+    };
+    for (let i = 0; i < TUCH_LAENGS; i++) for (let j = 0; j < TUCH_QUER; j++) {
+      punkt(i, j, a); punkt(i + 1, j, b); punkt(i + 1, j + 1, c); punkt(i, j + 1, d);
+      dreieck(a, b, c); dreieck(a, c, d);
+      dreieck(a, c, b); dreieck(a, d, c);
+    }
+    return e;
+  }
+
+  return { ART, artVon, gelaende, gelaendeNetz, wasserNetz, felsenNetz, burgNetz, dekoNetz,
+    streuenNetz, uferNetz, fernNetz, himmelNetz, wolkenNetz, tuchNeu, tuchFrisch };
+})();

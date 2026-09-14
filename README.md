@@ -1502,6 +1502,99 @@ Ebenen zusammen, alle Karten deckungsgleich, für jede Ebene ein Aufstieg von de
 keine Deko auf dem Fairway.
 
 
+## Fantasy Golf 3D
+
+Neben dem 2,5D-Spiel liegt eine zweite, jüngere Anwendung im selben Haus: **Fantasy Golf 3D**.
+Erreichbar ist sie über den Knopf *Fantasy Golf 3D* im Startbildschirm. Sie hat eine eigene
+Leinwand, eine eigene Bedienung und einen eigenen Speicher; am fertigen Spiel ändert sie nichts.
+Solange sie läuft, hält das 2,5D-Spiel seine Bildschleife an.
+
+### Was es gibt
+
+* Eine **Weltkarte in drei Dimensionen** – eine Insel im Meer, über der die Kamera langsam kreist.
+  Sechs Landstriche tragen je eine Welt; ihre Namen stehen als Schilder darüber und wandern mit.
+  Offen ist bisher das **Grasland** mit drei Bahnen, die übrigen fünf sagen „bald zu erkunden".
+* **Drei Bahnen im Grasland**, alle im Blick auf dieselbe Königsburg in der Mitte der Welt:
+  * *Burgwiese* (Par 3) – offene Wiese, vier Felsnadeln lassen ein Tor in der Mitte frei.
+  * *Der Mühlbach* (Par 4) – ein Bach teilt die Wiese; genau zwischen Abschlag und Loch liegt
+    eine zwei Felder schmale Furt.
+  * *Zum Burgtor* (Par 4) – bergauf über drei Terrassen, an Felsnadeln und Sandgruben vorbei.
+* **Eine ganze Runde** über alle drei Bahnen mit Zählkarte, oder jede Bahn einzeln. Rekorde je
+  Bahn werden gespeichert (getrennt von der Rangliste des 2,5D-Spiels – es sind zwei Spiele).
+
+### Steuerung
+
+| Was | Wie |
+| --- | --- |
+| Schlagen | vom Ball wegziehen und loslassen – weiter gezogen heißt fester |
+| Kamera drehen | die Knöpfe unten, **Q** / **E**, zwei Finger, oder die rechte Maustaste |
+| Näher / weiter | Mausrad, Finger auseinanderziehen, **+** / **−** |
+| Ganze Bahn zeigen | Knopf mit der Karte oder **M** |
+| Ball zurücklegen | Knopf rechts unten oder **R** (ohne Strafe) |
+| Zurück | Knopf oben links oder **Esc** |
+
+Nach jedem Schlag schwenkt die Kamera von selbst hinter den Ball und schaut zum Loch – sonst
+müsste man sie nach jedem Schlag erst suchen, und weil die Schlagrichtung an der Kamera hängt,
+schlüge man reihenweise in die falsche Richtung.
+
+### Wie eine Bahn beschrieben wird
+
+Eine Bahn in `src/3d/bahnen3d.js` besteht aus drei Angaben. Die erste ist dieselbe wie im
+2,5D-Spiel – ein Feld Text, ein Zeichen ist ein Feld:
+
+```
+.  nichts – hier endet die Bahn, der Ball fällt in die Wiese (ein Schlag Strafe)
+#  Fairway, kurz geschnitten, rollt gut      ,  Rough, hohes Gras, bremst spürbar
+s  Sand, bremst stark                        w  Wasser – Strafe, weiter geht es vom Ufer
+x  Fels – eine Wand, von der der Ball abprallt
+T  Abschlag                                  H  Loch
+```
+
+Die zweite ist die Höhe. Sie steht **nicht** als zweites Feld mit Ziffern da, sondern als
+Grundhöhe plus eine Handvoll Hügel und Mulden:
+
+```js
+gelaende: {
+  grund: 0, welle: 0.05,
+  huegel: [ { x: 12, z: 3, r: 7, h: 0.45 },      // Rücken im Norden
+            { x: 18.5, z: 8.5, r: 3.8, h: -0.3 } ] // Mulde vor dem Loch
+}
+```
+
+Der Unterschied ist größer, als er klingt. Ziffern geben Stufen, und Stufen muss man glätten;
+Hügel geben von sich aus eine weiche Landschaft mit einem Gefälle, das sich an jeder Stelle genau
+ausrechnen lässt – und genau das braucht die Kugelrechnung, um sauber zu rollen. Sechs Zeilen
+ersetzen ein ganzes Feld voller Ziffern, und man sieht ihnen an, was sie tun.
+
+Die dritte ist, was herumsteht: `burg` (wo die Königsburg von dieser Bahn aus zu sehen ist),
+`deko` (Mühle, Häuser, Brücke, Zäune, Fahnenmasten) und `autoDeko` (Bäume, Büsche und Steine,
+gestreut nach Zufall mit festem Startwert – dieselbe Bahn sieht bei jedem Laden gleich aus).
+
+### Wie geprüft wird
+
+`node tools/3d.mjs` rechnet die ganze 3D-Welt ohne Browser durch:
+
+1. **Bahnen** – Karte rechteckig, Abschlag und Loch vorhanden, Loch über trockenen Boden
+   erreichbar. (Wasser zählt dabei nicht als Weg. Genau daran ist beim Bauen der Furt ein Fehler
+   aufgefallen: Die Landzunge in der Mitte war rundherum von Wasser umgeben und damit eine Insel.)
+2. **Dreiecke** – jeder Grundkörper wird gebaut und nachgerechnet, ob seine Flächen nach außen
+   zeigen. Ein verkehrt herum gebauter Körper ist nicht falsch beleuchtet, sondern unsichtbar.
+3. **Gelände** – Höhen endlich, Abschlag flach genug zum Liegenbleiben, Loch nicht am Hang.
+4. **Spielbarkeit** – ein gründlicher Rechen-Golfer probiert je Schlag 350 Richtungen und Kräfte
+   durch und nimmt den besten. Schafft er es nicht in fünfzehn Schlägen, stimmt etwas nicht.
+5. **Par** – ein zweiter Spieler zielt aufs Loch und vertut sich dabei um ein paar Grad und ein
+   paar Prozent, so wie ein Mensch. Zweihundert Runden davon geben den Mittelwert, an dem sich
+   das Par messen lässt. Stand (Fassung 113): 3,2 – 4,2 – 3,6 Schläge bei Par 3 – 4 – 4.
+
+### Warum kein fertiger 3D-Baukasten
+
+Die Seite darf nach ihren eigenen Sicherheitsregeln (`script-src 'self'` in `index.html`) nichts
+Fremdes laden. Eine Bibliothek müsste also mit ins Haus – eine halbe Million Zeichen fremder,
+unkommentierter Code für das, was hier zwölf Matrixfunktionen und zwei Schattierer sind. Der
+Zeichner in `src/3d/gl3d.js` kann absichtlich wenig: Dreiecke mit Farbe in den Ecken, eine Sonne,
+einen Schattenwurf, Nebel und bewegtes Wasser. Mehr braucht eine gemalte Märchenwelt nicht – sie
+lebt von Form und Farbe, nicht von Oberflächenbildern. Geladen wird kein einziges.
+
 ## Kostenlos als App aufs iPad oder Handy (GitHub Pages)
 
 Das Spiel ist eine Web-App: Manifest (`manifest.webmanifest`), App-Symbole (`icons/`) und ein Service Worker (`sw.js`) sorgen dafür, dass es sich wie eine App installieren lässt und offline läuft. Der Workflow `.github/workflows/pages.yml` veröffentlicht bei jedem Push automatisch auf GitHub Pages.
@@ -1882,4 +1975,15 @@ src/music.js      Musik: je Welt ein erzeugter Klangteppich (WebAudio)
 src/worldmap.js   Weltkarte: Landkarte aus gerechneter Küste, Gelände je Biom und die Orte der Welten
 src/title.js      animierte Startbildschirm-Szene mit Tag-Nacht-Wechsel
 src/main.js       Spielablauf, Eingabe, Punkte
+
+src/3d/mathe3d.js   Vektoren, Matrizen, Rauschen – die Rechnung für drei Dimensionen
+src/3d/gl3d.js      der 3D-Zeichner: WebGL, Sonne, Schattenwurf, Nebel (ohne fremde Bibliothek)
+src/3d/bauen3d.js   die Bauhütte: Grundkörper und der Sammler, der die feste Welt zusammenbackt
+src/3d/deko3d.js    Burg, Türme, Häuser, Bäume, Felsen, Zäune, Fahnen, Wolken, Schilf
+src/3d/bahnen3d.js  die Welt „Grasland" mit ihren drei Bahnen und die Liste aller Welten
+src/3d/welt3d.js    aus Kartenzeichen wird Landschaft: Gelände, Wasser, Bewuchs, Höhe und Neigung
+src/3d/physik3d.js  wie der Ball in 3D rollt, springt, abprallt und einlocht
+src/3d/karte3d.js   die Weltkarte als Insel im Meer, aus gerechneter Küste
+src/3d/spiel3d.js   Ablauf der 3D-Welt: Weltkarte, Bahnwahl, Spielen, Ergebnis
+tools/3d.mjs        prüft die 3D-Welt ohne Browser: Bahnen, Dreiecke, Gelände, Spielbarkeit, Par
 ```
