@@ -23,13 +23,28 @@ Der Weg dahin, bei jeder Auslieferung:
 Am Ende jedes Berichts über eine Überarbeitung des Spiels stehen beide Adressen – ohne dass
 jemand danach fragen muss:
 
-* **Vorschau:** <https://66zyn8gz5v-dot.github.io/Golf-with-your-Friends/vorschau/>
-* **Spiel:** <https://66zyn8gz5v-dot.github.io/Golf-with-your-Friends/>
+Es sind inzwischen vier, weil es zwei Spiele sind:
+
+* 2,5D-Spiel: <https://66zyn8gz5v-dot.github.io/Golf-with-your-Friends/>
+* 2,5D-Vorschau: <https://66zyn8gz5v-dot.github.io/Golf-with-your-Friends/vorschau/>
+* Fantasy Golf 3D: <https://66zyn8gz5v-dot.github.io/Golf-with-your-Friends/src/3d/>
+* Fantasy Golf 3D, Vorschau: <https://66zyn8gz5v-dot.github.io/Golf-with-your-Friends/vorschau/src/3d/>
+
+Im Bericht stehen die, um die es geht – nicht alle vier, wenn nur eine gemeint ist.
 
 **Zum Anklicken, nicht als Textblock.** Eine Adresse, die in einem eingerückten Block oder in
 schrägen Anführungszeichen steht, ist im Bericht nur Text: Fynn muss sie mit der Hand markieren
 und kopieren. Als richtiger Verweis – in spitzen Klammern oder als `[Text](Adresse)` – ist sie
 ein Klick. Das gilt auch für jede andere Adresse im Bericht.
+
+**Und zwar in gewöhnlichem Fließtext, nie in einer Überschrift.** Das ist am 14. September
+schiefgegangen: Der Link stand als `### 👉 [Fantasy Golf 3D](…)` da, und beim Antippen auf dem
+iPad ging nicht der Browser auf, sondern ein leeres Fenster der Claude-App. Überschriften werden
+dort anders dargestellt, und dabei geht das Antippen verloren. Ein Link gehört in einen Satz.
+
+**Dazu die Adresse einmal nackt auf einer eigenen Zeile**, ohne Klammern und ohne Formatierung.
+Dann lässt sie sich markieren und kopieren, auch wenn das Antippen wieder ins Leere greift – und
+sie ist der Weg, der immer geht: Browser öffnen, einfügen.
 
 Dazu gehört der Hinweis, die Seite einmal neu zu laden – der Service Worker hält sonst den alten
 Stand. Vorschau und Spiel sind getrennte Anwendungen mit getrenntem Speicher; Rekorde aus dem einen
