@@ -18,17 +18,26 @@ Der Weg dahin, bei jeder Auslieferung:
    der Schutzregel der Umgebung `github-pages`.
 5. Bilder vom Ergebnis machen und einen Bericht auf Deutsch schreiben.
 
-## Am Ende eines größeren Auftrags immer den Link mitgeben
+## Nach jeder Überarbeitung die Links zum Anklicken mitgeben
 
-Zum Schluss steht der Link zur Vorschau im Bericht, ohne dass jemand danach fragen muss:
+Am Ende jedes Berichts über eine Überarbeitung des Spiels stehen beide Adressen – ohne dass
+jemand danach fragen muss:
 
-    https://66zyn8gz5v-dot.github.io/Golf-with-your-Friends/vorschau/
+* **Vorschau:** <https://66zyn8gz5v-dot.github.io/Golf-with-your-Friends/vorschau/>
+* **Spiel:** <https://66zyn8gz5v-dot.github.io/Golf-with-your-Friends/>
 
-Zum Vergleich das Spiel: `https://66zyn8gz5v-dot.github.io/Golf-with-your-Friends/`
+**Zum Anklicken, nicht als Textblock.** Eine Adresse, die in einem eingerückten Block oder in
+schrägen Anführungszeichen steht, ist im Bericht nur Text: Fynn muss sie mit der Hand markieren
+und kopieren. Als richtiger Verweis – in spitzen Klammern oder als `[Text](Adresse)` – ist sie
+ein Klick. Das gilt auch für jede andere Adresse im Bericht.
 
 Dazu gehört der Hinweis, die Seite einmal neu zu laden – der Service Worker hält sonst den alten
 Stand. Vorschau und Spiel sind getrennte Anwendungen mit getrenntem Speicher; Rekorde aus dem einen
 tauchen im anderen nicht auf.
+
+Und wenn der neue Stand noch **nicht** unter diesen Adressen liegt – weil die Veröffentlichung
+noch aussteht oder an etwas hängt –, dann steht das dabei. Ein Link, hinter dem der alte Stand
+wartet, ist schlimmer als kein Link.
 
 ## Sprache
 
