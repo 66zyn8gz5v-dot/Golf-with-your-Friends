@@ -878,7 +878,7 @@ body.g3-an > #overlay, body.g3-an > #game, body.g3-an > #vorschau-band { display
 
 /* ---- Kopfzeile ---- */
 #g3-kopf {
-  position: absolute; left: var(--g3-seite); top: var(--g3-oben); right: var(--g3-seite);
+  position: absolute; left: var(--g3-seite); top: var(--g3-oben); right: var(--g3-seite); z-index: 1010;
   display: flex; align-items: center; gap: 10px; pointer-events: none;
 }
 #g3-kopf > * { pointer-events: auto; }
@@ -902,7 +902,7 @@ body.g3-an > #overlay, body.g3-an > #game, body.g3-an > #vorschau-band { display
 
 /* ---- Anzeigetafel rechts oben ---- */
 #g3-tafel {
-  position: absolute; right: var(--g3-seite); top: calc(var(--g3-oben) + 52px);
+  position: absolute; right: var(--g3-seite); top: calc(var(--g3-oben) + 52px); z-index: 1010;
   display: flex; flex-direction: column; gap: 2px; padding: 8px 12px; border-radius: 12px;
   background: rgba(16, 12, 34, 0.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
   text-align: right; min-width: 110px;
@@ -935,7 +935,7 @@ body.g3-an > #overlay, body.g3-an > #game, body.g3-an > #vorschau-band { display
 
 /* ---- Steuerung unten ---- */
 #g3-steuer {
-  position: absolute; left: 50%; bottom: var(--g3-unten); transform: translateX(-50%);
+  position: absolute; left: 50%; bottom: var(--g3-unten); transform: translateX(-50%); z-index: 1010;
   display: flex; gap: 8px;
 }
 #g3-steuer[hidden] { display: none; }
@@ -963,7 +963,11 @@ body.g3-an > #overlay, body.g3-an > #game, body.g3-an > #vorschau-band { display
 .g3-marke-text i { font-style: normal; font-size: 11px; color: #cbbfe6; }
 
 /* ---- Bildschirme (Bahnwahl, Ergebnis) ---- */
-#g3-schirm { position: absolute; inset: 0; display: none; align-items: center; justify-content: center;
+/* Über allem: Die Ortsschilder der Weltkarte tragen eine eigene Stapelhöhe (je näher, desto
+   höher), damit sich das vordere vor das hintere legt. Ein Bildschirm, der sich darüberlegt, muss
+   darum höher liegen als jedes Schild – sonst steht mitten im Text der Bahnwahl ein Wegweiser.
+   Kopfzeile und Steuerung liegen dazwischen: über den Schildern, unter den Bildschirmen. */
+#g3-schirm { position: absolute; inset: 0; z-index: 1200; display: none; align-items: center; justify-content: center;
   padding: 16px; background: rgba(10, 8, 24, 0.55); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
 #g3-schirm.sichtbar { display: flex; }
 .g3-tafel-gross {

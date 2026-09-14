@@ -732,7 +732,7 @@ const Golf3D = (() => {
       el.style.top = M3.klemm((0.5 - (cy / cw) * 0.5) * r.height, hochH, r.height - 10) + 'px';
       /* Auf einem schmalen Schirm rücken die Schilder übereinander. Dann soll wenigstens das
          vordere oben liegen – sonst verdeckt ein Berg im Hintergrund die Wiese davor. */
-      el.style.zIndex = String(Math.max(0, 999 - Math.round(cw)));
+      el.style.zIndex = String(M3.klemm(999 - Math.round(cw), 1, 999));
     });
   }
 
