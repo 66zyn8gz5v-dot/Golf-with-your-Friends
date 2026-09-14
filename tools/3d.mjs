@@ -172,6 +172,14 @@ for (const art of Object.keys(Deko3D.BAUMARTEN)) {
   const name = art[0].toUpperCase() + art.slice(1);
   bauwerkPruefen(name, b => Deko3D.baum(b, art, 2, 5));
 }
+for (const nadel of [true, false]) bauwerkPruefen('Fernbaum ' + (nadel ? 'Nadel' : 'Laub'), b => Deko3D.fernbaum(b, 2, nadel, 5));
+/* Das Kleinzeug am Boden steht zu Tausenden herum – eine falsch gedrehte Fläche wäre dort kein
+   Fehler, den man findet, sondern ein Flimmern, das man nicht erklären kann. */
+bauwerkPruefen('Blumen', b => Deko3D.blume(b, 1, 5));
+bauwerkPruefen('Grasbüschel', b => Deko3D.grasbueschel(b, 1, '#5fa03a', 5));
+bauwerkPruefen('Baumstumpf', b => Deko3D.stumpf(b, 1, 5));
+bauwerkPruefen('Totholz', b => Deko3D.totholz(b, 1, 5));
+bauwerkPruefen('Busch', b => Deko3D.busch(b, 0.3, '#4f8f35', 5));
 bauwerkPruefen('Felsgruppe', b => Deko3D.felsgruppe(b, 0.7, 9));
 bauwerkPruefen('Haus', b => Deko3D.haus(b));
 bauwerkPruefen('Turm', b => Deko3D.turm(b, 0.5, 3));

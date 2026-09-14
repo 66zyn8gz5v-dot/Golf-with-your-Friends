@@ -49,7 +49,7 @@ const BAHNEN3D = (() => {
       himmel: [0.40, 0.46, 0.56],
       boden: [0.19, 0.22, 0.15],
       nebelFarbe: [0.72, 0.85, 0.96],
-      nebel: [26, 115],
+      nebel: [26, 138],
       schatten: 0.58,
     },
     himmelOben: '#2f7fc8', himmelUnten: '#bfe3f5',

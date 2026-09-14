@@ -431,11 +431,23 @@ const Welt3D = (() => {
       const mx = k.ix + 0.5 + k.dx * (0.5 + DICK / 2);
       const mz = k.iz + 0.5 + k.dz * (0.5 + DICK / 2);
       const laengs = k.dx ? 0 : Math.PI / 2;                   // Balken liegt quer zur Seitenrichtung
+      /* Der Balken ist nicht ein Brett, sondern zwei übereinander – mit einer dunklen Fuge
+         dazwischen und einer schmalen Deckleiste obenauf. Genau so ist die Bande auf Fynns
+         Vorbildfoto gebaut, und es ist der Unterschied zwischen „Holzfarbene Mauer" und „Holz".
+
+         Die Fuge ist eingerückt, nicht aufgesetzt: ein dünnes dunkles Brettchen, das schmaler ist
+         als der Balken. Aufgesetzt sähe es aus wie ein Gürtel. */
+      const bretterFarbe = Bauen.stufe(HOLZ, 0.94 + ((k.ix * 7 + k.iz * 3) % 5) * 0.03);
       B.stelle(mx, k.y - TIEF, mz, laengs, 1, b => {
-        b.kasten(DICK, HOCH + TIEF, 1.0, HOLZ, HOLZ_OBEN);
-        /* Ein schmaler dunkler Streifen auf halber Höhe: Von Weitem liest man daran, dass es ein
-           Balken ist und keine Mauer. */
-        b.mit(M3.verschieben(0, (HOCH + TIEF) * 0.62, 0), c => c.kasten(DICK * 1.04, 0.025, 1.0, HOLZ_TIEF));
+        const unten = (HOCH + TIEF) * 0.56;
+        b.kasten(DICK, unten, 1.0, bretterFarbe, HOLZ_TIEF);
+        b.mit(M3.verschieben(0, unten, 0),
+          c => c.kasten(DICK * 0.97, (HOCH + TIEF) - unten - 0.03, 1.0, bretterFarbe, HOLZ_TIEF));
+        /* Deckleiste: ein Stück breiter als der Balken, damit die Oberkante eine Linie bekommt.
+           Der Ball prallt an der senkrechten Fläche darunter ab – die Leiste ist reine Optik und
+           steht in der Kugelrechnung nicht. */
+        b.mit(M3.verschieben(0, (HOCH + TIEF) - 0.03, 0),
+          c => c.kasten(DICK * 1.1, 0.03, 1.0, HOLZ_OBEN, HOLZ_OBEN));
       });
       /* Pfosten – abgesägte Stämme wie auf dem Vorbild. Sie stehen an jedem Ende einer Reihe
          (dort stoßen sonst zwei Balken stumpf aneinander und man sieht durch die Fuge) und
@@ -446,8 +458,13 @@ const Welt3D = (() => {
         const ende = !laeuftWeiter(k, qx, qz);
         const regel = (qx > 0 || qz > 0) && (k.ix + k.iz) % 3 === 0;
         if (!ende && !regel) continue;
-        B.stelle(mx + qx * 0.5, k.y - TIEF - 0.05, mz + qz * 0.5, 0, 1,
-          b => b.walze(DICK * 0.66, DICK * 0.60, HOCH + TIEF + 0.10, 8, HOLZ, HOLZ_OBEN));
+        B.stelle(mx + qx * 0.5, k.y - TIEF - 0.05, mz + qz * 0.5, 0, 1, b => {
+          const h = HOCH + TIEF + 0.10;
+          b.walze(DICK * 0.66, DICK * 0.62, h, 8, HOLZ, null);
+          /* Eine abgesetzte Kuppe: Ein glatt abgeschnittener Pfosten sieht aus wie ein Rohr, ein
+             angefaster wie ein gesägter Stamm. */
+          b.mit(M3.verschieben(0, h, 0), c => c.walze(DICK * 0.62, DICK * 0.46, DICK * 0.2, 8, HOLZ, HOLZ_OBEN));
+        });
       }
     }
   }
@@ -561,6 +578,11 @@ const Welt3D = (() => {
   const BAUM_HOCH = { tanne: [1.5, 1.6], kiefer: [2.2, 1.0], pappel: [2.4, 1.2], tropfenbaum: [1.5, 0.8],
     birke: [1.6, 0.9], laubbaum: [1.6, 1.4], eiche: [1.8, 0.8] };
 
+  /* Ab hier wird gespart, und beide Grenzen sind aus dem Bild abgelesen und nicht geraten:
+     Jenseits von NAH_KRAM ist ein Busch oder ein Grasbüschel keine drei Bildpunkte mehr groß,
+     jenseits von FERN_BAUM ist von einem Baum nur noch der Umriss zu sehen. */
+  const NAH_KRAM = 11, FERN_BAUM = 16;
+
   function baumArt(wurf, tiefe) {
     let summe = 0;
     for (const art in BAUM_NAH) summe += M3.misch(BAUM_NAH[art], BAUM_FERN[art], tiefe);
@@ -589,10 +611,22 @@ const Welt3D = (() => {
       const abstand = gl.zumRand(px, pz);
       const wuerfel = r();
       if (abstand < 0.1) {
-        // auf der Spielfläche: nur Blumen, und auch die nur im Rough
-        if (gl.art(px, pz).name === 'Rough' && wuerfel < dichte * 0.35) {
-          const y = gl.hoehe(px, pz);
-          B.stelle(px, y, pz, r() * 6, 0.6 + r() * 0.4, b => Deko3D.busch(b, 0.1, r() < 0.5 ? '#5fa03a' : '#6fb045', Math.round(px * 91 + pz * 13)));
+        /* Auf der Spielfläche wächst nur, was der Ball nicht merkt: ein Grasbüschel oder eine
+           Blume, und auch die nur im Rough. Sie stehen ein paar Zentimeter hoch und zählen für
+           die Kugelrechnung nicht – der Ball rollt hindurch. */
+        if (gl.art(px, pz).name === 'Rough') {
+          /* Zwei Griffe je Feld statt einem: Das Rough ist im Spiel die Strafe für den schlechten
+             Schlag, und es muss von Weitem als hohes Gras zu erkennen sein. Ein Büschel alle zwei
+             Felder reicht dafür nicht. */
+          for (let k = 0; k < 2; k++) {
+            if (r() > dichte * 0.85) continue;
+            const qx = x + r(), qz = z + r();
+            if (gl.zumRand(qx, qz) > 0.1 || gl.art(qx, qz).name !== 'Rough') continue;
+            const saat = Math.round(qx * 91 + qz * 13) + k;
+            if (r() < 0.22) B.stelle(qx, gl.hoehe(qx, qz), qz, r() * 6, 0.8 + r() * 0.5, b => Deko3D.blume(b, 1, saat));
+            else B.stelle(qx, gl.hoehe(qx, qz), qz, r() * 6, 0.8 + r() * 0.6,
+              b => Deko3D.grasbueschel(b, 1.15, r() < 0.5 ? '#5fa03a' : '#6fb045', saat));
+          }
         }
         continue;
       }
@@ -615,11 +649,44 @@ const Welt3D = (() => {
       if (abstand > 2.8 && zumAbschlag > 7 && wuerfel < dichte * (0.14 + waldNeigung * 0.6)) {
         const art = baumArt(r(), waldNeigung);
         const [tief, spanne] = BAUM_HOCH[art];
-        B.stelle(px, y, pz, r() * 6, 1, b => Deko3D.baum(b, art, tief + r() * spanne, Math.round(px * 53 + pz * 29)));
-      } else if (wuerfel < dichte * 0.75) {
+        /* Jeder fünfte Baum ist ein Jungbaum. Ein Wald, in dem alle Wipfel auf derselben Höhe
+           enden, sieht aus wie eine Hecke; ein paar halbhohe darunter machen daraus einen
+           Bestand, der schon eine Weile dort steht. */
+        const jung = r() < 0.22 ? 0.45 + r() * 0.2 : 1;
+        const hoch = (tief + r() * spanne) * jung;
+        const saat = Math.round(px * 53 + pz * 29);
+        if (abstand > FERN_BAUM) B.stelle(px, y, pz, r() * 6, 1,
+          b => Deko3D.fernbaum(b, hoch, art === 'tanne' || art === 'kiefer' || art === 'pappel', saat));
+        else B.stelle(px, y, pz, r() * 6, 1, b => Deko3D.baum(b, art, hoch, saat));
+      } else if (abstand > NAH_KRAM) {
+        /* Weit draußen nichts als Bäume: Ein Busch von dreißig Feldern Entfernung ist ein
+           grüner Punkt im Gras und kostet trotzdem neunzig Dreiecke. */
+      } else if (wuerfel < dichte * 0.48) {
         B.stelle(px, y, pz, r() * 6, 1, b => Deko3D.busch(b, 0.18 + r() * 0.25, r() < 0.5 ? '#4f8f35' : '#3f8a2d', Math.round(px * 37 + pz * 91)));
-      } else if (wuerfel < dichte * 0.85) {
+      } else if (wuerfel < dichte * 0.68) {
+        B.stelle(px, y, pz, r() * 6, 0.9 + r() * 0.7,
+          b => Deko3D.grasbueschel(b, 1.3, r() < 0.5 ? '#4f8f35' : '#62a63d', Math.round(px * 17 + pz * 53)));
+      } else if (wuerfel < dichte * 0.78) {
+        B.stelle(px, y, pz, r() * 6, 0.9 + r() * 0.6, b => Deko3D.blume(b, 1.3, Math.round(px * 59 + pz * 11)));
+      } else if (wuerfel < dichte * 0.9) {
         B.stelle(px, y - 0.1, pz, 0, 1, b => Deko3D.fels(b, 0.18 + r() * 0.3, Math.round(px * 23 + pz * 41)));
+      } else if (abstand > 4 && wuerfel < dichte * 0.94) {
+        /* Totholz nur tief im Wald: Am gepflegten Bahnrand läge es falsch. */
+        if (r() < 0.5) B.stelle(px, y, pz, 0, 0.8 + r() * 0.5, b => Deko3D.stumpf(b, 1, Math.round(px * 83 + pz * 7)));
+        else B.stelle(px, y + 0.09, pz, 0, 0.8 + r() * 0.6, b => Deko3D.totholz(b, 1, Math.round(px * 29 + pz * 67)));
+      }
+      /* Und unabhängig davon noch einmal Kleinzeug an anderer Stelle im selben Feld. Ein Feld ist
+         einen Meter groß; wenn darin höchstens ein Ding stehen darf, bleibt der Boden zwischen den
+         Büschen kahl, und gerade den sieht man beim Zielen aus nächster Nähe. */
+      if (abstand < NAH_KRAM && r() < 0.42) {
+        const qx = x + r(), qz = z + r();
+        if (gl.zumRand(qx, qz) > 0.25 && weitVonBurg(qx, qz)) {
+          const qy = gl.hoehe(qx, qz), saat = Math.round(qx * 43 + qz * 79);
+          const w = r();
+          if (w < 0.55) B.stelle(qx, qy, qz, r() * 6, 0.8 + r() * 0.7, b => Deko3D.grasbueschel(b, 1.2, r() < 0.5 ? '#4f8f35' : '#62a63d', saat));
+          else if (w < 0.8) B.stelle(qx, qy, qz, r() * 6, 0.8 + r() * 0.5, b => Deko3D.blume(b, 1.2, saat));
+          else B.stelle(qx, qy - 0.05, qz, r() * 6, 1, b => Deko3D.fels(b, 0.07 + r() * 0.08, saat));
+        }
       }
     }
   }
@@ -646,19 +713,39 @@ const Welt3D = (() => {
   }
 
   /* Ferne Hügel. Ohne sie endet die Wiese in einer geraden Kante gegen den Himmel, und die Welt
-     sieht aus wie eine Tischplatte. Die Hügel stehen weit draußen, sind sehr grob und liegen im
-     Nebel – man erkennt nur, dass es dahinter weitergeht, und genau das ist ihre Aufgabe. */
+     sieht aus wie eine Tischplatte.
+
+     Sie stehen in drei Reihen hintereinander, und das ist der ganze Trick: Je weiter hinten, desto
+     höher, desto blasser und desto blauer. So entsteht Luftperspektive – dieselbe, die auf jedem
+     gemalten Bild die Ferne macht. Eine einzige Reihe gleich grüner Kegel liest sich dagegen als
+     Zaun aus Dreiecken.
+
+     Die hinterste Reihe bekommt zusätzlich graue Felsflanken und helle Gipfel. Sie ist zu weit weg,
+     als dass man Einzelheiten sähe, aber die Farbe sagt „Gebirge" statt „noch mehr Wiese". */
   function fernNetz(B, gl) {
-    const r = M3.zufall(6173);
     const mx = gl.B / 2, mz = gl.T / 2;
-    const weite = Math.max(gl.B, gl.T) * 0.5 + 38;
-    for (let i = 0; i < 34; i++) {
-      const a = (i + r() * 0.8) / 34 * M3.TAU3;
-      const d = weite * (0.86 + r() * 0.4);
-      const h = 5 + r() * 11;
-      const grund = gl.hoehe(mx + Math.cos(a) * d, mz + Math.sin(a) * d);
-      B.stelle(mx + Math.cos(a) * d, grund - 3, mz + Math.sin(a) * d, 0, 1,
-        b => b.walze(h * (0.9 + r() * 0.7), h * 0.12, h + 3, 7, '#5c8b47', '#6d9c52'));
+    const grund = gl.hoehe(mx, mz);
+    const weite = Math.max(gl.B, gl.T) * 0.5 + 34;
+    const reihen = [
+      { saat: 6173, n: 30, d: 0.86, h: [4, 7], fuss: '#5c8b47', spitze: '#6d9c52', fels: null },
+      { saat: 9241, n: 26, d: 1.22, h: [8, 11], fuss: '#5b8560', spitze: '#78a37e', fels: null },
+      { saat: 4517, n: 22, d: 1.62, h: [15, 15], fuss: '#6f8d94', spitze: '#cfdce1', fels: '#8fa2ab' },
+    ];
+    for (const reihe of reihen) {
+      const r = M3.zufall(reihe.saat);
+      for (let i = 0; i < reihe.n; i++) {
+        const a = (i + r() * 0.85) / reihe.n * M3.TAU3;
+        const d = weite * reihe.d * (0.9 + r() * 0.3);
+        const h = reihe.h[0] + r() * reihe.h[1];
+        const x = mx + Math.cos(a) * d, z = mz + Math.sin(a) * d;
+        B.stelle(x, grund - 3 - reihe.d * 2, z, r() * 6, 1, b => {
+          b.walze(h * (0.9 + r() * 0.7), h * 0.12, h + 3, 7, reihe.fuss, null, 0, reihe.spitze);
+          /* Ein Felskragen auf zwei Dritteln der Höhe: Darüber liegt der helle Gipfel, darunter
+             das bewachsene Fußstück. Die Grenze ist das, was einen Berg von einem Hügel trennt. */
+          if (reihe.fels) b.mit(M3.verschieben(0, (h + 3) * 0.66, 0),
+            c => c.walze(h * 0.32, h * 0.16, (h + 3) * 0.2, 7, reihe.fels, null, 0, reihe.spitze));
+        });
+      }
     }
   }
 
