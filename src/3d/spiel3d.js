@@ -1,13 +1,19 @@
 /* Fantasy Golf 3D – der Ablauf: Weltkarte, Bahnwahl, Spielen, Ergebnis.
 
-   Das hier ist eine Anwendung für sich. Sie hat ihre eigene Leinwand, ihre eigene Bedienung und
-   ihren eigenen Speicher; vom 2,5D-Spiel benutzt sie nur, was nichts mit dessen Bahnen zu tun hat
-   – die Sinnbilder, die Geräusche und den Speicherschlüssel. Das ist Absicht: So kann am 3D-Teil
-   gearbeitet werden, ohne dass jemals eine Runde im fertigen Spiel daran zerbricht.
+   Das hier ist ein eigenes Spiel mit einer eigenen Seite (src/3d/index.html) und einer eigenen
+   Adresse. Vom 2,5D-Spiel nebenan benutzt es nur drei Dinge, die mit dessen Bahnen nichts zu tun
+   haben: die Sinnbilder (src/icons.js), die Geräusche (src/sfx.js) und den Speicherschlüssel
+   (src/version.js). Sonst nichts – kein Bahnformat, keine Physik, keine Oberfläche.
 
-   Betreten wird sie über einen Knopf im Startbildschirm; verlassen über „Zurück". Solange sie
-   läuft, hält das 2,5D-Spiel seine Bildschleife an (siehe die Abfrage am Anfang von frame() in
-   main.js) – zwei Welten gleichzeitig zu rechnen wäre nur Wärme.
+   Das ist Absicht und war es von Anfang an: So kann am 3D-Teil gearbeitet werden, ohne dass
+   jemals eine Runde im fertigen Spiel daran zerbricht. Anfangs lag die 3D-Welt noch als Zimmer
+   im Haus nebenan, erreichbar über einen Knopf im Startbildschirm. Das war der kürzeste Weg zu
+   einer Vorschau, aber es war das falsche Bild: Wer ein neues Spiel öffnen will, soll ein neues
+   Spiel öffnen und nicht zuerst durch das alte gehen.
+
+   'starten' nimmt darum einen Rückruf entgegen, der sagt, wohin es beim Verlassen geht. Auf der
+   eigenen Seite gibt es keinen – dort ist diese Welt die ganze Anwendung, und der Knopf „Zurück"
+   bleibt auf der Weltkarte verborgen.
 
    ---- Die Bedienung ----
 
@@ -20,7 +26,6 @@
    Maustaste. Sie folgt dem Ball von selbst und dreht sich beim Anspielen einer neuen Bahn so,
    dass das Loch vor einem liegt. */
 const Golf3D = (() => {
-  const AN = 'g3-an';
   const MAX_ZIEHEN = 190;            // Bildpunkte für vollen Ausschlag
   const FERN = 420;
 
@@ -104,13 +109,23 @@ const Golf3D = (() => {
   }
 
   /* ---------- Bildschirme aus HTML ---------- */
+  /* Der Knopf oben links führt je nach Lage woanders hin – von einer Bahn zur Bahnwahl, von der
+     Bahnwahl zur Weltkarte, von der Weltkarte hinaus. Das Hinaus gibt es nur, wenn jemand einen
+     Rückweg mitgegeben hat; auf der eigenen Seite ist die Weltkarte der Anfang, und dort wäre ein
+     Knopf ins Nichts. */
+  function rausKnopfFrischen() {
+    const k = huelle.querySelector('#g3-raus');
+    if (k) k.hidden = schirm === 'karte' && !zurueck && !schirmFeld().className;
+  }
+
   const schirmFeld = () => huelle.querySelector('#g3-schirm');
   function schirmZeigen(html, klasse) {
     const s = schirmFeld();
     s.className = 'sichtbar' + (klasse ? ' ' + klasse : '');
     s.innerHTML = html;
+    rausKnopfFrischen();
   }
-  function schirmWeg() { const s = schirmFeld(); s.className = ''; s.innerHTML = ''; }
+  function schirmWeg() { const s = schirmFeld(); s.className = ''; s.innerHTML = ''; rausKnopfFrischen(); }
   const beiKlick = (id, tu) => { const e = huelle.querySelector('#' + id); if (e) e.addEventListener('click', tu); };
 
   function meldung(text, dauer = 2.2) {
@@ -128,6 +143,7 @@ const Golf3D = (() => {
     huelle.querySelector('#g3-tafel').hidden = true;
     huelle.querySelector('#g3-steuer').hidden = false;
     huelle.querySelector('#g3-raus2').hidden = true;
+    rausKnopfFrischen();
     titelSetzen('Fantasy Golf 3D', 'Wähle eine Welt');
 
     szene = Karte3D.bauen(zeichner);
@@ -193,6 +209,7 @@ const Golf3D = (() => {
     huelle.querySelector('#g3-marken').hidden = true;
     huelle.querySelector('#g3-tafel').hidden = false;
     huelle.querySelector('#g3-raus2').hidden = false;
+    rausKnopfFrischen();
 
     szeneWeg();
     const bahn = welt.bahnen[nr];
@@ -390,7 +407,7 @@ const Golf3D = (() => {
   function rausTaste() {
     if (schirmFeld().className) { schirmWeg(); if (schirm === 'karte') return; }
     if (schirm === 'bahn') { karteZeigen(); if (stand.welt) weltZeigen(stand.welt); return; }
-    beenden();
+    if (zurueck) beenden();      // von der Weltkarte aus nur, wenn es ein Davor gibt
   }
 
   /* ---------- Ergebnis einer Bahn ---------- */
@@ -741,7 +758,6 @@ const Golf3D = (() => {
   function starten(zurueckRuf) {
     zurueck = zurueckRuf;
     if (!huelle) huelleBauen();
-    document.body.classList.add(AN);
     huelle.hidden = false;
 
     if (!zeichner) {
@@ -775,7 +791,6 @@ const Golf3D = (() => {
     if (bildNr) cancelAnimationFrame(bildNr);
     szeneWeg();
     if (huelle) { huelle.hidden = true; schirmWeg(); }
-    document.body.classList.remove(AN);
     if (zurueck) zurueck();
   }
 

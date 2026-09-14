@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Fantasy Golf 3D">
+  <meta name="theme-color" content="#1b2a4a">
+  <!-- Dieselben Sicherheitsregeln wie beim 2,5D-Spiel: Alles ist verboten, außer dem, was hier
+       ausdrücklich steht. Der Unterschied zur Seite nebenan: Diese hier spricht mit niemandem.
+       Kein Netzspiel, keine Rangliste, kein Vermittler – also fehlt connect-src ganz, und damit
+       kann diese Seite gar keine Verbindung nach außen aufbauen.
+
+       script-src 'self'  Programmcode nur aus diesem Verzeichnisbaum. Deshalb steht auch der
+                          Anlasser in einer eigenen Datei (start3d.js) und nicht hier im HTML.
+       img-src 'self'     Bilder nur von hier – die 3D-Welt lädt allerdings gar keine.
+       style-src          eigenes Blatt und die Zierschrift von Google. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none';
+    script-src 'self';
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    font-src https://fonts.gstatic.com;
+    img-src 'self';
+    manifest-src 'self';
+    worker-src 'self';
+    base-uri 'none';
+    object-src 'none';
+    form-action 'none'">
+  <link rel="manifest" href="manifest3d.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="../../icons/icon-192.png">
+  <link rel="apple-touch-icon" href="../../icons/apple-touch-icon.png">
+  <title>Fantasy Golf 3D</title>
+  <!-- Die Zierschrift kommt nicht als <link> hierher, sondern wird in start3d.js nachgeladen: Ein
+       Stylesheet im Kopf hält das erste Bild auf, bis es da ist – und es liegt bei Google, nicht
+       bei uns. Bis sie da ist, steht die Überschrift in Georgia, danach wechselt sie. -->
+  <link rel="stylesheet" href="stil3d.css">
+</head>
+<body>
+  <!-- Ladebild. Es steht im festen HTML und bewegt sich allein mit CSS: So ist etwas zu sehen,
+       bevor die erste Zeile JavaScript gelaufen ist – und auch dann noch, wenn eine Datei hängt.
+       Der Würfel ist hier von Hand gezeichnet und nicht aus src/icons.js geholt, aus genau diesem
+       Grund: Er muss auch ohne JavaScript da sein. -->
+  <div id="lade3d" role="status" aria-label="Fantasy Golf 3D wird geladen">
+    <div class="innen">
+      <svg class="wuerfel" viewBox="0 -960 960 960" aria-hidden="true" focusable="false">
+        <path d="M480-812l312 176-312 172-312-172zM160-620l312 172v312l-312-172zM800-620l-312 172v312l312-172z"/>
+      </svg>
+      <div class="titel">Fantasy Golf 3D</div>
+      <div class="balken"><i></i></div>
+      <div class="text">Die Welt wird aufgebaut …</div>
+    </div>
+  </div>
+
+  <!-- Alles Weitere baut spiel3d.js selbst auf: Leinwand, Kopfzeile, Anzeigetafel, Steuerung. -->
+
+  <script src="../version.js"></script>
+  <script src="../icons.js"></script>
+  <script src="../sfx.js"></script>
+  <script src="mathe3d.js"></script>
+  <script src="gl3d.js"></script>
+  <script src="bauen3d.js"></script>
+  <script src="deko3d.js"></script>
+  <script src="bahnen3d.js"></script>
+  <script src="welt3d.js"></script>
+  <script src="physik3d.js"></script>
+  <script src="karte3d.js"></script>
+  <script src="spiel3d.js"></script>
+  <script src="start3d.js"></script>
+</body>
+</html>

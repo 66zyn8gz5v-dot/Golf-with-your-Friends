@@ -1,0 +1,213 @@
+/* Fantasy Golf 3D – das Stilblatt der eigenen Seite.
+
+   Es gehört allein zu src/3d/index.html. Das 2,5D-Spiel hat sein eigenes (../../style.css) und
+   weiß von diesem nichts; die beiden Spiele teilen sich nur das Haus, nicht die Einrichtung.
+
+   Alle Namen beginnen mit g3-. Das war nötig, solange beide Oberflächen auf derselben Seite lagen,
+   und es bleibt: Man sieht einer Regel dadurch an, wohin sie gehört, auch wenn man sie irgendwo
+   zitiert findet.
+
+   Die Farben sind dieselben wie im übrigen Spiel – Gold auf dunklem Violett –, der Aufbau ist ein
+   anderer: Hier liegt die Bedienung am Rand und lässt die Mitte frei, weil in der Mitte die Welt
+   steht. */
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0; height: 100%; overflow: hidden;
+  background: #6fb0d8; color: #f4efe6;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+button { font: inherit; color: inherit; border: none; background: none; }
+
+/* ---- Ladebild ----
+   Es steht im festen HTML und bewegt sich allein mit CSS: So ist etwas zu sehen, bevor die erste
+   Zeile JavaScript gelaufen ist – und auch dann noch, wenn eine Datei hängt. Weggenommen wird es
+   von start3d.js, sobald die Welt wirklich steht. */
+#lade3d {
+  position: fixed; inset: 0; z-index: 9000; display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(180deg, #2f7fc8 0%, #6fb0d8 55%, #9fd2ea 100%);
+  transition: opacity 0.5s, transform 0.5s;
+}
+#lade3d.weg { opacity: 0; transform: scale(1.05); pointer-events: none; }
+#lade3d .innen { width: min(86vw, 340px); text-align: center; }
+#lade3d .wuerfel { width: 92px; height: 92px; margin: 0 auto 14px; display: block; fill: #ffffff;
+  filter: drop-shadow(0 6px 14px rgba(10, 40, 70, 0.35)); animation: g3-dreh 3.6s ease-in-out infinite; }
+@keyframes g3-dreh { 0%, 100% { transform: rotate(-7deg) translateY(0); } 50% { transform: rotate(7deg) translateY(-8px); } }
+#lade3d .titel { font-family: "MedievalSharp", Georgia, serif; font-size: 34px; letter-spacing: 2px;
+  color: #fff3c4; text-shadow: 0 3px 0 rgba(20, 60, 90, 0.45); }
+#lade3d .balken { height: 7px; margin: 16px auto 10px; width: 78%; border-radius: 5px;
+  background: rgba(255, 255, 255, 0.3); overflow: hidden; }
+#lade3d .balken i { display: block; height: 100%; width: 36%; border-radius: 5px; background: #ffd166;
+  animation: g3-lauf 1.5s ease-in-out infinite; }
+@keyframes g3-lauf { 0% { margin-left: -36%; } 100% { margin-left: 100%; } }
+#lade3d .text { font-size: 14px; color: rgba(255, 255, 255, 0.9); }
+@media (prefers-reduced-motion: reduce) {
+  #lade3d .wuerfel, #lade3d .balken i { animation: none; }
+}
+
+/* ---- Die Oberfläche über der Leinwand ---- */
+#g3 {
+  position: fixed; inset: 0; overflow: hidden;
+  /* Auf dem Telefon reicht die Anzeige bis in die Ecken; die Bedienung muss davor bleiben. */
+  --g3-oben: max(10px, env(safe-area-inset-top));
+  --g3-unten: max(10px, env(safe-area-inset-bottom));
+  --g3-seite: max(10px, env(safe-area-inset-left), env(safe-area-inset-right));
+}
+#g3[hidden] { display: none; }
+
+#g3-leinwand { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+
+/* ---- Kopfzeile ---- */
+#g3-kopf {
+  position: absolute; left: var(--g3-seite); top: var(--g3-oben); right: var(--g3-seite); z-index: 1010;
+  display: flex; align-items: center; gap: 10px; pointer-events: none;
+}
+#g3-kopf > * { pointer-events: auto; }
+#g3-titel {
+  padding: 6px 14px; border-radius: 12px; background: rgba(16, 12, 34, 0.55);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  display: flex; flex-direction: column; line-height: 1.2; min-width: 0;
+}
+#g3-titel b { font-family: "MedievalSharp", Georgia, serif; font-size: 20px; color: #ffe08a; letter-spacing: 1px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#g3-titel i { font-style: normal; font-size: 12px; color: #cbbfe6; }
+
+.g3-knopf {
+  display: inline-flex; align-items: center; gap: 6px; padding: 9px 12px; border-radius: 12px; cursor: pointer;
+  background: rgba(16, 12, 34, 0.55); color: #f4efe6; border: 1px solid rgba(255, 209, 102, 0.4);
+  font-size: 14px; font-weight: bold; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+}
+.g3-knopf:active { transform: translateY(1px); }
+.g3-knopf svg { width: 20px; height: 20px; fill: currentColor; display: block; }
+.g3-knopf[hidden] { display: none; }
+
+/* ---- Anzeigetafel rechts oben ---- */
+#g3-tafel {
+  position: absolute; right: var(--g3-seite); top: calc(var(--g3-oben) + 52px); z-index: 1010;
+  display: flex; flex-direction: column; gap: 2px; padding: 8px 12px; border-radius: 12px;
+  background: rgba(16, 12, 34, 0.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  text-align: right; min-width: 110px;
+}
+#g3-tafel[hidden] { display: none; }
+.g3-feld { display: flex; justify-content: space-between; gap: 14px; font-size: 13px; }
+.g3-feld span { color: #cbbfe6; }
+.g3-feld b { color: #ffe08a; font-size: 15px; }
+.g3-rekord b { color: #9ee06f; }
+
+/* ---- Kraftbalken ---- */
+#g3-kraft {
+  position: absolute; left: 50%; bottom: calc(var(--g3-unten) + 70px); transform: translateX(-50%);
+  width: min(260px, 60vw); height: 12px; border-radius: 8px; overflow: hidden;
+  background: rgba(16, 12, 34, 0.6); border: 1px solid rgba(255, 209, 102, 0.5);
+  opacity: 0; transition: opacity 0.12s;
+}
+#g3-kraft.sichtbar { opacity: 1; }
+#g3-kraft i { display: block; height: 100%; width: 0;
+  background: linear-gradient(90deg, #9ee06f, #ffd166 55%, #e2542f); }
+
+/* ---- Hinweiszeile ---- */
+#g3-hinweis {
+  position: absolute; left: 50%; bottom: calc(var(--g3-unten) + 96px); transform: translateX(-50%);
+  max-width: min(520px, 86vw); padding: 8px 16px; border-radius: 12px; text-align: center;
+  background: rgba(16, 12, 34, 0.66); font-size: 14px; line-height: 1.35;
+  opacity: 0; transition: opacity 0.25s; pointer-events: none;
+}
+#g3-hinweis.sichtbar { opacity: 1; }
+
+/* ---- Steuerung unten ---- */
+#g3-steuer {
+  position: absolute; left: 50%; bottom: var(--g3-unten); transform: translateX(-50%); z-index: 1010;
+  display: flex; gap: 8px;
+}
+#g3-steuer[hidden] { display: none; }
+
+/* ---- Ortsschilder auf der Weltkarte ----
+   Sie hängen an einer Stelle in der 3D-Welt und werden bei jedem Bild dorthin gerückt. Der
+   Behälter fängt keine Berührungen ab, die Schilder selbst schon – sonst ließe sich die Karte
+   nicht mehr drehen, sobald man neben ein Schild fasst. */
+#g3-marken { position: absolute; inset: 0; pointer-events: none; }
+#g3-marken[hidden] { display: none; }
+.g3-marke {
+  position: absolute; transform: translate(-50%, -100%); pointer-events: auto; cursor: pointer;
+  display: flex; align-items: center; gap: 8px; padding: 6px 12px 6px 6px; border-radius: 999px;
+  background: rgba(16, 12, 34, 0.68); border: 1px solid rgba(255, 209, 102, 0.55); color: #f4efe6;
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  white-space: nowrap; transition: transform 0.12s, filter 0.12s;
+}
+.g3-marke:hover { filter: brightness(1.15); transform: translate(-50%, -100%) scale(1.05); }
+.g3-marke.bald { opacity: 0.62; }
+.g3-marke-zeichen { display: flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: 50%; color: #2a1a08; flex: none; }
+.g3-marke-zeichen svg { width: 19px; height: 19px; fill: currentColor; }
+.g3-marke-text { display: flex; flex-direction: column; line-height: 1.15; text-align: left; }
+.g3-marke-text b { font-size: 14px; color: #ffe08a; }
+.g3-marke-text i { font-style: normal; font-size: 11px; color: #cbbfe6; }
+
+/* ---- Bildschirme (Bahnwahl, Ergebnis) ---- */
+/* Über allem: Die Ortsschilder der Weltkarte tragen eine eigene Stapelhöhe (je näher, desto
+   höher), damit sich das vordere vor das hintere legt. Ein Bildschirm, der sich darüberlegt, muss
+   darum höher liegen als jedes Schild – sonst steht mitten im Text der Bahnwahl ein Wegweiser.
+   Kopfzeile und Steuerung liegen dazwischen: über den Schildern, unter den Bildschirmen. */
+#g3-schirm { position: absolute; inset: 0; z-index: 1200; display: none; align-items: center; justify-content: center;
+  padding: 16px; background: rgba(10, 8, 24, 0.55); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+#g3-schirm.sichtbar { display: flex; }
+.g3-tafel-gross {
+  background: linear-gradient(180deg, #2c2450, #171232);
+  border: 3px solid #ffd166; border-radius: 18px; padding: 20px 22px; text-align: center;
+  width: min(680px, 94vw); max-height: 88vh; overflow: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+}
+.g3-tafel-gross.schmal { width: min(440px, 94vw); }
+.g3-tafel-gross h2 { margin: 0 0 4px; font-size: 26px; color: #ffe08a;
+  font-family: "MedievalSharp", Georgia, serif; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.g3-tafel-gross h2 svg { width: 26px; height: 26px; fill: currentColor; }
+.g3-unter { color: #cbbfe6; font-size: 14px; margin: 0 0 14px; line-height: 1.4; }
+.g3-reihe { margin: 14px 0 0; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.g3-btn {
+  display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: 10px; cursor: pointer;
+  background: linear-gradient(180deg, #ffd166, #e39a2a); color: #3a2200; font-weight: bold; font-size: 16px;
+  border: 2px solid #8a5a10; box-shadow: 0 3px 0 #8a5a10;
+}
+.g3-btn svg { width: 19px; height: 19px; fill: currentColor; }
+.g3-btn:active { transform: translateY(2px); box-shadow: none; }
+.g3-btn.hell { background: rgba(255,255,255,0.1); color: #f4efe6; border-color: rgba(255,255,255,0.35); box-shadow: none; }
+
+.g3-bahnliste { display: flex; flex-direction: column; gap: 8px; }
+.g3-bahnkarte {
+  display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px; cursor: pointer;
+  border-radius: 12px; text-align: left; color: #f4efe6;
+  background: rgba(255,255,255,0.07); border: 1px solid rgba(255, 209, 102, 0.3);
+}
+.g3-bahnkarte:hover { background: rgba(255, 209, 102, 0.16); }
+.g3-nr { flex: none; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: #ffd166; color: #3a2200; font-weight: bold; font-size: 17px; }
+.g3-bahntext { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.g3-bahntext b { font-size: 16px; color: #ffe08a; }
+.g3-bahntext i { font-style: normal; font-size: 12px; color: #cbbfe6; line-height: 1.35; }
+.g3-bahnzahl { flex: none; text-align: right; font-size: 14px; color: #f4efe6; display: flex; flex-direction: column; }
+.g3-bahnzahl em { font-style: normal; font-size: 11px; color: #9ee06f; }
+
+table.g3-karte { margin: 8px auto 4px; border-collapse: collapse; font-size: 14px; }
+table.g3-karte th, table.g3-karte td { padding: 4px 9px; border-bottom: 1px solid rgba(255,255,255,0.15); }
+table.g3-karte th { color: #ffd98a; font-weight: normal; font-size: 12px; }
+table.g3-karte tr.ist td { color: #ffe08a; font-weight: bold; }
+
+@media (max-width: 560px) {
+  #g3-titel b { font-size: 16px; }
+  .g3-knopf span { display: none; }
+  .g3-bahntext i { display: none; }
+  .g3-tafel-gross h2 { font-size: 21px; }
+  /* Der Einleitungssatz einer Bahn ist auf dem Telefon sieben Zeilen hoch und deckt das halbe
+     Bild zu. Kleiner gesetzt und breiter gelaufen sind es vier. */
+  #g3-hinweis { font-size: 12.5px; line-height: 1.3; padding: 7px 11px; max-width: 92vw;
+    bottom: calc(var(--g3-unten) + 86px); }
+  #g3-tafel { padding: 6px 9px; min-width: 92px; }
+  .g3-feld { font-size: 12px; gap: 10px; }
+  /* Auf der Weltkarte stehen sechs Schilder dicht beieinander. Kleiner gesetzt überdecken sie
+     sich weniger, und die Insel bleibt zu sehen. */
+  .g3-marke { padding: 4px 9px 4px 4px; gap: 6px; }
+  .g3-marke-zeichen { width: 24px; height: 24px; }
+  .g3-marke-zeichen svg { width: 15px; height: 15px; }
+  .g3-marke-text b { font-size: 12px; }
+  .g3-marke-text i { font-size: 10px; }
+}

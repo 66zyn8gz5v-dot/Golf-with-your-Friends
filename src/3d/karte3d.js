@@ -195,16 +195,27 @@ const Karte3D = (() => {
     }
     for (const netz of W.fertig(zeichner)) stuecke.push({ netz, durchsichtig: true, alpha: 0.82, welle: true, wirftSchatten: false });
 
-    const WA = Bauen.sammler();
+    /* Draußen liegt dasselbe noch einmal, nur grob und ohne Wellen: erst ein undurchsichtiger
+       Meeresgrund, darüber dieselbe durchscheinende Decke. Beides zusammen ergibt genau die Farbe,
+       die innen aus Grund und Decke entsteht – sonst zöge sich quer über das Meer eine helle
+       Naht in der Größe des gerechneten Geländes. Der erste Versuch war eine einzelne
+       undurchsichtige Fläche in Meerblau, und die saß daneben. */
+    const GRUND_TIEF = Bauen.mischen('#35697a', '#e8d9a8', 0.083);
     const aussen = 330;
-    /* Vier Bänder rings um das innere Meer – oben, unten, links, rechts. */
-    const band = (x0, z0, x1, z1) => WA.viereck([x0, MEER - 0.02, z0], [x1, MEER - 0.02, z0],
-      [x1, MEER - 0.02, z1], [x0, MEER - 0.02, z1], '#1b76b4', [0, 1, 0]);
-    band(-aussen, -aussen, aussen, -innen);
-    band(-aussen, innen, aussen, aussen);
-    band(-aussen, -innen, -innen, innen);
-    band(innen, -innen, aussen, innen);
-    for (const netz of WA.fertig(zeichner)) stuecke.push({ netz, wirftSchatten: false });
+    const rahmen = (B, y, farbe) => {
+      const band = (x0, z0, x1, z1) => B.viereck([x0, y, z0], [x1, y, z0], [x1, y, z1], [x0, y, z1], farbe, [0, 1, 0]);
+      band(-aussen, -aussen, aussen, -innen);
+      band(-aussen, innen, aussen, aussen);
+      band(-aussen, -innen, -innen, innen);
+      band(innen, -innen, aussen, innen);
+    };
+    const WG = Bauen.sammler();
+    rahmen(WG, MEER - 1.1, GRUND_TIEF);
+    for (const netz of WG.fertig(zeichner)) stuecke.push({ netz, wirftSchatten: false });
+
+    const WA = Bauen.sammler();
+    rahmen(WA, MEER, '#1f7fbf');
+    for (const netz of WA.fertig(zeichner)) stuecke.push({ netz, durchsichtig: true, alpha: 0.82, wirftSchatten: false });
 
     /* --- Himmel und Wolken --- */
     const HS = Bauen.sammler();

@@ -1504,10 +1504,28 @@ keine Deko auf dem Fairway.
 
 ## Fantasy Golf 3D
 
-Neben dem 2,5D-Spiel liegt eine zweite, jüngere Anwendung im selben Haus: **Fantasy Golf 3D**.
-Erreichbar ist sie über den Knopf *Fantasy Golf 3D* im Startbildschirm. Sie hat eine eigene
-Leinwand, eine eigene Bedienung und einen eigenen Speicher; am fertigen Spiel ändert sie nichts.
-Solange sie läuft, hält das 2,5D-Spiel seine Bildschleife an.
+Neben dem 2,5D-Spiel steht ein zweites, jüngeres: **Fantasy Golf 3D**. Es hat eine **eigene
+Seite unter `src/3d/`**, eine eigene Adresse, ein eigenes Stilblatt, ein eigenes Manifest (man
+kann es als eigene App auf den Startbildschirm legen) und einen eigenen Speicher:
+
+* Spiel: `…/Golf-with-your-Friends/src/3d/`
+* Vorschau: `…/Golf-with-your-Friends/vorschau/src/3d/`
+
+Aus dem 2,5D-Spiel benutzt es genau drei Dateien, die mit dessen Bahnen nichts zu tun haben:
+`src/icons.js` (Sinnbilder), `src/sfx.js` (Geräusche) und `src/version.js` (Fassung und
+Speicherschlüssel). Kein Bahnformat, keine Physik, keine Oberfläche. Die beiden Spiele teilen sich
+nur das Haus – und den Service Worker, damit es eine Fassung und ein Aufräumen gibt.
+
+Anfangs lag die 3D-Welt als Zimmer im alten Haus, erreichbar über einen Knopf im Startbildschirm.
+Das war der kürzeste Weg zu einer ersten Vorschau, aber es war das falsche Bild: Wer ein neues
+Spiel öffnen will, soll ein neues Spiel öffnen und nicht zuerst durch das alte gehen. Seit
+Fassung 114 sind es zwei Adressen.
+
+Warum die Adresse so sperrig ist (`…/src/3d/` statt `…/3d/`): Der Arbeitsablauf `pages.yml`
+kopiert eine feste Liste – `index.html`, `style.css`, `manifest.webmanifest`, `sw.js`, `src`,
+`icons`. Ein neuer Ordner oben wäre schlicht nicht dabei; `src` dagegen wird mitsamt allem
+Darunterliegenden kopiert. Eine Zeile in `pages.yml` würde daraus `…/3d/` machen – die gehört
+aber auf `main` und damit Lüddecke.
 
 ### Was es gibt
 
@@ -1532,6 +1550,9 @@ Solange sie läuft, hält das 2,5D-Spiel seine Bildschleife an.
 | Ganze Bahn zeigen | Knopf mit der Karte oder **M** |
 | Ball zurücklegen | Knopf rechts unten oder **R** (ohne Strafe) |
 | Zurück | Knopf oben links oder **Esc** |
+
+Auf der Weltkarte fehlt der Knopf oben links: Dort ist der Anfang, und ein Knopf ins Nichts hilft
+niemandem. Er erscheint, sobald man in einer Welt oder auf einer Bahn steht.
 
 Nach jedem Schlag schwenkt die Kamera von selbst hinter den Ball und schaut zum Loch – sonst
 müsste man sie nach jedem Schlag erst suchen, und weil die Schlagrichtung an der Kamera hängt,
@@ -1943,7 +1964,7 @@ Sinnbilder, ein laufendes Spiel, die Rangliste und der Editor da sind.
 index.html        Seite, HUD, Ladebild und Startbild (beide laufen ohne JavaScript)
 icons/titelbild.jpg   gemaltes Titelbild des Startbildschirms (quer)
 icons/titelbild-hoch.jpg  dasselbe fürs Hochformat
-tools/auslieferung.mjs  prüft, ob alles, was die Seite braucht, auch ausgeliefert wird
+tools/auslieferung.mjs  prüft für beide Seiten, ob alles Gebrauchte auch ausgeliefert wird
 style.css         Oberfläche
 src/themes.js     Farbpaletten und Deko je Welt
 src/courses.js    die Bahnen des Märchenlands
@@ -1976,6 +1997,10 @@ src/worldmap.js   Weltkarte: Landkarte aus gerechneter Küste, Gelände je Biom 
 src/title.js      animierte Startbildschirm-Szene mit Tag-Nacht-Wechsel
 src/main.js       Spielablauf, Eingabe, Punkte
 
+src/3d/index.html   die eigene Seite von Fantasy Golf 3D (eigene Adresse, eigenes Ladebild)
+src/3d/stil3d.css   ihr Stilblatt – das 2,5D-Spiel hat sein eigenes und weiß von diesem nichts
+src/3d/start3d.js   der Anlasser: Welt starten, Ladebild weg, Zierschrift, Service Worker
+src/3d/manifest3d.webmanifest  damit sich die 3D-Welt als eigene App einrichten lässt
 src/3d/mathe3d.js   Vektoren, Matrizen, Rauschen – die Rechnung für drei Dimensionen
 src/3d/gl3d.js      der 3D-Zeichner: WebGL, Sonne, Schattenwurf, Nebel (ohne fremde Bibliothek)
 src/3d/bauen3d.js   die Bauhütte: Grundkörper und der Sammler, der die feste Welt zusammenbackt

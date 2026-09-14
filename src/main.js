@@ -431,8 +431,7 @@
       </div>
       <div class="atlas-extra"><span class="btn small ghost" id="to-turnier">${Icons.svg('golf_course')} Turnier</span>
         <span class="btn small ghost" id="to-online">${Icons.svg('public')} Online spielen</span>
-        <span class="btn small ghost" id="to-best">${Icons.svg('emoji_events')} Rangliste</span>
-        <span class="btn small ghost" id="to-3d">${Icons.svg('wuerfel')} Fantasy Golf 3D</span></div>
+        <span class="btn small ghost" id="to-best">${Icons.svg('emoji_events')} Rangliste</span></div>
       ${turnierBand()}
       <div class="legend">Die Stufe an jedem Ort sagt nur, was dich erwartet – gespielt werden kann jede Welt sofort.
         <span class="version">${typeof VORSCHAU !== 'undefined' && VORSCHAU ? 'Vorschau · ' : ''}Fassung ${typeof APP_VERSION !== 'undefined' ? APP_VERSION : '?'}</span></div>
@@ -445,13 +444,6 @@
     $('to-best').addEventListener('click', () => { Sfx.unlock(); Music.start(); showBestList(); });
     $('to-map').addEventListener('click', () => { Sfx.unlock(); Music.start(); showMap(); });
     $('to-build').addEventListener('click', () => { Sfx.unlock(); Music.start(); showBuild(); });
-    /* Der Weg in die 3D-Welt. Sie ist eine Anwendung für sich (src/3d/) und hält währenddessen
-       die Bildschleife hier an; zurück kommt man auf denselben Startbildschirm. */
-    $('to-3d').addEventListener('click', () => {
-      Sfx.unlock();
-      hideOverlay();
-      Golf3D.starten(() => showTitle());
-    });
     startbildAn();
   }
 
@@ -2465,10 +2457,6 @@
   /* ---------- Hauptschleife ---------- */
   let last = performance.now(), acc = 0;
   function frame(now) {
-    /* Läuft gerade Fantasy Golf 3D, hat es die Anzeige für sich. Dann hier nichts zeichnen –
-       zwei Welten gleichzeitig zu rechnen kostet nur Strom. Die Schleife läuft weiter, damit
-       nach der Rückkehr kein Anstoß nötig ist. */
-    if (typeof Golf3D !== 'undefined' && Golf3D.aktiv()) { requestAnimationFrame(frame); return; }
     const dt = Math.min(0.05, (now - last) / 1000); last = now; acc += dt;
     while (acc >= STEP) {
       acc -= STEP; if (!window.__golfDebug || !window.__golfDebug.freeze) state.t += STEP;

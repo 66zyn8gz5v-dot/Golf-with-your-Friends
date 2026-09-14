@@ -11,6 +11,9 @@ const APP_FILES = [
   './', './index.html', './style.css', './manifest.webmanifest',
   './src/version.js', './src/text.js', './src/themes.js', './src/courses.js', './src/courses_sea.js', './src/courses_jungle.js', './src/courses_storm.js', './src/courses_shadow.js', './src/courses_colosseum.js', './src/courses_clock.js', './src/courses_snow.js', './src/courses_boule.js', './src/courses_pro.js', './src/level.js', './src/obstacles.js', './src/obstacles_legend.js', './src/obstacles_snow.js',
   './src/physics.js', './src/render.js', './src/render_legend.js', './src/render_snow.js', './src/icons.js', './src/hats.js', './src/net.js', './src/best.js', './src/turnier.js', './src/share.js', './src/sfx.js', './src/music.js', './src/worldmap.js', './src/title.js', './src/editor.js', './src/main.js',
+  /* Fantasy Golf 3D ist eine eigene Seite unter ./src/3d/ mit eigenem Stilblatt und eigenem
+     Manifest. Sie teilt sich mit dem 2,5D-Spiel diesen Speicher – eine Fassung, ein Aufräumen. */
+  './src/3d/', './src/3d/index.html', './src/3d/stil3d.css', './src/3d/manifest3d.webmanifest', './src/3d/start3d.js',
   './src/3d/mathe3d.js', './src/3d/gl3d.js', './src/3d/bauen3d.js', './src/3d/deko3d.js', './src/3d/bahnen3d.js',
   './src/3d/welt3d.js', './src/3d/physik3d.js', './src/3d/karte3d.js', './src/3d/spiel3d.js',
   './icons/icon-192.png', './icons/apple-touch-icon.png',
@@ -40,6 +43,12 @@ self.addEventListener('fetch', e => {
     fetch(frisch).then(res => {
       if (res && res.ok) { const copy = res.clone(); caches.open(VERSION).then(c => c.put(req, copy)); }
       return res;
-    }).catch(() => caches.match(req, { ignoreSearch: true }).then(hit => hit || (req.mode === 'navigate' ? caches.match('./index.html') : undefined)))
+    }).catch(() => caches.match(req, { ignoreSearch: true }).then(hit => {
+      if (hit || req.mode !== 'navigate') return hit;
+      /* Ohne Netz und ohne passenden Eintrag: die Startseite derjenigen Anwendung ausliefern, zu
+         der die Adresse gehört. Früher stand hier immer './index.html' – wer offline die 3D-Seite
+         öffnete, landete damit im 2,5D-Spiel. */
+      return caches.match(url.pathname.includes('/src/3d/') ? './src/3d/index.html' : './index.html');
+    }))
   );
 });
