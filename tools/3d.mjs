@@ -57,7 +57,7 @@ const melde = (bahn, text) => fehler.push(`${bahn}: ${text}`);
    unspielbar – auch wenn man auf der Karte scheinbar durchkommt. Genau dieser Fehler ist beim
    Bauen von „Der Mühlbach" passiert: Die Landzunge in der Mitte war rundherum von Wasser umgeben
    und damit eine Insel. */
-const BEGEHBAR = new Set(['#', ',', 's', 'T', 'H']);
+const BEGEHBAR = new Set(['#', ',', 's', 'o', 'T', 'H']);
 
 for (const welt of BAHNEN3D.WELTEN) {
   if (welt.bald) continue;
@@ -207,7 +207,7 @@ for (const welt of BAHNEN3D.WELTEN) {
     for (let i = 0; i < 600; i++) Physik3D.bewegen(probe, gl, null, 1 / 60);
     const gelaufen = Math.hypot(probe.x - gl.abschlag[0], probe.z - gl.abschlag[1]);
     if (gelaufen > 0.5) melde(name, `ein abgelegter Ball rollt vom Abschlag ${gelaufen.toFixed(2)} Felder weg`);
-    zeile.push(`  ${name.padEnd(34)} ${gl.B}x${gl.T} Par ${b.par}  Hang am Loch ${(amLoch * 100).toFixed(0)} %  Felsen ${gl.felsen.length}`);
+    zeile.push(`  ${name.padEnd(34)} ${gl.B}x${gl.T} Par ${b.par}  Hang am Loch ${(amLoch * 100).toFixed(0)} %  Felsnadeln ${gl.felsen.length}, Banden ${gl.wand.length - gl.felsen.length}`);
   }
 }
 
@@ -266,21 +266,136 @@ for (const { name, gl, bahn } of gelaende) {
 }
 
 /* ---------- 5. Das Par ----------
-   Ein Spieler, der zielt und sich vertut. Er nimmt die Luftlinie zum Loch, schätzt die Kraft nach
-   der Entfernung und legt auf beides einen Fehler. Wasser und Aus kosten ihn einen Strafschlag,
-   genau wie im Spiel. */
-function zufallsRunde(gl, loch, wuerfel) {
+
+   Der zweite Golfer soll einen Menschen abbilden – und ein Mensch zielt nicht stur aufs Loch.
+   Er sieht, wo die Bahn hinführt, spielt bis zur Ecke und von dort weiter. Der erste Versuch
+   zielte immer geradeaus zum Loch; auf einer geraden Bahn ging das gut, auf einer mit Knick
+   schlug er zweihundert Runden lang gegen dieselbe Bande und brauchte zwanzig Schläge. Gemessen
+   wurde damit nicht die Bahn, sondern die Dummheit des Golfers.
+
+   Jetzt bekommt er einen Wegweiser: Von jedem Feld aus ist bekannt, wie weit es über trockenen
+   Grund bis zum Loch ist (eine Flutfüllung vom Loch aus). Daraus folgt eine Spur, und der Golfer
+   zielt auf den **weitesten Punkt dieser Spur, den er in gerader Linie erreichen kann** – genau
+   das, was man vor dem Schlag mit den Augen macht. Erst wenn das Loch selbst frei liegt, zielt er
+   darauf. Über die Bande um die Ecke spielen kann er nicht; er ist damit eher zu schlecht als zu
+   gut, und das ist die richtige Seite zum Irren. */
+function wegFeld(gl, loch) {
+  const B = gl.B, T = gl.T, GROSS = 1e9;
+  const d = new Float32Array(B * T).fill(GROSS);
+  const trocken = (ix, iz) => { const c = gl.zeichen(ix, iz); return c !== '.' && c !== 'x' && c !== 'w'; };
+  const start = [Math.floor(loch[0]), Math.floor(loch[1])];
+  d[start[1] * B + start[0]] = 0;
+  const rand = [start];
+  while (rand.length) {
+    const [x, z] = rand.shift();
+    for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const nx = x + dx, nz = z + dz;
+      if (nx < 0 || nz < 0 || nx >= B || nz >= T || !trocken(nx, nz)) continue;
+      if (d[nz * B + nx] <= d[z * B + x] + 1) continue;
+      d[nz * B + nx] = d[z * B + x] + 1;
+      rand.push([nx, nz]);
+    }
+  }
+  return (ix, iz) => (ix < 0 || iz < 0 || ix >= B || iz >= T) ? GROSS : d[iz * B + ix];
+}
+
+/* Liegt zwischen zwei Punkten nur spielbarer Grund? Abgetastet in Fünftelfeldern – feiner müsste
+   man nur, wenn Banden dünner wären als ein Feld, und das sind sie nicht. */
+function freieSicht(gl, ax, az, bx, bz) {
+  const n = Math.max(2, Math.ceil(Math.hypot(bx - ax, bz - az) * 5));
+  for (let i = 1; i <= n; i++) {
+    const u = i / n, c = gl.zeichenAn(ax + (bx - ax) * u, az + (bz - az) * u);
+    if (c === '.' || c === 'x' || c === 'w') return false;
+  }
+  return true;
+}
+
+/* Der Punkt, auf den gezielt wird: der weiteste auf der Spur, der in gerader Linie erreichbar ist. */
+function zielPunkt(gl, weg, loch, x, z) {
+  if (freieSicht(gl, x, z, loch[0], loch[1])) return loch;
+  let ix = Math.floor(x), iz = Math.floor(z), bestes = null;
+  for (let schritt = 0; schritt < 80; schritt++) {
+    let weiter = null, klein = weg(ix, iz);
+    for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const w = weg(ix + dx, iz + dz);
+      if (w < klein) { klein = w; weiter = [ix + dx, iz + dz]; }
+    }
+    if (!weiter) break;
+    [ix, iz] = weiter;
+    const px = ix + 0.5, pz = iz + 0.5;
+    if (!freieSicht(gl, x, z, px, pz)) break;
+    bestes = [px, pz];
+    if (klein === 0) break;
+  }
+  return bestes || loch;
+}
+
+/* ---------- Wie fest muss man schlagen? ----------
+   Nicht geschätzt, sondern gemessen: Auf einer eigens dafür gebauten, ebenen Bahn wird für zwanzig
+   Kraftstufen ausgerechnet, wie weit der Ball rollt. Daraus lässt sich zu jeder Entfernung die
+   nötige Kraft ablesen.
+
+   Der erste Versuch stand hier als Formel – die Weite wachse mit dem Quadrat der Kraft, also sei
+   die Kraft die Wurzel der Weite. Das ist die Schulphysik eines Balls, der nur von gleichmäßiger
+   Reibung gebremst wird; unser Ball wird zusätzlich mit der Geschwindigkeit gebremst, und damit
+   stimmt die Formel nicht. Bei kurzen Schlägen schlug der Prüfgolfer dadurch fast doppelt so weit
+   wie beabsichtigt, prallte hinten an die Bande und lief zurück – zehn Schläge für eine Bahn, die
+   in vier zu schaffen ist. Gemessen statt geglaubt, und das Problem war weg. */
+const eichung = (() => {
+  const eben = { name: 'Eichung', par: 3, gelaende: { grund: 0, welle: 0, huegel: [] },
+    karte: Array.from({ length: 5 }, (_, i) => (i === 2 ? 'T' + '#'.repeat(58) + 'H' : '#'.repeat(60))) };
+  const gl = Welt3D.gelaende(eben);
+  const punkte = [];
+  for (let i = 1; i <= 20; i++) {
+    const k = i / 20;
+    const b = Physik3D.ball(gl, 1.5, 2.5);
+    Physik3D.schlag(b, 1, 0, k);
+    let t = 0;
+    while (!b.ruht && t < 40) { Physik3D.bewegen(b, gl, null, 1 / 120); t += 1 / 120; }
+    punkte.push({ k, weite: b.x - 1.5 });
+  }
+  zeile.push(`  Eichung: halbe Kraft ${punkte[9].weite.toFixed(1)} Felder, volle Kraft ${punkte[19].weite.toFixed(1)} Felder`);
+  return punkte;
+})();
+
+/* Die Kraft für eine gewünschte Weite – zwischen den gemessenen Stufen geradlinig eingepasst. */
+function kraftFuer(weite) {
+  if (weite <= eichung[0].weite) return eichung[0].k * Math.max(0.2, weite / eichung[0].weite);
+  for (let i = 1; i < eichung.length; i++) {
+    if (weite <= eichung[i].weite) {
+      const a = eichung[i - 1], b = eichung[i];
+      return a.k + (b.k - a.k) * (weite - a.weite) / (b.weite - a.weite);
+    }
+  }
+  return 1;
+}
+
+/* Eine Runde dieses Spielers. Wasser und Aus kosten ihn einen Strafschlag, genau wie im Spiel.
+   Mit SPUR=<Bahnnummer> schreibt das Skript für die ersten Runden auf, was er tut – die einzige
+   Art, einer Zahl wie „im Mittel zwölf Schläge" anzusehen, woran sie liegt. */
+function zufallsRunde(gl, loch, weg, wuerfel, spur) {
   let x = gl.abschlag[0], z = gl.abschlag[1], schlaege = 0, letzterOrt = [x, z];
   while (schlaege < 20) {
-    const d = Math.hypot(loch[0] - x, loch[1] - z);
-    const winkel = Math.atan2(loch[0] - x, loch[1] - z) + (wuerfel() - 0.5) * 0.20;
-    /* Kraft aus der Entfernung: voller Schlag sind rund 27 Felder, und die Weite wächst ungefähr
-       mit dem Quadrat der Kraft. Dazu ein Fehler von gut einem Zehntel. */
-    const kraft = Math.min(1, Math.sqrt(Math.min(d, 27) / 27) * (0.92 + wuerfel() * 0.22));
+    const ziel = zielPunkt(gl, weg, loch, x, z);
+    const d = Math.hypot(ziel[0] - x, ziel[1] - z);
+    const winkel = Math.atan2(ziel[0] - x, ziel[1] - z) + (wuerfel() - 0.5) * 0.20;
+    /* Die Kraft kommt aus der Eichkurve. Gezielt wird ein Stück hinter das Ziel: Wer genau auf
+       das Loch dosiert, bleibt bei jedem zu schwachen Schlag davor liegen – und das Loch nimmt
+       den Ball ohnehin nur an, wenn er noch rollt. Dazu ein Fehler von gut einem Zehntel, so weit
+       vertut man sich beim Ziehen. */
+    const kraft = Math.min(1, kraftFuer(d * 1.15 + 0.7) * (0.93 + wuerfel() * 0.2));
     const b = schlagRechnen(gl, loch, x, z, winkel, kraft);
     schlaege++;
+    const art = gl.art(b.x, b.z);
+    if (spur) spur.push(b.ein ? 'EIN'
+      : `${(b.wasser ? 'Wasser' : art.aus ? 'Aus' : art.name[0])} (${b.x.toFixed(1)},${b.z.toFixed(1)})` +
+        ` [Ziel ${ziel[0].toFixed(0)},${ziel[1].toFixed(0)} d=${d.toFixed(1)} k=${kraft.toFixed(2)}]`);
     if (b.ein) return schlaege;
-    if (b.wasser || gl.art(b.x, b.z).aus) { schlaege++; x = b.sicher[0]; z = b.sicher[1]; letzterOrt = [x, z]; continue; }
+    if (b.wasser || art.aus) {
+      schlaege++; [x, z] = Physik3D.sicherOrt(b, gl); letzterOrt = [x, z];
+      if (spur) spur[spur.length - 1] += ` ->abgelegt(${x.toFixed(1)},${z.toFixed(1)})`;
+      continue;
+    }
     letzterOrt = [x, z]; x = b.x; z = b.z;
   }
   return 20;
@@ -288,10 +403,17 @@ function zufallsRunde(gl, loch, wuerfel) {
 
 for (const { name, gl, bahn } of gelaende) {
   const wuerfel = M3.zufall(20260914);
+  const weg = wegFeld(gl, gl.lochFeld);
   const RUNDEN = 200;
   let summe = 0, schlimmste = 0, imPar = 0;
+  /* Mit SPUR=<Bahnnummer> werden die missratenen Runden dieser Bahn mitgeschrieben – die
+     mittelmäßigen erklären nichts, die schlimmen erklären alles. */
+  const spurFuer = process.env.SPUR !== undefined && gelaende.findIndex(g => g.name === name) === +process.env.SPUR;
+  let gezeigt = 0;
   for (let i = 0; i < RUNDEN; i++) {
-    const n = zufallsRunde(gl, gl.lochFeld, wuerfel);
+    const spur = spurFuer ? [] : null;
+    const n = zufallsRunde(gl, gl.lochFeld, weg, wuerfel, spur);
+    if (spur && n >= bahn.par + 6 && gezeigt++ < 3) console.log(`  SPUR ${i + 1} (${n} Schläge): ` + spur.join(' | '));
     summe += n; schlimmste = Math.max(schlimmste, n);
     if (n <= bahn.par) imPar++;
   }

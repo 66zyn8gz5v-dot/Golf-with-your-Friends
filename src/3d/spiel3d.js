@@ -226,9 +226,11 @@ const Golf3D = (() => {
     const dx = stand.ziel[0] - stand.ball.x, dz = stand.ziel[1] - stand.ball.z;
     kamera.winkel = kamera.zielWinkel = Math.atan2(-dx, -dz);
     /* Die Kamera steht höher, als man zunächst meint. Flach hinter dem Ball sähe es
-       eindrucksvoller aus, aber dann steht die halbe Wiese vor dem Loch und man zielt blind;
-       aus rund dreißig Grad sieht man den Weg und behält den Ball groß im Bild. */
-    kamera.neigung = kamera.zielNeigung = 0.40;
+       eindrucksvoller aus, aber dann steht die halbe Bahn vor dem Loch und man zielt blind; aus
+       gut fünfundzwanzig Grad sieht man den Weg die Spur hinauf und behält den Ball groß im Bild.
+       Auf einer schmalen Bahn zwischen Banden ist das zugleich der Blick, der die Banden zeigt –
+       und über die soll ja gespielt werden. */
+    kamera.neigung = kamera.zielNeigung = 0.46;
     kamera.abstand = kamera.zielAbstand = 8.5;
     kamera.zx = stand.ball.x; kamera.zy = stand.ball.y; kamera.zz = stand.ball.z;
 
@@ -248,6 +250,7 @@ const Golf3D = (() => {
     const B = Bauen.sammler();
     Welt3D.gelaendeNetz(B, gl, AUSSEN);
     Welt3D.felsenNetz(B, gl);
+    Welt3D.bandenNetz(B, gl);
     const burgFahnen = Welt3D.burgNetz(B, gl, bahn.burg);
     Welt3D.dekoNetz(B, gl, beweglich);
     Welt3D.streuenNetz(B, gl, AUSSEN);
@@ -372,7 +375,7 @@ const Golf3D = (() => {
   function ballZurueck(grund) {
     const b = stand.ball;
     let x, z;
-    if (grund === 'wasser' || grund === 'aus') [x, z] = b.sicher;
+    if (grund === 'wasser' || grund === 'aus') [x, z] = Physik3D.sicherOrt(b, szene.gl);
     else [x, z] = stand.letzterOrt || szene.gl.abschlag;
     stand.ball = Physik3D.ball(szene.gl, x, z);
     stand.phase = 'zielen';

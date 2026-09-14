@@ -55,144 +55,195 @@ const BAHNEN3D = (() => {
     himmelOben: '#2f7fc8', himmelUnten: '#bfe3f5',
 
     bahnen: [
-      /* ---------------- 1 ---------------- */
+      /* ---------------- 1 ----------------
+         Die Lehrbahn: schnurgerade, schmal, lang. Wer die Nadeln in der Mitte nicht trifft, spielt
+         außen an der Bande vorbei – und wer außen bleibt, umgeht auch das hohe Gras. Das ist die
+         ganze Lektion dieser Bahn: Die Bande ist kein Rand, sie ist ein Werkzeug. */
       {
         name: 'Burgwiese',
         par: 3,
-        intro: 'Zum Warmwerden: eine offene Wiese unterhalb der Burg. Vier Felsnadeln lassen ein '
-             + 'Tor in der Mitte frei – hindurch, oder in weitem Bogen außen herum.',
+        intro: 'Eine schmale Bahn, geradeaus unter die Burg. Drei Felsnadeln stehen im Weg, in der '
+             + 'Mitte wächst hohes Gras – an der Bande entlang ist es frei.',
         karte: [
-          '..........................',
-          '....,,,,,,,,,,,,,,,,,,....',
-          '..,,,,,,,,,,,,,,,,,,,,,,..',
-          '..,,##################,,..',
-          '..,,##################,,..',
-          '..,,##T######x########,,..',
-          '..,,#########x########,,..',
-          '..,,##################,,..',
-          '..,,##############H###,,..',
-          '..,,#########x########,,..',
-          '..,,#########x########,,..',
-          '..,,##################,,..',
-          '..,,,,,,,,,,,,,,,,,,,,,,..',
-          '....,,,,,,,,,,,,,,,,,,....',
-          '..........................',
+          '..........',
+          '..........',
+          '...#####..',
+          '...##H##..',
+          '...#####..',
+          '...#####..',
+          '...#####..',
+          '...##x##..',
+          '...#####..',
+          '...#####..',
+          '...#x#x#..',
+          '...#####..',
+          '...#####..',
+          '...#####..',
+          '...#,,,#..',
+          '...#,,,#..',
+          '...#####..',
+          '...#####..',
+          '...#####..',
+          '...#####..',
+          '...#####..',
+          '...##T##..',
+          '...#####..',
+          '...#####..',
+          '...#####..',
+          '...#####..',
+          '..........',
+          '..........',
         ],
         gelaende: {
           grund: 0,
-          welle: 0.05,
+          welle: 0.03,
           huegel: [
-            { x: 12, z: 3, r: 7, h: 0.45 },        // Rücken im Norden, der zur Burg ansteigt
-            { x: 18.5, z: 8.5, r: 3.8, h: -0.3 },  // Mulde vor dem Loch: der Ball läuft hinein
-            { x: 7, z: 11, r: 4, h: 0.14 },
+            /* Eine sehr flache Querneigung: Die Bahn hängt kaum merklich nach rechts. Merken tut
+               man es erst über die ganze Länge – und genau das soll man lernen. */
+            { x: 2, z: 13, r: 10, h: 0.3 },
+            /* Die Mulde ist eng und steil. Flacher zieht sie nicht: Seit der Ball Haftreibung hat,
+               bleibt er auf allem unter achtzehn Prozent liegen – eine Mulde muss steiler sein als das,
+               sonst ist sie nur eine Delle. */
+            { x: 5.5, z: 3.5, r: 2, h: -0.3 },
           ],
         },
-        /* Die Burg steht so, dass sie vom Abschlag aus im Bild liegt: Gespielt wird nach Osten,
-           also steht sie weit östlich und ein Stück nördlich – schräg voraus über dem Loch. */
-        burg: { x: 31, z: -7, g: 1.35, berg: 5.4 },
+        burg: { x: 5.5, z: -19, g: 1.3, berg: 5.2 },
         deko: [
-          { t: 'muehle', x: -4.5, z: 5.5, g: 1.1 },
-          { t: 'haus', x: -3.2, z: 10.4, g: 1.2, dreh: 0.5 },
-          { t: 'haus', x: -5.6, z: 12.6, g: 0.95, dreh: -0.8 },
-          { t: 'zaun', von: [-2.2, 9.2], nach: [-2.2, 14] },
+          { t: 'muehle', x: -4.5, z: 9, g: 1.15, dreh: 0.6 },
+          { t: 'haus', x: -4, z: 17, g: 1.2, dreh: 0.5 },
+          { t: 'haus', x: 14, z: 7, g: 1.0, dreh: -0.7 },
+          { t: 'zaun', von: [-2.5, 12], nach: [-2.5, 20] },
+          { t: 'felsgruppe', x: 13, z: 16, g: 1.0 },
         ],
-        autoDeko: { saat: 11, dichte: 0.5 },
+        autoDeko: { saat: 11, dichte: 0.55 },
       },
 
-      /* ---------------- 2 ---------------- */
+      /* ---------------- 2 ----------------
+         Ein Knick nach rechts und ein Bach quer durch die zweite Hälfte. Der Bach lässt links und
+         rechts je ein Feld trocken – wer eng an der Bande bleibt, kommt hinüber, wer die Mitte
+         nimmt, schwimmt. */
       {
         name: 'Der Mühlbach',
         par: 4,
-        intro: 'Der Mühlbach teilt die Wiese von oben bis unten. Genau zwischen Abschlag und Loch '
-             + 'liegt die Furt, zwei Felder schmal – wer sie verfehlt, schwimmt.',
+        intro: 'Erst geradeaus, dann im rechten Winkel nach rechts. Hinter dem Knick liegt der '
+             + 'Mühlbach quer – links an der Bande, rechts daneben bleibt eine Gasse trocken.',
         karte: [
-          '..........................',
-          '....,,,,,,,wwww,,,,,,,,...',
-          '...,,,,,,,,wwww,,,,,,,,,..',
-          '..,,#######wwww#########,,',
-          '..,,#######wwww#########,,',
-          '..,,#######wwww#########,,',
-          '..,,#######wwww#########,,',
-          '..,,#T##################,,',
-          '..,,###############H####,,',
-          '..,,#######wwww#########,,',
-          '..,,#######wwww#########,,',
-          '..,,#######wwww#########,,',
-          '...,,,,,,,,wwww,,,,,,,,,..',
-          '....,,,,,,,wwww,,,,,,,,...',
+          '................',
+          '................',
+          '........#####...',
+          '........##H##...',
+          '........#####...',
+          '........#####...',
+          '........#####...',
+          '........#####...',
+          '........#####...',
+          '........#####...',
+          '........ww###...',
+          '........ww###...',
+          '........#####...',
+          '........#####...',
+          '........#####...',
+          '........#####...',
+          '........#####...',
+          '..###########...',
+          '..###########...',
+          '..###########...',
+          '..#####.........',
+          '..#####.........',
+          '..#####.........',
+          '..##x##.........',
+          '..#####.........',
+          '..#####.........',
+          '..##T##.........',
+          '..#####.........',
+          '..#####.........',
+          '..#####.........',
+          '................',
+          '................',
         ],
         gelaende: {
           grund: 0.1,
-          welle: 0.05,
+          welle: 0.04,
           huegel: [
-            { x: 24, z: 3, r: 8, h: 0.8 },       // die Wiese steigt nach Osten zur Burg an
-            { x: 5, z: 11, r: 5, h: -0.12 },
-            { x: 19.5, z: 8.5, r: 3, h: -0.3 },  // Kessel um das Loch
+            { x: 14, z: 6, r: 8, h: 0.5 },        // die Bahn steigt zur Burg hin leicht an
+            { x: 10.5, z: 3.5, r: 2, h: -0.32 },  // Kessel um das Loch, eng und steil
           ],
         },
-        burg: { x: 34, z: 0, g: 1.3, berg: 5.6 },
+        burg: { x: 10.5, z: -17, g: 1.3, berg: 5.4 },
         deko: [
-          // Die Brücke steht über dem nördlichen Bach und ist Zier, kein Weg – gespielt wird
-          // durch die Furt. Zwei Steinhaufen markieren deren Einfahrt.
-          { t: 'bruecke', x: 12.5, z: 3.5 },
-          { t: 'felsgruppe', x: 12.5, z: 6.3, g: 0.55 },
-          { t: 'felsgruppe', x: 12.5, z: 9.7, g: 0.55 },
-          { t: 'muehle', x: 8, z: -3.0, g: 1.05, dreh: 0.3 },
-          { t: 'haus', x: 28, z: 11.5, g: 1.1, dreh: -0.4 },
-          { t: 'zaun', von: [26, 9.5], nach: [30.5, 10.4] },
+          { t: 'muehle', x: 15.5, z: 10.5, g: 1.25, dreh: -0.7 },
+          { t: 'haus', x: 16.5, z: 15, g: 1.1, dreh: -0.4 },
+          { t: 'felsgruppe', x: 6.5, z: 10, g: 1.1 },
+          { t: 'zaun', von: [14.5, 13.5], nach: [18, 14.5] },
         ],
         autoDeko: { saat: 23, dichte: 0.5 },
       },
 
-      /* ---------------- 3 ---------------- */
+      /* ---------------- 3 ----------------
+         Bergauf, mit Knick, Sand und einem Tor aus zwei Felsnadeln kurz vor dem Loch. Die längste
+         und die schwerste der drei. */
       {
         name: 'Zum Burgtor',
-        par: 4,
-        intro: 'Bergauf bis vor das Burgtor: drei Terrassen, vier Felsnadeln, drei Sandgruben. '
-             + 'Oben liegt das Loch in einer Mulde.',
+        /* Par 5, nicht 4: Die Bahn ist lang, sie steigt, sie hat einen Knick und zwei Sandgruben.
+           Der Prüfgolfer braucht im Mittel sechs Schläge – ein Par, das nur der Rechner schafft,
+           ist kein Par, sondern eine Kränkung. */
+        par: 5,
+        intro: 'Bergauf, um die Ecke und durch ein Tor aus zwei Felsnadeln. Zwei Sandgruben liegen '
+             + 'im Weg; oben wartet das Loch in einer Mulde.',
         karte: [
-          '.......................',
-          '.....,,,,,,,,,,,,,.....',
-          '..,,,,,,,,,,,,,,,,,,,..',
-          '..,,###############,,..',
-          '..,,######H########,,..',
-          '..,,###############,,..',
-          '..,,##x#########x##,,..',
-          '..,,##x###sss###x##,,..',
-          '..,,######sss######,,..',
-          '..,,###############,,..',
-          '..,,##x#########x##,,..',
-          '..,,##x#########x##,,..',
-          '..,,###############,,..',
-          '..,,####sss########,,..',
-          '..,,####sss###T####,,..',
-          '..,,###############,,..',
-          '..,,,,,,,,,,,,,,,,,,,..',
-          '.....,,,,,,,,,,,,,.....',
-          '.......................',
+          '...............',
+          '...............',
+          '.....#####.....',
+          '.....##H##.....',
+          '.....#####.....',
+          '.....#####.....',
+          '.....#ss##.....',
+          '.....#ss##.....',
+          '.....#####.....',
+          '.....#####.....',
+          '.....#x#x#.....',
+          '.....#####.....',
+          '.....#####.....',
+          '..########.....',
+          '..########.....',
+          '..########.....',
+          '..#####........',
+          '..#####........',
+          '..##x##........',
+          '..#####........',
+          '..#####........',
+          '..#ss##........',
+          '..#ss##........',
+          '..#####........',
+          '..#####........',
+          '..##T##........',
+          '..#####........',
+          '..#####........',
+          '..#####........',
+          '...............',
+          '...............',
         ],
         gelaende: {
           grund: 0,
-          welle: 0.04,
+          welle: 0.03,
           huegel: [
-            /* Der Anstieg vom Abschlag (unten, großes z) zum Loch (oben, kleines z). Drei Glocken
-               nacheinander geben die drei Terrassen: dazwischen wird es kurz flach, und dort
-               bleibt ein zu schwacher Schlag liegen, statt wieder zurückzurollen. */
-            { x: 10.5, z: 3, r: 10, h: 1.25 },
-            { x: 10.5, z: 8, r: 5.5, h: 0.5 },
-            { x: 10.5, z: 13, r: 5, h: 0.2 },
-            { x: 10.5, z: 4.5, r: 2.6, h: -0.45 },   // die Mulde um das Loch
+            /* Der Anstieg zum Loch hin. Zwei Glocken hintereinander geben zwei Terrassen:
+               dazwischen wird es kurz flach, und dort bleibt ein zu schwacher Schlag liegen,
+               statt wieder zurückzurollen. */
+            { x: 7, z: 2, r: 13, h: 1.05 },
+            { x: 5, z: 14, r: 9, h: 0.5 },
+            { x: 7.5, z: 3.5, r: 2, h: -0.34 },    // die Mulde um das Loch, eng und steil
           ],
         },
-        burg: { x: 10.5, z: -15, g: 1.4, berg: 4.6 },
+        burg: { x: 7.5, z: -15, g: 1.4, berg: 4.8 },
         deko: [
-          { t: 'mast', x: 5.0, z: 3.5, h: 1.5, farbe: '#b63a30' },
-          { t: 'mast', x: 16.0, z: 3.5, h: 1.5, farbe: '#b63a30' },
-          { t: 'felsgruppe', x: -1.5, z: 7, g: 1.1 },
-          { t: 'felsgruppe', x: 24, z: 11, g: 0.9 },
-          { t: 'haus', x: -3.0, z: 14.5, g: 1.1, dreh: 0.6 },
+          { t: 'mast', x: 3.4, z: 2.5, h: 1.5, farbe: '#b63a30' },
+          { t: 'mast', x: 11.6, z: 2.5, h: 1.5, farbe: '#b63a30' },
+          { t: 'felsgruppe', x: 13.5, z: 8, g: 1.1 },
+          { t: 'felsgruppe', x: -1.5, z: 20, g: 0.9 },
+          { t: 'haus', x: 10.5, z: 22, g: 1.1, dreh: 0.6 },
         ],
-        autoDeko: { saat: 37, dichte: 0.45 },
+        autoDeko: { saat: 37, dichte: 0.5 },
       },
     ],
   };

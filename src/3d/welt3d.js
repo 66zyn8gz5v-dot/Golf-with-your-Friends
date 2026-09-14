@@ -33,24 +33,33 @@ const Welt3D = (() => {
      Das gibt den langen, weich auslaufenden Roll, den man vom Golf kennt.
 
      'reibung' wirkt gleichmäßig, egal wie schnell. Sie bringt den Ball am Ende wirklich zum
-     Stehen (mit 'zaeh' allein würde er unendlich lange immer langsamer werden) und entscheidet
-     zugleich, ab welchem Gefälle ein liegender Ball von selbst anrollt: genau dann, wenn die
-     Hangkraft größer ist als sie. Auf Fairway sind das rund sechs Prozent Gefälle – flach genug,
-     dass eine Mulde um das Loch wirkt, steil genug, dass nichts von allein davonläuft.
+     Stehen – mit 'zaeh' allein würde er unendlich lange immer langsamer werden.
+
+     'haft' ist die Haftreibung: Bis zu diesem Wert hält ein liegender Ball einem Hang stand. Sie
+     ist deutlich größer als 'reibung', und genau so ist es auch in Wirklichkeit – ein Ball, der
+     auf einem geneigten Grün liegt, bleibt liegen, obwohl er, einmal angestoßen, denselben Hang
+     hinunterrollt. Ohne sie ist die steilste bespielbare Bahn eine mit sechs Prozent Gefälle:
+     Alles darüber schiebt jeden liegenden Ball wieder nach unten, und eine Bahn, die bergauf zur
+     Burg führt, wird unspielbar. Genau das ist bei „Zum Burgtor" passiert, mit sechzehn Prozent.
+
+     Auf Fairway hält die Haftreibung bis zu rund achtzehn Prozent Gefälle – steil genug für
+     eine Bahn, die sichtbar bergauf führt, flach genug, dass eine Mulde um das Loch den Ball
+     trotzdem hineinzieht (dort ist es steiler).
 
      Geeicht ist es so: **Voller Schlag auf ebenem Fairway = gut 27 Felder.** Das ist etwas mehr
      als die längste Bahn, man kann also immer übers Ziel hinausschlagen. Ein halber Schlag kommt
      rund elf Felder weit – der Kraftbalken ist damit auf seiner ganzen Länge brauchbar und nicht
      nur im ersten Viertel. */
   const ART = {
-    '#': { name: 'Fairway', zaeh: 0.38, reibung: 0.40, gemaeht: 1, farbe: '#79c247', farbe2: '#6bb33d' },
-    'T': { name: 'Abschlag', zaeh: 0.38, reibung: 0.40, gemaeht: 1, farbe: '#8ed158', farbe2: '#80c34c' },
-    'H': { name: 'Grün', zaeh: 0.33, reibung: 0.34, gemaeht: 0.5, farbe: '#8ad455', farbe2: '#7cc849' },
-    ',': { name: 'Rough', zaeh: 1.5, reibung: 1.6, farbe: '#4e8f33', farbe2: '#447f2c', rau: 0.055 },
-    's': { name: 'Sand', zaeh: 3.0, reibung: 5.0, farbe: '#e6d3a0', farbe2: '#d8c28c', rau: 0.02 },
-    'w': { name: 'Wasser', zaeh: 1.2, reibung: 1.2, wasser: true, farbe: '#3a7a52', farbe2: '#33694a' },
-    'x': { name: 'Fels', zaeh: 0.6, reibung: 0.6, wand: true, farbe: '#6f9a45', farbe2: '#638c3e' },
-    '.': { name: 'Wiese', zaeh: 1.8, reibung: 2.2, aus: true, farbe: '#5fa03a', farbe2: '#549132' },
+    '#': { name: 'Fairway', zaeh: 0.38, reibung: 0.40, haft: 1.25, gemaeht: 1, farbe: '#79c247', farbe2: '#6bb33d' },
+    'T': { name: 'Abschlag', zaeh: 0.38, reibung: 0.40, haft: 1.25, gemaeht: 1, farbe: '#8ed158', farbe2: '#80c34c' },
+    'H': { name: 'Grün', zaeh: 0.33, reibung: 0.34, haft: 1.05, gemaeht: 0.5, farbe: '#8ad455', farbe2: '#7cc849' },
+    ',': { name: 'Rough', zaeh: 1.5, reibung: 1.6, haft: 2.4, farbe: '#4e8f33', farbe2: '#447f2c', rau: 0.055 },
+    's': { name: 'Sand', zaeh: 3.0, reibung: 5.0, haft: 4.5, farbe: '#e6d3a0', farbe2: '#d8c28c', rau: 0.02 },
+    'w': { name: 'Wasser', zaeh: 1.2, reibung: 1.2, haft: 1.2, wasser: true, farbe: '#3a7a52', farbe2: '#33694a' },
+    'x': { name: 'Fels', zaeh: 0.6, reibung: 0.6, haft: 1.2, wand: true, farbe: '#6f9a45', farbe2: '#638c3e' },
+    'o': { name: 'Kante', zaeh: 0.38, reibung: 0.40, haft: 1.25, gemaeht: 1, offen: true, farbe: '#79c247', farbe2: '#6bb33d' },
+    '.': { name: 'Wiese', zaeh: 1.8, reibung: 2.2, haft: 2.8, aus: true, farbe: '#5fa03a', farbe2: '#549132' },
   };
   const artVon = ch => ART[ch] || ART['.'];
 
@@ -115,9 +124,11 @@ const Welt3D = (() => {
     const zumRand = abstandsFeld(spielbar, B, T, RAND);
     const zumUfer = abstandsFeld(trocken, B, T, 2);
 
-    /* Böschung: Von einem halben Feld hinter der Spielfläche fällt der Boden über zweieinhalb
-       Felder um SENKE ab. Steiler sähe nach Tortenstück aus, flacher nach Fußmatte. */
-    const SENKE = 1.35, WASSERTIEFE = 0.5;
+    /* Böschung: Hinter der Bahn fällt der Boden ein Stück ab. Früher war das ein tiefer Absatz –
+       die Bahn lag wie eine Torte in der Landschaft. Seit sie von Banden eingefasst ist, braucht
+       es das nicht mehr: Die Bande sagt, wo die Bahn aufhört, und die Wiese daneben darf fast
+       gleich hoch liegen. Ein kleiner Absatz bleibt, damit der Balken einen Fuß hat. */
+    const SENKE = 0.45, WASSERTIEFE = 0.5;
     const s = M3.weich;
     const stufe = (v, a, b) => s(M3.klemm((v - a) / (b - a), 0, 1));
 
@@ -128,7 +139,7 @@ const Welt3D = (() => {
         if (q < 1) { const u = 1 - q; y += h.h * u * u; }
       }
       if (welle) y += welle * (rausch(x * 0.33, z * 0.33) + rausch(x * 0.9, z * 0.9) * 0.4);
-      y -= SENKE * stufe(zumRand(x, z), 0.45, 3.0);
+      y -= SENKE * stufe(zumRand(x, z), 0.35, 1.8);
       y -= WASSERTIEFE * stufe(zumUfer(x, z), 0.0, 1.3);
       return y;
     }
@@ -146,12 +157,54 @@ const Welt3D = (() => {
       return raus;
     }
 
-    /* Alle Felsklötze der Bahn als Rechtecke, damit die Kugelrechnung sie ohne Kartensuche
-       abklappern kann. Es sind nie viele. */
+    /* ---------- Was den Ball aufhält ----------
+
+       Zweierlei, und beides wird gleich gerechnet – als Rechteck von oben gesehen, an dem der Ball
+       abprallt wie an einer Bande:
+
+       **Felsnadeln** ('x') stehen mitten in der Bahn und sind mannshoch. Über sie hinweg kommt
+       nur, wer springt.
+
+       **Die Banden** sind der Rand der Bahn selbst. Jedes Feld außerhalb, das an die Spielfläche
+       stößt, wird zum Block – und weil der Ball ohnehin nie hineinkommt, ist die Innenkante dieses
+       Blocks genau die Bandenlinie. Das ist der ganze Trick: Man braucht keine eigene Rechnung für
+       dünne Balken, sondern setzt einen dicken Klotz dahinter, von dem man nur die Vorderseite
+       sieht. Gezeichnet wird ein Balken (siehe bandenNetz), gerechnet wird ein Rechteck.
+
+       Die Bande ist niedrig. Ein rollender Ball prallt ab, ein springender fliegt darüber – so
+       wie es auf einem richtigen Minigolfplatz auch ist. Wer die Bande nicht will, schreibt 'o'
+       statt '#': Dort ist die Bahn offen und der Ball fällt hinaus. */
+    const BANDE_HOCH = 0.34;
     const felsen = [];
     for (let iz = 0; iz < T; iz++) for (let ix = 0; ix < B; ix++) if (zeichen(ix, iz) === 'x') {
       felsen.push({ x0: ix, z0: iz, x1: ix + 1, z1: iz + 1, oben: hoehe(ix + 0.5, iz + 0.5) + 0.95 });
     }
+
+    /* Die Kanten der Bahn: je ein Eintrag für jede Feldseite, an der Spielfläche auf Nichts stößt.
+       Daraus entstehen unten sowohl die Klötze für die Rechnung als auch die Balken fürs Auge. */
+    const SEITEN = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+    const kanten = [];
+    for (let iz = -1; iz <= T; iz++) for (let ix = -1; ix <= B; ix++) {
+      const c = zeichen(ix, iz);
+      if (c === '.' || c === 'o' || c === 'x') continue;          // nur von der Spielfläche aus
+      for (const [dx, dz] of SEITEN) {
+        if (zeichen(ix + dx, iz + dz) !== '.') continue;
+        kanten.push({ ix, iz, dx, dz, y: hoehe(ix + 0.5, iz + 0.5) });
+      }
+    }
+
+    /* Aus jedem Nachbarfeld, das mindestens eine Kante trägt, wird ein Block. Mehrere Kanten am
+       selben Feld ergeben denselben Block – darum die Sammlung über den Schlüssel. */
+    const banden = new Map();
+    for (const k of kanten) {
+      const bx = k.ix + k.dx, bz = k.iz + k.dz, schluessel = bx + ':' + bz;
+      const vorher = banden.get(schluessel);
+      const oben = k.y + BANDE_HOCH;
+      if (!vorher) banden.set(schluessel, { x0: bx, z0: bz, x1: bx + 1, z1: bz + 1, oben, bande: true });
+      else if (oben > vorher.oben) vorher.oben = oben;
+    }
+    /* Eine Liste für die Kugelrechnung: Felsnadeln und Banden zusammen. */
+    const wand = [...felsen, ...banden.values()];
 
     const finde = ch => {
       for (let iz = 0; iz < T; iz++) { const ix = karte[iz].indexOf(ch); if (ix >= 0) return [ix + 0.5, iz + 0.5]; }
@@ -159,7 +212,7 @@ const Welt3D = (() => {
     };
 
     return { bahn, B, T, zeichen, zeichenAn, art: (x, z) => artVon(zeichenAn(x, z)),
-      hoehe, neigung, felsen, zumRand, RAND,
+      hoehe, neigung, felsen, wand, kanten, BANDE_HOCH, zumRand, RAND,
       abschlag: finde('T'), lochFeld: finde('H') };
   }
 
@@ -170,8 +223,22 @@ const Welt3D = (() => {
      kommt vom Feld, in dem die Mitte des Vierecks liegt; das Rauschen darauf nimmt der Wiese das
      Gleichmäßige, das sie sonst wie Filz aussehen lässt. */
   function gelaendeNetz(B, gl, aussenRand) {
-    const S = 0.5;
-    const x0 = -aussenRand, x1 = gl.B + aussenRand, z0 = -aussenRand, z1 = gl.T + aussenRand;
+    gitter(B, gl, 0.5, -aussenRand, gl.B + aussenRand, -aussenRand, gl.T + aussenRand, null);
+    /* Und weit draußen dasselbe noch einmal, grob: bis zu den fernen Hügeln. Ohne das hört der
+       Boden ein Stück vor dem Horizont auf, und in den Ecken des Bildes schaut der Himmel unter
+       der Landschaft hervor. Zwei Einheiten Schrittweite reichen dort – im Nebel und aus vierzig
+       Feldern Entfernung sieht niemand den Unterschied, aber jeder sieht das Loch. */
+    const innen = [-aussenRand, gl.B + aussenRand, -aussenRand, gl.T + aussenRand];
+    const weit = Math.max(gl.B, gl.T) * 0.5 + 52;
+    const mx = gl.B / 2, mz = gl.T / 2;
+    gitter(B, gl, 2, mx - weit, mx + weit, mz - weit, mz + weit, innen);
+  }
+
+  /* Ein Stück Gelände als Gitter. 'aussparen' lässt einen Bereich frei – so kann das grobe
+     Gitter um das feine herumgelegt werden, ohne es zu überdecken. */
+  function gitter(B, gl, S, xa, xb, za, zb, aussparen) {
+    const x0 = Math.floor(xa / S) * S, x1 = Math.ceil(xb / S) * S;
+    const z0 = Math.floor(za / S) * S, z1 = Math.ceil(zb / S) * S;
     const nx = Math.round((x1 - x0) / S), nz = Math.round((z1 - z0) / S);
     const rausch = M3.rauschen(4242);
 
@@ -184,6 +251,7 @@ const Welt3D = (() => {
     const p = (i, j) => [x0 + i * S, H(i, j), z0 + j * S];
     for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
       const mx = x0 + (i + 0.5) * S, mz = z0 + (j + 0.5) * S;
+      if (aussparen && mx > aussparen[0] && mx < aussparen[1] && mz > aussparen[2] && mz < aussparen[3]) continue;
       const a = gl.art(mx, mz);
       /* Unter Wasser liegt Bachgrund, kein Gras – die Farbe dafür steckt schon in ART['w'].
 
@@ -193,8 +261,12 @@ const Welt3D = (() => {
          etwas schon auf einem Rasen gesehen – und sie zeigen nebenbei, wo die kurz geschnittene
          Fläche aufhört. */
       let f = Bauen.farbe(a.gemaeht && Math.floor(mz / 2) % 2 === 0 ? a.farbe2 : a.farbe);
-      const v = 1 + rausch(mx * 0.7, mz * 0.7) * (a.gemaeht ? 0.03 : 0.09)
-                  + rausch(mx * 2.3, mz * 2.3) * (a.gemaeht ? 0.015 : 0.05);
+      /* Die Körnung der Farbe richtet sich nach der Maschenweite. Auf dem groben Gitter weit
+         draußen würde dasselbe feine Rauschen zu einem Schachbrett aus zwei Meter großen Feldern
+         – man sieht dann nicht mehr die Wiese, sondern das Gitter. */
+      const koernung = 0.5 / S;
+      const v = 1 + rausch(mx * 0.7 * koernung, mz * 0.7 * koernung) * (a.gemaeht ? 0.03 : 0.09)
+                  + rausch(mx * 2.3 * koernung, mz * 2.3 * koernung) * (a.gemaeht ? 0.015 : 0.05);
       f = [f[0] * v, f[1] * v, f[2] * v];
       /* Das Viereck wird über die kürzere Diagonale geteilt. Über die falsche geteilt bekommt ein
          Hügelkamm eine Delle und eine Mulde einen Grat – auf einer Golfbahn sieht man das sofort,
@@ -275,6 +347,48 @@ const Welt3D = (() => {
         const a = (i + r() * 0.6) / 4 * M3.TAU3, d = 0.46;
         B.stelle(mx + Math.cos(a) * d, gl.hoehe(mx + Math.cos(a) * d, mz + Math.sin(a) * d) - 0.04,
           mz + Math.sin(a) * d, 0, 1, b => Deko3D.busch(b, 0.12 + r() * 0.07, '#4e8f33', saat + i * 13));
+      }
+    }
+  }
+
+  /* ---------- Die Banden ----------
+     Für jede Kante ein Balken, dazu Pfosten dort, wo eine Reihe von Balken endet oder um die Ecke
+     geht. Das ist kein Zierrat: Ohne die Pfosten stoßen an jeder Ecke zwei Balken stumpf
+     aneinander, und man sieht durch die Fuge hindurch.
+
+     Der Balken sitzt mit seiner Innenseite genau auf der Bandenlinie – dort, wo die Kugelrechnung
+     den Ball anhalten lässt. Läge er mittig auf der Linie, prallte der Ball sichtbar in der Luft
+     ab; läge er ganz außen, führe er sichtbar in das Holz hinein. */
+  function bandenNetz(B, gl) {
+    const DICK = 0.30, HOCH = gl.BANDE_HOCH, TIEF = 0.10;     // TIEF: so weit steckt er im Boden
+    const HOLZ = '#8a5f38', HOLZ_OBEN = '#b1865a', HOLZ_TIEF = '#6a4526';
+    /* Trägt das Nachbarfeld dieselbe Kante? Dann läuft der Balken dort weiter und braucht hier
+       keinen Pfosten. */
+    const kantenSatz = new Set(gl.kanten.map(k => `${k.ix}:${k.iz}:${k.dx}:${k.dz}`));
+    const laeuftWeiter = (k, qx, qz) => kantenSatz.has(`${k.ix + qx}:${k.iz + qz}:${k.dx}:${k.dz}`);
+
+    for (const k of gl.kanten) {
+      // Mitte der Kante und ihre Richtung: quer zur Feldseite
+      const mx = k.ix + 0.5 + k.dx * (0.5 + DICK / 2);
+      const mz = k.iz + 0.5 + k.dz * (0.5 + DICK / 2);
+      const laengs = k.dx ? 0 : Math.PI / 2;                   // Balken liegt quer zur Seitenrichtung
+      B.stelle(mx, k.y - TIEF, mz, laengs, 1, b => {
+        b.kasten(DICK, HOCH + TIEF, 1.0, HOLZ, HOLZ_OBEN);
+        /* Ein schmaler dunkler Streifen auf halber Höhe: Von Weitem liest man daran, dass es ein
+           Balken ist und keine Mauer. */
+        b.mit(M3.verschieben(0, (HOCH + TIEF) * 0.62, 0), c => c.kasten(DICK * 1.04, 0.025, 1.0, HOLZ_TIEF));
+      });
+      /* Pfosten – abgesägte Stämme wie auf dem Vorbild. Sie stehen an jedem Ende einer Reihe
+         (dort stoßen sonst zwei Balken stumpf aneinander und man sieht durch die Fuge) und
+         zusätzlich alle drei Felder. Das zweite ist reine Optik, aber es ist die Optik, die aus
+         einer langen Latte eine Bande macht. */
+      const quer = k.dx ? [[0, -1], [0, 1]] : [[-1, 0], [1, 0]];
+      for (const [qx, qz] of quer) {
+        const ende = !laeuftWeiter(k, qx, qz);
+        const regel = (qx > 0 || qz > 0) && (k.ix + k.iz) % 3 === 0;
+        if (!ende && !regel) continue;
+        B.stelle(mx + qx * 0.5, k.y - TIEF - 0.05, mz + qz * 0.5, 0, 1,
+          b => b.walze(DICK * 0.66, DICK * 0.60, HOCH + TIEF + 0.10, 8, HOLZ, HOLZ_OBEN));
       }
     }
   }
@@ -400,12 +514,18 @@ const Welt3D = (() => {
       /* Je weiter draußen, desto dichter der Wald: Innen bleibt der Blick frei, außen schließt
          sich die Landschaft. Das ist billiger als eine Kulisse und wirkt dreimal so tief.
 
-         Die ersten zweieinhalb Felder hinter dem Bahnrand bleiben baumfrei. Das ist keine
-         Schönheitsregel, sondern eine Notwendigkeit: Die Kamera steht beim Zielen hinter dem Ball,
-         also oft genau dort – und stand dort eine Tanne, sah man die Bahn nicht mehr. Büsche und
-         Steine dürfen bleiben, über die schaut man hinweg. */
-      const waldNeigung = M3.klemm((abstand - 2.5) / 9, 0, 1);
-      if (abstand > 2.5 && wuerfel < dichte * (0.12 + waldNeigung * 0.55)) {
+         Zwei Sperrbezirke halten Bäume weg, und beide sind Notwendigkeiten, keine Schönheitsregeln:
+
+         **Der Saum entlang der Bahn.** Die Bahnen sind schmal; die Kamera steht beim Zielen
+         dahinter und damit oft neben der Bande. Eine Tanne zwei Felder daneben stünde mitten im
+         Bild. Büsche, Steine und Blumen dürfen dort bleiben – über die schaut man hinweg.
+
+         **Der Platz hinter dem Abschlag.** Dort steht die Kamera beim allerersten Schlag, weit
+         außerhalb der Bahn, und sie steht dort jedes Mal. Ein Baum an dieser Stelle verdeckt nicht
+         irgendeinen Schlag, sondern immer denselben. */
+      const zumAbschlag = gl.abschlag ? Math.hypot(px - gl.abschlag[0], pz - gl.abschlag[1]) : 99;
+      const waldNeigung = M3.klemm((abstand - 2.8) / 9, 0, 1);
+      if (abstand > 2.8 && zumAbschlag > 7 && wuerfel < dichte * (0.14 + waldNeigung * 0.6)) {
         if (r() < 0.62) B.stelle(px, y, pz, 0, 1, b => Deko3D.tanne(b, 1.5 + r() * 1.6, Math.round(px * 53 + pz * 29)));
         else B.stelle(px, y, pz, r() * 6, 1, b => Deko3D.laubbaum(b, 1.6 + r() * 1.4, Math.round(px * 71 + pz * 17)));
       } else if (wuerfel < dichte * 0.75) {
@@ -443,7 +563,7 @@ const Welt3D = (() => {
   function fernNetz(B, gl) {
     const r = M3.zufall(6173);
     const mx = gl.B / 2, mz = gl.T / 2;
-    const weite = Math.max(gl.B, gl.T) * 0.5 + 34;
+    const weite = Math.max(gl.B, gl.T) * 0.5 + 38;
     for (let i = 0; i < 34; i++) {
       const a = (i + r() * 0.8) / 34 * M3.TAU3;
       const d = weite * (0.86 + r() * 0.4);
@@ -483,8 +603,10 @@ const Welt3D = (() => {
     const r = M3.zufall(31337);
     const mx = gl.B / 2, mz = gl.T / 2;
     for (let i = 0; i < 16; i++) {
-      const a = r() * M3.TAU3, d = 26 + r() * 34;
-      B.stelle(mx + Math.cos(a) * d, 15 + r() * 11, mz + Math.sin(a) * d, r() * 6, 1.6 + r() * 2.4,
+      /* Weit draußen und hoch oben. Näher gesetzt hängen sie aus der Übersicht heraus mitten
+         über der Bahn und verdecken sie. */
+      const a = r() * M3.TAU3, d = 40 + r() * 42;
+      B.stelle(mx + Math.cos(a) * d, 22 + r() * 13, mz + Math.sin(a) * d, r() * 6, 2.2 + r() * 3,
         b => Deko3D.wolke(b, 1, i * 7 + 2));
     }
   }
@@ -546,6 +668,6 @@ const Welt3D = (() => {
     return e;
   }
 
-  return { ART, artVon, gelaende, gelaendeNetz, wasserNetz, felsenNetz, burgNetz, dekoNetz,
+  return { ART, artVon, gelaende, gelaendeNetz, wasserNetz, felsenNetz, bandenNetz, burgNetz, dekoNetz,
     streuenNetz, uferNetz, fernNetz, himmelNetz, wolkenNetz, tuchNeu, tuchFrisch };
 })();

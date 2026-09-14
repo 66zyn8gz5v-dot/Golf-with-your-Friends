@@ -1532,11 +1532,14 @@ aber auf `main` und damit Lüddecke.
 * Eine **Weltkarte in drei Dimensionen** – eine Insel im Meer, über der die Kamera langsam kreist.
   Sechs Landstriche tragen je eine Welt; ihre Namen stehen als Schilder darüber und wandern mit.
   Offen ist bisher das **Grasland** mit drei Bahnen, die übrigen fünf sagen „bald zu erkunden".
-* **Drei Bahnen im Grasland**, alle im Blick auf dieselbe Königsburg in der Mitte der Welt:
-  * *Burgwiese* (Par 3) – offene Wiese, vier Felsnadeln lassen ein Tor in der Mitte frei.
-  * *Der Mühlbach* (Par 4) – ein Bach teilt die Wiese; genau zwischen Abschlag und Loch liegt
-    eine zwei Felder schmale Furt.
-  * *Zum Burgtor* (Par 4) – bergauf über drei Terrassen, an Felsnadeln und Sandgruben vorbei.
+* **Drei Bahnen im Grasland** – lang, schmal und von Holzbanden eingefasst, alle im Blick auf
+  dieselbe Königsburg in der Mitte der Welt:
+  * *Burgwiese* (Par 3) – zwanzig Felder schnurgerade unter die Burg. Drei Felsnadeln stehen im
+    Weg, in der Mitte wächst hohes Gras; an der Bande entlang ist es frei.
+  * *Der Mühlbach* (Par 4) – erst geradeaus, dann im rechten Winkel nach rechts. Hinter dem Knick
+    liegt der Bach quer, links an der Bande; rechts daneben bleibt eine Gasse trocken.
+  * *Zum Burgtor* (Par 5) – die längste: bergauf, um die Ecke, durch ein Tor aus zwei Felsnadeln,
+    an zwei Sandgruben vorbei.
 * **Eine ganze Runde** über alle drei Bahnen mit Zählkarte, oder jede Bahn einzeln. Rekorde je
   Bahn werden gespeichert (getrennt von der Rangliste des 2,5D-Spiels – es sind zwei Spiele).
 
@@ -1571,12 +1574,24 @@ Eine Bahn in `src/3d/bahnen3d.js` besteht aus drei Angaben. Die erste ist diesel
 2,5D-Spiel – ein Feld Text, ein Zeichen ist ein Feld:
 
 ```
-.  nichts – hier endet die Bahn, der Ball fällt in die Wiese (ein Schlag Strafe)
+.  außerhalb – hier steht die Bande, von der der Ball abprallt
 #  Fairway, kurz geschnitten, rollt gut      ,  Rough, hohes Gras, bremst spürbar
 s  Sand, bremst stark                        w  Wasser – Strafe, weiter geht es vom Ufer
-x  Fels – eine Wand, von der der Ball abprallt
+x  Felsnadel – eine mannshohe Wand mitten in der Bahn
+o  wie #, aber ohne Bande: hier ist die Bahn offen und der Ball kann hinausfallen
 T  Abschlag                                  H  Loch
 ```
+
+### Die Banden
+
+Eine Bahn ist von Holzbanden eingefasst, und die entstehen von selbst: **Jedes Feld außerhalb, das
+an die Spielfläche stößt, wird zu einem Block, an dem der Ball abprallt.** Weil er ohnehin nie
+hineinkommt, ist die Innenkante dieses Blocks genau die Bandenlinie – man braucht keine eigene
+Rechnung für dünne Balken, sondern setzt einen dicken Klotz dahinter, von dem nur die Vorderseite
+zu sehen ist. Gezeichnet wird ein Balken mit Pfosten, gerechnet wird ein Rechteck.
+
+Die Bande ist niedrig: Ein rollender Ball prallt ab, ein springender fliegt darüber. Wer sie
+irgendwo nicht haben will, schreibt `o` statt `#`.
 
 Die zweite ist die Höhe. Sie steht **nicht** als zweites Feld mit Ziffern da, sondern als
 Grundhöhe plus eine Handvoll Hügel und Mulden:
@@ -1612,7 +1627,26 @@ gestreut nach Zufall mit festem Startwert – dieselbe Bahn sieht bei jedem Lade
    durch und nimmt den besten. Schafft er es nicht in fünfzehn Schlägen, stimmt etwas nicht.
 5. **Par** – ein zweiter Spieler zielt aufs Loch und vertut sich dabei um ein paar Grad und ein
    paar Prozent, so wie ein Mensch. Zweihundert Runden davon geben den Mittelwert, an dem sich
-   das Par messen lässt. Stand (Fassung 113): 3,2 – 4,2 – 3,6 Schläge bei Par 3 – 4 – 4.
+   das Par messen lässt. Dieser Spieler kennt den Weg – er zielt auf den weitesten Punkt der
+   Spur, den er in gerader Linie erreichen kann, so wie man es vor dem Schlag mit den Augen macht.
+   Zielte er stur aufs Loch, schlüge er auf einer Bahn mit Knick zweihundert Runden lang gegen
+   dieselbe Bande, und gemessen wäre nicht die Bahn, sondern seine Dummheit.
+   Stand (Fassung 116): 3,7 – 3,7 – 6,0 Schläge bei Par 3 – 4 – 5.
+
+Drei Fehler hat erst diese Rechnerei ans Licht gebracht, und zwei davon waren echte Spielfehler:
+
+* **Der Ball hüpfte auf ebener Bahn.** Ob er abhebt, wurde daran gemessen, ob der Boden schneller
+  wegfällt, als die Schwerkraft in einem Rechenschritt zieht – und das ist bei
+  Zweihundertvierzigstelsekunden schon ab zwei Prozent Gefälle der Fall. Er hob also ab, landete,
+  hob wieder ab, und jede Scheinlandung nahm ihm acht Prozent seiner Geschwindigkeit. Richtig ist:
+  Auf einer geraden Schräge hebt nichts ab, egal wie steil. Es hängt an der Krümmung.
+* **Es fehlte die Haftreibung.** Ohne sie rollt ein liegender Ball auf allem über sechs Prozent
+  von selbst wieder los, und eine Bahn, die bergauf zur Burg führt, schickt jeden Ball zurück.
+  Jetzt hält der Untergrund bis rund achtzehn Prozent – so wie ein Ball auf einem geneigten Grün
+  liegen bleibt, obwohl er, einmal angestoßen, denselben Hang hinunterrollt.
+* **Nach einem Wasserball lag der Ball auf der Uferkante** und fiel beim nächsten Schlag sofort
+  wieder hinein. Jetzt wird eine Stelle gesucht, von der aus man in die meisten Richtungen
+  wegspielen kann – geprüft mit zwölf Strahlen ringsum.
 
 ### Warum kein fertiger 3D-Baukasten
 
