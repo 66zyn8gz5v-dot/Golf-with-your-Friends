@@ -301,13 +301,10 @@ const Golf3D = (() => {
     BA.mit(M3.verschieben(Physik3D.BALL_R * 0.93, 0, 0), b => b.kugel(Physik3D.BALL_R * 0.26, 4, 6, '#b8342a'));
     const ballNetz = BA.fertig(zeichner)[0];
 
-    const PF = Bauen.sammler();
-    /* Der Zielpfeil zeigt in +Z und ist eine Einheit lang; beim Zeichnen wird er gedreht und in
-       die Länge gezogen. Er schwebt einen Hauch über dem Boden, sonst verschwindet er in der
-       Wiese, sobald es leicht bergab geht. */
-    PF.viereck([-0.07, 0, 0], [0.07, 0, 0], [0.07, 0, 0.74], [-0.07, 0, 0.74], '#ffffff', [0, 1, 0]);
-    PF.flaeche([[-0.17, 0, 0.72], [0.17, 0, 0.72], [0, 0, 1.0]], '#ffe37a', [0, 1, 0]);
-    const pfeilNetz = PF.fertig(zeichner)[0];
+    /* Der Zielpfeil folgt dem Boden und wird darum bei jedem Bild neu gerechnet – wie das
+       Fahnentuch. Hier entsteht nur die leere Form. */
+    const pfeilRoh = Welt3D.pfeilNeu();
+    const pfeilNetz = zeichner.netz(pfeilRoh.e, pfeilRoh.ix, true);
 
     const fluegel = [];
     for (const m of beweglich.muehlen) {
@@ -325,7 +322,7 @@ const Golf3D = (() => {
     });
 
     return {
-      gl, welt, bahn, stuecke, himmel, ballNetz, pfeilNetz, tuecher, fluegel,
+      gl, welt, bahn, stuecke, himmel, ballNetz, pfeilNetz, pfeilEcken: pfeilRoh.e, tuecher, fluegel,
       licht: welt.licht,
       weg() {
         for (const s of [...stuecke, ...himmel]) s.netz.weg();
@@ -721,13 +718,13 @@ const Golf3D = (() => {
       raus.push({ netz: szene.ballNetz, modell: m });
 
       if (zug && zug.art === 'zielen' && zug.kraft > 0.02 && stand.phase === 'zielen') {
-        const w = Math.atan2(zug.dx, zug.dz);
         const laenge = 0.9 + zug.kraft * 4.2;
-        let pm = M3.verschieben(b.x, szene.gl.hoehe(b.x, b.z) + 0.035, b.z);
-        pm = M3.mult(pm, M3.drehenY(w), pm);
-        pm = M3.mult(pm, M3.skalieren(1, 1, laenge), pm);
-        raus.push({ netz: szene.pfeilNetz, modell: pm, wirftSchatten: false, licht: false,
-          ton: [0.55 + zug.kraft * 0.45, 0.55 + zug.kraft * 0.15, 0.35] });
+        szene.pfeilNetz.frisch(Welt3D.pfeilFrisch(szene.pfeilEcken, szene.gl, b.x, b.z, zug.dx, zug.dz, laenge));
+        /* Ohne Licht gezeichnet: Der Pfeil ist eine Anzeige, kein Gegenstand – er soll im Schatten
+           genauso deutlich sein wie in der Sonne. Die Einfärbung wandert mit der Kraft von blass
+           nach glühend. */
+        raus.push({ netz: szene.pfeilNetz, wirftSchatten: false, licht: false,
+          ton: [0.7 + zug.kraft * 0.3, 0.72 - zug.kraft * 0.12, 0.62 - zug.kraft * 0.4] });
       }
 
       for (const t of szene.tuecher) {

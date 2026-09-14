@@ -1582,6 +1582,18 @@ o  wie #, aber ohne Bande: hier ist die Bahn offen und der Ball kann hinausfalle
 T  Abschlag                                  H  Loch
 ```
 
+### Der Zielpfeil
+
+Er liegt nicht auf einer Höhe, sondern **auf dem Boden** – wie eine aufgemalte Linie, die jeder
+Kuppe und jeder Mulde folgt. Vorher war er eine flache Scheibe auf Ballhöhe: Auf ebener Bahn sah
+das gut aus, aber sobald es vor dem Ball anstieg, verschwand die vordere Hälfte im Hang –
+ausgerechnet dort, wo der Hang etwas mit dem Schlag macht. Dazu zog das Langziehen die Spitze mit
+in die Länge; bei vollem Schlag war aus dem Pfeil ein Speer geworden.
+
+Jetzt ist er eine Kette fester Abschnitte, jeder mit seiner eigenen Bodenhöhe, und die Spitze hat
+ihre eigene Länge. Gezeichnet wird er ohne Licht: Er ist eine Anzeige, kein Gegenstand, und soll
+im Schatten so deutlich sein wie in der Sonne.
+
 ### Das Loch
 
 Ein Loch ist ein Loch, kein Zeichen auf dem Rasen: Der Boden wird an dieser Stelle **wirklich

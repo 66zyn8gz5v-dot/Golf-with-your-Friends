@@ -670,6 +670,70 @@ const Welt3D = (() => {
     }
   }
 
+  /* ---------- Der Zielpfeil ----------
+     Er liegt nicht auf einer Höhe, sondern **auf dem Boden** – wie eine aufgemalte Linie, die
+     jeder Kuppe und jeder Mulde folgt.
+
+     Vorher war er eine einzige flache Scheibe auf Ballhöhe, gedreht und in die Länge gezogen.
+     Auf ebener Bahn sah das gut aus; sobald es vor dem Ball anstieg, verschwand die vordere
+     Hälfte im Hang – und ausgerechnet dort, wo der Hang etwas mit dem Schlag macht, sah man am
+     wenigsten. Dazu zog das Langziehen die Spitze mit in die Länge: Bei vollem Schlag war aus dem
+     Pfeil ein Speer geworden.
+
+     Jetzt besteht er aus einer Kette von Abschnitten. Jeder fragt das Gelände nach seiner Höhe,
+     und die Spitze hat ihre eigene, feste Länge. Die Zahl der Abschnitte bleibt immer gleich –
+     nur so lässt sich das Gitter einmal anlegen und danach bei jedem Bild nur noch neu füllen. */
+  const PFEIL_SCHAFT = 14;                 // Abschnitte im geraden Teil
+  const PFEIL_STATIONEN = PFEIL_SCHAFT + 5;
+  const PFEIL_ECKEN = (PFEIL_STATIONEN - 1) * 6;
+  const PFEIL_KOPF = 0.6;                  // Länge der Spitze in Feldern
+  const PFEIL_BREIT = 0.075, PFEIL_KOPF_BREIT = 0.21, PFEIL_HOCH = 0.05, PFEIL_START = 0.16;
+
+  function pfeilNeu() {
+    const e = new Float32Array(PFEIL_ECKEN * 9);
+    const ix = new Uint16Array(PFEIL_ECKEN);
+    for (let i = 0; i < PFEIL_ECKEN; i++) { ix[i] = i; e[i * 9 + 4] = 1; }   // Normale zeigt nach oben
+    return { e, ix };
+  }
+
+  /* Füllt die Ecken neu. 'laenge' ist die Gesamtlänge ab dem Ball. */
+  function pfeilFrisch(e, gl, x, z, dx, dz, laenge) {
+    const kopf = Math.min(PFEIL_KOPF, laenge * 0.45);
+    const schaftEnde = Math.max(0.05, laenge - kopf);
+    const px = dz, pz = -dx;                                  // quer zur Richtung
+    const hell = Bauen.farbe('#fdfbf2'), spitz = Bauen.farbe('#ffd04a');
+
+    const station = i => {
+      let d, halb, f;
+      if (i <= PFEIL_SCHAFT) { d = schaftEnde * (i / PFEIL_SCHAFT); halb = PFEIL_BREIT; f = hell; }
+      else {
+        const k = i - PFEIL_SCHAFT - 1;                       // 0 … 3 über die Spitze
+        d = schaftEnde + kopf * (k / 4);
+        halb = PFEIL_KOPF_BREIT * (1 - k / 4);
+        f = spitz;
+      }
+      return { d: d + PFEIL_START, halb, f };
+    };
+    const punkt = (st, seite, raus) => {
+      const ax = x + dx * st.d + px * st.halb * seite;
+      const az = z + dz * st.d + pz * st.halb * seite;
+      raus[0] = ax; raus[1] = gl.hoehe(ax, az) + PFEIL_HOCH; raus[2] = az;
+      return raus;
+    };
+    const A = [0, 0, 0], Bp = [0, 0, 0], C = [0, 0, 0], D = [0, 0, 0];
+    let v = 0;
+    const setze = (p, f) => { const o = v * 9; e[o] = p[0]; e[o + 1] = p[1]; e[o + 2] = p[2];
+      e[o + 6] = f[0]; e[o + 7] = f[1]; e[o + 8] = f[2]; v++; };
+    for (let i = 0; i < PFEIL_STATIONEN - 1; i++) {
+      const s0 = station(i), s1 = station(i + 1);
+      punkt(s0, -1, A); punkt(s1, -1, D); punkt(s1, 1, C); punkt(s0, 1, Bp);
+      const f = s1.f;
+      setze(A, f); setze(D, f); setze(C, f);
+      setze(A, f); setze(C, f); setze(Bp, f);
+    }
+    return e;
+  }
+
   /* ---------- Das bewegliche Beiwerk ----------
      Ball, Fahnentücher und Mühlenflügel. Sie bekommen je ein kleines eigenes Gitter, das mit einer
      Lage verschoben und gedreht wird – das Tuch wird zusätzlich bei jedem Bild neu gerechnet. */
@@ -728,5 +792,6 @@ const Welt3D = (() => {
   }
 
   return { ART, artVon, gelaende, gelaendeNetz, lochNetz, wasserNetz, felsenNetz, bandenNetz, burgNetz, dekoNetz,
-    streuenNetz, uferNetz, fernNetz, himmelNetz, wolkenNetz, tuchNeu, tuchFrisch };
+    streuenNetz, uferNetz, fernNetz, himmelNetz, wolkenNetz, tuchNeu, tuchFrisch,
+    pfeilNeu, pfeilFrisch };
 })();
