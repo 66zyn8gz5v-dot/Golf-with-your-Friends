@@ -1554,6 +1554,13 @@ aber auf `main` und damit Lüddecke.
 Auf der Weltkarte fehlt der Knopf oben links: Dort ist der Anfang, und ein Knopf ins Nichts hilft
 niemandem. Er erscheint, sobald man in einer Welt oder auf einer Bahn steht.
 
+**Auf dem iPhone und dem iPad besser zum Startbildschirm hinzufügen** (in Safari: Teilen → Zum
+Home-Bildschirm). Dann läuft das Spiel als eigene App über den ganzen Schirm. Öffnet man es
+dagegen aus einer anderen App heraus, liegt es in einem Vorschaufenster, und solche Fenster lassen
+sich mit einer Wischbewegung nach unten wegschieben – ausgerechnet die Bewegung, mit der man Kraft
+auflädt. Die Seite fängt Berührungen auf der Leinwand darum ab (siehe `bedienungAnhaengen` in
+`src/3d/spiel3d.js`); als eigene App gibt es das Fenster aber gar nicht erst.
+
 Nach jedem Schlag schwenkt die Kamera von selbst hinter den Ball und schaut zum Loch – sonst
 müsste man sie nach jedem Schlag erst suchen, und weil die Schlagrichtung an der Kamera hängt,
 schlüge man reihenweise in die falsche Richtung.

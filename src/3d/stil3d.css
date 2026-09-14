@@ -17,6 +17,10 @@ html, body {
   background: #6fb0d8; color: #f4efe6;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   -webkit-tap-highlight-color: transparent;
+  /* Nichts federt, nichts wird ausgewählt, nichts blendet eine Lupe ein. In einem Spiel, das man
+     mit dem Finger über die ganze Fläche zieht, ist jedes davon im Weg. */
+  overscroll-behavior: none;
+  user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
 }
 button { font: inherit; color: inherit; border: none; background: none; }
 
@@ -153,6 +157,9 @@ button { font: inherit; color: inherit; border: none; background: none; }
   padding: 16px; background: rgba(10, 8, 24, 0.55); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
 #g3-schirm.sichtbar { display: flex; }
 .g3-tafel-gross {
+  /* Hier darf gerollt werden – die Bahnliste ist auf dem Telefon länger als der Schirm. Das ist
+     die eine Stelle, an der eine senkrechte Wischbewegung nicht dem Spiel gehört. */
+  touch-action: pan-y;
   background: linear-gradient(180deg, #2c2450, #171232);
   border: 3px solid #ffd166; border-radius: 18px; padding: 20px 22px; text-align: center;
   width: min(680px, 94vw); max-height: 88vh; overflow: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.6);

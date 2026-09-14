@@ -537,6 +537,21 @@ const Golf3D = (() => {
   function bedienungAnhaengen() {
     leinwand.style.touchAction = 'none';
 
+    /* Die Berührung auf der Leinwand gehört uns – und das muss ausdrücklich gesagt werden.
+       'touch-action: none' allein reicht dem iPhone und dem iPad nicht: Wer die Seite in einem
+       Vorschaufenster öffnet (aus einer App heraus, etwa aus dem Chat), kann dieses Fenster mit
+       einer Wischbewegung nach unten wegschieben – und genau das ist unsere Zielbewegung. Fynn
+       zog vom Ball nach unten, um Kraft aufzuladen, und das halbe Spiel verschwand.
+
+       Der Griff ist derselbe wie im 2,5D-Spiel: Berührungen, die auf der Leinwand beginnen oder
+       zu einem laufenden Zug gehören, werden abgefangen. Alles andere – Knöpfe, Bildschirme,
+       eine Bahnliste, die gerollt werden will – bleibt unberührt. */
+    const sperren = e => { if (zug || e.target === leinwand) e.preventDefault(); };
+    document.addEventListener('touchstart', sperren, { passive: false });
+    document.addEventListener('touchmove', sperren, { passive: false });
+    // Auf- und Zuziehen mit zwei Fingern zoomt sonst die ganze Seite statt der Kamera
+    document.addEventListener('gesturestart', e => e.preventDefault(), { passive: false });
+
     leinwand.addEventListener('pointerdown', e => {
       leinwand.setPointerCapture(e.pointerId);
       zeiger.set(e.pointerId, [e.clientX, e.clientY]);
