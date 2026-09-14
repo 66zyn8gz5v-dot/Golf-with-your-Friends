@@ -166,8 +166,12 @@ koerperPruefen('Felsen', b => Deko3D.fels(b, 0.5, 3));
    es braucht die Höhen der Bahn und lässt sich nicht für sich allein bauen. Geprüft wird es
    stattdessen weiter unten zusammen mit dem Gelände. */
 
-bauwerkPruefen('Tanne', b => Deko3D.tanne(b, 2, 3));
-bauwerkPruefen('Laubbaum', b => Deko3D.laubbaum(b, 2, 5));
+/* Jede Baumart einzeln: Sie stehen zu Hunderten in der Landschaft, und eine nach innen gedrehte
+   Fläche fällt dort nicht als Fehler auf, sondern nur als „irgendwie dunkel". */
+for (const art of Object.keys(Deko3D.BAUMARTEN)) {
+  const name = art[0].toUpperCase() + art.slice(1);
+  bauwerkPruefen(name, b => Deko3D.baum(b, art, 2, 5));
+}
 bauwerkPruefen('Felsgruppe', b => Deko3D.felsgruppe(b, 0.7, 9));
 bauwerkPruefen('Haus', b => Deko3D.haus(b));
 bauwerkPruefen('Turm', b => Deko3D.turm(b, 0.5, 3));

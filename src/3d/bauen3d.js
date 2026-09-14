@@ -156,14 +156,54 @@ const Bauen = (() => {
         return B;
       },
 
+      /* Ein Drehkörper: Ein Umriss aus Paaren { r, y } wird um die Hochachse gedreht. Damit
+         entstehen Formen, für die Walze und Kugel nicht reichen – ein Tropfen, eine Urne, ein
+         Pilzhut. Die Normalen werden aus der Steigung des Umrisses gerechnet und an den Knicken
+         gemittelt; deshalb wirkt ein Tropfen rund und nicht wie ein Stapel Ringe.
+
+         'colOben' färbt nach oben hin um. Fast alles Gewachsene ist oben heller als unten – das
+         ist der halbe Unterschied zwischen „Kegel" und „Baum". */
+      drehkoerper(umriss, kanten, col, colOben) {
+        const c = farbe(col), co = colOben ? farbe(colOben) : null;
+        const y0 = umriss[0].y, y1 = umriss[umriss.length - 1].y, hoch = (y1 - y0) || 1;
+        // Normale je Umrisspunkt: aus den Steigungen davor und danach gemittelt
+        const norm = umriss.map((p, i) => {
+          let sx = 0, sy = 0;
+          for (const [a, b] of [[i - 1, i], [i, i + 1]]) {
+            if (a < 0 || b >= umriss.length) continue;
+            const dr = umriss[b].r - umriss[a].r, dy = umriss[b].y - umriss[a].y;
+            const l = Math.hypot(dr, dy) || 1;
+            sx += dy / l; sy += -dr / l;
+          }
+          const l = Math.hypot(sx, sy) || 1;
+          return [sx / l, sy / l];
+        });
+        for (let i = 0; i + 1 < umriss.length; i++) {
+          const a = umriss[i], b = umriss[i + 1], na = norm[i], nb = norm[i + 1];
+          const f = co ? mischen(c, co, ((a.y + b.y) / 2 - y0) / hoch) : c;
+          for (let k = 0; k < kanten; k++) {
+            const w0 = k / kanten * M3.TAU3, w1 = (k + 1) / kanten * M3.TAU3;
+            const c0 = Math.cos(w0), s0 = Math.sin(w0), c1 = Math.cos(w1), s1 = Math.sin(w1);
+            const u0 = [c0 * a.r, a.y, s0 * a.r], u1 = [c1 * a.r, a.y, s1 * a.r];
+            const o0 = [c0 * b.r, b.y, s0 * b.r], o1 = [c1 * b.r, b.y, s1 * b.r];
+            const nu0 = [c0 * na[0], na[1], s0 * na[0]], nu1 = [c1 * na[0], na[1], s1 * na[0]];
+            const no0 = [c0 * nb[0], nb[1], s0 * nb[0]], no1 = [c1 * nb[0], nb[1], s1 * nb[0]];
+            if (a.r < 1e-5) B.dreieckWeich(u0, o0, o1, [0, -1, 0], no0, no1, f);
+            else if (b.r < 1e-5) B.dreieckWeich(u0, [0, b.y, 0], u1, nu0, [0, 1, 0], nu1, f);
+            else { B.dreieckWeich(u0, o0, o1, nu0, no0, no1, f); B.dreieckWeich(u0, o1, u1, nu0, no1, nu1, f); }
+          }
+        }
+        return B;
+      },
+
       /* Walze und Kegel in einem: 'r1' ist der Halbmesser oben. r1 = 0 gibt einen Kegel, r1 = r0
          eine Walze, alles dazwischen einen Kegelstumpf – Turm, Baumstamm, Fass, Zeltdach.
          Die Mantelflächen bekommen weiche Normalen, damit eine Walze rund wirkt und nicht wie ein
          Bleistift; die Deckel bleiben flach. 'kanten' klein gewählt sieht bewusst kantig aus.
          'deckelCol' ausdrücklich auf null gesetzt lässt die Deckel ganz weg – für Röhren, die
          im Boden stecken, und für Kronen, die ohnehin von einer anderen Form verdeckt werden. */
-      walze(r0, r1, h, kanten, col, deckelCol, y0 = 0) {
-        const c = farbe(col), d = deckelCol ? farbe(deckelCol) : c;
+      walze(r0, r1, h, kanten, col, deckelCol, y0 = 0, colOben) {
+        const c = colOben ? mischen(col, colOben, 0.5) : farbe(col), d = deckelCol ? farbe(deckelCol) : c;
         const y1 = y0 + h;
         /* Die Neigung des Mantels geht in die Normale ein: Bei einem spitzen Kegel zeigt sie
            deutlich nach oben, bei einer Walze waagerecht. Ohne das wäre ein Kegel von oben
@@ -186,7 +226,10 @@ const Bauen = (() => {
 
       /* Kugel mit weichen Normalen. 'beule' verzieht sie unregelmäßig – so wird aus einer Kugel
          ein Findling oder eine Baumkrone, ohne dass jemand einen Felsen von Hand modelliert. */
-      kugel(r, ringe, kanten, col, beule, saat) {
+      /* 'colOben' färbt die Kugel nach oben hin um – ein Dreieck bekommt die Farbe, die zu
+         seiner mittleren Höhe gehört. Bei wenigen Ringen gibt das sichtbare Bänder, und genau
+         so sehen die gemalten Vorlagen aus. */
+      kugel(r, ringe, kanten, col, beule, saat, colOben) {
         const c = farbe(col);
         const z = beule ? M3.zufall(saat || 7) : null;
         const knick = [];
@@ -201,11 +244,12 @@ const Bauen = (() => {
         };
         for (let i = 0; i < ringe; i++) for (let j = 0; j < kanten; j++) {
           const a = punkt(i, j), b = punkt(i, j + 1), d = punkt(i + 1, j + 1), f = punkt(i + 1, j);
+          const farbeHier = colOben ? mischen(c, colOben, 1 - (i + 0.5) / ringe) : c;
           /* Am Pol fallen zwei Ecken des Vierecks zusammen; dort bleibt nur ein Dreieck übrig.
              Das ist der Grund für die beiden Abfragen – ohne sie stünden an Nord- und Südpol
              entartete Dreiecke ohne Fläche, und eines der beiden Kappenstücke fehlte. */
-          if (i > 0) B.dreieckWeich(a.p, b.p, d.p, a.n, b.n, d.n, c);
-          if (i + 1 < ringe) B.dreieckWeich(a.p, d.p, f.p, a.n, d.n, f.n, c);
+          if (i > 0) B.dreieckWeich(a.p, b.p, d.p, a.n, b.n, d.n, farbeHier);
+          if (i + 1 < ringe) B.dreieckWeich(a.p, d.p, f.p, a.n, d.n, f.n, farbeHier);
         }
         return B;
       },

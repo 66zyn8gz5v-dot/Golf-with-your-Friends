@@ -25,40 +25,165 @@ const Deko3D = (() => {
     wasserFall: '#bfe7f7',
   };
 
-  /* ---------- Bäume ---------- */
+  /* ---------- Bäume ----------
 
-  /* Tanne: drei bis vier Kegel übereinander, jeder etwas kleiner. Die Kegel werden abwechselnd
-     heller und dunkler eingefärbt – das ist der billigste Weg, einen Baum plastisch zu machen,
-     ohne ihm Nadeln zu geben. */
+     Sieben Arten, und alle können dasselbe: Sie stehen am Nullpunkt, wachsen nach oben und
+     richten sich nach einer Höhe. Hingestellt werden sie über baum(); welche Art wo wächst,
+     entscheidet der Bewuchs in welt3d.js.
+
+     Was sie gemeinsam haben, ist der Stil der Vorlage: **oben heller als unten.** Fast alles
+     Gewachsene ist das, und es ist der halbe Unterschied zwischen einem Kegel und einem Baum.
+     Der zweite halbe Unterschied ist der Stamm – ein senkrechter Stab sieht nach Lampe aus, ein
+     leicht gekippter, unten breiterer nach Holz.
+
+     Die Farben kommen aus einer kleinen Tafel und werden je Baum ausgelost: ein bisschen
+     gelblicher, ein bisschen bläulicher. Ein Wald, in dem alle Kronen dasselbe Grün haben, sieht
+     aus wie Filz. */
+  const KRONEN = [
+    ['#3f8a2d', '#6fbf4a'], ['#4f9a3c', '#8ece5a'], ['#397f34', '#63b455'],
+    ['#568f2c', '#93cf52'], ['#33753a', '#5cab5e'],
+  ];
+  const NADELN = [
+    ['#23512c', '#4f8e46'], ['#265a30', '#57993f'], ['#1f4a33', '#468a52'],
+  ];
+
+  /* Ein Stamm: unten breiter, oben schmaler, mit einem leichten Knick. Der Wurzelanlauf ist ein
+     eigener, kurzer Kegel – ohne ihn steht der Baum auf dem Boden wie ein hineingesteckter
+     Bleistift. */
+  function stamm(B, hoehe, dicke, kippen, farbe = F.stammFarbe) {
+    B.walze(dicke * 1.7, dicke * 1.05, hoehe * 0.16, 7, farbe, null);
+    B.mit(M3.drehenZ(kippen), b => b.walze(dicke * 1.05, dicke * 0.75, hoehe, 7, farbe, null, hoehe * 0.14));
+    return hoehe * 0.95;
+  }
+
+  /* Die gestufte Tanne: mehrere Kegel übereinander, jeder ein wenig kleiner, mit einer Lücke
+     dazwischen. Die Lücke ist das Entscheidende – ohne sie entsteht ein glatter Kegel, mit ihr
+     sieht man die Etagen, die eine Tanne ausmachen. */
   function tanne(B, hoehe = 1, saat = 1) {
-    const r = M3.zufall(saat * 977 + 13);
-    const stammH = hoehe * 0.22, stammR = hoehe * 0.045;
-    B.walze(stammR, stammR * 0.8, stammH, 6, F.stammFarbe, null);
-    const lagen = 3 + (r() < 0.4 ? 1 : 0);
+    const r = M3.zufall(saat * 977 + 13), fa = NADELN[Math.floor(r() * NADELN.length)];
+    const stammH = hoehe * 0.17;
+    B.walze(hoehe * 0.055, hoehe * 0.04, stammH, 6, F.stammFarbe, null);
+    const lagen = 4 + (r() < 0.45 ? 1 : 0);
     for (let i = 0; i < lagen; i++) {
       const u = i / lagen;
-      const y = stammH + hoehe * 0.10 * i * (1.05 - u * 0.2);
-      const rr = hoehe * (0.28 - i * 0.055) * (0.9 + r() * 0.2);
-      const hh = hoehe * (0.42 - i * 0.05);
-      B.mit(M3.verschieben(0, y, 0), b => b.walze(rr, 0, hh, 7, i % 2 ? F.tanne : F.tanneDunkel, null));
+      const y = stammH + hoehe * (0.70 * u) * (1 - u * 0.12);
+      const rr = hoehe * (0.30 - u * 0.22) * (0.92 + r() * 0.16);
+      const hh = hoehe * (0.34 - u * 0.12);
+      const f = Bauen.mischen(fa[0], fa[1], u);
+      B.mit(M3.verschieben(0, y, 0), b => {
+        b.walze(rr, rr * 0.16, hh, 8, f, null, 0, Bauen.mischen(fa[0], fa[1], Math.min(1, u + 0.35)));
+      });
     }
     return B;
   }
 
-  /* Laubbaum: ein krummer Stamm und zwei, drei verbeulte Kugeln als Krone. Die Beulen kommen aus
-     dem Zufall mit festem Startwert – derselbe Baum sieht bei jedem Laden gleich aus, aber keine
-     zwei Bäume sehen gleich aus. */
+  /* Die Kiefer: ein langer, kahler Stamm und ganz oben drei dünne Schirme. Aus der Ferne ist sie
+     an ihrer Silhouette zu erkennen und nicht an der Farbe – deshalb steht sie im Wald zwischen
+     den Tannen und macht ihn unruhig. */
+  function kiefer(B, hoehe = 1, saat = 1) {
+    const r = M3.zufall(saat * 613 + 41), fa = NADELN[Math.floor(r() * NADELN.length)];
+    const oben = stamm(B, hoehe * 0.72, hoehe * 0.035, (r() - 0.5) * 0.06);
+    for (let i = 0; i < 3; i++) {
+      const u = i / 2;
+      const y = oben * (0.82 + u * 0.26);
+      const rr = hoehe * (0.26 - u * 0.15);
+      B.mit(M3.verschieben((r() - 0.5) * hoehe * 0.04, y, (r() - 0.5) * hoehe * 0.04),
+        b => b.drehkoerper([{ r: 0, y: 0 }, { r: rr, y: hoehe * 0.05 }, { r: rr * 0.9, y: hoehe * 0.08 },
+          { r: 0, y: hoehe * 0.17 }], 9, fa[0], fa[1]));
+    }
+    return B;
+  }
+
+  /* Die Pappel: eine schlanke Säule. Sie ist der einzige Baum, der höher als breit aussieht, und
+     ein paar davon in einer Reihe geben einer Wiese sofort eine Richtung. */
+  function pappel(B, hoehe = 1, saat = 1) {
+    const r = M3.zufall(saat * 271 + 7), fa = KRONEN[Math.floor(r() * KRONEN.length)];
+    const dick = hoehe * (0.10 + r() * 0.03);
+    B.walze(hoehe * 0.04, hoehe * 0.03, hoehe * 0.2, 6, F.stammFarbe, null);
+    B.mit(M3.verschieben(0, hoehe * 0.12, 0), b => b.drehkoerper([
+      { r: 0, y: 0 }, { r: dick * 0.7, y: hoehe * 0.10 }, { r: dick, y: hoehe * 0.34 },
+      { r: dick * 0.92, y: hoehe * 0.62 }, { r: dick * 0.55, y: hoehe * 0.84 }, { r: 0, y: hoehe },
+    ], 9, fa[0], fa[1]));
+    return B;
+  }
+
+  /* Der Tropfenbaum: eine glatte, nach oben spitz zulaufende Krone auf kurzem Stamm. */
+  function tropfenbaum(B, hoehe = 1, saat = 1) {
+    const r = M3.zufall(saat * 449 + 19), fa = KRONEN[Math.floor(r() * KRONEN.length)];
+    const oben = stamm(B, hoehe * 0.3, hoehe * 0.045, (r() - 0.5) * 0.1);
+    const rr = hoehe * (0.23 + r() * 0.05);
+    B.mit(M3.verschieben(0, oben, 0), b => b.drehkoerper([
+      { r: 0, y: 0 }, { r: rr * 0.8, y: hoehe * 0.09 }, { r: rr, y: hoehe * 0.26 },
+      { r: rr * 0.78, y: hoehe * 0.45 }, { r: rr * 0.42, y: hoehe * 0.58 }, { r: 0, y: hoehe * 0.68 },
+    ], 10, fa[0], fa[1]));
+    return B;
+  }
+
+  /* Die Birke: heller Stamm mit dunklen Narben, kleine lockere Krone. Der helle Stamm ist der
+     einzige im Wald und fällt darum von Weitem auf – sparsam setzen. */
+  function birke(B, hoehe = 1, saat = 1) {
+    const r = M3.zufall(saat * 733 + 23), fa = KRONEN[Math.floor(r() * KRONEN.length)];
+    const dick = hoehe * 0.028;
+    const oben = stamm(B, hoehe * 0.62, dick, (r() - 0.5) * 0.08, '#e8e3d6');
+    /* Vier Narben genügen. Sie sind winzig und stehen doch jede für zwölf Dreiecke – und Birken
+       stehen zu Dutzenden herum. */
+    for (let i = 0; i < 4; i++) {
+      const y = hoehe * (0.13 + i * 0.12 + r() * 0.03);
+      B.mit(M3.mult(M3.verschieben(0, y, 0), M3.drehenY(r() * 6)),
+        b => b.kasten(dick * 2.3, hoehe * 0.012, dick * 0.9, '#4a4238'));
+    }
+    for (let i = 0; i < 3; i++) {
+      const a = r() * M3.TAU3, d = hoehe * (0.04 + r() * 0.07);
+      B.mit(M3.verschieben(Math.cos(a) * d, oben * (0.94 + r() * 0.2), Math.sin(a) * d),
+        b => b.kugel(hoehe * (0.13 + r() * 0.05), 4, 7, fa[0], 0.13, saat * 13 + i, fa[1]));
+    }
+    return B;
+  }
+
+  /* Der Laubbaum: ein krummer Stamm, zwei bis drei runde Ballen. Der Brotbaum des Waldes. */
   function laubbaum(B, hoehe = 1, saat = 1) {
-    const r = M3.zufall(saat * 7919 + 101);
-    const stammH = hoehe * 0.42;
-    B.mit(M3.drehenZ((r() - 0.5) * 0.12), b => b.walze(hoehe * 0.055, hoehe * 0.04, stammH, 6, F.stammFarbe, null));
+    const r = M3.zufall(saat * 7919 + 101), fa = KRONEN[Math.floor(r() * KRONEN.length)];
+    const oben = stamm(B, hoehe * 0.42, hoehe * 0.045, (r() - 0.5) * 0.14);
     const ballen = 2 + Math.floor(r() * 2);
     for (let i = 0; i < ballen; i++) {
-      const rr = hoehe * (0.30 - i * 0.05);
-      const x = (r() - 0.5) * hoehe * 0.22, z = (r() - 0.5) * hoehe * 0.22;
-      const y = stammH + hoehe * (0.22 + i * 0.14);
-      B.mit(M3.verschieben(x, y, z), b => b.kugel(rr, 5, 8, i % 2 ? F.laub : F.laubDunkel, 0.16, saat * 31 + i));
+      const rr = hoehe * (0.28 - i * 0.045);
+      const x = (r() - 0.5) * hoehe * 0.24, z = (r() - 0.5) * hoehe * 0.24;
+      const y = oben + hoehe * (0.1 + i * 0.13);
+      B.mit(M3.verschieben(x, y, z), b => b.kugel(rr, 5, 9, fa[0], 0.12, saat * 31 + i, fa[1]));
     }
+    return B;
+  }
+
+  /* Die Eiche: der alte Baum am Bahnrand. Ein dicker, gegabelter Stamm trägt fünf sich
+     überschneidende Ballen zu einer breiten Krone. Sie ist die aufwendigste der sieben und wird
+     darum selten gesetzt – aber wo sie steht, ist sie der Blickfang. */
+  function eiche(B, hoehe = 1, saat = 1) {
+    const r = M3.zufall(saat * 3571 + 61), fa = KRONEN[Math.floor(r() * KRONEN.length)];
+    const dick = hoehe * 0.09;
+    B.walze(dick * 1.9, dick * 1.15, hoehe * 0.12, 8, F.stammFarbe, null);
+    B.walze(dick * 1.15, dick * 0.95, hoehe * 0.22, 8, F.stammFarbe, null, hoehe * 0.1);
+    const aeste = 3;
+    for (let i = 0; i < aeste; i++) {
+      const a = (i + r() * 0.5) / aeste * M3.TAU3;
+      B.mit(M3.mult(M3.mult(M3.verschieben(0, hoehe * 0.3, 0), M3.drehenY(-a)), M3.drehenZ(0.42 + r() * 0.16)),
+        b => b.walze(dick * 0.7, dick * 0.4, hoehe * 0.3, 6, F.stammFarbe, null));
+    }
+    for (let i = 0; i < 5; i++) {
+      const a = i / 5 * M3.TAU3 + r() * 0.6;
+      const d = i === 0 ? 0 : hoehe * (0.2 + r() * 0.08);
+      const rr = hoehe * (i === 0 ? 0.30 : 0.21 + r() * 0.05);
+      const y = hoehe * (i === 0 ? 0.68 : 0.5 + r() * 0.12);
+      B.mit(M3.verschieben(Math.cos(a) * d, y, Math.sin(a) * d),
+        b => b.kugel(rr, 5, 9, fa[0], 0.1, saat * 97 + i, fa[1]));
+    }
+    return B;
+  }
+
+  /* Welcher Baum? 'art' ist einer der Namen unten; ohne Angabe wird ausgelost. So kann der
+     Bewuchs sagen „hier ein Nadelbaum" und muss nicht wissen, welche Kegel das bedeutet. */
+  const BAUMARTEN = { tanne, kiefer, pappel, tropfenbaum, birke, laubbaum, eiche };
+  function baum(B, art, hoehe, saat) {
+    (BAUMARTEN[art] || laubbaum)(B, hoehe, saat);
     return B;
   }
 
@@ -66,7 +191,7 @@ const Deko3D = (() => {
      Mengen am Rand, und was in Mengen dasteht, darf einfach sein. */
   function busch(B, r = 0.3, col = F.laubDunkel, saat = 1) {
     B.mit(M3.mult(M3.verschieben(0, r * 0.55, 0), M3.skalieren(1, 0.72, 1)),
-      b => b.kugel(r, 4, 7, col, 0.2, saat));
+      b => b.kugel(r, 4, 7, col, 0.2, saat, Bauen.stufe(col, 1.25)));
     return B;
   }
 
@@ -316,6 +441,6 @@ const Deko3D = (() => {
     return B;
   }
 
-  return { F, tanne, laubbaum, busch, fels, felsgruppe, turm, haus, burg, muehle, muehlenfluegel,
+  return { F, BAUMARTEN, baum, tanne, kiefer, pappel, tropfenbaum, birke, laubbaum, eiche, busch, fels, felsgruppe, turm, haus, burg, muehle, muehlenfluegel,
     zaun, wolke, mast, schilf };
 })();

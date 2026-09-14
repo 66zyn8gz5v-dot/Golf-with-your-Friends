@@ -480,13 +480,16 @@ const Welt3D = (() => {
     }
     let fahnen = [];
     B.stelle(burg.x, fussHoehe + bergH, burg.z, 0.35, 1, b => { fahnen = Deko3D.burg(b, g).fahnen; });
-    /* Tannen am Burgberg, wie auf den gemalten Vorlagen. */
+    /* Nadelwald am Burgberg, wie auf den gemalten Vorlagen. Unter die Tannen mischen sich ein paar
+       Kiefern: Deren kahler Stamm bricht die gleichmäßige Zackenreihe auf, sonst sieht der Hang aus
+       wie ein Kamm. */
     const r = M3.zufall(555);
     for (let i = 0; i < 26; i++) {
       const a = r() * M3.TAU3, d = (4.4 + r() * 1.8) * g;
       const x = burg.x + Math.cos(a) * d, z = burg.z + Math.sin(a) * d;
-      B.stelle(x, fussHoehe - 0.6 + Math.max(0, bergH * 0.22 * (1 - d / (6.5 * g))), z, 0, 1,
-        b => Deko3D.tanne(b, 1.5 + r() * 1.3, i * 3 + 1));
+      const kiefer = r() < 0.25;
+      B.stelle(x, fussHoehe - 0.6 + Math.max(0, bergH * 0.22 * (1 - d / (6.5 * g))), z, r() * 6, 1,
+        b => Deko3D.baum(b, kiefer ? 'kiefer' : 'tanne', kiefer ? 2.2 + r() * 0.9 : 1.5 + r() * 1.3, i * 3 + 1));
     }
     /* Von der Burgmitte aus in Weltkoordinaten umrechnen – die Fahnen kommen in Burgkoordinaten
        zurück, gedreht um denselben Winkel wie die Burg. */
@@ -544,6 +547,31 @@ const Welt3D = (() => {
     });
   }
 
+  /* Welcher Baum wächst hier? Die Mischung wandert mit dem Abstand zur Bahn, und das hat einen
+     Grund im Bild, nicht in der Botanik: Direkt am Saum sieht man einzelne Bäume ganz, dort lohnen
+     sich die kenntlichen Formen – Birke, Tropfenkrone, Pappel. Weiter draußen verschmilzt alles zu
+     einer Wand, und eine Wand aus Nadelbäumen liest sich besser als eine aus Kugeln.
+
+     Die Eiche bleibt überall selten. Sie ist der größte und breiteste Baum; mehrere nebeneinander
+     wirken nicht nach Wald, sondern nach Wiederholung. Einzeln ist sie ein Merkzeichen. */
+  const BAUM_NAH =  { laubbaum: 0.30, tropfenbaum: 0.22, pappel: 0.17, tanne: 0.14, birke: 0.09, kiefer: 0.06, eiche: 0.02 };
+  const BAUM_FERN = { tanne: 0.42, kiefer: 0.23, laubbaum: 0.15, pappel: 0.11, tropfenbaum: 0.06, birke: 0.02, eiche: 0.01 };
+  /* Wuchshöhen: Untergrenze und Spanne. Die Pappel ist schlank und darf deshalb hoch werden, die
+     Eiche ist breit und bleibt niedrig – sonst erschlägt sie alles daneben. */
+  const BAUM_HOCH = { tanne: [1.5, 1.6], kiefer: [2.2, 1.0], pappel: [2.4, 1.2], tropfenbaum: [1.5, 0.8],
+    birke: [1.6, 0.9], laubbaum: [1.6, 1.4], eiche: [1.8, 0.8] };
+
+  function baumArt(wurf, tiefe) {
+    let summe = 0;
+    for (const art in BAUM_NAH) summe += M3.misch(BAUM_NAH[art], BAUM_FERN[art], tiefe);
+    let schwelle = wurf * summe;
+    for (const art in BAUM_NAH) {
+      schwelle -= M3.misch(BAUM_NAH[art], BAUM_FERN[art], tiefe);
+      if (schwelle <= 0) return art;
+    }
+    return 'laubbaum';
+  }
+
   /* Bäume, Büsche, Blumen und Steine, verteilt nach Zufall mit festem Startwert.
 
      Zwei Regeln halten die Bahn spielbar: Auf der Spielfläche wächst nur Kleinkram (Blumen,
@@ -585,8 +613,9 @@ const Welt3D = (() => {
       const zumAbschlag = gl.abschlag ? Math.hypot(px - gl.abschlag[0], pz - gl.abschlag[1]) : 99;
       const waldNeigung = M3.klemm((abstand - 2.8) / 9, 0, 1);
       if (abstand > 2.8 && zumAbschlag > 7 && wuerfel < dichte * (0.14 + waldNeigung * 0.6)) {
-        if (r() < 0.62) B.stelle(px, y, pz, 0, 1, b => Deko3D.tanne(b, 1.5 + r() * 1.6, Math.round(px * 53 + pz * 29)));
-        else B.stelle(px, y, pz, r() * 6, 1, b => Deko3D.laubbaum(b, 1.6 + r() * 1.4, Math.round(px * 71 + pz * 17)));
+        const art = baumArt(r(), waldNeigung);
+        const [tief, spanne] = BAUM_HOCH[art];
+        B.stelle(px, y, pz, r() * 6, 1, b => Deko3D.baum(b, art, tief + r() * spanne, Math.round(px * 53 + pz * 29)));
       } else if (wuerfel < dichte * 0.75) {
         B.stelle(px, y, pz, r() * 6, 1, b => Deko3D.busch(b, 0.18 + r() * 0.25, r() < 0.5 ? '#4f8f35' : '#3f8a2d', Math.round(px * 37 + pz * 91)));
       } else if (wuerfel < dichte * 0.85) {
