@@ -556,7 +556,7 @@ const Welt3D = (() => {
       const x = burg.x + Math.cos(a) * d, z = burg.z + Math.sin(a) * d;
       const y = berg ? fussHoehe - 0.6 + Math.max(0, bergH * 0.22 * (1 - d / (6.5 * g))) : gl.hoehe(x, z);
       const art = berg ? (r() < 0.25 ? 'kiefer' : 'tanne') : (r() < 0.4 ? 'eiche' : 'laubbaum');
-      B.stelle(x, y, z, r() * 6, 1, b => Deko3D.baum(b, art, 1.8 + r() * 1.4, i * 3 + 1));
+      B.stelle(x, y, z, r() * 6, 1, b => Deko3D.baum(b, art, 5 + r() * 4, i * 3 + 1));
     }
     /* Von der Burgmitte aus in Weltkoordinaten umrechnen – die Fahnen kommen in Burgkoordinaten
        zurück, gedreht um denselben Winkel wie die Burg. */
@@ -568,43 +568,146 @@ const Welt3D = (() => {
     }));
   }
 
+  /* ---------- Maßstab der Bauwerke ----------
+
+     Was in der Bahnbeschreibung als 'g' steht, ist nicht die Größe in Feldern, sondern ein
+     Verhältnis: „etwas größer als das Übliche". Wie groß das Übliche ist, steht hier – an einer
+     Stelle, für alle neun Bahnen.
+
+     Der Grund für diese Trennung ist ein handfester: Als die Welt größer wurde, mussten alle
+     Bauwerke mitwachsen. Stünden die Maße in den Bahnen, wären das siebzig Zahlen gewesen, jede
+     einzeln nachzuziehen und jede eine Gelegenheit, eine zu vergessen. So war es eine Tabelle.
+
+     'fuss' ist der Platz, den ein Bauwerk am Boden braucht, in Feldern. Daraus entsteht zweierlei:
+     der Abstand zur Spielfläche (kein Haus steht auf der Bahn) und die Lichtung im Wald ringsum. */
+  const DEKO = {
+    haus:       { mal: 3.6, fuss: 0.80 },
+    scheune:    { mal: 3.0, fuss: 1.70 },
+    muehle:     { mal: 3.2, fuss: 1.50 },
+    brunnen:    { mal: 2.4, fuss: 0.60 },
+    heuhaufen:  { mal: 2.4, fuss: 0.90 },
+    karren:     { mal: 2.2, fuss: 0.80 },
+    zelt:       { mal: 2.6, fuss: 1.20 },
+    zaun:       { mal: 2.2, fuss: 0 },
+    mauer:      { mal: 2.2, fuss: 0 },
+    felsgruppe: { mal: 2.2, fuss: 1.10 },
+    bruecke:    { mal: 1.3, fuss: 0 },
+    baum:       { mal: 2.8, fuss: 0.32 },
+    obstbaum:   { mal: 2.8, fuss: 0.32 },
+    mast:       { mal: 1.8, fuss: 0.15 },
+  };
+  const dekoMal = t => (DEKO[t] || { mal: 1 }).mal;
+  /* Der Fuß gilt für das fertige Stück, also nach 'mal'. Das war anfangs anders gemeint und ging
+     prompt schief: Die Mühle wurde mit dem Dreieinhalbfachen gebaut, aber nur mit dem Einfachen
+     weggeschoben – und stand mit ihren Flügeln über der Bahn. Jetzt gilt für beides dieselbe
+     Rechnung. Beim Baum ist 'g' die Höhe, und der Fuß ist ein Drittel davon: So breit ist eine
+     Krone ungefähr. */
+  const dekoFuss = (t, g = 1) => (DEKO[t] || { fuss: 0 }).fuss * g * dekoMal(t);
+
+  /* Ein Bauwerk von der Spielfläche wegschieben, bis sein Fuß frei steht. Geschoben wird entlang
+     des Anstiegs des Abstandsfeldes, also immer geradewegs von der Bahn fort.
+
+     Das ist bequemer, als es klingt: Beim Bauen einer Bahn setzt man ein Haus dorthin, wo es gut
+     aussieht, und muss nicht nachrechnen, ob seine Ecke die Bande berührt. Und als die Bauwerke
+     dreimal so groß wurden, rutschte alles von selbst an die richtige Stelle, statt in siebzig
+     Zeilen nachgebessert zu werden. */
+  function wegVomFeld(gl, x, z, fuss) {
+    if (!fuss) return [x, z];
+    let px = x, pz = z;
+    for (let i = 0; i < 60 && gl.zumRand(px, pz) < fuss; i++) {
+      const e = 0.4;
+      const gx = gl.zumRand(px + e, pz) - gl.zumRand(px - e, pz);
+      const gz = gl.zumRand(px, pz + e) - gl.zumRand(px, pz - e);
+      const l = Math.hypot(gx, gz);
+      if (l < 1e-6) break;
+      px += gx / l * 0.25; pz += gz / l * 0.25;
+    }
+    return [px, pz];
+  }
+
+  /* Wo die Bauwerke am Ende wirklich stehen. Zwei Kräfte wirken auf jedes: weg von der
+     Spielfläche und weg von den anderen. Das Zweite kam dazu, als die Bauwerke dreimal so groß
+     wurden – vorher stand ein Brunnen zwei Felder neben einem Haus und störte niemanden, jetzt
+     steckte er darin.
+
+     Gerechnet wird einmal je Bahn und dann gemerkt: Die Deko fragt danach, und der Bewuchs fragt
+     noch einmal, um seine Lichtungen an dieselbe Stelle zu legen. Zweimal zu rechnen hieße, dass
+     die Lichtung auch nur ein Rundungsfehler neben dem Haus liegen könnte. */
+  function dekoOrte(gl) {
+    if (gl.__orte) return gl.__orte;
+    const raus = [];
+    for (const d of gl.bahn.deko || []) {
+      const fuss = dekoFuss(d.t, d.g || 1);
+      let [x, z] = wegVomFeld(gl, d.x, d.z, fuss);
+      for (let i = 0; i < 24 && fuss > 0; i++) {
+        let stoss = null;
+        for (const a of raus) {
+          if (!a.fuss) continue;
+          const dx = x - a.x, dz = z - a.z, weit = Math.hypot(dx, dz), soll = (fuss + a.fuss) * 0.8;
+          if (weit < soll) { stoss = [dx / (weit || 1), dz / (weit || 1), soll - weit]; break; }
+        }
+        if (!stoss) break;
+        x += stoss[0] * Math.min(0.5, stoss[2]);
+        z += stoss[1] * Math.min(0.5, stoss[2]);
+        [x, z] = wegVomFeld(gl, x, z, fuss);
+      }
+      raus.push({ x, z, fuss });
+    }
+    gl.__orte = raus;
+    return raus;
+  }
+  const dekoOrt = (gl, d) => {
+    const i = (gl.bahn.deko || []).indexOf(d);
+    const o = dekoOrte(gl)[i];
+    return o ? [o.x, o.z] : [d.x, d.z];
+  };
+
   /* Alles, was in der Bahnbeschreibung unter 'deko' steht. */
   function dekoNetz(B, gl, beweglich) {
-    for (const d of gl.bahn.deko || []) {
+    const orte = dekoOrte(gl);
+    for (const eintrag of gl.bahn.deko || []) {
       const y = (x, z) => gl.hoehe(x, z);
-      if (d.t === 'zaun') { Deko3D.zaun(B, d.von[0], d.von[1], d.nach[0], d.nach[1], y, d.h); continue; }
-      if (d.t === 'mauer') { Deko3D.steinmauer(B, d.von[0], d.von[1], d.nach[0], d.nach[1], y, d.h); continue; }
+      const mal = dekoMal(eintrag.t);
+      if (eintrag.t === 'zaun') { Deko3D.zaun(B, eintrag.von[0], eintrag.von[1], eintrag.nach[0], eintrag.nach[1], y, (eintrag.h || 0.42) * mal); continue; }
+      if (eintrag.t === 'mauer') { Deko3D.steinmauer(B, eintrag.von[0], eintrag.von[1], eintrag.nach[0], eintrag.nach[1], y, (eintrag.h || 0.38) * mal); continue; }
+      /* Der Maßstab kommt aus der Tabelle, der Ort aus der Bahn – und der Ort wird noch ein Stück
+         von der Spielfläche weggeschoben, falls das Bauwerk größer ist als der Platz daneben. */
+      const ort = orte[gl.bahn.deko.indexOf(eintrag)];
+      const dx = ort.x, dz = ort.z;
+      const d = { ...eintrag, x: dx, z: dz, g: (eintrag.g || 1) * mal };
       const h = y(d.x, d.z);
       switch (d.t) {
         case 'muehle': {
           let nabe = null;
-          B.stelle(d.x, h, d.z, d.dreh || 0, 1, b => { nabe = Deko3D.muehle(b, d.g || 1).nabe; });
+          B.stelle(d.x, h, d.z, d.dreh || 0, 1, b => { nabe = Deko3D.muehle(b, d.g).nabe; });
           const w = d.dreh || 0, c = Math.cos(w), si = Math.sin(w);
           beweglich.muehlen.push({ x: d.x + nabe[0] * c + nabe[2] * si, y: h + nabe[1], z: d.z - nabe[0] * si + nabe[2] * c,
-            dreh: w, g: d.g || 1, tempo: 0.55 + (d.g || 1) * 0.1 });
+            dreh: w, g: d.g, tempo: 0.55 + d.g * 0.04 });
           break;
         }
-        case 'haus': B.stelle(d.x, h, d.z, d.dreh || 0, d.g || 1, b => Deko3D.haus(b, 1, 0.8, 0.8, d.dach)); break;
-        case 'scheune': B.stelle(d.x, h, d.z, d.dreh || 0, 1, b => Deko3D.scheune(b, d.g || 1, d.dach)); break;
-        case 'brunnen': B.stelle(d.x, h, d.z, d.dreh || 0, 1, b => Deko3D.brunnen(b, d.g || 1)); break;
-        case 'heuhaufen': B.stelle(d.x, h, d.z, d.dreh || 0, 1, b => Deko3D.heuhaufen(b, d.g || 1, Math.round(d.x * 17 + d.z * 5))); break;
-        case 'karren': B.stelle(d.x, h, d.z, d.dreh || 0, 1, b => Deko3D.karren(b, d.g || 1)); break;
-        case 'baum': B.stelle(d.x, h, d.z, d.dreh || 0, 1, b => Deko3D.baum(b, d.art || 'laubbaum', d.g || 2, Math.round(d.x * 29 + d.z * 11))); break;
-        case 'obstbaum': B.stelle(d.x, h, d.z, d.dreh || 0, 1, b => Deko3D.obstbaum(b, d.g || 2, Math.round(d.x * 29 + d.z * 11))); break;
+        case 'haus': B.stelle(d.x, h, d.z, d.dreh || 0, d.g, b => Deko3D.haus(b, 1, 0.8, 0.8, d.dach)); break;
+        case 'scheune': B.stelle(d.x, h, d.z, d.dreh || 0, 1, b => Deko3D.scheune(b, d.g, d.dach)); break;
+        case 'brunnen': B.stelle(d.x, h, d.z, d.dreh || 0, 1, b => Deko3D.brunnen(b, d.g)); break;
+        case 'heuhaufen': B.stelle(d.x, h, d.z, d.dreh || 0, 1, b => Deko3D.heuhaufen(b, d.g, Math.round(d.x * 17 + d.z * 5))); break;
+        case 'karren': B.stelle(d.x, h, d.z, d.dreh || 0, 1, b => Deko3D.karren(b, d.g)); break;
+        case 'baum': B.stelle(d.x, h, d.z, d.dreh || 0, 1, b => Deko3D.baum(b, d.art || 'laubbaum', d.g, Math.round(d.x * 29 + d.z * 11))); break;
+        case 'obstbaum': B.stelle(d.x, h, d.z, d.dreh || 0, 1, b => Deko3D.obstbaum(b, d.g, Math.round(d.x * 29 + d.z * 11))); break;
         case 'zelt': {
           /* Auf jedem Zelt weht ein Wimpel – deshalb kommt die Spitze zurück und wandert in die
              Liste der Fahnen, die im beweglichen Gitter gezeichnet werden. */
           let spitze = 1.5;
-          B.stelle(d.x, h, d.z, d.dreh || 0, 1, b => { spitze = Deko3D.zelt(b, d.g || 1, d.farbe, Math.round(d.x * 13 + d.z * 7)).spitze; });
-          beweglich.fahnen.push({ x: d.x, y: h + spitze + 0.02, z: d.z, h: 0.26, farbe: d.farbe || '#c8503f' });
+          B.stelle(d.x, h, d.z, d.dreh || 0, 1, b => { spitze = Deko3D.zelt(b, d.g, d.farbe, Math.round(d.x * 13 + d.z * 7)).spitze; });
+          beweglich.fahnen.push({ x: d.x, y: h + spitze + 0.02, z: d.z, h: 0.26 * d.g, farbe: d.farbe || '#c8503f' });
           break;
         }
-        case 'felsgruppe': B.stelle(d.x, h, d.z, 0, 1, b => Deko3D.felsgruppe(b, (d.g || 1) * 0.6, Math.round(d.x * 13 + d.z * 7))); break;
+        case 'felsgruppe': B.stelle(d.x, h, d.z, 0, 1, b => Deko3D.felsgruppe(b, d.g * 0.6, Math.round(d.x * 13 + d.z * 7))); break;
         case 'bruecke': bruecke(B, gl, d); break;
-        case 'mast':
-          B.stelle(d.x, h, d.z, 0, 1, b => Deko3D.mast(b, d.h || 1.4));
-          beweglich.fahnen.push({ x: d.x, y: h + (d.h || 1.4), z: d.z, h: (d.h || 1.4) * 0.42, farbe: d.farbe || '#b63a30' });
+        case 'mast': {
+          const hoch = (d.h || 1.4) * mal;
+          B.stelle(d.x, h, d.z, 0, 1, b => Deko3D.mast(b, hoch));
+          beweglich.fahnen.push({ x: d.x, y: h + hoch, z: d.z, h: hoch * 0.42, farbe: d.farbe || '#b63a30' });
           break;
+        }
         default: break;
       }
     }
@@ -638,15 +741,29 @@ const Welt3D = (() => {
      wirken nicht nach Wald, sondern nach Wiederholung. Einzeln ist sie ein Merkzeichen. */
   const BAUM_NAH =  { laubbaum: 0.30, tropfenbaum: 0.22, pappel: 0.17, tanne: 0.14, birke: 0.09, kiefer: 0.06, eiche: 0.02 };
   const BAUM_FERN = { tanne: 0.42, kiefer: 0.23, laubbaum: 0.15, pappel: 0.11, tropfenbaum: 0.06, birke: 0.02, eiche: 0.01 };
-  /* Wuchshöhen: Untergrenze und Spanne. Die Pappel ist schlank und darf deshalb hoch werden, die
-     Eiche ist breit und bleibt niedrig – sonst erschlägt sie alles daneben. */
-  const BAUM_HOCH = { tanne: [1.5, 1.6], kiefer: [2.2, 1.0], pappel: [2.4, 1.2], tropfenbaum: [1.5, 0.8],
-    birke: [1.6, 0.9], laubbaum: [1.6, 1.4], eiche: [1.8, 0.8] };
+  /* Wuchshöhen: Untergrenze und Spanne, in Feldern. Ein Feld ist ungefähr ein Meter, und damit
+     sind das Bäume von fünf bis zehn Metern – so groß, wie ein Baum neben einer Minigolfbahn
+     wirklich ist.
+
+     Vorher standen hier anderthalb bis dreieinhalb Meter. Das sah für sich genommen ordentlich
+     aus, aber es gab der Welt keinen Maßstab: Neben einer Bahn, die sechs Felder breit ist, ist
+     ein Baum von zwei Metern ein Busch, und ein Haus von einem Meter ein Spielzeug. Wer später
+     eine Bahn durch eine Scheune führen will, braucht eine Scheune, durch die eine Bahn passt –
+     und dann muss alles andere mitwachsen.
+
+     Die Pappel ist schlank und darf deshalb am höchsten werden, die Eiche bleibt niedriger und
+     wird dafür breit. */
+  const BAUM_HOCH = { tanne: [5.5, 4.0], kiefer: [7.0, 3.0], pappel: [7.0, 3.5], tropfenbaum: [4.0, 2.0],
+    birke: [5.0, 2.5], laubbaum: [4.5, 4.0], eiche: [5.5, 2.5] };
 
   /* Ab hier wird gespart, und beide Grenzen sind aus dem Bild abgelesen und nicht geraten:
      Jenseits von NAH_KRAM ist ein Busch oder ein Grasbüschel keine drei Bildpunkte mehr groß,
      jenseits von FERN_BAUM ist von einem Baum nur noch der Umriss zu sehen. */
-  const NAH_KRAM = 11, FERN_BAUM = 16;
+  const NAH_KRAM = 13, FERN_BAUM = 20;
+  /* Der Saum entlang der Bahn, in dem kein Baum wächst. Er ist mit den Bäumen mitgewachsen: Eine
+     Tanne von zwei Metern durfte drei Felder neben der Bahn stehen, eine von acht nicht mehr –
+     sie stünde beim Zielen mitten im Bild. Büsche, Gras und Steine dürfen weiter dicht heran. */
+  const SAUM = 4.5;
 
   function baumArt(wurf, tiefe) {
     let summe = 0;
@@ -674,9 +791,10 @@ const Welt3D = (() => {
        Wand, und aus einem Dorf wird eine Ansammlung von Dächern zwischen Tannen – man sieht dann
        nicht mehr, dass dort jemand wohnt. Ein Hof ist eine Lichtung mit Gebäuden darauf, und
        genau das ist hier gemeint. */
-    const LICHTUNG = { haus: 2.6, scheune: 3.4, muehle: 3.0, brunnen: 1.8, zelt: 2.4, karren: 1.2, heuhaufen: 1.6 };
-    const lichtungen = (gl.bahn.deko || []).filter(d => LICHTUNG[d.t] !== undefined)
-      .map(d => ({ x: d.x, z: d.z, r: LICHTUNG[d.t] * (d.g || 1) }));
+    /* Die Lichtung um ein Bauwerk ist anderthalbmal sein Fuß. Beide Maße kommen jetzt aus derselben
+       Tabelle – vorher stand die Lichtung für sich, und als die Häuser dreimal so groß wurden, wäre
+       sie stehen geblieben und der Wald hätte mitten in der Scheune gestanden. */
+    const lichtungen = dekoOrte(gl).filter(o => o.fuss > 0).map(o => ({ x: o.x, z: o.z, r: o.fuss * 1.5 }));
     const imFreien = (x, z) => !lichtungen.some(l => Math.hypot(x - l.x, z - l.z) < l.r);
 
     for (let z = -aussenRand; z < gl.T + aussenRand; z += 1) for (let x = -aussenRand; x < gl.B + aussenRand; x += 1) {
@@ -696,9 +814,9 @@ const Welt3D = (() => {
             const qx = x + r(), qz = z + r();
             if (gl.zumRand(qx, qz) > 0.1 || gl.art(qx, qz).name !== 'Rough') continue;
             const saat = Math.round(qx * 91 + qz * 13) + k;
-            if (r() < 0.22) B.stelle(qx, gl.hoehe(qx, qz), qz, r() * 6, 0.8 + r() * 0.5, b => Deko3D.blume(b, 1, saat));
-            else B.stelle(qx, gl.hoehe(qx, qz), qz, r() * 6, 0.8 + r() * 0.6,
-              b => Deko3D.grasbueschel(b, 1.15, r() < 0.5 ? '#5fa03a' : '#6fb045', saat));
+            if (r() < 0.22) B.stelle(qx, gl.hoehe(qx, qz), qz, r() * 6, 0.8 + r() * 0.5, b => Deko3D.blume(b, 1.6, saat));
+            else B.stelle(qx, gl.hoehe(qx, qz), qz, r() * 6, 0.75 + r() * 0.5,
+              b => Deko3D.grasbueschel(b, 1.0, r() < 0.5 ? '#5fa03a' : '#6fb045', saat));
           }
         }
         continue;
@@ -707,6 +825,10 @@ const Welt3D = (() => {
       const y = gl.hoehe(px, pz);
       /* Je weiter draußen, desto dichter der Wald: Innen bleibt der Blick frei, außen schließt
          sich die Landschaft. Das ist billiger als eine Kulisse und wirkt dreimal so tief.
+
+         Seit die Bäume fünf bis zehn Meter hoch sind, stehen nur noch halb so viele: Ein
+         ausgewachsener Wald hat weniger Stämme als ein Dickicht, weil jeder mehr Platz nimmt.
+         Dichter gesetzt wäre es eine grüne Wand und kostete das Doppelte an Dreiecken.
 
          Zwei Sperrbezirke halten Bäume weg, und beide sind Notwendigkeiten, keine Schönheitsregeln:
 
@@ -718,8 +840,8 @@ const Welt3D = (() => {
          außerhalb der Bahn, und sie steht dort jedes Mal. Ein Baum an dieser Stelle verdeckt nicht
          irgendeinen Schlag, sondern immer denselben. */
       const zumAbschlag = gl.abschlag ? Math.hypot(px - gl.abschlag[0], pz - gl.abschlag[1]) : 99;
-      const waldNeigung = M3.klemm((abstand - 2.8) / 9, 0, 1);
-      if (abstand > 2.8 && zumAbschlag > 7 && imFreien(px, pz) && wuerfel < dichte * (0.14 + waldNeigung * 0.6)) {
+      const waldNeigung = M3.klemm((abstand - SAUM) / 9, 0, 1);
+      if (abstand > SAUM && zumAbschlag > 12 && imFreien(px, pz) && wuerfel < dichte * (0.08 + waldNeigung * 0.34)) {
         const art = baumArt(r(), waldNeigung);
         const [tief, spanne] = BAUM_HOCH[art];
         /* Jeder fünfte Baum ist ein Jungbaum. Ein Wald, in dem alle Wipfel auf derselben Höhe
@@ -734,19 +856,23 @@ const Welt3D = (() => {
       } else if (abstand > NAH_KRAM) {
         /* Weit draußen nichts als Bäume: Ein Busch von dreißig Feldern Entfernung ist ein
            grüner Punkt im Gras und kostet trotzdem neunzig Dreiecke. */
-      } else if (wuerfel < dichte * 0.48) {
-        B.stelle(px, y, pz, r() * 6, 1, b => Deko3D.busch(b, 0.18 + r() * 0.25, r() < 0.5 ? '#4f8f35' : '#3f8a2d', Math.round(px * 37 + pz * 91)));
-      } else if (wuerfel < dichte * 0.68) {
+      /* Am Bahnrand wächst Gras, nicht Gebüsch. Das ist keine Kleinigkeit: Als die Büsche mit der
+         Welt mitwuchsen, standen sie plötzlich als geschlossene Hecke links und rechts der Bahn und
+         verdeckten alles dahinter – Häuser, Bäume, Burg. Auf Fynns Vorbild ist der Rand einer
+         Minigolfbahn ein Grassaum, und Büsche stehen weiter hinten unter den Bäumen. */
+      } else if (wuerfel < dichte * 0.42) {
         B.stelle(px, y, pz, r() * 6, 0.9 + r() * 0.7,
-          b => Deko3D.grasbueschel(b, 1.3, r() < 0.5 ? '#4f8f35' : '#62a63d', Math.round(px * 17 + pz * 53)));
-      } else if (wuerfel < dichte * 0.78) {
-        B.stelle(px, y, pz, r() * 6, 0.9 + r() * 0.6, b => Deko3D.blume(b, 1.3, Math.round(px * 59 + pz * 11)));
-      } else if (wuerfel < dichte * 0.9) {
-        B.stelle(px, y - 0.1, pz, 0, 1, b => Deko3D.fels(b, 0.18 + r() * 0.3, Math.round(px * 23 + pz * 41)));
-      } else if (abstand > 4 && wuerfel < dichte * 0.94) {
+          b => Deko3D.grasbueschel(b, 1.5, r() < 0.5 ? '#4f8f35' : '#62a63d', Math.round(px * 17 + pz * 53)));
+      } else if (abstand > 2.4 && wuerfel < dichte * 0.6) {
+        B.stelle(px, y, pz, r() * 6, 1, b => Deko3D.busch(b, 0.3 + r() * 0.45, r() < 0.5 ? '#4f8f35' : '#3f8a2d', Math.round(px * 37 + pz * 91)));
+      } else if (wuerfel < dichte * 0.72) {
+        B.stelle(px, y, pz, r() * 6, 0.9 + r() * 0.6, b => Deko3D.blume(b, 2.2, Math.round(px * 59 + pz * 11)));
+      } else if (wuerfel < dichte * 0.84) {
+        B.stelle(px, y - 0.1, pz, 0, 1, b => Deko3D.fels(b, 0.3 + r() * 0.45, Math.round(px * 23 + pz * 41)));
+      } else if (abstand > 4 && wuerfel < dichte * 0.88) {
         /* Totholz nur tief im Wald: Am gepflegten Bahnrand läge es falsch. */
-        if (r() < 0.5) B.stelle(px, y, pz, 0, 0.8 + r() * 0.5, b => Deko3D.stumpf(b, 1, Math.round(px * 83 + pz * 7)));
-        else B.stelle(px, y + 0.09, pz, 0, 0.8 + r() * 0.6, b => Deko3D.totholz(b, 1, Math.round(px * 29 + pz * 67)));
+        if (r() < 0.5) B.stelle(px, y, pz, 0, 0.8 + r() * 0.5, b => Deko3D.stumpf(b, 2.2, Math.round(px * 83 + pz * 7)));
+        else B.stelle(px, y + 0.09, pz, 0, 0.8 + r() * 0.6, b => Deko3D.totholz(b, 2.4, Math.round(px * 29 + pz * 67)));
       }
       /* Und unabhängig davon noch einmal Kleinzeug an anderer Stelle im selben Feld. Ein Feld ist
          einen Meter groß; wenn darin höchstens ein Ding stehen darf, bleibt der Boden zwischen den
@@ -756,10 +882,34 @@ const Welt3D = (() => {
         if (gl.zumRand(qx, qz) > 0.25 && weitVonBurg(qx, qz)) {
           const qy = gl.hoehe(qx, qz), saat = Math.round(qx * 43 + qz * 79);
           const w = r();
-          if (w < 0.55) B.stelle(qx, qy, qz, r() * 6, 0.8 + r() * 0.7, b => Deko3D.grasbueschel(b, 1.2, r() < 0.5 ? '#4f8f35' : '#62a63d', saat));
-          else if (w < 0.8) B.stelle(qx, qy, qz, r() * 6, 0.8 + r() * 0.5, b => Deko3D.blume(b, 1.2, saat));
-          else B.stelle(qx, qy - 0.05, qz, r() * 6, 1, b => Deko3D.fels(b, 0.07 + r() * 0.08, saat));
+          if (w < 0.6) B.stelle(qx, qy, qz, r() * 6, 0.8 + r() * 0.7, b => Deko3D.grasbueschel(b, 1.4, r() < 0.5 ? '#4f8f35' : '#62a63d', saat));
+          else if (w < 0.85) B.stelle(qx, qy, qz, r() * 6, 0.8 + r() * 0.5, b => Deko3D.blume(b, 2, saat));
+          else B.stelle(qx, qy - 0.05, qz, r() * 6, 1, b => Deko3D.fels(b, 0.14 + r() * 0.16, saat));
         }
+      }
+    }
+  }
+
+  /* Der Grassaum an der Bande. Auf Fynns Vorbild wächst das Gras der Wiese unmittelbar gegen das
+     Holz und steht dabei höher als die Bande selbst – das ist es, was die Bahn in die Landschaft
+     setzt, statt sie darauf zu legen. Ohne den Saum stößt gemähtes Grün an einen Balken und
+     dahinter fängt eine zweite, glatte Fläche an; mit ihm hat die Bahn einen Rand.
+
+     Gezeichnet wird je Bandenkante ein kleines Büschel dicht dahinter, mit etwas Zufall in Ort,
+     Größe und Ton. Sie stehen außerhalb der Bande und haben mit der Kugelrechnung nichts zu tun. */
+  function saumNetz(B, gl) {
+    const r = M3.zufall(4711);
+    for (const k of gl.kanten) {
+      for (let i = 0; i < 2; i++) {
+        /* Dicht hinter dem Balken: eine halbe Feldbreite nach außen, quer dazu über die Kante
+           verteilt. */
+        const laengs = (i + 0.25 + r() * 0.5) / 2 - 0.5;
+        const raus = 0.72 + r() * 0.5;
+        const x = k.ix + 0.5 + k.dx * raus - k.dz * laengs;
+        const z = k.iz + 0.5 + k.dz * raus + k.dx * laengs;
+        if (gl.zumRand(x, z) < 0.2) continue;             // nicht auf die Bahn
+        B.stelle(x, gl.hoehe(x, z), z, r() * 6, 0.85 + r() * 0.6,
+          b => Deko3D.grasbueschel(b, 1.35, r() < 0.5 ? '#57993a' : '#67aa42', Math.round(x * 37 + z * 13) + i));
       }
     }
   }
@@ -799,9 +949,9 @@ const Welt3D = (() => {
     /* Sanfte Kuppen, nichts Spitzes. Die Kuppe ist eine flachgedrückte Kugel, deren untere Hälfte
        im Boden steckt: eine Form ohne Kante und ohne Spitze, und genau das macht einen Hügel. */
     huegel: [
-      { saat: 6173, n: 22, d: 0.92, h: [2.6, 2.4], breit: 3.2, fuss: '#63954b', spitze: '#77aa57', wald: 0.5 },
-      { saat: 9241, n: 18, d: 1.34, h: [3.6, 3.0], breit: 3.6, fuss: '#5f8f57', spitze: '#7ba86c', wald: 0.3 },
-      { saat: 4517, n: 16, d: 1.78, h: [4.6, 3.4], breit: 4.0, fuss: '#6d9070', spitze: '#8fae8c', wald: 0 },
+      { saat: 6173, n: 22, d: 0.92, h: [7, 6], breit: 2.6, fuss: '#63954b', spitze: '#77aa57', wald: 0.5 },
+      { saat: 9241, n: 18, d: 1.34, h: [10, 8], breit: 2.8, fuss: '#5f8f57', spitze: '#7ba86c', wald: 0.3 },
+      { saat: 4517, n: 16, d: 1.78, h: [14, 9], breit: 3.0, fuss: '#6d9070', spitze: '#8fae8c', wald: 0 },
     ],
     berge: [
       { saat: 6173, n: 30, d: 0.86, h: [4, 7], fuss: '#5c8b47', spitze: '#6d9c52' },
@@ -844,7 +994,7 @@ const Welt3D = (() => {
           const wa = r() * M3.TAU3, wd = rr * (0.15 + r() * 0.5);
           const wy = grund + h * Math.sqrt(Math.max(0, 1 - (wd / rr) ** 2)) - 0.3;
           B.stelle(x + Math.cos(wa) * wd, wy, z + Math.sin(wa) * wd, r() * 6, 1,
-            b => Deko3D.fernbaum(b, 1.6 + r() * 1.6, r() < 0.55, i * 31 + k));
+            b => Deko3D.fernbaum(b, 4.5 + r() * 4, r() < 0.55, i * 31 + k));
         }
       }
     }
@@ -1009,6 +1159,7 @@ const Welt3D = (() => {
   }
 
   return { ART, artVon, gelaende, gelaendeNetz, lochNetz, wasserNetz, felsenNetz, bandenNetz, burgNetz, dekoNetz,
-    streuenNetz, uferNetz, fernNetz, himmelNetz, wolkenNetz, tuchNeu, tuchFrisch,
+    dekoOrt, dekoOrte, dekoFuss,
+    streuenNetz, saumNetz, uferNetz, fernNetz, himmelNetz, wolkenNetz, tuchNeu, tuchFrisch,
     pfeilNeu, pfeilFrisch };
 })();

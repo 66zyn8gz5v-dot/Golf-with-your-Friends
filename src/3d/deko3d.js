@@ -241,22 +241,41 @@ const Deko3D = (() => {
         /* Die Blüte ist eine flachgedrückte Kugel mit hellem Rand und dunklem Grund: Von oben
            sieht man den Kranz, von der Seite eine Scheibe. Blütenblätter einzeln zu bauen wäre
            zehnmal so teuer und auf zwei Metern Entfernung nicht zu sehen. */
-        b.mit(M3.mult(M3.verschieben(0, h, 0), M3.skalieren(1, 0.4, 1)),
+        /* Flach wie eine Scheibe, nicht rund wie eine Kappe: Eine halbe Kugel auf einem Stiel ist
+           ein Pilz, eine flache Scheibe mit hellem Rand eine Blüte. Bei einem Zehntel Feld
+           Durchmesser entscheidet genau das darüber, was man zu sehen glaubt. */
+        b.mit(M3.mult(M3.verschieben(0, h, 0), M3.skalieren(1.25, 0.16, 1.25)),
           c => c.kugel(0.036 * g, 2, 6, mitte, 0, 1, f));
       });
     }
     return B;
   }
 
-  /* Ein Grasbüschel: ein paar Halme, die nach außen kippen. Vorher war das eine gedrückte Kugel –
-     die sah aus wie ein Moospolster und nicht wie Gras. */
+  /* Ein Grasbüschel, wie auf Fynns Vorbild: hohe, gebogene Halme, unten dunkel, oben hell, und
+     genug davon, dass daraus ein Polster wird und keine Borsten.
+
+     Jeder Halm hat zwei Abschnitte, und das ist der ganze Unterschied. Ein gerader Halm sieht aus
+     wie ein Nagel; ein geknickter neigt sich, und eine Handvoll geknickter Halme, die sich nach
+     außen neigen, ist Gras. Der obere Abschnitt läuft spitz zu, der untere trägt.
+
+     Die Höhe ist mit Absicht groß geworden: Neben einer Bande von einem Drittel Feld Höhe sah ein
+     Büschel von einem Zehntel aus wie Moos. Jetzt reicht das Gras bis an die Bande heran, und die
+     Bahn liegt in der Wiese statt auf ihr. */
   function grasbueschel(B, g = 1, farbe = '#5fa03a', saat = 1) {
     const z = M3.zufall(saat * 199 + 3);
-    const n = 4 + Math.floor(z() * 3);
+    const hell = Bauen.stufe(farbe, 1.42), dunkel = Bauen.stufe(farbe, 0.72);
+    const n = 5 + Math.floor(z() * 3);
     for (let i = 0; i < n; i++) {
-      const a = (i + z() * 0.6) / n * M3.TAU3, h = (0.11 + z() * 0.12) * g;
-      B.mit(M3.mult(M3.mult(M3.drehenY(-a), M3.drehenZ(0.25 + z() * 0.45)),
-        M3.verschieben(0, 0, 0)), b => b.walze(0.016 * g, 0, h, 3, farbe, null));
+      const a = (i + z() * 0.7) / n * M3.TAU3;
+      const h = (0.3 + z() * 0.3) * g;
+      const neigung = 0.12 + z() * 0.3;
+      const dick = (0.022 + z() * 0.012) * g;
+      B.mit(M3.mult(M3.drehenY(-a), M3.drehenZ(neigung)), b => {
+        b.walze(dick, dick * 0.7, h * 0.55, 3, dunkel, null, 0, farbe);
+        /* Der obere Abschnitt knickt weiter weg – gedreht wird um den Fußpunkt des Knicks. */
+        b.mit(M3.mult(M3.verschieben(0, h * 0.55, 0), M3.drehenZ(neigung * 1.6)),
+          c => c.walze(dick * 0.7, 0, h * 0.5, 3, farbe, null, 0, hell));
+      });
     }
     return B;
   }
@@ -419,8 +438,13 @@ const Deko3D = (() => {
     const hb = b0 * 0.58, ht = t0 * 0.58, first = h + Math.max(b0, t0) * 0.42;
     B.viereck([-hb, h, -ht], [-hb, h, ht], [0, first, ht], [0, first, -ht], dachFarbe, [-1, 1, 0]);
     B.viereck([hb, h, -ht], [hb, h, ht], [0, first, ht], [0, first, -ht], dachFarbe, [1, 1, 0]);
-    B.flaeche([[-hb, h, -ht], [hb, h, -ht], [0, first, -ht]], F.dachDunkel, [0, 0, -1]);
-    B.flaeche([[-hb, h, ht], [hb, h, ht], [0, first, ht]], F.dachDunkel, [0, 0, 1]);
+    /* Der Giebel ist eine dunklere Stufe DESSELBEN Dachs. Vorher stand hier F.dachDunkel – das ist
+       das Dunkel des blauen Burgdachs, und so trug jedes rote Hausdach zwei blaue Giebeldreiecke.
+       Solange die Häuser einen Meter groß waren, ist das niemandem aufgefallen; seit sie sechs
+       Meter groß sind, sieht man es von der Bahn aus. */
+    const giebel = Bauen.stufe(dachFarbe, 0.74);
+    B.flaeche([[-hb, h, -ht], [hb, h, -ht], [0, first, -ht]], giebel, [0, 0, -1]);
+    B.flaeche([[-hb, h, ht], [hb, h, ht], [0, first, ht]], giebel, [0, 0, 1]);
     // Tür und zwei Fenster
     B.mit(M3.verschieben(0, 0, t0 * 0.5), x => x.kasten(b0 * 0.22, h * 0.5, t0 * 0.04, F.holzDunkel));
     for (const sx of [-1, 1]) B.mit(M3.verschieben(sx * b0 * 0.28, h * 0.55, t0 * 0.5), x => x.kasten(b0 * 0.16, h * 0.2, t0 * 0.04, '#ffe6a8'));
@@ -626,8 +650,9 @@ const Deko3D = (() => {
     const hb = b0 * 0.56, ht = t0 * 0.62, first = h + t0 * 0.5;
     B.viereck([-hb, h, -ht], [-hb, h, ht], [-hb, first, ht], [-hb, first, -ht], dachFarbe, [-1, 0, 0]);
     for (const sz of [-1, 1]) B.viereck([-hb, h, sz * ht], [hb, h, sz * ht], [hb, first, 0], [-hb, first, 0], dachFarbe, [0, 0.7, sz]);
-    B.flaeche([[hb, h, -ht], [hb, h, ht], [hb, first, 0]], F.dachDunkel, [1, 0, 0]);
-    B.flaeche([[-hb, h, ht], [-hb, h, -ht], [-hb, first, 0]], F.dachDunkel, [-1, 0, 0]);
+    const giebel = Bauen.stufe(dachFarbe, 0.74);
+    B.flaeche([[hb, h, -ht], [hb, h, ht], [hb, first, 0]], giebel, [1, 0, 0]);
+    B.flaeche([[-hb, h, ht], [-hb, h, -ht], [-hb, first, 0]], giebel, [-1, 0, 0]);
     // Tor und Heuluke
     B.mit(M3.verschieben(0, 0, t0 * 0.5), x => x.kasten(b0 * 0.34, h * 0.78, 0.04 * g, F.holzDunkel, F.holz));
     B.mit(M3.verschieben(0, h * 0.12, t0 * 0.51), x => x.kasten(b0 * 0.36, 0.05 * g, 0.03 * g, F.holz));
@@ -644,7 +669,8 @@ const Deko3D = (() => {
     // Satteldächlein
     const hb = 0.5 * g, ht = 0.4 * g, y0 = 0.98 * g, first = 1.26 * g;
     for (const sx of [-1, 1]) B.viereck([sx * hb, y0, -ht], [sx * hb, y0, ht], [0, first, ht], [0, first, -ht], F.dachRot, [sx, 1, 0]);
-    for (const sz of [-1, 1]) B.flaeche(sz > 0 ? [[-hb, y0, ht], [hb, y0, ht], [0, first, ht]] : [[hb, y0, -ht], [-hb, y0, -ht], [0, first, -ht]], F.dachDunkel, [0, 0, sz]);
+    const giebel = Bauen.stufe(F.dachRot, 0.74);
+    for (const sz of [-1, 1]) B.flaeche(sz > 0 ? [[-hb, y0, ht], [hb, y0, ht], [0, first, ht]] : [[hb, y0, -ht], [-hb, y0, -ht], [0, first, -ht]], giebel, [0, 0, sz]);
     B.mit(M3.verschieben(0, 0.55 * g, 0), b => b.walze(0.11 * g, 0.13 * g, 0.16 * g, 7, F.holzDunkel, F.holz));  // Eimer
     return B;
   }

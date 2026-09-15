@@ -116,7 +116,7 @@ const BAHNEN3D = (() => {
             { x: 5.5, z: 3.5, r: 2, h: -0.3 },
           ],
         },
-        burg: { x: 5.5, z: -17, g: 1.3, berg: 1.4 },
+        burg: { x: 5.5, z: -28, g: 3.2, berg: 3.5 },
         deko: [
           { t: 'muehle', x: -4.5, z: 9, g: 1.15, dreh: 0.6 },
           { t: 'haus', x: -4, z: 17, g: 1.2, dreh: 0.5 },
@@ -243,7 +243,7 @@ const BAHNEN3D = (() => {
             { x: 7.5, z: 3.5, r: 2, h: -0.34 },    // die Mulde um das Loch, eng und steil
           ],
         },
-        burg: { x: 7.5, z: -9.5, g: 1.35, berg: 0, dreh: 0 },
+        burg: { x: 7.5, z: -17, g: 3.0, berg: 0, dreh: 0 },
         deko: [
           { t: 'mast', x: 3.4, z: 2.5, h: 1.5, farbe: '#b63a30' },
           { t: 'mast', x: 11.6, z: 2.5, h: 1.5, farbe: '#b63a30' },
@@ -633,7 +633,7 @@ const BAHNEN3D = (() => {
         },
         /* Die Burg steht hier auf der Wiese, nicht auf dem Kegel: Am Ende einer Bahn, die zu ihr
            führt, will man sie sehen und nicht zu ihr hinaufschauen. */
-        burg: { x: 11.5, z: -8.5, g: 1.25, berg: 0, dreh: 0 },
+        burg: { x: 11.5, z: -16, g: 2.8, berg: 0, dreh: 0 },
         deko: [
           { t: 'zelt', x: 5.5, z: 5.5, g: 1.15, farbe: '#c8503f' },
           { t: 'zelt', x: 18.2, z: 6.5, g: 1.05, farbe: '#3d5da8' },

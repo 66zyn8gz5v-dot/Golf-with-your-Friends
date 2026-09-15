@@ -326,7 +326,10 @@ const Golf3D = (() => {
        Auf einer schmalen Bahn zwischen Banden ist das zugleich der Blick, der die Banden zeigt –
        und über die soll ja gespielt werden. */
     kamera.neigung = kamera.zielNeigung = 0.46;
-    kamera.abstand = kamera.zielAbstand = 8.5;
+    /* Ein Stück weiter weg als früher. Seit Bäume und Häuser ihre wirkliche Größe haben, steht
+       aus achteinhalb Feldern Entfernung nur noch ein Stamm im Bild; aus elf sieht man wieder die
+       Bahn und das, was daneben steht. */
+    kamera.abstand = kamera.zielAbstand = 11;
     kamera.zx = stand.ball.x; kamera.zy = stand.ball.y; kamera.zz = stand.ball.z;
 
     titelSetzen(bahn.name, welt.name + ' · Bahn ' + (nr + 1) + ' von ' + welt.bahnen.length);
@@ -351,6 +354,7 @@ const Golf3D = (() => {
     const burgFahnen = Welt3D.burgNetz(B, gl, bahn.burg);
     Welt3D.dekoNetz(B, gl, beweglich);
     Welt3D.streuenNetz(B, gl, AUSSEN);
+    Welt3D.saumNetz(B, gl);
     Welt3D.uferNetz(B, gl);
     Welt3D.fernNetz(B, gl, welt);
     // Das Loch mitsamt Fahnenmast

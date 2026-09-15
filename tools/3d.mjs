@@ -286,6 +286,19 @@ for (const welt of BAHNEN3D.WELTEN) {
       if (stehen) melde(name, `${stehen} abgelegte Bälle dicht am Loch (bis ${weiteste.toFixed(2)} Felder) fallen nicht hinein, sondern bleiben davor stehen`);
     }
 
+    /* Steht ein Bauwerk auf der Spielfläche? Seit die Häuser dreimal so groß sind, ist das keine
+       theoretische Frage mehr: Eine Scheune, die vorher bequem neben die Bahn passte, greift jetzt
+       über die Bande. Weggeschoben wird sie beim Bauen von selbst (siehe wegVomFeld in welt3d.js);
+       hier wird nachgesehen, ob das auch überall gelungen ist. */
+    for (const d of b.deko || []) {
+      const fuss = Welt3D.dekoFuss(d.t, d.g || 1);
+      if (!fuss) continue;
+      const [x, z] = Welt3D.dekoOrt(gl, d);
+      if (gl.zumRand(x, z) < fuss - 0.05) {
+        melde(name, `das Bauwerk '${d.t}' bei ${d.x}/${d.z} steht mit seinem Fuß (${fuss.toFixed(1)} Felder) auf der Spielfläche`);
+      }
+    }
+
     zeile.push(`  ${name.padEnd(34)} ${gl.B}x${gl.T} Par ${b.par}  Hang am Loch ${(amLoch * 100).toFixed(0)} %  Felsnadeln ${gl.felsen.length}, Banden ${gl.wand.length - gl.felsen.length}`);
   }
 }
