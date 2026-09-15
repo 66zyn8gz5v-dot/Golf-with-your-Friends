@@ -63,6 +63,10 @@ const Welt3D = (() => {
        weniger – wer oben nicht ankommt, kommt zurück. Ihre Höhe steht nicht hier, sondern in
        'gelaende.rampen'; dieses Zeichen sagt nur, wo die Bretter liegen. */
     'r': { name: 'Rampe', zaeh: 0.3, reibung: 0.3, haft: 1.6, farbe: '#a9793f', farbe2: '#9a6c37' },
+    /* Die Brücke steht in keiner Karte. Sie kommt aus 'gelaende.bruecken', und die Kugelrechnung
+       bekommt sie überall dort zu sehen, wo Bretter über dem Wasser liegen: Dort gilt nicht die
+       Kachel darunter – sonst ertränke ein Ball, der trocken über dem Bach rollt. */
+    'b': { name: 'Brücke', zaeh: 0.32, reibung: 0.34, haft: 1.5, farbe: '#b8a684', farbe2: '#a89774' },
     '.': { name: 'Wiese', zaeh: 1.8, reibung: 2.2, haft: 2.8, aus: true, farbe: '#5fa03a', farbe2: '#549132' },
   };
   const artVon = ch => ART[ch] || ART['.'];
@@ -127,6 +131,34 @@ const Welt3D = (() => {
       return { c: Math.cos(w), si: Math.sin(w), x: rp.x, z: rp.z,
         lang: rp.lang, breit: rp.breit, hoch: rp.hoch, auf: rp.auffahrt === undefined ? 2.5 : rp.auffahrt };
     });
+    /* Brücken. Anders als eine Rampe ist eine Brücke kein Summand in der Höhenformel, sondern
+       eine zweite Ebene: Unter ihr bleibt der Graben ein Graben, über ihr liegen Bretter. Deshalb
+       gibt es ab hier zwei Höhen – 'boden' für alles, was gezeichnet wird, und 'hoehe' für den
+       Ball. Überall sonst sind beide gleich; nur auf den paar Feldern einer Brücke gehen sie
+       auseinander.
+
+       Sie stehen absichtlich nur längs oder quer, nie schräg: Die Kugelrechnung kennt als Wand
+       ausschließlich achsenparallele Rechtecke (siehe 'wand' weiter unten), und ein schräges
+       Geländer wäre eine neue Rechnung für ein einziges Bauwerk. 'dreh' ist darum keine freie
+       Zahl, sondern eine Vierteldrehung: 0 heißt, man fährt in z-Richtung darüber. */
+    const bruecken = (g.bruecken || []).map(br => {
+      const quer = Math.abs(Math.round((br.dreh || 0) / (Math.PI / 2))) % 2 === 1;
+      const lang = br.lang === undefined ? 4.5 : br.lang;
+      const breit = br.breit === undefined ? 1.8 : br.breit;
+      const wange = br.wange === undefined ? 0.22 : br.wange;
+      /* 'scheitel' hebt die Fahrbahn über das Ufer. Bündig war der erste Versuch, und er war
+         spielerisch tadellos und optisch nichts: ein Holzweg im Rasen. Eine Brücke muss man von
+         der Bahn aus als Bauwerk erkennen, sonst zielt niemand darauf.
+
+         'auffahrt' ist die Strecke an jedem Ende, über die sie sich hebt. Sie darf nicht kurz
+         sein: Höhe durch Strecke ist die Steigung, und wo die über ein Fünftel geht, kommt ein
+         Ball mit wenig Schwung nicht hinauf, sondern zurück. */
+      return { x: br.x, z: br.z, quer, lang, breit, wange,
+        scheitel: br.scheitel === undefined ? 0.2 : br.scheitel,
+        auffahrt: br.auffahrt === undefined ? 1.2 : br.auffahrt,
+        halbX: (quer ? lang : breit) / 2, halbZ: (quer ? breit : lang) / 2 };
+    });
+
     const rausch = M3.rauschen(9001 + (bahn.name || '').length * 37);
 
     /* Die Abfrage steht bewusst verneint (!(ix >= 0) statt ix < 0): So fällt auch eine Stelle
@@ -146,11 +178,16 @@ const Welt3D = (() => {
        die Bahn lag wie eine Torte in der Landschaft. Seit sie von Banden eingefasst ist, braucht
        es das nicht mehr: Die Bande sagt, wo die Bahn aufhört, und die Wiese daneben darf fast
        gleich hoch liegen. Ein kleiner Absatz bleibt, damit der Balken einen Fuß hat. */
-    const SENKE = 0.45, WASSERTIEFE = 0.5;
+    /* Wie weit die Uferböschung ins Trockene reicht. Schmaler zu machen war ein Versuch, das
+       Zurückrollen ins Wasser zu beheben, und er ging nach hinten los: Eine scharfe Kante liest
+       sich für die Platzsuche nach einem Bad als „hier ist es eben und trocken", und der Ball
+       wurde danach noch dichter ans Wasser gelegt. Der Trichter bleibt; geholfen hat stattdessen,
+       den Ablageplatz selbst strenger zu prüfen (siehe sicherOrt in physik3d.js). */
+    const SENKE = 0.45, WASSERTIEFE = 0.5, UFER_BREIT = 1.3;
     const s = M3.weich;
     const stufe = (v, a, b) => s(M3.klemm((v - a) / (b - a), 0, 1));
 
-    function hoehe(x, z) {
+    function boden(x, z) {
       let y = grund;
       for (const h of huegel) {
         const dx = x - h.x, dz = z - h.z, q = (dx * dx + dz * dz) / (h.r * h.r);
@@ -166,9 +203,57 @@ const Welt3D = (() => {
       }
       if (welle) y += welle * (rausch(x * 0.33, z * 0.33) + rausch(x * 0.9, z * 0.9) * 0.4);
       y -= SENKE * stufe(zumRand(x, z), 0.35, 1.8);
-      y -= WASSERTIEFE * stufe(zumUfer(x, z), 0.0, 1.3);
+      y -= WASSERTIEFE * stufe(zumUfer(x, z), 0.0, UFER_BREIT);
       return y;
     }
+
+    /* Das Ufer an dieser Stelle: der Boden, aber ohne den Abzug fürs Wasser. Der Abzug wird hier
+       wieder hinzugerechnet und nicht etwa weggelassen, damit beides dieselbe Formel bleibt –
+       ändert sich die Wassertiefe, ändert sich die Fahrbahn von selbst mit. */
+    const ufer = (x, z) => boden(x, z) + WASSERTIEFE * stufe(zumUfer(x, z), 0.0, UFER_BREIT);
+    /* Die Scheitelhöhe einer Brücke: das Ufer an ihrer Mitte, plus ihr Scheitel. */
+    const fahrbahn = br => ufer(br.x, br.z) + br.scheitel;
+
+    /* Wie viel Brücke liegt hier? 1 auf den Brettern, 0 daneben – für die Höhe.
+
+       Der Abfall beginnt erst an der AUSSENkante des Geländers und nicht an der Fahrbahnkante.
+       Das ist wichtig: Eine senkrechte Kante hätte unendliche Neigung, und die Kugelrechnung
+       bekäme Unsinn zu essen – dieselbe Überlegung wie bei den Rampen. Läge der Abfall aber unter
+       der Fahrbahn, hinge der Ball dort an einer Schräge und würde ans Geländer gedrückt. So ist
+       die Fahrbahn über ihre ganze Breite eben, und die Böschung versteckt sich unter dem
+       Geländer, wo kein Ball je hinkommt. */
+    const KANTE = 0.3;
+    /* Quer ist die Grenze scharf (sie liegt unter dem Geländer), längs sanft (das ist die
+       Auffahrt). Beides mit derselben Weichheit zu machen, war der Fehler des ersten Versuchs:
+       Dann ist entweder die Auffahrt eine Stufe oder die Fahrbahn eine Dachrinne. */
+    function deckungVon(br, x, z) {
+      const q = Math.abs(br.quer ? z - br.z : x - br.x) - br.wange;
+      const l = Math.abs(br.quer ? x - br.x : z - br.z);
+      const hq = br.quer ? br.halbZ : br.halbX, hl = br.quer ? br.halbX : br.halbZ;
+      return (1 - stufe(q, hq, hq + KANTE)) * (1 - stufe(l, hl - br.auffahrt, hl));
+    }
+
+    /* Steht der Ball auf den Brettern? Hier wird hart gefragt und nicht weich: Ein Ball ist
+       entweder auf der Brücke oder daneben im Wasser; halb nass gibt es nicht. Die Grenze ist die
+       Innenkante des Geländers, genau die Linie, an der der Ball abprallt. */
+    const aufBruecke = (x, z) => bruecken.some(br =>
+      Math.abs(x - br.x) <= br.halbX && Math.abs(z - br.z) <= br.halbZ);
+
+    /* Die Höhe, auf der der Ball liegt. Ohne Brücken ist das der Boden – und weil 'bruecken' fast
+       immer leer ist, kostet die Abfrage auch fast nichts. */
+    /* Die Höhe, auf der der Ball liegt: der Boden, und über einer Brücke deren Fahrbahn. Genommen
+       wird der höhere Wert – eine Brücke hebt den Weg, sie senkt ihn nie. Ohne Brücken ist es der
+       Boden selbst, und weil 'bruecken' fast immer leer ist, kostet das auch nichts. */
+    const hoehe = bruecken.length
+      ? (x, z) => {
+        let y = boden(x, z);
+        for (const br of bruecken) {
+          const d = deckungVon(br, x, z);
+          if (d > 0) y = Math.max(y, M3.misch(boden(x, z), ufer(x, z) + br.scheitel, d));
+        }
+        return y;
+      }
+      : boden;
 
     /* Die Neigung wird gemessen, nicht hergeleitet: vier Stützstellen ringsum, daraus der
        Gradient. Das ist unempfindlich dagegen, dass oben Glocken, Rauschen und zwei Abstandsfelder
@@ -203,7 +288,7 @@ const Welt3D = (() => {
     const BANDE_HOCH = 0.34;
     const felsen = [];
     for (let iz = 0; iz < T; iz++) for (let ix = 0; ix < B; ix++) if (zeichen(ix, iz) === 'x') {
-      felsen.push({ x0: ix, z0: iz, x1: ix + 1, z1: iz + 1, oben: hoehe(ix + 0.5, iz + 0.5) + 0.95 });
+      felsen.push({ x0: ix, z0: iz, x1: ix + 1, z1: iz + 1, oben: boden(ix + 0.5, iz + 0.5) + 0.95 });
     }
 
     /* Die Kanten der Bahn: je ein Eintrag für jede Feldseite, an der Spielfläche auf Nichts stößt.
@@ -215,7 +300,7 @@ const Welt3D = (() => {
       if (c === '.' || c === 'o' || c === 'x') continue;          // nur von der Spielfläche aus
       for (const [dx, dz] of SEITEN) {
         if (zeichen(ix + dx, iz + dz) !== '.') continue;
-        kanten.push({ ix, iz, dx, dz, y: hoehe(ix + 0.5, iz + 0.5) });
+        kanten.push({ ix, iz, dx, dz, y: boden(ix + 0.5, iz + 0.5) });
       }
     }
 
@@ -229,16 +314,44 @@ const Welt3D = (() => {
       if (!vorher) banden.set(schluessel, { x0: bx, z0: bz, x1: bx + 1, z1: bz + 1, oben, bande: true });
       else if (oben > vorher.oben) vorher.oben = oben;
     }
-    /* Eine Liste für die Kugelrechnung: Felsnadeln und Banden zusammen. */
-    const wand = [...felsen, ...banden.values()];
+    /* Die Geländer. Zwei Blöcke je Brücke, links und rechts der Fahrbahn, gerechnet wie eine
+       Bande: Ein rollender Ball prallt ab, ein springender fliegt darüber und landet im Bach.
+       Sie sind der einzige Grund, warum eine Brücke spielbar ist – ohne sie führte sie über einen
+       Balken ohne Rand, und jeder zweite Ball fiele seitlich hinunter. */
+    const gelaender = [];
+    for (const br of bruecken) {
+      /* Die Oberkante wird am Scheitel gemessen, nicht an der Auffahrt: Ein Geländer, das an
+         seinem niedrigsten Punkt gemessen ist, lässt einen schnellen Ball oben darüber. */
+      const oben = fahrbahn(br) + BANDE_HOCH;
+      /* Die Geländer sind ein Stück länger als die Bretter: An der Auffahrt soll der Ball schon
+         geführt werden, bevor unter ihm das Wasser anfängt. */
+      const lx = br.halbX + (br.quer ? 0.5 : 0), lz = br.halbZ + (br.quer ? 0 : 0.5);
+      for (const seite of [-1, 1]) {
+        if (br.quer) gelaender.push({ x0: br.x - lx, x1: br.x + lx,
+          z0: br.z + seite * br.halbZ - (seite < 0 ? br.wange : 0), z1: br.z + seite * br.halbZ + (seite > 0 ? br.wange : 0),
+          oben, bande: true });
+        else gelaender.push({ z0: br.z - lz, z1: br.z + lz,
+          x0: br.x + seite * br.halbX - (seite < 0 ? br.wange : 0), x1: br.x + seite * br.halbX + (seite > 0 ? br.wange : 0),
+          oben, bande: true });
+      }
+    }
+
+    /* Eine Liste für die Kugelrechnung: Felsnadeln, Banden und Brückengeländer zusammen. */
+    const wand = [...felsen, ...banden.values(), ...gelaender];
 
     const finde = ch => {
       for (let iz = 0; iz < T; iz++) { const ix = karte[iz].indexOf(ch); if (ix >= 0) return [ix + 0.5, iz + 0.5]; }
       return null;
     };
 
-    return { bahn, B, T, zeichen, zeichenAn, art: (x, z) => artVon(zeichenAn(x, z)),
-      hoehe, neigung, felsen, wand, kanten, BANDE_HOCH, zumRand, RAND,
+    /* Wo Bretter liegen, gilt das Brett und nicht die Kachel darunter – sonst ertränke ein Ball,
+       der trocken über dem Bach rollt. */
+    const art = bruecken.length
+      ? (x, z) => (aufBruecke(x, z) ? ART['b'] : artVon(zeichenAn(x, z)))
+      : (x, z) => artVon(zeichenAn(x, z));
+
+    return { bahn, B, T, zeichen, zeichenAn, art,
+      hoehe, boden, neigung, felsen, wand, kanten, bruecken, fahrbahn, aufBruecke, BANDE_HOCH, zumRand, RAND,
       abschlag: finde('T'), lochFeld: finde('H') };
   }
 
@@ -280,7 +393,7 @@ const Welt3D = (() => {
     /* Höhen und Normalen einmal vorrechnen: Jeder Gitterpunkt gehört zu vier Vierecken, und
        hoehe() ist wegen der Hügelschleife und zweier Abstandsfelder nicht geschenkt. */
     const hh = new Float32Array((nx + 1) * (nz + 1));
-    for (let j = 0; j <= nz; j++) for (let i = 0; i <= nx; i++) hh[j * (nx + 1) + i] = gl.hoehe(x0 + i * S, z0 + j * S);
+    for (let j = 0; j <= nz; j++) for (let i = 0; i <= nx; i++) hh[j * (nx + 1) + i] = gl.boden(x0 + i * S, z0 + j * S);
     const H = (i, j) => hh[j * (nx + 1) + i];
 
     const p = (i, j) => [x0 + i * S, H(i, j), z0 + j * S];
@@ -345,7 +458,7 @@ const Welt3D = (() => {
        höchste Randwert ringsum, damit nirgends trockener Bachgrund stehen bleibt. */
     let spiegel = -1e9;
     for (const [ix, iz] of felder) for (const [dx, dz] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
-      if (gl.zeichen(ix + dx, iz + dz) !== 'w') spiegel = Math.max(spiegel, gl.hoehe(ix + 0.5 + dx * 0.9, iz + 0.5 + dz * 0.9));
+      if (gl.zeichen(ix + dx, iz + dz) !== 'w') spiegel = Math.max(spiegel, gl.boden(ix + 0.5 + dx * 0.9, iz + 0.5 + dz * 0.9));
     }
     if (spiegel < -1e8) spiegel = 0;
     spiegel -= 0.10;
@@ -377,7 +490,7 @@ const Welt3D = (() => {
       const mx = (f.x0 + f.x1) / 2, mz = (f.z0 + f.z1) / 2;
       const saat = Math.round(Math.abs(mx) * 131 + Math.abs(mz) * 17);
       const r = M3.zufall(saat + 5);
-      const unten = gl.hoehe(mx, mz) - 0.5;
+      const unten = gl.boden(mx, mz) - 0.5;
       const hoch = f.oben - unten;
       // Der Kern: unten feldfüllend, oben eingezogen
       B.mit(M3.verschieben(mx, unten, mz), b => {
@@ -733,9 +846,89 @@ const Welt3D = (() => {
     }
   }
 
-  /* Eine Steinbrücke über den Bach. Sie ist reine Zier: Der Ball läuft unter ihr durch, nicht
-     über sie. Über sie zu laufen hieße, eine zweite Spielebene zu führen – das kann das 2,5D-Spiel
-     mit seinen Türmen, und es kommt hier später dazu, aber nicht in der ersten Fassung. */
+  /* ---------- Die begehbaren Brücken ----------
+
+     Gezeichnet wird aus genau denselben Zahlen, aus denen gerechnet wird: 'gl.bruecken' sagt, wo
+     die Fahrbahn liegt und wie breit sie ist, 'gl.fahrbahn' sagt, wie hoch. Das ist keine
+     Bequemlichkeit, sondern die Bedingung dafür, dass die Brücke überhaupt spielbar ist – ein
+     Geländer, das woanders steht als der Klotz in der Kugelrechnung, lässt den Ball an Luft
+     abprallen oder durch Holz rollen.
+
+     Holz und nicht Stein: Die Banden dieser Bahnen sind Holzbalken, und eine Steinbrücke
+     dazwischen sähe aus wie von einer anderen Bahn geliehen. */
+  function brueckenNetz(B, gl) {
+    for (const br of gl.bruecken) {
+      const dreh = br.quer ? Math.PI / 2 : 0;
+      /* Gerechnet wird in Fahrtrichtung: 't' läuft von einem Ende zum anderen, 'ort' macht daraus
+         eine Stelle auf der Bahn. So gibt es die Geometrie nur einmal, längs wie quer. */
+      const hl = (br.quer ? br.halbX : br.halbZ), hb = br.breit / 2, w = br.wange;
+      const ort = t => br.quer ? [br.x + t, br.z] : [br.x, br.z + t];
+      /* Jedes Stück sitzt auf der Höhe, die die Kugelrechnung an dieser Stelle liefert – deshalb
+         folgen Bretter und Geländer der Auffahrt ganz von selbst, und ein Ball rollt nie über ein
+         Brett, das woanders liegt als seine Fahrbahn. */
+      const y = t => { const [px, pz] = ort(t); return gl.hoehe(px, pz); };
+
+      const bretter = Math.max(8, Math.round(br.lang / 0.32));
+      const dick = br.lang / bretter;
+      const zt = M3.zufall(Math.round(br.x * 71 + br.z * 29) + 3);
+      for (let i = 0; i < bretter; i++) {
+        const t = -hl + (i + 0.5) * dick;
+        const [px, pz] = ort(t);
+        /* Jedes Brett eine Spur anders getönt – aber nur eine Spur. Beim ersten Versuch war der
+           Unterschied dreimal so groß, und die Brücke sah aus wie eine Treppe. */
+        const ton = Bauen.stufe('#a8834f', 0.92 + zt() * 0.17);
+        B.stelle(px, y(t) - 0.055, pz, dreh, 1,
+          c => c.kasten(br.breit + w * 2, 0.11, dick * 0.88, ton, Bauen.stufe(ton, 1.1)));
+      }
+
+      /* Zwei Längsträger unter den Brettern, auf denen sie sichtbar aufliegen – in Stücken, damit
+         sie der Wölbung folgen. */
+      for (let i = 0; i < bretter; i++) {
+        const t = -hl + (i + 0.5) * dick;
+        const [px, pz] = ort(t);
+        for (const sx of [-1, 1]) B.stelle(px, y(t) - 0.2, pz, dreh, 1,
+          c => c.mit(M3.verschieben(sx * (hb - 0.02), 0, 0), d => d.kasten(0.16, 0.2, dick, '#6d5433', '#856741')));
+      }
+
+      /* Vier Pfähle im Bach. Der erste Versuch hatte an beiden Enden einen massiven Klotz, und der
+         sah von vorn aus wie eine Steinplatte im Rasen: Er verdeckte das Wasser, das die Brücke
+         doch gerade überspannen soll. Pfähle lassen den Bach darunter durchlaufen, und erst
+         dadurch sieht man überhaupt, dass hier etwas überbrückt wird. */
+      for (const st of [-0.38, 0.38]) {
+        const t = st * br.lang, [px, pz] = ort(t), py = y(t);
+        for (const sx of [-1, 1]) B.stelle(px, py - 1.4, pz, dreh, 1,
+          c => c.mit(M3.verschieben(sx * (hb - 0.02), 0, 0), d => d.walze(0.085, 0.1, 1.1, 6, '#6d5433', null)));
+        /* Ein Querriegel unter den Pfahlköpfen – er hält sie sichtbar zusammen und nimmt der
+           Brücke das Gestelzte. */
+        B.stelle(px, py - 0.36, pz, dreh, 1, c => c.kasten(br.breit + w, 0.11, 0.13, '#5d4830', '#6d5433'));
+      }
+
+      /* Das Geländer. Es steht genau auf der Linie, an der der Ball abprallt: innen bei hb, außen
+         bei hb + w – dieselben Zahlen wie im Klotz der Kugelrechnung. Der Handlauf läuft in
+         Stücken von Pfosten zu Pfosten und folgt damit der Wölbung. */
+      const pfosten = Math.max(4, Math.round(br.lang / 0.85));
+      for (let i = 0; i <= pfosten; i++) {
+        const t = -hl + i * (br.lang / pfosten), [px, pz] = ort(t);
+        for (const sx of [-1, 1]) B.stelle(px, y(t), pz, dreh, 1,
+          c => c.mit(M3.verschieben(sx * (hb + w / 2), 0.2, 0), d => d.kasten(w * 0.75, 0.5, w * 0.75, '#6d5433', '#8a6b43')));
+      }
+      for (let i = 0; i < pfosten; i++) {
+        const t0 = -hl + i * (br.lang / pfosten), t1 = t0 + br.lang / pfosten;
+        const tm = (t0 + t1) / 2, [px, pz] = ort(tm);
+        const lang = br.lang / pfosten;
+        /* Handlauf oben und ein Riegel darunter – zwei Linien lesen sich aus der Ferne besser als
+           eine, und dazwischen sieht man den Bach durchscheinen. */
+        for (const sx of [-1, 1]) B.stelle(px, y(tm), pz, dreh, 1, c => {
+          c.mit(M3.verschieben(sx * (hb + w / 2), 0.4, 0), d => d.kasten(w * 1.2, 0.11, lang, '#7d6039', '#9a7a4b'));
+          c.mit(M3.verschieben(sx * (hb + w / 2), 0.19, 0), d => d.kasten(w * 0.65, 0.08, lang, '#6d5433', '#856741'));
+        });
+      }
+    }
+  }
+
+  /* Eine Steinbrücke als Zier – sie steht dort, wo der Bach neben der Bahn vorbeiläuft, und über
+     sie führt kein Weg, weil hinter ihr das Aus beginnt. Wer eine Brücke will, über die gespielt
+     wird, schreibt sie nach 'gelaende.bruecken'; dann wird sie gerechnet und nicht nur gemalt. */
   function bruecke(B, gl, d) {
     const g = d.g || 1, w = d.dreh || 0;
     const h = gl.hoehe(d.x, d.z) + 0.55 * g;
@@ -938,7 +1131,10 @@ const Welt3D = (() => {
         for (let k = 0; k < 3; k++) {
           /* Auf die dem Wasser zugewandte Hälfte des Feldes setzen, quer dazu gestreut. */
           const x = ix + (dx ? 0.5 + dx * (0.2 + r() * 0.3) : r()), zz = iz + (dz ? 0.5 + dz * (0.2 + r() * 0.3) : r());
-          const y = gl.hoehe(x, zz);
+          /* Nicht auf die Brücke. Schilf, das aus den Brettern wächst, liest sich nicht als Ufer,
+             sondern als Fehler – und der Ball rollte mitten hindurch. */
+          if (gl.aufBruecke(x, zz)) continue;
+          const y = gl.boden(x, zz);
           if (r() < 0.62) B.stelle(x, y - 0.04, zz, 0, 1, b => Deko3D.schilf(b, 0.8 + r() * 0.7, Math.round(x * 71 + zz * 29) + k));
           else B.stelle(x, y - 0.06, zz, 0, 1, b => Deko3D.fels(b, 0.08 + r() * 0.09, Math.round(x * 37 + zz * 13) + k));
         }
@@ -1176,7 +1372,7 @@ const Welt3D = (() => {
     return e;
   }
 
-  return { ART, artVon, gelaende, gelaendeNetz, lochNetz, wasserNetz, felsenNetz, bandenNetz, burgNetz, dekoNetz,
+  return { ART, artVon, gelaende, gelaendeNetz, lochNetz, wasserNetz, felsenNetz, bandenNetz, brueckenNetz, burgNetz, dekoNetz,
     dekoOrt, dekoOrte, dekoFuss,
     streuenNetz, uferNetz, fernNetz, himmelNetz, wolkenNetz, tuchNeu, tuchFrisch,
     pfeilNeu, pfeilFrisch };

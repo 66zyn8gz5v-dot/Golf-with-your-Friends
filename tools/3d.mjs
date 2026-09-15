@@ -91,7 +91,20 @@ for (const welt of BAHNEN3D.WELTEN) {
     if (!abschlag) { melde(name, 'kein Abschlag (T)'); continue; }
     if (!loch) { melde(name, 'kein Loch (H)'); continue; }
 
-    // Flutfüllung vom Abschlag aus – kommt sie am Loch an?
+    /* Flutfüllung vom Abschlag aus – kommt sie am Loch an? Über Wasser führt der Weg nur, wo eine
+       Brücke liegt; ohne diese Felder hielte die Prüfung eine Bahn für unspielbar, deren einziger
+       Weg über einen Steg führt. */
+    const ueberbrueckt = new Set();
+    for (const br of (b.gelaende || {}).bruecken || []) {
+      const quer = Math.abs(Math.round((br.dreh || 0) / (Math.PI / 2))) % 2 === 1;
+      const hx = (quer ? (br.lang === undefined ? 4.5 : br.lang) : (br.breit === undefined ? 1.8 : br.breit)) / 2;
+      const hz = (quer ? (br.breit === undefined ? 1.8 : br.breit) : (br.lang === undefined ? 4.5 : br.lang)) / 2;
+      for (let iz = Math.floor(br.z - hz); iz <= Math.floor(br.z + hz); iz++) {
+        for (let ix = Math.floor(br.x - hx); ix <= Math.floor(br.x + hx); ix++) {
+          if (Math.abs(ix + 0.5 - br.x) <= hx && Math.abs(iz + 0.5 - br.z) <= hz) ueberbrueckt.add(ix + ',' + iz);
+        }
+      }
+    }
     const gesehen = new Set([abschlag.join(',')]);
     const rand = [abschlag];
     while (rand.length) {
@@ -99,7 +112,7 @@ for (const welt of BAHNEN3D.WELTEN) {
       for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
         const nx = x + dx, ny = y + dy, k = nx + ',' + ny;
         if (nx < 0 || ny < 0 || nx >= B || ny >= H || gesehen.has(k)) continue;
-        if (!BEGEHBAR.has(b.karte[ny][nx])) continue;
+        if (!BEGEHBAR.has(b.karte[ny][nx]) && !ueberbrueckt.has(k)) continue;
         gesehen.add(k); rand.push([nx, ny]);
       }
     }
@@ -286,6 +299,53 @@ for (const welt of BAHNEN3D.WELTEN) {
       if (stehen) melde(name, `${stehen} abgelegte Bälle dicht am Loch (bis ${weiteste.toFixed(2)} Felder) fallen nicht hinein, sondern bleiben davor stehen`);
     }
 
+    /* Trägt die Brücke? Eine Brücke, über die der Ball nicht trocken hinüberkommt, ist nur ein
+       gemaltes Bauwerk – und eine, neben der er auch trocken bleibt, ist gar keine Brücke,
+       sondern ein Damm. Geprüft wird beides: eine Reihe Bälle quer über die Fahrbahn, und je
+       einer links und rechts daneben.
+
+       Dazu die Steigung der Auffahrt. Sie ist der Preis dafür, dass die Fahrbahn über dem Ufer
+       liegt und man die Brücke als Bauwerk erkennt; wird sie zu steil, kommt ein Ball mit wenig
+       Schwung nicht hinauf, sondern zurück, und die Bahn ist kaputt. */
+    for (const br of gl.bruecken) {
+      const laengs = br.quer ? [1, 0] : [0, 1], quer = br.quer ? [0, 1] : [1, 0];
+      const hl = br.quer ? br.halbX : br.halbZ, hb = br.breit / 2;
+      const rollen = (sx, sz, ux, uz) => {
+        const kugel = Physik3D.ball(gl, sx, sz);
+        Physik3D.schlag(kugel, ux, uz, 0.55);
+        let t = 0;
+        while (!kugel.ruht && t < 30) { Physik3D.bewegen(kugel, gl, gl.lochFeld, 1 / 120); t += 1 / 120; }
+        return kugel;
+      };
+      const start = hl + 1.6;
+      let nass = 0;
+      for (let i = -3; i <= 3; i++) {
+        const q = i / 3 * (hb - Physik3D.BALL_R - 0.05);
+        const sx = br.x + laengs[0] * start + quer[0] * q, sz = br.z + laengs[1] * start + quer[1] * q;
+        if (rollen(sx, sz, -laengs[0], -laengs[1]).wasser) nass++;
+      }
+      if (nass) melde(name, `${nass} von 7 Bällen, die mittig auf die Brücke bei ${br.x}/${br.z} gespielt werden, landen im Wasser`);
+
+      let trocken = 0;
+      for (const seite of [-1, 1]) {
+        const q = seite * (hb + br.wange + 0.3);
+        const sx = br.x + laengs[0] * start + quer[0] * q, sz = br.z + laengs[1] * start + quer[1] * q;
+        if (!rollen(sx, sz, -laengs[0], -laengs[1]).wasser) trocken++;
+      }
+      if (trocken === 2) melde(name, `neben der Brücke bei ${br.x}/${br.z} kommt der Ball auf beiden Seiten trocken hinüber – das ist ein Damm, keine Brücke`);
+
+      let steil = 0;
+      for (let i = 0; i <= 40; i++) {
+        const t = -hl + i * (2 * hl) / 40;
+        const px = br.x + laengs[0] * t, pz = br.z + laengs[1] * t;
+        const d = 0.08;
+        const g = Math.abs(gl.hoehe(px + laengs[0] * d, pz + laengs[1] * d)
+                         - gl.hoehe(px - laengs[0] * d, pz - laengs[1] * d)) / (2 * d);
+        steil = Math.max(steil, g);
+      }
+      if (steil > 0.30) melde(name, `die Auffahrt der Brücke bei ${br.x}/${br.z} steigt mit ${(steil * 100).toFixed(0)} % – über 30 % kommt ein sanft gespielter Ball nicht hinauf`);
+    }
+
     /* Steht ein Bauwerk auf der Spielfläche? Seit die Häuser dreimal so groß sind, ist das keine
        theoretische Frage mehr: Eine Scheune, die vorher bequem neben die Bahn passte, greift jetzt
        über die Bande. Weggeschoben wird sie beim Bauen von selbst (siehe wegVomFeld in welt3d.js);
@@ -395,17 +455,38 @@ for (const { name, gl, bahn } of gelaende) {
 function wegFeld(gl, loch) {
   const B = gl.B, T = gl.T, GROSS = 1e9;
   const d = new Float32Array(B * T).fill(GROSS);
-  const trocken = (ix, iz) => { const c = gl.zeichen(ix, iz); return c !== '.' && c !== 'x' && c !== 'w'; };
+  /* Eine Brücke ist trockener Weg, auch wenn unter ihr Wasser steht. Ohne diese Zeile sucht sich
+     der Prüfgolfer einen Weg um den Graben herum und stellt der Brücke nie eine Frage – und genau
+     das war der Grund, warum er auf der Obstgartenbahn zwanzig Schläge lang in die Gasse neben
+     der Brücke spielte, statt über sie. */
+  const trocken = (ix, iz) => {
+    if (gl.aufBruecke(ix + 0.5, iz + 0.5)) return true;
+    const c = gl.zeichen(ix, iz); return c !== '.' && c !== 'x' && c !== 'w';
+  };
+  /* Ein Feld, das ans Wasser stößt, kostet mehr. Ohne diesen Zuschlag führt der kürzeste Weg an
+     der Uferkante entlang – und der Prüfgolfer zielt dann auf ein Feld eine Handbreit neben dem
+     Bach, spielt bei jedem Winkelfehler hinein und wiederholt das, bis die Geduld zu Ende ist.
+     Genau das ist auf der Obstgartenbahn passiert, als die Brücke dazukam. Ein Mensch spielt
+     ebenso wenig die Uferkante entlang, wenn zwei Felder weiter trockener Grund liegt. */
+  const amWasser = (ix, iz) => {
+    for (let a = -1; a <= 1; a++) for (let c = -1; c <= 1; c++) {
+      if (gl.zeichen(ix + a, iz + c) === 'w' && !gl.aufBruecke(ix + a + 0.5, iz + c + 0.5)) return true;
+    }
+    return false;
+  };
   const start = [Math.floor(loch[0]), Math.floor(loch[1])];
   d[start[1] * B + start[0]] = 0;
+  /* Mit Kosten je Feld ist es keine reine Flutfüllung mehr: Ein Feld kann später auf einem
+     billigeren Weg noch einmal erreicht werden, deshalb wird es dann erneut in den Rand gelegt. */
   const rand = [start];
   while (rand.length) {
     const [x, z] = rand.shift();
     for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
       const nx = x + dx, nz = z + dz;
       if (nx < 0 || nz < 0 || nx >= B || nz >= T || !trocken(nx, nz)) continue;
-      if (d[nz * B + nx] <= d[z * B + x] + 1) continue;
-      d[nz * B + nx] = d[z * B + x] + 1;
+      const kosten = 1 + (amWasser(nx, nz) ? 2.5 : 0);
+      if (d[nz * B + nx] <= d[z * B + x] + kosten) continue;
+      d[nz * B + nx] = d[z * B + x] + kosten;
       rand.push([nx, nz]);
     }
   }
@@ -417,7 +498,9 @@ function wegFeld(gl, loch) {
 function freieSicht(gl, ax, az, bx, bz) {
   const n = Math.max(2, Math.ceil(Math.hypot(bx - ax, bz - az) * 5));
   for (let i = 1; i <= n; i++) {
-    const u = i / n, c = gl.zeichenAn(ax + (bx - ax) * u, az + (bz - az) * u);
+    const u = i / n, px = ax + (bx - ax) * u, pz = az + (bz - az) * u;
+    if (gl.aufBruecke(px, pz)) continue;
+    const c = gl.zeichenAn(px, pz);
     if (c === '.' || c === 'x' || c === 'w') return false;
   }
   return true;

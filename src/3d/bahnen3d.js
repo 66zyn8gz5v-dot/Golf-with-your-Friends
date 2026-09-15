@@ -387,8 +387,9 @@ const BAHNEN3D = (() => {
            ihn hinein – wer den Graben umspielt hat, ist mit dem zweiten Schlag da. Ein Par 4 wäre
            hier ein geschenktes Birdie und damit gar kein Maß. */
         par: 3,
-        intro: 'Ein Graben quer durch die Bahn – links und rechts bleibt je eine Gasse trocken. '
-             + 'Ganz oben hebt eine Rampe die Bahn in den Obstgarten, dort liegt das Loch.',
+        intro: 'Ein Graben quer durch die Bahn: Mittendurch führt ein Steg, links und rechts '
+             + 'bleibt je eine Gasse trocken. Ganz oben hebt eine Rampe die Bahn in den '
+             + 'Obstgarten, dort liegt das Loch.',
         karte: [
           '.............',
           '.............',
@@ -409,7 +410,7 @@ const BAHNEN3D = (() => {
           '....#www##...',
           '....######...',
           '....######...',
-          '....###x##...',
+          '....######...',
           '....######...',
           '....######...',
           '....##,,##...',
@@ -431,6 +432,12 @@ const BAHNEN3D = (() => {
           rampen: [
             { x: 7, z: 5, dreh: Math.PI, lang: 6, breit: 6, hoch: 0.5, auffahrt: 3 },
           ],
+          /* Der Steg über den Graben. Er ist schmal – schmaler als jede Gasse daneben –, und das
+             ist der Sinn der Bahn: Wer ihn trifft, spart einen Schlag, wer ihn verfehlt, prallt am
+             Geländer ab oder liegt im Wasser. */
+          bruecken: [
+            { x: 6.5, z: 16.5, lang: 4.6, breit: 1.6 },
+          ],
           huegel: [
             { x: 3, z: 24, r: 9, h: 0.4 },
             { x: 6.5, z: 3.5, r: 2, h: -0.3 },
@@ -443,7 +450,6 @@ const BAHNEN3D = (() => {
           { t: 'obstbaum', x: 1.6, z: 7.5, g: 2.1 },
           { t: 'obstbaum', x: 1.6, z: 10.5, g: 2.5 },
           { t: 'obstbaum', x: 12.2, z: 10.5, g: 2.2 },
-          { t: 'bruecke', x: 6.5, z: 16.5, g: 0.8, dreh: 1.5708 },
           { t: 'karren', x: 11.5, z: 19.5, g: 1.0, dreh: 0.4 },
           { t: 'zaun', von: [1.5, 13], nach: [1.5, 19] },
           { t: 'haus', x: 11.8, z: 14, g: 0.95, dreh: -0.4 },

@@ -365,16 +365,49 @@ const Physik3D = (() => {
   function sicherOrt(b, gl) {
     const spur = b.sicherSpur;
     const schlecht = (x, z) => { const a2 = gl.art(x, z); return a2.wasser || a2.aus || a2.wand; };
-    const frei = (x, z) => {
+
+    /* Geprüft wird in drei Härtegraden, und das ist der Kern dieser Fassung: Die strengste
+       Prüfung hat auf der Obstgartenbahn gar keinen Platz mehr durchgelassen, und dann fiel die
+       Suche auf ihren letzten Ausweg zurück – die Stelle des Schlages. Die aber war der zuletzt
+       abgelegte Ort, und so legte sie den Ball zwanzigmal hintereinander an dieselbe Uferkante.
+
+       Lieber ein mittelmäßiger Platz als eine Schleife: Findet sich nichts Gutes, wird eine Stufe
+       nachgelassen, und erst wenn auch das nichts bringt, die nächste. */
+    const frei = (x, z, stufe) => {
       if (schlecht(x, z)) return false;
-      /* Zuerst: Der Ball darf nicht auf der Kante liegen. Ringsum ein Drittelfeld muss sauber
-         sein, ausnahmslos. Ohne diese Bedingung wurde er genau auf die Ecke des Wassers gelegt –
-         die Mitte war noch trocken, aber ein Hundertstel daneben nicht mehr, und beim nächsten
-         Schlag kippte er hinein, ohne sich bewegt zu haben. */
-      for (let i = 0; i < 16; i++) {
-        const w = i / 16 * Math.PI * 2;
-        if (schlecht(x + Math.cos(w) * NAH, z + Math.sin(w) * NAH)) return false;
+      /* Stufe 0 und 1: Der Ball darf nicht auf der Kante liegen. Ringsum ein Drittelfeld muss
+         sauber sein, ausnahmslos. Ohne diese Bedingung wurde er genau auf die Ecke des Wassers
+         gelegt – die Mitte war noch trocken, aber ein Hundertstel daneben nicht mehr, und beim
+         nächsten Schlag kippte er hinein, ohne sich bewegt zu haben. */
+      if (stufe <= 1) {
+        for (let i = 0; i < 16; i++) {
+          const w = i / 16 * Math.PI * 2;
+          if (schlecht(x + Math.cos(w) * NAH, z + Math.sin(w) * NAH)) return false;
+        }
       }
+      if (stufe > 0) return true;
+
+      /* Stufe 0, zuerst: Wohin rollt ein Ball, der hier abgelegt wird, von ganz allein? Zwölf
+         freie Strahlen sagen nur, dass man von hier wegspielen KANN – sie sagen nichts darüber,
+         wohin die Schwerkraft ihn zieht. Genau daran ist es zuletzt noch gescheitert: In der
+         Gasse neben einem Graben war nach acht Richtungen Luft, aber der Boden fiel zum Wasser,
+         und der nächste sanfte Schlag war wieder ein Bad. */
+      const n = [0, 0, 0];
+      gl.neigung(x, z, n);
+      const fall = Math.hypot(n[0], n[2]);
+      if (fall > 0.05) {
+        /* Nicht nur die Fallrichtung selbst, sondern ein Fächer darum. In einem Trichter – und
+           ein Ufer ist ein Trichter – zeigt die gemessene Fallrichtung oft haarscharf an der
+           Wasserkante vorbei, während sie einen Wimpernschlag daneben hineinführt. */
+        for (const ab of [-0.6, 0, 0.6]) {
+          const w = Math.atan2(n[2], n[0]) + ab, fx = Math.cos(w), fz = Math.sin(w);
+          for (let r = 0.35; r <= WEIT + 1e-6; r += 0.35) if (schlecht(x + fx * r, z + fz * r)) return false;
+        }
+      }
+
+      /* Und schließlich zwölf Strahlen: Von hier aus muss man in die meisten Richtungen
+         wegspielen können. Ein Punkt kann ringsum ein Dreiviertelfeld Luft haben und trotzdem in
+         der Gasse neben dem Wasser liegen, mit dem Bach eine Handbreit voraus. */
       let gut = 0;
       for (let i = 0; i < STRAHLEN; i++) {
         const w = i / STRAHLEN * Math.PI * 2, cx = Math.cos(w), cz = Math.sin(w);
@@ -384,17 +417,18 @@ const Physik3D = (() => {
       }
       return gut >= GENUG;
     };
-    for (let i = spur.length - 1; i >= 0; i--) if (frei(spur[i].x, spur[i].z)) return [spur[i].x, spur[i].z];
-    /* Auf der ganzen Spur nichts Freies – etwa, weil der Ball von einer Stelle aus geschlagen
-       wurde, die selbst schon zu nah am Wasser lag. Dann wird von der Stelle des Schlages aus in
-       Ringen nach außen gesucht, bis Platz da ist. Ohne diesen letzten Ausweg landet der Ball
-       wieder dort, wo er schon einmal ins Wasser gefallen ist – und das wiederholt sich, bis
-       jemand aufgibt. Im Prüflauf waren das zwanzig Schläge an derselben Uferkante. */
-    for (const r of [0.6, 1.1, 1.7, 2.4, 3.2]) {
-      for (let i = 0; i < 16; i++) {
-        const a = i / 16 * Math.PI * 2;
-        const x = spur[0].x + Math.cos(a) * r, z = spur[0].z + Math.sin(a) * r;
-        if (frei(x, z)) return [x, z];
+
+    for (let stufe = 0; stufe <= 2; stufe++) {
+      /* Erst zurück auf der eigenen Spur – dort lag der Ball schon einmal, und der Weg dorthin ist
+         dem Spieler vertraut. */
+      for (let i = spur.length - 1; i >= 0; i--) if (frei(spur[i].x, spur[i].z, stufe)) return [spur[i].x, spur[i].z];
+      /* Dann in Ringen um die Stelle des Schlages nach außen. */
+      for (const r of [0.6, 1.1, 1.7, 2.4, 3.2]) {
+        for (let i = 0; i < 16; i++) {
+          const a = i / 16 * Math.PI * 2;
+          const x = spur[0].x + Math.cos(a) * r, z = spur[0].z + Math.sin(a) * r;
+          if (frei(x, z, stufe)) return [x, z];
+        }
       }
     }
     return [spur[0].x, spur[0].z];
