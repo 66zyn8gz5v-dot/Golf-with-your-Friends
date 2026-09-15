@@ -380,10 +380,6 @@ const Golf3D = (() => {
        keinen Schatten. Der Schattendurchgang zeichnet jedes Dreieck ein zweites Mal, und der
        Schatten eines Grashalms wäre auf dem Schattenbild schmaler als ein Bildpunkt – bezahlt
        würde er trotzdem. So kostet die Wiese nur die Hälfte. */
-    const GR = Bauen.sammler();
-    Welt3D.grasNetz(GR, gl, AUSSEN);
-    for (const netz of GR.fertig(zeichner)) stuecke.push({ netz, wirftSchatten: false, beidseitig: true, gras: true });
-
     /* Die Wiese draußen liegt in einem eigenen Gitter, weil sie das gemalte Grasbild trägt. Die
        Spielfläche bekommt es nicht: Ein Rasen, durch den Grashalme gemalt sind, ist kein Rasen. */
     const WI = Bauen.sammler();

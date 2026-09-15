@@ -389,14 +389,14 @@ const Deko3D = (() => {
       B.mit(M3.mult(M3.verschieben(Math.cos(a) * d, y, Math.sin(a) * d), M3.skalieren(1, 0.82, 1)),
         b => b.kugel(rr, 3, 6, f, 0.3, saat * 7 + i, Bauen.stufe(f, 1.3)));
     }
-    /* Zwei bis drei Triebe, die oben herausstehen. */
-    const triebe = 2 + Math.floor(z() * 2);
-    for (let i = 0; i < triebe; i++) {
-      const a = z() * M3.TAU3, d = r * (0.2 + z() * 0.5);
-      B.mit(M3.mult(M3.mult(M3.verschieben(Math.cos(a) * d, r * 0.5, Math.sin(a) * d),
-        M3.drehenY(-a)), M3.drehenZ(-0.25 - z() * 0.35)),
-        b => b.walze(r * 0.13, 0, r * (0.7 + z() * 0.6), 3, Bauen.stufe(grund, 1.15), null, 0, Bauen.stufe(grund, 1.5)));
-    }
+    /* Hier standen zwei bis drei dünne Triebe, die oben herausragten und die runde Silhouette
+       brechen sollten. Sie sind weg: Neben dem gemalten Gras auf dem Boden las das Auge sie als
+       einzelne Grashalme, die aus dem Busch wachsen – „die 3D-Gräser dazwischen stören". Statt
+       ihrer sitzt oben ein weiterer, kleinerer Ballen; der bricht die Silhouette genauso und
+       bleibt dabei Laub. */
+    const a2 = z() * M3.TAU3, d2 = r * 0.3;
+    B.mit(M3.mult(M3.verschieben(Math.cos(a2) * d2, r * 0.82, Math.sin(a2) * d2), M3.skalieren(1, 0.8, 1)),
+      b => b.kugel(r * (0.3 + z() * 0.18), 3, 6, Bauen.stufe(grund, 1.18), 0.3, saat * 11 + 5, Bauen.stufe(grund, 1.45)));
     return B;
   }
 

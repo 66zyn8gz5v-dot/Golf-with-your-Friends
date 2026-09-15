@@ -828,7 +828,12 @@ const Welt3D = (() => {
         if (gl.art(px, pz).name === 'Rough') {
           /* Zwei Griffe je Feld statt einem: Das Rough ist im Spiel die Strafe für den schlechten
              Schlag, und es muss von Weitem als hohes Gras zu erkennen sein. Ein Büschel alle zwei
-             Felder reicht dafür nicht. */
+             Felder reicht dafür nicht.
+
+             Hier stehen die Büschel aus Dreiecken weiterhin, und das ist kein Widerspruch zu der
+             Stelle weiter unten: Das Rough liegt auf der Spielfläche, und die trägt das gemalte
+             Gras nicht. Hier ist ein Büschel keine Verdopplung, sondern das Einzige, was sagt:
+             „Hier wächst es hoch, hier bleibt dein Ball liegen." */
           for (let k = 0; k < 2; k++) {
             if (r() > dichte * 0.85) continue;
             const qx = x + r(), qz = z + r();
@@ -876,14 +881,11 @@ const Welt3D = (() => {
       } else if (abstand > NAH_KRAM) {
         /* Weit draußen nichts als Bäume: Ein Busch von dreißig Feldern Entfernung ist ein
            grüner Punkt im Gras und kostet trotzdem neunzig Dreiecke. */
-      /* Am Bahnrand wächst Gras, nicht Gebüsch. Das ist keine Kleinigkeit: Als die Büsche mit der
-         Welt mitwuchsen, standen sie plötzlich als geschlossene Hecke links und rechts der Bahn und
-         verdeckten alles dahinter – Häuser, Bäume, Burg. Auf Fynns Vorbild ist der Rand einer
-         Minigolfbahn ein Grassaum, und Büsche stehen weiter hinten unter den Bäumen. */
-      } else if (wuerfel < dichte * 0.42) {
-        B.stelle(px, y, pz, r() * 6, 0.9 + r() * 0.7,
-          b => Deko3D.grasbueschel(b, 1.5, r() < 0.5 ? '#4f8f35' : '#62a63d', Math.round(px * 17 + pz * 53)));
-      } else if (abstand > 2.4 && wuerfel < dichte * 0.6) {
+      /* Hier standen Grasbüschel aus Dreiecken – der häufigste Bewuchs am Bahnrand überhaupt. Seit
+         das gemalte Gras auf dem Boden liegt, sind sie weg: „Die 3D-Gräser dazwischen stören."
+         Auf einem Boden, der Gras schon zeigt, steht ein aufrechtes Büschel als Fremdkörper darin.
+         Was bleibt, sind Dinge, die ein Bild nicht sein kann – Büsche, Blumen, Steine, Totholz. */
+      } else if (abstand > 2.0 && wuerfel < dichte * 0.5) {
         B.stelle(px, y, pz, r() * 6, 1, b => Deko3D.busch(b, 0.3 + r() * 0.45, r() < 0.5 ? '#4f8f35' : '#3f8a2d', Math.round(px * 37 + pz * 91)));
       } else if (wuerfel < dichte * 0.72) {
         B.stelle(px, y, pz, r() * 6, 0.9 + r() * 0.6, b => Deko3D.blume(b, 2.2, Math.round(px * 59 + pz * 11)));
@@ -897,111 +899,32 @@ const Welt3D = (() => {
       /* Und unabhängig davon noch einmal Kleinzeug an anderer Stelle im selben Feld. Ein Feld ist
          einen Meter groß; wenn darin höchstens ein Ding stehen darf, bleibt der Boden zwischen den
          Büschen kahl, und gerade den sieht man beim Zielen aus nächster Nähe. */
-      if (abstand < NAH_KRAM && r() < 0.42) {
+      if (abstand < NAH_KRAM && r() < 0.3) {
         const qx = x + r(), qz = z + r();
         if (gl.zumRand(qx, qz) > 0.25 && weitVonBurg(qx, qz)) {
           const qy = gl.hoehe(qx, qz), saat = Math.round(qx * 43 + qz * 79);
           const w = r();
-          if (w < 0.6) B.stelle(qx, qy, qz, r() * 6, 0.8 + r() * 0.7, b => Deko3D.grasbueschel(b, 1.4, r() < 0.5 ? '#4f8f35' : '#62a63d', saat));
-          else if (w < 0.85) B.stelle(qx, qy, qz, r() * 6, 0.8 + r() * 0.5, b => Deko3D.blume(b, 2, saat));
+          if (w < 0.38) B.stelle(qx, qy, qz, r() * 6, 0.8 + r() * 0.5, b => Deko3D.blume(b, 2, saat));
           else B.stelle(qx, qy - 0.05, qz, r() * 6, 1, b => Deko3D.fels(b, 0.14 + r() * 0.16, saat));
         }
       }
     }
   }
 
-  /* ---------- Der Grasteppich ----------
+  /* ---------- Warum hier kein Gras aus Dreiecken mehr steht ----------
 
-     Der Weg hierher ging über vier Anläufe, und jeder hat etwas gelernt:
+     Es standen einmal welche, in fünf Anläufen: Büschel aus Kegeln, einzeln gestreute Dreiecke,
+     Halme in Horsten, stumpfe Vierecke und zuletzt gekreuzte Karten mit Fynns gemaltem Gras
+     darauf. Jeder Anlauf war besser als der vorige, und der letzte sah für sich genommen gut aus.
 
-     1. Einzelne Büschel aus Kegeln – „mehr decken und nicht so einzelne Sträucher".
-     2. Einzelne Halme als flache Dreiecke, dicht gestreut – „zu stachelig": Einzeln stehende
-        Dreiecke geben der Wiese eine Kontur aus lauter Spitzen.
-     3. Halme in Horsten, oben stumpf – besser, aber immer noch kantig: Ein Dreieck hat keine
-        weiche Kante, und fünfzehn Halme aus Dreiecken kosten hundertfünfzig.
-     4. Und schließlich Fynns Fingerzeig auf ein fertiges Spiel: „So wie hier, also nur
-        zweieinhalb D."
+     Fynn hat ihn trotzdem abgeräumt: „Die 3D-Gräser dazwischen stören." Und er hat recht – auf
+     einem Boden, der das gemalte Gras schon trägt, stehen aufrechte Büschel wie Fremdkörper
+     darin. Zweimal Gras übereinander ist nicht doppelt so viel Gras, sondern ein Widerspruch: Das
+     Bild zeigt eine geschlossene Fläche, die Karten behaupten einzelne Halme, und das Auge sieht
+     beides zugleich.
 
-     **Ein Büschel ist ein gekreuztes Paar bemalter Karten.** Vier Dreiecke zeigen fünfzehn
-     gemalte Halme mit Bogen, Verlauf und weicher Spitze – als Geometrie kostete dasselbe das
-     Zehnfache und sähe trotzdem kantiger aus. Das Bild dazu wird beim Start gemalt (gl3d.js).
-
-     Dazu liegt auf dem Boden selbst ein zweites gemaltes Bild, eine kachelbare Grasfläche. Die
-     Karten geben der Wiese den Umriss, wenn man flach darüberschaut; das Bodenbild gibt ihr die
-     Feinheit, wenn man von oben daraufsieht. Beides zusammen ist die Wiese.
-
-     Zwei Regeln halten das Gras vom Holz fern: Es beginnt erst hinter der Bande (die Spielfläche
-     reicht bis 0,5, der Balken bis 0,85 – gewachsen wird ab 0,95), und dicht dahinter bleiben die
-     Karten niedrig. Und Schatten wirft der Teppich keinen: Der Schattendurchgang rechnet jedes
-     Dreieck ein zweites Mal, und der Schatten eines Grashalms ist auf dem Schattenbild schmaler
-     als ein Bildpunkt. */
-  /* Ein Grasbüschel als gekreuztes Kartenpaar.
-
-     Fynn hat auf ein Bild aus einem fertigen Spiel gezeigt und gesagt: „So wie hier, also nur
-     zweieinhalb D." Genau das ist es. Ein Büschel ist keine Ansammlung von Halmen aus Dreiecken,
-     sondern zwei flache, aufrecht stehende Karten, auf die ein Büschel gemalt ist – gekreuzt, damit
-     es aus jeder Richtung eines ist und nicht von der Seite verschwindet.
-
-     Der Gewinn ist der Grund, warum das jedes Spiel so macht: Vier Dreiecke zeigen fünfzehn
-     gemalte Halme, jeder mit Bogen, Verlauf und weicher Spitze. Dieselben fünfzehn Halme als
-     Geometrie kosteten das Zehnfache und sähen trotzdem kantiger aus, weil ein Dreieck keine
-     weiche Kante hat. Das war der ganze Weg von „zu stachelig" bis hierher.
-
-     Wo sonst die Farbe einer Ecke steht, steht bei den Karten die Stelle im gemalten Bild (x, y)
-     und die Helligkeit dieses Büschels (z). Der Schattierer weiß das, weil das Stück als Gras
-     gekennzeichnet ist. So braucht keine Ecke eine vierte Angabe, und kein Puffer muss breiter
-     werden. */
-  function grasKarte(B, px, pz, y, breit, hoch, w, feld, schein, r) {
-    const fest = [0, 1, 0];
-    /* Der Wind greift oben an; unten steht die Karte im Boden. */
-    const kraft = hoch * (0.14 + r() * 0.12);
-    const nx = Math.cos(w + Math.PI * 0.5), nz = Math.sin(w + Math.PI * 0.5);
-    const wiegen = [nx * kraft, 1, nz * kraft];
-    const qx = Math.cos(w) * breit * 0.5, qz = Math.sin(w) * breit * 0.5;
-    /* Die vier Felder des Bildes liegen als Zweiertafel nebeneinander; 'feld' wählt eines aus.
-       Ein Hauch Rand verhindert, dass beim Verkleinern Farbe aus dem Nachbarfeld hereinblutet. */
-    const u0 = (feld % 2) * 0.5 + 0.008, v0 = Math.floor(feld / 2) * 0.5 + 0.008;
-    const u1 = u0 + 0.484, v1 = v0 + 0.484;
-    const lu = [u0, v1, schein], ru = [u1, v1, schein];     // unten links/rechts
-    const lo = [u0, v0, schein], ro = [u1, v0, schein];     // oben links/rechts
-    const A = [px - qx, y, pz - qz], Bp = [px + qx, y, pz + qz];
-    const C = [px + qx, y + hoch, pz + qz], D = [px - qx, y + hoch, pz - qz];
-    B.dreieckBunt(A, Bp, C, fest, fest, wiegen, lu, ru, ro);
-    B.dreieckBunt(A, C, D, fest, wiegen, wiegen, lu, ro, lo);
-  }
-
-  const GRAS_AB = 0.95;            // hinter der Bande fängt die Wiese an
-  const GRAS_VOLL = 7, GRAS_WEIT = 17, GRAS_HORSTE = 7;
-
-  function grasNetz(B, gl, aussenRand) {
-    const a = gl.bahn.autoDeko || {};
-    const r = M3.zufall((a.saat || 1) * 9091 + 7);
-    for (let z = -aussenRand; z < gl.T + aussenRand; z += 1) for (let x = -aussenRand; x < gl.B + aussenRand; x += 1) {
-      const dicht = M3.klemm(1 - (gl.zumRand(x + 0.5, z + 0.5) - GRAS_VOLL) / (GRAS_WEIT - GRAS_VOLL), 0, 1);
-      if (dicht <= 0) continue;
-      const wieViele = GRAS_HORSTE * dicht;
-      for (let k = 0; k < GRAS_HORSTE; k++) {
-        if (k >= wieViele) break;
-        const px = x + r(), pz = z + r();
-        const rand = gl.zumRand(px, pz);
-        if (rand < GRAS_AB) continue;
-        const art = gl.art(px, pz);
-        if (art.wasser || art.name === 'Sand') continue;
-        const y = gl.hoehe(px, pz);
-        /* Dicht an der Bande bleibt das Büschel niedrig, damit keines über den Balken ragt. */
-        const hoch = (0.3 + r() * 0.26) * Math.min(1, 0.45 + rand * 0.3);
-        const breit = hoch * (1.05 + r() * 0.5);
-        const w = r() * M3.TAU3;
-        const feld = Math.floor(r() * 4);
-        const schein = 0.72 + r() * 0.5;
-        grasKarte(B, px, pz, y, breit, hoch, w, feld, schein, r);
-        /* Die zweite Karte quer dazu. Ohne sie wird das Büschel beim Drehen der Kamera zu einem
-           Strich – der bekannte Preis flacher Karten, und mit zwei Dreiecken bezahlt. */
-        grasKarte(B, px, pz, y, breit * (0.8 + r() * 0.3), hoch * (0.85 + r() * 0.25),
-          w + Math.PI * 0.5, Math.floor(r() * 4), schein * 0.94, r);
-      }
-    }
-  }
+     Die Wiese ist darum jetzt allein das gemalte Bild auf dem Boden (siehe gl3d.js). Das spart
+     nebenbei dreißigtausend Dreiecke je Bahn und einen Texturzugriff je Bildpunkt. */
 
   /* Das Ufer bepflanzen. Gegangen wird über jedes Landfeld, das an ein Wasserfeld grenzt; dort
      kommen Schilf und Kiesel hin. Der Ball rollt durch beides hindurch – sie stehen ein paar
@@ -1255,6 +1178,6 @@ const Welt3D = (() => {
 
   return { ART, artVon, gelaende, gelaendeNetz, lochNetz, wasserNetz, felsenNetz, bandenNetz, burgNetz, dekoNetz,
     dekoOrt, dekoOrte, dekoFuss,
-    streuenNetz, grasNetz, uferNetz, fernNetz, himmelNetz, wolkenNetz, tuchNeu, tuchFrisch,
+    streuenNetz, uferNetz, fernNetz, himmelNetz, wolkenNetz, tuchNeu, tuchFrisch,
     pfeilNeu, pfeilFrisch };
 })();
