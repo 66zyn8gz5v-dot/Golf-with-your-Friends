@@ -49,6 +49,10 @@ const Physik3D = (() => {
   const LOCH_V = 2.8;             // schneller als das, und der Ball springt über das Loch hinweg
   const LOCH_FANG = LOCH_R * 2.8; // so weit reicht der Sog des Bechers
   const LOCH_ZUG = 7.5;           // wie kräftig er zieht (m/s² in der Mitte)
+  /* Wie tief der Becher ist. Die Zahl steht hier und nicht bei der Zeichnerei, weil der Ball
+     wirklich bis auf den Boden fällt: Becher und Fall müssen dieselbe Tiefe meinen, sonst schwebt
+     der Ball im Loch oder verschwindet durch dessen Boden. */
+  const LOCH_TIEF = 0.42;
   const MAX_ZEIT = 30;            // Notbremse: nach so vielen Sekunden gilt ein Schlag als beendet
 
   /* Ein neuer Ball an einer Stelle des Geländes. */
@@ -68,6 +72,10 @@ const Physik3D = (() => {
          Fingerbreit vor dem Wasser. Von dort war der nächste Schlag wieder im Wasser, und der
          übernächste auch – im Prüflauf hing der Ball zwölf Schläge lang an derselben Uferkante
          fest. Gebraucht wird ein Stück Abstand, und das steht in der Spur. */
+      /* Der Fall in den Becher. 'ein' heißt „gefallen und gewertet", 'sinkt' heißt „fällt gerade".
+         Beides braucht es getrennt: Gewertet wird in dem Augenblick, in dem die Mitte des Balls
+         über die Kante kommt, aber zu sehen ist der Fall erst danach. */
+      ein: false, sinkt: false, sinkRuhe: 0,
       sicherSpur: [{ x, z, weg: 0 }] };
   }
 
@@ -81,8 +89,50 @@ const Physik3D = (() => {
   /* Ein Rechenschritt. 'gl' ist das Gelände (siehe welt3d.js), 'loch' die Stelle des Bechers.
      Zurück kommt die Liste dessen, was in diesem Schritt passiert ist – daraus macht das Spiel
      Geräusche, Staub und Wasserringe. */
+  /* Ab hier ist der Schlag gewertet, und der Ball fällt. Die Geschwindigkeit, mit der er über die
+     Kante kam, geht dabei verloren: Er trudelt zur Mitte, statt an der Becherwand abzuprallen –
+     eine Wand, die es in der Rechnung gar nicht gibt. */
+  function faellt(b, loch, ereignisse) {
+    b.ein = true; b.sinkt = true; b.sinkRuhe = 0;
+    b.vx = b.vz = 0; b.vy = -0.35;
+    b.fliegt = false;
+    ereignisse.push({ was: 'ein', x: loch[0], z: loch[1] });
+  }
+
   function schritt(b, gl, loch, dt, ereignisse) {
     if (b.ruht) return;
+    /* Der Ball fällt in den Becher. Das läuft an der ganzen übrigen Rechnung vorbei: Sonst
+       schöbe ihn der Boden, der über dem Becher weiterhin gilt, sofort wieder heraus.
+
+       Gefallen wird wirklich, nicht abgeblendet – waagerecht schnell zur Mitte gezogen, senkrecht
+       mit der Schwerkraft, und unten einmal aufgesetzt und kurz geklappert. Das dauert keine halbe
+       Sekunde und ist der Augenblick, auf den die ganze Bahn hinausläuft; ein Ball, der einfach
+       stehen bleibt und verschwindet, nimmt ihr das Ende weg. */
+    if (b.sinkt) {
+      const bodenY = gl.hoehe(loch[0], loch[1]) - LOCH_TIEF + BALL_R;
+      const zieh = Math.min(1, 14 * dt);
+      b.x += (loch[0] - b.x) * zieh;
+      b.z += (loch[1] - b.z) * zieh;
+      /* Etwas langsamer als der freie Fall. Mit voller Schwerkraft sind die vierzig Zentimeter in
+         einer Viertelsekunde vorbei, und genau der Augenblick, auf den die ganze Bahn hinausläuft,
+         ist dann ein Zucken. Ein Ball fällt in einen engen Becher ohnehin nicht frei – er schleift
+         an der Wand. */
+      b.vy -= G * 0.5 * dt;
+      b.y += b.vy * dt;
+      /* Weiterdrehen, solange er fällt – ein Ball, der im Fallen erstarrt, sieht aus wie ein
+         Bild, das hängen geblieben ist. */
+      b.drehX += 5 * dt;
+      if (b.y <= bodenY) {
+        b.y = bodenY;
+        if (b.vy < -0.5) b.vy = -b.vy * 0.34;
+        else {
+          b.vy = 0;
+          b.sinkRuhe += dt;
+          if (b.sinkRuhe > 0.1) { b.sinkt = false; b.ruht = true; }
+        }
+      }
+      return;
+    }
     const n = [0, 1, 0];
     gl.neigung(b.x, b.z, n);
     const altX = b.x, altZ = b.z;
@@ -200,21 +250,11 @@ const Physik3D = (() => {
       }
       /* Drinnen ist der Ball, sobald seine Mitte über der Öffnung steht – dort trägt ihn nichts
          mehr. */
-      if (d < LOCH_R && v < LOCH_V && !b.fliegt) {
-        b.ein = true; b.ruht = true;
-        b.vx = b.vz = b.vy = 0;
-        ereignisse.push({ was: 'ein', x: loch[0], z: loch[1] });
-        return;
-      }
+      if (d < LOCH_R && v < LOCH_V && !b.fliegt) { faellt(b, loch, ereignisse); return; }
       /* Die Lippenregel: Ein fast stehender Ball, der mit seinem Rand über die Kante des Bechers
          hängt, kippt hinein. So ist es auf jedem Platz – ein Ball auf der Lippe fällt –, und es
          ist zugleich die Rettung für den Fall, dass er sich genau an der Kante festfährt. */
-      if (d < LOCH_R + BALL_R * 0.9 && v < 0.3 && !b.fliegt) {
-        b.ein = true; b.ruht = true;
-        b.vx = b.vz = b.vy = 0;
-        ereignisse.push({ was: 'ein', x: loch[0], z: loch[1] });
-        return;
-      }
+      if (d < LOCH_R + BALL_R * 0.9 && v < 0.3 && !b.fliegt) { faellt(b, loch, ereignisse); return; }
     }
 
     /* Wasser. Ein Ball, der ins Wasser läuft, ist weg – kein Schwimmen, kein Grundberühren. */
@@ -360,5 +400,5 @@ const Physik3D = (() => {
     return [spur[0].x, spur[0].z];
   }
 
-  return { G, BALL_R, MAX_V, LOCH_R, ball, schlag, bewegen, schritt, sicherOrt };
+  return { G, BALL_R, MAX_V, LOCH_R, LOCH_TIEF, ball, schlag, bewegen, schritt, sicherOrt };
 })();

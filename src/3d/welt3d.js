@@ -397,8 +397,11 @@ const Welt3D = (() => {
   function lochNetz(B, gl) {
     const [hx, hz] = gl.lochFeld;
     const R = Physik3D.LOCH_R + 0.015;       // ein Hauch weiter als der Becher, sonst klemmt der Rand
-    const K = 20, TIEF = 0.42, LAGEN = 3;
-    const GRUEN = ART['H'].farbe, DUNKEL = '#241f16', BODEN = '#15130d', KRAGEN = '#e9e4d4';
+    const K = 20, TIEF = Physik3D.LOCH_TIEF, LAGEN = 3;
+    /* Der Boden des Bechers ist heller als seine Wand, und das hat einen Grund: Dort unten liegt
+       am Ende der Ball, und ein weißer Ball auf schwarzem Grund im Schatten ist nicht zu erkennen.
+       Die Wand bleibt dunkel – an ihr liest man die Tiefe. */
+    const GRUEN = ART['H'].farbe, DUNKEL = '#221d15', BODEN = '#4a4133', KRAGEN = '#e9e4d4';
 
     const aufQuadrat = w => {
       const c = Math.cos(w), sn = Math.sin(w);
@@ -558,165 +561,6 @@ const Welt3D = (() => {
     /* Von der Burgmitte aus in Weltkoordinaten umrechnen – die Fahnen kommen in Burgkoordinaten
        zurück, gedreht um denselben Winkel wie die Burg. */
     const w = burg.dreh === undefined ? 0.35 : burg.dreh, c = Math.cos(w), s = Math.sin(w);
-    return fahnen.map(f => ({
-      x: burg.x + f.x * c + f.z * s,
-      z: burg.z - f.x * s + f.z * c,
-      y: fussHoehe + bergH + f.y, h: f.h, farbe: f.farbe,
-    }));
-  }
-
-  /* ---------- Das Loch ----------
-     Drei Teile: der Flicken Wiese mit der runden Öffnung, der Becher darunter und der helle Rand
-     obenauf. Der Becher zeigt nach innen – man schaut ja hinein –, und weil Rückseiten nicht
-     gezeichnet werden, müsste man sonst durch den Boden auf die Landschaft dahinter sehen.
-
-     Der Flicken ersetzt genau die neun Maschen, die gelaendeNetz ausgespart hat. Gebaut wird er
-     in Ringen um das Loch herum: innen der Kreis, außen das Quadrat, dazwischen drei Lagen. Die
-     Höhe wird für jeden Punkt beim Gelände erfragt, damit der Flicken die Mulde mitmacht, in der
-     das Loch liegt. */
-  function lochNetz(B, gl) {
-    const [hx, hz] = gl.lochFeld;
-    const R = Physik3D.LOCH_R + 0.015;       // ein Hauch weiter als der Becher, sonst klemmt der Rand
-    const K = 20, TIEF = 0.42, LAGEN = 3;
-    const GRUEN = ART['H'].farbe, DUNKEL = '#241f16', BODEN = '#15130d', KRAGEN = '#e9e4d4';
-
-    const aufQuadrat = w => {
-      const c = Math.cos(w), sn = Math.sin(w);
-      const t = LOCH_FELD / Math.max(Math.abs(c), Math.abs(sn));
-      return [hx + c * t, hz + sn * t];
-    };
-    const amKreis = w => [hx + Math.cos(w) * R, hz + Math.sin(w) * R];
-    const misch = (a, b, u) => [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u];
-    const hoch = p => [p[0], gl.hoehe(p[0], p[1]), p[1]];
-
-    for (let i = 0; i < K; i++) {
-      const w0 = i / K * M3.TAU3, w1 = (i + 1) / K * M3.TAU3;
-      const k0 = amKreis(w0), k1 = amKreis(w1), q0 = aufQuadrat(w0), q1 = aufQuadrat(w1);
-      /* Der Flicken Wiese. Die innerste Lage ist schmal und ein wenig heller – das ausgetretene
-         Gras rings um ein Loch. Ohne diesen Ring verschwindet die Öffnung aus ein paar Feldern
-         Entfernung im Grün; mit ihm sieht man von Weitem, wo man hin will. */
-      const RAND = 0.09 / LOCH_FELD;
-      B.viereck(hoch(misch(k0, q0, 0)), hoch(misch(k1, q1, 0)),
-        hoch(misch(k1, q1, RAND)), hoch(misch(k0, q0, RAND)), '#a8dd6a', [0, 1, 0]);
-      for (let l = 0; l < LAGEN; l++) {
-        const ua = RAND + (1 - RAND) * l / LAGEN, ub = RAND + (1 - RAND) * (l + 1) / LAGEN;
-        B.viereck(hoch(misch(k0, q0, ua)), hoch(misch(k1, q1, ua)),
-          hoch(misch(k1, q1, ub)), hoch(misch(k0, q0, ub)), GRUEN, [0, 1, 0]);
-      }
-      // Der Becher: Wand nach innen gerichtet, oben ein heller Kragen wie bei einem echten Loch
-      const y0 = gl.hoehe(k0[0], k0[1]), y1 = gl.hoehe(k1[0], k1[1]);
-      const nachInnen = [hx * 2 - k0[0] - k1[0], 0, hz * 2 - k0[1] - k1[1]];
-      const KRAGEN_TIEF = 0.11;
-      B.viereck([k0[0], y0, k0[1]], [k1[0], y1, k1[1]],
-        [k1[0], y1 - KRAGEN_TIEF, k1[1]], [k0[0], y0 - KRAGEN_TIEF, k0[1]], KRAGEN, nachInnen);
-      B.viereck([k0[0], y0 - KRAGEN_TIEF, k0[1]], [k1[0], y1 - KRAGEN_TIEF, k1[1]],
-        [k1[0], y1 - TIEF, k1[1]], [k0[0], y0 - TIEF, k0[1]], DUNKEL, nachInnen);
-      const tiefe = Math.min(y0, y1) - TIEF;
-      B.flaeche([[hx, tiefe, hz], [k0[0], tiefe, k0[1]], [k1[0], tiefe, k1[1]]], BODEN, [0, 1, 0]);
-    }
-  }
-
-  /* ---------- Die Banden ----------
-     Für jede Kante ein Balken, dazu Pfosten dort, wo eine Reihe von Balken endet oder um die Ecke
-     geht. Das ist kein Zierrat: Ohne die Pfosten stoßen an jeder Ecke zwei Balken stumpf
-     aneinander, und man sieht durch die Fuge hindurch.
-
-     Der Balken sitzt mit seiner Innenseite genau auf der Bandenlinie – dort, wo die Kugelrechnung
-     den Ball anhalten lässt. Läge er mittig auf der Linie, prallte der Ball sichtbar in der Luft
-     ab; läge er ganz außen, führe er sichtbar in das Holz hinein. */
-  function bandenNetz(B, gl) {
-    const DICK = 0.30, HOCH = gl.BANDE_HOCH, TIEF = 0.10;     // TIEF: so weit steckt er im Boden
-    const HOLZ = '#8a5f38', HOLZ_OBEN = '#b1865a', HOLZ_TIEF = '#6a4526';
-    /* Trägt das Nachbarfeld dieselbe Kante? Dann läuft der Balken dort weiter und braucht hier
-       keinen Pfosten. */
-    const kantenSatz = new Set(gl.kanten.map(k => `${k.ix}:${k.iz}:${k.dx}:${k.dz}`));
-    const laeuftWeiter = (k, qx, qz) => kantenSatz.has(`${k.ix + qx}:${k.iz + qz}:${k.dx}:${k.dz}`);
-
-    for (const k of gl.kanten) {
-      // Mitte der Kante und ihre Richtung: quer zur Feldseite
-      const mx = k.ix + 0.5 + k.dx * (0.5 + DICK / 2);
-      const mz = k.iz + 0.5 + k.dz * (0.5 + DICK / 2);
-      const laengs = k.dx ? 0 : Math.PI / 2;                   // Balken liegt quer zur Seitenrichtung
-      /* Der Balken ist nicht ein Brett, sondern zwei übereinander – mit einer dunklen Fuge
-         dazwischen und einer schmalen Deckleiste obenauf. Genau so ist die Bande auf Fynns
-         Vorbildfoto gebaut, und es ist der Unterschied zwischen „Holzfarbene Mauer" und „Holz".
-
-         Die Fuge ist eingerückt, nicht aufgesetzt: ein dünnes dunkles Brettchen, das schmaler ist
-         als der Balken. Aufgesetzt sähe es aus wie ein Gürtel. */
-      const bretterFarbe = Bauen.stufe(HOLZ, 0.94 + ((k.ix * 7 + k.iz * 3) % 5) * 0.03);
-      B.stelle(mx, k.y - TIEF, mz, laengs, 1, b => {
-        const unten = (HOCH + TIEF) * 0.56;
-        b.kasten(DICK, unten, 1.0, bretterFarbe, HOLZ_TIEF);
-        b.mit(M3.verschieben(0, unten, 0),
-          c => c.kasten(DICK * 0.97, (HOCH + TIEF) - unten - 0.03, 1.0, bretterFarbe, HOLZ_TIEF));
-        /* Deckleiste: ein Stück breiter als der Balken, damit die Oberkante eine Linie bekommt.
-           Der Ball prallt an der senkrechten Fläche darunter ab – die Leiste ist reine Optik und
-           steht in der Kugelrechnung nicht. */
-        b.mit(M3.verschieben(0, (HOCH + TIEF) - 0.03, 0),
-          c => c.kasten(DICK * 1.1, 0.03, 1.0, HOLZ_OBEN, HOLZ_OBEN));
-      });
-      /* Pfosten – abgesägte Stämme wie auf dem Vorbild. Sie stehen an jedem Ende einer Reihe
-         (dort stoßen sonst zwei Balken stumpf aneinander und man sieht durch die Fuge) und
-         zusätzlich alle drei Felder. Das zweite ist reine Optik, aber es ist die Optik, die aus
-         einer langen Latte eine Bande macht. */
-      const quer = k.dx ? [[0, -1], [0, 1]] : [[-1, 0], [1, 0]];
-      for (const [qx, qz] of quer) {
-        const ende = !laeuftWeiter(k, qx, qz);
-        const regel = (qx > 0 || qz > 0) && (k.ix + k.iz) % 3 === 0;
-        if (!ende && !regel) continue;
-        B.stelle(mx + qx * 0.5, k.y - TIEF - 0.05, mz + qz * 0.5, 0, 1, b => {
-          const h = HOCH + TIEF + 0.10;
-          b.walze(DICK * 0.66, DICK * 0.62, h, 8, HOLZ, null);
-          /* Eine abgesetzte Kuppe: Ein glatt abgeschnittener Pfosten sieht aus wie ein Rohr, ein
-             angefaster wie ein gesägter Stamm. */
-          b.mit(M3.verschieben(0, h, 0), c => c.walze(DICK * 0.62, DICK * 0.46, DICK * 0.2, 8, HOLZ, HOLZ_OBEN));
-        });
-      }
-    }
-  }
-
-  /* Die Burg auf ihrem Felsen. Sie liegt immer außerhalb der Bahn und ist nie zu erreichen –
-     sie ist Orientierung und Versprechen, nicht Hindernis. Zurück kommen die Stellen ihrer
-     Fahnen, damit die wehen können. */
-  function burgNetz(B, gl, burg) {
-    if (!burg) return [];
-    const fussHoehe = gl.hoehe(burg.x, burg.z);
-    const bergH = burg.berg || 3;
-    const g = burg.g || 1;
-    /* Der Burgberg ist ein Kegelstumpf, der tief genug im Boden steckt, dass auch am Hang keine
-       Fuge bleibt – oben grün, unter der Krone Fels. Zwei aufeinandergestapelte Scheiben (der
-       erste Versuch) sahen aus wie eine Torte; ein Kegel, dessen Wand nach oben einzieht, sieht
-       aus wie ein Berg. */
-    B.stelle(burg.x, fussHoehe - 2.2, burg.z, 0, 1, b => {
-      b.walze(6.6 * g, 4.4 * g, bergH * 0.62 + 2.2, 13, '#69933f', '#7cae4b');
-      b.mit(M3.verschieben(0, bergH * 0.62 + 2.2, 0), c => {
-        c.walze(4.4 * g, 3.9 * g, bergH * 0.26, 13, '#9a9488', '#a8a296');
-        c.mit(M3.verschieben(0, bergH * 0.26, 0), d => d.walze(3.9 * g, 3.7 * g, bergH * 0.12, 13, '#7cae4b', '#88bb53'));
-      });
-    });
-    /* Felsbrocken am Übergang von Grün zu Fels – sie verstecken die Kante zwischen den Walzen. */
-    const rb = M3.zufall(919);
-    for (let i = 0; i < 14; i++) {
-      const a = rb() * M3.TAU3, d = (4.3 + rb() * 0.5) * g;
-      B.stelle(burg.x + Math.cos(a) * d, fussHoehe - 2.2 + bergH * 0.62 + 2.2 - 0.3 + rb() * 0.5,
-        burg.z + Math.sin(a) * d, 0, 1, b => Deko3D.fels(b, (0.35 + rb() * 0.4) * g, i * 11 + 3));
-    }
-    let fahnen = [];
-    B.stelle(burg.x, fussHoehe + bergH, burg.z, 0.35, 1, b => { fahnen = Deko3D.burg(b, g).fahnen; });
-    /* Nadelwald am Burgberg, wie auf den gemalten Vorlagen. Unter die Tannen mischen sich ein paar
-       Kiefern: Deren kahler Stamm bricht die gleichmäßige Zackenreihe auf, sonst sieht der Hang aus
-       wie ein Kamm. */
-    const r = M3.zufall(555);
-    for (let i = 0; i < 26; i++) {
-      const a = r() * M3.TAU3, d = (4.4 + r() * 1.8) * g;
-      const x = burg.x + Math.cos(a) * d, z = burg.z + Math.sin(a) * d;
-      const kiefer = r() < 0.25;
-      B.stelle(x, fussHoehe - 0.6 + Math.max(0, bergH * 0.22 * (1 - d / (6.5 * g))), z, r() * 6, 1,
-        b => Deko3D.baum(b, kiefer ? 'kiefer' : 'tanne', kiefer ? 2.2 + r() * 0.9 : 1.5 + r() * 1.3, i * 3 + 1));
-    }
-    /* Von der Burgmitte aus in Weltkoordinaten umrechnen – die Fahnen kommen in Burgkoordinaten
-       zurück, gedreht um denselben Winkel wie die Burg. */
-    const w = 0.35, c = Math.cos(w), s = Math.sin(w);
     return fahnen.map(f => ({
       x: burg.x + f.x * c + f.z * s,
       z: burg.z - f.x * s + f.z * c,

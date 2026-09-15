@@ -856,7 +856,10 @@ const Golf3D = (() => {
         else if (ev.was === 'ein') schall('sink');
       }
       if (b.ruht) {
-        if (b.ein) { stand.phase = 'fertig'; setTimeout(() => { if (laeuft && schirm === 'bahn') bahnFertig(); }, 850); return; }
+        /* Der Ball liegt jetzt unten im Becher – der Fall selbst ist schon vorbei, als 'ruht'
+           gesetzt wird. Eine halbe Sekunde bleibt er noch liegen, damit man ihn dort sieht, bevor
+           die Ergebnistafel darüberfährt. */
+        if (b.ein) { stand.phase = 'fertig'; setTimeout(() => { if (laeuft && schirm === 'bahn') bahnFertig(); }, 900); return; }
         if (b.wasser) { meldung('Ins Wasser – ein Schlag Strafe, weiter geht es vom Ufer.'); ballZurueck('wasser'); return; }
         const art = szene.gl.art(b.x, b.z);
         if (art.aus) { schall('oob'); meldung('Aus – ein Schlag Strafe, weiter geht es an der Kante.'); ballZurueck('aus'); return; }

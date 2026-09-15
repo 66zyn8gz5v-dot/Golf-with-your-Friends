@@ -57,6 +57,22 @@ const melde = (bahn, text) => fehler.push(`${bahn}: ${text}`);
    unspielbar – auch wenn man auf der Karte scheinbar durchkommt. Genau dieser Fehler ist beim
    Bauen von „Der Mühlbach" passiert: Die Landzunge in der Mitte war rundherum von Wasser umgeben
    und damit eine Insel. */
+/* ---------- 0. Keine Zwillinge ----------
+
+   Zwei Funktionen desselben Namens in derselben Datei sind in JavaScript kein Fehler: Die zweite
+   gewinnt, die erste ist tot. Genau das ist hier einmal passiert – beim Umbauen blieb ein ganzer
+   Block doppelt stehen, und die neue Burg (die auch ebenerdig stehen kann) lag in der toten
+   Hälfte. Gelaufen ist trotzdem alles, nur eben das Alte. Seitdem wird gezählt. */
+{
+  const dateien = fs.readdirSync('src/3d').filter(n => n.endsWith('.js'));
+  for (const n of dateien) {
+    const text = fs.readFileSync('src/3d/' + n, 'utf8');
+    const zahl = new Map();
+    for (const m of text.matchAll(/^ {2}function ([A-Za-z0-9_$]+)\s*\(/gm)) zahl.set(m[1], (zahl.get(m[1]) || 0) + 1);
+    for (const [name, k] of zahl) if (k > 1) melde('src/3d/' + n, `die Funktion ${name} ist ${k}-mal angelegt – die späteren überdecken die früheren`);
+  }
+}
+
 const BEGEHBAR = new Set(['#', ',', 's', 'o', 'T', 'H', 'r']);
 
 for (const welt of BAHNEN3D.WELTEN) {
