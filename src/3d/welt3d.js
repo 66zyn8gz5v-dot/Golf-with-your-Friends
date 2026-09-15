@@ -299,8 +299,16 @@ const Welt3D = (() => {
          draußen würde dasselbe feine Rauschen zu einem Schachbrett aus zwei Meter großen Feldern
          – man sieht dann nicht mehr die Wiese, sondern das Gitter. */
       const koernung = 0.5 / S;
-      const v = 1 + rausch(mx * 0.7 * koernung, mz * 0.7 * koernung) * (a.gemaeht ? 0.03 : 0.09)
-                  + rausch(mx * 2.3 * koernung, mz * 2.3 * koernung) * (a.gemaeht ? 0.015 : 0.05);
+      /* Drei Lagen Rauschen: eine grobe für Flecken, eine mittlere für die Struktur und eine
+         feine, die von Masche zu Masche springt. Die feine ist es, die aus einer glatten Fläche
+         eine gesprenkelte macht – der Boden unter dem Gras soll nicht wie gestrichen aussehen.
+
+         Auf dem Grün bleibt alles drei- bis viermal schwächer. Dort SOLL es gestrichen aussehen:
+         Eine gemähte Spielfläche ist gleichmäßig, und eine gesprenkelte sähe aus wie ein Fehler. */
+      const stark = a.gemaeht ? 0.25 : 1;
+      const v = 1 + rausch(mx * 0.7 * koernung, mz * 0.7 * koernung) * 0.11 * stark
+                  + rausch(mx * 2.3 * koernung, mz * 2.3 * koernung) * 0.07 * stark
+                  + rausch(mx * 6.1 * koernung, mz * 6.1 * koernung) * 0.05 * stark;
       f = [f[0] * v, f[1] * v, f[2] * v];
       /* Das Viereck wird über die kürzere Diagonale geteilt. Über die falsche geteilt bekommt ein
          Hügelkamm eine Delle und eine Mulde einen Grat – auf einer Golfbahn sieht man das sofort,
@@ -922,55 +930,99 @@ const Welt3D = (() => {
      Und Schatten wirft der Teppich keinen: Der Schattendurchgang rechnet jedes Dreieck ein zweites
      Mal, und der Schatten eines Grashalms ist auf dem Schattenbild schmaler als ein Bildpunkt. */
   const GRAS_AB = 0.95;            // hinter der Bande fängt die Wiese an
-  const GRAS_VOLL = 7, GRAS_WEIT = 17, GRAS_JE_FELD = 26;
+  const GRAS_VOLL = 7, GRAS_WEIT = 17, GRAS_HORSTE = 4;
+  /* Acht Grüntöne statt vier, und jeder Horst bekommt darauf noch eine eigene Helligkeit. Eine
+     Wiese aus wenigen Tönen liest sich als Fläche; erst die Streuung macht daraus Textur. Die
+     zweite Farbe jedes Paars ist die Spitze – oben heller, wie bei allem Gewachsenen. */
   const GRAS_TOENE = [
-    ['#3f7a2c', '#7ac24a'], ['#478a30', '#88cf55'], ['#528f39', '#93d05e'], ['#3a7433', '#6fb84f'],
+    ['#3a7429', '#79c049'], ['#43852e', '#86cc53'], ['#4d8c36', '#91cf5c'], ['#356f30', '#6cb64c'],
+    ['#2f6a2a', '#63ad44'], ['#548f31', '#9ad257'], ['#3c7c38', '#72bb59'], ['#477f26', '#7fc23f'],
   ];
+
+  /* Ein Horst: mehrere Halme aus einem Punkt, in verschiedenen Höhen und Richtungen.
+
+     Dass sie aus EINEM Punkt kommen, ist die ganze Antwort auf „nicht so stachelig". Einzeln über
+     die Fläche gestreute Halme stehen wie Nägel nebeneinander, und die Wiese bekommt eine Kontur
+     aus lauter Spitzen. Aus einem Punkt heraus überschneiden sie sich, die kurzen füllen die
+     Lücken zwischen den langen, und die Kontur des Horstes ist eine weiche Kuppe. Es sind gleich
+     viele Halme wie vorher – sie stehen nur beieinander.
+
+     Zwei Sorten Halm, und die Mischung ist der Rest der Antwort:
+
+     **Das liegende Blatt** ist breit, kurz und fast waagerecht. Es steht nicht in die Höhe, es
+     deckt den Boden – das ist die Textur der Wiese. Ein Dreieck genügt: Von schräg oben sieht man
+     ohnehin nur seinen Umriss.
+
+     **Der stehende Halm** gibt dem Horst Höhe, und er ist ein Viereck, kein Dreieck. Genau das ist
+     der Unterschied zwischen Gras und Stacheln: Ein Dreieck läuft in eine Nadelspitze aus, ein
+     Viereck endet in einer kurzen, breiten Kante – stumpf, wie ein Grashalm eben endet. Dazu neigt
+     er sich weit zur Seite, statt senkrecht zu stehen; ein Halm, der sich überbiegt, ist Gras, ein
+     aufrechter ist ein Dorn. */
+  function grasHorst(B, gl, px, pz, y, hoch, r) {
+    const fest = [0, 1, 0];
+    const paar = GRAS_TOENE[Math.floor(r() * GRAS_TOENE.length)];
+    const schein = 0.86 + r() * 0.3;
+    const unten = Bauen.stufe(paar[0], schein), oben = Bauen.stufe(paar[1], schein);
+    const dreh = r() * M3.TAU3;
+    const blaetter = 3 + Math.floor(r() * 2);
+    const halme = 2 + Math.floor(r() * 2);
+    const n = blaetter + halme;
+    for (let i = 0; i < n; i++) {
+      /* Die Richtungen werden über den Kreis verteilt und dann verwackelt – rein zufällig gewählt
+         zeigen erfahrungsgemäß drei von fünf Halmen in dieselbe Ecke. */
+      const w = dreh + (i + r() * 0.8) / n * M3.TAU3;
+      const nx = Math.cos(w), nz = Math.sin(w);
+      const qx = -nz, qz = nx;
+      const fx = px + nx * 0.04 * r(), fz = pz + nz * 0.04 * r();   // Fußpunkte leicht gestreut
+      if (i < blaetter) {
+        const lang = (0.17 + r() * 0.22) * hoch;
+        const breit = (0.09 + r() * 0.09) * hoch;
+        const kipp = lang * (0.1 + r() * 0.28);
+        B.dreieckWeich(
+          [fx - qx * breit, y, fz - qz * breit],
+          [fx + qx * breit, y, fz + qz * breit],
+          [fx + nx * lang, y + kipp, fz + nz * lang],
+          fest, fest, [nx * lang * 0.1, 1, nz * lang * 0.1], r() < 0.5 ? unten : oben);
+        continue;
+      }
+      /* Die stehenden Halme eines Horstes sind absichtlich verschieden lang: Gleich hohe Halme
+         ergeben eine abgeschnittene Bürste. */
+      const hoehe = (0.3 + r() * 0.45) * hoch;
+      const breit = (0.055 + r() * 0.05) * hoch;
+      const neige = (0.45 + r() * 0.5) * hoehe;
+      const kraft = hoehe * (0.16 + r() * 0.14);
+      const wiegen = [nx * kraft, 1, nz * kraft];
+      const sx = fx + nx * neige, sz = fz + nz * neige, sy = y + hoehe;
+      const kappe = breit * 0.78;                                   // stumpfes Ende statt Spitze
+      B.dreieckWeich(
+        [fx - qx * breit, y, fz - qz * breit],
+        [fx + qx * breit, y, fz + qz * breit],
+        [sx + qx * kappe, sy, sz + qz * kappe],
+        fest, fest, wiegen, unten);
+      B.dreieckWeich(
+        [fx - qx * breit, y, fz - qz * breit],
+        [sx + qx * kappe, sy, sz + qz * kappe],
+        [sx - qx * kappe, sy, sz - qz * kappe],
+        fest, wiegen, wiegen, oben);
+    }
+  }
 
   function grasNetz(B, gl, aussenRand) {
     const a = gl.bahn.autoDeko || {};
     const r = M3.zufall((a.saat || 1) * 9091 + 7);
-    const fest = [0, 1, 0];
     for (let z = -aussenRand; z < gl.T + aussenRand; z += 1) for (let x = -aussenRand; x < gl.B + aussenRand; x += 1) {
       const dicht = M3.klemm(1 - (gl.zumRand(x + 0.5, z + 0.5) - GRAS_VOLL) / (GRAS_WEIT - GRAS_VOLL), 0, 1);
       if (dicht <= 0) continue;
-      const wieViele = GRAS_JE_FELD * dicht;
-      for (let k = 0; k < GRAS_JE_FELD; k++) {
+      const wieViele = GRAS_HORSTE * dicht;
+      for (let k = 0; k < GRAS_HORSTE; k++) {
         if (k >= wieViele) break;
         const px = x + r(), pz = z + r();
         const rand = gl.zumRand(px, pz);
         if (rand < GRAS_AB) continue;
         const art = gl.art(px, pz);
         if (art.wasser || art.name === 'Sand') continue;
-        const y = gl.hoehe(px, pz);
-        const ton = GRAS_TOENE[Math.floor(r() * GRAS_TOENE.length)];
-        const breit = 0.075 + r() * 0.06;
-        /* Dicht an der Bande kurz, weiter draußen voll hoch. */
-        const hoehe = (0.28 + r() * 0.3) * Math.min(1, 0.4 + rand * 0.3);
-        const w = r() * M3.TAU3;                       // Richtung, in die sich der Halm neigt
-        const nx = Math.cos(w), nz = Math.sin(w);
-        const qx = -nz, qz = nx;                       // quer dazu: seine Breite
-        const neige = (0.15 + r() * 0.4) * hoehe;      // so weit steht die Spitze schon ohne Wind
-        /* Der Wind greift an der Spitze an, und zwar quer zur Neigung mal ein bisschen Zufall –
-           ein Feld, in dem alle Halme genau gleich weit ausschlagen, wirkt gebürstet. */
-        const kraft = hoehe * (0.16 + r() * 0.14);
-        const wiegen = [nx * kraft, 1, nz * kraft];
-        B.dreieckWeich(
-          [px - qx * breit, y, pz - qz * breit],
-          [px + qx * breit, y, pz + qz * breit],
-          [px + nx * neige, y + hoehe, pz + nz * neige],
-          fest, fest, wiegen, ton[0]);
-        /* Jeder dritte Halm bekommt eine zweite, hellere Spitze darüber. Das kostet ein Dreieck
-           und gibt der Fläche die Tiefe, die ein einzelner Halm allein nicht hat. */
-        if (r() < 0.38) {
-          const bx = px + nx * neige * 0.3, bz = pz + nz * neige * 0.3;
-          const hoch2 = hoehe * 1.5, kraft2 = hoch2 * 0.2;
-          B.dreieckWeich(
-            [bx - qx * breit * 0.7, y + hoehe * 0.3, bz - qz * breit * 0.7],
-            [bx + qx * breit * 0.7, y + hoehe * 0.3, bz + qz * breit * 0.7],
-            [px + nx * neige * 1.8, y + hoch2, pz + nz * neige * 1.8],
-            fest, fest, [nx * kraft2, 1, nz * kraft2], ton[1]);
-        }
+        /* Dicht an der Bande bleibt der Horst niedrig, damit kein Halm über den Balken ragt. */
+        grasHorst(B, gl, px, pz, gl.hoehe(px, pz), Math.min(1, 0.45 + rand * 0.28) * (0.8 + r() * 0.5), r);
       }
     }
   }
