@@ -247,6 +247,29 @@ for (const welt of BAHNEN3D.WELTEN) {
       if (drueber) melde(name, `über dem Loch liegen ${drueber} Bodendreiecke – da ist kein Loch, sondern nur eine Fahne im Gras`);
     }
 
+    /* Fällt ein Ball, der dicht am Becher liegen bleibt, auch wirklich hinein? Das war Fynns
+       zweiter Befund am Loch: Der Ball blieb davor stehen. Schuld war die Haftreibung – die Mulde
+       am Loch hat gut fünfzehn Prozent Gefälle, und genau so viel hält das Grün fest. Der Sog des
+       Bechers gab dem Ball in jedem Rechenschritt Geschwindigkeit, und die Haftreibung nahm sie
+       ihm im nächsten wieder weg.
+
+       Geprüft wird ringsum, weil das Gefälle nicht in jeder Richtung gleich ist: Ein Ball, der
+       oberhalb des Lochs liegt, hat es leichter als einer unterhalb. */
+    {
+      const [hx, hz] = gl.lochFeld;
+      let stehen = 0, weiteste = 0;
+      for (let i = 0; i < 12; i++) for (const d of [0.3, 0.45, 0.6]) {
+        const w = i / 12 * Math.PI * 2;
+        const x = hx + Math.cos(w) * d, z = hz + Math.sin(w) * d;
+        if (!gl.art(x, z).gemaeht) continue;         // nur, wo wirklich Grün liegt
+        const kugel = Physik3D.ball(gl, x, z);
+        kugel.ruht = false;
+        for (let k = 0; k < 600 && !kugel.ruht; k++) Physik3D.bewegen(kugel, gl, gl.lochFeld, 1 / 60);
+        if (!kugel.ein) { stehen++; weiteste = Math.max(weiteste, d); }
+      }
+      if (stehen) melde(name, `${stehen} abgelegte Bälle dicht am Loch (bis ${weiteste.toFixed(2)} Felder) fallen nicht hinein, sondern bleiben davor stehen`);
+    }
+
     zeile.push(`  ${name.padEnd(34)} ${gl.B}x${gl.T} Par ${b.par}  Hang am Loch ${(amLoch * 100).toFixed(0)} %  Felsnadeln ${gl.felsen.length}, Banden ${gl.wand.length - gl.felsen.length}`);
   }
 }

@@ -43,9 +43,12 @@ const Physik3D = (() => {
   const MAX_V = 13;               // Geschwindigkeit bei voller Kraft: gut 27 Felder auf Fairway
   /* Halbmesser des Bechers. Beim Golf ist das Loch gut zweieinhalbmal so breit wie der Ball;
      beim Minigolf eher mehr. Mit 0,155 war es kaum größer als der Ball und aus drei Feldern
-     Entfernung nicht mehr zu erkennen – jetzt knapp das Doppelte des Balls. */
-  const LOCH_R = 0.2;
+     Entfernung nicht mehr zu erkennen; mit 0,2 traf man, aber der Becher wirkte knapp. 0,25 ist
+     gut zweieinviertelmal der Balldurchmesser – das Maß eines richtigen Minigolflochs. */
+  const LOCH_R = 0.25;
   const LOCH_V = 2.8;             // schneller als das, und der Ball springt über das Loch hinweg
+  const LOCH_FANG = LOCH_R * 2.8; // so weit reicht der Sog des Bechers
+  const LOCH_ZUG = 7.5;           // wie kräftig er zieht (m/s² in der Mitte)
   const MAX_ZEIT = 30;            // Notbremse: nach so vielen Sekunden gilt ein Schlag als beendet
 
   /* Ein neuer Ball an einer Stelle des Geländes. */
@@ -106,7 +109,14 @@ const Physik3D = (() => {
          herunter. Mit ihr bleibt er stehen, wo er zur Ruhe kommt, rollt aber, einmal angestoßen,
          denselben Hang hinab. Genau so verhält sich ein Ball auf einem geneigten Grün. */
       const hangkraft = G * n[1] * Math.hypot(n[0], n[2]) * ROLL;
-      if (v < HAFT_V && hangkraft < (art.haft || 1.2)) { b.vx = 0; b.vz = 0; }
+      /* ...aber nicht rings um den Becher. Dort war sie der Grund, warum ein Ball vor dem Loch
+         stehen blieb, statt hineinzufallen: Die Mulde am Loch hat gut fünfzehn Prozent Gefälle,
+         und genau bis dorthin hält die Haftreibung auf dem Grün einen langsamen Ball fest. Der Sog
+         des Bechers gab ihm zwar in jedem Rechenschritt Geschwindigkeit – und diese Zeile nahm sie
+         ihm im nächsten wieder weg. Am Loch gilt darum nur die Rollreibung, und der Ball kriecht
+         die letzten Zentimeter von selbst hinein. */
+      const amLoch = loch && Math.hypot(loch[0] - b.x, loch[1] - b.z) < LOCH_FANG;
+      if (v < HAFT_V && hangkraft < (art.haft || 1.2) && !amLoch) { b.vx = 0; b.vz = 0; }
 
       /* Rauer Untergrund verzieht den Ball ein wenig. Ein Schlag durch hohes Gras, der genau
          geradeaus läuft, fühlt sich falsch an. */
@@ -184,11 +194,22 @@ const Physik3D = (() => {
     if (loch) {
       const dx = loch[0] - b.x, dz = loch[1] - b.z, d = Math.hypot(dx, dz);
       const v = Math.hypot(b.vx, b.vz);
-      if (d < LOCH_R * 2.6 && v < LOCH_V && !b.fliegt) {
-        const zug = (1 - d / (LOCH_R * 2.6)) * 5.5 * dt;
+      if (d < LOCH_FANG && v < LOCH_V && !b.fliegt) {
+        const zug = (1 - d / LOCH_FANG) * LOCH_ZUG * dt;
         b.vx += dx / (d || 1) * zug; b.vz += dz / (d || 1) * zug;
       }
+      /* Drinnen ist der Ball, sobald seine Mitte über der Öffnung steht – dort trägt ihn nichts
+         mehr. */
       if (d < LOCH_R && v < LOCH_V && !b.fliegt) {
+        b.ein = true; b.ruht = true;
+        b.vx = b.vz = b.vy = 0;
+        ereignisse.push({ was: 'ein', x: loch[0], z: loch[1] });
+        return;
+      }
+      /* Die Lippenregel: Ein fast stehender Ball, der mit seinem Rand über die Kante des Bechers
+         hängt, kippt hinein. So ist es auf jedem Platz – ein Ball auf der Lippe fällt –, und es
+         ist zugleich die Rettung für den Fall, dass er sich genau an der Kante festfährt. */
+      if (d < LOCH_R + BALL_R * 0.9 && v < 0.3 && !b.fliegt) {
         b.ein = true; b.ruht = true;
         b.vx = b.vz = b.vy = 0;
         ereignisse.push({ was: 'ein', x: loch[0], z: loch[1] });
