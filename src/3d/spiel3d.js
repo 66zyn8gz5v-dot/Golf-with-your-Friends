@@ -347,7 +347,7 @@ const Golf3D = (() => {
     /* Feste Welt: Gelände, Felsen, Burg, Deko, Bewuchs – alles in einen Sammler, damit möglichst
        wenige Gitter daraus werden. */
     const B = Bauen.sammler();
-    Welt3D.gelaendeNetz(B, gl, AUSSEN);
+    Welt3D.gelaendeNetz(B, gl, AUSSEN, 'innen');
     Welt3D.lochNetz(B, gl);
     Welt3D.felsenNetz(B, gl);
     Welt3D.bandenNetz(B, gl);
@@ -383,6 +383,12 @@ const Golf3D = (() => {
     const GR = Bauen.sammler();
     Welt3D.grasNetz(GR, gl, AUSSEN);
     for (const netz of GR.fertig(zeichner)) stuecke.push({ netz, wirftSchatten: false, beidseitig: true, gras: true });
+
+    /* Die Wiese draußen liegt in einem eigenen Gitter, weil sie das gemalte Grasbild trägt. Die
+       Spielfläche bekommt es nicht: Ein Rasen, durch den Grashalme gemalt sind, ist kein Rasen. */
+    const WI = Bauen.sammler();
+    Welt3D.gelaendeNetz(WI, gl, AUSSEN, 'aussen');
+    for (const netz of WI.fertig(zeichner)) stuecke.push({ netz, boden: true });
 
     /* Wasser als durchscheinende, bewegte Decke – zuletzt gezeichnet, ohne Schattenwurf. */
     const W = Bauen.sammler();

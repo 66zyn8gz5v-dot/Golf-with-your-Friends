@@ -114,6 +114,11 @@ const GL3D = (() => {
     uniform float uSchattenStaerke;
     uniform float uSchattenFeld;  // Kantenlänge des Schattenbildes in Bildpunkten
     uniform float uSchattenSpanne; // Tiefe der Sonnenkamera in Welteinheiten
+    uniform sampler2D uBodenBild;  // gemaltes Gras, kachelbar
+    uniform float uBoden;          // >0: Bodenfläche, die das Grasbild trägt
+    uniform float uBodenMass;      // wie viele Felder eine Kachel breit ist
+    uniform sampler2D uHalmBild;   // gemalte Grasbüschel auf durchsichtigem Grund
+    uniform float uGrasBild;       // >0: Grasbüschel; dann steht in vFarbe.xy die Stelle im Bild
 
     /* Die Tiefe steckt auf vier Kanälen zu je acht Stufen – zusammen 32 Stufen Genauigkeit.
        Ein einzelner Kanal (256 Stufen) gäbe sichtbare Streifen im Schatten. */
@@ -153,6 +158,63 @@ const GL3D = (() => {
     void main() {
       vec3 n = normalize(vNorm);
       vec3 farbe = vFarbe * uTon;
+
+      /* ---------- Das Grasbild auf dem Boden ----------
+
+         Halme aus Dreiecken bekommen eine Wiese nicht fein genug hin. Auf Fynns Vorlage sind es
+         mehrere hundert Halme auf den Quadratmeter; als Geometrie wären das eine halbe Million
+         Dreiecke für eine Bahn. Als gemaltes Bild kostet es nichts – ein Zugriff auf eine Textur
+         je Bildpunkt, und die Wiese bekommt genau die Feinheit, die dem Auge fehlte.
+
+         Die Bildkoordinaten kommen aus dem Ort in der Welt, nicht aus den Ecken: Für einen Boden,
+         der fast waagerecht liegt, ist das genau richtig und spart eine vierte Angabe an jeder
+         Ecke – die müsste sonst durch jedes Gitter und jeden Puffer mitgeschleppt werden.
+
+         Verrechnet wird das Bild als Helligkeit, nicht als Farbe. So behält jede Fläche ihre
+         eigene Farbe – Fairway hell, Rough dunkel, Sand gelb – und bekommt nur die Zeichnung des
+         Grases darübergelegt. Ein Bild, das die Farbe ersetzt, sähe auf Sand aus wie ein Rasen. */
+      /* ---------- Das gemalte Grasbild auf dem Boden ----------
+
+         Halme aus Dreiecken bekommen eine Wiese nicht fein genug hin. Auf Fynns Vorlage sind es
+         mehrere hundert Halme auf den Quadratmeter; als Geometrie wären das eine halbe Million
+         Dreiecke für eine Bahn. Als gemaltes Bild kostet es zwei Zugriffe je Bildpunkt.
+
+         Die Bildkoordinaten kommen aus dem Ort in der Welt, nicht aus den Ecken: Für einen Boden,
+         der fast waagerecht liegt, ist das genau richtig und spart eine vierte Angabe an jeder
+         Ecke – die müsste sonst durch jedes Gitter und jeden Puffer mitgeschleppt werden.
+
+         Zwei Kacheln übereinander, die zweite größer, gedreht und verschoben: Eine einzelne Kachel
+         wiederholt sich sichtbar, sobald man weiter weg steht, und dann sieht die Wiese aus wie
+         Tapete.
+
+         **Gelesen wird immer, angewendet nur auf dem Boden.** Das sieht nach Verschwendung aus und
+         ist doch der einzige Weg, der überall funktioniert: Ein texture2D innerhalb eines 'if'
+         hat in GLSL ES 1.00 keine festgelegte Detailstufe, weil der Schattierer die Ableitung der
+         Bildkoordinate nicht mehr sauber bilden kann. Genau das ist passiert – das Gras kam als
+         gleichmäßiges Grau heraus, der Mittelwert der ganzen Kachel, und keine Einstellung half.
+         Außerhalb der Abfrage gelesen, stimmt die Stufe. */
+      /* Die Büschelkarte. Gelesen wird sie immer, angewendet nur auf dem Gras – aus demselben
+         Grund wie beim Bodenbild gleich darunter: Ein texture2D innerhalb eines 'if' hat in
+         GLSL ES 1.00 keine festgelegte Detailstufe.
+
+         Was nicht bemalt ist, wird weggeworfen statt durchsichtig gezeichnet. Durchsichtigkeit
+         müsste von hinten nach vorn sortiert werden, und das geht bei Zehntausenden von Karten
+         nicht; 'discard' braucht keine Reihenfolge und schreibt trotzdem in den Tiefenspeicher. */
+      vec4 halm = texture2D(uHalmBild, vFarbe.xy);
+      if (uGrasBild > 0.5) {
+        if (halm.a < 0.45) discard;
+        /* In vFarbe.z steht die Helligkeit dieses Büschels – so sind nicht alle gleich. */
+        farbe = halm.rgb * (0.72 + vFarbe.z * 0.56) * uTon;
+      }
+
+      vec2 bodenUv = vWeltOrt.xz / uBodenMass;
+      float g1 = texture2D(uBodenBild, bodenUv).g;
+      float g2 = texture2D(uBodenBild, bodenUv.yx * 0.43 + vec2(0.21, 0.63)).g;
+      float grasBild = g1 * 0.68 + g2 * 0.32;
+      /* Verrechnet als Helligkeit, nicht als Farbe: So behält jede Fläche ihre eigene – Fairway
+         hell, Rough dunkel, Sand gelb – und bekommt nur die Zeichnung darübergelegt. Ein Bild, das
+         die Farbe ersetzt, sähe auf Sand aus wie ein Rasen. */
+      farbe *= mix(1.0, 0.52 + grasBild * 1.06, step(0.5, uBoden));
 
       if (uLichtAnteil < 0.5) {
         /* Flach: Himmel und Wolken tragen ihre Farbe schon fertig in den Ecken. */
@@ -275,6 +337,136 @@ const GL3D = (() => {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
+    /* ---------- Das gemalte Grasbild ----------
+       Gezeichnet wird es beim Start auf eine gewöhnliche 2D-Leinwand: ein paar tausend schlanke
+       Halme, alle ungefähr in dieselbe Richtung geneigt, in vielen Grüntönen übereinander. Genau
+       das, was Fynns Vorlage zeigt – und was mit Dreiecken unbezahlbar wäre.
+
+       Kachelbar wird es dadurch, dass jeder Halm neunmal gezeichnet wird, einmal je Nachbarfeld.
+       Was oben hinausläuft, kommt unten wieder herein; die acht Kopien außerhalb schneidet die
+       Leinwand von selbst weg. Das ist die billigste Art, einen nahtlosen Rand zu bekommen, und
+       sie kostet nur beim Start ein paar Millisekunden. */
+    /* ---------- Das Gras ----------
+
+       Fynn hat eine gemalte Grasfläche mitgebracht und gesagt: „Nimm doch bitte das Design."
+       Genau das passiert hier. Sie liegt als src/3d/gras.jpg im Spiel, kachelt sich nahtlos und
+       wird zweimal gebraucht:
+
+       **Als Boden.** Über die ganze Wiese gelegt gibt sie ihr die Feinheit, die mit Dreiecken
+       unbezahlbar wäre – mehrere hundert Halme auf den Quadratmeter.
+
+       **Als Büschelkarte.** Dieselbe Fläche, aber durch eine Schablone aus Halmformen geschnitten:
+       Heraus kommen vier Grasbüschel auf durchsichtigem Grund. Im Spiel steht jedes als flache
+       Karte aufrecht in der Wiese – das Verfahren, das Fynn „zweieinhalb D" nennt. Vier Dreiecke
+       zeigen so fünfzehn gemalte Halme.
+
+       Die Schablone wird hier gezeichnet und nicht mitgeliefert: Sie ist reine Form, kein Bild,
+       und als Code ist sie fünfzig Zeilen statt fünfzig Kilobyte. */
+
+    /* Ein Halmumriss für die Schablone: unten am breitesten, zur Spitze auslaufend, mit Bogen. */
+    function halmUmriss(c, x, y, w, lang, breit, bogen) {
+      const N = 7;
+      const links = [], rechts = [];
+      const kx = Math.cos(w), ky = Math.sin(w), qx = -ky, qy = kx;
+      for (let i = 0; i <= N; i++) {
+        const t = i / N;
+        const mx = x + kx * lang * t + qx * bogen * Math.sin(Math.PI * t * 0.75);
+        const my = y + ky * lang * t + qy * bogen * Math.sin(Math.PI * t * 0.75);
+        /* Das Größte bei einem Sechstel der Länge: Ein Blatt, das unten am breitesten ist, sieht
+           aus wie ein Speer; so sieht es aus wie Gras. */
+        const halb = breit * Math.pow(1 - t, 0.62) * Math.min(1, 0.35 + t * 5);
+        links.push([mx - qx * halb, my - qy * halb]);
+        rechts.push([mx + qx * halb, my + qy * halb]);
+      }
+      c.beginPath();
+      c.moveTo(links[0][0], links[0][1]);
+      for (let i = 1; i <= N; i++) c.lineTo(links[i][0], links[i][1]);
+      for (let i = N; i >= 0; i--) c.lineTo(rechts[i][0], rechts[i][1]);
+      c.closePath();
+      c.fill();
+    }
+
+    /* Vier Büschel aus Fynns Gras, jedes in einem Viertel des Bildes. Gemalt wird zuerst das Gras,
+       dann wird mit 'destination-in' alles weggenommen, was nicht innerhalb der Halmformen liegt.
+       So haben die Karten die Farben und die Feinheit der Vorlage und trotzdem einen Umriss aus
+       einzelnen Halmen – ein rechteckiger Ausschnitt sähe aus wie ein Stück Teppich. */
+    function bueschelBildMachen(bild, kante) {
+      const lw = document.createElement('canvas');
+      lw.width = kante; lw.height = kante;
+      const c = lw.getContext('2d');
+      const zuf = M3.zufall(776655);
+      const feld = kante / 2;
+
+      /* Die Schablone wird auf einer EIGENEN Leinwand gebaut und erst am Ende in einem Zug
+         angewendet. Das ist keine Feinheit, sondern notwendig: 'destination-in' rechnet jedes Mal
+         gegen das ganze Bild. Siebzehn Halme nacheinander damit zu füllen heißt, dass jeder Halm
+         alle vorherigen wieder wegnimmt – übrig bleibt der letzte. Genau so war es, und das Bild
+         kam leer heraus. */
+      const maske = document.createElement('canvas');
+      maske.width = kante; maske.height = kante;
+      const m = maske.getContext('2d');
+      m.fillStyle = '#fff';
+
+      for (let f = 0; f < 4; f++) {
+        const ox = (f % 2) * feld, oy = Math.floor(f / 2) * feld;
+        /* Für jedes Viertel ein anderer Ausschnitt der Vorlage, damit die vier Büschel nicht
+           viermal dasselbe sind. */
+        const q = bild.width * 0.45;
+        c.drawImage(bild, zuf() * (bild.width - q), zuf() * (bild.height - q), q, q, ox, oy, feld, feld);
+        /* Jedes Viertel wird beim Zeichnen der Schablone begrenzt: Ein Halm, der über die Kante
+           wächst, stünde im Spiel als abgeschnittenes Stück im Nachbarbüschel. */
+        m.save();
+        m.beginPath(); m.rect(ox, oy, feld, feld); m.clip();
+        const fussY = oy + feld * 0.995, mitte = ox + feld * 0.5;
+        for (let i = 0; i < 20; i++) {
+          /* Fächerförmig vom Fuß weg: in der Mitte steil, außen flach. */
+          const seite = (zuf() - 0.5) * 2;
+          const w = -Math.PI / 2 + seite * (0.32 + zuf() * 0.55);
+          const lang = feld * (0.55 + zuf() * 0.42) * (1 - Math.abs(seite) * 0.28);
+          const breit = feld * (0.03 + zuf() * 0.025);
+          const bogen = seite * lang * (0.1 + zuf() * 0.22);
+          halmUmriss(m, mitte + seite * feld * 0.17, fussY, w, lang, breit, bogen);
+        }
+        m.restore();
+      }
+      c.globalCompositeOperation = 'destination-in';
+      c.drawImage(maske, 0, 0);
+      return lw;
+    }
+
+    /* Beide Texturen bekommen zuerst einen einzelnen grünen Punkt und werden ersetzt, sobald das
+       Bild da ist. So läuft die erste Bahn auch dann, wenn das Laden hakt – sie ist dann eben
+       einfarbig grün, und niemand steht vor einem schwarzen Schirm. */
+    function texturMachen(wiederholen) {
+      const t = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, t);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([90, 150, 70, 255]));
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wiederholen ? gl.REPEAT : gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wiederholen ? gl.REPEAT : gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      return t;
+    }
+    const bodenTextur = texturMachen(true);
+    const bueschelTextur = texturMachen(false);
+
+    function bildEinsetzen(t, quelle) {
+      gl.bindTexture(gl.TEXTURE_2D, t);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, quelle);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+      gl.generateMipmap(gl.TEXTURE_2D);
+    }
+
+    const grasBild = new Image();
+    grasBild.onload = () => {
+      try {
+        bildEinsetzen(bodenTextur, grasBild);
+        bildEinsetzen(bueschelTextur, bueschelBildMachen(grasBild, klein ? 512 : 1024));
+      } catch (e) { console.warn('3D: Gras konnte nicht eingesetzt werden –', e.message); }
+    };
+    /* Die Adresse steht relativ zur Seite, nicht zu dieser Datei – beide liegen in src/3d. */
+    grasBild.src = 'gras.jpg';
+
     const schattenTiefe = gl.createRenderbuffer();
     gl.bindRenderbuffer(gl.RENDERBUFFER, schattenTiefe);
     gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, SCHATTENFELD, SCHATTENFELD);
@@ -288,6 +480,10 @@ const GL3D = (() => {
 
     const z = {
       gl, leinwand, breite: 1, hoehe: 1, schattenGeht, SCHATTENFELD,
+      /* Wie breit eine Kachel des Grasbildes in Feldern ist. Knapp zwei: Dann sind die gemalten
+         Halme etwa eine Handbreit lang – so groß wie die aus Dreiecken daneben. Größer gewählt
+         sieht man die Kachel sich wiederholen, kleiner wird aus dem Gras eine Körnung. */
+      bodenMass: 1.35,
       /* Wetter und Licht. Jede Welt setzt das um; die Werte hier sind der sonnige Mittag der Wiese. */
       licht: {
         sonne: [0.44, 0.70, 0.56],                 // Richtung ZUR Sonne
@@ -362,6 +558,8 @@ const GL3D = (() => {
       if (u.uTon) gl.uniform3fv(u.uTon, s.ton || [1, 1, 1]);
       if (u.uWelle) gl.uniform1f(u.uWelle, s.welle ? 1 : 0);
       if (u.uGras) gl.uniform1f(u.uGras, s.gras ? 1 : 0);
+      if (u.uBoden) gl.uniform1f(u.uBoden, s.boden ? 1 : 0);
+      if (u.uGrasBild) gl.uniform1f(u.uGrasBild, s.gras ? 1 : 0);
       if (u.uSchattenSicht && schattenMat) gl.uniformMatrix4fv(u.uSchattenSicht, false, schattenMat);
       binden(s.netz);
       gl.drawElements(gl.TRIANGLES, s.netz.anzahl, gl.UNSIGNED_SHORT, 0);
@@ -424,6 +622,13 @@ const GL3D = (() => {
         gl.bindTexture(gl.TEXTURE_2D, schattenTextur);
         gl.uniform1i(u.uSchatten, 0);
       }
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, bodenTextur);
+      if (u.uBodenBild) gl.uniform1i(u.uBodenBild, 1);
+      if (u.uBodenMass) gl.uniform1f(u.uBodenMass, z.bodenMass);
+      gl.activeTexture(gl.TEXTURE2);
+      gl.bindTexture(gl.TEXTURE_2D, bueschelTextur);
+      if (u.uHalmBild) gl.uniform1i(u.uHalmBild, 2);
 
       gl.disable(gl.BLEND);
       gl.depthMask(true);

@@ -99,6 +99,18 @@ const Bauen = (() => {
       },
 
       /* Ein Dreieck mit eigenen Normalen je Ecke – für alles Runde, das weich wirken soll. */
+      /* Ein Dreieck, bei dem jede Ecke ihre eigene Normale UND ihre eigene Farbe trägt. Gebraucht
+         wird das für die Grasbüschel: Dort steht in der „Farbe" keine Farbe, sondern die Stelle im
+         gemalten Bild – und die ist an jeder Ecke eine andere. */
+      dreieckBunt(a, b, c, na, nb, nc, ca, cb, cc) {
+        platzFuer(3);
+        const i = ecke(a[0], a[1], a[2], na[0], na[1], na[2], ca);
+        ecke(b[0], b[1], b[2], nb[0], nb[1], nb[2], cb);
+        ecke(c[0], c[1], c[2], nc[0], nc[1], nc[2], cc);
+        ix.push(i, i + 1, i + 2);
+        return B;
+      },
+
       dreieckWeich(a, b, c, na, nb, nc, col) {
         col = farbe(col);
         platzFuer(3);

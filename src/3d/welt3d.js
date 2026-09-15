@@ -252,8 +252,13 @@ const Welt3D = (() => {
      Flicken ersetzt wird: drei mal drei Maschen des feinen Gitters. */
   const LOCH_FELD = 0.75;
 
-  function gelaendeNetz(B, gl, aussenRand) {
-    gitter(B, gl, 0.5, -aussenRand, gl.B + aussenRand, -aussenRand, gl.T + aussenRand, null, gl.lochFeld);
+  /* 'wahl' teilt den Boden in zwei Hälften: 'innen' ist die Spielfläche, 'aussen' alles andere.
+     Gebraucht wird das für das gemalte Grasbild – es liegt nur auf der Wiese draußen. Auf einer
+     gemähten Spielfläche hätte es nichts verloren: Die soll gleichmäßig aussehen, und ein Rasen,
+     durch den Grashalme gemalt sind, ist kein Rasen mehr. Ohne Angabe kommt alles in ein Gitter,
+     so wie es die Prüfwerkzeuge erwarten. */
+  function gelaendeNetz(B, gl, aussenRand, wahl) {
+    gitter(B, gl, 0.5, -aussenRand, gl.B + aussenRand, -aussenRand, gl.T + aussenRand, null, gl.lochFeld, wahl);
     /* Und weit draußen dasselbe noch einmal, grob: bis zu den fernen Hügeln. Ohne das hört der
        Boden ein Stück vor dem Horizont auf, und in den Ecken des Bildes schaut der Himmel unter
        der Landschaft hervor. Zwei Einheiten Schrittweite reichen dort – im Nebel und aus vierzig
@@ -261,12 +266,12 @@ const Welt3D = (() => {
     const innen = [-aussenRand, gl.B + aussenRand, -aussenRand, gl.T + aussenRand];
     const weit = Math.max(gl.B, gl.T) * 0.5 + 52;
     const mx = gl.B / 2, mz = gl.T / 2;
-    gitter(B, gl, 2, mx - weit, mx + weit, mz - weit, mz + weit, innen, null);
+    if (wahl !== 'innen') gitter(B, gl, 2, mx - weit, mx + weit, mz - weit, mz + weit, innen, null, wahl);
   }
 
   /* Ein Stück Gelände als Gitter. 'aussparen' lässt einen Bereich frei – so kann das grobe
      Gitter um das feine herumgelegt werden, ohne es zu überdecken. */
-  function gitter(B, gl, S, xa, xb, za, zb, aussparen, loch) {
+  function gitter(B, gl, S, xa, xb, za, zb, aussparen, loch, wahl) {
     const x0 = Math.floor(xa / S) * S, x1 = Math.ceil(xb / S) * S;
     const z0 = Math.floor(za / S) * S, z1 = Math.ceil(zb / S) * S;
     const nx = Math.round((x1 - x0) / S), nz = Math.round((z1 - z0) / S);
@@ -286,6 +291,13 @@ const Welt3D = (() => {
          runde Öffnung hat. Ohne das liegt die Wiese als geschlossene Decke über dem Becher, und
          vom Loch ist nichts zu sehen als der Fahnenmast, der im Gras steckt. */
       if (loch && Math.abs(mx - loch[0]) < LOCH_FELD && Math.abs(mz - loch[1]) < LOCH_FELD) continue;
+      if (wahl) {
+        /* Die Grenze liegt auf halbem Feld: Bis dorthin reicht die Masche, die zur Spielfläche
+           gehört. Eine Masche, die genau auf der Kante liegt, kommt nach innen – sonst bliebe
+           zwischen Bahn und Wiese ein Streifen ohne Boden. */
+        const drin = gl.zumRand(mx, mz) < 0.5;
+        if ((wahl === 'innen') !== drin) continue;
+      }
       const a = gl.art(mx, mz);
       /* Unter Wasser liegt Bachgrund, kein Gras – die Farbe dafür steckt schon in ART['w'].
 
@@ -900,112 +912,66 @@ const Welt3D = (() => {
 
   /* ---------- Der Grasteppich ----------
 
-     Fynn: „Das Gras muss überall außerhalb sein – mehr decken und nicht so einzelne Sträucher",
-     und danach: „Wir brauchen dynamischeres Gras. Das Gras darf auch nicht über den Holzbalken."
+     Der Weg hierher ging über vier Anläufe, und jeder hat etwas gelernt:
 
-     Drei Sachen stecken darin, und alle drei sind hier gelöst.
+     1. Einzelne Büschel aus Kegeln – „mehr decken und nicht so einzelne Sträucher".
+     2. Einzelne Halme als flache Dreiecke, dicht gestreut – „zu stachelig": Einzeln stehende
+        Dreiecke geben der Wiese eine Kontur aus lauter Spitzen.
+     3. Halme in Horsten, oben stumpf – besser, aber immer noch kantig: Ein Dreieck hat keine
+        weiche Kante, und fünfzehn Halme aus Dreiecken kosten hundertfünfzig.
+     4. Und schließlich Fynns Fingerzeig auf ein fertiges Spiel: „So wie hier, also nur
+        zweieinhalb D."
 
-     **Decken.** Der erste Versuch setzte Büschel aus mehreren Halmen, und um jedes Büschel blieb
-     eine Lücke – man sah Grasbüschel auf einem grünen Fußboden statt einer Wiese. Eine Wiese ist
-     kein Boden mit Gras darauf, eine Wiese IST Gras. Der Trick dafür: **Ein Halm ist ein einziges
-     Dreieck.** Als Kegel kostet ein Halm vier, ein Büschel aus sechsen vierundzwanzig – bei der
-     Menge, die zum Decken nötig ist, wären das eine halbe Million. Als flaches Dreieck kostet er
-     eines, und der ganze Boden lässt sich mit einzelnen Halmen bestellen: gut zwei Dutzend je
-     Feld, also alle zwanzig Zentimeter einer. Dann überschneiden sich ihre Umrisse.
+     **Ein Büschel ist ein gekreuztes Paar bemalter Karten.** Vier Dreiecke zeigen fünfzehn
+     gemalte Halme mit Bogen, Verlauf und weicher Spitze – als Geometrie kostete dasselbe das
+     Zehnfache und sähe trotzdem kantiger aus. Das Bild dazu wird beim Start gemalt (gl3d.js).
 
-     Damit ein einseitiges Dreieck von beiden Seiten zu sehen ist, wird der Teppich beidseitig
-     gezeichnet (siehe gl3d.js).
+     Dazu liegt auf dem Boden selbst ein zweites gemaltes Bild, eine kachelbare Grasfläche. Die
+     Karten geben der Wiese den Umriss, wenn man flach darüberschaut; das Bodenbild gibt ihr die
+     Feinheit, wenn man von oben daraufsieht. Beides zusammen ist die Wiese.
 
-     **Wind.** Beim Gras trägt die Normale nicht die Richtung der Fläche, sondern wie weit sich die
-     Ecke im Wind neigen darf: am Fuß null, an der Spitze am meisten. Der Schattierer macht daraus
-     eine Böe, die über die Wiese läuft. Das Licht bekommt jeder Halm senkrecht von oben – die
-     echte Normale eines fast senkrechten Dreiecks spränge bei jeder Kameradrehung um, und die
-     Wiese flimmerte.
+     Zwei Regeln halten das Gras vom Holz fern: Es beginnt erst hinter der Bande (die Spielfläche
+     reicht bis 0,5, der Balken bis 0,85 – gewachsen wird ab 0,95), und dicht dahinter bleiben die
+     Karten niedrig. Und Schatten wirft der Teppich keinen: Der Schattendurchgang rechnet jedes
+     Dreieck ein zweites Mal, und der Schatten eines Grashalms ist auf dem Schattenbild schmaler
+     als ein Bildpunkt. */
+  /* Ein Grasbüschel als gekreuztes Kartenpaar.
 
-     **Nicht über den Balken.** Zweierlei hält das Gras vom Holz fern: Es beginnt erst hinter der
-     Bande (die Spielfläche reicht bis 0,5, der Balken bis 0,85 – gewachsen wird ab 0,95), und
-     dicht dahinter bleibt es niedrig. Sonst sticht ein Halm durch den Balken hindurch, und das
-     ist genau die Art Fehler, die man nicht mehr übersieht, wenn man sie einmal gesehen hat.
+     Fynn hat auf ein Bild aus einem fertigen Spiel gezeigt und gesagt: „So wie hier, also nur
+     zweieinhalb D." Genau das ist es. Ein Büschel ist keine Ansammlung von Halmen aus Dreiecken,
+     sondern zwei flache, aufrecht stehende Karten, auf die ein Büschel gemalt ist – gekreuzt, damit
+     es aus jeder Richtung eines ist und nicht von der Seite verschwindet.
 
-     Und Schatten wirft der Teppich keinen: Der Schattendurchgang rechnet jedes Dreieck ein zweites
-     Mal, und der Schatten eines Grashalms ist auf dem Schattenbild schmaler als ein Bildpunkt. */
-  const GRAS_AB = 0.95;            // hinter der Bande fängt die Wiese an
-  const GRAS_VOLL = 7, GRAS_WEIT = 17, GRAS_HORSTE = 4;
-  /* Acht Grüntöne statt vier, und jeder Horst bekommt darauf noch eine eigene Helligkeit. Eine
-     Wiese aus wenigen Tönen liest sich als Fläche; erst die Streuung macht daraus Textur. Die
-     zweite Farbe jedes Paars ist die Spitze – oben heller, wie bei allem Gewachsenen. */
-  const GRAS_TOENE = [
-    ['#3a7429', '#79c049'], ['#43852e', '#86cc53'], ['#4d8c36', '#91cf5c'], ['#356f30', '#6cb64c'],
-    ['#2f6a2a', '#63ad44'], ['#548f31', '#9ad257'], ['#3c7c38', '#72bb59'], ['#477f26', '#7fc23f'],
-  ];
+     Der Gewinn ist der Grund, warum das jedes Spiel so macht: Vier Dreiecke zeigen fünfzehn
+     gemalte Halme, jeder mit Bogen, Verlauf und weicher Spitze. Dieselben fünfzehn Halme als
+     Geometrie kosteten das Zehnfache und sähen trotzdem kantiger aus, weil ein Dreieck keine
+     weiche Kante hat. Das war der ganze Weg von „zu stachelig" bis hierher.
 
-  /* Ein Horst: mehrere Halme aus einem Punkt, in verschiedenen Höhen und Richtungen.
-
-     Dass sie aus EINEM Punkt kommen, ist die ganze Antwort auf „nicht so stachelig". Einzeln über
-     die Fläche gestreute Halme stehen wie Nägel nebeneinander, und die Wiese bekommt eine Kontur
-     aus lauter Spitzen. Aus einem Punkt heraus überschneiden sie sich, die kurzen füllen die
-     Lücken zwischen den langen, und die Kontur des Horstes ist eine weiche Kuppe. Es sind gleich
-     viele Halme wie vorher – sie stehen nur beieinander.
-
-     Zwei Sorten Halm, und die Mischung ist der Rest der Antwort:
-
-     **Das liegende Blatt** ist breit, kurz und fast waagerecht. Es steht nicht in die Höhe, es
-     deckt den Boden – das ist die Textur der Wiese. Ein Dreieck genügt: Von schräg oben sieht man
-     ohnehin nur seinen Umriss.
-
-     **Der stehende Halm** gibt dem Horst Höhe, und er ist ein Viereck, kein Dreieck. Genau das ist
-     der Unterschied zwischen Gras und Stacheln: Ein Dreieck läuft in eine Nadelspitze aus, ein
-     Viereck endet in einer kurzen, breiten Kante – stumpf, wie ein Grashalm eben endet. Dazu neigt
-     er sich weit zur Seite, statt senkrecht zu stehen; ein Halm, der sich überbiegt, ist Gras, ein
-     aufrechter ist ein Dorn. */
-  function grasHorst(B, gl, px, pz, y, hoch, r) {
+     Wo sonst die Farbe einer Ecke steht, steht bei den Karten die Stelle im gemalten Bild (x, y)
+     und die Helligkeit dieses Büschels (z). Der Schattierer weiß das, weil das Stück als Gras
+     gekennzeichnet ist. So braucht keine Ecke eine vierte Angabe, und kein Puffer muss breiter
+     werden. */
+  function grasKarte(B, px, pz, y, breit, hoch, w, feld, schein, r) {
     const fest = [0, 1, 0];
-    const paar = GRAS_TOENE[Math.floor(r() * GRAS_TOENE.length)];
-    const schein = 0.86 + r() * 0.3;
-    const unten = Bauen.stufe(paar[0], schein), oben = Bauen.stufe(paar[1], schein);
-    const dreh = r() * M3.TAU3;
-    const blaetter = 3 + Math.floor(r() * 2);
-    const halme = 2 + Math.floor(r() * 2);
-    const n = blaetter + halme;
-    for (let i = 0; i < n; i++) {
-      /* Die Richtungen werden über den Kreis verteilt und dann verwackelt – rein zufällig gewählt
-         zeigen erfahrungsgemäß drei von fünf Halmen in dieselbe Ecke. */
-      const w = dreh + (i + r() * 0.8) / n * M3.TAU3;
-      const nx = Math.cos(w), nz = Math.sin(w);
-      const qx = -nz, qz = nx;
-      const fx = px + nx * 0.04 * r(), fz = pz + nz * 0.04 * r();   // Fußpunkte leicht gestreut
-      if (i < blaetter) {
-        const lang = (0.17 + r() * 0.22) * hoch;
-        const breit = (0.09 + r() * 0.09) * hoch;
-        const kipp = lang * (0.1 + r() * 0.28);
-        B.dreieckWeich(
-          [fx - qx * breit, y, fz - qz * breit],
-          [fx + qx * breit, y, fz + qz * breit],
-          [fx + nx * lang, y + kipp, fz + nz * lang],
-          fest, fest, [nx * lang * 0.1, 1, nz * lang * 0.1], r() < 0.5 ? unten : oben);
-        continue;
-      }
-      /* Die stehenden Halme eines Horstes sind absichtlich verschieden lang: Gleich hohe Halme
-         ergeben eine abgeschnittene Bürste. */
-      const hoehe = (0.3 + r() * 0.45) * hoch;
-      const breit = (0.055 + r() * 0.05) * hoch;
-      const neige = (0.45 + r() * 0.5) * hoehe;
-      const kraft = hoehe * (0.16 + r() * 0.14);
-      const wiegen = [nx * kraft, 1, nz * kraft];
-      const sx = fx + nx * neige, sz = fz + nz * neige, sy = y + hoehe;
-      const kappe = breit * 0.78;                                   // stumpfes Ende statt Spitze
-      B.dreieckWeich(
-        [fx - qx * breit, y, fz - qz * breit],
-        [fx + qx * breit, y, fz + qz * breit],
-        [sx + qx * kappe, sy, sz + qz * kappe],
-        fest, fest, wiegen, unten);
-      B.dreieckWeich(
-        [fx - qx * breit, y, fz - qz * breit],
-        [sx + qx * kappe, sy, sz + qz * kappe],
-        [sx - qx * kappe, sy, sz - qz * kappe],
-        fest, wiegen, wiegen, oben);
-    }
+    /* Der Wind greift oben an; unten steht die Karte im Boden. */
+    const kraft = hoch * (0.14 + r() * 0.12);
+    const nx = Math.cos(w + Math.PI * 0.5), nz = Math.sin(w + Math.PI * 0.5);
+    const wiegen = [nx * kraft, 1, nz * kraft];
+    const qx = Math.cos(w) * breit * 0.5, qz = Math.sin(w) * breit * 0.5;
+    /* Die vier Felder des Bildes liegen als Zweiertafel nebeneinander; 'feld' wählt eines aus.
+       Ein Hauch Rand verhindert, dass beim Verkleinern Farbe aus dem Nachbarfeld hereinblutet. */
+    const u0 = (feld % 2) * 0.5 + 0.008, v0 = Math.floor(feld / 2) * 0.5 + 0.008;
+    const u1 = u0 + 0.484, v1 = v0 + 0.484;
+    const lu = [u0, v1, schein], ru = [u1, v1, schein];     // unten links/rechts
+    const lo = [u0, v0, schein], ro = [u1, v0, schein];     // oben links/rechts
+    const A = [px - qx, y, pz - qz], Bp = [px + qx, y, pz + qz];
+    const C = [px + qx, y + hoch, pz + qz], D = [px - qx, y + hoch, pz - qz];
+    B.dreieckBunt(A, Bp, C, fest, fest, wiegen, lu, ru, ro);
+    B.dreieckBunt(A, C, D, fest, wiegen, wiegen, lu, ro, lo);
   }
+
+  const GRAS_AB = 0.95;            // hinter der Bande fängt die Wiese an
+  const GRAS_VOLL = 7, GRAS_WEIT = 17, GRAS_HORSTE = 7;
 
   function grasNetz(B, gl, aussenRand) {
     const a = gl.bahn.autoDeko || {};
@@ -1021,8 +987,18 @@ const Welt3D = (() => {
         if (rand < GRAS_AB) continue;
         const art = gl.art(px, pz);
         if (art.wasser || art.name === 'Sand') continue;
-        /* Dicht an der Bande bleibt der Horst niedrig, damit kein Halm über den Balken ragt. */
-        grasHorst(B, gl, px, pz, gl.hoehe(px, pz), Math.min(1, 0.45 + rand * 0.28) * (0.8 + r() * 0.5), r);
+        const y = gl.hoehe(px, pz);
+        /* Dicht an der Bande bleibt das Büschel niedrig, damit keines über den Balken ragt. */
+        const hoch = (0.3 + r() * 0.26) * Math.min(1, 0.45 + rand * 0.3);
+        const breit = hoch * (1.05 + r() * 0.5);
+        const w = r() * M3.TAU3;
+        const feld = Math.floor(r() * 4);
+        const schein = 0.72 + r() * 0.5;
+        grasKarte(B, px, pz, y, breit, hoch, w, feld, schein, r);
+        /* Die zweite Karte quer dazu. Ohne sie wird das Büschel beim Drehen der Kamera zu einem
+           Strich – der bekannte Preis flacher Karten, und mit zwei Dreiecken bezahlt. */
+        grasKarte(B, px, pz, y, breit * (0.8 + r() * 0.3), hoch * (0.85 + r() * 0.25),
+          w + Math.PI * 0.5, Math.floor(r() * 4), schein * 0.94, r);
       }
     }
   }

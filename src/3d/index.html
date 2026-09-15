@@ -28,6 +28,11 @@
     object-src 'none';
     form-action 'none'">
   <link rel="manifest" href="manifest3d.webmanifest">
+  <!-- Das gemalte Gras. Es liegt als Bild auf dem Boden der Wiese und wird beim Start in die
+       Grafikkarte geladen. Hier steht es als "preload", damit es früh unterwegs ist – und damit
+       die Auslieferungsprüfung es sieht: Die liest die Seite nach src/href ab, und was nur im
+       Quelltext einer Datei steht, findet sie nicht. -->
+  <link rel="preload" as="image" href="gras.jpg">
   <link rel="icon" type="image/png" sizes="192x192" href="../../icons/icon-192.png">
   <link rel="apple-touch-icon" href="../../icons/apple-touch-icon.png">
   <title>Fantasy Golf 3D</title>

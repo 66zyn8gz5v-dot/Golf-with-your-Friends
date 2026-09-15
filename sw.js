@@ -16,6 +16,7 @@ const APP_FILES = [
   './src/3d/', './src/3d/index.html', './src/3d/stil3d.css', './src/3d/manifest3d.webmanifest', './src/3d/start3d.js',
   './src/3d/mathe3d.js', './src/3d/gl3d.js', './src/3d/bauen3d.js', './src/3d/deko3d.js', './src/3d/bahnen3d.js',
   './src/3d/welt3d.js', './src/3d/physik3d.js', './src/3d/karte3d.js', './src/3d/spiel3d.js',
+  './src/3d/gras.jpg',
   './icons/icon-192.png', './icons/apple-touch-icon.png',
   /* icon-512 und icon-maskable-512 fehlen hier mit Absicht: Seit sie das gemalte Wappen
      tragen, wiegt jedes gut 700 kB, und gebraucht werden sie nur beim Einrichten auf dem
