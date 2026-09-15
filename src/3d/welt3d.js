@@ -890,26 +890,87 @@ const Welt3D = (() => {
     }
   }
 
-  /* Der Grassaum an der Bande. Auf Fynns Vorbild wächst das Gras der Wiese unmittelbar gegen das
-     Holz und steht dabei höher als die Bande selbst – das ist es, was die Bahn in die Landschaft
-     setzt, statt sie darauf zu legen. Ohne den Saum stößt gemähtes Grün an einen Balken und
-     dahinter fängt eine zweite, glatte Fläche an; mit ihm hat die Bahn einen Rand.
+  /* ---------- Der Grasteppich ----------
 
-     Gezeichnet wird je Bandenkante ein kleines Büschel dicht dahinter, mit etwas Zufall in Ort,
-     Größe und Ton. Sie stehen außerhalb der Bande und haben mit der Kugelrechnung nichts zu tun. */
-  function saumNetz(B, gl) {
-    const r = M3.zufall(4711);
-    for (const k of gl.kanten) {
-      for (let i = 0; i < 2; i++) {
-        /* Dicht hinter dem Balken: eine halbe Feldbreite nach außen, quer dazu über die Kante
-           verteilt. */
-        const laengs = (i + 0.25 + r() * 0.5) / 2 - 0.5;
-        const raus = 0.72 + r() * 0.5;
-        const x = k.ix + 0.5 + k.dx * raus - k.dz * laengs;
-        const z = k.iz + 0.5 + k.dz * raus + k.dx * laengs;
-        if (gl.zumRand(x, z) < 0.2) continue;             // nicht auf die Bahn
-        B.stelle(x, gl.hoehe(x, z), z, r() * 6, 0.85 + r() * 0.6,
-          b => Deko3D.grasbueschel(b, 1.35, r() < 0.5 ? '#57993a' : '#67aa42', Math.round(x * 37 + z * 13) + i));
+     Fynn: „Das Gras muss überall außerhalb sein – mehr decken und nicht so einzelne Sträucher",
+     und danach: „Wir brauchen dynamischeres Gras. Das Gras darf auch nicht über den Holzbalken."
+
+     Drei Sachen stecken darin, und alle drei sind hier gelöst.
+
+     **Decken.** Der erste Versuch setzte Büschel aus mehreren Halmen, und um jedes Büschel blieb
+     eine Lücke – man sah Grasbüschel auf einem grünen Fußboden statt einer Wiese. Eine Wiese ist
+     kein Boden mit Gras darauf, eine Wiese IST Gras. Der Trick dafür: **Ein Halm ist ein einziges
+     Dreieck.** Als Kegel kostet ein Halm vier, ein Büschel aus sechsen vierundzwanzig – bei der
+     Menge, die zum Decken nötig ist, wären das eine halbe Million. Als flaches Dreieck kostet er
+     eines, und der ganze Boden lässt sich mit einzelnen Halmen bestellen: gut zwei Dutzend je
+     Feld, also alle zwanzig Zentimeter einer. Dann überschneiden sich ihre Umrisse.
+
+     Damit ein einseitiges Dreieck von beiden Seiten zu sehen ist, wird der Teppich beidseitig
+     gezeichnet (siehe gl3d.js).
+
+     **Wind.** Beim Gras trägt die Normale nicht die Richtung der Fläche, sondern wie weit sich die
+     Ecke im Wind neigen darf: am Fuß null, an der Spitze am meisten. Der Schattierer macht daraus
+     eine Böe, die über die Wiese läuft. Das Licht bekommt jeder Halm senkrecht von oben – die
+     echte Normale eines fast senkrechten Dreiecks spränge bei jeder Kameradrehung um, und die
+     Wiese flimmerte.
+
+     **Nicht über den Balken.** Zweierlei hält das Gras vom Holz fern: Es beginnt erst hinter der
+     Bande (die Spielfläche reicht bis 0,5, der Balken bis 0,85 – gewachsen wird ab 0,95), und
+     dicht dahinter bleibt es niedrig. Sonst sticht ein Halm durch den Balken hindurch, und das
+     ist genau die Art Fehler, die man nicht mehr übersieht, wenn man sie einmal gesehen hat.
+
+     Und Schatten wirft der Teppich keinen: Der Schattendurchgang rechnet jedes Dreieck ein zweites
+     Mal, und der Schatten eines Grashalms ist auf dem Schattenbild schmaler als ein Bildpunkt. */
+  const GRAS_AB = 0.95;            // hinter der Bande fängt die Wiese an
+  const GRAS_VOLL = 7, GRAS_WEIT = 17, GRAS_JE_FELD = 26;
+  const GRAS_TOENE = [
+    ['#3f7a2c', '#7ac24a'], ['#478a30', '#88cf55'], ['#528f39', '#93d05e'], ['#3a7433', '#6fb84f'],
+  ];
+
+  function grasNetz(B, gl, aussenRand) {
+    const a = gl.bahn.autoDeko || {};
+    const r = M3.zufall((a.saat || 1) * 9091 + 7);
+    const fest = [0, 1, 0];
+    for (let z = -aussenRand; z < gl.T + aussenRand; z += 1) for (let x = -aussenRand; x < gl.B + aussenRand; x += 1) {
+      const dicht = M3.klemm(1 - (gl.zumRand(x + 0.5, z + 0.5) - GRAS_VOLL) / (GRAS_WEIT - GRAS_VOLL), 0, 1);
+      if (dicht <= 0) continue;
+      const wieViele = GRAS_JE_FELD * dicht;
+      for (let k = 0; k < GRAS_JE_FELD; k++) {
+        if (k >= wieViele) break;
+        const px = x + r(), pz = z + r();
+        const rand = gl.zumRand(px, pz);
+        if (rand < GRAS_AB) continue;
+        const art = gl.art(px, pz);
+        if (art.wasser || art.name === 'Sand') continue;
+        const y = gl.hoehe(px, pz);
+        const ton = GRAS_TOENE[Math.floor(r() * GRAS_TOENE.length)];
+        const breit = 0.075 + r() * 0.06;
+        /* Dicht an der Bande kurz, weiter draußen voll hoch. */
+        const hoehe = (0.28 + r() * 0.3) * Math.min(1, 0.4 + rand * 0.3);
+        const w = r() * M3.TAU3;                       // Richtung, in die sich der Halm neigt
+        const nx = Math.cos(w), nz = Math.sin(w);
+        const qx = -nz, qz = nx;                       // quer dazu: seine Breite
+        const neige = (0.15 + r() * 0.4) * hoehe;      // so weit steht die Spitze schon ohne Wind
+        /* Der Wind greift an der Spitze an, und zwar quer zur Neigung mal ein bisschen Zufall –
+           ein Feld, in dem alle Halme genau gleich weit ausschlagen, wirkt gebürstet. */
+        const kraft = hoehe * (0.16 + r() * 0.14);
+        const wiegen = [nx * kraft, 1, nz * kraft];
+        B.dreieckWeich(
+          [px - qx * breit, y, pz - qz * breit],
+          [px + qx * breit, y, pz + qz * breit],
+          [px + nx * neige, y + hoehe, pz + nz * neige],
+          fest, fest, wiegen, ton[0]);
+        /* Jeder dritte Halm bekommt eine zweite, hellere Spitze darüber. Das kostet ein Dreieck
+           und gibt der Fläche die Tiefe, die ein einzelner Halm allein nicht hat. */
+        if (r() < 0.38) {
+          const bx = px + nx * neige * 0.3, bz = pz + nz * neige * 0.3;
+          const hoch2 = hoehe * 1.5, kraft2 = hoch2 * 0.2;
+          B.dreieckWeich(
+            [bx - qx * breit * 0.7, y + hoehe * 0.3, bz - qz * breit * 0.7],
+            [bx + qx * breit * 0.7, y + hoehe * 0.3, bz + qz * breit * 0.7],
+            [px + nx * neige * 1.8, y + hoch2, pz + nz * neige * 1.8],
+            fest, fest, [nx * kraft2, 1, nz * kraft2], ton[1]);
+        }
       }
     }
   }
@@ -949,9 +1010,9 @@ const Welt3D = (() => {
     /* Sanfte Kuppen, nichts Spitzes. Die Kuppe ist eine flachgedrückte Kugel, deren untere Hälfte
        im Boden steckt: eine Form ohne Kante und ohne Spitze, und genau das macht einen Hügel. */
     huegel: [
-      { saat: 6173, n: 22, d: 0.92, h: [7, 6], breit: 2.6, fuss: '#63954b', spitze: '#77aa57', wald: 0.5 },
-      { saat: 9241, n: 18, d: 1.34, h: [10, 8], breit: 2.8, fuss: '#5f8f57', spitze: '#7ba86c', wald: 0.3 },
-      { saat: 4517, n: 16, d: 1.78, h: [14, 9], breit: 3.0, fuss: '#6d9070', spitze: '#8fae8c', wald: 0 },
+      { saat: 6173, n: 22, d: 1.12, h: [7, 6], breit: 2.2, fuss: '#63954b', spitze: '#77aa57', wald: 0.5 },
+      { saat: 9241, n: 18, d: 1.45, h: [10, 8], breit: 2.2, fuss: '#5f8f57', spitze: '#7ba86c', wald: 0.3 },
+      { saat: 4517, n: 16, d: 1.9, h: [14, 9], breit: 2.2, fuss: '#6d9070', spitze: '#8fae8c', wald: 0 },
     ],
     berge: [
       { saat: 6173, n: 30, d: 0.86, h: [4, 7], fuss: '#5c8b47', spitze: '#6d9c52' },
@@ -982,7 +1043,13 @@ const Welt3D = (() => {
           });
           continue;
         }
-        const rr = h * reihe.breit * (0.8 + r() * 0.5);
+        /* Der Halbmesser wird begrenzt, und zwar an seinem eigenen Abstand: Eine Kuppe darf nie so
+           breit werden, dass ihr naher Rand die Bahn erreicht. Genau das war passiert, als die
+           Kuppen mit der Welt mitwuchsen – die hinterste Reihe hatte neunzig Felder Halbmesser bei
+           siebenundachtzig Feldern Abstand und lag damit als dunkle Fläche über der halben
+           Landschaft. Von der Bahn aus sah man davon nichts, in der Übersicht die Hälfte des
+           Bildes. */
+        const rr = Math.min(h * reihe.breit * (0.8 + r() * 0.5), d * 0.42);
         B.stelle(x, grund - h * 0.55, z, r() * 6, 1, b => {
           b.mit(M3.skalieren(1, (h + h * 0.55) / rr, 1),
             c => c.kugel(rr, 4, 9, reihe.fuss, 0.07, i * 17 + 5, reihe.spitze));
@@ -1160,6 +1227,6 @@ const Welt3D = (() => {
 
   return { ART, artVon, gelaende, gelaendeNetz, lochNetz, wasserNetz, felsenNetz, bandenNetz, burgNetz, dekoNetz,
     dekoOrt, dekoOrte, dekoFuss,
-    streuenNetz, saumNetz, uferNetz, fernNetz, himmelNetz, wolkenNetz, tuchNeu, tuchFrisch,
+    streuenNetz, grasNetz, uferNetz, fernNetz, himmelNetz, wolkenNetz, tuchNeu, tuchFrisch,
     pfeilNeu, pfeilFrisch };
 })();

@@ -354,7 +354,6 @@ const Golf3D = (() => {
     const burgFahnen = Welt3D.burgNetz(B, gl, bahn.burg);
     Welt3D.dekoNetz(B, gl, beweglich);
     Welt3D.streuenNetz(B, gl, AUSSEN);
-    Welt3D.saumNetz(B, gl);
     Welt3D.uferNetz(B, gl);
     Welt3D.fernNetz(B, gl, welt);
     // Das Loch mitsamt Fahnenmast
@@ -376,6 +375,14 @@ const Golf3D = (() => {
       });
     }
     for (const netz of B.fertig(zeichner)) stuecke.push({ netz });
+
+    /* Der Grasteppich kommt in ein eigenes Gitter, und zwar aus einem einzigen Grund: Er wirft
+       keinen Schatten. Der Schattendurchgang zeichnet jedes Dreieck ein zweites Mal, und der
+       Schatten eines Grashalms wäre auf dem Schattenbild schmaler als ein Bildpunkt – bezahlt
+       würde er trotzdem. So kostet die Wiese nur die Hälfte. */
+    const GR = Bauen.sammler();
+    Welt3D.grasNetz(GR, gl, AUSSEN);
+    for (const netz of GR.fertig(zeichner)) stuecke.push({ netz, wirftSchatten: false, beidseitig: true, gras: true });
 
     /* Wasser als durchscheinende, bewegte Decke – zuletzt gezeichnet, ohne Schattenwurf. */
     const W = Bauen.sammler();

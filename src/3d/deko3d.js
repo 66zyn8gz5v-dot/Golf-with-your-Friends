@@ -261,15 +261,30 @@ const Deko3D = (() => {
      Die Höhe ist mit Absicht groß geworden: Neben einer Bande von einem Drittel Feld Höhe sah ein
      Büschel von einem Zehntel aus wie Moos. Jetzt reicht das Gras bis an die Bande heran, und die
      Bahn liegt in der Wiese statt auf ihr. */
-  function grasbueschel(B, g = 1, farbe = '#5fa03a', saat = 1) {
+  function grasbueschel(B, g = 1, farbe = '#5fa03a', saat = 1, halme = 0, einfach = false) {
     const z = M3.zufall(saat * 199 + 3);
     const hell = Bauen.stufe(farbe, 1.42), dunkel = Bauen.stufe(farbe, 0.72);
-    const n = 5 + Math.floor(z() * 3);
+    /* Zwei Größen, und beide braucht es.
+
+       'halme' gibt die Zahl vor, 'einfach' lässt den Knick weg. Der Grasteppich setzt Tausende von
+       Büscheln und nimmt drei gerade Halme – zwölf Dreiecke; ein einzelnes Büschel am Wegrand darf
+       sechs geknickte haben und sieht dafür voller aus – sechsundfünfzig. Aus einem halben Meter
+       Entfernung ist der Knick das, was aus einem Nagel einen Halm macht; aus fünf Metern sieht man
+       ihn nicht mehr, zahlt ihn aber weiterhin. */
+    const n = halme || (5 + Math.floor(z() * 3));
     for (let i = 0; i < n; i++) {
       const a = (i + z() * 0.7) / n * M3.TAU3;
       const h = (0.3 + z() * 0.3) * g;
       const neigung = 0.12 + z() * 0.3;
       const dick = (0.022 + z() * 0.012) * g;
+      if (einfach) {
+        /* Breiter und stärker geneigt als der geknickte Halm. Aus drei senkrechten Nadeln wird
+           sonst kein Polster, sondern ein Igel – erst wenn die Halme flach genug stehen, decken
+           ihre Umrisse den Boden, und genau darum geht es beim Teppich. */
+        B.mit(M3.mult(M3.drehenY(-a), M3.drehenZ(0.3 + z() * 0.35)),
+          b => b.walze(dick * 1.7, 0, h * 0.95, 3, dunkel, null, 0, hell));
+        continue;
+      }
       B.mit(M3.mult(M3.drehenY(-a), M3.drehenZ(neigung)), b => {
         b.walze(dick, dick * 0.7, h * 0.55, 3, dunkel, null, 0, farbe);
         /* Der obere Abschnitt knickt weiter weg – gedreht wird um den Fußpunkt des Knicks. */
@@ -348,16 +363,40 @@ const Deko3D = (() => {
 
   /* Busch: eine gedrückte Kugel. Mehr ist es nicht und mehr braucht es nicht – Büsche stehen in
      Mengen am Rand, und was in Mengen dasteht, darf einfach sein. */
+  /* Ein Busch. Die erste Fassung war eine gedrückte Kugel, die zweite zwei – beide sahen aus wie
+     grüne Klöße im Gras, und genau das hat Fynn beanstandet.
+
+     Ein Strauch hat kein Volumen, er hat einen Umriss: viele kleine Büschel, die aus einem
+     gemeinsamen Fuß nach außen wachsen, oben licht und unten dicht. Gebaut wird er deshalb aus
+     einer Handvoll kleiner Ballen auf einer flachen Kugelkappe – die Ballen sitzen weiter außen
+     und weiter oben, je größer sie sind, und jeder trägt seinen eigenen Ton. Dazu ein paar
+     aufragende Triebe am Rand: Die brechen die runde Silhouette, und daran erkennt man von Weitem
+     einen Busch und nicht einen Stein.
+
+     Die Ballen sind grob (drei Ringe, sechs Kanten) – das ist Absicht und nicht nur billig: Ein
+     kantiger Ballen wirft harte Schattenkanten, und die geben dem Laub seine Struktur. Glatt
+     geschliffen sieht es wieder nach Kloß aus. */
   function busch(B, r = 0.3, col = F.laubDunkel, saat = 1) {
     const z = M3.zufall(saat * 137 + 11);
-    const f = Bauen.stufe(col, 0.9 + z() * 0.22);
-    B.mit(M3.mult(M3.verschieben(0, r * 0.55, 0), M3.skalieren(1, 0.72, 1)),
-      b => b.kugel(r, 4, 7, f, 0.2, saat, Bauen.stufe(f, 1.25)));
-    /* Ein zweiter, kleinerer Ballen seitlich daneben. Ein einzelner ist eine Kugel; zwei, die
-       sich überschneiden, sind ein Strauch. Der Aufschlag sind dreißig Dreiecke. */
-    const a = z() * M3.TAU3, d = r * (0.5 + z() * 0.3);
-    B.mit(M3.mult(M3.verschieben(Math.cos(a) * d, r * 0.4, Math.sin(a) * d), M3.skalieren(1, 0.7, 1)),
-      b => b.kugel(r * (0.6 + z() * 0.2), 3, 6, f, 0.22, saat * 3 + 1, Bauen.stufe(f, 1.3)));
+    const grund = Bauen.stufe(col, 0.86 + z() * 0.2);
+    const n = 4 + Math.floor(z() * 3);
+    for (let i = 0; i < n; i++) {
+      const a = (i + z() * 0.7) / n * M3.TAU3;
+      const d = r * (0.1 + z() * 0.6);
+      const rr = r * (0.42 + z() * 0.3);
+      const y = r * (0.3 + z() * 0.55) * (1 - d / (r * 1.2) * 0.35);
+      const f = Bauen.stufe(grund, 0.84 + z() * 0.38);
+      B.mit(M3.mult(M3.verschieben(Math.cos(a) * d, y, Math.sin(a) * d), M3.skalieren(1, 0.82, 1)),
+        b => b.kugel(rr, 3, 6, f, 0.3, saat * 7 + i, Bauen.stufe(f, 1.3)));
+    }
+    /* Zwei bis drei Triebe, die oben herausstehen. */
+    const triebe = 2 + Math.floor(z() * 2);
+    for (let i = 0; i < triebe; i++) {
+      const a = z() * M3.TAU3, d = r * (0.2 + z() * 0.5);
+      B.mit(M3.mult(M3.mult(M3.verschieben(Math.cos(a) * d, r * 0.5, Math.sin(a) * d),
+        M3.drehenY(-a)), M3.drehenZ(-0.25 - z() * 0.35)),
+        b => b.walze(r * 0.13, 0, r * (0.7 + z() * 0.6), 3, Bauen.stufe(grund, 1.15), null, 0, Bauen.stufe(grund, 1.5)));
+    }
     return B;
   }
 

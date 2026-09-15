@@ -36,12 +36,17 @@ const GL3D = (() => {
     uniform mat4 uSchattenSicht;
     uniform float uZeit;
     uniform float uWelle;        // >0: Wasserfläche, die Ecken heben und senken sich
+    uniform float uGras;         // >0: Grashalme, die sich im Wind neigen
 
     varying vec3 vNorm;
     varying vec3 vFarbe;
     varying float vTiefe;        // Abstand zur Kamera, für den Nebel
     varying vec4 vSchattenOrt;
     varying vec3 vWeltOrt;
+
+    /* Eine Zahl, die entlang der Windrichtung wächst – daraus entsteht die lange Böe, die über
+       die Wiese läuft. Schräg gewählt, damit sie nicht entlang einer Bahnkante verläuft. */
+    float vWeltVor(vec3 p) { return p.x * 0.82 + p.z * 0.57; }
 
     void main() {
       vec3 ort = aOrt;
@@ -53,6 +58,24 @@ const GL3D = (() => {
         float b = ort.z * 1.3 - uZeit * 1.1;
         ort.y += (sin(a) * 0.030 + sin(b) * 0.022);
         vNorm = normalize(vec3(-cos(a) * 0.027, 1.0, -cos(b) * 0.029));
+      } else if (uGras > 0.5) {
+        /* Wind über die Wiese. Beim Gras bedeutet die Normale etwas anderes als sonst: In x und z
+           steht nicht die Richtung der Fläche, sondern wie weit sich diese Ecke neigen darf. Am
+           Fuß eines Halms ist das null, an seiner Spitze am meisten – so kippt der Halm, statt sich
+           zu verschieben, und bleibt im Boden stehen.
+
+           Zwei Wellen über Kreuz, eine lange und langsame und eine kurze und schnelle: Die lange
+           schiebt Böen über die Fläche, die kurze lässt die einzelnen Halme zittern. Mit nur einer
+           bewegte sich die ganze Wiese im Gleichtakt, und das sieht aus wie ein Tuch, nicht wie
+           Gras.
+
+           Das Licht bekommt jeder Halm senkrecht von oben, so wie der Boden unter ihm. Die echte
+           Normale eines fast senkrechten Dreiecks würde bei jeder Kameradrehung umspringen, und
+           die Wiese flimmerte. */
+        float boe = sin(uZeit * 1.05 + vWeltVor(ort) * 0.22) * 0.75 + 0.45;
+        float zittern = sin(uZeit * 4.2 + ort.x * 2.7 - ort.z * 1.9) * 0.3;
+        ort.xz += aNorm.xz * (boe + zittern);
+        vNorm = vec3(0.0, 1.0, 0.0);
       } else {
         vNorm = normalize((uModell * vec4(aNorm, 0.0)).xyz);
       }
@@ -328,11 +351,17 @@ const GL3D = (() => {
 
     function zeichneStueck(prog, s, schattenMat) {
       const u = prog.u;
+      /* Beidseitig gezeichnete Stücke: Für Gras wird jeder Halm aus einem einzigen Dreieck gebaut,
+         und ein einzelnes Dreieck hat nur eine Vorderseite. Ohne diesen Schalter wäre die halbe
+         Wiese unsichtbar, je nachdem, woher man schaut – mit ihm kostet ein Halm ein Dreieck statt
+         vier, und das ist der Unterschied zwischen ein paar Büscheln und einer gedeckten Wiese. */
+      if (s.beidseitig) gl.disable(gl.CULL_FACE); else gl.enable(gl.CULL_FACE);
       if (u.uModell) gl.uniformMatrix4fv(u.uModell, false, s.modell || modellEins);
       if (u.uLichtAnteil) gl.uniform1f(u.uLichtAnteil, s.licht === false ? 0 : 1);
       if (u.uAlpha) gl.uniform1f(u.uAlpha, s.alpha === undefined ? 1 : s.alpha);
       if (u.uTon) gl.uniform3fv(u.uTon, s.ton || [1, 1, 1]);
       if (u.uWelle) gl.uniform1f(u.uWelle, s.welle ? 1 : 0);
+      if (u.uGras) gl.uniform1f(u.uGras, s.gras ? 1 : 0);
       if (u.uSchattenSicht && schattenMat) gl.uniformMatrix4fv(u.uSchattenSicht, false, schattenMat);
       binden(s.netz);
       gl.drawElements(gl.TRIANGLES, s.netz.anzahl, gl.UNSIGNED_SHORT, 0);

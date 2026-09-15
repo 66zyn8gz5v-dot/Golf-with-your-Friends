@@ -299,6 +299,27 @@ for (const welt of BAHNEN3D.WELTEN) {
       }
     }
 
+    /* Bleibt die Kulisse am Horizont, wo sie hingehört? Die fernen Kuppen sind riesige, flache
+       Halbkugeln, und als sie mit der Welt mitwuchsen, reichte die hinterste Reihe mit neunzig
+       Feldern Halbmesser bei siebenundachtzig Feldern Abstand bis über die Bahn. Von der Bahn aus
+       war davon nichts zu sehen, in der Übersicht lag ein dunkler Keil über dem halben Bild. */
+    {
+      const FN = Bauen.sammler();
+      Welt3D.fernNetz(FN, gl, welt);
+      const mx = gl.B / 2, mz = gl.T / 2;
+      /* Frei bleiben muss die Bahn samt ihrem nächsten Umfeld. Dass die Kuppen weiter draußen
+         hinter dem Wald aufsteigen, ist erwünscht – die Bäume sollen an ihrem Fuß stehen. */
+      const frei = Math.max(gl.B, gl.T) / 2 + 8;
+      let naechste = 1e9;
+      for (const t of FN.rohfertig()) {
+        for (let i = 0; i * 9 < t.e.length; i++) {
+          const o = i * 9;
+          naechste = Math.min(naechste, Math.hypot(t.e[o] - mx, t.e[o + 2] - mz));
+        }
+      }
+      if (naechste < frei) melde(name, `die Kulisse am Horizont reicht bis ${naechste.toFixed(0)} Felder an die Bahnmitte heran – frei bleiben müssen ${frei.toFixed(0)}`);
+    }
+
     zeile.push(`  ${name.padEnd(34)} ${gl.B}x${gl.T} Par ${b.par}  Hang am Loch ${(amLoch * 100).toFixed(0)} %  Felsnadeln ${gl.felsen.length}, Banden ${gl.wand.length - gl.felsen.length}`);
   }
 }
