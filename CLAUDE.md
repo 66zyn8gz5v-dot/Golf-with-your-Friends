@@ -18,6 +18,21 @@ Der Weg dahin, bei jeder Auslieferung:
    der Schutzregel der Umgebung `github-pages`.
 5. Bilder vom Ergebnis machen und einen Bericht auf Deutsch schreiben.
 
+## Zwischendurch sagen, wie lange es noch dauert
+
+Bei allem, was länger als ein paar Minuten läuft, kommt eine kurze Zwischenmeldung – **was gerade
+fertig ist und wie lange der Rest ungefähr braucht.** Nicht erst am Ende, und nicht erst auf
+Nachfrage. Fynn sitzt sonst vor einem Bildschirm, auf dem nichts passiert, und weiß nicht, ob es
+noch zwei Minuten sind oder eine halbe Stunde.
+
+Die Meldung ist kurz: ein bis zwei Sätze. Was steht, was noch fehlt, wie lange ungefähr. Wenn die
+Schätzung nicht hält, kommt die neue Schätzung – lieber „doch zwanzig Minuten mehr, weil X" als
+stillschweigend überziehen.
+
+Und wenn unterwegs etwas Unerwartetes auftaucht – ein alter Fehler, eine Sackgasse –, steht das in
+der Zwischenmeldung. Das ist meistens der Grund, warum es länger dauert, und es ist eine Antwort
+auf die Frage „warum dauert das so lange", bevor sie gestellt werden muss.
+
 ## Nach jeder Überarbeitung die Links zum Anklicken mitgeben
 
 Am Ende jedes Berichts über eine Überarbeitung des Spiels stehen beide Adressen – ohne dass
