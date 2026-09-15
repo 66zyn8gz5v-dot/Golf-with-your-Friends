@@ -24,15 +24,25 @@ const kopiert = new Set(
   (cp ? cp[1] : '').match(/"\$1"\/([A-Za-z0-9_.-]+)/g)?.map(t => t.replace('"$1"/', '')) ?? []
 );
 
-// 2. Was verlangt index.html an eigenen Dateien? (fremde Adressen gehen uns nichts an)
-const html = lies('index.html');
+// 2. Was verlangen die Seiten an eigenen Dateien? (fremde Adressen gehen uns nichts an)
+//
+//    Es sind zwei: das 2,5D-Spiel in index.html und Fantasy Golf 3D in src/3d/index.html. Beide
+//    müssen geprüft werden, und bei der zweiten sind die Adressen relativ zu ihrem eigenen
+//    Verzeichnis – '../icons.js' meint src/icons.js. Genau daran ist die Prüfung sonst blind:
+//    Eine Seite in einem Unterverzeichnis kann auf etwas zeigen, das es gar nicht gibt.
+import { normalize, posix } from 'node:path';
+const SEITEN = ['index.html', 'src/3d/index.html'];
 const verlangt = new Set();
-for (const m of html.matchAll(/(?:src|href)="(?!https?:|data:|#)([^"]+)"/g)) verlangt.add(m[1]);
+for (const seite of SEITEN) {
+  const ordner = seite.includes('/') ? seite.slice(0, seite.lastIndexOf('/')) : '';
+  const auf = ziel => normalize(posix.join(ordner, ziel)).split('\\').join('/');
+  for (const m of lies(seite).matchAll(/(?:src|href)="(?!https?:|data:|#)([^"]+)"/g)) verlangt.add(auf(m[1]));
+}
 // manifest und Service Worker hängen nicht im HTML, gehören aber dazu
 verlangt.add('manifest.webmanifest');
 verlangt.add('sw.js');
 
-// 2b. Bilder, die nur im Stilblatt stehen. Genau hier lag die Lücke: Das Titelbild hing an einer
+// 2b. Bilder, die nur in einem Stilblatt stehen. Genau hier lag die Lücke: Das Titelbild hing an einer
 //     url(...) in style.css, im HTML stand es nirgends – gefunden wurde es nur, weil es zufällig
 //     auch im Service Worker steht. Ein Bild ohne diesen Zufall wäre durchgerutscht.
 for (const m of lies('style.css').matchAll(/url\(\s*['"]?(?!https?:|data:)([^)'"]+)['"]?\s*\)/g)) {
@@ -41,8 +51,10 @@ for (const m of lies('style.css').matchAll(/url\(\s*['"]?(?!https?:|data:)([^)'"
 
 // 2c. Und die Zeichen aus dem Manifest. Auch die stehen nirgends im HTML – das Manifest ist die
 //     einzige Stelle, an der etwa das maskable-Zeichen überhaupt vorkommt.
-for (const z of JSON.parse(lies('manifest.webmanifest')).icons ?? []) {
-  if (z.src && !/^(https?:|data:)/.test(z.src)) verlangt.add(z.src);
+for (const [datei, ordner] of [['manifest.webmanifest', ''], ['src/3d/manifest3d.webmanifest', 'src/3d']]) {
+  for (const z of JSON.parse(lies(datei)).icons ?? []) {
+    if (z.src && !/^(https?:|data:)/.test(z.src)) verlangt.add(normalize(posix.join(ordner, z.src)).split('\\').join('/'));
+  }
 }
 
 for (const datei of [...verlangt].sort()) {
@@ -62,4 +74,4 @@ for (const m of sw.matchAll(/'\.\/([^']+)'/g)) {
 }
 
 if (fehler.length) { console.error(fehler.map(f => '  FEHLER ' + f).join('\n')); process.exit(1); }
-console.log(`ok – ${verlangt.size} Dateien aus index.html, style.css und manifest.webmanifest, alle vorhanden und in der Auslieferung (kopiert: ${[...kopiert].join(', ')})`);
+console.log(`ok – ${verlangt.size} Dateien aus ${SEITEN.join(', ')}, style.css und beiden Manifesten, alle vorhanden und in der Auslieferung (kopiert: ${[...kopiert].join(', ')})`);

@@ -848,3 +848,4 @@ table.best-table th, table.best-table td { padding: 5px 6px; }
 @media (max-width: 480px) {
   .best-table .kopf-wort { display: none; }   /* die Sinnbilder allein reichen */
 }
+

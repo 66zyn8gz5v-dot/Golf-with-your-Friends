@@ -117,6 +117,10 @@ function buildLevel(def) {
     if (door) goal = { x: door.x, y: door.y };
   }
   let tee2 = tee;
+  /* 'ohneLoch': Boule-Bahnen haben keines, dort wäre es eine Falle, die mit dem Spiel nichts zu tun
+     hat. Sie brauchen trotzdem ein 'goal' – daran hängt der Startblick der Kamera –, und das ist
+     hier die Mitte der Bahn. 'cup' bleibt leer: Nur daran hängt, ob überhaupt eingelocht wird. */
+  if (def.ohneLoch && tee2 && !goal) goal = { x: W / 2, y: H / 2 };
   if (!tee2 || !goal) {
     if (!def.editing) throw new Error(`Bahn "${def.name}": Abschlag (T) oder Loch (H) fehlt`);
     tee2 = tee2 || { x: -100, y: -100 }; goal = goal || tee2; // Baumodus: noch unfertige Bahn darstellen

@@ -740,7 +740,7 @@ class Renderer {
     }
   }
   /* ---------- Boden ---------- */
-  drawFloor(ctx) {
+  drawFloor(ctx, matte = true) {
     // Gezeichnet wird immer die untere Ebene; die obere kommt als eigene, angehobene Scholle dazu
     const { W, H } = this.level, tiles = this.level.untenFl.tiles, th = this.theme;
     const cull = this.scale * 1.5;
@@ -803,11 +803,14 @@ class Renderer {
         const [sx, sy] = this.proj(x + 0.5, y + 0.5); ctx.beginPath(); ctx.arc(sx, sy, this.scale * 0.05, 0, TAU); ctx.fill();
       }
     }
-    // Abschlag-Matte
-    const t = this.level.tee;
-    this.isoEllipse(ctx, t.x, t.y, 0, 0.5, 'rgba(0,0,0,0.18)');
-    this.isoEllipse(ctx, t.x, t.y, 0.01, 0.42, th.accent);
-    this.isoEllipse(ctx, t.x, t.y, 0.02, 0.3, shade(th.accent, 0.8));
+    /* Abschlag-Matte. Im Boule-Modus bleibt sie weg: Dort steht die Kanone auf dem Abschlag, und
+       der helle Ring sah aus wie ein Loch, auf das man zielen soll – es gibt aber keines. */
+    if (matte) {
+      const t = this.level.tee;
+      this.isoEllipse(ctx, t.x, t.y, 0, 0.5, 'rgba(0,0,0,0.18)');
+      this.isoEllipse(ctx, t.x, t.y, 0.01, 0.42, th.accent);
+      this.isoEllipse(ctx, t.x, t.y, 0.02, 0.3, shade(th.accent, 0.8));
+    }
   }
 
   /* Klippenwände einer erhöhten Kachel zu tieferen oder leeren Nachbarn */
@@ -862,7 +865,7 @@ class Renderer {
     if (th.volcano) this.drawVolcano(ctx, t);
     if (th.dunes) this.drawDunes(ctx, t);
 
-    this.drawFloor(ctx);
+    this.drawFloor(ctx, state.abschlagMatte !== false);
 
     // animierte Flüssigkeiten
     const fires = [];
@@ -913,6 +916,16 @@ class Renderer {
     for (const lb of (state.liegendeBaelle || [])) {
       if (!lb || lb.sunk) continue;
       items.push({ x: lb.x, y: lb.y, ball: true, noFade: true, bias: 0.02, draw: () => this.drawBall(ctx, lb) });
+    }
+    /* Boule: die Kanone, mit der die Zielkugel nach vorn geschossen wird. Es ist dieselbe Kanone
+       wie das gleichnamige Hindernis – wer sie einmal gesehen hat, weiß sofort, was sie tut.
+       Sie steht so weit hinter dem Abschlag, dass die Kugel in der Mündung liegt – das Rohr reicht
+       vom Lafettenmittelpunkt 1,15 Kacheln nach vorn. */
+    const kan = state.kanone;
+    if (kan) {
+      const kx = kan.x - kan.dx * 1.15, ky = kan.y - kan.dy * 1.15;
+      const kw = Math.atan2(kan.dy, kan.dx);
+      items.push({ x: kx, y: ky, bias: 0.3, noFade: true, draw: () => this.drawCannon(ctx, { x: kx, y: ky, angle: kw, loaded: true }, t) });
     }
     // Der Ball wird zum Schluss gezeichnet, damit er nie hinter Bäumen oder Mauern verschwindet
     for (const it of items) { it.k = this.depth(it.x, it.y) + (it.bias || 0); const p = this.proj(it.x, it.y); it.sx = p[0]; it.sy = p[1]; }

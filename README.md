@@ -466,12 +466,61 @@ alle Kugeln liegen bleiben und sich gegenseitig wegstoßen. Beim Netzspiel müss
 dieselben acht bis zwölf Kugeln in derselben Reihenfolge rechnen; heute wird über das Netz genau
 ein Ball übertragen. Der Modus steht darum im Warteraum gar nicht erst zur Wahl.
 
-**Ablauf.** Eine Kanone am Abschlag schießt die kleine Zielkugel auf die Bahn – grob Richtung Loch,
-mit kräftiger Streuung, damit sie jede Runde woanders liegt. Landet sie zu dicht am Abschlag (unter
-drei Feldern), wird neu geschossen, höchstens sechsmal; danach gilt, was liegt. Dann spielen alle
-reihum je drei Kugeln: erst jeder seine erste, dann jeder seine zweite, dann jeder seine dritte.
-Jede geschlagene Kugel bleibt liegen und darf von jeder späteren angestoßen werden – die Zielkugel
-eingeschlossen.
+**Die Boule-Welt: neun Bahnen, die dafür gebaut sind.** Sie steht in **Bauen & Eigene Welt**, gleich
+neben der eigenen Welt, und ist bei jedem da – sie wird mitgeliefert, nicht gebaut. Von dort geht es
+in die Aufstellung (Spielerzahl, Hüte), und zwar nur nach Boule: Wettkampf auf einer Bahn ohne
+sinnvolles Par wäre nicht verboten, aber sinnlos.
+
+Die Bahnen liegen in `src/courses_boule.js`, gebaut von `tools/boule.py`. Was sie von einer
+Golfbahn unterscheidet, steht dort ausführlich; in Kürze:
+
+* **Platz.** Bei vier Spielern liegen am Ende zwölf Kugeln plus die Zielkugel auf der Bahn. Eine
+  enge Golfbahn wäre nach der vierten Kugel verstopft. Die Boule-Bahnen haben darum 175 bis 226
+  Rasenfelder, und der Erzeuger prüft das auch nach.
+* **Freier Abschlag.** Jede neue Kugel wird neben dem Abschlag eingesetzt und sucht sich dort einen
+  freien Platz; steht der Abschlag in einer Nische, wird es nach acht Kugeln eng. Geprüft wird auf
+  mindestens 15 freie Felder im Umkreis von zwei.
+* **Nur Gras.** Kein Eis (darauf rollt eine Kugel ewig, Bremsung 0.75) und kein Sand (darauf bleibt
+  sie sofort liegen, Bremsung 20). Beides nähme dem Spiel das Abschätzen, worum es gerade geht.
+  Themen sind nur `meadow` und `forest`.
+* **Kein Loch.** Eine Boule-Bahn hat keines: Es wäre eine Falle, die mit dem Spiel nichts zu tun hat
+  – wer Pech hat, verlöre eine Kugel an ein Ziel, das er gar nicht anspielt. Die Bahnen tragen
+  `ohneLoch: true`; `buildLevel` und die Bahnprüfung wissen davon und verlangen für sie kein 'H'.
+  Ausscheiden kann eine Kugel weiterhin – über den Rand.
+* **Nichts Bewegtes.** Nur Blöcke (Bäume, Findlinge) und Prellsteine. Loren, Fähren, Kanonen oder
+  Stacheln würden liegende Kugeln verschieben oder verschlucken, während gerade jemand anderes
+  zielt.
+
+Die Welt trägt die Kennung `custom` wie eine selbst gebaute. Das ist kein Behelf, sondern genau
+richtig: Daran hängt, dass keine Rekorde geschrieben werden (Abstände in Feldern sind mit Schlägen
+nicht vergleichbar) und dass „Zurück" in die Werkstatt führt statt auf die Weltkarte.
+
+**Ablauf.** Zu Beginn wird ein Spieler **ausgelost**, der die kleine Zielkugel mit der Kanone auf die
+Bahn schießt. Die Kanone steht am Abschlag und zeigt von Haus aus in die Mitte der Wiese. Gezogen
+wird wie bei jedem Schlag, und zwar für beides: **Stärke** und **Richtung**. Die Richtung ist aber
+nicht frei, sondern auf **±0,65 rad (rund 37°) nach links und rechts** um die Grundrichtung
+beschnitten (`BOULE_SCHWENK`). Das macht sie zur Kanone und nicht zum Schläger: Sie steht, sie
+schwenkt nur – und die Zielkugel kann nicht hinter den Abschlag fliegen, wo sie niemandem nützt.
+
+Die Kanone ist auch zu **sehen**: Sie steht 1,15 Felder hinter dem Abschlag, sodass die Zielkugel in
+ihrer Mündung liegt, und ihr Rohr dreht sich beim Schwenken mit (`state.kanone` mit Ort und
+Richtung, gezeichnet in `Renderer.drawFrame` mit `drawCannon` – derselben Zeichnung wie beim
+gleichnamigen Hindernis, denn wer sie einmal gesehen hat, weiß sofort, was sie tut).
+
+Dafür bleibt im Boule-Modus die **Abschlagmatte** weg (`state.abschlagMatte === false`, ausgewertet
+in `drawFloor`): Der helle Ring sah aus wie ein Loch, auf das man zielen soll – und ein Loch gibt es
+hier gerade nicht.
+
+Technisch wird die Zielkugel für diesen einen Schuss zum „Ball" des Spielers – dann gilt für sie die
+gewohnte Bedienung, ohne dass es dafür eine zweite Eingabeart braucht; nur der Schwenkbereich wird
+beim Ziehen dazwischengeschaltet (`bouleKanone()`).
+
+Bleibt sie zu dicht am Abschlag liegen (unter drei Feldern) oder nicht auf Gras, schießt derselbe
+Spieler noch einmal, höchstens sechsmal; danach wird sie hingelegt. Wer geschossen hat, **spielt
+auch als erster** – so wie beim richtigen Boule, wo der Werfer des Sauballs die erste Kugel legt.
+Damit ist das Los nicht bloß Beiwerk, sondern verteilt den Anfangsvorteil von Runde zu Runde neu.
+Danach geht es reihum: jeder drei Kugeln, jede bleibt liegen und darf von jeder späteren angestoßen
+werden – die Zielkugel eingeschlossen.
 
 **Wertung.** Nach der letzten Kugel gewinnt, wessen Kugel am nächsten an der Zielkugel liegt.
 Gemessen wird von Mitte zu Mitte, in Feldern der Bahn; die Tafel zeigt **alle** Kugeln nach Abstand
@@ -1453,6 +1502,195 @@ Ebenen zusammen, alle Karten deckungsgleich, für jede Ebene ein Aufstieg von de
 keine Deko auf dem Fairway.
 
 
+## Fantasy Golf 3D
+
+Neben dem 2,5D-Spiel steht ein zweites, jüngeres: **Fantasy Golf 3D**. Es hat eine **eigene
+Seite unter `src/3d/`**, eine eigene Adresse, ein eigenes Stilblatt, ein eigenes Manifest (man
+kann es als eigene App auf den Startbildschirm legen) und einen eigenen Speicher:
+
+* Spiel: `…/Golf-with-your-Friends/src/3d/`
+* Vorschau: `…/Golf-with-your-Friends/vorschau/src/3d/`
+
+Aus dem 2,5D-Spiel benutzt es genau drei Dateien, die mit dessen Bahnen nichts zu tun haben:
+`src/icons.js` (Sinnbilder), `src/sfx.js` (Geräusche) und `src/version.js` (Fassung und
+Speicherschlüssel). Kein Bahnformat, keine Physik, keine Oberfläche. Die beiden Spiele teilen sich
+nur das Haus – und den Service Worker, damit es eine Fassung und ein Aufräumen gibt.
+
+Anfangs lag die 3D-Welt als Zimmer im alten Haus, erreichbar über einen Knopf im Startbildschirm.
+Das war der kürzeste Weg zu einer ersten Vorschau, aber es war das falsche Bild: Wer ein neues
+Spiel öffnen will, soll ein neues Spiel öffnen und nicht zuerst durch das alte gehen. Seit
+Fassung 114 sind es zwei Adressen.
+
+Warum die Adresse so sperrig ist (`…/src/3d/` statt `…/3d/`): Der Arbeitsablauf `pages.yml`
+kopiert eine feste Liste – `index.html`, `style.css`, `manifest.webmanifest`, `sw.js`, `src`,
+`icons`. Ein neuer Ordner oben wäre schlicht nicht dabei; `src` dagegen wird mitsamt allem
+Darunterliegenden kopiert. Eine Zeile in `pages.yml` würde daraus `…/3d/` machen – die gehört
+aber auf `main` und damit Lüddecke.
+
+### Was es gibt
+
+* Eine **Weltkarte in drei Dimensionen** – eine Insel im Meer, über der die Kamera langsam kreist.
+  Sechs Landstriche tragen je eine Welt; ihre Namen stehen als Schilder darüber und wandern mit.
+  Offen ist bisher das **Grasland** mit neun Bahnen, die übrigen fünf sagen „bald zu erkunden".
+* **Neun Bahnen im Grasland** – lang, schmal und von Holzbanden eingefasst. Jede spielt an einem
+  anderen Ort derselben Landschaft; die Burg sieht man nur auf dreien, und wo man sie sieht, steht
+  sie einmal auf ihrem Hügel und zweimal ebenerdig am Wegesrand:
+  * *Burgwiese* (Par 3) – schnurgerade unter die Burg, drei Felsnadeln im Weg.
+  * *Der Mühlbach* (Par 4) – rechter Winkel nach rechts, dahinter der Bach quer.
+  * *Zum Burgtor* (Par 5) – bergauf, um die Ecke, durch ein Felsentor bis vors Tor der Burg.
+  * *Der Pferdehof* (Par 3) – über eine Holzrampe auf die Terrasse, Scheune und Heuhaufen ringsum.
+  * *Die Schafweide* (Par 4) – ein weiter Bogen über die Koppeln, mit Trockenmauern und Sandkuhle.
+  * *Der Obstgarten* (Par 3) – ein Graben quer, dann die Rampe hinauf zwischen die Apfelbäume.
+  * *Das Dorf* (Par 4) – am Brunnen vorbei, Knick nach rechts, Felsentor vor dem Loch.
+  * *Die Alte Brücke* (Par 3) – der Bach läuft die ganze linke Seite entlang.
+  * *Der Turnierplatz* (Par 4) – die längste: Sand, Knick, Felsentor, Rampe, Zelte und die Burg.
+* **Rampen** heben die Bahn auf eine Terrasse. Sie stehen nicht als Klotz in der Landschaft,
+  sondern sind ein Summand in der Höhenformel – die Kugelrechnung weiß nichts von ihnen und der
+  Ball rollt trotzdem hinauf, bleibt oben liegen oder kommt zurück.
+* **Zu mehreren an einem Gerät**, bis zu vier. Jeder hat einen Namen und eine Ballfarbe und spielt
+  eine Bahn ganz zu Ende, dann ist der nächste dran; nach Par plus sechs Schlägen geht es weiter,
+  damit niemand die anderen aufhält. Am Ende eine Zählkarte über alle neun Bahnen.
+* **Eine ganze Runde** über alle neun Bahnen mit Zählkarte, oder jede Bahn einzeln. Rekorde je
+  Bahn werden gespeichert (getrennt von der Rangliste des 2,5D-Spiels – es sind zwei Spiele).
+
+### Steuerung
+
+| Was | Wie |
+| --- | --- |
+| Schlagen | vom Ball wegziehen und loslassen – weiter gezogen heißt fester |
+| Kamera drehen | die Knöpfe unten, **Q** / **E**, zwei Finger, oder die rechte Maustaste |
+| Näher / weiter | Mausrad, Finger auseinanderziehen, **+** / **−** |
+| Ganze Bahn zeigen | Knopf mit der Karte oder **M** |
+| Ball zurücklegen | Knopf rechts unten oder **R** (ohne Strafe) |
+| Zurück | Knopf oben links oder **Esc** |
+
+Auf der Weltkarte fehlt der Knopf oben links: Dort ist der Anfang, und ein Knopf ins Nichts hilft
+niemandem. Er erscheint, sobald man in einer Welt oder auf einer Bahn steht.
+
+**Auf dem iPhone und dem iPad besser zum Startbildschirm hinzufügen** (in Safari: Teilen → Zum
+Home-Bildschirm). Dann läuft das Spiel als eigene App über den ganzen Schirm. Öffnet man es
+dagegen aus einer anderen App heraus, liegt es in einem Vorschaufenster, und solche Fenster lassen
+sich mit einer Wischbewegung nach unten wegschieben – ausgerechnet die Bewegung, mit der man Kraft
+auflädt. Die Seite fängt Berührungen auf der Leinwand darum ab (siehe `bedienungAnhaengen` in
+`src/3d/spiel3d.js`); als eigene App gibt es das Fenster aber gar nicht erst.
+
+Nach jedem Schlag schwenkt die Kamera von selbst hinter den Ball und schaut zum Loch – sonst
+müsste man sie nach jedem Schlag erst suchen, und weil die Schlagrichtung an der Kamera hängt,
+schlüge man reihenweise in die falsche Richtung.
+
+### Wie eine Bahn beschrieben wird
+
+Eine Bahn in `src/3d/bahnen3d.js` besteht aus drei Angaben. Die erste ist dieselbe wie im
+2,5D-Spiel – ein Feld Text, ein Zeichen ist ein Feld:
+
+```
+.  außerhalb – hier steht die Bande, von der der Ball abprallt
+#  Fairway, kurz geschnitten, rollt gut      ,  Rough, hohes Gras, bremst spürbar
+s  Sand, bremst stark                        w  Wasser – Strafe, weiter geht es vom Ufer
+x  Felsnadel – eine mannshohe Wand mitten in der Bahn
+o  wie #, aber ohne Bande: hier ist die Bahn offen und der Ball kann hinausfallen
+T  Abschlag                                  H  Loch
+```
+
+### Der Zielpfeil
+
+Er liegt nicht auf einer Höhe, sondern **auf dem Boden** – wie eine aufgemalte Linie, die jeder
+Kuppe und jeder Mulde folgt. Vorher war er eine flache Scheibe auf Ballhöhe: Auf ebener Bahn sah
+das gut aus, aber sobald es vor dem Ball anstieg, verschwand die vordere Hälfte im Hang –
+ausgerechnet dort, wo der Hang etwas mit dem Schlag macht. Dazu zog das Langziehen die Spitze mit
+in die Länge; bei vollem Schlag war aus dem Pfeil ein Speer geworden.
+
+Jetzt ist er eine Kette fester Abschnitte, jeder mit seiner eigenen Bodenhöhe, und die Spitze hat
+ihre eigene Länge. Gezeichnet wird er ohne Licht: Er ist eine Anzeige, kein Gegenstand, und soll
+im Schatten so deutlich sein wie in der Sonne.
+
+### Das Loch
+
+Ein Loch ist ein Loch, kein Zeichen auf dem Rasen: Der Boden wird an dieser Stelle **wirklich
+aufgeschnitten**. `gelaendeNetz` lässt neun Maschen rings um den Becher weg, und `lochNetz` setzt
+an ihre Stelle einen Flicken mit runder Öffnung, darunter den Becher (nach innen gerichtet – man
+schaut ja hinein) und obenauf einen Ring aus ausgetretenem Gras, damit man die Öffnung auch aus
+zehn Feldern Entfernung findet.
+
+Das war zuerst nicht so: Der Becher war gebaut, aber die Wiese lag als geschlossene Decke darüber,
+und zu sehen war nur ein Fahnenmast, der im Gras steckt. `tools/3d.mjs` prüft seitdem, ob über der
+Mitte des Bechers wirklich kein Bodendreieck liegt.
+
+### Die Banden
+
+Eine Bahn ist von Holzbanden eingefasst, und die entstehen von selbst: **Jedes Feld außerhalb, das
+an die Spielfläche stößt, wird zu einem Block, an dem der Ball abprallt.** Weil er ohnehin nie
+hineinkommt, ist die Innenkante dieses Blocks genau die Bandenlinie – man braucht keine eigene
+Rechnung für dünne Balken, sondern setzt einen dicken Klotz dahinter, von dem nur die Vorderseite
+zu sehen ist. Gezeichnet wird ein Balken mit Pfosten, gerechnet wird ein Rechteck.
+
+Die Bande ist niedrig: Ein rollender Ball prallt ab, ein springender fliegt darüber. Wer sie
+irgendwo nicht haben will, schreibt `o` statt `#`.
+
+Die zweite ist die Höhe. Sie steht **nicht** als zweites Feld mit Ziffern da, sondern als
+Grundhöhe plus eine Handvoll Hügel und Mulden:
+
+```js
+gelaende: {
+  grund: 0, welle: 0.05,
+  huegel: [ { x: 12, z: 3, r: 7, h: 0.45 },      // Rücken im Norden
+            { x: 18.5, z: 8.5, r: 3.8, h: -0.3 } ] // Mulde vor dem Loch
+}
+```
+
+Der Unterschied ist größer, als er klingt. Ziffern geben Stufen, und Stufen muss man glätten;
+Hügel geben von sich aus eine weiche Landschaft mit einem Gefälle, das sich an jeder Stelle genau
+ausrechnen lässt – und genau das braucht die Kugelrechnung, um sauber zu rollen. Sechs Zeilen
+ersetzen ein ganzes Feld voller Ziffern, und man sieht ihnen an, was sie tun.
+
+Die dritte ist, was herumsteht: `burg` (wo die Königsburg von dieser Bahn aus zu sehen ist),
+`deko` (Mühle, Häuser, Brücke, Zäune, Fahnenmasten) und `autoDeko` (Bäume, Büsche und Steine,
+gestreut nach Zufall mit festem Startwert – dieselbe Bahn sieht bei jedem Laden gleich aus).
+
+### Wie geprüft wird
+
+`node tools/3d.mjs` rechnet die ganze 3D-Welt ohne Browser durch:
+
+1. **Bahnen** – Karte rechteckig, Abschlag und Loch vorhanden, Loch über trockenen Boden
+   erreichbar. (Wasser zählt dabei nicht als Weg. Genau daran ist beim Bauen der Furt ein Fehler
+   aufgefallen: Die Landzunge in der Mitte war rundherum von Wasser umgeben und damit eine Insel.)
+2. **Dreiecke** – jeder Grundkörper wird gebaut und nachgerechnet, ob seine Flächen nach außen
+   zeigen. Ein verkehrt herum gebauter Körper ist nicht falsch beleuchtet, sondern unsichtbar.
+3. **Gelände** – Höhen endlich, Abschlag flach genug zum Liegenbleiben, Loch nicht am Hang.
+4. **Spielbarkeit** – ein gründlicher Rechen-Golfer probiert je Schlag 350 Richtungen und Kräfte
+   durch und nimmt den besten. Schafft er es nicht in fünfzehn Schlägen, stimmt etwas nicht.
+5. **Par** – ein zweiter Spieler zielt aufs Loch und vertut sich dabei um ein paar Grad und ein
+   paar Prozent, so wie ein Mensch. Zweihundert Runden davon geben den Mittelwert, an dem sich
+   das Par messen lässt. Dieser Spieler kennt den Weg – er zielt auf den weitesten Punkt der
+   Spur, den er in gerader Linie erreichen kann, so wie man es vor dem Schlag mit den Augen macht.
+   Zielte er stur aufs Loch, schlüge er auf einer Bahn mit Knick zweihundert Runden lang gegen
+   dieselbe Bande, und gemessen wäre nicht die Bahn, sondern seine Dummheit.
+   Stand (Fassung 116): 3,7 – 3,7 – 6,0 Schläge bei Par 3 – 4 – 5.
+
+Drei Fehler hat erst diese Rechnerei ans Licht gebracht, und zwei davon waren echte Spielfehler:
+
+* **Der Ball hüpfte auf ebener Bahn.** Ob er abhebt, wurde daran gemessen, ob der Boden schneller
+  wegfällt, als die Schwerkraft in einem Rechenschritt zieht – und das ist bei
+  Zweihundertvierzigstelsekunden schon ab zwei Prozent Gefälle der Fall. Er hob also ab, landete,
+  hob wieder ab, und jede Scheinlandung nahm ihm acht Prozent seiner Geschwindigkeit. Richtig ist:
+  Auf einer geraden Schräge hebt nichts ab, egal wie steil. Es hängt an der Krümmung.
+* **Es fehlte die Haftreibung.** Ohne sie rollt ein liegender Ball auf allem über sechs Prozent
+  von selbst wieder los, und eine Bahn, die bergauf zur Burg führt, schickt jeden Ball zurück.
+  Jetzt hält der Untergrund bis rund achtzehn Prozent – so wie ein Ball auf einem geneigten Grün
+  liegen bleibt, obwohl er, einmal angestoßen, denselben Hang hinunterrollt.
+* **Nach einem Wasserball lag der Ball auf der Uferkante** und fiel beim nächsten Schlag sofort
+  wieder hinein. Jetzt wird eine Stelle gesucht, von der aus man in die meisten Richtungen
+  wegspielen kann – geprüft mit zwölf Strahlen ringsum.
+
+### Warum kein fertiger 3D-Baukasten
+
+Die Seite darf nach ihren eigenen Sicherheitsregeln (`script-src 'self'` in `index.html`) nichts
+Fremdes laden. Eine Bibliothek müsste also mit ins Haus – eine halbe Million Zeichen fremder,
+unkommentierter Code für das, was hier zwölf Matrixfunktionen und zwei Schattierer sind. Der
+Zeichner in `src/3d/gl3d.js` kann absichtlich wenig: Dreiecke mit Farbe in den Ecken, eine Sonne,
+einen Schattenwurf, Nebel und bewegtes Wasser. Mehr braucht eine gemalte Märchenwelt nicht – sie
+lebt von Form und Farbe, nicht von Oberflächenbildern. Geladen wird kein einziges.
+
 ## Kostenlos als App aufs iPad oder Handy (GitHub Pages)
 
 Das Spiel ist eine Web-App: Manifest (`manifest.webmanifest`), App-Symbole (`icons/`) und ein Service Worker (`sw.js`) sorgen dafür, dass es sich wie eine App installieren lässt und offline läuft. Der Workflow `.github/workflows/pages.yml` veröffentlicht bei jedem Push automatisch auf GitHub Pages.
@@ -1801,7 +2039,7 @@ Sinnbilder, ein laufendes Spiel, die Rangliste und der Editor da sind.
 index.html        Seite, HUD, Ladebild und Startbild (beide laufen ohne JavaScript)
 icons/titelbild.jpg   gemaltes Titelbild des Startbildschirms (quer)
 icons/titelbild-hoch.jpg  dasselbe fürs Hochformat
-tools/auslieferung.mjs  prüft, ob alles, was die Seite braucht, auch ausgeliefert wird
+tools/auslieferung.mjs  prüft für beide Seiten, ob alles Gebrauchte auch ausgeliefert wird
 style.css         Oberfläche
 src/themes.js     Farbpaletten und Deko je Welt
 src/courses.js    die Bahnen des Märchenlands
@@ -1810,6 +2048,7 @@ src/courses_jungle.js die Bahnen des Dschungeltempels
 src/courses_storm.js die Bahnen des Sturmhimmels (Legende)
 src/courses_shadow.js die Bahnen des Schattenreichs (Legende)
 src/courses_colosseum.js die Bahnen des Kolosseums (Legende)
+src/courses_boule.js die neun Bahnen der Boule-Welt (erzeugt von tools/boule.py)
 src/courses_pro.js die Bahnen des Tüftlerreichs und die Weltenliste
 src/editor.js     Baumodus (Editor für eigene Bahnen)
 manifest.webmanifest, sw.js, icons/   Web-App: Installieren und offline spielen
@@ -1832,4 +2071,19 @@ src/music.js      Musik: je Welt ein erzeugter Klangteppich (WebAudio)
 src/worldmap.js   Weltkarte: Landkarte aus gerechneter Küste, Gelände je Biom und die Orte der Welten
 src/title.js      animierte Startbildschirm-Szene mit Tag-Nacht-Wechsel
 src/main.js       Spielablauf, Eingabe, Punkte
+
+src/3d/index.html   die eigene Seite von Fantasy Golf 3D (eigene Adresse, eigenes Ladebild)
+src/3d/stil3d.css   ihr Stilblatt – das 2,5D-Spiel hat sein eigenes und weiß von diesem nichts
+src/3d/start3d.js   der Anlasser: Welt starten, Ladebild weg, Zierschrift, Service Worker
+src/3d/manifest3d.webmanifest  damit sich die 3D-Welt als eigene App einrichten lässt
+src/3d/mathe3d.js   Vektoren, Matrizen, Rauschen – die Rechnung für drei Dimensionen
+src/3d/gl3d.js      der 3D-Zeichner: WebGL, Sonne, Schattenwurf, Nebel (ohne fremde Bibliothek)
+src/3d/bauen3d.js   die Bauhütte: Grundkörper und der Sammler, der die feste Welt zusammenbackt
+src/3d/deko3d.js    Burg, Türme, Häuser, Scheunen, Bäume, Felsen, Zäune, Zelte, Fahnen, Wolken
+src/3d/bahnen3d.js  die Welt „Grasland" mit ihren neun Bahnen und die Liste aller Welten
+src/3d/welt3d.js    aus Kartenzeichen wird Landschaft: Gelände, Wasser, Bewuchs, Höhe und Neigung
+src/3d/physik3d.js  wie der Ball in 3D rollt, springt, abprallt und einlocht
+src/3d/karte3d.js   die Weltkarte als Insel im Meer, aus gerechneter Küste
+src/3d/spiel3d.js   Ablauf der 3D-Welt: Weltkarte, Bahnwahl, Spielen, Ergebnis
+tools/3d.mjs        prüft die 3D-Welt ohne Browser: Bahnen, Dreiecke, Gelände, Spielbarkeit, Par
 ```
