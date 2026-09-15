@@ -267,6 +267,48 @@ const Bauen = (() => {
         return B;
       },
 
+      /* Eine Röhre: eine Walze mit einem Loch von oben nach unten. Gebaut wird sie aus vier
+         Teilen – Außenmantel, Innenmantel und zwei Kreisringen an den Enden.
+
+         Der Innenmantel ist das Besondere daran: Seine Dreiecke laufen andersherum und seine
+         Normalen zeigen nach innen. Ohne beides sähe man beim Blick in die Röhre nichts als das,
+         was dahinter liegt – Rückseiten werden nicht gezeichnet, und eine nach außen zeigende
+         Normale macht aus der Innenwand eine Fläche, die von der falschen Seite beleuchtet wird.
+
+         'beule' verzieht den Außenmantel, damit ein hohler Baumstamm nicht wie ein Abflussrohr
+         aussieht. Innen bleibt es glatt: Dort rollt der Ball. */
+      roehre(rAussen, rInnen, h, kanten, col, colInnen, beule = 0, saat = 3) {
+        const ca = farbe(col), ci = farbe(colInnen || col);
+        const z = beule ? M3.zufall(saat * 1201 + 5) : null;
+        const knick = [];
+        for (let i = 0; i <= kanten; i++) knick.push(z ? 1 + (z() * 2 - 1) * beule : 1);
+        const p = (i, r, y) => {
+          const a = (i % kanten) / kanten * M3.TAU3;
+          return [Math.cos(a) * r, y, Math.sin(a) * r];
+        };
+        for (let i = 0; i < kanten; i++) {
+          const a0 = i / kanten * M3.TAU3, a1 = (i + 1) / kanten * M3.TAU3;
+          const c0 = Math.cos(a0), s0 = Math.sin(a0), c1 = Math.cos(a1), s1 = Math.sin(a1);
+          const k0 = knick[i], k1 = knick[i + 1];
+          const A0 = [c0 * rAussen * k0, 0, s0 * rAussen * k0], A1 = [c1 * rAussen * k1, 0, s1 * rAussen * k1];
+          const B0 = [c0 * rAussen * k0, h, s0 * rAussen * k0], B1 = [c1 * rAussen * k1, h, s1 * rAussen * k1];
+          const I0 = p(i, rInnen, 0), I1 = p(i + 1, rInnen, 0);
+          const J0 = p(i, rInnen, h), J1 = p(i + 1, rInnen, h);
+          // Außenmantel, Normale nach außen
+          B.dreieckWeich(A0, B0, B1, [c0, 0, s0], [c0, 0, s0], [c1, 0, s1], ca);
+          B.dreieckWeich(A0, B1, A1, [c0, 0, s0], [c1, 0, s1], [c1, 0, s1], ca);
+          // Innenmantel, andersherum und mit Normale nach innen
+          B.dreieckWeich(I0, J1, J0, [-c0, 0, -s0], [-c1, 0, -s1], [-c0, 0, -s0], ci);
+          B.dreieckWeich(I0, I1, J1, [-c0, 0, -s0], [-c1, 0, -s1], [-c1, 0, -s1], ci);
+          /* Die beiden Kreisringe an den Enden. Die Reihenfolge der Ecken ist dieselbe wie bei
+             den Deckeln der Walze – nur steht dort, wo bei ihr der Mittelpunkt steht, hier der
+             Innenkreis. */
+          B.dreieck(B1, B0, J0, ci); B.dreieck(B1, J0, J1, ci);
+          B.dreieck(I0, A0, A1, ci); B.dreieck(I0, A1, I1, ci);
+        }
+        return B;
+      },
+
       /* Kugel mit weichen Normalen. 'beule' verzieht sie unregelmäßig – so wird aus einer Kugel
          ein Findling oder eine Baumkrone, ohne dass jemand einen Felsen von Hand modelliert. */
       /* 'colOben' färbt die Kugel nach oben hin um – ein Dreieck bekommt die Farbe, die zu

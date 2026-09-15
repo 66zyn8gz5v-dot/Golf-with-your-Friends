@@ -261,8 +261,9 @@ const BAHNEN3D = (() => {
       {
         name: 'Der Pferdehof',
         par: 3,
-        intro: 'Über die Holzrampe auf die Terrasse, dort oben liegt das Loch. Zu wenig Kraft, und '
-             + 'der Ball kommt die Bretter wieder herunter.',
+        intro: 'Erst durch den hohlen Baumstamm – oder außen herum –, dann über die Holzrampe auf '
+             + 'die Terrasse. Dort oben liegt das Loch; zu wenig Kraft, und der Ball kommt die '
+             + 'Bretter wieder herunter.',
         karte: [
           '............',
           '............',
@@ -280,7 +281,7 @@ const BAHNEN3D = (() => {
           '...##,,##...',
           '...##,,##...',
           '...######...',
-          '...######...',
+          '...x####x...',
           '...######...',
           '...######...',
           '...######...',
@@ -296,6 +297,12 @@ const BAHNEN3D = (() => {
             /* Gedreht um eine halbe Umdrehung, weil der Ball von hinten kommt: Die Auffahrt muss
                zum Abschlag zeigen, das Podest zum Loch. */
             { x: 6, z: 5.5, dreh: Math.PI, lang: 7, breit: 6, hoch: 0.55, auffahrt: 3 },
+          ],
+          /* Der hohle Baumstamm zwischen den beiden Felsnadeln. Er ist der direkte Weg und der
+             schmalste; rechts und links von ihm bleibt je eine Gasse von anderthalb Feldern. Wer
+             sie nimmt, verliert keinen Schlag, aber die Linie zum Loch. */
+          roehren: [
+            { x: 6, z: 17.5, lang: 3.2, weite: 0.8, dick: 0.62 },
           ],
           huegel: [
             { x: 6, z: 3.5, r: 2, h: -0.3 },

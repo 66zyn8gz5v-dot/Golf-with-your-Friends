@@ -159,6 +159,21 @@ const Welt3D = (() => {
         halbX: (quer ? lang : breit) / 2, halbZ: (quer ? breit : lang) / 2 };
     });
 
+    /* Röhren: liegende hohle Baumstämme quer über die Bahn. Anders als eine Brücke brauchen sie
+       keine zweite Ebene – der Ball bleibt die ganze Zeit auf dem Boden, er läuft nur durch etwas
+       hindurch statt darüber. Deshalb sind sie nichts weiter als zwei Klötze mit einer Lücke
+       dazwischen, und die Kugelrechnung muss gar nicht wissen, dass es eine Röhre ist.
+
+       Wie die Brücken stehen sie nur längs oder quer, weil die Kugelrechnung als Wand
+       ausschließlich achsenparallele Rechtecke kennt. */
+    const roehren = (rr => rr.map(ro => {
+      const quer = Math.abs(Math.round((ro.dreh || 0) / (Math.PI / 2))) % 2 === 1;
+      return { x: ro.x, z: ro.z, quer,
+        lang: ro.lang === undefined ? 3 : ro.lang,
+        weite: ro.weite === undefined ? 0.8 : ro.weite,
+        dick: ro.dick === undefined ? 0.62 : ro.dick };
+    }))(g.roehren || []);
+
     const rausch = M3.rauschen(9001 + (bahn.name || '').length * 37);
 
     /* Die Abfrage steht bewusst verneint (!(ix >= 0) statt ix < 0): So fällt auch eine Stelle
@@ -336,8 +351,32 @@ const Welt3D = (() => {
       }
     }
 
-    /* Eine Liste für die Kugelrechnung: Felsnadeln, Banden und Brückengeländer zusammen. */
-    const wand = [...felsen, ...banden.values(), ...gelaender];
+    /* Die Röhren, als Sperren gerechnet: links und rechts der Öffnung je ein Klotz, der bis weit
+       über die Bahn hinausreicht. Die Innenkanten dieser beiden Klötze SIND die Röhrenöffnung –
+       derselbe Trick wie bei den Banden, wo man nur die Vorderseite eines dicken Klotzes sieht.
+
+       Die Oberkante liegt am Scheitel des Stamms: Ein rollender Ball prallt ab, ein springender
+       fliegt darüber. Das ist bei einem Stamm von zwei Dritteln Feld Höhe die Ausnahme, aber es
+       ist dieselbe Regel wie überall sonst, und darum muss sie niemand eigens lernen. */
+    const roehrenWand = [];
+    for (const ro of roehren) {
+      const oben = boden(ro.x, ro.z) + ro.dick * 2;
+      const halbLang = ro.lang / 2, halbWeit = ro.weite / 2;
+      /* Die Sperre reicht genau bis zur Rinde und keinen Finger weiter. Im ersten Versuch stand
+         hier eine Zahl von dreißig Feldern, damit die Röhre „die ganze Bahn sperrt" – dann sieht
+         man einen schmalen Stamm und läuft rechts daneben gegen eine unsichtbare Wand. Ein
+         liegender Stamm ist von oben gesehen ein Rechteck, und genau das ist er hier auch. */
+      for (const seite of [-1, 1]) {
+        const a = halbWeit, b = ro.dick;
+        if (ro.quer) roehrenWand.push({ x0: ro.x - halbLang, x1: ro.x + halbLang,
+          z0: ro.z + (seite < 0 ? -b : a), z1: ro.z + (seite < 0 ? -a : b), oben });
+        else roehrenWand.push({ z0: ro.z - halbLang, z1: ro.z + halbLang,
+          x0: ro.x + (seite < 0 ? -b : a), x1: ro.x + (seite < 0 ? -a : b), oben });
+      }
+    }
+
+    /* Eine Liste für die Kugelrechnung: Felsnadeln, Banden, Brückengeländer und Röhren zusammen. */
+    const wand = [...felsen, ...banden.values(), ...gelaender, ...roehrenWand];
 
     const finde = ch => {
       for (let iz = 0; iz < T; iz++) { const ix = karte[iz].indexOf(ch); if (ix >= 0) return [ix + 0.5, iz + 0.5]; }
@@ -351,7 +390,7 @@ const Welt3D = (() => {
       : (x, z) => artVon(zeichenAn(x, z));
 
     return { bahn, B, T, zeichen, zeichenAn, art,
-      hoehe, boden, neigung, felsen, wand, kanten, bruecken, fahrbahn, aufBruecke, BANDE_HOCH, zumRand, RAND,
+      hoehe, boden, neigung, felsen, wand, kanten, bruecken, roehren, fahrbahn, aufBruecke, BANDE_HOCH, zumRand, RAND,
       abschlag: finde('T'), lochFeld: finde('H') };
   }
 
@@ -941,6 +980,14 @@ const Welt3D = (() => {
     }
   }
 
+  /* Die Röhren zeichnen – aus denselben Zahlen, aus denen gerechnet wird. */
+  function roehrenNetz(B, gl) {
+    for (const ro of gl.roehren) {
+      B.stelle(ro.x, gl.boden(ro.x, ro.z), ro.z, ro.quer ? Math.PI / 2 : 0, 1,
+        b => Deko3D.stammroehre(b, ro.lang, ro.dick, Math.round(ro.x * 61 + ro.z * 17)));
+    }
+  }
+
   /* Eine Steinbrücke als Zier – sie steht dort, wo der Bach neben der Bahn vorbeiläuft, und über
      sie führt kein Weg, weil hinter ihr das Aus beginnt. Wer eine Brücke will, über die gespielt
      wird, schreibt sie nach 'gelaende.bruecken'; dann wird sie gerechnet und nicht nur gemalt. */
@@ -1461,7 +1508,7 @@ const Welt3D = (() => {
     return e;
   }
 
-  return { ART, artVon, gelaende, gelaendeNetz, lochNetz, wasserNetz, entenNetz, schildNetz, felsenNetz, bandenNetz, brueckenNetz, burgNetz, dekoNetz,
+  return { ART, artVon, gelaende, gelaendeNetz, lochNetz, wasserNetz, entenNetz, schildNetz, felsenNetz, bandenNetz, brueckenNetz, roehrenNetz, burgNetz, dekoNetz,
     dekoOrt, dekoOrte, dekoFuss,
     streuenNetz, uferNetz, fernNetz, himmelNetz, wolkenNetz, tuchNeu, tuchFrisch,
     pfeilNeu, pfeilFrisch };

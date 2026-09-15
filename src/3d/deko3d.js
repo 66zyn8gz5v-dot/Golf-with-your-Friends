@@ -954,6 +954,37 @@ const Deko3D = (() => {
     return B;
   }
 
+  /* Der hohle Baumstamm, durch den der Ball rollt – das Hindernis aus Fynns Vorbild.
+
+     Gebaut wird er LIEGEND, mit der Achse entlang z und dem Boden bei y=0. Das ist Absicht: So
+     kann die Bahn ihn einfach hinstellen wie jedes andere Stück, ohne selbst zu wissen, dass er
+     eigentlich eine aufrechte Röhre ist, die gekippt wurde.
+
+     Die Metallbänder an den Enden sind nicht nur Zier. Sie sind der Grund, warum man von Weitem
+     sieht, dass der Stamm hohl ist: Zwei helle Ringe um eine dunkle Öffnung liest das Auge als
+     Loch, ein nackter Stamm dagegen als Klotz. */
+  function stammroehre(B, lang = 3, rAussen = 0.62, saat = 1) {
+    const z = M3.zufall(saat * 457 + 3);
+    const rInnen = rAussen * 0.66;
+    const rf = rinde(z);
+    const holz = Bauen.stufe('#c9a877', 0.92 + z() * 0.2);
+    B.mit(M3.mult(M3.verschieben(0, rAussen, -lang / 2), M3.drehenX(-Math.PI / 2)), b => {
+      b.roehre(rAussen, rInnen, lang, 14, rf, holz, 0.05, saat * 7);
+      /* Zwei Bänder, ein Stück von den Enden weg – genau auf der Kante sähen sie aus wie ein
+         Rahmen um ein Bild, ein Stück davor wie Beschläge an einem Stamm. */
+      for (const u of [0.1, 0.9]) b.mit(M3.verschieben(0, lang * u - lang * 0.035, 0),
+        c => c.walze(rAussen * 1.06, rAussen * 1.06, lang * 0.07, 14, '#b9bcc0', null));
+      /* Ein paar Astansätze auf der Rinde, damit der Stamm kein Rohr ist. */
+      for (let i = 0; i < 3; i++) {
+        const a = z() * M3.TAU3, u = 0.2 + z() * 0.6;
+        b.mit(M3.mult(M3.mult(M3.verschieben(Math.cos(a) * rAussen * 0.9, lang * u, Math.sin(a) * rAussen * 0.9),
+          M3.drehenY(-a)), M3.drehenZ(Math.PI / 2)),
+          c => c.walze(rAussen * 0.16, rAussen * 0.1, rAussen * 0.3, 5, Bauen.stufe(rf, 0.85), null));
+      }
+    });
+    return B;
+  }
+
   /* Fahnenmast ohne Tuch – das Tuch weht und liegt darum im beweglichen Gitter. */
   function mast(B, h, col = F.stein) {
     B.walze(0.032, 0.022, h, 6, col, null);
@@ -964,5 +995,5 @@ const Deko3D = (() => {
   return { F, BAUMARTEN, baum, fernbaum, tanne, kiefer, pappel, tropfenbaum, birke, laubbaum, eiche, blume, grasbueschel, stumpf, totholz,
     busch, fels, felsgruppe, turm, haus, scheune, brunnen, heuhaufen, steinmauer, zelt, karren, obstbaum,
     burg, muehle, muehlenfluegel,
-    zaun, wolke, mast, schilf, fliegenpilz, gartenzwerg, ente, bahnschild };
+    zaun, wolke, mast, schilf, fliegenpilz, gartenzwerg, ente, bahnschild, stammroehre };
 })();

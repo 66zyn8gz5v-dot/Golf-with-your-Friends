@@ -352,6 +352,7 @@ const Golf3D = (() => {
     Welt3D.felsenNetz(B, gl);
     Welt3D.bandenNetz(B, gl);
     Welt3D.brueckenNetz(B, gl);
+    Welt3D.roehrenNetz(B, gl);
     const burgFahnen = Welt3D.burgNetz(B, gl, bahn.burg);
     Welt3D.dekoNetz(B, gl, beweglich);
     Welt3D.streuenNetz(B, gl, AUSSEN);

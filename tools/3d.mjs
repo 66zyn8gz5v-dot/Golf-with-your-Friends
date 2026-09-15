@@ -215,6 +215,7 @@ bauwerkPruefen('Fliegenpilz', b => Deko3D.fliegenpilz(b, 1, 5));
 bauwerkPruefen('Gartenzwerg', b => Deko3D.gartenzwerg(b, 1, 3));
 bauwerkPruefen('Gummiente', b => Deko3D.ente(b, 1, 9));
 bauwerkPruefen('Bahnschild', b => Deko3D.bahnschild(b, 7, 1));
+bauwerkPruefen('Baumstammröhre', b => Deko3D.stammroehre(b, 3, 0.62, 5));
 bauwerkPruefen('Grasbüschel', b => Deko3D.grasbueschel(b, 1, '#5fa03a', 5));
 bauwerkPruefen('Baumstumpf', b => Deko3D.stumpf(b, 1, 5));
 bauwerkPruefen('Totholz', b => Deko3D.totholz(b, 1, 5));
@@ -348,6 +349,37 @@ for (const welt of BAHNEN3D.WELTEN) {
         steil = Math.max(steil, g);
       }
       if (steil > 0.30) melde(name, `die Auffahrt der Brücke bei ${br.x}/${br.z} steigt mit ${(steil * 100).toFixed(0)} % – über 30 % kommt ein sanft gespielter Ball nicht hinauf`);
+    }
+
+    /* Läuft der Ball durch die Röhre? Und prallt er an ihrer Rinde ab? Beides gehört zusammen:
+       Eine Röhre, durch die nichts hindurchgeht, ist ein Klotz, und eine, an der nichts abprallt,
+       ist gemalt. Gespielt wird von beiden Seiten – die Öffnung muss in beide Richtungen offen
+       sein, und daran ist schon manches Hindernis gescheitert, das nur vorwärts geprüft wurde. */
+    for (const ro of gl.roehren) {
+      const laengs = ro.quer ? [1, 0] : [0, 1], quer = ro.quer ? [0, 1] : [1, 0];
+      const start = ro.lang / 2 + 1.4;
+      const rollen = (sx, sz, ux, uz) => {
+        const kugel = Physik3D.ball(gl, sx, sz);
+        Physik3D.schlag(kugel, ux, uz, 0.5);
+        let t = 0;
+        while (!kugel.ruht && t < 30) { Physik3D.bewegen(kugel, gl, gl.lochFeld, 1 / 120); t += 1 / 120; }
+        return kugel;
+      };
+      const jenseits = k => (laengs[0] ? (k.x - ro.x) : (k.z - ro.z));
+      for (const vor of [-1, 1]) {
+        const sx = ro.x - laengs[0] * start * vor, sz = ro.z - laengs[1] * start * vor;
+        const k = rollen(sx, sz, laengs[0] * vor, laengs[1] * vor);
+        if (jenseits(k) * vor < ro.lang / 2) {
+          melde(name, `ein Ball, der mittig auf die Röhre bei ${ro.x}/${ro.z} gespielt wird, kommt nicht hindurch`);
+          break;
+        }
+      }
+      /* Und auf die Rinde: Ein Ball, der einen halben Stammdurchmesser neben der Mitte
+         ankommt, muss abprallen und diesseits liegen bleiben. */
+      const ab = ro.weite / 2 + (ro.dick - ro.weite / 2) / 2;
+      const px = ro.x - laengs[0] * start + quer[0] * ab, pz = ro.z - laengs[1] * start + quer[1] * ab;
+      const k2 = rollen(px, pz, laengs[0], laengs[1]);
+      if (jenseits(k2) > ro.lang / 2) melde(name, `ein Ball auf die Rinde der Röhre bei ${ro.x}/${ro.z} läuft hindurch, statt abzuprallen`);
     }
 
     /* Steht ein Bauwerk auf der Spielfläche? Seit die Häuser dreimal so groß sind, ist das keine
