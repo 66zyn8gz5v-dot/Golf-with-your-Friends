@@ -99,6 +99,38 @@ const Bauen = (() => {
       },
 
       /* Ein Dreieck mit eigenen Normalen je Ecke – für alles Runde, das weich wirken soll. */
+      /* Ein Zweigkranz: die Etage eines Nadelbaums.
+
+         Ein Kegel ist rund, und ein runder Nadelbaum sieht aus wie ein Hütchen. Eine Tannenetage
+         besteht in Wirklichkeit aus einzelnen Zweigen, die in verschiedenen Längen nach außen
+         gehen und an den Spitzen hängen. Genau das steht hier: Der Kranz wechselt von Kante zu
+         Kante zwischen langen und kurzen Zweigen, und die langen hängen tiefer.
+
+         Er kostet dabei WENIGER als der Kegel, den er ersetzt – ein Kegelstumpf braucht Mantel und
+         zwei Deckel, dieser Kranz nur Ober- und Unterseite. Detail muss nicht teuer sein, sie
+         muss an der richtigen Stelle sitzen.
+
+         'zacke' ist die Länge der kurzen Zweige im Verhältnis zu den langen, 'haenge' wie tief die
+         langen durchhängen. */
+      zweigkranz(rLang, hoehe, kanten, col, colOben, zacke = 0.62, haenge = 0.3) {
+        const c = farbe(col), co = colOben ? farbe(colOben) : c;
+        const spitze = [0, hoehe, 0];
+        const p = i => {
+          const a = i / kanten * M3.TAU3;
+          const lang = (i % 2) ? zacke : 1;
+          const rr = rLang * lang;
+          return [Math.cos(a) * rr, -haenge * hoehe * lang * lang, Math.sin(a) * rr];
+        };
+        for (let i = 0; i < kanten; i++) {
+          const u = p(i), v = p(i + 1);
+          /* Oberseite: von der Spitze nach außen. Unterseite: zurück zur Mitte, damit der Kranz
+             geschlossen ist und im Schattenbild eine Fläche hat. */
+          B.dreieck(spitze, v, u, co);
+          B.dreieck([0, 0, 0], u, v, c);
+        }
+        return B;
+      },
+
       dreieckWeich(a, b, c, na, nb, nc, col) {
         col = farbe(col);
         platzFuer(3);
@@ -163,8 +195,16 @@ const Bauen = (() => {
 
          'colOben' färbt nach oben hin um. Fast alles Gewachsene ist oben heller als unten – das
          ist der halbe Unterschied zwischen „Kegel" und „Baum". */
-      drehkoerper(umriss, kanten, col, colOben) {
+      drehkoerper(umriss, kanten, col, colOben, zottel = 0, saat = 3) {
         const c = farbe(col), co = colOben ? farbe(colOben) : null;
+        /* "zottel" beult den Umriss je Ecke und Ring aus und schaltet dabei auf flache Schattierung
+           um. Für Laub ist das der ganze Unterschied: Eine glatte Drehung bleibt eine gedrechselte
+           Säule, mit Beulen und einzeln beleuchteten Facetten wird daraus eine Krone. Es kostet
+           kein einziges Dreieck mehr – nur andere Ecken. */
+        const zz = zottel ? M3.zufall(saat * 1493 + 7) : null;
+        const beule = [];
+        if (zz) for (let i = 0; i < umriss.length * (kanten + 1); i++) beule.push(1 + (zz() * 2 - 1) * zottel);
+        const dehnen = (i, k) => (zz && umriss[i].r > 1e-5 ? beule[i * (kanten + 1) + (k % kanten)] : 1);
         const y0 = umriss[0].y, y1 = umriss[umriss.length - 1].y, hoch = (y1 - y0) || 1;
         // Normale je Umrisspunkt: aus den Steigungen davor und danach gemittelt
         const norm = umriss.map((p, i) => {
@@ -184,12 +224,15 @@ const Bauen = (() => {
           for (let k = 0; k < kanten; k++) {
             const w0 = k / kanten * M3.TAU3, w1 = (k + 1) / kanten * M3.TAU3;
             const c0 = Math.cos(w0), s0 = Math.sin(w0), c1 = Math.cos(w1), s1 = Math.sin(w1);
-            const u0 = [c0 * a.r, a.y, s0 * a.r], u1 = [c1 * a.r, a.y, s1 * a.r];
-            const o0 = [c0 * b.r, b.y, s0 * b.r], o1 = [c1 * b.r, b.y, s1 * b.r];
+            const ra0 = a.r * dehnen(i, k), ra1 = a.r * dehnen(i, k + 1);
+            const rb0 = b.r * dehnen(i + 1, k), rb1 = b.r * dehnen(i + 1, k + 1);
+            const u0 = [c0 * ra0, a.y, s0 * ra0], u1 = [c1 * ra1, a.y, s1 * ra1];
+            const o0 = [c0 * rb0, b.y, s0 * rb0], o1 = [c1 * rb1, b.y, s1 * rb1];
             const nu0 = [c0 * na[0], na[1], s0 * na[0]], nu1 = [c1 * na[0], na[1], s1 * na[0]];
             const no0 = [c0 * nb[0], nb[1], s0 * nb[0]], no1 = [c1 * nb[0], nb[1], s1 * nb[0]];
-            if (a.r < 1e-5) B.dreieckWeich(u0, o0, o1, [0, -1, 0], no0, no1, f);
-            else if (b.r < 1e-5) B.dreieckWeich(u0, [0, b.y, 0], u1, nu0, [0, 1, 0], nu1, f);
+            if (a.r < 1e-5) zz ? B.dreieck(u0, o0, o1, f) : B.dreieckWeich(u0, o0, o1, [0, -1, 0], no0, no1, f);
+            else if (b.r < 1e-5) zz ? B.dreieck(u0, [0, b.y, 0], u1, f) : B.dreieckWeich(u0, [0, b.y, 0], u1, nu0, [0, 1, 0], nu1, f);
+            else if (zz) { B.dreieck(u0, o0, o1, f); B.dreieck(u0, o1, u1, f); }
             else { B.dreieckWeich(u0, o0, o1, nu0, no0, no1, f); B.dreieckWeich(u0, o1, u1, nu0, no1, nu1, f); }
           }
         }
@@ -229,7 +272,7 @@ const Bauen = (() => {
       /* 'colOben' färbt die Kugel nach oben hin um – ein Dreieck bekommt die Farbe, die zu
          seiner mittleren Höhe gehört. Bei wenigen Ringen gibt das sichtbare Bänder, und genau
          so sehen die gemalten Vorlagen aus. */
-      kugel(r, ringe, kanten, col, beule, saat, colOben) {
+      kugel(r, ringe, kanten, col, beule, saat, colOben, hart) {
         const c = farbe(col);
         const z = beule ? M3.zufall(saat || 7) : null;
         const knick = [];
@@ -248,8 +291,11 @@ const Bauen = (() => {
           /* Am Pol fallen zwei Ecken des Vierecks zusammen; dort bleibt nur ein Dreieck übrig.
              Das ist der Grund für die beiden Abfragen – ohne sie stünden an Nord- und Südpol
              entartete Dreiecke ohne Fläche, und eines der beiden Kappenstücke fehlte. */
-          if (i > 0) B.dreieckWeich(a.p, b.p, d.p, a.n, b.n, d.n, farbeHier);
-          if (i + 1 < ringe) B.dreieckWeich(a.p, d.p, f.p, a.n, d.n, f.n, farbeHier);
+          /* "hart" heißt: keine gemittelten Normalen, sondern eine je Dreieck. Für Laubballen ist
+             das der Unterschied zwischen einer Kugel und einem Büschel – die Facetten fangen das
+             Licht einzeln, und aus sechs Kanten wird ein zerklüfteter Umriss statt einer Murmel. */
+          if (i > 0) hart ? B.dreieck(a.p, b.p, d.p, farbeHier) : B.dreieckWeich(a.p, b.p, d.p, a.n, b.n, d.n, farbeHier);
+          if (i + 1 < ringe) hart ? B.dreieck(a.p, d.p, f.p, farbeHier) : B.dreieckWeich(a.p, d.p, f.p, a.n, d.n, f.n, farbeHier);
         }
         return B;
       },

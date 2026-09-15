@@ -84,27 +84,39 @@ const Deko3D = (() => {
   /* Auch die Rinde schwankt – heller Ocker bis fast schwarzbraun. */
   const rinde = z => Bauen.stufe(F.stammFarbe, 0.72 + z() * 0.55);
 
-  /* Die gestufte Tanne: mehrere Kegel übereinander, jeder ein wenig kleiner, mit einer Lücke
-     dazwischen. Die Lücke ist das Entscheidende – ohne sie entsteht ein glatter Kegel, mit ihr
-     sieht man die Etagen, die eine Tanne ausmachen. Und weil der Stamm durch die Lücken
+  /* Die gestufte Tanne: Etagen aus Zweigkränzen übereinander, jede ein wenig kleiner, mit einer
+     Lücke dazwischen. Die Lücke ist das Entscheidende – ohne sie entsteht ein glatter Kegel, mit
+     ihr sieht man die Etagen, die eine Tanne ausmachen. Und weil der Stamm durch die Lücken
      durchgeht, sieht man auch, dass die Etagen an etwas hängen. */
   function tanne(B, hoehe = 1, saat = 1) {
     const r = M3.zufall(saat * 977 + 13), fa = nadelFarbe(r), rf = rinde(r);
-    const stammH = hoehe * 0.17;
-    B.walze(hoehe * 0.055, hoehe * 0.028, stammH + hoehe * 0.62, 6, rf, null);
-    const lagen = 4 + (r() < 0.45 ? 1 : 0);
+    const stammH = hoehe * 0.14;
+    B.walze(hoehe * 0.055, hoehe * 0.022, stammH + hoehe * 0.8, 6, rf, null);
+    /* Sieben bis neun Etagen statt vier bis fünf, und jede ist ein Zweigkranz statt eines Kegels:
+       lange und kurze Zweige im Wechsel, die langen hängen durch. Zusammen ist das die zerzauste
+       Silhouette einer Tanne – ein glatter Kegel bleibt ein Hütchen, so viele man auch stapelt.
+
+       Weil ein Kranz nur Ober- und Unterseite hat und ein Kegelstumpf Mantel und zwei Deckel,
+       kosten neun Etagen ungefähr so viel wie vorher fünf. */
+    const lagen = 7 + Math.floor(r() * 3);
     for (let i = 0; i < lagen; i++) {
-      const u = i / lagen;
-      const y = stammH + hoehe * (0.70 * u) * (1 - u * 0.12);
-      const rr = hoehe * (0.30 - u * 0.22) * (0.92 + r() * 0.16);
-      const hh = hoehe * (0.34 - u * 0.12);
-      const f = Bauen.mischen(fa[0], fa[1], u);
-      /* Jede Etage ein Stück weitergedreht: Acht Kanten übereinander in gleicher Stellung ergeben
-         eine glatte Säule mit Rillen – versetzt ergeben sie eine zerzauste Silhouette. */
+      const u = i / (lagen - 1);
+      const y = stammH + hoehe * 0.76 * Math.pow(u, 1.06);
+      /* Nach oben schnell schmaler, mit einer Prise Zufall je Etage – zwei gleich breite
+         Etagen übereinander sehen gedrechselt aus. */
+      const rr = hoehe * (0.32 - u * 0.27) * (0.88 + r() * 0.24);
+      const hh = hoehe * (0.2 - u * 0.09);
+      const f = Bauen.mischen(fa[0], fa[1], u * 0.8 + 0.1);
+      const hell = Bauen.mischen(fa[0], fa[1], Math.min(1, u * 0.8 + 0.45));
+      /* Jede Etage ein Stück weitergedreht: gleich gestellte Zacken übereinander ergäben Rippen
+         die ganze Tanne hinauf. */
       B.mit(M3.mult(M3.verschieben(0, y, 0), M3.drehenY(r() * 6)), b => {
-        b.walze(rr, rr * 0.16, hh, 8, f, null, 0, Bauen.mischen(fa[0], fa[1], Math.min(1, u + 0.35)));
+        b.zweigkranz(rr, hh, 12, f, hell, 0.58 + r() * 0.14, 0.26 + r() * 0.2);
       });
     }
+    /* Die Spitze: ein schmaler Kegel, damit der Baum oben nicht abgeschnitten wirkt. */
+    B.mit(M3.verschieben(0, stammH + hoehe * 0.78, 0),
+      b => b.walze(hoehe * 0.035, 0, hoehe * 0.16, 6, Bauen.mischen(fa[0], fa[1], 0.9), null));
     return B;
   }
 
@@ -122,9 +134,10 @@ const Deko3D = (() => {
       const u = i / 2;
       const y = oben * (0.82 + u * 0.26);
       const rr = hoehe * (0.26 - u * 0.15);
-      B.mit(M3.verschieben((r() - 0.5) * hoehe * 0.06, y, (r() - 0.5) * hoehe * 0.06),
-        b => b.drehkoerper([{ r: 0, y: 0 }, { r: rr, y: hoehe * 0.05 }, { r: rr * 0.9, y: hoehe * 0.08 },
-          { r: 0, y: hoehe * 0.17 }], 9, fa[0], fa[1]));
+      /* Der Schirm war ein glatter Drehkörper – und sah aus wie ein Pilzhut. Ein Zweigkranz mit
+         weit abstehenden, stark hängenden Zweigen trifft die Kiefer besser und kostet weniger. */
+      B.mit(M3.mult(M3.verschieben((r() - 0.5) * hoehe * 0.06, y, (r() - 0.5) * hoehe * 0.06), M3.drehenY(r() * 6)),
+        b => b.zweigkranz(rr, hoehe * (0.1 + u * 0.04), 12, fa[0], fa[1], 0.5 + r() * 0.16, 0.5));
     }
     return B;
   }
@@ -138,9 +151,10 @@ const Deko3D = (() => {
     /* Die Säule steht ein wenig schief und ist oben nicht ganz mittig – eine senkrechte,
        achsensymmetrische Spindel sieht gedrechselt aus. */
     B.mit(M3.mult(M3.verschieben(0, hoehe * 0.12, 0), M3.drehenZ((r() - 0.5) * 0.12)), b => b.drehkoerper([
-      { r: 0, y: 0 }, { r: dick * 0.7, y: hoehe * 0.10 }, { r: dick, y: hoehe * 0.34 },
-      { r: dick * 0.92, y: hoehe * 0.62 }, { r: dick * 0.55, y: hoehe * 0.84 }, { r: 0, y: hoehe },
-    ], 9, fa[0], fa[1]));
+      { r: 0, y: 0 }, { r: dick * 0.62, y: hoehe * 0.08 }, { r: dick * 0.95, y: hoehe * 0.22 },
+      { r: dick, y: hoehe * 0.38 }, { r: dick * 0.96, y: hoehe * 0.54 }, { r: dick * 0.84, y: hoehe * 0.70 },
+      { r: dick * 0.5, y: hoehe * 0.86 }, { r: 0, y: hoehe },
+    ], 9, fa[0], fa[1], 0.15, saat * 5 + 1));
     return B;
   }
 
@@ -152,7 +166,7 @@ const Deko3D = (() => {
     B.mit(M3.mult(M3.verschieben(0, oben, 0), M3.drehenY(r() * 6)), b => b.drehkoerper([
       { r: 0, y: 0 }, { r: rr * 0.8, y: hoehe * 0.09 }, { r: rr, y: hoehe * 0.26 },
       { r: rr * 0.78, y: hoehe * 0.45 }, { r: rr * 0.42, y: hoehe * 0.58 }, { r: 0, y: hoehe * 0.68 },
-    ], 10, fa[0], fa[1]));
+    ], 10, fa[0], fa[1], 0.17, saat * 7 + 3));
     return B;
   }
 
@@ -174,8 +188,31 @@ const Deko3D = (() => {
     for (let i = 0; i < 2; i++) {
       enden.push(ast(B, oben * 0.78, r() * M3.TAU3, hoehe * 0.14, dick * 0.7, 0.9 + r() * 0.35, weiss));
     }
-    enden.forEach((e, i) => B.mit(M3.verschieben(e[0], e[1] + hoehe * 0.04, e[2]),
-      b => b.kugel(hoehe * (0.12 + r() * 0.05), 4, 7, fa[0], 0.16, saat * 13 + i, fa[1])));
+    enden.forEach((e, i) => laubKrone(B, e[0], e[1] + hoehe * 0.04, e[2],
+      hoehe * (0.13 + r() * 0.05), fa, saat * 13 + i, 5));
+    return B;
+  }
+
+  /* Eine Laubkrone aus vielen kleinen Ballen statt eines großen.
+
+     Eine Kugel ist eine Kugel, und zwei nebeneinander sind zwei Kugeln. Laub sieht anders aus: Es
+     besteht aus Büscheln, die sich überschneiden, und seine Silhouette ist unruhig. Acht kleine
+     Ballen kosten ungefähr so viel wie zwei große – der Ballen wird grob gebaut (drei Ringe, sechs
+     Kanten) und flach schattiert, denn kantig ist hier von Vorteil: Jede Facette fängt das Licht
+     einzeln, und das gibt dem Laub Struktur. Weich geschliffen wird daraus wieder eine Kugel. */
+  function laubKrone(B, x, y, z, r, fa, saat, wieViele = 8) {
+    const zz = M3.zufall(saat * 2711 + 19);
+    for (let i = 0; i < wieViele; i++) {
+      /* Die Ballen sitzen auf einer gedrückten Kugelschale: außen kleiner, oben heller. */
+      const a = (i + zz() * 0.7) / wieViele * M3.TAU3;
+      const hoch = zz();
+      const d = r * (0.15 + zz() * 0.62) * (1 - hoch * 0.45);
+      const rr = r * (0.36 + zz() * 0.22) * (1 - hoch * 0.18);
+      const yy = y + r * (hoch * 0.9 - 0.25);
+      const ton = Bauen.mischen(fa[0], fa[1], 0.15 + hoch * 0.5 + zz() * 0.2);
+      B.mit(M3.mult(M3.verschieben(x + Math.cos(a) * d, yy, z + Math.sin(a) * d), M3.skalieren(1, 0.88, 1)),
+        b => b.kugel(rr, 3, 6, ton, 0.3, saat * 13 + i, Bauen.stufe(ton, 1.15), true));
+    }
     return B;
   }
 
@@ -189,9 +226,8 @@ const Deko3D = (() => {
     for (let i = 0; i < ballen; i++) {
       const a = dreh + i / ballen * M3.TAU3;
       const e = ast(B, oben * 0.86, a, hoehe * (0.1 + r() * 0.08), hoehe * 0.028, 0.75 + r() * 0.4, rf);
-      const rr = hoehe * (0.24 - i * 0.03 + r() * 0.05);
-      B.mit(M3.verschieben(e[0], e[1] + hoehe * 0.06, e[2]),
-        b => b.kugel(rr, 5, 9, fa[0], 0.16, saat * 31 + i, fa[1]));
+      const rr = hoehe * (0.26 - i * 0.03 + r() * 0.05);
+      laubKrone(B, e[0], e[1] + hoehe * 0.06, e[2], rr, fa, saat * 31 + i, 6);
     }
     return B;
   }
@@ -213,9 +249,9 @@ const Deko3D = (() => {
       const a = dreh + (i + r() * 0.4) / aeste * M3.TAU3;
       enden.push(ast(B, hoehe * 0.32, a, hoehe * (0.3 + r() * 0.08), dick * 0.62, 0.5 + r() * 0.25, rf));
     }
-    B.mit(M3.verschieben(0, hoehe * 0.66, 0), b => b.kugel(hoehe * 0.29, 5, 9, fa[0], 0.12, saat * 97, fa[1]));
-    enden.forEach((e, i) => B.mit(M3.verschieben(e[0], e[1] + hoehe * 0.05, e[2]),
-      b => b.kugel(hoehe * (0.19 + r() * 0.05), 4, 8, fa[0], 0.14, saat * 97 + i + 1, fa[1])));
+    laubKrone(B, 0, hoehe * 0.66, 0, hoehe * 0.3, fa, saat * 97, 8);
+    enden.forEach((e, i) => laubKrone(B, e[0], e[1] + hoehe * 0.05, e[2],
+      hoehe * (0.2 + r() * 0.05), fa, saat * 97 + i + 1, 6));
     return B;
   }
 
@@ -387,7 +423,7 @@ const Deko3D = (() => {
       const y = r * (0.3 + z() * 0.55) * (1 - d / (r * 1.2) * 0.35);
       const f = Bauen.stufe(grund, 0.84 + z() * 0.38);
       B.mit(M3.mult(M3.verschieben(Math.cos(a) * d, y, Math.sin(a) * d), M3.skalieren(1, 0.82, 1)),
-        b => b.kugel(rr, 3, 6, f, 0.3, saat * 7 + i, Bauen.stufe(f, 1.3)));
+        b => b.kugel(rr, 3, 6, f, 0.3, saat * 7 + i, Bauen.stufe(f, 1.3), true));
     }
     /* Hier standen zwei bis drei dünne Triebe, die oben herausragten und die runde Silhouette
        brechen sollten. Sie sind weg: Neben dem gemalten Gras auf dem Boden las das Auge sie als
@@ -396,7 +432,7 @@ const Deko3D = (() => {
        bleibt dabei Laub. */
     const a2 = z() * M3.TAU3, d2 = r * 0.3;
     B.mit(M3.mult(M3.verschieben(Math.cos(a2) * d2, r * 0.82, Math.sin(a2) * d2), M3.skalieren(1, 0.8, 1)),
-      b => b.kugel(r * (0.3 + z() * 0.18), 3, 6, Bauen.stufe(grund, 1.18), 0.3, saat * 11 + 5, Bauen.stufe(grund, 1.45)));
+      b => b.kugel(r * (0.3 + z() * 0.18), 3, 6, Bauen.stufe(grund, 1.18), 0.3, saat * 11 + 5, Bauen.stufe(grund, 1.45), true));
     return B;
   }
 
@@ -410,7 +446,7 @@ const Deko3D = (() => {
        Jahren liegt. */
     const oben = z() < 0.32 ? '#6f9147' : Bauen.stufe(grund, 1.16);
     B.mit(M3.mult(M3.drehenY(z() * M3.TAU3), M3.skalieren(1, 0.62 + z() * 0.3, 0.85 + z() * 0.3)),
-      b => b.kugel(r, 4, 7, grund, 0.28, saat * 17, oben));
+      b => b.kugel(r, 4, 7, grund, 0.28, saat * 17, oben, true));
     return B;
   }
 
