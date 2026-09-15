@@ -375,6 +375,14 @@ const Golf3D = (() => {
         b.mit(M3.verschieben(0, 0.16, 0), c => c.kugel(0.075, 4, 7, '#c8402f'));
       });
     }
+    /* Das Schild mit der Bahnnummer, wie auf einem richtigen Platz. */
+    Welt3D.schildNetz(B, gl, welt.bahnen.indexOf(bahn) + 1);
+    /* Das Wasser wird hier schon gerechnet, obwohl es erst zuletzt gezeichnet wird: Die Enten
+       schwimmen auf seinem Spiegel, gehören aber ins feste Gitter – sie sind undurchsichtig und
+       werfen Schatten. */
+    const W = Bauen.sammler();
+    const spiegel = Welt3D.wasserNetz(W, gl);
+    Welt3D.entenNetz(B, gl, spiegel);
     for (const netz of B.fertig(zeichner)) stuecke.push({ netz });
 
     /* Der Grasteppich kommt in ein eigenes Gitter, und zwar aus einem einzigen Grund: Er wirft
@@ -388,8 +396,6 @@ const Golf3D = (() => {
     for (const netz of WI.fertig(zeichner)) stuecke.push({ netz, boden: true });
 
     /* Wasser als durchscheinende, bewegte Decke – zuletzt gezeichnet, ohne Schattenwurf. */
-    const W = Bauen.sammler();
-    const spiegel = Welt3D.wasserNetz(W, gl);
     if (spiegel !== false) for (const netz of W.fertig(zeichner)) stuecke.push({ netz, durchsichtig: true, alpha: 0.78, welle: true, wirftSchatten: false });
 
     // Wolken, ohne Licht und ohne Schatten

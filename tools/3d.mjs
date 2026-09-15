@@ -211,6 +211,10 @@ for (const nadel of [true, false]) bauwerkPruefen('Fernbaum ' + (nadel ? 'Nadel'
 /* Das Kleinzeug am Boden steht zu Tausenden herum – eine falsch gedrehte Fläche wäre dort kein
    Fehler, den man findet, sondern ein Flimmern, das man nicht erklären kann. */
 bauwerkPruefen('Blumen', b => Deko3D.blume(b, 1, 5));
+bauwerkPruefen('Fliegenpilz', b => Deko3D.fliegenpilz(b, 1, 5));
+bauwerkPruefen('Gartenzwerg', b => Deko3D.gartenzwerg(b, 1, 3));
+bauwerkPruefen('Gummiente', b => Deko3D.ente(b, 1, 9));
+bauwerkPruefen('Bahnschild', b => Deko3D.bahnschild(b, 7, 1));
 bauwerkPruefen('Grasbüschel', b => Deko3D.grasbueschel(b, 1, '#5fa03a', 5));
 bauwerkPruefen('Baumstumpf', b => Deko3D.stumpf(b, 1, 5));
 bauwerkPruefen('Totholz', b => Deko3D.totholz(b, 1, 5));

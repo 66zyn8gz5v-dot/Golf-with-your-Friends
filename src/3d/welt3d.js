@@ -51,14 +51,14 @@ const Welt3D = (() => {
      rund elf Felder weit – der Kraftbalken ist damit auf seiner ganzen Länge brauchbar und nicht
      nur im ersten Viertel. */
   const ART = {
-    '#': { name: 'Fairway', zaeh: 0.38, reibung: 0.40, haft: 1.25, gemaeht: 1, farbe: '#79c247', farbe2: '#6bb33d' },
-    'T': { name: 'Abschlag', zaeh: 0.38, reibung: 0.40, haft: 1.25, gemaeht: 1, farbe: '#8ed158', farbe2: '#80c34c' },
-    'H': { name: 'Grün', zaeh: 0.33, reibung: 0.34, haft: 1.05, gemaeht: 0.5, farbe: '#8ad455', farbe2: '#7cc849' },
+    '#': { name: 'Fairway', zaeh: 0.38, reibung: 0.40, haft: 1.25, gemaeht: 1, farbe: '#7cc84a', farbe2: '#5da635' },
+    'T': { name: 'Abschlag', zaeh: 0.38, reibung: 0.40, haft: 1.25, gemaeht: 1, farbe: '#90d45c', farbe2: '#70b843' },
+    'H': { name: 'Grün', zaeh: 0.33, reibung: 0.34, haft: 1.05, gemaeht: 0.5, farbe: '#8cd657', farbe2: '#6fbe42' },
     ',': { name: 'Rough', zaeh: 1.5, reibung: 1.6, haft: 2.4, farbe: '#4e8f33', farbe2: '#447f2c', rau: 0.055 },
     's': { name: 'Sand', zaeh: 3.0, reibung: 5.0, haft: 4.5, farbe: '#e6d3a0', farbe2: '#d8c28c', rau: 0.02 },
     'w': { name: 'Wasser', zaeh: 1.2, reibung: 1.2, haft: 1.2, wasser: true, farbe: '#3a7a52', farbe2: '#33694a' },
     'x': { name: 'Fels', zaeh: 0.6, reibung: 0.6, haft: 1.2, wand: true, farbe: '#6f9a45', farbe2: '#638c3e' },
-    'o': { name: 'Kante', zaeh: 0.38, reibung: 0.40, haft: 1.25, gemaeht: 1, offen: true, farbe: '#79c247', farbe2: '#6bb33d' },
+    'o': { name: 'Kante', zaeh: 0.38, reibung: 0.40, haft: 1.25, gemaeht: 1, offen: true, farbe: '#7cc84a', farbe2: '#5da635' },
     /* Die Rampe ist gebautes Holz, kein Gras: Sie rollt schneller als das Fairway und hält
        weniger – wer oben nicht ankommt, kommt zurück. Ihre Höhe steht nicht hier, sondern in
        'gelaende.rampen'; dieses Zeichen sagt nur, wo die Bretter liegen. */
@@ -414,12 +414,13 @@ const Welt3D = (() => {
       const a = gl.art(mx, mz);
       /* Unter Wasser liegt Bachgrund, kein Gras – die Farbe dafür steckt schon in ART['w'].
 
-         Auf den gemähten Flächen laufen Mähstreifen quer zur Bahn: zwei Felder hell, zwei Felder
-         dunkel. Vorher wechselte die Farbe von Viereck zu Viereck, und das ergab ein Schachbrett,
-         das über die ganze Wiese schrie. Streifen dagegen erklären sich von selbst – jeder hat so
-         etwas schon auf einem Rasen gesehen – und sie zeigen nebenbei, wo die kurz geschnittene
-         Fläche aufhört. */
-      let f = Bauen.farbe(a.gemaeht && Math.floor(mz / 2) % 2 === 0 ? a.farbe2 : a.farbe);
+         Auf den gemähten Flächen liegt ein Karomuster: ein Feld hell, ein Feld dunkel, wie auf
+         einem gemähten Minigolfrasen. Hier standen einmal Mähstreifen, weil ein früherer Versuch
+         mit Karos „über die ganze Wiese schrie" – der wechselte die Farbe aber von Masche zu
+         Masche, also alle halben Felder, und das ist kein Rasenmuster mehr, sondern ein Flimmern.
+         Ein ganzes Feld je Karo ist ruhig genug und sagt sofort: Hier wird gespielt, dort nicht. */
+      const karo = Math.abs(Math.floor(mx) + Math.floor(mz)) % 2 === 0;
+      let f = Bauen.farbe(a.gemaeht && karo ? a.farbe2 : a.farbe);
       /* Die Körnung der Farbe richtet sich nach der Maschenweite. Auf dem groben Gitter weit
          draußen würde dasselbe feine Rauschen zu einem Schachbrett aus zwei Meter großen Feldern
          – man sieht dann nicht mehr die Wiese, sondern das Gitter. */
@@ -728,6 +729,9 @@ const Welt3D = (() => {
     baum:       { mal: 2.8, fuss: 0.32 },
     obstbaum:   { mal: 2.8, fuss: 0.32 },
     mast:       { mal: 1.8, fuss: 0.15 },
+    zwerg:      { mal: 1.6, fuss: 0.25 },
+    pilze:      { mal: 1.6, fuss: 0 },
+    schild:     { mal: 1.5, fuss: 0.45 },
   };
   const dekoMal = t => (DEKO[t] || { mal: 1 }).mal;
   /* Der Fuß gilt für das fertige Stück, also nach 'mal'. Das war anfangs anders gemeint und ging
@@ -834,6 +838,17 @@ const Welt3D = (() => {
           break;
         }
         case 'felsgruppe': B.stelle(d.x, h, d.z, 0, 1, b => Deko3D.felsgruppe(b, d.g * 0.6, Math.round(d.x * 13 + d.z * 7))); break;
+        case 'zwerg': {
+          /* Der Zwerg schaut zur Bahn. Ohne das steht er irgendwo herum; mit Blick auf die Bahn
+             gehört er dazu. Die Richtung kommt aus dem Abstandsfeld – dessen Anstieg zeigt von der
+             Bahn fort, also schaut er dorthin zurück. */
+          const e = 0.3, gx = gl.zumRand(d.x + e, d.z) - gl.zumRand(d.x - e, d.z);
+          const gz = gl.zumRand(d.x, d.z + e) - gl.zumRand(d.x, d.z - e);
+          const hin = (d.dreh !== undefined) ? d.dreh : Math.atan2(-gx, -gz);
+          B.stelle(d.x, h, d.z, hin, 1, b => Deko3D.gartenzwerg(b, d.g, Math.round(d.x * 53 + d.z * 19)));
+          break;
+        }
+        case 'pilze': B.stelle(d.x, h, d.z, d.dreh || 0, 1, b => Deko3D.fliegenpilz(b, d.g, Math.round(d.x * 41 + d.z * 23))); break;
         case 'bruecke': bruecke(B, gl, d); break;
         case 'mast': {
           const hoch = (d.h || 1.4) * mal;
@@ -1080,8 +1095,13 @@ const Welt3D = (() => {
          Was bleibt, sind Dinge, die ein Bild nicht sein kann – Büsche, Blumen, Steine, Totholz. */
       } else if (abstand > 2.0 && wuerfel < dichte * 0.5) {
         B.stelle(px, y, pz, r() * 6, 1, b => Deko3D.busch(b, 0.3 + r() * 0.45, r() < 0.5 ? '#4f8f35' : '#3f8a2d', Math.round(px * 37 + pz * 91)));
-      } else if (wuerfel < dichte * 0.72) {
+      } else if (wuerfel < dichte * 0.68) {
         B.stelle(px, y, pz, r() * 6, 0.9 + r() * 0.6, b => Deko3D.blume(b, 2.2, Math.round(px * 59 + pz * 11)));
+      } else if (wuerfel < dichte * 0.71) {
+        /* Fliegenpilze wachsen im Halbschatten, also weiter draußen als die Blumen und lieber am
+           Waldrand als am Bahnrand. Sie sind das auffälligste Kleinzeug, das wir haben – zu viele
+           davon, und die Wiese sieht aus wie ein Märchenbuch. */
+        if (abstand > 3) B.stelle(px, y, pz, r() * 6, 1, b => Deko3D.fliegenpilz(b, 1.5 + r() * 0.7, Math.round(px * 41 + pz * 23)));
       } else if (wuerfel < dichte * 0.84) {
         B.stelle(px, y - 0.1, pz, 0, 1, b => Deko3D.fels(b, 0.3 + r() * 0.45, Math.round(px * 23 + pz * 41)));
       } else if (abstand > 4 && wuerfel < dichte * 0.88) {
@@ -1122,6 +1142,75 @@ const Welt3D = (() => {
   /* Das Ufer bepflanzen. Gegangen wird über jedes Landfeld, das an ein Wasserfeld grenzt; dort
      kommen Schilf und Kiesel hin. Der Ball rollt durch beides hindurch – sie stehen ein paar
      Zentimeter neben der Kante und zählen für die Kugelrechnung nicht. */
+  /* Gummienten auf dem Bach. Sie schwimmen, also sitzen sie auf dem Wasserspiegel und nicht auf
+     dem Grund – deshalb bekommt diese Funktion die Höhe von wasserNetz gereicht, statt sie selbst
+     auszurechnen. Zwei oder drei genügen; eine Herde Enten auf einem Minigolfteich ist ein Witz,
+     der beim zweiten Mal nicht mehr zündet.
+
+     Gesetzt wird nur auf Wasserfelder, die groß genug für einen Teich sind: In einer Rinne von
+     einem Feld Breite sähe eine Ente aus wie hineingeklemmt. */
+  function entenNetz(B, gl, spiegel) {
+    if (spiegel === false) return;
+    const felder = [];
+    for (let iz = 0; iz < gl.T; iz++) for (let ix = 0; ix < gl.B; ix++) {
+      if (gl.zeichen(ix, iz) !== 'w') continue;
+      let ringsum = 0;
+      for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) if (gl.zeichen(ix + dx, iz + dz) === 'w') ringsum++;
+      /* Zwei Wassernachbarn genügen. Drei zu verlangen war der erste Versuch, und damit bekam ein
+         gerader Bach nie eine Ente – jedes seiner Felder hat nur zwei. */
+      if (ringsum >= 2 && !gl.aufBruecke(ix + 0.5, iz + 0.5)) felder.push([ix, iz]);
+    }
+    if (!felder.length) return;
+    const r = M3.zufall(gl.B * 313 + gl.T * 17 + 5);
+    const wieViele = Math.min(3, 1 + Math.floor(felder.length / 4));
+    for (let i = 0; i < wieViele; i++) {
+      const [ix, iz] = felder[Math.floor(r() * felder.length)];
+      const x = ix + 0.25 + r() * 0.5, z = iz + 0.25 + r() * 0.5;
+      B.stelle(x, spiegel - 0.03, z, r() * M3.TAU3, 1, b => Deko3D.ente(b, 1, Math.round(x * 97 + z * 31)));
+    }
+  }
+
+  /* Das Schild mit der Bahnnummer. Es steht seitlich hinter dem Abschlag, dort, wo es beim ersten
+     Schlag im Bild ist, ohne die Bahn zu verdecken. Welche Seite, entscheidet der Platz: Es geht
+     auf die Seite, die weiter von der Spielfläche weg ist. */
+  function schildNetz(B, gl, nummer) {
+    if (!gl.abschlag) return;
+    const [ax, az] = gl.abschlag;
+    /* Der Platz wird nicht rings um den Abschlag gesucht, sondern seitlich davon und ein Stück in
+       SPIELRICHTUNG. Das ist der Unterschied zwischen einem Schild, das man sieht, und einem, das
+       hinter der Kamera steht: Beim ersten Schlag steht die Kamera hinter dem Abschlag und schaut
+       zum Loch – alles, was hinter dem Abschlag liegt, ist damit außerhalb des Bildes. Beim ersten
+       Versuch stand es genau dort.
+
+       Gesucht wird der Platz, der einem Wunschabstand von anderthalb Feldern neben der Bande am
+       nächsten kommt: nah genug, um dazuzugehören, weit genug, um nicht im Weg zu stehen. */
+    const WUNSCH = 1.5;
+    const [lx, lz] = gl.lochFeld || [ax, az - 1];
+    const l = Math.hypot(lx - ax, lz - az) || 1;
+    const rx = (lx - ax) / l, rz = (lz - az) / l;        // Spielrichtung
+    let bestes = null;
+    for (const vor of [1.2, 2.2, 3.2]) {
+      for (const d of [2.0, 2.6, 3.2, 3.8]) {
+        for (const seite of [-1, 1]) {
+          /* Quer zur Spielrichtung – nach links und nach rechts, die freiere Seite gewinnt. */
+          const x = ax + rx * vor + rz * seite * d, z = az + rz * vor - rx * seite * d;
+          const frei = gl.zumRand(x, z);
+          if (frei < 0.7) continue;                      // noch auf der Bahn
+          const fehler = Math.abs(frei - WUNSCH) + d * 0.1 + vor * 0.05;
+          if (!bestes || fehler < bestes.fehler) bestes = { x, z, fehler };
+        }
+      }
+    }
+    if (!bestes) return;
+    /* Das Schild schaut nicht zum Abschlag, sondern dorthin, wo beim ersten Schlag die KAMERA
+       steht – ein gutes Stück dahinter. Das ist ein Unterschied von zwanzig Grad und entscheidet
+       darüber, ob man die Nummer liest oder die Kante des Bretts sieht. */
+    const kx = ax - rx * 5, kz = az - rz * 5;
+    const hin = Math.atan2(kx - bestes.x, kz - bestes.z);
+    B.stelle(bestes.x, gl.boden(bestes.x, bestes.z), bestes.z, hin, 1,
+      b => Deko3D.bahnschild(b, nummer, 1.7));
+  }
+
   function uferNetz(B, gl) {
     const r = M3.zufall(1543);
     for (let iz = -1; iz <= gl.T; iz++) for (let ix = -1; ix <= gl.B; ix++) {
@@ -1372,7 +1461,7 @@ const Welt3D = (() => {
     return e;
   }
 
-  return { ART, artVon, gelaende, gelaendeNetz, lochNetz, wasserNetz, felsenNetz, bandenNetz, brueckenNetz, burgNetz, dekoNetz,
+  return { ART, artVon, gelaende, gelaendeNetz, lochNetz, wasserNetz, entenNetz, schildNetz, felsenNetz, bandenNetz, brueckenNetz, burgNetz, dekoNetz,
     dekoOrt, dekoOrte, dekoFuss,
     streuenNetz, uferNetz, fernNetz, himmelNetz, wolkenNetz, tuchNeu, tuchFrisch,
     pfeilNeu, pfeilFrisch };

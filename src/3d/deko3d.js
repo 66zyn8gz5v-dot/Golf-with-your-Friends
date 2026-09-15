@@ -821,6 +821,139 @@ const Deko3D = (() => {
     return B;
   }
 
+
+  /* ---------- Das Kleine, das eine Bahn erst zu einem Ort macht ----------
+
+     Fliegenpilz, Gartenzwerg, Ente, Bahnschild. Nichts davon steht dem Ball im Weg, keines ist
+     größer als eine Hand – und trotzdem ist genau das der Unterschied zwischen „einer grünen
+     Fläche mit Bäumen" und „einem Minigolfplatz". Man erkennt einen Ort an seinen Kleinigkeiten,
+     nicht an seiner Kulisse. */
+
+  /* Der Fliegenpilz: roter Hut mit weißen Tupfen auf weißem Stiel. Wächst zu zweit oder zu dritt,
+     nie allein – einer ist ein Fleck, drei sind eine Pilzstelle. */
+  function fliegenpilz(B, g = 1, saat = 1) {
+    const z = M3.zufall(saat * 619 + 7);
+    const n = 2 + Math.floor(z() * 2);
+    for (let i = 0; i < n; i++) {
+      const a = z() * M3.TAU3, d = z() * 0.16 * g;
+      const gr = (0.6 + z() * 0.6) * g;
+      B.mit(M3.mult(M3.verschieben(Math.cos(a) * d, 0, Math.sin(a) * d), M3.drehenZ((z() - 0.5) * 0.3)), b => {
+        const h = 0.13 * gr;
+        /* Der Stiel ist unten dicker – eine gerade Walze sieht aus wie ein Zahnstocher. */
+        b.walze(0.026 * gr, 0.019 * gr, h, 6, '#efe9d8', '#f7f3e6');
+        /* Der Hut ist eine Halbkugel, gedrückt: außen tiefer als in der Mitte. Ein Kegel wäre
+           billiger, sähe aber aus wie ein Hütchen und nicht wie ein Pilz. */
+        b.mit(M3.mult(M3.verschieben(0, h, 0), M3.skalieren(1, 0.62, 1)),
+          c => c.kugel(0.062 * gr, 3, 8, '#c9372c', 0, 1, '#e15042'));
+        /* Die Tupfen sitzen oben auf der Kappe, nicht ringsum: Von unten sieht man sie ohnehin
+           nicht, und dort, wo sie sitzen, liest sie das Auge sofort als Fliegenpilz. */
+        for (let k = 0; k < 4; k++) {
+          const w = z() * M3.TAU3, dd = (0.2 + z() * 0.6) * 0.055 * gr;
+          b.mit(M3.verschieben(Math.cos(w) * dd, h + 0.035 * gr * (1 - dd / (0.07 * gr) * 0.5), Math.sin(w) * dd),
+            c => c.mit(M3.skalieren(1, 0.4, 1), d2 => d2.kugel(0.013 * gr, 2, 5, '#f6f2e4')));
+        }
+      });
+    }
+    return B;
+  }
+
+  /* Der Gartenzwerg. Rote Zipfelmütze, weißer Bart, blaue Jacke – die drei Sachen, an denen man
+     ihn erkennt, und mehr braucht es bei einer Figur von einem Drittel Feld Höhe nicht. Er steht
+     immer neben der Bahn und schaut auf sie: Eine Figur, die wegschaut, wirkt vergessen. */
+  function gartenzwerg(B, g = 1, saat = 1) {
+    const z = M3.zufall(saat * 787 + 11);
+    const h = 0.42 * g;
+    const jacke = ['#3f6fb5', '#2f7f5f', '#8a4a9e'][Math.floor(z() * 3)];
+    /* Körper und Kopf sind ein Drehkörper: Der Zwerg ist unten breit und läuft zum Hals hin
+       zusammen – das ist seine ganze Silhouette. */
+    B.drehkoerper([
+      { r: 0, y: 0 }, { r: h * 0.30, y: h * 0.05 }, { r: h * 0.33, y: h * 0.22 },
+      { r: h * 0.26, y: h * 0.42 }, { r: h * 0.18, y: h * 0.50 },
+    ], 9, jacke, Bauen.stufe(jacke, 1.2));
+    /* Der Bart hängt vorn über die Jacke – eine gedrückte Kugel, die unten spitz ausläuft. */
+    B.mit(M3.verschieben(0, h * 0.44, h * 0.1), b => b.drehkoerper([
+      { r: 0, y: -h * 0.26 }, { r: h * 0.13, y: -h * 0.1 }, { r: h * 0.19, y: h * 0.04 }, { r: h * 0.1, y: h * 0.12 },
+    ], 8, '#e8e2d2', '#f5f1e6', 0.12, saat * 3));
+    /* Gesicht und Nase. Die Nase ist der halbe Zwerg: ohne sie ist der Kopf eine Kugel. */
+    B.mit(M3.verschieben(0, h * 0.56, 0), b => b.kugel(h * 0.16, 4, 8, '#e0a884', 0, 1, '#eec09c'));
+    B.mit(M3.mult(M3.verschieben(0, h * 0.56, h * 0.14), M3.drehenX(Math.PI / 2)),
+      b => b.walze(h * 0.055, h * 0.02, h * 0.07, 5, '#d69878', null));
+    /* Die Mütze: ein hoher, schlanker Kegel, der nach hinten kippt. Gerade nach oben sieht sie
+       aus wie ein Hut; erst der Knick macht daraus eine Zipfelmütze. */
+    B.mit(M3.mult(M3.verschieben(0, h * 0.64, 0), M3.drehenX(-0.25)), b => b.drehkoerper([
+      { r: h * 0.19, y: 0 }, { r: h * 0.17, y: h * 0.08 }, { r: h * 0.09, y: h * 0.3 }, { r: 0, y: h * 0.52 },
+    ], 9, '#c3382c', '#d9483a'));
+    /* Zwei Stiefel, damit er nicht auf einem Sockel zu stehen scheint. */
+    for (const sx of [-1, 1]) B.mit(M3.verschieben(sx * h * 0.14, h * 0.03, h * 0.04),
+      b => b.kugel(h * 0.09, 3, 6, '#4a3a2c', 0, 1, '#5c4a38'));
+    return B;
+  }
+
+  /* Die Gummiente. Sie schwimmt, also wird sie nicht auf den Boden gesetzt, sondern auf den
+     Wasserspiegel – siehe entenNetz in welt3d.js. */
+  function ente(B, g = 1, saat = 1) {
+    const z = M3.zufall(saat * 353 + 13);
+    const r = 0.12 * g;
+    B.mit(M3.skalieren(1, 0.78, 1.25), b => b.kugel(r, 4, 8, '#f2c22e', 0, 1, '#f8d658'));
+    /* Kopf und Schnabel sitzen vorn oben. Der Schnabel ist winzig und trotzdem das Einzige, was
+       eine gelbe Kugel von einer Ente unterscheidet. */
+    B.mit(M3.verschieben(0, r * 0.78, r * 0.55), b => {
+      b.kugel(r * 0.6, 4, 8, '#f2c22e', 0, 1, '#f8d658');
+      b.mit(M3.mult(M3.verschieben(0, -r * 0.1, r * 0.5), M3.drehenX(Math.PI / 2)),
+        c => c.walze(r * 0.2, r * 0.13, r * 0.3, 5, '#e08830', null));
+      for (const sx of [-1, 1]) B.mit(M3.verschieben(sx * r * 0.28, r * 0.18, r * 0.42),
+        c => c.kugel(r * 0.07, 2, 5, '#2a2218'));
+    });
+    B.mit(M3.mult(M3.verschieben(0, r * 0.2, -r * 0.95), M3.drehenX(-0.5)),
+      b => b.walze(r * 0.28, r * 0.05, r * 0.4, 5, '#f2c22e', null));
+    return B;
+  }
+
+  /* ---------- Ziffern aus Klötzchen ----------
+     Für das Bahnschild. Jede Ziffer ist ein Raster von drei mal fünf; eine gesetzte Stelle wird
+     ein flacher Klotz. Geschrieben sähe besser aus, aber dafür bräuchte es eine Schrift als Bild,
+     und Bilder auf beliebigen Flächen kann dieser Zeichner noch nicht. Gestempelte Ziffern passen
+     ohnehin besser zu einem Holzschild als gemalte. */
+  const ZIFFERN = [
+    '111101101101111', '010110010010111', '111001111100111', '111001111001111', '101101111001001',
+    '111100111001111', '111100111101111', '111001010010010', '111101111101111', '111101111001111',
+  ];
+  function ziffer(B, n, g, col) {
+    const bits = ZIFFERN[n % 10];
+    const p = g / 5;             // Höhe der Ziffer geteilt durch fünf Zeilen
+    for (let j = 0; j < 5; j++) for (let i = 0; i < 3; i++) {
+      if (bits[j * 3 + i] !== '1') continue;
+      /* 'kasten' baut vom Boden nach oben und nicht um die Mitte – die Zeile 4 (unterste) fängt
+         also bei -g/2 an, und die Zeile 0 hört bei +g/2 auf. Daran ist der erste Versuch
+         gescheitert: Die Ziffern hingen unter dem Brett zwischen den Pfosten. */
+      B.mit(M3.verschieben((i - 1) * p, (4 - j) * p - g / 2, 0), b => b.kasten(p, p, p * 0.7, col));
+    }
+    return B;
+  }
+
+  /* Das Bahnschild am Abschlag: zwei Pfosten, ein Brett, darauf die Nummer. */
+  function bahnschild(B, nummer, g = 1) {
+    const h = 1.0 * g, br = 0.9 * g, bh = 0.46 * g;
+    for (const sx of [-1, 1]) B.mit(M3.verschieben(sx * br * 0.33, 0, 0),
+      b => b.walze(0.045 * g, 0.038 * g, h, 6, '#6d5433', null));
+    /* Das Brett hängt oben an den Pfosten und ist ein wenig nach hinten geneigt – ein
+       senkrechtes Schild sieht aus, als wäre es gerade erst gestellt worden. Gerechnet wird ab
+       der Oberkante nach unten, weil dort die Pfosten enden. */
+    B.mit(M3.mult(M3.verschieben(0, h + 0.06 * g, 0), M3.drehenX(-0.12)), b => {
+      b.mit(M3.verschieben(0, -bh, 0), c => c.kasten(br, bh, 0.06 * g, '#c8a468', '#dcbb80'));
+      /* Ein Rahmenbalken oben und unten, damit das Brett nicht wie ein Stück Pappe aussieht. */
+      for (const uy of [0, -bh]) b.mit(M3.verschieben(0, uy - 0.03 * g, 0),
+        c => c.kasten(br * 1.08, 0.06 * g, 0.09 * g, '#8a6b43', '#a08050'));
+      const ziffern = String(nummer).split('');
+      const zh = 0.26 * g, abstand = zh * 0.78;
+      ziffern.forEach((zi, i) => {
+        const x = (i - (ziffern.length - 1) / 2) * abstand;
+        b.mit(M3.verschieben(x, -bh / 2, 0.048 * g), c => ziffer(c, +zi, zh, '#4a3524'));
+      });
+    });
+    return B;
+  }
+
   /* Fahnenmast ohne Tuch – das Tuch weht und liegt darum im beweglichen Gitter. */
   function mast(B, h, col = F.stein) {
     B.walze(0.032, 0.022, h, 6, col, null);
@@ -831,5 +964,5 @@ const Deko3D = (() => {
   return { F, BAUMARTEN, baum, fernbaum, tanne, kiefer, pappel, tropfenbaum, birke, laubbaum, eiche, blume, grasbueschel, stumpf, totholz,
     busch, fels, felsgruppe, turm, haus, scheune, brunnen, heuhaufen, steinmauer, zelt, karren, obstbaum,
     burg, muehle, muehlenfluegel,
-    zaun, wolke, mast, schilf };
+    zaun, wolke, mast, schilf, fliegenpilz, gartenzwerg, ente, bahnschild };
 })();
