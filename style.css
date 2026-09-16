@@ -1,3 +1,13 @@
+/* DIE ZIERSCHRIFT HAT EINE FARBE, UND DIE STEHT HIER
+   Titel, Ladebild und die beiden großen Knöpfe tragen dieselben Wörter durch das Spiel. Sie
+   standen dreimal mit eigener Farbe da – Goldverlauf oben, Creme auf den Knöpfen – und sahen
+   untereinander aus, als gehörten sie nicht zusammen. Jetzt gibt es einen Namen dafür und drei
+   Stellen, die ihn benutzen. Wer die Farbe ändern will, ändert sie hier. */
+:root {
+  --zier: #fff6dc;                                        /* die Schriftfarbe selbst */
+  --zier-absatz: #4a2a00;                                 /* der harte Absatz darunter */
+  --zier-hof: rgba(0,0,0,0.8);                            /* der weiche dunkle Hof */
+}
 * { box-sizing: border-box; }
 html, body {
   margin: 0; padding: 0; width: 100%; height: 100%;
@@ -45,9 +55,9 @@ html, body {
 #lade .lb-titel {
   font-family: "MedievalSharp", Georgia, serif;
   font-size: clamp(28px, 8.5vw, 40px); letter-spacing: 2px; margin-bottom: 14px;
-  background: linear-gradient(180deg, #fff6d8, #ffd977 48%, #e0982c);
-  -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 2px 0 #6d3f00) drop-shadow(0 6px 16px rgba(0,0,0,0.7));
+  /* Dieselben Wörter wie auf dem Titelbild, also auch dieselbe Farbe – sonst wechselte „Fantasy
+     Golf" beim Übergang vom Ladebild zum Spiel die Farbe. */
+  color: var(--zier); text-shadow: 0 3px 0 var(--zier-absatz), 0 0 14px var(--zier-hof);
   animation: lb-titel-auf 0.9s cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
 }
 #lade .lb-szene {
@@ -190,7 +200,7 @@ body.creative .cbtn.creative { display: inline-block; }
 .mode-label {
   position: absolute; right: 18px; top: 50%; transform: translateY(-50%); z-index: 2; text-align: right;
   max-width: calc(100% - 28px);
-  color: #fff6dc; text-shadow: 0 2px 0 #4a2a00, 0 0 12px rgba(0,0,0,0.8);
+  color: var(--zier); text-shadow: 0 2px 0 var(--zier-absatz), 0 0 12px var(--zier-hof);
 }
 .mode-label small {
   display: block; margin-top: 3px; font-family: "Trebuchet MS", "Segoe UI", Verdana, sans-serif;
@@ -299,22 +309,18 @@ body.editing .cbtn.leave, body.testing .cbtn.leave { display: none; }
   padding: 20px 26px; max-height: 86vh; overflow-y: auto; max-width: min(92vw, 540px);
   text-shadow: 0 1px 3px rgba(0,0,0,0.7);
 }
-/* Gold lässt sich nicht mit einer Farbe schreiben: Es ist ein Verlauf von hell nach dunkel und
-   wieder hell. Der Verlauf wird in die Buchstaben geschnitten (background-clip: text) und wandert
-   langsam – daher der Schimmer. Der Schatten muss dabei ein Filter sein, denn text-shadow zeichnet
-   hinter Buchstaben, die hier gar keine Farbe mehr haben. */
+/* Dieselbe Farbe wie auf den beiden großen Knöpfen darunter (.mode-label): cremeweiß, darunter
+   ein harter brauner Absatz und ein weicher dunkler Hof. Vorher war der Titel ein wandernder
+   Goldverlauf, in die Buchstaben geschnitten – schön für sich, aber „Fantasy Golf" und
+   „Weltkarte" standen damit untereinander und sahen aus, als gehörten sie nicht zusammen.
+   Mit einer richtigen Textfarbe braucht es auch keinen Filter mehr für den Schatten und keine
+   Ausnahme für das Sinnbild vorn: Ein Emoji verschwand, solange die Schrift nur ein Ausschnitt
+   war, und blieb nur durch eine eigene Regel sichtbar. */
 .screen.title .panel h1 {
   font-size: clamp(30px, 6.4vw, 46px); margin-bottom: 2px;
-  background: linear-gradient(180deg, #fff8de 0%, #ffdc86 42%, #dd9b2c 68%, #ffeaad 100%);
-  background-size: 100% 240%;
-  -webkit-background-clip: text; background-clip: text;
-  color: transparent; -webkit-text-fill-color: transparent; text-shadow: none;
-  filter: drop-shadow(0 2px 0 #6d3f00) drop-shadow(0 5px 14px rgba(0,0,0,0.65));
-  animation: title-in 0.8s cubic-bezier(0.2, 0.9, 0.3, 1.1) both, h1-schimmer 7s 0.8s ease-in-out infinite;
+  color: var(--zier); text-shadow: 0 3px 0 var(--zier-absatz), 0 0 14px var(--zier-hof);
+  animation: title-in 0.8s cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
 }
-/* Das Sinnbild vorn ist ein Emoji und darf nicht mitgeschnitten werden, sonst verschwindet es. */
-.screen.title .panel h1 .h1-ball { -webkit-text-fill-color: initial; color: initial; }
-@keyframes h1-schimmer { 0%, 100% { background-position: 0 0; } 50% { background-position: 0 100%; } }
 .screen.title .btn.ghost { background: rgba(255,255,255,0.14); text-shadow: none; }
 .screen.title .btn.ghost.sel { background: rgba(255, 209, 102, 0.45); }
 .screen.title .btn:not(.ghost) { text-shadow: none; }

@@ -401,7 +401,7 @@
        das Wort „Weltkarte" mitten in den Ortsnamen der Karte. Die zweite Zeile sagt, was einen
        dahinter erwartet; das spart den Erklärsatz darunter. */
     overlay(`<div class="panel">
-      <h1>${Icons.svg('sports_golf', 'h1-ball')} Fantasy Golf</h1>
+      <h1>${Icons.svg('sports_golf')} Fantasy Golf</h1>
       <div class="sub">Golf with your Friends · Minigolf in 2,5D</div>
       <div class="modes">
         <span class="btn mode" id="to-map">${WorldMap.svg('mode-scene', 'xMidYMid slice')}<span class="mode-schleier"></span>

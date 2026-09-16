@@ -61,6 +61,31 @@ for (const [datei, wo] of [['src/main.js', '2,5D-Spiel'], ['src/3d/start3d.js', 
   }
 }
 
+/* UND DIE FARBE DAZU
+ * Titel, Ladebild und die beiden großen Knöpfe tragen dieselben Wörter durch das Spiel. Sie
+ * standen dreimal mit eigener Farbe da – Goldverlauf oben, Creme auf den Knöpfen. Jetzt gibt es
+ * einen Namen dafür (--zier) und drei Stellen, die ihn benutzen. Geprüft wird beides: dass es
+ * den Namen gibt und dass keine der drei Stellen wieder eine eigene Farbe hinschreibt. */
+{
+  const css = lies('style.css');
+  pruef('die Zierfarbe hat einen Namen', /--zier:\s*#[0-9a-f]{3,8}/i.test(css));
+  const stellen = [
+    ['der Titel', /\.screen\.title \.panel h1 \{[^}]*\}/],
+    ['das Ladebild', /#lade \.lb-titel \{[^}]*\}/],
+    ['die großen Knöpfe', /\.mode-label \{[^}]*\}/],
+  ];
+  /* Ein Wähler kann mehrfach vorkommen – der Titel hat einen Block für die Bewegung und einen
+     für das Aussehen. Also alle zusammennehmen, sonst prüfte man den falschen. */
+  for (const [was, muster] of stellen) {
+    const block = [...css.matchAll(new RegExp(muster.source, 'g'))].map(m => m[0]).join('\n');
+    const eigen = /color:\s*(#|rgb|linear-gradient)/.test(block);
+    pruef(`${was} nimmt die Zierfarbe`, block.includes('var(--zier)') && !eigen,
+          eigen ? 'schreibt eine eigene Farbe hin' : '');
+  }
+  pruef('und keiner schneidet mehr einen Verlauf in die Schrift',
+        !/-webkit-background-clip:\s*text/.test(css));
+}
+
 /* Die Karte bleibt, wie sie ist – das ist keine Ausnahme aus Bequemlichkeit, sondern der Grund,
    warum sie so aussieht, wie sie aussieht. Geprüft wird nur, dass sie sich nicht unbemerkt ändert. */
 pruef('die Weltkarte beschriftet weiter in Georgia kursiv',

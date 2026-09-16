@@ -1056,6 +1056,13 @@ für die beiden großen Knöpfe. Auf dem iPad stehen die untereinander, und dann
 Das 3D-Spiel benutzte ohnehin nur MedievalSharp; jetzt sehen beide Spiele gleich aus. Nebenbei wird
 eine Schriftdatei weniger geholt, bevor überhaupt etwas zu sehen ist.
 
+**Und die Farbe dazu.** Der Titel war ein wandernder Goldverlauf, in die Buchstaben geschnitten;
+„Weltkarte" darunter war cremeweiß mit hartem Absatz. Dieselben Wörter tragen jetzt dieselbe Farbe
+– und sie steht an *einer* Stelle, als `--zier` in `:root`, von Titel, Ladebild und den großen
+Knöpfen benutzt. Wer sie ändern will, ändert sie dort. Dass der Titel keinen eigenen Verlauf mehr
+hat, hat noch einen Nebeneffekt: Das Sinnbild davor brauchte eine eigene Regel, um überhaupt
+sichtbar zu bleiben, solange die Schrift nur ein Ausschnitt war. Die ist jetzt weg.
+
 Die **Weltkarte** zählt ausdrücklich nicht mit. Ihre Beschriftung ist Georgia kursiv, und das ist
 nicht Oberfläche, sondern Teil der gezeichneten Karte – so wie die Schrift auf einem alten Atlas
 zum Blatt gehört. `tools/schrift.mjs` hält beides fest: dass es außer den dreien keine gibt, dass
