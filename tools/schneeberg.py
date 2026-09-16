@@ -104,6 +104,14 @@ def schneebruecke(karten, name, x, y, w=2, h=2, ebene=0):
     eb = "" if ebene == 0 else ", ebene: %d" % ebene
     return "{ type: 'schneebruecke', x: %s, y: %s, w: %s, h: %s%s }" % (g(x), g(y), g(w), g(h), eb)
 
+SCHNEE_WACHS = 0.0018      # rund vierzig Kacheln Schnee, bis der Ball nicht mehr ins Loch passt
+
+# Die Regel, dass auf einer Schneebahn ein Weg ueber Eis oder Wasser zum Loch fuehren muss, wird
+# nicht hier geprueft, sondern in tools/validate.mjs. Der Grund: Sie haengt an Seilbahnen und
+# Etagen - auf "Die Seilbahn" liegt das Eis auf dem einen Plateau und das Loch auf dem anderen,
+# und dazwischen faehrt nur die Gondel. Das modelliert validate.mjs schon vollstaendig; es hier
+# noch einmal nachzubauen hiesse, dieselbe Rechnung zweimal zu pflegen.
+
 def hang(k, rampen, hstufe, kraft, bis=None):
     """Der Berg steigt nach rechts an - jede Bahn wird bergauf gespielt.
 
@@ -183,257 +191,312 @@ def blick(x, y, w, h, zx, zy, ebene=None):
 # Der Wind weht auf jeder Bahn quer zum Weg, nie laengs: Sonst waere er kein Raetsel, sondern nur
 # Rueckenwind oder Gegenwind, und man koennte ihn aussitzen.
 
-# ---------------------------------------------------------------- 1 Talstation (einfach)
+# ================================================================ Die zwoelf Bahnen
+#
+# DIE VIER ABSCHNITTE SIND JETZT VIER REGELN, NICHT VIER FARBEN
+# Vorher war der Schneeberg zwoelfmal dieselbe Bahn: eine Windfahne auf jeder, eine Lawine auf
+# fast jeder, drei bis sechs Hindernisse auf vierhundert Feldern, Eis auf vier von zwoelf und
+# Wasser auf keiner. Die Abschnitte unterschieden sich nur in der Palette.
+#
+#   Talstation (1-3)  Schnee, viel Schnee. Hier lernt man die Weltregel: Der Ball setzt an und
+#                     passt nicht mehr ins Loch, und die Eisplatte davor ist die Loesung.
+#   Felsband (4-6)    Schmale Baender zwischen Felsen. Ein zugeschneiter Ball kommt durch die
+#                     Engstellen nicht durch - hier kostet das Dickwerden zum ersten Mal wirklich.
+#   Gletscher (7-9)   Alles Eis. Der Ball bleibt klein und rutscht; dafuer steht Schmelzwasser in
+#                     den Spalten. Die einzige Stelle der Welt, an der man *nicht* abstreifen muss.
+#   Gipfel (10-12)    Tiefschnee auf schmalen Graten, mehrere Ebenen, der staerkste Wind.
+#
+# Und die Maschinen sind ungleich verteilt: Windfahne auf 8 von 12 statt auf allen, Lawine auf 6,
+# Seilbahn auf 4, Schneebruecke auf 5. Zwei Bahnen haben gar keinen Wind - und genau deshalb
+# merkt man ihn auf den anderen.
+
+# ---------------------------------------------------------------- 1 Talstation (Weltregel lernen)
 k = Karte(30, 13)
 k.rect(2, 3, 27, 9)
+k.rect(20, 5, 24, 8, 'i')                          # die Eisplatte vor dem Loch - hier faellt der Schnee ab
 k.put(4, 6, 'T'); k.put(25, 6, 'H')
-hoehen, schraegen, hs = hang(k, [10, 18], 0.6, 4.8)
+hoehen, schraegen, hs = hang(k, [10, 17], 0.6, 4.8)
 bahn(name='Talstation', par=3, theme='snowfoot', maxStrokes=12, seed=301, dichte=0.38,
-     intro='Der Hang unter der Talstation, und die erste Lektion des Berges: Hier oben steht der '
-           'Wind nicht still. Die Fahne dreht sich alle paar Sekunden weiter und zeigt schon '
-           'vorher, woher es gleich kommt – und zwischen zwei Richtungen ist einen Augenblick '
-           'Flaute. Wer geradeaus zielt, landet neben dem Loch; wer danebenzielt oder wartet, trifft.',
+     schnee=SCHNEE_WACHS,
+     intro='Die erste Lektion des Berges, und sie steht gleich am Anfang: Wer durch den Schnee '
+           'rollt, setzt Schnee an. Der Ball wird dicker – und ein dicker Ball passt nicht ins '
+           'Loch, er rollt darüber hinweg. Vor dem Loch liegt darum eine Eisplatte: Dort streift '
+           'er alles wieder ab. Erst aufs Eis, dann einlochen.',
      obstacles=[windfahne(k, 'Talstation', 15, 6.5)] + schraegen,
      decor=[('pineSnow', 15, 1.4, 1.4), ('pineSnow', 8, 11.4, 1.2), ('pineSnow', 22, 11.4, 1.3),
-            ('rockSnow', 0.8, 6.5, 1)],
+            ('pineSnow', 11, 1.4, 1.1), ('pineSnow', 26, 11.4, 1.2), ('rockSnow', 0.8, 6.5, 1),
+            ('rockSnow', 29, 2.4, 0.9)],
      heights=hoehen, hstep=hs,
      map=k.rows())
 
-# ---------------------------------------------------------------- 2 Waldschneise (einfach)
+# ---------------------------------------------------------------- 2 Waldschneise (ohne Wind)
 k = Karte(32, 14)
 k.rect(2, 3, 29, 10)
 for x in (11, 12, 19, 20):                         # Baumgruppen als Blocks mitten in der Schneise
     k.rect(x, 4, x, 5, 'x'); k.rect(x, 8, x, 9, 'x')
-k.rect(8, 6, 10, 7, 's'); k.rect(21, 6, 24, 7, 's')  # Tiefschnee bremst
+k.rect(8, 6, 10, 7, 's'); k.rect(21, 6, 23, 7, 's')  # Tiefschnee bremst - und setzt doppelt an
+k.rect(25, 5, 28, 8, 'i')
 k.put(4, 6, 'T'); k.put(27, 7, 'H')
 hoehen, schraegen, hs = hang(k, [6, 16], 0.6, 4.8)
 bahn(name='Waldschneise', par=4, theme='snowfoot', maxStrokes=14, seed=302, dichte=0.4,
-     intro='Die Schneise durch den Wald. In der Mitte bleibt nur eine Gasse zwischen den '
-           'Baumgruppen frei, und quer dazu drückt der Wind. Links und rechts liegt Tiefschnee: '
-           'Dort bleibt der Ball fast stehen – manchmal ist genau das die Rettung.',
-     obstacles=[windfahne(k, 'Waldschneise', 16, 6.5, phase=0.25)] + schraegen,
+     schnee=SCHNEE_WACHS,
+     intro='Hier steht der Wind still – die einzige Bahn am Fuß des Berges, auf der er schweigt. '
+           'Dafür ist der Weg lang: Zwischen den Baumgruppen bleibt nur eine Gasse, und links und '
+           'rechts liegt Tiefschnee, in dem der Ball fast stehen bleibt. Je weiter der Weg, desto '
+           'dicker der Ball – das Eisfeld am Ende ist keine Zugabe, sondern Pflicht.',
+     obstacles=schraegen,
      decor=[('pineSnow', 16, 1.4, 1.5), ('pineSnow', 6, 12.4, 1.2), ('pineSnow', 26, 12.4, 1.3),
+            ('pineSnow', 9, 1.4, 1.3), ('pineSnow', 22, 1.4, 1.1), ('pineSnow', 13, 12.4, 1.4),
             ('rockSnow', 30.8, 6.5, 1)],
      heights=hoehen, hstep=hs,
      map=k.rows())
 
-# ---------------------------------------------------------------- 3 Lawinenhang (einfach, erste Lawine)
+# ---------------------------------------------------------------- 3 Lawinenhang (erste Lawine)
 k = Karte(32, 15)
 k.rect(2, 3, 29, 11)
 for (bx, by) in [(11, 5), (16, 8), (21, 5), (13, 10)]:   # Felsbloecke als Deckung
     k.rect(bx, by, bx + 1, by, 'x')
+k.rect(24, 6, 27, 9, 'i')
 k.put(4, 7, 'T'); k.put(27, 7, 'H')
 hoehen, schraegen, hs = hang(k, [7, 18], 0.6, 5.0)
 bahn(name='Lawinenhang', par=4, theme='snowfoot', maxStrokes=16, seed=303, dichte=0.3,
+     schnee=SCHNEE_WACHS,
      intro='Über dem Hang hängt eine Wächte, und alle neun Sekunden kommt sie herunter. Vorher '
-           'staubt es an der Abrisskante – das ist die Vorwarnung. Wer dann offen liegt, wird ein '
-           'Stück mitgenommen; wer hinter einem Felsblock liegt, merkt nichts davon. Die hellen '
-           'Keile im Schnee zeigen, wo die Deckung reicht.',
+           'staubt es an der Abrisskante – das ist die Vorwarnung. Wer offen liegt, wird ein Stück '
+           'mitgenommen; wer hinter einem Felsblock liegt, merkt nichts davon. Und wer sich '
+           'mitnehmen lässt, rollt dabei durch den Schnee und wird dicker.',
      obstacles=[lawine(k, 'Lawinenhang', 8, 3, 26, 12, 90),
                 windfahne(k, 'Lawinenhang', 16, 10.5)] + schraegen,
-     decor=[('pineSnow', 6, 1.4, 1.3), ('rockSnow', 30.8, 7.5, 1.1), ('pineSnow', 25, 1.4, 1.2)],
+     decor=[('pineSnow', 6, 1.4, 1.3), ('rockSnow', 30.8, 7.5, 1.1), ('pineSnow', 25, 1.4, 1.2),
+            ('pineSnow', 10, 13.4, 1.2), ('rockSnow', 0.8, 12.5, 1), ('pineSnow', 19, 1.4, 1.1)],
      heights=hoehen, hstep=hs,
      map=k.rows())
 
-# ---------------------------------------------------------------- 4 Felsband (mittel)
+# ---------------------------------------------------------------- 4 Felsband (Engstelle)
 k = Karte(34, 15)
 k.rect(2, 6, 31, 9)                                # das schmale Band
-k.rect(12, 6, 13, 6, 'x'); k.rect(19, 9, 20, 9, 'x')
-k.rect(24, 7, 27, 8, 'i')                          # vereiste Stelle kurz vor dem Loch
-k.put(4, 7, 'T'); k.put(30, 8, 'H')
-hoehen, schraegen, hs = hang(k, [8, 16], 0.7, 5.2)
-bahn(name='Felsband', par=4, theme='snowrock', maxStrokes=16, seed=304, dichte=0.24,
-     intro='Ein Band, vier Kacheln breit, und links wie rechts geht es hinunter. Der Wind steht '
-           'quer dazu, und kurz vor dem Loch ist das Band vereist – dort greift nichts mehr, außer '
-           'dem Wind. Hier lohnt es sich, auf die Flaute zu warten.',
-     obstacles=[windfahne(k, 'Felsband', 8, 7.5, phase=0.4),
-                lawine(k, 'Felsband', 10, 6, 22, 10, 90, phase=0.3)] + schraegen,
-     decor=[('rockSnow', 17, 3.4, 1.4), ('rockSnow', 8, 12.4, 1.2), ('crystalBlue', 26, 3.4, 1),
-            ('rockSnow', 28, 12.4, 1.1)],
+k.rect(12, 7, 12, 8, 'x'); k.rect(20, 7, 20, 8, 'x')   # zwei Felsnasen - dazwischen wird es eng
+k.rect(5, 6, 8, 9, 'i')                            # die Eisplatte liegt *vor* der Engstelle
+k.rect(18, 7, 20, 8, 's')
+k.rect(26, 7, 29, 8, 'i')                          # und eine zweite kurz vor dem Loch
+k.put(3, 7, 'T'); k.put(30, 8, 'H')
+hoehen, schraegen, hs = hang(k, [10, 22], 0.7, 5.2)
+bahn(name='Felsband', par=4, theme='snowrock', maxStrokes=16, seed=304, dichte=0.22,
+     schnee=SCHNEE_WACHS,
+     intro='Ein Band aus Fels, vier Felder breit, und zwei Nasen springen hinein. Hier kostet das '
+           'Dickwerden zum ersten Mal wirklich: Ein zugeschneiter Ball kommt zwischen den Nasen '
+           'nicht mehr durch. Die Eisplatte liegt gleich hinter dem Abschlag – man muss also '
+           'schlank losfahren, nicht schlank ankommen.',
+     obstacles=[windfahne(k, 'Felsband', 16, 7.5, kraft=1.25)] + schraegen,
+     decor=[('rockSnow', 16, 3.4, 1.4), ('rockSnow', 26, 12.4, 1.3), ('pineSnow', 6, 12.4, 1.1),
+            ('rockSnow', 9, 3.4, 1.2), ('rockSnow', 22, 12.4, 1.1), ('rockSnow', 33, 4.4, 1)],
      heights=hoehen, hstep=hs,
      map=k.rows())
 
-# ---------------------------------------------------------------- 5 Die Seilbahn (mittel, erste Gondel)
+# ---------------------------------------------------------------- 5 Die Seilbahn (erste Gondel)
 k = Karte(36, 15)
-k.rect(2, 5, 12, 11)                               # Talstation
-k.rect(23, 4, 33, 11)                              # Bergstation
-k.rect(28, 6, 30, 8, 's')
-k.put(4, 8, 'T'); k.put(31, 8, 'H')
-hoehen, schraegen, hs = hang(k, [('luft', 23), 25], 0.7, 5.2)
-bahn(name='Die Seilbahn', par=4, theme='snowrock', maxStrokes=16, seed=305, dichte=0.24,
-     intro='Zwischen den beiden Felsköpfen liegt nichts als Luft – hinüber bringt nur die Gondel. '
-           'Sie wartet an der Station, fährt hinüber, wartet und kommt zurück; einsteigen kann man '
-           'nur, während sie steht. Drüben liegt Tiefschnee vor dem Loch, der den Anlauf schluckt.',
-     obstacles=[seilbahn([k], 'Die Seilbahn', 11.5, 8.5, 23.5, 8.5),
-                windfahne(k, 'Die Seilbahn', 6, 8.5)] + schraegen,
-     decor=[('rockSnow', 17, 2.4, 1.5), ('rockSnow', 17, 13.4, 1.4), ('crystalBlue', 34.8, 8.5, 1)],
+k.rect(2, 4, 12, 11)
+k.rect(23, 4, 33, 11)                              # zweites Plateau, dazwischen die Schlucht
+k.rect(8, 6, 11, 9, 'i')
+k.rect(28, 5, 31, 6, 's')
+k.rect(28, 8, 31, 10, 'i')                         # Eis auch drueben, sonst kommt er zu dick an
+k.put(4, 7, 'T'); k.put(31, 8, 'H')
+hoehen, schraegen, hs = hang(k, [26], 0.7, 5.2)
+bahn(name='Die Seilbahn', par=4, theme='snowrock', maxStrokes=16, seed=305, dichte=0.2,
+     schnee=SCHNEE_WACHS,
+     intro='Zwischen den beiden Plateaus liegt die Schlucht, und darüber fährt die Gondel. Sie '
+           'wartet, sie nimmt mit, sie setzt ab – dagegen hilft kein Schlag, nur Geduld. Wichtig '
+           'ist, *wie* man einsteigt: Auf der anderen Seite liegt kein Eis mehr.',
+     obstacles=[seilbahn([k], 'Die Seilbahn', 11, 7.5, 24, 7.5),
+                windfahne(k, 'Die Seilbahn', 6, 5.5, phase=0.5)] + schraegen,
+     decor=[('rockSnow', 17, 2.4, 1.5), ('rockSnow', 17, 13.4, 1.4), ('pineSnow', 5, 2.4, 1.2),
+            ('pineSnow', 34, 13.4, 1.2), ('rockSnow', 0.8, 8.5, 1), ('pineSnow', 30, 2.4, 1.1)],
      heights=hoehen, hstep=hs,
      map=k.rows())
 
-# ---------------------------------------------------------------- 6 Schneewaechte (mittel, erste Bruecke)
+# ---------------------------------------------------------------- 6 Schneewaechte (erste Bruecke)
 k = Karte(34, 15)
-k.rect(2, 6, 13, 10)                               # diesseits
-k.rect(14, 6, 17, 10)                              # die Waechte selbst liegt hier drueber
-k.rect(18, 4, 31, 11)                              # jenseits
-k.rect(22, 5, 23, 5, 'x')
-k.put(4, 8, 'T'); k.put(29, 8, 'H')
-hoehen, schraegen, hs = hang(k, [7, 19], 0.7, 5.2)
+k.rect(2, 4, 31, 11)
+# Der Spalt war zuerst vier Felder breit, und die beiden Waechten waren die einzigen Uebergaenge.
+# Der Bot ist zehnmal von zehn im Schlaglimit geendet: Er hat die schmalen Stege nicht getroffen
+# und ist immer wieder hinuntergefallen. Zwei Felder breit ist er eine Frage des Zielens, vier
+# waren eine Frage des Gluecks.
+# Unter den Waechten steht Schmelzwasser, kein Abgrund - und das ist der Unterschied zwischen
+# einer Aufgabe und einer kaputten Bahn. Zuerst lagen die Waechten ueber festem Boden: Jedes Mal,
+# wenn der Ball darueberrollte, brachen sie und machten aus Boden ein Loch. Nach ein paar
+# Schlaegen war das Feld durchloechert, und der Bot hat zehnmal von zehn im Schlaglimit geendet.
+# Ueber Wasser kostet ein Fehler einen Schlag - und die Bahn bleibt, wie sie war.
+# Oben und unten bleibt ein fester Rand: Es gibt immer einen Weg herum, und die beiden Waechten
+# sind die Abkuerzung, nicht die einzige Moeglichkeit. Ohne den Rand schnitt das Wasser die Bahn
+# durch - die Bahnpruefung hat das sofort gemeldet, und selbst das beste Spiel kam nicht hinueber.
+k.rect(15, 5, 16, 10, 'w')                         # der Wasserlauf, ueberbrueckt von zwei Waechten
+k.rect(4, 6, 7, 9, 'i')
+for (bx, by) in [(21, 6), (25, 9)]:
+    k.rect(bx, by, bx + 1, by, 'x')
+k.rect(26, 7, 28, 9, 'i')                          # hinter dem Spalt, kurz vor dem Loch
+k.put(3, 7, 'T'); k.put(29, 8, 'H')
+hoehen, schraegen, hs = hang(k, [20, 24], 0.7, 5.2)
 bahn(name='Schneewächte', par=5, theme='snowrock', maxStrokes=18, seed=306, dichte=0.24,
-     intro='Die Rinne ist überschneit, und die Wächte darüber trägt – aber nur einmal. Hat der '
-           'Ball sie überquert, bricht sie hinter ihm ein; im selben Schlag kommt man nicht zurück. '
-           'Beim nächsten Schlag liegt sie wieder da, der Berg schneit zu. Also: erst schauen, wo '
-           'man hinwill, dann hinüber.',
-     obstacles=[schneebruecke([k], 'Schneewächte', 14, 6, 4, 5),
-                windfahne(k, 'Schneewächte', 25, 9.5, phase=0.5),
-                lawine(k, 'Schneewächte', 19, 4, 30, 11, 90, phase=0.45)] + schraegen,
-     decor=[('rockSnow', 8, 12.4, 1.3), ('crystalBlue', 16, 2.4, 1.1), ('rockSnow', 33, 2.4, 1.2)],
+     schnee=SCHNEE_WACHS,
+     intro='Zwei Wächten liegen über dem Spalt, oben und unten. Jede trägt genau einen Schlag – '
+           'wer zurückwill, findet nichts mehr vor. Man hat also zwei Versuche, und muss sich beim '
+           'ersten entscheiden. Das Eis liegt hinter dem Abschlag; auf der anderen Seite des '
+           'Spalts hilft nur noch, was man mitgebracht hat.',
+     obstacles=[schneebruecke([k], 'Schneewächte', 15, 5, 2, 2),
+                schneebruecke([k], 'Schneewächte', 15, 9, 2, 2),
+                windfahne(k, 'Schneewächte', 10, 10.5)] + schraegen,
+     decor=[('rockSnow', 16, 2.4, 1.4), ('rockSnow', 24, 13.4, 1.3), ('pineSnow', 7, 2.4, 1.2),
+            ('rockSnow', 33, 6.5, 1.1), ('pineSnow', 11, 13.4, 1.1)],
      heights=hoehen, hstep=hs,
      map=k.rows())
 
-# ---------------------------------------------------------------- 7 Blankeis (schwer)
+# ---------------------------------------------------------------- 7 Blankeis (der Gletscher beginnt)
 k = Karte(34, 15)
-k.rect(2, 5, 31, 10)
-k.rect(9, 5, 26, 10, 'i')                          # der halbe Hang ist blankes Eis
-k.rect(14, 5, 15, 5, 'x'); k.rect(20, 10, 21, 10, 'x')
-k.put(4, 7, 'T'); k.put(29, 8, 'H')
-hoehen, schraegen, hs = hang(k, [6], 0.8, 5.6)
-bahn(name='Blankeis', par=4, theme='glacier', maxStrokes=16, seed=307, dichte=0.17,
-     intro='Der Gletscher, blank gefegt. Auf dem Eis bremst nichts mehr – der Ball läuft, bis ihn '
-           'etwas aufhält, und der Wind hat die ganze Zeit über Gelegenheit, ihn abzutreiben. '
-           'Sanft schlagen ist hier keine Schwäche, sondern die einzige Möglichkeit.',
-     obstacles=[windfahne(k, 'Blankeis', 6, 7.5),
-                lawine(k, 'Blankeis', 11, 5, 25, 11, 90, phase=0.35)] + schraegen,
-     decor=[('crystalBlue', 17, 2.4, 1.5), ('crystalBlue', 12, 12.4, 1.3), ('rockSnow', 27, 2.4, 1.2),
-            ('crystalBlue', 33, 12.4, 1.1)],
+k.rect(2, 4, 31, 11, 'i')                          # alles Eis - auf dem Gletscher waechst nichts an
+k.rect(2, 4, 5, 11, '#')                           # nur die Startzunge ist Schnee
+k.rect(13, 7, 14, 8, 'x'); k.rect(22, 5, 23, 6, 'x')
+k.put(3, 7, 'T'); k.put(29, 8, 'H')
+hoehen, schraegen, hs = hang(k, [], 0.7, 5.2)
+bahn(name='Blankeis', par=4, theme='glacier', maxStrokes=16, seed=307, dichte=0.12,
+     schnee=SCHNEE_WACHS,
+     intro='Der Gletscher, und damit die Umkehrung: Hier ist alles Eis. Der Ball setzt nichts an – '
+           'im Gegenteil, was er mitgebracht hat, streift er gleich auf den ersten Metern ab. '
+           'Dafür bremst nichts mehr. Ein Schlag, der auf Schnee genau richtig war, ist hier '
+           'doppelt zu viel.',
+     obstacles=[windfahne(k, 'Blankeis', 17, 10.5, kraft=1.3)] + schraegen,
+     decor=[('rockSnow', 17, 2.4, 1.4), ('rockSnow', 9, 13.4, 1.3), ('rockSnow', 27, 13.4, 1.2),
+            ('rockSnow', 33, 7.5, 1.1), ('rockSnow', 0.8, 5.5, 1)],
      heights=hoehen, hstep=hs,
      map=k.rows())
 
-# ---------------------------------------------------------------- 8 Gletscherspalten (schwer)
+# ---------------------------------------------------------------- 8 Gletscherspalten (Schmelzwasser, kein Wind)
 k = Karte(36, 16)
-k.rect(2, 6, 10, 11)
-k.rect(11, 6, 14, 11)                              # erste Waechte
-k.rect(15, 6, 20, 11)
-k.rect(21, 6, 24, 11)                              # zweite Waechte
-k.rect(25, 4, 33, 12)
-k.rect(27, 6, 29, 9, 'i')
-k.rect(30, 5, 31, 5, 'x')
-k.put(4, 8, 'T'); k.put(31, 9, 'H')
-hoehen, schraegen, hs = hang(k, [7, 17], 0.8, 5.6)
-bahn(name='Gletscherspalten', par=5, theme='glacier', maxStrokes=18, seed=308, dichte=0.17,
-     intro='Zwei Spalten hintereinander, beide nur von einer Wächte überbrückt. Jede trägt genau '
-           'einen Schlag – wer auf der Zwischeninsel landet, hat die erste hinter sich gelassen und '
-           'muss über die zweite weiter. Zurück geht es erst im nächsten Schlag, wenn wieder Schnee '
-           'darüberliegt.',
-     obstacles=[schneebruecke([k], 'Gletscherspalten A', 11, 6, 4, 6),
-                schneebruecke([k], 'Gletscherspalten B', 21, 6, 4, 6),
-                windfahne(k, 'Gletscherspalten', 17, 10.5, phase=0.3),
-                lawine(k, 'Gletscherspalten', 26, 4, 34, 12, 90, phase=0.5)] + schraegen,
-     decor=[('crystalBlue', 18, 2.4, 1.4), ('crystalBlue', 8, 13.4, 1.2), ('rockSnow', 30, 14.4, 1.2)],
+k.rect(2, 4, 33, 12, 'i')
+k.rect(2, 4, 5, 12, '#')
+for sx in (11, 18, 25):                            # drei Spalten, in zweien steht Schmelzwasser
+    k.rect(sx, 4, sx + 1, 12, '.')
+k.rect(11, 7, 12, 9, 'w'); k.rect(25, 7, 26, 9, 'w')
+# Ueber jede der beiden aeusseren Spalten fuehrt ein schmaler Eissteg, und zwar versetzt: einmal
+#    oben, einmal unten. Ohne ihn waere die Spalte nur mit einem Flug zu nehmen, und die Bahn
+#    haette keinen Weg mehr. Mit ihm ist sie eine Frage des Zielens.
+k.rect(11, 4, 12, 5, 'i'); k.rect(25, 11, 26, 12, 'i')
+k.rect(18, 7, 19, 9, '#')                          # ueber die mittlere fuehrt eine Waechte
+k.put(3, 8, 'T'); k.put(31, 8, 'H')
+hoehen, schraegen, hs = hang(k, [], 0.7, 5.2)
+bahn(name='Gletscherspalten', par=5, theme='glacier', maxStrokes=18, seed=308, dichte=0.1,
+     schnee=SCHNEE_WACHS,
+     intro='Drei Spalten queren den Gletscher. In zweien steht Schmelzwasser – das ist das erste '
+           'offene Wasser dieser Welt, und es kostet einen Schlag. Über die mittlere führt eine '
+           'Wächte, die genau einmal trägt. Wind gibt es hier nicht: In der Spalte ist es still.',
+     obstacles=[schneebruecke([k], 'Gletscherspalten', 18, 7, 2, 3)] + schraegen,
+     decor=[('rockSnow', 8, 2.4, 1.3), ('rockSnow', 22, 14.4, 1.4), ('rockSnow', 33, 2.4, 1.2),
+            ('rockSnow', 14, 14.4, 1.1), ('rockSnow', 0.8, 13.5, 1)],
      heights=hoehen, hstep=hs,
      map=k.rows())
 
-# ---------------------------------------------------------------- 9 Eisbruch (schwer)
+# ---------------------------------------------------------------- 9 Eisbruch (Gondel ueber dem Bruch)
 k = Karte(36, 16)
-k.rect(2, 6, 11, 11)                               # Talkessel
-k.rect(20, 4, 27, 12)                              # Mittelinsel
-k.rect(28, 6, 30, 11)                              # Bruecke zur Kanzel
-k.rect(31, 6, 34, 11)                              # Kanzel mit dem Loch
-k.rect(22, 6, 25, 9, 'i')
-k.rect(23, 11, 24, 11, 'x')
-k.put(4, 8, 'T'); k.put(33, 8, 'H')
-hoehen, schraegen, hs = hang(k, [('luft', 20), 26], 0.8, 5.8)
-bahn(name='Eisbruch', par=5, theme='glacier', maxStrokes=18, seed=309, dichte=0.17,
-     intro='Der Bruch, wo der Gletscher über die Kante fällt. Über die erste Kluft trägt die '
-           'Gondel, quer über die Mittelinsel läuft die Lawine, und auf die Kanzel kommt man nur '
-           'über eine Wächte, die einmal trägt. Drei Sachen nacheinander, und jede will für sich '
-           'abgepasst werden.',
-     obstacles=[seilbahn([k], 'Eisbruch', 10.5, 8.5, 21.5, 8.5, travel=3.8),
-                lawine(k, 'Eisbruch', 20, 4, 28, 12, 90, phase=0.4),
-                schneebruecke([k], 'Eisbruch', 28, 6, 3, 6),
-                windfahne(k, 'Eisbruch', 6, 8.5, phase=0.2)] + schraegen,
-     decor=[('crystalBlue', 16, 2.4, 1.4), ('crystalBlue', 16, 14.4, 1.3), ('rockSnow', 33, 14.4, 1.2)],
+k.rect(2, 4, 14, 12, 'i')
+k.rect(22, 4, 33, 12, 'i')
+k.rect(2, 4, 4, 12, '#')
+k.rect(24, 5, 27, 7, '#')                          # eine Schneezunge drueben - dort setzt er wieder an
+k.rect(9, 6, 10, 9, 'w')                           # ein Wasserloch mitten im Eis
+for (bx, by) in [(28, 10), (31, 6)]:
+    k.rect(bx, by, bx + 1, by, 'x')
+k.put(3, 8, 'T'); k.put(31, 9, 'H')
+hoehen, schraegen, hs = hang(k, [], 0.7, 5.4)
+bahn(name='Eisbruch', par=5, theme='glacier', maxStrokes=18, seed=309, dichte=0.1,
+     schnee=SCHNEE_WACHS,
+     intro='Der Gletscher bricht ab. Über den Bruch fährt eine Gondel, und drüben liegt eine '
+           'Schneezunge, die den Ball wieder ansetzen lässt – kurz vor dem Loch. Dazu ein '
+           'Wasserloch mitten im Eis und eine Lawine, die von oben kommt. Hier hilft nur, den '
+           'Weg vorher im Kopf zu haben.',
+     obstacles=[seilbahn([k], 'Eisbruch', 13, 8.5, 23, 8.5, wait=2.2, travel=3.0),
+                lawine(k, 'Eisbruch', 24, 4, 33, 13, 90, phase=0.3),
+                windfahne(k, 'Eisbruch', 6, 11.5, kraft=1.35)] + schraegen,
+     decor=[('rockSnow', 18, 2.4, 1.5), ('rockSnow', 18, 14.4, 1.4), ('rockSnow', 33, 14.4, 1.2),
+            ('rockSnow', 0.8, 2.5, 1.1)],
      heights=hoehen, hstep=hs,
      map=k.rows())
 
-# ---------------------------------------------------------------- 10 Der Grat (schwer)
+# ---------------------------------------------------------------- 10 Der Grat (Tiefschnee, kein Eis unterwegs)
 k = Karte(34, 17)
-k.rect(2, 7, 8, 11)                                # Scharte
-k.rect(9, 8, 24, 10)                               # der Grat: drei Kacheln breit, links und rechts nichts
-k.rect(25, 5, 32, 13)                              # Gipfelvorbau
-k.rect(14, 8, 15, 8, 'x'); k.rect(19, 10, 20, 10, 'x')
-k.rect(27, 7, 28, 7, 'x')          # Deckung vor der Lawine auf dem Vorbau
-k.put(4, 9, 'T'); k.put(29, 9, 'H')
-hoehen, schraegen, hs = hang(k, [6, 12, 22], 0.9, 6.6)
-bahn(name='Der Grat', par=5, theme='summit', maxStrokes=18, seed=310, dichte=0.1,
-     intro='Drei Kacheln breit, und rechts wie links tausend Meter Luft. Der Wind steht quer zum '
-           'Grat, und er dreht: Wer im falschen Augenblick losschlägt, wird heruntergedrückt. Die '
-           'beiden Felsköpfe auf dem Grat sind das Einzige, woran man sich festhalten kann.',
-     obstacles=[windfahne(k, 'Der Grat', 5, 9.5),
-                lawine(k, 'Der Grat', 25, 5, 33, 13, 90, phase=0.35)] + schraegen,
-     decor=[('rockSnow', 16, 4.4, 1.4), ('rockSnow', 16, 14.4, 1.3), ('crystalBlue', 33, 2.4, 1.1)],
+k.rect(2, 7, 31, 9)                                # der Grat: drei Felder breit, sonst Abgrund
+k.rect(6, 7, 9, 9, 's'); k.rect(17, 7, 20, 9, 's')  # zwei Tiefschneefelder auf dem Grat
+k.rect(26, 7, 29, 9, 'i')
+k.rect(13, 6, 15, 10, '#')                         # eine Verbreiterung zum Durchatmen
+k.put(3, 8, 'T'); k.put(30, 8, 'H')
+hoehen, schraegen, hs = hang(k, [12, 23], 0.8, 5.6)
+bahn(name='Der Grat', par=5, theme='summit', maxStrokes=18, seed=310, dichte=0.08,
+     schnee=SCHNEE_WACHS,
+     intro='Drei Felder breit, links und rechts nichts. Auf dem Grat liegen zwei Felder '
+           'Tiefschnee – dort bremst der Ball, und dort setzt er am meisten an. Das Eis kommt '
+           'erst ganz am Ende, drei Felder vor dem Loch: Bis dahin muss man den dicken Ball über '
+           'den Grat bringen, ohne ihn hinunterzuschießen.',
+     obstacles=[windfahne(k, 'Der Grat', 16, 8, kraft=1.45)] + schraegen,
+     decor=[('rockSnow', 16, 3.4, 1.4), ('rockSnow', 8, 14.4, 1.3), ('rockSnow', 24, 14.4, 1.2),
+            ('rockSnow', 33, 3.4, 1.1), ('rockSnow', 0.8, 13.5, 1)],
      heights=hoehen, hstep=hs,
      map=k.rows())
 
-# ---------------------------------------------------------------- 11 Ueber den Wolken (erste Wolkenetage)
-k = Karte(36, 17)                                  # Ebene 0: die letzte feste Platte
-k.rect(2, 7, 14, 12)
-k.rect(8, 9, 9, 9, 'x')
-k.put(4, 9, 'T')
-o = Karte(36, 17)                                  # Ebene 1: die Wolkenbank mit dem Loch
-o.rect(20, 6, 32, 11)
-o.rect(33, 6, 33, 11, 'o')                         # offene Kante: hier faellt man zurueck auf den Fels
-o.put(29, 8, 'H')
-hoehen, schraegen, hs = hang(k, [6, 10], 1.0, 6.8, bis=14)
+# ---------------------------------------------------------------- 11 Ueber den Wolken (zweite Etage)
+k = Karte(36, 17)
+k.rect(2, 8, 16, 12)
+k.rect(21, 8, 33, 12)
+k.rect(12, 9, 15, 11, 'i')
+k.put(3, 10, 'T')
+o1 = Karte(36, 17)
+o1.rect(20, 3, 33, 8)                              # die Wolkenetage
+o1.rect(24, 4, 27, 6, 's')                         # Tiefschnee oben
+o1.rect(29, 5, 29, 6, 'x'); o1.rect(23, 7, 23, 7, 'x')   # Deckung vor der Lawine
+o1.rect(28, 4, 30, 7, 'i')                         # die Eisplatte auf der Wolke
+o1.put(31, 6, 'H')
+hoehen, schraegen, hs = hang(k, [24], 0.8, 5.6)
 bahn(name='Über den Wolken', par=5, theme='summit', maxStrokes=18, seed=311, dichte=0.09,
-     intro='Ab hier ist der Berg zu Ende, und weiter geht es nur über die Wolken. Die Gondel hängt '
-           'an einem Seil, das von der Platte hinauf in die Wolkenbank führt – man sieht schon von '
-           'unten, wohin sie fährt. Oben trägt die Wolke, aber an ihrem hellen Rand hört sie auf; '
-           'wer darüber hinausrollt, fällt auf den Fels zurück. Das kostet keinen Strafschlag, nur '
-           'den Weg.',
-     obstacles=[seilbahn([k, o], 'Über den Wolken', 13.5, 9.5, 21.5, 8.5, ziel=1, travel=3.8),
-                windfahne(k, 'Über den Wolken', 6, 11.5),
-                lawine(k, 'Über den Wolken', 2, 7, 14, 13, 90, phase=0.5)] + schraegen,
-     # Unten geht es zur Talstation, nicht zum Loch - das liegt oben in der Wolke.
-     views=[blick(0, 0, 18, 17, 13.5, 9.5, ebene=0)],
-     decor=[('rockSnow', 17, 14.4, 1.3), ('cloud', 25, 2.4, 1.6), ('cloud', 8, 2.4, 1.4),
-            ('cloud', 30, 14.4, 1.5)],
+     schnee=SCHNEE_WACHS,
+     intro='Der Berg reicht in die Wolken, und das Loch liegt oben. Hinauf führt nur die Gondel. '
+           'Das Eis liegt unten, vor der Talstation – oben gibt es keines mehr, dafür Tiefschnee. '
+           'Wer zu dick einsteigt, steigt zu dick aus.',
+     obstacles=[seilbahn([k, o1], 'Über den Wolken', 15, 10.5, 22, 6.5, ziel=1, wait=2.4, travel=3.2),
+                windfahne(k, 'Über den Wolken', 8, 11.5, kraft=1.5),
+                lawine(o1, 'Über den Wolken', 22, 3, 32, 8, 90, phase=0.5, ebene=1)] + schraegen,
+     decor=[('cloud', 18, 4.4, 1.6), ('cloud', 7, 4.4, 1.4), ('cloud', 28, 15.4, 1.5),
+            ('cloud', 12, 15.4, 1.3), ('rockSnow', 0.8, 14.5, 1.1)],
      heights=hoehen, hstep=hs,
-     map=k.rows(), ebenen=[o.rows()])
+     map=k.rows(), ebenen=[o1.rows()])
 
 # ---------------------------------------------------------------- 12 Der Gipfel (Hoehepunkt)
-k = Karte(36, 20)                                  # Ebene 0: die Gipfelplatte
-k.rect(2, 10, 14, 16)
-k.rect(6, 12, 7, 12, 'x')
-k.put(4, 13, 'T')
-o1 = Karte(36, 20)                                 # Ebene 1: zwei Wolkenbaenke, dazwischen eine Waechte
-o1.rect(18, 9, 24, 14)
-o1.rect(25, 10, 27, 13)
-o1.rect(28, 9, 33, 14)
-o1.rect(17, 9, 17, 14, 'o')
-o2 = Karte(36, 20)                                 # Ebene 2: die oberste Wolke mit dem Loch
-o2.rect(24, 3, 33, 8)
-o2.rect(23, 3, 23, 8, 'o')
-o2.put(30, 5, 'H')
-hoehen, schraegen, hs = hang(k, [8, 11], 1.1, 7.2, bis=14)
+k = Karte(36, 20)
+k.rect(2, 13, 18, 18)
+k.rect(6, 14, 9, 17, 'i')
+k.put(3, 15, 'T')
+o1 = Karte(36, 20)
+o1.rect(14, 7, 30, 12)
+o1.rect(18, 8, 21, 11, 's')
+o1.rect(24, 8, 25, 12, '.')                        # ein Spalt auf der mittleren Etage
+o1.rect(24, 8, 25, 10, '#')                        # darueber die Waechte - sie traegt einmal
+o2 = Karte(36, 20)
+o2.rect(22, 2, 33, 6)
+o2.rect(26, 3, 28, 5, 'i')                         # die letzte Eisplatte, direkt vor dem Gipfelloch
+o2.rect(29, 5, 29, 6, 'x'); o2.rect(24, 2, 24, 2, 'x')   # Deckung vor der Gipfellawine
+o2.put(31, 4, 'H')
+hoehen, schraegen, hs = hang(k, [], 0.8, 5.8)
 bahn(name='Der Gipfel', par=6, theme='summit', maxStrokes=22, seed=312, dichte=0.08,
-     intro='Ganz oben. Von der Gipfelplatte bringt die erste Gondel auf die untere Wolke, dort '
-           'trennt eine Wächte die beiden Bänke – sie trägt einmal, dann bricht sie ein –, und von '
-           'der zweiten Bank führt die letzte Gondel noch eine Wolke höher. Dort liegt das Loch. '
-           'Über der Platte fegt es noch einmal herunter, und der Wind hört den ganzen Weg nicht '
-           'auf. Wer hier ankommt, hat den Berg gelesen und nicht bezwungen.',
-     obstacles=[seilbahn([k, o1, o2], 'Gipfel unten', 13.5, 13.5, 19.5, 12.5, ziel=1, travel=3.8),
-                schneebruecke([k, o1, o2], 'Gipfel', 25, 10, 3, 4, ebene=1),
-                seilbahn([k, o1, o2], 'Gipfel oben', 31.5, 11.5, 30.5, 6.5, ebene=1, ziel=2, travel=3.4),
-                windfahne(k, 'Gipfel', 10, 15.5),
-                lawine(k, 'Gipfel', 2, 10, 15, 17, 90, phase=0.4)] + schraegen,
-     # Jede Etage schaut zu ihrer eigenen Talstation: von der Platte zur ersten Gondel, von der
-     # unteren Wolke zur zweiten. Erst ganz oben ist das Loch das Ziel.
-     views=[blick(0, 0, 17, 20, 13.5, 13.5, ebene=0),
-            blick(16, 0, 20, 20, 31.5, 11.5, ebene=1)],
+     schnee=SCHNEE_WACHS,
+     intro='Drei Etagen bis zum Gipfel, zwei Gondeln dazwischen, und ganz oben die letzte '
+           'Eisplatte drei Felder vor dem Loch. Der Wind ist hier am stärksten, der Tiefschnee auf '
+           'der mittleren Etage am tiefsten, und über dem Spalt liegt eine Wächte, die einmal '
+           'trägt. Alles, was der Berg kann, auf einer Bahn.',
+     obstacles=[seilbahn([k, o1, o2], 'Der Gipfel', 17, 15.5, 15, 11.5, ziel=1, wait=2.4, travel=3.2),
+                seilbahn([k, o1, o2], 'Der Gipfel', 29, 9.5, 23, 4.5, ebene=1, ziel=2, wait=2.4, travel=3.2),
+                schneebruecke([k, o1, o2], 'Der Gipfel', 24, 8, 2, 3, ebene=1),
+                windfahne(k, 'Der Gipfel', 12, 17, kraft=1.6),
+                lawine(o2, 'Der Gipfel', 23, 2, 32, 6, 90, phase=0.35, ebene=2)] + schraegen,
      decor=[('cloud', 20, 2.4, 1.6), ('cloud', 8, 4.4, 1.4), ('cloud', 30, 17.4, 1.5),
-            ('rockSnow', 17, 17.4, 1.3)],
+            ('cloud', 24, 18.6, 1.3), ('rockSnow', 0.8, 19.4, 1.1)],
      heights=hoehen, hstep=hs,
      map=k.rows(), ebenen=[o1.rows(), o2.rows()])
+
 
 # ================================================================ Ausgabe
 for b in BAHNEN:
@@ -502,6 +565,8 @@ for b in BAHNEN:
     teile.append("  {\n")
     teile.append("    name: '%s', par: %d, theme: '%s', maxStrokes: %d,\n"
                  % (b['name'], b['par'], b['theme'], b['maxStrokes']))
+    if b.get('schnee'):
+        teile.append("    schnee: %s,\n" % g(b['schnee']))
     teile.append("    intro: '%s',\n" % b['intro'].replace("'", "\\'"))
     teile.append("    map: [\n%s\n    ],\n" % js_map(b['map']))
     if b.get('heights'):

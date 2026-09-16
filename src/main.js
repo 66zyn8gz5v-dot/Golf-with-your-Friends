@@ -1844,6 +1844,10 @@
       b.restX = rx; b.restY = ry;
     }
     else { Sfx.oob(); burst(b.x, b.y, '#cccccc', 10); }
+    /* Wer aus dem Spiel genommen und zurückgelegt wird, kommt sauber zurück: Der angesetzte Schnee
+       fällt dabei ab. Sonst läge nach einem Sturz ein zugeschneiter Ball am Ruheplatz, und man
+       müsste erst wieder aufs Eis, ohne zu wissen, warum. */
+    if (b.r > BALL_R) b.r = BALL_R;
     state.strokes++;
     schlagVorbei();
     showMessage(`${label} · +1 Strafschlag`, 1700);
@@ -2459,6 +2463,10 @@
         case 'bruch': Sfx.bounce(4); burst(ev.x, ev.y, '#ffffff', 18, true); break;
         /* Ein Guss: Das Erz läuft ein Feld weiter und erstarrt. Gemeldet wird jeder Guss, denn
            jeder verändert die Bahn – und der letzte sagt, dass die Brücke steht. */
+        /* Der Schneeberg: Der Ball setzt Schnee an, bis er nicht mehr ins Loch passt – und streift
+           ihn auf Eis wieder ab. Beide Augenblicke werden gemeldet, denn beide entscheiden. */
+        case 'zugeschneit': Sfx.bounce(2); showMessage('Zu dick fürs Loch – ab aufs Eis!', 1600); break;
+        case 'abgestreift': Sfx.bumper(); burst(ev.x != null ? ev.x : state.ball.x, ev.y != null ? ev.y : state.ball.y, '#ffffff', 12, true); showMessage('Schnee ab – jetzt passt er', 1400); break;
         case 'guss':
           Sfx.lava();
           burst(ev.x, ev.y, '#ffb347', 16, true); burst(ev.x, ev.y, '#fff0c0', 8, true);

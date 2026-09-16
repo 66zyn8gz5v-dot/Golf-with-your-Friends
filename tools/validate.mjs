@@ -508,6 +508,52 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
       problems.push(`Ebene ${n} ist von nirgends erreichbar – weder über einen Aufstieg noch über einen Sturz`);
     if (c.ebeneZ != null && !(+c.ebeneZ >= 1 && +c.ebeneZ <= 6))
       problems.push(`ebeneZ ${c.ebeneZ} liegt außerhalb von 1 bis 6 – so hoch oder so flach lässt sich nicht mehr zielen`);
+    /* DIE REGEL DES SCHNEEBERGS: Wer über Schnee rollt, wird dicker, und ein zu dicker Ball passt
+       nicht mehr ins Loch – er rollt darüber hinweg. Abstreifen geht nur auf Eis oder im Wasser.
+       Eine Schneebahn ohne Eis auf dem Weg wäre also unlösbar, und zwar unsichtbar unlösbar: Es
+       sähe alles richtig aus, man käme nur nie hinein.
+       Geprüft wird darum genau das, und mit denselben Wegen wie oben – also über Seilbahnen und
+       Etagen hinweg. Im Erzeuger ginge das nicht: Auf „Die Seilbahn" liegt das Eis auf dem einen
+       Plateau und das Loch auf dem anderen. */
+    if (c.schnee && cup && !c.ohneLoch) {
+        const kalt = [];
+        for (let n = 0; n < karten.length; n++)
+          for (const k of erreichbar[n]) {
+            const [x, y] = k.split(',').map(Number);
+            const ch = karten[n][y] && karten[n][y][x];
+            if (ch === 'i' || ch === 'w') kalt.push([n, x, y]);
+          }
+        if (!kalt.length)
+          problems.push('Schneebahn ohne Eis oder Wasser auf dem Weg – der Ball schneit zu und passt nie mehr ins Loch');
+        else {
+          /* Und vom kalten Fleck aus muss das Loch noch erreichbar sein. Alles Erreichbare ist im
+             selben Lauf entstanden, also genügt die Frage, ob Loch und Eis im selben Gebiet der
+             Lochebene liegen – oder ob es von der Eisebene aus überhaupt weitergeht. */
+          /* Und es muss *nah genug* am Loch liegen. Das war die zweite Hälfte der Regel, und sie
+             hat gefehlt: Auf „Felsband" lag das Eis gleich hinter dem Abschlag, und über die
+             zweiundzwanzig Felder bis zum Loch schneite der Ball wieder zu – die Bahn war
+             unlösbar, und der Bot hat zehn von zehn Runden im Schlaglimit geendet. Zwölf Felder
+             Schnee machen den Ball zu dick; die letzte kalte Stelle muss näher liegen. */
+          const REICH = 12;
+          const nah = kalt.some(([n, kx, ky]) => {
+            if (n !== lochEbene) return false;
+            const gesehen = new Set([`${kx},${ky}`]), q = [[kx, ky, 0]];
+            while (q.length) {
+              const [x, y, d] = q.shift();
+              if (x === cup[0] && y === cup[1]) return true;
+              if (d >= REICH) continue;
+              for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+                const nx = x + dx, ny = y + dy, k = `${nx},${ny}`;
+                if (gesehen.has(k) || !erreichbar[n].has(k)) continue;
+                gesehen.add(k); q.push([nx, ny, d + 1]);
+              }
+            }
+            return false;
+          });
+          if (erreichbar[lochEbene].has(cup.join()) && !nah)
+            problems.push(`kein Eis und kein Wasser innerhalb von ${REICH} Feldern vor dem Loch – der Ball schneit auf dem letzten Stück wieder zu`);
+        }
+    }
     if (cup && !c.ohneLoch && !erreichbar[lochEbene].has(cup.join()))
       problems.push(lochEbene === 0 ? 'Loch vom Abschlag nicht erreichbar'
         : `Loch auf Ebene ${lochEbene} nicht erreichbar – dorthin führt kein erreichbarer Auf- oder Abstieg, oder kein Weg auf der Ebene`);

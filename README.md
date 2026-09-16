@@ -1089,6 +1089,41 @@ nicht Oberfläche, sondern Teil der gezeichneten Karte – so wie die Schrift au
 zum Blatt gehört. `tools/schrift.mjs` hält beides fest: dass es außer den dreien keine gibt, dass
 genau eine Familie nachgeladen wird, und dass die Karte sich nicht unbemerkt ändert.
 
+### Der Schneeball: aus vier Paletten werden vier Abschnitte
+
+Der Schneeberg war zwölfmal dieselbe Bahn in anderer Farbe, und das ließ sich nachzählen: eine
+Windfahne auf **12 von 12**, eine Lawine auf 10, drei bis sechs Hindernisse auf vierhundert
+Feldern, Eis auf 4 von 12 Bahnen, Wasser auf **keiner**, drei bis vier Deko-Stücke je Bahn. Die
+vier Abschnitte – Talstation, Fels, Gletscher, Gipfel – waren nichts als vier Farbpaletten: Es galt
+überall dasselbe.
+
+Seit Fassung 152 gilt auf dem Berg eine eigene Regel, so wie in der Zwergenmine die Dunkelheit:
+
+> **Wer über Schnee rollt, setzt Schnee an und wird größer. Wer über Eis rollt, streift ihn wieder
+> ab. Und ein zu dicker Ball passt nicht mehr ins Loch.**
+
+Damit heißt *Gletscher* etwas: Dort ist alles Eis, der Ball bleibt klein und rutscht. Im Tiefschnee
+am Gipfel wächst er am schnellsten. Die Aufgabe der Welt in einem Satz: **nicht zu dick ankommen.**
+
+**Wie scharf, und wie ich es falsch hatte.** Zuerst war der Ball schon nach *zwei* Schlägen zu dick –
+auf jeder Bahn, bei jedem Spiel. Damit war die Regel keine Aufgabe, sondern eine Dauerstrafe; der
+Bot endete auf einer Bahn zehnmal von zehn im Schlaglimit. Gemeint war: *wer weit herumirrt, muss
+zum Eis* – nicht *wer zweimal schlägt*. Jetzt wird er nach rund vierzig Kacheln zu dick, also nach
+vier ordentlichen Schlägen, und drei Kacheln Eis genügen zum Abstreifen.
+
+**Was die Prüfung dazugelernt hat.** Eine Schneebahn ohne erreichbares Eis ist unlösbar, und zwar
+*unsichtbar* unlösbar – es sähe alles richtig aus, man käme nur nie hinein. `tools/validate.mjs`
+prüft darum zweierlei: dass überhaupt Eis oder Wasser auf dem erreichbaren Weg liegt, und dass es
+**höchstens zwölf Felder vor dem Loch** liegt. Die zweite Hälfte hat zuerst gefehlt, und sie hat
+sofort vier Bahnen gefunden, auf denen das Eis gleich hinter dem Abschlag lag und der Ball auf den
+letzten zwanzig Feldern wieder zuschneite.
+
+**Und die Bahnen selbst.** Eis jetzt auf allen zwölf (der Gletscher besteht aus 170 bis 200 Kacheln
+davon), Wasser auf dreien, Tiefschnee auf vieren, vier bis sieben Deko-Stücke je Bahn. Die
+Maschinen sind ungleich verteilt: Windfahne auf 10 von 12 statt auf allen, Lawine auf 4, Seilbahn
+auf 4, Schneebrücke auf 3. Zwei Bahnen haben gar keinen Wind – und genau deshalb merkt man ihn auf
+den anderen.
+
 ### Der Gießlöffel: das einzige Hindernis, das die Bahn aufbaut
 
 Eine Pfanne am Rand der Schmelze kippt im Takt flüssiges Erz in eine Rinne. Das Erz läuft ein Feld

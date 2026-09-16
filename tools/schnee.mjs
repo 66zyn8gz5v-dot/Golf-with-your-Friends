@@ -143,5 +143,72 @@ console.log('\n--- Die Windfahne ---');
   pruef('ein liegender Ball wird nie vom Berg geweht', ruhig < 1e-9, `Tempo ${ruhig.toFixed(6)}`);
 }
 
+/* ------------------------------------------------------------------------------------------- *
+ * DER SCHNEEBALL: die Weltregel des Berges
+ *
+ * Wer über Schnee rollt, setzt Schnee an und passt irgendwann nicht mehr ins Loch; auf Eis
+ * streift er ihn ab, Wasser nimmt ihn auf einen Schlag. Das ist die Regel, die aus vier Paletten
+ * vier Abschnitte gemacht hat – vorher galt auf allen zwölf Bahnen dasselbe.
+ *
+ * Geprüft wird sie an einer gebauten Fläche, nicht an einer Bahn: So steht in der Prüfung, was
+ * die Regel tun *soll*, und nicht, was eine bestimmte Bahn gerade zulässt.
+ */
+{
+  const feld = (zeile) => ({
+    name: 'Schneeprüfung', par: 3, theme: 'snowfoot', schnee: 0.0045,
+    map: ['..........................', '.T' + zeile + 'H.', '..........................'],
+  });
+  /* Geschlagen wird mehrfach, so wie im Spiel: Ein Schlag trägt gut neun Felder weit, dick wird
+     der Ball erst nach zwölf. Ein einzelner Schlag könnte die Regel also gar nicht auslösen – und
+     genau daran ist diese Prüfung beim ersten Versuch gescheitert. */
+  const lauf = (def, schlaege, vx = 9, hin = false) => {
+    const lv = G.buildLevel(def);
+    const b = G.makeBall(2.5, 1.5, '#fff');
+    let t = 0;
+    for (let s = 0; s < schlaege; s++) {
+      b.vx = vx * (hin || s % 2 === 0 ? 1 : -1);   // hin und her, damit die Fläche reicht
+      for (let i = 0; i < Math.round(4 / STEP); i++) {
+        G.stepPhysics(lv, b, STEP, t, false); t += STEP;
+        if (Math.hypot(b.vx, b.vy) < 0.05) break;
+      }
+    }
+    return b;
+  };
+  const R = 0.3, LOCH = R * 1.22;
+
+  const imSchnee = lauf(feld('#'.repeat(23)), 6);
+  pruef('im Schnee wird der Ball dicker', imSchnee.r > LOCH, `r = ${imSchnee.r.toFixed(3)}`);
+
+  const aufEis = lauf(feld('i'.repeat(23)), 6);
+  pruef('auf Eis bleibt er dünn', Math.abs(aufEis.r - R) < 1e-9, `r = ${aufEis.r.toFixed(3)}`);
+
+  // Erst durch den Schnee, dann über das Eis: was er angesetzt hat, streift er wieder ab
+  // Immer nach rechts: erst vierzehn Felder Schnee (dick), dann neun Felder Eis (wieder dünn)
+  const gemischt = lauf(feld('#'.repeat(14) + 'i'.repeat(9)), 5, 9, true);
+  pruef('das Eis streift den Schnee wieder ab', gemischt.r <= LOCH, `r = ${gemischt.r.toFixed(3)}`);
+
+  // Ein liegender Ball setzt nichts an - gewachsen wird nach Weg, nicht nach Zeit
+  const liegt = lauf(feld('#'.repeat(23)), 6, 0);
+  pruef('ein liegender Ball setzt nichts an', Math.abs(liegt.r - R) < 1e-9, `r = ${liegt.r.toFixed(3)}`);
+
+  // Und ohne die Regel rührt sich gar nichts – andere Welten bleiben unberührt
+  const ohne = feld('#'.repeat(23)); delete ohne.schnee;
+  pruef('ohne def.schnee gilt die Regel nicht', Math.abs(lauf(ohne, 6).r - R) < 1e-9);
+
+  /* Und die Bahnen selbst: Jede Schneebahn muss Eis oder Wasser haben. Dass es auch *erreichbar*
+     ist, prüft tools/validate.mjs – dort stehen Seilbahnen und Etagen schon fertig da. */
+  const bahnen = vm.runInContext('SNOW_COURSES', ctx);
+  const ohneEis = bahnen.filter(c => c.schnee && !c.map.some(r => /[iw]/.test(r)));
+  pruef('jede Schneebahn hat Eis oder Wasser', ohneEis.length === 0,
+        ohneEis.length ? ohneEis.map(c => c.name).join(', ') : `${bahnen.filter(c => c.schnee).length} Bahnen`);
+
+  /* Die Eintönigkeit, wegen der das alles hier steht: Vorher stand auf *jeder* Bahn eine
+     Windfahne und auf zehn von zwölf eine Lawine. Eine Welt, in der jede Bahn dieselbe Maschine
+     trägt, hat keine zwölf Bahnen, sondern eine. */
+  const mit = (typ) => bahnen.filter(c => (c.obstacles || []).some(o => o.type === typ)).length;
+  pruef('nicht jede Bahn hat eine Windfahne', mit('windfahne') < bahnen.length, `${mit('windfahne')}/${bahnen.length}`);
+  pruef('und nicht jede eine Lawine', mit('lawine') <= bahnen.length * 0.6, `${mit('lawine')}/${bahnen.length}`);
+}
+
 console.log(fehler ? `\n${fehler} Fehler\n` : '\nalles bestanden\n');
 process.exit(fehler ? 1 : 0);
