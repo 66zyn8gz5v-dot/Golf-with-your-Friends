@@ -47,5 +47,8 @@ const Sfx = (() => {
     /* Aufwind: aufsteigendes Rauschen mit hellem Zug nach oben */
     whoosh() { noise(0.45, 0.2); tone(240, 0.5, 'sine', 0.14, 900); setTimeout(() => tone(700, 0.35, 'triangle', 0.09, 700), 120); },
     thunder() { noise(0.12, 0.4); tone(2200, 0.09, 'square', 0.16, -1800); setTimeout(() => { noise(0.9, 0.3); tone(70, 1.1, 'sawtooth', 0.16, -35); tone(46, 1.3, 'sine', 0.14, -16); }, 70); },
+    /* Sprengschuss im Stollen: trockener Schlag, dann ein kurzes Nachrollen im Fels. Kürzer und
+       härter als der Donner – unter Tage hallt es, aber es grollt nicht minutenlang. */
+    spreng() { noise(0.1, 0.5); tone(180, 0.12, 'square', 0.2, -140); setTimeout(() => { noise(0.45, 0.22); tone(58, 0.55, 'sawtooth', 0.14, -28); }, 50); },
   };
 })();

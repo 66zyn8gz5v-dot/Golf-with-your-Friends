@@ -852,6 +852,7 @@ class Renderer {
     if (th.gears) this.drawSkyGears(ctx, t);
     if (th.planks) this.drawPlanks(ctx, t);
     if (th.tomb) this.drawTomb(ctx, t);
+    if (th.mineBg) this.drawMine(ctx, t);
     if (th.belly) this.drawBelly(ctx, t);
     if (th.jungleBg) this.drawJungle(ctx, t);
     if (th.temple) this.drawTemple(ctx, t);
@@ -962,6 +963,9 @@ class Renderer {
        zu, und auch unten verdeckte ihn jedes Hindernis, das davor gezeichnet wurde. Man konnte dann
        ganz normal aufladen und schießen, sah nur nicht, wohin - und das ist schlimmer als gar keine
        Hilfe, weil man den Fehler bei sich sucht. */
+    /* Der Schleier der Mine liegt über der ganzen Szene – aber unter der Zielhilfe. Wohin man
+       schlägt, muss man auch im Dunkeln sehen; was einen dort erwartet, nicht. */
+    this.drawDunkelheit(ctx, state);
     if (state.aim) this.drawAim(ctx, state.ball, state.aim);
 
     if (state.phase !== 'edit') this.drawDepthCues(ctx);
@@ -1313,6 +1317,58 @@ class Renderer {
       ctx.lineTo(w, h); ctx.closePath(); ctx.fill();
     }
   }
+  /* Unter Tage: geschlagener Fels statt Himmel. Die Farben kommen aus der Palette, damit
+     derselbe Stollen in der Kristallkammer violett und in der Schmelze rot leuchtet – gezeichnet
+     wird also nicht „die Mine", sondern „Fels in der Farbe dieses Abschnitts".
+
+     Drei Lagen, von hinten nach vorn: der rohe Fels mit seinen Schichten, das Grubenholz, das die
+     Decke hält, und der Lampenschein. Das Flackern ist bewusst langsam und schwach – eine Lampe,
+     die zuckt, macht die ganze Bahn unruhig, und gespielt wird auf dem Boden, nicht an der Wand. */
+  drawMine(ctx, t) {
+    const w = this.w, h = this.h, th = this.theme;
+    const kratz = (i, k) => Math.abs(Math.sin(i * 127.1 + k * 311.7) * 43758.5453) % 1;
+    const g = ctx.createLinearGradient(0, 0, 0, h);
+    g.addColorStop(0, th.sky[0]); g.addColorStop(0.55, th.sky[1]); g.addColorStop(1, th.sky[0]);
+    ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+    /* Gesteinsschichten: flache Bänder, die leicht abfallen. Sie geben dem Fels eine Richtung –
+       ohne sie sieht die Wand aus wie Nebel. */
+    for (let i = 0; i < 7; i++) {
+      const y0 = h * (0.06 + i * 0.13), neig = (kratz(i, 3) - 0.5) * h * 0.06;
+      ctx.fillStyle = `rgba(0,0,0,${0.06 + kratz(i, 1) * 0.07})`;
+      ctx.beginPath(); ctx.moveTo(0, y0);
+      for (let x = 0; x <= w; x += 24) ctx.lineTo(x, y0 + (x / w) * neig + Math.sin(x * 0.006 + i) * h * 0.012);
+      ctx.lineTo(w, y0 + neig + h * 0.045); 
+      for (let x = w; x >= 0; x -= 24) ctx.lineTo(x, y0 + (x / w) * neig + h * 0.045 + Math.sin(x * 0.006 + i) * h * 0.012);
+      ctx.closePath(); ctx.fill();
+    }
+    // Schlagspuren der Spitzhacke: kurze helle Kerben, unregelmäßig übers Gestein verteilt
+    ctx.strokeStyle = 'rgba(255,255,255,0.05)'; ctx.lineWidth = 2;
+    for (let i = 0; i < 90; i++) {
+      const x = kratz(i, 7) * w, y = kratz(i, 11) * h, l = 6 + kratz(i, 13) * 14, a = -0.9 + kratz(i, 17) * 0.5;
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); ctx.stroke();
+    }
+    /* Grubenholz: zwei Stempel und ein Querbalken, wie sie den Stollen offen halten. Sie stehen
+       weit auseinander und dunkel – sie sollen Tiefe geben, nicht auffallen. */
+    const holz = '#3a2a1c';
+    for (const [bx, bw, bh] of [[0.1, 0.17, 0.62], [0.63, 0.2, 0.7]]) {
+      const x0 = bx * w, br = bw * w, oben = h * (1 - bh);
+      ctx.fillStyle = holz;
+      ctx.fillRect(x0, oben, br * 0.1, h);                         // linker Stempel
+      ctx.fillRect(x0 + br * 0.9, oben, br * 0.1, h);               // rechter Stempel
+      ctx.fillRect(x0 - br * 0.04, oben - h * 0.03, br * 1.08, h * 0.05);   // Querbalken
+      ctx.fillStyle = 'rgba(255,255,255,0.05)';
+      ctx.fillRect(x0, oben, br * 0.03, h);
+    }
+    /* Lampenschein. Die Farbe ist der Akzent der Palette: gelb im Stollen, blau in der
+       Kristallkammer, orange in der Schmelze. */
+    for (const [fx, fy, ph] of [[0.16, 0.24, 0], [0.55, 0.14, 1.7], [0.9, 0.3, 3.4]]) {
+      const fl = 0.85 + 0.15 * Math.sin(t * 2.1 + ph) * Math.sin(t * 1.3 + ph);
+      const rg = ctx.createRadialGradient(fx * w, fy * h, 0, fx * w, fy * h, w * 0.3);
+      rg.addColorStop(0, rgba(th.accent, 0.16 * fl)); rg.addColorStop(1, rgba(th.accent, 0));
+      ctx.fillStyle = rg; ctx.fillRect(0, 0, w, h);
+    }
+  }
+
   /* Grabkammer: Sandsteinwand mit Hieroglyphen-Reihen und flackerndem Fackelschein */
   drawTomb(ctx, t) {
     const w = this.w, h = this.h, hash = (i, k) => Math.abs(Math.sin(i * 127.1 + k * 311.7) * 43758.5453) % 1;
@@ -1635,6 +1691,8 @@ class Renderer {
     if (ob.type === 'handclock') { this.drawHandClockFloor(ctx, ob, t); return; }
     if (ob.type === 'turbine') { this.drawTurbineFloor(ctx, ob, t); return; }
     if (ob.type === 'luke') { if (!(ob.ebene || 0)) this.drawLuke(ctx, ob, 0); return; }   // höhere Ebenen zeichnet zeichneEbene
+    if (ob.type === 'sprengladung') { this.drawSprengladungFloor(ctx, ob, t); return; }
+    if (ob.type === 'grubenlampe') { this.drawGrubenlampeFloor(ctx, ob, t); return; }
     if (ob.type === 'windfahne') { this.drawWindfahneFloor(ctx, ob, t); return; }
     if (ob.type === 'lawine') { this.drawLawineFloor(ctx, ob, t); return; }
     if (ob.type === 'seilbahn') { this.drawSeilbahnFloor(ctx, ob, t); return; }
@@ -1960,6 +2018,15 @@ class Renderer {
     } else if (ob.type === 'aufzug') {
       if (this.spanntEbenen(ob)) return;
       items.push({ x: ob.x, y: ob.y, bias: 0.4, draw: () => this.drawAufzug(ctx, ob, t) });
+    } else if (ob.type === 'sprengladung') {
+      items.push({ x: ob.x, y: ob.y, bias: 0.3, noFade: true, draw: () => this.drawSprengladung(ctx, ob, t) });
+    } else if (ob.type === 'kippbuehne') {
+      /* bias negativ: die Bohle liegt flach am Boden und gehört unter alles, was darauf steht.
+         noFade: Auf ihr wird gerollt – eine Fläche, die unter dem Ball durchsichtig wird, sähe aus
+         wie ein Loch, und man würde den eigenen Weg nicht mehr sehen. */
+      items.push({ x: ob.cx, y: ob.cy, bias: -0.15, noFade: true, draw: () => this.drawKippbuehne(ctx, ob, t) });
+    } else if (ob.type === 'grubenlampe') {
+      items.push({ x: ob.x, y: ob.y, bias: 0.45, noFade: true, draw: () => this.drawGrubenlampe(ctx, ob, t) });
     } else if (ob.type === 'windfahne') {
       items.push({ x: ob.x, y: ob.y, bias: 0.4, draw: () => this.drawWindfahne(ctx, ob, t) });
     } else if (ob.type === 'lawine') {

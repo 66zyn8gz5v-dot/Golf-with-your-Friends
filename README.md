@@ -192,6 +192,7 @@ Höhe** (y) – die x-Angabe wird beim Zeichnen durch `BREITE` geteilt.
 | Schattenreich | Legende | 10 extra große Bahnen im Reich der Schatten |
 | Schneeberg | Profi | 12 Bahnen den Berg hinauf – der Wind dreht im Takt, oben liegen die Wolkenetagen |
 | Uhrwerkstadt | Profi | 14 Bahnen im Uhrenturm – alles eine Frage des Takts, gestapelte Ebenen, zum Schluss wandert das Loch |
+| Zwergenmine | Profi | 9 Bahnen unter den Berg – man sieht nur, was im Licht der Grubenlampen steht |
 
 Das **Kolosseum** steht bewusst *nicht* auf der Weltkarte. Es ist die Turnierwelt und wird nur über
 den **Turnier**-Knopf im Startbildschirm betreten – die Weltkarte bleibt die Reise durch die sieben
@@ -948,6 +949,77 @@ Die Karten dieser Welt werden nicht von Hand getippt, sondern von `tools/arena.p
 zusammengesetzt und nach `src/courses_colosseum.js` geschrieben. So bleiben alle Zeilen gleich lang,
 und eine Änderung an einer Kammer zieht nicht Dutzende Zeichen nach sich. Nach jedem Lauf gehören
 `node tools/validate.mjs` und `node tools/audit/audit.mjs colosseum` dazu.
+
+## Die Zwergenmine
+
+Die zehnte Welt liegt im Berg – man erreicht sie auf der Weltkarte am Fuß des Gebirges, gleich
+unterhalb des Schneebergs. Neun Bahnen, Stufe Profi, und ein Abstieg: vom Tageslicht am Mundloch
+durch die Stollen und die Kristallkammern hinunter zur Schmelze.
+
+**Die Frage dieser Welt ist die Dunkelheit.** Jede andere Welt fragt, wie fest (Märchenland), wann
+(Uhrenturm) oder wohin (Schneeberg) man schlägt. Die Mine fragt: *was liegt da vorn überhaupt?* Ab
+Bahn 2 trägt jede Bahn einen Schleier (`dunkel`, 0,45 bis 0,62), der sich nur an zwei Stellen
+öffnet: um den Ball und um jede Grubenlampe. Dazwischen muss man sich merken, was man beim Hinweg
+gesehen hat.
+
+Drei Entscheidungen halten das spielbar statt ärgerlich:
+
+* **Die Zielhilfe liegt über dem Schleier.** Wohin man schlägt, sieht man immer – was einen dort
+  erwartet, nicht. Wer im Dunkeln zielt, zielt trotzdem genau.
+* **Gefahr leuchtet durch.** Der Kreis einer Sprengladung und die Glut in den Spalten werden auf
+  den Boden gezeichnet, bevor der Schleier kommt. Man sieht also, was einem schaden kann, auch wenn
+  man den Weg dorthin nicht sieht.
+* **Jede dunkle Bahn ist mit den Lampen allein lesbar.** `tools/mine.py` misst das beim Bauen: Kein
+  Punkt des Weges darf weiter als 7,5 Felder von jedem Licht entfernt liegen. Die Bahn mit der
+  dunkelsten Stelle (Erster Stollen, 6,3) hat also noch Luft.
+
+Gezeichnet wird der Schleier in `Renderer.drawDunkelheit` – fünf Lagen Dunkel übereinander, jede
+mit einem etwas kleineren Loch an denselben Stellen. Das ergibt einen weichen Rand ohne zweite
+Leinwand; drei Lagen waren zu wenig, da sah man die Ringe einzeln.
+
+**Zwei neue Maschinen** (`src/obstacles_mine.js`, gezeichnet in `src/render_mine.js`):
+
+| Typ | Was sie tut |
+|---|---|
+| `sprengladung` | Die Lunte brennt sichtbar ab, dann wirft der Druck alles im Umkreis nach außen – umso weiter, je näher es liegt (voll am Zünder, null am Rand). Sie kostet **keinen** Schlag und wirkt auch auf einen ruhenden Ball: Wer sich richtig hinlegt, lässt sich von ihr tragen. Takt 7,5 s, Lunte 2,4 s, Reichweite 3,2 Felder. |
+| `kippbuehne` | Eine Bohle über dem Schacht, die auf einer Achse ruht und zu der Seite kippt, auf der der Ball liegt. In einem Satz: **über die Mitte musst du kommen.** Wer es schafft, wird hinübergeworfen; wer davor liegenbleibt, rutscht zurück. Um die Achse liegt eine Totzone, damit nicht ein Fingerbreit über alles entscheidet. |
+| `grubenlampe` | Leuchtet ein Stück Bahn aus. Keine Wirkung auf den Ball – und auf einer dunklen Bahn trotzdem das Wertvollste, was dort steht. |
+
+Zwei Dinge, die ich **nicht** gebaut habe, obwohl sie auf der Hand lagen: Ein Förderkorb wäre der
+bestehende *Aufzug*, eine Pressluftdüse der bestehende *Aufwind*, und ein Schöpfrad, das den Ball
+eine Etage höher trägt, wäre *Aufzug* und *Zahnstange* unter einer runden Zeichnung. Neue Optik ist
+kein neues Spiel. Aufzug, Zahnstange, Lore und Aufwind kommen in der Mine natürlich trotzdem vor –
+nur eben als das, was sie sind.
+
+Geprüft wird beides dauerhaft mit `node tools/mine.mjs`: dass der Druck nach außen geht und mit dem
+Abstand abnimmt, dass jenseits der Reichweite nichts passiert, dass kein Strafschlag anfällt, dass
+der Knall genau einmal je Zündung gemeldet wird – und für die Bühne, dass sie hinter der Mitte
+vorwärts wirft, davor zurück, in der Totzone nichts tut und ohne Ball in die Waage zurückkehrt.
+
+**Die neun Bahnen** (`src/courses_mine.js`, erzeugt von `tools/mine.py`):
+
+| # | Name | Par | Abschnitt | Was sie will |
+|---|---|---|---|---|
+| 1 | Mundloch | 3 | Tageslicht | Halde, Grubenholz, das Tor in den Berg. Noch ohne Schleier. |
+| 2 | Erster Stollen | 3 | Stollen | Die Dunkelheit und die Lampen: den Lichtern nach, dann findet man das Loch. |
+| 3 | Sprengfeld | 4 | Stollen | Die erste Ladung. Der kurze Weg führt durch ihren Kreis, der lange außen herum. |
+| 4 | Kippbohle | 3 | Stollen | Der Schacht quer durch den Stollen, darüber die Bohle. Nicht zaghaft. |
+| 5 | Lorensohle | 4 | Stollen | Zwei Hunte queren den Gang im eigenen Takt, dazu eine Ladung vor dem Loch. |
+| 6 | Kristallkammer | 3 | Kristall | Ein Magnetit in der Mitte drückt weg, die Kristalle werfen zurück. |
+| 7 | Zwillingsbohlen | 3 | Kristall | Zweimal dasselbe kurz hintereinander – wer zu fest über die erste kommt, steht schon auf der zweiten. |
+| 8 | Sohle Neun | 4 | Schmelze | Ein schmaler Steg durch den Lavaspalt – oder man lässt sich von der Ladung hinüberwerfen. |
+| 9 | Die Schmelze | 5 | Schmelze | Die Insel im Lavasee, ein Damm hinüber, und eine Ladung, die ihn im Takt leerfegt. |
+
+Die Pare stehen nicht nach Gefühl, sondern nach dem, was die Bahnen wirklich spielen: Der
+Normalspieler-Bot (`node tools/audit/audit.mjs mine`) hat sie durchgespielt, und wo sein Median
+zwei Schläge unter dem Par lag, ist das Par heruntergegangen. Ein Vorbehalt bleibt und ist hier
+größer als sonst: Der Bot kennt die Karte auswendig, ein Mensch im Dunkeln nicht. Die Pare sind
+darum eher knapp bemessen als großzügig.
+
+**Die Belohnung** der Welt ist der Skin **Grubenlampe**: ein eiserner Lampenkörper mit
+Messingreifen, in dessen Glas wirklich eine Flamme steht – dazu als Hut der Grubenhelm mit der
+kleinen Lampe vorn. Freigeschaltet wird er wie jede Weltbelohnung, indem man die Welt vollständig
+spielt.
 
 ## Der Schneeberg
 
@@ -2048,6 +2120,7 @@ src/courses_jungle.js die Bahnen des Dschungeltempels
 src/courses_storm.js die Bahnen des Sturmhimmels (Legende)
 src/courses_shadow.js die Bahnen des Schattenreichs (Legende)
 src/courses_colosseum.js die Bahnen des Kolosseums (Legende)
+src/courses_mine.js die neun Bahnen der Zwergenmine (erzeugt von tools/mine.py)
 src/courses_boule.js die neun Bahnen der Boule-Welt (erzeugt von tools/boule.py)
 src/courses_pro.js die Bahnen des Tüftlerreichs und die Weltenliste
 src/editor.js     Baumodus (Editor für eigene Bahnen)
@@ -2056,9 +2129,11 @@ manifest.webmanifest, sw.js, icons/   Web-App: Installieren und offline spielen
 src/level.js      Karte → Kacheln, Mauern, Kollisionssegmente
 src/obstacles.js  bewegliche und statische Hindernisse
 src/obstacles_legend.js Blitzfeld, Aufwind, Falltür, Fallbeil, Augenturm, Löwentor
+src/obstacles_mine.js Sprengladung, Kippbühne und Grubenlampe der Zwergenmine
 src/physics.js    Ballphysik und Kollision (auch Ball gegen Ball, wenn mehrere zugleich rollen)
 src/render.js     isometrische Darstellung
 src/render_legend.js Optik der Legende-Welten (Hintergründe, neue Hindernisse und Stile)
+src/render_mine.js Optik der Zwergenmine: Fels statt Himmel, der Schleier und die drei Maschinen
 src/text.js       Eine Stelle für alle Eingaben: Namen und Bahnnamen filtern, Anzeige entschärfen
 src/share.js      Bahnen weitergeben: prüfen, über den Vermittler teilen, als Link verpacken
 src/version.js    Fassung und Ausgabe (Spiel oder Vorschau): Zahl, Speicher-Vorsatz und Themen-Marke – von Seite und Service Worker gelesen

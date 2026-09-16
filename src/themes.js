@@ -462,6 +462,59 @@ const THEMES = {
     blockStil: 'fels',
     autoDecor: ['rockSnow', 'rockSnow', 'cloud', 'crystalBlue', 'rockSnow', 'cloud', 'crystalBlue', 'windsock'],
   },
+  /* ---- Die Zwergenmine ----
+     Vier Abschnitte, die zusammen einen Abstieg ergeben: vom Tageslicht am Mundloch über die
+     Stollen und die Kristallkammern hinunter zur Schmelze. Die Welt wird mit jedem Abschnitt
+     dunkler und wärmer – oben graublauer Abend, unten glühendes Rot. Der Akzent ist immer ein
+     Licht: Lampe, Kristall, Glut. Unter Tage gibt es keinen Himmel, darum 'mineBg'. */
+  mundloch: { // Mundloch: Halde, Förderturm, letzter Abend vor dem Berg
+    atmo: 'mist',
+    sky: ['#243044', '#6b7a90'], ground: '#4a443c', groundEdge: '#2a2620', cliff: '#5a5148',
+    floor: ['#8a7f70', '#7f7567'], sand: '#c9b58a', ice: '#c8ecff', snow: '#f1f7ff',
+    water: '#37607f', lava: '#ff6a1f',
+    wall: { top: '#8e8577', side: '#4d463c', style: 'stone' },
+    block: { top: '#9a7c4e', side: '#5c4726' },      // Grubenholz: gestapelte Bohlen
+    mover: { top: '#b8843f', side: '#6b4a25' },
+    rotor: { top: '#a37a3c', side: '#5c4520' },
+    accent: '#ffc266', flag: '#ff5a5a',
+    autoDecor: ['crate', 'barrel', 'rock', 'lantern', 'rock', 'crate', 'anvil', 'gold'],
+  },
+  stollen: { // Im Stollen: geschlagener Fels, Grubenholz, Lampenschein, Staub in der Luft
+    atmo: 'mist', mineBg: true, cliff: '#4e463c',
+    sky: ['#120f0c', '#2b241d'], ground: '#3b352d', groundEdge: '#201c17',
+    floor: ['#7b7264', '#71695c'], sand: '#bfa982', ice: '#c8ecff', snow: '#f1f7ff',
+    water: '#2f5468', lava: '#ff6a1f',
+    wall: { top: '#7e7466', side: '#433c33', style: 'stone' },
+    block: { top: '#9a7c4e', side: '#5c4726' },
+    mover: { top: '#b8843f', side: '#6b4a25' },
+    rotor: { top: '#a37a3c', side: '#5c4520' },
+    accent: '#ffb347', flag: '#ff5a5a',
+    autoDecor: ['lantern', 'rock', 'crate', 'stalagmite', 'rock', 'barrel', 'lantern', 'pipe'],
+  },
+  kristall: { // Kristallkammer: der Fels wird violett, und das Licht kommt aus der Wand
+    atmo: 'sparks', mineBg: true, cliff: '#3d3358',
+    sky: ['#0d0a1a', '#241b3d'], ground: '#332a4d', groundEdge: '#1b1630',
+    floor: ['#6d6489', '#645b7f'], sand: '#b0a4cc', ice: '#bfe6ff', snow: '#f1f7ff',
+    water: '#2f4a8a', lava: '#ff6a1f',
+    wall: { top: '#7a6ea6', side: '#3c3460', style: 'stone' },
+    block: { top: '#8f7fc4', side: '#4d4180' },
+    mover: { top: '#b8843f', side: '#6b4a25' },
+    rotor: { top: '#a37a3c', side: '#5c4520' },
+    accent: '#8fe8ff', flag: '#ffd166', stars: false,
+    autoDecor: ['crystalBlue', 'crystal', 'crystalBlue', 'stalagmite', 'crystal', 'rock', 'crystalBlue', 'lantern'],
+  },
+  schmelze: { // Schmelze: die unterste Sohle, wo das Erz flüssig wird
+    atmo: 'embers', mineBg: true, cliff: '#4a2f24',
+    sky: ['#170a07', '#4a1c10'], ground: '#3d2a22', groundEdge: '#1f1410',
+    floor: ['#6e5a4e', '#645145'], sand: '#c9a878', ice: '#c8ecff', snow: '#f1f7ff',
+    water: '#2f5468', lava: '#ff7a1f',
+    wall: { top: '#6f5c50', side: '#3a2c24', style: 'stone' },
+    block: { top: '#7d5a3c', side: '#4a3322' },
+    mover: { top: '#b8843f', side: '#6b4a25' },
+    rotor: { top: '#a37a3c', side: '#5c4520' },
+    accent: '#ff8a3d', flag: '#ffd166',
+    autoDecor: ['basalt', 'brazier', 'obsidian', 'vent', 'anvil', 'basalt', 'stalagmite', 'crystalOrange'],
+  },
   cloud: {
     hangStil: 'schnee',   // Schrägen als Schneerinne, nicht als Erdrampe // Über den Wolken: nichts mehr fest außer dem, worauf man steht
     atmo: 'none',

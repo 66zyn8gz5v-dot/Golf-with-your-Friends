@@ -37,6 +37,10 @@ const WorldMap = (() => {
     { id: 'snow', name: 'Schneeberg', x: 60, y: 14, r: 14, biom: 'gebirge', marke: 'filter_hdr', farbe: '#bfe6ff', nameAn: [52, 9] },
     { id: 'clock', name: 'Uhrwerkstadt', x: 75, y: 21, r: 13, biom: 'stadt', marke: 'schedule', farbe: '#ffc46b' },
     { x: 66, y: 30, r: 10, biom: 'werkland' },                  // Talsenke unter dem Gebirge
+    /* Die Zwergenmine liegt im Berg selbst – darum sitzt ihre Marke am Fuß des Gebirges und ihr
+       Landstück wächst mit der Talsenke zusammen. Sie ist kein eigener Erdteil, sondern ein
+       Eingang. */
+    { id: 'mine', name: 'Zwergenmine', x: 69, y: 26, r: 9, biom: 'gebirge', marke: 'construction', farbe: '#ffb347', nameAn: [69, 33] },
     { id: 'storm', name: 'Sturmhimmel', x: 84, y: 38, r: 13, biom: 'sturm', marke: 'thunderstorm', farbe: '#8fb8ff' },
     { x: 47, y: 41, r: 10, biom: 'dschungel' },                 // Landbrücke in den Süden
     { id: 'jungle', name: 'Dschungeltempel', x: 57, y: 45, r: 14, biom: 'dschungel', marke: 'temple_buddhist', farbe: '#9ee06f' },
@@ -393,7 +397,7 @@ const WorldMap = (() => {
 
   /* Die Reise in der Reihenfolge der Welten. Ein Stück, das über Wasser führt, wird zur Seeroute –
      das entscheidet die Karte selbst, nicht eine Liste: Sie tastet die Strecke ab. */
-  const REISE = ['normal', 'sea', 'pro', 'snow', 'jungle', 'storm', 'shadow', 'clock'];
+  const REISE = ['normal', 'sea', 'pro', 'snow', 'mine', 'jungle', 'storm', 'shadow', 'clock'];
   function wege() {
     const land = [], see = [];
     for (let i = 0; i < REISE.length - 1; i++) {

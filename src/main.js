@@ -2440,6 +2440,7 @@
         case 'unshrink': showMessage('Der Trank lässt nach.', 1200); break;
         case 'curse': Sfx.potion(); burst(ev.x, ev.y, '#fff3d0', 18, true); showMessage(ev.label || 'Perlenfluch! Der Ball bleibt bis zum Loch träge.', 2000); break;
         case 'enter': enterInner(); return;
+        case 'spreng': Sfx.spreng(); burst(ev.x, ev.y, '#ffd18a', 26, true); burst(ev.x, ev.y, '#8a7b6a', 14, true); break;
         case 'spit': Sfx.bumper(); burst(ev.x, ev.y, '#a6ff5e', 10); break;
         case 'spin': Sfx.bounce(5); showMessage('Das Zahnrad nimmt den Ball mit …', 1200); break;
         case 'spinout': Sfx.bumper(); burst(ev.x, ev.y, '#ffe9a8', 8); break;

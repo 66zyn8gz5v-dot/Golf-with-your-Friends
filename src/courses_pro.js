@@ -471,4 +471,5 @@ const WORLDS = [
   { id: 'shadow', name: 'Schattenreich', short: 'Schatten', mode: 'legend', courses: SHADOW_COURSES },
   { id: 'clock', name: 'Uhrwerkstadt', short: 'Uhrwerk', mode: 'pro', courses: CLOCK_COURSES },
   { id: 'colosseum', name: 'Kolosseum', short: 'Arena', mode: 'legend', courses: COLOSSEUM_COURSES },
+  { id: 'mine', name: 'Zwergenmine', short: 'Mine', mode: 'pro', courses: MINE_COURSES },
 ];
