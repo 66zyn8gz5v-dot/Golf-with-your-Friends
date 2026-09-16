@@ -1121,7 +1121,7 @@ letzten zwanzig Feldern wieder zuschneite.
 **Und die Bahnen selbst.** Eis jetzt auf allen zwölf (der Gletscher besteht aus 170 bis 200 Kacheln
 davon), Wasser auf dreien, Tiefschnee auf vieren, vier bis sieben Deko-Stücke je Bahn. Die
 Maschinen sind ungleich verteilt: Windfahne auf 10 von 12 statt auf allen, Lawine auf 4, Seilbahn
-auf 4, Schneebrücke auf 3. Zwei Bahnen haben gar keinen Wind – und genau deshalb merkt man ihn auf
+auf 4, Schneebrücke auf 2. Zwei Bahnen haben gar keinen Wind – und genau deshalb merkt man ihn auf
 den anderen.
 
 **Was am Rand stand und nicht stimmte.** Die Streu-Deko der vier Schneepaletten enthält einen
