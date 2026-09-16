@@ -180,7 +180,12 @@
   let turnierSchirm = null;
   function overlay(html, cls) {
     clockPause(); turnierSchirm = null;
-    ui.overlay.innerHTML = html;
+    /* Hinter der Rangliste liegt die Weltkarte. Vorher stand dort ein gemaltes Bild – schön, aber
+       aus einer anderen Feder als der Rest des Spiels. Die Karte ist mit demselben Stift gezeichnet
+       wie alles andere und zeigt obendrein genau die Orte, um deren Rekorde es auf der Tafel geht.
+       Sie kommt vor die Tafel in den Baum, liegt aber durch die Lagen in style.css darunter. */
+    const karte = cls && cls.includes('rangliste') ? WorldMap.svg('rangliste-karte', 'xMidYMid slice') : '';
+    ui.overlay.innerHTML = karte + html;
     ui.overlay.className = 'screen visible' + (cls ? ' ' + cls : '');
     document.body.classList.remove('startbild');
     hutAbzeichenMalen(ui.overlay);

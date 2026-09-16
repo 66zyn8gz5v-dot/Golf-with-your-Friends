@@ -442,7 +442,17 @@ const WorldMap = (() => {
     return { land, see };
   }
 
+  /* Die Karte wird nicht nur einmal gebraucht: Sie liegt hinter dem Startknopf, auf der Weltkarte
+     und jetzt auch hinter der Rangliste. Gerechnet wird sie aber jedes Mal neu – Küstenlinie,
+     Wellen, Gelände, das sind Zehntausende Feldwerte. Da sie sich zur Laufzeit nie ändert, wird
+     das Ergebnis je Bauform aufgehoben. */
+  const svgSpeicher = new Map();
   function svg(cls = 'atlas-bg', par = 'none') {
+    const schluessel = cls + '|' + par;
+    if (!svgSpeicher.has(schluessel)) svgSpeicher.set(schluessel, svgBauen(cls, par));
+    return svgSpeicher.get(schluessel);
+  }
+  function svgBauen(cls, par) {
     const { inseln, seen } = karte();
     const kuesten = inseln.map(pfad).join(' ');
     const seenPfad = seen.map(pfad).join(' ');
