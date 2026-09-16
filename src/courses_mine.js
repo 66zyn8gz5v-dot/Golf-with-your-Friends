@@ -419,7 +419,7 @@ const MINE_COURSES = [
       '..................................',
     ],
     obstacles: [
-      { type: 'giessloeffel', x: 13.0, y: 7.5, takt: 4.2, glut: 2.0, phase: 0.0, rinne: {'x': 14, 'y': 7, 'len': 5, 'dx': 1, 'dy': 0} },
+      { type: 'giessloeffel', x: 13.0, y: 7.5, takt: 2.2, glut: 0.9, kipp: 0.7, phase: 0.0, rinne: {'x': 14, 'y': 7, 'len': 5, 'dx': 1, 'dy': 0} },
       { type: 'bumper', x: 8.0, y: 4.0, r: 0.7, style: 'fass' },
       { type: 'bumper', x: 8.0, y: 11.0, r: 0.7, style: 'fass' },
       { type: 'bumper', x: 25.0, y: 4.0, r: 0.7, style: 'fass' },

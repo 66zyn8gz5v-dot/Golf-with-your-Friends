@@ -1105,6 +1105,11 @@ Um eine Glutkachel herum baut `level.js` keine Bande, um eine Bodenkachel auch n
 `l` auf `#` umzuschreiben ändert darum nur, was beim Betreten geschieht. Über einen Abgrund ginge
 es nicht – dort steht eine Bande, und die bliebe mitten auf der neuen Brücke stehen.
 
+**Wie schnell.** Takt 2,2 s, Glut 0,9 s – die Brücke steht nach gut zehn Sekunden. Die erste
+Fassung war halb so schnell (Takt 4,2 s, Glut 2,0 s) und fühlte sich nach Warten an statt nach
+Zusehen. Die beiden Zahlen hängen zusammen: Das Fenster zum Hinüberkommen ist Takt minus Glut. Wer
+nur den Takt verkürzt, macht die Bahn nicht schneller, sondern enger.
+
 **Und warum es trotzdem eine Aufgabe ist.** Beim Guss glüht die *ganze* gefüllte Rinne, denn das
 Erz läuft über das schon Erstarrte hinweg bis nach vorn. Sonst wäre die Rinne nach dem ersten Guss
 ein sicherer Steg und die Aufgabe bloßes Warten. Abgekühlt wird von hinten nach vorn: Am Löffel

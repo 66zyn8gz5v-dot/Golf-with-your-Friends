@@ -238,9 +238,12 @@ class BlastWall {
  * zurückgeschrieben (setup) – sonst fände die zweite Runde eine Brücke vor, die die erste gebaut
  * hat.
  */
-const GUSS_TAKT = 6.0;           // so oft kippt der Löffel
-const GUSS_KIPP = 1.3;           // so lange dauert das Kippen – die Vorwarnung
-const GUSS_GLUT = 2.2;           // so lange glüht das frisch gegossene Feld und ist tödlich
+/* Die drei Zahlen hängen zusammen, und zwar so: Das Fenster zum Hinüberkommen ist takt minus
+   glut. Wer den Takt verkürzt, ohne die Glutzeit mitzunehmen, macht die Bahn nicht schneller,
+   sondern nur enger. */
+const GUSS_TAKT = 3.0;           // so oft kippt der Löffel
+const GUSS_KIPP = 0.8;           // so lange dauert das Kippen – die Vorwarnung
+const GUSS_GLUT = 1.0;           // so lange glüht das frisch gegossene Feld und ist tödlich
 
 class Giessloeffel {
   /* x, y ist die Pfanne. 'rinne' ist die Reihe, die sie füllt: {x, y, len, dx, dy} – Startfeld,

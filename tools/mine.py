@@ -113,9 +113,9 @@ def wand(x, y, w, h, ebene=0):
     if ebene: o['ebene'] = ebene
     return o
 
-def loeffel(x, y, rx, ry, laenge, dx=1, dy=0, takt=5.0, glut=1.8, phase=0.0, ebene=0):
+def loeffel(x, y, rx, ry, laenge, dx=1, dy=0, takt=2.4, glut=1.0, kipp=0.8, phase=0.0, ebene=0):
     """Gießlöffel. x, y ist die Pfanne, (rx, ry) das erste Feld der Rinne."""
-    o = {'type': 'giessloeffel', 'x': x, 'y': y, 'takt': takt, 'glut': glut, 'phase': phase,
+    o = {'type': 'giessloeffel', 'x': x, 'y': y, 'takt': takt, 'glut': glut, 'kipp': kipp, 'phase': phase,
          'rinne': {'x': rx, 'y': ry, 'len': laenge, 'dx': dx, 'dy': dy}}
     if ebene: o['ebene'] = ebene
     return o
@@ -336,7 +336,7 @@ fuell(f, 14, 2, 18, 12, 'l')          # die Glutspalte quer durch die Halle
 setz(f, 3, 7, 'T'); setz(f, 30, 7, 'H')
 bahn('Die Gießhalle', 'schmelze', f, [
     # Die Rinne läuft auf Reihe 7 quer über die Spalte – fünf Felder, fünf Güsse
-    loeffel(13.0, 7.5, 14, 7, 5, takt=4.2, glut=2.0),
+    loeffel(13.0, 7.5, 14, 7, 5, takt=2.2, glut=0.9, kipp=0.7),
     fass(8.0, 4.0, 0.7), fass(8.0, 11.0, 0.7),
     fass(25.0, 4.0, 0.7), fass(25.0, 11.0, 0.7),
     lampe_(4.0, 7.5, 3.8), lampe_(9.5, 7.5, 4.0), lampe_(13.0, 7.5, 4.4),
