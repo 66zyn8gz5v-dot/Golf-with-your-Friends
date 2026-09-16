@@ -21,6 +21,12 @@
      genau daran geht so etwas nach drei Auslieferungen kaputt. Ein Schalter ist eine Zeile;
      zwei Stände sind eine Dauerpflicht. */
   const NUR_VORSCHAU = TEST_FREI;
+  /* Die Welten, die dem Spieler angeboten werden. WORLDS bleibt vollständig: Die Prüfwerkzeuge
+     lesen dieselbe Liste, und eine Welt, die keiner prüft, verfällt. Nur die Oberfläche filtert. */
+  const SPIELWELTEN = () => WORLDS.filter(w => NUR_VORSCHAU || !w.nurVorschau);
+  /* Und die Belohnungen dazu: Der Skin einer Welt, die es im Spiel noch nicht gibt, stünde sonst
+     für immer gesperrt da – mit einer Bedingung, die niemand erfüllen kann. */
+  const SPIELHUETE = () => Hats.LIST.filter(h => !h.welt || SPIELWELTEN().some(w => w.id === h.welt));
   const playerHats = DEFAULT_HATS.slice();
   try {
     const saved = JSON.parse(localStorage.getItem(speicherSchluessel('hats')) || 'null');
@@ -55,7 +61,7 @@
     for (let i = 0; i < playerHats.length; i++) {
       let h = playerHats[i];
       if (!Hats.freigeschaltet(h) || vergeben.has(h)) {
-        const ersatz = Hats.LIST.find(x => !vergeben.has(x.id) && Hats.freigeschaltet(x.id) && x.id !== 'none');
+        const ersatz = SPIELHUETE().find(x => !vergeben.has(x.id) && Hats.freigeschaltet(x.id) && x.id !== 'none');
         h = ersatz ? ersatz.id : DEFAULT_HATS[i % DEFAULT_HATS.length];
       }
       vergeben.add(h); dauerhaft.push(h);
@@ -77,7 +83,7 @@
     camMode: 'overview', camTheta: Math.PI / 4, zoomFactor: 1,
     controlMode: 'sling', // 'sling' = Schleuder (vom Ball wegziehen), 'push' = Schieben (in Schussrichtung ziehen)
     mode: 'normal',       // 'normal' = Wettkampf, 'creative' = Kreativ (Bahnen frei wählen und überspringen, kein Schlaglimit), 'boule' = Boule
-    world: WORLDS[0], courses: WORLDS[0].courses,
+    world: SPIELWELTEN()[0], courses: SPIELWELTEN()[0].courses,
     boule: null,          // im Boule-Modus der ganze Stand dieser Runde, sonst null
     /* Bälle, die außer dem eigenen noch auf der Bahn liegen. Der Renderer zeichnet sie einfach
        mit; er muss dafür nichts über Spielarten wissen. Außerhalb von Boule ist die Liste leer. */
@@ -405,7 +411,7 @@
       <div class="sub">Golf with your Friends · Minigolf in 2,5D</div>
       <div class="modes">
         <span class="btn mode" id="to-map">${WorldMap.svg('mode-scene', 'xMidYMid slice')}<span class="mode-schleier"></span>
-          <span class="mode-label">Weltkarte<small>${WORLDS.length} Welten · ${TOTAL_HOLES} Bahnen · alle offen</small></span></span>
+          <span class="mode-label">Weltkarte<small>${SPIELWELTEN().length} Welten · ${TOTAL_HOLES} Bahnen · alle offen</small></span></span>
         <span class="btn mode" id="to-build">${SCENE_CREATIVE}<span class="mode-schleier"></span>
           <span class="mode-label long">Bauen &amp; Eigene Welt<small>Eigene Bahnen bauen und verschicken</small></span></span>
       </div>
@@ -435,7 +441,7 @@
     document.body.classList.remove('creative', 'editing', 'testing');
     // Nur Welten mit einem Ort auf der Karte: Das Kolosseum ist die Turnierwelt und wird über den
     // Turnier-Knopf im Startbildschirm betreten, nicht über die Reise
-    const kartenWelten = WORLDS.filter(w => WorldMap.spots[w.id]);
+    const kartenWelten = SPIELWELTEN().filter(w => WorldMap.spots[w.id]);
     const marks = kartenWelten.map(w => {
       const sp = WorldMap.spots[w.id];
       const m = worldMode(w);
@@ -583,12 +589,12 @@
   const WELT_ICON = id => WELT_ICON_AUSNAHME[id]
     || (WorldMap.spots[id] && WorldMap.spots[id].icon) || 'golf_course';
   const worldMode = w => (w && w.mode) || 'normal';
-  function setWorld(id) { state.world = WORLDS.find(w => w.id === id) || WORLDS[0]; state.courses = state.world.courses; Music.set(state.world.id); }
+  function setWorld(id) { const wl = SPIELWELTEN(); state.world = wl.find(w => w.id === id) || wl[0]; state.courses = state.world.courses; Music.set(state.world.id); }
 
   /* Bahnen zählen: die Innenräume gehören dazu (Hexenküche innen, Pyramide innen, Schiffswrack innen …),
      und ein Innenraum kann selbst wieder einen haben – darum rekursiv. */
   const countHoles = list => list.reduce((n, c) => n + 1 + (c.inner ? countHoles([c.inner]) : 0), 0);
-  const TOTAL_HOLES = WORLDS.reduce((n, w) => n + countHoles(w.courses), 0);
+  const TOTAL_HOLES = SPIELWELTEN().reduce((n, w) => n + countHoles(w.courses), 0);
 
   const showWorldSelect = () => showMap(); // der Editor kehrt über diesen Weg ins Menü zurück
   /* Eigene Welten tragen die Kennung 'custom'. Daran hängt mehr als der Name: Alles, was Rekorde
@@ -632,7 +638,7 @@
     document.body.classList.add('title');
     document.body.classList.remove('creative', 'editing', 'testing');
     const z = Turnier.zustand();
-    const welt = WORLDS.find(w => w.id === Turnier.WELT) || WORLDS[0];
+    const welt = SPIELWELTEN().find(w => w.id === Turnier.WELT) || SPIELWELTEN()[0];
     const liste = Turnier.rangliste();
     const medaille = ['gold', 'silber', 'bronze'].map(r => `<span class="rang ${r}">${Icons.svg('workspace_premium')}</span>`);
     const zeit = ms => Best.formatTime(ms);
@@ -762,8 +768,9 @@
   function showBestList(worldId) {
     state.phase = 'title'; document.body.classList.add('title');
     document.body.classList.remove('creative', 'editing', 'testing');
-    const wid = worldId || (state.world && state.world.id !== 'custom' ? state.world.id : WORLDS[0].id);
-    const w = WORLDS.find(x => x.id === wid) || WORLDS[0];
+    const wl = SPIELWELTEN();
+    const wid = worldId || (state.world && state.world.id !== 'custom' ? state.world.id : wl[0].id);
+    const w = wl.find(x => x.id === wid) || wl[0];
     const rec = Best.of(w.id);
     const bestStatus = { status: st => { const el = $('bstate'); if (!el) return;
       el.textContent = st === 'ready' ? 'Verbunden – alle mit dem Spiel teilen sich diese Liste.'
@@ -813,7 +820,7 @@
       <div class="sub net-note" id="bstate">${!Best.name ? 'Trag deinen Namen ein – ohne Namen wird nichts gewertet.'
         : Net.status === 'ready' ? 'Verbunden – alle mit dem Spiel teilen sich diese Liste.'
         : 'Keine Verbindung – die Rekorde bleiben vorerst auf diesem Gerät.'}</div>
-      <div id="bw" class="ow">${WORLDS.filter(x => x.id !== 'custom').map(x => `<span class="btn ghost small ${x.id === w.id ? 'sel' : ''}" data-w="${x.id}">${Icons.svg(WELT_ICON(x.id))} ${Text.esc(x.short)}</span>`).join('')}</div>
+      <div id="bw" class="ow">${SPIELWELTEN().filter(x => x.id !== 'custom').map(x => `<span class="btn ghost small ${x.id === w.id ? 'sel' : ''}" data-w="${x.id}">${Icons.svg(WELT_ICON(x.id))} ${Text.esc(x.short)}</span>`).join('')}</div>
       <div class="sub" style="margin-top:10px"><b>${Text.esc(w.name)}</b> · Par ${parTotal}</div>
       ${belohnungsStand(w)}
       <div class="tabelle-schiebe"><table class="scores best-table">
@@ -984,7 +991,7 @@
   function recordFromFriend(worldId, news) {
     if (!news || !news.length) return;
     if (state.phase === 'title' || state.phase === 'edit') return;
-    const w = WORLDS.find(x => x.id === worldId);
+    const w = SPIELWELTEN().find(x => x.id === worldId);
     for (const n of news.slice(0, 1)) {
       if (n.rec.n === Best.name) continue;   // der eigene Eintrag von einem anderen Gerät
       const wert = `${Best.KIND_NAME[n.kind] || 'Schläge'} ${Best.format(n.kind, n.rec)}`;
@@ -1004,7 +1011,7 @@
   let online = null, beatT = null, watchT = null;
   const myTurn = () => !online || !online.started || ((online.players[state.curPlayer] || {}).id === Net.id);
   const netSend = m => { if (online) Net.send(m); };
-  const onlineWorlds = () => WORLDS.filter(w => w.id !== 'custom');
+  const onlineWorlds = () => SPIELWELTEN().filter(w => w.id !== 'custom');
   /* Namen aus dem Netz gehen in die Anzeige – gefiltert wird zentral in src/text.js */
   const seatName = (p, i) => (p && Text.name(p.nick)) || PLAYER_NAMES[i];
 
@@ -1309,7 +1316,7 @@
     overlay(`<div class="panel">
       <div class="panel-head"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span><h2>${Icons.svg('sports_golf')} Dein Hut</h2></div>
       <div class="sub">Der Wechsel ist gleich bei allen im Raum zu sehen.</div>
-      <div id="hats" class="hat-grid">${Hats.LIST.map(h => `<button type="button" class="hat" data-h="${h.id}" title="${Text.esc(h.name)}"><canvas></canvas><span>${Text.esc(h.name)}</span><i class="hat-lock">${Icons.svg('lock')}</i></button>`).join('')}</div>
+      <div id="hats" class="hat-grid">${SPIELHUETE().map(h => `<button type="button" class="hat" data-h="${h.id}" title="${Text.esc(h.name)}"><canvas></canvas><span>${Text.esc(h.name)}</span><i class="hat-lock">${Icons.svg('lock')}</i></button>`).join('')}</div>
       <p style="margin-top:14px"><span class="btn" id="fertig">Fertig</span></p>
     </div>`, 'title');
     const zeichne = () => {
@@ -1377,7 +1384,7 @@
       </div>
       <p style="margin-top:10px">Hut:</p>
       <div id="hat-who"></div>
-      <div id="hats" class="hat-grid">${Hats.LIST.map(h => `<button type="button" class="hat" data-h="${h.id}" title="${Text.esc(h.name)}"><canvas></canvas><span>${Text.esc(h.name)}</span><i class="hat-lock">${Icons.svg('lock')}</i></button>`).join('')}</div>
+      <div id="hats" class="hat-grid">${SPIELHUETE().map(h => `<button type="button" class="hat" data-h="${h.id}" title="${Text.esc(h.name)}"><canvas></canvas><span>${Text.esc(h.name)}</span><i class="hat-lock">${Icons.svg('lock')}</i></button>`).join('')}</div>
       <p style="margin-top:10px">Musik:</p>
       <div id="mu">
         <span class="btn ghost small ${Music.on ? 'sel' : ''}" data-v="1">An</span>
@@ -1430,7 +1437,7 @@
       const vergeben = new Set();
       for (let i = 0; i < hatCount(); i++) {
         if (!vergeben.has(playerHats[i]) && darfTragen(playerHats[i])) { vergeben.add(playerHats[i]); continue; }
-        const frei = Hats.LIST.find(h => !vergeben.has(h.id) && darfTragen(h.id));
+        const frei = SPIELHUETE().find(h => !vergeben.has(h.id) && darfTragen(h.id));
         playerHats[i] = frei ? frei.id : DEFAULT_HATS[i % DEFAULT_HATS.length];
         vergeben.add(playerHats[i]);
       }

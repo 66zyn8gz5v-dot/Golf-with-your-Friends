@@ -53,7 +53,7 @@ const WorldMap = (() => {
        Platz für ihren Namen. Jetzt ist sie eine Insel für sich, und der Berg über der Mine ist ein
        Vulkan: Ganz unten auf der letzten Sohle steht das Erz flüssig, das passt zusammen. Der
        Abstand zum Sturmhimmel ist groß genug, dass nichts zusammenwächst. */
-    { id: 'mine', name: 'Zwergenmine', x: 107, y: 29, r: 12, biom: 'vulkan', marke: 'construction', farbe: '#ffb347' },
+    { id: 'mine', name: 'Zwergenmine', x: 107, y: 29, r: 12, biom: 'vulkan', marke: 'construction', farbe: '#ffb347', nurVorschau: true },
     { x: 112, y: 45, r: 4.4, biom: 'vulkan' },                  // Aschekegel südlich der Feuerinsel
     // ---- Schären: zu klein für eine Welt, groß genug fürs Auge. Sie brechen die leere See auf
     //      und zeigen, dass die Küste gerechnet wird – auch ein Punkt mit r=4 bekommt ein Ufer.
@@ -422,7 +422,14 @@ const WorldMap = (() => {
   }
 
   /* ---------- Öffentliches ---------- */
-  const welten = LAND.filter(l => l.id);
+  /* Eine Welt, die noch nicht ins Spiel soll, bekommt auf der Karte weder Namen noch Nadel – die
+     Insel bleibt aber liegen. Das ist Absicht: Die Küste rechnet sich aus allen Landstücken, und
+     ein Stück Land ohne Beschriftung verspricht nichts, sondern lässt offen, daß da noch etwas
+     kommt. Erkannt wird das Spiel daran, daß es sich *nicht* Vorschau nennt; wo es die Kennung
+     gar nicht gibt (Node beim Prüfen), wird nichts versteckt – sonst prüfte niemand die Welt. */
+  const imSpiel = typeof VORSCHAU !== 'undefined' && !VORSCHAU
+    && !(typeof PRUEFSTAND !== 'undefined' && PRUEFSTAND);
+  const welten = LAND.filter(l => l.id && !(imSpiel && l.nurVorschau));
   const spots = {};
   for (const l of welten) spots[l.id] = { x: l.x, y: +(l.y / HOEHE * 100).toFixed(2), icon: l.marke, col: l.farbe };
 
