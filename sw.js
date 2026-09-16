@@ -22,7 +22,7 @@ const APP_FILES = [
      tragen, wiegt jedes gut 700 kB, und gebraucht werden sie nur beim Einrichten auf dem
      Startbildschirm – nicht beim Spielen. Der fetch-Griff unten legt jede geholte Datei
      ohnehin ab, sie liegen also nach dem ersten Gebrauch im Speicher. */
-  './icons/titelbild.jpg', './icons/titelbild-hoch.jpg',
+  './icons/titelbild.jpg', './icons/titelbild-hoch.jpg', './icons/weltkarte.svg',
 ];
 
 self.addEventListener('install', e => {

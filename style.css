@@ -91,14 +91,16 @@ body.hoch .tb-vogel { animation-name: th-vogel; }
   transition: opacity 0.55s ease, transform 0.55s ease;
 }
 #lade.weg { opacity: 0; transform: scale(1.04); pointer-events: none; }
+/* Auch hier die Weltkarte. Sie kommt als fertige Datei (icons/weltkarte.svg, geschrieben von
+   tools/karte.mjs) und nicht aus dem Skript: Das Ladebild muss stehen, *bevor* irgendein Skript
+   gelaufen ist – eine gerechnete Karte käme immer zu spät. */
 #lade::before {
   content: ''; position: absolute; inset: 0;
-  background: url(icons/titelbild.jpg) center / cover no-repeat;
+  background: #17415a url(icons/weltkarte.svg) center / cover no-repeat;
   filter: blur(3px) brightness(0.52) saturate(0.92);
   transform: scale(1.07);                       /* deckt die weichen Ränder des Weichzeichners ab */
   animation: lb-grund 26s ease-in-out infinite alternate;
 }
-@media (orientation: portrait) { #lade::before { background-image: url(icons/titelbild-hoch.jpg); } }
 #lade::after {
   content: ''; position: absolute; inset: 0;
   background: radial-gradient(125% 95% at 50% 45%, rgba(10,14,32,0.15), rgba(6,9,22,0.82) 78%);
@@ -332,7 +334,26 @@ body.editing .cbtn.leave, body.testing .cbtn.leave { display: none; }
   background: rgba(8, 6, 20, 0.72); z-index: 10; backdrop-filter: blur(3px);
 }
 .screen.visible { display: flex; }
-.screen.title { background: transparent; backdrop-filter: none; align-items: flex-end; padding-bottom: 3vh; }
+/* Hinter jeder Tafel außerhalb des Spiels liegt die Weltkarte: Weltauswahl, Aufstellung, Bauen,
+   Turnier, Rangliste. Sie ist mit demselben Stift gezeichnet wie das Spiel selbst und zeigt die
+   Orte, um die es gerade geht – ein gemaltes Foto dahinter sah aus wie aus einem anderen Buch.
+   Im Spiel selbst bleibt es beim durchscheinenden Dunkel (.screen ohne .title): Dort liegt die
+   Bahn darunter, und die will man sehen. */
+.screen.title {
+  background: #17415a url(icons/weltkarte.svg) center / cover no-repeat;
+  backdrop-filter: none; align-items: flex-end; padding-bottom: 3vh;
+}
+/* Ein Schleier darüber, nach außen hin dichter: In der Mitte darf die Karte hell bleiben, am Rand
+   ist sie so bunt, dass der goldene Rahmen der Tafel darin unterginge. */
+.screen.title::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 1;
+  background: radial-gradient(125% 95% at 50% 45%, rgba(8, 6, 20, 0.34) 0%, rgba(8, 6, 20, 0.72) 100%);
+}
+.screen.title > .panel { position: relative; z-index: 2; }
+/* Nur die Startseite nicht: Dort hängt das gemalte Bild mit Fahne, Wolken und Möwen, und das ist
+   das Gesicht des Spiels. */
+body.startbild .screen.title { background: transparent; }
+body.startbild .screen.title::before { display: none; }
 /* Die Tafel stand als heller Schleier vor der Szene – schön, aber die Schrift lag auf Wolken,
    Tannen und Schafen und war schwer zu lesen. Jetzt ist sie deutlich dichter und liegt als eigene
    Tafel davor, mit einer zweiten Linie im Abstand: der Doppelrahmen alter Anschlagtafeln. */
@@ -382,20 +403,8 @@ body.title #hud, body.title #scoreboard, body.title #controls, body.title #hint 
   background: #17415a;          /* die Meeresfarbe der Karte, falls sie einen Wimpernschlag braucht */
   align-items: center; padding-bottom: 0;
 }
-/* Die Weltkarte als Hintergrund. 'slice' füllt den Schirm und schneidet über, statt zu verzerren –
-   eine gestauchte Landkarte sähe nach Fehler aus. */
-.screen.title.rangliste > .rangliste-karte {
-  position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 0;
-}
-/* Ein Schleier darüber, nach außen hin dichter: In der Mitte soll die Karte hell bleiben, am Rand
-   aber ist sie so bunt, dass der goldene Rahmen der Tafel darin untergeht. */
-.screen.title.rangliste::before {
-  content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 1;
-  background: radial-gradient(125% 95% at 50% 45%, rgba(8, 6, 20, 0.34) 0%, rgba(8, 6, 20, 0.72) 100%);
-}
-/* Ohne eigene Lage läge die Tafel unter dem Schleier – ein unpositioniertes Kind wird vor einem
-   positionierten Pseudo-Element gezeichnet, nicht dahinter. */
-.screen.title.rangliste > .panel { position: relative; z-index: 2; }
+/* Die Rangliste ist jetzt eine Tafel wie die anderen – Karte und Schleier kommen von .screen.title.
+   Sie rückt nur in die Mitte statt nach unten, weil ihre Tafel hoch ist. */
 
 /* Liegt das Startbild, trägt es den Schriftzug schon – die Tafel lässt ihn dann weg und wird flach,
    damit das Bild zu sehen bleibt. Auf breiten Schirmen stehen die beiden großen Knöpfe nebeneinander

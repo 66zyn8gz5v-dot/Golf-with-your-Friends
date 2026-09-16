@@ -15,9 +15,19 @@ npx serve .          # oder: python3 -m http.server 8080
 
 Beim Öffnen steht zuerst ein Ladebild: der Schriftzug, darunter eine kleine Szene – eine Insel mit
 Burg im Meer, davor ein Grün, über das ein Ball rollt, zweimal aufsetzt und im Loch verschwindet –
-und darunter ein Balken. Dahinter liegt das **gemalte Titelbild, weich gezeichnet und abgedunkelt**:
-Es macht die Stimmung, die Szene sagt, was hier gespielt wird. Die Szene ist in den Farben des
-Bildes gehalten, bis hin zur roten Fahne mit Gold, wie das Banner darin.
+und darunter ein Balken. Dahinter liegt die **Weltkarte, weich gezeichnet und abgedunkelt** – wie
+hinter jeder Tafel außerhalb des Spiels.
+
+Das war zuerst das gemalte Titelbild. Es sah neben dem Rest aus wie aus einem anderen Buch: Das
+Spiel ist gezeichnet, das Bild gemalt. Die Karte ist mit demselben Stift gemacht wie alles andere,
+und sie zeigt obendrein, worum es geht.
+
+Beim Ladebild geht das nicht über das Skript, das die Karte sonst rechnet: Das Ladebild steht im
+festen HTML und muss da sein, *bevor* irgendein Skript gelaufen ist – genau dafür gibt es das
+Ladebild. Die Karte liegt darum zusätzlich als fertige Datei bereit (`icons/weltkarte.svg`,
+geschrieben von `node tools/karte.mjs`), und dieselbe Datei bedient auch alle Tafeln. Damit sie
+nicht altert, prüft `node tools/auslieferung.mjs` bei jeder Auslieferung mit, ob sie noch zu
+`src/worldmap.js` passt – wer eine Welt anhängt, merkt es sofort statt erst auf dem Handy.
 
 Vorher war die Szene eine Nachtaufnahme in kalten Blautönen; neben dem gemalten Startbildschirm sah
 das aus wie ein Fremdkörper aus flachen Flächen. Ein Zwischenstand ohne Szene – nur der gemalte
@@ -2154,6 +2164,7 @@ src/best.js       Rangliste: Rekorde je Bahn und je Welt in drei Wertungen (Schl
 src/sfx.js        Klangeffekte (WebAudio)
 src/music.js      Musik: je Welt ein erzeugter Klangteppich (WebAudio)
 src/worldmap.js   Weltkarte: Landkarte aus gerechneter Küste, Gelände je Biom und die Orte der Welten
+icons/weltkarte.svg dieselbe Karte als fertige Datei – Hintergrund für Ladebild und alle Tafeln (node tools/karte.mjs)
 src/title.js      animierte Startbildschirm-Szene mit Tag-Nacht-Wechsel
 src/main.js       Spielablauf, Eingabe, Punkte
 

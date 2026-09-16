@@ -9,6 +9,7 @@
  *   node tools/auslieferung.mjs
  */
 import { readFileSync, existsSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { dirname, resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -71,6 +72,17 @@ for (const m of sw.matchAll(/'\.\/([^']+)'/g)) {
   if (!existsSync(join(wurzel, datei))) { fehler.push(`sw.js hält ${datei} vor – die Datei gibt es nicht`); continue; }
   const oben = datei.split('/')[0];
   if (!kopiert.has(oben)) fehler.push(`sw.js hält ${datei} vor, ausgeliefert wird "${oben}" aber nicht`);
+}
+
+/* 4. Die Weltkarte liegt zusätzlich als fertige Datei bereit (icons/weltkarte.svg), weil das
+      Ladebild sie braucht, bevor irgendein Skript gelaufen ist. Eine gerechnete und eine abgelegte
+      Karte können auseinanderlaufen: Wer eine Welt anhängt, ändert src/worldmap.js, und die Datei
+      zeigt weiter die alte Küste. Darum wird hier nachgesehen. */
+try {
+  execFileSync(process.execPath, [join(wurzel, 'tools', 'karte.mjs'), '--pruefen'], { stdio: 'pipe' });
+} catch (e) {
+  fehler.push(String(e.stdout || '').trim().replace(/^FEHLER – /, '')
+    || 'icons/weltkarte.svg stimmt nicht mehr mit src/worldmap.js überein – "node tools/karte.mjs" laufen lassen');
 }
 
 if (fehler.length) { console.error(fehler.map(f => '  FEHLER ' + f).join('\n')); process.exit(1); }
