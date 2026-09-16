@@ -1707,6 +1707,45 @@ Object.assign(Renderer.prototype, {
      Boden der Kabine ist hell, solange sie unten steht und aufnehmen kann – man soll von weitem
      sehen, ob man einsteigen kann, und nicht erst beim Danebenrollen merken, dass sie oben ist.
      Gezeichnet wird von der Ebene des Schachtfußes bis zur nächsten darüber. */
+  /* ---------- Der Schacht ----------
+     Aufzug und Zahnstange stehen zwischen zwei Etagen, und die obere hat an ihrer Stelle einen
+     Schacht. Bis Fassung 140 war der nirgends zu sehen: Über der Maschine lag ganz gewöhnlicher
+     Boden, die Kabine wurde als letztes darübergemalt, und sie fuhr sichtbar durch massives Gestein
+     nach oben – „der kommt einfach durch den Boden".
+
+     Gezeichnet wird der Schacht darum hier und nicht in der Bahn, damit es für jeden Aufzug gilt,
+     auch für einen aus dem Editor.
+
+     Beschnitten wird die Kabine ausdrücklich **nicht**. Naheliegend wäre es – wer im Schacht steckt,
+     ist verdeckt –, und ausprobiert war es auch: Dann verschwindet die Kabine unten aber vollständig
+     unter der oberen Etage, samt Ball, und man sieht nicht mehr, wo man einsteigen soll. Genau davor
+     werden diese Maschinen ja zuletzt gezeichnet. Der Schacht ist also die Erklärung des Bildes,
+     nicht sein Ausschnitt. */
+
+  /* Die Öffnung im oberen Boden, als Viereck in Weltkoordinaten. Null, wenn es über der Maschine
+     gar keine Etage gibt – dann ist auch nichts zu durchbrechen. */
+  schachtMund(ob) {
+    const lv = this.level;
+    if (!lv || !lv.flaechen || !lv.flaechen[(ob.ebene || 0) + 1]) return null;
+    const mw = (ob.w || 1.5) / 2 * 1.05, mh = (ob.h || 1.5) / 2 * 1.05;
+    return { poly: [[ob.x - mw, ob.y - mh], [ob.x + mw, ob.y - mh], [ob.x + mw, ob.y + mh], [ob.x - mw, ob.y + mh]],
+             z: ((ob.ebene || 0) + 1) * lv.ebeneZ };
+  },
+
+  /* Das Loch im oberen Boden: eine dunkle Kehle mit Tiefe, darauf ein Rahmen aus Eisen und ein
+     warmer Lichtsaum. Die Kehle ist wichtig – ein flacher dunkler Fleck sähe aus wie ein Teppich,
+     erst die Wandung macht daraus ein Loch, in das etwas hineinreicht. */
+  drawSchacht(ctx, ob) {
+    const mund = this.schachtMund(ob);
+    if (!mund) return;
+    const s = this.scale, kehle = 0.5;
+    this.prism(ctx, mund.poly, mund.z - kehle, kehle, 'rgba(10,7,3,0.95)', '#2a2118', { outline: '#120c06' });
+    const p = mund.poly.map(q => this.proj(q[0], q[1], mund.z + 0.004));
+    ctx.beginPath(); p.forEach((q, i) => i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1])); ctx.closePath();
+    ctx.strokeStyle = '#8a7050'; ctx.lineWidth = Math.max(2, s * 0.1); ctx.stroke();
+    ctx.strokeStyle = 'rgba(224,180,92,0.45)'; ctx.lineWidth = Math.max(1, s * 0.035); ctx.stroke();
+  },
+
   drawAufzug(ctx, ob, t) {
     const s = this.scale, lv = this.level;
     const z0 = (ob.ebene || 0) * lv.ebeneZ, z1 = z0 + lv.ebeneZ;
@@ -1731,11 +1770,14 @@ Object.assign(Renderer.prototype, {
     const rolle = this.proj(ob.x, ob.y, rq), rr = s * 0.2;
     ctx.fillStyle = '#6d4d18'; ctx.beginPath(); ctx.arc(rolle[0], rolle[1], rr, 0, TAU); ctx.fill();
     ctx.fillStyle = '#e0b45c'; ctx.beginPath(); ctx.arc(rolle[0] - rr * 0.12, rolle[1] - rr * 0.12, rr * 0.7, 0, TAU); ctx.fill();
+    // Der Schacht im oberen Boden – vor der Kabine, damit die Kabine darin steht
+    this.drawSchacht(ctx, ob);
     // Seil von der Rolle auf das Kabinendach
     const kz = z0 + (ob.p || 0) * lv.ebeneZ;
     const dach = this.proj(ob.x, ob.y, kz + 0.62);
     ctx.strokeStyle = '#cdbb95'; ctx.lineWidth = Math.max(1, s * 0.035);
     ctx.beginPath(); ctx.moveTo(rolle[0], rolle[1]); ctx.lineTo(dach[0], dach[1]); ctx.stroke();
+
     // Die Kabine: Boden, vier Eckpfosten, Dach. Unten wartend leuchtet der Boden.
     const wartet = ob.zustand === 'unten';
     const boden = [[ob.x - hw * 0.86, ob.y - hh * 0.86], [ob.x + hw * 0.86, ob.y - hh * 0.86],
@@ -1746,9 +1788,10 @@ Object.assign(Renderer.prototype, {
       this.prism(ctx, this.circlePoly(px, py, 0.07, 6), kz + 0.16, 0.46, '#b79a6a', '#4a3a24', { outline: '#160f08' });
     }
     this.prism(ctx, boden, kz + 0.62, 0.1, '#8a7050', '#3d3021', { outline: '#160f08' });
+
     // Lämpchen am Schachtfuß: hell, solange die Kabine aufnehmen kann
     const lampe = this.proj(ob.x + hw + 0.22, ob.y, z0 + 0.4);
-    ctx.fillStyle = wartet ? '#ffe08a' : '#5a4a34';
+    ctx.fillStyle = ob.zustand === 'unten' ? '#ffe08a' : '#5a4a34';
     ctx.beginPath(); ctx.arc(lampe[0], lampe[1], s * 0.09, 0, TAU); ctx.fill();
   },
 
@@ -1772,6 +1815,8 @@ Object.assign(Renderer.prototype, {
       const a = this.proj(...W(-0.18, -0.3), zz), b = this.proj(...W(0.18, -0.3), zz);
       ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
     }
+    // Auch hier ein Schacht im oberen Boden – sonst fährt die Schaufel durch massives Gestein
+    this.drawSchacht(ctx, ob);
     // Schaufel mit Zahnrad, auf ihrer Höhe
     const zs = z0 + ob.p * (z1 - z0);
     const schaufel = [[ob.x - ob.w / 2, ob.y - ob.h / 2], [ob.x + ob.w / 2, ob.y - ob.h / 2],

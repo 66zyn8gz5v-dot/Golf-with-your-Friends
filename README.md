@@ -1151,8 +1151,11 @@ schienen:
 - **Die Kabine wurde durchsichtig, während man darin saß.** Die Regel „was vor dem Ball steht und
   ihn verdecken würde, wird fast durchsichtig gezeichnet" traf ausgerechnet das Fahrzeug, in dem er
   fährt – gemessen: `globalAlpha` 0,22. Übrig blieb ein Ball, der über einem blassen Schemen
-  schwebt. Alles, was den Ball trägt, ist jetzt von der Regel ausgenommen (`noFade: true`), auch
-  Aufzug und Zahnstange, die denselben Fehler hatten.
+  schwebt. Alles, was den Ball trägt, ist jetzt von der Regel ausgenommen (`noFade: true`). Betroffen
+  war nur die Seilbahn, und dort nur auf den Bahnen, wo sie innerhalb einer Etage fährt: Wechselt sie
+  die Etage, steht sie wie Aufzug und Zahnstange ohnehin außerhalb der Tiefensortierung und wird
+  zuletzt gezeichnet. Der Vermerk steht bei allen dreien, damit er nicht fehlt, wenn eine davon
+  einmal auf einer einstöckigen Bahn landet.
 
 ## Die Bahnen des Uhrenturms
 
@@ -1178,6 +1181,22 @@ Kupferrohre verbunden sind; Bahn 13 ist der Rohrturm, und Bahn 14 ist der Höhep
 **Hemmung** ab Bahn 6 – beide bewusst nicht auf jeder Bahn, damit sie nicht zur Gewohnheit werden.
 Das **wandernde Loch** steht auf vier Bahnen: klein auf 6, 9 und 11, und als ganzes Zifferblatt
 auf 13.
+
+**Der Schacht.** Aufzug und Zahnstange fahren zwischen zwei Etagen, und die obere hat an ihrer
+Stelle eine Öffnung. Bis Fassung 140 war die nirgends zu sehen: Über der Maschine lag ganz
+gewöhnlicher Boden, die Kabine wurde – wie alle Maschinen zwischen zwei Etagen – als letztes
+darübergemalt, und sie fuhr sichtbar durch massives Gestein nach oben. Auf allen vier Bahnen mit
+Aufzug oder Zahnstange steht über dem Schacht eine volle Bodenkachel; es fiel also nirgends nicht
+auf. `Renderer.drawSchacht` zeichnet jetzt das Loch mit einer dunklen Kehle, einem Rahmen aus Eisen
+und einem warmen Saum darauf – in der Zeichnung der Maschine und nicht in der Bahn, damit es auch
+für einen Aufzug aus dem Editor gilt.
+
+**Beschnitten wird die Kabine ausdrücklich nicht**, obwohl es naheliegt: Wer im Schacht steckt, ist
+verdeckt. Ausprobiert war es auch – und dann verschwindet die Kabine unten vollständig unter der
+oberen Etage, samt Ball, und man sieht nicht mehr, wo man einsteigen soll. Genau davor werden diese
+Maschinen ja zuletzt gezeichnet: Auf einer Wolke, die voll deckend gemalt wird, wäre sonst die
+Gondel, mit der man gekommen ist, spurlos weg. Der Schacht ist also die Erklärung des Bildes, nicht
+sein Ausschnitt.
 
 | Nr. | Bahn | Größe | Par | Maschinen | Der Moment, auf den man wartet |
 |---|---|---|---|---|---|

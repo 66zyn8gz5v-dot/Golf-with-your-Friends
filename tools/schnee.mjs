@@ -75,7 +75,10 @@ console.log('\n--- Was den Ball trägt, bleibt sichtbar ---');
 {
   /* Die Regel „was vor dem Ball steht, wird durchsichtig" darf nie das Fahrzeug treffen, in dem er
      gerade sitzt: Sonst schwebt er sichtbar über einer blassen Kabine. Genau das war bei der
-     Seilbahn der Fall. Geprüft wird die Eintragung im Zeichner, weil die Regel dort steht. */
+     Seilbahn der Fall, und zwar auf den Bahnen, wo sie *innerhalb* einer Etage fährt – nur dort
+     steht sie in der gewöhnlichen Tiefensortierung. Aufzug und Zahnstange stehen immer zwischen
+     zwei Etagen und werden darum ohnehin zuletzt gezeichnet; der Vermerk steht bei ihnen trotzdem,
+     damit er nicht fehlt, wenn einer davon einmal auf einer einstöckigen Bahn landet. */
   const rend = fs.readFileSync(path.join(SRC, 'render.js'), 'utf8');
   for (const typ of ['seilbahn', 'aufzug', 'zahnstange']) {
     const zeile = rend.split('\n').find(l => l.includes('items.push') && l.includes(`draw${typ[0].toUpperCase()}${typ.slice(1)}`));
