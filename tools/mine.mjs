@@ -110,5 +110,60 @@ console.log('\n--- Die Kippbühne ---');
   }
 }
 
+console.log('\n--- Die Bruchwand ---');
+{
+  /* Eine Wand quer im Gang, dahinter das Loch. Ohne Sprengung kommt der Ball nicht durch – mit
+     einer schon, und dann für den Rest der Bahn. */
+  const feldB = (hindernisse) => ({
+    name: 'Bruchprüfung', par: 3, theme: 'stollen',
+    map: ['......................', '.Tiiiiiiiiiiiiiiiiii H'.replace(' ', 'i'),
+          ...Array.from({ length: 5 }, () => '.iiiiiiiiiiiiiiiiiiii.'), '......................'],
+    obstacles: hindernisse,
+  });
+  const wand = () => ({ type: 'bruchwand', x: 11, y: 3.5, w: 1.4, h: 8 });
+
+  // 1. Ohne Ladung bleibt sie stehen und hält den Ball auf
+  {
+    const lv = G.buildLevel(feldB([wand()]));
+    const b = ball(4, 1.5); b.vx = 12;
+    lauf(lv, b, 2.5);
+    const w = lv.obstacles.find(o => o.type === 'bruchwand');
+    pruef('ohne Sprengung steht sie', !w.weg);
+    pruef('und der Ball kommt nicht vorbei', b.x < 11, `steht bei x = ${b.x.toFixed(1)}`);
+  }
+
+  // 2. Eine Ladung daneben bricht sie – und sie bleibt offen
+  {
+    const lv = G.buildLevel(feldB([wand(), { type: 'sprengladung', x: 11, y: 6.5, phase: 0 }]));
+    const w = lv.obstacles.find(o => o.type === 'bruchwand');
+    const b = ball(4, 1.5);
+    const t1 = lauf(lv, b, 0.4, 0, false);          // über den Knall bei t = 0 hinweg
+    pruef('eine Zündung daneben bricht sie', w.weg);
+    const t2 = lauf(lv, b, 3, t1, false);
+    pruef('und sie bleibt offen', w.weg);
+    const b2 = ball(4, 1.5); b2.vx = 12;
+    lauf(lv, b2, 2.5, t2);
+    pruef('danach rollt der Ball hindurch', b2.x > 13, `bis x = ${b2.x.toFixed(1)}`);
+  }
+
+  // 3. Eine Ladung außer Reichweite lässt sie stehen
+  {
+    const lv = G.buildLevel(feldB([wand(), { type: 'sprengladung', x: 19, y: 3.5, phase: 0 }]));
+    const w = lv.obstacles.find(o => o.type === 'bruchwand');
+    lauf(lv, ball(4, 1.5), 0.6, 0, false);
+    pruef('eine Zündung außer Reichweite lässt sie stehen', !w.weg);
+  }
+
+  // 4. Beim nächsten Loch steht sie wieder
+  {
+    const def = feldB([wand(), { type: 'sprengladung', x: 11, y: 6.5, phase: 0 }]);
+    const lv1 = G.buildLevel(def);
+    lauf(lv1, ball(4, 1.5), 0.4, 0, false);
+    pruef('nach der Sprengung ist sie weg', lv1.obstacles.find(o => o.type === 'bruchwand').weg);
+    const lv2 = G.buildLevel(def);
+    pruef('beim nächsten Aufbau steht sie wieder', !lv2.obstacles.find(o => o.type === 'bruchwand').weg);
+  }
+}
+
 console.log(`\n${fehler ? fehler + ' FEHLER' : 'alles bestanden'}`);
 process.exit(fehler ? 1 : 0);

@@ -1667,6 +1667,7 @@
     }
     const p = state.players[state.curPlayer], lv = state.level;
     state.ball = makeBall(lv.tee.x, lv.tee.y, p.color, p.hat);
+    state.ball.ebene = lv.teeEbene || 0;   // der Abschlag darf eine Etage höher liegen
     lv.setzeEbene(0);   // jeder Spieler beginnt unten, auch wenn der vorige oben aufgehört hat
     state.strokes = 0; state.phase = 'aim'; state.aim = null; state.restTimer = 0; state.slowTimer = 0; state.rollT = 0; state.stuckRef = null;
     faceCup(); setCamMode('follow');
@@ -1784,11 +1785,11 @@
      können. */
   function sichererRuhepunkt(b) {
     const lv = state.level;
-    for (const [x, y, e] of [[b.restX, b.restY, b.restEbene || 0], [b.shotX, b.shotY, b.shotEbene || 0], [lv.tee.x, lv.tee.y, 0]]) {
+    for (const [x, y, e] of [[b.restX, b.restY, b.restEbene || 0], [b.shotX, b.shotY, b.shotEbene || 0], [lv.tee.x, lv.tee.y, lv.teeEbene || 0]]) {
       if (x == null || y == null) continue;
       if (lv.isFloorChar(lv.charAtEbene(e, x, y))) return { x, y, e };
     }
-    return { x: lv.tee.x, y: lv.tee.y, e: 0 };
+    return { x: lv.tee.x, y: lv.tee.y, e: lv.teeEbene || 0 };
   }
   function hazard(type) {
     const b = state.ball;
@@ -1806,7 +1807,7 @@
       b.z = 0; b.vz = 0; b.air = false;
       const lv = state.level; let rx = b.shotX != null ? b.shotX : b.restX, ry = b.shotX != null ? b.shotY : b.restY;
       b.restEbene = b.shotX != null ? (b.shotEbene || 0) : (b.restEbene || 0);
-      if (type === 'seen') { if (lv.obstacles.some(o => o.type === 'eyetower' && Math.hypot(rx - o.x, ry - o.y) <= o.range + 0.5)) { rx = lv.tee.x; ry = lv.tee.y; b.restEbene = 0; label += ' Zurück zum Anfang.'; } }
+      if (type === 'seen') { if (lv.obstacles.some(o => o.type === 'eyetower' && Math.hypot(rx - o.x, ry - o.y) <= o.range + 0.5)) { rx = lv.tee.x; ry = lv.tee.y; b.restEbene = lv.teeEbene || 0; label += ' Zurück zum Anfang.'; } }
       else for (const g of lv.obstacles) {
         if (g.type !== 'guillotine' || !g.under(rx, ry, 0.7)) continue;
         const vert = g.w < g.h, side = (vert ? Math.sign(lv.tee.x - g.x) : Math.sign(lv.tee.y - g.y)) || -1;
@@ -1847,7 +1848,7 @@
     // letzten Schlags zurück, notfalls zum Abschlag.
     if (ob && ob.trifft(rx, ry)) {
       if (b.shotX != null && !ob.trifft(b.shotX, b.shotY)) { rx = b.shotX; ry = b.shotY; b.restEbene = b.shotEbene || 0; }
-      else { rx = lv.tee.x; ry = lv.tee.y; b.restEbene = 0; }
+      else { rx = lv.tee.x; ry = lv.tee.y; b.restEbene = lv.teeEbene || 0; }
       b.restX = rx; b.restY = ry;
     }
     showMessage(art === 'feuer' ? 'Vom Feuerstoß erwischt! Zurück – ohne Strafschlag.'
@@ -1987,7 +1988,7 @@
       state.level = buildLevel(def); state.theme = THEMES[def.theme]; state.inner = true;
       R.setLevel(state.level, state.theme);
       const b = state.ball, lv = state.level;
-      b.x = lv.tee.x; b.y = lv.tee.y; b.vx = 0; b.vy = 0; b.z = 0; b.vz = 0; b.air = false; b.rider = null; b.sunk = false; b.sinkT = 0; b.entered = false; // die nächste Tür (z. B. die Luke) darf wieder auslösen
+      b.x = lv.tee.x; b.y = lv.tee.y; b.ebene = lv.teeEbene || 0; b.vx = 0; b.vy = 0; b.z = 0; b.vz = 0; b.air = false; b.rider = null; b.sunk = false; b.sinkT = 0; b.entered = false; // die nächste Tür (z. B. die Luke) darf wieder auslösen
       b.restX = b.x; b.restY = b.y; b.portalCd = 0.5;
       b.ebene = b.restEbene = 0; lv.setzeEbene(0);   // der Innenbereich ist eine eigene Bahn und fängt unten an
       state.particles = [];
@@ -2422,6 +2423,12 @@
         case 'curse': Sfx.potion(); burst(ev.x, ev.y, '#fff3d0', 18, true); showMessage(ev.label || 'Perlenfluch! Der Ball bleibt bis zum Loch träge.', 2000); break;
         case 'enter': enterInner(); return;
         case 'spreng': Sfx.spreng(); burst(ev.x, ev.y, '#ffd18a', 26, true); burst(ev.x, ev.y, '#8a7b6a', 14, true); break;
+        /* Die Bruchwand ist die einzige Maschine, die die Bahn selbst verändert – das muss man
+           auch dann mitbekommen, wenn man gerade woanders hinsieht. Darum eine Meldung. */
+        case 'durchbruch': Sfx.spreng(); burst(ev.x, ev.y, '#c9b79a', 30, true); burst(ev.x, ev.y, '#5c5148', 18, true); showMessage('Der Fels ist auf – der Gang steht offen!', 1800); break;
+        /* Die Schneewächte bricht ein. Das Ereignis gab es schon, gehört hat es bisher niemand:
+           Es stand in keinem Zweig, also brach die Brücke stumm. */
+        case 'bruch': Sfx.bounce(4); burst(ev.x, ev.y, '#ffffff', 18, true); break;
         case 'spit': Sfx.bumper(); burst(ev.x, ev.y, '#a6ff5e', 10); break;
         case 'spin': Sfx.bounce(5); showMessage('Das Zahnrad nimmt den Ball mit …', 1200); break;
         case 'spinout': Sfx.bumper(); burst(ev.x, ev.y, '#ffe9a8', 8); break;

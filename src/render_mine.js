@@ -155,6 +155,112 @@ Object.assign(Renderer.prototype, {
   /* Die Bohle wird wirklich schief gezeichnet: Beide Enden bekommen ihre eigene Höhe, und zwar
      genau nach dem Wert, mit dem die Bühne auch schiebt. Darunter der Bock, auf dem sie ruht –
      ohne ihn sähe die schwebende Planke nach Fehler aus. */
+  /* ---------- Bruchwand ----------
+     Solange sie steht, ist sie ein Pfeiler stehengebliebenen Felses quer im Gang – mit einem
+     gebohrten Loch darin und einem Kreidezeichen daneben. Beides sagt dasselbe: **Hier wird
+     gesprengt.** Ohne diese Ansage wäre die Wand nur eine Wand, und dass man vor ihr warten muss,
+     erführe man erst durch Zufall.
+
+     Gesprengt bleibt ein flacher Schutthaufen liegen, über den man rollt. Weggezaubert wird sie
+     nicht: Ein Pfeiler, der spurlos verschwindet, sieht aus wie ein Fehler; ein Haufen Bruchstein
+     erzählt, was passiert ist.
+
+     Auf dem Boden liegt beides – das ist der Unterschied zum Block. Eine Wand, die nur in der
+     Höhe steht, deckt bei dieser Kameraneigung den Gang dahinter zu. */
+  drawBruchwandFloor(ctx, ob, t) {
+    const z = (ob.ebene || 0) * (this.level.ebeneZ || 2);
+    const hw = ob.w / 2, hh = ob.h / 2;
+    const eck = [[ob.x - hw, ob.y - hh], [ob.x + hw, ob.y - hh], [ob.x + hw, ob.y + hh], [ob.x - hw, ob.y + hh]];
+    if (!ob.weg) return;
+    // Gesprengt: Bruchstein auf dem Gang, ein paar Brocken darin
+    this.fillPoly(ctx, eck, z + 0.01, 'rgba(70,62,52,0.55)', false);
+    for (let i = 0; i < 9; i++) {
+      const h1 = Math.abs(Math.sin(i * 91.7 + ob.x * 3.1) * 43758.5453) % 1;
+      const h2 = Math.abs(Math.sin(i * 47.3 + ob.y * 7.7) * 43758.5453) % 1;
+      const px = ob.x - hw + h1 * ob.w, py = ob.y - hh + h2 * ob.h;
+      this.isoEllipse(ctx, px, py, z + 0.02, 0.1 + h1 * 0.16, i % 2 ? '#6b6154' : '#565046');
+    }
+  },
+  drawBruchwand(ctx, ob, t) {
+    const s = this.scale, z = (ob.ebene || 0) * (this.level.ebeneZ || 2);
+    const hw = ob.w / 2, hh = ob.h / 2;
+    const eck = [[ob.x - hw, ob.y - hh], [ob.x + hw, ob.y - hh], [ob.x + hw, ob.y + hh], [ob.x - hw, ob.y + hh]];
+    const staub = ob.staub ? ob.staub() : 0;
+    if (!ob.weg) {
+      /* Der Pfeiler. Etwas niedriger als eine Mauer, damit man über ihn hinweg sieht, wohin der
+         Gang führt – man soll ja wissen, wofür sich das Warten lohnt. */
+      this.prism(ctx, eck, z, 1.15, '#6e6659', '#3a342c', { outline: '#1d1915' });
+      // Bohrloch mit Lunte-Öse und Kreidekreuz: die Ansage, dass hier gesprengt wird
+      const [bx, by] = this.proj(ob.x, ob.y, z + 1.16);
+      ctx.fillStyle = '#241f19';
+      ctx.beginPath(); ctx.ellipse(bx, by, s * 0.13, s * 0.13 * this.cam.tilt, 0, 0, TAU); ctx.fill();
+      ctx.strokeStyle = 'rgba(240,226,200,0.75)'; ctx.lineWidth = Math.max(1.5, s * 0.055);
+      ctx.lineCap = 'round';
+      const k = s * 0.3;
+      ctx.beginPath();
+      ctx.moveTo(bx - k, by - k * this.cam.tilt); ctx.lineTo(bx + k, by + k * this.cam.tilt);
+      ctx.moveTo(bx + k, by - k * this.cam.tilt); ctx.lineTo(bx - k, by + k * this.cam.tilt);
+      ctx.stroke();
+      return;
+    }
+    if (staub > 0) {
+      // Der Staub nach dem Bruch: Brocken, die auseinanderfliegen und ausblassen
+      for (let i = 0; i < 14; i++) {
+        const h = Math.abs(Math.sin(i * 127.1 + ob.x * 11.3) * 43758.5453) % 1;
+        const a = (i / 14) * TAU + h;
+        const d = (1 - staub) * (0.6 + h * 1.6);
+        const p = this.proj(ob.x + Math.cos(a) * d, ob.y + Math.sin(a) * d, z + 0.2 + staub * 0.9);
+        ctx.fillStyle = `rgba(190,176,152,${0.55 * staub})`;
+        ctx.beginPath(); ctx.arc(p[0], p[1], s * (0.09 + h * 0.18), 0, TAU); ctx.fill();
+      }
+    }
+  },
+
+  /* ---------- Grubenstempel ----------
+     Der Prellklotz der Mine. Ohne eigenen Stil fällt er auf den Fliegenpilz zurück, mit dem das
+     Märchenland angefangen hat – und ein Fliegenpilz vierhundert Meter unter Tage ist Unsinn.
+     Hier steht darum ein Stempel: der Holzpfosten, mit dem im Berg die Firste abgefangen wird,
+     unten ein Fußkeil, oben eine Kappe, dazwischen zwei Eisenringe.
+
+     Er ist absichtlich rund und von allen Seiten gleich: Ein Prellklotz wird aus jeder Richtung
+     getroffen. Beim Treffer staucht er sich – dieselbe Zahl (sq), die den Pilz aufbläht, drückt
+     ihn zusammen und lässt die Ringe zusammenrücken. So sieht man die Wirkung dort, wo sie
+     herkommt, und das Holz ächzt sichtbar unter dem Berg. */
+  drawGrubenstempel(ctx, ob, sq) {
+    const s = this.scale, [sx, sy] = this.proj(ob.x, ob.y, 0);
+    const r = s * ob.r * 0.95, hoch = s * ob.r * 3.6 * (1 - sq * 0.28);
+    this.shadow(ctx, sx, sy, r * 0.95);
+    // Fußkeil: ein flacher Klotz, auf dem der Stempel steht
+    ctx.fillStyle = '#4a3726';
+    ctx.beginPath(); ctx.ellipse(sx, sy, r * 1.15, r * 1.15 * this.cam.tilt, 0, 0, TAU); ctx.fill();
+    // Der Schaft, oben etwas schmaler – ein geschlagener Stamm, kein Rohr
+    const ro = r * 0.62, ru = r * 0.78;
+    const g = ctx.createLinearGradient(sx - ru, 0, sx + ru, 0);
+    g.addColorStop(0, '#6b4f30'); g.addColorStop(0.42, '#a37c4c'); g.addColorStop(1, '#5c4327');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(sx - ru, sy); ctx.lineTo(sx - ro, sy - hoch);
+    ctx.lineTo(sx + ro, sy - hoch); ctx.lineTo(sx + ru, sy);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#2e2116'; ctx.lineWidth = Math.max(1, s * 0.035); ctx.stroke();
+    // Zwei Eisenringe. Sie rücken beim Treffer zusammen, weil der Schaft kürzer wird.
+    for (const u of [0.32, 0.72]) {
+      const y = sy - hoch * u, rr = ru + (ro - ru) * u;
+      ctx.fillStyle = '#8d939c';
+      ctx.beginPath(); ctx.ellipse(sx, y, rr * 1.08, rr * 0.34, 0, 0, TAU); ctx.fill();
+      ctx.strokeStyle = '#4a4f57'; ctx.lineWidth = Math.max(1, s * 0.03); ctx.stroke();
+    }
+    // Kappe: das Querholz, das die Last des Berges aufnimmt
+    /* Das Kappholz ist ein flacher Balken, keine Kuppe – eine Kuppe sähe wieder nach Pilz aus. */
+    const kw = ro * 1.5, kh = ro * 0.42;
+    ctx.fillStyle = '#b08a55';
+    ctx.fillRect(sx - kw, sy - hoch - kh, kw * 2, kh);
+    ctx.fillStyle = '#8a6a3e';
+    ctx.beginPath(); ctx.ellipse(sx, sy - hoch, kw, kw * this.cam.tilt * 0.55, 0, 0, TAU); ctx.fill();
+    ctx.strokeStyle = '#2e2116'; ctx.lineWidth = Math.max(1, s * 0.035);
+    ctx.strokeRect(sx - kw, sy - hoch - kh, kw * 2, kh);
+  },
+
   drawKippbuehne(ctx, ob, t) {
     const n = ob.neigung || 0, hub = 0.22, dick = 0.13;
     const dx = ob.dx, dy = ob.dy, qx = -dy, qy = dx;

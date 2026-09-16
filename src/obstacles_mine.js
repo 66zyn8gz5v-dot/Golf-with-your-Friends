@@ -151,3 +151,67 @@ class MineLamp {
   }
   update(t) { this.t = t; }
 }
+
+/* ---------------------------------------------------------------------------
+   Bruchwand
+   --------------------------------------------------------------------------- */
+/* Ein Pfeiler stehengebliebenen Felses, der einen Gang versperrt – bis eine Sprengladung in der
+   Nähe zündet. Dann ist er weg, und der Gang ist offen. Für den Rest der Bahn.
+
+   Das ist die einzige Maschine im ganzen Spiel, die **die Bahn selbst verändert**. Alles andere
+   bewegt den Ball: Es stößt, trägt, hebt, fängt. Die Bruchwand rührt den Ball nicht an – sie nimmt
+   eine Wand heraus. Wer beim ersten Schlag vor einem geschlossenen Berg steht, spielt danach eine
+   andere Bahn als vorher.
+
+   Und sie ist die Antwort auf eine Frage, die die Sprengladung offen gelassen hat: Bis jetzt war
+   Dynamit im Berg nur ein Stoß für den Ball. In einem Bergwerk sprengt man aber keine Kugeln,
+   sondern Fels. Die Ladung hat damit zwei Wirkungen, und die zweite ist die, um die es eigentlich
+   geht.
+
+   Sie geht nicht von selbst wieder zu. Das war überlegt: Eine Wand, die sich nach jedem Schlag
+   wieder schließt, wäre ein Tor – und Tore gibt es schon, in drei Welten. Der Reiz hier ist, dass
+   der Berg nach der Sprengung offen *bleibt*, und dass man den Knall darum nicht abpassen, sondern
+   **abwarten** muss. Beim nächsten Loch steht sie wieder (setup). */
+const BRUCH_WEITE = 3.6;         // so weit reicht eine Zündung, um Fels zu brechen
+const BRUCH_STAUB = 1.1;         // so lange staubt es sichtbar nach
+
+class BlastWall {
+  /* x, y ist die Mitte – wie bei rectPoly, mit dem die Kanten gebaut werden. */
+  constructor(d) {
+    Object.assign(this, { w: 2, h: 2, weite: BRUCH_WEITE, ebene: 0 }, d);
+    this.type = 'bruchwand';
+    this.weg = false; this.bruchAt = -99; this.neu = false; this.t = 0;
+  }
+  setup(level) { this.level = level; this.weg = false; this.neu = false; }
+  update(t) {
+    this.t = t;
+    if (this.weg || !this.level) return;
+    for (const ob of this.level.obstacles) {
+      if (ob.type !== 'sprengladung' || !ob.knall) continue;
+      if ((ob.ebene || 0) !== (this.ebene || 0)) continue;
+      /* Gemessen wird vom Zünder zur *nächsten Stelle der Wand*, nicht zu ihrer Mitte: Sonst
+         hinge es an der Länge der Wand, ob sie bricht, und eine lange Wand wäre schwerer zu
+         sprengen als eine kurze, obwohl die Ladung direkt daneben liegt. */
+      const nx = Math.max(this.x - this.w / 2, Math.min(ob.x, this.x + this.w / 2));
+      const ny = Math.max(this.y - this.h / 2, Math.min(ob.y, this.y + this.h / 2));
+      if (Math.hypot(ob.x - nx, ob.y - ny) > this.weite) continue;
+      this.weg = true; this.bruchAt = t; this.neu = true;
+      break;
+    }
+  }
+  segments(out) {
+    if (this.weg) return;
+    polySegments(rectPoly(this.x, this.y, this.w, this.h), out, { e: 0.45, kind: 'fels' });
+  }
+  /* Einmal je Sprengung melden, nicht einmal je Bildschritt. */
+  trigger(ball, t, events) {
+    if (!this.neu) return;
+    this.neu = false;
+    events.push({ type: 'durchbruch', x: this.x, y: this.y });
+  }
+  /* Der Staub nach dem Bruch – nur fürs Bild. */
+  staub() {
+    const seit = this.t - this.bruchAt;
+    return seit >= 0 && seit < BRUCH_STAUB ? 1 - seit / BRUCH_STAUB : 0;
+  }
+}

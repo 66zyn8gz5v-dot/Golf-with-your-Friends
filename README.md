@@ -945,9 +945,28 @@ und eine Änderung an einer Kammer zieht nicht Dutzende Zeichen nach sich. Nach 
 
 Die zehnte Welt liegt im Berg – und der Berg ist ein Vulkan. Auf der Weltkarte ist sie die
 **Feuerinsel im Ostmeer**: eine eigene Insel mit Basaltküste, rauchendem Kegel und ein paar toten
-Bäumen, vom Festland aus per Schiff zu erreichen. Neun Bahnen, Stufe Profi, und ein Abstieg: vom
+Bäumen, vom Festland aus per Schiff zu erreichen. Zehn Bahnen, Stufe Profi, und ein Abstieg: vom
 Tageslicht am Mundloch durch die Stollen und die Kristallkammern hinunter zur Schmelze, wo das Erz
 flüssig steht – direkt unter dem Krater.
+
+**Die Welt war zuerst zu brav.** Neun Bahnen, alle flach, kaum eine Gefahr: Der Bot-Durchlauf zählte
+zwischen 0 und 0,58 Stürzen pro Spiel, im Schneeberg sind es auf zwei Bahnen über sechs. Ausgerechnet
+im Bergwerk, wo der Abstieg von Sohle zu Sohle das Naheliegendste überhaupt wäre – eine Bahn hieß
+„Sohle Neun" und war eben. Die Welt hat darum eine zehnte Bahn bekommen, zwei neue Ideen und
+größere Karten.
+
+**Der Abstieg ist jetzt wörtlich gemeint.** Vier der zehn Bahnen haben zwei Sohlen: Man schlägt auf
+der oberen ab und kommt hinunter, indem man über eine Kante rollt und fällt. Das kostet keinen
+Strafschlag, und genau darum ist es hier das richtige Mittel – in jeder anderen Welt braucht ein
+Stockwerkwechsel eine Maschine, die trägt (Aufzug, Seilbahn, Turbine). Nach unten braucht man keine.
+Man lässt los. Ein `o` in der Karte ist so eine offene Kante; an einem gewöhnlichen Bodenrand baut
+`level.js` eine Bande, und die hielte den Ball auf.
+
+Dafür musste das Spiel etwas lernen: **Der Abschlag darf auf jeder Etage liegen.** Bis Fassung 142
+wurde das `T` immer auf der untersten gesucht (`level.js`), und jede mehrstöckige Bahn ging damit
+zwangsläufig nach oben. Jetzt führt `level.js` ein `teeEbene` mit, so wie es `cupEbene` für das Loch
+schon immer tat. Gegengeprüft: Für alle 103 Bahnen, die es vorher gab, kommt 0 heraus – dort ändert
+sich nichts.
 
 Zuerst stand sie als kleines Landstück am Fuß des Gebirges, eingeklemmt zwischen Uhrwerkstadt und
 Talsenke. Das war gequetscht statt gelegen: keine eigene Küste, kein Platz für den Namen. Die Karte
@@ -985,7 +1004,29 @@ eine Zielscheibe statt eines Lichtscheins. Mehr Lagen hätten das nur verschoben
 jede Lage kostet eine bildschirmgroße Füllung pro Bild. Der Verlauf hat keine Stufen, kommt mit
 einer Füllung aus, und überlappende Lichter addieren sich von selbst richtig.
 
-**Zwei neue Maschinen** (`src/obstacles_mine.js`, gezeichnet in `src/render_mine.js`):
+**Die Bruchwand** (`bruchwand`) ist die einzige Maschine im ganzen Spiel, die **die Bahn selbst
+verändert**. Alles andere bewegt den Ball: Es stößt, trägt, hebt, fängt. Die Bruchwand rührt den
+Ball nicht an – sie nimmt eine Wand heraus. Ein Pfeiler stehengebliebenen Felses versperrt den Gang,
+mit einem Bohrloch und einem Kreidekreuz darauf; zündet eine Sprengladung in der Nähe, ist er weg,
+und zwar für den Rest der Bahn. Wer beim ersten Schlag vor einem geschlossenen Berg steht, spielt
+danach eine andere Bahn als vorher.
+
+Sie ist zugleich die Antwort auf eine Frage, die die Sprengladung offen gelassen hatte: Bis dahin
+war Dynamit im Berg nur ein Stoß für den Ball. In einem Bergwerk sprengt man aber keine Kugeln,
+sondern Fels.
+
+Sie geht **nicht** wieder zu, und das war überlegt: Eine Wand, die sich nach jedem Schlag wieder
+schließt, wäre ein Tor – und Tore gibt es schon, in drei Welten. Der Reiz liegt darin, dass der Berg
+offen *bleibt*, und dass man den Knall darum nicht abpassen, sondern abwarten muss. `tools/mine.py`
+prüft, dass zu jeder Bruchwand auch eine Ladung in Reichweite liegt: Das ist die eine Panne, die man
+beim Bauen nicht sieht – die Wand steht da und sieht richtig aus, nur zündet nichts in ihrer Nähe.
+
+Der Prellklotz der Mine ist ein **Grubenstempel** (`style: 'stempel'`): der Holzpfosten mit
+Kappholz und zwei Eisenringen, mit dem im Berg die Firste abgefangen wird, und er ächzt sichtbar,
+wenn man ihn trifft. Ohne eigenen Stil fiel er auf den Fliegenpilz zurück, mit dem das Märchenland
+angefangen hat – und ein Fliegenpilz vierhundert Meter unter Tage ist Unsinn.
+
+**Zwei weitere Maschinen** (`src/obstacles_mine.js`, gezeichnet in `src/render_mine.js`):
 
 | Typ | Was sie tut |
 |---|---|
@@ -1002,21 +1043,25 @@ nur eben als das, was sie sind.
 Geprüft wird beides dauerhaft mit `node tools/mine.mjs`: dass der Druck nach außen geht und mit dem
 Abstand abnimmt, dass jenseits der Reichweite nichts passiert, dass kein Strafschlag anfällt, dass
 der Knall genau einmal je Zündung gemeldet wird – und für die Bühne, dass sie hinter der Mitte
-vorwärts wirft, davor zurück, in der Totzone nichts tut und ohne Ball in die Waage zurückkehrt.
+vorwärts wirft, davor zurück, in der Totzone nichts tut und ohne Ball in die Waage zurückkehrt. Für
+die Bruchwand acht weitere Proben: dass sie ohne Sprengung steht und den Ball aufhält, dass eine
+Zündung daneben sie bricht, dass sie danach offen *bleibt*, dass eine Zündung außer Reichweite sie
+stehen lässt, und dass sie beim nächsten Loch wieder dasteht.
 
-**Die neun Bahnen** (`src/courses_mine.js`, erzeugt von `tools/mine.py`):
+**Die zehn Bahnen** (`src/courses_mine.js`, erzeugt von `tools/mine.py`):
 
 | # | Name | Par | Abschnitt | Was sie will |
 |---|---|---|---|---|
 | 1 | Mundloch | 3 | Tageslicht | Halde, Grubenholz, das Tor in den Berg. Noch ohne Schleier. |
 | 2 | Erster Stollen | 3 | Stollen | Die Dunkelheit und die Lampen: den Lichtern nach, dann findet man das Loch. |
-| 3 | Sprengfeld | 4 | Stollen | Die erste Ladung. Der kurze Weg führt durch ihren Kreis, der lange außen herum. |
-| 4 | Kippbohle | 3 | Stollen | Der Schacht quer durch den Stollen, darüber die Bohle. Nicht zaghaft. |
-| 5 | Lorensohle | 4 | Stollen | Zwei Hunte queren den Gang im eigenen Takt, dazu eine Ladung vor dem Loch. |
-| 6 | Kristallkammer | 3 | Kristall | Ein Magnetit in der Mitte drückt weg, die Kristalle werfen zurück. |
-| 7 | Zwillingsbohlen | 3 | Kristall | Zweimal dasselbe kurz hintereinander – wer zu fest über die erste kommt, steht schon auf der zweiten. |
-| 8 | Sohle Neun | 4 | Schmelze | Ein schmaler Steg durch den Lavaspalt – oder man lässt sich von der Ladung hinüberwerfen. |
-| 9 | Die Schmelze | 5 | Schmelze | Die Insel im Lavasee, ein Damm hinüber, und eine Ladung, die ihn im Takt leerfegt. |
+| 3 | **Der Schacht** | 3 | Stollen | **Zwei Sohlen.** Die Strecke bricht vorn ab – über die Kante rollen und fallen lassen. Kostet nichts. |
+| 4 | Sprengfeld | 4 | Stollen | Zwei Ladungen im Gang, und rechts wie links steht nichts mehr. |
+| 5 | **Die Bruchwand** | 4 | Stollen | **Der Berg ist zu.** Daneben liegt eine Ladung; wenn die zündet, steht der Gang offen – für den Rest der Bahn. |
+| 6 | Kippbohle | 3 | Stollen | Der Schacht quer durch den Stollen, darüber die Bohle. Nicht zaghaft. |
+| 7 | Lorensohle | 4 | Stollen | **Zwei Sohlen.** Oben queren zwei Hunte die Strecke, unten liegt das Loch. |
+| 8 | Kristallkammer | 4 | Kristall | **Zwei Sohlen.** Oben der Magnetit auf der Galerie, unten ein Felspfeiler vor der großen Kammer. |
+| 9 | Sohle Neun | 4 | Schmelze | **Zwei Sohlen.** Man fällt mitten in die Glut: ein Steg über den einen Spalt, eine Bohle über den anderen. |
+| 10 | Die Schmelze | 5 | Schmelze | Die Insel im Lavasee. Der Damm ist zugemauert und wird in der Mitte im Takt leergefegt. |
 
 Die Pare stehen nicht nach Gefühl, sondern nach dem, was die Bahnen wirklich spielen: Der
 Normalspieler-Bot (`node tools/audit/audit.mjs mine`) hat sie durchgespielt, und wo sein Median

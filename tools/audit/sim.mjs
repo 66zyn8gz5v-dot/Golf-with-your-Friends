@@ -31,6 +31,10 @@ function resetLevel(lv, switches, schlagZahl) {
 export function newState(hole) {
   const lv = getLevel(hole);
   const b = G.makeBall(lv.tee.x, lv.tee.y, '#fff');
+  /* Der Abschlag darf auf jeder Sohle liegen (level.js, 'teeEbene'). Ohne das startete der Ball in
+     der Zwergenmine unter der Galerie im Nichts und war sofort aus – der Bot hat dort zehnmal
+     hintereinander das Schlaglimit erreicht, ohne je einen Schlag zu spielen. */
+  b.ebene = lv.teeEbene || 0;
   return { hole, def: hole, ball: b, t: 0, strokes: 0, schlagZahl: 0, switches: {}, inner: false, done: false, log: [] };
 }
 export function maxStrokes(hole) { return hole.maxStrokes || DEFAULT_MAX; }

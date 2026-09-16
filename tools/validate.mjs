@@ -18,7 +18,7 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
   const problems = [];
   if (!THEMES[c.theme]) problems.push(`Theme ${c.theme} fehlt`);
   rows.forEach((r, y) => { if (r.length !== W) problems.push(`Zeile ${y} hat Länge ${r.length} statt ${W}`); });
-  let tee, cup;
+  let tee, cup, teeEbene = 0;
   rows.forEach((r, y) => [...r].forEach((ch, x) => { if (ch === 'T') tee = [x, y]; if (ch === 'H') cup = [x, y]; }));
   if (!cup) { const d = (c.obstacles || []).find(o => o.type === 'door'); if (d) cup = [Math.floor(d.x), Math.floor(d.y)]; }
 
@@ -33,7 +33,14 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
   obere.forEach((ebRows, i) => {
     const n = i + 1;
     if (ebRows.length !== H || ebRows.some(r => r.length !== W)) problems.push(`Ebene ${n} ist ${ebRows[0] ? ebRows[0].length : 0}x${ebRows.length} statt ${W}x${H} – alle Ebenen müssen deckungsgleich sein`);
-    if (ebRows.join('').includes('T')) problems.push(`der Abschlag steht auf Ebene ${n} – angefangen wird immer ganz unten`);
+    /* Der Abschlag darf auf jeder Ebene liegen (level.js führt 'teeEbene' mit). Bis Fassung 142
+       musste er unten stehen; die Zwergenmine geht aber hinunter, und dafür fängt man oben an.
+       Zweimal darf er trotzdem nicht vorkommen. */
+    ebRows.forEach((r, y) => [...r].forEach((ch, x) => {
+      if (ch !== 'T') return;
+      if (tee) problems.push(`'T' steht auf mehreren Ebenen – der Abschlag liegt auf genau einer`);
+      tee = [x, y]; teeEbene = n;
+    }));
     ebRows.forEach((r, y) => [...r].forEach((ch, x) => {
       if (ch !== 'H') return;
       if (cup) problems.push(`'H' steht auf mehreren Ebenen – das Loch liegt auf genau einer`);
@@ -307,6 +314,7 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
     stufeVon(nx, ny) > stufeVon(x, y) && !aufSchraege(x, y) && !aufSchraege(nx, ny);
 
   if (tee && cup && !c.ohneLoch) {
+    let flutStart = null;
     const seen = new Set([tee.join()]), q = [tee];
     while (q.length) {
       const [x, y] = q.shift();
@@ -428,7 +436,11 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
        zusammen gerechnet werden, denn ein Sturz öffnet auch wieder eine untere Ebene: Eine Kammer,
        in die es unten keine Tür gibt, ist erreichbar, sobald ein Steg darüber führt. Also wird
        nicht einmal von unten nach oben gerechnet, sondern so lange, bis sich nichts mehr ändert. */
-    const erreichbar = karten.map((_, n) => (n === 0 ? seen : new Set()));
+    /* 'seen' ist der Flutlauf über die *unterste* Ebene – so war es, als der Abschlag immer dort
+       stand. Liegt er höher (Zwergenmine), ist Ebene 0 zunächst leer, und der Lauf beginnt oben. */
+    const erreichbar = karten.map(() => new Set());
+    if (teeEbene === 0) for (const k of seen) erreichbar[0].add(k);
+    else flutStart = tee;
     const flute = (n, start) => {              // von 'start' aus über Ebene n ausbreiten
       const set = erreichbar[n], q = []; let neu = false;
       for (const [x, y] of start) { const k = `${x},${y}`; if (bodenAuf(n, x, y) && !set.has(k)) { set.add(k); q.push([x, y]); neu = true; } }
@@ -449,6 +461,7 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
       return false;                            // nirgends Boden: das ist ein Sturz ins Aus, kein Weg
     };
 
+    if (flutStart) flute(teeEbene, [flutStart]);
     for (let runde = 0, wieder = true; wieder && runde < 40; runde++) {
       wieder = false;
       for (const a of aufstiege) {
@@ -497,9 +510,11 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
     for (const o of c.obstacles || []) {
       const pts = o.type === 'portal' ? [[o.x, o.y], [o.tx, o.ty]] : ['bumper', 'rotor', 'switch', 'potion', 'turntable', 'magnet', 'cannon', 'cauldron', 'door', 'spikes', 'lightning', 'trapdoor', 'guillotine', 'eyetower'].includes(o.type) ? [[o.x, o.y]] : o.type === 'mover' && o.style !== 'shark' ? [[o.x0, o.y0], [o.x1, o.y1]] : []; // Haie schwimmen im Wasser neben der Bahn
       if (o.type === 'rotor' && o.style === 'darktentacle') pts.length = 0; // dunkle Tentakel kriechen von außen (aus dem Wrack) auf die Bahn
+      // Ein Hindernis steht auf seiner eigenen Ebene – geprüft wird darum auch dort
+      const km = karten[o.ebene || 0] || rows;
       for (const [px, py] of pts) {
-        const ch = rows[Math.floor(py)] && rows[Math.floor(py)][Math.floor(px)];
-        if (!FLOOR.has(ch)) problems.push(`${o.type} bei (${px},${py}) liegt nicht auf dem Fairway (${ch})`);
+        const ch = km[Math.floor(py)] && km[Math.floor(py)][Math.floor(px)];
+        if (!FLOOR.has(ch)) problems.push(`${o.type} bei (${px},${py}) liegt auf Ebene ${o.ebene || 0} nicht auf dem Fairway (${ch})`);
       }
     }
   }

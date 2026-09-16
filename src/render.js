@@ -1696,6 +1696,7 @@ class Renderer {
     if (ob.type === 'windfahne') { this.drawWindfahneFloor(ctx, ob, t); return; }
     if (ob.type === 'lawine') { this.drawLawineFloor(ctx, ob, t); return; }
     if (ob.type === 'seilbahn') { this.drawSeilbahnFloor(ctx, ob, t); return; }
+    if (ob.type === 'bruchwand') { this.drawBruchwandFloor(ctx, ob, t); return; }
     if (ob.type === 'schneebruecke') { this.drawSchneebrueckeFloor(ctx, ob, t); return; }
     if (ob.type === 'dial' || ob.type === 'wanderloch') { this.drawWanderlochFloor(ctx, ob, t); return; }
     if (ob.type === 'field' && ob.style === 'steam') { this.drawSteam(ctx, ob, t); return; }
@@ -2027,6 +2028,10 @@ class Renderer {
       items.push({ x: ob.cx, y: ob.cy, bias: -0.15, noFade: true, draw: () => this.drawKippbuehne(ctx, ob, t) });
     } else if (ob.type === 'grubenlampe') {
       items.push({ x: ob.x, y: ob.y, bias: 0.45, noFade: true, draw: () => this.drawGrubenlampe(ctx, ob, t) });
+    } else if (ob.type === 'bruchwand') {
+      /* noFade: Die Wand ist der Grund, warum man hier nicht weiterkommt. Durchsichtig zu werden,
+         sobald der Ball davorliegt, nähme ihr genau das. */
+      items.push({ x: ob.x, y: ob.y, bias: 0.3, noFade: true, draw: () => this.drawBruchwand(ctx, ob, t) });
     } else if (ob.type === 'windfahne') {
       items.push({ x: ob.x, y: ob.y, bias: 0.4, draw: () => this.drawWindfahne(ctx, ob, t) });
     } else if (ob.type === 'lawine') {
@@ -2096,6 +2101,7 @@ class Renderer {
         else if (ob.style === 'grave') { const [rx, ry] = this.proj(ob.x, ob.y + 0.2, 0); this.spriteGravestone(ctx, rx, ry, this.scale * ob.r * 2.4 * sc, { seed: 0.3 }); }
         else if (ob.style === 'eye') this.drawEye(ctx, ob, t, sc);
         else if (ob.style === 'feder') this.spriteFeder(ctx, ob, sq);
+        else if (ob.style === 'stempel') this.drawGrubenstempel(ctx, ob, sq);
         else this.spriteMushroom(ctx, ob.x, ob.y, 0, ob.r * 1.7 * sc, '#e63b5a', true);
       } });
     } else if (ob.type === 'portal') {
