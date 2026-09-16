@@ -484,22 +484,33 @@ k = Karte(36, 20)
 k.rect(2, 13, 18, 18)
 k.rect(6, 14, 9, 17, 'i')
 k.put(3, 15, 'T')
+# Die beiden oberen Etagen sind breiter als zuerst gebaut. Der Grund steht in den Zahlen: Nicht
+#    der Wind macht diese Bahn lang, sondern der Absturz von einer Etage - wer herunterfaellt,
+#    faehrt den ganzen Aufstieg noch einmal, und genau das erzeugte die Ausreisser (Median 11,
+#    einzelne Runden bis ans Schlaglimit). Ein schmaler Sims bei staerkstem Wind ist keine Aufgabe,
+#    sondern ein Wuerfel. Eine Reihe mehr an jeder Kante nimmt dem Zufall den Ausschlag, ohne der
+#    Bahn ihren Aufstieg zu nehmen.
 o1 = Karte(36, 20)
-o1.rect(14, 7, 30, 12)
+o1.rect(13, 6, 31, 13)
 o1.rect(18, 8, 21, 11, 's')
 o1.rect(24, 8, 25, 12, '.')                        # ein Spalt auf der mittleren Etage
 o1.rect(24, 8, 25, 10, '#')                        # darueber die Waechte - sie traegt einmal
 o2 = Karte(36, 20)
-o2.rect(22, 2, 33, 6)
+o2.rect(21, 1, 34, 7)
 o2.rect(26, 3, 28, 5, 'i')                         # die letzte Eisplatte, direkt vor dem Gipfelloch
 o2.rect(29, 5, 29, 6, 'x'); o2.rect(24, 2, 24, 2, 'x')   # Deckung vor der Gipfellawine
 o2.put(31, 4, 'H')
 hoehen, schraegen, hs = hang(k, [], 0.8, 5.8)
-# Par 8, nicht 6: Der Bot braucht im Schnitt 9,4 Schlaege und im Median 11, und die Verteilung
-# ist zweigeteilt (4-8 gegen 11-15) - wer eine Etage wieder hinunterfaellt, faehrt den Aufstieg
-# noch einmal. Die Bahn ist dabei nie am Limit (hoechstens 15 von 22). Zu aendern war also nicht
-# die Bahn, sondern die Zahl, die behauptet, was gutes Spiel hier heisst.
-bahn(name='Der Gipfel', par=8, theme='summit', maxStrokes=22, seed=312, dichte=0.08,
+# Par 8, nicht 6: Der Bot braucht im Schnitt zwischen 9 und 12 Schlaege - wer eine der drei Etagen
+# wieder hinunterfaellt, faehrt den Aufstieg noch einmal. Zu aendern war nicht die Bahn, sondern
+# die Zahl, die behauptet, was gutes Spiel hier heisst.
+#
+# Und das Schlaglimit von 22 war zu eng. Es stand noch auf dem Par von vorher und war damit das
+# knappste des ganzen Berges: 2,75-mal Par, wo alle elf anderen Bahnen zwischen 3,5 und 4 liegen.
+# Der Bot lief darum in 2 von 10 Runden hinein und kam nicht ins Loch, waehrend keine andere
+# Schneebahn das ein einziges Mal tat. 29 sind 3,6-mal Par - dasselbe Verhaeltnis wie bei den
+# anderen Par-5-Bahnen. Das Limit ist ein Netz, keine zweite Aufgabe.
+bahn(name='Der Gipfel', par=8, theme='summit', maxStrokes=29, seed=312, dichte=0.08,
      schnee=SCHNEE_WACHS,
      intro='Drei Etagen bis zum Gipfel, zwei Gondeln dazwischen, und ganz oben die letzte '
            'Eisplatte drei Felder vor dem Loch. Der Wind ist hier am stärksten, der Tiefschnee auf '
