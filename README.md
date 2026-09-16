@@ -1041,6 +1041,26 @@ zwischen zwei Etagen stehen: Seilbahn, Aufzug und Zahnstange (`drawSpannendeMasc
 Kupferrohr, das seine Teilstücke einzeln in die Tiefensortierung schickt, damit es sich richtig
 mit den Mauern überdeckt.
 
+### Eine Zierschrift, eine Leseschrift
+
+Es waren zwei Zierschriften nebeneinander: **Cinzel Decorative** für die Titel, **MedievalSharp**
+für die beiden großen Knöpfe. Auf dem iPad stehen die untereinander, und dann sieht man es sofort –
+„Fantasy Golf" und „Weltkarte" sahen aus, als gehörten sie nicht zusammen. Seit Fassung 148 gilt:
+
+| | wofür |
+|---|---|
+| `MedievalSharp` | alles, was schmückt: Titel, Ladebild, die großen Knöpfe, die Schlusstafel |
+| `Trebuchet MS` | alles, was man liest: Fließtext, Knöpfe, Zahlen |
+| `monospace` | nur der Bahn-Text im Editor und die Entwicklerausgabe – dort muss jede Spalte untereinander stehen |
+
+Das 3D-Spiel benutzte ohnehin nur MedievalSharp; jetzt sehen beide Spiele gleich aus. Nebenbei wird
+eine Schriftdatei weniger geholt, bevor überhaupt etwas zu sehen ist.
+
+Die **Weltkarte** zählt ausdrücklich nicht mit. Ihre Beschriftung ist Georgia kursiv, und das ist
+nicht Oberfläche, sondern Teil der gezeichneten Karte – so wie die Schrift auf einem alten Atlas
+zum Blatt gehört. `tools/schrift.mjs` hält beides fest: dass es außer den dreien keine gibt, dass
+genau eine Familie nachgeladen wird, und dass die Karte sich nicht unbemerkt ändert.
+
 ### Der Gießlöffel: das einzige Hindernis, das die Bahn aufbaut
 
 Eine Pfanne am Rand der Schmelze kippt im Takt flüssiges Erz in eine Rinne. Das Erz läuft ein Feld

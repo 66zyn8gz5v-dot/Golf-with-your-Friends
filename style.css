@@ -43,8 +43,8 @@ html, body {
 
 #lade .lb-innen { position: relative; z-index: 1; width: min(86vw, 360px); text-align: center; }
 #lade .lb-titel {
-  font-family: "Cinzel Decorative", "MedievalSharp", Georgia, serif; font-weight: 900;
-  font-size: clamp(26px, 8vw, 38px); letter-spacing: 2px; margin-bottom: 14px;
+  font-family: "MedievalSharp", Georgia, serif;
+  font-size: clamp(28px, 8.5vw, 40px); letter-spacing: 2px; margin-bottom: 14px;
   background: linear-gradient(180deg, #fff6d8, #ffd977 48%, #e0982c);
   -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
   filter: drop-shadow(0 2px 0 #6d3f00) drop-shadow(0 6px 16px rgba(0,0,0,0.7));
@@ -172,7 +172,7 @@ body.creative .cbtn.creative { display: inline-block; }
 .panel-head .btn.small { margin: 0; flex: none; white-space: nowrap; }
 @media (max-width: 600px) { .panel-head h2 { font-size: 19px; } }
 .btn.mode {
-  font-family: "MedievalSharp", "Cinzel Decorative", Georgia, serif; font-size: 28px; letter-spacing: 2px;
+  font-family: "MedievalSharp", Georgia, serif; font-size: 28px; letter-spacing: 2px;
   position: relative; overflow: hidden; display: block; height: 88px; padding: 0; margin: 0;
   background: #2a1a4d; border: 2px solid #ffd166; border-radius: 14px; box-shadow: 0 4px 0 #8a5a10, 0 8px 18px rgba(0,0,0,0.35);
   animation: mode-in 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
@@ -236,7 +236,7 @@ body.creative .cbtn.creative { display: inline-block; }
   .btn.mode, .art-flag, .art-window, .sway, .drift, .twinkle, .mill-blades, .particles .p, .screen.title .panel, .screen.title .panel h1 { animation: none; }
   .screen.title .panel h1 { opacity: 1; transform: none; }
 }
-.screen.title .panel h1 { font-family: "Cinzel Decorative", "MedievalSharp", Georgia, serif; font-weight: 900; letter-spacing: 1px; }
+.screen.title .panel h1 { font-family: "MedievalSharp", Georgia, serif; letter-spacing: 2px; }
 .screen.title .panel h2 { font-family: "MedievalSharp", Georgia, serif; letter-spacing: 1px; }
 .holes { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; }
 .holes .btn.small { min-width: 38px; padding: 6px 8px; margin: 0; }
@@ -398,7 +398,7 @@ table.scores td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .panel.final .final-banner { position: relative; height: 118px; overflow: hidden; border-radius: 14px 14px 0 0; border-bottom: 2px solid rgba(255,255,255,0.25); }
 .panel.final .final-banner .mode-scene { position: absolute; inset: 0; width: 100%; height: 100%; }
 .panel.final .final-head { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; background: linear-gradient(180deg, rgba(0,0,0,0.05), rgba(0,0,0,0.55)); text-shadow: 0 2px 6px rgba(0,0,0,0.8); }
-.panel.final .final-head h1 { margin: 0; font-size: 36px; font-family: "Cinzel Decorative", "MedievalSharp", Georgia, serif; }
+.panel.final .final-head h1 { margin: 0; font-size: 36px; font-family: "MedievalSharp", Georgia, serif; }
 .panel.final .final-world { color: #fff3d6; font-size: 15px; letter-spacing: 1px; margin-top: 2px; }
 .podium { display: flex; flex-direction: column; gap: 6px; margin: 16px 22px 8px; }
 .pod { display: flex; align-items: center; gap: 10px; padding: 7px 14px; border-radius: 12px; background: rgba(255,255,255,0.07); font-size: 17px; }

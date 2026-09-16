@@ -2752,7 +2752,7 @@
     l.rel = 'stylesheet';
     l.media = 'print';
     l.addEventListener('load', () => { l.media = 'all'; });
-    l.href = 'https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=MedievalSharp&display=swap';
+    l.href = 'https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap';
     document.head.appendChild(l);
   })();
 
