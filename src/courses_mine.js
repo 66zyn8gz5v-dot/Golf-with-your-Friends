@@ -345,7 +345,7 @@ const MINE_COURSES = [
     ],
   },
   {
-    name: 'Sohle Neun', par: 4, theme: 'schmelze', maxStrokes: 16, dunkel: 0.48, lampe: 3.0,
+    name: 'Sohle Neun', par: 5, theme: 'schmelze', maxStrokes: 16, dunkel: 0.48, lampe: 3.0,
     intro: 'Die unterste Sohle: In den Spalten steht die Glut. Über den ersten Spalt führt ein schmaler Steg, über den zweiten eine Bohle – und die Ladung dazwischen kann beides sein, Gefahr oder Abkürzung.',
     map: [
       '....................................',

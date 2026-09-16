@@ -304,6 +304,8 @@ fuell(f, 26, 2, 29, 13, 'l')
 fuell(f, 16, 7, 20, 8)                # der Steg über den ersten Spalt
 fuell(f, 26, 7, 29, 8)                # über den zweiten führt die Bohle
 setz(f, 32, 7, 'H')
+# Par 5 und nicht 4: Die Botprüfung braucht hier im Schnitt 5,8 Schläge, auf jeder anderen
+# Bahn der Welt liegt das Par über dem Schnitt. Zwei Lavaspalten kosten eben mehr.
 bahn('Sohle Neun', 'schmelze', f, [
     bohle(26.0, 7.0, 4.0, 2.0),
     ladung(22.5, 11.0, 0.3, 3.2),
@@ -311,7 +313,7 @@ bahn('Sohle Neun', 'schmelze', f, [
     lampe_(13.5, 8.5, 3.4, ebene=1),
     lampe_(14.5, 7.5, 4.0), lampe_(18.0, 7.5, 3.6), lampe_(23.0, 7.5, 4.2),
     lampe_(27.5, 7.5, 3.6), lampe_(32.0, 7.5, 3.8),
-], par=4, dunkel=0.48, maxStrokes=16, oben=u,
+], par=5, dunkel=0.48, maxStrokes=16, oben=u,
 intro='Die unterste Sohle: In den Spalten steht die Glut. Über den ersten Spalt führt ein schmaler '
       'Steg, über den zweiten eine Bohle – und die Ladung dazwischen kann beides sein, Gefahr oder '
       'Abkürzung.')

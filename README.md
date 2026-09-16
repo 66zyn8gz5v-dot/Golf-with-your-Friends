@@ -1060,12 +1060,14 @@ stehen lässt, und dass sie beim nächsten Loch wieder dasteht.
 | 6 | Kippbohle | 3 | Stollen | Der Schacht quer durch den Stollen, darüber die Bohle. Nicht zaghaft. |
 | 7 | Lorensohle | 4 | Stollen | **Zwei Sohlen.** Oben queren zwei Hunte die Strecke, unten liegt das Loch. |
 | 8 | Kristallkammer | 4 | Kristall | **Zwei Sohlen.** Oben der Magnetit auf der Galerie, unten ein Felspfeiler vor der großen Kammer. |
-| 9 | Sohle Neun | 4 | Schmelze | **Zwei Sohlen.** Man fällt mitten in die Glut: ein Steg über den einen Spalt, eine Bohle über den anderen. |
+| 9 | Sohle Neun | 5 | Schmelze | **Zwei Sohlen.** Man fällt mitten in die Glut: ein Steg über den einen Spalt, eine Bohle über den anderen. |
 | 10 | Die Schmelze | 5 | Schmelze | Die Insel im Lavasee. Der Damm ist zugemauert und wird in der Mitte im Takt leergefegt. |
 
 Die Pare stehen nicht nach Gefühl, sondern nach dem, was die Bahnen wirklich spielen: Der
 Normalspieler-Bot (`node tools/audit/audit.mjs mine`) hat sie durchgespielt, und wo sein Median
-zwei Schläge unter dem Par lag, ist das Par heruntergegangen. Ein Vorbehalt bleibt und ist hier
+zwei Schläge unter dem Par lag, ist das Par heruntergegangen. Umgekehrt genauso: „Sohle Neun" kostet
+ihn im Schnitt 5,8 Schläge – zwei Lavaspalten –, und darum steht dort seit Fassung 144 eine
+Fünf und keine Vier. Ein Vorbehalt bleibt und ist hier
 größer als sonst: Der Bot kennt die Karte auswendig, ein Mensch im Dunkeln nicht. Die Pare sind
 darum eher knapp bemessen als großzügig.
 
