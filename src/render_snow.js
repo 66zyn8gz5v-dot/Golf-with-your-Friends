@@ -66,7 +66,7 @@ Object.assign(Renderer.prototype, {
   /* Der Mast: ein Rohr, oben die Fahne als Pfeil und ein Windsack, der sich im Wind strafft.
      Beide zeigen dasselbe – die Fahne die Richtung, der Sack die Stärke. */
   drawWindfahne(ctx, ob, t) {
-    const s = this.scale, z = (ob.ebene || 0) * (this.level.ebeneZ || 2);
+    const s = this.scale, z = 0;   // die Ebene steckt jetzt im Versatz der Leinwand (Renderer.zeichneEbenenDinge)
     const hoch = ob.hoehe;
     this.isoEllipse(ctx, ob.x, ob.y, z + 0.004, 0.42, 'rgba(0,0,0,0.22)');
     this.prism(ctx, this.circlePoly(ob.x, ob.y, 0.3, 8), z, 0.16, '#c9d8e8', '#6d8199', { outline: '#41505f' });
@@ -191,7 +191,7 @@ Object.assign(Renderer.prototype, {
      Loch mit gezacktem Rand, und der erste Augenblick danach staubt nach - so sieht man, was
      passiert ist, und nicht nur, dass etwas weg ist. */
   drawSchneebrueckeFloor(ctx, ob, t) {
-    const s = this.scale, z = (ob.ebene || 0) * (this.level.ebeneZ || 2);
+    const s = this.scale, z = 0;   // die Ebene steckt jetzt im Versatz der Leinwand (Renderer.zeichneEbenenDinge)
     const eck = [[ob.x, ob.y], [ob.x + ob.w, ob.y], [ob.x + ob.w, ob.y + ob.h], [ob.x, ob.y + ob.h]];
     if (!ob.gebrochen) {
       this.fillPoly(ctx, eck, z + 0.012, 'rgba(255,255,255,0.85)', false);

@@ -18,7 +18,12 @@
    Küste, Flachwasser, Strand, Färbung, Gelände und Beschriftung folgen daraus. Wer eine Welt
    anhängt, zeichnet keine Landkarte – er sagt, wo sie liegt und wie es dort aussieht. */
 const WorldMap = (() => {
-  const BREITE = 100, HOEHE = 62;
+  /* Die Karte ist breiter als der Schirm, und das ist Absicht. Sie wuchs mit jeder Welt, und
+     irgendwann stand eine neue nur noch zwischen zwei alten – gequetscht, ohne eigene Küste. Statt
+     enger zu packen, ist das Meer nach Osten gewachsen: Die Höhe bleibt, also bleibt alles
+     Gezeichnete so groß wie vorher, und der Kasten um die Karte schiebt waagerecht (.atlas-schiebe).
+     Wer eine Welt anhängt, hat damit wieder Platz für eine eigene Insel. */
+  const BREITE = 118, HOEHE = 62;
 
   /* Ein Landstück. 'biom' bestimmt die Färbung und die Geländezeichen, 'marke' und 'farbe' den
      anklickbaren Ort. Landstücke ohne 'id' tragen keine Welt – sie geben dem Festland nur seine
@@ -43,11 +48,19 @@ const WorldMap = (() => {
     { id: 'shadow', name: 'Schattenreich', x: 80, y: 49, r: 13, biom: 'moor', marke: 'dark_mode', farbe: '#c58bff' },
     // ---- Nebeninsel im Südwesten: weit genug weg, damit sie eine eigene Insel bleibt
     { id: 'sea', name: 'Meereswelt', x: 14, y: 50, r: 11, biom: 'kueste', marke: 'waves', farbe: '#7fd8ff' },
+    /* ---- Feuerinsel im Ostmeer: die Zwergenmine. Sie stand zuerst als kleines Landstück am Fuß
+       des Gebirges, eingeklemmt zwischen Uhrwerkstadt und Talsenke – ohne eigene Küste und ohne
+       Platz für ihren Namen. Jetzt ist sie eine Insel für sich, und der Berg über der Mine ist ein
+       Vulkan: Ganz unten auf der letzten Sohle steht das Erz flüssig, das passt zusammen. Der
+       Abstand zum Sturmhimmel ist groß genug, dass nichts zusammenwächst. */
+    { id: 'mine', name: 'Zwergenmine', x: 107, y: 29, r: 12, biom: 'vulkan', marke: 'construction', farbe: '#ffb347', nurVorschau: true },
+    { x: 112, y: 45, r: 4.4, biom: 'vulkan' },                  // Aschekegel südlich der Feuerinsel
     // ---- Schären: zu klein für eine Welt, groß genug fürs Auge. Sie brechen die leere See auf
     //      und zeigen, dass die Küste gerechnet wird – auch ein Punkt mit r=4 bekommt ein Ufer.
     { x: 19, y: 12, r: 4.2, biom: 'kueste' }, { x: 8, y: 34, r: 3.4, biom: 'kueste' },
     { x: 33, y: 56, r: 4.6, biom: 'kueste' }, { x: 95, y: 27, r: 3.8, biom: 'kueste' },
     { x: 68, y: 57, r: 3.6, biom: 'kueste' }, { x: 88, y: 10, r: 3.1, biom: 'kueste' },
+    { x: 104, y: 8, r: 3.4, biom: 'kueste' }, { x: 114, y: 55, r: 3.2, biom: 'kueste' },
   ];
 
 
@@ -93,10 +106,12 @@ const WorldMap = (() => {
     rausch(x * 0.29 - o, y * 0.29 + o) * 1.15 +
     rausch(x * 0.83 + o, y * 0.83 + o) * 0.4;
 
-  const feld = (x, y) => {
+  /* 'land' ist voreingestellt die Karte selbst. Angeben kann man es, weil dieselbe Rechnung auch
+     für eine einzelne kleine Insel gebraucht wird – das App-Zeichen holt sich seine Küste hier. */
+  const feld = (x, y, land = LAND) => {
     const wx = x + versatz(x, y, 0), wy = y + versatz(x, y, 37.4);
     let s = 0;
-    for (const l of LAND) {
+    for (const l of land) {
       const dx = wx - l.x, dy = wy - l.y, q = (dx * dx + dy * dy) / (l.r * l.r);
       if (q < 1) { const u = 1 - q; s += u * u * u; }
     }
@@ -106,11 +121,11 @@ const WorldMap = (() => {
   /* Marching Squares: Das Gitter wird Zelle für Zelle abgelaufen; je nachdem, welche Ecken über
      dem Wasser liegen, entsteht ein Stück Küstenlinie. Der Schnittpunkt wird zwischen den Ecken
      linear eingepasst, sonst sähe die Küste aus wie eine Treppe. */
-  function kuestenLinien() {
-    const S = 0.42, NX = Math.ceil(BREITE / S) + 2, NY = Math.ceil(HOEHE / S) + 2;
+  function kuestenLinien(land = LAND, breite = BREITE, hoehe = HOEHE) {
+    const S = 0.42, NX = Math.ceil(breite / S) + 2, NY = Math.ceil(hoehe / S) + 2;
     const OX = -3, OY = -3;                     // etwas über den Rand hinaus rechnen
     const w = [];
-    for (let j = 0; j < NY; j++) { w[j] = []; for (let i = 0; i < NX; i++) w[j][i] = feld(OX + i * S, OY + j * S); }
+    for (let j = 0; j < NY; j++) { w[j] = []; for (let i = 0; i < NX; i++) w[j][i] = feld(OX + i * S, OY + j * S, land); }
     const mitte = (xa, ya, va, xb, yb, vb) => { const t = (WASSER - va) / (vb - va); return [xa + (xb - xa) * t, ya + (yb - ya) * t]; };
     const stuecke = [];
     for (let j = 0; j < NY - 1; j++) for (let i = 0; i < NX - 1; i++) {
@@ -205,6 +220,9 @@ const WorldMap = (() => {
     dschungel: { land: '#6ab455', zeichen: ['palme', 'baum', 'baum', 'tempel', 'baum', 'palme', 'busch'], dichte: 36 },
     moor:      { land: '#7d7a95', zeichen: ['totbaum', 'grab', 'totbaum', 'schilf', 'ruine', 'totbaum'], dichte: 28 },
     kueste:    { land: '#d8c98f', zeichen: ['palme', 'duene', 'palme', 'busch', 'duene', 'fels'], dichte: 22 },
+    /* Feuerinsel: dunkles Basaltland, auf dem wenig wächst. Die Zeichen sind entsprechend karg –
+       ein rauchender Kegel, Felsen, eine Klippe und hier und da ein toter Baum. */
+    vulkan:    { land: '#8a7a76', zeichen: ['vulkan', 'fels', 'klippe', 'fels', 'totbaum', 'fels'], dichte: 28 },
   };
 
   /* ---------- Zeichenstift ----------
@@ -289,6 +307,23 @@ const WorldMap = (() => {
         <path d="M${x - 0.62 * s} ${y - H * 0.52} L${x - 0.35 * s} ${y - H * 0.78} L${x} ${y - H} L${x + 0.32 * s} ${y - H * 0.78} L${x + 0.1 * s} ${y - H * 0.6} L${x - 0.2 * s} ${y - H * 0.66} Z" fill="#ffffff"/>
         <path d="M${x} ${y - H} L${x + 1.7 * s} ${y} L${x + 0.5 * s} ${y} Z" fill="${STEIN}" opacity="0.24"/>
         ${schraffur(x + 0.2 * s, y - H * 0.3, 0.24 * s, -0.12 * s, 3, 0.34 * s, STEIN, 0.1 * s)}`;
+    },
+    /* Der Vulkan: ein Kegel mit abgeschnittener Spitze. Der Krater ist als schmale Ellipse
+       angedeutet, darin glüht es; darüber steigt eine Rauchfahne. Ohne den Rauch säße da nur ein
+       grauer Kegel – erst er macht aus dem Berg einen Vulkan. */
+    vulkan: (x, y, s) => {
+      const H = 4.6 * s, kb = 0.62 * s;                       // Höhe und halbe Kraterbreite
+      return `<path d="M${x - 2.4 * s} ${y} L${x - kb} ${y - H} L${x + kb} ${y - H} L${x + 2.4 * s} ${y} Z"
+          fill="#7d6a62" stroke="${STEIN}" stroke-width="${0.14 * s}" stroke-linejoin="round"/>
+        <path d="M${x + kb} ${y - H} L${x + 2.4 * s} ${y} L${x + 0.7 * s} ${y} Z" fill="${STEIN}" opacity="0.28"/>
+        <path d="M${x - 0.3 * s} ${y - H * 0.55} L${x + 0.1 * s} ${y - H * 0.2} L${x + 0.55 * s} ${y}"
+          stroke="#e8632a" stroke-width="${0.16 * s}" fill="none" stroke-linecap="round"/>
+        <ellipse cx="${x}" cy="${y - H}" rx="${kb}" ry="${0.2 * s}" fill="#c9481f" stroke="${STEIN}" stroke-width="${0.1 * s}"/>
+        <ellipse cx="${x}" cy="${y - H}" rx="${kb * 0.5}" ry="${0.1 * s}" fill="#ffb347"/>
+        <path d="M${x - 0.1 * s} ${y - H - 0.3 * s} q${-0.7 * s} ${-0.9 * s} ${0.1 * s} ${-1.5 * s}
+          q${0.8 * s} ${-0.6 * s} ${0.2 * s} ${-1.4 * s}" stroke="#d8d2cc" stroke-width="${0.3 * s}"
+          fill="none" opacity="0.5" stroke-linecap="round"/>
+        ${schraffur(x - 1.2 * s, y - H * 0.3, 0.24 * s, -0.14 * s, 3, 0.34 * s, STEIN, 0.1 * s)}`;
     },
     fels: (x, y, s) => `<path d="M${x - 1.2 * s} ${y} L${x - 0.9 * s} ${y - 1.1 * s} L${x - 0.1 * s} ${y - 1.5 * s} L${x + 0.8 * s} ${y - 0.9 * s} L${x + 1.2 * s} ${y} Z"
         fill="#95a0ad" stroke="${STEIN}" stroke-width="${0.13 * s}" stroke-linejoin="round"/>
@@ -387,13 +422,20 @@ const WorldMap = (() => {
   }
 
   /* ---------- Öffentliches ---------- */
-  const welten = LAND.filter(l => l.id);
+  /* Eine Welt, die noch nicht ins Spiel soll, bekommt auf der Karte weder Namen noch Nadel – die
+     Insel bleibt aber liegen. Das ist Absicht: Die Küste rechnet sich aus allen Landstücken, und
+     ein Stück Land ohne Beschriftung verspricht nichts, sondern lässt offen, daß da noch etwas
+     kommt. Erkannt wird das Spiel daran, daß es sich *nicht* Vorschau nennt; wo es die Kennung
+     gar nicht gibt (Node beim Prüfen), wird nichts versteckt – sonst prüfte niemand die Welt. */
+  const imSpiel = typeof VORSCHAU !== 'undefined' && !VORSCHAU
+    && !(typeof PRUEFSTAND !== 'undefined' && PRUEFSTAND);
+  const welten = LAND.filter(l => l.id && !(imSpiel && l.nurVorschau));
   const spots = {};
   for (const l of welten) spots[l.id] = { x: l.x, y: +(l.y / HOEHE * 100).toFixed(2), icon: l.marke, col: l.farbe };
 
   /* Die Reise in der Reihenfolge der Welten. Ein Stück, das über Wasser führt, wird zur Seeroute –
      das entscheidet die Karte selbst, nicht eine Liste: Sie tastet die Strecke ab. */
-  const REISE = ['normal', 'sea', 'pro', 'snow', 'jungle', 'storm', 'shadow', 'clock'];
+  const REISE = ['normal', 'sea', 'pro', 'snow', 'jungle', 'storm', 'shadow', 'clock', 'mine'];
   function wege() {
     const land = [], see = [];
     for (let i = 0; i < REISE.length - 1; i++) {
@@ -409,7 +451,17 @@ const WorldMap = (() => {
     return { land, see };
   }
 
+  /* Die Karte wird nicht nur einmal gebraucht: Sie liegt hinter dem Startknopf, auf der Weltkarte
+     und jetzt auch hinter der Rangliste. Gerechnet wird sie aber jedes Mal neu – Küstenlinie,
+     Wellen, Gelände, das sind Zehntausende Feldwerte. Da sie sich zur Laufzeit nie ändert, wird
+     das Ergebnis je Bauform aufgehoben. */
+  const svgSpeicher = new Map();
   function svg(cls = 'atlas-bg', par = 'none') {
+    const schluessel = cls + '|' + par;
+    if (!svgSpeicher.has(schluessel)) svgSpeicher.set(schluessel, svgBauen(cls, par));
+    return svgSpeicher.get(schluessel);
+  }
+  function svgBauen(cls, par) {
     const { inseln, seen } = karte();
     const kuesten = inseln.map(pfad).join(' ');
     const seenPfad = seen.map(pfad).join(' ');
@@ -430,7 +482,7 @@ const WorldMap = (() => {
     for (let y = 10; y < HOEHE; y += 10) gradnetz += `<path d="M0 ${y} h${BREITE}"/>`;
 
     // Schiffe auf See
-    const schiffe = [[9, 20], [92, 12], [34, 57], [70, 60]].map(([x, y]) =>
+    const schiffe = [[9, 20], [92, 12], [34, 57], [70, 60], [97, 42], [113, 14]].map(([x, y]) =>
       `<g opacity="0.8"><path d="M${x - 1.3} ${y} q${1.3} 1 ${2.6} 0 Z" fill="#7a5a3a"/>
         <path d="M${x} ${y - 0.2} v-2.2" stroke="#7a5a3a" stroke-width="0.18"/>
         <path d="M${x + 0.06} ${y - 2.3} l1.5 1 l-1.5 0.6 Z" fill="#f2ead6"/></g>`).join('');
@@ -507,5 +559,15 @@ const WorldMap = (() => {
     </svg>`;
   }
 
-  return { spots, svg, BREITE, LAND };
+  /* 'zeichen' ist die Tabelle der Geländezeichen – Baum, Tanne, Busch, Hügel, Berg und die
+     anderen. Sie wird nach außen gegeben, damit das App-Zeichen (tools/appzeichen.mjs) dieselben
+     Bäume setzen kann wie die Karte. Sie nachzubauen wäre die zweite Wahrheit gewesen: Wer hier
+     einen Baum ändert, hätte dort einen alten stehen. */
+  /* 'kueste' gibt die gerechnete Küste zu einer Liste von Landstücken – dieselbe Rechnung, die
+     auch die Karte benutzt, nur mit anderen Zutaten. Das App-Zeichen holt sich damit eine Insel,
+     die dieselben Buchten und Macken hat wie das Festland; von Hand gezeichnet war sie vorher zu
+     glatt, und nachgeahmtes Rauschen wäre die zweite Wahrheit gewesen. */
+  const kueste = (land, breite, hoehe) => kuestenLinien(land, breite, hoehe).map(pfad);
+
+  return { spots, svg, zeichen: Z, kueste, BREITE, HOEHE, LAND };
 })();

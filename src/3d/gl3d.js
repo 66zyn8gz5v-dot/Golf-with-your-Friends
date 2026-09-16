@@ -94,6 +94,9 @@ const GL3D = (() => {
     uniform sampler2D uBodenBild;  // gemaltes Gras, kachelbar
     uniform float uBoden;          // >0: Bodenfläche, die das Grasbild trägt
     uniform float uBodenMass;      // wie viele Felder eine Kachel breit ist
+    uniform sampler2D uHolzBild;   // gerechnete Holzmaserung, kachelbar
+    uniform float uHolz;           // >0: Fläche aus Holz
+    uniform float uHolzMass;       // wie viele Felder eine Kachel breit ist
 
     /* Die Tiefe steckt auf vier Kanälen zu je acht Stufen – zusammen 32 Stufen Genauigkeit.
        Ein einzelner Kanal (256 Stufen) gäbe sichtbare Streifen im Schatten. */
@@ -176,6 +179,26 @@ const GL3D = (() => {
          hell, Rough dunkel, Sand gelb – und bekommt nur die Zeichnung darübergelegt. Ein Bild, das
          die Farbe ersetzt, sähe auf Sand aus wie ein Rasen. */
       farbe *= mix(1.0, 0.52 + grasBild * 1.06, step(0.5, uBoden));
+
+      /* Holz. Die Bildstelle kommt aus der Weltlage – genau wie beim Gras, aber mit einem
+         Unterschied: Welche zwei Achsen genommen werden, entscheidet die Normale. Eine Fläche,
+         die nach oben schaut, bekommt (x,z); eine, die nach vorn schaut, (x,y); eine seitliche
+         (z,y). Ohne das liefe die Maserung an einer senkrechten Wand quer durch sie hindurch
+         statt über sie hinweg.
+
+         Das spart den großen Umbau: Sonst müsste jede Ecke zwei Zahlen mehr tragen (wo im Bild
+         sie liegt), und jeder Körper müsste sagen, wie das Bild auf ihm liegt. Für Muster ohne
+         festen Ort – Holz, Stein, Ziegel – ist die Weltlage genauso gut und kostet nichts.
+
+         Gelesen wird auch hier unbedingt, aus demselben Grund wie oben: Ein texture2D in einem
+         'if' hat in GLSL ES 1.00 keine festgelegte Detailstufe. */
+      vec3 achse = abs(vNorm);
+      vec2 holzUv = achse.y > achse.x && achse.y > achse.z ? vWeltOrt.xz
+                  : (achse.x > achse.z ? vWeltOrt.zy : vWeltOrt.xy);
+      vec3 holzBild = texture2D(uHolzBild, holzUv / uHolzMass).rgb;
+      /* Wie beim Gras als Helligkeit verrechnet, nicht als Farbe: So behält jeder Balken seinen
+         eigenen Ton – helle Kiefer, dunkle Eiche – und bekommt nur die Zeichnung darübergelegt. */
+      farbe *= mix(vec3(1.0), 0.68 + holzBild * 0.62, step(0.5, uHolz));
 
       if (uLichtAnteil < 0.5) {
         /* Flach: Himmel und Wolken tragen ihre Farbe schon fertig in den Ecken. */
@@ -332,6 +355,69 @@ const GL3D = (() => {
       gl.generateMipmap(gl.TEXTURE_2D);
     }
 
+    /* ---------- Die Holzmaserung, gerechnet ----------
+
+       Sie kommt nicht als Datei, sondern entsteht beim Start in einem unsichtbaren Zeichenblatt.
+       Das hat drei Gründe, und alle drei sprechen gegen eine Bilddatei: Sie kostet keine Ladezeit,
+       sie braucht keine Erlaubnis in den Sicherheitsregeln (ein gerechnetes Bild wird ja nicht
+       geladen), und dieselbe Maserung lässt sich in jeder Farbe ausgeben – die Bande aus Eiche
+       und die aus Fichte sind ein Aufruf mit anderer Farbe und nicht zwei Dateien.
+
+       Beim Gras ging genau das schief, und der Unterschied ist lehrreich: Ein Grasteppich folgt
+       keiner Regel, eine Holzmaserung schon. Sie ist ein Streifenmuster, das entlang der Faser
+       läuft und quer dazu schwankt – das lässt sich aufschreiben, ein Grashalm nicht.
+
+       Nahtlos wird sie dadurch, dass jede Welle eine ganzzahlige Zahl von Durchgängen über die
+       Kachel macht. Dann trifft der rechte Rand auf den linken, ohne dass man die Naht sieht. */
+    function holzBildMachen() {
+      const N = 256;
+      const c = document.createElement('canvas');
+      c.width = c.height = N;
+      const g = c.getContext('2d');
+      const bild = g.createImageData(N, N);
+      const d = bild.data;
+      const TAU = Math.PI * 2;
+      /* Die Faser läuft waagerecht (entlang u), die Maserung schwankt senkrecht (entlang v).
+         'welle' verzieht die Jahresringe ein wenig, sonst wären es Linien wie auf kariertem
+         Papier statt gewachsenem Holz. */
+      for (let j = 0; j < N; j++) {
+        for (let i = 0; i < N; i++) {
+          const u = i / N, v = j / N;
+          const welle = Math.sin(u * TAU) * 0.018 + Math.sin(u * TAU * 3 + 1.7) * 0.009
+                      + Math.sin(u * TAU * 7 + 0.4) * 0.004;
+          const t = v + welle;
+          /* Die Jahresringe: dichte Streifen, die nicht gleichmäßig liegen. Drei Frequenzen
+             übereinander – eine gleichmäßige gäbe ein Wellblech. */
+          let ring = Math.sin(t * TAU * 19) * 0.5 + Math.sin(t * TAU * 37 + 2.1) * 0.3
+                   + Math.sin(t * TAU * 67 + 0.8) * 0.2;
+          /* Die harte Kante: Im Holz wechseln Früh- und Spätholz nicht weich, sondern mit einem
+             Sprung. Erst dadurch sieht man Ringe und keine Schattierung. */
+          ring = Math.sign(ring) * Math.pow(Math.abs(ring), 0.55);
+          /* Eine grobe Schwankung über die ganze Fläche, damit nicht jeder Ring gleich dunkel
+             ist – gewachsenes Holz ist an einer Stelle heller als an der anderen. */
+          const grob = Math.sin((v * 2 + u * 0.7) * TAU) * 0.09 + Math.sin((v * 5 - u * 1.3) * TAU + 1.1) * 0.05;
+          /* Und eine feine Körnung längs der Faser: die Poren. Sie ist mit Absicht nur in u
+             fein und in v grob – Holz reißt längs, nicht quer. */
+          const pore = Math.sin(u * TAU * 61 + j * 0.9) * 0.035 + Math.sin(u * TAU * 113 + j * 2.3) * 0.02;
+          const h = Math.max(0, Math.min(1, 0.62 + ring * 0.2 + grob + pore));
+          const k = (j * N + i) * 4;
+          /* Warm getönt: Die Ringe sind nicht nur dunkler, sondern auch röter. Grau abgestuftes
+             Holz sieht aus wie Beton mit Streifen. */
+          d[k] = Math.round(255 * Math.min(1, h * 1.06));
+          d[k + 1] = Math.round(255 * h);
+          d[k + 2] = Math.round(255 * h * 0.9);
+          d[k + 3] = 255;
+        }
+      }
+      g.putImageData(bild, 0, 0);
+      return c;
+    }
+
+    const holzTextur = texturMachen(true);
+    try {
+      bildEinsetzen(holzTextur, holzBildMachen());
+    } catch (e) { console.warn('3D: Holzmaserung konnte nicht erzeugt werden –', e.message); }
+
     const grasBild = new Image();
     grasBild.onload = () => {
       try {
@@ -358,6 +444,11 @@ const GL3D = (() => {
          Halme etwa eine Handbreit lang – so groß wie die aus Dreiecken daneben. Größer gewählt
          sieht man die Kachel sich wiederholen, kleiner wird aus dem Gras eine Körnung. */
       bodenMass: 1.35,
+      /* Wie breit eine Holzkachel in Feldern ist. Eine Bande ist ein Drittel Feld hoch; bei
+         anderthalb Feldern je Kachel lagen nur zwei, drei Ringe darauf, und das sah nach Wellen
+         aus und nicht nach Holz. Bei 0,8 sind es ein gutes Dutzend – so viele, wie man an einem
+         Balken dieser Stärke wirklich sieht. */
+      holzMass: 0.8,
       /* Wetter und Licht. Jede Welt setzt das um; die Werte hier sind der sonnige Mittag der Wiese. */
       licht: {
         sonne: [0.44, 0.70, 0.56],                 // Richtung ZUR Sonne
@@ -427,6 +518,7 @@ const GL3D = (() => {
       if (u.uTon) gl.uniform3fv(u.uTon, s.ton || [1, 1, 1]);
       if (u.uWelle) gl.uniform1f(u.uWelle, s.welle ? 1 : 0);
       if (u.uBoden) gl.uniform1f(u.uBoden, s.boden ? 1 : 0);
+      if (u.uHolz) gl.uniform1f(u.uHolz, s.holz ? 1 : 0);
       if (u.uSchattenSicht && schattenMat) gl.uniformMatrix4fv(u.uSchattenSicht, false, schattenMat);
       binden(s.netz);
       gl.drawElements(gl.TRIANGLES, s.netz.anzahl, gl.UNSIGNED_SHORT, 0);
@@ -493,6 +585,10 @@ const GL3D = (() => {
       gl.bindTexture(gl.TEXTURE_2D, bodenTextur);
       if (u.uBodenBild) gl.uniform1i(u.uBodenBild, 1);
       if (u.uBodenMass) gl.uniform1f(u.uBodenMass, z.bodenMass);
+      gl.activeTexture(gl.TEXTURE2);
+      gl.bindTexture(gl.TEXTURE_2D, holzTextur);
+      if (u.uHolzBild) gl.uniform1i(u.uHolzBild, 2);
+      if (u.uHolzMass) gl.uniform1f(u.uHolzMass, z.holzMass);
 
       gl.disable(gl.BLEND);
       gl.depthMask(true);

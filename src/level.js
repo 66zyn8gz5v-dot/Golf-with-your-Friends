@@ -106,7 +106,14 @@ function buildLevel(def) {
   const tiles = unten.tiles;
   const at = unten.at, isFloor = unten.isFloor;
   const blocks = unten.blocks;
-  const tee = unten.tee;
+  /* Auch der Abschlag liegt auf genau einer Ebene. Lange war das immer die unterste – jede Bahn
+     mit zwei Stockwerken ging darum zwangsläufig nach oben, und ein Weg nach oben braucht eine
+     Maschine, die ihn trägt. Für ein Bergwerk ist das genau verkehrt herum: Dort geht es hinunter,
+     und hinunter kommt man ohne Maschine, nämlich durch den Schacht. Seit die Kennung 'teeEbene'
+     mitgeführt wird, darf das T also auch eine Etage höher stehen. Für jede Bahn mit T auf der
+     untersten Ebene ändert sich nichts – findIndex liefert dann 0. */
+  const teeEbene = Math.max(0, flaechen.findIndex(f => f.tee));
+  const tee = flaechen[teeEbene] ? flaechen[teeEbene].tee : null;
   // Das Loch liegt auf genau einer Ebene und ist nur von dort zu erreichen.
   const cupEbene = Math.max(0, flaechen.findIndex(f => f.cup));
   const cup = flaechen[cupEbene] ? flaechen[cupEbene].cup : null;
@@ -166,7 +173,7 @@ function buildLevel(def) {
   const level = {
     def, W, H, tiles: unten.tiles, tee: tee2, cup, goal, blocks: unten.blocks,
     segs: unten.segs, walls: unten.walls, obstacles, decor, switches: {},
-    flaechen, ebene: 0, cupEbene, untenFl: unten,
+    flaechen, ebene: 0, cupEbene, teeEbene, untenFl: unten,
     ebeneZ: Math.min(EBENE_Z_MAX, Math.max(1, +def.ebeneZ || EBENE_Z)),
     schlagZahl: 0,   // Schläge auf dieser Bahn (die Kaiserloge dreht danach den Daumen)
     hasHeights, hStep, heightAt, cellH, slopeAt,
@@ -240,7 +247,11 @@ function buildDecor(def, tiles, W, H, isFloor) {
   const rand = theme.floating ? 99 : (theme.gears ? 3.6 : 1.4) - 0.35;
   const aufDerScholle = (px, py) => px > -rand && px < W + rand && py > -rand && py < H + rand;
   const auto = def.autoDecor;
-  if (auto && theme.autoDecor.length) {
+  /* Eine Bahn darf einzelne Requisiten der Palette abwählen. Der Grund ist die Waldschneise: Sie
+     ist die eine windstille Bahn des Schneebergs, und die Streu-Deko stellte trotzdem Windsäcke an
+     ihren Rand – die versprechen einen Wind, den es dort nicht gibt. */
+  const vorrat = auto && auto.ohne ? theme.autoDecor.filter(t => !auto.ohne.includes(t)) : theme.autoDecor;
+  if (auto && vorrat.length) {
     const rnd = seededRandom(auto.seed || 1);
     const density = auto.density ?? 0.3;
     for (let y = -2; y < H + 2; y++) for (let x = -2; x < W + 2; x++) {
@@ -250,7 +261,7 @@ function buildDecor(def, tiles, W, H, isFloor) {
       let blocked = false;
       for (let i = 0; i <= 2 && !blocked; i++) for (let j = 0; j <= 2; j++) if (isFloor(x - i, y - j)) { blocked = true; break; }
       if (blocked) continue;
-      const t = theme.autoDecor[Math.floor(rnd() * theme.autoDecor.length)];
+      const t = vorrat[Math.floor(rnd() * vorrat.length)];
       if (t === 'cloud') { // Wolken sind breit: mindestens zwei Kacheln Abstand zur Bahn
         let near = false;
         for (let i = -2; i <= 2 && !near; i++) for (let j = -2; j <= 2; j++) if (isFloor(x + i, y + j)) { near = true; break; }

@@ -9,6 +9,54 @@ function makeBall(x, y, color, hat) {
   return { x, y, z: 0, vx: 0, vy: 0, vz: 0, r: BALL_R, shrinkUntil: 0, portalCd: 0, rideCd: 0, rider: null, air: false, restX: x, restY: y, ebene: 0, restEbene: 0, color, hat, boosted: false };
 }
 
+/* ---------- Der Schneeball: die Regel des Schneebergs ----------
+ *
+ * Wer über Schnee rollt, setzt Schnee an und wird größer. Wer über Eis rollt, streift ihn wieder
+ * ab. Wasser nimmt ihn auf einen Schlag.
+ *
+ * WARUM DAS EINE WELTREGEL IST UND KEINE MASCHINE
+ * Der Schneeberg hatte vier Abschnitte – Talstation, Fels, Gletscher, Gipfel –, und die waren
+ * nichts als vier Paletten: Es galt überall dasselbe. Damit war die Welt zwölfmal dieselbe Bahn
+ * in anderer Farbe. Jetzt heißt Gletscher etwas: Dort ist alles Eis, dort bleibt der Ball klein
+ * und rutscht; im Schnee wächst er.
+ *
+ * WAS DAS GRÖSSERWERDEN KOSTET
+ * Ein dicker Ball passt nicht mehr durch jede Lücke – und vor allem passt er nicht ins Loch. Man
+ * muss den Schnee also loswerden, bevor man einlocht, und das geht nur auf Eis oder im Wasser.
+ * Das ist die Aufgabe dieser Welt in einem Satz: *nicht zu dick ankommen.*
+ *
+ * Gewachsen wird nach zurückgelegtem Weg, nicht nach Zeit: Ein Ball, der liegt, setzt nichts an,
+ * und ein langsamer Schlag über dieselbe Strecke kostet genauso viel wie ein schneller. Sonst
+ * hinge die Ballgröße daran, wie lange man ausrollt, und das kann niemand vorhersehen.
+ *
+ * Die Regel gilt nur, wo eine Bahn sie anfordert (def.schnee) – in allen anderen Welten rührt
+ * sie nichts an. */
+/* Die Zahlen sind einmal viel zu scharf gewesen, und der Bot hat es gezeigt: Mit den ersten Werten
+   war der Ball schon nach zwei Schlägen zu dick fürs Loch – auf jeder Bahn, bei jedem Spiel. Damit
+   war die Regel keine Aufgabe, sondern eine Dauerstrafe, und auf „Schneewächte" endeten zehn von
+   zehn Botrunden im Schlaglimit. Gemeint war: Wer weit herumirrt, muss zum Eis. Nicht: Wer zweimal
+   schlägt. Ein Schlag trägt gut neun Felder – zu dick wird er jetzt nach rund vierzig, also nach
+   vier ordentlichen Schlägen. */
+const SCHNEE_MAX = BALL_R * 1.8;          // dicker wird er nicht, sonst bleibt er überall hängen
+const SCHNEE_LOCH = BALL_R * 1.22;        // dicker passt er nicht mehr ins Loch
+const SCHNEE_AB = 10;                     // so viel schneller streift Eis ab, als Schnee ansetzt
+
+function schneeball(level, ball, dt, events) {
+  const wachs = level.def && level.def.schnee;
+  if (!wachs || ball.air || ball.rider || ball.sunk) return;
+  const weg = Math.hypot(ball.vx, ball.vy) * dt;
+  if (weg <= 0) return;
+  const c = level.charAt(ball.x, ball.y);
+  const vor = ball.r;
+  if (c === '#' || c === 's' || c === 'T') ball.r = Math.min(SCHNEE_MAX, ball.r + weg * wachs);
+  else if (c === 'i') ball.r = Math.max(BALL_R, ball.r - weg * wachs * SCHNEE_AB);
+  else if (c === 'w') ball.r = BALL_R;
+  /* Gemeldet wird nur der Sprung über die Lochgrenze, in beide Richtungen – das ist der einzige
+     Augenblick, in dem sich für den Spieler etwas ändert, und er soll ihn hören. */
+  if (vor <= SCHNEE_LOCH && ball.r > SCHNEE_LOCH) events.push({ type: 'zugeschneit' });
+  else if (vor > SCHNEE_LOCH && ball.r <= SCHNEE_LOCH) events.push({ type: 'abgestreift' });
+}
+
 function collideSeg(ball, s, events) {
   const rad = ball.r + (s.rad || 0);
   const ex = s.bx - s.ax, ey = s.by - s.ay;
@@ -111,6 +159,42 @@ function anWaendenLoesen(level, ball, flaechen, events) {
    Strafschlag fällt nicht an. Das gilt für die offene Kante genauso wie für die Luke, darum steht
    es hier einmal und nicht zweimal. Das z setzt nur die Optik: Der Ball sinkt sichtbar herunter,
    rollt dabei aber schon auf der neuen Ebene und stößt sich an deren Wänden. */
+/* Auf einer Schneewächte bleibt niemand liegen. Sie trägt über die Rinne, sie ist kein Standplatz:
+   Wer auf ihr zur Ruhe käme, spielte den nächsten Schlag von ihr aus, sie bräche hinter ihm weg,
+   und das Zurücklegen setzte ihn genau wieder auf sie – eine Schlinge ohne Ausgang. Auf den
+   Gletscherspalten hing der Bot achtzehn Schläge darin fest und kam in zehn von zehn Runden nie
+   ins Loch. Darum rutscht der Ball am Ende eines Schlags von der Wächte herunter, auf den
+   nächsten festen Boden daneben – ohne Strafschlag, denn gefallen ist er nicht. */
+const ABRUTSCH_WEIT = 4;                 // so weit wird nach festem Boden gesucht
+function waechteUnterBall(level, ball) {
+  for (const ob of level.obstacles) {
+    if (ob.type !== 'schneebruecke' || (ob.ebene || 0) !== (ball.ebene || 0)) continue;
+    if (Math.abs(ball.x - (ob.x + ob.w / 2)) <= ob.w / 2 && Math.abs(ball.y - (ob.y + ob.h / 2)) <= ob.h / 2) return ob;
+  }
+  return null;
+}
+function waechteAbrutschen(level, ball) {
+  const w = waechteUnterBall(level, ball);
+  if (!w) return false;
+  const mx = w.x + w.w / 2, my = w.y + w.h / 2;
+  let ziel = null, zielEis = null;
+  for (let d = 0.6; d <= ABRUTSCH_WEIT && !ziel; d += 0.3) {
+    for (let a = 0; a < 16; a++) {
+      const px = ball.x + Math.cos(a * Math.PI / 8) * d, py = ball.y + Math.sin(a * Math.PI / 8) * d;
+      // Noch über der Wächte zu landen hilft nicht, auch nicht knapp an ihrem Rand
+      if (Math.abs(px - mx) <= w.w / 2 + ball.r && Math.abs(py - my) <= w.h / 2 + ball.r) continue;
+      const c = level.charAt(px, py);
+      // Fester Boden wird gesucht, Eis nur als Notlösung: Auf Eis bliebe er ohnehin nicht liegen
+      if (c === '#' || c === 's' || c === 'T') { ziel = [px, py]; break; }
+      if (c === 'i' && !zielEis) zielEis = [px, py];
+    }
+  }
+  ziel = ziel || zielEis;
+  if (!ziel) return false;
+  ball.x = ziel[0]; ball.y = ziel[1]; ball.vx = 0; ball.vy = 0;
+  return true;
+}
+
 function ebeneFallen(level, ball, events) {
   if (!ball.ebene) return false;
   const von = ball.ebene;
@@ -140,6 +224,8 @@ function stepPhysics(level, ball, dt, t, allowForces, maschinenLaufen = true) {
 
   // Schrumpfzauber läuft ab
   if (ball.shrinkUntil && t > ball.shrinkUntil) { ball.shrinkUntil = 0; ball.r = BALL_R; events.push({ type: 'unshrink' }); }
+
+  schneeball(level, ball, dt, events);
 
   // Fähren und Kanonen: mitfahren bzw. geladen sein (dann keine weitere Physik) oder einsteigen
   ball.rideCd = Math.max(0, (ball.rideCd || 0) - dt);
@@ -207,7 +293,9 @@ function stepPhysics(level, ball, dt, t, allowForces, maschinenLaufen = true) {
     if (cd < pullR && sp < 7.5 && sp > 0.01) { // leichte Anziehung am Lochrand
       ball.vx -= (cdx / cd) * pullF * dt; ball.vy -= (cdy / cd) * pullF * dt;
     }
-    if (cd < cr && sp < 7.5) { events.push({ type: 'sunk' }); return events; }
+    /* Ein zugeschneiter Ball passt nicht hinein – er rollt über das Loch hinweg. Das ist die
+       Aufgabe des Schneebergs: erst abstreifen, dann einlochen. */
+    if (cd < cr && sp < 7.5 && ball.r <= SCHNEE_LOCH) { events.push({ type: 'sunk' }); return events; }
   }
 
   /* Zurück nach unten: An einer offenen Kante der oberen Ebene gibt es nichts, worauf der Ball

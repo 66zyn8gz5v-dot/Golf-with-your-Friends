@@ -21,6 +21,12 @@
      genau daran geht so etwas nach drei Auslieferungen kaputt. Ein Schalter ist eine Zeile;
      zwei Stände sind eine Dauerpflicht. */
   const NUR_VORSCHAU = TEST_FREI;
+  /* Die Welten, die dem Spieler angeboten werden. WORLDS bleibt vollständig: Die Prüfwerkzeuge
+     lesen dieselbe Liste, und eine Welt, die keiner prüft, verfällt. Nur die Oberfläche filtert. */
+  const SPIELWELTEN = () => WORLDS.filter(w => NUR_VORSCHAU || !w.nurVorschau);
+  /* Und die Belohnungen dazu: Der Skin einer Welt, die es im Spiel noch nicht gibt, stünde sonst
+     für immer gesperrt da – mit einer Bedingung, die niemand erfüllen kann. */
+  const SPIELHUETE = () => Hats.LIST.filter(h => !h.welt || SPIELWELTEN().some(w => w.id === h.welt));
   const playerHats = DEFAULT_HATS.slice();
   try {
     const saved = JSON.parse(localStorage.getItem(speicherSchluessel('hats')) || 'null');
@@ -55,7 +61,7 @@
     for (let i = 0; i < playerHats.length; i++) {
       let h = playerHats[i];
       if (!Hats.freigeschaltet(h) || vergeben.has(h)) {
-        const ersatz = Hats.LIST.find(x => !vergeben.has(x.id) && Hats.freigeschaltet(x.id) && x.id !== 'none');
+        const ersatz = SPIELHUETE().find(x => !vergeben.has(x.id) && Hats.freigeschaltet(x.id) && x.id !== 'none');
         h = ersatz ? ersatz.id : DEFAULT_HATS[i % DEFAULT_HATS.length];
       }
       vergeben.add(h); dauerhaft.push(h);
@@ -77,7 +83,7 @@
     camMode: 'overview', camTheta: Math.PI / 4, zoomFactor: 1,
     controlMode: 'sling', // 'sling' = Schleuder (vom Ball wegziehen), 'push' = Schieben (in Schussrichtung ziehen)
     mode: 'normal',       // 'normal' = Wettkampf, 'creative' = Kreativ (Bahnen frei wählen und überspringen, kein Schlaglimit), 'boule' = Boule
-    world: WORLDS[0], courses: WORLDS[0].courses,
+    world: SPIELWELTEN()[0], courses: SPIELWELTEN()[0].courses,
     boule: null,          // im Boule-Modus der ganze Stand dieser Runde, sonst null
     /* Bälle, die außer dem eigenen noch auf der Bahn liegen. Der Renderer zeichnet sie einfach
        mit; er muss dafür nichts über Spielarten wissen. Außerhalb von Boule ist die Liste leer. */
@@ -195,45 +201,25 @@
   function hideOverlay() { ui.overlay.className = 'screen'; ui.overlay.innerHTML = ''; document.body.classList.remove('startbild'); clockResume(); }
 
   /* ---------- Startbild ----------
-     Das gemalte Titelbild liegt nur auf dem Startbildschirm. overlay() nimmt es bei jedem Wechsel
-     weg, showTitle() setzt es wieder – so muss nicht jeder einzelne Bildschirm daran denken.
+     Der Startbildschirm ist eine Tafel wie jede andere: Die Weltkarte liegt dahinter, der Schriftzug
+     steht in der Tafel. Die Kennung `startbild` sagt nur noch, dass gerade die Starttafel liegt –
+     danach richtet sich, wie breit sie wird und ob die beiden großen Knöpfe nebeneinander stehen.
+     overlay() nimmt sie bei jedem Wechsel weg, showTitle() setzt sie wieder.
 
-     Es gibt zwei Bilder: eines quer, eines hoch. Ein einziges täte es nicht – vom Querbild bliebe
-     auf dem Handy ein schmaler Streifen übrig, mit zerschnittenem Schriftzug darin. Welches gilt,
-     entscheidet allein das Seitenverhältnis des Fensters; beide füllen ihren Schirm dann ganz.
+     Bis Fassung 138 hing das an einem gemalten Bild, das erst geladen sein musste. Damit hing auch
+     die ganze Tafelform daran – ohne Netz kam sie schmal und hochkant falsch. Jetzt hängt sie an
+     nichts mehr.
 
-     Lädt das Bild nicht, fällt der Startbildschirm auf die gezeichnete Szene zurück – dann steht
-     der Schriftzug wieder in der Tafel, und niemand sieht ein Loch.
-
-     Geprüft wird das **vorher**, mit einem eigenen Image-Objekt, nicht mit einem 'error' am <image>
-     im SVG. Genau daran ist es einmal gescheitert: Auf dem iPad hat das SVG-Element kein 'error'
-     gemeldet, das Bild fehlte trotzdem, und Safari malte sein Fragezeichen quer über den halben
-     Schirm. Ein Image-Objekt meldet überall verlässlich, und das Bild kommt erst auf den Schirm,
-     wenn es wirklich da ist. */
-  const bildBereit = { quer: false, hoch: false };
+     `hoch` sagt bloß, dass das Fenster höher als breit ist. Danach rückt die Tafel enger zusammen,
+     damit von der Karte dahinter noch etwas zu sehen bleibt. */
   function titelbildPassen() {
-    // Hochkant nur, wenn es auch das hohe Bild gibt – sonst lieber das quere beschnitten als nichts.
-    const hoch = innerWidth < innerHeight && bildBereit.hoch;
-    document.body.classList.toggle('hoch', hoch);
+    document.body.classList.toggle('hoch', innerWidth < innerHeight);
   }
   function startbildAn() {
-    if (!bildBereit.quer || !$('tb-svg')) return;
     document.body.classList.add('startbild');
     titelbildPassen();
   }
-  (() => {
-    for (const [welches, id] of [['quer', 'tb-svg'], ['hoch', 'tb-hoch']]) {
-      const svg = $(id), quelle = svg && svg.querySelector('image');
-      if (!quelle) continue;
-      const probe = new Image();
-      probe.addEventListener('load', () => {
-        bildBereit[welches] = true;
-        if (state.phase === 'title' && ui.overlay.classList.contains('title')) startbildAn();
-      });
-      probe.src = quelle.getAttribute('href');
-    }
-    addEventListener('resize', titelbildPassen);
-  })();
+  addEventListener('resize', titelbildPassen);
 
   const SCENE_NORMAL = `<svg class="mode-scene" viewBox="0 0 300 72" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
             <defs>
@@ -421,11 +407,11 @@
        das Wort „Weltkarte" mitten in den Ortsnamen der Karte. Die zweite Zeile sagt, was einen
        dahinter erwartet; das spart den Erklärsatz darunter. */
     overlay(`<div class="panel">
-      <h1>${Icons.svg('sports_golf', 'h1-ball')} Fantasy Golf</h1>
+      <h1>${Icons.svg('sports_golf')} Fantasy Golf</h1>
       <div class="sub">Golf with your Friends · Minigolf in 2,5D</div>
       <div class="modes">
         <span class="btn mode" id="to-map">${WorldMap.svg('mode-scene', 'xMidYMid slice')}<span class="mode-schleier"></span>
-          <span class="mode-label">Weltkarte<small>${WORLDS.length} Welten · ${TOTAL_HOLES} Bahnen · alle offen</small></span></span>
+          <span class="mode-label">Weltkarte<small>${SPIELWELTEN().length} Welten · ${TOTAL_HOLES} Bahnen · alle offen</small></span></span>
         <span class="btn mode" id="to-build">${SCENE_CREATIVE}<span class="mode-schleier"></span>
           <span class="mode-label long">Bauen &amp; Eigene Welt<small>Eigene Bahnen bauen und verschicken</small></span></span>
       </div>
@@ -455,7 +441,7 @@
     document.body.classList.remove('creative', 'editing', 'testing');
     // Nur Welten mit einem Ort auf der Karte: Das Kolosseum ist die Turnierwelt und wird über den
     // Turnier-Knopf im Startbildschirm betreten, nicht über die Reise
-    const kartenWelten = WORLDS.filter(w => WorldMap.spots[w.id]);
+    const kartenWelten = SPIELWELTEN().filter(w => WorldMap.spots[w.id]);
     const marks = kartenWelten.map(w => {
       const sp = WorldMap.spots[w.id];
       const m = worldMode(w);
@@ -468,10 +454,11 @@
     overlay(`<div class="panel atlas-panel">
       <div class="panel-head"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span><h2>${Icons.svg('map')} Weltkarte</h2></div>
       <div class="sub">Tippe einen Ort an – alle ${kartenWelten.length} Welten sind offen.<span class="lang">
-        Sie liegen als Landstriche auf der Karte: <b>gestrichelte Wege</b> verbinden sie, über Wasser geht es per Schiff.</span></div>
+        Sie liegen als Landstriche auf der Karte: <b>gestrichelte Wege</b> verbinden sie, über Wasser geht es per Schiff.</span>
+        <b>Die Karte reicht nach Osten weiter – dort schieben.</b></div>
       <!-- Die Karte ist BREITE Einheiten breit, der Kasten so breit wie die Tafel. Bei BREITE = 100
            passt sie ganz hinein; wird sie einmal breiter, schiebt der Kasten waagerecht. -->
-      <div class="atlas-schiebe"><div class="atlas" style="aspect-ratio:${WorldMap.BREITE} / 62;width:${WorldMap.BREITE}%">${WorldMap.svg()}${marks}</div></div>
+      <div class="atlas-schiebe"><div class="atlas" style="aspect-ratio:${WorldMap.BREITE} / ${WorldMap.HOEHE};width:${WorldMap.BREITE}%">${WorldMap.svg()}${marks}</div></div>
       ${turnierBand()}
       <div class="atlas-extra"><span class="btn small ghost" id="to-build2">${Icons.svg('construction')} Bauen &amp; Eigene Welt</span></div>
     </div>`, 'title');
@@ -602,12 +589,12 @@
   const WELT_ICON = id => WELT_ICON_AUSNAHME[id]
     || (WorldMap.spots[id] && WorldMap.spots[id].icon) || 'golf_course';
   const worldMode = w => (w && w.mode) || 'normal';
-  function setWorld(id) { state.world = WORLDS.find(w => w.id === id) || WORLDS[0]; state.courses = state.world.courses; Music.set(state.world.id); }
+  function setWorld(id) { const wl = SPIELWELTEN(); state.world = wl.find(w => w.id === id) || wl[0]; state.courses = state.world.courses; Music.set(state.world.id); }
 
   /* Bahnen zählen: die Innenräume gehören dazu (Hexenküche innen, Pyramide innen, Schiffswrack innen …),
      und ein Innenraum kann selbst wieder einen haben – darum rekursiv. */
   const countHoles = list => list.reduce((n, c) => n + 1 + (c.inner ? countHoles([c.inner]) : 0), 0);
-  const TOTAL_HOLES = WORLDS.reduce((n, w) => n + countHoles(w.courses), 0);
+  const TOTAL_HOLES = SPIELWELTEN().reduce((n, w) => n + countHoles(w.courses), 0);
 
   const showWorldSelect = () => showMap(); // der Editor kehrt über diesen Weg ins Menü zurück
   /* Eigene Welten tragen die Kennung 'custom'. Daran hängt mehr als der Name: Alles, was Rekorde
@@ -651,7 +638,7 @@
     document.body.classList.add('title');
     document.body.classList.remove('creative', 'editing', 'testing');
     const z = Turnier.zustand();
-    const welt = WORLDS.find(w => w.id === Turnier.WELT) || WORLDS[0];
+    const welt = SPIELWELTEN().find(w => w.id === Turnier.WELT) || SPIELWELTEN()[0];
     const liste = Turnier.rangliste();
     const medaille = ['gold', 'silber', 'bronze'].map(r => `<span class="rang ${r}">${Icons.svg('workspace_premium')}</span>`);
     const zeit = ms => Best.formatTime(ms);
@@ -781,8 +768,9 @@
   function showBestList(worldId) {
     state.phase = 'title'; document.body.classList.add('title');
     document.body.classList.remove('creative', 'editing', 'testing');
-    const wid = worldId || (state.world && state.world.id !== 'custom' ? state.world.id : WORLDS[0].id);
-    const w = WORLDS.find(x => x.id === wid) || WORLDS[0];
+    const wl = SPIELWELTEN();
+    const wid = worldId || (state.world && state.world.id !== 'custom' ? state.world.id : wl[0].id);
+    const w = wl.find(x => x.id === wid) || wl[0];
     const rec = Best.of(w.id);
     const bestStatus = { status: st => { const el = $('bstate'); if (!el) return;
       el.textContent = st === 'ready' ? 'Verbunden – alle mit dem Spiel teilen sich diese Liste.'
@@ -832,7 +820,7 @@
       <div class="sub net-note" id="bstate">${!Best.name ? 'Trag deinen Namen ein – ohne Namen wird nichts gewertet.'
         : Net.status === 'ready' ? 'Verbunden – alle mit dem Spiel teilen sich diese Liste.'
         : 'Keine Verbindung – die Rekorde bleiben vorerst auf diesem Gerät.'}</div>
-      <div id="bw" class="ow">${WORLDS.filter(x => x.id !== 'custom').map(x => `<span class="btn ghost small ${x.id === w.id ? 'sel' : ''}" data-w="${x.id}">${Icons.svg(WELT_ICON(x.id))} ${Text.esc(x.short)}</span>`).join('')}</div>
+      <div id="bw" class="ow">${SPIELWELTEN().filter(x => x.id !== 'custom').map(x => `<span class="btn ghost small ${x.id === w.id ? 'sel' : ''}" data-w="${x.id}">${Icons.svg(WELT_ICON(x.id))} ${Text.esc(x.short)}</span>`).join('')}</div>
       <div class="sub" style="margin-top:10px"><b>${Text.esc(w.name)}</b> · Par ${parTotal}</div>
       ${belohnungsStand(w)}
       <div class="tabelle-schiebe"><table class="scores best-table">
@@ -1003,7 +991,7 @@
   function recordFromFriend(worldId, news) {
     if (!news || !news.length) return;
     if (state.phase === 'title' || state.phase === 'edit') return;
-    const w = WORLDS.find(x => x.id === worldId);
+    const w = SPIELWELTEN().find(x => x.id === worldId);
     for (const n of news.slice(0, 1)) {
       if (n.rec.n === Best.name) continue;   // der eigene Eintrag von einem anderen Gerät
       const wert = `${Best.KIND_NAME[n.kind] || 'Schläge'} ${Best.format(n.kind, n.rec)}`;
@@ -1023,7 +1011,7 @@
   let online = null, beatT = null, watchT = null;
   const myTurn = () => !online || !online.started || ((online.players[state.curPlayer] || {}).id === Net.id);
   const netSend = m => { if (online) Net.send(m); };
-  const onlineWorlds = () => WORLDS.filter(w => w.id !== 'custom');
+  const onlineWorlds = () => SPIELWELTEN().filter(w => w.id !== 'custom');
   /* Namen aus dem Netz gehen in die Anzeige – gefiltert wird zentral in src/text.js */
   const seatName = (p, i) => (p && Text.name(p.nick)) || PLAYER_NAMES[i];
 
@@ -1328,7 +1316,7 @@
     overlay(`<div class="panel">
       <div class="panel-head"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span><h2>${Icons.svg('sports_golf')} Dein Hut</h2></div>
       <div class="sub">Der Wechsel ist gleich bei allen im Raum zu sehen.</div>
-      <div id="hats" class="hat-grid">${Hats.LIST.map(h => `<button type="button" class="hat" data-h="${h.id}" title="${Text.esc(h.name)}"><canvas></canvas><span>${Text.esc(h.name)}</span><i class="hat-lock">${Icons.svg('lock')}</i></button>`).join('')}</div>
+      <div id="hats" class="hat-grid">${SPIELHUETE().map(h => `<button type="button" class="hat" data-h="${h.id}" title="${Text.esc(h.name)}"><canvas></canvas><span>${Text.esc(h.name)}</span><i class="hat-lock">${Icons.svg('lock')}</i></button>`).join('')}</div>
       <p style="margin-top:14px"><span class="btn" id="fertig">Fertig</span></p>
     </div>`, 'title');
     const zeichne = () => {
@@ -1396,7 +1384,7 @@
       </div>
       <p style="margin-top:10px">Hut:</p>
       <div id="hat-who"></div>
-      <div id="hats" class="hat-grid">${Hats.LIST.map(h => `<button type="button" class="hat" data-h="${h.id}" title="${Text.esc(h.name)}"><canvas></canvas><span>${Text.esc(h.name)}</span><i class="hat-lock">${Icons.svg('lock')}</i></button>`).join('')}</div>
+      <div id="hats" class="hat-grid">${SPIELHUETE().map(h => `<button type="button" class="hat" data-h="${h.id}" title="${Text.esc(h.name)}"><canvas></canvas><span>${Text.esc(h.name)}</span><i class="hat-lock">${Icons.svg('lock')}</i></button>`).join('')}</div>
       <p style="margin-top:10px">Musik:</p>
       <div id="mu">
         <span class="btn ghost small ${Music.on ? 'sel' : ''}" data-v="1">An</span>
@@ -1449,7 +1437,7 @@
       const vergeben = new Set();
       for (let i = 0; i < hatCount(); i++) {
         if (!vergeben.has(playerHats[i]) && darfTragen(playerHats[i])) { vergeben.add(playerHats[i]); continue; }
-        const frei = Hats.LIST.find(h => !vergeben.has(h.id) && darfTragen(h.id));
+        const frei = SPIELHUETE().find(h => !vergeben.has(h.id) && darfTragen(h.id));
         playerHats[i] = frei ? frei.id : DEFAULT_HATS[i % DEFAULT_HATS.length];
         vergeben.add(playerHats[i]);
       }
@@ -1548,13 +1536,41 @@
   }
 
   /* Endtafel: kleines Sinnbild je Bahn (nach Name, sonst nach Optik) */
-  const HOLE_ICONS = { Elfenwiese: '🌼', Pilzhain: '🍄', Zwergenschmiede: '⚒️', Zauberwald: '🔮', Drachenhöhle: '🐉', Eisgrotte: '❄️', Wolkenburg: '☁️', Hexenturm: '🧙', Burgberg: '🏰',
-    Strandbucht: '🏖️', Muschelriff: '🐚', Fischerpier: '🎣', Krakengrotte: '🐙', Piratendeck: '🏴‍☠️', Leuchtturmfelsen: '🗼', Schiffswrack: '🚢', Perlengrotte: '🦪', Sturmsee: '🌊', Haifischbucht: '🦈',
-    Mühlenwiese: '🌾', Nebelmoor: '🌫️', Zwergenkanone: '💣', Korallenriff: '🪸', Uhrwerk: '⚙️', Piratenbucht: '⚓', Hexenküche: '🧪', Sultanspalast: '🕌', Pyramide: '🔺',
-    Urwaldpfad: '🌿', Affenbrücke: '🐒', Krokodilfluss: '🐊', Stachelpfad: '🗡️', Felskugelschlucht: '🪨', Treibsandbecken: '⏳', Totemplatz: '🗿', Wasserfallterrassen: '💧', 'Der Tempel': '🏛️',
-    Friedhofspforte: '🪦', Knochensteg: '🦴', Fallbeilgasse: '🔪', Rabenschlucht: '🐦‍⬛', Ritterhalle: '⚔️', Totenfähre: '⚰️', 'Turm des Auges': '👁️', Schattenschloss: '🏰', 'Gruft der Sensen': '🕯️', 'Herz der Finsternis': '🖤' };
-  const THEME_ICONS = { meadow: '🌼', mushroom: '🍄', forge: '⚒️', forest: '🌲', dragon: '🐉', ice: '❄️', sky: '☁️', witch: '🧙', castle: '🏰', harbor: '⚓', reef: '🐠', clockwork: '⚙️', palace: '🕌', desert: '🏜️', tomb: '⚱️', deck: '🏴‍☠️', wreck: '🚢', belly: '🦈', jungle: '🌴', temple: '🗿', hut: '🧪', storm: '⛈️', fortress: '🏯', shadow: '🌑', throne: '👑', darksea: '🌊', ghostship: '⚓', clocktown: '🕰️', boiler: '🔥', escapement: '⚙️' };
-  const holeIcon = def => HOLE_ICONS[def.name] || THEME_ICONS[def.theme] || '⛳';
+  /* Ein gezeichnetes Sinnbild je Abschnitt einer Welt. Vorher standen hier Emoji – ein 🐉 für die
+     Drachenhöhle, ein 🐙 für die Krakengrotte –, und das war eine bewusste Entscheidung: Material
+     Symbols kennt weder Drache noch Krake, und am Zeichen erkannte man die Bahn.
+
+     Sie hat sich trotzdem nicht bewährt. In der Rangliste stehen die Emoji direkt neben der
+     Kopfzeile, die schon gezeichnete Sinnbilder trägt – bunt neben einfarbig, in derselben
+     Tabelle. Dazu zeichnet jedes Gerät die Emoji selbst: Auf dem iPad sieht die Liste anders aus
+     als auf dem Rechner, und einige Bahnen einer Welt trugen ohnehin alle dasselbe Wolkenzeichen.
+
+     Was dabei verloren geht, ist echt und sei hier genannt: Ein Krake ist jetzt eine Welle. Der
+     Abschnitt einer Bahn ist aber das, was man in der Liste tatsächlich unterscheiden will – in
+     welchem Teil der Welt sie liegt –, und das steht hier vollständig. */
+  const THEME_ICONS = {
+    // Märchenland
+    meadow: 'local_florist', mushroom: 'pilz', forge: 'construction', forest: 'tanne',
+    dragon: 'local_fire_department', ice: 'ac_unit', sky: 'cloud', witch: 'science', castle: 'castle',
+    // Meereswelt und die dunkle See
+    harbor: 'anchor', reef: 'water_drop', deck: 'sailing', wreck: 'directions_boat',
+    darksea: 'waves',
+    // Dschungeltempel
+    jungle: 'park', temple: 'temple_buddhist', hut: 'science',
+    // Schattenreich
+    tomb: 'church', shadow: 'dark_mode', throne: 'crown', fortress: 'castle',
+    // Sturmhimmel
+    storm: 'thunderstorm',
+    // Uhrwerkstadt
+    clocktown: 'schedule', clockwork: 'settings', escapement: 'timer', boiler: 'local_fire_department',
+    // Schneeberg
+    snowfoot: 'tanne', snowrock: 'landscape', glacier: 'ac_unit', summit: 'filter_hdr',
+    // Zwergenmine
+    mundloch: 'sonne', stollen: 'flashlight_on', kristall: 'diamond', schmelze: 'local_fire_department',
+    // Kolosseum, Tüftlerreich, Wüste
+    colosseum: 'stadium', palace: 'temple_buddhist', desert: 'sonne',
+  };
+  const holeIcon = def => Icons.svg(THEME_ICONS[def.theme] || 'golf_course');
   const worldClass = () => 'world-' + ((state.world && state.world.id) || 'custom');
   /* Das geltende Par: Es steht nicht mehr fest in der Bahn, sondern kommt aus der Rangliste –
      immer einen Schlag über dem besten Ergebnis, das je auf ihr gespielt wurde. Entschieden wird
@@ -1686,6 +1702,7 @@
     }
     const p = state.players[state.curPlayer], lv = state.level;
     state.ball = makeBall(lv.tee.x, lv.tee.y, p.color, p.hat);
+    state.ball.ebene = lv.teeEbene || 0;   // der Abschlag darf eine Etage höher liegen
     lv.setzeEbene(0);   // jeder Spieler beginnt unten, auch wenn der vorige oben aufgehört hat
     state.strokes = 0; state.phase = 'aim'; state.aim = null; state.restTimer = 0; state.slowTimer = 0; state.rollT = 0; state.stuckRef = null;
     faceCup(); setCamMode('follow');
@@ -1768,6 +1785,9 @@
 
   function ballAtRest() {
     const b = state.ball;
+    // Niemand bleibt auf einer Schneewächte liegen (physics.js sagt, warum): Sonst wäre der
+    // Ruheplatz selbst die Falle, in die er beim nächsten Schlag stürzt.
+    if (state.level) waechteAbrutschen(state.level, b);
     b.vx = 0; b.vy = 0; b.restX = b.x; b.restY = b.y; b.restEbene = b.ebene || 0;
     schlagVorbei();
     faceCup();
@@ -1803,11 +1823,11 @@
      können. */
   function sichererRuhepunkt(b) {
     const lv = state.level;
-    for (const [x, y, e] of [[b.restX, b.restY, b.restEbene || 0], [b.shotX, b.shotY, b.shotEbene || 0], [lv.tee.x, lv.tee.y, 0]]) {
+    for (const [x, y, e] of [[b.restX, b.restY, b.restEbene || 0], [b.shotX, b.shotY, b.shotEbene || 0], [lv.tee.x, lv.tee.y, lv.teeEbene || 0]]) {
       if (x == null || y == null) continue;
       if (lv.isFloorChar(lv.charAtEbene(e, x, y))) return { x, y, e };
     }
-    return { x: lv.tee.x, y: lv.tee.y, e: 0 };
+    return { x: lv.tee.x, y: lv.tee.y, e: lv.teeEbene || 0 };
   }
   function hazard(type) {
     const b = state.ball;
@@ -1825,7 +1845,7 @@
       b.z = 0; b.vz = 0; b.air = false;
       const lv = state.level; let rx = b.shotX != null ? b.shotX : b.restX, ry = b.shotX != null ? b.shotY : b.restY;
       b.restEbene = b.shotX != null ? (b.shotEbene || 0) : (b.restEbene || 0);
-      if (type === 'seen') { if (lv.obstacles.some(o => o.type === 'eyetower' && Math.hypot(rx - o.x, ry - o.y) <= o.range + 0.5)) { rx = lv.tee.x; ry = lv.tee.y; b.restEbene = 0; label += ' Zurück zum Anfang.'; } }
+      if (type === 'seen') { if (lv.obstacles.some(o => o.type === 'eyetower' && Math.hypot(rx - o.x, ry - o.y) <= o.range + 0.5)) { rx = lv.tee.x; ry = lv.tee.y; b.restEbene = lv.teeEbene || 0; label += ' Zurück zum Anfang.'; } }
       else for (const g of lv.obstacles) {
         if (g.type !== 'guillotine' || !g.under(rx, ry, 0.7)) continue;
         const vert = g.w < g.h, side = (vert ? Math.sign(lv.tee.x - g.x) : Math.sign(lv.tee.y - g.y)) || -1;
@@ -1834,6 +1854,10 @@
       b.restX = rx; b.restY = ry;
     }
     else { Sfx.oob(); burst(b.x, b.y, '#cccccc', 10); }
+    /* Wer aus dem Spiel genommen und zurückgelegt wird, kommt sauber zurück: Der angesetzte Schnee
+       fällt dabei ab. Sonst läge nach einem Sturz ein zugeschneiter Ball am Ruheplatz, und man
+       müsste erst wieder aufs Eis, ohne zu wissen, warum. */
+    if (b.r > BALL_R) b.r = BALL_R;
     state.strokes++;
     schlagVorbei();
     showMessage(`${label} · +1 Strafschlag`, 1700);
@@ -1866,7 +1890,7 @@
     // letzten Schlags zurück, notfalls zum Abschlag.
     if (ob && ob.trifft(rx, ry)) {
       if (b.shotX != null && !ob.trifft(b.shotX, b.shotY)) { rx = b.shotX; ry = b.shotY; b.restEbene = b.shotEbene || 0; }
-      else { rx = lv.tee.x; ry = lv.tee.y; b.restEbene = 0; }
+      else { rx = lv.tee.x; ry = lv.tee.y; b.restEbene = lv.teeEbene || 0; }
       b.restX = rx; b.restY = ry;
     }
     showMessage(art === 'feuer' ? 'Vom Feuerstoß erwischt! Zurück – ohne Strafschlag.'
@@ -2006,7 +2030,7 @@
       state.level = buildLevel(def); state.theme = THEMES[def.theme]; state.inner = true;
       R.setLevel(state.level, state.theme);
       const b = state.ball, lv = state.level;
-      b.x = lv.tee.x; b.y = lv.tee.y; b.vx = 0; b.vy = 0; b.z = 0; b.vz = 0; b.air = false; b.rider = null; b.sunk = false; b.sinkT = 0; b.entered = false; // die nächste Tür (z. B. die Luke) darf wieder auslösen
+      b.x = lv.tee.x; b.y = lv.tee.y; b.ebene = lv.teeEbene || 0; b.vx = 0; b.vy = 0; b.z = 0; b.vz = 0; b.air = false; b.rider = null; b.sunk = false; b.sinkT = 0; b.entered = false; // die nächste Tür (z. B. die Luke) darf wieder auslösen
       b.restX = b.x; b.restY = b.y; b.portalCd = 0.5;
       b.ebene = b.restEbene = 0; lv.setzeEbene(0);   // der Innenbereich ist eine eigene Bahn und fängt unten an
       state.particles = [];
@@ -2440,6 +2464,24 @@
         case 'unshrink': showMessage('Der Trank lässt nach.', 1200); break;
         case 'curse': Sfx.potion(); burst(ev.x, ev.y, '#fff3d0', 18, true); showMessage(ev.label || 'Perlenfluch! Der Ball bleibt bis zum Loch träge.', 2000); break;
         case 'enter': enterInner(); return;
+        case 'spreng': Sfx.spreng(); burst(ev.x, ev.y, '#ffd18a', 26, true); burst(ev.x, ev.y, '#8a7b6a', 14, true); break;
+        /* Die Bruchwand ist die einzige Maschine, die die Bahn selbst verändert – das muss man
+           auch dann mitbekommen, wenn man gerade woanders hinsieht. Darum eine Meldung. */
+        case 'durchbruch': Sfx.spreng(); burst(ev.x, ev.y, '#c9b79a', 30, true); burst(ev.x, ev.y, '#5c5148', 18, true); showMessage('Der Fels ist auf – der Gang steht offen!', 1800); break;
+        /* Die Schneewächte bricht ein. Das Ereignis gab es schon, gehört hat es bisher niemand:
+           Es stand in keinem Zweig, also brach die Brücke stumm. */
+        case 'bruch': Sfx.bounce(4); burst(ev.x, ev.y, '#ffffff', 18, true); break;
+        /* Ein Guss: Das Erz läuft ein Feld weiter und erstarrt. Gemeldet wird jeder Guss, denn
+           jeder verändert die Bahn – und der letzte sagt, dass die Brücke steht. */
+        /* Der Schneeberg: Der Ball setzt Schnee an, bis er nicht mehr ins Loch passt – und streift
+           ihn auf Eis wieder ab. Beide Augenblicke werden gemeldet, denn beide entscheiden. */
+        case 'zugeschneit': Sfx.bounce(2); showMessage('Zu dick fürs Loch – ab aufs Eis!', 1600); break;
+        case 'abgestreift': Sfx.bumper(); burst(ev.x != null ? ev.x : state.ball.x, ev.y != null ? ev.y : state.ball.y, '#ffffff', 12, true); showMessage('Schnee ab – jetzt passt er', 1400); break;
+        case 'guss':
+          Sfx.lava();
+          burst(ev.x, ev.y, '#ffb347', 16, true); burst(ev.x, ev.y, '#fff0c0', 8, true);
+          if (ev.fertig) showMessage('Die Rinne ist voll – das Erz trägt!', 1800);
+          break;
         case 'spit': Sfx.bumper(); burst(ev.x, ev.y, '#a6ff5e', 10); break;
         case 'spin': Sfx.bounce(5); showMessage('Das Zahnrad nimmt den Ball mit …', 1200); break;
         case 'spinout': Sfx.bumper(); burst(ev.x, ev.y, '#ffe9a8', 8); break;
@@ -2492,10 +2534,9 @@
     updateParticles(dt);
     if (state.ball && state.ball.sunk) state.ball.sinkT += dt;
     updateCamera(dt);
-    // Liegt das gemalte Startbild darüber, ist die gezeichnete Szene ohnehin verdeckt – dann wird
-    // sie auch nicht gezeichnet. Das spart auf dem Startbildschirm die ganze Arbeit pro Bild.
-    if (state.phase === 'title') { if (!document.body.classList.contains('startbild')) TitleScene.draw(R.ctx, R.w, R.h, state.t); }
-    else { R.drawFrame(state); if (state.phase === 'edit') editor.drawOverlay(R.ctx); }
+    // Auf dem Startbildschirm liegt die Weltkarte als Tafelhintergrund über der Leinwand: Was dort
+    // gezeichnet würde, sähe niemand. Also wird es gar nicht erst gezeichnet.
+    if (state.phase !== 'title') { R.drawFrame(state); if (state.phase === 'edit') editor.drawOverlay(R.ctx); }
     syncClock();
     ui.power.classList.toggle('visible', !!state.aim);
     if (state.aim) ui.powerFill.style.width = `${Math.round(state.aim.power * 100)}%`;
@@ -2757,7 +2798,7 @@
     l.rel = 'stylesheet';
     l.media = 'print';
     l.addEventListener('load', () => { l.media = 'all'; });
-    l.href = 'https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=MedievalSharp&display=swap';
+    l.href = 'https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap';
     document.head.appendChild(l);
   })();
 

@@ -350,8 +350,6 @@ const Golf3D = (() => {
     Welt3D.gelaendeNetz(B, gl, AUSSEN, 'innen');
     Welt3D.lochNetz(B, gl);
     Welt3D.felsenNetz(B, gl);
-    Welt3D.bandenNetz(B, gl);
-    Welt3D.brueckenNetz(B, gl);
     Welt3D.roehrenNetz(B, gl);
     const burgFahnen = Welt3D.burgNetz(B, gl, bahn.burg);
     Welt3D.dekoNetz(B, gl, beweglich);
@@ -390,6 +388,15 @@ const Golf3D = (() => {
        keinen Schatten. Der Schattendurchgang zeichnet jedes Dreieck ein zweites Mal, und der
        Schatten eines Grashalms wäre auf dem Schattenbild schmaler als ein Bildpunkt – bezahlt
        würde er trotzdem. So kostet die Wiese nur die Hälfte. */
+    /* Alles aus Holz kommt in ein eigenes Gitter, weil es die gerechnete Maserung trägt: Banden,
+       Brückenbretter und Geländer. Das ist derselbe Gedanke wie beim Grasbild – ein Gitter, eine
+       Oberfläche. Ein Schalter je Ecke wäre feiner, kostete aber zwei Zahlen an jeder Ecke der
+       ganzen Welt, und die tragen heute nur Ort, Normale und Farbe. */
+    const HO = Bauen.sammler();
+    Welt3D.bandenNetz(HO, gl);
+    Welt3D.brueckenNetz(HO, gl);
+    for (const netz of HO.fertig(zeichner)) stuecke.push({ netz, holz: true });
+
     /* Die Wiese draußen liegt in einem eigenen Gitter, weil sie das gemalte Grasbild trägt. Die
        Spielfläche bekommt es nicht: Ein Rasen, durch den Grashalme gemalt sind, ist kein Rasen. */
     const WI = Bauen.sammler();

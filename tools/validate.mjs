@@ -3,22 +3,22 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 const ctx = { console };
 vm.createContext(ctx);
-const GLOBAL = { courses_pro: 'PRO_COURSES', courses_sea: 'SEA_COURSES', courses_jungle: 'JUNGLE_COURSES', courses_storm: 'STORM_COURSES', courses_shadow: 'SHADOW_COURSES', courses_colosseum: 'COLOSSEUM_COURSES', courses_clock: 'CLOCK_COURSES', courses_snow: 'SNOW_COURSES', courses_boule: 'BOULE_COURSES' };
+const GLOBAL = { courses_pro: 'PRO_COURSES', courses_sea: 'SEA_COURSES', courses_jungle: 'JUNGLE_COURSES', courses_storm: 'STORM_COURSES', courses_shadow: 'SHADOW_COURSES', courses_colosseum: 'COLOSSEUM_COURSES', courses_clock: 'CLOCK_COURSES', courses_snow: 'SNOW_COURSES', courses_mine: 'MINE_COURSES', courses_boule: 'BOULE_COURSES' };
 const load = f => vm.runInContext(fs.readFileSync(new URL(`../src/${f}.js`, import.meta.url), 'utf8') + `\n;${GLOBAL[f] || f.toUpperCase()}`, ctx);
 // Reihenfolge wie in index.html: courses_pro.js baut die Weltliste und braucht die anderen schon
-const THEMES = load('themes'), COURSES = load('courses'), SEA = load('courses_sea'), JUNGLE = load('courses_jungle'), STORM = load('courses_storm'), SHADOW = load('courses_shadow'), COLOSSEUM = load('courses_colosseum'), CLOCK = load('courses_clock'), SNOW = load('courses_snow'), BOULE = load('courses_boule'), PRO = load('courses_pro');
+const THEMES = load('themes'), COURSES = load('courses'), SEA = load('courses_sea'), JUNGLE = load('courses_jungle'), STORM = load('courses_storm'), SHADOW = load('courses_shadow'), COLOSSEUM = load('courses_colosseum'), CLOCK = load('courses_clock'), SNOW = load('courses_snow'), MINE = load('courses_mine'), BOULE = load('courses_boule'), PRO = load('courses_pro');
 // A bis F sind die Eingänge der Löwentore und Kupferrohre und begehbar; ihre Ausgänge (a bis f)
 // sind Mauer.
 const FLOOR = new Set(['#', 's', 'i', 'w', 'l', 'T', 'H', 'o', 'A', 'B', 'C', 'D', 'E', 'F']);
 const TOR_PAARE = ['A', 'B', 'C', 'D', 'E', 'F'];
 let ok = true;
 const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, world }]; let d = c.inner, n = 1; while (d) { out.push({ ...d, par: c.par, name: `${c.name} (innen${n > 1 ? ' ' + n : ''})`, world }); d = d.inner; n++; } return out; });
-[...COURSES.map(c => ({ ...c, world: 'Märchenland' })), ...withInner(SEA, 'Meereswelt'), ...withInner(JUNGLE, 'Dschungel'), ...withInner(STORM, 'Sturmhimmel'), ...withInner(SHADOW, 'Schattenreich'), ...withInner(COLOSSEUM, 'Kolosseum'), ...withInner(CLOCK, 'Uhrwerkstadt'), ...withInner(SNOW, 'Schneeberg'), ...BOULE.map(c => ({ ...c, world: 'Boule-Welt' })), ...PRO.flatMap(c => c.inner ? [{ ...c, world: 'Profi' }, { ...c.inner, par: c.par, name: `${c.name} (innen)`, world: 'Profi' }] : [{ ...c, world: 'Profi' }])].forEach((c, i) => {
+[...COURSES.map(c => ({ ...c, world: 'Märchenland' })), ...withInner(SEA, 'Meereswelt'), ...withInner(JUNGLE, 'Dschungel'), ...withInner(STORM, 'Sturmhimmel'), ...withInner(SHADOW, 'Schattenreich'), ...withInner(COLOSSEUM, 'Kolosseum'), ...withInner(CLOCK, 'Uhrwerkstadt'), ...withInner(SNOW, 'Schneeberg'), ...withInner(MINE, 'Zwergenmine'), ...BOULE.map(c => ({ ...c, world: 'Boule-Welt' })), ...PRO.flatMap(c => c.inner ? [{ ...c, world: 'Profi' }, { ...c.inner, par: c.par, name: `${c.name} (innen)`, world: 'Profi' }] : [{ ...c, world: 'Profi' }])].forEach((c, i) => {
   const rows = c.map, H = rows.length, W = rows[0].length;
   const problems = [];
   if (!THEMES[c.theme]) problems.push(`Theme ${c.theme} fehlt`);
   rows.forEach((r, y) => { if (r.length !== W) problems.push(`Zeile ${y} hat Länge ${r.length} statt ${W}`); });
-  let tee, cup;
+  let tee, cup, teeEbene = 0;
   rows.forEach((r, y) => [...r].forEach((ch, x) => { if (ch === 'T') tee = [x, y]; if (ch === 'H') cup = [x, y]; }));
   if (!cup) { const d = (c.obstacles || []).find(o => o.type === 'door'); if (d) cup = [Math.floor(d.x), Math.floor(d.y)]; }
 
@@ -33,7 +33,14 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
   obere.forEach((ebRows, i) => {
     const n = i + 1;
     if (ebRows.length !== H || ebRows.some(r => r.length !== W)) problems.push(`Ebene ${n} ist ${ebRows[0] ? ebRows[0].length : 0}x${ebRows.length} statt ${W}x${H} – alle Ebenen müssen deckungsgleich sein`);
-    if (ebRows.join('').includes('T')) problems.push(`der Abschlag steht auf Ebene ${n} – angefangen wird immer ganz unten`);
+    /* Der Abschlag darf auf jeder Ebene liegen (level.js führt 'teeEbene' mit). Bis Fassung 142
+       musste er unten stehen; die Zwergenmine geht aber hinunter, und dafür fängt man oben an.
+       Zweimal darf er trotzdem nicht vorkommen. */
+    ebRows.forEach((r, y) => [...r].forEach((ch, x) => {
+      if (ch !== 'T') return;
+      if (tee) problems.push(`'T' steht auf mehreren Ebenen – der Abschlag liegt auf genau einer`);
+      tee = [x, y]; teeEbene = n;
+    }));
     ebRows.forEach((r, y) => [...r].forEach((ch, x) => {
       if (ch !== 'H') return;
       if (cup) problems.push(`'H' steht auf mehreren Ebenen – das Loch liegt auf genau einer`);
@@ -306,7 +313,20 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
   const stufeSperrt = (x, y, nx, ny) =>
     stufeVon(nx, ny) > stufeVon(x, y) && !aufSchraege(x, y) && !aufSchraege(nx, ny);
 
+  /* Was ein Gießlöffel füllt, ist Weg. In der Karte steht dort Glut, im Spiel wird daraus Boden,
+     sobald das Erz erstarrt ist – ohne das hielte die Prüfung jede Gießhalle für unpassierbar und
+     meldete „Loch vom Abschlag nicht erreichbar", obwohl der Weg entsteht, während man davorsteht. */
+  const rinnen = new Set();
+  for (const o of (c.obstacles || [])) {
+    if (o.type !== 'giessloeffel' || !o.rinne) continue;
+    const r = o.rinne, e = o.ebene || 0;
+    for (let i = 0; i < (r.len || 0); i++)
+      rinnen.add(`${e}|${(r.x || 0) + (r.dx || 0) * i},${(r.y || 0) + (r.dy || 0) * i}`);
+  }
+  const gussBoden = (n, x, y) => rinnen.has(`${n}|${x},${y}`);
+
   if (tee && cup && !c.ohneLoch) {
+    let flutStart = null;
     const seen = new Set([tee.join()]), q = [tee];
     while (q.length) {
       const [x, y] = q.shift();
@@ -314,7 +334,7 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
         const nx = x + dx, ny = y + dy;
         if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
         const ch = rows[ny][nx];
-        if (!FLOOR.has(ch) || ch === 'w' || ch === 'l') continue;
+        if (!FLOOR.has(ch) || ((ch === 'w' || ch === 'l') && !gussBoden(0, nx, ny))) continue;
         if (stufeSperrt(x, y, nx, ny)) continue;
         const k = `${nx},${ny}`; if (seen.has(k)) continue; seen.add(k); q.push([nx, ny]);
       }
@@ -384,7 +404,9 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
        ist und oben auch Boden unter dem Ball hat. */
     const bodenAuf = (n, x, y) => {
       const r = karten[n] && karten[n][y], ch = r && r[x];
-      return !!ch && FLOOR.has(ch) && ch !== 'w' && ch !== 'l';
+      if (!ch || !FLOOR.has(ch)) return false;
+      if (ch !== 'w' && ch !== 'l') return true;
+      return ch === 'l' && gussBoden(n, x, y);     // die Rinne des Gießlöffels wird Boden
     };
     const HEBER = ['turbine', 'aufzug', 'zahnstange'];
     const aufstiege = [];                       // { typ, von, nach, x, y, zx, zy }
@@ -428,7 +450,11 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
        zusammen gerechnet werden, denn ein Sturz öffnet auch wieder eine untere Ebene: Eine Kammer,
        in die es unten keine Tür gibt, ist erreichbar, sobald ein Steg darüber führt. Also wird
        nicht einmal von unten nach oben gerechnet, sondern so lange, bis sich nichts mehr ändert. */
-    const erreichbar = karten.map((_, n) => (n === 0 ? seen : new Set()));
+    /* 'seen' ist der Flutlauf über die *unterste* Ebene – so war es, als der Abschlag immer dort
+       stand. Liegt er höher (Zwergenmine), ist Ebene 0 zunächst leer, und der Lauf beginnt oben. */
+    const erreichbar = karten.map(() => new Set());
+    if (teeEbene === 0) for (const k of seen) erreichbar[0].add(k);
+    else flutStart = tee;
     const flute = (n, start) => {              // von 'start' aus über Ebene n ausbreiten
       const set = erreichbar[n], q = []; let neu = false;
       for (const [x, y] of start) { const k = `${x},${y}`; if (bodenAuf(n, x, y) && !set.has(k)) { set.add(k); q.push([x, y]); neu = true; } }
@@ -449,6 +475,7 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
       return false;                            // nirgends Boden: das ist ein Sturz ins Aus, kein Weg
     };
 
+    if (flutStart) flute(teeEbene, [flutStart]);
     for (let runde = 0, wieder = true; wieder && runde < 40; runde++) {
       wieder = false;
       for (const a of aufstiege) {
@@ -481,6 +508,52 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
       problems.push(`Ebene ${n} ist von nirgends erreichbar – weder über einen Aufstieg noch über einen Sturz`);
     if (c.ebeneZ != null && !(+c.ebeneZ >= 1 && +c.ebeneZ <= 6))
       problems.push(`ebeneZ ${c.ebeneZ} liegt außerhalb von 1 bis 6 – so hoch oder so flach lässt sich nicht mehr zielen`);
+    /* DIE REGEL DES SCHNEEBERGS: Wer über Schnee rollt, wird dicker, und ein zu dicker Ball passt
+       nicht mehr ins Loch – er rollt darüber hinweg. Abstreifen geht nur auf Eis oder im Wasser.
+       Eine Schneebahn ohne Eis auf dem Weg wäre also unlösbar, und zwar unsichtbar unlösbar: Es
+       sähe alles richtig aus, man käme nur nie hinein.
+       Geprüft wird darum genau das, und mit denselben Wegen wie oben – also über Seilbahnen und
+       Etagen hinweg. Im Erzeuger ginge das nicht: Auf „Die Seilbahn" liegt das Eis auf dem einen
+       Plateau und das Loch auf dem anderen. */
+    if (c.schnee && cup && !c.ohneLoch) {
+        const kalt = [];
+        for (let n = 0; n < karten.length; n++)
+          for (const k of erreichbar[n]) {
+            const [x, y] = k.split(',').map(Number);
+            const ch = karten[n][y] && karten[n][y][x];
+            if (ch === 'i' || ch === 'w') kalt.push([n, x, y]);
+          }
+        if (!kalt.length)
+          problems.push('Schneebahn ohne Eis oder Wasser auf dem Weg – der Ball schneit zu und passt nie mehr ins Loch');
+        else {
+          /* Und vom kalten Fleck aus muss das Loch noch erreichbar sein. Alles Erreichbare ist im
+             selben Lauf entstanden, also genügt die Frage, ob Loch und Eis im selben Gebiet der
+             Lochebene liegen – oder ob es von der Eisebene aus überhaupt weitergeht. */
+          /* Und es muss *nah genug* am Loch liegen. Das war die zweite Hälfte der Regel, und sie
+             hat gefehlt: Auf „Felsband" lag das Eis gleich hinter dem Abschlag, und über die
+             zweiundzwanzig Felder bis zum Loch schneite der Ball wieder zu – die Bahn war
+             unlösbar, und der Bot hat zehn von zehn Runden im Schlaglimit geendet. Zwölf Felder
+             Schnee machen den Ball zu dick; die letzte kalte Stelle muss näher liegen. */
+          const REICH = 12;
+          const nah = kalt.some(([n, kx, ky]) => {
+            if (n !== lochEbene) return false;
+            const gesehen = new Set([`${kx},${ky}`]), q = [[kx, ky, 0]];
+            while (q.length) {
+              const [x, y, d] = q.shift();
+              if (x === cup[0] && y === cup[1]) return true;
+              if (d >= REICH) continue;
+              for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+                const nx = x + dx, ny = y + dy, k = `${nx},${ny}`;
+                if (gesehen.has(k) || !erreichbar[n].has(k)) continue;
+                gesehen.add(k); q.push([nx, ny, d + 1]);
+              }
+            }
+            return false;
+          });
+          if (erreichbar[lochEbene].has(cup.join()) && !nah)
+            problems.push(`kein Eis und kein Wasser innerhalb von ${REICH} Feldern vor dem Loch – der Ball schneit auf dem letzten Stück wieder zu`);
+        }
+    }
     if (cup && !c.ohneLoch && !erreichbar[lochEbene].has(cup.join()))
       problems.push(lochEbene === 0 ? 'Loch vom Abschlag nicht erreichbar'
         : `Loch auf Ebene ${lochEbene} nicht erreichbar – dorthin führt kein erreichbarer Auf- oder Abstieg, oder kein Weg auf der Ebene`);
@@ -497,9 +570,11 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
     for (const o of c.obstacles || []) {
       const pts = o.type === 'portal' ? [[o.x, o.y], [o.tx, o.ty]] : ['bumper', 'rotor', 'switch', 'potion', 'turntable', 'magnet', 'cannon', 'cauldron', 'door', 'spikes', 'lightning', 'trapdoor', 'guillotine', 'eyetower'].includes(o.type) ? [[o.x, o.y]] : o.type === 'mover' && o.style !== 'shark' ? [[o.x0, o.y0], [o.x1, o.y1]] : []; // Haie schwimmen im Wasser neben der Bahn
       if (o.type === 'rotor' && o.style === 'darktentacle') pts.length = 0; // dunkle Tentakel kriechen von außen (aus dem Wrack) auf die Bahn
+      // Ein Hindernis steht auf seiner eigenen Ebene – geprüft wird darum auch dort
+      const km = karten[o.ebene || 0] || rows;
       for (const [px, py] of pts) {
-        const ch = rows[Math.floor(py)] && rows[Math.floor(py)][Math.floor(px)];
-        if (!FLOOR.has(ch)) problems.push(`${o.type} bei (${px},${py}) liegt nicht auf dem Fairway (${ch})`);
+        const ch = km[Math.floor(py)] && km[Math.floor(py)][Math.floor(px)];
+        if (!FLOOR.has(ch)) problems.push(`${o.type} bei (${px},${py}) liegt auf Ebene ${o.ebene || 0} nicht auf dem Fairway (${ch})`);
       }
     }
   }

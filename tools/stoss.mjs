@@ -14,8 +14,8 @@ import { fileURLToPath } from 'node:url';
 const SRC = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'src');
 const ctx = { console, performance: { now: () => 0 }, window: {} }; vm.createContext(ctx);
 for (const f of ['themes', 'courses', 'courses_sea', 'courses_jungle', 'courses_storm', 'courses_shadow',
-                 'courses_colosseum', 'courses_clock', 'courses_snow', 'courses_pro', 'level',
-                 'obstacles', 'obstacles_legend', 'obstacles_snow', 'physics'])
+                 'courses_colosseum', 'courses_clock', 'courses_snow', 'courses_mine', 'courses_pro', 'level',
+                 'obstacles', 'obstacles_legend', 'obstacles_snow', 'obstacles_mine', 'physics'])
   vm.runInContext(fs.readFileSync(path.join(SRC, `${f}.js`), 'utf8'), ctx);
 const G = vm.runInContext('({buildLevel, makeBall, stepPhysics, stepBaelle, ballStoss, WORLDS})', ctx);
 const STEP = 1 / 240, MAX_SHOT = 19;

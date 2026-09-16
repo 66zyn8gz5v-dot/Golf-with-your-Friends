@@ -507,6 +507,12 @@ function createObstacles(defs) {
       case 'turbine': out.push(new Turbine(d)); break;
       case 'luke': out.push(new Hatch(d)); break;
       case 'aufzug': out.push(new Elevator(d)); break;
+      // Zwergenmine
+      case 'sprengladung': out.push(new Blast(d)); break;
+      case 'kippbuehne': out.push(new TiltBridge(d)); break;
+      case 'grubenlampe': out.push(new MineLamp(d)); break;
+      case 'bruchwand': out.push(new BlastWall(d)); break;
+      case 'giessloeffel': out.push(new Giessloeffel(d)); break;
       // Schneeberg
       case 'windfahne': out.push(new WindVane(d)); break;
       case 'lawine': out.push(new Avalanche(d)); break;

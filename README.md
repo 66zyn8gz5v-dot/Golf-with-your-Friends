@@ -15,9 +15,19 @@ npx serve .          # oder: python3 -m http.server 8080
 
 Beim Öffnen steht zuerst ein Ladebild: der Schriftzug, darunter eine kleine Szene – eine Insel mit
 Burg im Meer, davor ein Grün, über das ein Ball rollt, zweimal aufsetzt und im Loch verschwindet –
-und darunter ein Balken. Dahinter liegt das **gemalte Titelbild, weich gezeichnet und abgedunkelt**:
-Es macht die Stimmung, die Szene sagt, was hier gespielt wird. Die Szene ist in den Farben des
-Bildes gehalten, bis hin zur roten Fahne mit Gold, wie das Banner darin.
+und darunter ein Balken. Dahinter liegt die **Weltkarte, weich gezeichnet und abgedunkelt** – wie
+hinter jeder Tafel außerhalb des Spiels.
+
+Das war zuerst das gemalte Titelbild. Es sah neben dem Rest aus wie aus einem anderen Buch: Das
+Spiel ist gezeichnet, das Bild gemalt. Die Karte ist mit demselben Stift gemacht wie alles andere,
+und sie zeigt obendrein, worum es geht.
+
+Beim Ladebild geht das nicht über das Skript, das die Karte sonst rechnet: Das Ladebild steht im
+festen HTML und muss da sein, *bevor* irgendein Skript gelaufen ist – genau dafür gibt es das
+Ladebild. Die Karte liegt darum zusätzlich als fertige Datei bereit (`icons/weltkarte.svg`,
+geschrieben von `node tools/karte.mjs`), und dieselbe Datei bedient auch alle Tafeln. Damit sie
+nicht altert, prüft `node tools/auslieferung.mjs` bei jeder Auslieferung mit, ob sie noch zu
+`src/worldmap.js` passt – wer eine Welt anhängt, merkt es sofort statt erst auf dem Handy.
 
 Vorher war die Szene eine Nachtaufnahme in kalten Blautönen; neben dem gemalten Startbildschirm sah
 das aus wie ein Fremdkörper aus flachen Flächen. Ein Zwischenstand ohne Szene – nur der gemalte
@@ -26,10 +36,9 @@ das, was das Ladebild ausmacht.
 
 Alles daran bewegt sich **allein mit CSS** – kein JavaScript. Das ist der ganze Punkt: Ein Ladebild,
 das erst läuft, wenn die Skripte da sind, kommt genau dann nicht, wenn man es braucht. Beim
-allerersten Öffnen ist das Bild noch unterwegs; bis dahin steht der dunkle Verlauf darunter, damit da
-kein Loch ist. Welches der beiden Titelbilder den Grund gibt, entscheidet `@media (orientation:
-portrait)` – also auch das ohne JavaScript. Nebenbei ist das Bild dadurch schon geladen, wenn gleich
-darauf der Startbildschirm kommt.
+allerersten Öffnen ist die Karte noch unterwegs; bis dahin steht der dunkle Verlauf darunter, damit da
+kein Loch ist. Nebenbei ist die Karte dadurch schon geladen, wenn gleich darauf der Startbildschirm
+kommt – er trägt dieselbe.
 
 Damit das auch stimmt, musste die Zierschrift aus dem Seitenkopf verschwinden. Ein `<link
 rel="stylesheet">` auf Google hält das erste Bild auf, bis die Antwort da ist – und solange nichts
@@ -48,55 +57,38 @@ ruhig: Ball am Loch, Balken voll.
 
 ## Startbild
 
-Der Startbildschirm zeigt ein gemaltes Titelbild. Es gibt **zwei davon**: `icons/titelbild.jpg`
-(1170 × 639) fürs Querformat und `icons/titelbild-hoch.jpg` (1170 × 2078) fürs Hochformat. Eines
-allein täte es nicht – vom queren bliebe auf dem Handy ein schmaler Streifen übrig, mit
-zerschnittenem Schriftzug darin. Welches gilt, entscheidet allein das Seitenverhältnis des Fensters
-(`titelbildPassen()` setzt die Klasse `hoch`); beide füllen ihren Schirm dann ganz. Jedes bringt
-seine eigenen Maße mit, also auch eigene Stellen für Fahne, Laterne und Funkeln – und einen eigenen
-Filter, denn ein SVG-Filter gilt nur innerhalb seines eigenen SVG. Das Bild liegt als
-`<image>` in einem SVG, und **alles, was sich bewegt, liegt im selben Koordinatensystem darüber** –
-denselben 1170 × 639. Darum sitzt jede Bewegung immer genau an ihrer Stelle, egal wie der Schirm
-geschnitten ist: Bild und Auflagen werden gemeinsam beschnitten. Bewegt werden: die Fahne, Wolken
-über dem Himmel, drei Möwen, Sonnenfunkeln auf dem Wasser, der Schein der Laterne am Zaun,
-Lichtpunkte über der Wiese, und die ganze Ansicht fährt langsam heran.
+Der Startbildschirm ist eine Tafel wie jede andere: Dahinter liegt die **Weltkarte**, weich
+gezeichnet und abgedunkelt, davor die Tafel mit dem goldenen Schriftzug, den beiden großen Knöpfen
+und den drei kleinen. Dasselbe Bild also wie im Ladebild davor und wie hinter der Rangliste – wer
+das Spiel öffnet, sieht von der ersten Sekunde an dieselbe Welt.
 
-**Die Fahne wird nicht nachgezeichnet** – das ginge nie genau genug, und eine daneben liegende
-Zeichnung fällt mehr auf als gar keine Bewegung. Statt dessen liegt dasselbe Bild ein zweites Mal
-darüber, auf die Fahne beschnitten (`clipPath`) und durch ein Wellenfeld geschickt (`feTurbulence`
-und `feDisplacementMap`, das Rauschen wandert per SMIL). Verschoben werden also die gemalten Pixel
-selbst, mitsamt Löwe und Zaddeln; darunter steht unverändert das Original und füllt die Ränder, wo
-die Welle Stoff wegzieht.
+**Bis Fassung 138 lag hier ein gemaltes Titelbild**, in zwei Fassungen (`icons/titelbild.jpg` quer,
+`icons/titelbild-hoch.jpg` hoch), mit wehender Fahne, ziehenden Wolken, Möwen und Sonnenfunkeln –
+alles als SVG-Auflagen über dem Bild, bewegt allein mit CSS. Es sah neben dem Rest aus wie aus einem
+anderen Buch: Das Spiel ist gezeichnet, das Bild gemalt. Die Bilder liegen noch in `icons/`, die
+Zeichnung steht in der Geschichte des Zweiges; im ausgelieferten Spiel kommt beides nicht mehr vor.
 
-Der Ausschlag (`scale` am `feDisplacementMap`) ist je Bild ein anderer: 6 im queren, 20 im hohen.
-Nicht willkürlich – die Fahne nimmt im hohen Bild ein Viertel der Breite ein, im queren nur ein
-Achtel, und beide werden auf dieselbe Schirmbreite gebracht. Gleicher Ausschlag hieße also halb so
-viel Wellenbild. Nachgemessen an einem Ausschnitt um die Fahne, über sechs Augenblicke: Mit
-Wellenfeld ändern sich 10,5 % (quer) und 6,7 % (hoch) der Pixel, mit abgeschaltetem Wellenfeld genau
-0,0 %. Beim ersten Messversuch war der Vergleichspunkt der Kompass – der bewegt sich aber mit, weil
-das langsame Heranfahren das ganze Bild verschiebt und Wolken und Möwen durch den Himmel ziehen. Erst
-der Gegenversuch mit abgeschaltetem Filter am selben Ausschnitt sagt wirklich etwas.
+Zwei Dinge sind mit ihm weggefallen, und beide waren mehr als Schmuck:
 
-Hochkant liegt das Schöne am Bild unten: Fahne, Laterne, Ball auf dem Tee. Eine Tafel in voller Höhe
-deckt genau das zu – sie wird dort darum so knapp wie möglich: kleinere Knöpfe, engere Abstände, und
-der Erklärsatz fällt weg (er sagt nichts, was nicht schon auf dem Weltkarten-Knopf steht). Der
-Vollbild-Knopf geht nach oben links, sonst säße er auf dem Turnierband. Lädt das Bild nicht, fällt der Startbildschirm auf die
-gezeichnete Szene aus `src/title.js` zurück, und der Schriftzug steht wieder in der Tafel. Liegt das
-Bild, wird die Szene gar nicht erst gezeichnet – sie wäre ohnehin verdeckt.
+- **Die Tafelform hing am Bild.** `startbildAn()` setzte die Kennung `startbild` erst, wenn
+  `titelbild.jpg` wirklich geladen war – und an dieser Kennung hängt, wie breit die Tafel wird und ob
+  die beiden großen Knöpfe nebeneinander stehen. Ohne Netz kam die Tafel also schmal und hochkant
+  falsch. Jetzt sagt `startbild` nur noch, dass gerade die Starttafel liegt, und `hoch` nur noch,
+  dass das Fenster höher als breit ist.
+- **1,4 MB für nichts.** Die beiden Bilder standen weiter als `<image>` im HTML und wurden vom
+  Browser brav geholt, obwohl sie niemand mehr sah (nachgemessen: zwei Anfragen pro Seitenaufruf).
+  Darum ist die Zeichnung ganz aus `index.html` heraus, nicht bloß auf `display: none` gesetzt.
 
-**Zwei Fehler auf dem Weg dahin, und beide zeigten sich erst in der Vorschau:**
+Mit dem Bild ist auch `src/title.js` gegangen – die gezeichnete Szene, die einsprang, wenn das Bild
+nicht lud. Hinter der Starttafel liegt jetzt in jedem Fall die Karte; was die Leinwand dort malte,
+sähe ohnehin niemand. Auf dem Startbildschirm wird darum gar nicht mehr gezeichnet, was pro Bild die
+ganze Arbeit spart.
 
-- **Das Bild lag in einem eigenen Ordner `bilder/`.** Die Auslieferung nach GitHub Pages kopiert
-  aber nicht den ganzen Baum, sondern eine Liste (`cp -r … index.html style.css … src icons`), und
-  in der stand `bilder` nicht. Auf dem eigenen Rechner war alles in Ordnung, auf der Seite fehlte
-  das Bild. Es liegt darum bei den `icons` – dem Ordner, der ohnehin mitgeht. Dagegen prüft jetzt
-  `node tools/auslieferung.mjs`: Es liest, was `index.html` und `sw.js` verlangen, und was die
-  `cp`-Zeile in `.github/workflows/pages.yml` kopiert. Was nur auf einer Seite steht, ist ein
-  Fehler. (Gegengeprüft: Mit dem alten Pfad schlägt die Prüfung an.)
-- **Die Notbremse griff nicht.** Sie hing an einem `error`-Ereignis am `<image>` im SVG – und das
-  meldet Safari auf dem iPad nicht. Das Bild fehlte, der Rückfall blieb aus, und Safari malte sein
-  Fragezeichen quer über den halben Schirm. Geprüft wird jetzt **vorher**, mit einem eigenen
-  `Image`-Objekt: Das Bild kommt erst auf den Schirm, wenn es wirklich geladen ist.
+Hochkant bleibt die Tafel knapp: kleinere Knöpfe, engere Abstände, der Erklärsatz fällt weg (er sagt
+nichts, was nicht schon auf dem Weltkarten-Knopf steht). Sonst deckte sie auf dem Telefon die Karte
+ganz zu. Eine Breite braucht sie dort trotzdem – ohne sie schrumpft sie auf die Breite der Knöpfe und
+stünde auf dem Tablett als schmaler Streifen mitten in der Karte. Der Vollbild-Knopf geht hochkant
+nach oben links, sonst säße er auf dem Turnierband.
 
 ## Welten und Modi
 
@@ -107,9 +99,8 @@ lesbar bleibt, liegt ein Schleier dazwischen, der nach rechts hin dunkler wird �
 ohne Umweg in die Arena (Kolosseum), **Online spielen** in den Warteraum, **Rangliste** zu den
 Rekorden.
 
-Liegt das gemalte Startbild, trägt es den Schriftzug schon: Die Tafel lässt ihn dann weg, wird flach
-und stellt die beiden großen Knöpfe auf breiten Schirmen nebeneinander – das halbiert ihre Höhe, und
-vom Bild bleibt mehr zu sehen.
+Auf breiten Schirmen stehen die beiden großen Knöpfe nebeneinander statt untereinander. Das halbiert
+die Höhe der Tafel, und von der Karte dahinter bleibt mehr zu sehen.
 
 Die Tafel selbst war lange ein heller Schleier vor der Szene: hübsch, aber die Schrift lag auf Wolken,
 Tannen und Schafen. Jetzt ist sie dicht genug zum Lesen und hat den Doppelrahmen alter
@@ -192,6 +183,24 @@ Höhe** (y) – die x-Angabe wird beim Zeichnen durch `BREITE` geteilt.
 | Schattenreich | Legende | 10 extra große Bahnen im Reich der Schatten |
 | Schneeberg | Profi | 12 Bahnen den Berg hinauf – der Wind dreht im Takt, oben liegen die Wolkenetagen |
 | Uhrwerkstadt | Profi | 14 Bahnen im Uhrenturm – alles eine Frage des Takts, gestapelte Ebenen, zum Schluss wandert das Loch |
+| Zwergenmine | Profi | 11 Bahnen unter den Berg – man sieht nur, was im Licht der Grubenlampen steht (**nur in der Vorschau**) |
+
+**Nur in der Vorschau.** Die Zwergenmine ist gebaut und geprüft, soll aber noch nicht ins Spiel. Der
+nächstliegende Weg wäre, sie für `main` herauszuschneiden – und genau daran geht so etwas kaputt:
+Zwei Stände von Hand auseinanderzuhalten ist eine Dauerpflicht, und spätestens bei der dritten
+Auslieferung fehlt irgendwo eine Zeile. Darum ist es *ein* Stand mit einem Schalter, so wie beim
+Boule-Modus: Die Welt trägt `nurVorschau: true`, und die Oberfläche filtert – Weltliste, Weltkarte,
+Rangliste, Online-Auswahl und die Belohnungshüte.
+
+Zwei Dinge daran sind Absicht. Erstens sieht `WORLDS` für die Prüfwerkzeuge weiter *alle* Welten:
+Eine Welt, die keiner prüft, verfällt still. Zweitens bleibt ihre Insel auf der Karte liegen, nur
+ohne Namen und ohne Nadel – die Küste rechnet sich aus allen Landstücken, und ein Stück Land ohne
+Beschriftung verspricht nichts, sondern läßt offen, daß da noch etwas kommt.
+
+`tools/vorschauwelt.mjs` hält beide Richtungen fest: daß die Welt im Spiel nirgends angeboten wird,
+und daß sie in der Vorschau vollständig da ist. Es prüft auch, daß `main.js` die Weltliste nicht
+mehr von Hand durchgeht – die Prüfung hat beim Schreiben sofort drei solche Stellen gefunden,
+darunter eine, über die die Welt im Spiel doch erreichbar gewesen wäre.
 
 Das **Kolosseum** steht bewusst *nicht* auf der Weltkarte. Es ist die Turnierwelt und wird nur über
 den **Turnier**-Knopf im Startbildschirm betreten – die Weltkarte bleibt die Reise durch die sieben
@@ -597,15 +606,15 @@ gibt.
 
 ## Rangliste
 
-**Hinter der Tafel liegt ein eigenes Bild** (`icons/rangliste.jpg`, 1170 × 1477). Vorher stand dort,
-was gerade auf der Leinwand lag – das Spielfeld oder die Weltkarte – und wanderte unter der Tafel
-herum, obwohl es mit Rekorden nichts zu tun hat. Das Bild bekommt die Kennung `rangliste` am
-Überlagerungs-Schirm; dieselbe tragen die drei Tafeln, die von der Rangliste abzweigen (Liste
-führen, Schlüssel, Zurücksetzen), sonst spränge der Hintergrund bei jedem Schritt. Darüber liegt ein
-Schleier, der nach außen hin dichter wird: In der Mitte soll das Bild hell bleiben, am Rand ist es
-so bunt, dass der goldene Rahmen der Tafel darin unterginge. Anders als beim Startbild gibt es nur
-*ein* Bild – es ist hochkant, und `cover` schneidet daraus im Querformat den mittleren Streifen mit
-Burg und Meer heraus.
+**Hinter der Tafel liegt die Weltkarte**, weich gezeichnet und abgedunkelt – wie hinter jeder Tafel
+außerhalb des Spiels. Vorher stand dort, was gerade auf der Leinwand lag – das Spielfeld oder die
+Weltkarte in voller Schärfe – und wanderte unter der Tafel herum, obwohl es mit Rekorden nichts zu
+tun hat. Dann lag dort ein gemaltes Bild (`icons/rangliste.jpg`); es sah neben dem gezeichneten Rest
+aus wie aus einem anderen Buch und ist seit Fassung 137 nicht mehr im Spiel. Die Kennung `rangliste`
+am Überlagerungs-Schirm tragen auch die drei Tafeln, die von der Rangliste abzweigen (Liste führen,
+Schlüssel, Zurücksetzen) – sie rücken die Tafel nur in die Mitte statt nach unten, weil sie hoch ist.
+Darüber liegt ein Schleier, der nach außen hin dichter wird: In der Mitte soll die Karte hell
+bleiben, am Rand ist sie sonst so bunt, dass der goldene Rahmen der Tafel darin unterginge.
 
 Über **🏆 Rangliste** im Startbildschirm: für jede Bahn und für jede ganze Runde, mit Namen dabei, in
 **drei Wertungen**. Es gibt nichts auszuwählen – **alle drei laufen bei jedem Schlag gleichzeitig mit**,
@@ -949,6 +958,326 @@ zusammengesetzt und nach `src/courses_colosseum.js` geschrieben. So bleiben alle
 und eine Änderung an einer Kammer zieht nicht Dutzende Zeichen nach sich. Nach jedem Lauf gehören
 `node tools/validate.mjs` und `node tools/audit/audit.mjs colosseum` dazu.
 
+## Die Zwergenmine
+
+Die zehnte Welt liegt im Berg – und der Berg ist ein Vulkan. Auf der Weltkarte ist sie die
+**Feuerinsel im Ostmeer**: eine eigene Insel mit Basaltküste, rauchendem Kegel und ein paar toten
+Bäumen, vom Festland aus per Schiff zu erreichen. Zehn Bahnen, Stufe Profi, und ein Abstieg: vom
+Tageslicht am Mundloch durch die Stollen und die Kristallkammern hinunter zur Schmelze, wo das Erz
+flüssig steht – direkt unter dem Krater.
+
+**Die Welt war zuerst zu brav.** Neun Bahnen, alle flach, kaum eine Gefahr: Der Bot-Durchlauf zählte
+zwischen 0 und 0,58 Stürzen pro Spiel, im Schneeberg sind es auf zwei Bahnen über sechs. Ausgerechnet
+im Bergwerk, wo der Abstieg von Sohle zu Sohle das Naheliegendste überhaupt wäre – eine Bahn hieß
+„Sohle Neun" und war eben. Die Welt hat darum eine zehnte Bahn bekommen, zwei neue Ideen und
+größere Karten.
+
+**Der Abstieg ist jetzt wörtlich gemeint.** Vier der zehn Bahnen haben zwei Sohlen: Man schlägt auf
+der oberen ab und kommt hinunter, indem man über eine Kante rollt und fällt. Das kostet keinen
+Strafschlag, und genau darum ist es hier das richtige Mittel – in jeder anderen Welt braucht ein
+Stockwerkwechsel eine Maschine, die trägt (Aufzug, Seilbahn, Turbine). Nach unten braucht man keine.
+Man lässt los. Ein `o` in der Karte ist so eine offene Kante; an einem gewöhnlichen Bodenrand baut
+`level.js` eine Bande, und die hielte den Ball auf.
+
+Dafür musste das Spiel etwas lernen: **Der Abschlag darf auf jeder Etage liegen.** Bis Fassung 142
+wurde das `T` immer auf der untersten gesucht (`level.js`), und jede mehrstöckige Bahn ging damit
+zwangsläufig nach oben. Jetzt führt `level.js` ein `teeEbene` mit, so wie es `cupEbene` für das Loch
+schon immer tat. Gegengeprüft: Für alle 103 Bahnen, die es vorher gab, kommt 0 heraus – dort ändert
+sich nichts.
+
+Zuerst stand sie als kleines Landstück am Fuß des Gebirges, eingeklemmt zwischen Uhrwerkstadt und
+Talsenke. Das war gequetscht statt gelegen: keine eigene Küste, kein Platz für den Namen. Die Karte
+ist darum nach Osten gewachsen (`BREITE` 100 → 118 in `src/worldmap.js`), und weil die Höhe bleibt,
+bleibt auch alles Gezeichnete so groß wie vorher – der Kasten um die Karte schiebt waagerecht, so
+wie es dort von Anfang an vorgesehen war. Die Küste der Feuerinsel schaut im ersten Blick schon
+rechts herein, damit niemand sie übersieht, und in der Kopfzeile steht, dass es nach Osten
+weitergeht.
+
+**Die Frage dieser Welt ist die Dunkelheit.** Jede andere Welt fragt, wie fest (Märchenland), wann
+(Uhrenturm) oder wohin (Schneeberg) man schlägt. Die Mine fragt: *was liegt da vorn überhaupt?* Ab
+Bahn 2 trägt jede Bahn einen Schleier (`dunkel`, 0,45 bis 0,62), der sich nur an zwei Stellen
+öffnet: um den Ball und um jede Grubenlampe. Dazwischen muss man sich merken, was man beim Hinweg
+gesehen hat.
+
+Drei Entscheidungen halten das spielbar statt ärgerlich:
+
+* **Die Zielhilfe liegt über dem Schleier.** Wohin man schlägt, sieht man immer – was einen dort
+  erwartet, nicht. Wer im Dunkeln zielt, zielt trotzdem genau.
+* **Gefahr leuchtet durch.** Der Kreis einer Sprengladung und die Glut in den Spalten werden auf
+  den Boden gezeichnet, bevor der Schleier kommt. Man sieht also, was einem schaden kann, auch wenn
+  man den Weg dorthin nicht sieht.
+* **Jede dunkle Bahn ist mit den Lampen allein lesbar.** `tools/mine.py` misst das beim Bauen: Kein
+  Punkt des Weges darf weiter als 7,5 Felder von jedem Licht entfernt liegen. Die Bahn mit der
+  dunkelsten Stelle (Erster Stollen, 6,3) hat also noch Luft.
+
+Gezeichnet wird der Schleier in `Renderer.drawDunkelheit`, auf einer zweiten, unsichtbaren
+Leinwand: erst überall dunkel, dann wird an jedem Licht ein Loch hineingewischt – mit einem
+Farbverlauf, der nach außen hin dichter wird (`destination-out` löscht so viel, wie der Verlauf
+deckt). Dann kommt das Ganze in einem Zug auf das Bild.
+
+Zuerst lagen dafür gestapelte Lagen mit je einem harten Loch übereinander, erst drei, dann fünf.
+Bei drei Lagen sah man die Ringe einzeln, bei fünf ebenso – nur enger: Um Ball und Laterne stand
+eine Zielscheibe statt eines Lichtscheins. Mehr Lagen hätten das nur verschoben, nicht behoben, und
+jede Lage kostet eine bildschirmgroße Füllung pro Bild. Der Verlauf hat keine Stufen, kommt mit
+einer Füllung aus, und überlappende Lichter addieren sich von selbst richtig.
+
+**Die Bruchwand** (`bruchwand`) ist die einzige Maschine im ganzen Spiel, die **die Bahn selbst
+verändert**. Alles andere bewegt den Ball: Es stößt, trägt, hebt, fängt. Die Bruchwand rührt den
+Ball nicht an – sie nimmt eine Wand heraus. Ein Pfeiler stehengebliebenen Felses versperrt den Gang,
+mit einem Bohrloch und einem Kreidekreuz darauf; zündet eine Sprengladung in der Nähe, ist er weg,
+und zwar für den Rest der Bahn. Wer beim ersten Schlag vor einem geschlossenen Berg steht, spielt
+danach eine andere Bahn als vorher.
+
+Sie ist zugleich die Antwort auf eine Frage, die die Sprengladung offen gelassen hatte: Bis dahin
+war Dynamit im Berg nur ein Stoß für den Ball. In einem Bergwerk sprengt man aber keine Kugeln,
+sondern Fels.
+
+Sie geht **nicht** wieder zu, und das war überlegt: Eine Wand, die sich nach jedem Schlag wieder
+schließt, wäre ein Tor – und Tore gibt es schon, in drei Welten. Der Reiz liegt darin, dass der Berg
+offen *bleibt*, und dass man den Knall darum nicht abpassen, sondern abwarten muss. `tools/mine.py`
+prüft, dass zu jeder Bruchwand auch eine Ladung in Reichweite liegt: Das ist die eine Panne, die man
+beim Bauen nicht sieht – die Wand steht da und sieht richtig aus, nur zündet nichts in ihrer Nähe.
+
+### Ein Hindernis auf einer oberen Etage wurde nie gezeichnet
+
+Mehrstöckige Bahnen zeichnen ihre Etagen als Schollen, und zwar **nach** allem, was unten steht –
+sonst verdeckte eine Mauer im Vordergrund die Etage darüber. Wer oben stand, wurde dabei brav auf
+Höhe null gemalt und danach von der eigenen Scholle zugedeckt. Das Hindernis war da, es stieß den
+Ball, man sah es nur nicht. Auf der Kristallkammer waren das zwei Kristalle und ein Magnet; über
+alle Welten hinweg 26 Hindernisse auf sieben Bahnen.
+
+Der Zeichner stellt diese Stücke jetzt zurück und holt sie in `zeichneEbene` nach – mit der
+Leinwand um die Höhe der Etage nach oben verschoben. Verschieben genügt, weil die Höhe in dieser
+Abbildung nur senkrecht und nur linear wirkt (`projRaw`); `tools/ebenen.mjs` rechnet das an
+vierhundert Proben nach, damit es auffällt, falls sich die Abbildung einmal ändert.
+
+Damit gibt es **eine** Stelle, an der die Etage in die Höhe eingeht. Windfahne, Schneebrücke und
+Bruchwand haben das vorher zusätzlich selbst getan – zusammen mit dem Versatz wäre das doppelt
+gewesen, und sie hätten eine Etage zu hoch gestanden. Ausgenommen bleiben nur die Maschinen, die
+zwischen zwei Etagen stehen: Seilbahn, Aufzug und Zahnstange (`drawSpannendeMaschinen`) und das
+Kupferrohr, das seine Teilstücke einzeln in die Tiefensortierung schickt, damit es sich richtig
+mit den Mauern überdeckt.
+
+### Die Bahnen tragen jetzt gezeichnete Sinnbilder
+
+In der Rangliste trugen die Zeilen Emoji – ein 🐉 für die Drachenhöhle, ein 🐙 für die Krakengrotte –,
+die Kopfzeile daneben gezeichnete Sinnbilder. Bunt neben einfarbig, in derselben Tabelle.
+
+Das war ursprünglich eine **bewusste** Entscheidung, und der Kopf von `src/icons.js` hielt sie fest:
+Material Symbols kennt weder Drache noch Krake, und am Zeichen erkannte man die Bahn. Sie hat sich
+trotzdem nicht bewährt. Jedes Gerät zeichnet Emoji selbst, die Liste sah auf dem iPad anders aus als
+auf dem Rechner – und in einer Welt wie dem Sturmhimmel trugen ohnehin alle neun Bahnen dasselbe
+Wolkenzeichen.
+
+Jetzt hat jeder **Abschnitt** einer Welt ein gezeichnetes Zeichen aus derselben Sammlung wie der
+Rest der Oberfläche; alle 37 sind vergeben. Vierzehn Sinnbilder sind dafür dazugekommen (Anker,
+Segel, Schneeflocke, Kristall, Grubenlampe, Wolke, Krone, Kirche …), und eines ist von Hand
+gezeichnet: den **Pilz** gibt es in der Sammlung nicht – wie schon bei Tanne und Sonne.
+
+Was dabei verloren geht, ist echt: Ein Krake ist jetzt eine Welle. Der Abschnitt ist aber das, was
+man in der Liste tatsächlich unterscheiden will – in welchem Teil der Welt eine Bahn liegt –, und
+das steht vollständig da. `tools/schrift.mjs` prüft, dass kein Abschnitt vergessen wird: Ein
+vergessener fiele still auf das Ersatzzeichen zurück, und das sähe aus wie Absicht.
+
+### Eine Zierschrift, eine Leseschrift
+
+Es waren zwei Zierschriften nebeneinander: **Cinzel Decorative** für die Titel, **MedievalSharp**
+für die beiden großen Knöpfe. Auf dem iPad stehen die untereinander, und dann sieht man es sofort –
+„Fantasy Golf" und „Weltkarte" sahen aus, als gehörten sie nicht zusammen. Seit Fassung 148 gilt:
+
+| | wofür |
+|---|---|
+| `MedievalSharp` | alles, was schmückt: Titel, Ladebild, die großen Knöpfe, die Schlusstafel |
+| `Trebuchet MS` | alles, was man liest: Fließtext, Knöpfe, Zahlen |
+| `monospace` | nur der Bahn-Text im Editor und die Entwicklerausgabe – dort muss jede Spalte untereinander stehen |
+
+Das 3D-Spiel benutzte ohnehin nur MedievalSharp; jetzt sehen beide Spiele gleich aus. Nebenbei wird
+eine Schriftdatei weniger geholt, bevor überhaupt etwas zu sehen ist.
+
+**Und die Farbe dazu.** Der Titel war ein wandernder Goldverlauf, in die Buchstaben geschnitten;
+„Weltkarte" darunter war cremeweiß mit hartem Absatz. Dieselben Wörter tragen jetzt dieselbe Farbe
+– und sie steht an *einer* Stelle, als `--zier` in `:root`, von Titel, Ladebild und den großen
+Knöpfen benutzt. Wer sie ändern will, ändert sie dort. Dass der Titel keinen eigenen Verlauf mehr
+hat, hat noch einen Nebeneffekt: Das Sinnbild davor brauchte eine eigene Regel, um überhaupt
+sichtbar zu bleiben, solange die Schrift nur ein Ausschnitt war. Die ist jetzt weg.
+
+Die **Weltkarte** zählt ausdrücklich nicht mit. Ihre Beschriftung ist Georgia kursiv, und das ist
+nicht Oberfläche, sondern Teil der gezeichneten Karte – so wie die Schrift auf einem alten Atlas
+zum Blatt gehört. `tools/schrift.mjs` hält beides fest: dass es außer den dreien keine gibt, dass
+genau eine Familie nachgeladen wird, und dass die Karte sich nicht unbemerkt ändert.
+
+### Der Schneeball: aus vier Paletten werden vier Abschnitte
+
+Der Schneeberg war zwölfmal dieselbe Bahn in anderer Farbe, und das ließ sich nachzählen: eine
+Windfahne auf **12 von 12**, eine Lawine auf 10, drei bis sechs Hindernisse auf vierhundert
+Feldern, Eis auf 4 von 12 Bahnen, Wasser auf **keiner**, drei bis vier Deko-Stücke je Bahn. Die
+vier Abschnitte – Talstation, Fels, Gletscher, Gipfel – waren nichts als vier Farbpaletten: Es galt
+überall dasselbe.
+
+Seit Fassung 152 gilt auf dem Berg eine eigene Regel, so wie in der Zwergenmine die Dunkelheit:
+
+> **Wer über Schnee rollt, setzt Schnee an und wird größer. Wer über Eis rollt, streift ihn wieder
+> ab. Und ein zu dicker Ball passt nicht mehr ins Loch.**
+
+Damit heißt *Gletscher* etwas: Dort ist alles Eis, der Ball bleibt klein und rutscht. Im Tiefschnee
+am Gipfel wächst er am schnellsten. Die Aufgabe der Welt in einem Satz: **nicht zu dick ankommen.**
+
+**Wie scharf, und wie ich es falsch hatte.** Zuerst war der Ball schon nach *zwei* Schlägen zu dick –
+auf jeder Bahn, bei jedem Spiel. Damit war die Regel keine Aufgabe, sondern eine Dauerstrafe; der
+Bot endete auf einer Bahn zehnmal von zehn im Schlaglimit. Gemeint war: *wer weit herumirrt, muss
+zum Eis* – nicht *wer zweimal schlägt*. Jetzt wird er nach rund vierzig Kacheln zu dick, also nach
+vier ordentlichen Schlägen, und drei Kacheln Eis genügen zum Abstreifen.
+
+**Was die Prüfung dazugelernt hat.** Eine Schneebahn ohne erreichbares Eis ist unlösbar, und zwar
+*unsichtbar* unlösbar – es sähe alles richtig aus, man käme nur nie hinein. `tools/validate.mjs`
+prüft darum zweierlei: dass überhaupt Eis oder Wasser auf dem erreichbaren Weg liegt, und dass es
+**höchstens zwölf Felder vor dem Loch** liegt. Die zweite Hälfte hat zuerst gefehlt, und sie hat
+sofort vier Bahnen gefunden, auf denen das Eis gleich hinter dem Abschlag lag und der Ball auf den
+letzten zwanzig Feldern wieder zuschneite.
+
+**Und die Bahnen selbst.** Eis jetzt auf allen zwölf (der Gletscher besteht aus 170 bis 200 Kacheln
+davon), Wasser auf dreien, Tiefschnee auf vieren, vier bis sieben Deko-Stücke je Bahn. Die
+Maschinen sind ungleich verteilt: Windfahne auf 10 von 12 statt auf allen, Lawine auf 4, Seilbahn
+auf 4, Schneebrücke auf 2. Zwei Bahnen haben gar keinen Wind – und genau deshalb merkt man ihn auf
+den anderen.
+
+**Was am Rand stand und nicht stimmte.** Die Streu-Deko der vier Schneepaletten enthält einen
+Windsack. Auf den beiden windstillen Bahnen stand er trotzdem da und versprach Wind, den es dort
+nicht gibt – auf den Gletscherspalten sogar gegen den eigenen Einleitungstext. Eine Bahn kann
+einzelne Requisiten der Palette jetzt abwählen (`autoDecor.ohne`). Die Prüfung dazu steht in
+`tools/schnee.mjs` und ist die Art Prüfung, die sich lohnt: Geschrieben für die eine Bahn, die mir
+aufgefallen war, hat sie sofort die zweite gefunden.
+
+**Die Schlinge auf der Wächte.** Die Gletscherspalten waren nach dem Umbau nicht schwer, sondern
+unspielbar: Der Bot erreichte in **zehn von zehn** Runden das Schlaglimit und kam kein einziges Mal
+ins Loch. Die Spur zeigte, woran: Der Ball kam auf der Schneewächte zur Ruhe, spielte den nächsten
+Schlag von ihr aus, sie brach hinter ihm weg, er fiel – und wurde an seinen Ruheplatz zurückgelegt,
+also genau wieder auf die Wächte. Achtzehn Schläge lang, jedes Mal dasselbe.
+
+Das ist kein Bahnfehler, sondern einer im Spiel, und er betraf jede Bahn mit einer Wächte. Eine
+Wächte trägt *über* die Rinne, sie ist kein Standplatz: Seit Fassung 152 rutscht der Ball am Ende
+eines Schlags von ihr herunter, auf den nächsten festen Boden daneben – ohne Strafschlag, denn
+gefallen ist er nicht. `tools/schnee.mjs` prüft das am Verhalten, nicht am Quelltext, und meldet
+auf dem alten Stand vier benannte Fehler.
+
+**Und warum in den Spalten jetzt Wasser steht.** Auch mit der Regel blieb die Bahn zäh, denn die
+zweite Hälfte des Problems war der Abgrund selbst: Wer zwischen zwei Eisfeldern hineinfällt, wird
+an seinen Ruheplatz zurückgelegt – und der lag auf dem schmalen Streifen am Spaltenrand, von dem
+aus er gerade hineingefallen war. Jetzt steht in allen drei Spalten Schmelzwasser. Wasser kostet
+einen Schlag und legt zurück, aber es sperrt nicht ein. Dazu liegt an beiden Enden jeder Querung
+fester Firn statt blankem Eis – auf Eis kann der Ball vor einer Spalte nirgends liegen bleiben, und
+dann stochert man nur davor herum. Aus *nie im Loch* wurden **Ø 3,7 Schläge, Median 3, kein
+Limit-Treffer.**
+
+**Und eine Zahl, die etwas Falsches behauptet hat.** Der Gipfel stand auf Par 6. Der Bot braucht
+dort im Schnitt 9,4 Schläge und im Median 11, und die Verteilung ist zweigeteilt: halbe Runden mit
+4 bis 8 Schlägen, halbe mit 11 bis 15, je nachdem ob man eine der drei Etagen wieder hinunterfällt
+und den Aufstieg noch einmal fährt. Am Schlaglimit war die Bahn dabei nie – höchstens 15 von 22.
+Zu ändern war also nicht die Bahn, sondern das Par: **8**. Ein Par, das kein Mensch erreicht, ist
+keine Herausforderung, sondern eine falsche Auskunft.
+
+### Der Gießlöffel: das einzige Hindernis, das die Bahn aufbaut
+
+Eine Pfanne am Rand der Schmelze kippt im Takt flüssiges Erz in eine Rinne. Das Erz läuft ein Feld
+weiter, erstarrt und ist von da an Boden. Mit jedem Guss wächst die Brücke um ein Feld, bis die
+Glutspalte überbrückt ist.
+
+**Warum er nicht der Blitz ist.** Ein Streifen, der im Takt tödlich wird, steht schon im
+Sturmhimmel. Das Eigene hier ist nicht die Gefahr, sondern dass daraus Weg wird. Die Bruchwand
+räumt einmal Fels weg, ein Tor öffnet und schließt – hier entsteht Boden, wo keiner war, und er
+bleibt. Es ist das einzige Hindernis im Spiel, das die Bahn *aufbaut*.
+
+**Warum das ohne Eingriff in die Physik geht.** Glut und Boden sind für den Bahnbau beide „Boden":
+Um eine Glutkachel herum baut `level.js` keine Bande, um eine Bodenkachel auch nicht. Ein Feld von
+`l` auf `#` umzuschreiben ändert darum nur, was beim Betreten geschieht. Über einen Abgrund ginge
+es nicht – dort steht eine Bande, und die bliebe mitten auf der neuen Brücke stehen.
+
+**Wie schnell.** Takt 2,2 s, Glut 0,9 s – die Brücke steht nach gut zehn Sekunden. Die erste
+Fassung war halb so schnell (Takt 4,2 s, Glut 2,0 s) und fühlte sich nach Warten an statt nach
+Zusehen. Die beiden Zahlen hängen zusammen: Das Fenster zum Hinüberkommen ist Takt minus Glut. Wer
+nur den Takt verkürzt, macht die Bahn nicht schneller, sondern enger.
+
+**Und warum es trotzdem eine Aufgabe ist.** Beim Guss glüht die *ganze* gefüllte Rinne, denn das
+Erz läuft über das schon Erstarrte hinweg bis nach vorn. Sonst wäre die Rinne nach dem ersten Guss
+ein sicherer Steg und die Aufgabe bloßes Warten. Abgekühlt wird von hinten nach vorn: Am Löffel
+wird der Strom zuerst dünn, vorn steht das Erz am längsten. Dadurch läuft eine Abkühlungswelle über
+die Rinne, und man kann ihr hinterherlaufen, statt immer auf die ganze Brücke zu warten.
+
+Zwei Werkzeuge mussten mitlernen, und beide aus demselben Grund: Für sie steht in der Karte Glut,
+wo im Spiel Boden entsteht. `tools/mine.py` und `tools/validate.mjs` zählen die Felder einer Rinne
+darum als Weg – sonst meldeten sie „Loch vom Abschlag nicht erreichbar" für eine Bahn, deren Weg
+entsteht, während man davorsteht. `tools/mine.mjs` prüft dafür die zehn Regeln des Löffels nach,
+vom ersten Guss bis zu der Glut, die beim nächsten Loch wieder dasteht.
+
+Im Editor und unter geteilten Bahnen gibt es ihn **nicht**: Sein `rinne`-Feld ist ein
+verschachteltes Objekt, und der Filter für fremde Bahndaten (`src/share.js`) lässt nur flache Werte
+durch. Lieber kein Gießlöffel in einer Freundesbahn als eine Lücke in dieser Prüfung.
+
+Der Prellklotz der Mine ist ein **Fass** (`style: 'fass'`): eichen, mit drei Eisenreifen, und es
+staucht sich sichtbar, wenn man es trifft. Ohne eigenen Stil fiel es auf den Fliegenpilz zurück, mit
+dem das Märchenland angefangen hat – und ein Fliegenpilz vierhundert Meter unter Tage ist Unsinn.
+
+Dazwischen stand kurz ein Grubenstempel, der Holzpfosten mit Kappholz, der im Berg die Firste
+abfängt. Sachlich richtig, nur hat ihn niemand als solchen erkannt: dünner Schaft, zwei Ringe wie
+aufgesteckte Teller, oben ein schwebender Balken. Ein Fass muss man nicht erklären. Und es ist rund
+– ein Prellklotz wird aus jeder Richtung getroffen, darf also keine Vorderseite haben; ein Hunt
+hätte eine, und auf der Lorensohle fahren schon welche.
+
+Gebaut ist es aus zwei Kegelstümpfen, die sich in der Mitte zum Bauch weiten, und drei `reifen`.
+Der Reifen ist neu im Zeichner (`src/render.js`) und ist eine `saeule` ohne Deckel: Mit Deckel legte
+jedes Band eine volle Scheibe quer über das Fass, und drei Scheiben deckten das ganze Holz zu.
+
+**Zwei weitere Maschinen** (`src/obstacles_mine.js`, gezeichnet in `src/render_mine.js`):
+
+| Typ | Was sie tut |
+|---|---|
+| `sprengladung` | Die Lunte brennt sichtbar ab, dann wirft der Druck alles im Umkreis nach außen – umso weiter, je näher es liegt (voll am Zünder, null am Rand). Sie kostet **keinen** Schlag und wirkt auch auf einen ruhenden Ball: Wer sich richtig hinlegt, lässt sich von ihr tragen. Takt 7,5 s, Lunte 2,4 s, Reichweite 3,2 Felder. |
+| `kippbuehne` | Eine Bohle über dem Schacht, die auf einer Achse ruht und zu der Seite kippt, auf der der Ball liegt. In einem Satz: **über die Mitte musst du kommen.** Wer es schafft, wird hinübergeworfen; wer davor liegenbleibt, rutscht zurück. Um die Achse liegt eine Totzone, damit nicht ein Fingerbreit über alles entscheidet. |
+| `grubenlampe` | Leuchtet ein Stück Bahn aus. Keine Wirkung auf den Ball – und auf einer dunklen Bahn trotzdem das Wertvollste, was dort steht. |
+
+Zwei Dinge, die ich **nicht** gebaut habe, obwohl sie auf der Hand lagen: Ein Förderkorb wäre der
+bestehende *Aufzug*, eine Pressluftdüse der bestehende *Aufwind*, und ein Schöpfrad, das den Ball
+eine Etage höher trägt, wäre *Aufzug* und *Zahnstange* unter einer runden Zeichnung. Neue Optik ist
+kein neues Spiel. Aufzug, Zahnstange, Lore und Aufwind kommen in der Mine natürlich trotzdem vor –
+nur eben als das, was sie sind.
+
+Geprüft wird beides dauerhaft mit `node tools/mine.mjs`: dass der Druck nach außen geht und mit dem
+Abstand abnimmt, dass jenseits der Reichweite nichts passiert, dass kein Strafschlag anfällt, dass
+der Knall genau einmal je Zündung gemeldet wird – und für die Bühne, dass sie hinter der Mitte
+vorwärts wirft, davor zurück, in der Totzone nichts tut und ohne Ball in die Waage zurückkehrt. Für
+die Bruchwand acht weitere Proben: dass sie ohne Sprengung steht und den Ball aufhält, dass eine
+Zündung daneben sie bricht, dass sie danach offen *bleibt*, dass eine Zündung außer Reichweite sie
+stehen lässt, und dass sie beim nächsten Loch wieder dasteht.
+
+**Die zehn Bahnen** (`src/courses_mine.js`, erzeugt von `tools/mine.py`):
+
+| # | Name | Par | Abschnitt | Was sie will |
+|---|---|---|---|---|
+| 1 | Mundloch | 3 | Tageslicht | Halde, Grubenholz, das Tor in den Berg. Noch ohne Schleier. |
+| 2 | Erster Stollen | 3 | Stollen | Die Dunkelheit und die Lampen: den Lichtern nach, dann findet man das Loch. |
+| 3 | **Der Schacht** | 3 | Stollen | **Zwei Sohlen.** Die Strecke bricht vorn ab – über die Kante rollen und fallen lassen. Kostet nichts. |
+| 4 | Sprengfeld | 4 | Stollen | Zwei Ladungen im Gang, und rechts wie links steht nichts mehr. |
+| 5 | **Die Bruchwand** | 4 | Stollen | **Der Berg ist zu.** Daneben liegt eine Ladung; wenn die zündet, steht der Gang offen – für den Rest der Bahn. |
+| 6 | Kippbohle | 3 | Stollen | Der Schacht quer durch den Stollen, darüber die Bohle. Nicht zaghaft. |
+| 7 | Lorensohle | 4 | Stollen | **Zwei Sohlen.** Oben queren zwei Hunte die Strecke, unten liegt das Loch. |
+| 8 | Kristallkammer | 4 | Kristall | **Zwei Sohlen.** Oben der Magnetit auf der Galerie, unten ein Felspfeiler vor der großen Kammer. |
+| 9 | Sohle Neun | 5 | Schmelze | **Zwei Sohlen.** Man fällt mitten in die Glut: ein Steg über den einen Spalt, eine Bohle über den anderen. |
+| 10 | **Die Gießhalle** | 4 | Schmelze | **Der Gießlöffel.** Quer durch die Halle steht die Glut, hinüber führt nichts – bis das Erz die Brücke baut. |
+| 11 | Die Schmelze | 5 | Schmelze | Die Insel im Lavasee. Der Damm ist zugemauert und wird in der Mitte im Takt leergefegt. |
+
+Die Pare stehen nicht nach Gefühl, sondern nach dem, was die Bahnen wirklich spielen: Der
+Normalspieler-Bot (`node tools/audit/audit.mjs mine`) hat sie durchgespielt, und wo sein Median
+zwei Schläge unter dem Par lag, ist das Par heruntergegangen. Umgekehrt genauso: „Sohle Neun" kostet
+ihn im Schnitt 5,8 Schläge – zwei Lavaspalten –, und darum steht dort seit Fassung 144 eine
+Fünf und keine Vier. Ein Vorbehalt bleibt und ist hier
+größer als sonst: Der Bot kennt die Karte auswendig, ein Mensch im Dunkeln nicht. Die Pare sind
+darum eher knapp bemessen als großzügig.
+
+**Die Belohnung** der Welt ist der Skin **Grubenlampe**: ein eiserner Lampenkörper mit
+Messingreifen, in dessen Glas wirklich eine Flamme steht – dazu als Hut der Grubenhelm mit der
+kleinen Lampe vorn. Freigeschaltet wird er wie jede Weltbelohnung, indem man die Welt vollständig
+spielt.
+
 ## Der Schneeberg
 
 Zwölf Bahnen, Stufe Profi, und sie liegen zwischen Tüftlerreich und Dschungeltempel – die Reise
@@ -1058,6 +1387,25 @@ liegen (ohne Deckung wäre sie keine Aufgabe, sondern Warten), beide Stationen e
 auf ihrer jeweiligen Ebene Bahn sein, und eine Schneebrücke muss auf Bahn liegen – sonst wäre sie
 von Anfang an ein Loch.
 
+Die Maschinen selbst prüft `node tools/schnee.mjs` – dauerhaft und nachrechnend, nicht durch
+Hinschauen. Anlass waren zwei Fehler an der Seilbahn, die beide nur zu sehen und nicht zu messen
+schienen:
+
+- **Der Ball schwebte eine Etage über der Kabine.** Die Gondel rechnet ihre Höhe vom Grund der Bahn
+  aus, der Ball dagegen von *seiner* Etage – der Zeichner legt `ball.ebene` noch einmal obendrauf.
+  Wer die eine Zahl unbesehen in die andere einsetzt, zählt die Etage zweimal. Auf allen Bahnen mit
+  Talstation auf Ebene 0 fiel das nicht auf; auf dem Gipfel, wo die zweite Gondel schon auf Ebene 1
+  steht, schwebte der Ball genau 2,00 Kacheln zu hoch. `tools/schnee.mjs` misst jetzt auf **jeder**
+  Seilbahn jeder Bahn den Abstand zwischen Ball und Kabinendach.
+- **Die Kabine wurde durchsichtig, während man darin saß.** Die Regel „was vor dem Ball steht und
+  ihn verdecken würde, wird fast durchsichtig gezeichnet" traf ausgerechnet das Fahrzeug, in dem er
+  fährt – gemessen: `globalAlpha` 0,22. Übrig blieb ein Ball, der über einem blassen Schemen
+  schwebt. Alles, was den Ball trägt, ist jetzt von der Regel ausgenommen (`noFade: true`). Betroffen
+  war nur die Seilbahn, und dort nur auf den Bahnen, wo sie innerhalb einer Etage fährt: Wechselt sie
+  die Etage, steht sie wie Aufzug und Zahnstange ohnehin außerhalb der Tiefensortierung und wird
+  zuletzt gezeichnet. Der Vermerk steht bei allen dreien, damit er nicht fehlt, wenn eine davon
+  einmal auf einer einstöckigen Bahn landet.
+
 ## Die Bahnen des Uhrenturms
 
 Vierzehn Bahnen, Stufe Profi, und die letzte Welt des Spiels. Was sie von allen anderen trennt,
@@ -1082,6 +1430,22 @@ Kupferrohre verbunden sind; Bahn 13 ist der Rohrturm, und Bahn 14 ist der Höhep
 **Hemmung** ab Bahn 6 – beide bewusst nicht auf jeder Bahn, damit sie nicht zur Gewohnheit werden.
 Das **wandernde Loch** steht auf vier Bahnen: klein auf 6, 9 und 11, und als ganzes Zifferblatt
 auf 13.
+
+**Der Schacht.** Aufzug und Zahnstange fahren zwischen zwei Etagen, und die obere hat an ihrer
+Stelle eine Öffnung. Bis Fassung 140 war die nirgends zu sehen: Über der Maschine lag ganz
+gewöhnlicher Boden, die Kabine wurde – wie alle Maschinen zwischen zwei Etagen – als letztes
+darübergemalt, und sie fuhr sichtbar durch massives Gestein nach oben. Auf allen vier Bahnen mit
+Aufzug oder Zahnstange steht über dem Schacht eine volle Bodenkachel; es fiel also nirgends nicht
+auf. `Renderer.drawSchacht` zeichnet jetzt das Loch mit einer dunklen Kehle, einem Rahmen aus Eisen
+und einem warmen Saum darauf – in der Zeichnung der Maschine und nicht in der Bahn, damit es auch
+für einen Aufzug aus dem Editor gilt.
+
+**Beschnitten wird die Kabine ausdrücklich nicht**, obwohl es naheliegt: Wer im Schacht steckt, ist
+verdeckt. Ausprobiert war es auch – und dann verschwindet die Kabine unten vollständig unter der
+oberen Etage, samt Ball, und man sieht nicht mehr, wo man einsteigen soll. Genau davor werden diese
+Maschinen ja zuletzt gezeichnet: Auf einer Wolke, die voll deckend gemalt wird, wäre sonst die
+Gondel, mit der man gekommen ist, spurlos weg. Der Schacht ist also die Erklärung des Bildes, nicht
+sein Ausschnitt.
 
 | Nr. | Bahn | Größe | Par | Maschinen | Der Moment, auf den man wartet |
 |---|---|---|---|---|---|
@@ -1695,20 +2059,40 @@ lebt von Form und Farbe, nicht von Oberflächenbildern. Geladen wird kein einzig
 
 Das Spiel ist eine Web-App: Manifest (`manifest.webmanifest`), App-Symbole (`icons/`) und ein Service Worker (`sw.js`) sorgen dafür, dass es sich wie eine App installieren lässt und offline läuft. Der Workflow `.github/workflows/pages.yml` veröffentlicht bei jedem Push automatisch auf GitHub Pages.
 
-**Das App-Zeichen ist ein Ausschnitt aus dem gemalten Titelbild** – dem hochkanten, weil das Wappen
-darin am größten liegt. Es gibt **zwei Zuschnitte**, und das ist kein Zufall: Das gewöhnliche Zeichen
-(`icon-192`, `icon-512`, `apple-touch-icon`) führt das Wappen bis fast an den Rand, denn iOS und
-Android runden es nur ab. Das **maskable**-Zeichen darf das nicht – davon schneidet Android einen
-Kreis aus, und was außerhalb der inneren 80 % liegt, ist weg. Dort sitzt dasselbe Wappen darum in
-einem weiteren Ausschnitt: 870 von 1170 Bildpunkten Breite, also 74 %. Gegengeprüft, indem beide
-Masken – Kreis und abgerundetes Quadrat – über die fertigen Zeichen gelegt wurden; das Wappen
-bleibt in beiden ganz.
+**Das App-Zeichen ist eine kleine Seekarte** (`node tools/appzeichen.mjs`): eine Insel im Meer der
+Weltkarte, mit dem Loch und der Fahne darauf. Bis Fassung 141 waren es Ausschnitte aus dem gemalten
+Titelbild – und die passten aus demselben Grund nicht wie das Titelbild selbst: Das Spiel ist
+gezeichnet, das Bild war gemalt.
 
-Die beiden 512er wiegen als PNG je gut 700 kB. Sie stehen darum **nicht** in der Vorratsliste des
-Service Workers: Gebraucht werden sie nur beim Einrichten auf dem Startbildschirm, nicht beim
-Spielen, und der `fetch`-Griff legt jede geholte Datei ohnehin ab. PNG bleibt es trotzdem – JPEG
-wäre viermal kleiner, aber das Zeichen ist das eine, was auf jedem Gerät sitzen muss, und für
-`apple-touch-icon` schreibt Apple PNG.
+**Es ist kein Ausschnitt der Karte.** Ein Ausschnitt wäre bei 48 Bildpunkten ein Farbbrei: Die Karte
+lebt von Beschriftung und hundert kleinen Zeichen, und nichts davon überlebt so klein. Das Zeichen
+ist darum eine eigene, winzige Karte mit nur *einem* Motiv – aber aus denselben Teilen:
+
+- **Die Küste wird gerechnet, nicht gezeichnet.** `WorldMap.kueste` ist dieselbe Rechnung, die auch
+  das Festland macht: ein paar Landstücke, ein Feld daraus, die Linie auf Wasserhöhe ist die Küste,
+  und drei Lagen Rauschen verbiegen dabei die Stelle, an der man das Feld fragt. Daher die Buchten
+  und die zerfranste Kante. Von Hand gezeichnet war die Insel zuerst – ein Klecks mit einer Delle,
+  der eher nach Farbpalette aussah als nach Land. Gerechnet wird in den Einheiten der Karte, sonst
+  wäre das Rauschen im Verhältnis zur Insel zu fein; ins Bild kommt sie über eine Vergrößerung, die
+  aus ihren eigenen Ausmaßen folgt.
+- **Die Bäume und der Hügel sind die Zeichen der Karte** (`WorldMap.zeichen`), nicht nachgebaute.
+  Nachgebaut waren sie einen Anlauf lang, und damit wären es zwei Wahrheiten gewesen: Wer in
+  `src/worldmap.js` einen Baum ändert, hätte im App-Zeichen einen alten stehen.
+- Dazu Gradnetz, Wellenstriche, die gestuften Tiefenlinien am Ufer, der helle Strand innen an der
+  Küste, die Windrose und die Vignette – alles wie auf der großen Karte.
+
+Es gibt **zwei Zuschnitte**, und das ist kein Zufall: Das gewöhnliche Zeichen (`icon-192`,
+`icon-512`, `apple-touch-icon`) führt das Bild bis an den Rand, denn iOS und Android runden es nur
+ab. Das **maskable**-Zeichen darf das nicht – davon schneidet Android einen Kreis aus, und was
+außerhalb der inneren 80 % liegt, ist weg. Dort sitzt dasselbe Motiv darum kleiner im Bild: 11 %
+Rand ringsum, also 78 % der Kante. Gegengeprüft, indem beide Masken – Kreis und abgerundetes
+Quadrat – über die fertigen Zeichen gelegt wurden, und indem das Zeichen bei 48, 64 und 96
+Bildpunkten angesehen wurde: So klein bleiben Insel und rote Fahne, alles andere ist Beiwerk.
+
+Die beiden 512er wiegen als PNG je gut 200 kB – als Ausschnitt des gemalten Bildes waren es 700.
+Sie stehen trotzdem **nicht** in der Vorratsliste des Service Workers: Gebraucht werden sie nur beim
+Einrichten auf dem Startbildschirm, nicht beim Spielen, und der `fetch`-Griff legt jede geholte
+Datei ohnehin ab. PNG bleibt es, denn für `apple-touch-icon` schreibt Apple PNG.
 
 Einmalig einrichten (auf github.com im Repository):
 1. **Settings → General → Danger Zone → Change visibility → Public** (GitHub Pages ist nur bei öffentlichen Repositories kostenlos).
@@ -2036,9 +2420,7 @@ Sinnbilder, ein laufendes Spiel, die Rangliste und der Editor da sind.
 ## Projektstruktur
 
 ```
-index.html        Seite, HUD, Ladebild und Startbild (beide laufen ohne JavaScript)
-icons/titelbild.jpg   gemaltes Titelbild des Startbildschirms (quer)
-icons/titelbild-hoch.jpg  dasselbe fürs Hochformat
+index.html        Seite, HUD und Ladebild (das Ladebild läuft ohne JavaScript)
 tools/auslieferung.mjs  prüft für beide Seiten, ob alles Gebrauchte auch ausgeliefert wird
 style.css         Oberfläche
 src/themes.js     Farbpaletten und Deko je Welt
@@ -2048,6 +2430,7 @@ src/courses_jungle.js die Bahnen des Dschungeltempels
 src/courses_storm.js die Bahnen des Sturmhimmels (Legende)
 src/courses_shadow.js die Bahnen des Schattenreichs (Legende)
 src/courses_colosseum.js die Bahnen des Kolosseums (Legende)
+src/courses_mine.js die neun Bahnen der Zwergenmine (erzeugt von tools/mine.py)
 src/courses_boule.js die neun Bahnen der Boule-Welt (erzeugt von tools/boule.py)
 src/courses_pro.js die Bahnen des Tüftlerreichs und die Weltenliste
 src/editor.js     Baumodus (Editor für eigene Bahnen)
@@ -2056,9 +2439,11 @@ manifest.webmanifest, sw.js, icons/   Web-App: Installieren und offline spielen
 src/level.js      Karte → Kacheln, Mauern, Kollisionssegmente
 src/obstacles.js  bewegliche und statische Hindernisse
 src/obstacles_legend.js Blitzfeld, Aufwind, Falltür, Fallbeil, Augenturm, Löwentor
+src/obstacles_mine.js Sprengladung, Kippbühne und Grubenlampe der Zwergenmine
 src/physics.js    Ballphysik und Kollision (auch Ball gegen Ball, wenn mehrere zugleich rollen)
 src/render.js     isometrische Darstellung
 src/render_legend.js Optik der Legende-Welten (Hintergründe, neue Hindernisse und Stile)
+src/render_mine.js Optik der Zwergenmine: Fels statt Himmel, der Schleier und die drei Maschinen
 src/text.js       Eine Stelle für alle Eingaben: Namen und Bahnnamen filtern, Anzeige entschärfen
 src/share.js      Bahnen weitergeben: prüfen, über den Vermittler teilen, als Link verpacken
 src/version.js    Fassung und Ausgabe (Spiel oder Vorschau): Zahl, Speicher-Vorsatz und Themen-Marke – von Seite und Service Worker gelesen
@@ -2069,7 +2454,8 @@ src/best.js       Rangliste: Rekorde je Bahn und je Welt in drei Wertungen (Schl
 src/sfx.js        Klangeffekte (WebAudio)
 src/music.js      Musik: je Welt ein erzeugter Klangteppich (WebAudio)
 src/worldmap.js   Weltkarte: Landkarte aus gerechneter Küste, Gelände je Biom und die Orte der Welten
-src/title.js      animierte Startbildschirm-Szene mit Tag-Nacht-Wechsel
+icons/weltkarte.svg dieselbe Karte als fertige Datei – Hintergrund für Ladebild und alle Tafeln (node tools/karte.mjs)
+icons/icon-*.png   die App-Zeichen: eine Insel im Stil der Karte (node tools/appzeichen.mjs)
 src/main.js       Spielablauf, Eingabe, Punkte
 
 src/3d/index.html   die eigene Seite von Fantasy Golf 3D (eigene Adresse, eigenes Ladebild)

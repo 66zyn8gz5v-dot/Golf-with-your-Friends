@@ -5,9 +5,9 @@
 import fs from 'node:fs'; import vm from 'node:vm'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
 const SRC = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'src');
 const ctx = { console, performance: { now: () => 0 }, window: {} }; vm.createContext(ctx);
-for (const f of ['themes', 'courses', 'courses_sea', 'courses_jungle', 'courses_storm', 'courses_shadow', 'courses_colosseum', 'courses_clock', 'courses_snow', 'courses_pro', 'level', 'obstacles', 'obstacles_legend', 'obstacles_snow', 'physics'])
+for (const f of ['themes', 'courses', 'courses_sea', 'courses_jungle', 'courses_storm', 'courses_shadow', 'courses_colosseum', 'courses_clock', 'courses_snow', 'courses_mine', 'courses_pro', 'level', 'obstacles', 'obstacles_legend', 'obstacles_snow', 'obstacles_mine', 'physics'])
   vm.runInContext(fs.readFileSync(path.join(SRC, `${f}.js`), 'utf8'), ctx);
-export const G = vm.runInContext('({buildLevel, makeBall, stepPhysics, createObstacles, PRO_COURSES, COURSES, SEA_COURSES, JUNGLE_COURSES, STORM_COURSES, SHADOW_COURSES, COLOSSEUM_COURSES, WORLDS, BALL_R})', ctx);
+export const G = vm.runInContext('({buildLevel, makeBall, stepPhysics, waechteAbrutschen, createObstacles, PRO_COURSES, COURSES, SEA_COURSES, JUNGLE_COURSES, STORM_COURSES, SHADOW_COURSES, COLOSSEUM_COURSES, WORLDS, BALL_R})', ctx);
 export const WORLDS = G.WORLDS;
 export const MAX_SHOT = 19, STEP = 1 / 240, DEFAULT_MAX = 15;
 
@@ -31,6 +31,10 @@ function resetLevel(lv, switches, schlagZahl) {
 export function newState(hole) {
   const lv = getLevel(hole);
   const b = G.makeBall(lv.tee.x, lv.tee.y, '#fff');
+  /* Der Abschlag darf auf jeder Sohle liegen (level.js, 'teeEbene'). Ohne das startete der Ball in
+     der Zwergenmine unter der Galerie im Nichts und war sofort aus – der Bot hat dort zehnmal
+     hintereinander das Schlaglimit erreicht, ohne je einen Schlag zu spielen. */
+  b.ebene = lv.teeEbene || 0;
   return { hole, def: hole, ball: b, t: 0, strokes: 0, schlagZahl: 0, switches: {}, inner: false, done: false, log: [] };
 }
 export function maxStrokes(hole) { return hole.maxStrokes || DEFAULT_MAX; }
@@ -112,6 +116,8 @@ export function shoot(st0, ang, pow, wait = 0, wantTrace = false) {
     if (sp < 0.5 && !b.boosted) { slowT += STEP; if (slowT > (wartet ? 8 : 3)) break; } else slowT = 0;
   }
   b.vx = 0; b.vy = 0; b.rider = null; b.air = false; b.z = 0;
+  // Wie im Spiel (main.js, ballAtRest): von der Wächte rutscht der Ball herunter
+  G.waechteAbrutschen(lv, b);
   st.t = t + 0.3; st.trace = trace; st.last = 'rest';
   if (st.strokes >= maxStrokes(st.hole)) { st.done = true; st.last = 'max'; }
   return st;

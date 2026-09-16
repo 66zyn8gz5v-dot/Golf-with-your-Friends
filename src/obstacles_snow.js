@@ -146,10 +146,19 @@ class CableCar extends Ferry {
     this.ebene = d.ebene || 0;
     this.ziel = d.ziel == null ? this.ebene : d.ziel;
   }
-  /* Die Höhe der Gondel wächst mit dem Weg: Sie hängt am Seil zwischen Tal- und Bergstation. */
+  /* Die Höhe der Gondel wächst mit dem Weg: Sie hängt am Seil zwischen Tal- und Bergstation.
+     Gerechnet wird vom Grund der Bahn aus – die Zeichnung braucht es so. */
   hoehe() {
     const z = this.level ? this.level.ebeneZ : 2;
     return this.ebene * z + (this.ziel - this.ebene) * z * (this.progress || 0) + this.tragHoehe;
+  }
+  /* Der Ball zählt seine Höhe dagegen ab *seiner* Etage: Der Zeichner legt ball.ebene noch einmal
+     obendrauf. Wer hier hoehe() unverändert einsetzt, zählt die Etage zweimal – auf dem Gipfel,
+     wo die zweite Gondel schon auf Ebene 1 steht, schwebte der Ball darum eine ganze Etage über
+     dem Kabinendach. */
+  ballZ(ball) {
+    const z = this.level ? this.level.ebeneZ : 2;
+    return this.hoehe() - (ball.ebene || 0) * z;
   }
   setup(level) { this.level = level; }
   ride(ball, t, events) {
@@ -158,14 +167,14 @@ class CableCar extends Ferry {
     const vorher = this.station;
     const raus = Ferry.prototype.ride.call(this, ball, t, events);
     if (drin) {
-      if (ball.rider === this) { ball.z = this.hoehe(); return true; }
+      if (ball.rider === this) { ball.z = this.ballZ(ball); return true; }
       // Ausgestiegen: an der oberen Station gehört der Ball auf die obere Ebene
       const neu = vorher === 'B' ? this.ziel : this.ebene;
       if (this.level && neu !== (ball.ebene || 0)) { ball.ebene = neu; this.level.setzeEbene(neu); }
       ball.z = 0; ball.vz = 0;
       return false;
     }
-    if (ball.rider === this) ball.z = this.hoehe();
+    if (ball.rider === this) ball.z = this.ballZ(ball);
     return raus;
   }
 }

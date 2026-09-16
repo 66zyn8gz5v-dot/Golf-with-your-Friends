@@ -660,6 +660,65 @@ const Hats = (() => {
       return () => bommelmuetze(ctx, t, fein);   // die Mütze liegt über dem Reif in Spielerfarbe
     },
 
+    grubenlampe(ctx, color, t, fein) {   // Zwergenmine: eiserne Lampe, in deren Glas eine Flamme steht
+      /* Die Belohnung der Mine ist das, worum es in ihr die ganze Zeit geht: Licht. Der Körper ist
+         schwarzes Eisen mit Messingreifen, in der Mitte das Glas – und darin brennt wirklich etwas.
+         Die Flamme flackert langsam; ein hektisches Zucken machte den ganzen Ball unruhig. */
+      const g = ctx.createRadialGradient(-0.36, -0.38, 0.08, 0, 0, 1);
+      g.addColorStop(0, '#6d717b'); g.addColorStop(0.5, '#3d414a'); g.addColorStop(1, '#1b1e24');
+      ctx.beginPath(); ctx.arc(0, 0, 1, 0, TAU2); ctx.fillStyle = g; ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.45)'; ctx.lineWidth = 0.07; ctx.stroke();
+
+      ctx.save(); kugelMaske(ctx);
+      // Messingreifen oben und unten: sie fassen das Glas ein
+      for (const [y, hoehe] of [[-0.66, 0.26], [0.62, 0.3]]) {
+        const mg = ctx.createLinearGradient(0, y - hoehe / 2, 0, y + hoehe / 2);
+        mg.addColorStop(0, '#8a6a32'); mg.addColorStop(0.45, '#d8ab55'); mg.addColorStop(1, '#7d5f2c');
+        ctx.fillStyle = mg; ctx.fillRect(-1, y - hoehe / 2, 2, hoehe);
+      }
+      if (fein) {   // Nieten auf den Reifen – ohne sie sehen die Bänder aus wie aufgemalt
+        ctx.fillStyle = 'rgba(255,236,190,0.55)';
+        ctx.beginPath();
+        for (const y of [-0.66, 0.62]) for (const x of [-0.62, -0.21, 0.21, 0.62]) { ctx.moveTo(x + 0.05, y); ctx.ellipse(x, y, 0.05, 0.04, 0, 0, TAU2); }
+        ctx.fill();
+      }
+      /* Das Glas: ein warmes Feld zwischen den Reifen, dahinter die Flamme. Der Schein greift über
+         das Glas hinaus aufs Eisen über – so sieht man, dass das Licht von innen kommt. */
+      const flacker = 0.8 + 0.2 * Math.sin(t * 5.1) * Math.sin(t * 2.3 + 1.1);
+      const sg = ctx.createRadialGradient(0, 0, 0.05, 0, 0, 0.95);
+      sg.addColorStop(0, `rgba(255,228,150,${0.95 * flacker})`);
+      sg.addColorStop(0.42, `rgba(255,166,62,${0.6 * flacker})`);
+      sg.addColorStop(1, 'rgba(255,120,30,0)');
+      ctx.fillStyle = sg; ctx.fillRect(-1, -0.55, 2, 1.1);
+      // Die Flamme selbst: ein Tropfen, der mit dem Flackern atmet
+      const fh = 0.46 * flacker;
+      ctx.beginPath();
+      ctx.moveTo(0, 0.3);
+      ctx.quadraticCurveTo(-0.22, 0.1, -0.05, -fh * 0.5);
+      ctx.quadraticCurveTo(0.02, -fh, 0.06, -fh * 0.45);
+      ctx.quadraticCurveTo(0.22, 0.08, 0, 0.3);
+      ctx.fillStyle = `rgba(255,214,120,${0.85 * flacker})`; ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(0, 0.22);
+      ctx.quadraticCurveTo(-0.1, 0.06, -0.02, -fh * 0.25);
+      ctx.quadraticCurveTo(0.03, -fh * 0.5, 0.05, -fh * 0.2);
+      ctx.quadraticCurveTo(0.11, 0.06, 0, 0.22);
+      ctx.fillStyle = 'rgba(255,252,232,0.9)'; ctx.fill();
+      if (fein) {   // die drei senkrechten Streben vor dem Glas
+        ctx.strokeStyle = 'rgba(30,32,38,0.75)'; ctx.lineWidth = 0.055;
+        ctx.beginPath();
+        for (const x of [-0.42, 0.42]) { ctx.moveTo(x, -0.55); ctx.lineTo(x, 0.55); }
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      steinRand(ctx);
+      ctx.fillStyle = 'rgba(255,255,255,0.14)';   // Glanz auf dem Eisen, sonst wirkt es flach
+      ctx.beginPath(); ctx.ellipse(-0.4, -0.5, 0.28, 0.15, -0.6, 0, TAU2); ctx.fill();
+
+      return () => grubenhelm(ctx, t, fein);   // der Helm liegt über dem Reif in Spielerfarbe
+    },
+
     orb(ctx, color, t, fein) {   // Schattenreich: Kristallkugel mit Nebel, Funken und einem Auge, das blinzelt
       glasKugel(ctx, '#e2c8ff', '#5c34a0');
       ctx.save(); kugelMaske(ctx);
@@ -1159,6 +1218,35 @@ const Hats = (() => {
   /* Bommelmütze: gestrickter Kegel mit umgeschlagenem Rand. Die Spitze neigt sich, der Bommel
      schwingt eine Spur hinterher – das macht aus einer Form eine Mütze. Bewegt wird nach der
      Spieluhr, nicht nach Zufall: online sehen alle dasselbe. */
+  /* Grubenhelm: Lederkappe mit eisernem Bügel und der kleinen Lampe vorn. Sie leuchtet mit
+     derselben langsamen Unruhe wie die große Flamme im Glas – beides ist dasselbe Feuer. */
+  function grubenhelm(ctx, t, fein) {
+    ctx.save(); ctx.translate(0, -0.6);
+    const fl = 0.82 + 0.18 * Math.sin(t * 5.1) * Math.sin(t * 2.3 + 1.1);
+    // Kappe
+    const g = ctx.createLinearGradient(-0.5, 0, 0.5, 0);
+    g.addColorStop(0, '#3a2a1c'); g.addColorStop(0.45, '#6b4e30'); g.addColorStop(1, '#33251a');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.ellipse(0, 0.06, 0.54, 0.46, 0, Math.PI, 0); ctx.closePath(); ctx.fill();
+    // Krempe
+    ctx.fillStyle = '#2b1f14';
+    ctx.beginPath(); ctx.ellipse(0, 0.08, 0.66, 0.12, 0, 0, TAU2); ctx.fill();
+    if (fein) {   // eiserner Bügel über die Kappe
+      ctx.strokeStyle = 'rgba(180,170,155,0.5)'; ctx.lineWidth = 0.05;
+      ctx.beginPath(); ctx.moveTo(-0.5, 0.05); ctx.quadraticCurveTo(0, -0.52, 0.5, 0.05); ctx.stroke();
+    }
+    // Die Lampe vorn: Messingfassung, Glas, Schein
+    ctx.fillStyle = '#c9a052';
+    ctx.beginPath(); ctx.ellipse(0, -0.1, 0.19, 0.16, 0, 0, TAU2); ctx.fill();
+    const sg = ctx.createRadialGradient(0, -0.1, 0.01, 0, -0.1, 0.42);
+    sg.addColorStop(0, `rgba(255,240,190,${0.95 * fl})`);
+    sg.addColorStop(0.3, `rgba(255,180,80,${0.5 * fl})`);
+    sg.addColorStop(1, 'rgba(255,150,50,0)');
+    ctx.fillStyle = sg;
+    ctx.beginPath(); ctx.arc(0, -0.1, 0.42, 0, TAU2); ctx.fill();
+    ctx.restore();
+  }
+
   function bommelmuetze(ctx, t, fein) {
     ctx.save(); ctx.translate(0, -0.62);
     const neig = Math.sin(t * 1.7) * 0.07;
@@ -1472,6 +1560,7 @@ const Hats = (() => {
     { id: 'cog', name: 'Tüftlerzylinder', welt: 'pro', voll: true },
     { id: 'feathercrown', name: 'Federkrone', welt: 'jungle', voll: true },
     { id: 'runenstein', name: 'Runenstein', welt: 'snow', voll: true },
+    { id: 'grubenlampe', name: 'Grubenlampe', welt: 'mine', voll: true },
     { id: 'thunder', name: 'Gewitterkugel', welt: 'storm', voll: true },
     { id: 'orb', name: 'Kristallkugel', welt: 'shadow', voll: true },
     { id: 'pocketwatch', name: 'Taschenuhr', welt: 'clock', voll: true },

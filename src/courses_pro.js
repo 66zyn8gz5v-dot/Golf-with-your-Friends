@@ -460,7 +460,12 @@ const PRO_COURSES = [
   },
 ];
 
-/* Welten: jede mit eigener Bahnliste. Neue Welten hier anhängen. */
+/* Welten: jede mit eigener Bahnliste. Neue Welten hier anhängen.
+
+   'nurVorschau' heißt: fertig gebaut, aber noch nicht im Spiel. Die Welt steckt im selben Stand –
+   die Vorschau zeigt sie, das Spiel bietet sie nicht an. Sie herauszuschneiden hieße zwei Stände
+   von Hand auseinanderzuhalten, und genau daran geht so etwas nach drei Auslieferungen kaputt.
+   Die Prüfwerkzeuge sehen die Liste ungefiltert – eine Welt, die keiner prüft, verfällt. */
 const WORLDS = [
   { id: 'normal', name: 'Märchenland', short: 'Märchen', mode: 'normal', courses: COURSES },
   { id: 'sea', name: 'Meereswelt', short: 'Meer', mode: 'normal', courses: SEA_COURSES },
@@ -471,4 +476,5 @@ const WORLDS = [
   { id: 'shadow', name: 'Schattenreich', short: 'Schatten', mode: 'legend', courses: SHADOW_COURSES },
   { id: 'clock', name: 'Uhrwerkstadt', short: 'Uhrwerk', mode: 'pro', courses: CLOCK_COURSES },
   { id: 'colosseum', name: 'Kolosseum', short: 'Arena', mode: 'legend', courses: COLOSSEUM_COURSES },
+  { id: 'mine', name: 'Zwergenmine', short: 'Mine', mode: 'pro', courses: MINE_COURSES, nurVorschau: true },
 ];

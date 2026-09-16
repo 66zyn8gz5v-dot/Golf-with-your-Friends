@@ -1,3 +1,13 @@
+/* DIE ZIERSCHRIFT HAT EINE FARBE, UND DIE STEHT HIER
+   Titel, Ladebild und die beiden großen Knöpfe tragen dieselben Wörter durch das Spiel. Sie
+   standen dreimal mit eigener Farbe da – Goldverlauf oben, Creme auf den Knöpfen – und sahen
+   untereinander aus, als gehörten sie nicht zusammen. Jetzt gibt es einen Namen dafür und drei
+   Stellen, die ihn benutzen. Wer die Farbe ändern will, ändert sie hier. */
+:root {
+  --zier: #fff6dc;                                        /* die Schriftfarbe selbst */
+  --zier-absatz: #4a2a00;                                 /* der harte Absatz darunter */
+  --zier-hof: rgba(0,0,0,0.8);                            /* der weiche dunkle Hof */
+}
 * { box-sizing: border-box; }
 html, body {
   margin: 0; padding: 0; width: 100%; height: 100%;
@@ -8,97 +18,33 @@ html, body {
 }
 #game { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: crosshair; }
 
-/* ---------- Startbild ----------
-   Das gemalte Titelbild liegt über der Leinwand und unter den Tafeln (z-index 5 gegen 10). Es ist
-   nur auf dem Startbildschirm zu sehen; wer auf die Weltkarte oder in die Werkstatt geht, sieht
-   wieder die gezeichnete Szene. Angeklickt werden kann es nicht – die Knöpfe liegen darüber.
-
-   Es gibt zwei Bilder: eines quer, eines hoch. Ein einziges täte es nicht – vom Querbild bliebe
-   auf dem Handy ein schmaler Streifen übrig, mit zerschnittenem Schriftzug darin. main.js setzt je
-   nach Seitenverhältnis die Klasse 'hoch', und beide Bilder füllen dann ihren Schirm ganz. */
-#titelbild {
-  position: fixed; inset: 0; z-index: 5; display: none; pointer-events: none;
-  background: linear-gradient(180deg, #7cc3ea 0%, #4f9fd0 30%, #1f6ea6 60%, #123f61 100%);
-}
-body.startbild #titelbild { display: block; }
-#tb-svg, #tb-hoch { width: 100%; height: 100%; display: block; }
-#tb-hoch { display: none; }
-body.hoch #tb-svg { display: none; }
-body.hoch #tb-hoch { display: block; }
-
-/* Ein langsames Heranfahren, damit das Bild nicht wie ein Poster steht */
-.tb-kamera { transform-box: view-box; transform-origin: 50% 50%; animation: tb-kamera 38s ease-in-out infinite alternate; }
-@keyframes tb-kamera { from { transform: scale(1); } to { transform: scale(1.045) translate(-6px, 4px); } }
-
-.tb-zug { animation: tb-zug 96s linear infinite; }
-.tb-zug.z2 { animation-duration: 132s; animation-delay: -40s; }
-.tb-zug.z3 { animation-duration: 78s; animation-delay: -25s; }
-@keyframes tb-zug { from { transform: translateX(-420px); } to { transform: translateX(1400px); } }
-
-.tb-vogel { animation: tb-vogel 26s linear infinite; }
-.tb-vogel.v2 { animation-duration: 34s; animation-delay: -11s; }
-.tb-vogel.v3 { animation-duration: 21s; animation-delay: -17s; }
-@keyframes tb-vogel {
-  from { transform: translate(-60px, 150px); }
-  50%  { transform: translate(560px, 96px); }
-  to   { transform: translate(1230px, 132px); }
-}
-body.hoch .tb-vogel { animation-name: th-vogel; }
-@keyframes th-vogel {
-  from { transform: translate(-80px, 300px); }
-  50%  { transform: translate(560px, 200px); }
-  to   { transform: translate(1250px, 265px); }
-}
-
-.tb-funken ellipse { opacity: 0; animation: tb-blink 4.2s ease-in-out infinite; }
-.tb-funken .f2 { animation-delay: 0.7s; } .tb-funken .f3 { animation-delay: 1.5s; }
-.tb-funken .f4 { animation-delay: 2.3s; } .tb-funken .f5 { animation-delay: 3.1s; }
-@keyframes tb-blink { 0%, 100% { opacity: 0; } 45% { opacity: 0.55; } 55% { opacity: 0.35; } }
-
-.tb-lampe { transform-box: view-box; transform-origin: 159px 438px; animation: tb-lampe 3.4s ease-in-out infinite; }
-.tb-lampe.hoch { transform-origin: 251px 1734px; }
-@keyframes tb-lampe { 0%, 100% { opacity: 0.8; transform: scale(0.94); } 50% { opacity: 1; transform: scale(1.06); } }
-
-.tb-staub circle { opacity: 0; animation: tb-staub 9s ease-out infinite; }
-.tb-staub .s2 { animation-delay: 1.8s; } .tb-staub .s3 { animation-delay: 3.4s; }
-.tb-staub .s4 { animation-delay: 5.1s; } .tb-staub .s5 { animation-delay: 6.8s; }
-@keyframes tb-staub {
-  0% { opacity: 0; transform: translate(0, 0); }
-  20% { opacity: 0.85; } 100% { opacity: 0; transform: translate(14px, -120px); }
-}
-/* Ruhig gestellt bleibt das Bild stehen – die Fahne weht dann nicht, das Bild ist aber vollständig. */
-@media (prefers-reduced-motion: reduce) {
-  .tb-kamera, .tb-zug, .tb-vogel, .tb-funken ellipse, .tb-lampe, .tb-staub circle { animation: none; }
-  .tb-funken ellipse, .tb-staub circle { opacity: 0; }
-}
-
 /* ---------- Ladebild ----------
    Steht ganz oben in dieser Datei, weil es das Erste ist, was jemand sieht: ein Stylesheet, das
    der Browser von oben nach unten liest, hat die Regeln dafür schon parat, bevor der Rest kommt.
    Das Bild bewegt sich allein mit CSS – kein JavaScript. main.js nimmt es mit der Klasse 'weg'
    wieder heraus.
 
-   Der Grund ist das gemalte Titelbild, weich gezeichnet und abgedunkelt: Es macht die Stimmung,
-   die kleine Szene darauf sagt, was hier gespielt wird. Zwei Gewinne auf einmal – das Ladebild ist
-   im Stil des Spiels statt ein Fremdkörper aus flachen Flächen, und das Bild ist schon geladen,
-   wenn gleich darauf der Startbildschirm kommt. Der dunkle Verlauf bleibt trotzdem darunter: Beim
-   allerersten Öffnen ist das Bild noch unterwegs, und bis dahin soll da kein Loch sein. Welches der
-   beiden Bilder genommen wird, entscheidet die Ausrichtung – ganz ohne JavaScript, denn das
-   Ladebild läuft, bevor eine Zeile davon lief. */
+   Den Grund gibt die Weltkarte, weich gezeichnet und abgedunkelt. Zwei Gewinne auf einmal: Das
+   Ladebild ist im Stil des Spiels statt ein Fremdkörper aus flachen Flächen, und es zeigt gleich,
+   worum es geht – dieselbe Karte liegt danach hinter dem Startbildschirm. Der dunkle Verlauf bleibt
+   trotzdem darunter: Beim allerersten Öffnen ist die Karte noch unterwegs, und bis dahin soll da
+   kein Loch sein. */
 #lade {
   position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center;
   background: radial-gradient(120% 100% at 50% 18%, #24305c 0%, #141b38 55%, #080c1c 100%);
   transition: opacity 0.55s ease, transform 0.55s ease;
 }
 #lade.weg { opacity: 0; transform: scale(1.04); pointer-events: none; }
+/* Auch hier die Weltkarte. Sie kommt als fertige Datei (icons/weltkarte.svg, geschrieben von
+   tools/karte.mjs) und nicht aus dem Skript: Das Ladebild muss stehen, *bevor* irgendein Skript
+   gelaufen ist – eine gerechnete Karte käme immer zu spät. */
 #lade::before {
   content: ''; position: absolute; inset: 0;
-  background: url(icons/titelbild.jpg) center / cover no-repeat;
+  background: #17415a url(icons/weltkarte.svg) center / cover no-repeat;
   filter: blur(3px) brightness(0.52) saturate(0.92);
   transform: scale(1.07);                       /* deckt die weichen Ränder des Weichzeichners ab */
   animation: lb-grund 26s ease-in-out infinite alternate;
 }
-@media (orientation: portrait) { #lade::before { background-image: url(icons/titelbild-hoch.jpg); } }
 #lade::after {
   content: ''; position: absolute; inset: 0;
   background: radial-gradient(125% 95% at 50% 45%, rgba(10,14,32,0.15), rgba(6,9,22,0.82) 78%);
@@ -107,11 +53,11 @@ body.hoch .tb-vogel { animation-name: th-vogel; }
 
 #lade .lb-innen { position: relative; z-index: 1; width: min(86vw, 360px); text-align: center; }
 #lade .lb-titel {
-  font-family: "Cinzel Decorative", "MedievalSharp", Georgia, serif; font-weight: 900;
-  font-size: clamp(26px, 8vw, 38px); letter-spacing: 2px; margin-bottom: 14px;
-  background: linear-gradient(180deg, #fff6d8, #ffd977 48%, #e0982c);
-  -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 2px 0 #6d3f00) drop-shadow(0 6px 16px rgba(0,0,0,0.7));
+  font-family: "MedievalSharp", Georgia, serif;
+  font-size: clamp(28px, 8.5vw, 40px); letter-spacing: 2px; margin-bottom: 14px;
+  /* Dieselben Wörter wie auf dem Titelbild, also auch dieselbe Farbe – sonst wechselte „Fantasy
+     Golf" beim Übergang vom Ladebild zum Spiel die Farbe. */
+  color: var(--zier); text-shadow: 0 3px 0 var(--zier-absatz), 0 0 14px var(--zier-hof);
   animation: lb-titel-auf 0.9s cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
 }
 #lade .lb-szene {
@@ -236,7 +182,7 @@ body.creative .cbtn.creative { display: inline-block; }
 .panel-head .btn.small { margin: 0; flex: none; white-space: nowrap; }
 @media (max-width: 600px) { .panel-head h2 { font-size: 19px; } }
 .btn.mode {
-  font-family: "MedievalSharp", "Cinzel Decorative", Georgia, serif; font-size: 28px; letter-spacing: 2px;
+  font-family: "MedievalSharp", Georgia, serif; font-size: 28px; letter-spacing: 2px;
   position: relative; overflow: hidden; display: block; height: 88px; padding: 0; margin: 0;
   background: #2a1a4d; border: 2px solid #ffd166; border-radius: 14px; box-shadow: 0 4px 0 #8a5a10, 0 8px 18px rgba(0,0,0,0.35);
   animation: mode-in 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
@@ -254,7 +200,7 @@ body.creative .cbtn.creative { display: inline-block; }
 .mode-label {
   position: absolute; right: 18px; top: 50%; transform: translateY(-50%); z-index: 2; text-align: right;
   max-width: calc(100% - 28px);
-  color: #fff6dc; text-shadow: 0 2px 0 #4a2a00, 0 0 12px rgba(0,0,0,0.8);
+  color: var(--zier); text-shadow: 0 2px 0 var(--zier-absatz), 0 0 12px var(--zier-hof);
 }
 .mode-label small {
   display: block; margin-top: 3px; font-family: "Trebuchet MS", "Segoe UI", Verdana, sans-serif;
@@ -300,7 +246,7 @@ body.creative .cbtn.creative { display: inline-block; }
   .btn.mode, .art-flag, .art-window, .sway, .drift, .twinkle, .mill-blades, .particles .p, .screen.title .panel, .screen.title .panel h1 { animation: none; }
   .screen.title .panel h1 { opacity: 1; transform: none; }
 }
-.screen.title .panel h1 { font-family: "Cinzel Decorative", "MedievalSharp", Georgia, serif; font-weight: 900; letter-spacing: 1px; }
+.screen.title .panel h1 { font-family: "MedievalSharp", Georgia, serif; letter-spacing: 2px; }
 .screen.title .panel h2 { font-family: "MedievalSharp", Georgia, serif; letter-spacing: 1px; }
 .holes { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; }
 .holes .btn.small { min-width: 38px; padding: 6px 8px; margin: 0; }
@@ -332,7 +278,23 @@ body.editing .cbtn.leave, body.testing .cbtn.leave { display: none; }
   background: rgba(8, 6, 20, 0.72); z-index: 10; backdrop-filter: blur(3px);
 }
 .screen.visible { display: flex; }
-.screen.title { background: transparent; backdrop-filter: none; align-items: flex-end; padding-bottom: 3vh; }
+/* Hinter jeder Tafel außerhalb des Spiels liegt die Weltkarte: Weltauswahl, Aufstellung, Bauen,
+   Turnier, Rangliste. Sie ist mit demselben Stift gezeichnet wie das Spiel selbst und zeigt die
+   Orte, um die es gerade geht – ein gemaltes Foto dahinter sah aus wie aus einem anderen Buch.
+   Im Spiel selbst bleibt es beim durchscheinenden Dunkel (.screen ohne .title): Dort liegt die
+   Bahn darunter, und die will man sehen. */
+.screen.title {
+  background: #17415a url(icons/weltkarte.svg) center / cover no-repeat;
+  backdrop-filter: none; align-items: flex-end; padding-bottom: 3vh;
+}
+/* Ein Schleier darüber, nach außen hin dichter: In der Mitte darf die Karte hell bleiben, am Rand
+   ist sie so bunt, dass der goldene Rahmen der Tafel darin unterginge. */
+.screen.title::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 1;
+  background: radial-gradient(125% 95% at 50% 45%, rgba(8, 6, 20, 0.34) 0%, rgba(8, 6, 20, 0.72) 100%);
+}
+.screen.title > .panel { position: relative; z-index: 2; }
+
 /* Die Tafel stand als heller Schleier vor der Szene – schön, aber die Schrift lag auf Wolken,
    Tannen und Schafen und war schwer zu lesen. Jetzt ist sie deutlich dichter und liegt als eigene
    Tafel davor, mit einer zweiten Linie im Abstand: der Doppelrahmen alter Anschlagtafeln. */
@@ -347,22 +309,18 @@ body.editing .cbtn.leave, body.testing .cbtn.leave { display: none; }
   padding: 20px 26px; max-height: 86vh; overflow-y: auto; max-width: min(92vw, 540px);
   text-shadow: 0 1px 3px rgba(0,0,0,0.7);
 }
-/* Gold lässt sich nicht mit einer Farbe schreiben: Es ist ein Verlauf von hell nach dunkel und
-   wieder hell. Der Verlauf wird in die Buchstaben geschnitten (background-clip: text) und wandert
-   langsam – daher der Schimmer. Der Schatten muss dabei ein Filter sein, denn text-shadow zeichnet
-   hinter Buchstaben, die hier gar keine Farbe mehr haben. */
+/* Dieselbe Farbe wie auf den beiden großen Knöpfen darunter (.mode-label): cremeweiß, darunter
+   ein harter brauner Absatz und ein weicher dunkler Hof. Vorher war der Titel ein wandernder
+   Goldverlauf, in die Buchstaben geschnitten – schön für sich, aber „Fantasy Golf" und
+   „Weltkarte" standen damit untereinander und sahen aus, als gehörten sie nicht zusammen.
+   Mit einer richtigen Textfarbe braucht es auch keinen Filter mehr für den Schatten und keine
+   Ausnahme für das Sinnbild vorn: Ein Emoji verschwand, solange die Schrift nur ein Ausschnitt
+   war, und blieb nur durch eine eigene Regel sichtbar. */
 .screen.title .panel h1 {
   font-size: clamp(30px, 6.4vw, 46px); margin-bottom: 2px;
-  background: linear-gradient(180deg, #fff8de 0%, #ffdc86 42%, #dd9b2c 68%, #ffeaad 100%);
-  background-size: 100% 240%;
-  -webkit-background-clip: text; background-clip: text;
-  color: transparent; -webkit-text-fill-color: transparent; text-shadow: none;
-  filter: drop-shadow(0 2px 0 #6d3f00) drop-shadow(0 5px 14px rgba(0,0,0,0.65));
-  animation: title-in 0.8s cubic-bezier(0.2, 0.9, 0.3, 1.1) both, h1-schimmer 7s 0.8s ease-in-out infinite;
+  color: var(--zier); text-shadow: 0 3px 0 var(--zier-absatz), 0 0 14px var(--zier-hof);
+  animation: title-in 0.8s cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
 }
-/* Das Sinnbild vorn ist ein Emoji und darf nicht mitgeschnitten werden, sonst verschwindet es. */
-.screen.title .panel h1 .h1-ball { -webkit-text-fill-color: initial; color: initial; }
-@keyframes h1-schimmer { 0%, 100% { background-position: 0 0; } 50% { background-position: 0 100%; } }
 .screen.title .btn.ghost { background: rgba(255,255,255,0.14); text-shadow: none; }
 .screen.title .btn.ghost.sel { background: rgba(255, 209, 102, 0.45); }
 .screen.title .btn:not(.ghost) { text-shadow: none; }
@@ -379,31 +337,23 @@ body.title #hud, body.title #scoreboard, body.title #controls, body.title #hint 
    sehen bleibt. Dieselbe Kennung tragen die drei Tafeln, die von der Rangliste abzweigen, sonst
    spränge der Hintergrund bei jedem Schritt. */
 .screen.title.rangliste {
-  background: #0a0f1e url(icons/rangliste.jpg) center / cover no-repeat;
+  background: #17415a;          /* die Meeresfarbe der Karte, falls sie einen Wimpernschlag braucht */
   align-items: center; padding-bottom: 0;
 }
-/* Ein Schleier darüber, nach außen hin dichter: In der Mitte soll das Bild hell bleiben, am Rand
-   aber ist es so bunt, dass der goldene Rahmen der Tafel darin untergeht. */
-.screen.title.rangliste::before {
-  content: ''; position: absolute; inset: 0; pointer-events: none;
-  background: radial-gradient(125% 95% at 50% 45%, rgba(8, 6, 20, 0.3) 0%, rgba(8, 6, 20, 0.66) 100%);
-}
-/* Ohne eigene Lage läge die Tafel unter dem Schleier – ein unpositioniertes Kind wird vor einem
-   positionierten Pseudo-Element gezeichnet, nicht dahinter. */
-.screen.title.rangliste > .panel { position: relative; }
+/* Die Rangliste ist jetzt eine Tafel wie die anderen – Karte und Schleier kommen von .screen.title.
+   Sie rückt nur in die Mitte statt nach unten, weil ihre Tafel hoch ist. */
 
-/* Liegt das Startbild, trägt es den Schriftzug schon – die Tafel lässt ihn dann weg und wird flach,
-   damit das Bild zu sehen bleibt. Auf breiten Schirmen stehen die beiden großen Knöpfe nebeneinander
-   statt untereinander; das halbiert die Höhe der Tafel. */
-body.startbild .screen.title .panel > h1,
-body.startbild .screen.title .panel > .sub { display: none; }
+/* Früher trug das gemalte Bild den Schriftzug, und die Tafel ließ ihn weg. Jetzt liegt dort die
+   Karte, und der Schriftzug gehört wieder auf die Tafel – in goldener Zierschrift, wie auf jeder
+   anderen auch. Auf breiten Schirmen stehen die beiden großen Knöpfe nebeneinander statt
+   untereinander; das halbiert die Höhe der Tafel. */
 body.startbild .screen.title .panel { max-width: min(95vw, 1040px); padding: 14px 18px 16px; }
 body.startbild .screen.title { padding-bottom: 2vh; }
-/* Hochkant liegt das Schöne am Bild unten: Fahne, Laterne, Ball auf dem Tee. Eine Tafel in
-   voller Höhe deckt genau das zu. Also wird sie hier so knapp wie möglich – kleinere Knöpfe,
-   engere Abstände, und der Erklärsatz fällt weg. Er sagt nichts, was nicht schon auf dem
-   Weltkarten-Knopf steht. */
-body.startbild.hoch .screen.title .panel { padding: 10px 12px 12px; }
+/* Hochkant bleibt die Tafel knapp: kleinere Knöpfe, engere Abstände, kein Erklärsatz. Auf einem
+   Telefon ist sonst kein Platz für die Karte dahinter. Eine Breite braucht sie trotzdem – ohne
+   sie schrumpft sie auf die Breite der Knöpfe und steht auf dem Tablett als schmaler Streifen
+   mitten in der Karte. */
+body.startbild.hoch .screen.title .panel { padding: 10px 12px 12px; width: min(92vw, 560px); }
 body.startbild.hoch .btn.mode { height: 66px; font-size: 22px; }
 body.startbild.hoch .mode-label.long { font-size: 18px; }
 body.startbild.hoch .mode-label small { font-size: 10.5px; margin-top: 1px; }
@@ -454,7 +404,7 @@ table.scores td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .panel.final .final-banner { position: relative; height: 118px; overflow: hidden; border-radius: 14px 14px 0 0; border-bottom: 2px solid rgba(255,255,255,0.25); }
 .panel.final .final-banner .mode-scene { position: absolute; inset: 0; width: 100%; height: 100%; }
 .panel.final .final-head { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; background: linear-gradient(180deg, rgba(0,0,0,0.05), rgba(0,0,0,0.55)); text-shadow: 0 2px 6px rgba(0,0,0,0.8); }
-.panel.final .final-head h1 { margin: 0; font-size: 36px; font-family: "Cinzel Decorative", "MedievalSharp", Georgia, serif; }
+.panel.final .final-head h1 { margin: 0; font-size: 36px; font-family: "MedievalSharp", Georgia, serif; }
 .panel.final .final-world { color: #fff3d6; font-size: 15px; letter-spacing: 1px; margin-top: 2px; }
 .podium { display: flex; flex-direction: column; gap: 6px; margin: 16px 22px 8px; }
 .pod { display: flex; align-items: center; gap: 10px; padding: 7px 14px; border-radius: 12px; background: rgba(255,255,255,0.07); font-size: 17px; }

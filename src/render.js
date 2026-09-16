@@ -26,6 +26,13 @@ function shade(hex, f) {
   return '#' + [c(r), c(g), c(b)].map(v => v.toString(16).padStart(2, '0')).join('');
 }
 function rgba(hex, a) { const [r, g, b] = hexToRgb(hex); return `rgba(${r},${g},${b},${a})`; }
+/* Zwei Farben mischen, k = 0 gibt die erste, k = 1 die zweite. Für alles, was ausglüht oder
+   abkühlt: Da ändert sich nicht die Helligkeit einer Farbe, sondern es wird eine andere. */
+function mixHex(a, b, k) {
+  const [r1, g1, b1] = hexToRgb(a), [r2, g2, b2] = hexToRgb(b), u = Math.max(0, Math.min(1, k));
+  const c = (p, q) => Math.round(p + (q - p) * u).toString(16).padStart(2, '0');
+  return '#' + c(r1, r2) + c(g1, g2) + c(b1, b2);
+}
 function convexHull(pts) { // Andrew's monotone chain
   const p = pts.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]), cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
   const lo = [], up = [];
@@ -124,6 +131,37 @@ class Renderer {
     return [c.cx + rx * c.zoom, c.cy + ry * c.zoom * c.tilt - z * c.zoom * (c.zf ?? CAM_ZF)];
   }
   depth(x, y) { const c = this.cam; return (x - c.fx) * c.sin + (y - c.fy) * c.cos; }
+  /* Der Bildschirmversatz einer Etage. In dieser Abbildung wirkt die Höhe nur senkrecht und nur
+     linear (projRaw) – eine feste Höhe ist darum eine feste Verschiebung nach oben. Das ist der
+     Grund, warum die Hindernisse einer oberen Ebene nicht neu gezeichnet werden müssen: Man
+     verschiebt die Leinwand und ruft dieselbe Zeichnung auf. */
+  ebeneVersatz(n) {
+    const c = this.cam;
+    return n * ((this.level && this.level.ebeneZ) || 0) * c.zoom * (c.zf ?? CAM_ZF);
+  }
+  /* Was auf Etage n steht: erst die Boden-Überlagerungen, dann die Körper. Aufgerufen aus
+     zeichneEbene und zeichneWolke, nachdem der Belag der Etage liegt. */
+  zeichneEbenenDinge(ctx, n, t) {
+    const lv = this.level;
+    if (!lv) return;
+    const dy = this.ebeneVersatz(n);
+    ctx.save(); ctx.translate(0, -dy);
+    for (const ob of lv.obstacles)
+      if ((ob.ebene || 0) === n && !this.spanntEbenen(ob)) this.drawObstacleFloor(ctx, ob, t);
+    const f = this.ebenenFade || {};
+    for (const it of (this.ebenenStuecke || [])) {
+      if (it.ebene !== n) continue;
+      const sy = it.sy - dy;
+      if (!this.onScreen(it.sx, sy, this.scale * 3.5)) continue;
+      const fade = f.bp && !it.ball && !it.noFade && it.k > f.bk + 0.3 && Math.abs(it.sx - f.bp[0]) < f.fadeW
+        && sy > f.bp[1] - this.scale * 0.4 && sy < f.bp[1] + f.fadeH;
+      const vorher = ctx.globalAlpha;
+      if (fade) ctx.globalAlpha = vorher * 0.22;
+      it.draw();
+      ctx.globalAlpha = vorher;
+    }
+    ctx.restore();
+  }
   unprojDelta(dx, dy) {
     const c = this.cam, rx = dx / c.zoom, ry = dy / (c.zoom * c.tilt);
     return [rx * c.cos + ry * c.sin, -rx * c.sin + ry * c.cos];
@@ -186,6 +224,7 @@ class Renderer {
       ctx.fillStyle = shade(side, light); ctx.fill();
       ctx.strokeStyle = ctx.fillStyle; ctx.lineWidth = 0.8; ctx.stroke();
     }
+    if (opts.ohneDeckel) return;
     this.pathPoly(ctx, oben, z1);
     ctx.fillStyle = top; ctx.fill();
     ctx.strokeStyle = opts.outline || top; ctx.lineWidth = opts.outline ? 1 : 0.8; ctx.stroke();
@@ -216,6 +255,15 @@ class Renderer {
   /* Säule: Zylinder oder Kegelstumpf. Stamm, Mast, Poller, Krug, Fass. */
   saeule(ctx, x, y, z0, r0, r1, h, top, side, n = 10) {
     this.frustum(ctx, this.circlePoly(x, y, r0, n), this.circlePoly(x, y, r1, n), z0, z0 + h, top, side);
+  }
+
+  /* Reifen: ein Band um einen Körper – Fassreif, Manschette, Eisenring am Pfosten. Dasselbe wie
+     saeule, nur ohne Deckel: Ein Deckel ist eine volle Scheibe quer über den Körper und verdeckte
+     genau das, was das Band umspannen soll. Beim Fass lagen darum zuerst drei graue Scheiben über
+     dem ganzen Holz. */
+  reifen(ctx, x, y, z0, r, h, farbe, n = 12) {
+    const ring = this.circlePoly(x, y, r, n);
+    this.frustum(ctx, ring, ring, z0, z0 + h, farbe, farbe, { ohneDeckel: true });
   }
 
   /* Brocken: ein Fels. Ein regelmäßiger Zylinder sähe aus wie ein Hutschachtel-Deckel, darum wird
@@ -852,6 +900,7 @@ class Renderer {
     if (th.gears) this.drawSkyGears(ctx, t);
     if (th.planks) this.drawPlanks(ctx, t);
     if (th.tomb) this.drawTomb(ctx, t);
+    if (th.mineBg) this.drawMine(ctx, t);
     if (th.belly) this.drawBelly(ctx, t);
     if (th.jungleBg) this.drawJungle(ctx, t);
     if (th.temple) this.drawTemple(ctx, t);
@@ -887,8 +936,9 @@ class Renderer {
 
     for (const [fx, fy] of fires) this.drawShadowFire(ctx, fx, fy, t, lv, 1); // Glut, Flammen und Funken über den fertigen Grund
     if (state.phase !== 'edit') this.drawCastShadows(ctx);
-    // Boden-Overlays
-    for (const ob of lv.obstacles) this.drawObstacleFloor(ctx, ob, t);
+    /* Boden-Overlays. Die oberer Ebenen kommen erst mit ihrer Scholle (zeichneEbene) – hier
+       gemalt lägen sie unter ihr und wären nie zu sehen. */
+    for (const ob of lv.obstacles) if (!(ob.ebene || 0) || this.spanntEbenen(ob)) this.drawObstacleFloor(ctx, ob, t);
     // Loch und Fahne der oberen Ebene kommen erst nach der Scholle, sonst lägen sie darunter
     if (lv.cup && !lv.cupEbene) this.drawCupHole(ctx);
 
@@ -907,7 +957,19 @@ class Renderer {
       items.push({ x: b.x + 0.5, y: b.y + 0.5, draw: () => this.prism(ctx, poly, 0, 1.0, th.block.top, th.block.side, { outline: shade(th.block.side, 0.7) }) });
     }
     for (const d of lv.decor) items.push({ x: d.x, y: d.y, draw: () => this.drawDecor(ctx, d, t) });
-    for (const ob of lv.obstacles) this.pushObstacle(items, ctx, ob, t);
+    /* Jedes Stück merkt sich seine Ebene. Die Schollen werden nach allen Stücken gezeichnet, damit
+       eine höhere Etage die darunter verdeckt – und genau dabei verschwand jedes Hindernis, das
+       oben steht: Es wurde brav auf Höhe null gemalt und dann von der eigenen Scholle zugedeckt.
+       Man lief dagegen, ohne etwas zu sehen. */
+    for (const ob of lv.obstacles) {
+      const vorher = items.length;
+      this.pushObstacle(items, ctx, ob, t);
+      /* Das Kupferrohr bleibt ausgenommen: Es spannt sich zwischen zwei Etagen, rechnet seine
+         Höhe selbst (CopperPipe.hoehe) und schickt jedes Teilstück einzeln in die Tiefensortierung,
+         damit es sich richtig mit den Mauern überdeckt. Ein Versatz am Stück nähme ihm beides. */
+      const e = ob.type === 'copperpipe' ? 0 : (ob.ebene || 0);
+      if (e) for (let i = vorher; i < items.length; i++) items[i].ebene = e;
+    }
     if (lv.cup && !lv.cupEbene) items.push({ x: lv.cup.x, y: lv.cup.y, bias: 0.01, draw: () => this.drawFlag(ctx, t) });
     /* Bälle, die außer dem eigenen auf der Bahn liegen (Boule). Sie kommen in dieselbe Sortierung
        wie alles andere, damit sie hinter einer Mauer auch hinter der Mauer liegen. 'ball: true'
@@ -945,7 +1007,12 @@ class Renderer {
     const bp = b && !imRohr ? this.proj(b.x, b.y, 0) : null, bk = b ? this.depth(b.x, b.y) : 0;
     this.ballPos = bp;
     const cullM = this.scale * 3.5, fadeW = this.scale * 2.2, fadeH = this.scale * 3.2;
+    /* Die Stücke der oberen Ebenen werden hier übergangen und kommen in zeichneEbene an die
+       Reihe – jedes mit dem Versatz seiner Etage. */
+    this.ebenenStuecke = items.filter(it => it.ebene);
+    this.ebenenFade = { bp, bk, fadeW, fadeH };
     for (const it of items) {
+      if (it.ebene) continue;
       if (!this.onScreen(it.sx, it.sy, cullM)) continue;
       // Objekte, die vor dem Ball stehen und ihn verdecken würden, fast durchsichtig zeichnen
       const fade = bp && !it.ball && !it.noFade && it.k > bk + 0.3 && Math.abs(it.sx - bp[0]) < fadeW && it.sy > bp[1] - this.scale * 0.4 && it.sy < bp[1] + fadeH;
@@ -962,6 +1029,9 @@ class Renderer {
        zu, und auch unten verdeckte ihn jedes Hindernis, das davor gezeichnet wurde. Man konnte dann
        ganz normal aufladen und schießen, sah nur nicht, wohin - und das ist schlimmer als gar keine
        Hilfe, weil man den Fehler bei sich sucht. */
+    /* Der Schleier der Mine liegt über der ganzen Szene – aber unter der Zielhilfe. Wohin man
+       schlägt, muss man auch im Dunkeln sehen; was einen dort erwartet, nicht. */
+    this.drawDunkelheit(ctx, state);
     if (state.aim) this.drawAim(ctx, state.ball, state.aim);
 
     if (state.phase !== 'edit') this.drawDepthCues(ctx);
@@ -1313,6 +1383,58 @@ class Renderer {
       ctx.lineTo(w, h); ctx.closePath(); ctx.fill();
     }
   }
+  /* Unter Tage: geschlagener Fels statt Himmel. Die Farben kommen aus der Palette, damit
+     derselbe Stollen in der Kristallkammer violett und in der Schmelze rot leuchtet – gezeichnet
+     wird also nicht „die Mine", sondern „Fels in der Farbe dieses Abschnitts".
+
+     Drei Lagen, von hinten nach vorn: der rohe Fels mit seinen Schichten, das Grubenholz, das die
+     Decke hält, und der Lampenschein. Das Flackern ist bewusst langsam und schwach – eine Lampe,
+     die zuckt, macht die ganze Bahn unruhig, und gespielt wird auf dem Boden, nicht an der Wand. */
+  drawMine(ctx, t) {
+    const w = this.w, h = this.h, th = this.theme;
+    const kratz = (i, k) => Math.abs(Math.sin(i * 127.1 + k * 311.7) * 43758.5453) % 1;
+    const g = ctx.createLinearGradient(0, 0, 0, h);
+    g.addColorStop(0, th.sky[0]); g.addColorStop(0.55, th.sky[1]); g.addColorStop(1, th.sky[0]);
+    ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+    /* Gesteinsschichten: flache Bänder, die leicht abfallen. Sie geben dem Fels eine Richtung –
+       ohne sie sieht die Wand aus wie Nebel. */
+    for (let i = 0; i < 7; i++) {
+      const y0 = h * (0.06 + i * 0.13), neig = (kratz(i, 3) - 0.5) * h * 0.06;
+      ctx.fillStyle = `rgba(0,0,0,${0.06 + kratz(i, 1) * 0.07})`;
+      ctx.beginPath(); ctx.moveTo(0, y0);
+      for (let x = 0; x <= w; x += 24) ctx.lineTo(x, y0 + (x / w) * neig + Math.sin(x * 0.006 + i) * h * 0.012);
+      ctx.lineTo(w, y0 + neig + h * 0.045); 
+      for (let x = w; x >= 0; x -= 24) ctx.lineTo(x, y0 + (x / w) * neig + h * 0.045 + Math.sin(x * 0.006 + i) * h * 0.012);
+      ctx.closePath(); ctx.fill();
+    }
+    // Schlagspuren der Spitzhacke: kurze helle Kerben, unregelmäßig übers Gestein verteilt
+    ctx.strokeStyle = 'rgba(255,255,255,0.05)'; ctx.lineWidth = 2;
+    for (let i = 0; i < 90; i++) {
+      const x = kratz(i, 7) * w, y = kratz(i, 11) * h, l = 6 + kratz(i, 13) * 14, a = -0.9 + kratz(i, 17) * 0.5;
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); ctx.stroke();
+    }
+    /* Grubenholz: zwei Stempel und ein Querbalken, wie sie den Stollen offen halten. Sie stehen
+       weit auseinander und dunkel – sie sollen Tiefe geben, nicht auffallen. */
+    const holz = '#3a2a1c';
+    for (const [bx, bw, bh] of [[0.1, 0.17, 0.62], [0.63, 0.2, 0.7]]) {
+      const x0 = bx * w, br = bw * w, oben = h * (1 - bh);
+      ctx.fillStyle = holz;
+      ctx.fillRect(x0, oben, br * 0.1, h);                         // linker Stempel
+      ctx.fillRect(x0 + br * 0.9, oben, br * 0.1, h);               // rechter Stempel
+      ctx.fillRect(x0 - br * 0.04, oben - h * 0.03, br * 1.08, h * 0.05);   // Querbalken
+      ctx.fillStyle = 'rgba(255,255,255,0.05)';
+      ctx.fillRect(x0, oben, br * 0.03, h);
+    }
+    /* Lampenschein. Die Farbe ist der Akzent der Palette: gelb im Stollen, blau in der
+       Kristallkammer, orange in der Schmelze. */
+    for (const [fx, fy, ph] of [[0.16, 0.24, 0], [0.55, 0.14, 1.7], [0.9, 0.3, 3.4]]) {
+      const fl = 0.85 + 0.15 * Math.sin(t * 2.1 + ph) * Math.sin(t * 1.3 + ph);
+      const rg = ctx.createRadialGradient(fx * w, fy * h, 0, fx * w, fy * h, w * 0.3);
+      rg.addColorStop(0, rgba(th.accent, 0.16 * fl)); rg.addColorStop(1, rgba(th.accent, 0));
+      ctx.fillStyle = rg; ctx.fillRect(0, 0, w, h);
+    }
+  }
+
   /* Grabkammer: Sandsteinwand mit Hieroglyphen-Reihen und flackerndem Fackelschein */
   drawTomb(ctx, t) {
     const w = this.w, h = this.h, hash = (i, k) => Math.abs(Math.sin(i * 127.1 + k * 311.7) * 43758.5453) % 1;
@@ -1635,9 +1757,13 @@ class Renderer {
     if (ob.type === 'handclock') { this.drawHandClockFloor(ctx, ob, t); return; }
     if (ob.type === 'turbine') { this.drawTurbineFloor(ctx, ob, t); return; }
     if (ob.type === 'luke') { if (!(ob.ebene || 0)) this.drawLuke(ctx, ob, 0); return; }   // höhere Ebenen zeichnet zeichneEbene
+    if (ob.type === 'sprengladung') { this.drawSprengladungFloor(ctx, ob, t); return; }
+    if (ob.type === 'grubenlampe') { this.drawGrubenlampeFloor(ctx, ob, t); return; }
     if (ob.type === 'windfahne') { this.drawWindfahneFloor(ctx, ob, t); return; }
     if (ob.type === 'lawine') { this.drawLawineFloor(ctx, ob, t); return; }
     if (ob.type === 'seilbahn') { this.drawSeilbahnFloor(ctx, ob, t); return; }
+    if (ob.type === 'bruchwand') { this.drawBruchwandFloor(ctx, ob, t); return; }
+    if (ob.type === 'giessloeffel') { this.drawGussFloor(ctx, ob, t); return; }
     if (ob.type === 'schneebruecke') { this.drawSchneebrueckeFloor(ctx, ob, t); return; }
     if (ob.type === 'dial' || ob.type === 'wanderloch') { this.drawWanderlochFloor(ctx, ob, t); return; }
     if (ob.type === 'field' && ob.style === 'steam') { this.drawSteam(ctx, ob, t); return; }
@@ -1959,17 +2085,38 @@ class Renderer {
       items.push({ x: ob.x, y: ob.y, bias: 0.3, draw: () => this.drawHandClock(ctx, ob, t) });
     } else if (ob.type === 'aufzug') {
       if (this.spanntEbenen(ob)) return;
-      items.push({ x: ob.x, y: ob.y, bias: 0.4, draw: () => this.drawAufzug(ctx, ob, t) });
+      items.push({ x: ob.x, y: ob.y, bias: 0.4, noFade: true, draw: () => this.drawAufzug(ctx, ob, t) });
+    } else if (ob.type === 'sprengladung') {
+      items.push({ x: ob.x, y: ob.y, bias: 0.3, noFade: true, draw: () => this.drawSprengladung(ctx, ob, t) });
+    } else if (ob.type === 'kippbuehne') {
+      /* bias negativ: die Bohle liegt flach am Boden und gehört unter alles, was darauf steht.
+         noFade: Auf ihr wird gerollt – eine Fläche, die unter dem Ball durchsichtig wird, sähe aus
+         wie ein Loch, und man würde den eigenen Weg nicht mehr sehen. */
+      items.push({ x: ob.cx, y: ob.cy, bias: -0.15, noFade: true, draw: () => this.drawKippbuehne(ctx, ob, t) });
+    } else if (ob.type === 'grubenlampe') {
+      items.push({ x: ob.x, y: ob.y, bias: 0.45, noFade: true, draw: () => this.drawGrubenlampe(ctx, ob, t) });
+    } else if (ob.type === 'bruchwand') {
+      /* noFade: Die Wand ist der Grund, warum man hier nicht weiterkommt. Durchsichtig zu werden,
+         sobald der Ball davorliegt, nähme ihr genau das. */
+      items.push({ x: ob.x, y: ob.y, bias: 0.3, noFade: true, draw: () => this.drawBruchwand(ctx, ob, t) });
+    } else if (ob.type === 'giessloeffel') {
+      /* noFade: Am Löffel liest man ab, wann der nächste Guss kommt. Durchsichtig zu werden,
+         sobald der Ball davorliegt, nähme ihm genau das – und davor liegt man hier immer. */
+      items.push({ x: ob.x, y: ob.y, bias: 0.35, noFade: true, draw: () => this.drawGiessloeffel(ctx, ob, t) });
     } else if (ob.type === 'windfahne') {
       items.push({ x: ob.x, y: ob.y, bias: 0.4, draw: () => this.drawWindfahne(ctx, ob, t) });
     } else if (ob.type === 'lawine') {
       items.push({ x: ob.fx || ob.cx, y: ob.fy || ob.cy, bias: 0.5, noFade: true, draw: () => this.drawLawine(ctx, ob, t) });
     } else if (ob.type === 'seilbahn') {
       if (this.spanntEbenen(ob)) return;
-      items.push({ x: ob.x, y: ob.y, bias: 0.45, draw: () => this.drawSeilbahn(ctx, ob, t) });
+      /* noFade: In der Gondel sitzt der Ball. Ohne die Ausnahme greift die Regel „was vor dem Ball
+         steht, wird durchsichtig" ausgerechnet auf das Fahrzeug, in dem er fährt – dann schwebt er
+         sichtbar über einer blassen Kabine statt darin zu sitzen. Dasselbe gilt für Aufzug und
+         Zahnstange: Alles, was den Ball trägt, bleibt sichtbar. */
+      items.push({ x: ob.x, y: ob.y, bias: 0.45, noFade: true, draw: () => this.drawSeilbahn(ctx, ob, t) });
     } else if (ob.type === 'zahnstange') {
       if (this.spanntEbenen(ob)) return;
-      items.push({ x: ob.x, y: ob.y, bias: 0.4, draw: () => this.drawZahnstange(ctx, ob, t) });
+      items.push({ x: ob.x, y: ob.y, bias: 0.4, noFade: true, draw: () => this.drawZahnstange(ctx, ob, t) });
     } else if (ob.type === 'escapement') {
       items.push({ x: ob.x, y: ob.y, bias: 0.25, draw: () => this.drawEscapement(ctx, ob, t) });
     } else if (ob.type === 'pendulum') {
@@ -2025,6 +2172,7 @@ class Renderer {
         else if (ob.style === 'grave') { const [rx, ry] = this.proj(ob.x, ob.y + 0.2, 0); this.spriteGravestone(ctx, rx, ry, this.scale * ob.r * 2.4 * sc, { seed: 0.3 }); }
         else if (ob.style === 'eye') this.drawEye(ctx, ob, t, sc);
         else if (ob.style === 'feder') this.spriteFeder(ctx, ob, sq);
+        else if (ob.style === 'fass') this.drawFass(ctx, ob, sq);
         else this.spriteMushroom(ctx, ob.x, ob.y, 0, ob.r * 1.7 * sc, '#e63b5a', true);
       } });
     } else if (ob.type === 'portal') {
