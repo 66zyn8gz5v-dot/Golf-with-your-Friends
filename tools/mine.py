@@ -39,6 +39,7 @@ DIE MASCHINEN DER WELT (src/obstacles_mine.js):
     'kippbuehne'    Bohle über dem Schacht, die zu der Seite kippt, auf der der Ball liegt
     'grubenlampe'   leuchtet ein Stück Bahn aus – auf einer dunklen Bahn das Wertvollste
     'fass'          der Prellklotz der Welt: ein eisenbeschlagenes Fass, rund von allen Seiten
+    'giessloeffel'  kippt im Takt Erz in eine Rinne; es erstarrt zu Boden, die Brücke wächst
 
     python3 tools/mine.py
 """
@@ -109,6 +110,13 @@ def bohle(x, y, w, h, angle=0, ebene=0):
 def wand(x, y, w, h, ebene=0):
     """Bruchwand. x, y ist die Mitte – so, wie das Hindernis seine Kanten baut."""
     o = {'type': 'bruchwand', 'x': x, 'y': y, 'w': w, 'h': h}
+    if ebene: o['ebene'] = ebene
+    return o
+
+def loeffel(x, y, rx, ry, laenge, dx=1, dy=0, takt=5.0, glut=1.8, phase=0.0, ebene=0):
+    """Gießlöffel. x, y ist die Pfanne, (rx, ry) das erste Feld der Rinne."""
+    o = {'type': 'giessloeffel', 'x': x, 'y': y, 'takt': takt, 'glut': glut, 'phase': phase,
+         'rinne': {'x': rx, 'y': ry, 'len': laenge, 'dx': dx, 'dy': dy}}
     if ebene: o['ebene'] = ebene
     return o
 
@@ -320,7 +328,27 @@ intro='Die unterste Sohle: In den Spalten steht die Glut. Über den ersten Spalt
       'Abkürzung.')
 
 # ---------------------------------------------------------------------------
-# 10 – Die Schmelze: das Ende. Alles, was die Welt hat, auf einmal.
+# 10 – Die Gießhalle: Hier wird der Weg gebaut, während man davorsteht. Quer durch
+#      die Halle steht die Glut; hinüber führt nichts. Am Rand hängt der Gießlöffel.
+f = leer(34, 15)
+fuell(f, 1, 2, 32, 12)
+fuell(f, 14, 2, 18, 12, 'l')          # die Glutspalte quer durch die Halle
+setz(f, 3, 7, 'T'); setz(f, 30, 7, 'H')
+bahn('Die Gießhalle', 'schmelze', f, [
+    # Die Rinne läuft auf Reihe 7 quer über die Spalte – fünf Felder, fünf Güsse
+    loeffel(13.0, 7.5, 14, 7, 5, takt=4.2, glut=2.0),
+    fass(8.0, 4.0, 0.7), fass(8.0, 11.0, 0.7),
+    fass(25.0, 4.0, 0.7), fass(25.0, 11.0, 0.7),
+    lampe_(4.0, 7.5, 3.8), lampe_(9.5, 7.5, 4.0), lampe_(13.0, 7.5, 4.4),
+    lampe_(20.5, 7.5, 4.2), lampe_(26.0, 7.5, 4.0), lampe_(30.5, 7.5, 3.8),
+], par=4, dunkel=0.45, maxStrokes=16,
+intro='Quer durch die Halle steht die Glut, und hinüber führt nichts. Am Rand hängt der '
+      'Gießlöffel: Jedes Mal, wenn er kippt, läuft das Erz ein Feld weiter und erstarrt – so baut '
+      'sich die Brücke selbst. Nur läuft jeder neue Guss über das schon Erstarrte hinweg. Warten, '
+      'bis es kalt ist, und dann hinüber.')
+
+# ---------------------------------------------------------------------------
+# 11 – Die Schmelze: das Ende. Alles, was die Welt hat, auf einmal.
 f = leer(38, 18)
 fuell(f, 1, 2, 36, 15)
 scheibe(f, 19, 8, 12.0, 6.0, 'l')     # der See aus flüssigem Erz
@@ -366,7 +394,18 @@ def pruefe(b):
                     ziel = (x, y, e)
     assert start and ziel, f"{b['name']}: Abschlag oder Loch fehlt"
 
-    fest = lambda x, y, e: 0 <= x < breit and 0 <= y < hoch and s[e][y][x] in FEST
+    """Was der Gießlöffel füllt, zählt als Weg: In der Karte steht dort Glut, im Spiel wird daraus
+       Boden, sobald das Erz erstarrt ist. Ohne das hielte die Prüfung jede Gießhalle für
+       unpassierbar – und mit einer Ausnahme von Hand wäre sie es womöglich wirklich."""
+    rinnen = set()
+    for o in b.get('obstacles', []):
+        if o.get('type') != 'giessloeffel': continue
+        r, e = o['rinne'], o.get('ebene', 0)
+        for i in range(r['len']):
+            rinnen.add((r['x'] + r.get('dx', 0) * i, r['y'] + r.get('dy', 0) * i, e))
+
+    fest = lambda x, y, e: 0 <= x < breit and 0 <= y < hoch and \
+        (s[e][y][x] in FEST or (x, y, e) in rinnen)
 
     """Der Weg – über alle Sohlen hinweg. Innerhalb einer Sohle rollt der Ball; von einer Sohle
        auf die nächste kommt er nur, indem er über eine offene Kante ('o') hinausrollt und fällt.
@@ -388,6 +427,27 @@ def pruefe(b):
             if n in gesehen: continue
             gesehen.add(n); weg[n] = weg[(x, y, e)] + 1; q.append(n)
     assert ziel in gesehen, f"{b['name']}: kein Weg vom Abschlag zum Loch"
+
+    """Der Gießlöffel: Die Rinne muss in der Karte wirklich Glut sein – gösse er über Boden, wäre
+       er ein Blitz, der nichts baut. Und die Pfanne muss am ersten Feld stehen, sonst gösse sie
+       sichtbar daneben."""
+    for o in b.get('obstacles', []):
+        if o.get('type') != 'giessloeffel': continue
+        r, e = o['rinne'], o.get('ebene', 0)
+        assert r['len'] >= 2, f"{b['name']}: eine Rinne aus einem Feld ist keine Brücke"
+        for i in range(r['len']):
+            x, y = r['x'] + r.get('dx', 0) * i, r['y'] + r.get('dy', 0) * i
+            assert 0 <= x < breit and 0 <= y < hoch, f"{b['name']}: die Rinne läuft aus der Karte"
+            assert s[e][y][x] == 'l', \
+                f"{b['name']}: die Rinne steht bei ({x},{y}) nicht auf Glut, sondern auf '{s[e][y][x]}'"
+        nah = abs(o['x'] - (r['x'] + 0.5)) + abs(o['y'] - (r['y'] + 0.5))
+        assert nah <= 2.5, f"{b['name']}: der Gießlöffel steht {nah:.1f} Felder vom Rinnenanfang weg"
+        # Und beide Enden der Rinne müssen an Boden stoßen – sonst brückt sie ins Nichts
+        for ende, dx, dy in ((0, -r.get('dx', 0), -r.get('dy', 0)),
+                             (r['len'] - 1, r.get('dx', 0), r.get('dy', 0))):
+            x, y = r['x'] + r.get('dx', 0) * ende + dx, r['y'] + r.get('dy', 0) * ende + dy
+            assert 0 <= x < breit and 0 <= y < hoch and s[e][y][x] in FEST, \
+                f"{b['name']}: die Rinne stößt bei ({x},{y}) nicht auf festen Boden"
 
     # Jede offene Kante muss auch irgendwo hinführen – sonst ist sie nur ein Loch ins Aus
     for e in range(1, len(s)):

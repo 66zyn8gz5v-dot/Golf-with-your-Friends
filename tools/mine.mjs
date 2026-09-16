@@ -166,6 +166,103 @@ console.log('\n--- Die Bruchwand ---');
 }
 
 /* ------------------------------------------------------------------------------------------- *
+ * Der Gießlöffel: aus Glut wird Boden
+ *
+ * Er ist das einzige Hindernis im Spiel, das die Bahn *aufbaut*. Geprüft wird genau das, in der
+ * Reihenfolge, in der man es auch erzählen würde: Am Anfang ist die Rinne Glut. Jeder Guss füllt
+ * ein Feld weiter. Beim Guss glüht die ganze gefüllte Rinne, weil das Erz darüber hinwegläuft –
+ * und sie kühlt von hinten nach vorn ab, damit man der Abkühlung hinterherlaufen kann. Und beim
+ * nächsten Loch steht wieder Glut da, nicht die Brücke der letzten Runde.
+ */
+{
+  const rinne = { x: 4, y: 3, len: 4, dx: 1, dy: 0 };
+  const feldG = (extra = {}) => ({
+    name: 'Gießprüfung', par: 3, theme: 'schmelze',
+    map: ['..........................', '.T........................',
+          ...Array.from({ length: 4 }, () => '.########################.'),
+          '.........................H', '..........................'],
+    obstacles: [{ type: 'giessloeffel', x: 3.5, y: 3.5, takt: 4, kipp: 1, glut: 2, rinne, ...extra }],
+  });
+  /* Die Karte von Hand mit Glut versehen – fuell gibt es hier nicht, und die Rinne muss auf Glut
+     stehen, sonst prüfte man etwas anderes als im Spiel. */
+  const mitGlut = (def) => {
+    def.map = def.map.map((r, y) => y !== rinne.y ? r
+      : r.slice(0, rinne.x) + 'l'.repeat(rinne.len) + r.slice(rinne.x + rinne.len));
+    return def;
+  };
+  const kachel = (lv, i) => lv.untenFl.tiles[rinne.y][rinne.x + i];
+  const reihe = (lv) => Array.from({ length: rinne.len }, (_, i) => kachel(lv, i)).join('');
+
+  {
+    const lv = G.buildLevel(mitGlut(feldG()));
+    const g = lv.obstacles.find(o => o.type === 'giessloeffel');
+    g.update(0);
+    pruef('am Anfang ist die Rinne Glut', reihe(lv) === 'llll', reihe(lv));
+
+    // Vier Takte laufen lassen und nach jedem Guss im kalten Fenster nachsehen
+    const stand = [];
+    for (let k = 1; k <= 4; k++) {
+      for (let t = (k - 1) * 4; t < k * 4; t += 0.05) g.update(t);
+      g.update(k * 4 - 0.1);           // kurz vor dem nächsten Kippen: alles erkaltet
+      stand.push(reihe(lv));
+    }
+    pruef('jeder Guss füllt ein Feld weiter', stand.join(' ') === '#lll ##ll ###l ####', stand.join(' '));
+    pruef('nach dem letzten Guss trägt die ganze Rinne', reihe(lv) === '####');
+  }
+
+  {
+    // Beim Guss glüht die ganze gefüllte Rinne – das Erz läuft ja darüber hinweg
+    const lv = G.buildLevel(mitGlut(feldG()));
+    const g = lv.obstacles.find(o => o.type === 'giessloeffel');
+    /* Gegossen wird am *Ende* des Kippens, also bei t = 1, 5, 9, 13 – nicht bei Vielfachen des
+       Takts. Bei 11,9 s sind drei Güsse durch und alles ist erkaltet. */
+    for (let t = 0; t < 12; t += 0.05) g.update(t);      // drei Güsse
+    g.update(11.9); const kalt = reihe(lv);
+    for (let t = 12.9; t < 13.2; t += 0.02) g.update(t); // mitten im vierten Guss
+    pruef('vor dem Guss ist das Gefüllte Boden', kalt === '###l', kalt);
+    pruef('beim Guss glüht die ganze Rinne wieder', reihe(lv) === 'llll', reihe(lv));
+    // Und sie kühlt von hinten nach vorn ab
+    let hinten = -1, vorn = -1;
+    for (let t = 13.2; t < 18; t += 0.05) {
+      g.update(t);
+      if (hinten < 0 && kachel(lv, 0) === '#') hinten = t;
+      if (vorn < 0 && kachel(lv, 2) === '#') vorn = t;
+    }
+    pruef('sie kühlt von hinten nach vorn ab', hinten > 0 && vorn > hinten,
+          `hinten bei ${hinten.toFixed(2)}s, vorn bei ${vorn.toFixed(2)}s`);
+  }
+
+  {
+    // Wer beim Guss auf der Rinne liegt, liegt in der Glut
+    const def = mitGlut(feldG());
+    const lv = G.buildLevel(def);
+    const g = lv.obstacles.find(o => o.type === 'giessloeffel');
+    for (let t = 0; t < 8; t += 0.05) g.update(t);
+    g.update(7.9);
+    pruef('nach zwei Güssen liegen zwei Felder', reihe(lv) === '##ll', reihe(lv));
+    const b = ball(rinne.x + 0.5, rinne.y + 0.5);       // auf dem ersten, erkalteten Feld
+    let ev = [], getroffen = false;
+    for (let t = 8.6; t < 9.6; t += 1 / 240) {
+      for (const o of lv.obstacles) if (o.update) o.update(t);
+      ev = G.stepPhysics(lv, b, 1 / 240, t, false);
+      if (ev.some(e => e.type === 'lava')) { getroffen = true; break; }
+    }
+    pruef('der nächste Guss erwischt, wer auf der Rinne wartet', getroffen);
+  }
+
+  {
+    // Beim nächsten Loch steht wieder Glut da
+    const def = mitGlut(feldG());
+    const lv1 = G.buildLevel(def);
+    const g1 = lv1.obstacles.find(o => o.type === 'giessloeffel');
+    for (let t = 0; t < 20; t += 0.05) g1.update(t);
+    pruef('nach dem Durchlauf ist die Brücke fertig', g1.gefuellt === rinne.len, `${g1.gefuellt} Felder`);
+    const lv2 = G.buildLevel(def);
+    pruef('beim nächsten Aufbau steht wieder Glut da', reihe(lv2) === 'llll', reihe(lv2));
+  }
+}
+
+/* ------------------------------------------------------------------------------------------- *
  * Das Fass steht im Raum, nicht auf dem Bildschirm
  *
  * Der Vorgänger an dieser Stelle war ein Trapez, das am Bildschirmpunkt gemalt wurde: ein paar

@@ -2429,6 +2429,13 @@
         /* Die Schneewächte bricht ein. Das Ereignis gab es schon, gehört hat es bisher niemand:
            Es stand in keinem Zweig, also brach die Brücke stumm. */
         case 'bruch': Sfx.bounce(4); burst(ev.x, ev.y, '#ffffff', 18, true); break;
+        /* Ein Guss: Das Erz läuft ein Feld weiter und erstarrt. Gemeldet wird jeder Guss, denn
+           jeder verändert die Bahn – und der letzte sagt, dass die Brücke steht. */
+        case 'guss':
+          Sfx.lava();
+          burst(ev.x, ev.y, '#ffb347', 16, true); burst(ev.x, ev.y, '#fff0c0', 8, true);
+          if (ev.fertig) showMessage('Die Rinne ist voll – das Erz trägt!', 1800);
+          break;
         case 'spit': Sfx.bumper(); burst(ev.x, ev.y, '#a6ff5e', 10); break;
         case 'spin': Sfx.bounce(5); showMessage('Das Zahnrad nimmt den Ball mit …', 1200); break;
         case 'spinout': Sfx.bumper(); burst(ev.x, ev.y, '#ffe9a8', 8); break;

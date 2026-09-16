@@ -294,4 +294,62 @@ Object.assign(Renderer.prototype, {
       ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
     }
   },
+
+  /* ---------- Der Gießlöffel ----------
+     Die Pfanne hängt an einem Bock über dem Rand der Rinne und kippt im Takt nach vorn. Beim
+     Kippen läuft ein Faden Erz heraus – der ist die Vorwarnung, und man liest an ihm ab, wann der
+     Guss kommt, ohne eine Uhr zu brauchen. */
+  drawGiessloeffel(ctx, ob, t) {
+    const r = 0.62, neig = ob.state === 'kippen' ? Math.sin((ob.p || 0) * Math.PI * 0.5) : 0;
+    const dx = (ob.rinne && ob.rinne.dx) || 0, dy = (ob.rinne && ob.rinne.dy) || 0;
+    const zAchse = 1.15;
+    this.isoEllipse(ctx, ob.x, ob.y, 0.004, r * 1.1, 'rgba(0,0,0,0.34)');
+    // Der Bock: zwei Ständer und die Achse dazwischen
+    for (const q of [-1, 1]) {
+      this.saeule(ctx, ob.x - dy * q * r * 0.9, ob.y + dx * q * r * 0.9, 0, 0.14, 0.11, zAchse, '#6d747d', '#434951', 7);
+    }
+    /* Die Pfanne kippt um die Achse: Sie rückt zur Rinne hin und sinkt dabei ab – mehr Drehung
+       braucht es nicht, um sie kippen zu sehen, und mehr ginge in dieser Abbildung auch nicht,
+       weil sie keine Neigung um eine waagerechte Achse kennt. */
+    const px = ob.x + dx * neig * 0.52, py = ob.y + dy * neig * 0.52;
+    const pz = zAchse - neig * 0.34;
+    this.saeule(ctx, px, py, pz - 0.42, r * 0.82, r, 0.42, '#7a5f42', '#4a3a28', 12);
+    this.reifen(ctx, px, py, pz - 0.12, r * 1.03, 0.1, '#5d646d');
+    // Das Erz in der Pfanne, hell und flach – es leuchtet den Bock von unten an
+    this.isoEllipse(ctx, px, py, pz - 0.04, r * 0.8, '#ffb347');
+    this.isoEllipse(ctx, px, py, pz - 0.03, r * 0.5, '#fff0c0');
+    /* Der Faden beim Kippen: ein schmaler Streifen vom Pfannenrand hinunter in die Rinne. */
+    if (neig > 0.15) {
+      const [a0, a1] = this.proj(px + dx * r * 0.9, py + dy * r * 0.9, pz - 0.1);
+      const [b0, b1] = this.proj(px + dx * (r * 0.9 + 0.5), py + dy * (r * 0.9 + 0.5), 0.05);
+      ctx.strokeStyle = 'rgba(255,170,60,0.85)';
+      ctx.lineWidth = Math.max(1.5, this.scale * 0.07 * neig);
+      ctx.beginPath(); ctx.moveTo(a0, a1); ctx.lineTo(b0, b1); ctx.stroke();
+    }
+  },
+
+  /* Die Rinne im Boden: Was erkaltet ist, ist dunkles Erz mit einer Naht an der Bruchstelle; das
+     zuletzt gegossene Feld glüht aus. Gezeichnet wird über den Belag, den die Karte schon gelegt
+     hat – die Kachel selbst steht dort je nach Stand auf Glut oder auf Boden. */
+  drawGussFloor(ctx, ob, t) {
+    const felder = ob.felder ? ob.felder() : [];
+    for (let i = 0; i < felder.length; i++) {
+      const [fx, fy] = felder[i];
+      if (i >= ob.gefuellt) continue;                       // noch nicht gegossen: die Glut der Karte steht
+      const h = ob.hitze ? ob.hitze(i) : 0;
+      const poly = [[fx, fy], [fx + 1, fy], [fx + 1, fy + 1], [fx, fy + 1]];
+      // Erkaltetes Erz: dunkel, körnig, mit einem letzten Schimmer in den Fugen
+      this.fillPoly(ctx, poly, 0.012, h > 0 ? mixHex('#3a2f28', '#ffb03a', h) : '#3a2f28');
+      ctx.save();
+      this.pathPoly(ctx, poly, 0.013); ctx.clip();
+      ctx.strokeStyle = h > 0 ? `rgba(255,196,110,${0.5 + h * 0.45})` : 'rgba(196,110,60,0.35)';
+      ctx.lineWidth = Math.max(1, this.scale * 0.035);
+      for (let k = 0; k < 3; k++) {
+        const u = 0.25 + k * 0.25;
+        const [a0, a1] = this.proj(fx + u, fy + 0.08, 0.014), [b0, b1] = this.proj(fx + u - 0.16, fy + 0.92, 0.014);
+        ctx.beginPath(); ctx.moveTo(a0, a1); ctx.lineTo(b0, b1); ctx.stroke();
+      }
+      ctx.restore();
+    }
+  },
 });

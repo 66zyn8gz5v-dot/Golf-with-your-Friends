@@ -1041,6 +1041,38 @@ zwischen zwei Etagen stehen: Seilbahn, Aufzug und Zahnstange (`drawSpannendeMasc
 Kupferrohr, das seine Teilstücke einzeln in die Tiefensortierung schickt, damit es sich richtig
 mit den Mauern überdeckt.
 
+### Der Gießlöffel: das einzige Hindernis, das die Bahn aufbaut
+
+Eine Pfanne am Rand der Schmelze kippt im Takt flüssiges Erz in eine Rinne. Das Erz läuft ein Feld
+weiter, erstarrt und ist von da an Boden. Mit jedem Guss wächst die Brücke um ein Feld, bis die
+Glutspalte überbrückt ist.
+
+**Warum er nicht der Blitz ist.** Ein Streifen, der im Takt tödlich wird, steht schon im
+Sturmhimmel. Das Eigene hier ist nicht die Gefahr, sondern dass daraus Weg wird. Die Bruchwand
+räumt einmal Fels weg, ein Tor öffnet und schließt – hier entsteht Boden, wo keiner war, und er
+bleibt. Es ist das einzige Hindernis im Spiel, das die Bahn *aufbaut*.
+
+**Warum das ohne Eingriff in die Physik geht.** Glut und Boden sind für den Bahnbau beide „Boden":
+Um eine Glutkachel herum baut `level.js` keine Bande, um eine Bodenkachel auch nicht. Ein Feld von
+`l` auf `#` umzuschreiben ändert darum nur, was beim Betreten geschieht. Über einen Abgrund ginge
+es nicht – dort steht eine Bande, und die bliebe mitten auf der neuen Brücke stehen.
+
+**Und warum es trotzdem eine Aufgabe ist.** Beim Guss glüht die *ganze* gefüllte Rinne, denn das
+Erz läuft über das schon Erstarrte hinweg bis nach vorn. Sonst wäre die Rinne nach dem ersten Guss
+ein sicherer Steg und die Aufgabe bloßes Warten. Abgekühlt wird von hinten nach vorn: Am Löffel
+wird der Strom zuerst dünn, vorn steht das Erz am längsten. Dadurch läuft eine Abkühlungswelle über
+die Rinne, und man kann ihr hinterherlaufen, statt immer auf die ganze Brücke zu warten.
+
+Zwei Werkzeuge mussten mitlernen, und beide aus demselben Grund: Für sie steht in der Karte Glut,
+wo im Spiel Boden entsteht. `tools/mine.py` und `tools/validate.mjs` zählen die Felder einer Rinne
+darum als Weg – sonst meldeten sie „Loch vom Abschlag nicht erreichbar" für eine Bahn, deren Weg
+entsteht, während man davorsteht. `tools/mine.mjs` prüft dafür die zehn Regeln des Löffels nach,
+vom ersten Guss bis zu der Glut, die beim nächsten Loch wieder dasteht.
+
+Im Editor und unter geteilten Bahnen gibt es ihn **nicht**: Sein `rinne`-Feld ist ein
+verschachteltes Objekt, und der Filter für fremde Bahndaten (`src/share.js`) lässt nur flache Werte
+durch. Lieber kein Gießlöffel in einer Freundesbahn als eine Lücke in dieser Prüfung.
+
 Der Prellklotz der Mine ist ein **Fass** (`style: 'fass'`): eichen, mit drei Eisenreifen, und es
 staucht sich sichtbar, wenn man es trifft. Ohne eigenen Stil fiel es auf den Fliegenpilz zurück, mit
 dem das Märchenland angefangen hat – und ein Fliegenpilz vierhundert Meter unter Tage ist Unsinn.
@@ -1090,7 +1122,8 @@ stehen lässt, und dass sie beim nächsten Loch wieder dasteht.
 | 7 | Lorensohle | 4 | Stollen | **Zwei Sohlen.** Oben queren zwei Hunte die Strecke, unten liegt das Loch. |
 | 8 | Kristallkammer | 4 | Kristall | **Zwei Sohlen.** Oben der Magnetit auf der Galerie, unten ein Felspfeiler vor der großen Kammer. |
 | 9 | Sohle Neun | 5 | Schmelze | **Zwei Sohlen.** Man fällt mitten in die Glut: ein Steg über den einen Spalt, eine Bohle über den anderen. |
-| 10 | Die Schmelze | 5 | Schmelze | Die Insel im Lavasee. Der Damm ist zugemauert und wird in der Mitte im Takt leergefegt. |
+| 10 | **Die Gießhalle** | 4 | Schmelze | **Der Gießlöffel.** Quer durch die Halle steht die Glut, hinüber führt nichts – bis das Erz die Brücke baut. |
+| 11 | Die Schmelze | 5 | Schmelze | Die Insel im Lavasee. Der Damm ist zugemauert und wird in der Mitte im Takt leergefegt. |
 
 Die Pare stehen nicht nach Gefühl, sondern nach dem, was die Bahnen wirklich spielen: Der
 Normalspieler-Bot (`node tools/audit/audit.mjs mine`) hat sie durchgespielt, und wo sein Median

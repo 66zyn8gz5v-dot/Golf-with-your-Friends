@@ -26,6 +26,13 @@ function shade(hex, f) {
   return '#' + [c(r), c(g), c(b)].map(v => v.toString(16).padStart(2, '0')).join('');
 }
 function rgba(hex, a) { const [r, g, b] = hexToRgb(hex); return `rgba(${r},${g},${b},${a})`; }
+/* Zwei Farben mischen, k = 0 gibt die erste, k = 1 die zweite. Für alles, was ausglüht oder
+   abkühlt: Da ändert sich nicht die Helligkeit einer Farbe, sondern es wird eine andere. */
+function mixHex(a, b, k) {
+  const [r1, g1, b1] = hexToRgb(a), [r2, g2, b2] = hexToRgb(b), u = Math.max(0, Math.min(1, k));
+  const c = (p, q) => Math.round(p + (q - p) * u).toString(16).padStart(2, '0');
+  return '#' + c(r1, r2) + c(g1, g2) + c(b1, b2);
+}
 function convexHull(pts) { // Andrew's monotone chain
   const p = pts.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]), cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
   const lo = [], up = [];
@@ -1756,6 +1763,7 @@ class Renderer {
     if (ob.type === 'lawine') { this.drawLawineFloor(ctx, ob, t); return; }
     if (ob.type === 'seilbahn') { this.drawSeilbahnFloor(ctx, ob, t); return; }
     if (ob.type === 'bruchwand') { this.drawBruchwandFloor(ctx, ob, t); return; }
+    if (ob.type === 'giessloeffel') { this.drawGussFloor(ctx, ob, t); return; }
     if (ob.type === 'schneebruecke') { this.drawSchneebrueckeFloor(ctx, ob, t); return; }
     if (ob.type === 'dial' || ob.type === 'wanderloch') { this.drawWanderlochFloor(ctx, ob, t); return; }
     if (ob.type === 'field' && ob.style === 'steam') { this.drawSteam(ctx, ob, t); return; }
@@ -2091,6 +2099,10 @@ class Renderer {
       /* noFade: Die Wand ist der Grund, warum man hier nicht weiterkommt. Durchsichtig zu werden,
          sobald der Ball davorliegt, nähme ihr genau das. */
       items.push({ x: ob.x, y: ob.y, bias: 0.3, noFade: true, draw: () => this.drawBruchwand(ctx, ob, t) });
+    } else if (ob.type === 'giessloeffel') {
+      /* noFade: Am Löffel liest man ab, wann der nächste Guss kommt. Durchsichtig zu werden,
+         sobald der Ball davorliegt, nähme ihm genau das – und davor liegt man hier immer. */
+      items.push({ x: ob.x, y: ob.y, bias: 0.35, noFade: true, draw: () => this.drawGiessloeffel(ctx, ob, t) });
     } else if (ob.type === 'windfahne') {
       items.push({ x: ob.x, y: ob.y, bias: 0.4, draw: () => this.drawWindfahne(ctx, ob, t) });
     } else if (ob.type === 'lawine') {

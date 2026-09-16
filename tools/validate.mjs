@@ -313,6 +313,18 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
   const stufeSperrt = (x, y, nx, ny) =>
     stufeVon(nx, ny) > stufeVon(x, y) && !aufSchraege(x, y) && !aufSchraege(nx, ny);
 
+  /* Was ein Gießlöffel füllt, ist Weg. In der Karte steht dort Glut, im Spiel wird daraus Boden,
+     sobald das Erz erstarrt ist – ohne das hielte die Prüfung jede Gießhalle für unpassierbar und
+     meldete „Loch vom Abschlag nicht erreichbar", obwohl der Weg entsteht, während man davorsteht. */
+  const rinnen = new Set();
+  for (const o of (c.obstacles || [])) {
+    if (o.type !== 'giessloeffel' || !o.rinne) continue;
+    const r = o.rinne, e = o.ebene || 0;
+    for (let i = 0; i < (r.len || 0); i++)
+      rinnen.add(`${e}|${(r.x || 0) + (r.dx || 0) * i},${(r.y || 0) + (r.dy || 0) * i}`);
+  }
+  const gussBoden = (n, x, y) => rinnen.has(`${n}|${x},${y}`);
+
   if (tee && cup && !c.ohneLoch) {
     let flutStart = null;
     const seen = new Set([tee.join()]), q = [tee];
@@ -322,7 +334,7 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
         const nx = x + dx, ny = y + dy;
         if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
         const ch = rows[ny][nx];
-        if (!FLOOR.has(ch) || ch === 'w' || ch === 'l') continue;
+        if (!FLOOR.has(ch) || ((ch === 'w' || ch === 'l') && !gussBoden(0, nx, ny))) continue;
         if (stufeSperrt(x, y, nx, ny)) continue;
         const k = `${nx},${ny}`; if (seen.has(k)) continue; seen.add(k); q.push([nx, ny]);
       }
@@ -392,7 +404,9 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
        ist und oben auch Boden unter dem Ball hat. */
     const bodenAuf = (n, x, y) => {
       const r = karten[n] && karten[n][y], ch = r && r[x];
-      return !!ch && FLOOR.has(ch) && ch !== 'w' && ch !== 'l';
+      if (!ch || !FLOOR.has(ch)) return false;
+      if (ch !== 'w' && ch !== 'l') return true;
+      return ch === 'l' && gussBoden(n, x, y);     // die Rinne des Gießlöffels wird Boden
     };
     const HEBER = ['turbine', 'aufzug', 'zahnstange'];
     const aufstiege = [];                       // { typ, von, nach, x, y, zx, zy }

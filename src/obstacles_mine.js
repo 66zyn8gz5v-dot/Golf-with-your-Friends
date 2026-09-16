@@ -215,3 +215,110 @@ class BlastWall {
     return seit >= 0 && seit < BRUCH_STAUB ? 1 - seit / BRUCH_STAUB : 0;
   }
 }
+
+/* ---------- Der Gießlöffel ----------
+ *
+ * Eine Pfanne am Rand der Schmelze, die im Takt flüssiges Erz in eine Rinne kippt. Das Erz läuft
+ * ein Feld weiter, erstarrt und ist von da an Boden. Mit jedem Guss wächst die Brücke um ein Feld,
+ * bis die Rinne überbrückt ist.
+ *
+ * WARUM ER NICHT DER BLITZ IST
+ * Ein Streifen, der im Takt tödlich wird, steht schon im Sturmhimmel. Das Eigene hier ist nicht
+ * die Gefahr, sondern dass daraus Weg wird: Der Gießlöffel ist das einzige Hindernis im Spiel, das
+ * die Bahn *aufbaut*. Die Bruchwand räumt einmal Fels weg, ein Tor öffnet und schließt – hier
+ * entsteht Boden, wo keiner war, und er bleibt.
+ *
+ * WIE ER DAS KANN, OHNE DASS DIE PHYSIK ETWAS LERNEN MUSS
+ * Glut und Boden sind für die Bahnprüfung beide „Boden": Um eine Glutkachel herum baut das Spiel
+ * keine Bande, um eine Bodenkachel auch nicht. Ein Feld von 'l' auf '#' umzuschreiben ändert
+ * darum nur, was beim Betreten geschieht – und genau das ist gewollt. Über einen Abgrund ginge es
+ * nicht: Dort steht eine Bande, und die bliebe mitten auf der neuen Brücke stehen.
+ *
+ * Die Rinne steht als Reihe von Glutkacheln in der Karte. Beim nächsten Loch wird sie
+ * zurückgeschrieben (setup) – sonst fände die zweite Runde eine Brücke vor, die die erste gebaut
+ * hat.
+ */
+const GUSS_TAKT = 6.0;           // so oft kippt der Löffel
+const GUSS_KIPP = 1.3;           // so lange dauert das Kippen – die Vorwarnung
+const GUSS_GLUT = 2.2;           // so lange glüht das frisch gegossene Feld und ist tödlich
+
+class Giessloeffel {
+  /* x, y ist die Pfanne. 'rinne' ist die Reihe, die sie füllt: {x, y, len, dx, dy} – Startfeld,
+     Länge und Richtung, in der das Erz läuft. */
+  constructor(d) {
+    Object.assign(this, { takt: GUSS_TAKT, kipp: GUSS_KIPP, glut: GUSS_GLUT, phase: 0, ebene: 0 }, d);
+    this.type = 'giessloeffel';
+    this.gefuellt = 0; this.gussAt = -99; this.neu = false; this.t = 0; this.p = 0; this.state = 'ruhe';
+  }
+  /* Die Felder der Rinne, von der Pfanne weg. */
+  felder() {
+    const r = this.rinne || { x: 0, y: 0, len: 0, dx: 1, dy: 0 };
+    const aus = [];
+    for (let i = 0; i < r.len; i++) aus.push([r.x + (r.dx || 0) * i, r.y + (r.dy || 0) * i]);
+    return aus;
+  }
+  flaeche() {
+    const lv = this.level;
+    return lv && lv.flaechen ? (lv.flaechen[this.ebene || 0] || lv.flaechen[0]) : null;
+  }
+  setzeFeld(i, z) {
+    const fl = this.flaeche(); if (!fl) return;
+    const f = this.felder()[i]; if (!f) return;
+    if (fl.tiles[f[1]] && fl.tiles[f[1]][f[0]] != null) fl.tiles[f[1]][f[0]] = z;
+  }
+  setup(level) {
+    this.level = level;
+    this.gefuellt = 0; this.gussAt = -99; this.neu = false;
+    // Die Rinne ist beim Anfang wieder Glut – auch in der zweiten Runde auf derselben Bahn
+    for (let i = 0; i < this.felder().length; i++) this.setzeFeld(i, 'l');
+  }
+  update(t) {
+    this.t = t;
+    const n = this.felder().length;
+    const u = ((((t / this.takt + this.phase) % 1) + 1) % 1) * this.takt;
+    this.state = u < this.kipp ? 'kippen' : 'ruhe';
+    this.p = this.state === 'kippen' ? u / this.kipp : 0;
+    /* Gegossen wird im Augenblick, in dem der Löffel ganz gekippt ist. Erkannt wird das am
+       Umschlag von 'kippen' auf 'ruhe' und nicht an einem Vergleich mit t: Bei einem Sprung in der
+       Uhr (Bahnwechsel, Netzabgleich) fiele sonst entweder kein Guss aus oder gleich zehn. */
+    if (this.state === 'ruhe' && this.warKippen && this.gefuellt < n) {
+      this.gefuellt++; this.gussAt = t; this.neu = true;
+    }
+    this.warKippen = this.state === 'kippen';
+    /* Die Kacheln nachführen. Beim Guss glüht die *ganze* gefüllte Rinne, nicht nur das neue Feld:
+       Das Erz läuft ja über das schon Erstarrte hinweg bis nach vorn. Das ist nicht nur richtiger,
+       es ist auch erst das Spiel daran – sonst wäre die Rinne nach dem ersten Guss ein sicherer
+       Steg und die Aufgabe bloßes Warten.
+       Abgekühlt wird von hinten nach vorn: Am Löffel wird der Strom zuerst dünn, vorn steht das
+       Erz am längsten. Dadurch gibt es überhaupt etwas zu entscheiden – man kann der Abkühlung
+       hinterherlaufen, statt immer auf die ganze Rinne zu warten. */
+    for (let i = 0; i < n; i++) this.setzeFeld(i, i < this.gefuellt && !this.heiss(i, t) ? '#' : 'l');
+  }
+  /* Einmal je Guss melden, nicht einmal je Bildschritt. */
+  trigger(ball, t, events) {
+    if (!this.neu) return;
+    this.neu = false;
+    const f = this.felder()[this.gefuellt - 1];
+    events.push({ type: 'guss', x: f ? f[0] + 0.5 : this.x, y: f ? f[1] + 0.5 : this.y,
+                  fertig: this.gefuellt >= this.felder().length });
+  }
+  /* Wie lange bleibt Feld i nach einem Guss heiß? Hinten am Löffel am kürzesten, vorn am
+     längsten – daher die Welle, die über die Rinne läuft. */
+  glutZeit(i) {
+    const n = Math.max(1, this.gefuellt);
+    return this.glut * (0.4 + 0.6 * ((i + 1) / n));
+  }
+  heiss(i, t = this.t) { return t - this.gussAt < this.glutZeit(i); }
+  /* Wie weit ist ein Feld erkaltet? 1 = eben übergossen, 0 = kalt. Nur fürs Bild – das Nachglühen
+     dauert länger als die Gefahr, sonst sähe ein kaltes Feld aus wie ein heißes. */
+  hitze(i) {
+    const seit = this.t - this.gussAt, dauer = this.glutZeit(i) * 1.8;
+    return seit >= 0 && seit < dauer ? 1 - seit / dauer : 0;
+  }
+  /* Glüht irgendein Teil der Rinne noch? Dieselbe Rechnung, nach der update die Kacheln setzt –
+     damit die Prüfwerkzeuge die Bedingung nicht nachbauen und dabei danebenliegen können. */
+  glueht() {
+    for (let i = 0; i < this.gefuellt; i++) if (this.heiss(i)) return true;
+    return false;
+  }
+}
