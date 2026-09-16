@@ -10,10 +10,15 @@
 Object.assign(Renderer.prototype, {
 
   /* ---------- Dunkelheit ---------- */
-  /* Der Schleier über einer dunklen Bahn. Er wird nicht als ein weicher Verlauf gezeichnet,
-     sondern als drei gestaffelte Lagen mit je einem Loch: Das kommt ohne zweite Leinwand aus
-     (evenodd macht aus dem Kreis ein Loch im Rechteck) und ergibt trotzdem einen weichen Rand,
-     weil die Löcher verschieden groß sind.
+  /* Der Schleier über einer dunklen Bahn. Gezeichnet wird er auf einer zweiten, unsichtbaren
+     Leinwand: erst überall dunkel, dann wird an jedem Licht ein Loch *hineingewischt* – mit einem
+     Farbverlauf, der nach außen hin dichter wird ('destination-out' löscht so viel, wie der
+     Verlauf deckt). Danach kommt das Ganze in einem Zug auf das Bild.
+
+     Vorher lagen dafür fünf Lagen mit je einem harten Loch übereinander. Das ergab genau fünf
+     sichtbare Ringe: Um Ball und Laterne stand eine Zielscheibe statt eines Lichtscheins. Mit dem
+     Verlauf gibt es keine Stufen mehr, und überlappende Lichter addieren sich von selbst richtig,
+     statt sich gegenseitig aufzuhellen.
 
      Aufgehellt wird um den Ball und um jede Grubenlampe. Der Ball ist immer dabei – wer gar nichts
      sieht, spielt nicht, sondern rät. */
@@ -27,23 +32,42 @@ Object.assign(Renderer.prototype, {
       if (ob.type !== 'grubenlampe' || (ob.ebene || 0) !== (lv.ebene || 0)) continue;
       lichter.push({ x: ob.x, y: ob.y, r: ob.r });
     }
-    /* Fünf Lagen mit immer kleinerem Loch. Drei waren zu wenig – man sah die Ringe einzeln, und
-       das Licht wirkte gestapelt statt gestreut. */
-    const lagen = [1, 0.87, 0.73, 0.58, 0.42];
-    ctx.save();
-    for (const f of lagen) {
-      ctx.beginPath();
-      ctx.rect(0, 0, this.w, this.h);
-      for (const l of lichter) {
-        const [sx, sy] = this.proj(l.x, l.y, 0);
-        const rx = l.r * f * this.scale;
-        ctx.moveTo(sx + rx, sy);
-        ctx.ellipse(sx, sy, rx, rx * this.cam.tilt, 0, 0, TAU);
-      }
-      ctx.fillStyle = `rgba(6,4,10,${staerke / lagen.length})`;
-      ctx.fill('evenodd');
+    /* Die zweite Leinwand wird einmal angelegt und danach nur noch neu bemalt – ein neues
+       Canvas je Bild wäre bei sechzig Bildern in der Sekunde Arbeit für nichts. */
+    const px = Math.round(this.w * this.dpr), py = Math.round(this.h * this.dpr);
+    if (!this.dunkelBild || this.dunkelBild.width !== px || this.dunkelBild.height !== py) {
+      this.dunkelBild = document.createElement('canvas');
+      this.dunkelBild.width = px; this.dunkelBild.height = py;
+      this.dunkelCtx = this.dunkelBild.getContext('2d');
     }
-    ctx.restore();
+    /* Die zweite Leinwand hat so viele Bildpunkte wie die echte, rechnet aber in denselben
+       Einheiten – sonst wäre der Schleier auf einem feinen Schirm weichgezogen. */
+    const d = this.dunkelCtx;
+    d.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    d.globalCompositeOperation = 'source-over';
+    d.clearRect(0, 0, this.w, this.h);
+    d.fillStyle = `rgba(6,4,10,${staerke})`;
+    d.fillRect(0, 0, this.w, this.h);
+    d.globalCompositeOperation = 'destination-out';
+    for (const l of lichter) {
+      const [sx, sy] = this.proj(l.x, l.y, 0);
+      const r = l.r * this.scale;
+      /* Der Kern ist voll frei, nach außen geht das Licht weich aus. Der Boden ist schräg gesehen,
+         darum wird der Kreis in der Höhe gestaucht – sonst läge ein runder Fleck auf einem
+         schrägen Boden. */
+      d.save();
+      d.translate(sx, sy); d.scale(1, this.cam.tilt); d.translate(-sx, -sy);
+      const g = d.createRadialGradient(sx, sy, 0, sx, sy, r);
+      g.addColorStop(0, 'rgba(0,0,0,1)');
+      g.addColorStop(0.45, 'rgba(0,0,0,0.92)');
+      g.addColorStop(0.78, 'rgba(0,0,0,0.45)');
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      d.fillStyle = g;
+      d.beginPath(); d.arc(sx, sy, r, 0, TAU); d.fill();
+      d.restore();
+    }
+    d.globalCompositeOperation = 'source-over';
+    ctx.drawImage(this.dunkelBild, 0, 0, this.w, this.h);
   },
 
   /* ---------- Grubenlampe ---------- */

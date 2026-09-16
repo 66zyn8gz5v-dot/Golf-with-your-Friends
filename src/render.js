@@ -2017,7 +2017,7 @@ class Renderer {
       items.push({ x: ob.x, y: ob.y, bias: 0.3, draw: () => this.drawHandClock(ctx, ob, t) });
     } else if (ob.type === 'aufzug') {
       if (this.spanntEbenen(ob)) return;
-      items.push({ x: ob.x, y: ob.y, bias: 0.4, draw: () => this.drawAufzug(ctx, ob, t) });
+      items.push({ x: ob.x, y: ob.y, bias: 0.4, noFade: true, draw: () => this.drawAufzug(ctx, ob, t) });
     } else if (ob.type === 'sprengladung') {
       items.push({ x: ob.x, y: ob.y, bias: 0.3, noFade: true, draw: () => this.drawSprengladung(ctx, ob, t) });
     } else if (ob.type === 'kippbuehne') {
@@ -2033,10 +2033,14 @@ class Renderer {
       items.push({ x: ob.fx || ob.cx, y: ob.fy || ob.cy, bias: 0.5, noFade: true, draw: () => this.drawLawine(ctx, ob, t) });
     } else if (ob.type === 'seilbahn') {
       if (this.spanntEbenen(ob)) return;
-      items.push({ x: ob.x, y: ob.y, bias: 0.45, draw: () => this.drawSeilbahn(ctx, ob, t) });
+      /* noFade: In der Gondel sitzt der Ball. Ohne die Ausnahme greift die Regel „was vor dem Ball
+         steht, wird durchsichtig" ausgerechnet auf das Fahrzeug, in dem er fährt – dann schwebt er
+         sichtbar über einer blassen Kabine statt darin zu sitzen. Dasselbe gilt für Aufzug und
+         Zahnstange: Alles, was den Ball trägt, bleibt sichtbar. */
+      items.push({ x: ob.x, y: ob.y, bias: 0.45, noFade: true, draw: () => this.drawSeilbahn(ctx, ob, t) });
     } else if (ob.type === 'zahnstange') {
       if (this.spanntEbenen(ob)) return;
-      items.push({ x: ob.x, y: ob.y, bias: 0.4, draw: () => this.drawZahnstange(ctx, ob, t) });
+      items.push({ x: ob.x, y: ob.y, bias: 0.4, noFade: true, draw: () => this.drawZahnstange(ctx, ob, t) });
     } else if (ob.type === 'escapement') {
       items.push({ x: ob.x, y: ob.y, bias: 0.25, draw: () => this.drawEscapement(ctx, ob, t) });
     } else if (ob.type === 'pendulum') {

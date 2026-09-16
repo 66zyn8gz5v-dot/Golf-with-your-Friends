@@ -974,9 +974,16 @@ Drei Entscheidungen halten das spielbar statt ärgerlich:
   Punkt des Weges darf weiter als 7,5 Felder von jedem Licht entfernt liegen. Die Bahn mit der
   dunkelsten Stelle (Erster Stollen, 6,3) hat also noch Luft.
 
-Gezeichnet wird der Schleier in `Renderer.drawDunkelheit` – fünf Lagen Dunkel übereinander, jede
-mit einem etwas kleineren Loch an denselben Stellen. Das ergibt einen weichen Rand ohne zweite
-Leinwand; drei Lagen waren zu wenig, da sah man die Ringe einzeln.
+Gezeichnet wird der Schleier in `Renderer.drawDunkelheit`, auf einer zweiten, unsichtbaren
+Leinwand: erst überall dunkel, dann wird an jedem Licht ein Loch hineingewischt – mit einem
+Farbverlauf, der nach außen hin dichter wird (`destination-out` löscht so viel, wie der Verlauf
+deckt). Dann kommt das Ganze in einem Zug auf das Bild.
+
+Zuerst lagen dafür gestapelte Lagen mit je einem harten Loch übereinander, erst drei, dann fünf.
+Bei drei Lagen sah man die Ringe einzeln, bei fünf ebenso – nur enger: Um Ball und Laterne stand
+eine Zielscheibe statt eines Lichtscheins. Mehr Lagen hätten das nur verschoben, nicht behoben, und
+jede Lage kostet eine bildschirmgroße Füllung pro Bild. Der Verlauf hat keine Stufen, kommt mit
+einer Füllung aus, und überlappende Lichter addieren sich von selbst richtig.
 
 **Zwei neue Maschinen** (`src/obstacles_mine.js`, gezeichnet in `src/render_mine.js`):
 
@@ -1130,6 +1137,22 @@ Windfahne muss auf der Bahn stehen, in jedem Lawinenstreifen muss Bahn **und min
 liegen (ohne Deckung wäre sie keine Aufgabe, sondern Warten), beide Stationen einer Seilbahn müssen
 auf ihrer jeweiligen Ebene Bahn sein, und eine Schneebrücke muss auf Bahn liegen – sonst wäre sie
 von Anfang an ein Loch.
+
+Die Maschinen selbst prüft `node tools/schnee.mjs` – dauerhaft und nachrechnend, nicht durch
+Hinschauen. Anlass waren zwei Fehler an der Seilbahn, die beide nur zu sehen und nicht zu messen
+schienen:
+
+- **Der Ball schwebte eine Etage über der Kabine.** Die Gondel rechnet ihre Höhe vom Grund der Bahn
+  aus, der Ball dagegen von *seiner* Etage – der Zeichner legt `ball.ebene` noch einmal obendrauf.
+  Wer die eine Zahl unbesehen in die andere einsetzt, zählt die Etage zweimal. Auf allen Bahnen mit
+  Talstation auf Ebene 0 fiel das nicht auf; auf dem Gipfel, wo die zweite Gondel schon auf Ebene 1
+  steht, schwebte der Ball genau 2,00 Kacheln zu hoch. `tools/schnee.mjs` misst jetzt auf **jeder**
+  Seilbahn jeder Bahn den Abstand zwischen Ball und Kabinendach.
+- **Die Kabine wurde durchsichtig, während man darin saß.** Die Regel „was vor dem Ball steht und
+  ihn verdecken würde, wird fast durchsichtig gezeichnet" traf ausgerechnet das Fahrzeug, in dem er
+  fährt – gemessen: `globalAlpha` 0,22. Übrig blieb ein Ball, der über einem blassen Schemen
+  schwebt. Alles, was den Ball trägt, ist jetzt von der Regel ausgenommen (`noFade: true`), auch
+  Aufzug und Zahnstange, die denselben Fehler hatten.
 
 ## Die Bahnen des Uhrenturms
 
