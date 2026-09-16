@@ -1529,13 +1529,41 @@
   }
 
   /* Endtafel: kleines Sinnbild je Bahn (nach Name, sonst nach Optik) */
-  const HOLE_ICONS = { Elfenwiese: '🌼', Pilzhain: '🍄', Zwergenschmiede: '⚒️', Zauberwald: '🔮', Drachenhöhle: '🐉', Eisgrotte: '❄️', Wolkenburg: '☁️', Hexenturm: '🧙', Burgberg: '🏰',
-    Strandbucht: '🏖️', Muschelriff: '🐚', Fischerpier: '🎣', Krakengrotte: '🐙', Piratendeck: '🏴‍☠️', Leuchtturmfelsen: '🗼', Schiffswrack: '🚢', Perlengrotte: '🦪', Sturmsee: '🌊', Haifischbucht: '🦈',
-    Mühlenwiese: '🌾', Nebelmoor: '🌫️', Zwergenkanone: '💣', Korallenriff: '🪸', Uhrwerk: '⚙️', Piratenbucht: '⚓', Hexenküche: '🧪', Sultanspalast: '🕌', Pyramide: '🔺',
-    Urwaldpfad: '🌿', Affenbrücke: '🐒', Krokodilfluss: '🐊', Stachelpfad: '🗡️', Felskugelschlucht: '🪨', Treibsandbecken: '⏳', Totemplatz: '🗿', Wasserfallterrassen: '💧', 'Der Tempel': '🏛️',
-    Friedhofspforte: '🪦', Knochensteg: '🦴', Fallbeilgasse: '🔪', Rabenschlucht: '🐦‍⬛', Ritterhalle: '⚔️', Totenfähre: '⚰️', 'Turm des Auges': '👁️', Schattenschloss: '🏰', 'Gruft der Sensen': '🕯️', 'Herz der Finsternis': '🖤' };
-  const THEME_ICONS = { meadow: '🌼', mushroom: '🍄', forge: '⚒️', forest: '🌲', dragon: '🐉', ice: '❄️', sky: '☁️', witch: '🧙', castle: '🏰', harbor: '⚓', reef: '🐠', clockwork: '⚙️', palace: '🕌', desert: '🏜️', tomb: '⚱️', deck: '🏴‍☠️', wreck: '🚢', belly: '🦈', jungle: '🌴', temple: '🗿', hut: '🧪', storm: '⛈️', fortress: '🏯', shadow: '🌑', throne: '👑', darksea: '🌊', ghostship: '⚓', clocktown: '🕰️', boiler: '🔥', escapement: '⚙️' };
-  const holeIcon = def => HOLE_ICONS[def.name] || THEME_ICONS[def.theme] || '⛳';
+  /* Ein gezeichnetes Sinnbild je Abschnitt einer Welt. Vorher standen hier Emoji – ein 🐉 für die
+     Drachenhöhle, ein 🐙 für die Krakengrotte –, und das war eine bewusste Entscheidung: Material
+     Symbols kennt weder Drache noch Krake, und am Zeichen erkannte man die Bahn.
+
+     Sie hat sich trotzdem nicht bewährt. In der Rangliste stehen die Emoji direkt neben der
+     Kopfzeile, die schon gezeichnete Sinnbilder trägt – bunt neben einfarbig, in derselben
+     Tabelle. Dazu zeichnet jedes Gerät die Emoji selbst: Auf dem iPad sieht die Liste anders aus
+     als auf dem Rechner, und einige Bahnen einer Welt trugen ohnehin alle dasselbe Wolkenzeichen.
+
+     Was dabei verloren geht, ist echt und sei hier genannt: Ein Krake ist jetzt eine Welle. Der
+     Abschnitt einer Bahn ist aber das, was man in der Liste tatsächlich unterscheiden will – in
+     welchem Teil der Welt sie liegt –, und das steht hier vollständig. */
+  const THEME_ICONS = {
+    // Märchenland
+    meadow: 'local_florist', mushroom: 'pilz', forge: 'construction', forest: 'tanne',
+    dragon: 'local_fire_department', ice: 'ac_unit', sky: 'cloud', witch: 'science', castle: 'castle',
+    // Meereswelt und die dunkle See
+    harbor: 'anchor', reef: 'water_drop', deck: 'sailing', wreck: 'directions_boat',
+    darksea: 'waves',
+    // Dschungeltempel
+    jungle: 'park', temple: 'temple_buddhist', hut: 'science',
+    // Schattenreich
+    tomb: 'church', shadow: 'dark_mode', throne: 'crown', fortress: 'castle',
+    // Sturmhimmel
+    storm: 'thunderstorm',
+    // Uhrwerkstadt
+    clocktown: 'schedule', clockwork: 'settings', escapement: 'timer', boiler: 'local_fire_department',
+    // Schneeberg
+    snowfoot: 'tanne', snowrock: 'landscape', glacier: 'ac_unit', summit: 'filter_hdr',
+    // Zwergenmine
+    mundloch: 'sonne', stollen: 'flashlight_on', kristall: 'diamond', schmelze: 'local_fire_department',
+    // Kolosseum, Tüftlerreich, Wüste
+    colosseum: 'stadium', palace: 'temple_buddhist', desert: 'sonne',
+  };
+  const holeIcon = def => Icons.svg(THEME_ICONS[def.theme] || 'golf_course');
   const worldClass = () => 'world-' + ((state.world && state.world.id) || 'custom');
   /* Das geltende Par: Es steht nicht mehr fest in der Bahn, sondern kommt aus der Rangliste –
      immer einen Schlag über dem besten Ergebnis, das je auf ihr gespielt wurde. Entschieden wird

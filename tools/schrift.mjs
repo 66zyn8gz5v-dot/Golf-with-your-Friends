@@ -1,4 +1,4 @@
-/* Prüft, wie viele Schriftarten das Spiel benutzt.
+/* Prüft, dass die Oberfläche einheitlich aussieht: Schrift, Farbe und Sinnbilder.
  *
  *   node tools/schrift.mjs
  *
@@ -84,6 +84,35 @@ for (const [datei, wo] of [['src/main.js', '2,5D-Spiel'], ['src/3d/start3d.js', 
   }
   pruef('und keiner schneidet mehr einen Verlauf in die Schrift',
         !/-webkit-background-clip:\s*text/.test(css));
+}
+
+/* UND DIE SINNBILDER
+ * In der Rangliste trugen die Zeilen Emoji, die Kopfzeile daneben gezeichnete Sinnbilder – bunt
+ * neben einfarbig, in derselben Tabelle. Dazu zeichnet jedes Gerät Emoji selbst, die Liste sah
+ * also auf dem iPad anders aus als auf dem Rechner. Seit Fassung 150 trägt jeder Abschnitt einer
+ * Welt ein gezeichnetes Zeichen aus derselben Sammlung wie alles andere.
+ *
+ * Geprüft wird das Wichtigste daran: dass kein Abschnitt vergessen wurde. Ein vergessener fiele
+ * still auf das Ersatzzeichen zurück, und das sähe aus wie Absicht. */
+{
+  const main = lies('src/main.js');
+  pruef('holeIcon liefert ein gezeichnetes Zeichen', /const holeIcon = def => Icons\.svg\(/.test(main));
+  pruef('und es gibt keine Emoji-Tabelle mehr', !/HOLE_ICONS/.test(main));
+
+  const block = main.slice(main.indexOf('const THEME_ICONS = {'), main.indexOf('const holeIcon'));
+  const zuordnung = new Map([...block.matchAll(/([a-z]+):\s*'([a-z_0-9]+)'/g)].map(m => [m[1], m[2]]));
+  const bekannt = new Set([...lies('src/icons.js').matchAll(/^ {4}([a-z_0-9]+):\s*'/gm)].map(m => m[1]));
+
+  const genutzt = new Set();
+  for (const f of fs.readdirSync(path.join(WURZEL, 'src')).filter(f => /^courses/.test(f)))
+    for (const m of lies(`src/${f}`).matchAll(/theme: '([a-z]+)'/g)) genutzt.add(m[1]);
+
+  const ohne = [...genutzt].filter(t => !zuordnung.has(t));
+  pruef('jeder Abschnitt hat ein Zeichen', ohne.length === 0,
+        ohne.length ? ohne.join(', ') : `${genutzt.size} Abschnitte`);
+  const falsch = [...zuordnung].filter(([, i]) => !bekannt.has(i));
+  pruef('und jedes Zeichen gibt es auch', falsch.length === 0,
+        falsch.length ? falsch.map(x => x.join(' → ')).join(', ') : `${bekannt.size} Sinnbilder`);
 }
 
 /* Die Karte bleibt, wie sie ist – das ist keine Ausnahme aus Bequemlichkeit, sondern der Grund,

@@ -1041,6 +1041,27 @@ zwischen zwei Etagen stehen: Seilbahn, Aufzug und Zahnstange (`drawSpannendeMasc
 Kupferrohr, das seine Teilstücke einzeln in die Tiefensortierung schickt, damit es sich richtig
 mit den Mauern überdeckt.
 
+### Die Bahnen tragen jetzt gezeichnete Sinnbilder
+
+In der Rangliste trugen die Zeilen Emoji – ein 🐉 für die Drachenhöhle, ein 🐙 für die Krakengrotte –,
+die Kopfzeile daneben gezeichnete Sinnbilder. Bunt neben einfarbig, in derselben Tabelle.
+
+Das war ursprünglich eine **bewusste** Entscheidung, und der Kopf von `src/icons.js` hielt sie fest:
+Material Symbols kennt weder Drache noch Krake, und am Zeichen erkannte man die Bahn. Sie hat sich
+trotzdem nicht bewährt. Jedes Gerät zeichnet Emoji selbst, die Liste sah auf dem iPad anders aus als
+auf dem Rechner – und in einer Welt wie dem Sturmhimmel trugen ohnehin alle neun Bahnen dasselbe
+Wolkenzeichen.
+
+Jetzt hat jeder **Abschnitt** einer Welt ein gezeichnetes Zeichen aus derselben Sammlung wie der
+Rest der Oberfläche; alle 37 sind vergeben. Vierzehn Sinnbilder sind dafür dazugekommen (Anker,
+Segel, Schneeflocke, Kristall, Grubenlampe, Wolke, Krone, Kirche …), und eines ist von Hand
+gezeichnet: den **Pilz** gibt es in der Sammlung nicht – wie schon bei Tanne und Sonne.
+
+Was dabei verloren geht, ist echt: Ein Krake ist jetzt eine Welle. Der Abschnitt ist aber das, was
+man in der Liste tatsächlich unterscheiden will – in welchem Teil der Welt eine Bahn liegt –, und
+das steht vollständig da. `tools/schrift.mjs` prüft, dass kein Abschnitt vergessen wird: Ein
+vergessener fiele still auf das Ersatzzeichen zurück, und das sähe aus wie Absicht.
+
 ### Eine Zierschrift, eine Leseschrift
 
 Es waren zwei Zierschriften nebeneinander: **Cinzel Decorative** für die Titel, **MedievalSharp**
