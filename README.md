@@ -952,9 +952,19 @@ und eine Änderung an einer Kammer zieht nicht Dutzende Zeichen nach sich. Nach 
 
 ## Die Zwergenmine
 
-Die zehnte Welt liegt im Berg – man erreicht sie auf der Weltkarte am Fuß des Gebirges, gleich
-unterhalb des Schneebergs. Neun Bahnen, Stufe Profi, und ein Abstieg: vom Tageslicht am Mundloch
-durch die Stollen und die Kristallkammern hinunter zur Schmelze.
+Die zehnte Welt liegt im Berg – und der Berg ist ein Vulkan. Auf der Weltkarte ist sie die
+**Feuerinsel im Ostmeer**: eine eigene Insel mit Basaltküste, rauchendem Kegel und ein paar toten
+Bäumen, vom Festland aus per Schiff zu erreichen. Neun Bahnen, Stufe Profi, und ein Abstieg: vom
+Tageslicht am Mundloch durch die Stollen und die Kristallkammern hinunter zur Schmelze, wo das Erz
+flüssig steht – direkt unter dem Krater.
+
+Zuerst stand sie als kleines Landstück am Fuß des Gebirges, eingeklemmt zwischen Uhrwerkstadt und
+Talsenke. Das war gequetscht statt gelegen: keine eigene Küste, kein Platz für den Namen. Die Karte
+ist darum nach Osten gewachsen (`BREITE` 100 → 118 in `src/worldmap.js`), und weil die Höhe bleibt,
+bleibt auch alles Gezeichnete so groß wie vorher – der Kasten um die Karte schiebt waagerecht, so
+wie es dort von Anfang an vorgesehen war. Die Küste der Feuerinsel schaut im ersten Blick schon
+rechts herein, damit niemand sie übersieht, und in der Kopfzeile steht, dass es nach Osten
+weitergeht.
 
 **Die Frage dieser Welt ist die Dunkelheit.** Jede andere Welt fragt, wie fest (Märchenland), wann
 (Uhrenturm) oder wohin (Schneeberg) man schlägt. Die Mine fragt: *was liegt da vorn überhaupt?* Ab

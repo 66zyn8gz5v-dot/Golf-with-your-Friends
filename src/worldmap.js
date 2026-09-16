@@ -18,7 +18,12 @@
    Küste, Flachwasser, Strand, Färbung, Gelände und Beschriftung folgen daraus. Wer eine Welt
    anhängt, zeichnet keine Landkarte – er sagt, wo sie liegt und wie es dort aussieht. */
 const WorldMap = (() => {
-  const BREITE = 100, HOEHE = 62;
+  /* Die Karte ist breiter als der Schirm, und das ist Absicht. Sie wuchs mit jeder Welt, und
+     irgendwann stand eine neue nur noch zwischen zwei alten – gequetscht, ohne eigene Küste. Statt
+     enger zu packen, ist das Meer nach Osten gewachsen: Die Höhe bleibt, also bleibt alles
+     Gezeichnete so groß wie vorher, und der Kasten um die Karte schiebt waagerecht (.atlas-schiebe).
+     Wer eine Welt anhängt, hat damit wieder Platz für eine eigene Insel. */
+  const BREITE = 118, HOEHE = 62;
 
   /* Ein Landstück. 'biom' bestimmt die Färbung und die Geländezeichen, 'marke' und 'farbe' den
      anklickbaren Ort. Landstücke ohne 'id' tragen keine Welt – sie geben dem Festland nur seine
@@ -37,21 +42,25 @@ const WorldMap = (() => {
     { id: 'snow', name: 'Schneeberg', x: 60, y: 14, r: 14, biom: 'gebirge', marke: 'filter_hdr', farbe: '#bfe6ff', nameAn: [52, 9] },
     { id: 'clock', name: 'Uhrwerkstadt', x: 75, y: 21, r: 13, biom: 'stadt', marke: 'schedule', farbe: '#ffc46b' },
     { x: 66, y: 30, r: 10, biom: 'werkland' },                  // Talsenke unter dem Gebirge
-    /* Die Zwergenmine liegt im Berg selbst – darum sitzt ihre Marke am Fuß des Gebirges und ihr
-       Landstück wächst mit der Talsenke zusammen. Sie ist kein eigener Erdteil, sondern ein
-       Eingang. */
-    { id: 'mine', name: 'Zwergenmine', x: 69, y: 26, r: 9, biom: 'gebirge', marke: 'construction', farbe: '#ffb347', nameAn: [69, 33] },
     { id: 'storm', name: 'Sturmhimmel', x: 84, y: 38, r: 13, biom: 'sturm', marke: 'thunderstorm', farbe: '#8fb8ff' },
     { x: 47, y: 41, r: 10, biom: 'dschungel' },                 // Landbrücke in den Süden
     { id: 'jungle', name: 'Dschungeltempel', x: 57, y: 45, r: 14, biom: 'dschungel', marke: 'temple_buddhist', farbe: '#9ee06f' },
     { id: 'shadow', name: 'Schattenreich', x: 80, y: 49, r: 13, biom: 'moor', marke: 'dark_mode', farbe: '#c58bff' },
     // ---- Nebeninsel im Südwesten: weit genug weg, damit sie eine eigene Insel bleibt
     { id: 'sea', name: 'Meereswelt', x: 14, y: 50, r: 11, biom: 'kueste', marke: 'waves', farbe: '#7fd8ff' },
+    /* ---- Feuerinsel im Ostmeer: die Zwergenmine. Sie stand zuerst als kleines Landstück am Fuß
+       des Gebirges, eingeklemmt zwischen Uhrwerkstadt und Talsenke – ohne eigene Küste und ohne
+       Platz für ihren Namen. Jetzt ist sie eine Insel für sich, und der Berg über der Mine ist ein
+       Vulkan: Ganz unten auf der letzten Sohle steht das Erz flüssig, das passt zusammen. Der
+       Abstand zum Sturmhimmel ist groß genug, dass nichts zusammenwächst. */
+    { id: 'mine', name: 'Zwergenmine', x: 107, y: 29, r: 12, biom: 'vulkan', marke: 'construction', farbe: '#ffb347' },
+    { x: 112, y: 45, r: 4.4, biom: 'vulkan' },                  // Aschekegel südlich der Feuerinsel
     // ---- Schären: zu klein für eine Welt, groß genug fürs Auge. Sie brechen die leere See auf
     //      und zeigen, dass die Küste gerechnet wird – auch ein Punkt mit r=4 bekommt ein Ufer.
     { x: 19, y: 12, r: 4.2, biom: 'kueste' }, { x: 8, y: 34, r: 3.4, biom: 'kueste' },
     { x: 33, y: 56, r: 4.6, biom: 'kueste' }, { x: 95, y: 27, r: 3.8, biom: 'kueste' },
     { x: 68, y: 57, r: 3.6, biom: 'kueste' }, { x: 88, y: 10, r: 3.1, biom: 'kueste' },
+    { x: 104, y: 8, r: 3.4, biom: 'kueste' }, { x: 114, y: 55, r: 3.2, biom: 'kueste' },
   ];
 
 
@@ -209,6 +218,9 @@ const WorldMap = (() => {
     dschungel: { land: '#6ab455', zeichen: ['palme', 'baum', 'baum', 'tempel', 'baum', 'palme', 'busch'], dichte: 36 },
     moor:      { land: '#7d7a95', zeichen: ['totbaum', 'grab', 'totbaum', 'schilf', 'ruine', 'totbaum'], dichte: 28 },
     kueste:    { land: '#d8c98f', zeichen: ['palme', 'duene', 'palme', 'busch', 'duene', 'fels'], dichte: 22 },
+    /* Feuerinsel: dunkles Basaltland, auf dem wenig wächst. Die Zeichen sind entsprechend karg –
+       ein rauchender Kegel, Felsen, eine Klippe und hier und da ein toter Baum. */
+    vulkan:    { land: '#8a7a76', zeichen: ['vulkan', 'fels', 'klippe', 'fels', 'totbaum', 'fels'], dichte: 28 },
   };
 
   /* ---------- Zeichenstift ----------
@@ -293,6 +305,23 @@ const WorldMap = (() => {
         <path d="M${x - 0.62 * s} ${y - H * 0.52} L${x - 0.35 * s} ${y - H * 0.78} L${x} ${y - H} L${x + 0.32 * s} ${y - H * 0.78} L${x + 0.1 * s} ${y - H * 0.6} L${x - 0.2 * s} ${y - H * 0.66} Z" fill="#ffffff"/>
         <path d="M${x} ${y - H} L${x + 1.7 * s} ${y} L${x + 0.5 * s} ${y} Z" fill="${STEIN}" opacity="0.24"/>
         ${schraffur(x + 0.2 * s, y - H * 0.3, 0.24 * s, -0.12 * s, 3, 0.34 * s, STEIN, 0.1 * s)}`;
+    },
+    /* Der Vulkan: ein Kegel mit abgeschnittener Spitze. Der Krater ist als schmale Ellipse
+       angedeutet, darin glüht es; darüber steigt eine Rauchfahne. Ohne den Rauch säße da nur ein
+       grauer Kegel – erst er macht aus dem Berg einen Vulkan. */
+    vulkan: (x, y, s) => {
+      const H = 4.6 * s, kb = 0.62 * s;                       // Höhe und halbe Kraterbreite
+      return `<path d="M${x - 2.4 * s} ${y} L${x - kb} ${y - H} L${x + kb} ${y - H} L${x + 2.4 * s} ${y} Z"
+          fill="#7d6a62" stroke="${STEIN}" stroke-width="${0.14 * s}" stroke-linejoin="round"/>
+        <path d="M${x + kb} ${y - H} L${x + 2.4 * s} ${y} L${x + 0.7 * s} ${y} Z" fill="${STEIN}" opacity="0.28"/>
+        <path d="M${x - 0.3 * s} ${y - H * 0.55} L${x + 0.1 * s} ${y - H * 0.2} L${x + 0.55 * s} ${y}"
+          stroke="#e8632a" stroke-width="${0.16 * s}" fill="none" stroke-linecap="round"/>
+        <ellipse cx="${x}" cy="${y - H}" rx="${kb}" ry="${0.2 * s}" fill="#c9481f" stroke="${STEIN}" stroke-width="${0.1 * s}"/>
+        <ellipse cx="${x}" cy="${y - H}" rx="${kb * 0.5}" ry="${0.1 * s}" fill="#ffb347"/>
+        <path d="M${x - 0.1 * s} ${y - H - 0.3 * s} q${-0.7 * s} ${-0.9 * s} ${0.1 * s} ${-1.5 * s}
+          q${0.8 * s} ${-0.6 * s} ${0.2 * s} ${-1.4 * s}" stroke="#d8d2cc" stroke-width="${0.3 * s}"
+          fill="none" opacity="0.5" stroke-linecap="round"/>
+        ${schraffur(x - 1.2 * s, y - H * 0.3, 0.24 * s, -0.14 * s, 3, 0.34 * s, STEIN, 0.1 * s)}`;
     },
     fels: (x, y, s) => `<path d="M${x - 1.2 * s} ${y} L${x - 0.9 * s} ${y - 1.1 * s} L${x - 0.1 * s} ${y - 1.5 * s} L${x + 0.8 * s} ${y - 0.9 * s} L${x + 1.2 * s} ${y} Z"
         fill="#95a0ad" stroke="${STEIN}" stroke-width="${0.13 * s}" stroke-linejoin="round"/>
@@ -397,7 +426,7 @@ const WorldMap = (() => {
 
   /* Die Reise in der Reihenfolge der Welten. Ein Stück, das über Wasser führt, wird zur Seeroute –
      das entscheidet die Karte selbst, nicht eine Liste: Sie tastet die Strecke ab. */
-  const REISE = ['normal', 'sea', 'pro', 'snow', 'mine', 'jungle', 'storm', 'shadow', 'clock'];
+  const REISE = ['normal', 'sea', 'pro', 'snow', 'jungle', 'storm', 'shadow', 'clock', 'mine'];
   function wege() {
     const land = [], see = [];
     for (let i = 0; i < REISE.length - 1; i++) {
@@ -434,7 +463,7 @@ const WorldMap = (() => {
     for (let y = 10; y < HOEHE; y += 10) gradnetz += `<path d="M0 ${y} h${BREITE}"/>`;
 
     // Schiffe auf See
-    const schiffe = [[9, 20], [92, 12], [34, 57], [70, 60]].map(([x, y]) =>
+    const schiffe = [[9, 20], [92, 12], [34, 57], [70, 60], [97, 42], [113, 14]].map(([x, y]) =>
       `<g opacity="0.8"><path d="M${x - 1.3} ${y} q${1.3} 1 ${2.6} 0 Z" fill="#7a5a3a"/>
         <path d="M${x} ${y - 0.2} v-2.2" stroke="#7a5a3a" stroke-width="0.18"/>
         <path d="M${x + 0.06} ${y - 2.3} l1.5 1 l-1.5 0.6 Z" fill="#f2ead6"/></g>`).join('');
@@ -511,5 +540,5 @@ const WorldMap = (() => {
     </svg>`;
   }
 
-  return { spots, svg, BREITE, LAND };
+  return { spots, svg, BREITE, HOEHE, LAND };
 })();
