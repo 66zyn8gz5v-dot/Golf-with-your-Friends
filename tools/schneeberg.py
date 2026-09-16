@@ -484,19 +484,18 @@ k = Karte(36, 20)
 k.rect(2, 13, 18, 18)
 k.rect(6, 14, 9, 17, 'i')
 k.put(3, 15, 'T')
-# Die beiden oberen Etagen sind breiter als zuerst gebaut. Der Grund steht in den Zahlen: Nicht
-#    der Wind macht diese Bahn lang, sondern der Absturz von einer Etage - wer herunterfaellt,
-#    faehrt den ganzen Aufstieg noch einmal, und genau das erzeugte die Ausreisser (Median 11,
-#    einzelne Runden bis ans Schlaglimit). Ein schmaler Sims bei staerkstem Wind ist keine Aufgabe,
-#    sondern ein Wuerfel. Eine Reihe mehr an jeder Kante nimmt dem Zufall den Ausschlag, ohne der
-#    Bahn ihren Aufstieg zu nehmen.
+# Die Masse der beiden oberen Etagen ist gemessen, nicht geschaetzt. Ich hatte sie einmal um je
+#    eine Reihe verbreitert, in der Annahme, ein breiterer Sims nehme dem Wind den Ausschlag. Das
+#    Gegenteil trat ein: Der Bot brauchte im Schnitt 19,3 statt 11 Schlaege und lief in 6 von 12
+#    Runden ins Limit. Auf einer groesseren Flaeche irrt ein Spieler laenger umher, und der Weg
+#    nach oben wird dadurch nicht kuerzer. Also wieder so schmal wie vorher.
 o1 = Karte(36, 20)
-o1.rect(13, 6, 31, 13)
+o1.rect(14, 7, 30, 12)
 o1.rect(18, 8, 21, 11, 's')
 o1.rect(24, 8, 25, 12, '.')                        # ein Spalt auf der mittleren Etage
 o1.rect(24, 8, 25, 10, '#')                        # darueber die Waechte - sie traegt einmal
 o2 = Karte(36, 20)
-o2.rect(21, 1, 34, 7)
+o2.rect(22, 2, 33, 6)
 o2.rect(26, 3, 28, 5, 'i')                         # die letzte Eisplatte, direkt vor dem Gipfelloch
 o2.rect(29, 5, 29, 6, 'x'); o2.rect(24, 2, 24, 2, 'x')   # Deckung vor der Gipfellawine
 o2.put(31, 4, 'H')
