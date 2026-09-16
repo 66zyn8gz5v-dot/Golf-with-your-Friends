@@ -240,6 +240,9 @@ k.put(4, 6, 'T'); k.put(27, 7, 'H')
 hoehen, schraegen, hs = hang(k, [6, 16], 0.6, 4.8)
 bahn(name='Waldschneise', par=4, theme='snowfoot', maxStrokes=14, seed=302, dichte=0.4,
      schnee=SCHNEE_WACHS,
+     # Ohne Windsaecke: Diese Bahn hat als einzige keinen Wind, und ein Windsack am Rand wuerde
+     # einen versprechen. Was nicht weht, soll auch nicht wehen aussehen.
+     ohneDeko=['windsock'],
      intro='Hier steht der Wind still – die einzige Bahn am Fuß des Berges, auf der er schweigt. '
            'Dafür ist der Weg lang: Zwischen den Baumgruppen bleibt nur eine Gasse, und links und '
            'rechts liegt Tiefschnee, in dem der Ball fast stehen bleibt. Je weiter der Weg, desto '
@@ -385,6 +388,9 @@ k.put(3, 8, 'T'); k.put(31, 8, 'H')
 hoehen, schraegen, hs = hang(k, [], 0.7, 5.2)
 bahn(name='Gletscherspalten', par=5, theme='glacier', maxStrokes=18, seed=308, dichte=0.1,
      schnee=SCHNEE_WACHS,
+     # Auch hier kein Windsack: Der Einleitungstext sagt, in der Spalte sei es still - dann darf
+     # am Rand nicht doch einer wehen.
+     ohneDeko=['windsock'],
      intro='Drei Spalten queren den Gletscher. In zweien steht Schmelzwasser – das ist das erste '
            'offene Wasser dieser Welt, und es kostet einen Schlag. Über die mittlere führt eine '
            'Wächte, die genau einmal trägt. Wind gibt es hier nicht: In der Spalte ist es still.',
@@ -481,7 +487,11 @@ o2.rect(26, 3, 28, 5, 'i')                         # die letzte Eisplatte, direk
 o2.rect(29, 5, 29, 6, 'x'); o2.rect(24, 2, 24, 2, 'x')   # Deckung vor der Gipfellawine
 o2.put(31, 4, 'H')
 hoehen, schraegen, hs = hang(k, [], 0.8, 5.8)
-bahn(name='Der Gipfel', par=6, theme='summit', maxStrokes=22, seed=312, dichte=0.08,
+# Par 8, nicht 6: Der Bot braucht im Schnitt 9,4 Schlaege und im Median 11, und die Verteilung
+# ist zweigeteilt (4-8 gegen 11-15) - wer eine Etage wieder hinunterfaellt, faehrt den Aufstieg
+# noch einmal. Die Bahn ist dabei nie am Limit (hoechstens 15 von 22). Zu aendern war also nicht
+# die Bahn, sondern die Zahl, die behauptet, was gutes Spiel hier heisst.
+bahn(name='Der Gipfel', par=8, theme='summit', maxStrokes=22, seed=312, dichte=0.08,
      schnee=SCHNEE_WACHS,
      intro='Drei Etagen bis zum Gipfel, zwei Gondeln dazwischen, und ganz oben die letzte '
            'Eisplatte drei Felder vor dem Loch. Der Wind ist hier am stärksten, der Tiefschnee auf '
@@ -579,7 +589,9 @@ for b in BAHNEN:
     teile.append("    decor: [\n%s\n    ],\n" % js_decor(b['decor']))
     if b.get('views'):
         teile.append("    views: [\n" + '\n'.join('      %s,' % v for v in b['views']) + "\n    ],\n")
-    teile.append("    autoDecor: { density: %s, seed: %d },\n" % (b['dichte'], b['seed']))
+    ohne = b.get('ohneDeko')
+    ohne_js = (", ohne: [%s]" % ', '.join("'%s'" % t for t in ohne)) if ohne else ''
+    teile.append("    autoDecor: { density: %s, seed: %d%s },\n" % (b['dichte'], b['seed'], ohne_js))
     teile.append("  },\n")
 teile.append("];\n")
 

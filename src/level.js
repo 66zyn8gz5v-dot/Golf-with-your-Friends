@@ -247,7 +247,11 @@ function buildDecor(def, tiles, W, H, isFloor) {
   const rand = theme.floating ? 99 : (theme.gears ? 3.6 : 1.4) - 0.35;
   const aufDerScholle = (px, py) => px > -rand && px < W + rand && py > -rand && py < H + rand;
   const auto = def.autoDecor;
-  if (auto && theme.autoDecor.length) {
+  /* Eine Bahn darf einzelne Requisiten der Palette abwählen. Der Grund ist die Waldschneise: Sie
+     ist die eine windstille Bahn des Schneebergs, und die Streu-Deko stellte trotzdem Windsäcke an
+     ihren Rand – die versprechen einen Wind, den es dort nicht gibt. */
+  const vorrat = auto && auto.ohne ? theme.autoDecor.filter(t => !auto.ohne.includes(t)) : theme.autoDecor;
+  if (auto && vorrat.length) {
     const rnd = seededRandom(auto.seed || 1);
     const density = auto.density ?? 0.3;
     for (let y = -2; y < H + 2; y++) for (let x = -2; x < W + 2; x++) {
@@ -257,7 +261,7 @@ function buildDecor(def, tiles, W, H, isFloor) {
       let blocked = false;
       for (let i = 0; i <= 2 && !blocked; i++) for (let j = 0; j <= 2; j++) if (isFloor(x - i, y - j)) { blocked = true; break; }
       if (blocked) continue;
-      const t = theme.autoDecor[Math.floor(rnd() * theme.autoDecor.length)];
+      const t = vorrat[Math.floor(rnd() * vorrat.length)];
       if (t === 'cloud') { // Wolken sind breit: mindestens zwei Kacheln Abstand zur Bahn
         let near = false;
         for (let i = -2; i <= 2 && !near; i++) for (let j = -2; j <= 2; j++) if (isFloor(x + i, y + j)) { near = true; break; }

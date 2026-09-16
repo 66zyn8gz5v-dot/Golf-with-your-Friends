@@ -130,7 +130,7 @@ const SNOW_COURSES = [
       { t: 'pineSnow', x: 13, y: 12.4, s: 1.4 },
       { t: 'rockSnow', x: 30.8, y: 6.5, s: 1 },
     ],
-    autoDecor: { density: 0.4, seed: 302 },
+    autoDecor: { density: 0.4, seed: 302, ohne: ['windsock'] },
   },
   {
     name: 'Lawinenhang', par: 4, theme: 'snowfoot', maxStrokes: 16,
@@ -452,7 +452,7 @@ const SNOW_COURSES = [
       { t: 'rockSnow', x: 14, y: 14.4, s: 1.1 },
       { t: 'rockSnow', x: 0.8, y: 13.5, s: 1 },
     ],
-    autoDecor: { density: 0.1, seed: 308 },
+    autoDecor: { density: 0.1, seed: 308, ohne: ['windsock'] },
   },
   {
     name: 'Eisbruch', par: 5, theme: 'glacier', maxStrokes: 18,
@@ -645,7 +645,7 @@ const SNOW_COURSES = [
     autoDecor: { density: 0.09, seed: 311 },
   },
   {
-    name: 'Der Gipfel', par: 6, theme: 'summit', maxStrokes: 22,
+    name: 'Der Gipfel', par: 8, theme: 'summit', maxStrokes: 22,
     schnee: 0.0018,
     intro: 'Drei Etagen bis zum Gipfel, zwei Gondeln dazwischen, und ganz oben die letzte Eisplatte drei Felder vor dem Loch. Der Wind ist hier am stärksten, der Tiefschnee auf der mittleren Etage am tiefsten, und über dem Spalt liegt eine Wächte, die einmal trägt. Alles, was der Berg kann, auf einer Bahn.',
     map: [

@@ -208,6 +208,21 @@ console.log('\n--- Die Windfahne ---');
   const mit = (typ) => bahnen.filter(c => (c.obstacles || []).some(o => o.type === typ)).length;
   pruef('nicht jede Bahn hat eine Windfahne', mit('windfahne') < bahnen.length, `${mit('windfahne')}/${bahnen.length}`);
   pruef('und nicht jede eine Lawine', mit('lawine') <= bahnen.length * 0.6, `${mit('lawine')}/${bahnen.length}`);
+
+  /* Die Waldschneise ist die eine Bahn ohne Wind. Die Streu-Deko der Palette kennt einen Windsack,
+     und der stünde dort als Versprechen auf einen Wind, den es nicht gibt. Darum wählt die Bahn
+     ihn ab - und zwar nachweislich: Wird die Zeile vergessen, fällt diese Prüfung. */
+  const still = bahnen.filter(c => !(c.obstacles || []).some(o => o.type === 'windfahne'));
+  const luegt = still.filter(c => !(c.autoDecor && (c.autoDecor.ohne || []).includes('windsock')));
+  pruef('windstille Bahnen haben keine Windsäcke in der Deko', luegt.length === 0,
+        luegt.length ? luegt.map(c => c.name).join(', ') : still.map(c => c.name).join(', '));
+
+  /* Die Abwahl muss beim Streuen wirklich greifen und nicht nur in den Daten stehen: Der Streuer
+     in level.js zieht aus dem gefilterten Vorrat, nicht mehr aus der vollen Palette. */
+  const streuer = fs.readFileSync('src/level.js', 'utf8');
+  pruef('der Streuer zieht aus dem gefilterten Vorrat',
+        /const t = vorrat\[/.test(streuer) && !/const t = theme\.autoDecor\[/.test(streuer));
+  pruef('und der Vorrat wird aus auto.ohne gefiltert', /auto\.ohne.*filter\(/.test(streuer));
 }
 
 console.log(fehler ? `\n${fehler} Fehler\n` : '\nalles bestanden\n');
