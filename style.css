@@ -8,83 +8,17 @@ html, body {
 }
 #game { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: crosshair; }
 
-/* ---------- Startbild ----------
-   Das gemalte Titelbild liegt über der Leinwand und unter den Tafeln (z-index 5 gegen 10). Es ist
-   nur auf dem Startbildschirm zu sehen; wer auf die Weltkarte oder in die Werkstatt geht, sieht
-   wieder die gezeichnete Szene. Angeklickt werden kann es nicht – die Knöpfe liegen darüber.
-
-   Es gibt zwei Bilder: eines quer, eines hoch. Ein einziges täte es nicht – vom Querbild bliebe
-   auf dem Handy ein schmaler Streifen übrig, mit zerschnittenem Schriftzug darin. main.js setzt je
-   nach Seitenverhältnis die Klasse 'hoch', und beide Bilder füllen dann ihren Schirm ganz. */
-#titelbild {
-  position: fixed; inset: 0; z-index: 5; display: none; pointer-events: none;
-  background: linear-gradient(180deg, #7cc3ea 0%, #4f9fd0 30%, #1f6ea6 60%, #123f61 100%);
-}
-body.startbild #titelbild { display: block; }
-#tb-svg, #tb-hoch { width: 100%; height: 100%; display: block; }
-#tb-hoch { display: none; }
-body.hoch #tb-svg { display: none; }
-body.hoch #tb-hoch { display: block; }
-
-/* Ein langsames Heranfahren, damit das Bild nicht wie ein Poster steht */
-.tb-kamera { transform-box: view-box; transform-origin: 50% 50%; animation: tb-kamera 38s ease-in-out infinite alternate; }
-@keyframes tb-kamera { from { transform: scale(1); } to { transform: scale(1.045) translate(-6px, 4px); } }
-
-.tb-zug { animation: tb-zug 96s linear infinite; }
-.tb-zug.z2 { animation-duration: 132s; animation-delay: -40s; }
-.tb-zug.z3 { animation-duration: 78s; animation-delay: -25s; }
-@keyframes tb-zug { from { transform: translateX(-420px); } to { transform: translateX(1400px); } }
-
-.tb-vogel { animation: tb-vogel 26s linear infinite; }
-.tb-vogel.v2 { animation-duration: 34s; animation-delay: -11s; }
-.tb-vogel.v3 { animation-duration: 21s; animation-delay: -17s; }
-@keyframes tb-vogel {
-  from { transform: translate(-60px, 150px); }
-  50%  { transform: translate(560px, 96px); }
-  to   { transform: translate(1230px, 132px); }
-}
-body.hoch .tb-vogel { animation-name: th-vogel; }
-@keyframes th-vogel {
-  from { transform: translate(-80px, 300px); }
-  50%  { transform: translate(560px, 200px); }
-  to   { transform: translate(1250px, 265px); }
-}
-
-.tb-funken ellipse { opacity: 0; animation: tb-blink 4.2s ease-in-out infinite; }
-.tb-funken .f2 { animation-delay: 0.7s; } .tb-funken .f3 { animation-delay: 1.5s; }
-.tb-funken .f4 { animation-delay: 2.3s; } .tb-funken .f5 { animation-delay: 3.1s; }
-@keyframes tb-blink { 0%, 100% { opacity: 0; } 45% { opacity: 0.55; } 55% { opacity: 0.35; } }
-
-.tb-lampe { transform-box: view-box; transform-origin: 159px 438px; animation: tb-lampe 3.4s ease-in-out infinite; }
-.tb-lampe.hoch { transform-origin: 251px 1734px; }
-@keyframes tb-lampe { 0%, 100% { opacity: 0.8; transform: scale(0.94); } 50% { opacity: 1; transform: scale(1.06); } }
-
-.tb-staub circle { opacity: 0; animation: tb-staub 9s ease-out infinite; }
-.tb-staub .s2 { animation-delay: 1.8s; } .tb-staub .s3 { animation-delay: 3.4s; }
-.tb-staub .s4 { animation-delay: 5.1s; } .tb-staub .s5 { animation-delay: 6.8s; }
-@keyframes tb-staub {
-  0% { opacity: 0; transform: translate(0, 0); }
-  20% { opacity: 0.85; } 100% { opacity: 0; transform: translate(14px, -120px); }
-}
-/* Ruhig gestellt bleibt das Bild stehen – die Fahne weht dann nicht, das Bild ist aber vollständig. */
-@media (prefers-reduced-motion: reduce) {
-  .tb-kamera, .tb-zug, .tb-vogel, .tb-funken ellipse, .tb-lampe, .tb-staub circle { animation: none; }
-  .tb-funken ellipse, .tb-staub circle { opacity: 0; }
-}
-
 /* ---------- Ladebild ----------
    Steht ganz oben in dieser Datei, weil es das Erste ist, was jemand sieht: ein Stylesheet, das
    der Browser von oben nach unten liest, hat die Regeln dafür schon parat, bevor der Rest kommt.
    Das Bild bewegt sich allein mit CSS – kein JavaScript. main.js nimmt es mit der Klasse 'weg'
    wieder heraus.
 
-   Der Grund ist das gemalte Titelbild, weich gezeichnet und abgedunkelt: Es macht die Stimmung,
-   die kleine Szene darauf sagt, was hier gespielt wird. Zwei Gewinne auf einmal – das Ladebild ist
-   im Stil des Spiels statt ein Fremdkörper aus flachen Flächen, und das Bild ist schon geladen,
-   wenn gleich darauf der Startbildschirm kommt. Der dunkle Verlauf bleibt trotzdem darunter: Beim
-   allerersten Öffnen ist das Bild noch unterwegs, und bis dahin soll da kein Loch sein. Welches der
-   beiden Bilder genommen wird, entscheidet die Ausrichtung – ganz ohne JavaScript, denn das
-   Ladebild läuft, bevor eine Zeile davon lief. */
+   Den Grund gibt die Weltkarte, weich gezeichnet und abgedunkelt. Zwei Gewinne auf einmal: Das
+   Ladebild ist im Stil des Spiels statt ein Fremdkörper aus flachen Flächen, und es zeigt gleich,
+   worum es geht – dieselbe Karte liegt danach hinter dem Startbildschirm. Der dunkle Verlauf bleibt
+   trotzdem darunter: Beim allerersten Öffnen ist die Karte noch unterwegs, und bis dahin soll da
+   kein Loch sein. */
 #lade {
   position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center;
   background: radial-gradient(120% 100% at 50% 18%, #24305c 0%, #141b38 55%, #080c1c 100%);
@@ -350,10 +284,7 @@ body.editing .cbtn.leave, body.testing .cbtn.leave { display: none; }
   background: radial-gradient(125% 95% at 50% 45%, rgba(8, 6, 20, 0.34) 0%, rgba(8, 6, 20, 0.72) 100%);
 }
 .screen.title > .panel { position: relative; z-index: 2; }
-/* Nur die Startseite nicht: Dort hängt das gemalte Bild mit Fahne, Wolken und Möwen, und das ist
-   das Gesicht des Spiels. */
-body.startbild .screen.title { background: transparent; }
-body.startbild .screen.title::before { display: none; }
+
 /* Die Tafel stand als heller Schleier vor der Szene – schön, aber die Schrift lag auf Wolken,
    Tannen und Schafen und war schwer zu lesen. Jetzt ist sie deutlich dichter und liegt als eigene
    Tafel davor, mit einer zweiten Linie im Abstand: der Doppelrahmen alter Anschlagtafeln. */
@@ -406,18 +337,17 @@ body.title #hud, body.title #scoreboard, body.title #controls, body.title #hint 
 /* Die Rangliste ist jetzt eine Tafel wie die anderen – Karte und Schleier kommen von .screen.title.
    Sie rückt nur in die Mitte statt nach unten, weil ihre Tafel hoch ist. */
 
-/* Liegt das Startbild, trägt es den Schriftzug schon – die Tafel lässt ihn dann weg und wird flach,
-   damit das Bild zu sehen bleibt. Auf breiten Schirmen stehen die beiden großen Knöpfe nebeneinander
-   statt untereinander; das halbiert die Höhe der Tafel. */
-body.startbild .screen.title .panel > h1,
-body.startbild .screen.title .panel > .sub { display: none; }
+/* Früher trug das gemalte Bild den Schriftzug, und die Tafel ließ ihn weg. Jetzt liegt dort die
+   Karte, und der Schriftzug gehört wieder auf die Tafel – in goldener Zierschrift, wie auf jeder
+   anderen auch. Auf breiten Schirmen stehen die beiden großen Knöpfe nebeneinander statt
+   untereinander; das halbiert die Höhe der Tafel. */
 body.startbild .screen.title .panel { max-width: min(95vw, 1040px); padding: 14px 18px 16px; }
 body.startbild .screen.title { padding-bottom: 2vh; }
-/* Hochkant liegt das Schöne am Bild unten: Fahne, Laterne, Ball auf dem Tee. Eine Tafel in
-   voller Höhe deckt genau das zu. Also wird sie hier so knapp wie möglich – kleinere Knöpfe,
-   engere Abstände, und der Erklärsatz fällt weg. Er sagt nichts, was nicht schon auf dem
-   Weltkarten-Knopf steht. */
-body.startbild.hoch .screen.title .panel { padding: 10px 12px 12px; }
+/* Hochkant bleibt die Tafel knapp: kleinere Knöpfe, engere Abstände, kein Erklärsatz. Auf einem
+   Telefon ist sonst kein Platz für die Karte dahinter. Eine Breite braucht sie trotzdem – ohne
+   sie schrumpft sie auf die Breite der Knöpfe und steht auf dem Tablett als schmaler Streifen
+   mitten in der Karte. */
+body.startbild.hoch .screen.title .panel { padding: 10px 12px 12px; width: min(92vw, 560px); }
 body.startbild.hoch .btn.mode { height: 66px; font-size: 22px; }
 body.startbild.hoch .mode-label.long { font-size: 18px; }
 body.startbild.hoch .mode-label small { font-size: 10.5px; margin-top: 1px; }

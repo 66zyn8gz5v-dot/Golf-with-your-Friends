@@ -36,10 +36,9 @@ das, was das Ladebild ausmacht.
 
 Alles daran bewegt sich **allein mit CSS** – kein JavaScript. Das ist der ganze Punkt: Ein Ladebild,
 das erst läuft, wenn die Skripte da sind, kommt genau dann nicht, wenn man es braucht. Beim
-allerersten Öffnen ist das Bild noch unterwegs; bis dahin steht der dunkle Verlauf darunter, damit da
-kein Loch ist. Welches der beiden Titelbilder den Grund gibt, entscheidet `@media (orientation:
-portrait)` – also auch das ohne JavaScript. Nebenbei ist das Bild dadurch schon geladen, wenn gleich
-darauf der Startbildschirm kommt.
+allerersten Öffnen ist die Karte noch unterwegs; bis dahin steht der dunkle Verlauf darunter, damit da
+kein Loch ist. Nebenbei ist die Karte dadurch schon geladen, wenn gleich darauf der Startbildschirm
+kommt – er trägt dieselbe.
 
 Damit das auch stimmt, musste die Zierschrift aus dem Seitenkopf verschwinden. Ein `<link
 rel="stylesheet">` auf Google hält das erste Bild auf, bis die Antwort da ist – und solange nichts
@@ -58,55 +57,38 @@ ruhig: Ball am Loch, Balken voll.
 
 ## Startbild
 
-Der Startbildschirm zeigt ein gemaltes Titelbild. Es gibt **zwei davon**: `icons/titelbild.jpg`
-(1170 × 639) fürs Querformat und `icons/titelbild-hoch.jpg` (1170 × 2078) fürs Hochformat. Eines
-allein täte es nicht – vom queren bliebe auf dem Handy ein schmaler Streifen übrig, mit
-zerschnittenem Schriftzug darin. Welches gilt, entscheidet allein das Seitenverhältnis des Fensters
-(`titelbildPassen()` setzt die Klasse `hoch`); beide füllen ihren Schirm dann ganz. Jedes bringt
-seine eigenen Maße mit, also auch eigene Stellen für Fahne, Laterne und Funkeln – und einen eigenen
-Filter, denn ein SVG-Filter gilt nur innerhalb seines eigenen SVG. Das Bild liegt als
-`<image>` in einem SVG, und **alles, was sich bewegt, liegt im selben Koordinatensystem darüber** –
-denselben 1170 × 639. Darum sitzt jede Bewegung immer genau an ihrer Stelle, egal wie der Schirm
-geschnitten ist: Bild und Auflagen werden gemeinsam beschnitten. Bewegt werden: die Fahne, Wolken
-über dem Himmel, drei Möwen, Sonnenfunkeln auf dem Wasser, der Schein der Laterne am Zaun,
-Lichtpunkte über der Wiese, und die ganze Ansicht fährt langsam heran.
+Der Startbildschirm ist eine Tafel wie jede andere: Dahinter liegt die **Weltkarte**, weich
+gezeichnet und abgedunkelt, davor die Tafel mit dem goldenen Schriftzug, den beiden großen Knöpfen
+und den drei kleinen. Dasselbe Bild also wie im Ladebild davor und wie hinter der Rangliste – wer
+das Spiel öffnet, sieht von der ersten Sekunde an dieselbe Welt.
 
-**Die Fahne wird nicht nachgezeichnet** – das ginge nie genau genug, und eine daneben liegende
-Zeichnung fällt mehr auf als gar keine Bewegung. Statt dessen liegt dasselbe Bild ein zweites Mal
-darüber, auf die Fahne beschnitten (`clipPath`) und durch ein Wellenfeld geschickt (`feTurbulence`
-und `feDisplacementMap`, das Rauschen wandert per SMIL). Verschoben werden also die gemalten Pixel
-selbst, mitsamt Löwe und Zaddeln; darunter steht unverändert das Original und füllt die Ränder, wo
-die Welle Stoff wegzieht.
+**Bis Fassung 138 lag hier ein gemaltes Titelbild**, in zwei Fassungen (`icons/titelbild.jpg` quer,
+`icons/titelbild-hoch.jpg` hoch), mit wehender Fahne, ziehenden Wolken, Möwen und Sonnenfunkeln –
+alles als SVG-Auflagen über dem Bild, bewegt allein mit CSS. Es sah neben dem Rest aus wie aus einem
+anderen Buch: Das Spiel ist gezeichnet, das Bild gemalt. Die Bilder liegen noch in `icons/`, die
+Zeichnung steht in der Geschichte des Zweiges; im ausgelieferten Spiel kommt beides nicht mehr vor.
 
-Der Ausschlag (`scale` am `feDisplacementMap`) ist je Bild ein anderer: 6 im queren, 20 im hohen.
-Nicht willkürlich – die Fahne nimmt im hohen Bild ein Viertel der Breite ein, im queren nur ein
-Achtel, und beide werden auf dieselbe Schirmbreite gebracht. Gleicher Ausschlag hieße also halb so
-viel Wellenbild. Nachgemessen an einem Ausschnitt um die Fahne, über sechs Augenblicke: Mit
-Wellenfeld ändern sich 10,5 % (quer) und 6,7 % (hoch) der Pixel, mit abgeschaltetem Wellenfeld genau
-0,0 %. Beim ersten Messversuch war der Vergleichspunkt der Kompass – der bewegt sich aber mit, weil
-das langsame Heranfahren das ganze Bild verschiebt und Wolken und Möwen durch den Himmel ziehen. Erst
-der Gegenversuch mit abgeschaltetem Filter am selben Ausschnitt sagt wirklich etwas.
+Zwei Dinge sind mit ihm weggefallen, und beide waren mehr als Schmuck:
 
-Hochkant liegt das Schöne am Bild unten: Fahne, Laterne, Ball auf dem Tee. Eine Tafel in voller Höhe
-deckt genau das zu – sie wird dort darum so knapp wie möglich: kleinere Knöpfe, engere Abstände, und
-der Erklärsatz fällt weg (er sagt nichts, was nicht schon auf dem Weltkarten-Knopf steht). Der
-Vollbild-Knopf geht nach oben links, sonst säße er auf dem Turnierband. Lädt das Bild nicht, fällt der Startbildschirm auf die
-gezeichnete Szene aus `src/title.js` zurück, und der Schriftzug steht wieder in der Tafel. Liegt das
-Bild, wird die Szene gar nicht erst gezeichnet – sie wäre ohnehin verdeckt.
+- **Die Tafelform hing am Bild.** `startbildAn()` setzte die Kennung `startbild` erst, wenn
+  `titelbild.jpg` wirklich geladen war – und an dieser Kennung hängt, wie breit die Tafel wird und ob
+  die beiden großen Knöpfe nebeneinander stehen. Ohne Netz kam die Tafel also schmal und hochkant
+  falsch. Jetzt sagt `startbild` nur noch, dass gerade die Starttafel liegt, und `hoch` nur noch,
+  dass das Fenster höher als breit ist.
+- **1,4 MB für nichts.** Die beiden Bilder standen weiter als `<image>` im HTML und wurden vom
+  Browser brav geholt, obwohl sie niemand mehr sah (nachgemessen: zwei Anfragen pro Seitenaufruf).
+  Darum ist die Zeichnung ganz aus `index.html` heraus, nicht bloß auf `display: none` gesetzt.
 
-**Zwei Fehler auf dem Weg dahin, und beide zeigten sich erst in der Vorschau:**
+Mit dem Bild ist auch `src/title.js` gegangen – die gezeichnete Szene, die einsprang, wenn das Bild
+nicht lud. Hinter der Starttafel liegt jetzt in jedem Fall die Karte; was die Leinwand dort malte,
+sähe ohnehin niemand. Auf dem Startbildschirm wird darum gar nicht mehr gezeichnet, was pro Bild die
+ganze Arbeit spart.
 
-- **Das Bild lag in einem eigenen Ordner `bilder/`.** Die Auslieferung nach GitHub Pages kopiert
-  aber nicht den ganzen Baum, sondern eine Liste (`cp -r … index.html style.css … src icons`), und
-  in der stand `bilder` nicht. Auf dem eigenen Rechner war alles in Ordnung, auf der Seite fehlte
-  das Bild. Es liegt darum bei den `icons` – dem Ordner, der ohnehin mitgeht. Dagegen prüft jetzt
-  `node tools/auslieferung.mjs`: Es liest, was `index.html` und `sw.js` verlangen, und was die
-  `cp`-Zeile in `.github/workflows/pages.yml` kopiert. Was nur auf einer Seite steht, ist ein
-  Fehler. (Gegengeprüft: Mit dem alten Pfad schlägt die Prüfung an.)
-- **Die Notbremse griff nicht.** Sie hing an einem `error`-Ereignis am `<image>` im SVG – und das
-  meldet Safari auf dem iPad nicht. Das Bild fehlte, der Rückfall blieb aus, und Safari malte sein
-  Fragezeichen quer über den halben Schirm. Geprüft wird jetzt **vorher**, mit einem eigenen
-  `Image`-Objekt: Das Bild kommt erst auf den Schirm, wenn es wirklich geladen ist.
+Hochkant bleibt die Tafel knapp: kleinere Knöpfe, engere Abstände, der Erklärsatz fällt weg (er sagt
+nichts, was nicht schon auf dem Weltkarten-Knopf steht). Sonst deckte sie auf dem Telefon die Karte
+ganz zu. Eine Breite braucht sie dort trotzdem – ohne sie schrumpft sie auf die Breite der Knöpfe und
+stünde auf dem Tablett als schmaler Streifen mitten in der Karte. Der Vollbild-Knopf geht hochkant
+nach oben links, sonst säße er auf dem Turnierband.
 
 ## Welten und Modi
 
@@ -117,9 +99,8 @@ lesbar bleibt, liegt ein Schleier dazwischen, der nach rechts hin dunkler wird �
 ohne Umweg in die Arena (Kolosseum), **Online spielen** in den Warteraum, **Rangliste** zu den
 Rekorden.
 
-Liegt das gemalte Startbild, trägt es den Schriftzug schon: Die Tafel lässt ihn dann weg, wird flach
-und stellt die beiden großen Knöpfe auf breiten Schirmen nebeneinander – das halbiert ihre Höhe, und
-vom Bild bleibt mehr zu sehen.
+Auf breiten Schirmen stehen die beiden großen Knöpfe nebeneinander statt untereinander. Das halbiert
+die Höhe der Tafel, und von der Karte dahinter bleibt mehr zu sehen.
 
 Die Tafel selbst war lange ein heller Schleier vor der Szene: hübsch, aber die Schrift lag auf Wolken,
 Tannen und Schafen. Jetzt ist sie dicht genug zum Lesen und hat den Doppelrahmen alter
@@ -608,15 +589,15 @@ gibt.
 
 ## Rangliste
 
-**Hinter der Tafel liegt ein eigenes Bild** (`icons/rangliste.jpg`, 1170 × 1477). Vorher stand dort,
-was gerade auf der Leinwand lag – das Spielfeld oder die Weltkarte – und wanderte unter der Tafel
-herum, obwohl es mit Rekorden nichts zu tun hat. Das Bild bekommt die Kennung `rangliste` am
-Überlagerungs-Schirm; dieselbe tragen die drei Tafeln, die von der Rangliste abzweigen (Liste
-führen, Schlüssel, Zurücksetzen), sonst spränge der Hintergrund bei jedem Schritt. Darüber liegt ein
-Schleier, der nach außen hin dichter wird: In der Mitte soll das Bild hell bleiben, am Rand ist es
-so bunt, dass der goldene Rahmen der Tafel darin unterginge. Anders als beim Startbild gibt es nur
-*ein* Bild – es ist hochkant, und `cover` schneidet daraus im Querformat den mittleren Streifen mit
-Burg und Meer heraus.
+**Hinter der Tafel liegt die Weltkarte**, weich gezeichnet und abgedunkelt – wie hinter jeder Tafel
+außerhalb des Spiels. Vorher stand dort, was gerade auf der Leinwand lag – das Spielfeld oder die
+Weltkarte in voller Schärfe – und wanderte unter der Tafel herum, obwohl es mit Rekorden nichts zu
+tun hat. Dann lag dort ein gemaltes Bild (`icons/rangliste.jpg`); es sah neben dem gezeichneten Rest
+aus wie aus einem anderen Buch und ist seit Fassung 137 nicht mehr im Spiel. Die Kennung `rangliste`
+am Überlagerungs-Schirm tragen auch die drei Tafeln, die von der Rangliste abzweigen (Liste führen,
+Schlüssel, Zurücksetzen) – sie rücken die Tafel nur in die Mitte statt nach unten, weil sie hoch ist.
+Darüber liegt ein Schleier, der nach außen hin dichter wird: In der Mitte soll die Karte hell
+bleiben, am Rand ist sie sonst so bunt, dass der goldene Rahmen der Tafel darin unterginge.
 
 Über **🏆 Rangliste** im Startbildschirm: für jede Bahn und für jede ganze Runde, mit Namen dabei, in
 **drei Wertungen**. Es gibt nichts auszuwählen – **alle drei laufen bei jedem Schlag gleichzeitig mit**,
@@ -2128,9 +2109,7 @@ Sinnbilder, ein laufendes Spiel, die Rangliste und der Editor da sind.
 ## Projektstruktur
 
 ```
-index.html        Seite, HUD, Ladebild und Startbild (beide laufen ohne JavaScript)
-icons/titelbild.jpg   gemaltes Titelbild des Startbildschirms (quer)
-icons/titelbild-hoch.jpg  dasselbe fürs Hochformat
+index.html        Seite, HUD und Ladebild (das Ladebild läuft ohne JavaScript)
 tools/auslieferung.mjs  prüft für beide Seiten, ob alles Gebrauchte auch ausgeliefert wird
 style.css         Oberfläche
 src/themes.js     Farbpaletten und Deko je Welt
@@ -2165,7 +2144,6 @@ src/sfx.js        Klangeffekte (WebAudio)
 src/music.js      Musik: je Welt ein erzeugter Klangteppich (WebAudio)
 src/worldmap.js   Weltkarte: Landkarte aus gerechneter Küste, Gelände je Biom und die Orte der Welten
 icons/weltkarte.svg dieselbe Karte als fertige Datei – Hintergrund für Ladebild und alle Tafeln (node tools/karte.mjs)
-src/title.js      animierte Startbildschirm-Szene mit Tag-Nacht-Wechsel
 src/main.js       Spielablauf, Eingabe, Punkte
 
 src/3d/index.html   die eigene Seite von Fantasy Golf 3D (eigene Adresse, eigenes Ladebild)

@@ -195,45 +195,25 @@
   function hideOverlay() { ui.overlay.className = 'screen'; ui.overlay.innerHTML = ''; document.body.classList.remove('startbild'); clockResume(); }
 
   /* ---------- Startbild ----------
-     Das gemalte Titelbild liegt nur auf dem Startbildschirm. overlay() nimmt es bei jedem Wechsel
-     weg, showTitle() setzt es wieder – so muss nicht jeder einzelne Bildschirm daran denken.
+     Der Startbildschirm ist eine Tafel wie jede andere: Die Weltkarte liegt dahinter, der Schriftzug
+     steht in der Tafel. Die Kennung `startbild` sagt nur noch, dass gerade die Starttafel liegt –
+     danach richtet sich, wie breit sie wird und ob die beiden großen Knöpfe nebeneinander stehen.
+     overlay() nimmt sie bei jedem Wechsel weg, showTitle() setzt sie wieder.
 
-     Es gibt zwei Bilder: eines quer, eines hoch. Ein einziges täte es nicht – vom Querbild bliebe
-     auf dem Handy ein schmaler Streifen übrig, mit zerschnittenem Schriftzug darin. Welches gilt,
-     entscheidet allein das Seitenverhältnis des Fensters; beide füllen ihren Schirm dann ganz.
+     Bis Fassung 138 hing das an einem gemalten Bild, das erst geladen sein musste. Damit hing auch
+     die ganze Tafelform daran – ohne Netz kam sie schmal und hochkant falsch. Jetzt hängt sie an
+     nichts mehr.
 
-     Lädt das Bild nicht, fällt der Startbildschirm auf die gezeichnete Szene zurück – dann steht
-     der Schriftzug wieder in der Tafel, und niemand sieht ein Loch.
-
-     Geprüft wird das **vorher**, mit einem eigenen Image-Objekt, nicht mit einem 'error' am <image>
-     im SVG. Genau daran ist es einmal gescheitert: Auf dem iPad hat das SVG-Element kein 'error'
-     gemeldet, das Bild fehlte trotzdem, und Safari malte sein Fragezeichen quer über den halben
-     Schirm. Ein Image-Objekt meldet überall verlässlich, und das Bild kommt erst auf den Schirm,
-     wenn es wirklich da ist. */
-  const bildBereit = { quer: false, hoch: false };
+     `hoch` sagt bloß, dass das Fenster höher als breit ist. Danach rückt die Tafel enger zusammen,
+     damit von der Karte dahinter noch etwas zu sehen bleibt. */
   function titelbildPassen() {
-    // Hochkant nur, wenn es auch das hohe Bild gibt – sonst lieber das quere beschnitten als nichts.
-    const hoch = innerWidth < innerHeight && bildBereit.hoch;
-    document.body.classList.toggle('hoch', hoch);
+    document.body.classList.toggle('hoch', innerWidth < innerHeight);
   }
   function startbildAn() {
-    if (!bildBereit.quer || !$('tb-svg')) return;
     document.body.classList.add('startbild');
     titelbildPassen();
   }
-  (() => {
-    for (const [welches, id] of [['quer', 'tb-svg'], ['hoch', 'tb-hoch']]) {
-      const svg = $(id), quelle = svg && svg.querySelector('image');
-      if (!quelle) continue;
-      const probe = new Image();
-      probe.addEventListener('load', () => {
-        bildBereit[welches] = true;
-        if (state.phase === 'title' && ui.overlay.classList.contains('title')) startbildAn();
-      });
-      probe.src = quelle.getAttribute('href');
-    }
-    addEventListener('resize', titelbildPassen);
-  })();
+  addEventListener('resize', titelbildPassen);
 
   const SCENE_NORMAL = `<svg class="mode-scene" viewBox="0 0 300 72" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
             <defs>
@@ -2494,10 +2474,9 @@
     updateParticles(dt);
     if (state.ball && state.ball.sunk) state.ball.sinkT += dt;
     updateCamera(dt);
-    // Liegt das gemalte Startbild darüber, ist die gezeichnete Szene ohnehin verdeckt – dann wird
-    // sie auch nicht gezeichnet. Das spart auf dem Startbildschirm die ganze Arbeit pro Bild.
-    if (state.phase === 'title') { if (!document.body.classList.contains('startbild')) TitleScene.draw(R.ctx, R.w, R.h, state.t); }
-    else { R.drawFrame(state); if (state.phase === 'edit') editor.drawOverlay(R.ctx); }
+    // Auf dem Startbildschirm liegt die Weltkarte als Tafelhintergrund über der Leinwand: Was dort
+    // gezeichnet würde, sähe niemand. Also wird es gar nicht erst gezeichnet.
+    if (state.phase !== 'title') { R.drawFrame(state); if (state.phase === 'edit') editor.drawOverlay(R.ctx); }
     syncClock();
     ui.power.classList.toggle('visible', !!state.aim);
     if (state.aim) ui.powerFill.style.width = `${Math.round(state.aim.power * 100)}%`;

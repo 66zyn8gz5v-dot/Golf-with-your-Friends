@@ -10,7 +10,7 @@ const meiner = k => k.startsWith(MARKE) || (!VORSCHAU && k.startsWith('fantasygo
 const APP_FILES = [
   './', './index.html', './style.css', './manifest.webmanifest',
   './src/version.js', './src/text.js', './src/themes.js', './src/courses.js', './src/courses_sea.js', './src/courses_jungle.js', './src/courses_storm.js', './src/courses_shadow.js', './src/courses_colosseum.js', './src/courses_clock.js', './src/courses_snow.js', './src/courses_mine.js', './src/courses_boule.js', './src/courses_pro.js', './src/level.js', './src/obstacles.js', './src/obstacles_legend.js', './src/obstacles_snow.js', './src/obstacles_mine.js',
-  './src/physics.js', './src/render.js', './src/render_legend.js', './src/render_snow.js', './src/render_mine.js', './src/icons.js', './src/hats.js', './src/net.js', './src/best.js', './src/turnier.js', './src/share.js', './src/sfx.js', './src/music.js', './src/worldmap.js', './src/title.js', './src/editor.js', './src/main.js',
+  './src/physics.js', './src/render.js', './src/render_legend.js', './src/render_snow.js', './src/render_mine.js', './src/icons.js', './src/hats.js', './src/net.js', './src/best.js', './src/turnier.js', './src/share.js', './src/sfx.js', './src/music.js', './src/worldmap.js', './src/editor.js', './src/main.js',
   /* Fantasy Golf 3D ist eine eigene Seite unter ./src/3d/ mit eigenem Stilblatt und eigenem
      Manifest. Sie teilt sich mit dem 2,5D-Spiel diesen Speicher – eine Fassung, ein Aufräumen. */
   './src/3d/', './src/3d/index.html', './src/3d/stil3d.css', './src/3d/manifest3d.webmanifest', './src/3d/start3d.js',
@@ -22,7 +22,7 @@ const APP_FILES = [
      tragen, wiegt jedes gut 700 kB, und gebraucht werden sie nur beim Einrichten auf dem
      Startbildschirm – nicht beim Spielen. Der fetch-Griff unten legt jede geholte Datei
      ohnehin ab, sie liegen also nach dem ersten Gebrauch im Speicher. */
-  './icons/titelbild.jpg', './icons/titelbild-hoch.jpg', './icons/weltkarte.svg',
+  './icons/weltkarte.svg',
 ];
 
 self.addEventListener('install', e => {
