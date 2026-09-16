@@ -372,29 +372,37 @@ bahn(name='Blankeis', par=4, theme='glacier', maxStrokes=16, seed=307, dichte=0.
      heights=hoehen, hstep=hs,
      map=k.rows())
 
-# ---------------------------------------------------------------- 8 Gletscherspalten (Schmelzwasser, kein Wind)
+# ---------------------------------------------------------------- 8 Gletscherspalten (Schmelzwasser)
+# In den Spalten steht Schmelzwasser, kein Abgrund - und das ist keine Geschmacksfrage, sondern
+#    die Lehre aus der ersten Fassung. Mit Abgruenden war die Bahn unspielbar: Der Bot erreichte in
+#    zehn von zehn Runden das Schlaglimit, ohne je einzulochen. Wer zwischen zwei Eisfeldern in
+#    einen Abgrund faellt, wird an seinen Ruheplatz zurueckgelegt - und der lag auf dem schmalen
+#    Streifen am Spaltenrand, von dem aus er gerade hineingefallen war. Das ist keine schwere
+#    Stelle, das ist eine Schlinge. Wasser kostet einen Schlag und legt zurueck, aber es sperrt
+#    nicht ein.
 k = Karte(36, 16)
 k.rect(2, 4, 33, 12, 'i')
 k.rect(2, 4, 5, 12, '#')
-for sx in (11, 18, 25):                            # drei Spalten, in zweien steht Schmelzwasser
-    k.rect(sx, 4, sx + 1, 12, '.')
-k.rect(11, 7, 12, 9, 'w'); k.rect(25, 7, 26, 9, 'w')
-# Ueber jede der beiden aeusseren Spalten fuehrt ein schmaler Eissteg, und zwar versetzt: einmal
-#    oben, einmal unten. Ohne ihn waere die Spalte nur mit einem Flug zu nehmen, und die Bahn
-#    haette keinen Weg mehr. Mit ihm ist sie eine Frage des Zielens.
-k.rect(11, 4, 12, 5, 'i'); k.rect(25, 11, 26, 12, 'i')
-k.rect(18, 7, 19, 9, '#')                          # ueber die mittlere fuehrt eine Waechte
+for sx in (11, 18, 25):                            # drei Spalten quer ueber den Gletscher
+    k.rect(sx, 4, sx + 1, 12, 'w')
+# Ueber jede Spalte fuehrt eine Firnbruecke, und zwar versetzt: oben, Mitte, unten. Wer sie nicht
+#    trifft, steht im Wasser. An beiden Enden liegt fester Schnee - auf blankem Eis kann der Ball
+#    vor einer Spalte nirgends liegen bleiben, und dann stochert man nur davor herum.
+k.rect(11, 4, 12, 6, '#');  k.rect(9, 4, 10, 6, '#');    k.rect(13, 4, 14, 6, '#')
+k.rect(18, 7, 19, 9, '#');  k.rect(16, 7, 17, 9, '#');   k.rect(20, 7, 21, 9, '#')
+k.rect(25, 10, 26, 12, '#'); k.rect(23, 10, 24, 12, '#'); k.rect(27, 10, 28, 12, '#')
 k.put(3, 8, 'T'); k.put(31, 8, 'H')
 hoehen, schraegen, hs = hang(k, [], 0.7, 5.2)
 bahn(name='Gletscherspalten', par=5, theme='glacier', maxStrokes=18, seed=308, dichte=0.1,
      schnee=SCHNEE_WACHS,
-     # Auch hier kein Windsack: Der Einleitungstext sagt, in der Spalte sei es still - dann darf
-     # am Rand nicht doch einer wehen.
+     # Kein Windsack: Der Einleitungstext sagt, in der Spalte sei es still - dann darf am Rand
+     # auch keiner wehen.
      ohneDeko=['windsock'],
-     intro='Drei Spalten queren den Gletscher. In zweien steht Schmelzwasser – das ist das erste '
-           'offene Wasser dieser Welt, und es kostet einen Schlag. Über die mittlere führt eine '
-           'Wächte, die genau einmal trägt. Wind gibt es hier nicht: In der Spalte ist es still.',
-     obstacles=[schneebruecke([k], 'Gletscherspalten', 18, 7, 2, 3)] + schraegen,
+     intro='Drei Spalten queren den Gletscher, in allen steht Schmelzwasser – das erste offene '
+           'Wasser dieser Welt, und es kostet einen Schlag. Über jede führt eine Firnbrücke, und '
+           'sie liegen versetzt: einmal oben, einmal in der Mitte, einmal unten. Wind gibt es '
+           'hier nicht: In der Spalte ist es still.',
+     obstacles=schraegen,
      decor=[('rockSnow', 8, 2.4, 1.3), ('rockSnow', 22, 14.4, 1.4), ('rockSnow', 33, 2.4, 1.2),
             ('rockSnow', 14, 14.4, 1.1), ('rockSnow', 0.8, 13.5, 1)],
      heights=hoehen, hstep=hs,

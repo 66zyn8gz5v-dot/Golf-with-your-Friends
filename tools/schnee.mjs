@@ -18,7 +18,10 @@ for (const f of ['themes', 'courses', 'courses_sea', 'courses_jungle', 'courses_
                  'courses_colosseum', 'courses_clock', 'courses_snow', 'courses_mine', 'courses_pro', 'level',
                  'obstacles', 'obstacles_legend', 'obstacles_snow', 'obstacles_mine', 'physics'])
   vm.runInContext(fs.readFileSync(path.join(SRC, `${f}.js`), 'utf8'), ctx);
-const G = vm.runInContext('({buildLevel, makeBall, stepPhysics, SNOW_COURSES})', ctx);
+// waechteAbrutschen wird weich geholt: Fehlt die Regel, soll diese Datei einen benannten Fehler
+// melden und nicht mit einem ReferenceError abstürzen - ein Absturz sagt nicht, was fehlt.
+const G = vm.runInContext('({buildLevel, makeBall, stepPhysics, SNOW_COURSES,'
+  + ' waechteAbrutschen: typeof waechteAbrutschen === "function" ? waechteAbrutschen : null})', ctx);
 const STEP = 1 / 240;
 
 let fehler = 0;
@@ -216,6 +219,28 @@ console.log('\n--- Die Windfahne ---');
   const luegt = still.filter(c => !(c.autoDecor && (c.autoDecor.ohne || []).includes('windsock')));
   pruef('windstille Bahnen haben keine Windsäcke in der Deko', luegt.length === 0,
         luegt.length ? luegt.map(c => c.name).join(', ') : still.map(c => c.name).join(', '));
+
+  /* Die Schlinge auf der Wächte. Ein Ball, der auf einer Schneewächte zur Ruhe kam, spielte den
+     nächsten Schlag von ihr aus, sie brach hinter ihm weg, er fiel - und wurde genau auf sie
+     zurückgelegt. Der Bot hing so auf den Gletscherspalten achtzehn Schläge fest und kam in zehn
+     von zehn Runden nie ins Loch. Geprüft wird das am Verhalten, nicht am Quelltext: Ein Ball auf
+     der Wächte muss nach dem Schlag woanders liegen, und zwar auf festem Boden. */
+  pruef('die Regel für die Wächte gibt es', typeof G.waechteAbrutschen === 'function');
+  const bahnMitWaechte = bahnen.find(c => (c.obstacles || []).some(o => o.type === 'schneebruecke'));
+  const lvW = G.buildLevel(bahnMitWaechte);
+  const w = lvW.obstacles.find(o => o.type === 'schneebruecke');
+  const probe = { x: w.x + w.w / 2, y: w.y + w.h / 2, r: 0.3, vx: 0, vy: 0, ebene: w.ebene || 0 };
+  const lag = [probe.x, probe.y];
+  const gerutscht = G.waechteAbrutschen ? G.waechteAbrutschen(lvW, probe) : false;
+  const drauf = (x, y) => Math.abs(x - (w.x + w.w / 2)) <= w.w / 2 && Math.abs(y - (w.y + w.h / 2)) <= w.h / 2;
+  pruef('auf der Wächte bleibt kein Ball liegen', gerutscht && !drauf(probe.x, probe.y),
+        `${lag.map(v => v.toFixed(1))} → ${probe.x.toFixed(1)},${probe.y.toFixed(1)} (${bahnMitWaechte.name})`);
+  pruef('und er landet auf festem Boden', ['#', 's', 'T', 'i'].includes(lvW.charAt(probe.x, probe.y)),
+        lvW.charAt(probe.x, probe.y));
+
+  /* Ein Ball, der nie auf einer Wächte lag, wird auch nicht verschoben. */
+  const frei = { x: lvW.tee.x, y: lvW.tee.y, r: 0.3, vx: 0, vy: 0, ebene: lvW.teeEbene || 0 };
+  pruef('woanders rührt die Regel nichts an', !!G.waechteAbrutschen && G.waechteAbrutschen(lvW, frei) === false);
 
   /* Die Abwahl muss beim Streuen wirklich greifen und nicht nur in den Daten stehen: Der Streuer
      in level.js zieht aus dem gefilterten Vorrat, nicht mehr aus der vollen Palette. */

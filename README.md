@@ -1124,6 +1124,41 @@ Maschinen sind ungleich verteilt: Windfahne auf 10 von 12 statt auf allen, Lawin
 auf 4, Schneebrücke auf 3. Zwei Bahnen haben gar keinen Wind – und genau deshalb merkt man ihn auf
 den anderen.
 
+**Was am Rand stand und nicht stimmte.** Die Streu-Deko der vier Schneepaletten enthält einen
+Windsack. Auf den beiden windstillen Bahnen stand er trotzdem da und versprach Wind, den es dort
+nicht gibt – auf den Gletscherspalten sogar gegen den eigenen Einleitungstext. Eine Bahn kann
+einzelne Requisiten der Palette jetzt abwählen (`autoDecor.ohne`). Die Prüfung dazu steht in
+`tools/schnee.mjs` und ist die Art Prüfung, die sich lohnt: Geschrieben für die eine Bahn, die mir
+aufgefallen war, hat sie sofort die zweite gefunden.
+
+**Die Schlinge auf der Wächte.** Die Gletscherspalten waren nach dem Umbau nicht schwer, sondern
+unspielbar: Der Bot erreichte in **zehn von zehn** Runden das Schlaglimit und kam kein einziges Mal
+ins Loch. Die Spur zeigte, woran: Der Ball kam auf der Schneewächte zur Ruhe, spielte den nächsten
+Schlag von ihr aus, sie brach hinter ihm weg, er fiel – und wurde an seinen Ruheplatz zurückgelegt,
+also genau wieder auf die Wächte. Achtzehn Schläge lang, jedes Mal dasselbe.
+
+Das ist kein Bahnfehler, sondern einer im Spiel, und er betraf jede Bahn mit einer Wächte. Eine
+Wächte trägt *über* die Rinne, sie ist kein Standplatz: Seit Fassung 152 rutscht der Ball am Ende
+eines Schlags von ihr herunter, auf den nächsten festen Boden daneben – ohne Strafschlag, denn
+gefallen ist er nicht. `tools/schnee.mjs` prüft das am Verhalten, nicht am Quelltext, und meldet
+auf dem alten Stand vier benannte Fehler.
+
+**Und warum in den Spalten jetzt Wasser steht.** Auch mit der Regel blieb die Bahn zäh, denn die
+zweite Hälfte des Problems war der Abgrund selbst: Wer zwischen zwei Eisfeldern hineinfällt, wird
+an seinen Ruheplatz zurückgelegt – und der lag auf dem schmalen Streifen am Spaltenrand, von dem
+aus er gerade hineingefallen war. Jetzt steht in allen drei Spalten Schmelzwasser. Wasser kostet
+einen Schlag und legt zurück, aber es sperrt nicht ein. Dazu liegt an beiden Enden jeder Querung
+fester Firn statt blankem Eis – auf Eis kann der Ball vor einer Spalte nirgends liegen bleiben, und
+dann stochert man nur davor herum. Aus *nie im Loch* wurden **Ø 3,7 Schläge, Median 3, kein
+Limit-Treffer.**
+
+**Und eine Zahl, die etwas Falsches behauptet hat.** Der Gipfel stand auf Par 6. Der Bot braucht
+dort im Schnitt 9,4 Schläge und im Median 11, und die Verteilung ist zweigeteilt: halbe Runden mit
+4 bis 8 Schlägen, halbe mit 11 bis 15, je nachdem ob man eine der drei Etagen wieder hinunterfällt
+und den Aufstieg noch einmal fährt. Am Schlaglimit war die Bahn dabei nie – höchstens 15 von 22.
+Zu ändern war also nicht die Bahn, sondern das Par: **8**. Ein Par, das kein Mensch erreicht, ist
+keine Herausforderung, sondern eine falsche Auskunft.
+
 ### Der Gießlöffel: das einzige Hindernis, das die Bahn aufbaut
 
 Eine Pfanne am Rand der Schmelze kippt im Takt flüssiges Erz in eine Rinne. Das Erz läuft ein Feld

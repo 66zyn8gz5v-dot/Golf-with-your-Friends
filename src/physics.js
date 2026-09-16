@@ -159,6 +159,42 @@ function anWaendenLoesen(level, ball, flaechen, events) {
    Strafschlag fällt nicht an. Das gilt für die offene Kante genauso wie für die Luke, darum steht
    es hier einmal und nicht zweimal. Das z setzt nur die Optik: Der Ball sinkt sichtbar herunter,
    rollt dabei aber schon auf der neuen Ebene und stößt sich an deren Wänden. */
+/* Auf einer Schneewächte bleibt niemand liegen. Sie trägt über die Rinne, sie ist kein Standplatz:
+   Wer auf ihr zur Ruhe käme, spielte den nächsten Schlag von ihr aus, sie bräche hinter ihm weg,
+   und das Zurücklegen setzte ihn genau wieder auf sie – eine Schlinge ohne Ausgang. Auf den
+   Gletscherspalten hing der Bot achtzehn Schläge darin fest und kam in zehn von zehn Runden nie
+   ins Loch. Darum rutscht der Ball am Ende eines Schlags von der Wächte herunter, auf den
+   nächsten festen Boden daneben – ohne Strafschlag, denn gefallen ist er nicht. */
+const ABRUTSCH_WEIT = 4;                 // so weit wird nach festem Boden gesucht
+function waechteUnterBall(level, ball) {
+  for (const ob of level.obstacles) {
+    if (ob.type !== 'schneebruecke' || (ob.ebene || 0) !== (ball.ebene || 0)) continue;
+    if (Math.abs(ball.x - (ob.x + ob.w / 2)) <= ob.w / 2 && Math.abs(ball.y - (ob.y + ob.h / 2)) <= ob.h / 2) return ob;
+  }
+  return null;
+}
+function waechteAbrutschen(level, ball) {
+  const w = waechteUnterBall(level, ball);
+  if (!w) return false;
+  const mx = w.x + w.w / 2, my = w.y + w.h / 2;
+  let ziel = null, zielEis = null;
+  for (let d = 0.6; d <= ABRUTSCH_WEIT && !ziel; d += 0.3) {
+    for (let a = 0; a < 16; a++) {
+      const px = ball.x + Math.cos(a * Math.PI / 8) * d, py = ball.y + Math.sin(a * Math.PI / 8) * d;
+      // Noch über der Wächte zu landen hilft nicht, auch nicht knapp an ihrem Rand
+      if (Math.abs(px - mx) <= w.w / 2 + ball.r && Math.abs(py - my) <= w.h / 2 + ball.r) continue;
+      const c = level.charAt(px, py);
+      // Fester Boden wird gesucht, Eis nur als Notlösung: Auf Eis bliebe er ohnehin nicht liegen
+      if (c === '#' || c === 's' || c === 'T') { ziel = [px, py]; break; }
+      if (c === 'i' && !zielEis) zielEis = [px, py];
+    }
+  }
+  ziel = ziel || zielEis;
+  if (!ziel) return false;
+  ball.x = ziel[0]; ball.y = ziel[1]; ball.vx = 0; ball.vy = 0;
+  return true;
+}
+
 function ebeneFallen(level, ball, events) {
   if (!ball.ebene) return false;
   const von = ball.ebene;

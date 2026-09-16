@@ -1778,6 +1778,9 @@
 
   function ballAtRest() {
     const b = state.ball;
+    // Niemand bleibt auf einer Schneewächte liegen (physics.js sagt, warum): Sonst wäre der
+    // Ruheplatz selbst die Falle, in die er beim nächsten Schlag stürzt.
+    if (state.level) waechteAbrutschen(state.level, b);
     b.vx = 0; b.vy = 0; b.restX = b.x; b.restY = b.y; b.restEbene = b.ebene || 0;
     schlagVorbei();
     faceCup();
