@@ -165,5 +165,37 @@ console.log('\n--- Die Bruchwand ---');
   }
 }
 
+/* ------------------------------------------------------------------------------------------- *
+ * Das Fass steht im Raum, nicht auf dem Bildschirm
+ *
+ * Der Vorgänger an dieser Stelle war ein Trapez, das am Bildschirmpunkt gemalt wurde: ein paar
+ * fillRect und ein Farbverlauf quer über die Breite. Von vorn sah das aus wie ein Körper – bis man
+ * die Kamera drehte, dann drehte sich der Aufkleber mit und der Raum wurde wieder zum Bild. Gebaut
+ * wird das Fass wie die Maschinen: aus saeule, in Kacheln und in Weltkoordinaten.
+ *
+ * Nachweisbar ist das am Quelltext, nicht am Rechnen – gezeichnet wird auf einer Leinwand, die es
+ * hier nicht gibt. Darum wird hier gelesen: die räumlichen Bausteine müssen vorkommen, und die
+ * Bildschirmbefehle dürfen es nicht. */
+{
+  const quelle = fs.readFileSync(path.join(SRC, 'render_mine.js'), 'utf8');
+  const i = quelle.indexOf('drawFass(ctx, ob, sq) {');
+  const koerper = i < 0 ? '' : quelle.slice(i, quelle.indexOf('\n  },', i));
+  pruef('drawFass gibt es', i >= 0);
+  for (const baustein of ['this.saeule(', 'this.isoEllipse('])
+    pruef(`baut mit ${baustein.slice(5, -1)}`, koerper.includes(baustein));
+  for (const flach of ['fillRect', 'strokeRect', 'createLinearGradient', 'this.proj('])
+    pruef(`malt nicht mit ${flach}`, !koerper.includes(flach));
+  /* Und jeder Prellklotz der Welt muss einen Stil tragen, den der Zeichner auch kennt. Beim
+     Umbenennen von 'stempel' auf 'fass' wäre sonst still ein Pilz übriggeblieben: Der Zeichner
+     fällt am Ende der Kette auf den Fliegenpilz zurück, ohne sich zu beschweren. */
+  const zeichner = fs.readFileSync(path.join(SRC, 'render.js'), 'utf8');
+  const bekannt = new Set([...zeichner.matchAll(/ob\.style === '([a-z]+)'/g)].map(m => m[1]));
+  const klotz = vm.runInContext("MINE_COURSES.flatMap(c => (c.obstacles||[]).filter(o => o.type === 'bumper'))", ctx);
+  const fremd = klotz.filter(o => !bekannt.has(o.style));
+  pruef('jeder Prellklotz trägt einen Stil, den der Zeichner kennt', fremd.length === 0,
+        fremd.length ? fremd.map(o => o.style).join(', ') : `${klotz.length} Stück`);
+  pruef('keiner steht mehr auf dem alten „stempel"', !klotz.some(o => o.style === 'stempel'));
+}
+
 console.log(`\n${fehler ? fehler + ' FEHLER' : 'alles bestanden'}`);
 process.exit(fehler ? 1 : 0);

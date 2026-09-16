@@ -1021,10 +1021,19 @@ offen *bleibt*, und dass man den Knall darum nicht abpassen, sondern abwarten mu
 prüft, dass zu jeder Bruchwand auch eine Ladung in Reichweite liegt: Das ist die eine Panne, die man
 beim Bauen nicht sieht – die Wand steht da und sieht richtig aus, nur zündet nichts in ihrer Nähe.
 
-Der Prellklotz der Mine ist ein **Grubenstempel** (`style: 'stempel'`): der Holzpfosten mit
-Kappholz und zwei Eisenringen, mit dem im Berg die Firste abgefangen wird, und er ächzt sichtbar,
-wenn man ihn trifft. Ohne eigenen Stil fiel er auf den Fliegenpilz zurück, mit dem das Märchenland
-angefangen hat – und ein Fliegenpilz vierhundert Meter unter Tage ist Unsinn.
+Der Prellklotz der Mine ist ein **Fass** (`style: 'fass'`): eichen, mit drei Eisenreifen, und es
+staucht sich sichtbar, wenn man es trifft. Ohne eigenen Stil fiel es auf den Fliegenpilz zurück, mit
+dem das Märchenland angefangen hat – und ein Fliegenpilz vierhundert Meter unter Tage ist Unsinn.
+
+Dazwischen stand kurz ein Grubenstempel, der Holzpfosten mit Kappholz, der im Berg die Firste
+abfängt. Sachlich richtig, nur hat ihn niemand als solchen erkannt: dünner Schaft, zwei Ringe wie
+aufgesteckte Teller, oben ein schwebender Balken. Ein Fass muss man nicht erklären. Und es ist rund
+– ein Prellklotz wird aus jeder Richtung getroffen, darf also keine Vorderseite haben; ein Hunt
+hätte eine, und auf der Lorensohle fahren schon welche.
+
+Gebaut ist es aus zwei Kegelstümpfen, die sich in der Mitte zum Bauch weiten, und drei `reifen`.
+Der Reifen ist neu im Zeichner (`src/render.js`) und ist eine `saeule` ohne Deckel: Mit Deckel legte
+jedes Band eine volle Scheibe quer über das Fass, und drei Scheiben deckten das ganze Holz zu.
 
 **Zwei weitere Maschinen** (`src/obstacles_mine.js`, gezeichnet in `src/render_mine.js`):
 

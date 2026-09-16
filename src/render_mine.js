@@ -216,49 +216,38 @@ Object.assign(Renderer.prototype, {
     }
   },
 
-  /* ---------- Grubenstempel ----------
-     Der Prellklotz der Mine. Ohne eigenen Stil fällt er auf den Fliegenpilz zurück, mit dem das
-     Märchenland angefangen hat – und ein Fliegenpilz vierhundert Meter unter Tage ist Unsinn.
-     Hier steht darum ein Stempel: der Holzpfosten, mit dem im Berg die Firste abgefangen wird,
-     unten ein Fußkeil, oben eine Kappe, dazwischen zwei Eisenringe.
+  /* ---------- Das Fass ----------
+     Der Prellklotz der Mine. Vorher stand hier ein Fliegenpilz – geborgt aus der Waldwelt und im
+     Stollen fehl am Platz. Ein eisenbeschlagenes Fass ist Bergwerksgerät, und es ist rund: Ein
+     Prellklotz wird aus jeder Richtung getroffen, also darf er keine Vorderseite haben. Ein Hunt
+     hätte eine – und auf der Lorensohle fahren schon welche.
 
-     Er ist absichtlich rund und von allen Seiten gleich: Ein Prellklotz wird aus jeder Richtung
-     getroffen. Beim Treffer staucht er sich – dieselbe Zahl (sq), die den Pilz aufbläht, drückt
-     ihn zusammen und lässt die Ringe zusammenrücken. So sieht man die Wirkung dort, wo sie
-     herkommt, und das Holz ächzt sichtbar unter dem Berg. */
-  drawGrubenstempel(ctx, ob, sq) {
-    const s = this.scale, [sx, sy] = this.proj(ob.x, ob.y, 0);
-    const r = s * ob.r * 0.95, hoch = s * ob.r * 3.6 * (1 - sq * 0.28);
-    this.shadow(ctx, sx, sy, r * 0.95);
-    // Fußkeil: ein flacher Klotz, auf dem der Stempel steht
-    ctx.fillStyle = '#4a3726';
-    ctx.beginPath(); ctx.ellipse(sx, sy, r * 1.15, r * 1.15 * this.cam.tilt, 0, 0, TAU); ctx.fill();
-    // Der Schaft, oben etwas schmaler – ein geschlagener Stamm, kein Rohr
-    const ro = r * 0.62, ru = r * 0.78;
-    const g = ctx.createLinearGradient(sx - ru, 0, sx + ru, 0);
-    g.addColorStop(0, '#6b4f30'); g.addColorStop(0.42, '#a37c4c'); g.addColorStop(1, '#5c4327');
-    ctx.fillStyle = g;
-    ctx.beginPath();
-    ctx.moveTo(sx - ru, sy); ctx.lineTo(sx - ro, sy - hoch);
-    ctx.lineTo(sx + ro, sy - hoch); ctx.lineTo(sx + ru, sy);
-    ctx.closePath(); ctx.fill();
-    ctx.strokeStyle = '#2e2116'; ctx.lineWidth = Math.max(1, s * 0.035); ctx.stroke();
-    // Zwei Eisenringe. Sie rücken beim Treffer zusammen, weil der Schaft kürzer wird.
-    for (const u of [0.32, 0.72]) {
-      const y = sy - hoch * u, rr = ru + (ro - ru) * u;
-      ctx.fillStyle = '#8d939c';
-      ctx.beginPath(); ctx.ellipse(sx, y, rr * 1.08, rr * 0.34, 0, 0, TAU); ctx.fill();
-      ctx.strokeStyle = '#4a4f57'; ctx.lineWidth = Math.max(1, s * 0.03); ctx.stroke();
+     Gebaut aus zwei Kegelstümpfen, die sich in der Mitte zum Bauch weiten; die drei Eisenbänder
+     sitzen dort, wo die beiden Hälften aneinanderstoßen, und verdecken die Naht. Beim Treffer
+     staucht das Fass sich – dieselbe Zahl (sq), die den Pilz aufgebläht hat, drückt es zusammen
+     und macht es dabei breiter. */
+  drawFass(ctx, ob, sq) {
+    const r = ob.r;
+    const dick = 1 + sq * 0.16;
+    const hoch = r * 1.9 * (1 - sq * 0.22);
+    const bauch = r * 0.94 * dick;          // die weiteste Stelle – genau die trifft der Ball
+    const ende = r * 0.68 * dick;           // Boden und Deckel
+    const mitte = hoch * 0.46;
+    // Der Halbmesser an einer beliebigen Höhe, damit die Bänder der Wölbung folgen
+    const weite = (z) => z < mitte
+      ? ende + (bauch - ende) * (z / mitte)
+      : bauch + (ende - bauch) * ((z - mitte) / (hoch - mitte));
+    this.isoEllipse(ctx, ob.x, ob.y, 0.004, r * 1.06, 'rgba(0,0,0,0.32)');
+    this.saeule(ctx, ob.x, ob.y, 0, ende, bauch, mitte, '#8a6134', '#6b4a2a', 12);
+    this.saeule(ctx, ob.x, ob.y, mitte, bauch, ende, hoch - mitte, '#b08653', '#7d5730', 12);
+    // Drei Bänder: zwei an den Enden, eins über der Naht der beiden Hälften
+    for (const z of [hoch * 0.17, mitte, hoch * 0.84]) {
+      const band = r * 0.15;
+      this.reifen(ctx, ob.x, ob.y, z - band / 2, weite(z) * 1.04, band, '#5d646d');
     }
-    // Kappe: das Querholz, das die Last des Berges aufnimmt
-    /* Das Kappholz ist ein flacher Balken, keine Kuppe – eine Kuppe sähe wieder nach Pilz aus. */
-    const kw = ro * 1.5, kh = ro * 0.42;
-    ctx.fillStyle = '#b08a55';
-    ctx.fillRect(sx - kw, sy - hoch - kh, kw * 2, kh);
-    ctx.fillStyle = '#8a6a3e';
-    ctx.beginPath(); ctx.ellipse(sx, sy - hoch, kw, kw * this.cam.tilt * 0.55, 0, 0, TAU); ctx.fill();
-    ctx.strokeStyle = '#2e2116'; ctx.lineWidth = Math.max(1, s * 0.035);
-    ctx.strokeRect(sx - kw, sy - hoch - kh, kw * 2, kh);
+    /* Der Deckel als eingelassenes Rund. Er ist nur eine Spur dunkler als der Rand – ein deutlich
+       dunkleres Loch sähe aus wie ein offenes Fass, und in ein offenes Fass fiele der Ball. */
+    this.isoEllipse(ctx, ob.x, ob.y, hoch + 0.002, ende * 0.78, '#9a7241');
   },
 
   drawKippbuehne(ctx, ob, t) {

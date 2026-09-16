@@ -186,6 +186,7 @@ class Renderer {
       ctx.fillStyle = shade(side, light); ctx.fill();
       ctx.strokeStyle = ctx.fillStyle; ctx.lineWidth = 0.8; ctx.stroke();
     }
+    if (opts.ohneDeckel) return;
     this.pathPoly(ctx, oben, z1);
     ctx.fillStyle = top; ctx.fill();
     ctx.strokeStyle = opts.outline || top; ctx.lineWidth = opts.outline ? 1 : 0.8; ctx.stroke();
@@ -216,6 +217,15 @@ class Renderer {
   /* Säule: Zylinder oder Kegelstumpf. Stamm, Mast, Poller, Krug, Fass. */
   saeule(ctx, x, y, z0, r0, r1, h, top, side, n = 10) {
     this.frustum(ctx, this.circlePoly(x, y, r0, n), this.circlePoly(x, y, r1, n), z0, z0 + h, top, side);
+  }
+
+  /* Reifen: ein Band um einen Körper – Fassreif, Manschette, Eisenring am Pfosten. Dasselbe wie
+     saeule, nur ohne Deckel: Ein Deckel ist eine volle Scheibe quer über den Körper und verdeckte
+     genau das, was das Band umspannen soll. Beim Fass lagen darum zuerst drei graue Scheiben über
+     dem ganzen Holz. */
+  reifen(ctx, x, y, z0, r, h, farbe, n = 12) {
+    const ring = this.circlePoly(x, y, r, n);
+    this.frustum(ctx, ring, ring, z0, z0 + h, farbe, farbe, { ohneDeckel: true });
   }
 
   /* Brocken: ein Fels. Ein regelmäßiger Zylinder sähe aus wie ein Hutschachtel-Deckel, darum wird
@@ -2101,7 +2111,7 @@ class Renderer {
         else if (ob.style === 'grave') { const [rx, ry] = this.proj(ob.x, ob.y + 0.2, 0); this.spriteGravestone(ctx, rx, ry, this.scale * ob.r * 2.4 * sc, { seed: 0.3 }); }
         else if (ob.style === 'eye') this.drawEye(ctx, ob, t, sc);
         else if (ob.style === 'feder') this.spriteFeder(ctx, ob, sq);
-        else if (ob.style === 'stempel') this.drawGrubenstempel(ctx, ob, sq);
+        else if (ob.style === 'fass') this.drawFass(ctx, ob, sq);
         else this.spriteMushroom(ctx, ob.x, ob.y, 0, ob.r * 1.7 * sc, '#e63b5a', true);
       } });
     } else if (ob.type === 'portal') {

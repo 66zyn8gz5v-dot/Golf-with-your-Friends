@@ -38,6 +38,7 @@ DIE MASCHINEN DER WELT (src/obstacles_mine.js):
     'bruchwand'     Fels, den eine Zündung in der Nähe wegsprengt – dann bleibt der Gang offen
     'kippbuehne'    Bohle über dem Schacht, die zu der Seite kippt, auf der der Ball liegt
     'grubenlampe'   leuchtet ein Stück Bahn aus – auf einer dunklen Bahn das Wertvollste
+    'fass'          der Prellklotz der Welt: ein eisenbeschlagenes Fass, rund von allen Seiten
 
     python3 tools/mine.py
 """
@@ -111,8 +112,8 @@ def wand(x, y, w, h, ebene=0):
     if ebene: o['ebene'] = ebene
     return o
 
-def stempel(x, y, r=0.65, ebene=0):
-    o = {'type': 'bumper', 'x': x, 'y': y, 'r': r, 'style': 'stempel'}
+def fass(x, y, r=0.65, ebene=0):
+    o = {'type': 'bumper', 'x': x, 'y': y, 'r': r, 'style': 'fass'}
     if ebene: o['ebene'] = ebene
     return o
 
@@ -127,7 +128,7 @@ fuell(f, 13, 2, 14, 5, 'x')           # Grubenholz, gestapelt
 fuell(f, 13, 10, 14, 12, 'x')
 setz(f, 2, 7, 'T'); setz(f, 26, 7, 'H')
 bahn('Mundloch', 'mundloch', f, [
-    stempel(9.5, 9.5), stempel(21.5, 4.5),
+    fass(9.5, 9.5), fass(21.5, 4.5),
     lampe_(25.5, 10.5, 3.0),
 ], par=3,
 intro='Vor dem Berg: Halde, Grubenholz, und hinten das Mundloch. Zwischen den Holzstapeln geht es '
@@ -203,7 +204,7 @@ setz(f, 3, 7, 'T'); setz(f, 30, 7, 'H')
 bahn('Die Bruchwand', 'stollen', f, [
     wand(17.0, 7.0, 1.6, 5.0),        # quer im Gang – ohne Sprengung kommt hier niemand durch
     ladung(14.0, 11.0, 0.0, 3.0),
-    stempel(8.0, 7.0, 0.6),
+    fass(8.0, 7.0, 0.6),
     lampe_(6.0, 7.5, 3.6), lampe_(13.5, 7.5, 4.2), lampe_(14.0, 11.0, 3.4),
     lampe_(21.0, 7.5, 4.0), lampe_(28.0, 7.5, 3.6),
 ], par=4, dunkel=0.58, maxStrokes=14,
@@ -330,7 +331,7 @@ bahn('Die Schmelze', 'schmelze', f, [
     wand(13.0, 8.5, 1.4, 3.0),        # der Damm ist zu – erst sprengen
     ladung(10.5, 8.5, 0.0, 3.2),      # die Ladung liegt auf dem Damm davor
     ladung(23.0, 8.5, 0.5, 3.4),      # und eine mitten auf dem Damm
-    stempel(5.0, 5.0, 0.7), stempel(5.0, 11.0, 0.7),
+    fass(5.0, 5.0, 0.7), fass(5.0, 11.0, 0.7),
     lampe_(4.5, 8.5, 3.8), lampe_(10.5, 8.5, 4.2), lampe_(16.0, 8.5, 4.0),
     lampe_(23.0, 8.5, 4.4), lampe_(29.5, 8.5, 4.2),
 ], par=5, dunkel=0.45, maxStrokes=18,
