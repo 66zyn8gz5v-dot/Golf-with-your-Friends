@@ -1890,12 +1890,12 @@ Object.assign(Renderer.prototype, {
   drawEbeneOben(ctx, t) {
     const lv = this.level;
     if (!lv.flaechen || lv.flaechen.length < 2) return;
-    for (let n = 1; n < lv.flaechen.length; n++) this.zeichneEbene(ctx, lv.flaechen[n], n);
+    for (let n = 1; n < lv.flaechen.length; n++) this.zeichneEbene(ctx, lv.flaechen[n], n, t);
   },
-  zeichneEbene(ctx, fl, n) {
+  zeichneEbene(ctx, fl, n, t) {
     const lv = this.level;
     // Am Berg sind die oberen Ebenen Wolken, keine Schollen - eigene Zeichnung, gleiche Regeln.
-    if (this.theme.ebeneStil === 'wolke') return this.zeichneWolke(ctx, fl, n);
+    if (this.theme.ebeneStil === 'wolke') return this.zeichneWolke(ctx, fl, n, t);
     // Die Schürze wächst mit dem Ebenenabstand mit: Bei weit gestapelten Etagen (Rohrturm) sähe
     // eine dünne Kante aus wie eine schwebende Platte statt wie ein Stockwerk.
     const th = this.theme, z = n * lv.ebeneZ, aktiv = lv.ebene === n;
@@ -1930,6 +1930,8 @@ Object.assign(Renderer.prototype, {
       const poly = [[wr.x, wr.y], [wr.x + wr.w, wr.y], [wr.x + wr.w, wr.y + wr.h], [wr.x, wr.y + wr.h]];
       this.prism(ctx, poly, z, 0.42, th.wall.top, th.wall.side, { outline: shade(th.wall.side, 0.7) });
     }
+    // Und was auf dieser Etage steht – erst jetzt, sonst deckte der Belag es zu
+    this.zeichneEbenenDinge(ctx, n, t);
     /* Offene Kanten hell stricheln: Dort geht es hinunter, und das muss man sehen, bevor man
        darüberrollt – sonst wirkt der Fall wie ein Fehler des Spiels statt wie ein Weg. */
     ctx.strokeStyle = aktiv ? 'rgba(255,214,110,0.85)' : 'rgba(255,214,110,0.45)';
@@ -2278,7 +2280,7 @@ Object.assign(Renderer.prototype, {
      sich anfuehlen soll: eine Bank aus weichen Ballen, unten ins Blaue auslaufend. Die Bruestung
      an den geschlossenen Kanten ist hier ein Wall aus dichteren Ballen: Man soll sehen, wo die
      Wolke traegt und wo sie aufhoert, sonst waere jeder Rand eine Ueberraschung. */
-  zeichneWolke(ctx, fl, n) {
+  zeichneWolke(ctx, fl, n, t) {
     const lv = this.level, s = this.scale;
     const z = n * lv.ebeneZ, aktiv = lv.ebene === n;
     ctx.globalAlpha = aktiv ? 1 : 0.45;
@@ -2312,6 +2314,8 @@ Object.assign(Renderer.prototype, {
         ctx.beginPath(); ctx.arc(p[0], p[1] + s * 0.1, s * 0.3, 0, TAU); ctx.fill();
       }
     }
+    // Und was auf dieser Wolke steht – erst jetzt, sonst deckte die Oberseite es zu
+    this.zeichneEbenenDinge(ctx, n, t);
     // Offene Kanten hell gestrichelt - dort geht es hinunter
     ctx.strokeStyle = aktiv ? 'rgba(255,214,110,0.85)' : 'rgba(255,214,110,0.45)';
     ctx.lineWidth = Math.max(1.5, s * 0.08);

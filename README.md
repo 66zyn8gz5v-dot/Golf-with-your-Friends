@@ -1021,6 +1021,26 @@ offen *bleibt*, und dass man den Knall darum nicht abpassen, sondern abwarten mu
 prüft, dass zu jeder Bruchwand auch eine Ladung in Reichweite liegt: Das ist die eine Panne, die man
 beim Bauen nicht sieht – die Wand steht da und sieht richtig aus, nur zündet nichts in ihrer Nähe.
 
+### Ein Hindernis auf einer oberen Etage wurde nie gezeichnet
+
+Mehrstöckige Bahnen zeichnen ihre Etagen als Schollen, und zwar **nach** allem, was unten steht –
+sonst verdeckte eine Mauer im Vordergrund die Etage darüber. Wer oben stand, wurde dabei brav auf
+Höhe null gemalt und danach von der eigenen Scholle zugedeckt. Das Hindernis war da, es stieß den
+Ball, man sah es nur nicht. Auf der Kristallkammer waren das zwei Kristalle und ein Magnet; über
+alle Welten hinweg 26 Hindernisse auf sieben Bahnen.
+
+Der Zeichner stellt diese Stücke jetzt zurück und holt sie in `zeichneEbene` nach – mit der
+Leinwand um die Höhe der Etage nach oben verschoben. Verschieben genügt, weil die Höhe in dieser
+Abbildung nur senkrecht und nur linear wirkt (`projRaw`); `tools/ebenen.mjs` rechnet das an
+vierhundert Proben nach, damit es auffällt, falls sich die Abbildung einmal ändert.
+
+Damit gibt es **eine** Stelle, an der die Etage in die Höhe eingeht. Windfahne, Schneebrücke und
+Bruchwand haben das vorher zusätzlich selbst getan – zusammen mit dem Versatz wäre das doppelt
+gewesen, und sie hätten eine Etage zu hoch gestanden. Ausgenommen bleiben nur die Maschinen, die
+zwischen zwei Etagen stehen: Seilbahn, Aufzug und Zahnstange (`drawSpannendeMaschinen`) und das
+Kupferrohr, das seine Teilstücke einzeln in die Tiefensortierung schickt, damit es sich richtig
+mit den Mauern überdeckt.
+
 Der Prellklotz der Mine ist ein **Fass** (`style: 'fass'`): eichen, mit drei Eisenreifen, und es
 staucht sich sichtbar, wenn man es trifft. Ohne eigenen Stil fiel es auf den Fliegenpilz zurück, mit
 dem das Märchenland angefangen hat – und ein Fliegenpilz vierhundert Meter unter Tage ist Unsinn.

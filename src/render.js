@@ -124,6 +124,37 @@ class Renderer {
     return [c.cx + rx * c.zoom, c.cy + ry * c.zoom * c.tilt - z * c.zoom * (c.zf ?? CAM_ZF)];
   }
   depth(x, y) { const c = this.cam; return (x - c.fx) * c.sin + (y - c.fy) * c.cos; }
+  /* Der Bildschirmversatz einer Etage. In dieser Abbildung wirkt die Höhe nur senkrecht und nur
+     linear (projRaw) – eine feste Höhe ist darum eine feste Verschiebung nach oben. Das ist der
+     Grund, warum die Hindernisse einer oberen Ebene nicht neu gezeichnet werden müssen: Man
+     verschiebt die Leinwand und ruft dieselbe Zeichnung auf. */
+  ebeneVersatz(n) {
+    const c = this.cam;
+    return n * ((this.level && this.level.ebeneZ) || 0) * c.zoom * (c.zf ?? CAM_ZF);
+  }
+  /* Was auf Etage n steht: erst die Boden-Überlagerungen, dann die Körper. Aufgerufen aus
+     zeichneEbene und zeichneWolke, nachdem der Belag der Etage liegt. */
+  zeichneEbenenDinge(ctx, n, t) {
+    const lv = this.level;
+    if (!lv) return;
+    const dy = this.ebeneVersatz(n);
+    ctx.save(); ctx.translate(0, -dy);
+    for (const ob of lv.obstacles)
+      if ((ob.ebene || 0) === n && !this.spanntEbenen(ob)) this.drawObstacleFloor(ctx, ob, t);
+    const f = this.ebenenFade || {};
+    for (const it of (this.ebenenStuecke || [])) {
+      if (it.ebene !== n) continue;
+      const sy = it.sy - dy;
+      if (!this.onScreen(it.sx, sy, this.scale * 3.5)) continue;
+      const fade = f.bp && !it.ball && !it.noFade && it.k > f.bk + 0.3 && Math.abs(it.sx - f.bp[0]) < f.fadeW
+        && sy > f.bp[1] - this.scale * 0.4 && sy < f.bp[1] + f.fadeH;
+      const vorher = ctx.globalAlpha;
+      if (fade) ctx.globalAlpha = vorher * 0.22;
+      it.draw();
+      ctx.globalAlpha = vorher;
+    }
+    ctx.restore();
+  }
   unprojDelta(dx, dy) {
     const c = this.cam, rx = dx / c.zoom, ry = dy / (c.zoom * c.tilt);
     return [rx * c.cos + ry * c.sin, -rx * c.sin + ry * c.cos];
@@ -898,8 +929,9 @@ class Renderer {
 
     for (const [fx, fy] of fires) this.drawShadowFire(ctx, fx, fy, t, lv, 1); // Glut, Flammen und Funken über den fertigen Grund
     if (state.phase !== 'edit') this.drawCastShadows(ctx);
-    // Boden-Overlays
-    for (const ob of lv.obstacles) this.drawObstacleFloor(ctx, ob, t);
+    /* Boden-Overlays. Die oberer Ebenen kommen erst mit ihrer Scholle (zeichneEbene) – hier
+       gemalt lägen sie unter ihr und wären nie zu sehen. */
+    for (const ob of lv.obstacles) if (!(ob.ebene || 0) || this.spanntEbenen(ob)) this.drawObstacleFloor(ctx, ob, t);
     // Loch und Fahne der oberen Ebene kommen erst nach der Scholle, sonst lägen sie darunter
     if (lv.cup && !lv.cupEbene) this.drawCupHole(ctx);
 
@@ -918,7 +950,19 @@ class Renderer {
       items.push({ x: b.x + 0.5, y: b.y + 0.5, draw: () => this.prism(ctx, poly, 0, 1.0, th.block.top, th.block.side, { outline: shade(th.block.side, 0.7) }) });
     }
     for (const d of lv.decor) items.push({ x: d.x, y: d.y, draw: () => this.drawDecor(ctx, d, t) });
-    for (const ob of lv.obstacles) this.pushObstacle(items, ctx, ob, t);
+    /* Jedes Stück merkt sich seine Ebene. Die Schollen werden nach allen Stücken gezeichnet, damit
+       eine höhere Etage die darunter verdeckt – und genau dabei verschwand jedes Hindernis, das
+       oben steht: Es wurde brav auf Höhe null gemalt und dann von der eigenen Scholle zugedeckt.
+       Man lief dagegen, ohne etwas zu sehen. */
+    for (const ob of lv.obstacles) {
+      const vorher = items.length;
+      this.pushObstacle(items, ctx, ob, t);
+      /* Das Kupferrohr bleibt ausgenommen: Es spannt sich zwischen zwei Etagen, rechnet seine
+         Höhe selbst (CopperPipe.hoehe) und schickt jedes Teilstück einzeln in die Tiefensortierung,
+         damit es sich richtig mit den Mauern überdeckt. Ein Versatz am Stück nähme ihm beides. */
+      const e = ob.type === 'copperpipe' ? 0 : (ob.ebene || 0);
+      if (e) for (let i = vorher; i < items.length; i++) items[i].ebene = e;
+    }
     if (lv.cup && !lv.cupEbene) items.push({ x: lv.cup.x, y: lv.cup.y, bias: 0.01, draw: () => this.drawFlag(ctx, t) });
     /* Bälle, die außer dem eigenen auf der Bahn liegen (Boule). Sie kommen in dieselbe Sortierung
        wie alles andere, damit sie hinter einer Mauer auch hinter der Mauer liegen. 'ball: true'
@@ -956,7 +1000,12 @@ class Renderer {
     const bp = b && !imRohr ? this.proj(b.x, b.y, 0) : null, bk = b ? this.depth(b.x, b.y) : 0;
     this.ballPos = bp;
     const cullM = this.scale * 3.5, fadeW = this.scale * 2.2, fadeH = this.scale * 3.2;
+    /* Die Stücke der oberen Ebenen werden hier übergangen und kommen in zeichneEbene an die
+       Reihe – jedes mit dem Versatz seiner Etage. */
+    this.ebenenStuecke = items.filter(it => it.ebene);
+    this.ebenenFade = { bp, bk, fadeW, fadeH };
     for (const it of items) {
+      if (it.ebene) continue;
       if (!this.onScreen(it.sx, it.sy, cullM)) continue;
       // Objekte, die vor dem Ball stehen und ihn verdecken würden, fast durchsichtig zeichnen
       const fade = bp && !it.ball && !it.noFade && it.k > bk + 0.3 && Math.abs(it.sx - bp[0]) < fadeW && it.sy > bp[1] - this.scale * 0.4 && it.sy < bp[1] + fadeH;

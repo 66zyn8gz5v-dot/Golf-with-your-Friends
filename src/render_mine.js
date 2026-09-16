@@ -168,7 +168,7 @@ Object.assign(Renderer.prototype, {
      Auf dem Boden liegt beides – das ist der Unterschied zum Block. Eine Wand, die nur in der
      Höhe steht, deckt bei dieser Kameraneigung den Gang dahinter zu. */
   drawBruchwandFloor(ctx, ob, t) {
-    const z = (ob.ebene || 0) * (this.level.ebeneZ || 2);
+    const z = 0;   // die Ebene steckt jetzt im Versatz der Leinwand (Renderer.zeichneEbenenDinge)
     const hw = ob.w / 2, hh = ob.h / 2;
     const eck = [[ob.x - hw, ob.y - hh], [ob.x + hw, ob.y - hh], [ob.x + hw, ob.y + hh], [ob.x - hw, ob.y + hh]];
     if (!ob.weg) return;
@@ -182,7 +182,7 @@ Object.assign(Renderer.prototype, {
     }
   },
   drawBruchwand(ctx, ob, t) {
-    const s = this.scale, z = (ob.ebene || 0) * (this.level.ebeneZ || 2);
+    const s = this.scale, z = 0;   // die Ebene steckt jetzt im Versatz der Leinwand (Renderer.zeichneEbenenDinge)
     const hw = ob.w / 2, hh = ob.h / 2;
     const eck = [[ob.x - hw, ob.y - hh], [ob.x + hw, ob.y - hh], [ob.x + hw, ob.y + hh], [ob.x - hw, ob.y + hh]];
     const staub = ob.staub ? ob.staub() : 0;
