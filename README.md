@@ -1810,20 +1810,40 @@ lebt von Form und Farbe, nicht von Oberflächenbildern. Geladen wird kein einzig
 
 Das Spiel ist eine Web-App: Manifest (`manifest.webmanifest`), App-Symbole (`icons/`) und ein Service Worker (`sw.js`) sorgen dafür, dass es sich wie eine App installieren lässt und offline läuft. Der Workflow `.github/workflows/pages.yml` veröffentlicht bei jedem Push automatisch auf GitHub Pages.
 
-**Das App-Zeichen ist ein Ausschnitt aus dem gemalten Titelbild** – dem hochkanten, weil das Wappen
-darin am größten liegt. Es gibt **zwei Zuschnitte**, und das ist kein Zufall: Das gewöhnliche Zeichen
-(`icon-192`, `icon-512`, `apple-touch-icon`) führt das Wappen bis fast an den Rand, denn iOS und
-Android runden es nur ab. Das **maskable**-Zeichen darf das nicht – davon schneidet Android einen
-Kreis aus, und was außerhalb der inneren 80 % liegt, ist weg. Dort sitzt dasselbe Wappen darum in
-einem weiteren Ausschnitt: 870 von 1170 Bildpunkten Breite, also 74 %. Gegengeprüft, indem beide
-Masken – Kreis und abgerundetes Quadrat – über die fertigen Zeichen gelegt wurden; das Wappen
-bleibt in beiden ganz.
+**Das App-Zeichen ist eine kleine Seekarte** (`node tools/appzeichen.mjs`): eine Insel im Meer der
+Weltkarte, mit dem Loch und der Fahne darauf. Bis Fassung 141 waren es Ausschnitte aus dem gemalten
+Titelbild – und die passten aus demselben Grund nicht wie das Titelbild selbst: Das Spiel ist
+gezeichnet, das Bild war gemalt.
 
-Die beiden 512er wiegen als PNG je gut 700 kB. Sie stehen darum **nicht** in der Vorratsliste des
-Service Workers: Gebraucht werden sie nur beim Einrichten auf dem Startbildschirm, nicht beim
-Spielen, und der `fetch`-Griff legt jede geholte Datei ohnehin ab. PNG bleibt es trotzdem – JPEG
-wäre viermal kleiner, aber das Zeichen ist das eine, was auf jedem Gerät sitzen muss, und für
-`apple-touch-icon` schreibt Apple PNG.
+**Es ist kein Ausschnitt der Karte.** Ein Ausschnitt wäre bei 48 Bildpunkten ein Farbbrei: Die Karte
+lebt von Beschriftung und hundert kleinen Zeichen, und nichts davon überlebt so klein. Das Zeichen
+ist darum eine eigene, winzige Karte mit nur *einem* Motiv – aber aus denselben Teilen:
+
+- **Die Küste wird gerechnet, nicht gezeichnet.** `WorldMap.kueste` ist dieselbe Rechnung, die auch
+  das Festland macht: ein paar Landstücke, ein Feld daraus, die Linie auf Wasserhöhe ist die Küste,
+  und drei Lagen Rauschen verbiegen dabei die Stelle, an der man das Feld fragt. Daher die Buchten
+  und die zerfranste Kante. Von Hand gezeichnet war die Insel zuerst – ein Klecks mit einer Delle,
+  der eher nach Farbpalette aussah als nach Land. Gerechnet wird in den Einheiten der Karte, sonst
+  wäre das Rauschen im Verhältnis zur Insel zu fein; ins Bild kommt sie über eine Vergrößerung, die
+  aus ihren eigenen Ausmaßen folgt.
+- **Die Bäume und der Hügel sind die Zeichen der Karte** (`WorldMap.zeichen`), nicht nachgebaute.
+  Nachgebaut waren sie einen Anlauf lang, und damit wären es zwei Wahrheiten gewesen: Wer in
+  `src/worldmap.js` einen Baum ändert, hätte im App-Zeichen einen alten stehen.
+- Dazu Gradnetz, Wellenstriche, die gestuften Tiefenlinien am Ufer, der helle Strand innen an der
+  Küste, die Windrose und die Vignette – alles wie auf der großen Karte.
+
+Es gibt **zwei Zuschnitte**, und das ist kein Zufall: Das gewöhnliche Zeichen (`icon-192`,
+`icon-512`, `apple-touch-icon`) führt das Bild bis an den Rand, denn iOS und Android runden es nur
+ab. Das **maskable**-Zeichen darf das nicht – davon schneidet Android einen Kreis aus, und was
+außerhalb der inneren 80 % liegt, ist weg. Dort sitzt dasselbe Motiv darum kleiner im Bild: 11 %
+Rand ringsum, also 78 % der Kante. Gegengeprüft, indem beide Masken – Kreis und abgerundetes
+Quadrat – über die fertigen Zeichen gelegt wurden, und indem das Zeichen bei 48, 64 und 96
+Bildpunkten angesehen wurde: So klein bleiben Insel und rote Fahne, alles andere ist Beiwerk.
+
+Die beiden 512er wiegen als PNG je gut 200 kB – als Ausschnitt des gemalten Bildes waren es 700.
+Sie stehen trotzdem **nicht** in der Vorratsliste des Service Workers: Gebraucht werden sie nur beim
+Einrichten auf dem Startbildschirm, nicht beim Spielen, und der `fetch`-Griff legt jede geholte
+Datei ohnehin ab. PNG bleibt es, denn für `apple-touch-icon` schreibt Apple PNG.
 
 Einmalig einrichten (auf github.com im Repository):
 1. **Settings → General → Danger Zone → Change visibility → Public** (GitHub Pages ist nur bei öffentlichen Repositories kostenlos).
@@ -2186,6 +2206,7 @@ src/sfx.js        Klangeffekte (WebAudio)
 src/music.js      Musik: je Welt ein erzeugter Klangteppich (WebAudio)
 src/worldmap.js   Weltkarte: Landkarte aus gerechneter Küste, Gelände je Biom und die Orte der Welten
 icons/weltkarte.svg dieselbe Karte als fertige Datei – Hintergrund für Ladebild und alle Tafeln (node tools/karte.mjs)
+icons/icon-*.png   die App-Zeichen: eine Insel im Stil der Karte (node tools/appzeichen.mjs)
 src/main.js       Spielablauf, Eingabe, Punkte
 
 src/3d/index.html   die eigene Seite von Fantasy Golf 3D (eigene Adresse, eigenes Ladebild)

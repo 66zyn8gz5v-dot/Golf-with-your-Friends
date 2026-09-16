@@ -18,10 +18,9 @@ const APP_FILES = [
   './src/3d/welt3d.js', './src/3d/physik3d.js', './src/3d/karte3d.js', './src/3d/spiel3d.js',
   './src/3d/gras.jpg',
   './icons/icon-192.png', './icons/apple-touch-icon.png',
-  /* icon-512 und icon-maskable-512 fehlen hier mit Absicht: Seit sie das gemalte Wappen
-     tragen, wiegt jedes gut 700 kB, und gebraucht werden sie nur beim Einrichten auf dem
-     Startbildschirm – nicht beim Spielen. Der fetch-Griff unten legt jede geholte Datei
-     ohnehin ab, sie liegen also nach dem ersten Gebrauch im Speicher. */
+  /* icon-512 und icon-maskable-512 fehlen hier mit Absicht: Gebraucht werden sie nur beim
+     Einrichten auf dem Startbildschirm, nicht beim Spielen. Der fetch-Griff unten legt jede
+     geholte Datei ohnehin ab, sie liegen also nach dem ersten Gebrauch im Speicher. */
   './icons/weltkarte.svg',
 ];
 

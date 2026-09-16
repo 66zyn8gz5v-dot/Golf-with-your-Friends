@@ -106,10 +106,12 @@ const WorldMap = (() => {
     rausch(x * 0.29 - o, y * 0.29 + o) * 1.15 +
     rausch(x * 0.83 + o, y * 0.83 + o) * 0.4;
 
-  const feld = (x, y) => {
+  /* 'land' ist voreingestellt die Karte selbst. Angeben kann man es, weil dieselbe Rechnung auch
+     für eine einzelne kleine Insel gebraucht wird – das App-Zeichen holt sich seine Küste hier. */
+  const feld = (x, y, land = LAND) => {
     const wx = x + versatz(x, y, 0), wy = y + versatz(x, y, 37.4);
     let s = 0;
-    for (const l of LAND) {
+    for (const l of land) {
       const dx = wx - l.x, dy = wy - l.y, q = (dx * dx + dy * dy) / (l.r * l.r);
       if (q < 1) { const u = 1 - q; s += u * u * u; }
     }
@@ -119,11 +121,11 @@ const WorldMap = (() => {
   /* Marching Squares: Das Gitter wird Zelle für Zelle abgelaufen; je nachdem, welche Ecken über
      dem Wasser liegen, entsteht ein Stück Küstenlinie. Der Schnittpunkt wird zwischen den Ecken
      linear eingepasst, sonst sähe die Küste aus wie eine Treppe. */
-  function kuestenLinien() {
-    const S = 0.42, NX = Math.ceil(BREITE / S) + 2, NY = Math.ceil(HOEHE / S) + 2;
+  function kuestenLinien(land = LAND, breite = BREITE, hoehe = HOEHE) {
+    const S = 0.42, NX = Math.ceil(breite / S) + 2, NY = Math.ceil(hoehe / S) + 2;
     const OX = -3, OY = -3;                     // etwas über den Rand hinaus rechnen
     const w = [];
-    for (let j = 0; j < NY; j++) { w[j] = []; for (let i = 0; i < NX; i++) w[j][i] = feld(OX + i * S, OY + j * S); }
+    for (let j = 0; j < NY; j++) { w[j] = []; for (let i = 0; i < NX; i++) w[j][i] = feld(OX + i * S, OY + j * S, land); }
     const mitte = (xa, ya, va, xb, yb, vb) => { const t = (WASSER - va) / (vb - va); return [xa + (xb - xa) * t, ya + (yb - ya) * t]; };
     const stuecke = [];
     for (let j = 0; j < NY - 1; j++) for (let i = 0; i < NX - 1; i++) {
@@ -550,5 +552,15 @@ const WorldMap = (() => {
     </svg>`;
   }
 
-  return { spots, svg, BREITE, HOEHE, LAND };
+  /* 'zeichen' ist die Tabelle der Geländezeichen – Baum, Tanne, Busch, Hügel, Berg und die
+     anderen. Sie wird nach außen gegeben, damit das App-Zeichen (tools/appzeichen.mjs) dieselben
+     Bäume setzen kann wie die Karte. Sie nachzubauen wäre die zweite Wahrheit gewesen: Wer hier
+     einen Baum ändert, hätte dort einen alten stehen. */
+  /* 'kueste' gibt die gerechnete Küste zu einer Liste von Landstücken – dieselbe Rechnung, die
+     auch die Karte benutzt, nur mit anderen Zutaten. Das App-Zeichen holt sich damit eine Insel,
+     die dieselben Buchten und Macken hat wie das Festland; von Hand gezeichnet war sie vorher zu
+     glatt, und nachgeahmtes Rauschen wäre die zweite Wahrheit gewesen. */
+  const kueste = (land, breite, hoehe) => kuestenLinien(land, breite, hoehe).map(pfad);
+
+  return { spots, svg, zeichen: Z, kueste, BREITE, HOEHE, LAND };
 })();
