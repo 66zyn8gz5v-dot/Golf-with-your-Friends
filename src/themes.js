@@ -538,7 +538,9 @@ const THEMES = {
     mover: { top: '#b8843f', side: '#6b4a25' },
     rotor: { top: '#aeb8b4', side: '#5e6e72' },
     accent: '#ffe08a', flag: '#ff5a5a',
-    autoDecor: ['buoy', 'shell', 'coral', 'ropepost', 'starfish', 'bollard', 'seaweed', 'buoy'],
+    /* Oben an der Wasserlinie ist das Meer noch Hafen: Bojen, Poller, Tauwerk. Das Wrack liegt
+       hier schon, aber es ist das einzige, was von unten erzählt. */
+    autoDecor: ['buoy', 'shell', 'coral', 'ropepost', 'starfish', 'bollard', 'seaweed', 'buoy', 'wrack'],
   },
   flachwasser: { // Sandbank und Seegras: das Licht steht noch, aber es wird grün
     atmo: 'bubbles', meerBg: true, tiefe: 0.35,
@@ -550,7 +552,8 @@ const THEMES = {
     mover: { top: '#a37f4e', side: '#60482a' },
     rotor: { top: '#9aa9a2', side: '#4f6265' },
     accent: '#7fe8c0', flag: '#ffd166',
-    autoDecor: ['seaweed', 'coral', 'shell', 'seaweed', 'starfish', 'rock', 'coral', 'pearl'],
+    /* Auf der Sandbank ist noch nichts gebaut – dafür liegt hier, was heruntergesunken ist. */
+    autoDecor: ['seaweed', 'coral', 'shell', 'seaweed', 'starfish', 'rock', 'coral', 'pearl', 'wrack', 'amphore'],
   },
   daemmerzone: { // Die versunkene Stadt: blau, kaum noch Licht, Dächer und Giebel im Dämmer
     atmo: 'bubbles', meerBg: true, tiefe: 0.65,
@@ -562,7 +565,9 @@ const THEMES = {
     mover: { top: '#7b8c92', side: '#3b4e55' },
     rotor: { top: '#86979c', side: '#42565c' },
     accent: '#8fd8ff', flag: '#ffd166', stars: false,
-    autoDecor: ['anchor', 'coral', 'seaweed', 'shell', 'pillar', 'coral', 'bell', 'seaweed'],
+    /* In der Dämmerzone steht die Stadt: Säulen, Torbögen, Amphoren zwischen den Korallen. Hier
+       häuft sich absichtlich das Gebaute – es ist die Etage, in der die Legende spielt. */
+    autoDecor: ['anchor', 'coral', 'seaweed', 'shell', 'pillar', 'torbogen', 'amphore', 'bell', 'seaweed', 'torbogen'],
   },
   meeresgrund: { // Ganz unten: Dämmergrün geht in Schwarz über, Licht nur noch von dem, was leuchtet
     atmo: 'bubbles', meerBg: true, tiefe: 1.0,
@@ -574,7 +579,9 @@ const THEMES = {
     mover: { top: '#55696c', side: '#263c40' },
     rotor: { top: '#5f7477', side: '#2c4348' },
     accent: '#7fe8d8', flag: '#ffd166', stars: false,
-    autoDecor: ['coral', 'jelly', 'seaweed', 'anchor', 'skull', 'coral', 'pearl', 'jelly'],
+    /* Ganz unten ist die Stadt schon wieder Natur: Korallen und Quallen überwiegen, dazwischen
+       nur noch Bruchstücke. */
+    autoDecor: ['coral', 'jelly', 'seaweed', 'anchor', 'skull', 'coral', 'pearl', 'jelly', 'wrack', 'torbogen'],
   },
   cloud: {
     hangStil: 'schnee',   // Schrägen als Schneerinne, nicht als Erdrampe // Über den Wolken: nichts mehr fest außer dem, worauf man steht

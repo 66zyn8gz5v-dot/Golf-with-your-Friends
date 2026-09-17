@@ -2835,6 +2835,9 @@ class Renderer {
       case 'crate': this.spriteCrate(ctx, d); break;
       case 'bollard': this.spriteBollard(ctx, d, t); break;
       case 'anchor': this.spriteAnchor(ctx, d); break;
+      case 'wrack': this.spriteWrack(ctx, d); break;
+      case 'amphore': this.spriteAmphore(ctx, d); break;
+      case 'torbogen': this.spriteTorbogen(ctx, d); break;
       case 'buoy': this.spriteBuoy(ctx, d, t); break;
       case 'seaweed': this.spriteSeaweed(ctx, d, t); break;
       case 'shell': this.spriteShell(ctx, d); break;
@@ -3661,6 +3664,122 @@ class Renderer {
 
   /* Fass: drei Ringe übereinander geben den Bauch, zwei dunkle Reifen halten ihn zusammen, und
      obendrauf liegt der Deckel mit seinen Dauben. */
+  /* ---------- Die Requisiten der versunkenen Stadt ----------
+     Drei Körper für den Außenbereich der Flut. Sie stehen dort, wo kein Ball hinkommt – im offenen
+     Wasser neben den Stegen –, und haben genau eine Aufgabe: Der Meeresgrund soll nach etwas
+     aussehen, das einmal bewohnt war, und nicht nach einer leeren blauen Fläche.
+
+     Alle drei sind in WELTKOORDINATEN gebaut, nicht am Bildschirmpunkt. Das ist in dieser Welt
+     wichtiger als anderswo: Die Bahnen sind schmale Stege, man dreht die Kamera dauernd, um an
+     den Kanten entlangzusehen – und eine Deko, die sich dabei mitdreht, verrät sich sofort als
+     aufgeklebtes Bild. */
+
+  /* Wrackrippen: ein Kiel, der im Sand liegt, und die Spanten darüber. Von einem Schiff ist nach
+     Jahrhunderten genau das übrig – die Beplankung ist weg, das Gerippe steht.
+
+     Beim ersten Versuch waren die Spanten kurz und steil, und der Haufen sah aus wie ein Rechen:
+     ein Balken mit fünf Zinken darauf. Was fehlte, waren zwei Dinge, die ein Schiff ausmachen –
+     die Spanten müssen sich deutlich nach AUSSEN öffnen (ein Rumpf ist ein U, kein Kamm), und es
+     muss noch ein Rest BEPLANKUNG daran hängen. Zwei Längsgurte an den Spanten reichen dafür. */
+  spriteWrack(ctx, d) {
+    const k = d.s * 1.7, z = d.z || 0;
+    const a = (d.seed || 0) * 6.283, co = Math.cos(a), si = Math.sin(a);
+    const qx = -si, qy = co;                        // quer zum Kiel
+    const holz = '#7a6448', dunkel = '#3a3028';
+    this.bodenSchatten(ctx, d.x, d.y, k * 0.8, 0.2);
+    // Der Kiel – ein Balken, der im Grund steckt
+    this.walze(ctx, d.x - co * k * 0.85, d.y - si * k * 0.85, d.x + co * k * 0.85, d.y + si * k * 0.85,
+               z + k * 0.06, k * 0.07, holz, dunkel, { n: 7 });
+    /* Vier Spanten, vorn hoch und weit, achtern flach – daran sieht man, wo der Bug lag. Jede
+       besteht aus zwei Ästen, die sich NICHT treffen: Ein geschlossener Bogen wäre ein Tor. */
+    const spant = [];
+    for (let i = 0; i < 4; i++) {
+      const u = (i / 3) - 0.5;                      // -0,5 … 0,5 entlang des Kiels
+      const px = d.x + co * k * 1.6 * u, py = d.y + si * k * 1.6 * u;
+      const hoch = k * (0.95 - Math.abs(u) * 0.75);
+      const weit = k * (0.62 - Math.abs(u) * 0.22);
+      for (const vz of [-1, 1]) {
+        /* steig = hoch, senk = 0,62·hoch: Der Ast startet steil am Kiel und legt sich nach außen
+           um – das ist der Querschnitt eines Rumpfes. */
+        this.ast(ctx, px, py, z + k * 0.06, qx * vz, qy * vz, weit, hoch, hoch * 0.62,
+                 k * 0.055, holz, dunkel, 5);
+      }
+      spant.push({ px, py, weit, hoch });
+    }
+    /* Zwei Längsgurte: der Rest der Beplankung. Sie laufen von Spant zu Spant auf halber Höhe und
+       machen aus vier einzelnen Bögen einen Rumpf. */
+    for (const vz of [-1, 1]) {
+      for (let i = 0; i < spant.length - 1; i++) {
+        const A = spant[i], B = spant[i + 1];
+        const h = u => z + k * 0.06 + u.hoch * 0.75 - u.hoch * 0.62 * 0.5625;   // Höhe bei u = 0,75
+        this.walze(ctx, A.px + qx * vz * A.weit * 0.75, A.py + qy * vz * A.weit * 0.75,
+                   B.px + qx * vz * B.weit * 0.75, B.py + qy * vz * B.weit * 0.75,
+                   (h(A) + h(B)) / 2, k * 0.04, holz, dunkel, { n: 6 });
+      }
+    }
+  }
+
+  /* Amphore: der schlanke Krug der Stadt. Sie ist absichtlich ein anderer Körper als die Urne der
+     Wüstenwelten – höher, enger, mit zwei Henkeln und ohne Zierreif. Zwei von dreien liegen
+     halb im Sand: 'seed' entscheidet, wie tief sie eingesunken ist, und ein Krug, der schon
+     dreihundert Jahre unten liegt, steht nicht mehr sauber auf seinem Fuß. */
+  spriteAmphore(ctx, d) {
+    const g = d.s * 0.95, x = d.x, y = d.y;
+    const sand = ((d.seed || 0) * 0.55);            // 0 … 0,55: so tief steckt sie im Grund
+    const z = (d.z || 0) - g * 0.28 * sand;
+    const ton = '#b98a5e', seite = '#7a5334';
+    const K = r => this.circlePoly(x, y, r * g, 10);
+    this.bodenSchatten(ctx, x, y, g * 0.34, 0.2);
+    this.frustum(ctx, K(0.10), K(0.17), z, z + g * 0.10, ton, seite);          // Spitzfuß
+    this.frustum(ctx, K(0.17), K(0.30), z + g * 0.10, z + g * 0.40, ton, seite); // Bauch
+    this.frustum(ctx, K(0.30), K(0.15), z + g * 0.40, z + g * 0.80, ton, seite); // Schulter
+    this.frustum(ctx, K(0.15), K(0.13), z + g * 0.80, z + g * 0.94, ton, seite); // Hals
+    this.frustum(ctx, K(0.13), K(0.18), z + g * 0.94, z + g * 1.00, ton, seite); // Mündung
+    // Die beiden Henkel – daran erkennt man sie auch klein und im Dämmer
+    const a = (d.seed || 0) * 6.283, co = Math.cos(a), si = Math.sin(a);
+    for (const vz of [-1, 1]) {
+      this.ast(ctx, x + co * g * 0.14 * vz, y + si * g * 0.14 * vz, z + g * 0.86,
+               co * vz, si * vz, g * 0.16, -g * 0.02, -g * 0.22, g * 0.035, ton, seite, 3);
+    }
+  }
+
+  /* Torbogen: ein Stück Stadt, das stehengeblieben ist. Zwei Pfosten und der Sturz darüber – und
+     der Sturz ist auf einer Seite abgebrochen. Das Gebrochene ist der Punkt: Ein heiles Tor sähe
+     aus wie ein Bauwerk, das jemand pflegt, und hier pflegt seit dreihundert Jahren niemand mehr.
+
+     Zuerst war es ein Keilsteinbogen – sieben kleine Trommeln auf einem Halbkreis. Im Bild wurde
+     daraus ein Haken: Die Trommeln stehen senkrecht, der Bogen ist schmaler als hoch, und in der
+     schrägen Sicht des Spiels reiht sich das zu einer Raupe. Ein Pfosten-Sturz-Tor ist auf den
+     ersten Blick als Tor zu erkennen, und es ist für eine versunkene Stadt auch das richtige
+     Bauwerk – so haben sie damals gebaut. */
+  spriteTorbogen(ctx, d) {
+    const k = d.s * 1.6, z = d.z || 0;
+    const a = (d.seed || 0) * 6.283, co = Math.cos(a), si = Math.sin(a);
+    const stein = '#96a4aa', seite = '#4c5c64';
+    const halb = k * 0.62;                          // halbe Spannweite
+    const hoch = k * 1.05;                          // Höhe der Pfosten
+    const heil = (d.seed || 0) < 0.5 ? 1 : -1;      // diese Seite steht noch ganz
+    this.bodenSchatten(ctx, d.x, d.y, k * 0.7, 0.2);
+    const fuss = [];
+    for (const vz of [-1, 1]) {
+      const px = d.x + co * halb * vz, py = d.y + si * halb * vz;
+      const h = vz === heil ? hoch : hoch * 0.66;   // der gebrochene Pfosten ist kürzer
+      this.saeule(ctx, px, py, z, k * 0.2, k * 0.24, k * 0.1, stein, seite, 8);   // Sockel
+      this.saeule(ctx, px, py, z + k * 0.1, k * 0.16, k * 0.14, h, stein, seite, 8);
+      fuss.push({ px, py, oben: z + k * 0.1 + h, ganz: vz === heil });
+    }
+    /* Der Sturz. Er sitzt auf dem heilen Pfosten und ragt über die Lücke – aber nur zu zwei
+       Dritteln: Der Rest liegt seit langem unten. */
+    const A = fuss.find(f => f.ganz), B = fuss.find(f => !f.ganz);
+    const ex = (B.px - A.px), ey = (B.py - A.py);
+    this.walze(ctx, A.px - ex * 0.18, A.py - ey * 0.18, A.px + ex * 0.66, A.py + ey * 0.66,
+               A.oben + k * 0.1, k * 0.1, stein, seite, { n: 8 });
+    // Und das abgebrochene Stück liegt im Sand davor
+    this.walze(ctx, d.x + co * halb * 0.5 - si * k * 0.3, d.y + si * halb * 0.5 + co * k * 0.3,
+               d.x + co * halb * 1.1 - si * k * 0.22, d.y + si * halb * 1.1 + co * k * 0.22,
+               z + k * 0.09, k * 0.09, stein, seite, { n: 7 });
+  }
+
   spriteBarrel(ctx, d) {
     const g = d.s || 1, x = d.x, y = d.y, s = this.scale * g;
     const K = r => this.circlePoly(x, y, r * g, 12);

@@ -442,6 +442,51 @@ console.log('\n--- Die Ankerkette ---');
         `Tempo ${Math.hypot(b.vx, b.vy).toFixed(2)}`);
 }
 
+console.log('\n--- Die Requisiten im Wasser ---');
+{
+  /* Die Streu-Deko wird über Namen angesprochen: In der Palette steht 'torbogen', und der Renderer
+     muss dazu einen Fall kennen. Steht dort ein Name, den er nicht kennt, passiert NICHTS – kein
+     Fehler, keine Meldung, das Ding fehlt einfach. Genau so ein Tippfehler ist nicht zu sehen,
+     solange man nicht weiß, wie viele Wracks eigentlich dastehen sollten. */
+  const render = fs.readFileSync(path.join(SRC, 'render.js'), 'utf8')
+    + fs.readFileSync(path.join(SRC, 'render_flut.js'), 'utf8');
+  const bekannt = new Set([...render.matchAll(/case '([a-zA-Z]+)':/g)].map(m => m[1]));
+  const paletten = ['wasserlinie', 'flachwasser', 'daemmerzone', 'meeresgrund'];
+  const TH = vm.runInContext('THEMES', ctx);
+  let fehlend = [];
+  for (const name of paletten) {
+    const th = TH[name];
+    for (const t of (th.autoDecor || [])) if (!bekannt.has(t)) fehlend.push(`${name}: ${t}`);
+  }
+  pruef('jede Requisite der vier Paletten kennt der Renderer', fehlend.length === 0, fehlend.join(', '));
+
+  /* Und jede Bahn streut überhaupt welche. Ohne autoDecor ist das offene Wasser leer – so war es
+     bis Fassung 174, und eine leere blaue Fläche sieht nicht nach versunkener Stadt aus. */
+  const welt = vm.runInContext('WORLDS.find(w => w.id === "flut")', ctx);
+  const ohne = welt.courses.filter(c => !c.autoDecor).map(c => c.name);
+  pruef('jede Bahn der Welt streut Requisiten ins Wasser', ohne.length === 0, ohne.join(', '));
+
+  /* Die drei neuen Körper sind in WELTKOORDINATEN gebaut und nicht am Bildschirmpunkt. Das ist
+     hier keine Förmlichkeit: Auf schmalen Stegen dreht man die Kamera dauernd, und eine Deko, die
+     sich mitdreht, verrät sich sofort als aufgeklebtes Bild. Geprüft wird es an der Bauweise –
+     die neuen Zeichner dürfen kein proj(sx, sy) am Bildschirm benutzen, sondern nur die
+     Körper-Bausteine, die selbst in Weltkoordinaten rechnen. */
+  const rumpf = (bau) => {
+    const i = render.indexOf(`  ${bau}(ctx, d) {`);
+    if (i < 0) return null;
+    const j = render.indexOf('\n  }\n', i);
+    return j < 0 ? null : render.slice(i, j);
+  };
+  for (const [name, bau] of [['Wrack', 'spriteWrack'], ['Amphore', 'spriteAmphore'], ['Torbogen', 'spriteTorbogen']]) {
+    const r = rumpf(bau);
+    pruef(`${name} wird gezeichnet`, !!r);
+    if (!r) continue;
+    const koerper = /this\.(walze|saeule|frustum|prism|ast|kugel|brocken|bodenSchatten|circlePoly)\(/.test(r);
+    const flach = /\bsx\b|\bsy\b/.test(r);
+    pruef(`${name} ist ein Körper in Weltkoordinaten`, koerper && !flach);
+  }
+}
+
 console.log('\n--- Das Wracktor ---');
 {
   const bahn = (hind) => G.buildLevel({

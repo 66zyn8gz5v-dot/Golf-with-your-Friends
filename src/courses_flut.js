@@ -20,6 +20,7 @@ const FLUT_COURSES = [
   {
     name: 'Das Hafenbecken', par: 3, theme: 'wasserlinie',
     intro: 'Dicht unter der Oberfläche. Der Steg führt geradeaus durch das Becken – steht es leer, ist es kurz; steht es voll, geht es oben herum. Neben dem Steg ist nichts.',
+    autoDecor: { density: 0.13, seed: 17 },
     map: [
       '................................',
       '.wwwwwwwwwwwwwwwwwwwwwwwwwwwwww.',
@@ -46,6 +47,7 @@ const FLUT_COURSES = [
   {
     name: 'Der Priel', par: 3, theme: 'wasserlinie',
     intro: 'Ein Priel zieht quer über den Steg, und neben dem Steg ist nichts. Wer darin liegenbleibt, wird heruntergespült und zahlt dafür. Aber er ist eine Dünung – er schwillt an und wieder ab, und der Augenblick dazwischen ist der, in dem man spielt.',
+    autoDecor: { density: 0.13, seed: 29 },
     map: [
       '..................................',
       '.wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.',
@@ -72,6 +74,7 @@ const FLUT_COURSES = [
   {
     name: 'Die Mole', par: 4, theme: 'wasserlinie',
     intro: 'Unten schiebt die Strömung nach rechts – wer sie mitnimmt, ist schnell am Aufgang. Der Aufgang ist ein Becken. Ist es voll, hilft die Riesenmuschel am Ende des Stegs: Steht sie offen, verschluckt sie den Ball und wirft ihn nach oben.',
+    autoDecor: { density: 0.13, seed: 43 },
     map: [
       '..................................',
       '.wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.',
@@ -102,6 +105,7 @@ const FLUT_COURSES = [
   {
     name: 'Die Sandbank', par: 4, theme: 'flachwasser',
     intro: 'Zwei Becken hintereinander auf einem Steg. Der Umweg unten herum ist lang – aber auf ihm liegt das Pumpwerk, und das hält beide Becken vier Sekunden lang leer.',
+    autoDecor: { density: 0.13, seed: 59 },
     map: [
       '....................................',
       '.wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.',
@@ -134,6 +138,7 @@ const FLUT_COURSES = [
   {
     name: 'Der Seegraswald', par: 3, theme: 'flachwasser',
     intro: 'Zwischen den Halmen liegt eine Kammer, und darin dreht sich das Wasser. Der Strudel hält niemanden fest – er wirft nur woandershin, als man wollte, und der Ausgang ist schmal.',
+    autoDecor: { density: 0.13, seed: 71 },
     map: [
       '..................................',
       '.wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.',
@@ -164,6 +169,7 @@ const FLUT_COURSES = [
   {
     name: 'Die Rinne', par: 4, theme: 'flachwasser',
     intro: 'Die Rinne trägt weit – man muß sie nur treffen und darf nicht zu früh liegenbleiben. Am Ende liegt ein Becken quer vor dem Loch; drumherum geht es unten lang.',
+    autoDecor: { density: 0.13, seed: 89 },
     map: [
       '......................................',
       '.wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.',
@@ -195,6 +201,7 @@ const FLUT_COURSES = [
   {
     name: 'Die Gassen', par: 4, theme: 'daemmerzone',
     intro: 'Das Haus in der Mitte versperrt den geraden Weg. Links und rechts daran vorbei laufen zwei Gassen, und beide saufen im Takt voll – versetzt, damit immer eine offen ist. Vor der oberen hängt eine Luke aus einem Schiffsrumpf: Die Dünung drückt sie langsam auf und schlägt sie kurz darauf wieder zu. Wer dann noch darunter liegt, fliegt.',
+    autoDecor: { density: 0.13, seed: 101 },
     map: [
       '..................................',
       '.wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.',
@@ -227,6 +234,7 @@ const FLUT_COURSES = [
   {
     name: 'Der Marktplatz', par: 4, theme: 'daemmerzone',
     intro: 'Über dem alten Brunnen dreht sich das Wasser, und in den Platz hinein und heraus führt je ein Becken. Wer beide im richtigen Augenblick nimmt, wird trotzdem noch versetzt. In der Ecke des Platzes liegt ein Abflußgitter: Wen der Brunnen dorthin schleudert, den setzt die Kanalisation hinter dem Platz wieder ab.',
+    autoDecor: { density: 0.13, seed: 113 },
     map: [
       '......................................',
       '.wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.',
@@ -260,6 +268,7 @@ const FLUT_COURSES = [
   {
     name: 'Die Kaimauer', par: 4, theme: 'daemmerzone',
     intro: 'Unter der Kaimauer geht es hin, oben wieder zurück. Der kurze Aufgang ist ein Becken; oben zieht es dann kräftig aufs Loch zu – zu kräftig, um dort stehenzubleiben. Das Pumpwerk liegt am Anfang des langen Wegs.',
+    autoDecor: { density: 0.13, seed: 131 },
     map: [
       '........................................',
       '.wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.',
@@ -293,6 +302,7 @@ const FLUT_COURSES = [
   {
     name: 'Der Grund', par: 3, theme: 'meeresgrund',
     intro: 'Ganz unten. Von oben kommt kein Licht mehr – was leuchtet, leuchtet selbst. Quer über den Steg liegt ein langes Becken; der Umweg unten herum ist weit, und auf ihm schwimmt ein Anglerfisch. Seine Laterne ist hier das hellste Licht: Man sieht ihn kommen, bevor man ihn sieht. Auf dem Steg raucht eine heiße Quelle – wer sich daraufliegt und den Ausbruch abwartet, fliegt über das ganze Becken hinweg.',
+    autoDecor: { density: 0.13, seed: 149 },
     map: [
       '......................................',
       '.wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.',
@@ -326,6 +336,7 @@ const FLUT_COURSES = [
   {
     name: 'Das Kaltwasserfeld', par: 5, theme: 'meeresgrund',
     intro: 'Zwei Stege, auf beiden zieht es – oben nach rechts, unten nach links, und beide als Dünung. Verbunden sind sie nur in der Mitte, und mitten in der Verbindung dreht sich das Wasser. Stehenbleiben geht nirgends. Wer aber unten ganz nach links gespült wird, Wer unten nach links gespült wird, fällt ins Abflußgitter – und die Kanalisation setzt ihn oben auf dem anderen Steg wieder ab.',
+    autoDecor: { density: 0.13, seed: 163 },
     map: [
       '........................................',
       '.wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.',
@@ -360,6 +371,7 @@ const FLUT_COURSES = [
   {
     name: 'Der Schlund', par: 5, theme: 'meeresgrund',
     intro: 'Das Ende. Zwei Äste, in jedem ein Becken, und beide münden in eine Kammer, in der es zieht und sich alles dreht. Wer dort liegenbleibt, bleibt nicht liegen.',
+    autoDecor: { density: 0.13, seed: 181 },
     map: [
       '..........................................',
       '.wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.',

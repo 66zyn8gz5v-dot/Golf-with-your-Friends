@@ -1696,6 +1696,38 @@ Die Kette wird Glied für Glied mitgezeichnet, und die Aufhängung bleibt stehen
 An ihr liest man ab, wo der Anker gleich sein wird. Ein Anker, der scheinbar frei herumfliegt, hätte
 keine Bahn, die man vorhersehen könnte.
 
+### Was im Wasser steht – die Requisiten des Außenbereichs
+
+Die Bahnen dieser Welt sind schmale Stege, also ist fast die ganze Karte offenes Wasser. Bis
+Fassung 174 war dieses Wasser **leer** – eine blaue Fläche mit einem Steg darin. Jetzt streut jede
+Bahn Requisiten hinein, und zwar nach Tiefe verschieden: An der **Wasserlinie** ist das Meer noch
+Hafen (Bojen, Poller, Tauwerk), auf der **Sandbank** liegt, was heruntergesunken ist, in der
+**Dämmerzone** steht die Stadt (Säulen, Torbögen, Amphoren), und am **Meeresgrund** ist die Stadt
+schon wieder Natur – Korallen und Quallen, dazwischen nur noch Bruchstücke.
+
+Drei Körper sind dafür neu, und alle drei sind in Weltkoordinaten gebaut und nicht am
+Bildschirmpunkt. Das ist hier keine Förmlichkeit: Auf schmalen Stegen dreht man die Kamera
+dauernd, um an den Kanten entlangzusehen, und eine Deko, die sich mitdreht, verrät sich sofort als
+aufgeklebtes Bild.
+
+* **Wrackrippen** – ein Kiel im Sand, vier Spanten darüber, zwei Längsgurte als Rest der
+  Beplankung. Beim ersten Versuch waren die Spanten kurz und steil, und der Haufen sah aus wie ein
+  Rechen: ein Balken mit fünf Zinken. Es fehlten genau zwei Dinge – die Spanten müssen sich nach
+  *außen* öffnen (ein Rumpf ist ein U, kein Kamm), und es muss noch Beplankung daran hängen.
+* **Amphore** – der schlanke Krug der Stadt, mit Spitzfuß und zwei Henkeln, je nach Startwert
+  unterschiedlich tief im Grund versunken. Sie ist absichtlich ein anderer Körper als die Urne der
+  Wüstenwelten: höher, enger, ohne Zierreif.
+* **Torbogen** – zwei Pfosten und der Sturz darüber, auf einer Seite abgebrochen, das Bruchstück
+  liegt davor im Sand. Zuerst war es ein Keilsteinbogen aus sieben Trommeln; im Bild wurde daraus
+  ein Haken, weil senkrechte Trommeln auf einem schmalen Halbkreis sich in der schrägen Sicht zu
+  einer Raupe reihen. Ein Pfosten-Sturz-Tor ist auf den ersten Blick als Tor zu erkennen – und für
+  eine versunkene Stadt ohnehin das richtige Bauwerk.
+
+Dass ein Name in der Palette auch beim Zeichner ankommt, prüft `tools/flut.mjs`. Der Grund ist die
+Art des Fehlers: Steht in der Palette ein Name, den der Renderer nicht kennt, passiert **nichts** –
+keine Meldung, das Ding fehlt einfach. Das sieht niemand, solange er nicht weiß, wie viele Wracks
+eigentlich dastehen sollten.
+
 ### Das Wracktor – langsam auf, schnell zu
 
 Eine Luke aus einem Schiffsrumpf, die die Dünung auf- und zudrückt. Sie ist Tor und Schlag in einem,

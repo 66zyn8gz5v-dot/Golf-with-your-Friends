@@ -109,9 +109,20 @@ def txt(f):
 BAHNEN = []
 
 
+# Startwerte für die Streu-Deko. Jede Bahn bekommt einen eigenen, sonst stünde auf allen zwölf
+# dasselbe Wrack an derselben Stelle. Die Zahlen sind Primzahlen ohne tiefere Bedeutung – sie
+# müssen nur verschieden sein und sich nicht mehr ändern, damit ein Bild von heute morgen noch
+# stimmt.
+DEKO_SAAT = [17, 29, 43, 59, 71, 89, 101, 113, 131, 149, 163, 181]
+# Wie dicht. Die Stege sind schmal, also ist fast die ganze Karte Wasser – bei der Dichte der
+# Landwelten (0,4) stünde der Meeresgrund voll wie ein Möbellager. Ein Achtel reicht.
+DEKO_DICHTE = 0.13
+
+
 def bahn(name, theme, karte, hindernisse=None, par=3, intro=None, maxStrokes=None):
     b = {'name': name, 'par': par, 'theme': theme, 'map': txt(karte),
-         'obstacles': hindernisse or []}
+         'obstacles': hindernisse or [],
+         'autoDecor': {'density': DEKO_DICHTE, 'seed': DEKO_SAAT[len(BAHNEN) % len(DEKO_SAAT)]}}
     if intro: b['intro'] = intro
     if maxStrokes: b['maxStrokes'] = maxStrokes
     BAHNEN.append(b)
@@ -685,6 +696,9 @@ def js(b):
     if 'maxStrokes' in b: teile.append(f"maxStrokes: {b['maxStrokes']}")
     kopf = '    ' + ', '.join(teile) + ',\n'
     if 'intro' in b: kopf += f"    intro: {wert(b['intro'])},\n"
+    if 'autoDecor' in b:
+        a = b['autoDecor']
+        kopf += f"    autoDecor: {{ density: {a['density']}, seed: {a['seed']} }},\n"
     karte = ',\n      '.join(f"'{r}'" for r in b['map'])
     hind = ''
     if b['obstacles']:
