@@ -1538,8 +1538,17 @@ spielt.
 
 ## Die Flut (Vorschau)
 
-Die elfte Welt ist noch nicht im Spiel. In der Vorschau stehen vier Probebahnen – eine je Tiefe,
-damit man den Abstieg sehen kann; die neun Bahnen kommen danach. Auf der Weltkarte liegt sie allein im Südostmeer, mit einem Kirchturm als Marke –
+Die elfte Welt ist noch nicht im Spiel; sie steht in der Vorschau. **Zwölf Bahnen, drei je Tiefe**,
+Stufe Legende:
+
+| | Abschnitt | Bahnen |
+| --- | --- | --- |
+| 1–3 | `wasserlinie` | Das Hafenbecken · Der Priel · Die Mole |
+| 4–6 | `flachwasser` | Die Sandbank · Der Seegraswald · Die Rinne |
+| 7–9 | `daemmerzone` | Die Gassen · Der Marktplatz · Die Kaimauer |
+| 10–12 | `meeresgrund` | Der Grund · Das Kaltwasserfeld · Der Schlund |
+
+Vier Maschinen: **Flutbecken**, **Pumpwerk**, **Strömung** und **Strudel**. Auf der Weltkarte liegt sie allein im Südostmeer, mit einem Kirchturm als Marke –
 dem Einzigen, was von so einer Stadt am Ende noch herausschaut.
 
 ### Erst war es eine Weltregel, und das war ein Fehler
@@ -1600,6 +1609,39 @@ der in den Sekunden davor anschwillt, mit Schaumkante zur trockenen Seite – di
 Ring der Lavafontäne und bei der Lunte der Sprengladung. Angesagt wird nur steigendes Wasser;
 zurückgehendes gibt Boden her und ist keine Gefahr.
 
+### Die Strömung – der Wind dieser Welt, nur stärker
+
+Das Wasser steht nicht still. Eine Strömung ist ein Band, durch das es zieht, und sie hat einen
+Unterschied zum Wind des Schneebergs, an dem alles hängt: **sie trägt auch, wer liegt.** Der Wind
+versetzt einen rollenden Ball; wer liegt, liegt. Hier nicht – wer in der Strömung zur Ruhe kommt,
+treibt ab. In einer Strömung kann man nicht in Ruhe zielen, und das ist ihr ganzer Sinn.
+
+Daraus folgt eine Zahl: Die Reibung auf Stein ist 4,2 Kacheln/s², und eine Kraft *darunter* bewegt
+einen liegenden Ball **gar nicht** – `Math.max(0, sp - dec)` frisst sie glatt auf. Eine Strömung
+muss also spürbar darüber liegen; sie steht bei 9,0. Genau diese Falle hatte schon die Kippbühne der
+Zwergenmine zu Fall gebracht, und `tools/flut.mjs` hält beides fest: die Zahl und die Probe in
+Bewegung (ein Ball, der im Band liegt, muss abtreiben; einer daneben muss liegen bleiben).
+
+Sie beschleunigt **nicht** ins Unendliche: Sie zieht den Ball auf ihr eigenes Tempo und dann nicht
+weiter, wie echtes Wasser. Ohne diese Schranke wäre sie keine Strömung, sondern eine Kanone.
+
+Mit `puls` wird aus dem gleichmäßigen Zug eine **Dünung**: Sie schwillt an und ab, und dazwischen
+ist für einen Augenblick Ruhe – das ist dann das Zeitfenster. Gezeichnet wird sie als Striche, die
+mitlaufen; ihre Spitze läuft vorweg, so wie eine Welle spitz auf ihre Laufrichtung zeigt. Wie stark
+sie zieht, sagt das Tempo der Striche, nicht ihre Farbe.
+
+### Der Strudel – ein Schleuderrad, kein Trichter
+
+Wo zwei Strömungen aufeinandertreffen, dreht sich das Wasser. Ein Strudel führt den Ball im Kreis
+und wirft ihn woandershin, als er wollte.
+
+**Er fängt nicht ein**, und das ist eine Korrektur. Der erste Entwurf zog außen nach innen und
+drückte innen wieder heraus; die beiden Kräfte hoben sich bei etwa zwei Dritteln des Halbmessers
+auf, der Ball kreiste dort und kam nicht mehr los, bis ihn nach vier Sekunden die Notbremse des
+Spiels herausnahm. Eine Maschine, aus der einen die Notbremse befreien muss, ist kaputt. Jetzt
+drückt er überall ein wenig nach außen: ein Schleuderrad. `tools/flut.mjs` legt einen Ball ohne
+Schwung fast genau in die Mitte und verlangt, dass er innerhalb von dreieinhalb Sekunden draußen ist.
+
 ### Das Pumpwerk
 
 Eine Druckplatte abseits des Weges: Wer darüberrollt, hält **alle** Becken der Bahn vier Sekunden
@@ -1650,11 +1692,19 @@ ohne Ansage.
 
 ### Geprüft
 
-`node tools/flut.mjs`: Tiefe aus der Form, Ring für Ring von außen nach innen, außerhalb des Beckens
-bleibt alles trocken, der Lauf geht einmal herum und bleibt unter der Geduld, ein Ball rollt durchs
-leere Becken hindurch und geht im vollen unter, das Pumpwerk hält leer und lässt wieder los, die
-zweite Runde fängt trocken an – und für jede fertige Bahn: bei vollem Becken führt trotzdem ein Weg
-zum Loch. Gebaut und beurteilt werden die Bahnen von `python3 tools/flut.py`.
+`node tools/flut.mjs` (122 Prüfungen): Tiefe aus der Form, Ring für Ring von außen nach innen,
+außerhalb des Beckens bleibt alles trocken, der Lauf geht einmal herum und bleibt unter der Geduld,
+ein Ball rollt durchs leere Becken hindurch und geht im vollen unter, das Pumpwerk hält leer und
+lässt wieder los, die zweite Runde fängt trocken an; die Strömung ist stärker als die Reibung und
+trägt einen liegenden Ball, beschleunigt aber nur bis auf ihr Tempo; der Strudel hält niemanden
+fest und lenkt trotzdem ab – und für jede der zwölf Bahnen: sie trägt eine Maschine dieser Welt,
+ein Weg führt zum Loch, und bei vollem Becken führt er immer noch dorthin.
+
+`python3 tools/flut.py` baut die Bahnen und lehnt ab, was nicht geht: ein Becken, das die Bahn
+zerschneidet; ein Lauf über 15 Sekunden; ein Umweg, der genauso kurz ist wie der Weg durchs Becken
+(dann nimmt niemand das Becken); eine Strömung über dem Abschlag (man käme nie zum Zielen) oder über
+dem Loch (der Ball würde davor weggetragen); ein Strudel, der bis an Abschlag oder Loch greift; und
+eine Bahn ganz ohne Maschine dieser Welt.
 
 Dass die Welt in der Vorschau steht und im Spiel nicht, hängt an einer einzigen Kennzeichnung
 (`nurVorschau` in `src/courses_pro.js`); `node tools/vorschauwelt.mjs` prüft sie – bis hinunter zu

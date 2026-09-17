@@ -247,6 +247,91 @@ Object.assign(Renderer.prototype, {
     ctx.restore();
   },
 
+  /* ================= Die Strömung =================
+     Eine Strömung muß man sehen, *bevor* man hineinspielt, und man muß ihre Richtung sehen. Beides
+     zusammen macht eine einzige Zeichnung: Striche, die mit der Strömung laufen. Sie wandern im
+     Bild – Stillstand wäre hier eine Lüge, denn eine Strömung, die stillsteht, gibt es nicht –,
+     und ihre Spitze läuft vorweg, so wie eine Welle spitz auf ihre Laufrichtung zeigt.
+
+     Wie stark sie zieht, sagt die Dichte der Striche und ihr Tempo, nicht ihre Farbe. Eine
+     Dünung (puls > 0) schwillt dabei sichtbar an und ab: Wenn sie gerade nicht zieht, sind die
+     Striche blaß, und das ist der Augenblick zum Durchspielen. */
+  drawStroemungFloor(ctx, ob, t) {
+    const s = this.scale;
+    const k = ob.k == null ? 1 : ob.k;
+    const dx = ob.dx, dy = ob.dy;
+    const qx = -dy, qy = dx;                       // quer zur Strömung
+    const laenge = Math.abs(dx) > 0.5 ? ob.w : ob.h;
+    const breite = Math.abs(dx) > 0.5 ? ob.h : ob.w;
+    ctx.save();
+    /* Das Band selbst, damit die Grenze klar ist: Wer daneben liegt, liegt ruhig. */
+    const ecken = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([a, b]) =>
+      [ob.x + (dx * a * laenge + qx * b * breite) / 2, ob.y + (dy * a * laenge + qy * b * breite) / 2]);
+    this.fillPoly(ctx, ecken, 0.009, this.rgbaVon(this.theme.accent || '#8fd8ff', 0.14), false);
+
+    /* Wenige, große Striche statt vieler kleiner. Der erste Versuch setzte rund hundert winzige
+       Marken ins Band; aus zwei Metern Abstand war das ein Raster und keine Strömung. */
+    const reihen = Math.max(2, Math.round(breite * 0.62));
+    const proReihe = Math.max(3, Math.round(laenge * 0.42));
+    ctx.lineCap = 'round';
+    for (let r = 0; r < reihen; r++) {
+      const q = ((r + 0.5) / reihen - 0.5) * breite;
+      for (let i = 0; i < proReihe; i++) {
+        /* Der Versatz je Reihe bricht das Gittermuster auf – sonst sieht es aus wie ein Zaun. */
+        const u = (((i + r * 0.37) / proReihe + t * (0.22 + 0.12 * k)) % 1) * laenge - laenge / 2;
+        const l = laenge / proReihe * 0.52;
+        const a0 = [ob.x + dx * u + qx * q, ob.y + dy * u + qy * q];
+        const a1 = [a0[0] + dx * l, a0[1] + dy * l];
+        const p0 = this.proj(a0[0], a0[1], 0.012), p1 = this.proj(a1[0], a1[1], 0.012);
+        ctx.strokeStyle = `rgba(232,250,255,${(0.34 + 0.46 * k) * (0.6 + 0.4 * Math.sin(i * 1.7 + r))})`;
+        ctx.lineWidth = Math.max(2, s * 0.1);
+        ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke();
+        // die Spitze läuft vorweg: so zeigt der Strich, wohin es geht
+        const sp = this.proj(a1[0] + dx * l * 0.5, a1[1] + dy * l * 0.5, 0.012);
+        const fl = this.proj(a1[0] + qx * l * 0.26, a1[1] + qy * l * 0.26, 0.012);
+        const fr = this.proj(a1[0] - qx * l * 0.26, a1[1] - qy * l * 0.26, 0.012);
+        ctx.fillStyle = `rgba(232,250,255,${0.38 + 0.5 * k})`;
+        ctx.beginPath(); ctx.moveTo(sp[0], sp[1]); ctx.lineTo(fl[0], fl[1]); ctx.lineTo(fr[0], fr[1]);
+        ctx.closePath(); ctx.fill();
+      }
+    }
+    ctx.restore();
+  },
+
+  /* ================= Der Strudel =================
+     Ringe, die sich drehen, und zwar außen langsamer als innen – daran erkennt man von weitem, daß
+     es sich wirklich dreht und nicht bloß rund ist. Die Mitte bleibt hell: Sie ist kein Loch, und
+     sie soll auch nicht wie eines aussehen, sonst zielt jemand hinein und wundert sich. */
+  drawStrudelFloor(ctx, ob, t) {
+    const R = ob.r || 2.4, dreh = ob.dreh || 1;
+    ctx.save();
+    for (let ring = 4; ring >= 1; ring--) {
+      const rr = R * (ring / 4);
+      const u = 1 - ring / 5;                      // innen schneller
+      ctx.strokeStyle = `rgba(214,244,255,${0.10 + 0.16 * u})`;
+      ctx.lineWidth = Math.max(1.2, this.scale * (0.05 + 0.03 * u));
+      for (let arm = 0; arm < 3; arm++) {
+        const a0 = t * dreh * (0.6 + 1.5 * u) + (arm * TAU) / 3;
+        ctx.beginPath();
+        for (let i = 0; i <= 14; i++) {
+          const a = a0 + (i / 14) * (TAU * 0.42);
+          const rad = rr * (1 - (i / 14) * 0.16);
+          const [px, py] = this.proj(ob.x + Math.cos(a) * rad, ob.y + Math.sin(a) * rad, 0.011);
+          if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+      }
+    }
+    // Die helle Mitte: der Wendepunkt, an dem es wieder herausdrückt
+    const [cx, cy] = this.proj(ob.x, ob.y, 0.012);
+    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, this.scale * R * 0.4);
+    g.addColorStop(0, 'rgba(232,250,255,0.28)');
+    g.addColorStop(1, 'rgba(232,250,255,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.ellipse(cx, cy, this.scale * R * 0.4, this.scale * R * 0.4 * this.cam.tilt, 0, 0, TAU); ctx.fill();
+    ctx.restore();
+  },
+
   /* Das Pumpwerk: ein eiserner Rost im Boden mit einem Rad darüber. Läuft es, dreht sich das Rad
      und es sprudelt – so sieht man von weitem, ob die Flut gerade gehalten wird. */
   drawPumpwerkFloor(ctx, ob, t) {

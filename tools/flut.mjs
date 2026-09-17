@@ -27,7 +27,7 @@ for (const f of ['themes', 'courses', 'courses_sea', 'courses_jungle', 'courses_
                  'courses_colosseum', 'courses_clock', 'courses_snow', 'courses_mine', 'courses_flut', 'courses_pro', 'level',
                  'obstacles', 'obstacles_legend', 'obstacles_snow', 'obstacles_mine', 'obstacles_flut', 'physics'])
   vm.runInContext(fs.readFileSync(path.join(SRC, `${f}.js`), 'utf8'), ctx);
-const G = vm.runInContext('({buildLevel, makeBall, stepPhysics, FLUT_START, FLUT_TAKT, FLUT_MAX, FLUT_HALT, FLUT_LEER})', ctx);
+const G = vm.runInContext('({buildLevel, makeBall, stepPhysics, FLUT_START, FLUT_TAKT, FLUT_MAX, FLUT_HALT, FLUT_LEER, STROM_KRAFT, STROM_TEMPO, FRICTION})', ctx);
 const GEDULD = 15;                      // muß zu FLUT_GEDULD in tools/flut.py passen
 
 let fehler = 0;
@@ -211,6 +211,92 @@ console.log('\n--- Beim nächsten Loch ---');
   pruef('die zweite fängt trocken an', zaehleNass(zweite.lv) === 0, `${zaehleNass(zweite.lv)} nasse Felder`);
 }
 
+console.log('\n--- Die Strömung ---');
+{
+  /* Eine leere Bahn, quer darüber ein Strömungsband. Gerechnet wird mit der echten Physik: Was
+     hier steht, ist das, was der Ball wirklich tut, nicht was die Formel verspricht. */
+  const bahn = (hind) => G.buildLevel({
+    name: 'Strömungsprüfung', par: 3, theme: 'stollen',
+    map: ['................', '.T############H.', '.##############.', '.##############.',
+          '.##############.', '.##############.', '................'],
+    obstacles: hind,
+  });
+  const strom = (extra = {}) => Object.assign({ type: 'stroemung', x: 8, y: 3.5, w: 6, h: 5, angle: 90 }, extra);
+
+  /* Die Zahl, an der alles hängt: Unter der Reibung bewegt eine Kraft einen liegenden Ball GAR
+     NICHT (Math.max(0, sp - dec) frißt sie auf). Dieselbe Falle hat die Kippbühne zu Fall gebracht. */
+  pruef('die Strömung ist stärker als die Reibung auf Stein',
+        G.STROM_KRAFT > G.FRICTION['#'] * 1.5,
+        `${G.STROM_KRAFT} gegen ${G.FRICTION['#']}`);
+
+  /* Und die Probe dazu, in Bewegung: ein Ball, der im Band zur Ruhe kommt, darf nicht liegen
+     bleiben. Das ist der ganze Unterschied zum Wind – im Wind darf man in Ruhe zielen. */
+  const treiben = (hind, x, y, sek) => {
+    const lv = bahn(hind);
+    const b = G.makeBall(x, y, '#fff');
+    for (let i = 0; i < 240 * sek; i++) G.stepPhysics(lv, b, 1 / 240, i / 240, true);
+    return { x: +b.x.toFixed(2), y: +b.y.toFixed(2), v: +Math.hypot(b.vx, b.vy).toFixed(2) };
+  };
+  const drin = treiben([strom()], 8.5, 1.5, 1.5);
+  pruef('ein liegender Ball im Band treibt ab', drin.y > 2.4,
+        `von y = 1.5 nach y = ${drin.y}`);
+  const daneben = treiben([strom()], 2.5, 1.5, 1.5);
+  pruef('und einer daneben bleibt liegen', Math.abs(daneben.y - 1.5) < 0.05 && daneben.v < 0.05,
+        `y = ${daneben.y}, Tempo ${daneben.v}`);
+
+  /* Sie darf nicht ins Unendliche beschleunigen – sonst ist sie keine Strömung, sondern eine
+     Kanone. Geprüft an einem langen Band, damit wirklich Zeit zum Beschleunigen ist. */
+  const langes = { type: 'stroemung', x: 8, y: 3.5, w: 12, h: 5, angle: 0, tempo: 5 };
+  const lv = bahn([langes]);
+  const b = G.makeBall(2.5, 3.5, '#fff');
+  let schnellstes = 0;
+  for (let i = 0; i < 240 * 4; i++) {
+    G.stepPhysics(lv, b, 1 / 240, i / 240, true);
+    schnellstes = Math.max(schnellstes, Math.hypot(b.vx, b.vy));
+  }
+  pruef('sie zieht nur bis auf ihr eigenes Tempo', schnellstes <= 5 + 0.3,
+        `schnellstes ${schnellstes.toFixed(2)}, erlaubt ${langes.tempo}`);
+
+  /* Die Dünung: wenn sie gerade nicht zieht, ist Ruhe – das ist das Zeitfenster. */
+  const duenung = new (vm.runInContext('Stroemung', ctx))(strom({ puls: 1.0 }));
+  duenung.update(0);        // sin(0) = 0 → keine Kraft
+  const still = duenung.k;
+  duenung.update(Math.PI / 2);
+  pruef('eine Dünung hat einen Augenblick Ruhe', still < 0.02 && duenung.k > 0.95,
+        `Ruhe ${still.toFixed(2)}, voll ${duenung.k.toFixed(2)}`);
+}
+
+console.log('\n--- Der Strudel ---');
+{
+  const lv = G.buildLevel({
+    name: 'Strudelprüfung', par: 3, theme: 'stollen',
+    map: ['................', '.T############H.', '.##############.', '.##############.',
+          '.##############.', '.##############.', '................'],
+    obstacles: [{ type: 'strudel', x: 8, y: 3.5, r: 2.4 }],
+  });
+  const p = lv.obstacles.find(o => o.type === 'strudel');
+  pruef('der Strudel wird gebaut', !!p && typeof p.force === 'function');
+
+  /* Die wichtigste Eigenschaft ist eine, die er *nicht* hat: Er fängt nicht ein. Ein Trichter würde
+     den Ball in der Mitte halten, bis die Notbremse des Spiels ihn nach vier Sekunden herausnimmt –
+     eine Maschine, aus der einen die Notbremse befreien muß, ist kaputt. */
+  const b = G.makeBall(8.1, 3.6, '#fff');       // fast genau in der Mitte, ohne Schwung
+  let raus = false;
+  for (let i = 0; i < 240 * 3.5 && !raus; i++) {
+    G.stepPhysics(lv, b, 1 / 240, i / 240, true);
+    if (Math.hypot(b.x - 8, b.y - 3.5) > p.r) raus = true;
+  }
+  pruef('er hält den Ball nicht in der Mitte fest', raus,
+        `nach 3,5 s noch bei Abstand ${Math.hypot(b.x - 8, b.y - 3.5).toFixed(2)} von ${p.r}`);
+
+  /* Und er lenkt wirklich ab: Ein Ball, der geradeaus hindurchfährt, kommt woanders heraus. */
+  const c = G.makeBall(2.5, 3.5, '#fff');
+  c.vx = 6; c.vy = 0;
+  for (let i = 0; i < 240 * 2; i++) G.stepPhysics(lv, c, 1 / 240, i / 240, true);
+  pruef('er lenkt einen durchfahrenden Ball ab', Math.abs(c.y - 3.5) > 0.6,
+        `aus y = 3.5 wird y = ${c.y.toFixed(2)}`);
+}
+
 console.log('\n--- Die Bahnen der Welt ---');
 {
   /* Hier wird nicht der Quelltext verglichen, sondern das Ergebnis: Was die laufende Maschine auf
@@ -220,7 +306,15 @@ console.log('\n--- Die Bahnen der Welt ---');
   for (const def of BAHNEN) {
     const lv = G.buildLevel(def);
     const becken = lv.obstacles.filter(o => o.type === 'flut');
-    if (!becken.length) { pruef(`„${def.name}" hat ein Becken`, false); continue; }
+    /* Nicht jede Bahn hat ein Becken – manche leben von Strömung und Strudel. Eine Maschine der
+       Welt muß aber jede haben, sonst könnte sie in jeder anderen Welt genauso stehen. */
+    const eigene = new Set(['flut', 'pumpwerk', 'stroemung', 'strudel']);
+    pruef(`„${def.name}" trägt eine Maschine dieser Welt`,
+          lv.obstacles.some(o => eigene.has(o.type)),
+          lv.obstacles.map(o => o.type).join(' '));
+    /* Und ein Weg zum Loch muß immer da sein – auch auf einer Bahn ohne Becken. */
+    pruef(`… ein Weg führt zum Loch`, wegDa(lv));
+    if (!becken.length) continue;
     const urNass = def.map.reduce((n, z) => n + [...z].filter(c => c === 'w').length, 0);
     for (const f of becken) f.update(0);
     pruef(`„${def.name}" fängt trocken an`, zaehleNass(lv) === urNass,

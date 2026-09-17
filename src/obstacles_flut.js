@@ -196,3 +196,98 @@ class Pumpwerk {
     events.push({ type: 'pumpe', x: this.x, y: this.y, dauer: this.dauer });
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Die Strömung
+   ---------------------------------------------------------------------------
+   Das Wasser steht nicht still. Eine Strömung ist ein Band, durch das es zieht, und sie ist der
+   Wind dieser Welt – nur stärker, und mit einem Unterschied, an dem alles hängt:
+
+   SIE TRÄGT AUCH, WER LIEGT. Der Wind im Schneeberg versetzt einen rollenden Ball; wer liegt, liegt.
+   Hier nicht. Wer in der Strömung zur Ruhe kommt, bleibt nicht liegen, sondern treibt ab – man kann
+   darin nicht in Ruhe zielen. Das ist der ganze Punkt, und es ist auch der Grund für die Zahl
+   unten: Die Reibung auf Stein ist 4,2 Kacheln/s², und eine Kraft *darunter* bewegt einen
+   liegenden Ball GAR NICHT (sie wird von der Reibung glattweg aufgefressen). Eine Strömung, die
+   nicht spürbar über der Reibung liegt, wäre also gar keine. Dieselbe Falle hat schon die
+   Kippbühne der Zwergenmine zu Fall gebracht.
+
+   SIE BESCHLEUNIGT NICHT INS UNENDLICHE. Sie zieht den Ball auf ihr eigenes Tempo und dann nicht
+   weiter – wie echtes Wasser. Ohne diese Schranke würde ein Ball, der lange genug im Band liegt,
+   quer über die Bahn geschossen, und das wäre kein Hindernis mehr, sondern eine Kanone. */
+const STROM_KRAFT = 9.0;         // Kacheln/s² – deutlich über der Reibung 4,2, sonst trägt sie nichts
+const STROM_TEMPO = 7.0;         // auf dieses Tempo zieht sie den Ball, und nicht schneller
+
+class Stroemung {
+  constructor(d) {
+    Object.assign(this, { w: 4, h: 4, angle: 0, kraft: STROM_KRAFT, tempo: STROM_TEMPO,
+                          puls: 0, phase: 0, ebene: 0 }, d);
+    this.type = 'stroemung';
+    const a = (this.angle * Math.PI) / 180;
+    this.dx = Math.cos(a); this.dy = Math.sin(a);
+    this.alwaysForce = true;       // der Unterschied zum Wind: sie greift auch einen ruhenden Ball
+    this.k = 1;
+  }
+  inside(px, py) {
+    return Math.abs(px - this.x) <= this.w / 2 && Math.abs(py - this.y) <= this.h / 2;
+  }
+  /* puls > 0: eine Dünung statt eines gleichmäßigen Zuges – sie schwillt an und ab, und dazwischen
+     ist für einen Augenblick Ruhe. Damit wird aus der Strömung eine Frage des Zeitpunkts. */
+  update(t) {
+    this.t = t;
+    this.k = this.puls ? Math.pow(Math.max(0, Math.sin(t * this.puls + this.phase)), 2) : 1;
+  }
+  force(ball, dt) {
+    if (ball.air || ball.rider || ball.sunk) return;
+    if (this.k <= 0.01 || !this.inside(ball.x, ball.y)) return;
+    /* Nur bis auf das eigene Tempo beschleunigen: Was der Ball quer dazu tut, bleibt seine Sache. */
+    const laengs = ball.vx * this.dx + ball.vy * this.dy;
+    const ziel = this.tempo * this.k;
+    if (laengs >= ziel) return;
+    const zu = Math.min(this.kraft * this.k * dt, ziel - laengs);
+    ball.vx += this.dx * zu; ball.vy += this.dy * zu;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Der Strudel
+   ---------------------------------------------------------------------------
+   Wo zwei Strömungen aufeinandertreffen, dreht sich das Wasser. Ein Strudel packt den Ball und
+   führt ihn im Kreis – nicht als Strafe, sondern als Umleitung: Wer hineinfährt, kommt woanders
+   wieder heraus, als er wollte.
+
+   ER FÄNGT NICHT EIN, und das ist mit Absicht so gebaut. Der erste Entwurf zog außen nach innen und
+   drückte innen wieder heraus – zwei Kräfte, die sich bei etwa zwei Dritteln des Halbmessers
+   aufhoben. Der Ball kreiste dort und kam nicht mehr los; nach vier Sekunden nahm ihn die Notbremse
+   des Spiels heraus. Eine Maschine, aus der einen die Notbremse befreien muß, ist kaputt.
+
+   Jetzt drückt er überall ein wenig nach außen. Damit ist er kein Trichter, sondern ein
+   Schleuderrad: Wer hineinfährt, wird herumgeführt und wieder hinausgeworfen – bloß woandershin,
+   als er wollte. Das ist die Umleitung, um die es geht, und sie hat keinen Haken. */
+const STRUDEL_KRAFT = 8.0;
+
+class Strudel {
+  constructor(d) {
+    Object.assign(this, { r: 2.4, kraft: STRUDEL_KRAFT, dreh: 1, ebene: 0 }, d);
+    this.type = 'strudel';
+    this.alwaysForce = true;
+  }
+  update(t) { this.t = t; }
+  force(ball, dt) {
+    if (ball.air || ball.rider || ball.sunk) return;
+    const dx = ball.x - this.x, dy = ball.y - this.y;
+    const d = Math.hypot(dx, dy);
+    if (d > this.r) return;
+    const e = Math.max(0.08, d), ux = dx / e, uy = dy / e;
+    const u = 1 - d / this.r;                       // 0 am Rand, 1 in der Mitte
+    /* Im Kreis: der eigentliche Zug. Der Faktor wächst nach innen, sonst dreht der Rand genauso
+       schnell wie die Mitte und es sieht aus wie ein Karussell aus Pappe. */
+    const tx = -uy * this.dreh, ty = ux * this.dreh;
+    /* Und quer dazu: immer ein Stück nach außen. Das ist es, was ihn zum Schleuderrad macht statt
+       zum Trichter – jeder Ball, der hineingerät, kommt auch wieder heraus (tools/flut.mjs rechnet
+       das nach, mit einem Ball, der ohne Schwung fast in der Mitte liegt). */
+    const radial = -0.4;
+    const f = this.kraft * (0.3 + 0.7 * u) * dt;
+    ball.vx += (tx - ux * radial) * f;
+    ball.vy += (ty - uy * radial) * f;
+  }
+}
