@@ -113,5 +113,25 @@ const pruef = (name, ok, zusatz = '') => {
   pruef('es gibt überhaupt Hindernisse auf oberen Ebenen', summe > 0, `${summe} auf ${bahnen} Bahnen`);
 }
 
+/* ---------- Der Weg nach oben: die Turbine ----------
+ * Sie war das Gegenstück zum Fehler oben: Nicht ein Hindernis, das man nicht sah, sondern ein
+ * Aufstieg, den man nicht sah. Der Ball stand unten und im nächsten Bild oben - und weil über
+ * einer Turbine geschlossener Boden liegen *muß* (sonst fiele der Ball sofort wieder herunter),
+ * sah es aus, als käme man einfach durch die Decke. Jetzt trägt sie ihn sichtbar hinauf, und in
+ * der Decke darüber liegt eine Luke, die der Stoß aufdrückt. */
+{
+  const ob = lies('obstacles_legend.js'), rl = lies('render_legend.js'), mj = lies('main.js');
+  pruef('die Turbine trägt den Ball, statt ihn zu versetzen',
+        /ride\(ball, t, events\)/.test(ob.slice(ob.indexOf('class Turbine'), ob.indexOf('class Turbine') + 2200))
+        && !/trigger\(ball, t, events\)/.test(ob.slice(ob.indexOf('class Turbine'), ob.indexOf('class Turbine') + 2200)));
+  pruef('unterwegs hängt er an ihr (ball.rider)', /ball\.rider = this;/.test(ob.slice(ob.indexOf('class Turbine'), ob.indexOf('class Turbine') + 2200)));
+  pruef('und steigt dabei wirklich (ball.z wächst)', /ball\.z = u \* this\.level\.ebeneZ/.test(ob));
+  pruef('über ihr muß Boden sein', /bodenDrueber\(ball\)/.test(ob));
+  pruef('die Decke darüber bekommt eine Luke', /drawTurbinenluke\(ctx, ob, z, t\)/.test(rl));
+  pruef('und die Luke wird beim Zeichnen der Etage darüber gerufen',
+        /ob\.type === 'turbine' && \(ob\.ebene \|\| 0\) \+ 1 === n/.test(rl));
+  pruef('sie sagt an, was geschieht', /case 'turbine':/.test(mj));
+}
+
 console.log(`\n${fehler ? fehler + ' FEHLER' : 'alles bestanden'}`);
 process.exit(fehler ? 1 : 0);

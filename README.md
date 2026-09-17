@@ -1454,6 +1454,19 @@ sein Ausschnitt.
 | 3 | Räderwerkstatt | 38×13 | 4 | Zahnradfeld, Pendel | Das Feld hält am Ufer an: einsteigen, tragen lassen |
 | 4 | Rohrpost | 38×13 | 4 | Kupferrohr, Pendel | Das Rohr nimmt einen immer – man sieht schon vorher, wo es endet |
 | 5 | Turbinenhalle | 38×15 | 4 | Pendel, **Turbine**, zweite Ebene | Der Windstoß hebt eine Etage – zu schnell, und man schießt oben über die offene Kante zurück |
+
+**Die Turbine hob früher, ohne daß man es sah.** Sie setzte den Ball in einem einzigen Bild von
+unten nach oben. Und weil über einer Turbine geschlossener Boden liegen *muß* – läge dort ein Loch,
+fiele der Ball im selben Augenblick wieder herunter –, sah das aus, als käme man einfach durch die
+Decke. Seit Fassung 154 hängt der Ball eine halbe Sekunde lang am Windstoß, so wie er im Aufzug an
+der Kabine hängt, und steigt sichtbar. In der Decke darüber liegt eine **Luke**, die der Stoß
+aufdrückt und die hinter ihm wieder zufällt; sie ist auch dann zu sehen, wenn niemand fährt, damit
+man von oben erkennt, wo der Weg heraufkommt. Der Weg ist derselbe wie vorher – man sieht ihn nur.
+
+Geprüft wird das in `tools/ebenen.mjs`, wo es hingehört: Dieselbe Datei hält schon fest, daß ein
+Hindernis auf einer oberen Etage auch dort gezeichnet wird. Das war ein Ding, das man nicht sah;
+das hier war ein Weg, den man nicht sah. Auf dem alten Quelltext melden die neuen Prüfungen sieben
+Fehler.
 | 6 | Hemmwerk | 38×13 | 4 | Hemmung, Pendel, wanderndes Loch | Die offene Hälfte des Ganges, dann die Tür – und dahinter bleibt das Loch nicht liegen |
 | 7 | Federkammer | 40×17 | 5 | Federwerk, **Aufzug**, **Luke** | Hinauf ist einfach – oben muss die Luke gerade zu sein |
 | 8 | Zeigerhof | 40×19 | 5 | Zeigerarm, **Zahnstange** | Hinter dem Zeiger her, dann rechtzeitig auf die Schaufel und warten |

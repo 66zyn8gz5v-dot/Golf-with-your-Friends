@@ -1892,6 +1892,40 @@ Object.assign(Renderer.prototype, {
     if (!lv.flaechen || lv.flaechen.length < 2) return;
     for (let n = 1; n < lv.flaechen.length; n++) this.zeichneEbene(ctx, lv.flaechen[n], n, t);
   },
+  /* Die Luke, durch die die Turbine bläst. Sie liegt im Boden der Etage *über* der Turbine und
+     besteht aus zwei Klappen, die der Windstoß aufdrückt, solange jemand hindurchfährt (ob.p läuft
+     dabei von 0 auf 1). Steht niemand im Wind, liegt sie zu - man sieht dann nur den Rahmen und
+     weiß trotzdem, wo es heraufgeht. */
+  drawTurbinenluke(ctx, ob, z, t) {
+    const s = this.scale, r = Math.min(ob.w, ob.h) * 0.62;
+    const auf = ob.p > 0 && ob.p < 1 ? Math.min(1, ob.p * 2.6) : 0;   // schnell auf, mit dem Ball zu
+    /* Rahmen und Schacht sind eckig, nicht rund: Die Klappen sind Platten, und ein runder Rahmen
+       schaute unter ihnen hervor - die geschlossene Luke sah dann offen aus. */
+    const feld = (a, hoehe, farbe) => this.fillPoly(ctx,
+      [[ob.x - a, ob.y - a * 0.92], [ob.x + a, ob.y - a * 0.92], [ob.x + a, ob.y + a * 0.92], [ob.x - a, ob.y + a * 0.92]],
+      hoehe, farbe);
+    feld(r * 1.14, z + 0.006, '#2a2118');
+    feld(r, z + 0.008, auf > 0.2 ? '#0d0906' : '#191209');
+    // Zwei Klappen, die zur Seite kippen: geschlossen decken sie das Loch, offen stehen sie am Rand
+    for (const sgn of [-1, 1]) {
+      const b = r * (1 - auf * 0.86);                                  // wie weit die Klappe noch übers Loch reicht
+      const kx = ob.x + sgn * (r - b) * 0.9;
+      this.fillPoly(ctx, [[kx, ob.y - r * 0.92], [kx + sgn * b, ob.y - r * 0.92],
+        [kx + sgn * b, ob.y + r * 0.92], [kx, ob.y + r * 0.92]], z + 0.012, sgn < 0 ? '#8a7454' : '#7a6748');
+    }
+    // Der Luftzug, der heraufkommt - nur während der Fahrt
+    if (auf <= 0) return;
+    ctx.save();
+    ctx.globalAlpha = 0.5 * auf;
+    ctx.strokeStyle = 'rgba(255,236,190,0.9)'; ctx.lineWidth = Math.max(1, s * 0.05);
+    for (let i = 0; i < 5; i++) {
+      const u = ((t * 1.6 + i / 5) % 1), rr = r * (0.2 + u * 0.8);
+      const p0 = this.proj(ob.x - rr, ob.y, z + 0.05 + u * 0.35), p1 = this.proj(ob.x + rr, ob.y, z + 0.05 + u * 0.35);
+      ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke();
+    }
+    ctx.restore();
+  },
+
   zeichneEbene(ctx, fl, n, t) {
     const lv = this.level;
     // Am Berg sind die oberen Ebenen Wolken, keine Schollen - eigene Zeichnung, gleiche Regeln.
@@ -1925,6 +1959,10 @@ Object.assign(Renderer.prototype, {
     }
     // Luken dieser Ebene: sie liegen im Boden, also direkt nach dem Belag
     for (const ob of lv.obstacles) if (ob.type === 'luke' && (ob.ebene || 0) === n) this.drawLuke(ctx, ob, z);
+    /* Und die Lukendeckel über den Turbinen: Die Turbine steht eine Etage tiefer und bläst den
+       Ball hier hindurch. Ohne diese Zeichnung läge über ihr geschlossener Boden, und der Ball
+       käme durch die blanke Decke. */
+    for (const ob of lv.obstacles) if (ob.type === 'turbine' && (ob.ebene || 0) + 1 === n) this.drawTurbinenluke(ctx, ob, z, t);
     // Brüstung an den geschlossenen Kanten
     for (const wr of fl.walls) {
       const poly = [[wr.x, wr.y], [wr.x + wr.w, wr.y], [wr.x + wr.w, wr.y + wr.h], [wr.x, wr.y + wr.h]];
