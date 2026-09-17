@@ -2456,6 +2456,11 @@
           break;
         case 'portal': Sfx.portal(); burst(ev.x, ev.y, ev.color, 12, true); break;
         case 'board': Sfx.bounce(6); showMessage('Eingestiegen – gute Fahrt!', 1400); break;
+        /* Die Turbine meldet sich zweimal: wenn der Stoß greift und wenn er oben absetzt. Vorher
+           sagte sie gar nichts und versetzte den Ball in einem Bild - es sah aus, als käme man
+           einfach durch die Decke. */
+        case 'turbine': if (ev.hoch) { Sfx.whoosh(); burst(ev.x, ev.y, '#ffe7b0', 20, true); showMessage('Der Windstoß hebt dich durch die Luke!', 1300); }
+          else { Sfx.bounce(4); burst(ev.x, ev.y, '#ffd166', 10); } break;
         case 'jump': if (ev.updraft) { Sfx.whoosh(); burst(ev.x, ev.y, '#cdefff', 22, true); showMessage('Der Aufwind trägt dich!', 1100); } else { Sfx.portal(); showMessage('Sprung!', 900); } break;
         case 'land': Sfx.bounce(3); burst(ev.x, ev.y, 'rgba(255,255,255,0.7)', 6); break;
         case 'dropoff': Sfx.bounce(4); burst(ev.x, ev.y, '#ffd166', 8); break;

@@ -896,28 +896,53 @@ class CopperPipe extends LionGate {
    - Ist über ihr auch Boden? Wäre dort ein Loch in der oberen Fläche, würde der Ball im selben
      Augenblick wieder herunterfallen – ein Zittern, das niemand versteht. */
 const TURBINE_STOSS = 0.55;      // Sekunden, die der Windstoß nach dem Heben noch zu sehen ist
+const TURBINE_FAHRT = 0.5;       // so lange trägt der Stoß den Ball nach oben
 
 class Turbine {
   constructor(d) {
     Object.assign(this, { w: 1.4, h: 1.4 }, d);
     this.type = 'turbine';
     this.hebtAt = -10;           // wann zuletzt gehoben wurde (für die Zeichnung)
+    this.p = 0;                  // wie weit der Fahrgast oben ist: 0 unten, 1 durch die Luke
   }
   ueber(ball) {
     return Math.abs(ball.x - this.x) <= this.w / 2 && Math.abs(ball.y - this.y) <= this.h / 2;
   }
-  trigger(ball, t, events) {
-    if (ball.air || ball.rider) return;
-    // Sie hebt von ihrer eigenen Ebene auf die nächste darüber – bei mehr als zwei Ebenen stehen
-    // mehrere übereinander, jede mit ihrem eigenen 'ebene'.
+  /* Über ihr muss Boden sein. Wäre dort ein Loch in der oberen Fläche, fiele der Ball im selben
+     Augenblick wieder herunter - ein Zittern, das niemand versteht. */
+  bodenDrueber(ball) {
+    const nach = (this.ebene || 0) + 1;
+    return !!(this.level && this.level.flaechen[nach]
+      && this.level.isFloorChar(this.level.charAtEbene(nach, ball.x, ball.y)));
+  }
+  /* Der Ball fährt sichtbar hinauf, statt oben zu erscheinen. Vorher versetzte ihn die Turbine in
+     einem Bild von unten nach oben, und weil über ihr geschlossener Boden liegt (liegen *muss*,
+     siehe bodenDrueber), sah es aus, als käme man einfach durch die Decke. Jetzt hängt er am
+     Windstoß wie im Aufzug an der Kabine, und die Luke in der Decke darüber zeigt, wo es
+     durchgeht. Es ist derselbe Weg - man sieht ihn nur. */
+  ride(ball, t, events) {
     const von = this.ebene || 0, nach = von + 1;
-    if ((ball.ebene || 0) !== von || !this.level || !this.level.flaechen[nach]) return;
-    if (!this.ueber(ball)) return;
-    if (!this.level.isFloorChar(this.level.charAtEbene(nach, ball.x, ball.y))) return;
-    ball.ebene = nach; this.level.setzeEbene(nach);
-    ball.z = 0; ball.vz = 0;
-    this.hebtAt = t;
-    events.push({ type: 'turbine', x: ball.x, y: ball.y, nach });
+    if (ball.rider === this) {
+      const u = Math.min(1, (t - this.hebtAt) / TURBINE_FAHRT);
+      this.p = u;
+      ball.x = this.x; ball.y = this.y; ball.vx = 0; ball.vy = 0; ball.vz = 0;
+      ball.z = u * this.level.ebeneZ;
+      if (u < 1) return true;
+      // Oben angekommen: absetzen, die Luke fällt hinter ihm zu
+      ball.rider = null; ball.rideCd = 0.4; this.p = 0;
+      ball.ebene = nach; this.level.setzeEbene(nach);
+      ball.z = 0; ball.vz = 0;
+      events.push({ type: 'turbine', x: ball.x, y: ball.y, nach });
+      return false;
+    }
+    if (ball.rideCd > 0 || ball.air) return false;
+    if ((ball.ebene || 0) !== von || !this.level || !this.level.flaechen[nach]) return false;
+    if (!this.ueber(ball) || !this.bodenDrueber(ball)) return false;
+    ball.rider = this; this.hebtAt = t; this.p = 0;
+    ball.x = this.x; ball.y = this.y; ball.vx = 0; ball.vy = 0; ball.z = 0;
+    // Eigenes Ereignis, nicht das des Aufzugs: Man steigt hier nicht ein, man wird gehoben.
+    events.push({ type: 'turbine', x: this.x, y: this.y, hoch: true });
+    return true;
   }
 }
 
