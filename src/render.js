@@ -2300,6 +2300,8 @@ class Renderer {
 
   /* Windmühle: zwei Turmhälften mit Durchgang, Dach, Fenster, Tür und drehenden Flügeln */
   drawWindmill(ctx, ob, t) {
+    // Unter Tage weht kein Wind: Dort ist dieselbe Maschine ein Schmelzofen (render_mine.js).
+    if (ob.style === 'ofen') return this.drawSchmelzofen(ctx, ob, t);
     const s = this.scale, th = this.theme, ax = ob.axis === 'x';
     const wallTop = '#e8dfcf', wallSide = '#a8998a', roof = '#7a4a2a';
     for (const b of ob.blocks) this.prism(ctx, b, 0, ob.height, wallTop, wallSide, { outline: '#6b5a4a' });
