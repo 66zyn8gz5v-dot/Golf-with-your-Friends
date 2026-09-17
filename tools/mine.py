@@ -128,10 +128,10 @@ def fass(x, y, r=0.65, ebene=0):
 def ofen(x, y, w=3.0, gap=0.95, speed=1.0, blades=4, axis='y', phase=0.0, ebene=0):
     """Schmelzofen: dieselbe Maschine wie die Windmuehle im Maerchenland, nur anders gezeichnet.
 
-    Ein Bau quer ueber dem Weg, ein Maul in der Mitte, und davor dreht sich das Geblaeserad -
-    steht eine Schaufel unten, ist der Weg zu. Die Frage ist dieselbe wie bei der Muehle (*wann*
-    gehe ich durch?), die Sprache ist die der Schmiede. Ein Windrad sechshundert Meter unter Tage
-    waere Unsinn; ein Stil ist billiger als ein neues Hindernis, und er haelt die Regel gleich.
+    Ein Bau quer ueber dem Weg, ein Maul in der Mitte, und im Takt faellt die eiserne Ofenklappe
+    davor. Die Frage ist dieselbe wie bei der Muehle (*wann* gehe ich durch?), die Sprache ist die
+    der Schmiede. Ein Windrad sechshundert Meter unter Tage waere Unsinn - und ein Schaufelrad vor
+    dem Maul waere nur die Muehle in Eisen. Ein Ofen hat kein Rad, er hat eine Klappe.
     """
     o = {'type': 'windmill', 'x': x, 'y': y, 'w': w, 'gap': gap, 'speed': speed,
          'blades': blades, 'axis': axis, 'phase': phase, 'style': 'ofen',

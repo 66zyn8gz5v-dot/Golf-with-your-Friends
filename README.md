@@ -1266,12 +1266,22 @@ stehen lässt, und dass sie beim nächsten Loch wieder dasteht.
 | 11 | Die Schmelze | 5 | Schmelze | Die Insel im Lavasee. Der Damm ist zugemauert, in der Mitte steht der **Schmelzofen**, und im Takt fegt eine Ladung alles hinunter. |
 
 **Der Schmelzofen ist die Windmühle.** Nicht *wie* eine Windmühle – es ist dieselbe Maschine,
-Zeile für Zeile: ein Bau quer über dem Weg, ein Durchgang in der Mitte, davor ein Rad, dessen
-Blätter den Durchgang im Takt versperren. Nur wäre ein Windrad sechshundert Meter unter Tage
-Unsinn; dort weht nichts. Also dieselbe Frage – *wann gehe ich durch?* – in der Sprache der
-Schmiede: ein Ofen aus Schamottsteinen, das Maul glüht, oben raucht die Esse, und davor dreht sich
-das Gebläserad, das das Feuer anfacht. Steht eine Schaufel unten, ist der Weg zu; das Maul zeigt es
-von weitem, offen als Blick ins Feuer, zu als glühende Eisenklappe.
+Zeile für Zeile: ein Bau quer über dem Weg, ein Durchgang in der Mitte, der sich im Takt schließt.
+Nur wäre ein Windrad sechshundert Meter unter Tage Unsinn; dort weht nichts. Also dieselbe Frage –
+*wann gehe ich durch?* – in der Sprache der Schmiede: ein Ofen aus Schamottsteinen, im Maul brennt
+das Feuer, oben raucht die Esse, und was den Weg sperrt, ist die **eiserne Ofenklappe**, die aus
+dem Sturz herunterfährt. Ihre Unterkante steht im Feuer und glüht.
+
+**Erst stand ein Schaufelrad davor**, die Mühlenflügel in Eisen. Das war der Fehler, und Lüddecke
+hat ihn sofort gesehen: Mit Rad war es doch wieder eine Mühle, nur anders bemalt. Ein Ofen hat kein
+Rad, er hat eine Klappe – und die ist auch ehrlicher: Sie *ist* das, was sperrt. Man sieht nicht
+ein Rad und muss sich denken, wann es zu ist, sondern sieht die Klappe fallen.
+
+Ihr Stand ist dabei nicht neu erfunden, sondern aus demselben Winkel gelesen, aus dem das
+Hindernis `blocked` rechnet (`obstacles.js`, `Windmill.update`). Bei 0,30 sperrt es – und genau
+dort ist die Klappe ganz unten. Das Bild zeigt also nicht *ungefähr*, sondern *genau*, was gilt;
+eine Zeichnung, die nach eigener Uhr liefe, wäre schlimmer als gar keine, weil man sich auf sie
+verließe.
 
 Gebaut war daran nichts: `style: 'ofen'` an der Windmühle, und `render.js` biegt beim Zeichnen nach
 `render_mine.js` ab. **Ein Stil ist billiger als ein Hindernis**, und er hält die Regel gleich – wer
@@ -1279,9 +1289,10 @@ die Mühle im Märchenland kennt, kennt den Ofen. Dazu die eine Sache, die ein O
 zählt in der Dunkelheit der Mine als **Licht**. Ein Feuer, das Licht malt und keins gibt, wäre
 Kulisse.
 
-`tools/mine.mjs` prüft vor allem das eine: dass unter Tage keine Windmühle *als* Windmühle steht.
-Ein vergessener Stil fiele sonst nicht auf – der Zeichner beschwert sich nicht, er malt ein
-Segeltuch-Kreuz in den Berg. Auf dem alten Quelltext melden die neuen Prüfungen acht Fehler.
+`tools/mine.mjs` prüft dreierlei: dass unter Tage keine Windmühle *als* Windmühle steht (ein
+vergessener Stil fiele sonst nicht auf – der Zeichner beschwert sich nicht, er malt ein
+Segeltuch-Kreuz in den Berg), dass vor dem Maul **kein Rad** steht, und dass die Klappe den Winkel
+des Hindernisses liest statt einer eigenen Uhr.
 
 Die Pare stehen nicht nach Gefühl, sondern nach dem, was die Bahnen wirklich spielen: Der
 Normalspieler-Bot (`node tools/audit/audit.mjs mine`) hat sie durchgespielt, und wo sein Median

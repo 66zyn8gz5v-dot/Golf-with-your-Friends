@@ -360,12 +360,17 @@ Object.assign(Renderer.prototype, {
      Der Schmelzofen
      ---------------------------------------------------------------------------
      Es ist dieselbe Maschine wie die Windmühle im Märchenland: ein Haus quer über dem Weg, ein
-     Durchgang in der Mitte, und davor dreht sich ein Rad, dessen Blätter den Durchgang im Takt
-     versperren. Nur wäre ein Windrad sechshundert Meter unter Tage Unsinn - hier weht nichts.
+     Durchgang in der Mitte, der im Takt zugeht. Nur wäre ein Windrad sechshundert Meter unter Tage
+     Unsinn - hier weht nichts.
 
      Also dieselbe Frage (*wann* gehe ich durch?), nur in der Sprache der Schmiede: Der Bau ist ein
-     Schmelzofen aus Schamottsteinen, das Maul glüht, oben raucht die Esse. Vor dem Maul dreht sich
-     das Gebläserad, das das Feuer anfacht - und wenn eine Schaufel unten steht, ist der Weg zu.
+     Schmelzofen aus Schamottsteinen, im Maul brennt das Feuer, oben raucht die Esse - und was den
+     Weg sperrt, ist die eiserne Ofenklappe, die aus dem Sturz herunterfährt.
+
+     Zuerst stand hier ein Schaufelrad vor dem Maul, die Flügel der Mühle in Eisen. Das war der
+     Fehler: Damit war es doch wieder eine Mühle, nur anders bemalt. Ein Ofen hat kein Rad, er hat
+     eine Klappe. Und die ist ehrlicher, denn sie *ist* das, was sperrt - man sieht nicht ein Rad
+     und muß sich denken, wann es zu ist, sondern sieht die Klappe fallen.
 
      Neu zu bauen war daran nichts: Die Windmühle kann das alles schon. Ein Stil ist billiger als
      ein Hindernis, und er hält die Regel gleich - wer die Mühle kennt, kennt den Ofen. */
@@ -413,54 +418,54 @@ Object.assign(Renderer.prototype, {
       for (let k = 0; k <= 10; k++) { const a = Math.PI - (k / 10) * Math.PI; p = an(Math.cos(a) * w2, oben - rad + Math.sin(a) * rad); ctx.lineTo(p[0], p[1]); }
       p = an(w2, 0); ctx.lineTo(p[0], p[1]); ctx.closePath();
     };
-    if (ob.blocked) {
-      ctx.fillStyle = `rgb(${Math.round(150 + 80 * glut)},${Math.round(50 + 45 * glut)},30)`; bogen(); ctx.fill();
-      ctx.save(); bogen(); ctx.clip();
-      ctx.strokeStyle = 'rgba(30,14,6,0.7)'; ctx.lineWidth = Math.max(2, s * 0.07);
-      for (const z of [0.32, 0.74]) { const q0 = an(-w2, z), q1 = an(w2, z); ctx.beginPath(); ctx.moveTo(q0[0], q0[1]); ctx.lineTo(q1[0], q1[1]); ctx.stroke(); }
-      ctx.restore();
-      ctx.strokeStyle = '#2a1a12'; ctx.lineWidth = Math.max(1.5, s * 0.05); bogen(); ctx.stroke();
-    } else {
-      ctx.fillStyle = '#120a06'; bogen(); ctx.fill();
-      ctx.save(); bogen(); ctx.clip();
-      for (let i = 0; i < 6; i++) {                                   // Glut tief im Maul
-        const u = -w2 + (i + 0.5) * (2 * w2) / 6;
-        const [qx, qy] = an(u, 0.12 + 0.1 * Math.sin(t * 3 + i));
-        ctx.fillStyle = `rgba(255,${Math.round(120 + 70 * glut)},40,${0.5 + 0.35 * glut})`;
-        ctx.beginPath(); ctx.arc(qx, qy, s * (0.16 + 0.06 * Math.sin(t * 4 + i * 2)), 0, TAU); ctx.fill();
-      }
-      ctx.restore();
-      ctx.strokeStyle = '#6d4a38'; ctx.lineWidth = Math.max(1, s * 0.04); bogen(); ctx.stroke();
+    // Im Maul brennt immer das Feuer - ob man durchkommt, sagt die Klappe darüber.
+    ctx.fillStyle = '#120a06'; bogen(); ctx.fill();
+    ctx.save(); bogen(); ctx.clip();
+    for (let i = 0; i < 6; i++) {
+      const u = -w2 + (i + 0.5) * (2 * w2) / 6;
+      const [qx, qy] = an(u, 0.12 + 0.1 * Math.sin(t * 3 + i));
+      ctx.fillStyle = `rgba(255,${Math.round(120 + 70 * glut)},40,${0.5 + 0.35 * glut})`;
+      ctx.beginPath(); ctx.arc(qx, qy, s * (0.16 + 0.06 * Math.sin(t * 4 + i * 2)), 0, TAU); ctx.fill();
     }
+    ctx.restore();
+    ctx.strokeStyle = '#6d4a38'; ctx.lineWidth = Math.max(1, s * 0.04); bogen(); ctx.stroke();
     // Der Schein, den das Maul auf den Boden davor wirft
     const [sx, sy] = an(0, 0.02);
     const schein = ctx.createRadialGradient(sx, sy, 0, sx, sy, s * 1.5);
     schein.addColorStop(0, `rgba(255,150,50,${0.2 + 0.12 * glut})`);
     schein.addColorStop(1, 'rgba(255,150,50,0)');
     ctx.fillStyle = schein; ctx.beginPath(); ctx.arc(sx, sy, s * 1.5, 0, TAU); ctx.fill();
-    /* Das Gebläserad: dieselben Achsen und Winkel wie die Mühlenflügel, nur sind es eiserne
-       Schaufeln an Speichen statt Segeltuch an Balken - und ihre Spitzen sind vom Feuer heiß. */
-    const nx = ax ? ob.x : ob.x + seite * (dd + 0.08), ny = ax ? ob.y + seite * (dd + 0.08) : ob.y;
-    const nz = ob.height - 0.15;
-    const [hx, hy] = this.proj(nx, ny, nz);
-    ctx.lineCap = 'round';
-    for (let i = 0; i < ob.blades; i++) {
-      const a = ob.angle + (i * TAU) / ob.blades, ca = Math.cos(a), sa = Math.sin(a);
-      const spX = nx + (ax ? ca * ob.len : 0), spY = ny + (ax ? 0 : ca * ob.len), spZ = nz + sa * ob.len;
-      const [tx, ty] = this.proj(spX, spY, spZ);
-      ctx.strokeStyle = '#4a4038'; ctx.lineWidth = Math.max(2, s * 0.07);
-      ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(tx, ty); ctx.stroke();
-      // Schaufel am äußeren Drittel
-      const px = ax ? -sa * 0.3 : 0, py = ax ? 0 : -sa * 0.3, pz = ca * 0.3;
-      const innen = [nx + (spX - nx) * 0.45, ny + (spY - ny) * 0.45, nz + (spZ - nz) * 0.45];
-      const q = [this.proj(innen[0], innen[1], innen[2]), this.proj(spX, spY, spZ),
-        this.proj(spX + px, spY + py, spZ + pz), this.proj(innen[0] + px, innen[1] + py, innen[2] + pz)];
-      ctx.beginPath(); q.forEach((pp, k) => k ? ctx.lineTo(pp[0], pp[1]) : ctx.moveTo(pp[0], pp[1])); ctx.closePath();
-      // unten am Maul glüht die Schaufel, oben ist sie kalt
-      const heiss = Math.max(0, -sa);
-      ctx.fillStyle = mixHex('#5a5048', '#c85a1e', heiss * (0.55 + 0.3 * glut));
-      ctx.fill(); ctx.strokeStyle = '#2a2018'; ctx.lineWidth = 1; ctx.stroke();
+    /* Die Ofenklappe. Vor ihr drehte sich hier ein Schaufelrad - und damit sah der Ofen doch wieder
+       aus wie eine Mühle, nur in Eisen. Jetzt macht das, was sperrt, auch sichtbar zu: eine
+       eiserne Klappe fährt im Takt aus dem Sturz herunter über das Maul.
+
+       Ihr Stand wird nicht neu erfunden, sondern aus demselben Winkel gelesen, aus dem das
+       Hindernis 'blocked' rechnet (obstacles.js, Windmill.update): Der Abstand des nächsten
+       Blattes vom untersten Punkt sagt, wie weit die Klappe unten ist. Bei 0,30 sperrt sie - und
+       genau dort ist sie ganz zu. So zeigt das Bild nicht *ungefähr*, sondern *genau*, was gilt. */
+    const schritt = TAU / (ob.blades || 4);
+    const roh = ((ob.angle + Math.PI / 2) % schritt + schritt) % schritt;
+    const naehe = Math.min(roh, schritt - roh);
+    const zu = Math.max(0, Math.min(1, (0.75 - naehe) / 0.45));
+    if (zu > 0.003) {
+      const unten = oben * (1 - zu);
+      ctx.save(); bogen(); ctx.clip();
+      const platte = [an(-w2, oben), an(w2, oben), an(w2, unten), an(-w2, unten)];
+      ctx.beginPath(); platte.forEach((q, i) => i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1])); ctx.closePath();
+      ctx.fillStyle = '#4a4038'; ctx.fill();
+      // Beschläge quer über die Klappe
+      ctx.strokeStyle = '#2a2018'; ctx.lineWidth = Math.max(1.5, s * 0.05);
+      for (const q of [0.3, 0.7]) {
+        const z = oben - (oben - unten) * q;
+        const a0 = an(-w2, z), a1 = an(w2, z);
+        ctx.beginPath(); ctx.moveTo(a0[0], a0[1]); ctx.lineTo(a1[0], a1[1]); ctx.stroke();
+      }
+      // Die Unterkante steht im Feuer und glüht
+      const k0 = an(-w2, unten), k1 = an(w2, unten);
+      ctx.strokeStyle = `rgba(${Math.round(200 + 55 * glut)},${Math.round(90 + 60 * glut)},40,${0.55 + 0.35 * glut})`;
+      ctx.lineWidth = Math.max(2, s * 0.09);
+      ctx.beginPath(); ctx.moveTo(k0[0], k0[1]); ctx.lineTo(k1[0], k1[1]); ctx.stroke();
+      ctx.restore();
     }
-    ctx.fillStyle = '#2a2018'; ctx.beginPath(); ctx.arc(hx, hy, s * 0.13, 0, TAU); ctx.fill();
   },
 });
