@@ -1548,7 +1548,8 @@ Stufe Legende:
 | 7–9 | `daemmerzone` | Die Gassen · Der Marktplatz · Die Kaimauer |
 | 10–12 | `meeresgrund` | Der Grund · Das Kaltwasserfeld · Der Schlund |
 
-Fünf Maschinen: **Flutbecken**, **Pumpwerk**, **Strömung**, **Strudel** und **Anglerfisch**.
+Sieben Maschinen: **Flutbecken**, **Pumpwerk**, **Strömung**, **Strudel**, **Anglerfisch**,
+**Riesenmuschel** und **Tangwald**.
 
 **Die Bahnen sind Stege, keine Plätze.** Ringsum steht offenes Wasser, und wer heruntergespült
 wird, zahlt. Das ist der Unterschied zwischen einer Strömung, die ärgert, und einer, die etwas
@@ -1664,6 +1665,43 @@ auf, der Ball kreiste dort und kam nicht mehr los, bis ihn nach vier Sekunden di
 Spiels herausnahm. Eine Maschine, aus der einen die Notbremse befreien muss, ist kaputt. Jetzt
 drückt er überall ein wenig nach außen: ein Schleuderrad. `tools/flut.mjs` legt einen Ball ohne
 Schwung fast genau in die Mitte und verlangt, dass er innerhalb von dreieinhalb Sekunden draußen ist.
+
+### Die Riesenmuschel – Mauer oder Maul, je nach Takt
+
+Sie öffnet und schließt sich, und je nachdem ist sie zwei völlig verschiedene Dinge:
+**geschlossen** ein runder Klotz, von dem der Ball abprallt; **offen** ein Maul, das ihn verschluckt,
+kurz festhält und dann mit Schwung in ihre Blickrichtung wieder ausspuckt. Hindernis und Abkürzung
+in einem, und was von beidem, entscheidet der Zeitpunkt.
+
+**Sie schiebt, sie schießt nicht.** Die Kanone im Märchenland wirft den Ball durch die Luft; hier
+unten gäbe es dafür keine Erklärung – und vor allem flöge er damit über alles hinweg, was diese Welt
+ausmacht: über Becken, Strömung und die Ränder der Stege.
+
+**Wer darin liegt, wird nicht zerquetscht.** Sie nimmt den Ball schon, wenn sie erst zu einem
+Drittel offen ist, und sie ist keine Mauer, solange sie ihn hält. Sonst gäbe es den Fall „sie
+schließt sich genau auf dem Ball", und der hätte keine gute Auflösung: entweder herausgedrückt (sieht
+kaputt aus) oder festgesteckt (ist kaputt). Die Prüfung dazu ist gegengeprobt – nimmt man die
+Bedingung weg, fällt genau sie um.
+
+### Der Tangwald – das Gegenteil einer Mauer
+
+Ein Streifen Tang quer über den Steg. Er hält nicht auf, er nimmt den **Schwung** – und zwar genau
+dort, wo die Halme gerade stehen. Zwischen ihnen bleibt eine Gasse frei, die im Wellengang
+mitwandert: Wer sie trifft, rollt fast ungebremst hindurch; wer danebenhält, bleibt mitten im Tang
+liegen, und von dort hat man keinen guten Schlag mehr. Er kostet keinen Schlag, nur Weg.
+
+Zwei Dinge, die man ihm nicht ansieht:
+
+- **Gebremst wird über die Geschwindigkeit, nicht über die Reibung.** Die Reibung hängt an der
+  Kachel, und ein Streifen, der Kacheln ändert, würde mit dem Flutbecken streiten, das dieselben
+  Kacheln beschreibt. Zwei Maschinen auf derselben Karte gehen beim dritten Zusammentreffen kaputt.
+- **Anteilig, nicht als fester Abzug.** Ein schneller Ball verliert viel, ein langsamer wenig. Zöge
+  man einen festen Betrag ab, stünde er im Tang schlagartig still – das sähe aus wie eine Mauer, und
+  eine Mauer soll er gerade nicht sein.
+
+Beim ersten Versuch wanderte die Gasse *in* Laufrichtung statt quer dazu (ein vertauschtes Zeichen),
+und der Tang war überall gleich dicht; dazu war er mit 0,82 Resttempo je Sekunde so schwach, dass die
+Prüfung „wer danebenhält, bleibt stecken" keinen Unterschied zum freien Weg fand. Jetzt sind es 0,03.
 
 ### Der Anglerfisch – das erste Hindernis, das einen sucht
 

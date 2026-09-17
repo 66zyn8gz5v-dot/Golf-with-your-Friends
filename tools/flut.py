@@ -151,6 +151,20 @@ def angler(x0, y0, x1, y1, tempo=2.2, phase=0.0):
     return o
 
 
+def muschel(x, y, angle=0, r=1.05, takt=5.5, offen=0.45, phase=0.0):
+    o = {'type': 'muschel', 'x': x, 'y': y, 'r': r, 'angle': angle, 'takt': takt, 'offen': offen}
+    if phase: o['phase'] = phase
+    return o
+
+
+def tang(x0, y0, x1, y1, takt=3.4, phase=0.0):
+    """Ein Tangstreifen über die Kacheln x0..x1 / y0..y1."""
+    o = {'type': 'tangwald', 'x': (x0 + x1 + 1) / 2, 'y': (y0 + y1 + 1) / 2,
+         'w': x1 - x0 + 1, 'h': y1 - y0 + 1, 'takt': takt}
+    if phase: o['phase'] = phase
+    return o
+
+
 def strudel(x, y, r=2.4, dreh=1):
     return {'type': 'strudel', 'x': x, 'y': y, 'r': r, 'dreh': dreh}
 
@@ -333,7 +347,7 @@ def pruefe(b):
                           f'({auf} von {schritte + 1} Punkten auf Boden)')
 
     # Jede Bahn dieser Welt braucht wenigstens eine ihrer Maschinen, sonst könnte sie überall stehen
-    eigene = {'flut', 'pumpwerk', 'stroemung', 'strudel', 'angler'}
+    eigene = {'flut', 'pumpwerk', 'stroemung', 'strudel', 'angler', 'muschel', 'tangwald'}
     if not any(o['type'] in eigene for o in b['obstacles']):
         fehler.append('keine Maschine der Welt auf dieser Bahn')
 
@@ -397,8 +411,10 @@ setz(f, 4, 15, 'T'); setz(f, 27, 4, 'H')
 fuell(f, 21, 8, 23, 13, 's')
 bahn('Die Mole', 'wasserlinie', f, par=4,
      intro='Unten schiebt die Strömung nach rechts – wer sie mitnimmt, ist schnell am Aufgang. '
-           'Der Aufgang ist ein Becken. Ist es voll, bleibt nur der lange Weg ganz links zurück.',
-     hindernisse=[strom(10, 14, 20, 16, 0, tempo=7.0), becken(21, 8, 23, 13)])
+           'Der Aufgang ist ein Becken. Ist es voll, hilft die Riesenmuschel am Ende des Stegs: '
+           'Steht sie offen, verschluckt sie den Ball und wirft ihn nach oben.',
+     hindernisse=[strom(10, 14, 20, 16, 0, tempo=7.0), becken(21, 8, 23, 13),
+                  muschel(27.5, 15.5, angle=270)])
 
 # ---------------------------------------------------------------- Flachwasser
 # --- 4: die Sandbank. Zwei Becken hintereinander, und der Umweg führt am Pumpwerk vorbei.
@@ -424,6 +440,7 @@ bahn('Der Seegraswald', 'flachwasser', f, par=3,
            'hält niemanden fest – er wirft nur woandershin, als man wollte, und der Ausgang ist '
            'schmal.',
      hindernisse=[strudel(17.0, 9.5, 3.6, dreh=1),
+                  tang(23, 7, 25, 11),
                   angler(22, 9, 29, 9, tempo=2.0)])
 
 # --- 6: die Rinne. Ein langer Steg, auf dem es zieht, und am Ende ein Becken.

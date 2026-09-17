@@ -2682,6 +2682,12 @@
            dieselbe Strafe wie bei den Stacheln. Wer dort abgelegt würde, wo er gefangen wurde,
            läge dem Fisch gleich wieder vor dem Maul. */
         case 'angler': hazard('angler'); return;
+        /* Die Riesenmuschel: verschluckt und gibt wieder her. Beide Augenblicke werden gemeldet –
+           der erste sagt „das war Absicht", der zweite „jetzt geht es los". */
+        case 'muschel':
+          if (ev.aus) { Sfx.bounce(6); burst(ev.x, ev.y, '#f0e6d2', 16, true); }
+          else { Sfx.lever(); burst(ev.x, ev.y, '#cfeaff', 14, true); showMessage('Die Muschel hat dich!', 1200); }
+          break;
         case 'pumpe': Sfx.lever(); burst(ev.x, ev.y, '#cfeaff', 22, true); showMessage(`Pumpwerk läuft – das Wasser weicht für ${Math.round(ev.dauer || 0)} Sekunden!`, 1800); break;
         case 'shrink': Sfx.potion(); burst(ev.x, ev.y, '#d58cff', 16, true); showMessage('Schrumpftrank! Der Ball ist jetzt winzig.', 1600); break;
         case 'unshrink': showMessage('Der Trank lässt nach.', 1200); break;

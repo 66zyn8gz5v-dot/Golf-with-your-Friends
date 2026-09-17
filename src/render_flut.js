@@ -332,6 +332,128 @@ Object.assign(Renderer.prototype, {
     ctx.restore();
   },
 
+  /* ================= Der Tangwald =================
+     Halme, die im Wellengang stehen und sich neigen – und zwischen ihnen die Gasse, die mitwandert.
+     Gezeichnet wird die Gasse nicht als Loch, sondern als Lücke zwischen den Halmen: Man sieht sie,
+     weil dort nichts steht. Das ist wichtiger, als es klingt – ein gezeichneter Korridor sähe aus
+     wie ein Weg mit Rand, und der Tang hat keinen Rand, er wird nur dünner.
+
+     Die Halme stehen auf festen Plätzen (aus ihrem Zähler gerechnet, nicht gewürfelt), damit das
+     Bild bei jedem Aufruf dasselbe ist. Ein Tangwald, der bei jedem Bild neu wächst, flimmert. */
+  drawTangwald(ctx, ob, t) {
+    const s = this.scale;
+    const quer = ob.laengsY;
+    const spanne = quer ? ob.h : ob.w;
+    const dicke = quer ? ob.w : ob.h;
+    const n = Math.max(10, Math.round(spanne * 5));
+    ctx.save();
+    ctx.lineCap = 'round';
+    for (let i = 0; i < n; i++) {
+      const u = (i + 0.5) / n - 0.5;                     // quer zum Streifen, -0,5 … 0,5
+      const d = ob.dichte
+        ? ob.dichte(quer ? ob.x : ob.x + u * spanne, quer ? ob.y + u * spanne : ob.y)
+        : 1;
+      if (d <= 0.02) continue;
+      /* Zwei bis drei Halme je Platz, über die Dicke des Streifens verteilt. */
+      for (let k = 0; k < 3; k++) {
+        const laengs = ((i * 7 + k * 13) % 11) / 11 - 0.5;
+        const px = quer ? ob.x + laengs * dicke : ob.x + u * spanne;
+        const py = quer ? ob.y + u * spanne : ob.y + laengs * dicke;
+        const hoch = (0.55 + 0.45 * ((i * 5 + k * 3) % 7) / 7) * d;
+        const neigung = Math.sin(t * 1.6 + i * 0.7 + k) * 0.32;
+        const [fx, fy] = this.proj(px, py, 0.01);
+        const [tx, ty] = this.proj(px + neigung * 0.35, py, 0.01 + hoch * 1.5);
+        const g = ctx.createLinearGradient(fx, fy, tx, ty);
+        g.addColorStop(0, `rgba(36,74,50,${0.25 + 0.5 * d})`);
+        g.addColorStop(1, `rgba(96,158,96,${0.15 + 0.45 * d})`);
+        ctx.strokeStyle = g;
+        ctx.lineWidth = Math.max(1.5, s * 0.09 * (0.6 + 0.4 * d));
+        ctx.beginPath();
+        ctx.moveTo(fx, fy);
+        ctx.quadraticCurveTo((fx + tx) / 2 + neigung * s * 0.25, (fy + ty) / 2, tx, ty);
+        ctx.stroke();
+        // ein Blatt an der Spitze, damit es Tang ist und kein Gras
+        ctx.fillStyle = `rgba(120,180,110,${0.2 + 0.4 * d})`;
+        ctx.beginPath(); ctx.ellipse(tx, ty, s * 0.09, s * 0.05, neigung, 0, TAU); ctx.fill();
+      }
+    }
+    ctx.restore();
+  },
+
+  /* ================= Die Riesenmuschel =================
+     Zwei Schalen, die sich um ein Scharnier hinten öffnen – das Maul zeigt in die Richtung, in die
+     sie den Ball wieder ausspuckt. Damit sagt die Zeichnung von selbst, wohin es geht, und niemand
+     muß es ausprobieren.
+
+     Die Rippen laufen vom Scharnier nach außen. Sie sind nicht nur Schmuck: An ihnen sieht man
+     auch im Kleinen, wie weit sie schon offen steht, denn die beiden Fächer spreizen sich. */
+  drawMuschel(ctx, ob, t) {
+    const s = this.scale, R = s * (ob.r || 1.05);
+    const [sx, sy] = this.proj(ob.x, ob.y, 0.05);
+    // Blickrichtung am Bildschirm, nicht auf der Karte
+    const [ax, ay] = this.proj(ob.x, ob.y, 0.05);
+    const [bx, by] = this.proj(ob.x + ob.dx, ob.y + ob.dy, 0.05);
+    const w = Math.atan2(by - ay, bx - ax);
+    const p = ob.p || 0;
+    const spalt = 0.16 + 0.78 * p;            // Öffnungswinkel je Schale
+
+    ctx.save();
+    ctx.translate(sx, sy); ctx.rotate(w);
+    ctx.scale(1, this.cam.tilt + (1 - this.cam.tilt) * 0.35);   // flach liegend, aber nicht platt
+
+    // Der dunkle Schlund – man muß sehen, daß da etwas hineinpaßt
+    if (p > 0.05) {
+      const g = ctx.createRadialGradient(0, 0, 0, 0, 0, R);
+      g.addColorStop(0, `rgba(10,26,30,${0.55 + 0.4 * p})`);
+      g.addColorStop(1, 'rgba(10,26,30,0.15)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(0, 0, R * 0.92, 0, TAU); ctx.fill();
+      // die Perle: der Grund, warum man hineinspielen will
+      const puls = 0.75 + 0.25 * Math.sin(t * 2.2);
+      const pg = ctx.createRadialGradient(-R * 0.1, 0, 0, -R * 0.1, 0, R * 0.42);
+      pg.addColorStop(0, `rgba(255,255,255,${0.85 * p})`);
+      pg.addColorStop(0.5, `rgba(200,240,255,${0.35 * p})`);
+      pg.addColorStop(1, 'rgba(200,240,255,0)');
+      ctx.fillStyle = pg;
+      ctx.beginPath(); ctx.arc(-R * 0.1, 0, R * 0.42 * puls, 0, TAU); ctx.fill();
+    }
+
+    /* Die beiden Schalen. Das Scharnier liegt hinten (in -x), die Öffnung vorn – darum werden die
+       Fächer um -R/2 gedreht und nicht um die Mitte. */
+    for (const seite of [-1, 1]) {
+      ctx.save();
+      ctx.translate(-R * 0.55, 0);
+      ctx.rotate(seite * spalt);
+      /* Der Verlauf läuft der LÄNGE nach, vom Scharnier zum Rand. Beim ersten Versuch lief er quer
+         dazu – dann lag fast die ganze Schale außerhalb und nahm die Endfarbe an, und statt einer
+         hellen Muschel stand da ein brauner Fächer. */
+      const schale = ctx.createLinearGradient(0, 0, R * 1.6, 0);
+      schale.addColorStop(0, '#9d8c6e'); schale.addColorStop(0.45, '#dccfb0'); schale.addColorStop(1, '#f6eedc');
+      ctx.fillStyle = schale;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.quadraticCurveTo(R * 0.7, seite * R * 0.12, R * 1.45, seite * R * 0.28);
+      ctx.quadraticCurveTo(R * 1.66, seite * R * 0.72, R * 1.12, seite * R * 1.02);
+      ctx.quadraticCurveTo(R * 0.52, seite * R * 0.72, 0, 0);
+      ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = 'rgba(86,70,48,0.6)'; ctx.lineWidth = Math.max(1, s * 0.04); ctx.stroke();
+      // Rippen vom Scharnier zum Rand – an ihnen sieht man auch im Kleinen, wie weit sie offen ist
+      ctx.strokeStyle = 'rgba(120,100,70,0.45)'; ctx.lineWidth = Math.max(1, s * 0.03);
+      for (let i = 1; i <= 5; i++) {
+        const q = i / 6;
+        ctx.beginPath(); ctx.moveTo(0, 0);
+        ctx.quadraticCurveTo(R * 0.62, seite * R * (0.12 + 0.6 * q) * 0.8,
+                             R * 1.3 + R * 0.15 * (1 - q), seite * R * (0.28 + 0.74 * q));
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+    // Das Scharnier selbst
+    ctx.fillStyle = '#6b5b45';
+    ctx.beginPath(); ctx.ellipse(-R * 0.55, 0, R * 0.16, R * 0.3, 0, 0, TAU); ctx.fill();
+    ctx.restore();
+  },
+
   /* ================= Der Anglerfisch =================
      Zwei Zeichnungen, und die erste ist die wichtigere: der Schein seiner Laterne auf dem Grund.
      Ihn sieht man, bevor man den Fisch selbst erkennt – und genau darum geht es. Auf dem

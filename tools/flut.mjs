@@ -346,6 +346,104 @@ console.log('\n--- Der Strudel ---');
         `aus y = 3.5 wird y = ${c.y.toFixed(2)}`);
 }
 
+console.log('\n--- Der Tangwald ---');
+{
+  const bahn = (hind) => G.buildLevel({
+    name: 'Tangprüfung', par: 3, theme: 'flachwasser',
+    map: ['................', '.T############H.', '.##############.', '.##############.',
+          '.##############.', '.##############.', '................'],
+    obstacles: hind,
+  });
+  const lv = bahn([{ type: 'tangwald', x: 8, y: 3.5, w: 3, h: 6, takt: 4 }]);
+  const w = lv.obstacles.find(o => o.type === 'tangwald');
+  pruef('der Tangwald wird gebaut', !!w && typeof w.force === 'function');
+
+  /* Er ist keine Mauer: Er hat keine Kreise und keine Kanten, an denen etwas abprallen könnte.
+     Das ist sein ganzer Sinn – ein Hindernis, das den Schwung nimmt und nicht den Weg. */
+  pruef('er ist keine Mauer', typeof w.circles !== 'function' && typeof w.segments !== 'function');
+
+  /* Die Gasse wandert. Ohne das wäre er eine Bremszone und keine Maschine. */
+  const orte = [];
+  for (let i = 0; i < 40; i++) { w.update(i * 0.1); orte.push(w.mitte); }
+  pruef('die Gasse wandert', Math.max(...orte) - Math.min(...orte) > 0.4,
+        `zwischen ${Math.min(...orte).toFixed(2)} und ${Math.max(...orte).toFixed(2)}`);
+
+  /* Und jetzt die Probe, um die es geht: Wer die Gasse trifft, kommt durch; wer danebenhält,
+     bleibt stecken. Gemessen mit echter Physik, beide Male von derselben Stelle mit demselben
+     Schlag – nur die Höhe ist anders. */
+  const durch = (y) => {
+    const lv2 = bahn([{ type: 'tangwald', x: 8, y: 3.5, w: 3, h: 6, takt: 4, phase: 0 }]);
+    const tw = lv2.obstacles.find(o => o.type === 'tangwald');
+    tw.update(0);                     // Gasse steht in der Mitte (sin 0 = 0)
+    const b = G.makeBall(4, y, '#fff');
+    b.vx = 9; b.vy = 0;
+    for (let i = 0; i < 240 * 3; i++) { tw.update(0); G.stepPhysics(lv2, b, 1 / 240, 0, true); if (Math.hypot(b.vx, b.vy) < 0.05) break; }
+    return +b.x.toFixed(2);
+  };
+  const inDerGasse = durch(3.5);      // mitte = 0 → Gasse liegt bei y = 3,5
+  const daneben = durch(5.4);
+  pruef('wer die Gasse trifft, rollt hindurch', inDerGasse > 11,
+        `bis x = ${inDerGasse}`);
+  pruef('wer danebenhält, bleibt stecken', daneben < inDerGasse - 2,
+        `bis x = ${daneben} statt ${inDerGasse}`);
+  /* Und er prallt nicht ab: Der Streifen geht von x = 6,5 bis 9,5; an einer Mauer bliebe der Ball
+     davor liegen. Daß er MITTEN im Tang zur Ruhe kommt, ist kein Mangel, sondern die Ansage –
+     von dort hat man keinen guten Schlag mehr. */
+  pruef('aber er prallt nicht ab, er steckt darin', daneben > 7 && daneben < 9.5,
+        `liegt bei x = ${daneben}; der Tang reicht von 6.5 bis 9.5`);
+
+  /* Auch ein liegender Ball steckt im Tang. Das ist kein Schaden, sondern die Ansage: Von hier
+     hast du keinen guten Schlag mehr. */
+  pruef('er greift auch einen ruhenden Ball', w.alwaysForce === true);
+}
+
+console.log('\n--- Die Riesenmuschel ---');
+{
+  const bahn = (hind) => G.buildLevel({
+    name: 'Muschelprüfung', par: 3, theme: 'daemmerzone',
+    map: ['................', '.T############H.', '.##############.', '.##############.',
+          '.##############.', '.##############.', '................'],
+    obstacles: hind,
+  });
+  const lv = bahn([{ type: 'muschel', x: 8, y: 3.5, r: 1.05, takt: 4, offen: 0.5, halt: 1, angle: 0 }]);
+  const m = lv.obstacles.find(o => o.type === 'muschel');
+  pruef('die Riesenmuschel wird gebaut', !!m && typeof m.ride === 'function');
+
+  /* Sie ist zwei Dinge, und welches, entscheidet der Takt. Geprüft wird beides an derselben
+     Muschel – sonst könnte man aus Versehen zwei Maschinen bauen, die nie dasselbe Ding sind. */
+  const kreise = (t) => { m.update(t); const out = []; m.circles(out); return out.length; };
+  pruef('geschlossen ist sie eine Mauer', kreise(4 * 0.75) === 1, `bei p = ${m.p.toFixed(2)}`);
+  pruef('offen ist sie keine Mauer', kreise(4 * 0.25) === 0, `bei p = ${m.p.toFixed(2)}`);
+
+  /* Verschlucken und wieder ausspucken – und zwar in ihre Blickrichtung, damit die Zeichnung nicht
+     lügt. */
+  m.update(1.0);                                   // mitten in der offenen Zeit
+  const b = G.makeBall(8, 3.5, '#fff');
+  const ev = G.stepPhysics(lv, b, 1 / 240, 1.0, true);
+  pruef('sie verschluckt einen Ball, der hineinrollt', !!b.rider && ev.some(e => e.type === 'muschel'));
+  pruef('und hält ihn fest', Math.abs(b.x - 8) < 0.01 && Math.hypot(b.vx, b.vy) < 0.01);
+  /* Während sie hält, darf sie keine Mauer sein – sonst stieße der Ball gegen sein eigenes
+     Gefängnis, und das sähe aus wie ein Fehler, weil es einer wäre. */
+  m.update(4 * 0.75);
+  const out = []; m.circles(out);
+  pruef('während sie hält, ist sie keine Mauer', out.length === 0);
+
+  let raus = null;
+  for (let i = 0; i < 240 * 3 && !raus; i++) {
+    const t = 1.0 + i / 240;
+    const e2 = G.stepPhysics(lv, b, 1 / 240, t, true);
+    if (e2.some(x => x.type === 'muschel' && x.aus)) raus = { t, vx: b.vx, vy: b.vy, x: b.x };
+  }
+  pruef('und gibt ihn nach kurzer Zeit wieder her', !!raus,
+        raus ? `nach ${(raus.t - 1.0).toFixed(2)} s` : 'gar nicht');
+  pruef('und zwar in ihre Blickrichtung', !!raus && raus.vx > 5 && Math.abs(raus.vy) < 0.5,
+        raus ? `Tempo (${raus.vx.toFixed(1)}, ${raus.vy.toFixed(1)})` : '');
+  /* Sie schiebt, sie schießt nicht: Ein Ball, der fliegt, käme über alles hinweg, was diese Welt
+     ausmacht – über Becken, Strömung und die Ränder der Stege. */
+  pruef('sie schiebt am Boden, sie schießt nicht in die Luft', !b.air && b.z < 0.01,
+        `z = ${b.z.toFixed(2)}, in der Luft: ${b.air}`);
+}
+
 console.log('\n--- Der Anglerfisch ---');
 {
   const lv = G.buildLevel({

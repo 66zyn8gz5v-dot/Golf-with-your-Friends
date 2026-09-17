@@ -71,7 +71,7 @@ const FLUT_COURSES = [
   },
   {
     name: 'Die Mole', par: 4, theme: 'wasserlinie',
-    intro: 'Unten schiebt die Strömung nach rechts – wer sie mitnimmt, ist schnell am Aufgang. Der Aufgang ist ein Becken. Ist es voll, bleibt nur der lange Weg ganz links zurück.',
+    intro: 'Unten schiebt die Strömung nach rechts – wer sie mitnimmt, ist schnell am Aufgang. Der Aufgang ist ein Becken. Ist es voll, hilft die Riesenmuschel am Ende des Stegs: Steht sie offen, verschluckt sie den Ball und wirft ihn nach oben.',
     map: [
       '..................................',
       '.wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.',
@@ -96,6 +96,7 @@ const FLUT_COURSES = [
     obstacles: [
       { type: 'stroemung', x: 15.5, y: 15.5, w: 11, h: 3, angle: 0, tempo: 7.0 },
       { type: 'flut', x: 22.5, y: 11.0, w: 3, h: 6, start: 2.5, takt: 1.2, halt: 1.0, leer: 5.0 },
+      { type: 'muschel', x: 27.5, y: 15.5, r: 1.05, angle: 270, takt: 5.5, offen: 0.45 },
     ],
   },
   {
@@ -156,6 +157,7 @@ const FLUT_COURSES = [
     ],
     obstacles: [
       { type: 'strudel', x: 17.0, y: 9.5, r: 3.6, dreh: 1 },
+      { type: 'tangwald', x: 24.5, y: 9.5, w: 3, h: 5, takt: 3.4 },
       { type: 'angler', x0: 22.5, y0: 9.5, x1: 29.5, y1: 9.5, tempo: 2.0 },
     ],
   },

@@ -365,3 +365,151 @@ class Anglerfisch {
     events.push({ type: 'angler', x: ball.x, y: ball.y });
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Die Riesenmuschel
+   ---------------------------------------------------------------------------
+   Sie öffnet und schließt sich im Takt, und je nachdem ist sie zwei völlig verschiedene Dinge:
+
+     GESCHLOSSEN ist sie eine Mauer. Ein runder Klotz im Weg, von dem der Ball abprallt.
+     OFFEN ist sie ein Maul. Wer hineinrollt, wird verschluckt, kurz festgehalten und dann mit
+     Schwung in ihre Blickrichtung wieder ausgespuckt.
+
+   Damit ist sie Hindernis und Abkürzung in einem, und was von beidem, entscheidet der Zeitpunkt –
+   dieselbe Frage wie beim Flutbecken, nur andersherum: Dort ist der Weg offen, wenn es leer ist;
+   hier hilft sie, wenn sie offen ist.
+
+   SIE SCHIEBT, SIE SCHIESST NICHT. Die Kanone im Märchenland wirft den Ball durch die Luft; hier
+   unten gäbe es dafür keine Erklärung, und vor allem flöge er damit über alles hinweg, was diese
+   Welt ausmacht. Die Muschel gibt ihm Schwung am Boden – schnell, aber am Boden.
+
+   WER GERADE DARIN LIEGT, WIRD NICHT ZERQUETSCHT. Sie nimmt den Ball schon, wenn sie erst zu einem
+   Drittel offen ist, und sie ist keine Mauer, solange sie ihn hält. Sonst gäbe es den Fall „die
+   Muschel schließt sich genau auf dem Ball", und der hätte keine gute Auflösung: Entweder würde er
+   herausgedrückt (dann sieht es kaputt aus) oder er steckte fest (dann ist es kaputt). */
+const MUSCHEL_TAKT = 5.5;        // Sekunden für ein ganzes Auf und Zu
+const MUSCHEL_OFFEN = 0.45;      // so viel davon steht sie offen
+const MUSCHEL_HALT = 1.0;        // so lange behält sie den Ball
+const MUSCHEL_TEMPO = 9.5;       // und so schnell gibt sie ihn wieder her
+
+class Riesenmuschel {
+  constructor(d) {
+    Object.assign(this, { r: 1.05, takt: MUSCHEL_TAKT, offen: MUSCHEL_OFFEN, halt: MUSCHEL_HALT,
+                          tempo: MUSCHEL_TEMPO, angle: 0, phase: 0, ebene: 0 }, d);
+    this.type = 'muschel';
+    const a = (this.angle * Math.PI) / 180;
+    this.dx = Math.cos(a); this.dy = Math.sin(a);
+    this.p = 0; this.haelt = false;
+    this.update(0);
+  }
+  setup(level) { this.level = level; this.haelt = false; }
+  /* p: 0 ganz zu, 1 ganz offen. Die Flanken sind weich – eine Muschel, die springt, sieht aus wie
+     eine Falltür mit Muschelmuster. */
+  update(t) {
+    this.t = t;
+    const u = (((t / this.takt + this.phase) % 1) + 1) % 1;
+    if (u < this.offen) {
+      const q = u / this.offen;
+      this.p = Math.max(0, Math.min(1, Math.min(q, 1 - q) / 0.2));
+    } else this.p = 0;
+    this.auf = this.p > 0.35;
+  }
+  /* Geschlossen ist sie ein Klotz. Offen nicht – sonst könnte man nie hineinrollen –, und während
+     sie hält, auch nicht, sonst stieße der eigene Ball von außen gegen sein eigenes Gefängnis. */
+  circles(out) {
+    if (this.haelt || this.p > 0.4) return;
+    out.push({ x: this.x, y: this.y, r: this.r * 0.88, e: 0.75, kind: 'muschel', owner: this });
+  }
+  ride(ball, t, events) {
+    if (ball.rider === this) {
+      ball.x = this.x; ball.y = this.y; ball.vx = 0; ball.vy = 0; ball.z = 0.3; ball.vz = 0;
+      if (t >= ball.muschelAb) {
+        ball.rider = null; ball.rideCd = 1.4; this.haelt = false;
+        ball.x = this.x + this.dx * (this.r + 0.4);
+        ball.y = this.y + this.dy * (this.r + 0.4);
+        ball.z = 0;
+        ball.vx = this.dx * this.tempo; ball.vy = this.dy * this.tempo;
+        events.push({ type: 'muschel', x: this.x, y: this.y, aus: true });
+        return false;
+      }
+      return true;
+    }
+    if (ball.rideCd > 0 || ball.air || ball.sunk) return false;
+    if (this.p < 0.35) return false;
+    if (Math.hypot(ball.x - this.x, ball.y - this.y) > this.r * 0.8) return false;
+    ball.rider = this; ball.muschelAb = t + this.halt; this.haelt = true;
+    ball.x = this.x; ball.y = this.y; ball.vx = 0; ball.vy = 0; ball.z = 0.3;
+    events.push({ type: 'muschel', x: this.x, y: this.y, aus: false });
+    return true;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Der Tangwald
+   ---------------------------------------------------------------------------
+   Ein Streifen Tang quer über den Steg. Er hält nicht auf – man kommt immer hindurch –, aber er
+   bremst hart, und zwar genau dort, wo die Halme gerade stehen.
+
+   ER IST DAS GEGENTEIL EINER MAUER, und darum gehört er in diese Welt. Mauern hat jede Welt;
+   was hier fehlte, war ein Hindernis, das den *Schwung* nimmt statt den Weg. Wer zu zaghaft
+   spielt, bleibt im Tang stecken und liegt mitten darin – und dort liegen ist unangenehm, weil man
+   von dort keinen guten Schlag mehr hat.
+
+   DIE LÜCKE WANDERT. Die Halme schwingen im Wellengang hin und her, und zwischen ihnen bleibt ein
+   Gang frei, der mitwandert. Wer ihn trifft, rollt fast ungebremst hindurch; wer danebenhält, wird
+   ausgebremst. Damit ist der Tangwald kein Zufall, sondern eine Frage des Zeitpunkts – dieselbe
+   Frage wie überall in dieser Welt, nur sanfter gestellt: Er kostet keinen Schlag, nur Weg.
+
+   GEBREMST WIRD ÜBER DIE GESCHWINDIGKEIT, NICHT ÜBER DIE REIBUNG. Die Reibung des Bodens wäre der
+   naheliegende Weg – und der falsche: Sie hängt an der Kachel, und ein Streifen, der die Kacheln
+   ändert, würde mit dem Flutbecken streiten, das dieselben Kacheln beschreibt. Zwei Maschinen, die
+   sich dieselbe Karte teilen, gehen beim dritten Zusammentreffen kaputt. */
+/* So viel vom Tempo bleibt nach einer Sekunde im dichtesten Tang. Die Zahl sieht klein aus und ist
+   es auch: Ein Ball durchquert einen drei Kacheln breiten Streifen in etwa einem Drittel einer
+   Sekunde, und 0,03 hoch ein Drittel sind rund 0,31 – er kommt also mit knapp einem Drittel seines
+   Tempos heraus. Mit dem ersten Wert (0,82) war es ein Hundertstel davon, und die Prüfung „wer
+   danebenhält, bleibt stecken" fand keinen Unterschied zum freien Weg. */
+const TANG_BREMSE = 0.03;
+const TANG_TAKT = 3.4;           // Sekunden für ein Hin und Her der Halme
+const TANG_GASSE = 0.34;         // so breit ist die Lücke, gemessen am Streifen
+
+class Tangwald {
+  constructor(d) {
+    Object.assign(this, { w: 3, h: 6, bremse: TANG_BREMSE, takt: TANG_TAKT, gasse: TANG_GASSE,
+                          phase: 0, ebene: 0 }, d);
+    this.type = 'tangwald';
+    this.alwaysForce = true;       // auch ein liegender Ball steckt im Tang – er soll es merken
+    /* Die Lücke wandert quer zum Weg, also entlang der LANGEN Achse des Streifens. Ein Streifen,
+       der breiter als hoch ist, liegt längs der x-Achse; einer, der höher als breit ist, längs y.
+       Beim ersten Versuch war das Zeichen vertauscht, und die Lücke wanderte in Laufrichtung – der
+       Tang war dann überall gleich dicht, und die Maschine tat nichts. */
+    this.laengsY = this.h >= this.w;
+    this.update(0);
+  }
+  inside(px, py) {
+    return Math.abs(px - this.x) <= this.w / 2 && Math.abs(py - this.y) <= this.h / 2;
+  }
+  /* Wo steht die Lücke gerade? Als Anteil -0,5 … 0,5 quer zum Streifen. */
+  update(t) {
+    this.t = t;
+    this.mitte = 0.34 * Math.sin((t / this.takt) * TAU + this.phase);
+  }
+  /* Wie dicht steht der Tang an dieser Stelle: 0 in der Lücke, 1 im dichtesten Halm. */
+  dichte(px, py) {
+    if (!this.inside(px, py)) return 0;
+    const spanne = this.laengsY ? this.h : this.w;
+    const u = ((this.laengsY ? py - this.y : px - this.x) / spanne) - this.mitte;
+    const d = Math.abs(u) / (this.gasse / 2);
+    return Math.max(0, Math.min(1, (d - 1) / 1.2));
+  }
+  force(ball, dt) {
+    if (ball.air || ball.rider || ball.sunk) return;
+    const d = this.dichte(ball.x, ball.y);
+    if (d <= 0.01) return;
+    /* Anteilig bremsen, nicht abziehen: Ein schneller Ball verliert viel, ein langsamer wenig.
+       Zöge man einen festen Betrag ab, stünde er im Tang schlagartig still – das sähe aus wie eine
+       Mauer, und eine Mauer soll er gerade nicht sein. */
+    const halt = Math.pow(this.bremse, d * dt);
+    ball.vx *= halt; ball.vy *= halt;
+  }
+}

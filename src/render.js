@@ -2110,6 +2110,14 @@ class Renderer {
       /* noFade: Die Wand ist der Grund, warum man hier nicht weiterkommt. Durchsichtig zu werden,
          sobald der Ball davorliegt, nähme ihr genau das. */
       items.push({ x: ob.x, y: ob.y, bias: 0.3, noFade: true, draw: () => this.drawBruchwand(ctx, ob, t) });
+    } else if (ob.type === 'tangwald') {
+      /* Halme stehen aufrecht und gehören vor das, was hinter ihnen liegt. Sie dürfen ruhig
+         verblassen, wenn der Ball dahinter liegt – sie halten ja niemanden auf. */
+      items.push({ x: ob.x, y: ob.y, bias: 0.15, draw: () => this.drawTangwald(ctx, ob, t) });
+    } else if (ob.type === 'muschel') {
+      /* noFade: Ob sie offen oder zu ist, entscheidet den Schlag. Durchsichtig zu werden, sobald
+         der Ball davorliegt, nähme ihr genau das – und davor liegt man hier dauernd. */
+      items.push({ x: ob.x, y: ob.y, bias: 0.2, noFade: true, draw: () => this.drawMuschel(ctx, ob, t) });
     } else if (ob.type === 'angler') {
       /* noFade: Er ist die Gefahr selbst, und er kommt auf einen zu – durchsichtig zu werden,
          sobald der Ball davorliegt, nähme ihm genau das. */
