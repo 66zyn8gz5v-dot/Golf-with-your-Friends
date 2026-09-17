@@ -29,8 +29,11 @@ Object.assign(Renderer.prototype, {
     const b = state.ball;
     if (b && !b.sunk) lichter.push({ x: b.x, y: b.y, r: lv.def.lampe || 3.0 });
     for (const ob of lv.obstacles) {
-      if (ob.type !== 'grubenlampe' || (ob.ebene || 0) !== (lv.ebene || 0)) continue;
-      lichter.push({ x: ob.x, y: ob.y, r: ob.r });
+      if ((ob.ebene || 0) !== (lv.ebene || 0)) continue;
+      if (ob.type === 'grubenlampe') { lichter.push({ x: ob.x, y: ob.y, r: ob.r }); continue; }
+      /* Der Schmelzofen brennt, also leuchtet er auch. Ein Feuer, das Licht malt und keins gibt,
+         wäre Kulisse; so ist der Ofen zugleich die Lampe seines Abschnitts. */
+      if (ob.type === 'windmill' && ob.style === 'ofen') lichter.push({ x: ob.x, y: ob.y, r: ob.licht || 4.4 });
     }
     /* Die zweite Leinwand wird einmal angelegt und danach nur noch neu bemalt – ein neues
        Canvas je Bild wäre bei sechzig Bildern in der Sekunde Arbeit für nichts. */
@@ -351,5 +354,113 @@ Object.assign(Renderer.prototype, {
       }
       ctx.restore();
     }
+  },
+
+  /* ---------------------------------------------------------------------------
+     Der Schmelzofen
+     ---------------------------------------------------------------------------
+     Es ist dieselbe Maschine wie die Windmühle im Märchenland: ein Haus quer über dem Weg, ein
+     Durchgang in der Mitte, und davor dreht sich ein Rad, dessen Blätter den Durchgang im Takt
+     versperren. Nur wäre ein Windrad sechshundert Meter unter Tage Unsinn - hier weht nichts.
+
+     Also dieselbe Frage (*wann* gehe ich durch?), nur in der Sprache der Schmiede: Der Bau ist ein
+     Schmelzofen aus Schamottsteinen, das Maul glüht, oben raucht die Esse. Vor dem Maul dreht sich
+     das Gebläserad, das das Feuer anfacht - und wenn eine Schaufel unten steht, ist der Weg zu.
+
+     Neu zu bauen war daran nichts: Die Windmühle kann das alles schon. Ein Stil ist billiger als
+     ein Hindernis, und er hält die Regel gleich - wer die Mühle kennt, kennt den Ofen. */
+  drawSchmelzofen(ctx, ob, t) {
+    const s = this.scale, ax = ob.axis === 'x';
+    const stein = '#6d4a38', steinSeite = '#4a2f22', esse = '#3a2a22';
+    const glut = 0.6 + 0.4 * (0.5 + 0.5 * Math.sin(t * 2.3));      // das Feuer atmet
+    for (const b of ob.blocks) this.prism(ctx, b, 0, ob.height, stein, steinSeite, { outline: '#2a1a12' });
+    // Sturz über dem Maul
+    const g = ob.gap / 2 + 0.05, dd = ob.depth / 2;
+    const sturz = ax ? [[ob.x - g, ob.y - dd], [ob.x + g, ob.y - dd], [ob.x + g, ob.y + dd], [ob.x - g, ob.y + dd]]
+                     : [[ob.x - dd, ob.y - g], [ob.x + dd, ob.y - g], [ob.x + dd, ob.y + g], [ob.x - dd, ob.y + g]];
+    this.prism(ctx, sturz, 1.05, ob.height - 1.05, stein, steinSeite, { outline: '#2a1a12' });
+    // Statt des Spitzdachs die Esse: ein gemauerter Schlot, aus dem Rauch steigt
+    const eb = 0.42;
+    const schlot = [[ob.x - eb, ob.y - eb], [ob.x + eb, ob.y - eb], [ob.x + eb, ob.y + eb], [ob.x - eb, ob.y + eb]];
+    this.prism(ctx, schlot, ob.height, 1.25, esse, '#241a15', { outline: '#140e0a' });
+    this.fillPoly(ctx, schlot, ob.height + 1.25, '#1a1210');
+    /* Ein glühender Rand oben auf der Esse. Ohne ihn war der Schlot von oben nur ein schwarzer
+       Kasten - man sah einen Klotz, keinen Kamin. Das Feuer steht unten, also glimmt sein Rand. */
+    const kb = eb * 0.82;
+    this.fillPoly(ctx, [[ob.x - kb, ob.y - kb], [ob.x + kb, ob.y - kb], [ob.x + kb, ob.y + kb], [ob.x - kb, ob.y + kb]],
+      ob.height + 1.26, `rgb(${Math.round(110 + 70 * glut)},${Math.round(40 + 35 * glut)},22)`);
+    ctx.save();
+    for (let i = 0; i < 5; i++) {
+      const u = ((t * 0.34 + i / 5) % 1);
+      const [px, py] = this.proj(ob.x + Math.sin(t * 0.8 + i) * u * 0.5, ob.y, ob.height + 1.25 + u * 2.2);
+      ctx.globalAlpha = 0.3 * (1 - u);
+      ctx.fillStyle = '#9a8d84';
+      ctx.beginPath(); ctx.arc(px, py, s * (0.12 + u * 0.4), 0, TAU); ctx.fill();
+    }
+    ctx.restore();
+    /* Das Maul - nur auf der Seite, die zur Kamera zeigt, sonst sähe man durch den Ofen hindurch.
+       Offen ist es ein Blick ins Feuer, zu ist es eine glühende Eisenklappe: Beides sagt von weitem,
+       ob man gerade darf. */
+    const faceN = ax ? [0, 1] : [1, 0];
+    const seite = (faceN[0] * this.cam.sin + faceN[1] * this.cam.cos) > 0 ? 1 : -1;
+    const w2 = ob.gap / 2 + 0.08, oben = 1.05, rad = Math.min(w2, 0.3);
+    const fx = ax ? ob.x : ob.x + seite * dd, fy = ax ? ob.y + seite * dd : ob.y;
+    const an = (u, z) => ax ? this.proj(fx + u, fy, z) : this.proj(fx, fy + u, z);
+    const bogen = () => {
+      ctx.beginPath();
+      let p = an(-w2, 0); ctx.moveTo(p[0], p[1]);
+      p = an(-w2, oben - rad); ctx.lineTo(p[0], p[1]);
+      for (let k = 0; k <= 10; k++) { const a = Math.PI - (k / 10) * Math.PI; p = an(Math.cos(a) * w2, oben - rad + Math.sin(a) * rad); ctx.lineTo(p[0], p[1]); }
+      p = an(w2, 0); ctx.lineTo(p[0], p[1]); ctx.closePath();
+    };
+    if (ob.blocked) {
+      ctx.fillStyle = `rgb(${Math.round(150 + 80 * glut)},${Math.round(50 + 45 * glut)},30)`; bogen(); ctx.fill();
+      ctx.save(); bogen(); ctx.clip();
+      ctx.strokeStyle = 'rgba(30,14,6,0.7)'; ctx.lineWidth = Math.max(2, s * 0.07);
+      for (const z of [0.32, 0.74]) { const q0 = an(-w2, z), q1 = an(w2, z); ctx.beginPath(); ctx.moveTo(q0[0], q0[1]); ctx.lineTo(q1[0], q1[1]); ctx.stroke(); }
+      ctx.restore();
+      ctx.strokeStyle = '#2a1a12'; ctx.lineWidth = Math.max(1.5, s * 0.05); bogen(); ctx.stroke();
+    } else {
+      ctx.fillStyle = '#120a06'; bogen(); ctx.fill();
+      ctx.save(); bogen(); ctx.clip();
+      for (let i = 0; i < 6; i++) {                                   // Glut tief im Maul
+        const u = -w2 + (i + 0.5) * (2 * w2) / 6;
+        const [qx, qy] = an(u, 0.12 + 0.1 * Math.sin(t * 3 + i));
+        ctx.fillStyle = `rgba(255,${Math.round(120 + 70 * glut)},40,${0.5 + 0.35 * glut})`;
+        ctx.beginPath(); ctx.arc(qx, qy, s * (0.16 + 0.06 * Math.sin(t * 4 + i * 2)), 0, TAU); ctx.fill();
+      }
+      ctx.restore();
+      ctx.strokeStyle = '#6d4a38'; ctx.lineWidth = Math.max(1, s * 0.04); bogen(); ctx.stroke();
+    }
+    // Der Schein, den das Maul auf den Boden davor wirft
+    const [sx, sy] = an(0, 0.02);
+    const schein = ctx.createRadialGradient(sx, sy, 0, sx, sy, s * 1.5);
+    schein.addColorStop(0, `rgba(255,150,50,${0.2 + 0.12 * glut})`);
+    schein.addColorStop(1, 'rgba(255,150,50,0)');
+    ctx.fillStyle = schein; ctx.beginPath(); ctx.arc(sx, sy, s * 1.5, 0, TAU); ctx.fill();
+    /* Das Gebläserad: dieselben Achsen und Winkel wie die Mühlenflügel, nur sind es eiserne
+       Schaufeln an Speichen statt Segeltuch an Balken - und ihre Spitzen sind vom Feuer heiß. */
+    const nx = ax ? ob.x : ob.x + seite * (dd + 0.08), ny = ax ? ob.y + seite * (dd + 0.08) : ob.y;
+    const nz = ob.height - 0.15;
+    const [hx, hy] = this.proj(nx, ny, nz);
+    ctx.lineCap = 'round';
+    for (let i = 0; i < ob.blades; i++) {
+      const a = ob.angle + (i * TAU) / ob.blades, ca = Math.cos(a), sa = Math.sin(a);
+      const spX = nx + (ax ? ca * ob.len : 0), spY = ny + (ax ? 0 : ca * ob.len), spZ = nz + sa * ob.len;
+      const [tx, ty] = this.proj(spX, spY, spZ);
+      ctx.strokeStyle = '#4a4038'; ctx.lineWidth = Math.max(2, s * 0.07);
+      ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(tx, ty); ctx.stroke();
+      // Schaufel am äußeren Drittel
+      const px = ax ? -sa * 0.3 : 0, py = ax ? 0 : -sa * 0.3, pz = ca * 0.3;
+      const innen = [nx + (spX - nx) * 0.45, ny + (spY - ny) * 0.45, nz + (spZ - nz) * 0.45];
+      const q = [this.proj(innen[0], innen[1], innen[2]), this.proj(spX, spY, spZ),
+        this.proj(spX + px, spY + py, spZ + pz), this.proj(innen[0] + px, innen[1] + py, innen[2] + pz)];
+      ctx.beginPath(); q.forEach((pp, k) => k ? ctx.lineTo(pp[0], pp[1]) : ctx.moveTo(pp[0], pp[1])); ctx.closePath();
+      // unten am Maul glüht die Schaufel, oben ist sie kalt
+      const heiss = Math.max(0, -sa);
+      ctx.fillStyle = mixHex('#5a5048', '#c85a1e', heiss * (0.55 + 0.3 * glut));
+      ctx.fill(); ctx.strokeStyle = '#2a2018'; ctx.lineWidth = 1; ctx.stroke();
+    }
+    ctx.fillStyle = '#2a2018'; ctx.beginPath(); ctx.arc(hx, hy, s * 0.13, 0, TAU); ctx.fill();
   },
 });

@@ -294,5 +294,39 @@ console.log('\n--- Die Bruchwand ---');
   pruef('keiner steht mehr auf dem alten „stempel"', !klotz.some(o => o.style === 'stempel'));
 }
 
+/* ---------- Der Schmelzofen ----------
+ * Es ist die Windmühle des Märchenlands, nur anders gezeichnet: ein Bau quer über dem Weg, ein
+ * Maul in der Mitte, davor ein Rad, dessen Blätter den Weg im Takt versperren. Ein Windrad
+ * sechshundert Meter unter Tage wäre Unsinn - also derselbe Bau, andere Sprache.
+ *
+ * Geprüft wird darum vor allem das eine: daß unter Tage keine Windmühle *als* Windmühle steht.
+ * Ein vergessener Stil fiele sonst nicht auf - der Zeichner beschwert sich nicht, er malt ein
+ * Segeltuch-Kreuz in den Berg. */
+{
+  const muehlen = vm.runInContext("MINE_COURSES.flatMap(c => (c.obstacles||[]).map(o => ({ bahn: c.name, o })).filter(z => z.o.type === 'windmill'))", ctx);
+  pruef('die Mine hat einen Ofen', muehlen.length > 0, muehlen.map(z => z.bahn).join(', '));
+  const alsMuehle = muehlen.filter(z => z.o.style !== 'ofen');
+  pruef('und keine Windmühle unter Tage', alsMuehle.length === 0,
+        alsMuehle.length ? alsMuehle.map(z => `${z.bahn}: ${z.o.style || 'ohne Stil'}`).join(', ') : `${muehlen.length} als Ofen`);
+  /* Das Maul muß breiter sein als der Ball, sonst stünde dort eine Mauer statt eines Durchgangs. */
+  const eng = muehlen.filter(z => (z.o.gap ?? 0.8) < 0.75);
+  pruef('das Maul ist breiter als der Ball', eng.length === 0,
+        eng.length ? eng.map(z => `${z.bahn}: ${z.o.gap}`).join(', ') : `${muehlen.map(z => z.o.gap).join(', ')}`);
+
+  const zeichner2 = fs.readFileSync(path.join(SRC, 'render.js'), 'utf8');
+  pruef('der Zeichner biegt beim Stil „ofen" ab', /ob\.style === 'ofen'/.test(zeichner2));
+  const q = fs.readFileSync(path.join(SRC, 'render_mine.js'), 'utf8');
+  const j = q.indexOf('drawSchmelzofen(ctx, ob, t) {');
+  pruef('drawSchmelzofen gibt es', j >= 0);
+  const leib = j < 0 ? '' : q.slice(j, q.indexOf('\n  },', j));
+  /* Es soll ein Ofen sein und keine Mühle mit anderer Farbe: Esse, glühendes Maul, Schaufelrad. */
+  for (const [was, muster] of [['eine Esse mit Rauch', /schlot/], ['ein glühendes Maul', /bogen\(\)/],
+                               ['ein Rad mit Schaufeln', /ob\.blades/], ['Glut, die atmet', /glut/]])
+    pruef(`er hat ${was}`, muster.test(leib));
+  pruef('und kein Segeltuch', !/245,235,210/.test(leib));
+  /* Und er leuchtet: ein Feuer, das kein Licht gibt, wäre Kulisse. */
+  pruef('der Ofen zählt als Licht', /ob\.style === 'ofen'\) lichter\.push/.test(q));
+}
+
 console.log(`\n${fehler ? fehler + ' FEHLER' : 'alles bestanden'}`);
 process.exit(fehler ? 1 : 0);

@@ -1263,7 +1263,25 @@ stehen lässt, und dass sie beim nächsten Loch wieder dasteht.
 | 8 | Kristallkammer | 4 | Kristall | **Zwei Sohlen.** Oben der Magnetit auf der Galerie, unten ein Felspfeiler vor der großen Kammer. |
 | 9 | Sohle Neun | 5 | Schmelze | **Zwei Sohlen.** Man fällt mitten in die Glut: ein Steg über den einen Spalt, eine Bohle über den anderen. |
 | 10 | **Die Gießhalle** | 4 | Schmelze | **Der Gießlöffel.** Quer durch die Halle steht die Glut, hinüber führt nichts – bis das Erz die Brücke baut. |
-| 11 | Die Schmelze | 5 | Schmelze | Die Insel im Lavasee. Der Damm ist zugemauert und wird in der Mitte im Takt leergefegt. |
+| 11 | Die Schmelze | 5 | Schmelze | Die Insel im Lavasee. Der Damm ist zugemauert, in der Mitte steht der **Schmelzofen**, und im Takt fegt eine Ladung alles hinunter. |
+
+**Der Schmelzofen ist die Windmühle.** Nicht *wie* eine Windmühle – es ist dieselbe Maschine,
+Zeile für Zeile: ein Bau quer über dem Weg, ein Durchgang in der Mitte, davor ein Rad, dessen
+Blätter den Durchgang im Takt versperren. Nur wäre ein Windrad sechshundert Meter unter Tage
+Unsinn; dort weht nichts. Also dieselbe Frage – *wann gehe ich durch?* – in der Sprache der
+Schmiede: ein Ofen aus Schamottsteinen, das Maul glüht, oben raucht die Esse, und davor dreht sich
+das Gebläserad, das das Feuer anfacht. Steht eine Schaufel unten, ist der Weg zu; das Maul zeigt es
+von weitem, offen als Blick ins Feuer, zu als glühende Eisenklappe.
+
+Gebaut war daran nichts: `style: 'ofen'` an der Windmühle, und `render.js` biegt beim Zeichnen nach
+`render_mine.js` ab. **Ein Stil ist billiger als ein Hindernis**, und er hält die Regel gleich – wer
+die Mühle im Märchenland kennt, kennt den Ofen. Dazu die eine Sache, die ein Ofen können muss: Er
+zählt in der Dunkelheit der Mine als **Licht**. Ein Feuer, das Licht malt und keins gibt, wäre
+Kulisse.
+
+`tools/mine.mjs` prüft vor allem das eine: dass unter Tage keine Windmühle *als* Windmühle steht.
+Ein vergessener Stil fiele sonst nicht auf – der Zeichner beschwert sich nicht, er malt ein
+Segeltuch-Kreuz in den Berg. Auf dem alten Quelltext melden die neuen Prüfungen acht Fehler.
 
 Die Pare stehen nicht nach Gefühl, sondern nach dem, was die Bahnen wirklich spielen: Der
 Normalspieler-Bot (`node tools/audit/audit.mjs mine`) hat sie durchgespielt, und wo sein Median

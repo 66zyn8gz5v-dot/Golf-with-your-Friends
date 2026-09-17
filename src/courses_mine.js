@@ -458,6 +458,7 @@ const MINE_COURSES = [
     obstacles: [
       { type: 'bruchwand', x: 13.0, y: 8.5, w: 1.4, h: 3.0 },
       { type: 'sprengladung', x: 10.5, y: 8.5, phase: 0.0, weite: 3.2 },
+      { type: 'windmill', x: 18.0, y: 8.5, w: 3.0, gap: 0.95, speed: 1.0, blades: 4, axis: 'y', phase: 0.0, style: 'ofen', len: 1.1, height: 1.8, depth: 1.3 },
       { type: 'sprengladung', x: 23.0, y: 8.5, phase: 0.5, weite: 3.4 },
       { type: 'bumper', x: 5.0, y: 5.0, r: 0.7, style: 'fass' },
       { type: 'bumper', x: 5.0, y: 11.0, r: 0.7, style: 'fass' },

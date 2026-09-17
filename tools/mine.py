@@ -125,6 +125,20 @@ def fass(x, y, r=0.65, ebene=0):
     if ebene: o['ebene'] = ebene
     return o
 
+def ofen(x, y, w=3.0, gap=0.95, speed=1.0, blades=4, axis='y', phase=0.0, ebene=0):
+    """Schmelzofen: dieselbe Maschine wie die Windmuehle im Maerchenland, nur anders gezeichnet.
+
+    Ein Bau quer ueber dem Weg, ein Maul in der Mitte, und davor dreht sich das Geblaeserad -
+    steht eine Schaufel unten, ist der Weg zu. Die Frage ist dieselbe wie bei der Muehle (*wann*
+    gehe ich durch?), die Sprache ist die der Schmiede. Ein Windrad sechshundert Meter unter Tage
+    waere Unsinn; ein Stil ist billiger als ein neues Hindernis, und er haelt die Regel gleich.
+    """
+    o = {'type': 'windmill', 'x': x, 'y': y, 'w': w, 'gap': gap, 'speed': speed,
+         'blades': blades, 'axis': axis, 'phase': phase, 'style': 'ofen',
+         'len': 1.1, 'height': 1.8, 'depth': 1.3}
+    if ebene: o['ebene'] = ebene
+    return o
+
 # ---------------------------------------------------------------------------
 # 1 – Mundloch: vor dem Berg, bei Tageslicht. Hier wird nichts Neues verlangt;
 #     die Bahn zeigt nur, wohin es gleich geht.
@@ -358,6 +372,10 @@ setz(f, 3, 8, 'T'); setz(f, 31, 8, 'H')
 bahn('Die Schmelze', 'schmelze', f, [
     wand(13.0, 8.5, 1.4, 3.0),        # der Damm ist zu – erst sprengen
     ladung(10.5, 8.5, 0.0, 3.2),      # die Ladung liegt auf dem Damm davor
+    # Der Schmelzofen steht quer auf dem Damm: Sein Maul ist die einzige Luecke, und das
+    # Geblaeserad davor macht sie im Takt zu. Er steht mit Absicht zwischen den beiden Ladungen -
+    # so folgt auf die Frage *wann kommt der Knall* die Frage *wann steht die Schaufel oben*.
+    ofen(18.0, 8.5),
     ladung(23.0, 8.5, 0.5, 3.4),      # und eine mitten auf dem Damm
     fass(5.0, 5.0, 0.7), fass(5.0, 11.0, 0.7),
     lampe_(4.5, 8.5, 3.8), lampe_(10.5, 8.5, 4.2), lampe_(16.0, 8.5, 4.0),
