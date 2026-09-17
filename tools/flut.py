@@ -165,6 +165,19 @@ def tang(x0, y0, x1, y1, takt=3.4, phase=0.0):
     return o
 
 
+def raucher(x, y, angle=0, weite=6.0, r=1.0, takt=4.6, phase=0.0):
+    o = {'type': 'raucher', 'x': x, 'y': y, 'r': r, 'angle': angle, 'weite': weite, 'takt': takt}
+    if phase: o['phase'] = phase
+    return o
+
+
+def ankerkette(x, y, len_=4.0, amp=48, ruhe=90, takt=5.2, phase=0.0):
+    """x,y ist die AUFHÄNGUNG – der Anker hängt 'len_' Kacheln darunter und schwingt um sie."""
+    o = {'type': 'ankerkette', 'x': x, 'y': y, 'len': len_, 'amp': amp, 'ruhe': ruhe, 'takt': takt}
+    if phase: o['phase'] = phase
+    return o
+
+
 def strudel(x, y, r=2.4, dreh=1):
     return {'type': 'strudel', 'x': x, 'y': y, 'r': r, 'dreh': dreh}
 
@@ -347,7 +360,7 @@ def pruefe(b):
                           f'({auf} von {schritte + 1} Punkten auf Boden)')
 
     # Jede Bahn dieser Welt braucht wenigstens eine ihrer Maschinen, sonst könnte sie überall stehen
-    eigene = {'flut', 'pumpwerk', 'stroemung', 'strudel', 'angler', 'muschel', 'tangwald'}
+    eigene = {'flut', 'pumpwerk', 'stroemung', 'strudel', 'angler', 'muschel', 'tangwald', 'raucher', 'ankerkette'}
     if not any(o['type'] in eigene for o in b['obstacles']):
         fehler.append('keine Maschine der Welt auf dieser Bahn')
 
@@ -502,6 +515,7 @@ bahn('Die Kaimauer', 'daemmerzone', f, par=4,
            'oben zieht es dann kräftig aufs Loch zu – zu kräftig, um dort stehenzubleiben. Das '
            'Pumpwerk liegt am Anfang des langen Wegs.',
      hindernisse=[becken(19, 9, 21, 13), strom(22, 4, 31, 6, 0, tempo=7.5),
+                  ankerkette(27.5, 11.5, len_=4.5),
                   pumpwerk(10.5, 16.5)])
 
 # ---------------------------------------------------------------- Meeresgrund
@@ -515,9 +529,11 @@ bahn('Der Grund', 'meeresgrund', f, par=3,
      intro='Ganz unten. Von oben kommt kein Licht mehr – was leuchtet, leuchtet selbst. Quer über '
            'den Steg liegt ein langes Becken; der Umweg unten herum ist weit, und auf ihm schwimmt '
            'ein Anglerfisch. Seine Laterne ist hier das hellste Licht: Man sieht ihn kommen, bevor '
-           'man ihn sieht.',
+           'man ihn sieht. Auf dem Steg raucht eine heiße Quelle – wer sich daraufliegt und den '
+           'Ausbruch abwartet, fliegt über das ganze Becken hinweg.',
      hindernisse=[becken(13, 7, 24, 9), pumpwerk(19.5, 17.5),
-                  angler(12, 17, 27, 17, tempo=2.4)])
+                  angler(12, 17, 27, 17, tempo=2.4),
+                  raucher(10.5, 8.5, angle=0, weite=15.0)])
 
 # --- 11: das Kaltwasserfeld. Zwei Stege, auf jedem zieht es – und zwar gegeneinander.
 f = meer(40, 21)

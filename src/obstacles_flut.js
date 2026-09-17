@@ -513,3 +513,95 @@ class Tangwald {
     ball.vx *= halt; ball.vy *= halt;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Der Schwarze Raucher
+   ---------------------------------------------------------------------------
+   Eine heiße Quelle am Grund. Im Takt bricht sie aus und wirft alles, was darüber liegt, in hohem
+   Bogen davon – über Mauern hinweg, über Becken, auf einen anderen Steg.
+
+   ER IST DER AUFWIND DIESER WELT, mit einem Unterschied: Der Aufwind im Sturmhimmel braucht einen
+   Ball, der mit Schwung hineinrollt, und trägt ihn in dessen eigener Richtung weiter. Der Raucher
+   nimmt auch einen, der einfach nur daliegt, und wirft ihn immer dorthin, wohin er zeigt. Damit ist
+   er kein Beschleuniger, sondern eine Fähre mit Fahrplan: Man legt sich darauf und wartet.
+
+   DIE ANSAGE GEHT DEM AUSBRUCH VORAUS, wie überall hier. Vor dem Stoß sammelt sich der Schwall
+   sichtbar im Schlot; wer erst beim Ausbruch merkt, daß gleich einer kommt, hat keine Wahl mehr
+   gehabt, und eine Maschine ohne Wahl ist eine Falle. */
+const RAUCHER_TAKT = 4.6;        // Sekunden von einem Ausbruch zum nächsten
+const RAUCHER_STOSS = 0.5;       // so lange dauert der Ausbruch
+const RAUCHER_WARN = 1.3;        // so lange vorher sieht man ihn kommen
+const RAUCHER_WEITE = 6.0;       // so weit fliegt der Ball
+const RAUCHER_TEMPO = 7.5;       // und so schnell
+
+class SchwarzerRaucher {
+  constructor(d) {
+    Object.assign(this, { r: 1.0, takt: RAUCHER_TAKT, stoss: RAUCHER_STOSS, warn: RAUCHER_WARN,
+                          weite: RAUCHER_WEITE, tempo: RAUCHER_TEMPO, angle: 0, phase: 0, ebene: 0 }, d);
+    this.type = 'raucher';
+    const a = (this.angle * Math.PI) / 180;
+    this.dx = Math.cos(a); this.dy = Math.sin(a);
+    this.bricht = false; this.p = 0; this.ansage = 0;
+    this.update(0);
+  }
+  setup(level) { this.level = level; }
+  update(t) {
+    this.t = t;
+    const u = (((t / this.takt + this.phase) % 1) + 1) % 1;
+    const s = u * this.takt;                       // Sekunden seit dem letzten Ausbruchsbeginn
+    this.bricht = s < this.stoss;
+    this.p = this.bricht ? s / this.stoss : 0;
+    /* Die Ansage: 0 bis 1 in den letzten 'warn' Sekunden vor dem nächsten Ausbruch. */
+    const bisNaechster = this.takt - s;
+    this.ansage = bisNaechster < this.warn ? 1 - bisNaechster / this.warn : 0;
+  }
+  /* launch ist derselbe Haken, den auch Rampe und Aufwind benutzen – er greift vor der Flugphase
+     und vor allem vor der Reibung. Ein Wurf über 'force' wäre wieder die Reibungsfalle. */
+  launch(ball, events, t) {
+    if (ball.air || ball.rider || ball.sunk || !this.bricht) return;
+    if (Math.hypot(ball.x - this.x, ball.y - this.y) > this.r) return;
+    const flug = this.weite / this.tempo;
+    ball.vx = this.dx * this.tempo; ball.vy = this.dy * this.tempo;
+    ball.vz = (12 * flug) / 2; ball.z = Math.max(ball.z, 0.02); ball.air = true;
+    events.push({ type: 'raucher', x: this.x, y: this.y });
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Die Ankerkette
+   ---------------------------------------------------------------------------
+   Ein Anker an einer Kette, der über den Steg schwingt. Er stößt wie das Pendel der Uhrwerkstadt –
+   nur schwerer und langsamer, und das ist hier keine Geschmacksfrage: Auf einem drei Kacheln
+   schmalen Steg über offenem Wasser reicht ein Stoß, um jemanden hinunterzuschicken. Ein schnelles
+   Pendel wäre dort kein Hindernis, sondern ein Würfel.
+
+   ER HÄNGT AN EINER AUFHÄNGUNG, nicht in der Luft. Die Kette wird mitgezeichnet, und daran sieht
+   man, wo er gleich sein wird: Ein Anker, der scheinbar frei herumfliegt, hat keine Bahn, die man
+   ablesen könnte. */
+const KETTE_TAKT = 5.2;          // Sekunden für ein Hin und Zurück – langsam, damit man es lesen kann
+
+class Ankerkette {
+  constructor(d) {
+    Object.assign(this, { len: 4.0, amp: 48, ruhe: 90, takt: KETTE_TAKT, phase: 0,
+                          w: 1.5, h: 1.5, e: 0.45, hoehe: 0.9, ebene: 0 }, d);
+    this.type = 'ankerkette';
+    this.ax = this.x; this.ay = this.y;             // die Aufhängung bleibt stehen
+    this.ampR = (this.amp * Math.PI) / 180;
+    this.ruheR = (this.ruhe * Math.PI) / 180;
+    this.omega = TAU / this.takt;
+    this.update(0);
+  }
+  update(t) {
+    const w = this.omega * t + this.phase * TAU;
+    this.angle = this.ruheR + this.ampR * Math.sin(w);
+    const dw = this.ampR * this.omega * Math.cos(w);
+    this.x = this.ax + Math.cos(this.angle) * this.len;
+    this.y = this.ay + Math.sin(this.angle) * this.len;
+    this.vx = -Math.sin(this.angle) * this.len * dw;
+    this.vy = Math.cos(this.angle) * this.len * dw;
+    this.dir = Math.sign(dw) || 1;
+    this.schwung = Math.abs(dw) / (this.ampR * this.omega || 1);
+  }
+  poly() { return rectPoly(this.x, this.y, this.w, this.h); }
+  segments(out) { polySegments(this.poly(), out, { vx: this.vx, vy: this.vy, e: this.e, kind: 'mover', owner: this }); }
+}

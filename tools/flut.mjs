@@ -346,6 +346,102 @@ console.log('\n--- Der Strudel ---');
         `aus y = 3.5 wird y = ${c.y.toFixed(2)}`);
 }
 
+console.log('\n--- Der Schwarze Raucher ---');
+{
+  const bahn = (hind) => G.buildLevel({
+    name: 'Raucherprüfung', par: 3, theme: 'meeresgrund',
+    map: ['................', '.T############H.', '.##############.', '.##############.',
+          '.##############.', '.##############.', '................'],
+    obstacles: hind,
+  });
+  const lv = bahn([{ type: 'raucher', x: 5, y: 3.5, r: 1, takt: 4, stoss: 0.5, warn: 1.2, angle: 0, weite: 6, tempo: 7.5 }]);
+  const r = lv.obstacles.find(o => o.type === 'raucher');
+  pruef('der Schwarze Raucher wird gebaut', !!r && typeof r.launch === 'function');
+
+  /* Er nimmt auch einen, der einfach nur daliegt – das ist sein Unterschied zum Aufwind, der einen
+     Ball mit Schwung braucht. Damit ist er eine Fähre mit Fahrplan und kein Beschleuniger. */
+  const b = G.makeBall(5, 3.5, '#fff');
+  r.update(0.1);
+  const ev = G.stepPhysics(lv, b, 1 / 240, 0.1, false);
+  pruef('er wirft auch einen Ball, der nur daliegt', ev.some(e => e.type === 'raucher') && b.air,
+        `in der Luft: ${b.air}`);
+  pruef('und zwar in seine Richtung', b.vx > 7 && Math.abs(b.vy) < 0.3,
+        `Tempo (${b.vx.toFixed(1)}, ${b.vy.toFixed(1)})`);
+
+  /* Zwischen den Ausbrüchen darf er nichts tun – sonst wäre er kein Takt, sondern ein Dauerwurf. */
+  const ruhig = bahn([{ type: 'raucher', x: 5, y: 3.5, r: 1, takt: 4, stoss: 0.5, angle: 0 }]);
+  const r2 = ruhig.obstacles.find(o => o.type === 'raucher');
+  const c = G.makeBall(5, 3.5, '#fff');
+  r2.update(2.0);                                  // mitten zwischen zwei Ausbrüchen
+  const ev2 = G.stepPhysics(ruhig, c, 1 / 240, 2.0, false);
+  pruef('zwischen den Ausbrüchen liegt man ruhig', !ev2.some(e => e.type === 'raucher') && !c.air);
+
+  /* Die Ansage geht dem Ausbruch voraus. Eine Maschine, die man erst merkt, wenn sie zuschlägt,
+     ist eine Falle - dieselbe Regel wie beim Ring der Lavafontäne. */
+  r2.update(4 - 0.1); const kurzDavor = r2.ansage;
+  r2.update(2.0); const mittendrin = r2.ansage;
+  pruef('kurz vorher sieht man ihn kommen', kurzDavor > 0.85 && mittendrin < 0.05,
+        `kurz davor ${kurzDavor.toFixed(2)}, dazwischen ${mittendrin.toFixed(2)}`);
+
+  /* Und er wirft WEIT. Das ist der Sinn: Wer fliegt, sieht weder Mauern noch Becken noch die
+     Ränder der Stege – der Raucher ist der einzige Weg in dieser Welt, etwas zu überspringen.
+     Geprüft wird die Weite, denn die ist die Zahl, an der eine Bahn geplant wird. */
+  const weit = bahn([{ type: 'raucher', x: 3, y: 3.5, r: 1, takt: 4, stoss: 0.5, angle: 0, weite: 7, tempo: 7.5 }]);
+  const wr = weit.obstacles.find(o => o.type === 'raucher');
+  const d = G.makeBall(3, 3.5, '#fff');
+  let flog = false;
+  for (let i = 0; i < 240 * 2; i++) {
+    const t = 0.1 + i / 240;
+    wr.update(t);
+    G.stepPhysics(weit, d, 1 / 240, t, true, false);
+    if (d.air) flog = true;
+    if (flog && !d.air) break;
+  }
+  pruef('und er wirft etwa so weit, wie an ihm steht', Math.abs(d.x - (3 + 7)) < 1.6,
+        `landet bei x = ${d.x.toFixed(1)}, erwartet rund ${3 + 7}`);
+}
+
+console.log('\n--- Die Ankerkette ---');
+{
+  const lv = G.buildLevel({
+    name: 'Ankerprüfung', par: 3, theme: 'daemmerzone',
+    map: ['................', '.T############H.', '.##############.', '.##############.',
+          '.##############.', '.##############.', '................'],
+    obstacles: [{ type: 'ankerkette', x: 8, y: 0.5, len: 3, amp: 48, takt: 5.2 }],
+  });
+  const k = lv.obstacles.find(o => o.type === 'ankerkette');
+  pruef('die Ankerkette wird gebaut', !!k && typeof k.segments === 'function');
+
+  /* Sie hängt an einer Aufhängung und schwingt um sie – der Anker bewegt sich, die Aufhängung
+     nicht. Ohne das hätte man keine Bahn, die man ablesen könnte. */
+  const orte = [];
+  for (let i = 0; i < 60; i++) { k.update(i * 0.1); orte.push([k.x, k.y, k.ax, k.ay]); }
+  const wandert = Math.max(...orte.map(o => o[0])) - Math.min(...orte.map(o => o[0]));
+  const haengtFest = orte.every(o => o[2] === orte[0][2] && o[3] === orte[0][3]);
+  pruef('der Anker schwingt', wandert > 2, `${wandert.toFixed(1)} Kacheln weit`);
+  pruef('und die Aufhängung bleibt stehen', haengtFest);
+  pruef('er bleibt am Ende der Kette', orte.every(o => Math.abs(Math.hypot(o[0] - o[2], o[1] - o[3]) - k.len) < 1e-9),
+        `Kettenlänge ${k.len}`);
+
+  /* Langsam ist hier kein Geschmack: Auf einem drei Kacheln schmalen Steg über offenem Wasser
+     reicht ein Stoß, um jemanden hinunterzuschicken. Ein schnelles Pendel wäre dort ein Würfel. */
+  const pendel = fs.readFileSync(path.join(SRC, 'obstacles_legend.js'), 'utf8');
+  const pTakt = parseFloat((pendel.match(/const PENDEL_TAKT = ([\d.]+)/) || [])[1]);
+  pruef('sie schwingt langsamer als das Pendel der Uhrwerkstadt', k.takt > pTakt,
+        `${k.takt} s gegen ${pTakt} s`);
+
+  /* Und sie stößt: Ein Ball, den der Anker trifft, fliegt weg. Geprüft mit echter Physik. */
+  const b = G.makeBall(8, 3.5, '#fff');
+  let getroffen = false;
+  for (let i = 0; i < 240 * 6 && !getroffen; i++) {
+    const t = i / 240;
+    G.stepPhysics(lv, b, 1 / 240, t, true);
+    if (Math.hypot(b.vx, b.vy) > 1.5) getroffen = true;
+  }
+  pruef('sie stößt einen Ball, der im Weg liegt', getroffen,
+        `Tempo ${Math.hypot(b.vx, b.vy).toFixed(2)}`);
+}
+
 console.log('\n--- Der Tangwald ---');
 {
   const bahn = (hind) => G.buildLevel({

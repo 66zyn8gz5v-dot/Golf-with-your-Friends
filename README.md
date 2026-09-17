@@ -1548,8 +1548,8 @@ Stufe Legende:
 | 7–9 | `daemmerzone` | Die Gassen · Der Marktplatz · Die Kaimauer |
 | 10–12 | `meeresgrund` | Der Grund · Das Kaltwasserfeld · Der Schlund |
 
-Sieben Maschinen: **Flutbecken**, **Pumpwerk**, **Strömung**, **Strudel**, **Anglerfisch**,
-**Riesenmuschel** und **Tangwald**.
+Neun Maschinen: **Flutbecken**, **Pumpwerk**, **Strömung**, **Strudel**, **Anglerfisch**,
+**Riesenmuschel**, **Tangwald**, **Schwarzer Raucher** und **Ankerkette**.
 
 **Die Bahnen sind Stege, keine Plätze.** Ringsum steht offenes Wasser, und wer heruntergespült
 wird, zahlt. Das ist der Unterschied zwischen einer Strömung, die ärgert, und einer, die etwas
@@ -1665,6 +1665,35 @@ auf, der Ball kreiste dort und kam nicht mehr los, bis ihn nach vier Sekunden di
 Spiels herausnahm. Eine Maschine, aus der einen die Notbremse befreien muss, ist kaputt. Jetzt
 drückt er überall ein wenig nach außen: ein Schleuderrad. `tools/flut.mjs` legt einen Ball ohne
 Schwung fast genau in die Mitte und verlangt, dass er innerhalb von dreieinhalb Sekunden draußen ist.
+
+### Der Schwarze Raucher – der Aufwind dieser Welt
+
+Eine heiße Quelle am Grund. Im Takt bricht sie aus und wirft alles, was darüber liegt, in hohem
+Bogen davon – über Mauern, über Becken, auf einen anderen Steg. Sie ist der **einzige Weg in dieser
+Welt, etwas zu überspringen**: Wer fliegt, sieht weder Mauern noch Becken noch die Ränder der Stege.
+
+Der Unterschied zum Aufwind im Sturmhimmel ist der Punkt: Der braucht einen Ball, der mit Schwung
+hineinrollt, und trägt ihn in dessen eigener Richtung weiter. Der Raucher nimmt auch einen, der
+einfach nur daliegt, und wirft ihn immer dorthin, wohin er zeigt. Damit ist er kein Beschleuniger,
+sondern **eine Fähre mit Fahrplan**: Man legt sich darauf und wartet.
+
+Geworfen wird über `launch` – denselben Haken, den Rampe und Aufwind benutzen. Er greift vor der
+Flugphase und vor allem vor der Reibung; ein Wurf über `force` wäre wieder die Reibungsfalle.
+
+Und die Ansage geht dem Ausbruch voraus: Vor dem Stoß sammelt sich der Schwall sichtbar im Schlot,
+und auf dem Boden liegt ein Ring, der anschwillt. Wer erst beim Ausbruch merkt, dass gleich einer
+kommt, hat keine Wahl gehabt – und eine Maschine ohne Wahl ist eine Falle.
+
+### Die Ankerkette – schwerer und langsamer als das Pendel
+
+Ein Anker an einer Kette, der über den Steg schwingt. Er stößt wie das Pendel der Uhrwerkstadt, nur
+mit 5,2 s statt 3,4 s Taktzeit. **Langsam ist hier kein Geschmack:** Auf einem drei Kacheln schmalen
+Steg über offenem Wasser reicht ein Stoß, um jemanden hinunterzuschicken. Ein schnelles Pendel wäre
+dort kein Hindernis, sondern ein Würfel.
+
+Die Kette wird Glied für Glied mitgezeichnet, und die Aufhängung bleibt stehen. Das ist der Grund:
+An ihr liest man ab, wo der Anker gleich sein wird. Ein Anker, der scheinbar frei herumfliegt, hätte
+keine Bahn, die man vorhersehen könnte.
 
 ### Die Riesenmuschel – Mauer oder Maul, je nach Takt
 

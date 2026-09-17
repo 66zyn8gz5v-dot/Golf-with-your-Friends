@@ -2684,6 +2684,9 @@
         case 'angler': hazard('angler'); return;
         /* Die Riesenmuschel: verschluckt und gibt wieder her. Beide Augenblicke werden gemeldet –
            der erste sagt „das war Absicht", der zweite „jetzt geht es los". */
+        /* Der Schwarze Raucher wirft den Ball davon. Das ist kein Schaden, sondern eine Fähre –
+           darum ein Wusch und keine Warnung. */
+        case 'raucher': Sfx.whoosh(); burst(ev.x, ev.y, '#ffc9a0', 24, true); burst(ev.x, ev.y, '#6b5a4c', 14, true); break;
         case 'muschel':
           if (ev.aus) { Sfx.bounce(6); burst(ev.x, ev.y, '#f0e6d2', 16, true); }
           else { Sfx.lever(); burst(ev.x, ev.y, '#cfeaff', 14, true); showMessage('Die Muschel hat dich!', 1200); }

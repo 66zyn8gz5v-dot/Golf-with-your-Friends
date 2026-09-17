@@ -332,6 +332,119 @@ Object.assign(Renderer.prototype, {
     ctx.restore();
   },
 
+  /* ================= Der Schwarze Raucher =================
+     Auf dem Boden der Ring, der sagt, wie weit er greift – und wie nah der nächste Ausbruch ist.
+     Das ist dieselbe Ansage wie beim Ring der Lavafontäne, und sie steht aus demselben Grund auf
+     dem Boden und nicht am Gerät: Man zielt auf den Boden, nicht auf den Schlot. */
+  drawRaucherFloor(ctx, ob, t) {
+    const [sx, sy] = this.proj(ob.x, ob.y, 0.011);
+    const R = this.scale * (ob.r || 1);
+    const a = ob.ansage || 0;
+    ctx.save();
+    ctx.strokeStyle = `rgba(255,190,140,${0.18 + 0.6 * a})`;
+    ctx.lineWidth = Math.max(1.5, this.scale * (0.05 + 0.06 * a));
+    ctx.beginPath(); ctx.ellipse(sx, sy, R, R * this.cam.tilt, 0, 0, TAU); ctx.stroke();
+    if (ob.bricht) {
+      const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, R * 1.3);
+      g.addColorStop(0, 'rgba(255,220,180,0.45)'); g.addColorStop(1, 'rgba(255,160,90,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.ellipse(sx, sy, R * 1.3, R * 1.3 * this.cam.tilt, 0, 0, TAU); ctx.fill();
+    }
+    ctx.restore();
+  },
+
+  /* Der Schlot selbst: ein schiefer Turm aus verbackenen Mineralien, und darüber die Wolke.
+     Zwischen den Ausbrüchen steigt nur ein Faden; vor dem Ausbruch schwillt er an, und im Stoß
+     schießt die Fahne heraus. Wie stark, sagt die Höhe – nicht die Farbe. */
+  drawRaucher(ctx, ob, t) {
+    const s = this.scale;
+    const [sx, sy] = this.proj(ob.x, ob.y, 0);
+    const a = ob.ansage || 0;
+    const stoss = ob.bricht ? Math.sin(Math.min(1, ob.p) * Math.PI) : 0;
+    ctx.save();
+    // Schlot
+    const hoehe = s * 1.5;
+    const schlot = ctx.createLinearGradient(sx, sy, sx, sy - hoehe);
+    schlot.addColorStop(0, '#2a2420'); schlot.addColorStop(0.6, '#3e332c'); schlot.addColorStop(1, '#1d1815');
+    ctx.fillStyle = schlot;
+    ctx.beginPath();
+    ctx.moveTo(sx - s * 0.62, sy);
+    ctx.quadraticCurveTo(sx - s * 0.34, sy - hoehe * 0.6, sx - s * 0.22, sy - hoehe);
+    ctx.lineTo(sx + s * 0.2, sy - hoehe);
+    ctx.quadraticCurveTo(sx + s * 0.4, sy - hoehe * 0.55, sx + s * 0.66, sy);
+    ctx.closePath(); ctx.fill();
+    // Krusten
+    ctx.strokeStyle = 'rgba(200,170,140,0.22)'; ctx.lineWidth = Math.max(1, s * 0.035);
+    for (let i = 1; i <= 3; i++) {
+      const y = sy - hoehe * (i / 4);
+      ctx.beginPath(); ctx.moveTo(sx - s * (0.55 - i * 0.09), y); ctx.lineTo(sx + s * (0.58 - i * 0.1), y); ctx.stroke();
+    }
+    // Die Fahne
+    const menge = Math.max(a * 0.45, stoss);
+    if (menge > 0.02) {
+      ctx.globalCompositeOperation = 'lighter';
+      for (let i = 0; i < 10; i++) {
+        const u = i / 10;
+        const hy = sy - hoehe - u * s * (1.2 + 6.5 * menge);
+        const hx = sx + Math.sin(t * 2.1 + i * 0.8) * s * 0.3 * u;
+        const r = s * (0.18 + 0.5 * u) * (0.5 + menge);
+        ctx.fillStyle = `rgba(${40 + 120 * stoss | 0},${34 + 60 * stoss | 0},${30 + 30 * stoss | 0},${(0.3 - 0.24 * u) * (0.4 + menge)})`;
+        ctx.beginPath(); ctx.arc(hx, hy, r, 0, TAU); ctx.fill();
+      }
+      ctx.globalCompositeOperation = 'source-over';
+    }
+    ctx.restore();
+  },
+
+  /* ================= Die Ankerkette =================
+     Die Kette von der Aufhängung zum Anker ist das Wichtigste an der Zeichnung: An ihr liest man
+     ab, wo der Anker gleich sein wird. Ein Anker ohne sichtbare Aufhängung hätte keine Bahn, die
+     man vorhersehen könnte, und wäre damit Glückssache. */
+  drawAnkerkette(ctx, ob, t) {
+    const s = this.scale;
+    const [ax, ay] = this.proj(ob.ax, ob.ay, 1.5);
+    const [bx, by] = this.proj(ob.x, ob.y, ob.hoehe || 0.9);
+    ctx.save();
+    // Die Kette: Glied für Glied, damit sie schwer aussieht und nicht wie ein Faden
+    const n = 12;
+    for (let i = 0; i < n; i++) {
+      const u = (i + 0.5) / n;
+      const gx = ax + (bx - ax) * u, gy = ay + (by - ay) * u - Math.sin(u * Math.PI) * s * 0.12;
+      ctx.strokeStyle = i % 2 ? 'rgba(150,158,160,0.85)' : 'rgba(96,104,108,0.85)';
+      ctx.lineWidth = Math.max(1.5, s * 0.075);
+      ctx.beginPath(); ctx.ellipse(gx, gy, s * 0.1, s * 0.055, Math.atan2(by - ay, bx - ax), 0, TAU); ctx.stroke();
+    }
+    // Die Aufhängung: ein Poller, an dem sie hängt
+    ctx.fillStyle = '#4a545a';
+    ctx.beginPath(); ctx.ellipse(ax, ay, s * 0.22, s * 0.3, 0, 0, TAU); ctx.fill();
+
+    // Der Anker
+    const gr = s * 0.55;
+    ctx.translate(bx, by);
+    ctx.strokeStyle = '#8d979b'; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.lineWidth = Math.max(2, s * 0.13);
+    ctx.beginPath(); ctx.moveTo(0, -gr * 1.1); ctx.lineTo(0, gr * 0.75); ctx.stroke();       // Schaft
+    ctx.lineWidth = Math.max(2, s * 0.1);
+    ctx.beginPath(); ctx.moveTo(-gr * 0.6, -gr * 0.65); ctx.lineTo(gr * 0.6, -gr * 0.65); ctx.stroke();  // Stock
+    ctx.lineWidth = Math.max(2, s * 0.12);
+    ctx.beginPath();
+    ctx.moveTo(-gr * 0.85, gr * 0.1);
+    ctx.quadraticCurveTo(-gr * 0.7, gr * 0.85, 0, gr * 0.8);
+    ctx.quadraticCurveTo(gr * 0.7, gr * 0.85, gr * 0.85, gr * 0.1);
+    ctx.stroke();                                                                             // Arme
+    ctx.fillStyle = '#b4bec2';
+    for (const sx2 of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(sx2 * gr * 0.85, gr * 0.1);
+      ctx.lineTo(sx2 * gr * 1.05, gr * 0.42);
+      ctx.lineTo(sx2 * gr * 0.62, gr * 0.36);
+      ctx.closePath(); ctx.fill();                                                            // Flunken
+    }
+    ctx.strokeStyle = '#6c7679'; ctx.lineWidth = Math.max(1.5, s * 0.08);
+    ctx.beginPath(); ctx.arc(0, -gr * 1.15, gr * 0.22, 0, TAU); ctx.stroke();                  // Ring
+    ctx.restore();
+  },
+
   /* ================= Der Tangwald =================
      Halme, die im Wellengang stehen und sich neigen – und zwischen ihnen die Gasse, die mitwandert.
      Gezeichnet wird die Gasse nicht als Loch, sondern als Lücke zwischen den Halmen: Man sieht sie,

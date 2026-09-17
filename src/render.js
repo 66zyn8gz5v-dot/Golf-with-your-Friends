@@ -1775,6 +1775,7 @@ class Renderer {
     if (ob.type === 'stroemung') { this.drawStroemungFloor(ctx, ob, t); return; }
     if (ob.type === 'strudel') { this.drawStrudelFloor(ctx, ob, t); return; }
     if (ob.type === 'angler') { this.drawAnglerScheinFloor(ctx, ob, t); return; }
+    if (ob.type === 'raucher') { this.drawRaucherFloor(ctx, ob, t); return; }
     if (ob.type === 'schneebruecke') { this.drawSchneebrueckeFloor(ctx, ob, t); return; }
     if (ob.type === 'dial' || ob.type === 'wanderloch') { this.drawWanderlochFloor(ctx, ob, t); return; }
     if (ob.type === 'field' && ob.style === 'steam') { this.drawSteam(ctx, ob, t); return; }
@@ -2110,6 +2111,13 @@ class Renderer {
       /* noFade: Die Wand ist der Grund, warum man hier nicht weiterkommt. Durchsichtig zu werden,
          sobald der Ball davorliegt, nähme ihr genau das. */
       items.push({ x: ob.x, y: ob.y, bias: 0.3, noFade: true, draw: () => this.drawBruchwand(ctx, ob, t) });
+    } else if (ob.type === 'raucher') {
+      /* noFade: Der Schlot ist die Ansage. Durchsichtig zu werden, sobald der Ball davorliegt,
+         nähme ihm genau das – und davor liegt man hier mit Absicht. */
+      items.push({ x: ob.x, y: ob.y, bias: 0.4, noFade: true, draw: () => this.drawRaucher(ctx, ob, t) });
+    } else if (ob.type === 'ankerkette') {
+      /* noFade: An der Kette liest man ab, wo der Anker gleich sein wird. */
+      items.push({ x: ob.x, y: ob.y, bias: 0.45, noFade: true, draw: () => this.drawAnkerkette(ctx, ob, t) });
     } else if (ob.type === 'tangwald') {
       /* Halme stehen aufrecht und gehören vor das, was hinter ihnen liegt. Sie dürfen ruhig
          verblassen, wenn der Ball dahinter liegt – sie halten ja niemanden auf. */

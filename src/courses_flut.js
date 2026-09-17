@@ -284,12 +284,13 @@ const FLUT_COURSES = [
     obstacles: [
       { type: 'flut', x: 20.5, y: 11.5, w: 3, h: 5, start: 2.5, takt: 1.2, halt: 1.0, leer: 5.0 },
       { type: 'stroemung', x: 27.0, y: 5.5, w: 10, h: 3, angle: 0, tempo: 7.5 },
+      { type: 'ankerkette', x: 27.5, y: 11.5, len: 4.5, amp: 48, ruhe: 90, takt: 5.2 },
       { type: 'pumpwerk', x: 10.5, y: 16.5, r: 0.8, dauer: 4 },
     ],
   },
   {
     name: 'Der Grund', par: 3, theme: 'meeresgrund',
-    intro: 'Ganz unten. Von oben kommt kein Licht mehr – was leuchtet, leuchtet selbst. Quer über den Steg liegt ein langes Becken; der Umweg unten herum ist weit, und auf ihm schwimmt ein Anglerfisch. Seine Laterne ist hier das hellste Licht: Man sieht ihn kommen, bevor man ihn sieht.',
+    intro: 'Ganz unten. Von oben kommt kein Licht mehr – was leuchtet, leuchtet selbst. Quer über den Steg liegt ein langes Becken; der Umweg unten herum ist weit, und auf ihm schwimmt ein Anglerfisch. Seine Laterne ist hier das hellste Licht: Man sieht ihn kommen, bevor man ihn sieht. Auf dem Steg raucht eine heiße Quelle – wer sich daraufliegt und den Ausbruch abwartet, fliegt über das ganze Becken hinweg.',
     map: [
       '......................................',
       '.wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.',
@@ -317,6 +318,7 @@ const FLUT_COURSES = [
       { type: 'flut', x: 19.0, y: 8.5, w: 12, h: 3, start: 2.5, takt: 1.2, halt: 1.0, leer: 5.0 },
       { type: 'pumpwerk', x: 19.5, y: 17.5, r: 0.8, dauer: 4 },
       { type: 'angler', x0: 12.5, y0: 17.5, x1: 27.5, y1: 17.5, tempo: 2.4 },
+      { type: 'raucher', x: 10.5, y: 8.5, r: 1.0, angle: 0, weite: 15.0, takt: 4.6 },
     ],
   },
   {
