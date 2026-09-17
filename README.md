@@ -1548,7 +1548,13 @@ Stufe Legende:
 | 7–9 | `daemmerzone` | Die Gassen · Der Marktplatz · Die Kaimauer |
 | 10–12 | `meeresgrund` | Der Grund · Das Kaltwasserfeld · Der Schlund |
 
-Vier Maschinen: **Flutbecken**, **Pumpwerk**, **Strömung** und **Strudel**. Auf der Weltkarte liegt sie allein im Südostmeer, mit einem Kirchturm als Marke –
+Fünf Maschinen: **Flutbecken**, **Pumpwerk**, **Strömung**, **Strudel** und **Anglerfisch**.
+
+**Die Bahnen sind Stege, keine Plätze.** Ringsum steht offenes Wasser, und wer heruntergespült
+wird, zahlt. Das ist der Unterschied zwischen einer Strömung, die ärgert, und einer, die etwas
+kostet – und der Grund, warum die Welt eine Legende ist. Dass ringsum *Wasser* steht und nicht
+Abgrund, ist dabei kein Geschmack, sondern Mechanik: Am Rand eines Stegs über dem Abgrund baut das
+Spiel eine Bande, und gegen die würde die Strömung einen nur drücken. Auf der Weltkarte liegt sie allein im Südostmeer, mit einem Kirchturm als Marke –
 dem Einzigen, was von so einer Stadt am Ende noch herausschaut.
 
 ### Erst war es eine Weltregel, und das war ein Fehler
@@ -1626,7 +1632,24 @@ Sie beschleunigt **nicht** ins Unendliche: Sie zieht den Ball auf ihr eigenes Te
 weiter, wie echtes Wasser. Ohne diese Schranke wäre sie keine Strömung, sondern eine Kanone.
 
 Mit `puls` wird aus dem gleichmäßigen Zug eine **Dünung**: Sie schwillt an und ab, und dazwischen
-ist für einen Augenblick Ruhe – das ist dann das Zeitfenster. Gezeichnet wird sie als Striche, die
+ist für einen Augenblick Ruhe – das ist dann das Zeitfenster.
+
+**Dieselbe Reibungsfalle ist dabei noch zweimal zugeschnappt**, und beide Male sah es im Browser
+aus, als sei die Maschine kaputt, während alle Zahlen grün waren:
+
+1. Die Dünung skalierte zuerst die **Kraft**. Bei halber Welle waren das 13 × 0,32 = 4,16 – knapp
+   unter der Reibung 4,2, und damit bewegte sich gar nichts. Jetzt schiebt sie immer mit voller
+   Kraft, nur auf ein kleineres **Zieltempo**.
+2. Fünf von sechs Strömungen lagen auf **Schlick**, und dessen Reibung ist 20. Eine Strömung mit 13
+   trägt dort nichts. `tools/flut.py` lehnt das jetzt ab.
+
+Dazu kam die Wellenform selbst: `max(0, sin)²` – die Formel des Windstoßes im Märchenland – steht
+die *halbe* Zeit still, bei gemächlichem Puls sechs Sekunden am Stück. Jetzt ist die Welle
+gestaucht: Ruhe nur im untersten Drittel.
+
+Und eine Stelle in `src/main.js`: Wer aus der Strömung gespült wird, darf nicht **mitten in ihr**
+zurückgelegt werden, sonst treibt er sofort wieder ab und bekommt den nächsten Strafschlag, bis das
+Limit erreicht ist. Derselbe Fehler wie beim Wasser, nur eine Maschine weiter. Gezeichnet wird sie als Striche, die
 mitlaufen; ihre Spitze läuft vorweg, so wie eine Welle spitz auf ihre Laufrichtung zeigt. Wie stark
 sie zieht, sagt das Tempo der Striche, nicht ihre Farbe.
 
@@ -1641,6 +1664,32 @@ auf, der Ball kreiste dort und kam nicht mehr los, bis ihn nach vier Sekunden di
 Spiels herausnahm. Eine Maschine, aus der einen die Notbremse befreien muss, ist kaputt. Jetzt
 drückt er überall ein wenig nach außen: ein Schleuderrad. `tools/flut.mjs` legt einen Ball ohne
 Schwung fast genau in die Mitte und verlangt, dass er innerhalb von dreieinhalb Sekunden draußen ist.
+
+### Der Anglerfisch – das erste Hindernis, das einen sucht
+
+Er schwimmt seine Strecke ab, hin und zurück, die Laterne voraus. Wer sich einfangen lässt, zahlt
+einen Schlag und wird an den **Anfang des letzten Schlags** zurückgelegt – dieselbe Strafe wie bei
+den Stacheln im Schattenreich.
+
+**Er ist etwas Neues für diese Welt.** Becken, Strömung und Strudel stehen, wo sie stehen: Man kann
+ihnen ausweichen und danach in Ruhe zielen. Der Angler kommt zu einem hin. Ein liegender Ball ist
+vor ihm nicht sicher, und damit wird aus „ich warte auf den richtigen Augenblick" ein „ich muss hier
+weg, bevor er da ist".
+
+Drei Entscheidungen, die man ihm nicht ansieht:
+
+- **Er schwimmt gleichmäßig**, nicht in einer Sinusschwingung wie die Lore der Uhrwerkstadt. Ein
+  Fisch, der an den Enden bremst und in der Mitte rast, sieht aus wie ein Pendel – und vor allem
+  könnte man sein Tempo nicht abschätzen. Ein Dreieck statt eines Cosinus.
+- **Er hat kein `airTrigger`.** Wer über ihn hinwegfliegt, kommt davon. Das ist die Belohnung für
+  einen Sprung und der einzige Weg, ihn zu überspielen.
+- **Die Laterne ist nicht nur Schmuck.** Auf dem Meeresgrund ist sie das Hellste weit und breit –
+  man sieht ihn kommen, bevor man ihn erkennt. Dieselbe Regel wie überall hier: Die Ansage geht der
+  Gefahr voraus.
+
+`tools/flut.py` lehnt zwei Dinge ab, die man einer Bahn beim Bauen nicht ansieht: einen Angler,
+dessen Strecke neben dem Steg im Wasser liegt (dann schwimmt er da, wo nie ein Ball ist), und einen,
+der bis an den Abschlag reicht (dann wird man gefressen, bevor man den ersten Schlag tun konnte).
 
 ### Das Pumpwerk
 

@@ -56,6 +56,51 @@ def setz(f, x, y, z):
     f[y][x] = z
 
 
+def meer(breit, hoch):
+    """Eine Bahn, die aus offenem Wasser besteht – die Stege werden hineingelegt.
+
+    WARUM WASSER UND NICHT ABGRUND. Am Rand eines Stegs über dem Abgrund baut das Spiel eine
+    Bande: Wer dagegengedrückt wird, prallt ab und bleibt liegen. Eine Strömung könnte dann
+    niemanden herunterspülen, sie würde einen nur an die Bande drücken – geprüft im Browser, und
+    genau so sah es aus. Über Wasser gibt es keine Bande: Wer hinausgetrieben wird, geht unter und
+    zahlt einen Strafschlag. Erst damit ist die Strömung eine Gefahr.
+
+    Ganz außen bleibt ein Rahmen aus Abgrund, damit die Bahn eine Kante hat und nicht ins Nichts
+    ausfranst."""
+    f = leer(breit, hoch, 'w')
+    for x in range(breit):
+        f[0][x] = '.'; f[hoch - 1][x] = '.'
+    for y in range(hoch):
+        f[y][0] = '.'; f[y][breit - 1] = '.'
+    return f
+
+
+def gang(f, x0, y0, x1, y1, b=3, z='#'):
+    """Ein gerader Steg, b Kacheln breit, von (x0,y0) nach (x1,y1) – waagerecht oder senkrecht.
+
+    Die Bahnen dieser Welt sind aus Stegen gebaut, nicht aus Plätzen: Ringsum ist offenes Wasser,
+    und wer heruntergespült wird, zahlt. Das ist der Unterschied zwischen einer Strömung, die
+    ärgert, und einer, die etwas kostet – und der Grund, warum die Welt eine Legende ist."""
+    h = (b - 1) // 2
+    if y0 == y1:
+        fuell(f, min(x0, x1), y0 - h, max(x0, x1), y0 + (b - 1 - h), z)
+    else:
+        fuell(f, x0 - h, min(y0, y1), x0 + (b - 1 - h), max(y0, y1), z)
+
+
+def umweg(f, x0, x1, ym, yn, b=3):
+    """Der Nebensteg samt seinen beiden Verbindungen: der Weg, den man nimmt, wenn das Becken
+    gerade vollsteht. Ohne ihn müßte man warten, und das soll nie sein."""
+    gang(f, x0, yn, x1, yn, b)
+    gang(f, x0, ym, x0, yn, b)
+    gang(f, x1, ym, x1, yn, b)
+
+
+def kammer(f, x0, y0, x1, y1, z='#'):
+    """Ein weiterer Raum im Steg – da, wo sich etwas drehen können muß."""
+    fuell(f, x0, y0, x1, y1, z)
+
+
 def txt(f):
     return [''.join(r) for r in f]
 
@@ -95,6 +140,14 @@ def strom(x0, y0, x1, y1, angle, tempo=None, kraft=None, puls=0, phase=0.0):
     if tempo is not None: o['tempo'] = tempo
     if kraft is not None: o['kraft'] = kraft
     if puls: o['puls'] = puls; o['phase'] = phase
+    return o
+
+
+def angler(x0, y0, x1, y1, tempo=2.2, phase=0.0):
+    """Ein Anglerfisch, der die Strecke (x0,y0)–(x1,y1) abschwimmt."""
+    o = {'type': 'angler', 'x0': x0 + 0.5, 'y0': y0 + 0.5, 'x1': x1 + 0.5, 'y1': y1 + 0.5,
+         'tempo': tempo}
+    if phase: o['phase'] = phase
     return o
 
 
@@ -242,13 +295,45 @@ def pruefe(b):
                        for y in range(max(0, y0), min(len(karte), y1 + 1))
                        for x in range(max(0, x0), min(len(karte[0]), x1 + 1))):
                 fehler.append('eine Strömung liegt auf keinem Boden')
+            # Und der Boden darunter muß glatt sein. Die Reibung auf Schlick ist 20 Kacheln/s²,
+            # die Strömung schiebt mit 13 – auf Schlick bewegt sie GAR NICHTS, denn die Reibung
+            # frißt sie auf. Beim ersten Bau lagen fünf von sechs Strömungen auf Schlick, und im
+            # Browser sah es aus, als seien sie kaputt. Dieselbe Falle wie bei der Kippbühne und
+            # bei der Dünung: Eine Kraft unter der Reibung ist keine Kraft.
+            bremsend = [(x, y)
+                        for y in range(max(0, y0), min(len(karte), y1 + 1))
+                        for x in range(max(0, x0), min(len(karte[0]), x1 + 1))
+                        if karte[y][x] == 's']
+            if bremsend:
+                fehler.append(f'eine Strömung liegt auf bremsendem Grund ({len(bremsend)} Felder '
+                              'Schlick) – dort trägt sie nichts')
         if o['type'] == 'strudel':
             for name, (px, py) in (('Abschlag', tee), ('Loch', cup)):
                 if (px + 0.5 - o['x']) ** 2 + (py + 0.5 - o['y']) ** 2 < (o['r'] + 0.6) ** 2:
                     fehler.append(f'ein Strudel greift bis an den {name}')
 
+    # Der Anglerfisch. Zwei Dinge sieht man einer Bahn beim Bauen nicht an: daß seine Strecke
+    # neben dem Steg im Wasser liegt (dann schwimmt er da, wo nie ein Ball ist), und daß sie bis
+    # an den Abschlag reicht (dann wird man gefressen, bevor man den ersten Schlag tun konnte).
+    for o in b['obstacles']:
+        if o['type'] != 'angler': continue
+        schritte = 24
+        auf = 0
+        for i in range(schritte + 1):
+            u = i / schritte
+            px = int(o['x0'] + (o['x1'] - o['x0']) * u)
+            py = int(o['y0'] + (o['y1'] - o['y0']) * u)
+            if 0 <= py < len(karte) and 0 <= px < len(karte[0]) and karte[py][px] in TROCKEN:
+                auf += 1
+            if abs(px - tee[0]) + abs(py - tee[1]) < 3:
+                fehler.append('ein Anglerfisch schwimmt bis an den Abschlag')
+                break
+        if auf < schritte * 0.6:
+            fehler.append(f'ein Anglerfisch schwimmt größtenteils neben dem Steg '
+                          f'({auf} von {schritte + 1} Punkten auf Boden)')
+
     # Jede Bahn dieser Welt braucht wenigstens eine ihrer Maschinen, sonst könnte sie überall stehen
-    eigene = {'flut', 'pumpwerk', 'stroemung', 'strudel'}
+    eigene = {'flut', 'pumpwerk', 'stroemung', 'strudel', 'angler'}
     if not any(o['type'] in eigene for o in b['obstacles']):
         fehler.append('keine Maschine der Welt auf dieser Bahn')
 
@@ -259,194 +344,205 @@ def pruefe(b):
 
 
 # ================================================================ Die Bahnen
-# Zwölf Bahnen, drei je Tiefe. Die Welt ist ein Abstieg: von dicht unter der Oberfläche bis auf den
-# Meeresgrund, und jeder Abschnitt bringt eine Maschine dazu.
+# ZWÖLF STEGE, DREI JE TIEFE. Die Welt ist eine Legende, und das heißt hier: keine Plätze, sondern
+# schmale Stege im offenen Wasser. Wer heruntergespült wird, zahlt einen Strafschlag – erst damit
+# wird aus der Strömung eine Gefahr und nicht bloß ein Ärgernis.
 #
 #   Bahn  1-3   wasserlinie   Becken, dann die erste Strömung
 #   Bahn  4-6   flachwasser   Pumpwerk und der erste Strudel
 #   Bahn  7-9   daemmerzone   alles zusammen, in der versunkenen Stadt
 #   Bahn 10-12  meeresgrund   Dünung, Gegenströmungen, und zuletzt alles auf einmal
 #
-# Becken sind mit Absicht flach: Sie laufen von außen nach innen voll, ein Ring je Takt, und die
-# Tiefe ist die halbe kürzere Kante. Vier Kacheln kurze Kante heißt Tiefe 2 heißt ein Lauf von
-# knapp elf Sekunden – ein Takt wie beim Mühlrad. Sechs Kacheln wären schon dreizehn.
+# Zwei Regeln halten die Welt spielbar, und beide stehen als Prüfung weiter unten: Es gibt immer
+# einen trockenen Weg (der Nebensteg), und kein Becken braucht länger als fünfzehn Sekunden für
+# einen Lauf. Schwer heißt nicht warten.
 
 # ---------------------------------------------------------------- Wasserlinie
-# --- 1: das Hafenbecken im Kai. Quer hindurch ist es kurz, außen herum sicher.
-f = leer(32, 17)
-fuell(f, 2, 2, 29, 14)
-setz(f, 5, 8, 'T'); setz(f, 26, 8, 'H')
-fuell(f, 11, 6, 20, 9, 's')
-fuell(f, 11, 5, 20, 5, 'x')
-fuell(f, 11, 10, 20, 10, 'x')
+# --- 1: das Hafenbecken. Der Steg geht hindurch; wer nicht durchkommt, geht oben herum.
+f = meer(32, 17)
+gang(f, 3, 9, 28, 9)
+umweg(f, 10, 21, 9, 4)
+setz(f, 4, 9, 'T'); setz(f, 27, 9, 'H')
+fuell(f, 13, 8, 18, 10, 's')
 bahn('Das Hafenbecken', 'wasserlinie', f, par=3,
-     intro='Dicht unter der Oberfläche: Die Sonne steht noch im Wasser. Das Becken läuft im Takt '
-           'voll und wieder leer – steht es leer, geht es geradeaus hindurch, steht es voll, spielt '
-           'man oben oder unten herum. Warten muß man nie.',
-     hindernisse=[becken(11, 6, 20, 9)])
+     intro='Dicht unter der Oberfläche. Der Steg führt geradeaus durch das Becken – steht es leer, '
+           'ist es kurz; steht es voll, geht es oben herum. Neben dem Steg ist nichts.',
+     hindernisse=[becken(13, 8, 18, 10)])
 
-# --- 2: der Priel. Die erste Strömung, und sie steht quer zum Weg.
-f = leer(32, 17)
-fuell(f, 2, 2, 29, 14)
-setz(f, 5, 8, 'T'); setz(f, 26, 8, 'H')
-fuell(f, 13, 3, 18, 13, 's')        # der Priel: sandiger Grund, durch den es zieht
+# --- 2: der Priel. Die erste Strömung, quer über den Steg – und daneben ist offenes Wasser.
+f = meer(34, 15)
+gang(f, 3, 7, 30, 7)
+setz(f, 4, 7, 'T'); setz(f, 29, 7, 'H')
 bahn('Der Priel', 'wasserlinie', f, par=3,
-     intro='Ein Priel zieht quer über den Grund. Wer geradeaus spielt, kommt schräg an – man muß '
-           'gegen die Strömung halten. Sie trägt auch einen Ball, der schon liegt: In ihr kann man '
-           'nicht in Ruhe zielen.',
-     hindernisse=[strom(13, 3, 18, 13, 90, tempo=4.0),
-                  fass(11.5, 5.5), fass(20.5, 11.5)])
+     intro='Ein Priel zieht quer über den Steg, und neben dem Steg ist nichts. Wer darin '
+           'liegenbleibt, wird heruntergespült und zahlt dafür. Aber er ist eine Dünung – er '
+           'schwillt an und wieder ab, und der Augenblick dazwischen ist der, in dem man spielt.',
+     # Das Band reicht mit Absicht weit über den Steg hinaus: Es soll nicht an eine Bande drücken,
+     # sondern hinunter ins Wasser. Eine Strömung, die einen gegen eine Mauer preßt, ärgert bloß.
+     # Zuerst war das Band fünf Kacheln breit und zog mit 6,5 – der Bot brauchte im Mittel
+     # dreizehn Schläge und lief einmal ins Limit. Schwer soll die Welt sein, nicht unfair.
+     hindernisse=[strom(14, 2, 16, 13, 90, tempo=5.0, puls=1.25),
+                  fass(10.5, 7.5), fass(20.5, 7.5)])
 
-# --- 3: die Mole. Strömung und Becken zusammen – die Strömung hilft, wenn man sie nimmt.
-f = leer(34, 17)
-fuell(f, 2, 2, 31, 14)
-setz(f, 5, 8, 'T'); setz(f, 30, 8, 'H')
-fuell(f, 10, 2, 11, 6, 'x')         # die Mole ragt von oben herein: der hohe Weg ist zu
-fuell(f, 12, 9, 17, 12, 's')        # dahinter schiebt es nach rechts
-fuell(f, 20, 6, 27, 9, 's')         # und dann das Becken, quer im Weg
-fuell(f, 20, 5, 27, 5, 'x')
-fuell(f, 20, 10, 27, 10, 'x')
+# --- 3: die Mole. Unten trägt die Strömung, oben liegt das Loch – dazwischen zwei Aufgänge.
+f = meer(34, 19)
+gang(f, 3, 15, 31, 15)             # der untere Steg
+gang(f, 8, 4, 31, 4)               # der obere
+gang(f, 22, 4, 22, 15)             # der kurze Aufgang: durch das Becken
+# Der lange Aufgang liegt RECHTS vom Loch. Das ist kein Zufall: Läge er links, wäre er genauso
+# kurz wie der kurze – beide Wege gingen nur nach rechts und nach oben, und ein Weg ohne Umkehr
+# ist kein Umweg. Erst wer über das Loch hinausfahren und zurückkommen muß, zahlt dafür. 
+gang(f, 31, 4, 31, 15)
+setz(f, 4, 15, 'T'); setz(f, 27, 4, 'H')
+fuell(f, 21, 8, 23, 13, 's')
 bahn('Die Mole', 'wasserlinie', f, par=4,
-     intro='Die Mole nimmt den hohen Weg. Unten herum schiebt die Strömung nach rechts – wer sie '
-           'mitnimmt, spart einen Schlag; dahinter liegt das Becken quer vor dem Loch.',
-     hindernisse=[strom(12, 9, 17, 12, 0, tempo=5.0), becken(20, 6, 27, 9)])
+     intro='Unten schiebt die Strömung nach rechts – wer sie mitnimmt, ist schnell am Aufgang. '
+           'Der Aufgang ist ein Becken. Ist es voll, bleibt nur der lange Weg ganz links zurück.',
+     hindernisse=[strom(10, 14, 20, 16, 0, tempo=7.0), becken(21, 8, 23, 13)])
 
 # ---------------------------------------------------------------- Flachwasser
-# --- 4: die Sandbank. Zwei versetzte Becken und das Pumpwerk.
-f = leer(36, 17)
-fuell(f, 2, 2, 33, 14)
-setz(f, 5, 8, 'T'); setz(f, 30, 8, 'H')
-fuell(f, 11, 6, 16, 9, 's')
-fuell(f, 21, 6, 26, 9, 's')
-fuell(f, 11, 5, 16, 5, 'x')
-fuell(f, 21, 10, 26, 10, 'x')
+# --- 4: die Sandbank. Zwei Becken hintereinander, und der Umweg führt am Pumpwerk vorbei.
+f = meer(36, 21)
+gang(f, 3, 8, 32, 8)
+umweg(f, 8, 28, 8, 16)
+setz(f, 4, 8, 'T'); setz(f, 31, 8, 'H')
+fuell(f, 11, 7, 16, 9, 's')
+fuell(f, 21, 7, 26, 9, 's')
 bahn('Die Sandbank', 'flachwasser', f, par=4,
-     intro='Tiefer, und das Licht wird grün. Zwei Becken hintereinander, jedes zur anderen Seite '
-           'hin gemauert: Wer sie umgeht, fährt Zickzack. Unten links liegt das Pumpwerk – wer '
-           'darüberrollt, hält beide vier Sekunden lang leer.',
-     hindernisse=[becken(11, 6, 16, 9), becken(21, 6, 26, 9, start=4.4), pumpwerk(5.5, 12.5)])
+     intro='Zwei Becken hintereinander auf einem Steg. Der Umweg unten herum ist lang – aber auf '
+           'ihm liegt das Pumpwerk, und das hält beide Becken vier Sekunden lang leer.',
+     hindernisse=[becken(11, 7, 16, 9), becken(21, 7, 26, 9, start=4.4), pumpwerk(18.5, 16.5)])
 
-# --- 5: der Seegraswald. Der erste Strudel, mittendrin.
-f = leer(34, 19)
-fuell(f, 2, 2, 31, 16)
-setz(f, 5, 9, 'T'); setz(f, 28, 9, 'H')
-fuell(f, 9, 3, 10, 15, 'x')         # Seegrasdickicht als Wand, mit zwei Durchlässen
-fuell(f, 9, 7, 10, 8, '#')
-fuell(f, 9, 11, 10, 12, '#')
-bahn('Der Seegraswald', 'flachwasser', f, par=3,   # Bot: Median 2
-     intro='Zwischen den Halmen gibt es zwei Durchlässe, und dahinter dreht sich das Wasser. Der '
-           'Strudel hält niemanden fest – er wirft nur woandershin, als man wollte.',
-     hindernisse=[strudel(18.5, 9.5, 3.0, dreh=1), fass(24.5, 5.5), fass(24.5, 13.5)])
+# --- 5: der Seegraswald. Eine Kammer, in der sich das Wasser dreht, mit engem Aus- und Eingang.
+f = meer(34, 19)
+gang(f, 3, 9, 13, 9)
+gang(f, 21, 9, 30, 9)
+kammer(f, 13, 4, 21, 14)
+setz(f, 4, 9, 'T'); setz(f, 29, 9, 'H')
+bahn('Der Seegraswald', 'flachwasser', f, par=3,
+     intro='Zwischen den Halmen liegt eine Kammer, und darin dreht sich das Wasser. Der Strudel '
+           'hält niemanden fest – er wirft nur woandershin, als man wollte, und der Ausgang ist '
+           'schmal.',
+     hindernisse=[strudel(17.0, 9.5, 3.6, dreh=1),
+                  angler(22, 9, 29, 9, tempo=2.0)])
 
-# --- 6: die Rinne. Eine lange Strömung, auf der man reitet, und am Ende ein Becken.
-f = leer(38, 17)
-fuell(f, 2, 2, 35, 14)
-setz(f, 4, 8, 'T'); setz(f, 32, 8, 'H')
-fuell(f, 7, 7, 24, 9, 's')          # die Rinne
-fuell(f, 7, 6, 24, 6, 'x')
-fuell(f, 7, 10, 24, 10, 'x')
-fuell(f, 26, 5, 30, 12, 's')        # Becken am Ende der Rinne
+# --- 6: die Rinne. Ein langer Steg, auf dem es zieht, und am Ende ein Becken.
+f = meer(38, 21)
+gang(f, 3, 7, 34, 7)
+umweg(f, 24, 33, 7, 15)
+setz(f, 4, 7, 'T'); setz(f, 33, 7, 'H')
+fuell(f, 27, 6, 30, 8, 's')
 bahn('Die Rinne', 'flachwasser', f, par=4,
-     intro='Die Rinne trägt weit – man muß sie nur treffen. Am Ende wartet ein Becken quer vor dem '
-           'Loch; wer zu schnell ankommt, landet darin.',
-     hindernisse=[strom(7, 7, 24, 9, 0, tempo=6.0), becken(26, 5, 30, 12)])
+     intro='Die Rinne trägt weit – man muß sie nur treffen und darf nicht zu früh liegenbleiben. '
+           'Am Ende liegt ein Becken quer vor dem Loch; drumherum geht es unten lang.',
+     hindernisse=[strom(8, 6, 22, 8, 0, tempo=7.5), becken(27, 6, 30, 8)])
 
 # ---------------------------------------------------------------- Dämmerzone
-# --- 7: die Gassen. Geradeaus steht ein Haus, links und rechts säuft es ab.
-f = leer(34, 19)
-fuell(f, 2, 2, 31, 16)
-setz(f, 5, 9, 'T'); setz(f, 28, 9, 'H')
-fuell(f, 12, 9, 19, 9, 'x')
-fuell(f, 12, 6, 19, 8, 's')
-fuell(f, 12, 10, 19, 12, 's')
-bahn('Die Gassen', 'daemmerzone', f, par=3,
-     intro='In der Dämmerzone steht die Stadt. Geradeaus versperrt ein Haus den Weg; links und '
-           'rechts daran vorbei laufen zwei Gassen, und beide saufen im Takt voll. Wer keine '
-           'erwischt, spielt ganz außen herum.',
-     hindernisse=[becken(12, 6, 19, 8), becken(12, 10, 19, 12, start=4.4)])
+# --- 7: die Gassen. Zwei Gassen um ein Haus, und beide saufen ab.
+f = meer(34, 21)
+gang(f, 3, 10, 11, 10)
+gang(f, 23, 10, 30, 10)
+gang(f, 11, 6, 23, 6)              # die obere Gasse
+gang(f, 11, 14, 23, 14)            # die untere
+gang(f, 11, 6, 11, 14)
+gang(f, 23, 6, 23, 14)
+# Und ein dritter Weg ganz außen herum. Die beiden Gassen laufen versetzt voll, aber es gibt
+# Augenblicke, in denen beide zu sind – ohne den Bogen müßte man dann warten. 
+umweg(f, 7, 27, 10, 18)
+setz(f, 4, 10, 'T'); setz(f, 29, 10, 'H')
+fuell(f, 14, 5, 20, 7, 's')
+fuell(f, 14, 13, 20, 15, 's')
+bahn('Die Gassen', 'daemmerzone', f, par=4,
+     intro='Das Haus in der Mitte versperrt den geraden Weg. Links und rechts daran vorbei laufen '
+           'zwei Gassen, und beide saufen im Takt voll – versetzt, damit immer eine offen ist.',
+     hindernisse=[becken(14, 5, 20, 7), becken(14, 13, 20, 15, start=4.4)])
 
-# --- 8: der Marktplatz. Zwei Becken auf dem Weg, dazwischen der Brunnenstrudel.
-f = leer(36, 21)
-fuell(f, 2, 2, 33, 18)
-setz(f, 5, 10, 'T'); setz(f, 30, 10, 'H')
-fuell(f, 9, 8, 14, 11, 's')         # Becken vor dem Brunnen
-fuell(f, 9, 7, 14, 7, 'x')
-fuell(f, 9, 12, 14, 12, 'x')
-fuell(f, 22, 8, 27, 11, 's')        # und eines dahinter
-fuell(f, 22, 7, 27, 7, 'x')
-fuell(f, 22, 12, 27, 12, 'x')
+# --- 8: der Marktplatz. Der Brunnen dreht mitten im Platz, davor und dahinter je ein Becken.
+f = meer(38, 21)
+gang(f, 3, 10, 13, 10)
+gang(f, 25, 10, 34, 10)
+kammer(f, 13, 5, 25, 15)
+umweg(f, 9, 29, 10, 18)
+setz(f, 4, 10, 'T'); setz(f, 33, 10, 'H')
+fuell(f, 13, 9, 16, 11, 's')
+fuell(f, 22, 9, 25, 11, 's')
 bahn('Der Marktplatz', 'daemmerzone', f, par=4,
-     intro='Über dem alten Brunnen mitten auf dem Platz dreht sich das Wasser. Davor und dahinter '
-           'liegt je ein Becken – wer beide im richtigen Augenblick nimmt, geht geradeaus durch '
-           'und wird vom Brunnen doch noch versetzt.',
-     hindernisse=[becken(9, 8, 14, 11), strudel(18.5, 10.5, 3.4, dreh=-1),
-                  becken(22, 8, 27, 11, start=4.4)])
+     intro='Über dem alten Brunnen dreht sich das Wasser, und in den Platz hinein und heraus führt '
+           'je ein Becken. Wer beide im richtigen Augenblick nimmt, wird trotzdem noch versetzt.',
+     hindernisse=[becken(13, 9, 16, 11), strudel(19.0, 10.5, 3.6, dreh=-1),
+                  becken(22, 9, 25, 11, start=4.4)])
 
-# --- 9: die Kaimauer. Eine lange Mauer trennt unten von oben; das Becken ist das Tor darin.
-f = leer(38, 21)
-fuell(f, 2, 2, 35, 18)
-setz(f, 5, 15, 'T'); setz(f, 32, 5, 'H')
-# Die Kaimauer geht fast über die ganze Breite. Sie muß es: Läßt man ein Ende offen, ist der Weg
-# drumherum genauso kurz wie der durchs Tor (beides bergauf und nach rechts, kein Umweg), und das
-# Tor wäre Zierrat. Offen bleibt nur ein schmaler Durchlaß ganz links – hinter dem Abschlag, so
-# daß man dafür erst zurück muß. 
-fuell(f, 4, 9, 35, 9, 'x')
-fuell(f, 16, 7, 21, 10, 's')        # das Tor darin: ein Becken, das im Takt zuläuft
-fuell(f, 4, 4, 29, 6, 's')          # oben zieht es nach rechts, zum Loch hin
-bahn('Die Kaimauer', 'daemmerzone', f, par=4,   # Bot: Median 3
-     intro='Die Kaimauer trennt unten von oben, und das einzige Tor darin ist ein Becken. Ist es '
-           'voll, muß man ganz außen herum. Oben zieht die Strömung nach rechts – bis vor das Loch.',
-     hindernisse=[becken(16, 7, 21, 10), strom(4, 4, 29, 6, 0, tempo=6.5), pumpwerk(5.5, 11.5)])
+# --- 9: die Kaimauer. Unten hin, oben zurück – und dazwischen nur das Becken oder der weite Bogen.
+f = meer(40, 21)
+gang(f, 3, 16, 37, 16)             # unten hin
+gang(f, 10, 5, 37, 5)              # oben zurück, zum Loch
+gang(f, 20, 5, 20, 16)             # der kurze Aufgang: das Becken
+gang(f, 37, 5, 37, 16)             # der lange – jenseits des Lochs, also mit Umkehr
+setz(f, 4, 16, 'T'); setz(f, 33, 5, 'H')
+fuell(f, 19, 9, 21, 13, 's')
+bahn('Die Kaimauer', 'daemmerzone', f, par=4,
+     intro='Unter der Kaimauer geht es hin, oben wieder zurück. Der kurze Aufgang ist ein Becken; '
+           'oben zieht es dann kräftig aufs Loch zu – zu kräftig, um dort stehenzubleiben. Das '
+           'Pumpwerk liegt am Anfang des langen Wegs.',
+     hindernisse=[becken(19, 9, 21, 13), strom(22, 4, 31, 6, 0, tempo=7.5),
+                  pumpwerk(10.5, 16.5)])
 
 # ---------------------------------------------------------------- Meeresgrund
-# --- 10: der Grund. Weit, dunkel, ein langes Becken quer davor.
-f = leer(38, 19)
-fuell(f, 2, 2, 35, 16)
-setz(f, 5, 9, 'T'); setz(f, 32, 9, 'H')
-fuell(f, 12, 7, 25, 10, 's')
-fuell(f, 12, 6, 25, 6, 'x')
-fuell(f, 12, 11, 25, 11, 'x')
-bahn('Der Grund', 'meeresgrund', f, par=3,   # Bot: Median 2
-     intro='Ganz unten. Von oben kommt kein Licht mehr – was leuchtet, leuchtet selbst. Quer vor '
-           'dem Loch liegt ein langes Becken; der Umweg ist weit. Links unten das Pumpwerk.',
-     hindernisse=[becken(12, 7, 25, 10), pumpwerk(6.5, 14.5)])
+# --- 10: der Grund. Ein langer Steg, quer davor ein breites Becken.
+f = meer(38, 21)
+gang(f, 3, 8, 34, 8)
+umweg(f, 9, 29, 8, 17)
+setz(f, 4, 8, 'T'); setz(f, 33, 8, 'H')
+fuell(f, 13, 7, 24, 9, 's')
+bahn('Der Grund', 'meeresgrund', f, par=3,
+     intro='Ganz unten. Von oben kommt kein Licht mehr – was leuchtet, leuchtet selbst. Quer über '
+           'den Steg liegt ein langes Becken; der Umweg unten herum ist weit, und auf ihm schwimmt '
+           'ein Anglerfisch. Seine Laterne ist hier das hellste Licht: Man sieht ihn kommen, bevor '
+           'man ihn sieht.',
+     hindernisse=[becken(13, 7, 24, 9), pumpwerk(19.5, 17.5),
+                  angler(12, 17, 27, 17, tempo=2.4)])
 
-# --- 11: das Kaltwasserfeld. Zwei Strömungen gegeneinander, dazwischen ein Strudel.
-f = leer(38, 21)
-fuell(f, 2, 2, 35, 18)
-setz(f, 5, 10, 'T'); setz(f, 32, 10, 'H')
-fuell(f, 11, 3, 26, 7, 's')         # obere Strömung: nach rechts
-fuell(f, 11, 13, 26, 17, 's')       # untere: nach links
-fuell(f, 11, 8, 26, 8, 'x')
-fuell(f, 11, 12, 26, 12, 'x')
-bahn('Das Kaltwasserfeld', 'meeresgrund', f, par=4,   # Bot: Median 2, aber die Dünung kostet einen Menschen Schläge
-     intro='Zwei Strömungen laufen gegeneinander, oben nach rechts, unten nach links – und beide '
-           'als Dünung: Sie schwellen an und wieder ab. Dazwischen bleibt eine schmale Gasse, und '
-           'in ihrer Mitte dreht sich das Wasser.',
-     hindernisse=[strom(11, 3, 26, 7, 0, tempo=6.0, puls=0.55),
-                  strom(11, 13, 26, 17, 180, tempo=6.0, puls=0.55, phase=3.14),
-                  strudel(18.5, 10.5, 2.6, dreh=1)])
+# --- 11: das Kaltwasserfeld. Zwei Stege, auf jedem zieht es – und zwar gegeneinander.
+f = meer(40, 21)
+gang(f, 3, 6, 36, 6)               # oberer Steg: es zieht nach rechts
+gang(f, 3, 15, 36, 15)             # unterer Steg: es zieht nach links
+gang(f, 20, 6, 20, 15)             # die einzige Verbindung, in der Mitte
+setz(f, 4, 15, 'T'); setz(f, 35, 6, 'H')
+bahn('Das Kaltwasserfeld', 'meeresgrund', f, par=5,
+     intro='Zwei Stege, auf beiden zieht es – oben nach rechts, unten nach links, und beide als '
+           'Dünung. Verbunden sind sie nur in der Mitte, und mitten in der Verbindung dreht sich '
+           'das Wasser. Stehenbleiben geht nirgends.',
+     # Die Bänder lassen die Enden und die Mitte frei: Ohne diese Ruhezonen konnte man nirgends
+     # zum Liegen kommen, und der Bot lief ins Schlaglimit. Jetzt gibt es Stellen zum Sammeln –
+     # nur eben nicht da, wo man sie gerade braucht.
+     hindernisse=[strom(9, 5, 17, 7, 0, tempo=6.0, puls=1.25),
+                  strom(24, 5, 32, 7, 0, tempo=6.0, puls=1.25, phase=1.6),
+                  strom(9, 14, 17, 16, 180, tempo=6.0, puls=1.25, phase=3.14),
+                  strom(24, 14, 32, 16, 180, tempo=6.0, puls=1.25, phase=4.7),
+                  strudel(20.5, 10.5, 2.6, dreh=1)])
 
-# --- 12: der Schlund. Alles auf einmal – das Ende der Welt.
-f = leer(40, 21)
-fuell(f, 2, 2, 37, 18)
-setz(f, 5, 10, 'T'); setz(f, 34, 10, 'H')
-fuell(f, 9, 4, 14, 7, 's')          # erstes Becken
-fuell(f, 9, 13, 14, 16, 's')        # zweites Becken
-fuell(f, 9, 8, 14, 12, 'x')         # dazwischen ein Block: beide Becken sind die Durchlässe
-fuell(f, 17, 4, 24, 16, 's')        # das Feld des Strudels
-fuell(f, 27, 6, 32, 9, 's')         # letztes Becken vor dem Loch
-fuell(f, 27, 5, 32, 5, 'x')
-fuell(f, 27, 10, 32, 10, 'x')
+# --- 12: der Schlund. Alles auf einmal, und nichts davon breit.
+f = meer(42, 23)
+gang(f, 3, 11, 10, 11)
+gang(f, 10, 5, 10, 17)             # die Gabelung: oben oder unten weiter
+gang(f, 10, 5, 20, 5)
+gang(f, 10, 17, 20, 17)
+kammer(f, 20, 7, 30, 15)           # die Kammer mit dem Strudel
+gang(f, 20, 5, 20, 7)
+gang(f, 20, 15, 20, 17)
+gang(f, 30, 11, 38, 11)
+umweg(f, 10, 30, 11, 20)           # der weite Bogen: wenn beide Äste zu sind
+setz(f, 4, 11, 'T'); setz(f, 37, 11, 'H')
+fuell(f, 13, 4, 17, 6, 's')        # Becken im oberen Ast
+fuell(f, 13, 16, 17, 18, 's')      # Becken im unteren
 bahn('Der Schlund', 'meeresgrund', f, par=5,
-     intro='Das Ende: zwei Becken als einzige Durchlässe, dahinter ein Feld, über das es zieht und '
-           'in dessen Mitte sich alles dreht, und ganz zuletzt noch ein Becken vor dem Loch. Das '
-           'Pumpwerk liegt unten links, hinter dem Abschlag – wer es will, muß zurück.',
-     hindernisse=[becken(9, 4, 14, 7), becken(9, 13, 14, 16, start=4.4),
-                  strom(17, 4, 24, 16, 0, tempo=5.0, puls=0.5),
-                  strudel(20.5, 10.5, 3.0, dreh=-1),
-                  becken(27, 6, 32, 9, start=2.0),
-                  pumpwerk(5.5, 17.5)])
+     intro='Das Ende. Zwei Äste, in jedem ein Becken, und beide münden in eine Kammer, in der es '
+           'zieht und sich alles dreht. Wer dort liegenbleibt, bleibt nicht liegen.',
+     hindernisse=[becken(13, 4, 17, 6), becken(13, 16, 17, 18, start=4.4),
+                  strom(20, 7, 30, 15, 0, tempo=6.0, puls=1.15),
+                  strudel(25.0, 11.5, 3.2, dreh=-1),
+                  angler(21, 8, 29, 14, tempo=2.2),
+                  pumpwerk(6.5, 11.5)])
 
 
 # ================================================================ Prüfen

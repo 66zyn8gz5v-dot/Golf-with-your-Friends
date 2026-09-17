@@ -332,6 +332,112 @@ Object.assign(Renderer.prototype, {
     ctx.restore();
   },
 
+  /* ================= Der Anglerfisch =================
+     Zwei Zeichnungen, und die erste ist die wichtigere: der Schein seiner Laterne auf dem Grund.
+     Ihn sieht man, bevor man den Fisch selbst erkennt – und genau darum geht es. Auf dem
+     Meeresgrund ist er ohnehin das Hellste weit und breit.
+
+     Der Fisch selbst ist von oben gesehen: ein plumper Leib, das Maul voraus, darüber die Angel
+     mit dem Licht an der Spitze. Er schlägt mit dem Schwanz, und zwar schneller, während er
+     schwimmt – ein Fisch, der sich gleichmäßig bewegt und dabei stillsteht, sieht aus wie gezogen. */
+  drawAnglerScheinFloor(ctx, ob, t) {
+    const [sx, sy] = this.proj(ob.x + ob.dx * 0.9, ob.y + ob.dy * 0.9, 0.011);
+    const r = this.scale * (ob.licht || 3.6);
+    const puls = 0.82 + 0.18 * Math.sin(t * 2.6);
+    const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, r * puls);
+    g.addColorStop(0, 'rgba(180,255,235,0.34)');
+    g.addColorStop(0.45, 'rgba(120,220,220,0.14)');
+    g.addColorStop(1, 'rgba(120,220,220,0)');
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.ellipse(sx, sy, r * puls, r * puls * this.cam.tilt, 0, 0, TAU); ctx.fill();
+    ctx.restore();
+  },
+
+  drawAngler(ctx, ob, t) {
+    const s = this.scale;
+    const [sx, sy] = this.proj(ob.x, ob.y, 0.22);
+    /* Der Fisch wird in seine Schwimmrichtung gedreht. In der schrägen Sicht des Spiels ist die
+       Richtung am Bildschirm eine andere als auf der Karte – darum wird sie projiziert und nicht
+       aus dx/dy geradeheraus genommen. */
+    const [ax, ay] = this.proj(ob.x, ob.y, 0.22);
+    const [bx, by] = this.proj(ob.x + ob.dx, ob.y + ob.dy, 0.22);
+    const w = Math.atan2(by - ay, bx - ax);
+    const L = s * 1.15, H = s * 0.62;
+    const schlag = Math.sin(t * 7.5) * 0.45;
+    ctx.save();
+    ctx.translate(sx, sy);
+    ctx.rotate(w);
+
+    // Schatten auf dem Grund
+    ctx.fillStyle = 'rgba(0,0,0,0.22)';
+    ctx.beginPath(); ctx.ellipse(0, H * 0.55, L * 0.5, H * 0.3, 0, 0, TAU); ctx.fill();
+
+    // Schwanzflosse – sie schlägt
+    ctx.save();
+    ctx.translate(-L * 0.42, 0); ctx.rotate(schlag);
+    ctx.fillStyle = '#2d4c52';
+    ctx.beginPath();
+    ctx.moveTo(0, 0); ctx.lineTo(-L * 0.34, -H * 0.42); ctx.lineTo(-L * 0.22, 0);
+    ctx.lineTo(-L * 0.34, H * 0.42); ctx.closePath(); ctx.fill();
+    ctx.restore();
+
+    // Leib: vorn dick, hinten schmal – ein Tiefseeangler ist ein Sack mit Maul
+    const leib = ctx.createLinearGradient(0, -H * 0.5, 0, H * 0.5);
+    leib.addColorStop(0, '#4a7178'); leib.addColorStop(0.55, '#33565d'); leib.addColorStop(1, '#1d3a41');
+    ctx.fillStyle = leib;
+    ctx.beginPath();
+    ctx.moveTo(L * 0.5, 0);
+    ctx.bezierCurveTo(L * 0.42, -H * 0.62, -L * 0.1, -H * 0.5, -L * 0.42, -H * 0.1);
+    ctx.lineTo(-L * 0.42, H * 0.1);
+    ctx.bezierCurveTo(-L * 0.1, H * 0.5, L * 0.42, H * 0.62, L * 0.5, 0);
+    ctx.closePath(); ctx.fill();
+    // Rückenflosse
+    ctx.fillStyle = '#26454b';
+    ctx.beginPath();
+    ctx.moveTo(-L * 0.05, -H * 0.48); ctx.lineTo(-L * 0.2, -H * 0.78); ctx.lineTo(-L * 0.3, -H * 0.4);
+    ctx.closePath(); ctx.fill();
+
+    // Maul mit Zähnen – das Kennzeichen, an dem man ihn auch klein erkennt
+    ctx.fillStyle = '#10262b';
+    ctx.beginPath();
+    ctx.moveTo(L * 0.5, 0); ctx.quadraticCurveTo(L * 0.2, H * 0.34, L * 0.02, H * 0.2);
+    ctx.quadraticCurveTo(L * 0.22, H * 0.06, L * 0.5, 0); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#eaf6f2';
+    for (let i = 0; i < 5; i++) {
+      const u = 0.08 + i * 0.09;
+      const zx = L * (0.5 - u * 1.0), zy = H * (0.06 + u * 0.55);
+      ctx.beginPath(); ctx.moveTo(zx, zy); ctx.lineTo(zx + s * 0.055, zy - s * 0.12);
+      ctx.lineTo(zx + s * 0.11, zy); ctx.closePath(); ctx.fill();
+    }
+
+    // Auge
+    ctx.fillStyle = '#f2fbff';
+    ctx.beginPath(); ctx.arc(L * 0.26, -H * 0.2, s * 0.09, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#08161a';
+    ctx.beginPath(); ctx.arc(L * 0.28, -H * 0.2, s * 0.045, 0, TAU); ctx.fill();
+
+    /* Die Angel: ein Stiel vom Kopf nach vorn, an seiner Spitze das Licht. Sie schwingt leicht –
+       sonst sieht sie aus wie angeklebt. */
+    const wippe = Math.sin(t * 3.1) * 0.12;
+    ctx.save();
+    ctx.translate(L * 0.3, -H * 0.36); ctx.rotate(-0.55 + wippe);
+    ctx.strokeStyle = '#2b4a50'; ctx.lineWidth = Math.max(1.2, s * 0.05);
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(s * 0.35, -s * 0.28, s * 0.72, -s * 0.18);
+    ctx.stroke();
+    const lx = s * 0.72, ly = -s * 0.18;
+    const gl = ctx.createRadialGradient(lx, ly, 0, lx, ly, s * 0.42);
+    gl.addColorStop(0, 'rgba(210,255,240,0.95)'); gl.addColorStop(0.4, 'rgba(130,235,220,0.5)');
+    gl.addColorStop(1, 'rgba(130,235,220,0)');
+    ctx.fillStyle = gl;
+    ctx.beginPath(); ctx.arc(lx, ly, s * 0.42, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#eafff8';
+    ctx.beginPath(); ctx.arc(lx, ly, Math.max(1.5, s * 0.1), 0, TAU); ctx.fill();
+    ctx.restore();
+    ctx.restore();
+  },
+
   /* Das Pumpwerk: ein eiserner Rost im Boden mit einem Rad darüber. Läuft es, dreht sich das Rad
      und es sprudelt – so sieht man von weitem, ob die Flut gerade gehalten wird. */
   drawPumpwerkFloor(ctx, ob, t) {

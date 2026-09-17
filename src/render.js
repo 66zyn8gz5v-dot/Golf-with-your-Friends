@@ -1774,6 +1774,7 @@ class Renderer {
     if (ob.type === 'pumpwerk') { this.drawPumpwerkFloor(ctx, ob, t); return; }
     if (ob.type === 'stroemung') { this.drawStroemungFloor(ctx, ob, t); return; }
     if (ob.type === 'strudel') { this.drawStrudelFloor(ctx, ob, t); return; }
+    if (ob.type === 'angler') { this.drawAnglerScheinFloor(ctx, ob, t); return; }
     if (ob.type === 'schneebruecke') { this.drawSchneebrueckeFloor(ctx, ob, t); return; }
     if (ob.type === 'dial' || ob.type === 'wanderloch') { this.drawWanderlochFloor(ctx, ob, t); return; }
     if (ob.type === 'field' && ob.style === 'steam') { this.drawSteam(ctx, ob, t); return; }
@@ -2109,6 +2110,10 @@ class Renderer {
       /* noFade: Die Wand ist der Grund, warum man hier nicht weiterkommt. Durchsichtig zu werden,
          sobald der Ball davorliegt, nähme ihr genau das. */
       items.push({ x: ob.x, y: ob.y, bias: 0.3, noFade: true, draw: () => this.drawBruchwand(ctx, ob, t) });
+    } else if (ob.type === 'angler') {
+      /* noFade: Er ist die Gefahr selbst, und er kommt auf einen zu – durchsichtig zu werden,
+         sobald der Ball davorliegt, nähme ihm genau das. */
+      items.push({ x: ob.x, y: ob.y, bias: 0.35, noFade: true, draw: () => this.drawAngler(ctx, ob, t) });
     } else if (ob.type === 'lavafontaene') {
       /* noFade: Der Strahl ist die Gefahr selbst. Durchsichtig zu werden, sobald der Ball davor
          liegt, nähme ihm genau das – und davor liegt man hier dauernd. */

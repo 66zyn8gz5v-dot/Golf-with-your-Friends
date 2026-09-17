@@ -518,6 +518,7 @@ function createObstacles(defs) {
       case 'pumpwerk': out.push(new Pumpwerk(d)); break;
       case 'stroemung': out.push(new Stroemung(d)); break;
       case 'strudel': out.push(new Strudel(d)); break;
+      case 'angler': out.push(new Anglerfisch(d)); break;
       // Schneeberg
       case 'windfahne': out.push(new WindVane(d)); break;
       case 'lawine': out.push(new Avalanche(d)); break;

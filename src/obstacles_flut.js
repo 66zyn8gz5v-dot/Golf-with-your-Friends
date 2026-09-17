@@ -214,8 +214,9 @@ class Pumpwerk {
    SIE BESCHLEUNIGT NICHT INS UNENDLICHE. Sie zieht den Ball auf ihr eigenes Tempo und dann nicht
    weiter – wie echtes Wasser. Ohne diese Schranke würde ein Ball, der lange genug im Band liegt,
    quer über die Bahn geschossen, und das wäre kein Hindernis mehr, sondern eine Kanone. */
-const STROM_KRAFT = 9.0;         // Kacheln/s² – deutlich über der Reibung 4,2, sonst trägt sie nichts
-const STROM_TEMPO = 7.0;         // auf dieses Tempo zieht sie den Ball, und nicht schneller
+const STROM_KRAFT = 13.0;        // Kacheln/s² – das Dreifache der Reibung 4,2. Sie soll nicht
+                                 // „auch ein bißchen" tragen, sondern mitnehmen.
+const STROM_TEMPO = 8.5;         // auf dieses Tempo zieht sie den Ball, und nicht schneller
 
 class Stroemung {
   constructor(d) {
@@ -231,19 +232,38 @@ class Stroemung {
     return Math.abs(px - this.x) <= this.w / 2 && Math.abs(py - this.y) <= this.h / 2;
   }
   /* puls > 0: eine Dünung statt eines gleichmäßigen Zuges – sie schwillt an und ab, und dazwischen
-     ist für einen Augenblick Ruhe. Damit wird aus der Strömung eine Frage des Zeitpunkts. */
+     ist für einen Augenblick Ruhe. Damit wird aus der Strömung eine Frage des Zeitpunkts.
+     'puls' ist die Winkelgeschwindigkeit: ein voller Wellengang dauert 2π/puls Sekunden.
+
+     DIE FORM DER WELLE IST NICHT EGAL. Zuerst stand hier max(0, sin)² – dieselbe Formel wie beim
+     Windstoß im Märchenland. Damit steht die Strömung die *halbe* Zeit still (der Sinus ist die
+     halbe Periode lang negativ), und bei einem gemächlichen Puls sind das sechs Sekunden am
+     Stück. Im Browser sah es aus, als sei die Strömung kaputt; in Wahrheit war gerade Flaute.
+     Jetzt wird die Welle gestaucht: Ruhe nur im untersten Drittel, volle Kraft im obersten.
+     Die Flaute ist damit das Zeitfenster und nicht der Normalzustand. */
   update(t) {
     this.t = t;
-    this.k = this.puls ? Math.pow(Math.max(0, Math.sin(t * this.puls + this.phase)), 2) : 1;
+    if (!this.puls) { this.k = 1; return; }
+    const w = 0.5 + 0.5 * Math.sin(t * this.puls + this.phase);      // 0 … 1
+    this.k = Math.max(0, Math.min(1, (w - 0.25) / 0.55));
   }
   force(ball, dt) {
     if (ball.air || ball.rider || ball.sunk) return;
     if (this.k <= 0.01 || !this.inside(ball.x, ball.y)) return;
-    /* Nur bis auf das eigene Tempo beschleunigen: Was der Ball quer dazu tut, bleibt seine Sache. */
+    /* Nur bis auf das eigene Tempo beschleunigen: Was der Ball quer dazu tut, bleibt seine Sache.
+
+       DIE DÜNUNG ÄNDERT DAS ZIELTEMPO, NICHT DIE KRAFT. Das ist keine Feinheit, sondern wieder die
+       Reibungsfalle: Stünde hier 'kraft * k', dann läge die Strömung bei halber Welle
+       (13 × 0,32 = 4,16) unter der Reibung auf Stein (4,2) – und eine Kraft unter der Reibung
+       bewegt einen liegenden Ball GAR NICHT. Die halbe Welle über täte die Maschine dann nichts,
+       und im Browser sähe es aus, als sei sie kaputt. Genau so ist es passiert.
+       Jetzt schiebt sie immer mit voller Kraft, nur eben auf ein kleineres Ziel: Bei schwacher
+       Dünung treibt man langsam, bei starker schnell – und bei Flaute gar nicht, weil das Ziel
+       null ist. */
     const laengs = ball.vx * this.dx + ball.vy * this.dy;
     const ziel = this.tempo * this.k;
     if (laengs >= ziel) return;
-    const zu = Math.min(this.kraft * this.k * dt, ziel - laengs);
+    const zu = Math.min(this.kraft * dt, ziel - laengs);
     ball.vx += this.dx * zu; ball.vy += this.dy * zu;
   }
 }
@@ -289,5 +309,59 @@ class Strudel {
     const f = this.kraft * (0.3 + 0.7 * u) * dt;
     ball.vx += (tx - ux * radial) * f;
     ball.vy += (ty - uy * radial) * f;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Der Anglerfisch
+   ---------------------------------------------------------------------------
+   Er schwimmt seine Strecke ab, hin und zurück, und hält die Laterne vor sich her. Wer sich von
+   ihr einfangen läßt, zahlt einen Schlag und wird an den Anfang des letzten Schlags zurückgelegt.
+
+   ER IST DAS ERSTE HINDERNIS DIESER WELT, DAS EINEN SUCHT. Becken, Strömung und Strudel stehen da,
+   wo sie stehen – man kann ihnen ausweichen und danach in Ruhe zielen. Der Angler kommt zu einem
+   hin. Ein liegender Ball ist vor ihm nicht sicher, und darum wird aus „ich warte auf den richtigen
+   Augenblick" ein „ich muß hier weg, bevor er da ist".
+
+   ER SCHWIMMT GLEICHMÄSSIG, nicht in einer Sinusschwingung wie die Lore. Ein Fisch, der an den
+   Enden langsamer wird und in der Mitte rast, sieht aus wie ein Pendel; und wichtiger: Man könnte
+   sein Tempo nicht abschätzen, und genau das soll man können. Ein Dreieck statt eines Cosinus.
+
+   DIE LATERNE IST NICHT NUR SCHMUCK. Auf dem Meeresgrund ist sie das hellste auf der Bahn – man
+   sieht ihn kommen, bevor man ihn sieht. Das ist dieselbe Regel wie überall hier: Die Ansage geht
+   der Gefahr voraus. */
+const ANGLER_TEMPO = 2.2;        // Kacheln je Sekunde – schneller als ein Spaziergang, langsamer als ein Putt
+const ANGLER_FANG = 0.62;        // so nah muß er kommen
+const ANGLER_LICHT = 3.6;        // so weit trägt seine Laterne
+
+class Anglerfisch {
+  constructor(d) {
+    Object.assign(this, { x0: 0, y0: 0, x1: 0, y1: 0, tempo: ANGLER_TEMPO, r: ANGLER_FANG,
+                          licht: ANGLER_LICHT, phase: 0, ebene: 0 }, d);
+    this.type = 'angler';
+    this.laenge = Math.hypot(this.x1 - this.x0, this.y1 - this.y0) || 1;
+    this.x = this.x0; this.y = this.y0; this.dx = 1; this.dy = 0;
+    this.update(0);
+  }
+  setup(level) { this.level = level; }
+  update(t) {
+    this.t = t;
+    const strecke = this.laenge / this.tempo;               // eine Richtung
+    const u = (((t / (2 * strecke) + this.phase) % 1) + 1) % 1;
+    /* Dreieck statt Cosinus: gleichmäßiges Tempo hin wie zurück. */
+    const s = u < 0.5 ? u * 2 : 2 - u * 2;
+    this.x = this.x0 + (this.x1 - this.x0) * s;
+    this.y = this.y0 + (this.y1 - this.y0) * s;
+    const vor = u < 0.5 ? 1 : -1;
+    this.dx = ((this.x1 - this.x0) / this.laenge) * vor;
+    this.dy = ((this.y1 - this.y0) / this.laenge) * vor;
+    this.u = s;
+  }
+  /* Kein airTrigger: Er schwimmt am Grund. Wer über ihn hinwegfliegt, kommt davon – das ist die
+     Belohnung für einen Sprung und der einzige Weg, ihn zu überspielen. */
+  trigger(ball, t, events) {
+    if (ball.sunk || ball.rider || ball.air) return;
+    if (Math.hypot(ball.x - this.x, ball.y - this.y) > this.r + (ball.r || 0.22)) return;
+    events.push({ type: 'angler', x: ball.x, y: ball.y });
   }
 }

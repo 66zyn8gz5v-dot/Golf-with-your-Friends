@@ -240,6 +240,26 @@ console.log('\n--- Die Strömung ---');
   const drin = treiben([strom()], 8.5, 1.5, 1.5);
   pruef('ein liegender Ball im Band treibt ab', drin.y > 2.4,
         `von y = 1.5 nach y = ${drin.y}`);
+
+  /* Und jetzt der Fall, um den es wirklich geht: WÄHREND MAN ZIELT. main.js ruft stepPhysics in
+     der Zielphase mit allowForces = false auf – dann greift nur, was 'alwaysForce' trägt. Die
+     Probe oben lief in der Rollphase und hätte diesen Unterschied nicht gesehen: Nähme man das
+     Kennzeichen weg, bliebe sie grün und die Strömung ließe einen trotzdem in Ruhe zielen. */
+  const zielen = (() => {
+    const lv = bahn([strom()]);
+    const b = G.makeBall(8.5, 1.5, '#fff');
+    for (let i = 0; i < 240; i++) G.stepPhysics(lv, b, 1 / 240, i / 240, false);   // Zielphase!
+    return +b.y.toFixed(2);
+  })();
+  pruef('sie trägt auch, während man noch zielt', zielen > 2.4,
+        `nach 1 s Zielen von y = 1.5 nach y = ${zielen}`);
+
+  /* Wer aus der Strömung gespült wird, darf nicht mitten in ihr zurückgelegt werden – sonst
+     treibt er sofort wieder ab und bekommt den nächsten Strafschlag, bis das Limit erreicht ist.
+     Geprüft am Quelltext von main.js; das Verhalten prüft die Browserprobe. */
+  const haupt2 = fs.readFileSync(path.join(SRC, 'main.js'), 'utf8');
+  pruef('main.js kennt den Sog', /const imSog = /.test(haupt2));
+  pruef('und legt niemanden darin ab', /ruhigerBoden\(lv, e, x, y\)\) return \{ x, y, e \}/.test(haupt2));
   const daneben = treiben([strom()], 2.5, 1.5, 1.5);
   pruef('und einer daneben bleibt liegen', Math.abs(daneben.y - 1.5) < 0.05 && daneben.v < 0.05,
         `y = ${daneben.y}, Tempo ${daneben.v}`);
@@ -257,13 +277,42 @@ console.log('\n--- Die Strömung ---');
   pruef('sie zieht nur bis auf ihr eigenes Tempo', schnellstes <= 5 + 0.3,
         `schnellstes ${schnellstes.toFixed(2)}, erlaubt ${langes.tempo}`);
 
-  /* Die Dünung: wenn sie gerade nicht zieht, ist Ruhe – das ist das Zeitfenster. */
-  const duenung = new (vm.runInContext('Stroemung', ctx))(strom({ puls: 1.0 }));
-  duenung.update(0);        // sin(0) = 0 → keine Kraft
-  const still = duenung.k;
-  duenung.update(Math.PI / 2);
-  pruef('eine Dünung hat einen Augenblick Ruhe', still < 0.02 && duenung.k > 0.95,
-        `Ruhe ${still.toFixed(2)}, voll ${duenung.k.toFixed(2)}`);
+  /* Die Dünung: wenn sie gerade nicht zieht, ist Ruhe – das ist das Zeitfenster. Und genau so
+     wichtig: Die Ruhe darf nur ein Fenster sein, nicht der Normalzustand. Der erste Entwurf stand
+     die halbe Zeit still; im Browser sah das aus, als sei die Maschine kaputt. */
+  const Stroemung = vm.runInContext('Stroemung', ctx);
+  const duenung = new Stroemung(strom({ puls: 1.0 }));
+  let ruhig = 0, voll = 0;
+  const N = 2000, periode = 2 * Math.PI;      // puls = 1 → eine Welle dauert 2π Sekunden
+  for (let i = 0; i < N; i++) {
+    duenung.update((i / N) * periode);
+    if (duenung.k < 0.05) ruhig++;
+    if (duenung.k > 0.95) voll++;
+  }
+  pruef('eine Dünung hat einen Augenblick Ruhe', ruhig > N * 0.1,
+        `${Math.round(100 * ruhig / N)} % der Welle`);
+  pruef('und steht die meiste Zeit NICHT still', ruhig < N * 0.4,
+        `${Math.round(100 * ruhig / N)} % Ruhe, ${Math.round(100 * voll / N)} % volle Kraft`);
+  pruef('und zieht einen guten Teil der Welle voll', voll > N * 0.2,
+        `${Math.round(100 * voll / N)} % volle Kraft`);
+
+  /* Und die Probe, die der Grund für all das war: Auch bei HALBER Welle muß ein liegender Ball
+     abtreiben. Skalierte die Dünung die Kraft statt des Zieltempos, läge sie hier bei 13 × 0,4 =
+     5,2 – knapp über der Reibung 4,2 – und der Ball kröche; bei 0,3 stünde er ganz still. Genau
+     das ist im Browser passiert, während alle Zahlen oben grün waren. */
+  const halbeWelle = (() => {
+    const lv = bahn([strom({ puls: 1.0 })]);
+    const st = lv.obstacles.find(o => o.type === 'stroemung');
+    const b = G.makeBall(8.5, 1.5, '#fff');
+    /* Einen Zeitpunkt suchen, an dem die Welle wirklich halb steht, und ihn festhalten – so hängt
+       die Prüfung nicht daran, wo der Zufall der Uhr gerade hinfällt. */
+    let t0 = 0;
+    for (let i = 0; i < 2000; i++) { st.update(i / 200); if (st.k > 0.35 && st.k < 0.5) { t0 = i / 200; break; } }
+    for (let i = 0; i < 240; i++) { st.update(t0); G.stepPhysics(lv, b, 1 / 240, t0, false, false); }
+    return { k: +st.k.toFixed(2), y: +b.y.toFixed(2) };
+  })();
+  pruef('auch bei halber Welle treibt ein liegender Ball ab', halbeWelle.y > 2.4,
+        `bei Stärke ${halbeWelle.k}: nach 1 s von y = 1.5 nach y = ${halbeWelle.y}`);
 }
 
 console.log('\n--- Der Strudel ---');
@@ -295,6 +344,58 @@ console.log('\n--- Der Strudel ---');
   for (let i = 0; i < 240 * 2; i++) G.stepPhysics(lv, c, 1 / 240, i / 240, true);
   pruef('er lenkt einen durchfahrenden Ball ab', Math.abs(c.y - 3.5) > 0.6,
         `aus y = 3.5 wird y = ${c.y.toFixed(2)}`);
+}
+
+console.log('\n--- Der Anglerfisch ---');
+{
+  const lv = G.buildLevel({
+    name: 'Anglerprüfung', par: 3, theme: 'meeresgrund',
+    map: ['................', '.T############H.', '.##############.', '.##############.',
+          '.##############.', '.##############.', '................'],
+    obstacles: [{ type: 'angler', x0: 4, y0: 3.5, x1: 12, y1: 3.5, tempo: 2 }],
+  });
+  const a = lv.obstacles.find(o => o.type === 'angler');
+  pruef('der Anglerfisch wird gebaut', !!a && typeof a.trigger === 'function');
+
+  /* Er schwimmt gleichmäßig. Die Lore der Uhrwerkstadt fährt in einer Sinusschwingung – an den
+     Enden langsam, in der Mitte schnell. Für einen Fisch wäre das falsch, und wichtiger: Man
+     könnte sein Tempo nicht abschätzen. Geprüft wird darum, daß der Weg je Zeitschritt überall
+     gleich lang ist, außer an den beiden Wendepunkten. */
+  let langsamste = Infinity, schnellste = 0, links = 99, rechts = -99;
+  let vx = a.x;
+  for (let i = 1; i <= 800; i++) {
+    a.update(i * 0.01);
+    const d = Math.abs(a.x - vx) / 0.01; vx = a.x;
+    links = Math.min(links, a.x); rechts = Math.max(rechts, a.x);
+    if (i > 5 && Math.abs(a.x - 4) > 0.3 && Math.abs(a.x - 12) > 0.3) {
+      langsamste = Math.min(langsamste, d); schnellste = Math.max(schnellste, d);
+    }
+  }
+  pruef('er schwimmt gleichmäßig, nicht in einer Schwingung',
+        schnellste - langsamste < 0.2, `zwischen ${langsamste.toFixed(2)} und ${schnellste.toFixed(2)} Kacheln/s`);
+  pruef('und mit dem Tempo, das an ihm steht', Math.abs(schnellste - 2) < 0.15,
+        `${schnellste.toFixed(2)} statt ${a.tempo}`);
+  pruef('er fährt seine Strecke ganz ab', links < 4.2 && rechts > 11.8,
+        `von ${links.toFixed(1)} bis ${rechts.toFixed(1)}`);
+
+  /* Und die Strafe. Ein liegender Ball ist vor ihm nicht sicher – das ist der Punkt: Er ist das
+     erste Hindernis dieser Welt, das einen sucht. */
+  a.update(0);
+  const b = G.makeBall(a.x, a.y, '#fff');
+  const ev = G.stepPhysics(lv, b, 1 / 240, 0, false);
+  pruef('er schnappt auch einen Ball, der nur daliegt', ev.some(e => e.type === 'angler'));
+  const weit = G.makeBall(a.x + 3, a.y, '#fff');
+  const ev2 = G.stepPhysics(lv, weit, 1 / 240, 0, false);
+  pruef('und läßt in Ruhe, wer weit genug weg ist', !ev2.some(e => e.type === 'angler'));
+
+  /* Wer über ihn hinwegfliegt, kommt davon. Das ist die Belohnung für einen Sprung und der
+     einzige Weg, ihn zu überspielen – darum darf er ausdrücklich KEIN airTrigger haben. */
+  pruef('wer über ihn hinwegfliegt, kommt davon', typeof a.airTrigger !== 'function');
+
+  const haupt3 = fs.readFileSync(path.join(SRC, 'main.js'), 'utf8');
+  pruef('ein Schlag zurück: main.js kennt den Angler', /case 'angler': hazard\('angler'\)/.test(haupt3));
+  pruef('und legt ihn an den Anfang des letzten Schlags', /type === 'fell' \|\| type === 'angler'/.test(haupt3));
+  pruef('und sagt, was passiert ist', /Vom Anglerfisch geschnappt/.test(haupt3));
 }
 
 console.log('\n--- Die Bahnen der Welt ---');
