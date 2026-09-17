@@ -119,8 +119,25 @@ DEKO_SAAT = [17, 29, 43, 59, 71, 89, 101, 113, 131, 149, 163, 181]
 DEKO_DICHTE = 0.13
 
 
+# Die TIEFE jeder Bahn, von der Wasserlinie (0) bis zum Grund (1). Sie läuft gleichmäßig durch:
+# Bahn 1 liegt dicht unter der Oberfläche, Bahn 12 ganz unten, und dazwischen geht es Schritt für
+# Schritt hinunter. Die vier Paletten bleiben als Stützstellen stehen; zwischen ihnen mischt
+# themaFuer() in src/themes.js. Vorher lagen je drei Bahnen auf derselben Palette – dann sprang
+# die Farbe drei Mal hart um, und der Abstieg war kein Abstieg, sondern vier Zimmer.
+# Der erste Wert ist NICHT null, sondern die Tiefe der obersten Palette. Alles darunter wird
+# abgeschnitten, weil es keine Stützstelle mehr gibt – und dann sind die ersten beiden Bahnen
+# farblich fast gleich, während anderswo ein ordentlicher Schritt liegt. Die Prüfung in
+# tools/flut.mjs hat genau das gemeldet: größter Farbschritt 17,5, kleinster 3,0.
+def _tiefen(n=12, von=0.12, bis=1.0):
+    return [round(von + (bis - von) * i / (n - 1), 3) for i in range(n)]
+
+
+TIEFEN = _tiefen()
+
+
 def bahn(name, theme, karte, hindernisse=None, par=3, intro=None, maxStrokes=None):
     b = {'name': name, 'par': par, 'theme': theme, 'map': txt(karte),
+         'tiefe': TIEFEN[min(len(BAHNEN), len(TIEFEN) - 1)],
          'obstacles': hindernisse or [],
          'autoDecor': {'density': DEKO_DICHTE, 'seed': DEKO_SAAT[len(BAHNEN) % len(DEKO_SAAT)]}}
     if intro: b['intro'] = intro
@@ -699,6 +716,7 @@ def wert(v):
 
 def js(b):
     teile = [f"name: {wert(b['name'])}", f"par: {b['par']}", f"theme: {wert(b['theme'])}"]
+    if 'tiefe' in b: teile.append(f"tiefe: {b['tiefe']}")
     if 'maxStrokes' in b: teile.append(f"maxStrokes: {b['maxStrokes']}")
     kopf = '    ' + ', '.join(teile) + ',\n'
     if 'intro' in b: kopf += f"    intro: {wert(b['intro'])},\n"

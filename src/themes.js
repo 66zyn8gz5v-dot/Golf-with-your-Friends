@@ -598,3 +598,78 @@ const THEMES = {
     autoDecor: ['cloud', 'cloud', 'cloud', 'cloud', 'cloud', 'cloud', 'cloud', 'windsock'],
   },
 };
+
+/* ---------------------------------------------------------------------------
+   STUFENLOSE TIEFE – die Atmosphäre der Flut ändert sich von Bahn zu Bahn.
+
+   Die versunkene Stadt hat vier Paletten: Wasserlinie, Flachwasser, Dämmerzone, Meeresgrund. Als
+   die Welt zwölf Bahnen bekam, lagen je drei auf einer Palette – und damit sprang die Farbe drei
+   Mal hart um. Man spielt drei Bahnen im selben Blau und steht bei der vierten plötzlich woanders.
+   Das ist kein Abstieg, das sind vier Zimmer.
+
+   Jetzt trägt jede Bahn ihre eigene TIEFE (0 an der Oberfläche, 1 auf dem Grund), und die Palette
+   wird dazwischen GEMISCHT. Die vier bleiben als Stützstellen stehen – sie sind von Hand gesetzt
+   und sollen es bleiben –, aber zwischen ihnen wird gerechnet. Zwölf Bahnen sind dann zwölf
+   Schritte hinunter und nicht vier Sprünge.
+
+   Gemischt wird alles, was eine Farbe ist, und die Tiefe selbst. Alles andere – Stimmung, Deko,
+   Mauerstil – kommt von der NÄHEREN der beiden Paletten: Man kann eine Qualle nicht halb
+   zeichnen, und eine Bahn, auf der Bojen und Quallen zugleich stehen, sähe nach Versehen aus. */
+const MEER_LEITER = ['wasserlinie', 'flachwasser', 'daemmerzone', 'meeresgrund'];
+
+function mischeFarbe(a, b, k) {
+  if (typeof a !== 'string' || typeof b !== 'string' || a[0] !== '#' || b[0] !== '#') return k < 0.5 ? a : b;
+  const z = (s, i) => parseInt(s.slice(1 + i * 2, 3 + i * 2), 16);
+  const teil = i => Math.round(z(a, i) + (z(b, i) - z(a, i)) * k).toString(16).padStart(2, '0');
+  return '#' + teil(0) + teil(1) + teil(2);
+}
+
+/* Mischt zwei Paletten. 'k' läuft von 0 (ganz a) bis 1 (ganz b). */
+function mischeThema(a, b, k) {
+  const aus = Object.assign({}, k < 0.5 ? a : b);      // erst das Nähere ganz übernehmen …
+  for (const feld of ['ground', 'groundEdge', 'cliff', 'sand', 'ice', 'snow', 'water', 'lava',
+                      'accent', 'flag']) {
+    if (a[feld] && b[feld]) aus[feld] = mischeFarbe(a[feld], b[feld], k);
+  }
+  for (const feld of ['sky', 'floor']) {
+    if (Array.isArray(a[feld]) && Array.isArray(b[feld]))
+      aus[feld] = a[feld].map((c, i) => mischeFarbe(c, b[feld][i], k));
+  }
+  for (const feld of ['wall', 'block', 'mover', 'rotor']) {
+    if (a[feld] && b[feld]) {
+      aus[feld] = Object.assign({}, k < 0.5 ? a[feld] : b[feld]);
+      for (const teil of ['top', 'side'])
+        if (a[feld][teil] && b[feld][teil]) aus[feld][teil] = mischeFarbe(a[feld][teil], b[feld][teil], k);
+    }
+  }
+  if (a.tiefe != null && b.tiefe != null) aus.tiefe = a.tiefe + (b.tiefe - a.tiefe) * k;
+  return aus;
+}
+
+/* Die Palette für eine Bahn. Ohne eigene Tiefe ist es einfach die Palette, die dransteht – das
+   gilt für alle Welten außer der Flut und muß auch so bleiben.
+
+   Der Mischwert wird gemerkt: Eine Palette wird bei jedem Bild angefaßt, und zwölf Bahnen ergeben
+   zwölf Ergebnisse. Sie jedesmal neu zu rechnen wäre Arbeit für nichts. */
+const _meerCache = {};
+function themaFuer(def) {
+  const basis = (def && THEMES[def.theme]) || THEMES.meadow;
+  const t = def && def.tiefe;
+  if (t == null || !basis.meerBg) return basis;
+  const schluessel = def.theme + '@' + t;
+  if (_meerCache[schluessel]) return _meerCache[schluessel];
+  const leiter = MEER_LEITER.map(n => THEMES[n]);
+  let aus = leiter[0];
+  if (t >= leiter[leiter.length - 1].tiefe) aus = leiter[leiter.length - 1];
+  else if (t > leiter[0].tiefe) {
+    for (let i = 0; i < leiter.length - 1; i++) {
+      const u = leiter[i], o = leiter[i + 1];
+      if (t >= u.tiefe && t <= o.tiefe) { aus = mischeThema(u, o, (t - u.tiefe) / (o.tiefe - u.tiefe)); break; }
+    }
+  }
+  /* Die gemischte Palette bekommt die Tiefe der Bahn und nicht die der Stützstelle – an ihr hängt
+     alles, was sonst noch mit der Tiefe rechnet (Wassersäule, Schleier, Lichtschächte). */
+  aus = Object.assign({}, aus, { tiefe: t });
+  _meerCache[schluessel] = aus;
+  return aus;
+}

@@ -1578,6 +1578,34 @@ Elf Maschinen: **Flutbecken**, **Pumpwerk**, **Strömung**, **Strudel**, **Angle
 **Riesenmuschel**, **Tangwald**, **Schwarzer Raucher**, **Ankerkette**, **Wracktor** und
 **Abflußrohr**.
 
+### Der Abstieg ist stufenlos
+
+Die Welt hat vier Paletten – Wasserlinie, Flachwasser, Dämmerzone, Meeresgrund –, und als sie zwölf
+Bahnen bekam, lagen je drei auf einer davon. Damit sprang die Farbe **drei Mal hart um**: Man
+spielt drei Bahnen im selben Blau und steht bei der vierten plötzlich woanders. Das ist kein
+Abstieg, das sind vier Zimmer.
+
+Jetzt trägt jede Bahn ihre eigene **Tiefe** (0,12 an der Oberfläche bis 1,0 auf dem Grund, in
+gleichmäßigen Schritten von 0,08), und `themaFuer()` in `src/themes.js` **mischt** die Palette
+dazwischen. Die vier bleiben als Stützstellen stehen – sie sind von Hand gesetzt und sollen es
+bleiben –, aber zwischen ihnen wird gerechnet. Zwölf Bahnen sind dann zwölf Schritte hinunter statt
+vier Sprünge: von `#2c6d84` über `#1b5067` und `#0f2e40` bis `#07202b`.
+
+**Gemischt wird nur, was eine Farbe ist** – dazu die Tiefe selbst, an der die Wassersäule, der
+Schleier und die Lichtschächte hängen. Stimmung, Mauerstil und Requisitenliste kommen ganz von der
+näheren der beiden Paletten: Man kann eine Qualle nicht halb zeichnen, und eine Bahn, auf der Bojen
+und Quallen zugleich stehen, sähe nach Versehen aus.
+
+Die erste Tiefe ist **nicht null**, sondern die der obersten Palette. Alles darunter wird
+abgeschnitten, weil es keine Stützstelle mehr gibt – und dann waren die ersten beiden Bahnen
+farblich fast gleich, während anderswo ein ordentlicher Schritt lag. Gemeldet hat das die Prüfung
+selbst: größter Farbschritt 17,5, kleinster 3,0. Jetzt sind es 16,8 gegen 7,5.
+
+Die Prüfung dazu trägt ihre Gegenprobe im selben Lauf: Sie rechnet dieselben zwölf Bahnen noch
+einmal **ohne** den Mischer durch und verlangt, daß es dann sehr wohl springt (60,1 gegen 0,0).
+Ohne diese zweite Hälfte bewiese die erste nichts – eine Prüfung, die auch grün wäre, wenn der
+Mischer gar nichts täte, prüft nichts.
+
 **Die Bahnen sind Stege, keine Plätze.** Ringsum steht offenes Wasser, und wer heruntergespült
 wird, zahlt. Das ist der Unterschied zwischen einer Strömung, die ärgert, und einer, die etwas
 kostet – und der Grund, warum die Welt eine Legende ist. Dass ringsum *Wasser* steht und nicht

@@ -91,7 +91,7 @@ const Editor = (deps) => {
     if (hatHoehen()) { ed.def.heights = ed.heights.map(r => r.join('')); ed.def.hStep = ed.def.hStep || 0.5; }
     else { delete ed.def.heights; delete ed.def.hStep; }
     ed.def.editing = true;
-    state.level = buildLevel(ed.def); state.theme = THEMES[ed.def.theme] || THEMES.meadow;
+    state.level = buildLevel(ed.def); state.theme = themaFuer(ed.def);
     R.setLevel(state.level, state.theme);
   }
   /* Kamera: Draufsicht (Norden oben, quadratische Kacheln, nur ein Hauch Höhe) oder Schrägsicht;

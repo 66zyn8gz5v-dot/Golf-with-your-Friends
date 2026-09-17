@@ -18,7 +18,7 @@
    'T' Abschlag, 'H' Loch. */
 const FLUT_COURSES = [
   {
-    name: 'Die Hafenmole', par: 4, theme: 'wasserlinie',
+    name: 'Die Hafenmole', par: 4, theme: 'wasserlinie', tiefe: 0.12,
     intro: 'Die Mole läuft nach rechts und knickt am Ende nach oben ab. Mittendrin läuft sie im Takt voll: Zwei Wege, im richtigen Augenblick hindurch – oder unten herum, immer, aber weiter.',
     autoDecor: { density: 0.13, seed: 17 },
     map: [
@@ -49,7 +49,7 @@ const FLUT_COURSES = [
     ],
   },
   {
-    name: 'Der Priel', par: 5, theme: 'wasserlinie',
+    name: 'Der Priel', par: 5, theme: 'wasserlinie', tiefe: 0.2,
     intro: 'Zwei Becken hintereinander, versetzt getaktet – nacheinander kommt man nie durch beide. Am Anfang liegt das Pumpwerk: Wer darüberrollt, legt beide für vier Sekunden trocken.',
     autoDecor: { density: 0.13, seed: 29 },
     map: [
@@ -84,7 +84,7 @@ const FLUT_COURSES = [
     ],
   },
   {
-    name: 'Die Buhnen', par: 5, theme: 'wasserlinie',
+    name: 'Die Buhnen', par: 5, theme: 'wasserlinie', tiefe: 0.28,
     intro: 'Zwischen den Buhnen drückt das Wasser zurück – wer zu sacht spielt, kommt nicht durch. Und vor dem Loch hängt eine Luke aus einem Schiffsrumpf: langsam auf, blitzschnell zu.',
     autoDecor: { density: 0.13, seed: 43 },
     map: [
@@ -116,7 +116,7 @@ const FLUT_COURSES = [
     ],
   },
   {
-    name: 'Der Kessel', par: 4, theme: 'flachwasser',
+    name: 'Der Kessel', par: 4, theme: 'flachwasser', tiefe: 0.36,
     intro: 'Mitten im Kessel dreht sich das Wasser. Es hält niemanden fest – es schleudert nach außen, und wohin, entscheidet, wo man hineingerät.',
     autoDecor: { density: 0.13, seed: 59 },
     map: [
@@ -147,7 +147,7 @@ const FLUT_COURSES = [
     ],
   },
   {
-    name: 'Der Seegraswald', par: 5, theme: 'flachwasser',
+    name: 'Der Seegraswald', par: 5, theme: 'flachwasser', tiefe: 0.44,
     intro: 'Hin und um die Ecke wieder zurück – das Loch liegt fast neben dem Abschlag, nur eben auf der anderen Seite. Auf beiden Läufen liegt ein Tangfeld quer. Es hält niemanden auf, es nimmt den Schwung; durch jedes läuft eine Gasse, und die wandert.',
     autoDecor: { density: 0.13, seed: 71 },
     map: [
@@ -181,7 +181,7 @@ const FLUT_COURSES = [
     ],
   },
   {
-    name: 'Die Austernbank', par: 5, theme: 'flachwasser',
+    name: 'Die Austernbank', par: 5, theme: 'flachwasser', tiefe: 0.52,
     intro: 'Oben oder unten herum – und in beiden Ästen sitzt eine Riesenmuschel. Geschlossen ist sie ein Klotz, offen ein Maul: Sie schluckt, hält kurz und spuckt in ihre Richtung wieder aus. Wer den Takt trifft, spart den halben Weg.',
     autoDecor: { density: 0.13, seed: 89 },
     map: [
@@ -215,7 +215,7 @@ const FLUT_COURSES = [
     ],
   },
   {
-    name: 'Die Kanalisation', par: 4, theme: 'daemmerzone',
+    name: 'Die Kanalisation', par: 4, theme: 'daemmerzone', tiefe: 0.6,
     intro: 'Im Platz dreht sich das Wasser, und in seiner Ecke liegt ein Abflußgitter. Man spielt nicht hinein – man landet darin, wenn einen der Strudel dorthin schleudert. Unter dem Grund läuft die Leitung schnurgerade hinter den Platz; man sieht die Naht.',
     autoDecor: { density: 0.13, seed: 101 },
     map: [
@@ -249,7 +249,7 @@ const FLUT_COURSES = [
     ],
   },
   {
-    name: 'Die Kaimauer', par: 5, theme: 'daemmerzone',
+    name: 'Die Kaimauer', par: 5, theme: 'daemmerzone', tiefe: 0.68,
     intro: 'Unten hin, oben zurück – oder andersherum. Über beiden Stegen schwingt ein Anker an seiner Kette. Er ist langsamer als jedes Pendel der Uhrwerkstadt, und das ist auch nötig: Ein Stoß auf drei Kacheln Steg schickt einen ins Meer.',
     autoDecor: { density: 0.13, seed: 113 },
     map: [
@@ -284,7 +284,7 @@ const FLUT_COURSES = [
     ],
   },
   {
-    name: 'Der Marktplatz', par: 5, theme: 'daemmerzone',
+    name: 'Der Marktplatz', par: 5, theme: 'daemmerzone', tiefe: 0.76,
     intro: 'Am Eingang ein Becken, im Platz der Brunnen, in dem sich alles dreht, und davor und dahinter Schlick, der den Schwung frißt. In der Ecke wartet das Abflußgitter, über dem Ausgang hängt der Anker. Wer hier in fünf Schlägen durchkommt, hat alles getroffen.',
     autoDecor: { density: 0.13, seed: 131 },
     map: [
@@ -320,7 +320,7 @@ const FLUT_COURSES = [
     ],
   },
   {
-    name: 'Die Schlotebene', par: 4, theme: 'meeresgrund',
+    name: 'Die Schlotebene', par: 4, theme: 'meeresgrund', tiefe: 0.84,
     intro: 'Aus dem Grund stößt eine heiße Quelle. Sie wirft auch einen Ball, der nur daliegt – und sie wirft ihn weit. Kurz vorher flimmert der Boden: Das ist die ganze Warnung, die man bekommt.',
     autoDecor: { density: 0.13, seed: 149 },
     map: [
@@ -354,7 +354,7 @@ const FLUT_COURSES = [
     ],
   },
   {
-    name: 'Das Kaltwasserfeld', par: 5, theme: 'meeresgrund',
+    name: 'Das Kaltwasserfeld', par: 5, theme: 'meeresgrund', tiefe: 0.92,
     intro: 'Zwei Stege, auf beiden zieht es – oben nach rechts, unten nach links, und beide als Dünung: Sie kommt und geht. Verbunden sind sie nur in der Mitte, und mitten in der Verbindung dreht sich das Wasser. Stehenbleiben geht nirgends.',
     autoDecor: { density: 0.13, seed: 163 },
     map: [
@@ -392,7 +392,7 @@ const FLUT_COURSES = [
     ],
   },
   {
-    name: 'Der Schlund', par: 5, theme: 'meeresgrund',
+    name: 'Der Schlund', par: 5, theme: 'meeresgrund', tiefe: 1.0,
     intro: 'Das Ende. Zwei Äste, in jedem ein Becken, und beide münden in die Kammer, in der es zieht, sich alles dreht – und in der ein Anglerfisch seine Bahn zieht. Wen seine Laterne erreicht, der spielt den letzten Schlag noch einmal.',
     autoDecor: { density: 0.13, seed: 181 },
     map: [

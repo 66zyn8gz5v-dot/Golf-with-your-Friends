@@ -224,7 +224,7 @@ function abstandStrecke(px, py, f) {
 /* Deko: explizite Objekte plus automatisch verstreute Objekte auf leeren Kacheln
    (innerhalb der Karte und in einem Ring von 2 Kacheln außen herum). */
 function buildDecor(def, tiles, W, H, isFloor) {
-  const theme = THEMES[def.theme];
+  const theme = themaFuer(def);
   const out = [];
   for (const d of def.decor || []) out.push(Object.assign({ s: 1, z: 0 }, d));
   /* Freihalten, wo eine Maschine über den Fairway hinausgreift. Das Zahnradfeld trägt quer über

@@ -442,6 +442,57 @@ console.log('\n--- Die Ankerkette ---');
         `Tempo ${Math.hypot(b.vx, b.vy).toFixed(2)}`);
 }
 
+console.log('\n--- Der Abstieg ---');
+{
+  /* Die Welt soll sich langsam verändern, nicht in vier Sprüngen. Geprüft wird das an dem, was
+     man sieht: an der Tiefe jeder Bahn und an der Farbe, die dabei herauskommt. */
+  const welt = vm.runInContext('WORLDS.find(w => w.id === "flut")', ctx);
+  const themaFuer = vm.runInContext('themaFuer', ctx);
+  const tiefen = welt.courses.map(c => c.tiefe);
+  pruef('jede Bahn trägt ihre eigene Tiefe', tiefen.every(t => typeof t === 'number'),
+        tiefen.join(' · '));
+  pruef('es geht von Bahn zu Bahn hinunter', tiefen.every((t, i) => i === 0 || t > tiefen[i - 1]),
+        `von ${tiefen[0]} bis ${tiefen[tiefen.length - 1]}`);
+
+  /* Und die Schritte sind klein. Die alte Einteilung hatte je drei Bahnen auf einer Palette und
+     dann einen Sprung von 0,23 bis 0,35 – daran hängt die ganze Beschwerde. */
+  const schritte = tiefen.slice(1).map((t, i) => t - tiefen[i]);
+  pruef('und zwar in gleichmäßigen Schritten',
+        Math.max(...schritte) - Math.min(...schritte) < 0.01,
+        `kleinster ${Math.min(...schritte).toFixed(3)}, größter ${Math.max(...schritte).toFixed(3)}`);
+
+  /* DAS IST DIE EIGENTLICHE PRÜFUNG: Zwei aufeinanderfolgende Bahnen dürfen sich in der Farbe
+     nicht mehr unterscheiden als zwei beliebige andere. Vorher war der Unterschied zwischen Bahn 3
+     und 4 (Palettenwechsel) ein Vielfaches des Unterschieds zwischen Bahn 1 und 2 (gar keiner). */
+  const zahl = (hex) => [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16));
+  const abstand = (a, b) => {
+    const [ar, ag, ab_] = zahl(a), [br, bg, bb] = zahl(b);
+    return Math.hypot(ar - br, ag - bg, ab_ - bb);
+  };
+  const paletten = welt.courses.map(c => themaFuer(c));
+  const spruenge = paletten.slice(1).map((th, i) => abstand(th.ground, paletten[i].ground));
+  const groesster = Math.max(...spruenge), kleinster = Math.min(...spruenge);
+  pruef('keine zwei Bahnen springen in der Farbe', groesster < kleinster * 3,
+        `größter Schritt ${groesster.toFixed(1)}, kleinster ${kleinster.toFixed(1)}`);
+
+  /* Gegenprobe im selben Lauf: Ohne eigene Tiefe fallen die zwölf wieder auf vier Paletten
+     zurück, und dann steht dort dreimal dieselbe Farbe und einmal ein Sprung. Wäre der Mischer
+     wirkungslos, sähe die Prüfung oben genauso aus wie diese hier. */
+  const ohne = welt.courses.map(c => themaFuer({ theme: c.theme }));
+  const alt = ohne.slice(1).map((th, i) => abstand(th.ground, ohne[i].ground));
+  pruef('und ohne den Mischer täte sie es sehr wohl', Math.max(...alt) > Math.min(...alt) * 3,
+        `größter Schritt ${Math.max(...alt).toFixed(1)}, kleinster ${Math.min(...alt).toFixed(1)}`);
+
+  /* Die Stimmung wird NICHT gemischt: Man kann eine Qualle nicht halb zeichnen. Sie kommt von der
+     näheren der beiden Stützstellen, und darum steht auf jeder Bahn eine Requisitenliste, die es
+     wirklich gibt – und nicht eine halbe aus zwei Paletten. */
+  const TH = vm.runInContext('THEMES', ctx);
+  const listen = new Set(['wasserlinie', 'flachwasser', 'daemmerzone', 'meeresgrund']
+    .map(n => TH[n].autoDecor.join(',')));
+  pruef('die Requisitenliste kommt immer ganz von einer Palette',
+        paletten.every(th => listen.has((th.autoDecor || []).join(','))));
+}
+
 console.log('\n--- Die Requisiten im Wasser ---');
 {
   /* Die Streu-Deko wird über Namen angesprochen: In der Palette steht 'torbogen', und der Renderer

@@ -1843,7 +1843,7 @@
   }
   function loadLevelPreview(i) {
     const def = state.courses[i];
-    state.level = buildLevel(def); state.theme = THEMES[def.theme]; state.inner = false;
+    state.level = buildLevel(def); state.theme = themaFuer(def); state.inner = false;
     R.setLevel(state.level, state.theme);
     state.ball = null; state.aim = null; state.liegendeBaelle = []; state.kanone = null;
     state.abschlagMatte = state.mode !== 'boule';   // im Boule steht dort die Kanone, kein heller Ring
@@ -1860,7 +1860,7 @@
   function beginTurn() {
     if (state.inner) { // zurück in den Außenbereich der Bahn
       const def = state.courses[state.holeIdx];
-      state.level = buildLevel(def); state.theme = THEMES[def.theme]; state.inner = false;
+      state.level = buildLevel(def); state.theme = themaFuer(def); state.inner = false;
       R.setLevel(state.level, state.theme);
     }
     const p = state.players[state.curPlayer], lv = state.level;
@@ -2238,7 +2238,7 @@
     showMessage(msg || `Hinein in die ${def.name} …`, msg ? 1900 : 1500);
     clearTimeout(waitTimer);
     waitTimer = setTimeout(() => {
-      state.level = buildLevel(def); state.theme = THEMES[def.theme]; state.inner = true;
+      state.level = buildLevel(def); state.theme = themaFuer(def); state.inner = true;
       R.setLevel(state.level, state.theme);
       const b = state.ball, lv = state.level;
       b.x = lv.tee.x; b.y = lv.tee.y; b.ebene = lv.teeEbene || 0; b.vx = 0; b.vy = 0; b.z = 0; b.vz = 0; b.air = false; b.rider = null; b.sunk = false; b.sinkT = 0; b.entered = false; // die nächste Tür (z. B. die Luke) darf wieder auslösen
