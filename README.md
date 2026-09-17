@@ -1283,16 +1283,38 @@ dort ist die Klappe ganz unten. Das Bild zeigt also nicht *ungefähr*, sondern *
 eine Zeichnung, die nach eigener Uhr liefe, wäre schlimmer als gar keine, weil man sich auf sie
 verließe.
 
+**Der Fahrweg war trotzdem falsch** – Fassung 156 hatte an der Klappe einen Weg von 0,45 vor der
+Sperre. Das ist richtig gerechnet und trotzdem falsch gemessen: Der Winkel kommt über den ganzen
+Umlauf nie weiter als 0,785 vom untersten Punkt weg (ein halber Blattabstand bei vier Blättern).
+Mit 0,45 stand die Klappe also nur in einem Wimpernschlag ganz oben – das Maul sah fast immer
+versperrt aus, obwohl der Weg 62 % der Zeit frei ist. Seit Fassung 157 sind es `SPERRT = 0,30` und
+`FAHRWEG = 0,22`: 38 % ganz zu, 34 % ganz offen, der Rest Fahrt. `tools/mine.mjs` rechnet das jetzt
+nach, statt nur die Zeichen zu lesen – es liest die Schwelle aus *beiden* Dateien und vergleicht
+sie, und es prüft, dass der Fahrweg unterhalb des weitesten Standes bleibt.
+
+**Die Feinarbeit (Fassung 157).** Der Ofen war ein glatter Kasten mit einem Loch, und ein glatter
+Kasten ist kein Bauwerk. Dazugekommen ist, was ihn zu einem macht: gemauerte Lagen mit versetzten
+Stoßfugen (zwei Fugen übereinander gibt es an keiner Mauer, die hält – daran erkennt das Auge
+Mauerwerk), **Zugeisen** in der Wand, weil ein Ofen sich mit der Hitze selbst auseinandertreibt,
+ein **Rauchfang** zwischen Dach und Esse samt Eisenringen, **Funken**, die schneller steigen als der
+Rauch und unterwegs verlöschen, **Ruß** über dem Maul, ein **Kohlenbett** aus kantigen dunklen
+Brocken auf einem hellen Streifen – die Glut sieht *zwischen* der Kohle durch – mit Flammenzungen
+davor, dazu Nieten auf dem Eisen und ein **Schieberkasten** über dem Maul, in dem die Klappe steckt,
+wenn sie oben ist. Alles Kleinteilige hängt am Maßstab (`fein = s > 24`): Aus der Übersicht
+verschmieren Fugen und Nieten zu einem grauen Schleier, dort ist weniger mehr.
+
 Gebaut war daran nichts: `style: 'ofen'` an der Windmühle, und `render.js` biegt beim Zeichnen nach
 `render_mine.js` ab. **Ein Stil ist billiger als ein Hindernis**, und er hält die Regel gleich – wer
 die Mühle im Märchenland kennt, kennt den Ofen. Dazu die eine Sache, die ein Ofen können muss: Er
 zählt in der Dunkelheit der Mine als **Licht**. Ein Feuer, das Licht malt und keins gibt, wäre
 Kulisse.
 
-`tools/mine.mjs` prüft dreierlei: dass unter Tage keine Windmühle *als* Windmühle steht (ein
-vergessener Stil fiele sonst nicht auf – der Zeichner beschwert sich nicht, er malt ein
-Segeltuch-Kreuz in den Berg), dass vor dem Maul **kein Rad** steht, und dass die Klappe den Winkel
-des Hindernisses liest statt einer eigenen Uhr.
+`tools/mine.mjs` prüft: dass unter Tage keine Windmühle *als* Windmühle steht (ein vergessener
+Stil fiele sonst nicht auf – der Zeichner beschwert sich nicht, er malt ein Segeltuch-Kreuz in den
+Berg), dass vor dem Maul **kein Rad** steht, dass die Klappe den Winkel des Hindernisses liest statt
+einer eigenen Uhr, dass sie an derselben Schwelle ganz zu ist und einen guten Teil des Umlaufs ganz
+offen steht – und jedes einzelne Stück der Feinarbeit. Letzteres steht dort, weil es sonst beim
+nächsten Umbau still verschwindet: Ein Ofen ohne Fugen ist wieder der Kasten aus Fassung 156.
 
 Die Pare stehen nicht nach Gefühl, sondern nach dem, was die Bahnen wirklich spielen: Der
 Normalspieler-Bot (`node tools/audit/audit.mjs mine`) hat sie durchgespielt, und wo sein Median

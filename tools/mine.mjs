@@ -324,6 +324,23 @@ console.log('\n--- Die Bruchwand ---');
                                ['eine Ofenklappe', /Ofenklappe/], ['Glut, die atmet', /glut/]])
     pruef(`er hat ${was}`, muster.test(leib));
   pruef('und kein Segeltuch', !/245,235,210/.test(leib));
+  /* Die Feinarbeit. Sie steht hier, weil sie sonst beim nächsten Umbau still verschwindet - und
+     ohne sie ist der Ofen wieder der glatte Kasten mit einem Loch, den es in Fassung 156 gab. */
+  for (const [was, muster] of [['gemauerte Lagen mit versetzten Stoßfugen', /steinBreit/],
+                               ['Zugeisen in der Wand', /Zugeisen/],
+                               ['einen Rauchfang unter der Esse', /this\.frustum\(ctx, quad\(/],
+                               ['Eisenringe um die Esse', /for \(const zr of/],
+                               ['Funken über der Esse', /Funken/],
+                               ['Ruß über dem Maul', /russ\.addColorStop/],
+                               ['ein Kohlenbett mit Brocken', /bett\.addColorStop/],
+                               ['Flammenzungen', /quadraticCurveTo/],
+                               ['einen Schieberkasten für die Klappe', /Schieberkasten/],
+                               ['Nieten auf dem Eisen', /Nieten/]])
+    pruef(`er hat ${was}`, muster.test(leib));
+  /* Und das Kleinteilige hängt am Maßstab: Aus der Übersicht verschmieren Fugen und Nieten zu
+     einem grauen Schleier - dort ist weniger mehr. */
+  pruef('die Feinarbeit hängt am Maßstab',
+        /const fein = s > \d+/.test(leib) && (leib.match(/\(fein\)|\(!fein\)/g) || []).length >= 4);
   /* Und vor allem: kein Rad. Ein Schaufelrad vor dem Maul waere die Muehle in Eisen - der Ofen
      soll mit dem sperren, was ein Ofen hat. */
   pruef('und kein Rad vor dem Maul', !/for \(let i = 0; i < ob\.blades/.test(leib));
@@ -331,10 +348,27 @@ console.log('\n--- Die Bruchwand ---');
      eigener Uhr, zeigte das Bild etwas anderes an, als gilt - und das ist schlimmer als gar kein
      Bild: Man verließe sich darauf. */
   pruef('die Klappe liest den Winkel des Hindernisses', /ob\.angle/.test(leib) && /ob\.blades/.test(leib));
-  const sperrt = /const naehe = Math\.min\(roh, schritt - roh\)/.test(leib) && /0\.75 - naehe\) \/ 0\.45/.test(leib);
-  pruef('und ist genau dann ganz zu, wenn das Hindernis sperrt', sperrt);
+  pruef('sie misst den Abstand zum untersten Punkt', /const naehe = Math\.min\(roh, schritt - roh\)/.test(leib));
   const hind = fs.readFileSync(path.join(SRC, 'obstacles.js'), 'utf8');
   pruef('das Hindernis sperrt weiterhin bei 0,3', /rel < 0\.3 \|\| rel > step - 0\.3/.test(hind));
+  /* Nicht nur „irgendein Wert steht da", sondern *derselbe*: Die Schwelle wird aus beiden Dateien
+     gelesen und verglichen. Stünde in der Zeichnung eine andere, zeigte die Klappe „zu", wo man
+     durchkommt - oder schlimmer „offen", wo man anstößt. */
+  const sperrtHind = hind.match(/rel < (\d[\d.]*) \|\| rel > step - \1/);
+  const sperrtBild = leib.match(/const SPERRT = (\d[\d.]*), FAHRWEG = (\d[\d.]*)/);
+  pruef('und ist genau dann ganz zu, wenn das Hindernis sperrt',
+        !!sperrtBild && !!sperrtHind && Number(sperrtBild[1]) === Number(sperrtHind[1]),
+        sperrtBild && sperrtHind ? `Bild ${sperrtBild[1]} / Physik ${sperrtHind[1]}` : 'Schwelle nicht ablesbar');
+  pruef('und fährt aus der Sperre heraus', /\(SPERRT \+ FAHRWEG - naehe\) \/ FAHRWEG/.test(leib));
+  /* Und sie muß auch wirklich ganz oben ankommen. Der Winkel entfernt sich über den Umlauf nie
+     weiter als einen halben Blattabstand vom untersten Punkt - bei vier Blättern 0,785. Reicht der
+     Fahrweg darüber hinaus, steht die Klappe nie ganz offen: Der Weg sieht versperrt aus, obwohl
+     er die meiste Zeit frei ist. Genau das war in Fassung 156 so. */
+  if (sperrtBild) {
+    const weitest = Math.PI / 4, offenAb = Number(sperrtBild[1]) + Number(sperrtBild[2]);
+    pruef('und steht einen guten Teil des Umlaufs ganz offen', offenAb < weitest - 0.15,
+          `ganz offen ab ${offenAb.toFixed(2)} von höchstens ${weitest.toFixed(3)}`);
+  }
   /* Und er leuchtet: ein Feuer, das kein Licht gibt, wäre Kulisse. */
   pruef('der Ofen zählt als Licht', /ob\.style === 'ofen'\) lichter\.push/.test(q));
 }
