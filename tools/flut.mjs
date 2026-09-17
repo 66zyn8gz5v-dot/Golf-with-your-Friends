@@ -808,7 +808,11 @@ console.log('\n--- Die Bahnen der Welt ---');
     const becken = lv.obstacles.filter(o => o.type === 'flut');
     /* Nicht jede Bahn hat ein Becken – manche leben von Strömung und Strudel. Eine Maschine der
        Welt muß aber jede haben, sonst könnte sie in jeder anderen Welt genauso stehen. */
-    const eigene = new Set(['flut', 'pumpwerk', 'stroemung', 'strudel']);
+    /* Diese Liste muß zu 'eigene' in tools/flut.py passen. Sie stand lange nur auf den ersten
+       vier Maschinen, und dann meldete sie vier fertige Bahnen als maschinenlos, obwohl auf
+       ihnen Muscheln, Anker und ein Schlot standen. */
+    const eigene = new Set(['flut', 'pumpwerk', 'stroemung', 'strudel', 'angler', 'muschel',
+      'tangwald', 'raucher', 'ankerkette', 'wracktor', 'abflussrohr']);
     pruef(`„${def.name}" trägt eine Maschine dieser Welt`,
           lv.obstacles.some(o => eigene.has(o.type)),
           lv.obstacles.map(o => o.type).join(' '));

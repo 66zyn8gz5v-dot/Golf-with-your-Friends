@@ -1541,12 +1541,38 @@ spielt.
 Die elfte Welt ist noch nicht im Spiel; sie steht in der Vorschau. **Zwölf Bahnen, drei je Tiefe**,
 Stufe Legende:
 
-| | Abschnitt | Bahnen |
-| --- | --- | --- |
-| 1–3 | `wasserlinie` | Das Hafenbecken · Der Priel · Die Mole |
-| 4–6 | `flachwasser` | Die Sandbank · Der Seegraswald · Die Rinne |
-| 7–9 | `daemmerzone` | Die Gassen · Der Marktplatz · Die Kaimauer |
-| 10–12 | `meeresgrund` | Der Grund · Das Kaltwasserfeld · Der Schlund |
+| | Abschnitt | Bahnen | was hier dazukommt |
+| --- | --- | --- | --- |
+| 1–3 | `wasserlinie` | Die Hafenmole · Der Priel · Die Buhnen | Becken · Pumpwerk · Strömung und Wracktor |
+| 4–6 | `flachwasser` | Der Kessel · Der Seegraswald · Die Austernbank | Strudel · Tangwald · Riesenmuschel |
+| 7–9 | `daemmerzone` | Die Kanalisation · Die Kaimauer · Der Marktplatz | Abflußrohr · Ankerkette · alles der Stadt zusammen |
+| 10–12 | `meeresgrund` | Die Schlotebene · Das Kaltwasserfeld · Der Schlund | Schwarzer Raucher · Gegenströmungen · der Anglerfisch |
+
+**Jede Maschine bekommt ihre eigene Bahn, bevor sie sich mit anderen mischt.** Wer zum ersten Mal
+einen Strudel sieht, sieht ihn allein und lernt, was er tut; erst danach steht er neben einer
+Strömung. Eine Welt, die alles auf einmal auspackt, ist nicht schwer, sondern unübersichtlich.
+
+**Der Anglerfisch kommt zuletzt, und nur einmal.** Er ist das einzige Hindernis dieser Welt, das
+einen Schlag zurücksetzt – damit ist er die Pointe der letzten Bahn und nicht das Grundrauschen
+der ganzen Welt.
+
+**Keine Bahn liegt geradeaus.** Beim ersten Anlauf waren die zwölf lange gerade Stege, und der
+Profi-Bot lochte die ersten beiden mit **einem Schlag** ein: Abschlag und Loch standen auf einer
+Linie, und dazwischen lag nur ein Becken, das man abwarten konnte. Jetzt hat jede Bahn wenigstens
+einen Knick – ein Bogen über Wasser ist nicht zu schlagen, also kostet er einen Schlag.
+
+Der Bot hat auch die Pars gesetzt. Das Verfahren ist immer dasselbe: Der Profi-Bot sagt, was
+optimal geht, der Normalspieler-Bot, was ein Mensch braucht. Par ist der Profi-Wert, und der
+Normalspieler soll zwei bis drei darüber landen, ohne ins Schlaglimit zu laufen. Danach standen
+vier Bahnen anders da als geplant – Priel, Buhnen, Seegraswald und Austernbank sind Par 5 geworden,
+weil der Profi dort fünf Schläge braucht.
+
+Eine Bahn hat dabei etwas über den Tangwald verraten. *Der Seegraswald* hatte zuerst **zwei**
+Tangfelder, eines auf dem Hinweg und eines auf dem Rückweg. Damit fand der Profi-Bot in acht
+Schlägen gar keine Lösung mehr, und jeder fünfte Durchgang des Normalspielers lief ins Schlaglimit.
+Der Grund ist eine Kette: Der Tang nimmt den Schwung, der nächste Schlag trägt nicht mehr über die
+Ecke, und der Ball geht ins Meer. Mit einem Tangfeld: Ø 6,4 Schläge, kein einziger Sturz. **Eine
+Maschine, die man zweimal trifft, ist nicht doppelt so gut – sie ist doppelt so zäh.**
 
 Elf Maschinen: **Flutbecken**, **Pumpwerk**, **Strömung**, **Strudel**, **Anglerfisch**,
 **Riesenmuschel**, **Tangwald**, **Schwarzer Raucher**, **Ankerkette**, **Wracktor** und
