@@ -702,4 +702,218 @@ Object.assign(Renderer.prototype, {
     }
     ctx.restore();
   },
+
+  /* ================= Das Wracktor =================
+     Eine Luke aus Schiffsblech, die um ihre Angel schwingt. Gezeichnet wird zuerst der Bogen, den
+     sie überstreicht – auf dem Grund, blaß, als Schleifspur im Sand. Das ist die wichtigste Linie
+     des ganzen Hindernisses: Sie sagt, wo man nicht stehenbleiben darf, und sie sagt es, bevor
+     etwas passiert. Das Blatt selbst kommt danach.
+
+     Kurz vor dem Zuschlagen färbt sich der Bogen: Man sieht den Schlag kommen, so wie man beim
+     Schwarzen Raucher den Ausbruch kommen sieht. Ohne diese Ansage wäre er Willkür. */
+  drawWracktorFloor(ctx, ob, t) {
+    const s = this.scale;
+    const a0 = ob.zuR, a1 = ob.zuR + ob.ampR;
+    const von = Math.min(a0, a1), bis = Math.max(a0, a1);
+    ctx.save();
+    /* Der Bogen wird Stück für Stück projiziert – ein ctx.arc wäre ein Kreis am Bildschirm und
+       nicht auf dem Boden, und in der schrägen Sicht liegt der Unterschied bei einer halben
+       Kachel. */
+    const rand = [];
+    for (let i = 0; i <= 16; i++) {
+      const a = von + (bis - von) * (i / 16);
+      rand.push(this.proj(ob.ax + Math.cos(a) * ob.len, ob.ay + Math.sin(a) * ob.len, 0.011));
+    }
+    const [hx, hy] = this.proj(ob.ax, ob.ay, 0.011);
+    ctx.beginPath();
+    ctx.moveTo(hx, hy);
+    for (const [px, py] of rand) ctx.lineTo(px, py);
+    ctx.closePath();
+    /* Die Warnung hängt am Rest des Takts, nicht am Winkel: Sie beginnt, während die Luke noch
+       offen steht, und hört auf, sobald sie zu ist. */
+    const warnt = ob.p > 0.55;
+    const puls = warnt ? 0.5 + 0.5 * Math.sin(t * 9) : 0;
+    ctx.fillStyle = `rgba(${150 + 90 * puls},${150 - 40 * puls},${120 - 40 * puls},${0.16 + 0.2 * puls})`;
+    ctx.fill();
+    ctx.strokeStyle = `rgba(${200 + 40 * puls},${190 - 40 * puls},${150 - 40 * puls},${0.5 + 0.4 * puls})`;
+    ctx.lineWidth = Math.max(1.5, s * 0.07);
+    ctx.beginPath();
+    ctx.moveTo(rand[0][0], rand[0][1]);
+    for (const [px, py] of rand) ctx.lineTo(px, py);
+    ctx.stroke();
+    ctx.restore();
+  },
+
+  drawWracktor(ctx, ob, t) {
+    const s = this.scale, hoch = ob.hoehe || 1.1;
+    const [fx, fy] = this.proj(ob.ax, ob.ay, 0.02);
+    const [ftx, fty] = this.proj(ob.tipX, ob.tipY, 0.02);
+    const [kx, ky] = this.proj(ob.ax, ob.ay, hoch);
+    const [ktx, kty] = this.proj(ob.tipX, ob.tipY, hoch);
+    ctx.save();
+
+    // Der Schatten des Blattes auf dem Grund
+    ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+    ctx.lineWidth = Math.max(2, s * (ob.dick || 0.16) * 2.4);
+    ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(fx, fy); ctx.lineTo(ftx, fty); ctx.stroke();
+
+    // Die Flanke: das Blatt hat Dicke, sonst ist es ein Strich
+    const flanke = ctx.createLinearGradient(fx, fy, kx, ky);
+    flanke.addColorStop(0, '#2a3338'); flanke.addColorStop(1, '#46545a');
+    ctx.fillStyle = flanke;
+    ctx.beginPath();
+    ctx.moveTo(fx, fy); ctx.lineTo(ftx, fty); ctx.lineTo(ktx, kty); ctx.lineTo(kx, ky);
+    ctx.closePath(); ctx.fill();
+
+    /* Die Oberkante: verrostetes Blech mit Nieten. Der Rost läuft von der Angel nach außen heller,
+       weil das Blatt dort vom Wasser blankgescheuert ist – das gibt der Luke eine Richtung. */
+    const blech = ctx.createLinearGradient(kx, ky, ktx, kty);
+    blech.addColorStop(0, '#5d4a32'); blech.addColorStop(0.5, '#7a6543'); blech.addColorStop(1, '#93836a');
+    ctx.strokeStyle = blech;
+    ctx.lineWidth = Math.max(2.5, s * (ob.dick || 0.16) * 2.1);
+    ctx.beginPath(); ctx.moveTo(kx, ky); ctx.lineTo(ktx, kty); ctx.stroke();
+    ctx.strokeStyle = 'rgba(24,30,34,0.55)';
+    ctx.lineWidth = Math.max(1, s * 0.035);
+    ctx.beginPath(); ctx.moveTo(kx, ky); ctx.lineTo(ktx, kty); ctx.stroke();
+    ctx.fillStyle = 'rgba(206,196,176,0.7)';
+    for (let i = 1; i <= 5; i++) {
+      const u = i / 6;
+      ctx.beginPath();
+      ctx.arc(kx + (ktx - kx) * u, ky + (kty - ky) * u, Math.max(1, s * 0.04), 0, TAU);
+      ctx.fill();
+    }
+
+    // Die Angel: ein Beschlag am Rumpf, an dem das Blatt hängt
+    ctx.fillStyle = '#3a454b';
+    ctx.beginPath(); ctx.ellipse(kx, ky, s * 0.2, s * 0.2 * this.cam.tilt + s * 0.08, 0, 0, TAU); ctx.fill();
+    ctx.strokeStyle = '#5e6c73'; ctx.lineWidth = Math.max(1.5, s * 0.05);
+    ctx.beginPath(); ctx.arc(kx, ky, s * 0.11, 0, TAU); ctx.stroke();
+
+    /* Gischt an der Spitze, während sie zuschlägt. Sie zeigt in die Bewegungsrichtung, damit auch
+       ein stehendes Bild sagt, wohin das Blatt gerade fährt. */
+    if (ob.schlaegt) {
+      const q = Math.min(1, Math.abs(ob.omega) / 4);
+      const senk = Math.atan2(kty - ky, ktx - kx) + Math.PI / 2 * Math.sign(ob.omega || 1);
+      ctx.globalCompositeOperation = 'lighter';
+      for (let i = 0; i < 7; i++) {
+        const u = 0.35 + 0.65 * ((i * 3) % 7) / 7;
+        const px = kx + (ktx - kx) * u + Math.cos(senk) * s * 0.2 * (0.4 + i / 7);
+        const py = ky + (kty - ky) * u + Math.sin(senk) * s * 0.2 * (0.4 + i / 7);
+        ctx.globalAlpha = 0.35 * q;
+        ctx.fillStyle = '#dff2ff';
+        ctx.beginPath(); ctx.arc(px, py, Math.max(1, s * 0.09 * (0.5 + i / 9)), 0, TAU); ctx.fill();
+      }
+      ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+    }
+    ctx.restore();
+  },
+
+  /* ================= Das Abflussrohr =================
+     Zu sehen ist die Leitung nicht – sie liegt unter dem Grund. Zu sehen ist ihre NAHT: eine Reihe
+     verrosteter Platten mit Nieten, vom Einlauf schnurgerade zum Auslauf. Das ist mit Absicht die
+     ganze Zeichnung. Eine Leitung, die man sähe, wäre das Kupferrohr noch einmal; eine, die man
+     gar nicht ahnte, wäre ein Loch, in dem Bälle verschwinden.
+
+     Läuft eine Kugel darin, wandert eine helle Blase über der Naht mit. Damit weiß man, wo sie
+     gerade ist und wann sie herauskommt – und man schaut auf den Auslauf und nicht auf den Boden. */
+  drawAbflussFloor(ctx, ob, t) {
+    if (!ob.bereit) return;
+    const s = this.scale;
+    const [ex, ey] = this.proj(ob.x, ob.y, 0.012);
+    const [zx, zy] = this.proj(ob.ax, ob.ay, 0.012);
+    ctx.save();
+    // Die Naht: ein breiter, dunkler Streifen mit Plattenstößen darin
+    ctx.lineCap = 'butt';
+    ctx.strokeStyle = 'rgba(28,34,36,0.55)';
+    ctx.lineWidth = Math.max(3, s * 0.42);
+    ctx.beginPath(); ctx.moveTo(ex, ey); ctx.lineTo(zx, zy); ctx.stroke();
+    ctx.strokeStyle = 'rgba(112,88,56,0.5)';
+    ctx.lineWidth = Math.max(2, s * 0.3);
+    ctx.beginPath(); ctx.moveTo(ex, ey); ctx.lineTo(zx, zy); ctx.stroke();
+    // Plattenstöße quer dazu, dazwischen Nieten – so wird aus dem Strich eine gedeckelte Rinne
+    const laenge = Math.hypot(zx - ex, zy - ey) || 1;
+    const nx = (zx - ex) / laenge, ny = (zy - ey) / laenge;
+    const n = Math.max(3, Math.round(ob.strecke));
+    ctx.strokeStyle = 'rgba(22,28,30,0.6)';
+    ctx.lineWidth = Math.max(1, s * 0.04);
+    for (let i = 1; i < n; i++) {
+      const u = i / n;
+      const px = ex + (zx - ex) * u, py = ey + (zy - ey) * u;
+      ctx.beginPath();
+      ctx.moveTo(px + ny * s * 0.2, py - nx * s * 0.2);
+      ctx.lineTo(px - ny * s * 0.2, py + nx * s * 0.2);
+      ctx.stroke();
+    }
+    ctx.fillStyle = 'rgba(190,178,156,0.5)';
+    for (let i = 0; i < n; i++) {
+      const u = (i + 0.5) / n;
+      const px = ex + (zx - ex) * u, py = ey + (zy - ey) * u;
+      for (const seite of [-1, 1]) {
+        ctx.beginPath();
+        ctx.arc(px + ny * s * 0.15 * seite, py - nx * s * 0.15 * seite, Math.max(1, s * 0.035), 0, TAU);
+        ctx.fill();
+      }
+    }
+    // Die Blase, solange etwas unterwegs ist
+    if (ob.fahrt >= 0) {
+      const px = ex + (zx - ex) * ob.fahrt, py = ey + (zy - ey) * ob.fahrt;
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      const g = ctx.createRadialGradient(px, py, 0, px, py, s * 0.7);
+      g.addColorStop(0, 'rgba(200,240,255,0.55)');
+      g.addColorStop(1, 'rgba(160,220,255,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.ellipse(px, py, s * 0.7, s * 0.7 * this.cam.tilt, 0, 0, TAU); ctx.fill();
+      ctx.restore();
+    }
+    ctx.restore();
+  },
+
+  /* Einlauf und Auslauf: zwei Gitter im Boden. Das eine schluckt, das andere spült aus – und man
+     soll ihnen das ansehen, ohne es probiert zu haben. Darum sitzt über dem Auslauf ein Bügel mit
+     der Auswurfrichtung, so wie beim Löwentor der Kopf in seine Richtung schaut. */
+  drawAbflussMund(ctx, ob, t) {
+    if (!ob.bereit) return;
+    const s = this.scale;
+    const gitter = (gx, gy, aus) => {
+      const [sx, sy] = this.proj(gx, gy, 0.02);
+      ctx.save();
+      ctx.fillStyle = '#20282c';
+      ctx.beginPath(); ctx.ellipse(sx, sy, s * 0.46, s * 0.46 * this.cam.tilt, 0, 0, TAU); ctx.fill();
+      ctx.strokeStyle = '#6e604a'; ctx.lineWidth = Math.max(1.5, s * 0.07); ctx.stroke();
+      ctx.strokeStyle = 'rgba(150,140,118,0.8)'; ctx.lineWidth = Math.max(1, s * 0.05);
+      for (let i = -2; i <= 2; i++) {
+        const a = this.proj(gx + i * 0.16, gy - 0.34, 0.021), b = this.proj(gx + i * 0.16, gy + 0.34, 0.021);
+        ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+      }
+      ctx.restore();
+      return [sx, sy];
+    };
+    gitter(ob.x, ob.y, false);
+    const [zx, zy] = gitter(ob.ax, ob.ay, true);
+    // Der Bügel über dem Auslauf zeigt, wohin gespült wird
+    const [rx, ry] = this.proj(ob.ax + ob.dx * 1.0, ob.ay + ob.dy * 1.0, 0.02);
+    ctx.save();
+    ctx.strokeStyle = '#8a7a5c'; ctx.lineCap = 'round';
+    ctx.lineWidth = Math.max(2, s * 0.09);
+    ctx.beginPath(); ctx.moveTo(zx, zy); ctx.lineTo(rx, ry); ctx.stroke();
+    /* Der Schwall: kurz nach dem Ausspülen schießt Wasser aus dem Gitter. Er ist die Quittung für
+       den Stoß – ohne ihn sähe es aus, als spränge der Ball von selbst los. */
+    const seit = t - (ob.speiAt ?? -10);
+    if (seit >= 0 && seit < 0.7) {
+      const q = 1 - seit / 0.7;
+      ctx.globalCompositeOperation = 'lighter';
+      for (let i = 0; i < 10; i++) {
+        const u = ((i * 7) % 10) / 10;
+        const w = 0.2 + 1.1 * u * (1 - q * 0.4);
+        const [px, py] = this.proj(ob.ax + ob.dx * w, ob.ay + ob.dy * w, 0.05 + u * 0.4);
+        ctx.globalAlpha = 0.5 * q * (1 - u * 0.5);
+        ctx.fillStyle = '#dff2ff';
+        ctx.beginPath(); ctx.arc(px, py, Math.max(1, s * 0.13 * (1 - u * 0.4)), 0, TAU); ctx.fill();
+      }
+      ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+    }
+    ctx.restore();
+  },
 });

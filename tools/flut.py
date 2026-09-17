@@ -27,6 +27,7 @@ wirklich auf der Bahn, und ein Becken, das nie zugeht, ist keines.
 KARTENLEGENDE wie in courses.js: '#' Boden, '.' offenes Wasser/Abgrund, 'T' Abschlag, 'H' Loch,
 'x' Block, 'w' Wasser, 's' bremsender Grund (hier: Schlick), 'i' Eis (hier: nasser Stein).
 """
+import math
 import io
 from collections import deque
 
@@ -176,6 +177,22 @@ def ankerkette(x, y, len_=4.0, amp=48, ruhe=90, takt=5.2, phase=0.0):
     o = {'type': 'ankerkette', 'x': x, 'y': y, 'len': len_, 'amp': amp, 'ruhe': ruhe, 'takt': takt}
     if phase: o['phase'] = phase
     return o
+
+
+def wracktor(x, y, len_=2.2, zu=90, gegen=False, takt=6.0, phase=0.0):
+    """x,y ist die ANGEL – das Blatt ist 'len_' Kacheln lang und schwingt um sie. 'zu' ist der
+    Winkel, in dem es den Durchgang sperrt; auf geht es um 88 Grad in die eine oder (mit 'gegen')
+    in die andere Richtung."""
+    o = {'type': 'wracktor', 'x': x, 'y': y, 'len': len_, 'zuWinkel': zu, 'takt': takt}
+    if gegen: o['gegen'] = True
+    if phase: o['phase'] = phase
+    return o
+
+
+def abfluss(paar, angle=0):
+    """Das Abflußrohr braucht zwei Buchstaben in der Karte: den Großbuchstaben als Einlauf, den
+    gleichen Kleinbuchstaben als Auslauf. 'angle' sagt, wohin gespült wird."""
+    return {'type': 'abflussrohr', 'pair': paar, 'angle': angle}
 
 
 def strudel(x, y, r=2.4, dreh=1):
@@ -359,8 +376,58 @@ def pruefe(b):
             fehler.append(f'ein Anglerfisch schwimmt größtenteils neben dem Steg '
                           f'({auf} von {schritte + 1} Punkten auf Boden)')
 
+    # Das Wracktor. Es schlägt zu, und wo es zuschlägt, darf niemand stehen müssen: Eine Luke, deren
+    # Bogen über den Abschlag oder das Loch streicht, würfe den Ball weg, bevor oder nachdem man
+    # etwas dagegen tun kann. Und sie muß über BODEN schwingen – über offenem Wasser sperrt sie
+    # nichts und trifft nie jemanden, dann ist sie bloß Deko mit Takt.
+    for o in b['obstacles']:
+        if o['type'] != 'wracktor': continue
+        amp = -88 if o.get('gegen') else 88
+        boden = 0
+        schritte = 20
+        for i in range(schritte + 1):
+            w = math.radians(o['zuWinkel'] + amp * (i / schritte))
+            for k in (0.4, 0.7, 1.0):
+                px = int(o['x'] + math.cos(w) * o['len'] * k)
+                py = int(o['y'] + math.sin(w) * o['len'] * k)
+                if not (0 <= py < len(karte) and 0 <= px < len(karte[0])): continue
+                if karte[py][px] in TROCKEN: boden += 1
+                for name, (tx, ty) in (('Abschlag', tee), ('Loch', cup)):
+                    if (px, py) == (tx, ty):
+                        fehler.append(f'ein Wracktor schlägt über den {name}')
+        if boden < schritte:
+            fehler.append(f'ein Wracktor schwingt fast nur über Wasser ({boden} feste Felder im Bogen) '
+                          '– dort sperrt es nichts')
+        if o['takt'] > FLUT_GEDULD:
+            fehler.append(f'ein Wracktor braucht {o["takt"]:.1f} s je Takt – zu lang zum Warten')
+
+    # Das Abflußrohr. Beide Gitter müssen auf festem Grund liegen – ein Einlauf im offenen Wasser
+    # ist nie zu erreichen, ein Auslauf darin spuckt den Ball ins Nichts. Und keines der beiden
+    # darf auf dem Abschlag oder dem Loch sitzen: Der Einlauf verschlänge den Ball, bevor man
+    # gespielt hat, der Auslauf machte das Loch unerreichbar.
+    for o in b['obstacles']:
+        if o['type'] != 'abflussrohr': continue
+        gross, klein = o['pair'].upper(), o['pair'].lower()
+        stellen = {}
+        for y, zeile in enumerate(karte):
+            for x, c in enumerate(zeile):
+                if c in (gross, klein): stellen[c] = (x, y)
+        for c, was in ((gross, 'Einlauf'), (klein, 'Auslauf')):
+            if c not in stellen:
+                fehler.append(f'ein Abflußrohr braucht {c} auf der Karte ({was} fehlt)')
+                continue
+            if stellen[c] in (tee, cup):
+                fehler.append(f'der {was} eines Abflußrohrs liegt auf {"dem Abschlag" if stellen[c] == tee else "dem Loch"}')
+        if gross in stellen and klein in stellen:
+            (ex, ey), (zx, zy) = stellen[gross], stellen[klein]
+            # Unterwegs ist die Leitung unter dem Grund – aber sie soll eine Strecke überbrücken,
+            # die zu Fuß länger ist. Sonst ist sie ein teurer Umweg um zwei Kacheln.
+            if abs(ex - zx) + abs(ey - zy) < 6:
+                fehler.append('ein Abflußrohr überbrückt fast nichts – der Weg drumherum ist kürzer')
+
     # Jede Bahn dieser Welt braucht wenigstens eine ihrer Maschinen, sonst könnte sie überall stehen
-    eigene = {'flut', 'pumpwerk', 'stroemung', 'strudel', 'angler', 'muschel', 'tangwald', 'raucher', 'ankerkette'}
+    eigene = {'flut', 'pumpwerk', 'stroemung', 'strudel', 'angler', 'muschel', 'tangwald', 'raucher',
+              'ankerkette', 'wracktor', 'abflussrohr'}
     if not any(o['type'] in eigene for o in b['obstacles']):
         fehler.append('keine Maschine der Welt auf dieser Bahn')
 
@@ -484,8 +551,11 @@ fuell(f, 14, 5, 20, 7, 's')
 fuell(f, 14, 13, 20, 15, 's')
 bahn('Die Gassen', 'daemmerzone', f, par=4,
      intro='Das Haus in der Mitte versperrt den geraden Weg. Links und rechts daran vorbei laufen '
-           'zwei Gassen, und beide saufen im Takt voll – versetzt, damit immer eine offen ist.',
-     hindernisse=[becken(14, 5, 20, 7), becken(14, 13, 20, 15, start=4.4)])
+           'zwei Gassen, und beide saufen im Takt voll – versetzt, damit immer eine offen ist. Vor '
+           'der oberen hängt eine Luke aus einem Schiffsrumpf: Die Dünung drückt sie langsam auf '
+           'und schlägt sie kurz darauf wieder zu. Wer dann noch darunter liegt, fliegt.',
+     hindernisse=[becken(14, 5, 20, 7), becken(14, 13, 20, 15, start=4.4),
+                  wracktor(12.5, 5.15, len_=2.8, zu=90, gegen=True)])
 
 # --- 8: der Marktplatz. Der Brunnen dreht mitten im Platz, davor und dahinter je ein Becken.
 f = meer(38, 21)
@@ -496,11 +566,17 @@ umweg(f, 9, 29, 10, 18)
 setz(f, 4, 10, 'T'); setz(f, 33, 10, 'H')
 fuell(f, 13, 9, 16, 11, 's')
 fuell(f, 22, 9, 25, 11, 's')
+# Das Abflußgitter liegt in der Ecke des Platzes, wohin einen nur der Brunnen schleudert – man
+# spielt nicht hinein, man landet darin. Und die Kanalisation setzt einen hinter dem Platz wieder
+# ab. Damit ist es keine Abkürzung, sondern der Ausweg aus dem Strudel.
+setz(f, 15, 13, 'A'); setz(f, 28, 10, 'a')
 bahn('Der Marktplatz', 'daemmerzone', f, par=4,
      intro='Über dem alten Brunnen dreht sich das Wasser, und in den Platz hinein und heraus führt '
-           'je ein Becken. Wer beide im richtigen Augenblick nimmt, wird trotzdem noch versetzt.',
+           'je ein Becken. Wer beide im richtigen Augenblick nimmt, wird trotzdem noch versetzt. In '
+           'der Ecke des Platzes liegt ein Abflußgitter: Wen der Brunnen dorthin schleudert, den '
+           'setzt die Kanalisation hinter dem Platz wieder ab.',
      hindernisse=[becken(13, 9, 16, 11), strudel(19.0, 10.5, 3.6, dreh=-1),
-                  becken(22, 9, 25, 11, start=4.4)])
+                  becken(22, 9, 25, 11, start=4.4), abfluss('A', angle=0)])
 
 # --- 9: die Kaimauer. Unten hin, oben zurück – und dazwischen nur das Becken oder der weite Bogen.
 f = meer(40, 21)
@@ -544,7 +620,9 @@ setz(f, 4, 15, 'T'); setz(f, 35, 6, 'H')
 bahn('Das Kaltwasserfeld', 'meeresgrund', f, par=5,
      intro='Zwei Stege, auf beiden zieht es – oben nach rechts, unten nach links, und beide als '
            'Dünung. Verbunden sind sie nur in der Mitte, und mitten in der Verbindung dreht sich '
-           'das Wasser. Stehenbleiben geht nirgends.',
+           'das Wasser. Stehenbleiben geht nirgends. Wer aber unten ganz nach links gespült wird, '
+           'Wer unten nach links gespült wird, fällt ins Abflußgitter – und die Kanalisation '
+           'setzt ihn oben auf dem anderen Steg wieder ab.',
      # Die Bänder lassen die Enden und die Mitte frei: Ohne diese Ruhezonen konnte man nirgends
      # zum Liegen kommen, und der Bot lief ins Schlaglimit. Jetzt gibt es Stellen zum Sammeln –
      # nur eben nicht da, wo man sie gerade braucht.

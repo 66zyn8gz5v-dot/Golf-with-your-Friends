@@ -605,3 +605,173 @@ class Ankerkette {
   poly() { return rectPoly(this.x, this.y, this.w, this.h); }
   segments(out) { polySegments(this.poly(), out, { vx: this.vx, vy: this.vy, e: this.e, kind: 'mover', owner: this }); }
 }
+
+/* Das Wracktor – die Luke im Schiffsrumpf, die die Dünung auf- und zudrückt.
+
+   ES IST EIN TOR UND EIN SCHLAG ZUGLEICH, UND DARIN LIEGT SEIN GANZER WITZ.
+   Das Wandertor der Uhrwerkstadt geht auf und zu, das Pendel schlägt. Das Wracktor tut beides mit
+   demselben Blatt, und zwar ungleich verteilt: Die Dünung drückt es **langsam** auf – über drei
+   Sekunden, man sieht es kommen und hat Zeit, sich zu entscheiden – und sie schlägt es in einer
+   halben Sekunde wieder zu. Dieselbe Bewegung, siebenmal so schnell.
+
+   Daraus ergibt sich von selbst, was die Luke gefährlich macht: Wer im Durchgang steht, wenn sie
+   zufällt, wird nicht eingeklemmt, sondern **weggeworfen** – das Blatt hat am Ende gut zehn Kacheln
+   je Sekunde an der Spitze, und die gibt es weiter. Man muß nicht ausrechnen, wann sie zuschlägt;
+   man muß nur hindurch sein, bevor sie es tut.
+
+   WARUM EIN DREHENDES BLATT UND KEIN STEIGENDES GITTER
+   Ein Fallgatter (die Luke des Uhrenturms) verschwindet nach oben und ist weg. Ein Türblatt ist
+   auch offen noch da: Es liegt dann am Rumpf an und macht den Durchgang schmaler, als er aussieht.
+   Wer zu dicht an der Wand vorbeispielt, stößt an – und das ist richtig so, denn eine Luke im
+   Rumpf ist ein Loch in einer Wand und kein Tor in einem Zaun. */
+const TOR_TAKT = 6.0;            // Sekunden für eine volle Dünung
+const TOR_AUF = 0.50;            // so viel vom Takt drückt sie auf
+const TOR_OFFEN = 0.24;          // so lange steht sie offen – das Fenster zum Durchspielen
+const TOR_ZU = 0.10;             // und so kurz schlägt sie zu. Der Rest des Takts liegt sie zu.
+const TOR_AMP = 88;              // Grad, um die das Blatt aufgeht: fast flach an den Rumpf
+
+class Wracktor {
+  constructor(d) {
+    Object.assign(this, { len: 2.2, takt: TOR_TAKT, amp: TOR_AMP, zuWinkel: 0, phase: 0,
+                          dick: 0.22, e: 0.45, hoehe: 1.1, ebene: 0, gegen: false }, d);
+    this.type = 'wracktor';
+    this.zuR = (this.zuWinkel * Math.PI) / 180;
+    /* 'gegen' dreht die Öffnungsrichtung um – damit zwei Lukenflügel gegeneinander aufgehen können
+       und der Bahnbauer nicht mit negativen Winkeln rechnen muß. */
+    this.ampR = ((this.amp * Math.PI) / 180) * (this.gegen ? -1 : 1);
+    this.ax = this.x; this.ay = this.y;            // die Angel bleibt stehen
+    this.update(0);
+  }
+  setup(level) { this.level = level; }
+  /* p: 0 ganz zu, 1 ganz offen. omega ist die echte Winkelgeschwindigkeit in rad/s – die Physik
+     rechnet daraus den Stoß an jeder Stelle des Blattes aus (sie bekommt cx/cy und omega). */
+  update(t) {
+    this.t = t;
+    const u = (((t / this.takt + this.phase) % 1) + 1) % 1;
+    const bisOffen = TOR_AUF, bisZu = TOR_AUF + TOR_OFFEN, bisRuhe = bisZu + TOR_ZU;
+    let p, dpdt;
+    if (u < bisOffen) {                             // die Dünung drückt: weich an, weich aus
+      const q = u / TOR_AUF;
+      p = q * q * (3 - 2 * q);
+      dpdt = (6 * q * (1 - q)) / (TOR_AUF * this.takt);
+    } else if (u < bisZu) { p = 1; dpdt = 0; }      // offen
+    else if (u < bisRuhe) {                          // und zurück: schnell und schneller werdend
+      const q = (u - bisZu) / TOR_ZU;
+      p = 1 - q * q;
+      dpdt = (-2 * q) / (TOR_ZU * this.takt);
+    } else { p = 0; dpdt = 0; }                      // zu
+    this.p = p;
+    this.oeffnet = u < bisOffen;
+    this.schlaegt = u >= bisZu && u < bisRuhe;
+    /* 'ruht' ist nicht dasselbe wie p === 0: Am letzten Bild des Zuschlagens ist p auch schon
+       null, das Blatt aber noch in voller Fahrt. Wer wissen will, ob die Luke still liegt, muß
+       den Takt fragen und nicht den Winkel. */
+    this.ruht = u >= bisRuhe;
+    this.angle = this.zuR + this.ampR * p;
+    this.omega = this.ampR * dpdt;
+    this.tipX = this.ax + Math.cos(this.angle) * this.len;
+    this.tipY = this.ay + Math.sin(this.angle) * this.len;
+  }
+  segments(out) {
+    out.push({ ax: this.ax, ay: this.ay, bx: this.tipX, by: this.tipY,
+               rad: this.dick, omega: this.omega, cx: this.ax, cy: this.ay,
+               e: this.e, kind: 'rotor', owner: this });
+  }
+}
+
+/* Das Abflussrohr – die Kanalisation der versunkenen Stadt.
+
+   ES IST DER VERWANDTE DES KUPFERROHRS, UND DER UNTERSCHIED IST ABSICHT.
+   Die Rohrpost des Uhrenturms läuft **über** der Bahn und **außen um sie herum**: ein blankes
+   Kupferrohr auf Stützen, in dem man den Ball fahren sieht. Sie ist ein Bauwerk, das jemand
+   hingestellt hat, und sie zeigt stolz, was sie tut.
+
+   Der Abfluß ist das Gegenteil. Er liegt **unter** dem Grund und läuft **geradeaus** – von der
+   Einlaufkammer zum Auslauf, quer unter allem hindurch, was oben im Weg steht. Zu sehen ist von
+   ihm nur die Naht im Boden: eine Reihe verrosteter Platten mit Nieten, und darin läuft, während
+   eine Kugel darin unterwegs ist, eine Blase mit. Das ist die ganze Ansage, und sie genügt: Wer
+   die Naht sieht, weiß, wo der Ball wieder herauskommt, bevor er hineinspielt.
+
+   UND ER SPÜLT, ER TRÄGT NICHT.
+   Am Ende des Kupferrohrs wird der Ball abgesetzt und läuft weiter (LOEWENTOR_AUSWURF, 9,5). Aus
+   dem Abfluß wird er **herausgeschossen** – mit einem Schwall Wasser, spürbar stärker. Das ist der
+   Grund, warum es beide gibt: Das eine ist eine Fahrt, das andere ein Katapult mit langem Anlauf.
+
+   Ein Rohr braucht zwei Buchstaben in der Karte, genau wie das Löwentor und die Rohrpost: der
+   Großbuchstabe ist der Einlauf, der gleiche Kleinbuchstabe der Auslauf (A/a, B/b). */
+const ABFLUSS_TEMPO = 9;         // Kacheln je Sekunde, mit denen es die Strecke durchspült
+/* Der Stoß am Auslauf – und hier steht ausdrücklich eine KLEINERE Zahl als beim Kupferrohr (9,5).
+
+   Das war nicht die erste Absicht. Zuerst sollte der Abfluß kräftiger ausspülen als die Rohrpost
+   absetzt, weil „Spülung" nach Wucht klingt. Zwei Versuche, 13,5 und 11,5, endeten beide gleich:
+   Der Ball schoß aus dem Gitter, rollte sechzehn bis zweiundzwanzig Kacheln weit – und diese Welt
+   besteht aus drei Kacheln schmalen Stegen über offenem Wasser. Die Maschine ertränkte jeden, der
+   sie benutzte, und zwar zuverlässig.
+
+   Also andersherum, und das ist auch die bessere Aufteilung: **Die Rohrpost wirft, der Abfluß
+   setzt ab.** Aus einem Gitter im Boden quillt Wasser, es schießt nicht. Der Ball kommt heraus,
+   rollt ein paar Kacheln aus und liegt – und der nächste Schlag gehört wieder dem Spieler. Auf
+   einem Steg über dem Meer ist das genau das, was man sich wünscht. */
+const ABFLUSS_STOSS = 5.5;
+const ABFLUSS_SCHWALL = 0.7;     // so lange ist der Schwall am Auslauf noch zu sehen
+
+class Abflussrohr {
+  constructor(d) {
+    Object.assign(this, { pair: 'A', angle: 0, ebene: 0 }, d);
+    this.type = 'abflussrohr';
+    const a = (this.angle * Math.PI) / 180;
+    this.dx = Math.cos(a); this.dy = Math.sin(a);
+    this.bereit = false; this.fahrt = -1;
+    this.schluckAt = -10; this.speiAt = -10;
+  }
+  setup(level) {
+    this.level = level;
+    const gross = this.pair.toUpperCase(), klein = this.pair.toLowerCase();
+    const fl = level.flaechen[this.ebene];
+    this.x = this.y = this.ax = this.ay = null;
+    this.bereit = false;
+    if (!fl) return;
+    for (let y = 0; y < level.H; y++) for (let x = 0; x < level.W; x++) {
+      if (fl.tiles[y][x] === gross) { this.x = x + 0.5; this.y = y + 0.5; }
+      if (fl.tiles[y][x] === klein) { this.ax = x + 0.5; this.ay = y + 0.5; }
+    }
+    this.bereit = this.x != null && this.ax != null;
+    if (!this.bereit) return;
+    this.strecke = Math.hypot(this.ax - this.x, this.ay - this.y) || 1;
+    this.dauer = Math.max(0.2, this.strecke / ABFLUSS_TEMPO);
+    this.fahrt = -1;
+  }
+  /* Nie gesperrt, nichts zu versetzen, kein Tempo abzulesen: Der Einlauf steht offen, und wer ihn
+     berührt, fährt mit – auch wer nur hineintröpfelt. Ein Abfluß ist keine Prüfung. */
+  punkt(u) {
+    const k = Math.max(0, Math.min(1, u));
+    return [this.x + (this.ax - this.x) * k, this.y + (this.ay - this.y) * k];
+  }
+  ride(ball, t, events) {
+    if (!this.bereit) return false;
+    if (ball.rider === this) {
+      const u = Math.min(1, (t - ball.abflussStart) / this.dauer);
+      this.fahrt = u;
+      const [px, py] = this.punkt(u);
+      ball.x = px; ball.y = py; ball.z = 0; ball.vx = 0; ball.vy = 0; ball.vz = 0;
+      if (u < 1) return true;
+      /* Abgesetzt wird NEBEN dem Auslauf, nicht darin: Das Auslauffeld ist ein Gitter in der
+         Mauer, dort stünde der Ball ohne Boden. Die Richtung steht als 'angle' am Rohr – damit
+         ist die Landestelle planbar, so wie beim Löwentor. */
+      this.fahrt = -1; this.speiAt = t;
+      ball.rider = null; ball.rideCd = 0.6; ball.portalCd = 0.4;
+      ball.x = this.ax + this.dx * 0.95; ball.y = this.ay + this.dy * 0.95;
+      ball.vx = this.dx * ABFLUSS_STOSS; ball.vy = this.dy * ABFLUSS_STOSS;
+      ball.z = 0; ball.vz = 0; ball.air = false;
+      events.push({ type: 'abfluss', x: ball.x, y: ball.y, aus: true });
+      return false;
+    }
+    if (ball.rideCd > 0 || ball.air || ball.portalCd > 0 || ball.sunk) return false;
+    if ((ball.ebene || 0) !== this.ebene) return false;
+    if (Math.abs(ball.x - this.x) > 0.5 || Math.abs(ball.y - this.y) > 0.5) return false;
+    ball.rider = this; ball.abflussStart = t; this.fahrt = 0; this.schluckAt = t;
+    ball.x = this.x; ball.y = this.y; ball.z = 0; ball.vx = 0; ball.vy = 0; ball.vz = 0;
+    events.push({ type: 'abfluss', x: this.x, y: this.y, aus: false });
+    return true;
+  }
+}

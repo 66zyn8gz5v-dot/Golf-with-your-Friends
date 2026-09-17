@@ -66,16 +66,19 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
     if (hatEin && !hatAus) problems.push(`Löwentor ${gross}: Eingang ohne Ausgang (${klein} fehlt auf der Karte)`);
     if (hatAus && !hatEin) problems.push(`Löwentor ${klein}: Ausgang ohne Eingang (${gross} fehlt auf der Karte)`);
     if (!hatEin && !hatAus) continue;
-    // Löwentor und Kupferrohr teilen sich das Verhalten und damit auch die Buchstabenpaare
-    const tor = (c.obstacles || []).find(o => (o.type === 'liongate' || o.type === 'copperpipe') && String(o.pair || '').toUpperCase() === gross);
-    const wie = tor && tor.type === 'copperpipe' ? 'Kupferrohr' : 'Löwentor';
-    if (!tor) problems.push(`Tor ${gross}: kein Hindernis vom Typ liongate oder copperpipe mit pair '${gross}' – der Ausgang hat keine Auswurfrichtung`);
+    /* Löwentor, Kupferrohr und Abflußrohr teilen sich das Verhalten und damit auch die
+       Buchstabenpaare: Großbuchstabe ist der Eingang, Kleinbuchstabe der Ausgang. */
+    const NAME = { liongate: 'Löwentor', copperpipe: 'Kupferrohr', abflussrohr: 'Abflußrohr' };
+    const tor = (c.obstacles || []).find(o => NAME[o.type] && String(o.pair || '').toUpperCase() === gross);
+    const wie = tor ? NAME[tor.type] : 'Löwentor';
+    if (!tor) problems.push(`Tor ${gross}: kein Hindernis vom Typ liongate, copperpipe oder abflussrohr mit pair '${gross}' – der Ausgang hat keine Auswurfrichtung`);
     else if (typeof tor.angle !== 'number' || !isFinite(tor.angle)) problems.push(`${wie} ${gross}: der Ausgang hat keine Auswurfrichtung (angle fehlt)`);
     else {
       // Wohin gespien wird, muss Bahn sein – sonst wirft das Rohr den Ball in die Wand oder ins Aus
       let aus = null;
       // Das Rohrende liegt auf der Ebene 'ziel' (fehlt sie, auf der des Mundes) - dort wird geprueft
-      const zielKarte = karten[(tor.type === 'copperpipe' ? (tor.ziel != null ? tor.ziel : (tor.ebene || 0)) : 0)] || rows;
+      const zielKarte = karten[(tor.type === 'copperpipe' ? (tor.ziel != null ? tor.ziel : (tor.ebene || 0))
+        : tor.type === 'abflussrohr' ? (tor.ebene || 0) : 0)] || rows;
       zielKarte.forEach((r, y) => [...r].forEach((ch, x) => { if (ch === klein) aus = [x + 0.5, y + 0.5]; }));
       if (aus) {
         const w = (tor.angle * Math.PI) / 180, lx = aus[0] + Math.cos(w) * 0.95, ly = aus[1] + Math.sin(w) * 0.95;
@@ -362,7 +365,7 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
         const cx = o.x + (o.w || 2) / 2, cy = o.y + (o.h || 2) / 2, L = o.land || 5;
         return [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([dx, dy]) => ({ x: cx, y: cy, tx: cx + dx * L, ty: cy + dy * L }));
       }))
-      .concat((c.obstacles || []).filter(o => o.type === 'liongate' || o.type === 'copperpipe').flatMap(o => { // Löwentor und Kupferrohr: vom Eingang vor den Ausgang
+      .concat((c.obstacles || []).filter(o => o.type === 'liongate' || o.type === 'copperpipe' || o.type === 'abflussrohr').flatMap(o => { // Löwentor, Kupferrohr und Abflußrohr: vom Eingang vor den Ausgang
         const g = String(o.pair || '').toUpperCase(), k = g.toLowerCase();
         let ein = null, aus = null;
         rows.forEach((r, y) => [...r].forEach((ch, x) => { if (ch === g) ein = [x + 0.5, y + 0.5]; if (ch === k) aus = [x + 0.5, y + 0.5]; }));

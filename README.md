@@ -1548,8 +1548,9 @@ Stufe Legende:
 | 7–9 | `daemmerzone` | Die Gassen · Der Marktplatz · Die Kaimauer |
 | 10–12 | `meeresgrund` | Der Grund · Das Kaltwasserfeld · Der Schlund |
 
-Neun Maschinen: **Flutbecken**, **Pumpwerk**, **Strömung**, **Strudel**, **Anglerfisch**,
-**Riesenmuschel**, **Tangwald**, **Schwarzer Raucher** und **Ankerkette**.
+Elf Maschinen: **Flutbecken**, **Pumpwerk**, **Strömung**, **Strudel**, **Anglerfisch**,
+**Riesenmuschel**, **Tangwald**, **Schwarzer Raucher**, **Ankerkette**, **Wracktor** und
+**Abflußrohr**.
 
 **Die Bahnen sind Stege, keine Plätze.** Ringsum steht offenes Wasser, und wer heruntergespült
 wird, zahlt. Das ist der Unterschied zwischen einer Strömung, die ärgert, und einer, die etwas
@@ -1694,6 +1695,45 @@ dort kein Hindernis, sondern ein Würfel.
 Die Kette wird Glied für Glied mitgezeichnet, und die Aufhängung bleibt stehen. Das ist der Grund:
 An ihr liest man ab, wo der Anker gleich sein wird. Ein Anker, der scheinbar frei herumfliegt, hätte
 keine Bahn, die man vorhersehen könnte.
+
+### Das Wracktor – langsam auf, schnell zu
+
+Eine Luke aus einem Schiffsrumpf, die die Dünung auf- und zudrückt. Sie ist Tor und Schlag in einem,
+und der Witz liegt in der **ungleichen Verteilung**: Die Dünung drückt sie über drei Sekunden
+langsam auf und schlägt sie in einer halben wieder zu – dieselbe Bewegung, gut sechsmal so schnell.
+Wer beim Zuschlagen noch im Durchgang liegt, wird nicht eingeklemmt, sondern weggeworfen; das Blatt
+hat an der Spitze rund zehn Kacheln je Sekunde und gibt sie weiter.
+
+Auf dem Boden liegt der Bogen, den es überstreicht, als Schleifspur im Sand, und kurz vor dem
+Zuschlagen färbt er sich. Das ist die wichtigste Linie des Hindernisses: Sie sagt, wo man nicht
+stehenbleiben darf, und sie sagt es, bevor etwas passiert.
+
+**Warum ein drehendes Blatt und kein steigendes Gitter.** Ein Fallgatter verschwindet nach oben und
+ist weg. Ein Türblatt ist auch offen noch da – es liegt dann am Rumpf an und macht den Durchgang
+schmaler, als er aussieht. Eine Luke im Rumpf ist ein Loch in einer Wand, kein Tor in einem Zaun.
+
+### Das Abflußrohr – der Verwandte des Kupferrohrs, andersherum gebaut
+
+Dieselbe Idee wie die Rohrpost des Uhrenturms, und in jedem sichtbaren Zug ihr Gegenteil. Die
+Rohrpost läuft **über** der Bahn und **außen um sie herum**: ein blankes Kupferrohr auf Stützen, in
+dem man den Ball fahren sieht. Der Abfluß liegt **unter** dem Grund und läuft **schnurgerade** –
+quer unter allem hindurch, was oben im Weg steht. Zu sehen ist von ihm nur die Naht im Boden: eine
+Reihe verrosteter Platten mit Nieten, und darin läuft, während eine Kugel unterwegs ist, eine Blase
+mit. Wer die Naht sieht, weiß, wo der Ball wieder herauskommt, bevor er hineinspielt.
+
+**Die Rohrpost wirft, der Abfluß setzt ab.** Das war nicht die erste Absicht – „Spülung" klingt nach
+Wucht, und die ersten beiden Versuche spülten den Ball mit 13,5 und 11,5 Kacheln je Sekunde aus dem
+Gitter. Beide endeten gleich: Der Ball rollte sechzehn bis zweiundzwanzig Kacheln weit, und diese
+Welt besteht aus drei Kacheln schmalen Stegen über offenem Wasser. Die Maschine ertränkte jeden, der
+sie benutzte. Jetzt quillt das Wasser aus dem Gitter, statt zu schießen: Der Ball rollt dreieinhalb
+Kacheln aus und liegt, und der nächste Schlag gehört wieder dem Spieler. Die Prüfung mißt gegen die
+Zahl des Uhrenturms und nicht gegen sich selbst – wird der Abfluß eines Tages stärker als die
+Rohrpost, ist das kein Feinschliff, sondern ein Rückschritt.
+
+Auf dem Marktplatz liegt das Gitter in der Ecke des Platzes, wohin einen nur der Brunnen schleudert.
+Man spielt nicht hinein, man landet darin – und das ist der Unterschied zwischen einer Abkürzung und
+einem Ausweg. Der Bot bestätigt es: mit dem Abfluß drei Schläge statt zwei für den Profi, bei
+gleichem Par.
 
 ### Die Riesenmuschel – Mauer oder Maul, je nach Takt
 

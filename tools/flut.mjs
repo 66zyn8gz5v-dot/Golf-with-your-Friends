@@ -442,6 +442,166 @@ console.log('\n--- Die Ankerkette ---');
         `Tempo ${Math.hypot(b.vx, b.vy).toFixed(2)}`);
 }
 
+console.log('\n--- Das Wracktor ---');
+{
+  const bahn = (hind) => G.buildLevel({
+    name: 'Lukenprüfung', par: 3, theme: 'daemmerzone',
+    map: ['................', '.T############H.', '.##############.', '.##############.',
+          '.##############.', '.##############.', '................'],
+    obstacles: hind,
+  });
+  /* Die Angel sitzt bei (8|2), zu zeigt das Blatt nach unten (90°), auf gehts nach rechts an den
+     Rumpf ('gegen'). Damit liegt der Durchgang zwischen (8|2) und (8|5). */
+  const luke = (extra = {}) => Object.assign(
+    { type: 'wracktor', x: 8, y: 2, len: 3, zuWinkel: 90, gegen: true, takt: 6 }, extra);
+  const lv0 = bahn([luke()]);
+  const w = lv0.obstacles.find(o => o.type === 'wracktor');
+  pruef('das Wracktor wird gebaut', !!w && typeof w.segments === 'function');
+
+  /* Sie geht ganz auf und ganz zu. Eine Luke, die auf halbem Weg stehenbleibt, wäre ein Pfosten. */
+  const lauf = [];
+  for (let i = 0; i < 240; i++) {
+    w.update((i / 240) * w.takt);
+    lauf.push({ p: w.p, om: Math.abs(w.omega), auf: w.oeffnet, ruht: w.ruht, x: w.tipX, y: w.tipY, ax: w.ax, ay: w.ay });
+  }
+  pruef('sie geht ganz auf und ganz zu',
+        Math.max(...lauf.map(o => o.p)) > 0.99 && Math.min(...lauf.map(o => o.p)) < 0.01);
+  pruef('die Angel bleibt stehen, die Spitze wandert',
+        lauf.every(o => o.ax === lauf[0].ax && o.ay === lauf[0].ay)
+        && Math.max(...lauf.map(o => o.x)) - Math.min(...lauf.map(o => o.x)) > 2);
+  pruef('das Blatt bleibt an der Angel',
+        lauf.every(o => Math.abs(Math.hypot(o.x - o.ax, o.y - o.ay) - w.len) < 1e-9));
+
+  /* DIE EIGENTLICHE PRÜFUNG DIESER MASCHINE.
+     Sie geht langsam auf und schlägt schnell zu – daran hängt alles: die Ansage, der Wurf, und der
+     Unterschied zum Wandertor, das nur auf und zu macht. Gemessen wird die Winkelgeschwindigkeit
+     in beiden Richtungen. Wären sie gleich, wäre das Wracktor ein Pendel mit Rahmen. */
+  const auf = Math.max(...lauf.filter(o => o.auf).map(o => o.om));
+  const zu = Math.max(...lauf.filter(o => !o.auf).map(o => o.om));
+  pruef('sie schlägt viel schneller zu, als sie aufgeht', zu > auf * 3,
+        `auf ${auf.toFixed(2)} rad/s, zu ${zu.toFixed(2)} rad/s – ${(zu / auf).toFixed(1)}fach`);
+
+  /* Und zwischen den Zügen steht sie still. Ein Blatt, das immer ein bißchen wandert, schöbe einen
+     Ball, der daran lehnt, langsam weg – und niemand wüßte, warum er nicht liegenbleibt. */
+  const ruht = lauf.filter(o => o.ruht).every(o => o.om === 0) && lauf.some(o => o.ruht);
+  pruef('und zwischen den Zügen steht sie ganz still', ruht);
+
+  /* Zu ist sie eine Wand. Geprüft mit echter Physik: ein Ball, quer darauf geschossen, kommt
+     zurück. Die Phase steht so, daß sie während des ganzen Laufs zubleibt. */
+  const rollen = (phase, x0, y0, vx, dauer) => {
+    const lv = bahn([luke({ phase })]);
+    const b = G.makeBall(x0, y0, '#fff');
+    b.vx = vx; b.vy = 0;
+    for (let i = 0; i < 240 * dauer; i++) G.stepPhysics(lv, b, 1 / 240, i / 240, true);
+    return b;
+  };
+  const geprallt = rollen(0.88, 5, 3.5, 6.5, 1.2);
+  pruef('zu ist sie eine Wand', geprallt.x < 8, `der Ball steht bei x = ${geprallt.x.toFixed(1)}`);
+
+  /* Offen läßt sie durch – derselbe Schlag von derselben Stelle. Ohne diese zweite Hälfte bewiese
+     die erste nichts: Eine Luke, die immer sperrt, bestünde die Wandprüfung auch. */
+  const durch = rollen(0.55, 5, 3.5, 6.5, 1.2);
+  pruef('offen läßt sie durch', durch.x > 9, `der Ball steht bei x = ${durch.x.toFixed(1)}`);
+
+  /* Und das, was sie gefährlich macht: Wer im Durchgang LIEGT, wenn sie zuschlägt, wird
+     weggeworfen – nicht eingeklemmt. Der Ball liegt still und wird nicht geschossen. */
+  const lv2 = bahn([luke({ phase: 0.72 })]);
+  const b2 = G.makeBall(8.8, 3.3, '#fff');
+  let tempoMax = 0;
+  for (let i = 0; i < 240 * 1.2; i++) {
+    G.stepPhysics(lv2, b2, 1 / 240, i / 240, true);
+    tempoMax = Math.max(tempoMax, Math.hypot(b2.vx, b2.vy));
+  }
+  pruef('wer beim Zuschlagen im Weg liegt, wird weggeworfen', tempoMax > 4,
+        `Tempo bis ${tempoMax.toFixed(1)}`);
+  const w2 = lv2.obstacles.find(o => o.type === 'wracktor');
+  const winkel = Math.atan2(b2.y - w2.ay, b2.x - w2.ax) * 180 / Math.PI;
+  const bogenVon = Math.min(w2.zuWinkel, w2.zuWinkel + (w2.gegen ? -w2.amp : w2.amp));
+  const bogenBis = Math.max(w2.zuWinkel, w2.zuWinkel + (w2.gegen ? -w2.amp : w2.amp));
+  const abstand = Math.hypot(b2.x - w2.ax, b2.y - w2.ay);
+  pruef('und er liegt danach nicht mehr im Bogen des Blattes',
+        winkel < bogenVon || winkel > bogenBis || abstand > w2.len,
+        `er liegt bei ${winkel.toFixed(0)}° (Bogen ${bogenVon}°…${bogenBis}°), ${abstand.toFixed(1)} Kacheln von der Angel`);
+}
+
+console.log('\n--- Das Abflussrohr ---');
+{
+  /* Einlauf 'A' links, Auslauf 'a' rechts – dazwischen zehn Kacheln, die zu Fuß weiter sind, weil
+     die Mauer in der Mitte steht. Genau dafür ist das Rohr da. */
+  const lv = G.buildLevel({
+    name: 'Abflußprüfung', par: 3, theme: 'meeresgrund',
+    map: ['................', '.T#A#######a##H.', '.####.....####.', '.####.....####.',
+          '.##############.', '................'],
+    obstacles: [{ type: 'abflussrohr', pair: 'A', angle: 0 }],
+  });
+  const r = lv.obstacles.find(o => o.type === 'abflussrohr');
+  pruef('das Abflussrohr wird gebaut', !!r && typeof r.ride === 'function');
+  pruef('es findet beide Gitter in der Karte', !!r && r.bereit,
+        r && r.bereit ? `Einlauf (${r.x},${r.y}) → Auslauf (${r.ax},${r.ay})` : 'nicht bereit');
+
+  /* Es ist keine Prüfung, sondern ein Weg: Wer hineintröpfelt, fährt mit. Darum wird mit einem
+     ganz schwachen Schlag geprüft – bestünde ein Mindesttempo, käme dieser Ball nie hinein. */
+  const fahre = (tempo) => {
+    const l = G.buildLevel({
+      name: 'Abflußprüfung', par: 3, theme: 'meeresgrund',
+      map: ['................', '.T#A#######a##H.', '.####.....####.', '.####.....####.',
+            '.##############.', '................'],
+      obstacles: [{ type: 'abflussrohr', pair: 'A', angle: 0 }],
+    });
+    const b = G.makeBall(2.5, 1.5, '#fff');
+    b.vx = tempo; b.vy = 0;
+    const spur = [];
+    let vorm = null;                      // Tempo im Bild, bevor es geschluckt wurde
+    for (let i = 0; i < 240 * 4; i++) {
+      const vorher = Math.hypot(b.vx, b.vy);
+      G.stepPhysics(l, b, 1 / 240, i / 240, true);
+      const drin = b.rider === l.obstacles[0];
+      if (drin && vorm === null) vorm = vorher;
+      spur.push({ x: b.x, drin, f: l.obstacles[0].fahrt });
+    }
+    return { b, spur, rohr: l.obstacles[0], vorm };
+  };
+  const sacht = fahre(2.4);
+  pruef('auch ein ganz sachter Ball kommt hinein', sacht.spur.some(o => o.drin),
+        `Anstoßtempo 2,4 – am Gitter sind davon noch ${(sacht.vorm ?? 0).toFixed(2)} übrig`);
+  pruef('und er kommt am Auslauf wieder heraus', sacht.b.x > 11,
+        `er steht bei x = ${sacht.b.x.toFixed(1)}, der Auslauf bei x = ${sacht.rohr.ax}`);
+
+  /* Die Fahrt ist SICHTBAR: Zwischen Einlauf und Auslauf wandert 'fahrt' von 0 nach 1. Daran hängt
+     die Blase über der Naht – ohne sie verschwände der Ball und tauchte irgendwo wieder auf. */
+  const fahrten = sacht.spur.map(o => o.f).filter(f => f >= 0);
+  pruef('die Fahrt ist von außen zu sehen', fahrten.length > 5 && Math.max(...fahrten) > 0.9,
+        `${fahrten.length} Bilder lang, bis ${Math.max(...fahrten).toFixed(2)}`);
+
+  /* DIE ROHRPOST WIRFT, DER ABFLUSS SETZT AB. Das ist der Unterschied zwischen den beiden Rohren,
+     und er steht hier fest, weil er in dieser Welt über Leben und Tod entscheidet: Die Bahnen sind
+     drei Kacheln schmale Stege über offenem Wasser. Ein Ball, der mit dem Auswurf des Kupferrohrs
+     aus dem Gitter schösse, rollte sechzehn Kacheln weit und läge im Meer. Wird die Zahl hier
+     eines Tages größer als die des Uhrenturms, ist das kein Feinschliff, sondern ein Rückschritt –
+     darum die Prüfung gegen die andere Zahl und nicht gegen sich selbst. */
+  const legend = fs.readFileSync(path.join(SRC, 'obstacles_legend.js'), 'utf8');
+  const kupfer = parseFloat((legend.match(/const LOEWENTOR_AUSWURF = ([\d.]+)/) || [])[1]);
+  const flut = fs.readFileSync(path.join(SRC, 'obstacles_flut.js'), 'utf8');
+  const stoss = parseFloat((flut.match(/const ABFLUSS_STOSS = ([\d.]+)/) || [])[1]);
+  pruef('es setzt den Ball ab, statt ihn zu werfen wie das Kupferrohr', stoss < kupfer * 0.7,
+        `${stoss} gegen ${kupfer}`);
+  /* Und die Strecke, die er danach noch ausrollt, paßt auf einen Steg. Gerechnet mit der Reibung
+     des gewöhnlichen Bodens: v²/(2a). */
+  const weite = (stoss * stoss) / (2 * G.FRICTION['#']);
+  pruef('und rollt danach nur ein paar Kacheln aus', weite < 5,
+        `${weite.toFixed(1)} Kacheln auf gewöhnlichem Boden`);
+
+  /* Und es läuft GERADEAUS unter dem Grund – nicht außen um die Bahn herum wie das Kupferrohr.
+     Geprüft an seinem eigenen Weg: Jeder Punkt der Fahrt liegt auf der Verbindungslinie. */
+  const gerade = [0, 0.25, 0.5, 0.75, 1].every(u => {
+    const [px, py] = r.punkt(u);
+    const ex = r.ax - r.x, ey = r.ay - r.y;
+    const quer = Math.abs((px - r.x) * -ey + (py - r.y) * ex) / Math.hypot(ex, ey);
+    return quer < 1e-9;
+  });
+  pruef('die Leitung läuft schnurgerade', gerade);
+}
+
 console.log('\n--- Der Tangwald ---');
 {
   const bahn = (hind) => G.buildLevel({

@@ -34,7 +34,7 @@ const Share = (() => {
     // Die Maschinen der Zwergenmine
     'sprengladung', 'kippbuehne', 'grubenlampe', 'bruchwand', 'lavafontaene',
     // Die versunkene Stadt
-    'flut', 'pumpwerk', 'stroemung', 'strudel', 'angler', 'muschel', 'tangwald', 'raucher', 'ankerkette']);
+    'flut', 'pumpwerk', 'stroemung', 'strudel', 'angler', 'muschel', 'tangwald', 'raucher', 'ankerkette', 'wracktor', 'abflussrohr']);
   const W_MIN = 6, W_MAX = 48, H_MIN = 4, H_MAX = 36;
   const OBJ_MAX = 120, DEKOR_MAX = 120, FELDER_MAX = 24;
 

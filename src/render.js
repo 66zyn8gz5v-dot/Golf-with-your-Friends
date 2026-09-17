@@ -1004,7 +1004,7 @@ class Renderer {
        Zeiger statt Wetter. */
     const wf = lv.obstacles.find(o => o.type === 'windfahne');
     this.wind = wf ? { dx: wf.dx, dy: wf.dy, staerke: wf.staerke } : null;
-    const imRohr = !!(b && b.rider && b.rider.type === 'copperpipe');
+    const imRohr = !!(b && b.rider && (b.rider.type === 'copperpipe' || b.rider.type === 'abflussrohr'));
     const bp = b && !imRohr ? this.proj(b.x, b.y, 0) : null, bk = b ? this.depth(b.x, b.y) : 0;
     this.ballPos = bp;
     const cullM = this.scale * 3.5, fadeW = this.scale * 2.2, fadeH = this.scale * 3.2;
@@ -1776,6 +1776,8 @@ class Renderer {
     if (ob.type === 'strudel') { this.drawStrudelFloor(ctx, ob, t); return; }
     if (ob.type === 'angler') { this.drawAnglerScheinFloor(ctx, ob, t); return; }
     if (ob.type === 'raucher') { this.drawRaucherFloor(ctx, ob, t); return; }
+    if (ob.type === 'wracktor') { this.drawWracktorFloor(ctx, ob, t); return; }
+    if (ob.type === 'abflussrohr') { this.drawAbflussFloor(ctx, ob, t); return; }
     if (ob.type === 'schneebruecke') { this.drawSchneebrueckeFloor(ctx, ob, t); return; }
     if (ob.type === 'dial' || ob.type === 'wanderloch') { this.drawWanderlochFloor(ctx, ob, t); return; }
     if (ob.type === 'field' && ob.style === 'steam') { this.drawSteam(ctx, ob, t); return; }
@@ -2118,6 +2120,16 @@ class Renderer {
     } else if (ob.type === 'ankerkette') {
       /* noFade: An der Kette liest man ab, wo der Anker gleich sein wird. */
       items.push({ x: ob.x, y: ob.y, bias: 0.45, noFade: true, draw: () => this.drawAnkerkette(ctx, ob, t) });
+    } else if (ob.type === 'abflussrohr') {
+      /* Einsortiert nach dem Auslauf: Dort steht der Bügel, und nur er ragt über den Boden. Die
+         Naht dazwischen wird als Bodenzeichnung gemalt und braucht keine Tiefensortierung. */
+      items.push({ x: ob.ax ?? ob.x, y: ob.ay ?? ob.y, bias: 0.1, noFade: true, draw: () => this.drawAbflussMund(ctx, ob, t) });
+    } else if (ob.type === 'wracktor') {
+      /* Einsortiert wird die Luke nach ihrer Angel, nicht nach der Spitze: Die Angel steht fest,
+         die Spitze wandert – sortierte man danach, sprünge das Blatt bei jedem Schwung vor und
+         hinter den Rumpf, in dem es sitzt.
+         noFade: Ob sie offen oder zu ist, entscheidet den Schlag. */
+      items.push({ x: ob.ax, y: ob.ay, bias: 0.35, noFade: true, draw: () => this.drawWracktor(ctx, ob, t) });
     } else if (ob.type === 'tangwald') {
       /* Halme stehen aufrecht und gehören vor das, was hinter ihnen liegt. Sie dürfen ruhig
          verblassen, wenn der Ball dahinter liegt – sie halten ja niemanden auf. */

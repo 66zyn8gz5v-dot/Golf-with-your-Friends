@@ -194,7 +194,7 @@ const FLUT_COURSES = [
   },
   {
     name: 'Die Gassen', par: 4, theme: 'daemmerzone',
-    intro: 'Das Haus in der Mitte versperrt den geraden Weg. Links und rechts daran vorbei laufen zwei Gassen, und beide saufen im Takt voll – versetzt, damit immer eine offen ist.',
+    intro: 'Das Haus in der Mitte versperrt den geraden Weg. Links und rechts daran vorbei laufen zwei Gassen, und beide saufen im Takt voll – versetzt, damit immer eine offen ist. Vor der oberen hängt eine Luke aus einem Schiffsrumpf: Die Dünung drückt sie langsam auf und schlägt sie kurz darauf wieder zu. Wer dann noch darunter liegt, fliegt.',
     map: [
       '..................................',
       '.wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.',
@@ -221,11 +221,12 @@ const FLUT_COURSES = [
     obstacles: [
       { type: 'flut', x: 17.5, y: 6.5, w: 7, h: 3, start: 2.5, takt: 1.2, halt: 1.0, leer: 5.0 },
       { type: 'flut', x: 17.5, y: 14.5, w: 7, h: 3, start: 4.4, takt: 1.2, halt: 1.0, leer: 5.0 },
+      { type: 'wracktor', x: 12.5, y: 5.15, len: 2.8, zuWinkel: 90, takt: 6.0, gegen: true },
     ],
   },
   {
     name: 'Der Marktplatz', par: 4, theme: 'daemmerzone',
-    intro: 'Über dem alten Brunnen dreht sich das Wasser, und in den Platz hinein und heraus führt je ein Becken. Wer beide im richtigen Augenblick nimmt, wird trotzdem noch versetzt.',
+    intro: 'Über dem alten Brunnen dreht sich das Wasser, und in den Platz hinein und heraus führt je ein Becken. Wer beide im richtigen Augenblick nimmt, wird trotzdem noch versetzt. In der Ecke des Platzes liegt ein Abflußgitter: Wen der Brunnen dorthin schleudert, den setzt die Kanalisation hinter dem Platz wieder ab.',
     map: [
       '......................................',
       '.wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.',
@@ -237,10 +238,10 @@ const FLUT_COURSES = [
       '.wwwwwwwwwwww#############wwwwwwwwwww.',
       '.wwwwwwwwwwww#############wwwwwwwwwww.',
       '.ww##########ssss#####ssss#########ww.',
-      '.ww#T########ssss#####ssss#######H#ww.',
+      '.ww#T########ssss#####ssss##a####H#ww.',
       '.ww##########ssss#####ssss#########ww.',
       '.wwwwwww###ww#############ww###wwwwww.',
-      '.wwwwwww###ww#############ww###wwwwww.',
+      '.wwwwwww###ww##A##########ww###wwwwww.',
       '.wwwwwww###ww#############ww###wwwwww.',
       '.wwwwwww###ww#############ww###wwwwww.',
       '.wwwwwww###wwwwwwwwwwwwwwwww###wwwwww.',
@@ -253,6 +254,7 @@ const FLUT_COURSES = [
       { type: 'flut', x: 15.0, y: 10.5, w: 4, h: 3, start: 2.5, takt: 1.2, halt: 1.0, leer: 5.0 },
       { type: 'strudel', x: 19.0, y: 10.5, r: 3.6, dreh: -1 },
       { type: 'flut', x: 24.0, y: 10.5, w: 4, h: 3, start: 4.4, takt: 1.2, halt: 1.0, leer: 5.0 },
+      { type: 'abflussrohr', pair: 'A', angle: 0 },
     ],
   },
   {
@@ -323,7 +325,7 @@ const FLUT_COURSES = [
   },
   {
     name: 'Das Kaltwasserfeld', par: 5, theme: 'meeresgrund',
-    intro: 'Zwei Stege, auf beiden zieht es – oben nach rechts, unten nach links, und beide als Dünung. Verbunden sind sie nur in der Mitte, und mitten in der Verbindung dreht sich das Wasser. Stehenbleiben geht nirgends.',
+    intro: 'Zwei Stege, auf beiden zieht es – oben nach rechts, unten nach links, und beide als Dünung. Verbunden sind sie nur in der Mitte, und mitten in der Verbindung dreht sich das Wasser. Stehenbleiben geht nirgends. Wer aber unten ganz nach links gespült wird, Wer unten nach links gespült wird, fällt ins Abflußgitter – und die Kanalisation setzt ihn oben auf dem anderen Steg wieder ab.',
     map: [
       '........................................',
       '.wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.',

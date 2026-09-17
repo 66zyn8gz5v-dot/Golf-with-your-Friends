@@ -2691,6 +2691,13 @@
           if (ev.aus) { Sfx.bounce(6); burst(ev.x, ev.y, '#f0e6d2', 16, true); }
           else { Sfx.lever(); burst(ev.x, ev.y, '#cfeaff', 14, true); showMessage('Die Muschel hat dich!', 1200); }
           break;
+        /* Das Abflussrohr. Beim Einlaufen ein Gurgeln, beim Ausspülen ein Schwall – der erste Laut
+           sagt „er ist unterwegs", der zweite „jetzt kommt er wieder". Dazwischen sieht man nur
+           die Blase über der Naht laufen, und die spricht für sich. */
+        case 'abfluss':
+          if (ev.aus) { Sfx.whoosh(); burst(ev.x, ev.y, '#cfeaff', 26, true); }
+          else { Sfx.water(); burst(ev.x, ev.y, '#9fd8f0', 16, true); }
+          break;
         case 'pumpe': Sfx.lever(); burst(ev.x, ev.y, '#cfeaff', 22, true); showMessage(`Pumpwerk läuft – das Wasser weicht für ${Math.round(ev.dauer || 0)} Sekunden!`, 1800); break;
         case 'shrink': Sfx.potion(); burst(ev.x, ev.y, '#d58cff', 16, true); showMessage('Schrumpftrank! Der Ball ist jetzt winzig.', 1600); break;
         case 'unshrink': showMessage('Der Trank lässt nach.', 1200); break;
