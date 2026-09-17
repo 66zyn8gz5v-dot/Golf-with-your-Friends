@@ -11,6 +11,8 @@
  *                 Ball, der schon liegt.
  *   Kippbühne:    Über die Mitte hinaus wirft sie nach vorn, davor schickt sie zurück, in der
  *                 Totzone bleibt sie waagerecht – und ohne Ball kehrt sie in die Waage zurück.
+ *                 Und das alles auch auf Stollenboden, nicht nur auf dem Eis der Prüffläche: Auf
+ *                 Eis beweist man die Mechanik, auf Stein die Wirklichkeit.
  */
 import fs from 'node:fs'; import vm from 'node:vm'; import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -108,6 +110,63 @@ console.log('\n--- Die Kippbühne ---');
     pruef('ohne Ball kehrt sie in die Waage zurück', Math.abs(geneigt) > 0.3 && Math.abs(k.neigung) < 0.05,
       `geneigt ${geneigt.toFixed(2)} → ${k.neigung.toFixed(3)}`);
   }
+}
+
+/* ---------- Die Kippbühne auf dem Boden, auf dem sie wirklich liegt ----------
+ *
+ * Der Abschnitt darüber misst auf Eis – mit Absicht: Dort sieht man den Stoß und nicht die
+ * Bremsung. Genau daran ist der Fehler aus Fassung 160 vorbeigelaufen, und es lohnt sich, ihn
+ * aufzuschreiben, weil die Lehre allgemein ist:
+ *
+ *   Eine Prüfung auf einem Sonderboden beweist die Mechanik, nicht die Wirklichkeit.
+ *
+ * In der Mine liegt die Bohle auf Stollenboden ('#'), und der bremst mit 4,2 Kacheln/s². Die
+ * Physik zieht die Bremsung im selben Schritt ab, in dem die Bohle schiebt, und kappt das Tempo
+ * bei null: Eine Bohle, die mit weniger als 4,2 schiebt, bewegt einen liegenden Ball nicht
+ * langsam, sondern gar nicht. Auf Eis (0,75) fiel das nie auf.
+ *
+ * Darum hier dasselbe noch einmal auf Stein – und mit einem ruhenden Ball, denn das ist der Fall,
+ * den Fynn gemeldet hat: „man kann auf ihr liegen, ohne daß was passiert".
+ */
+console.log('\n--- Die Kippbühne auf Stein ---');
+{
+  const stein = (hindernisse) => ({
+    name: 'Bohle auf Stein', par: 3, theme: 'stollen',
+    map: ['......................', '.T##################H.',
+          ...Array.from({ length: 13 }, () => '.####################.'), '......................'],
+    obstacles: hindernisse,
+  });
+  const bau = () => G.buildLevel(stein([{ type: 'kippbuehne', x: 8, y: 6.8, w: 8, h: 1.4, angle: 0 }]));
+  /* Der Ball wird hingelegt und nicht angestoßen – 'zielen' = false, also genau die Lage zwischen
+     zwei Schlägen. Gemessen wird, wie weit er von selbst wandert. */
+  const liegen = (u, sek = 3) => {
+    const lv = bau(), k = lv.obstacles.find(o => o.type === 'kippbuehne');
+    const x0 = k.cx + u * k.halb, b = ball(x0, k.cy);
+    lauf(lv, b, sek, 0, false);
+    return b.x - x0;
+  };
+  const mitte = liegen(0), knappVor = liegen(-0.2), knappNach = liegen(0.2);
+  pruef('in der Totzone darf man liegenbleiben',
+        Math.abs(mitte) < 0.02 && Math.abs(knappVor) < 0.02 && Math.abs(knappNach) < 0.02,
+        `${mitte.toFixed(3)} / ${knappVor.toFixed(3)} / ${knappNach.toFixed(3)} Kacheln`);
+  /* Und außerhalb: Sie muß den liegenden Ball WEGSCHIEBEN. Das ist der eigentliche Wächter gegen
+     den Fehler – vorher stand hier überall 0,000. */
+  for (const u of [0.35, 0.5, 0.7]) {
+    const weg = liegen(u);
+    pruef(`bei u = ${u} rutscht der liegende Ball nach vorn`, weg > 1.0, `${weg.toFixed(2)} Kacheln`);
+  }
+  for (const u of [-0.35, -0.5, -0.7]) {
+    const weg = liegen(u);
+    pruef(`bei u = ${u} rutscht er zurück`, weg < -1.0, `${weg.toFixed(2)} Kacheln`);
+  }
+  /* Der Grund in einer Zahl. Wer KIPP_KRAFT oder KIPP_MIN später herunterdreht, ohne an die
+     Reibung zu denken, baut den Fehler wieder ein – und merkt es hier. Weich geholt, damit ein
+     alter Stand ohne KIPP_MIN einen benannten Fehler gibt statt eines Absturzes. */
+  const zahl = (name) => { try { return vm.runInContext(name, ctx); } catch (e) { return undefined; } };
+  const kraft = zahl('KIPP_KRAFT'), min = zahl('KIPP_MIN'), reib = (zahl('FRICTION') || {})['#'];
+  pruef('der Schub gleich hinter der Totzone schlägt die Reibung',
+        typeof kraft === 'number' && typeof min === 'number' && typeof reib === 'number' && kraft * min > reib,
+        `${kraft} × ${min} = ${(kraft * min || 0).toFixed(1)} gegen ${reib}`);
 }
 
 console.log('\n--- Die Bruchwand ---');

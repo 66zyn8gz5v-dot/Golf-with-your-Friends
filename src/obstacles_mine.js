@@ -99,9 +99,29 @@ class Blast {
 
    Ohne Ball geht sie von selbst wieder in die Waage: Die nächste Spielerin findet dieselbe Bühne
    vor wie die vorige. */
-const KIPP_KRAFT = 5.2;          // Beschleunigung in Kacheln/s² bei voller Neigung
-const KIPP_TEMPO = 2.2;          // wie schnell die Bohle der Last folgt (je Sekunde)
+/* DIE ZAHLEN HABEN EINMAL NICHT GEREICHT, UND ZWAR STILL
+   Bis Fassung 160 stand hier KIPP_KRAFT = 5,2. Auf dem Stollenboden bremst die Reibung mit 4,2
+   (FRICTION['#'] in physics.js), und die Physik zieht die Bremsung im selben Schritt wieder ab, in
+   dem die Bohle schiebt – sie kappt das Tempo dabei bei null. Eine Bohle, die mit weniger als 4,2
+   schiebt, bewegt einen liegenden Ball also nicht ein bißchen langsam, sondern GAR NICHT.
+
+   Bei 5,2 kam das erst ganz außen zustande (Neigung über 0,81, also jenseits von 86 % der halben
+   Länge). Über fast der ganzen Bohle konnte man liegenbleiben, und nichts geschah – genau das, was
+   Fynn gemeldet hat. Gemessen: 4 Sekunden Ruhe bei u = 0,1 / 0,3 / 0,5 / 0,7 / 0,85 → Weg 0,000.
+
+   Zwei Änderungen, und beide zielen auf dasselbe: Außerhalb der Totzone soll sie *immer* etwas
+   tun.
+     KIPP_KRAFT muß die Reibung deutlich schlagen, sonst frißt die Bremsung den Schub.
+     KIPP_MIN ist die Neigung, die sie sofort einnimmt, sobald die Last die Totzone verläßt. Ohne
+     sie wüchse die Neigung bei null los, und gleich hinter der Totzone gäbe es wieder ein Stück,
+     auf dem nichts passiert. Eine Wippe kippt auch nicht ein Promille, wenn man einen Zeh über die
+     Mitte setzt – sie geht über.
+   Der Sinn der Totzone bleibt: In ihr steht die Bohle waagerecht, und dort darf man liegenbleiben.
+   Sonst entschiede ein Fingerbreit über alles. */
+const KIPP_KRAFT = 12.0;         // Beschleunigung in Kacheln/s² bei voller Neigung
+const KIPP_TEMPO = 2.8;          // wie schnell die Bohle der Last folgt (je Sekunde)
 const KIPP_MITTE = 0.28;         // Totzone um die Achse, gemessen in Anteilen der halben Länge
+const KIPP_MIN = 0.45;           // Neigung gleich hinter der Totzone – muß KIPP_KRAFT über die Reibung heben
 const KIPP_WINKEL = 0.2;         // sichtbarer Ausschlag in Kachelhöhen – nur fürs Bild
 
 class TiltBridge {
@@ -129,7 +149,10 @@ class TiltBridge {
     if (ball.air || ball.rider || !this.drauf(ball)) return;
     const u = ((ball.x - this.cx) * this.dx + (ball.y - this.cy) * this.dy) / (this.halb || 1);
     const a = Math.abs(u);
-    if (a > KIPP_MITTE) this.ziel = Math.sign(u) * Math.min(1, (a - KIPP_MITTE) / (1 - KIPP_MITTE));
+    if (a > KIPP_MITTE) {
+      const ueber = Math.min(1, (a - KIPP_MITTE) / (1 - KIPP_MITTE));
+      this.ziel = Math.sign(u) * (KIPP_MIN + (1 - KIPP_MIN) * ueber);
+    }
     ball.vx += this.dx * KIPP_KRAFT * this.neigung * dt;
     ball.vy += this.dy * KIPP_KRAFT * this.neigung * dt;
   }

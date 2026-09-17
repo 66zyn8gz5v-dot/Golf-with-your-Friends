@@ -1296,7 +1296,34 @@ die Bruchwand acht weitere Proben: dass sie ohne Sprengung steht und den Ball au
 Zündung daneben sie bricht, dass sie danach offen *bleibt*, dass eine Zündung außer Reichweite sie
 stehen lässt, und dass sie beim nächsten Loch wieder dasteht.
 
-**Die zehn Bahnen** (`src/courses_mine.js`, erzeugt von `tools/mine.py`):
+**Die Bohle hat einmal nichts getan, und das still (Fassung 161).** Fynn hat gemeldet: „man kann
+auf ihr liegen, ohne dass was passiert." Stimmte. Bis Fassung 160 stand in `obstacles_mine.js`
+`KIPP_KRAFT = 5,2` – die Beschleunigung bei voller Neigung. Der Stollenboden bremst aber mit **4,2**
+(`FRICTION['#']`), und `physics.js` zieht die Bremsung im selben Rechenschritt ab, in dem die Bohle
+schiebt, und kappt das Tempo dabei bei null. Eine Bohle, die mit weniger als 4,2 schiebt, bewegt
+einen liegenden Ball darum nicht langsam, sondern **gar nicht**. Bei 5,2 kam das erst jenseits von
+86 % der halben Länge zustande. Gemessen: vier Sekunden Ruhe bei u = 0,1 / 0,3 / 0,5 / 0,7 / 0,85 →
+Weg jeweils 0,000.
+
+Behoben mit zwei Zahlen, die auf dasselbe zielen – *außerhalb der Totzone muss sie immer etwas tun*:
+`KIPP_KRAFT` auf **12,0**, damit der Schub die Reibung deutlich schlägt, und neu `KIPP_MIN = 0,45`,
+die Neigung, die sie sofort einnimmt, sobald die Last die Totzone verlässt. Ohne die zweite wüchse
+die Neigung bei null los, und gleich hinter der Totzone gäbe es wieder ein Stück, auf dem nichts
+passiert. Eine Wippe kippt auch nicht ein Promille, wenn man einen Zeh über die Mitte setzt – sie
+geht über. Die Totzone selbst bleibt: Dort *darf* man liegenbleiben, sonst entschiede ein
+Fingerbreit über alles.
+
+**Warum die Prüfung das nicht gefunden hat**, ist die eigentliche Lehre. Die Prüffläche in
+`tools/mine.mjs` ist **Eis** (Reibung 0,75) – mit Absicht, damit man den Stoß misst und nicht die
+Bremsung. Auf Eis gewinnt auch eine schwache Bohle. *Eine Prüfung auf einem Sonderboden beweist die
+Mechanik, nicht die Wirklichkeit.* Seit Fassung 161 steht dieselbe Messung deshalb ein zweites Mal
+dort, auf Stollenboden und mit einem **ruhenden** Ball: In der Totzone darf er liegenbleiben, bei
+u = ±0,35 / ±0,5 / ±0,7 muss er von selbst mindestens eine Kachel wegrutschen. Dazu ein Wächter über
+die Zahlen selbst – `KIPP_KRAFT × KIPP_MIN > FRICTION['#']` –, damit niemand die Kraft später
+herunterdreht, ohne an die Reibung zu denken. Auf dem alten Stand meldet die neue Prüfung genau das,
+was Fynn gesehen hat: 0,00 Kacheln, überall.
+
+**Die zwölf Bahnen** (`src/courses_mine.js`, erzeugt von `tools/mine.py`):
 
 | # | Name | Par | Abschnitt | Was sie will |
 |---|---|---|---|---|
