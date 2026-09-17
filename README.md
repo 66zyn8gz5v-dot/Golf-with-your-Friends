@@ -773,7 +773,58 @@ sich der Warteraum nicht davor – sonst fiele man bei jedem Wechsel aus der Wah
 
 Wer den Raum verlässt oder die Verbindung verliert, wird nach gut zwanzig Sekunden bemerkt: sein Zug wird
 mit dem Schlaglimit gewertet und die Runde läuft weiter. Geht der Gastgeber, endet der Raum für alle.
-Eigene Bahnen lassen sich online nicht spielen, nur die sechs festen Welten.
+Eigene Bahnen lassen sich online nicht spielen, nur die festen Welten.
+
+### Wiederkommen: der Sitz gehört dem Gerät, nicht der Verbindung
+
+**Wer rausflog, kam nicht zurück** – bis Fassung 164. Ein Sitz wurde am MQTT-Namen des Geräts
+erkannt, und den würfelt `src/net.js` bei **jedem Seitenaufruf neu**. Für die Verbindung ist das
+richtig: Zwei Fenster desselben Rechners müssen sich unterscheiden, sonst wirft der Vermittler eines
+davon hinaus. Für den *Spieler* war es falsch. Fynns Handy sperrt sich, die Seite lädt neu, er tippt
+den Code wieder ein – und ist ein Fremder. Der Gastgeber beantwortete jede Anmeldung während einer
+laufenden Runde mit „Die Runde läuft schon", und jede weitere Bahn wurde ihm mit dem Schlaglimit
+gewertet, während er danebensaß.
+
+Seit Fassung 164 trägt der Sitz eine **eigene Kennung**, die im Browser liegenbleibt
+(`fantasygolf.sitz`). Sie sagt nichts über die Person – eine gewürfelte Zeichenkette, deren einziger
+Zweck ist: *„Ich bin der, der vorhin auf Platz zwei saß."* Der MQTT-Name darf sich dabei ändern; der
+Gastgeber schreibt ihn am Sitz einfach um. Zwei Wege führen zurück:
+
+* **Die Verbindung wackelt nur** – die Seite bleibt offen, der MQTT-Name bleibt derselbe. Dann reicht
+  schon das nächste Lebenszeichen: Wer wieder zuhört, gilt sofort wieder als da. Auf die Anmeldung zu
+  warten hieße, jemanden noch Sekunden länger als weg zu führen, obwohl er längst zurück ist.
+* **Die Seite lädt neu** – neuer MQTT-Name, gleiche Sitzkennung. Der Gastgeber erkennt ihn daran,
+  gibt ihm den Platz zurück und schickt ihm den **Stand der Runde**: Welt, Bahn, wer dran ist, alle
+  Punkte und Zeiten, die Uhr der Hindernisse und wo der Ball zuletzt lag. Ohne den stünde er auf
+  Bahn eins, während die anderen auf Bahn sieben spielen.
+
+Ein Gerät **ohne** bekannte Sitzkennung bekommt weiterhin die Absage: Ein Fremder soll nicht mitten
+in eine laufende Runde. Der eingesetzte Platz wird beim Einsteigen nicht neu vergeben, sondern
+zurückgegeben – Punkte, Hut und Name bleiben, was sie waren.
+
+### Geprüft mit zwei Browsern und einem eigenen Vermittler
+
+Der Netzteil ist keine Rechnung, die man nachrechnen kann; er ist ein Ablauf zwischen zwei Geräten.
+Einzelne Nachrichten zu prüfen hieße, die Prüfung genau so zu schreiben, wie der Code gerade ist –
+sie würde jeden Umbau überleben und nie etwas finden. Darum gibt es seit Fassung 164 zwei Werkzeuge:
+
+* **`tools/vermittler.mjs`** – ein winziger MQTT-Vermittler für die Werkbank, MQTT 3.1.1 über
+  WebSocket, ohne fremde Bibliothek, rund zweihundert Zeilen. Er kann genau so viel, wie `src/net.js`
+  benutzt: CONNECT, SUBSCRIBE, UNSUBSCRIBE, PUBLISH (auch aufbewahrt), PINGREQ, DISCONNECT, alles
+  QoS 0. Mehr Kann wäre mehr Code, der selbst kaputtgehen kann. Umgestellt wird im Browser mit
+  `localStorage.setItem('fantasygolf.broker', 'ws://localhost:9001')`.
+* **`node tools/online.mjs`** – fährt zwei echte Browserfenster dagegen: Raum aufmachen, beitreten,
+  Runde starten, die Seite des Gastes neu laden, zurückkommen. Geprüft wird, was auf dem Bildschirm
+  steht – gleiche Bahn, beide Spieler, eigener Punktestand, niemand mehr als weg geführt –, und zum
+  Schluss, dass ein **fremdes** Gerät weiterhin draußen bleibt. Auf dem Stand von Fassung 163 fällt
+  die Prüfung mit drei Fehlern durch, genau an der gemeldeten Stelle.
+
+Der Port ist dabei nicht frei wählbar: In der Sicherheitsregel der Seite (`Content-Security-Policy`
+in `index.html`) steht, wohin der Browser überhaupt eine Verbindung aufbauen darf, und dort ist genau
+`ws://localhost:9001` eingetragen. Ein anderer Port sähe aus wie ein Vermittler, der nicht antwortet.
+
+Fehlt Playwright, sagt `tools/online.mjs` das und endet ohne Fehler: Auf einem Rechner ohne Browser
+ist „nicht geprüft" die ehrliche Antwort, nicht „bestanden".
 
 **Wie es ohne eigenen Server geht:** Das Spiel liegt als reine Dateien auf GitHub Pages. Der Verkehr läuft
 deshalb über einen offenen MQTT-Vermittler – jeder Raum ist ein Thema, in das alle schreiben und aus dem
@@ -2617,6 +2668,8 @@ Sinnbilder, ein laufendes Spiel, die Rangliste und der Editor da sind.
 ```
 index.html        Seite, HUD und Ladebild (das Ladebild läuft ohne JavaScript)
 tools/auslieferung.mjs  prüft für beide Seiten, ob alles Gebrauchte auch ausgeliefert wird
+tools/vermittler.mjs    ein kleiner MQTT-Vermittler für die Werkbank – ohne ihn ist Online nicht prüfbar
+tools/online.mjs        fährt zwei Browser gegeneinander: beitreten, spielen, rausfliegen, wiederkommen
 style.css         Oberfläche
 src/themes.js     Farbpaletten und Deko je Welt
 src/courses.js    die Bahnen des Märchenlands
