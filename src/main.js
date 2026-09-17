@@ -1066,7 +1066,7 @@
   }
 
   function enterRoom(code, host) {
-    online = { code, host, hostId: '', players: [], started: false, world: onlineWorlds()[0].id, seen: {}, note: 'Verbinde …' };
+    online = { code, host, hostId: '', gen: 0, players: [], started: false, world: onlineWorlds()[0].id, seen: {}, note: 'Verbinde …' };
     const id = Net.join(code, { message: netMessage, status: netStatus });
     if (host) { online.hostId = id; online.players = [{ id, nick: Best.name, hat: hutOderErsatz(playerHats[0], 0) }]; }
     showLobby();
@@ -1091,7 +1091,10 @@
     else if (s === 'error') { onlineLost(text || 'Die Verbindung ist fehlgeschlagen.'); return; }
     if (!online.started) showLobby();
   }
-  function sendRoster() { if (online && online.host) netSend({ t: 'roster', players: online.players, w: online.world }); }
+  /* Die Generation zählt die Gastgeber durch. Wer übernimmt, zählt sie hoch; wer eine höhere sieht,
+     tritt zurück. Ohne sie könnten nach einer Übergabe zwei Geräte gleichzeitig Gastgeber sein –
+     der alte, der es nie gemerkt hat, und der neue. */
+  function sendRoster() { if (online && online.host) netSend({ t: 'roster', players: online.players, w: online.world, g: online.gen || 0 }); }
 
   /* ---------- Eingehende Nachrichten prüfen ----------
 
@@ -1156,7 +1159,7 @@
     if (!m || typeof m !== 'object' || !istText(m.t, 20) || !istText(m.from, 40) || !m.from) return false;
     switch (m.t) {
       case 'hello':  return istText(m.nick == null ? '' : m.nick, 200) && (m.hat == null || istText(m.hat, 40));
-      case 'roster': return !online.hostId || istGastgeber(m);   // der erste Roster bestimmt den Gastgeber
+      case 'roster': return !online.hostId || istGastgeber(m) || uebernahmeOk(m);   // der erste Roster bestimmt den Gastgeber, eine höhere Generation löst ihn ab
       case 'start':  return istGastgeber(m);
       case 'next':   return istGastgeber(m) && istGanz(m.h, -1, state.courses.length - 1) && istTakt(m.st);
       // Läuft die Runde schon, kommt die Absage, bevor ein Roster den Gastgeber festgelegt hat
@@ -1218,9 +1221,14 @@
         sendRoster(); showLobby();
         break;
       case 'roster': {
-        if (online.host) break;
+        const neuerChef = uebernahmeOk(m);
+        if (online.host && !neuerChef) break;
         const liste = pruefeRoster(m.players);
         if (!liste) break;
+        if (neuerChef) {
+          online.gen = m.g;
+          if (online.host) { online.host = false; showMessage('Jemand anders führt den Raum jetzt', 2000); }
+        }
         online.hostId = m.from; online.players = liste; online.world = pruefeWelt(m.w) || online.world;
         const drin = online.players.some(p => p.id === Net.id);
         online.note = drin ? '' : (online.players.length >= ONLINE_MAX ? 'Der Raum ist voll.' : 'Melde mich an …');
@@ -1288,7 +1296,7 @@
         if (m.h < 0) showFinal(); else loadHole(m.h);
         break;
       case 'bye':
-        if (!online.host) { if (istGastgeber(m)) onlineLost('Der Gastgeber hat den Raum verlassen.'); break; }
+        if (!online.host) { if (istGastgeber(m)) gastgeberWeg('Der Gastgeber hat den Raum verlassen.'); break; }
         if (platzVon(m.from) < 0) break;                      // wer nicht im Raum ist, kann ihn nicht verlassen
         if (online.started) dropPlayer(m.from);
         else { online.players = online.players.filter(p => p.id !== m.from); sendRoster(); showLobby(); }
@@ -1307,7 +1315,7 @@
          Verbindungsabbruch: Der Gastgeber hört die Anmeldung und gibt mir meinen Sitz zurück. */
       const meinSitz = online.players.find(p => p.id === Net.id);
       if (Net.status === 'ready' && (!meinSitz || meinSitz.gone)) netSend(helloNachricht());
-      if (online.hostId && now - (online.seen[online.hostId] || now) > LOST) onlineLost('Der Gastgeber hat den Raum verlassen.');
+      if (online.hostId && now - (online.seen[online.hostId] || now) > LOST) gastgeberWeg('Der Gastgeber hat den Raum verlassen.');
       return;
     }
     for (const p of online.players.slice()) {
@@ -1317,6 +1325,45 @@
       else { online.players = online.players.filter(x => x.id !== p.id); sendRoster(); showLobby(); }
     }
   }
+  /* ---------- Gastgeber-Übergabe ----------
+     Bis Fassung 164 endete der Raum für alle, sobald der Gastgeber ging. Das ist hart und unnötig:
+     Die anderen sitzen ja noch da, mitten in der Runde, mit ihren Punkten. Nur *führen* muß jemand,
+     und dafür kommt jeder in Frage.
+
+     Der Nachfolger wird nicht ausgehandelt, sondern gerechnet: der erste Sitz, der nicht der alte
+     Gastgeber und nicht weg ist. Alle Geräte haben dieselbe Liste, alle rechnen dasselbe – es gibt
+     also nichts zu besprechen, und niemand kann sich vordrängeln. Wer übernimmt, zählt die
+     Generation hoch; daran erkennen die anderen (und der alte Gastgeber, falls er zurückkommt),
+     wessen Wort jetzt gilt. */
+  const nachfolger = () => (online && online.players || []).find(p => !p.gone && p.id !== online.hostId) || null;
+  /* Darf diese Übernahme gelten? Nur mit höherer Generation und nur vom gerechneten Nachfolger –
+     sonst könnte jeder, der den Code kennt, den Raum an sich reißen. */
+  const uebernahmeOk = (m) => {
+    if (!istGanz(m.g, 0, 9999) || m.g <= (online.gen || 0)) return false;
+    const n = nachfolger();
+    return !!n && n.id === m.from;
+  };
+  function gastgeberWeg(grund) {
+    if (!online || online.host) return;
+    const n = nachfolger();
+    if (!n) { onlineLost(grund); return; }        // niemand mehr da: dann ist der Raum wirklich vorbei
+    if (n.id === Net.id) uebernehmen();
+    else {
+      online.hostId = n.id;
+      online.seen[n.id] = Date.now();             // der Neue fängt bei null an, nicht mit der Uhr des Alten
+      showMessage(`${seatName(n, online.players.indexOf(n))} führt den Raum weiter`, 2000);
+    }
+  }
+  function uebernehmen() {
+    online.host = true; online.hostId = Net.id; online.gen = (online.gen || 0) + 1;
+    showMessage('Du führst den Raum jetzt', 2000);
+    sendRoster();
+    if (!online.started) showLobby();
+    /* Stand der Weggegangene gerade am Abschlag, blieb die Runde stehen – der alte Gastgeber hätte
+       gewertet. Das holt der neue nach. */
+    else if (state.players[state.curPlayer] && state.players[state.curPlayer].gone) setTimeout(skipGoneTurn, 700);
+  }
+
   /* ---------- Wiederkommen ----------
      Der Gastgeber gibt einen Sitz zurück: neuer MQTT-Name am alten Platz, „weg" fällt weg, und der
      Rückkehrer bekommt den Stand der Runde zugeschickt. Ohne den stünde er auf Bahn eins, während

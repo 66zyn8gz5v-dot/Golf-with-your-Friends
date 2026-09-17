@@ -62,6 +62,9 @@ const WEB = `http://localhost:${web.address().port}`;
    antwortet – der Browser würde die Verbindung gar nicht erst versuchen. */
 const PORT_V = 9001;
 const schlaf = ms => new Promise(r => setTimeout(r, ms));
+/* Dieselbe Frist wie im Spiel (LOST in main.js): So lange darf jemand schweigen, bevor er als weg
+   gilt. Die Prüfung muß sie abwarten – vorher ist noch gar nichts entschieden. */
+const LOST_MS = 22000;
 /* Warten, bis er wirklich horcht, und nicht einfach eine Zahl hoffen: Ein Vermittler, der noch
    nicht steht, sieht für den Browser genauso aus wie einer, den es nicht gibt – und die Prüfung
    meldete dann einen Fehler im Spiel, wo keiner ist. */
@@ -162,6 +165,24 @@ try {
   const abgewiesen = await C.p.waitForFunction(
     () => document.body.innerText.includes('Die Runde läuft schon'), null, { timeout: 20000 }).then(() => true).catch(() => false);
   pruef('ein fremdes Gerät kommt nicht mitten hinein', abgewiesen);
+
+  /* ---------- Der Gastgeber fällt aus ----------
+     Nicht höflich verabschieden, sondern verschwinden – so, wie ein Handy ausgeht. Die anderen
+     merken es erst nach gut zwanzig Sekunden, darum ist dieser Teil der langsame. */
+  await A.c.close();
+  /* Erst warten, dann fragen. Die erste Fassung dieser Prüfung fragte sofort – und bekam natürlich
+     „alles gut", weil die zwanzig Sekunden noch gar nicht um waren. Sie hätte nie etwas gefunden:
+     Auf dem Stand ohne Übergabe war sie ebenso grün. Eine Prüfung, die zu früh hinsieht, prüft
+     nichts. */
+  await schlaf(LOST_MS + 8000);
+  const drin = await B.p.evaluate(() => ({
+    phase: window.__golfDebug.state.phase,
+    raus: document.body.innerText.includes('Der Gastgeber hat den Raum verlassen'),
+    bahn: window.__golfDebug.state.holeIdx,
+  }));
+  pruef('der Raum läuft weiter, wenn der Gastgeber ausfällt', drin.phase !== 'title' && !drin.raus,
+        `Zustand ${drin.phase}${drin.raus ? ', hinausgeworfen' : ''}`);
+  pruef('und der Übriggebliebene steht noch auf seiner Bahn', drin.bahn === 0, `Bahn ${drin.bahn + 1}`);
 
   pruef('keine Fehler in den Browsern', jsFehler.length === 0, jsFehler.join(' | '));
 } finally {

@@ -772,8 +772,27 @@ sondern übernimmt daraus Name und Hut, ohne den Platz zu ändern. Solange die H
 sich der Warteraum nicht davor – sonst fiele man bei jedem Wechsel aus der Wahl heraus.
 
 Wer den Raum verlässt oder die Verbindung verliert, wird nach gut zwanzig Sekunden bemerkt: sein Zug wird
-mit dem Schlaglimit gewertet und die Runde läuft weiter. Geht der Gastgeber, endet der Raum für alle.
-Eigene Bahnen lassen sich online nicht spielen, nur die festen Welten.
+mit dem Schlaglimit gewertet und die Runde läuft weiter. Eigene Bahnen lassen sich online nicht
+spielen, nur die festen Welten.
+
+### Geht der Gastgeber, führt der Nächste weiter
+
+Bis Fassung 164 endete der Raum **für alle**, sobald der Gastgeber ging. Das ist hart und unnötig:
+Die anderen sitzen ja noch da, mitten in der Runde, mit ihren Punkten. Nur *führen* muss jemand –
+den Takt zwischen den Bahnen vorgeben, Weggegangene werten, Anmeldungen beantworten –, und dafür
+kommt jeder in Frage.
+
+Der Nachfolger wird darum nicht ausgehandelt, sondern **gerechnet**: der erste Sitz, der nicht der
+alte Gastgeber und nicht weg ist. Alle Geräte haben dieselbe Liste, alle rechnen dasselbe – es gibt
+nichts zu besprechen, und niemand kann sich vordrängeln.
+
+**Damit es nicht zwei Gastgeber gibt**, trägt die Spielerliste eine **Generation**. Wer übernimmt,
+zählt sie hoch. Ein Gerät nimmt eine Liste mit höherer Generation nur vom gerechneten Nachfolger an –
+sonst könnte jeder, der den vierstelligen Code kennt, den Raum an sich reißen. Und wer selbst
+Gastgeber war und eine höhere Generation sieht, tritt zurück: Das ist der Fall, in dem der alte
+Gastgeber zurückkommt, ohne gemerkt zu haben, dass er abgelöst wurde.
+
+Erst wenn **niemand** mehr übrig ist, endet der Raum wirklich.
 
 ### Wiederkommen: der Sitz gehört dem Gerät, nicht der Verbindung
 
@@ -815,9 +834,15 @@ sie würde jeden Umbau überleben und nie etwas finden. Darum gibt es seit Fassu
   `localStorage.setItem('fantasygolf.broker', 'ws://localhost:9001')`.
 * **`node tools/online.mjs`** – fährt zwei echte Browserfenster dagegen: Raum aufmachen, beitreten,
   Runde starten, die Seite des Gastes neu laden, zurückkommen. Geprüft wird, was auf dem Bildschirm
-  steht – gleiche Bahn, beide Spieler, eigener Punktestand, niemand mehr als weg geführt –, und zum
-  Schluss, dass ein **fremdes** Gerät weiterhin draußen bleibt. Auf dem Stand von Fassung 163 fällt
-  die Prüfung mit drei Fehlern durch, genau an der gemeldeten Stelle.
+  steht – gleiche Bahn, beide Spieler, eigener Punktestand, niemand mehr als weg geführt –, dann,
+  dass ein **fremdes** Gerät weiterhin draußen bleibt, und zuletzt, dass der Raum weiterläuft, wenn
+  der Gastgeber einfach verschwindet. Auf dem Stand von Fassung 163 fällt die Prüfung mit drei
+  Fehlern durch, auf dem von 164 mit einem – jeweils genau an der reparierten Stelle.
+
+  Die letzte Probe hatte zuerst einen Fehler in sich selbst: Sie fragte **sofort** nach, ob der
+  Übriggebliebene noch drin ist – und bekam natürlich „alles gut", weil die zwanzig Sekunden noch
+  gar nicht um waren. Auf dem Stand *ohne* Übergabe war sie ebenso grün. Eine Prüfung, die zu früh
+  hinsieht, prüft nichts; jetzt wartet sie die Frist ab und fragt danach.
 
 Der Port ist dabei nicht frei wählbar: In der Sicherheitsregel der Seite (`Content-Security-Policy`
 in `index.html`) steht, wohin der Browser überhaupt eine Verbindung aufbauen darf, und dort ist genau
