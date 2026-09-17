@@ -391,6 +391,11 @@ fuell(f, 1, 5, 9, 9)                  # der Absatz mit dem Abschlag
 fuell(f, 9, 6, 16, 8)                 # die Brücke bis zum Bruch
 fuell(f, 20, 6, 27, 8)                # und weiter hinter dem Bruch
 fuell(f, 27, 4, 33, 10)               # der Absatz mit dem Loch
+# Eine kleine Wand hinter dem Loch. Hinter dem Absatz steht die Glut, und Glut ist für das Spiel
+# Boden - an ihrem Rand baut level.js darum keine Bande. Ein Schlag, der einen Tick zu lang ist,
+# rollte bisher am Loch vorbei und in die Schmelze. Das ist keine Aufgabe, sondern eine Strafe
+# dafür, daß man getroffen hat; die Wand gibt den Ball statt dessen zurück.
+fuell(f, 33, 5, 33, 9, 'x')
 setz(f, 4, 7, 'T'); setz(f, 31, 7, 'H')
 bahn('Die zerbrochene Brücke', 'schmelze', f, [
     # Die Fontäne steht mitten im Bruch. Sie ist die einzige Falle im Spiel, die einen fliegenden

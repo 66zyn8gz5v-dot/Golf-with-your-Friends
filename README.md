@@ -1370,7 +1370,11 @@ der Schein weit. Es ist der einzige Ort einer Bahn, an dem man ausgerechnet dann
 wenn man nicht hindarf.
 
 **Bahn 11, „Die zerbrochene Brücke".** Über den See führte einmal eine Brücke; in der Mitte fehlen
-drei Felder. Die Rampe steht drei Felder davor: genug Anlauf, um sie zu treffen, zu wenig, um den
+drei Felder. Hinter dem Loch steht seit Fassung 162 eine kleine Wand: Hinter dem Absatz beginnt die
+Glut, und Glut ist für das Spiel Boden – an ihrem Rand baut `level.js` darum keine Bande. Ein Schlag,
+der einen Tick zu lang war, rollte am Loch vorbei und in die Schmelze. Das ist keine Aufgabe, sondern
+eine Strafe dafür, dass man getroffen hat; die Wand gibt den Ball statt dessen zurück. Der Bot spielt
+die Bahn danach in Ø 5,0 statt 5,5, Median 5, längster Lauf 9 statt 12. Die Rampe steht drei Felder davor: genug Anlauf, um sie zu treffen, zu wenig, um den
 Stoß noch abzuwarten, nachdem man geschlagen hat. Im Bruch steht die große Fontäne, auf den beiden
 Stegen je eine kleinere, im Takt gegeneinander versetzt. Der Bot spielt sie mit Ø 5,5 bei Par 4,
 Median 4, Profi 3 Schläge, 0 von 10 Läufen am Schlaglimit.
