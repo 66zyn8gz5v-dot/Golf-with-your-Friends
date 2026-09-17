@@ -44,7 +44,7 @@ const FLUT_COURSES = [
   },
   {
     name: 'Die Gasse', par: 4, theme: 'gassen',
-    intro: 'Die Gasse zwischen den Höfen ist die einzige Verbindung, und sie ist das Erste, was absäuft. Unten links liegt das Pumpwerk: Wer darüberrollt, drückt das Wasser für ein paar Sekunden zurück – muß dafür aber dorthin, wo es zuerst steht.',
+    intro: 'Die Gasse zwischen den Höfen ist die einzige Verbindung, und sie ist das Erste, was absäuft. Unten links liegt das Pumpwerk: Wer darüberrollt, drückt das Wasser für ein paar Sekunden zurück. Aber es liegt außen und säuft selbst früh ab – wer es holen will, muß gleich los, und der Weg dorthin führt vom Loch weg.',
     map: [
       '......................................',
       '......................................',

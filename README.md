@@ -1568,8 +1568,10 @@ Beide sind die Insel, auf die man sich retten kann.
 
 **Das Pumpwerk** ist die Gegenmaschine: eine Druckplatte im Boden, die die Flut für sieben Sekunden
 um zwei Stufen zurückdrückt. Es ist das Gegenstück zum Schalter im Märchenland – nur öffnet es kein
-Tor, sondern gibt Boden zurück. Es steht mit Absicht dort, wo das Wasser zuerst hinkommt: Wer es
-drücken will, muss ins Nasse.
+Tor, sondern gibt Boden zurück. Es liegt mit Absicht weit außen, dort, wo das Wasser zuerst
+hinkommt – und ist damit kein Schalter, der immer dasteht, sondern ein **Zeitfenster**: erreichbar,
+solange die Flut niedrig steht, danach selbst abgesoffen und bis zum Zurückgehen der Tide weg. Wer
+es holen will, muss gleich los, und der Weg dorthin führt vom Loch weg.
 
 **Die Ansage steht auf dem Boden, nicht am Gerät** (`src/render_flut.js`). Auf jedem Feld, das als
 nächstes drankommt, liegt ein Schimmer, der in den Sekunden davor anschwillt, mit einer hellen

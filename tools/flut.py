@@ -182,8 +182,9 @@ def pruefe(b):
         fehler.append(f'bei voller Flut sind noch {round(100 * rest / anfang)} % trocken – '
                       'die Flut ändert auf dieser Bahn zu wenig')
 
-    # Das Pumpwerk gehört ins Nasse. Stünde es auf dem trockenen Rückgrat, bekäme man den Boden
-    # geschenkt; es soll etwas kosten, dorthin zu gehen.
+    # Das Pumpwerk gehört weit nach außen. Stünde es auf dem trockenen Rückgrat, bekäme man den
+    # Boden geschenkt und könnte ihn jederzeit holen. Draußen ist es ein Zeitfenster: erreichbar,
+    # solange die Flut niedrig steht, und danach bis zum Zurückgehen der Tide weg.
     for o in hind:
         if o['type'] != 'pumpwerk': continue
         x, y = int(o['x']), int(o['y'])
@@ -230,7 +231,8 @@ fuell(f, 25, 12, 26, 13, 'x')
 bahn('Die Gasse', 'gassen', f, par=4,
      intro='Die Gasse zwischen den Höfen ist die einzige Verbindung, und sie ist das Erste, was '
            'absäuft. Unten links liegt das Pumpwerk: Wer darüberrollt, drückt das Wasser für ein '
-           'paar Sekunden zurück – muß dafür aber dorthin, wo es zuerst steht.',
+           'paar Sekunden zurück. Aber es liegt außen und säuft selbst früh ab – wer es holen '
+           'will, muß gleich los, und der Weg dorthin führt vom Loch weg.',
      hindernisse=[flut(), pumpwerk(4.5, 14.5)])
 
 

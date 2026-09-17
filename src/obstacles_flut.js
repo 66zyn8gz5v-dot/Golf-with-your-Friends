@@ -33,9 +33,15 @@
    trocken, auch wenn ringsum alles absäuft – das ist die Insel, auf die man sich retten muß.
 
    DER RÜCKWEG
-   Das PUMPWERK ist eine Druckplatte im Wasser: Rollt der Ball darüber, drückt es die Flut für eine
+   Das PUMPWERK ist eine Druckplatte im Boden: Rollt der Ball darüber, drückt es die Flut für eine
    Weile um ein paar Stufen zurück. Es ist das Gegenstück zum Schalter im Märchenland – nur öffnet
    es kein Tor, sondern gibt Boden zurück.
+
+   Es liegt mit Absicht weit außen, dort, wo das Wasser zuerst hinkommt. Nicht, damit man ins Nasse
+   muß – im Nassen geht man unter, dorthin kann man gar nicht –, sondern damit es ein *Fenster* ist:
+   Solange die Flut niedrig steht, ist die Platte zu erreichen; steigt sie, verschwindet die Platte
+   als erstes und ist bis zum Zurückgehen der Tide weg. Wer sie nutzen will, muß früh hin, und der
+   Weg dorthin führt vom Loch weg.
 */
 const FLUT_START = 9;            // Sekunden Ruhe, bevor das Wasser überhaupt steigt
 const FLUT_TAKT = 4.5;           // Sekunden von einer Stufe zur nächsten – beim Steigen wie beim Fallen
@@ -149,8 +155,8 @@ class Flut {
 
 /* Das Pumpwerk: eine Druckplatte, die die Flut zurückdrängt. Anders als der Schalter im
    Märchenland öffnet sie kein Tor, sondern gibt Boden zurück – und sie wirkt auf die ganze Bahn,
-   nicht auf eine Stelle. Darum steht sie mit Absicht dort, wo das Wasser zuerst hinkommt: Wer sie
-   drücken will, muß ins Nasse. */
+   nicht auf eine Stelle. Sie steht weit außen und säuft darum früh ab: Sie ist ein Zeitfenster,
+   kein Schalter, der immer dasteht (siehe oben). */
 class Pumpwerk {
   constructor(d) {
     Object.assign(this, { r: 0.6, stufen: PUMPE_STUFEN, dauer: PUMPE_DAUER, ebene: 0 }, d);
