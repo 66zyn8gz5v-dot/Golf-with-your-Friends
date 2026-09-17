@@ -76,9 +76,10 @@ pruef('die Belohnungsskins hängen weiter alle an ihrer Welt', freiVoll.length =
 const quelle = lies('src/hats.js');
 const von = quelle.indexOf('gartenzwerg(ctx, color, t, fein) {');
 const leib = von < 0 ? '' : quelle.slice(von, quelle.indexOf('\n    },', von));
-for (const [was, muster] of [['eine Zipfelmütze', /zipfelmuetze\(ctx, t, fein\)/],
-                             ['einen Bart', /Bart/], ['eine Knollennase', /Knollennase|Nase/],
-                             ['eine Jacke mit Gürtel', /Gürtel/], ['rote Wangen', /Wangen/],
+for (const [was, muster] of [['eine Zipfelmütze', /zipfelmuetze\(ctx, color, t, fein\)/],
+                             ['einen Gabelbart', /Gabelbart/], ['Lederzwingen darin', /Lederzwingen/],
+                             ['eine Knollennase', /Knollennase/], ['spitze Ohren', /Spitze Ohren/],
+                             ['eine Joppe mit Gürtel', /Gürtel/], ['gegerbte Backen', /Backen/],
                              ['buschige Brauen', /Brauen/]])
   pruef(`er hat ${was}`, muster.test(leib));
 /* Die Mütze gehört *über* den Reif in Spielerfarbe. Käme sie als gewöhnliche Zeichnung, liefe der
@@ -92,7 +93,8 @@ console.log('\n--- Gezeichnet wird jeder ---');
    deren Rückgabe gebraucht wird. */
 function leinwand(dichte) {
   const zaehler = { fill: 0, stroke: 0 };
-  const verlauf = { addColorStop() {} };
+  const farben = [];                       // jede Füllfarbe und jeder Farbhalt eines Verlaufs
+  const verlauf = { addColorStop(_, f) { farben.push(String(f)); } };
   const abgelegt = {};
   const c = new Proxy({}, {
     get(_, k) {
@@ -104,9 +106,9 @@ function leinwand(dichte) {
       if (k in abgelegt) return abgelegt[k];
       return () => {};
     },
-    set(_, k, v) { abgelegt[k] = v; return true; },
+    set(_, k, v) { if (k === 'fillStyle' && typeof v === 'string') farben.push(v); abgelegt[k] = v; return true; },
   });
-  return { c, zaehler };
+  return { c, zaehler, farben };
 }
 for (const h of Hats.LIST) {
   if (h.id === 'none') continue;
@@ -122,6 +124,25 @@ for (const h of Hats.LIST) {
   }
   pruef(`${h.name} wird gezeichnet`, ergebnis.length === 0, ergebnis.join(' | '));
 }
+
+/* ---------- Die Mütze trägt die Ballfarbe ---------- */
+console.log('\n--- Die Mützenfarbe ---');
+/* Nicht „steht der Aufruf da", sondern: Kommt bei zwei Bällen wirklich etwas anderes heraus? Nur
+   die Füllfarben werden verglichen - der Reif in Spielerfarbe ist ein Strich und zählt hier nicht
+   mit, sonst wäre der Unterschied schon dadurch da und die Prüfung wertlos. */
+const farbenVon = (color) => {
+  const { c, farben } = leinwand(3);
+  Hats.draw(c, 'gartenzwerg', 100, 100, 40, color, 0);
+  return farben;
+};
+const weiss = farbenVon('#ffffff'), gruen = farbenVon('#5ce07a'), blau = farbenVon('#4dd4ff');
+pruef('zwei Bälle ergeben zwei Mützen', JSON.stringify(gruen) !== JSON.stringify(blau));
+/* Und der weiße Ball ist der Sonderfall: Eine weiße Mütze über hellem Bart wäre keine Mütze mehr,
+   er bekommt darum Rot. Gesucht wird ein deutlich roter Farbwert unter den Füllungen. */
+const istRot = (s) => { const m = /^rgb\((\d+),(\d+),(\d+)\)$/.exec(s); return !!m && +m[1] > 120 && +m[1] > +m[2] * 2 && +m[1] > +m[3] * 2; };
+pruef('und ein weißer Ball bekommt eine rote Mütze', weiss.some(istRot),
+      weiss.filter(istRot).join(', ') || 'keine rote Füllung gefunden');
+pruef('ein farbiger Ball bekommt sie nicht', !gruen.some(istRot), gruen.filter(istRot).join(', '));
 
 console.log(`\n${fehler ? fehler + ' FEHLER' : 'alles bestanden'}`);
 process.exit(fehler ? 1 : 0);

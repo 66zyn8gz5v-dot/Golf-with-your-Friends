@@ -234,13 +234,28 @@ aber an keiner Welt und an keinem Rekord. Er ist von Anfang an da. Das ist Absic
 sind Auszeichnungen und sollen es bleiben, der Zwerg ist der Spaß daneben, und ein Spaß, den man
 erst freispielen muss, ist keiner.
 
-Die Kugel ist der Zwerg vom Kinn bis zum Gürtel – rote Wangen, buschige weiße Brauen, die
-Knollennase ganz vorn, darunter Schnurrbart und ein Bart, der bis über den Gürtel hängt; links und
-rechts daneben schaut die blaue Jacke heraus, und alle paar Sekunden blinzelt er. Die **Zipfelmütze**
-kommt obendrauf: fast so hoch wie der Ball breit, denn eine brave Kappe wäre auf dem Spielfeld nur
-ein roter Fleck. Ihre Spitze schwingt beim Rollen nach, im selben Takt wie die Bommelmütze im
-Schneeberg – zwei Zwerge nebeneinander sollen nicht gegeneinander wackeln. Gezeichnet wird sie über
-den Farbreif (siehe unten), sonst liefe der Reif quer über die Mütze.
+**Die erste Fassung war zu weihnachtlich**, und das lag nicht an einem Stück, sondern an der Summe:
+runder schneeweißer Vollbart, rote Mütze mit hellem Rand, rosige Backen – das ist ein
+Weihnachtsmann. Ein Zwerg ist knorriger. Was ihn dazu macht: **spitze Ohren**, die unter der
+Mützenkrempe hervorschauen (ein Weihnachtsmann hat runde, und man sieht sie nie), ein
+elfenbeinfarbener **Gabelbart**, der unten in zwei Zöpfe ausläuft und von **Lederzwingen** gefasst
+wird, **Brauen, die zur Nase hin abfallen** statt freundlich zu wölben – dieselben zwei Pfade, nur
+andersherum, und ein anderer Kerl –, dazu die Knollennase ganz vorn, wettergegerbte statt puderrosa
+Backen und eine **moosgrüne Joppe** mit Gürtel. Zwischendurch war die Joppe aus Leder; das ging
+unter, weil Braun auf brauner Haut keine Kante macht.
+
+**Die Mütze trägt die Farbe des Balls.** Der Skin verdeckt die Spielerfarbe ja, und der dünne Reif
+allein ist auf dem Spielfeld leicht zu übersehen – eine Mütze in Ballfarbe dagegen nicht: Bei vier
+Zwergen sieht man auf einen Blick, welcher der eigene ist. Ein (fast) weißer Ball bekommt **Rot**,
+denn eine weiße Mütze über hellem Bart wäre keine Mütze mehr, sondern ein Fleck – und Rot ist beim
+Gartenzwerg ohnehin zu Hause. Das ist dieselbe Regel, nach der schon der Federbusch des Ritterhelms
+geht (`plumeColors`). Der umgeschlagene Rand ist *dunkler* als die Mütze, nicht heller: Ein weißer
+Pelzrand war genau das, was den Zwerg zum Weihnachtsmann gemacht hat.
+
+Die Mütze ist fast so hoch wie der Ball breit, denn eine brave Kappe wäre auf dem Spielfeld nur ein
+Farbfleck. Ihre Spitze schwingt beim Rollen nach, im selben Takt wie die Bommelmütze im Schneeberg –
+zwei Zwerge nebeneinander sollen nicht gegeneinander wackeln. Gezeichnet wird sie über den Farbreif
+(siehe unten), sonst liefe der Reif quer über die Mütze. Und alle paar Sekunden blinzelt er.
 
 **Legionärshelm** und **Championhelm** gehören zum Kolosseum und sind ein Paar: dieselbe Grundform –
 halbrunde Helmglocke, goldener Rand über der Stirn mit Nieten, breiter Nackenschirm nach hinten unten,
@@ -365,6 +380,13 @@ die Regeln, die sich nicht von selbst halten: jeder Listeneintrag hat eine Zeich
 genau eine Belohnung, keine Belohnung hängt an einer Welt, die es nicht gibt – und der Gartenzwerg
 ist der einzige Ganzkörper-Skin ohne Welt. Bekäme er still eine Bedingung, wäre aus dem Spaß eine
 weitere Hausaufgabe geworden, und niemandem fiele es auf.
+
+Dass die Mütze die Ballfarbe trägt, wird dabei nicht am Quelltext abgelesen, sondern **gemessen**:
+Die mitzählende Leinwand merkt sich jede Füllfarbe, der Zwerg wird mit zwei Ballfarben gezeichnet,
+und die Listen müssen sich unterscheiden. Verglichen werden nur die *Füllungen* – der Reif in
+Spielerfarbe ist ein Strich und zählt nicht mit, sonst wäre der Unterschied schon dadurch da und
+die Prüfung wertlos. Dazu die Sonderregel: Beim weißen Ball muss eine deutlich rote Füllung dabei
+sein, bei einem farbigen keine.
 
 Vier der Skins teilen sich die Glaskugel-Form, damit sie als eine Familie zu erkennen sind – der Inhalt
 macht die Welt. Drei tanzen bewusst aus der Reihe: Federkrone und Runenstein sind Stein, die Königskrone
