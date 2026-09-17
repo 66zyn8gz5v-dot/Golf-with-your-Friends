@@ -222,9 +222,13 @@ def pruefe(b):
 # ================================================================ Die Bahnen
 # Becken sind mit Absicht flach: Sie laufen von außen nach innen voll, ein Ring je Takt, und die
 # Tiefe ist die halbe kürzere Kante. Vier Kacheln kurze Kante heißt Tiefe 2 heißt ein Lauf von
-# knapp zwölf Sekunden – ein Takt wie beim Mühlrad. Sechs Kacheln wären schon fünfzehn.
+# knapp elf Sekunden – ein Takt wie beim Mühlrad. Sechs Kacheln wären schon dreizehn.
+#
+# DIE VIER PROBEBAHNEN SIND VIER TIEFEN. Die Welt ist ein Abstieg: von dicht unter der Oberfläche
+# bis auf den Meeresgrund, und jede Bahn liegt tiefer als die vorige. Das steckt allein in der
+# Palette ('tiefe' in src/themes.js); die Zeichnung macht daraus Licht, Schwebstoff und Schleier.
 
-# --- Bahn 1: das Hafenbecken mitten im Kai. Quer hindurch ist es kurz, außen herum sicher.
+# --- Bahn 1, dicht unter der Oberfläche: das Hafenbecken im Kai.
 f = leer(32, 17)
 fuell(f, 2, 2, 29, 14)
 setz(f, 5, 8, 'T')
@@ -232,14 +236,13 @@ setz(f, 26, 8, 'H')
 fuell(f, 11, 6, 20, 9, 's')         # der Beckengrund ist Schlick: bremst, wer zu fest durchzieht
 fuell(f, 11, 5, 20, 5, 'x')         # Kaimauern oben und unten – der Umweg ist nicht geschenkt
 fuell(f, 11, 10, 20, 10, 'x')
-bahn('Das Hafenbecken', 'deich', f, par=3,
-     intro='Das Becken läuft im Takt voll und wieder leer. Steht es leer, geht es geradeaus '
-           'hindurch – das ist der kurze Weg. Steht es voll, spielt man oben oder unten herum und '
-           'braucht einen Schlag mehr. Warten muß man nie.',
+bahn('Das Hafenbecken', 'wasserlinie', f, par=3,
+     intro='Dicht unter der Oberfläche: Die Sonne steht noch im Wasser. Das Becken läuft im Takt '
+           'voll und wieder leer – steht es leer, geht es geradeaus hindurch, steht es voll, spielt '
+           'man oben oder unten herum. Warten muß man nie.',
      hindernisse=[becken(11, 6, 20, 9)])
 
-# --- Bahn 2: zwei Becken hintereinander, jedes zur anderen Seite hin gemauert. Wer beide umgeht,
-#     fährt Zickzack; wer beide im richtigen Augenblick trifft, geht geradeaus.
+# --- Bahn 2, eine Handbreit tiefer: Sandbank und Seegras, zwei versetzte Becken.
 f = leer(36, 17)
 fuell(f, 2, 2, 33, 14)
 setz(f, 5, 8, 'T')
@@ -248,11 +251,38 @@ fuell(f, 11, 6, 16, 9, 's')
 fuell(f, 21, 6, 26, 9, 's')
 fuell(f, 11, 5, 16, 5, 'x')         # das erste Becken ist oben zu: außen herum geht es unten lang
 fuell(f, 21, 10, 26, 10, 'x')       # das zweite unten: also wieder hinauf
-bahn('Zwei Becken', 'gassen', f, par=4,
-     intro='Zwei Becken hintereinander, jedes zur anderen Seite hin gemauert: Wer sie umgeht, fährt '
-           'Zickzack. Unten links liegt das Pumpwerk – wer darüberrollt, hält beide vier Sekunden '
-           'lang leer.',
+bahn('Die Sandbank', 'flachwasser', f, par=4,
+     intro='Tiefer, und das Licht wird grün. Zwei Becken hintereinander, jedes zur anderen Seite '
+           'hin gemauert: Wer sie umgeht, fährt Zickzack. Unten links liegt das Pumpwerk – wer '
+           'darüberrollt, hält beide vier Sekunden lang leer.',
      hindernisse=[becken(11, 6, 16, 9), becken(21, 6, 26, 9, start=4.4), pumpwerk(5.5, 12.5)])
+
+# --- Bahn 3, in der Dämmerzone: die Gassen der versunkenen Stadt. Geradeaus steht ein Haus.
+f = leer(34, 19)
+fuell(f, 2, 2, 31, 16)
+setz(f, 5, 9, 'T')
+setz(f, 28, 9, 'H')
+fuell(f, 12, 9, 19, 9, 'x')         # das Haus mitten in der Gasse: der gerade Weg ist zu
+fuell(f, 12, 6, 19, 8, 's')         # Gasse darüber
+fuell(f, 12, 10, 19, 12, 's')       # Gasse darunter
+bahn('Die Gassen', 'daemmerzone', f, par=3,   # Bot: Median 2 – Par 4 waere geschenkt
+     intro='In der Dämmerzone steht die Stadt. Geradeaus versperrt ein Haus den Weg; links und '
+           'rechts daran vorbei laufen zwei Gassen, und beide saufen im Takt voll. Wer keine '
+           'erwischt, spielt ganz außen herum.',
+     hindernisse=[becken(12, 6, 19, 8), becken(12, 10, 19, 12, start=4.4)])
+
+# --- Bahn 4, auf dem Grund: weit, dunkel, und ein langes Becken quer davor.
+f = leer(38, 19)
+fuell(f, 2, 2, 35, 16)
+setz(f, 5, 9, 'T')
+setz(f, 32, 9, 'H')
+fuell(f, 12, 7, 25, 10, 's')
+fuell(f, 12, 6, 25, 6, 'x')
+fuell(f, 12, 11, 25, 11, 'x')
+bahn('Der Grund', 'meeresgrund', f, par=4,
+     intro='Ganz unten. Von oben kommt kein Licht mehr – was leuchtet, leuchtet selbst. Quer vor '
+           'dem Loch liegt ein langes Becken; der Umweg ist weit. Links unten das Pumpwerk.',
+     hindernisse=[becken(12, 7, 25, 10), pumpwerk(6.5, 14.5)])
 
 
 # ================================================================ Prüfen

@@ -516,59 +516,65 @@ const THEMES = {
     autoDecor: ['basalt', 'brazier', 'obsidian', 'vent', 'anvil', 'basalt', 'stalagmite', 'crystalOrange'],
   },
   /* ---- Die Flut ----
-     Eine versunkene Stadt an vier Stationen, und in jeder steht das Wasser höher: vom Deich, wo
-     man es noch draußen wähnt, über die Gassen und die Dächer bis hinunter in die Tiefe, wo es
-     längst gewonnen hat. Die Farbe wird dabei von Grau zu Grün: oben Sturmlicht auf nassem Stein,
-     unten das Dämmergrün unter der Oberfläche. Der Akzent ist überall ein Signal – Sturmlaterne,
-     Boje, Leuchtfeuer –, denn hier gibt es nur eine Frage, und die heißt: wie lange noch.
-     Die Weltregel selbst steht in src/obstacles_flut.js. */
-  deich: { // Der Deich: letzte Stunde vor der Springflut, Möwenlicht, Gischt über der Krone
-    atmo: 'spray',
-    sky: ['#3f4c5e', '#9fb0bd'], ground: '#4e5a4a', groundEdge: '#2b332a', cliff: '#5a5c58',
-    floor: ['#7f8a6d', '#758064'], sand: '#c3b491', ice: '#c8ecff', snow: '#f1f7ff',
-    water: '#3d6b7a', lava: '#ff7a3d',
-    wall: { top: '#8d9184', side: '#4a4d45', style: 'stone' },
-    block: { top: '#9a7c4e', side: '#5c4726' },          // Bohlen und Buhnen: Holz gegen die See
+     Ein Abstieg, und zwar wörtlich: von der Wasseroberfläche bis auf den Meeresgrund. Die vier
+     Abschnitte sind vier Tiefen, und mit jeder wird es dunkler, blauer und stiller – oben steht die
+     Sonne noch im Wasser, unten kommt das einzige Licht aus dem, was selber leuchtet.
+
+     Das trägt die Kennung 'tiefe' von 0 (dicht unter der Oberfläche) bis 1 (ganz unten). Daran
+     hängt in src/render_flut.js alles: wie hell die Lichtbahnen von oben sind, ob man das Kräuseln
+     der Oberfläche noch sieht, wie stark das Netz aus Sonnenlicht über dem Boden liegt, wieviel
+     Schwebstoff im Wasser hängt und wie blau der Schleier ist, der über allem liegt. Eine Zahl,
+     und die ganze Welt wird tiefer – so wie die Mine mit jedem Abschnitt wärmer wurde.
+
+     'meerBg' heißt: kein Himmel, sondern die Wassersäule. Über Wasser gibt es in dieser Welt
+     nichts mehr zu sehen. */
+  wasserlinie: { // Dicht unter der Oberfläche: Sonne im Wasser, das Kräuseln von unten gesehen
+    atmo: 'bubbles', meerBg: true, tiefe: 0.12,
+    sky: ['#9fe2ef', '#2e7fa8'], ground: '#2c6d84', groundEdge: '#17475c', cliff: '#4a7f92',
+    floor: ['#d2c69c', '#c6b992'], sand: '#e8dfb8', ice: '#c8ecff', snow: '#f1f7ff',
+    water: '#4fb3d9', lava: '#ff7a3d',
+    wall: { top: '#c2ccc6', side: '#5f7c82', style: 'stone' },
+    block: { top: '#a8895a', side: '#63502f' },      // Bohlen und Buhnen: Holz gegen die See
     mover: { top: '#b8843f', side: '#6b4a25' },
-    rotor: { top: '#a8a49a', side: '#5e5b54' },
-    accent: '#ffc266', flag: '#ff5a5a',
-    autoDecor: ['bollard', 'ropepost', 'buoy', 'rock', 'crate', 'lighthouse', 'barrel', 'bollard'],
+    rotor: { top: '#aeb8b4', side: '#5e6e72' },
+    accent: '#ffe08a', flag: '#ff5a5a',
+    autoDecor: ['buoy', 'shell', 'coral', 'ropepost', 'starfish', 'bollard', 'seaweed', 'buoy'],
   },
-  gassen: { // Die Gassen: das Wasser steht schon zwischen den Häusern, Pflaster glänzt, Läden zu
-    atmo: 'mist',
-    sky: ['#26313f', '#5d7181'], ground: '#3a4450', groundEdge: '#1e242c', cliff: '#4a5260',
-    floor: ['#6e7a86', '#66727e'], sand: '#b0a68e', ice: '#c8ecff', snow: '#f1f7ff',
-    water: '#356073', lava: '#ff7a3d',
-    wall: { top: '#7d8794', side: '#3e4650', style: 'stone' },
-    block: { top: '#8a6f4a', side: '#513e25' },
+  flachwasser: { // Sandbank und Seegras: das Licht steht noch, aber es wird grün
+    atmo: 'bubbles', meerBg: true, tiefe: 0.35,
+    sky: ['#5fb6cc', '#15607f'], ground: '#1f5c74', groundEdge: '#0f3b4d', cliff: '#3c6e80',
+    floor: ['#aab88e', '#9eac82'], sand: '#d8d2a4', ice: '#c8ecff', snow: '#f1f7ff',
+    water: '#3f9cc4', lava: '#ff7a3d',
+    wall: { top: '#9fb0a6', side: '#4c6a6a', style: 'stone' },
+    block: { top: '#8f7a4e', side: '#54462b' },
     mover: { top: '#a37f4e', side: '#60482a' },
-    rotor: { top: '#9aa3ae', side: '#525a66' },
-    accent: '#ffb347', flag: '#ffd166',
-    autoDecor: ['lantern', 'barrel', 'crate', 'bollard', 'shell', 'lantern', 'ropepost', 'seaweed'],
+    rotor: { top: '#9aa9a2', side: '#4f6265' },
+    accent: '#7fe8c0', flag: '#ffd166',
+    autoDecor: ['seaweed', 'coral', 'shell', 'seaweed', 'starfish', 'rock', 'coral', 'pearl'],
   },
-  daecher: { // Über den Dächern: nur noch Giebel und Ziegel ragen heraus, ringsum offenes Wasser
-    atmo: 'spray',
-    sky: ['#4a5c70', '#c4d2da'], ground: '#5a4a46', groundEdge: '#301f1d', cliff: '#6a5a52',
-    floor: ['#9a6a58', '#8e6152'], sand: '#c9b58a', ice: '#c8ecff', snow: '#f1f7ff',
-    water: '#41788c', lava: '#ff7a3d',
-    wall: { top: '#a5715c', side: '#5b3d33', style: 'stone' },   // Ziegel, nicht Quader
-    block: { top: '#8a6f4a', side: '#513e25' },
-    mover: { top: '#b8843f', side: '#6b4a25' },
-    rotor: { top: '#a8a49a', side: '#5e5b54' },
-    accent: '#ffd166', flag: '#ff4f6d', clouds: true,
-    autoDecor: ['bell', 'buoy', 'cloud', 'ropepost', 'wave', 'bell', 'cloud', 'lighthouse'],
+  daemmerzone: { // Die versunkene Stadt: blau, kaum noch Licht, Dächer und Giebel im Dämmer
+    atmo: 'bubbles', meerBg: true, tiefe: 0.65,
+    sky: ['#1a5670', '#06283a'], ground: '#123449', groundEdge: '#07202e', cliff: '#27506a',
+    floor: ['#71868f', '#677c85'], sand: '#9aa79c', ice: '#bfe6ff', snow: '#f1f7ff',
+    water: '#2b6f92', lava: '#5fe8c4',
+    wall: { top: '#7d8f96', side: '#37505c', style: 'stone' },
+    block: { top: '#6d7f88', side: '#33454e' },
+    mover: { top: '#7b8c92', side: '#3b4e55' },
+    rotor: { top: '#86979c', side: '#42565c' },
+    accent: '#8fd8ff', flag: '#ffd166', stars: false,
+    autoDecor: ['anchor', 'coral', 'seaweed', 'shell', 'pillar', 'coral', 'bell', 'seaweed'],
   },
-  tiefe: { // Die Tiefe: unter der Oberfläche, Dämmergrün, Schwebstoff im Licht, Muscheln am Stein
-    atmo: 'bubbles', mineBg: true, cliff: '#1f3f44',
-    sky: ['#04161c', '#0d3a44'], ground: '#123138', groundEdge: '#081c21',
-    floor: ['#4d6e6a', '#456560'], sand: '#9cae94', ice: '#bfe6ff', snow: '#f1f7ff',
-    water: '#2a5c6e', lava: '#5fe8c4',
-    wall: { top: '#54736e', side: '#25403e', style: 'stone' },
-    block: { top: '#5d7a86', side: '#2d444e' },
-    mover: { top: '#6d8a92', side: '#354d55' },
-    rotor: { top: '#7a969c', side: '#3c555b' },
+  meeresgrund: { // Ganz unten: Dämmergrün geht in Schwarz über, Licht nur noch von dem, was leuchtet
+    atmo: 'bubbles', meerBg: true, tiefe: 1.0,
+    sky: ['#073040', '#01090f'], ground: '#07202b', groundEdge: '#030e14', cliff: '#1c383f',
+    floor: ['#546e72', '#4b6467'], sand: '#8b9c92', ice: '#bfe6ff', snow: '#f1f7ff',
+    water: '#1d4e63', lava: '#5fe8c4',
+    wall: { top: '#5e7a7c', side: '#264247', style: 'stone' },
+    block: { top: '#587270', side: '#26403f' },
+    mover: { top: '#55696c', side: '#263c40' },
+    rotor: { top: '#5f7477', side: '#2c4348' },
     accent: '#7fe8d8', flag: '#ffd166', stars: false,
-    autoDecor: ['coral', 'seaweed', 'shell', 'anchor', 'starfish', 'coral', 'pearl', 'seaweed'],
+    autoDecor: ['coral', 'jelly', 'seaweed', 'anchor', 'skull', 'coral', 'pearl', 'jelly'],
   },
   cloud: {
     hangStil: 'schnee',   // Schrägen als Schneerinne, nicht als Erdrampe // Über den Wolken: nichts mehr fest außer dem, worauf man steht

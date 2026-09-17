@@ -1538,8 +1538,8 @@ spielt.
 
 ## Die Flut (Vorschau)
 
-Die elfte Welt ist noch nicht im Spiel. In der Vorschau stehen zwei Probebahnen; die neun Bahnen
-kommen danach. Auf der Weltkarte liegt sie allein im Südostmeer, mit einem Kirchturm als Marke –
+Die elfte Welt ist noch nicht im Spiel. In der Vorschau stehen vier Probebahnen – eine je Tiefe,
+damit man den Abstieg sehen kann; die neun Bahnen kommen danach. Auf der Weltkarte liegt sie allein im Südostmeer, mit einem Kirchturm als Marke –
 dem Einzigen, was von so einer Stadt am Ende noch herausschaut.
 
 ### Erst war es eine Weltregel, und das war ein Fehler
@@ -1615,11 +1615,38 @@ ertrinken, bis das Schlaglimit erreicht ist. Gesucht wird jetzt nach *trockenem*
 nichts Gemerktes trocken ist, ringsum weiter. Das bedrohte auch schon die Gießhalle, nur ist es dort
 nie jemandem passiert.
 
-### Die vier Paletten
+### Die Welt ist ein Abstieg – von der Oberfläche bis auf den Grund
 
-`src/themes.js`: `deich` (Sturmlicht auf nassem Stein), `gassen` (das Wasser steht schon zwischen
-den Häusern), `daecher` (nur noch Giebel und Ziegel ragen heraus) und `tiefe` (Dämmergrün unter der
-Oberfläche) – vier Stationen, in jeder steht das Wasser höher.
+Zuerst waren die vier Paletten vier *Stationen einer absaufenden Stadt* (Deich, Gassen, Dächer,
+Tiefe). Das erzählte etwas, sah aber nicht nach Unterwasser aus – es sah nach nassem Stein aus.
+Seit Fassung 168 sind es vier **Tiefen**, und die Welt geht wörtlich nach unten: `wasserlinie`
+(dicht unter der Oberfläche, die Sonne steht noch im Wasser), `flachwasser` (Sandbank und Seegras,
+das Licht wird grün), `daemmerzone` (die versunkene Stadt, blau, kaum noch Licht) und `meeresgrund`
+(ganz unten; was leuchtet, leuchtet selbst). Das ist derselbe Gedanke wie der Abstieg der
+Zwergenmine, nur nach unten ins Wasser statt in den Berg.
+
+**Eine einzige Zahl macht das**: `tiefe` an der Palette, 0 dicht unter der Oberfläche bis 1 auf dem
+Grund. `src/render_flut.js` rechnet daraus alles:
+
+| | nah an der Oberfläche | auf dem Grund |
+| --- | --- | --- |
+| Wassersäule statt Himmel (`meerBg`) | hell türkis | fast schwarz |
+| Unterseite der Oberfläche mit Kräuseln | da | aus dem Bild gerutscht |
+| Lichtbahnen von oben | breit und hell | keine |
+| Netz aus Sonnenlicht über der Szene | deutlich | keins |
+| Schwebstoff im Wasser | wenig | viel |
+| Blaustich und dunkler Rand | schwach | stark |
+| Schemen der versunkenen Stadt in der Ferne | zu hell dafür | Dächer und ein Kirchturm |
+| Was selbst leuchtet | – | Biolumineszenz im Wasser |
+
+Zwei Dinge liegen dabei **über** der Szene und nicht dahinter: das Lichtnetz und der Blauschleier.
+Beide bleiben aber unter der Zielhilfe – wohin man schlägt, gehört zur Bedienung und nicht zur
+Stimmung; dieselbe Regel wie beim Schleier der Zwergenmine.
+
+Und der Schimmer, der ein leeres Becken sichtbar macht, nimmt seine Farbe aus der Palette
+(`water`), nicht aus einem festen Blau. Ein fester Ton sähe auf dem hellen Sand der Wasserlinie gut
+aus und wäre auf dem dunklen Grund unsichtbar – und ein unsichtbares Becken ist wieder eine Falle
+ohne Ansage.
 
 ### Geprüft
 

@@ -901,6 +901,7 @@ class Renderer {
     if (th.planks) this.drawPlanks(ctx, t);
     if (th.tomb) this.drawTomb(ctx, t);
     if (th.mineBg) this.drawMine(ctx, t);
+    if (th.meerBg) this.drawMeer(ctx, t);          // Die Flut: kein Himmel, sondern die Wassersäule
     if (th.belly) this.drawBelly(ctx, t);
     if (th.jungleBg) this.drawJungle(ctx, t);
     if (th.temple) this.drawTemple(ctx, t);
@@ -1032,6 +1033,10 @@ class Renderer {
     /* Der Schleier der Mine liegt über der ganzen Szene – aber unter der Zielhilfe. Wohin man
        schlägt, muss man auch im Dunkeln sehen; was einen dort erwartet, nicht. */
     this.drawDunkelheit(ctx, state);
+    /* Der Tiefenschleier der Flut liegt genauso über der Szene – Lichtnetz, Blaustich und der
+       dunkle Rand. Auch er muß unter der Zielhilfe bleiben: Wohin man schlägt, gehört zur
+       Bedienung und nicht zur Stimmung. */
+    this.drawTiefenschleier(ctx, state);
     if (state.aim) this.drawAim(ctx, state.ball, state.aim);
 
     if (state.phase !== 'edit') this.drawDepthCues(ctx);
