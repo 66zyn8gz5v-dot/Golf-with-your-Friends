@@ -319,11 +319,22 @@ console.log('\n--- Die Bruchwand ---');
   const j = q.indexOf('drawSchmelzofen(ctx, ob, t) {');
   pruef('drawSchmelzofen gibt es', j >= 0);
   const leib = j < 0 ? '' : q.slice(j, q.indexOf('\n  },', j));
-  /* Es soll ein Ofen sein und keine Mühle mit anderer Farbe: Esse, glühendes Maul, Schaufelrad. */
-  for (const [was, muster] of [['eine Esse mit Rauch', /schlot/], ['ein glühendes Maul', /bogen\(\)/],
-                               ['ein Rad mit Schaufeln', /ob\.blades/], ['Glut, die atmet', /glut/]])
+  /* Es soll ein Ofen sein und keine Mühle mit anderer Farbe: Esse, brennendes Maul, Ofenklappe. */
+  for (const [was, muster] of [['eine Esse mit Rauch', /schlot/], ['ein brennendes Maul', /bogen\(\)/],
+                               ['eine Ofenklappe', /Ofenklappe/], ['Glut, die atmet', /glut/]])
     pruef(`er hat ${was}`, muster.test(leib));
   pruef('und kein Segeltuch', !/245,235,210/.test(leib));
+  /* Und vor allem: kein Rad. Ein Schaufelrad vor dem Maul waere die Muehle in Eisen - der Ofen
+     soll mit dem sperren, was ein Ofen hat. */
+  pruef('und kein Rad vor dem Maul', !/for \(let i = 0; i < ob\.blades/.test(leib));
+  /* Die Klappe muß denselben Winkel lesen, aus dem das Hindernis 'blocked' rechnet. Malte sie nach
+     eigener Uhr, zeigte das Bild etwas anderes an, als gilt - und das ist schlimmer als gar kein
+     Bild: Man verließe sich darauf. */
+  pruef('die Klappe liest den Winkel des Hindernisses', /ob\.angle/.test(leib) && /ob\.blades/.test(leib));
+  const sperrt = /const naehe = Math\.min\(roh, schritt - roh\)/.test(leib) && /0\.75 - naehe\) \/ 0\.45/.test(leib);
+  pruef('und ist genau dann ganz zu, wenn das Hindernis sperrt', sperrt);
+  const hind = fs.readFileSync(path.join(SRC, 'obstacles.js'), 'utf8');
+  pruef('das Hindernis sperrt weiterhin bei 0,3', /rel < 0\.3 \|\| rel > step - 0\.3/.test(hind));
   /* Und er leuchtet: ein Feuer, das kein Licht gibt, wäre Kulisse. */
   pruef('der Ofen zählt als Licht', /ob\.style === 'ofen'\) lichter\.push/.test(q));
 }
