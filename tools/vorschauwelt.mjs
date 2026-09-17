@@ -3,16 +3,19 @@
  *   node tools/vorschauwelt.mjs
  *
  * WARUM DAS EINE REGEL IST
- * Die Zwergenmine ist gebaut, aber sie soll noch nicht ins Spiel. Der nächstliegende Weg wäre, sie
- * für main herauszuschneiden – und genau daran geht so etwas kaputt: Zwei Stände von Hand
- * auseinanderzuhalten ist eine Dauerpflicht, und spätestens bei der dritten Auslieferung fehlt
- * irgendwo eine Zeile. Darum ist es *ein* Stand mit einem Schalter, so wie beim Boule-Modus:
+ * Die Zwergenmine war gebaut, sollte aber noch nicht ins Spiel. Der nächstliegende Weg wäre
+ * gewesen, sie für main herauszuschneiden – und genau daran geht so etwas kaputt: Zwei Stände von
+ * Hand auseinanderzuhalten ist eine Dauerpflicht, und spätestens bei der dritten Auslieferung
+ * fehlt irgendwo eine Zeile. Darum war es *ein* Stand mit einem Schalter, so wie beim Boule-Modus:
  * 'nurVorschau' an der Welt, und die Oberfläche filtert.
  *
- * Geprüft wird beides, denn beide Richtungen können schiefgehen:
- *   - Die Welt darf im Spiel nirgends angeboten werden (Weltliste, Karte, Rekorde, Online, Hüte).
- *   - Sie muss in der Vorschau vollständig da sein – und die Prüfwerkzeuge müssen sie weiter sehen.
- *     Eine Welt, die keiner prüft, verfällt still.
+ * SEIT FASSUNG 163 IST DIE MINE IM SPIEL, und keine Welt trägt die Kennzeichnung mehr. Die Prüfung
+ * bleibt trotzdem stehen, und zwar aus zwei Gründen:
+ *   - Der Schalter ist der Weg, den auch die nächste Welt gehen wird. Eine Mechanik, die nur
+ *     einmal benutzt und dann nicht mehr geprüft wird, ist beim nächsten Mal kaputt.
+ *   - Sie hält jetzt das Gegenteil fest: Was fertig ist, muß auch wirklich angeboten werden. Eine
+ *     vergessene Kennzeichnung wäre eine Welt, die niemand findet – und niemand vermißt, weil
+ *     niemand weiß, daß es sie gibt.
  */
 import fs from 'node:fs'; import path from 'node:path'; import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
@@ -36,10 +39,15 @@ const WORLDS = vm.runInContext('WORLDS', ctx);
 const mine = WORLDS.find(w => w.id === 'mine');
 pruef('die Prüfwerkzeuge sehen die Mine weiter', !!mine && mine.courses.length > 0,
       mine ? `${mine.courses.length} Bahnen` : 'fehlt ganz');
-pruef('und sie ist als „nur Vorschau" gekennzeichnet', !!mine && mine.nurVorschau === true);
-pruef('keine andere Welt trägt die Kennzeichnung',
-      WORLDS.filter(w => w.nurVorschau).length === 1,
-      WORLDS.filter(w => w.nurVorschau).map(w => w.name).join(', ') || 'keine');
+pruef('und sie ist nicht mehr als „nur Vorschau" gekennzeichnet', !!mine && !mine.nurVorschau);
+const versteckt = WORLDS.filter(w => w.nurVorschau);
+pruef('zurzeit trägt keine Welt die Kennzeichnung', versteckt.length === 0,
+      versteckt.map(w => w.name).join(', ') || 'keine');
+/* Die Regel dahinter, als Zahl: Was im Spiel angeboten wird, ist die ganze Liste. Bliebe irgendwo
+   eine Kennzeichnung hängen, stünde hier eine Welt weniger. */
+pruef('das Spiel bietet alle Welten an',
+      WORLDS.filter(w => !w.nurVorschau).length === WORLDS.length,
+      `${WORLDS.length} Welten`);
 
 /* ---------- Die Oberfläche ---------- */
 const main = lies('src/main.js');
@@ -55,7 +63,9 @@ pruef('die Hüte werden mitgefiltert', /const SPIELHUETE = \(\) =>/.test(main) &
 
 /* ---------- Die Weltkarte ---------- */
 const karte = lies('src/worldmap.js');
-pruef('die Karte kennt die Kennzeichnung', /nurVorschau: true/.test(karte));
+/* Die Karte muß den Schalter weiter kennen, auch wenn ihn gerade niemand benutzt – sonst fehlt er,
+   wenn die nächste Welt ihn braucht. Geprüft wird darum die Regel, nicht die Marke an der Mine. */
+pruef('die Karte kennt die Kennzeichnung', /l\.nurVorschau/.test(karte));
 pruef('und läßt Namen und Nadel im Spiel weg', /imSpiel && l\.nurVorschau/.test(karte));
 /* Die Insel selbst bleibt liegen: Die Küste rechnet sich aus allen Landstücken, und ein Stück Land
    ohne Beschriftung verspricht nichts. */

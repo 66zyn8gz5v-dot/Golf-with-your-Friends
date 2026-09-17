@@ -53,7 +53,7 @@ const WorldMap = (() => {
        Platz für ihren Namen. Jetzt ist sie eine Insel für sich, und der Berg über der Mine ist ein
        Vulkan: Ganz unten auf der letzten Sohle steht das Erz flüssig, das passt zusammen. Der
        Abstand zum Sturmhimmel ist groß genug, dass nichts zusammenwächst. */
-    { id: 'mine', name: 'Zwergenmine', x: 107, y: 29, r: 12, biom: 'vulkan', marke: 'construction', farbe: '#ffb347', nurVorschau: true },
+    { id: 'mine', name: 'Zwergenmine', x: 107, y: 29, r: 12, biom: 'vulkan', marke: 'construction', farbe: '#ffb347' },
     { x: 112, y: 45, r: 4.4, biom: 'vulkan' },                  // Aschekegel südlich der Feuerinsel
     // ---- Schären: zu klein für eine Welt, groß genug fürs Auge. Sie brechen die leere See auf
     //      und zeigen, dass die Küste gerechnet wird – auch ein Punkt mit r=4 bekommt ein Ufer.

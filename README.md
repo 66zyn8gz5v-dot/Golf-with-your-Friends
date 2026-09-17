@@ -183,24 +183,28 @@ Höhe** (y) – die x-Angabe wird beim Zeichnen durch `BREITE` geteilt.
 | Schattenreich | Legende | 10 extra große Bahnen im Reich der Schatten |
 | Schneeberg | Profi | 12 Bahnen den Berg hinauf – der Wind dreht im Takt, oben liegen die Wolkenetagen |
 | Uhrwerkstadt | Profi | 14 Bahnen im Uhrenturm – alles eine Frage des Takts, gestapelte Ebenen, zum Schluss wandert das Loch |
-| Zwergenmine | Profi | 12 Bahnen unter den Berg – man sieht nur, was im Licht der Grubenlampen steht (**nur in der Vorschau**) |
+| Zwergenmine | Profi | 12 Bahnen unter den Berg – man sieht nur, was im Licht der Grubenlampen steht |
 
-**Nur in der Vorschau.** Die Zwergenmine ist gebaut und geprüft, soll aber noch nicht ins Spiel. Der
-nächstliegende Weg wäre, sie für `main` herauszuschneiden – und genau daran geht so etwas kaputt:
-Zwei Stände von Hand auseinanderzuhalten ist eine Dauerpflicht, und spätestens bei der dritten
-Auslieferung fehlt irgendwo eine Zeile. Darum ist es *ein* Stand mit einem Schalter, so wie beim
-Boule-Modus: Die Welt trägt `nurVorschau: true`, und die Oberfläche filtert – Weltliste, Weltkarte,
-Rangliste, Online-Auswahl und die Belohnungshüte.
+**Der Schalter „nur in der Vorschau".** Die Zwergenmine war gebaut und geprüft, sollte aber eine
+Weile noch nicht ins Spiel. Der nächstliegende Weg wäre gewesen, sie für `main` herauszuschneiden –
+und genau daran geht so etwas kaputt: Zwei Stände von Hand auseinanderzuhalten ist eine
+Dauerpflicht, und spätestens bei der dritten Auslieferung fehlt irgendwo eine Zeile. Darum war es
+*ein* Stand mit einem Schalter, so wie beim Boule-Modus: Die Welt trägt `nurVorschau: true`, und die
+Oberfläche filtert – Weltliste, Weltkarte, Rangliste, Online-Auswahl und die Belohnungshüte.
 
-Zwei Dinge daran sind Absicht. Erstens sieht `WORLDS` für die Prüfwerkzeuge weiter *alle* Welten:
-Eine Welt, die keiner prüft, verfällt still. Zweitens bleibt ihre Insel auf der Karte liegen, nur
+Zwei Dinge daran waren Absicht. Erstens sah `WORLDS` für die Prüfwerkzeuge weiter *alle* Welten:
+Eine Welt, die keiner prüft, verfällt still. Zweitens blieb ihre Insel auf der Karte liegen, nur
 ohne Namen und ohne Nadel – die Küste rechnet sich aus allen Landstücken, und ein Stück Land ohne
 Beschriftung verspricht nichts, sondern läßt offen, daß da noch etwas kommt.
 
-`tools/vorschauwelt.mjs` hält beide Richtungen fest: daß die Welt im Spiel nirgends angeboten wird,
-und daß sie in der Vorschau vollständig da ist. Es prüft auch, daß `main.js` die Weltliste nicht
-mehr von Hand durchgeht – die Prüfung hat beim Schreiben sofort drei solche Stellen gefunden,
-darunter eine, über die die Welt im Spiel doch erreichbar gewesen wäre.
+**Seit Fassung 163 ist die Mine im Spiel**, und keine Welt trägt die Kennzeichnung mehr.
+`tools/vorschauwelt.mjs` bleibt trotzdem stehen, und zwar aus zwei Gründen: Der Schalter ist der
+Weg, den auch die nächste Welt gehen wird – eine Mechanik, die einmal benutzt und dann nicht mehr
+geprüft wird, ist beim nächsten Mal kaputt. Und die Prüfung hält jetzt das Gegenteil fest: Was
+fertig ist, muß auch wirklich angeboten werden. Eine vergessene Kennzeichnung wäre eine Welt, die
+niemand findet – und niemand vermißt, weil niemand weiß, daß es sie gibt. Geprüft wird darum auch,
+daß `main.js` die Weltliste nicht von Hand durchgeht; diese Prüfung hat beim Schreiben sofort drei
+solche Stellen gefunden, darunter eine, über die die Welt im Spiel doch erreichbar gewesen wäre.
 
 Das **Kolosseum** steht bewusst *nicht* auf der Weltkarte. Es ist die Turnierwelt und wird nur über
 den **Turnier**-Knopf im Startbildschirm betreten – die Weltkarte bleibt die Reise durch die sieben
