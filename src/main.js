@@ -1997,12 +1997,36 @@
      auf. Liegt der gemerkte Punkt auf seiner Ebene doch nicht auf Boden, geht es zum Start des
      letzten Schlags zurück und notfalls an den Abschlag – ein Ball muss immer irgendwo liegen
      können. */
+  /* Trocken heißt: Boden, auf dem man stehen bleiben darf. 'isFloorChar' ist dafür zu großzügig –
+     Wasser und Glut zählen dort als Boden, und das ist richtig, denn sie sind Untergrund, nur eben
+     tödlicher. Zurückgelegt werden darf man dort nicht. */
+  const trockenerBoden = (lv, e, x, y) => {
+    const c = lv.charAtEbene(e, x, y);
+    return lv.isFloorChar(c) && c !== 'w' && c !== 'l';
+  };
+  /* Wohin der Ball nach einem Strafschlag zurückkommt.
+     Solange nichts den Boden verändert, konnte der gemerkte Ruhepunkt gar nicht naß sein: In Wasser
+     bleibt man nicht liegen, man geht unter. Seit dem Gießlöffel kann sich Boden aber verwandeln,
+     und mit der Flut wird daraus die Regel. Läge man dann auf einem Feld zurück, das inzwischen
+     Wasser ist, ginge man dort sofort wieder unter – und noch einmal, und noch einmal, bis das
+     Schlaglimit erreicht ist. Ein Strafschlag darf wehtun, eine Endlosschleife nicht.
+     Darum wird hier nach trockenem Boden gesucht und nicht nur nach Boden. */
   function sichererRuhepunkt(b) {
     const lv = state.level;
-    for (const [x, y, e] of [[b.restX, b.restY, b.restEbene || 0], [b.shotX, b.shotY, b.shotEbene || 0], [lv.tee.x, lv.tee.y, lv.teeEbene || 0]]) {
-      if (x == null || y == null) continue;
-      if (lv.isFloorChar(lv.charAtEbene(e, x, y))) return { x, y, e };
+    const kandidaten = [[b.restX, b.restY, b.restEbene || 0], [b.shotX, b.shotY, b.shotEbene || 0], [lv.tee.x, lv.tee.y, lv.teeEbene || 0]]
+      .filter(([x, y]) => x != null && y != null);
+    for (const [x, y, e] of kandidaten) if (trockenerBoden(lv, e, x, y)) return { x, y, e };
+    /* Nichts Trockenes gemerkt: ringsum suchen, vom zuletzt bekannten Punkt aus nach außen. */
+    const [sx, sy, se] = kandidaten[0] || [lv.tee.x, lv.tee.y, lv.teeEbene || 0];
+    for (let r = 0.8; r <= 12; r += 0.8) {
+      for (let i = 0; i < 16; i++) {
+        const w = (i / 16) * TAU;
+        const x = sx + Math.cos(w) * r, y = sy + Math.sin(w) * r;
+        if (trockenerBoden(lv, se, x, y)) return { x, y, e: se };
+      }
     }
+    // Gar nichts Trockenes mehr da: dann eben nass – irgendwo muß der Ball hin.
+    for (const [x, y, e] of kandidaten) if (lv.isFloorChar(lv.charAtEbene(e, x, y))) return { x, y, e };
     return { x: lv.tee.x, y: lv.tee.y, e: lv.teeEbene || 0 };
   }
   function hazard(type) {
@@ -2641,6 +2665,9 @@
         case 'land': Sfx.bounce(3); burst(ev.x, ev.y, 'rgba(255,255,255,0.7)', 6); break;
         case 'dropoff': Sfx.bounce(4); burst(ev.x, ev.y, '#ffd166', 8); break;
         case 'switch': Sfx.lever(); burst(ev.x, ev.y, '#9dffb5', 14); showMessage('Schalter gedrückt – das Zaubertor öffnet sich!', 1600); break;
+        /* Das Pumpwerk drückt die Flut auf der *ganzen* Bahn zurück – auch dort, wo man gerade
+           nicht hinsieht. Ohne Meldung merkt man von der wichtigsten Wirkung des Spiels nichts. */
+        case 'pumpe': Sfx.lever(); burst(ev.x, ev.y, '#cfeaff', 22, true); showMessage(`Pumpwerk läuft – das Wasser weicht für ${Math.round(ev.dauer || 0)} Sekunden!`, 1800); break;
         case 'shrink': Sfx.potion(); burst(ev.x, ev.y, '#d58cff', 16, true); showMessage('Schrumpftrank! Der Ball ist jetzt winzig.', 1600); break;
         case 'unshrink': showMessage('Der Trank lässt nach.', 1200); break;
         case 'curse': Sfx.potion(); burst(ev.x, ev.y, '#fff3d0', 18, true); showMessage(ev.label || 'Perlenfluch! Der Ball bleibt bis zum Loch träge.', 2000); break;
@@ -2876,6 +2903,15 @@
       state.strokes = strokes;
       finishTurn(strokes);
       return true;
+    },
+    /* Die Welt wechseln, ohne durch die Tafeln zu gehen. Braucht die Browserprobe, die für Bilder
+       und Regelprüfungen gezielt eine Bahn aufmacht: openHole zählt in state.courses, und das
+       hängt an der Welt. Filtert wie die Oberfläche – eine Welt, die das Spiel nicht anbietet,
+       läßt sich auch hier nicht öffnen. */
+    welt(id) {
+      const wl = SPIELWELTEN();
+      if (!wl.some(w => w.id === id)) return false;
+      setWorld(id); return true;
     },
     /* Direkt auf eine Bahn springen – nur fürs automatische Prüfen */
     openHole(i) {

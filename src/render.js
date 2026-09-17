@@ -1765,6 +1765,8 @@ class Renderer {
     if (ob.type === 'bruchwand') { this.drawBruchwandFloor(ctx, ob, t); return; }
     if (ob.type === 'giessloeffel') { this.drawGussFloor(ctx, ob, t); return; }
     if (ob.type === 'lavafontaene') { this.drawFontaeneFloor(ctx, ob, t); return; }
+    if (ob.type === 'flut') { this.drawFlutFloor(ctx, ob, t); return; }
+    if (ob.type === 'pumpwerk') { this.drawPumpwerkFloor(ctx, ob, t); return; }
     if (ob.type === 'schneebruecke') { this.drawSchneebrueckeFloor(ctx, ob, t); return; }
     if (ob.type === 'dial' || ob.type === 'wanderloch') { this.drawWanderlochFloor(ctx, ob, t); return; }
     if (ob.type === 'field' && ob.style === 'steam') { this.drawSteam(ctx, ob, t); return; }

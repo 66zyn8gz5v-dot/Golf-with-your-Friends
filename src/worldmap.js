@@ -55,6 +55,13 @@ const WorldMap = (() => {
        Abstand zum Sturmhimmel ist groß genug, dass nichts zusammenwächst. */
     { id: 'mine', name: 'Zwergenmine', x: 107, y: 29, r: 12, biom: 'vulkan', marke: 'construction', farbe: '#ffb347' },
     { x: 112, y: 45, r: 4.4, biom: 'vulkan' },                  // Aschekegel südlich der Feuerinsel
+    /* ---- Die versunkene Stadt im Südostmeer. Sie liegt mit Absicht allein im Wasser und hat
+       keinen Nachbarn: Eine Welt, deren ganze Frage das steigende Wasser ist, gehört nicht an eine
+       Küste, an der man notfalls landeinwärts gehen könnte. Die Marke ist ein Kirchturm – das
+       Einzige, was von so einer Stadt am Ende noch herausschaut.
+       'nurVorschau' hält sie vorerst aus dem Spiel; die Insel selbst bleibt trotzdem liegen, denn
+       ein Stück Land ohne Beschriftung verspricht nichts. */
+    { id: 'flut', name: 'Die Flut', x: 100, y: 52, r: 11, biom: 'kueste', marke: 'church', farbe: '#7fe8d8', nurVorschau: true },
     // ---- Schären: zu klein für eine Welt, groß genug fürs Auge. Sie brechen die leere See auf
     //      und zeigen, dass die Küste gerechnet wird – auch ein Punkt mit r=4 bekommt ein Ufer.
     { x: 19, y: 12, r: 4.2, biom: 'kueste' }, { x: 8, y: 34, r: 3.4, biom: 'kueste' },

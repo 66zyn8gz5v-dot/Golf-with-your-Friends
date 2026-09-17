@@ -1536,6 +1536,69 @@ Messingreifen, in dessen Glas wirklich eine Flamme steht – dazu als Hut der Gr
 kleinen Lampe vorn. Freigeschaltet wird er wie jede Weltbelohnung, indem man die Welt vollständig
 spielt.
 
+## Die Flut (Vorschau)
+
+Die elfte Welt ist noch nicht im Spiel. In der Vorschau stehen zwei Probebahnen; die neun Bahnen
+kommen danach. Auf der Weltkarte liegt sie allein im Südostmeer, mit einem Kirchturm als Marke –
+dem Einzigen, was von so einer Stadt am Ende noch herausschaut.
+
+**Die Frage dieser Welt ist *wie lange noch?*** Das Märchenland fragt, wie fest man schlägt, der
+Uhrenturm, wann, der Schneeberg, wohin, die Zwergenmine, was da vorn überhaupt liegt. In allen
+vieren kostet Warten nichts: Man darf vor einer Maschine sitzen und den richtigen Augenblick
+abpassen, so lange man will. Hier nicht. Hier steigt das Wasser, und zwar auf der ganzen Bahn.
+
+**Die Flut folgt der Form der Bahn.** Beim Aufbau bekommt jedes Bodenfeld eine Ringnummer: 1 für
+alles, was an Wasser, Abgrund oder Mauer grenzt, 2 für alles, was an einen Einser grenzt, und so
+weiter (Vielquellen-Breitensuche, `src/obstacles_flut.js`). Steigt die Flut um eine Stufe, wird aus
+jedem Feld mit Ringnummer ≤ Stufe Wasser. Das heißt: Eine lange schmale Gasse säuft von beiden
+Seiten zu, ein runder Platz von außen, ein Kai mit Hafenbecken auch von innen – ohne dass das
+jemand für jede Bahn aufschreiben müsste.
+
+**Sie steigt nicht nur, sie geht auch wieder.** Das ist keine Verzierung, sondern das, woran die
+Welt hängt. Der erste Entwurf ließ das Wasser nur steigen, und die Probebahn zerfiel bei voller
+Stufe in zwei Inseln: Abschlag hier, Loch dort, dazwischen Wasser. Über Wasser rollen heißt
+versinken – die Bahn war ab da nicht mehr zu gewinnen, nur noch zu Ende zu zählen. Es ist darum
+eine **Tide**: neun Sekunden Ruhe, dann Stufe um Stufe hinauf (alle 4,5 s, höchstens vier Ringe),
+sieben Sekunden oben stehen, ebenso zurück, sieben Sekunden unten. Wer das Fenster verpasst,
+verliert Zeit – nicht die Bahn.
+
+**Abschlag und Loch bleiben immer trocken.** Ein Loch unter Wasser wäre keine Aufgabe, sondern das
+Ende der Bahn, und ein überfluteter Abschlag nähme einem den Platz, an den man zurückgelegt wird.
+Beide sind die Insel, auf die man sich retten kann.
+
+**Das Pumpwerk** ist die Gegenmaschine: eine Druckplatte im Boden, die die Flut für sieben Sekunden
+um zwei Stufen zurückdrückt. Es ist das Gegenstück zum Schalter im Märchenland – nur öffnet es kein
+Tor, sondern gibt Boden zurück. Es steht mit Absicht dort, wo das Wasser zuerst hinkommt: Wer es
+drücken will, muss ins Nasse.
+
+**Die Ansage steht auf dem Boden, nicht am Gerät** (`src/render_flut.js`). Auf jedem Feld, das als
+nächstes drankommt, liegt ein Schimmer, der in den Sekunden davor anschwillt, mit einer hellen
+Schaumkante zur trockenen Seite hin. Dieselbe Regel wie beim Ring der Lavafontäne und bei der Lunte
+der Sprengladung: Wer erst merkt, dass der Boden weg ist, wenn er weg ist, spielt nicht, sondern
+würfelt. Angesagt wird nur steigendes Wasser; zurückgehendes gibt Boden her und ist keine Gefahr.
+
+**Ein alter Fehler, den diese Welt ans Licht geholt hat.** Wer ertrinkt, wird an seinen Ruhepunkt
+zurückgelegt. Bisher hat `src/main.js` dafür nach *Boden* gesucht – und Wasser **ist** Boden für die
+Physik (`FLOOR_CHARS`). In einer Welt, in der der Ruhepunkt nachträglich absaufen kann, hieße das:
+ertrinken, zurückgelegt werden, sofort wieder ertrinken, bis das Schlaglimit erreicht ist. Gesucht
+wird jetzt nach *trockenem* Boden, und wenn nichts Gemerktes trocken ist, ringsum weiter. Das
+bedrohte auch schon die Gießhalle, nur ist es dort nie jemandem passiert.
+
+**Die vier Paletten** (`src/themes.js`) sind vier Stationen, in jeder steht das Wasser höher:
+`deich` (Sturmlicht auf nassem Stein), `gassen` (das Wasser steht schon zwischen den Häusern),
+`daecher` (nur noch Giebel und Ziegel ragen heraus) und `tiefe` (Dämmergrün unter der Oberfläche).
+
+**Geprüft wird mit** `node tools/flut.mjs` – Tidenlauf Stufe für Stufe, Abschlag und Loch trocken,
+Pumpwerk drückt zurück und lässt wieder los, zweite Runde fängt trocken an, und auf jeder fertigen
+Bahn: fängt trocken an, erreicht die Höchststufe, nimmt dabei mindestens die Hälfte des Bodens, ist
+nach der Tide wieder ganz. Gebaut und beurteilt werden die Bahnen von `python3 tools/flut.py`; das
+rechnet dieselben Ringnummern noch einmal und sagt für jede Bahn, wie viel Boden bei voller Flut
+übrig bleibt und ab welcher Stufe der Weg reißt.
+
+Dass die Welt in der Vorschau steht und im Spiel nicht, hängt an einer einzigen Kennzeichnung
+(`nurVorschau` in `src/courses_pro.js`); `node tools/vorschauwelt.mjs` prüft sie – bis hinunter zu
+`icons/weltkarte.svg`, das hinter jedem Ladebild liegt und darum die Sicht des *Spiels* zeigen muss.
+
 ## Der Schneeberg
 
 Zwölf Bahnen, Stufe Profi, und sie liegen zwischen Tüftlerreich und Dschungeltempel – die Reise
@@ -2695,6 +2758,8 @@ index.html        Seite, HUD und Ladebild (das Ladebild läuft ohne JavaScript)
 tools/auslieferung.mjs  prüft für beide Seiten, ob alles Gebrauchte auch ausgeliefert wird
 tools/vermittler.mjs    ein kleiner MQTT-Vermittler für die Werkbank – ohne ihn ist Online nicht prüfbar
 tools/online.mjs        fährt zwei Browser gegeneinander: beitreten, spielen, rausfliegen, wiederkommen
+tools/flut.mjs          prüft die Weltregel der Flut: Tidenlauf, Pumpwerk, und jede fertige Bahn
+tools/flut.py           baut die Bahnen der Flut und sagt, wie viel Boden die Flut ihnen nimmt
 style.css         Oberfläche
 src/themes.js     Farbpaletten und Deko je Welt
 src/courses.js    die Bahnen des Märchenlands
@@ -2704,6 +2769,7 @@ src/courses_storm.js die Bahnen des Sturmhimmels (Legende)
 src/courses_shadow.js die Bahnen des Schattenreichs (Legende)
 src/courses_colosseum.js die Bahnen des Kolosseums (Legende)
 src/courses_mine.js die zwölf Bahnen der Zwergenmine (erzeugt von tools/mine.py)
+src/courses_flut.js die Probebahnen der Flut (erzeugt von tools/flut.py)
 src/courses_boule.js die neun Bahnen der Boule-Welt (erzeugt von tools/boule.py)
 src/courses_pro.js die Bahnen des Tüftlerreichs und die Weltenliste
 src/editor.js     Baumodus (Editor für eigene Bahnen)
@@ -2713,10 +2779,12 @@ src/level.js      Karte → Kacheln, Mauern, Kollisionssegmente
 src/obstacles.js  bewegliche und statische Hindernisse
 src/obstacles_legend.js Blitzfeld, Aufwind, Falltür, Fallbeil, Augenturm, Löwentor
 src/obstacles_mine.js Sprengladung, Kippbühne, Grubenlampe, Gießlöffel und Lavafontäne der Zwergenmine
+src/obstacles_flut.js die Weltregel der Flut (Tide, Ringnummern) und das Pumpwerk
 src/physics.js    Ballphysik und Kollision (auch Ball gegen Ball, wenn mehrere zugleich rollen)
 src/render.js     isometrische Darstellung
 src/render_legend.js Optik der Legende-Welten (Hintergründe, neue Hindernisse und Stile)
 src/render_mine.js Optik der Zwergenmine: Fels statt Himmel, der Schleier und die drei Maschinen
+src/render_flut.js Optik der Flut: die Ansage des steigenden Wassers und das Pumpwerk
 src/text.js       Eine Stelle für alle Eingaben: Namen und Bahnnamen filtern, Anzeige entschärfen
 src/share.js      Bahnen weitergeben: prüfen, über den Vermittler teilen, als Link verpacken
 src/version.js    Fassung und Ausgabe (Spiel oder Vorschau): Zahl, Speicher-Vorsatz und Themen-Marke – von Seite und Service Worker gelesen

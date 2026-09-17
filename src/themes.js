@@ -515,6 +515,61 @@ const THEMES = {
     accent: '#ff8a3d', flag: '#ffd166',
     autoDecor: ['basalt', 'brazier', 'obsidian', 'vent', 'anvil', 'basalt', 'stalagmite', 'crystalOrange'],
   },
+  /* ---- Die Flut ----
+     Eine versunkene Stadt an vier Stationen, und in jeder steht das Wasser höher: vom Deich, wo
+     man es noch draußen wähnt, über die Gassen und die Dächer bis hinunter in die Tiefe, wo es
+     längst gewonnen hat. Die Farbe wird dabei von Grau zu Grün: oben Sturmlicht auf nassem Stein,
+     unten das Dämmergrün unter der Oberfläche. Der Akzent ist überall ein Signal – Sturmlaterne,
+     Boje, Leuchtfeuer –, denn hier gibt es nur eine Frage, und die heißt: wie lange noch.
+     Die Weltregel selbst steht in src/obstacles_flut.js. */
+  deich: { // Der Deich: letzte Stunde vor der Springflut, Möwenlicht, Gischt über der Krone
+    atmo: 'spray',
+    sky: ['#3f4c5e', '#9fb0bd'], ground: '#4e5a4a', groundEdge: '#2b332a', cliff: '#5a5c58',
+    floor: ['#7f8a6d', '#758064'], sand: '#c3b491', ice: '#c8ecff', snow: '#f1f7ff',
+    water: '#3d6b7a', lava: '#ff7a3d',
+    wall: { top: '#8d9184', side: '#4a4d45', style: 'stone' },
+    block: { top: '#9a7c4e', side: '#5c4726' },          // Bohlen und Buhnen: Holz gegen die See
+    mover: { top: '#b8843f', side: '#6b4a25' },
+    rotor: { top: '#a8a49a', side: '#5e5b54' },
+    accent: '#ffc266', flag: '#ff5a5a',
+    autoDecor: ['bollard', 'ropepost', 'buoy', 'rock', 'crate', 'lighthouse', 'barrel', 'bollard'],
+  },
+  gassen: { // Die Gassen: das Wasser steht schon zwischen den Häusern, Pflaster glänzt, Läden zu
+    atmo: 'mist',
+    sky: ['#26313f', '#5d7181'], ground: '#3a4450', groundEdge: '#1e242c', cliff: '#4a5260',
+    floor: ['#6e7a86', '#66727e'], sand: '#b0a68e', ice: '#c8ecff', snow: '#f1f7ff',
+    water: '#356073', lava: '#ff7a3d',
+    wall: { top: '#7d8794', side: '#3e4650', style: 'stone' },
+    block: { top: '#8a6f4a', side: '#513e25' },
+    mover: { top: '#a37f4e', side: '#60482a' },
+    rotor: { top: '#9aa3ae', side: '#525a66' },
+    accent: '#ffb347', flag: '#ffd166',
+    autoDecor: ['lantern', 'barrel', 'crate', 'bollard', 'shell', 'lantern', 'ropepost', 'seaweed'],
+  },
+  daecher: { // Über den Dächern: nur noch Giebel und Ziegel ragen heraus, ringsum offenes Wasser
+    atmo: 'spray',
+    sky: ['#4a5c70', '#c4d2da'], ground: '#5a4a46', groundEdge: '#301f1d', cliff: '#6a5a52',
+    floor: ['#9a6a58', '#8e6152'], sand: '#c9b58a', ice: '#c8ecff', snow: '#f1f7ff',
+    water: '#41788c', lava: '#ff7a3d',
+    wall: { top: '#a5715c', side: '#5b3d33', style: 'stone' },   // Ziegel, nicht Quader
+    block: { top: '#8a6f4a', side: '#513e25' },
+    mover: { top: '#b8843f', side: '#6b4a25' },
+    rotor: { top: '#a8a49a', side: '#5e5b54' },
+    accent: '#ffd166', flag: '#ff4f6d', clouds: true,
+    autoDecor: ['bell', 'buoy', 'cloud', 'ropepost', 'wave', 'bell', 'cloud', 'lighthouse'],
+  },
+  tiefe: { // Die Tiefe: unter der Oberfläche, Dämmergrün, Schwebstoff im Licht, Muscheln am Stein
+    atmo: 'bubbles', mineBg: true, cliff: '#1f3f44',
+    sky: ['#04161c', '#0d3a44'], ground: '#123138', groundEdge: '#081c21',
+    floor: ['#4d6e6a', '#456560'], sand: '#9cae94', ice: '#bfe6ff', snow: '#f1f7ff',
+    water: '#2a5c6e', lava: '#5fe8c4',
+    wall: { top: '#54736e', side: '#25403e', style: 'stone' },
+    block: { top: '#5d7a86', side: '#2d444e' },
+    mover: { top: '#6d8a92', side: '#354d55' },
+    rotor: { top: '#7a969c', side: '#3c555b' },
+    accent: '#7fe8d8', flag: '#ffd166', stars: false,
+    autoDecor: ['coral', 'seaweed', 'shell', 'anchor', 'starfish', 'coral', 'pearl', 'seaweed'],
+  },
   cloud: {
     hangStil: 'schnee',   // Schrägen als Schneerinne, nicht als Erdrampe // Über den Wolken: nichts mehr fest außer dem, worauf man steht
     atmo: 'none',

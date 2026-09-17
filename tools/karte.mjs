@@ -18,7 +18,14 @@ import { fileURLToPath } from 'node:url';
 const WURZEL = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const ZIEL = path.join(WURZEL, 'icons', 'weltkarte.svg');
 
-const ctx = { console }; vm.createContext(ctx);
+/* VORSCHAU = false heißt hier: Diese Datei zeigt die Karte so, wie das *Spiel* sie sieht. Das ist
+   keine Kleinigkeit – die Datei liegt hinter dem Ladebild und hinter jeder Tafel, und zwar in
+   beiden Ständen, denn es ist dieselbe Datei. Nur eine Welt, die im Spiel angeboten wird, darf
+   darauf einen Namen tragen; eine Welt, die noch in der Vorschau steckt, bliebe sonst zwar aus
+   der Weltliste heraus, stünde aber groß auf dem Hintergrund. Die Insel selbst bleibt liegen.
+   PRUEFSTAND wird hier mit Absicht *nicht* gesetzt: Das ist der Schalter für Werkzeuge, die alles
+   sehen sollen – diese Datei soll gerade nicht alles zeigen. */
+const ctx = { console, VORSCHAU: false }; vm.createContext(ctx);
 /* level.js nur wegen seededRandom: Die Karte streut Wellen, Gelände und Küstenrauschen mit
    festem Startwert, damit sie jedes Mal genau gleich aussieht – sonst wäre die Datei bei jedem
    Lauf anders und --pruefen könnte nichts vergleichen. */

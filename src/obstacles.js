@@ -514,6 +514,8 @@ function createObstacles(defs) {
       case 'bruchwand': out.push(new BlastWall(d)); break;
       case 'giessloeffel': out.push(new Giessloeffel(d)); break;
       case 'lavafontaene': out.push(new Lavafontaene(d)); break;
+      case 'flut': out.push(new Flut(d)); break;
+      case 'pumpwerk': out.push(new Pumpwerk(d)); break;
       // Schneeberg
       case 'windfahne': out.push(new WindVane(d)); break;
       case 'lawine': out.push(new Avalanche(d)); break;
