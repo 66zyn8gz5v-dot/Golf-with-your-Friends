@@ -228,6 +228,20 @@ Der **Ritterhelm** ist ein Sonderfall: er legt sich um den ganzen Ball, als wär
 einen Federbusch wie bei den Feldherren. Die beiden äußeren Federn nehmen die Farbe des Balls an (beim weißen
 Ball Rot), die mittlere bleibt immer weiß.
 
+**Der Gartenzwerg** ist der Spezialskin und fällt in dieser Reihe aus dem Rahmen: Er ist ein
+**Ganzkörper-Skin** wie die Belohnungen – er ersetzt den Ball, statt auf ihm zu sitzen –, hängt
+aber an keiner Welt und an keinem Rekord. Er ist von Anfang an da. Das ist Absicht: Die Weltskins
+sind Auszeichnungen und sollen es bleiben, der Zwerg ist der Spaß daneben, und ein Spaß, den man
+erst freispielen muss, ist keiner.
+
+Die Kugel ist der Zwerg vom Kinn bis zum Gürtel – rote Wangen, buschige weiße Brauen, die
+Knollennase ganz vorn, darunter Schnurrbart und ein Bart, der bis über den Gürtel hängt; links und
+rechts daneben schaut die blaue Jacke heraus, und alle paar Sekunden blinzelt er. Die **Zipfelmütze**
+kommt obendrauf: fast so hoch wie der Ball breit, denn eine brave Kappe wäre auf dem Spielfeld nur
+ein roter Fleck. Ihre Spitze schwingt beim Rollen nach, im selben Takt wie die Bommelmütze im
+Schneeberg – zwei Zwerge nebeneinander sollen nicht gegeneinander wackeln. Gezeichnet wird sie über
+den Farbreif (siehe unten), sonst liefe der Reif quer über die Mütze.
+
 **Legionärshelm** und **Championhelm** gehören zum Kolosseum und sind ein Paar: dieselbe Grundform –
 halbrunde Helmglocke, goldener Rand über der Stirn mit Nieten, breiter Nackenschirm nach hinten unten,
 seitliche Wangenklappen – einmal in Silber für die Teilnahme, einmal in Gold für den Sieg. Der
@@ -340,6 +354,17 @@ braucht das nicht – bei ihr liegen die Federn bewusst *hinter* dem Reif, das S
 | Schattenreich | Kristallkugel | Schwaden waberen, ein Auge blickt umher und blinzelt | Spitzhut mit Mondschnalle; die Spitze schwankt, Sterne funkeln darauf |
 | Uhrwerkstadt | Taschenuhr | durchbrochenes Zifferblatt, hinter dem das Werk läuft | Bügel und Krone wie an einer Taschenuhr |
 | Kolosseum | Championhelm | (kein eigener Ball – der Helm sitzt auf dem Spielerball) | der Federkamm wiegt sich im Wind |
+
+**Geprüft wird das mit `node tools/huete.mjs`.** Ein Hut geht nicht laut kaputt: Er wird nur in
+einem Menü und auf einem Ball gezeichnet, und wenn dabei etwas wirft, sieht man einen leeren Kreis –
+keine Meldung, nur ein Ball ohne Hut. Darum zeichnet das Werkzeug **jeden** Hut wirklich, auf eine
+Leinwand, die nichts malt und nur mitzählt, einmal groß (mit Feinarbeit) und einmal klein (ohne) und
+zu zwei Zeitpunkten, damit auch das drankommt, was blinzelt oder schwingt. Ein Tippfehler in einer
+Hilfsfunktion fliegt so sofort auf, und zwar bei allen Hüten, nicht nur beim neuen. Dazu prüft es
+die Regeln, die sich nicht von selbst halten: jeder Listeneintrag hat eine Zeichnung, jede Welt hat
+genau eine Belohnung, keine Belohnung hängt an einer Welt, die es nicht gibt – und der Gartenzwerg
+ist der einzige Ganzkörper-Skin ohne Welt. Bekäme er still eine Bedingung, wäre aus dem Spaß eine
+weitere Hausaufgabe geworden, und niemandem fiele es auf.
 
 Vier der Skins teilen sich die Glaskugel-Form, damit sie als eine Familie zu erkennen sind – der Inhalt
 macht die Welt. Drei tanzen bewusst aus der Reihe: Federkrone und Runenstein sind Stein, die Königskrone

@@ -855,6 +855,112 @@ const Hats = (() => {
       ctx.restore(); glasLicht(ctx);
       return () => uhrkrone(ctx, t, fein);   // die Aufzugkrone sitzt oben auf dem Gehäuse
     },
+    gartenzwerg(ctx, color, t, fein) {   // Spezial: der Gartenzwerg - Zipfelmütze, Knollennase, Bart
+      /* Der einzige Ganzkörper-Skin, den man nicht verdienen muß. Die Weltskins sind Auszeichnungen
+         und sollen es bleiben; dieser hier ist der Spaß dazwischen, und ein Spaß, den man erst
+         freispielen muß, ist keiner.
+
+         Gebaut ist er wie die Belohnungsskins: Die Kugel ist der Zwerg vom Kinn bis zum Gürtel, die
+         Mütze kommt als 'obenauf' oben drauf - so läuft der Reif in Spielerfarbe hinter der Mütze
+         durch und nicht quer über sie. */
+      const g = ctx.createRadialGradient(-0.34, -0.42, 0.08, 0, 0, 1);
+      g.addColorStop(0, '#ffe6d2'); g.addColorStop(0.55, '#f0c3a2'); g.addColorStop(1, '#c08560');
+      ctx.beginPath(); ctx.arc(0, 0, 1, 0, TAU2); ctx.fillStyle = g; ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.45)'; ctx.lineWidth = 0.07; ctx.stroke();
+
+      ctx.save(); kugelMaske(ctx);
+      /* Die Jacke. Ohne sie hörte der Zwerg am Bart auf und wäre ein Kopf auf einer Wiese - die
+         paar blauen Ecken links und rechts vom Bart sind das ganze Geheimnis eines Körpers. */
+      ctx.fillStyle = '#2f5c96';
+      ctx.beginPath();
+      ctx.moveTo(-1, 0.34); ctx.quadraticCurveTo(0, 0.08, 1, 0.34);
+      ctx.lineTo(1, 1.05); ctx.lineTo(-1, 1.05); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#24486f';                       // Schattenseite der Jacke
+      ctx.beginPath(); ctx.moveTo(0.3, 0.13); ctx.quadraticCurveTo(0.76, 0.22, 1, 0.34);
+      ctx.lineTo(1, 1.05); ctx.lineTo(0.3, 1.05); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = 'rgba(180,205,235,0.5)'; ctx.lineWidth = 0.035;   // Kragenkante
+      ctx.beginPath(); ctx.moveTo(-1, 0.34); ctx.quadraticCurveTo(0, 0.08, 1, 0.34); ctx.stroke();
+      ctx.fillStyle = '#2a1c12'; ctx.fillRect(-1, 0.87, 2, 0.13);      // Gürtel
+      ctx.fillStyle = '#e0bb55'; ctx.fillRect(-0.13, 0.84, 0.26, 0.19); // Schnalle
+
+      // Augen. Der Lidschlag ist derselbe wie beim Auge im Schattenreich - alle paar Sekunden kurz zu.
+      const lid = augenlid(t), h = 0.082 * (1 - lid);
+      ctx.fillStyle = '#2a1d16';
+      for (const x of [-0.27, 0.27]) {
+        ctx.beginPath(); ctx.ellipse(x, -0.2, 0.072, Math.max(0.012, h), 0, 0, TAU2); ctx.fill();
+      }
+      if (fein) {   // ein Glanzpunkt je Auge, sonst schaut der Zwerg tot
+        ctx.fillStyle = 'rgba(255,255,255,0.8)';
+        for (const x of [-0.245, 0.295]) { ctx.beginPath(); ctx.arc(x, -0.225, 0.024 * (1 - lid), 0, TAU2); ctx.fill(); }
+      }
+      /* Buschige Brauen. Sie sind der Unterschied zwischen einem Zwerg und einem runden Gesicht mit
+         Bart: Ein Zwerg guckt immer ein bißchen grimmig unter seiner Mütze hervor. */
+      ctx.fillStyle = '#f4f7fa';
+      for (const s of [-1, 1]) {
+        ctx.beginPath();
+        ctx.moveTo(s * 0.08, -0.36);
+        ctx.quadraticCurveTo(s * 0.32, -0.5, s * 0.55, -0.36);
+        ctx.quadraticCurveTo(s * 0.32, -0.38, s * 0.08, -0.29);
+        ctx.closePath(); ctx.fill();
+      }
+      ctx.fillStyle = 'rgba(214,94,84,0.32)';          // rote Wangen
+      for (const x of [-0.5, 0.5]) { ctx.beginPath(); ctx.ellipse(x, 0.0, 0.19, 0.12, 0, 0, TAU2); ctx.fill(); }
+
+      /* Der Bart: die halbe Figur. Er hängt vom Backenknochen bis über den Gürtel und ist unten
+         gewellt - eine glatte Kante sähe aus wie ein Lätzchen. */
+      const bg = ctx.createLinearGradient(0, 0, 0, 0.95);
+      bg.addColorStop(0, '#ffffff'); bg.addColorStop(1, '#cfd6dd');
+      ctx.fillStyle = bg;
+      ctx.beginPath();
+      ctx.moveTo(-0.7, -0.08);
+      ctx.quadraticCurveTo(-0.76, 0.44, -0.36, 0.8);
+      ctx.quadraticCurveTo(-0.23, 0.95, -0.12, 0.82);
+      ctx.quadraticCurveTo(0, 0.97, 0.12, 0.82);
+      ctx.quadraticCurveTo(0.23, 0.95, 0.36, 0.8);
+      ctx.quadraticCurveTo(0.76, 0.44, 0.7, -0.08);
+      ctx.quadraticCurveTo(0.48, 0.18, 0.26, 0.12);
+      ctx.quadraticCurveTo(0, 0.24, -0.26, 0.12);
+      ctx.quadraticCurveTo(-0.48, 0.18, -0.7, -0.08);
+      ctx.closePath(); ctx.fill();
+      if (fein) {   // Strähnen: ein paar Bögen, die dem Fall des Bartes folgen
+        ctx.strokeStyle = 'rgba(150,162,175,0.55)'; ctx.lineWidth = 0.03;
+        ctx.beginPath();
+        for (const u of [-0.4, -0.15, 0.15, 0.4]) {
+          ctx.moveTo(u, 0.22);
+          ctx.quadraticCurveTo(u * 1.1, 0.54, u * 0.62, 0.82);
+        }
+        ctx.stroke();
+      }
+      // Schnurrbart: zwei Wülste unter der Nase, sie liegen auf dem Bart auf
+      ctx.fillStyle = '#f4f7fa';
+      ctx.beginPath();
+      ctx.moveTo(0, 0.2);
+      ctx.quadraticCurveTo(-0.3, 0.14, -0.48, 0.36);
+      ctx.quadraticCurveTo(-0.26, 0.46, 0, 0.32);
+      ctx.quadraticCurveTo(0.26, 0.46, 0.48, 0.36);
+      ctx.quadraticCurveTo(0.3, 0.14, 0, 0.2);
+      ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = 'rgba(146,158,172,0.7)'; ctx.lineWidth = 0.028;
+      ctx.beginPath();
+      ctx.moveTo(-0.48, 0.36); ctx.quadraticCurveTo(-0.26, 0.46, 0, 0.32);
+      ctx.quadraticCurveTo(0.26, 0.46, 0.48, 0.36); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, 0.24); ctx.lineTo(0, 0.31); ctx.stroke();
+
+      // Die Knollennase. Sie sitzt ganz vorn, über Bart und Schnurrbart - daran erkennt man einen Zwerg.
+      const ng = ctx.createRadialGradient(-0.06, 0.0, 0.02, 0, 0.07, 0.22);
+      ng.addColorStop(0, '#ffcfb2'); ng.addColorStop(1, '#d98f6c');
+      ctx.fillStyle = ng;
+      ctx.beginPath(); ctx.arc(0, 0.07, 0.2, 0, TAU2); ctx.fill();
+      ctx.strokeStyle = 'rgba(120,70,48,0.4)'; ctx.lineWidth = 0.028; ctx.stroke();
+      if (fein) {
+        ctx.fillStyle = 'rgba(255,255,255,0.45)';
+        ctx.beginPath(); ctx.ellipse(-0.07, 0.0, 0.06, 0.04, -0.5, 0, TAU2); ctx.fill();
+      }
+      ctx.restore();
+
+      steinRand(ctx);
+      return () => zipfelmuetze(ctx, t, fein);   // die Mütze gehört über den Reif
+    },
   };
 
   /* Aufzugkrone der Taschenuhr: der geriffelte Knopf mit Bügel, wie am Gehäuserand einer echten
@@ -1305,6 +1411,48 @@ const Hats = (() => {
     ctx.restore();
   }
 
+  /* Die Zipfelmütze des Gartenzwergs. Sie ist das, woran man ihn auf zwanzig Meter erkennt: hoch,
+     rot und vorn übergeneigt. Darum ist sie fast so hoch wie der Ball breit - eine brave kleine
+     Kappe wäre auf dem Spielfeld nur ein roter Fleck.
+
+     Die Spitze schwingt beim Rollen nach, wie die Bommelmütze im Schneeberg: derselbe Takt, damit
+     zwei Zwerge nebeneinander nicht gegeneinander wackeln. */
+  function zipfelmuetze(ctx, t, fein) {
+    ctx.save(); ctx.translate(0, -0.6);
+    const neig = Math.sin(t * 1.4) * 0.08;
+    const sx = 0.2 + neig * 1.8, sy = -1.15;
+    const g = ctx.createLinearGradient(-0.6, 0, 0.5, -0.3);
+    g.addColorStop(0, '#8d1f1c'); g.addColorStop(0.42, '#d9382f'); g.addColorStop(1, '#8a1d1a');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(-0.62, 0.12);
+    ctx.quadraticCurveTo(-0.6, -0.5, sx - 0.14, sy + 0.04);
+    ctx.quadraticCurveTo(sx + 0.14, sy + 0.1, 0.62, 0.12);
+    ctx.closePath(); ctx.fill();
+    if (fein) {   // ein Lichtstreifen an der Vorderkante, sonst ist die Mütze eine flache Fläche
+      ctx.strokeStyle = 'rgba(255,170,150,0.35)'; ctx.lineWidth = 0.05;
+      ctx.beginPath();
+      ctx.moveTo(-0.34, 0.06);
+      ctx.quadraticCurveTo(-0.3, -0.42, sx - 0.2, sy + 0.18);
+      ctx.stroke();
+    }
+    /* Der umgeschlagene Rand. Er ist heller und liegt auf der Stirn auf - ohne ihn stünde die
+       Mütze auf dem Kopf wie ein aufgeklebter Kegel. */
+    ctx.fillStyle = '#b42a24';
+    ctx.beginPath();
+    ctx.moveTo(-0.68, 0.14);
+    ctx.quadraticCurveTo(0, 0.36, 0.68, 0.14);
+    ctx.quadraticCurveTo(0.7, -0.04, 0.64, -0.06);
+    ctx.quadraticCurveTo(0, 0.14, -0.64, -0.06);
+    ctx.quadraticCurveTo(-0.7, -0.04, -0.68, 0.14);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 0.04; ctx.stroke();
+    // Die Spitze rundet ab: ein spitzer Zipfel sähe aus wie eine Nadel
+    ctx.fillStyle = '#d9382f';
+    ctx.beginPath(); ctx.arc(sx, sy + 0.08, 0.06, 0, TAU2); ctx.fill();
+    ctx.restore();
+  }
+
   function wetterhahn(ctx, t, fein, blitz) {
     ctx.save(); ctx.translate(0, -0.78);
     ctx.strokeStyle = '#8d93a6'; ctx.lineWidth = 0.055; ctx.lineCap = 'round';
@@ -1552,6 +1700,10 @@ const Hats = (() => {
     { id: 'viking', name: 'Wikingerhelm' },
     { id: 'knight', name: 'Ritterhelm' },
     { id: 'legion', name: 'Legionärshelm' },
+    /* Der Spezialskin. Er hängt an keiner Welt und an keinem Rekord: Die Weltskins sind
+       Auszeichnungen und sollen es bleiben, der Zwerg ist der Spaß daneben - und ein Spaß, den man
+       erst freispielen muß, ist keiner. Er steht darum vor dem Belohnungsblock, nicht darin. */
+    { id: 'gartenzwerg', name: 'Gartenzwerg', voll: true },
     /* Belohnungen: Wer in einer Welt den Rundenrekord der Kombi-Wertung hält, darf ihren Skin
        tragen. Verliert er ihn wieder, ist auch der Skin wieder weg – die Auszeichnung gilt für
        den aktuellen Bestand, nicht für die Ewigkeit. */
