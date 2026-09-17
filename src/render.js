@@ -1764,6 +1764,7 @@ class Renderer {
     if (ob.type === 'seilbahn') { this.drawSeilbahnFloor(ctx, ob, t); return; }
     if (ob.type === 'bruchwand') { this.drawBruchwandFloor(ctx, ob, t); return; }
     if (ob.type === 'giessloeffel') { this.drawGussFloor(ctx, ob, t); return; }
+    if (ob.type === 'lavafontaene') { this.drawFontaeneFloor(ctx, ob, t); return; }
     if (ob.type === 'schneebruecke') { this.drawSchneebrueckeFloor(ctx, ob, t); return; }
     if (ob.type === 'dial' || ob.type === 'wanderloch') { this.drawWanderlochFloor(ctx, ob, t); return; }
     if (ob.type === 'field' && ob.style === 'steam') { this.drawSteam(ctx, ob, t); return; }
@@ -2099,6 +2100,10 @@ class Renderer {
       /* noFade: Die Wand ist der Grund, warum man hier nicht weiterkommt. Durchsichtig zu werden,
          sobald der Ball davorliegt, nähme ihr genau das. */
       items.push({ x: ob.x, y: ob.y, bias: 0.3, noFade: true, draw: () => this.drawBruchwand(ctx, ob, t) });
+    } else if (ob.type === 'lavafontaene') {
+      /* noFade: Der Strahl ist die Gefahr selbst. Durchsichtig zu werden, sobald der Ball davor
+         liegt, nähme ihm genau das – und davor liegt man hier dauernd. */
+      items.push({ x: ob.x, y: ob.y, bias: 0.4, noFade: true, draw: () => this.drawLavafontaene(ctx, ob, t) });
     } else if (ob.type === 'giessloeffel') {
       /* noFade: Am Löffel liest man ab, wann der nächste Guss kommt. Durchsichtig zu werden,
          sobald der Ball davorliegt, nähme ihm genau das – und davor liegt man hier immer. */

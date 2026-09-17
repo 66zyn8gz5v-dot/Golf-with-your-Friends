@@ -44,6 +44,7 @@ DIE MASCHINEN DER WELT (src/obstacles_mine.js):
     python3 tools/mine.py
 """
 import io
+import math
 from collections import deque
 
 GANG_DUNKEL = 7.5        # so weit darf ein Stück Weg höchstens ohne Lampenlicht sein
@@ -117,6 +118,25 @@ def loeffel(x, y, rx, ry, laenge, dx=1, dy=0, takt=2.4, glut=1.0, kipp=0.8, phas
     """Gießlöffel. x, y ist die Pfanne, (rx, ry) das erste Feld der Rinne."""
     o = {'type': 'giessloeffel', 'x': x, 'y': y, 'takt': takt, 'glut': glut, 'kipp': kipp, 'phase': phase,
          'rinne': {'x': rx, 'y': ry, 'len': laenge, 'dx': dx, 'dy': dy}}
+    if ebene: o['ebene'] = ebene
+    return o
+
+def fontaene(x, y, r=0.8, takt=2.1, droht=0.5, oben=0.55, phase=0.0, hoehe=3.4, ebene=0):
+    """Lavafontaene: ein Spalt, aus dem im Takt ein Strahl hochschiesst.
+
+    Sie trifft auch einen fliegenden Ball - das ist der Unterschied zu jeder anderen Falle im
+    Spiel und der Grund, warum man ueber sie nicht einfach hinwegspringen kann. Der Takt ist
+    kurz: Wer wartet, bis Ruhe ist, wartet vergebens, denn die Ruhe dauert eine Sekunde.
+    """
+    o = {'type': 'lavafontaene', 'x': x, 'y': y, 'r': r, 'takt': takt, 'droht': droht,
+         'oben': oben, 'phase': phase, 'hoehe': hoehe}
+    if ebene: o['ebene'] = ebene
+    return o
+
+def rampe(x, y, w, h, angle=0, land=5.0, speed=5.0, minSpeed=2.5, ebene=0):
+    """Sprungschanze. x, y ist die *Ecke* - so, wie das Hindernis selbst rechnet."""
+    o = {'type': 'ramp', 'x': x, 'y': y, 'w': w, 'h': h, 'angle': angle,
+         'minSpeed': minSpeed, 'speed': speed, 'land': land}
     if ebene: o['ebene'] = ebene
     return o
 
@@ -362,7 +382,43 @@ intro='Quer durch die Halle steht die Glut, und hinüber führt nichts. Am Rand 
       'bis es kalt ist, und dann hinüber.')
 
 # ---------------------------------------------------------------------------
-# 11 – Die Schmelze: das Ende. Alles, was die Welt hat, auf einmal.
+# 11 – Die zerbrochene Brücke: In der Mitte fehlt ein Stück, und genau dort steht
+#      die Spalte. Man muss springen – und der Sprung muss in die Lücke zwischen
+#      zwei Stössen passen.
+f = leer(36, 15)
+fuell(f, 1, 2, 34, 12, 'l')           # der ganze Grund ist flüssiges Erz
+fuell(f, 1, 5, 9, 9)                  # der Absatz mit dem Abschlag
+fuell(f, 9, 6, 16, 8)                 # die Brücke bis zum Bruch
+fuell(f, 20, 6, 27, 8)                # und weiter hinter dem Bruch
+fuell(f, 27, 4, 33, 10)               # der Absatz mit dem Loch
+# Eine kleine Wand hinter dem Loch. Hinter dem Absatz steht die Glut, und Glut ist für das Spiel
+# Boden - an ihrem Rand baut level.js darum keine Bande. Ein Schlag, der einen Tick zu lang ist,
+# rollte bisher am Loch vorbei und in die Schmelze. Das ist keine Aufgabe, sondern eine Strafe
+# dafür, daß man getroffen hat; die Wand gibt den Ball statt dessen zurück.
+fuell(f, 33, 5, 33, 9, 'x')
+setz(f, 4, 7, 'T'); setz(f, 31, 7, 'H')
+bahn('Die zerbrochene Brücke', 'schmelze', f, [
+    # Die Fontäne steht mitten im Bruch. Sie ist die einzige Falle im Spiel, die einen fliegenden
+    # Ball holt - ohne das wäre der Sprung immer sicher und die Bahn eine Formalität.
+    fontaene(18.0, 7.5, r=1.1, takt=2.1, hoehe=4.2),
+    # Die Rampe steht drei Felder vor dem Bruch: genug Anlauf, um sie zu treffen, zu wenig, um
+    # den Stoss abzuwarten, nachdem man geschlagen hat.
+    rampe(13.0, 6.0, 2.0, 3.0, angle=0, land=5.2, speed=5.0),
+    # Zwei weitere auf den Stegen - damit die Fontäne nicht nur im Flug zählt, sondern auch beim
+    # Rollen. Versetzt im Takt, sonst stünden alle drei gleichzeitig oben.
+    fontaene(11.5, 7.5, r=0.7, phase=0.33),
+    fontaene(24.0, 7.5, r=0.7, phase=0.66),
+    fass(5.5, 5.5, 0.6), fass(5.5, 8.5, 0.6),
+    lampe_(4.0, 7.5, 3.8), lampe_(10.0, 7.5, 3.6), lampe_(14.5, 7.5, 4.0),
+    lampe_(21.5, 7.5, 3.8), lampe_(26.5, 7.5, 3.8), lampe_(31.0, 7.5, 4.0),
+], par=4, dunkel=0.45, maxStrokes=16,
+intro='Über den See führte einmal eine Brücke; in der Mitte fehlt ein Stück. Genau dort steht eine '
+      'Spalte, aus der im Takt die Lava hochschiesst – und die erwischt den Ball auch in der Luft. '
+      'Die Rampe bringt hinüber, aber nur, wenn der Strahl gerade unten ist. Warten hilft nicht: '
+      'Die Ruhe dauert eine Sekunde.')
+
+# ---------------------------------------------------------------------------
+# 12 – Die Schmelze: das Ende. Alles, was die Welt hat, auf einmal.
 f = leer(38, 18)
 fuell(f, 1, 2, 36, 15)
 scheibe(f, 19, 8, 12.0, 6.0, 'l')     # der See aus flüssigem Erz
@@ -425,6 +481,23 @@ def pruefe(b):
     fest = lambda x, y, e: 0 <= x < breit and 0 <= y < hoch and \
         (s[e][y][x] in FEST or (x, y, e) in rinnen)
 
+    """Eine Rampe überbrückt eine Lücke: Der Ball fliegt über sie hinweg und setzt 'land' Felder
+       hinter der Rampenkante wieder auf. Ohne diese Ausnahme hielte die Prüfung jede zerbrochene
+       Brücke für unpassierbar – dabei ist der Sprung ja gerade der Weg. Gerechnet wird mit
+       denselben Zahlen wie im Spiel (obstacles.js, Ramp.launch): halbe Rampenlänge bis zur Kante,
+       dann 'land'."""
+    spruenge = []
+    for o in b.get('obstacles', []):
+        if o.get('type') != 'ramp': continue
+        e = o.get('ebene', 0)
+        a = math.radians(o.get('angle', 90))
+        dx, dy = math.cos(a), math.sin(a)
+        halb = o['w'] / 2 if abs(dx) > 0.5 else o['h'] / 2
+        mx, my = o['x'] + o['w'] / 2, o['y'] + o['h'] / 2
+        lx = mx + dx * (halb + o.get('land', 1.7))
+        ly = my + dy * (halb + o.get('land', 1.7))
+        spruenge.append((o['x'], o['y'], o['x'] + o['w'], o['y'] + o['h'], e, int(lx), int(ly)))
+
     """Der Weg – über alle Sohlen hinweg. Innerhalb einer Sohle rollt der Ball; von einer Sohle
        auf die nächste kommt er nur, indem er über eine offene Kante ('o') hinausrollt und fällt.
        Nach oben geht es in dieser Welt nicht, und das ist Absicht: Nach unten braucht man keine
@@ -442,6 +515,13 @@ def pruefe(b):
                 n = (nx, ny, e - 1)            # über die Kante und eine Sohle tiefer
             else:
                 continue
+            if n in gesehen: continue
+            gesehen.add(n); weg[n] = weg[(x, y, e)] + 1; q.append(n)
+        # und von jeder Rampe aus dorthin, wo der Sprung aufsetzt
+        for rx0, ry0, rx1, ry1, re, lx, ly in spruenge:
+            if e != re or not (rx0 <= x <= rx1 and ry0 <= y <= ry1): continue
+            if not fest(lx, ly, e): continue
+            n = (lx, ly, e)
             if n in gesehen: continue
             gesehen.add(n); weg[n] = weg[(x, y, e)] + 1; q.append(n)
     assert ziel in gesehen, f"{b['name']}: kein Weg vom Abschlag zum Loch"
@@ -466,6 +546,24 @@ def pruefe(b):
             x, y = r['x'] + r.get('dx', 0) * ende + dx, r['y'] + r.get('dy', 0) * ende + dy
             assert 0 <= x < breit and 0 <= y < hoch and s[e][y][x] in FEST, \
                 f"{b['name']}: die Rinne stößt bei ({x},{y}) nicht auf festen Boden"
+
+    """Und jede Rampe muss auf festem Boden aufsetzen. Eine Schanze, die in die Glut wirft, ist
+       keine Aufgabe, sondern ein Fehler – und sie fiele beim Spielen erst auf, wenn es zu spät
+       ist."""
+    for rx0, ry0, rx1, ry1, re, lx, ly in spruenge:
+        assert fest(lx, ly, re), \
+            f"{b['name']}: die Rampe bei ({rx0},{ry0}) setzt bei ({lx},{ly}) nicht auf festem Boden auf"
+
+    """Die Lavafontäne muss auf der Bahn stehen und darf weder den Abschlag noch das Loch
+       bestreichen: Ein Ball, der schon beim Hinlegen verbrennt, ist keine Aufgabe."""
+    for o in b.get('obstacles', []):
+        if o.get('type') != 'lavafontaene': continue
+        e, rr = o.get('ebene', 0), o.get('r', 0.8)
+        for (px, py, pe), was in ((start, 'Abschlag'), (ziel, 'Loch')):
+            if pe != e: continue
+            d = math.hypot(o['x'] - (px + 0.5), o['y'] - (py + 0.5))
+            assert d > rr + 1.0, \
+                f"{b['name']}: eine Lavafontäne steht {d:.1f} Felder vom {was} entfernt"
 
     # Jede offene Kante muss auch irgendwo hinführen – sonst ist sie nur ein Loch ins Aus
     for e in range(1, len(s)):

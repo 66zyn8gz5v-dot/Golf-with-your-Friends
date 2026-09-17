@@ -11,6 +11,8 @@
  *                 Ball, der schon liegt.
  *   Kippbühne:    Über die Mitte hinaus wirft sie nach vorn, davor schickt sie zurück, in der
  *                 Totzone bleibt sie waagerecht – und ohne Ball kehrt sie in die Waage zurück.
+ *                 Und das alles auch auf Stollenboden, nicht nur auf dem Eis der Prüffläche: Auf
+ *                 Eis beweist man die Mechanik, auf Stein die Wirklichkeit.
  */
 import fs from 'node:fs'; import vm from 'node:vm'; import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -108,6 +110,63 @@ console.log('\n--- Die Kippbühne ---');
     pruef('ohne Ball kehrt sie in die Waage zurück', Math.abs(geneigt) > 0.3 && Math.abs(k.neigung) < 0.05,
       `geneigt ${geneigt.toFixed(2)} → ${k.neigung.toFixed(3)}`);
   }
+}
+
+/* ---------- Die Kippbühne auf dem Boden, auf dem sie wirklich liegt ----------
+ *
+ * Der Abschnitt darüber misst auf Eis – mit Absicht: Dort sieht man den Stoß und nicht die
+ * Bremsung. Genau daran ist der Fehler aus Fassung 160 vorbeigelaufen, und es lohnt sich, ihn
+ * aufzuschreiben, weil die Lehre allgemein ist:
+ *
+ *   Eine Prüfung auf einem Sonderboden beweist die Mechanik, nicht die Wirklichkeit.
+ *
+ * In der Mine liegt die Bohle auf Stollenboden ('#'), und der bremst mit 4,2 Kacheln/s². Die
+ * Physik zieht die Bremsung im selben Schritt ab, in dem die Bohle schiebt, und kappt das Tempo
+ * bei null: Eine Bohle, die mit weniger als 4,2 schiebt, bewegt einen liegenden Ball nicht
+ * langsam, sondern gar nicht. Auf Eis (0,75) fiel das nie auf.
+ *
+ * Darum hier dasselbe noch einmal auf Stein – und mit einem ruhenden Ball, denn das ist der Fall,
+ * den Fynn gemeldet hat: „man kann auf ihr liegen, ohne daß was passiert".
+ */
+console.log('\n--- Die Kippbühne auf Stein ---');
+{
+  const stein = (hindernisse) => ({
+    name: 'Bohle auf Stein', par: 3, theme: 'stollen',
+    map: ['......................', '.T##################H.',
+          ...Array.from({ length: 13 }, () => '.####################.'), '......................'],
+    obstacles: hindernisse,
+  });
+  const bau = () => G.buildLevel(stein([{ type: 'kippbuehne', x: 8, y: 6.8, w: 8, h: 1.4, angle: 0 }]));
+  /* Der Ball wird hingelegt und nicht angestoßen – 'zielen' = false, also genau die Lage zwischen
+     zwei Schlägen. Gemessen wird, wie weit er von selbst wandert. */
+  const liegen = (u, sek = 3) => {
+    const lv = bau(), k = lv.obstacles.find(o => o.type === 'kippbuehne');
+    const x0 = k.cx + u * k.halb, b = ball(x0, k.cy);
+    lauf(lv, b, sek, 0, false);
+    return b.x - x0;
+  };
+  const mitte = liegen(0), knappVor = liegen(-0.2), knappNach = liegen(0.2);
+  pruef('in der Totzone darf man liegenbleiben',
+        Math.abs(mitte) < 0.02 && Math.abs(knappVor) < 0.02 && Math.abs(knappNach) < 0.02,
+        `${mitte.toFixed(3)} / ${knappVor.toFixed(3)} / ${knappNach.toFixed(3)} Kacheln`);
+  /* Und außerhalb: Sie muß den liegenden Ball WEGSCHIEBEN. Das ist der eigentliche Wächter gegen
+     den Fehler – vorher stand hier überall 0,000. */
+  for (const u of [0.35, 0.5, 0.7]) {
+    const weg = liegen(u);
+    pruef(`bei u = ${u} rutscht der liegende Ball nach vorn`, weg > 1.0, `${weg.toFixed(2)} Kacheln`);
+  }
+  for (const u of [-0.35, -0.5, -0.7]) {
+    const weg = liegen(u);
+    pruef(`bei u = ${u} rutscht er zurück`, weg < -1.0, `${weg.toFixed(2)} Kacheln`);
+  }
+  /* Der Grund in einer Zahl. Wer KIPP_KRAFT oder KIPP_MIN später herunterdreht, ohne an die
+     Reibung zu denken, baut den Fehler wieder ein – und merkt es hier. Weich geholt, damit ein
+     alter Stand ohne KIPP_MIN einen benannten Fehler gibt statt eines Absturzes. */
+  const zahl = (name) => { try { return vm.runInContext(name, ctx); } catch (e) { return undefined; } };
+  const kraft = zahl('KIPP_KRAFT'), min = zahl('KIPP_MIN'), reib = (zahl('FRICTION') || {})['#'];
+  pruef('der Schub gleich hinter der Totzone schlägt die Reibung',
+        typeof kraft === 'number' && typeof min === 'number' && typeof reib === 'number' && kraft * min > reib,
+        `${kraft} × ${min} = ${(kraft * min || 0).toFixed(1)} gegen ${reib}`);
 }
 
 console.log('\n--- Die Bruchwand ---');
@@ -294,6 +353,137 @@ console.log('\n--- Die Bruchwand ---');
   pruef('keiner steht mehr auf dem alten „stempel"', !klotz.some(o => o.style === 'stempel'));
 }
 
+/* ---------- Die Lavafontäne ----------
+ *
+ * Sie ist die einzige Falle im Spiel außer dem springenden Hai, die einen *fliegenden* Ball holt.
+ * Genau daran hängt die Bahn „Die zerbrochene Brücke": Wäre der Sprung immer sicher, gäbe es dort
+ * nichts zu entscheiden. Darum wird hier nicht nachgelesen, ob der Haken dasteht, sondern mit der
+ * echten Physik nachgespielt, was einem Ball in der Luft passiert.
+ *
+ * Und das Zweite: Tödlich ist allein der stehende Strahl. Die Vorwarnung muß folgenlos sein –
+ * sonst wäre sie keine Warnung, sondern schon der Treffer.
+ */
+{
+  const feldF = (extra = {}) => ({
+    name: 'Fontänenprüfung', par: 3, theme: 'schmelze',
+    map: ['..........................', '.T........................',
+          ...Array.from({ length: 4 }, () => '.########################.'),
+          '.........................H', '..........................'],
+    obstacles: [{ type: 'lavafontaene', x: 8.5, y: 3.5, r: 0.8, takt: 2.1, droht: 0.5, oben: 0.55, ...extra }],
+  });
+  const lv = G.buildLevel(feldF());
+  const f = lv.obstacles.find(o => o.type === 'lavafontaene');
+  const gebaut = !!f && typeof f.update === 'function' && typeof f.airTrigger === 'function';
+  pruef('die Fontäne wird gebaut', gebaut);
+  /* Fehlt sie, fällt der Rest nicht mit einem Absturz aus, sondern mit Namen. Eine Prüfung, die
+     beim ersten Fehler stirbt, sagt nur, *dass* etwas kaputt ist – nicht was alles. */
+  if (!gebaut) for (const n of ['sie hat Ruhe, Vorwarnung und Stoß', 'der Takt ist kurz',
+                                'der stehende Strahl verbrennt den Ball', 'die Vorwarnung tut nichts',
+                                'der Strahl holt auch einen fliegenden Ball herunter',
+                                'jenseits des Rings ist man sicher'])
+    pruef(n, false, 'die Fontäne fehlt');
+  if (gebaut) {
+
+  /* Der Takt. „Recht schnell" ist keine Geschmacksfrage, sondern die Aufgabe: Bei einem langen
+     Takt wartet man die Ruhe ab und spielt in aller Gemütlichkeit weiter. */
+  const dauer = {};
+  for (let t = 0; t < f.takt; t += 0.002) { f.update(t); dauer[f.state] = (dauer[f.state] || 0) + 0.002; }
+  pruef('sie hat Ruhe, Vorwarnung und Stoß',
+        dauer.ruhe > 0 && dauer.droht > 0 && dauer.stoss > 0,
+        Object.entries(dauer).map(([k, v]) => `${k} ${v.toFixed(2)}s`).join(', '));
+  pruef('der Takt ist kurz', f.takt <= 3.0, `${f.takt}s`);
+  pruef('und die Ruhe kürzer als zwei Sekunden', (dauer.ruhe || 0) < 2.0, `${(dauer.ruhe || 0).toFixed(2)}s`);
+
+  /* Wer im Strahl liegt, verbrennt – und nur dann. Gemessen wird mit der echten Physik: Der Ball
+     liegt auf dem Spalt, und über einen ganzen Umlauf wird mitgeschrieben, wann ein Lava-Ereignis
+     fällt. */
+  const zeiten = { ruhe: 0, droht: 0, stoss: 0 };
+  {
+    const b = ball(8.5, 3.5);
+    for (let t = 0; t < f.takt * 2; t += STEP) {
+      b.x = 8.5; b.y = 3.5; b.vx = 0; b.vy = 0;
+      const ev = G.stepPhysics(lv, b, STEP, t, true);
+      if (ev.some(e => e.type === 'lava')) zeiten[f.state] = (zeiten[f.state] || 0) + 1;
+    }
+  }
+  pruef('der stehende Strahl verbrennt den Ball', zeiten.stoss > 0, `${zeiten.stoss} Bildschritte`);
+  pruef('die Vorwarnung tut nichts', zeiten.droht === 0, `${zeiten.droht} Treffer in der Vorwarnung`);
+  pruef('und in Ruhe ist der Spalt harmlos', zeiten.ruhe === 0, `${zeiten.ruhe} Treffer in der Ruhe`);
+
+  /* Der eigentliche Punkt: ein Ball in der Luft. Die Physik überspringt im Flug fast alles – ohne
+     airTrigger flöge man ungestraft über jede Fontäne, und die zerbrochene Brücke wäre geschenkt. */
+  const imFlug = (t0) => {
+    const b = ball(8.5, 3.5);
+    let getroffen = false;
+    for (let t = t0, i = 0; i < 20; i++, t += STEP) {
+      b.x = 8.5; b.y = 3.5; b.vx = 0; b.vy = 0;
+      b.air = true; b.z = 2.0; b.vz = 0;                 // in der Luft festhalten
+      const ev = G.stepPhysics(lv, b, STEP, t, true);
+      if (ev.some(e => e.type === 'lava')) getroffen = true;
+    }
+    return getroffen;
+  };
+  // Ein Zeitpunkt mitten im Stoß und einer mitten in der Ruhe
+  const imStoss = f.droht + f.oben / 2, inRuhe = f.droht + f.oben + (f.takt - f.droht - f.oben) / 2;
+  pruef('der Strahl holt auch einen fliegenden Ball herunter', imFlug(imStoss), `bei t=${imStoss.toFixed(2)}s`);
+  pruef('und wer im richtigen Augenblick springt, kommt durch', !imFlug(inRuhe), `bei t=${inRuhe.toFixed(2)}s`);
+
+  /* Außerhalb der Reichweite tut sie nichts – sonst wäre der Ring auf dem Boden gelogen. */
+  {
+    const b = ball(8.5 + f.r + 0.8, 3.5);
+    let getroffen = false;
+    for (let t = 0; t < f.takt; t += STEP) {
+      b.x = 8.5 + f.r + 0.8; b.y = 3.5; b.vx = 0; b.vy = 0;
+      const ev = G.stepPhysics(lv, b, STEP, t, true);
+      if (ev.some(e => e.type === 'lava')) getroffen = true;
+    }
+    pruef('jenseits des Rings ist man sicher', !getroffen);
+  }
+
+  }
+
+  /* Die Bahn dazu. Der Sprung muß über die Fontäne führen – stünde sie neben dem Flugweg, wäre
+     der Haken in der Luft ohne Wirkung und die Bahn eine gewöhnliche Rampe. */
+  const bahn = vm.runInContext("MINE_COURSES.find(c => c.name === 'Die zerbrochene Brücke')", ctx);
+  pruef('es gibt die zerbrochene Brücke', !!bahn);
+  if (bahn) {
+    const fs_ = (bahn.obstacles || []).filter(o => o.type === 'lavafontaene');
+    const rampen = (bahn.obstacles || []).filter(o => o.type === 'ramp');
+    pruef('sie hat Fontänen', fs_.length >= 1, `${fs_.length} Stück`);
+    pruef('und eine Rampe', rampen.length === 1);
+    if (rampen.length === 1 && fs_.length) {
+      const rp = rampen[0];
+      const a = (rp.angle ?? 90) * Math.PI / 180, dx = Math.cos(a), dy = Math.sin(a);
+      const halb = Math.abs(dx) > 0.5 ? rp.w / 2 : rp.h / 2;
+      const mx = rp.x + rp.w / 2, my = rp.y + rp.h / 2;
+      const lx = mx + dx * (halb + (rp.land ?? 1.7)), ly = my + dy * (halb + (rp.land ?? 1.7));
+      // Liegt eine Fontäne zwischen Rampenkante und Aufsetzpunkt, und zwar auf dem Flugweg?
+      const ueber = fs_.some(o => {
+        const u = ((o.x - mx) * dx + (o.y - my) * dy);
+        const quer = Math.abs((o.x - mx) * -dy + (o.y - my) * dx);
+        return u > halb && u < (halb + (rp.land ?? 1.7)) && quer < o.r + 0.5;
+      });
+      pruef('und der Sprung führt über eine Fontäne hinweg', ueber,
+            `Rampe (${mx},${my}) → (${lx.toFixed(1)},${ly.toFixed(1)})`);
+    }
+  }
+
+  /* Gezeichnet werden muß sie auch – und zwar der Ring *immer*, nicht nur beim Stoß: Wo es gleich
+     brennt, muß man auch dann sehen, wenn gerade nichts brennt. */
+  const zeichner = fs.readFileSync(path.join(SRC, 'render_mine.js'), 'utf8');
+  const haupt = fs.readFileSync(path.join(SRC, 'render.js'), 'utf8');
+  for (const [was, muster] of [['den Boden der Fontäne', /drawFontaeneFloor\(ctx, ob, t\) \{/],
+                               ['den Strahl', /drawLavafontaene\(ctx, ob, t\) \{/],
+                               ['einen Reichweitenring', /Reichweitenring/],
+                               ['Funken beim Stoß', /Spritzer/]])
+    pruef(`der Zeichner hat ${was}`, muster.test(zeichner));
+  pruef('und render.js ruft beides auf',
+        /ob\.type === 'lavafontaene'\) \{ this\.drawFontaeneFloor/.test(haupt) && /drawLavafontaene\(ctx, ob, t\)/.test(haupt));
+  pruef('die Fontäne zählt als Licht', /ob\.type === 'lavafontaene'\) \{\n\s*lichter\.push/.test(zeichner));
+  const teilen = fs.readFileSync(path.join(SRC, 'share.js'), 'utf8');
+  pruef('und geteilte Bahnen dürfen sie enthalten', /'lavafontaene'/.test(teilen));
+}
+
 /* ---------- Der Schmelzofen ----------
  * Es ist die Windmühle des Märchenlands, nur anders gezeichnet: ein Bau quer über dem Weg, ein
  * Maul in der Mitte, davor ein Rad, dessen Blätter den Weg im Takt versperren. Ein Windrad
@@ -324,6 +514,23 @@ console.log('\n--- Die Bruchwand ---');
                                ['eine Ofenklappe', /Ofenklappe/], ['Glut, die atmet', /glut/]])
     pruef(`er hat ${was}`, muster.test(leib));
   pruef('und kein Segeltuch', !/245,235,210/.test(leib));
+  /* Die Feinarbeit. Sie steht hier, weil sie sonst beim nächsten Umbau still verschwindet - und
+     ohne sie ist der Ofen wieder der glatte Kasten mit einem Loch, den es in Fassung 156 gab. */
+  for (const [was, muster] of [['gemauerte Lagen mit versetzten Stoßfugen', /steinBreit/],
+                               ['Zugeisen in der Wand', /Zugeisen/],
+                               ['einen Rauchfang unter der Esse', /this\.frustum\(ctx, quad\(/],
+                               ['Eisenringe um die Esse', /for \(const zr of/],
+                               ['Funken über der Esse', /Funken/],
+                               ['Ruß über dem Maul', /russ\.addColorStop/],
+                               ['ein Kohlenbett mit Brocken', /bett\.addColorStop/],
+                               ['Flammenzungen', /quadraticCurveTo/],
+                               ['einen Schieberkasten für die Klappe', /Schieberkasten/],
+                               ['Nieten auf dem Eisen', /Nieten/]])
+    pruef(`er hat ${was}`, muster.test(leib));
+  /* Und das Kleinteilige hängt am Maßstab: Aus der Übersicht verschmieren Fugen und Nieten zu
+     einem grauen Schleier - dort ist weniger mehr. */
+  pruef('die Feinarbeit hängt am Maßstab',
+        /const fein = s > \d+/.test(leib) && (leib.match(/\(fein\)|\(!fein\)/g) || []).length >= 4);
   /* Und vor allem: kein Rad. Ein Schaufelrad vor dem Maul waere die Muehle in Eisen - der Ofen
      soll mit dem sperren, was ein Ofen hat. */
   pruef('und kein Rad vor dem Maul', !/for \(let i = 0; i < ob\.blades/.test(leib));
@@ -331,10 +538,27 @@ console.log('\n--- Die Bruchwand ---');
      eigener Uhr, zeigte das Bild etwas anderes an, als gilt - und das ist schlimmer als gar kein
      Bild: Man verließe sich darauf. */
   pruef('die Klappe liest den Winkel des Hindernisses', /ob\.angle/.test(leib) && /ob\.blades/.test(leib));
-  const sperrt = /const naehe = Math\.min\(roh, schritt - roh\)/.test(leib) && /0\.75 - naehe\) \/ 0\.45/.test(leib);
-  pruef('und ist genau dann ganz zu, wenn das Hindernis sperrt', sperrt);
+  pruef('sie misst den Abstand zum untersten Punkt', /const naehe = Math\.min\(roh, schritt - roh\)/.test(leib));
   const hind = fs.readFileSync(path.join(SRC, 'obstacles.js'), 'utf8');
   pruef('das Hindernis sperrt weiterhin bei 0,3', /rel < 0\.3 \|\| rel > step - 0\.3/.test(hind));
+  /* Nicht nur „irgendein Wert steht da", sondern *derselbe*: Die Schwelle wird aus beiden Dateien
+     gelesen und verglichen. Stünde in der Zeichnung eine andere, zeigte die Klappe „zu", wo man
+     durchkommt - oder schlimmer „offen", wo man anstößt. */
+  const sperrtHind = hind.match(/rel < (\d[\d.]*) \|\| rel > step - \1/);
+  const sperrtBild = leib.match(/const SPERRT = (\d[\d.]*), FAHRWEG = (\d[\d.]*)/);
+  pruef('und ist genau dann ganz zu, wenn das Hindernis sperrt',
+        !!sperrtBild && !!sperrtHind && Number(sperrtBild[1]) === Number(sperrtHind[1]),
+        sperrtBild && sperrtHind ? `Bild ${sperrtBild[1]} / Physik ${sperrtHind[1]}` : 'Schwelle nicht ablesbar');
+  pruef('und fährt aus der Sperre heraus', /\(SPERRT \+ FAHRWEG - naehe\) \/ FAHRWEG/.test(leib));
+  /* Und sie muß auch wirklich ganz oben ankommen. Der Winkel entfernt sich über den Umlauf nie
+     weiter als einen halben Blattabstand vom untersten Punkt - bei vier Blättern 0,785. Reicht der
+     Fahrweg darüber hinaus, steht die Klappe nie ganz offen: Der Weg sieht versperrt aus, obwohl
+     er die meiste Zeit frei ist. Genau das war in Fassung 156 so. */
+  if (sperrtBild) {
+    const weitest = Math.PI / 4, offenAb = Number(sperrtBild[1]) + Number(sperrtBild[2]);
+    pruef('und steht einen guten Teil des Umlaufs ganz offen', offenAb < weitest - 0.15,
+          `ganz offen ab ${offenAb.toFixed(2)} von höchstens ${weitest.toFixed(3)}`);
+  }
   /* Und er leuchtet: ein Feuer, das kein Licht gibt, wäre Kulisse. */
   pruef('der Ofen zählt als Licht', /ob\.style === 'ofen'\) lichter\.push/.test(q));
 }

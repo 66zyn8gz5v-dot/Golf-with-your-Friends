@@ -99,9 +99,29 @@ class Blast {
 
    Ohne Ball geht sie von selbst wieder in die Waage: Die nächste Spielerin findet dieselbe Bühne
    vor wie die vorige. */
-const KIPP_KRAFT = 5.2;          // Beschleunigung in Kacheln/s² bei voller Neigung
-const KIPP_TEMPO = 2.2;          // wie schnell die Bohle der Last folgt (je Sekunde)
+/* DIE ZAHLEN HABEN EINMAL NICHT GEREICHT, UND ZWAR STILL
+   Bis Fassung 160 stand hier KIPP_KRAFT = 5,2. Auf dem Stollenboden bremst die Reibung mit 4,2
+   (FRICTION['#'] in physics.js), und die Physik zieht die Bremsung im selben Schritt wieder ab, in
+   dem die Bohle schiebt – sie kappt das Tempo dabei bei null. Eine Bohle, die mit weniger als 4,2
+   schiebt, bewegt einen liegenden Ball also nicht ein bißchen langsam, sondern GAR NICHT.
+
+   Bei 5,2 kam das erst ganz außen zustande (Neigung über 0,81, also jenseits von 86 % der halben
+   Länge). Über fast der ganzen Bohle konnte man liegenbleiben, und nichts geschah – genau das, was
+   Fynn gemeldet hat. Gemessen: 4 Sekunden Ruhe bei u = 0,1 / 0,3 / 0,5 / 0,7 / 0,85 → Weg 0,000.
+
+   Zwei Änderungen, und beide zielen auf dasselbe: Außerhalb der Totzone soll sie *immer* etwas
+   tun.
+     KIPP_KRAFT muß die Reibung deutlich schlagen, sonst frißt die Bremsung den Schub.
+     KIPP_MIN ist die Neigung, die sie sofort einnimmt, sobald die Last die Totzone verläßt. Ohne
+     sie wüchse die Neigung bei null los, und gleich hinter der Totzone gäbe es wieder ein Stück,
+     auf dem nichts passiert. Eine Wippe kippt auch nicht ein Promille, wenn man einen Zeh über die
+     Mitte setzt – sie geht über.
+   Der Sinn der Totzone bleibt: In ihr steht die Bohle waagerecht, und dort darf man liegenbleiben.
+   Sonst entschiede ein Fingerbreit über alles. */
+const KIPP_KRAFT = 12.0;         // Beschleunigung in Kacheln/s² bei voller Neigung
+const KIPP_TEMPO = 2.8;          // wie schnell die Bohle der Last folgt (je Sekunde)
 const KIPP_MITTE = 0.28;         // Totzone um die Achse, gemessen in Anteilen der halben Länge
+const KIPP_MIN = 0.45;           // Neigung gleich hinter der Totzone – muß KIPP_KRAFT über die Reibung heben
 const KIPP_WINKEL = 0.2;         // sichtbarer Ausschlag in Kachelhöhen – nur fürs Bild
 
 class TiltBridge {
@@ -129,7 +149,10 @@ class TiltBridge {
     if (ball.air || ball.rider || !this.drauf(ball)) return;
     const u = ((ball.x - this.cx) * this.dx + (ball.y - this.cy) * this.dy) / (this.halb || 1);
     const a = Math.abs(u);
-    if (a > KIPP_MITTE) this.ziel = Math.sign(u) * Math.min(1, (a - KIPP_MITTE) / (1 - KIPP_MITTE));
+    if (a > KIPP_MITTE) {
+      const ueber = Math.min(1, (a - KIPP_MITTE) / (1 - KIPP_MITTE));
+      this.ziel = Math.sign(u) * (KIPP_MIN + (1 - KIPP_MIN) * ueber);
+    }
     ball.vx += this.dx * KIPP_KRAFT * this.neigung * dt;
     ball.vy += this.dy * KIPP_KRAFT * this.neigung * dt;
   }
@@ -213,6 +236,73 @@ class BlastWall {
   staub() {
     const seit = this.t - this.bruchAt;
     return seit >= 0 && seit < BRUCH_STAUB ? 1 - seit / BRUCH_STAUB : 0;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Lavafontäne
+   --------------------------------------------------------------------------- */
+/* Ein Spalt im Stollenboden, aus dem im Takt ein Strahl Lava hochschießt. Wer darin steht,
+   verbrennt – und wer darüber fliegt, auch.
+
+   WARUM SIE NICHT DIE STACHELFALLE IST
+   Eine Platte, aus der im Takt etwas hochkommt, steht schon im Märchenland. Zwei Dinge sind hier
+   anders, und beide hängen zusammen:
+
+   Erstens der Takt. Die Fontäne kommt alle zwei Sekunden, nicht alle acht. Das ist kein Detail,
+   sondern die ganze Aufgabe: Bei einem langen Takt wartet man, bis Ruhe ist, und spielt dann in
+   aller Gemütlichkeit – die Maschine kostet nur Zeit. Bei einem kurzen Takt kann man nicht warten.
+   Man muß den Schlag in die Lücke legen, während sie noch da ist.
+
+   Zweitens greift sie in die Luft. Alle anderen Fallen lassen einen fliegenden Ball durch (die
+   Physik überspringt im Flug fast alles); nur der springende Hai holt ihn herunter. Die Fontäne
+   ist die zweite – und das ist der Sinn: Über einen Spalt zu springen, während unten etwas
+   hochschießt, ist erst dann eine Entscheidung, wenn der Strahl den Sprung auch treffen kann.
+   Deshalb trifft sie auf jeder Höhe. Eine Fontäne, über die man einfach hinwegfliegt, wäre
+   Kulisse.
+
+   WIE MAN SIE KOMMEN SIEHT
+   In der Mine ist es dunkel, und eine Gefahr, die man erst sieht, wenn sie wirkt, ist keine
+   Aufgabe, sondern Pech. Darum kündigt sich jeder Stoß an: Der Spalt glüht auf, ein Ring auf dem
+   Boden wächst, und Funken steigen auf – FONT_DROHT Sekunden lang, bevor irgendetwas tödlich ist.
+   Der Strahl selbst leuchtet den Gang aus (render_mine.js zählt ihn als Licht), er ist also auch
+   der einzige Punkt der Bahn, an dem man beim Stoß mehr sieht als sonst. */
+const FONT_TAKT = 2.1;           // Sekunden von einem Stoß zum nächsten
+const FONT_DROHT = 0.5;          // so lange kündigt der glühende Spalt den Stoß an
+const FONT_OBEN = 0.55;          // so lange steht der Strahl – und nur so lange verbrennt er
+
+class Lavafontaene {
+  constructor(d) {
+    Object.assign(this, { r: 0.8, takt: FONT_TAKT, droht: FONT_DROHT, oben: FONT_OBEN,
+                          phase: 0, hoehe: 3.4, ebene: 0 }, d);
+    this.type = 'lavafontaene';
+    this.state = 'ruhe'; this.p = 0; this.hoch = 0;
+  }
+  update(t) {
+    const u = ((((t / this.takt + this.phase) % 1) + 1) % 1) * this.takt;
+    if (u < this.droht) { this.state = 'droht'; this.p = u / this.droht; }
+    else if (u < this.droht + this.oben) { this.state = 'stoss'; this.p = (u - this.droht) / this.oben; }
+    else { this.state = 'ruhe'; this.p = (u - this.droht - this.oben) / Math.max(0.001, this.takt - this.droht - this.oben); }
+    /* Der Strahl schießt schnell hoch und sinkt langsamer zurück. Beides aus derselben Zahl: Wer
+       den Takt ändert, ändert die Form nicht mit – sie hängt am Anteil, nicht an der Sekunde. */
+    this.hoch = this.state === 'stoss'
+      ? Math.max(0, Math.min(1, Math.min(this.p / 0.18, (1 - this.p) / 0.34))) : 0;
+  }
+  /* Tödlich ist allein der stehende Strahl. Die Vorwarnung tut nichts – sonst wäre sie keine. */
+  trifft(ball) {
+    if (this.state !== 'stoss') return false;
+    return Math.hypot(ball.x - this.x, ball.y - this.y) <= this.r + (ball.r || 0.22);
+  }
+  /* Rollender oder liegender Ball. Die Physik ruft trigger im Flug gar nicht erst auf. */
+  trigger(ball, t, events) {
+    if (ball.rider || ball.sunk) return;
+    if (this.trifft(ball)) events.push({ type: 'lava', x: ball.x, y: ball.y });
+  }
+  /* Fliegender Ball. Ohne diesen Haken wäre jeder Sprung über die Fontäne umsonst sicher. */
+  airTrigger(ball, t, events) {
+    if (!this.trifft(ball)) return false;
+    events.push({ type: 'lava', x: ball.x, y: ball.y });
+    return true;
   }
 }
 

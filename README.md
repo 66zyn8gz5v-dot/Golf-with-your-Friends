@@ -183,24 +183,28 @@ Höhe** (y) – die x-Angabe wird beim Zeichnen durch `BREITE` geteilt.
 | Schattenreich | Legende | 10 extra große Bahnen im Reich der Schatten |
 | Schneeberg | Profi | 12 Bahnen den Berg hinauf – der Wind dreht im Takt, oben liegen die Wolkenetagen |
 | Uhrwerkstadt | Profi | 14 Bahnen im Uhrenturm – alles eine Frage des Takts, gestapelte Ebenen, zum Schluss wandert das Loch |
-| Zwergenmine | Profi | 11 Bahnen unter den Berg – man sieht nur, was im Licht der Grubenlampen steht (**nur in der Vorschau**) |
+| Zwergenmine | Profi | 12 Bahnen unter den Berg – man sieht nur, was im Licht der Grubenlampen steht |
 
-**Nur in der Vorschau.** Die Zwergenmine ist gebaut und geprüft, soll aber noch nicht ins Spiel. Der
-nächstliegende Weg wäre, sie für `main` herauszuschneiden – und genau daran geht so etwas kaputt:
-Zwei Stände von Hand auseinanderzuhalten ist eine Dauerpflicht, und spätestens bei der dritten
-Auslieferung fehlt irgendwo eine Zeile. Darum ist es *ein* Stand mit einem Schalter, so wie beim
-Boule-Modus: Die Welt trägt `nurVorschau: true`, und die Oberfläche filtert – Weltliste, Weltkarte,
-Rangliste, Online-Auswahl und die Belohnungshüte.
+**Der Schalter „nur in der Vorschau".** Die Zwergenmine war gebaut und geprüft, sollte aber eine
+Weile noch nicht ins Spiel. Der nächstliegende Weg wäre gewesen, sie für `main` herauszuschneiden –
+und genau daran geht so etwas kaputt: Zwei Stände von Hand auseinanderzuhalten ist eine
+Dauerpflicht, und spätestens bei der dritten Auslieferung fehlt irgendwo eine Zeile. Darum war es
+*ein* Stand mit einem Schalter, so wie beim Boule-Modus: Die Welt trägt `nurVorschau: true`, und die
+Oberfläche filtert – Weltliste, Weltkarte, Rangliste, Online-Auswahl und die Belohnungshüte.
 
-Zwei Dinge daran sind Absicht. Erstens sieht `WORLDS` für die Prüfwerkzeuge weiter *alle* Welten:
-Eine Welt, die keiner prüft, verfällt still. Zweitens bleibt ihre Insel auf der Karte liegen, nur
+Zwei Dinge daran waren Absicht. Erstens sah `WORLDS` für die Prüfwerkzeuge weiter *alle* Welten:
+Eine Welt, die keiner prüft, verfällt still. Zweitens blieb ihre Insel auf der Karte liegen, nur
 ohne Namen und ohne Nadel – die Küste rechnet sich aus allen Landstücken, und ein Stück Land ohne
 Beschriftung verspricht nichts, sondern läßt offen, daß da noch etwas kommt.
 
-`tools/vorschauwelt.mjs` hält beide Richtungen fest: daß die Welt im Spiel nirgends angeboten wird,
-und daß sie in der Vorschau vollständig da ist. Es prüft auch, daß `main.js` die Weltliste nicht
-mehr von Hand durchgeht – die Prüfung hat beim Schreiben sofort drei solche Stellen gefunden,
-darunter eine, über die die Welt im Spiel doch erreichbar gewesen wäre.
+**Seit Fassung 163 ist die Mine im Spiel**, und keine Welt trägt die Kennzeichnung mehr.
+`tools/vorschauwelt.mjs` bleibt trotzdem stehen, und zwar aus zwei Gründen: Der Schalter ist der
+Weg, den auch die nächste Welt gehen wird – eine Mechanik, die einmal benutzt und dann nicht mehr
+geprüft wird, ist beim nächsten Mal kaputt. Und die Prüfung hält jetzt das Gegenteil fest: Was
+fertig ist, muß auch wirklich angeboten werden. Eine vergessene Kennzeichnung wäre eine Welt, die
+niemand findet – und niemand vermißt, weil niemand weiß, daß es sie gibt. Geprüft wird darum auch,
+daß `main.js` die Weltliste nicht von Hand durchgeht; diese Prüfung hat beim Schreiben sofort drei
+solche Stellen gefunden, darunter eine, über die die Welt im Spiel doch erreichbar gewesen wäre.
 
 Das **Kolosseum** steht bewusst *nicht* auf der Weltkarte. Es ist die Turnierwelt und wird nur über
 den **Turnier**-Knopf im Startbildschirm betreten – die Weltkarte bleibt die Reise durch die sieben
@@ -227,6 +231,35 @@ gewählt wird. Die Wahl merkt sich der Browser, und in der Anzeigetafel steht ne
 Der **Ritterhelm** ist ein Sonderfall: er legt sich um den ganzen Ball, als wäre der Ball der Kopf, und trägt
 einen Federbusch wie bei den Feldherren. Die beiden äußeren Federn nehmen die Farbe des Balls an (beim weißen
 Ball Rot), die mittlere bleibt immer weiß.
+
+**Der Gartenzwerg** ist der Spezialskin und fällt in dieser Reihe aus dem Rahmen: Er ist ein
+**Ganzkörper-Skin** wie die Belohnungen – er ersetzt den Ball, statt auf ihm zu sitzen –, hängt
+aber an keiner Welt und an keinem Rekord. Er ist von Anfang an da. Das ist Absicht: Die Weltskins
+sind Auszeichnungen und sollen es bleiben, der Zwerg ist der Spaß daneben, und ein Spaß, den man
+erst freispielen muss, ist keiner.
+
+**Die erste Fassung war zu weihnachtlich**, und das lag nicht an einem Stück, sondern an der Summe:
+runder schneeweißer Vollbart, rote Mütze mit hellem Rand, rosige Backen – das ist ein
+Weihnachtsmann. Ein Zwerg ist knorriger. Was ihn dazu macht: **spitze Ohren**, die unter der
+Mützenkrempe hervorschauen (ein Weihnachtsmann hat runde, und man sieht sie nie), ein
+elfenbeinfarbener **Gabelbart**, der unten in zwei Zöpfe ausläuft und von **Lederzwingen** gefasst
+wird, **Brauen, die zur Nase hin abfallen** statt freundlich zu wölben – dieselben zwei Pfade, nur
+andersherum, und ein anderer Kerl –, dazu die Knollennase ganz vorn, wettergegerbte statt puderrosa
+Backen und eine **moosgrüne Joppe** mit Gürtel. Zwischendurch war die Joppe aus Leder; das ging
+unter, weil Braun auf brauner Haut keine Kante macht.
+
+**Die Mütze trägt die Farbe des Balls.** Der Skin verdeckt die Spielerfarbe ja, und der dünne Reif
+allein ist auf dem Spielfeld leicht zu übersehen – eine Mütze in Ballfarbe dagegen nicht: Bei vier
+Zwergen sieht man auf einen Blick, welcher der eigene ist. Ein (fast) weißer Ball bekommt **Rot**,
+denn eine weiße Mütze über hellem Bart wäre keine Mütze mehr, sondern ein Fleck – und Rot ist beim
+Gartenzwerg ohnehin zu Hause. Das ist dieselbe Regel, nach der schon der Federbusch des Ritterhelms
+geht (`plumeColors`). Der umgeschlagene Rand ist *dunkler* als die Mütze, nicht heller: Ein weißer
+Pelzrand war genau das, was den Zwerg zum Weihnachtsmann gemacht hat.
+
+Die Mütze ist fast so hoch wie der Ball breit, denn eine brave Kappe wäre auf dem Spielfeld nur ein
+Farbfleck. Ihre Spitze schwingt beim Rollen nach, im selben Takt wie die Bommelmütze im Schneeberg –
+zwei Zwerge nebeneinander sollen nicht gegeneinander wackeln. Gezeichnet wird sie über den Farbreif
+(siehe unten), sonst liefe der Reif quer über die Mütze. Und alle paar Sekunden blinzelt er.
 
 **Legionärshelm** und **Championhelm** gehören zum Kolosseum und sind ein Paar: dieselbe Grundform –
 halbrunde Helmglocke, goldener Rand über der Stirn mit Nieten, breiter Nackenschirm nach hinten unten,
@@ -340,6 +373,24 @@ braucht das nicht – bei ihr liegen die Federn bewusst *hinter* dem Reif, das S
 | Schattenreich | Kristallkugel | Schwaden waberen, ein Auge blickt umher und blinzelt | Spitzhut mit Mondschnalle; die Spitze schwankt, Sterne funkeln darauf |
 | Uhrwerkstadt | Taschenuhr | durchbrochenes Zifferblatt, hinter dem das Werk läuft | Bügel und Krone wie an einer Taschenuhr |
 | Kolosseum | Championhelm | (kein eigener Ball – der Helm sitzt auf dem Spielerball) | der Federkamm wiegt sich im Wind |
+
+**Geprüft wird das mit `node tools/huete.mjs`.** Ein Hut geht nicht laut kaputt: Er wird nur in
+einem Menü und auf einem Ball gezeichnet, und wenn dabei etwas wirft, sieht man einen leeren Kreis –
+keine Meldung, nur ein Ball ohne Hut. Darum zeichnet das Werkzeug **jeden** Hut wirklich, auf eine
+Leinwand, die nichts malt und nur mitzählt, einmal groß (mit Feinarbeit) und einmal klein (ohne) und
+zu zwei Zeitpunkten, damit auch das drankommt, was blinzelt oder schwingt. Ein Tippfehler in einer
+Hilfsfunktion fliegt so sofort auf, und zwar bei allen Hüten, nicht nur beim neuen. Dazu prüft es
+die Regeln, die sich nicht von selbst halten: jeder Listeneintrag hat eine Zeichnung, jede Welt hat
+genau eine Belohnung, keine Belohnung hängt an einer Welt, die es nicht gibt – und der Gartenzwerg
+ist der einzige Ganzkörper-Skin ohne Welt. Bekäme er still eine Bedingung, wäre aus dem Spaß eine
+weitere Hausaufgabe geworden, und niemandem fiele es auf.
+
+Dass die Mütze die Ballfarbe trägt, wird dabei nicht am Quelltext abgelesen, sondern **gemessen**:
+Die mitzählende Leinwand merkt sich jede Füllfarbe, der Zwerg wird mit zwei Ballfarben gezeichnet,
+und die Listen müssen sich unterscheiden. Verglichen werden nur die *Füllungen* – der Reif in
+Spielerfarbe ist ein Strich und zählt nicht mit, sonst wäre der Unterschied schon dadurch da und
+die Prüfung wertlos. Dazu die Sonderregel: Beim weißen Ball muss eine deutlich rote Füllung dabei
+sein, bei einem farbigen keine.
 
 Vier der Skins teilen sich die Glaskugel-Form, damit sie als eine Familie zu erkennen sind – der Inhalt
 macht die Welt. Drei tanzen bewusst aus der Reihe: Federkrone und Runenstein sind Stein, die Königskrone
@@ -1249,7 +1300,34 @@ die Bruchwand acht weitere Proben: dass sie ohne Sprengung steht und den Ball au
 Zündung daneben sie bricht, dass sie danach offen *bleibt*, dass eine Zündung außer Reichweite sie
 stehen lässt, und dass sie beim nächsten Loch wieder dasteht.
 
-**Die zehn Bahnen** (`src/courses_mine.js`, erzeugt von `tools/mine.py`):
+**Die Bohle hat einmal nichts getan, und das still (Fassung 161).** Fynn hat gemeldet: „man kann
+auf ihr liegen, ohne dass was passiert." Stimmte. Bis Fassung 160 stand in `obstacles_mine.js`
+`KIPP_KRAFT = 5,2` – die Beschleunigung bei voller Neigung. Der Stollenboden bremst aber mit **4,2**
+(`FRICTION['#']`), und `physics.js` zieht die Bremsung im selben Rechenschritt ab, in dem die Bohle
+schiebt, und kappt das Tempo dabei bei null. Eine Bohle, die mit weniger als 4,2 schiebt, bewegt
+einen liegenden Ball darum nicht langsam, sondern **gar nicht**. Bei 5,2 kam das erst jenseits von
+86 % der halben Länge zustande. Gemessen: vier Sekunden Ruhe bei u = 0,1 / 0,3 / 0,5 / 0,7 / 0,85 →
+Weg jeweils 0,000.
+
+Behoben mit zwei Zahlen, die auf dasselbe zielen – *außerhalb der Totzone muss sie immer etwas tun*:
+`KIPP_KRAFT` auf **12,0**, damit der Schub die Reibung deutlich schlägt, und neu `KIPP_MIN = 0,45`,
+die Neigung, die sie sofort einnimmt, sobald die Last die Totzone verlässt. Ohne die zweite wüchse
+die Neigung bei null los, und gleich hinter der Totzone gäbe es wieder ein Stück, auf dem nichts
+passiert. Eine Wippe kippt auch nicht ein Promille, wenn man einen Zeh über die Mitte setzt – sie
+geht über. Die Totzone selbst bleibt: Dort *darf* man liegenbleiben, sonst entschiede ein
+Fingerbreit über alles.
+
+**Warum die Prüfung das nicht gefunden hat**, ist die eigentliche Lehre. Die Prüffläche in
+`tools/mine.mjs` ist **Eis** (Reibung 0,75) – mit Absicht, damit man den Stoß misst und nicht die
+Bremsung. Auf Eis gewinnt auch eine schwache Bohle. *Eine Prüfung auf einem Sonderboden beweist die
+Mechanik, nicht die Wirklichkeit.* Seit Fassung 161 steht dieselbe Messung deshalb ein zweites Mal
+dort, auf Stollenboden und mit einem **ruhenden** Ball: In der Totzone darf er liegenbleiben, bei
+u = ±0,35 / ±0,5 / ±0,7 muss er von selbst mindestens eine Kachel wegrutschen. Dazu ein Wächter über
+die Zahlen selbst – `KIPP_KRAFT × KIPP_MIN > FRICTION['#']` –, damit niemand die Kraft später
+herunterdreht, ohne an die Reibung zu denken. Auf dem alten Stand meldet die neue Prüfung genau das,
+was Fynn gesehen hat: 0,00 Kacheln, überall.
+
+**Die zwölf Bahnen** (`src/courses_mine.js`, erzeugt von `tools/mine.py`):
 
 | # | Name | Par | Abschnitt | Was sie will |
 |---|---|---|---|---|
@@ -1263,7 +1341,60 @@ stehen lässt, und dass sie beim nächsten Loch wieder dasteht.
 | 8 | Kristallkammer | 4 | Kristall | **Zwei Sohlen.** Oben der Magnetit auf der Galerie, unten ein Felspfeiler vor der großen Kammer. |
 | 9 | Sohle Neun | 5 | Schmelze | **Zwei Sohlen.** Man fällt mitten in die Glut: ein Steg über den einen Spalt, eine Bohle über den anderen. |
 | 10 | **Die Gießhalle** | 4 | Schmelze | **Der Gießlöffel.** Quer durch die Halle steht die Glut, hinüber führt nichts – bis das Erz die Brücke baut. |
-| 11 | Die Schmelze | 5 | Schmelze | Die Insel im Lavasee. Der Damm ist zugemauert, in der Mitte steht der **Schmelzofen**, und im Takt fegt eine Ladung alles hinunter. |
+| 11 | **Die zerbrochene Brücke** | 4 | Schmelze | **Die Lavafontäne.** In der Mitte fehlt ein Stück Brücke, und genau dort schießt im Takt die Lava hoch – die trifft auch in der Luft. |
+| 12 | Die Schmelze | 5 | Schmelze | Die Insel im Lavasee. Der Damm ist zugemauert, in der Mitte steht der **Schmelzofen**, und im Takt fegt eine Ladung alles hinunter. |
+
+### Die Lavafontäne: die einzige Falle, die in die Luft greift
+
+Ein Spalt im Stollenboden, aus dem im Takt ein Strahl Lava hochschießt. Wer darin steht, verbrennt –
+und wer darüber fliegt, auch. Das Zweite ist der Punkt.
+
+**Sie ist nicht die Stachelfalle.** Eine Platte, aus der im Takt etwas hochkommt, steht schon im
+Märchenland. Zwei Dinge sind hier anders, und beide hängen zusammen:
+
+*Der Takt ist kurz* – 2,1 Sekunden, davon 0,5 Vorwarnung und 0,55 der stehende Strahl. Das ist kein
+Detail, sondern die ganze Aufgabe: Bei einem langen Takt wartet man, bis Ruhe ist, und spielt dann in
+aller Gemütlichkeit; die Maschine kostet nur Zeit. Bei einem kurzen Takt kann man nicht warten – die
+Ruhe dauert eine Sekunde. Man muss den Schlag in die Lücke legen, während sie noch da ist.
+
+*Sie greift in die Luft.* Die Physik überspringt im Flug fast alles: keine Reibung, keine Wände,
+keine Hindernisse. Nur der springende Hai holt einen fliegenden Ball herunter – und jetzt die
+Fontäne, über `airTrigger` (`obstacles_mine.js`). Genau deshalb kann die Bahn eine zerbrochene
+Brücke sein: Über einen Spalt zu springen, während unten etwas hochschießt, ist erst dann eine
+Entscheidung, wenn der Strahl den Sprung auch treffen kann. Eine Fontäne, über die man einfach
+hinwegfliegt, wäre Kulisse.
+
+**Wie man sie kommen sieht.** In der Mine ist es dunkel, und eine Gefahr, die man erst sieht, wenn
+sie wirkt, ist keine Aufgabe, sondern Pech. Darum kündigt sich jeder Stoß an: Der Spalt glüht auf,
+und ein Ring auf dem Boden füllt sich von innen nach außen – voll heißt Stoß. Der Ring steht
+**immer** da, auch in Ruhe: Wo es gleich brennt, muss man auch dann sehen, wenn gerade nichts brennt.
+Das ist dieselbe Regel wie bei der Sprengladung – die Ansage steht auf dem Boden, nicht am Gerät.
+Der Strahl selbst zählt in der Dunkelheit als **Licht**; der Spalt glimmt schwach, beim Stoß reicht
+der Schein weit. Es ist der einzige Ort einer Bahn, an dem man ausgerechnet dann am meisten sieht,
+wenn man nicht hindarf.
+
+**Bahn 11, „Die zerbrochene Brücke".** Über den See führte einmal eine Brücke; in der Mitte fehlen
+drei Felder. Hinter dem Loch steht seit Fassung 162 eine kleine Wand: Hinter dem Absatz beginnt die
+Glut, und Glut ist für das Spiel Boden – an ihrem Rand baut `level.js` darum keine Bande. Ein Schlag,
+der einen Tick zu lang war, rollte am Loch vorbei und in die Schmelze. Das ist keine Aufgabe, sondern
+eine Strafe dafür, dass man getroffen hat; die Wand gibt den Ball statt dessen zurück. Der Bot spielt
+die Bahn danach in Ø 5,0 statt 5,5, Median 5, längster Lauf 9 statt 12. Die Rampe steht drei Felder davor: genug Anlauf, um sie zu treffen, zu wenig, um den
+Stoß noch abzuwarten, nachdem man geschlagen hat. Im Bruch steht die große Fontäne, auf den beiden
+Stegen je eine kleinere, im Takt gegeneinander versetzt. Der Bot spielt sie mit Ø 5,5 bei Par 4,
+Median 4, Profi 3 Schläge, 0 von 10 Läufen am Schlaglimit.
+
+Damit das überhaupt als Bahn durchgeht, musste `tools/mine.py` etwas lernen: Die Wegprüfung kannte
+bis dahin nur Rollen und Fallen. Jetzt rechnet sie **den Sprung mit** – mit denselben Zahlen wie das
+Spiel (halbe Rampenlänge bis zur Kante, dann `land`) – und prüft zusätzlich, dass die Rampe auf
+festem Boden aufsetzt und keine Fontäne den Abschlag oder das Loch bestreicht. Eine Schanze, die in
+die Glut wirft, fiele sonst erst beim Spielen auf.
+
+**Geprüft wird das Verhalten, nicht der Quelltext** (`tools/mine.mjs`): Ein Ball liegt auf dem Spalt,
+und über zwei volle Umläufe wird mitgeschrieben, wann ein Lava-Ereignis fällt – im Stoß ja, in der
+Vorwarnung und in der Ruhe nie. Dann dasselbe mit einem Ball, der in der Luft festgehalten wird: Im
+Stoß holt ihn der Strahl herunter, in der Ruhe kommt er durch. Und für die Bahn wird nachgerechnet,
+dass der Flugweg der Rampe wirklich über eine Fontäne führt – sonst wäre der Haken in der Luft ohne
+Wirkung und die Bahn eine gewöhnliche Rampe.
 
 **Der Schmelzofen ist die Windmühle.** Nicht *wie* eine Windmühle – es ist dieselbe Maschine,
 Zeile für Zeile: ein Bau quer über dem Weg, ein Durchgang in der Mitte, der sich im Takt schließt.
@@ -1283,16 +1414,38 @@ dort ist die Klappe ganz unten. Das Bild zeigt also nicht *ungefähr*, sondern *
 eine Zeichnung, die nach eigener Uhr liefe, wäre schlimmer als gar keine, weil man sich auf sie
 verließe.
 
+**Der Fahrweg war trotzdem falsch** – Fassung 156 hatte an der Klappe einen Weg von 0,45 vor der
+Sperre. Das ist richtig gerechnet und trotzdem falsch gemessen: Der Winkel kommt über den ganzen
+Umlauf nie weiter als 0,785 vom untersten Punkt weg (ein halber Blattabstand bei vier Blättern).
+Mit 0,45 stand die Klappe also nur in einem Wimpernschlag ganz oben – das Maul sah fast immer
+versperrt aus, obwohl der Weg 62 % der Zeit frei ist. Seit Fassung 157 sind es `SPERRT = 0,30` und
+`FAHRWEG = 0,22`: 38 % ganz zu, 34 % ganz offen, der Rest Fahrt. `tools/mine.mjs` rechnet das jetzt
+nach, statt nur die Zeichen zu lesen – es liest die Schwelle aus *beiden* Dateien und vergleicht
+sie, und es prüft, dass der Fahrweg unterhalb des weitesten Standes bleibt.
+
+**Die Feinarbeit (Fassung 157).** Der Ofen war ein glatter Kasten mit einem Loch, und ein glatter
+Kasten ist kein Bauwerk. Dazugekommen ist, was ihn zu einem macht: gemauerte Lagen mit versetzten
+Stoßfugen (zwei Fugen übereinander gibt es an keiner Mauer, die hält – daran erkennt das Auge
+Mauerwerk), **Zugeisen** in der Wand, weil ein Ofen sich mit der Hitze selbst auseinandertreibt,
+ein **Rauchfang** zwischen Dach und Esse samt Eisenringen, **Funken**, die schneller steigen als der
+Rauch und unterwegs verlöschen, **Ruß** über dem Maul, ein **Kohlenbett** aus kantigen dunklen
+Brocken auf einem hellen Streifen – die Glut sieht *zwischen* der Kohle durch – mit Flammenzungen
+davor, dazu Nieten auf dem Eisen und ein **Schieberkasten** über dem Maul, in dem die Klappe steckt,
+wenn sie oben ist. Alles Kleinteilige hängt am Maßstab (`fein = s > 24`): Aus der Übersicht
+verschmieren Fugen und Nieten zu einem grauen Schleier, dort ist weniger mehr.
+
 Gebaut war daran nichts: `style: 'ofen'` an der Windmühle, und `render.js` biegt beim Zeichnen nach
 `render_mine.js` ab. **Ein Stil ist billiger als ein Hindernis**, und er hält die Regel gleich – wer
 die Mühle im Märchenland kennt, kennt den Ofen. Dazu die eine Sache, die ein Ofen können muss: Er
 zählt in der Dunkelheit der Mine als **Licht**. Ein Feuer, das Licht malt und keins gibt, wäre
 Kulisse.
 
-`tools/mine.mjs` prüft dreierlei: dass unter Tage keine Windmühle *als* Windmühle steht (ein
-vergessener Stil fiele sonst nicht auf – der Zeichner beschwert sich nicht, er malt ein
-Segeltuch-Kreuz in den Berg), dass vor dem Maul **kein Rad** steht, und dass die Klappe den Winkel
-des Hindernisses liest statt einer eigenen Uhr.
+`tools/mine.mjs` prüft: dass unter Tage keine Windmühle *als* Windmühle steht (ein vergessener
+Stil fiele sonst nicht auf – der Zeichner beschwert sich nicht, er malt ein Segeltuch-Kreuz in den
+Berg), dass vor dem Maul **kein Rad** steht, dass die Klappe den Winkel des Hindernisses liest statt
+einer eigenen Uhr, dass sie an derselben Schwelle ganz zu ist und einen guten Teil des Umlaufs ganz
+offen steht – und jedes einzelne Stück der Feinarbeit. Letzteres steht dort, weil es sonst beim
+nächsten Umbau still verschwindet: Ein Ofen ohne Fugen ist wieder der Kasten aus Fassung 156.
 
 Die Pare stehen nicht nach Gefühl, sondern nach dem, was die Bahnen wirklich spielen: Der
 Normalspieler-Bot (`node tools/audit/audit.mjs mine`) hat sie durchgespielt, und wo sein Median
@@ -2472,7 +2625,7 @@ src/courses_jungle.js die Bahnen des Dschungeltempels
 src/courses_storm.js die Bahnen des Sturmhimmels (Legende)
 src/courses_shadow.js die Bahnen des Schattenreichs (Legende)
 src/courses_colosseum.js die Bahnen des Kolosseums (Legende)
-src/courses_mine.js die neun Bahnen der Zwergenmine (erzeugt von tools/mine.py)
+src/courses_mine.js die zwölf Bahnen der Zwergenmine (erzeugt von tools/mine.py)
 src/courses_boule.js die neun Bahnen der Boule-Welt (erzeugt von tools/boule.py)
 src/courses_pro.js die Bahnen des Tüftlerreichs und die Weltenliste
 src/editor.js     Baumodus (Editor für eigene Bahnen)
@@ -2481,7 +2634,7 @@ manifest.webmanifest, sw.js, icons/   Web-App: Installieren und offline spielen
 src/level.js      Karte → Kacheln, Mauern, Kollisionssegmente
 src/obstacles.js  bewegliche und statische Hindernisse
 src/obstacles_legend.js Blitzfeld, Aufwind, Falltür, Fallbeil, Augenturm, Löwentor
-src/obstacles_mine.js Sprengladung, Kippbühne und Grubenlampe der Zwergenmine
+src/obstacles_mine.js Sprengladung, Kippbühne, Grubenlampe, Gießlöffel und Lavafontäne der Zwergenmine
 src/physics.js    Ballphysik und Kollision (auch Ball gegen Ball, wenn mehrere zugleich rollen)
 src/render.js     isometrische Darstellung
 src/render_legend.js Optik der Legende-Welten (Hintergründe, neue Hindernisse und Stile)
