@@ -34,6 +34,14 @@ Object.assign(Renderer.prototype, {
       /* Der Schmelzofen brennt, also leuchtet er auch. Ein Feuer, das Licht malt und keins gibt,
          wäre Kulisse; so ist der Ofen zugleich die Lampe seines Abschnitts. */
       if (ob.type === 'windmill' && ob.style === 'ofen') lichter.push({ x: ob.x, y: ob.y, r: ob.licht || 4.4 });
+      /* Die Fontäne leuchtet auch. Der Spalt glimmt immer ein wenig - sonst fände man ihn im
+         Dunkeln erst, wenn man drinsteht -, und beim Stoß reicht der Schein weit. Das ist der
+         einzige Ort der Bahn, an dem man ausgerechnet dann am meisten sieht, wenn man nicht
+         hindarf. */
+      if (ob.type === 'lavafontaene') {
+        lichter.push({ x: ob.x, y: ob.y, r: (ob.licht || 3.8) * (0.42 + 0.58 * (ob.hoch || 0)) });
+        continue;
+      }
     }
     /* Die zweite Leinwand wird einmal angelegt und danach nur noch neu bemalt – ein neues
        Canvas je Bild wäre bei sechzig Bildern in der Sekunde Arbeit für nichts. */
@@ -354,6 +362,92 @@ Object.assign(Renderer.prototype, {
       }
       ctx.restore();
     }
+  },
+
+  /* ---------------------------------------------------------------------------
+     Die Lavafontäne
+     ---------------------------------------------------------------------------
+     Zwei Teile, wie bei der Sprengladung: Was auf dem Boden liegt, wird vor allen Körpern
+     gezeichnet (drawFontaeneFloor), der Strahl selbst danach.
+
+     Und wie bei der Sprengladung steht die Ansage auf dem Boden, nicht am Gerät: Der Ring zeigt,
+     wie weit der Strahl reicht, und er füllt sich in den letzten Zehntelsekunden vor dem Stoß.
+     Man muß also nicht den Takt zählen - man sieht ihn ablaufen. Bei einem Takt von zwei Sekunden
+     ist das der Unterschied zwischen einer Aufgabe und einem Würfel. */
+  drawFontaeneFloor(ctx, ob, t) {
+    const s = this.scale, r = ob.r || 0.8;
+    const droht = ob.state === 'droht', stoss = ob.state === 'stoss';
+    const puls = droht ? ob.p : stoss ? 1 : 0.12;
+    // Der Schein auf dem Gestein rings um den Spalt
+    const [sx, sy] = this.proj(ob.x, ob.y, 0.01);
+    const schein = ctx.createRadialGradient(sx, sy, 0, sx, sy, s * r * 2.6);
+    schein.addColorStop(0, `rgba(255,150,50,${0.16 + 0.5 * puls})`);
+    schein.addColorStop(1, 'rgba(255,120,30,0)');
+    ctx.fillStyle = schein;
+    ctx.beginPath(); ctx.ellipse(sx, sy, s * r * 2.6, s * r * 2.6 * this.cam.tilt, 0, 0, TAU); ctx.fill();
+    /* Der Reichweitenring. Er steht immer da - auch in Ruhe -, denn wo die Fontäne trifft, muß man
+       auch dann wissen, wenn sie gerade unten ist. Nur füllt er sich erst, wenn es soweit ist. */
+    ctx.strokeStyle = `rgba(255,${Math.round(140 + 80 * puls)},60,${0.35 + 0.5 * puls})`;
+    ctx.lineWidth = Math.max(1.5, s * (0.05 + 0.05 * puls));
+    ctx.beginPath(); ctx.ellipse(sx, sy, s * r, s * r * this.cam.tilt, 0, 0, TAU); ctx.stroke();
+    if (droht) {   // der Ring füllt sich von innen nach außen: fertig heißt Stoß
+      ctx.fillStyle = `rgba(255,120,30,${0.18 + 0.3 * ob.p})`;
+      ctx.beginPath(); ctx.ellipse(sx, sy, s * r * ob.p, s * r * ob.p * this.cam.tilt, 0, 0, TAU); ctx.fill();
+    }
+    // Der Spalt: ein dunkler Riß, in dem es glüht
+    ctx.fillStyle = '#1a0f0a';
+    ctx.beginPath(); ctx.ellipse(sx, sy, s * r * 0.52, s * r * 0.52 * this.cam.tilt, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = `rgba(255,${Math.round(120 + 90 * puls)},${Math.round(30 + 40 * puls)},${0.75 + 0.25 * puls})`;
+    ctx.beginPath(); ctx.ellipse(sx, sy, s * r * (0.2 + 0.26 * puls), s * r * (0.2 + 0.26 * puls) * this.cam.tilt, 0, 0, TAU); ctx.fill();
+  },
+
+  /* Der Strahl. Er steht nur, solange er tödlich ist - genau das ist seine Aufgabe als Bild:
+     Was man sieht, ist was gilt. Dazwischen brodelt es nur im Spalt. */
+  drawLavafontaene(ctx, ob, t) {
+    const s = this.scale, r = ob.r || 0.8;
+    if (ob.hoch > 0.004) {
+      const h = (ob.hoehe || 3.4) * ob.hoch;
+      /* Ein Kegelstumpf statt eines Rechtecks: Der Strahl wird nach oben dünner, und weil er in
+         Weltkoordinaten steht, dreht er sich mit der Kamera mit. */
+      /* Der Strahl ist schlank. Ein breiter Kegel sah aus wie ein Sandhaufen - was ihn zum Strahl
+         macht, ist das Verhältnis: dünn und hoch, nicht dick und kurz. */
+      this.frustum(ctx, this.circlePoly(ob.x, ob.y, r * 0.44, 10), this.circlePoly(ob.x, ob.y, r * 0.14, 10),
+                   0, h, '#ff9a24', '#d83c08', { ohneDeckel: true });
+      // Der Kern: schmal und fast weiß. Eine Säule aus einer Farbe sähe aus wie Pappe.
+      this.frustum(ctx, this.circlePoly(ob.x, ob.y, r * 0.17, 8), this.circlePoly(ob.x, ob.y, r * 0.05, 8),
+                   0.02, h * 0.7, '#fff3cf', '#ffca62', { ohneDeckel: true });
+      // Ein Kranz am Fuß: dort, wo der Strahl aus dem Spalt bricht, spritzt es zur Seite
+      const [bx, by] = this.proj(ob.x, ob.y, 0.05);
+      const fuss = ctx.createRadialGradient(bx, by, 0, bx, by, s * r * 1.1);
+      fuss.addColorStop(0, 'rgba(255,240,190,0.85)');
+      fuss.addColorStop(0.5, 'rgba(255,140,40,0.5)');
+      fuss.addColorStop(1, 'rgba(255,110,20,0)');
+      ctx.fillStyle = fuss;
+      ctx.beginPath(); ctx.ellipse(bx, by, s * r * 1.1, s * r * 1.1 * this.cam.tilt, 0, 0, TAU); ctx.fill();
+      // Spritzer, die der Strahl oben abwirft
+      ctx.save();
+      for (let i = 0; i < 7; i++) {
+        const u = ((t * 1.7 + i / 7) % 1);
+        const w = i * 0.9 + t * 0.6;
+        const [px, py] = this.proj(ob.x + Math.cos(w) * r * u * 1.5, ob.y + Math.sin(w) * r * u * 1.5, h * (0.75 + 0.5 * u) - u * u * 1.6);
+        ctx.globalAlpha = 0.9 * (1 - u);
+        ctx.fillStyle = u < 0.5 ? '#ffd27a' : '#f2701c';
+        ctx.beginPath(); ctx.arc(px, py, Math.max(1, s * (0.09 - 0.05 * u)), 0, TAU); ctx.fill();
+      }
+      ctx.restore();
+      return;
+    }
+    // In Ruhe: ein paar Blasen im Spalt, damit er nicht tot aussieht
+    if (!(this.scale > 20)) return;
+    ctx.save();
+    for (let i = 0; i < 3; i++) {
+      const u = ((t * 0.8 + i / 3) % 1);
+      const [px, py] = this.proj(ob.x + Math.sin(t * 1.3 + i * 2) * r * 0.25, ob.y, 0.02 + u * 0.3);
+      ctx.globalAlpha = 0.5 * (1 - u);
+      ctx.fillStyle = '#ffb347';
+      ctx.beginPath(); ctx.arc(px, py, Math.max(1, s * 0.06 * (1 - u * 0.5)), 0, TAU); ctx.fill();
+    }
+    ctx.restore();
   },
 
   /* ---------------------------------------------------------------------------

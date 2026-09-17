@@ -32,7 +32,7 @@ const Share = (() => {
     'gearfield', 'pendulum', 'springwork', 'copperpipe', 'escapement', 'sweephand', 'dial', 'wanderloch', 'handclock', 'turbine', 'luke', 'aufzug', 'zahnstange',
     'windfahne', 'lawine', 'seilbahn', 'schneebruecke',
     // Die Maschinen der Zwergenmine
-    'sprengladung', 'kippbuehne', 'grubenlampe', 'bruchwand']);
+    'sprengladung', 'kippbuehne', 'grubenlampe', 'bruchwand', 'lavafontaene']);
   const W_MIN = 6, W_MAX = 48, H_MIN = 4, H_MAX = 36;
   const OBJ_MAX = 120, DEKOR_MAX = 120, FELDER_MAX = 24;
 

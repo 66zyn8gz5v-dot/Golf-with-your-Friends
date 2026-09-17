@@ -294,6 +294,137 @@ console.log('\n--- Die Bruchwand ---');
   pruef('keiner steht mehr auf dem alten „stempel"', !klotz.some(o => o.style === 'stempel'));
 }
 
+/* ---------- Die Lavafontäne ----------
+ *
+ * Sie ist die einzige Falle im Spiel außer dem springenden Hai, die einen *fliegenden* Ball holt.
+ * Genau daran hängt die Bahn „Die zerbrochene Brücke": Wäre der Sprung immer sicher, gäbe es dort
+ * nichts zu entscheiden. Darum wird hier nicht nachgelesen, ob der Haken dasteht, sondern mit der
+ * echten Physik nachgespielt, was einem Ball in der Luft passiert.
+ *
+ * Und das Zweite: Tödlich ist allein der stehende Strahl. Die Vorwarnung muß folgenlos sein –
+ * sonst wäre sie keine Warnung, sondern schon der Treffer.
+ */
+{
+  const feldF = (extra = {}) => ({
+    name: 'Fontänenprüfung', par: 3, theme: 'schmelze',
+    map: ['..........................', '.T........................',
+          ...Array.from({ length: 4 }, () => '.########################.'),
+          '.........................H', '..........................'],
+    obstacles: [{ type: 'lavafontaene', x: 8.5, y: 3.5, r: 0.8, takt: 2.1, droht: 0.5, oben: 0.55, ...extra }],
+  });
+  const lv = G.buildLevel(feldF());
+  const f = lv.obstacles.find(o => o.type === 'lavafontaene');
+  const gebaut = !!f && typeof f.update === 'function' && typeof f.airTrigger === 'function';
+  pruef('die Fontäne wird gebaut', gebaut);
+  /* Fehlt sie, fällt der Rest nicht mit einem Absturz aus, sondern mit Namen. Eine Prüfung, die
+     beim ersten Fehler stirbt, sagt nur, *dass* etwas kaputt ist – nicht was alles. */
+  if (!gebaut) for (const n of ['sie hat Ruhe, Vorwarnung und Stoß', 'der Takt ist kurz',
+                                'der stehende Strahl verbrennt den Ball', 'die Vorwarnung tut nichts',
+                                'der Strahl holt auch einen fliegenden Ball herunter',
+                                'jenseits des Rings ist man sicher'])
+    pruef(n, false, 'die Fontäne fehlt');
+  if (gebaut) {
+
+  /* Der Takt. „Recht schnell" ist keine Geschmacksfrage, sondern die Aufgabe: Bei einem langen
+     Takt wartet man die Ruhe ab und spielt in aller Gemütlichkeit weiter. */
+  const dauer = {};
+  for (let t = 0; t < f.takt; t += 0.002) { f.update(t); dauer[f.state] = (dauer[f.state] || 0) + 0.002; }
+  pruef('sie hat Ruhe, Vorwarnung und Stoß',
+        dauer.ruhe > 0 && dauer.droht > 0 && dauer.stoss > 0,
+        Object.entries(dauer).map(([k, v]) => `${k} ${v.toFixed(2)}s`).join(', '));
+  pruef('der Takt ist kurz', f.takt <= 3.0, `${f.takt}s`);
+  pruef('und die Ruhe kürzer als zwei Sekunden', (dauer.ruhe || 0) < 2.0, `${(dauer.ruhe || 0).toFixed(2)}s`);
+
+  /* Wer im Strahl liegt, verbrennt – und nur dann. Gemessen wird mit der echten Physik: Der Ball
+     liegt auf dem Spalt, und über einen ganzen Umlauf wird mitgeschrieben, wann ein Lava-Ereignis
+     fällt. */
+  const zeiten = { ruhe: 0, droht: 0, stoss: 0 };
+  {
+    const b = ball(8.5, 3.5);
+    for (let t = 0; t < f.takt * 2; t += STEP) {
+      b.x = 8.5; b.y = 3.5; b.vx = 0; b.vy = 0;
+      const ev = G.stepPhysics(lv, b, STEP, t, true);
+      if (ev.some(e => e.type === 'lava')) zeiten[f.state] = (zeiten[f.state] || 0) + 1;
+    }
+  }
+  pruef('der stehende Strahl verbrennt den Ball', zeiten.stoss > 0, `${zeiten.stoss} Bildschritte`);
+  pruef('die Vorwarnung tut nichts', zeiten.droht === 0, `${zeiten.droht} Treffer in der Vorwarnung`);
+  pruef('und in Ruhe ist der Spalt harmlos', zeiten.ruhe === 0, `${zeiten.ruhe} Treffer in der Ruhe`);
+
+  /* Der eigentliche Punkt: ein Ball in der Luft. Die Physik überspringt im Flug fast alles – ohne
+     airTrigger flöge man ungestraft über jede Fontäne, und die zerbrochene Brücke wäre geschenkt. */
+  const imFlug = (t0) => {
+    const b = ball(8.5, 3.5);
+    let getroffen = false;
+    for (let t = t0, i = 0; i < 20; i++, t += STEP) {
+      b.x = 8.5; b.y = 3.5; b.vx = 0; b.vy = 0;
+      b.air = true; b.z = 2.0; b.vz = 0;                 // in der Luft festhalten
+      const ev = G.stepPhysics(lv, b, STEP, t, true);
+      if (ev.some(e => e.type === 'lava')) getroffen = true;
+    }
+    return getroffen;
+  };
+  // Ein Zeitpunkt mitten im Stoß und einer mitten in der Ruhe
+  const imStoss = f.droht + f.oben / 2, inRuhe = f.droht + f.oben + (f.takt - f.droht - f.oben) / 2;
+  pruef('der Strahl holt auch einen fliegenden Ball herunter', imFlug(imStoss), `bei t=${imStoss.toFixed(2)}s`);
+  pruef('und wer im richtigen Augenblick springt, kommt durch', !imFlug(inRuhe), `bei t=${inRuhe.toFixed(2)}s`);
+
+  /* Außerhalb der Reichweite tut sie nichts – sonst wäre der Ring auf dem Boden gelogen. */
+  {
+    const b = ball(8.5 + f.r + 0.8, 3.5);
+    let getroffen = false;
+    for (let t = 0; t < f.takt; t += STEP) {
+      b.x = 8.5 + f.r + 0.8; b.y = 3.5; b.vx = 0; b.vy = 0;
+      const ev = G.stepPhysics(lv, b, STEP, t, true);
+      if (ev.some(e => e.type === 'lava')) getroffen = true;
+    }
+    pruef('jenseits des Rings ist man sicher', !getroffen);
+  }
+
+  }
+
+  /* Die Bahn dazu. Der Sprung muß über die Fontäne führen – stünde sie neben dem Flugweg, wäre
+     der Haken in der Luft ohne Wirkung und die Bahn eine gewöhnliche Rampe. */
+  const bahn = vm.runInContext("MINE_COURSES.find(c => c.name === 'Die zerbrochene Brücke')", ctx);
+  pruef('es gibt die zerbrochene Brücke', !!bahn);
+  if (bahn) {
+    const fs_ = (bahn.obstacles || []).filter(o => o.type === 'lavafontaene');
+    const rampen = (bahn.obstacles || []).filter(o => o.type === 'ramp');
+    pruef('sie hat Fontänen', fs_.length >= 1, `${fs_.length} Stück`);
+    pruef('und eine Rampe', rampen.length === 1);
+    if (rampen.length === 1 && fs_.length) {
+      const rp = rampen[0];
+      const a = (rp.angle ?? 90) * Math.PI / 180, dx = Math.cos(a), dy = Math.sin(a);
+      const halb = Math.abs(dx) > 0.5 ? rp.w / 2 : rp.h / 2;
+      const mx = rp.x + rp.w / 2, my = rp.y + rp.h / 2;
+      const lx = mx + dx * (halb + (rp.land ?? 1.7)), ly = my + dy * (halb + (rp.land ?? 1.7));
+      // Liegt eine Fontäne zwischen Rampenkante und Aufsetzpunkt, und zwar auf dem Flugweg?
+      const ueber = fs_.some(o => {
+        const u = ((o.x - mx) * dx + (o.y - my) * dy);
+        const quer = Math.abs((o.x - mx) * -dy + (o.y - my) * dx);
+        return u > halb && u < (halb + (rp.land ?? 1.7)) && quer < o.r + 0.5;
+      });
+      pruef('und der Sprung führt über eine Fontäne hinweg', ueber,
+            `Rampe (${mx},${my}) → (${lx.toFixed(1)},${ly.toFixed(1)})`);
+    }
+  }
+
+  /* Gezeichnet werden muß sie auch – und zwar der Ring *immer*, nicht nur beim Stoß: Wo es gleich
+     brennt, muß man auch dann sehen, wenn gerade nichts brennt. */
+  const zeichner = fs.readFileSync(path.join(SRC, 'render_mine.js'), 'utf8');
+  const haupt = fs.readFileSync(path.join(SRC, 'render.js'), 'utf8');
+  for (const [was, muster] of [['den Boden der Fontäne', /drawFontaeneFloor\(ctx, ob, t\) \{/],
+                               ['den Strahl', /drawLavafontaene\(ctx, ob, t\) \{/],
+                               ['einen Reichweitenring', /Reichweitenring/],
+                               ['Funken beim Stoß', /Spritzer/]])
+    pruef(`der Zeichner hat ${was}`, muster.test(zeichner));
+  pruef('und render.js ruft beides auf',
+        /ob\.type === 'lavafontaene'\) \{ this\.drawFontaeneFloor/.test(haupt) && /drawLavafontaene\(ctx, ob, t\)/.test(haupt));
+  pruef('die Fontäne zählt als Licht', /ob\.type === 'lavafontaene'\) \{\n\s*lichter\.push/.test(zeichner));
+  const teilen = fs.readFileSync(path.join(SRC, 'share.js'), 'utf8');
+  pruef('und geteilte Bahnen dürfen sie enthalten', /'lavafontaene'/.test(teilen));
+}
+
 /* ---------- Der Schmelzofen ----------
  * Es ist die Windmühle des Märchenlands, nur anders gezeichnet: ein Bau quer über dem Weg, ein
  * Maul in der Mitte, davor ein Rad, dessen Blätter den Weg im Takt versperren. Ein Windrad

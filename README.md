@@ -183,7 +183,7 @@ Höhe** (y) – die x-Angabe wird beim Zeichnen durch `BREITE` geteilt.
 | Schattenreich | Legende | 10 extra große Bahnen im Reich der Schatten |
 | Schneeberg | Profi | 12 Bahnen den Berg hinauf – der Wind dreht im Takt, oben liegen die Wolkenetagen |
 | Uhrwerkstadt | Profi | 14 Bahnen im Uhrenturm – alles eine Frage des Takts, gestapelte Ebenen, zum Schluss wandert das Loch |
-| Zwergenmine | Profi | 11 Bahnen unter den Berg – man sieht nur, was im Licht der Grubenlampen steht (**nur in der Vorschau**) |
+| Zwergenmine | Profi | 12 Bahnen unter den Berg – man sieht nur, was im Licht der Grubenlampen steht (**nur in der Vorschau**) |
 
 **Nur in der Vorschau.** Die Zwergenmine ist gebaut und geprüft, soll aber noch nicht ins Spiel. Der
 nächstliegende Weg wäre, sie für `main` herauszuschneiden – und genau daran geht so etwas kaputt:
@@ -1310,7 +1310,56 @@ stehen lässt, und dass sie beim nächsten Loch wieder dasteht.
 | 8 | Kristallkammer | 4 | Kristall | **Zwei Sohlen.** Oben der Magnetit auf der Galerie, unten ein Felspfeiler vor der großen Kammer. |
 | 9 | Sohle Neun | 5 | Schmelze | **Zwei Sohlen.** Man fällt mitten in die Glut: ein Steg über den einen Spalt, eine Bohle über den anderen. |
 | 10 | **Die Gießhalle** | 4 | Schmelze | **Der Gießlöffel.** Quer durch die Halle steht die Glut, hinüber führt nichts – bis das Erz die Brücke baut. |
-| 11 | Die Schmelze | 5 | Schmelze | Die Insel im Lavasee. Der Damm ist zugemauert, in der Mitte steht der **Schmelzofen**, und im Takt fegt eine Ladung alles hinunter. |
+| 11 | **Die zerbrochene Brücke** | 4 | Schmelze | **Die Lavafontäne.** In der Mitte fehlt ein Stück Brücke, und genau dort schießt im Takt die Lava hoch – die trifft auch in der Luft. |
+| 12 | Die Schmelze | 5 | Schmelze | Die Insel im Lavasee. Der Damm ist zugemauert, in der Mitte steht der **Schmelzofen**, und im Takt fegt eine Ladung alles hinunter. |
+
+### Die Lavafontäne: die einzige Falle, die in die Luft greift
+
+Ein Spalt im Stollenboden, aus dem im Takt ein Strahl Lava hochschießt. Wer darin steht, verbrennt –
+und wer darüber fliegt, auch. Das Zweite ist der Punkt.
+
+**Sie ist nicht die Stachelfalle.** Eine Platte, aus der im Takt etwas hochkommt, steht schon im
+Märchenland. Zwei Dinge sind hier anders, und beide hängen zusammen:
+
+*Der Takt ist kurz* – 2,1 Sekunden, davon 0,5 Vorwarnung und 0,55 der stehende Strahl. Das ist kein
+Detail, sondern die ganze Aufgabe: Bei einem langen Takt wartet man, bis Ruhe ist, und spielt dann in
+aller Gemütlichkeit; die Maschine kostet nur Zeit. Bei einem kurzen Takt kann man nicht warten – die
+Ruhe dauert eine Sekunde. Man muss den Schlag in die Lücke legen, während sie noch da ist.
+
+*Sie greift in die Luft.* Die Physik überspringt im Flug fast alles: keine Reibung, keine Wände,
+keine Hindernisse. Nur der springende Hai holt einen fliegenden Ball herunter – und jetzt die
+Fontäne, über `airTrigger` (`obstacles_mine.js`). Genau deshalb kann die Bahn eine zerbrochene
+Brücke sein: Über einen Spalt zu springen, während unten etwas hochschießt, ist erst dann eine
+Entscheidung, wenn der Strahl den Sprung auch treffen kann. Eine Fontäne, über die man einfach
+hinwegfliegt, wäre Kulisse.
+
+**Wie man sie kommen sieht.** In der Mine ist es dunkel, und eine Gefahr, die man erst sieht, wenn
+sie wirkt, ist keine Aufgabe, sondern Pech. Darum kündigt sich jeder Stoß an: Der Spalt glüht auf,
+und ein Ring auf dem Boden füllt sich von innen nach außen – voll heißt Stoß. Der Ring steht
+**immer** da, auch in Ruhe: Wo es gleich brennt, muss man auch dann sehen, wenn gerade nichts brennt.
+Das ist dieselbe Regel wie bei der Sprengladung – die Ansage steht auf dem Boden, nicht am Gerät.
+Der Strahl selbst zählt in der Dunkelheit als **Licht**; der Spalt glimmt schwach, beim Stoß reicht
+der Schein weit. Es ist der einzige Ort einer Bahn, an dem man ausgerechnet dann am meisten sieht,
+wenn man nicht hindarf.
+
+**Bahn 11, „Die zerbrochene Brücke".** Über den See führte einmal eine Brücke; in der Mitte fehlen
+drei Felder. Die Rampe steht drei Felder davor: genug Anlauf, um sie zu treffen, zu wenig, um den
+Stoß noch abzuwarten, nachdem man geschlagen hat. Im Bruch steht die große Fontäne, auf den beiden
+Stegen je eine kleinere, im Takt gegeneinander versetzt. Der Bot spielt sie mit Ø 5,5 bei Par 4,
+Median 4, Profi 3 Schläge, 0 von 10 Läufen am Schlaglimit.
+
+Damit das überhaupt als Bahn durchgeht, musste `tools/mine.py` etwas lernen: Die Wegprüfung kannte
+bis dahin nur Rollen und Fallen. Jetzt rechnet sie **den Sprung mit** – mit denselben Zahlen wie das
+Spiel (halbe Rampenlänge bis zur Kante, dann `land`) – und prüft zusätzlich, dass die Rampe auf
+festem Boden aufsetzt und keine Fontäne den Abschlag oder das Loch bestreicht. Eine Schanze, die in
+die Glut wirft, fiele sonst erst beim Spielen auf.
+
+**Geprüft wird das Verhalten, nicht der Quelltext** (`tools/mine.mjs`): Ein Ball liegt auf dem Spalt,
+und über zwei volle Umläufe wird mitgeschrieben, wann ein Lava-Ereignis fällt – im Stoß ja, in der
+Vorwarnung und in der Ruhe nie. Dann dasselbe mit einem Ball, der in der Luft festgehalten wird: Im
+Stoß holt ihn der Strahl herunter, in der Ruhe kommt er durch. Und für die Bahn wird nachgerechnet,
+dass der Flugweg der Rampe wirklich über eine Fontäne führt – sonst wäre der Haken in der Luft ohne
+Wirkung und die Bahn eine gewöhnliche Rampe.
 
 **Der Schmelzofen ist die Windmühle.** Nicht *wie* eine Windmühle – es ist dieselbe Maschine,
 Zeile für Zeile: ein Bau quer über dem Weg, ein Durchgang in der Mitte, der sich im Takt schließt.
@@ -2541,7 +2590,7 @@ src/courses_jungle.js die Bahnen des Dschungeltempels
 src/courses_storm.js die Bahnen des Sturmhimmels (Legende)
 src/courses_shadow.js die Bahnen des Schattenreichs (Legende)
 src/courses_colosseum.js die Bahnen des Kolosseums (Legende)
-src/courses_mine.js die neun Bahnen der Zwergenmine (erzeugt von tools/mine.py)
+src/courses_mine.js die zwölf Bahnen der Zwergenmine (erzeugt von tools/mine.py)
 src/courses_boule.js die neun Bahnen der Boule-Welt (erzeugt von tools/boule.py)
 src/courses_pro.js die Bahnen des Tüftlerreichs und die Weltenliste
 src/editor.js     Baumodus (Editor für eigene Bahnen)
@@ -2550,7 +2599,7 @@ manifest.webmanifest, sw.js, icons/   Web-App: Installieren und offline spielen
 src/level.js      Karte → Kacheln, Mauern, Kollisionssegmente
 src/obstacles.js  bewegliche und statische Hindernisse
 src/obstacles_legend.js Blitzfeld, Aufwind, Falltür, Fallbeil, Augenturm, Löwentor
-src/obstacles_mine.js Sprengladung, Kippbühne und Grubenlampe der Zwergenmine
+src/obstacles_mine.js Sprengladung, Kippbühne, Grubenlampe, Gießlöffel und Lavafontäne der Zwergenmine
 src/physics.js    Ballphysik und Kollision (auch Ball gegen Ball, wenn mehrere zugleich rollen)
 src/render.js     isometrische Darstellung
 src/render_legend.js Optik der Legende-Welten (Hintergründe, neue Hindernisse und Stile)
