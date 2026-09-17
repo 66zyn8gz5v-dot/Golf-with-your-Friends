@@ -1,74 +1,74 @@
 /* Die Flut (Weltkennung 'flut'): die versunkene Stadt.
    Erzeugt von tools/flut.py – dort steht auch, warum die Bahnen so aussehen, wie sie aussehen.
 
-   NOCH NICHT FERTIG. Zurzeit stehen hier zwei Probebahnen: eine für die Flut allein, eine für das
-   Pumpwerk. Sie sind da, damit die Weltregel angesehen und gespielt werden kann, bevor neun Bahnen
-   darauf gebaut werden – und darum trägt die Welt in src/courses_pro.js die Kennzeichnung
-   'nurVorschau'. Im Spiel taucht sie nicht auf.
+   NOCH NICHT FERTIG. Zurzeit stehen hier zwei Probebahnen, an denen die Maschinen angesehen und
+   gespielt werden können, bevor neun Bahnen darauf gebaut werden. Die Welt trägt darum in
+   src/courses_pro.js die Kennzeichnung 'nurVorschau'; im Spiel taucht sie nicht auf.
 
-   DIE FRAGE DIESER WELT IST: *wie lange noch?* Das Wasser steigt, Ring für Ring, von den Rändern
-   nach innen, und es nimmt der Bahn dabei die Breite. Abschlag und Loch bleiben trocken; alles
-   dazwischen kann verschwinden. Die Weltregel selbst steht in src/obstacles_flut.js, gezeichnet
-   wird sie in src/render_flut.js.
+   DAS FLUTBECKEN ist ein Hindernis wie das Wandertor oder die Falltür: Es läuft im Takt von außen
+   nach innen voll und wieder leer, und solange es leer ist, geht der Weg hindurch. Ringsum bleibt
+   die Bahn trocken und immer spielbar – **es gibt auf jeder Bahn einen Weg, der auch bei vollem
+   Becken zum Loch führt** (tools/flut.py prüft das). Das Becken ist die Abkürzung, nicht die
+   einzige Möglichkeit; warten muß man nie.
+
+   Zuerst war die Flut eine Weltregel und stieg über die ganze Bahn. Das war gut gedacht und
+   schlecht zu spielen: Wer den Augenblick verpaßte, konnte nur zusehen. Siehe src/obstacles_flut.js.
 
    Kartenlegende wie in courses.js: '#' Boden, '.' offenes Wasser, 'x' Block, 's' Schlick (bremst),
    'T' Abschlag, 'H' Loch. */
 const FLUT_COURSES = [
   {
-    name: 'Der Kai', par: 3, theme: 'deich',
-    intro: 'Die Springflut kommt, und sie kommt von beiden Seiten und aus dem Hafenbecken dazu. Der Kai ist breit genug, daß ein Streifen stehenbleibt – aber nur ein Streifen. Wer sich Zeit läßt, spielt ihn auf einem Steg zu Ende.',
+    name: 'Das Hafenbecken', par: 3, theme: 'deich',
+    intro: 'Das Becken läuft im Takt voll und wieder leer. Steht es leer, geht es geradeaus hindurch – das ist der kurze Weg. Steht es voll, spielt man oben oder unten herum und braucht einen Schlag mehr. Warten muß man nie.',
     map: [
-      '....................................',
-      '....................................',
-      '..############wwwwwww#############..',
-      '..############wwwwwww#############..',
-      '..############wwwwwww#############..',
-      '..############wwwwwww#############..',
-      '..############wwwwwww#############..',
-      '..###########sssssssss############..',
-      '..################################..',
-      '..#####T####################H#####..',
-      '..################################..',
-      '..################################..',
-      '..########xx############xx########..',
-      '..########xx############xx########..',
-      '..################################..',
-      '..################################..',
-      '..################################..',
-      '....................................',
-      '....................................',
+      '................................',
+      '................................',
+      '..############################..',
+      '..############################..',
+      '..############################..',
+      '..#########xxxxxxxxxx#########..',
+      '..#########ssssssssss#########..',
+      '..#########ssssssssss#########..',
+      '..###T#####ssssssssss#####H###..',
+      '..#########ssssssssss#########..',
+      '..#########xxxxxxxxxx#########..',
+      '..############################..',
+      '..############################..',
+      '..############################..',
+      '..############################..',
+      '................................',
+      '................................',
     ],
     obstacles: [
-      { type: 'flut', start: 9.0, takt: 4.5, max: 4, halt: 7 },
+      { type: 'flut', x: 16.0, y: 8.0, w: 10, h: 4, start: 2.5, takt: 1.2, halt: 1.0, leer: 5.0 },
     ],
   },
   {
-    name: 'Die Gasse', par: 4, theme: 'gassen',
-    intro: 'Die Gasse zwischen den Höfen ist die einzige Verbindung, und sie ist das Erste, was absäuft. Unten links liegt das Pumpwerk: Wer darüberrollt, drückt das Wasser für ein paar Sekunden zurück. Aber es liegt außen und säuft selbst früh ab – wer es holen will, muß gleich los, und der Weg dorthin führt vom Loch weg.',
+    name: 'Zwei Becken', par: 4, theme: 'gassen',
+    intro: 'Zwei Becken hintereinander, jedes zur anderen Seite hin gemauert: Wer sie umgeht, fährt Zickzack. Unten links liegt das Pumpwerk – wer darüberrollt, hält beide vier Sekunden lang leer.',
     map: [
-      '......................................',
-      '......................................',
-      '..##############......##############..',
-      '..##############......##############..',
-      '..##############......##############..',
-      '..##############......##############..',
-      '..##############......##############..',
-      '..##################################..',
-      '..##########x#######################..',
-      '..######T###x################H######..',
-      '..##########x#######################..',
-      '..##################################..',
-      '..##############......###xx#########..',
-      '..##############......###xx#########..',
-      '..##############......##############..',
-      '..##############......##############..',
-      '..##############......##############..',
-      '......................................',
-      '......................................',
+      '....................................',
+      '....................................',
+      '..################################..',
+      '..################################..',
+      '..################################..',
+      '..#########xxxxxx#################..',
+      '..#########ssssss####ssssss#######..',
+      '..#########ssssss####ssssss#######..',
+      '..###T#####ssssss####ssssss###H###..',
+      '..#########ssssss####ssssss#######..',
+      '..###################xxxxxx#######..',
+      '..################################..',
+      '..################################..',
+      '..################################..',
+      '..################################..',
+      '....................................',
+      '....................................',
     ],
     obstacles: [
-      { type: 'flut', start: 9.0, takt: 4.5, max: 4, halt: 7 },
-      { type: 'pumpwerk', x: 4.5, y: 14.5, r: 0.8, stufen: 2, dauer: 7 },
+      { type: 'flut', x: 14.0, y: 8.0, w: 6, h: 4, start: 2.5, takt: 1.2, halt: 1.0, leer: 5.0 },
+      { type: 'flut', x: 24.0, y: 8.0, w: 6, h: 4, start: 4.4, takt: 1.2, halt: 1.0, leer: 5.0 },
+      { type: 'pumpwerk', x: 5.5, y: 12.5, r: 0.8, dauer: 4 },
     ],
   },
 ];

@@ -1542,60 +1542,92 @@ Die elfte Welt ist noch nicht im Spiel. In der Vorschau stehen zwei Probebahnen;
 kommen danach. Auf der Weltkarte liegt sie allein im Südostmeer, mit einem Kirchturm als Marke –
 dem Einzigen, was von so einer Stadt am Ende noch herausschaut.
 
-**Die Frage dieser Welt ist *wie lange noch?*** Das Märchenland fragt, wie fest man schlägt, der
-Uhrenturm, wann, der Schneeberg, wohin, die Zwergenmine, was da vorn überhaupt liegt. In allen
-vieren kostet Warten nichts: Man darf vor einer Maschine sitzen und den richtigen Augenblick
-abpassen, so lange man will. Hier nicht. Hier steigt das Wasser, und zwar auf der ganzen Bahn.
+### Erst war es eine Weltregel, und das war ein Fehler
 
-**Die Flut folgt der Form der Bahn.** Beim Aufbau bekommt jedes Bodenfeld eine Ringnummer: 1 für
-alles, was an Wasser, Abgrund oder Mauer grenzt, 2 für alles, was an einen Einser grenzt, und so
-weiter (Vielquellen-Breitensuche, `src/obstacles_flut.js`). Steigt die Flut um eine Stufe, wird aus
-jedem Feld mit Ringnummer ≤ Stufe Wasser. Das heißt: Eine lange schmale Gasse säuft von beiden
-Seiten zu, ein runder Platz von außen, ein Kai mit Hafenbecken auch von innen – ohne dass das
-jemand für jede Bahn aufschreiben müsste.
+In der ersten Fassung (166) stieg das Wasser auf der **ganzen** Bahn: eine Tide über alles, die von
+den Rändern nach innen fraß. Die Idee war gut und ließ sich schlecht spielen. Wer den Augenblick
+verpasste, konnte nichts tun als warten, bis das Wasser zurückging – eine halbe Minute, in der der
+Ball liegt und nichts passiert. Das ist kein Druck, das ist Leerlauf, und Leerlauf ist das Gegenteil
+von dem, was die Idee wollte. Gemeldet hat das nicht eine Prüfung, sondern der, der es gespielt hat.
 
-**Sie steigt nicht nur, sie geht auch wieder.** Das ist keine Verzierung, sondern das, woran die
-Welt hängt. Der erste Entwurf ließ das Wasser nur steigen, und die Probebahn zerfiel bei voller
-Stufe in zwei Inseln: Abschlag hier, Loch dort, dazwischen Wasser. Über Wasser rollen heißt
-versinken – die Bahn war ab da nicht mehr zu gewinnen, nur noch zu Ende zu zählen. Es ist darum
-eine **Tide**: neun Sekunden Ruhe, dann Stufe um Stufe hinauf (alle 4,5 s, höchstens vier Ringe),
-sieben Sekunden oben stehen, ebenso zurück, sieben Sekunden unten. Wer das Fenster verpasst,
-verliert Zeit – nicht die Bahn.
+Seit Fassung 167 ist es ein **Hindernis** wie jedes andere: ein Becken an einer Stelle der Bahn, mit
+einem Takt von ein paar Sekunden – wie das Wandertor, die Falltür oder das Mühlrad. Ringsum bleibt
+alles trocken und immer spielbar.
 
-**Abschlag und Loch bleiben immer trocken.** Ein Loch unter Wasser wäre keine Aufgabe, sondern das
-Ende der Bahn, und ein überfluteter Abschlag nähme einem den Platz, an den man zurückgelegt wird.
-Beide sind die Insel, auf die man sich retten kann.
+### Das Flutbecken
 
-**Das Pumpwerk** ist die Gegenmaschine: eine Druckplatte im Boden, die die Flut für sieben Sekunden
-um zwei Stufen zurückdrückt. Es ist das Gegenstück zum Schalter im Märchenland – nur öffnet es kein
-Tor, sondern gibt Boden zurück. Es liegt mit Absicht weit außen, dort, wo das Wasser zuerst
-hinkommt – und ist damit kein Schalter, der immer dasteht, sondern ein **Zeitfenster**: erreichbar,
-solange die Flut niedrig steht, danach selbst abgesoffen und bis zum Zurückgehen der Tide weg. Wer
-es holen will, muss gleich los, und der Weg dorthin führt vom Loch weg.
+Es läuft von seinem Rand nach innen voll und folgt dabei seiner Form. Jedes Bodenfeld im Becken
+bekommt beim Aufbau eine Ringnummer (Vielquellen-Breitensuche, `src/obstacles_flut.js`): 1 für
+alles, was an den Beckenrand grenzt, 2 für alles, was an einen Einser grenzt, und so weiter. Steht
+das Wasser auf Stufe n, ist jedes Feld mit Ringnummer ≤ n überflutet. Eine schmale Rinne säuft damit
+von beiden Seiten zu, ein runder Kessel von außen – ohne dass das jemand aufschreiben müsste.
 
-**Die Ansage steht auf dem Boden, nicht am Gerät** (`src/render_flut.js`). Auf jedem Feld, das als
-nächstes drankommt, liegt ein Schimmer, der in den Sekunden davor anschwillt, mit einer hellen
-Schaumkante zur trockenen Seite hin. Dieselbe Regel wie beim Ring der Lavafontäne und bei der Lunte
-der Sprengladung: Wer erst merkt, dass der Boden weg ist, wenn er weg ist, spielt nicht, sondern
-würfelt. Angesagt wird nur steigendes Wasser; zurückgehendes gibt Boden her und ist keine Gefahr.
+**Wie tief, und darum wie lange.** Ohne Angabe füllt sich ein Becken ganz: Die Tiefe ist die
+tiefste Ringnummer, die darin vorkommt, und daraus ergibt sich der Takt von selbst. Ein vier Kacheln
+schmales Becken ist zwei Ringe tief und braucht knapp elf Sekunden für einen Lauf; sechs Kacheln
+wären schon dreizehn. **Wer ein breites Becken baut, baut eine lange Wartezeit** – genau der Fehler
+von vorhin, nur kleiner. Darum rechnet `tools/flut.py` für jede Bahn die Zykluslänge aus und schlägt
+Alarm, wenn sie über 15 Sekunden geht.
 
-**Ein alter Fehler, den diese Welt ans Licht geholt hat.** Wer ertrinkt, wird an seinen Ruhepunkt
-zurückgelegt. Bisher hat `src/main.js` dafür nach *Boden* gesucht – und Wasser **ist** Boden für die
-Physik (`FLOOR_CHARS`). In einer Welt, in der der Ruhepunkt nachträglich absaufen kann, hieße das:
-ertrinken, zurückgelegt werden, sofort wieder ertrinken, bis das Schlaglimit erreicht ist. Gesucht
-wird jetzt nach *trockenem* Boden, und wenn nichts Gemerktes trocken ist, ringsum weiter. Das
-bedrohte auch schon die Gießhalle, nur ist es dort nie jemandem passiert.
+**Der Takt** ist steigen – voll stehen – fallen – leer stehen, dann von vorn: 1,2 s je Ring, 1 s
+voll, 5 s leer. Leer steht es mit Absicht viel länger als voll, denn das Leerstehen ist das Fenster,
+in dem man durchspielt. Beim ersten Versuch standen dort 3,2 s, und die Probe im Browser ertrank
+auch dann, wenn beim Schlag alles frei war – der Ball braucht vom Abschlag bis zum Becken selbst
+schon ein bis zwei Sekunden. Diese Probe steht jetzt als Prüfung in `tools/flut.mjs`.
 
-**Die vier Paletten** (`src/themes.js`) sind vier Stationen, in jeder steht das Wasser höher:
-`deich` (Sturmlicht auf nassem Stein), `gassen` (das Wasser steht schon zwischen den Häusern),
-`daecher` (nur noch Giebel und Ziegel ragen heraus) und `tiefe` (Dämmergrün unter der Oberfläche).
+### Die beiden Regeln gegen das Warten
 
-**Geprüft wird mit** `node tools/flut.mjs` – Tidenlauf Stufe für Stufe, Abschlag und Loch trocken,
-Pumpwerk drückt zurück und lässt wieder los, zweite Runde fängt trocken an, und auf jeder fertigen
-Bahn: fängt trocken an, erreicht die Höchststufe, nimmt dabei mindestens die Hälfte des Bodens, ist
-nach der Tide wieder ganz. Gebaut und beurteilt werden die Bahnen von `python3 tools/flut.py`; das
-rechnet dieselben Ringnummern noch einmal und sagt für jede Bahn, wie viel Boden bei voller Flut
-übrig bleibt und ab welcher Stufe der Weg reißt.
+Sie stehen nicht als guter Vorsatz da, sondern als Prüfungen, die eine Bahn ablehnen:
+
+1. **Es gibt immer einen trockenen Weg.** Auch wenn jedes Becken der Bahn randvoll steht, muss ein
+   Weg vom Abschlag zum Loch führen. Das Becken ist die *kurze* Möglichkeit, nicht die einzige: Wer
+   den Takt trifft, spart einen Schlag; wer ihn nicht trifft, spielt außen herum. Niemand muss je
+   stehenbleiben und zusehen. Gegengeprüft mit einer Bahn, deren Becken quer durchgeht – sie wird
+   abgelehnt.
+2. **Der Takt bleibt kurz.** Höchstens 15 Sekunden für einen ganzen Lauf, und das ist die längste
+   Zeit, die man überhaupt je wartet.
+
+Dazu die dritte, gegen Zierrat: Der Weg durch das leere Becken muss wirklich kürzer sein als der
+Umweg, sonst nimmt ihn niemand und die Maschine läuft für nichts.
+
+### Zu sehen sein muss nicht das Wasser
+
+`src/render_flut.js` zeichnet zwei Dinge, und keines davon ist das gestiegene Wasser – das kann das
+Spiel schon. Erstens **wo das Becken liegt, solange es leer ist**: ein feuchter Schimmer auf jeder
+Beckenkachel und eine helle Kante ringsum. Ein Becken, das trocken aussieht wie der übrige Boden,
+wäre eine Falle ohne Ansage. Und zweitens **welche Felder als nächstes drankommen**: ein Schimmer,
+der in den Sekunden davor anschwillt, mit Schaumkante zur trockenen Seite – dieselbe Regel wie beim
+Ring der Lavafontäne und bei der Lunte der Sprengladung. Angesagt wird nur steigendes Wasser;
+zurückgehendes gibt Boden her und ist keine Gefahr.
+
+### Das Pumpwerk
+
+Eine Druckplatte abseits des Weges: Wer darüberrollt, hält **alle** Becken der Bahn vier Sekunden
+lang leer. Es ist das Gegenstück zum Schalter im Märchenland – nur öffnet es kein Tor, sondern gibt
+Boden zurück. Der Preis ist der Umweg dorthin, nicht das Wasser.
+
+### Ein alter Fehler, den diese Welt ans Licht geholt hat
+
+Wer ertrinkt, wird an seinen Ruhepunkt zurückgelegt. Bisher hat `src/main.js` dafür nach *Boden*
+gesucht – und Wasser **ist** Boden für die Physik (`FLOOR_CHARS`). In einer Welt, in der der
+Ruhepunkt nachträglich absaufen kann, hieße das: ertrinken, zurückgelegt werden, sofort wieder
+ertrinken, bis das Schlaglimit erreicht ist. Gesucht wird jetzt nach *trockenem* Boden, und wenn
+nichts Gemerktes trocken ist, ringsum weiter. Das bedrohte auch schon die Gießhalle, nur ist es dort
+nie jemandem passiert.
+
+### Die vier Paletten
+
+`src/themes.js`: `deich` (Sturmlicht auf nassem Stein), `gassen` (das Wasser steht schon zwischen
+den Häusern), `daecher` (nur noch Giebel und Ziegel ragen heraus) und `tiefe` (Dämmergrün unter der
+Oberfläche) – vier Stationen, in jeder steht das Wasser höher.
+
+### Geprüft
+
+`node tools/flut.mjs`: Tiefe aus der Form, Ring für Ring von außen nach innen, außerhalb des Beckens
+bleibt alles trocken, der Lauf geht einmal herum und bleibt unter der Geduld, ein Ball rollt durchs
+leere Becken hindurch und geht im vollen unter, das Pumpwerk hält leer und lässt wieder los, die
+zweite Runde fängt trocken an – und für jede fertige Bahn: bei vollem Becken führt trotzdem ein Weg
+zum Loch. Gebaut und beurteilt werden die Bahnen von `python3 tools/flut.py`.
 
 Dass die Welt in der Vorschau steht und im Spiel nicht, hängt an einer einzigen Kennzeichnung
 (`nurVorschau` in `src/courses_pro.js`); `node tools/vorschauwelt.mjs` prüft sie – bis hinunter zu
@@ -2760,8 +2792,8 @@ index.html        Seite, HUD und Ladebild (das Ladebild läuft ohne JavaScript)
 tools/auslieferung.mjs  prüft für beide Seiten, ob alles Gebrauchte auch ausgeliefert wird
 tools/vermittler.mjs    ein kleiner MQTT-Vermittler für die Werkbank – ohne ihn ist Online nicht prüfbar
 tools/online.mjs        fährt zwei Browser gegeneinander: beitreten, spielen, rausfliegen, wiederkommen
-tools/flut.mjs          prüft die Weltregel der Flut: Tidenlauf, Pumpwerk, und jede fertige Bahn
-tools/flut.py           baut die Bahnen der Flut und sagt, wie viel Boden die Flut ihnen nimmt
+tools/flut.mjs          prüft die Maschinen der Flut: Beckenlauf, Durchrollen, Pumpwerk, jede fertige Bahn
+tools/flut.py           baut die Bahnen der Flut – und lehnt jede ab, auf der man warten müsste
 style.css         Oberfläche
 src/themes.js     Farbpaletten und Deko je Welt
 src/courses.js    die Bahnen des Märchenlands
@@ -2781,12 +2813,12 @@ src/level.js      Karte → Kacheln, Mauern, Kollisionssegmente
 src/obstacles.js  bewegliche und statische Hindernisse
 src/obstacles_legend.js Blitzfeld, Aufwind, Falltür, Fallbeil, Augenturm, Löwentor
 src/obstacles_mine.js Sprengladung, Kippbühne, Grubenlampe, Gießlöffel und Lavafontäne der Zwergenmine
-src/obstacles_flut.js die Weltregel der Flut (Tide, Ringnummern) und das Pumpwerk
+src/obstacles_flut.js das Flutbecken (Ringnummern, Takt) und das Pumpwerk
 src/physics.js    Ballphysik und Kollision (auch Ball gegen Ball, wenn mehrere zugleich rollen)
 src/render.js     isometrische Darstellung
 src/render_legend.js Optik der Legende-Welten (Hintergründe, neue Hindernisse und Stile)
 src/render_mine.js Optik der Zwergenmine: Fels statt Himmel, der Schleier und die drei Maschinen
-src/render_flut.js Optik der Flut: die Ansage des steigenden Wassers und das Pumpwerk
+src/render_flut.js Optik der Flut: das leere Becken, die Ansage des steigenden Wassers, das Pumpwerk
 src/text.js       Eine Stelle für alle Eingaben: Namen und Bahnnamen filtern, Anzeige entschärfen
 src/share.js      Bahnen weitergeben: prüfen, über den Vermittler teilen, als Link verpacken
 src/version.js    Fassung und Ausgabe (Spiel oder Vorschau): Zahl, Speicher-Vorsatz und Themen-Marke – von Seite und Service Worker gelesen

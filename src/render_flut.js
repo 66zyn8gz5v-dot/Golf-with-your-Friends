@@ -1,57 +1,82 @@
-/* Zeichnung der versunkenen Stadt: die Flut und das Pumpwerk.
+/* Zeichnung der versunkenen Stadt: das Flutbecken und das Pumpwerk.
 
-   DAS WICHTIGSTE IST NICHT DAS WASSER, SONDERN DIE ANKÜNDIGUNG.
+   ZWEI DINGE MÜSSEN ZU SEHEN SEIN, UND KEINES DAVON IST DAS WASSER.
    Das gestiegene Wasser zeichnet das Spiel von selbst – aus einer Bodenkachel ist eine
-   Wasserkachel geworden, und Wasser kann es schon. Was fehlt, ist der Blick nach vorn: Welche
-   Felder säuft die nächste Stufe? In dieser Welt ist das die eigentliche Auskunft, denn wer erst
-   merkt, daß der Boden weg ist, wenn er weg ist, spielt nicht, sondern würfelt.
+   Wasserkachel geworden, und Wasser kann es schon.
 
-   Darum liegt auf jedem Feld, das als nächstes drankommt, ein Schimmer, der in den Sekunden davor
-   anschwillt – zuerst kaum zu sehen, kurz vorher deutlich. Dieselbe Regel wie beim Ring der
-   Lavafontäne und bei der Lunte der Sprengladung: Die Ansage steht auf dem Boden, nicht am Gerät. */
+   Zu sehen sein muß erstens, **wo das Becken liegt, solange es leer ist**. Ein Becken, das trocken
+   aussieht wie der übrige Boden, ist eine Falle ohne Ansage: Man rollt hinein, weil man nicht
+   wußte, daß da eines war. Darum liegt auf jeder Beckenkachel ein feuchter Schimmer, und außen
+   herum läuft eine Kante – dasselbe, was einen Brunnen im Hof von seinem Pflaster unterscheidet.
+
+   Und zweitens, **welche Felder als nächstes drankommen**. Auf denen liegt ein Schimmer, der in den
+   Sekunden davor anschwillt, mit einer hellen Schaumkante zur trockenen Seite hin. Dieselbe Regel
+   wie beim Ring der Lavafontäne und bei der Lunte der Sprengladung: Die Ansage steht auf dem Boden,
+   nicht am Gerät. Angesagt wird nur steigendes Wasser; zurückgehendes gibt Boden her. */
 Object.assign(Renderer.prototype, {
 
   drawFlutFloor(ctx, ob, t) {
     const lv = this.level;
     if (!lv || !ob.ringe) return;
-    /* Angekündigt wird nur steigendes Wasser. Fällt die Tide, wird Boden frei – das ist keine
-       Gefahr, und ein Schimmer darauf hieße das Gegenteil von dem, was passiert. */
-    if (!ob.steigt) return;
-    const naechst = (ob.stufe || 0) + 1;
-    if (naechst > (ob.max || 0)) return;               // höher steigt sie nicht mehr
-    /* Wie weit ist die nächste Stufe? 0 = gerade gestiegen, 1 = gleich soweit. Die Anzeige wächst
-       erst spät merklich an: Eine Warnung, die zwanzig Sekunden lang gleich aussieht, ist keine. */
-    const rest = ob.naechsteIn ? ob.naechsteIn() : Infinity;
-    if (!isFinite(rest)) return;
-    const u = Math.max(0, Math.min(1, 1 - rest / (ob.takt || 4.5)));
-    const staerke = u * u;
     const fl = lv.flaechen ? (lv.flaechen[ob.ebene || 0] || lv.flaechen[0]) : null;
     if (!fl) return;
+    const R = ob.ringe, H = R.length;
+    const ring = (x, y) => ((R[y] || [])[x]) || 0;
+    const imBecken = (x, y) => { const r = ring(x, y); return r > 0 && r < 9000; };
+
     ctx.save();
-    for (let y = 0; y < ob.ringe.length; y++) {
-      for (let x = 0; x < ob.ringe[y].length; x++) {
-        if (ob.ringe[y][x] !== naechst) continue;
-        if (fl.tiles[y][x] === 'w') continue;          // schon abgesoffen
-        const poly = [[x, y], [x + 1, y], [x + 1, y + 1], [x, y + 1]];
-        this.fillPoly(ctx, poly, 0.011, `rgba(70,140,190,${0.12 + 0.5 * staerke})`, false);
+    /* 1. Das Becken selbst – auch wenn es trocken ist. Feuchter Stein, damit man sieht, wo man
+          gleich nicht mehr stehen kann. */
+    for (let y = 0; y < H; y++) for (let x = 0; x < R[y].length; x++) {
+      if (!imBecken(x, y) || fl.tiles[y][x] === 'w') continue;
+      this.fillPoly(ctx, [[x, y], [x + 1, y], [x + 1, y + 1], [x, y + 1]], 0.010,
+                    'rgba(40,80,105,0.20)', false);
+    }
+    /* 2. Die Beckenkante: eine gemauerte Linie ringsum. Sie sagt, wie weit das Wasser höchstens
+          kommt – wer außerhalb liegenbleibt, bleibt trocken, so lange er will. */
+    ctx.strokeStyle = 'rgba(232,240,246,0.55)';
+    ctx.lineWidth = Math.max(1.5, this.scale * 0.075);
+    ctx.lineCap = 'round';
+    for (let y = 0; y < H; y++) for (let x = 0; x < R[y].length; x++) {
+      if (!imBecken(x, y)) continue;
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        if (imBecken(x + dx, y + dy)) continue;           // nur nach außen hin
+        const a = dx ? [x + (dx > 0 ? 1 : 0), y] : [x, y + (dy > 0 ? 1 : 0)];
+        const b = dx ? [a[0], y + 1] : [x + 1, a[1]];
+        const p0 = this.proj(a[0], a[1], 0.014), p1 = this.proj(b[0], b[1], 0.014);
+        ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke();
       }
+    }
+
+    /* 3. Die Ansage. Nur steigendes Wasser wird angekündigt – fällt es, wird Boden frei, und ein
+          Schimmer darauf hieße das Gegenteil von dem, was passiert. */
+    if (!ob.steigt) { ctx.restore(); return; }
+    const naechst = (ob.stufe || 0) + 1;
+    if (naechst > (ob.max || 0)) { ctx.restore(); return; }
+    /* Wie weit ist die nächste Stufe? 0 = gerade gestiegen, 1 = gleich soweit. Die Anzeige wächst
+       erst spät merklich an: Eine Warnung, die die ganze Zeit gleich aussieht, ist keine. */
+    const rest = ob.naechsteIn ? ob.naechsteIn() : Infinity;
+    if (!isFinite(rest)) { ctx.restore(); return; }
+    const u = Math.max(0, Math.min(1, 1 - rest / (ob.takt || 1.8)));
+    const staerke = u * u;
+    for (let y = 0; y < H; y++) for (let x = 0; x < R[y].length; x++) {
+      if (ring(x, y) !== naechst || fl.tiles[y][x] === 'w') continue;
+      this.fillPoly(ctx, [[x, y], [x + 1, y], [x + 1, y + 1], [x, y + 1]], 0.011,
+                    `rgba(70,140,190,${0.12 + 0.5 * staerke})`, false);
     }
     /* Die Schaumkante: dort, wo das Wasser gleich hinkommt, steht eine helle Linie. Sie macht aus
        dem Schimmer eine Kante – man sieht, wo der trockene Rest aufhört. */
     ctx.strokeStyle = `rgba(210,240,255,${0.25 + 0.55 * staerke})`;
     ctx.lineWidth = Math.max(1, this.scale * 0.05);
-    for (let y = 0; y < ob.ringe.length; y++) {
-      for (let x = 0; x < ob.ringe[y].length; x++) {
-        if (ob.ringe[y][x] !== naechst || fl.tiles[y][x] === 'w') continue;
-        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
-          const nx = x + dx, ny = y + dy;
-          const r = (ob.ringe[ny] || [])[nx];
-          if (r === undefined || r === 0 || r <= naechst) continue;   // nur zur trockenen Seite hin
-          const a = dx ? [x + (dx > 0 ? 1 : 0), y] : [x, y + (dy > 0 ? 1 : 0)];
-          const b = dx ? [a[0], y + 1] : [x + 1, a[1]];
-          const p0 = this.proj(a[0], a[1], 0.012), p1 = this.proj(b[0], b[1], 0.012);
-          ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke();
-        }
+    for (let y = 0; y < H; y++) for (let x = 0; x < R[y].length; x++) {
+      if (ring(x, y) !== naechst || fl.tiles[y][x] === 'w') continue;
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const r = ring(x + dx, y + dy);
+        if (!r || r <= naechst || r > 9000) continue;     // nur zur noch trockenen Beckenseite hin
+        const a = dx ? [x + (dx > 0 ? 1 : 0), y] : [x, y + (dy > 0 ? 1 : 0)];
+        const b = dx ? [a[0], y + 1] : [x + 1, a[1]];
+        const p0 = this.proj(a[0], a[1], 0.012), p1 = this.proj(b[0], b[1], 0.012);
+        ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke();
       }
     }
     ctx.restore();

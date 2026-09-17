@@ -1,21 +1,22 @@
-/* Prüft die Weltregel der versunkenen Stadt: die Flut und das Pumpwerk.
+/* Prüft die Maschinen der versunkenen Stadt: das Flutbecken und das Pumpwerk.
  *
  *   node tools/flut.mjs
  *
  * WARUM HIER GERECHNET WIRD
- * Die Flut ist die erste Regel im Spiel, die den Boden während der Bahn *wegnimmt*. Alles andere
- * stellt sich in den Weg, schiebt oder trägt – hier verschwindet, worauf man steht. Wenn das
- * schiefgeht, sieht man es nicht als Fehler, sondern als Pech: Die Bahn ist plötzlich unspielbar,
- * und niemand weiß, warum.
+ * Das Becken ist die erste Maschine im Spiel, die den Boden *wegnimmt*. Alles andere stellt sich in
+ * den Weg, schiebt oder trägt – hier verschwindet, worauf man steht. Geht das schief, sieht man es
+ * nicht als Fehler, sondern als Pech: Die Bahn ist plötzlich unspielbar, und niemand weiß, warum.
  *
- * Geprüft wird darum das, was man auch sagen würde, wenn man die Regel erklärt:
- *   - Am Anfang ist alles trocken; die Ruhe vor dem ersten Steigen gehört dazu.
- *   - Sie frißt sich von außen nach innen, Ring für Ring, und folgt der Form der Bahn.
- *   - Abschlag und Loch bleiben trocken. Ein Loch unter Wasser wäre das Ende der Bahn.
- *   - Sie geht auch wieder zurück. Das ist die Regel, an der die ganze Welt hängt: Eine Flut, die
- *     nur steigt, zerlegt jede Bahn irgendwann in Inseln, und dann ist sie nicht mehr zu lösen.
- *   - Das Pumpwerk gibt Boden zurück – und nur für seine Dauer.
- *   - Beim nächsten Loch steht wieder die trockene Bahn da, nicht die abgesoffene der letzten Runde.
+ * DIE WICHTIGSTE PRÜFUNG IST DIE GEGEN DAS WARTEN.
+ * In der ersten Fassung stieg das Wasser über die ganze Bahn. Das war gut gedacht und schlecht zu
+ * spielen: Wer den Augenblick verpaßte, konnte nichts tun als zusehen. Jetzt ist es ein Becken an
+ * einer Stelle, und dazu gehören zwei Zahlen, die hier festgehalten werden:
+ *   - Auf jeder fertigen Bahn führt auch bei *vollem* Becken ein Weg zum Loch.
+ *   - Ein Lauf dauert höchstens FLUT_GEDULD Sekunden.
+ *
+ * Dazu das, was man auch sagen würde, wenn man die Maschine erklärt: Sie läuft von außen nach innen
+ * voll, außerhalb des Beckens bleibt alles trocken, Abschlag und Loch bleiben frei, sie läuft wieder
+ * leer, das Pumpwerk hält sie leer, und beim nächsten Loch steht wieder die trockene Bahn da.
  */
 import fs from 'node:fs'; import vm from 'node:vm'; import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -26,124 +27,176 @@ for (const f of ['themes', 'courses', 'courses_sea', 'courses_jungle', 'courses_
                  'courses_colosseum', 'courses_clock', 'courses_snow', 'courses_mine', 'courses_flut', 'courses_pro', 'level',
                  'obstacles', 'obstacles_legend', 'obstacles_snow', 'obstacles_mine', 'obstacles_flut', 'physics'])
   vm.runInContext(fs.readFileSync(path.join(SRC, `${f}.js`), 'utf8'), ctx);
-const G = vm.runInContext('({buildLevel, makeBall, stepPhysics, FLUT_START, FLUT_TAKT, FLUT_MAX, FLUT_HALT})', ctx);
+const G = vm.runInContext('({buildLevel, makeBall, stepPhysics, FLUT_START, FLUT_TAKT, FLUT_MAX, FLUT_HALT, FLUT_LEER})', ctx);
+const GEDULD = 15;                      // muß zu FLUT_GEDULD in tools/flut.py passen
 
 let fehler = 0;
 const pruef = (name, ok, zusatz = '') => {
   console.log(`${ok ? '  ok  ' : 'FEHLER'}  ${name}${zusatz ? ' – ' + zusatz : ''}`); if (!ok) fehler++;
 };
 
-/* Ein Platz mit Rand: außen Abgrund, innen zehn mal sieben Felder Boden. Der Abschlag steht links,
-   das Loch rechts – beide auf Boden, der sonst absaufen würde. */
+/* Ein Platz mit Rand: außen Abgrund, innen zwölf mal fünf Felder Boden. Das Becken liegt mittendrin
+   und läßt links und rechts Platz – da steht der Abschlag, da steht das Loch. */
 const feld = (hindernisse) => ({
-  name: 'Flutprüfung', par: 3, theme: 'stollen',
-  map: ['............', '.T########H.', '.##########.', '.##########.',
-        '.##########.', '.##########.', '............'],
+  name: 'Beckenprüfung', par: 3, theme: 'stollen',
+  map: ['..............', '.T##########H.', '.############.', '.############.',
+        '.############.', '.############.', '..............'],
   obstacles: hindernisse,
 });
-const flutDef = (extra = {}) => Object.assign({ type: 'flut', start: 4, takt: 2, max: 3 }, extra);
+/* Becken über die Kacheln 4..9 / 2..5: vier Reihen hoch, also zwei Ringe tief. */
+const beckenDef = (extra = {}) => Object.assign(
+  { type: 'flut', x: 7, y: 4, w: 6, h: 4, start: 2, takt: 1, halt: 1, leer: 2 }, extra);
 const bau = (extra = {}, mehr = []) => {
-  const lv = G.buildLevel(feld([flutDef(extra), ...mehr]));
+  const lv = G.buildLevel(feld([beckenDef(extra), ...mehr]));
   return { lv, f: lv.obstacles.find(o => o.type === 'flut') };
 };
 const kachel = (lv, x, y) => lv.untenFl.tiles[y][x];
 const nass = (lv, x, y) => kachel(lv, x, y) === 'w';
 const zaehleNass = (lv) => lv.untenFl.tiles.reduce((n, r) => n + r.filter(c => c === 'w').length, 0);
 
-console.log('\n--- Die Flut ---');
+/* Führt ein trockener Weg vom Abschlag zum Loch, so wie die Bahn gerade dasteht? */
+function wegDa(lv) {
+  const T = lv.untenFl.tiles, H = T.length, W = T[0].length;
+  const gut = (x, y) => x >= 0 && y >= 0 && x < W && y < H
+    && lv.isFloorChar(T[y][x]) && T[y][x] !== 'w' && T[y][x] !== 'l';
+  const start = [Math.floor(lv.tee.x), Math.floor(lv.tee.y)];
+  const ziel = `${Math.floor(lv.cup.x)},${Math.floor(lv.cup.y)}`;
+  const gesehen = new Set([start.join(',')]); const q = [start];
+  for (let i = 0; i < q.length; i++) {
+    const [x, y] = q[i];
+    if (`${x},${y}` === ziel) return true;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const nx = x + dx, ny = y + dy, k = `${nx},${ny}`;
+      if (gesehen.has(k) || !gut(nx, ny)) continue;
+      gesehen.add(k); q.push([nx, ny]);
+    }
+  }
+  return false;
+}
+
+console.log('\n--- Das Becken ---');
 {
   const { lv, f } = bau();
-  pruef('die Flut wird gebaut', !!f && typeof f.update === 'function');
+  pruef('das Becken wird gebaut', !!f && typeof f.update === 'function');
   f.update(0);
   pruef('am Anfang ist alles trocken', zaehleNass(lv) === 0, `${zaehleNass(lv)} nasse Felder`);
-  f.update(3.9);
+  f.update(1.9);
   pruef('und bleibt es, solange die Ruhe dauert', zaehleNass(lv) === 0, `${zaehleNass(lv)} nasse Felder`);
 
-  /* Erste Stufe: alles, was an den Abgrund grenzt. Das sind die Randfelder – nicht die Mitte. */
-  f.update(4.1);
-  const randNass = nass(lv, 1, 2) && nass(lv, 10, 5);
-  const mitteTrocken = !nass(lv, 5, 3);
-  pruef('die erste Stufe frißt den Rand', randNass && mitteTrocken,
-        `Rand ${randNass ? 'nass' : 'trocken'}, Mitte ${mitteTrocken ? 'trocken' : 'nass'}`);
+  /* Die Tiefe kommt aus der Form, nicht aus einer Zahl in der Bahn: vier Reihen hoch, also zwei
+     Ringe. Daran hängt der ganze Takt – und damit, wie lange man wartet. */
+  pruef('die Tiefe ergibt sich aus der Form', f.tiefe === 2 && f.max === 2, `Tiefe ${f.tiefe}, max ${f.max}`);
 
-  f.update(6.1);
-  pruef('die zweite Stufe geht einen Ring weiter', nass(lv, 2, 3), `Feld (2,3) ${kachel(lv, 2, 3)}`);
-  const vorher = zaehleNass(lv);
-  f.update(8.1);
-  pruef('und die dritte noch einen', zaehleNass(lv) > vorher, `${vorher} → ${zaehleNass(lv)}`);
-  const beiMax = zaehleNass(lv);
-  f.update(40);
-  pruef('weiter als bis zur Höchststufe steigt sie nicht', zaehleNass(lv) === beiMax, `${beiMax} → ${zaehleNass(lv)}`);
+  /* Erste Stufe: der Beckenrand. Die Mitte bleibt noch. */
+  f.update(2.1);
+  pruef('die erste Stufe frißt den Beckenrand', nass(lv, 4, 2) && nass(lv, 9, 5), 'Ecken nass');
+  pruef('und die Beckenmitte bleibt noch', !nass(lv, 6, 3), `Feld (6,3) ${kachel(lv, 6, 3)}`);
+  f.update(3.1);
+  pruef('die zweite Stufe nimmt auch die Mitte', nass(lv, 6, 3), `Feld (6,3) ${kachel(lv, 6, 3)}`);
 
-  /* Abschlag und Loch: die Insel, auf die man sich retten kann. */
+  /* Die eigentliche Neuerung gegenüber der Weltregel: Außerhalb des Beckens passiert nichts. */
+  const drumherum = [[1, 1], [2, 3], [3, 5], [10, 2], [12, 4], [12, 1]];
+  const trockenDraussen = drumherum.every(([x, y]) => !nass(lv, x, y));
+  pruef('außerhalb des Beckens bleibt alles trocken', trockenDraussen,
+        drumherum.map(([x, y]) => kachel(lv, x, y)).join(''));
+  pruef('und genau so viele Felder sind nass wie das Becken groß ist', zaehleNass(lv) === 6 * 4,
+        `${zaehleNass(lv)} von ${6 * 4}`);
+
+  /* Abschlag und Loch: sie liegen hier außerhalb, aber die Sicherung muß trotzdem stehen. */
   const tee = [Math.floor(lv.tee.x), Math.floor(lv.tee.y)], loch = [Math.floor(lv.cup.x), Math.floor(lv.cup.y)];
   pruef('der Abschlag bleibt trocken', !nass(lv, tee[0], tee[1]), `(${tee}) = ${kachel(lv, tee[0], tee[1])}`);
   pruef('und das Loch auch', !nass(lv, loch[0], loch[1]), `(${loch}) = ${kachel(lv, loch[0], loch[1])}`);
 }
 
-console.log('\n--- Das Pumpwerk ---');
+console.log('\n--- Der Takt: es läuft auch wieder leer ---');
 {
-  const { lv, f } = bau({}, [{ type: 'pumpwerk', x: 3.5, y: 2.5, stufen: 2, dauer: 5 }]);
-  const p = lv.obstacles.find(o => o.type === 'pumpwerk');
-  pruef('das Pumpwerk wird gebaut', !!p && typeof p.trigger === 'function');
-  f.update(8.1);                                  // dritte Stufe, alles nass, was absaufen kann
-  const vollNass = zaehleNass(lv);
-  // Ball auf die Platte legen und einen Schritt rechnen
-  const b = G.makeBall(3.5, 2.5, '#fff');
-  const ev = G.stepPhysics(lv, b, 1 / 240, 8.1, true);
-  pruef('es meldet sich, wenn der Ball darüber rollt', ev.some(e => e.type === 'pumpe'));
-  f.update(8.2);
-  const zurueck = zaehleNass(lv);
-  pruef('und drückt die Flut zurück', zurueck < vollNass, `${vollNass} → ${zurueck} nasse Felder`);
-  f.update(8.1 + 5.5);                            // nach Ablauf der Dauer
-  pruef('danach kommt sie wieder', zaehleNass(lv) >= vollNass, `${zurueck} → ${zaehleNass(lv)}`);
-}
-
-console.log('\n--- Die Tide: sie geht auch wieder ---');
-{
-  /* Die wichtigste Prüfung dieser Datei. Beim ersten Entwurf stieg die Flut nur, und die Probebahn
-     zerfiel bei voller Stufe in zwei Inseln: Abschlag hier, Loch dort, dazwischen Wasser. Über
-     Wasser rollen heißt versinken – die Bahn war ab da nicht mehr zu gewinnen, nur noch zu Ende zu
-     zählen. Darum steht hier Zahl für Zahl, daß ein voller Tidenlauf wirklich einmal herum geht. */
-  const takt = 2, max = 3, halt = 5, start = 4;
-  const { lv, f } = bau({ start, takt, max, halt });
+  /* Die Prüfung, an der die ganze Welt hängt. Beim ersten Entwurf stieg das Wasser über die ganze
+     Bahn und blieb lange oben; wer den Augenblick verpaßte, konnte nur zusehen. Darum steht hier
+     Zahl für Zahl, daß ein Lauf wirklich einmal herumgeht – und wie lange er dauert. */
+  const takt = 1, max = 2, halt = 1, leer = 2, start = 2;
+  const { lv, f } = bau({ start, takt, halt, leer });
   const stufeBei = (t) => { f.update(t); return f.stufe; };
-  const hoch = max * takt;                       // 6 s steigen, dann 5 s oben, dann 6 s fallen, 5 s unten
-  pruef('ein Tidenlauf ist so lang wie zweimal Steigen plus zweimal Stehen',
-        f.zyklus() === 2 * hoch + 2 * halt, `${f.zyklus()} s`);
+  const hoch = max * takt;
+  pruef('ein Lauf ist Steigen + Vollstehen + Fallen + Leerstehen',
+        f.zyklus() === 2 * hoch + halt + leer, `${f.zyklus()} s`);
+  pruef('und er dauert nicht länger als die Geduld erlaubt', f.zyklus() <= GEDULD,
+        `${f.zyklus()} s, erlaubt ${GEDULD} s`);
+  /* Leer steht es länger als voll – das Leerstehen ist das Fenster zum Durchspielen. */
+  pruef('leer steht es länger als voll', f.leer > f.halt, `${f.leer} s gegen ${f.halt} s`);
 
-  const lauf = [];
-  for (let t = start; t < start + f.zyklus(); t += takt / 2) lauf.push(stufeBei(t + 0.01));
-  pruef('sie steigt bis zur Höchststufe', Math.max(...lauf) === max, `höchste Stufe ${Math.max(...lauf)}`);
-  pruef('und kommt wieder auf null herunter', Math.min(...lauf.slice(2)) === 0,
-        `niedrigste Stufe nach dem Steigen ${Math.min(...lauf.slice(2))}`);
-
-  // Steigen und Fallen einzeln nachgehen, damit ein Fehler sagt, *wo* es klemmt.
-  pruef('Stufe für Stufe hinauf',
-        [1, 2, 3].every((n, i) => stufeBei(start + i * takt + 0.01) === n),
-        [0, 1, 2].map(i => stufeBei(start + i * takt + 0.01)).join(','));
-  pruef('oben steht sie still',
+  pruef('Stufe für Stufe hinauf', [1, 2].every((n, i) => stufeBei(start + i * takt + 0.01) === n),
+        [0, 1].map(i => stufeBei(start + i * takt + 0.01)).join(','));
+  pruef('voll steht es still',
         stufeBei(start + hoch + 0.01) === max && stufeBei(start + hoch + halt - 0.01) === max);
   pruef('Stufe für Stufe hinunter',
-        [2, 1, 0].every((n, i) => stufeBei(start + hoch + halt + i * takt + 0.01) === n),
-        [0, 1, 2].map(i => stufeBei(start + hoch + halt + i * takt + 0.01)).join(','));
-  pruef('unten steht sie still und alles ist wieder trocken',
+        [1, 0].every((n, i) => stufeBei(start + hoch + halt + i * takt + 0.01) === n),
+        [0, 1].map(i => stufeBei(start + hoch + halt + i * takt + 0.01)).join(','));
+  pruef('leer steht es still und der Boden ist wieder da',
         stufeBei(start + 2 * hoch + halt + 0.01) === 0 && zaehleNass(lv) === 0,
         `${zaehleNass(lv)} nasse Felder`);
-
-  /* Und die Runde danach fängt genauso an – sonst wäre es keine Tide, sondern ein einmaliger Lauf. */
-  pruef('und dann fängt sie von vorn an',
-        stufeBei(start + f.zyklus() + takt + 0.01) === 2,
+  pruef('und dann fängt es von vorn an', stufeBei(start + f.zyklus() + takt + 0.01) === 2,
         `Stufe ${f.stufe}`);
 
-  /* Die Ansage gilt nur für steigendes Wasser: Zurückgehendes gibt Boden her und ist keine Gefahr.
-     Die Zeichnung hängt daran (src/render_flut.js prüft ob.steigt). */
+  /* Die Ansage gilt nur für steigendes Wasser: Zurückgehendes gibt Boden her und ist keine Gefahr. */
   f.update(start + takt + 0.01);
   pruef('beim Steigen ist die Ansage an', f.steigt === true);
   f.update(start + hoch + halt + takt + 0.01);
   pruef('beim Fallen ist sie aus', f.steigt === false);
   const zeichnung = fs.readFileSync(path.join(SRC, 'render_flut.js'), 'utf8');
-  pruef('und die Zeichnung fragt danach', /if \(!ob\.steigt\) return;/.test(zeichnung));
+  pruef('und die Zeichnung fragt danach', /if \(!ob\.steigt\)/.test(zeichnung));
+  /* Und das Becken muß auch trocken zu sehen sein – sonst ist es eine Falle ohne Ansage. */
+  pruef('das leere Becken wird trotzdem gezeichnet', /1\. Das Becken selbst/.test(zeichnung));
+  pruef('mit einer Kante ringsum', /Die Beckenkante/.test(zeichnung));
+}
+
+console.log('\n--- Durchrollen: leer geht, voll nicht ---');
+{
+  /* Die Probe, die am nächsten an dem ist, was Fynn tut: einen Ball quer durchs Becken schicken.
+     Sie hat schon einmal etwas gefunden, was keine Zahl zeigte – das Leerstehen war mit 3,2 s so
+     kurz, daß der Ball unterwegs davon eingeholt wurde, obwohl beim Schlag alles frei war. Darum
+     steht sie hier und nicht nur in der Browserprobe. */
+  const rollen = (t0) => {
+    const { lv, f } = bau();
+    const b = G.makeBall(1.5, 3.5, '#fff');
+    b.vx = 9; b.vy = 0;                       // quer über das Becken, von links nach rechts
+    let t = t0, ertrunken = false;
+    for (let i = 0; i < 240 * 4 && !ertrunken; i++) {
+      t += 1 / 240;
+      const ev = G.stepPhysics(lv, b, 1 / 240, t, true);
+      if (ev.some(e => e.type === 'water')) ertrunken = true;
+      if (Math.hypot(b.vx, b.vy) < 0.05) break;
+    }
+    return { ertrunken, x: +b.x.toFixed(1), stufe: f.stufe };
+  };
+  /* Takt der Prüfbahn: start 2, takt 1, max 2, halt 1, leer 2 → Lauf 7 s.
+     Leer steht es von p = 5 bis 7, also von t = 7 bis 9. Voll von p = 2 bis 3, also t = 4 bis 5. */
+  const leerLauf = rollen(7.2);
+  pruef('durch das leere Becken rollt der Ball hindurch', !leerLauf.ertrunken && leerLauf.x > 9,
+        `bis x = ${leerLauf.x}, Stufe beim Ankommen ${leerLauf.stufe}`);
+  const vollLauf = rollen(4.1);
+  pruef('durch das volle geht er unter', vollLauf.ertrunken,
+        `bis x = ${vollLauf.x}, Stufe ${vollLauf.stufe}`);
+}
+
+console.log('\n--- Das Pumpwerk ---');
+{
+  const { lv, f } = bau({}, [{ type: 'pumpwerk', x: 2.5, y: 2.5, dauer: 5 }]);
+  const p = lv.obstacles.find(o => o.type === 'pumpwerk');
+  pruef('das Pumpwerk wird gebaut', !!p && typeof p.trigger === 'function');
+  f.update(3.1);                                  // voll
+  const vollNass = zaehleNass(lv);
+  const b = G.makeBall(2.5, 2.5, '#fff');
+  const ev = G.stepPhysics(lv, b, 1 / 240, 3.1, true);
+  pruef('es meldet sich, wenn der Ball darüber rollt', ev.some(e => e.type === 'pumpe'));
+  f.update(3.2);
+  pruef('und hält das Becken leer', zaehleNass(lv) === 0, `${vollNass} → ${zaehleNass(lv)} nasse Felder`);
+  /* Und danach nimmt der Takt seinen Lauf wieder auf. Der Zeitpunkt ist mit Bedacht gewählt: Der
+     Druck endet bei 8,1 s, und der nächste Augenblick, in dem das Becken *voll* stehen muß, liegt
+     eine Laufrunde später. Ein blind genommener Zeitpunkt träfe die Leerphase und bewiese nichts. */
+  const vollWieder = 2 + f.zyklus() + f.max * f.takt + 0.5;   // 11,5 s
+  f.update(vollWieder);
+  pruef('danach läuft es wieder voll', zaehleNass(lv) === vollNass,
+        `bei ${vollWieder} s: ${zaehleNass(lv)} von ${vollNass}`);
 }
 
 console.log('\n--- Beim nächsten Loch ---');
@@ -151,8 +204,8 @@ console.log('\n--- Beim nächsten Loch ---');
   /* Dieselbe Bahn ein zweites Mal aufbauen: Es muß wieder die trockene dastehen. Beim Gießlöffel
      war das derselbe Fallstrick – die zweite Runde fand sonst die Brücke der ersten vor. */
   const erste = bau();
-  erste.f.update(40);
-  pruef('die erste Runde säuft ab', zaehleNass(erste.lv) > 0, `${zaehleNass(erste.lv)} nasse Felder`);
+  erste.f.update(3.1);
+  pruef('die erste Runde läuft voll', zaehleNass(erste.lv) > 0, `${zaehleNass(erste.lv)} nasse Felder`);
   const zweite = bau();
   zweite.f.update(0);
   pruef('die zweite fängt trocken an', zaehleNass(zweite.lv) === 0, `${zaehleNass(zweite.lv)} nasse Felder`);
@@ -160,38 +213,35 @@ console.log('\n--- Beim nächsten Loch ---');
 
 console.log('\n--- Die Bahnen der Welt ---');
 {
-  /* tools/flut.py rechnet dieselben Ringnummern noch einmal in Python, um eine Bahn schon beim
-     Bauen beurteilen zu können. Zwei Rechnungen, die dasselbe tun sollen, laufen mit der Zeit
-     auseinander – darum wird hier nicht der Quelltext verglichen, sondern das Ergebnis: Was die
-     laufende Maschine auf den fertigen Bahnen anrichtet, muß zu dem passen, was flut.py
-     versprochen hat. */
+  /* Hier wird nicht der Quelltext verglichen, sondern das Ergebnis: Was die laufende Maschine auf
+     den fertigen Bahnen anrichtet, muß zu dem passen, was tools/flut.py versprochen hat. */
   const BAHNEN = vm.runInContext('FLUT_COURSES', ctx);
   pruef('es gibt Bahnen in der Welt', BAHNEN.length > 0, `${BAHNEN.length} Bahnen`);
   for (const def of BAHNEN) {
     const lv = G.buildLevel(def);
-    const f = lv.obstacles.find(o => o.type === 'flut');
-    if (!f) { pruef(`„${def.name}" hat eine Flut`, false); continue; }
-    f.update(0);
-    /* „Trocken" heißt nicht „kein Wasser auf der Bahn": Der Kai hat ein Hafenbecken, das von Anfang
-       an dasteht. Verglichen wird darum mit dem Wasser, das in der Karte selbst steht. */
+    const becken = lv.obstacles.filter(o => o.type === 'flut');
+    if (!becken.length) { pruef(`„${def.name}" hat ein Becken`, false); continue; }
     const urNass = def.map.reduce((n, z) => n + [...z].filter(c => c === 'w').length, 0);
-    const trockenAnfang = lv.untenFl.tiles.reduce((n, r) => n + r.filter(c => c !== 'w' && lv.isFloorChar(c)).length, 0);
+    for (const f of becken) f.update(0);
     pruef(`„${def.name}" fängt trocken an`, zaehleNass(lv) === urNass,
           `${zaehleNass(lv)} nasse Felder, in der Karte stehen ${urNass}`);
-    // Auf die Höchststufe fahren, ohne auf den Takt der Bahn angewiesen zu sein
-    f.update(f.start + f.max * f.takt + 0.01);
-    pruef(`… erreicht die Höchststufe`, f.stufe === f.max, `Stufe ${f.stufe} von ${f.max}`);
-    const trockenEnde = lv.untenFl.tiles.reduce((n, r) => n + r.filter(c => c !== 'w' && lv.isFloorChar(c)).length, 0);
-    pruef(`… und nimmt dabei mehr als die Hälfte des Bodens`,
-          trockenEnde <= trockenAnfang * 0.45,
-          `${trockenAnfang} → ${trockenEnde} (${Math.round(100 * trockenEnde / trockenAnfang)} %)`);
+
+    /* Alle Becken randvoll – und jetzt die Regel, um die es geht. */
+    for (const f of becken) f.update(f.start + f.max * f.takt + 0.01);
+    pruef(`… alle Becken laufen voll`, becken.every(f => f.stufe === f.max),
+          becken.map(f => `${f.stufe}/${f.max}`).join(' '));
+    pruef(`… und trotzdem führt ein Weg zum Loch`, wegDa(lv),
+          'sonst müßte man warten, bis das Becken leerläuft');
+    const laeufe = becken.map(f => f.zyklus());
+    pruef(`… der längste Lauf bleibt unter der Geduld`, Math.max(...laeufe) <= GEDULD,
+          `${Math.max(...laeufe).toFixed(1)} s, erlaubt ${GEDULD} s`);
     const tee = [Math.floor(lv.tee.x), Math.floor(lv.tee.y)], loch = [Math.floor(lv.cup.x), Math.floor(lv.cup.y)];
     pruef(`… Abschlag und Loch bleiben trocken`,
           !nass(lv, tee[0], tee[1]) && !nass(lv, loch[0], loch[1]),
           `Abschlag ${kachel(lv, tee[0], tee[1])}, Loch ${kachel(lv, loch[0], loch[1])}`);
-    // Und am Ende der Tide steht die Bahn wieder da, wie sie war
-    f.update(f.start + f.zyklus() - 0.01);
-    pruef(`… und nach der Tide ist sie wieder ganz`, zaehleNass(lv) === urNass,
+    /* Und am Ende des Laufs steht die Bahn wieder da, wie sie war. */
+    for (const f of becken) f.update(f.start + f.zyklus() - 0.01);
+    pruef(`… und nach dem Lauf ist sie wieder ganz`, zaehleNass(lv) === urNass,
           `${zaehleNass(lv)} nasse Felder, in der Karte stehen ${urNass}`);
   }
 }
