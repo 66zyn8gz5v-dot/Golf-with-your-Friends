@@ -120,6 +120,42 @@ const Editor = (deps) => {
   /* Die drei, die ihre beiden Plätze als Buchstaben in der Karte ablegen – wie im Bahn-Quelltext. */
   const PAAR_MASCHINEN = new Set(['liongate', 'copperpipe', 'abflussrohr']);
 
+  /* ---------- Aussehen ----------
+     Viele Maschinen koennen anders aussehen, ohne sich anders zu verhalten: Die Lore ist auch ein
+     Drache, ein Sarg oder ein Piratenschiff, die Kanone auch eine Balliste. Bisher steckte das im
+     Drehen-Knopf - bei der Kanone musste man VIERMAL drehen, bis das Aussehen wechselte, und bei
+     der Muehle ging es nur zusammen mit der Achse. Das hat niemand gefunden, der nicht den
+     Quelltext gelesen hat. Jetzt steht es als eigene Reihe im Blatt der Maschine, und Drehen
+     dreht wieder nur.
+
+     [Wert, Name]. Der leere Wert heisst: gar kein Stil am Hindernis - das ist das Aussehen, mit
+     dem die Maschine gebaut wurde. */
+  const FAHRZEUGE = [
+    ['cart', 'Lore'], ['barrel', 'Faß'], ['boulder', 'Felsbrocken'], ['cannonball', 'Kanonenkugel'],
+    ['coconut', 'Kokosnuß'], ['stone', 'Schiebestein'], ['chariot', 'Streitwagen'],
+    ['boat', 'Ruderboot'], ['ship', 'Piratenschiff'], ['coffin', 'Sarg'], ['shark', 'Hai'], ['wave', 'Welle'],
+    ['balloon', 'Ballon'], ['airship', 'Luftschiff'], ['cloud', 'Wolke'], ['stormcloud', 'Gewitterwolke'],
+    ['ghost', 'Geist'], ['bat', 'Fledermaus'], ['ravens', 'Raben'],
+    ['dragon', 'Drache'], ['snake', 'Schlange'], ['cauldron', 'Hexenkessel'],
+    ['guard', 'Palastwache'], ['knight', 'Ritter'], ['gladiator', 'Gladiator'],
+  ];
+  const AUSSEHEN = {
+    bumper: [['mushroom', 'Pilz'], ['crystal', 'Kristall'], ['rock', 'Fels'], ['coral', 'Koralle'],
+             ['idol', 'Götze'], ['orb', 'Leuchtkugel'], ['grave', 'Grabstein'], ['eye', 'Auge'],
+             ['fass', 'Faß'], ['feder', 'Sprungfeder']],
+    rotor: [['wood', 'Windrad'], ['crystal', 'Kristall'], ['log', 'Baumstamm'], ['stone', 'Steinbalken'],
+            ['broom', 'Besen'], ['tentacle', 'Tentakel'], ['darktentacle', 'Dunkler Tentakel'],
+            ['knight', 'Ritterstatue'], ['vine', 'Ranke'], ['propeller', 'Propeller'],
+            ['scythe', 'Sense'], ['pendel', 'Pendel']],
+    magnet: [['', 'Kristall'], ['pearl', 'Perle'], ['coral', 'Koralle'], ['soul', 'Seelenlicht']],
+    cannon: [['', 'Kanone'], ['ballista', 'Balliste'], ['catapult', 'Katapult'], ['wrackkanone', 'Wrackkanone']],
+    turntable: [['', 'Drehscheibe'], ['whirl', 'Strudel'], ['tornado', 'Wirbelsturm'], ['void', 'Leere']],
+    windmill: [['', 'Windmühle'], ['ofen', 'Schmelzofen'], ['wasserwand', 'Wasserwand']],
+    sharkjump: [['', 'Hai'], ['croc', 'Krokodil'], ['bat', 'Fledermaus']],
+    field: [['wind', 'Wind'], ['current', 'Strömung'], ['steam', 'Dampf'], ['dark', 'Dunkelzone'], ['slope', 'Schräge']],
+    mover: FAHRZEUGE, ferry: FAHRZEUGE, wave: FAHRZEUGE,
+  };
+
   /* ---------- Regler ----------
      [Schlüssel, Name, kleinster, größter, Schritt]. Was VOR dem null steht, sieht man sofort –
      das sind die drei bis fünf Werte, die eine Maschine wirklich verändern. Was dahinter steht,
@@ -611,14 +647,12 @@ const Editor = (deps) => {
       case 'ramp': case 'boost': case 'gearlift': case 'piston': case 'kippbuehne': case 'lawine':
       case 'sprengladung': case 'muschel': case 'raucher': case 'stroemung': o.angle = cyc(o.angle || 0); break;
       case 'gate': { tausch(); o.axis = o.axis === 'x' ? 'y' : 'x'; break; }
-      /* Die Mühle dreht sich beim Tippen durch vier Zustände: quer, längs – und beides
-         noch einmal als Wasserwand, der Gestalt, die sie in der Flut trägt. */
-      case 'windmill':
-        if (o.axis === 'x') { o.axis = 'y'; o.style = o.style === 'wasserwand' ? undefined : 'wasserwand'; }
-        else o.axis = 'x';
-        break;
+      // Die Mühle kippt zwischen quer und längs. Ihre Gestalt – Mühle, Schmelzofen, Wasserwand –
+      // steht seit Fassung 191 unter „Aussehen“ und hängt nicht mehr mit am Drehen.
+      case 'windmill': o.axis = o.axis === 'x' ? 'y' : 'x'; break;
       case 'mover': case 'ferry': case 'wave': case 'gearfield': case 'angler': case 'wandergate': case 'seilbahn': kipp(); break;
-      case 'cannon': o.base = Math.round(((o.base || 0) + Math.PI / 2) * 1000) / 1000; if (o.base > Math.PI * 2 - 0.01) { o.base = 0; o.style = o.style === 'ballista' ? 'catapult' : o.style === 'catapult' ? 'wrackkanone' : o.style === 'wrackkanone' ? undefined : 'ballista'; } break;
+      // Drehen dreht nur noch: Balliste, Katapult und Wrackkanone stehen unter „Aussehen“.
+      case 'cannon': o.base = Math.round((((o.base || 0) + Math.PI / 2) % (Math.PI * 2)) * 1000) / 1000; break;
       case 'magnet': o.strength = -o.strength; break;
       case 'turntable': case 'cauldron': o.exit = cyc(o.exit || 0); break;
       case 'rotor': case 'hand': o.speed = -o.speed; break;
@@ -884,10 +918,16 @@ const Editor = (deps) => {
     const zeile = ([k, n, min, max, schritt]) => `<label class="bl-regler"><span class="bl-name">${n}</span>
       <input type="range" data-k="${k}" min="${min}" max="${max}" step="${schritt}" value="${wertVon(o, k)}">
       <output data-o="${k}">${zahl(wertVon(o, k))}</output></label>`;
-    const nichts = !oben.length && !unten.length ? '<div class="bl-leer">An dieser Maschine gibt es nichts einzustellen – ihre Plätze bestimmen alles.</div>' : '';
+    /* Das Aussehen steht ganz oben, vor den Reglern: Es ist das, was man als erstes ändern will,
+       und man sieht es sofort auf der Bahn. */
+    const stile = AUSSEHEN[o.type] || [];
+    const jetzt = o.style || '';
+    const aussehen = stile.length ? `<div class="bl-welt">Aussehen</div><div class="bl-stile">${stile.map(([w, n]) =>
+      `<button class="bl-stil${w === jetzt ? ' sel' : ''}" data-s="${w}">${n}</button>`).join('')}</div>` : '';
+    const nichts = !oben.length && !unten.length && !stile.length ? '<div class="bl-leer">An dieser Maschine gibt es nichts einzustellen – ihre Plätze bestimmen alles.</div>' : '';
     blattAuf(MASCHINE_NAME[o.type] || o.type, `
       <div class="bl-satz">${MASCHINE_SATZ[o.type] || ''}</div>
-      ${nichts}${oben.map(zeile).join('')}
+      ${nichts}${aussehen}${oben.map(zeile).join('')}
       ${unten.length ? (mehr ? unten.map(zeile).join('') + `<button class="cbtn small" id="bl-weniger">Weniger zeigen</button>`
                              : `<button class="cbtn small" id="bl-mehr">Mehr einstellen …</button>`) : ''}
       <div class="bl-knoepfe">
@@ -909,6 +949,10 @@ const Editor = (deps) => {
       // Erst wenn der Finger loslässt, wird ein Schritt daraus – sonst wären es hundert
       r.addEventListener('change', () => { ablegen(vorRegler); vorRegler = stand(); });
     });
+    ed.blatt.querySelectorAll('.bl-stil').forEach(b => b.addEventListener('click', () => aenderung(() => {
+      if (b.dataset.s) o.style = b.dataset.s; else delete o.style;
+      rebuild(); blattMaschine(mehr);
+    })));
     if ($('bl-mehr')) $('bl-mehr').addEventListener('click', () => blattMaschine(true));
     if ($('bl-weniger')) $('bl-weniger').addEventListener('click', () => blattMaschine(false));
     $('bl-drehen').addEventListener('click', () => aenderung(() => { if (rotate(o)) rebuild(); else showMessage('Diese Maschine läßt sich nicht drehen', 1200); }));
@@ -1075,7 +1119,9 @@ const Editor = (deps) => {
       html = knopf('T', 'Abschlag', Icons.svg('sports_golf')) + knopf('H', 'Loch', Icons.svg('golf_course'));
     } else if (ed.gruppe === 'maschinen') {
       const sel = ed.def.obstacles[ed.sel];
-      html = `<button class="ed-wz gross sel" id="ed-wahl">${Icons.svg('construction')} ${MASCHINE_NAME[ed.obj] || ed.obj} · andere wählen …</button>`
+      /* „Setzen:“ davor, weil daneben die AUSGEWÄHLTE Maschine steht. Ohne das Wort sah es aus,
+         als widersprächen sich die beiden Knöpfe – links „Pilz“, rechts „Lore einstellen“. */
+      html = `<button class="ed-wz gross sel" id="ed-wahl">${Icons.svg('construction')} Setzen: ${MASCHINE_NAME[ed.obj] || ed.obj} · andere wählen …</button>`
         + (sel ? `<button class="ed-wz" id="ed-einstellen">${Icons.svg('settings')} ${MASCHINE_NAME[sel.type] || sel.type} einstellen</button>` : '')
         + `<span class="ed-trenner"></span><span class="ed-zahl">${ed.def.obstacles.length} auf der Bahn</span>`;
     } else if (ed.gruppe === 'hoehen') {
@@ -1106,7 +1152,7 @@ const Editor = (deps) => {
     if (ed.pending) return zweiterTipp(ed.pending.kind);
     if (ed.tool === 'obj') {
       const sel = ed.def.obstacles[ed.sel];
-      return sel ? `${MASCHINE_NAME[sel.type] || sel.type} ausgewählt. Ziehen verschiebt sie, Tippen öffnet ihre Einstellungen.`
+      return sel ? `${MASCHINE_NAME[sel.type] || sel.type} ausgewählt. Ziehen verschiebt sie, Tippen öffnet Aussehen und Einstellungen.`
         : `Tippen setzt ${MASCHINE_NAME[ed.obj] || ed.obj}. Tippen auf eine Maschine wählt sie aus, Ziehen verschiebt sie.`;
     }
     if (ed.tool === 'T' || ed.tool === 'H' || ed.tool === 'pan') return HINWEIS[ed.tool];
@@ -1156,7 +1202,7 @@ const Editor = (deps) => {
      jede der über sechzig Maschinen einmal hinsetzen und nachsehen, ob sie eine gültige Bahn
      ergibt und ob jeder Regler auch wirklich einen Wert trifft, den es gibt. Ohne diesen Zugang
      müßte man dreiundsechzigmal von Hand tippen – und würde es darum nie tun. */
-  const katalog = { MASCHINEN, REGLER, ZWEI_TIPPER, PAAR_MASCHINEN, makeObject, makeStrecke, anchors, rotate, wertVon };
+  const katalog = { MASCHINEN, REGLER, AUSSEHEN, ZWEI_TIPPER, PAAR_MASCHINEN, makeObject, makeStrecke, anchors, rotate, wertVon };
 
   return { open, uebernimm, loadCustoms, worldCourses, cameraTarget, drawOverlay, pointer, returnFromTest, katalog, get active() { return state.phase === 'edit'; } };
 };
