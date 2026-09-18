@@ -188,7 +188,7 @@ const FLUT_COURSES = [
       '..........................................',
     ],
     obstacles: [
-      { type: 'windmill', style: 'schoepfrad', x: 20.5, y: 11.5, axis: 'y', w: 6.0, gap: 1.8, depth: 1.4, height: 2.2, blades: 8, len: 1.6, speed: 0.9, phase: 0.0 },
+      { type: 'windmill', style: 'schoepfrad', x: 20.5, y: 11.5, axis: 'y', w: 6.0, gap: 1.8, depth: 1.4, height: 3.6, blades: 8, len: 1.35, speed: 0.9, phase: 0.0 },
       { type: 'stroemung', x: 17.5, y: 14.0, w: 5, h: 2, angle: 0, tempo: 4.2 },
     ],
   },
@@ -294,7 +294,7 @@ const FLUT_COURSES = [
     obstacles: [
       { type: 'strudel', x: 22.0, y: 11.0, r: 3.4, dreh: -1 },
       { type: 'abflussrohr', pair: 'A', angle: 0 },
-      { type: 'windmill', style: 'schoepfrad', x: 9.5, y: 6.5, axis: 'y', w: 3.6, gap: 1.5, depth: 1.2, height: 2.0, blades: 8, len: 1.3, speed: 1.05, phase: 0.0 },
+      { type: 'windmill', style: 'schoepfrad', x: 9.5, y: 6.5, axis: 'y', w: 3.6, gap: 1.5, depth: 1.2, height: 3.2, blades: 8, len: 1.15, speed: 1.05, phase: 0.0 },
     ],
   },
   {
@@ -368,7 +368,7 @@ const FLUT_COURSES = [
       { type: 'strudel', x: 21.5, y: 12.0, r: 2.8, dreh: -1 },
       { type: 'abflussrohr', pair: 'B', angle: 0 },
       { type: 'ankerkette', x: 38.5, y: 13.5, len: 4.0, amp: 48, ruhe: 90, takt: 5.2 },
-      { type: 'windmill', style: 'schoepfrad', x: 37.5, y: 17.5, axis: 'y', w: 3.6, gap: 1.5, depth: 1.2, height: 2.0, blades: 8, len: 1.3, speed: 0.85, phase: 1.1 },
+      { type: 'windmill', style: 'schoepfrad', x: 37.5, y: 17.5, axis: 'y', w: 3.6, gap: 1.5, depth: 1.2, height: 3.2, blades: 8, len: 1.15, speed: 0.85, phase: 1.1 },
     ],
   },
   {

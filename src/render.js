@@ -2436,109 +2436,229 @@ class Renderer {
     }
   }
 
-  /* DAS SCHÖPFRAD – die Mühle der versunkenen Stadt.
+  /* DAS SCHÖPFRAD – die Wassermühle der versunkenen Stadt.
 
      Dieselbe Maschine wie die Windmühle: ein Torhaus, dessen Durchgang im Takt der Flügel zufällt.
      Nur treibt sie hier unten kein Wind, sondern die Strömung, und die Flügel sind die Schaufeln
-     eines hölzernen Schöpfrades. Steht eine Schaufel unten, ist der Weg versperrt – dann wartet
-     man einen Takt oder spielt den Bogen außen herum.
+     eines hölzernen Rades. Steht eine Schaufel unten, ist der Weg versperrt – dann wartet man
+     einen Takt oder spielt den Bogen außen herum.
 
-     Kein Spitzdach, keine erleuchteten Fenster: Hier wohnt niemand mehr. Das Haus ist nasser
-     Quaderstein mit einer flachen Deckplatte, das Rad grün bewachsen. */
+     VIER DINGE SIND HIER TEUER ERKAUFT, und darum stehen sie oben:
+
+     1. DAS RAD WIRD IM BILD AUFGESPANNT, NICHT IN DER WELT. Ein Kreis, der in einer Weltebene
+        liegt, wird in der schrägen Ansicht zur gekippten Ellipse – geometrisch richtig, aber es
+        sieht aus, als falle das Rad um. Ein Rad ist rundherum gleich, also merkt niemand, daß es
+        sich nicht mit der Kamera dreht; schief dagegen sieht jeder sofort.
+     2. ES HÄNGT SEITLICH AN DER WAND, nicht mittig vor dem Tor. So ist eine Wassermühle gebaut:
+        Das Haus steht, an seiner Flanke läuft das Rad, der Durchgang bleibt frei.
+     3. JEDES STÜCK IST EINE FLÄCHE, KEIN STRICH. Felgen sind Bänder, Speichen sind Balken, außen
+        läuft ein Mantel. Ein Rad aus Linien sieht aus wie ein Zahnrad von der Seite.
+     4. DAS HAUS MUSS HÖHER SEIN ALS DAS RAD. Sonst bleibt vom Gebäude nichts übrig und es steht
+        nur ein Rad mit einem Loch darunter da. */
   drawSchoepfrad(ctx, ob, t) {
     const s = this.scale, ax = ob.axis === 'x';
-    const steinOben = '#8f9a94', steinSeite = '#5c6a66', kante = '#39443f';
-    for (const b of ob.blocks) this.prism(ctx, b, 0, ob.height, steinOben, steinSeite, { outline: kante });
+    const steinOben = '#9aa79f', steinSeite = '#46534e', kante = '#232c29';
+    const holzHell = '#8a6d3e', holzMittel = '#6b5334', holzDunkel = '#3f3018';
+    const dd = ob.depth / 2;
+    const flaeche = (punkte, fuell, rand, breite) => {
+      ctx.beginPath(); punkte.forEach((q, i) => i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]));
+      ctx.closePath();
+      if (fuell) { ctx.fillStyle = fuell; ctx.fill(); }
+      if (rand) { ctx.strokeStyle = rand; ctx.lineWidth = breite || 1; ctx.stroke(); }
+    };
 
-    const g = ob.gap / 2 + 0.05, dd = ob.depth / 2;
+    // ---------------------------------------------------------------- das Haus
+    for (const b of ob.blocks) this.prism(ctx, b, 0, ob.height, steinOben, steinSeite, { outline: kante });
+    const g = ob.gap / 2 + 0.05;
     const bruecke = ax ? [[ob.x - g, ob.y - dd], [ob.x + g, ob.y - dd], [ob.x + g, ob.y + dd], [ob.x - g, ob.y + dd]]
                        : [[ob.x - dd, ob.y - g], [ob.x + dd, ob.y - g], [ob.x + dd, ob.y + g], [ob.x - dd, ob.y + g]];
     this.prism(ctx, bruecke, 1.05, ob.height - 1.05, steinOben, steinSeite, { outline: kante });
-
-    // Die Deckplatte: ein flacher Kranz statt eines Daches, mit Algenpolster obendrauf
-    const rw = ob.w / 2 + ob.overlap + 0.18, rd = ob.depth / 2 + 0.18;
+    for (const bl of ob.blocks) {   // Sockelband: ein Haus ohne Fuß sieht aus wie aufgeklebt
+      const sockel = bl.map(q => [ob.x + (q[0] - ob.x) * 1.05, ob.y + (q[1] - ob.y) * 1.05]);
+      this.prism(ctx, sockel, 0, 0.45, '#7d8a84', '#38433f', { outline: kante });
+    }
+    const rw = ob.w / 2 + ob.overlap + 0.18, rd = dd + 0.18;
     const platte = ax ? [[ob.x - rw, ob.y - rd], [ob.x + rw, ob.y - rd], [ob.x + rw, ob.y + rd], [ob.x - rw, ob.y + rd]]
                       : [[ob.x - rd, ob.y - rw], [ob.x + rd, ob.y - rw], [ob.x + rd, ob.y + rw], [ob.x - rd, ob.y + rw]];
-    this.prism(ctx, platte, ob.height, 0.22, '#6f7d70', '#414d46', { outline: kante });
-    for (let i = 0; i < 5; i++) {
-      const u = (i / 4 - 0.5) * (rw * 1.6);
-      const [px, py] = this.proj(ax ? ob.x + u : ob.x + (i % 2 ? 0.2 : -0.2), ax ? ob.y + (i % 2 ? 0.2 : -0.2) : ob.y + u, ob.height + 0.24);
-      ctx.fillStyle = i % 2 ? 'rgba(96,138,92,0.85)' : 'rgba(126,162,104,0.8)';
-      ctx.beginPath(); ctx.ellipse(px, py, s * 0.16, s * 0.08, 0, 0, TAU); ctx.fill();
+    this.prism(ctx, platte, ob.height, 0.24, '#6f7d70', '#414d46', { outline: kante });
+
+    // Front: Quaderfugen und zwei dunkle Luken – erst das macht aus dem Klotz ein Gebäude
+    const frontN = ax ? [0, 1] : [1, 0];
+    const vorn = (frontN[0] * this.cam.sin + frontN[1] * this.cam.cos) > 0 ? 1 : -1;
+    for (const bl of ob.blocks) {
+      const mx = (bl[0][0] + bl[2][0]) / 2, my = (bl[0][1] + bl[2][1]) / 2;
+      const fx = ax ? mx : ob.x + vorn * (dd + 0.02), fy = ax ? ob.y + vorn * (dd + 0.02) : my;
+      const auf = (u, z) => ax ? this.proj(fx + u, fy, z) : this.proj(fx, fy + u, z);
+      ctx.strokeStyle = 'rgba(30,40,36,0.32)'; ctx.lineWidth = 1;
+      for (let z = 0.75; z < ob.height - 0.25; z += 0.55) {
+        const q0 = auf(-1.0, z), q1 = auf(1.0, z);
+        ctx.beginPath(); ctx.moveTo(q0[0], q0[1]); ctx.lineTo(q1[0], q1[1]); ctx.stroke();
+      }
+      for (const u of [-0.42, 0.42]) {
+        const z = ob.height - 1.2;
+        flaeche([auf(u - 0.22, z), auf(u + 0.22, z), auf(u + 0.22, z + 0.5), auf(u - 0.22, z + 0.5)],
+                '#12201d', '#6d7c76', Math.max(1, s * 0.035));
+      }
     }
 
-    // Der Torbogen auf der Kameraseite – offen ein dunkles Loch, versperrt ein Schwall
-    const faceN = ax ? [0, 1] : [1, 0];
-    const seite = (faceN[0] * this.cam.sin + faceN[1] * this.cam.cos) > 0 ? 1 : -1;
+    // ---------------------------------------------------------------- der Torbogen
     const w2 = ob.gap / 2 + 0.08, top = 1.05, rad = Math.min(w2, 0.32);
-    const fx = ax ? ob.x : ob.x + seite * dd, fy = ax ? ob.y + seite * dd : ob.y;
-    const at = (u, z) => ax ? this.proj(fx + u, fy, z) : this.proj(fx, fy + u, z);
+    const tx = ax ? ob.x : ob.x + vorn * dd, ty = ax ? ob.y + vorn * dd : ob.y;
+    const anTor = (u, z) => ax ? this.proj(tx + u, ty, z) : this.proj(tx, ty + u, z);
     const bogen = () => {
       ctx.beginPath();
-      let p = at(-w2, 0); ctx.moveTo(p[0], p[1]);
-      p = at(-w2, top - rad); ctx.lineTo(p[0], p[1]);
-      for (let k = 0; k <= 10; k++) { const a = Math.PI - (k / 10) * Math.PI; p = at(Math.cos(a) * w2, top - rad + Math.sin(a) * rad); ctx.lineTo(p[0], p[1]); }
-      p = at(w2, 0); ctx.lineTo(p[0], p[1]); ctx.closePath();
+      let p = anTor(-w2, 0); ctx.moveTo(p[0], p[1]);
+      p = anTor(-w2, top - rad); ctx.lineTo(p[0], p[1]);
+      for (let k = 0; k <= 10; k++) { const a = Math.PI - (k / 10) * Math.PI; p = anTor(Math.cos(a) * w2, top - rad + Math.sin(a) * rad); ctx.lineTo(p[0], p[1]); }
+      p = anTor(w2, 0); ctx.lineTo(p[0], p[1]); ctx.closePath();
     };
     ctx.fillStyle = '#0a1412'; bogen(); ctx.fill();
-    if (ob.blocked) {
-      // Die Schaufel steht im Tor und schiebt eine Wand aus Wasser vor sich her
+    if (ob.blocked) {   // die Schaufel steht im Tor und schiebt eine Wand aus Wasser vor sich her
       ctx.save(); bogen(); ctx.clip();
       ctx.fillStyle = 'rgba(150,205,220,0.55)'; bogen(); ctx.fill();
       ctx.strokeStyle = 'rgba(232,250,255,0.75)'; ctx.lineWidth = Math.max(1, s * 0.035);
       for (let k = -2; k <= 2; k++) {
-        const u = (k / 2.6) * w2, q0 = at(u, 0), q1 = at(u + 0.06, top);
+        const u = (k / 2.6) * w2, q0 = anTor(u, 0), q1 = anTor(u + 0.06, top);
         ctx.beginPath(); ctx.moveTo(q0[0], q0[1]); ctx.lineTo(q1[0], q1[1]); ctx.stroke();
       }
       ctx.restore();
     }
     ctx.strokeStyle = '#6d7c76'; ctx.lineWidth = Math.max(1.5, s * 0.05); bogen(); ctx.stroke();
 
-    // DAS RAD. Es steht senkrecht vor der Front und dreht um die Nabe: Kranz, Speichen, Schaufeln.
-    const nabX = ax ? ob.x : ob.x + dd + 0.1, nabY = ax ? ob.y + dd + 0.1 : ob.y, nabZ = ob.height - 0.15;
-    const R = ob.len;
-    const aufKreis = (winkel, r) => {
-      const c = Math.cos(winkel) * r, h = Math.sin(winkel) * r;
-      return this.proj(nabX + (ax ? c : 0), nabY + (ax ? 0 : c), nabZ + h);
+    // ---------------------------------------------------------------- das Rad
+    const R = ob.len, hb = Math.max(0.42, R * 0.3);          // hb = halbe Radbreite in Metern
+    const nabZ = R + 0.22;                                    // unterste Schaufel knapp über Grund
+    const seitlich = ob.gap / 2 + Math.max(0.95, hb + 0.45);  // seitlich neben dem Tor
+    const radX = ax ? ob.x + seitlich : ob.x + vorn * (dd + 0.55);
+    const radY = ax ? ob.y + vorn * (dd + 0.55) : ob.y + seitlich;
+
+    // Der Bildrahmen des Rades: Mitte, ein Meter Höhe, ein Meter entlang der Achse
+    const [mx0, my0] = this.proj(radX, radY, nabZ);
+    const [ox0, oy0] = this.proj(radX, radY, nabZ + 1);
+    const hPix = Math.hypot(ox0 - mx0, oy0 - my0) || s;
+    const [axx, axy] = ax ? this.proj(radX, radY + 1, nabZ) : this.proj(radX + 1, radY, nabZ);
+    const achse = [axx - mx0, axy - my0];
+    const P = (w, r, b) => [mx0 + Math.cos(w) * r * hPix + achse[0] * b,
+                            my0 - Math.sin(w) * r * hPix + achse[1] * b];
+
+    const rInnen = R * 0.74, N = 8;
+    const kranzRing = (b, hellFaktor) => {          // die Felge als BAND
+      for (let k = 0; k < 32; k++) {
+        const a0 = (k / 32) * TAU + ob.angle, a1 = ((k + 1) / 32) * TAU + ob.angle;
+        const hell = hellFaktor * (0.68 + 0.32 * (0.5 + 0.5 * Math.sin((a0 + a1) / 2)));
+        flaeche([P(a0, R, b), P(a1, R, b), P(a1, rInnen, b), P(a0, rInnen, b)],
+                `rgb(${Math.round(138 * hell)},${Math.round(109 * hell)},${Math.round(62 * hell)})`, null);
+      }
+      ctx.strokeStyle = holzDunkel; ctx.lineWidth = Math.max(1, s * 0.03);
+      for (const r of [R, rInnen]) {
+        ctx.beginPath();
+        for (let k = 0; k <= 32; k++) { const q = P((k / 32) * TAU, r, b); k ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); }
+        ctx.closePath(); ctx.stroke();
+      }
     };
+    const speichen = (b, farbe) => {                // die Speiche als BALKEN
+      for (let i = 0; i < N; i++) {
+        const a = ob.angle + (i * TAU) / N;
+        const w0 = 0.13 / (R * 0.22), w1 = 0.13 / rInnen;
+        flaeche([P(a - w0, R * 0.22, b), P(a + w0, R * 0.22, b), P(a + w1, rInnen + 0.02, b), P(a - w1, rInnen + 0.02, b)],
+                farbe, holzDunkel, 1);
+      }
+    };
+
+    kranzRing(-hb, 0.72);                           // hintere Felge, im Schatten
+    speichen(-hb, '#57431f');
+
+    for (let k = 0; k < 32; k++) {                  // der Mantel zwischen den Felgen
+      const a0 = (k / 32) * TAU + ob.angle, a1 = ((k + 1) / 32) * TAU + ob.angle;
+      const hell = 0.55 + 0.45 * (0.5 + 0.5 * Math.sin((a0 + a1) / 2));
+      flaeche([P(a0, R, -hb), P(a1, R, -hb), P(a1, R, hb), P(a0, R, hb)],
+              `rgb(${Math.round(96 * hell)},${Math.round(75 * hell)},${Math.round(42 * hell)})`, null);
+    }
+    for (let i = 0; i < N; i++) {                   // die Schaufeln: Bretter über die ganze Breite
+      const a = ob.angle + (i * TAU) / N;
+      const hell = 0.55 + 0.45 * (0.5 + 0.5 * Math.sin(a));
+      flaeche([P(a, rInnen, -hb), P(a, R * 1.2, -hb), P(a, R * 1.2, hb), P(a, rInnen, hb)],
+              `rgb(${Math.round(150 * hell)},${Math.round(120 * hell)},${Math.round(70 * hell)})`,
+              'rgba(42,30,14,0.9)', 1);
+      const [gx, gy] = P(a, R * 1.06, 0);           // Bewuchs auf der Schaufel
+      ctx.fillStyle = `rgba(104,150,88,${0.3 + 0.3 * Math.abs(Math.sin(a * 3))})`;
+      ctx.beginPath(); ctx.ellipse(gx, gy, s * 0.1, s * 0.05, 0, 0, TAU); ctx.fill();
+    }
+
+    kranzRing(hb, 1.0);                             // vordere Felge, voll im Licht
+    speichen(hb, holzMittel);
+
+    // Nabe: ein kurzer Zylinder aus Eisen, kein Punkt
+    for (let k = 0; k < 16; k++) {
+      const a0 = (k / 16) * TAU, a1 = ((k + 1) / 16) * TAU;
+      const hell = 0.6 + 0.4 * (0.5 + 0.5 * Math.sin((a0 + a1) / 2));
+      flaeche([P(a0, R * 0.2, -hb), P(a1, R * 0.2, -hb), P(a1, R * 0.2, hb), P(a0, R * 0.2, hb)],
+              `rgb(${Math.round(80 * hell)},${Math.round(80 * hell)},${Math.round(92 * hell)})`, null);
+    }
+    const nabe = [];
+    for (let k = 0; k < 16; k++) nabe.push(P((k / 16) * TAU, R * 0.2, hb));
+    flaeche(nabe, '#4a4a54', '#9a9aa6', Math.max(1, s * 0.04));
+    const [zx, zy] = P(0, 0, hb);
+    ctx.fillStyle = '#23232a'; ctx.beginPath(); ctx.arc(zx, zy, s * 0.07, 0, TAU); ctx.fill();
+
+    // ---------------------------------------------------------------- Welle und Lagerbock
+    const wandX = ax ? radX : ob.x + vorn * dd, wandY = ax ? ob.y + vorn * dd : radY;
+    const [wx, wy] = this.proj(wandX, wandY, nabZ);
     ctx.lineCap = 'round';
-    for (const r of [R, R * 0.62]) {   // äußerer Kranz und innerer Ring
-      ctx.strokeStyle = r === R ? '#4d3a22' : '#5d4728'; ctx.lineWidth = Math.max(2, s * (r === R ? 0.09 : 0.05));
-      ctx.beginPath();
-      for (let k = 0; k <= 28; k++) { const q = aufKreis((k / 28) * TAU, r); k ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); }
-      ctx.closePath(); ctx.stroke();
+    ctx.strokeStyle = '#2f2f37'; ctx.lineWidth = Math.max(3, s * 0.15);
+    ctx.beginPath(); ctx.moveTo(wx, wy); ctx.lineTo(mx0, my0); ctx.stroke();
+    ctx.strokeStyle = '#5c5c68'; ctx.lineWidth = Math.max(2, s * 0.1);
+    ctx.beginPath(); ctx.moveTo(wx, wy); ctx.lineTo(mx0, my0); ctx.stroke();
+
+    /* Der Bock trägt das äußere Wellenende: zwei Streben vom Grund, oben ein Lagerklotz. Ohne ihn
+       hängt das Rad in der Luft – das ist der Punkt, an dem eine Mühle zum Mobile wird. */
+    const [lagerX, lagerY] = P(0, 0, hb + 0.35);
+    for (const seite of [-1, 1]) {
+      const fx2 = ax ? radX + seite * (R * 0.75) : radX + (hb + 0.35),
+            fy2 = ax ? radY + (hb + 0.35) : radY + seite * (R * 0.75);
+      const [fx3, fy3] = this.proj(fx2, fy2, 0);
+      ctx.strokeStyle = holzDunkel; ctx.lineWidth = Math.max(4, s * 0.17);
+      ctx.beginPath(); ctx.moveTo(fx3, fy3); ctx.lineTo(lagerX, lagerY); ctx.stroke();
+      ctx.strokeStyle = holzHell; ctx.lineWidth = Math.max(2.5, s * 0.12);
+      ctx.beginPath(); ctx.moveTo(fx3, fy3); ctx.lineTo(lagerX, lagerY); ctx.stroke();
     }
-    for (let i = 0; i < ob.blades; i++) {
-      const a = ob.angle + (i * TAU) / ob.blades;
-      const [nx0, ny0] = this.proj(nabX, nabY, nabZ), [ex, ey] = aufKreis(a, R);
-      ctx.strokeStyle = '#6b5334'; ctx.lineWidth = Math.max(1.5, s * 0.06);
-      ctx.beginPath(); ctx.moveTo(nx0, ny0); ctx.lineTo(ex, ey); ctx.stroke();
-      // Die Schaufel: ein Brett quer am Speichenende, in der Ebene des Rades
-      const b0 = aufKreis(a - 0.22, R * 0.82), b1 = aufKreis(a + 0.22, R * 0.82);
-      const b2 = aufKreis(a + 0.22, R), b3 = aufKreis(a - 0.22, R);
-      ctx.beginPath(); ctx.moveTo(b0[0], b0[1]); ctx.lineTo(b1[0], b1[1]); ctx.lineTo(b2[0], b2[1]); ctx.lineTo(b3[0], b3[1]); ctx.closePath();
-      ctx.fillStyle = i % 2 ? '#7d6339' : '#6a5330'; ctx.fill();
-      ctx.strokeStyle = '#3d2e18'; ctx.lineWidth = 1; ctx.stroke();
-      // Bewuchs auf jeder zweiten Schaufel
-      if (i % 2 === 0) {
-        const [gx, gy] = aufKreis(a, R * 0.9);
-        ctx.fillStyle = 'rgba(104,150,88,0.75)';
-        ctx.beginPath(); ctx.arc(gx, gy, s * 0.09, 0, TAU); ctx.fill();
-      }
-      // Aus der obersten Schaufel läuft das Wasser zurück: kleine Blasen, die aufsteigen
-      const obenAuf = Math.sin(a) > 0.82;
-      if (obenAuf) {
-        const [tx2, ty2] = aufKreis(a, R);
-        for (let k = 0; k < 3; k++) {
-          const f = ((t * 1.4 + k * 0.33) % 1);
-          ctx.fillStyle = `rgba(228,246,255,${0.6 * (1 - f)})`;
-          ctx.beginPath(); ctx.arc(tx2 + (k - 1) * s * 0.07, ty2 - f * s * 0.5, s * 0.045, 0, TAU); ctx.fill();
-        }
-      }
+    ctx.fillStyle = '#6f7d70'; ctx.fillRect(lagerX - s * 0.17, lagerY - s * 0.14, s * 0.34, s * 0.28);
+    ctx.strokeStyle = kante; ctx.lineWidth = 1; ctx.strokeRect(lagerX - s * 0.17, lagerY - s * 0.14, s * 0.34, s * 0.28);
+
+    // ---------------------------------------------------------------- Gerinne und Strahl
+    const gz = Math.min(ob.height - 0.2, nabZ + R + 0.42);
+    const gEnde = [radX, radY];
+    const gAnf = ax ? [radX, ob.y + vorn * (dd - 0.2)] : [ob.x + vorn * (dd - 0.2), radY];
+    const quer = ax ? [0.42, 0] : [0, 0.42];
+    const rinneBoden = [
+      this.proj(gAnf[0] - quer[0], gAnf[1] - quer[1], gz),
+      this.proj(gEnde[0] - quer[0], gEnde[1] - quer[1], gz),
+      this.proj(gEnde[0] + quer[0], gEnde[1] + quer[1], gz),
+      this.proj(gAnf[0] + quer[0], gAnf[1] + quer[1], gz),
+    ];
+    flaeche(rinneBoden, holzMittel, holzDunkel, Math.max(1, s * 0.04));
+    flaeche(rinneBoden.map(q => [q[0], q[1] - s * 0.07]), 'rgba(150,215,230,0.8)', null);
+    for (const seite of [-1, 1]) {
+      const a0 = this.proj(gAnf[0] + quer[0] * seite, gAnf[1] + quer[1] * seite, gz);
+      const a1 = this.proj(gEnde[0] + quer[0] * seite, gEnde[1] + quer[1] * seite, gz);
+      const a2 = this.proj(gEnde[0] + quer[0] * seite, gEnde[1] + quer[1] * seite, gz + 0.3);
+      const a3 = this.proj(gAnf[0] + quer[0] * seite, gAnf[1] + quer[1] * seite, gz + 0.3);
+      flaeche([a0, a1, a2, a3], seite > 0 ? holzHell : '#4d3a20', holzDunkel, 1);
     }
-    const [nx, ny] = this.proj(nabX, nabY, nabZ);
-    ctx.fillStyle = '#3b3b42'; ctx.beginPath(); ctx.arc(nx, ny, s * 0.14, 0, TAU); ctx.fill();
-    ctx.strokeStyle = '#8b8b96'; ctx.lineWidth = Math.max(1, s * 0.04); ctx.stroke();
+    const [sx0, sy0] = this.proj(gEnde[0], gEnde[1], gz);
+    const [sx1, sy1] = P(Math.PI / 2 - 0.2, R * 1.08, 0);
+    ctx.lineCap = 'butt';
+    ctx.strokeStyle = 'rgba(206,240,250,0.85)'; ctx.lineWidth = Math.max(4, s * 0.26);
+    ctx.beginPath(); ctx.moveTo(sx0, sy0); ctx.lineTo(sx1, sy1); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = Math.max(1, s * 0.06);
+    ctx.beginPath(); ctx.moveTo(sx0 - s * 0.06, sy0); ctx.lineTo(sx1 - s * 0.06, sy1); ctx.stroke();
+    for (let k = 0; k < 4; k++) {   // was an der tiefsten Schaufel wieder herausläuft
+      const f = (t * 0.9 + k * 0.25) % 1;
+      const [dx2, dy2] = P(-Math.PI / 2 + 0.45, R * (0.98 + f * 0.22), 0);
+      ctx.fillStyle = `rgba(224,244,252,${0.55 * (1 - f)})`;
+      ctx.beginPath(); ctx.arc(dx2, dy2 + f * s * 0.3, s * 0.05, 0, TAU); ctx.fill();
+    }
+    ctx.lineCap = 'round';
   }
 
   /* Windmühle: zwei Turmhälften mit Durchgang, Dach, Fenster, Tür und drehenden Flügeln */

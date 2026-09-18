@@ -284,8 +284,8 @@ def abfluss(paar, angle=0):
     return {'type': 'abflussrohr', 'pair': paar, 'angle': angle}
 
 
-def schoepfrad(x, y, achse='y', breit=6.0, spalt=1.8, tiefe_=1.4, hoch=2.2,
-               schaufeln=8, rad=1.6, tempo=0.9, phase=0.0):
+def schoepfrad(x, y, achse='y', breit=6.0, spalt=1.8, tiefe_=1.4, hoch=3.6,
+               schaufeln=8, rad=1.35, tempo=0.9, phase=0.0):
     """DAS SCHÖPFRAD – die Mühle der versunkenen Stadt.
 
     Dieselbe Maschine wie die Windmühle: ein Torhaus, dessen Durchgang im Takt der Flügel zufällt.
@@ -873,7 +873,7 @@ bahn('Die Kanalisation', 'daemmerzone', f, par=4,
            'hinein, man landet darin – und die Leitung setzt einen hinter dem Platz wieder ab.',
      hindernisse=[strudel(22.0, 11.0, 3.4, dreh=-1), abfluss('A', angle=0),
                   schoepfrad(9.5, 6.5, achse='y', breit=3.6, spalt=1.5, tiefe_=1.2,
-                             hoch=2.0, rad=1.3, tempo=1.05)])
+                             hoch=3.2, rad=1.15, tempo=1.05)])
 
 # --- 8: die Kaimauer. HALB UND HALB, und das ist der ganze Reiz: links die Mauer, an der man
 #        entlangspielen kann, rechts das offene Meer, in das man fällt.
@@ -920,7 +920,7 @@ bahn('Der Marktplatz', 'daemmerzone', f, par=5,
                   abfluss('B', angle=0),
                   ankerkette(38.5, 13.5, len_=4.0, ruhe=90, takt=5.2),
                   schoepfrad(37.5, 17.5, achse='y', breit=3.6, spalt=1.5, tiefe_=1.2,
-                             hoch=2.0, rad=1.3, tempo=0.85, phase=1.1)])
+                             hoch=3.2, rad=1.15, tempo=0.85, phase=1.1)])
 
 # ---------------------------------------------------------------- Meeresgrund
 # --- 10: die Schlotebene. Unten ein STEG über Wasser mit dem Raucher, oben eine GEMAUERTE Ebene.
