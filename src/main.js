@@ -2973,6 +2973,10 @@
       shoot(dx / L, dy / L, Math.max(0.05, Math.min(1, power)));
       return true;
     },
+    /* Der Baumodus – die Prüfung setzt damit jede Maschine einmal hin (tools/baumodus.mjs).
+       Als Abfrage, nicht als Wert: editor wird erst weiter unten gebaut, und ein const,
+       das hier schon gelesen würde, wirft. */
+    get editor() { return editor; },
     state, R,
   };
 

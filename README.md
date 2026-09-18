@@ -2839,37 +2839,75 @@ Danach ist das Spiel unter `https://66zyn8gz5v-dot.github.io/Golf-with-your-Frie
 
 ## Baumodus (eigene Bahnen im Spiel bauen)
 
-Im Kreativmodus gibt es **Bahn bauen**: ein Editor direkt im Spiel. Kacheln (Rasen, Sand, Eis, Wasser,
-Lava, Block, Klippe, Leer) werden durch Tippen oder Ziehen gemalt, Abschlag und Loch per Werkzeug
-gesetzt. Gebaut wird in der Draufsicht (umschaltbar auf Schrägsicht), das Panel lässt sich einklappen und
-ist in die Reiter **Bauen** (Boden, Abschlag/Loch, Hindernisse, Höhenstufen), **Bahn** (Name, Par, Welt,
-Kartengröße) und **Speichern** (Speichern, Laden, Bahn-Code, Weitergeben) aufgeteilt. **Testen** spielt
-die Bahn sofort probe, danach geht es zurück in den Editor. **Fertig** speichert sie und öffnet die
-**Eigene Welt**: dort wird die Bahn per **Einsetzen** an einer wählbaren Stelle eingefügt, die Reihenfolge
-lässt sich mit den Pfeilen ändern, das Kreuz nimmt eine Bahn wieder heraus. Die Eigene Welt erscheint im
-Kreativmodus als eigene Welt und wird in dieser Reihenfolge gespielt. Gespeichert wird im Browser;
-**Exportieren** liefert den Bahn-Code als Text, **Importieren** liest ihn wieder ein – zum Weitergeben
-gibt es zusätzlich **Teilen** und **Link kopieren** (siehe „Bahnen weitergeben"). Der Editor steckt in
-`src/editor.js`.
+Im Kreativmodus gibt es **Bahn bauen**: ein Editor direkt im Spiel. Er steckt in `src/editor.js`.
 
-**Alle 24 Hindernisse** stehen zur Verfügung – auch die der Stufe „Legende", die vorher nur in den
-gebauten Welten vorkamen: Pilz, Windrad, Fallgatter, Lore, Windfeld, Sprungrampe, Beschleuniger,
-Windmühle, Kanone, Magnet, Drehscheibe, Schrumpftrank, **Fähre, Schiene, Welle, springender Hai,
-Stacheln, Aufwind, Blitz, Fallbeil, Turm des Auges, Schalter**, Portal und Bande (die letzten beiden
-werden mit zwei Tippern gesetzt). Sie kommen mit denselben Werten wie in den gebauten Welten, damit sie
-sich gleich anfühlen; **Drehen** ändert je nach Objekt die Richtung, die Achse, das Vorzeichen oder das
-Ziel, **Löschen** entfernt das Objekt in der Nähe. Unter der Auswahl steht immer ein Satz dazu, was das
-gewählte Objekt tut.
+**Der Leitgedanke ist Übersicht, nicht Fülle.** Das Spiel kennt über sechzig Maschinen und
+fünfundvierzig Ausstattungen. Läge das alles gleichzeitig da, baute niemand mehr etwas. Darum:
 
-**Höhenstufen** gibt es ebenfalls: **Höher**, **Tiefer** und **Stufe weg** heben und senken den Boden
-kachelweise, die **Stufenhöhe** wechselt zwischen flach (0,3), mittel (0,5) und steil (0,8). Der Ball
-rollt Hänge hinunter, wie in den Bahnen des Schattenreichs. Damit man von oben nicht blind malt, zeigt
-der Editor jede Stufe als Ziffer und Tönung. Das Raster liegt als Ziffernzeilen (`heights`) über der
-Karte, wird beim Ändern der Kartengröße mitgezogen und kommt nur dann in die Bahn, wenn wirklich Stufen
-gemalt sind.
+* Die Werkzeugleiste sitzt **unten** und ist immer nur drei Reihen hoch – Hinweiszeile, die Knöpfe
+  der offenen Gruppe, die fünf Gruppen samt Handgriffen. Vorher war sie eine 290 Pixel breite Spalte
+  am rechten Rand; auf dem iPad hat die ein Viertel der Bahn weggenommen.
+* Die fünf Gruppen sind **Boden**, **Start & Ziel**, **Maschinen**, **Höhen** und **Ansicht**. Offen
+  ist immer genau eine.
+* Ganz oben steht **immer ein Satz**, was das gewählte Werkzeug gerade tut.
+* Alles andere – die Maschinenauswahl, die Einstellungen einer Maschine, die Angaben zur Bahn, das
+  Speichern – geht als **Blatt** von unten auf, über der Leiste, nicht auf ihr: Rückgängig, Testen
+  und Fertig bleiben erreichbar, während man an einer Maschine dreht.
 
-Was der Editor weiterhin nicht baut: Innenräume (Bahnen mit zweiter Karte, wie Pyramide oder
-Schattenschloss) und die Tür dorthin. Solche Bahnen lassen sich deshalb auch nicht teilen.
+**Rückgängig und Wiederholen** gibt es für jeden Schritt (80 tief, auch Strg+Z / Strg+Umschalt+Z).
+Ein Strich mit dem Finger ist dabei *ein* Schritt und nicht sechzig: Gemerkt wird beim Aufsetzen,
+abgelegt beim Loslassen – und nur, wenn sich wirklich etwas geändert hat.
+
+**Boden malen** kennt fünf Formen: **Malen** (ziehen), **Füllen** (der Farbeimer nimmt die ganze
+zusammenhängende Fläche), **Rechteck**, **Linie** und **Pipette** (übernimmt den Boden, der dort
+liegt). Rechteck und Linie zeigen beim Ziehen eine Vorschau – dieselbe Rechnung, die danach malt.
+Füllen gilt auch für Höhenstufen.
+
+**63 der 68 Maschinen** lassen sich setzen, nach Welt gruppiert (Grundausstattung, Legende,
+Kolosseum, Uhrwerk, Schneeberg, Zwergenmine, Die Flut), jede mit deutschem Namen und einem Satz
+dazu, und mit einem Suchfeld darüber. Sie kommen mit denselben Werten wie in den gebauten Welten,
+damit sie sich gleich anfühlen.
+
+**Ein Werkzeug statt vier:** Tippen auf leeren Boden setzt die gewählte Maschine, Tippen auf eine
+vorhandene wählt sie aus und öffnet ihr Blatt, Ziehen verschiebt sie (auf halbe Kacheln einrastend).
+Maschinen mit zwei Enden – Lore, Fähre, Welle, Bande, Portal, Anglerfisch, Wandertor, Seilbahn –
+haben drei Greifpunkte: die beiden Enden einzeln und die Mitte für das Ganze. **Drehen**, **Doppeln**
+und **Löschen** stehen im Blatt.
+
+**Regler je Maschine:** Tempo, Größe, Reichweite, Takt – benannt in gewöhnlichen Worten („Wie oft“,
+„Wie weit sie schießt“) statt in Fachbegriffen. Zuerst stehen nur die drei bis fünf da, die wirklich
+etwas ausmachen; der Rest liegt hinter **Mehr einstellen**. Jeder Regler wirkt sofort.
+
+**Löwentor, Kupferrohr und Abflußrohr** merken sich ihre beiden Plätze als Buchstaben in der Karte
+(groß = Einlauf, klein = Auslauf). Das ging bisher nur im Quelltext; jetzt sucht der Baumodus den
+nächsten freien Buchstaben und setzt beide Felder selbst, und beim Löschen verschwinden sie wieder.
+Geteilte Bahnen dürfen A–F darum ebenfalls tragen (`KARTE` in `src/share.js`).
+
+**Höhenstufen**: **Höher**, **Tiefer** und **Stufe weg** heben und senken den Boden kachelweise, die
+**Stufenhöhe** wechselt zwischen flach (0,3), mittel (0,5) und steil (0,8). Der Ball rollt Hänge
+hinunter, wie in den Bahnen des Schattenreichs. Damit man von oben nicht blind malt, zeigt der
+Editor jede Stufe als Ziffer und Tönung. Das Raster liegt als Ziffernzeilen (`heights`) über der
+Karte, wird beim Ändern der Kartengröße mitgezogen und kommt nur dann in die Bahn, wenn wirklich
+Stufen gemalt sind.
+
+**Testen** spielt die Bahn sofort probe, danach geht es zurück in den Editor. **Fertig** speichert
+sie und öffnet die **Eigene Welt**: dort wird die Bahn per **Einsetzen** an einer wählbaren Stelle
+eingefügt, die Reihenfolge lässt sich mit den Pfeilen ändern, das Kreuz nimmt eine Bahn wieder
+heraus. Die Eigene Welt erscheint im Kreativmodus als eigene Welt und wird in dieser Reihenfolge
+gespielt. Gespeichert wird im Browser; **Exportieren** liefert den Bahn-Code als Text,
+**Importieren** liest ihn wieder ein – zum Weitergeben gibt es **Teilen** und **Link kopieren**
+(siehe „Bahnen weitergeben“).
+
+**Was der Baumodus nicht baut**, und warum ein Knopf dafür schlimmer wäre als keiner: Innenräume
+(Bahnen mit zweiter Karte, wie Pyramide oder Schattenschloss) samt der Tür dorthin, und die fünf
+Maschinen, die mehrere Ebenen übereinander brauchen – Aufzug, Luke, Turbine, Zahnstange. Solche
+Bahnen lassen sich deshalb auch nicht teilen.
+
+**Geprüft wird das mit `node tools/baumodus.mjs`** im echten Browser. Die Prüfung setzt jede der 63
+Maschinen einmal hin, baut die Bahn daraus, ruft `update()` auf und sieht nach, ob die Maschine auch
+ankommt – und sie faßt jeden einzelnen Regler an. Der Grund dafür steht im Werkzeug: Ein Regler,
+dessen Schlüssel es am Hindernis gar nicht gibt, sieht im Blatt völlig richtig aus und tut nichts.
+Beim ersten Lauf waren es neununddreißig solcher Regler.
 
 ## Eigene Bahnen im Code bauen
 
@@ -3162,6 +3200,7 @@ tools/vermittler.mjs    ein kleiner MQTT-Vermittler für die Werkbank – ohne i
 tools/online.mjs        fährt zwei Browser gegeneinander: beitreten, spielen, rausfliegen, wiederkommen
 tools/flut.mjs          prüft die Maschinen der Flut: Beckenlauf, Durchrollen, Pumpwerk, jede fertige Bahn
 tools/flut.py           baut die Bahnen der Flut – und lehnt jede ab, auf der man warten müsste
+tools/baumodus.mjs      setzt im Browser jede der 63 Maschinen des Baumodus einmal hin und faßt jeden Regler an
 style.css         Oberfläche
 src/themes.js     Farbpaletten und Deko je Welt
 src/courses.js    die Bahnen des Märchenlands
