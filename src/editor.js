@@ -103,6 +103,7 @@ const Editor = (deps) => {
       ['ranke', 'Rankenbrücke', 'Die Blüte anstoßen läßt eine Ranke über die Lücke wachsen – für ein paar Sekunden.'],
       ['zauberhut', 'Zauberhüte', 'Wer in einen Hut rollt, kommt aus dem leuchtenden wieder heraus. Das Leuchten wandert.'],
       ['mondzieher', 'Mondzieher', 'Zieht und stößt im Wechsel. Volle Scheibe zieht, dunkle stößt, Halbmond läßt in Ruhe.'],
+      ['sternbild', 'Sternbild', 'Alle Sterne anfahren, dann geht das Tor auf. Die Linien zeigen, was noch fehlt.'],
     ]],
     ['Die Flut', [
       ['flut', 'Flutbecken', 'Ein Becken, das im Takt vollläuft und wieder leerläuft.'],
@@ -229,6 +230,7 @@ const Editor = (deps) => {
 
     ranke:       [['dauer', 'Wie lange sie trägt', 1.5, 10, 0.25], ['w', 'Breite', 1, 12, 1], ['h', 'Tiefe', 1, 8, 1], null, ['r', 'Wie nah an die Blüte', 0.3, 1.2, 0.05]],
     zauberhut:   [['takt', 'Wie oft das Leuchten wandert', 1, 8, 0.2], ['r', 'Wie groß die Öffnung', 0.25, 0.9, 0.02], null, ['phase', 'Versatz im Takt', 0, 0.95, 0.05]],
+    sternbild:   [['r', 'Wie nah an einen Stern', 0.3, 1.2, 0.05]],
     mondzieher:  [['kraft', 'Wie stark', 3, 18, 0.5], ['r', 'Reichweite', 1.5, 7, 0.1], ['takt', 'Wie lange ein Mondlauf dauert', 3, 14, 0.5], null, ['core', 'Wie dick der Sockel', 0.2, 0.9, 0.05], ['phase', 'Versatz im Takt', 0, 0.95, 0.05]],
 
     flut:        [['w', 'Breite', 3, 16, 1], ['h', 'Tiefe', 3, 16, 1], ['max', 'Wie tief es wird', 1, 4, 1], null, ['takt', 'Sekunden je Stufe', 0.4, 3, 0.1], ['halt', 'Wie lange es voll steht', 0.3, 4, 0.1], ['leer', 'Wie lange es leer steht', 1, 10, 0.5], ['start', 'Wann es losgeht', 0, 8, 0.5]],
@@ -560,6 +562,11 @@ const Editor = (deps) => {
       case 'zauberhut': return { type: 'zauberhut', takt: 2.6, r: 0.42, phase: 0,
                                  plaetze: [[x - 3, y], [x, y - 2], [x + 3, y]] };
       case 'mondzieher': return { type: 'mondzieher', x, y, r: 3.4, kraft: 9, takt: 7, core: 0.4, phase: 0 };
+      /* Das Sternbild bringt sein Tor mit: Ohne Tor waeren die Sterne Schmuck. Gesetzt wird es
+         rechts daneben; verschieben kann man beide Enden einzeln. */
+      case 'sternbild': return { type: 'sternbild', r: 0.5,
+                                 sterne: [[x - 3, y - 2], [x, y - 3], [x + 3, y - 2]],
+                                 tor: { x0: x + 5, y0: y - 2, x1: x + 5, y1: y + 2 } };
 
       /* --- Die Flut --- */
       case 'flut': return { type: 'flut', x, y, w: 6, h: 6, max: 3, takt: 1.2, halt: 1, leer: 5, start: 2.5 };
@@ -622,6 +629,9 @@ const Editor = (deps) => {
     // Die Ranke faßt man an der Brücke oder an ihrer Blüte an, die Hüte einzeln
     if (o.type === 'ranke') return [[o.x + o.w / 2, o.y + o.h / 2], [o.bluete.x, o.bluete.y]];
     if (o.type === 'zauberhut' && Array.isArray(o.plaetze)) return o.plaetze.map(p => [p[0], p[1]]);
+    // Das Sternbild faßt man an jedem Stern an, dazu an den beiden Enden seines Tores
+    if (o.type === 'sternbild' && Array.isArray(o.sterne))
+      return o.sterne.map(p => [p[0], p[1]]).concat(o.tor ? [[o.tor.x0, o.tor.y0], [o.tor.x1, o.tor.y1]] : []);
     if (o.x == null) return [];
     return [[o.x, o.y]];
   }
@@ -652,6 +662,13 @@ const Editor = (deps) => {
     if (o.type === 'giessloeffel' && punkt === 1 && o.rinne) { o.rinne.x += dx; o.rinne.y += dy; return; }
     if (o.type === 'ranke' && punkt === 1) { o.bluete.x += dx; o.bluete.y += dy; return; }
     if (o.type === 'zauberhut' && Array.isArray(o.plaetze)) { const p = o.plaetze[punkt]; if (p) { p[0] += dx; p[1] += dy; } return; }
+    if (o.type === 'sternbild' && Array.isArray(o.sterne)) {
+      const n = o.sterne.length;
+      if (punkt < n) { o.sterne[punkt][0] += dx; o.sterne[punkt][1] += dy; return; }
+      if (o.tor && punkt === n) { o.tor.x0 += dx; o.tor.y0 += dy; return; }
+      if (o.tor) { o.tor.x1 += dx; o.tor.y1 += dy; return; }
+      return;
+    }
     for (const k of ['x', 'y', 'x0', 'y0', 'x1', 'y1', 'tx', 'ty', 'zx', 'zy', 'lx', 'ly']) {
       if (o[k] == null) continue;
       if (k === 'x' || k === 'x0' || k === 'x1' || k === 'tx' || k === 'zx' || k === 'lx') o[k] += dx; else o[k] += dy;
@@ -693,6 +710,11 @@ const Editor = (deps) => {
       case 'ranke': { tausch(); const mx = o.x + o.w / 2, my = o.y + o.h / 2;
         const rx = o.bluete.x - mx, ry = o.bluete.y - my; o.bluete.x = mx - ry; o.bluete.y = my + rx; break; }
       case 'zauberhut': o.phase = Math.round((((o.phase || 0) + 0.25) % 1) * 100) / 100; break;
+      // Beim Sternbild dreht sich das Tor um seine Mitte – die Sterne bleiben, wo sie stehen
+      case 'sternbild': if (o.tor) { const cx = (o.tor.x0 + o.tor.x1) / 2, cy = (o.tor.y0 + o.tor.y1) / 2;
+        const L = Math.hypot(o.tor.x1 - o.tor.x0, o.tor.y1 - o.tor.y0) / 2;
+        if (Math.abs(o.tor.y1 - o.tor.y0) > Math.abs(o.tor.x1 - o.tor.x0)) { o.tor.y0 = o.tor.y1 = cy; o.tor.x0 = cx - L; o.tor.x1 = cx + L; }
+        else { o.tor.x0 = o.tor.x1 = cx; o.tor.y0 = cy - L; o.tor.y1 = cy + L; } } break;
       case 'eyetower': o.phase = Math.round((((o.phase || 0) + Math.PI / 2) % (Math.PI * 2)) * 100) / 100; break;
       case 'switch': o.target = o.target === 'A' ? 'B' : 'A'; break;
       case 'imperialbox': { tausch(); const w = o.lw; o.lw = o.lh; o.lh = w; break; }

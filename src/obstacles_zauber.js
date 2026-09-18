@@ -211,3 +211,61 @@ class Mondzieher {
   /* Der Sockel ist fest – sonst stünde der Mond auf nichts und der Ball liefe hindurch. */
   circles(out) { out.push({ x: this.x, y: this.y, r: this.core, e: 0.55, kind: 'mond' }); }
 }
+
+/* ---------------------------------------------------------------------------
+   Das Sternbild
+   ---------------------------------------------------------------------------
+   Auf der Bahn stehen mehrere Sterne. Wer über einen rollt, zündet ihn an. Sind alle an, geht das
+   Sternentor auf – vorher steht dort eine Wand aus Licht, durch die nichts hindurchkommt.
+
+   WARUM DAS EINE PROFI-AUFGABE IST UND KEINE NORMAL-AUFGABE. Alles andere im Spiel fragt „wohin
+   schlage ich als nächstes". Das Sternbild fragt „in welcher REIHENFOLGE", und das muß man vor dem
+   ersten Schlag entscheiden, nicht zwischendurch. Wer die Sterne in der falschen Reihenfolge
+   nimmt, kommt an, hat aber keinen Schwung mehr für den nächsten – und muß noch einmal ansetzen.
+   Genau das ist der Unterschied zwischen Normal und Profi: nicht schmalere Wege, sondern eine
+   Entscheidung, die vorher fällt.
+
+   DAS TOR IST EINE WAND, KEIN LOCH IM BODEN. Ein Boden, der zur Laufzeit entsteht, müßte die ganze
+   Wegfindung mitziehen (siehe Rankenbrücke). Eine Wand dagegen kostet ein Mauerstück, das der
+   Zeichner malt und die Physik abfragt – dieselbe Bauart wie beim Geländer, nur daß sie
+   verschwindet, sobald das Bild vollständig ist.
+
+   UND ES BLEIBT AN. Einmal gezündete Sterne gehen innerhalb einer Bahn nicht wieder aus. Sonst
+   wäre die Aufgabe „alles in einem Schlag", und das ist kein Planen mehr, sondern Glück. Wer es in
+   einem Schlag schafft, spart Schläge; wer zweimal ansetzt, kommt auch ans Ziel. */
+const STERN_NAH = 0.5;           // so nah muß der Ball einem Stern kommen
+
+class Sternbild {
+  constructor(d) {
+    Object.assign(this, { r: STERN_NAH, sterne: [], tor: null, ebene: 0 }, d);
+    this.type = 'sternbild';
+    this.an = this.sterne.map(() => false);
+    this.zuletzt = -99;          // wann zuletzt einer ansprang – der Zeichner macht daraus ein Aufblitzen
+    this.offenT = -99;           // wann das Tor aufging
+    this.t = 0;
+  }
+  setup(level) { this.level = level; this.an = this.sterne.map(() => false); this.zuletzt = -99; this.offenT = -99; }
+  update(t) { this.t = t; }
+  get fertig() { return this.sterne.length > 0 && this.an.every(Boolean); }
+
+  trigger(ball, t, events) {
+    if (ball.sunk || ball.air) return;
+    if ((ball.ebene || 0) !== (this.ebene || 0)) return;
+    const nah = this.r + (ball.r || 0.22);
+    for (let i = 0; i < this.sterne.length; i++) {
+      if (this.an[i]) continue;
+      const s = this.sterne[i];
+      if (Math.hypot(ball.x - s[0], ball.y - s[1]) > nah) continue;
+      this.an[i] = true; this.zuletzt = t;
+      const fertig = this.fertig;
+      if (fertig) this.offenT = t;
+      events.push({ type: 'sternbild', x: s[0], y: s[1], fertig });
+    }
+  }
+  /* Solange das Bild unvollständig ist, steht im Tor eine Wand. Danach nicht mehr – und weil die
+     Mauerstücke in jedem Bild neu eingesammelt werden, kostet das Aufgehen keine Umrechnung. */
+  segments(out) {
+    if (!this.tor || this.fertig) return;
+    out.push({ ax: this.tor.x0, ay: this.tor.y0, bx: this.tor.x1, by: this.tor.y1, e: 0.72, kind: 'sternentor' });
+  }
+}

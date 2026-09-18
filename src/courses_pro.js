@@ -486,4 +486,5 @@ const WORLDS = [
      trägt ihren eigenen Belohnungshut – die Regel dafür steht längst in hats.js und brauchte
      nichts Neues. */
   { id: 'lehrling', name: 'Lehrlingsgarten', short: 'Garten', mode: 'normal', courses: ZAUBER_GARTEN },
+  { id: 'warte', name: 'Sternenwarte', short: 'Warte', mode: 'pro', courses: ZAUBER_WARTE },
 ];

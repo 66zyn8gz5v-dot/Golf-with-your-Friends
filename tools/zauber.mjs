@@ -15,6 +15,8 @@
  *   - Das Leuchten wandert im Takt und ist vorher angekündigt.
  *   - Der Mondzieher zieht bei voller Scheibe, stößt bei dunkler, läßt beim Halbmond in Ruhe –
  *     und einen liegenden Ball rührt er überhaupt nicht an.
+ *   - Das Sternentor hält, solange ein Stern fehlt, und geht auf, sobald keiner mehr fehlt.
+ *     Einmal gezündete Sterne bleiben an, auch über mehrere Schläge hinweg.
  */
 import fs from 'node:fs'; import vm from 'node:vm'; import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -203,6 +205,72 @@ console.log('\nDer Mondzieher');
     const m = lv.obstacles.find(o => o.type === 'mondzieher');
     const out = []; m.circles(out);
     pruef('der Sockel ist fest', out.length === 1 && out[0].r > 0.2);
+  }
+}
+
+/* ---------- Das Sternbild ---------- */
+console.log('\nDas Sternbild');
+{
+  /* Derselbe schmale Gang wie bei der Ranke: Das Tor steht quer darin, und weil es links und
+     rechts an die Bande stößt, kann man es nicht umfahren. Was gemessen wird, ist das Tor. */
+  const stern = (sterne, tor) => bau([{ type: 'sternbild', r: 0.5, sterne, tor }]);
+  const TOR = { x0: 14, y0: 0.9, x1: 14, y1: 2.1 };
+
+  // Ein Stern liegt seitlich außerhalb des Gangs – den kann der Ball nicht erreichen
+  {
+    const lv = stern([[6, 1.5], [9, 1.5], [6, 20]], TOR);
+    const a = rolle(lv, 14);
+    pruef('solange ein Stern fehlt, hält das Tor', a.x < 14, `bis x=${a.x.toFixed(1)}`);
+    const sb = lv.obstacles.find(o => o.type === 'sternbild');
+    pruef('die erreichten Sterne sind an, der unerreichbare nicht',
+          sb.an[0] && sb.an[1] && !sb.an[2] && !sb.fertig, sb.an.join(','));
+  }
+
+  // Alle drei im Gang: der Ball zündet sie der Reihe nach und rollt durch
+  {
+    const lv = stern([[5, 1.5], [8, 1.5], [11, 1.5]], TOR);
+    const a = rolle(lv, 14);
+    const sb = lv.obstacles.find(o => o.type === 'sternbild');
+    pruef('sind alle an, geht das Tor auf', sb.fertig && a.x > 15, `bis x=${a.x.toFixed(1)}`);
+  }
+
+  /* Über mehrere Schläge hinweg: Erst ein sachter Schlag, der nur die ersten beiden erreicht,
+     dann ein zweiter. Das Bild darf zwischendurch nicht verlöschen – sonst wäre die Aufgabe
+     „alles in einem Schlag", und das ist Glück, kein Planen. */
+  {
+    const lv = stern([[5, 1.5], [8, 1.5], [11, 1.5]], TOR);
+    rolle(lv, 6.5);
+    const sb = lv.obstacles.find(o => o.type === 'sternbild');
+    const nachEins = sb.an.filter(Boolean).length;
+    const b = G.makeBall(1.5, 1.5, '#fff', 'none');
+    b.vx = 14; b.vy = 0;
+    const dt = 1 / 120; let t = 8;
+    for (let i = 0; i < 8 * 120; i++) { G.stepPhysics(lv, b, dt, t, true); t += dt; if (b.x > 17) break; }
+    pruef('gezündete Sterne bleiben über den nächsten Schlag hinweg an',
+          nachEins >= 1 && nachEins < 3 && sb.fertig && b.x > 15, `erst ${nachEins} von 3, dann alle`);
+  }
+
+  // Ein Stern zündet nur einmal – sonst hinge an ihm ein Dauerfeuer von Ereignissen
+  {
+    const lv = stern([[5, 1.5], [8, 1.5], [11, 1.5]], TOR);
+    const b = G.makeBall(1.5, 1.5, '#fff', 'none');
+    b.vx = 14; b.vy = 0;
+    const dt = 1 / 120; let t = 0, zaehl = 0;
+    for (let i = 0; i < 8 * 120; i++) {
+      for (const e of G.stepPhysics(lv, b, dt, t, true)) if (e.type === 'sternbild') zaehl++;
+      t += dt; if (b.x > 17) break;
+    }
+    pruef('jeder Stern meldet sich genau einmal', zaehl === 3, `${zaehl} Meldungen`);
+  }
+
+  // Nach dem Aufgehen steht kein Mauerstück mehr im Weg
+  {
+    const lv = stern([[5, 1.5], [8, 1.5], [11, 1.5]], TOR);
+    const sb = lv.obstacles.find(o => o.type === 'sternbild');
+    const zu = []; sb.segments(zu);
+    sb.an = [true, true, true];
+    const auf = []; sb.segments(auf);
+    pruef('das Tor ist erst eine Wand und dann keine mehr', zu.length === 1 && auf.length === 0);
   }
 }
 

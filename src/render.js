@@ -1189,6 +1189,30 @@ class Renderer {
         const x = (hash(i, 1) * w + t * (6 + hash(i, 2) * 8) + Math.sin(t * 0.5 + i) * 15) % w, y = (hash(i, 3) * h + Math.sin(t * 0.6 + i * 1.3) * 25) % h;
         ctx.fillStyle = `rgba(255,250,200,${0.25 + 0.35 * Math.abs(Math.sin(t + i))})`; ctx.beginPath(); ctx.arc(x, y, 1.5, 0, TAU); ctx.fill();
       }
+    } else if (kind === 'sternenstaub') {
+      /* Die Luft der Sternenwarte: feiner Staub, der langsam sinkt und dabei funkelt, und hin und
+         wieder eine Sternschnuppe. Sie ist kein Schmuck ohne Zweck – sie ist das einzige, was sich
+         auf einer Bahn bewegt, auf der man lange rechnet, und sie sagt dem Auge, daß das Bild
+         lebt. */
+      for (let i = 0; i < 34; i++) {
+        const x = (hash(i, 1) * w + Math.sin(t * 0.25 + i) * 22) % w;
+        const y = (hash(i, 2) * h + t * (4 + hash(i, 3) * 7)) % h;
+        const a = 0.18 + 0.5 * Math.abs(Math.sin(t * 1.1 + i * 2.3));
+        ctx.fillStyle = `rgba(215,228,255,${a * 0.3})`; ctx.beginPath(); ctx.arc(x, y, 5, 0, TAU); ctx.fill();
+        ctx.fillStyle = `rgba(240,246,255,${a})`; ctx.beginPath(); ctx.arc(x, y, 1.3, 0, TAU); ctx.fill();
+      }
+      // Alle paar Sekunden eine Schnuppe – kurz, schräg, und immer nur eine
+      const runde = Math.floor(t / 5.5), phase = (t % 5.5) / 1.1;
+      if (phase < 1) {
+        const x0 = hash(runde, 7) * w * 0.8, y0 = hash(runde, 8) * h * 0.35;
+        const len = 90 + hash(runde, 9) * 70;
+        const x = x0 + phase * (w * 0.35), y = y0 + phase * (h * 0.2);
+        const g = ctx.createLinearGradient(x, y, x - len * 0.6, y - len * 0.34);
+        g.addColorStop(0, `rgba(255,255,255,${0.75 * (1 - phase)})`);
+        g.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.strokeStyle = g; ctx.lineWidth = 2; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - len * 0.6, y - len * 0.34); ctx.stroke();
+      }
     }
   }
 
@@ -1782,6 +1806,7 @@ class Renderer {
     if (ob.type === 'ranke') { this.drawRankeFloor(ctx, ob, t); return; }
     if (ob.type === 'zauberhut') { this.drawZauberhutFloor(ctx, ob, t); return; }
     if (ob.type === 'mondzieher') { this.drawMondzieherFloor(ctx, ob, t); return; }
+    if (ob.type === 'sternbild') { this.drawSternbildFloor(ctx, ob, t); return; }
     if (ob.type === 'dial' || ob.type === 'wanderloch') { this.drawWanderlochFloor(ctx, ob, t); return; }
     if (ob.type === 'field' && ob.style === 'steam') { this.drawSteam(ctx, ob, t); return; }
     if (ob.type === 'field' && ob.style === 'dark') { this.drawDarkZone(ctx, ob, t); return; }
@@ -2133,6 +2158,13 @@ class Renderer {
       /* noFade: Welcher Hut leuchtet, ist die ganze Aufgabe. Durchsichtig zu werden, sobald der
          Ball davorliegt, nähme ihr genau das. */
       items.push({ x: ob.x, y: ob.y, bias: 0.3, noFade: true, draw: () => this.drawZauberhut(ctx, ob, t) });
+    } else if (ob.type === 'sternbild') {
+      /* Einsortiert nach dem Tor, denn nur die Lichtwand ist hoch; die Sterne schweben knapp über
+         dem Boden und stören die Tiefensortierung nicht.
+         noFade: Welcher Stern noch fehlt, ist die ganze Aufgabe. */
+      const sx = ob.tor ? (ob.tor.x0 + ob.tor.x1) / 2 : ob.sterne[0][0];
+      const sy = ob.tor ? (ob.tor.y0 + ob.tor.y1) / 2 : ob.sterne[0][1];
+      items.push({ x: sx, y: sy, bias: 0.3, noFade: true, draw: () => this.drawSternbild(ctx, ob, t) });
     } else if (ob.type === 'mondzieher') {
       /* noFade: Die Phase der Scheibe ist die ganze Aufgabe. Durchsichtig zu werden, sobald der
          Ball davorliegt, nähme ihr genau das. */

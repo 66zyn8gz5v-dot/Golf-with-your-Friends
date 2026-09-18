@@ -652,7 +652,8 @@
       satz: 'Der ummauerte Garten in der Dämmerung. Hier lernt man, die Uhr selbst zu starten: '
           + 'Die Blüte anstoßen, und die Ranke trägt – ein paar Sekunden lang.' },
     { id: 'warte', hut: 'sternenhut', stufe: 'Profi',
-      satz: 'Oben auf dem Turm, wo die Karten des Himmels liegen.' },
+      satz: 'Oben auf dem Turm, wo die Karten des Himmels liegen. Der Mond zieht und stößt im '
+          + 'Wechsel, und ein Tor geht erst auf, wenn das Sternbild vollständig ist.' },
     { id: 'loge', hut: 'erzmagierhut', stufe: 'Legende',
       satz: 'Die Halle, in der die Erzmagier tagen. Wer hier besteht, hat ausgelernt.' },
   ];
@@ -1808,6 +1809,7 @@
     meeresgrund: 'local_fire_department',
     // Das Zauberreich
     lehrlingsgarten: 'local_florist', gewaechshaus: 'science',
+    sternenwarte: 'dark_mode', kartensaal: 'schedule',
     // Kolosseum, Tüftlerreich, Wüste
     colosseum: 'stadium', palace: 'temple_buddhist', desert: 'sonne',
   };
@@ -3026,6 +3028,13 @@
       const wl = SPIELWELTEN();
       if (!wl.some(w => w.id === id)) return false;
       setWorld(id); return true;
+    },
+    /* Eine Runde anpfeifen – das Gegenstück zu welt(). Ohne sie läuft openHole in eine Bahn
+       ohne Spieler, und beginTurn stolpert über den leeren Platz. Nur fürs Prüfen. */
+    starte(n = 1, erste = 0) {
+      if (!state.courses || !state.courses.length) return false;
+      startGame(Math.max(1, Math.min(4, n | 0)), erste);
+      return true;
     },
     /* Direkt auf eine Bahn springen – nur fürs automatische Prüfen */
     openHole(i) {

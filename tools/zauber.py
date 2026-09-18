@@ -4,7 +4,7 @@
 Das Zauberreich ist ein Ereignis mit drei Orten, und sie erzählen einen Aufstieg:
 
     Lehrlingsgarten   Normal    9 Bahnen   der ummauerte Garten, in dem man es lernt
-    Sternenwarte      Profi     9 Bahnen   (folgt)
+    Sternenwarte      Profi     9 Bahnen   die Terrasse über den Wolken und der Kartensaal darunter
     Erzmagierloge     Legende   9 Bahnen   (folgt)
 
 Jeder Ort ist im Spiel eine eigene Welt mit eigenem Belohnungshut – so, wie es die Regel in
@@ -25,6 +25,8 @@ DIE MASCHINEN (src/obstacles_zauber.js):
     'ranke'       Blüte anstoßen, dann wächst eine Ranke über die Lücke – für ein paar Sekunden
     'zauberhut'   drei Hüte; wer in einen rollt, kommt aus dem leuchtenden heraus, und das
                   Leuchten wandert im Takt weiter
+    'mondzieher'  zieht bei voller Scheibe, stößt bei dunkler, läßt beim Halbmond in Ruhe
+    'sternbild'   alle Sterne anfahren, dann geht das Sternentor auf
 
 DIE REGELN, DIE HIER GEPRÜFT WERDEN, und warum jede einzelne dasteht:
 
@@ -34,6 +36,9 @@ DIE REGELN, DIE HIER GEPRÜFT WERDEN, und warum jede einzelne dasteht:
   * Man muß es in der Zeit auch schaffen. Gerechnet wird mit demselben Reibungswert, den die
     Physik benutzt, und mit einem ehrlichen Tempo an der Blüte – nicht mit dem Höchstschlag.
   * Jeder Hut steht auf Boden. Ein Hut über dem Abgrund spuckt den Ball ins Nichts.
+  * Der Sockel des Mondziehers steht auf Boden – er ist fest.
+  * Ein Sternentor sperrt wirklich etwas ab, und alle seine Sterne liegen davor. Ein Tor, das
+    nichts absperrt, ist Schmuck; ein Stern dahinter macht die Bahn unlösbar.
   * Keine freie Sichtlinie vom Abschlag ins Loch. Dieselbe Regel wie in der Flut: Eine Bahn, die
     man mit einem geraden Schlag löst, ist keine Bahn.
 
@@ -114,6 +119,70 @@ def gatter(x, y, w=2.0, period=5.0, offen=0.5, achse='x', phase=0.0):
 
 def bande(x0, y0, x1, y1):
     return {'type': 'wall', 'x0': x0, 'y0': y0, 'x1': x1, 'y1': y1, 't': 0.22, 'h': 0.5}
+
+
+def mond(x, y, r=3.4, kraft=9.0, takt=7.0, phase=0.0, core=0.4):
+    """Mondzieher. Volle Scheibe zieht, dunkle stößt, Halbmond läßt in Ruhe."""
+    return {'type': 'mondzieher', 'x': x, 'y': y, 'r': r, 'kraft': kraft, 'takt': takt,
+            'phase': phase, 'core': core}
+
+def sternbild(sterne, tor, r=0.5):
+    """Sternbild mit Sternentor. Das Tor steht waagerecht oder senkrecht auf einer ganzen Linie –
+    nur dann läßt sich prüfen, welche Kachelkanten es sperrt."""
+    return {'type': 'sternbild', 'r': r,
+            'sterne': [[float(p[0]), float(p[1])] for p in sterne],
+            'tor': {'x0': float(tor[0]), 'y0': float(tor[1]), 'x1': float(tor[2]), 'y1': float(tor[3])}}
+
+# --- Alte Maschinen, deren Aussehen diese Welt weiterbenutzt ---------------
+def auge(x, y, r=1.1, weite=9.0, tempo=0.42, phase=0.0):
+    """Das Auge des Turms aus dem Schattenreich – hier das Fernrohr, das die Terrasse absucht."""
+    return {'type': 'eyetower', 'x': x, 'y': y, 'r': r, 'range': weite, 'fov': 0.6,
+            'speed': tempo, 'phase': phase}
+
+def pendel(x, y, laenge=3.5, amp=50, ruhe=90, phase=0.0):
+    return {'type': 'pendulum', 'x': x, 'y': y, 'len': laenge, 'amp': amp, 'ruhe': ruhe,
+            'phase': phase, 'w': 1.2, 'h': 1.2}
+
+def feder(x, y, base=0.0, weite=9.0):
+    return {'type': 'springwork', 'x': x, 'y': y, 'base': base, 'amp': 0.2, 'speed': 0.75,
+            'range': weite, 'catchR': 0.7, 'loadTime': 0.9}
+
+def zahnfeld(x0, y0, x1, y1, warten=2.4, fahrt=3.0, phase=0.0):
+    return {'type': 'gearfield', 'x0': x0, 'y0': y0, 'x1': x1, 'y1': y1, 'wait': warten,
+            'travel': fahrt, 'r': 0.9, 'zaehne': 10, 'phase': phase}
+
+def wandertor(x0, y0, x1, y1, gasse=1.8):
+    return {'type': 'wandergate', 'x0': x0, 'y0': y0, 'x1': x1, 'y1': y1, 'gap': gasse}
+
+def nebel(x, y, r=3.0, dreh=1):
+    """Der Strudel der Flut, hier als Nebelwirbel am Himmel."""
+    return {'type': 'strudel', 'x': x, 'y': y, 'r': r, 'dreh': dreh}
+
+
+def tor_kanten(tor):
+    """Welche Übergänge zwischen zwei Nachbarfeldern sperrt ein Sternentor?
+
+    Ein Tor ist eine Wand und keine Kachel: Es steht auf einer ganzen Linie ZWISCHEN zwei
+    Kachelreihen. Wer es als gesperrte Kachel rechnete, sperrte eine Reihe zu viel und hielte
+    Bahnen für unpassierbar, die es nicht sind."""
+    x0, y0, x1, y1 = tor['x0'], tor['y0'], tor['x1'], tor['y1']
+    kanten = set()
+    if abs(x1 - x0) < 1e-6:
+        X = int(round(x0))
+        for y in range(int(math.floor(min(y0, y1))), int(math.ceil(max(y0, y1)))):
+            kanten.add(((X - 1, y), (X, y))); kanten.add(((X, y), (X - 1, y)))
+    elif abs(y1 - y0) < 1e-6:
+        Y = int(round(y0))
+        for x in range(int(math.floor(min(x0, x1))), int(math.ceil(max(x0, x1)))):
+            kanten.add(((x, Y - 1), (x, Y))); kanten.add(((x, Y), (x, Y - 1)))
+    else:
+        raise AssertionError('ein Sternentor steht nur waagerecht oder senkrecht')
+    return kanten
+
+
+def tor_felder(tor):
+    """Die Kacheln links und rechts der Wand – so viel steht der Sichtlinie im Weg."""
+    return set(a for kante in tor_kanten(tor) for a in kante)
 
 
 # ---------------------------------------------------------------- Sammlung
@@ -211,13 +280,16 @@ def pruefe(b):
         elif o['type'] == 'zauberhut':
             spruenge.append([(int(p[0]), int(p[1])) for p in o['plaetze']])
 
-    def erreichbar(von, ohne=()):
+    def erreichbar(von, ohne=(), kanten=()):
         """Welche Felder erreicht man von 'von' aus? 'ohne' sind Rechtecke, die gesperrt sind –
-        damit läßt sich fragen, was man OHNE eine bestimmte Rankenbrücke noch erreicht."""
+        damit läßt sich fragen, was man OHNE eine bestimmte Rankenbrücke noch erreicht. 'kanten'
+        sind gesperrte ÜBERGÄNGE zwischen zwei Nachbarfeldern: So steht ein Sternentor genau dort,
+        wo es in der Bahn steht – zwischen zwei Kacheln und nicht auf einer."""
         gesperrt = set()
         for (x0, y0, w, h) in ohne:
             for y in range(int(y0), int(y0 + h)):
                 for x in range(int(x0), int(x0 + w)): gesperrt.add((x, y))
+        kanten = set(kanten)
         gesehen = {von}; q = deque([von])
         while q:
             x, y = q.popleft()
@@ -226,6 +298,7 @@ def pruefe(b):
                 if (x, y) in gruppe: nachbarn.extend(gruppe)
             for n in nachbarn:
                 if n in gesehen or n in gesperrt or not fest(*n): continue
+                if ((x, y), n) in kanten: continue
                 gesehen.add(n); q.append(n)
         return gesehen
 
@@ -255,6 +328,13 @@ def pruefe(b):
                 for dx2 in range(-1, 2): sperren.add((int(o['x']) + dx2, int(o['y'])))
             elif art == 'bumper':
                 # Ein Pilz steht wirklich im Weg – ein Ball, der ihn trifft, fliegt woandershin.
+                sperren.add((int(o['x']), int(o['y'])))
+            elif art == 'sternbild':
+                # Solange ein Stern fehlt, steht dort eine Wand – und bis dahin gibt es keinen
+                # geraden Schlag ins Loch.
+                sperren |= tor_felder(o['tor'])
+            elif art == 'mondzieher':
+                # Der Sockel ist fest; außerdem zieht der Mond jeden geraden Schlag krumm.
                 sperren.add((int(o['x']), int(o['y'])))
         tx, ty = tee[0] + 0.5, tee[1] + 0.5
         hx, hy = cup[0] + 0.5, cup[1] + 0.5
@@ -314,6 +394,34 @@ def pruefe(b):
             if not fest(px, py):
                 fehler.append(f'ein Zauberhut steht auf {px}/{py}, und dort ist kein Boden – '
                               f'er spuckte den Ball ins Nichts')
+
+    # ---- Der Mondzieher
+    for o in [x for x in b['obstacles'] if x['type'] == 'mondzieher']:
+        mx, my = int(o['x']), int(o['y'])
+        if not fest(mx, my):
+            fehler.append(f'ein Mondzieher steht auf {mx}/{my}, und dort ist kein Boden – '
+                          f'sein Sockel stünde im Nichts')
+
+    # ---- Das Sternbild
+    #
+    # Zwei Regeln, und beide betreffen denselben Fehler in zwei Richtungen: Ein Tor, das nichts
+    # absperrt, ist Schmuck – und ein Stern hinter dem eigenen Tor macht die Bahn unlösbar.
+    for o in [x for x in b['obstacles'] if x['type'] == 'sternbild']:
+        if len(o['sterne']) < 2:
+            fehler.append('ein Sternbild braucht mindestens zwei Sterne')
+        for pkt in o['sterne']:
+            sx, sy = int(pkt[0]), int(pkt[1])
+            if not fest(sx, sy):
+                fehler.append(f'ein Stern steht auf {sx}/{sy}, und dort ist kein Boden')
+        if tee and cup:
+            zu = erreichbar(tee, kanten=tor_kanten(o['tor']))
+            if cup in zu:
+                fehler.append('das Sternentor sperrt nichts ab – es gibt einen Weg ins Loch, der '
+                              'daran vorbeiführt')
+            for pkt in o['sterne']:
+                if (int(pkt[0]), int(pkt[1])) not in zu:
+                    fehler.append(f'der Stern auf {int(pkt[0])}/{int(pkt[1])} liegt hinter dem '
+                                  f'eigenen Tor – dann geht es nie auf')
 
     if fehler:
         raise AssertionError(f"{name}: " + '; '.join(fehler))
@@ -475,7 +583,7 @@ fuell(f, 18, 7, 20, 11, '.')          # Beet von unten
 fuell(f, 23, 8, 24, 10, 'x')          # Hecke vor dem Loch, mit einer Gasse darunter
 setz(f, 3, 5, 'T'); setz(f, 26, 9, 'H')
 bahn(GARTEN, 'Der Blätterwirbel', 'lehrlingsgarten', f, [
-    magnet(8.5, 9.5, r=3.0, kraft=7.0, stil='soul'),
+    magnet(8.5, 9.5, r=2.6, kraft=5.0, stil='soul'),   # schwach genug, daß es den Ball ablenkt und nicht einfängt
     scheibe_(15.5, 5.5, r=1.8, tempo=1.8, aus=90),
     pilz(22.5, 5.5),
 ], par=4,
@@ -499,6 +607,179 @@ bahn(GARTEN, 'Die Lehrlingsprüfung', 'lehrlingsgarten', f, [
 intro='Die Prüfung: erst die Ranke, dann zwischen den Pilzen hindurch, dann das Tor im Takt – und '
       'zum Schluß noch einmal die Hüte. Wer hier unter Par bleibt, hat den Lehrlingshut verdient.')
 
+
+# ===========================================================================
+#  DIE STERNENWARTE - Profi, neun Bahnen
+#  Die Terrasse eines Turms über den Wolken und der Kartensaal darunter.
+#
+#  WAS DIESE STUFE VON DER NORMALEN UNTERSCHEIDET. Nicht schmalere Wege - die sind nur lästiger,
+#  nicht schwerer. Hier fällt die Entscheidung VOR dem Schlag: Der Mondzieher fragt "wann", das
+#  Sternbild fragt "in welcher Reihenfolge". Beides muß man sich überlegen, während der Ball noch
+#  liegt; danach kann man es nicht mehr richten.
+#
+#  UND DIE ALTEN MASCHINEN BEHALTEN IHR GESICHT. Das Auge des Turms aus dem Schattenreich wird zum
+#  Fernrohr, das Pendel der Uhrwerkstadt zum Lot des Astronomen, der Strudel der Flut zum
+#  Nebelwirbel, das Zahnradfeld zur Armillarsphäre. Jede von ihnen hat eine Zeichnung, an der man
+#  sie erkennt - und die wiederzusehen ist ein Teil der Freude.
+# ===========================================================================
+WARTE = welt('warte', 'ZAUBER_WARTE', 'Sternenwarte')
+
+# --- 1 ---------------------------------------------------------------------
+# Der Aufgang. Ein Mond, ein Abgrund - mehr nicht. Wer ihn hier nicht versteht, versteht die ganze
+# Welt nicht, und darum steht auf dieser Bahn sonst nichts im Weg.
+f = leer(30, 13)
+fuell(f, 1, 2, 28, 10)
+fuell(f, 10, 7, 20, 10, '.')          # der Abgrund unter dem Gang
+setz(f, 3, 8, 'T'); setz(f, 26, 8, 'H')
+bahn(WARTE, 'Der Aufgang', 'sternenwarte', f, [
+    mond(15.0, 4.0, r=3.4, kraft=9.0, takt=7.0),
+    pilz(8.5, 4.5, stil='crystal'),
+    pilz(22.5, 4.5, stil='crystal'),
+], par=3,
+intro='Der Mond über der Terrasse zieht, solange seine Scheibe voll ist, und stößt, solange sie '
+      'dunkel ist. Beim Halbmond läßt er in Ruhe. Der Gang oben ist schmal, und unter ihm ist '
+      'nichts - also: erst hinsehen, dann schlagen.')
+
+# --- 2 ---------------------------------------------------------------------
+# Das erste Sternbild. Drei Sterne, ein Tor, sonst nichts. Dieselbe Sparsamkeit wie bei Bahn 1.
+f = leer(32, 13)
+fuell(f, 1, 2, 30, 10)
+fuell(f, 20, 2, 21, 5, 'x')           # der Mauerdurchbruch, in dem das Tor steht
+fuell(f, 20, 8, 21, 10, 'x')
+setz(f, 3, 6, 'T'); setz(f, 28, 6, 'H')
+bahn(WARTE, 'Das erste Sternbild', 'sternenwarte', f, [
+    sternbild([(6, 3), (11, 9), (16, 3)], (20, 6, 20, 8)),
+    pilz(13.5, 6.5, stil='orb'),
+], par=3,
+intro='Die drei Sterne wollen angefahren werden - alle drei, in einer Reihenfolge, die man sich '
+      'vorher überlegt. Erst dann geht das Tor auf. Die Linien am Boden zeigen, was noch fehlt.')
+
+# --- 3 ---------------------------------------------------------------------
+# Zwischen den Monden. Zwei Monde im Gegentakt: Wenn der eine zieht, stößt der andere. Es gibt
+# keinen Augenblick, in dem beide schweigen - man muß sich für eine Seite entscheiden.
+f = leer(34, 15)
+fuell(f, 1, 2, 32, 12)
+fuell(f, 12, 2, 14, 5, '.'); fuell(f, 12, 9, 14, 12, '.')
+fuell(f, 22, 2, 24, 5, '.'); fuell(f, 22, 9, 24, 12, '.')
+setz(f, 4, 7, 'T'); setz(f, 30, 7, 'H')
+bahn(WARTE, 'Zwischen den Monden', 'sternenwarte', f, [
+    mond(9.0, 7.0, r=3.2, kraft=8.0, takt=6.0, phase=0.0),
+    mond(19.0, 7.0, r=3.2, kraft=8.0, takt=6.0, phase=0.5),
+    pendel(27.0, 4.0, laenge=3.5, amp=48),
+], par=4,
+intro='Zwei Monde stehen im Gegentakt: Zieht der eine, stößt der andere. Dazwischen liegen zwei '
+      'Stege, die keinen Platz für Irrtümer lassen. Und am Ende schwingt das Lot des Astronomen.')
+
+# --- 4 ---------------------------------------------------------------------
+# Der Kartensaal. Vier Sterne in den Ecken einer Halle, das Tor quer davor. Wer die Ecken in der
+# falschen Reihenfolge nimmt, läuft die Halle zweimal ab.
+f = leer(30, 15)
+fuell(f, 1, 2, 28, 12)
+fuell(f, 12, 2, 14, 5, 'x')           # Regale
+fuell(f, 12, 9, 14, 12, 'x')
+setz(f, 3, 7, 'T'); setz(f, 26, 7, 'H')
+bahn(WARTE, 'Der Kartensaal', 'kartensaal', f, [
+    sternbild([(5, 4), (5, 11), (19, 4), (19, 11)], (24, 2, 24, 13)),
+    pendel(13.0, 4.0, laenge=3.2, amp=55),
+    pilz(18.5, 7.5, stil='orb'),
+], par=4,
+intro='Vier Sterne, vier Ecken, und mittendrin zwei Regale, die den Saal in zwei Hälften teilen. '
+      'Das Tor steht vor dem Loch und geht erst auf, wenn alle vier brennen. Die Reihenfolge '
+      'entscheidet, wie oft man den Saal durchqueren muß.')
+
+# --- 5 ---------------------------------------------------------------------
+# Das Fernrohr. Das Auge des Turms sucht die Terrasse ab - dieselbe Zeichnung wie im Schattenreich,
+# hier als Instrument statt als Wächter. Wen es erwischt, den setzt es zurück.
+f = leer(32, 15)
+fuell(f, 1, 2, 30, 12)
+fuell(f, 8, 2, 9, 8, 'x')
+fuell(f, 16, 6, 17, 12, 'x')
+fuell(f, 24, 2, 25, 8, 'x')
+setz(f, 3, 7, 'T'); setz(f, 29, 10, 'H')
+bahn(WARTE, 'Das Fernrohr', 'sternenwarte', f, [
+    auge(12.5, 10.5, r=1.1, weite=9.0, tempo=0.4),
+    auge(21.0, 4.0, r=1.1, weite=9.0, tempo=-0.36, phase=1.6),
+    mond(20.0, 10.5, r=2.8, kraft=7.0, takt=6.5, phase=0.3),
+], par=4,
+intro='Zwei Fernrohre suchen die Terrasse ab, und zwischen ihnen steht ein Mond, der jeden geraden '
+      'Weg krumm zieht. Der Zickzack durch die Pfeiler ist der kurze Weg - wenn man ihn im '
+      'richtigen Augenblick nimmt.')
+
+# --- 6 ---------------------------------------------------------------------
+# Die Armillarsphäre. Das Zahnradfeld der Uhrwerkstadt trägt über die Lücke, der Nebelwirbel
+# schleudert nach außen. Beide kennt man - neu ist, daß sie zusammenarbeiten.
+f = leer(32, 15)
+fuell(f, 1, 2, 30, 12)
+fuell(f, 13, 2, 19, 12, '.')          # die große Lücke
+fuell(f, 13, 6, 19, 8, '#')           # der Steg, über den das Zahnrad fährt
+setz(f, 3, 7, 'T'); setz(f, 28, 4, 'H')
+bahn(WARTE, 'Die Armillarsphäre', 'sternenwarte', f, [
+    zahnfeld(12.5, 7.5, 19.5, 7.5, warten=2.2, fahrt=3.0),
+    nebel(24.5, 9.0, r=2.8, dreh=1),
+    pilz(9.5, 4.5, stil='crystal'),
+], par=4,
+intro='Der Messingring fährt über den Steg und nimmt mit, wer rechtzeitig darauf liegt. Dahinter '
+      'wartet ein Nebelwirbel, der alles nach außen schleudert - am besten also gar nicht erst '
+      'hinein.')
+
+# --- 7 ---------------------------------------------------------------------
+# Der Wandelgang. Das wandernde Tor der Uhrwerkstadt, dazu ein Mond, der die Lücke verschiebt,
+# während man auf sie zielt.
+f = leer(34, 15)
+fuell(f, 1, 2, 32, 12)
+fuell(f, 6, 2, 7, 12, 'x'); fuell(f, 6, 6, 7, 8, '#')     # erster Durchlaß, fest
+setz(f, 3, 7, 'T'); setz(f, 30, 7, 'H')
+bahn(WARTE, 'Der Wandelgang', 'kartensaal', f, [
+    wandertor(18, 3, 18, 11, gasse=1.9),
+    mond(13.0, 7.0, r=3.0, kraft=8.5, takt=5.5),
+    pilz(24.5, 4.5, stil='orb'),
+    pilz(24.5, 9.5, stil='orb'),
+], par=3,     # Bot-Median 3 - Par 4 waere hier geschenkt
+intro='Das wandernde Tor läuft auf und ab, und der Mond davor zieht den Ball von der Lücke weg '
+      'oder in sie hinein. Zwei Uhren, die nicht zusammenpassen - man muß sich die eine aussuchen '
+      'und die andere aushalten.')
+
+# --- 8 ---------------------------------------------------------------------
+# Die Hutkammer. Der Rückgriff auf den Lehrlingsgarten: dieselben Zauberhüte, aber jetzt entscheidet
+# ein Mond mit, wo man ankommt.
+f = leer(32, 15)
+fuell(f, 1, 2, 30, 12)
+fuell(f, 11, 2, 12, 9, 'x')
+fuell(f, 20, 5, 21, 12, 'x')
+setz(f, 3, 7, 'T'); setz(f, 28, 4, 'H')
+bahn(WARTE, 'Die Hutkammer', 'kartensaal', f, [
+    huete([(8, 4), (16, 11), (25, 9)], takt=2.4),
+    mond(16.0, 4.0, r=3.0, kraft=8.0, takt=6.0, phase=0.25),
+    pendel(25.0, 3.0, laenge=3.0, amp=45),
+], par=4,
+intro='Die Hüte aus dem Garten, eine Stufe schärfer: Wo man herauskommt, steht fest - was danach '
+      'mit dem Ball geschieht, entscheidet der Mond daneben. Wer den Hut im falschen Augenblick '
+      'nimmt, landet dort, wo er nicht hin wollte.')
+
+# --- 9 ---------------------------------------------------------------------
+# Die Sternenprüfung. Alles, was die Warte kann, hintereinander: Ranke, Mond, Sternbild.
+#
+# ZWEITE FASSUNG. Die erste war eine offene Halle mit drei Sternen darin, und der Bot lochte sie
+# JEDES MAL in zwei Schlägen bei Par 5: Ein Schlag quer durch die Halle traf im Abprallen alle drei
+# Sterne, und das Tor stand schon offen, bevor man es gesehen hatte. Ein Sternbild, das man
+# versehentlich vollendet, ist kein Sternbild. Jetzt stehen vier Pfeilerpaare im Weg, und der
+# dritte Stern liegt in einer Nische hinter dem letzten Pfeiler - dorthin kommt nur, wer hinfährt.
+f = leer(36, 15)
+fuell(f, 1, 2, 34, 12)
+fuell(f, 20, 2, 21, 5, 'x'); fuell(f, 20, 9, 21, 12, 'x')     # erstes Pfeilerpaar
+fuell(f, 24, 2, 25, 5, 'x'); fuell(f, 24, 9, 25, 12, 'x')     # zweites, und dahinter die Nische
+# Die Felder der Ranke bleiben in der Karte Boden - das Fallen besorgt die Maschine (siehe
+# obstacles_zauber.js). Ein '.' hier wäre ein Loch, das keine Ranke je schlösse.
+setz(f, 3, 7, 'T'); setz(f, 32, 7, 'H')
+bahn(WARTE, 'Die Sternenprüfung', 'sternenwarte', f, [
+    ranke(9, 6, 4, 3, 6.5, 7.5, dauer=4.5),
+    mond(16.0, 7.0, r=3.2, kraft=8.5, takt=6.5, phase=0.15),
+    sternbild([(15, 3), (15, 11), (27, 3)], (28, 2, 28, 13)),
+], par=5,
+intro='Die Prüfung der Warte: erst die Blüte anstoßen und über die Ranke, dann am Mond vorbei - '
+      'und dabei alle drei Sterne mitnehmen, denn sonst steht am Ende ein Tor, das nicht aufgeht. '
+      'Der dritte liegt in der Nische hinter dem letzten Pfeiler. Wer hier unter Par bleibt, hat '
+      'den Sternenhut verdient.')
 
 # ---------------------------------------------------------------- Prüfen
 for kennung, jsname, titel, liste in WELTEN:

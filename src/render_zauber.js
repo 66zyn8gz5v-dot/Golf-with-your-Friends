@@ -216,14 +216,14 @@ Object.assign(Renderer.prototype, {
        Vorzeichen. Sie laufen schneller, je stärker der Mond greift; beim Halbmond hängen sie
        nahezu still, und genau das ist der Augenblick, in dem man ungestört schlagen kann. */
     const lauf = (t * (0.25 + kraft * 0.75)) % 1;
-    ctx.fillStyle = zieht ? `rgba(200,220,255,${0.25 + 0.55 * kraft})` : `rgba(240,190,255,${0.25 + 0.55 * kraft})`;
+    ctx.fillStyle = zieht ? `rgba(215,232,255,${0.4 + 0.5 * kraft})` : `rgba(248,205,255,${0.4 + 0.5 * kraft})`;
     for (let k = 0; k < 14; k++) {
       const a = k * (TAU / 14) + (k % 3) * 0.4;
       const u = ((k * 0.137 + (zieht ? -lauf : lauf)) % 1 + 1) % 1;   // 0 = Mitte, 1 = Rand
       const rr = ob.core + (ob.r - ob.core) * u;
       const [fx, fy] = this.proj(ob.x + Math.cos(a) * rr, ob.y + Math.sin(a) * rr, 0.008);
       // am Rand klein, in der Mitte groß: der Funke wächst auf dem Weg, den auch der Ball nähme
-      const gr = s * 0.045 * (zieht ? (1.3 - u * 0.7) : (0.6 + u * 0.7));
+      const gr = s * 0.065 * (zieht ? (1.3 - u * 0.7) : (0.6 + u * 0.7));
       ctx.beginPath(); ctx.arc(fx, fy, gr, 0, TAU); ctx.fill();
     }
   },
@@ -239,9 +239,13 @@ Object.assign(Renderer.prototype, {
   drawMondzieher(ctx, ob, t) {
     const s = this.scale;
     const [fx, fy] = this.proj(ob.x, ob.y, 0);
-    const [, oben] = this.proj(ob.x, ob.y, 1.5);
-    const hPx = Math.max(s * 0.9, fy - oben);
-    const rr = Math.max(s * 0.34, s * 0.5);              // Halbmesser der Scheibe in Bildpunkten
+    const [, oben] = this.proj(ob.x, ob.y, 2.0);
+    const hPx = Math.max(s * 1.2, fy - oben);
+    /* DIE SCHEIBE IST GROSS, UND ZWAR ABSICHTLICH. Beim ersten Versuch hatte sie einen halben
+       Kachelhalbmesser – und bei Neumond war sie eine dunkle Scheibe vor einem dunklen Himmel,
+       also unsichtbar. Genau dann aber muß man sie am dringendsten sehen, denn dann stößt der
+       Mond. Sie ist jetzt fast doppelt so groß und hat einen hellen Rand, der auch dunkel bleibt. */
+    const rr = s * 0.9;                                   // Halbmesser der Scheibe in Bildpunkten
     const mx = fx, my = fy - hPx;
 
     // Sockel: erst er macht sichtbar, daß der Mond nicht frei schwebt, sondern im Weg steht
@@ -287,7 +291,116 @@ Object.assign(Renderer.prototype, {
     }
     ctx.restore();
 
-    ctx.strokeStyle = 'rgba(190,205,255,0.5)'; ctx.lineWidth = Math.max(1, s * 0.03);
+    // Der Rand: hell genug, daß auch die dunkle Scheibe eine Scheibe bleibt und kein Loch
+    ctx.strokeStyle = 'rgba(205,220,255,0.85)'; ctx.lineWidth = Math.max(1.5, s * 0.055);
     ctx.beginPath(); ctx.arc(mx, my, rr, 0, TAU); ctx.stroke();
+    /* Der Messingring darum – das Instrument, in dem der Mond hängt. Er macht aus der Scheibe ein
+       Gerät und sagt nebenbei, daß hier jemand etwas gebaut hat und nicht der Himmel steht. */
+    ctx.strokeStyle = 'rgba(201,167,90,0.75)'; ctx.lineWidth = Math.max(1.5, s * 0.05);
+    ctx.beginPath(); ctx.ellipse(mx, my, rr * 1.3, rr * 1.3 * 0.34, 0.5, 0, TAU); ctx.stroke();
+  },
+
+  /* ================= Das Sternbild =================
+     Am Boden liegen die Sterne und die Linien dazwischen. Die Linie zwischen zwei Sternen leuchtet
+     erst, wenn BEIDE an sind – so wächst das Bild sichtbar zusammen, und man sieht ohne Zählen und
+     ohne Zahl, was noch fehlt.
+
+     WARUM DIE LINIEN UND NICHT EINE ANZEIGE „3 VON 5". Eine Zahl am Bildrand steht nicht dort, wo
+     man hinsieht, und sie sagt nicht, WELCHER Stern fehlt. Die Linien sagen beides an der Stelle,
+     an der der Ball gleich langläuft. */
+  drawSternbildFloor(ctx, ob, t) {
+    const s = this.scale, sterne = ob.sterne;
+
+    // Die Linien des Bildes: matt, solange ein Ende fehlt, hell, sobald beide Enden brennen
+    for (let i = 0; i + 1 < sterne.length; i++) {
+      const a = sterne[i], b = sterne[i + 1], hell = ob.an[i] && ob.an[i + 1];
+      const pa = this.proj(a[0], a[1], 0.006), pb = this.proj(b[0], b[1], 0.006);
+      ctx.strokeStyle = hell ? 'rgba(255,240,190,0.75)' : 'rgba(150,170,230,0.20)';
+      ctx.lineWidth = Math.max(1.5, s * (hell ? 0.06 : 0.035));
+      ctx.setLineDash(hell ? [] : [s * 0.18, s * 0.16]);
+      ctx.beginPath(); ctx.moveTo(pa[0], pa[1]); ctx.lineTo(pb[0], pb[1]); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    for (let i = 0; i < sterne.length; i++) {
+      const [sx, sy] = sterne[i], an = ob.an[i];
+      // frisch gezündet: ein kurzer Ring, der aufspringt – die Rückmeldung auf den eigenen Schlag
+      const seit = t - ob.zuletzt;
+      const puls = an && seit >= 0 && seit < 0.45 ? 1 + (1 - seit / 0.45) * 1.1 : 1;
+      this.isoEllipse(ctx, sx, sy, 0.004, ob.r * 1.8 * puls, an ? 'rgba(255,225,140,0.34)' : 'rgba(120,140,210,0.16)');
+      const [cx, cy] = this.proj(sx, sy, 0.007);
+      ctx.strokeStyle = an ? 'rgba(255,235,170,0.9)' : 'rgba(150,170,230,0.5)';
+      ctx.lineWidth = Math.max(1.5, s * 0.05);
+      ctx.beginPath(); ctx.ellipse(cx, cy, ob.r * 1.35 * s, ob.r * 1.35 * s * this.cam.tilt, 0, 0, TAU); ctx.stroke();
+    }
+
+    /* Das Tor: solange es zu ist, liegt sein Fuß als leuchtende Naht auf dem Boden. Sie bleibt
+       auch dann sichtbar, wenn die Wand selbst hinter etwas verschwindet. */
+    if (ob.tor && !ob.fertig) {
+      const pa = this.proj(ob.tor.x0, ob.tor.y0, 0.008), pb = this.proj(ob.tor.x1, ob.tor.y1, 0.008);
+      ctx.strokeStyle = `rgba(190,205,255,${0.4 + 0.2 * Math.sin(t * 3)})`;
+      ctx.lineWidth = Math.max(2, s * 0.09); ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(pa[0], pa[1]); ctx.lineTo(pb[0], pb[1]); ctx.stroke();
+    }
+  },
+
+  /* Die Sterne, aufrecht: kleine Funkelsterne über ihrem Platz. Und das Tor als Lichtvorhang,
+     solange es steht.
+
+     Auch hier gilt die Regel vom Zauberhut: Die Zacken sind BILDPUNKTE. Ein Stern, der in der
+     Weltebene läge, wäre in der Schrägsicht ein plattgedrücktes Kreuz. */
+  drawSternbild(ctx, ob, t) {
+    const s = this.scale;
+    const zacke = (mx, my, r1, r2, dreh) => {
+      ctx.beginPath();
+      for (let k = 0; k < 10; k++) {
+        const a = -Math.PI / 2 + k * (Math.PI / 5) + dreh, rr = k % 2 ? r2 : r1;
+        const px = mx + Math.cos(a) * rr, py = my + Math.sin(a) * rr;
+        k ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+      }
+      ctx.closePath(); ctx.fill();
+    };
+
+    for (let i = 0; i < ob.sterne.length; i++) {
+      const [sx, sy] = ob.sterne[i], an = ob.an[i];
+      const schweben = 0.45 + 0.06 * Math.sin(t * 1.7 + i);
+      const [mx, my] = this.proj(sx, sy, schweben);
+      if (an) {
+        const g = ctx.createRadialGradient(mx, my, s * 0.05, mx, my, s * 0.55);
+        g.addColorStop(0, 'rgba(255,245,200,0.55)'); g.addColorStop(1, 'rgba(255,245,200,0)');
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(mx, my, s * 0.55, 0, TAU); ctx.fill();
+      }
+      ctx.fillStyle = an ? '#fff4c2' : 'rgba(170,190,240,0.55)';
+      zacke(mx, my, s * (an ? 0.26 : 0.18), s * (an ? 0.1 : 0.07), t * 0.5 + i);
+    }
+
+    if (!ob.tor || ob.fertig) return;
+    /* Der Vorhang: zwei Fußpunkte am Boden, zwei darüber. Die HÖHE kommt aus der Projektion, die
+       Fußpunkte aus der Welt – damit steht die Wand dort, wo die Physik sie abfragt. */
+    const [ax, ay] = this.proj(ob.tor.x0, ob.tor.y0, 0);
+    const [bx, by] = this.proj(ob.tor.x1, ob.tor.y1, 0);
+    const [, ao] = this.proj(ob.tor.x0, ob.tor.y0, 0.85);
+    const [, bo] = this.proj(ob.tor.x1, ob.tor.y1, 0.85);
+    const g = ctx.createLinearGradient(0, Math.min(ao, bo), 0, Math.max(ay, by));
+    /* Kräftig genug, daß man sie als WAND liest. Beim ersten Versuch war der Vorhang so zart,
+       daß er im Gesamtbild wie ein Lichtreflex aussah – und eine Wand, die man für einen Reflex
+       hält, ist keine Ansage, sondern eine Falle. */
+    g.addColorStop(0, 'rgba(150,175,255,0.12)');
+    g.addColorStop(0.5, `rgba(175,200,255,${0.4 + 0.1 * Math.sin(t * 2.2)})`);
+    g.addColorStop(1, 'rgba(225,238,255,0.62)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.lineTo(bx, bo); ctx.lineTo(ax, ao); ctx.closePath(); ctx.fill();
+    // Funken, die im Vorhang aufsteigen: erst daran sieht man, daß er lebt und nicht Glas ist
+    ctx.fillStyle = 'rgba(230,240,255,0.7)';
+    for (let k = 0; k < 9; k++) {
+      const u = (k * 0.17 + t * 0.22) % 1, v = ((k * 0.31 + t * 0.35) % 1);
+      const px = ax + (bx - ax) * u, py0 = ay + (by - ay) * u, py1 = ao + (bo - ao) * u;
+      ctx.beginPath(); ctx.arc(px, py0 + (py1 - py0) * v, s * 0.035, 0, TAU); ctx.fill();
+    }
+    ctx.strokeStyle = 'rgba(225,238,255,0.9)'; ctx.lineWidth = Math.max(1.5, s * 0.05);
+    ctx.beginPath(); ctx.moveTo(ax, ao); ctx.lineTo(bx, bo); ctx.stroke();
+    // Die beiden Pfosten: Ohne sie schwebt der Vorhang, und man sieht nicht, wo er endet
+    ctx.strokeStyle = 'rgba(201,167,90,0.85)'; ctx.lineWidth = Math.max(2, s * 0.09); ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(ax, ao); ctx.moveTo(bx, by); ctx.lineTo(bx, bo); ctx.stroke();
   },
 });

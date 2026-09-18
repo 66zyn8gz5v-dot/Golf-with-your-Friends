@@ -899,6 +899,111 @@ const Hats = (() => {
       ctx.restore();
     },
 
+    sternenhut(ctx, color, t, fein) {    // Sternenwarte: der Hut des Astronomen
+      /* Der zweite der drei Hüte, und er muß auf den ersten Blick als Verwandter des
+         Lehrlingshuts zu erkennen sein und auf den zweiten als der nächsthöhere. Darum dieselbe
+         Bauart - Ganzkörper-Skin, geknickter Kegel, Krempe, Band in Spielerfarbe - und drei
+         Unterschiede, die man nicht übersehen kann: Der Filz ist nachtblau statt violett, er ist
+         mit Sternen bestickt, und an der Spitze sitzt kein Stern mehr, sondern ein MOND, der
+         seine Phasen durchläuft.
+
+         WARUM AUSGERECHNET DER MOND. Weil die ganze Welt an ihm hängt: Der Mondzieher zieht bei
+         voller Scheibe und stößt bei dunkler. Wer die Warte geschafft hat, hat genau das
+         begriffen - und trägt es von da an auf dem Kopf. */
+      // Der Astronom darunter: etwas blasser als der Lehrling, er sitzt schließlich nachts draußen
+      const g = ctx.createRadialGradient(-0.3, -0.24, 0.08, 0, 0, 1);
+      g.addColorStop(0, '#f6e8d8'); g.addColorStop(0.55, '#e2c9ad'); g.addColorStop(1, '#9a7f66');
+      ctx.beginPath(); ctx.arc(0, 0, 1, 0, TAU2); ctx.fillStyle = g; ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.4)'; ctx.lineWidth = 0.06; ctx.stroke();
+
+      ctx.save(); kugelMaske(ctx);
+      // Augen tief unter der Krempe - dieselbe Lehre wie beim Lehrlingshut, sonst wird die
+      // Krempe im kleinen Vorschaubild zum Visier
+      ctx.fillStyle = '#231a38';
+      for (const ax of [-0.28, 0.28]) { ctx.beginPath(); ctx.ellipse(ax, 0.26, 0.09, 0.11, 0, 0, TAU2); ctx.fill(); }
+      if (fein) {
+        ctx.fillStyle = 'rgba(255,255,255,0.8)';
+        for (const ax of [-0.25, 0.31]) { ctx.beginPath(); ctx.arc(ax, 0.22, 0.032, 0, TAU2); ctx.fill(); }
+        /* HIER STAND EINMAL EIN BART, und er ist mit Absicht wieder weg. Erst waren es drei
+           Striche – die sahen im großen Bild aus wie Zähne. Dann eine weiße Fläche – die sah aus
+           wie ein offener Mund. Ein Gesicht in dieser Größe hat Augen, und alles weitere wird zu
+           etwas anderem, als es sein soll. Was diesen Hut vom Lehrlingshut unterscheidet, steht
+           ohnehin über dem Gesicht: nachtblauer Filz, Sterne darauf, ein Mond an der Spitze. */
+      }
+      ctx.restore();
+
+      const wippen = Math.sin(t * 1.6) * 0.06;
+      const spitzeX = 0.5 + wippen, spitzeY = -1.78;   // der Mond an der Spitze braucht Platz nach oben
+      const kg = ctx.createLinearGradient(-0.9, -0.2, 0.9, -1.5);
+      kg.addColorStop(0, '#1b2350'); kg.addColorStop(0.55, '#2e3c7e'); kg.addColorStop(1, '#141a3c');
+      ctx.beginPath();
+      ctx.moveTo(-1.0, -0.24);
+      ctx.quadraticCurveTo(-0.55, -1.12, spitzeX, spitzeY);
+      ctx.quadraticCurveTo(0.7, -0.8, 1.0, -0.24);
+      ctx.closePath();
+      ctx.fillStyle = kg; ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.45)'; ctx.lineWidth = 0.06; ctx.stroke();
+
+      /* Die Stickerei: kleine Sterne auf dem Kegel, die einzeln aufblinken. Sie sind der Grund,
+         warum der Hut auch im Stillstand lebt - ein glatter blauer Kegel wäre ein Schlafsack. */
+      if (fein) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(-1.0, -0.24);
+        ctx.quadraticCurveTo(-0.55, -1.12, spitzeX, spitzeY);
+        ctx.quadraticCurveTo(0.7, -0.8, 1.0, -0.24);
+        ctx.closePath(); ctx.clip();
+        for (const [sx, sy, sr, ph] of [[-0.42, -0.62, 0.09, 0], [0.18, -0.5, 0.07, 1.9],
+                                        [-0.05, -1.0, 0.08, 3.4], [0.36, -0.95, 0.06, 5.1],
+                                        [-0.55, -0.34, 0.06, 2.6], [0.18, -1.38, 0.06, 4.2]]) {
+          const a = 0.35 + 0.65 * Math.abs(Math.sin(t * 1.8 + ph));
+          ctx.fillStyle = `rgba(255,245,200,${a})`;
+          ctx.beginPath();
+          for (let i = 0; i < 8; i++) {
+            const w = -Math.PI / 2 + i * (Math.PI / 4), rr = i % 2 ? sr * 0.35 : sr;
+            const px = sx + Math.cos(w) * rr, py = sy + Math.sin(w) * rr;
+            i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+          }
+          ctx.closePath(); ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      // Die Krempe, breiter als beim Lehrling und mit einem Silberrand
+      ctx.beginPath(); ctx.ellipse(0, -0.22, 1.24, 0.28, 0, 0, TAU2);
+      const bg = ctx.createLinearGradient(0, -0.42, 0, 0.14);
+      bg.addColorStop(0, '#2b3a66'); bg.addColorStop(1, '#141a36');
+      ctx.fillStyle = bg; ctx.fill();
+      ctx.strokeStyle = 'rgba(200,215,255,0.55)'; ctx.lineWidth = 0.05; ctx.stroke();
+
+      // Das Band in Spielerfarbe - dieselbe Regel wie beim Lehrlingshut: Der Hut sagt, wem der Ball gehört
+      ctx.beginPath(); ctx.ellipse(0, -0.42, 0.88, 0.19, 0, 0, TAU2);
+      ctx.fillStyle = color || '#8fd0ff'; ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 0.04; ctx.stroke();
+
+      /* Der Mond an der Spitze. Er läuft dieselbe Phase wie der Mondzieher auf der Bahn: volle
+         Scheibe, Halbmond, dunkle Scheibe und zurück. Gezeichnet wie dort - dunkle Scheibe,
+         helle Hälfte, und eine Ellipse als Schatten darüber. */
+      const f = (Math.cos(t * 0.9) + 1) / 2;
+      const mx = spitzeX, my = spitzeY + 0.06, mr = 0.24;
+      ctx.save();
+      ctx.beginPath(); ctx.arc(mx, my, mr * 1.9, 0, TAU2);
+      const sch = ctx.createRadialGradient(mx, my, mr * 0.6, mx, my, mr * 1.9);
+      sch.addColorStop(0, `rgba(210,225,255,${0.1 + 0.35 * f})`); sch.addColorStop(1, 'rgba(210,225,255,0)');
+      ctx.fillStyle = sch; ctx.fill();
+      ctx.fillStyle = '#242044';
+      ctx.beginPath(); ctx.arc(mx, my, mr, 0, TAU2); ctx.fill();
+      ctx.beginPath(); ctx.arc(mx, my, mr, 0, TAU2); ctx.clip();
+      ctx.fillStyle = '#eef2ff';
+      ctx.beginPath(); ctx.arc(mx, my, mr, -Math.PI / 2, Math.PI / 2); ctx.closePath(); ctx.fill();
+      const k = 2 * f - 1;
+      ctx.fillStyle = k >= 0 ? '#eef2ff' : '#242044';
+      ctx.beginPath(); ctx.ellipse(mx, my, mr * Math.abs(k), mr, 0, 0, TAU2); ctx.fill();
+      ctx.restore();
+      ctx.strokeStyle = 'rgba(200,215,255,0.6)'; ctx.lineWidth = 0.04;
+      ctx.beginPath(); ctx.arc(mx, my, mr, 0, TAU2); ctx.stroke();
+    },
+
     orb(ctx, color, t, fein) {   // Schattenreich: Kristallkugel mit Nebel, Funken und einem Auge, das blinzelt
       glasKugel(ctx, '#e2c8ff', '#5c34a0');
       ctx.save(); kugelMaske(ctx);
@@ -1947,6 +2052,7 @@ const Hats = (() => {
     { id: 'pocketwatch', name: 'Taschenuhr', welt: 'clock', voll: true },
     { id: 'taucherhelm', name: 'Taucherhelm', welt: 'flut', voll: true },
     { id: 'lehrlingshut', name: 'Lehrlingshut', welt: 'lehrling', voll: true },
+    { id: 'sternenhut', name: 'Sternenhut', welt: 'warte', voll: true },
     { id: 'champion', name: 'Championhelm', welt: 'colosseum', art: 'turnier' },
   ];
   const byId = id => LIST.find(h => h.id === id);

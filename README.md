@@ -2974,12 +2974,37 @@ Aufgabe heißt immer: den Moment abpassen. Hier startet der Spieler die Uhr selb
   beim Wasserrad. Der Kegel wird darum im **Bildraum** gebaut, nicht in der Weltebene: Aus der
   Projektion kommt nur die Höhe, Breite und Knick sind Bildpunkte. So steht der Hut aufrecht, egal
   wie die Kamera gedreht ist.
+* **Der Mondzieher** (`mondzieher`, Sternenwarte). Er zieht und stößt im Wechsel: volle Scheibe
+  zieht, dunkle stößt, Halbmond läßt in Ruhe. *Warum kein Magnet:* Der Magnet zieht immer gleich
+  stark und immer in dieselbe Richtung; man lernt ihn einmal und rechnet ihn danach mit. Hier ist
+  auch das **Vorzeichen** eine Frage des Zeitpunkts – derselbe Schlag geht einmal daneben, weil er
+  gezogen wurde, und einmal, weil er gestoßen wurde. *Ohne Pfeil:* Die Phase steht am Mond selbst,
+  in der Sprache jedes Kalenders, und am Boden laufen Funken nach innen (zieht) oder nach außen
+  (stößt) – Richtung und Stärke in einer einzigen Bewegung. *Und er greift nur einen rollenden
+  Ball:* Seine Kraft liegt über der Bodenreibung; ohne diese Schranke schöbe er einen liegenden
+  Ball von allein über die Bahn, und der Spieler sähe zu, statt zu entscheiden.
+  *Die Scheibe ist groß, und zwar absichtlich.* Beim ersten Versuch hatte sie einen halben
+  Kachelhalbmesser – und bei Neumond war sie eine dunkle Scheibe vor einem dunklen Himmel, also
+  unsichtbar. Genau dann aber muß man sie am dringendsten sehen.
+* **Das Sternbild** (`sternbild`, Sternenwarte). Mehrere Sterne stehen auf der Bahn; wer über einen
+  rollt, zündet ihn an. Sind alle an, geht das **Sternentor** auf – vorher steht dort eine Wand aus
+  Licht. Die Linien zwischen zwei Sternen leuchten erst, wenn beide Enden brennen; so sieht man
+  ohne Zahl am Bildrand, was noch fehlt, und zwar dort, wo der Ball gleich langläuft.
+  *Warum das eine Profi-Aufgabe ist:* Alles andere im Spiel fragt „wohin als nächstes". Das
+  Sternbild fragt „in welcher **Reihenfolge**", und das muß man vor dem ersten Schlag entscheiden.
+  *Und es bleibt an:* Gezündete Sterne gehen innerhalb einer Bahn nicht wieder aus – sonst hieße
+  die Aufgabe „alles in einem Schlag", und das ist Glück, kein Planen.
+  *Das Tor ist eine Wand, kein Loch im Boden:* Boden, der zur Laufzeit entsteht, müßte die ganze
+  Wegfindung mitziehen; ein Mauerstück, das der Zeichner malt und die Physik abfragt, kostet nichts.
 
 **Die Optik der alten Maschinen kommt aus dem Bestand** – kein einziges neues Bild, und trotzdem
 sieht keine aus wie im Märchenland: Das Windrad ist hier eine **Ranke** oder ein **Besen**, der
 Prellklotz ein **Pilz**, eine **Leuchtkugel** oder ein **Kristall**, der Magnet ein
 **Seelenlicht**, die Drehscheibe ein **Laubwirbel**. Seit Fassung 191 sind diese Gestalten auch im
-Baumodus unter *Aussehen* zu finden.
+Baumodus unter *Aussehen* zu finden. In der Sternenwarte geht es so weiter: Das **Auge des
+Turms** aus dem Schattenreich wird zum Fernrohr, das **Pendel** der Uhrwerkstadt zum Lot des
+Astronomen, das **Zahnradfeld** zur Armillarsphäre, der **Strudel** der Flut zum Nebelwirbel und
+das **wandernde Tor** zum Wandelgang.
 
 **Der Bahnbauer** ist `tools/zauber.py`. Er trägt die Regeln, die aus früheren Welten gelernt
 wurden – Schrägen in jede einspringende Ecke (die Eckkachel selbst wird Boden, sonst bleibt die
@@ -2991,9 +3016,15 @@ Dickicht – und dazu zwei eigene:
   hintereinander sind ausdrücklich erlaubt.
 * **Man muß es in der Zeit auch schaffen.** Gerechnet wird mit demselben Reibungswert wie in der
   Physik (4,2) und mit einem ehrlichen Tempo an der Blüte (12), nicht mit dem Höchstschlag.
+* **Der Sockel des Mondziehers steht auf Boden.** Er ist fest; über dem Abgrund stünde er im Nichts.
+* **Das Sternentor sperrt wirklich etwas ab** – mit geschlossenem Tor darf es keinen Weg ins Loch
+  geben, sonst ist das ganze Sternbild Schmuck. Gerechnet wird dabei nicht mit gesperrten Kacheln,
+  sondern mit gesperrten **Übergängen**: Ein Tor steht zwischen zwei Kachelreihen, nicht auf einer.
+* **Und jeder Stern liegt vor dem Tor.** Ein Stern dahinter machte die Bahn unlösbar: Man käme nur
+  durch das Tor an ihn heran, und das Tor ginge nur auf, wenn man ihn hätte.
 
 **Geprüft** wird mit `node tools/zauber.mjs` (Verhalten beider Maschinen im echten Ablauf),
-`node tools/validate.mjs` und `GAMES=2 node tools/audit/audit.mjs lehrling`. Die Wegprüfung in
+`node tools/validate.mjs` und `GAMES=2 node tools/audit/audit.mjs lehrling` bzw. `… warte`. Die Wegprüfung in
 `validate.mjs` kennt die Zauberhüte als Verbindung – sonst hielte sie ausgerechnet die Bahn für
 unpassierbar, die den Hut erklärt.
 
@@ -3289,7 +3320,7 @@ tools/online.mjs        fährt zwei Browser gegeneinander: beitreten, spielen, r
 tools/flut.mjs          prüft die Maschinen der Flut: Beckenlauf, Durchrollen, Pumpwerk, jede fertige Bahn
 tools/flut.py           baut die Bahnen der Flut – und lehnt jede ab, auf der man warten müsste
 tools/baumodus.mjs      setzt im Browser jede der 63 Maschinen des Baumodus einmal hin und faßt jeden Regler an
-tools/zauber.mjs        prüft die Maschinen des Zauberreichs: Rankenbrücke und Zauberhüte
+tools/zauber.mjs        prüft die Maschinen des Zauberreichs: Ranke, Hüte, Mondzieher, Sternbild
 tools/zauber.py         baut die Bahnen des Zauberreichs – und lehnt jede Blüte ab, die man nicht rechtzeitig erreicht
 style.css         Oberfläche
 src/themes.js     Farbpaletten und Deko je Welt
