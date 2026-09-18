@@ -350,9 +350,10 @@ dem Browser-Speicher kommt: Der überlebt Fassungswechsel und lässt sich von Ha
 
 Jede Welt hat eine Belohnung, und man verdient sie sich am eigenen Können: **Die Summe der eigenen besten
 Einzelbahnen muss unter dem Par der Welt liegen, und jede Bahn braucht ein Ergebnis.** Gerechnet wird gegen
-das geltende Par – also gegen die Rangliste, siehe oben. Neun Welten,
-neun Belohnungen – acht davon sind **Ganzkörper-Skins**: Sie ersetzen den Ball, statt auf ihm zu
-sitzen, und bewegen sich. Der Championhelm ist der einzige, der nur ein Hut ist.
+das geltende Par – also gegen die Rangliste, siehe oben. **Elf Welten, elf Belohnungen** – zehn
+davon sind **Ganzkörper-Skins**: Sie ersetzen den Ball, statt auf ihm zu sitzen, und bewegen sich.
+Der Championhelm ist der einzige, der nur ein Hut ist; ihn gibt es auch nicht fürs Durchspielen,
+sondern fürs Gewinnen eines Turniers.
 
 **Wie der Hut über den Farbreif kommt.** Ein Ganzkörper-Skin bekommt nach dem Zeichnen einen dünnen Reif in
 der Spielerfarbe (sonst wüsste bei vier Bällen niemand, welcher der eigene ist). Läge der Hut darunter, liefe
@@ -372,6 +373,8 @@ braucht das nicht – bei ihr liegen die Federn bewusst *hinter* dem Reif, das S
 | Sturmhimmel | Gewitterkugel | Wolken ziehen, es regnet, alle 2,2 s schlägt ein Blitz ein | ein Wetterhahn, der sich dreht – und beim Einschlag an der Spitze sprüht |
 | Schattenreich | Kristallkugel | Schwaden waberen, ein Auge blickt umher und blinzelt | Spitzhut mit Mondschnalle; die Spitze schwankt, Sterne funkeln darauf |
 | Uhrwerkstadt | Taschenuhr | durchbrochenes Zifferblatt, hinter dem das Werk läuft | Bügel und Krone wie an einer Taschenuhr |
+| Zwergenmine | Grubenlampe | eiserner Lampenkörper mit Messingreifen; hinter dem Glas brennt eine Flamme, die langsam flackert und ihren Schein aufs Eisen wirft | ein Grubenhelm mit eisernem Bügel |
+| Die Flut | Taucherhelm | messingene Haube mit Bullauge, zwei Seitenfenstern, Schrauben rings um das Glas und einem Kragen mit Nieten | (kein eigener Hut – aus dem Ventil oben steigen Blasen auf) |
 | Kolosseum | Championhelm | (kein eigener Ball – der Helm sitzt auf dem Spielerball) | der Federkamm wiegt sich im Wind |
 
 **Geprüft wird das mit `node tools/huete.mjs`.** Ein Hut geht nicht laut kaputt: Er wird nur in
@@ -1577,6 +1580,22 @@ Maschine, die man zweimal trifft, ist nicht doppelt so gut – sie ist doppelt s
 Elf Maschinen: **Flutbecken**, **Pumpwerk**, **Strömung**, **Strudel**, **Anglerfisch**,
 **Riesenmuschel**, **Tangwald**, **Schwarzer Raucher**, **Ankerkette**, **Wracktor** und
 **Abflußrohr**.
+
+### Die Belohnung: der Taucherhelm
+
+Wer in dieser Welt die Rundensumme unter Par bringt, darf den **Taucherhelm** tragen – eine
+messingene Haube mit Bullauge, zwei angeschnittenen Seitenfenstern, acht Schrauben rings um das
+Glas und einem Kragen mit Nieten. Hinter dem Glas steht dunkles Wasser mit einem schrägen
+Lichtstreifen; daran erkennt man Glas auch ohne Spiegelung.
+
+Er ist ein **Ganzkörper-Skin** und kein Hut, der obendrauf sitzt – ein Taucherhelm als Hütchen
+sähe aus wie ein Eimer. Und er ist der einzige Weltskin ohne zusätzlichen Kopfschmuck: Was ihn
+lebendig macht, sind die **Blasen**, die aus dem Ventil aufsteigen, größer werden und
+verschwinden. Das ist dieselbe Bewegung, die in der ganzen Welt im Hintergrund läuft – ohne sie
+wäre der Helm ein Stillleben, und man sähe ihm nicht an, daß darin jemand atmet.
+
+Die Blasen verblassen nur zu drei Vierteln, nicht ganz. Eine Blase, die linear auf null geht, ist
+auf halbem Weg schon grau und sieht aus wie Staub statt wie Luft.
 
 ### Der Abstieg ist stufenlos
 
