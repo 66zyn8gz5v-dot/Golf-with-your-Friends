@@ -1781,6 +1781,7 @@ class Renderer {
     if (ob.type === 'schneebruecke') { this.drawSchneebrueckeFloor(ctx, ob, t); return; }
     if (ob.type === 'ranke') { this.drawRankeFloor(ctx, ob, t); return; }
     if (ob.type === 'zauberhut') { this.drawZauberhutFloor(ctx, ob, t); return; }
+    if (ob.type === 'mondzieher') { this.drawMondzieherFloor(ctx, ob, t); return; }
     if (ob.type === 'dial' || ob.type === 'wanderloch') { this.drawWanderlochFloor(ctx, ob, t); return; }
     if (ob.type === 'field' && ob.style === 'steam') { this.drawSteam(ctx, ob, t); return; }
     if (ob.type === 'field' && ob.style === 'dark') { this.drawDarkZone(ctx, ob, t); return; }
@@ -2132,6 +2133,10 @@ class Renderer {
       /* noFade: Welcher Hut leuchtet, ist die ganze Aufgabe. Durchsichtig zu werden, sobald der
          Ball davorliegt, nähme ihr genau das. */
       items.push({ x: ob.x, y: ob.y, bias: 0.3, noFade: true, draw: () => this.drawZauberhut(ctx, ob, t) });
+    } else if (ob.type === 'mondzieher') {
+      /* noFade: Die Phase der Scheibe ist die ganze Aufgabe. Durchsichtig zu werden, sobald der
+         Ball davorliegt, nähme ihr genau das. */
+      items.push({ x: ob.x, y: ob.y, bias: 0.35, noFade: true, draw: () => this.drawMondzieher(ctx, ob, t) });
     } else if (ob.type === 'ankerkette') {
       /* noFade: An der Kette liest man ab, wo der Anker gleich sein wird. */
       items.push({ x: ob.x, y: ob.y, bias: 0.45, noFade: true, draw: () => this.drawAnkerkette(ctx, ob, t) });

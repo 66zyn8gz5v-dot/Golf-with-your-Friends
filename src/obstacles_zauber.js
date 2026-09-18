@@ -155,3 +155,59 @@ class Zauberhuete {
     events.push({ type: 'zauberhut', x: zx, y: zy, von: this.orte[rein] });
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Der Mondzieher
+   ---------------------------------------------------------------------------
+   Die Maschine der Sternenwarte. Ein Mond auf einem Sockel, der seine Phase durchläuft: Bei
+   Vollmond zieht er alles an, was in seiner Reichweite rollt, bei Neumond stößt er es weg, und
+   dazwischen tut er fast nichts.
+
+   WARUM NICHT EINFACH EIN MAGNET. Der Magnet zieht immer gleich stark und immer in dieselbe
+   Richtung; man lernt ihn einmal und rechnet ihn danach mit. Hier ist die Stärke eine Frage des
+   Zeitpunkts, und das Vorzeichen auch: Derselbe Schlag geht einmal daneben, weil er gezogen
+   wurde, und einmal daneben, weil er gestoßen wurde. Das ist eine Profi-Aufgabe, keine
+   Normal-Aufgabe – man muß zweimal hinsehen, bevor man schlägt.
+
+   ZU SEHEN IST ES AM MOND SELBST, NICHT AN EINEM PFEIL. Die Scheibe steht über dem Sockel und
+   zeigt ihre Phase: volle Scheibe heißt ziehen, dunkle Scheibe heißt stoßen, Halbmond heißt fast
+   nichts. Das ist dieselbe Sprache, die jeder Kalender spricht, und sie braucht keine Legende.
+
+   Und er greift nur einen ROLLENDEN Ball. Ein Mond, der einen liegenden Ball über die Bahn
+   schöbe, nähme dem Spieler die Entscheidung wieder ab – dann wäre die Aufgabe nicht mehr „wann
+   schlage ich", sondern „wo lande ich zufällig". */
+const MOND_TAKT = 7.0;           // Sekunden für einen ganzen Mondlauf (Voll zu Voll)
+const MOND_KRAFT = 9.0;          // Beschleunigung in Kachel/s² bei Vollmond, in der Mitte
+const MOND_RUHE = 0.6;           // darunter gilt der Ball als liegend und wird nicht gegriffen
+
+class Mondzieher {
+  constructor(d) {
+    Object.assign(this, { r: 3.4, kraft: MOND_KRAFT, takt: MOND_TAKT, phase: 0, core: 0.4, ebene: 0 }, d);
+    this.type = 'mondzieher';
+    this.p = 1;
+    this.update(0);
+  }
+  setup(level) { this.level = level; }
+  /* p: +1 Vollmond (zieht), -1 Neumond (stößt), 0 Halbmond (nichts). */
+  update(t) {
+    this.t = t;
+    this.p = Math.cos(TAU * (t / this.takt + this.phase));
+  }
+  force(ball, dt) {
+    if (ball.air || ball.rider || ball.sunk) return;
+    if ((ball.ebene || 0) !== (this.ebene || 0)) return;
+    const dx = this.x - ball.x, dy = this.y - ball.y, d = Math.hypot(dx, dy);
+    if (d > this.r || d < 0.01) return;
+    /* NUR EIN ROLLENDER BALL WIRD GEGRIFFEN. Die Kraft liegt über der Bodenreibung; ohne diese
+       Schranke schöbe der Mond einen liegenden Ball von selbst über die Bahn, und der Spieler
+       sähe zu, statt zu entscheiden. Der Griff setzt weich ein, damit er nicht sichtbar
+       abschaltet, sobald der Ball langsam wird. */
+    const v = Math.hypot(ball.vx, ball.vy);
+    if (v <= MOND_RUHE) return;
+    const greift = Math.min(1, (v - MOND_RUHE) / MOND_RUHE);
+    const a = this.kraft * this.p * (1 - d / this.r) * 1.5 * greift;
+    ball.vx += (dx / d) * a * dt; ball.vy += (dy / d) * a * dt;
+  }
+  /* Der Sockel ist fest – sonst stünde der Mond auf nichts und der Ball liefe hindurch. */
+  circles(out) { out.push({ x: this.x, y: this.y, r: this.core, e: 0.55, kind: 'mond' }); }
+}

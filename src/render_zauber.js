@@ -195,4 +195,99 @@ Object.assign(Renderer.prototype, {
       }
     }
   },
+
+  /* ================= Der Mondzieher =================
+     Am Boden liegt der Kreis, in dem er greift, und darin laufen Funken. Sie laufen nach INNEN,
+     solange der Mond zieht, und nach AUSSEN, solange er stößt; beim Halbmond stehen sie fast.
+     Damit liest man Richtung und Stärke aus einer einzigen Bewegung ab, ohne einen Pfeil und ohne
+     eine Zahl – und man liest sie am Boden, dort, wo der Ball gleich langläuft. */
+  drawMondzieherFloor(ctx, ob, t) {
+    const s = this.scale, p = ob.p;
+    const zieht = p >= 0, kraft = Math.abs(p);
+
+    // Der Rand des Griffs. Er ist immer gleich groß – nur seine Farbe sagt, was er gerade tut.
+    this.isoEllipse(ctx, ob.x, ob.y, 0.003, ob.r, zieht ? 'rgba(90,110,190,0.14)' : 'rgba(150,90,190,0.14)');
+    const [cx, cy] = this.proj(ob.x, ob.y, 0.005);
+    ctx.strokeStyle = zieht ? `rgba(170,200,255,${0.25 + 0.4 * kraft})` : `rgba(226,160,255,${0.25 + 0.4 * kraft})`;
+    ctx.lineWidth = Math.max(1.5, s * 0.05);
+    ctx.beginPath(); ctx.ellipse(cx, cy, ob.r * s, ob.r * s * this.cam.tilt, 0, 0, TAU); ctx.stroke();
+
+    /* Die Funken. Ihr Abstand zur Mitte läuft mit der Zeit – nach innen oder nach außen, je nach
+       Vorzeichen. Sie laufen schneller, je stärker der Mond greift; beim Halbmond hängen sie
+       nahezu still, und genau das ist der Augenblick, in dem man ungestört schlagen kann. */
+    const lauf = (t * (0.25 + kraft * 0.75)) % 1;
+    ctx.fillStyle = zieht ? `rgba(200,220,255,${0.25 + 0.55 * kraft})` : `rgba(240,190,255,${0.25 + 0.55 * kraft})`;
+    for (let k = 0; k < 14; k++) {
+      const a = k * (TAU / 14) + (k % 3) * 0.4;
+      const u = ((k * 0.137 + (zieht ? -lauf : lauf)) % 1 + 1) % 1;   // 0 = Mitte, 1 = Rand
+      const rr = ob.core + (ob.r - ob.core) * u;
+      const [fx, fy] = this.proj(ob.x + Math.cos(a) * rr, ob.y + Math.sin(a) * rr, 0.008);
+      // am Rand klein, in der Mitte groß: der Funke wächst auf dem Weg, den auch der Ball nähme
+      const gr = s * 0.045 * (zieht ? (1.3 - u * 0.7) : (0.6 + u * 0.7));
+      ctx.beginPath(); ctx.arc(fx, fy, gr, 0, TAU); ctx.fill();
+    }
+  },
+
+  /* Der Mond selbst: ein Sockel und darüber die Scheibe, die ihre Phase zeigt.
+
+     DIE SCHEIBE WIRD IM BILDRAUM GEBAUT, nur ihre Höhe kommt aus der Projektion – dieselbe Regel
+     wie beim Zauberhut und beim Wasserrad. Ein Kreis, der in der Weltebene läge, sähe aus wie ein
+     umgefallener Teller.
+
+     VOLL HEISST ZIEHEN, DUNKEL HEISST STOSSEN. Das ist keine Erfindung dieses Spiels, sondern die
+     Sprache jedes Kalenders, und deshalb braucht sie keine Legende am Rand. */
+  drawMondzieher(ctx, ob, t) {
+    const s = this.scale;
+    const [fx, fy] = this.proj(ob.x, ob.y, 0);
+    const [, oben] = this.proj(ob.x, ob.y, 1.5);
+    const hPx = Math.max(s * 0.9, fy - oben);
+    const rr = Math.max(s * 0.34, s * 0.5);              // Halbmesser der Scheibe in Bildpunkten
+    const mx = fx, my = fy - hPx;
+
+    // Sockel: erst er macht sichtbar, daß der Mond nicht frei schwebt, sondern im Weg steht
+    this.isoEllipse(ctx, ob.x, ob.y, 0.004, ob.core * 1.5, 'rgba(0,0,0,0.3)');
+    const sg = ctx.createLinearGradient(fx - ob.core * s, 0, fx + ob.core * s, 0);
+    sg.addColorStop(0, '#2b2547'); sg.addColorStop(0.5, '#4a4270'); sg.addColorStop(1, '#241f3c');
+    ctx.fillStyle = sg;
+    ctx.beginPath();
+    ctx.moveTo(fx - ob.core * s, fy);
+    ctx.lineTo(fx - ob.core * s * 0.7, my + rr * 0.6);
+    ctx.lineTo(fx + ob.core * s * 0.7, my + rr * 0.6);
+    ctx.lineTo(fx + ob.core * s, fy);
+    ctx.closePath(); ctx.fill();
+    this.isoEllipse(ctx, ob.x, ob.y, 0.02, ob.core, '#554b82');
+
+    const f = (ob.p + 1) / 2;                            // 0 = Neumond (stößt), 1 = Vollmond (zieht)
+
+    // Der Schein um die Scheibe wächst mit der Phase – von weitem sieht man daran schon, was los ist
+    const sch = ctx.createRadialGradient(mx, my, rr * 0.6, mx, my, rr * 2.4);
+    sch.addColorStop(0, `rgba(200,215,255,${0.05 + 0.3 * f})`);
+    sch.addColorStop(1, 'rgba(200,215,255,0)');
+    ctx.fillStyle = sch;
+    ctx.beginPath(); ctx.arc(mx, my, rr * 2.4, 0, TAU); ctx.fill();
+
+    // Die dunkle Scheibe liegt immer da; darauf kommt das Licht
+    ctx.fillStyle = '#2a2440';
+    ctx.beginPath(); ctx.arc(mx, my, rr, 0, TAU); ctx.fill();
+
+    const licht = '#e9eeff';
+    ctx.save();
+    ctx.beginPath(); ctx.arc(mx, my, rr, 0, TAU); ctx.clip();
+    ctx.fillStyle = licht;
+    ctx.beginPath(); ctx.arc(mx, my, rr, -Math.PI / 2, Math.PI / 2); ctx.closePath(); ctx.fill();
+    /* Der Schatten läuft als Ellipse über die Scheibe: breiter als halb heißt zunehmend und hell,
+       schmaler heißt abnehmend und dunkel. Ein einziger Wert, zwei Richtungen. */
+    const k = 2 * f - 1;
+    ctx.fillStyle = k >= 0 ? licht : '#2a2440';
+    ctx.beginPath(); ctx.ellipse(mx, my, rr * Math.abs(k), rr, 0, 0, TAU); ctx.fill();
+    // Krater, damit die helle Fläche nicht wie eine Lampe aussieht
+    ctx.fillStyle = 'rgba(150,160,200,0.35)';
+    for (const [ux, uy, ur] of [[-0.3, -0.25, 0.2], [0.25, 0.1, 0.15], [0.05, -0.45, 0.1], [-0.1, 0.4, 0.13]]) {
+      ctx.beginPath(); ctx.arc(mx + ux * rr, my + uy * rr, ur * rr, 0, TAU); ctx.fill();
+    }
+    ctx.restore();
+
+    ctx.strokeStyle = 'rgba(190,205,255,0.5)'; ctx.lineWidth = Math.max(1, s * 0.03);
+    ctx.beginPath(); ctx.arc(mx, my, rr, 0, TAU); ctx.stroke();
+  },
 });

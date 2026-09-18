@@ -102,6 +102,7 @@ const Editor = (deps) => {
     ['Zauberreich', [
       ['ranke', 'Rankenbrücke', 'Die Blüte anstoßen läßt eine Ranke über die Lücke wachsen – für ein paar Sekunden.'],
       ['zauberhut', 'Zauberhüte', 'Wer in einen Hut rollt, kommt aus dem leuchtenden wieder heraus. Das Leuchten wandert.'],
+      ['mondzieher', 'Mondzieher', 'Zieht und stößt im Wechsel. Volle Scheibe zieht, dunkle stößt, Halbmond läßt in Ruhe.'],
     ]],
     ['Die Flut', [
       ['flut', 'Flutbecken', 'Ein Becken, das im Takt vollläuft und wieder leerläuft.'],
@@ -228,6 +229,7 @@ const Editor = (deps) => {
 
     ranke:       [['dauer', 'Wie lange sie trägt', 1.5, 10, 0.25], ['w', 'Breite', 1, 12, 1], ['h', 'Tiefe', 1, 8, 1], null, ['r', 'Wie nah an die Blüte', 0.3, 1.2, 0.05]],
     zauberhut:   [['takt', 'Wie oft das Leuchten wandert', 1, 8, 0.2], ['r', 'Wie groß die Öffnung', 0.25, 0.9, 0.02], null, ['phase', 'Versatz im Takt', 0, 0.95, 0.05]],
+    mondzieher:  [['kraft', 'Wie stark', 3, 18, 0.5], ['r', 'Reichweite', 1.5, 7, 0.1], ['takt', 'Wie lange ein Mondlauf dauert', 3, 14, 0.5], null, ['core', 'Wie dick der Sockel', 0.2, 0.9, 0.05], ['phase', 'Versatz im Takt', 0, 0.95, 0.05]],
 
     flut:        [['w', 'Breite', 3, 16, 1], ['h', 'Tiefe', 3, 16, 1], ['max', 'Wie tief es wird', 1, 4, 1], null, ['takt', 'Sekunden je Stufe', 0.4, 3, 0.1], ['halt', 'Wie lange es voll steht', 0.3, 4, 0.1], ['leer', 'Wie lange es leer steht', 1, 10, 0.5], ['start', 'Wann es losgeht', 0, 8, 0.5]],
     pumpwerk:    [['dauer', 'Wie lange es pumpt', 2, 8, 0.25], ['r', 'Größe', 0.4, 1.5, 0.05], null, ['stufen', 'Wie viele Stufen', 1, 9, 1]],
@@ -557,6 +559,7 @@ const Editor = (deps) => {
                              bluete: { x: Math.max(0.5, tx - 2.5), y: ty + 0.5 } };
       case 'zauberhut': return { type: 'zauberhut', takt: 2.6, r: 0.42, phase: 0,
                                  plaetze: [[x - 3, y], [x, y - 2], [x + 3, y]] };
+      case 'mondzieher': return { type: 'mondzieher', x, y, r: 3.4, kraft: 9, takt: 7, core: 0.4, phase: 0 };
 
       /* --- Die Flut --- */
       case 'flut': return { type: 'flut', x, y, w: 6, h: 6, max: 3, takt: 1.2, halt: 1, leer: 5, start: 2.5 };

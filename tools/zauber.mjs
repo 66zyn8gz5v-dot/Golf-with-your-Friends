@@ -13,6 +13,8 @@
  *   - Wer in einen Hut rollt, kommt aus dem leuchtenden heraus; wer in den leuchtenden rollt,
  *     aus dem nächsten. Es gibt keine Sackgasse.
  *   - Das Leuchten wandert im Takt und ist vorher angekündigt.
+ *   - Der Mondzieher zieht bei voller Scheibe, stößt bei dunkler, läßt beim Halbmond in Ruhe –
+ *     und einen liegenden Ball rührt er überhaupt nicht an.
  */
 import fs from 'node:fs'; import vm from 'node:vm'; import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -23,7 +25,7 @@ for (const f of ['themes', 'courses', 'courses_sea', 'courses_jungle', 'courses_
                  'courses_colosseum', 'courses_clock', 'courses_snow', 'courses_mine', 'courses_flut', 'courses_zauber', 'courses_pro', 'level',
                  'obstacles', 'obstacles_legend', 'obstacles_snow', 'obstacles_mine', 'obstacles_flut', 'obstacles_zauber', 'physics'])
   vm.runInContext(fs.readFileSync(path.join(SRC, `${f}.js`), 'utf8'), ctx);
-const G = vm.runInContext('({buildLevel, makeBall, stepPhysics, RANKE_DAUER, HUT_TAKT, HUT_VORWARN})', ctx);
+const G = vm.runInContext('({buildLevel, makeBall, stepPhysics, RANKE_DAUER, HUT_TAKT, HUT_VORWARN, MOND_TAKT, MOND_RUHE})', ctx);
 
 let fehler = 0;
 const pruef = (name, ok, zusatz = '') => {
@@ -135,6 +137,73 @@ console.log('\nDie Zauberhüte');
   const einzeln = bau([{ type: 'zauberhut', plaetze: [[6, 1.5]] }]);
   const e = einzeln.obstacles.find(o => o.type === 'zauberhut');
   pruef('ein einzelner Hut bleibt wirkungslos statt abzustürzen', !e.bereit);
+}
+
+/* ---------- Der Mondzieher ---------- */
+console.log('\nDer Mondzieher');
+{
+  /* Ein breites Feld statt des schmalen Gangs: Gemessen wird, wie weit der Mond den Ball QUER
+     zu seiner Laufrichtung zieht – auf einer Bahn, die nur eine Kachel breit ist, könnte er das
+     gar nicht zeigen, weil die Bande alles auffinge. */
+  const FELD = ['.'.repeat(22)];
+  for (let r = 1; r < 8; r++) FELD.push('.' + '#'.repeat(20) + '.');
+  FELD.push('.'.repeat(22));
+  FELD[4] = '.T' + '#'.repeat(19) + '.';                 // der Abschlag liegt auf der Spur
+  FELD[7] = '.' + '#'.repeat(18) + 'H#.';                // das Loch weit ab davon, damit nichts einfällt
+  const feld = (hindernisse) => G.buildLevel({ name: 'Mondprobe', par: 3, theme: 'sternenwarte', map: FELD, obstacles: hindernisse });
+
+  /* Der Takt wird absichtlich riesig gewählt: Dann steht die Phase während des ganzen Laufs still,
+     und was gemessen wird, ist die Kraft einer Phase und nicht der Wechsel zwischen zweien.
+     phase 0 = Vollmond, 0.25 = Halbmond, 0.5 = Neumond. */
+  const mond = (phase) => ({ type: 'mondzieher', x: 11, y: 2.5, r: 3.4, kraft: 9, takt: 1e6, core: 0.4, phase });
+
+  // Der Ball läuft auf y = 4.5 entlang, der Mond steht bei y = 2.5 – also oberhalb der Spur.
+  function quer(phase, tempo = 11) {
+    const lv = feld([mond(phase)]);
+    const b = G.makeBall(1.5, 4.5, '#fff', 'none');
+    b.vx = tempo; b.vy = 0;
+    const dt = 1 / 120; let t = 0, ab = 0;
+    for (let i = 0; i < 300; i++) {
+      G.stepPhysics(lv, b, dt, t, true); t += dt;
+      if (Math.abs(b.y - 4.5) > Math.abs(ab)) ab = b.y - 4.5;
+      if (b.x > 18) break;
+    }
+    return ab;                                     // negativ = zum Mond hin, positiv = von ihm weg
+  }
+
+  const voll = quer(0), halb = quer(0.25), neu = quer(0.5);
+  pruef('die volle Scheibe zieht den Ball zu sich', voll < -0.35, `Abweichung ${voll.toFixed(2)} Kacheln`);
+  pruef('die dunkle Scheibe stößt ihn weg', neu > 0.35, `Abweichung ${neu.toFixed(2)} Kacheln`);
+  pruef('der Halbmond läßt ihn fast in Ruhe', Math.abs(halb) < 0.12, `Abweichung ${halb.toFixed(2)} Kacheln`);
+
+  /* Der wichtigste Fall: Ein LIEGENDER Ball darf sich nicht bewegen. Die Kraft des Mondes liegt
+     über der Bodenreibung – ohne die Schranke schöbe er den Ball von allein über die Bahn, und
+     der Spieler sähe zu, statt zu entscheiden. */
+  {
+    const lv = feld([mond(0)]);
+    const b = G.makeBall(9, 4.5, '#fff', 'none');  // in Reichweite, aber in Ruhe
+    b.vx = 0; b.vy = 0;
+    const dt = 1 / 120; let t = 0;
+    for (let i = 0; i < 600; i++) { G.stepPhysics(lv, b, dt, t, true); t += dt; }
+    const weg = Math.hypot(b.x - 9, b.y - 4.5);
+    pruef('einen liegenden Ball rührt er nicht an', weg < 0.02, `bewegt um ${weg.toFixed(3)} Kacheln`);
+  }
+
+  // Die Phase läuft im Takt: voll, halb, dunkel, halb, voll
+  {
+    const lv = feld([{ type: 'mondzieher', x: 11, y: 2.5, takt: 8, phase: 0 }]);
+    const m = lv.obstacles.find(o => o.type === 'mondzieher');
+    const folge = [0, 2, 4, 6, 8].map(s => { m.update(s); return Math.round(m.p * 100) / 100; });
+    pruef('die Scheibe läuft voll → halb → dunkel → halb → voll', folge.join(',') === '1,0,-1,0,1', folge.join(','));
+  }
+
+  // Der Sockel steht im Weg – sonst stünde der Mond auf nichts
+  {
+    const lv = feld([mond(0)]);
+    const m = lv.obstacles.find(o => o.type === 'mondzieher');
+    const out = []; m.circles(out);
+    pruef('der Sockel ist fest', out.length === 1 && out[0].r > 0.2);
+  }
 }
 
 console.log(fehler ? `\n${fehler} Fehler` : '\nalles bestanden');

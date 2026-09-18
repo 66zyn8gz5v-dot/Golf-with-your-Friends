@@ -428,7 +428,7 @@ bahn(GARTEN, 'Das Treibhaus', 'gewaechshaus', f, [
     windrad(21.5, 8.5, blades=2, laenge=1.3, tempo=0.9, stil='broom'),
     pilz(8.5, 4.5, stil='crystal'),
     pilz(8.5, 8.5, stil='crystal'),
-], par=3,
+], par=4,
 intro='Das Gerätehaus steht quer im Weg, und seine Tür geht im Takt auf und zu. Dahinter kehren zwei '
       'Besen gegeneinander – sie drehen in verschiedene Richtungen, also gibt es keinen Augenblick, '
       'in dem beide zugleich aus dem Weg sind. Einer nach dem anderen.')
@@ -457,18 +457,32 @@ intro='Erst die Ranke über den Steg – sie trägt hier eine halbe Sekunde län
 
 # --- 8 ---------------------------------------------------------------------
 # Der Blätterwirbel. Ein Seelenlicht zieht, ein Laubwirbel dreht und wirft aus.
+#
+# ZWEITE FASSUNG. Die erste war ein offener Platz mit einem Beet darin, und der Bot lochte sie
+# JEDES MAL mit einem Schlag – ein Schlag am Beet vorbei, und der Ball lief durch. Eine Bahn, auf
+# der der gerade Weg immer reicht, ist Kulisse. Jetzt stehen zwei Beete versetzt zueinander und vor
+# dem Loch eine Hecke: Der Weg ist ein Zickzack, und das Seelenlicht steht genau in der ersten
+# Kehre, wo man am wenigsten Lust hat, abgelenkt zu werden.
+#
+# DRITTE FASSUNG. Damit war sie zu weit ins andere Extrem gekippt: Der Bot brauchte im Mittel fünf
+# Schläge bei Par 3 und über zwei Minuten. Die Hecke bekommt darum eine Gasse an der Unterkante –
+# wer sie sieht, kommt geradeaus durch –, und Par steht jetzt auf 4. Eine Bahn, die man nur mit
+# Glück in drei schafft, ist nicht schwer, sondern unfair.
 f = leer(30, 15)
 fuell(f, 1, 3, 28, 11)
-fuell(f, 12, 3, 14, 7, '.')           # Beet, das die Sicht nimmt
-setz(f, 3, 5, 'T'); setz(f, 26, 5, 'H')
+fuell(f, 10, 3, 12, 8, '.')           # Beet von oben
+fuell(f, 18, 7, 20, 11, '.')          # Beet von unten
+fuell(f, 23, 8, 24, 10, 'x')          # Hecke vor dem Loch, mit einer Gasse darunter
+setz(f, 3, 5, 'T'); setz(f, 26, 9, 'H')
 bahn(GARTEN, 'Der Blätterwirbel', 'lehrlingsgarten', f, [
     magnet(8.5, 9.5, r=3.0, kraft=7.0, stil='soul'),
-    scheibe_(18.5, 8.5, r=1.8, tempo=1.8, aus=270),
-    pilz(22.5, 10.5),
-], par=3,
-intro='Das Seelenlicht zieht an allem, was an ihm vorbeirollt – wer zu dicht daran vorbeispielt, '
-      'landet woanders als gedacht. Der Laubwirbel dahinter fängt den Ball und wirft ihn immer in '
-      'dieselbe Richtung aus; das ist keine Strafe, das ist eine Abkürzung, wenn man ihn trifft.')
+    scheibe_(15.5, 5.5, r=1.8, tempo=1.8, aus=90),
+    pilz(22.5, 5.5),
+], par=4,
+intro='Zwei Beete stehen versetzt, dazwischen geht es im Zickzack. Das Seelenlicht zieht an allem, '
+      'was an ihm vorbeirollt – ausgerechnet in der ersten Kehre, wo man ohnehin schon aufpassen '
+      'muß. Der Laubwirbel dahinter fängt den Ball und wirft ihn immer nach unten aus; wer ihn '
+      'trifft, spart sich die halbe Bahn.')
 
 # --- 9 ---------------------------------------------------------------------
 # Die Lehrlingsprüfung. Alles, was der Garten kann, hintereinander.

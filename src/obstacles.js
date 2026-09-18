@@ -538,6 +538,7 @@ function createObstacles(defs) {
       // Zauberreich
       case 'ranke': out.push(new Rankenbruecke(d)); break;
       case 'zauberhut': out.push(new Zauberhuete(d)); break;
+      case 'mondzieher': out.push(new Mondzieher(d)); break;
       case 'dial': case 'wanderloch': out.push(new MovingHole(d)); break;
     case 'sharkjump': out.push(new SharkJump(d)); break;
     case 'spikes': out.push(new Spikes(d)); break;
