@@ -533,11 +533,14 @@ const RAUCHER_STOSS = 0.5;       // so lange dauert der Ausbruch
 const RAUCHER_WARN = 1.3;        // so lange vorher sieht man ihn kommen
 const RAUCHER_WEITE = 6.0;       // so weit fliegt der Ball
 const RAUCHER_TEMPO = 7.5;       // und so schnell
+const RAUCHER_SOG = 2.4;         // so weit greift die Anziehung
+const RAUCHER_KRIECH = 0.95;     // und so schnell kriecht der Ball dann hinein
 
 class SchwarzerRaucher {
   constructor(d) {
     Object.assign(this, { r: 1.0, takt: RAUCHER_TAKT, stoss: RAUCHER_STOSS, warn: RAUCHER_WARN,
-                          weite: RAUCHER_WEITE, tempo: RAUCHER_TEMPO, angle: 0, phase: 0, ebene: 0 }, d);
+                          weite: RAUCHER_WEITE, tempo: RAUCHER_TEMPO, sog: RAUCHER_SOG,
+                          angle: 0, phase: 0, ebene: 0 }, d);
     this.type = 'raucher';
     const a = (this.angle * Math.PI) / 180;
     this.dx = Math.cos(a); this.dy = Math.sin(a);
@@ -558,8 +561,30 @@ class SchwarzerRaucher {
   /* launch ist derselbe Haken, den auch Rampe und Aufwind benutzen – er greift vor der Flugphase
      und vor allem vor der Reibung. Ein Wurf über 'force' wäre wieder die Reibungsfalle. */
   launch(ball, events, t) {
-    if (ball.air || ball.rider || ball.sunk || !this.bricht) return;
-    if (Math.hypot(ball.x - this.x, ball.y - this.y) > this.r) return;
+    if (ball.air || ball.rider || ball.sunk) return;
+    const weg = Math.hypot(ball.x - this.x, ball.y - this.y);
+
+    /* DER SOG. Wer neben dem Schlot liegenbleibt, wird langsam hineingezogen: Das heiße Wasser
+       steigt auf, und von unten saugt es nach. Ohne das blieb ein Ball, der knapp danebenlag,
+       für immer liegen und sah dem Ausbruch zu.
+
+       Das steht hier in launch() und nicht in force(), und das ist kein Geschmack: force läuft
+       zwar vor der Reibung, aber die Reibung frißt jede Kraft unter 4,2 Kacheln/s² restlos auf –
+       und „leicht ziehen" heißt gerade, weniger als das zu geben. Darum wird nicht beschleunigt,
+       sondern ein Kriechtempo GESETZT. Es wirkt nur auf einen Ball, der ohnehin fast steht, also
+       bremst es niemanden, der noch rollt, und es endet von selbst: Am Schlot angekommen, liegt
+       der Ball still und wartet auf den nächsten Stoß. */
+    if (!this.bricht && weg > this.r * 0.55 && weg < (this.sog || RAUCHER_SOG)) {
+      const v = Math.hypot(ball.vx, ball.vy);
+      if (v < RAUCHER_KRIECH) {
+        const nah = Math.max(0.2, 1 - (weg - this.r) / ((this.sog || RAUCHER_SOG) - this.r));
+        ball.vx = ((this.x - ball.x) / weg) * RAUCHER_KRIECH * nah;
+        ball.vy = ((this.y - ball.y) / weg) * RAUCHER_KRIECH * nah;
+      }
+    }
+
+    if (!this.bricht) return;
+    if (weg > this.r) return;
     const flug = this.weite / this.tempo;
     ball.vx = this.dx * this.tempo; ball.vy = this.dy * this.tempo;
     ball.vz = (12 * flug) / 2; ball.z = Math.max(ball.z, 0.02); ball.air = true;

@@ -399,43 +399,91 @@ Object.assign(Renderer.prototype, {
     ctx.restore();
   },
 
-  /* Der Schlot selbst: ein schiefer Turm aus verbackenen Mineralien, und darüber die Wolke.
-     Zwischen den Ausbrüchen steigt nur ein Faden; vor dem Ausbruch schwillt er an, und im Stoß
-     schießt die Fahne heraus. Wie stark, sagt die Höhe – nicht die Farbe. */
+  /* DER SCHLOT – ein Körper, kein Scherenschnitt.
+
+     Vorher war er eine flache Form im Bild: zwei Kurven und ein Farbverlauf. Von schräg oben sah
+     das aus wie ein aufgeklebtes Dreieck. Jetzt ist er aus RINGEN gebaut, die aufeinandersitzen,
+     nach oben schmaler werden und dabei seitlich auswandern – daher die Schieflage, die ein
+     Schwarzer Raucher hat, weil er sich über Jahre selbst zusammenbackt.
+
+     DAZU DIE WURFBAHN als gepunktete Linie. Er wirft immer dorthin, wohin er zeigt, und wer das
+     erst beim Ausbruch erfährt, hat keine Wahl gehabt. Die Linie ist die echte Flugparabel –
+     dieselbe Rechnung wie im Wurf selbst, nicht eine hübsche Kurve daneben. */
   drawRaucher(ctx, ob, t) {
     const s = this.scale;
-    const [sx, sy] = this.proj(ob.x, ob.y, 0);
     const a = ob.ansage || 0;
     const stoss = ob.bricht ? Math.sin(Math.min(1, ob.p) * Math.PI) : 0;
     ctx.save();
-    // Schlot
-    const hoehe = s * 1.5;
-    const schlot = ctx.createLinearGradient(sx, sy, sx, sy - hoehe);
-    schlot.addColorStop(0, '#2a2420'); schlot.addColorStop(0.6, '#3e332c'); schlot.addColorStop(1, '#1d1815');
-    ctx.fillStyle = schlot;
-    ctx.beginPath();
-    ctx.moveTo(sx - s * 0.62, sy);
-    ctx.quadraticCurveTo(sx - s * 0.34, sy - hoehe * 0.6, sx - s * 0.22, sy - hoehe);
-    ctx.lineTo(sx + s * 0.2, sy - hoehe);
-    ctx.quadraticCurveTo(sx + s * 0.4, sy - hoehe * 0.55, sx + s * 0.66, sy);
-    ctx.closePath(); ctx.fill();
-    // Krusten
-    ctx.strokeStyle = 'rgba(200,170,140,0.22)'; ctx.lineWidth = Math.max(1, s * 0.035);
-    for (let i = 1; i <= 3; i++) {
-      const y = sy - hoehe * (i / 4);
-      ctx.beginPath(); ctx.moveTo(sx - s * (0.55 - i * 0.09), y); ctx.lineTo(sx + s * (0.58 - i * 0.1), y); ctx.stroke();
+
+    /* Der Sockel: ein Kranz aus verbackenen Brocken, damit der Schlot aus dem Grund WÄCHST und
+       nicht daraufsteht. */
+    this.prism(ctx, this.circlePoly(ob.x, ob.y, 0.92, 9), 0, 0.18, '#4a423a', '#2a241f', { outline: '#171310' });
+    for (let i = 0; i < 6; i++) {
+      const w = (i / 6) * TAU + 0.4;
+      const bx = ob.x + Math.cos(w) * 0.78, by = ob.y + Math.sin(w) * 0.78;
+      this.prism(ctx, this.circlePoly(bx, by, 0.2 + 0.06 * (i % 3), 6), 0.02, 0.2 + 0.08 * (i % 2),
+                 '#554a40', '#302822', { outline: '#171310' });
     }
-    // Die Fahne
+
+    /* Der Turm: neun Ringe, jeder schmaler und leicht versetzt. Der Versatz ist die Schieflage. */
+    const ringe = 9, hoehe = 1.9;
+    let rx = ob.x, ry = ob.y;
+    for (let i = 0; i < ringe; i++) {
+      const u = i / ringe, z = u * hoehe, dz = hoehe / ringe * 1.08;
+      const r = 0.62 * (1 - u * 0.62);
+      rx += 0.055 * Math.sin(i * 0.9 + 1.2);
+      ry += 0.045 * Math.cos(i * 0.7);
+      const hell = 1 - u * 0.25;
+      const oben = `rgb(${Math.round(78 * hell)},${Math.round(66 * hell)},${Math.round(56 * hell)})`;
+      const seite = `rgb(${Math.round(44 * hell)},${Math.round(36 * hell)},${Math.round(30 * hell)})`;
+      this.prism(ctx, this.circlePoly(rx, ry, r, 10), z, dz, oben, seite, { outline: '#14100d' });
+      if (i % 3 === 1) {   // Krusten: ein Wulst, der übersteht
+        this.prism(ctx, this.circlePoly(rx, ry, r * 1.22, 10), z + dz * 0.35, dz * 0.3,
+                   '#6b5c4c', '#38302a', { outline: '#14100d' });
+      }
+    }
+    // Die Mündung – ein dunkles Loch, das bei der Ansage glüht
+    const muendZ = hoehe + 0.05, muendR = 0.62 * (1 - 0.62) * 0.8;
+    const [mx, my] = this.proj(rx, ry, muendZ);
+    ctx.fillStyle = `rgb(${Math.round(20 + 160 * Math.max(a, stoss))},${Math.round(14 + 70 * Math.max(a, stoss))},12)`;
+    ctx.beginPath(); ctx.ellipse(mx, my, s * muendR, s * muendR * this.cam.tilt, 0, 0, TAU); ctx.fill();
+    ctx.strokeStyle = '#6b5c4c'; ctx.lineWidth = Math.max(1, s * 0.04); ctx.stroke();
+
+    /* DIE WURFBAHN. Dieselbe Rechnung wie im Wurf: waagerecht mit 'tempo', senkrecht mit der
+       Schwerkraft 12, Flugzeit 'weite/tempo'. Gepunktet wie die offenen Kanten im Schneeberg. */
+    const flug = (ob.weite || 6) / (ob.tempo || 7.5);
+    const vz0 = (12 * flug) / 2;
+    const bahn = [];
+    for (let i = 0; i <= 16; i++) {
+      const tt = (i / 16) * flug;
+      const px = ob.x + (ob.dx || 1) * (ob.tempo || 7.5) * tt;
+      const py = ob.y + (ob.dy || 0) * (ob.tempo || 7.5) * tt;
+      bahn.push(this.proj(px, py, Math.max(0.02, vz0 * tt - 6 * tt * tt) + 0.1));
+    }
+    ctx.setLineDash([s * 0.26, s * 0.18]);
+    ctx.strokeStyle = `rgba(255,198,140,${0.35 + 0.5 * Math.max(a, stoss)})`;
+    ctx.lineWidth = Math.max(1.5, s * 0.07);
+    ctx.beginPath(); bahn.forEach((q, i) => i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1])); ctx.stroke();
+    ctx.setLineDash([]);
+    // Das Ende der Bahn bekommt einen Ring: dort kommt man auf
+    const [ex, ey] = bahn[bahn.length - 1];
+    ctx.strokeStyle = `rgba(255,198,140,${0.3 + 0.45 * Math.max(a, stoss)})`;
+    ctx.lineWidth = Math.max(1.5, s * 0.05);
+    ctx.beginPath(); ctx.ellipse(ex, ey, s * 0.38, s * 0.38 * this.cam.tilt, 0, 0, TAU); ctx.stroke();
+
+    /* Die Fahne. Zwischen den Ausbrüchen steigt nur ein Faden; vor dem Ausbruch schwillt er an,
+       im Stoß schießt sie heraus. Wie stark, sagt die Höhe – nicht die Farbe. */
     const menge = Math.max(a * 0.45, stoss);
     if (menge > 0.02) {
       ctx.globalCompositeOperation = 'lighter';
-      for (let i = 0; i < 10; i++) {
-        const u = i / 10;
-        const hy = sy - hoehe - u * s * (1.2 + 6.5 * menge);
-        const hx = sx + Math.sin(t * 2.1 + i * 0.8) * s * 0.3 * u;
-        const r = s * (0.18 + 0.5 * u) * (0.5 + menge);
-        ctx.fillStyle = `rgba(${40 + 120 * stoss | 0},${34 + 60 * stoss | 0},${30 + 30 * stoss | 0},${(0.3 - 0.24 * u) * (0.4 + menge)})`;
-        ctx.beginPath(); ctx.arc(hx, hy, r, 0, TAU); ctx.fill();
+      for (let i = 0; i < 12; i++) {
+        const u = i / 12;
+        const [wx, wy] = this.proj(rx + Math.sin(t * 2.1 + i * 0.8) * 0.3 * u,
+                                   ry + Math.cos(t * 1.7 + i * 0.6) * 0.22 * u,
+                                   muendZ + u * (0.8 + 4.2 * menge));
+        const r = s * (0.16 + 0.46 * u) * (0.5 + menge);
+        ctx.fillStyle = `rgba(${40 + 120 * stoss | 0},${34 + 60 * stoss | 0},${30 + 30 * stoss | 0},${(0.3 - 0.23 * u) * (0.4 + menge)})`;
+        ctx.beginPath(); ctx.arc(wx, wy, r, 0, TAU); ctx.fill();
       }
       ctx.globalCompositeOperation = 'source-over';
     }
