@@ -158,8 +158,8 @@ const FLUT_COURSES = [
     ],
   },
   {
-    name: 'Das Schöpfrad', par: 4, theme: 'flachwasser', tiefe: 0.413,
-    intro: 'Ein Torhaus steht quer im Weg, und davor dreht die Strömung ein großes Schöpfrad. Steht eine Schaufel unten, kommt niemand hindurch – einen Takt warten, oder den Bogen darunter nehmen. Der ist länger, aber er ist immer offen.',
+    name: 'Die Wasserwand', par: 4, theme: 'flachwasser', tiefe: 0.413,
+    intro: 'Quer im Weg liegt ein Gitterrost, und aus ihm schießt im Takt eine Wand aus Wasser hoch. Solange sie steht, kommt niemand hindurch – einen Takt warten, oder den Bogen darunter nehmen. Der ist länger, aber immer offen.',
     autoDecor: { density: 0.09, seed: 71 },
     schwebDecor: { density: 0.025, seed: 78 },
     map: [
@@ -188,7 +188,7 @@ const FLUT_COURSES = [
       '..........................................',
     ],
     obstacles: [
-      { type: 'windmill', style: 'schoepfrad', x: 20.5, y: 11.5, axis: 'y', w: 6.0, gap: 1.8, depth: 1.4, height: 3.6, blades: 8, len: 1.35, speed: 0.9, phase: 0.0 },
+      { type: 'windmill', style: 'wasserwand', x: 20.5, y: 11.5, axis: 'y', w: 5.0, gap: 5.0, depth: 1.0, height: 1.0, blades: 4, len: 0.6, speed: 0.9, phase: 0.0 },
       { type: 'stroemung', x: 17.5, y: 14.0, w: 5, h: 2, angle: 0, tempo: 4.2 },
     ],
   },
@@ -263,7 +263,7 @@ const FLUT_COURSES = [
   },
   {
     name: 'Die Kanalisation', par: 4, theme: 'daemmerzone', tiefe: 0.633,
-    intro: 'Gleich am Anfang ein Schöpfrad im Torhaus, dann vier Pfeiler im Platz, und über dem Brunnen dreht sich das Wasser. In der Ecke liegt ein Abflußgitter: Man spielt nicht hinein, man landet darin – und die Leitung setzt einen hinter dem Platz wieder ab.',
+    intro: 'Gleich am Anfang eine Wasserwand quer im Weg, dann vier Pfeiler im Platz, und über dem Brunnen dreht sich das Wasser. In der Ecke liegt ein Abflußgitter: Man spielt nicht hinein, man landet darin – und die Leitung setzt einen hinter dem Platz wieder ab.',
     autoDecor: { density: 0.09, seed: 113 },
     schwebDecor: { density: 0.025, seed: 120 },
     map: [
@@ -294,7 +294,7 @@ const FLUT_COURSES = [
     obstacles: [
       { type: 'strudel', x: 22.0, y: 11.0, r: 3.4, dreh: -1 },
       { type: 'abflussrohr', pair: 'A', angle: 0 },
-      { type: 'windmill', style: 'schoepfrad', x: 9.5, y: 6.5, axis: 'y', w: 3.6, gap: 1.5, depth: 1.2, height: 3.2, blades: 8, len: 1.15, speed: 1.05, phase: 0.0 },
+      { type: 'windmill', style: 'wasserwand', x: 9.5, y: 6.5, axis: 'y', w: 3.0, gap: 3.0, depth: 1.0, height: 1.0, blades: 4, len: 0.6, speed: 1.05, phase: 0.0 },
     ],
   },
   {
@@ -336,7 +336,7 @@ const FLUT_COURSES = [
   },
   {
     name: 'Der Marktplatz', par: 5, theme: 'daemmerzone', tiefe: 0.78,
-    intro: 'Sechs Häuserecken stehen auf dem Platz – hier prallt man von allem ab, und genau so kommt man weiter. Über dem Brunnen dreht sich das Wasser, in der Ecke liegt das Abflußgitter, und am Ausgang schwingt der Anker – hinter ihm das letzte Schöpfrad.',
+    intro: 'Sechs Häuserecken stehen auf dem Platz – hier prallt man von allem ab, und genau so kommt man weiter. Über dem Brunnen dreht sich das Wasser, in der Ecke liegt das Abflußgitter, und am Ausgang schwingt der Anker – hinter ihm die letzte Wasserwand.',
     autoDecor: { density: 0.09, seed: 149 },
     schwebDecor: { density: 0.025, seed: 156 },
     map: [
@@ -368,7 +368,7 @@ const FLUT_COURSES = [
       { type: 'strudel', x: 21.5, y: 12.0, r: 2.8, dreh: -1 },
       { type: 'abflussrohr', pair: 'B', angle: 0 },
       { type: 'ankerkette', x: 38.5, y: 13.5, len: 4.0, amp: 48, ruhe: 90, takt: 5.2 },
-      { type: 'windmill', style: 'schoepfrad', x: 37.5, y: 17.5, axis: 'y', w: 3.6, gap: 1.5, depth: 1.2, height: 3.2, blades: 8, len: 1.15, speed: 0.85, phase: 1.1 },
+      { type: 'windmill', style: 'wasserwand', x: 37.5, y: 17.5, axis: 'y', w: 3.0, gap: 3.0, depth: 1.0, height: 1.0, blades: 4, len: 0.6, speed: 0.85, phase: 1.1 },
     ],
   },
   {

@@ -284,17 +284,17 @@ def abfluss(paar, angle=0):
     return {'type': 'abflussrohr', 'pair': paar, 'angle': angle}
 
 
-def schoepfrad(x, y, achse='y', breit=6.0, spalt=1.8, tiefe_=1.4, hoch=3.6,
-               schaufeln=8, rad=1.35, tempo=0.9, phase=0.0):
-    """DAS SCHÖPFRAD – die Mühle der versunkenen Stadt.
+def wasserwand(x, y, achse='y', spalt=5.0, takte=4, tempo=0.9, phase=0.0):
+    """DIE WASSERWAND – die Mühle der versunkenen Stadt.
 
-    Dieselbe Maschine wie die Windmühle: ein Torhaus, dessen Durchgang im Takt der Flügel zufällt.
-    Nur treibt sie hier unten kein Wind, sondern die Strömung, und die Flügel sind die Schaufeln
-    eines hölzernen Rades. 'achse' sagt, in welche Richtung sich das HAUS erstreckt – bei 'y'
-    läuft der Weg also in x-Richtung hindurch."""
-    return {'type': 'windmill', 'style': 'schoepfrad', 'x': x, 'y': y, 'axis': achse,
-            'w': breit, 'gap': spalt, 'depth': tiefe_, 'height': hoch,
-            'blades': schaufeln, 'len': rad, 'speed': tempo, 'phase': phase}
+    Dieselbe Maschine wie die Windmühle: ein Torhaus, dessen Durchgang im Takt zufällt. Nur steht
+    hier kein Flügel im Weg, sondern Wasser – es schießt aus einem Gitterrost im Boden hoch und
+    sinkt wieder. Ein GEBÄUDE hat sie nicht, und darum auch keine Mauern: 'spalt' muß so breit
+    sein wie der Weg, sonst käme man neben der Wand vorbei. 'takte' ist, wie oft je Umdrehung
+    gesperrt wird; vier ist ein ruhiger Rhythmus."""
+    return {'type': 'windmill', 'style': 'wasserwand', 'x': x, 'y': y, 'axis': achse,
+            'w': spalt, 'gap': spalt, 'depth': 1.0, 'height': 1.0,
+            'blades': takte, 'len': 0.6, 'speed': tempo, 'phase': phase}
 
 
 def wrackkanone(x, y, richtung=0, schwenk=16, weite=9.0, tempo=0.9, phase=0.0, laden=0.7):
@@ -641,7 +641,7 @@ def pruefe(b):
                               f'(Schwenk {round(math.degrees(w))}°, Weite {o["range"]})')
                 break
 
-    # DAS SCHÖPFRAD. Ein Torhaus, das nicht auf dem Weg steht, ist eine Kulisse: Der Ball geht
+    # DIE WASSERWAND. Ein Torhaus, das nicht auf dem Weg steht, ist eine Kulisse: Der Ball geht
     # zwei Kacheln daneben vorbei, und die Schaufeln drehen sich für niemanden. Geprüft wird
     # darum, daß der Durchgang selbst auf Boden liegt und daß der Weg auch wirklich hindurchführt –
     # also auf beiden Seiten des Hauses Boden ist.
@@ -650,14 +650,14 @@ def pruefe(b):
         durch = int(o['x']), int(o['y'])
         if not (0 <= durch[1] < len(karte) and 0 <= durch[0] < len(karte[0])
                 and karte[durch[1]][durch[0]] in TROCKEN):
-            fehler.append('ein Schöpfrad hat keinen Boden im Durchgang')
+            fehler.append('eine Wasserwand hat keinen Boden im Durchgang')
             continue
         quer = (1, 0) if o.get('axis', 'y') == 'y' else (0, 1)
         for seite in (-1, 1):
             px = durch[0] + quer[0] * seite * 2
             py = durch[1] + quer[1] * seite * 2
             if not (0 <= py < len(karte) and 0 <= px < len(karte[0]) and karte[py][px] in TROCKEN):
-                fehler.append(f'ein Schöpfrad steht nicht IM Weg – auf {px}/{py} ist kein Boden, '
+                fehler.append(f'eine Wasserwand steht nicht IM Weg – auf {px}/{py} ist kein Boden, '
                               'also führt der Weg daran vorbei statt hindurch')
                 break
 
@@ -666,7 +666,7 @@ def pruefe(b):
               'ankerkette', 'wracktor', 'abflussrohr'}
     # Die Wrackkanone ist keine eigene Hindernisart, sondern die Kanone in anderer Gestalt – für
     # die Welt zählt sie trotzdem als ihre, denn so sieht sie nirgendwo sonst aus.
-    if not any(o['type'] in eigene or o.get('style') in ('wrackkanone', 'schoepfrad')
+    if not any(o['type'] in eigene or o.get('style') in ('wrackkanone', 'wasserwand')
                for o in b['obstacles']):
         fehler.append('keine Maschine der Welt auf dieser Bahn')
 
@@ -794,10 +794,10 @@ bahn('Der Kessel', 'flachwasser', f, par=4,
            'Loch liegt in einer Nische, deren Mund nach unten zeigt: Man muß von unten hinauf.',
      hindernisse=[strudel(19.5, 10.0, 3.4, dreh=1)])
 
-# --- 5: das Schöpfrad. EIN TORHAUS QUER IM WEG, und davor dreht sich ein hölzernes Rad. Steht
-#        eine Schaufel unten, ist der Durchgang zu – dann wartet man einen Takt oder nimmt den
-#        Bogen darunter. Es ist die Mühle dieser Welt, und wie jede Maschine bekommt sie ihre
-#        eigene Bahn, bevor sie sich mit anderen mischt.
+# --- 5: die Wasserwand. EIN GITTERROST QUER IM WEG, und aus ihm schießt im Takt eine Wand aus
+#        Wasser hoch. Solange sie steht, kommt niemand hindurch – dann wartet man einen Takt oder
+#        nimmt den Bogen darunter. Es ist die Mühle dieser Welt, und wie jede Maschine bekommt sie ihre eigene
+#        Bahn, bevor sie sich mit anderen mischt.
 f = meer(42, 23)
 rinne(f, 3, 11, 30, 11, b=5)       # die Hauptgasse, mitten hindurch
 fuell(f, 30, 5, 38, 15)            # die Kammer dahinter, in der das Loch liegt
@@ -807,11 +807,11 @@ rinne(f, 12, 17, 27, 17, b=4)
 rinne(f, 27, 11, 27, 17, b=4)
 mauer(f, 0, 0, 41, 22)
 setz(f, 5, 11, 'T'); setz(f, 36, 7, 'H')
-bahn('Das Schöpfrad', 'flachwasser', f, par=4,
-     intro='Ein Torhaus steht quer im Weg, und davor dreht die Strömung ein großes Schöpfrad. '
-           'Steht eine Schaufel unten, kommt niemand hindurch – einen Takt warten, oder den Bogen '
-           'darunter nehmen. Der ist länger, aber er ist immer offen.',
-     hindernisse=[schoepfrad(20.5, 11.5, achse='y', breit=6.0, spalt=1.8),
+bahn('Die Wasserwand', 'flachwasser', f, par=4,
+     intro='Quer im Weg liegt ein Gitterrost, und aus ihm schießt im Takt eine Wand aus Wasser '
+           'hoch. Solange sie steht, kommt niemand hindurch – einen Takt warten, oder den Bogen '
+           'darunter nehmen. Der ist länger, aber immer offen.',
+     hindernisse=[wasserwand(20.5, 11.5, achse='y', spalt=5.0),
                   strom(15, 13, 19, 14, 0, tempo=4.2)])
 
 # --- 5: der Seegraswald. ENGE GASSEN zwischen Mauern, versetzt wie ein Zickzack. Hier zählt der
@@ -868,12 +868,11 @@ mauer(f, 0, 0, 43, 22)
 setz(f, 5, 6, 'T'); setz(f, 38, 16, 'H')
 setz(f, 16, 17, 'A'); setz(f, 34, 16, 'a')
 bahn('Die Kanalisation', 'daemmerzone', f, par=4,
-     intro='Gleich am Anfang ein Schöpfrad im Torhaus, dann vier Pfeiler im Platz, und über dem '
+     intro='Gleich am Anfang eine Wasserwand quer im Weg, dann vier Pfeiler im Platz, und über dem '
            'Brunnen dreht sich das Wasser. In der Ecke liegt ein Abflußgitter: Man spielt nicht '
            'hinein, man landet darin – und die Leitung setzt einen hinter dem Platz wieder ab.',
      hindernisse=[strudel(22.0, 11.0, 3.4, dreh=-1), abfluss('A', angle=0),
-                  schoepfrad(9.5, 6.5, achse='y', breit=3.6, spalt=1.5, tiefe_=1.2,
-                             hoch=3.2, rad=1.15, tempo=1.05)])
+                  wasserwand(9.5, 6.5, achse='y', spalt=3.0, tempo=1.05)])
 
 # --- 8: die Kaimauer. HALB UND HALB, und das ist der ganze Reiz: links die Mauer, an der man
 #        entlangspielen kann, rechts das offene Meer, in das man fällt.
@@ -913,14 +912,13 @@ setz(f, 14, 18, 'B'); setz(f, 38, 17, 'b')
 bahn('Der Marktplatz', 'daemmerzone', f, par=5,
      intro='Sechs Häuserecken stehen auf dem Platz – hier prallt man von allem ab, und genau so '
            'kommt man weiter. Über dem Brunnen dreht sich das Wasser, in der Ecke liegt das '
-           'Abflußgitter, und am Ausgang schwingt der Anker – hinter ihm das letzte Schöpfrad.',
+           'Abflußgitter, und am Ausgang schwingt der Anker – hinter ihm die letzte Wasserwand.',
      # Kein Becken: Der Platz ist offen, man geht zwei Kacheln daneben vorbei. Drei Maschinen
      # stehen ohnehin darauf.
      hindernisse=[strudel(21.5, 12.0, 2.8, dreh=-1),
                   abfluss('B', angle=0),
                   ankerkette(38.5, 13.5, len_=4.0, ruhe=90, takt=5.2),
-                  schoepfrad(37.5, 17.5, achse='y', breit=3.6, spalt=1.5, tiefe_=1.2,
-                             hoch=3.2, rad=1.15, tempo=0.85, phase=1.1)])
+                  wasserwand(37.5, 17.5, achse='y', spalt=3.0, tempo=0.85, phase=1.1)])
 
 # ---------------------------------------------------------------- Meeresgrund
 # --- 10: die Schlotebene. Unten ein STEG über Wasser mit dem Raucher, oben eine GEMAUERTE Ebene.

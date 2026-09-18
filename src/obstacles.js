@@ -246,9 +246,13 @@ class Windmill {
     // overlap: die Gebäudehälften reichen in die Randmauern hinein, damit keine Lücke bleibt
     const ax = this.axis === 'x';
     const bw = (this.w - this.gap) / 2 + this.overlap, off = this.gap / 2 + bw / 2;
-    this.blocks = ax
-      ? [rectPoly(this.x - off, this.y, bw, this.depth), rectPoly(this.x + off, this.y, bw, this.depth)]
-      : [rectPoly(this.x, this.y - off, this.depth, bw), rectPoly(this.x, this.y + off, this.depth, bw)];
+    /* Die Wasserwand hat KEIN Gebäude: Sie steht frei über dem Weg, und wenn kein Haus zu sehen
+       ist, darf auch keine Mauer im Weg stehen – sonst prallt der Ball an etwas ab, das niemand
+       malt. Es bleiben nur die beiden Sperren, und die gelten nur, solange das Wasser steht. */
+    this.blocks = this.style === 'wasserwand' ? []
+      : ax
+        ? [rectPoly(this.x - off, this.y, bw, this.depth), rectPoly(this.x + off, this.y, bw, this.depth)]
+        : [rectPoly(this.x, this.y - off, this.depth, bw), rectPoly(this.x, this.y + off, this.depth, bw)];
     // Türsegmente (beide Seiten des Durchgangs), nur aktiv wenn versperrt
     const g = this.gap / 2, dd = this.depth / 2;
     this.doors = ax
