@@ -1730,6 +1730,9 @@
     snowfoot: 'tanne', snowrock: 'landscape', glacier: 'ac_unit', summit: 'filter_hdr',
     // Zwergenmine
     mundloch: 'sonne', stollen: 'flashlight_on', kristall: 'diamond', schmelze: 'local_fire_department',
+    // Die Flut – vier Abschnitte, von der Wasserlinie bis zum Grund
+    wasserlinie: 'sailing', flachwasser: 'water_drop', daemmerzone: 'dark_mode',
+    meeresgrund: 'local_fire_department',
     // Kolosseum, Tüftlerreich, Wüste
     colosseum: 'stadium', palace: 'temple_buddhist', desert: 'sonne',
   };
