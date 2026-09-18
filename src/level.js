@@ -93,6 +93,36 @@ function bauFlaeche(rows, W, H, def) {
   return { tiles, at, isFloor, segs, walls, blocks, tee, cup };
 }
 
+/* ---------- Der Blick folgt dem WEG, nicht der Luftlinie ----------
+   Die Kamera hat immer geradewegs aufs Loch geschaut. Auf einer offenen Bahn ist das richtig, in
+   Gassen ist es falsch: Dort liegt das Loch hinter einer Mauer, und man sieht die Wand statt der
+   Gasse, in der man gerade spielt. Im Seegraswald der Flut stand die Kamera darum quer zur Bahn.
+
+   Darum rechnet jede Fläche einmal aus, wie weit jede Kachel vom Loch entfernt ist – ÜBER DEN
+   BODEN gemessen, nicht durch die Luft. Die Kamera schaut dann ein Stück diesen Weg entlang. Auf
+   einer offenen Bahn ist das dieselbe Richtung wie vorher, in einer Gasse die Gasse hinunter. */
+const WEG_NACHBARN = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+
+function wegFeld(fl, W, H, cup) {
+  if (!cup) return null;
+  const hx = Math.floor(cup.x), hy = Math.floor(cup.y);
+  if (!fl.isFloor(hx, hy)) return null;
+  const d = new Int32Array(W * H).fill(-1);
+  d[hy * W + hx] = 0;
+  const schlange = [hy * W + hx];
+  for (let i = 0; i < schlange.length; i++) {
+    const k = schlange[i], x = k % W, y = (k - x) / W;
+    for (const [ox, oy] of WEG_NACHBARN) {
+      const nx = x + ox, ny = y + oy;
+      if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
+      const nk = ny * W + nx;
+      if (d[nk] !== -1 || !fl.isFloor(nx, ny)) continue;
+      d[nk] = d[k] + 1; schlange.push(nk);
+    }
+  }
+  return d;
+}
+
 function buildLevel(def) {
   const rows = def.map;
   const H = rows.length;
@@ -189,6 +219,51 @@ function buildLevel(def) {
     /* Die Kachel einer bestimmten Ebene – die Turbine muss wissen, ob oben überhaupt Boden ist. */
     charAtEbene(n, x, y) { const fl = this.flaechen[n]; return fl ? fl.at(Math.floor(x), Math.floor(y)) : '.'; },
     isFloorChar(c) { return FLOOR_CHARS.has(c); },
+    /* Ein Punkt ein Stück weit den Weg zum Loch entlang – der Blickpunkt der Kamera. Liegt das
+       Loch auf einer anderen Ebene oder der Ball neben jedem Weg, gibt es keinen: Dann bleibt es
+       bei der Luftlinie, und das ist auch richtig so.
+
+       Unter mehreren Nachbarn, die gleich weit ans Loch heranführen, gewinnt der, der ihm auch in
+       der Luftlinie am nächsten liegt. Ohne diese Regel liefe der Blick auf einer offenen Fläche
+       erst ganz nach rechts und dann nach unten, statt schräg – die Kachelentfernung kennt keine
+       Schräge, die Kamera soll sie aber zeigen. */
+    wegPunkt(x, y, weite = 6) {
+      if (!this.cup || this.ebene !== this.cupEbene) return null;
+      const fl = this.aktiv, W = this.W, H = this.H;
+      /* Sieht man das Loch, schaut man es an. Nur wenn etwas dazwischensteht – eine Mauer, ein
+         Klotz, offenes Wasser –, lohnt der Umweg über den Weg. Sonst bekäme eine ganz offene Bahn
+         eine schiefe Kamera: Kachelentfernungen kennen keine Schräge, und ein Weg über sechs
+         Kacheln liefe erst geradeaus und böge dann ab, wo die Luftlinie längst schräg läuft. */
+      const lx = this.cup.x - x, ly = this.cup.y - y;
+      const schritte = Math.max(2, Math.round(Math.hypot(lx, ly) * 4));
+      let frei = true;
+      for (let i = 1; i < schritte && frei; i++) {
+        const u = i / schritte;
+        if (!fl.isFloor(Math.floor(x + lx * u), Math.floor(y + ly * u))) frei = false;
+      }
+      if (frei) return null;
+      if (fl._weg === undefined) fl._weg = wegFeld(fl, W, H, this.cup);
+      const d = fl._weg;
+      if (!d) return null;
+      let cx = Math.floor(x), cy = Math.floor(y);
+      if (cx < 0 || cy < 0 || cx >= W || cy >= H || d[cy * W + cx] < 0) return null;
+      const hx = Math.floor(this.cup.x), hy = Math.floor(this.cup.y);
+      for (let i = 0; i < weite; i++) {
+        const hier = d[cy * W + cx];
+        if (hier === 0) break;
+        let bx = -1, by = -1, nah = Infinity;
+        for (const [ox, oy] of WEG_NACHBARN) {
+          const nx = cx + ox, ny = cy + oy;
+          if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
+          if (d[ny * W + nx] !== hier - 1) continue;
+          const e = (nx - hx) * (nx - hx) + (ny - hy) * (ny - hy);
+          if (e < nah) { nah = e; bx = nx; by = ny; }
+        }
+        if (bx < 0) break;
+        cx = bx; cy = by;
+      }
+      return { x: cx + 0.5, y: cy + 0.5 };
+    },
   };
   level.aktiv = unten;
   for (const ob of obstacles) ob.level = level;

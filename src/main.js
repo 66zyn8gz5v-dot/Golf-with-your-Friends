@@ -1773,7 +1773,12 @@
        Mitte der Bahn. Boule setzt den Blick zwar selbst (faceZiel), aber faceCup wird von einem
        halben Dutzend Stellen gerufen, und eine davon ohne Loch hieße ein Absturz mitten im Spiel. */
     const mitte = { x: state.level.W / 2, y: state.level.H / 2 };
-    const c = zone ? zone.look : (state.level.cup || state.level.goal || mitte);
+    /* Ohne eigene Blickzone schaut die Kamera den WEG entlang statt auf die Luftlinie zum Loch.
+       In einer Gasse liegt das Loch hinter der Mauer, und dann sah man die Mauer statt der Bahn –
+       genau das war im Seegraswald der Flut zu sehen. Auf einer offenen Bahn ist beides dieselbe
+       Richtung, dort ändert sich nichts. */
+    const weg = zone ? null : (state.level.wegPunkt ? state.level.wegPunkt(b.x, b.y) : null);
+    const c = zone ? zone.look : (weg || state.level.cup || state.level.goal || mitte);
     state.camTheta = thetaTowards(b.x, b.y, c.x, c.y);
   }
   function setCamMode(mode) {
