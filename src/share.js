@@ -21,7 +21,12 @@ const Share = (() => {
 
   /* ---------- Prüfung ----------
      Erlaubt ist nur, was das Spiel kennt. Alles andere fällt weg. */
-  const KARTE = new Set(['#', 's', 'i', 'w', 'l', 'x', 'o', '.', 'T', 'H']);
+  /* Die Buchstaben A–F sind die Plätze der Maschinen, die zwei Felder brauchen: Löwentor,
+     Kupferrohr, Abflußrohr. Groß ist der Einlauf (begehbarer Boden), klein der Auslauf (kein
+     Boden – von außen eine Wand). Seit der Baumodus sie setzen kann, dürfen sie auch geteilt
+     werden; das Spiel kennt sie ohnehin, level.js führt sie in FLOOR_CHARS. */
+  const KARTE = new Set(['#', 's', 'i', 'w', 'l', 'x', 'o', '.', 'T', 'H',
+    'A', 'B', 'C', 'D', 'E', 'F', 'a', 'b', 'c', 'd', 'e', 'f']);
   const TYPEN = new Set(['bumper', 'rotor', 'gate', 'mover', 'wind', 'ramp', 'boost', 'windmill',
     'cannon', 'magnet', 'turntable', 'potion', 'portal', 'wall', 'field', 'rail', 'wave',
     'sharkjump', 'door', 'cauldron', 'spikes', 'switch', 'trapdoor', 'guillotine', 'lightning',
@@ -34,7 +39,9 @@ const Share = (() => {
     // Die Maschinen der Zwergenmine
     'sprengladung', 'kippbuehne', 'grubenlampe', 'bruchwand', 'lavafontaene',
     // Die versunkene Stadt
-    'flut', 'pumpwerk', 'stroemung', 'strudel', 'angler', 'muschel', 'tangwald', 'raucher', 'ankerkette', 'wracktor', 'abflussrohr']);
+    'flut', 'pumpwerk', 'stroemung', 'strudel', 'angler', 'muschel', 'tangwald', 'raucher', 'ankerkette', 'wracktor', 'abflussrohr',
+    // Kolosseum und Schmelze – seit dem Baumodus auch von Hand zu setzen
+    'liongate', 'wandergate', 'firetower', 'imperialbox', 'giessloeffel']);
   const W_MIN = 6, W_MAX = 48, H_MIN = 4, H_MAX = 36;
   const OBJ_MAX = 120, DEKOR_MAX = 120, FELDER_MAX = 24;
 

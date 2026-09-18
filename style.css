@@ -464,40 +464,93 @@ table.scores td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .cbtn.testing { display: none; background: rgba(60, 30, 90, 0.8); border-color: #c77dff; }
 body.testing .cbtn.testing { display: inline-block; }
 body.editing #hud, body.editing #scoreboard, body.editing #hint, body.editing #power, body.editing .cbtn.creative { display: none; }
+/* Die Spielknöpfe am unteren Rand liegen im Baumodus genau unter der Werkzeugleiste und schauen
+   halb darunter hervor. Gebraucht werden sie dort auch nicht: Drehen, Zoomen und „Ganze Bahn“
+   stehen in der Gruppe „Ansicht“, der Weg zurück im Blatt „Speichern“. */
+body.editing #controls { display: none; }
+/* Der Baumodus: Leiste UNTEN, nicht rechts. Auf dem iPad hat die alte Spalte am rechten Rand ein
+   Viertel der Bahn weggenommen; unten bleibt sie in voller Breite stehen, und die Knöpfe liegen
+   dort, wo der Daumen ohnehin ist. Drei Reihen, mehr nie: Hinweis, Werkzeuge, Gruppen + Handgriffe. */
 #editor-panel {
-  display: none; position: fixed; right: 12px; top: 12px; bottom: 12px; width: 270px; max-width: calc(100vw - 24px);
-  background: rgba(20, 16, 40, 0.88); border: 2px solid rgba(255, 215, 120, 0.55); border-radius: 12px;
-  color: #f4efe6; font-size: 13px; overflow: hidden; box-shadow: 0 4px 14px rgba(0,0,0,0.35); z-index: 5;
+  display: none; position: fixed; left: 0; right: 0; bottom: 0;
+  background: rgba(20, 16, 40, 0.94); border-top: 2px solid rgba(255, 215, 120, 0.55);
+  color: #f4efe6; font-size: 13px; box-shadow: 0 -4px 14px rgba(0,0,0,0.4); z-index: 5;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 body.editing #editor-panel { display: flex; flex-direction: column; }
-#editor-panel.collapsed { bottom: auto; width: auto; background: rgba(20, 16, 40, 0.6); }
-#editor-panel.collapsed .ed-body, #editor-panel.collapsed .ed-tabs, #editor-panel.collapsed .ed-foot, #editor-panel.collapsed .ed-head b, #editor-panel.collapsed #ed-view { display: none; }
-#editor-panel.collapsed .ed-head { border-bottom: none; padding: 6px; }
-#editor-panel .ed-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 8px 10px; font-size: 15px; }
-#editor-panel .ed-head span { display: flex; gap: 4px; }
-#editor-panel .ed-tabs { display: flex; border-top: 1px solid rgba(255,215,120,0.3); border-bottom: 1px solid rgba(255,215,120,0.3); }
-#editor-panel .ed-tab { flex: 1; font: inherit; font-weight: bold; color: #cbbfe6; background: rgba(0,0,0,0.25); border: none; border-right: 1px solid rgba(255,215,120,0.2); padding: 8px 0; cursor: pointer; }
-#editor-panel .ed-tab:last-child { border-right: none; }
-#editor-panel .ed-tab.sel { color: #3a2200; background: #ffd166; }
-#editor-panel .ed-body { overflow-y: auto; padding: 6px 10px 10px; flex: 1; }
-#editor-panel .ed-title { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: #ffd98a; margin: 10px 0 4px; }
-#editor-panel .ed-grid { display: flex; flex-wrap: wrap; gap: 4px; }
-#editor-panel .ed-tiles .cbtn { flex: 1 1 44%; text-align: left; }
-#editor-panel .ed-tiles i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; border: 1px solid rgba(0,0,0,0.4); }
-#editor-panel .cbtn.small { height: 32px; min-width: 0; padding: 0 9px; font-size: 12px; }
-#editor-panel .ed-foot { display: flex; gap: 6px; padding: 8px 10px; border-top: 1px solid rgba(255,215,120,0.3); }
-#editor-panel .ed-foot .cbtn { flex: 1; height: 38px; font-size: 14px; }
+/* Eingeklappt bleibt nur ein Knopf stehen, mit dem die Leiste wiederkommt. */
+#editor-panel.collapsed { left: auto; background: transparent; border-top: none; box-shadow: none; }
+#editor-panel.collapsed .ed-hinweis, #editor-panel.collapsed .ed-werkzeuge, #editor-panel.collapsed .ed-gruppen,
+#editor-panel.collapsed .ed-bar > :not(#ed-collapse) { display: none; }
+#editor-panel.collapsed .ed-bar { border-top: none; padding: 8px; }
+
+#editor-panel .ed-hinweis { padding: 6px 12px 0; font-size: 13px; color: #ffe9a8; min-height: 19px; line-height: 1.35; }
+#editor-panel .ed-werkzeuge { display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 6px; padding: 8px 12px; scrollbar-width: thin; }
+#editor-panel .ed-wz {
+  flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; height: 44px; padding: 0 12px;
+  font: inherit; font-size: 14px; color: #f4efe6; white-space: nowrap; cursor: pointer;
+  background: rgba(0,0,0,0.3); border: 1px solid rgba(255,215,120,0.35); border-radius: 10px;
+}
+#editor-panel .ed-wz.sel { color: #3a2200; background: #ffd166; border-color: #8a5a10; font-weight: bold; }
+#editor-panel .ed-wz.gross { font-weight: bold; }
+#editor-panel .ed-wz svg { width: 18px; height: 18px; fill: currentColor; }
+#editor-panel .ed-wz i { display: inline-block; width: 14px; height: 14px; border-radius: 4px; border: 1px solid rgba(0,0,0,0.45); }
+#editor-panel .ed-trenner { flex: 0 0 auto; width: 1px; align-self: stretch; background: rgba(255,215,120,0.3); margin: 0 4px; }
+#editor-panel .ed-zahl { flex: 0 0 auto; align-self: center; color: #cbbfe6; font-size: 12px; }
+
+#editor-panel .ed-gruppen { display: flex; border-top: 1px solid rgba(255,215,120,0.3); }
+#editor-panel .ed-gr { flex: 1; font: inherit; font-size: 14px; font-weight: bold; color: #cbbfe6; background: rgba(0,0,0,0.25); border: none; border-right: 1px solid rgba(255,215,120,0.2); padding: 11px 2px; cursor: pointer; }
+#editor-panel .ed-gr:last-child { border-right: none; }
+#editor-panel .ed-gr.sel { color: #3a2200; background: #ffd166; }
+
+#editor-panel .ed-bar { display: flex; align-items: center; gap: 6px; padding: 8px 12px; border-top: 1px solid rgba(255,215,120,0.3); }
+#editor-panel .ed-luecke { flex: 1; }
+#editor-panel .ed-bar .cbtn.small { height: 40px; min-width: 44px; padding: 0 12px; font-size: 14px; }
+#editor-panel .cbtn.aus { opacity: 0.35; }
 #editor-panel .ed-go { background: linear-gradient(180deg, #ffd166, #e39a2a); color: #3a2200; border-color: #8a5a10; }
 #editor-panel .ed-done { background: linear-gradient(180deg, #8fe07a, #3f9a4e); color: #10300f; border-color: #2a6e38; }
-#editor-panel .ed-hint { font-size: 12px; color: #cbbfe6; min-height: 30px; padding: 6px 0; }
-#editor-panel label { display: grid; grid-template-columns: 52px 1fr; align-items: center; gap: 6px; margin: 8px 0; }
-#editor-panel .ed-size { display: flex; align-items: center; gap: 4px; }
-#editor-panel input, #editor-panel select, #editor-panel textarea {
-  font: inherit; color: #f4efe6; background: rgba(0,0,0,0.35); border: 1px solid rgba(255,215,120,0.4); border-radius: 6px; padding: 5px 6px; width: 100%; box-sizing: border-box;
+
+/* Das Blatt: geht über der Leiste auf und deckt nie mehr als die halbe Höhe zu. */
+#editor-blatt {
+  position: fixed; left: 0; right: 0; bottom: 0; max-height: 72vh; z-index: 6;
+  display: flex; flex-direction: column;
+  background: rgba(18, 14, 36, 0.98); border-top: 2px solid rgba(255, 215, 120, 0.7);
+  border-radius: 14px 14px 0 0; color: #f4efe6; box-shadow: 0 -8px 26px rgba(0,0,0,0.55);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
-#editor-panel .ed-size input { width: 54px; }
-#editor-panel textarea { resize: vertical; font-family: monospace; font-size: 11px; margin-bottom: 4px; }
-#editor-panel select option { color: #111; }
+#editor-blatt[hidden] { display: none; }
+#editor-blatt.weit { max-height: 82vh; }
+#editor-blatt .bl-kopf { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 14px; font-size: 17px; border-bottom: 1px solid rgba(255,215,120,0.3); }
+#editor-blatt .bl-kopf .cbtn.small { height: 38px; padding: 0 12px; font-size: 14px; }
+/* Am Rechner wird das Blatt sonst zwei Meter breit und die Regler stehen einsam am Rand.
+   Auf dem iPad ändert die Schranke nichts – da ist das Fenster ohnehin schmaler. */
+#editor-blatt .bl-inhalt { overflow-y: auto; padding: 10px 14px 16px; -webkit-overflow-scrolling: touch; width: 100%; max-width: 860px; margin: 0 auto; box-sizing: border-box; }
+#editor-blatt .bl-satz { color: #cbbfe6; font-size: 13px; line-height: 1.4; margin: 2px 0 10px; }
+#editor-blatt .bl-leer { color: #cbbfe6; font-size: 13px; padding: 10px 0; }
+#editor-blatt .bl-welt { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: #ffd98a; margin: 14px 0 6px; }
+#editor-blatt .bl-karten { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 6px; }
+#editor-blatt .bl-karte { text-align: left; font: inherit; color: #f4efe6; cursor: pointer; padding: 9px 11px; border-radius: 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,215,120,0.3); }
+#editor-blatt .bl-karte b { display: block; font-size: 15px; }
+#editor-blatt .bl-karte span { display: block; font-size: 12px; color: #cbbfe6; line-height: 1.35; margin-top: 2px; }
+#editor-blatt .bl-karte.sel { background: rgba(255, 209, 102, 0.24); border-color: #ffd166; }
+#editor-blatt .bl-suche { margin-bottom: 4px; }
+/* Ein Regler je Zeile: Name links, Schieber in der Mitte, Wert rechts. */
+#editor-blatt .bl-regler { display: grid; grid-template-columns: minmax(120px, 42%) 1fr 54px; align-items: center; gap: 10px; margin: 10px 0; }
+#editor-blatt .bl-feld { display: grid; grid-template-columns: minmax(90px, 30%) 1fr; align-items: center; gap: 10px; margin: 10px 0; }
+#editor-blatt .bl-name { font-size: 14px; }
+#editor-blatt .bl-groesse { display: flex; align-items: center; gap: 6px; }
+#editor-blatt .bl-groesse input { width: 66px; }
+#editor-blatt output { text-align: right; color: #ffe9a8; font-variant-numeric: tabular-nums; }
+#editor-blatt input[type=range] { width: 100%; accent-color: #ffd166; height: 30px; }
+#editor-blatt input, #editor-blatt select, #editor-blatt textarea {
+  font: inherit; color: #f4efe6; background: rgba(0,0,0,0.35); border: 1px solid rgba(255,215,120,0.4); border-radius: 8px; padding: 8px 8px; width: 100%; box-sizing: border-box;
+}
+#editor-blatt select option, #editor-blatt select optgroup { color: #111; }
+#editor-blatt textarea { resize: vertical; font-family: monospace; font-size: 12px; }
+#editor-blatt .bl-knoepfe { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 0; }
+#editor-blatt .bl-knoepfe .cbtn.small { height: 40px; padding: 0 12px; font-size: 14px; }
+#editor-blatt .cbtn.warn { border-color: #c1554a; }
+#editor-blatt .cbtn.sel { background: #ffd166; color: #3a2200; }
 .btn.mode.own, .btn.mode.build { height: 54px; background: linear-gradient(90deg, #2a1a4d, #4a2f7a); }
 .btn.mode.build { background: linear-gradient(90deg, #3a2a10, #7a5a20); }
 .btn.mode.own .mode-label, .btn.mode.build .mode-label { right: auto; left: 22px; font-size: 20px; white-space: nowrap; }
@@ -511,7 +564,16 @@ body.editing #editor-panel { display: flex; flex-direction: column; }
 .wl-row .cbtn.small { height: 30px; min-width: 32px; padding: 0 6px; }
 .wl-slots { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; }
 .wl-slots .btn.small { min-width: 40px; margin: 2px; }
-@media (max-width: 700px) { #editor-panel { width: 220px; font-size: 12px; } }
+/* Schmales Fenster: die Gruppenknöpfe werden kürzer beschriftet, aber alles bleibt erreichbar. */
+@media (max-width: 700px) {
+  #editor-panel { font-size: 12px; }
+  #editor-panel .ed-gr { font-size: 12px; padding: 10px 1px; }
+  #editor-panel .ed-wz { height: 42px; font-size: 13px; padding: 0 10px; }
+  #editor-blatt .bl-regler { grid-template-columns: 1fr 46px; grid-template-areas: "name name" "schieber wert"; }
+  #editor-blatt .bl-regler .bl-name { grid-area: name; }
+  #editor-blatt .bl-regler input[type=range] { grid-area: schieber; }
+  #editor-blatt .bl-regler output { grid-area: wert; }
+}
 
 /* ---------- Weltkarte: die Übersicht über alle Welten ---------- */
 .panel.atlas-panel, .screen.title .panel.atlas-panel { width: min(97vw, 1200px); max-width: min(97vw, 1200px); padding: 12px 14px; }
