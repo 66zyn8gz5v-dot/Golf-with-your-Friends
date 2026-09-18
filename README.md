@@ -2874,6 +2874,15 @@ Maschinen mit zwei Enden – Lore, Fähre, Welle, Bande, Portal, Anglerfisch, Wa
 haben drei Greifpunkte: die beiden Enden einzeln und die Mitte für das Ganze. **Drehen**, **Doppeln**
 und **Löschen** stehen im Blatt.
 
+**Aussehen als eigene Reihe:** Viele Maschinen können anders aussehen, ohne sich anders zu
+verhalten – die Lore ist auch ein Drache, ein Sarg oder ein Piratenschiff, die Kanone auch eine
+Balliste. Das steckte bis Fassung 190 im **Drehen**-Knopf: Bei der Kanone musste man *viermal*
+drehen, bis das Aussehen wechselte, und bei der Mühle ging es nur zusammen mit der Achse. Das hat
+niemand gefunden, der nicht den Quelltext gelesen hat. Seit Fassung 191 steht es als erste Reihe im
+Blatt der Maschine – eine Plakette je Aussehen, ein Tipp –, und **Drehen** dreht wieder nur.
+Zehn Maschinentypen haben eine Wahl, zusammen 120 Aussehen; Lore, Fähre und Welle teilen sich
+dieselben fünfundzwanzig Fahrzeuge (`AUSSEHEN` und `FAHRZEUGE` in `src/editor.js`).
+
 **Regler je Maschine:** Tempo, Größe, Reichweite, Takt – benannt in gewöhnlichen Worten („Wie oft“,
 „Wie weit sie schießt“) statt in Fachbegriffen. Zuerst stehen nur die drei bis fünf da, die wirklich
 etwas ausmachen; der Rest liegt hinter **Mehr einstellen**. Jeder Regler wirkt sofort.
@@ -2908,6 +2917,12 @@ Maschinen einmal hin, baut die Bahn daraus, ruft `update()` auf und sieht nach, 
 ankommt – und sie faßt jeden einzelnen Regler an. Der Grund dafür steht im Werkzeug: Ein Regler,
 dessen Schlüssel es am Hindernis gar nicht gibt, sieht im Blatt völlig richtig aus und tut nichts.
 Beim ersten Lauf waren es neununddreißig solcher Regler.
+
+Dieselbe Prüfung öffnet auch jedes der 120 Aussehen einmal und läßt ein Bild zeichnen – nicht bloß
+rechnen. Denn ein Stilname, den der Zeichner nicht kennt, fällt nicht auf: Die Maschine wird dann
+einfach in ihrer Grundgestalt gemalt, und die Plakette im Blatt tut scheinbar nichts. Ein Stilname,
+der einen Zeichner mit anderen Erwartungen trifft, stürzt dagegen ab. Beides fängt nur ab, wer
+wirklich malen läßt.
 
 ## Eigene Bahnen im Code bauen
 

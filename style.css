@@ -547,6 +547,15 @@ body.editing #editor-panel { display: flex; flex-direction: column; }
 }
 #editor-blatt select option, #editor-blatt select optgroup { color: #111; }
 #editor-blatt textarea { resize: vertical; font-family: monospace; font-size: 12px; }
+/* Die Aussehen als Reihe kleiner Plaketten. Sie sollen nebeneinander stehen und umbrechen –
+   bei der Lore sind es fuenfundzwanzig, und die passen in keine Zeile. */
+#editor-blatt .bl-stile { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
+#editor-blatt .bl-stil {
+  font: inherit; font-size: 14px; color: #f4efe6; cursor: pointer; white-space: nowrap;
+  height: 38px; padding: 0 12px; border-radius: 10px;
+  background: rgba(0,0,0,0.3); border: 1px solid rgba(255,215,120,0.35);
+}
+#editor-blatt .bl-stil.sel { color: #3a2200; background: #ffd166; border-color: #8a5a10; font-weight: bold; }
 #editor-blatt .bl-knoepfe { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 0; }
 #editor-blatt .bl-knoepfe .cbtn.small { height: 40px; padding: 0 12px; font-size: 14px; }
 #editor-blatt .cbtn.warn { border-color: #c1554a; }

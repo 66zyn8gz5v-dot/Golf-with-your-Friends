@@ -81,6 +81,41 @@ const bericht = await seite.evaluate(() => {
 fehler.push(...bericht.meldungen);
 console.log(`${bericht.anzahl} Maschinen geprüft`);
 
+/* ---------- 2. Jedes Aussehen einmal zeichnen ----------
+   Ein Stilname, den der Zeichner nicht kennt, faellt nicht auf: Die Maschine wird dann einfach in
+   ihrer Grundgestalt gemalt, und der Knopf im Blatt tut scheinbar nichts. Ein Stilname, der einen
+   Zeichner mit anderen Erwartungen trifft, stuerzt dagegen ab. Beides faengt nur ab, wer jedes
+   Aussehen einmal wirklich malen laesst - darum wird hier die Bahn geoeffnet und ein Bild
+   gezeichnet, nicht bloss gerechnet. */
+const stile = await seite.evaluate(() => {
+  const k = window.__golfDebug.editor.katalog;
+  return Object.entries(k.AUSSEHEN).map(([typ, liste]) => [typ, liste.map(e => e[0])]);
+});
+let stilZahl = 0;
+for (const [typ, liste] of stile) for (const stil of liste) {
+  stilZahl++;
+  const vorher = fehler.length;
+  await seite.evaluate(({ typ, stil }) => {
+    const k = window.__golfDebug.editor.katalog;
+    const rows = [];
+    for (let y = 0; y < 14; y++) { let r = ''; for (let x = 0; x < 26; x++) r += (x >= 1 && x <= 24 && y >= 1 && y <= 12) ? '#' : '.'; rows.push(r); }
+    rows[6] = rows[6].slice(0, 2) + 'T' + rows[6].slice(3);
+    rows[7] = rows[7].slice(0, 22) + 'H' + rows[7].slice(23);
+    const o = k.ZWEI_TIPPER.has(typ) ? k.makeStrecke(typ, [8.5, 6.5], [15.5, 6.5]) : k.makeObject(typ, 12.5, 6.5);
+    if (stil) o.style = stil; else delete o.style;
+    window.__golfDebug.editor.open({ id: 2, name: 'Stilprobe', par: 3, theme: 'meadow', map: rows, obstacles: [o], decor: [] });
+  }, { typ, stil });
+  await seite.waitForTimeout(110);
+  const angekommen = await seite.evaluate(({ typ, stil }) => {
+    const o = (window.__golfDebug.state.level.obstacles || []).find(x => x.type === typ);
+    if (!o) return 'die Maschine fehlt in der Bahn';
+    return (o.style || '') === stil ? true : `traegt „${o.style || '–'}“ statt „${stil || '–'}“`;
+  }, { typ, stil });
+  if (angekommen !== true) fehler.push(`FEHLER ${typ}/Aussehen „${stil || 'Grundgestalt'}“: ${angekommen}`);
+  if (fehler.length > vorher) console.log(`  beim Aussehen ${typ}/${stil || '–'}`);
+}
+console.log(`${stilZahl} Aussehen gezeichnet`);
+
 /* ---------- 2. Die Oberfläche: Bauen öffnen, Werkzeuge durchgehen ---------- */
 await seite.evaluate(() => { window.__golfDebug.editor.open(null); });
 await seite.waitForTimeout(700);
@@ -164,4 +199,4 @@ if (BILDER) await seite.screenshot({ path: path.join(BILDER, 'bau-schraeg.png') 
 
 await browser.close();
 if (fehler.length) { for (const f of fehler) console.log(f); console.log(`\n${fehler.length} Fehler`); process.exit(1); }
-console.log('ok – Baumodus: alle Maschinen, alle Regler, Werkzeuge und Rückgängig');
+console.log('ok – Baumodus: alle Maschinen, alle Aussehen, alle Regler, Werkzeuge und Rückgängig');
