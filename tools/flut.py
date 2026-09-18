@@ -168,13 +168,15 @@ BAHNEN = []
 # stimmt.
 DEKO_SAAT = [17, 29, 43, 59, 71, 89, 101, 113, 131, 149, 163, 181]
 # Wie dicht. Die Stege sind schmal, also ist fast die ganze Karte Wasser – bei der Dichte der
-# Landwelten (0,4) stünde der Meeresgrund voll wie ein Möbellager. Ein knappes Viertel ist der
-# Stand nach dem ersten Ansehen: Mit einem Achtel war der Grund noch immer zu leer.
-DEKO_DICHTE = 0.22
+# Landwelten (0,4) stünde der Meeresgrund voll wie ein Möbellager. Ein knappes Viertel war der
+# erste Versuch, und das war zuviel: Auf den großen Bahnen standen über zweihundertfünfzig
+# Gegenstände ringsum, und vor lauter Fässern, Masten und Korallen sah man die Bahn nicht mehr.
+# Deko ist Umgebung, nicht Inhalt – sie soll den Rand füllen, nicht um Aufmerksamkeit bitten.
+DEKO_DICHTE = 0.09
 # Und die schwebenden Wesen ringsum – Schwärme, Rochen, Schildkröten, Quallen. Sie stehen weiter
 # auseinander als die Bodendeko, weil jedes einzelne größer ist und sich bewegt: Ein Rand voller
 # zappelnder Tiere zieht den Blick von der Bahn weg, und die soll man ansehen.
-SCHWEB_DICHTE = 0.055
+SCHWEB_DICHTE = 0.025
 
 
 # Die TIEFE jeder Bahn, von der Wasserlinie (0) bis zum Grund (1). Sie läuft gleichmäßig durch:

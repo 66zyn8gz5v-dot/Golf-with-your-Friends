@@ -26,8 +26,8 @@ const FLUT_COURSES = [
   {
     name: 'Die Hafenmole', par: 4, theme: 'wasserlinie', tiefe: 0.12,
     intro: 'Ein Hafenbecken mit Kaimauern ringsum – hier geht nichts ins Meer, hier wird über die Bande gespielt. Nach oben führt eine einzige Durchfahrt, und der Kranfuß deckt das Loch. Läuft die Schleuse voll, nimmt man die Mole außen herum.',
-    autoDecor: { density: 0.22, seed: 17 },
-    schwebDecor: { density: 0.055, seed: 24 },
+    autoDecor: { density: 0.09, seed: 17 },
+    schwebDecor: { density: 0.025, seed: 24 },
     map: [
       '......................................',
       '......................................',
@@ -60,8 +60,8 @@ const FLUT_COURSES = [
   {
     name: 'Der Priel', par: 4, theme: 'wasserlinie', tiefe: 0.2,
     intro: 'Vier Kehren, alle gemauert – hier kommt man nur über die Bande vorwärts. Gleich hinter dem Abschlag geht es gerade hinunter: die Abkürzung. In ihr steht ein Becken, und wenn das vollsteht, schlängelt man den ganzen Priel entlang.',
-    autoDecor: { density: 0.22, seed: 29 },
-    schwebDecor: { density: 0.055, seed: 36 },
+    autoDecor: { density: 0.09, seed: 29 },
+    schwebDecor: { density: 0.025, seed: 36 },
     map: [
       '............................................',
       '............................................',
@@ -93,8 +93,8 @@ const FLUT_COURSES = [
   {
     name: 'Die Buhnen', par: 4, theme: 'wasserlinie', tiefe: 0.28,
     intro: 'Ein breiter Steg im offenen Wasser – hier gibt es keinen Rand, der einen aufhält. Dafür stehen Buhnenpfähle darauf, an denen man den Winkel doch bekommt. Und zwischen ihnen drückt das Wasser zurück.',
-    autoDecor: { density: 0.22, seed: 43 },
-    schwebDecor: { density: 0.055, seed: 50 },
+    autoDecor: { density: 0.09, seed: 43 },
+    schwebDecor: { density: 0.025, seed: 50 },
     map: [
       '............................................',
       '.wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.',
@@ -126,8 +126,8 @@ const FLUT_COURSES = [
   {
     name: 'Der Kessel', par: 4, theme: 'flachwasser', tiefe: 0.36,
     intro: 'Ein runder Kessel, ganz aus Mauer, mit sechs Pfeilern darin. In der Mitte dreht sich das Wasser und schleudert nach außen – und außen ist die Bande, die zurückwirft. Das Loch liegt in einer Nische, deren Mund nach unten zeigt: Man muß von unten hinauf.',
-    autoDecor: { density: 0.22, seed: 59 },
-    schwebDecor: { density: 0.055, seed: 66 },
+    autoDecor: { density: 0.09, seed: 59 },
+    schwebDecor: { density: 0.025, seed: 66 },
     map: [
       '........................................',
       '........................................',
@@ -160,8 +160,8 @@ const FLUT_COURSES = [
   {
     name: 'Der Seegraswald', par: 5, theme: 'flachwasser', tiefe: 0.44,
     intro: 'Drei Gassen im Zickzack, alle gemauert. Hier zählt der Winkel mehr als die Kraft – und in der mittleren steht ein Tangfeld, das den Schwung frißt.',
-    autoDecor: { density: 0.22, seed: 71 },
-    schwebDecor: { density: 0.055, seed: 78 },
+    autoDecor: { density: 0.09, seed: 71 },
+    schwebDecor: { density: 0.025, seed: 78 },
     map: [
       '..........................................',
       '.wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.',
@@ -194,8 +194,8 @@ const FLUT_COURSES = [
   {
     name: 'Die Austernbank', par: 4, theme: 'flachwasser', tiefe: 0.52,
     intro: 'Zwei gemauerte Kammern, in jeder eine Riesenmuschel. Geschlossen ist sie ein Klotz, an dem man abprallt; offen ein Maul, das einen packt und weiterspuckt. Beide Kammern führen zum Ausgang – aber nicht gleich schnell.',
-    autoDecor: { density: 0.22, seed: 89 },
-    schwebDecor: { density: 0.055, seed: 96 },
+    autoDecor: { density: 0.09, seed: 89 },
+    schwebDecor: { density: 0.025, seed: 96 },
     map: [
       '..........................................',
       '..........................................',
@@ -229,8 +229,8 @@ const FLUT_COURSES = [
   {
     name: 'Die Kanalisation', par: 4, theme: 'daemmerzone', tiefe: 0.6,
     intro: 'Vier Pfeiler stehen im Platz, und über dem Brunnen dreht sich das Wasser. In der Ecke liegt ein Abflußgitter: Man spielt nicht hinein, man landet darin – und die Leitung setzt einen hinter dem Platz wieder ab.',
-    autoDecor: { density: 0.22, seed: 101 },
-    schwebDecor: { density: 0.055, seed: 108 },
+    autoDecor: { density: 0.09, seed: 101 },
+    schwebDecor: { density: 0.025, seed: 108 },
     map: [
       '............................................',
       '............................................',
@@ -264,8 +264,8 @@ const FLUT_COURSES = [
   {
     name: 'Die Kaimauer', par: 5, theme: 'daemmerzone', tiefe: 0.68,
     intro: 'Unten hin, oben zurück. Der untere Steg liegt im offenen Wasser – dort hält einen nichts. Der obere hat die Kaimauer im Rücken, dort kann man über die Bande spielen. Über beiden schwingt ein Anker.',
-    autoDecor: { density: 0.22, seed: 113 },
-    schwebDecor: { density: 0.055, seed: 120 },
+    autoDecor: { density: 0.09, seed: 113 },
+    schwebDecor: { density: 0.025, seed: 120 },
     map: [
       '............................................',
       '............................................',
@@ -300,8 +300,8 @@ const FLUT_COURSES = [
   {
     name: 'Der Marktplatz', par: 5, theme: 'daemmerzone', tiefe: 0.76,
     intro: 'Sechs Häuserecken stehen auf dem Platz – hier prallt man von allem ab, und genau so kommt man weiter. Über dem Brunnen dreht sich das Wasser, in der Ecke liegt das Abflußgitter, und am Ausgang schwingt der Anker.',
-    autoDecor: { density: 0.22, seed: 131 },
-    schwebDecor: { density: 0.055, seed: 138 },
+    autoDecor: { density: 0.09, seed: 131 },
+    schwebDecor: { density: 0.025, seed: 138 },
     map: [
       '..............................................',
       '..............................................',
@@ -336,8 +336,8 @@ const FLUT_COURSES = [
   {
     name: 'Die Schlotebene', par: 4, theme: 'meeresgrund', tiefe: 0.84,
     intro: 'Unten der offene Steg, oben die gemauerte Ebene mit dem Loch. Der lange Weg führt ganz links hinauf – der kurze über den Schlot, der einen hochwirft. Er wirft auch einen Ball, der nur daliegt.',
-    autoDecor: { density: 0.22, seed: 149 },
-    schwebDecor: { density: 0.055, seed: 156 },
+    autoDecor: { density: 0.09, seed: 149 },
+    schwebDecor: { density: 0.025, seed: 156 },
     map: [
       '............................................',
       '.wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.',
@@ -371,8 +371,8 @@ const FLUT_COURSES = [
   {
     name: 'Das Kaltwasserfeld', par: 5, theme: 'meeresgrund', tiefe: 0.92,
     intro: 'Zwei Stege im offenen Wasser, auf beiden zieht es – oben nach rechts, unten nach links, und beide als Dünung: Sie kommt und geht. Hier gibt es keine Bande, die einen hält. Stehenbleiben geht nirgends.',
-    autoDecor: { density: 0.22, seed: 163 },
-    schwebDecor: { density: 0.055, seed: 170 },
+    autoDecor: { density: 0.09, seed: 163 },
+    schwebDecor: { density: 0.025, seed: 170 },
     map: [
       '..............................................',
       '.wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.',
@@ -410,8 +410,8 @@ const FLUT_COURSES = [
   {
     name: 'Der Schlund', par: 5, theme: 'meeresgrund', tiefe: 1.0,
     intro: 'Das Ende. Zwei Äste – der kurze läuft durch ein Becken, der lange tiefer herum –, und beide münden in die große Halle: zwei Pfeiler, ein Strudel – und ein Anglerfisch, der seine Bahn zieht. Wen seine Laterne erreicht, der spielt den letzten Schlag noch einmal.',
-    autoDecor: { density: 0.22, seed: 181 },
-    schwebDecor: { density: 0.055, seed: 188 },
+    autoDecor: { density: 0.09, seed: 181 },
+    schwebDecor: { density: 0.025, seed: 188 },
     map: [
       '................................................',
       '................................................',
