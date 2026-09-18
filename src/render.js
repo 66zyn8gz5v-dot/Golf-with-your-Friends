@@ -2258,7 +2258,7 @@ class Renderer {
     } else if (ob.type === 'potion') {
       items.push({ x: ob.x, y: ob.y, draw: () => this.spritePotion(ctx, ob, t) });
     } else if (ob.type === 'cannon') {
-      items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => ob.style === 'catapult' ? this.drawCatapult(ctx, ob, t) : ob.style === 'ballista' ? this.drawBallista(ctx, ob, t) : this.drawCannon(ctx, ob, t) });
+      items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => ob.style === 'catapult' ? this.drawCatapult(ctx, ob, t) : ob.style === 'ballista' ? this.drawBallista(ctx, ob, t) : ob.style === 'wrackkanone' ? this.drawWrackkanone(ctx, ob, t) : this.drawCannon(ctx, ob, t) });
     } else if (ob.type === 'door') {
       if (ob.style === 'pyramid') items.push({ x: ob.px, y: ob.py, noFade: true, draw: () => this.drawPyramid(ctx, ob, t) });
       else if (ob.style === 'wreck') items.push({ x: ob.px, y: ob.py, noFade: true, draw: () => this.drawWreck(ctx, ob, t) });
@@ -2342,6 +2342,97 @@ class Renderer {
       const f = 0.7 + 0.3 * Math.sin(t * 30);
       ctx.fillStyle = `rgba(255,${Math.round(150 + 80 * f)},60,${f})`;
       ctx.beginPath(); ctx.arc(fx + s * 0.05, fy - s * 0.35, s * 0.08 * f, 0, TAU); ctx.fill();
+    }
+  }
+
+  /* DIE WRACKKANONE – die Kanone der versunkenen Stadt.
+
+     Dieselbe Maschine wie die Kanone im Märchenland, nur in der Gestalt, die hier unten Sinn
+     ergibt: ein Bronzegeschütz von einem gesunkenen Schiff, halb im Grund, das Rohr von Grünspan
+     überzogen. Unter Wasser gibt es kein Pulver und keine Lunte – geladen wird mit Luft, und man
+     sieht es daran, daß sich Blasen an der Mündung sammeln. Beim Schuß fährt die Lafette zurück
+     und eine Blasenwolke treibt nach oben weg.
+
+     Gezeichnet wird in WELTKOORDINATEN (prism/proj), damit das Geschütz sich mitdreht, wenn die
+     Kamera sich dreht – ein im Bild gemaltes Rohr stünde nach einer Vierteldrehung quer. */
+  drawWrackkanone(ctx, ob, t) {
+    const s = this.scale;
+    const dx = Math.cos(ob.angle), dy = Math.sin(ob.angle);
+    // Rückstoß: In den ersten Zehnteln nach dem Schuß sitzt das Rohr weiter hinten.
+    const seit = t - (ob.firedAt ?? -10);
+    const rueck = seit >= 0 && seit < 0.35 ? Math.sin((1 - seit / 0.35) * Math.PI * 0.5) * 0.3 : 0;
+
+    this.isoEllipse(ctx, ob.x, ob.y, 0.004, 1.0, 'rgba(0,0,0,0.22)');
+    // Der Sandhaufen, in dem das Geschütz steckt
+    this.prism(ctx, this.circlePoly(ob.x, ob.y, 0.78, 9), 0, 0.14, '#8e8468', '#5f5842', { outline: '#3d382a' });
+
+    // Die Lafette: zwei Wangen aus verquollenem Holz, längs zur Rohrachse
+    const nx = -dy, ny = dx;
+    for (const side of [-1, 1]) {
+      const ox = nx * side * 0.3, oy = ny * side * 0.3;
+      const wange = [[ob.x - dx * 0.62 + ox - nx * 0.09, ob.y - dy * 0.62 + oy - ny * 0.09],
+                     [ob.x + dx * 0.5 + ox - nx * 0.09, ob.y + dy * 0.5 + oy - ny * 0.09],
+                     [ob.x + dx * 0.5 + ox + nx * 0.09, ob.y + dy * 0.5 + oy + ny * 0.09],
+                     [ob.x - dx * 0.62 + ox + nx * 0.09, ob.y - dy * 0.62 + oy + ny * 0.09]];
+      this.prism(ctx, wange, 0.1, 0.3, '#6b5334', '#42301b', { outline: '#26190c' });
+    }
+
+    // Die Räder: sie stehen hochkant, also werden sie im Bild gezeichnet – als Scheibe mit
+    // Speichen und Eisenreif, an der Nabe aufgehängt, die in Weltkoordinaten gesetzt wird.
+    for (const side of [-1, 1]) {
+      const [rx, ry] = this.proj(ob.x - dx * 0.1 + nx * side * 0.42, ob.y - dy * 0.1 + ny * side * 0.42, 0.3);
+      const R = s * 0.34;
+      ctx.fillStyle = '#4a3a22'; ctx.beginPath(); ctx.arc(rx, ry, R, 0, TAU); ctx.fill();
+      ctx.strokeStyle = '#2a2018'; ctx.lineWidth = Math.max(1.5, s * 0.07); ctx.stroke();
+      ctx.strokeStyle = '#7e6338'; ctx.lineWidth = Math.max(1, s * 0.035);
+      for (let i = 0; i < 6; i++) {
+        const a = i * Math.PI / 3 + 0.3;
+        ctx.beginPath(); ctx.moveTo(rx, ry); ctx.lineTo(rx + Math.cos(a) * R * 0.85, ry + Math.sin(a) * R * 0.85); ctx.stroke();
+      }
+      ctx.fillStyle = '#9a7a44'; ctx.beginPath(); ctx.arc(rx, ry, R * 0.22, 0, TAU); ctx.fill();
+    }
+
+    // Das Rohr: hinten der dicke Bodenring, vorn der Mündungsring, dazwischen der Grünspan
+    const hx = ob.x - dx * (0.62 + rueck), hy = ob.y - dy * (0.62 + rueck);
+    const vx = ob.x + dx * (1.12 - rueck), vy = ob.y + dy * (1.12 - rueck);
+    const rohr = (von, bis, halb) => [[von[0] + nx * halb, von[1] + ny * halb], [bis[0] + nx * halb, bis[1] + ny * halb],
+                                      [bis[0] - nx * halb, bis[1] - ny * halb], [von[0] - nx * halb, von[1] - ny * halb]];
+    this.prism(ctx, rohr([hx, hy], [vx, vy], 0.2), 0.3, 0.34, '#6f8f79', '#3c5748', { outline: '#20342a' });
+    this.prism(ctx, rohr([hx, hy], [hx + dx * 0.26, hy + dy * 0.26], 0.27), 0.28, 0.4, '#82a189', '#476253', { outline: '#20342a' });
+    this.prism(ctx, rohr([vx - dx * 0.2, vy - dy * 0.2], [vx, vy], 0.26), 0.3, 0.36, '#9c8148', '#5e4a26', { outline: '#2c2212' });
+
+    // Die Mündung selbst: ein dunkles Loch mit blankem Bronzerand
+    const [mx, my] = this.proj(vx, vy, 0.48);
+    const flach = 0.55 + 0.45 * this.cam.tilt;
+    ctx.fillStyle = '#0d1512'; ctx.beginPath(); ctx.ellipse(mx, my, s * 0.2, s * 0.2 * flach, 0, 0, TAU); ctx.fill();
+    ctx.strokeStyle = '#c8a95e'; ctx.lineWidth = Math.max(1, s * 0.05); ctx.stroke();
+
+    // Bewuchs: drei Flecken Seepocken auf dem Rohr, damit es alt aussieht und nicht wie neu gegossen
+    for (let i = 0; i < 3; i++) {
+      const u = 0.2 + i * 0.28, q = ((i % 2) ? 1 : -1) * 0.12;
+      const [px, py] = this.proj(hx + (vx - hx) * u + nx * q, hy + (vy - hy) * u + ny * q, 0.64);
+      ctx.fillStyle = i === 1 ? 'rgba(198,214,168,0.8)' : 'rgba(150,180,150,0.75)';
+      ctx.beginPath(); ctx.arc(px, py, s * (0.05 + 0.02 * i), 0, TAU); ctx.fill();
+    }
+
+    // GELADEN: Luft sammelt sich an der Mündung. GESCHOSSEN: die Wolke treibt nach oben weg.
+    if (ob.loaded) {
+      for (let i = 0; i < 5; i++) {
+        const f = (t * 0.9 + i * 0.2) % 1;
+        const [bx, by] = this.proj(vx + dx * 0.18, vy + dy * 0.18, 0.5 + f * 0.7);
+        ctx.fillStyle = `rgba(226,244,255,${0.55 * (1 - f)})`;
+        ctx.beginPath(); ctx.arc(bx + Math.sin(f * 7 + i) * s * 0.06, by, s * (0.05 + 0.03 * i % 0.09), 0, TAU); ctx.fill();
+        ctx.strokeStyle = `rgba(255,255,255,${0.4 * (1 - f)})`; ctx.lineWidth = 1; ctx.stroke();
+      }
+    }
+    if (seit >= 0 && seit < 0.8) {
+      const f = seit / 0.8;
+      for (let i = 0; i < 9; i++) {
+        const a = (i / 9) * TAU, weit = 0.25 + f * 1.1;
+        const [bx, by] = this.proj(vx + dx * 0.3 + Math.cos(a) * weit * 0.5, vy + dy * 0.3 + Math.sin(a) * weit * 0.5, 0.5 + f * 1.4);
+        ctx.fillStyle = `rgba(230,246,255,${0.6 * (1 - f)})`;
+        ctx.beginPath(); ctx.arc(bx, by, s * 0.09 * (1 - f * 0.4), 0, TAU); ctx.fill();
+      }
     }
   }
 

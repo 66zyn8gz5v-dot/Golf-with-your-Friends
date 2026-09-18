@@ -192,8 +192,8 @@ const FLUT_COURSES = [
     ],
   },
   {
-    name: 'Die Austernbank', par: 4, theme: 'flachwasser', tiefe: 0.52,
-    intro: 'Zwei gemauerte Kammern, in jeder eine Riesenmuschel. Geschlossen ist sie ein Klotz, an dem man abprallt; offen ein Maul, das einen packt und weiterspuckt. Beide Kammern führen zum Ausgang – aber nicht gleich schnell.',
+    name: 'Das Kanonendeck', par: 4, theme: 'flachwasser', tiefe: 0.52,
+    intro: 'Zwei gemauerte Kammern, in jeder ein Wrackgeschütz. Wer hineinrollt, wird geladen – und dann geht es hinaus, dorthin, wo das Rohr gerade zeigt. Es schwenkt, also ist der Augenblick die halbe Miete. Beide Kammern führen zum Ausgang.',
     autoDecor: { density: 0.09, seed: 89 },
     schwebDecor: { density: 0.025, seed: 96 },
     map: [
@@ -222,8 +222,8 @@ const FLUT_COURSES = [
       '..........................................',
     ],
     obstacles: [
-      { type: 'muschel', x: 19.5, y: 6.5, r: 1.05, angle: 0, takt: 5.5, offen: 0.45 },
-      { type: 'muschel', x: 19.5, y: 15.5, r: 1.05, angle: 0, takt: 5.5, offen: 0.45, phase: 0.5 },
+      { type: 'cannon', style: 'wrackkanone', x: 15.5, y: 6.5, base: 0.0, amp: 0.244, speed: 0.9, phase: 0.0, range: 9.0, loadTime: 0.7 },
+      { type: 'cannon', style: 'wrackkanone', x: 15.5, y: 15.5, base: 0.0, amp: 0.244, speed: 0.9, phase: 1.6, range: 9.0, loadTime: 0.7 },
     ],
   },
   {
@@ -371,7 +371,7 @@ const FLUT_COURSES = [
   },
   {
     name: 'Das Kaltwasserfeld', par: 5, theme: 'meeresgrund', tiefe: 0.92,
-    intro: 'Zwei Stege im offenen Wasser, auf beiden zieht es – oben nach rechts, unten nach links, und beide als Dünung: Sie kommt und geht. Hier gibt es keine Bande, die einen hält. Stehenbleiben geht nirgends. Wer nicht über den Strudelsteg will, nimmt links das Abflußgitter.',
+    intro: 'Zwei Stege im offenen Wasser, auf beiden zieht es – oben nach rechts, unten nach links, und beide als Dünung: Sie kommt und geht. Hier gibt es keine Bande, die einen hält. Stehenbleiben geht nirgends. Wer nicht über den Strudelsteg will, nimmt links das Abflußgitter – und oben steht ein Wrackgeschütz, das weiterhilft.',
     autoDecor: { density: 0.09, seed: 163 },
     schwebDecor: { density: 0.025, seed: 170 },
     map: [
@@ -405,7 +405,7 @@ const FLUT_COURSES = [
       { type: 'stroemung', x: 15.0, y: 16.5, w: 10, h: 3, angle: 180, tempo: 6.0, puls: 1.25, phase: 3.14 },
       { type: 'stroemung', x: 32.0, y: 16.5, w: 10, h: 3, angle: 180, tempo: 6.0, puls: 1.25, phase: 4.7 },
       { type: 'strudel', x: 23.5, y: 11.5, r: 2.6, dreh: 1 },
-      { type: 'muschel', x: 23.5, y: 6.5, r: 1.05, angle: 0, takt: 5.5, offen: 0.45, phase: 0.3 },
+      { type: 'cannon', style: 'wrackkanone', x: 23.5, y: 7.5, base: 0.0, amp: 0.174, speed: 0.9, phase: 0.3, range: 6.5, loadTime: 0.7 },
       { type: 'abflussrohr', pair: 'D', angle: 0 },
     ],
   },

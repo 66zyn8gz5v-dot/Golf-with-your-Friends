@@ -891,9 +891,11 @@ console.log('\n--- Die Bahnen der Welt ---');
        ihnen Muscheln, Anker und ein Schlot standen. */
     const eigene = new Set(['flut', 'pumpwerk', 'stroemung', 'strudel', 'angler', 'muschel',
       'tangwald', 'raucher', 'ankerkette', 'wracktor', 'abflussrohr']);
+    /* Die Wrackkanone ist keine eigene Hindernisart, sondern die Kanone in anderer Gestalt –
+       für die Welt zählt sie trotzdem als ihre, denn so sieht sie nirgendwo sonst aus. */
     pruef(`„${def.name}" trägt eine Maschine dieser Welt`,
-          lv.obstacles.some(o => eigene.has(o.type)),
-          lv.obstacles.map(o => o.type).join(' '));
+          lv.obstacles.some(o => eigene.has(o.type) || o.style === 'wrackkanone'),
+          lv.obstacles.map(o => o.style === 'wrackkanone' ? 'wrackkanone' : o.type).join(' '));
     /* Und ein Weg zum Loch muß immer da sein – auch auf einer Bahn ohne Becken. */
     pruef(`… ein Weg führt zum Loch`, wegDa(lv));
     if (!becken.length) continue;

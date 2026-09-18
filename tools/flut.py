@@ -284,6 +284,20 @@ def abfluss(paar, angle=0):
     return {'type': 'abflussrohr', 'pair': paar, 'angle': angle}
 
 
+def wrackkanone(x, y, richtung=0, schwenk=16, weite=9.0, tempo=0.9, phase=0.0, laden=0.7):
+    """DIE WRACKKANONE – die Kanone der versunkenen Stadt.
+
+    Es ist dieselbe Maschine wie die Kanone im Märchenland, nur in der Gestalt, die hier unten
+    Sinn ergibt: ein Bronzegeschütz von einem gesunkenen Schiff. 'richtung' und 'schwenk' stehen
+    in GRAD, weil man sich Grad vorstellen kann und Bogenmaß nicht; umgerechnet wird hier.
+
+    'weite' ist die Flugstrecke in Kacheln – WO DER BALL AUFKOMMT, MUSS BODEN SEIN. Das ist der
+    Fehler, den man der Karte nicht ansieht, und pruefe() rechnet ihn darum nach."""
+    return {'type': 'cannon', 'style': 'wrackkanone', 'x': x, 'y': y,
+            'base': round(math.radians(richtung), 4), 'amp': round(math.radians(schwenk), 4),
+            'speed': tempo, 'phase': phase, 'range': weite, 'loadTime': laden}
+
+
 def strudel(x, y, r=2.4, dreh=1):
     return {'type': 'strudel', 'x': x, 'y': y, 'r': r, 'dreh': dreh}
 
@@ -588,10 +602,34 @@ def pruefe(b):
         fehler.append('vom Abschlag führt eine freie gerade Linie ins Loch – das ist ein Ass, '
                       'kein Hindernis (Mauer, Klotz, Wasser oder Schlick dazwischenlegen)')
 
+    # DIE WRACKKANONE. Zwei Dinge sieht man ihr auf der Karte nicht an, und beide machen die Bahn
+    # kaputt: daß sie selbst auf keinem Boden steht (dann kommt nie ein Ball hinein), und daß sie
+    # ins Wasser schießt. Sie schwenkt, also zählt nicht eine Flugbahn, sondern der ganze Fächer –
+    # geprüft werden die beiden Ränder und die Mitte. Wer daneben liegt, zahlt einen Strafschlag,
+    # ohne etwas falsch gemacht zu haben, und das ist kein Hindernis, sondern eine Falle.
+    for o in b['obstacles']:
+        if o.get('style') != 'wrackkanone': continue
+        kx, ky = int(o['x']), int(o['y'])
+        if not (0 <= ky < len(karte) and 0 <= kx < len(karte[0]) and karte[ky][kx] in TROCKEN):
+            fehler.append('ein Wrackgeschütz steht auf keinem festen Grund')
+        if abs(kx - tee[0]) + abs(ky - tee[1]) < 3:
+            fehler.append('ein Wrackgeschütz steht auf dem Abschlag – man wäre geladen, bevor man '
+                          'gespielt hat')
+        for w in (o['base'] - o['amp'], o['base'], o['base'] + o['amp']):
+            zx = int(o['x'] + math.cos(w) * o['range'])
+            zy = int(o['y'] + math.sin(w) * o['range'])
+            if not (0 <= zy < len(karte) and 0 <= zx < len(karte[0]) and karte[zy][zx] in BODEN
+                    and karte[zy][zx] != 'w'):
+                fehler.append(f'ein Wrackgeschütz schießt auf {zx}/{zy}, und dort ist kein Boden '
+                              f'(Schwenk {round(math.degrees(w))}°, Weite {o["range"]})')
+                break
+
     # Jede Bahn dieser Welt braucht wenigstens eine ihrer Maschinen, sonst könnte sie überall stehen
     eigene = {'flut', 'pumpwerk', 'stroemung', 'strudel', 'angler', 'muschel', 'tangwald', 'raucher',
               'ankerkette', 'wracktor', 'abflussrohr'}
-    if not any(o['type'] in eigene for o in b['obstacles']):
+    # Die Wrackkanone ist keine eigene Hindernisart, sondern die Kanone in anderer Gestalt – für
+    # die Welt zählt sie trotzdem als ihre, denn so sieht sie nirgendwo sonst aus.
+    if not any(o['type'] in eigene or o.get('style') == 'wrackkanone' for o in b['obstacles']):
         fehler.append('keine Maschine der Welt auf dieser Bahn')
 
     felder = sum(1 for z in karte for c in z if c in BODEN)
@@ -736,7 +774,10 @@ bahn('Der Seegraswald', 'flachwasser', f, par=5,
      # und kein Hindernis. Der Tangwald ist die Maschine dieser Bahn.
      hindernisse=[tang(24, 9, 26, 13)])
 
-# --- 6: die Austernbank. ZWEI KAMMERN mit je einer Muschel, dazwischen eine Wahl.
+# --- 6: das Kanonendeck. ZWEI KAMMERN mit je einem Wrackgeschütz, dazwischen eine Wahl.
+#        Hier stand bis Fassung 182 die Riesenmuschel. Sie ging, weil zwei Maschinen, die den Ball
+#        packen und weiterwerfen (Muschel und Kanone), eine zuviel sind – und die Kanone ist die,
+#        bei der man sieht, wohin es geht.
 f = meer(42, 23)
 rinne(f, 3, 11, 12, 11)
 platz(f, 12, 4, 26, 9)             # obere Kammer
@@ -745,11 +786,16 @@ rinne(f, 12, 9, 12, 13)            # der Schacht, der beide verbindet
 rinne(f, 26, 11, 38, 11)
 mauer(f, 0, 0, 41, 22)
 setz(f, 5, 11, 'T'); setz(f, 36, 11, 'H')
-bahn('Die Austernbank', 'flachwasser', f, par=4,
-     intro='Zwei gemauerte Kammern, in jeder eine Riesenmuschel. Geschlossen ist sie ein Klotz, an '
-           'dem man abprallt; offen ein Maul, das einen packt und weiterspuckt. Beide Kammern '
-           'führen zum Ausgang – aber nicht gleich schnell.',
-     hindernisse=[muschel(19.5, 6.5, angle=0), muschel(19.5, 15.5, angle=0, phase=0.5)])
+bahn('Das Kanonendeck', 'flachwasser', f, par=4,
+     intro='Zwei gemauerte Kammern, in jeder ein Wrackgeschütz. Wer hineinrollt, wird geladen – '
+           'und dann geht es hinaus, dorthin, wo das Rohr gerade zeigt. Es schwenkt, also ist der '
+           'Augenblick die halbe Miete. Beide Kammern führen zum Ausgang.',
+     # Der Fächer bleibt GANZ in der Kammer. Beim ersten Versuch schossen die Geschütze schräg
+     # auf den Ausgang zu – und die Ränder des Schwenks landeten im Wasser zwischen den Kammern.
+     # Eine Kanone, die bei ungünstigem Augenblick einen Strafschlag kostet, ist keine Maschine,
+     # sondern eine Falle; also wirft sie einen quer durch die Kammer, und den Rest spielt man.
+     hindernisse=[wrackkanone(15.5, 6.5, richtung=0, schwenk=14, weite=9.0),
+                  wrackkanone(15.5, 15.5, richtung=0, schwenk=14, weite=9.0, phase=1.6)])
 
 # ---------------------------------------------------------------- Dämmerzone
 # --- 7: die Kanalisation. Ein BANDENLABYRINTH aus Kammern und Klötzen, mit dem Abflußrohr als
@@ -844,13 +890,13 @@ bahn('Das Kaltwasserfeld', 'meeresgrund', f, par=5,
      intro='Zwei Stege im offenen Wasser, auf beiden zieht es – oben nach rechts, unten nach '
            'links, und beide als Dünung: Sie kommt und geht. Hier gibt es keine Bande, die einen '
            'hält. Stehenbleiben geht nirgends. Wer nicht über den Strudelsteg will, nimmt links '
-           'das Abflußgitter.',
+           'das Abflußgitter – und oben steht ein Wrackgeschütz, das weiterhilft.',
      hindernisse=[strom(10, 6, 19, 8, 0, tempo=6.0, puls=1.25),
                   strom(27, 6, 36, 8, 0, tempo=6.0, puls=1.25, phase=1.6),
                   strom(10, 15, 19, 17, 180, tempo=6.0, puls=1.25, phase=3.14),
                   strom(27, 15, 36, 17, 180, tempo=6.0, puls=1.25, phase=4.7),
                   strudel(23.5, 11.5, 2.6, dreh=1),
-                  muschel(23.5, 6.5, angle=0, phase=0.3),
+                  wrackkanone(23.5, 7.5, richtung=0, schwenk=10, weite=6.5, phase=0.3),
                   abfluss('D', angle=0)])
 
 # --- 12: der Schlund. Das Finale: eine GROSSE HALLE mit Banden und Pfeilern, davor zwei Äste mit
