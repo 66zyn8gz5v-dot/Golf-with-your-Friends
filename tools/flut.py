@@ -155,6 +155,44 @@ def kammer(f, x0, y0, x1, y1, z='#'):
     fuell(f, x0, y0, x1, y1, z)
 
 
+def schraegen(f):
+    """SCHRÄGE BANDEN IN DIE ECKEN – so, wie es die alten Welten machen.
+
+    Eine Kehre mit einer rechtwinkligen Ecke ist eine Falle: Der Ball läuft in den Winkel und
+    bleibt dort liegen, statt um die Ecke zu prallen. Die alten Welten legen darum eine diagonale
+    Bande über die Ecke, und der Bot-Prüfer zählt sie sogar mit („Kehren mit Schrägbande").
+
+    ES REICHT NICHT, DIE DIAGONALE DAVORZULEGEN. Beim ersten Versuch stand die Mauerecke weiter da
+    und die Schräge lag nur davor – von außen war die Ecke unverändert zu sehen. Die Eckkachel
+    selbst muß BODEN werden; erst dann verschwindet die rechtwinklige Bande, und die Diagonale
+    übernimmt die Begrenzung. Durch sie kommt niemand, sie ist eine Wand wie jede andere.
+
+    Gefunden werden die Ecken an der Karte: Eine ABGRUND-Kachel, die genau zwei Bodennachbarn hat,
+    und zwar senkrecht zueinander, ist eine einspringende Ecke. Klötze ('x') bleiben eckig – ein
+    Pfeiler soll eine Kante haben, an der man rechnen kann."""
+    hoch, breit = len(f), len(f[0])
+    boden = lambda x, y: 0 <= x < breit and 0 <= y < hoch and f[y][x] in BODEN
+    ecken = []
+    for y in range(hoch):
+        for x in range(breit):
+            if f[y][x] != '.': continue
+            r, l = boden(x + 1, y), boden(x - 1, y)
+            u, o = boden(x, y + 1), boden(x, y - 1)
+            if sum((r, l, u, o)) != 2: continue
+            if (r and l) or (u and o): continue        # gerader Rand, keine Ecke
+            if r and u: strecke = (x + 1, y, x, y + 1)
+            elif r and o: strecke = (x + 1, y + 1, x, y)
+            elif l and u: strecke = (x, y, x + 1, y + 1)
+            else: strecke = (x, y + 1, x + 1, y)       # l und o
+            ecken.append((x, y, strecke))
+    # Erst alle sammeln, dann umwandeln: Sonst fände die Suche Ecken, die sie selbst erzeugt hat.
+    aus = []
+    for x, y, (x0, y0, x1, y1) in ecken:
+        f[y][x] = '#'
+        aus.append({'type': 'wall', 'x0': x0, 'y0': y0, 'x1': x1, 'y1': y1})
+    return aus
+
+
 def txt(f):
     return [''.join(r) for r in f]
 
@@ -196,9 +234,11 @@ TIEFEN = _tiefen()
 
 
 def bahn(name, theme, karte, hindernisse=None, par=3, intro=None, maxStrokes=None):
+    # Zuerst die Ecken abschrägen – das ÄNDERT die Karte, muß also vor txt() geschehen.
+    schr = schraegen(karte)
     b = {'name': name, 'par': par, 'theme': theme, 'map': txt(karte),
          'tiefe': TIEFEN[min(len(BAHNEN), len(TIEFEN) - 1)],
-         'obstacles': hindernisse or [],
+         'obstacles': (hindernisse or []) + schr,
          'autoDecor': {'density': DEKO_DICHTE, 'seed': DEKO_SAAT[len(BAHNEN) % len(DEKO_SAAT)]},
          'schwebDecor': {'density': SCHWEB_DICHTE, 'seed': DEKO_SAAT[len(BAHNEN) % len(DEKO_SAAT)] + 7}}
     if intro: b['intro'] = intro
