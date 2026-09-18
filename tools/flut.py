@@ -509,6 +509,37 @@ def pruefe(b):
                 fehler.append(f'der {was} eines Abflußrohrs liegt auf {"dem Abschlag" if stellen[c] == tee else "dem Loch"}')
         if gross in stellen and klein in stellen:
             (ex, ey), (zx, zy) = stellen[gross], stellen[klein]
+            # WO DER BALL LANDET, MUSS BODEN SEIN. Das Auslauffeld selbst ist ein Gitter in der
+            # Mauer – dort stünde der Ball ohne Grund –, darum setzt src/obstacles_flut.js ihn
+            # eine knappe Kachel weiter in Richtung 'angle' ab. Steht dort Wasser, spuckt das Rohr
+            # ins Nichts, und man sieht es der Karte nicht an.
+            w = math.radians(o.get('angle', 0))
+            lx, ly = int(zx + 0.5 + math.cos(w) * 0.95), int(zy + 0.5 + math.sin(w) * 0.95)
+            if not (0 <= ly < len(karte) and 0 <= lx < len(karte[0]) and karte[ly][lx] in BODEN):
+                fehler.append(f'ein Abflußrohr setzt den Ball auf {lx}/{ly} ab, und dort ist kein '
+                              'Boden – die Landestelle liegt eine Kachel in Richtung des Winkels')
+            elif (lx, ly) == cup:
+                fehler.append('ein Abflußrohr setzt den Ball genau ins Loch ab')
+            else:
+                # UND DAS ROHR STÖSST. Es setzt nicht bloß ab, es gibt einen Schub von 5,5
+                # Kacheln je Sekunde mit; bei einer Reibung von 4,2 trägt der rund dreieinhalb
+                # Kacheln weit. Steht dort Wasser, ist der Ball weg – im Kaltwasserfeld hat genau
+                # das den Ball über den Stegrand geschoben, und die Karte sah völlig harmlos aus.
+                # Eine Bande (Abgrund oder Klotz) fängt ihn dagegen auf, dann ist alles gut.
+                for k in range(1, 5):
+                    px, py = int(lx + math.cos(w) * k), int(ly + math.sin(w) * k)
+                    if not (0 <= py < len(karte) and 0 <= px < len(karte[0])): break
+                    c2 = karte[py][px]
+                    if c2 in ('.', 'x'): break          # Bande – sie hält ihn auf
+                    if c2 not in BODEN or c2 == 'w':
+                        fehler.append(f'der Schub eines Abflußrohrs treibt den Ball auf {px}/{py} '
+                                      'ins Wasser – hinter der Landestelle braucht es vier Kacheln '
+                                      'Boden oder eine Bande')
+                        break
+            # Und der Einlauf darf nicht neben dem Abschlag liegen: Er schluckt jeden, der ihn
+            # berührt, also wäre man weg, bevor man den ersten Schlag richtig getan hat.
+            if abs(ex - tee[0]) + abs(ey - tee[1]) < 4:
+                fehler.append('der Einlauf eines Abflußrohrs liegt neben dem Abschlag')
             # Unterwegs ist die Leitung unter dem Grund – aber sie soll eine Strecke überbrücken,
             # die zu Fuß länger ist. Sonst ist sie ein teurer Umweg um zwei Kacheln.
             if abs(ex - zx) + abs(ey - zy) < 6:
@@ -747,13 +778,19 @@ gang(f, 4, 6, 4, 17, b=4)
 gang(f, 39, 6, 39, 17, b=4)
 mauer(f, 0, 0, 43, 9)              # der obere Steg bekommt seine Kaimauer …
 setz(f, 6, 17, 'T'); setz(f, 37, 5, 'H')
+# Ein Abflußgitter in der zweiten Hälfte des unteren Stegs: Wer bis hierher gekommen ist, darf
+# hinauf, statt noch bis ganz nach rechts zu fahren. Weiter vorn läge es falsch – dann spielte
+# niemand den unteren Steg, und der ist die halbe Bahn.
+setz(f, 30, 18, 'C'); setz(f, 30, 8, 'c')
 bahn('Die Kaimauer', 'daemmerzone', f, par=5,
      intro='Unten hin, oben zurück. Der untere Steg liegt im offenen Wasser – dort hält einen '
            'nichts. Der obere hat die Kaimauer im Rücken, dort kann man über die Bande spielen. '
-           'Über beiden schwingt ein Anker.',
+           'Über beiden schwingt ein Anker – und in der Mitte liegt ein Abflußgitter, das einen '
+           'nach oben setzt, statt ganz außen herumzufahren.',
      hindernisse=[ankerkette(20.5, 12.5, len_=5.0, ruhe=90, takt=5.2),
                   ankerkette(30.5, 11.5, len_=5.0, ruhe=270, takt=5.2, phase=0.5),
-                  wracktor(12.5, 15.15, len_=2.8, zu=90, gegen=True)])
+                  wracktor(12.5, 15.15, len_=2.8, zu=90, gegen=True),
+                  abfluss('C', angle=270)])
 
 # --- 9: der Marktplatz. EIN GROSSER PLATZ mit Häuserecken als Klötzen – der bandenreichste Ort
 #        der Welt, und der einzige, auf dem man wirklich Karambolage spielen kann.
@@ -799,16 +836,22 @@ gang(f, 3, 7, 42, 7, b=4)
 gang(f, 3, 16, 42, 16, b=4)
 gang(f, 23, 7, 23, 16, b=4)
 setz(f, 5, 16, 'T'); setz(f, 40, 7, 'H')
+# Der zweite Weg nach oben. Der mittlere Steg hat den Strudel und die Muschel, hier gibt es das
+# Gitter – ruhig, aber es setzt einen dort ab, wo die obere Dünung schiebt. Beides kostet etwas,
+# nur eben Verschiedenes.
+setz(f, 12, 18, 'D'); setz(f, 12, 7, 'd')
 bahn('Das Kaltwasserfeld', 'meeresgrund', f, par=5,
      intro='Zwei Stege im offenen Wasser, auf beiden zieht es – oben nach rechts, unten nach '
            'links, und beide als Dünung: Sie kommt und geht. Hier gibt es keine Bande, die einen '
-           'hält. Stehenbleiben geht nirgends.',
+           'hält. Stehenbleiben geht nirgends. Wer nicht über den Strudelsteg will, nimmt links '
+           'das Abflußgitter.',
      hindernisse=[strom(10, 6, 19, 8, 0, tempo=6.0, puls=1.25),
                   strom(27, 6, 36, 8, 0, tempo=6.0, puls=1.25, phase=1.6),
                   strom(10, 15, 19, 17, 180, tempo=6.0, puls=1.25, phase=3.14),
                   strom(27, 15, 36, 17, 180, tempo=6.0, puls=1.25, phase=4.7),
                   strudel(23.5, 11.5, 2.6, dreh=1),
-                  muschel(23.5, 6.5, angle=0, phase=0.3)])
+                  muschel(23.5, 6.5, angle=0, phase=0.3),
+                  abfluss('D', angle=0)])
 
 # --- 12: der Schlund. Das Finale: eine GROSSE HALLE mit Banden und Pfeilern, davor zwei Äste mit
 #         Becken – und der Anglerfisch zieht durch die Halle.

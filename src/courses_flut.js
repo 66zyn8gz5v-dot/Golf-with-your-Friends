@@ -263,7 +263,7 @@ const FLUT_COURSES = [
   },
   {
     name: 'Die Kaimauer', par: 5, theme: 'daemmerzone', tiefe: 0.68,
-    intro: 'Unten hin, oben zurück. Der untere Steg liegt im offenen Wasser – dort hält einen nichts. Der obere hat die Kaimauer im Rücken, dort kann man über die Bande spielen. Über beiden schwingt ein Anker.',
+    intro: 'Unten hin, oben zurück. Der untere Steg liegt im offenen Wasser – dort hält einen nichts. Der obere hat die Kaimauer im Rücken, dort kann man über die Bande spielen. Über beiden schwingt ein Anker – und in der Mitte liegt ein Abflußgitter, das einen nach oben setzt, statt ganz außen herumzufahren.',
     autoDecor: { density: 0.09, seed: 113 },
     schwebDecor: { density: 0.025, seed: 120 },
     map: [
@@ -275,7 +275,7 @@ const FLUT_COURSES = [
       '...##################################H###...',
       '...#######################################..',
       '...#######################################..',
-      '...#######################################..',
+      '...###########################c###########..',
       '...####...............................####..',
       '.ww####wwwwwwwwwwwwwwwwwwwwwwwwwwwwwww####w.',
       '.ww####wwwwwwwwwwwwwwwwwwwwwwwwwwwwwww####w.',
@@ -285,7 +285,7 @@ const FLUT_COURSES = [
       '.ww#######################################w.',
       '.ww#######################################w.',
       '.ww###T###################################w.',
-      '.ww######################################ww.',
+      '.ww###########################C##########ww.',
       '.ww######################################ww.',
       '.wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.',
       '.wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.',
@@ -295,6 +295,7 @@ const FLUT_COURSES = [
       { type: 'ankerkette', x: 20.5, y: 12.5, len: 5.0, amp: 48, ruhe: 90, takt: 5.2 },
       { type: 'ankerkette', x: 30.5, y: 11.5, len: 5.0, amp: 48, ruhe: 270, takt: 5.2, phase: 0.5 },
       { type: 'wracktor', x: 12.5, y: 15.15, len: 2.8, zuWinkel: 90, takt: 6.0, gegen: true },
+      { type: 'abflussrohr', pair: 'C', angle: 270 },
     ],
   },
   {
@@ -370,7 +371,7 @@ const FLUT_COURSES = [
   },
   {
     name: 'Das Kaltwasserfeld', par: 5, theme: 'meeresgrund', tiefe: 0.92,
-    intro: 'Zwei Stege im offenen Wasser, auf beiden zieht es – oben nach rechts, unten nach links, und beide als Dünung: Sie kommt und geht. Hier gibt es keine Bande, die einen hält. Stehenbleiben geht nirgends.',
+    intro: 'Zwei Stege im offenen Wasser, auf beiden zieht es – oben nach rechts, unten nach links, und beide als Dünung: Sie kommt und geht. Hier gibt es keine Bande, die einen hält. Stehenbleiben geht nirgends. Wer nicht über den Strudelsteg will, nimmt links das Abflußgitter.',
     autoDecor: { density: 0.09, seed: 163 },
     schwebDecor: { density: 0.025, seed: 170 },
     map: [
@@ -381,7 +382,7 @@ const FLUT_COURSES = [
       '.wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.',
       '.wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.',
       '.ww########################################ww.',
-      '.ww#####################################H##ww.',
+      '.ww#########d###########################H##ww.',
       '.ww########################################ww.',
       '.ww########################################ww.',
       '.wwwwwwwwwwwwwwwwwwwww####wwwwwwwwwwwwwwwwwww.',
@@ -392,7 +393,7 @@ const FLUT_COURSES = [
       '.ww########################################ww.',
       '.ww##T#####################################ww.',
       '.ww########################################ww.',
-      '.ww########################################ww.',
+      '.ww#########D##############################ww.',
       '.wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.',
       '.wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.',
       '.wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.',
@@ -405,6 +406,7 @@ const FLUT_COURSES = [
       { type: 'stroemung', x: 32.0, y: 16.5, w: 10, h: 3, angle: 180, tempo: 6.0, puls: 1.25, phase: 4.7 },
       { type: 'strudel', x: 23.5, y: 11.5, r: 2.6, dreh: 1 },
       { type: 'muschel', x: 23.5, y: 6.5, r: 1.05, angle: 0, takt: 5.5, offen: 0.45, phase: 0.3 },
+      { type: 'abflussrohr', pair: 'D', angle: 0 },
     ],
   },
   {
