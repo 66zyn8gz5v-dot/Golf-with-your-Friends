@@ -2,8 +2,7 @@
    Erzeugt von tools/flut.py – dort steht auch, warum die Bahnen so aussehen, wie sie aussehen.
 
    ZWÖLF BAHNEN, und jede hat ihre eigene Form: Hafenbecken, Priel, Steg, Kessel, Gassen,
-   Kammern, Platz, Ebene. Die Welt trägt in src/courses_pro.js die Kennzeichnung 'nurVorschau';
-   im Spiel taucht sie erst auf, wenn sie dort hingehört.
+   Kammern, Platz, Ebene. Seit Fassung 189 ist die Welt im Spiel.
 
    BANDEN STATT WASSER, WO GESPIELT WIRD. Eine Bande entsteht nur an der Kante zwischen Boden und
    Abgrund ('.') oder an einem Klotz ('x'); Wasser ('w') ist Boden, an dem man versinkt, und hat

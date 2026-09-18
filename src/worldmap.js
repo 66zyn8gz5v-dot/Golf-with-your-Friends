@@ -59,9 +59,9 @@ const WorldMap = (() => {
        keinen Nachbarn: Eine Welt, deren ganze Frage das steigende Wasser ist, gehört nicht an eine
        Küste, an der man notfalls landeinwärts gehen könnte. Die Marke ist ein Kirchturm – das
        Einzige, was von so einer Stadt am Ende noch herausschaut.
-       'nurVorschau' hält sie vorerst aus dem Spiel; die Insel selbst bleibt trotzdem liegen, denn
-       ein Stück Land ohne Beschriftung verspricht nichts. */
-    { id: 'flut', name: 'Die Flut', x: 100, y: 52, r: 11, biom: 'kueste', marke: 'church', farbe: '#7fe8d8', nurVorschau: true },
+       Bis Fassung 188 hielt 'nurVorschau' sie aus dem Spiel; die Insel lag trotzdem schon da, denn
+       ein Stück Land ohne Beschriftung verspricht nichts. Seit 189 ist die Welt dahinter offen. */
+    { id: 'flut', name: 'Die Flut', x: 100, y: 52, r: 11, biom: 'kueste', marke: 'church', farbe: '#7fe8d8' },
     // ---- Schären: zu klein für eine Welt, groß genug fürs Auge. Sie brechen die leere See auf
     //      und zeigen, dass die Küste gerechnet wird – auch ein Punkt mit r=4 bekommt ein Ufer.
     { x: 19, y: 12, r: 4.2, biom: 'kueste' }, { x: 8, y: 34, r: 3.4, biom: 'kueste' },
