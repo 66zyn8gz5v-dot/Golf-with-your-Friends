@@ -2436,10 +2436,117 @@ class Renderer {
     }
   }
 
+  /* DAS SCHÖPFRAD – die Mühle der versunkenen Stadt.
+
+     Dieselbe Maschine wie die Windmühle: ein Torhaus, dessen Durchgang im Takt der Flügel zufällt.
+     Nur treibt sie hier unten kein Wind, sondern die Strömung, und die Flügel sind die Schaufeln
+     eines hölzernen Schöpfrades. Steht eine Schaufel unten, ist der Weg versperrt – dann wartet
+     man einen Takt oder spielt den Bogen außen herum.
+
+     Kein Spitzdach, keine erleuchteten Fenster: Hier wohnt niemand mehr. Das Haus ist nasser
+     Quaderstein mit einer flachen Deckplatte, das Rad grün bewachsen. */
+  drawSchoepfrad(ctx, ob, t) {
+    const s = this.scale, ax = ob.axis === 'x';
+    const steinOben = '#8f9a94', steinSeite = '#5c6a66', kante = '#39443f';
+    for (const b of ob.blocks) this.prism(ctx, b, 0, ob.height, steinOben, steinSeite, { outline: kante });
+
+    const g = ob.gap / 2 + 0.05, dd = ob.depth / 2;
+    const bruecke = ax ? [[ob.x - g, ob.y - dd], [ob.x + g, ob.y - dd], [ob.x + g, ob.y + dd], [ob.x - g, ob.y + dd]]
+                       : [[ob.x - dd, ob.y - g], [ob.x + dd, ob.y - g], [ob.x + dd, ob.y + g], [ob.x - dd, ob.y + g]];
+    this.prism(ctx, bruecke, 1.05, ob.height - 1.05, steinOben, steinSeite, { outline: kante });
+
+    // Die Deckplatte: ein flacher Kranz statt eines Daches, mit Algenpolster obendrauf
+    const rw = ob.w / 2 + ob.overlap + 0.18, rd = ob.depth / 2 + 0.18;
+    const platte = ax ? [[ob.x - rw, ob.y - rd], [ob.x + rw, ob.y - rd], [ob.x + rw, ob.y + rd], [ob.x - rw, ob.y + rd]]
+                      : [[ob.x - rd, ob.y - rw], [ob.x + rd, ob.y - rw], [ob.x + rd, ob.y + rw], [ob.x - rd, ob.y + rw]];
+    this.prism(ctx, platte, ob.height, 0.22, '#6f7d70', '#414d46', { outline: kante });
+    for (let i = 0; i < 5; i++) {
+      const u = (i / 4 - 0.5) * (rw * 1.6);
+      const [px, py] = this.proj(ax ? ob.x + u : ob.x + (i % 2 ? 0.2 : -0.2), ax ? ob.y + (i % 2 ? 0.2 : -0.2) : ob.y + u, ob.height + 0.24);
+      ctx.fillStyle = i % 2 ? 'rgba(96,138,92,0.85)' : 'rgba(126,162,104,0.8)';
+      ctx.beginPath(); ctx.ellipse(px, py, s * 0.16, s * 0.08, 0, 0, TAU); ctx.fill();
+    }
+
+    // Der Torbogen auf der Kameraseite – offen ein dunkles Loch, versperrt ein Schwall
+    const faceN = ax ? [0, 1] : [1, 0];
+    const seite = (faceN[0] * this.cam.sin + faceN[1] * this.cam.cos) > 0 ? 1 : -1;
+    const w2 = ob.gap / 2 + 0.08, top = 1.05, rad = Math.min(w2, 0.32);
+    const fx = ax ? ob.x : ob.x + seite * dd, fy = ax ? ob.y + seite * dd : ob.y;
+    const at = (u, z) => ax ? this.proj(fx + u, fy, z) : this.proj(fx, fy + u, z);
+    const bogen = () => {
+      ctx.beginPath();
+      let p = at(-w2, 0); ctx.moveTo(p[0], p[1]);
+      p = at(-w2, top - rad); ctx.lineTo(p[0], p[1]);
+      for (let k = 0; k <= 10; k++) { const a = Math.PI - (k / 10) * Math.PI; p = at(Math.cos(a) * w2, top - rad + Math.sin(a) * rad); ctx.lineTo(p[0], p[1]); }
+      p = at(w2, 0); ctx.lineTo(p[0], p[1]); ctx.closePath();
+    };
+    ctx.fillStyle = '#0a1412'; bogen(); ctx.fill();
+    if (ob.blocked) {
+      // Die Schaufel steht im Tor und schiebt eine Wand aus Wasser vor sich her
+      ctx.save(); bogen(); ctx.clip();
+      ctx.fillStyle = 'rgba(150,205,220,0.55)'; bogen(); ctx.fill();
+      ctx.strokeStyle = 'rgba(232,250,255,0.75)'; ctx.lineWidth = Math.max(1, s * 0.035);
+      for (let k = -2; k <= 2; k++) {
+        const u = (k / 2.6) * w2, q0 = at(u, 0), q1 = at(u + 0.06, top);
+        ctx.beginPath(); ctx.moveTo(q0[0], q0[1]); ctx.lineTo(q1[0], q1[1]); ctx.stroke();
+      }
+      ctx.restore();
+    }
+    ctx.strokeStyle = '#6d7c76'; ctx.lineWidth = Math.max(1.5, s * 0.05); bogen(); ctx.stroke();
+
+    // DAS RAD. Es steht senkrecht vor der Front und dreht um die Nabe: Kranz, Speichen, Schaufeln.
+    const nabX = ax ? ob.x : ob.x + dd + 0.1, nabY = ax ? ob.y + dd + 0.1 : ob.y, nabZ = ob.height - 0.15;
+    const R = ob.len;
+    const aufKreis = (winkel, r) => {
+      const c = Math.cos(winkel) * r, h = Math.sin(winkel) * r;
+      return this.proj(nabX + (ax ? c : 0), nabY + (ax ? 0 : c), nabZ + h);
+    };
+    ctx.lineCap = 'round';
+    for (const r of [R, R * 0.62]) {   // äußerer Kranz und innerer Ring
+      ctx.strokeStyle = r === R ? '#4d3a22' : '#5d4728'; ctx.lineWidth = Math.max(2, s * (r === R ? 0.09 : 0.05));
+      ctx.beginPath();
+      for (let k = 0; k <= 28; k++) { const q = aufKreis((k / 28) * TAU, r); k ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); }
+      ctx.closePath(); ctx.stroke();
+    }
+    for (let i = 0; i < ob.blades; i++) {
+      const a = ob.angle + (i * TAU) / ob.blades;
+      const [nx0, ny0] = this.proj(nabX, nabY, nabZ), [ex, ey] = aufKreis(a, R);
+      ctx.strokeStyle = '#6b5334'; ctx.lineWidth = Math.max(1.5, s * 0.06);
+      ctx.beginPath(); ctx.moveTo(nx0, ny0); ctx.lineTo(ex, ey); ctx.stroke();
+      // Die Schaufel: ein Brett quer am Speichenende, in der Ebene des Rades
+      const b0 = aufKreis(a - 0.22, R * 0.82), b1 = aufKreis(a + 0.22, R * 0.82);
+      const b2 = aufKreis(a + 0.22, R), b3 = aufKreis(a - 0.22, R);
+      ctx.beginPath(); ctx.moveTo(b0[0], b0[1]); ctx.lineTo(b1[0], b1[1]); ctx.lineTo(b2[0], b2[1]); ctx.lineTo(b3[0], b3[1]); ctx.closePath();
+      ctx.fillStyle = i % 2 ? '#7d6339' : '#6a5330'; ctx.fill();
+      ctx.strokeStyle = '#3d2e18'; ctx.lineWidth = 1; ctx.stroke();
+      // Bewuchs auf jeder zweiten Schaufel
+      if (i % 2 === 0) {
+        const [gx, gy] = aufKreis(a, R * 0.9);
+        ctx.fillStyle = 'rgba(104,150,88,0.75)';
+        ctx.beginPath(); ctx.arc(gx, gy, s * 0.09, 0, TAU); ctx.fill();
+      }
+      // Aus der obersten Schaufel läuft das Wasser zurück: kleine Blasen, die aufsteigen
+      const obenAuf = Math.sin(a) > 0.82;
+      if (obenAuf) {
+        const [tx2, ty2] = aufKreis(a, R);
+        for (let k = 0; k < 3; k++) {
+          const f = ((t * 1.4 + k * 0.33) % 1);
+          ctx.fillStyle = `rgba(228,246,255,${0.6 * (1 - f)})`;
+          ctx.beginPath(); ctx.arc(tx2 + (k - 1) * s * 0.07, ty2 - f * s * 0.5, s * 0.045, 0, TAU); ctx.fill();
+        }
+      }
+    }
+    const [nx, ny] = this.proj(nabX, nabY, nabZ);
+    ctx.fillStyle = '#3b3b42'; ctx.beginPath(); ctx.arc(nx, ny, s * 0.14, 0, TAU); ctx.fill();
+    ctx.strokeStyle = '#8b8b96'; ctx.lineWidth = Math.max(1, s * 0.04); ctx.stroke();
+  }
+
   /* Windmühle: zwei Turmhälften mit Durchgang, Dach, Fenster, Tür und drehenden Flügeln */
   drawWindmill(ctx, ob, t) {
     // Unter Tage weht kein Wind: Dort ist dieselbe Maschine ein Schmelzofen (render_mine.js).
     if (ob.style === 'ofen') return this.drawSchmelzofen(ctx, ob, t);
+    // Und unter Wasser auch nicht: Dort treibt die Strömung ein Schöpfrad.
+    if (ob.style === 'schoepfrad') return this.drawSchoepfrad(ctx, ob, t);
     const s = this.scale, th = this.theme, ax = ob.axis === 'x';
     const wallTop = '#e8dfcf', wallSide = '#a8998a', roof = '#7a4a2a';
     for (const b of ob.blocks) this.prism(ctx, b, 0, ob.height, wallTop, wallSide, { outline: '#6b5a4a' });
