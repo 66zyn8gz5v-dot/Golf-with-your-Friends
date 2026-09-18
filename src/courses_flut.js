@@ -1,9 +1,15 @@
 /* Die Flut (Weltkennung 'flut'): die versunkene Stadt.
    Erzeugt von tools/flut.py – dort steht auch, warum die Bahnen so aussehen, wie sie aussehen.
 
-   NOCH NICHT FERTIG. Zurzeit stehen hier zwei Probebahnen, an denen die Maschinen angesehen und
-   gespielt werden können, bevor neun Bahnen darauf gebaut werden. Die Welt trägt darum in
-   src/courses_pro.js die Kennzeichnung 'nurVorschau'; im Spiel taucht sie nicht auf.
+   ZWÖLF BAHNEN, und jede hat ihre eigene Form: Hafenbecken, Priel, Steg, Kessel, Gassen,
+   Kammern, Platz, Ebene. Die Welt trägt in src/courses_pro.js die Kennzeichnung 'nurVorschau';
+   im Spiel taucht sie erst auf, wenn sie dort hingehört.
+
+   BANDEN STATT WASSER, WO GESPIELT WIRD. Eine Bande entsteht nur an der Kante zwischen Boden und
+   Abgrund ('.') oder an einem Klotz ('x'); Wasser ('w') ist Boden, an dem man versinkt, und hat
+   keine. Die ersten zwölf Bahnen waren durchweg Stege im offenen Wasser – die ganze Welt hatte
+   EINE Bande, und damit nur einen Schlag: gerade und vorsichtig, sonst Wasser. Jetzt ist beides
+   da, jedes an seinem Platz.
 
    DAS FLUTBECKEN ist ein Hindernis wie das Wandertor oder die Falltür: Es läuft im Takt von außen
    nach innen voll und wieder leer, und solange es leer ist, geht der Weg hindurch. Ringsum bleibt
@@ -119,7 +125,7 @@ const FLUT_COURSES = [
   },
   {
     name: 'Der Kessel', par: 4, theme: 'flachwasser', tiefe: 0.36,
-    intro: 'Ein runder Kessel, ganz aus Mauer, mit sechs Pfeilern darin. In der Mitte dreht sich das Wasser und schleudert nach außen – und außen ist die Bande, die zurückwirft. Vor dem Loch liegt ein Riegel: geradeaus geht es nicht.',
+    intro: 'Ein runder Kessel, ganz aus Mauer, mit sechs Pfeilern darin. In der Mitte dreht sich das Wasser und schleudert nach außen – und außen ist die Bande, die zurückwirft. Das Loch liegt in einer Nische, deren Mund nach unten zeigt: Man muß von unten hinauf.',
     autoDecor: { density: 0.22, seed: 59 },
     schwebDecor: { density: 0.055, seed: 66 },
     map: [
@@ -129,10 +135,10 @@ const FLUT_COURSES = [
       '........................................',
       '.........##########xx##########.........',
       '......#############xx#############......',
-      '....#########xx###########xx########....',
-      '...##########xx###########xx###xx####...',
-      '...############################xx#H##...',
-      '....###########################xx###....',
+      '....#########xx###########xx##xxxxx#....',
+      '...##########xx###########xx##x####x#...',
+      '...###########################x##H#x#...',
+      '....##########################x####x....',
       '......############################......',
       '.........######################.........',
       '...##################################...',

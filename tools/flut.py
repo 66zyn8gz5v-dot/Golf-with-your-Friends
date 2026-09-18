@@ -669,13 +669,20 @@ for i, (ein, aus) in enumerate([(3, 36), (4, 35), (6, 33), (9, 30)]):
     fuell(f, ein, 13 + i, aus, 13 + i)     # unten die Rundung
 for kx, ky in [(19, 4), (13, 6), (26, 6), (13, 13), (26, 13), (19, 15)]:
     klotz(f, kx, ky, 2, 2)                 # der Ring aus Pfeilern um den Strudel
-klotz(f, 31, 7, 2, 3)                      # der Riegel vor dem Loch
+# Die Nische mit dem Loch: Decke, zwei Wangen, und der Mund zeigt nach UNTEN.
+# Auch das ist gemessen: Mit dem Loch offen im Kessel lochte der einfache Bot im Schnitt nach
+# 1,75 Schlägen, einmal gleich beim ersten – eine runde Schüssel mit harten Banden ist ein
+# Flipper, in dem alles irgendwann ins Loch fällt. Ein Mund, der von der falschen Seite wegsieht,
+# nimmt dem Zufall das.
+klotz(f, 30, 6, 5, 1)                      # die Decke der Nische
+klotz(f, 30, 7, 1, 3)                      # die linke Wange
+klotz(f, 35, 7, 1, 3)                      # die rechte Wange
 mauer(f, 0, 0, 39, 22)
-setz(f, 6, 14, 'T'); setz(f, 34, 8, 'H')
+setz(f, 6, 14, 'T'); setz(f, 33, 8, 'H')
 bahn('Der Kessel', 'flachwasser', f, par=4,
      intro='Ein runder Kessel, ganz aus Mauer, mit sechs Pfeilern darin. In der Mitte dreht sich '
-           'das Wasser und schleudert nach außen – und außen ist die Bande, die zurückwirft. Vor '
-           'dem Loch liegt ein Riegel: geradeaus geht es nicht.',
+           'das Wasser und schleudert nach außen – und außen ist die Bande, die zurückwirft. Das '
+           'Loch liegt in einer Nische, deren Mund nach unten zeigt: Man muß von unten hinauf.',
      hindernisse=[strudel(19.5, 10.0, 3.4, dreh=1)])
 
 # --- 5: der Seegraswald. ENGE GASSEN zwischen Mauern, versetzt wie ein Zickzack. Hier zählt der
