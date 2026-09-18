@@ -826,6 +826,79 @@ const Hats = (() => {
       }
     },
 
+    lehrlingshut(ctx, color, t, fein) {   // Lehrlingsgarten: der erste eigene Zauberhut
+      /* Der erste der drei Hüte des Zauberreichs, und er soll auch wie der erste aussehen: ein
+         Filzhut, der eine Nummer zu groß ist, mit einem geknickten Kegel und einem einzigen Stern
+         am Band. Kein Gold, keine Runen – das kommt in den beiden Welten darüber.
+
+         Er ist ein Ganzkörper-Skin wie alle Weltbelohnungen: Ein Hut, der oben auf dem Ball säße,
+         wäre in dieser Größe ein Hütchen. Hier IST der Ball der Lehrling – der Hut sitzt ihm bis
+         über die Augen, und darunter schaut nur das Gesicht hervor.
+
+         Das Lebendige ist der Stern. Er dreht sich langsam und blinkt dabei auf; ohne ihn wäre der
+         Hut ein Stück Filz. Und die Hutspitze wippt ein wenig nach – das ist der ganze Unterschied
+         zwischen „jemand trägt einen Zauberhut" und „hier liegt ein Hut". */
+      // Der Lehrling darunter: Gesicht in Spielerfarbe, damit man bei vier Bällen noch weiß, wer wer ist
+      const g = ctx.createRadialGradient(-0.3, -0.24, 0.08, 0, 0, 1);
+      g.addColorStop(0, '#ffe6c8'); g.addColorStop(0.55, '#f0c69a'); g.addColorStop(1, '#a87a52');
+      ctx.beginPath(); ctx.arc(0, 0, 1, 0, TAU2); ctx.fillStyle = g; ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.4)'; ctx.lineWidth = 0.06; ctx.stroke();
+
+      ctx.save(); kugelMaske(ctx);
+      /* Zwei Augen unter der Krempe – sie machen aus der Kugel ein Gesicht. Sie sitzen tief:
+         Im kleinen Vorschaubild lagen sie zuerst genau auf der Krempenkante, und dann sah der
+         Hut aus wie ein heruntergezogenes Visier statt wie ein Hut. */
+      ctx.fillStyle = '#2a1b3c';
+      for (const ax of [-0.28, 0.28]) { ctx.beginPath(); ctx.ellipse(ax, 0.26, 0.09, 0.11, 0, 0, TAU2); ctx.fill(); }
+      if (fein) {   // ein Lichtpunkt je Auge: erst damit schaut jemand, statt zwei Löcher zu haben
+        ctx.fillStyle = 'rgba(255,255,255,0.8)';
+        for (const ax of [-0.25, 0.31]) { ctx.beginPath(); ctx.arc(ax, 0.22, 0.032, 0, TAU2); ctx.fill(); }
+      }
+      ctx.restore();
+
+      /* Der Hut. Er liegt AUSSERHALB der Kugelmaske: Eine Krempe, die an der Kugel abgeschnitten
+         wird, sähe aus wie ein Strich. Ein Hut darf über den Ball hinausragen. */
+      const wippen = Math.sin(t * 1.9) * 0.07;
+      const spitzeX = 0.46 + wippen, spitzeY = -1.82;
+      // Kegel, in zwei Bögen: einmal nach außen gewölbt, einmal nach innen – das macht den Knick
+      const kg = ctx.createLinearGradient(-0.9, -0.2, 0.9, -1.4);
+      kg.addColorStop(0, '#4a3384'); kg.addColorStop(0.55, '#6b4bb8'); kg.addColorStop(1, '#3a2766');
+      ctx.beginPath();
+      ctx.moveTo(-0.96, -0.24);
+      ctx.quadraticCurveTo(-0.52, -1.1, spitzeX, spitzeY);
+      ctx.quadraticCurveTo(0.66, -0.78, 0.96, -0.24);
+      ctx.closePath();
+      ctx.fillStyle = kg; ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.4)'; ctx.lineWidth = 0.06; ctx.stroke();
+
+      // Die Krempe: breiter als der Kopf, vorn leicht heruntergezogen
+      ctx.beginPath(); ctx.ellipse(0, -0.22, 1.16, 0.26, 0, 0, TAU2);
+      const bg = ctx.createLinearGradient(0, -0.4, 0, 0.12);
+      bg.addColorStop(0, '#5a3f9c'); bg.addColorStop(1, '#2f2054');
+      ctx.fillStyle = bg; ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.45)'; ctx.lineWidth = 0.06; ctx.stroke();
+
+      // Das Band – in Spielerfarbe, damit auch der Hut sagt, wem der Ball gehört
+      ctx.beginPath(); ctx.ellipse(0, -0.4, 0.84, 0.18, 0, 0, TAU2);
+      ctx.fillStyle = color || '#ffd166'; ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 0.04; ctx.stroke();
+
+      /* Der Stern am Band. Er dreht sich und wird dabei heller und dunkler – ein Lehrling, der
+         übt, und ein Zauber, der noch flackert. */
+      const funkel = 0.55 + 0.45 * Math.sin(t * 2.6);
+      ctx.save();
+      ctx.translate(0, -0.46); ctx.rotate(t * 0.5);
+      ctx.fillStyle = `rgba(255,240,180,${0.5 + 0.5 * funkel})`;
+      ctx.beginPath();
+      for (let i = 0; i < 10; i++) {
+        const a = -Math.PI / 2 + i * (Math.PI / 5), rr = i % 2 ? 0.08 : 0.2;
+        const px = Math.cos(a) * rr, py = Math.sin(a) * rr;
+        i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+      }
+      ctx.closePath(); ctx.fill();
+      ctx.restore();
+    },
+
     orb(ctx, color, t, fein) {   // Schattenreich: Kristallkugel mit Nebel, Funken und einem Auge, das blinzelt
       glasKugel(ctx, '#e2c8ff', '#5c34a0');
       ctx.save(); kugelMaske(ctx);
@@ -1873,6 +1946,7 @@ const Hats = (() => {
     { id: 'orb', name: 'Kristallkugel', welt: 'shadow', voll: true },
     { id: 'pocketwatch', name: 'Taschenuhr', welt: 'clock', voll: true },
     { id: 'taucherhelm', name: 'Taucherhelm', welt: 'flut', voll: true },
+    { id: 'lehrlingshut', name: 'Lehrlingshut', welt: 'lehrling', voll: true },
     { id: 'champion', name: 'Championhelm', welt: 'colosseum', art: 'turnier' },
   ];
   const byId = id => LIST.find(h => h.id === id);

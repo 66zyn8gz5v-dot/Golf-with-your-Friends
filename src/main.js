@@ -415,7 +415,8 @@
         <span class="btn mode" id="to-build">${SCENE_CREATIVE}<span class="mode-schleier"></span>
           <span class="mode-label long">Bauen &amp; Eigene Welt<small>Eigene Bahnen bauen und verschicken</small></span></span>
       </div>
-      <div class="atlas-extra"><span class="btn small ghost" id="to-turnier">${Icons.svg('golf_course')} Turnier</span>
+      <div class="atlas-extra"><span class="btn small ghost ereignis" id="to-zauber">${Icons.svg('star')} Zauberreich</span>
+        <span class="btn small ghost" id="to-turnier">${Icons.svg('golf_course')} Turnier</span>
         <span class="btn small ghost" id="to-online">${Icons.svg('public')} Online spielen</span>
         <span class="btn small ghost" id="to-best">${Icons.svg('emoji_events')} Rangliste</span></div>
       ${turnierBand()}
@@ -425,6 +426,7 @@
     turnierSchirm = showTitle;
     // Der Turnier-Knopf führt auf den Turnierbildschirm: dort stehen Stand, Restlaufzeit und
     // Rangliste, und von dort geht es in die Arena.
+    $('to-zauber').addEventListener('click', () => { Sfx.unlock(); Music.start(); showZauberreich(); });
     $('to-turnier').addEventListener('click', () => { Sfx.unlock(); Music.start(); showTurnier(); });
     $('to-online').addEventListener('click', () => { Sfx.unlock(); Music.start(); showOnline(); });
     $('to-best').addEventListener('click', () => { Sfx.unlock(); Music.start(); showBestList(); });
@@ -633,6 +635,77 @@
   }
 
   /* Turnierbildschirm: Stand, Restlaufzeit, Rangliste und der Weg in die Arena */
+  /* ---------- Das Zauberreich ----------
+     Ein Ereignis, kein Turnier: Es hat keinen Anfang und kein Ende, und nichts läuft ab. Was es
+     zum Ereignis macht, ist der Aufstieg – drei Welten auf einer Insel, vom Garten des Lehrlings
+     bis zur Loge der Erzmagier, und an jeder hängt ein Hut.
+
+     Warum ein eigener Bildschirm und nicht nur drei Nadeln auf der Weltkarte: Auf der Karte
+     stünden sie als drei Welten neben elf anderen, und der Zusammenhang – daß man hier von unten
+     nach oben geht und drei Hüte holen kann – wäre nirgends zu sehen. Hier steht er.
+
+     Die Liste beschreibt die REIHENFOLGE des Aufstiegs, nicht den Bestand; darum steht sie hier
+     und nicht in courses_pro.js. Ein Ort, dessen Welt es noch nicht gibt, wird als „in Arbeit"
+     gezeigt statt versteckt: Man soll sehen, was kommt. */
+  const ZAUBERREICH = [
+    { id: 'lehrling', hut: 'lehrlingshut', stufe: 'Normal',
+      satz: 'Der ummauerte Garten in der Dämmerung. Hier lernt man, die Uhr selbst zu starten: '
+          + 'Die Blüte anstoßen, und die Ranke trägt – ein paar Sekunden lang.' },
+    { id: 'warte', hut: 'sternenhut', stufe: 'Profi',
+      satz: 'Oben auf dem Turm, wo die Karten des Himmels liegen.' },
+    { id: 'loge', hut: 'erzmagierhut', stufe: 'Legende',
+      satz: 'Die Halle, in der die Erzmagier tagen. Wer hier besteht, hat ausgelernt.' },
+  ];
+
+  function showZauberreich() {
+    state.phase = 'title'; state.editorReturn = false; Music.set('title');
+    document.body.classList.add('title');
+    document.body.classList.remove('creative', 'editing', 'testing');
+
+    const karten = ZAUBERREICH.map((e, i) => {
+      const w = SPIELWELTEN().find(x => x.id === e.id);
+      if (!w) return `<div class="zr-ort offen">
+          <div class="zr-nr">${i + 1}</div>
+          <div class="zr-text"><b>${Text.esc(e.stufe)} · in Arbeit</b>
+            <span class="sub">${Text.esc(e.satz)}</span></div>
+        </div>`;
+      const f = Best.fortschritt(w.id);
+      const hutDa = Hats.has(e.hut) && Hats.freigeschaltet(e.hut);
+      const stand = Hats.has(e.hut) ? Hats.stand(e.hut) : '';
+      const name = Hats.has(e.hut) ? (Hats.LIST.find(h => h.id === e.hut) || {}).name : '';
+      return `<div class="zr-ort ${hutDa ? 'fertig' : ''}">
+          <div class="zr-nr">${i + 1}</div>
+          <div class="zr-text">
+            <b>${Text.esc(w.name)}</b> <span class="zr-stufe">${Text.esc(e.stufe)} · ${w.courses.length} Bahnen</span>
+            <span class="sub">${Text.esc(e.satz)}</span>
+            <span class="zr-stand">${hutDa ? Icons.svg('check') + ' ' : ''}${Text.esc(name)}: ${Text.esc(stand || 'noch nichts gespielt')}</span>
+          </div>
+          <div class="zr-hut"><canvas class="hutbild" data-hut="${e.hut}" width="72" height="72"></canvas></div>
+          <span class="btn small zr-spielen" data-welt="${w.id}">${Icons.svg('play_arrow')} Spielen</span>
+        </div>`;
+    }).join('');
+
+    const gebaut = ZAUBERREICH.filter(e => SPIELWELTEN().some(x => x.id === e.id)).length;
+    overlay(`<div class="panel wide">
+      <div class="panel-head"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span>
+        <h2>${Icons.svg('star')} Das Zauberreich</h2></div>
+      <div class="sub">Eine Insel, drei Orte, ein Aufstieg – und an jedem Ort ein Hut. Den bekommt,
+        wer <b>jede Bahn des Ortes gespielt</b> hat und in der <b>Summe unter Par</b> bleibt. Es
+        zählt die Summe: Eine Bahn über Par ist keine verlorene Belohnung.</div>
+      <div class="zr-liste">${karten}</div>
+      <div class="sub">${gebaut} von ${ZAUBERREICH.length} Orten sind offen. Die Insel liegt im
+        Nordwesten der Weltkarte.</div>
+    </div>`);
+    $('back').addEventListener('click', showTitle);
+    ui.overlay.querySelectorAll('.zr-spielen').forEach(b => b.addEventListener('click', () => {
+      Sfx.unlock(); setWorld(b.dataset.welt); showSetup();
+    }));
+    // Die Hutbilder: dieselbe Zeichnung wie in der Hutwahl, nur klein
+    ui.overlay.querySelectorAll('.hutbild').forEach(cv => {
+      try { Hats.preview(cv, cv.dataset.hut, '#ffd166'); } catch (e) { /* ein Hut, den es noch nicht gibt */ }
+    });
+  }
+
   function showTurnier() {
     state.phase = 'title'; state.editorReturn = false; Music.set('title');
     document.body.classList.add('title');
@@ -1733,6 +1806,8 @@
     // Die Flut – vier Abschnitte, von der Wasserlinie bis zum Grund
     wasserlinie: 'sailing', flachwasser: 'water_drop', daemmerzone: 'dark_mode',
     meeresgrund: 'local_fire_department',
+    // Das Zauberreich
+    lehrlingsgarten: 'local_florist', gewaechshaus: 'science',
     // Kolosseum, Tüftlerreich, Wüste
     colosseum: 'stadium', palace: 'temple_buddhist', desert: 'sonne',
   };

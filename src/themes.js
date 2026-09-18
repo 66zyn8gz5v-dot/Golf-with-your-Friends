@@ -591,6 +591,38 @@ const THEMES = {
     /* Ganz unten ziehen nur noch Quallen und Rochen vorbei – Schwärme gibt es hier nicht mehr. */
     schwebDecor: ['jelly', 'rochen', 'jelly', 'rochen', 'fischschwarm'],
   },
+  /* ---------- Das Zauberreich ----------
+     Drei Orte, die einen Aufstieg erzählen: der Garten des Lehrlings, die Sternenwarte, die Loge
+     der Erzmagier. Hier stehen zuerst die beiden Paletten des Lehrlingsgartens; die anderen
+     kommen mit ihren Teilwelten dazu.
+
+     Warum Glühwürmchen und nicht Blütenstaub wie auf der Elfenwiese: Der Garten spielt in der
+     Dämmerung. Das ist die Tageszeit, zu der ein Lehrling übt – tagsüber hat er zu tun –, und es
+     gibt den leuchtenden Dingen im Garten überhaupt erst etwas zu leuchten. */
+  lehrlingsgarten: { // Ummauerter Zaubergarten in der Abenddämmerung: Hecken, Beete, erste Lichter
+    atmo: 'fireflies',
+    sky: ['#3b2a63', '#f0b878'], ground: '#33562f', groundEdge: '#1d331b',
+    floor: ['#6fb84a', '#63aa41'], sand: '#e6d79a', ice: '#c8ecff', snow: '#f1f7ff',
+    water: '#3f8fd9', lava: '#ff5a1f',
+    wall: { top: '#7fc75a', side: '#3c6f2e', style: 'hedge' },
+    block: { top: '#b9a9d6', side: '#6d5f92' },
+    mover: { top: '#d9a066', side: '#8c5a2b' },
+    rotor: { top: '#e8c98a', side: '#a37a3c' },
+    accent: '#ffd166', flag: '#c77dff', stars: true,
+    autoDecor: ['flowerbush', 'tree', 'mushroom', 'lantern', 'flowerbush', 'crystal', 'flowerbush', 'candle', 'tree'],
+  },
+  gewaechshaus: { // Das Treibhaus des Lehrlings: Bohlen, Töpfe, Kerzenlicht unter Glas
+    atmo: 'pollen', planks: true,
+    sky: ['#1e1630', '#4a3a66'], ground: '#2a2038', groundEdge: '#150f1e',
+    floor: ['#8a6a44', '#7d5f3c'], sand: '#d8c49a', ice: '#c8ecff', snow: '#f1f7ff',
+    water: '#3f6fd9', lava: '#ff5a1f',
+    wall: { top: '#9a7f56', side: '#4f3a24', style: 'stone' },
+    block: { top: '#6a5a44', side: '#3a3024' },
+    mover: { top: '#3b3b45', side: '#1a1a20' },
+    rotor: { top: '#c9a15a', side: '#7a5a2a' },
+    accent: '#a6ff5e', flag: '#ffd166',
+    autoDecor: ['bottle', 'shelf', 'candle', 'mushroom', 'flowerbush', 'bottle', 'cauldron', 'candle'],
+  },
   cloud: {
     hangStil: 'schnee',   // Schrägen als Schneerinne, nicht als Erdrampe // Über den Wolken: nichts mehr fest außer dem, worauf man steht
     atmo: 'none',

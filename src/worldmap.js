@@ -46,6 +46,14 @@ const WorldMap = (() => {
     { x: 47, y: 41, r: 10, biom: 'dschungel' },                 // Landbrücke in den Süden
     { id: 'jungle', name: 'Dschungeltempel', x: 57, y: 45, r: 14, biom: 'dschungel', marke: 'temple_buddhist', farbe: '#9ee06f' },
     { id: 'shadow', name: 'Schattenreich', x: 80, y: 49, r: 13, biom: 'moor', marke: 'dark_mode', farbe: '#c58bff' },
+    /* ---- Das Zauberreich im Nordwesten: EINE Insel mit DREI Orten. Sie liegen so dicht
+       beieinander, daß ihre Küsten zusammenwachsen (Abstand kleiner als 0,78 mal die Summe der
+       Reichweiten) – und weit genug vom Märchenland weg, daß sie nicht mit ihm verwachsen. Genau
+       das soll man sehen: ein Reich, kein Archipel. Der Aufstieg läuft von Südwest nach Nordost,
+       vom Garten über die Warte bis zur Loge. */
+    { id: 'lehrling', name: 'Lehrlingsgarten', x: 10, y: 16, r: 9, biom: 'wiese', marke: 'local_florist', farbe: '#9fe06a' },
+    { id: 'warte', name: 'Sternenwarte', x: 18, y: 7, r: 9, biom: 'gebirge', marke: 'star', farbe: '#a9c8ff' },
+    { id: 'loge', name: 'Erzmagierloge', x: 31, y: 6, r: 9, biom: 'moor', marke: 'crown', farbe: '#e0b0ff' },
     // ---- Nebeninsel im Südwesten: weit genug weg, damit sie eine eigene Insel bleibt
     { id: 'sea', name: 'Meereswelt', x: 14, y: 50, r: 11, biom: 'kueste', marke: 'waves', farbe: '#7fd8ff' },
     /* ---- Feuerinsel im Ostmeer: die Zwergenmine. Sie stand zuerst als kleines Landstück am Fuß
@@ -64,7 +72,7 @@ const WorldMap = (() => {
     { id: 'flut', name: 'Die Flut', x: 100, y: 52, r: 11, biom: 'kueste', marke: 'church', farbe: '#7fe8d8' },
     // ---- Schären: zu klein für eine Welt, groß genug fürs Auge. Sie brechen die leere See auf
     //      und zeigen, dass die Küste gerechnet wird – auch ein Punkt mit r=4 bekommt ein Ufer.
-    { x: 19, y: 12, r: 4.2, biom: 'kueste' }, { x: 8, y: 34, r: 3.4, biom: 'kueste' },
+    { x: 8, y: 34, r: 3.4, biom: 'kueste' },
     { x: 33, y: 56, r: 4.6, biom: 'kueste' }, { x: 95, y: 27, r: 3.8, biom: 'kueste' },
     { x: 68, y: 57, r: 3.6, biom: 'kueste' }, { x: 88, y: 10, r: 3.1, biom: 'kueste' },
     { x: 104, y: 8, r: 3.4, biom: 'kueste' }, { x: 114, y: 55, r: 3.2, biom: 'kueste' },
@@ -436,7 +444,11 @@ const WorldMap = (() => {
      gar nicht gibt (Node beim Prüfen), wird nichts versteckt – sonst prüfte niemand die Welt. */
   const imSpiel = typeof VORSCHAU !== 'undefined' && !VORSCHAU
     && !(typeof PRUEFSTAND !== 'undefined' && PRUEFSTAND);
-  const welten = LAND.filter(l => l.id && !(imSpiel && l.nurVorschau));
+  /* Und eine Insel, deren Welt es im Spiel noch gar nicht gibt, bleibt ebenfalls unbeschriftet.
+     Das Zauberreich wächst Ort für Ort; sein Land liegt von Anfang an da, aber eine Nadel, hinter
+     der nichts steckt, wäre ein gebrochenes Versprechen – und ein Klick darauf ein Absturz. */
+  const gebaut = l => typeof WORLDS === 'undefined' || WORLDS.some(w => w.id === l.id);
+  const welten = LAND.filter(l => l.id && gebaut(l) && !(imSpiel && l.nurVorschau));
   const spots = {};
   for (const l of welten) spots[l.id] = { x: l.x, y: +(l.y / HOEHE * 100).toFixed(2), icon: l.marke, col: l.farbe };
 

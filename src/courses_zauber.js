@@ -1,0 +1,300 @@
+/* Das Zauberreich: ein Ereignis mit drei Orten, die einen Aufstieg erzählen.
+   Erzeugt von tools/zauber.py – dort steht auch, warum die Bahnen so aussehen, wie sie aussehen.
+
+     'lehrling'   Lehrlingsgarten   Normal    der ummauerte Garten, in dem man es lernt
+     'warte'      Sternenwarte      Profi
+     'loge'       Erzmagierloge     Legende
+
+   DIE FRAGE DIESER WELT IST: *WANN FÄNGT ES AN?*
+   Jede andere Welt läuft im Takt – Fallgatter, Falltür, Stacheln, Fontäne, Wracktor gehen auf und
+   zu, ohne daß jemand gefragt würde, und die Aufgabe heißt immer: den Moment abpassen. Hier
+   startet der Spieler die Uhr selbst. Er stößt die Blüte an, und von da an läuft SEINE Zeit. Aus
+   dem Abpassen wird eine Dosierung, und das ist es, was ein Lehrling übt.
+
+   DIE MASCHINEN (src/obstacles_zauber.js):
+     'ranke'       Die Blüte anstoßen läßt eine Ranke über die Lücke wachsen – für ein paar
+                   Sekunden, dann welkt sie. Ihre Felder sind in der Karte gewöhnlicher Boden;
+                   daß man ohne Ranke hindurchfällt, besorgt die Maschine. Dieselbe Umkehrung wie
+                   bei der Schneebrücke, und aus demselben Grund: Boden, der zur Laufzeit
+                   entsteht, müßte Wegfindung, Banden und Kamera mitziehen. Boden, der wegfällt,
+                   kostet eine Abfrage.
+     'zauberhut'   Drei Hüte, einer leuchtet. Wer in einen rollt, kommt aus dem leuchtenden
+                   heraus; wer in den leuchtenden rollt, aus dem nächsten – es gibt keine
+                   Sackgasse. Das Leuchten wandert im Takt und kündigt sich an.
+
+   DIE OPTIK KOMMT AUS DEM BESTAND. Kein einziges neues Bild für die alten Maschinen, und trotzdem
+   sieht keine aus wie im Märchenland: Das Windrad ist hier eine Ranke oder ein Besen, der
+   Prellklotz ein Pilz, eine Leuchtkugel oder ein Kristall, der Magnet ein Seelenlicht, die
+   Drehscheibe ein Laubwirbel.
+
+   Sonst gilt dieselbe Kartenlegende wie in courses.js. */
+
+const ZAUBER_GARTEN = [
+  {
+    name: 'Am Gartentor', par: 3, theme: 'lehrlingsgarten',
+    intro: 'Der Garten des Lehrlings, kurz vor Sonnenuntergang. Zwei Hecken stehen im Weg, und dazwischen geht es im Bogen hindurch. Die Leuchtkugel am Ende federt kräftiger als der Pilz – das lohnt sich zu wissen, bevor es schwieriger wird.',
+    map: [
+      '..............................',
+      '..............................',
+      '.#######....#################.',
+      '.#######....#################.',
+      '.#######....#################.',
+      '.#######....#################.',
+      '.##T#####..#######..######H##.',
+      '.################....########.',
+      '.################....########.',
+      '.################....########.',
+      '.################....########.',
+      '..............................',
+      '..............................',
+    ],
+    obstacles: [
+      { type: 'wall', x0: 8, y0: 6, x1: 9, y1: 7, t: 0.22, h: 0.5 },
+      { type: 'wall', x0: 12, y0: 6, x1: 11, y1: 7, t: 0.22, h: 0.5 },
+      { type: 'wall', x0: 17, y0: 7, x1: 18, y1: 6, t: 0.22, h: 0.5 },
+      { type: 'wall', x0: 21, y0: 7, x1: 20, y1: 6, t: 0.22, h: 0.5 },
+      { type: 'bumper', x: 14.5, y: 8.5, r: 0.55, style: 'mushroom', kick: 7.5 },
+      { type: 'bumper', x: 23.5, y: 4.5, r: 0.55, style: 'orb', kick: 7.5 },
+    ],
+    autoDecor: { density: 0.09, seed: 11 },
+  },
+  {
+    name: 'Die erste Blüte', par: 3, theme: 'lehrlingsgarten',
+    intro: 'Über die Lücke führt nichts – bis man die Blüte anstößt. Dann wächst eine Ranke hinüber und trägt vier Sekunden lang. Zu sacht geschlagen, und man liegt noch darauf, wenn sie welkt; zu hart, und man fliegt daran vorbei. Dazwischen liegt der Schlag.',
+    map: [
+      '................................',
+      '................................',
+      '................................',
+      '.##############################.',
+      '.##############################.',
+      '.##############################.',
+      '.##T########################H##.',
+      '.##############################.',
+      '.##############################.',
+      '.##############################.',
+      '................................',
+      '................................',
+      '................................',
+    ],
+    obstacles: [
+      { type: 'ranke', x: 14, y: 3, w: 4, h: 7, dauer: 4.0, r: 0.6, bluete: { x: 10.5, y: 6.5 } },
+      { type: 'rotor', x: 21.5, y: 6.5, blades: 3, len: 1.8, speed: 1.1, thick: 0.16, style: 'vine', phase: 0.0 },
+    ],
+    autoDecor: { density: 0.09, seed: 29 },
+  },
+  {
+    name: 'Der Pilzring', par: 3, theme: 'lehrlingsgarten',
+    intro: 'Ein Rundbeet, und mitten darin das Loch. Der Kranz aus Pilzen läßt niemanden geradewegs hinein – wer es mit Gewalt versucht, kommt weiter heraus, als er hineingekommen ist. Sanft anspielen und einen Pilz als Wand benutzen ist der kürzere Weg.',
+    map: [
+      '............................',
+      '............................',
+      '.......##############.......',
+      '....####################....',
+      '...######################...',
+      '..########################..',
+      '..########################..',
+      '..#T#########H############..',
+      '..########################..',
+      '..########################..',
+      '..########################..',
+      '...######################...',
+      '....####################....',
+      '.......##############.......',
+      '............................',
+    ],
+    obstacles: [
+      { type: 'wall', x0: 8, y0: 2, x1: 7, y1: 3, t: 0.22, h: 0.5 },
+      { type: 'wall', x0: 20, y0: 2, x1: 21, y1: 3, t: 0.22, h: 0.5 },
+      { type: 'wall', x0: 5, y0: 3, x1: 4, y1: 4, t: 0.22, h: 0.5 },
+      { type: 'wall', x0: 23, y0: 3, x1: 24, y1: 4, t: 0.22, h: 0.5 },
+      { type: 'wall', x0: 4, y0: 4, x1: 3, y1: 5, t: 0.22, h: 0.5 },
+      { type: 'wall', x0: 24, y0: 4, x1: 25, y1: 5, t: 0.22, h: 0.5 },
+      { type: 'wall', x0: 3, y0: 5, x1: 2, y1: 6, t: 0.22, h: 0.5 },
+      { type: 'wall', x0: 25, y0: 5, x1: 26, y1: 6, t: 0.22, h: 0.5 },
+      { type: 'wall', x0: 3, y0: 11, x1: 2, y1: 10, t: 0.22, h: 0.5 },
+      { type: 'wall', x0: 25, y0: 11, x1: 26, y1: 10, t: 0.22, h: 0.5 },
+      { type: 'wall', x0: 4, y0: 12, x1: 3, y1: 11, t: 0.22, h: 0.5 },
+      { type: 'wall', x0: 24, y0: 12, x1: 25, y1: 11, t: 0.22, h: 0.5 },
+      { type: 'wall', x0: 5, y0: 13, x1: 4, y1: 12, t: 0.22, h: 0.5 },
+      { type: 'wall', x0: 23, y0: 13, x1: 24, y1: 12, t: 0.22, h: 0.5 },
+      { type: 'wall', x0: 8, y0: 14, x1: 7, y1: 13, t: 0.22, h: 0.5 },
+      { type: 'wall', x0: 20, y0: 14, x1: 21, y1: 13, t: 0.22, h: 0.5 },
+      { type: 'bumper', x: 16.7, y: 7.5, r: 0.5, style: 'orb', kick: 7.5 },
+      { type: 'bumper', x: 15.8, y: 9.8, r: 0.5, style: 'mushroom', kick: 7.5 },
+      { type: 'bumper', x: 13.5, y: 10.7, r: 0.5, style: 'orb', kick: 7.5 },
+      { type: 'bumper', x: 11.2, y: 9.8, r: 0.5, style: 'mushroom', kick: 7.5 },
+      { type: 'bumper', x: 10.3, y: 7.5, r: 0.5, style: 'orb', kick: 7.5 },
+      { type: 'bumper', x: 11.2, y: 5.2, r: 0.5, style: 'mushroom', kick: 7.5 },
+      { type: 'bumper', x: 13.5, y: 4.3, r: 0.5, style: 'orb', kick: 7.5 },
+      { type: 'bumper', x: 15.8, y: 5.2, r: 0.5, style: 'mushroom', kick: 7.5 },
+    ],
+    autoDecor: { density: 0.09, seed: 43 },
+  },
+  {
+    name: 'Zwei Blüten', par: 3, theme: 'lehrlingsgarten',
+    intro: 'Zwei Lücken, zwei Blüten. Die zweite Blüte liegt hinter der ersten Ranke – man kommt also nur an sie heran, wenn die erste noch trägt. Ein Schlag, der beide schafft, ist möglich; zwei ruhige sind sicherer.',
+    map: [
+      '..................................',
+      '..................................',
+      '..................................',
+      '.################################.',
+      '.################################.',
+      '.################################.',
+      '.##T##########################H##.',
+      '.################################.',
+      '.################################.',
+      '.################################.',
+      '..................................',
+      '..................................',
+      '..................................',
+    ],
+    obstacles: [
+      { type: 'ranke', x: 11, y: 3, w: 3, h: 7, dauer: 4.0, r: 0.6, bluete: { x: 8.5, y: 6.5 } },
+      { type: 'ranke', x: 22, y: 3, w: 3, h: 7, dauer: 4.0, r: 0.6, bluete: { x: 18.5, y: 6.5 } },
+      { type: 'bumper', x: 27.5, y: 6.5, r: 0.55, style: 'orb', kick: 7.5 },
+    ],
+    autoDecor: { density: 0.09, seed: 57 },
+  },
+  {
+    name: 'Der Hutständer', par: 3, theme: 'gewaechshaus',
+    intro: 'Durch die Mauer kommt nur, wer sich verzaubern läßt. Wer in einen Hut rollt, kommt aus dem heraus, der gerade leuchtet – und wer in den leuchtenden rollt, aus dem nächsten. Einer der beiden Ausgänge steht im Sand. Das Leuchten wandert; man sieht es kommen.',
+    map: [
+      '..............................',
+      '..............................',
+      '.############xxx#############.',
+      '.############xxx#############.',
+      '.############xxx#############.',
+      '.############xxx##########H##.',
+      '.##T#########xxx#############.',
+      '.############xxx#############.',
+      '.############xxx#############.',
+      '.############xxx###ssssss####.',
+      '.############xxx###ssssss####.',
+      '.############xxx###ssssss####.',
+      '..............................',
+      '..............................',
+    ],
+    obstacles: [
+      { type: 'zauberhut', takt: 2.6, phase: 0.0, r: 0.42, plaetze: [[6.0, 6.0], [22.0, 4.0], [22.0, 10.0]] },
+      { type: 'bumper', x: 9.5, y: 9.5, r: 0.55, style: 'crystal', kick: 7.5 },
+    ],
+    autoDecor: { density: 0.09, seed: 71 },
+  },
+  {
+    name: 'Das Treibhaus', par: 3, theme: 'gewaechshaus',
+    intro: 'Das Gerätehaus steht quer im Weg, und seine Tür geht im Takt auf und zu. Dahinter kehren zwei Besen gegeneinander – sie drehen in verschiedene Richtungen, also gibt es keinen Augenblick, in dem beide zugleich aus dem Weg sind. Einer nach dem anderen.',
+    map: [
+      '..............................',
+      '..............................',
+      '..............................',
+      '.############################.',
+      '.############################.',
+      '.############################.',
+      '.##T#######################H#.',
+      '.############################.',
+      '.############################.',
+      '.############################.',
+      '.############################.',
+      '..............................',
+      '..............................',
+      '..............................',
+    ],
+    obstacles: [
+      { type: 'windmill', x: 15.5, y: 6.5, w: 5.0, gap: 1.5, speed: 0.85, blades: 4, axis: 'y', phase: 0.0, depth: 1.2 },
+      { type: 'rotor', x: 21.5, y: 4.5, blades: 2, len: 1.3, speed: -0.9, thick: 0.16, style: 'broom', phase: 0.0 },
+      { type: 'rotor', x: 21.5, y: 8.5, blades: 2, len: 1.3, speed: 0.9, thick: 0.16, style: 'broom', phase: 0.0 },
+      { type: 'bumper', x: 8.5, y: 4.5, r: 0.55, style: 'crystal', kick: 7.5 },
+      { type: 'bumper', x: 8.5, y: 8.5, r: 0.55, style: 'crystal', kick: 7.5 },
+    ],
+    autoDecor: { density: 0.09, seed: 83 },
+  },
+  {
+    name: 'Blüte und Hut', par: 4, theme: 'gewaechshaus',
+    intro: 'Erst die Ranke über den Steg – sie trägt hier eine halbe Sekunde länger, der Weg ist weiter. Dann steht die Regalwand im Weg, und wieder helfen nur die Hüte. Wer beim Steg zu viel Kraft gibt, steht drüben zu weit oben und muß noch einmal ansetzen.',
+    map: [
+      '..................................',
+      '..................................',
+      '..................................',
+      '.....................######xx####.',
+      '.############........######xx####.',
+      '.#############......#######xx####.',
+      '.##########################xx####.',
+      '.##T#######################xx##H#.',
+      '.##########################xx####.',
+      '.#############......#######xx####.',
+      '.############........######xx####.',
+      '.....................######xx####.',
+      '..................................',
+      '..................................',
+      '..................................',
+    ],
+    obstacles: [
+      { type: 'wall', x0: 13, y0: 5, x1: 14, y1: 6, t: 0.22, h: 0.5 },
+      { type: 'wall', x0: 21, y0: 5, x1: 20, y1: 6, t: 0.22, h: 0.5 },
+      { type: 'wall', x0: 13, y0: 10, x1: 14, y1: 9, t: 0.22, h: 0.5 },
+      { type: 'wall', x0: 21, y0: 10, x1: 20, y1: 9, t: 0.22, h: 0.5 },
+      { type: 'ranke', x: 14, y: 6, w: 5, h: 3, dauer: 4.5, r: 0.6, bluete: { x: 9.5, y: 7.5 } },
+      { type: 'zauberhut', takt: 2.4, phase: 0.0, r: 0.42, plaetze: [[24.0, 7.0], [30.0, 10.0]] },
+      { type: 'bumper', x: 24.5, y: 4.5, r: 0.55, style: 'crystal', kick: 7.5 },
+    ],
+    autoDecor: { density: 0.09, seed: 97 },
+  },
+  {
+    name: 'Der Blätterwirbel', par: 3, theme: 'lehrlingsgarten',
+    intro: 'Das Seelenlicht zieht an allem, was an ihm vorbeirollt – wer zu dicht daran vorbeispielt, landet woanders als gedacht. Der Laubwirbel dahinter fängt den Ball und wirft ihn immer in dieselbe Richtung aus; das ist keine Strafe, das ist eine Abkürzung, wenn man ihn trifft.',
+    map: [
+      '..............................',
+      '..............................',
+      '..............................',
+      '.###########...##############.',
+      '.###########...##############.',
+      '.##T########...###########H##.',
+      '.###########...##############.',
+      '.############.###############.',
+      '.############################.',
+      '.############################.',
+      '.############################.',
+      '.############################.',
+      '..............................',
+      '..............................',
+      '..............................',
+    ],
+    obstacles: [
+      { type: 'wall', x0: 12, y0: 7, x1: 13, y1: 8, t: 0.22, h: 0.5 },
+      { type: 'wall', x0: 15, y0: 7, x1: 14, y1: 8, t: 0.22, h: 0.5 },
+      { type: 'magnet', x: 8.5, y: 9.5, r: 3.0, strength: 7.0, slow: 0, style: 'soul' },
+      { type: 'turntable', x: 18.5, y: 8.5, r: 1.8, speed: 1.8, exit: 270, eject: 4.5 },
+      { type: 'bumper', x: 22.5, y: 10.5, r: 0.55, style: 'mushroom', kick: 7.5 },
+    ],
+    autoDecor: { density: 0.09, seed: 109 },
+  },
+  {
+    name: 'Die Lehrlingsprüfung', par: 4, theme: 'lehrlingsgarten',
+    intro: 'Die Prüfung: erst die Ranke, dann zwischen den Pilzen hindurch, dann das Tor im Takt – und zum Schluß noch einmal die Hüte. Wer hier unter Par bleibt, hat den Lehrlingshut verdient.',
+    map: [
+      '..................................',
+      '..................................',
+      '..................................',
+      '.################################.',
+      '.################################.',
+      '.################################.',
+      '.################################.',
+      '.##T#############################.',
+      '.##############################H#.',
+      '.################################.',
+      '.################################.',
+      '.################################.',
+      '..................................',
+      '..................................',
+      '..................................',
+    ],
+    obstacles: [
+      { type: 'ranke', x: 10, y: 3, w: 3, h: 9, dauer: 4.2, r: 0.6, bluete: { x: 7.5, y: 7.5 } },
+      { type: 'bumper', x: 14.5, y: 5.5, r: 0.55, style: 'mushroom', kick: 7.5 },
+      { type: 'bumper', x: 14.5, y: 9.5, r: 0.55, style: 'orb', kick: 7.5 },
+      { type: 'windmill', x: 18.5, y: 7.5, w: 5.0, gap: 1.2, speed: 0.9, blades: 4, axis: 'y', phase: 0.0, depth: 1.2 },
+      { type: 'zauberhut', takt: 2.8, phase: 0.0, r: 0.42, plaetze: [[24.0, 5.0], [24.0, 10.0], [29.0, 11.0]] },
+    ],
+    autoDecor: { density: 0.09, seed: 127 },
+  },
+];

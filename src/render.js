@@ -1779,6 +1779,8 @@ class Renderer {
     if (ob.type === 'wracktor') { this.drawWracktorFloor(ctx, ob, t); return; }
     if (ob.type === 'abflussrohr') { this.drawAbflussFloor(ctx, ob, t); return; }
     if (ob.type === 'schneebruecke') { this.drawSchneebrueckeFloor(ctx, ob, t); return; }
+    if (ob.type === 'ranke') { this.drawRankeFloor(ctx, ob, t); return; }
+    if (ob.type === 'zauberhut') { this.drawZauberhutFloor(ctx, ob, t); return; }
     if (ob.type === 'dial' || ob.type === 'wanderloch') { this.drawWanderlochFloor(ctx, ob, t); return; }
     if (ob.type === 'field' && ob.style === 'steam') { this.drawSteam(ctx, ob, t); return; }
     if (ob.type === 'field' && ob.style === 'dark') { this.drawDarkZone(ctx, ob, t); return; }
@@ -2122,6 +2124,14 @@ class Renderer {
       /* noFade: Der Schlot ist die Ansage. Durchsichtig zu werden, sobald der Ball davorliegt,
          nähme ihm genau das – und davor liegt man hier mit Absicht. */
       items.push({ x: ob.x, y: ob.y, bias: 0.4, noFade: true, draw: () => this.drawRaucher(ctx, ob, t) });
+    } else if (ob.type === 'ranke') {
+      /* Einsortiert nach der Blüte: Nur sie steht aufrecht, die Ranke selbst liegt am Boden und
+         wird als Bodenzeichnung gemalt. */
+      items.push({ x: ob.bluete.x, y: ob.bluete.y, bias: 0.25, draw: () => this.drawRanke(ctx, ob, t) });
+    } else if (ob.type === 'zauberhut') {
+      /* noFade: Welcher Hut leuchtet, ist die ganze Aufgabe. Durchsichtig zu werden, sobald der
+         Ball davorliegt, nähme ihr genau das. */
+      items.push({ x: ob.x, y: ob.y, bias: 0.3, noFade: true, draw: () => this.drawZauberhut(ctx, ob, t) });
     } else if (ob.type === 'ankerkette') {
       /* noFade: An der Kette liest man ab, wo der Anker gleich sein wird. */
       items.push({ x: ob.x, y: ob.y, bias: 0.45, noFade: true, draw: () => this.drawAnkerkette(ctx, ob, t) });

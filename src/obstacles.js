@@ -535,6 +535,9 @@ function createObstacles(defs) {
       case 'seilbahn': out.push(new CableCar(d)); break;
       case 'schneebruecke': out.push(new SnowBridge(d)); break;
       case 'zahnstange': out.push(new RackLift(d)); break;
+      // Zauberreich
+      case 'ranke': out.push(new Rankenbruecke(d)); break;
+      case 'zauberhut': out.push(new Zauberhuete(d)); break;
       case 'dial': case 'wanderloch': out.push(new MovingHole(d)); break;
     case 'sharkjump': out.push(new SharkJump(d)); break;
     case 'spikes': out.push(new Spikes(d)); break;

@@ -2924,6 +2924,79 @@ einfach in ihrer Grundgestalt gemalt, und die Plakette im Blatt tut scheinbar ni
 der einen Zeichner mit anderen Erwartungen trifft, stürzt dagegen ab. Beides fängt nur ab, wer
 wirklich malen läßt.
 
+## Das Zauberreich (Ereignis, drei Welten auf einer Insel)
+
+Ein **Ereignis** – aber keins mit Stoppuhr. Der Knopf **Zauberreich** im Startbildschirm führt auf
+einen eigenen Bildschirm, auf dem die drei Orte untereinander stehen, samt Fortschritt und Hut. Es
+läuft nichts ab und geht nichts wieder verloren; was das Ganze zum Ereignis macht, ist der
+Aufstieg. Auf der Weltkarte liegen die drei als **eine** Insel im Nordwesten: `worldmap.js` läßt
+Landstücke zusammenwachsen, wenn ihr Abstand kleiner ist als 0,78 mal die Summe ihrer Reichweiten,
+und genau so sind sie gesetzt – ein Reich, kein Archipel.
+
+| Ort | Stufe | Bahnen | Hut |
+|---|---|---|---|
+| Lehrlingsgarten | Normal | 9 | Lehrlingshut |
+| Sternenwarte | Profi | 9 | Sternenhut |
+| Erzmagierloge | Legende | 9 | Erzmagierhut |
+
+Jeder Ort ist im Spiel eine **eigene Welt** (`WORLDS` in `src/courses_pro.js`) mit eigenem
+Belohnungsskin. Die Bedingung dafür brauchte nichts Neues: Sie steht seit der Zwergenmine in
+`hats.js` – jede Bahn der Welt gespielt, und in der Summe unter Par. Ein Ort, dessen Welt es noch
+nicht gibt, steht auf dem Eventbildschirm als *in Arbeit* und bekommt auf der Karte weder Namen
+noch Nadel (`gebaut()` in `src/worldmap.js`): Eine Nadel, hinter der nichts steckt, wäre ein
+gebrochenes Versprechen und ein Klick darauf ein Absturz.
+
+**Die Frage dieser Welt ist: *wann fängt es an?*** Jede andere Welt läuft im Takt – Fallgatter,
+Falltür, Stacheln, Fontäne, Wracktor gehen auf und zu, ohne daß jemand gefragt würde, und die
+Aufgabe heißt immer: den Moment abpassen. Hier startet der Spieler die Uhr selbst.
+
+**Die Maschinen** (`src/obstacles_zauber.js`, gezeichnet in `src/render_zauber.js`):
+
+* **Die Rankenbrücke** (`ranke`). Über der Lücke liegt nichts. Stößt der Ball die Blüte an, wächst
+  eine Ranke hinüber und trägt ein paar Sekunden lang – dann welkt sie, und wer noch darauf liegt,
+  fällt. Ein Balken neben der Ranke läuft sichtbar leer und blinkt in der letzten Sekunde; vier
+  Sekunden im Kopf zu zählen, während der Ball rollt, kann niemand.
+  *Warum die Blüte und nicht ein Takt:* Eine Brücke, die im Takt kommt und geht, ist die Falltür,
+  nur andersherum. Der Reiz entsteht erst dadurch, daß der Spieler die Uhr selbst startet – er muß
+  die Blüte treffen und dabei **genug Schwung behalten**. Zu hart schießt über die Brücke hinaus,
+  zu weich liegt darauf, wenn sie welkt.
+  *Wie sie technisch trägt:* gar nicht. Ihre Felder sind in der Karte gewöhnlicher Boden, und die
+  Ranke sorgt nur dafür, daß man dort **nicht** hindurchfällt – dieselbe Umkehrung wie bei der
+  Schneebrücke. Boden, der zur Laufzeit entsteht, müßte Wegfindung, Banden und Kamera mitziehen;
+  Boden, der wegfällt, kostet eine Abfrage.
+* **Die Zauberhüte** (`zauberhut`). Zwei bis vier Hüte, genau einer leuchtet. Wer in einen rollt,
+  kommt aus dem leuchtenden heraus – und wer in den leuchtenden rollt, aus dem **nächsten**, damit
+  er keine Sackgasse ist. Das Leuchten wandert im Takt, und der nächste Hut glimmt schon auf,
+  bevor er dran ist: Ein wanderndes Ziel, das man nicht kommen sieht, wäre Glück, und Glück ist
+  hier nirgends die Aufgabe.
+  *Das Maß der Zeichnung ist nicht das Maß der Maschine.* Beim ersten Versuch war der Hut so breit
+  wie sein Maul (0,42 Kacheln) und wurde in der Schrägsicht zu einem Dorn – derselbe Fehler wie
+  beim Wasserrad. Der Kegel wird darum im **Bildraum** gebaut, nicht in der Weltebene: Aus der
+  Projektion kommt nur die Höhe, Breite und Knick sind Bildpunkte. So steht der Hut aufrecht, egal
+  wie die Kamera gedreht ist.
+
+**Die Optik der alten Maschinen kommt aus dem Bestand** – kein einziges neues Bild, und trotzdem
+sieht keine aus wie im Märchenland: Das Windrad ist hier eine **Ranke** oder ein **Besen**, der
+Prellklotz ein **Pilz**, eine **Leuchtkugel** oder ein **Kristall**, der Magnet ein
+**Seelenlicht**, die Drehscheibe ein **Laubwirbel**. Seit Fassung 191 sind diese Gestalten auch im
+Baumodus unter *Aussehen* zu finden.
+
+**Der Bahnbauer** ist `tools/zauber.py`. Er trägt die Regeln, die aus früheren Welten gelernt
+wurden – Schrägen in jede einspringende Ecke (die Eckkachel selbst wird Boden, sonst bleibt die
+rechtwinklige Bande stehen), keine freie Sichtlinie vom Abschlag ins Loch, Deko-Dichte 0,09 statt
+Dickicht – und dazu zwei eigene:
+
+* **Die Blüte muß ohne ihre eigene Ranke erreichbar sein.** Sonst bräuchte man die Brücke, um an
+  das zu kommen, was die Brücke baut. Andere Ranken dürfen dabei benutzt werden – zwei Lücken
+  hintereinander sind ausdrücklich erlaubt.
+* **Man muß es in der Zeit auch schaffen.** Gerechnet wird mit demselben Reibungswert wie in der
+  Physik (4,2) und mit einem ehrlichen Tempo an der Blüte (12), nicht mit dem Höchstschlag.
+
+**Geprüft** wird mit `node tools/zauber.mjs` (Verhalten beider Maschinen im echten Ablauf),
+`node tools/validate.mjs` und `GAMES=2 node tools/audit/audit.mjs lehrling`. Die Wegprüfung in
+`validate.mjs` kennt die Zauberhüte als Verbindung – sonst hielte sie ausgerechnet die Bahn für
+unpassierbar, die den Hut erklärt.
+
 ## Eigene Bahnen im Code bauen
 
 Bahnen stehen in `src/courses.js` (Märchenland), `src/courses_sea.js` (Meereswelt), `src/courses_colosseum.js` (Kolosseum) und `src/courses_pro.js` (Tüftlerreich) als ASCII-Karte plus Hindernisliste. Die Liste `WORLDS` in `src/courses_pro.js` registriert die Welten für die Weltkarte; `mode` (`normal`, `pro`, `legend`) steht dort nur noch als Schwierigkeitshinweis am Ort, gespielt werden kann jede Welt von Anfang an.
@@ -3216,6 +3289,8 @@ tools/online.mjs        fährt zwei Browser gegeneinander: beitreten, spielen, r
 tools/flut.mjs          prüft die Maschinen der Flut: Beckenlauf, Durchrollen, Pumpwerk, jede fertige Bahn
 tools/flut.py           baut die Bahnen der Flut – und lehnt jede ab, auf der man warten müsste
 tools/baumodus.mjs      setzt im Browser jede der 63 Maschinen des Baumodus einmal hin und faßt jeden Regler an
+tools/zauber.mjs        prüft die Maschinen des Zauberreichs: Rankenbrücke und Zauberhüte
+tools/zauber.py         baut die Bahnen des Zauberreichs – und lehnt jede Blüte ab, die man nicht rechtzeitig erreicht
 style.css         Oberfläche
 src/themes.js     Farbpaletten und Deko je Welt
 src/courses.js    die Bahnen des Märchenlands

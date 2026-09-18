@@ -99,6 +99,10 @@ const Editor = (deps) => {
       ['lavafontaene', 'Lavafontäne', 'Schießt im Takt glühend nach oben.'],
       ['giessloeffel', 'Gießlöffel', 'Kippt glühendes Erz in eine Rinne – die glüht dann kurz tödlich.'],
     ]],
+    ['Zauberreich', [
+      ['ranke', 'Rankenbrücke', 'Die Blüte anstoßen läßt eine Ranke über die Lücke wachsen – für ein paar Sekunden.'],
+      ['zauberhut', 'Zauberhüte', 'Wer in einen Hut rollt, kommt aus dem leuchtenden wieder heraus. Das Leuchten wandert.'],
+    ]],
     ['Die Flut', [
       ['flut', 'Flutbecken', 'Ein Becken, das im Takt vollläuft und wieder leerläuft.'],
       ['pumpwerk', 'Pumpwerk', 'Wer es berührt, hält die Becken eine Weile leer.'],
@@ -222,6 +226,9 @@ const Editor = (deps) => {
     lavafontaene: [['takt', 'Wie oft (Sekunden)', 1, 8, 0.25], ['hoehe', 'Wie hoch', 1.5, 6, 0.1], null, ['r', 'Größe', 0.4, 2, 0.05], ['oben', 'Wie lange oben', 0.2, 2, 0.05], ['droht', 'Vorwarnung', 0.2, 2, 0.05], ['phase', 'Versatz im Takt', 0, 0.95, 0.05]],
     giessloeffel: [['takt', 'Wie oft (Sekunden)', 1.5, 8, 0.25], ['glut', 'Wie lange es glüht', 0.4, 3, 0.1], null, ['kipp', 'Vorwarnung', 0.3, 2, 0.05], ['phase', 'Versatz im Takt', 0, 0.95, 0.05]],
 
+    ranke:       [['dauer', 'Wie lange sie trägt', 1.5, 10, 0.25], ['w', 'Breite', 1, 12, 1], ['h', 'Tiefe', 1, 8, 1], null, ['r', 'Wie nah an die Blüte', 0.3, 1.2, 0.05]],
+    zauberhut:   [['takt', 'Wie oft das Leuchten wandert', 1, 8, 0.2], ['r', 'Wie groß die Öffnung', 0.25, 0.9, 0.02], null, ['phase', 'Versatz im Takt', 0, 0.95, 0.05]],
+
     flut:        [['w', 'Breite', 3, 16, 1], ['h', 'Tiefe', 3, 16, 1], ['max', 'Wie tief es wird', 1, 4, 1], null, ['takt', 'Sekunden je Stufe', 0.4, 3, 0.1], ['halt', 'Wie lange es voll steht', 0.3, 4, 0.1], ['leer', 'Wie lange es leer steht', 1, 10, 0.5], ['start', 'Wann es losgeht', 0, 8, 0.5]],
     pumpwerk:    [['dauer', 'Wie lange es pumpt', 2, 8, 0.25], ['r', 'Größe', 0.4, 1.5, 0.05], null, ['stufen', 'Wie viele Stufen', 1, 9, 1]],
     stroemung:   [['kraft', 'Wie stark', 4, 20, 0.5], ['tempo', 'Höchsttempo', 3, 14, 0.5], ['w', 'Breite', 2, 16, 1], ['h', 'Tiefe', 2, 16, 1], null, ['puls', 'Dünung (0 = gleichmäßig)', 0, 2, 0.05], ['phase', 'Versatz im Takt', 0, 0.95, 0.05]],
@@ -248,6 +255,7 @@ const Editor = (deps) => {
     ['Schneeberg', [['snowfoot', 'Bergfuß'], ['snowrock', 'Felsstufe'], ['glacier', 'Gletscher'], ['summit', 'Gipfel']]],
     ['Zwergenmine', [['mundloch', 'Mundloch'], ['stollen', 'Stollen'], ['kristall', 'Kristallkammer'], ['schmelze', 'Schmelze']]],
     ['Die Flut', [['wasserlinie', 'Wasserlinie'], ['flachwasser', 'Flachwasser'], ['daemmerzone', 'Dämmerzone'], ['meeresgrund', 'Meeresgrund']]],
+    ['Zauberreich', [['lehrlingsgarten', 'Lehrlingsgarten'], ['gewaechshaus', 'Gewächshaus']]],
   ];
   const THEMA_NAME = {};
   for (const [, liste] of THEMEN) for (const [k, n] of liste) THEMA_NAME[k] = n;
@@ -541,6 +549,15 @@ const Editor = (deps) => {
       // Der Löffel gießt in eine Rinne; sie beginnt gleich neben der Pfanne und läuft nach rechts.
       case 'giessloeffel': return { type: 'giessloeffel', x, y, takt: 3, glut: 1, kipp: 0.8, phase: 0, rinne: { x: tx + 1, y: ty, len: 5, dx: 1, dy: 0 } };
 
+      /* --- Zauberreich ---
+         Die Ranke bringt ihre Blüte mit: Sie ist Teil der Maschine, nicht ein zweites Ding, das
+         man daneben setzen müßte. Die Hüte stehen zu dritt in einer Reihe – zwei wären ein
+         Portal, vier sind auf einer Normal-Bahn zu viel zu merken. */
+      case 'ranke': return { type: 'ranke', x: Math.max(0, tx - 1), y: ty, w: 3, h: 1, dauer: 4, r: 0.6,
+                             bluete: { x: Math.max(0.5, tx - 2.5), y: ty + 0.5 } };
+      case 'zauberhut': return { type: 'zauberhut', takt: 2.6, r: 0.42, phase: 0,
+                                 plaetze: [[x - 3, y], [x, y - 2], [x + 3, y]] };
+
       /* --- Die Flut --- */
       case 'flut': return { type: 'flut', x, y, w: 6, h: 6, max: 3, takt: 1.2, halt: 1, leer: 5, start: 2.5 };
       case 'pumpwerk': return { type: 'pumpwerk', x, y, r: 0.6, dauer: 4, stufen: 9 };
@@ -599,6 +616,9 @@ const Editor = (deps) => {
     if (o.type === 'firetower') return [[o.x, o.y], [o.zx + o.zw / 2, o.zy + o.zh / 2]];
     if (o.type === 'imperialbox') return [[o.x, o.y], [o.lx + o.lw / 2, o.ly + o.lh / 2]];
     if (o.type === 'giessloeffel' && o.rinne) return [[o.x, o.y], [o.rinne.x + 0.5, o.rinne.y + 0.5]];
+    // Die Ranke faßt man an der Brücke oder an ihrer Blüte an, die Hüte einzeln
+    if (o.type === 'ranke') return [[o.x + o.w / 2, o.y + o.h / 2], [o.bluete.x, o.bluete.y]];
+    if (o.type === 'zauberhut' && Array.isArray(o.plaetze)) return o.plaetze.map(p => [p[0], p[1]]);
     if (o.x == null) return [];
     return [[o.x, o.y]];
   }
@@ -627,6 +647,8 @@ const Editor = (deps) => {
     if (o.type === 'firetower' && punkt === 1) { o.zx += dx; o.zy += dy; return; }
     if (o.type === 'imperialbox' && punkt === 1) { o.lx += dx; o.ly += dy; return; }
     if (o.type === 'giessloeffel' && punkt === 1 && o.rinne) { o.rinne.x += dx; o.rinne.y += dy; return; }
+    if (o.type === 'ranke' && punkt === 1) { o.bluete.x += dx; o.bluete.y += dy; return; }
+    if (o.type === 'zauberhut' && Array.isArray(o.plaetze)) { const p = o.plaetze[punkt]; if (p) { p[0] += dx; p[1] += dy; } return; }
     for (const k of ['x', 'y', 'x0', 'y0', 'x1', 'y1', 'tx', 'ty', 'zx', 'zy', 'lx', 'ly']) {
       if (o[k] == null) continue;
       if (k === 'x' || k === 'x0' || k === 'x1' || k === 'tx' || k === 'zx' || k === 'lx') o[k] += dx; else o[k] += dy;
@@ -664,6 +686,10 @@ const Editor = (deps) => {
       case 'sharkjump': o.axis = o.axis === 'x' ? 'y' : 'x'; break;
       case 'spikes': case 'updraft': case 'lightning': case 'guillotine': case 'trapdoor':
       case 'escapement': case 'tangwald': case 'bruchwand': case 'schneebruecke': case 'flut': tausch(); break;
+      // Die Ranke kippt mitsamt ihrer Blüte, die Hüte versetzen ihr Leuchten
+      case 'ranke': { tausch(); const mx = o.x + o.w / 2, my = o.y + o.h / 2;
+        const rx = o.bluete.x - mx, ry = o.bluete.y - my; o.bluete.x = mx - ry; o.bluete.y = my + rx; break; }
+      case 'zauberhut': o.phase = Math.round((((o.phase || 0) + 0.25) % 1) * 100) / 100; break;
       case 'eyetower': o.phase = Math.round((((o.phase || 0) + Math.PI / 2) % (Math.PI * 2)) * 100) / 100; break;
       case 'switch': o.target = o.target === 'A' ? 'B' : 'A'; break;
       case 'imperialbox': { tausch(); const w = o.lw; o.lw = o.lh; o.lh = w; break; }
