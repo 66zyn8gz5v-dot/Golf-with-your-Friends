@@ -189,7 +189,6 @@ const FLUT_COURSES = [
     ],
     obstacles: [
       { type: 'windmill', style: 'wasserwand', x: 20.5, y: 11.5, axis: 'y', w: 5.0, gap: 5.0, depth: 1.0, height: 1.0, blades: 4, len: 0.6, speed: 0.9, phase: 0.0 },
-      { type: 'stroemung', x: 17.5, y: 14.0, w: 5, h: 2, angle: 0, tempo: 4.2 },
     ],
   },
   {

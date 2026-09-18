@@ -267,32 +267,78 @@ Object.assign(Renderer.prototype, {
     /* Das Band selbst, damit die Grenze klar ist: Wer daneben liegt, liegt ruhig. */
     const ecken = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([a, b]) =>
       [ob.x + (dx * a * laenge + qx * b * breite) / 2, ob.y + (dy * a * laenge + qy * b * breite) / 2]);
-    this.fillPoly(ctx, ecken, 0.009, this.rgbaVon(this.theme.accent || '#8fd8ff', 0.14), false);
+    this.fillPoly(ctx, ecken, 0.009, this.rgbaVon(this.theme.accent || '#8fd8ff', 0.22), false);
 
-    /* Wenige, große Striche statt vieler kleiner. Der erste Versuch setzte rund hundert winzige
-       Marken ins Band; aus zwei Metern Abstand war das ein Raster und keine Strömung. */
-    const reihen = Math.max(2, Math.round(breite * 0.62));
-    const proReihe = Math.max(3, Math.round(laenge * 0.42));
+    const imBand = (u, q, z) => this.proj(ob.x + dx * u + qx * q, ob.y + dy * u + qy * q, z);
+
+    /* SCHLIEREN statt Pfeilen. Vorher lagen hier Striche mit einer Spitze vorne dran – Pfeile
+       eben –, und das sah aus wie ein Verkehrsschild auf dem Meeresgrund. Eine Strömung zeigt man
+       nicht durch Zeichen, sondern durch das, was sie tut: Sand zieht in langen Fahnen, Tang legt
+       sich um, Körner treiben mit. Die Richtung liest man daran ab, wohin alles geneigt ist. */
     ctx.lineCap = 'round';
-    for (let r = 0; r < reihen; r++) {
-      const q = ((r + 0.5) / reihen - 0.5) * breite;
-      for (let i = 0; i < proReihe; i++) {
-        /* Der Versatz je Reihe bricht das Gittermuster auf – sonst sieht es aus wie ein Zaun. */
-        const u = (((i + r * 0.37) / proReihe + t * (0.22 + 0.12 * k)) % 1) * laenge - laenge / 2;
-        const l = laenge / proReihe * 0.52;
-        const a0 = [ob.x + dx * u + qx * q, ob.y + dy * u + qy * q];
-        const a1 = [a0[0] + dx * l, a0[1] + dy * l];
-        const p0 = this.proj(a0[0], a0[1], 0.012), p1 = this.proj(a1[0], a1[1], 0.012);
-        ctx.strokeStyle = `rgba(232,250,255,${(0.34 + 0.46 * k) * (0.6 + 0.4 * Math.sin(i * 1.7 + r))})`;
-        ctx.lineWidth = Math.max(2, s * 0.1);
-        ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke();
-        // die Spitze läuft vorweg: so zeigt der Strich, wohin es geht
-        const sp = this.proj(a1[0] + dx * l * 0.5, a1[1] + dy * l * 0.5, 0.012);
-        const fl = this.proj(a1[0] + qx * l * 0.26, a1[1] + qy * l * 0.26, 0.012);
-        const fr = this.proj(a1[0] - qx * l * 0.26, a1[1] - qy * l * 0.26, 0.012);
-        ctx.fillStyle = `rgba(232,250,255,${0.38 + 0.5 * k})`;
-        ctx.beginPath(); ctx.moveTo(sp[0], sp[1]); ctx.lineTo(fl[0], fl[1]); ctx.lineTo(fr[0], fr[1]);
-        ctx.closePath(); ctx.fill();
+    const bahnen = Math.max(2, Math.round(breite * 0.8));
+    for (let r = 0; r < bahnen; r++) {
+      const q = ((r + 0.5) / bahnen - 0.5) * breite * 0.94;
+      const wandern = ((r * 0.41 + t * (0.16 + 0.14 * k)) % 1);
+      for (let i = 0; i < 2; i++) {
+        const u0 = ((wandern + i * 0.5) % 1) * (laenge + 3) - laenge / 2 - 1.5;
+        const lang = laenge * (0.28 + 0.16 * ((r + i) % 3) / 2);
+        const schlag = 0.16 * Math.sin(t * 1.4 + r * 1.7 + i);
+        const p0 = imBand(u0, q + schlag, 0.012);
+        const p1 = imBand(u0 + lang * 0.5, q - schlag, 0.012);
+        const p2 = imBand(u0 + lang, q + schlag * 0.5, 0.012);
+        /* ZWEI Schlieren übereinander: eine dunkle darunter, eine helle darauf. Auf hellem Sand
+           ist eine weiße Linie unsichtbar, auf dunklem Grund eine dunkle – so sieht man sie auf
+           beidem. Das war der Fehler beim ersten Versuch: nur helle Striche, und auf dem Steg war
+           von der Strömung nichts zu erkennen. */
+        for (const [farbe, dicke, versatz] of [['16,44,58', 1.5, 0.06], ['236,252,255', 1.0, 0]]) {
+          const lauf = ctx.createLinearGradient(p0[0], p0[1], p2[0], p2[1]);
+          lauf.addColorStop(0, `rgba(${farbe},0)`);
+          lauf.addColorStop(0.45, `rgba(${farbe},${(farbe[0] === '1' ? 0.3 : 0.42) + 0.3 * k})`);
+          lauf.addColorStop(1, `rgba(${farbe},0)`);
+          ctx.strokeStyle = lauf; ctx.lineWidth = Math.max(2, s * (0.1 + 0.06 * k) * dicke);
+          ctx.beginPath();
+          ctx.moveTo(p0[0], p0[1] + versatz * s);
+          ctx.quadraticCurveTo(p1[0], p1[1] + versatz * s, p2[0], p2[1] + versatz * s);
+          ctx.stroke();
+        }
+      }
+    }
+
+    /* TANG, DER SICH LEGT. Das ist das deutlichste Zeichen: Halme stehen nicht aufrecht, sie
+       zeigen dorthin, wo es hintreibt, und wehen im Takt. Wo die Strömung gerade ruht (Dünung),
+       richten sie sich wieder auf – daran sieht man den Augenblick zum Durchspielen. */
+    const bueschel = Math.max(5, Math.round(laenge * breite * 0.22));
+    for (let i = 0; i < bueschel; i++) {
+      const fu = ((i * 0.6180339887) % 1 - 0.5) * laenge * 0.92;
+      const fq = ((i * 0.3819660113 + 0.27) % 1 - 0.5) * breite * 0.86;
+      const [fx, fy] = imBand(fu, fq, 0.01);
+      const neigung = (0.45 + 0.75 * k) * (1 + 0.18 * Math.sin(t * 2.2 + i));
+      for (let h = 0; h < 3; h++) {
+        const hoehe = 0.5 + 0.18 * h;
+        const [sx, sy] = imBand(fu + dx * 0, fq + (h - 1) * 0.1, 0.01);
+        const [ex, ey] = imBand(fu + hoehe * neigung, fq + (h - 1) * 0.1, hoehe * 0.55);
+        const [mx, my] = imBand(fu + hoehe * neigung * 0.45, fq + (h - 1) * 0.1, hoehe * 0.78);
+        ctx.strokeStyle = `rgba(${74 + h * 16},${132 + h * 14},${76 + h * 10},${0.75 + 0.2 * k})`;
+        ctx.lineWidth = Math.max(2, s * 0.075);
+        ctx.beginPath(); ctx.moveTo(sx, sy); ctx.quadraticCurveTo(mx, my, ex, ey); ctx.stroke();
+      }
+    }
+
+    /* KÖRNER UND BLASEN, die mittreiben. Sie sind das, was Bewegung zeigt, ohne etwas zu
+       behaupten: Kein Zeichen, nur Zeug, das mitgerissen wird. */
+    const koerner = Math.max(6, Math.round(laenge * breite * 0.5));
+    for (let i = 0; i < koerner; i++) {
+      const spur = ((i * 0.7548776662) % 1 - 0.5) * breite * 0.92;
+      const u = (((i * 0.5698402909) + t * (0.4 + 0.5 * k)) % 1) * laenge - laenge / 2;
+      const rand = Math.min(1, (laenge / 2 - Math.abs(u)) / 1.2);   // am Rand aus- und einblenden
+      const [px, py] = imBand(u, spur + 0.1 * Math.sin(t * 3 + i), 0.02 + (i % 4) * 0.05);
+      if (i % 5 === 0) {
+        ctx.strokeStyle = `rgba(226,248,255,${0.5 * k * rand})`; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(px, py, s * (0.045 + (i % 3) * 0.018), 0, Math.PI * 2); ctx.stroke();
+      } else {
+        ctx.fillStyle = `rgba(250,254,255,${(0.45 + 0.4 * k) * rand})`;
+        ctx.beginPath(); ctx.arc(px, py, s * (0.035 + (i % 3) * 0.015), 0, Math.PI * 2); ctx.fill();
       }
     }
     ctx.restore();

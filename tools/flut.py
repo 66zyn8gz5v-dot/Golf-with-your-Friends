@@ -811,8 +811,9 @@ bahn('Die Wasserwand', 'flachwasser', f, par=4,
      intro='Quer im Weg liegt ein Gitterrost, und aus ihm schießt im Takt eine Wand aus Wasser '
            'hoch. Solange sie steht, kommt niemand hindurch – einen Takt warten, oder den Bogen '
            'darunter nehmen. Der ist länger, aber immer offen.',
-     hindernisse=[wasserwand(20.5, 11.5, achse='y', spalt=5.0),
-                  strom(15, 13, 19, 14, 0, tempo=4.2)])
+     # Keine Strömung mehr: Sie stand hier, als noch ein Schöpfrad angetrieben werden mußte.
+     # Die Wasserwand braucht niemanden, der sie dreht.
+     hindernisse=[wasserwand(20.5, 11.5, achse='y', spalt=5.0)])
 
 # --- 5: der Seegraswald. ENGE GASSEN zwischen Mauern, versetzt wie ein Zickzack. Hier zählt der
 #        Winkel mehr als die Kraft.
