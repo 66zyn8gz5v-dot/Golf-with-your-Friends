@@ -115,8 +115,13 @@ BAHNEN = []
 # stimmt.
 DEKO_SAAT = [17, 29, 43, 59, 71, 89, 101, 113, 131, 149, 163, 181]
 # Wie dicht. Die Stege sind schmal, also ist fast die ganze Karte Wasser – bei der Dichte der
-# Landwelten (0,4) stünde der Meeresgrund voll wie ein Möbellager. Ein Achtel reicht.
-DEKO_DICHTE = 0.13
+# Landwelten (0,4) stünde der Meeresgrund voll wie ein Möbellager. Ein knappes Viertel ist der
+# Stand nach dem ersten Ansehen: Mit einem Achtel war der Grund noch immer zu leer.
+DEKO_DICHTE = 0.22
+# Und die schwebenden Wesen ringsum – Schwärme, Rochen, Schildkröten, Quallen. Sie stehen weiter
+# auseinander als die Bodendeko, weil jedes einzelne größer ist und sich bewegt: Ein Rand voller
+# zappelnder Tiere zieht den Blick von der Bahn weg, und die soll man ansehen.
+SCHWEB_DICHTE = 0.055
 
 
 # Die TIEFE jeder Bahn, von der Wasserlinie (0) bis zum Grund (1). Sie läuft gleichmäßig durch:
@@ -139,7 +144,8 @@ def bahn(name, theme, karte, hindernisse=None, par=3, intro=None, maxStrokes=Non
     b = {'name': name, 'par': par, 'theme': theme, 'map': txt(karte),
          'tiefe': TIEFEN[min(len(BAHNEN), len(TIEFEN) - 1)],
          'obstacles': hindernisse or [],
-         'autoDecor': {'density': DEKO_DICHTE, 'seed': DEKO_SAAT[len(BAHNEN) % len(DEKO_SAAT)]}}
+         'autoDecor': {'density': DEKO_DICHTE, 'seed': DEKO_SAAT[len(BAHNEN) % len(DEKO_SAAT)]},
+         'schwebDecor': {'density': SCHWEB_DICHTE, 'seed': DEKO_SAAT[len(BAHNEN) % len(DEKO_SAAT)] + 7}}
     if intro: b['intro'] = intro
     if maxStrokes: b['maxStrokes'] = maxStrokes
     BAHNEN.append(b)
@@ -723,6 +729,9 @@ def js(b):
     if 'autoDecor' in b:
         a = b['autoDecor']
         kopf += f"    autoDecor: {{ density: {a['density']}, seed: {a['seed']} }},\n"
+    if 'schwebDecor' in b:
+        a = b['schwebDecor']
+        kopf += f"    schwebDecor: {{ density: {a['density']}, seed: {a['seed']} }},\n"
     karte = ',\n      '.join(f"'{r}'" for r in b['map'])
     hind = ''
     if b['obstacles']:

@@ -1796,6 +1796,36 @@ aufgeklebtes Bild.
   einer Raupe reihen. Ein Pfosten-Sturz-Tor ist auf den ersten Blick als Tor zu erkennen – und für
   eine versunkene Stadt ohnehin das richtige Bauwerk.
 
+### Und was im Wasser schwebt
+
+Die Streu-Deko oben braucht Boden unter sich: Sie wirft einen Schatten, also darf sie nicht in der
+Luft stehen, und darum endet sie am Rand der Erdscholle. **Unter Wasser ist das die falsche Regel.**
+Ein Fischschwarm steht auf nichts, eine Qualle auch nicht, und beide gehören genau dorthin, wo die
+andere Deko aufhört: neben die Bahn und über sie hinaus, ins offene Wasser.
+
+Darum gibt es einen zweiten Streu-Durchgang, `schwebDecor`. Er verteilt in einem Ring von sieben
+Kacheln um die Karte, was im Wasser hängt – **Fischschwarm**, **Rochen**, **Meeresschildkröte**,
+dazu Quallen und einzelne Fische –, auf einer Höhe zwischen 1,1 und 3,8 Kacheln. Nach Tiefe
+verschieden: oben Schwärme und Schildkröten, die Luft holen gehen; über der Sandbank am dichtesten,
+weil dort noch Licht ist; in der Dämmerzone mehr Rochen und die erste Qualle; ganz unten nur noch
+Quallen und Rochen.
+
+**Sie sind reine Zier** – sie kollidieren nicht, sie bremsen nicht, sie halten niemanden auf. Dafür
+gelten drei Regeln, und alle drei halten sie vom Spielfeld weg: nie über Boden, mindestens drei
+Kacheln Abstand zum nächsten Boden, und nichts im Streifen *vor* der Bahn. Ohne die erste schwämme
+ein Rochen über dem Steg und man sähe nicht mehr, wohin man spielt; ohne die zweite verdeckte er
+die Kante, an der es ins Meer geht – und die ist in dieser Welt die wichtigste Linie überhaupt.
+Geprüft wird beides über alle zwölf Bahnen: 526 Wesen, keines über Boden, keines näher als zwei
+Kacheln.
+
+Die Fische im Schwarm sind mit Absicht **groß für ihre Zahl**. Beim ersten Versuch waren es acht
+winzige, und in der Übersicht des Spiels ist ein winziger Fisch drei Bildpunkte: Aus dem Schwarm
+wurde eine Handvoll gelber Häkchen. Jetzt sind es sechs, die man erkennt. Lieber fünf, die man
+sieht, als acht, die man errät.
+
+Alle drei bewegen sich aus der Spieluhr, nicht aus dem Zufall. Das ist hier wichtiger als
+anderswo: Es sind viele, sie stehen dicht, und wenn jedes einzeln zuckt, flimmert der ganze Rand.
+
 Dass ein Name in der Palette auch beim Zeichner ankommt, prüft `tools/flut.mjs`. Der Grund ist die
 Art des Fehlers: Steht in der Palette ein Name, den der Renderer nicht kennt, passiert **nichts** –
 keine Meldung, das Ding fehlt einfach. Das sieht niemand, solange er nicht weiß, wie viele Wracks

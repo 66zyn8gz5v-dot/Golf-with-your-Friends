@@ -2836,6 +2836,9 @@ class Renderer {
       case 'bollard': this.spriteBollard(ctx, d, t); break;
       case 'anchor': this.spriteAnchor(ctx, d); break;
       case 'wrack': this.spriteWrack(ctx, d); break;
+      case 'fischschwarm': this.spriteFischschwarm(ctx, d, t); break;
+      case 'rochen': this.spriteRochen(ctx, d, t); break;
+      case 'schildkroete': this.spriteSchildkroete(ctx, d, t); break;
       case 'amphore': this.spriteAmphore(ctx, d); break;
       case 'torbogen': this.spriteTorbogen(ctx, d); break;
       case 'buoy': this.spriteBuoy(ctx, d, t); break;
@@ -3664,6 +3667,153 @@ class Renderer {
 
   /* Fass: drei Ringe übereinander geben den Bauch, zwei dunkle Reifen halten ihn zusammen, und
      obendrauf liegt der Deckel mit seinen Dauben. */
+  /* ---------- Was im Wasser schwebt ----------
+     Drei Wesen für den Außenbereich der Flut. Sie stehen auf nichts, sie halten niemanden auf und
+     sie werden nie berührt – sie sind reine Zier und schwimmen neben der Bahn im offenen Wasser.
+
+     Alle drei bewegen sich aus der Spieluhr, nicht aus dem Zufall. Das ist hier wichtiger als
+     anderswo: Es sind viele, sie stehen dicht, und wenn jedes einzeln zuckt, flimmert der ganze
+     Rand. Aus t gerechnet ziehen sie ruhig ihre Bahn, und zwei Nachbarn bleiben zwei Nachbarn. */
+
+  /* Fischschwarm: sieben, acht Fische, die gemeinsam eine langsame Runde drehen. Das Kunststück
+     ist nicht der einzelne Fisch – der ist ein Tropfen mit einer Schwanzflosse –, sondern daß der
+     Schwarm ZUSAMMENBLEIBT. Jeder Fisch bekommt darum denselben Kreis, nur mit eigenem Vorlauf,
+     und schaut in die Richtung, in die er gerade fährt. */
+  spriteFischschwarm(ctx, d, t) {
+    /* Die Fische sind mit Absicht GROSS für ihre Zahl. Beim ersten Ansehen waren es acht winzige,
+       und in der Übersicht des Spiels ist ein winziger Fisch drei Bildpunkte: Aus dem Schwarm
+       wurde eine Handvoll gelber Häkchen. Lieber fünf, die man erkennt, als acht, die man errät. */
+    const k = d.s * 1.35, seed = d.seed || 0;
+    const n = 6;
+    const R = k * 0.85;                              // Radius der Runde
+    const w0 = seed * 6.283 + t * 0.55;              // der Schwarm dreht sich langsam
+    const zm = (d.z || 0) + k * 0.2 * Math.sin(t * 0.8 + seed * 5);
+    const farbe = seed < 0.5 ? ['#ffd98a', '#c9973a'] : ['#9fe0ff', '#3f87b8'];
+    for (let i = 0; i < n; i++) {
+      /* Der Versatz im Kreis und ein kleiner Eigenabstand quer dazu – ohne den läge der Schwarm
+         auf einer Schnur statt in einer Wolke. */
+      const u = i / n;
+      const w = w0 + u * 1.9;
+      const quer = ((i * 7) % 5) / 5 - 0.5;
+      const rr = R * (0.72 + quer * 0.5);
+      const x = d.x + Math.cos(w) * rr, y = d.y + Math.sin(w) * rr * 0.8;
+      const z = zm + (((i * 3) % 5) / 5 - 0.5) * k * 0.45;
+      const L = k * 0.3;
+      // Blickrichtung: die Tangente an den Kreis, projiziert – sonst schwimmen sie am Bildschirm quer
+      const [ax, ay] = this.proj(x, y, z);
+      const [bx, by] = this.proj(x - Math.sin(w) * 0.3, y + Math.cos(w) * 0.3 * 0.8, z);
+      const ri = Math.atan2(by - ay, bx - ax);
+      const sc = this.scale * L;
+      ctx.save();
+      ctx.translate(ax, ay); ctx.rotate(ri);
+      const schlag = Math.sin(t * 9 + i * 1.7) * 0.5;
+      ctx.fillStyle = farbe[1];
+      ctx.beginPath();
+      ctx.moveTo(-sc * 0.7, 0);
+      ctx.lineTo(-sc * 1.5, -sc * (0.55 + schlag * 0.3));
+      ctx.lineTo(-sc * 1.5, sc * (0.55 - schlag * 0.3));
+      ctx.closePath(); ctx.fill();
+      const g = ctx.createLinearGradient(0, -sc * 0.5, 0, sc * 0.5);
+      g.addColorStop(0, farbe[0]); g.addColorStop(1, farbe[1]);
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.ellipse(0, 0, sc, sc * 0.46, 0, 0, TAU); ctx.fill();
+      ctx.fillStyle = 'rgba(12,20,24,0.8)';
+      ctx.beginPath(); ctx.arc(sc * 0.52, -sc * 0.1, sc * 0.13, 0, TAU); ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  /* Rochen: ein Rautenkörper mit zwei Flügeln, die langsam schlagen, und einem langen Schweif.
+     Er gleitet auf einer Geraden hin und her – ein Rochen, der auf der Stelle flattert, sieht aus
+     wie festgenagelt. */
+  spriteRochen(ctx, d, t) {
+    const k = d.s * 1.5, seed = d.seed || 0;
+    const ph = t * 0.42 + seed * 6.283;
+    const a = seed * 6.283;                          // seine Richtung
+    const co = Math.cos(a), si = Math.sin(a);
+    const weg = Math.sin(ph) * k * 1.6;              // hin und her auf seiner Geraden
+    const x = d.x + co * weg, y = d.y + si * weg;
+    const dir = Math.cos(ph) >= 0 ? 1 : -1;
+    const z = (d.z || 0) + k * 0.18 * Math.sin(t * 0.9 + seed * 4);
+    const schlag = Math.sin(t * 1.6 + seed * 3);     // die Flügel gehen langsam auf und ab
+    const [cx, cy] = this.proj(x, y, z);
+    const [nx2, ny2] = this.proj(x + co * dir, y + si * dir, z);
+    const ri = Math.atan2(ny2 - cy, nx2 - cx);
+    const sc = this.scale * k;
+    ctx.save();
+    ctx.translate(cx, cy); ctx.rotate(ri);
+    // Der Schatten liegt nicht unter ihm: Er schwebt, und unter ihm ist Wasser.
+    const g = ctx.createLinearGradient(0, -sc * 0.5, 0, sc * 0.5);
+    g.addColorStop(0, '#5c7a86'); g.addColorStop(0.5, '#3e5b68'); g.addColorStop(1, '#2a4450');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(sc * 0.62, 0);
+    for (const vz of [-1, 1]) {
+      ctx.moveTo(sc * 0.62, 0);
+      ctx.quadraticCurveTo(sc * 0.1, vz * sc * (0.34 + schlag * 0.14), -sc * 0.5, vz * sc * (0.5 + schlag * 0.2));
+      ctx.quadraticCurveTo(-sc * 0.34, vz * sc * 0.12, -sc * 0.42, 0);
+      ctx.closePath();
+    }
+    ctx.fill();
+    // Der Schweif
+    ctx.strokeStyle = '#2a4450'; ctx.lineWidth = Math.max(1, sc * 0.05); ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(-sc * 0.42, 0);
+    ctx.quadraticCurveTo(-sc * 0.8, sc * 0.1 * schlag, -sc * 1.25, sc * 0.2 * schlag);
+    ctx.stroke();
+    // Zwei Augen oben auf dem Rücken – daran erkennt man ihn auch aus der Höhe
+    ctx.fillStyle = 'rgba(230,244,250,0.8)';
+    for (const vz of [-1, 1]) { ctx.beginPath(); ctx.arc(sc * 0.34, vz * sc * 0.1, sc * 0.045, 0, TAU); ctx.fill(); }
+    ctx.restore();
+  }
+
+  /* Meeresschildkröte: ein gewölbter Panzer mit Platten, vier Flossen, die rudern, und ein Kopf.
+     Sie ist die langsamste der drei – und die einzige, die sich dabei auch dreht. */
+  spriteSchildkroete(ctx, d, t) {
+    const k = d.s * 1.15, seed = d.seed || 0;
+    const w = seed * 6.283 + t * 0.16;               // sie zieht eine weite Runde
+    const R = k * 0.9;
+    const x = d.x + Math.cos(w) * R, y = d.y + Math.sin(w) * R * 0.8;
+    const z = (d.z || 0) + k * 0.2 * Math.sin(t * 0.7 + seed * 6);
+    const [cx, cy] = this.proj(x, y, z);
+    const [bx, by] = this.proj(x - Math.sin(w) * 0.4, y + Math.cos(w) * 0.4 * 0.8, z);
+    const ri = Math.atan2(by - cy, bx - cx);
+    const sc = this.scale * k;
+    ctx.save();
+    ctx.translate(cx, cy); ctx.rotate(ri);
+    const rudern = Math.sin(t * 2.1 + seed * 5);
+    // Die vier Flossen zuerst, damit der Panzer darüber liegt
+    ctx.fillStyle = '#3f6b52';
+    for (const [fx, fy, vz] of [[0.2, -1, -1], [0.2, 1, 1], [-0.3, -1, 1], [-0.3, 1, -1]]) {
+      ctx.save();
+      ctx.translate(sc * fx, sc * fy * 0.3);
+      ctx.rotate(fy * (0.6 + vz * rudern * 0.35));
+      ctx.beginPath(); ctx.ellipse(0, sc * fy * 0.22, sc * 0.3, sc * 0.12, 0, 0, TAU); ctx.fill();
+      ctx.restore();
+    }
+    // Kopf
+    ctx.fillStyle = '#48775c';
+    ctx.beginPath(); ctx.ellipse(sc * 0.52, 0, sc * 0.16, sc * 0.12, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = 'rgba(12,20,16,0.8)';
+    for (const vz of [-1, 1]) { ctx.beginPath(); ctx.arc(sc * 0.58, vz * sc * 0.06, sc * 0.03, 0, TAU); ctx.fill(); }
+    // Der Panzer
+    const g = ctx.createRadialGradient(-sc * 0.1, -sc * 0.12, sc * 0.05, 0, 0, sc * 0.5);
+    g.addColorStop(0, '#7a6a3e'); g.addColorStop(0.6, '#4f4526'); g.addColorStop(1, '#312a16');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.ellipse(0, 0, sc * 0.48, sc * 0.36, 0, 0, TAU); ctx.fill();
+    // Die Platten: ein Ring aus sechs Feldern und eine Reihe in der Mitte
+    ctx.strokeStyle = 'rgba(28,24,12,0.6)'; ctx.lineWidth = Math.max(1, sc * 0.022);
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const aa = (i * TAU) / 6 + 0.3;
+      ctx.moveTo(Math.cos(aa) * sc * 0.2, Math.sin(aa) * sc * 0.15);
+      ctx.lineTo(Math.cos(aa) * sc * 0.47, Math.sin(aa) * sc * 0.35);
+    }
+    ctx.ellipse(0, 0, sc * 0.2, sc * 0.15, 0, 0, TAU);
+    ctx.stroke();
+    ctx.restore();
+  }
+
   /* ---------- Die Requisiten der versunkenen Stadt ----------
      Drei Körper für den Außenbereich der Flut. Sie stehen dort, wo kein Ball hinkommt – im offenen
      Wasser neben den Stegen –, und haben genau eine Aufgabe: Der Meeresgrund soll nach etwas

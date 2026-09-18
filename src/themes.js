@@ -540,7 +540,9 @@ const THEMES = {
     accent: '#ffe08a', flag: '#ff5a5a',
     /* Oben an der Wasserlinie ist das Meer noch Hafen: Bojen, Poller, Tauwerk. Das Wrack liegt
        hier schon, aber es ist das einzige, was von unten erzählt. */
-    autoDecor: ['buoy', 'shell', 'coral', 'ropepost', 'starfish', 'bollard', 'seaweed', 'buoy', 'wrack'],
+    autoDecor: ['buoy', 'shell', 'coral', 'ropepost', 'starfish', 'bollard', 'seaweed', 'buoy', 'wrack', 'barrel', 'mast'],
+    /* Oben schwimmt, was ans Licht mag: Schwärme und die Schildkröte, die Luft holen geht. */
+    schwebDecor: ['fischschwarm', 'fischschwarm', 'schildkroete', 'fish'],
   },
   flachwasser: { // Sandbank und Seegras: das Licht steht noch, aber es wird grün
     atmo: 'bubbles', meerBg: true, tiefe: 0.35,
@@ -553,7 +555,9 @@ const THEMES = {
     rotor: { top: '#9aa9a2', side: '#4f6265' },
     accent: '#7fe8c0', flag: '#ffd166',
     /* Auf der Sandbank ist noch nichts gebaut – dafür liegt hier, was heruntergesunken ist. */
-    autoDecor: ['seaweed', 'coral', 'shell', 'seaweed', 'starfish', 'rock', 'coral', 'pearl', 'wrack', 'amphore'],
+    autoDecor: ['seaweed', 'coral', 'shell', 'seaweed', 'starfish', 'rock', 'coral', 'pearl', 'wrack', 'amphore', 'barrel', 'chest'],
+    /* Über der Sandbank stehen die Schwärme am dichtesten – hier ist noch Licht. */
+    schwebDecor: ['fischschwarm', 'fischschwarm', 'rochen', 'schildkroete', 'fish', 'jelly'],
   },
   daemmerzone: { // Die versunkene Stadt: blau, kaum noch Licht, Dächer und Giebel im Dämmer
     atmo: 'bubbles', meerBg: true, tiefe: 0.65,
@@ -567,7 +571,9 @@ const THEMES = {
     accent: '#8fd8ff', flag: '#ffd166', stars: false,
     /* In der Dämmerzone steht die Stadt: Säulen, Torbögen, Amphoren zwischen den Korallen. Hier
        häuft sich absichtlich das Gebaute – es ist die Etage, in der die Legende spielt. */
-    autoDecor: ['anchor', 'coral', 'seaweed', 'shell', 'pillar', 'torbogen', 'amphore', 'bell', 'seaweed', 'torbogen'],
+    autoDecor: ['anchor', 'coral', 'seaweed', 'shell', 'pillar', 'torbogen', 'amphore', 'bell', 'seaweed', 'torbogen', 'chest', 'bones'],
+    /* In der Dämmerzone wird es ruhiger: mehr Rochen, weniger Schwarm, die erste Qualle. */
+    schwebDecor: ['rochen', 'fischschwarm', 'jelly', 'rochen', 'schildkroete'],
   },
   meeresgrund: { // Ganz unten: Dämmergrün geht in Schwarz über, Licht nur noch von dem, was leuchtet
     atmo: 'bubbles', meerBg: true, tiefe: 1.0,
@@ -581,7 +587,9 @@ const THEMES = {
     accent: '#7fe8d8', flag: '#ffd166', stars: false,
     /* Ganz unten ist die Stadt schon wieder Natur: Korallen und Quallen überwiegen, dazwischen
        nur noch Bruchstücke. */
-    autoDecor: ['coral', 'jelly', 'seaweed', 'anchor', 'skull', 'coral', 'pearl', 'jelly', 'wrack', 'torbogen'],
+    autoDecor: ['coral', 'jelly', 'seaweed', 'anchor', 'skull', 'coral', 'pearl', 'jelly', 'wrack', 'torbogen', 'bones', 'chest'],
+    /* Ganz unten ziehen nur noch Quallen und Rochen vorbei – Schwärme gibt es hier nicht mehr. */
+    schwebDecor: ['jelly', 'rochen', 'jelly', 'rochen', 'fischschwarm'],
   },
   cloud: {
     hangStil: 'schnee',   // Schrägen als Schneerinne, nicht als Erdrampe // Über den Wolken: nichts mehr fest außer dem, worauf man steht

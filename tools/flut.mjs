@@ -508,8 +508,35 @@ console.log('\n--- Die Requisiten im Wasser ---');
   for (const name of paletten) {
     const th = TH[name];
     for (const t of (th.autoDecor || [])) if (!bekannt.has(t)) fehlend.push(`${name}: ${t}`);
+    for (const t of (th.schwebDecor || [])) if (!bekannt.has(t)) fehlend.push(`${name} (schwebend): ${t}`);
   }
   pruef('jede Requisite der vier Paletten kennt der Renderer', fehlend.length === 0, fehlend.join(', '));
+
+  /* Die schwebenden Wesen sind REINE ZIER, und das heißt zweierlei: Sie stehen nie über Boden, und
+     sie halten Abstand zur Bahn. Ohne die erste Regel schwämme ein Rochen über dem Steg und man
+     sähe nicht mehr, wo man hinspielt; ohne die zweite stünde er am Rand und verdeckte die Kante,
+     an der es ins Meer geht – und die ist in dieser Welt die wichtigste Linie überhaupt. */
+  const wl = vm.runInContext('WORLDS.find(w => w.id === "flut")', ctx);
+  let ueberBoden = 0, zuNah = 0, schwebGesamt = 0, tiefste = 99, hoechste = 0;
+  for (const def of wl.courses) {
+    const lv = G.buildLevel(def);
+    for (const d of (lv.decor || [])) {
+      if (!d.schwebt) continue;
+      schwebGesamt++;
+      tiefste = Math.min(tiefste, d.z); hoechste = Math.max(hoechste, d.z);
+      const bx = Math.floor(d.x), by = Math.floor(d.y);
+      if (lv.isFloorChar(lv.charAt(bx, by))) ueberBoden++;
+      let nah = false;
+      for (let i = -2; i <= 2 && !nah; i++) for (let j = -2; j <= 2; j++)
+        if (lv.isFloorChar(lv.charAt(bx + i, by + j))) { nah = true; break; }
+      if (nah) zuNah++;
+    }
+  }
+  pruef('es schwebt überhaupt etwas im Wasser', schwebGesamt > 100, `${schwebGesamt} Wesen auf zwölf Bahnen`);
+  pruef('und nichts davon über dem Steg', ueberBoden === 0, `${ueberBoden} über Boden`);
+  pruef('und nichts davon dicht daneben', zuNah === 0, `${zuNah} näher als zwei Kacheln`);
+  pruef('sie hängen im Wasser, nicht auf dem Grund', tiefste > 1.0,
+        `tiefstes ${tiefste.toFixed(1)}, höchstes ${hoechste.toFixed(1)} Kacheln über dem Boden`);
 
   /* Und jede Bahn streut überhaupt welche. Ohne autoDecor ist das offene Wasser leer – so war es
      bis Fassung 174, und eine leere blaue Fläche sieht nicht nach versunkener Stadt aus. */

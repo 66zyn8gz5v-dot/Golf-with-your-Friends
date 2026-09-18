@@ -273,5 +273,45 @@ function buildDecor(def, tiles, W, H, isFloor) {
       out.push({ t, x: px, y: py, s: gr, z: 0, seed: sd });
     }
   }
+  /* ------------------------------------------------------------------
+     SCHWEBENDE REQUISITEN – das, was im Wasser hängt statt auf dem Grund zu stehen.
+
+     Die Streu-Deko oben braucht Boden unter sich: Sie wirft einen Schatten, also darf sie nicht in
+     der Luft stehen, und darum endet sie am Rand der Erdscholle. Unter Wasser ist das die falsche
+     Regel. Ein Fischschwarm steht auf nichts, eine Qualle auch nicht, und beide gehören genau
+     dorthin, wo die andere Deko aufhört: NEBEN die Bahn und ÜBER sie hinaus, ins offene Wasser.
+
+     Sie sind reine Zier. Sie kollidieren nicht, sie bremsen nicht, sie verdecken nichts – dafür
+     gelten hier drei Regeln, und alle drei halten sie vom Spielfeld weg:
+       - nie über Boden, und mit Abstand zum nächsten Boden (SCHWEB_ABSTAND),
+       - nichts im Streifen VOR der Bahn, sonst schwimmt ein Rochen durchs Bild,
+       - und eine Höhe zwischen SCHWEB_TIEF und SCHWEB_HOCH, damit sie im Wasser hängen und nicht
+         auf dem Grund zu liegen scheinen. */
+  const schweb = def.schwebDecor || (auto && theme.schwebDecor ? { density: 0.1, seed: (auto.seed || 1) + 7 } : null);
+  const schwebVorrat = theme.schwebDecor || [];
+  if (schweb && schwebVorrat.length) {
+    const SCHWEB_RING = 7;        // so weit über die Karte hinaus wird gestreut
+    const SCHWEB_ABSTAND = 3;     // so viele Kacheln Abstand zum nächsten Boden
+    const SCHWEB_TIEF = 1.1, SCHWEB_HOCH = 3.8;
+    const rnd = seededRandom(schweb.seed || 1);
+    const dichte = schweb.density ?? 0.1;
+    const bodenNah = (x, y) => {
+      for (let i = -SCHWEB_ABSTAND; i <= SCHWEB_ABSTAND; i++)
+        for (let j = -SCHWEB_ABSTAND; j <= SCHWEB_ABSTAND; j++) if (isFloor(x + i, y + j)) return true;
+      return false;
+    };
+    for (let y = -SCHWEB_RING; y < H + SCHWEB_RING; y++) for (let x = -SCHWEB_RING; x < W + SCHWEB_RING; x++) {
+      if (rnd() > dichte) continue;
+      // Der Streifen vor der Bahn bleibt frei – dort verdeckte alles, was schwebt, den Weg
+      let davor = false;
+      for (let i = 0; i <= 4 && !davor; i++) for (let j = 0; j <= 4; j++) if (isFloor(x - i, y - j)) { davor = true; break; }
+      if (davor || bodenNah(x, y)) continue;
+      const t = schwebVorrat[Math.floor(rnd() * schwebVorrat.length)];
+      const px = x + 0.2 + rnd() * 0.6, py = y + 0.2 + rnd() * 0.6;
+      const gr = 0.8 + rnd() * 0.7, sd = rnd();
+      const z = SCHWEB_TIEF + rnd() * (SCHWEB_HOCH - SCHWEB_TIEF);
+      out.push({ t, x: px, y: py, s: gr, z, seed: sd, schwebt: true });
+    }
+  }
   return out;
 }
