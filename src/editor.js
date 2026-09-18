@@ -91,7 +91,7 @@ const Editor = (deps) => {
     if (hatHoehen()) { ed.def.heights = ed.heights.map(r => r.join('')); ed.def.hStep = ed.def.hStep || 0.5; }
     else { delete ed.def.heights; delete ed.def.hStep; }
     ed.def.editing = true;
-    state.level = buildLevel(ed.def); state.theme = THEMES[ed.def.theme] || THEMES.meadow;
+    state.level = buildLevel(ed.def); state.theme = themaFuer(ed.def);
     R.setLevel(state.level, state.theme);
   }
   /* Kamera: Draufsicht (Norden oben, quadratische Kacheln, nur ein Hauch Höhe) oder Schrägsicht;
@@ -209,9 +209,14 @@ const Editor = (deps) => {
       case 'ramp': o.angle = cyc(o.angle || 0); break;
       case 'boost': o.angle = cyc(o.angle || 0); break;
       case 'gate': { const w = o.w; o.w = o.h; o.h = w; o.axis = o.axis === 'x' ? 'y' : 'x'; break; }
-      case 'windmill': o.axis = o.axis === 'x' ? 'y' : 'x'; break;
+      /* Die Mühle dreht sich beim Tippen durch vier Zustände: quer, längs – und beides
+         noch einmal als Wasserwand, der Gestalt, die sie in der Flut trägt. */
+      case 'windmill':
+        if (o.axis === 'x') { o.axis = 'y'; o.style = o.style === 'wasserwand' ? undefined : 'wasserwand'; }
+        else o.axis = 'x';
+        break;
       case 'mover': { const cx = (o.x0 + o.x1) / 2, cy = (o.y0 + o.y1) / 2, L = Math.hypot(o.x1 - o.x0, o.y1 - o.y0) / 2; if (o.y0 === o.y1) { o.x0 = o.x1 = cx; o.y0 = cy - L; o.y1 = cy + L; } else { o.y0 = o.y1 = cy; o.x0 = cx - L; o.x1 = cx + L; } break; }
-      case 'cannon': o.base = Math.round(((o.base || 0) + Math.PI / 2) * 1000) / 1000; if (o.base > Math.PI * 2 - 0.01) { o.base = 0; o.style = o.style === 'ballista' ? 'catapult' : o.style === 'catapult' ? undefined : 'ballista'; } break;
+      case 'cannon': o.base = Math.round(((o.base || 0) + Math.PI / 2) * 1000) / 1000; if (o.base > Math.PI * 2 - 0.01) { o.base = 0; o.style = o.style === 'ballista' ? 'catapult' : o.style === 'catapult' ? 'wrackkanone' : o.style === 'wrackkanone' ? undefined : 'ballista'; } break;
       case 'magnet': o.strength = -o.strength; break;
       case 'turntable': o.exit = cyc(o.exit || 0); break;
       case 'rotor': o.speed = -o.speed; break;

@@ -515,6 +515,82 @@ const THEMES = {
     accent: '#ff8a3d', flag: '#ffd166',
     autoDecor: ['basalt', 'brazier', 'obsidian', 'vent', 'anvil', 'basalt', 'stalagmite', 'crystalOrange'],
   },
+  /* ---- Die Flut ----
+     Ein Abstieg, und zwar wörtlich: von der Wasseroberfläche bis auf den Meeresgrund. Die vier
+     Abschnitte sind vier Tiefen, und mit jeder wird es dunkler, blauer und stiller – oben steht die
+     Sonne noch im Wasser, unten kommt das einzige Licht aus dem, was selber leuchtet.
+
+     Das trägt die Kennung 'tiefe' von 0 (dicht unter der Oberfläche) bis 1 (ganz unten). Daran
+     hängt in src/render_flut.js alles: wie hell die Lichtbahnen von oben sind, ob man das Kräuseln
+     der Oberfläche noch sieht, wie stark das Netz aus Sonnenlicht über dem Boden liegt, wieviel
+     Schwebstoff im Wasser hängt und wie blau der Schleier ist, der über allem liegt. Eine Zahl,
+     und die ganze Welt wird tiefer – so wie die Mine mit jedem Abschnitt wärmer wurde.
+
+     'meerBg' heißt: kein Himmel, sondern die Wassersäule. Über Wasser gibt es in dieser Welt
+     nichts mehr zu sehen. */
+  wasserlinie: { // Dicht unter der Oberfläche: Sonne im Wasser, das Kräuseln von unten gesehen
+    atmo: 'bubbles', meerBg: true, tiefe: 0.12,
+    sky: ['#9fe2ef', '#2e7fa8'], ground: '#2c6d84', groundEdge: '#17475c', cliff: '#4a7f92',
+    floor: ['#d2c69c', '#c6b992'], sand: '#e8dfb8', ice: '#c8ecff', snow: '#f1f7ff',
+    water: '#4fb3d9', lava: '#ff7a3d',
+    wall: { top: '#c2ccc6', side: '#5f7c82', style: 'stone' },
+    block: { top: '#a8895a', side: '#63502f' },      // Bohlen und Buhnen: Holz gegen die See
+    mover: { top: '#b8843f', side: '#6b4a25' },
+    rotor: { top: '#aeb8b4', side: '#5e6e72' },
+    accent: '#ffe08a', flag: '#ff5a5a',
+    /* Oben an der Wasserlinie ist das Meer noch Hafen: Bojen, Poller, Tauwerk. Das Wrack liegt
+       hier schon, aber es ist das einzige, was von unten erzählt. */
+    autoDecor: ['buoy', 'shell', 'coral', 'ropepost', 'starfish', 'bollard', 'seaweed', 'buoy', 'wrack', 'barrel', 'mast'],
+    /* Oben schwimmt, was ans Licht mag: Schwärme und die Schildkröte, die Luft holen geht. */
+    schwebDecor: ['fischschwarm', 'fischschwarm', 'schildkroete', 'fish'],
+  },
+  flachwasser: { // Sandbank und Seegras: das Licht steht noch, aber es wird grün
+    atmo: 'bubbles', meerBg: true, tiefe: 0.35,
+    sky: ['#5fb6cc', '#15607f'], ground: '#1f5c74', groundEdge: '#0f3b4d', cliff: '#3c6e80',
+    floor: ['#aab88e', '#9eac82'], sand: '#d8d2a4', ice: '#c8ecff', snow: '#f1f7ff',
+    water: '#3f9cc4', lava: '#ff7a3d',
+    wall: { top: '#9fb0a6', side: '#4c6a6a', style: 'stone' },
+    block: { top: '#8f7a4e', side: '#54462b' },
+    mover: { top: '#a37f4e', side: '#60482a' },
+    rotor: { top: '#9aa9a2', side: '#4f6265' },
+    accent: '#7fe8c0', flag: '#ffd166',
+    /* Auf der Sandbank ist noch nichts gebaut – dafür liegt hier, was heruntergesunken ist. */
+    autoDecor: ['seaweed', 'coral', 'shell', 'seaweed', 'starfish', 'rock', 'coral', 'pearl', 'wrack', 'amphore', 'barrel', 'chest'],
+    /* Über der Sandbank stehen die Schwärme am dichtesten – hier ist noch Licht. */
+    schwebDecor: ['fischschwarm', 'fischschwarm', 'rochen', 'schildkroete', 'fish', 'jelly'],
+  },
+  daemmerzone: { // Die versunkene Stadt: blau, kaum noch Licht, Dächer und Giebel im Dämmer
+    atmo: 'bubbles', meerBg: true, tiefe: 0.65,
+    sky: ['#1a5670', '#06283a'], ground: '#123449', groundEdge: '#07202e', cliff: '#27506a',
+    floor: ['#71868f', '#677c85'], sand: '#9aa79c', ice: '#bfe6ff', snow: '#f1f7ff',
+    water: '#2b6f92', lava: '#5fe8c4',
+    wall: { top: '#7d8f96', side: '#37505c', style: 'stone' },
+    block: { top: '#6d7f88', side: '#33454e' },
+    mover: { top: '#7b8c92', side: '#3b4e55' },
+    rotor: { top: '#86979c', side: '#42565c' },
+    accent: '#8fd8ff', flag: '#ffd166', stars: false,
+    /* In der Dämmerzone steht die Stadt: Säulen, Torbögen, Amphoren zwischen den Korallen. Hier
+       häuft sich absichtlich das Gebaute – es ist die Etage, in der die Legende spielt. */
+    autoDecor: ['anchor', 'coral', 'seaweed', 'shell', 'pillar', 'torbogen', 'amphore', 'bell', 'seaweed', 'torbogen', 'chest', 'bones'],
+    /* In der Dämmerzone wird es ruhiger: mehr Rochen, weniger Schwarm, die erste Qualle. */
+    schwebDecor: ['rochen', 'fischschwarm', 'jelly', 'rochen', 'schildkroete'],
+  },
+  meeresgrund: { // Ganz unten: Dämmergrün geht in Schwarz über, Licht nur noch von dem, was leuchtet
+    atmo: 'bubbles', meerBg: true, tiefe: 1.0,
+    sky: ['#073040', '#01090f'], ground: '#07202b', groundEdge: '#030e14', cliff: '#1c383f',
+    floor: ['#546e72', '#4b6467'], sand: '#8b9c92', ice: '#bfe6ff', snow: '#f1f7ff',
+    water: '#1d4e63', lava: '#5fe8c4',
+    wall: { top: '#5e7a7c', side: '#264247', style: 'stone' },
+    block: { top: '#587270', side: '#26403f' },
+    mover: { top: '#55696c', side: '#263c40' },
+    rotor: { top: '#5f7477', side: '#2c4348' },
+    accent: '#7fe8d8', flag: '#ffd166', stars: false,
+    /* Ganz unten ist die Stadt schon wieder Natur: Korallen und Quallen überwiegen, dazwischen
+       nur noch Bruchstücke. */
+    autoDecor: ['coral', 'jelly', 'seaweed', 'anchor', 'skull', 'coral', 'pearl', 'jelly', 'wrack', 'torbogen', 'bones', 'chest'],
+    /* Ganz unten ziehen nur noch Quallen und Rochen vorbei – Schwärme gibt es hier nicht mehr. */
+    schwebDecor: ['jelly', 'rochen', 'jelly', 'rochen', 'fischschwarm'],
+  },
   cloud: {
     hangStil: 'schnee',   // Schrägen als Schneerinne, nicht als Erdrampe // Über den Wolken: nichts mehr fest außer dem, worauf man steht
     atmo: 'none',
@@ -530,3 +606,78 @@ const THEMES = {
     autoDecor: ['cloud', 'cloud', 'cloud', 'cloud', 'cloud', 'cloud', 'cloud', 'windsock'],
   },
 };
+
+/* ---------------------------------------------------------------------------
+   STUFENLOSE TIEFE – die Atmosphäre der Flut ändert sich von Bahn zu Bahn.
+
+   Die versunkene Stadt hat vier Paletten: Wasserlinie, Flachwasser, Dämmerzone, Meeresgrund. Als
+   die Welt zwölf Bahnen bekam, lagen je drei auf einer Palette – und damit sprang die Farbe drei
+   Mal hart um. Man spielt drei Bahnen im selben Blau und steht bei der vierten plötzlich woanders.
+   Das ist kein Abstieg, das sind vier Zimmer.
+
+   Jetzt trägt jede Bahn ihre eigene TIEFE (0 an der Oberfläche, 1 auf dem Grund), und die Palette
+   wird dazwischen GEMISCHT. Die vier bleiben als Stützstellen stehen – sie sind von Hand gesetzt
+   und sollen es bleiben –, aber zwischen ihnen wird gerechnet. Zwölf Bahnen sind dann zwölf
+   Schritte hinunter und nicht vier Sprünge.
+
+   Gemischt wird alles, was eine Farbe ist, und die Tiefe selbst. Alles andere – Stimmung, Deko,
+   Mauerstil – kommt von der NÄHEREN der beiden Paletten: Man kann eine Qualle nicht halb
+   zeichnen, und eine Bahn, auf der Bojen und Quallen zugleich stehen, sähe nach Versehen aus. */
+const MEER_LEITER = ['wasserlinie', 'flachwasser', 'daemmerzone', 'meeresgrund'];
+
+function mischeFarbe(a, b, k) {
+  if (typeof a !== 'string' || typeof b !== 'string' || a[0] !== '#' || b[0] !== '#') return k < 0.5 ? a : b;
+  const z = (s, i) => parseInt(s.slice(1 + i * 2, 3 + i * 2), 16);
+  const teil = i => Math.round(z(a, i) + (z(b, i) - z(a, i)) * k).toString(16).padStart(2, '0');
+  return '#' + teil(0) + teil(1) + teil(2);
+}
+
+/* Mischt zwei Paletten. 'k' läuft von 0 (ganz a) bis 1 (ganz b). */
+function mischeThema(a, b, k) {
+  const aus = Object.assign({}, k < 0.5 ? a : b);      // erst das Nähere ganz übernehmen …
+  for (const feld of ['ground', 'groundEdge', 'cliff', 'sand', 'ice', 'snow', 'water', 'lava',
+                      'accent', 'flag']) {
+    if (a[feld] && b[feld]) aus[feld] = mischeFarbe(a[feld], b[feld], k);
+  }
+  for (const feld of ['sky', 'floor']) {
+    if (Array.isArray(a[feld]) && Array.isArray(b[feld]))
+      aus[feld] = a[feld].map((c, i) => mischeFarbe(c, b[feld][i], k));
+  }
+  for (const feld of ['wall', 'block', 'mover', 'rotor']) {
+    if (a[feld] && b[feld]) {
+      aus[feld] = Object.assign({}, k < 0.5 ? a[feld] : b[feld]);
+      for (const teil of ['top', 'side'])
+        if (a[feld][teil] && b[feld][teil]) aus[feld][teil] = mischeFarbe(a[feld][teil], b[feld][teil], k);
+    }
+  }
+  if (a.tiefe != null && b.tiefe != null) aus.tiefe = a.tiefe + (b.tiefe - a.tiefe) * k;
+  return aus;
+}
+
+/* Die Palette für eine Bahn. Ohne eigene Tiefe ist es einfach die Palette, die dransteht – das
+   gilt für alle Welten außer der Flut und muß auch so bleiben.
+
+   Der Mischwert wird gemerkt: Eine Palette wird bei jedem Bild angefaßt, und zwölf Bahnen ergeben
+   zwölf Ergebnisse. Sie jedesmal neu zu rechnen wäre Arbeit für nichts. */
+const _meerCache = {};
+function themaFuer(def) {
+  const basis = (def && THEMES[def.theme]) || THEMES.meadow;
+  const t = def && def.tiefe;
+  if (t == null || !basis.meerBg) return basis;
+  const schluessel = def.theme + '@' + t;
+  if (_meerCache[schluessel]) return _meerCache[schluessel];
+  const leiter = MEER_LEITER.map(n => THEMES[n]);
+  let aus = leiter[0];
+  if (t >= leiter[leiter.length - 1].tiefe) aus = leiter[leiter.length - 1];
+  else if (t > leiter[0].tiefe) {
+    for (let i = 0; i < leiter.length - 1; i++) {
+      const u = leiter[i], o = leiter[i + 1];
+      if (t >= u.tiefe && t <= o.tiefe) { aus = mischeThema(u, o, (t - u.tiefe) / (o.tiefe - u.tiefe)); break; }
+    }
+  }
+  /* Die gemischte Palette bekommt die Tiefe der Bahn und nicht die der Stützstelle – an ihr hängt
+     alles, was sonst noch mit der Tiefe rechnet (Wassersäule, Schleier, Lichtschächte). */
+  aus = Object.assign({}, aus, { tiefe: t });
+  _meerCache[schluessel] = aus;
+  return aus;
+}

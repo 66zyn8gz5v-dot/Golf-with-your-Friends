@@ -467,9 +467,9 @@ const PRO_COURSES = [
    von Hand auseinanderzuhalten, und genau daran geht so etwas nach drei Auslieferungen kaputt.
    Die Prüfwerkzeuge sehen die Liste ungefiltert – eine Welt, die keiner prüft, verfällt.
 
-   Zurzeit trägt keine Welt die Kennzeichnung: Die Zwergenmine war die erste und ist seit Fassung
-   163 im Spiel. Der Schalter bleibt trotzdem gebaut und geprüft (tools/vorschauwelt.mjs), denn die
-   nächste Welt wird denselben Weg gehen. */
+   Die Zwergenmine war die erste Welt, die diesen Weg gegangen ist; sie ist seit Fassung 163 im
+   Spiel. „Die Flut" trug die Kennzeichnung von Fassung 166 bis 188 – erst zwei Probebahnen, dann
+   dreizehn – und ist seit Fassung 189 im Spiel. Zurzeit trägt sie keine Welt. */
 const WORLDS = [
   { id: 'normal', name: 'Märchenland', short: 'Märchen', mode: 'normal', courses: COURSES },
   { id: 'sea', name: 'Meereswelt', short: 'Meer', mode: 'normal', courses: SEA_COURSES },
@@ -481,4 +481,5 @@ const WORLDS = [
   { id: 'clock', name: 'Uhrwerkstadt', short: 'Uhrwerk', mode: 'pro', courses: CLOCK_COURSES },
   { id: 'colosseum', name: 'Kolosseum', short: 'Arena', mode: 'legend', courses: COLOSSEUM_COURSES },
   { id: 'mine', name: 'Zwergenmine', short: 'Mine', mode: 'pro', courses: MINE_COURSES },
+  { id: 'flut', name: 'Die Flut', short: 'Flut', mode: 'legend', courses: FLUT_COURSES },
 ];

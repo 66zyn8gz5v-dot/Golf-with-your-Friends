@@ -32,7 +32,7 @@ const pruef = (name, ok, zusatz = '') => {
 const ctx = { console };
 vm.createContext(ctx);
 for (const f of ['themes', 'courses', 'courses_sea', 'courses_jungle', 'courses_storm', 'courses_shadow',
-                 'courses_colosseum', 'courses_clock', 'courses_snow', 'courses_mine', 'courses_pro'])
+                 'courses_colosseum', 'courses_clock', 'courses_snow', 'courses_mine', 'courses_flut', 'courses_pro'])
   vm.runInContext(lies(`src/${f}.js`), ctx);
 const WORLDS = vm.runInContext('WORLDS', ctx);
 
@@ -40,14 +40,18 @@ const mine = WORLDS.find(w => w.id === 'mine');
 pruef('die Prüfwerkzeuge sehen die Mine weiter', !!mine && mine.courses.length > 0,
       mine ? `${mine.courses.length} Bahnen` : 'fehlt ganz');
 pruef('und sie ist nicht mehr als „nur Vorschau" gekennzeichnet', !!mine && !mine.nurVorschau);
+const flut = WORLDS.find(w => w.id === 'flut');
+pruef('die Flut steht in der Weltliste', !!flut && flut.courses.length > 0,
+      flut ? `${flut.courses.length} Bahnen` : 'fehlt ganz');
+pruef('und ist als „nur Vorschau" gekennzeichnet', !!flut && flut.nurVorschau === true);
+/* Die Regel dahinter, als Zahl: Im Spiel steht genau eine Welt weniger als in der Liste. Wäre die
+   Kennzeichnung weg, stünden beide Zahlen gleich – und die Flut wäre unbemerkt im Spiel. */
 const versteckt = WORLDS.filter(w => w.nurVorschau);
-pruef('zurzeit trägt keine Welt die Kennzeichnung', versteckt.length === 0,
+pruef('und sie ist die einzige mit dieser Kennzeichnung', versteckt.length === 1,
       versteckt.map(w => w.name).join(', ') || 'keine');
-/* Die Regel dahinter, als Zahl: Was im Spiel angeboten wird, ist die ganze Liste. Bliebe irgendwo
-   eine Kennzeichnung hängen, stünde hier eine Welt weniger. */
-pruef('das Spiel bietet alle Welten an',
-      WORLDS.filter(w => !w.nurVorschau).length === WORLDS.length,
-      `${WORLDS.length} Welten`);
+pruef('das Spiel bietet eine Welt weniger an',
+      WORLDS.filter(w => !w.nurVorschau).length === WORLDS.length - 1,
+      `${WORLDS.length} Welten, davon ${WORLDS.length - 1} im Spiel`);
 
 /* ---------- Die Oberfläche ---------- */
 const main = lies('src/main.js');
@@ -63,6 +67,9 @@ pruef('die Hüte werden mitgefiltert', /const SPIELHUETE = \(\) =>/.test(main) &
 
 /* ---------- Die Weltkarte ---------- */
 const karte = lies('src/worldmap.js');
+/* Nicht jede Welt hat ein eigenes Landstück (das Kolosseum etwa hat keines). Geprüft wird darum
+   nur, was auf der Karte überhaupt vorkommt. */
+const LANDNAMEN = new Set([...karte.matchAll(/id: '[a-z]+', name: '([^']+)'/g)].map(m => m[1]));
 /* Die Karte muß den Schalter weiter kennen, auch wenn ihn gerade niemand benutzt – sonst fehlt er,
    wenn die nächste Welt ihn braucht. Geprüft wird darum die Regel, nicht die Marke an der Mine. */
 pruef('die Karte kennt die Kennzeichnung', /l\.nurVorschau/.test(karte));
@@ -72,6 +79,20 @@ pruef('und läßt Namen und Nadel im Spiel weg', /imSpiel && l\.nurVorschau/.tes
 pruef('die Insel bleibt auf der Karte', /LAND\.map\(gelaende\)/.test(karte) && !/LAND = LAND\.filter/.test(karte));
 /* Ohne die Kennung VORSCHAU (Node beim Prüfen) darf nichts versteckt werden. */
 pruef('ohne Kennung wird nichts versteckt', /typeof VORSCHAU !== 'undefined' && !VORSCHAU/.test(karte));
+
+/* ---------- Die fertige Kartendatei ----------
+   icons/weltkarte.svg liegt hinter dem Ladebild und hinter jeder Tafel, in beiden Ständen – es ist
+   dieselbe Datei. Sie muß darum die Sicht des *Spiels* zeigen, sonst steht die Welt zwar nicht in
+   der Weltliste, aber groß auf dem Hintergrund. Das ist die Lücke, die dieser Abschnitt zuhält. */
+const kartenwerkzeug = lies('tools/karte.mjs');
+pruef('tools/karte.mjs zeichnet die Karte aus Sicht des Spiels',
+      /VORSCHAU:\s*false/.test(kartenwerkzeug));
+pruef('und setzt dabei nicht den Prüfstand-Schalter', !/PRUEFSTAND:\s*true/.test(kartenwerkzeug));
+const svg = lies('icons/weltkarte.svg');
+for (const w of versteckt)
+  pruef(`„${w.name}" steht nicht in icons/weltkarte.svg`, !svg.includes(w.name));
+for (const w of WORLDS.filter(x => !x.nurVorschau && LANDNAMEN.has(x.name)))
+  pruef(`„${w.name}" steht dagegen darin`, svg.includes(w.name));
 
 console.log(fehler ? `\n${fehler} Fehler\n` : '\nalles bestanden\n');
 process.exit(fehler ? 1 : 0);

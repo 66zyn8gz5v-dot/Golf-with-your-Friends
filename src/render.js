@@ -901,6 +901,7 @@ class Renderer {
     if (th.planks) this.drawPlanks(ctx, t);
     if (th.tomb) this.drawTomb(ctx, t);
     if (th.mineBg) this.drawMine(ctx, t);
+    if (th.meerBg) this.drawMeer(ctx, t);          // Die Flut: kein Himmel, sondern die Wassersäule
     if (th.belly) this.drawBelly(ctx, t);
     if (th.jungleBg) this.drawJungle(ctx, t);
     if (th.temple) this.drawTemple(ctx, t);
@@ -1003,7 +1004,7 @@ class Renderer {
        Zeiger statt Wetter. */
     const wf = lv.obstacles.find(o => o.type === 'windfahne');
     this.wind = wf ? { dx: wf.dx, dy: wf.dy, staerke: wf.staerke } : null;
-    const imRohr = !!(b && b.rider && b.rider.type === 'copperpipe');
+    const imRohr = !!(b && b.rider && (b.rider.type === 'copperpipe' || b.rider.type === 'abflussrohr'));
     const bp = b && !imRohr ? this.proj(b.x, b.y, 0) : null, bk = b ? this.depth(b.x, b.y) : 0;
     this.ballPos = bp;
     const cullM = this.scale * 3.5, fadeW = this.scale * 2.2, fadeH = this.scale * 3.2;
@@ -1032,6 +1033,10 @@ class Renderer {
     /* Der Schleier der Mine liegt über der ganzen Szene – aber unter der Zielhilfe. Wohin man
        schlägt, muss man auch im Dunkeln sehen; was einen dort erwartet, nicht. */
     this.drawDunkelheit(ctx, state);
+    /* Der Tiefenschleier der Flut liegt genauso über der Szene – Lichtnetz, Blaustich und der
+       dunkle Rand. Auch er muß unter der Zielhilfe bleiben: Wohin man schlägt, gehört zur
+       Bedienung und nicht zur Stimmung. */
+    this.drawTiefenschleier(ctx, state);
     if (state.aim) this.drawAim(ctx, state.ball, state.aim);
 
     if (state.phase !== 'edit') this.drawDepthCues(ctx);
@@ -1765,6 +1770,14 @@ class Renderer {
     if (ob.type === 'bruchwand') { this.drawBruchwandFloor(ctx, ob, t); return; }
     if (ob.type === 'giessloeffel') { this.drawGussFloor(ctx, ob, t); return; }
     if (ob.type === 'lavafontaene') { this.drawFontaeneFloor(ctx, ob, t); return; }
+    if (ob.type === 'flut') { this.drawFlutFloor(ctx, ob, t); return; }
+    if (ob.type === 'pumpwerk') { this.drawPumpwerkFloor(ctx, ob, t); return; }
+    if (ob.type === 'stroemung') { this.drawStroemungFloor(ctx, ob, t); return; }
+    if (ob.type === 'strudel') { this.drawStrudelFloor(ctx, ob, t); return; }
+    if (ob.type === 'angler') { this.drawAnglerScheinFloor(ctx, ob, t); return; }
+    if (ob.type === 'raucher') { this.drawRaucherFloor(ctx, ob, t); return; }
+    if (ob.type === 'wracktor') { this.drawWracktorFloor(ctx, ob, t); return; }
+    if (ob.type === 'abflussrohr') { this.drawAbflussFloor(ctx, ob, t); return; }
     if (ob.type === 'schneebruecke') { this.drawSchneebrueckeFloor(ctx, ob, t); return; }
     if (ob.type === 'dial' || ob.type === 'wanderloch') { this.drawWanderlochFloor(ctx, ob, t); return; }
     if (ob.type === 'field' && ob.style === 'steam') { this.drawSteam(ctx, ob, t); return; }
@@ -1868,9 +1881,14 @@ class Renderer {
       const poly = [[ob.x - ob.w / 2, ob.y - ob.h / 2], [ob.x + ob.w / 2, ob.y - ob.h / 2], [ob.x + ob.w / 2, ob.y + ob.h / 2], [ob.x - ob.w / 2, ob.y + ob.h / 2]];
       this.fillPoly(ctx, poly, 0.005, ob.closed ? 'rgba(255,80,80,0.35)' : 'rgba(120,255,120,0.25)', false);
     } else if (ob.type === 'windmill') {
-      const ax = ob.axis === 'x', g = ob.gap / 2, dd = ob.depth / 2 + 0.35;
-      const poly = ax ? [[ob.x - g, ob.y - dd], [ob.x + g, ob.y - dd], [ob.x + g, ob.y + dd], [ob.x - g, ob.y + dd]] : [[ob.x - dd, ob.y - g], [ob.x + dd, ob.y - g], [ob.x + dd, ob.y + g], [ob.x - dd, ob.y + g]];
-      this.fillPoly(ctx, poly, 0.005, ob.blocked ? 'rgba(255,80,70,0.4)' : 'rgba(120,255,140,0.3)', false);
+      /* Der rote bzw. grüne Fleck auf dem Boden sagt, ob der Durchgang gerade gesperrt ist. Bei
+         der Wasserwand steht das Wasser selbst im Weg – da ist die Ampel überflüssig und stört
+         nur das Bild. */
+      if (ob.style !== 'wasserwand') {
+        const ax = ob.axis === 'x', g = ob.gap / 2, dd = ob.depth / 2 + 0.35;
+        const poly = ax ? [[ob.x - g, ob.y - dd], [ob.x + g, ob.y - dd], [ob.x + g, ob.y + dd], [ob.x - g, ob.y + dd]] : [[ob.x - dd, ob.y - g], [ob.x + dd, ob.y - g], [ob.x + dd, ob.y + g], [ob.x - dd, ob.y + g]];
+        this.fillPoly(ctx, poly, 0.005, ob.blocked ? 'rgba(255,80,70,0.4)' : 'rgba(120,255,140,0.3)', false);
+      }
     } else if (ob.type === 'switch') {
       const active = ob.activeUntil > t, left = active ? ob.activeUntil - t : 0;
       const pulse = active ? 0.85 + 0.15 * Math.sin(t * 6) : 1;
@@ -2100,6 +2118,35 @@ class Renderer {
       /* noFade: Die Wand ist der Grund, warum man hier nicht weiterkommt. Durchsichtig zu werden,
          sobald der Ball davorliegt, nähme ihr genau das. */
       items.push({ x: ob.x, y: ob.y, bias: 0.3, noFade: true, draw: () => this.drawBruchwand(ctx, ob, t) });
+    } else if (ob.type === 'raucher') {
+      /* noFade: Der Schlot ist die Ansage. Durchsichtig zu werden, sobald der Ball davorliegt,
+         nähme ihm genau das – und davor liegt man hier mit Absicht. */
+      items.push({ x: ob.x, y: ob.y, bias: 0.4, noFade: true, draw: () => this.drawRaucher(ctx, ob, t) });
+    } else if (ob.type === 'ankerkette') {
+      /* noFade: An der Kette liest man ab, wo der Anker gleich sein wird. */
+      items.push({ x: ob.x, y: ob.y, bias: 0.45, noFade: true, draw: () => this.drawAnkerkette(ctx, ob, t) });
+    } else if (ob.type === 'abflussrohr') {
+      /* Einsortiert nach dem Auslauf: Dort steht der Bügel, und nur er ragt über den Boden. Die
+         Naht dazwischen wird als Bodenzeichnung gemalt und braucht keine Tiefensortierung. */
+      items.push({ x: ob.ax ?? ob.x, y: ob.ay ?? ob.y, bias: 0.1, noFade: true, draw: () => this.drawAbflussMund(ctx, ob, t) });
+    } else if (ob.type === 'wracktor') {
+      /* Einsortiert wird die Luke nach ihrer Angel, nicht nach der Spitze: Die Angel steht fest,
+         die Spitze wandert – sortierte man danach, sprünge das Blatt bei jedem Schwung vor und
+         hinter den Rumpf, in dem es sitzt.
+         noFade: Ob sie offen oder zu ist, entscheidet den Schlag. */
+      items.push({ x: ob.ax, y: ob.ay, bias: 0.35, noFade: true, draw: () => this.drawWracktor(ctx, ob, t) });
+    } else if (ob.type === 'tangwald') {
+      /* Halme stehen aufrecht und gehören vor das, was hinter ihnen liegt. Sie dürfen ruhig
+         verblassen, wenn der Ball dahinter liegt – sie halten ja niemanden auf. */
+      items.push({ x: ob.x, y: ob.y, bias: 0.15, draw: () => this.drawTangwald(ctx, ob, t) });
+    } else if (ob.type === 'muschel') {
+      /* noFade: Ob sie offen oder zu ist, entscheidet den Schlag. Durchsichtig zu werden, sobald
+         der Ball davorliegt, nähme ihr genau das – und davor liegt man hier dauernd. */
+      items.push({ x: ob.x, y: ob.y, bias: 0.2, noFade: true, draw: () => this.drawMuschel(ctx, ob, t) });
+    } else if (ob.type === 'angler') {
+      /* noFade: Er ist die Gefahr selbst, und er kommt auf einen zu – durchsichtig zu werden,
+         sobald der Ball davorliegt, nähme ihm genau das. */
+      items.push({ x: ob.x, y: ob.y, bias: 0.35, noFade: true, draw: () => this.drawAngler(ctx, ob, t) });
     } else if (ob.type === 'lavafontaene') {
       /* noFade: Der Strahl ist die Gefahr selbst. Durchsichtig zu werden, sobald der Ball davor
          liegt, nähme ihm genau das – und davor liegt man hier dauernd. */
@@ -2216,7 +2263,7 @@ class Renderer {
     } else if (ob.type === 'potion') {
       items.push({ x: ob.x, y: ob.y, draw: () => this.spritePotion(ctx, ob, t) });
     } else if (ob.type === 'cannon') {
-      items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => ob.style === 'catapult' ? this.drawCatapult(ctx, ob, t) : ob.style === 'ballista' ? this.drawBallista(ctx, ob, t) : this.drawCannon(ctx, ob, t) });
+      items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => ob.style === 'catapult' ? this.drawCatapult(ctx, ob, t) : ob.style === 'ballista' ? this.drawBallista(ctx, ob, t) : ob.style === 'wrackkanone' ? this.drawWrackkanone(ctx, ob, t) : this.drawCannon(ctx, ob, t) });
     } else if (ob.type === 'door') {
       if (ob.style === 'pyramid') items.push({ x: ob.px, y: ob.py, noFade: true, draw: () => this.drawPyramid(ctx, ob, t) });
       else if (ob.style === 'wreck') items.push({ x: ob.px, y: ob.py, noFade: true, draw: () => this.drawWreck(ctx, ob, t) });
@@ -2303,10 +2350,184 @@ class Renderer {
     }
   }
 
+  /* DIE WRACKKANONE – die Kanone der versunkenen Stadt.
+
+     Dieselbe Maschine wie die Kanone im Märchenland, nur in der Gestalt, die hier unten Sinn
+     ergibt: ein Bronzegeschütz von einem gesunkenen Schiff, halb im Grund, das Rohr von Grünspan
+     überzogen. Unter Wasser gibt es kein Pulver und keine Lunte – geladen wird mit Luft, und man
+     sieht es daran, daß sich Blasen an der Mündung sammeln. Beim Schuß fährt die Lafette zurück
+     und eine Blasenwolke treibt nach oben weg.
+
+     Gezeichnet wird in WELTKOORDINATEN (prism/proj), damit das Geschütz sich mitdreht, wenn die
+     Kamera sich dreht – ein im Bild gemaltes Rohr stünde nach einer Vierteldrehung quer. */
+  drawWrackkanone(ctx, ob, t) {
+    const s = this.scale;
+    const dx = Math.cos(ob.angle), dy = Math.sin(ob.angle);
+    // Rückstoß: In den ersten Zehnteln nach dem Schuß sitzt das Rohr weiter hinten.
+    const seit = t - (ob.firedAt ?? -10);
+    const rueck = seit >= 0 && seit < 0.35 ? Math.sin((1 - seit / 0.35) * Math.PI * 0.5) * 0.3 : 0;
+
+    this.isoEllipse(ctx, ob.x, ob.y, 0.004, 1.0, 'rgba(0,0,0,0.22)');
+    // Der Sandhaufen, in dem das Geschütz steckt
+    this.prism(ctx, this.circlePoly(ob.x, ob.y, 0.78, 9), 0, 0.14, '#8e8468', '#5f5842', { outline: '#3d382a' });
+
+    // Die Lafette: zwei Wangen aus verquollenem Holz, längs zur Rohrachse
+    const nx = -dy, ny = dx;
+    for (const side of [-1, 1]) {
+      const ox = nx * side * 0.3, oy = ny * side * 0.3;
+      const wange = [[ob.x - dx * 0.62 + ox - nx * 0.09, ob.y - dy * 0.62 + oy - ny * 0.09],
+                     [ob.x + dx * 0.5 + ox - nx * 0.09, ob.y + dy * 0.5 + oy - ny * 0.09],
+                     [ob.x + dx * 0.5 + ox + nx * 0.09, ob.y + dy * 0.5 + oy + ny * 0.09],
+                     [ob.x - dx * 0.62 + ox + nx * 0.09, ob.y - dy * 0.62 + oy + ny * 0.09]];
+      this.prism(ctx, wange, 0.1, 0.3, '#6b5334', '#42301b', { outline: '#26190c' });
+    }
+
+    // Die Räder: sie stehen hochkant, also werden sie im Bild gezeichnet – als Scheibe mit
+    // Speichen und Eisenreif, an der Nabe aufgehängt, die in Weltkoordinaten gesetzt wird.
+    for (const side of [-1, 1]) {
+      const [rx, ry] = this.proj(ob.x - dx * 0.1 + nx * side * 0.42, ob.y - dy * 0.1 + ny * side * 0.42, 0.3);
+      const R = s * 0.34;
+      ctx.fillStyle = '#4a3a22'; ctx.beginPath(); ctx.arc(rx, ry, R, 0, TAU); ctx.fill();
+      ctx.strokeStyle = '#2a2018'; ctx.lineWidth = Math.max(1.5, s * 0.07); ctx.stroke();
+      ctx.strokeStyle = '#7e6338'; ctx.lineWidth = Math.max(1, s * 0.035);
+      for (let i = 0; i < 6; i++) {
+        const a = i * Math.PI / 3 + 0.3;
+        ctx.beginPath(); ctx.moveTo(rx, ry); ctx.lineTo(rx + Math.cos(a) * R * 0.85, ry + Math.sin(a) * R * 0.85); ctx.stroke();
+      }
+      ctx.fillStyle = '#9a7a44'; ctx.beginPath(); ctx.arc(rx, ry, R * 0.22, 0, TAU); ctx.fill();
+    }
+
+    // Das Rohr: hinten der dicke Bodenring, vorn der Mündungsring, dazwischen der Grünspan
+    const hx = ob.x - dx * (0.62 + rueck), hy = ob.y - dy * (0.62 + rueck);
+    const vx = ob.x + dx * (1.12 - rueck), vy = ob.y + dy * (1.12 - rueck);
+    const rohr = (von, bis, halb) => [[von[0] + nx * halb, von[1] + ny * halb], [bis[0] + nx * halb, bis[1] + ny * halb],
+                                      [bis[0] - nx * halb, bis[1] - ny * halb], [von[0] - nx * halb, von[1] - ny * halb]];
+    this.prism(ctx, rohr([hx, hy], [vx, vy], 0.2), 0.3, 0.34, '#6f8f79', '#3c5748', { outline: '#20342a' });
+    this.prism(ctx, rohr([hx, hy], [hx + dx * 0.26, hy + dy * 0.26], 0.27), 0.28, 0.4, '#82a189', '#476253', { outline: '#20342a' });
+    this.prism(ctx, rohr([vx - dx * 0.2, vy - dy * 0.2], [vx, vy], 0.26), 0.3, 0.36, '#9c8148', '#5e4a26', { outline: '#2c2212' });
+
+    // Die Mündung selbst: ein dunkles Loch mit blankem Bronzerand
+    const [mx, my] = this.proj(vx, vy, 0.48);
+    const flach = 0.55 + 0.45 * this.cam.tilt;
+    ctx.fillStyle = '#0d1512'; ctx.beginPath(); ctx.ellipse(mx, my, s * 0.2, s * 0.2 * flach, 0, 0, TAU); ctx.fill();
+    ctx.strokeStyle = '#c8a95e'; ctx.lineWidth = Math.max(1, s * 0.05); ctx.stroke();
+
+    // Bewuchs: drei Flecken Seepocken auf dem Rohr, damit es alt aussieht und nicht wie neu gegossen
+    for (let i = 0; i < 3; i++) {
+      const u = 0.2 + i * 0.28, q = ((i % 2) ? 1 : -1) * 0.12;
+      const [px, py] = this.proj(hx + (vx - hx) * u + nx * q, hy + (vy - hy) * u + ny * q, 0.64);
+      ctx.fillStyle = i === 1 ? 'rgba(198,214,168,0.8)' : 'rgba(150,180,150,0.75)';
+      ctx.beginPath(); ctx.arc(px, py, s * (0.05 + 0.02 * i), 0, TAU); ctx.fill();
+    }
+
+    // GELADEN: Luft sammelt sich an der Mündung. GESCHOSSEN: die Wolke treibt nach oben weg.
+    if (ob.loaded) {
+      for (let i = 0; i < 5; i++) {
+        const f = (t * 0.9 + i * 0.2) % 1;
+        const [bx, by] = this.proj(vx + dx * 0.18, vy + dy * 0.18, 0.5 + f * 0.7);
+        ctx.fillStyle = `rgba(226,244,255,${0.55 * (1 - f)})`;
+        ctx.beginPath(); ctx.arc(bx + Math.sin(f * 7 + i) * s * 0.06, by, s * (0.05 + 0.03 * i % 0.09), 0, TAU); ctx.fill();
+        ctx.strokeStyle = `rgba(255,255,255,${0.4 * (1 - f)})`; ctx.lineWidth = 1; ctx.stroke();
+      }
+    }
+    if (seit >= 0 && seit < 0.8) {
+      const f = seit / 0.8;
+      for (let i = 0; i < 9; i++) {
+        const a = (i / 9) * TAU, weit = 0.25 + f * 1.1;
+        const [bx, by] = this.proj(vx + dx * 0.3 + Math.cos(a) * weit * 0.5, vy + dy * 0.3 + Math.sin(a) * weit * 0.5, 0.5 + f * 1.4);
+        ctx.fillStyle = `rgba(230,246,255,${0.6 * (1 - f)})`;
+        ctx.beginPath(); ctx.arc(bx, by, s * 0.09 * (1 - f * 0.4), 0, TAU); ctx.fill();
+      }
+    }
+  }
+
+  /* DIE WASSERWAND – die Mühle der versunkenen Stadt.
+
+     Dieselbe Maschine wie die Windmühle: etwas sperrt den Weg im Takt und gibt ihn wieder frei.
+     Nur ist es hier kein Flügel und kein Tor, sondern WASSER: Aus einem Gitterrost im Boden
+     schießt eine Wand hoch, und solange sie steht, kommt niemand hindurch.
+
+     KEIN GEBÄUDE. Vorher standen hier ein Wasserrad und eine Drehbrücke an einem Torhaus, und
+     beide sind an derselben Sache gescheitert: Was aus vielen dünnen Teilen besteht – Speichen,
+     Streben, Geländer –, zerfällt in dieser Größe zu Gekrissel, und ein großer Kreis in einer
+     senkrechten Ebene sieht in der Schrägsicht immer aus, als falle er um. Wasser hat keine
+     Kanten, die schief stehen können. Und weil kein Haus mehr zu sehen ist, hat die Maschine
+     auch keine Mauern mehr (src/obstacles.js): Was niemand malt, darf auch nicht abprallen. */
+  drawWasserwand(ctx, ob, t) {
+    const s = this.scale, ax = ob.axis === 'x';
+    const halb = ob.gap / 2, tief = 0.42;
+    // quer: entlang der Wand. laengs: in Wegrichtung (da ist die Wand dünn).
+    const P = (q, l, z) => ax ? this.proj(ob.x + q, ob.y + l, z) : this.proj(ob.x + l, ob.y + q, z);
+
+    /* Der Gitterrost, aus dem das Wasser kommt. Er liegt flach im Weg – der Ball rollt darüber
+       hinweg – und sagt schon im Ruhezustand, wo gleich etwas passiert. */
+    const rost = [P(-halb, -tief, 0.02), P(halb, -tief, 0.02), P(halb, tief, 0.02), P(-halb, tief, 0.02)];
+    ctx.beginPath(); rost.forEach((q, i) => i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]));
+    ctx.closePath(); ctx.fillStyle = '#2b3a38'; ctx.fill();
+    ctx.strokeStyle = '#141d1c'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.strokeStyle = 'rgba(158,176,172,0.75)'; ctx.lineWidth = Math.max(1, s * 0.045);
+    const stege = Math.max(4, Math.round(halb * 4));
+    for (let k = -stege; k <= stege; k++) {
+      const q = (k / (stege + 0.4)) * halb;
+      const a = P(q, -tief, 0.03), b = P(q, tief, 0.03);
+      ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+    }
+
+    /* WIE HOCH STEHT DAS WASSER. 'blocked' ist ein Ja oder Nein, aber eine Wand, die von einem
+       Bild zum nächsten dasteht, sieht aus wie ein Fehler. Darum wird derselbe Takt, aus dem die
+       Physik ihr Ja oder Nein zieht, hier weich gerechnet: Je näher am Sperrpunkt, desto höher
+       steht sie. So sieht man sie kommen und gehen und kann den Augenblick abpassen. */
+    const step = TAU / Math.max(1, ob.blades || 4);
+    const rel = ((ob.angle + Math.PI / 2) % step + step) % step;
+    const abstand = Math.min(rel, step - rel);
+    const hoch = Math.max(0, Math.min(1, 1 - abstand / 0.85));
+    if (hoch <= 0.01) return;
+
+    const zMax = 0.35 + 2.1 * hoch;
+    // Die Wand hat zwei Seiten, sonst ist sie ein Blatt Papier: hinten dunkler, vorn hell.
+    for (const [l, deck] of [[-tief * 0.55, 'rgba(96,158,180,'], [tief * 0.55, 'rgba(178,228,240,']]) {
+      const wand = [P(-halb, l, 0), P(halb, l, 0), P(halb, l, zMax), P(-halb, l, zMax)];
+      const [g0x, g0y] = P(0, l, 0), [g1x, g1y] = P(0, l, zMax);
+      const lauf = ctx.createLinearGradient(g0x, g0y, g1x, g1y);
+      lauf.addColorStop(0, deck + (0.9 * hoch) + ')');
+      lauf.addColorStop(0.7, deck + (0.72 * hoch) + ')');
+      lauf.addColorStop(1, 'rgba(232,250,255,' + (0.22 * hoch) + ')');
+      ctx.beginPath(); wand.forEach((q, i) => i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]));
+      ctx.closePath(); ctx.fillStyle = lauf; ctx.fill();
+    }
+    // Die Krone oben: ein schmales Band, das die Wand abschließt und ihr Dicke gibt
+    const krone = [P(-halb, -tief * 0.55, zMax), P(halb, -tief * 0.55, zMax), P(halb, tief * 0.55, zMax), P(-halb, tief * 0.55, zMax)];
+    ctx.beginPath(); krone.forEach((q, i) => i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]));
+    ctx.closePath(); ctx.fillStyle = `rgba(236,252,255,${0.7 * hoch})`; ctx.fill();
+
+    // Strähnen: sie steigen, damit man sieht, daß es schießt und nicht bloß steht
+    ctx.strokeStyle = `rgba(248,254,255,${0.5 * hoch})`; ctx.lineWidth = Math.max(1, s * 0.05);
+    const n = Math.max(4, Math.round(halb * 3));
+    for (let k = -n; k <= n; k++) {
+      const q = (k / (n + 0.5)) * halb, ver = (t * 1.9 + k * 0.29) % 1;
+      const a = P(q, tief * 0.55, zMax * (0.05 + ver * 0.5));
+      const b = P(q + 0.06, tief * 0.55, zMax * (0.42 + ver * 0.58));
+      ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+    }
+    // Gischt über der Krone und Spritzer am Fuß
+    for (let k = 0; k <= n * 2; k++) {
+      const q = ((k / (n * 2)) - 0.5) * halb * 2.05;
+      const f = (t * 1.4 + k * 0.13) % 1;
+      const [px, py] = P(q, tief * 0.2, zMax + f * 0.5);
+      ctx.fillStyle = `rgba(236,252,255,${0.65 * hoch * (1 - f)})`;
+      ctx.beginPath(); ctx.arc(px, py, s * (0.05 + 0.045 * (1 - f)), 0, TAU); ctx.fill();
+      const [sx, sy] = P(q * 1.06, tief * (0.8 + f * 0.9), 0.05 + f * 0.25);
+      ctx.fillStyle = `rgba(214,240,250,${0.45 * hoch * (1 - f)})`;
+      ctx.beginPath(); ctx.arc(sx, sy, s * 0.04, 0, TAU); ctx.fill();
+    }
+  }
+
   /* Windmühle: zwei Turmhälften mit Durchgang, Dach, Fenster, Tür und drehenden Flügeln */
   drawWindmill(ctx, ob, t) {
     // Unter Tage weht kein Wind: Dort ist dieselbe Maschine ein Schmelzofen (render_mine.js).
     if (ob.style === 'ofen') return this.drawSchmelzofen(ctx, ob, t);
+    // Und unter Wasser auch nicht: Dort schießt Wasser aus dem Boden und sperrt den Weg.
+    if (ob.style === 'wasserwand') return this.drawWasserwand(ctx, ob, t);
     const s = this.scale, th = this.theme, ax = ob.axis === 'x';
     const wallTop = '#e8dfcf', wallSide = '#a8998a', roof = '#7a4a2a';
     for (const b of ob.blocks) this.prism(ctx, b, 0, ob.height, wallTop, wallSide, { outline: '#6b5a4a' });
@@ -2793,6 +3014,12 @@ class Renderer {
       case 'crate': this.spriteCrate(ctx, d); break;
       case 'bollard': this.spriteBollard(ctx, d, t); break;
       case 'anchor': this.spriteAnchor(ctx, d); break;
+      case 'wrack': this.spriteWrack(ctx, d); break;
+      case 'fischschwarm': this.spriteFischschwarm(ctx, d, t); break;
+      case 'rochen': this.spriteRochen(ctx, d, t); break;
+      case 'schildkroete': this.spriteSchildkroete(ctx, d, t); break;
+      case 'amphore': this.spriteAmphore(ctx, d); break;
+      case 'torbogen': this.spriteTorbogen(ctx, d); break;
       case 'buoy': this.spriteBuoy(ctx, d, t); break;
       case 'seaweed': this.spriteSeaweed(ctx, d, t); break;
       case 'shell': this.spriteShell(ctx, d); break;
@@ -3619,6 +3846,269 @@ class Renderer {
 
   /* Fass: drei Ringe übereinander geben den Bauch, zwei dunkle Reifen halten ihn zusammen, und
      obendrauf liegt der Deckel mit seinen Dauben. */
+  /* ---------- Was im Wasser schwebt ----------
+     Drei Wesen für den Außenbereich der Flut. Sie stehen auf nichts, sie halten niemanden auf und
+     sie werden nie berührt – sie sind reine Zier und schwimmen neben der Bahn im offenen Wasser.
+
+     Alle drei bewegen sich aus der Spieluhr, nicht aus dem Zufall. Das ist hier wichtiger als
+     anderswo: Es sind viele, sie stehen dicht, und wenn jedes einzeln zuckt, flimmert der ganze
+     Rand. Aus t gerechnet ziehen sie ruhig ihre Bahn, und zwei Nachbarn bleiben zwei Nachbarn. */
+
+  /* Fischschwarm: sieben, acht Fische, die gemeinsam eine langsame Runde drehen. Das Kunststück
+     ist nicht der einzelne Fisch – der ist ein Tropfen mit einer Schwanzflosse –, sondern daß der
+     Schwarm ZUSAMMENBLEIBT. Jeder Fisch bekommt darum denselben Kreis, nur mit eigenem Vorlauf,
+     und schaut in die Richtung, in die er gerade fährt. */
+  spriteFischschwarm(ctx, d, t) {
+    /* Die Fische sind mit Absicht GROSS für ihre Zahl. Beim ersten Ansehen waren es acht winzige,
+       und in der Übersicht des Spiels ist ein winziger Fisch drei Bildpunkte: Aus dem Schwarm
+       wurde eine Handvoll gelber Häkchen. Lieber fünf, die man erkennt, als acht, die man errät. */
+    const k = d.s * 1.35, seed = d.seed || 0;
+    const n = 6;
+    const R = k * 0.85;                              // Radius der Runde
+    const w0 = seed * 6.283 + t * 0.55;              // der Schwarm dreht sich langsam
+    const zm = (d.z || 0) + k * 0.2 * Math.sin(t * 0.8 + seed * 5);
+    const farbe = seed < 0.5 ? ['#ffd98a', '#c9973a'] : ['#9fe0ff', '#3f87b8'];
+    for (let i = 0; i < n; i++) {
+      /* Der Versatz im Kreis und ein kleiner Eigenabstand quer dazu – ohne den läge der Schwarm
+         auf einer Schnur statt in einer Wolke. */
+      const u = i / n;
+      const w = w0 + u * 1.9;
+      const quer = ((i * 7) % 5) / 5 - 0.5;
+      const rr = R * (0.72 + quer * 0.5);
+      const x = d.x + Math.cos(w) * rr, y = d.y + Math.sin(w) * rr * 0.8;
+      const z = zm + (((i * 3) % 5) / 5 - 0.5) * k * 0.45;
+      const L = k * 0.3;
+      // Blickrichtung: die Tangente an den Kreis, projiziert – sonst schwimmen sie am Bildschirm quer
+      const [ax, ay] = this.proj(x, y, z);
+      const [bx, by] = this.proj(x - Math.sin(w) * 0.3, y + Math.cos(w) * 0.3 * 0.8, z);
+      const ri = Math.atan2(by - ay, bx - ax);
+      const sc = this.scale * L;
+      ctx.save();
+      ctx.translate(ax, ay); ctx.rotate(ri);
+      const schlag = Math.sin(t * 9 + i * 1.7) * 0.5;
+      ctx.fillStyle = farbe[1];
+      ctx.beginPath();
+      ctx.moveTo(-sc * 0.7, 0);
+      ctx.lineTo(-sc * 1.5, -sc * (0.55 + schlag * 0.3));
+      ctx.lineTo(-sc * 1.5, sc * (0.55 - schlag * 0.3));
+      ctx.closePath(); ctx.fill();
+      const g = ctx.createLinearGradient(0, -sc * 0.5, 0, sc * 0.5);
+      g.addColorStop(0, farbe[0]); g.addColorStop(1, farbe[1]);
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.ellipse(0, 0, sc, sc * 0.46, 0, 0, TAU); ctx.fill();
+      ctx.fillStyle = 'rgba(12,20,24,0.8)';
+      ctx.beginPath(); ctx.arc(sc * 0.52, -sc * 0.1, sc * 0.13, 0, TAU); ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  /* Rochen: ein Rautenkörper mit zwei Flügeln, die langsam schlagen, und einem langen Schweif.
+     Er gleitet auf einer Geraden hin und her – ein Rochen, der auf der Stelle flattert, sieht aus
+     wie festgenagelt. */
+  spriteRochen(ctx, d, t) {
+    const k = d.s * 1.5, seed = d.seed || 0;
+    const ph = t * 0.42 + seed * 6.283;
+    const a = seed * 6.283;                          // seine Richtung
+    const co = Math.cos(a), si = Math.sin(a);
+    const weg = Math.sin(ph) * k * 1.6;              // hin und her auf seiner Geraden
+    const x = d.x + co * weg, y = d.y + si * weg;
+    const dir = Math.cos(ph) >= 0 ? 1 : -1;
+    const z = (d.z || 0) + k * 0.18 * Math.sin(t * 0.9 + seed * 4);
+    const schlag = Math.sin(t * 1.6 + seed * 3);     // die Flügel gehen langsam auf und ab
+    const [cx, cy] = this.proj(x, y, z);
+    const [nx2, ny2] = this.proj(x + co * dir, y + si * dir, z);
+    const ri = Math.atan2(ny2 - cy, nx2 - cx);
+    const sc = this.scale * k;
+    ctx.save();
+    ctx.translate(cx, cy); ctx.rotate(ri);
+    // Der Schatten liegt nicht unter ihm: Er schwebt, und unter ihm ist Wasser.
+    const g = ctx.createLinearGradient(0, -sc * 0.5, 0, sc * 0.5);
+    g.addColorStop(0, '#5c7a86'); g.addColorStop(0.5, '#3e5b68'); g.addColorStop(1, '#2a4450');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(sc * 0.62, 0);
+    for (const vz of [-1, 1]) {
+      ctx.moveTo(sc * 0.62, 0);
+      ctx.quadraticCurveTo(sc * 0.1, vz * sc * (0.34 + schlag * 0.14), -sc * 0.5, vz * sc * (0.5 + schlag * 0.2));
+      ctx.quadraticCurveTo(-sc * 0.34, vz * sc * 0.12, -sc * 0.42, 0);
+      ctx.closePath();
+    }
+    ctx.fill();
+    // Der Schweif
+    ctx.strokeStyle = '#2a4450'; ctx.lineWidth = Math.max(1, sc * 0.05); ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(-sc * 0.42, 0);
+    ctx.quadraticCurveTo(-sc * 0.8, sc * 0.1 * schlag, -sc * 1.25, sc * 0.2 * schlag);
+    ctx.stroke();
+    // Zwei Augen oben auf dem Rücken – daran erkennt man ihn auch aus der Höhe
+    ctx.fillStyle = 'rgba(230,244,250,0.8)';
+    for (const vz of [-1, 1]) { ctx.beginPath(); ctx.arc(sc * 0.34, vz * sc * 0.1, sc * 0.045, 0, TAU); ctx.fill(); }
+    ctx.restore();
+  }
+
+  /* Meeresschildkröte: ein gewölbter Panzer mit Platten, vier Flossen, die rudern, und ein Kopf.
+     Sie ist die langsamste der drei – und die einzige, die sich dabei auch dreht. */
+  spriteSchildkroete(ctx, d, t) {
+    const k = d.s * 1.15, seed = d.seed || 0;
+    const w = seed * 6.283 + t * 0.16;               // sie zieht eine weite Runde
+    const R = k * 0.9;
+    const x = d.x + Math.cos(w) * R, y = d.y + Math.sin(w) * R * 0.8;
+    const z = (d.z || 0) + k * 0.2 * Math.sin(t * 0.7 + seed * 6);
+    const [cx, cy] = this.proj(x, y, z);
+    const [bx, by] = this.proj(x - Math.sin(w) * 0.4, y + Math.cos(w) * 0.4 * 0.8, z);
+    const ri = Math.atan2(by - cy, bx - cx);
+    const sc = this.scale * k;
+    ctx.save();
+    ctx.translate(cx, cy); ctx.rotate(ri);
+    const rudern = Math.sin(t * 2.1 + seed * 5);
+    // Die vier Flossen zuerst, damit der Panzer darüber liegt
+    ctx.fillStyle = '#3f6b52';
+    for (const [fx, fy, vz] of [[0.2, -1, -1], [0.2, 1, 1], [-0.3, -1, 1], [-0.3, 1, -1]]) {
+      ctx.save();
+      ctx.translate(sc * fx, sc * fy * 0.3);
+      ctx.rotate(fy * (0.6 + vz * rudern * 0.35));
+      ctx.beginPath(); ctx.ellipse(0, sc * fy * 0.22, sc * 0.3, sc * 0.12, 0, 0, TAU); ctx.fill();
+      ctx.restore();
+    }
+    // Kopf
+    ctx.fillStyle = '#48775c';
+    ctx.beginPath(); ctx.ellipse(sc * 0.52, 0, sc * 0.16, sc * 0.12, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = 'rgba(12,20,16,0.8)';
+    for (const vz of [-1, 1]) { ctx.beginPath(); ctx.arc(sc * 0.58, vz * sc * 0.06, sc * 0.03, 0, TAU); ctx.fill(); }
+    // Der Panzer
+    const g = ctx.createRadialGradient(-sc * 0.1, -sc * 0.12, sc * 0.05, 0, 0, sc * 0.5);
+    g.addColorStop(0, '#7a6a3e'); g.addColorStop(0.6, '#4f4526'); g.addColorStop(1, '#312a16');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.ellipse(0, 0, sc * 0.48, sc * 0.36, 0, 0, TAU); ctx.fill();
+    // Die Platten: ein Ring aus sechs Feldern und eine Reihe in der Mitte
+    ctx.strokeStyle = 'rgba(28,24,12,0.6)'; ctx.lineWidth = Math.max(1, sc * 0.022);
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const aa = (i * TAU) / 6 + 0.3;
+      ctx.moveTo(Math.cos(aa) * sc * 0.2, Math.sin(aa) * sc * 0.15);
+      ctx.lineTo(Math.cos(aa) * sc * 0.47, Math.sin(aa) * sc * 0.35);
+    }
+    ctx.ellipse(0, 0, sc * 0.2, sc * 0.15, 0, 0, TAU);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  /* ---------- Die Requisiten der versunkenen Stadt ----------
+     Drei Körper für den Außenbereich der Flut. Sie stehen dort, wo kein Ball hinkommt – im offenen
+     Wasser neben den Stegen –, und haben genau eine Aufgabe: Der Meeresgrund soll nach etwas
+     aussehen, das einmal bewohnt war, und nicht nach einer leeren blauen Fläche.
+
+     Alle drei sind in WELTKOORDINATEN gebaut, nicht am Bildschirmpunkt. Das ist in dieser Welt
+     wichtiger als anderswo: Die Bahnen sind schmale Stege, man dreht die Kamera dauernd, um an
+     den Kanten entlangzusehen – und eine Deko, die sich dabei mitdreht, verrät sich sofort als
+     aufgeklebtes Bild. */
+
+  /* Wrackrippen: ein Kiel, der im Sand liegt, und die Spanten darüber. Von einem Schiff ist nach
+     Jahrhunderten genau das übrig – die Beplankung ist weg, das Gerippe steht.
+
+     Beim ersten Versuch waren die Spanten kurz und steil, und der Haufen sah aus wie ein Rechen:
+     ein Balken mit fünf Zinken darauf. Was fehlte, waren zwei Dinge, die ein Schiff ausmachen –
+     die Spanten müssen sich deutlich nach AUSSEN öffnen (ein Rumpf ist ein U, kein Kamm), und es
+     muss noch ein Rest BEPLANKUNG daran hängen. Zwei Längsgurte an den Spanten reichen dafür. */
+  spriteWrack(ctx, d) {
+    const k = d.s * 1.7, z = d.z || 0;
+    const a = (d.seed || 0) * 6.283, co = Math.cos(a), si = Math.sin(a);
+    const qx = -si, qy = co;                        // quer zum Kiel
+    const holz = '#7a6448', dunkel = '#3a3028';
+    this.bodenSchatten(ctx, d.x, d.y, k * 0.8, 0.2);
+    // Der Kiel – ein Balken, der im Grund steckt
+    this.walze(ctx, d.x - co * k * 0.85, d.y - si * k * 0.85, d.x + co * k * 0.85, d.y + si * k * 0.85,
+               z + k * 0.06, k * 0.07, holz, dunkel, { n: 7 });
+    /* Vier Spanten, vorn hoch und weit, achtern flach – daran sieht man, wo der Bug lag. Jede
+       besteht aus zwei Ästen, die sich NICHT treffen: Ein geschlossener Bogen wäre ein Tor. */
+    const spant = [];
+    for (let i = 0; i < 4; i++) {
+      const u = (i / 3) - 0.5;                      // -0,5 … 0,5 entlang des Kiels
+      const px = d.x + co * k * 1.6 * u, py = d.y + si * k * 1.6 * u;
+      const hoch = k * (0.95 - Math.abs(u) * 0.75);
+      const weit = k * (0.62 - Math.abs(u) * 0.22);
+      for (const vz of [-1, 1]) {
+        /* steig = hoch, senk = 0,62·hoch: Der Ast startet steil am Kiel und legt sich nach außen
+           um – das ist der Querschnitt eines Rumpfes. */
+        this.ast(ctx, px, py, z + k * 0.06, qx * vz, qy * vz, weit, hoch, hoch * 0.62,
+                 k * 0.055, holz, dunkel, 5);
+      }
+      spant.push({ px, py, weit, hoch });
+    }
+    /* Zwei Längsgurte: der Rest der Beplankung. Sie laufen von Spant zu Spant auf halber Höhe und
+       machen aus vier einzelnen Bögen einen Rumpf. */
+    for (const vz of [-1, 1]) {
+      for (let i = 0; i < spant.length - 1; i++) {
+        const A = spant[i], B = spant[i + 1];
+        const h = u => z + k * 0.06 + u.hoch * 0.75 - u.hoch * 0.62 * 0.5625;   // Höhe bei u = 0,75
+        this.walze(ctx, A.px + qx * vz * A.weit * 0.75, A.py + qy * vz * A.weit * 0.75,
+                   B.px + qx * vz * B.weit * 0.75, B.py + qy * vz * B.weit * 0.75,
+                   (h(A) + h(B)) / 2, k * 0.04, holz, dunkel, { n: 6 });
+      }
+    }
+  }
+
+  /* Amphore: der schlanke Krug der Stadt. Sie ist absichtlich ein anderer Körper als die Urne der
+     Wüstenwelten – höher, enger, mit zwei Henkeln und ohne Zierreif. Zwei von dreien liegen
+     halb im Sand: 'seed' entscheidet, wie tief sie eingesunken ist, und ein Krug, der schon
+     dreihundert Jahre unten liegt, steht nicht mehr sauber auf seinem Fuß. */
+  spriteAmphore(ctx, d) {
+    const g = d.s * 0.95, x = d.x, y = d.y;
+    const sand = ((d.seed || 0) * 0.55);            // 0 … 0,55: so tief steckt sie im Grund
+    const z = (d.z || 0) - g * 0.28 * sand;
+    const ton = '#b98a5e', seite = '#7a5334';
+    const K = r => this.circlePoly(x, y, r * g, 10);
+    this.bodenSchatten(ctx, x, y, g * 0.34, 0.2);
+    this.frustum(ctx, K(0.10), K(0.17), z, z + g * 0.10, ton, seite);          // Spitzfuß
+    this.frustum(ctx, K(0.17), K(0.30), z + g * 0.10, z + g * 0.40, ton, seite); // Bauch
+    this.frustum(ctx, K(0.30), K(0.15), z + g * 0.40, z + g * 0.80, ton, seite); // Schulter
+    this.frustum(ctx, K(0.15), K(0.13), z + g * 0.80, z + g * 0.94, ton, seite); // Hals
+    this.frustum(ctx, K(0.13), K(0.18), z + g * 0.94, z + g * 1.00, ton, seite); // Mündung
+    // Die beiden Henkel – daran erkennt man sie auch klein und im Dämmer
+    const a = (d.seed || 0) * 6.283, co = Math.cos(a), si = Math.sin(a);
+    for (const vz of [-1, 1]) {
+      this.ast(ctx, x + co * g * 0.14 * vz, y + si * g * 0.14 * vz, z + g * 0.86,
+               co * vz, si * vz, g * 0.16, -g * 0.02, -g * 0.22, g * 0.035, ton, seite, 3);
+    }
+  }
+
+  /* Torbogen: ein Stück Stadt, das stehengeblieben ist. Zwei Pfosten und der Sturz darüber – und
+     der Sturz ist auf einer Seite abgebrochen. Das Gebrochene ist der Punkt: Ein heiles Tor sähe
+     aus wie ein Bauwerk, das jemand pflegt, und hier pflegt seit dreihundert Jahren niemand mehr.
+
+     Zuerst war es ein Keilsteinbogen – sieben kleine Trommeln auf einem Halbkreis. Im Bild wurde
+     daraus ein Haken: Die Trommeln stehen senkrecht, der Bogen ist schmaler als hoch, und in der
+     schrägen Sicht des Spiels reiht sich das zu einer Raupe. Ein Pfosten-Sturz-Tor ist auf den
+     ersten Blick als Tor zu erkennen, und es ist für eine versunkene Stadt auch das richtige
+     Bauwerk – so haben sie damals gebaut. */
+  spriteTorbogen(ctx, d) {
+    const k = d.s * 1.6, z = d.z || 0;
+    const a = (d.seed || 0) * 6.283, co = Math.cos(a), si = Math.sin(a);
+    const stein = '#96a4aa', seite = '#4c5c64';
+    const halb = k * 0.62;                          // halbe Spannweite
+    const hoch = k * 1.05;                          // Höhe der Pfosten
+    const heil = (d.seed || 0) < 0.5 ? 1 : -1;      // diese Seite steht noch ganz
+    this.bodenSchatten(ctx, d.x, d.y, k * 0.7, 0.2);
+    const fuss = [];
+    for (const vz of [-1, 1]) {
+      const px = d.x + co * halb * vz, py = d.y + si * halb * vz;
+      const h = vz === heil ? hoch : hoch * 0.66;   // der gebrochene Pfosten ist kürzer
+      this.saeule(ctx, px, py, z, k * 0.2, k * 0.24, k * 0.1, stein, seite, 8);   // Sockel
+      this.saeule(ctx, px, py, z + k * 0.1, k * 0.16, k * 0.14, h, stein, seite, 8);
+      fuss.push({ px, py, oben: z + k * 0.1 + h, ganz: vz === heil });
+    }
+    /* Der Sturz. Er sitzt auf dem heilen Pfosten und ragt über die Lücke – aber nur zu zwei
+       Dritteln: Der Rest liegt seit langem unten. */
+    const A = fuss.find(f => f.ganz), B = fuss.find(f => !f.ganz);
+    const ex = (B.px - A.px), ey = (B.py - A.py);
+    this.walze(ctx, A.px - ex * 0.18, A.py - ey * 0.18, A.px + ex * 0.66, A.py + ey * 0.66,
+               A.oben + k * 0.1, k * 0.1, stein, seite, { n: 8 });
+    // Und das abgebrochene Stück liegt im Sand davor
+    this.walze(ctx, d.x + co * halb * 0.5 - si * k * 0.3, d.y + si * halb * 0.5 + co * k * 0.3,
+               d.x + co * halb * 1.1 - si * k * 0.22, d.y + si * halb * 1.1 + co * k * 0.22,
+               z + k * 0.09, k * 0.09, stein, seite, { n: 7 });
+  }
+
   spriteBarrel(ctx, d) {
     const g = d.s || 1, x = d.x, y = d.y, s = this.scale * g;
     const K = r => this.circlePoly(x, y, r * g, 12);

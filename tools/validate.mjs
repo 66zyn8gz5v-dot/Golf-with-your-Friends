@@ -3,17 +3,17 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 const ctx = { console };
 vm.createContext(ctx);
-const GLOBAL = { courses_pro: 'PRO_COURSES', courses_sea: 'SEA_COURSES', courses_jungle: 'JUNGLE_COURSES', courses_storm: 'STORM_COURSES', courses_shadow: 'SHADOW_COURSES', courses_colosseum: 'COLOSSEUM_COURSES', courses_clock: 'CLOCK_COURSES', courses_snow: 'SNOW_COURSES', courses_mine: 'MINE_COURSES', courses_boule: 'BOULE_COURSES' };
+const GLOBAL = { courses_pro: 'PRO_COURSES', courses_sea: 'SEA_COURSES', courses_jungle: 'JUNGLE_COURSES', courses_storm: 'STORM_COURSES', courses_shadow: 'SHADOW_COURSES', courses_colosseum: 'COLOSSEUM_COURSES', courses_clock: 'CLOCK_COURSES', courses_snow: 'SNOW_COURSES', courses_mine: 'MINE_COURSES', courses_flut: 'FLUT_COURSES', courses_boule: 'BOULE_COURSES' };
 const load = f => vm.runInContext(fs.readFileSync(new URL(`../src/${f}.js`, import.meta.url), 'utf8') + `\n;${GLOBAL[f] || f.toUpperCase()}`, ctx);
 // Reihenfolge wie in index.html: courses_pro.js baut die Weltliste und braucht die anderen schon
-const THEMES = load('themes'), COURSES = load('courses'), SEA = load('courses_sea'), JUNGLE = load('courses_jungle'), STORM = load('courses_storm'), SHADOW = load('courses_shadow'), COLOSSEUM = load('courses_colosseum'), CLOCK = load('courses_clock'), SNOW = load('courses_snow'), MINE = load('courses_mine'), BOULE = load('courses_boule'), PRO = load('courses_pro');
+const THEMES = load('themes'), COURSES = load('courses'), SEA = load('courses_sea'), JUNGLE = load('courses_jungle'), STORM = load('courses_storm'), SHADOW = load('courses_shadow'), COLOSSEUM = load('courses_colosseum'), CLOCK = load('courses_clock'), SNOW = load('courses_snow'), MINE = load('courses_mine'), FLUT = load('courses_flut'), BOULE = load('courses_boule'), PRO = load('courses_pro');
 // A bis F sind die Eingänge der Löwentore und Kupferrohre und begehbar; ihre Ausgänge (a bis f)
 // sind Mauer.
 const FLOOR = new Set(['#', 's', 'i', 'w', 'l', 'T', 'H', 'o', 'A', 'B', 'C', 'D', 'E', 'F']);
 const TOR_PAARE = ['A', 'B', 'C', 'D', 'E', 'F'];
 let ok = true;
 const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, world }]; let d = c.inner, n = 1; while (d) { out.push({ ...d, par: c.par, name: `${c.name} (innen${n > 1 ? ' ' + n : ''})`, world }); d = d.inner; n++; } return out; });
-[...COURSES.map(c => ({ ...c, world: 'Märchenland' })), ...withInner(SEA, 'Meereswelt'), ...withInner(JUNGLE, 'Dschungel'), ...withInner(STORM, 'Sturmhimmel'), ...withInner(SHADOW, 'Schattenreich'), ...withInner(COLOSSEUM, 'Kolosseum'), ...withInner(CLOCK, 'Uhrwerkstadt'), ...withInner(SNOW, 'Schneeberg'), ...withInner(MINE, 'Zwergenmine'), ...BOULE.map(c => ({ ...c, world: 'Boule-Welt' })), ...PRO.flatMap(c => c.inner ? [{ ...c, world: 'Profi' }, { ...c.inner, par: c.par, name: `${c.name} (innen)`, world: 'Profi' }] : [{ ...c, world: 'Profi' }])].forEach((c, i) => {
+[...COURSES.map(c => ({ ...c, world: 'Märchenland' })), ...withInner(SEA, 'Meereswelt'), ...withInner(JUNGLE, 'Dschungel'), ...withInner(STORM, 'Sturmhimmel'), ...withInner(SHADOW, 'Schattenreich'), ...withInner(COLOSSEUM, 'Kolosseum'), ...withInner(CLOCK, 'Uhrwerkstadt'), ...withInner(SNOW, 'Schneeberg'), ...withInner(MINE, 'Zwergenmine'), ...withInner(FLUT, 'Die Flut'), ...BOULE.map(c => ({ ...c, world: 'Boule-Welt' })), ...PRO.flatMap(c => c.inner ? [{ ...c, world: 'Profi' }, { ...c.inner, par: c.par, name: `${c.name} (innen)`, world: 'Profi' }] : [{ ...c, world: 'Profi' }])].forEach((c, i) => {
   const rows = c.map, H = rows.length, W = rows[0].length;
   const problems = [];
   if (!THEMES[c.theme]) problems.push(`Theme ${c.theme} fehlt`);
@@ -66,16 +66,19 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
     if (hatEin && !hatAus) problems.push(`Löwentor ${gross}: Eingang ohne Ausgang (${klein} fehlt auf der Karte)`);
     if (hatAus && !hatEin) problems.push(`Löwentor ${klein}: Ausgang ohne Eingang (${gross} fehlt auf der Karte)`);
     if (!hatEin && !hatAus) continue;
-    // Löwentor und Kupferrohr teilen sich das Verhalten und damit auch die Buchstabenpaare
-    const tor = (c.obstacles || []).find(o => (o.type === 'liongate' || o.type === 'copperpipe') && String(o.pair || '').toUpperCase() === gross);
-    const wie = tor && tor.type === 'copperpipe' ? 'Kupferrohr' : 'Löwentor';
-    if (!tor) problems.push(`Tor ${gross}: kein Hindernis vom Typ liongate oder copperpipe mit pair '${gross}' – der Ausgang hat keine Auswurfrichtung`);
+    /* Löwentor, Kupferrohr und Abflußrohr teilen sich das Verhalten und damit auch die
+       Buchstabenpaare: Großbuchstabe ist der Eingang, Kleinbuchstabe der Ausgang. */
+    const NAME = { liongate: 'Löwentor', copperpipe: 'Kupferrohr', abflussrohr: 'Abflußrohr' };
+    const tor = (c.obstacles || []).find(o => NAME[o.type] && String(o.pair || '').toUpperCase() === gross);
+    const wie = tor ? NAME[tor.type] : 'Löwentor';
+    if (!tor) problems.push(`Tor ${gross}: kein Hindernis vom Typ liongate, copperpipe oder abflussrohr mit pair '${gross}' – der Ausgang hat keine Auswurfrichtung`);
     else if (typeof tor.angle !== 'number' || !isFinite(tor.angle)) problems.push(`${wie} ${gross}: der Ausgang hat keine Auswurfrichtung (angle fehlt)`);
     else {
       // Wohin gespien wird, muss Bahn sein – sonst wirft das Rohr den Ball in die Wand oder ins Aus
       let aus = null;
       // Das Rohrende liegt auf der Ebene 'ziel' (fehlt sie, auf der des Mundes) - dort wird geprueft
-      const zielKarte = karten[(tor.type === 'copperpipe' ? (tor.ziel != null ? tor.ziel : (tor.ebene || 0)) : 0)] || rows;
+      const zielKarte = karten[(tor.type === 'copperpipe' ? (tor.ziel != null ? tor.ziel : (tor.ebene || 0))
+        : tor.type === 'abflussrohr' ? (tor.ebene || 0) : 0)] || rows;
       zielKarte.forEach((r, y) => [...r].forEach((ch, x) => { if (ch === klein) aus = [x + 0.5, y + 0.5]; }));
       if (aus) {
         const w = (tor.angle * Math.PI) / 180, lx = aus[0] + Math.cos(w) * 0.95, ly = aus[1] + Math.sin(w) * 0.95;
@@ -362,7 +365,7 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
         const cx = o.x + (o.w || 2) / 2, cy = o.y + (o.h || 2) / 2, L = o.land || 5;
         return [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([dx, dy]) => ({ x: cx, y: cy, tx: cx + dx * L, ty: cy + dy * L }));
       }))
-      .concat((c.obstacles || []).filter(o => o.type === 'liongate' || o.type === 'copperpipe').flatMap(o => { // Löwentor und Kupferrohr: vom Eingang vor den Ausgang
+      .concat((c.obstacles || []).filter(o => o.type === 'liongate' || o.type === 'copperpipe' || o.type === 'abflussrohr').flatMap(o => { // Löwentor, Kupferrohr und Abflußrohr: vom Eingang vor den Ausgang
         const g = String(o.pair || '').toUpperCase(), k = g.toLowerCase();
         let ein = null, aus = null;
         rows.forEach((r, y) => [...r].forEach((ch, x) => { if (ch === g) ein = [x + 0.5, y + 0.5]; if (ch === k) aus = [x + 0.5, y + 0.5]; }));

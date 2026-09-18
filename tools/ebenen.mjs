@@ -30,8 +30,8 @@ const ctx = { console, performance: { now: () => 0 }, window: {}, devicePixelRat
               document: { createElement: () => ({ getContext: () => ({}) }) } };
 vm.createContext(ctx);
 for (const f of ['themes', 'courses', 'courses_sea', 'courses_jungle', 'courses_storm', 'courses_shadow',
-                 'courses_colosseum', 'courses_clock', 'courses_snow', 'courses_mine', 'courses_boule',
-                 'courses_pro', 'level', 'obstacles', 'obstacles_legend', 'obstacles_snow', 'obstacles_mine',
+                 'courses_colosseum', 'courses_clock', 'courses_snow', 'courses_mine', 'courses_flut', 'courses_boule',
+                 'courses_pro', 'level', 'obstacles', 'obstacles_legend', 'obstacles_snow', 'obstacles_mine', 'obstacles_flut',
                  'physics', 'render'])
   vm.runInContext(lies(`${f}.js`), ctx);
 

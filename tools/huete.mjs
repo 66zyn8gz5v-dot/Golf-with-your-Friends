@@ -12,8 +12,9 @@
  * Dazu die Regeln, die sich nicht von selbst halten:
  *   - Jeder Eintrag in der Liste muß auch eine Zeichnung haben (und umgekehrt fällt ein Hut ohne
  *     Listeneintrag niemandem auf - er ist dann einfach nicht zu haben).
- *   - Jede Welt hat genau eine Belohnung. Zwei wären ein Streit, keine wäre ein leeres Versprechen
- *     auf dem Weltbildschirm.
+ *   - Jede Welt im Spiel hat genau eine Belohnung. Zwei wären ein Streit, keine wäre ein leeres
+ *     Versprechen auf dem Weltbildschirm. Eine Welt, die noch in der Vorschau steckt, darf sie
+ *     schuldig bleiben – sie ist ja nicht zu Ende gebaut.
  *   - Der Gartenzwerg ist der Spezialskin: ein Ganzkörper-Skin, der an keiner Welt hängt und
  *     darum von Anfang an zu haben ist. Ein Spaß, den man erst freispielen muß, ist keiner.
  */
@@ -31,7 +32,7 @@ const pruef = (name, ok, zusatz = '') => {
 const ctx = { console };
 vm.createContext(ctx);
 for (const f of ['themes', 'courses', 'courses_sea', 'courses_jungle', 'courses_storm', 'courses_shadow',
-                 'courses_colosseum', 'courses_clock', 'courses_snow', 'courses_mine', 'courses_pro', 'hats'])
+                 'courses_colosseum', 'courses_clock', 'courses_snow', 'courses_mine', 'courses_flut', 'courses_pro', 'hats'])
   vm.runInContext(lies(`src/${f}.js`), ctx);
 const WORLDS = vm.runInContext('WORLDS', ctx);
 const Hats = vm.runInContext('Hats', ctx);
@@ -49,11 +50,21 @@ pruef('jeder Eintrag hat einen Namen', ohneName.length === 0, ohneName.map(h => 
 
 /* ---------- Belohnungen ---------- */
 console.log('\n--- Belohnungen ---');
-for (const w of WORLDS) {
+/* Die Regel gilt für die Welten *im Spiel*. Eine Welt, die noch in der Vorschau steckt, darf ihre
+   Belohnung noch schuldig bleiben – sie ist ja nicht zu Ende gebaut, und ein Skin für eine Welt mit
+   zwei Probebahnen wäre ein Versprechen auf etwas, das es noch nicht gibt. Sobald die
+   Kennzeichnung fällt, greift die Regel wieder, ohne daß jemand daran denken müßte. */
+for (const w of WORLDS.filter(x => !x.nurVorschau)) {
   const lohn = Hats.belohnung(w.id);
   pruef(`${w.name} hat genau eine Belohnung`,
         !!lohn && Hats.LIST.filter(h => h.welt === w.id).length === 1,
         lohn ? lohn.name : 'keine');
+}
+for (const w of WORLDS.filter(x => x.nurVorschau)) {
+  const lohn = Hats.belohnung(w.id);
+  pruef(`${w.name} steht noch in der Vorschau – Belohnung darf fehlen`,
+        Hats.LIST.filter(h => h.welt === w.id).length <= 1,
+        lohn ? lohn.name : 'noch keine');
 }
 const fremd = Hats.LIST.filter(h => h.welt && !WORLDS.some(w => w.id === h.welt));
 pruef('keine Belohnung hängt an einer Welt, die es nicht gibt', fremd.length === 0,

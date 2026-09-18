@@ -93,6 +93,36 @@ function bauFlaeche(rows, W, H, def) {
   return { tiles, at, isFloor, segs, walls, blocks, tee, cup };
 }
 
+/* ---------- Der Blick folgt dem WEG, nicht der Luftlinie ----------
+   Die Kamera hat immer geradewegs aufs Loch geschaut. Auf einer offenen Bahn ist das richtig, in
+   Gassen ist es falsch: Dort liegt das Loch hinter einer Mauer, und man sieht die Wand statt der
+   Gasse, in der man gerade spielt. Im Seegraswald der Flut stand die Kamera darum quer zur Bahn.
+
+   Darum rechnet jede Fläche einmal aus, wie weit jede Kachel vom Loch entfernt ist – ÜBER DEN
+   BODEN gemessen, nicht durch die Luft. Die Kamera schaut dann ein Stück diesen Weg entlang. Auf
+   einer offenen Bahn ist das dieselbe Richtung wie vorher, in einer Gasse die Gasse hinunter. */
+const WEG_NACHBARN = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+
+function wegFeld(fl, W, H, cup) {
+  if (!cup) return null;
+  const hx = Math.floor(cup.x), hy = Math.floor(cup.y);
+  if (!fl.isFloor(hx, hy)) return null;
+  const d = new Int32Array(W * H).fill(-1);
+  d[hy * W + hx] = 0;
+  const schlange = [hy * W + hx];
+  for (let i = 0; i < schlange.length; i++) {
+    const k = schlange[i], x = k % W, y = (k - x) / W;
+    for (const [ox, oy] of WEG_NACHBARN) {
+      const nx = x + ox, ny = y + oy;
+      if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
+      const nk = ny * W + nx;
+      if (d[nk] !== -1 || !fl.isFloor(nx, ny)) continue;
+      d[nk] = d[k] + 1; schlange.push(nk);
+    }
+  }
+  return d;
+}
+
 function buildLevel(def) {
   const rows = def.map;
   const H = rows.length;
@@ -189,6 +219,51 @@ function buildLevel(def) {
     /* Die Kachel einer bestimmten Ebene – die Turbine muss wissen, ob oben überhaupt Boden ist. */
     charAtEbene(n, x, y) { const fl = this.flaechen[n]; return fl ? fl.at(Math.floor(x), Math.floor(y)) : '.'; },
     isFloorChar(c) { return FLOOR_CHARS.has(c); },
+    /* Ein Punkt ein Stück weit den Weg zum Loch entlang – der Blickpunkt der Kamera. Liegt das
+       Loch auf einer anderen Ebene oder der Ball neben jedem Weg, gibt es keinen: Dann bleibt es
+       bei der Luftlinie, und das ist auch richtig so.
+
+       Unter mehreren Nachbarn, die gleich weit ans Loch heranführen, gewinnt der, der ihm auch in
+       der Luftlinie am nächsten liegt. Ohne diese Regel liefe der Blick auf einer offenen Fläche
+       erst ganz nach rechts und dann nach unten, statt schräg – die Kachelentfernung kennt keine
+       Schräge, die Kamera soll sie aber zeigen. */
+    wegPunkt(x, y, weite = 6) {
+      if (!this.cup || this.ebene !== this.cupEbene) return null;
+      const fl = this.aktiv, W = this.W, H = this.H;
+      /* Sieht man das Loch, schaut man es an. Nur wenn etwas dazwischensteht – eine Mauer, ein
+         Klotz, offenes Wasser –, lohnt der Umweg über den Weg. Sonst bekäme eine ganz offene Bahn
+         eine schiefe Kamera: Kachelentfernungen kennen keine Schräge, und ein Weg über sechs
+         Kacheln liefe erst geradeaus und böge dann ab, wo die Luftlinie längst schräg läuft. */
+      const lx = this.cup.x - x, ly = this.cup.y - y;
+      const schritte = Math.max(2, Math.round(Math.hypot(lx, ly) * 4));
+      let frei = true;
+      for (let i = 1; i < schritte && frei; i++) {
+        const u = i / schritte;
+        if (!fl.isFloor(Math.floor(x + lx * u), Math.floor(y + ly * u))) frei = false;
+      }
+      if (frei) return null;
+      if (fl._weg === undefined) fl._weg = wegFeld(fl, W, H, this.cup);
+      const d = fl._weg;
+      if (!d) return null;
+      let cx = Math.floor(x), cy = Math.floor(y);
+      if (cx < 0 || cy < 0 || cx >= W || cy >= H || d[cy * W + cx] < 0) return null;
+      const hx = Math.floor(this.cup.x), hy = Math.floor(this.cup.y);
+      for (let i = 0; i < weite; i++) {
+        const hier = d[cy * W + cx];
+        if (hier === 0) break;
+        let bx = -1, by = -1, nah = Infinity;
+        for (const [ox, oy] of WEG_NACHBARN) {
+          const nx = cx + ox, ny = cy + oy;
+          if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
+          if (d[ny * W + nx] !== hier - 1) continue;
+          const e = (nx - hx) * (nx - hx) + (ny - hy) * (ny - hy);
+          if (e < nah) { nah = e; bx = nx; by = ny; }
+        }
+        if (bx < 0) break;
+        cx = bx; cy = by;
+      }
+      return { x: cx + 0.5, y: cy + 0.5 };
+    },
   };
   level.aktiv = unten;
   for (const ob of obstacles) ob.level = level;
@@ -224,7 +299,7 @@ function abstandStrecke(px, py, f) {
 /* Deko: explizite Objekte plus automatisch verstreute Objekte auf leeren Kacheln
    (innerhalb der Karte und in einem Ring von 2 Kacheln außen herum). */
 function buildDecor(def, tiles, W, H, isFloor) {
-  const theme = THEMES[def.theme];
+  const theme = themaFuer(def);
   const out = [];
   for (const d of def.decor || []) out.push(Object.assign({ s: 1, z: 0 }, d));
   /* Freihalten, wo eine Maschine über den Fairway hinausgreift. Das Zahnradfeld trägt quer über
@@ -271,6 +346,46 @@ function buildDecor(def, tiles, W, H, isFloor) {
       const gr = 0.75 + rnd() * 0.6, sd = rnd();   // erst ziehen, dann verwerfen: sonst
       if (imWeg(px, py) || !aufDerScholle(px, py)) continue;   // verschöbe sich die ganze Streuung
       out.push({ t, x: px, y: py, s: gr, z: 0, seed: sd });
+    }
+  }
+  /* ------------------------------------------------------------------
+     SCHWEBENDE REQUISITEN – das, was im Wasser hängt statt auf dem Grund zu stehen.
+
+     Die Streu-Deko oben braucht Boden unter sich: Sie wirft einen Schatten, also darf sie nicht in
+     der Luft stehen, und darum endet sie am Rand der Erdscholle. Unter Wasser ist das die falsche
+     Regel. Ein Fischschwarm steht auf nichts, eine Qualle auch nicht, und beide gehören genau
+     dorthin, wo die andere Deko aufhört: NEBEN die Bahn und ÜBER sie hinaus, ins offene Wasser.
+
+     Sie sind reine Zier. Sie kollidieren nicht, sie bremsen nicht, sie verdecken nichts – dafür
+     gelten hier drei Regeln, und alle drei halten sie vom Spielfeld weg:
+       - nie über Boden, und mit Abstand zum nächsten Boden (SCHWEB_ABSTAND),
+       - nichts im Streifen VOR der Bahn, sonst schwimmt ein Rochen durchs Bild,
+       - und eine Höhe zwischen SCHWEB_TIEF und SCHWEB_HOCH, damit sie im Wasser hängen und nicht
+         auf dem Grund zu liegen scheinen. */
+  const schweb = def.schwebDecor || (auto && theme.schwebDecor ? { density: 0.1, seed: (auto.seed || 1) + 7 } : null);
+  const schwebVorrat = theme.schwebDecor || [];
+  if (schweb && schwebVorrat.length) {
+    const SCHWEB_RING = 7;        // so weit über die Karte hinaus wird gestreut
+    const SCHWEB_ABSTAND = 3;     // so viele Kacheln Abstand zum nächsten Boden
+    const SCHWEB_TIEF = 1.1, SCHWEB_HOCH = 3.8;
+    const rnd = seededRandom(schweb.seed || 1);
+    const dichte = schweb.density ?? 0.1;
+    const bodenNah = (x, y) => {
+      for (let i = -SCHWEB_ABSTAND; i <= SCHWEB_ABSTAND; i++)
+        for (let j = -SCHWEB_ABSTAND; j <= SCHWEB_ABSTAND; j++) if (isFloor(x + i, y + j)) return true;
+      return false;
+    };
+    for (let y = -SCHWEB_RING; y < H + SCHWEB_RING; y++) for (let x = -SCHWEB_RING; x < W + SCHWEB_RING; x++) {
+      if (rnd() > dichte) continue;
+      // Der Streifen vor der Bahn bleibt frei – dort verdeckte alles, was schwebt, den Weg
+      let davor = false;
+      for (let i = 0; i <= 4 && !davor; i++) for (let j = 0; j <= 4; j++) if (isFloor(x - i, y - j)) { davor = true; break; }
+      if (davor || bodenNah(x, y)) continue;
+      const t = schwebVorrat[Math.floor(rnd() * schwebVorrat.length)];
+      const px = x + 0.2 + rnd() * 0.6, py = y + 0.2 + rnd() * 0.6;
+      const gr = 0.8 + rnd() * 0.7, sd = rnd();
+      const z = SCHWEB_TIEF + rnd() * (SCHWEB_HOCH - SCHWEB_TIEF);
+      out.push({ t, x: px, y: py, s: gr, z, seed: sd, schwebt: true });
     }
   }
   return out;

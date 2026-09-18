@@ -719,6 +719,113 @@ const Hats = (() => {
       return () => grubenhelm(ctx, t, fein);   // der Helm liegt über dem Reif in Spielerfarbe
     },
 
+    taucherhelm(ctx, color, t, fein) {   // Die Flut: messingener Taucherhelm, aus dem Blasen aufsteigen
+      /* Die Belohnung der versunkenen Stadt ist das, was man dort unten anhätte: ein Helm aus
+         Messing mit einem runden Bullauge. Er ist absichtlich KEIN Hut, der auf dem Ball sitzt,
+         sondern der Ball selbst – so wie die Grubenlampe und die Kristallkugel. Ein Helm, der als
+         Hütchen obendrauf säße, sähe aus wie ein Eimer.
+
+         Das Lebendige daran sind die BLASEN. Sie steigen aus dem Ventil auf, werden nach oben
+         größer und verschwinden – dieselbe Bewegung, die in der ganzen Welt im Hintergrund läuft.
+         Ohne sie wäre der Helm ein Stillleben, und man sähe ihm nicht an, daß darin jemand atmet. */
+      const g = ctx.createRadialGradient(-0.34, -0.4, 0.08, 0, 0, 1);
+      g.addColorStop(0, '#f0d79a'); g.addColorStop(0.42, '#c79a4e'); g.addColorStop(1, '#6b4f21');
+      ctx.beginPath(); ctx.arc(0, 0, 1, 0, TAU2); ctx.fillStyle = g; ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.45)'; ctx.lineWidth = 0.07; ctx.stroke();
+
+      ctx.save(); kugelMaske(ctx);
+      /* Der Kragen unten: der Helm sitzt auf einer Schulterplatte, und die ist dunkler als die
+         Haube. Ohne sie schwebt die Kugel, statt getragen zu werden. */
+      const kg = ctx.createLinearGradient(0, 0.45, 0, 1);
+      kg.addColorStop(0, '#a87f38'); kg.addColorStop(1, '#5b421c');
+      ctx.fillStyle = kg; ctx.fillRect(-1, 0.52, 2, 0.6);
+      ctx.strokeStyle = 'rgba(70,48,16,0.7)'; ctx.lineWidth = 0.05;
+      ctx.beginPath(); ctx.moveTo(-1, 0.52); ctx.lineTo(1, 0.52); ctx.stroke();
+
+      // Die beiden Seitenfenster, angeschnitten am Rand – sie machen aus der Scheibe einen Helm
+      for (const sx of [-0.78, 0.78]) {
+        ctx.beginPath(); ctx.ellipse(sx, -0.06, 0.2, 0.26, 0, 0, TAU2);
+        ctx.fillStyle = '#123b46'; ctx.fill();
+        ctx.strokeStyle = '#e0bd72'; ctx.lineWidth = 0.07; ctx.stroke();
+      }
+
+      /* Das Bullauge. Der Ring ist dick und heller als die Haube, das Glas dahinter ist dunkles
+         Wasser mit einem schrägen Lichtstreifen – daran erkennt man Glas auch ohne Spiegelung. */
+      ctx.beginPath(); ctx.arc(0, -0.04, 0.52, 0, TAU2);
+      const rg = ctx.createLinearGradient(-0.5, -0.5, 0.5, 0.5);
+      rg.addColorStop(0, '#ffe7ad'); rg.addColorStop(0.5, '#c99c4e'); rg.addColorStop(1, '#8a6a2c');
+      ctx.fillStyle = rg; ctx.fill();
+      const glas = ctx.createRadialGradient(-0.14, -0.2, 0.04, 0, -0.04, 0.42);
+      glas.addColorStop(0, '#2f6f7d'); glas.addColorStop(0.6, '#123c4a'); glas.addColorStop(1, '#07202b');
+      ctx.beginPath(); ctx.arc(0, -0.04, 0.4, 0, TAU2); ctx.fillStyle = glas; ctx.fill();
+      // Der Lichtstreifen auf dem Glas
+      ctx.save();
+      ctx.beginPath(); ctx.arc(0, -0.04, 0.4, 0, TAU2); ctx.clip();
+      ctx.fillStyle = 'rgba(214,244,255,0.3)';
+      ctx.beginPath();
+      ctx.moveTo(-0.42, 0.06); ctx.lineTo(-0.02, -0.44); ctx.lineTo(0.14, -0.44); ctx.lineTo(-0.26, 0.06);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = 'rgba(214,244,255,0.18)';
+      ctx.beginPath();
+      ctx.moveTo(-0.1, 0.1); ctx.lineTo(0.16, -0.24); ctx.lineTo(0.24, -0.24); ctx.lineTo(-0.02, 0.1);
+      ctx.closePath(); ctx.fill();
+      ctx.restore();
+
+      if (fein) {   // Schrauben rings um das Bullauge – daran sieht man, daß es angeflanscht ist
+        ctx.fillStyle = 'rgba(255,238,190,0.85)';
+        ctx.strokeStyle = 'rgba(90,64,22,0.6)'; ctx.lineWidth = 0.02;
+        ctx.beginPath();
+        for (let i = 0; i < 8; i++) {
+          const a = (i * TAU2) / 8 + 0.4;
+          ctx.moveTo(Math.cos(a) * 0.46 + 0.045, Math.sin(a) * 0.46 - 0.04);
+          ctx.ellipse(Math.cos(a) * 0.46, Math.sin(a) * 0.46 - 0.04, 0.045, 0.045, 0, 0, TAU2);
+        }
+        ctx.fill(); ctx.stroke();
+        // Nieten auf dem Kragen
+        ctx.fillStyle = 'rgba(255,238,190,0.5)';
+        ctx.beginPath();
+        for (const x of [-0.66, -0.22, 0.22, 0.66]) { ctx.moveTo(x + 0.04, 0.68); ctx.ellipse(x, 0.68, 0.04, 0.035, 0, 0, TAU2); }
+        ctx.fill();
+      }
+      ctx.restore();
+
+      steinRand(ctx);
+      ctx.fillStyle = 'rgba(255,255,255,0.16)';   // Glanz auf dem Messing, sonst wirkt es flach
+      ctx.beginPath(); ctx.ellipse(-0.42, -0.52, 0.26, 0.14, -0.6, 0, TAU2); ctx.fill();
+
+      /* Das Ventil auf dem Helm und die Blasen daraus. Beides liegt AUSSERHALB der Kugelmaske:
+         Die Blasen sollen über den Helm hinaussteigen, und ein Ventil, das an der Kugel
+         abgeschnitten wird, sähe aus wie ein Fleck. */
+      ctx.save();
+      ctx.translate(0.42, -0.86);
+      ctx.rotate(-0.5);
+      const vg = ctx.createLinearGradient(-0.1, 0, 0.1, 0);
+      vg.addColorStop(0, '#8a6a2c'); vg.addColorStop(0.45, '#e6c479'); vg.addColorStop(1, '#7a5c26');
+      ctx.fillStyle = vg;
+      ctx.beginPath(); ctx.rect(-0.09, -0.24, 0.18, 0.3); ctx.fill();
+      ctx.strokeStyle = 'rgba(70,48,16,0.6)'; ctx.lineWidth = 0.03; ctx.stroke();
+      ctx.fillStyle = '#d9b566';
+      ctx.beginPath(); ctx.ellipse(0, -0.26, 0.13, 0.06, 0, 0, TAU2); ctx.fill();
+      ctx.restore();
+
+      /* Vier Blasen, versetzt im selben Takt. Jede steigt von u = 0 bis 1, wird dabei größer und
+         blasser und fängt dann von vorn an – gerechnet aus der Spieluhr, damit alle Bälle
+         denselben Takt haben und keiner beim Neuzeichnen springt. */
+      const n = fein ? 4 : 2;
+      for (let i = 0; i < n; i++) {
+        const u = ((t * 0.42 + i / n) % 1);
+        const x = 0.52 + Math.sin(u * 5.5 + i * 2.1) * 0.12;
+        const y = -1.02 - u * 0.95;
+        const r = (0.05 + u * 0.07) * (1 - u * 0.25);
+        /* Sie verblassen nur zu drei Vierteln, nicht ganz: Eine Blase, die linear auf null geht,
+           ist auf halbem Weg schon grau und sieht aus wie Staub statt wie Luft. */
+        ctx.fillStyle = `rgba(222,246,255,${0.7 * (1 - u * 0.75)})`;
+        ctx.beginPath(); ctx.arc(x, y, r, 0, TAU2); ctx.fill();
+        ctx.strokeStyle = `rgba(255,255,255,${0.6 * (1 - u * 0.75)})`; ctx.lineWidth = 0.018;
+        ctx.stroke();
+      }
+    },
+
     orb(ctx, color, t, fein) {   // Schattenreich: Kristallkugel mit Nebel, Funken und einem Auge, das blinzelt
       glasKugel(ctx, '#e2c8ff', '#5c34a0');
       ctx.save(); kugelMaske(ctx);
@@ -1765,6 +1872,7 @@ const Hats = (() => {
     { id: 'thunder', name: 'Gewitterkugel', welt: 'storm', voll: true },
     { id: 'orb', name: 'Kristallkugel', welt: 'shadow', voll: true },
     { id: 'pocketwatch', name: 'Taschenuhr', welt: 'clock', voll: true },
+    { id: 'taucherhelm', name: 'Taucherhelm', welt: 'flut', voll: true },
     { id: 'champion', name: 'Championhelm', welt: 'colosseum', art: 'turnier' },
   ];
   const byId = id => LIST.find(h => h.id === id);

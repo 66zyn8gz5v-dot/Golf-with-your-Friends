@@ -350,9 +350,10 @@ dem Browser-Speicher kommt: Der überlebt Fassungswechsel und lässt sich von Ha
 
 Jede Welt hat eine Belohnung, und man verdient sie sich am eigenen Können: **Die Summe der eigenen besten
 Einzelbahnen muss unter dem Par der Welt liegen, und jede Bahn braucht ein Ergebnis.** Gerechnet wird gegen
-das geltende Par – also gegen die Rangliste, siehe oben. Neun Welten,
-neun Belohnungen – acht davon sind **Ganzkörper-Skins**: Sie ersetzen den Ball, statt auf ihm zu
-sitzen, und bewegen sich. Der Championhelm ist der einzige, der nur ein Hut ist.
+das geltende Par – also gegen die Rangliste, siehe oben. **Elf Welten, elf Belohnungen** – zehn
+davon sind **Ganzkörper-Skins**: Sie ersetzen den Ball, statt auf ihm zu sitzen, und bewegen sich.
+Der Championhelm ist der einzige, der nur ein Hut ist; ihn gibt es auch nicht fürs Durchspielen,
+sondern fürs Gewinnen eines Turniers.
 
 **Wie der Hut über den Farbreif kommt.** Ein Ganzkörper-Skin bekommt nach dem Zeichnen einen dünnen Reif in
 der Spielerfarbe (sonst wüsste bei vier Bällen niemand, welcher der eigene ist). Läge der Hut darunter, liefe
@@ -372,6 +373,8 @@ braucht das nicht – bei ihr liegen die Federn bewusst *hinter* dem Reif, das S
 | Sturmhimmel | Gewitterkugel | Wolken ziehen, es regnet, alle 2,2 s schlägt ein Blitz ein | ein Wetterhahn, der sich dreht – und beim Einschlag an der Spitze sprüht |
 | Schattenreich | Kristallkugel | Schwaden waberen, ein Auge blickt umher und blinzelt | Spitzhut mit Mondschnalle; die Spitze schwankt, Sterne funkeln darauf |
 | Uhrwerkstadt | Taschenuhr | durchbrochenes Zifferblatt, hinter dem das Werk läuft | Bügel und Krone wie an einer Taschenuhr |
+| Zwergenmine | Grubenlampe | eiserner Lampenkörper mit Messingreifen; hinter dem Glas brennt eine Flamme, die langsam flackert und ihren Schein aufs Eisen wirft | ein Grubenhelm mit eisernem Bügel |
+| Die Flut | Taucherhelm | messingene Haube mit Bullauge, zwei Seitenfenstern, Schrauben rings um das Glas und einem Kragen mit Nieten | (kein eigener Hut – aus dem Ventil oben steigen Blasen auf) |
 | Kolosseum | Championhelm | (kein eigener Ball – der Helm sitzt auf dem Spielerball) | der Federkamm wiegt sich im Wind |
 
 **Geprüft wird das mit `node tools/huete.mjs`.** Ein Hut geht nicht laut kaputt: Er wird nur in
@@ -1536,6 +1539,468 @@ Messingreifen, in dessen Glas wirklich eine Flamme steht – dazu als Hut der Gr
 kleinen Lampe vorn. Freigeschaltet wird er wie jede Weltbelohnung, indem man die Welt vollständig
 spielt.
 
+## Die Flut (Vorschau)
+
+Die elfte Welt ist noch nicht im Spiel; sie steht in der Vorschau. **Zwölf Bahnen, drei je Tiefe**,
+Stufe Legende:
+
+| | Abschnitt | Bahnen | was hier dazukommt |
+| --- | --- | --- | --- |
+| 1–3 | `wasserlinie` | Die Hafenmole · Der Priel · Die Buhnen | Becken · Pumpwerk · Strömung und Wracktor |
+| 4–6 | `flachwasser` | Der Kessel · Der Seegraswald · Die Austernbank | Strudel · Tangwald · Riesenmuschel |
+| 7–9 | `daemmerzone` | Die Kanalisation · Die Kaimauer · Der Marktplatz | Abflußrohr · Ankerkette · alles der Stadt zusammen |
+| 10–12 | `meeresgrund` | Die Schlotebene · Das Kaltwasserfeld · Der Schlund | Schwarzer Raucher · Gegenströmungen · der Anglerfisch |
+
+**Jede Maschine bekommt ihre eigene Bahn, bevor sie sich mit anderen mischt.** Wer zum ersten Mal
+einen Strudel sieht, sieht ihn allein und lernt, was er tut; erst danach steht er neben einer
+Strömung. Eine Welt, die alles auf einmal auspackt, ist nicht schwer, sondern unübersichtlich.
+
+**Der Anglerfisch kommt zuletzt, und nur einmal.** Er ist das einzige Hindernis dieser Welt, das
+einen Schlag zurücksetzt – damit ist er die Pointe der letzten Bahn und nicht das Grundrauschen
+der ganzen Welt.
+
+**Keine Bahn liegt geradeaus.** Beim ersten Anlauf waren die zwölf lange gerade Stege, und der
+Profi-Bot lochte die ersten beiden mit **einem Schlag** ein: Abschlag und Loch standen auf einer
+Linie, und dazwischen lag nur ein Becken, das man abwarten konnte. Jetzt hat jede Bahn wenigstens
+einen Knick – ein Bogen über Wasser ist nicht zu schlagen, also kostet er einen Schlag.
+
+Der Bot hat auch die Pars gesetzt. Das Verfahren ist immer dasselbe: Der Profi-Bot sagt, was
+optimal geht, der Normalspieler-Bot, was ein Mensch braucht. Par ist der Profi-Wert, und der
+Normalspieler soll zwei bis drei darüber landen, ohne ins Schlaglimit zu laufen. Danach standen
+vier Bahnen anders da als geplant – Priel, Buhnen, Seegraswald und Austernbank sind Par 5 geworden,
+weil der Profi dort fünf Schläge braucht.
+
+Eine Bahn hat dabei etwas über den Tangwald verraten. *Der Seegraswald* hatte zuerst **zwei**
+Tangfelder, eines auf dem Hinweg und eines auf dem Rückweg. Damit fand der Profi-Bot in acht
+Schlägen gar keine Lösung mehr, und jeder fünfte Durchgang des Normalspielers lief ins Schlaglimit.
+Der Grund ist eine Kette: Der Tang nimmt den Schwung, der nächste Schlag trägt nicht mehr über die
+Ecke, und der Ball geht ins Meer. Mit einem Tangfeld: Ø 6,4 Schläge, kein einziger Sturz. **Eine
+Maschine, die man zweimal trifft, ist nicht doppelt so gut – sie ist doppelt so zäh.**
+
+Elf Maschinen: **Flutbecken**, **Pumpwerk**, **Strömung**, **Strudel**, **Anglerfisch**,
+**Riesenmuschel**, **Tangwald**, **Schwarzer Raucher**, **Ankerkette**, **Wracktor** und
+**Abflußrohr**.
+
+### Die Belohnung: der Taucherhelm
+
+Wer in dieser Welt die Rundensumme unter Par bringt, darf den **Taucherhelm** tragen – eine
+messingene Haube mit Bullauge, zwei angeschnittenen Seitenfenstern, acht Schrauben rings um das
+Glas und einem Kragen mit Nieten. Hinter dem Glas steht dunkles Wasser mit einem schrägen
+Lichtstreifen; daran erkennt man Glas auch ohne Spiegelung.
+
+Er ist ein **Ganzkörper-Skin** und kein Hut, der obendrauf sitzt – ein Taucherhelm als Hütchen
+sähe aus wie ein Eimer. Und er ist der einzige Weltskin ohne zusätzlichen Kopfschmuck: Was ihn
+lebendig macht, sind die **Blasen**, die aus dem Ventil aufsteigen, größer werden und
+verschwinden. Das ist dieselbe Bewegung, die in der ganzen Welt im Hintergrund läuft – ohne sie
+wäre der Helm ein Stillleben, und man sähe ihm nicht an, daß darin jemand atmet.
+
+Die Blasen verblassen nur zu drei Vierteln, nicht ganz. Eine Blase, die linear auf null geht, ist
+auf halbem Weg schon grau und sieht aus wie Staub statt wie Luft.
+
+### Der Abstieg ist stufenlos
+
+Die Welt hat vier Paletten – Wasserlinie, Flachwasser, Dämmerzone, Meeresgrund –, und als sie zwölf
+Bahnen bekam, lagen je drei auf einer davon. Damit sprang die Farbe **drei Mal hart um**: Man
+spielt drei Bahnen im selben Blau und steht bei der vierten plötzlich woanders. Das ist kein
+Abstieg, das sind vier Zimmer.
+
+Jetzt trägt jede Bahn ihre eigene **Tiefe** (0,12 an der Oberfläche bis 1,0 auf dem Grund, in
+gleichmäßigen Schritten von 0,08), und `themaFuer()` in `src/themes.js` **mischt** die Palette
+dazwischen. Die vier bleiben als Stützstellen stehen – sie sind von Hand gesetzt und sollen es
+bleiben –, aber zwischen ihnen wird gerechnet. Zwölf Bahnen sind dann zwölf Schritte hinunter statt
+vier Sprünge: von `#2c6d84` über `#1b5067` und `#0f2e40` bis `#07202b`.
+
+**Gemischt wird nur, was eine Farbe ist** – dazu die Tiefe selbst, an der die Wassersäule, der
+Schleier und die Lichtschächte hängen. Stimmung, Mauerstil und Requisitenliste kommen ganz von der
+näheren der beiden Paletten: Man kann eine Qualle nicht halb zeichnen, und eine Bahn, auf der Bojen
+und Quallen zugleich stehen, sähe nach Versehen aus.
+
+Die erste Tiefe ist **nicht null**, sondern die der obersten Palette. Alles darunter wird
+abgeschnitten, weil es keine Stützstelle mehr gibt – und dann waren die ersten beiden Bahnen
+farblich fast gleich, während anderswo ein ordentlicher Schritt lag. Gemeldet hat das die Prüfung
+selbst: größter Farbschritt 17,5, kleinster 3,0. Jetzt sind es 16,8 gegen 7,5.
+
+Die Prüfung dazu trägt ihre Gegenprobe im selben Lauf: Sie rechnet dieselben zwölf Bahnen noch
+einmal **ohne** den Mischer durch und verlangt, daß es dann sehr wohl springt (60,1 gegen 0,0).
+Ohne diese zweite Hälfte bewiese die erste nichts – eine Prüfung, die auch grün wäre, wenn der
+Mischer gar nichts täte, prüft nichts.
+
+**Die Bahnen sind Stege, keine Plätze.** Ringsum steht offenes Wasser, und wer heruntergespült
+wird, zahlt. Das ist der Unterschied zwischen einer Strömung, die ärgert, und einer, die etwas
+kostet – und der Grund, warum die Welt eine Legende ist. Dass ringsum *Wasser* steht und nicht
+Abgrund, ist dabei kein Geschmack, sondern Mechanik: Am Rand eines Stegs über dem Abgrund baut das
+Spiel eine Bande, und gegen die würde die Strömung einen nur drücken. Auf der Weltkarte liegt sie allein im Südostmeer, mit einem Kirchturm als Marke –
+dem Einzigen, was von so einer Stadt am Ende noch herausschaut.
+
+### Erst war es eine Weltregel, und das war ein Fehler
+
+In der ersten Fassung (166) stieg das Wasser auf der **ganzen** Bahn: eine Tide über alles, die von
+den Rändern nach innen fraß. Die Idee war gut und ließ sich schlecht spielen. Wer den Augenblick
+verpasste, konnte nichts tun als warten, bis das Wasser zurückging – eine halbe Minute, in der der
+Ball liegt und nichts passiert. Das ist kein Druck, das ist Leerlauf, und Leerlauf ist das Gegenteil
+von dem, was die Idee wollte. Gemeldet hat das nicht eine Prüfung, sondern der, der es gespielt hat.
+
+Seit Fassung 167 ist es ein **Hindernis** wie jedes andere: ein Becken an einer Stelle der Bahn, mit
+einem Takt von ein paar Sekunden – wie das Wandertor, die Falltür oder das Mühlrad. Ringsum bleibt
+alles trocken und immer spielbar.
+
+### Das Flutbecken
+
+Es läuft von seinem Rand nach innen voll und folgt dabei seiner Form. Jedes Bodenfeld im Becken
+bekommt beim Aufbau eine Ringnummer (Vielquellen-Breitensuche, `src/obstacles_flut.js`): 1 für
+alles, was an den Beckenrand grenzt, 2 für alles, was an einen Einser grenzt, und so weiter. Steht
+das Wasser auf Stufe n, ist jedes Feld mit Ringnummer ≤ n überflutet. Eine schmale Rinne säuft damit
+von beiden Seiten zu, ein runder Kessel von außen – ohne dass das jemand aufschreiben müsste.
+
+**Wie tief, und darum wie lange.** Ohne Angabe füllt sich ein Becken ganz: Die Tiefe ist die
+tiefste Ringnummer, die darin vorkommt, und daraus ergibt sich der Takt von selbst. Ein vier Kacheln
+schmales Becken ist zwei Ringe tief und braucht knapp elf Sekunden für einen Lauf; sechs Kacheln
+wären schon dreizehn. **Wer ein breites Becken baut, baut eine lange Wartezeit** – genau der Fehler
+von vorhin, nur kleiner. Darum rechnet `tools/flut.py` für jede Bahn die Zykluslänge aus und schlägt
+Alarm, wenn sie über 15 Sekunden geht.
+
+**Der Takt** ist steigen – voll stehen – fallen – leer stehen, dann von vorn: 1,2 s je Ring, 1 s
+voll, 5 s leer. Leer steht es mit Absicht viel länger als voll, denn das Leerstehen ist das Fenster,
+in dem man durchspielt. Beim ersten Versuch standen dort 3,2 s, und die Probe im Browser ertrank
+auch dann, wenn beim Schlag alles frei war – der Ball braucht vom Abschlag bis zum Becken selbst
+schon ein bis zwei Sekunden. Diese Probe steht jetzt als Prüfung in `tools/flut.mjs`.
+
+### Die beiden Regeln gegen das Warten
+
+Sie stehen nicht als guter Vorsatz da, sondern als Prüfungen, die eine Bahn ablehnen:
+
+1. **Es gibt immer einen trockenen Weg.** Auch wenn jedes Becken der Bahn randvoll steht, muss ein
+   Weg vom Abschlag zum Loch führen. Das Becken ist die *kurze* Möglichkeit, nicht die einzige: Wer
+   den Takt trifft, spart einen Schlag; wer ihn nicht trifft, spielt außen herum. Niemand muss je
+   stehenbleiben und zusehen. Gegengeprüft mit einer Bahn, deren Becken quer durchgeht – sie wird
+   abgelehnt.
+2. **Der Takt bleibt kurz.** Höchstens 15 Sekunden für einen ganzen Lauf, und das ist die längste
+   Zeit, die man überhaupt je wartet.
+
+Dazu die dritte, gegen Zierrat: Der Weg durch das leere Becken muss wirklich kürzer sein als der
+Umweg, sonst nimmt ihn niemand und die Maschine läuft für nichts.
+
+### Zu sehen sein muss nicht das Wasser
+
+`src/render_flut.js` zeichnet zwei Dinge, und keines davon ist das gestiegene Wasser – das kann das
+Spiel schon. Erstens **wo das Becken liegt, solange es leer ist**: ein feuchter Schimmer auf jeder
+Beckenkachel und eine helle Kante ringsum. Ein Becken, das trocken aussieht wie der übrige Boden,
+wäre eine Falle ohne Ansage. Und zweitens **welche Felder als nächstes drankommen**: ein Schimmer,
+der in den Sekunden davor anschwillt, mit Schaumkante zur trockenen Seite – dieselbe Regel wie beim
+Ring der Lavafontäne und bei der Lunte der Sprengladung. Angesagt wird nur steigendes Wasser;
+zurückgehendes gibt Boden her und ist keine Gefahr.
+
+### Die Strömung – der Wind dieser Welt, nur stärker
+
+Das Wasser steht nicht still. Eine Strömung ist ein Band, durch das es zieht, und sie hat einen
+Unterschied zum Wind des Schneebergs, an dem alles hängt: **sie trägt auch, wer liegt.** Der Wind
+versetzt einen rollenden Ball; wer liegt, liegt. Hier nicht – wer in der Strömung zur Ruhe kommt,
+treibt ab. In einer Strömung kann man nicht in Ruhe zielen, und das ist ihr ganzer Sinn.
+
+Daraus folgt eine Zahl: Die Reibung auf Stein ist 4,2 Kacheln/s², und eine Kraft *darunter* bewegt
+einen liegenden Ball **gar nicht** – `Math.max(0, sp - dec)` frisst sie glatt auf. Eine Strömung
+muss also spürbar darüber liegen; sie steht bei 9,0. Genau diese Falle hatte schon die Kippbühne der
+Zwergenmine zu Fall gebracht, und `tools/flut.mjs` hält beides fest: die Zahl und die Probe in
+Bewegung (ein Ball, der im Band liegt, muss abtreiben; einer daneben muss liegen bleiben).
+
+Sie beschleunigt **nicht** ins Unendliche: Sie zieht den Ball auf ihr eigenes Tempo und dann nicht
+weiter, wie echtes Wasser. Ohne diese Schranke wäre sie keine Strömung, sondern eine Kanone.
+
+Mit `puls` wird aus dem gleichmäßigen Zug eine **Dünung**: Sie schwillt an und ab, und dazwischen
+ist für einen Augenblick Ruhe – das ist dann das Zeitfenster.
+
+**Dieselbe Reibungsfalle ist dabei noch zweimal zugeschnappt**, und beide Male sah es im Browser
+aus, als sei die Maschine kaputt, während alle Zahlen grün waren:
+
+1. Die Dünung skalierte zuerst die **Kraft**. Bei halber Welle waren das 13 × 0,32 = 4,16 – knapp
+   unter der Reibung 4,2, und damit bewegte sich gar nichts. Jetzt schiebt sie immer mit voller
+   Kraft, nur auf ein kleineres **Zieltempo**.
+2. Fünf von sechs Strömungen lagen auf **Schlick**, und dessen Reibung ist 20. Eine Strömung mit 13
+   trägt dort nichts. `tools/flut.py` lehnt das jetzt ab.
+
+Dazu kam die Wellenform selbst: `max(0, sin)²` – die Formel des Windstoßes im Märchenland – steht
+die *halbe* Zeit still, bei gemächlichem Puls sechs Sekunden am Stück. Jetzt ist die Welle
+gestaucht: Ruhe nur im untersten Drittel.
+
+Und eine Stelle in `src/main.js`: Wer aus der Strömung gespült wird, darf nicht **mitten in ihr**
+zurückgelegt werden, sonst treibt er sofort wieder ab und bekommt den nächsten Strafschlag, bis das
+Limit erreicht ist. Derselbe Fehler wie beim Wasser, nur eine Maschine weiter. Gezeichnet wird sie als Striche, die
+mitlaufen; ihre Spitze läuft vorweg, so wie eine Welle spitz auf ihre Laufrichtung zeigt. Wie stark
+sie zieht, sagt das Tempo der Striche, nicht ihre Farbe.
+
+### Der Strudel – ein Schleuderrad, kein Trichter
+
+Wo zwei Strömungen aufeinandertreffen, dreht sich das Wasser. Ein Strudel führt den Ball im Kreis
+und wirft ihn woandershin, als er wollte.
+
+**Er fängt nicht ein**, und das ist eine Korrektur. Der erste Entwurf zog außen nach innen und
+drückte innen wieder heraus; die beiden Kräfte hoben sich bei etwa zwei Dritteln des Halbmessers
+auf, der Ball kreiste dort und kam nicht mehr los, bis ihn nach vier Sekunden die Notbremse des
+Spiels herausnahm. Eine Maschine, aus der einen die Notbremse befreien muss, ist kaputt. Jetzt
+drückt er überall ein wenig nach außen: ein Schleuderrad. `tools/flut.mjs` legt einen Ball ohne
+Schwung fast genau in die Mitte und verlangt, dass er innerhalb von dreieinhalb Sekunden draußen ist.
+
+### Der Schwarze Raucher – der Aufwind dieser Welt
+
+Eine heiße Quelle am Grund. Im Takt bricht sie aus und wirft alles, was darüber liegt, in hohem
+Bogen davon – über Mauern, über Becken, auf einen anderen Steg. Sie ist der **einzige Weg in dieser
+Welt, etwas zu überspringen**: Wer fliegt, sieht weder Mauern noch Becken noch die Ränder der Stege.
+
+Der Unterschied zum Aufwind im Sturmhimmel ist der Punkt: Der braucht einen Ball, der mit Schwung
+hineinrollt, und trägt ihn in dessen eigener Richtung weiter. Der Raucher nimmt auch einen, der
+einfach nur daliegt, und wirft ihn immer dorthin, wohin er zeigt. Damit ist er kein Beschleuniger,
+sondern **eine Fähre mit Fahrplan**: Man legt sich darauf und wartet.
+
+Geworfen wird über `launch` – denselben Haken, den Rampe und Aufwind benutzen. Er greift vor der
+Flugphase und vor allem vor der Reibung; ein Wurf über `force` wäre wieder die Reibungsfalle.
+
+Und die Ansage geht dem Ausbruch voraus: Vor dem Stoß sammelt sich der Schwall sichtbar im Schlot,
+und auf dem Boden liegt ein Ring, der anschwillt. Wer erst beim Ausbruch merkt, dass gleich einer
+kommt, hat keine Wahl gehabt – und eine Maschine ohne Wahl ist eine Falle.
+
+### Die Ankerkette – schwerer und langsamer als das Pendel
+
+Ein Anker an einer Kette, der über den Steg schwingt. Er stößt wie das Pendel der Uhrwerkstadt, nur
+mit 5,2 s statt 3,4 s Taktzeit. **Langsam ist hier kein Geschmack:** Auf einem drei Kacheln schmalen
+Steg über offenem Wasser reicht ein Stoß, um jemanden hinunterzuschicken. Ein schnelles Pendel wäre
+dort kein Hindernis, sondern ein Würfel.
+
+Die Kette wird Glied für Glied mitgezeichnet, und die Aufhängung bleibt stehen. Das ist der Grund:
+An ihr liest man ab, wo der Anker gleich sein wird. Ein Anker, der scheinbar frei herumfliegt, hätte
+keine Bahn, die man vorhersehen könnte.
+
+### Was im Wasser steht – die Requisiten des Außenbereichs
+
+Die Bahnen dieser Welt sind schmale Stege, also ist fast die ganze Karte offenes Wasser. Bis
+Fassung 174 war dieses Wasser **leer** – eine blaue Fläche mit einem Steg darin. Jetzt streut jede
+Bahn Requisiten hinein, und zwar nach Tiefe verschieden: An der **Wasserlinie** ist das Meer noch
+Hafen (Bojen, Poller, Tauwerk), auf der **Sandbank** liegt, was heruntergesunken ist, in der
+**Dämmerzone** steht die Stadt (Säulen, Torbögen, Amphoren), und am **Meeresgrund** ist die Stadt
+schon wieder Natur – Korallen und Quallen, dazwischen nur noch Bruchstücke.
+
+Drei Körper sind dafür neu, und alle drei sind in Weltkoordinaten gebaut und nicht am
+Bildschirmpunkt. Das ist hier keine Förmlichkeit: Auf schmalen Stegen dreht man die Kamera
+dauernd, um an den Kanten entlangzusehen, und eine Deko, die sich mitdreht, verrät sich sofort als
+aufgeklebtes Bild.
+
+* **Wrackrippen** – ein Kiel im Sand, vier Spanten darüber, zwei Längsgurte als Rest der
+  Beplankung. Beim ersten Versuch waren die Spanten kurz und steil, und der Haufen sah aus wie ein
+  Rechen: ein Balken mit fünf Zinken. Es fehlten genau zwei Dinge – die Spanten müssen sich nach
+  *außen* öffnen (ein Rumpf ist ein U, kein Kamm), und es muss noch Beplankung daran hängen.
+* **Amphore** – der schlanke Krug der Stadt, mit Spitzfuß und zwei Henkeln, je nach Startwert
+  unterschiedlich tief im Grund versunken. Sie ist absichtlich ein anderer Körper als die Urne der
+  Wüstenwelten: höher, enger, ohne Zierreif.
+* **Torbogen** – zwei Pfosten und der Sturz darüber, auf einer Seite abgebrochen, das Bruchstück
+  liegt davor im Sand. Zuerst war es ein Keilsteinbogen aus sieben Trommeln; im Bild wurde daraus
+  ein Haken, weil senkrechte Trommeln auf einem schmalen Halbkreis sich in der schrägen Sicht zu
+  einer Raupe reihen. Ein Pfosten-Sturz-Tor ist auf den ersten Blick als Tor zu erkennen – und für
+  eine versunkene Stadt ohnehin das richtige Bauwerk.
+
+### Und was im Wasser schwebt
+
+Die Streu-Deko oben braucht Boden unter sich: Sie wirft einen Schatten, also darf sie nicht in der
+Luft stehen, und darum endet sie am Rand der Erdscholle. **Unter Wasser ist das die falsche Regel.**
+Ein Fischschwarm steht auf nichts, eine Qualle auch nicht, und beide gehören genau dorthin, wo die
+andere Deko aufhört: neben die Bahn und über sie hinaus, ins offene Wasser.
+
+Darum gibt es einen zweiten Streu-Durchgang, `schwebDecor`. Er verteilt in einem Ring von sieben
+Kacheln um die Karte, was im Wasser hängt – **Fischschwarm**, **Rochen**, **Meeresschildkröte**,
+dazu Quallen und einzelne Fische –, auf einer Höhe zwischen 1,1 und 3,8 Kacheln. Nach Tiefe
+verschieden: oben Schwärme und Schildkröten, die Luft holen gehen; über der Sandbank am dichtesten,
+weil dort noch Licht ist; in der Dämmerzone mehr Rochen und die erste Qualle; ganz unten nur noch
+Quallen und Rochen.
+
+**Sie sind reine Zier** – sie kollidieren nicht, sie bremsen nicht, sie halten niemanden auf. Dafür
+gelten drei Regeln, und alle drei halten sie vom Spielfeld weg: nie über Boden, mindestens drei
+Kacheln Abstand zum nächsten Boden, und nichts im Streifen *vor* der Bahn. Ohne die erste schwämme
+ein Rochen über dem Steg und man sähe nicht mehr, wohin man spielt; ohne die zweite verdeckte er
+die Kante, an der es ins Meer geht – und die ist in dieser Welt die wichtigste Linie überhaupt.
+Geprüft wird beides über alle zwölf Bahnen: 526 Wesen, keines über Boden, keines näher als zwei
+Kacheln.
+
+Die Fische im Schwarm sind mit Absicht **groß für ihre Zahl**. Beim ersten Versuch waren es acht
+winzige, und in der Übersicht des Spiels ist ein winziger Fisch drei Bildpunkte: Aus dem Schwarm
+wurde eine Handvoll gelber Häkchen. Jetzt sind es sechs, die man erkennt. Lieber fünf, die man
+sieht, als acht, die man errät.
+
+Alle drei bewegen sich aus der Spieluhr, nicht aus dem Zufall. Das ist hier wichtiger als
+anderswo: Es sind viele, sie stehen dicht, und wenn jedes einzeln zuckt, flimmert der ganze Rand.
+
+Dass ein Name in der Palette auch beim Zeichner ankommt, prüft `tools/flut.mjs`. Der Grund ist die
+Art des Fehlers: Steht in der Palette ein Name, den der Renderer nicht kennt, passiert **nichts** –
+keine Meldung, das Ding fehlt einfach. Das sieht niemand, solange er nicht weiß, wie viele Wracks
+eigentlich dastehen sollten.
+
+### Das Wracktor – langsam auf, schnell zu
+
+Eine Luke aus einem Schiffsrumpf, die die Dünung auf- und zudrückt. Sie ist Tor und Schlag in einem,
+und der Witz liegt in der **ungleichen Verteilung**: Die Dünung drückt sie über drei Sekunden
+langsam auf und schlägt sie in einer halben wieder zu – dieselbe Bewegung, gut sechsmal so schnell.
+Wer beim Zuschlagen noch im Durchgang liegt, wird nicht eingeklemmt, sondern weggeworfen; das Blatt
+hat an der Spitze rund zehn Kacheln je Sekunde und gibt sie weiter.
+
+Auf dem Boden liegt der Bogen, den es überstreicht, als Schleifspur im Sand, und kurz vor dem
+Zuschlagen färbt er sich. Das ist die wichtigste Linie des Hindernisses: Sie sagt, wo man nicht
+stehenbleiben darf, und sie sagt es, bevor etwas passiert.
+
+**Warum ein drehendes Blatt und kein steigendes Gitter.** Ein Fallgatter verschwindet nach oben und
+ist weg. Ein Türblatt ist auch offen noch da – es liegt dann am Rumpf an und macht den Durchgang
+schmaler, als er aussieht. Eine Luke im Rumpf ist ein Loch in einer Wand, kein Tor in einem Zaun.
+
+### Das Abflußrohr – der Verwandte des Kupferrohrs, andersherum gebaut
+
+Dieselbe Idee wie die Rohrpost des Uhrenturms, und in jedem sichtbaren Zug ihr Gegenteil. Die
+Rohrpost läuft **über** der Bahn und **außen um sie herum**: ein blankes Kupferrohr auf Stützen, in
+dem man den Ball fahren sieht. Der Abfluß liegt **unter** dem Grund und läuft **schnurgerade** –
+quer unter allem hindurch, was oben im Weg steht. Zu sehen ist von ihm nur die Naht im Boden: eine
+Reihe verrosteter Platten mit Nieten, und darin läuft, während eine Kugel unterwegs ist, eine Blase
+mit. Wer die Naht sieht, weiß, wo der Ball wieder herauskommt, bevor er hineinspielt.
+
+**Die Rohrpost wirft, der Abfluß setzt ab.** Das war nicht die erste Absicht – „Spülung" klingt nach
+Wucht, und die ersten beiden Versuche spülten den Ball mit 13,5 und 11,5 Kacheln je Sekunde aus dem
+Gitter. Beide endeten gleich: Der Ball rollte sechzehn bis zweiundzwanzig Kacheln weit, und diese
+Welt besteht aus drei Kacheln schmalen Stegen über offenem Wasser. Die Maschine ertränkte jeden, der
+sie benutzte. Jetzt quillt das Wasser aus dem Gitter, statt zu schießen: Der Ball rollt dreieinhalb
+Kacheln aus und liegt, und der nächste Schlag gehört wieder dem Spieler. Die Prüfung mißt gegen die
+Zahl des Uhrenturms und nicht gegen sich selbst – wird der Abfluß eines Tages stärker als die
+Rohrpost, ist das kein Feinschliff, sondern ein Rückschritt.
+
+Auf dem Marktplatz liegt das Gitter in der Ecke des Platzes, wohin einen nur der Brunnen schleudert.
+Man spielt nicht hinein, man landet darin – und das ist der Unterschied zwischen einer Abkürzung und
+einem Ausweg. Der Bot bestätigt es: mit dem Abfluß drei Schläge statt zwei für den Profi, bei
+gleichem Par.
+
+### Die Riesenmuschel – Mauer oder Maul, je nach Takt
+
+Sie öffnet und schließt sich, und je nachdem ist sie zwei völlig verschiedene Dinge:
+**geschlossen** ein runder Klotz, von dem der Ball abprallt; **offen** ein Maul, das ihn verschluckt,
+kurz festhält und dann mit Schwung in ihre Blickrichtung wieder ausspuckt. Hindernis und Abkürzung
+in einem, und was von beidem, entscheidet der Zeitpunkt.
+
+**Sie schiebt, sie schießt nicht.** Die Kanone im Märchenland wirft den Ball durch die Luft; hier
+unten gäbe es dafür keine Erklärung – und vor allem flöge er damit über alles hinweg, was diese Welt
+ausmacht: über Becken, Strömung und die Ränder der Stege.
+
+**Wer darin liegt, wird nicht zerquetscht.** Sie nimmt den Ball schon, wenn sie erst zu einem
+Drittel offen ist, und sie ist keine Mauer, solange sie ihn hält. Sonst gäbe es den Fall „sie
+schließt sich genau auf dem Ball", und der hätte keine gute Auflösung: entweder herausgedrückt (sieht
+kaputt aus) oder festgesteckt (ist kaputt). Die Prüfung dazu ist gegengeprobt – nimmt man die
+Bedingung weg, fällt genau sie um.
+
+### Der Tangwald – das Gegenteil einer Mauer
+
+Ein Streifen Tang quer über den Steg. Er hält nicht auf, er nimmt den **Schwung** – und zwar genau
+dort, wo die Halme gerade stehen. Zwischen ihnen bleibt eine Gasse frei, die im Wellengang
+mitwandert: Wer sie trifft, rollt fast ungebremst hindurch; wer danebenhält, bleibt mitten im Tang
+liegen, und von dort hat man keinen guten Schlag mehr. Er kostet keinen Schlag, nur Weg.
+
+Zwei Dinge, die man ihm nicht ansieht:
+
+- **Gebremst wird über die Geschwindigkeit, nicht über die Reibung.** Die Reibung hängt an der
+  Kachel, und ein Streifen, der Kacheln ändert, würde mit dem Flutbecken streiten, das dieselben
+  Kacheln beschreibt. Zwei Maschinen auf derselben Karte gehen beim dritten Zusammentreffen kaputt.
+- **Anteilig, nicht als fester Abzug.** Ein schneller Ball verliert viel, ein langsamer wenig. Zöge
+  man einen festen Betrag ab, stünde er im Tang schlagartig still – das sähe aus wie eine Mauer, und
+  eine Mauer soll er gerade nicht sein.
+
+Beim ersten Versuch wanderte die Gasse *in* Laufrichtung statt quer dazu (ein vertauschtes Zeichen),
+und der Tang war überall gleich dicht; dazu war er mit 0,82 Resttempo je Sekunde so schwach, dass die
+Prüfung „wer danebenhält, bleibt stecken" keinen Unterschied zum freien Weg fand. Jetzt sind es 0,03.
+
+### Der Anglerfisch – das erste Hindernis, das einen sucht
+
+Er schwimmt seine Strecke ab, hin und zurück, die Laterne voraus. Wer sich einfangen lässt, zahlt
+einen Schlag und wird an den **Anfang des letzten Schlags** zurückgelegt – dieselbe Strafe wie bei
+den Stacheln im Schattenreich.
+
+**Er ist etwas Neues für diese Welt.** Becken, Strömung und Strudel stehen, wo sie stehen: Man kann
+ihnen ausweichen und danach in Ruhe zielen. Der Angler kommt zu einem hin. Ein liegender Ball ist
+vor ihm nicht sicher, und damit wird aus „ich warte auf den richtigen Augenblick" ein „ich muss hier
+weg, bevor er da ist".
+
+Drei Entscheidungen, die man ihm nicht ansieht:
+
+- **Er schwimmt gleichmäßig**, nicht in einer Sinusschwingung wie die Lore der Uhrwerkstadt. Ein
+  Fisch, der an den Enden bremst und in der Mitte rast, sieht aus wie ein Pendel – und vor allem
+  könnte man sein Tempo nicht abschätzen. Ein Dreieck statt eines Cosinus.
+- **Er hat kein `airTrigger`.** Wer über ihn hinwegfliegt, kommt davon. Das ist die Belohnung für
+  einen Sprung und der einzige Weg, ihn zu überspielen.
+- **Die Laterne ist nicht nur Schmuck.** Auf dem Meeresgrund ist sie das Hellste weit und breit –
+  man sieht ihn kommen, bevor man ihn erkennt. Dieselbe Regel wie überall hier: Die Ansage geht der
+  Gefahr voraus.
+
+`tools/flut.py` lehnt zwei Dinge ab, die man einer Bahn beim Bauen nicht ansieht: einen Angler,
+dessen Strecke neben dem Steg im Wasser liegt (dann schwimmt er da, wo nie ein Ball ist), und einen,
+der bis an den Abschlag reicht (dann wird man gefressen, bevor man den ersten Schlag tun konnte).
+
+### Das Pumpwerk
+
+Eine Druckplatte abseits des Weges: Wer darüberrollt, hält **alle** Becken der Bahn vier Sekunden
+lang leer. Es ist das Gegenstück zum Schalter im Märchenland – nur öffnet es kein Tor, sondern gibt
+Boden zurück. Der Preis ist der Umweg dorthin, nicht das Wasser.
+
+### Ein alter Fehler, den diese Welt ans Licht geholt hat
+
+Wer ertrinkt, wird an seinen Ruhepunkt zurückgelegt. Bisher hat `src/main.js` dafür nach *Boden*
+gesucht – und Wasser **ist** Boden für die Physik (`FLOOR_CHARS`). In einer Welt, in der der
+Ruhepunkt nachträglich absaufen kann, hieße das: ertrinken, zurückgelegt werden, sofort wieder
+ertrinken, bis das Schlaglimit erreicht ist. Gesucht wird jetzt nach *trockenem* Boden, und wenn
+nichts Gemerktes trocken ist, ringsum weiter. Das bedrohte auch schon die Gießhalle, nur ist es dort
+nie jemandem passiert.
+
+### Die Welt ist ein Abstieg – von der Oberfläche bis auf den Grund
+
+Zuerst waren die vier Paletten vier *Stationen einer absaufenden Stadt* (Deich, Gassen, Dächer,
+Tiefe). Das erzählte etwas, sah aber nicht nach Unterwasser aus – es sah nach nassem Stein aus.
+Seit Fassung 168 sind es vier **Tiefen**, und die Welt geht wörtlich nach unten: `wasserlinie`
+(dicht unter der Oberfläche, die Sonne steht noch im Wasser), `flachwasser` (Sandbank und Seegras,
+das Licht wird grün), `daemmerzone` (die versunkene Stadt, blau, kaum noch Licht) und `meeresgrund`
+(ganz unten; was leuchtet, leuchtet selbst). Das ist derselbe Gedanke wie der Abstieg der
+Zwergenmine, nur nach unten ins Wasser statt in den Berg.
+
+**Eine einzige Zahl macht das**: `tiefe` an der Palette, 0 dicht unter der Oberfläche bis 1 auf dem
+Grund. `src/render_flut.js` rechnet daraus alles:
+
+| | nah an der Oberfläche | auf dem Grund |
+| --- | --- | --- |
+| Wassersäule statt Himmel (`meerBg`) | hell türkis | fast schwarz |
+| Unterseite der Oberfläche mit Kräuseln | da | aus dem Bild gerutscht |
+| Lichtbahnen von oben | breit und hell | keine |
+| Netz aus Sonnenlicht über der Szene | deutlich | keins |
+| Schwebstoff im Wasser | wenig | viel |
+| Blaustich und dunkler Rand | schwach | stark |
+| Schemen der versunkenen Stadt in der Ferne | zu hell dafür | Dächer und ein Kirchturm |
+| Was selbst leuchtet | – | Biolumineszenz im Wasser |
+
+Zwei Dinge liegen dabei **über** der Szene und nicht dahinter: das Lichtnetz und der Blauschleier.
+Beide bleiben aber unter der Zielhilfe – wohin man schlägt, gehört zur Bedienung und nicht zur
+Stimmung; dieselbe Regel wie beim Schleier der Zwergenmine.
+
+Und der Schimmer, der ein leeres Becken sichtbar macht, nimmt seine Farbe aus der Palette
+(`water`), nicht aus einem festen Blau. Ein fester Ton sähe auf dem hellen Sand der Wasserlinie gut
+aus und wäre auf dem dunklen Grund unsichtbar – und ein unsichtbares Becken ist wieder eine Falle
+ohne Ansage.
+
+### Geprüft
+
+`node tools/flut.mjs` (122 Prüfungen): Tiefe aus der Form, Ring für Ring von außen nach innen,
+außerhalb des Beckens bleibt alles trocken, der Lauf geht einmal herum und bleibt unter der Geduld,
+ein Ball rollt durchs leere Becken hindurch und geht im vollen unter, das Pumpwerk hält leer und
+lässt wieder los, die zweite Runde fängt trocken an; die Strömung ist stärker als die Reibung und
+trägt einen liegenden Ball, beschleunigt aber nur bis auf ihr Tempo; der Strudel hält niemanden
+fest und lenkt trotzdem ab – und für jede der zwölf Bahnen: sie trägt eine Maschine dieser Welt,
+ein Weg führt zum Loch, und bei vollem Becken führt er immer noch dorthin.
+
+`python3 tools/flut.py` baut die Bahnen und lehnt ab, was nicht geht: ein Becken, das die Bahn
+zerschneidet; ein Lauf über 15 Sekunden; ein Umweg, der genauso kurz ist wie der Weg durchs Becken
+(dann nimmt niemand das Becken); eine Strömung über dem Abschlag (man käme nie zum Zielen) oder über
+dem Loch (der Ball würde davor weggetragen); ein Strudel, der bis an Abschlag oder Loch greift; und
+eine Bahn ganz ohne Maschine dieser Welt.
+
+Dass die Welt in der Vorschau steht und im Spiel nicht, hängt an einer einzigen Kennzeichnung
+(`nurVorschau` in `src/courses_pro.js`); `node tools/vorschauwelt.mjs` prüft sie – bis hinunter zu
+`icons/weltkarte.svg`, das hinter jedem Ladebild liegt und darum die Sicht des *Spiels* zeigen muss.
+
 ## Der Schneeberg
 
 Zwölf Bahnen, Stufe Profi, und sie liegen zwischen Tüftlerreich und Dschungeltempel – die Reise
@@ -2695,6 +3160,8 @@ index.html        Seite, HUD und Ladebild (das Ladebild läuft ohne JavaScript)
 tools/auslieferung.mjs  prüft für beide Seiten, ob alles Gebrauchte auch ausgeliefert wird
 tools/vermittler.mjs    ein kleiner MQTT-Vermittler für die Werkbank – ohne ihn ist Online nicht prüfbar
 tools/online.mjs        fährt zwei Browser gegeneinander: beitreten, spielen, rausfliegen, wiederkommen
+tools/flut.mjs          prüft die Maschinen der Flut: Beckenlauf, Durchrollen, Pumpwerk, jede fertige Bahn
+tools/flut.py           baut die Bahnen der Flut – und lehnt jede ab, auf der man warten müsste
 style.css         Oberfläche
 src/themes.js     Farbpaletten und Deko je Welt
 src/courses.js    die Bahnen des Märchenlands
@@ -2704,6 +3171,7 @@ src/courses_storm.js die Bahnen des Sturmhimmels (Legende)
 src/courses_shadow.js die Bahnen des Schattenreichs (Legende)
 src/courses_colosseum.js die Bahnen des Kolosseums (Legende)
 src/courses_mine.js die zwölf Bahnen der Zwergenmine (erzeugt von tools/mine.py)
+src/courses_flut.js die Probebahnen der Flut (erzeugt von tools/flut.py)
 src/courses_boule.js die neun Bahnen der Boule-Welt (erzeugt von tools/boule.py)
 src/courses_pro.js die Bahnen des Tüftlerreichs und die Weltenliste
 src/editor.js     Baumodus (Editor für eigene Bahnen)
@@ -2713,10 +3181,12 @@ src/level.js      Karte → Kacheln, Mauern, Kollisionssegmente
 src/obstacles.js  bewegliche und statische Hindernisse
 src/obstacles_legend.js Blitzfeld, Aufwind, Falltür, Fallbeil, Augenturm, Löwentor
 src/obstacles_mine.js Sprengladung, Kippbühne, Grubenlampe, Gießlöffel und Lavafontäne der Zwergenmine
+src/obstacles_flut.js das Flutbecken (Ringnummern, Takt) und das Pumpwerk
 src/physics.js    Ballphysik und Kollision (auch Ball gegen Ball, wenn mehrere zugleich rollen)
 src/render.js     isometrische Darstellung
 src/render_legend.js Optik der Legende-Welten (Hintergründe, neue Hindernisse und Stile)
 src/render_mine.js Optik der Zwergenmine: Fels statt Himmel, der Schleier und die drei Maschinen
+src/render_flut.js Optik der Flut: das leere Becken, die Ansage des steigenden Wassers, das Pumpwerk
 src/text.js       Eine Stelle für alle Eingaben: Namen und Bahnnamen filtern, Anzeige entschärfen
 src/share.js      Bahnen weitergeben: prüfen, über den Vermittler teilen, als Link verpacken
 src/version.js    Fassung und Ausgabe (Spiel oder Vorschau): Zahl, Speicher-Vorsatz und Themen-Marke – von Seite und Service Worker gelesen

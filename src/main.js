@@ -1730,6 +1730,9 @@
     snowfoot: 'tanne', snowrock: 'landscape', glacier: 'ac_unit', summit: 'filter_hdr',
     // Zwergenmine
     mundloch: 'sonne', stollen: 'flashlight_on', kristall: 'diamond', schmelze: 'local_fire_department',
+    // Die Flut – vier Abschnitte, von der Wasserlinie bis zum Grund
+    wasserlinie: 'sailing', flachwasser: 'water_drop', daemmerzone: 'dark_mode',
+    meeresgrund: 'local_fire_department',
     // Kolosseum, Tüftlerreich, Wüste
     colosseum: 'stadium', palace: 'temple_buddhist', desert: 'sonne',
   };
@@ -1770,7 +1773,12 @@
        Mitte der Bahn. Boule setzt den Blick zwar selbst (faceZiel), aber faceCup wird von einem
        halben Dutzend Stellen gerufen, und eine davon ohne Loch hieße ein Absturz mitten im Spiel. */
     const mitte = { x: state.level.W / 2, y: state.level.H / 2 };
-    const c = zone ? zone.look : (state.level.cup || state.level.goal || mitte);
+    /* Ohne eigene Blickzone schaut die Kamera den WEG entlang statt auf die Luftlinie zum Loch.
+       In einer Gasse liegt das Loch hinter der Mauer, und dann sah man die Mauer statt der Bahn –
+       genau das war im Seegraswald der Flut zu sehen. Auf einer offenen Bahn ist beides dieselbe
+       Richtung, dort ändert sich nichts. */
+    const weg = zone ? null : (state.level.wegPunkt ? state.level.wegPunkt(b.x, b.y) : null);
+    const c = zone ? zone.look : (weg || state.level.cup || state.level.goal || mitte);
     state.camTheta = thetaTowards(b.x, b.y, c.x, c.y);
   }
   function setCamMode(mode) {
@@ -1843,7 +1851,7 @@
   }
   function loadLevelPreview(i) {
     const def = state.courses[i];
-    state.level = buildLevel(def); state.theme = THEMES[def.theme]; state.inner = false;
+    state.level = buildLevel(def); state.theme = themaFuer(def); state.inner = false;
     R.setLevel(state.level, state.theme);
     state.ball = null; state.aim = null; state.liegendeBaelle = []; state.kanone = null;
     state.abschlagMatte = state.mode !== 'boule';   // im Boule steht dort die Kanone, kein heller Ring
@@ -1860,7 +1868,7 @@
   function beginTurn() {
     if (state.inner) { // zurück in den Außenbereich der Bahn
       const def = state.courses[state.holeIdx];
-      state.level = buildLevel(def); state.theme = THEMES[def.theme]; state.inner = false;
+      state.level = buildLevel(def); state.theme = themaFuer(def); state.inner = false;
       R.setLevel(state.level, state.theme);
     }
     const p = state.players[state.curPlayer], lv = state.level;
@@ -1997,23 +2005,58 @@
      auf. Liegt der gemerkte Punkt auf seiner Ebene doch nicht auf Boden, geht es zum Start des
      letzten Schlags zurück und notfalls an den Abschlag – ein Ball muss immer irgendwo liegen
      können. */
+  /* Trocken heißt: Boden, auf dem man stehen bleiben darf. 'isFloorChar' ist dafür zu großzügig –
+     Wasser und Glut zählen dort als Boden, und das ist richtig, denn sie sind Untergrund, nur eben
+     tödlicher. Zurückgelegt werden darf man dort nicht. */
+  const trockenerBoden = (lv, e, x, y) => {
+    const c = lv.charAtEbene(e, x, y);
+    return lv.isFloorChar(c) && c !== 'w' && c !== 'l';
+  };
+  /* Und noch eine Stelle, an der man nicht zurückgelegt werden darf: mitten in einer Strömung.
+     Sie trägt auch einen ruhenden Ball – wer dort abgelegt wird, treibt sofort wieder ab, fällt
+     wieder herunter und bekommt den nächsten Strafschlag, bis das Limit erreicht ist. Derselbe
+     Fehler wie beim Wasser, nur eine Maschine weiter: Ein Strafschlag darf wehtun, eine
+     Endlosschleife nicht. */
+  const imSog = (lv, e, x, y) => (lv.obstacles || []).some(o =>
+    o.type === 'stroemung' && (o.ebene || 0) === e && o.inside && o.inside(x, y));
+  const ruhigerBoden = (lv, e, x, y) => trockenerBoden(lv, e, x, y) && !imSog(lv, e, x, y);
+  /* Wohin der Ball nach einem Strafschlag zurückkommt.
+     Solange nichts den Boden verändert, konnte der gemerkte Ruhepunkt gar nicht naß sein: In Wasser
+     bleibt man nicht liegen, man geht unter. Seit dem Gießlöffel kann sich Boden aber verwandeln,
+     und mit der Flut wird daraus die Regel. Läge man dann auf einem Feld zurück, das inzwischen
+     Wasser ist, ginge man dort sofort wieder unter – und noch einmal, und noch einmal, bis das
+     Schlaglimit erreicht ist. Ein Strafschlag darf wehtun, eine Endlosschleife nicht.
+     Darum wird hier nach trockenem Boden gesucht und nicht nur nach Boden. */
   function sichererRuhepunkt(b) {
     const lv = state.level;
-    for (const [x, y, e] of [[b.restX, b.restY, b.restEbene || 0], [b.shotX, b.shotY, b.shotEbene || 0], [lv.tee.x, lv.tee.y, lv.teeEbene || 0]]) {
-      if (x == null || y == null) continue;
-      if (lv.isFloorChar(lv.charAtEbene(e, x, y))) return { x, y, e };
+    const kandidaten = [[b.restX, b.restY, b.restEbene || 0], [b.shotX, b.shotY, b.shotEbene || 0], [lv.tee.x, lv.tee.y, lv.teeEbene || 0]]
+      .filter(([x, y]) => x != null && y != null);
+    for (const [x, y, e] of kandidaten) if (ruhigerBoden(lv, e, x, y)) return { x, y, e };
+    /* Nichts Ruhiges gemerkt: ringsum suchen, vom zuletzt bekannten Punkt aus nach außen. */
+    const [sx, sy, se] = kandidaten[0] || [lv.tee.x, lv.tee.y, lv.teeEbene || 0];
+    for (let r = 0.8; r <= 12; r += 0.8) {
+      for (let i = 0; i < 16; i++) {
+        const w = (i / 16) * TAU;
+        const x = sx + Math.cos(w) * r, y = sy + Math.sin(w) * r;
+        if (ruhigerBoden(lv, se, x, y)) return { x, y, e: se };
+      }
     }
+    /* Ringsum nichts Ruhiges: dann wenigstens trocken – in der Strömung liegen ist unangenehm,
+       im Wasser liegen ist tödlich. */
+    for (const [x, y, e] of kandidaten) if (trockenerBoden(lv, e, x, y)) return { x, y, e };
+    // Und gar nichts Trockenes mehr da: dann eben nass – irgendwo muß der Ball hin.
+    for (const [x, y, e] of kandidaten) if (lv.isFloorChar(lv.charAtEbene(e, x, y))) return { x, y, e };
     return { x: lv.tee.x, y: lv.tee.y, e: lv.teeEbene || 0 };
   }
   function hazard(type) {
     const b = state.ball;
     const custom = state.level.def.hazardText && state.level.def.hazardText[type];
-    let label = custom || (type === 'water' ? 'Platsch! Wasser' : type === 'lava' ? 'Zischhh! Lava' : type === 'shark' ? 'Vom Hai gefressen!' : type === 'spiked' ? 'Aufgespießt!' : type === 'zapped' ? 'Vom Blitz getroffen!' : type === 'fell' ? 'In die Tiefe gestürzt!' : type === 'beheaded' ? 'Vom Fallbeil geköpft!' : type === 'seen' ? 'Vom brennenden Auge erblickt!' : 'Aus! Abgrund');
+    let label = custom || (type === 'water' ? 'Platsch! Wasser' : type === 'lava' ? 'Zischhh! Lava' : type === 'shark' ? 'Vom Hai gefressen!' : type === 'spiked' ? 'Aufgespießt!' : type === 'zapped' ? 'Vom Blitz getroffen!' : type === 'fell' ? 'In die Tiefe gestürzt!' : type === 'beheaded' ? 'Vom Fallbeil geköpft!' : type === 'seen' ? 'Vom brennenden Auge erblickt!' : type === 'angler' ? 'Vom Anglerfisch geschnappt!' : 'Aus! Abgrund');
     if (type === 'shark') { if (state.level.obstacles.some(o => o.type === 'sharkjump' && o.style === 'bat')) { Sfx.screech(); burst(b.x, b.y, '#6a4a9a', 26, true); } else { Sfx.water(); burst(b.x, b.y, '#ff5a5a', 22, true); } b.z = 0; b.vz = 0; b.air = false; }
     else if (type === 'water') { Sfx.water(); burst(b.x, b.y, '#9fd3ff', 18); }
     else if (type === 'lava') { Sfx.lava(); burst(b.x, b.y, '#ffb347', 18); }
-    else if (type === 'spiked' || type === 'zapped' || type === 'fell') { // zurück zum Start des letzten Schlags
-      if (type === 'zapped') { Sfx.thunder(); burst(b.x, b.y, '#fff27a', 34, true); burst(b.x, b.y, '#ffffff', 16, true); } else if (type === 'fell') { Sfx.oob(); burst(b.x, b.y, '#b56bff', 14, true); } else { Sfx.lava(); burst(b.x, b.y, '#e6e6e6', 18, true); }
+    else if (type === 'spiked' || type === 'zapped' || type === 'fell' || type === 'angler') { // zurück zum Start des letzten Schlags
+      if (type === 'zapped') { Sfx.thunder(); burst(b.x, b.y, '#fff27a', 34, true); burst(b.x, b.y, '#ffffff', 16, true); } else if (type === 'fell') { Sfx.oob(); burst(b.x, b.y, '#b56bff', 14, true); } else if (type === 'angler') { Sfx.water(); burst(b.x, b.y, '#7fe8d8', 26, true); } else { Sfx.lava(); burst(b.x, b.y, '#e6e6e6', 18, true); }
       b.z = 0; b.vz = 0; b.air = false; if (b.shotX != null) { b.restX = b.shotX; b.restY = b.shotY; b.restEbene = b.shotEbene || 0; }
     }
     else if (type === 'beheaded' || type === 'seen') { // zurück zum Schlagstart – aber nie wieder unter die Klinge oder in den Blick des Auges
@@ -2203,7 +2246,7 @@
     showMessage(msg || `Hinein in die ${def.name} …`, msg ? 1900 : 1500);
     clearTimeout(waitTimer);
     waitTimer = setTimeout(() => {
-      state.level = buildLevel(def); state.theme = THEMES[def.theme]; state.inner = true;
+      state.level = buildLevel(def); state.theme = themaFuer(def); state.inner = true;
       R.setLevel(state.level, state.theme);
       const b = state.ball, lv = state.level;
       b.x = lv.tee.x; b.y = lv.tee.y; b.ebene = lv.teeEbene || 0; b.vx = 0; b.vy = 0; b.z = 0; b.vz = 0; b.air = false; b.rider = null; b.sunk = false; b.sinkT = 0; b.entered = false; // die nächste Tür (z. B. die Luke) darf wieder auslösen
@@ -2245,7 +2288,7 @@
      verlässt oder im Loch landet, ist raus und zählt nicht mehr mit. Die Tür in eine Innenkarte
      steht mit in der Liste: Sie würde mitten in der Runde die ganze Bahn austauschen. */
   const BOULE_RAUS = new Set(['sunk', 'oob', 'water', 'lava', 'fell', 'spiked', 'zapped',
-    'shark', 'beheaded', 'seen', 'enter']);
+    'shark', 'beheaded', 'seen', 'angler', 'enter']);
   const BOULE_GRUND = {
     sunk: 'im Loch verschwunden', oob: 'von der Bahn gefallen', water: 'im Wasser gelandet',
     lava: 'in der Lava gelandet', fell: 'in die Tiefe gestürzt', spiked: 'aufgespießt',
@@ -2641,6 +2684,29 @@
         case 'land': Sfx.bounce(3); burst(ev.x, ev.y, 'rgba(255,255,255,0.7)', 6); break;
         case 'dropoff': Sfx.bounce(4); burst(ev.x, ev.y, '#ffd166', 8); break;
         case 'switch': Sfx.lever(); burst(ev.x, ev.y, '#9dffb5', 14); showMessage('Schalter gedrückt – das Zaubertor öffnet sich!', 1600); break;
+        /* Das Pumpwerk drückt die Flut auf der *ganzen* Bahn zurück – auch dort, wo man gerade
+           nicht hinsieht. Ohne Meldung merkt man von der wichtigsten Wirkung des Spiels nichts. */
+        /* Der Anglerfisch: einen Schlag zurück, und zwar an den Anfang des letzten Schlags –
+           dieselbe Strafe wie bei den Stacheln. Wer dort abgelegt würde, wo er gefangen wurde,
+           läge dem Fisch gleich wieder vor dem Maul. */
+        case 'angler': hazard('angler'); return;
+        /* Die Riesenmuschel: verschluckt und gibt wieder her. Beide Augenblicke werden gemeldet –
+           der erste sagt „das war Absicht", der zweite „jetzt geht es los". */
+        /* Der Schwarze Raucher wirft den Ball davon. Das ist kein Schaden, sondern eine Fähre –
+           darum ein Wusch und keine Warnung. */
+        case 'raucher': Sfx.whoosh(); burst(ev.x, ev.y, '#ffc9a0', 24, true); burst(ev.x, ev.y, '#6b5a4c', 14, true); break;
+        case 'muschel':
+          if (ev.aus) { Sfx.bounce(6); burst(ev.x, ev.y, '#f0e6d2', 16, true); }
+          else { Sfx.lever(); burst(ev.x, ev.y, '#cfeaff', 14, true); showMessage('Die Muschel hat dich!', 1200); }
+          break;
+        /* Das Abflussrohr. Beim Einlaufen ein Gurgeln, beim Ausspülen ein Schwall – der erste Laut
+           sagt „er ist unterwegs", der zweite „jetzt kommt er wieder". Dazwischen sieht man nur
+           die Blase über der Naht laufen, und die spricht für sich. */
+        case 'abfluss':
+          if (ev.aus) { Sfx.whoosh(); burst(ev.x, ev.y, '#cfeaff', 26, true); }
+          else { Sfx.water(); burst(ev.x, ev.y, '#9fd8f0', 16, true); }
+          break;
+        case 'pumpe': Sfx.lever(); burst(ev.x, ev.y, '#cfeaff', 22, true); showMessage(`Pumpwerk läuft – das Wasser weicht für ${Math.round(ev.dauer || 0)} Sekunden!`, 1800); break;
         case 'shrink': Sfx.potion(); burst(ev.x, ev.y, '#d58cff', 16, true); showMessage('Schrumpftrank! Der Ball ist jetzt winzig.', 1600); break;
         case 'unshrink': showMessage('Der Trank lässt nach.', 1200); break;
         case 'curse': Sfx.potion(); burst(ev.x, ev.y, '#fff3d0', 18, true); showMessage(ev.label || 'Perlenfluch! Der Ball bleibt bis zum Loch träge.', 2000); break;
@@ -2876,6 +2942,15 @@
       state.strokes = strokes;
       finishTurn(strokes);
       return true;
+    },
+    /* Die Welt wechseln, ohne durch die Tafeln zu gehen. Braucht die Browserprobe, die für Bilder
+       und Regelprüfungen gezielt eine Bahn aufmacht: openHole zählt in state.courses, und das
+       hängt an der Welt. Filtert wie die Oberfläche – eine Welt, die das Spiel nicht anbietet,
+       läßt sich auch hier nicht öffnen. */
+    welt(id) {
+      const wl = SPIELWELTEN();
+      if (!wl.some(w => w.id === id)) return false;
+      setWorld(id); return true;
     },
     /* Direkt auf eine Bahn springen – nur fürs automatische Prüfen */
     openHole(i) {
