@@ -3170,6 +3170,14 @@ Messing – ein grellbunter Ring sähe aus wie Spielzeug, und das hier ist ein I
 zwischen ihnen schwarze Bänder lagen und die Farben darin untergingen. Der Schatten war richtig
 gerechnet – er war nur wichtiger als das, was er verdeckte.
 
+**Der Zirkel leuchtet.** In der ersten Fassung war er eine feine Gravur – dünne Linien in
+halbdurchsichtigem Gold auf dunkelblauem Stein –, und die vier Ringe warfen ihre Schatten darüber.
+Fynn: *„Der magische Zirkel soll besser sichtbar sein."* Jetzt liegt unter den Linien ein eigener
+Schein, jede Rille wird dreimal gezogen (weicher Schein, dunkle Rille, Gold darin), der Runenkranz
+dreht sich langsam, und an jeder der zwölf Speichen sitzt ein Lichtpunkt. Das Ganze atmet.
+**Ein Zirkel, der nicht leuchtet, ist eine Gravur und kein Zauber** – und der Schein ist zugleich
+das, was ihn über die Schatten der Ringe hebt.
+
 **Und die Bahn ist rund.** Fynn: *„Die Bahn soll etwas runder gebaut sein, nicht bloß ein Kasten."*
 Ein rundes Ding in einem rechteckigen Saal sieht aus, als hätte man es in eine Kiste gelegt. Der
 neue Helfer `rund()` in `tools/zauber.py` füllt eine runde Fläche; die Treppenstufen am Rand nimmt

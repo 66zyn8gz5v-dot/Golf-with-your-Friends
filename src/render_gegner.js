@@ -122,47 +122,82 @@ Object.assign(Renderer.prototype, {
     const R = gross * s * 1.16;
     ctx.save(); ctx.translate(cx, cy); ctx.scale(1, this.cam.tilt);
 
-    /* Der große Bannkreis, auf dem alles steht. Erst der Hof, dann zwei Rillen, dazwischen ein
-       Kranz aus Runen - dieselbe Sprache wie die Zauberkreise, nur zwanzigfach. */
-    const hof = ctx.createRadialGradient(0, 0, R * 0.25, 0, 0, R);
-    hof.addColorStop(0, 'rgba(120,150,210,0.26)');
-    hof.addColorStop(0.8, 'rgba(90,110,180,0.16)');
-    hof.addColorStop(1, 'rgba(60,72,120,0)');
-    ctx.fillStyle = hof; ctx.beginPath(); ctx.arc(0, 0, R, 0, TAU); ctx.fill();
-    for (const [rr, dick] of [[R, 0.06], [R * 0.94, 0.035], [R * 0.2, 0.05]]) {
-      ctx.strokeStyle = 'rgba(12,14,30,0.5)'; ctx.lineWidth = Math.max(1.5, s * (dick + 0.03));
+    /* Der große Bannkreis, auf dem alles steht.
+
+       ER MUSS ZU SEHEN SEIN. In der ersten Fassung war er eine feine Gravur: dünne Linien in
+       halbdurchsichtigem Gold auf dunkelblauem Stein, und die vier Ringe warfen ihre Schatten
+       darüber. Fynn: „Der magische Zirkel soll besser sichtbar sein." Jetzt liegt unter den Linien
+       ein eigener Schein, die Linien selbst sind kräftiger und doppelt gezogen, und alles atmet
+       langsam – ein Zirkel, der nicht leuchtet, ist eine Gravur und kein Zauber. */
+    const puls = 0.78 + 0.22 * Math.sin(t * 0.9);
+
+    // Der Schein unter allem. Er liegt weit über den äußersten Ring hinaus, damit man den Zirkel
+    // auch dort noch sieht, wo die Sphäre ihn nicht mehr überdeckt.
+    const hof = ctx.createRadialGradient(0, 0, R * 0.15, 0, 0, R * 1.1);
+    hof.addColorStop(0, `rgba(150,180,255,${(0.16 * puls).toFixed(3)})`);
+    hof.addColorStop(0.72, `rgba(180,170,255,${(0.20 * puls).toFixed(3)})`);
+    hof.addColorStop(0.93, `rgba(255,225,150,${(0.30 * puls).toFixed(3)})`);
+    hof.addColorStop(1, 'rgba(255,225,150,0)');
+    ctx.fillStyle = hof; ctx.beginPath(); ctx.arc(0, 0, R * 1.1, 0, TAU); ctx.fill();
+
+    /* Die Rillen. Jede wird dreimal gezogen: erst ein breiter weicher Schein, dann die dunkle
+       Rille, dann das Gold darin. Der Schein ist das, was sie über den Schatten der Ringe hebt. */
+    const rille = (rr, dick) => {
+      ctx.strokeStyle = `rgba(255,232,170,${(0.28 * puls).toFixed(3)})`;
+      ctx.lineWidth = Math.max(4, s * (dick + 0.22));
       ctx.beginPath(); ctx.arc(0, 0, rr, 0, TAU); ctx.stroke();
-      ctx.strokeStyle = 'rgba(226,192,114,0.7)'; ctx.lineWidth = Math.max(1.2, s * dick);
+      ctx.strokeStyle = 'rgba(10,10,26,0.75)';
+      ctx.lineWidth = Math.max(2, s * (dick + 0.05));
       ctx.beginPath(); ctx.arc(0, 0, rr, 0, TAU); ctx.stroke();
-    }
-    // Der Runenkranz zwischen den beiden äußeren Rillen
-    ctx.strokeStyle = 'rgba(226,192,114,0.6)'; ctx.lineWidth = Math.max(1, s * 0.03);
+      ctx.strokeStyle = `rgba(255,236,178,${(0.85 * puls + 0.15).toFixed(3)})`;
+      ctx.lineWidth = Math.max(1.6, s * dick);
+      ctx.beginPath(); ctx.arc(0, 0, rr, 0, TAU); ctx.stroke();
+    };
+    rille(R, 0.11);
+    rille(R * 0.9, 0.07);
+    rille(R * 0.2, 0.09);
+
+    /* Der Runenkranz zwischen den beiden äußeren Rillen. Er dreht sich langsam – das ist der
+       Unterschied zwischen einem Muster und einem Zauber, der arbeitet. */
     ctx.lineCap = 'round';
-    const anzahl = 48;
+    const anzahl = 40;
     for (let k = 0; k < anzahl; k++) {
-      const a = (k / anzahl) * TAU;
+      const a = (k / anzahl) * TAU + t * 0.035;
       ctx.save();
-      ctx.translate(Math.cos(a) * R * 0.97, Math.sin(a) * R * 0.97);
+      ctx.translate(Math.cos(a) * R * 0.95, Math.sin(a) * R * 0.95);
       ctx.rotate(a + Math.PI / 2);
-      const g = R * 0.022;
+      const g = R * 0.032;
       const rune = k % 4;
-      ctx.beginPath();
-      ctx.moveTo(0, -g); ctx.lineTo(0, g);
-      if (rune === 0) { ctx.moveTo(-g * 0.7, -g * 0.4); ctx.lineTo(0, 0); }
-      else if (rune === 1) { ctx.moveTo(-g * 0.7, 0); ctx.lineTo(g * 0.7, 0); }
-      else if (rune === 2) { ctx.moveTo(-g * 0.6, g); ctx.lineTo(0, g * 0.2); ctx.moveTo(g * 0.6, g); ctx.lineTo(0, g * 0.2); }
-      else { ctx.moveTo(-g * 0.7, -g); ctx.lineTo(g * 0.7, -g); }
-      ctx.stroke();
+      const zeichne = () => {
+        ctx.beginPath();
+        ctx.moveTo(0, -g); ctx.lineTo(0, g);
+        if (rune === 0) { ctx.moveTo(-g * 0.75, -g * 0.45); ctx.lineTo(0, 0); }
+        else if (rune === 1) { ctx.moveTo(-g * 0.75, 0); ctx.lineTo(g * 0.75, 0); }
+        else if (rune === 2) { ctx.moveTo(-g * 0.65, g); ctx.lineTo(0, g * 0.2); ctx.moveTo(g * 0.65, g); ctx.lineTo(0, g * 0.2); }
+        else { ctx.moveTo(-g * 0.75, -g); ctx.lineTo(g * 0.75, -g); }
+        ctx.stroke();
+      };
+      ctx.strokeStyle = `rgba(255,232,170,${(0.3 * puls).toFixed(3)})`;
+      ctx.lineWidth = Math.max(3, s * 0.13); zeichne();
+      ctx.strokeStyle = `rgba(255,244,205,${(0.9 * puls).toFixed(3)})`;
+      ctx.lineWidth = Math.max(1.4, s * 0.05); zeichne();
       ctx.restore();
     }
-    // Zwölf Speichen nach außen, damit der Kreis eine Teilung hat
-    ctx.strokeStyle = 'rgba(226,192,114,0.3)'; ctx.lineWidth = Math.max(1, s * 0.03);
+
+    // Zwölf Speichen nach außen, damit der Kreis eine Teilung hat – und an jeder ein Sternpunkt
     for (let k = 0; k < 12; k++) {
       const a = (k / 12) * TAU;
+      ctx.strokeStyle = `rgba(255,232,170,${(0.45 * puls).toFixed(3)})`;
+      ctx.lineWidth = Math.max(1.4, s * 0.05);
       ctx.beginPath();
       ctx.moveTo(Math.cos(a) * R * 0.2, Math.sin(a) * R * 0.2);
-      ctx.lineTo(Math.cos(a) * R * 0.94, Math.sin(a) * R * 0.94);
+      ctx.lineTo(Math.cos(a) * R * 0.9, Math.sin(a) * R * 0.9);
       ctx.stroke();
+      const fx = Math.cos(a) * R * 0.9, fy = Math.sin(a) * R * 0.9;
+      const fk = ctx.createRadialGradient(fx, fy, 0, fx, fy, s * 0.5);
+      fk.addColorStop(0, `rgba(255,248,215,${(0.85 * puls).toFixed(3)})`);
+      fk.addColorStop(1, 'rgba(255,230,160,0)');
+      ctx.fillStyle = fk; ctx.beginPath(); ctx.arc(fx, fy, s * 0.5, 0, TAU); ctx.fill();
     }
 
     /* Die Bänder der Wirkungen. Jedes liegt zwischen seinem Ring und dem nächsten nach innen und
