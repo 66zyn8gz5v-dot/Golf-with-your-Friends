@@ -138,25 +138,33 @@ def sternbild(sterne, tor, r=0.5):
             'tor': {'x0': float(tor[0]), 'y0': float(tor[1]), 'x1': float(tor[2]), 'y1': float(tor[3])}}
 
 # --- Alte Maschinen, deren Aussehen diese Welt weiterbenutzt ---------------
-def auge(x, y, r=1.1, weite=9.0, tempo=0.42, phase=0.0):
-    """Das Auge des Turms aus dem Schattenreich – hier das Fernrohr, das die Terrasse absucht."""
-    return {'type': 'eyetower', 'x': x, 'y': y, 'r': r, 'range': weite, 'fov': 0.6,
-            'speed': tempo, 'phase': phase}
+def auge(x, y, r=1.1, weite=9.0, tempo=0.42, phase=0.0, stil=None):
+    """Das Fernrohr, das die Terrasse absucht (Verhalten: das Auge des Turms)."""
+    o = {'type': 'eyetower', 'x': x, 'y': y, 'r': r, 'range': weite, 'fov': 0.6,
+         'speed': tempo, 'phase': phase}
+    if stil: o['style'] = stil
+    return o
 
-def pendel(x, y, laenge=3.5, amp=50, ruhe=90, phase=0.0):
-    return {'type': 'pendulum', 'x': x, 'y': y, 'len': laenge, 'amp': amp, 'ruhe': ruhe,
-            'phase': phase, 'w': 1.2, 'h': 1.2}
+def pendel(x, y, laenge=3.5, amp=50, ruhe=90, phase=0.0, stil=None):
+    o = {'type': 'pendulum', 'x': x, 'y': y, 'len': laenge, 'amp': amp, 'ruhe': ruhe,
+         'phase': phase, 'w': 1.2, 'h': 1.2}
+    if stil: o['style'] = stil
+    return o
 
 def feder(x, y, base=0.0, weite=9.0):
     return {'type': 'springwork', 'x': x, 'y': y, 'base': base, 'amp': 0.2, 'speed': 0.75,
             'range': weite, 'catchR': 0.7, 'loadTime': 0.9}
 
-def zahnfeld(x0, y0, x1, y1, warten=2.4, fahrt=3.0, phase=0.0):
-    return {'type': 'gearfield', 'x0': x0, 'y0': y0, 'x1': x1, 'y1': y1, 'wait': warten,
-            'travel': fahrt, 'r': 0.9, 'zaehne': 10, 'phase': phase}
+def zahnfeld(x0, y0, x1, y1, warten=2.4, fahrt=3.0, phase=0.0, stil=None):
+    o = {'type': 'gearfield', 'x0': x0, 'y0': y0, 'x1': x1, 'y1': y1, 'wait': warten,
+         'travel': fahrt, 'r': 0.9, 'zaehne': 10, 'phase': phase}
+    if stil: o['style'] = stil
+    return o
 
-def wandertor(x0, y0, x1, y1, gasse=1.8):
-    return {'type': 'wandergate', 'x0': x0, 'y0': y0, 'x1': x1, 'y1': y1, 'gap': gasse}
+def wandertor(x0, y0, x1, y1, gasse=1.8, stil=None):
+    o = {'type': 'wandergate', 'x0': x0, 'y0': y0, 'x1': x1, 'y1': y1, 'gap': gasse}
+    if stil: o['style'] = stil
+    return o
 
 def spiegel(x0, y0, x1, y1):
     """Zauberspiegel. Wer hineinrollt, kommt drüben seitenverkehrt heraus."""
@@ -183,9 +191,11 @@ def wanderloch(stellen, phase=0.0):
 def lampe(x, y, r=3.4):
     return {'type': 'grubenlampe', 'x': x, 'y': y, 'r': r}
 
-def nebel(x, y, r=3.0, dreh=1):
-    """Der Strudel der Flut, hier als Nebelwirbel am Himmel."""
-    return {'type': 'strudel', 'x': x, 'y': y, 'r': r, 'dreh': dreh}
+def nebel(x, y, r=3.0, dreh=1, stil=None):
+    """Der Nebelwirbel am Himmel (Verhalten: der Strudel der Flut)."""
+    o = {'type': 'strudel', 'x': x, 'y': y, 'r': r, 'dreh': dreh}
+    if stil: o['style'] = stil
+    return o
 
 
 def tor_kanten(tor):
@@ -775,8 +785,8 @@ fuell(f, 10, 7, 20, 10, '.')          # der Abgrund unter dem Gang
 setz(f, 3, 8, 'T'); setz(f, 26, 8, 'H')
 bahn(WARTE, 'Der Aufgang', 'sternenwarte', f, [
     mond(15.0, 4.0, r=3.4, kraft=9.0, takt=7.0),
-    pilz(8.5, 4.5, stil='crystal'),
-    pilz(22.5, 4.5, stil='crystal'),
+    pilz(8.5, 4.5, stil='meteorit'),
+    pilz(22.5, 4.5, stil='meteorit'),
 ], par=3,
 intro='Der Mond über der Terrasse zieht, solange seine Scheibe voll ist, und stößt, solange sie '
       'dunkel ist. Beim Halbmond läßt er in Ruhe. Der Gang oben ist schmal, und unter ihm ist '
@@ -791,7 +801,7 @@ fuell(f, 20, 8, 21, 10, 'x')
 setz(f, 3, 6, 'T'); setz(f, 28, 6, 'H')
 bahn(WARTE, 'Das erste Sternbild', 'sternenwarte', f, [
     sternbild([(6, 3), (11, 9), (16, 3)], (20, 6, 20, 8)),
-    pilz(13.5, 6.5, stil='orb'),
+    pilz(13.5, 6.5, stil='meteorit'),
 ], par=3,
 intro='Die drei Sterne wollen angefahren werden - alle drei, in einer Reihenfolge, die man sich '
       'vorher überlegt. Erst dann geht das Tor auf. Die Linien am Boden zeigen, was noch fehlt.')
@@ -807,7 +817,7 @@ setz(f, 4, 7, 'T'); setz(f, 30, 7, 'H')
 bahn(WARTE, 'Zwischen den Monden', 'sternenwarte', f, [
     mond(9.0, 7.0, r=3.2, kraft=8.0, takt=6.0, phase=0.0),
     mond(19.0, 7.0, r=3.2, kraft=8.0, takt=6.0, phase=0.5),
-    pendel(27.0, 4.0, laenge=3.5, amp=48),
+    pendel(27.0, 4.0, laenge=3.5, amp=48, stil='foucault'),
 ], par=4,
 intro='Zwei Monde stehen im Gegentakt: Zieht der eine, stößt der andere. Dazwischen liegen zwei '
       'Stege, die keinen Platz für Irrtümer lassen. Und am Ende schwingt das Lot des Astronomen.')
@@ -822,8 +832,8 @@ fuell(f, 12, 9, 14, 12, 'x')
 setz(f, 3, 7, 'T'); setz(f, 26, 7, 'H')
 bahn(WARTE, 'Der Kartensaal', 'kartensaal', f, [
     sternbild([(5, 4), (5, 11), (19, 4), (19, 11)], (24, 2, 24, 13)),
-    pendel(13.0, 4.0, laenge=3.2, amp=55),
-    pilz(18.5, 7.5, stil='orb'),
+    pendel(13.0, 4.0, laenge=3.2, amp=55, stil='foucault'),
+    pilz(18.5, 7.5, stil='meteorit'),
 ], par=4,
 intro='Vier Sterne, vier Ecken, und mittendrin zwei Regale, die den Saal in zwei Hälften teilen. '
       'Das Tor steht vor dem Loch und geht erst auf, wenn alle vier brennen. Die Reihenfolge '
@@ -853,8 +863,8 @@ bahn(WARTE, 'Das Fernrohr', 'sternenwarte', f, [
     # aussen, und der Sockel des Turms misst 1,375 im Halbmesser (r * 1,25). Macht 14,96 bzw. 0,05
     # als Grenze - mit 15,2 und -0,2 steht beides frei, und beides liegt noch auf der Scholle,
     # die 1,4 Felder ueber die Karte hinausreicht.
-    auge(12.5, 15.2, r=1.1, weite=9.0, tempo=0.4),                # unten neben der Terrasse
-    auge(21.0, -0.2, r=1.1, weite=9.0, tempo=-0.36, phase=1.6),   # oben neben der Terrasse
+    auge(12.5, 15.2, r=1.1, weite=9.0, tempo=0.4, stil='tubus'),                # unten neben der Terrasse
+    auge(21.0, -0.2, r=1.1, weite=9.0, tempo=-0.36, phase=1.6, stil='tubus'),   # oben neben der Terrasse
     mond(20.0, 10.5, r=2.8, kraft=7.0, takt=6.5, phase=0.3),
 ], par=4,
 intro='Zwei Fernrohre stehen am Rand der Terrasse und suchen sie ab, und zwischen ihnen zieht ein '
@@ -870,9 +880,9 @@ fuell(f, 13, 2, 19, 12, '.')          # die große Lücke
 fuell(f, 13, 6, 19, 8, '#')           # der Steg, über den das Zahnrad fährt
 setz(f, 3, 7, 'T'); setz(f, 28, 4, 'H')
 bahn(WARTE, 'Die Armillarsphäre', 'sternenwarte', f, [
-    zahnfeld(12.5, 7.5, 19.5, 7.5, warten=2.2, fahrt=3.0),
-    nebel(24.5, 9.0, r=2.8, dreh=1),
-    pilz(9.5, 4.5, stil='crystal'),
+    zahnfeld(12.5, 7.5, 19.5, 7.5, warten=2.2, fahrt=3.0, stil='meridian'),
+    nebel(24.5, 9.0, r=2.8, dreh=1, stil='spiralnebel'),
+    pilz(9.5, 4.5, stil='meteorit'),
 ], par=4,
 intro='Der Messingring fährt über den Steg und nimmt mit, wer rechtzeitig darauf liegt. Dahinter '
       'wartet ein Nebelwirbel, der alles nach außen schleudert - am besten also gar nicht erst '
@@ -886,10 +896,10 @@ fuell(f, 1, 2, 32, 12)
 fuell(f, 6, 2, 7, 12, 'x'); fuell(f, 6, 6, 7, 8, '#')     # erster Durchlaß, fest
 setz(f, 3, 7, 'T'); setz(f, 30, 7, 'H')
 bahn(WARTE, 'Der Wandelgang', 'kartensaal', f, [
-    wandertor(18, 3, 18, 11, gasse=1.9),
+    wandertor(18, 3, 18, 11, gasse=1.9, stil='kulisse'),
     mond(13.0, 7.0, r=3.0, kraft=8.5, takt=5.5),
-    pilz(24.5, 4.5, stil='orb'),
-    pilz(24.5, 9.5, stil='orb'),
+    pilz(24.5, 4.5, stil='meteorit'),
+    pilz(24.5, 9.5, stil='meteorit'),
 ], par=3,     # Bot-Median 3 - Par 4 waere hier geschenkt
 intro='Das wandernde Tor läuft auf und ab, und der Mond davor zieht den Ball von der Lücke weg '
       'oder in sie hinein. Zwei Uhren, die nicht zusammenpassen - man muß sich die eine aussuchen '
@@ -906,7 +916,7 @@ setz(f, 3, 7, 'T'); setz(f, 28, 4, 'H')
 bahn(WARTE, 'Die Hutkammer', 'kartensaal', f, [
     huete([(8, 4), (16, 11), (25, 9)], takt=2.4),
     mond(16.0, 4.0, r=3.0, kraft=8.0, takt=6.0, phase=0.25),
-    pendel(25.0, 3.0, laenge=3.0, amp=45),
+    pendel(25.0, 3.0, laenge=3.0, amp=45, stil='foucault'),
 ], par=4,
 intro='Die Hüte aus dem Garten, eine Stufe schärfer: Wo man herauskommt, steht fest - was danach '
       'mit dem Ball geschieht, entscheidet der Mond daneben. Wer den Hut im falschen Augenblick '

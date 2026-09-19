@@ -3058,7 +3058,23 @@ an. `pruefe()` in `tools/zauber.py` sucht jetzt jede Bodenkachel neben den Klöt
 Bahn nicht durch, solange eine übrig ist; die beiden Mühlen wurden entsprechend verbreitert (5,0 →
 6,8 bzw. 7,6). Die Mühlen aller anderen Welten sind nachgemessen und dicht.
 
-**In den beiden Welten darüber kommt die Optik weiter aus dem Bestand** – kein neues Bild, und
+**Die Sternenwarte hat seit Fassung 204 ihre eigenen sechs** (`src/render_warte.js`). Die Welt hat
+eine Handschrift: **Messing, Nachtblau und Sternenlicht.** Was aus Menschenhand kommt, ist
+gedrechseltes Messing mit Gradteilung; was vom Himmel kommt, leuchtet. Genau daran unterscheidet man
+auf dieser Terrasse ein Gerät von einer Erscheinung.
+
+| Maschine | Gestalt | Was man ihr jetzt ansieht |
+| --- | --- | --- |
+| Prellklotz | **Meteorit** | Ein Brocken mit glühenden Rissen. Beim Treffer schlagen die Funken genau aus den Rissen – er gibt zurück, was in ihm steckt. |
+| Fernrohr (`eyetower`) | **Großer Tubus** | Ein Messingrohr auf einer Gabelmontierung: Man sieht, **woher** der Lichtkegel kommt, und dass er von einem Gerät kommt. Die Öffnung leuchtet heller, je näher es daran ist, jemanden zu fassen. |
+| Pendel | **Foucault-Pendel** | Kugel an langem Draht, darunter der Teilkreis mit 24 Stiften; die beiden an den Umkehrpunkten leuchten. Von oben liest man ab, wie weit es ausschlägt. |
+| Zahnradfeld | **Meridianschiene** | Ein Messingband mit Gradteilung – man sieht die STRECKE vor dem Schlag, nicht erst während der Fahrt. Der Stern auf dem Schlitten dreht sich mit. |
+| Nebelwirbel (`strudel`) | **Spiralnebel** | Zwei Arme statt drei (so liest man die Drehrichtung) und Sterne, die nach innen wandern – innen schneller, und daran erkennt man die Stärke. |
+| Wandelgang (`wandergate`) | **Planetariumskulisse** | Zwei Messingblenden mit heller Kante zum Spalt hin, dazu die Führungsschiene am Boden: Man sieht, wie weit sie fahren können. |
+
+Alle sechs stehen im Baumodus unter *Aussehen*.
+
+**In der Erzmagierloge kommt die Optik weiter aus dem Bestand** – kein neues Bild, und
 trotzdem sieht keine aus wie im Märchenland. In der Sternenwarte geht es so weiter: Das **Auge des
 Turms** aus dem Schattenreich wird zum Fernrohr, das **Pendel** der Uhrwerkstadt zum Lot des
 Astronomen, das **Zahnradfeld** zur Armillarsphäre, der **Strudel** der Flut zum Nebelwirbel und

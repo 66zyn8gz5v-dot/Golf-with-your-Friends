@@ -1783,7 +1783,7 @@ class Renderer {
     if (ob.type === 'gearlift') { this.drawGearLiftFloor(ctx, ob, t); return; }
     if (ob.type === 'piston') { this.drawPistonFloor(ctx, ob, t); return; }
     if (ob.type === 'hand') { this.isoEllipse(ctx, ob.x, ob.y, 0.004, ob.len + 0.2, 'rgba(0,0,0,0.1)'); return; }
-    if (ob.type === 'pendulum') { this.drawPendulumFloor(ctx, ob, t); return; }
+    if (ob.type === 'pendulum') { (ob.style === 'foucault' ? this.drawFoucaultFloor : this.drawPendulumFloor).call(this, ctx, ob, t); return; }
     if (ob.type === 'springwork') { this.drawSpringWorkFloor(ctx, ob, t); return; }
     if (ob.type === 'escapement') { this.drawEscapementFloor(ctx, ob, t); return; }
     if (ob.type === 'sweephand') { this.drawSweepHandFloor(ctx, ob, t); return; }
@@ -1801,7 +1801,8 @@ class Renderer {
     if (ob.type === 'flut') { this.drawFlutFloor(ctx, ob, t); return; }
     if (ob.type === 'pumpwerk') { this.drawPumpwerkFloor(ctx, ob, t); return; }
     if (ob.type === 'stroemung') { this.drawStroemungFloor(ctx, ob, t); return; }
-    if (ob.type === 'strudel') { this.drawStrudelFloor(ctx, ob, t); return; }
+    if (ob.type === 'gearfield' && ob.style === 'meridian') { this.drawMeridianFloor(ctx, ob, t); return; }
+    if (ob.type === 'strudel') { (ob.style === 'spiralnebel' ? this.drawSpiralnebelFloor : this.drawStrudelFloor).call(this, ctx, ob, t); return; }
     if (ob.type === 'angler') { this.drawAnglerScheinFloor(ctx, ob, t); return; }
     if (ob.type === 'raucher') { this.drawRaucherFloor(ctx, ob, t); return; }
     if (ob.type === 'wracktor') { this.drawWracktorFloor(ctx, ob, t); return; }
@@ -1859,6 +1860,7 @@ class Renderer {
         ctx.beginPath(); ctx.ellipse(sx, sy, ob.r * 0.8 * s, ob.r * 0.8 * s * this.cam.tilt, 0, a, a + 1.2); ctx.stroke();
       }
     } else if (ob.type === 'wandergate') {
+      if (ob.style === 'kulisse') { this.drawKulisseFloor(ctx, ob, t); return; }
       // Der Durchlass wird auf dem Boden hell markiert – man soll von weitem sehen, wo er gerade steht
       const q = ob.gap / 2, nx = -ob.uy * 0.45, ny = ob.ux * 0.45;
       const poly = [[ob.gx - ob.ux * q + nx, ob.gy - ob.uy * q + ny], [ob.gx + ob.ux * q + nx, ob.gy + ob.uy * q + ny],
@@ -1902,6 +1904,7 @@ class Renderer {
       }
     } else if (ob.type === 'bumper') {
       if (ob.style === 'springkraut') { this.drawSpringkrautFloor(ctx, ob, t); return; }
+      if (ob.style === 'meteorit') { this.drawMeteoritFloor(ctx, ob, t); return; }
       this.isoEllipse(ctx, ob.x, ob.y, 0.004, ob.r + 0.12, 'rgba(255,255,255,0.22)');
       this.isoEllipse(ctx, ob.x, ob.y, 0.005, ob.r, 'rgba(0,0,0,0.18)');
     } else if (ob.type === 'rotor') {
@@ -2072,7 +2075,9 @@ class Renderer {
           const p0 = [p[0] + (q[0] - p[0]) * a, p[1] + (q[1] - p[1]) * a];
           const p1 = [p[0] + (q[0] - p[0]) * b, p[1] + (q[1] - p[1]) * b];
           const poly = [[p0[0] + nx, p0[1] + ny], [p1[0] + nx, p1[1] + ny], [p1[0] - nx, p1[1] - ny], [p0[0] - nx, p0[1] - ny]];
+          const amSpalt = ob.style === 'kulisse' && (i === 0 || i === n - 1) ? p1 : null;
           items.push({ x: (p0[0] + p1[0]) / 2, y: (p0[1] + p1[1]) / 2, draw: () => {
+            if (ob.style === 'kulisse') { this.drawKulisseStueck(ctx, poly, ob, amSpalt); return; }
             // Etwas dunkler als die Arenamauer und mit roter Deckleiste – sonst geht die Sperre im
             // hellen Sandstein ringsum unter und man sieht nicht, wo der Weg zu ist.
             this.prism(ctx, poly, 0, ob.h, th.block.top, th.block.side, { outline: shade(th.block.side, 0.7) });
@@ -2080,7 +2085,8 @@ class Renderer {
           } });
         }
       }
-      for (const sd of [-1, 1]) {   // Torpfosten an den Kanten des Durchlasses
+      // Die Kulisse braucht keine Pfosten: Ihre Blenden haben selbst eine helle Kante zum Spalt hin
+      for (const sd of ob.style === 'kulisse' ? [] : [-1, 1]) {   // Torpfosten an den Kanten des Durchlasses
         const px = ob.gx + ob.ux * sd * ob.gap / 2, py = ob.gy + ob.uy * sd * ob.gap / 2;
         const poly = [[px - 0.16, py - 0.16], [px + 0.16, py - 0.16], [px + 0.16, py + 0.16], [px - 0.16, py + 0.16]];
         items.push({ x: px, y: py, bias: 0.1, draw: () => {
@@ -2118,7 +2124,8 @@ class Renderer {
     } else if (ob.type === 'guillotine') {
       this.pushGuillotine(items, ctx, ob, t);
     } else if (ob.type === 'eyetower') {
-      items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => this.drawEyeTower(ctx, ob, t) });
+      // In der Sternenwarte ist derselbe Apparat ein Messingfernrohr auf einer Gabel
+      items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => (ob.style === 'tubus' ? this.drawTubus(ctx, ob, t) : this.drawEyeTower(ctx, ob, t)) });
     } else if (ob.type === 'copperpipe') {
       // Rohrmund und Rohrende stehen an verschiedenen Stellen der Karte – jeder wird für sich einsortiert
       if (ob.x != null) items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => this.drawCopperPipe(ctx, ob, t, false) });
@@ -2135,7 +2142,7 @@ class Renderer {
         });
       }
     } else if (ob.type === 'gearfield') {
-      items.push({ x: (ob.x0 + ob.x1) / 2, y: (ob.y0 + ob.y1) / 2, bias: -0.2, draw: () => this.drawGearField(ctx, ob, t) });
+      items.push({ x: (ob.x0 + ob.x1) / 2, y: (ob.y0 + ob.y1) / 2, bias: -0.2, draw: () => (ob.style === 'meridian' ? this.drawMeridian(ctx, ob, t) : this.drawGearField(ctx, ob, t)) });
     } else if (ob.type === 'sweephand') {
       items.push({ x: ob.x, y: ob.y, bias: 0.3, draw: () => this.drawSweepHand(ctx, ob, t) });
     } else if (ob.type === 'handclock') {
@@ -2233,7 +2240,7 @@ class Renderer {
     } else if (ob.type === 'escapement') {
       items.push({ x: ob.x, y: ob.y, bias: 0.25, draw: () => this.drawEscapement(ctx, ob, t) });
     } else if (ob.type === 'pendulum') {
-      items.push({ x: ob.x, y: ob.y, bias: 0.3, draw: () => this.drawPendulum(ctx, ob, t) });
+      items.push({ x: ob.x, y: ob.y, bias: 0.3, draw: () => (ob.style === 'foucault' ? this.drawFoucault(ctx, ob, t) : this.drawPendulum(ctx, ob, t)) });
     } else if (ob.type === 'springwork') {
       items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => this.drawSpringWork(ctx, ob, t) });
     } else if (ob.type === 'gearlift') {
@@ -2278,6 +2285,7 @@ class Renderer {
         const now = performance.now() / 1000, sq = Math.max(0, 1 - (now - ob.hitAt) * 4);
         const sc = 1 + sq * 0.25;
         if (ob.style === 'springkraut') this.drawSpringkraut(ctx, ob, t);
+        else if (ob.style === 'meteorit') this.drawMeteorit(ctx, ob, t);
         else if (ob.style === 'crystal') this.spriteCrystal(ctx, ob.x, ob.y, 0, ob.r * 1.6 * sc, '#cfeeff', '#5b90c6');
         else if (ob.style === 'rock') this.spriteRock(ctx, { x: ob.x, y: ob.y, z: 0, s: ob.r * 2.1 * sc, seed: ((ob.x * 7 + ob.y * 13) % 10) / 10 }, '#9a948a', '#5f5a52');
         else if (ob.style === 'coral') this.spriteCoral(ctx, { x: ob.x, y: ob.y, z: 0, s: ob.r * 2.6 * sc, seed: ((ob.x * 7 + ob.y * 13) % 10) / 10 });

@@ -149,7 +149,8 @@ const Editor = (deps) => {
   const AUSSEHEN = {
     bumper: [['mushroom', 'Pilz'], ['crystal', 'Kristall'], ['rock', 'Fels'], ['coral', 'Koralle'],
              ['idol', 'Götze'], ['orb', 'Leuchtkugel'], ['grave', 'Grabstein'], ['eye', 'Auge'],
-             ['fass', 'Faß'], ['feder', 'Sprungfeder'], ['springkraut', 'Springkraut']],
+             ['fass', 'Faß'], ['feder', 'Sprungfeder'], ['springkraut', 'Springkraut'],
+             ['meteorit', 'Meteorit']],
     rotor: [['wood', 'Windrad'], ['crystal', 'Kristall'], ['log', 'Baumstamm'], ['stone', 'Steinbalken'],
             ['broom', 'Besen'], ['tentacle', 'Tentakel'], ['darktentacle', 'Dunkler Tentakel'],
             ['knight', 'Ritterstatue'], ['vine', 'Ranke'], ['propeller', 'Propeller'],
@@ -159,6 +160,13 @@ const Editor = (deps) => {
     /* Der Runenstein ist der Entwurf aus Fassung 196: im Garten wieder herausgenommen, hier
        aufgehoben. Für eine Loge oder eine Gruft ist er genau richtig. */
     zauberhut: [['', 'Zauberhüte'], ['runenstein', 'Runensteine']],
+    /* Die sechs Instrumente der Sternenwarte: dasselbe Verhalten, aus Messing statt aus
+       Uhrwerkstadt, Schattenreich und Flut. */
+    eyetower: [['', 'Turm des Auges'], ['tubus', 'Großes Fernrohr']],
+    pendulum: [['', 'Pendel'], ['foucault', 'Foucault-Pendel']],
+    gearfield: [['', 'Zahnradfeld'], ['meridian', 'Meridianschiene']],
+    strudel: [['', 'Strudel'], ['spiralnebel', 'Spiralnebel']],
+    wandergate: [['', 'Wanderndes Tor'], ['kulisse', 'Planetariumskulisse']],
     cannon: [['', 'Kanone'], ['ballista', 'Balliste'], ['catapult', 'Katapult'], ['wrackkanone', 'Wrackkanone']],
     turntable: [['', 'Drehscheibe'], ['whirl', 'Strudel'], ['tornado', 'Wirbelsturm'], ['void', 'Leere'],
                 ['sonnenblume', 'Riesen-Sonnenblume']],
