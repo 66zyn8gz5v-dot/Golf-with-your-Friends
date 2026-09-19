@@ -625,13 +625,20 @@ intro='Zwei Lücken, zwei Blüten. Die zweite Blüte liegt hinter der ersten Ran
 # Fassung war die Bahn hinter dem Zauber zu Ende: Hut treffen, herauskommen, einlochen – die
 # Maschine war erklärt, aber gespielt hatte man sie nicht. Jetzt entscheidet der Hut nur, WO man
 # den zweiten Teil beginnt, und der zweite Teil ist selbst eine Aufgabe: an der zweiten Wand oben
-# herum, am Springkraut vorbei, durch den Rasensprenger ans Loch. Wer im Sand landet, hat nicht
-# verloren, sondern nur den längeren Anlauf.
+# herum, am Springkraut vorbei, durch den Rasensprenger ans Loch. Wer in der Nische landet, hat
+# nicht verloren, sondern nur den längeren Anlauf.
 f = leer(42, 15)
 fuell(f, 1, 2, 40, 12)
 fuell(f, 12, 2, 14, 12, 'x')          # die erste Regalwand: hier hilft nur der Hut
 fuell(f, 28, 5, 30, 12, 'x')          # die zweite: sie läßt oben eine Gasse frei
-fuell(f, 16, 9, 22, 12, 's')          # der Sandkasten um den falschen Hut
+# Die Nische um den falschen Hut. VORHER WAR HIER SAND, und Sand ist eine schlechte Strafe: Er
+# nimmt Tempo weg, aber man sieht ihm nicht an, wieviel, und man kann nichts dagegen tun. Eine
+# Ecke ist ehrlicher – wer hier herauskommt, sieht sofort, dass er einmal zur Seite und einmal
+# hinaus spielen muss. Das kostet genau einen Schlag, und zwar einen, den man selbst verschuldet
+# hat, indem man im falschen Augenblick in den Hut gerollt ist.
+# Die Lücke oben links ist der Ausgang; ohne sie wäre die Nische ein Gefängnis. 
+fuell(f, 17, 9, 21, 9, 'x')           # die Wand über der Nische, mit einer Lücke bei x = 15/16
+fuell(f, 21, 10, 21, 12, 'x')         # und die Wand an ihrer rechten Seite
 setz(f, 3, 7, 'T'); setz(f, 37, 10, 'H')
 bahn(GARTEN, 'Der Hutständer', 'gewaechshaus', f, [
     huete([(6, 7), (18, 4), (18, 11)], takt=2.6),
@@ -641,8 +648,9 @@ bahn(GARTEN, 'Der Hutständer', 'gewaechshaus', f, [
 ], par=4,
 intro='Durch die erste Wand kommt nur, wer sich verzaubern läßt: hinein in einen Hut, heraus aus '
       'dem, der gerade leuchtet – und wer in den leuchtenden rollt, aus dem nächsten. Einer der '
-      'beiden Ausgänge steht im Sand, der andere frei. Danach ist die Bahn aber nicht zu Ende: Die '
-      'zweite Wand läßt nur oben eine Gasse, und davor dreht der Sprenger.')
+      'beiden Ausgänge steht in einer Nische: Von dort muß man erst zur Seite und dann hinaus, das '
+      'kostet einen Schlag. Danach ist die Bahn noch nicht zu Ende – die zweite Wand läßt nur oben '
+      'eine Gasse, und davor dreht der Sprenger.')
 
 # --- 6 ---------------------------------------------------------------------
 # Das Treibhaus. Der Bienenstand steht quer über dem Weg, dahinter drehen zwei Rasensprenger.

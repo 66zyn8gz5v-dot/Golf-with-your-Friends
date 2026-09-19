@@ -157,7 +157,7 @@ const ZAUBER_GARTEN = [
   },
   {
     name: 'Der Hutständer', par: 4, theme: 'gewaechshaus',
-    intro: 'Durch die erste Wand kommt nur, wer sich verzaubern läßt: hinein in einen Hut, heraus aus dem, der gerade leuchtet – und wer in den leuchtenden rollt, aus dem nächsten. Einer der beiden Ausgänge steht im Sand, der andere frei. Danach ist die Bahn aber nicht zu Ende: Die zweite Wand läßt nur oben eine Gasse, und davor dreht der Sprenger.',
+    intro: 'Durch die erste Wand kommt nur, wer sich verzaubern läßt: hinein in einen Hut, heraus aus dem, der gerade leuchtet – und wer in den leuchtenden rollt, aus dem nächsten. Einer der beiden Ausgänge steht in einer Nische: Von dort muß man erst zur Seite und dann hinaus, das kostet einen Schlag. Danach ist die Bahn noch nicht zu Ende – die zweite Wand läßt nur oben eine Gasse, und davor dreht der Sprenger.',
     map: [
       '..........................................',
       '..........................................',
@@ -168,10 +168,10 @@ const ZAUBER_GARTEN = [
       '.###########xxx#############xxx##########.',
       '.##T########xxx#############xxx##########.',
       '.###########xxx#############xxx##########.',
-      '.###########xxx#sssssss#####xxx##########.',
-      '.###########xxx#sssssss#####xxx######H###.',
-      '.###########xxx#sssssss#####xxx##########.',
-      '.###########xxx#sssssss#####xxx##########.',
+      '.###########xxx##xxxxx######xxx##########.',
+      '.###########xxx######x######xxx######H###.',
+      '.###########xxx######x######xxx##########.',
+      '.###########xxx######x######xxx##########.',
       '..........................................',
       '..........................................',
     ],
