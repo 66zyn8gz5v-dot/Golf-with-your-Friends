@@ -1773,8 +1773,8 @@ class Renderer {
   }
   drawObstacleFloor(ctx, ob, t) {
     const s = this.scale;
-    if (ob.type === 'lightning') { this.drawLightningFloor(ctx, ob, t); return; }
-    if (ob.type === 'updraft') { this.drawUpdraft(ctx, ob, t); return; }
+    if (ob.type === 'lightning') { (ob.style === 'bannschlag' ? this.drawBannschlagFloor : this.drawLightningFloor).call(this, ctx, ob, t); return; }
+    if (ob.type === 'updraft') { (ob.style === 'bannschacht' ? this.drawBannschacht : this.drawUpdraft).call(this, ctx, ob, t); return; }
     if (ob.type === 'trapdoor') { this.drawTrapdoor(ctx, ob, t); return; }
     if (ob.type === 'guillotine') { this.drawGuillotineFloor(ctx, ob, t); return; }
     if (ob.type === 'eyetower') { this.drawEyeBeam(ctx, ob, t); return; }
@@ -1783,7 +1783,7 @@ class Renderer {
     if (ob.type === 'gearlift') { this.drawGearLiftFloor(ctx, ob, t); return; }
     if (ob.type === 'piston') { this.drawPistonFloor(ctx, ob, t); return; }
     if (ob.type === 'hand') { this.isoEllipse(ctx, ob.x, ob.y, 0.004, ob.len + 0.2, 'rgba(0,0,0,0.1)'); return; }
-    if (ob.type === 'pendulum') { (ob.style === 'foucault' ? this.drawFoucaultFloor : this.drawPendulumFloor).call(this, ctx, ob, t); return; }
+    if (ob.type === 'pendulum') { (ob.style === 'foucault' ? this.drawFoucaultFloor : ob.style === 'kettenlot' ? this.drawKettenlotFloor : this.drawPendulumFloor).call(this, ctx, ob, t); return; }
     if (ob.type === 'springwork') { this.drawSpringWorkFloor(ctx, ob, t); return; }
     if (ob.type === 'escapement') { this.drawEscapementFloor(ctx, ob, t); return; }
     if (ob.type === 'sweephand') { this.drawSweepHandFloor(ctx, ob, t); return; }
@@ -1791,7 +1791,7 @@ class Renderer {
     if (ob.type === 'turbine') { this.drawTurbineFloor(ctx, ob, t); return; }
     if (ob.type === 'luke') { if (!(ob.ebene || 0)) this.drawLuke(ctx, ob, 0); return; }   // höhere Ebenen zeichnet zeichneEbene
     if (ob.type === 'sprengladung') { this.drawSprengladungFloor(ctx, ob, t); return; }
-    if (ob.type === 'grubenlampe') { this.drawGrubenlampeFloor(ctx, ob, t); return; }
+    if (ob.type === 'grubenlampe') { (ob.style === 'bannlicht' ? this.drawBannlichtFloor : this.drawGrubenlampeFloor).call(this, ctx, ob, t); return; }
     if (ob.type === 'windfahne') { this.drawWindfahneFloor(ctx, ob, t); return; }
     if (ob.type === 'lawine') { this.drawLawineFloor(ctx, ob, t); return; }
     if (ob.type === 'seilbahn') { this.drawSeilbahnFloor(ctx, ob, t); return; }
@@ -1813,7 +1813,7 @@ class Renderer {
     if (ob.type === 'mondzieher') { this.drawMondzieherFloor(ctx, ob, t); return; }
     if (ob.type === 'sternbild') { this.drawSternbildFloor(ctx, ob, t); return; }
     if (ob.type === 'zauberspiegel') { this.drawZauberspiegelFloor(ctx, ob, t); return; }
-    if (ob.type === 'dial' || ob.type === 'wanderloch') { this.drawWanderlochFloor(ctx, ob, t); return; }
+    if (ob.type === 'dial' || ob.type === 'wanderloch') { (ob.style === 'siegelloch' ? this.drawSiegellochFloor : this.drawWanderlochFloor).call(this, ctx, ob, t); return; }
     if (ob.type === 'field' && ob.style === 'steam') { this.drawSteam(ctx, ob, t); return; }
     if (ob.type === 'field' && ob.style === 'dark') { this.drawDarkZone(ctx, ob, t); return; }
     if (ob.type === 'boost' || (ob.type === 'field' && (ob.style === 'wind' || ob.style === 'current'))) { this.drawWind(ctx, ob, t); return; }
@@ -1905,10 +1905,12 @@ class Renderer {
     } else if (ob.type === 'bumper') {
       if (ob.style === 'springkraut') { this.drawSpringkrautFloor(ctx, ob, t); return; }
       if (ob.style === 'meteorit') { this.drawMeteoritFloor(ctx, ob, t); return; }
+      if (ob.style === 'bannstein') { this.drawBannsteinFloor(ctx, ob, t); return; }
       this.isoEllipse(ctx, ob.x, ob.y, 0.004, ob.r + 0.12, 'rgba(255,255,255,0.22)');
       this.isoEllipse(ctx, ob.x, ob.y, 0.005, ob.r, 'rgba(0,0,0,0.18)');
     } else if (ob.type === 'rotor') {
       if (ob.style === 'sprenger') { this.drawSprengerFloor(ctx, ob, t); return; }
+      if (ob.style === 'bannzeiger') { this.drawBannzeigerFloor(ctx, ob, t); return; }
       if (ob.swing) { // Pendel/Weiche: nur den Schwenkbereich als Fächer markieren
         const [cx, cy] = this.proj(ob.x, ob.y, 0.004);
         ctx.fillStyle = 'rgba(0,0,0,0.1)'; ctx.beginPath(); ctx.moveTo(cx, cy);
@@ -2109,6 +2111,7 @@ class Renderer {
         if (ob.style === 'scythe') { this.drawScythe(ctx, ob, t); return; }
         if (ob.style === 'pendel') { this.drawPendel(ctx, ob, t); return; }
         if (ob.style === 'sprenger') { this.drawRasensprenger(ctx, ob, t); return; }
+        if (ob.style === 'bannzeiger') { this.drawBannzeiger(ctx, ob, t); return; }
         this.prism(ctx, hub, 0, ob.height + 0.25, th.rotor.top, th.rotor.side);
         for (let i = 0; i < ob.blades; i++) {
           const a = ob.bladeAngle(i), ca = Math.cos(a), sa = Math.sin(a), tk = ob.thick;
@@ -2158,7 +2161,7 @@ class Renderer {
          wie ein Loch, und man würde den eigenen Weg nicht mehr sehen. */
       items.push({ x: ob.cx, y: ob.cy, bias: -0.15, noFade: true, draw: () => this.drawKippbuehne(ctx, ob, t) });
     } else if (ob.type === 'grubenlampe') {
-      items.push({ x: ob.x, y: ob.y, bias: 0.45, noFade: true, draw: () => this.drawGrubenlampe(ctx, ob, t) });
+      items.push({ x: ob.x, y: ob.y, bias: 0.45, noFade: true, draw: () => (ob.style === 'bannlicht' ? this.drawBannlicht(ctx, ob, t) : this.drawGrubenlampe(ctx, ob, t)) });
     } else if (ob.type === 'bruchwand') {
       /* noFade: Die Wand ist der Grund, warum man hier nicht weiterkommt. Durchsichtig zu werden,
          sobald der Ball davorliegt, nähme ihr genau das. */
@@ -2240,7 +2243,7 @@ class Renderer {
     } else if (ob.type === 'escapement') {
       items.push({ x: ob.x, y: ob.y, bias: 0.25, draw: () => this.drawEscapement(ctx, ob, t) });
     } else if (ob.type === 'pendulum') {
-      items.push({ x: ob.x, y: ob.y, bias: 0.3, draw: () => (ob.style === 'foucault' ? this.drawFoucault(ctx, ob, t) : this.drawPendulum(ctx, ob, t)) });
+      items.push({ x: ob.x, y: ob.y, bias: 0.3, draw: () => (ob.style === 'foucault' ? this.drawFoucault(ctx, ob, t) : ob.style === 'kettenlot' ? this.drawKettenlot(ctx, ob, t) : this.drawPendulum(ctx, ob, t)) });
     } else if (ob.type === 'springwork') {
       items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => this.drawSpringWork(ctx, ob, t) });
     } else if (ob.type === 'gearlift') {
@@ -2286,6 +2289,7 @@ class Renderer {
         const sc = 1 + sq * 0.25;
         if (ob.style === 'springkraut') this.drawSpringkraut(ctx, ob, t);
         else if (ob.style === 'meteorit') this.drawMeteorit(ctx, ob, t);
+        else if (ob.style === 'bannstein') this.drawBannstein(ctx, ob, t);
         else if (ob.style === 'crystal') this.spriteCrystal(ctx, ob.x, ob.y, 0, ob.r * 1.6 * sc, '#cfeeff', '#5b90c6');
         else if (ob.style === 'rock') this.spriteRock(ctx, { x: ob.x, y: ob.y, z: 0, s: ob.r * 2.1 * sc, seed: ((ob.x * 7 + ob.y * 13) % 10) / 10 }, '#9a948a', '#5f5a52');
         else if (ob.style === 'coral') this.spriteCoral(ctx, { x: ob.x, y: ob.y, z: 0, s: ob.r * 2.6 * sc, seed: ((ob.x * 7 + ob.y * 13) % 10) / 10 });
@@ -2350,7 +2354,7 @@ class Renderer {
     } else if (ob.type === 'spikes') {
       items.push({ x: ob.x, y: ob.y, draw: () => this.drawSpikes(ctx, ob, t) });
     } else if (ob.type === 'lightning') {
-      items.push({ x: ob.x, y: ob.y, bias: 0.3, noFade: true, draw: () => this.drawLightningBolt(ctx, ob, t) });
+      items.push({ x: ob.x, y: ob.y, bias: 0.3, noFade: true, draw: () => (ob.style === 'bannschlag' ? this.drawBannsaeule(ctx, ob, t) : this.drawLightningBolt(ctx, ob, t)) });
     }
   }
 

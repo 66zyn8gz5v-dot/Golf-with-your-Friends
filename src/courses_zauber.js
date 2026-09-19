@@ -156,7 +156,7 @@ const ZAUBER_GARTEN = [
     autoDecor: { density: 0.09, seed: 57 },
   },
   {
-    name: 'Der Hutständer', par: 4, theme: 'gewaechshaus',
+    name: 'Der Hutständer', par: 3, theme: 'gewaechshaus',
     intro: 'Durch die erste Wand kommt nur, wer sich verzaubern läßt: hinein in einen Hut, heraus aus dem, der gerade leuchtet – und wer in den leuchtenden rollt, aus dem nächsten. Einer der beiden Ausgänge steht in einer Nische: Von dort muß man erst zur Seite und dann hinaus, das kostet einen Schlag. Danach ist die Bahn noch nicht zu Ende – die zweite Wand läßt nur oben eine Gasse, und davor dreht der Sprenger.',
     map: [
       '..........................................',
@@ -563,7 +563,7 @@ const ZAUBER_WARTE = [
 const ZAUBER_LOGE = [
   {
     name: 'Vor der Loge', par: 4, theme: 'erzmagierloge',
-    intro: 'Der Spiegel ist der einzige Weg durch die Wand, und er wirft seitenverkehrt aus. Dahinter geht es nur unten weiter - wer also unten ankommen will, muss oben auftreffen. Sein Spiegelbild steht drueben und sagt einem vorher, wo das sein wird.',
+    intro: 'Der Spiegel ist der einzige Weg durch die Wand, und er wirft seitenverkehrt aus. Dahinter geht es nur unten weiter - wer also unten ankommen will, muß oben auftreffen. Sein Spiegelbild steht drüben und sagt einem vorher, wo das sein wird.',
     map: [
       '....................................',
       '....................................',
@@ -583,13 +583,13 @@ const ZAUBER_LOGE = [
     ],
     obstacles: [
       { type: 'zauberspiegel', x0: 18, y0: 4, x1: 18, y1: 11 },
-      { type: 'rotor', x: 23.0, y: 10.5, blades: 3, len: 1.5, speed: 1.2, thick: 0.16, style: 'crystal', phase: 0.0 },
+      { type: 'rotor', x: 23.0, y: 10.5, blades: 3, len: 1.5, speed: 1.2, thick: 0.16, style: 'bannzeiger', phase: 0.0 },
     ],
     autoDecor: { density: 0.09, seed: 11 },
   },
   {
     name: 'Der Spiegelsaal', par: 4, theme: 'erzmagierloge',
-    intro: 'Zwei Spiegel, dazwischen ein Pfeiler, um den man herum muss. Zweimal seitenverkehrt waere wieder richtig herum - nur trifft man wegen des Pfeilers beim zweiten Mal woanders auf als beim ersten.',
+    intro: 'Zwei Spiegel, dazwischen ein Pfeiler, um den man herum muß. Zweimal seitenverkehrt wäre wieder richtig herum - nur trifft man wegen des Pfeilers beim zweiten Mal woanders auf als beim ersten.',
     map: [
       '......................................',
       '......................................',
@@ -611,13 +611,13 @@ const ZAUBER_LOGE = [
     obstacles: [
       { type: 'zauberspiegel', x0: 13, y0: 5, x1: 13, y1: 12 },
       { type: 'zauberspiegel', x0: 26, y0: 5, x1: 26, y1: 12 },
-      { type: 'bumper', x: 31.5, y: 10.5, r: 0.55, style: 'crystal', kick: 7.5 },
+      { type: 'bumper', x: 31.5, y: 10.5, r: 0.55, style: 'bannstein', kick: 7.5 },
     ],
     autoDecor: { density: 0.09, seed: 29 },
   },
   {
     name: 'Das Bannmal', par: 5, theme: 'bannkreis',
-    intro: 'In der Gruft sieht man nur, was im Licht der Lampen steht. Vier Sterne liegen in drei Kammern verteilt, und erst wenn alle brennen, geht das Bannmal vor dem Loch auf. Wer beim Hinweg nicht hinsieht, sucht sie beim Rueckweg.',
+    intro: 'In der Gruft sieht man nur, was im Licht der Lampen steht. Vier Sterne liegen in drei Kammern verteilt, und erst wenn alle brennen, geht das Bannmal vor dem Loch auf. Wer beim Hinweg nicht hinsieht, sucht sie beim Rückweg.',
     map: [
       '....................................',
       '....................................',
@@ -638,15 +638,15 @@ const ZAUBER_LOGE = [
     ],
     obstacles: [
       { type: 'sternbild', r: 0.5, sterne: [[5.0, 4.0], [5.0, 12.0], [18.0, 11.0], [26.0, 4.0]], tor: { x0: 28.0, y0: 2.0, x1: 28.0, y1: 14.0 } },
-      { type: 'grubenlampe', x: 6.5, y: 8.5, r: 4.4 },
-      { type: 'grubenlampe', x: 18.5, y: 8.5, r: 4.4 },
-      { type: 'grubenlampe', x: 30.5, y: 9.5, r: 4.0 },
+      { type: 'grubenlampe', x: 6.5, y: 8.5, r: 4.4, style: 'bannlicht' },
+      { type: 'grubenlampe', x: 18.5, y: 8.5, r: 4.4, style: 'bannlicht' },
+      { type: 'grubenlampe', x: 30.5, y: 9.5, r: 4.0, style: 'bannlicht' },
     ],
     autoDecor: { density: 0.09, seed: 43 },
   },
   {
     name: 'Der Rat der Neun', par: 5, theme: 'erzmagierloge',
-    intro: 'Vier Hueten leuchtet reihum einer, und der Takt ist schnell. Mitten zwischen ihnen steht ein Mond, der zieht und stoesst - wer im falschen Augenblick in den Hut rollt, kommt richtig heraus und landet trotzdem falsch. Am Ende schwingt das Lot des Astronomen.',
+    intro: 'Vier Hüten leuchtet reihum einer, und der Takt ist schnell. Mitten zwischen ihnen steht ein Mond, der zieht und stößt - wer im falschen Augenblick in den Hut rollt, kommt richtig heraus und landet trotzdem falsch. Am Ende schwingt das Lot des Astronomen.',
     map: [
       '........................................',
       '........................................',
@@ -668,13 +668,13 @@ const ZAUBER_LOGE = [
     obstacles: [
       { type: 'zauberhut', takt: 2.2, phase: 0.0, r: 0.42, plaetze: [[9.0, 4.0], [9.0, 12.0], [22.0, 4.0], [22.0, 12.0]] },
       { type: 'mondzieher', x: 21.0, y: 7.5, r: 3.2, kraft: 9.0, takt: 5.5, phase: 0.2, core: 0.4 },
-      { type: 'pendulum', x: 33.0, y: 4.0, len: 3.4, amp: 52, ruhe: 90, phase: 0.0, w: 1.2, h: 1.2 },
+      { type: 'pendulum', x: 33.0, y: 4.0, len: 3.4, amp: 52, ruhe: 90, phase: 0.0, w: 1.2, h: 1.2, style: 'kettenlot' },
     ],
     autoDecor: { density: 0.09, seed: 57 },
   },
   {
     name: 'Die Ranken der Gruft', par: 4, theme: 'bannkreis',
-    intro: 'Zwei Luecken, dazwischen ein Spiegel, und ueber allem die Dunkelheit der Gruft. Jede Bluete startet ihre eigene Uhr - und der Spiegel wirft einen seitenverkehrt aus, also gerade nicht dorthin, wo man beim Schlagen hingesehen hat.',
+    intro: 'Zwei Lücken, dazwischen ein Spiegel, und über allem die Dunkelheit der Gruft. Jede Blüte startet ihre eigene Uhr - und der Spiegel wirft einen seitenverkehrt aus, also gerade nicht dorthin, wo man beim Schlagen hingesehen hat.',
     map: [
       '......................................',
       '......................................',
@@ -697,14 +697,14 @@ const ZAUBER_LOGE = [
       { type: 'ranke', x: 10, y: 6, w: 4, h: 5, dauer: 4.5, r: 0.6, bluete: { x: 8.5, y: 7.0 } },
       { type: 'zauberspiegel', x0: 21, y0: 5, x1: 21, y1: 12 },
       { type: 'ranke', x: 27, y: 7, w: 4, h: 4, dauer: 4.5, r: 0.6, bluete: { x: 25.5, y: 9.5 } },
-      { type: 'grubenlampe', x: 8.5, y: 7.0, r: 4.4 },
-      { type: 'grubenlampe', x: 25.5, y: 9.5, r: 4.4 },
+      { type: 'grubenlampe', x: 8.5, y: 7.0, r: 4.4, style: 'bannlicht' },
+      { type: 'grubenlampe', x: 25.5, y: 9.5, r: 4.4, style: 'bannlicht' },
     ],
     autoDecor: { density: 0.09, seed: 71 },
   },
   {
     name: 'Der Blitzgang', par: 5, theme: 'erzmagierloge',
-    intro: 'Zwei Blitze schlagen im Wechsel in den mittleren Gang, und der Aufwind hebt einen ueber den ersten hinweg. Dahinter steht ein Spiegel - der wirft einen zwar auf die richtige Seite, aber nur, wenn man an der richtigen Stelle ankommt.',
+    intro: 'Zwei Blitze schlagen im Wechsel in den mittleren Gang, und der Aufwind hebt einen über den ersten hinweg. Dahinter steht ein Spiegel - der wirft einen zwar auf die richtige Seite, aber nur, wenn man an der richtigen Stelle ankommt.',
     map: [
       '......................................',
       '......................................',
@@ -724,9 +724,9 @@ const ZAUBER_LOGE = [
       '......................................',
     ],
     obstacles: [
-      { type: 'updraft', x: 7, y: 9, w: 2, h: 3, minSpeed: 2.5, land: 6.5, fly: 7.0 },
-      { type: 'lightning', x: 17.0, y: 5.5, w: 2.0, h: 6.0, period: 4.0, phase: 0.0, warn: 1.0, strike: 0.35 },
-      { type: 'lightning', x: 20.5, y: 10.0, w: 2.0, h: 6.0, period: 4.0, phase: 0.5, warn: 1.0, strike: 0.35 },
+      { type: 'updraft', x: 7, y: 9, w: 2, h: 3, minSpeed: 2.5, land: 6.5, fly: 7.0, style: 'bannschacht' },
+      { type: 'lightning', x: 17.0, y: 5.5, w: 2.0, h: 6.0, period: 4.0, phase: 0.0, warn: 1.0, strike: 0.35, style: 'bannschlag' },
+      { type: 'lightning', x: 20.5, y: 10.0, w: 2.0, h: 6.0, period: 4.0, phase: 0.5, warn: 1.0, strike: 0.35, style: 'bannschlag' },
       { type: 'zauberspiegel', x0: 30, y0: 4, x1: 30, y1: 12 },
     ],
     autoDecor: { density: 0.09, seed: 83 },
@@ -753,17 +753,17 @@ const ZAUBER_LOGE = [
       '....................................',
     ],
     obstacles: [
-      { type: 'wanderloch', stellen: [[31.5, 4.5], [31.5, 8.5], [31.5, 12.5]], phase: 0.0 },
+      { type: 'wanderloch', stellen: [[31.5, 4.5], [31.5, 8.5], [31.5, 12.5]], phase: 0.0, style: 'siegelloch' },
       { type: 'mondzieher', x: 26.0, y: 8.5, r: 3.2, kraft: 8.0, takt: 6.0, phase: 0.35, core: 0.4 },
-      { type: 'grubenlampe', x: 6.5, y: 11.5, r: 4.0 },
-      { type: 'grubenlampe', x: 17.5, y: 4.5, r: 4.4 },
-      { type: 'grubenlampe', x: 30.5, y: 8.5, r: 5.0 },
+      { type: 'grubenlampe', x: 6.5, y: 11.5, r: 4.0, style: 'bannlicht' },
+      { type: 'grubenlampe', x: 17.5, y: 4.5, r: 4.4, style: 'bannlicht' },
+      { type: 'grubenlampe', x: 30.5, y: 8.5, r: 5.0, style: 'bannlicht' },
     ],
     autoDecor: { density: 0.09, seed: 97 },
   },
   {
     name: 'Die Kammer der Spiegel', par: 5, theme: 'erzmagierloge',
-    intro: 'Zwei Spiegel, vier Sterne und ein Bannmal vor dem Loch. An zwei der Sterne kommt man nur durch einen Spiegel heran, und es ist nicht derselbe - man muss sich vorher ueberlegen, welchen man wofuer nimmt.',
+    intro: 'Zwei Spiegel, vier Sterne und ein Bannmal vor dem Loch. An zwei der Sterne kommt man nur durch einen Spiegel heran, und es ist nicht derselbe - man muß sich vorher überlegen, welchen man wofür nimmt.',
     map: [
       '........................................',
       '........................................',
@@ -787,13 +787,13 @@ const ZAUBER_LOGE = [
       { type: 'zauberspiegel', x0: 12, y0: 5, x1: 12, y1: 13 },
       { type: 'zauberspiegel', x0: 26, y0: 5, x1: 26, y1: 13 },
       { type: 'sternbild', r: 0.5, sterne: [[6.0, 3.0], [6.0, 13.0], [22.0, 3.0], [30.0, 13.0]], tor: { x0: 32.0, y0: 2.0, x1: 32.0, y1: 15.0 } },
-      { type: 'bumper', x: 29.5, y: 6.5, r: 0.55, style: 'crystal', kick: 7.5 },
+      { type: 'bumper', x: 29.5, y: 6.5, r: 0.55, style: 'bannstein', kick: 7.5 },
     ],
     autoDecor: { density: 0.09, seed: 109 },
   },
   {
     name: 'Der Erzmagier', par: 6, theme: 'erzmagierloge',
-    intro: 'Die Pruefung der Loge: die Bluete anstossen, durch den Spiegel, in den richtigen Hut, am Mond vorbei - und dabei die drei Sterne mitnehmen, denn sonst steht am Ende ein Bannmal, das nicht aufgeht. Wer hier unter Par bleibt, hat ausgelernt.',
+    intro: 'Die Prüfung der Loge: die Blüte anstoßen, durch den Spiegel, in den richtigen Hut, am Mond vorbei - und dabei die drei Sterne mitnehmen, denn sonst steht am Ende ein Bannmal, das nicht aufgeht. Wer hier unter Par bleibt, hat ausgelernt.',
     map: [
       '............................................',
       '............................................',

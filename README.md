@@ -3074,8 +3074,29 @@ auf dieser Terrasse ein Gerät von einer Erscheinung.
 
 Alle sechs stehen im Baumodus unter *Aussehen*.
 
-**In der Erzmagierloge kommt die Optik weiter aus dem Bestand** – kein neues Bild, und
-trotzdem sieht keine aus wie im Märchenland. In der Sternenwarte geht es so weiter: Das **Auge des
+**Und die Erzmagierloge hat seit Fassung 205 ihre eigenen sieben** (`src/render_loge.js`). Ihre
+Handschrift: **schwarzer Marmor, Gold und violettes Bannfeuer.** Der Garten wächst, die Sternenwarte
+misst – hier wird **gebannt**: Alles auf diesen Bahnen ist ein gefesselter Zauber, in Stein
+geschnitten, mit Gold ausgelegt, und was sich darin regt, brennt violett. Daraus folgt die Regel,
+die alle sieben teilen: **Was glüht, ist gleich dran.** Das Gold liegt still, solange die Maschine
+ruht, und leuchtet auf, bevor sie zuschlägt – auf der Stufe Legende ist das keine Zierde, sondern
+die einzige Vorwarnung, die es gibt. Gebaut sind alle sieben aus einem Baustein, dem `bannsiegel()`
+(Goldring, Speichen, vier Runenzacken).
+
+| Maschine | Gestalt | Was man ihr jetzt ansieht |
+| --- | --- | --- |
+| Prellklotz | **Bannstein** | Marmorblock mit eingelegter Goldrune: Der Zauber sitzt im Stein und wartet, bis ihn jemand anstößt. |
+| Grubenlampe | **Bannlicht** | Eine goldene Schale, die über ihrer Stele **schwebt**, mit violettem Feuer. Im dunklen Bannkreis sind diese Lichter die Karte, nicht die Zierde. |
+| Blitz | **Bannschlag** | Eine Kette von Siegeln über die ganze Länge des Feldes – ein einzelnes in der Mitte sagte nichts darüber, wie weit die Gefahr reicht. Sie glühen alle zugleich: Es ist ein Bann, nicht sechs. |
+| Pendel | **Kettenlot** | Eine schwere Siegelscheibe an einer Kette aus einzelnen Gliedern. In der Sternenwarte misst eine Kugel am Draht, hier räumt ein Siegel an der Kette auf. |
+| Windrad | **Bannzeiger** | Ein Steinarm mit Goldschiene und einem Siegel an der Spitze, der sich um eine Marmorsäule dreht. |
+| Aufwind | **Bannschacht** | Ein Schacht mit Siegelrand, aus dem Bannfeuer steigt: Man weiß, **wer** einen wirft, statt es dem Wetter zuzuschreiben. |
+| Wanderndes Loch | **Siegelloch** | Die geschlossenen Stellen sind kaltes Gold auf Schwarz, die offene ein Schacht mit brennendem Ring. |
+
+Alle sieben stehen im Baumodus unter *Aussehen*. Damit hat **jede der drei Zauberreich-Welten ihre
+eigene Handschrift**, und keine Maschine im Zauberreich trägt mehr ein geliehenes Bild.
+
+In der Sternenwarte geht es so weiter: Das **Auge des
 Turms** aus dem Schattenreich wird zum Fernrohr, das **Pendel** der Uhrwerkstadt zum Lot des
 Astronomen, das **Zahnradfeld** zur Armillarsphäre, der **Strudel** der Flut zum Nebelwirbel und
 das **wandernde Tor** zum Wandelgang. In der Erzmagierloge kommen die härtesten dazu: der

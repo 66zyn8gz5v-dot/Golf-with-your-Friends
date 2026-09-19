@@ -150,11 +150,12 @@ const Editor = (deps) => {
     bumper: [['mushroom', 'Pilz'], ['crystal', 'Kristall'], ['rock', 'Fels'], ['coral', 'Koralle'],
              ['idol', 'Götze'], ['orb', 'Leuchtkugel'], ['grave', 'Grabstein'], ['eye', 'Auge'],
              ['fass', 'Faß'], ['feder', 'Sprungfeder'], ['springkraut', 'Springkraut'],
-             ['meteorit', 'Meteorit']],
+             ['meteorit', 'Meteorit'], ['bannstein', 'Bannstein']],
     rotor: [['wood', 'Windrad'], ['crystal', 'Kristall'], ['log', 'Baumstamm'], ['stone', 'Steinbalken'],
             ['broom', 'Besen'], ['tentacle', 'Tentakel'], ['darktentacle', 'Dunkler Tentakel'],
             ['knight', 'Ritterstatue'], ['vine', 'Ranke'], ['propeller', 'Propeller'],
-            ['scythe', 'Sense'], ['pendel', 'Pendel'], ['sprenger', 'Rasensprenger']],
+            ['scythe', 'Sense'], ['pendel', 'Pendel'], ['sprenger', 'Rasensprenger'],
+            ['bannzeiger', 'Bannzeiger']],
     magnet: [['', 'Kristall'], ['pearl', 'Perle'], ['coral', 'Koralle'], ['soul', 'Seelenlicht'],
              ['pollen', 'Pollenstrudel']],
     /* Der Runenstein ist der Entwurf aus Fassung 196: im Garten wieder herausgenommen, hier
@@ -163,7 +164,12 @@ const Editor = (deps) => {
     /* Die sechs Instrumente der Sternenwarte: dasselbe Verhalten, aus Messing statt aus
        Uhrwerkstadt, Schattenreich und Flut. */
     eyetower: [['', 'Turm des Auges'], ['tubus', 'Großes Fernrohr']],
-    pendulum: [['', 'Pendel'], ['foucault', 'Foucault-Pendel']],
+    pendulum: [['', 'Pendel'], ['foucault', 'Foucault-Pendel'], ['kettenlot', 'Kettenlot']],
+    /* Die sieben Bannzeichen der Erzmagierloge: schwarzer Marmor, Gold, violettes Bannfeuer. */
+    grubenlampe: [['', 'Grubenlampe'], ['bannlicht', 'Bannlicht']],
+    lightning: [['', 'Blitz'], ['bannschlag', 'Bannschlag']],
+    updraft: [['', 'Aufwind'], ['bannschacht', 'Bannschacht']],
+    wanderloch: [['', 'Wanderndes Loch'], ['siegelloch', 'Siegelloch']],
     gearfield: [['', 'Zahnradfeld'], ['meridian', 'Meridianschiene']],
     strudel: [['', 'Strudel'], ['spiralnebel', 'Spiralnebel']],
     wandergate: [['', 'Wanderndes Tor'], ['kulisse', 'Planetariumskulisse']],

@@ -170,26 +170,34 @@ def spiegel(x0, y0, x1, y1):
     """Zauberspiegel. Wer hineinrollt, kommt drüben seitenverkehrt heraus."""
     return {'type': 'zauberspiegel', 'x0': x0, 'y0': y0, 'x1': x1, 'y1': y1}
 
-def blitz(x, y, w=2.0, h=4.0, takt=4.5, phase=0.0):
-    return {'type': 'lightning', 'x': x, 'y': y, 'w': w, 'h': h, 'period': takt,
-            'phase': phase, 'warn': 1.0, 'strike': 0.35}
+def blitz(x, y, w=2.0, h=4.0, takt=4.5, phase=0.0, stil=None):
+    o = {'type': 'lightning', 'x': x, 'y': y, 'w': w, 'h': h, 'period': takt,
+         'phase': phase, 'warn': 1.0, 'strike': 0.35}
+    if stil: o['style'] = stil
+    return o
 
-def aufwind(x, y, w=2, h=3, land=6.0, flug=7.0):
-    return {'type': 'updraft', 'x': x, 'y': y, 'w': w, 'h': h, 'minSpeed': 2.5,
-            'land': land, 'fly': flug}
+def aufwind(x, y, w=2, h=3, land=6.0, flug=7.0, stil=None):
+    o = {'type': 'updraft', 'x': x, 'y': y, 'w': w, 'h': h, 'minSpeed': 2.5,
+         'land': land, 'fly': flug}
+    if stil: o['style'] = stil
+    return o
 
 def fallbeil(x, y, h=3.0, takt=5.0, phase=0.0):
     return {'type': 'guillotine', 'x': x, 'y': y, 'w': 0.35, 'h': h, 'period': takt,
             'phase': phase, 'hold': 0.32}
 
-def wanderloch(stellen, phase=0.0):
+def wanderloch(stellen, phase=0.0, stil=None):
     """Das wandernde Loch der Uhrwerkstadt. Es IST das Loch, kein Hindernis daneben - darum muß
     das 'H' der Karte auf seiner ersten Stelle stehen (siehe validate.mjs)."""
-    return {'type': 'wanderloch', 'stellen': [[float(p[0]), float(p[1])] for p in stellen],
-            'phase': phase}
+    o = {'type': 'wanderloch', 'stellen': [[float(p[0]), float(p[1])] for p in stellen],
+         'phase': phase}
+    if stil: o['style'] = stil
+    return o
 
-def lampe(x, y, r=3.4):
-    return {'type': 'grubenlampe', 'x': x, 'y': y, 'r': r}
+def lampe(x, y, r=3.4, stil=None):
+    o = {'type': 'grubenlampe', 'x': x, 'y': y, 'r': r}
+    if stil: o['style'] = stil
+    return o
 
 def nebel(x, y, r=3.0, dreh=1, stil=None):
     """Der Nebelwirbel am Himmel (Verhalten: der Strudel der Flut)."""
@@ -655,7 +663,7 @@ bahn(GARTEN, 'Der Hutständer', 'gewaechshaus', f, [
     pilz(9.5, 10.5, stil='springkraut'),
     pilz(24.5, 7.5, stil='springkraut'),
     windrad(34.5, 6.5, blades=2, laenge=1.3, tempo=0.9, stil='sprenger'),
-], par=4,
+], par=3,   # die Bot-Prüfung nach dem Umbau: Median 2, Schnitt 2,25 – Par 4 wäre ein geschenkter Schlag
 intro='Durch die erste Wand kommt nur, wer sich verzaubern läßt: hinein in einen Hut, heraus aus '
       'dem, der gerade leuchtet – und wer in den leuchtenden rollt, aus dem nächsten. Einer der '
       'beiden Ausgänge steht in einer Nische: Von dort muß man erst zur Seite und dann hinaus, das '
@@ -977,8 +985,8 @@ intro='Die Prüfung der Warte: erst die Blüte anstoßen und über die Ranke, da
 LOGE = welt('loge', 'ZAUBER_LOGE', 'Erzmagierloge')
 
 # --- 1 ---------------------------------------------------------------------
-# Vor der Loge. Hier wird der Spiegel erklaert, und sonst nichts. Der zweite Durchlass liegt UNTEN;
-# wer also unten herauskommen will, muss OBEN auftreffen. Genau das ist die ganze Maschine, und
+# Vor der Loge. Hier wird der Spiegel erklärt, und sonst nichts. Der zweite Durchlass liegt UNTEN;
+# wer also unten herauskommen will, muß OBEN auftreffen. Genau das ist die ganze Maschine, und
 # genau das steht als Spiegelbild auf dem Boden.
 f = leer(36, 15)
 fuell(f, 1, 2, 34, 12)
@@ -987,15 +995,15 @@ fuell(f, 26, 2, 27, 8, 'x')                                   # dahinter geht es
 setz(f, 4, 7, 'T'); setz(f, 32, 11, 'H')
 bahn(LOGE, 'Vor der Loge', 'erzmagierloge', f, [
     spiegel(18, 4, 18, 11),
-    windrad(23.0, 10.5, blades=3, laenge=1.5, tempo=1.2, stil='crystal'),
+    windrad(23.0, 10.5, blades=3, laenge=1.5, tempo=1.2, stil='bannzeiger'),
 ], par=4,
 intro='Der Spiegel ist der einzige Weg durch die Wand, und er wirft seitenverkehrt aus. Dahinter '
-      'geht es nur unten weiter - wer also unten ankommen will, muss oben auftreffen. Sein '
-      'Spiegelbild steht drueben und sagt einem vorher, wo das sein wird.')
+      'geht es nur unten weiter - wer also unten ankommen will, muß oben auftreffen. Sein '
+      'Spiegelbild steht drüben und sagt einem vorher, wo das sein wird.')
 
 # --- 2 ---------------------------------------------------------------------
 # Der Spiegelsaal. Zwei Spiegel hintereinander. Zweimal seitenverkehrt ist wieder richtig herum -
-# aber der Pfeiler dazwischen sorgt dafuer, dass man nicht zweimal an derselben Stelle auftrifft.
+# aber der Pfeiler dazwischen sorgt dafür, dass man nicht zweimal an derselben Stelle auftrifft.
 f = leer(38, 16)
 fuell(f, 1, 2, 36, 13)
 fuell(f, 13, 2, 14, 4, 'x'); fuell(f, 13, 12, 14, 13, 'x')
@@ -1005,9 +1013,9 @@ setz(f, 4, 8, 'T'); setz(f, 33, 3, 'H')
 bahn(LOGE, 'Der Spiegelsaal', 'erzmagierloge', f, [
     spiegel(13, 5, 13, 12),
     spiegel(26, 5, 26, 12),
-    pilz(31.5, 10.5, stil='crystal'),
+    pilz(31.5, 10.5, stil='bannstein'),
 ], par=4,
-intro='Zwei Spiegel, dazwischen ein Pfeiler, um den man herum muss. Zweimal seitenverkehrt waere '
+intro='Zwei Spiegel, dazwischen ein Pfeiler, um den man herum muß. Zweimal seitenverkehrt wäre '
       'wieder richtig herum - nur trifft man wegen des Pfeilers beim zweiten Mal woanders auf als '
       'beim ersten.')
 
@@ -1021,17 +1029,17 @@ fuell(f, 22, 8, 23, 13, 'x')          # zweiter oben
 setz(f, 4, 10, 'T'); setz(f, 32, 10, 'H')
 bahn(LOGE, 'Das Bannmal', 'bannkreis', f, [
     sternbild([(5, 4), (5, 12), (18, 11), (26, 4)], (28, 2, 28, 14)),
-    lampe(6.5, 8.5, r=4.4),
-    lampe(18.5, 8.5, r=4.4),
-    lampe(30.5, 9.5, r=4.0),
+    lampe(6.5, 8.5, r=4.4, stil='bannlicht'),
+    lampe(18.5, 8.5, r=4.4, stil='bannlicht'),
+    lampe(30.5, 9.5, r=4.0, stil='bannlicht'),
 ], par=5, dunkel=0.55, lampe=3.2,
 intro='In der Gruft sieht man nur, was im Licht der Lampen steht. Vier Sterne liegen in drei '
       'Kammern verteilt, und erst wenn alle brennen, geht das Bannmal vor dem Loch auf. Wer beim '
-      'Hinweg nicht hinsieht, sucht sie beim Rueckweg.')
+      'Hinweg nicht hinsieht, sucht sie beim Rückweg.')
 
 # --- 4 ---------------------------------------------------------------------
-# Der Rat der Neun. Vier Huete, ein Mond und ein Lot. Die Huete sind hier kein Umweg, sondern die
-# Abkuerzung - sie fuehren durch die Waende, an denen alle anderen entlangmuessen.
+# Der Rat der Neun. Vier Hüte, ein Mond und ein Lot. Die Hüte sind hier kein Umweg, sondern die
+# Abkürzung - sie führen durch die Wände, an denen alle anderen entlangmüssen.
 f = leer(40, 16)
 fuell(f, 1, 2, 38, 13)
 fuell(f, 15, 2, 16, 5, 'x'); fuell(f, 15, 10, 16, 13, 'x')
@@ -1040,21 +1048,21 @@ setz(f, 4, 8, 'T'); setz(f, 36, 4, 'H')
 bahn(LOGE, 'Der Rat der Neun', 'erzmagierloge', f, [
     huete([(9, 4), (9, 12), (22, 4), (22, 12)], takt=2.2),
     mond(21.0, 7.5, r=3.2, kraft=9.0, takt=5.5, phase=0.2),
-    pendel(33.0, 4.0, laenge=3.4, amp=52),
+    pendel(33.0, 4.0, laenge=3.4, amp=52, stil='kettenlot'),
 ], par=5,
-intro='Vier Hueten leuchtet reihum einer, und der Takt ist schnell. Mitten zwischen ihnen steht ein '
-      'Mond, der zieht und stoesst - wer im falschen Augenblick in den Hut rollt, kommt richtig '
+intro='Vier Hüten leuchtet reihum einer, und der Takt ist schnell. Mitten zwischen ihnen steht ein '
+      'Mond, der zieht und stößt - wer im falschen Augenblick in den Hut rollt, kommt richtig '
       'heraus und landet trotzdem falsch. Am Ende schwingt das Lot des Astronomen.')
 
 # --- 5 ---------------------------------------------------------------------
-# Die Ranken der Gruft. Zwei Luecken, dazwischen ein Spiegel, und ueber allem die Dunkelheit.
+# Die Ranken der Gruft. Zwei Lücken, dazwischen ein Spiegel, und über allem die Dunkelheit.
 #
 # DIE BLUETEN LIEGEN AM GANG, NICHT WEIT AB DAVON. Ein Versuch, sie in Nischen zu legen, ist
 # gescheitert - nicht am Spiel, sondern am Bot: Er kennt nur "wo ist das Loch" und keine
-# Zwischenziele, lief also immer geradeaus gegen die Luecke und erreichte das Schlaglimit. Eine
-# Bahn, die das Pruefwerkzeug nicht mehr messen kann, ist keine gepruefte Bahn. Der Reiz liegt
-# hier ohnehin in der Dosierung: Die Bluete anstossen UND genug Schwung behalten, um in der Zeit
-# hinueberzukommen - zweimal hintereinander, mit einem Spiegel dazwischen.
+# Zwischenziele, lief also immer geradeaus gegen die Lücke und erreichte das Schlaglimit. Eine
+# Bahn, die das Prüfwerkzeug nicht mehr messen kann, ist keine geprüfte Bahn. Der Reiz liegt
+# hier ohnehin in der Dosierung: Die Blüte anstoßen UND genug Schwung behalten, um in der Zeit
+# hinüberzukommen - zweimal hintereinander, mit einem Spiegel dazwischen.
 f = leer(38, 16)
 fuell(f, 1, 2, 36, 13)
 fuell(f, 10, 2, 13, 5, 'x'); fuell(f, 10, 11, 13, 13, 'x')    # der Gang der ersten Ranke
@@ -1065,16 +1073,16 @@ bahn(LOGE, 'Die Ranken der Gruft', 'bannkreis', f, [
     ranke(10, 6, 4, 5, 8.5, 7.0, dauer=4.5),
     spiegel(21, 5, 21, 12),
     ranke(27, 7, 4, 4, 25.5, 9.5, dauer=4.5),
-    lampe(8.5, 7.0, r=4.4),
-    lampe(25.5, 9.5, r=4.4),
+    lampe(8.5, 7.0, r=4.4, stil='bannlicht'),
+    lampe(25.5, 9.5, r=4.4, stil='bannlicht'),
 ], par=4, dunkel=0.5, lampe=3.2,
-intro='Zwei Luecken, dazwischen ein Spiegel, und ueber allem die Dunkelheit der Gruft. Jede Bluete '
+intro='Zwei Lücken, dazwischen ein Spiegel, und über allem die Dunkelheit der Gruft. Jede Blüte '
       'startet ihre eigene Uhr - und der Spiegel wirft einen seitenverkehrt aus, also gerade nicht '
       'dorthin, wo man beim Schlagen hingesehen hat.')
 
 # --- 6 ---------------------------------------------------------------------
 # Der Blitzgang. Zwei Blitze schlagen im Wechsel in den mittleren Gang, der Aufwind hebt einen
-# darueber hinweg - und dahinter steht ein Spiegel, der einen im falschen Augenblick zurueckwirft.
+# darüber hinweg - und dahinter steht ein Spiegel, der einen im falschen Augenblick zurückwirft.
 f = leer(38, 16)
 fuell(f, 1, 2, 36, 13)
 fuell(f, 12, 2, 13, 8, 'x')           # erster Durchlass unten
@@ -1082,12 +1090,12 @@ fuell(f, 24, 9, 25, 13, 'x')          # zweiter oben
 fuell(f, 30, 2, 31, 3, 'x'); fuell(f, 30, 12, 31, 13, 'x')    # der Rahmen des Spiegels
 setz(f, 4, 5, 'T'); setz(f, 34, 12, 'H')
 bahn(LOGE, 'Der Blitzgang', 'erzmagierloge', f, [
-    aufwind(7, 9, w=2, h=3, land=6.5),
-    blitz(17.0, 5.5, w=2.0, h=6.0, takt=4.0),
-    blitz(20.5, 10.0, w=2.0, h=6.0, takt=4.0, phase=0.5),
+    aufwind(7, 9, w=2, h=3, land=6.5, stil='bannschacht'),
+    blitz(17.0, 5.5, w=2.0, h=6.0, takt=4.0, stil='bannschlag'),
+    blitz(20.5, 10.0, w=2.0, h=6.0, takt=4.0, phase=0.5, stil='bannschlag'),
     spiegel(30, 4, 30, 12),
 ], par=5,
-intro='Zwei Blitze schlagen im Wechsel in den mittleren Gang, und der Aufwind hebt einen ueber den '
+intro='Zwei Blitze schlagen im Wechsel in den mittleren Gang, und der Aufwind hebt einen über den '
       'ersten hinweg. Dahinter steht ein Spiegel - der wirft einen zwar auf die richtige Seite, '
       'aber nur, wenn man an der richtigen Stelle ankommt.')
 
@@ -1097,14 +1105,14 @@ intro='Zwei Blitze schlagen im Wechsel in den mittleren Gang, und der Aufwind he
 f = leer(36, 16)
 fuell(f, 1, 2, 34, 13)
 fuell(f, 10, 2, 11, 9, 'x')           # der Durchlass liegt unten
-fuell(f, 22, 6, 23, 13, 'x')          # und der naechste oben - ein Zickzack um das Loch herum
+fuell(f, 22, 6, 23, 13, 'x')          # und der nächste oben - ein Zickzack um das Loch herum
 setz(f, 4, 11, 'T'); setz(f, 31, 4, 'H')
 bahn(LOGE, 'Das Wanderloch', 'bannkreis', f, [
-    wanderloch([(31.5, 4.5), (31.5, 8.5), (31.5, 12.5)]),
+    wanderloch([(31.5, 4.5), (31.5, 8.5), (31.5, 12.5)], stil='siegelloch'),
     mond(26.0, 8.5, r=3.2, kraft=8.0, takt=6.0, phase=0.35),
-    lampe(6.5, 11.5, r=4.0),
-    lampe(17.5, 4.5, r=4.4),
-    lampe(30.5, 8.5, r=5.0),
+    lampe(6.5, 11.5, r=4.0, stil='bannlicht'),
+    lampe(17.5, 4.5, r=4.4, stil='bannlicht'),
+    lampe(30.5, 8.5, r=5.0, stil='bannlicht'),
 ], par=5, dunkel=0.52, lampe=3.2,
 intro='Das Loch bleibt nicht, wo es ist - es wandert zwischen drei Stellen. Und der Mond davor '
       'zieht den Ball genau dann, wenn man ihn gerade nicht ziehen lassen will. In der Dunkelheit '
@@ -1123,11 +1131,11 @@ bahn(LOGE, 'Die Kammer der Spiegel', 'erzmagierloge', f, [
     spiegel(12, 5, 12, 13),
     spiegel(26, 5, 26, 13),
     sternbild([(6, 3), (6, 13), (22, 3), (30, 13)], (32, 2, 32, 15)),
-    pilz(29.5, 6.5, stil='crystal'),
+    pilz(29.5, 6.5, stil='bannstein'),
 ], par=5,
 intro='Zwei Spiegel, vier Sterne und ein Bannmal vor dem Loch. An zwei der Sterne kommt man nur '
-      'durch einen Spiegel heran, und es ist nicht derselbe - man muss sich vorher ueberlegen, '
-      'welchen man wofuer nimmt.')
+      'durch einen Spiegel heran, und es ist nicht derselbe - man muß sich vorher überlegen, '
+      'welchen man wofür nimmt.')
 
 # --- 9 ---------------------------------------------------------------------
 # Der Erzmagier. Die letzte Bahn des Zauberreichs: Ranke, Spiegel, Hut, Mond und Sternbild,
@@ -1145,7 +1153,7 @@ bahn(LOGE, 'Der Erzmagier', 'erzmagierloge', f, [
     mond(33.0, 10.0, r=3.2, kraft=8.5, takt=5.5, phase=0.1),
     sternbild([(15, 8), (24, 9), (33, 4)], (37, 2, 37, 16)),
 ], par=6,
-intro='Die Pruefung der Loge: die Bluete anstossen, durch den Spiegel, in den richtigen Hut, am '
+intro='Die Prüfung der Loge: die Blüte anstoßen, durch den Spiegel, in den richtigen Hut, am '
       'Mond vorbei - und dabei die drei Sterne mitnehmen, denn sonst steht am Ende ein Bannmal, '
       'das nicht aufgeht. Wer hier unter Par bleibt, hat ausgelernt.')
 
