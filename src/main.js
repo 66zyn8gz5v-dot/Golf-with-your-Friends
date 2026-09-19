@@ -2096,7 +2096,18 @@
      Endlosschleife nicht. */
   const imSog = (lv, e, x, y) => (lv.obstacles || []).some(o =>
     o.type === 'stroemung' && (o.ebene || 0) === e && o.inside && o.inside(x, y));
-  const ruhigerBoden = (lv, e, x, y) => trockenerBoden(lv, e, x, y) && !imSog(lv, e, x, y);
+  /* Und die dritte Stelle: auf einer Rankenbrücke. Ihre Felder sind in der Karte gewöhnlicher
+     Boden – die Ranke sorgt nur dafür, daß man dort NICHT hindurchfällt (siehe
+     obstacles_zauber.js). Wer nach einem Strafschlag dorthin zurückgelegt wird, liegt über einer
+     Lücke, deren Ranke längst verwelkt ist: Er fällt sofort wieder, bekommt den nächsten
+     Strafschlag, wird an dieselbe Stelle gelegt – und das ohne Ende, bis das Schlaglimit erreicht
+     ist. Derselbe Fehler wie beim Wasser und bei der Strömung, nur eine Maschine weiter.
+     AUF DER BRÜCKE LIEGENZUBLEIBEN IST DAGEGEN RICHTIG und bleibt es: Wer zu sacht schlägt, fällt
+     mit der Ranke, und das ist die Aufgabe der Maschine. Verboten ist nur, ihn dort WIEDER
+     HINZULEGEN – ein Strafschlag darf wehtun, eine Endlosschleife nicht. */
+  const aufRanke = (lv, e, x, y) => (lv.obstacles || []).some(o =>
+    o.type === 'ranke' && (o.ebene || 0) === e && o.drauf && o.drauf({ x, y }));
+  const ruhigerBoden = (lv, e, x, y) => trockenerBoden(lv, e, x, y) && !imSog(lv, e, x, y) && !aufRanke(lv, e, x, y);
   /* Wohin der Ball nach einem Strafschlag zurückkommt.
      Solange nichts den Boden verändert, konnte der gemerkte Ruhepunkt gar nicht naß sein: In Wasser
      bleibt man nicht liegen, man geht unter. Seit dem Gießlöffel kann sich Boden aber verwandeln,

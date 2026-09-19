@@ -3016,6 +3016,14 @@ Dickicht – und dazu zwei eigene:
   hintereinander sind ausdrücklich erlaubt.
 * **Man muß es in der Zeit auch schaffen.** Gerechnet wird mit demselben Reibungswert wie in der
   Physik (4,2) und mit einem ehrlichen Tempo an der Blüte (12), nicht mit dem Höchstschlag.
+* **Und nach einem Sturz wird niemand auf die Brücke zurückgelegt.** Ihre Felder sind in der Karte
+  gewöhnlicher Boden; wer dort abgelegt wird, fällt sofort wieder, bekommt den nächsten
+  Strafschlag und landet wieder dort – bis zum Schlaglimit. Fynn hat das am 19. September auf
+  *Die erste Blüte* gefunden. Es ist dieselbe Falle wie beim Wasser (seit dem Gießlöffel kann
+  Boden zu Wasser werden) und in der Strömung (sie trägt auch einen liegenden Ball), und darum
+  steht die Regel jetzt an derselben Stelle wie jene beiden: in `ruhigerBoden` in `main.js`,
+  festgehalten von `node tools/ruhepunkt.mjs`. **Auf** der Brücke liegenzubleiben bleibt richtig –
+  wer zu sacht schlägt, fällt mit der Ranke. Verboten ist nur, ihn dort wieder hinzulegen.
 * **Der Sockel des Mondziehers steht auf Boden.** Er ist fest; über dem Abgrund stünde er im Nichts.
 * **Das Sternentor sperrt wirklich etwas ab** – mit geschlossenem Tor darf es keinen Weg ins Loch
   geben, sonst ist das ganze Sternbild Schmuck. Gerechnet wird dabei nicht mit gesperrten Kacheln,
@@ -3321,6 +3329,7 @@ tools/flut.mjs          prüft die Maschinen der Flut: Beckenlauf, Durchrollen, 
 tools/flut.py           baut die Bahnen der Flut – und lehnt jede ab, auf der man warten müsste
 tools/baumodus.mjs      setzt im Browser jede der 63 Maschinen des Baumodus einmal hin und faßt jeden Regler an
 tools/zauber.mjs        prüft die Maschinen des Zauberreichs: Ranke, Hüte, Mondzieher, Sternbild
+tools/ruhepunkt.mjs     prüft, wohin der Ball nach einem Strafschlag zurückkommt – nie dorthin, wo er gleich wieder fällt
 tools/zauber.py         baut die Bahnen des Zauberreichs – und lehnt jede Blüte ab, die man nicht rechtzeitig erreicht
 style.css         Oberfläche
 src/themes.js     Farbpaletten und Deko je Welt
