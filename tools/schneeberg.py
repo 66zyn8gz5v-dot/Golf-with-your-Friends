@@ -216,6 +216,22 @@ k.rect(2, 3, 27, 9)
 k.rect(20, 5, 24, 8, 'i')                          # die Eisplatte vor dem Loch - hier faellt der Schnee ab
 k.put(4, 6, 'T'); k.put(25, 6, 'H')
 hoehen, schraegen, hs = hang(k, [10, 17], 0.6, 4.8)
+# ---------------------------------------------------------------------------
+# DIE PARS DIESER WELT SIND NACHGERECHNET (GAMES=20, tools/audit/audit.mjs snow).
+#
+# Sie standen fast alle einen bis zwei Schläge zu hoch: Waldschneise, Lawinenhang, Felsband und
+# Blankeis kamen auf Bot-Median 2 bei Par 4, Der Grat auf Median 2 bei Par 5. Ein Par, das zwei
+# Schläge über dem liegt, was ein ordentlicher Spieler braucht, ist kein Ziel mehr, sondern ein
+# Geschenk - und es entwertet die Bahnen, auf denen das Par wirklich sitzt.
+#
+# Regel, nach der hier gesetzt wird: Das Par liegt auf dem Bot-Median oder hoechstens EINEN
+# Schlag darueber. Wo die Streuung gross ist (Schneewaechte: Median 2, Schnitt 3,9), gilt der
+# obere Wert.
+#
+# DER GIPFEL IST DER UMGEKEHRTE FALL und steht jetzt auf Par 10 statt 8: Der Normalspieler braucht
+# im Median 11, und der Profi-Sucher findet in zwoelf Schlaegen ueberhaupt keine Loesung. Drei von
+# zwanzig Durchgaengen erreichten das Schlaglimit. Das Par ist damit ehrlich - die Bahn selbst ist
+# es noch nicht, und das steht im Bericht.
 bahn(name='Talstation', par=3, theme='snowfoot', maxStrokes=12, seed=301, dichte=0.38,
      schnee=SCHNEE_WACHS,
      intro='Die erste Lektion des Berges, und sie steht gleich am Anfang: Wer durch den Schnee '
@@ -238,7 +254,7 @@ k.rect(8, 6, 10, 7, 's'); k.rect(21, 6, 23, 7, 's')  # Tiefschnee bremst - und s
 k.rect(25, 5, 28, 8, 'i')
 k.put(4, 6, 'T'); k.put(27, 7, 'H')
 hoehen, schraegen, hs = hang(k, [6, 16], 0.6, 4.8)
-bahn(name='Waldschneise', par=4, theme='snowfoot', maxStrokes=14, seed=302, dichte=0.4,
+bahn(name='Waldschneise', par=3, theme='snowfoot', maxStrokes=14, seed=302, dichte=0.4,
      schnee=SCHNEE_WACHS,
      # Ohne Windsaecke: Diese Bahn hat als einzige keinen Wind, und ein Windsack am Rand wuerde
      # einen versprechen. Was nicht weht, soll auch nicht wehen aussehen.
@@ -262,7 +278,7 @@ for (bx, by) in [(11, 5), (16, 8), (21, 5), (13, 10)]:   # Felsbloecke als Decku
 k.rect(24, 6, 27, 9, 'i')
 k.put(4, 7, 'T'); k.put(27, 7, 'H')
 hoehen, schraegen, hs = hang(k, [7, 18], 0.6, 5.0)
-bahn(name='Lawinenhang', par=4, theme='snowfoot', maxStrokes=16, seed=303, dichte=0.3,
+bahn(name='Lawinenhang', par=3, theme='snowfoot', maxStrokes=16, seed=303, dichte=0.3,
      schnee=SCHNEE_WACHS,
      intro='Über dem Hang hängt eine Wächte, und alle neun Sekunden kommt sie herunter. Vorher '
            'staubt es an der Abrisskante – das ist die Vorwarnung. Wer offen liegt, wird ein Stück '
@@ -284,7 +300,7 @@ k.rect(18, 7, 20, 8, 's')
 k.rect(26, 7, 29, 8, 'i')                          # und eine zweite kurz vor dem Loch
 k.put(3, 7, 'T'); k.put(30, 8, 'H')
 hoehen, schraegen, hs = hang(k, [10, 22], 0.7, 5.2)
-bahn(name='Felsband', par=4, theme='snowrock', maxStrokes=16, seed=304, dichte=0.22,
+bahn(name='Felsband', par=3, theme='snowrock', maxStrokes=16, seed=304, dichte=0.22,
      schnee=SCHNEE_WACHS,
      intro='Ein Band aus Fels, vier Felder breit, und zwei Nasen springen hinein. Hier kostet das '
            'Dickwerden zum ersten Mal wirklich: Ein zugeschneiter Ball kommt zwischen den Nasen '
@@ -339,7 +355,7 @@ for (bx, by) in [(21, 6), (25, 9)]:
 k.rect(26, 7, 28, 9, 'i')                          # hinter dem Spalt, kurz vor dem Loch
 k.put(3, 7, 'T'); k.put(29, 8, 'H')
 hoehen, schraegen, hs = hang(k, [20, 24], 0.7, 5.2)
-bahn(name='Schneewächte', par=5, theme='snowrock', maxStrokes=18, seed=306, dichte=0.24,
+bahn(name='Schneewächte', par=4, theme='snowrock', maxStrokes=18, seed=306, dichte=0.24,
      schnee=SCHNEE_WACHS,
      intro='Zwei Wächten liegen über dem Spalt, oben und unten. Jede trägt genau einen Schlag – '
            'wer zurückwill, findet nichts mehr vor. Man hat also zwei Versuche, und muss sich beim '
@@ -360,7 +376,7 @@ k.rect(2, 4, 5, 11, '#')                           # nur die Startzunge ist Schn
 k.rect(13, 7, 14, 8, 'x'); k.rect(22, 5, 23, 6, 'x')
 k.put(3, 7, 'T'); k.put(29, 8, 'H')
 hoehen, schraegen, hs = hang(k, [], 0.7, 5.2)
-bahn(name='Blankeis', par=4, theme='glacier', maxStrokes=16, seed=307, dichte=0.12,
+bahn(name='Blankeis', par=3, theme='glacier', maxStrokes=16, seed=307, dichte=0.12,
      schnee=SCHNEE_WACHS,
      intro='Der Gletscher, und damit die Umkehrung: Hier ist alles Eis. Der Ball setzt nichts an – '
            'im Gegenteil, was er mitgebracht hat, streift er gleich auf den ersten Metern ab. '
@@ -393,7 +409,7 @@ k.rect(18, 7, 19, 9, '#');  k.rect(16, 7, 17, 9, '#');   k.rect(20, 7, 21, 9, '#
 k.rect(25, 10, 26, 12, '#'); k.rect(23, 10, 24, 12, '#'); k.rect(27, 10, 28, 12, '#')
 k.put(3, 8, 'T'); k.put(31, 8, 'H')
 hoehen, schraegen, hs = hang(k, [], 0.7, 5.2)
-bahn(name='Gletscherspalten', par=5, theme='glacier', maxStrokes=18, seed=308, dichte=0.1,
+bahn(name='Gletscherspalten', par=4, theme='glacier', maxStrokes=18, seed=308, dichte=0.1,
      schnee=SCHNEE_WACHS,
      # Kein Windsack: Der Einleitungstext sagt, in der Spalte sei es still - dann darf am Rand
      # auch keiner wehen.
@@ -441,7 +457,7 @@ k.rect(26, 7, 29, 9, 'i')
 k.rect(13, 6, 15, 10, '#')                         # eine Verbreiterung zum Durchatmen
 k.put(3, 8, 'T'); k.put(30, 8, 'H')
 hoehen, schraegen, hs = hang(k, [12, 23], 0.8, 5.6)
-bahn(name='Der Grat', par=5, theme='summit', maxStrokes=18, seed=310, dichte=0.08,
+bahn(name='Der Grat', par=3, theme='summit', maxStrokes=18, seed=310, dichte=0.08,
      schnee=SCHNEE_WACHS,
      intro='Drei Felder breit, links und rechts nichts. Auf dem Grat liegen zwei Felder '
            'Tiefschnee – dort bremst der Ball, und dort setzt er am meisten an. Das Eis kommt '
@@ -509,7 +525,7 @@ hoehen, schraegen, hs = hang(k, [], 0.8, 5.8)
 # Der Bot lief darum in 2 von 10 Runden hinein und kam nicht ins Loch, waehrend keine andere
 # Schneebahn das ein einziges Mal tat. 29 sind 3,6-mal Par - dasselbe Verhaeltnis wie bei den
 # anderen Par-5-Bahnen. Das Limit ist ein Netz, keine zweite Aufgabe.
-bahn(name='Der Gipfel', par=8, theme='summit', maxStrokes=29, seed=312, dichte=0.08,
+bahn(name='Der Gipfel', par=10, theme='summit', maxStrokes=29, seed=312, dichte=0.08,
      schnee=SCHNEE_WACHS,
      intro='Drei Etagen bis zum Gipfel, zwei Gondeln dazwischen, und ganz oben die letzte '
            'Eisplatte drei Felder vor dem Loch. Der Wind ist hier am stärksten, der Tiefschnee auf '
