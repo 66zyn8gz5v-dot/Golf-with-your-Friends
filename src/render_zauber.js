@@ -99,6 +99,115 @@ Object.assign(Renderer.prototype, {
     ctx.beginPath(); ctx.arc(kx, ky, s * 0.1, 0, TAU); ctx.fill();
   },
 
+  /* ================= Die Teleporter des Zauberreichs =================
+     Zwei Gestalten für dieselbe Maschine: der HUT (Vorgabe) und der RUNENSTEIN (`style:
+     'runenstein'`). Der Stein war Fassung 196 lang die Vorgabe und ist wieder herausgenommen
+     worden – er ist ein Bauwerk und paßt damit in eine Loge oder eine Gruft, aber nicht in einen
+     Garten, in dem Lehrlinge üben. Aufgehoben ist er trotzdem: Er steht im Baumodus unter
+     *Aussehen*, und wenn eine spätere Welt ihn braucht, ist er da. Ein Entwurf, den man wegwirft,
+     weil er gerade nicht paßt, muß später noch einmal gebaut werden.
+
+  /* ================= Die Zauberhüte =================
+     Auf dem Boden steht, welcher Hut gerade der Ausgang ist: ein Kreis aus Sternen unter ihm. Der
+     nächste glimmt schon auf, bevor er dran ist – daran legt man den Schlag an. */
+  drawZauberhutFloor(ctx, ob, t) {
+    if (!ob.bereit) return;
+    const s = this.scale;
+    for (let i = 0; i < ob.orte.length; i++) {
+      const [hx, hy] = ob.orte[i];
+      const an = i === ob.aktiv, gleich = i === ob.naechste ? ob.gleich : 0;
+      const hell = an ? 1 : gleich;
+      this.isoEllipse(ctx, hx, hy, 0.004, ob.r * 2.1, `rgba(120,80,190,${0.18 + 0.3 * hell})`);
+      if (hell < 0.02) continue;
+      const [cx, cy] = this.proj(hx, hy, 0.006);
+      ctx.strokeStyle = `rgba(255,225,150,${0.35 + 0.6 * hell})`;
+      ctx.lineWidth = Math.max(1.5, s * 0.06);
+      ctx.beginPath(); ctx.ellipse(cx, cy, ob.r * 1.9 * s, ob.r * 1.9 * s * this.cam.tilt, 0, 0, TAU); ctx.stroke();
+      // Sterne, die im Kreis laufen – der Ausgang funkelt, der nächste glimmt nur
+      ctx.fillStyle = `rgba(255,240,190,${0.5 + 0.5 * hell})`;
+      for (let k = 0; k < 6; k++) {
+        const a = t * 1.3 + k * (TAU / 6), rr = ob.r * (1.55 + 0.25 * Math.sin(t * 3 + k));
+        const [sx, sy] = this.proj(hx + Math.cos(a) * rr, hy + Math.sin(a) * rr, 0.01);
+        ctx.beginPath(); ctx.arc(sx, sy, s * 0.05 * (0.6 + hell), 0, TAU); ctx.fill();
+      }
+    }
+  },
+
+  /* Die Hüte selbst: Krempe, Kegel, geknickte Spitze. Der leuchtende trägt einen Stern daran.
+
+     DAS MASS DER ZEICHNUNG IST NICHT DAS MASS DER MASCHINE. Beim ersten Versuch war der Hut genau
+     so breit wie sein Maul (0,42 Kacheln), und in der Schrägsicht wurde daraus ein dünner Dorn –
+     derselbe Fehler wie beim Wasserrad: Was aus schmalen Teilen besteht, zerfällt in dieser Größe
+     zu Gekrissel. Ein Zauberhut ist ein breiter Filzhut mit einer Krempe, unter die ein Ball paßt.
+     Darum rechnet die Zeichnung mit einem eigenen, größeren Maß; gefangen wird weiter am Maul. */
+  drawZauberhut(ctx, ob, t) {
+    if (!ob.bereit) return;
+    const s = this.scale;
+    const R = Math.max(0.78, ob.r * 2.0);           // so groß ist der Hut fürs Auge
+    /* Von hinten nach vorn: Zwei Hüte hintereinander würden sich sonst falsch überdecken. */
+    const reihe = ob.orte.map((p, i) => ({ i, x: p[0], y: p[1] })).sort((a, b) => (a.x + a.y) - (b.x + b.y));
+    for (const h of reihe) {
+      const an = h.i === ob.aktiv, gleich = h.i === ob.naechste ? ob.gleich : 0;
+      const hell = an ? 1 : gleich * 0.7;
+      /* DER KEGEL WIRD IM BILDRAUM GEBAUT, NICHT IN DER WELTEBENE. Zuerst standen seine beiden
+         Fußpunkte links und rechts auf DERSELBEN Weltkoordinate y – und in der Schrägsicht fallen
+         die dann fast aufeinander: Aus dem Hut wurde ein Strich. Dieselbe Falle wie beim
+         Wasserrad. Gerechnet wird darum nur die HÖHE aus der Projektion; Breite und Knick sind
+         Bildpunkte, und damit steht der Hut immer aufrecht, egal wie die Kamera gedreht ist. */
+      const hoch = 1.05 + 0.05 * Math.sin(t * 2 + h.i);
+      const [cx, cy] = this.proj(h.x, h.y, 0.1);
+      const [, oben] = this.proj(h.x, h.y, hoch * (R / 0.78));
+      const hPx = Math.max(s * 0.6, cy - oben);              // so hoch ist der Hut in Bildpunkten
+      const bPx = R * s * 0.82;                              // und so breit sein Fuß
+      const knick = hPx * (0.26 + 0.03 * Math.sin(t * 1.3 + h.i));
+      const spitze = [cx + knick, cy - hPx];
+
+      // Schatten und Krempe. Die Krempe ist breit – daran erkennt man den Hut von oben.
+      this.isoEllipse(ctx, h.x, h.y, 0.004, R * 1.15, 'rgba(0,0,0,0.28)');
+      this.isoEllipse(ctx, h.x, h.y, 0.08, R * 1.1, an ? '#4a3480' : '#3a2a63');
+      this.isoEllipse(ctx, h.x, h.y, 0.095, R * 0.95, an ? '#5c3fa8' : '#472f82');
+      // Das Maul: der dunkle Ring in der Mitte, in den der Ball rollt
+      this.isoEllipse(ctx, h.x, h.y, 0.1, ob.r * 1.05, '#150e2a');
+
+      // Der Kegel, in Bildpunkten: zwei Bögen von den Fußpunkten zur Spitze
+      const kg = ctx.createLinearGradient(cx - bPx, cy, spitze[0], spitze[1]);
+      kg.addColorStop(0, an ? '#4a3384' : '#3a2766');
+      kg.addColorStop(0.6, an ? '#6b4bb8' : '#503a8c');
+      kg.addColorStop(1, an ? '#8a68d8' : '#5a3f9c');
+      ctx.fillStyle = kg;
+      ctx.beginPath();
+      ctx.moveTo(cx - bPx, cy - hPx * 0.06);
+      ctx.quadraticCurveTo(cx - bPx * 0.55, cy - hPx * 0.62, spitze[0], spitze[1]);
+      ctx.quadraticCurveTo(cx + bPx * 0.72, cy - hPx * 0.52, cx + bPx, cy - hPx * 0.06);
+      ctx.closePath(); ctx.fill();
+      /* HELLER UMRISS, NICHT SCHWARZER. In der Erzmagierloge steht der Hut auf violettem Marmor,
+         und mit einer schwarzen Kante war vom Kegel nichts mehr zu sehen - nur noch Krempe und
+         Maul, also eine Schale. Ein heller Umriss trägt auf JEDEM Boden, im Garten wie in der
+         Loge, und nimmt dem dunklen Hut nichts von seiner Dunkelheit. */
+      ctx.strokeStyle = 'rgba(226,212,255,0.5)'; ctx.lineWidth = Math.max(1.2, s * 0.04); ctx.stroke();
+
+      // Das Band über der Krempe – ebenfalls in Bildpunkten, damit es am Kegel anliegt
+      ctx.strokeStyle = an ? '#ffd166' : '#a98a46'; ctx.lineWidth = Math.max(2, hPx * 0.13);
+      ctx.beginPath();
+      ctx.moveTo(cx - bPx * 0.86, cy - hPx * 0.13);
+      ctx.quadraticCurveTo(cx, cy - hPx * 0.06, cx + bPx * 0.86, cy - hPx * 0.13);
+      ctx.stroke();
+
+      if (hell > 0.02) {   // der Stern an der Spitze: das Zeichen des Ausgangs
+        ctx.save(); ctx.globalAlpha = 0.35 + 0.65 * hell;
+        ctx.fillStyle = '#fff2b8';
+        const r1 = s * 0.2, r2 = s * 0.085;
+        ctx.beginPath();
+        for (let k = 0; k < 10; k++) {
+          const a = -Math.PI / 2 + k * (Math.PI / 5) + t * 0.6, rr = k % 2 ? r2 : r1;
+          const px = spitze[0] + Math.cos(a) * rr, py = spitze[1] + Math.sin(a) * rr;
+          k ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+        }
+        ctx.closePath(); ctx.fill(); ctx.restore();
+      }
+    }
+  },
+
   /* ================= Die Runensteine =================
      Die Teleporter des Zauberreichs. Zwei bis vier Steine stehen auf der Bahn, genau einer ist der
      Ausgang, und das Leuchten wandert im Takt weiter. Wer in ein Maul rollt, kommt am leuchtenden

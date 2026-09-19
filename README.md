@@ -2977,13 +2977,13 @@ Aufgabe heißt immer: den Moment abpassen. Hier startet der Spieler die Uhr selb
   Ranke sorgt nur dafür, daß man dort **nicht** hindurchfällt – dieselbe Umkehrung wie bei der
   Schneebrücke. Boden, der zur Laufzeit entsteht, müßte Wegfindung, Banden und Kamera mitziehen;
   Boden, der wegfällt, kostet eine Abfrage.
-* **Die Runensteine** (`zauberhut`). *Bis Fassung 195 waren das Zauberhüte – ein Filzhut mit Krempe,
-  in den der Ball hineinrollte. Seit 196 stehen dort aufgerichtete Steine mit leuchtenden Zeichen.
-  Das Verhalten ist unverändert; was sich ändert, ist, womit die Maschine ihren Zustand erzählt: Der
-  Hut brauchte dafür einen Stern an der Spitze und einen Schein am Boden, der Stein hat seine Runen.
-  Der interne Name des Typs bleibt `zauberhut`, damit selbstgebaute Bahnen, die ihn schon benutzen,
-  weiter laden – ein umbenannter Typ wäre in fremden Bahnen ein unbekanntes Hindernis.*
-  Zwei bis vier Steine, genau einer leuchtet. Wer in ein Maul rollt,
+* **Die Zauberhüte** (`zauberhut`). *In Fassung 196 standen hier kurz **Runensteine** – aufgerichtete
+  Steine mit leuchtenden Zeichen statt der Filzhüte. Sie sind wieder herausgenommen: Ein Bauwerk paßt
+  in eine Loge oder eine Gruft, aber nicht in einen Garten, in dem Lehrlinge üben. Weggeworfen ist
+  der Entwurf deswegen nicht – er liegt als `style: 'runenstein'` im Zeichner und steht im Baumodus
+  unter *Aussehen*, für den Tag, an dem eine Welt ihn braucht. Ein Entwurf, den man löscht, weil er
+  gerade nicht paßt, muß später noch einmal gebaut werden.*
+  Zwei bis vier Hüte, genau einer leuchtet. Wer in einen rollt,
   kommt aus dem leuchtenden heraus – und wer in den leuchtenden rollt, aus dem **nächsten**, damit
   er keine Sackgasse ist. Das Leuchten wandert im Takt, und der nächste Hut glimmt schon auf,
   bevor er dran ist: Ein wanderndes Ziel, das man nicht kommen sieht, wäre Glück, und Glück ist
@@ -3038,7 +3038,7 @@ geborgt – und ein geborgtes Bild erzählt die falsche Geschichte: In einem Gar
 | --- | --- | --- |
 | Prellklotz | **Springkraut** | Die pralle Kapsel steht sichtbar unter Spannung und platzt beim Stoß in zwei Hälften auf – der Ball fliegt weg wie die Samen. |
 | Windrad | **Rasensprenger** | Der Strahl läuft dem Arm hinterher, also sieht man die Drehrichtung, ohne getroffen zu werden. Am Besen sah man sie erst danach. |
-| Mühle | **Bienenstock** | Zwei Reihen runder Strohkörbe, die den Klotz ganz ausfüllen; was den Durchgang sperrt, ist eine Wabe, und bei geschlossener Wabe stehen mehr Bienen davor. |
+| Mühle | **Bienenstock** | **Ein** Stock aus geflochtenen Strohwülsten über die ganze Sperre, und der Durchgang ist ein Tunnel **darin** – kein Spalt zwischen zwei Dingen. Was ihn sperrt, ist eine Wabe, und bei geschlossener Wabe stehen mehr Bienen davor. |
 | Magnet | **Pollenstrudel** | Eine Pusteblume, die atmet: Beim Ziehen zieht sie sich zusammen und die Pollen laufen nach innen, beim Stoßen bläst sie aus. Der Kristall sah in beiden Fällen gleich aus. |
 | Drehscheibe | **Riesen-Sonnenblume** | Die Kerne liegen in der echten Spirale und drehen sich mit, zwei grüne Blätter zeigen die Auswurfstelle. |
 
@@ -3113,8 +3113,8 @@ ist noch nicht in Sicherheit – sie welkt gleich.
 
 **Geprüft** wird mit `node tools/zauber.mjs` (Verhalten beider Maschinen im echten Ablauf),
 `node tools/validate.mjs` und `GAMES=2 node tools/audit/audit.mjs lehrling` bzw. `… warte`, `… loge`. Die Wegprüfung in
-`validate.mjs` kennt die Runensteine als Verbindung – sonst hielte sie ausgerechnet die Bahn für
-unpassierbar, die den Stein erklärt.
+`validate.mjs` kennt die Zauberhüte als Verbindung – sonst hielte sie ausgerechnet die Bahn für
+unpassierbar, die den Hut erklärt.
 
 ## Eigene Bahnen im Code bauen
 

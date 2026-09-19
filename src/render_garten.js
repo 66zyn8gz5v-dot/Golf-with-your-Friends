@@ -169,90 +169,95 @@ Object.assign(Renderer.prototype, {
   },
 
   /* ================= Der Bienenstock (Mühle) =================
-     Dieselbe Maschine wie die Windmühle: zwei Klötze, dazwischen ein Durchgang, der sich im Takt
-     schließt. Nur steht hier kein Müllerhaus, sondern zwei Strohkörbe auf einem Bienenstand, und
-     was den Weg versperrt, ist eine Wabe, die vor den Spalt geschoben wird.
+     Dieselbe Maschine wie die Windmühle: eine Sperre quer über den Weg mit einem Durchgang, der
+     sich im Takt schließt. Nur steht hier kein Müllerhaus, sondern EIN Bienenstock.
+
+     EINER, NICHT VIELE. Zuerst waren es zwei Stände mit einer Reihe einzelner Körbe darauf, und
+     dazwischen ein Holzbalken über dem Durchgang. Das las sich als Regal mit Körben: drei Dinge,
+     die zufällig nebeneinanderstehen, und der Durchgang war die Lücke zwischen ihnen. Jetzt ist es
+     ein einziger Stock, der die ganze Sperre füllt – ein gewachsener Strohhaufen, geflochten aus
+     Wülsten, die von unten nach oben schmaler werden.
+
+     UND DER DURCHGANG IST IM STOCK, NICHT ZWISCHEN ZWEIEN. Er ist ein Tunnel, den die Bienen
+     durch ihr eigenes Nest gelassen haben: ein Bogen mitten im Stroh, der sich mit einer Wabe
+     schließt. Damit ist die Maschine EIN Ding mit EINER Öffnung, und nicht zwei Dinge mit einem
+     Zwischenraum – man sieht auf einen Blick, was hier sperrt und wo es aufgeht.
 
      Die Ampel am Boden bleibt: Sie gehört nicht zur Optik der alten Welt, sondern zur Regel
-     dieser Maschine – man muss von oben sehen können, ob gerade zu ist. */
+     dieser Maschine – man muß von oben sehen können, ob gerade zu ist. */
   drawBienenstock(ctx, ob, t) {
     const s = this.scale, ax = ob.axis === 'x';
     const dd = ob.depth / 2;
-    const stroh = ['#e3b86a', '#a97c34'], holz = ['#8a6438', '#5a4022'];
+    /* Die Achse, längs der die Sperre läuft, und wie weit sie reicht. Das ist genau die Strecke,
+       die die Klötze abdecken (w/2 + overlap) – das Bild ist damit so breit wie die Wirkung. */
+    const ux = ax ? 1 : 0, uy = ax ? 0 : 1;
+    const halb = ob.w / 2 + (ob.overlap == null ? 0.7 : ob.overlap);
+    const hoehe = ob.height + 0.95;
 
-    for (const b of ob.blocks) {
-      /* KEIN KASTEN MEHR, SONDERN EINE REIHE RUNDER KÖRBE. Erst stand hier ein rechteckiger
-         Strohklotz mit kleinen Kuppeln obendrauf – und ein Quader mit Hütchen ist ein Schrank mit
-         Hütchen, kein Bienenstock. Jetzt füllt eine Reihe voller Strohkörbe den ganzen Klotz, vom
-         Boden bis über die Sperrhöhe hinaus. Sie überlappen sich ein wenig: Ein Nest ist ein
-         Haufen, keine Aufstellung.
+    // Der Sockel: ein flacher Erdwall unter dem Stroh, damit der Stock nicht auf dem Rasen schwebt
+    const sockel = [
+      [ob.x + ux * halb + (ax ? 0 : dd), ob.y + uy * halb + (ax ? dd : 0)],
+      [ob.x - ux * halb + (ax ? 0 : dd), ob.y - uy * halb + (ax ? dd : 0)],
+      [ob.x - ux * halb - (ax ? 0 : dd), ob.y - uy * halb - (ax ? dd : 0)],
+      [ob.x + ux * halb - (ax ? 0 : dd), ob.y + uy * halb - (ax ? dd : 0)],
+    ];
+    this.prism(ctx, sockel, 0, 0.14, '#8a6438', '#5a4022', { outline: '#3a2812' });
 
-         Die Sperre bleibt der Klotz. Die Körbe decken ihn nur, und zwar mit Absicht etwas
-         großzügiger als er ist – ein Bild, das schmaler ist als seine Wirkung, lädt dazu ein,
-         daneben zu zielen. */
-      const lx0 = Math.min(b[0][0], b[2][0]), lx1 = Math.max(b[0][0], b[2][0]);
-      const ly0 = Math.min(b[0][1], b[2][1]), ly1 = Math.max(b[0][1], b[2][1]);
-      const mx = (lx0 + lx1) / 2, my = (ly0 + ly1) / 2;
-      const lang = ax ? lx1 - lx0 : ly1 - ly0;
-      const tief = ax ? ly1 - ly0 : lx1 - lx0;
-      this.prism(ctx, b, 0, 0.16, holz[0], holz[1], { outline: '#3a2812' });   // das Brett, auf dem sie stehen
-
-      const anz = Math.max(2, Math.round(lang / 0.95));
-      const koerbe = [];
-      for (let k = 0; k < anz; k++) {
-        const u = (k + 0.5) / anz;
-        koerbe.push(ax ? [lx0 + u * lang, my] : [mx, ly0 + u * lang]);
-      }
-      koerbe.sort((p, q) => (p[0] + p[1]) - (q[0] + q[1]));   // von hinten nach vorn
-      const kb = Math.max(s * 0.28, Math.min((lang / anz) * 1.3, tief * 1.35) * s * 0.5);
-      for (const [px, py] of koerbe) {
-        const [kx, ky] = this.proj(px, py, 0.16);
-        const [, kob] = this.proj(px, py, ob.height + 0.5);
-        const kh = Math.max(s * 0.5, ky - kob);
-        /* Sieben Strohwülste, von oben nach unten gezeichnet: Der untere deckt jeweils die
-           Unterkante des oberen, und daraus wird eine Kuppel statt eines Stapels Ringe. */
-        for (let r = 6; r >= 0; r--) {
-          const u = r / 7;
-          const w = kb * Math.sqrt(Math.max(0.06, 1 - u * u * 0.9));
-          ctx.beginPath(); ctx.ellipse(kx, ky - kh * u, w, kh * 0.14, 0, 0, TAU);
-          ctx.fillStyle = r % 2 ? '#d6a955' : '#eccb84'; ctx.fill();
-          ctx.strokeStyle = 'rgba(96,64,20,0.5)'; ctx.lineWidth = Math.max(1, s * 0.02); ctx.stroke();
-        }
-        // Flugloch mit Anflugbrett, unten am Korb
-        ctx.fillStyle = '#2a1a08';
-        ctx.beginPath(); ctx.ellipse(kx, ky - kh * 0.12, kb * 0.2, kh * 0.09, 0, 0, TAU); ctx.fill();
-        ctx.fillStyle = '#b98a42';
-        ctx.fillRect(kx - kb * 0.28, ky - kh * 0.05, kb * 0.56, Math.max(1.5, s * 0.045));
-      }
+    /* Der Stock selbst: Strohwülste übereinander, jeder etwas kürzer als der darunter. Gezeichnet
+       wird jeder als dicker Strich von einem Ende zum anderen – die Schrägsicht besorgt dabei die
+       Richtung von selbst, und runde Enden machen aus dem Strich einen Wulst.
+       Von OBEN nach UNTEN, damit der untere Wulst die Unterkante des oberen deckt. */
+    const bahnen = 8;   // weniger, dafuer dickere Wuelste: Stroh ist geflochten, nicht geriffelt
+    const [, obenPx] = this.proj(ob.x, ob.y, hoehe);
+    const [, untenPx] = this.proj(ob.x, ob.y, 0.14);
+    const hPx = Math.max(s * 0.6, untenPx - obenPx);
+    const dick = (hPx / bahnen) * 1.9;
+    ctx.lineCap = 'round';
+    for (let r = bahnen; r >= 0; r--) {
+      const u = r / bahnen;
+      /* Stark verjuengt: Mit wenig Verjuengung lag dort eine gerollte Matte. Ein Nest ist oben
+         schmal und unten breit - erst dadurch wird aus der Sperre ein Haufen. */
+      const schrumpf = Math.sqrt(Math.max(0.05, 1 - u * u * 0.94));
+      const h = halb * schrumpf;
+      const z = 0.14 + u * (hoehe - 0.14);
+      const p0 = this.proj(ob.x - ux * h, ob.y - uy * h, z);
+      const p1 = this.proj(ob.x + ux * h, ob.y + uy * h, z);
+      ctx.strokeStyle = 'rgba(92,62,18,0.85)'; ctx.lineWidth = dick + Math.max(2, s * 0.06);
+      ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke();
+      ctx.strokeStyle = r % 2 ? '#d6a955' : '#eccb84'; ctx.lineWidth = dick;
+      ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke();
     }
 
-
-    // Der Querbalken über dem Durchgang trägt die beiden Stände zusammen
-    const g = ob.gap / 2 + 0.05;
-    const bridge = ax ? [[ob.x - g, ob.y - dd], [ob.x + g, ob.y - dd], [ob.x + g, ob.y + dd], [ob.x - g, ob.y + dd]]
-      : [[ob.x - dd, ob.y - g], [ob.x + dd, ob.y - g], [ob.x + dd, ob.y + g], [ob.x - dd, ob.y + g]];
-    this.prism(ctx, bridge, 1.05, Math.max(0.2, ob.height - 1.05), holz[0], holz[1], { outline: '#3a2812' });
-
-    /* Der Durchgang. Gezeichnet wird nur die Seite, die zur Kamera zeigt – sonst sähe man durch
-       den Stand hindurch. */
+    /* Der Tunnel durch den Stock. Gezeichnet wird nur die Seite, die zur Kamera zeigt – sonst
+       sähe man durch das Nest hindurch. */
     const faceN = ax ? [0, 1] : [1, 0];
     const side = (faceN[0] * this.cam.sin + faceN[1] * this.cam.cos) > 0 ? 1 : -1;
-    const w2 = ob.gap / 2 + 0.08, top = 1.05;
+    const w2 = ob.gap / 2 + 0.12, top = 1.2, rad = Math.min(w2, 0.5);
     const fx = ax ? ob.x : ob.x + side * dd, fy = ax ? ob.y + side * dd : ob.y;
     const at = (u, z) => (ax ? this.proj(fx + u, fy, z) : this.proj(fx, fy + u, z));
-    const loch = () => {
+    const bogen = () => {
       ctx.beginPath();
-      for (const [u, z] of [[-w2, 0], [-w2, top], [w2, top], [w2, 0]]) { const q = at(u, z); ctx.lineTo(q[0], q[1]); }
-      ctx.closePath();
+      let p = at(-w2, 0.1); ctx.moveTo(p[0], p[1]);
+      p = at(-w2, top - rad); ctx.lineTo(p[0], p[1]);
+      for (let k = 0; k <= 12; k++) {
+        const a = Math.PI - (k / 12) * Math.PI;
+        p = at(Math.cos(a) * w2, top - rad + Math.sin(a) * rad); ctx.lineTo(p[0], p[1]);
+      }
+      p = at(w2, 0.1); ctx.lineTo(p[0], p[1]); ctx.closePath();
     };
+    // Ein Kranz aus dunklerem Stroh um den Eingang: so ist der Tunnel gefloch­ten und nicht gestanzt
+    ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    bogen(); ctx.strokeStyle = '#b98a42'; ctx.lineWidth = Math.max(3, s * 0.16); ctx.stroke();
+    ctx.restore();
+
     if (ob.blocked) {
-      // Die Wabe schiebt sich vor den Spalt: Bernstein mit Sechsecken, und Honig tropft
-      ctx.fillStyle = '#e8a52c'; loch(); ctx.fill();
-      ctx.save(); loch(); ctx.clip();
+      // Die Wabe schiebt sich in den Tunnel: Bernstein mit Sechsecken, und Honig tropft
+      ctx.fillStyle = '#e8a52c'; bogen(); ctx.fill();
+      ctx.save(); bogen(); ctx.clip();
       ctx.strokeStyle = 'rgba(120,72,10,0.7)'; ctx.lineWidth = Math.max(1, s * 0.03);
       const zelle = w2 / 3;
-      for (let r = 0; r < 6; r++) for (let c = -3; c <= 3; c++) {
-        const u = c * zelle * 1.5 + (r % 2 ? zelle * 0.75 : 0), z = r * zelle * 0.9;
+      for (let r = 0; r < 7; r++) for (let c = -3; c <= 3; c++) {
+        const u = c * zelle * 1.5 + (r % 2 ? zelle * 0.75 : 0), z = 0.1 + r * zelle * 0.9;
         if (z > top) continue;
         ctx.beginPath();
         for (let k = 0; k < 6; k++) {
@@ -263,21 +268,32 @@ Object.assign(Renderer.prototype, {
         ctx.closePath(); ctx.stroke();
       }
       ctx.fillStyle = 'rgba(255,214,120,0.5)';
-      for (let k = -2; k <= 2; k++) { const q = at(k * w2 * 0.4, top * 0.92); ctx.beginPath(); ctx.arc(q[0], q[1], s * 0.05, 0, TAU); ctx.fill(); }
+      for (let k = -2; k <= 2; k++) { const q = at(k * w2 * 0.4, top * 0.9); ctx.beginPath(); ctx.arc(q[0], q[1], s * 0.05, 0, TAU); ctx.fill(); }
       ctx.restore();
-      ctx.strokeStyle = '#7a4a10'; ctx.lineWidth = Math.max(1.5, s * 0.05); loch(); ctx.stroke();
+      ctx.strokeStyle = '#7a4a10'; ctx.lineWidth = Math.max(1.5, s * 0.05); bogen(); ctx.stroke();
     } else {
-      ctx.fillStyle = '#1a1206'; loch(); ctx.fill();
-      ctx.strokeStyle = '#6b5a2a'; ctx.lineWidth = Math.max(1, s * 0.04); loch(); ctx.stroke();
+      ctx.fillStyle = '#1a1206'; bogen(); ctx.fill();
+      ctx.strokeStyle = '#6b5a2a'; ctx.lineWidth = Math.max(1, s * 0.04); bogen(); ctx.stroke();
     }
-    // Die Ansage über dem Durchgang: bernstein = zu, grün = frei
+
+    // Fluglöcher im Stroh, links und rechts vom Tunnel, jedes mit seinem Anflugbrett
+    for (const sd of [-1, 1]) {
+      const fu = sd * (w2 + halb) / 2;
+      const [lx, ly] = at(fu, 0.55);
+      ctx.fillStyle = '#2a1a08';
+      ctx.beginPath(); ctx.ellipse(lx, ly, s * 0.13, s * 0.08, 0, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#b98a42';
+      ctx.fillRect(lx - s * 0.17, ly + s * 0.05, s * 0.34, Math.max(1.5, s * 0.05));
+    }
+
+    // Die Ansage über dem Tunnel: bernstein = zu, grün = frei
     const [lx, ly] = at(0, top + 0.3), lc = ob.blocked ? '255,170,40' : '120,255,140';
     const pulse = 0.75 + 0.25 * Math.sin(t * 5);
     ctx.fillStyle = `rgba(${lc},${0.2 * pulse})`; ctx.beginPath(); ctx.arc(lx, ly, s * 0.34, 0, TAU); ctx.fill();
     ctx.fillStyle = `rgb(${lc})`; ctx.beginPath(); ctx.arc(lx, ly, s * 0.1, 0, TAU); ctx.fill();
 
-    // Bienen. Bei geschlossener Wabe sind es mehr und sie bleiben vor dem Spalt – das erklärt,
-    // warum gerade niemand durchkommt.
+    /* Bienen. Bei geschlossener Wabe sind es mehr und sie bleiben vor dem Tunnel – das erklärt,
+       warum gerade niemand durchkommt. */
     const n = ob.blocked ? 7 : 4;
     for (let i = 0; i < n; i++) {
       const a = t * (1.6 + (i % 3) * 0.4) + i * 1.1;
@@ -291,6 +307,7 @@ Object.assign(Renderer.prototype, {
       ctx.beginPath(); ctx.ellipse(px, py - s * 0.05, s * 0.055, s * 0.025, 0, 0, TAU); ctx.fill();
     }
   },
+
 
   /* ================= Der Pollenstrudel (Magnet) =================
      Eine Pusteblume, die atmet. Zieht sie, fliegen die Schirmchen nach INNEN und sie zieht sich
