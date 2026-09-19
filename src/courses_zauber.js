@@ -758,7 +758,7 @@ const ZAUBER_LOGE = [
   },
   {
     name: 'Der Bannlauf', par: 5, theme: 'erzmagierloge',
-    intro: 'Zweiundzwanzig Kacheln Leere, und darüber nur die Fernschleuder. Ihre drei Ringe taumeln, solange sie wartet; sobald sie einen Ball hat, richten sie sich aus – und wenn alle drei in einer Ebene stehen, fliegt er. Drüben landet man am falschen Ende: Der Weg zum Loch führt ganz nach Osten, um die Schräge herum nach oben und die Galerie wieder zurück.',
+    intro: 'Zweiundzwanzig Kacheln Leere, und darüber nur die Fernschleuder. Ihre drei Ringe taumeln, solange sie wartet; sobald sie einen Ball hat, richten sie sich aus – und wenn alle drei in einer Ebene stehen, fliegt er. Sie schwenkt dabei, und nicht jeder Augenblick trifft das andere Ufer: Das Fadenkreuz am Boden sagt vorher, wohin. Drüben landet man am falschen Ende – der Weg zum Loch führt ganz nach Osten, um die Schräge herum nach oben und die Galerie wieder zurück.',
     map: [
       '........................................................',
       '........................................................',
@@ -802,7 +802,7 @@ const ZAUBER_LOGE = [
       { type: 'wall', x0: 49, y0: 17, x1: 50, y1: 16, t: 0.42, h: 0.85 },
       { type: 'zauberkreis', x: 8.0, y: 8.5, r: 1.2, wirkung: 'schub', takt: 0.0, phase: 0.0 },
       { type: 'copperpipe', pair: 'A', angle: 0, style: 'siegelroehre' },
-      { type: 'cannon', x: 24.0, y: 14.5, base: 0.0, amp: 0.05, speed: 0.6, phase: 0.0, range: 22.0, loadTime: 1.1, catchR: 0.7, flySpeed: 8, style: 'fernschleuder' },
+      { type: 'cannon', x: 24.0, y: 14.5, base: 0.0, amp: 0.13, speed: 0.5, phase: 0.0, range: 22.0, loadTime: 1.1, catchR: 0.7, flySpeed: 8, style: 'fernschleuder' },
       { type: 'zauberkreis', x: 48.5, y: 14.5, r: 1.2, wirkung: 'bremse', takt: 0.0, phase: 0.0 },
       { type: 'grubenlampe', x: 40.0, y: 5.5, r: 4.0, style: 'bannlicht' },
     ],
@@ -869,7 +869,7 @@ const ZAUBER_LOGE = [
   },
   {
     name: 'Der Rat der Neun', par: 5, theme: 'erzmagierloge',
-    intro: 'Der Ratssaal. In seiner Mitte steht die Raute der Neun – vier Schrägen, die nach allen Seiten abweisen, und darin brennt ein Bannkreis im Takt. Geradeaus geht hier nichts; man muß sich aussuchen, an welcher Kante man vorbeiwill.',
+    intro: 'Der Ratssaal. In seiner Mitte steht die Raute der Neun – vier Schrägen, die nach allen Seiten abweisen, und darin brennt ein Bannkreis im Takt. Geradeaus geht hier nichts; man muß sich aussuchen, an welcher Kante man vorbeiwill. Die Fernschleuder am Eingang wirft über die Raute hinweg, aber sie schwenkt weit – wer im falschen Augenblick hineinrollt, fliegt über den Saal hinaus.',
     map: [
       '..................................................',
       '..................................................',
@@ -924,7 +924,7 @@ const ZAUBER_LOGE = [
       { type: 'wall', x0: 19, y0: 20, x1: 18, y1: 19, t: 0.42, h: 0.85 },
       { type: 'wall', x0: 38, y0: 20, x1: 39, y1: 19, t: 0.42, h: 0.85 },
       { type: 'zauberkreis', x: 7.0, y: 11.5, r: 1.2, wirkung: 'schub', takt: 0.0, phase: 0.0 },
-      { type: 'cannon', x: 17.0, y: 11.5, base: 0.0, amp: 0.22, speed: 0.7, phase: 0.0, range: 18.0, loadTime: 1.1, catchR: 0.7, flySpeed: 8, style: 'fernschleuder' },
+      { type: 'cannon', x: 17.0, y: 11.5, base: 0.0, amp: 0.55, speed: 0.5, phase: 0.0, range: 18.0, loadTime: 1.1, catchR: 0.7, flySpeed: 8, style: 'fernschleuder' },
       { type: 'wall', x0: 23.5, y0: 11.5, x1: 28.0, y1: 7.0, t: 0.42, h: 0.85 },
       { type: 'wall', x0: 28.0, y0: 7.0, x1: 32.5, y1: 11.5, t: 0.42, h: 0.85 },
       { type: 'wall', x0: 32.5, y0: 11.5, x1: 28.0, y1: 16.0, t: 0.42, h: 0.85 },
@@ -1177,7 +1177,7 @@ const ZAUBER_LOGE = [
   },
   {
     name: 'Der Erzmagier', par: 6, theme: 'erzmagierloge', maxStrokes: 18,
-    intro: 'Die letzte Bahn vor dem Wächter: erst der Bannschlag, dann die lange Kehre nach unten – und dort steht die Fernschleuder und wirft achtzehneinhalb Kacheln weit ans andere Ende. Danach die Galerie zurück nach Westen. Keine einzige rechtwinklige Ecke auf der ganzen Strecke.',
+    intro: 'Die letzte Bahn vor dem Wächter: erst der Bannschlag, dann die lange Kehre nach unten – und dort steht die Fernschleuder und wirft achtzehneinhalb Kacheln weit ans andere Ende. Auch sie schwenkt; das andere Ufer ist schmal, und daneben ist nichts. Danach die Galerie zurück nach Westen. Keine einzige rechtwinklige Ecke auf der ganzen Strecke.',
     map: [
       '............................................................',
       '............................................................',
@@ -1240,7 +1240,7 @@ const ZAUBER_LOGE = [
       { type: 'copperpipe', pair: 'A', angle: 90, style: 'siegelroehre' },
       { type: 'lightning', x: 21.0, y: 4.5, w: 3.0, h: 3.2, period: 4.0, phase: 0.0, warn: 1.0, strike: 0.35, style: 'bannschlag' },
       { type: 'zauberkreis', x: 28.0, y: 12.0, r: 1.2, wirkung: 'bremse', takt: 4.4, phase: 0.0 },
-      { type: 'cannon', x: 30.0, y: 17.5, base: 0.0, amp: 0.05, speed: 0.6, phase: 0.0, range: 18.5, loadTime: 1.1, catchR: 0.7, flySpeed: 8, style: 'fernschleuder' },
+      { type: 'cannon', x: 30.0, y: 17.5, base: 0.0, amp: 0.13, speed: 0.5, phase: 0.0, range: 18.5, loadTime: 1.1, catchR: 0.7, flySpeed: 8, style: 'fernschleuder' },
       { type: 'wall', x0: 44.0, y0: 10.0, x1: 48.0, y1: 14.0, t: 0.42, h: 0.85 },
       { type: 'grubenlampe', x: 42.0, y: 8.5, r: 4.2, style: 'bannlicht' },
     ],

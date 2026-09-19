@@ -469,23 +469,52 @@ def pruefe(b):
             # wird darum der ganze Bogen in Schritten von etwa drei Grad.
             weit = 0.9 + o.get('range', 9.0)
             amp = abs(o.get('amp', 0.0))
+
+            def sicher(w):
+                """Trifft dieser Winkel Boden – beim Aufsetzen UND nach dem Ausrollen?"""
+                for zusatz in (0.0, 3.2):
+                    lx = o['x'] + math.cos(w) * (weit + zusatz)
+                    ly = o['y'] + math.sin(w) * (weit + zusatz)
+                    if not fest(int(lx), int(ly)): return False
+                return True
+
             schritte = max(1, int(amp / 0.05)) if amp else 0
             winkel = [o['base']] if not amp else [o['base'] - amp + 2 * amp * i / (2 * schritte)
                                                   for i in range(2 * schritte + 1)]
-            schlecht = None
-            for w in winkel:
-                for zusatz, was in ((0.0, 'landet'), (3.2, 'rollt danach')):
-                    lx = o['x'] + math.cos(w) * (weit + zusatz)
-                    ly = o['y'] + math.sin(w) * (weit + zusatz)
-                    if not fest(int(lx), int(ly)):
-                        schlecht = (math.degrees(w), lx, ly, was)
-                        break
-                if schlecht: break
-            if schlecht:
-                grad, lx, ly, was = schlecht
-                wie = f'bei {grad:.0f}° ' if amp else ''
-                fehler.append(f'die Bannschleuder auf {o["x"]}/{o["y"]} {wie}{was} bei '
-                              f'{lx:.1f}/{ly:.1f} – dort ist kein Boden')
+
+            if o.get('style') == 'fernschleuder':
+                """DIE FERNSCHLEUDER DARF DANEBENWERFEN. Fynn: „Man soll bei der langen Kanone auch
+                außerhalb der Map landen können." Das ist eine Entwurfsentscheidung und keine
+                Nachlässigkeit: Eine Maschine, die zweiundzwanzig Kacheln weit trägt und dabei
+                nichts kosten kann, ist ein Fahrstuhl. Wenn sie schwenkt, sollen die Augenblicke,
+                in denen man sie nimmt, verschieden viel wert sein - und die schlechtesten sollen
+                in den Abgrund führen.
+
+                Zwei Dinge bleiben trotzdem Pflicht, sonst wäre es Glück statt Zielen:
+                In der MITTE ihres Schwenks muß sie treffen - dort, wohin die Punkte am Boden
+                zeigen, wenn sie gerade steht. Und das Fenster um diese Mitte herum muß breit
+                genug sein: Ein Drittel des Bogens ist die Grenze. Darunter wäre der richtige
+                Augenblick nicht mehr zu erwischen, sondern nur noch zu erwürfeln."""
+                if not sicher(o['base']):
+                    fehler.append(f'die Fernschleuder auf {o["x"]}/{o["y"]} trifft nicht einmal '
+                                  f'geradeaus – dorthin, wohin ihre Punkte zeigen, muß sie treffen')
+                elif amp:
+                    gut = sum(1 for w in winkel if sicher(w))
+                    anteil = gut / len(winkel)
+                    if anteil < 0.34:
+                        fehler.append(f'die Fernschleuder auf {o["x"]}/{o["y"]} trifft nur in '
+                                      f'{anteil * 100:.0f}% ihres Schwenks Boden – unter einem '
+                                      f'Drittel ist der richtige Augenblick nicht mehr zu treffen, '
+                                      f'sondern nur noch zu erwürfeln')
+            else:
+                schlecht = next((w for w in winkel if not sicher(w)), None)
+                if schlecht is not None:
+                    lx = o['x'] + math.cos(schlecht) * weit
+                    ly = o['y'] + math.sin(schlecht) * weit
+                    wie = f'bei {math.degrees(schlecht):.0f}° ' if amp else ''
+                    fehler.append(f'die Bannschleuder auf {o["x"]}/{o["y"]} {wie}landet oder rollt '
+                                  f'bei {lx:.1f}/{ly:.1f} – dort ist kein Boden')
+
             lx = o['x'] + math.cos(o['base']) * weit
             ly = o['y'] + math.sin(o['base']) * weit
             if fest(int(lx), int(ly)):
@@ -1516,14 +1545,16 @@ setz(f, 12, 8, 'A'); setz(f, 16, 15, 'a')
 bahn(LOGE, 'Der Bannlauf', 'erzmagierloge', f, [
     kreis(8.0, 8.5, 'schub', r=1.2),
     rohr('A', grad=0),                # der kurze Weg hinunter, wenn man den Mund trifft
-    fernschleuder(24.0, 14.5, grad=0, weite=22.0, amp=0.05, tempo=0.6),
+    fernschleuder(24.0, 14.5, grad=0, weite=22.0, amp=0.13, tempo=0.5),
     kreis(48.5, 14.5, 'bremse', r=1.2),
     lampe(40.0, 5.5, r=4.0, stil='bannlicht'),
 ], par=5,
 intro='Zweiundzwanzig Kacheln Leere, und darüber nur die Fernschleuder. Ihre drei Ringe taumeln, '
       'solange sie wartet; sobald sie einen Ball hat, richten sie sich aus – und wenn alle drei in '
-      'einer Ebene stehen, fliegt er. Drüben landet man am falschen Ende: Der Weg zum Loch führt '
-      'ganz nach Osten, um die Schräge herum nach oben und die Galerie wieder zurück.')
+      'einer Ebene stehen, fliegt er. Sie schwenkt dabei, und nicht jeder Augenblick trifft das '
+      'andere Ufer: Das Fadenkreuz am Boden sagt vorher, wohin. Drüben landet man am falschen '
+      'Ende – der Weg zum Loch führt ganz nach Osten, um die Schräge herum nach oben und die '
+      'Galerie wieder zurück.')
 
 # --- 3 ---------------------------------------------------------------------
 # Das Bannmal. Die einzige Bahn der Welt, auf der noch gesammelt wird - vier Sterne in vier
@@ -1580,7 +1611,7 @@ bahn(LOGE, 'Der Rat der Neun', 'erzmagierloge', f, ([
     # achtzehn Kacheln weit wirft.
     # Der Ball fliegt über die Raute hinweg, und wo er drüben ankommt, entscheidet allein der
     # Augenblick, in dem man sich hineinrollen läßt.
-    fernschleuder(17.0, 11.5, grad=0, weite=18.0, amp=0.22, tempo=0.7),
+    fernschleuder(17.0, 11.5, grad=0, weite=18.0, amp=0.55, tempo=0.5),
 ] + raute(28.0, 11.5, 4.5) + [
     bande(20.0, 5.5, 24.5, 10.0),     # zwei Schrägen an den Ecken des Saals
     bande(20.0, 17.5, 24.5, 13.0),
@@ -1589,7 +1620,9 @@ bahn(LOGE, 'Der Rat der Neun', 'erzmagierloge', f, ([
 ]), par=5,
 intro='Der Ratssaal. In seiner Mitte steht die Raute der Neun – vier Schrägen, die nach allen '
       'Seiten abweisen, und darin brennt ein Bannkreis im Takt. Geradeaus geht hier nichts; man '
-      'muß sich aussuchen, an welcher Kante man vorbeiwill.')
+      'muß sich aussuchen, an welcher Kante man vorbeiwill. Die Fernschleuder am Eingang wirft '
+      'über die Raute hinweg, aber sie schwenkt weit – wer im falschen Augenblick hineinrollt, '
+      'fliegt über den Saal hinaus.')
 
 # --- 5 ---------------------------------------------------------------------
 # Die Winkelgalerie. Vier Kehren hintereinander, alle abgeschrägt, und keine Maschine dazwischen
@@ -1738,14 +1771,14 @@ bahn(LOGE, 'Der Erzmagier', 'erzmagierloge', f, [
     rohr('A', grad=90),               # sie überspringt den Bannschlag - und die obere Galerie
     blitz(21.0, 4.5, w=3.0, h=3.2, takt=4.0, stil='bannschlag'),
     kreis(28.0, 12.0, 'bremse', r=1.2, takt=4.4),
-    fernschleuder(30.0, 17.5, grad=0, weite=18.5, amp=0.05, tempo=0.6),
+    fernschleuder(30.0, 17.5, grad=0, weite=18.5, amp=0.13, tempo=0.5),
     bande(44.0, 10.0, 48.0, 14.0),
     lampe(42.0, 8.5, r=4.2, stil='bannlicht'),
 ], par=6, maxStrokes=18,
 intro='Die letzte Bahn vor dem Wächter: erst der Bannschlag, dann die lange Kehre nach unten – '
       'und dort steht die Fernschleuder und wirft achtzehneinhalb Kacheln weit ans andere Ende. '
-      'Danach die Galerie zurück nach Westen. Keine einzige rechtwinklige Ecke auf der ganzen '
-      'Strecke.')
+      'Auch sie schwenkt; das andere Ufer ist schmal, und daneben ist nichts. Danach die Galerie '
+      'zurück nach Westen. Keine einzige rechtwinklige Ecke auf der ganzen Strecke.')
 
 # --- 10 --------------------------------------------------------------------
 # DER ENDGEGNER DER LOGE: Der Bannwächter.

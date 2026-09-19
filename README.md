@@ -3921,3 +3921,33 @@ Der Grund für den Kniff greift hier ohnehin nicht. Steckt der Ball **in** der L
 Absicht unsichtbar – so wie eine Rohrpostbüchse auch nicht durch das Kupfer scheint; sichtbar ist
 dann nur der Schein, der mitläuft. Und steckt er nicht darin, ist ein Rohr von 0,42 Kacheln zu
 dünn, um ihn zu verstecken. Mund, Stützen und Läufe tragen deshalb jetzt `noFade`.
+
+## Die Fernschleuder darf danebenwerfen (Fassung 224)
+
+*„Man soll bei der langen Kanone auch außerhalb der Map landen können."*
+
+Bis hierher galt für jede Kanone: Der **ganze** Schwenkbogen muß auf Boden führen, Landepunkt und
+Ausrollweg. Das war richtig gedacht und für die kurze Bannschleuder ist es weiter richtig – aber
+für die Fernschleuder war es zuviel des Guten. Eine Maschine, die zweiundzwanzig Kacheln weit
+trägt und dabei nichts kosten kann, ist kein Rätsel, sondern ein Fahrstuhl.
+
+Die Regel in `pruefe()` ist jetzt **für die Fernschleuder eine andere**, und zwar mit genau zwei
+Bedingungen, damit aus dem Wagnis kein Würfel wird:
+
+1. **In der Mitte ihres Schwenks muß sie treffen.** Dort, wohin das Fadenkreuz am Boden zeigt,
+   wenn sie gerade steht, ist Boden – immer. Sonst könnte man sie gar nicht richtig nehmen.
+2. **Mindestens ein Drittel des Bogens muß treffen.** Darunter wäre der richtige Augenblick nicht
+   mehr zu erwischen, sondern nur noch zu erwürfeln.
+
+Wie es damit auf den drei Bahnen steht:
+
+| Bahn | Schwenk | trifft in … des Bogens |
+| --- | --- | --- |
+| Der Bannlauf | 7° | **50 %** – das andere Ufer ist vier Kacheln hoch, zweiundzwanzig Kacheln weit weg |
+| Der Rat der Neun | 32° | **67 %** – an den Rändern fliegt man über den Saal hinaus |
+| Der Erzmagier | 7° | **72 %** |
+
+Die kurzen Bannschleudern bleiben bei hundert Prozent. Das ist kein Zufall, sondern der
+Unterschied, an dem man die beiden Maschinen auseinanderhält: **Die kurze trägt, die lange
+wagt.** Und weil sie wagt, sagt sie es auch vorher – die Punkte laufen, das Fadenkreuz steht dort,
+wo sie in diesem Augenblick hinwirft, und wer wartet, sieht es wandern.
