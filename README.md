@@ -3178,6 +3178,12 @@ dreht sich langsam, und an jeder der zwölf Speichen sitzt ein Lichtpunkt. Das G
 **Ein Zirkel, der nicht leuchtet, ist eine Gravur und kein Zauber** – und der Schein ist zugleich
 das, was ihn über die Schatten der Ringe hebt.
 
+Die Rillen und Speichen reichen bis in die **Mitte**: Anfangs lagen sie alle am Rand, und in den
+Kammern zwischen den Ringen war nichts – dort spielt man aber, und dort soll der Zirkel auch
+liegen. Ihre Radien liegen mit Absicht neben denen der Ringe; zwei Kreise, die genau
+übereinanderliegen, heben sich gegenseitig auf. Ein zweiter Runenkranz weiter innen läuft
+gegenläufig zum äußeren.
+
 **Und die Bahn ist rund.** Fynn: *„Die Bahn soll etwas runder gebaut sein, nicht bloß ein Kasten."*
 Ein rundes Ding in einem rechteckigen Saal sieht aus, als hätte man es in eine Kiste gelegt. Der
 neue Helfer `rund()` in `tools/zauber.py` füllt eine runde Fläche; die Treppenstufen am Rand nimmt
@@ -3187,6 +3193,16 @@ demselben Grund jetzt ebenfalls rund.
 Und `pruefe()` kennt die Sphäre jetzt beim **Ass-Test**: Ihre Ringe sind Wände mit je einer Gasse,
 also ist die gerade Linie vom Abschlag zum Loch dort gesperrt. Ohne das hätte die Prüfung jeden
 offenen Saal mit einer Sphäre darin für ein Ass gehalten.
+
+### Wo der Ball aufkommt, bleibt er nicht liegen
+
+Fynn auf der *Siegelkammer*: *„Man wird hier in den Abgrund geworfen."* Die Bannschleuder warf quer
+über einen Gang von drei Kacheln. Der **Landepunkt** lag auf dem Gang – aber beim Aufsetzen behält
+der Ball 0,6 seines Flugtempos (`physics.js`) und rollt damit noch gut drei Kacheln weiter, und die
+lagen im Nichts.
+
+`pruefe()` rechnet seit Fassung 217 **beides** nach: den Landepunkt und den Ausrollweg dahinter. Und
+aus dem Gang ist eine Kammer geworden: Wer quer geworfen wird, braucht Platz hinter der Landung.
 
 ## Der Garten bleibt ein Garten (Fassung 213)
 

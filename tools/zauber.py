@@ -419,13 +419,21 @@ def pruefe(b):
             # Die Bannschleuder trägt über die Leere. Ihr Landepunkt steht fest, solange sie nicht
             # schwenkt (amp = 0) - und in der Loge schwenkt keine. Damit ist der Wurf ein Übergang
             # wie ein Hut, nur in eine Richtung; für die Frage „kommt man ans Loch" reicht das.
+            # DER BALL BLEIBT NICHT LIEGEN, WO ER AUFKOMMT. Beim Aufsetzen behält er 0,6 seines
+            # Flugtempos (physics.js) und rollt damit noch gut drei Kacheln weiter. Fynn ist genau
+            # deshalb auf der Siegelkammer in den Abgrund geflogen: Der Landepunkt lag auf dem
+            # Gang, der Ausrollweg dahinter nicht mehr. Geprüft wird darum beides.
             weit = 0.9 + o.get('range', 9.0)
+            for zusatz, was in ((0.0, 'landet'), (3.2, 'rollt danach')):
+                lx = o['x'] + math.cos(o['base']) * (weit + zusatz)
+                ly = o['y'] + math.sin(o['base']) * (weit + zusatz)
+                if not fest(int(lx), int(ly)):
+                    fehler.append(f'die Bannschleuder auf {o["x"]}/{o["y"]} {was} bei '
+                                  f'{lx:.1f}/{ly:.1f} – dort ist kein Boden')
+                    break
             lx = o['x'] + math.cos(o['base']) * weit
             ly = o['y'] + math.sin(o['base']) * weit
-            if not fest(int(lx), int(ly)):
-                fehler.append(f'die Bannschleuder auf {o["x"]}/{o["y"]} wirft nach '
-                              f'{lx:.1f}/{ly:.1f} – dort ist kein Boden')
-            else:
+            if fest(int(lx), int(ly)):
                 spruenge.append([(int(o['x']), int(o['y'])), (int(lx), int(ly))])
         elif o['type'] == 'copperpipe':
             # Die Siegelröhre: ihre beiden Enden stehen als Buchstaben in der Karte
@@ -1448,18 +1456,21 @@ intro='Das Loch wandert zwischen drei Stellen in einem schmalen Schacht, und man
 f = leer(44, 18)
 gang(f, 2, 8, 12, 10)                 # Abschlag, endet an der ersten Röhre
 gang(f, 18, 3, 28, 5)                 # zweites Stück, oben
-gang(f, 18, 12, 28, 14)               # drittes Stück, unten
+# EINE KAMMER, KEIN GANG. Die Schleuder wirft hier QUER, und ein Gang von drei Kacheln fängt das
+# nicht auf: Der Ball kam auf dem Boden an und rollte über die hintere Kante hinaus. Wer quer
+# geworfen wird, braucht Platz hinter der Landung.
+gang(f, 16, 11, 30, 17)               # drittes Stück, unten – eine Kammer
 gang(f, 34, 8, 42, 10)                # und das Ziel
 gang(f, 34, 5, 36, 13)
 setz(f, 3, 9, 'T'); setz(f, 40, 9, 'H')
 # Die Rohrmünder liegen auf dem Boden: A schluckt am Ende des ersten Stücks, a spuckt oben aus.
 setz(f, 11, 9, 'A'); setz(f, 19, 4, 'a')
-setz(f, 27, 13, 'B'); setz(f, 35, 9, 'b')
+setz(f, 27, 15, 'B'); setz(f, 35, 9, 'b')
 bahn(LOGE, 'Die Siegelkammer', 'erzmagierloge', f, [
     rohr('A', grad=0),
     rohr('B', grad=0),
-    kanone(26.0, 4.5, grad=90, weite=9.0, amp=0.0, stil='bannschleuder'),
-    kreis(22.0, 13.5, 'bremse', r=1.2),
+    kanone(26.0, 4.5, grad=90, weite=6.5, amp=0.0, stil='bannschleuder'),
+    kreis(21.0, 14.0, 'bremse', r=1.3),
     kreis(38.0, 9.5, 'bann', r=1.2, takt=5.0),
     lampe(41.0, 9.5, r=3.8, stil='bannlicht'),
 ], par=5,
@@ -1484,7 +1495,7 @@ bahn(LOGE, 'Der Erzmagier', 'erzmagierloge', f, [
     kreis(7.0, 10.5, 'schub', r=1.2),
     ranke(12, 9, 6, 3, 9.5, 10.5, dauer=4.2),
     huete([(20, 10), (23, 5), (30, 5)], takt=2.2),
-    kanone(31.0, 5.5, grad=0, weite=9.5, amp=0.0, stil='bannschleuder'),
+    kanone(31.0, 5.5, grad=0, weite=7.5, amp=0.0, stil='bannschleuder'),
     mond(41.0, 5.5, r=2.8, kraft=7.5, takt=5.0, phase=0.2),
     blitz(37.5, 11.0, w=3.0, h=4.0, takt=4.2, stil='bannschlag'),
     kreis(34.0, 15.5, 'bremse', r=1.2),

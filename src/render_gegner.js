@@ -153,9 +153,17 @@ Object.assign(Renderer.prototype, {
       ctx.lineWidth = Math.max(1.6, s * dick);
       ctx.beginPath(); ctx.arc(0, 0, rr, 0, TAU); ctx.stroke();
     };
+    /* Rillen bis in die MITTE. Anfangs lagen sie alle am Rand, und in den Kammern zwischen den
+       Ringen war nichts – dort spielt man aber, und dort soll der Zirkel auch liegen. Die Radien
+       sind mit Absicht andere als die der Ringe: Zwei Kreise, die genau übereinanderliegen,
+       heben sich gegenseitig auf. */
     rille(R, 0.11);
     rille(R * 0.9, 0.07);
+    rille(R * 0.72, 0.055);
+    rille(R * 0.54, 0.07);
+    rille(R * 0.36, 0.055);
     rille(R * 0.2, 0.09);
+    rille(R * 0.1, 0.05);
 
     /* Der Runenkranz zwischen den beiden äußeren Rillen. Er dreht sich langsam – das ist der
        Unterschied zwischen einem Muster und einem Zauber, der arbeitet. */
@@ -184,20 +192,48 @@ Object.assign(Renderer.prototype, {
       ctx.restore();
     }
 
-    // Zwölf Speichen nach außen, damit der Kreis eine Teilung hat – und an jeder ein Sternpunkt
+    // Zwölf Speichen von der Mitte bis zum Rand, an jeder Kreuzung ein Sternpunkt
     for (let k = 0; k < 12; k++) {
       const a = (k / 12) * TAU;
-      ctx.strokeStyle = `rgba(255,232,170,${(0.45 * puls).toFixed(3)})`;
-      ctx.lineWidth = Math.max(1.4, s * 0.05);
+      ctx.strokeStyle = `rgba(255,232,170,${(0.28 * puls).toFixed(3)})`;
+      ctx.lineWidth = Math.max(3, s * 0.13);
       ctx.beginPath();
-      ctx.moveTo(Math.cos(a) * R * 0.2, Math.sin(a) * R * 0.2);
+      ctx.moveTo(Math.cos(a) * R * 0.1, Math.sin(a) * R * 0.1);
       ctx.lineTo(Math.cos(a) * R * 0.9, Math.sin(a) * R * 0.9);
       ctx.stroke();
-      const fx = Math.cos(a) * R * 0.9, fy = Math.sin(a) * R * 0.9;
-      const fk = ctx.createRadialGradient(fx, fy, 0, fx, fy, s * 0.5);
-      fk.addColorStop(0, `rgba(255,248,215,${(0.85 * puls).toFixed(3)})`);
-      fk.addColorStop(1, 'rgba(255,230,160,0)');
-      ctx.fillStyle = fk; ctx.beginPath(); ctx.arc(fx, fy, s * 0.5, 0, TAU); ctx.fill();
+      ctx.strokeStyle = `rgba(255,240,195,${(0.7 * puls).toFixed(3)})`;
+      ctx.lineWidth = Math.max(1.4, s * 0.05);
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a) * R * 0.1, Math.sin(a) * R * 0.1);
+      ctx.lineTo(Math.cos(a) * R * 0.9, Math.sin(a) * R * 0.9);
+      ctx.stroke();
+      for (const u of [0.36, 0.54, 0.72, 0.9]) {
+        const fx = Math.cos(a) * R * u, fy = Math.sin(a) * R * u;
+        const fk = ctx.createRadialGradient(fx, fy, 0, fx, fy, s * 0.42);
+        fk.addColorStop(0, `rgba(255,248,215,${(0.8 * puls).toFixed(3)})`);
+        fk.addColorStop(1, 'rgba(255,230,160,0)');
+        ctx.fillStyle = fk; ctx.beginPath(); ctx.arc(fx, fy, s * 0.42, 0, TAU); ctx.fill();
+      }
+    }
+
+    /* Ein zweiter Runenkranz weiter innen, gegenläufig. Er ist das, was die Kammern zwischen den
+       Ringen füllt – und daß er andersherum läuft als der äußere, macht aus zwei Ringen ein
+       Werk, das arbeitet. */
+    for (let k = 0; k < 24; k++) {
+      const a = (k / 24) * TAU - t * 0.05;
+      ctx.save();
+      ctx.translate(Math.cos(a) * R * 0.45, Math.sin(a) * R * 0.45);
+      ctx.rotate(a + Math.PI / 2);
+      const g = R * 0.026;
+      ctx.strokeStyle = `rgba(255,232,170,${(0.25 * puls).toFixed(3)})`;
+      ctx.lineWidth = Math.max(2.5, s * 0.11);
+      ctx.beginPath(); ctx.moveTo(0, -g); ctx.lineTo(0, g);
+      ctx.moveTo(-g * 0.6, k % 2 ? -g * 0.5 : g * 0.5); ctx.lineTo(0, 0); ctx.stroke();
+      ctx.strokeStyle = `rgba(255,244,205,${(0.8 * puls).toFixed(3)})`;
+      ctx.lineWidth = Math.max(1.2, s * 0.042);
+      ctx.beginPath(); ctx.moveTo(0, -g); ctx.lineTo(0, g);
+      ctx.moveTo(-g * 0.6, k % 2 ? -g * 0.5 : g * 0.5); ctx.lineTo(0, 0); ctx.stroke();
+      ctx.restore();
     }
 
     /* Die Bänder der Wirkungen. Jedes liegt zwischen seinem Ring und dem nächsten nach innen und
