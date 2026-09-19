@@ -443,6 +443,31 @@ def pruefe(b):
                           f'{dauer:.1f} s schafft man aber nur {weit:.1f} – die Brücke welkt, '
                           f'bevor man drüben ist')
 
+    # ---- Die Mühle (der Bienenstand)
+    #
+    # SIE MUSS DEN GANG WIRKLICH ZUSPERREN. Ihre beiden Klötze reichen von der Mitte aus je
+    # w/2 + overlap weit; ist der Gang höher als das, bleibt an der Wand ein Schlitz offen, durch
+    # den man an der ganzen Maschine vorbeirollt. Fynn hat genau das auf dem Treibhaus gefunden,
+    # und man sieht es auf dem Bild sofort, sobald die Körbe einzeln dastehen: Der letzte Korb
+    # hört auf, die Bande fängt aber erst ein Stück weiter an.
+    for o in [x for x in b['obstacles'] if x['type'] == 'windmill']:
+        achse_x = o.get('axis', 'y') == 'x'
+        w = o.get('w', 3.0); ueber = o.get('overlap', 0.7)
+        reicht = w / 2 + ueber
+        mitte = o['x'] if achse_x else o['y']
+        quer = int(o['y'] if achse_x else o['x'])
+        offen = []
+        for i in range(breit if achse_x else hoch):
+            px, py = (i, quer) if achse_x else (quer, i)
+            if not fest(px, py):
+                continue
+            if abs(i + 0.5 - mitte) > reicht + 0.001:
+                offen.append(i)
+        if offen:
+            fehler.append(f'die Mühle auf {o["x"]}/{o["y"]} sperrt den Gang nicht zu: bei '
+                          f'{"x" if achse_x else "y"} = {offen[0]} ist noch Boden, ihre Klötze '
+                          f'reichen aber nur {reicht:.1f} Felder weit (w={w}, overlap={ueber})')
+
     # ---- Die Zauberhüte
     for o in [x for x in b['obstacles'] if x['type'] == 'zauberhut']:
         if len(o['plaetze']) < 2:
@@ -620,7 +645,7 @@ bahn(GARTEN, 'Das Treibhaus', 'gewaechshaus', f, [
     # Die Zahlen stammen aus der Bot-Prüfung: Mit Durchlaß 1,1 und zwei Sprengern zu 1,4 brauchte
     # der Normalspieler im Schnitt fünfeinhalb Schläge – auf der sechsten Bahn einer NORMAL-Welt ist
     # das zu viel. Breiterer Durchlaß, langsamere Sprenger, und sie stehen weiter auseinander.
-    muehle(15.5, 6.5, w=5.0, gap=1.5, tempo=0.85, achse='y', stil='bienenstock'),
+    muehle(15.5, 6.5, w=6.8, gap=1.5, tempo=0.85, achse='y', stil='bienenstock'),
     windrad(21.5, 4.5, blades=2, laenge=1.3, tempo=-0.9, stil='sprenger'),
     windrad(21.5, 8.5, blades=2, laenge=1.3, tempo=0.9, stil='sprenger'),
     pilz(8.5, 4.5, stil='springkraut'),
@@ -701,7 +726,7 @@ bahn(GARTEN, 'Die Lehrlingsprüfung', 'lehrlingsgarten', f, [
     ranke(10, 3, 3, 9, 7.5, 7.5, dauer=4.2),
     pilz(14.5, 5.5, stil='springkraut'),
     pilz(14.5, 9.5, stil='springkraut'),
-    muehle(18.5, 7.5, w=5.0, gap=1.2, tempo=0.9, achse='y', stil='bienenstock'),
+    muehle(18.5, 7.5, w=7.6, gap=1.2, tempo=0.9, achse='y', stil='bienenstock'),
     huete([(24, 5), (24, 10), (29, 11)], takt=2.8),
 ], par=3,
 intro='Die Prüfung: erst die Ranke, dann zwischen dem Springkraut hindurch, dann der Bienenstand im '

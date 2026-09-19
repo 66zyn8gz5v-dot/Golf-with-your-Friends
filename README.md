@@ -3038,12 +3038,21 @@ geborgt – und ein geborgtes Bild erzählt die falsche Geschichte: In einem Gar
 | --- | --- | --- |
 | Prellklotz | **Springkraut** | Die pralle Kapsel steht sichtbar unter Spannung und platzt beim Stoß in zwei Hälften auf – der Ball fliegt weg wie die Samen. |
 | Windrad | **Rasensprenger** | Der Strahl läuft dem Arm hinterher, also sieht man die Drehrichtung, ohne getroffen zu werden. Am Besen sah man sie erst danach. |
-| Mühle | **Bienenstock** | Zwei Bienenstände mit Strohkörben; was den Durchgang sperrt, ist eine Wabe, und bei geschlossener Wabe stehen mehr Bienen davor. |
+| Mühle | **Bienenstock** | Zwei Reihen runder Strohkörbe, die den Klotz ganz ausfüllen; was den Durchgang sperrt, ist eine Wabe, und bei geschlossener Wabe stehen mehr Bienen davor. |
 | Magnet | **Pollenstrudel** | Eine Pusteblume, die atmet: Beim Ziehen zieht sie sich zusammen und die Pollen laufen nach innen, beim Stoßen bläst sie aus. Der Kristall sah in beiden Fällen gleich aus. |
 | Drehscheibe | **Riesen-Sonnenblume** | Die Kerne liegen in der echten Spirale und drehen sich mit, zwei grüne Blätter zeigen die Auswurfstelle. |
 
 Alle fünf stehen im Baumodus unter *Aussehen*; die Ampel am Boden bleibt, wo es eine gab – sie
 gehört zur Regel der Maschine, nicht zur Optik der alten Welt.
+
+**Und eine Regel mehr im Bahnbauer, seit Fassung 197: die Mühle muß den Gang wirklich zusperren.**
+Ihre beiden Klötze reichen von der Mitte aus je `w/2 + overlap` weit. Ist der Gang höher als das,
+bleibt an der Bande ein Schlitz offen, durch den man an der ganzen Maschine vorbeirollt – im
+Treibhaus und in der Lehrlingsprüfung war das so, seit die Bahnen stehen. Aufgefallen ist es erst,
+als die Körbe einzeln dastanden: Der letzte Korb hörte auf, die Bande fing erst ein Stück weiter
+an. `pruefe()` in `tools/zauber.py` sucht jetzt jede Bodenkachel neben den Klötzen und läßt die
+Bahn nicht durch, solange eine übrig ist; die beiden Mühlen wurden entsprechend verbreitert (5,0 →
+6,8 bzw. 7,6). Die Mühlen aller anderen Welten sind nachgemessen und dicht.
 
 **In den beiden Welten darüber kommt die Optik weiter aus dem Bestand** – kein neues Bild, und
 trotzdem sieht keine aus wie im Märchenland. In der Sternenwarte geht es so weiter: Das **Auge des

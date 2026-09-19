@@ -200,7 +200,7 @@ const ZAUBER_GARTEN = [
       '..............................',
     ],
     obstacles: [
-      { type: 'windmill', x: 15.5, y: 6.5, w: 5.0, gap: 1.5, speed: 0.85, blades: 4, axis: 'y', phase: 0.0, depth: 1.2, style: 'bienenstock' },
+      { type: 'windmill', x: 15.5, y: 6.5, w: 6.8, gap: 1.5, speed: 0.85, blades: 4, axis: 'y', phase: 0.0, depth: 1.2, style: 'bienenstock' },
       { type: 'rotor', x: 21.5, y: 4.5, blades: 2, len: 1.3, speed: -0.9, thick: 0.16, style: 'sprenger', phase: 0.0 },
       { type: 'rotor', x: 21.5, y: 8.5, blades: 2, len: 1.3, speed: 0.9, thick: 0.16, style: 'sprenger', phase: 0.0 },
       { type: 'bumper', x: 8.5, y: 4.5, r: 0.55, style: 'springkraut', kick: 7.5 },
@@ -294,7 +294,7 @@ const ZAUBER_GARTEN = [
       { type: 'ranke', x: 10, y: 3, w: 3, h: 9, dauer: 4.2, r: 0.6, bluete: { x: 7.5, y: 7.5 } },
       { type: 'bumper', x: 14.5, y: 5.5, r: 0.55, style: 'springkraut', kick: 7.5 },
       { type: 'bumper', x: 14.5, y: 9.5, r: 0.55, style: 'springkraut', kick: 7.5 },
-      { type: 'windmill', x: 18.5, y: 7.5, w: 5.0, gap: 1.2, speed: 0.9, blades: 4, axis: 'y', phase: 0.0, depth: 1.2, style: 'bienenstock' },
+      { type: 'windmill', x: 18.5, y: 7.5, w: 7.6, gap: 1.2, speed: 0.9, blades: 4, axis: 'y', phase: 0.0, depth: 1.2, style: 'bienenstock' },
       { type: 'zauberhut', takt: 2.8, phase: 0.0, r: 0.42, plaetze: [[24.0, 5.0], [24.0, 10.0], [29.0, 11.0]] },
     ],
     autoDecor: { density: 0.09, seed: 127 },

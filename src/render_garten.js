@@ -181,51 +181,51 @@ Object.assign(Renderer.prototype, {
     const stroh = ['#e3b86a', '#a97c34'], holz = ['#8a6438', '#5a4022'];
 
     for (const b of ob.blocks) {
-      const mx = (b[0][0] + b[2][0]) / 2, my = (b[0][1] + b[2][1]) / 2;
-      this.prism(ctx, b, 0, 0.3, holz[0], holz[1], { outline: '#3a2812' });          // der Bienenstand
-      this.prism(ctx, b, 0.3, ob.height - 0.3, stroh[0], stroh[1], { outline: '#6b4a1a' });
-      // Strohgeflecht: waagerechte Wülste auf der Seite, die zur Kamera zeigt
-      const sd = ((ax ? this.cam.cos : this.cam.sin)) > 0 ? 1 : -1;
-      const a0 = ax ? [Math.min(b[0][0], b[2][0]), my + sd * dd] : [mx + sd * dd, Math.min(b[0][1], b[2][1])];
-      const a1 = ax ? [Math.max(b[0][0], b[2][0]), my + sd * dd] : [mx + sd * dd, Math.max(b[0][1], b[2][1])];
-      ctx.strokeStyle = 'rgba(96,64,20,0.45)'; ctx.lineWidth = Math.max(1, s * 0.035);
-      for (let z = 0.45; z < ob.height; z += 0.24) {
-        const p0 = this.proj(a0[0], a0[1], z), p1 = this.proj(a1[0], a1[1], z);
-        ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke();
-      }
-      /* Die Körbe obendrauf. ES SIND MEHRERE, keiner. Der Klotz ist knapp drei Felder lang; ein
-         einzelner Korb in seiner Mitte sah aus wie ein Hütchen auf einer Kiste und ließ die
-         Kiste als Kiste stehen. Zwei oder drei nebeneinander machen aus dem Klotz einen
-         Bienenstand – und das ist das Bild, das die Maschine erklärt. */
+      /* KEIN KASTEN MEHR, SONDERN EINE REIHE RUNDER KÖRBE. Erst stand hier ein rechteckiger
+         Strohklotz mit kleinen Kuppeln obendrauf – und ein Quader mit Hütchen ist ein Schrank mit
+         Hütchen, kein Bienenstock. Jetzt füllt eine Reihe voller Strohkörbe den ganzen Klotz, vom
+         Boden bis über die Sperrhöhe hinaus. Sie überlappen sich ein wenig: Ein Nest ist ein
+         Haufen, keine Aufstellung.
+
+         Die Sperre bleibt der Klotz. Die Körbe decken ihn nur, und zwar mit Absicht etwas
+         großzügiger als er ist – ein Bild, das schmaler ist als seine Wirkung, lädt dazu ein,
+         daneben zu zielen. */
       const lx0 = Math.min(b[0][0], b[2][0]), lx1 = Math.max(b[0][0], b[2][0]);
       const ly0 = Math.min(b[0][1], b[2][1]), ly1 = Math.max(b[0][1], b[2][1]);
+      const mx = (lx0 + lx1) / 2, my = (ly0 + ly1) / 2;
       const lang = ax ? lx1 - lx0 : ly1 - ly0;
-      const anz = Math.max(1, Math.round(lang / 1.5));
+      const tief = ax ? ly1 - ly0 : lx1 - lx0;
+      this.prism(ctx, b, 0, 0.16, holz[0], holz[1], { outline: '#3a2812' });   // das Brett, auf dem sie stehen
+
+      const anz = Math.max(2, Math.round(lang / 0.95));
       const koerbe = [];
       for (let k = 0; k < anz; k++) {
         const u = (k + 0.5) / anz;
         koerbe.push(ax ? [lx0 + u * lang, my] : [mx, ly0 + u * lang]);
       }
       koerbe.sort((p, q) => (p[0] + p[1]) - (q[0] + q[1]));   // von hinten nach vorn
-      const kb = Math.max(s * 0.3, Math.min(lang / anz, ob.depth) * s * 0.44);
+      const kb = Math.max(s * 0.28, Math.min((lang / anz) * 1.3, tief * 1.35) * s * 0.5);
       for (const [px, py] of koerbe) {
-        const [kx, ky] = this.proj(px, py, ob.height);
-        const [, kob] = this.proj(px, py, ob.height + 0.9);
-        const kh = Math.max(s * 0.35, ky - kob);
-        for (let r = 5; r >= 0; r--) {        // von oben nach unten: der untere Ring deckt den oberen
-          const u = r / 6;
-          const w = kb * Math.sqrt(Math.max(0.05, 1 - u * u * 0.92));
-          ctx.beginPath(); ctx.ellipse(kx, ky - kh * u, w, kh * 0.19, 0, 0, TAU);
+        const [kx, ky] = this.proj(px, py, 0.16);
+        const [, kob] = this.proj(px, py, ob.height + 0.5);
+        const kh = Math.max(s * 0.5, ky - kob);
+        /* Sieben Strohwülste, von oben nach unten gezeichnet: Der untere deckt jeweils die
+           Unterkante des oberen, und daraus wird eine Kuppel statt eines Stapels Ringe. */
+        for (let r = 6; r >= 0; r--) {
+          const u = r / 7;
+          const w = kb * Math.sqrt(Math.max(0.06, 1 - u * u * 0.9));
+          ctx.beginPath(); ctx.ellipse(kx, ky - kh * u, w, kh * 0.14, 0, 0, TAU);
           ctx.fillStyle = r % 2 ? '#d6a955' : '#eccb84'; ctx.fill();
-          ctx.strokeStyle = 'rgba(96,64,20,0.55)'; ctx.lineWidth = Math.max(1, s * 0.022); ctx.stroke();
+          ctx.strokeStyle = 'rgba(96,64,20,0.5)'; ctx.lineWidth = Math.max(1, s * 0.02); ctx.stroke();
         }
-        // Flugloch mit Anflugbrett
+        // Flugloch mit Anflugbrett, unten am Korb
         ctx.fillStyle = '#2a1a08';
-        ctx.beginPath(); ctx.ellipse(kx, ky - kh * 0.1, kb * 0.22, kh * 0.13, 0, 0, TAU); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(kx, ky - kh * 0.12, kb * 0.2, kh * 0.09, 0, 0, TAU); ctx.fill();
         ctx.fillStyle = '#b98a42';
-        ctx.fillRect(kx - kb * 0.32, ky - kh * 0.02, kb * 0.64, Math.max(1.5, s * 0.05));
+        ctx.fillRect(kx - kb * 0.28, ky - kh * 0.05, kb * 0.56, Math.max(1.5, s * 0.045));
       }
     }
+
 
     // Der Querbalken über dem Durchgang trägt die beiden Stände zusammen
     const g = ob.gap / 2 + 0.05;
