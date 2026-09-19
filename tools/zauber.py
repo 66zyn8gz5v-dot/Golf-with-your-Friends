@@ -1554,6 +1554,12 @@ gang(f, 12, 10, 14, 16)               # der Umweg: vom Abschlag hinab
 gang(f, 12, 14, 31, 16)               # am Grund entlang, die ganze Bahn
 gang(f, 29, 5, 31, 16)                # und drüben wieder hinauf
 gang(f, 36, 3, 38, 15)                # der Schacht, in dem das Loch wandert
+# ZWEI MAUERN GEGEN DEN ABSTURZ. Die Galerie endet vor der Leere, und wer zu langsam in den
+# Bannschacht rollt, wird nicht gehoben - er rollte sonst über die Kante. Ein Stein am Ende fängt
+# ihn auf: Wer zu sacht schlägt, liegt dort und schlägt noch einmal, statt einen Strafschlag zu
+# bekommen. Dasselbe drüben, wo der Ball mit Flugtempo ankommt und noch drei Kacheln weiterrollt.
+fuell(f, 24, 3, 24, 5, 'x')
+fuell(f, 39, 3, 39, 5, 'x')
 setz(f, 3, 9, 'T'); setz(f, 37, 4, 'H')
 bahn(LOGE, 'Das Wanderloch', 'bannkreis', f, [
     wanderloch([(37.5, 4.5), (37.5, 9.5), (37.5, 14.5)], stil='siegelloch'),
