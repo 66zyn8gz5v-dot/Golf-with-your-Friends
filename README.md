@@ -3019,11 +3019,26 @@ Aufgabe heißt immer: den Moment abpassen. Hier startet der Spieler die Uhr selb
   Maschine dieselbe Stelle meinen: Stünde er woanders, wäre die Ansage eine Lüge.
   *Und er greift nur, wer auf ihn zurollt* – sonst hinge man zwischen beiden Seiten fest.
 
-**Die Optik der alten Maschinen kommt aus dem Bestand** – kein einziges neues Bild, und trotzdem
-sieht keine aus wie im Märchenland: Das Windrad ist hier eine **Ranke** oder ein **Besen**, der
-Prellklotz ein **Pilz**, eine **Leuchtkugel** oder ein **Kristall**, der Magnet ein
-**Seelenlicht**, die Drehscheibe ein **Laubwirbel**. Seit Fassung 191 sind diese Gestalten auch im
-Baumodus unter *Aussehen* zu finden. In der Sternenwarte geht es so weiter: Das **Auge des
+**Der Lehrlingsgarten hat seit Fassung 195 seine eigenen fünf Gestalten** (`src/render_garten.js`).
+Anfangs liehen sich die alten Maschinen hier ihr Bild aus den alten Welten: ein **Pilz** aus dem
+Pilzhain als Prellklotz, ein **Hexenbesen** als Windrad, ein **Müllerhaus** als Mühle, ein
+**Seelenlicht** als Magnet, ein **Laubwirbel** als Drehscheibe. Das Verhalten war neu, das Bild
+geborgt – und ein geborgtes Bild erzählt die falsche Geschichte: In einem Garten, in dem Lehrlinge
+üben, steht kein Müllerhaus. Jetzt wachsen alle fünf im selben Garten:
+
+| Maschine | Gestalt | Was man ihr jetzt ansieht |
+| --- | --- | --- |
+| Prellklotz | **Springkraut** | Die pralle Kapsel steht sichtbar unter Spannung und platzt beim Stoß in zwei Hälften auf – der Ball fliegt weg wie die Samen. |
+| Windrad | **Rasensprenger** | Der Strahl läuft dem Arm hinterher, also sieht man die Drehrichtung, ohne getroffen zu werden. Am Besen sah man sie erst danach. |
+| Mühle | **Bienenstock** | Zwei Bienenstände mit Strohkörben; was den Durchgang sperrt, ist eine Wabe, und bei geschlossener Wabe stehen mehr Bienen davor. |
+| Magnet | **Pollenstrudel** | Eine Pusteblume, die atmet: Beim Ziehen zieht sie sich zusammen und die Pollen laufen nach innen, beim Stoßen bläst sie aus. Der Kristall sah in beiden Fällen gleich aus. |
+| Drehscheibe | **Riesen-Sonnenblume** | Die Kerne liegen in der echten Spirale und drehen sich mit, zwei grüne Blätter zeigen die Auswurfstelle. |
+
+Alle fünf stehen im Baumodus unter *Aussehen*; die Ampel am Boden bleibt, wo es eine gab – sie
+gehört zur Regel der Maschine, nicht zur Optik der alten Welt.
+
+**In den beiden Welten darüber kommt die Optik weiter aus dem Bestand** – kein neues Bild, und
+trotzdem sieht keine aus wie im Märchenland. In der Sternenwarte geht es so weiter: Das **Auge des
 Turms** aus dem Schattenreich wird zum Fernrohr, das **Pendel** der Uhrwerkstadt zum Lot des
 Astronomen, das **Zahnradfeld** zur Armillarsphäre, der **Strudel** der Flut zum Nebelwirbel und
 das **wandernde Tor** zum Wandelgang. In der Erzmagierloge kommen die härtesten dazu: der

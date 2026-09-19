@@ -94,9 +94,11 @@ def windrad(x, y, blades=3, laenge=1.6, tempo=1.3, stil='vine'):
     return {'type': 'rotor', 'x': x, 'y': y, 'blades': blades, 'len': laenge,
             'speed': tempo, 'thick': 0.16, 'style': stil, 'phase': 0.0}
 
-def muehle(x, y, w=3.0, gap=1.0, tempo=1.0, achse='y', phase=0.0):
-    return {'type': 'windmill', 'x': x, 'y': y, 'w': w, 'gap': gap, 'speed': tempo,
-            'blades': 4, 'axis': achse, 'phase': phase, 'depth': 1.2}
+def muehle(x, y, w=3.0, gap=1.0, tempo=1.0, achse='y', phase=0.0, stil=None):
+    o = {'type': 'windmill', 'x': x, 'y': y, 'w': w, 'gap': gap, 'speed': tempo,
+         'blades': 4, 'axis': achse, 'phase': phase, 'depth': 1.2}
+    if stil: o['style'] = stil
+    return o
 
 def portal(x, y, tx, ty, farbe='#c77dff'):
     return {'type': 'portal', 'x': x, 'y': y, 'tx': tx, 'ty': ty, 'color': farbe, 'twoWay': True}
@@ -106,8 +108,10 @@ def magnet(x, y, r=3.0, kraft=8.0, stil=None):
     if stil: o['style'] = stil
     return o
 
-def scheibe_(x, y, r=1.5, tempo=1.6, aus=0):
-    return {'type': 'turntable', 'x': x, 'y': y, 'r': r, 'speed': tempo, 'exit': aus, 'eject': 4.5}
+def scheibe_(x, y, r=1.5, tempo=1.6, aus=0, stil=None):
+    o = {'type': 'turntable', 'x': x, 'y': y, 'r': r, 'speed': tempo, 'exit': aus, 'eject': 4.5}
+    if stil: o['style'] = stil
+    return o
 
 def rampe(x, y, w, h, angle=0, land=2.6, speed=5.0, minSpeed=2.5):
     return {'type': 'ramp', 'x': x, 'y': y, 'w': w, 'h': h, 'angle': angle,
@@ -519,10 +523,12 @@ def pruefe(b):
 #  DER LEHRLINGSGARTEN – Normal, neun Bahnen
 #  Ein ummauerter Garten in der Dämmerung. Die Hecken sind die Banden, die Beete die Lücken.
 #
-#  DIE OPTIK KOMMT AUS DEM BESTAND. Das Spiel hat für fast jede Maschine schon mehrere Gestalten –
-#  das Windrad kann eine Ranke sein, ein Besen, eine Sense; der Prellklotz ein Pilz, ein Kristall,
-#  eine Leuchtkugel; der Magnet ein Seelenlicht. Hier wird genau das benutzt: Kein einziges neues
-#  Bild, und trotzdem sieht keine Maschine aus wie im Märchenland.
+#  DIE OPTIK IST JETZT DIE EIGENE. Anfangs lieh sich der Garten seine Bilder aus den alten Welten:
+#  ein Pilz aus dem Pilzhain, ein Hexenbesen als Windrad, ein Müllerhaus als Mühle. Das Verhalten
+#  war neu, das Bild geborgt – und ein geborgtes Bild erzählt die falsche Geschichte. Seit Fassung
+#  195 hat jede der fünf alten Maschinen hier ihre eigene Gestalt, und alle fünf wachsen im selben
+#  Garten: Springkraut, Rasensprenger, Bienenstock, Pollenstrudel, Riesen-Sonnenblume
+#  (gezeichnet in src/render_garten.js).
 # ===========================================================================
 GARTEN = welt('lehrling', 'ZAUBER_GARTEN', 'Lehrlingsgarten')
 
@@ -535,12 +541,12 @@ fuell(f, 8, 2, 11, 6, '.')            # Hecke, von oben hereinragend
 fuell(f, 17, 6, 20, 10, '.')          # und eine von unten
 setz(f, 3, 6, 'T'); setz(f, 26, 6, 'H')
 bahn(GARTEN, 'Am Gartentor', 'lehrlingsgarten', f, [
-    pilz(14.5, 8.5),
-    pilz(23.5, 4.5, stil='orb'),
+    pilz(14.5, 8.5, stil='springkraut'),
+    pilz(23.5, 4.5, stil='springkraut'),
 ], par=3,
 intro='Der Garten des Lehrlings, kurz vor Sonnenuntergang. Zwei Hecken stehen im Weg, und dazwischen '
-      'geht es im Bogen hindurch. Die Leuchtkugel am Ende federt kräftiger als der Pilz – das lohnt '
-      'sich zu wissen, bevor es schwieriger wird.')
+      'geht es im Bogen hindurch. Die beiden Springkräuter federn den Ball zurück, sobald ihre '
+      'Kapsel platzt – das lohnt sich zu wissen, bevor es schwieriger wird.')
 
 # --- 2 ---------------------------------------------------------------------
 # Die erste Blüte. Hier wird die Rankenbrücke erklärt, und sonst nichts: eine Lücke,
@@ -550,29 +556,29 @@ fuell(f, 1, 3, 30, 9)
 setz(f, 3, 6, 'T'); setz(f, 28, 6, 'H')
 bahn(GARTEN, 'Die erste Blüte', 'lehrlingsgarten', f, [
     ranke(14, 3, 4, 7, 10.5, 6.5, dauer=4.0),
-    windrad(21.5, 6.5, blades=3, laenge=1.8, tempo=1.1, stil='vine'),
+    windrad(21.5, 6.5, blades=3, laenge=1.8, tempo=1.1, stil='sprenger'),
 ], par=3,
 intro='Über die Lücke führt nichts – bis man die Blüte anstößt. Dann wächst eine Ranke hinüber und '
       'trägt vier Sekunden lang. Zu sacht geschlagen, und man liegt noch darauf, wenn sie welkt; zu '
       'hart, und man fliegt daran vorbei. Dazwischen liegt der Schlag.')
 
 # --- 3 ---------------------------------------------------------------------
-# Der Pilzring. Ein Rundbeet, in seiner Mitte das Loch, und davor ein Kranz aus Pilzen.
+# Der Springkrautkranz. Ein Rundbeet, in seiner Mitte das Loch, und davor ein Kranz aus Springkraut.
 # Gerade hinein geht nicht; man muß den Ball abprallen lassen.
 f = leer(28, 15)
 scheibe(f, 13.5, 7.5, 12, 6.4)
 setz(f, 3, 7, 'T'); setz(f, 13, 7, 'H')
 ring = []
 for i in range(8):
-    # Ohne Versatz: So steht einer der Pilze genau zwischen Abschlag und Loch. Das ist der Sinn
+    # Ohne Versatz: So steht eines der Kräuter genau zwischen Abschlag und Loch. Das ist der Sinn
     # der Bahn – der gerade Weg ist versperrt – und die Prüfung besteht darauf.
     a = i * (math.pi * 2 / 8)
     ring.append(pilz(round(13.5 + math.cos(a) * 3.2, 1), round(7.5 + math.sin(a) * 3.2, 1),
-                     r=0.5, stil='mushroom' if i % 2 else 'orb'))
-bahn(GARTEN, 'Der Pilzring', 'lehrlingsgarten', f, ring, par=3,
-intro='Ein Rundbeet, und mitten darin das Loch. Der Kranz aus Pilzen läßt niemanden geradewegs '
+                     r=0.5 if i % 2 else 0.58, stil='springkraut'))
+bahn(GARTEN, 'Der Springkrautkranz', 'lehrlingsgarten', f, ring, par=3,
+intro='Ein Rundbeet, und mitten darin das Loch. Der Kranz aus Springkraut läßt niemanden geradewegs '
       'hinein – wer es mit Gewalt versucht, kommt weiter heraus, als er hineingekommen ist. Sanft '
-      'anspielen und einen Pilz als Wand benutzen ist der kürzere Weg.')
+      'anspielen und eine Kapsel als Wand benutzen ist der kürzere Weg.')
 
 # --- 4 ---------------------------------------------------------------------
 # Zwei Blüten. Dieselbe Maschine zweimal, und dazwischen bleibt keine Zeit zum Nachdenken:
@@ -583,7 +589,7 @@ setz(f, 3, 6, 'T'); setz(f, 30, 6, 'H')
 bahn(GARTEN, 'Zwei Blüten', 'lehrlingsgarten', f, [
     ranke(11, 3, 3, 7, 8.5, 6.5, dauer=4.0),
     ranke(22, 3, 3, 7, 18.5, 6.5, dauer=4.0),
-    pilz(27.5, 6.5, stil='orb'),
+    pilz(27.5, 6.5, stil='springkraut'),
 ], par=4,   # zwei Uhren hintereinander kosten einen Schlag mehr, als hier lange stand
 intro='Zwei Lücken, zwei Blüten. Die zweite Blüte liegt hinter der ersten Ranke – man kommt also nur '
       'an sie heran, wenn die erste noch trägt. Ein Schlag, der beide schafft, ist möglich; zwei '
@@ -599,30 +605,31 @@ fuell(f, 19, 9, 24, 11, 's')          # der Sandkasten hinter dem falschen Hut
 setz(f, 3, 6, 'T'); setz(f, 26, 5, 'H')
 bahn(GARTEN, 'Der Hutständer', 'gewaechshaus', f, [
     huete([(6, 6), (22, 4), (22, 10)], takt=2.6),
-    pilz(9.5, 9.5, stil='crystal'),
+    pilz(9.5, 9.5, stil='springkraut'),
 ], par=3,
 intro='Durch die Mauer kommt nur, wer sich verzaubern läßt. Wer in einen Hut rollt, kommt aus dem '
       'heraus, der gerade leuchtet – und wer in den leuchtenden rollt, aus dem nächsten. Einer der '
       'beiden Ausgänge steht im Sand. Das Leuchten wandert; man sieht es kommen.')
 
 # --- 6 ---------------------------------------------------------------------
-# Das Treibhaus. Das Gerätehaus steht quer über dem Weg, davor kehren zwei Besen.
+# Das Treibhaus. Der Bienenstand steht quer über dem Weg, dahinter drehen zwei Rasensprenger.
 f = leer(30, 14)
 fuell(f, 1, 3, 28, 10)
 setz(f, 3, 6, 'T'); setz(f, 27, 6, 'H')
 bahn(GARTEN, 'Das Treibhaus', 'gewaechshaus', f, [
-    # Die Zahlen stammen aus der Bot-Prüfung: Mit Tür 1,1 und zwei Besen zu 1,4 brauchte der
-    # Normalspieler im Schnitt fünfeinhalb Schläge – auf der sechsten Bahn einer NORMAL-Welt ist
-    # das zu viel. Breitere Tür, langsamere Besen, und die Besen stehen weiter auseinander.
-    muehle(15.5, 6.5, w=5.0, gap=1.5, tempo=0.85, achse='y'),
-    windrad(21.5, 4.5, blades=2, laenge=1.3, tempo=-0.9, stil='broom'),
-    windrad(21.5, 8.5, blades=2, laenge=1.3, tempo=0.9, stil='broom'),
-    pilz(8.5, 4.5, stil='crystal'),
-    pilz(8.5, 8.5, stil='crystal'),
+    # Die Zahlen stammen aus der Bot-Prüfung: Mit Durchlaß 1,1 und zwei Sprengern zu 1,4 brauchte
+    # der Normalspieler im Schnitt fünfeinhalb Schläge – auf der sechsten Bahn einer NORMAL-Welt ist
+    # das zu viel. Breiterer Durchlaß, langsamere Sprenger, und sie stehen weiter auseinander.
+    muehle(15.5, 6.5, w=5.0, gap=1.5, tempo=0.85, achse='y', stil='bienenstock'),
+    windrad(21.5, 4.5, blades=2, laenge=1.3, tempo=-0.9, stil='sprenger'),
+    windrad(21.5, 8.5, blades=2, laenge=1.3, tempo=0.9, stil='sprenger'),
+    pilz(8.5, 4.5, stil='springkraut'),
+    pilz(8.5, 8.5, stil='springkraut'),
 ], par=4,
-intro='Das Gerätehaus steht quer im Weg, und seine Tür geht im Takt auf und zu. Dahinter kehren zwei '
-      'Besen gegeneinander – sie drehen in verschiedene Richtungen, also gibt es keinen Augenblick, '
-      'in dem beide zugleich aus dem Weg sind. Einer nach dem anderen.')
+intro='Der Bienenstand steht quer im Weg, und der Durchlaß zwischen den Körben schließt sich im Takt '
+      'mit einer Wabe. Dahinter drehen zwei Rasensprenger gegeneinander – sie laufen in '
+      'verschiedene Richtungen, also gibt es keinen Augenblick, in dem beide zugleich aus dem Weg '
+      'sind. Einer nach dem anderen.')
 
 # --- 7 ---------------------------------------------------------------------
 # Blüte und Hut. Zuerst die Ranke über den Steg, dann die Hüte durch die Regalwand.
@@ -650,19 +657,19 @@ bahn(GARTEN, 'Blüte und Hut', 'gewaechshaus', f, [
     # das ist im Garten die richtige Rolle fuer ihn. Wer ihn trifft, spart einen Schlag; wer
     # nicht, geht unten herum.
     huete([(24, 7), (30, 10)], takt=2.4, r=0.62),
-    pilz(24.5, 4.5, stil='crystal'),
+    pilz(24.5, 4.5, stil='springkraut'),
 ], par=4,
 intro='Erst die Ranke über den Steg – sie trägt hier eine halbe Sekunde länger, der Weg ist weiter. '
       'Dann steht die Regalwand im Weg, und wieder helfen nur die Hüte. Wer beim Steg zu viel Kraft '
       'gibt, steht drüben zu weit oben und muß noch einmal ansetzen.')
 
 # --- 8 ---------------------------------------------------------------------
-# Der Blätterwirbel. Ein Seelenlicht zieht, ein Laubwirbel dreht und wirft aus.
+# Der Blätterwirbel. Ein Pollenstrudel zieht, eine Riesen-Sonnenblume dreht und wirft aus.
 #
 # ZWEITE FASSUNG. Die erste war ein offener Platz mit einem Beet darin, und der Bot lochte sie
 # JEDES MAL mit einem Schlag – ein Schlag am Beet vorbei, und der Ball lief durch. Eine Bahn, auf
 # der der gerade Weg immer reicht, ist Kulisse. Jetzt stehen zwei Beete versetzt zueinander und vor
-# dem Loch eine Hecke: Der Weg ist ein Zickzack, und das Seelenlicht steht genau in der ersten
+# dem Loch eine Hecke: Der Weg ist ein Zickzack, und der Pollenstrudel steht genau in der ersten
 # Kehre, wo man am wenigsten Lust hat, abgelenkt zu werden.
 #
 # DRITTE FASSUNG. Damit war sie zu weit ins andere Extrem gekippt: Der Bot brauchte im Mittel fünf
@@ -676,13 +683,13 @@ fuell(f, 18, 7, 20, 11, '.')          # Beet von unten
 fuell(f, 23, 8, 24, 10, 'x')          # Hecke vor dem Loch, mit einer Gasse darunter
 setz(f, 3, 5, 'T'); setz(f, 26, 9, 'H')
 bahn(GARTEN, 'Der Blätterwirbel', 'lehrlingsgarten', f, [
-    magnet(8.5, 9.5, r=2.6, kraft=5.0, stil='soul'),   # schwach genug, daß es den Ball ablenkt und nicht einfängt
-    scheibe_(15.5, 5.5, r=1.8, tempo=1.8, aus=90),
-    pilz(22.5, 5.5),
+    magnet(8.5, 9.5, r=2.6, kraft=5.0, stil='pollen'),   # schwach genug, daß es den Ball ablenkt und nicht einfängt
+    scheibe_(15.5, 5.5, r=1.8, tempo=1.8, aus=90, stil='sonnenblume'),
+    pilz(22.5, 5.5, stil='springkraut'),
 ], par=3,
-intro='Zwei Beete stehen versetzt, dazwischen geht es im Zickzack. Das Seelenlicht zieht an allem, '
-      'was an ihm vorbeirollt – ausgerechnet in der ersten Kehre, wo man ohnehin schon aufpassen '
-      'muß. Der Laubwirbel dahinter fängt den Ball und wirft ihn immer nach unten aus; wer ihn '
+intro='Zwei Beete stehen versetzt, dazwischen geht es im Zickzack. Die Pusteblume zieht an allem, '
+      'was an ihr vorbeirollt – ausgerechnet in der ersten Kehre, wo man ohnehin schon aufpassen '
+      'muß. Die Sonnenblume dahinter fängt den Ball und wirft ihn immer nach unten aus; wer sie '
       'trifft, spart sich die halbe Bahn.')
 
 # --- 9 ---------------------------------------------------------------------
@@ -692,12 +699,13 @@ fuell(f, 1, 3, 32, 11)
 setz(f, 3, 7, 'T'); setz(f, 31, 8, 'H')
 bahn(GARTEN, 'Die Lehrlingsprüfung', 'lehrlingsgarten', f, [
     ranke(10, 3, 3, 9, 7.5, 7.5, dauer=4.2),
-    pilz(14.5, 5.5),
-    pilz(14.5, 9.5, stil='orb'),
-    muehle(18.5, 7.5, w=5.0, gap=1.2, tempo=0.9, achse='y'),
+    pilz(14.5, 5.5, stil='springkraut'),
+    pilz(14.5, 9.5, stil='springkraut'),
+    muehle(18.5, 7.5, w=5.0, gap=1.2, tempo=0.9, achse='y', stil='bienenstock'),
     huete([(24, 5), (24, 10), (29, 11)], takt=2.8),
 ], par=3,
-intro='Die Prüfung: erst die Ranke, dann zwischen den Pilzen hindurch, dann das Tor im Takt – und '
+intro='Die Prüfung: erst die Ranke, dann zwischen dem Springkraut hindurch, dann der Bienenstand im '
+      'Takt – und '
       'zum Schluß noch einmal die Hüte. Wer hier unter Par bleibt, hat den Lehrlingshut verdient.')
 
 

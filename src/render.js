@@ -1901,9 +1901,11 @@ class Renderer {
         this.isoEllipse(ctx, px, py, 0.005, 0.6, 'rgba(0,0,0,0.15)');
       }
     } else if (ob.type === 'bumper') {
+      if (ob.style === 'springkraut') { this.drawSpringkrautFloor(ctx, ob, t); return; }
       this.isoEllipse(ctx, ob.x, ob.y, 0.004, ob.r + 0.12, 'rgba(255,255,255,0.22)');
       this.isoEllipse(ctx, ob.x, ob.y, 0.005, ob.r, 'rgba(0,0,0,0.18)');
     } else if (ob.type === 'rotor') {
+      if (ob.style === 'sprenger') { this.drawSprengerFloor(ctx, ob, t); return; }
       if (ob.swing) { // Pendel/Weiche: nur den Schwenkbereich als Fächer markieren
         const [cx, cy] = this.proj(ob.x, ob.y, 0.004);
         ctx.fillStyle = 'rgba(0,0,0,0.1)'; ctx.beginPath(); ctx.moveTo(cx, cy);
@@ -1944,6 +1946,7 @@ class Renderer {
     } else if (ob.type === 'turntable') {
       const th = this.theme;
       if (ob.style === 'whirl' || ob.style === 'tornado' || ob.style === 'void') { this.drawWhirl(ctx, ob, t); return; }
+      if (ob.style === 'sonnenblume') { this.drawSonnenblumeFloor(ctx, ob, t); return; }
       this.isoEllipse(ctx, ob.x, ob.y, 0.003, ob.r + 0.25, 'rgba(30,25,40,0.5)');
       const [cx, cy] = this.proj(ob.x, ob.y, 0.008);
       ctx.save(); ctx.translate(cx, cy); ctx.scale(1, this.cam.tilt);
@@ -1979,6 +1982,7 @@ class Renderer {
         ctx.beginPath(); ctx.moveTo(p2[0], p2[1]); ctx.lineTo(p1[0], p1[1]); ctx.lineTo(p3[0], p3[1]); ctx.closePath(); ctx.fill();
       }
     } else if (ob.type === 'magnet') {
+      if (ob.style === 'pollen') { this.drawPollenFloor(ctx, ob, t); return; }
       const kind = ob.slow ? 'slow' : ob.strength > 0 ? 'attract' : 'repel';
       const col = ob.style === 'pearl' ? '255,240,190' : ob.style === 'coral' ? (kind === 'attract' ? '255,110,110' : kind === 'repel' ? '110,230,130' : '110,180,255') : (kind === 'attract' ? '120,220,255' : '255,120,200');
       this.isoEllipse(ctx, ob.x, ob.y, 0.003, ob.r, `rgba(${col},0.07)`);
@@ -2098,6 +2102,7 @@ class Renderer {
         if (ob.style === 'propeller') { this.drawPropeller(ctx, ob, t); return; }
         if (ob.style === 'scythe') { this.drawScythe(ctx, ob, t); return; }
         if (ob.style === 'pendel') { this.drawPendel(ctx, ob, t); return; }
+        if (ob.style === 'sprenger') { this.drawRasensprenger(ctx, ob, t); return; }
         this.prism(ctx, hub, 0, ob.height + 0.25, th.rotor.top, th.rotor.side);
         for (let i = 0; i < ob.blades; i++) {
           const a = ob.bladeAngle(i), ca = Math.cos(a), sa = Math.sin(a), tk = ob.thick;
@@ -2272,7 +2277,8 @@ class Renderer {
       items.push({ x: ob.x, y: ob.y, draw: () => {
         const now = performance.now() / 1000, sq = Math.max(0, 1 - (now - ob.hitAt) * 4);
         const sc = 1 + sq * 0.25;
-        if (ob.style === 'crystal') this.spriteCrystal(ctx, ob.x, ob.y, 0, ob.r * 1.6 * sc, '#cfeeff', '#5b90c6');
+        if (ob.style === 'springkraut') this.drawSpringkraut(ctx, ob, t);
+        else if (ob.style === 'crystal') this.spriteCrystal(ctx, ob.x, ob.y, 0, ob.r * 1.6 * sc, '#cfeeff', '#5b90c6');
         else if (ob.style === 'rock') this.spriteRock(ctx, { x: ob.x, y: ob.y, z: 0, s: ob.r * 2.1 * sc, seed: ((ob.x * 7 + ob.y * 13) % 10) / 10 }, '#9a948a', '#5f5a52');
         else if (ob.style === 'coral') this.spriteCoral(ctx, { x: ob.x, y: ob.y, z: 0, s: ob.r * 2.6 * sc, seed: ((ob.x * 7 + ob.y * 13) % 10) / 10 });
         else if (ob.style === 'idol') this.spriteIdol(ctx, { x: ob.x, y: ob.y, z: 0, s: ob.r * 2.2 * sc, seed: 0.5 }, t);
@@ -2299,6 +2305,7 @@ class Renderer {
     } else if (ob.type === 'magnet') {
       items.push({ x: ob.x, y: ob.y, draw: () => {
         const kind = ob.slow ? 'slow' : ob.strength > 0 ? 'attract' : 'repel', s = this.scale;
+        if (ob.style === 'pollen') { this.drawPollenstrudel(ctx, ob, t); return; }
         if (ob.style === 'pearl') { this.spritePearl(ctx, { x: ob.x, y: ob.y, z: 0, s: ob.core * 3.4, seed: 0.4 }, t, true); return; }
         if (ob.style === 'coral') {
           const cols = kind === 'attract' ? ['#ff6a6a', '#a8202a'] : kind === 'repel' ? ['#6fe07a', '#1f7a30'] : ['#6fb0ff', '#1f4a9a'];
@@ -2584,6 +2591,8 @@ class Renderer {
     if (ob.style === 'ofen') return this.drawSchmelzofen(ctx, ob, t);
     // Und unter Wasser auch nicht: Dort schießt Wasser aus dem Boden und sperrt den Weg.
     if (ob.style === 'wasserwand') return this.drawWasserwand(ctx, ob, t);
+    // Und im Lehrlingsgarten mahlt niemand: Dort stehen zwei Bienenkoerbe am Durchgang.
+    if (ob.style === 'bienenstock') return this.drawBienenstock(ctx, ob, t);
     const s = this.scale, th = this.theme, ax = ob.axis === 'x';
     const wallTop = '#e8dfcf', wallSide = '#a8998a', roof = '#7a4a2a';
     for (const b of ob.blocks) this.prism(ctx, b, 0, ob.height, wallTop, wallSide, { outline: '#6b5a4a' });
