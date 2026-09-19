@@ -405,6 +405,105 @@ Object.assign(Renderer.prototype, {
   },
 
 
+  /* ================= Die Fernschleuder (Kanone, weite Reichweite) =================
+     Die große Schwester der Bannschleuder: ein Kreiselwerk aus drei Goldringen auf einem Turm aus
+     schwarzem Marmor, und in seiner Mitte ein Kern aus Bannfeuer.
+
+     DIE ANIMATION IST DER ANZEIGER. Im Leerlauf taumeln die drei Ringe gegeneinander - jeder
+     dreht sich um seine eigene Achse, keiner paßt zum anderen, und der Kern glimmt nur. Sobald
+     ein Ball gefangen ist, RICHTEN SIE SICH AUS: Sie fahren in dem Takt, in dem geladen wird, in
+     eine gemeinsame Ebene, und die zeigt in Schußrichtung. Wer das sieht, weiß, wann der Schuß
+     fällt, ohne mitzählen zu müssen, und in welche Richtung, ohne die Punkte am Boden zu lesen.
+     Deshalb merkt sich die Kanone seit dieser Fassung ihr loadedAt (siehe obstacles.js) - ohne
+     den Zeitpunkt ließe sich nur zeigen, DASS geladen ist, nicht, wie weit.
+
+     Beim Schuß fahren die Ringe in einem Ruck auseinander und ein Stoß aus Bannfeuer läuft die
+     Flugbahn entlang. Das ist der einzige Augenblick, in dem die Maschine laut wird. */
+  drawFernschleuder(ctx, ob, t) {
+    const s = this.scale;
+    const ca = Math.cos(ob.angle), sa = Math.sin(ob.angle);
+    const zu = ca * this.cam.sin + sa * this.cam.cos;      // wie weit die Schußebene uns zugewandt ist
+    const seit = t - ob.firedAt;
+    const knall = Math.max(0, 1 - seit / 0.7);
+    const ladeZeit = ob.loadTime || 0.7;
+    const laden = ob.loaded ? Math.min(1, Math.max(0, (t - (ob.loadedAt == null ? -10 : ob.loadedAt)) / ladeZeit)) : 0;
+    const glut = 0.22 + 0.55 * laden + 0.75 * knall;
+
+    this.isoEllipse(ctx, ob.x, ob.y, 0.004, 1.7, 'rgba(0,0,0,0.32)');
+    this.bannsiegel(ctx, ob.x, ob.y, 0.006, 1.5, 0.15 + 0.55 * laden + 0.6 * knall, -t * 0.18);
+
+    // Der Turm: drei Stufen schwarzer Marmor, oben ein goldener Kranz
+    this.prism(ctx, this.circlePoly(ob.x, ob.y, 0.92, 12), 0, 0.34, '#2e2740', '#15111f', { outline: '#0a0813' });
+    this.prism(ctx, this.circlePoly(ob.x, ob.y, 0.74, 12), 0.34, 0.34, '#352c4a', '#18131f', { outline: '#0a0813' });
+    this.prism(ctx, this.circlePoly(ob.x, ob.y, 0.52, 10), 0.68, 0.5, '#3f3558', '#1c1728', { outline: '#0a0813' });
+    this.prism(ctx, this.circlePoly(ob.x, ob.y, 0.58, 8), 1.18, 0.14, '#d8b054', '#7a5c24', { outline: '#3d2f10' });
+
+    const [mx, my] = this.proj(ob.x, ob.y, 2.35);
+    const R = s * 1.02;
+
+    /* Die drei Ringe. Jeder ist eine Ellipse, deren Breite sich aus seiner eigenen Drehung ergibt:
+       quer zur Blickrichtung wird er zum Strich, längs zum vollen Kreis. Beim Laden läuft seine
+       Drehung in die Schußebene hinein - `ziel` ist, wo er stehen muß, `frei`, wo er im Leerlauf
+       gerade steht, und `laden` blendet zwischen beidem über. */
+    const ringe = [
+      { f: 1.0, tempo: 0.9, phase: 0.0, dick: 0.085, farbe: '#e8c76e' },
+      { f: 0.78, tempo: -1.45, phase: 2.1, dick: 0.07, farbe: '#d0a84e' },
+      { f: 0.56, tempo: 2.2, phase: 4.3, dick: 0.055, farbe: '#f0d488' },
+    ];
+    const auf = knall * 0.45;                    // beim Schuß fahren sie auseinander
+    for (const rg of ringe) {
+      const frei = Math.cos(t * rg.tempo + rg.phase);
+      const breite = Math.abs(frei) * (1 - laden) + Math.abs(zu) * laden;
+      const rx = Math.max(s * 0.05, R * rg.f * (breite + auf));
+      const ry = R * rg.f * (1 + auf * 0.3);
+      const kipp = (1 - laden) * Math.sin(t * rg.tempo * 0.6 + rg.phase) * 0.5;
+      ctx.beginPath(); ctx.ellipse(mx, my, rx, ry, kipp, 0, TAU);
+      ctx.strokeStyle = rg.farbe; ctx.lineWidth = Math.max(2, s * rg.dick); ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(mx, my, rx, ry, kipp, 0, TAU);
+      ctx.strokeStyle = 'rgba(30,20,6,0.55)'; ctx.lineWidth = Math.max(1, s * rg.dick * 0.35); ctx.stroke();
+    }
+
+    // Der Kern: ein Ball aus Bannfeuer, der mit dem Laden wächst
+    const kern = R * (0.2 + 0.18 * laden + 0.3 * knall);
+    const hof = ctx.createRadialGradient(mx, my, 0, mx, my, kern * 2.6);
+    hof.addColorStop(0, `rgba(255,236,255,${0.5 + 0.45 * glut})`);
+    hof.addColorStop(0.35, `rgba(198,132,255,${0.45 * glut + 0.2})`);
+    hof.addColorStop(1, 'rgba(90,50,150,0)');
+    ctx.fillStyle = hof;
+    ctx.beginPath(); ctx.arc(mx, my, kern * 2.6, 0, TAU); ctx.fill();
+    ctx.fillStyle = `rgba(255,245,255,${0.7 + 0.3 * glut})`;
+    ctx.beginPath(); ctx.arc(mx, my, kern, 0, TAU); ctx.fill();
+
+    /* Die Ladeuhr: acht Runenpunkte auf dem Kranz, die im Laden einer nach dem anderen angehen.
+       Ein Balken wäre hier fremd - die Loge zählt in Runen. */
+    for (let k = 0; k < 8; k++) {
+      const a = (k / 8) * TAU - Math.PI / 2;
+      const px = mx + Math.cos(a) * R * 1.22, py = my + Math.sin(a) * R * 1.22 * 0.55;
+      const an = laden * 8 > k ? 1 : 0;
+      ctx.fillStyle = an ? `rgba(255,232,170,${0.85})` : 'rgba(120,96,50,0.35)';
+      ctx.beginPath(); ctx.arc(px, py, Math.max(1.5, s * (0.05 + 0.03 * an)), 0, TAU); ctx.fill();
+    }
+
+    // Der Stoß: eine Lanze aus Bannfeuer, die beim Schuß die Flugbahn entlangläuft
+    if (knall > 0) {
+      const weit = (1 - knall) * (0.9 + ob.range) * 0.55 + 1.2;
+      const [lx, ly] = this.proj(ob.x + ca * weit, ob.y + sa * weit, 1.6);
+      ctx.strokeStyle = `rgba(226,178,255,${0.7 * knall})`;
+      ctx.lineCap = 'round'; ctx.lineWidth = Math.max(2, s * 0.14 * knall);
+      ctx.beginPath(); ctx.moveTo(mx, my); ctx.lineTo(lx, ly); ctx.stroke();
+      ctx.strokeStyle = `rgba(255,250,255,${0.6 * knall})`;
+      ctx.lineWidth = Math.max(1, s * 0.05 * knall);
+      ctx.beginPath(); ctx.moveTo(mx, my); ctx.lineTo(lx, ly); ctx.stroke();
+    }
+
+    // Die vier Streben vom Kranz zum Kreiselwerk
+    ctx.strokeStyle = '#a8842a'; ctx.lineWidth = Math.max(2, s * 0.06);
+    for (const sd of [-1, 1]) {
+      const [fx, fy] = this.proj(ob.x - sa * sd * 0.5, ob.y + ca * sd * 0.5, 1.32);
+      ctx.beginPath(); ctx.moveTo(fx, fy); ctx.lineTo(mx + sd * R * 0.55, my + R * 0.75); ctx.stroke();
+    }
+  },
+
   /* ================= Die Bannschleuder (Kanone) =================
      Die Loge hat kein Schießpulver. Was hier wirft, ist ein Ring aus Bannfeuer, der auf einem
      Marmorsockel steht: Der Ball rollt hinein, das Feuer dreht auf, und im Augenblick des Wurfs

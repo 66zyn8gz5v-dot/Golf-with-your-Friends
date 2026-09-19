@@ -2011,6 +2011,34 @@ class Renderer {
       for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) { const [hx, hy] = this.proj(ob.x - ob.w / 2 + (i + 0.5) * ob.w / 3, ob.y - ob.h / 2 + (j + 0.5) * ob.h / 3, 0.006); ctx.beginPath(); ctx.ellipse(hx, hy, s * 0.06, s * 0.06 * this.cam.tilt, 0, 0, TAU); ctx.fill(); }
     } else if (ob.type === 'sharkjump') { // Warnschimmer über der Bucht, solange der Hai in der Luft ist
       if (ob.jumping) { const a = 0.18 * Math.sin(ob.p * Math.PI); this.fillPoly(ctx, [[ob.x - ob.w / 2, ob.y - ob.h / 2], [ob.x + ob.w / 2, ob.y - ob.h / 2], [ob.x + ob.w / 2, ob.y + ob.h / 2], [ob.x - ob.w / 2, ob.y + ob.h / 2]], -0.1, `rgba(255,60,60,${a})`, false); }
+    } else if (ob.type === 'cannon' && ob.style === 'fernschleuder') {
+      /* DIE LANGE LINIE MUSS SICH LESEN LASSEN. Bei fünf Kacheln reicht eine Punktreihe; bei
+         zwanzig ist sie ein Strich, an dem man weder Richtung noch Weite abliest. Deshalb LAUFEN
+         die Punkte hier nach außen - daran sieht man, wohin -, sie werden zum Ziel hin größer,
+         und am Ende steht kein Punkt, sondern ein Fadenkreuz aus zwei Ringen. */
+      const dx = Math.cos(ob.angle), dy = Math.sin(ob.angle), R = 0.9 + ob.range;
+      this.isoEllipse(ctx, ob.x, ob.y, 0.004, 1.15, 'rgba(0,0,0,0.3)');
+      const lauf = (t * 2.2) % 0.8;
+      for (let d = 1.8; d < R - 0.4; d += 0.8) {
+        const u = (d - 1.8) / Math.max(1, R - 2.2);
+        const [px, py] = this.proj(ob.x + dx * (d + lauf), ob.y + dy * (d + lauf), 0.01);
+        ctx.fillStyle = `rgba(214,160,255,${(0.25 + 0.4 * u).toFixed(3)})`;
+        ctx.beginPath(); ctx.arc(px, py, s * (0.04 + 0.05 * u), 0, TAU); ctx.fill();
+      }
+      // Das Fadenkreuz am Landepunkt, es atmet im Takt der Ladezeit
+      const puls = 0.85 + 0.15 * Math.sin(t * 3);
+      this.isoEllipse(ctx, ob.x + dx * R, ob.y + dy * R, 0.006, 0.95 * puls, 'rgba(200,130,255,0.22)');
+      this.isoEllipse(ctx, ob.x + dx * R, ob.y + dy * R, 0.007, 0.5 * puls, 'rgba(226,178,255,0.3)');
+      this.isoEllipse(ctx, ob.x + dx * R, ob.y + dy * R, 0.008, 0.18, 'rgba(255,245,255,0.7)');
+      // Die Druckwelle beim Schuß: zwei Ringe, die vom Turm weglaufen
+      const seit = t - ob.firedAt;
+      if (seit >= 0 && seit < 0.8) {
+        for (const v of [0, 0.18]) {
+          const u = (seit - v) / 0.8;
+          if (u <= 0 || u >= 1) continue;
+          this.isoEllipse(ctx, ob.x, ob.y, 0.009, 1.2 + u * 5.5, `rgba(226,178,255,${(0.35 * (1 - u)).toFixed(3)})`);
+        }
+      }
     } else if (ob.type === 'cannon') {
       this.isoEllipse(ctx, ob.x, ob.y, 0.004, 0.75, 'rgba(0,0,0,0.25)');
       // Ziellinie und Landepunkt in aktueller Rohrrichtung
@@ -2144,17 +2172,24 @@ class Renderer {
     } else if (ob.type === 'copperpipe') {
       // Rohrmund und Rohrende stehen an verschiedenen Stellen der Karte – jeder wird für sich einsortiert
       const rohr = ob.style === 'siegelroehre' ? this.drawSiegelroehre : this.drawCopperPipe;
-      if (ob.x != null) items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => rohr.call(this, ctx, ob, t, false) });
-      if (ob.ax != null) items.push({ x: ob.ax, y: ob.ay, bias: 0.2, draw: () => rohr.call(this, ctx, ob, t, true) });
+      /* noFade für die ganze Leitung. Alles, was zwischen Kamera und Ball steht, wird sonst auf
+         22 Prozent Deckkraft gesetzt, damit es den Ball nicht verdeckt - und ein Rohr, das
+         durchsichtig wird, sieht nicht nach Rohr aus, sondern nach Fehler. Fynn hat das sofort
+         gesehen: „Das Kupferrohr soll nicht dieses leicht Transparente haben."
+         Der Grund für den Kniff greift hier ohnehin nicht: Steckt der Ball IN der Leitung, ist er
+         mit Absicht unsichtbar (siehe oben) - sichtbar ist nur der Schein, der mitläuft. Und
+         steckt er nicht darin, ist ein Rohr von 0,42 Kacheln zu dünn, um ihn zu verstecken. */
+      if (ob.x != null) items.push({ x: ob.x, y: ob.y, bias: 0.2, noFade: true, draw: () => rohr.call(this, ctx, ob, t, false) });
+      if (ob.ax != null) items.push({ x: ob.ax, y: ob.ay, bias: 0.2, noFade: true, draw: () => rohr.call(this, ctx, ob, t, true) });
       // Die Leitung dazwischen: Lauf für Lauf, damit sie sich richtig mit Mauern überdeckt
       if (ob.bereit && ob.stuecke) {
         for (const u of ob.stuetzen) {
           const [px, py] = ob.punkt(u);
-          items.push({ x: px, y: py, bias: 0.4, draw: () => (ob.style === 'siegelroehre' ? this.drawSiegelStuetze : this.drawPipeStuetze).call(this, ctx, ob, u) });
+          items.push({ x: px, y: py, bias: 0.4, noFade: true, draw: () => (ob.style === 'siegelroehre' ? this.drawSiegelStuetze : this.drawPipeStuetze).call(this, ctx, ob, u) });
         }
         ob.stuecke.forEach((st, k) => {
           const [px, py] = ob.punkt((st.u0 + st.u1) / 2);
-          items.push({ x: px, y: py, bias: 0.45, draw: () => this.drawPipeLauf(ctx, ob, k, t) });
+          items.push({ x: px, y: py, bias: 0.45, noFade: true, draw: () => this.drawPipeLauf(ctx, ob, k, t) });
         });
       }
     } else if (ob.type === 'riesenbluete') {
@@ -2357,7 +2392,7 @@ class Renderer {
     } else if (ob.type === 'potion') {
       items.push({ x: ob.x, y: ob.y, draw: () => this.spritePotion(ctx, ob, t) });
     } else if (ob.type === 'cannon') {
-      items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => ob.style === 'catapult' ? this.drawCatapult(ctx, ob, t) : ob.style === 'ballista' ? this.drawBallista(ctx, ob, t) : ob.style === 'wrackkanone' ? this.drawWrackkanone(ctx, ob, t) : ob.style === 'bannschleuder' ? this.drawBannschleuder(ctx, ob, t) : this.drawCannon(ctx, ob, t) });
+      items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => ob.style === 'catapult' ? this.drawCatapult(ctx, ob, t) : ob.style === 'ballista' ? this.drawBallista(ctx, ob, t) : ob.style === 'wrackkanone' ? this.drawWrackkanone(ctx, ob, t) : ob.style === 'bannschleuder' ? this.drawBannschleuder(ctx, ob, t) : ob.style === 'fernschleuder' ? this.drawFernschleuder(ctx, ob, t) : this.drawCannon(ctx, ob, t) });
     } else if (ob.type === 'door') {
       if (ob.style === 'pyramid') items.push({ x: ob.px, y: ob.py, noFade: true, draw: () => this.drawPyramid(ctx, ob, t) });
       else if (ob.style === 'wreck') items.push({ x: ob.px, y: ob.py, noFade: true, draw: () => this.drawWreck(ctx, ob, t) });

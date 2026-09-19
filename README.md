@@ -3834,3 +3834,90 @@ Nebenbei zwei Lücken in der Ass-Prüfung geschlossen: Eine **freistehende Bande
 **Schleuder** zählen jetzt als Sperre auf der geraden Linie vom Abschlag ins Loch. Vorher taten sie
 das nicht – es gab bis zur dritten Fassung der Loge keine freistehende Bande, und an einer
 Schleuder kommt ohnehin niemand vorbei, ohne geworfen zu werden.
+
+## Die Fernschleuder (Fassung 223)
+
+*„Und wir brauchen eine Kanone mit richtig langer Reichweite, die eine coolere Animation haben."*
+
+Ein neues Aussehen für die Kanone, `fernschleuder`, und eine neue Rolle: **zweiundzwanzig Kacheln**
+statt neuneinhalb. Ein Kreiselwerk aus drei Goldringen auf einem Turm aus schwarzem Marmor, in
+seiner Mitte ein Kern aus Bannfeuer.
+
+**Die Animation ist der Anzeiger, nicht die Verzierung.** Sie erzählt in drei Zuständen, was gleich
+passiert:
+
+| Zustand | was man sieht | was es heißt |
+| --- | --- | --- |
+| wartend | die drei Ringe taumeln gegeneinander, jeder um seine eigene Achse, der Kern glimmt | sie hat nichts |
+| geladen | die Ringe **richten sich aus** – sie fahren in eine gemeinsame Ebene, und die zeigt in Schußrichtung; am Kranz gehen acht Runenpunkte nacheinander an | der Schuß kommt, und zwar dorthin |
+| Schuß | die Ringe fahren in einem Ruck auseinander, eine Lanze aus Bannfeuer läuft die Flugbahn entlang, zwei Druckwellen laufen über den Boden | jetzt |
+
+Damit die Ringe wirklich *im Ladetakt* fahren können, merkt sich die Kanone seit dieser Fassung
+ihren `loadedAt` (`src/obstacles.js`). Vorher ließ sich nur zeigen, **daß** geladen ist, nicht, wie
+weit – und die Ladeanzeige ist der halbe Reiz: Wer sie lesen kann, weiß, wann der Ball fliegt, ohne
+mitzuzählen. Die Ladezeit ist deshalb auf 1,1 Sekunden verlängert; in sieben Zehnteln sähe man das
+Ausrichten nicht.
+
+**Die Bodenzeichnung ist eine eigene**, denn eine lange Linie liest sich anders als eine kurze: Bei
+fünf Kacheln reicht eine Punktreihe, bei zweiundzwanzig ist sie ein Strich, an dem man weder
+Richtung noch Weite abliest. Hier **laufen** die Punkte nach außen, sie werden zum Ziel hin größer,
+und am Ende steht kein Punkt, sondern ein atmendes Fadenkreuz aus zwei Ringen.
+
+**Der Schwenk ist von Haus aus klein** (3°). Bei zwanzig Kacheln Flugweite macht ein Grad schon ein
+Drittel Kachel am Landepunkt aus; was bei der kurzen Schleuder ein Spielraum ist, wäre hier eine
+Lotterie. Die Ausnahme steht im *Rat der Neun*, wo ringsum Boden ist – dort schwenkt sie über 25°.
+
+Sie steht auf drei Bahnen: im **Bannlauf** (22 Kacheln über eine Leere, die genau deshalb von
+neun auf neunzehn Kacheln verbreitert wurde – die Bahn, die diese Maschine erklärt, soll man nicht
+übersehen können), im **Rat der Neun** (18 Kacheln quer durch den Saal, über die Raute hinweg) und
+beim **Erzmagier** (18,5 Kacheln ans andere Ende der Bahn).
+
+## Die Fernschleuder (Fassung 223)
+
+*„Und wir brauchen eine Kanone mit richtig langer Reichweite, die eine coolere Animation haben."*
+
+Ein neues Aussehen für die Kanone, `fernschleuder`, und eine neue Rolle: **zweiundzwanzig Kacheln**
+statt neuneinhalb. Ein Kreiselwerk aus drei Goldringen auf einem Turm aus schwarzem Marmor, in
+seiner Mitte ein Kern aus Bannfeuer.
+
+**Die Animation ist der Anzeiger, nicht die Verzierung.** Sie erzählt in drei Zuständen, was gleich
+passiert:
+
+| Zustand | was man sieht | was es heißt |
+| --- | --- | --- |
+| wartend | die drei Ringe taumeln gegeneinander, jeder um seine eigene Achse, der Kern glimmt | sie hat nichts |
+| geladen | die Ringe **richten sich aus** – sie fahren in eine gemeinsame Ebene, und die zeigt in Schußrichtung; am Kranz gehen acht Runenpunkte nacheinander an | der Schuß kommt, und zwar dorthin |
+| Schuß | die Ringe fahren in einem Ruck auseinander, eine Lanze aus Bannfeuer läuft die Flugbahn entlang, zwei Druckwellen laufen über den Boden | jetzt |
+
+Damit die Ringe wirklich *im Ladetakt* fahren können, merkt sich die Kanone seit dieser Fassung
+ihren `loadedAt` (`src/obstacles.js`). Vorher ließ sich nur zeigen, **daß** geladen ist, nicht, wie
+weit – und die Ladeanzeige ist der halbe Reiz: Wer sie lesen kann, weiß, wann der Ball fliegt, ohne
+mitzuzählen. Die Ladezeit ist deshalb auf 1,1 Sekunden verlängert; in sieben Zehnteln sähe man das
+Ausrichten nicht.
+
+**Die Bodenzeichnung ist eine eigene**, denn eine lange Linie liest sich anders als eine kurze: Bei
+fünf Kacheln reicht eine Punktreihe, bei zweiundzwanzig ist sie ein Strich, an dem man weder
+Richtung noch Weite abliest. Hier **laufen** die Punkte nach außen, sie werden zum Ziel hin größer,
+und am Ende steht kein Punkt, sondern ein atmendes Fadenkreuz aus zwei Ringen.
+
+**Der Schwenk ist von Haus aus klein** (3°). Bei zwanzig Kacheln Flugweite macht ein Grad schon ein
+Drittel Kachel am Landepunkt aus; was bei der kurzen Schleuder ein Spielraum ist, wäre hier eine
+Lotterie. Die Ausnahme steht im *Rat der Neun*, wo ringsum Boden ist – dort schwenkt sie über 25°.
+
+Sie steht auf drei Bahnen: im **Bannlauf** (22 Kacheln über eine Leere, die genau deshalb von neun
+auf neunzehn Kacheln verbreitert wurde – die Bahn, die diese Maschine erklärt, soll man nicht
+übersehen können), im **Rat der Neun** (18 Kacheln quer durch den Saal, über die Raute hinweg) und
+beim **Erzmagier** (18,5 Kacheln ans andere Ende der Bahn).
+
+## Das Rohr wird nicht mehr durchsichtig (Fassung 223)
+
+*„Das Kupferrohr soll nicht dieses leicht Transparente haben."*
+
+Der Renderer setzt alles, was zwischen Kamera und Ball steht, auf 22 Prozent Deckkraft, damit es
+den Ball nicht verdeckt. Das ist für Türme, Bäume und Mauern richtig und für eine Leitung falsch:
+Ein Rohr, das durchsichtig wird, sieht nicht nach Rohr aus, sondern nach Fehler.
+
+Der Grund für den Kniff greift hier ohnehin nicht. Steckt der Ball **in** der Leitung, ist er mit
+Absicht unsichtbar – so wie eine Rohrpostbüchse auch nicht durch das Kupfer scheint; sichtbar ist
+dann nur der Schein, der mitläuft. Und steckt er nicht darin, ist ein Rohr von 0,42 Kacheln zu
+dünn, um ihn zu verstecken. Mund, Stützen und Läufe tragen deshalb jetzt `noFade`.

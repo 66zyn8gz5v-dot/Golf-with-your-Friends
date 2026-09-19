@@ -183,7 +183,7 @@ const Editor = (deps) => {
                   ['sprung', 'Sprungkreis (gold)'], ['wirbel', 'Wirbelkreis (violett)'],
                   ['bann', 'Bannkreis (rot)']],
     copperpipe: [['', 'Kupferrohr'], ['siegelroehre', 'Siegelröhre']],
-    cannon: [['', 'Kanone'], ['ballista', 'Balliste'], ['catapult', 'Katapult'], ['wrackkanone', 'Wrackkanone'], ['bannschleuder', 'Bannschleuder']],
+    cannon: [['', 'Kanone'], ['ballista', 'Balliste'], ['catapult', 'Katapult'], ['wrackkanone', 'Wrackkanone'], ['bannschleuder', 'Bannschleuder'], ['fernschleuder', 'Fernschleuder']],
     turntable: [['', 'Drehscheibe'], ['whirl', 'Strudel'], ['tornado', 'Wirbelsturm'], ['void', 'Leere'],
                 ['sonnenblume', 'Riesen-Sonnenblume']],
     windmill: [['', 'Windmühle'], ['ofen', 'Schmelzofen'], ['wasserwand', 'Wasserwand'],

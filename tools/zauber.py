@@ -220,6 +220,19 @@ def kanone(x, y, grad=0, weite=9.0, amp=0.0, tempo=1.0, phase=0.0, laden=0.7, st
     if stil: o['style'] = stil
     return o
 
+def fernschleuder(x, y, grad=0, weite=20.0, amp=0.05, tempo=0.6, phase=0.0, laden=1.1):
+    """Die Fernschleuder - die große Schwester der Bannschleuder, ein Kreiselwerk aus drei
+    Goldringen auf einem Marmorturm. Sie trägt zwanzig Kacheln und mehr, und sie LÄDT LÄNGER:
+    1,1 Sekunden statt 0,7. Das ist kein Ausgleich für die Reichweite, sondern die Bedingung
+    dafür, daß man sie lesen kann - ihre drei Ringe fahren im Ladetakt in die Schußebene, und in
+    sieben Zehnteln sähe man das nicht.
+
+    Der Schwenk ist von Haus aus klein. Bei zwanzig Kacheln Flugweite macht ein Grad Schwenk schon
+    ein Drittel Kachel am Landepunkt aus; was bei der kurzen Schleuder ein Spielraum ist, wäre
+    hier eine Lotterie."""
+    return kanone(x, y, grad=grad, weite=weite, amp=amp, tempo=tempo, phase=phase,
+                  laden=laden, stil='fernschleuder')
+
 def rohr(paar, grad=0, stil='siegelroehre'):
     """Die Siegelröhre. Ihre beiden Enden stehen als Buchstaben in der Karte: 'A' schluckt,
     'a' spuckt aus. grad ist die Richtung, in die ausgeworfen wird."""
@@ -1487,7 +1500,10 @@ f = leer(56, 19)
 fuell(f, 2, 7, 18, 10)                # Anmarsch
 fuell(f, 14, 7, 18, 16)               # hinunter
 fuell(f, 14, 13, 26, 16)              # die Kammer der Schleuder
-fuell(f, 34, 13, 52, 16)              # drüben - dazwischen ist nichts
+# ZWEIUNDZWANZIG KACHELN LEERE. Das ist die Bahn, auf der die Loge ihre Wurfmaschine erklärt,
+# und eine Erklärung, die man übersehen kann, ist keine. Von der Kammer bis zum anderen Ufer ist
+# kein Boden - man sieht auf einen Blick, daß hier nichts anderes hilft.
+fuell(f, 46, 13, 52, 16)              # drüben - dazwischen ist nichts
 fuell(f, 48, 4, 52, 16)               # der Aufstieg am Ostende
 fuell(f, 34, 4, 52, 7)                # und die obere Galerie zurück nach Westen
 keil(f, 18, 10, 4, 'ro')              # Kehre nach Süden
@@ -1500,16 +1516,14 @@ setz(f, 12, 8, 'A'); setz(f, 16, 15, 'a')
 bahn(LOGE, 'Der Bannlauf', 'erzmagierloge', f, [
     kreis(8.0, 8.5, 'schub', r=1.2),
     rohr('A', grad=0),                # der kurze Weg hinunter, wenn man den Mund trifft
-    # SIE SCHWENKT EIN WENIG. Sechs Grad sind kein Würfel - der Landepunkt wandert um knapp zwei
-    # Kacheln, und das reicht, damit der Augenblick des Abschusses etwas entscheidet. Mehr ginge
-    # hier nicht: pruefe() rechnet jeden Winkel des Bogens nach, und drüben ist der Boden schmal.
-    kanone(24.0, 14.5, grad=0, weite=9.5, amp=0.10, tempo=0.8, stil='bannschleuder'),
-    kreis(46.0, 14.5, 'bremse', r=1.2),
+    fernschleuder(24.0, 14.5, grad=0, weite=22.0, amp=0.05, tempo=0.6),
+    kreis(48.5, 14.5, 'bremse', r=1.2),
     lampe(40.0, 5.5, r=4.0, stil='bannlicht'),
 ], par=5,
-intro='Der Gang endet vor der Leere; hinüber kommt nur, wer sich in den Ring aus Bannfeuer rollen '
-      'läßt. Drüben landet man am falschen Ende – der Weg zum Loch führt ganz nach Osten, um die '
-      'Schräge herum nach oben und die Galerie wieder zurück.')
+intro='Zweiundzwanzig Kacheln Leere, und darüber nur die Fernschleuder. Ihre drei Ringe taumeln, '
+      'solange sie wartet; sobald sie einen Ball hat, richten sie sich aus – und wenn alle drei in '
+      'einer Ebene stehen, fliegt er. Drüben landet man am falschen Ende: Der Weg zum Loch führt '
+      'ganz nach Osten, um die Schräge herum nach oben und die Galerie wieder zurück.')
 
 # --- 3 ---------------------------------------------------------------------
 # Das Bannmal. Die einzige Bahn der Welt, auf der noch gesammelt wird - vier Sterne in vier
@@ -1561,11 +1575,12 @@ keil(f, 12, 19, 7, 'lu'); keil(f, 44, 19, 7, 'ru')
 setz(f, 3, 11, 'T'); setz(f, 40, 11, 'H')
 bahn(LOGE, 'Der Rat der Neun', 'erzmagierloge', f, ([
     kreis(7.0, 11.5, 'schub', r=1.2),
-    # DIE SCHLEUDER DES RATES SCHWENKT WEIT. Sie steht im Saal, und im Saal ist ringsum Boden -
-    # damit darf sie tun, was sie in einem Gang nicht dürfte: über fünfundzwanzig Grad wandern.
+    # DIE FERNSCHLEUDER DES RATES SCHWENKT WEIT. Sie steht im Saal, und im Saal ist ringsum Boden -
+    # damit darf sie tun, was sie sonst nicht dürfte: über fünfundzwanzig Grad wandern, obwohl sie
+    # achtzehn Kacheln weit wirft.
     # Der Ball fliegt über die Raute hinweg, und wo er drüben ankommt, entscheidet allein der
     # Augenblick, in dem man sich hineinrollen läßt.
-    kanone(17.0, 11.5, grad=0, weite=18.0, amp=0.22, tempo=0.7, stil='bannschleuder'),
+    fernschleuder(17.0, 11.5, grad=0, weite=18.0, amp=0.22, tempo=0.7),
 ] + raute(28.0, 11.5, 4.5) + [
     bande(20.0, 5.5, 24.5, 10.0),     # zwei Schrägen an den Ecken des Saals
     bande(20.0, 17.5, 24.5, 13.0),
@@ -1723,13 +1738,14 @@ bahn(LOGE, 'Der Erzmagier', 'erzmagierloge', f, [
     rohr('A', grad=90),               # sie überspringt den Bannschlag - und die obere Galerie
     blitz(21.0, 4.5, w=3.0, h=3.2, takt=4.0, stil='bannschlag'),
     kreis(28.0, 12.0, 'bremse', r=1.2, takt=4.4),
-    kanone(40.0, 17.5, grad=0, weite=8.5, amp=0.10, tempo=0.8, stil='bannschleuder'),
+    fernschleuder(30.0, 17.5, grad=0, weite=18.5, amp=0.05, tempo=0.6),
     bande(44.0, 10.0, 48.0, 14.0),
     lampe(42.0, 8.5, r=4.2, stil='bannlicht'),
 ], par=6, maxStrokes=18,
-intro='Die letzte Bahn vor dem Wächter: erst der Bannschlag, dann die lange Kehre nach unten, '
-      'dann die Schleuder hinüber – und am Ende die Galerie zurück nach Westen. Keine einzige '
-      'rechtwinklige Ecke auf der ganzen Strecke.')
+intro='Die letzte Bahn vor dem Wächter: erst der Bannschlag, dann die lange Kehre nach unten – '
+      'und dort steht die Fernschleuder und wirft achtzehneinhalb Kacheln weit ans andere Ende. '
+      'Danach die Galerie zurück nach Westen. Keine einzige rechtwinklige Ecke auf der ganzen '
+      'Strecke.')
 
 # --- 10 --------------------------------------------------------------------
 # DER ENDGEGNER DER LOGE: Der Bannwächter.
