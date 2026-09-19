@@ -832,6 +832,14 @@ intro='Vier Sterne, vier Ecken, und mittendrin zwei Regale, die den Saal in zwei
 # --- 5 ---------------------------------------------------------------------
 # Das Fernrohr. Das Auge des Turms sucht die Terrasse ab - dieselbe Zeichnung wie im Schattenreich,
 # hier als Instrument statt als Wächter. Wen es erwischt, den setzt es zurück.
+#
+# DIE TÜRME STEHEN NEBEN DER TERRASSE, NICHT DARAUF. Vorher standen sie mitten im Weg und waren
+# damit zweierlei: ein Hindernis, um das man herumspielt, UND ein Auge, vor dem man sich versteckt.
+# Das erste nimmt dem zweiten die Wirkung - man umkurvte den Sockel und merkte gar nicht, dass
+# oben etwas schaut. Jetzt stehen sie draußen im Dunkeln, wie die Laternen, und was von ihnen auf
+# der Bahn ankommt, ist nur noch ihr Blick. Jeder von beiden bewacht die Gerade, die man wirklich
+# überqueren muss: der eine unten zwischen dem ersten und dem zweiten Pfeiler, der andere oben
+# zwischen dem zweiten und dem dritten.
 f = leer(32, 15)
 fuell(f, 1, 2, 30, 12)
 fuell(f, 8, 2, 9, 8, 'x')
@@ -839,13 +847,19 @@ fuell(f, 16, 6, 17, 12, 'x')
 fuell(f, 24, 2, 25, 8, 'x')
 setz(f, 3, 7, 'T'); setz(f, 29, 10, 'H')
 bahn(WARTE, 'Das Fernrohr', 'sternenwarte', f, [
-    auge(12.5, 10.5, r=1.1, weite=9.0, tempo=0.4),
-    auge(21.0, 4.0, r=1.1, weite=9.0, tempo=-0.36, phase=1.6),
+    # WEIT GENUG HINAUS, DASS DER SOCKEL DIE BANDE NICHT MEHR BERUEHRT. Zweimal standen sie noch
+    # halb in ihr drin, und das sieht aus wie ein Baufehler und nicht wie ein Turm neben der
+    # Terrasse. Die Rechnung: Der Boden endet bei y = 13 bzw. y = 2, die Bande ragt 0,58 nach
+    # aussen, und der Sockel des Turms misst 1,375 im Halbmesser (r * 1,25). Macht 14,96 bzw. 0,05
+    # als Grenze - mit 15,2 und -0,2 steht beides frei, und beides liegt noch auf der Scholle,
+    # die 1,4 Felder ueber die Karte hinausreicht.
+    auge(12.5, 15.2, r=1.1, weite=9.0, tempo=0.4),                # unten neben der Terrasse
+    auge(21.0, -0.2, r=1.1, weite=9.0, tempo=-0.36, phase=1.6),   # oben neben der Terrasse
     mond(20.0, 10.5, r=2.8, kraft=7.0, takt=6.5, phase=0.3),
 ], par=4,
-intro='Zwei Fernrohre suchen die Terrasse ab, und zwischen ihnen steht ein Mond, der jeden geraden '
-      'Weg krumm zieht. Der Zickzack durch die Pfeiler ist der kurze Weg - wenn man ihn im '
-      'richtigen Augenblick nimmt.')
+intro='Zwei Fernrohre stehen am Rand der Terrasse und suchen sie ab, und zwischen ihnen zieht ein '
+      'Mond jeden geraden Weg krumm. Der Zickzack durch die Pfeiler ist der kurze Weg - wenn man '
+      'ihn im richtigen Augenblick nimmt. Wer im Strahl liegen bleibt, wird gesehen.')
 
 # --- 6 ---------------------------------------------------------------------
 # Die Armillarsphäre. Das Zahnradfeld der Uhrwerkstadt trägt über die Lücke, der Nebelwirbel

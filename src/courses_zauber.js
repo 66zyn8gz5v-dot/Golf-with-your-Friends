@@ -420,7 +420,7 @@ const ZAUBER_WARTE = [
   },
   {
     name: 'Das Fernrohr', par: 4, theme: 'sternenwarte',
-    intro: 'Zwei Fernrohre suchen die Terrasse ab, und zwischen ihnen steht ein Mond, der jeden geraden Weg krumm zieht. Der Zickzack durch die Pfeiler ist der kurze Weg - wenn man ihn im richtigen Augenblick nimmt.',
+    intro: 'Zwei Fernrohre stehen am Rand der Terrasse und suchen sie ab, und zwischen ihnen zieht ein Mond jeden geraden Weg krumm. Der Zickzack durch die Pfeiler ist der kurze Weg - wenn man ihn im richtigen Augenblick nimmt. Wer im Strahl liegen bleibt, wird gesehen.',
     map: [
       '................................',
       '................................',
@@ -439,8 +439,8 @@ const ZAUBER_WARTE = [
       '................................',
     ],
     obstacles: [
-      { type: 'eyetower', x: 12.5, y: 10.5, r: 1.1, range: 9.0, fov: 0.6, speed: 0.4, phase: 0.0 },
-      { type: 'eyetower', x: 21.0, y: 4.0, r: 1.1, range: 9.0, fov: 0.6, speed: -0.36, phase: 1.6 },
+      { type: 'eyetower', x: 12.5, y: 15.2, r: 1.1, range: 9.0, fov: 0.6, speed: 0.4, phase: 0.0 },
+      { type: 'eyetower', x: 21.0, y: -0.2, r: 1.1, range: 9.0, fov: 0.6, speed: -0.36, phase: 1.6 },
       { type: 'mondzieher', x: 20.0, y: 10.5, r: 2.8, kraft: 7.0, takt: 6.5, phase: 0.3, core: 0.4 },
     ],
     autoDecor: { density: 0.09, seed: 71 },

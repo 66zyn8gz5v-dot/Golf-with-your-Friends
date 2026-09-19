@@ -578,8 +578,24 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
       for (let m = n - 1; m >= 0; m--) if (bodenAuf(m, lx, ly)) { landet = true; break; }
       if (!landet) problems.push(`luke bei (${o.x},${o.y}): unter ihr ist auf keiner Ebene Boden – wer hindurchfällt, ist aus`);
     }
+    /* DER AUGENTURM DARF NEBEN DER BAHN STEHEN. Er wirkt auf Entfernung – was auf der Bahn
+       ankommt, ist sein Blick, nicht sein Sockel –, und als Bauwerk gehört er an den Rand wie eine
+       Laterne. Steht er mitten im Weg, ist er zweierlei auf einmal: ein Klotz, um den man
+       herumspielt, UND ein Auge, vor dem man sich versteckt; das erste nimmt dem zweiten die
+       Wirkung. Geprüft wird darum nicht das Feld unter ihm, sondern ob überhaupt Bahn in Reichweite
+       liegt: Ein Turm im Nichts leuchtet auf nichts. */
+    for (const o of (c.obstacles || []).filter(o => o.type === 'eyetower')) {
+      const km = karten[o.ebene || 0] || rows;
+      const tx = Math.floor(o.x), ty = Math.floor(o.y);
+      let nah = false;
+      for (let dy = -3; dy <= 3 && !nah; dy++) for (let dx = -3; dx <= 3; dx++) {
+        const ch = km[ty + dy] && km[ty + dy][tx + dx];
+        if (FLOOR.has(ch)) { nah = true; break; }
+      }
+      if (!nah) problems.push(`eyetower bei (${o.x},${o.y}) steht mehr als drei Felder neben der Bahn – sein Blick trifft nichts`);
+    }
     for (const o of c.obstacles || []) {
-      const pts = o.type === 'portal' ? [[o.x, o.y], [o.tx, o.ty]] : ['bumper', 'rotor', 'switch', 'potion', 'turntable', 'magnet', 'cannon', 'cauldron', 'door', 'spikes', 'lightning', 'trapdoor', 'guillotine', 'eyetower'].includes(o.type) ? [[o.x, o.y]] : o.type === 'mover' && o.style !== 'shark' ? [[o.x0, o.y0], [o.x1, o.y1]] : []; // Haie schwimmen im Wasser neben der Bahn
+      const pts = o.type === 'portal' ? [[o.x, o.y], [o.tx, o.ty]] : ['bumper', 'rotor', 'switch', 'potion', 'turntable', 'magnet', 'cannon', 'cauldron', 'door', 'spikes', 'lightning', 'trapdoor', 'guillotine'].includes(o.type) ? [[o.x, o.y]] : o.type === 'mover' && o.style !== 'shark' ? [[o.x0, o.y0], [o.x1, o.y1]] : []; // Haie schwimmen im Wasser neben der Bahn
       if (o.type === 'rotor' && o.style === 'darktentacle') pts.length = 0; // dunkle Tentakel kriechen von außen (aus dem Wrack) auf die Bahn
       // Ein Hindernis steht auf seiner eigenen Ebene – geprüft wird darum auch dort
       const km = karten[o.ebene || 0] || rows;
