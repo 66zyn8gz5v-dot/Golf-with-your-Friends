@@ -1525,9 +1525,11 @@ bahn(LOGE, 'Der Winkelgang', 'erzmagierloge', f, [
     blitz(27.0, 5.5, w=3.0, h=3.2, takt=4.4, stil='bannschlag'),
     kreis(40.0, 13.0, 'bremse', r=1.2, takt=4.2),
     lampe(46.0, 13.0, r=4.0, stil='bannlicht'),
-# Bot-Median DREI. Die Lehrbahn der Welt ist kurz, und ihre beiden Kehren geben den Ball weiter,
-# statt ihn zu schlucken - genau das soll sie ja zeigen. Par 3 ist die ehrliche Zahl dafür.
-], par=3,
+# Bot-Median DREI bei Par 4 - und das bleibt so. Ein Schlag Vorsprung für den Bot ist die Regel
+# dieses Spiels und kein Fehler; korrigiert wird erst bei zweien (siehe Das Treibhaus). In
+# Fassung 225 stand hier kurz Par 3, und das war eine Übersteuerung: Ausgerechnet die Lehrbahn
+# der Welt wäre damit ihre strengste Bahn gewesen.
+], par=4,
 intro='Drei Läufe, zwei Kehren – und in den Kehren steht keine Ecke, sondern eine Schräge. Wer '
       'mit Tempo hineinspielt, kommt um sie herum; wer zu sacht spielt, liegt davor. Das ist die '
       'Rechnung, die in dieser Welt jede Bahn verlangt.')
@@ -1600,6 +1602,12 @@ bahn(LOGE, 'Das Bannmal', 'bannkreis', f, [
     kreis(31.0, 10.5, 'sprung', r=1.2, weite=7.0),
     lampe(9.5, 6.5, r=3.8, stil='bannlicht'),
     lampe(39.5, 15.5, r=3.8, stil='bannlicht'),
+# DIESE BAHN IST MIT DEM BOT NICHT ZU MESSEN, und zwar aus demselben Grund wie Das erste
+# Sternbild: Er kennt nur „wo ist das Loch" und zielt nie auf einen Stern. In ZEHN von zehn
+# Durchgängen erreichte er das Schlaglimit, der Profi-Sucher fand in neun Schlägen keine Lösung -
+# er lief geradeaus gegen ein Tor, das nie aufging. Das Par steht darum nach Augenmaß: vier
+# Sterne in vier Nischen über fünfzig Kacheln, dazu der Bannstein und das Siegel. Fünf Schläge,
+# wenn man sich die Reihenfolge vorher überlegt.
 ], par=5, dunkel=0.5, lampe=3.4,
 intro='Vier Sterne in vier Nischen, und das Bannmal vor dem Loch geht erst auf, wenn alle '
       'brennen. Die Nischen haben schräge Schultern – man muß nicht hineinfahren, man kann '
@@ -1628,7 +1636,11 @@ bahn(LOGE, 'Der Rat der Neun', 'erzmagierloge', f, ([
     bande(20.0, 17.5, 24.5, 13.0),
     kreis(28.0, 11.5, 'bann', r=1.6, takt=5.0),
     lampe(40.0, 11.5, r=4.2, stil='bannlicht'),
-]), par=5,
+# Bot-Median DREI bei Par 5 - zwei Schläge Vorsprung, und die vergibt man nicht. Der Grund ist
+# die Fernschleuder: Wer sie im richtigen Augenblick nimmt, kommt in EINEM Flug von der Tür bis
+# hinter die Raute. Das soll sie auch - dafür steht sie da -, nur darf das Par dann nicht so tun,
+# als wäre der lange Weg um den Saal herum der gemeinte.
+]), par=4,
 intro='Der Ratssaal. In seiner Mitte steht die Raute der Neun – vier Schrägen, die nach allen '
       'Seiten abweisen, und darin brennt ein Bannkreis im Takt. Geradeaus geht hier nichts; man '
       'muß sich aussuchen, an welcher Kante man vorbeiwill. Die Fernschleuder am Eingang wirft '

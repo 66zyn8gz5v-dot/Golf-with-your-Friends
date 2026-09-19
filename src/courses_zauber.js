@@ -706,7 +706,7 @@ const ZAUBER_WARTE = [
 
 const ZAUBER_LOGE = [
   {
-    name: 'Der Winkelgang', par: 3, theme: 'erzmagierloge',
+    name: 'Der Winkelgang', par: 4, theme: 'erzmagierloge',
     intro: 'Drei Läufe, zwei Kehren – und in den Kehren steht keine Ecke, sondern eine Schräge. Wer mit Tempo hineinspielt, kommt um sie herum; wer zu sacht spielt, liegt davor. Das ist die Rechnung, die in dieser Welt jede Bahn verlangt.',
     map: [
       '....................................................',
@@ -868,7 +868,7 @@ const ZAUBER_LOGE = [
     autoDecor: { density: 0.09, seed: 43 },
   },
   {
-    name: 'Der Rat der Neun', par: 5, theme: 'erzmagierloge',
+    name: 'Der Rat der Neun', par: 4, theme: 'erzmagierloge',
     intro: 'Der Ratssaal. In seiner Mitte steht die Raute der Neun – vier Schrägen, die nach allen Seiten abweisen, und darin brennt ein Bannkreis im Takt. Geradeaus geht hier nichts; man muß sich aussuchen, an welcher Kante man vorbeiwill. Die Fernschleuder am Eingang wirft über die Raute hinweg, aber sie schwenkt weit – wer im falschen Augenblick hineinrollt, fliegt über den Saal hinaus.',
     map: [
       '..................................................',
