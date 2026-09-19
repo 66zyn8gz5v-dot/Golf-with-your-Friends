@@ -54,7 +54,7 @@ lieber jetzt einlösen?
 
 | Wer | Sicher | Mit Glück (etwa 10 %) |
 | --- | --- | --- |
-| Zombie, Skelett, Spinne | nichts | trüber Kristall |
+| Zombie, Skelett, Spinne, Glimmerling | nichts | trüber Kristall |
 | Creeper, Ertrunkener, Hexe | trüber Kristall | klarer Kristall |
 | Enderman, Plünderer, Verwüster | klarer Kristall | leuchtender Kristall |
 | Wächter, Ältester Wächter, Warden | leuchtender Kristall | Sternenkristall |
@@ -70,7 +70,11 @@ Biome und Spawn-Regeln mit; beides gleichzeitig anzufangen hiesse doppelt so
 viele Stellen, an denen etwas schiefgeht, und nichts davon fertig.
 
 Eigene Mobs entstehen aus demselben Grund erst einmal nur für die Oberwelt.
-Der Glimmerling ist der erste davon.
+Der Glimmerling ist der erste davon. Er steht auf der untersten Stufe, wie
+ein Skelett — den Sternenstaub lässt er weiterhin sicher fallen, der Kristall
+kommt obendrauf. Dass ein harmloses Waldtier überhaupt Kristalle gibt, ist
+vertretbar, weil es wegläuft: Einen Glimmerling zu erwischen kostet mehr
+Mühe als einen Zombie, der von selbst angelaufen kommt.
 
 Die schwachen Nachtmobs gehen absichtlich leer aus. Sonst baut man eine
 Mob-Farm, geht Abendbrot essen und hat alle Fähigkeiten an einem Tag frei —
