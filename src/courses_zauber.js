@@ -393,7 +393,7 @@ const ZAUBER_WARTE = [
   },
   {
     name: 'Der Kartensaal', par: 4, theme: 'kartensaal',
-    intro: 'Vier Sterne, vier Ecken, und mittendrin zwei Regale, die den Saal in zwei Hälften teilen. Das Tor steht vor dem Loch und geht erst auf, wenn alle vier brennen. Die Reihenfolge entscheidet, wie oft man den Saal durchqueren muß.',
+    intro: 'Zwei Regale teilen den Saal. Wer den Gang in der Mitte nimmt, kommt am Lot des Astronomen vorbei; wer die Schanze oben trifft, fliegt über das erste Regal hinweg. Vor dem Loch wandert die Kulisse hin und her – da hilft nur der richtige Augenblick.',
     map: [
       '..............................',
       '..............................',
@@ -401,10 +401,10 @@ const ZAUBER_WARTE = [
       '.###########xxx##############.',
       '.###########xxx##############.',
       '.###########xxx##############.',
-      '.############################.',
-      '.##T######################H##.',
-      '.############################.',
-      '.###########xxx##############.',
+      '.################xx##########.',
+      '.##T#############xx#######H##.',
+      '.################xx##########.',
+      '.###########xxx##xx##########.',
       '.###########xxx##############.',
       '.###########xxx##############.',
       '.###########xxx##############.',
@@ -412,9 +412,10 @@ const ZAUBER_WARTE = [
       '..............................',
     ],
     obstacles: [
-      { type: 'sternbild', r: 0.5, sterne: [[5.0, 4.0], [5.0, 11.0], [19.0, 4.0], [19.0, 11.0]], tor: { x0: 24.0, y0: 2.0, x1: 24.0, y1: 13.0 } },
-      { type: 'pendulum', x: 13.0, y: 4.0, len: 3.2, amp: 55, ruhe: 90, phase: 0.0, w: 1.2, h: 1.2, style: 'foucault' },
-      { type: 'bumper', x: 18.5, y: 7.5, r: 0.55, style: 'meteorit', kick: 7.5 },
+      { type: 'ramp', x: 7.5, y: 2.6, w: 3.0, h: 2.8, angle: 0, minSpeed: 2.5, speed: 5.8, land: 5.2, style: 'sternschanze' },
+      { type: 'pendulum', x: 24.0, y: 3.6, len: 3.2, amp: 55, ruhe: 90, phase: 0.0, w: 1.2, h: 1.2, style: 'foucault' },
+      { type: 'bumper', x: 18.5, y: 4.5, r: 0.55, style: 'meteorit', kick: 7.5 },
+      { type: 'wandergate', x0: 21, y0: 2, x1: 21, y1: 13, gap: 2.0, style: 'kulisse' },
     ],
     autoDecor: { density: 0.09, seed: 57 },
   },
@@ -439,8 +440,8 @@ const ZAUBER_WARTE = [
       '................................',
     ],
     obstacles: [
-      { type: 'eyetower', x: 12.5, y: 15.2, r: 1.1, range: 9.0, fov: 0.6, speed: 0.4, phase: 0.0, style: 'tubus' },
-      { type: 'eyetower', x: 21.0, y: -0.2, r: 1.1, range: 9.0, fov: 0.6, speed: -0.36, phase: 1.6, style: 'tubus' },
+      { type: 'eyetower', x: 12.5, y: 15.2, r: 1.1, range: 9.0, fov: 0.6, speed: 0.4, phase: 0.0, style: 'sternenspiegel' },
+      { type: 'eyetower', x: 21.0, y: -0.2, r: 1.1, range: 9.0, fov: 0.6, speed: -0.36, phase: 1.6, style: 'sternenspiegel' },
       { type: 'mondzieher', x: 20.0, y: 10.5, r: 2.8, kraft: 7.0, takt: 6.5, phase: 0.3, core: 0.4 },
     ],
     autoDecor: { density: 0.09, seed: 71 },
@@ -533,7 +534,7 @@ const ZAUBER_WARTE = [
   },
   {
     name: 'Die Sternenprüfung', par: 5, theme: 'sternenwarte',
-    intro: 'Die Prüfung der Warte: erst die Blüte anstoßen und über die Ranke, dann am Mond vorbei - und dabei alle drei Sterne mitnehmen, denn sonst steht am Ende ein Tor, das nicht aufgeht. Der dritte liegt in der Nische hinter dem letzten Pfeiler. Wer hier unter Par bleibt, hat den Sternenhut verdient.',
+    intro: 'Die Prüfung der Warte: erst die Blüte anstoßen und über die Ranke, dann am Mond vorbei. Danach gibt es zwei Wege. Die Schanze zwischen den Pfeilern ist schmal, wirft aber in einem Bogen über die Kulisse hinweg; wer sie verfehlt, muß den Augenblick abpassen, in dem die Gasse vor ihm steht. Wer hier unter Par bleibt, hat den Sternenhut verdient.',
     map: [
       '....................................',
       '....................................',
@@ -554,7 +555,8 @@ const ZAUBER_WARTE = [
     obstacles: [
       { type: 'ranke', x: 9, y: 5, w: 4, h: 5, dauer: 4.5, r: 0.6, bluete: { x: 6.5, y: 7.5 } },
       { type: 'mondzieher', x: 16.0, y: 7.0, r: 3.2, kraft: 8.5, takt: 6.5, phase: 0.15, core: 0.4 },
-      { type: 'sternbild', r: 0.5, sterne: [[15.0, 3.0], [15.0, 11.0], [27.0, 3.0]], tor: { x0: 28.0, y0: 2.0, x1: 28.0, y1: 13.0 } },
+      { type: 'ramp', x: 21.8, y: 6.2, w: 2.0, h: 2.6, angle: 0, minSpeed: 2.5, speed: 6.0, land: 5.4, style: 'sternschanze' },
+      { type: 'wandergate', x0: 28, y0: 2, x1: 28, y1: 13, gap: 2.0, style: 'kulisse' },
     ],
     autoDecor: { density: 0.09, seed: 127 },
   },
@@ -617,7 +619,7 @@ const ZAUBER_LOGE = [
   },
   {
     name: 'Das Bannmal', par: 5, theme: 'bannkreis',
-    intro: 'In der Gruft sieht man nur, was im Licht der Lampen steht. Vier Sterne liegen in drei Kammern verteilt, und erst wenn alle brennen, geht das Bannmal vor dem Loch auf. Wer beim Hinweg nicht hinsieht, sucht sie beim Rückweg.',
+    intro: 'Vier Sterne liegen in drei Kammern verteilt, und erst wenn alle brennen, geht das Bannmal vor dem Loch auf. Der Weg dorthin ist keiner zum Trödeln: Im oberen Durchlaß schlägt der Bann ein, im unteren dreht der Zeiger.',
     map: [
       '....................................',
       '....................................',
@@ -638,8 +640,8 @@ const ZAUBER_LOGE = [
     ],
     obstacles: [
       { type: 'sternbild', r: 0.5, sterne: [[5.0, 4.0], [5.0, 12.0], [18.0, 11.0], [26.0, 4.0]], tor: { x0: 28.0, y0: 2.0, x1: 28.0, y1: 14.0 } },
-      { type: 'grubenlampe', x: 6.5, y: 8.5, r: 4.4, style: 'bannlicht' },
-      { type: 'grubenlampe', x: 18.5, y: 8.5, r: 4.4, style: 'bannlicht' },
+      { type: 'lightning', x: 18.0, y: 4.5, w: 3.0, h: 5.0, period: 4.6, phase: 0.0, warn: 1.0, strike: 0.35, style: 'bannschlag' },
+      { type: 'rotor', x: 11.5, y: 10.5, blades: 3, len: 1.5, speed: 0.9, thick: 0.16, style: 'bannzeiger', phase: 0.0 },
       { type: 'grubenlampe', x: 30.5, y: 9.5, r: 4.0, style: 'bannlicht' },
     ],
     autoDecor: { density: 0.09, seed: 43 },
@@ -733,7 +735,7 @@ const ZAUBER_LOGE = [
   },
   {
     name: 'Das Wanderloch', par: 5, theme: 'bannkreis',
-    intro: 'Das Loch bleibt nicht, wo es ist - es wandert zwischen drei Stellen. Und der Mond davor zieht den Ball genau dann, wenn man ihn gerade nicht ziehen lassen will. In der Dunkelheit sieht man immer nur die Stelle, die gerade im Licht liegt.',
+    intro: 'Das Loch bleibt nicht, wo es ist - es wandert zwischen drei Stellen, und der Mond davor zieht den Ball genau dann, wenn man ihn gerade nicht ziehen lassen will. Wer den Zickzack nicht ablaufen will, nimmt die Schanze und fliegt über die zweite Wand hinweg – oben, wo es schneller geht, schlägt allerdings der Bann ein.',
     map: [
       '....................................',
       '....................................',
@@ -755,15 +757,15 @@ const ZAUBER_LOGE = [
     obstacles: [
       { type: 'wanderloch', stellen: [[31.5, 4.5], [31.5, 8.5], [31.5, 12.5]], phase: 0.0, style: 'siegelloch' },
       { type: 'mondzieher', x: 26.0, y: 8.5, r: 3.2, kraft: 8.0, takt: 6.0, phase: 0.35, core: 0.4 },
+      { type: 'ramp', x: 18.0, y: 9.6, w: 2.6, h: 3.0, angle: 0, minSpeed: 2.5, speed: 6.0, land: 5.6, style: 'bannschanze' },
+      { type: 'lightning', x: 14.5, y: 3.5, w: 3.0, h: 4.0, period: 4.4, phase: 0.0, warn: 1.0, strike: 0.35, style: 'bannschlag' },
       { type: 'grubenlampe', x: 6.5, y: 11.5, r: 4.0, style: 'bannlicht' },
-      { type: 'grubenlampe', x: 17.5, y: 4.5, r: 4.4, style: 'bannlicht' },
-      { type: 'grubenlampe', x: 30.5, y: 8.5, r: 5.0, style: 'bannlicht' },
     ],
     autoDecor: { density: 0.09, seed: 97 },
   },
   {
     name: 'Die Kammer der Spiegel', par: 5, theme: 'erzmagierloge',
-    intro: 'Zwei Spiegel, vier Sterne und ein Bannmal vor dem Loch. An zwei der Sterne kommt man nur durch einen Spiegel heran, und es ist nicht derselbe - man muß sich vorher überlegen, welchen man wofür nimmt.',
+    intro: 'Zwei Spiegel und dazwischen ein Pfeiler. Über dem oberen Gang liegt eine Schanze: Wer sie trifft, fliegt über den zweiten Spiegel hinweg und spart sich das Umdenken. Vor dem Loch dreht der Bannzeiger.',
     map: [
       '........................................',
       '........................................',
@@ -786,14 +788,15 @@ const ZAUBER_LOGE = [
     obstacles: [
       { type: 'zauberspiegel', x0: 12, y0: 5, x1: 12, y1: 13 },
       { type: 'zauberspiegel', x0: 26, y0: 5, x1: 26, y1: 13 },
-      { type: 'sternbild', r: 0.5, sterne: [[6.0, 3.0], [6.0, 13.0], [22.0, 3.0], [30.0, 13.0]], tor: { x0: 32.0, y0: 2.0, x1: 32.0, y1: 15.0 } },
+      { type: 'ramp', x: 20.5, y: 3.0, w: 3.0, h: 3.0, angle: 0, minSpeed: 2.5, speed: 5.8, land: 5.0, style: 'bannschanze' },
+      { type: 'rotor', x: 32.0, y: 8.0, blades: 3, len: 1.6, speed: 0.9, thick: 0.16, style: 'bannzeiger', phase: 0.0 },
       { type: 'bumper', x: 29.5, y: 6.5, r: 0.55, style: 'bannstein', kick: 7.5 },
     ],
     autoDecor: { density: 0.09, seed: 109 },
   },
   {
     name: 'Der Erzmagier', par: 6, theme: 'erzmagierloge',
-    intro: 'Die Prüfung der Loge: die Blüte anstoßen, durch den Spiegel, in den richtigen Hut, am Mond vorbei - und dabei die drei Sterne mitnehmen, denn sonst steht am Ende ein Bannmal, das nicht aufgeht. Wer hier unter Par bleibt, hat ausgelernt.',
+    intro: 'Die Prüfung der Loge: die Blüte anstoßen, durch den Spiegel, in den richtigen Hut, am Mond vorbei. Hinter den Hüten steht eine Wand, an der es nur unten weitergeht – oder über die Schanze hinweg. Und kurz vor dem Loch schlägt noch einmal der Bann ein. Wer hier unter Par bleibt, hat ausgelernt.',
     map: [
       '............................................',
       '............................................',
@@ -819,7 +822,8 @@ const ZAUBER_LOGE = [
       { type: 'zauberspiegel', x0: 18, y0: 5, x1: 18, y1: 14 },
       { type: 'zauberhut', takt: 2.4, phase: 0.0, r: 0.42, plaetze: [[23.0, 4.0], [23.0, 13.0], [34.0, 4.0]] },
       { type: 'mondzieher', x: 33.0, y: 10.0, r: 3.2, kraft: 8.5, takt: 5.5, phase: 0.1, core: 0.4 },
-      { type: 'sternbild', r: 0.5, sterne: [[15.0, 8.0], [24.0, 9.0], [33.0, 4.0]], tor: { x0: 37.0, y0: 2.0, x1: 37.0, y1: 16.0 } },
+      { type: 'ramp', x: 24.5, y: 3.2, w: 3.0, h: 3.0, angle: 0, minSpeed: 2.5, speed: 6.0, land: 5.4, style: 'bannschanze' },
+      { type: 'lightning', x: 36.0, y: 11.5, w: 3.0, h: 4.0, period: 4.6, phase: 0.0, warn: 1.0, strike: 0.35, style: 'bannschlag' },
     ],
     autoDecor: { density: 0.09, seed: 127 },
   },

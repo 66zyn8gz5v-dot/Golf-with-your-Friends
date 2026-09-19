@@ -367,4 +367,41 @@ Object.assign(Renderer.prototype, {
       }
     }
   },
+
+  /* Die Bannschanze. Derselbe Körper wie die Sternschanze der Warte, aber in der Handschrift der
+     Loge: schwarzer Marmor, goldene Wange, und auf dem Deck ein Bannsiegel, das mit dem Ball
+     hochglüht. Die Schanze ist hier kein Weg, sondern eine Erlaubnis – wer sie nimmt, überspringt
+     eine Sperre, um die alle anderen herummüssen. */
+  drawBannschanze(ctx, ob, t) {
+    const s = this.scale;
+    const { punkt, kante, P, deckWeg } = this.rampenKoerper(ctx, ob, '#1d1832', '#b99243');
+    ctx.save(); deckWeg(); ctx.clip();
+
+    // Zwei Bahnen violetten Bannfeuers, die zur Abrißkante hin laufen
+    for (const u of [0.3, 0.7]) {
+      const a = P(punkt(u, 0.04)), b = P(punkt(u, 0.96));
+      const lauf = ctx.createLinearGradient(a[0], a[1], b[0], b[1]);
+      lauf.addColorStop(0, 'rgba(150,90,220,0.05)');
+      lauf.addColorStop(1, `rgba(196,132,255,${0.45 + 0.25 * Math.sin(t * 2.4 + u * 6)})`);
+      ctx.strokeStyle = lauf; ctx.lineWidth = Math.max(2, s * 0.10); ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+    }
+    // Das Siegel liegt in der oberen Hälfte der Schanze, dort, wo der Ball abhebt
+    const m = punkt(0.5, 0.62);
+    this.bannsiegel(ctx, m[0], m[1], m[2], Math.min(ob.w, ob.h) * 0.34, 0.35 + 0.3 * Math.sin(t * 1.8), t * 0.22);
+    ctx.restore();
+
+    // Umriß, goldene Abrißkante und ihre Untersicht
+    deckWeg(); ctx.strokeStyle = 'rgba(10,8,20,0.8)'; ctx.lineWidth = Math.max(1, s * 0.04); ctx.stroke();
+    const puls = 0.55 + 0.45 * Math.sin(t * 3.0);
+    const ka = P(kante[0]), kb = P(kante[1]);
+    ctx.strokeStyle = `rgba(246,206,120,${0.6 + 0.4 * puls})`;
+    ctx.lineWidth = Math.max(2, s * 0.1); ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(ka[0], ka[1]); ctx.lineTo(kb[0], kb[1]); ctx.stroke();
+    const ua = this.proj(kante[0][0], kante[0][1], Math.max(0, kante[0][2] - 0.08));
+    const ub = this.proj(kante[1][0], kante[1][1], Math.max(0, kante[1][2] - 0.08));
+    ctx.strokeStyle = 'rgba(92,66,22,0.8)'; ctx.lineWidth = Math.max(1, s * 0.055);
+    ctx.beginPath(); ctx.moveTo(ua[0], ua[1]); ctx.lineTo(ub[0], ub[1]); ctx.stroke();
+  },
+
 });

@@ -402,4 +402,141 @@ Object.assign(Renderer.prototype, {
       ctx.beginPath(); ctx.moveTo(kx, ky); ctx.lineTo(kx, ko); ctx.stroke();
     }
   },
+
+  /* Die Sternschanze. Eine Platte aus weißem Marmor, deren Deck eine Himmelskarte trägt: dunkles
+     Blau, ein eingelegtes Sternbild aus Gold, und an der Abrißkante ein Licht, das anzeigt, wo der
+     Ball die Schanze verläßt. Die Karte liegt unter einem Umriß-Schnitt, damit nichts über die
+     Kante hinausläuft – ein Muster, das über den Rand einer Fläche hinausläuft, nimmt ihr sofort
+     den Körper. */
+  drawSternschanze(ctx, ob, t) {
+    const s = this.scale;
+    const { ecken, punkt, kante, P, deckWeg } = this.rampenKoerper(ctx, ob, '#232c55', '#dfe7f7');
+    ctx.save(); deckWeg(); ctx.clip();
+
+    // Die Himmelskarte: sechs Sterne, durch Linien verbunden – immer dieselben, damit die Schanze
+    // bei jedem Hinsehen gleich aussieht und nicht flackert
+    const karte = [[0.24, 0.16], [0.52, 0.34], [0.30, 0.55], [0.72, 0.58], [0.50, 0.80], [0.80, 0.22]];
+    const pfad = [0, 1, 3, 4, 2, 0];
+    ctx.beginPath();
+    pfad.forEach((k, i) => { const p = P(punkt(karte[k][0], karte[k][1])); i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); });
+    ctx.strokeStyle = 'rgba(255,224,150,0.5)'; ctx.lineWidth = Math.max(1, s * 0.025); ctx.stroke();
+    for (let i = 0; i < karte.length; i++) {
+      const p = P(punkt(karte[i][0], karte[i][1]));
+      const f = 0.65 + 0.35 * Math.sin(t * 1.6 + i * 1.3);
+      const r = s * (0.05 + 0.018 * f);
+      const hof = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], r * 3);
+      hof.addColorStop(0, `rgba(255,240,190,${0.5 * f})`); hof.addColorStop(1, 'rgba(255,240,190,0)');
+      ctx.fillStyle = hof; ctx.beginPath(); ctx.arc(p[0], p[1], r * 3, 0, TAU); ctx.fill();
+      ctx.fillStyle = `rgba(255,248,225,${0.75 + 0.25 * f})`;
+      ctx.beginPath(); ctx.arc(p[0], p[1], r, 0, TAU); ctx.fill();
+    }
+    // Ein Lichtstreifen von unten nach oben – er sagt, in welche Richtung die Schanze wirft
+    const lauf = ((t * 0.5) % 1);
+    for (const o of [0, 0.5]) {
+      const v = (lauf + o) % 1;
+      const a = P(punkt(0.08, v)), b = P(punkt(0.92, v));
+      ctx.strokeStyle = `rgba(190,220,255,${0.3 * Math.sin(Math.PI * v)})`;
+      ctx.lineWidth = Math.max(1, s * 0.07);
+      ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+    }
+    ctx.restore();
+
+    // Umriß und die goldene Abrißkante
+    deckWeg(); ctx.strokeStyle = 'rgba(20,24,48,0.75)'; ctx.lineWidth = Math.max(1, s * 0.035); ctx.stroke();
+    const puls = 0.55 + 0.45 * Math.sin(t * 3.2);
+    const ka = P(kante[0]), kb = P(kante[1]);
+    ctx.strokeStyle = `rgba(255,228,150,${0.55 + 0.45 * puls})`;
+    ctx.lineWidth = Math.max(2, s * 0.09); ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(ka[0], ka[1]); ctx.lineTo(kb[0], kb[1]); ctx.stroke();
+    // und ihre Untersicht, damit die Kante eine Dicke hat
+    const ua = this.proj(kante[0][0], kante[0][1], Math.max(0, kante[0][2] - 0.07));
+    const ub = this.proj(kante[1][0], kante[1][1], Math.max(0, kante[1][2] - 0.07));
+    ctx.strokeStyle = 'rgba(120,96,40,0.7)'; ctx.lineWidth = Math.max(1, s * 0.05);
+    ctx.beginPath(); ctx.moveTo(ua[0], ua[1]); ctx.lineTo(ub[0], ub[1]); ctx.stroke();
+  },
+
+
+  /* ================= Der Sternenspiegel =================
+     Die zweite Gestalt des Augenturms. Statt eines Rohrs, durch das jemand hindurchsieht, steht
+     hier ein Heliostat: eine geschliffene Scheibe auf einer Marmorsäule, die das Sternenlicht auf
+     die Terrasse wirft. Das paßt zur Sternenwarte, hat aber eine andere Silhouette als das
+     Fernrohr – rund und flach statt lang und spitz -, und man erkennt beim Hinsehen sofort, wohin
+     sie schaut: Steht sie dem Ball zugewandt, sieht man die volle Scheibe; dreht sie sich weg,
+     wird sie zum Strich. */
+  drawSternenspiegel(ctx, ob, t) {
+    const s = this.scale, r = ob.r;
+    const wach = ob.alert || 0;
+    const ca = Math.cos(ob.dir), sa = Math.sin(ob.dir);
+    // Wie weit die Scheibe der Kamera zugewandt ist. Dieselbe Rechnung, mit der die Wände
+    // entscheiden, ob ihre Seitenfläche sichtbar ist.
+    const zu = ca * this.cam.sin + sa * this.cam.cos;
+
+    this.isoEllipse(ctx, ob.x, ob.y, 0.004, r * 1.6, 'rgba(0,0,0,0.3)');
+    // Sockel und Säule aus dem Marmor der Warte
+    this.prism(ctx, this.circlePoly(ob.x, ob.y, r * 1.25, 10), 0, 0.26, '#6a6488', '#302b48', { outline: '#15121f' });
+    this.prism(ctx, this.circlePoly(ob.x, ob.y, r * 0.92, 10), 0.26, 0.22, '#5c5678', '#28243c', { outline: '#15121f' });
+    this.prism(ctx, this.circlePoly(ob.x, ob.y, r * 0.38, 8), 0.48, 1.05, '#d7dced', '#767c96', { outline: '#3a3c52' });
+    // Der goldene Kragen, in dem die Scheibe hängt
+    this.prism(ctx, this.circlePoly(ob.x, ob.y, r * 0.52, 8), 1.53, 0.18, '#d8b054', '#7a5c24', { outline: '#3d2f10' });
+
+    const [mx, my] = this.proj(ob.x, ob.y, 2.05);
+    const hoch = s * r * 1.02;                       // senkrechte Halbachse: immer voll
+    const breit = Math.max(s * r * 0.08, hoch * Math.abs(zu));  // quer: je nach Blickrichtung
+    const scheibe = () => { ctx.beginPath(); ctx.ellipse(mx, my, breit, hoch, 0, 0, TAU); ctx.closePath(); };
+
+    // Die Rückseite ist mattes Messing, die Vorderseite Spiegelglas – welche man sieht, sagt zu
+    const vorn = zu > 0;
+    scheibe();
+    if (vorn) {
+      const g = ctx.createLinearGradient(mx - breit, my - hoch, mx + breit, my + hoch);
+      g.addColorStop(0, '#9fb7e8'); g.addColorStop(0.5, '#2c3a68'); g.addColorStop(1, '#141c38');
+      ctx.fillStyle = g;
+    } else {
+      // Die Rückseite ist gegossenes Messing. Ohne Verlauf und Strebe war sie ein flacher
+      // Goldfleck - und die beiden Türme der Terrasse zeigen dem Spieler meistens genau sie.
+      const g = ctx.createLinearGradient(mx - breit, my - hoch, mx + breit, my + hoch);
+      g.addColorStop(0, '#c49a44'); g.addColorStop(0.55, '#8a6c2c'); g.addColorStop(1, '#4e3c15');
+      ctx.fillStyle = g;
+    }
+    ctx.fill();
+
+    if (!vorn) {   // Kreuzstrebe und Nabe, damit man den Guß als Guß erkennt
+      ctx.save(); scheibe(); ctx.clip();
+      ctx.strokeStyle = 'rgba(58,44,14,0.65)'; ctx.lineWidth = Math.max(2, s * 0.06);
+      ctx.beginPath();
+      ctx.moveTo(mx, my - hoch); ctx.lineTo(mx, my + hoch);
+      ctx.moveTo(mx - breit, my); ctx.lineTo(mx + breit, my);
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,235,180,0.35)'; ctx.lineWidth = Math.max(1, s * 0.05);
+      ctx.beginPath(); ctx.ellipse(mx, my, breit * 0.62, hoch * 0.62, 0, 0, TAU); ctx.stroke();
+      ctx.restore();
+      ctx.fillStyle = '#e0bb62';
+      ctx.beginPath(); ctx.ellipse(mx, my, Math.max(1.5, breit * 0.2), hoch * 0.2, 0, 0, TAU); ctx.fill();
+      ctx.strokeStyle = '#4a3a12'; ctx.lineWidth = Math.max(1, s * 0.03); ctx.stroke();
+    }
+
+    if (vorn) {   // der Glanzstreifen liegt IM Umriß, sonst franst die Scheibe aus
+      ctx.save(); scheibe(); ctx.clip();
+      ctx.strokeStyle = 'rgba(226,238,255,0.5)'; ctx.lineWidth = Math.max(2, hoch * 0.16);
+      ctx.beginPath(); ctx.moveTo(mx - breit, my + hoch * 0.45); ctx.lineTo(mx + breit, my - hoch * 0.75); ctx.stroke();
+      // und das Sternenlicht, das sie sammelt – heller, je näher sie daran ist, jemanden zu fassen
+      const f = 0.7 + 0.3 * Math.sin(t * 5);
+      const hof = ctx.createRadialGradient(mx, my, 0, mx, my, hoch);
+      hof.addColorStop(0, `rgba(255,${Math.round(226 - 90 * wach)},${Math.round(170 - 110 * wach)},${(0.25 + 0.5 * wach) * f})`);
+      hof.addColorStop(1, 'rgba(255,220,160,0)');
+      ctx.fillStyle = hof; scheibe(); ctx.fill();
+      ctx.restore();
+    }
+    scheibe(); ctx.strokeStyle = '#d8b054'; ctx.lineWidth = Math.max(2, s * 0.07); ctx.stroke();
+    scheibe(); ctx.strokeStyle = 'rgba(30,24,10,0.55)'; ctx.lineWidth = Math.max(1, s * 0.03); ctx.stroke();
+
+    // Das Gegengewicht hinter der Scheibe: daran sieht man, daß sie sich wirklich dreht
+    const gx = ob.x - ca * r * 0.9, gy = ob.y - sa * r * 0.9;
+    const [px, py] = this.proj(gx, gy, 1.72);
+    ctx.strokeStyle = '#7a5c24'; ctx.lineWidth = Math.max(2, s * 0.06); ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(mx, my + hoch * 0.2); ctx.lineTo(px, py); ctx.stroke();
+    ctx.fillStyle = '#c8a24a'; ctx.beginPath(); ctx.arc(px, py, Math.max(2, s * 0.13), 0, TAU); ctx.fill();
+    ctx.strokeStyle = '#4a3a12'; ctx.lineWidth = Math.max(1, s * 0.03); ctx.stroke();
+  },
+
 });

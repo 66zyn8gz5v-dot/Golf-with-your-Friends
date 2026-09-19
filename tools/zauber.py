@@ -113,9 +113,14 @@ def scheibe_(x, y, r=1.5, tempo=1.6, aus=0, stil=None):
     if stil: o['style'] = stil
     return o
 
-def rampe(x, y, w, h, angle=0, land=2.6, speed=5.0, minSpeed=2.5):
-    return {'type': 'ramp', 'x': x, 'y': y, 'w': w, 'h': h, 'angle': angle,
-            'minSpeed': minSpeed, 'speed': speed, 'land': land}
+def rampe(x, y, w, h, angle=0, land=2.6, speed=5.0, minSpeed=2.5, stil=None):
+    """Sprungschanze. x/y ist die OBERE LINKE Ecke, angle die Flugrichtung in Grad (0 = nach
+    rechts). Der Ball landet genau `land` Felder hinter der Schanzenkante - in der Luft gibt es
+    keine Mauern, also ist der Landepunkt das, was zaehlt; pruefe() sieht nach, ob dort Boden ist."""
+    o = {'type': 'ramp', 'x': x, 'y': y, 'w': w, 'h': h, 'angle': angle,
+         'minSpeed': minSpeed, 'speed': speed, 'land': land}
+    if stil: o['style'] = stil
+    return o
 
 def gatter(x, y, w=2.0, period=5.0, offen=0.5, achse='x', phase=0.0):
     return {'type': 'gate', 'x': x, 'y': y, 'w': w, 'h': 0.3, 'period': period,
@@ -486,6 +491,29 @@ def pruefe(b):
                           f'{"x" if achse_x else "y"} = {offen[0]} ist noch Boden, ihre Klötze '
                           f'reichen aber nur {reicht:.1f} Felder weit (w={w}, overlap={ueber})')
 
+    # ---- Die Sprungschanzen
+    #
+    # IN DER LUFT GIBT ES KEINE MAUERN (siehe physics.js). Das ist der Reiz der Schanze - man
+    # fliegt über die Sperre, um die alle anderen herummüssen -, aber es heißt auch: Wo der Ball
+    # aufkommt, entscheidet allein die Rechnung `Schanzenkante + land`. Liegt dort eine Wand oder
+    # der Rand, landet der Ball im Nichts und die Bahn ist kaputt, ohne daß es jemand beim
+    # Hinsehen merkt. Also wird der Landepunkt hier nachgerechnet.
+    for o in [x for x in b['obstacles'] if x['type'] == 'ramp']:
+        rad = math.radians(o.get('angle', 90))
+        dx, dy = math.cos(rad), math.sin(rad)
+        # Die Kante liegt eine halbe Rampenlänge vom Mittelpunkt entfernt, in Flugrichtung
+        mx, my = o['x'] + o['w'] / 2, o['y'] + o['h'] / 2
+        halb = o['w'] / 2 if abs(dx) > 0.5 else o['h'] / 2
+        lx, ly = mx + dx * (halb + o['land']), my + dy * (halb + o['land'])
+        if not fest(int(lx), int(ly)):
+            fehler.append(f'die Schanze auf {o["x"]}/{o["y"]} wirft den Ball nach '
+                          f'{lx:.1f}/{ly:.1f} – dort ist kein Boden')
+        # Und sie muß selbst auf Boden stehen, sonst kommt man gar nicht auf sie herauf
+        for ex, ey in ((o['x'] + 0.1, o['y'] + 0.1), (o['x'] + o['w'] - 0.1, o['y'] + o['h'] - 0.1)):
+            if not fest(int(ex), int(ey)):
+                fehler.append(f'die Schanze auf {o["x"]}/{o["y"]} steht mit einer Ecke '
+                              f'({ex:.1f}/{ey:.1f}) nicht auf der Bahn')
+
     # ---- Die Zauberhüte
     for o in [x for x in b['obstacles'] if x['type'] == 'zauberhut']:
         if len(o['plaetze']) < 2:
@@ -837,15 +865,20 @@ f = leer(30, 15)
 fuell(f, 1, 2, 28, 12)
 fuell(f, 12, 2, 14, 5, 'x')           # Regale
 fuell(f, 12, 9, 14, 12, 'x')
+# Der Kartentisch mitten im Saal. Er stand hier nicht, solange das Sternentor vor dem Loch die
+# Gerade sperrte; ohne das Tor lag der Weg vom Abschlag bis ins Loch frei, und die Bahn war ein
+# Ass. Um den Tisch herum muß man so oder so.
+fuell(f, 17, 6, 18, 9, 'x')
 setz(f, 3, 7, 'T'); setz(f, 26, 7, 'H')
 bahn(WARTE, 'Der Kartensaal', 'kartensaal', f, [
-    sternbild([(5, 4), (5, 11), (19, 4), (19, 11)], (24, 2, 24, 13)),
-    pendel(13.0, 4.0, laenge=3.2, amp=55, stil='foucault'),
-    pilz(18.5, 7.5, stil='meteorit'),
+    rampe(7.5, 2.6, 3.0, 2.8, angle=0, land=5.2, speed=5.8, stil='sternschanze'),
+    pendel(24.0, 3.6, laenge=3.2, amp=55, stil='foucault'),
+    pilz(18.5, 4.5, stil='meteorit'),
+    wandertor(21, 2, 21, 13, gasse=2.0, stil='kulisse'),
 ], par=4,
-intro='Vier Sterne, vier Ecken, und mittendrin zwei Regale, die den Saal in zwei Hälften teilen. '
-      'Das Tor steht vor dem Loch und geht erst auf, wenn alle vier brennen. Die Reihenfolge '
-      'entscheidet, wie oft man den Saal durchqueren muß.')
+intro='Zwei Regale teilen den Saal. Wer den Gang in der Mitte nimmt, kommt am Lot des Astronomen '
+      'vorbei; wer die Schanze oben trifft, fliegt über das erste Regal hinweg. Vor dem Loch '
+      'wandert die Kulisse hin und her – da hilft nur der richtige Augenblick.')
 
 # --- 5 ---------------------------------------------------------------------
 # Das Fernrohr. Das Auge des Turms sucht die Terrasse ab - dieselbe Zeichnung wie im Schattenreich,
@@ -871,8 +904,8 @@ bahn(WARTE, 'Das Fernrohr', 'sternenwarte', f, [
     # aussen, und der Sockel des Turms misst 1,375 im Halbmesser (r * 1,25). Macht 14,96 bzw. 0,05
     # als Grenze - mit 15,2 und -0,2 steht beides frei, und beides liegt noch auf der Scholle,
     # die 1,4 Felder ueber die Karte hinausreicht.
-    auge(12.5, 15.2, r=1.1, weite=9.0, tempo=0.4, stil='tubus'),                # unten neben der Terrasse
-    auge(21.0, -0.2, r=1.1, weite=9.0, tempo=-0.36, phase=1.6, stil='tubus'),   # oben neben der Terrasse
+    auge(12.5, 15.2, r=1.1, weite=9.0, tempo=0.4, stil='sternenspiegel'),                # unten neben der Terrasse
+    auge(21.0, -0.2, r=1.1, weite=9.0, tempo=-0.36, phase=1.6, stil='sternenspiegel'),   # oben neben der Terrasse
     mond(20.0, 10.5, r=2.8, kraft=7.0, takt=6.5, phase=0.3),
 ], par=4,
 intro='Zwei Fernrohre stehen am Rand der Terrasse und suchen sie ab, und zwischen ihnen zieht ein '
@@ -953,12 +986,13 @@ setz(f, 3, 7, 'T'); setz(f, 32, 7, 'H')
 bahn(WARTE, 'Die Sternenprüfung', 'sternenwarte', f, [
     ranke(9, 5, 4, 5, 6.5, 7.5, dauer=4.5),
     mond(16.0, 7.0, r=3.2, kraft=8.5, takt=6.5, phase=0.15),
-    sternbild([(15, 3), (15, 11), (27, 3)], (28, 2, 28, 13)),
+    rampe(21.8, 6.2, 2.0, 2.6, angle=0, land=5.4, speed=6.0, stil='sternschanze'),
+    wandertor(28, 2, 28, 13, gasse=2.0, stil='kulisse'),
 ], par=5,
-intro='Die Prüfung der Warte: erst die Blüte anstoßen und über die Ranke, dann am Mond vorbei - '
-      'und dabei alle drei Sterne mitnehmen, denn sonst steht am Ende ein Tor, das nicht aufgeht. '
-      'Der dritte liegt in der Nische hinter dem letzten Pfeiler. Wer hier unter Par bleibt, hat '
-      'den Sternenhut verdient.')
+intro='Die Prüfung der Warte: erst die Blüte anstoßen und über die Ranke, dann am Mond vorbei. '
+      'Danach gibt es zwei Wege. Die Schanze zwischen den Pfeilern ist schmal, wirft aber in '
+      'einem Bogen über die Kulisse hinweg; wer sie verfehlt, muß den Augenblick abpassen, in dem '
+      'die Gasse vor ihm steht. Wer hier unter Par bleibt, hat den Sternenhut verdient.')
 
 # ===========================================================================
 #  DIE ERZMAGIERLOGE - Legende, neun Bahnen
@@ -1029,13 +1063,13 @@ fuell(f, 22, 8, 23, 13, 'x')          # zweiter oben
 setz(f, 4, 10, 'T'); setz(f, 32, 10, 'H')
 bahn(LOGE, 'Das Bannmal', 'bannkreis', f, [
     sternbild([(5, 4), (5, 12), (18, 11), (26, 4)], (28, 2, 28, 14)),
-    lampe(6.5, 8.5, r=4.4, stil='bannlicht'),
-    lampe(18.5, 8.5, r=4.4, stil='bannlicht'),
+    blitz(18.0, 4.5, w=3.0, h=5.0, takt=4.6, stil='bannschlag'),
+    windrad(11.5, 10.5, blades=3, laenge=1.5, tempo=0.9, stil='bannzeiger'),
     lampe(30.5, 9.5, r=4.0, stil='bannlicht'),
-], par=5, dunkel=0.55, lampe=3.2,
-intro='In der Gruft sieht man nur, was im Licht der Lampen steht. Vier Sterne liegen in drei '
-      'Kammern verteilt, und erst wenn alle brennen, geht das Bannmal vor dem Loch auf. Wer beim '
-      'Hinweg nicht hinsieht, sucht sie beim Rückweg.')
+], par=5,
+intro='Vier Sterne liegen in drei Kammern verteilt, und erst wenn alle brennen, geht das Bannmal '
+      'vor dem Loch auf. Der Weg dorthin ist keiner zum Trödeln: Im oberen Durchlaß schlägt der '
+      'Bann ein, im unteren dreht der Zeiger.')
 
 # --- 4 ---------------------------------------------------------------------
 # Der Rat der Neun. Vier Hüte, ein Mond und ein Lot. Die Hüte sind hier kein Umweg, sondern die
@@ -1110,13 +1144,14 @@ setz(f, 4, 11, 'T'); setz(f, 31, 4, 'H')
 bahn(LOGE, 'Das Wanderloch', 'bannkreis', f, [
     wanderloch([(31.5, 4.5), (31.5, 8.5), (31.5, 12.5)], stil='siegelloch'),
     mond(26.0, 8.5, r=3.2, kraft=8.0, takt=6.0, phase=0.35),
+    rampe(18.0, 9.6, 2.6, 3.0, angle=0, land=5.6, speed=6.0, stil='bannschanze'),
+    blitz(14.5, 3.5, w=3.0, h=4.0, takt=4.4, stil='bannschlag'),
     lampe(6.5, 11.5, r=4.0, stil='bannlicht'),
-    lampe(17.5, 4.5, r=4.4, stil='bannlicht'),
-    lampe(30.5, 8.5, r=5.0, stil='bannlicht'),
-], par=5, dunkel=0.52, lampe=3.2,
-intro='Das Loch bleibt nicht, wo es ist - es wandert zwischen drei Stellen. Und der Mond davor '
-      'zieht den Ball genau dann, wenn man ihn gerade nicht ziehen lassen will. In der Dunkelheit '
-      'sieht man immer nur die Stelle, die gerade im Licht liegt.')
+], par=5,
+intro='Das Loch bleibt nicht, wo es ist - es wandert zwischen drei Stellen, und der Mond davor '
+      'zieht den Ball genau dann, wenn man ihn gerade nicht ziehen lassen will. Wer den Zickzack '
+      'nicht ablaufen will, nimmt die Schanze und fliegt über die zweite Wand hinweg – oben, wo '
+      'es schneller geht, schlägt allerdings der Bann ein.')
 
 # --- 8 ---------------------------------------------------------------------
 # Die Kammer der Spiegel. Zwei Spiegel, vier Sterne, und das Bannmal vor dem Loch. An zwei der
@@ -1130,12 +1165,13 @@ setz(f, 4, 8, 'T'); setz(f, 36, 8, 'H')
 bahn(LOGE, 'Die Kammer der Spiegel', 'erzmagierloge', f, [
     spiegel(12, 5, 12, 13),
     spiegel(26, 5, 26, 13),
-    sternbild([(6, 3), (6, 13), (22, 3), (30, 13)], (32, 2, 32, 15)),
+    rampe(20.5, 3.0, 3.0, 3.0, angle=0, land=5.0, speed=5.8, stil='bannschanze'),
+    windrad(32.0, 8.0, blades=3, laenge=1.6, tempo=0.9, stil='bannzeiger'),
     pilz(29.5, 6.5, stil='bannstein'),
 ], par=5,
-intro='Zwei Spiegel, vier Sterne und ein Bannmal vor dem Loch. An zwei der Sterne kommt man nur '
-      'durch einen Spiegel heran, und es ist nicht derselbe - man muß sich vorher überlegen, '
-      'welchen man wofür nimmt.')
+intro='Zwei Spiegel und dazwischen ein Pfeiler. Über dem oberen Gang liegt eine Schanze: Wer sie '
+      'trifft, fliegt über den zweiten Spiegel hinweg und spart sich das Umdenken. Vor dem Loch '
+      'dreht der Bannzeiger.')
 
 # --- 9 ---------------------------------------------------------------------
 # Der Erzmagier. Die letzte Bahn des Zauberreichs: Ranke, Spiegel, Hut, Mond und Sternbild,
@@ -1151,11 +1187,13 @@ bahn(LOGE, 'Der Erzmagier', 'erzmagierloge', f, [
     spiegel(18, 5, 18, 14),
     huete([(23, 4), (23, 13), (34, 4)], takt=2.4),
     mond(33.0, 10.0, r=3.2, kraft=8.5, takt=5.5, phase=0.1),
-    sternbild([(15, 8), (24, 9), (33, 4)], (37, 2, 37, 16)),
+    rampe(24.5, 3.2, 3.0, 3.0, angle=0, land=5.4, speed=6.0, stil='bannschanze'),
+    blitz(36.0, 11.5, w=3.0, h=4.0, takt=4.6, stil='bannschlag'),
 ], par=6,
 intro='Die Prüfung der Loge: die Blüte anstoßen, durch den Spiegel, in den richtigen Hut, am '
-      'Mond vorbei - und dabei die drei Sterne mitnehmen, denn sonst steht am Ende ein Bannmal, '
-      'das nicht aufgeht. Wer hier unter Par bleibt, hat ausgelernt.')
+      'Mond vorbei. Hinter den Hüten steht eine Wand, an der es nur unten weitergeht – oder über '
+      'die Schanze hinweg. Und kurz vor dem Loch schlägt noch einmal der Bann ein. Wer hier unter '
+      'Par bleibt, hat ausgelernt.')
 
 
 # ---------------------------------------------------------------- Prüfen

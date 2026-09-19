@@ -163,7 +163,7 @@ const Editor = (deps) => {
     zauberhut: [['', 'Zauberhüte'], ['runenstein', 'Runensteine']],
     /* Die sechs Instrumente der Sternenwarte: dasselbe Verhalten, aus Messing statt aus
        Uhrwerkstadt, Schattenreich und Flut. */
-    eyetower: [['', 'Turm des Auges'], ['tubus', 'Großes Fernrohr']],
+    eyetower: [['', 'Turm des Auges'], ['tubus', 'Großes Fernrohr'], ['sternenspiegel', 'Sternenspiegel']],
     pendulum: [['', 'Pendel'], ['foucault', 'Foucault-Pendel'], ['kettenlot', 'Kettenlot']],
     /* Die sieben Bannzeichen der Erzmagierloge: schwarzer Marmor, Gold, violettes Bannfeuer. */
     grubenlampe: [['', 'Grubenlampe'], ['bannlicht', 'Bannlicht']],

@@ -3096,6 +3096,26 @@ die einzige Vorwarnung, die es gibt. Gebaut sind alle sieben aus einem Baustein,
 Alle sieben stehen im Baumodus unter *Aussehen*. Damit hat **jede der drei Zauberreich-Welten ihre
 eigene Handschrift**, und keine Maschine im Zauberreich trägt mehr ein geliehenes Bild.
 
+**Seit Fassung 207 kommen die Sprungschanze und der zweite Augenturm dazu.** Fynn hat auf der
+Sternenwarte gesagt, was ihm fehlt: *„Die Sternenbilder und die Finsternis sind etwas nervig, ich
+mag's lieber mit Timing und Spaß mit Rampen und sowas."* Daran gemessen war die Verteilung falsch –
+das Sternbild stand in **sechs** der achtzehn Bahnen, die Finsternis in **drei**. Beides ist jetzt
+auf **je einmal** zurückgenommen: Das Sammeln gibt es noch in *Das erste Sternbild* (dort, wo es
+den Namen gibt) und in *Das Bannmal*, die Finsternis nur noch in *Die Ranken der Gruft*. Was in den
+anderen sechs Bahnen an ihre Stelle getreten ist, ist Takt und Flug: die **Kulisse** der Warte, der
+**Bannschlag** und der **Bannzeiger** der Loge – und die Schanze.
+
+| Maschine | Gestalt | Was man ihr ansieht |
+| --- | --- | --- |
+| Sprungschanze (Warte) | **Sternschanze** | Weißer Marmor, auf dem Deck eine eingelegte Himmelskarte, an der Abrißkante ein goldenes Licht. Ein Lichtstreifen läuft nach oben und sagt, wohin sie wirft. |
+| Sprungschanze (Loge) | **Bannschanze** | Schwarzer Marmor mit goldener Wange, zwei Bahnen Bannfeuer und ein Siegel dort, wo der Ball abhebt. |
+| Augenturm (Warte) | **Sternenspiegel** | Eine geschliffene Scheibe auf einer Marmorsäule statt eines Rohres. Wem sie zugewandt ist, sieht die volle Scheibe; dreht sie sich weg, wird sie zum Strich – man liest ihre Blickrichtung an ihrer Breite ab. |
+
+Das Fernrohr (`tubus`) bleibt im Baumodus wählbar, es ist nur nicht mehr das, was auf der Terrasse
+steht. Und weil ein Ball in der Luft **keine Mauern** kennt (`physics.js`), rechnet `pruefe()` seit
+dieser Fassung jeden Landepunkt nach: Eine Schanze, die in eine Wand oder über den Rand wirft, kommt
+nicht mehr durch.
+
 In der Sternenwarte geht es so weiter: Das **Auge des
 Turms** aus dem Schattenreich wird zum Fernrohr, das **Pendel** der Uhrwerkstadt zum Lot des
 Astronomen, das **Zahnradfeld** zur Armillarsphäre, der **Strudel** der Flut zum Nebelwirbel und
