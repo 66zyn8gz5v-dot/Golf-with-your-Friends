@@ -164,7 +164,7 @@ const Editor = (deps) => {
              ['pollen', 'Pollenstrudel']],
     /* Der Runenstein ist der Entwurf aus Fassung 196: im Garten wieder herausgenommen, hier
        aufgehoben. Für eine Loge oder eine Gruft ist er genau richtig. */
-    zauberhut: [['', 'Zauberhüte'], ['runenstein', 'Runensteine']],
+    zauberhut: [['', 'Zauberhüte'], ['runenstein', 'Runensteine'], ['maulwurf', 'Maulwurfshügel']],
     /* Die sechs Instrumente der Sternenwarte: dasselbe Verhalten, aus Messing statt aus
        Uhrwerkstadt, Schattenreich und Flut. */
     eyetower: [['', 'Turm des Auges'], ['tubus', 'Großes Fernrohr'], ['sternenspiegel', 'Sternenspiegel']],

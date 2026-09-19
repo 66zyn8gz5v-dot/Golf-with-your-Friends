@@ -492,4 +492,94 @@ Object.assign(Renderer.prototype, {
       ctx.beginPath(); ctx.moveTo(p2[0], p2[1]); ctx.lineTo(p1[0], p1[1]); ctx.lineTo(p3[0], p3[1]); ctx.closePath(); ctx.fill();
     }
   },
+
+  /* ================= Die Maulwurfshügel =================
+     Dieselbe Maschine wie die Zauberhüte, in der Sprache eines Gartens: Man rollt in einen Hügel
+     und kommt aus dem heraus, in dem der Maulwurf gerade steckt.
+
+     WARUM NICHT DIE HÜTE. Ein Hutständer mitten im Beet war eine Maschine, die nur deshalb im
+     Garten stand, weil die Welt zufällig zum Zauberreich gehört – man sah ihr an, daß sie von
+     woanders herkam. Ein Maulwurfshügel gehört dorthin, wo Erde ist, und er erklärt sich von
+     selbst: Wo der Maulwurf gerade herausschaut, kommt auch der Ball heraus.
+
+     DER ZUSTAND STEHT AM MAULWURF. Beim aktiven Hügel schaut er heraus; beim nächsten, der gleich
+     dran ist, wackelt die Erde und es rieseln Krümel. Das ist dieselbe Ansage wie das Glimmen der
+     Hüte, nur muß sie hier niemand erst lernen. */
+  drawMaulwurfFloor(ctx, ob, t) {
+    if (!ob.bereit) return;
+    const s = this.scale;
+    for (let i = 0; i < ob.orte.length; i++) {
+      const [hx, hy] = ob.orte[i];
+      const an = i === ob.aktiv, gleich = i === ob.naechste ? ob.gleich : 0;
+      const hell = an ? 1 : gleich;
+      // Die aufgeworfene Erde ringsum – sie liegt flach und gehört zum Boden
+      this.isoEllipse(ctx, hx, hy, 0.003, ob.r * 2.6, 'rgba(58,40,22,0.30)');
+      this.isoEllipse(ctx, hx, hy, 0.004, ob.r * 2.0, 'rgba(78,54,28,0.42)');
+      if (hell < 0.02) continue;
+      // Frisch geworfene Krümel: Sie rieseln, kurz bevor er durchbricht
+      ctx.fillStyle = `rgba(96,66,34,${0.35 + 0.5 * hell})`;
+      for (let k = 0; k < 7; k++) {
+        const a = t * 0.8 + k * (TAU / 7), rr = ob.r * (2.0 + 0.5 * Math.sin(t * 2.4 + k));
+        const [sx, sy] = this.proj(hx + Math.cos(a) * rr, hy + Math.sin(a) * rr, 0.008);
+        ctx.beginPath(); ctx.arc(sx, sy, s * 0.06 * (0.5 + hell), 0, TAU); ctx.fill();
+      }
+    }
+  },
+
+  drawMaulwurfshuegel(ctx, ob, t) {
+    if (!ob.bereit) return;
+    const s = this.scale;
+    for (let i = 0; i < ob.orte.length; i++) {
+      const [hx, hy] = ob.orte[i];
+      const an = i === ob.aktiv, gleich = i === ob.naechste ? ob.gleich : 0;
+      const hell = an ? 1 : gleich;
+      const R = ob.r * 2.3;
+      /* Der Hügel. Er zittert, wenn der Maulwurf gleich kommt – eine Kuppe, die sich um ein paar
+         Hundertstel hebt und senkt, reicht dafür völlig und fällt sofort ins Auge. */
+      const zitter = gleich > 0.02 ? Math.sin(t * 22) * 0.05 * gleich : 0;
+      const hoch = 0.5 + zitter;
+      this.isoEllipse(ctx, hx, hy, 0.005, R * 1.05, 'rgba(0,0,0,0.22)');
+      for (const [f, z, deck, seite] of [[1.0, 0, '#6b4a24', '#3a2712'], [0.72, hoch * 0.52, '#7c5628', '#432d14']]) {
+        this.prism(ctx, this.circlePoly(hx, hy, R * f, 12), z, hoch * 0.55, deck, seite, { outline: '#241708' });
+      }
+      // Das Loch oben in der Kuppe – dort verschwindet der Ball
+      this.isoEllipse(ctx, hx, hy, hoch * 1.07 + 0.01, ob.r * 1.15, '#1c1208');
+      this.isoEllipse(ctx, hx, hy, hoch * 1.07 + 0.02, ob.r * 0.82, '#0d0804');
+
+      /* Der Maulwurf. Er kommt heraus, wenn dieser Hügel dran ist, und ist sonst nicht zu sehen.
+         Wie weit er heraus ist, ist zugleich die Anzeige: halb heraus heißt „gleich", ganz heraus
+         heißt „jetzt". */
+      const raus = an ? 1 : gleich * 0.45;
+      if (raus < 0.05) continue;
+      const kopfZ = hoch * 1.07 + 0.1 + raus * 0.34;
+      const [kx, ky] = this.proj(hx, hy, kopfZ);
+      const kr = s * ob.r * 0.9;
+      ctx.beginPath(); ctx.ellipse(kx, ky, kr, kr * 0.92, 0, 0, TAU);
+      ctx.fillStyle = '#4a4148'; ctx.fill();
+      ctx.strokeStyle = '#241f24'; ctx.lineWidth = Math.max(1, s * 0.04); ctx.stroke();
+      // Schnauze, Nase, zwei Augenschlitze – mehr braucht ein Maulwurf nicht
+      ctx.beginPath(); ctx.ellipse(kx, ky + kr * 0.38, kr * 0.52, kr * 0.4, 0, 0, TAU);
+      ctx.fillStyle = '#5c525a'; ctx.fill();
+      ctx.fillStyle = '#e88fa6';
+      ctx.beginPath(); ctx.ellipse(kx, ky + kr * 0.62, kr * 0.2, kr * 0.15, 0, 0, TAU); ctx.fill();
+      ctx.strokeStyle = '#1a151a'; ctx.lineWidth = Math.max(1, s * 0.035); ctx.lineCap = 'round';
+      for (const sd of [-1, 1]) {
+        ctx.beginPath();
+        ctx.moveTo(kx + sd * kr * 0.46, ky - kr * 0.12);
+        ctx.lineTo(kx + sd * kr * 0.2, ky - kr * 0.12);
+        ctx.stroke();
+      }
+      // Die beiden Grabschaufeln, wenn er ganz heraus ist
+      if (raus > 0.8) {
+        ctx.fillStyle = '#d6b98a';
+        for (const sd of [-1, 1]) {
+          ctx.beginPath();
+          ctx.ellipse(kx + sd * kr * 1.05, ky + kr * 0.5, kr * 0.38, kr * 0.28, sd * 0.4, 0, TAU);
+          ctx.fill();
+          ctx.strokeStyle = '#8a7250'; ctx.lineWidth = Math.max(1, s * 0.03); ctx.stroke();
+        }
+      }
+    }
+  },
+
 });

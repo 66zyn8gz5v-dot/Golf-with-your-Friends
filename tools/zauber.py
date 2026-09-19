@@ -83,9 +83,11 @@ def ranke(x, y, w, h, bx, by, dauer=4.0):
     return {'type': 'ranke', 'x': x, 'y': y, 'w': w, 'h': h, 'dauer': dauer, 'r': 0.6,
             'bluete': {'x': bx, 'y': by}}
 
-def huete(plaetze, takt=2.6, phase=0.0, r=0.42):
-    return {'type': 'zauberhut', 'takt': takt, 'phase': phase, 'r': r,
-            'plaetze': [[float(p[0]), float(p[1])] for p in plaetze]}
+def huete(plaetze, takt=2.6, phase=0.0, r=0.42, stil=None):
+    o = {'type': 'zauberhut', 'takt': takt, 'phase': phase, 'r': r,
+         'plaetze': [[float(p[0]), float(p[1])] for p in plaetze]}
+    if stil: o['style'] = stil
+    return o
 
 def pilz(x, y, r=0.55, stil='mushroom'):
     return {'type': 'bumper', 'x': x, 'y': y, 'r': r, 'style': stil, 'kick': 7.5}
@@ -701,6 +703,11 @@ def pruefe(b):
 #  Garten: Springkraut, Rasensprenger, Bienenstock, Pollenstrudel, Riesen-Sonnenblume
 #  (gezeichnet in src/render_garten.js).
 # ===========================================================================
+# DER GARTEN BLEIBT EIN GARTEN. Drei Bahnen standen in der Palette 'gewaechshaus' – Glasdach,
+# Töpfe, Innenraum. Fynn: „Der Lehrlingsgarten soll immer im Garten bleiben." Er hat recht, und
+# der Grund ist nicht nur Geschmack: Eine Welt, die auf halber Strecke nach drinnen wechselt und
+# wieder heraus, erzählt nichts – sie sieht nur zweimal anders aus. Die Sternenwarte darf zwischen
+# Terrasse und Kartensaal wechseln, weil das ein Aufstieg IST; der Garten hat keinen.
 GARTEN = welt('lehrling', 'ZAUBER_GARTEN', 'Lehrlingsgarten')
 
 # --- 1 ---------------------------------------------------------------------
@@ -767,43 +774,43 @@ intro='Zwei Lücken, zwei Blüten. Die zweite Blüte liegt hinter der ersten Ran
       'ruhige sind sicherer.')
 
 # --- 5 ---------------------------------------------------------------------
-# Der Hutständer. ZWEI Regalwände statt einer, und dahinter noch der halbe Weg. In der ersten
-# Fassung war die Bahn hinter dem Zauber zu Ende: Hut treffen, herauskommen, einlochen – die
-# Maschine war erklärt, aber gespielt hatte man sie nicht. Jetzt entscheidet der Hut nur, WO man
+# Der Maulwurfshügel. ZWEI Hecken statt einer, und dahinter noch der halbe Weg. In der ersten
+# Fassung war die Bahn hinter dem Zauber zu Ende: Hügel treffen, herauskommen, einlochen – die
+# Maschine war erklärt, aber gespielt hatte man sie nicht. Jetzt entscheidet der Hügel nur, WO man
 # den zweiten Teil beginnt, und der zweite Teil ist selbst eine Aufgabe: an der zweiten Wand oben
 # herum, am Springkraut vorbei, durch den Rasensprenger ans Loch. Wer in der Nische landet, hat
 # nicht verloren, sondern nur den längeren Anlauf.
 f = leer(42, 15)
 fuell(f, 1, 2, 40, 12)
-fuell(f, 12, 2, 14, 12, 'x')          # die erste Regalwand: hier hilft nur der Hut
+fuell(f, 12, 2, 14, 12, 'x')          # die erste Hecke: hier hilft nur der Hügel
 fuell(f, 28, 5, 30, 12, 'x')          # die zweite: sie läßt oben eine Gasse frei
-# Die Nische um den falschen Hut. VORHER WAR HIER SAND, und Sand ist eine schlechte Strafe: Er
+# Die Nische um den falschen Hügel. VORHER WAR HIER SAND, und Sand ist eine schlechte Strafe: Er
 # nimmt Tempo weg, aber man sieht ihm nicht an, wieviel, und man kann nichts dagegen tun. Eine
 # Ecke ist ehrlicher – wer hier herauskommt, sieht sofort, dass er einmal zur Seite und einmal
 # hinaus spielen muss. Das kostet genau einen Schlag, und zwar einen, den man selbst verschuldet
-# hat, indem man im falschen Augenblick in den Hut gerollt ist.
+# hat, indem man im falschen Augenblick in den Hügel gerollt ist.
 # Die Lücke oben links ist der Ausgang; ohne sie wäre die Nische ein Gefängnis. 
 fuell(f, 17, 9, 21, 9, 'x')           # die Wand über der Nische, mit einer Lücke bei x = 15/16
 fuell(f, 21, 10, 21, 12, 'x')         # und die Wand an ihrer rechten Seite
 setz(f, 3, 7, 'T'); setz(f, 37, 10, 'H')
-bahn(GARTEN, 'Der Hutständer', 'gewaechshaus', f, [
-    huete([(6, 7), (18, 4), (18, 11)], takt=2.6),
+bahn(GARTEN, 'Der Maulwurfshügel', 'lehrlingsgarten', f, [
+    huete([(6, 7), (18, 4), (18, 11)], takt=2.6, stil='maulwurf'),
     pilz(9.5, 10.5, stil='springkraut'),
     pilz(24.5, 7.5, stil='springkraut'),
     windrad(34.5, 6.5, blades=2, laenge=1.3, tempo=0.9, stil='sprenger'),
 ], par=3,   # die Bot-Prüfung nach dem Umbau: Median 2, Schnitt 2,25 – Par 4 wäre ein geschenkter Schlag
-intro='Durch die erste Wand kommt nur, wer sich verzaubern läßt: hinein in einen Hut, heraus aus '
-      'dem, der gerade leuchtet – und wer in den leuchtenden rollt, aus dem nächsten. Einer der '
-      'beiden Ausgänge steht in einer Nische: Von dort muß man erst zur Seite und dann hinaus, das '
-      'kostet einen Schlag. Danach ist die Bahn noch nicht zu Ende – die zweite Wand läßt nur oben '
-      'eine Gasse, und davor dreht der Sprenger.')
+intro='Durch die erste Hecke kommt nur, wer sich untergräbt: hinein in einen Hügel, heraus aus '
+      'dem, in dem der Maulwurf gerade steckt – und wer in dessen Hügel rollt, kommt aus dem '
+      'nächsten. Einer der beiden Ausgänge liegt in einer Nische: Von dort muß man erst zur Seite '
+      'und dann hinaus, das kostet einen Schlag. Danach ist die Bahn noch nicht zu Ende – die '
+      'zweite Hecke läßt nur oben eine Gasse, und davor dreht der Sprenger.')
 
 # --- 6 ---------------------------------------------------------------------
 # Das Treibhaus. Der Bienenstand steht quer über dem Weg, dahinter drehen zwei Rasensprenger.
 f = leer(30, 14)
 fuell(f, 1, 3, 28, 10)
 setz(f, 3, 6, 'T'); setz(f, 27, 6, 'H')
-bahn(GARTEN, 'Das Treibhaus', 'gewaechshaus', f, [
+bahn(GARTEN, 'Das Treibhaus', 'lehrlingsgarten', f, [
     # Die Zahlen stammen aus der Bot-Prüfung: Mit Durchlaß 1,1 und zwei Sprengern zu 1,4 brauchte
     # der Normalspieler im Schnitt fünfeinhalb Schläge – auf der sechsten Bahn einer NORMAL-Welt ist
     # das zu viel. Breiterer Durchlaß, langsamere Sprenger, und sie stehen weiter auseinander.
@@ -819,14 +826,14 @@ intro='Der Bienenstand steht quer im Weg, und der Durchlaß zwischen den Körben
       'sind. Einer nach dem anderen.')
 
 # --- 7 ---------------------------------------------------------------------
-# Blüte und Hut. Zuerst die Ranke über den Steg, dann die Hüte durch die Regalwand.
+# Blüte und Hügel. Zuerst die Ranke über den Steg, dann die Hügel durch die Hecke.
 f = leer(34, 15)
 fuell(f, 1, 4, 12, 10)                # der Vorraum
 fuell(f, 13, 6, 20, 8)                # der schmale Steg
 fuell(f, 21, 3, 32, 11)               # die Halle
-fuell(f, 27, 3, 28, 8, 'x')           # die Regalwand davor - mit einer Gasse an der Unterkante
+fuell(f, 27, 3, 28, 8, 'x')           # die Hecke davor - mit einer Gasse an der Unterkante
 setz(f, 3, 7, 'T'); setz(f, 31, 7, 'H')
-bahn(GARTEN, 'Blüte und Hut', 'gewaechshaus', f, [
+bahn(GARTEN, 'Blüte und Hügel', 'lehrlingsgarten', f, [
     ranke(14, 6, 5, 3, 9.5, 7.5, dauer=5.5),
     # ZWEI Hüte, nicht drei. Mit dreien brauchte der Normalspieler in der Bot-Prüfung im Schnitt
     # sieben Schläge und im Median neun: Aus welchem Hut man herauskommt, war dann Glück. Mit
@@ -843,11 +850,11 @@ bahn(GARTEN, 'Blüte und Hut', 'gewaechshaus', f, [
     # versuchen, und noch einmal. Der Hut ist jetzt die ABKUERZUNG, nicht die einzige Tuer -
     # das ist im Garten die richtige Rolle fuer ihn. Wer ihn trifft, spart einen Schlag; wer
     # nicht, geht unten herum.
-    huete([(24, 7), (30, 10)], takt=2.4, r=0.62),
+    huete([(24, 7), (30, 10)], takt=2.4, r=0.62, stil='maulwurf'),
     pilz(24.5, 4.5, stil='springkraut'),
 ], par=4,
 intro='Erst die Ranke über den Steg – sie trägt hier eine halbe Sekunde länger, der Weg ist weiter. '
-      'Dann steht die Regalwand im Weg, und wieder helfen nur die Hüte. Wer beim Steg zu viel Kraft '
+      'Dann steht die Hecke im Weg, und wieder helfen nur die Hügel. Wer beim Steg zu viel Kraft '
       'gibt, steht drüben zu weit oben und muß noch einmal ansetzen.')
 
 # --- 8 ---------------------------------------------------------------------
@@ -892,7 +899,7 @@ bahn(GARTEN, 'Die Lehrlingsprüfung', 'lehrlingsgarten', f, [
     pilz(14.5, 5.5, stil='springkraut'),
     pilz(14.5, 9.5, stil='springkraut'),
     muehle(18.5, 7.5, w=7.6, gap=1.2, tempo=0.9, achse='y', stil='bienenstock'),
-    huete([(24, 5), (24, 10), (29, 11)], takt=2.8),
+    huete([(24, 5), (24, 10), (29, 11)], takt=2.8, stil='maulwurf'),
 ], par=4,   # seit der Bienenstock die Gasse wirklich schließt: Bot-Median 4 statt 3
 intro='Die Prüfung: erst die Ranke, dann zwischen dem Springkraut hindurch, dann der Bienenstand im '
       'Takt – und '

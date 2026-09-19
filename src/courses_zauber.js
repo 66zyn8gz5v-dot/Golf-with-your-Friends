@@ -156,8 +156,8 @@ const ZAUBER_GARTEN = [
     autoDecor: { density: 0.09, seed: 57 },
   },
   {
-    name: 'Der Hutständer', par: 3, theme: 'gewaechshaus',
-    intro: 'Durch die erste Wand kommt nur, wer sich verzaubern läßt: hinein in einen Hut, heraus aus dem, der gerade leuchtet – und wer in den leuchtenden rollt, aus dem nächsten. Einer der beiden Ausgänge steht in einer Nische: Von dort muß man erst zur Seite und dann hinaus, das kostet einen Schlag. Danach ist die Bahn noch nicht zu Ende – die zweite Wand läßt nur oben eine Gasse, und davor dreht der Sprenger.',
+    name: 'Der Maulwurfshügel', par: 3, theme: 'lehrlingsgarten',
+    intro: 'Durch die erste Hecke kommt nur, wer sich untergräbt: hinein in einen Hügel, heraus aus dem, in dem der Maulwurf gerade steckt – und wer in dessen Hügel rollt, kommt aus dem nächsten. Einer der beiden Ausgänge liegt in einer Nische: Von dort muß man erst zur Seite und dann hinaus, das kostet einen Schlag. Danach ist die Bahn noch nicht zu Ende – die zweite Hecke läßt nur oben eine Gasse, und davor dreht der Sprenger.',
     map: [
       '..........................................',
       '..........................................',
@@ -176,7 +176,7 @@ const ZAUBER_GARTEN = [
       '..........................................',
     ],
     obstacles: [
-      { type: 'zauberhut', takt: 2.6, phase: 0.0, r: 0.42, plaetze: [[6.0, 7.0], [18.0, 4.0], [18.0, 11.0]] },
+      { type: 'zauberhut', takt: 2.6, phase: 0.0, r: 0.42, plaetze: [[6.0, 7.0], [18.0, 4.0], [18.0, 11.0]], style: 'maulwurf' },
       { type: 'bumper', x: 9.5, y: 10.5, r: 0.55, style: 'springkraut', kick: 7.5 },
       { type: 'bumper', x: 24.5, y: 7.5, r: 0.55, style: 'springkraut', kick: 7.5 },
       { type: 'rotor', x: 34.5, y: 6.5, blades: 2, len: 1.3, speed: 0.9, thick: 0.16, style: 'sprenger', phase: 0.0 },
@@ -184,7 +184,7 @@ const ZAUBER_GARTEN = [
     autoDecor: { density: 0.09, seed: 71 },
   },
   {
-    name: 'Das Treibhaus', par: 4, theme: 'gewaechshaus',
+    name: 'Das Treibhaus', par: 4, theme: 'lehrlingsgarten',
     intro: 'Der Bienenstand steht quer im Weg, und der Durchlaß zwischen den Körben schließt sich im Takt mit einer Wabe. Dahinter drehen zwei Rasensprenger gegeneinander – sie laufen in verschiedene Richtungen, also gibt es keinen Augenblick, in dem beide zugleich aus dem Weg sind. Einer nach dem anderen.',
     map: [
       '..............................',
@@ -212,8 +212,8 @@ const ZAUBER_GARTEN = [
     autoDecor: { density: 0.09, seed: 83 },
   },
   {
-    name: 'Blüte und Hut', par: 4, theme: 'gewaechshaus',
-    intro: 'Erst die Ranke über den Steg – sie trägt hier eine halbe Sekunde länger, der Weg ist weiter. Dann steht die Regalwand im Weg, und wieder helfen nur die Hüte. Wer beim Steg zu viel Kraft gibt, steht drüben zu weit oben und muß noch einmal ansetzen.',
+    name: 'Blüte und Hügel', par: 4, theme: 'lehrlingsgarten',
+    intro: 'Erst die Ranke über den Steg – sie trägt hier eine halbe Sekunde länger, der Weg ist weiter. Dann steht die Hecke im Weg, und wieder helfen nur die Hügel. Wer beim Steg zu viel Kraft gibt, steht drüben zu weit oben und muß noch einmal ansetzen.',
     map: [
       '..................................',
       '..................................',
@@ -237,7 +237,7 @@ const ZAUBER_GARTEN = [
       { type: 'wall', x0: 13, y0: 10, x1: 14, y1: 9, t: 0.22, h: 0.5 },
       { type: 'wall', x0: 21, y0: 10, x1: 20, y1: 9, t: 0.22, h: 0.5 },
       { type: 'ranke', x: 14, y: 6, w: 5, h: 3, dauer: 5.5, r: 0.6, bluete: { x: 9.5, y: 7.5 } },
-      { type: 'zauberhut', takt: 2.4, phase: 0.0, r: 0.62, plaetze: [[24.0, 7.0], [30.0, 10.0]] },
+      { type: 'zauberhut', takt: 2.4, phase: 0.0, r: 0.62, plaetze: [[24.0, 7.0], [30.0, 10.0]], style: 'maulwurf' },
       { type: 'bumper', x: 24.5, y: 4.5, r: 0.55, style: 'springkraut', kick: 7.5 },
     ],
     autoDecor: { density: 0.09, seed: 97 },
@@ -299,7 +299,7 @@ const ZAUBER_GARTEN = [
       { type: 'bumper', x: 14.5, y: 5.5, r: 0.55, style: 'springkraut', kick: 7.5 },
       { type: 'bumper', x: 14.5, y: 9.5, r: 0.55, style: 'springkraut', kick: 7.5 },
       { type: 'windmill', x: 18.5, y: 7.5, w: 7.6, gap: 1.2, speed: 0.9, blades: 4, axis: 'y', phase: 0.0, depth: 1.2, style: 'bienenstock' },
-      { type: 'zauberhut', takt: 2.8, phase: 0.0, r: 0.42, plaetze: [[24.0, 5.0], [24.0, 10.0], [29.0, 11.0]] },
+      { type: 'zauberhut', takt: 2.8, phase: 0.0, r: 0.42, plaetze: [[24.0, 5.0], [24.0, 10.0], [29.0, 11.0]], style: 'maulwurf' },
     ],
     autoDecor: { density: 0.09, seed: 127 },
   },

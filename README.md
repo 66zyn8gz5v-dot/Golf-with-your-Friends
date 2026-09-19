@@ -3143,6 +3143,29 @@ iPad in der Sonne hat man von Farben allein wenig.
 Das Fernrohr (`tubus`) bleibt im Baumodus wählbar, es ist nur nicht mehr das, was auf der Terrasse
 steht.
 
+## Der Garten bleibt ein Garten (Fassung 213)
+
+Drei Bahnen des Lehrlingsgartens standen in der Palette `gewaechshaus` – Glasdach, Töpfe,
+Innenraum. Fynn: *„Der Lehrlingsgarten soll immer im Garten bleiben."* Sie stehen jetzt alle zehn
+im Freien. Der Grund ist nicht nur Geschmack: Eine Welt, die auf halber Strecke nach drinnen
+wechselt und wieder heraus, erzählt damit nichts – sie sieht nur zweimal anders aus. Die
+Sternenwarte darf zwischen Terrasse und Kartensaal wechseln, weil das ein Aufstieg *ist*; der
+Garten hat keinen.
+
+**Und aus den Zauberhüten sind Maulwurfshügel geworden** (`maulwurf`, `src/render_garten.js`).
+Dieselbe Maschine – man rollt in einen Hügel und kommt aus dem heraus, in dem der Maulwurf gerade
+steckt –, aber in der Sprache eines Gartens. Ein Hutständer mitten im Beet war eine Maschine, die
+nur deshalb dort stand, weil die Welt zufällig zum Zauberreich gehört; man sah ihr an, daß sie von
+woanders herkam. Ein Maulwurfshügel gehört dorthin, wo Erde ist, und er erklärt sich von selbst.
+
+**Der Zustand steht am Maulwurf.** Beim aktiven Hügel schaut er ganz heraus; beim nächsten, der
+gleich dran ist, ist er halb draußen, der Hügel zittert und es rieseln Krümel. Das ist dieselbe
+Ansage wie das Glimmen der Hüte, nur muß sie hier niemand erst lernen.
+
+Zwei Bahnen heißen deshalb anders: *Der Hutständer* → **Der Maulwurfshügel**, *Blüte und Hut* →
+**Blüte und Hügel**. Die Zauberhüte bleiben im Baumodus wählbar und stehen weiterhin in Sternenwarte
+und Loge – dort sind sie am Platz.
+
 ## Die drei Endgegner (Fassung 211)
 
 Jede der drei Zauberreich-Welten hat seit Fassung 211 eine **zehnte Bahn**, und auf ihr steht eine
