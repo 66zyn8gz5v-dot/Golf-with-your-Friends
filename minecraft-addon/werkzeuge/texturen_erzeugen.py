@@ -16,9 +16,9 @@ GROESSE = 16  # Minecraft erwartet Gegenstandsbilder in 16x16.
 # Jedes Zeichen ist eine Farbe. Der Punkt bleibt durchsichtig.
 FARBEN = {
     ".": (0, 0, 0, 0),
-    "a": (255, 252, 235, 255),   # helles Sternenlicht
-    "b": (125, 215, 255, 255),   # Himmelblau
-    "c": (55, 135, 225, 255),    # tiefes Blau
+    "a": (255, 246, 214, 255),   # Sternenlicht, heisser Kern
+    "b": (240, 190, 92, 255),    # Gold, glimmend
+    "c": (176, 122, 44, 255),    # Bernstein, abkuehlend
     # Mittelalter-Palette: geschmiedeter Stahl, Bronze, gegerbtes Leder.
     "w": (228, 233, 240, 255),   # Klinge, geschliffene Kante
     "s": (168, 178, 194, 255),   # Klinge, Schattenseite
@@ -36,14 +36,14 @@ STERNENSTAUB = [
     "...aba....aba...",
     "....a......a....",
     "................",
-    ".....a....a.....",
-    "......bccb......",
-    ".....bcaacb.....",
-    "....bcaaaacb....",
-    "....bcaaaacb....",
-    ".....bcaacb.....",
-    "......bccb......",
-    ".......aa.......",
+    "......kkkk......",
+    ".....kbccbk.....",
+    "....kbcaacbk....",
+    "...kbcaaaacbk...",
+    "...kbcaaaacbk...",
+    "....kbcaacbk....",
+    ".....kbccbk.....",
+    "......kkkk......",
     "...a........a...",
     "..aba......aba..",
     "...a........a...",
@@ -140,12 +140,28 @@ def main():
         schreibe_png(vorschau, karte_zu_pixeln(karte, 16, (235, 235, 240, 255)))
         print(f"  geschrieben  {vorschau.relative_to(hier)}")
 
+    # Alle Gegenstaende nebeneinander. Einzeln sieht fast jedes Bild
+    # brauchbar aus; ob es zur uebrigen Welt passt, zeigt erst der direkte
+    # Vergleich - daran ist die erste Fassung dieses Pakets gescheitert.
+    hintergrund = (235, 235, 240, 255)
+    luecke = [hintergrund] * 20
+    nebeneinander = None
+    for karte in bilder.values():
+        gross = karte_zu_pixeln(karte, 14, hintergrund)
+        if nebeneinander is None:
+            nebeneinander = gross
+        else:
+            nebeneinander = [a + luecke + b for a, b in zip(nebeneinander, gross)]
+    ziel = hier / "vorschau" / "alle_zusammen.png"
+    schreibe_png(ziel, nebeneinander)
+    print(f"  geschrieben  {ziel.relative_to(hier)}")
+
     # Das Paketsymbol steht in der Paketliste des Spiels und darf nicht
     # durchsichtig sein - sonst sieht man dort ein leeres Feld.
-    nachtblau = (18, 24, 48, 255)
+    russbraun = (34, 27, 23, 255)
     for paket in ("verhaltenspaket", "ressourcenpaket"):
         ziel = hier / paket / "pack_icon.png"
-        schreibe_png(ziel, karte_zu_pixeln(STERNENSTAUB, 8, nachtblau))
+        schreibe_png(ziel, karte_zu_pixeln(STERNENSTAUB, 8, russbraun))
         print(f"  geschrieben  {ziel.relative_to(hier)}")
 
 
