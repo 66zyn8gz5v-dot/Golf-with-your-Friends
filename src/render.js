@@ -2012,7 +2012,7 @@ class Renderer {
       this.isoEllipse(ctx, ob.x, ob.y, 0.004, 0.75, 'rgba(0,0,0,0.25)');
       // Ziellinie und Landepunkt in aktueller Rohrrichtung
       const dx = Math.cos(ob.angle), dy = Math.sin(ob.angle), R = 0.9 + ob.range;
-      const bas = ob.style === 'ballista';
+      const bas = ob.style === 'ballista' || ob.style === 'bannschleuder';
       ctx.fillStyle = bas ? 'rgba(200,130,255,0.55)' : 'rgba(255,210,120,0.55)';
       for (let d = 1.6; d < R - 0.5; d += 0.7) { const [px, py] = this.proj(ob.x + dx * d, ob.y + dy * d, 0.01); ctx.beginPath(); ctx.arc(px, py, s * 0.05, 0, TAU); ctx.fill(); }
       this.isoEllipse(ctx, ob.x + dx * R, ob.y + dy * R, 0.006, 0.45, bas ? 'rgba(200,130,255,0.3)' : 'rgba(255,210,120,0.3)');
@@ -2140,13 +2140,14 @@ class Renderer {
       } });
     } else if (ob.type === 'copperpipe') {
       // Rohrmund und Rohrende stehen an verschiedenen Stellen der Karte – jeder wird für sich einsortiert
-      if (ob.x != null) items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => this.drawCopperPipe(ctx, ob, t, false) });
-      if (ob.ax != null) items.push({ x: ob.ax, y: ob.ay, bias: 0.2, draw: () => this.drawCopperPipe(ctx, ob, t, true) });
+      const rohr = ob.style === 'siegelroehre' ? this.drawSiegelroehre : this.drawCopperPipe;
+      if (ob.x != null) items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => rohr.call(this, ctx, ob, t, false) });
+      if (ob.ax != null) items.push({ x: ob.ax, y: ob.ay, bias: 0.2, draw: () => rohr.call(this, ctx, ob, t, true) });
       // Die Leitung dazwischen: Lauf für Lauf, damit sie sich richtig mit Mauern überdeckt
       if (ob.bereit && ob.stuecke) {
         for (const u of ob.stuetzen) {
           const [px, py] = ob.punkt(u);
-          items.push({ x: px, y: py, bias: 0.4, draw: () => this.drawPipeStuetze(ctx, ob, u) });
+          items.push({ x: px, y: py, bias: 0.4, draw: () => (ob.style === 'siegelroehre' ? this.drawSiegelStuetze : this.drawPipeStuetze).call(this, ctx, ob, u) });
         }
         ob.stuecke.forEach((st, k) => {
           const [px, py] = ob.punkt((st.u0 + st.u1) / 2);
@@ -2347,7 +2348,7 @@ class Renderer {
     } else if (ob.type === 'potion') {
       items.push({ x: ob.x, y: ob.y, draw: () => this.spritePotion(ctx, ob, t) });
     } else if (ob.type === 'cannon') {
-      items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => ob.style === 'catapult' ? this.drawCatapult(ctx, ob, t) : ob.style === 'ballista' ? this.drawBallista(ctx, ob, t) : ob.style === 'wrackkanone' ? this.drawWrackkanone(ctx, ob, t) : this.drawCannon(ctx, ob, t) });
+      items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => ob.style === 'catapult' ? this.drawCatapult(ctx, ob, t) : ob.style === 'ballista' ? this.drawBallista(ctx, ob, t) : ob.style === 'wrackkanone' ? this.drawWrackkanone(ctx, ob, t) : ob.style === 'bannschleuder' ? this.drawBannschleuder(ctx, ob, t) : this.drawCannon(ctx, ob, t) });
     } else if (ob.type === 'door') {
       if (ob.style === 'pyramid') items.push({ x: ob.px, y: ob.py, noFade: true, draw: () => this.drawPyramid(ctx, ob, t) });
       else if (ob.style === 'wreck') items.push({ x: ob.px, y: ob.py, noFade: true, draw: () => this.drawWreck(ctx, ob, t) });

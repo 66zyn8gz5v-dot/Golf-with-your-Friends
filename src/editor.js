@@ -179,7 +179,8 @@ const Editor = (deps) => {
     zauberkreis: [['schub', 'Schubkreis (grün)'], ['bremse', 'Bremskreis (blau)'],
                   ['sprung', 'Sprungkreis (gold)'], ['wirbel', 'Wirbelkreis (violett)'],
                   ['bann', 'Bannkreis (rot)']],
-    cannon: [['', 'Kanone'], ['ballista', 'Balliste'], ['catapult', 'Katapult'], ['wrackkanone', 'Wrackkanone']],
+    copperpipe: [['', 'Kupferrohr'], ['siegelroehre', 'Siegelröhre']],
+    cannon: [['', 'Kanone'], ['ballista', 'Balliste'], ['catapult', 'Katapult'], ['wrackkanone', 'Wrackkanone'], ['bannschleuder', 'Bannschleuder']],
     turntable: [['', 'Drehscheibe'], ['whirl', 'Strudel'], ['tornado', 'Wirbelsturm'], ['void', 'Leere'],
                 ['sonnenblume', 'Riesen-Sonnenblume']],
     windmill: [['', 'Windmühle'], ['ofen', 'Schmelzofen'], ['wasserwand', 'Wasserwand'],
@@ -242,6 +243,7 @@ const Editor = (deps) => {
     dial:        [['r', 'Größe', 2, 9, 0.25], ['marken', 'Wie viele Marken', 3, 16, 1], null, ['phase', 'Versatz im Takt', 0, 0.95, 0.05]],
     wanderloch:  [['r', 'Größe', 2, 9, 0.25], ['marken', 'Wie viele Marken', 3, 16, 1], null, ['phase', 'Versatz im Takt', 0, 0.95, 0.05]],
     copperpipe:  [],
+
 
     windfahne:   [['kraft', 'Wie stark der Wind', 1, 12, 0.25], null, ['phase', 'Versatz im Takt', 0, 0.95, 0.05]],
     lawine:      [['w', 'Breite', 2, 16, 1], ['h', 'Tiefe', 2, 16, 1], null, ['phase', 'Versatz im Takt', 0, 0.95, 0.05]],

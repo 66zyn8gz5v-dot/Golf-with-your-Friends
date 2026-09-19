@@ -3019,7 +3019,11 @@ Aufgabe heißt immer: den Moment abpassen. Hier startet der Spieler die Uhr selb
   die Aufgabe „alles in einem Schlag", und das ist Glück, kein Planen.
   *Das Tor ist eine Wand, kein Loch im Boden:* Boden, der zur Laufzeit entsteht, müßte die ganze
   Wegfindung mitziehen; ein Mauerstück, das der Zeichner malt und die Physik abfragt, kostet nichts.
-* **Der Zauberspiegel** (`zauberspiegel`, Erzmagierloge). Ein hoher Spiegel steht quer im Raum. Wer
+* **Der Zauberspiegel** (`zauberspiegel`, im Baumodus). *Steht seit Fassung 210 auf keiner Bahn
+  mehr* – Fynn über das Bild einer Loge-Bahn: „Diese Teile finde ich unnötig, entferne sie."
+  Er stand auf sechs von neun Bahnen und war damit die Maschine, die diese Welt erklären sollte;
+  das war eine Entscheidung am Spieler vorbei. Die Maschine bleibt vollständig erhalten und im
+  Baumodus wählbar, sie ist nur nicht mehr das Gesicht der Loge. Was er tat: Ein hoher Spiegel steht quer im Raum. Wer
   hineinrollt, kommt drüben wieder heraus – aber **seitenverkehrt**: Wer links auftrifft, kommt
   rechts heraus, und was sich nach links bewegte, bewegt sich danach nach rechts.
   *Warum kein Portal:* Ein Portal hat einen festen Ausgang. Hier gibt es keinen – **der Spieler
@@ -3137,7 +3141,39 @@ Mitte (Winkel nach außen, Bögen nach innen, Pfeil aus der Schale, Spirale, Kno
 iPad in der Sonne hat man von Farben allein wenig.
 
 Das Fernrohr (`tubus`) bleibt im Baumodus wählbar, es ist nur nicht mehr das, was auf der Terrasse
-steht. Und weil ein Ball in der Luft **keine Mauern** kennt (`physics.js`), rechnet `pruefe()` seit
+steht.
+
+## Die Loge, zweite Fassung: schmal statt weit (Fassung 210)
+
+Fynn, zum ersten Entwurf: *„Macht die Bahnen bitte etwas schmaler und komplexer, die Erzmagierwelt
+ist schließlich eine Legendenwelt – macht die Strecken also schmaler und länger."* Er hatte recht,
+und der Grund läßt sich benennen: Die neun Bahnen waren **Säle**, dreihundert bis fünfhundert
+Kacheln Boden mit zwei, drei Maschinen darin. Ein Saal von sechzehn Kacheln Höhe ist kein Weg,
+sondern ein Platz – man schlägt irgendwohin und kommt irgendwie an. Die Maschine steht dann nicht
+*im* Weg, sondern *neben* ihm.
+
+Deshalb sind die Bahnen jetzt **andersherum gebaut**. Vorher: eine gefüllte Fläche, in die Wände
+gestellt werden. Jetzt: eine **leere** Karte, in die nur die Gänge geschnitten werden, drei Kacheln
+breit. Neben dem Weg ist nichts. Das macht zweierlei auf einmal – die Strecke wird schmal, und sie
+wird lang, weil sie sich winden muß, statt quer über einen Platz zu laufen. Aus 350–530 Bodenfeldern
+je Bahn sind 130–235 geworden, bei größeren Karten (bis 46 × 19).
+
+**Zwei neue Maschinen** treten an die Stelle der Spiegel:
+
+| Maschine | Gestalt | Was sie tut |
+| --- | --- | --- |
+| Kanone | **Bannschleuder** | Ein Ring aus violettem Bannfeuer, der aufrecht auf einem Marmorsockel steht. Sie schwenkt nicht (`amp = 0`): Auf einer Bahn, neben der die Leere liegt, wäre eine schwenkende Kanone kein Rätsel, sondern ein Würfel. An der **Breite** des Rings liest man ab, wohin er zeigt – voller Kreis heißt „auf dich zu", Strich heißt „quer". |
+| Kupferrohr | **Siegelröhre** | Dieselbe Leitung wie in der Uhrwerkstadt, aber die Loge nietet nicht: schwarzer Marmor, zwei Goldbänder, ein Siegelring am Mund, und statt Dampf steigt Bannfeuer auf. Farben und Zeichnung teilen sich beide über `rohrFarben()` – zwei Kopien derselben Funktion hätten sich beim ersten Umbau auseinandergelebt. |
+
+**Eine Wirkung der Zauberkreise fehlt hier: der Wirbelkreis.** Er dreht die Laufrichtung, und in
+einem Gang von drei Kacheln Breite, neben dem die Leere liegt, heißt das schlicht: Ball weg. Er
+steht deshalb in der Sternenwarte, wo die Säle breit genug sind, um ihn auszuhalten.
+
+**Zwei neue Prüfregeln**, beide aus diesem Umbau entstanden: `pruefe()` rechnet den Landepunkt jeder
+Bannschleuder nach und kennt Schleuder wie Röhre jetzt als **Übergang** – sonst hätte die
+Erreichbarkeitsprüfung jede Bahn abgelehnt, auf der ein Gangstück nur über eine Maschine hängt. Und
+genau solche Bahnen sind der Punkt: Auf der *Siegelkammer* hängt kein Stück am anderen.
+ Und weil ein Ball in der Luft **keine Mauern** kennt (`physics.js`), rechnet `pruefe()` seit
 dieser Fassung jeden Landepunkt nach: Eine Schanze, die in eine Wand oder über den Rand wirft, kommt
 nicht mehr durch.
 

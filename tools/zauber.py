@@ -48,7 +48,7 @@ import io
 import math
 from collections import deque
 
-FEST = '#silwTHo'            # worauf der Ball liegen kann
+FEST = '#silwTHoAaBbCc'      # worauf der Ball liegen kann ('A'/'a' … sind Rohrmünder)
 REIBUNG = 4.2                # muß zu FRICTION['#'] in src/physics.js passen
 RANKE_TEMPO = 12.0           # ehrliches Tempo an der Blüte – nicht der Höchstschlag (19)
 RANKE_PUFFER = 1.5           # so viel Weg bleibt als Luft, damit es nicht auf die Kachel ankommt
@@ -134,6 +134,30 @@ def mond(x, y, r=3.4, kraft=9.0, takt=7.0, phase=0.0, core=0.4):
     """Mondzieher. Volle Scheibe zieht, dunkle stößt, Halbmond läßt in Ruhe."""
     return {'type': 'mondzieher', 'x': x, 'y': y, 'r': r, 'kraft': kraft, 'takt': takt,
             'phase': phase, 'core': core}
+
+def gang(f, x0, y0, x1, y1):
+    """Schneidet einen Gang in die Leere. Die Loge ist andersherum gebaut als die ersten beiden
+    Orte: Dort war die Karte ein gefüllter Saal, in den Wände gestellt wurden; hier ist sie leer,
+    und nur der Weg wird hineingeschnitten. Das macht die Strecke schmal UND lang, weil sie sich
+    winden muß, statt quer über einen Platz zu laufen."""
+    fuell(f, x0, y0, x1, y1)
+
+def kanone(x, y, grad=0, weite=9.0, amp=0.0, tempo=1.0, phase=0.0, laden=0.7, stil=None):
+    """Die Bannschleuder. amp=0 heißt: Sie schwenkt nicht, sie zeigt immer dorthin, wo die Punkte
+    am Boden hinführen. Auf einer Bahn, neben der die Leere liegt, ist eine schwenkende Kanone
+    kein Rätsel, sondern ein Würfel."""
+    o = {'type': 'cannon', 'x': x, 'y': y, 'base': math.radians(grad), 'amp': amp,
+         'speed': tempo, 'phase': phase, 'range': weite, 'loadTime': laden,
+         'catchR': 0.7, 'flySpeed': 8}
+    if stil: o['style'] = stil
+    return o
+
+def rohr(paar, grad=0, stil='siegelroehre'):
+    """Die Siegelröhre. Ihre beiden Enden stehen als Buchstaben in der Karte: 'A' schluckt,
+    'a' spuckt aus. grad ist die Richtung, in die ausgeworfen wird."""
+    o = {'type': 'copperpipe', 'pair': paar.upper(), 'angle': grad}
+    if stil: o['style'] = stil
+    return o
 
 def kreis(x, y, wirkung, r=1.6, takt=0.0, phase=0.0, kraft=0.0, weite=4.2):
     """Ein Zauberkreis. Die Wirkung bestimmt die Farbe, und die Farbe steht im Bild, bevor man
@@ -256,7 +280,7 @@ def welt(kennung, jsname, titel):
     return WELTEN[-1][3]
 
 
-BODEN = '#silwTH'            # worauf der Ball liegen kann (ohne die offene Kante 'o')
+BODEN = '#silwTHAaBbCc'      # worauf der Ball liegen kann (ohne die offene Kante 'o')
 
 def schraegen(f):
     """SCHRÄGE BANDEN IN DIE ECKEN – so, wie es die alten Welten machen.
@@ -347,6 +371,36 @@ def pruefe(b):
             spruenge.append([(int(o['x']), int(o['y'])), (int(o['tx']), int(o['ty']))])
         elif o['type'] == 'zauberhut':
             spruenge.append([(int(p[0]), int(p[1])) for p in o['plaetze']])
+        elif o['type'] == 'cannon':
+            # Die Bannschleuder trägt über die Leere. Ihr Landepunkt steht fest, solange sie nicht
+            # schwenkt (amp = 0) - und in der Loge schwenkt keine. Damit ist der Wurf ein Übergang
+            # wie ein Hut, nur in eine Richtung; für die Frage „kommt man ans Loch" reicht das.
+            weit = 0.9 + o.get('range', 9.0)
+            lx = o['x'] + math.cos(o['base']) * weit
+            ly = o['y'] + math.sin(o['base']) * weit
+            if not fest(int(lx), int(ly)):
+                fehler.append(f'die Bannschleuder auf {o["x"]}/{o["y"]} wirft nach '
+                              f'{lx:.1f}/{ly:.1f} – dort ist kein Boden')
+            else:
+                spruenge.append([(int(o['x']), int(o['y'])), (int(lx), int(ly))])
+        elif o['type'] == 'copperpipe':
+            # Die Siegelröhre: ihre beiden Enden stehen als Buchstaben in der Karte
+            gross, klein = o['pair'].upper(), o['pair'].lower()
+            ein = aus = None
+            for yy, zeile in enumerate(karte):
+                for xx, ch in enumerate(zeile):
+                    if ch == gross: ein = (xx, yy)
+                    if ch == klein: aus = (xx, yy)
+            if not ein or not aus:
+                fehler.append(f'die Siegelröhre {gross} braucht beide Enden in der Karte')
+            else:
+                # Ausgeworfen wird eine Kachel weiter in Richtung 'angle' – dort muß Boden sein
+                a = math.radians(o.get('angle', 0))
+                lx, ly = aus[0] + 0.5 + math.cos(a) * 0.95, aus[1] + 0.5 + math.sin(a) * 0.95
+                if not fest(int(lx), int(ly)):
+                    fehler.append(f'die Siegelröhre {gross} spuckt nach {lx:.1f}/{ly:.1f} – '
+                                  f'dort ist kein Boden')
+                spruenge.append([ein, aus])
 
     def erreichbar(von, ohne=(), kanten=()):
         """Welche Felder erreicht man von 'von' aus? 'ohne' sind Rechtecke, die gesperrt sind –
@@ -1054,185 +1108,235 @@ intro='Die Prüfung der Warte: erst die Blüte anstoßen und über die Ranke, da
 # ===========================================================================
 LOGE = welt('loge', 'ZAUBER_LOGE', 'Erzmagierloge')
 
+# ---------------------------------------------------------------------------
+# DIE ZWEITE FASSUNG DER LOGE. Die erste bestand aus neun offenen Sälen mit je zwei, drei
+# Maschinen darin, und Fynn hat sie richtig beurteilt: „Macht die Bahnen bitte etwas schmaler und
+# komplexer, die Erzmagierwelt ist schließlich eine Legendenwelt." Ein Saal von sechzehn Kacheln
+# Höhe ist kein Weg, sondern ein Platz – man schlägt irgendwohin und kommt irgendwie an.
+#
+# Deshalb sind die Bahnen jetzt ANDERSHERUM gebaut: Die Karte ist leer, und hineingeschnitten
+# werden nur die Gänge, drei Kacheln breit. Neben dem Weg ist nichts. Das macht zweierlei zugleich
+# – die Strecke wird schmal, und sie wird lang, weil sie sich winden muß, statt quer über einen
+# Platz zu laufen.
+#
+# UND DIE ZAUBERSPIEGEL SIND FORT. Sie standen auf sechs der neun Bahnen und waren die Maschine,
+# die diese Welt erklären sollte; gefallen haben sie nicht („diese Teile finde ich unnötig,
+# entferne sie"). An ihre Stelle treten zwei neue: die Bannschleuder – die Kanone der Loge, ein
+# Ring aus Bannfeuer auf Marmor – und die Siegelröhre, die Leitung der Uhrwerkstadt in Marmor und
+# Gold. Dazu die Zauberkreise, die bleiben durften und jetzt auf fast jeder Bahn stehen.
+#
+# EINE WIRKUNG FEHLT HIER: der Wirbelkreis. Er dreht die Laufrichtung, und in einem Gang von drei
+# Kacheln Breite, neben dem die Leere liegt, heißt das: Ball weg. Das ist kein Rätsel, sondern ein
+# Würfel. Er steht deshalb in der Sternenwarte, wo die Säle breit genug sind, um ihn auszuhalten.
+
 # --- 1 ---------------------------------------------------------------------
-# Vor der Loge. Hier wird der Spiegel erklärt, und sonst nichts. Der zweite Durchlass liegt UNTEN;
-# wer also unten herauskommen will, muß OBEN auftreffen. Genau das ist die ganze Maschine, und
-# genau das steht als Spiegelbild auf dem Boden.
-f = leer(36, 15)
-fuell(f, 1, 2, 34, 12)
-fuell(f, 18, 2, 19, 3, 'x'); fuell(f, 18, 11, 19, 12, 'x')    # der Rahmen des Spiegels
-fuell(f, 26, 2, 27, 8, 'x')                                   # dahinter geht es nur unten weiter
-setz(f, 4, 7, 'T'); setz(f, 32, 11, 'H')
+# Vor der Loge. Der Aufgang: ein Z aus drei Gängen, und in jedem steht eine Sache. Wer die Loge
+# betritt, soll einmal alles sehen, was ihn drinnen erwartet - aber jedes für sich.
+f = leer(40, 17)
+gang(f, 2, 8, 13, 10)                 # der erste Gang, nach rechts
+gang(f, 11, 4, 13, 10)                # die Kehre nach oben
+gang(f, 11, 4, 27, 6)                 # der zweite Gang
+gang(f, 25, 4, 27, 14)                # die zweite Kehre, nach unten
+gang(f, 25, 12, 38, 14)               # und der letzte Gang zum Loch
+setz(f, 3, 9, 'T'); setz(f, 36, 13, 'H')
 bahn(LOGE, 'Vor der Loge', 'erzmagierloge', f, [
-    kreis(10.0, 7.0, 'bann', r=2.0, takt=5.0),
-    spiegel(18, 4, 18, 11),
-    windrad(23.0, 10.5, blades=3, laenge=1.5, tempo=1.2, stil='bannzeiger'),
+    kreis(8.0, 9.5, 'schub', r=1.2),
+    windrad(12.5, 9.0, blades=3, laenge=1.3, tempo=0.9, stil='bannzeiger'),
+    blitz(19.0, 5.5, w=3.0, h=3.0, takt=4.4, stil='bannschlag'),
+    kreis(26.5, 9.0, 'bremse', r=1.2, takt=4.0),
+    lampe(31.0, 13.5, r=4.0, stil='bannlicht'),
 ], par=4,
-intro='Der Spiegel ist der einzige Weg durch die Wand, und er wirft seitenverkehrt aus. Dahinter '
-      'geht es nur unten weiter - wer also unten ankommen will, muß oben auftreffen. Sein '
-      'Spiegelbild steht drüben und sagt einem vorher, wo das sein wird.')
+intro='Der Aufgang zur Loge: drei Gänge, zwei Kehren, und neben dem Weg ist nichts. In jedem Gang '
+      'steht eine Sache – erst der Schubkreis, dann der Zeiger, dann der Bann. Wer zu früh zu viel '
+      'Tempo mitnimmt, findet die erste Kehre nicht mehr.')
 
 # --- 2 ---------------------------------------------------------------------
-# Der Spiegelsaal. Zwei Spiegel hintereinander. Zweimal seitenverkehrt ist wieder richtig herum -
-# aber der Pfeiler dazwischen sorgt dafür, dass man nicht zweimal an derselben Stelle auftrifft.
-f = leer(38, 16)
-fuell(f, 1, 2, 36, 13)
-fuell(f, 13, 2, 14, 4, 'x'); fuell(f, 13, 12, 14, 13, 'x')
-fuell(f, 25, 2, 26, 4, 'x'); fuell(f, 25, 12, 26, 13, 'x')
-fuell(f, 19, 6, 20, 9, 'x')                                   # der Pfeiler dazwischen
-setz(f, 4, 8, 'T'); setz(f, 33, 3, 'H')
-bahn(LOGE, 'Der Spiegelsaal', 'erzmagierloge', f, [
-    kreis(8.5, 8.0, 'schub', r=1.6, takt=4.6),
-    kreis(31.5, 6.0, 'bremse', r=1.7),
-    spiegel(13, 5, 13, 12),
-    spiegel(26, 5, 26, 12),
-    pilz(31.5, 10.5, stil='bannstein'),
+# Der Bannlauf. Hier steht die Bannschleuder zum ersten Mal, und sie steht allein: Der Gang endet
+# vor der Leere, hinüber führt nichts, und der Ring wirft genau so weit, wie er muß.
+f = leer(42, 17)
+gang(f, 2, 7, 15, 9)
+gang(f, 13, 7, 15, 13)
+gang(f, 13, 11, 22, 13)               # die Kammer der Schleuder endet hier
+gang(f, 30, 11, 40, 13)               # drüben geht es weiter - dazwischen ist nichts
+gang(f, 30, 3, 32, 13)
+gang(f, 30, 3, 40, 5)
+setz(f, 3, 8, 'T'); setz(f, 38, 4, 'H')
+bahn(LOGE, 'Der Bannlauf', 'erzmagierloge', f, [
+    kreis(8.5, 8.5, 'schub', r=1.2),
+    kanone(20.0, 12.5, grad=0, weite=9.5, amp=0.0, stil='bannschleuder'),
+    kreis(35.0, 12.5, 'bremse', r=1.2),
+    windrad(31.5, 8.0, blades=3, laenge=1.3, tempo=-0.9, stil='bannzeiger'),
+    lampe(36.0, 4.5, r=4.0, stil='bannlicht'),
 ], par=4,
-intro='Zwei Spiegel, dazwischen ein Pfeiler, um den man herum muß. Zweimal seitenverkehrt wäre '
-      'wieder richtig herum - nur trifft man wegen des Pfeilers beim zweiten Mal woanders auf als '
-      'beim ersten.')
+intro='Der Gang endet vor der Leere. Hinüber kommt nur, wer sich in den Ring aus Bannfeuer rollen '
+      'läßt – er wirft immer gleich weit, und die Punkte am Boden sagen vorher, wohin. Drüben '
+      'bremst ein blauer Kreis, damit man in der Kehre nicht vorbeischießt.')
 
 # --- 3 ---------------------------------------------------------------------
-# Das Bannmal. Die Gruft ist dunkel; man sieht nur, was im Licht der Lampen steht. Vier Sterne
-# verteilen sich auf drei Kammern, und das Bannmal vor dem Loch geht erst auf, wenn alle brennen.
-f = leer(36, 16)
-fuell(f, 1, 2, 34, 13)
-fuell(f, 13, 2, 14, 7, 'x')           # erster Durchlass unten
-fuell(f, 22, 8, 23, 13, 'x')          # zweiter oben
-setz(f, 4, 10, 'T'); setz(f, 32, 10, 'H')
+# Das Bannmal. Die einzige Bahn der Welt, auf der noch gesammelt wird - vier Sterne in vier
+# Sackgassen, und das Siegel vor dem Loch geht erst auf, wenn alle brennen.
+f = leer(40, 18)
+gang(f, 2, 8, 34, 10)                 # der Hauptgang, schnurgerade
+gang(f, 6, 3, 8, 10)                  # vier Stichgänge, abwechselnd nach oben und unten
+gang(f, 13, 8, 15, 15)
+gang(f, 21, 3, 23, 10)
+gang(f, 28, 8, 30, 15)
+gang(f, 32, 8, 38, 10)
+setz(f, 3, 9, 'T'); setz(f, 36, 9, 'H')
 bahn(LOGE, 'Das Bannmal', 'bannkreis', f, [
-    sternbild([(5, 4), (5, 12), (18, 11), (26, 4)], (28, 2, 28, 14)),
-    blitz(18.0, 4.5, w=3.0, h=5.0, takt=4.6, stil='bannschlag'),
-    windrad(11.5, 10.5, blades=3, laenge=1.5, tempo=0.9, stil='bannzeiger'),
-    lampe(30.5, 9.5, r=4.0, stil='bannlicht'),
-], par=5,
-intro='Vier Sterne liegen in drei Kammern verteilt, und erst wenn alle brennen, geht das Bannmal '
-      'vor dem Loch auf. Der Weg dorthin ist keiner zum Trödeln: Im oberen Durchlaß schlägt der '
-      'Bann ein, im unteren dreht der Zeiger.')
+    sternbild([(7, 4), (14, 14), (22, 4), (29, 14)], (33, 8, 33, 11)),
+    kreis(10.5, 9.5, 'sprung', r=1.2, weite=4.6),
+    kreis(18.0, 9.5, 'bremse', r=1.2),
+    kreis(25.5, 9.5, 'schub', r=1.2, takt=4.4),
+    lampe(7.0, 4.5, r=3.6, stil='bannlicht'),
+    lampe(29.0, 14.5, r=3.6, stil='bannlicht'),
+], par=5, dunkel=0.5, lampe=3.2,
+intro='Vier Sterne liegen in vier Sackgassen, und das Bannmal vor dem Loch geht erst auf, wenn '
+      'alle brennen. In der Gruft sieht man nur, was im Licht steht. Im Hauptgang liegen drei '
+      'Kreise – sie helfen beim Abbiegen und stehen im Weg beim Zurückkommen.')
 
 # --- 4 ---------------------------------------------------------------------
-# Der Rat der Neun. Vier Hüte, ein Mond und ein Lot. Die Hüte sind hier kein Umweg, sondern die
-# Abkürzung - sie führen durch die Wände, an denen alle anderen entlangmüssen.
-f = leer(40, 16)
-fuell(f, 1, 2, 38, 13)
-fuell(f, 15, 2, 16, 5, 'x'); fuell(f, 15, 10, 16, 13, 'x')
-fuell(f, 27, 2, 28, 9, 'x')
-setz(f, 4, 8, 'T'); setz(f, 36, 4, 'H')
+# Der Rat der Neun. Die Hüte sind hier keine Abkürzung mehr, sondern der einzige Weg: Der Gang ist
+# in drei Stücke zerschnitten, und dazwischen liegt die Leere.
+f = leer(42, 17)
+gang(f, 2, 7, 12, 9)
+gang(f, 17, 3, 27, 5)                 # das zweite Stück liegt oben und hängt an nichts
+gang(f, 17, 11, 27, 13)               # das dritte unten, ebenso
+gang(f, 31, 7, 40, 9)                 # und das Ziel in der Mitte
+gang(f, 31, 5, 33, 11)
+setz(f, 3, 8, 'T'); setz(f, 38, 8, 'H')
 bahn(LOGE, 'Der Rat der Neun', 'erzmagierloge', f, [
-    huete([(9, 4), (9, 12), (22, 4), (22, 12)], takt=2.2),
-    mond(21.0, 7.5, r=3.2, kraft=9.0, takt=5.5, phase=0.2),
-    pendel(33.0, 4.0, laenge=3.4, amp=52, stil='kettenlot'),
+    huete([(10, 8), (19, 4), (19, 12), (32, 8)], takt=2.2),
+    kreis(24.0, 4.5, 'bremse', r=1.2),
+    kreis(24.0, 12.5, 'schub', r=1.2),
+    mond(32.5, 8.5, r=2.8, kraft=7.5, takt=5.5, phase=0.1),
+    lampe(36.0, 8.5, r=4.0, stil='bannlicht'),
 ], par=5,
-intro='Vier Hüten leuchtet reihum einer, und der Takt ist schnell. Mitten zwischen ihnen steht ein '
-      'Mond, der zieht und stößt - wer im falschen Augenblick in den Hut rollt, kommt richtig '
-      'heraus und landet trotzdem falsch. Am Ende schwingt das Lot des Astronomen.')
+intro='Vier Hüte, und zwischen ihnen ist nichts – kein Steg, keine Brücke. Wo man herauskommt, '
+      'entscheidet der Takt, und die beiden Stücke in der Mitte sind verschieden: oben bremst es, '
+      'unten schiebt es. Wer oben landet, hat Zeit; wer unten landet, muß sie sich nehmen.')
 
 # --- 5 ---------------------------------------------------------------------
-# Die Ranken der Gruft. Zwei Lücken, dazwischen ein Spiegel, und über allem die Dunkelheit.
-#
-# DIE BLUETEN LIEGEN AM GANG, NICHT WEIT AB DAVON. Ein Versuch, sie in Nischen zu legen, ist
-# gescheitert - nicht am Spiel, sondern am Bot: Er kennt nur "wo ist das Loch" und keine
-# Zwischenziele, lief also immer geradeaus gegen die Lücke und erreichte das Schlaglimit. Eine
-# Bahn, die das Prüfwerkzeug nicht mehr messen kann, ist keine geprüfte Bahn. Der Reiz liegt
-# hier ohnehin in der Dosierung: Die Blüte anstoßen UND genug Schwung behalten, um in der Zeit
-# hinüberzukommen - zweimal hintereinander, mit einem Spiegel dazwischen.
-f = leer(38, 16)
-fuell(f, 1, 2, 36, 13)
-fuell(f, 10, 2, 13, 5, 'x'); fuell(f, 10, 11, 13, 13, 'x')    # der Gang der ersten Ranke
-fuell(f, 21, 2, 22, 4, 'x'); fuell(f, 21, 12, 22, 13, 'x')    # der Rahmen des Spiegels
-fuell(f, 27, 2, 30, 6, 'x'); fuell(f, 27, 11, 30, 13, 'x')    # der Gang der zweiten Ranke
-setz(f, 4, 8, 'T'); setz(f, 34, 8, 'H')
+# Die Ranken der Gruft. Die dunkle Bahn der Welt. Zwei Ranken hintereinander, und der Gang dazwischen
+# ist so schmal, daß man beim Warten nirgends hin kann.
+f = leer(42, 16)
+gang(f, 2, 7, 12, 9)
+gang(f, 12, 7, 18, 9)                 # das Feld der ersten Ranke
+gang(f, 18, 7, 24, 9)
+gang(f, 24, 7, 30, 9)                 # das der zweiten
+gang(f, 30, 7, 34, 9)
+gang(f, 32, 3, 34, 9)
+gang(f, 32, 3, 40, 5)
+setz(f, 3, 8, 'T'); setz(f, 38, 4, 'H')
 bahn(LOGE, 'Die Ranken der Gruft', 'bannkreis', f, [
-    ranke(10, 6, 4, 5, 8.5, 7.0, dauer=4.5),
-    spiegel(21, 5, 21, 12),
-    ranke(27, 7, 4, 4, 25.5, 9.5, dauer=4.5),
-    lampe(8.5, 7.0, r=4.4, stil='bannlicht'),
-    lampe(25.5, 9.5, r=4.4, stil='bannlicht'),
-], par=4, dunkel=0.5, lampe=3.2,
-intro='Zwei Lücken, dazwischen ein Spiegel, und über allem die Dunkelheit der Gruft. Jede Blüte '
-      'startet ihre eigene Uhr - und der Spiegel wirft einen seitenverkehrt aus, also gerade nicht '
-      'dorthin, wo man beim Schlagen hingesehen hat.')
+    ranke(12, 7, 6, 3, 9.5, 8.5, dauer=4.2),
+    ranke(24, 7, 6, 3, 20.5, 8.5, dauer=4.2),
+    kreis(22.5, 8.5, 'bremse', r=1.2),
+    kreis(37.0, 4.5, 'bremse', r=1.2, takt=4.4),
+    lampe(9.5, 8.5, r=4.2, stil='bannlicht'),
+    lampe(20.5, 8.5, r=4.2, stil='bannlicht'),
+    lampe(37.0, 4.5, r=4.2, stil='bannlicht'),
+], par=5, dunkel=0.5, lampe=3.2,
+intro='Zwei Ranken hintereinander, und zwischen ihnen ein Stück Gang, auf dem ein Bremskreis '
+      'liegt. Wer zu schnell über die erste kommt, steht beim Anstoßen der zweiten schon still – '
+      'und in der Dunkelheit sieht man immer nur, was gerade im Licht liegt.')
 
 # --- 6 ---------------------------------------------------------------------
-# Der Blitzgang. Zwei Blitze schlagen im Wechsel in den mittleren Gang, der Aufwind hebt einen
-# darüber hinweg - und dahinter steht ein Spiegel, der einen im falschen Augenblick zurückwirft.
-f = leer(38, 16)
-fuell(f, 1, 2, 36, 13)
-fuell(f, 12, 2, 13, 8, 'x')           # erster Durchlass unten
-fuell(f, 24, 9, 25, 13, 'x')          # zweiter oben
-fuell(f, 30, 2, 31, 3, 'x'); fuell(f, 30, 12, 31, 13, 'x')    # der Rahmen des Spiegels
-setz(f, 4, 5, 'T'); setz(f, 34, 12, 'H')
+# Der Blitzgang. Ein langer Gang unter drei Bännen hindurch, und danach die Röhre: Wer sie findet,
+# spart sich den Rückweg um die ganze Halle.
+f = leer(44, 17)
+gang(f, 2, 7, 30, 9)                  # der Blitzgang selbst
+gang(f, 28, 7, 30, 14)
+gang(f, 16, 12, 30, 14)               # der Rückweg unten - lang und ohne alles
+gang(f, 16, 3, 18, 14)
+gang(f, 16, 3, 42, 5)                 # und oben entlang zum Loch
+setz(f, 3, 8, 'T'); setz(f, 40, 4, 'H')
+setz(f, 29, 13, 'A'); setz(f, 20, 4, 'a')   # die Röhre: unten geschluckt, oben ausgespien
 bahn(LOGE, 'Der Blitzgang', 'erzmagierloge', f, [
-    aufwind(7, 9, w=2, h=3, land=6.5, stil='bannschacht'),
-    blitz(17.0, 5.5, w=2.0, h=6.0, takt=4.0, stil='bannschlag'),
-    blitz(20.5, 10.0, w=2.0, h=6.0, takt=4.0, phase=0.5, stil='bannschlag'),
-    spiegel(30, 4, 30, 12),
+    blitz(9.0, 8.5, w=3.0, h=3.0, takt=4.0, phase=0.0, stil='bannschlag'),
+    blitz(16.0, 8.5, w=3.0, h=3.0, takt=4.0, phase=0.33, stil='bannschlag'),
+    blitz(23.0, 8.5, w=3.0, h=3.0, takt=4.0, phase=0.66, stil='bannschlag'),
+    rohr('A', grad=0),                # die Abkürzung: vom Ende des Blitzgangs nach oben
+    kreis(35.0, 4.5, 'bremse', r=1.2),
+    lampe(38.0, 4.5, r=4.0, stil='bannlicht'),
 ], par=5,
-intro='Zwei Blitze schlagen im Wechsel in den mittleren Gang, und der Aufwind hebt einen über den '
-      'ersten hinweg. Dahinter steht ein Spiegel - der wirft einen zwar auf die richtige Seite, '
-      'aber nur, wenn man an der richtigen Stelle ankommt.')
+intro='Drei Bänne schlagen versetzt in denselben Gang – es gibt keinen Augenblick, in dem alle '
+      'drei schweigen, also muß man zwischen ihnen durchwandern. Am Ende steht die Siegelröhre: '
+      'Wer hineinrollt, kommt oben wieder heraus und spart den ganzen Rückweg.')
 
 # --- 7 ---------------------------------------------------------------------
-# Das Wanderloch. Das Loch der Uhrwerkstadt IST hier das Loch - es wandert zwischen drei Stellen.
-# Der Mond davor zieht den Ball genau dann, wenn man es gerade nicht brauchen kann.
-f = leer(36, 16)
-fuell(f, 1, 2, 34, 13)
-fuell(f, 10, 2, 11, 9, 'x')           # der Durchlass liegt unten
-fuell(f, 22, 6, 23, 13, 'x')          # und der nächste oben - ein Zickzack um das Loch herum
-setz(f, 4, 11, 'T'); setz(f, 31, 4, 'H')
+# Das Wanderloch. Das Loch bleibt nicht, wo es ist - und der Gang davor ist eine Schleife, auf der
+# man immer nur eine der drei Stellen sieht.
+f = leer(42, 18)
+gang(f, 2, 8, 14, 10)
+gang(f, 12, 3, 14, 10)
+gang(f, 12, 3, 26, 5)
+gang(f, 24, 3, 26, 15)
+gang(f, 26, 13, 36, 15)
+gang(f, 34, 3, 36, 15)                # der Schacht, in dem das Loch wandert
+setz(f, 3, 9, 'T'); setz(f, 35, 4, 'H')
 bahn(LOGE, 'Das Wanderloch', 'bannkreis', f, [
-    wanderloch([(31.5, 4.5), (31.5, 8.5), (31.5, 12.5)], stil='siegelloch'),
-    mond(26.0, 8.5, r=3.2, kraft=8.0, takt=6.0, phase=0.35),
-    rampe(18.0, 9.6, 2.6, 3.0, angle=0, land=5.6, speed=6.0, stil='bannschanze'),
-    blitz(14.5, 3.5, w=3.0, h=4.0, takt=4.4, stil='bannschlag'),
-    lampe(6.5, 11.5, r=4.0, stil='bannlicht'),
+    wanderloch([(35.5, 4.5), (35.5, 9.5), (35.5, 14.5)], stil='siegelloch'),
+    kreis(8.0, 9.5, 'sprung', r=1.2, weite=4.8),
+    aufwind(24, 8, w=3, h=3, land=6.5, flug=7.5, stil='bannschacht'),
+    windrad(30.0, 14.5, blades=3, laenge=1.3, tempo=0.9, stil='bannzeiger'),
+    kreis(35.5, 11.0, 'bremse', r=1.2, takt=4.6),
 ], par=5,
-intro='Das Loch bleibt nicht, wo es ist - es wandert zwischen drei Stellen, und der Mond davor '
-      'zieht den Ball genau dann, wenn man ihn gerade nicht ziehen lassen will. Wer den Zickzack '
-      'nicht ablaufen will, nimmt die Schanze und fliegt über die zweite Wand hinweg – oben, wo '
-      'es schneller geht, schlägt allerdings der Bann ein.')
+intro='Das Loch wandert zwischen drei Stellen in einem schmalen Schacht, und man sieht immer nur '
+      'die, vor der man steht. Der Bannschacht in der Mitte hebt einen über die Kehre hinweg – '
+      'wenn man ihn trifft. Sonst geht es außen herum, und das dauert.')
 
 # --- 8 ---------------------------------------------------------------------
-# Die Kammer der Spiegel. Zwei Spiegel, vier Sterne, und das Bannmal vor dem Loch. An zwei der
-# Sterne kommt man nur durch einen Spiegel heran - und es ist nicht derselbe.
-f = leer(40, 17)
-fuell(f, 1, 2, 38, 14)
-fuell(f, 12, 2, 13, 4, 'x'); fuell(f, 12, 13, 13, 14, 'x')
-fuell(f, 25, 2, 26, 4, 'x'); fuell(f, 25, 13, 26, 14, 'x')
-fuell(f, 18, 7, 19, 10, 'x')
-setz(f, 4, 8, 'T'); setz(f, 36, 8, 'H')
-bahn(LOGE, 'Die Kammer der Spiegel', 'erzmagierloge', f, [
-    spiegel(12, 5, 12, 13),
-    spiegel(26, 5, 26, 13),
-    rampe(20.5, 3.0, 3.0, 3.0, angle=0, land=5.0, speed=5.8, stil='bannschanze'),
-    windrad(32.0, 8.0, blades=3, laenge=1.6, tempo=0.9, stil='bannzeiger'),
-    pilz(29.5, 6.5, stil='bannstein'),
+# Die Siegelkammer. Zwei Röhren und eine Schleuder: Auf dieser Bahn gibt es keinen durchgehenden
+# Weg zu Fuß, jedes Stück hängt am nächsten nur über eine Maschine.
+f = leer(44, 18)
+gang(f, 2, 8, 12, 10)                 # Abschlag, endet an der ersten Röhre
+gang(f, 18, 3, 28, 5)                 # zweites Stück, oben
+gang(f, 18, 12, 28, 14)               # drittes Stück, unten
+gang(f, 34, 8, 42, 10)                # und das Ziel
+gang(f, 34, 5, 36, 13)
+setz(f, 3, 9, 'T'); setz(f, 40, 9, 'H')
+# Die Rohrmünder liegen auf dem Boden: A schluckt am Ende des ersten Stücks, a spuckt oben aus.
+setz(f, 11, 9, 'A'); setz(f, 19, 4, 'a')
+setz(f, 27, 13, 'B'); setz(f, 35, 9, 'b')
+bahn(LOGE, 'Die Siegelkammer', 'erzmagierloge', f, [
+    rohr('A', grad=0),
+    rohr('B', grad=0),
+    kanone(26.0, 4.5, grad=90, weite=9.0, amp=0.0, stil='bannschleuder'),
+    kreis(22.0, 13.5, 'bremse', r=1.2),
+    kreis(38.0, 9.5, 'bann', r=1.2, takt=5.0),
+    lampe(41.0, 9.5, r=3.8, stil='bannlicht'),
 ], par=5,
-intro='Zwei Spiegel und dazwischen ein Pfeiler. Über dem oberen Gang liegt eine Schanze: Wer sie '
-      'trifft, fliegt über den zweiten Spiegel hinweg und spart sich das Umdenken. Vor dem Loch '
-      'dreht der Bannzeiger.')
+intro='Vier Stücke Gang, und keines hängt am anderen: Die erste Röhre bringt einen nach oben, die '
+      'Schleuder von oben nach unten, die zweite Röhre ans Ziel. Wer eine davon verfehlt, liegt '
+      'auf einem Stück, von dem aus es nur einen Weg gibt – zurück in dieselbe Maschine.')
 
 # --- 9 ---------------------------------------------------------------------
-# Der Erzmagier. Die letzte Bahn des Zauberreichs: Ranke, Spiegel, Hut, Mond und Sternbild,
-# hintereinander, jedes in seinem eigenen Durchlass. Wer hier unter Par bleibt, hat ausgelernt.
-f = leer(44, 18)
-fuell(f, 1, 2, 42, 15)
-fuell(f, 9, 2, 12, 5, 'x'); fuell(f, 9, 12, 12, 15, 'x')      # der Gang der Ranke
-fuell(f, 18, 2, 19, 4, 'x'); fuell(f, 18, 14, 19, 15, 'x')    # der Rahmen des Spiegels
-fuell(f, 28, 2, 29, 8, 'x')                                   # dahinter geht es nur unten weiter
-setz(f, 4, 8, 'T'); setz(f, 40, 9, 'H')
+# Der Erzmagier. Die letzte Bahn des Zauberreichs. Alles, was die Loge hat, hintereinander, jedes
+# in seinem eigenen Gang - und zwischen den Gängen liegt die Leere.
+f = leer(46, 19)
+gang(f, 2, 9, 12, 11)                 # 1: der Anlauf
+gang(f, 12, 9, 18, 11)                # 2: die Ranke
+gang(f, 18, 9, 24, 11)
+gang(f, 22, 4, 24, 11)                # 3: hinauf zu den Hüten
+gang(f, 22, 4, 32, 6)
+gang(f, 36, 4, 44, 6)                 # 4: drüben, nur über die Schleuder zu erreichen
+gang(f, 36, 4, 38, 16)
+gang(f, 30, 14, 38, 16)               # 5: hinunter und zurück zum Loch
+setz(f, 3, 10, 'T'); setz(f, 32, 15, 'H')
 bahn(LOGE, 'Der Erzmagier', 'erzmagierloge', f, [
-    ranke(9, 6, 4, 6, 7.5, 8.5, dauer=4.5),
-    spiegel(18, 5, 18, 14),
-    huete([(23, 4), (23, 13), (34, 4)], takt=2.4),
-    mond(33.0, 10.0, r=3.2, kraft=8.5, takt=5.5, phase=0.1),
-    rampe(24.5, 3.2, 3.0, 3.0, angle=0, land=5.4, speed=6.0, stil='bannschanze'),
-    blitz(36.0, 11.5, w=3.0, h=4.0, takt=4.6, stil='bannschlag'),
+    kreis(7.0, 10.5, 'schub', r=1.2),
+    ranke(12, 9, 6, 3, 9.5, 10.5, dauer=4.2),
+    huete([(20, 10), (23, 5), (30, 5)], takt=2.2),
+    kanone(31.0, 5.5, grad=0, weite=9.5, amp=0.0, stil='bannschleuder'),
+    mond(41.0, 5.5, r=2.8, kraft=7.5, takt=5.0, phase=0.2),
+    blitz(37.5, 11.0, w=3.0, h=4.0, takt=4.2, stil='bannschlag'),
+    kreis(34.0, 15.5, 'bremse', r=1.2),
+    lampe(32.0, 15.5, r=4.0, stil='bannlicht'),
 ], par=6,
-intro='Die Prüfung der Loge: die Blüte anstoßen, durch den Spiegel, in den richtigen Hut, am '
-      'Mond vorbei. Hinter den Hüten steht eine Wand, an der es nur unten weitergeht – oder über '
-      'die Schanze hinweg. Und kurz vor dem Loch schlägt noch einmal der Bann ein. Wer hier unter '
-      'Par bleibt, hat ausgelernt.')
+intro='Die Prüfung der Loge: Schubkreis, Ranke, Hüte, Schleuder, Mond, Bann – sechs Gänge '
+      'hintereinander, und zwischen ihnen ist nichts. Jeder einzelne ist zu schaffen. Alle sechs '
+      'in einem Anlauf ist das, was den Erzmagierhut kostet.')
 
 
 # ---------------------------------------------------------------- Prüfen

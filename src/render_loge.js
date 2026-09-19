@@ -404,4 +404,138 @@ Object.assign(Renderer.prototype, {
     ctx.beginPath(); ctx.moveTo(ua[0], ua[1]); ctx.lineTo(ub[0], ub[1]); ctx.stroke();
   },
 
+
+  /* ================= Die Bannschleuder (Kanone) =================
+     Die Loge hat kein Schießpulver. Was hier wirft, ist ein Ring aus Bannfeuer, der auf einem
+     Marmorsockel steht: Der Ball rollt hinein, das Feuer dreht auf, und im Augenblick des Wurfs
+     steht es still. Die Blickrichtung liest man an der BREITE des Rings ab – zeigt er einen an,
+     sieht man den vollen Kreis, dreht er sich weg, wird er zum Strich. Dieselbe Regel wie beim
+     Sternenspiegel der Warte, und aus demselben Grund: Eine Maschine, die zielt, muß ihr Ziel
+     verraten, bevor sie schießt. */
+  drawBannschleuder(ctx, ob, t) {
+    const s = this.scale;
+    const ca = Math.cos(ob.angle), sa = Math.sin(ob.angle);
+    const zu = ca * this.cam.sin + sa * this.cam.cos;      // wie weit der Ring uns zugewandt ist
+    const seit = t - ob.firedAt;
+    const knall = Math.max(0, 1 - seit / 0.45);
+    const geladen = ob.loaded ? 1 : 0;
+
+    this.isoEllipse(ctx, ob.x, ob.y, 0.004, 1.25, 'rgba(0,0,0,0.3)');
+    this.bannsiegel(ctx, ob.x, ob.y, 0.006, 1.05, 0.15 + 0.5 * geladen + 0.5 * knall, t * 0.25);
+    // Sockel: zwei Stufen schwarzer Marmor, darauf der goldene Kranz, in dem der Ring hängt
+    this.prism(ctx, this.circlePoly(ob.x, ob.y, 0.62, 10), 0, 0.3, '#2e2740', '#15111f', { outline: '#0a0813' });
+    this.prism(ctx, this.circlePoly(ob.x, ob.y, 0.46, 10), 0.3, 0.26, '#3a3152', '#1b1628', { outline: '#0a0813' });
+    this.prism(ctx, this.circlePoly(ob.x, ob.y, 0.5, 8), 0.56, 0.12, '#d8b054', '#7a5c24', { outline: '#3d2f10' });
+
+    const [mx, my] = this.proj(ob.x, ob.y, 1.32);
+    const hoch = s * 0.78;
+    const breit = Math.max(s * 0.07, hoch * Math.abs(zu));
+    const ring = (f) => { ctx.beginPath(); ctx.ellipse(mx, my, breit * f, hoch * f, 0, 0, TAU); ctx.closePath(); };
+
+    // Das Bannfeuer IM Ring – geclippt, damit nichts über die Goldfassung hinausleckt
+    ctx.save(); ring(0.94); ctx.clip();
+    const glut = 0.3 + 0.45 * geladen + 0.55 * knall;
+    const hof = ctx.createRadialGradient(mx, my, 0, mx, my, hoch);
+    hof.addColorStop(0, `rgba(${Math.round(226 + 29 * knall)},${Math.round(178 + 60 * knall)},255,${0.35 + 0.5 * glut})`);
+    hof.addColorStop(0.6, `rgba(168,104,240,${0.3 * glut})`);
+    hof.addColorStop(1, 'rgba(90,50,150,0.05)');
+    ctx.fillStyle = hof; ring(1); ctx.fill();
+    // Drei Feuerfäden, die im Ring kreisen. Geladen drehen sie schneller – daran sieht man, daß
+    // gleich etwas passiert, ohne daß es irgendwo geschrieben stünde.
+    const dreh = t * (1.1 + 2.6 * geladen);
+    ctx.lineCap = 'round';
+    for (let k = 0; k < 3; k++) {
+      const a0 = dreh + (k * TAU) / 3;
+      ctx.beginPath();
+      for (let i = 0; i <= 14; i++) {
+        const a = a0 + (i / 14) * 1.5;
+        const px = mx + Math.cos(a) * breit * 0.72, py = my + Math.sin(a) * hoch * 0.72;
+        i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+      }
+      ctx.strokeStyle = `rgba(214,160,255,${0.35 + 0.5 * glut})`;
+      ctx.lineWidth = Math.max(1.5, s * 0.06); ctx.stroke();
+    }
+    ctx.restore();
+
+    // Die Fassung: außen Gold, innen ein dunkler Rand, damit der Ring eine Dicke hat
+    ring(1); ctx.strokeStyle = '#e0bb62'; ctx.lineWidth = Math.max(2.5, s * 0.1); ctx.stroke();
+    ring(1); ctx.strokeStyle = 'rgba(40,28,8,0.6)'; ctx.lineWidth = Math.max(1, s * 0.035); ctx.stroke();
+    ring(0.9); ctx.strokeStyle = 'rgba(20,14,34,0.55)'; ctx.lineWidth = Math.max(1, s * 0.04); ctx.stroke();
+    // Vier Runenzacken auf der Fassung, dieselben wie am Bannsiegel
+    ctx.fillStyle = '#f0d488';
+    for (const [dx, dy] of [[0, -1], [0, 1], [1, 0], [-1, 0]]) {
+      const px = mx + dx * breit, py = my + dy * hoch;
+      ctx.beginPath(); ctx.arc(px, py, Math.max(1.5, s * 0.07), 0, TAU); ctx.fill();
+    }
+    // Die beiden Streben vom Kranz zur Fassung
+    ctx.strokeStyle = '#a8842a'; ctx.lineWidth = Math.max(2, s * 0.07);
+    for (const sd of [-1, 1]) {
+      const [fx, fy] = this.proj(ob.x - sa * sd * 0.42, ob.y + ca * sd * 0.42, 0.68);
+      ctx.beginPath(); ctx.moveTo(fx, fy); ctx.lineTo(mx + sd * breit * 0.8, my + hoch * 0.6); ctx.stroke();
+    }
+  },
+
+  /* ================= Die Siegelröhre (Kupferrohr) =================
+     Dieselbe Leitung wie in der Uhrwerkstadt, nur ist hier nichts genietet: Die Loge legt keine
+     Rohre, sie schneidet Gänge in den Marmor und versiegelt sie. Statt Dampf tritt Bannfeuer aus,
+     und der Mund trägt einen Siegelring – so weiß man, daß das, was einen schluckt, zur Loge
+     gehört und nicht aus einer Werkstatt stammt. */
+  drawSiegelroehre(ctx, ob, t, ausgang) {
+    const s = this.scale;
+    const cx = ausgang ? ob.ax : ob.x, cy = ausgang ? ob.ay : ob.y;
+    if (cx == null) return;
+    let ux = ausgang ? ob.ausMundX : ob.mundX, uy = ausgang ? ob.ausMundY : ob.mundY;
+    if (!ux && !uy) { ux = ob.dx; uy = ob.dy; }
+    const L = Math.hypot(ux, uy) || 1; ux /= L; uy /= L;
+    const qx = -uy, qy = ux;
+    const r = 0.42, z = r + 0.1;
+    const seit = t - (ausgang ? ob.speiAt : ob.schluckAt);
+    const stoss = Math.max(0, 1 - seit / 0.9);
+
+    const scheibe = (mx, my, rr, farbe) => {
+      ctx.beginPath();
+      for (let i = 0; i <= 16; i++) {
+        const w = (i * TAU) / 16;
+        const p = this.proj(mx + qx * Math.cos(w) * rr, my + qy * Math.cos(w) * rr, z + Math.sin(w) * rr);
+        i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]);
+      }
+      ctx.closePath(); ctx.fillStyle = farbe; ctx.fill();
+    };
+    // Sockel aus schwarzem Marmor
+    this.prism(ctx, [[cx - qx * 0.5 - ux * 0.45, cy - qy * 0.5 - uy * 0.45], [cx + qx * 0.5 - ux * 0.45, cy + qy * 0.5 - uy * 0.45],
+      [cx + qx * 0.5 + ux * 0.4, cy + qy * 0.5 + uy * 0.4], [cx - qx * 0.5 + ux * 0.4, cy - qy * 0.5 + uy * 0.4]],
+      0, 0.18, '#2e2740', '#15111f', { outline: '#0a0813' });
+    const hx = cx - ux * 0.5, hy = cy - uy * 0.5, mx = cx + ux * 0.52, my = cy + uy * 0.52;
+    this.walze(ctx, hx, hy, mx, my, z, r, '#3d3455', '#1a1628', { n: 14, outline: '#0a0813' });
+    // Zwei Goldbänder statt des Nietenbands
+    for (const d of [0.1, 0.3]) {
+      scheibe(cx + ux * d, cy + uy * d, r * 1.08, '#8a6c2c');
+      scheibe(cx + ux * (d + 0.05), cy + uy * (d + 0.05), r * 1.0, '#d8b054');
+    }
+    // Der Mund: ein Loch mit Siegelring, der im Stoß aufglüht
+    scheibe(mx, my, r * 0.95, '#e0bb62');
+    scheibe(mx + ux * 0.04, my + uy * 0.04, r * 0.82, '#140f24');
+    scheibe(mx + ux * 0.09, my + uy * 0.09, r * 0.6, `rgba(150,90,220,${(0.25 + 0.6 * stoss).toFixed(3)})`);
+    scheibe(mx + ux * 0.14, my + uy * 0.14, r * 0.36, '#0b0817');
+    // Bannfeuer statt Dampf – es steigt aus dem Siegel oben auf
+    const [vx, vy] = this.proj(cx - ux * 0.28, cy - uy * 0.28, z + r + 0.1);
+    ctx.fillStyle = '#7a5c24'; ctx.beginPath(); ctx.arc(vx, vy, s * 0.09, 0, TAU); ctx.fill();
+    for (let i = 0; i < 4; i++) {
+      const u = ((t * 0.9 + i / 4) % 1);
+      const dicht = 0.1 + 0.55 * stoss;
+      const p = this.proj(cx - ux * (0.28 + u * 0.2) + qx * (i - 1.5) * 0.09, cy - uy * (0.28 + u * 0.2) + qy * (i - 1.5) * 0.09, z + r + 0.14 + u * 0.6);
+      ctx.fillStyle = `rgba(${Math.round(190 + 40 * u)},${Math.round(130 + 40 * u)},255,${(dicht * (1 - u)).toFixed(3)})`;
+      ctx.beginPath(); ctx.arc(p[0], p[1], s * (0.08 + u * 0.22), 0, TAU); ctx.fill();
+    }
+  },
+
+  /* Die Stütze unter der Siegelröhre: eine Marmorsäule mit Goldkragen statt des Kupferbocks. */
+  drawSiegelStuetze(ctx, ob, u) {
+    const [x, y, z] = ob.punkt(u), r = this.ROHR_R;
+    this.isoEllipse(ctx, x, y, 0.003, 0.3, 'rgba(0,0,0,0.25)');
+    this.prism(ctx, this.circlePoly(x, y, 0.3, 10), 0, 0.1, '#2e2740', '#15111f', { outline: '#0a0813' });
+    this.prism(ctx, this.circlePoly(x, y, 0.15, 8), 0.1, z - r * 0.9 - 0.1, '#3d3455', '#1a1628', { outline: '#0a0813' });
+    this.prism(ctx, this.circlePoly(x, y, 0.24, 10), z - r * 0.9, 0.14, '#d8b054', '#7a5c24', { outline: '#3d2f10' });
+  },
+
 });
