@@ -85,6 +85,32 @@ Umgesetzt wird das über ein Skript, das auf den Tod eines Wesens reagiert —
 nicht über achtzig einzelne Beutelisten. Das gilt dann automatisch auch für
 Mobs, die Mojang später hinzufügt, und für unsere eigenen.
 
+## Bosse
+
+Später, aber vorgesehen. Eigene Bosse mit echter Bossleiste oben am
+Bildschirm: Name und Lebensanzeige, erscheint beim Näherkommen. Das ist in
+Bedrock eingebaut (`minecraft:boss`) und kostet zwei Zeilen — `hud_range`
+bestimmt die Entfernung, `should_darken_sky` verdunkelt den Himmel wie beim
+Wither.
+
+Beute: sicher mehrere Kristalle der obersten Stufe, dazu mit kleiner
+Wahrscheinlichkeit ein besonderer Gegenstand. Dafür braucht die Beuteliste
+zwei Töpfe — einen sicheren und einen seltenen.
+
+**Beschworen, nicht gefunden.** Ein Boss, der frei in der Welt auftaucht, ist
+entweder nie zu finden oder steht plötzlich im Dorf. Besser der Weg des
+Withers: ein Bauwerk oder ein Ritual, das ihn ruft — bezahlt mit
+Sternenkristallen. Dann bestimmt der Spieler den Zeitpunkt, kann sich
+vorbereiten und den Kampf wiederholen, bis der seltene Gegenstand fällt. Der
+Sternenkristall ist damit nicht nur Währung, sondern auch Schlüssel.
+
+**Der Aufwand steckt nicht in der Leiste.** Die ist trivial. Ein Boss, der
+sich wie einer anfühlt, braucht ein eigenes Modell mit Animationen,
+Angriffsmuster, die länger als zwei Minuten tragen, und am besten mehrere
+Phasen — ab der Hälfte anders kämpfen, Helfer rufen. Phasen gehen ohne
+Skript; Minecraft kann Mobs mitten im Kampf umschalten. Trotzdem ist ein
+guter Boss mehr Arbeit als zehn gewöhnliche Mobs.
+
 ## In welcher Reihenfolge
 
 Jede Stufe muss für sich funktionieren und spielbar sein.
@@ -95,6 +121,7 @@ Jede Stufe muss für sich funktionieren und spielbar sein.
 4. Kristalle, Essenz, Eintauschen
 5. Fähigkeiten kaufen, Stufen
 6. Mehr Zauber, Abklingzeiten, später vielleicht die grafische Leiste
+7. Der erste Boss, beschworen statt gefunden
 
 ## Was nicht geht
 
