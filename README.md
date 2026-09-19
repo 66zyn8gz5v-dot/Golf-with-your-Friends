@@ -2983,6 +2983,10 @@ Aufgabe heißt immer: den Moment abpassen. Hier startet der Spieler die Uhr selb
   der Entwurf deswegen nicht – er liegt als `style: 'runenstein'` im Zeichner und steht im Baumodus
   unter *Aussehen*, für den Tag, an dem eine Welt ihn braucht. Ein Entwurf, den man löscht, weil er
   gerade nicht paßt, muß später noch einmal gebaut werden.*
+  *Seit Fassung 199 hat der Hut auf der Bahn einen Körper: Die Krempe hat eine dunkle Unterseite und
+  eine sichtbare Kante dazwischen (zwei flache Ellipsen übereinander lasen sich als aufgemalter
+  Fleck), der Kegel bekommt Schattenseite und Glanzstreifen innerhalb seines eigenen Umrisses, und
+  das Maul ist ein Loch mit Lichtsaum statt eines dunklen Flecks.*
   Zwei bis vier Hüte, genau einer leuchtet. Wer in einen rollt,
   kommt aus dem leuchtenden heraus – und wer in den leuchtenden rollt, aus dem **nächsten**, damit
   er keine Sackgasse ist. Das Leuchten wandert im Takt, und der nächste Hut glimmt schon auf,

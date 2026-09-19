@@ -162,12 +162,32 @@ Object.assign(Renderer.prototype, {
       const knick = hPx * (0.26 + 0.03 * Math.sin(t * 1.3 + h.i));
       const spitze = [cx + knick, cy - hPx];
 
-      // Schatten und Krempe. Die Krempe ist breit – daran erkennt man den Hut von oben.
-      this.isoEllipse(ctx, h.x, h.y, 0.004, R * 1.15, 'rgba(0,0,0,0.28)');
-      this.isoEllipse(ctx, h.x, h.y, 0.08, R * 1.1, an ? '#4a3480' : '#3a2a63');
-      this.isoEllipse(ctx, h.x, h.y, 0.095, R * 0.95, an ? '#5c3fa8' : '#472f82');
-      // Das Maul: der dunkle Ring in der Mitte, in den der Ball rollt
-      this.isoEllipse(ctx, h.x, h.y, 0.1, ob.r * 1.05, '#150e2a');
+      /* DIE KREMPE HAT DICKE. Vorher waren es zwei flache Ellipsen übereinander, und das las sich
+         als aufgemalter Fleck: ein Hut ohne Rand, auf den man von oben schaut. Jetzt liegt eine
+         dunkle Unterseite ein Stück TIEFER als die Oberseite, und der Streifen dazwischen ist die
+         Kante des Filzes – dasselbe, was prism mit einer Mauer macht, nur rund. */
+      this.isoEllipse(ctx, h.x, h.y, 0.004, R * 1.2, 'rgba(0,0,0,0.3)');
+      this.isoEllipse(ctx, h.x, h.y, 0.045, R * 1.12, an ? '#2a1c4e' : '#1f1540');   // Unterseite
+      const [krx, kry] = this.proj(h.x, h.y, 0.045);
+      const [kox, koy] = this.proj(h.x, h.y, 0.13);
+      ctx.fillStyle = an ? '#33235e' : '#261a4c';                                     // die Kante
+      ctx.beginPath();
+      ctx.ellipse(krx, kry, R * 1.12 * s, R * 1.12 * s * this.cam.tilt, 0, 0, Math.PI);
+      ctx.lineTo(kox - R * 1.1 * s, koy);
+      ctx.ellipse(kox, koy, R * 1.1 * s, R * 1.1 * s * this.cam.tilt, 0, Math.PI, 0, true);
+      ctx.closePath(); ctx.fill();
+      this.isoEllipse(ctx, h.x, h.y, 0.13, R * 1.1, an ? '#4a3480' : '#3a2a63');      // Oberseite
+      this.isoEllipse(ctx, h.x, h.y, 0.145, R * 0.95, an ? '#5c3fa8' : '#472f82');
+      /* Das Maul ist ein LOCH, kein Fleck: ein dunkler Ring, darin ein noch dunklerer Grund und
+         am oberen Rand ein Lichtsaum – so sieht man, daß es nach unten weitergeht. */
+      this.isoEllipse(ctx, h.x, h.y, 0.15, ob.r * 1.12, '#241844');
+      this.isoEllipse(ctx, h.x, h.y, 0.155, ob.r * 1.0, '#0e0820');
+      const [mx0, my0] = this.proj(h.x, h.y, 0.158);
+      ctx.strokeStyle = an ? 'rgba(190,160,255,0.55)' : 'rgba(150,130,200,0.3)';
+      ctx.lineWidth = Math.max(1, s * 0.03);
+      ctx.beginPath();
+      ctx.ellipse(mx0, my0, ob.r * 1.0 * s, ob.r * 1.0 * s * this.cam.tilt, 0, Math.PI, 0);
+      ctx.stroke();
 
       // Der Kegel, in Bildpunkten: zwei Bögen von den Fußpunkten zur Spitze
       const kg = ctx.createLinearGradient(cx - bPx, cy, spitze[0], spitze[1]);
@@ -180,18 +200,54 @@ Object.assign(Renderer.prototype, {
       ctx.quadraticCurveTo(cx - bPx * 0.55, cy - hPx * 0.62, spitze[0], spitze[1]);
       ctx.quadraticCurveTo(cx + bPx * 0.72, cy - hPx * 0.52, cx + bPx, cy - hPx * 0.06);
       ctx.closePath(); ctx.fill();
+      /* SCHATTENSEITE UND GLANZ, BEIDE INNERHALB DES KEGELS. Eine einzige Verlaufsfläche ist ein
+         Dreieck mit Farbe darin; erst eine dunkle Seite und ein heller Streifen daneben machen aus
+         ihr einen Körper, um den man herumgehen könnte. Beschnitten wird am Kegel selbst, sonst
+         liefe der Schatten über die Krempe hinaus. */
+      ctx.save(); ctx.clip();
+      ctx.fillStyle = 'rgba(18,10,40,0.42)';
+      ctx.beginPath();
+      ctx.moveTo(spitze[0], spitze[1]);
+      ctx.quadraticCurveTo(cx + bPx * 0.72, cy - hPx * 0.52, cx + bPx, cy - hPx * 0.06);
+      ctx.lineTo(cx + bPx * 1.2, cy + hPx * 0.1); ctx.lineTo(spitze[0] + bPx, spitze[1]);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = 'rgba(214,196,255,0.22)';
+      ctx.beginPath();
+      ctx.moveTo(cx - bPx * 0.52, cy - hPx * 0.1);
+      ctx.quadraticCurveTo(cx - bPx * 0.3, cy - hPx * 0.6, spitze[0] - bPx * 0.1, spitze[1] + hPx * 0.08);
+      ctx.quadraticCurveTo(cx - bPx * 0.02, cy - hPx * 0.55, cx - bPx * 0.22, cy - hPx * 0.1);
+      ctx.closePath(); ctx.fill();
+      ctx.restore();
+      ctx.beginPath();          // der Umriß braucht den Pfad noch einmal, das clip hat ihn verbraucht
+      ctx.moveTo(cx - bPx, cy - hPx * 0.06);
+      ctx.quadraticCurveTo(cx - bPx * 0.55, cy - hPx * 0.62, spitze[0], spitze[1]);
+      ctx.quadraticCurveTo(cx + bPx * 0.72, cy - hPx * 0.52, cx + bPx, cy - hPx * 0.06);
+      ctx.closePath();
       /* HELLER UMRISS, NICHT SCHWARZER. In der Erzmagierloge steht der Hut auf violettem Marmor,
          und mit einer schwarzen Kante war vom Kegel nichts mehr zu sehen - nur noch Krempe und
          Maul, also eine Schale. Ein heller Umriss trägt auf JEDEM Boden, im Garten wie in der
          Loge, und nimmt dem dunklen Hut nichts von seiner Dunkelheit. */
       ctx.strokeStyle = 'rgba(226,212,255,0.5)'; ctx.lineWidth = Math.max(1.2, s * 0.04); ctx.stroke();
 
-      // Das Band über der Krempe – ebenfalls in Bildpunkten, damit es am Kegel anliegt
+      /* Das Band über der Krempe, in Bildpunkten, damit es am Kegel anliegt. Es bekommt eine
+         dunkle Unterkante – ein Band ohne Schattenkante klebt auf dem Filz, statt ihn zu umfassen. */
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = 'rgba(20,12,44,0.45)'; ctx.lineWidth = Math.max(3, hPx * 0.17);
+      ctx.beginPath();
+      ctx.moveTo(cx - bPx * 0.86, cy - hPx * 0.1);
+      ctx.quadraticCurveTo(cx, cy - hPx * 0.03, cx + bPx * 0.86, cy - hPx * 0.1);
+      ctx.stroke();
       ctx.strokeStyle = an ? '#ffd166' : '#a98a46'; ctx.lineWidth = Math.max(2, hPx * 0.13);
       ctx.beginPath();
       ctx.moveTo(cx - bPx * 0.86, cy - hPx * 0.13);
       ctx.quadraticCurveTo(cx, cy - hPx * 0.06, cx + bPx * 0.86, cy - hPx * 0.13);
       ctx.stroke();
+      // Die Schnalle: ein kleines Blech vorn auf dem Band, damit es einen Anfang hat
+      ctx.fillStyle = an ? '#ffe9a8' : '#8f7640';
+      ctx.strokeStyle = 'rgba(20,12,44,0.5)'; ctx.lineWidth = Math.max(1, s * 0.02);
+      ctx.beginPath();
+      ctx.rect(cx - bPx * 0.14, cy - hPx * 0.13, bPx * 0.28, hPx * 0.13);
+      ctx.fill(); ctx.stroke();
 
       if (hell > 0.02) {   // der Stern an der Spitze: das Zeichen des Ausgangs
         ctx.save(); ctx.globalAlpha = 0.35 + 0.65 * hell;

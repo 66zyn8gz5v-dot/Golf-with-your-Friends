@@ -621,20 +621,28 @@ intro='Zwei Lücken, zwei Blüten. Die zweite Blüte liegt hinter der ersten Ran
       'ruhige sind sicherer.')
 
 # --- 5 ---------------------------------------------------------------------
-# Der Hutständer. Eine Mauer quer durch das Treibhaus, und durch sie führt nur der Zauber:
-# hinein in einen Hut, heraus aus dem, der leuchtet. Einer der beiden Ausgänge liegt im Sand.
-f = leer(30, 14)
-fuell(f, 1, 2, 28, 11)
-fuell(f, 13, 2, 15, 11, 'x')          # die Mauer
-fuell(f, 19, 9, 24, 11, 's')          # der Sandkasten hinter dem falschen Hut
-setz(f, 3, 6, 'T'); setz(f, 26, 5, 'H')
+# Der Hutständer. ZWEI Regalwände statt einer, und dahinter noch der halbe Weg. In der ersten
+# Fassung war die Bahn hinter dem Zauber zu Ende: Hut treffen, herauskommen, einlochen – die
+# Maschine war erklärt, aber gespielt hatte man sie nicht. Jetzt entscheidet der Hut nur, WO man
+# den zweiten Teil beginnt, und der zweite Teil ist selbst eine Aufgabe: an der zweiten Wand oben
+# herum, am Springkraut vorbei, durch den Rasensprenger ans Loch. Wer im Sand landet, hat nicht
+# verloren, sondern nur den längeren Anlauf.
+f = leer(42, 15)
+fuell(f, 1, 2, 40, 12)
+fuell(f, 12, 2, 14, 12, 'x')          # die erste Regalwand: hier hilft nur der Hut
+fuell(f, 28, 5, 30, 12, 'x')          # die zweite: sie läßt oben eine Gasse frei
+fuell(f, 16, 9, 22, 12, 's')          # der Sandkasten um den falschen Hut
+setz(f, 3, 7, 'T'); setz(f, 37, 10, 'H')
 bahn(GARTEN, 'Der Hutständer', 'gewaechshaus', f, [
-    huete([(6, 6), (22, 4), (22, 10)], takt=2.6),
-    pilz(9.5, 9.5, stil='springkraut'),
-], par=3,
-intro='Durch die Mauer kommt nur, wer sich verzaubern läßt. Wer in einen Hut rollt, kommt aus dem '
-      'heraus, der gerade leuchtet – und wer in den leuchtenden rollt, aus dem nächsten. Einer der '
-      'beiden Ausgänge steht im Sand. Das Leuchten wandert; man sieht es kommen.')
+    huete([(6, 7), (18, 4), (18, 11)], takt=2.6),
+    pilz(9.5, 10.5, stil='springkraut'),
+    pilz(24.5, 7.5, stil='springkraut'),
+    windrad(34.5, 6.5, blades=2, laenge=1.3, tempo=0.9, stil='sprenger'),
+], par=4,
+intro='Durch die erste Wand kommt nur, wer sich verzaubern läßt: hinein in einen Hut, heraus aus '
+      'dem, der gerade leuchtet – und wer in den leuchtenden rollt, aus dem nächsten. Einer der '
+      'beiden Ausgänge steht im Sand, der andere frei. Danach ist die Bahn aber nicht zu Ende: Die '
+      'zweite Wand läßt nur oben eine Gasse, und davor dreht der Sprenger.')
 
 # --- 6 ---------------------------------------------------------------------
 # Das Treibhaus. Der Bienenstand steht quer über dem Weg, dahinter drehen zwei Rasensprenger.
