@@ -891,6 +891,10 @@ class Renderer {
     const ctx = this.ctx, th = this.theme, lv = this.level, t = state.t;
     if (!lv) return;
     this.t = t;   // Spieluhr merken: drawBall und die Ball-Skins brauchen sie für ihre Bewegung
+    /* Und den Ball dazu: 'state' ist hier ein Übergabewert, kein globaler Name – die Zeichnungen
+       in den Zusatzdateien (render_zauber.js und Geschwister) kommen sonst nicht daran. Der
+       Zauberspiegel braucht ihn, weil sein Spiegelbild am Ball hängt. */
+    this.ball = state.ball;
     // Himmel
     const g = ctx.createLinearGradient(0, 0, 0, this.h);
     g.addColorStop(0, th.sky[0]); g.addColorStop(1, th.sky[1]);
@@ -1057,7 +1061,7 @@ class Renderer {
   drawCastShadows(ctx) {
     const lv = this.level, th = this.theme, LX = 0.42, LY = 0.3; // Schattenversatz je Höheneinheit (Weltkoordinaten)
     const boxes = [];
-    for (const w of lv.untenFl.walls) boxes.push([w.x, w.y, w.x + w.w, w.y + w.h, th.wall.style === 'hedge' ? 0.55 : 0.6]);
+    for (const w of lv.untenFl.walls) boxes.push([w.x, w.y, w.x + w.w, w.y + w.h, th.wall.style === 'hedge' ? 0.65 : 0.7]);
     for (const b of lv.untenFl.blocks) boxes.push([b.x, b.y, b.x + 1, b.y + 1, 1.0]);
     for (const o of lv.obstacles) {
       if (o.type === 'wall') { const nx = -(o.y1 - o.y0), ny = o.x1 - o.x0, L = Math.hypot(nx, ny) || 1, tx = nx / L * o.t / 2, ty = ny / L * o.t / 2; boxes.push({ poly: [[o.x0 + tx, o.y0 + ty], [o.x1 + tx, o.y1 + ty], [o.x1 - tx, o.y1 - ty], [o.x0 - tx, o.y0 - ty]], h: o.h }); }
@@ -1188,6 +1192,30 @@ class Renderer {
       for (let i = 0; i < 30; i++) {
         const x = (hash(i, 1) * w + t * (6 + hash(i, 2) * 8) + Math.sin(t * 0.5 + i) * 15) % w, y = (hash(i, 3) * h + Math.sin(t * 0.6 + i * 1.3) * 25) % h;
         ctx.fillStyle = `rgba(255,250,200,${0.25 + 0.35 * Math.abs(Math.sin(t + i))})`; ctx.beginPath(); ctx.arc(x, y, 1.5, 0, TAU); ctx.fill();
+      }
+    } else if (kind === 'sternenstaub') {
+      /* Die Luft der Sternenwarte: feiner Staub, der langsam sinkt und dabei funkelt, und hin und
+         wieder eine Sternschnuppe. Sie ist kein Schmuck ohne Zweck – sie ist das einzige, was sich
+         auf einer Bahn bewegt, auf der man lange rechnet, und sie sagt dem Auge, daß das Bild
+         lebt. */
+      for (let i = 0; i < 34; i++) {
+        const x = (hash(i, 1) * w + Math.sin(t * 0.25 + i) * 22) % w;
+        const y = (hash(i, 2) * h + t * (4 + hash(i, 3) * 7)) % h;
+        const a = 0.18 + 0.5 * Math.abs(Math.sin(t * 1.1 + i * 2.3));
+        ctx.fillStyle = `rgba(215,228,255,${a * 0.3})`; ctx.beginPath(); ctx.arc(x, y, 5, 0, TAU); ctx.fill();
+        ctx.fillStyle = `rgba(240,246,255,${a})`; ctx.beginPath(); ctx.arc(x, y, 1.3, 0, TAU); ctx.fill();
+      }
+      // Alle paar Sekunden eine Schnuppe – kurz, schräg, und immer nur eine
+      const runde = Math.floor(t / 5.5), phase = (t % 5.5) / 1.1;
+      if (phase < 1) {
+        const x0 = hash(runde, 7) * w * 0.8, y0 = hash(runde, 8) * h * 0.35;
+        const len = 90 + hash(runde, 9) * 70;
+        const x = x0 + phase * (w * 0.35), y = y0 + phase * (h * 0.2);
+        const g = ctx.createLinearGradient(x, y, x - len * 0.6, y - len * 0.34);
+        g.addColorStop(0, `rgba(255,255,255,${0.75 * (1 - phase)})`);
+        g.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.strokeStyle = g; ctx.lineWidth = 2; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - len * 0.6, y - len * 0.34); ctx.stroke();
       }
     }
   }
@@ -1495,7 +1523,7 @@ class Renderer {
 
   drawWall(ctx, poly, wall) {
     if (wall.style === 'hedge') {
-      this.prism(ctx, poly, 0, 0.55, wall.top, wall.side);
+      this.prism(ctx, poly, 0, 0.65, wall.top, wall.side);
       // Blätter-Knubbel auf der Oberseite
       const cx = (poly[0][0] + poly[2][0]) / 2, cy = (poly[0][1] + poly[2][1]) / 2;
       const w = poly[2][0] - poly[0][0], h = poly[2][1] - poly[0][1];
@@ -1503,23 +1531,23 @@ class Renderer {
       for (let i = 0; i < n; i++) {
         const u = (i + 0.5) / n;
         const px = along ? poly[0][0] + u * w : cx, py = along ? cy : poly[0][1] + u * h;
-        this.isoEllipse(ctx, px, py, 0.55, 0.22, shade(wall.top, 1.08 - (i % 2) * 0.12));
+        this.isoEllipse(ctx, px, py, 0.65, 0.24, shade(wall.top, 1.08 - (i % 2) * 0.12));
       }
     } else if (wall.style === 'ice') {
-      ctx.globalAlpha = 0.85; this.prism(ctx, poly, 0, 0.6, wall.top, wall.side); ctx.globalAlpha = 1;
+      ctx.globalAlpha = 0.85; this.prism(ctx, poly, 0, 0.7, wall.top, wall.side); ctx.globalAlpha = 1;
     } else if (wall.style === 'brass') {
-      this.prism(ctx, poly, 0, 0.55, wall.top, wall.side, { outline: shade(wall.side, 0.7) });
+      this.prism(ctx, poly, 0, 0.65, wall.top, wall.side, { outline: shade(wall.side, 0.7) });
       // Nieten auf der Oberseite
       const w = poly[2][0] - poly[0][0], h = poly[2][1] - poly[0][1], along = w > h, len = Math.max(w, h), n = Math.max(1, Math.round(len / 0.5));
       ctx.fillStyle = shade(wall.side, 0.9);
       for (let i = 0; i < n; i++) {
         const u = (i + 0.5) / n, px = along ? poly[0][0] + u * w : (poly[0][0] + poly[2][0]) / 2, py = along ? (poly[0][1] + poly[2][1]) / 2 : poly[0][1] + u * h;
-        const [sx, sy] = this.proj(px, py, 0.56); ctx.beginPath(); ctx.arc(sx, sy, Math.max(1, this.scale * 0.035), 0, TAU); ctx.fill();
+        const [sx, sy] = this.proj(px, py, 0.66); ctx.beginPath(); ctx.arc(sx, sy, Math.max(1, this.scale * 0.035), 0, TAU); ctx.fill();
       }
     } else if (wall.style === 'gold') {
-      this.prism(ctx, poly, 0, 0.5, wall.top, wall.side, { outline: shade(wall.side, 0.8) });
+      this.prism(ctx, poly, 0, 0.6, wall.top, wall.side, { outline: shade(wall.side, 0.8) });
     } else {
-      this.prism(ctx, poly, 0, 0.6, wall.top, wall.side, { outline: shade(wall.side, 0.75) });
+      this.prism(ctx, poly, 0, 0.7, wall.top, wall.side, { outline: shade(wall.side, 0.75) });
     }
   }
 
@@ -1745,8 +1773,8 @@ class Renderer {
   }
   drawObstacleFloor(ctx, ob, t) {
     const s = this.scale;
-    if (ob.type === 'lightning') { this.drawLightningFloor(ctx, ob, t); return; }
-    if (ob.type === 'updraft') { this.drawUpdraft(ctx, ob, t); return; }
+    if (ob.type === 'lightning') { (ob.style === 'bannschlag' ? this.drawBannschlagFloor : this.drawLightningFloor).call(this, ctx, ob, t); return; }
+    if (ob.type === 'updraft') { (ob.style === 'bannschacht' ? this.drawBannschacht : this.drawUpdraft).call(this, ctx, ob, t); return; }
     if (ob.type === 'trapdoor') { this.drawTrapdoor(ctx, ob, t); return; }
     if (ob.type === 'guillotine') { this.drawGuillotineFloor(ctx, ob, t); return; }
     if (ob.type === 'eyetower') { this.drawEyeBeam(ctx, ob, t); return; }
@@ -1755,7 +1783,7 @@ class Renderer {
     if (ob.type === 'gearlift') { this.drawGearLiftFloor(ctx, ob, t); return; }
     if (ob.type === 'piston') { this.drawPistonFloor(ctx, ob, t); return; }
     if (ob.type === 'hand') { this.isoEllipse(ctx, ob.x, ob.y, 0.004, ob.len + 0.2, 'rgba(0,0,0,0.1)'); return; }
-    if (ob.type === 'pendulum') { this.drawPendulumFloor(ctx, ob, t); return; }
+    if (ob.type === 'pendulum') { (ob.style === 'foucault' ? this.drawFoucaultFloor : ob.style === 'kettenlot' ? this.drawKettenlotFloor : this.drawPendulumFloor).call(this, ctx, ob, t); return; }
     if (ob.type === 'springwork') { this.drawSpringWorkFloor(ctx, ob, t); return; }
     if (ob.type === 'escapement') { this.drawEscapementFloor(ctx, ob, t); return; }
     if (ob.type === 'sweephand') { this.drawSweepHandFloor(ctx, ob, t); return; }
@@ -1763,7 +1791,7 @@ class Renderer {
     if (ob.type === 'turbine') { this.drawTurbineFloor(ctx, ob, t); return; }
     if (ob.type === 'luke') { if (!(ob.ebene || 0)) this.drawLuke(ctx, ob, 0); return; }   // höhere Ebenen zeichnet zeichneEbene
     if (ob.type === 'sprengladung') { this.drawSprengladungFloor(ctx, ob, t); return; }
-    if (ob.type === 'grubenlampe') { this.drawGrubenlampeFloor(ctx, ob, t); return; }
+    if (ob.type === 'grubenlampe') { (ob.style === 'bannlicht' ? this.drawBannlichtFloor : this.drawGrubenlampeFloor).call(this, ctx, ob, t); return; }
     if (ob.type === 'windfahne') { this.drawWindfahneFloor(ctx, ob, t); return; }
     if (ob.type === 'lawine') { this.drawLawineFloor(ctx, ob, t); return; }
     if (ob.type === 'seilbahn') { this.drawSeilbahnFloor(ctx, ob, t); return; }
@@ -1773,13 +1801,23 @@ class Renderer {
     if (ob.type === 'flut') { this.drawFlutFloor(ctx, ob, t); return; }
     if (ob.type === 'pumpwerk') { this.drawPumpwerkFloor(ctx, ob, t); return; }
     if (ob.type === 'stroemung') { this.drawStroemungFloor(ctx, ob, t); return; }
-    if (ob.type === 'strudel') { this.drawStrudelFloor(ctx, ob, t); return; }
+    if (ob.type === 'gearfield' && ob.style === 'meridian') { this.drawMeridianFloor(ctx, ob, t); return; }
+    if (ob.type === 'riesenbluete') { this.drawRiesenblueteFloor(ctx, ob, t); return; }
+    if (ob.type === 'armillar') { this.drawArmillarFloor(ctx, ob, t); return; }
+    if (ob.type === 'bannwaechter') { this.drawBannwaechterFloor(ctx, ob, t); return; }
+    if (ob.type === 'zauberkreis') { this.drawZauberkreisFloor(ctx, ob, t); return; }
+    if (ob.type === 'strudel') { (ob.style === 'spiralnebel' ? this.drawSpiralnebelFloor : this.drawStrudelFloor).call(this, ctx, ob, t); return; }
     if (ob.type === 'angler') { this.drawAnglerScheinFloor(ctx, ob, t); return; }
     if (ob.type === 'raucher') { this.drawRaucherFloor(ctx, ob, t); return; }
     if (ob.type === 'wracktor') { this.drawWracktorFloor(ctx, ob, t); return; }
     if (ob.type === 'abflussrohr') { this.drawAbflussFloor(ctx, ob, t); return; }
     if (ob.type === 'schneebruecke') { this.drawSchneebrueckeFloor(ctx, ob, t); return; }
-    if (ob.type === 'dial' || ob.type === 'wanderloch') { this.drawWanderlochFloor(ctx, ob, t); return; }
+    if (ob.type === 'ranke') { this.drawRankeFloor(ctx, ob, t); return; }
+    if (ob.type === 'zauberhut') { (ob.style === 'runenstein' ? this.drawRunensteinFloor : ob.style === 'maulwurf' ? this.drawMaulwurfFloor : this.drawZauberhutFloor).call(this, ctx, ob, t); return; }
+    if (ob.type === 'mondzieher') { this.drawMondzieherFloor(ctx, ob, t); return; }
+    if (ob.type === 'sternbild') { this.drawSternbildFloor(ctx, ob, t); return; }
+    if (ob.type === 'zauberspiegel') { this.drawZauberspiegelFloor(ctx, ob, t); return; }
+    if (ob.type === 'dial' || ob.type === 'wanderloch') { (ob.style === 'siegelloch' ? this.drawSiegellochFloor : this.drawWanderlochFloor).call(this, ctx, ob, t); return; }
     if (ob.type === 'field' && ob.style === 'steam') { this.drawSteam(ctx, ob, t); return; }
     if (ob.type === 'field' && ob.style === 'dark') { this.drawDarkZone(ctx, ob, t); return; }
     if (ob.type === 'boost' || (ob.type === 'field' && (ob.style === 'wind' || ob.style === 'current'))) { this.drawWind(ctx, ob, t); return; }
@@ -1826,6 +1864,7 @@ class Renderer {
         ctx.beginPath(); ctx.ellipse(sx, sy, ob.r * 0.8 * s, ob.r * 0.8 * s * this.cam.tilt, 0, a, a + 1.2); ctx.stroke();
       }
     } else if (ob.type === 'wandergate') {
+      if (ob.style === 'kulisse') { this.drawKulisseFloor(ctx, ob, t); return; }
       // Der Durchlass wird auf dem Boden hell markiert – man soll von weitem sehen, wo er gerade steht
       const q = ob.gap / 2, nx = -ob.uy * 0.45, ny = ob.ux * 0.45;
       const poly = [[ob.gx - ob.ux * q + nx, ob.gy - ob.uy * q + ny], [ob.gx + ob.ux * q + nx, ob.gy + ob.uy * q + ny],
@@ -1868,9 +1907,14 @@ class Renderer {
         this.isoEllipse(ctx, px, py, 0.005, 0.6, 'rgba(0,0,0,0.15)');
       }
     } else if (ob.type === 'bumper') {
+      if (ob.style === 'springkraut') { this.drawSpringkrautFloor(ctx, ob, t); return; }
+      if (ob.style === 'meteorit') { this.drawMeteoritFloor(ctx, ob, t); return; }
+      if (ob.style === 'bannstein') { this.drawBannsteinFloor(ctx, ob, t); return; }
       this.isoEllipse(ctx, ob.x, ob.y, 0.004, ob.r + 0.12, 'rgba(255,255,255,0.22)');
       this.isoEllipse(ctx, ob.x, ob.y, 0.005, ob.r, 'rgba(0,0,0,0.18)');
     } else if (ob.type === 'rotor') {
+      if (ob.style === 'sprenger') { this.drawSprengerFloor(ctx, ob, t); return; }
+      if (ob.style === 'bannzeiger') { this.drawBannzeigerFloor(ctx, ob, t); return; }
       if (ob.swing) { // Pendel/Weiche: nur den Schwenkbereich als Fächer markieren
         const [cx, cy] = this.proj(ob.x, ob.y, 0.004);
         ctx.fillStyle = 'rgba(0,0,0,0.1)'; ctx.beginPath(); ctx.moveTo(cx, cy);
@@ -1911,6 +1955,7 @@ class Renderer {
     } else if (ob.type === 'turntable') {
       const th = this.theme;
       if (ob.style === 'whirl' || ob.style === 'tornado' || ob.style === 'void') { this.drawWhirl(ctx, ob, t); return; }
+      if (ob.style === 'sonnenblume') { this.drawSonnenblumeFloor(ctx, ob, t); return; }
       this.isoEllipse(ctx, ob.x, ob.y, 0.003, ob.r + 0.25, 'rgba(30,25,40,0.5)');
       const [cx, cy] = this.proj(ob.x, ob.y, 0.008);
       ctx.save(); ctx.translate(cx, cy); ctx.scale(1, this.cam.tilt);
@@ -1946,6 +1991,7 @@ class Renderer {
         ctx.beginPath(); ctx.moveTo(p2[0], p2[1]); ctx.lineTo(p1[0], p1[1]); ctx.lineTo(p3[0], p3[1]); ctx.closePath(); ctx.fill();
       }
     } else if (ob.type === 'magnet') {
+      if (ob.style === 'pollen') { this.drawPollenFloor(ctx, ob, t); return; }
       const kind = ob.slow ? 'slow' : ob.strength > 0 ? 'attract' : 'repel';
       const col = ob.style === 'pearl' ? '255,240,190' : ob.style === 'coral' ? (kind === 'attract' ? '255,110,110' : kind === 'repel' ? '110,230,130' : '110,180,255') : (kind === 'attract' ? '120,220,255' : '255,120,200');
       this.isoEllipse(ctx, ob.x, ob.y, 0.003, ob.r, `rgba(${col},0.07)`);
@@ -1965,11 +2011,39 @@ class Renderer {
       for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) { const [hx, hy] = this.proj(ob.x - ob.w / 2 + (i + 0.5) * ob.w / 3, ob.y - ob.h / 2 + (j + 0.5) * ob.h / 3, 0.006); ctx.beginPath(); ctx.ellipse(hx, hy, s * 0.06, s * 0.06 * this.cam.tilt, 0, 0, TAU); ctx.fill(); }
     } else if (ob.type === 'sharkjump') { // Warnschimmer über der Bucht, solange der Hai in der Luft ist
       if (ob.jumping) { const a = 0.18 * Math.sin(ob.p * Math.PI); this.fillPoly(ctx, [[ob.x - ob.w / 2, ob.y - ob.h / 2], [ob.x + ob.w / 2, ob.y - ob.h / 2], [ob.x + ob.w / 2, ob.y + ob.h / 2], [ob.x - ob.w / 2, ob.y + ob.h / 2]], -0.1, `rgba(255,60,60,${a})`, false); }
+    } else if (ob.type === 'cannon' && ob.style === 'fernschleuder') {
+      /* DIE LANGE LINIE MUSS SICH LESEN LASSEN. Bei fünf Kacheln reicht eine Punktreihe; bei
+         zwanzig ist sie ein Strich, an dem man weder Richtung noch Weite abliest. Deshalb LAUFEN
+         die Punkte hier nach außen - daran sieht man, wohin -, sie werden zum Ziel hin größer,
+         und am Ende steht kein Punkt, sondern ein Fadenkreuz aus zwei Ringen. */
+      const dx = Math.cos(ob.angle), dy = Math.sin(ob.angle), R = 0.9 + ob.range;
+      this.isoEllipse(ctx, ob.x, ob.y, 0.004, 1.15, 'rgba(0,0,0,0.3)');
+      const lauf = (t * 2.2) % 0.8;
+      for (let d = 1.8; d < R - 0.4; d += 0.8) {
+        const u = (d - 1.8) / Math.max(1, R - 2.2);
+        const [px, py] = this.proj(ob.x + dx * (d + lauf), ob.y + dy * (d + lauf), 0.01);
+        ctx.fillStyle = `rgba(214,160,255,${(0.25 + 0.4 * u).toFixed(3)})`;
+        ctx.beginPath(); ctx.arc(px, py, s * (0.04 + 0.05 * u), 0, TAU); ctx.fill();
+      }
+      // Das Fadenkreuz am Landepunkt, es atmet im Takt der Ladezeit
+      const puls = 0.85 + 0.15 * Math.sin(t * 3);
+      this.isoEllipse(ctx, ob.x + dx * R, ob.y + dy * R, 0.006, 0.95 * puls, 'rgba(200,130,255,0.22)');
+      this.isoEllipse(ctx, ob.x + dx * R, ob.y + dy * R, 0.007, 0.5 * puls, 'rgba(226,178,255,0.3)');
+      this.isoEllipse(ctx, ob.x + dx * R, ob.y + dy * R, 0.008, 0.18, 'rgba(255,245,255,0.7)');
+      // Die Druckwelle beim Schuß: zwei Ringe, die vom Turm weglaufen
+      const seit = t - ob.firedAt;
+      if (seit >= 0 && seit < 0.8) {
+        for (const v of [0, 0.18]) {
+          const u = (seit - v) / 0.8;
+          if (u <= 0 || u >= 1) continue;
+          this.isoEllipse(ctx, ob.x, ob.y, 0.009, 1.2 + u * 5.5, `rgba(226,178,255,${(0.35 * (1 - u)).toFixed(3)})`);
+        }
+      }
     } else if (ob.type === 'cannon') {
       this.isoEllipse(ctx, ob.x, ob.y, 0.004, 0.75, 'rgba(0,0,0,0.25)');
       // Ziellinie und Landepunkt in aktueller Rohrrichtung
       const dx = Math.cos(ob.angle), dy = Math.sin(ob.angle), R = 0.9 + ob.range;
-      const bas = ob.style === 'ballista';
+      const bas = ob.style === 'ballista' || ob.style === 'bannschleuder';
       ctx.fillStyle = bas ? 'rgba(200,130,255,0.55)' : 'rgba(255,210,120,0.55)';
       for (let d = 1.6; d < R - 0.5; d += 0.7) { const [px, py] = this.proj(ob.x + dx * d, ob.y + dy * d, 0.01); ctx.beginPath(); ctx.arc(px, py, s * 0.05, 0, TAU); ctx.fill(); }
       this.isoEllipse(ctx, ob.x + dx * R, ob.y + dy * R, 0.006, 0.45, bas ? 'rgba(200,130,255,0.3)' : 'rgba(255,210,120,0.3)');
@@ -2013,7 +2087,11 @@ class Renderer {
     if (ob.type === 'windmill') {
       items.push({ x: ob.x, y: ob.y, bias: 0.4, draw: () => this.drawWindmill(ctx, ob, t) });
     } else if (ob.type === 'ramp') {
-      items.push({ x: ob.x + ob.w / 2, y: ob.y + ob.h / 2, draw: () => this.drawRamp(ctx, ob, t) });
+      items.push({ x: ob.x + ob.w / 2, y: ob.y + ob.h / 2, draw: () => {
+        if (ob.style === 'sternschanze') { this.drawSternschanze(ctx, ob, t); return; }
+        if (ob.style === 'bannschanze') { this.drawBannschanze(ctx, ob, t); return; }
+        this.drawRamp(ctx, ob, t);
+      } });
     } else if (ob.type === 'wall') {
       const L = Math.hypot(ob.x1 - ob.x0, ob.y1 - ob.y0) || 1, ux = (ob.x1 - ob.x0) / L, uy = (ob.y1 - ob.y0) / L;
       const nx = -uy * ob.t / 2, ny = ux * ob.t / 2, n = Math.max(1, Math.ceil(L / 3));
@@ -2035,7 +2113,9 @@ class Renderer {
           const p0 = [p[0] + (q[0] - p[0]) * a, p[1] + (q[1] - p[1]) * a];
           const p1 = [p[0] + (q[0] - p[0]) * b, p[1] + (q[1] - p[1]) * b];
           const poly = [[p0[0] + nx, p0[1] + ny], [p1[0] + nx, p1[1] + ny], [p1[0] - nx, p1[1] - ny], [p0[0] - nx, p0[1] - ny]];
+          const amSpalt = ob.style === 'kulisse' && (i === 0 || i === n - 1) ? p1 : null;
           items.push({ x: (p0[0] + p1[0]) / 2, y: (p0[1] + p1[1]) / 2, draw: () => {
+            if (ob.style === 'kulisse') { this.drawKulisseStueck(ctx, poly, ob, amSpalt); return; }
             // Etwas dunkler als die Arenamauer und mit roter Deckleiste – sonst geht die Sperre im
             // hellen Sandstein ringsum unter und man sieht nicht, wo der Weg zu ist.
             this.prism(ctx, poly, 0, ob.h, th.block.top, th.block.side, { outline: shade(th.block.side, 0.7) });
@@ -2043,7 +2123,8 @@ class Renderer {
           } });
         }
       }
-      for (const sd of [-1, 1]) {   // Torpfosten an den Kanten des Durchlasses
+      // Die Kulisse braucht keine Pfosten: Ihre Blenden haben selbst eine helle Kante zum Spalt hin
+      for (const sd of ob.style === 'kulisse' ? [] : [-1, 1]) {   // Torpfosten an den Kanten des Durchlasses
         const px = ob.gx + ob.ux * sd * ob.gap / 2, py = ob.gy + ob.uy * sd * ob.gap / 2;
         const poly = [[px - 0.16, py - 0.16], [px + 0.16, py - 0.16], [px + 0.16, py + 0.16], [px - 0.16, py + 0.16]];
         items.push({ x: px, y: py, bias: 0.1, draw: () => {
@@ -2065,6 +2146,8 @@ class Renderer {
         if (ob.style === 'propeller') { this.drawPropeller(ctx, ob, t); return; }
         if (ob.style === 'scythe') { this.drawScythe(ctx, ob, t); return; }
         if (ob.style === 'pendel') { this.drawPendel(ctx, ob, t); return; }
+        if (ob.style === 'sprenger') { this.drawRasensprenger(ctx, ob, t); return; }
+        if (ob.style === 'bannzeiger') { this.drawBannzeiger(ctx, ob, t); return; }
         this.prism(ctx, hub, 0, ob.height + 0.25, th.rotor.top, th.rotor.side);
         for (let i = 0; i < ob.blades; i++) {
           const a = ob.bladeAngle(i), ca = Math.cos(a), sa = Math.sin(a), tk = ob.thick;
@@ -2080,24 +2163,43 @@ class Renderer {
     } else if (ob.type === 'guillotine') {
       this.pushGuillotine(items, ctx, ob, t);
     } else if (ob.type === 'eyetower') {
-      items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => this.drawEyeTower(ctx, ob, t) });
+      // In der Sternenwarte ist derselbe Apparat ein Messingfernrohr auf einer Gabel
+      items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => {
+        if (ob.style === 'tubus') { this.drawTubus(ctx, ob, t); return; }
+        if (ob.style === 'sternenspiegel') { this.drawSternenspiegel(ctx, ob, t); return; }
+        this.drawEyeTower(ctx, ob, t);
+      } });
     } else if (ob.type === 'copperpipe') {
       // Rohrmund und Rohrende stehen an verschiedenen Stellen der Karte – jeder wird für sich einsortiert
-      if (ob.x != null) items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => this.drawCopperPipe(ctx, ob, t, false) });
-      if (ob.ax != null) items.push({ x: ob.ax, y: ob.ay, bias: 0.2, draw: () => this.drawCopperPipe(ctx, ob, t, true) });
+      const rohr = ob.style === 'siegelroehre' ? this.drawSiegelroehre : this.drawCopperPipe;
+      /* noFade für die ganze Leitung. Alles, was zwischen Kamera und Ball steht, wird sonst auf
+         22 Prozent Deckkraft gesetzt, damit es den Ball nicht verdeckt - und ein Rohr, das
+         durchsichtig wird, sieht nicht nach Rohr aus, sondern nach Fehler. Fynn hat das sofort
+         gesehen: „Das Kupferrohr soll nicht dieses leicht Transparente haben."
+         Der Grund für den Kniff greift hier ohnehin nicht: Steckt der Ball IN der Leitung, ist er
+         mit Absicht unsichtbar (siehe oben) - sichtbar ist nur der Schein, der mitläuft. Und
+         steckt er nicht darin, ist ein Rohr von 0,42 Kacheln zu dünn, um ihn zu verstecken. */
+      if (ob.x != null) items.push({ x: ob.x, y: ob.y, bias: 0.2, noFade: true, draw: () => rohr.call(this, ctx, ob, t, false) });
+      if (ob.ax != null) items.push({ x: ob.ax, y: ob.ay, bias: 0.2, noFade: true, draw: () => rohr.call(this, ctx, ob, t, true) });
       // Die Leitung dazwischen: Lauf für Lauf, damit sie sich richtig mit Mauern überdeckt
       if (ob.bereit && ob.stuecke) {
         for (const u of ob.stuetzen) {
           const [px, py] = ob.punkt(u);
-          items.push({ x: px, y: py, bias: 0.4, draw: () => this.drawPipeStuetze(ctx, ob, u) });
+          items.push({ x: px, y: py, bias: 0.4, noFade: true, draw: () => (ob.style === 'siegelroehre' ? this.drawSiegelStuetze : this.drawPipeStuetze).call(this, ctx, ob, u) });
         }
         ob.stuecke.forEach((st, k) => {
           const [px, py] = ob.punkt((st.u0 + st.u1) / 2);
-          items.push({ x: px, y: py, bias: 0.45, draw: () => this.drawPipeLauf(ctx, ob, k, t) });
+          items.push({ x: px, y: py, bias: 0.45, noFade: true, draw: () => this.drawPipeLauf(ctx, ob, k, t) });
         });
       }
+    } else if (ob.type === 'riesenbluete') {
+      items.push({ x: ob.x, y: ob.y, bias: 0.3, draw: () => this.drawRiesenbluete(ctx, ob, t) });
+    } else if (ob.type === 'armillar') {
+      items.push({ x: ob.x, y: ob.y, bias: 0.3, draw: () => this.drawArmillar(ctx, ob, t) });
+    } else if (ob.type === 'bannwaechter') {
+      items.push({ x: ob.x, y: ob.y, bias: 0.4, draw: () => this.drawBannwaechter(ctx, ob, t) });
     } else if (ob.type === 'gearfield') {
-      items.push({ x: (ob.x0 + ob.x1) / 2, y: (ob.y0 + ob.y1) / 2, bias: -0.2, draw: () => this.drawGearField(ctx, ob, t) });
+      items.push({ x: (ob.x0 + ob.x1) / 2, y: (ob.y0 + ob.y1) / 2, bias: -0.2, draw: () => (ob.style === 'meridian' ? this.drawMeridian(ctx, ob, t) : this.drawGearField(ctx, ob, t)) });
     } else if (ob.type === 'sweephand') {
       items.push({ x: ob.x, y: ob.y, bias: 0.3, draw: () => this.drawSweepHand(ctx, ob, t) });
     } else if (ob.type === 'handclock') {
@@ -2113,7 +2215,7 @@ class Renderer {
          wie ein Loch, und man würde den eigenen Weg nicht mehr sehen. */
       items.push({ x: ob.cx, y: ob.cy, bias: -0.15, noFade: true, draw: () => this.drawKippbuehne(ctx, ob, t) });
     } else if (ob.type === 'grubenlampe') {
-      items.push({ x: ob.x, y: ob.y, bias: 0.45, noFade: true, draw: () => this.drawGrubenlampe(ctx, ob, t) });
+      items.push({ x: ob.x, y: ob.y, bias: 0.45, noFade: true, draw: () => (ob.style === 'bannlicht' ? this.drawBannlicht(ctx, ob, t) : this.drawGrubenlampe(ctx, ob, t)) });
     } else if (ob.type === 'bruchwand') {
       /* noFade: Die Wand ist der Grund, warum man hier nicht weiterkommt. Durchsichtig zu werden,
          sobald der Ball davorliegt, nähme ihr genau das. */
@@ -2122,6 +2224,29 @@ class Renderer {
       /* noFade: Der Schlot ist die Ansage. Durchsichtig zu werden, sobald der Ball davorliegt,
          nähme ihm genau das – und davor liegt man hier mit Absicht. */
       items.push({ x: ob.x, y: ob.y, bias: 0.4, noFade: true, draw: () => this.drawRaucher(ctx, ob, t) });
+    } else if (ob.type === 'ranke') {
+      /* Einsortiert nach der Blüte: Nur sie steht aufrecht, die Ranke selbst liegt am Boden und
+         wird als Bodenzeichnung gemalt. */
+      items.push({ x: ob.bluete.x, y: ob.bluete.y, bias: 0.25, draw: () => this.drawRanke(ctx, ob, t) });
+    } else if (ob.type === 'zauberhut') {
+      /* noFade: Welcher Hut leuchtet, ist die ganze Aufgabe. Durchsichtig zu werden, sobald der
+         Ball davorliegt, nähme ihr genau das. */
+      items.push({ x: ob.x, y: ob.y, bias: 0.3, noFade: true, draw: () => (ob.style === 'runenstein' ? this.drawRunenstein(ctx, ob, t) : ob.style === 'maulwurf' ? this.drawMaulwurfshuegel(ctx, ob, t) : this.drawZauberhut(ctx, ob, t)) });
+    } else if (ob.type === 'zauberspiegel') {
+      /* noFade: Der Spiegel ist kein Hindernis, das man umfährt, sondern der Weg selbst.
+         Durchsichtig zu werden, sobald der Ball davorliegt, nähme ihm genau das. */
+      items.push({ x: ob.x, y: ob.y, bias: 0.4, noFade: true, draw: () => this.drawZauberspiegel(ctx, ob, t) });
+    } else if (ob.type === 'sternbild') {
+      /* Einsortiert nach dem Tor, denn nur die Lichtwand ist hoch; die Sterne schweben knapp über
+         dem Boden und stören die Tiefensortierung nicht.
+         noFade: Welcher Stern noch fehlt, ist die ganze Aufgabe. */
+      const sx = ob.tor ? (ob.tor.x0 + ob.tor.x1) / 2 : ob.sterne[0][0];
+      const sy = ob.tor ? (ob.tor.y0 + ob.tor.y1) / 2 : ob.sterne[0][1];
+      items.push({ x: sx, y: sy, bias: 0.3, noFade: true, draw: () => this.drawSternbild(ctx, ob, t) });
+    } else if (ob.type === 'mondzieher') {
+      /* noFade: Die Phase der Scheibe ist die ganze Aufgabe. Durchsichtig zu werden, sobald der
+         Ball davorliegt, nähme ihr genau das. */
+      items.push({ x: ob.x, y: ob.y, bias: 0.35, noFade: true, draw: () => this.drawMondzieher(ctx, ob, t) });
     } else if (ob.type === 'ankerkette') {
       /* noFade: An der Kette liest man ab, wo der Anker gleich sein wird. */
       items.push({ x: ob.x, y: ob.y, bias: 0.45, noFade: true, draw: () => this.drawAnkerkette(ctx, ob, t) });
@@ -2172,7 +2297,7 @@ class Renderer {
     } else if (ob.type === 'escapement') {
       items.push({ x: ob.x, y: ob.y, bias: 0.25, draw: () => this.drawEscapement(ctx, ob, t) });
     } else if (ob.type === 'pendulum') {
-      items.push({ x: ob.x, y: ob.y, bias: 0.3, draw: () => this.drawPendulum(ctx, ob, t) });
+      items.push({ x: ob.x, y: ob.y, bias: 0.3, draw: () => (ob.style === 'foucault' ? this.drawFoucault(ctx, ob, t) : ob.style === 'kettenlot' ? this.drawKettenlot(ctx, ob, t) : this.drawPendulum(ctx, ob, t)) });
     } else if (ob.type === 'springwork') {
       items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => this.drawSpringWork(ctx, ob, t) });
     } else if (ob.type === 'gearlift') {
@@ -2216,7 +2341,10 @@ class Renderer {
       items.push({ x: ob.x, y: ob.y, draw: () => {
         const now = performance.now() / 1000, sq = Math.max(0, 1 - (now - ob.hitAt) * 4);
         const sc = 1 + sq * 0.25;
-        if (ob.style === 'crystal') this.spriteCrystal(ctx, ob.x, ob.y, 0, ob.r * 1.6 * sc, '#cfeeff', '#5b90c6');
+        if (ob.style === 'springkraut') this.drawSpringkraut(ctx, ob, t);
+        else if (ob.style === 'meteorit') this.drawMeteorit(ctx, ob, t);
+        else if (ob.style === 'bannstein') this.drawBannstein(ctx, ob, t);
+        else if (ob.style === 'crystal') this.spriteCrystal(ctx, ob.x, ob.y, 0, ob.r * 1.6 * sc, '#cfeeff', '#5b90c6');
         else if (ob.style === 'rock') this.spriteRock(ctx, { x: ob.x, y: ob.y, z: 0, s: ob.r * 2.1 * sc, seed: ((ob.x * 7 + ob.y * 13) % 10) / 10 }, '#9a948a', '#5f5a52');
         else if (ob.style === 'coral') this.spriteCoral(ctx, { x: ob.x, y: ob.y, z: 0, s: ob.r * 2.6 * sc, seed: ((ob.x * 7 + ob.y * 13) % 10) / 10 });
         else if (ob.style === 'idol') this.spriteIdol(ctx, { x: ob.x, y: ob.y, z: 0, s: ob.r * 2.2 * sc, seed: 0.5 }, t);
@@ -2243,6 +2371,7 @@ class Renderer {
     } else if (ob.type === 'magnet') {
       items.push({ x: ob.x, y: ob.y, draw: () => {
         const kind = ob.slow ? 'slow' : ob.strength > 0 ? 'attract' : 'repel', s = this.scale;
+        if (ob.style === 'pollen') { this.drawPollenstrudel(ctx, ob, t); return; }
         if (ob.style === 'pearl') { this.spritePearl(ctx, { x: ob.x, y: ob.y, z: 0, s: ob.core * 3.4, seed: 0.4 }, t, true); return; }
         if (ob.style === 'coral') {
           const cols = kind === 'attract' ? ['#ff6a6a', '#a8202a'] : kind === 'repel' ? ['#6fe07a', '#1f7a30'] : ['#6fb0ff', '#1f4a9a'];
@@ -2263,7 +2392,7 @@ class Renderer {
     } else if (ob.type === 'potion') {
       items.push({ x: ob.x, y: ob.y, draw: () => this.spritePotion(ctx, ob, t) });
     } else if (ob.type === 'cannon') {
-      items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => ob.style === 'catapult' ? this.drawCatapult(ctx, ob, t) : ob.style === 'ballista' ? this.drawBallista(ctx, ob, t) : ob.style === 'wrackkanone' ? this.drawWrackkanone(ctx, ob, t) : this.drawCannon(ctx, ob, t) });
+      items.push({ x: ob.x, y: ob.y, bias: 0.2, draw: () => ob.style === 'catapult' ? this.drawCatapult(ctx, ob, t) : ob.style === 'ballista' ? this.drawBallista(ctx, ob, t) : ob.style === 'wrackkanone' ? this.drawWrackkanone(ctx, ob, t) : ob.style === 'bannschleuder' ? this.drawBannschleuder(ctx, ob, t) : ob.style === 'fernschleuder' ? this.drawFernschleuder(ctx, ob, t) : this.drawCannon(ctx, ob, t) });
     } else if (ob.type === 'door') {
       if (ob.style === 'pyramid') items.push({ x: ob.px, y: ob.py, noFade: true, draw: () => this.drawPyramid(ctx, ob, t) });
       else if (ob.style === 'wreck') items.push({ x: ob.px, y: ob.py, noFade: true, draw: () => this.drawWreck(ctx, ob, t) });
@@ -2279,7 +2408,7 @@ class Renderer {
     } else if (ob.type === 'spikes') {
       items.push({ x: ob.x, y: ob.y, draw: () => this.drawSpikes(ctx, ob, t) });
     } else if (ob.type === 'lightning') {
-      items.push({ x: ob.x, y: ob.y, bias: 0.3, noFade: true, draw: () => this.drawLightningBolt(ctx, ob, t) });
+      items.push({ x: ob.x, y: ob.y, bias: 0.3, noFade: true, draw: () => (ob.style === 'bannschlag' ? this.drawBannsaeule(ctx, ob, t) : this.drawLightningBolt(ctx, ob, t)) });
     }
   }
 
@@ -2528,6 +2657,8 @@ class Renderer {
     if (ob.style === 'ofen') return this.drawSchmelzofen(ctx, ob, t);
     // Und unter Wasser auch nicht: Dort schießt Wasser aus dem Boden und sperrt den Weg.
     if (ob.style === 'wasserwand') return this.drawWasserwand(ctx, ob, t);
+    // Und im Lehrlingsgarten mahlt niemand: Dort stehen zwei Bienenkoerbe am Durchgang.
+    if (ob.style === 'bienenstock') return this.drawBienenstock(ctx, ob, t);
     const s = this.scale, th = this.theme, ax = ob.axis === 'x';
     const wallTop = '#e8dfcf', wallSide = '#a8998a', roof = '#7a4a2a';
     for (const b of ob.blocks) this.prism(ctx, b, 0, ob.height, wallTop, wallSide, { outline: '#6b5a4a' });
@@ -2614,6 +2745,51 @@ class Renderer {
   }
 
   /* Rampe: schräge Fläche, an der Eintrittskante flach, an der Austrittskante hoch */
+  /* Die Geometrie einer Sprungschanze: die vier Ecken mit ihrer Höhe, dazu die hohe Kante, an der
+     der Ball abhebt. Zwei Welten zeichnen darauf ihre eigene Schanze – sie sollen sich die
+     Rechnung teilen und nicht voneinander abschreiben. */
+  rampenForm(ob) {
+    const x0 = ob.x, y0 = ob.y, x1 = ob.x + ob.w, y1 = ob.y + ob.h;
+    const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+    const halb = Math.abs(ob.dx) > 0.5 ? ob.w / 2 : ob.h / 2;
+    const zAn = (px, py) => ob.height * Math.max(0, Math.min(1, (((px - cx) * ob.dx + (py - cy) * ob.dy) + halb) / (2 * halb)));
+    const ecken = [[x0, y0], [x1, y0], [x1, y1], [x0, y1]].map(([px, py]) => [px, py, zAn(px, py)]);
+    // u läuft quer zur Flugrichtung, v von unten nach oben – damit kann jede Welt ihr Muster in
+    // Bruchteilen der Schanze angeben, ohne x und y auseinanderhalten zu müssen
+    const punkt = (u, v) => {
+      const px = ob.dx > 0.5 || ob.dx < -0.5 ? x0 + (ob.dx > 0 ? v : 1 - v) * ob.w : x0 + u * ob.w;
+      const py = ob.dx > 0.5 || ob.dx < -0.5 ? y0 + u * ob.h : y0 + (ob.dy > 0 ? v : 1 - v) * ob.h;
+      return [px, py, zAn(px, py) + 0.012];
+    };
+    let hoch = 0;   // die Kante mit der größten mittleren Höhe ist die Abrißkante
+    for (let i = 1; i < 4; i++) {
+      const m = (a, b) => (ecken[a][2] + ecken[b][2]) / 2;
+      if (m(i, (i + 1) % 4) > m(hoch, (hoch + 1) % 4)) hoch = i;
+    }
+    return { ecken, zAn, punkt, kante: [ecken[hoch], ecken[(hoch + 1) % 4]], P: v => this.proj(v[0], v[1], v[2]) };
+  }
+
+  /* Wangen und Deck. Eine Schanze ohne sichtbare Wange liest sich als aufgemalter Fleck – dieselbe
+     Erfahrung wie beim Zauberhut und beim Bienenstock. */
+  rampenKoerper(ctx, ob, deck, seite) {
+    const form = this.rampenForm(ob), P = form.P, ecken = form.ecken;
+    for (let i = 0; i < 4; i++) {
+      const a = ecken[i], b = ecken[(i + 1) % 4];
+      if (a[2] < 0.01 && b[2] < 0.01) continue;
+      const ex = b[0] - a[0], ey = b[1] - a[1];
+      let nx = ey, ny = -ex; const L = Math.hypot(nx, ny) || 1; nx /= L; ny /= L;
+      if (nx * this.cam.sin + ny * this.cam.cos <= 0.001) continue;
+      const licht = 0.64 + 0.36 * (0.5 + 0.5 * (nx * 0.85 - ny * 0.53));
+      const p0 = P([a[0], a[1], 0]), p1 = P([b[0], b[1], 0]), p2 = P(b), p3 = P(a);
+      ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.lineTo(p2[0], p2[1]); ctx.lineTo(p3[0], p3[1]); ctx.closePath();
+      ctx.fillStyle = shade(seite, licht); ctx.fill();
+      ctx.strokeStyle = ctx.fillStyle; ctx.lineWidth = 0.8; ctx.stroke();
+    }
+    const deckWeg = () => { ctx.beginPath(); ecken.forEach((v, i) => { const p = P(v); i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); }); ctx.closePath(); };
+    deckWeg(); ctx.fillStyle = deck; ctx.fill();
+    return Object.assign(form, { deckWeg });
+  }
+
   drawRamp(ctx, ob, t) {
     const th = this.theme, s = this.scale;
     const x0 = ob.x, y0 = ob.y, x1 = ob.x + ob.w, y1 = ob.y + ob.h;

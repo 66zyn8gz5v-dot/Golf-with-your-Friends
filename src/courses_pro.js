@@ -482,4 +482,10 @@ const WORLDS = [
   { id: 'colosseum', name: 'Kolosseum', short: 'Arena', mode: 'legend', courses: COLOSSEUM_COURSES },
   { id: 'mine', name: 'Zwergenmine', short: 'Mine', mode: 'pro', courses: MINE_COURSES },
   { id: 'flut', name: 'Die Flut', short: 'Flut', mode: 'legend', courses: FLUT_COURSES },
+  /* Das Zauberreich: drei Welten auf einer Insel, ein Aufstieg vom Lehrling zum Erzmagier. Jede
+     trägt ihren eigenen Belohnungshut – die Regel dafür steht längst in hats.js und brauchte
+     nichts Neues. */
+  { id: 'lehrling', name: 'Lehrlingsgarten', short: 'Garten', mode: 'normal', courses: ZAUBER_GARTEN },
+  { id: 'warte', name: 'Sternenwarte', short: 'Warte', mode: 'pro', courses: ZAUBER_WARTE },
+  { id: 'loge', name: 'Erzmagierloge', short: 'Loge', mode: 'legend', courses: ZAUBER_LOGE },
 ];

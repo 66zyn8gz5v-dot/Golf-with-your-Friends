@@ -24,6 +24,69 @@ const Hats = (() => {
     ctx.quadraticCurveTo(x - r * 0.18, y - r * 0.18, x, y - r);
     ctx.fillStyle = col; ctx.fill();
   }
+  /* Krempe mit Tiefe: erst die Unterseite, dann die Oberseite darüber. Eine einzelne Ellipse ist
+     eine Scheibe; zwei versetzte sind ein Hut, den man von schräg oben sieht. */
+  function krempe(ctx, w, h, oben, unten, y) {
+    ctx.beginPath(); ctx.ellipse(0, y + h * 0.42, w, h, 0, 0, TAU2); fs(ctx, unten);
+    ctx.beginPath(); ctx.ellipse(0, y, w, h, 0, 0, TAU2); fs(ctx, oben);
+  }
+  /* Stiche am Krempenrand – die kleine Handschrift, an der man Filz von Blech unterscheidet */
+  function stiche(ctx, w, h, y, col, n = 14) {
+    ctx.strokeStyle = col; ctx.lineWidth = 0.028; ctx.beginPath();
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * TAU2;
+      const cx = Math.cos(a), sy2 = Math.sin(a);
+      ctx.moveTo(cx * w * 0.86, y + sy2 * h * 0.86);
+      ctx.lineTo(cx * w * 0.96, y + sy2 * h * 0.96);
+    }
+    ctx.stroke();
+  }
+
+  /* Fuenfzackiger Stern mit dunklem Umriss - so, wie sie auf einem gestickten Zauberhut sitzen.
+     Der vierzackige 'spark' ist ein Funkeln, dieser hier ist ein AUFNAEHER: Er hat eine Kante. */
+  function stern5(ctx, x, y, r, dreh, fuell, rand) {
+    ctx.beginPath();
+    for (let i = 0; i < 10; i++) {
+      const a = -Math.PI / 2 + i * (Math.PI / 5) + dreh, rr = i % 2 ? r * 0.44 : r;
+      const px = x + Math.cos(a) * rr, py = y + Math.sin(a) * rr;
+      i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+    }
+    ctx.closePath();
+    ctx.fillStyle = fuell; ctx.fill();
+    if (rand) { ctx.strokeStyle = rand; ctx.lineWidth = 0.035; ctx.stroke(); }
+  }
+  /* Mondsichel: ein Kreis, aus dem ein zweiter herausgestanzt wird */
+  function sichel(ctx, x, y, r, col) {
+    ctx.beginPath(); ctx.arc(x, y, r, 0, TAU2);
+    ctx.arc(x + r * 0.46, y - r * 0.2, r * 0.94, 0, TAU2, true);
+    ctx.fillStyle = col; ctx.fill();
+  }
+
+  /* Das Band in Spielerfarbe, um den Hutkoerper gewickelt. Es wird an der Form BESCHNITTEN und
+     liegt ueber dem Krempenrand, statt als freie Ellipse mitten auf der Krempe zu schwimmen: So
+     eine Ellipse las Fynn als Loch, durch das der Ball durchschaut - der helle Fleck hatte ja
+     genau seine Ballfarbe. Ein Band liegt auf dem Filz, es ist kein Fenster. */
+  const bandSack = (zx, w, hoch) => hoch * 0.8 * Math.max(0, 1 - (zx / w) * (zx / w));
+  function band(ctx, form, y, hoch, col, w = 0.66) {
+    /* w ist die halbe Kegelbreite an dieser Stelle. Ueber die volle Hutbreite gerechnet waere der
+       Bogen so flach, dass das Band als gerader Balken dalaege - es soll sich um den Filz legen. */
+    const s2 = hoch * 1.6;
+    ctx.save(); form(); ctx.clip();
+    ctx.beginPath();
+    ctx.moveTo(-w, y);
+    ctx.quadraticCurveTo(0, y + s2, w, y);
+    ctx.lineTo(w, y + hoch);
+    ctx.quadraticCurveTo(0, y + hoch + s2, -w, y + hoch);
+    ctx.closePath();
+    ctx.fillStyle = col; ctx.fill();
+    // Unterkante im Schatten: das Band hat Dicke, es ist nicht aufgemalt
+    ctx.strokeStyle = 'rgba(0,0,0,0.32)'; ctx.lineWidth = 0.035; ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(-w, y + hoch); ctx.quadraticCurveTo(0, y + hoch + s2, w, y + hoch);
+    ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 0.07; ctx.stroke();
+    ctx.restore();
+  }
+
   /* Federfarbe aus der Ballfarbe: der Federbusch nimmt die Farbe des Spielers an. Ein (fast) weißer
      Ball bekommt Rot, sonst ginge der Busch in der weißen Mittelfeder unter. */
   function plumeColors(color) {
@@ -823,6 +886,247 @@ const Hats = (() => {
         ctx.beginPath(); ctx.arc(x, y, r, 0, TAU2); ctx.fill();
         ctx.strokeStyle = `rgba(255,255,255,${0.6 * (1 - u * 0.75)})`; ctx.lineWidth = 0.018;
         ctx.stroke();
+      }
+    },
+
+    /* ================= Die drei Hüte des Zauberreichs =================
+       Hüte und sonst nichts – kein Gesicht darunter. Zuerst waren es Ganzkörper-Skins mit Augen;
+       das nahm dem Hut die Hauptrolle, und weil das Gesicht immer dasselbe war, sahen sich die
+       drei zu ähnlich. Jetzt sitzen sie auf dem Ball wie jeder andere Hut, der Ball behält seine
+       Spielerfarbe, und sie unterscheiden sich an dem, worauf es ankommt: an der FORM.
+
+         Lehrling   gerader Filzkegel mit einem Knick unter der Spitze, flache Krempe
+         Astronom   hoch und S-förmig, die Spitze rollt sich nach RECHTS ein und trägt den Mond
+         Erzmagier  bauchig und zerknautscht, die Spitze kippt nach LINKS und hängt herab
+
+       Die Spitzen zeigen mit Absicht in verschiedene Richtungen: Das ist der Unterschied, den man
+       noch erkennt, wenn der Hut im Menü nur daumennagelgroß ist.
+
+       UND JEDER IST IN VIER LAGEN GEBAUT: Grundform, dann Schatten und Glanz INNERHALB der Form
+       (über ctx.clip, damit nichts über die Kante läuft), dann die Zierde, dann zuletzt ein
+       kräftiger Umriß. Ein Filzhut ohne Schattenseite sieht aus wie ein ausgeschnittenes Stück
+       Papier - das war der Grund, warum die erste Fassung so flach wirkte. */
+
+    lehrlingshut(ctx, color, t, fein) {   // Lehrlingsgarten: der erste eigene Zauberhut
+      /* Der schlichteste der drei: ein Filzkegel, der eine Nummer zu groß ist, mit einem Knick
+         kurz unter der Spitze. Kein Gold, keine Runen - das kommt in den beiden Welten darüber.
+         Was ihn lebendig macht, ist der Stern an der Spitze: Er dreht sich und blinkt dabei, wie
+         ein Zauber, der noch flackert. */
+      const wippen = Math.sin(t * 1.9) * 0.05;
+      const kx = 0.1, ky = -1.2;                 // der Knick
+      const sx = 0.36 + wippen, sy = -1.72;      // die Spitze
+      const kegel = () => {
+        ctx.beginPath();
+        ctx.moveTo(-0.5, -0.1);
+        ctx.quadraticCurveTo(-0.34, -0.72, kx - 0.14, ky);       // linke Kante bis zum Knick
+        ctx.quadraticCurveTo(kx + 0.08, ky - 0.34, sx, sy);      // und weiter zur Spitze
+        ctx.quadraticCurveTo(kx + 0.3, ky - 0.1, kx + 0.24, ky); // rechte Kante über den Knick
+        ctx.quadraticCurveTo(0.42, -0.66, 0.54, -0.1);
+        ctx.closePath();
+      };
+      const g = ctx.createLinearGradient(-0.5, 0, 0.5, -1.2);
+      g.addColorStop(0, '#3a2766'); g.addColorStop(0.5, '#6b4bb8'); g.addColorStop(1, '#4a3384');
+      kegel(); ctx.fillStyle = g; ctx.fill();
+
+      ctx.save(); kegel(); ctx.clip();
+      // Schattenseite rechts und ein Glanzstreifen links: erst damit wölbt sich der Filz
+      ctx.fillStyle = 'rgba(24,14,48,0.4)';
+      ctx.beginPath(); ctx.moveTo(0.1, 0.1); ctx.quadraticCurveTo(0.34, -0.9, sx, sy);
+      ctx.lineTo(0.7, sy); ctx.lineTo(0.7, 0.1); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = 'rgba(200,175,255,0.22)';
+      ctx.beginPath(); ctx.moveTo(-0.3, -0.08); ctx.quadraticCurveTo(-0.18, -0.82, 0.14, -1.42);
+      ctx.quadraticCurveTo(-0.02, -0.8, -0.1, -0.08); ctx.closePath(); ctx.fill();
+      if (fein) {   // eine Naht längs, gestrichelt wie ein Stich
+        ctx.strokeStyle = 'rgba(20,12,40,0.45)'; ctx.lineWidth = 0.032;
+        ctx.setLineDash([0.07, 0.08]);
+        ctx.beginPath(); ctx.moveTo(-0.16, -0.24); ctx.quadraticCurveTo(-0.02, -0.9, 0.2, -1.5);
+        ctx.stroke(); ctx.setLineDash([]);
+      }
+      ctx.restore();
+
+      krempe(ctx, 1.06, 0.26, '#4a3384', '#2c1d52', -0.04);
+      if (fein) stiche(ctx, 1.06, 0.26, -0.04, 'rgba(24,14,48,0.45)');
+
+      /* Das Band in Spielerfarbe mit einer goldenen Schnalle - auch der Hut sagt, wem der Ball
+         gehört. Es sitzt ÜBER dem Krempenrand auf dem Filz; tiefer lag es auf der Krempe und
+         sah aus wie ein Loch im Hut. */
+      band(ctx, kegel, -0.64, 0.17, color || '#ffd166', 0.6);
+      ctx.fillStyle = '#e8c06a'; ctx.strokeStyle = 'rgba(0,0,0,0.4)'; ctx.lineWidth = 0.028;
+      ctx.beginPath(); ctx.rect(-0.1, -0.53, 0.2, 0.17); ctx.fill(); ctx.stroke();
+
+      kegel(); ctx.strokeStyle = 'rgba(14,8,30,0.62)'; ctx.lineWidth = 0.075; ctx.stroke();
+      const funkel = 0.55 + 0.45 * Math.sin(t * 2.6);
+      spark(ctx, sx + 0.02, sy - 0.1, 0.19 + 0.04 * funkel, `rgba(255,240,180,${0.55 + 0.45 * funkel})`);
+    },
+
+    sternenhut(ctx, color, t, fein) {    // Sternenwarte: der Hut des Astronomen
+      /* Der zweite, nach dem Vorbild, das Lüddecke geschickt hat: unten bauchig, nach oben
+         schlanker werdend und dabei nach rechts geneigt - und ganz oben knickt die Spitze nach
+         RECHTS ab und trägt einen Stern. Er ist damit der einzige der drei, dessen Spitze nach
+         oben zeigt: Der Lehrling hat einen kleinen Knick, der Erzmagier hängt nach links herab.
+
+         DER MOND IST NICHT VERSCHWUNDEN, er ist umgezogen. Auf dem Filz sitzen zwei Sicheln und
+         eine Scheibe, und diese Scheibe läuft ihre Phase durch - dieselbe wie der Mondzieher auf
+         der Bahn, der bei voller Scheibe zieht und bei dunkler stößt. Wer die Warte geschafft
+         hat, hat genau das begriffen und trägt es von da an auf dem Kopf. */
+      const wippen = Math.sin(t * 1.5) * 0.04;
+      const spx = 0.8 + wippen, spy = -1.92;
+      const kegel = () => {
+        ctx.beginPath();
+        ctx.moveTo(-0.5, -0.1);
+        ctx.bezierCurveTo(-0.44, -0.96, -0.12, -1.56, 0.26, -1.86);   // linke Kante, konkav nach oben rechts
+        ctx.bezierCurveTo(0.5, -2.04, spx - 0.02, -2.04, spx, spy);   // über den Knick zur Spitze
+        ctx.bezierCurveTo(0.68, -1.8, 0.5, -1.7, 0.4, -1.6);          // Unterseite der Spitze
+        ctx.bezierCurveTo(0.72, -1.2, 0.78, -0.6, 0.62, -0.1);        // rechte Kante, bauchig
+        ctx.closePath();
+      };
+      const g = ctx.createLinearGradient(-0.5, 0, 0.8, -1.6);
+      g.addColorStop(0, '#16203f'); g.addColorStop(0.45, '#2f4285'); g.addColorStop(1, '#1c2a5c');
+      kegel(); ctx.fillStyle = g; ctx.fill();
+
+      ctx.save(); kegel(); ctx.clip();
+      /* Zwei Glanzbahnen der Länge nach: Sie folgen der Krümmung und machen aus dem flachen
+         Blaufeld einen gerollten Filz. */
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = 'rgba(120,160,245,0.26)'; ctx.lineWidth = 0.24;
+      ctx.beginPath();
+      ctx.moveTo(-0.24, -0.2); ctx.bezierCurveTo(-0.2, -1.0, 0.06, -1.5, 0.34, -1.82);
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(8,14,40,0.4)'; ctx.lineWidth = 0.2;
+      ctx.beginPath();
+      ctx.moveTo(0.52, -0.2); ctx.bezierCurveTo(0.62, -0.9, 0.5, -1.4, 0.36, -1.66);
+      ctx.stroke();
+      if (fein) {
+        /* Die Stickerei nach dem Vorbild: ein großer Stern in der Mitte, ein kleiner darunter,
+           einer oben am Knick - und dazu die Monde. */
+        stern5(ctx, 0.04, -1.02, 0.22, 0.1, '#ffd34d', 'rgba(10,14,36,0.8)');
+        stern5(ctx, 0.38, -0.8, 0.13, -0.3, '#ffd34d', 'rgba(10,14,36,0.8)');
+        stern5(ctx, 0.3, -1.66, 0.11, 0.5, '#ffd34d', 'rgba(10,14,36,0.8)');
+        sichel(ctx, -0.3, -0.88, 0.1, '#e8bf3c');   // hoeher als Band und Krempe, sonst schneiden sie ihn ab
+        // Die laufende Scheibe: dieselbe Phase wie der Mondzieher auf der Bahn
+        const f = (Math.cos(t * 0.9) + 1) / 2, mr = 0.14, mx = -0.26, my = -1.42;
+        ctx.save();
+        ctx.beginPath(); ctx.arc(mx, my, mr, 0, TAU2); ctx.fillStyle = '#2a3566'; ctx.fill(); ctx.clip();
+        ctx.fillStyle = '#ffd34d';
+        ctx.beginPath(); ctx.arc(mx, my, mr, -Math.PI / 2, Math.PI / 2); ctx.closePath(); ctx.fill();
+        const k = 2 * f - 1;
+        ctx.fillStyle = k >= 0 ? '#ffd34d' : '#2a3566';
+        ctx.beginPath(); ctx.ellipse(mx, my, mr * Math.abs(k), mr, 0, 0, TAU2); ctx.fill();
+        ctx.restore();
+        ctx.strokeStyle = 'rgba(232,191,60,0.85)'; ctx.lineWidth = 0.035;
+        ctx.beginPath(); ctx.arc(mx, my, mr, 0, TAU2); ctx.stroke();
+      }
+      ctx.restore();
+
+      krempe(ctx, 1.26, 0.32, '#243057', '#111832', -0.06);
+      ctx.strokeStyle = 'rgba(8,12,32,0.7)'; ctx.lineWidth = 0.06;
+      ctx.beginPath(); ctx.ellipse(0, -0.06, 1.26, 0.32, 0, 0, TAU2); ctx.stroke();
+      if (fein) stiche(ctx, 1.26, 0.32, -0.06, 'rgba(150,175,235,0.3)', 18);
+
+      /* Das Band in Spielerfarbe, schmal, dicht über dem Krempenrand auf dem Filz. */
+      band(ctx, kegel, -0.74, 0.18, color || '#8fd0ff', 0.7);
+
+      kegel(); ctx.strokeStyle = 'rgba(8,12,32,0.72)'; ctx.lineWidth = 0.08; ctx.stroke();
+
+      /* Der Stern an der Spitze. Auf dem Vorbild hängt er ein Stück ab - das macht aus der Spitze
+         eine Zauberstabspitze und nicht nur ein Ende. */
+      const funkel = 0.6 + 0.4 * Math.sin(t * 2.4);
+      ctx.strokeStyle = 'rgba(12,16,40,0.8)'; ctx.lineWidth = 0.05; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(spx - 0.02, spy + 0.04); ctx.lineTo(spx + 0.14, spy - 0.1); ctx.stroke();
+      stern5(ctx, spx + 0.24, spy - 0.16, 0.2 + 0.03 * funkel, t * 0.5, '#ffd34d', 'rgba(12,16,40,0.85)');
+    },
+
+    erzmagierhut(ctx, color, t, fein) {  // Erzmagierloge: der letzte Hut des Zauberreichs
+      /* Der dritte und letzte: bauchig, zerknautscht, und als einziger kippt seine Spitze nach
+         LINKS und hängt herab. Darunter die breiteste Krempe, wellig und mit Goldrand - ein Hut,
+         den jemand seit dreihundert Jahren trägt, hat keinen runden Rand mehr.
+
+         Und er ist schwarz mit Gold. Violett war der Lehrling, nachtblau die Warte; Schwarz ist
+         keine vierte Farbe in derselben Reihe, sondern das Ende der Reihe. */
+      const wippen = Math.sin(t * 1.3) * 0.05;
+      const sx = -0.95 + wippen, sy = -1.06;
+      /* ZWEI FORMEN, NICHT EINE. Als ein einziger Pfad schnitt die Unterkante des Knicks quer
+         durch den Bauch, und die Füllregel stanzte den halben Hut wieder aus - er sah aus wie ein
+         Block mit einem schwebenden Fetzen daneben. Zuerst der herabhängende Zipfel, dann der
+         Körper darüber: Die Naht zwischen beiden liegt dann hinter dem Körper und ist weg. */
+      const zipfel = () => {
+        ctx.beginPath();
+        ctx.moveTo(-0.16, -1.98);
+        ctx.bezierCurveTo(-0.58, -2.12, -1.04, -1.72, sx, sy);      // Oberkante bis zur Spitze
+        ctx.bezierCurveTo(-0.84, -1.3, -0.42, -1.48, 0.06, -1.62);  // Unterkante zurück zum Körper
+        ctx.closePath();
+      };
+      const koerper = () => {
+        ctx.beginPath();
+        ctx.moveTo(-0.52, -0.16);
+        ctx.bezierCurveTo(-0.52, -0.98, -0.32, -1.58, -0.04, -1.96);
+        ctx.bezierCurveTo(0.3, -1.62, 0.46, -0.92, 0.58, -0.16);
+        ctx.closePath();
+      };
+      const g = ctx.createLinearGradient(-0.6, 0, 0.6, -1.5);
+      g.addColorStop(0, '#191125'); g.addColorStop(0.5, '#443260'); g.addColorStop(1, '#241a38');
+      zipfel(); ctx.fillStyle = g; ctx.fill();
+      zipfel(); ctx.strokeStyle = 'rgba(6,4,12,0.7)'; ctx.lineWidth = 0.075; ctx.stroke();
+      koerper(); ctx.fillStyle = g; ctx.fill();
+
+      ctx.save(); koerper(); ctx.clip();
+      // Schattenseite links unter dem Überhang, Glanz auf dem Bauch
+      ctx.fillStyle = 'rgba(8,5,16,0.42)';
+      ctx.beginPath(); ctx.moveTo(-0.8, -2.1); ctx.lineTo(-0.18, -2.1);
+      ctx.quadraticCurveTo(-0.3, -0.9, -0.24, 0.1); ctx.lineTo(-0.8, 0.1); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = 'rgba(190,165,240,0.2)';
+      ctx.beginPath(); ctx.moveTo(-0.3, -0.2); ctx.quadraticCurveTo(-0.22, -1.0, -0.02, -1.8);
+      ctx.quadraticCurveTo(0.14, -1.0, 0.12, -0.2); ctx.closePath(); ctx.fill();
+      if (fein) {
+        /* Knautschfalten: sie machen aus dem Kegel einen getragenen Hut. Drei Stück, unterschiedlich
+           lang - drei gleich lange Striche sähen aus wie Rillen an einem Rohr. */
+        ctx.strokeStyle = 'rgba(10,6,18,0.6)'; ctx.lineWidth = 0.05; ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(-0.44, -0.62); ctx.quadraticCurveTo(0.0, -0.78, 0.44, -0.6);
+        ctx.moveTo(-0.36, -1.14); ctx.quadraticCurveTo(-0.02, -1.3, 0.3, -1.18);
+        ctx.moveTo(-0.26, -1.62); ctx.quadraticCurveTo(-0.1, -1.72, 0.08, -1.66);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      /* Die Krempe ist WELLIG, keine glatte Ellipse. Gezeichnet wird sie zweimal: einmal als
+         Unterseite, einmal etwas höher als Oberseite - sonst wäre sie ein Brett. */
+      const rand = (dy) => {
+        ctx.beginPath();
+        ctx.moveTo(-1.24, -0.06 + dy);
+        ctx.bezierCurveTo(-0.94, -0.38 + dy, -0.38, -0.42 + dy, 0.05, -0.36 + dy);
+        ctx.bezierCurveTo(0.58, -0.42 + dy, 1.06, -0.3 + dy, 1.26, -0.02 + dy);
+        ctx.bezierCurveTo(1.04, 0.28 + dy, 0.46, 0.38 + dy, 0.02, 0.34 + dy);
+        ctx.bezierCurveTo(-0.48, 0.38 + dy, -1.0, 0.26 + dy, -1.24, -0.06 + dy);
+        ctx.closePath();
+      };
+      rand(0.1); fs(ctx, '#0b0812');
+      rand(0); const kg = ctx.createLinearGradient(0, -0.42, 0, 0.36);
+      kg.addColorStop(0, '#332543'); kg.addColorStop(1, '#130e1c');
+      ctx.fillStyle = kg; ctx.fill();
+      ctx.strokeStyle = '#c9a75a'; ctx.lineWidth = 0.05; rand(0); ctx.stroke();
+
+      /* Das Band ist hier eine KRONE: derselbe Platz, dieselbe Spielerfarbe wie bei den anderen
+         beiden - aber mit Zacken. Man soll die drei nebeneinanderlegen und die Reihenfolge sehen,
+         ohne dass jemand sie erklärt. */
+      band(ctx, koerper, -0.8, 0.2, color || '#c77dff', 0.62);
+      ctx.fillStyle = '#ffd166'; ctx.strokeStyle = 'rgba(0,0,0,0.4)'; ctx.lineWidth = 0.03;
+      for (const zx of [-0.36, -0.12, 0.14, 0.4]) {
+        const hoch = Math.abs(zx) < 0.25 ? 0.3 : 0.22;
+        const fuss = -0.8 + bandSack(zx, 0.62, 0.2);   // folgt der Wölbung des Bandes
+        ctx.beginPath();
+        ctx.moveTo(zx - 0.085, fuss); ctx.lineTo(zx, fuss - hoch); ctx.lineTo(zx + 0.085, fuss);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+      }
+
+      koerper(); ctx.strokeStyle = 'rgba(6,4,12,0.7)'; ctx.lineWidth = 0.075; ctx.stroke();
+
+      // Drei Sterne kreisen um die herabhängende Spitze
+      for (let i = 0; i < 3; i++) {
+        const a = t * 0.8 + i * (TAU2 / 3);
+        const px = sx + 0.04 + Math.cos(a) * 0.22, py = sy - 0.06 + Math.sin(a) * 0.1;
+        const nah = (Math.sin(a) + 1) / 2;
+        spark(ctx, px, py, 0.075 + nah * 0.06, `rgba(255,240,190,${0.45 + 0.5 * nah})`);
       }
     },
 
@@ -1873,6 +2177,9 @@ const Hats = (() => {
     { id: 'orb', name: 'Kristallkugel', welt: 'shadow', voll: true },
     { id: 'pocketwatch', name: 'Taschenuhr', welt: 'clock', voll: true },
     { id: 'taucherhelm', name: 'Taucherhelm', welt: 'flut', voll: true },
+    { id: 'lehrlingshut', name: 'Lehrlingshut', welt: 'lehrling' },
+    { id: 'sternenhut', name: 'Sternenhut', welt: 'warte' },
+    { id: 'erzmagierhut', name: 'Erzmagierhut', welt: 'loge' },
     { id: 'champion', name: 'Championhelm', welt: 'colosseum', art: 'turnier' },
   ];
   const byId = id => LIST.find(h => h.id === id);

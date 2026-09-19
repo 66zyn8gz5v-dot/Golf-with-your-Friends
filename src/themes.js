@@ -591,6 +591,86 @@ const THEMES = {
     /* Ganz unten ziehen nur noch Quallen und Rochen vorbei – Schwärme gibt es hier nicht mehr. */
     schwebDecor: ['jelly', 'rochen', 'jelly', 'rochen', 'fischschwarm'],
   },
+  /* ---------- Das Zauberreich ----------
+     Drei Orte, die einen Aufstieg erzählen: der Garten des Lehrlings, die Sternenwarte, die Loge
+     der Erzmagier. Hier stehen zuerst die beiden Paletten des Lehrlingsgartens; die anderen
+     kommen mit ihren Teilwelten dazu.
+
+     Warum Glühwürmchen und nicht Blütenstaub wie auf der Elfenwiese: Der Garten spielt in der
+     Dämmerung. Das ist die Tageszeit, zu der ein Lehrling übt – tagsüber hat er zu tun –, und es
+     gibt den leuchtenden Dingen im Garten überhaupt erst etwas zu leuchten. */
+  lehrlingsgarten: { // Ummauerter Zaubergarten in der Abenddämmerung: Hecken, Beete, erste Lichter
+    atmo: 'fireflies',
+    sky: ['#3b2a63', '#f0b878'], ground: '#33562f', groundEdge: '#1d331b',
+    floor: ['#6fb84a', '#63aa41'], sand: '#e6d79a', ice: '#c8ecff', snow: '#f1f7ff',
+    water: '#3f8fd9', lava: '#ff5a1f',
+    wall: { top: '#7fc75a', side: '#3c6f2e', style: 'hedge' },
+    block: { top: '#b9a9d6', side: '#6d5f92' },
+    mover: { top: '#d9a066', side: '#8c5a2b' },
+    rotor: { top: '#e8c98a', side: '#a37a3c' },
+    accent: '#ffd166', flag: '#c77dff', stars: true,
+    autoDecor: ['flowerbush', 'tree', 'mushroom', 'lantern', 'flowerbush', 'crystal', 'flowerbush', 'candle', 'tree'],
+  },
+  gewaechshaus: { // Das Treibhaus des Lehrlings: Bohlen, Töpfe, Kerzenlicht unter Glas
+    atmo: 'pollen', planks: true,
+    sky: ['#1e1630', '#4a3a66'], ground: '#2a2038', groundEdge: '#150f1e',
+    floor: ['#8a6a44', '#7d5f3c'], sand: '#d8c49a', ice: '#c8ecff', snow: '#f1f7ff',
+    water: '#3f6fd9', lava: '#ff5a1f',
+    wall: { top: '#9a7f56', side: '#4f3a24', style: 'stone' },
+    block: { top: '#6a5a44', side: '#3a3024' },
+    mover: { top: '#3b3b45', side: '#1a1a20' },
+    rotor: { top: '#c9a15a', side: '#7a5a2a' },
+    accent: '#a6ff5e', flag: '#ffd166',
+    autoDecor: ['bottle', 'shelf', 'candle', 'mushroom', 'flowerbush', 'bottle', 'cauldron', 'candle'],
+  },
+  sternenwarte: { // Die Terrasse der Sternwarte: Marmor unter dem Nachthimmel, Messing, Sternenstaub
+    atmo: 'sternenstaub',
+    sky: ['#0b1030', '#2a2f6b'], ground: '#171b3a', groundEdge: '#0a0d20',
+    floor: ['#4a5285', '#414977'], sand: '#cfd6f0', ice: '#c8ecff', snow: '#eef3ff',
+    water: '#2f5bd9', lava: '#ff5a1f',
+    wall: { top: '#8f9ac9', side: '#3a4270', style: 'stone' },
+    block: { top: '#6f79ad', side: '#333a63' },
+    mover: { top: '#c9a75a', side: '#7a632c' },
+    rotor: { top: '#b9c2e8', side: '#5a6396' },
+    accent: '#8fd0ff', flag: '#ffe9a8', stars: true,
+    autoDecor: ['crystal', 'lantern', 'pillar', 'crystal', 'candle', 'pillar', 'lantern', 'crystal'],
+  },
+  kartensaal: { // Der Kartensaal darunter: Holz, Messing, Kerzen, Himmelskarten an den Wänden
+    atmo: 'mist',
+    sky: ['#120e24', '#332a52'], ground: '#241d3c', groundEdge: '#120e1f',
+    floor: ['#6b5b86', '#61527a'], sand: '#ddd0a8', ice: '#c8ecff', snow: '#eef3ff',
+    water: '#3a5ab0', lava: '#ff5a1f',
+    wall: { top: '#9a8a6a', side: '#4a3f2e', style: 'stone' },
+    block: { top: '#7a6a52', side: '#3c3428' },
+    mover: { top: '#c9a75a', side: '#7a632c' },
+    rotor: { top: '#d0c39a', side: '#7d704c' },
+    accent: '#ffd166', flag: '#8fd0ff',
+    autoDecor: ['shelf', 'candle', 'bottle', 'pillar', 'candle', 'shelf', 'lantern', 'bottle'],
+  },
+  erzmagierloge: { // Der Ratssaal: schwarzer Marmor mit Goldadern, Purpur, Kerzenlicht, Sporenlicht
+    atmo: 'spores',
+    sky: ['#140b24', '#3c1f5e'], ground: '#1d1230', groundEdge: '#0d0718',
+    floor: ['#3a2b52', '#332547'], sand: '#d8c9a8', ice: '#c8ecff', snow: '#eef3ff',
+    water: '#4a3ad0', lava: '#ff5a1f',
+    wall: { top: '#c9a75a', side: '#4a3a20', style: 'stone' },
+    block: { top: '#6b568f', side: '#33264a' },
+    mover: { top: '#c9a75a', side: '#7a632c' },
+    rotor: { top: '#a98ad8', side: '#5a4288' },
+    accent: '#ffd166', flag: '#c77dff',
+    autoDecor: ['pillar', 'candle', 'lantern', 'pillar', 'crystal', 'candle', 'shelf', 'pillar'],
+  },
+  bannkreis: { // Die Gruft darunter: Runenstein, Glut, und kein Licht außer dem, das man mitbringt
+    atmo: 'embers',
+    sky: ['#0a0610', '#241026'], ground: '#170d1c', groundEdge: '#090509',
+    floor: ['#4a2f42', '#41293a'], sand: '#c8b08a', ice: '#c8ecff', snow: '#eef3ff',
+    water: '#3a2ab0', lava: '#ff5a1f',
+    wall: { top: '#7a5a72', side: '#38243a', style: 'stone' },
+    block: { top: '#5c3f56', side: '#2c1c2a' },
+    mover: { top: '#8a6a52', side: '#4a3428' },
+    rotor: { top: '#9a6f8c', side: '#57384f' },
+    accent: '#ff7ad0', flag: '#ffd166',
+    autoDecor: ['grave', 'candle', 'crystal', 'pillar', 'candle', 'grave', 'crystal', 'candle'],
+  },
   cloud: {
     hangStil: 'schnee',   // Schrägen als Schneerinne, nicht als Erdrampe // Über den Wolken: nichts mehr fest außer dem, worauf man steht
     atmo: 'none',
