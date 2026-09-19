@@ -62,6 +62,31 @@ const Hats = (() => {
     ctx.fillStyle = col; ctx.fill();
   }
 
+  /* Das Band in Spielerfarbe, um den Hutkoerper gewickelt. Es wird an der Form BESCHNITTEN und
+     liegt ueber dem Krempenrand, statt als freie Ellipse mitten auf der Krempe zu schwimmen: So
+     eine Ellipse las Fynn als Loch, durch das der Ball durchschaut - der helle Fleck hatte ja
+     genau seine Ballfarbe. Ein Band liegt auf dem Filz, es ist kein Fenster. */
+  const bandSack = (zx, w, hoch) => hoch * 0.8 * Math.max(0, 1 - (zx / w) * (zx / w));
+  function band(ctx, form, y, hoch, col, w = 0.66) {
+    /* w ist die halbe Kegelbreite an dieser Stelle. Ueber die volle Hutbreite gerechnet waere der
+       Bogen so flach, dass das Band als gerader Balken dalaege - es soll sich um den Filz legen. */
+    const s2 = hoch * 1.6;
+    ctx.save(); form(); ctx.clip();
+    ctx.beginPath();
+    ctx.moveTo(-w, y);
+    ctx.quadraticCurveTo(0, y + s2, w, y);
+    ctx.lineTo(w, y + hoch);
+    ctx.quadraticCurveTo(0, y + hoch + s2, -w, y + hoch);
+    ctx.closePath();
+    ctx.fillStyle = col; ctx.fill();
+    // Unterkante im Schatten: das Band hat Dicke, es ist nicht aufgemalt
+    ctx.strokeStyle = 'rgba(0,0,0,0.32)'; ctx.lineWidth = 0.035; ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(-w, y + hoch); ctx.quadraticCurveTo(0, y + hoch + s2, w, y + hoch);
+    ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 0.07; ctx.stroke();
+    ctx.restore();
+  }
+
   /* Federfarbe aus der Ballfarbe: der Federbusch nimmt die Farbe des Spielers an. Ein (fast) weißer
      Ball bekommt Rot, sonst ginge der Busch in der weißen Mittelfeder unter. */
   function plumeColors(color) {
@@ -922,12 +947,12 @@ const Hats = (() => {
       krempe(ctx, 1.06, 0.26, '#4a3384', '#2c1d52', -0.04);
       if (fein) stiche(ctx, 1.06, 0.26, -0.04, 'rgba(24,14,48,0.45)');
 
-      // Das Band in Spielerfarbe mit einer goldenen Schnalle - auch der Hut sagt, wem der Ball gehört
-      ctx.beginPath(); ctx.ellipse(0, -0.2, 0.44, 0.13, 0, 0, TAU2);
-      ctx.fillStyle = color || '#ffd166'; ctx.fill();
-      ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 0.04; ctx.stroke();
+      /* Das Band in Spielerfarbe mit einer goldenen Schnalle - auch der Hut sagt, wem der Ball
+         gehört. Es sitzt ÜBER dem Krempenrand auf dem Filz; tiefer lag es auf der Krempe und
+         sah aus wie ein Loch im Hut. */
+      band(ctx, kegel, -0.64, 0.17, color || '#ffd166', 0.6);
       ctx.fillStyle = '#e8c06a'; ctx.strokeStyle = 'rgba(0,0,0,0.4)'; ctx.lineWidth = 0.028;
-      ctx.beginPath(); ctx.rect(-0.1, -0.29, 0.2, 0.15); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.rect(-0.1, -0.53, 0.2, 0.17); ctx.fill(); ctx.stroke();
 
       kegel(); ctx.strokeStyle = 'rgba(14,8,30,0.62)'; ctx.lineWidth = 0.075; ctx.stroke();
       const funkel = 0.55 + 0.45 * Math.sin(t * 2.6);
@@ -974,12 +999,12 @@ const Hats = (() => {
       if (fein) {
         /* Die Stickerei nach dem Vorbild: ein großer Stern in der Mitte, ein kleiner darunter,
            einer oben am Knick - und dazu die Monde. */
-        stern5(ctx, -0.02, -0.86, 0.25, 0.1, '#ffd34d', 'rgba(10,14,36,0.8)');
-        stern5(ctx, 0.3, -0.62, 0.15, -0.3, '#ffd34d', 'rgba(10,14,36,0.8)');
+        stern5(ctx, 0.04, -1.02, 0.22, 0.1, '#ffd34d', 'rgba(10,14,36,0.8)');
+        stern5(ctx, 0.38, -0.8, 0.13, -0.3, '#ffd34d', 'rgba(10,14,36,0.8)');
         stern5(ctx, 0.3, -1.66, 0.11, 0.5, '#ffd34d', 'rgba(10,14,36,0.8)');
-        sichel(ctx, -0.26, -0.66, 0.1, '#e8bf3c');   // hoeher als der Krempenrand, sonst schneidet er sie ab
+        sichel(ctx, -0.3, -0.88, 0.1, '#e8bf3c');   // hoeher als Band und Krempe, sonst schneiden sie ihn ab
         // Die laufende Scheibe: dieselbe Phase wie der Mondzieher auf der Bahn
-        const f = (Math.cos(t * 0.9) + 1) / 2, mr = 0.15, mx = -0.2, my = -1.3;
+        const f = (Math.cos(t * 0.9) + 1) / 2, mr = 0.14, mx = -0.26, my = -1.42;
         ctx.save();
         ctx.beginPath(); ctx.arc(mx, my, mr, 0, TAU2); ctx.fillStyle = '#2a3566'; ctx.fill(); ctx.clip();
         ctx.fillStyle = '#ffd34d';
@@ -998,10 +1023,8 @@ const Hats = (() => {
       ctx.beginPath(); ctx.ellipse(0, -0.06, 1.26, 0.32, 0, 0, TAU2); ctx.stroke();
       if (fein) stiche(ctx, 1.26, 0.32, -0.06, 'rgba(150,175,235,0.3)', 18);
 
-      // Das Band in Spielerfarbe, schmal - auf dem Vorbild sitzt es tief am Kegelfuß
-      ctx.beginPath(); ctx.ellipse(0.05, -0.22, 0.46, 0.13, 0, 0, TAU2);
-      ctx.fillStyle = color || '#8fd0ff'; ctx.fill();
-      ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 0.04; ctx.stroke();
+      /* Das Band in Spielerfarbe, schmal, dicht über dem Krempenrand auf dem Filz. */
+      band(ctx, kegel, -0.74, 0.18, color || '#8fd0ff', 0.7);
 
       kegel(); ctx.strokeStyle = 'rgba(8,12,32,0.72)'; ctx.lineWidth = 0.08; ctx.stroke();
 
@@ -1086,14 +1109,13 @@ const Hats = (() => {
       /* Das Band ist hier eine KRONE: derselbe Platz, dieselbe Spielerfarbe wie bei den anderen
          beiden - aber mit Zacken. Man soll die drei nebeneinanderlegen und die Reihenfolge sehen,
          ohne dass jemand sie erklärt. */
-      ctx.beginPath(); ctx.ellipse(0, -0.36, 0.54, 0.16, 0, 0, TAU2);
-      ctx.fillStyle = color || '#c77dff'; ctx.fill();
-      ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 0.04; ctx.stroke();
+      band(ctx, koerper, -0.8, 0.2, color || '#c77dff', 0.62);
       ctx.fillStyle = '#ffd166'; ctx.strokeStyle = 'rgba(0,0,0,0.4)'; ctx.lineWidth = 0.03;
-      for (const zx of [-0.4, -0.14, 0.14, 0.4]) {
+      for (const zx of [-0.36, -0.12, 0.14, 0.4]) {
         const hoch = Math.abs(zx) < 0.25 ? 0.3 : 0.22;
+        const fuss = -0.8 + bandSack(zx, 0.62, 0.2);   // folgt der Wölbung des Bandes
         ctx.beginPath();
-        ctx.moveTo(zx - 0.085, -0.46); ctx.lineTo(zx, -0.46 - hoch); ctx.lineTo(zx + 0.085, -0.46);
+        ctx.moveTo(zx - 0.085, fuss); ctx.lineTo(zx, fuss - hoch); ctx.lineTo(zx + 0.085, fuss);
         ctx.closePath(); ctx.fill(); ctx.stroke();
       }
 
