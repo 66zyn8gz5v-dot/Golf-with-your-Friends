@@ -42,6 +42,26 @@ const Hats = (() => {
     ctx.stroke();
   }
 
+  /* Fuenfzackiger Stern mit dunklem Umriss - so, wie sie auf einem gestickten Zauberhut sitzen.
+     Der vierzackige 'spark' ist ein Funkeln, dieser hier ist ein AUFNAEHER: Er hat eine Kante. */
+  function stern5(ctx, x, y, r, dreh, fuell, rand) {
+    ctx.beginPath();
+    for (let i = 0; i < 10; i++) {
+      const a = -Math.PI / 2 + i * (Math.PI / 5) + dreh, rr = i % 2 ? r * 0.44 : r;
+      const px = x + Math.cos(a) * rr, py = y + Math.sin(a) * rr;
+      i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+    }
+    ctx.closePath();
+    ctx.fillStyle = fuell; ctx.fill();
+    if (rand) { ctx.strokeStyle = rand; ctx.lineWidth = 0.035; ctx.stroke(); }
+  }
+  /* Mondsichel: ein Kreis, aus dem ein zweiter herausgestanzt wird */
+  function sichel(ctx, x, y, r, col) {
+    ctx.beginPath(); ctx.arc(x, y, r, 0, TAU2);
+    ctx.arc(x + r * 0.46, y - r * 0.2, r * 0.94, 0, TAU2, true);
+    ctx.fillStyle = col; ctx.fill();
+  }
+
   /* Federfarbe aus der Ballfarbe: der Federbusch nimmt die Farbe des Spielers an. Ein (fast) weißer
      Ball bekommt Rot, sonst ginge der Busch in der weißen Mittelfeder unter. */
   function plumeColors(color) {
@@ -915,79 +935,82 @@ const Hats = (() => {
     },
 
     sternenhut(ctx, color, t, fein) {    // Sternenwarte: der Hut des Astronomen
-      /* Der zweite: höher als der erste und geschwungen - die Spitze rollt sich nach rechts ein
-         und endet über der Krempe, nicht über dem Kopf. Dazu die weiteste runde Krempe der drei.
+      /* Der zweite, nach dem Vorbild, das Lüddecke geschickt hat: unten bauchig, nach oben
+         schlanker werdend und dabei nach rechts geneigt - und ganz oben knickt die Spitze nach
+         RECHTS ab und trägt einen Stern. Er ist damit der einzige der drei, dessen Spitze nach
+         oben zeigt: Der Lehrling hat einen kleinen Knick, der Erzmagier hängt nach links herab.
 
-         AN DER SPITZE HÄNGT DER MOND, nicht ein Stern. Die ganze Sternenwarte hängt an ihm: Der
-         Mondzieher zieht bei voller Scheibe und stößt bei dunkler. Wer die Warte geschafft hat,
-         hat genau das begriffen - und trägt es von da an auf dem Kopf. Er läuft dieselbe Phase
-         wie auf der Bahn und ist genauso gezeichnet. */
-      const wippen = Math.sin(t * 1.5) * 0.05;
-      const sx = 0.82 + wippen, sy = -1.36;
+         DER MOND IST NICHT VERSCHWUNDEN, er ist umgezogen. Auf dem Filz sitzen zwei Sicheln und
+         eine Scheibe, und diese Scheibe läuft ihre Phase durch - dieselbe wie der Mondzieher auf
+         der Bahn, der bei voller Scheibe zieht und bei dunkler stößt. Wer die Warte geschafft
+         hat, hat genau das begriffen und trägt es von da an auf dem Kopf. */
+      const wippen = Math.sin(t * 1.5) * 0.04;
+      const spx = 0.8 + wippen, spy = -1.92;
       const kegel = () => {
         ctx.beginPath();
-        ctx.moveTo(-0.5, -0.12);
-        ctx.bezierCurveTo(-0.76, -1.06, -0.04, -1.96, sx - 0.06, sy - 0.26);
-        ctx.bezierCurveTo(sx + 0.2, sy + 0.06, 0.24, -1.2, 0.52, -0.12);
+        ctx.moveTo(-0.5, -0.1);
+        ctx.bezierCurveTo(-0.44, -0.96, -0.12, -1.56, 0.26, -1.86);   // linke Kante, konkav nach oben rechts
+        ctx.bezierCurveTo(0.5, -2.04, spx - 0.02, -2.04, spx, spy);   // über den Knick zur Spitze
+        ctx.bezierCurveTo(0.68, -1.8, 0.5, -1.7, 0.4, -1.6);          // Unterseite der Spitze
+        ctx.bezierCurveTo(0.72, -1.2, 0.78, -0.6, 0.62, -0.1);        // rechte Kante, bauchig
         ctx.closePath();
       };
-      const g = ctx.createLinearGradient(-0.5, 0, 0.85, -1.5);
-      g.addColorStop(0, '#141a3c'); g.addColorStop(0.5, '#2e3c7e'); g.addColorStop(1, '#1b2350');
+      const g = ctx.createLinearGradient(-0.5, 0, 0.8, -1.6);
+      g.addColorStop(0, '#16203f'); g.addColorStop(0.45, '#2f4285'); g.addColorStop(1, '#1c2a5c');
       kegel(); ctx.fillStyle = g; ctx.fill();
 
       ctx.save(); kegel(); ctx.clip();
       /* Zwei Glanzbahnen der Länge nach: Sie folgen der Krümmung und machen aus dem flachen
          Blaufeld einen gerollten Filz. */
-      ctx.strokeStyle = 'rgba(150,180,255,0.22)'; ctx.lineWidth = 0.22; ctx.lineCap = 'round';
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = 'rgba(120,160,245,0.26)'; ctx.lineWidth = 0.24;
       ctx.beginPath();
-      ctx.moveTo(-0.28, -0.24); ctx.bezierCurveTo(-0.5, -1.0, 0.06, -1.62, sx - 0.18, sy - 0.2);
+      ctx.moveTo(-0.24, -0.2); ctx.bezierCurveTo(-0.2, -1.0, 0.06, -1.5, 0.34, -1.82);
       ctx.stroke();
-      ctx.strokeStyle = 'rgba(10,14,36,0.35)'; ctx.lineWidth = 0.17;
+      ctx.strokeStyle = 'rgba(8,14,40,0.4)'; ctx.lineWidth = 0.2;
       ctx.beginPath();
-      ctx.moveTo(0.3, -0.2); ctx.bezierCurveTo(0.1, -0.9, 0.36, -1.32, sx - 0.02, sy - 0.02);
+      ctx.moveTo(0.52, -0.2); ctx.bezierCurveTo(0.62, -0.9, 0.5, -1.4, 0.36, -1.66);
       ctx.stroke();
       if (fein) {
-        // Stickerei: Sterne und Sicheln, die einzeln aufblinken. Ein glatter Kegel wäre ein Schlafsack.
-        for (const [px, py, pr, ph] of [[-0.22, -0.52, 0.11, 0], [0.12, -0.76, 0.085, 2.1],
-                                        [-0.14, -1.04, 0.1, 4.0], [0.3, -1.44, 0.075, 5.2]]) {
-          const a = 0.4 + 0.6 * Math.abs(Math.sin(t * 1.8 + ph));
-          spark(ctx, px, py, pr, `rgba(255,240,185,${a})`);
-        }
-        ctx.fillStyle = 'rgba(255,225,140,0.78)';
-        for (const [mx2, my2, ms] of [[0.2, -1.2, 0.13], [-0.34, -0.8, 0.1]]) {
-          ctx.beginPath(); ctx.arc(mx2, my2, ms, 0, TAU2);
-          ctx.arc(mx2 + ms * 0.45, my2 - ms * 0.2, ms * 0.95, 0, TAU2, true);
-          ctx.fill();
-        }
+        /* Die Stickerei nach dem Vorbild: ein großer Stern in der Mitte, ein kleiner darunter,
+           einer oben am Knick - und dazu die Monde. */
+        stern5(ctx, -0.02, -0.86, 0.25, 0.1, '#ffd34d', 'rgba(10,14,36,0.8)');
+        stern5(ctx, 0.3, -0.62, 0.15, -0.3, '#ffd34d', 'rgba(10,14,36,0.8)');
+        stern5(ctx, 0.3, -1.66, 0.11, 0.5, '#ffd34d', 'rgba(10,14,36,0.8)');
+        sichel(ctx, -0.26, -0.66, 0.1, '#e8bf3c');   // hoeher als der Krempenrand, sonst schneidet er sie ab
+        // Die laufende Scheibe: dieselbe Phase wie der Mondzieher auf der Bahn
+        const f = (Math.cos(t * 0.9) + 1) / 2, mr = 0.15, mx = -0.2, my = -1.3;
+        ctx.save();
+        ctx.beginPath(); ctx.arc(mx, my, mr, 0, TAU2); ctx.fillStyle = '#2a3566'; ctx.fill(); ctx.clip();
+        ctx.fillStyle = '#ffd34d';
+        ctx.beginPath(); ctx.arc(mx, my, mr, -Math.PI / 2, Math.PI / 2); ctx.closePath(); ctx.fill();
+        const k = 2 * f - 1;
+        ctx.fillStyle = k >= 0 ? '#ffd34d' : '#2a3566';
+        ctx.beginPath(); ctx.ellipse(mx, my, mr * Math.abs(k), mr, 0, 0, TAU2); ctx.fill();
+        ctx.restore();
+        ctx.strokeStyle = 'rgba(232,191,60,0.85)'; ctx.lineWidth = 0.035;
+        ctx.beginPath(); ctx.arc(mx, my, mr, 0, TAU2); ctx.stroke();
       }
       ctx.restore();
 
-      krempe(ctx, 1.22, 0.31, '#232c56', '#10152e', -0.06);
-      ctx.strokeStyle = 'rgba(190,205,255,0.55)'; ctx.lineWidth = 0.045;   // Silberrand
-      ctx.beginPath(); ctx.ellipse(0, -0.06, 1.22, 0.31, 0, 0, TAU2); ctx.stroke();
-      if (fein) stiche(ctx, 1.22, 0.31, -0.06, 'rgba(190,205,255,0.35)', 18);
+      krempe(ctx, 1.26, 0.32, '#243057', '#111832', -0.06);
+      ctx.strokeStyle = 'rgba(8,12,32,0.7)'; ctx.lineWidth = 0.06;
+      ctx.beginPath(); ctx.ellipse(0, -0.06, 1.26, 0.32, 0, 0, TAU2); ctx.stroke();
+      if (fein) stiche(ctx, 1.26, 0.32, -0.06, 'rgba(150,175,235,0.3)', 18);
 
-      ctx.beginPath(); ctx.ellipse(0, -0.24, 0.44, 0.13, 0, 0, TAU2);
+      // Das Band in Spielerfarbe, schmal - auf dem Vorbild sitzt es tief am Kegelfuß
+      ctx.beginPath(); ctx.ellipse(0.05, -0.22, 0.46, 0.13, 0, 0, TAU2);
       ctx.fillStyle = color || '#8fd0ff'; ctx.fill();
       ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 0.04; ctx.stroke();
 
-      kegel(); ctx.strokeStyle = 'rgba(8,12,32,0.65)'; ctx.lineWidth = 0.075; ctx.stroke();
+      kegel(); ctx.strokeStyle = 'rgba(8,12,32,0.72)'; ctx.lineWidth = 0.08; ctx.stroke();
 
-      // Der Mond an der Spitze
-      const f = (Math.cos(t * 0.9) + 1) / 2, mr = 0.2, mx = sx + 0.12, my = sy - 0.3;
-      const sch = ctx.createRadialGradient(mx, my, mr * 0.5, mx, my, mr * 2.2);
-      sch.addColorStop(0, `rgba(210,225,255,${0.12 + 0.35 * f})`); sch.addColorStop(1, 'rgba(210,225,255,0)');
-      ctx.fillStyle = sch; ctx.beginPath(); ctx.arc(mx, my, mr * 2.2, 0, TAU2); ctx.fill();
-      ctx.save();
-      ctx.beginPath(); ctx.arc(mx, my, mr, 0, TAU2); ctx.fillStyle = '#242044'; ctx.fill(); ctx.clip();
-      ctx.fillStyle = '#eef2ff';
-      ctx.beginPath(); ctx.arc(mx, my, mr, -Math.PI / 2, Math.PI / 2); ctx.closePath(); ctx.fill();
-      const k = 2 * f - 1;
-      ctx.fillStyle = k >= 0 ? '#eef2ff' : '#242044';
-      ctx.beginPath(); ctx.ellipse(mx, my, mr * Math.abs(k), mr, 0, 0, TAU2); ctx.fill();
-      ctx.restore();
-      ctx.strokeStyle = 'rgba(205,220,255,0.9)'; ctx.lineWidth = 0.045;
-      ctx.beginPath(); ctx.arc(mx, my, mr, 0, TAU2); ctx.stroke();
+      /* Der Stern an der Spitze. Auf dem Vorbild hängt er ein Stück ab - das macht aus der Spitze
+         eine Zauberstabspitze und nicht nur ein Ende. */
+      const funkel = 0.6 + 0.4 * Math.sin(t * 2.4);
+      ctx.strokeStyle = 'rgba(12,16,40,0.8)'; ctx.lineWidth = 0.05; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(spx - 0.02, spy + 0.04); ctx.lineTo(spx + 0.14, spy - 0.1); ctx.stroke();
+      stern5(ctx, spx + 0.24, spy - 0.16, 0.2 + 0.03 * funkel, t * 0.5, '#ffd34d', 'rgba(12,16,40,0.85)');
     },
 
     erzmagierhut(ctx, color, t, fein) {  // Erzmagierloge: der letzte Hut des Zauberreichs
