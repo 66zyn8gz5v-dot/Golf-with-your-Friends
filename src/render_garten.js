@@ -212,21 +212,65 @@ Object.assign(Renderer.prototype, {
     const [, untenPx] = this.proj(ob.x, ob.y, 0.14);
     const hPx = Math.max(s * 0.6, untenPx - obenPx);
     const dick = (hPx / bahnen) * 1.9;
-    ctx.lineCap = 'round';
-    for (let r = bahnen; r >= 0; r--) {
+
+    /* Erst die Enden aller Wülste ausrechnen, dann daraus die Silhouette bauen. Die braucht man
+       zweimal: um die Fugen zwischen den Wülsten zu schließen und um Licht und Schatten INNERHALB
+       des Stocks zu malen, ohne dass etwas über die Kante läuft.
+
+       DAS WAR DER GRUND, WARUM DER STOCK FLACH AUSSAH. Jeder Wulst war ein Strich in einer Farbe,
+       und ein Strich in einer Farbe ist ein Band, kein Rohr. Ein geflochtener Strohwulst ist rund:
+       unten im Schatten, oben ein Glanz, und zu den Enden hin dunkler, weil er sich dort wegdreht. */
+    const kanten = [];
+    for (let r = 0; r <= bahnen; r++) {
       const u = r / bahnen;
       /* Stark verjuengt: Mit wenig Verjuengung lag dort eine gerollte Matte. Ein Nest ist oben
          schmal und unten breit - erst dadurch wird aus der Sperre ein Haufen. */
       const schrumpf = Math.sqrt(Math.max(0.05, 1 - u * u * 0.94));
       const h = halb * schrumpf;
       const z = 0.14 + u * (hoehe - 0.14);
-      const p0 = this.proj(ob.x - ux * h, ob.y - uy * h, z);
-      const p1 = this.proj(ob.x + ux * h, ob.y + uy * h, z);
-      ctx.strokeStyle = 'rgba(92,62,18,0.85)'; ctx.lineWidth = dick + Math.max(2, s * 0.06);
-      ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke();
-      ctx.strokeStyle = r % 2 ? '#d6a955' : '#eccb84'; ctx.lineWidth = dick;
-      ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke();
+      kanten.push([this.proj(ob.x - ux * h, ob.y - uy * h, z), this.proj(ob.x + ux * h, ob.y + uy * h, z)]);
     }
+    const umriss = () => {
+      ctx.beginPath();
+      ctx.moveTo(kanten[0][0][0], kanten[0][0][1]);
+      for (let r = 1; r <= bahnen; r++) ctx.lineTo(kanten[r][0][0], kanten[r][0][1]);
+      for (let r = bahnen; r >= 0; r--) ctx.lineTo(kanten[r][1][0], kanten[r][1][1]);
+      ctx.closePath();
+    };
+    umriss(); ctx.fillStyle = '#c89a4a'; ctx.fill();
+
+    ctx.lineCap = 'round';
+    for (let r = bahnen; r >= 0; r--) {
+      const [p0, p1] = kanten[r];
+      // Der Wulst in drei Lagen: dunkle Unterseite, Filz, Glanz obendrauf - das macht ihn rund
+      ctx.strokeStyle = 'rgba(86,56,16,0.9)'; ctx.lineWidth = dick + Math.max(2, s * 0.05);
+      ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke();
+      ctx.strokeStyle = r % 2 ? '#c99c48' : '#dcb267'; ctx.lineWidth = dick;
+      ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke();
+      ctx.strokeStyle = r % 2 ? '#e7c483' : '#f6dda6'; ctx.lineWidth = dick * 0.42;
+      ctx.beginPath();
+      ctx.moveTo(p0[0], p0[1] - dick * 0.24); ctx.lineTo(p1[0], p1[1] - dick * 0.24); ctx.stroke();
+    }
+
+    /* Licht und Schatten über den ganzen Stock, beschnitten am Umriß. Ohne das bleibt er eine
+       Reihe gleich heller Rohre; erst die Wölbung von einem Ende zum anderen macht daraus einen
+       Körper, um den man herumgehen könnte. */
+    ctx.save(); umriss(); ctx.clip();
+    const e0 = this.proj(ob.x - ux * halb, ob.y - uy * halb, 0.14);
+    const e1 = this.proj(ob.x + ux * halb, ob.y + uy * halb, 0.14);
+    const lg = ctx.createLinearGradient(e0[0], e0[1], e1[0], e1[1]);
+    lg.addColorStop(0, 'rgba(70,44,10,0.55)');
+    lg.addColorStop(0.28, 'rgba(70,44,10,0)');
+    lg.addColorStop(0.72, 'rgba(70,44,10,0)');
+    lg.addColorStop(1, 'rgba(70,44,10,0.55)');
+    umriss(); ctx.fillStyle = lg; ctx.fill();
+    const hg = ctx.createLinearGradient(0, obenPx, 0, untenPx);
+    hg.addColorStop(0, 'rgba(255,240,200,0.3)');
+    hg.addColorStop(0.45, 'rgba(255,240,200,0)');
+    hg.addColorStop(1, 'rgba(50,30,6,0.35)');
+    umriss(); ctx.fillStyle = hg; ctx.fill();
+    ctx.restore();
+    umriss(); ctx.strokeStyle = 'rgba(70,44,10,0.75)'; ctx.lineWidth = Math.max(1.5, s * 0.05); ctx.stroke();
 
     /* Der Tunnel durch den Stock. Gezeichnet wird nur die Seite, die zur Kamera zeigt – sonst
        sähe man durch das Nest hindurch. */
