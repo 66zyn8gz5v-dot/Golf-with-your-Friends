@@ -269,3 +269,80 @@ class Sternbild {
     out.push({ ax: this.tor.x0, ay: this.tor.y0, bx: this.tor.x1, by: this.tor.y1, e: 0.72, kind: 'sternentor' });
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Der Zauberspiegel
+   ---------------------------------------------------------------------------
+   Die Maschine der Erzmagierloge. Ein hoher Spiegel steht quer im Raum. Wer hineinrollt, kommt auf
+   der anderen Seite wieder heraus – aber SEITENVERKEHRT: Wer links hineingeht, kommt rechts
+   heraus, und was sich nach links bewegte, bewegt sich danach nach rechts.
+
+   WARUM NICHT EINFACH EIN PORTAL. Ein Portal hat einen festen Ausgang; man zielt darauf, und man
+   weiß vorher, wo man landet. Hier gibt es keinen festen Ausgang: DER SPIELER WÄHLT IHN MIT SEINEM
+   SCHLAG. Wer weiter links auftrifft, kommt weiter rechts heraus – stufenlos, über die ganze
+   Breite des Spiegels. Das ist keine Frage des Treffens mehr und keine des Zeitpunkts, sondern
+   eine des Rechnens, und dafür ist die Legenden-Stufe da.
+
+   DAS SPIEGELBILD IST DIE ANSAGE. Solange der Ball auf dieser Seite liegt oder rollt, steht sein
+   Bild drüben – an genau der Stelle, an der er herauskäme, und es bewegt sich mit. Man muß nichts
+   ausrechnen; man sieht es. Das ist dieselbe Regel wie überall in dieser Welt: Was die Maschine
+   tut, steht auf dem Boden, nicht in einer Legende am Bildrand.
+
+   UND ER GREIFT NUR EINEN BALL, DER AUF IHN ZUROLLT. Wer sich vom Spiegel entfernt, wird nicht
+   noch einmal hindurchgezogen – sonst hinge man zwischen beiden Seiten fest und käme nie los. */
+const SPIEGEL_NAH = 0.34;        // so nah muß der Ball der Spiegelfläche kommen
+const SPIEGEL_AUSWURF = 0.55;    // so weit hinter dem Spiegel setzt er wieder auf
+
+class Zauberspiegel {
+  /* Der Spiegel steht auf der Strecke (x0,y0)–(x1,y1) – dieselbe Schreibweise wie das Geländer
+     und das wandernde Tor, damit man ihn im Baumodus an beiden Enden anfaßt. */
+  constructor(d) {
+    Object.assign(this, { x0: 0, y0: 0, x1: 4, y1: 0, ebene: 0 }, d);
+    this.type = 'zauberspiegel';
+    this.x = (this.x0 + this.x1) / 2; this.y = (this.y0 + this.y1) / 2;
+    const dx = this.x1 - this.x0, dy = this.y1 - this.y0;
+    this.laenge = Math.hypot(dx, dy) || 1;
+    this.ux = dx / this.laenge; this.uy = dy / this.laenge;   // entlang des Spiegels
+    this.nx = -this.uy; this.ny = this.ux;                    // quer dazu
+    this.t = 0; this.blitzAt = -99; this.blitzU = 0;
+  }
+  setup(level) { this.level = level; this.blitzAt = -99; }
+  update(t) { this.t = t; }
+
+  /* Wo liegt ein Punkt im Maß des Spiegels? u: 0 am Anfang, 1 am Ende. d: Abstand quer dazu,
+     mit Vorzeichen – daran hängt, auf welcher Seite er steht. */
+  lage(x, y) {
+    const dx = x - this.x0, dy = y - this.y0;
+    return { u: (dx * this.ux + dy * this.uy) / this.laenge, d: dx * this.nx + dy * this.ny };
+  }
+  /* Das Spiegelbild eines Punktes: seitenverkehrt entlang des Spiegels, und drüben.
+     Der Zeichner malt damit den Geisterball; die Maschine setzt damit den Ball um. */
+  bild(x, y) {
+    const { u, d } = this.lage(x, y);
+    const v = 1 - u;
+    return { x: this.x0 + this.ux * this.laenge * v - this.nx * d,
+             y: this.y0 + this.uy * this.laenge * v - this.ny * d, u: v, d: -d };
+  }
+
+  teleport(ball, t, events) {
+    if (ball.portalCd > 0 || ball.sunk || ball.air) return;
+    if ((ball.ebene || 0) !== (this.ebene || 0)) return;
+    const { u, d } = this.lage(ball.x, ball.y);
+    if (u < 0 || u > 1 || Math.abs(d) > SPIEGEL_NAH) return;
+    const seite = d >= 0 ? 1 : -1;
+    const vu = ball.vx * this.ux + ball.vy * this.uy;      // Anteil entlang des Spiegels
+    const vn = ball.vx * this.nx + ball.vy * this.ny;      // Anteil quer dazu
+    if (vn * seite >= 0) return;                            // er rollt gar nicht auf den Spiegel zu
+
+    const v = 1 - u;                                        // seitenverkehrt: links wird rechts
+    ball.x = this.x0 + this.ux * this.laenge * v - this.nx * seite * SPIEGEL_AUSWURF;
+    ball.y = this.y0 + this.uy * this.laenge * v - this.ny * seite * SPIEGEL_AUSWURF;
+    /* Die Geschwindigkeit wird ebenso gespiegelt: quer bleibt quer (er geht hindurch), längs
+       kehrt sich um (ein Spiegelbild hebt die andere Hand). */
+    ball.vx = -vu * this.ux + vn * this.nx;
+    ball.vy = -vu * this.uy + vn * this.ny;
+    ball.portalCd = 0.55; ball.z = 0.18; ball.vz = 1.4;
+    this.blitzAt = t; this.blitzU = v;
+    events.push({ type: 'zauberspiegel', x: ball.x, y: ball.y, u: v });
+  }
+}

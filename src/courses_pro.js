@@ -487,4 +487,5 @@ const WORLDS = [
      nichts Neues. */
   { id: 'lehrling', name: 'Lehrlingsgarten', short: 'Garten', mode: 'normal', courses: ZAUBER_GARTEN },
   { id: 'warte', name: 'Sternenwarte', short: 'Warte', mode: 'pro', courses: ZAUBER_WARTE },
+  { id: 'loge', name: 'Erzmagierloge', short: 'Loge', mode: 'legend', courses: ZAUBER_LOGE },
 ];

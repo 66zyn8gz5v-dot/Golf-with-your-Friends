@@ -540,6 +540,7 @@ function createObstacles(defs) {
       case 'zauberhut': out.push(new Zauberhuete(d)); break;
       case 'mondzieher': out.push(new Mondzieher(d)); break;
       case 'sternbild': out.push(new Sternbild(d)); break;
+      case 'zauberspiegel': out.push(new Zauberspiegel(d)); break;
       case 'dial': case 'wanderloch': out.push(new MovingHole(d)); break;
     case 'sharkjump': out.push(new SharkJump(d)); break;
     case 'spikes': out.push(new Spikes(d)); break;

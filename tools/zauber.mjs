@@ -17,6 +17,8 @@
  *     und einen liegenden Ball rührt er überhaupt nicht an.
  *   - Das Sternentor hält, solange ein Stern fehlt, und geht auf, sobald keiner mehr fehlt.
  *     Einmal gezündete Sterne bleiben an, auch über mehrere Schläge hinweg.
+ *   - Der Zauberspiegel wirft seitenverkehrt aus: Wer links auftrifft, kommt rechts heraus.
+ *     Und er greift nur einen Ball, der auf ihn zurollt.
  */
 import fs from 'node:fs'; import vm from 'node:vm'; import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -271,6 +273,75 @@ console.log('\nDas Sternbild');
     sb.an = [true, true, true];
     const auf = []; sb.segments(auf);
     pruef('das Tor ist erst eine Wand und dann keine mehr', zu.length === 1 && auf.length === 0);
+  }
+}
+
+/* ---------- Der Zauberspiegel ---------- */
+console.log('\nDer Zauberspiegel');
+{
+  /* Ein breites Feld, und mittendrin steht der Spiegel senkrecht von (10,2) bis (10,8). Der Ball
+     läuft waagerecht darauf zu: Nur so läßt sich messen, wie weit er beim Durchgang QUER
+     versetzt wird - und genau das ist die ganze Maschine. */
+  const FELD = ['.'.repeat(22)];
+  for (let r = 1; r < 10; r++) FELD.push('.' + '#'.repeat(20) + '.');
+  FELD.push('.'.repeat(22));
+  FELD[1] = '.T' + '#'.repeat(19) + '.';
+  FELD[9] = '.' + '#'.repeat(18) + 'H#.';
+  const feld = (h) => G.buildLevel({ name: 'Spiegelprobe', par: 3, theme: 'lehrlingsgarten', map: FELD, obstacles: h });
+  const SPIEGEL = { type: 'zauberspiegel', x0: 10, y0: 2, x1: 10, y1: 8 };
+
+  /* Ein einzelner Durchgang, von Hand ausgelöst: So steht fest, wo der Ball auftrifft, und das
+     Ergebnis hängt nicht daran, ob ein Schlag zufällig genau die richtige Höhe hatte. */
+  function durch(y, vx, vy = 0) {
+    const lv = feld([Object.assign({}, SPIEGEL)]);
+    const sp = lv.obstacles.find(o => o.type === 'zauberspiegel');
+    const b = G.makeBall(9.9, y, '#fff', 'none');
+    b.vx = vx; b.vy = vy; b.portalCd = 0;
+    const ev = [];
+    sp.teleport(b, 0, ev);
+    return { b, ev, sp };
+  }
+
+  const oben = durch(4, 12);
+  pruef('wer oben auftrifft, kommt unten heraus',
+        oben.ev.length === 1 && Math.abs(oben.b.y - 6) < 0.2, `y 4 → ${oben.b.y.toFixed(2)}`);
+  const unten = durch(6, 12);
+  pruef('und wer unten auftrifft, kommt oben heraus',
+        unten.ev.length === 1 && Math.abs(unten.b.y - 4) < 0.2, `y 6 → ${unten.b.y.toFixed(2)}`);
+  pruef('er kommt auf der anderen Seite heraus', oben.b.x > 10.2, `x=${oben.b.x.toFixed(2)}`);
+  pruef('und rollt dort weiter, statt stehenzubleiben', oben.b.vx > 10, `vx=${oben.b.vx.toFixed(1)}`);
+
+  // Die Mitte ist der einzige Punkt, der auf sich selbst abbildet - das Maß auf dem Boden zeigt sie
+  const mitte = durch(5, 12);
+  pruef('die Mitte des Spiegels bildet auf sich selbst ab', Math.abs(mitte.b.y - 5) < 0.2,
+        `y 5 → ${mitte.b.y.toFixed(2)}`);
+
+  /* Seitenverkehrt heißt auch: Was sich nach unten bewegte, bewegt sich danach nach oben. Ohne das
+     wäre es kein Spiegel, sondern ein Loch mit versetztem Ausgang. */
+  const schraeg = durch(4, 12, 4);
+  pruef('die Bewegung längs des Spiegels kehrt sich um', schraeg.b.vy < -3,
+        `vy 4 → ${schraeg.b.vy.toFixed(1)}`);
+
+  // Ein Ball, der sich entfernt, wird nicht noch einmal hindurchgezogen
+  const weg = durch(4, -12);
+  pruef('wer sich vom Spiegel entfernt, wird nicht gegriffen', weg.ev.length === 0);
+
+  // Und nach dem Durchgang ist er kurz gesperrt, sonst ginge es sofort wieder zurück
+  {
+    const a = durch(4, 12);
+    const ev2 = [];
+    a.sp.teleport(a.b, 0.01, ev2);
+    pruef('nach dem Durchgang ist er kurz gesperrt', ev2.length === 0 && a.b.portalCd > 0);
+  }
+
+  /* Und das Bild, das der Zeichner malt, ist dasselbe, das die Maschine rechnet. Stünde der
+     Geisterball woanders, als der Ball herauskommt, wäre die Ansage eine Lüge. */
+  {
+    const lv = feld([Object.assign({}, SPIEGEL)]);
+    const sp = lv.obstacles.find(o => o.type === 'zauberspiegel');
+    const g = sp.bild(9.0, 4.0);
+    pruef('der Geisterball steht dort, wo der Ball herauskäme',
+          Math.abs(g.y - 6) < 0.05 && g.x > 10, `Bild von 9,0/4,0 liegt bei ${g.x.toFixed(1)}/${g.y.toFixed(1)}`);
   }
 }
 

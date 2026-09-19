@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 const ctx = { console };
 vm.createContext(ctx);
-const GLOBAL = { courses_pro: 'PRO_COURSES', courses_sea: 'SEA_COURSES', courses_jungle: 'JUNGLE_COURSES', courses_storm: 'STORM_COURSES', courses_shadow: 'SHADOW_COURSES', courses_colosseum: 'COLOSSEUM_COURSES', courses_clock: 'CLOCK_COURSES', courses_snow: 'SNOW_COURSES', courses_mine: 'MINE_COURSES', courses_flut: 'FLUT_COURSES', courses_zauber: '[].concat(ZAUBER_GARTEN, ZAUBER_WARTE)', courses_boule: 'BOULE_COURSES' };
+const GLOBAL = { courses_pro: 'PRO_COURSES', courses_sea: 'SEA_COURSES', courses_jungle: 'JUNGLE_COURSES', courses_storm: 'STORM_COURSES', courses_shadow: 'SHADOW_COURSES', courses_colosseum: 'COLOSSEUM_COURSES', courses_clock: 'CLOCK_COURSES', courses_snow: 'SNOW_COURSES', courses_mine: 'MINE_COURSES', courses_flut: 'FLUT_COURSES', courses_zauber: '[].concat(ZAUBER_GARTEN, ZAUBER_WARTE, ZAUBER_LOGE)', courses_boule: 'BOULE_COURSES' };
 const load = f => vm.runInContext(fs.readFileSync(new URL(`../src/${f}.js`, import.meta.url), 'utf8') + `\n;${GLOBAL[f] || f.toUpperCase()}`, ctx);
 // Reihenfolge wie in index.html: courses_pro.js baut die Weltliste und braucht die anderen schon
 const THEMES = load('themes'), COURSES = load('courses'), SEA = load('courses_sea'), JUNGLE = load('courses_jungle'), STORM = load('courses_storm'), SHADOW = load('courses_shadow'), COLOSSEUM = load('courses_colosseum'), CLOCK = load('courses_clock'), SNOW = load('courses_snow'), MINE = load('courses_mine'), FLUT = load('courses_flut'), ZAUBER = load('courses_zauber'), BOULE = load('courses_boule'), PRO = load('courses_pro');

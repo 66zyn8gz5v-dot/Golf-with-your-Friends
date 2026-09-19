@@ -104,6 +104,7 @@ const Editor = (deps) => {
       ['zauberhut', 'Zauberhüte', 'Wer in einen Hut rollt, kommt aus dem leuchtenden wieder heraus. Das Leuchten wandert.'],
       ['mondzieher', 'Mondzieher', 'Zieht und stößt im Wechsel. Volle Scheibe zieht, dunkle stößt, Halbmond läßt in Ruhe.'],
       ['sternbild', 'Sternbild', 'Alle Sterne anfahren, dann geht das Tor auf. Die Linien zeigen, was noch fehlt.'],
+      ['zauberspiegel', 'Zauberspiegel', 'Wer hineinrollt, kommt drüben seitenverkehrt heraus. Wo man auftrifft, entscheidet, wo man landet.'],
     ]],
     ['Die Flut', [
       ['flut', 'Flutbecken', 'Ein Becken, das im Takt vollläuft und wieder leerläuft.'],
@@ -122,7 +123,7 @@ const Editor = (deps) => {
   const MASCHINE_NAME = {}, MASCHINE_SATZ = {};
   for (const [, stuecke] of MASCHINEN) for (const [k, n, s] of stuecke) { MASCHINE_NAME[k] = n; MASCHINE_SATZ[k] = s; }
   /* Maschinen, die zwei Tipper brauchen: eine Strecke oder ein Paar von Plätzen. */
-  const ZWEI_TIPPER = new Set(['wall', 'portal', 'angler', 'wandergate', 'seilbahn', 'liongate', 'copperpipe', 'abflussrohr']);
+  const ZWEI_TIPPER = new Set(['wall', 'portal', 'angler', 'wandergate', 'seilbahn', 'liongate', 'copperpipe', 'abflussrohr', 'zauberspiegel']);
   /* Die drei, die ihre beiden Plätze als Buchstaben in der Karte ablegen – wie im Bahn-Quelltext. */
   const PAAR_MASCHINEN = new Set(['liongate', 'copperpipe', 'abflussrohr']);
 
@@ -589,6 +590,7 @@ const Editor = (deps) => {
       case 'angler': return { type: 'angler', x0: a[0], y0: a[1], x1: b[0], y1: b[1], tempo: 2.2, r: 0.62, licht: 3.6, phase: 0 };
       case 'wandergate': return { type: 'wandergate', x0: a[0], y0: a[1], x1: b[0], y1: b[1], gap: 1.7, t: 0.26, h: 0.75 };
       case 'seilbahn': return { type: 'seilbahn', x0: a[0], y0: a[1], x1: b[0], y1: b[1], w: 1.2, h: 1.2, wait: 2.6, travel: 3.4 };
+      case 'zauberspiegel': return { type: 'zauberspiegel', x0: a[0], y0: a[1], x1: b[0], y1: b[1] };
       default: return null;
     }
   }
@@ -616,7 +618,7 @@ const Editor = (deps) => {
      Woran man eine Maschine anfaßt. Maschinen mit zwei Enden haben drei: die beiden Enden – die
      sich einzeln ziehen lassen – und die Mitte, an der das Ganze wandert. */
   const NACH_ECKE = new Set(['field', 'ramp', 'boost', 'spikes', 'updraft', 'lawine', 'kippbuehne', 'schneebruecke']);
-  const MIT_STRECKE = new Set(['mover', 'ferry', 'wave', 'gearfield', 'angler', 'wandergate', 'seilbahn']);
+  const MIT_STRECKE = new Set(['mover', 'ferry', 'wave', 'gearfield', 'angler', 'wandergate', 'seilbahn', 'zauberspiegel']);
   function anchors(o) {
     if (NACH_ECKE.has(o.type)) return [[o.x + (o.w || 1) / 2, o.y + (o.h || 1) / 2]];
     if (MIT_STRECKE.has(o.type)) return [[o.x0, o.y0], [o.x1, o.y1], [(o.x0 + o.x1) / 2, (o.y0 + o.y1) / 2]];
@@ -692,7 +694,8 @@ const Editor = (deps) => {
       // Die Mühle kippt zwischen quer und längs. Ihre Gestalt – Mühle, Schmelzofen, Wasserwand –
       // steht seit Fassung 191 unter „Aussehen“ und hängt nicht mehr mit am Drehen.
       case 'windmill': o.axis = o.axis === 'x' ? 'y' : 'x'; break;
-      case 'mover': case 'ferry': case 'wave': case 'gearfield': case 'angler': case 'wandergate': case 'seilbahn': kipp(); break;
+      case 'mover': case 'ferry': case 'wave': case 'gearfield': case 'angler': case 'wandergate': case 'seilbahn':
+      case 'zauberspiegel': kipp(); break;
       // Drehen dreht nur noch: Balliste, Katapult und Wrackkanone stehen unter „Aussehen“.
       case 'cannon': o.base = Math.round((((o.base || 0) + Math.PI / 2) % (Math.PI * 2)) * 1000) / 1000; break;
       case 'magnet': o.strength = -o.strength; break;
@@ -752,6 +755,7 @@ const Editor = (deps) => {
   const zweiterTipp = kind => kind === 'wall' ? 'Jetzt das Ende der Bande antippen'
     : kind === 'portal' ? 'Jetzt den Ausgang antippen'
     : kind === 'angler' ? 'Jetzt das andere Ende seiner Strecke antippen'
+    : kind === 'zauberspiegel' ? 'Jetzt das andere Ende des Spiegels antippen'
     : kind === 'liongate' ? 'Jetzt den Ausgang antippen – er darf nicht auf dem Weg liegen'
     : (kind === 'copperpipe' || kind === 'abflussrohr') ? 'Jetzt den Auslauf antippen'
     : 'Jetzt das andere Ende antippen';

@@ -891,6 +891,10 @@ class Renderer {
     const ctx = this.ctx, th = this.theme, lv = this.level, t = state.t;
     if (!lv) return;
     this.t = t;   // Spieluhr merken: drawBall und die Ball-Skins brauchen sie für ihre Bewegung
+    /* Und den Ball dazu: 'state' ist hier ein Übergabewert, kein globaler Name – die Zeichnungen
+       in den Zusatzdateien (render_zauber.js und Geschwister) kommen sonst nicht daran. Der
+       Zauberspiegel braucht ihn, weil sein Spiegelbild am Ball hängt. */
+    this.ball = state.ball;
     // Himmel
     const g = ctx.createLinearGradient(0, 0, 0, this.h);
     g.addColorStop(0, th.sky[0]); g.addColorStop(1, th.sky[1]);
@@ -1807,6 +1811,7 @@ class Renderer {
     if (ob.type === 'zauberhut') { this.drawZauberhutFloor(ctx, ob, t); return; }
     if (ob.type === 'mondzieher') { this.drawMondzieherFloor(ctx, ob, t); return; }
     if (ob.type === 'sternbild') { this.drawSternbildFloor(ctx, ob, t); return; }
+    if (ob.type === 'zauberspiegel') { this.drawZauberspiegelFloor(ctx, ob, t); return; }
     if (ob.type === 'dial' || ob.type === 'wanderloch') { this.drawWanderlochFloor(ctx, ob, t); return; }
     if (ob.type === 'field' && ob.style === 'steam') { this.drawSteam(ctx, ob, t); return; }
     if (ob.type === 'field' && ob.style === 'dark') { this.drawDarkZone(ctx, ob, t); return; }
@@ -2158,6 +2163,10 @@ class Renderer {
       /* noFade: Welcher Hut leuchtet, ist die ganze Aufgabe. Durchsichtig zu werden, sobald der
          Ball davorliegt, nähme ihr genau das. */
       items.push({ x: ob.x, y: ob.y, bias: 0.3, noFade: true, draw: () => this.drawZauberhut(ctx, ob, t) });
+    } else if (ob.type === 'zauberspiegel') {
+      /* noFade: Der Spiegel ist kein Hindernis, das man umfährt, sondern der Weg selbst.
+         Durchsichtig zu werden, sobald der Ball davorliegt, nähme ihm genau das. */
+      items.push({ x: ob.x, y: ob.y, bias: 0.4, noFade: true, draw: () => this.drawZauberspiegel(ctx, ob, t) });
     } else if (ob.type === 'sternbild') {
       /* Einsortiert nach dem Tor, denn nur die Lichtwand ist hoch; die Sterne schweben knapp über
          dem Boden und stören die Tiefensortierung nicht.

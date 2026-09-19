@@ -154,6 +154,31 @@ def zahnfeld(x0, y0, x1, y1, warten=2.4, fahrt=3.0, phase=0.0):
 def wandertor(x0, y0, x1, y1, gasse=1.8):
     return {'type': 'wandergate', 'x0': x0, 'y0': y0, 'x1': x1, 'y1': y1, 'gap': gasse}
 
+def spiegel(x0, y0, x1, y1):
+    """Zauberspiegel. Wer hineinrollt, kommt drüben seitenverkehrt heraus."""
+    return {'type': 'zauberspiegel', 'x0': x0, 'y0': y0, 'x1': x1, 'y1': y1}
+
+def blitz(x, y, w=2.0, h=4.0, takt=4.5, phase=0.0):
+    return {'type': 'lightning', 'x': x, 'y': y, 'w': w, 'h': h, 'period': takt,
+            'phase': phase, 'warn': 1.0, 'strike': 0.35}
+
+def aufwind(x, y, w=2, h=3, land=6.0, flug=7.0):
+    return {'type': 'updraft', 'x': x, 'y': y, 'w': w, 'h': h, 'minSpeed': 2.5,
+            'land': land, 'fly': flug}
+
+def fallbeil(x, y, h=3.0, takt=5.0, phase=0.0):
+    return {'type': 'guillotine', 'x': x, 'y': y, 'w': 0.35, 'h': h, 'period': takt,
+            'phase': phase, 'hold': 0.32}
+
+def wanderloch(stellen, phase=0.0):
+    """Das wandernde Loch der Uhrwerkstadt. Es IST das Loch, kein Hindernis daneben - darum muß
+    das 'H' der Karte auf seiner ersten Stelle stehen (siehe validate.mjs)."""
+    return {'type': 'wanderloch', 'stellen': [[float(p[0]), float(p[1])] for p in stellen],
+            'phase': phase}
+
+def lampe(x, y, r=3.4):
+    return {'type': 'grubenlampe', 'x': x, 'y': y, 'r': r}
+
 def nebel(x, y, r=3.0, dreh=1):
     """Der Strudel der Flut, hier als Nebelwirbel am Himmel."""
     return {'type': 'strudel', 'x': x, 'y': y, 'r': r, 'dreh': dreh}
@@ -237,14 +262,19 @@ DEKO_DICHTE = 0.09
 DEKO_SAAT = [11, 29, 43, 57, 71, 83, 97, 109, 127]
 
 
-def bahn(liste, name, theme, karte, hindernisse=None, par=3, intro=None, maxStrokes=None):
-    """Legt eine Bahn an. Die Schrägen kommen ZUERST – sie ändern die Karte."""
+def bahn(liste, name, theme, karte, hindernisse=None, par=3, intro=None, maxStrokes=None, **mehr):
+    """Legt eine Bahn an. Die Schrägen kommen ZUERST – sie ändern die Karte.
+
+    'mehr' nimmt auf, was nur einzelne Bahnen brauchen – 'dunkel' und 'lampe' der Gruft zum
+    Beispiel. Die stehen an der BAHN und nicht an der Palette: Wie finster es ist, ist eine Frage
+    der Aufgabe, nicht der Farbe (siehe courses_mine.js)."""
     schr = schraegen(karte)
     b = {'name': name, 'par': par, 'theme': theme, 'map': txt(karte),
          'obstacles': schr + (hindernisse or []),
          'autoDecor': {'density': DEKO_DICHTE, 'seed': DEKO_SAAT[len(liste) % len(DEKO_SAAT)]}}
     if intro: b['intro'] = intro
     if maxStrokes: b['maxStrokes'] = maxStrokes
+    b.update(mehr)
     liste.append(b)
 
 
@@ -336,6 +366,13 @@ def pruefe(b):
             elif art == 'mondzieher':
                 # Der Sockel ist fest; außerdem zieht der Mond jeden geraden Schlag krumm.
                 sperren.add((int(o['x']), int(o['y'])))
+            elif art == 'zauberspiegel':
+                # Ein Spiegel ist keine Wand, aber wer hindurchrollt, kommt woanders heraus –
+                # eine gerade Linie durch ihn hindurch ist also keine gerade Linie mehr.
+                for k in range(0, 21):
+                    u = k / 20
+                    sperren.add((int(o['x0'] + (o['x1'] - o['x0']) * u),
+                                 int(o['y0'] + (o['y1'] - o['y0']) * u)))
         tx, ty = tee[0] + 0.5, tee[1] + 0.5
         hx, hy = cup[0] + 0.5, cup[1] + 0.5
         schritte = max(2, int(math.hypot(hx - tx, hy - ty) * 4))
@@ -372,11 +409,28 @@ def pruefe(b):
                 fehler.append('die Blüte ist nur über ihre eigene Ranke zu erreichen – dann kommt '
                               'man nie an sie heran')
 
+        # UND DIE BRÜCKE MUSS DEN GANZEN WEG SPERREN. Ihre Felder sind in der Karte gewöhnlicher
+        # Boden; liegt daneben noch ein Streifen frei, rollt man einfach daran vorbei, und die
+        # ganze Maschine ist Schmuck. Genau das hatte die Bot-Prüfung in der Erzmagierloge
+        # entlarvt: zwei Ranken auf einer Bahn, und der Bot lochte sie im Mittel in zwei Schlägen,
+        # weil er keine einzige davon benutzen mußte. Dieselbe Regel wie beim Sternentor.
+        if tee and cup:
+            mich = [(o['x'], o['y'], o['w'], o['h'])]
+            if cup in erreichbar(tee, mich):
+                fehler.append('an dieser Rankenbrücke führt ein Weg vorbei – dann braucht man sie '
+                              'nie, und sie ist nur Schmuck')
+
         # UND MAN MUSS ES IN DER ZEIT SCHAFFEN. Gerechnet mit demselben Reibungswert wie die
         # Physik und mit einem ehrlichen Tempo an der Blüte, nicht mit dem Höchstschlag.
         dauer = o.get('dauer', 4.0)
-        weit = RANKE_TEMPO * dauer - 0.5 * REIBUNG * dauer * dauer
-        weit = min(weit, RANKE_TEMPO * RANKE_TEMPO / (2 * REIBUNG))
+        # Wie weit kommt ein Ball, der mit RANKE_TEMPO losrollt, in 'dauer' Sekunden? Nur bis er
+        # steht: nach RANKE_TEMPO/REIBUNG Sekunden ist Schluss. Die erste Fassung rechnete die
+        # Wurfformel auch ueber diesen Punkt hinaus weiter - und dort wird sie wieder KLEINER,
+        # als waere der Ball rueckwaerts gerollt. Bei dauer 5,5 kam so heraus, man schaffe nur
+        # 2,5 Felder, und eine voellig gesunde Bahn fiel durch.
+        halt = RANKE_TEMPO / REIBUNG
+        rollt = min(dauer, halt)
+        weit = RANKE_TEMPO * rollt - 0.5 * REIBUNG * rollt * rollt
         ecken = [(o['x'], o['y']), (o['x'] + o['w'], o['y']),
                  (o['x'], o['y'] + o['h']), (o['x'] + o['w'], o['y'] + o['h'])]
         noetig = max(math.hypot(ex - bl['x'], ey - bl['y']) for ex, ey in ecken)
@@ -422,6 +476,35 @@ def pruefe(b):
                 if (int(pkt[0]), int(pkt[1])) not in zu:
                     fehler.append(f'der Stern auf {int(pkt[0])}/{int(pkt[1])} liegt hinter dem '
                                   f'eigenen Tor – dann geht es nie auf')
+
+    # ---- Der Zauberspiegel
+    #
+    # Er wirft den Ball auf der anderen Seite aus, und zwar an der seitenverkehrten Stelle. Beides
+    # muß Boden sein: Steht vor einem Ende die Wand, kommt man dort nie an; ist HINTER einem Ende
+    # kein Boden, wirft der Spiegel den Ball ins Nichts. Beim Bauen sieht man das nicht, beim
+    # Spielen sofort.
+    for o in [x for x in b['obstacles'] if x['type'] == 'zauberspiegel']:
+        dx, dy = o['x1'] - o['x0'], o['y1'] - o['y0']
+        lang = math.hypot(dx, dy)
+        if lang < 1.5:
+            fehler.append('ein Zauberspiegel unter anderthalb Feldern Breite ist ein Punkt, '
+                          'kein Spiegel')
+            continue
+        nx, ny = -dy / lang, dx / lang
+        # Nicht ganz bis an die Enden: Ein Spiegel steckt mit seinen Enden IN der Wand, wie eine
+        # Tuer im Rahmen. Geprueft wird die Flaeche, durch die der Ball geht.
+        for k in range(1, 20):
+            u = k / 20
+            px, py = o['x0'] + dx * u, o['y0'] + dy * u
+            for seite in (1, -1):
+                qx, qy = px + nx * seite * 0.8, py + ny * seite * 0.8
+                if not fest(int(qx), int(qy)):
+                    fehler.append(f'neben dem Zauberspiegel ist bei {int(qx)}/{int(qy)} kein Boden '
+                                  f'– dort käme der Ball nie an oder flöge ins Nichts')
+                    break
+            else:
+                continue
+            break
 
     if fehler:
         raise AssertionError(f"{name}: " + '; '.join(fehler))
@@ -501,7 +584,7 @@ bahn(GARTEN, 'Zwei Blüten', 'lehrlingsgarten', f, [
     ranke(11, 3, 3, 7, 8.5, 6.5, dauer=4.0),
     ranke(22, 3, 3, 7, 18.5, 6.5, dauer=4.0),
     pilz(27.5, 6.5, stil='orb'),
-], par=3,
+], par=4,   # zwei Uhren hintereinander kosten einen Schlag mehr, als hier lange stand
 intro='Zwei Lücken, zwei Blüten. Die zweite Blüte liegt hinter der ersten Ranke – man kommt also nur '
       'an sie heran, wenn die erste noch trägt. Ein Schlag, der beide schafft, ist möglich; zwei '
       'ruhige sind sicherer.')
@@ -547,16 +630,26 @@ f = leer(34, 15)
 fuell(f, 1, 4, 12, 10)                # der Vorraum
 fuell(f, 13, 6, 20, 8)                # der schmale Steg
 fuell(f, 21, 3, 32, 11)               # die Halle
-fuell(f, 27, 3, 28, 11, 'x')          # die Regalwand davor
+fuell(f, 27, 3, 28, 8, 'x')           # die Regalwand davor - mit einer Gasse an der Unterkante
 setz(f, 3, 7, 'T'); setz(f, 31, 7, 'H')
 bahn(GARTEN, 'Blüte und Hut', 'gewaechshaus', f, [
-    ranke(14, 6, 5, 3, 9.5, 7.5, dauer=4.5),
+    ranke(14, 6, 5, 3, 9.5, 7.5, dauer=5.5),
     # ZWEI Hüte, nicht drei. Mit dreien brauchte der Normalspieler in der Bot-Prüfung im Schnitt
     # sieben Schläge und im Median neun: Aus welchem Hut man herauskommt, war dann Glück. Mit
     # zweien ist der Weg eindeutig – egal welcher gerade leuchtet, man landet drüben –, und die
     # Aufgabe ist wieder das, was sie sein soll: hineintreffen. Die Wahl zwischen mehreren
     # Ausgängen gehört in die Sternenwarte, nicht in den Garten. 
-    huete([(24, 7), (30, 10)], takt=2.4),
+    # Und ein weites Maul. Mit 0,42 Kacheln war der Hut ein Nadeloehr: Der ehrlich messende
+    # Bot (siehe README, die zwei Fehler im Pruefstand) brauchte im Median NEUN Schlaege bei
+    # Par 4, weil er immer wieder daneben rollte. Ein Hut, den man nur mit Glueck trifft, ist
+    # keine Aufgabe, sondern eine Pruefung der Geduld.
+    #
+    # UND DIE REGALWAND HAT JETZT EINE GASSE. Auch mit weitem Maul blieb der Median bei elf:
+    # Wer den Hut verfehlte, stand vor einer Wand ohne Ausweg und musste es noch einmal
+    # versuchen, und noch einmal. Der Hut ist jetzt die ABKUERZUNG, nicht die einzige Tuer -
+    # das ist im Garten die richtige Rolle fuer ihn. Wer ihn trifft, spart einen Schlag; wer
+    # nicht, geht unten herum.
+    huete([(24, 7), (30, 10)], takt=2.4, r=0.62),
     pilz(24.5, 4.5, stil='crystal'),
 ], par=4,
 intro='Erst die Ranke über den Steg – sie trägt hier eine halbe Sekunde länger, der Weg ist weiter. '
@@ -586,7 +679,7 @@ bahn(GARTEN, 'Der Blätterwirbel', 'lehrlingsgarten', f, [
     magnet(8.5, 9.5, r=2.6, kraft=5.0, stil='soul'),   # schwach genug, daß es den Ball ablenkt und nicht einfängt
     scheibe_(15.5, 5.5, r=1.8, tempo=1.8, aus=90),
     pilz(22.5, 5.5),
-], par=4,
+], par=3,
 intro='Zwei Beete stehen versetzt, dazwischen geht es im Zickzack. Das Seelenlicht zieht an allem, '
       'was an ihm vorbeirollt – ausgerechnet in der ersten Kehre, wo man ohnehin schon aufpassen '
       'muß. Der Laubwirbel dahinter fängt den Ball und wirft ihn immer nach unten aus; wer ihn '
@@ -603,7 +696,7 @@ bahn(GARTEN, 'Die Lehrlingsprüfung', 'lehrlingsgarten', f, [
     pilz(14.5, 9.5, stil='orb'),
     muehle(18.5, 7.5, w=5.0, gap=1.2, tempo=0.9, achse='y'),
     huete([(24, 5), (24, 10), (29, 11)], takt=2.8),
-], par=4,
+], par=3,
 intro='Die Prüfung: erst die Ranke, dann zwischen den Pilzen hindurch, dann das Tor im Takt – und '
       'zum Schluß noch einmal die Hüte. Wer hier unter Par bleibt, hat den Lehrlingshut verdient.')
 
@@ -766,13 +859,18 @@ intro='Die Hüte aus dem Garten, eine Stufe schärfer: Wo man herauskommt, steht
 # dritte Stern liegt in einer Nische hinter dem letzten Pfeiler - dorthin kommt nur, wer hinfährt.
 f = leer(36, 15)
 fuell(f, 1, 2, 34, 12)
+fuell(f, 9, 2, 12, 4, 'x'); fuell(f, 9, 10, 12, 12, 'x')      # der Gang, den die Ranke sperrt
 fuell(f, 20, 2, 21, 5, 'x'); fuell(f, 20, 9, 21, 12, 'x')     # erstes Pfeilerpaar
 fuell(f, 24, 2, 25, 5, 'x'); fuell(f, 24, 9, 25, 12, 'x')     # zweites, und dahinter die Nische
 # Die Felder der Ranke bleiben in der Karte Boden - das Fallen besorgt die Maschine (siehe
 # obstacles_zauber.js). Ein '.' hier wäre ein Loch, das keine Ranke je schlösse.
+#
+# DRITTE FASSUNG. Die Ranke lag zuerst mitten in der offenen Halle, und daneben blieb ein
+# Streifen frei - also rollte der Bot einfach daran vorbei, und die Maschine war Schmuck. Seit
+# dieser Erfahrung prüft pruefe(), ob an einer Rankenbrücke ein Weg vorbeiführt.
 setz(f, 3, 7, 'T'); setz(f, 32, 7, 'H')
 bahn(WARTE, 'Die Sternenprüfung', 'sternenwarte', f, [
-    ranke(9, 6, 4, 3, 6.5, 7.5, dauer=4.5),
+    ranke(9, 5, 4, 5, 6.5, 7.5, dauer=4.5),
     mond(16.0, 7.0, r=3.2, kraft=8.5, takt=6.5, phase=0.15),
     sternbild([(15, 3), (15, 11), (27, 3)], (28, 2, 28, 13)),
 ], par=5,
@@ -780,6 +878,204 @@ intro='Die Prüfung der Warte: erst die Blüte anstoßen und über die Ranke, da
       'und dabei alle drei Sterne mitnehmen, denn sonst steht am Ende ein Tor, das nicht aufgeht. '
       'Der dritte liegt in der Nische hinter dem letzten Pfeiler. Wer hier unter Par bleibt, hat '
       'den Sternenhut verdient.')
+
+# ===========================================================================
+#  DIE ERZMAGIERLOGE - Legende, neun Bahnen
+#  Der Ratssaal der Erzmagier und die Bannkreis-Gruft darunter.
+#
+#  WAS DIESE STUFE VON DER PROFI-STUFE UNTERSCHEIDET. Die Warte fragt "wann" und "in welcher
+#  Reihenfolge". Hier kommt die dritte Frage dazu: "WO GENAU". Der Zauberspiegel hat keinen festen
+#  Ausgang - man waehlt ihn mit dem Auftreffpunkt, stufenlos, ueber die ganze Breite. Wer die Mitte
+#  trifft, kommt in der Mitte heraus und hat nichts gewonnen; wer knapp am Rand auftrifft, kommt am
+#  anderen Rand heraus. Das ist kein Zielen mehr, das ist Rechnen.
+#
+#  UND DIE BAUART IST EINE ANDERE. Die ersten neun Bahnen waren offene Saele mit je einer Maschine
+#  darin, und der Bot lochte sie im Mittel mit ZWEI Schlaegen bei Par 5 - eine Legenden-Welt, die
+#  leichter ist als der Lehrlingsgarten. Der Grund war immer derselbe: Neben der Maschine blieb
+#  Platz, und wo Platz ist, geht der Ball vorbei. Jetzt ist jede Bahn eine Folge von KAMMERN, und
+#  zwischen zwei Kammern gibt es genau EINEN Durchlass - und in dem steht die Maschine. Wer sie
+#  nicht loest, kommt nicht weiter.
+#
+#  UND HIER KOMMT ALLES ZUSAMMEN. Alle vier Zauber-Maschinen, dazu die haertesten alten: der Blitz
+#  und der Aufwind des Sturmhimmels, das wandernde Loch der Uhrwerkstadt, die Grubenlampe der
+#  Zwergenmine. Die Gruft ist dunkel wie die Mine - und das ist die einzige Stelle im Zauberreich,
+#  an der man sich merken muss, was man beim Hinweg gesehen hat.
+# ===========================================================================
+LOGE = welt('loge', 'ZAUBER_LOGE', 'Erzmagierloge')
+
+# --- 1 ---------------------------------------------------------------------
+# Vor der Loge. Hier wird der Spiegel erklaert, und sonst nichts. Der zweite Durchlass liegt UNTEN;
+# wer also unten herauskommen will, muss OBEN auftreffen. Genau das ist die ganze Maschine, und
+# genau das steht als Spiegelbild auf dem Boden.
+f = leer(36, 15)
+fuell(f, 1, 2, 34, 12)
+fuell(f, 18, 2, 19, 3, 'x'); fuell(f, 18, 11, 19, 12, 'x')    # der Rahmen des Spiegels
+fuell(f, 26, 2, 27, 8, 'x')                                   # dahinter geht es nur unten weiter
+setz(f, 4, 7, 'T'); setz(f, 32, 11, 'H')
+bahn(LOGE, 'Vor der Loge', 'erzmagierloge', f, [
+    spiegel(18, 4, 18, 11),
+    windrad(23.0, 10.5, blades=3, laenge=1.5, tempo=1.2, stil='crystal'),
+], par=4,
+intro='Der Spiegel ist der einzige Weg durch die Wand, und er wirft seitenverkehrt aus. Dahinter '
+      'geht es nur unten weiter - wer also unten ankommen will, muss oben auftreffen. Sein '
+      'Spiegelbild steht drueben und sagt einem vorher, wo das sein wird.')
+
+# --- 2 ---------------------------------------------------------------------
+# Der Spiegelsaal. Zwei Spiegel hintereinander. Zweimal seitenverkehrt ist wieder richtig herum -
+# aber der Pfeiler dazwischen sorgt dafuer, dass man nicht zweimal an derselben Stelle auftrifft.
+f = leer(38, 16)
+fuell(f, 1, 2, 36, 13)
+fuell(f, 13, 2, 14, 4, 'x'); fuell(f, 13, 12, 14, 13, 'x')
+fuell(f, 25, 2, 26, 4, 'x'); fuell(f, 25, 12, 26, 13, 'x')
+fuell(f, 19, 6, 20, 9, 'x')                                   # der Pfeiler dazwischen
+setz(f, 4, 8, 'T'); setz(f, 33, 3, 'H')
+bahn(LOGE, 'Der Spiegelsaal', 'erzmagierloge', f, [
+    spiegel(13, 5, 13, 12),
+    spiegel(26, 5, 26, 12),
+    pilz(31.5, 10.5, stil='crystal'),
+], par=4,
+intro='Zwei Spiegel, dazwischen ein Pfeiler, um den man herum muss. Zweimal seitenverkehrt waere '
+      'wieder richtig herum - nur trifft man wegen des Pfeilers beim zweiten Mal woanders auf als '
+      'beim ersten.')
+
+# --- 3 ---------------------------------------------------------------------
+# Das Bannmal. Die Gruft ist dunkel; man sieht nur, was im Licht der Lampen steht. Vier Sterne
+# verteilen sich auf drei Kammern, und das Bannmal vor dem Loch geht erst auf, wenn alle brennen.
+f = leer(36, 16)
+fuell(f, 1, 2, 34, 13)
+fuell(f, 13, 2, 14, 7, 'x')           # erster Durchlass unten
+fuell(f, 22, 8, 23, 13, 'x')          # zweiter oben
+setz(f, 4, 10, 'T'); setz(f, 32, 10, 'H')
+bahn(LOGE, 'Das Bannmal', 'bannkreis', f, [
+    sternbild([(5, 4), (5, 12), (18, 11), (26, 4)], (28, 2, 28, 14)),
+    lampe(6.5, 8.5, r=4.4),
+    lampe(18.5, 8.5, r=4.4),
+    lampe(30.5, 9.5, r=4.0),
+], par=5, dunkel=0.55, lampe=3.2,
+intro='In der Gruft sieht man nur, was im Licht der Lampen steht. Vier Sterne liegen in drei '
+      'Kammern verteilt, und erst wenn alle brennen, geht das Bannmal vor dem Loch auf. Wer beim '
+      'Hinweg nicht hinsieht, sucht sie beim Rueckweg.')
+
+# --- 4 ---------------------------------------------------------------------
+# Der Rat der Neun. Vier Huete, ein Mond und ein Lot. Die Huete sind hier kein Umweg, sondern die
+# Abkuerzung - sie fuehren durch die Waende, an denen alle anderen entlangmuessen.
+f = leer(40, 16)
+fuell(f, 1, 2, 38, 13)
+fuell(f, 15, 2, 16, 5, 'x'); fuell(f, 15, 10, 16, 13, 'x')
+fuell(f, 27, 2, 28, 9, 'x')
+setz(f, 4, 8, 'T'); setz(f, 36, 4, 'H')
+bahn(LOGE, 'Der Rat der Neun', 'erzmagierloge', f, [
+    huete([(9, 4), (9, 12), (22, 4), (22, 12)], takt=2.2),
+    mond(21.0, 7.5, r=3.2, kraft=9.0, takt=5.5, phase=0.2),
+    pendel(33.0, 4.0, laenge=3.4, amp=52),
+], par=5,
+intro='Vier Hueten leuchtet reihum einer, und der Takt ist schnell. Mitten zwischen ihnen steht ein '
+      'Mond, der zieht und stoesst - wer im falschen Augenblick in den Hut rollt, kommt richtig '
+      'heraus und landet trotzdem falsch. Am Ende schwingt das Lot des Astronomen.')
+
+# --- 5 ---------------------------------------------------------------------
+# Die Ranken der Gruft. Zwei Luecken, dazwischen ein Spiegel, und ueber allem die Dunkelheit.
+#
+# DIE BLUETEN LIEGEN AM GANG, NICHT WEIT AB DAVON. Ein Versuch, sie in Nischen zu legen, ist
+# gescheitert - nicht am Spiel, sondern am Bot: Er kennt nur "wo ist das Loch" und keine
+# Zwischenziele, lief also immer geradeaus gegen die Luecke und erreichte das Schlaglimit. Eine
+# Bahn, die das Pruefwerkzeug nicht mehr messen kann, ist keine gepruefte Bahn. Der Reiz liegt
+# hier ohnehin in der Dosierung: Die Bluete anstossen UND genug Schwung behalten, um in der Zeit
+# hinueberzukommen - zweimal hintereinander, mit einem Spiegel dazwischen.
+f = leer(38, 16)
+fuell(f, 1, 2, 36, 13)
+fuell(f, 10, 2, 13, 5, 'x'); fuell(f, 10, 11, 13, 13, 'x')    # der Gang der ersten Ranke
+fuell(f, 21, 2, 22, 4, 'x'); fuell(f, 21, 12, 22, 13, 'x')    # der Rahmen des Spiegels
+fuell(f, 27, 2, 30, 6, 'x'); fuell(f, 27, 11, 30, 13, 'x')    # der Gang der zweiten Ranke
+setz(f, 4, 8, 'T'); setz(f, 34, 8, 'H')
+bahn(LOGE, 'Die Ranken der Gruft', 'bannkreis', f, [
+    ranke(10, 6, 4, 5, 8.5, 7.0, dauer=4.5),
+    spiegel(21, 5, 21, 12),
+    ranke(27, 7, 4, 4, 25.5, 9.5, dauer=4.5),
+    lampe(8.5, 7.0, r=4.4),
+    lampe(25.5, 9.5, r=4.4),
+], par=4, dunkel=0.5, lampe=3.2,
+intro='Zwei Luecken, dazwischen ein Spiegel, und ueber allem die Dunkelheit der Gruft. Jede Bluete '
+      'startet ihre eigene Uhr - und der Spiegel wirft einen seitenverkehrt aus, also gerade nicht '
+      'dorthin, wo man beim Schlagen hingesehen hat.')
+
+# --- 6 ---------------------------------------------------------------------
+# Der Blitzgang. Zwei Blitze schlagen im Wechsel in den mittleren Gang, der Aufwind hebt einen
+# darueber hinweg - und dahinter steht ein Spiegel, der einen im falschen Augenblick zurueckwirft.
+f = leer(38, 16)
+fuell(f, 1, 2, 36, 13)
+fuell(f, 12, 2, 13, 8, 'x')           # erster Durchlass unten
+fuell(f, 24, 9, 25, 13, 'x')          # zweiter oben
+fuell(f, 30, 2, 31, 3, 'x'); fuell(f, 30, 12, 31, 13, 'x')    # der Rahmen des Spiegels
+setz(f, 4, 5, 'T'); setz(f, 34, 12, 'H')
+bahn(LOGE, 'Der Blitzgang', 'erzmagierloge', f, [
+    aufwind(7, 9, w=2, h=3, land=6.5),
+    blitz(17.0, 5.5, w=2.0, h=6.0, takt=4.0),
+    blitz(20.5, 10.0, w=2.0, h=6.0, takt=4.0, phase=0.5),
+    spiegel(30, 4, 30, 12),
+], par=5,
+intro='Zwei Blitze schlagen im Wechsel in den mittleren Gang, und der Aufwind hebt einen ueber den '
+      'ersten hinweg. Dahinter steht ein Spiegel - der wirft einen zwar auf die richtige Seite, '
+      'aber nur, wenn man an der richtigen Stelle ankommt.')
+
+# --- 7 ---------------------------------------------------------------------
+# Das Wanderloch. Das Loch der Uhrwerkstadt IST hier das Loch - es wandert zwischen drei Stellen.
+# Der Mond davor zieht den Ball genau dann, wenn man es gerade nicht brauchen kann.
+f = leer(36, 16)
+fuell(f, 1, 2, 34, 13)
+fuell(f, 10, 2, 11, 9, 'x')           # der Durchlass liegt unten
+fuell(f, 22, 6, 23, 13, 'x')          # und der naechste oben - ein Zickzack um das Loch herum
+setz(f, 4, 11, 'T'); setz(f, 31, 4, 'H')
+bahn(LOGE, 'Das Wanderloch', 'bannkreis', f, [
+    wanderloch([(31.5, 4.5), (31.5, 8.5), (31.5, 12.5)]),
+    mond(26.0, 8.5, r=3.2, kraft=8.0, takt=6.0, phase=0.35),
+    lampe(6.5, 11.5, r=4.0),
+    lampe(17.5, 4.5, r=4.4),
+    lampe(30.5, 8.5, r=5.0),
+], par=5, dunkel=0.52, lampe=3.2,
+intro='Das Loch bleibt nicht, wo es ist - es wandert zwischen drei Stellen. Und der Mond davor '
+      'zieht den Ball genau dann, wenn man ihn gerade nicht ziehen lassen will. In der Dunkelheit '
+      'sieht man immer nur die Stelle, die gerade im Licht liegt.')
+
+# --- 8 ---------------------------------------------------------------------
+# Die Kammer der Spiegel. Zwei Spiegel, vier Sterne, und das Bannmal vor dem Loch. An zwei der
+# Sterne kommt man nur durch einen Spiegel heran - und es ist nicht derselbe.
+f = leer(40, 17)
+fuell(f, 1, 2, 38, 14)
+fuell(f, 12, 2, 13, 4, 'x'); fuell(f, 12, 13, 13, 14, 'x')
+fuell(f, 25, 2, 26, 4, 'x'); fuell(f, 25, 13, 26, 14, 'x')
+fuell(f, 18, 7, 19, 10, 'x')
+setz(f, 4, 8, 'T'); setz(f, 36, 8, 'H')
+bahn(LOGE, 'Die Kammer der Spiegel', 'erzmagierloge', f, [
+    spiegel(12, 5, 12, 13),
+    spiegel(26, 5, 26, 13),
+    sternbild([(6, 3), (6, 13), (22, 3), (30, 13)], (32, 2, 32, 15)),
+    pilz(29.5, 6.5, stil='crystal'),
+], par=5,
+intro='Zwei Spiegel, vier Sterne und ein Bannmal vor dem Loch. An zwei der Sterne kommt man nur '
+      'durch einen Spiegel heran, und es ist nicht derselbe - man muss sich vorher ueberlegen, '
+      'welchen man wofuer nimmt.')
+
+# --- 9 ---------------------------------------------------------------------
+# Der Erzmagier. Die letzte Bahn des Zauberreichs: Ranke, Spiegel, Hut, Mond und Sternbild,
+# hintereinander, jedes in seinem eigenen Durchlass. Wer hier unter Par bleibt, hat ausgelernt.
+f = leer(44, 18)
+fuell(f, 1, 2, 42, 15)
+fuell(f, 9, 2, 12, 5, 'x'); fuell(f, 9, 12, 12, 15, 'x')      # der Gang der Ranke
+fuell(f, 18, 2, 19, 4, 'x'); fuell(f, 18, 14, 19, 15, 'x')    # der Rahmen des Spiegels
+fuell(f, 28, 2, 29, 8, 'x')                                   # dahinter geht es nur unten weiter
+setz(f, 4, 8, 'T'); setz(f, 40, 9, 'H')
+bahn(LOGE, 'Der Erzmagier', 'erzmagierloge', f, [
+    ranke(9, 6, 4, 6, 7.5, 8.5, dauer=4.5),
+    spiegel(18, 5, 18, 14),
+    huete([(23, 4), (23, 13), (34, 4)], takt=2.4),
+    mond(33.0, 10.0, r=3.2, kraft=8.5, takt=5.5, phase=0.1),
+    sternbild([(15, 8), (24, 9), (33, 4)], (37, 2, 37, 16)),
+], par=6,
+intro='Die Pruefung der Loge: die Bluete anstossen, durch den Spiegel, in den richtigen Hut, am '
+      'Mond vorbei - und dabei die drei Sterne mitnehmen, denn sonst steht am Ende ein Bannmal, '
+      'das nicht aufgeht. Wer hier unter Par bleibt, hat ausgelernt.')
+
 
 # ---------------------------------------------------------------- Prüfen
 for kennung, jsname, titel, liste in WELTEN:

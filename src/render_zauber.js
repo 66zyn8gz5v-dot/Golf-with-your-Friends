@@ -172,7 +172,11 @@ Object.assign(Renderer.prototype, {
       ctx.quadraticCurveTo(cx - bPx * 0.55, cy - hPx * 0.62, spitze[0], spitze[1]);
       ctx.quadraticCurveTo(cx + bPx * 0.72, cy - hPx * 0.52, cx + bPx, cy - hPx * 0.06);
       ctx.closePath(); ctx.fill();
-      ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = Math.max(1, s * 0.03); ctx.stroke();
+      /* HELLER UMRISS, NICHT SCHWARZER. In der Erzmagierloge steht der Hut auf violettem Marmor,
+         und mit einer schwarzen Kante war vom Kegel nichts mehr zu sehen - nur noch Krempe und
+         Maul, also eine Schale. Ein heller Umriss trägt auf JEDEM Boden, im Garten wie in der
+         Loge, und nimmt dem dunklen Hut nichts von seiner Dunkelheit. */
+      ctx.strokeStyle = 'rgba(226,212,255,0.5)'; ctx.lineWidth = Math.max(1.2, s * 0.04); ctx.stroke();
 
       // Das Band über der Krempe – ebenfalls in Bildpunkten, damit es am Kegel anliegt
       ctx.strokeStyle = an ? '#ffd166' : '#a98a46'; ctx.lineWidth = Math.max(2, hPx * 0.13);
@@ -402,5 +406,105 @@ Object.assign(Renderer.prototype, {
     // Die beiden Pfosten: Ohne sie schwebt der Vorhang, und man sieht nicht, wo er endet
     ctx.strokeStyle = 'rgba(201,167,90,0.85)'; ctx.lineWidth = Math.max(2, s * 0.09); ctx.lineCap = 'round';
     ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(ax, ao); ctx.moveTo(bx, by); ctx.lineTo(bx, bo); ctx.stroke();
+  },
+
+  /* ================= Der Zauberspiegel =================
+     Auf dem Boden liegt die Spiegellinie mit einem Maß darauf – und das Spiegelbild des Balls.
+
+     DAS BILD IST DIE GANZE ANSAGE. Wer links auftrifft, kommt rechts heraus; das muß man nicht
+     ausrechnen, wenn man es sieht. Der Geisterball steht drüben, wo der Ball herauskäme, und
+     bewegt sich seitenverkehrt mit – wie ein Spiegelbild eben. Eine Beschriftung oder gar ein
+     Pfeil wäre hier eine Erklärung für etwas, das jeder Spiegel von selbst erklärt. */
+  drawZauberspiegelFloor(ctx, ob, t) {
+    const s = this.scale;
+    const pa = this.proj(ob.x0, ob.y0, 0.005), pb = this.proj(ob.x1, ob.y1, 0.005);
+
+    // Die Linie selbst: der Fuß des Spiegels, damit man sieht, wo er im Weg steht
+    ctx.strokeStyle = 'rgba(214,190,255,0.55)'; ctx.lineWidth = Math.max(2, s * 0.08); ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(pa[0], pa[1]); ctx.lineTo(pb[0], pb[1]); ctx.stroke();
+
+    /* Das Maß: fünf Marken über die Breite. Erst damit sieht man, daß der Spiegel eine BREITE hat,
+       auf der es einen Unterschied macht, wo man auftrifft – ohne sie sähe er aus wie eine Wand. */
+    ctx.strokeStyle = 'rgba(255,225,150,0.5)'; ctx.lineWidth = Math.max(1, s * 0.04);
+    for (let k = 0; k <= 4; k++) {
+      const v = k / 4;
+      const mx = ob.x0 + (ob.x1 - ob.x0) * v, my = ob.y0 + (ob.y1 - ob.y0) * v;
+      const q = k === 2 ? 0.34 : 0.2;                     // die Mitte bekommt einen längeren Strich
+      const [ax, ay] = this.proj(mx - ob.nx * q, my - ob.ny * q, 0.006);
+      const [bx, by] = this.proj(mx + ob.nx * q, my + ob.ny * q, 0.006);
+      ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+    }
+
+    // Das Aufblitzen beim Durchgang – die Rückmeldung, daß der Spiegel gerade gearbeitet hat
+    const seit = t - ob.blitzAt;
+    if (seit >= 0 && seit < 0.45) {
+      const bx = ob.x0 + (ob.x1 - ob.x0) * ob.blitzU, by = ob.y0 + (ob.y1 - ob.y0) * ob.blitzU;
+      this.isoEllipse(ctx, bx, by, 0.007, 0.5 + seit * 3.2, `rgba(226,200,255,${0.5 * (1 - seit / 0.45)})`);
+    }
+
+    /* Der Geisterball. Er steht nur da, solange der echte Ball auf einer Seite des Spiegels liegt
+       und in seiner Breite – sonst führte er in die Irre, denn dann gäbe es gar keinen Durchgang. */
+    const b = this.ball;
+    if (!b || b.sunk || (b.ebene || 0) !== (ob.ebene || 0)) return;
+    const lage = ob.lage(b.x, b.y);
+    if (lage.u < -0.15 || lage.u > 1.15) return;
+    const g = ob.bild(b.x, b.y);
+    const [gx, gy] = this.proj(g.x, g.y, 0.01);
+    ctx.save();
+    ctx.globalAlpha = Math.max(0.15, 0.6 - Math.min(0.45, Math.abs(lage.d) * 0.05));
+    ctx.fillStyle = 'rgba(226,210,255,0.5)';
+    ctx.beginPath(); ctx.ellipse(gx, gy, (b.r || 0.22) * s, (b.r || 0.22) * s * this.cam.tilt, 0, 0, TAU); ctx.fill();
+    ctx.strokeStyle = 'rgba(245,235,255,0.85)'; ctx.lineWidth = Math.max(1, s * 0.035);
+    ctx.beginPath(); ctx.ellipse(gx, gy, (b.r || 0.22) * s, (b.r || 0.22) * s * this.cam.tilt, 0, 0, TAU); ctx.stroke();
+    ctx.restore();
+  },
+
+  /* Der Spiegel selbst: ein hoher Rahmen aus Messing mit Glas darin.
+
+     Auch hier die Regel vom Zauberhut: Die HÖHE kommt aus der Projektion, die Fußpunkte aus der
+     Welt. Damit steht der Spiegel aufrecht, egal wie die Kamera gedreht ist, und sein Fuß liegt
+     genau dort, wo die Maschine ihn abfragt. */
+  drawZauberspiegel(ctx, ob, t) {
+    const s = this.scale, HOCH = 1.35;
+    const [ax, ay] = this.proj(ob.x0, ob.y0, 0);
+    const [bx, by] = this.proj(ob.x1, ob.y1, 0);
+    const [, ao] = this.proj(ob.x0, ob.y0, HOCH);
+    const [, bo] = this.proj(ob.x1, ob.y1, HOCH);
+
+    // Schatten am Fuß: ohne ihn schwebt der Rahmen
+    ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = Math.max(3, s * 0.14); ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(ax, ay + s * 0.05); ctx.lineTo(bx, by + s * 0.05); ctx.stroke();
+
+    // Das Glas: dunkel und tief, mit einem hellen Streifen, der langsam darüberwandert
+    const g = ctx.createLinearGradient(ax, Math.min(ao, bo), bx, Math.max(ay, by));
+    g.addColorStop(0, 'rgba(46,34,86,0.88)');
+    g.addColorStop(0.5, 'rgba(96,74,158,0.72)');
+    g.addColorStop(1, 'rgba(38,28,70,0.9)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.lineTo(bx, bo); ctx.lineTo(ax, ao); ctx.closePath(); ctx.fill();
+
+    ctx.save();
+    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.lineTo(bx, bo); ctx.lineTo(ax, ao); ctx.closePath(); ctx.clip();
+    const w = ((t * 0.16) % 1);
+    const sx = ax + (bx - ax) * w, sy0 = ay + (by - ay) * w, sy1 = ao + (bo - ao) * w;
+    const sg = ctx.createLinearGradient(sx - s * 0.7, 0, sx + s * 0.7, 0);
+    sg.addColorStop(0, 'rgba(255,255,255,0)');
+    sg.addColorStop(0.5, 'rgba(255,255,255,0.22)');
+    sg.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = sg;
+    ctx.beginPath(); ctx.moveTo(sx - s * 0.7, sy0 + s); ctx.lineTo(sx + s * 0.7, sy0 + s);
+    ctx.lineTo(sx + s * 0.7, sy1 - s); ctx.lineTo(sx - s * 0.7, sy1 - s); ctx.closePath(); ctx.fill();
+    ctx.restore();
+
+    /* Der Rahmen. Messing und kräftig – ein Spiegel ohne Rahmen wäre in der Schrägsicht ein
+       farbiger Fleck, und man wüßte nicht, wo er anfängt und aufhört. */
+    ctx.strokeStyle = '#c9a75a'; ctx.lineWidth = Math.max(2.5, s * 0.1); ctx.lineJoin = 'round';
+    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.lineTo(bx, bo); ctx.lineTo(ax, ao); ctx.closePath(); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,238,190,0.8)'; ctx.lineWidth = Math.max(1, s * 0.035);
+    ctx.beginPath(); ctx.moveTo(ax, ao); ctx.lineTo(bx, bo); ctx.stroke();
+
+    // Zwei Knäufe auf dem Rahmen: sie sagen, wo der Spiegel endet, und geben ihm Gewicht
+    ctx.fillStyle = '#e8cf8a';
+    for (const [kx, ky] of [[ax, ao], [bx, bo]]) { ctx.beginPath(); ctx.arc(kx, ky, s * 0.12, 0, TAU); ctx.fill(); }
   },
 });

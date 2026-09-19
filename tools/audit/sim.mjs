@@ -17,6 +17,37 @@ export function getLevel(def) {
   if (!lv) { lv = G.buildLevel(def); LV.set(def, lv); }
   return lv;
 }
+/* Die Maschinen des Zauberreichs merken sich etwas ÜBER den einzelnen Schlag hinaus: Die
+   Rankenbrücke, wie lange sie noch trägt, und das Sternbild, welche Sterne schon brennen. Der Bot
+   rechnet aber Dutzende Kandidatenschläge auf DEMSELBEN Level durch, bevor er den wirklichen
+   ausführt – und was ein Kandidat angestoßen hat, stand danach für den wirklichen Schlag noch
+   offen. Dann trug eine Ranke, die nie jemand angestoßen hatte, und ein Bannmal stand offen, das
+   niemand vollendet hatte.
+
+   Das war kein kleiner Meßfehler: Der Bot lochte die Erzmagierloge im Mittel mit zwei Schlägen bei
+   Par 5 und hielt die Legenden-Welt damit für leichter als den Lehrlingsgarten. Gemessen hatte er
+   eine Bahn, die es gar nicht gibt.
+
+   Darum wird dieser Zustand wie 'switches' im Zustand mitgeführt: vor jedem Schlag gesetzt, nach
+   jedem Schlag gelesen. Dann sieht der wirkliche Schlag genau das, was der Spieler auch sähe. */
+function zauberLesen(lv) {
+  return lv.obstacles.map(ob => ob.type === 'ranke' ? { bisT: ob.bisT, abT: ob.abT }
+                            : ob.type === 'sternbild' ? { an: (ob.an || []).slice() }
+                            : null);
+}
+function zauberSetzen(lv, stand) {
+  lv.obstacles.forEach((ob, i) => {
+    const z = stand && stand[i];
+    if (ob.type === 'ranke') { ob.bisT = z ? z.bisT : -99; ob.abT = z ? z.abT : -99; }
+    else if (ob.type === 'sternbild') ob.an = z ? z.an.slice() : (ob.sterne || []).map(() => false);
+  });
+}
+
+const rankeDrauf = (o, x, y) => Math.abs(x - (o.x + o.w / 2)) <= o.w / 2 && Math.abs(y - (o.y + o.h / 2)) <= o.h / 2;
+const aufRanke = (lv, b, x, y) => lv.obstacles.some(o => o.type === 'ranke' && (o.ebene || 0) === (b.ebene || 0) && rankeDrauf(o, x, y));
+const aufTragenderRanke = (lv, b, t) => lv.obstacles.some(o => o.type === 'ranke' && (o.ebene || 0) === (b.ebene || 0)
+  && rankeDrauf(o, b.x, b.y) && t <= (o.bisT == null ? -99 : o.bisT));
+
 function resetLevel(lv, switches, schlagZahl) {
   lv.switches = Object.assign({}, switches);
   lv.schlagZahl = schlagZahl || 0;   // Daumenstand der Kaiserloge: sie zählt die Schläge der Bahn mit
@@ -46,6 +77,7 @@ export function shoot(st0, ang, pow, wait = 0, wantTrace = false) {
   const st = cloneState(st0);
   const lv = getLevel(st.def);
   resetLevel(lv, st.switches, st.schlagZahl);
+  zauberSetzen(lv, st.zauber);
   const b = st.ball;
   st.t += wait;
   b.restX = b.x; b.restY = b.y; b.air = false; b.z = 0; b.vz = 0; b.rider = null;
@@ -70,7 +102,7 @@ export function shoot(st0, ang, pow, wait = 0, wantTrace = false) {
       if (e.type === 'scorched' || e.type === 'dropped') { out = e.type; ausOb = e.ob; break; }
     }
     if (out) {
-      st.t = t; st.trace = trace;
+      st.t = t; st.trace = trace; st.zauber = zauberLesen(lv);
       if (out === 'sunk') { st.done = true; st.last = 'sunk'; return st; }
       if (out === 'enter' || out === 'stomach') {
         const inner = st.hole.inner; st.def = inner; st.inner = true;
@@ -91,9 +123,16 @@ export function shoot(st0, ang, pow, wait = 0, wantTrace = false) {
         if (st.strokes >= maxStrokes(st.hole)) { st.done = true; st.last = 'max'; st.strokes = maxStrokes(st.hole); }
         return st;
       }
-      // Strafschlag: zurück zur Ruheposition
+      /* Strafschlag: zurück zur Ruheposition – aber NIE auf eine Rankenbrücke. Dort fiele der Ball
+         sofort wieder, bekäme den nächsten Strafschlag und läge wieder da, bis das Schlaglimit
+         erreicht ist. Genau diese Schleife hat Fynn am 19. September im Spiel gefunden; sie steht
+         dort in main.js (sichererRuhepunkt), und ohne dieselbe Regel hier hielte der Bot jede
+         Rankenbahn für unlösbar. */
       st.strokes++; st.log.push(out);
-      Object.assign(b, { x: b.restX, y: b.restY, vx: 0, vy: 0, z: 0, vz: 0, air: false, rider: null, portalCd: 0.5 });
+      let zx = b.restX, zy = b.restY;
+      if (aufRanke(lv, b, zx, zy)) { zx = lv.tee.x; zy = lv.tee.y; }
+      Object.assign(b, { x: zx, y: zy, vx: 0, vy: 0, z: 0, vz: 0, air: false, rider: null, portalCd: 0.5 });
+      b.restX = zx; b.restY = zy;
       st.t += 0.9; st.last = out;
       if (st.strokes >= maxStrokes(st.hole)) { st.done = true; st.last = 'max'; st.strokes = maxStrokes(st.hole); }
       return st;
@@ -112,13 +151,17 @@ export function shoot(st0, ang, pow, wait = 0, wantTrace = false) {
       if (!wartet) wartet = lv.obstacles.some(o => WARTEN.includes(o.type) && (o.ebene || 0) === eb
         && Math.abs(o.x - b.x) < 1.4 && Math.abs(o.y - b.y) < 1.4);
     } else wartet = false;
+    /* Auf einer tragenden Ranke ist der Schlag noch nicht zu Ende: Sie welkt gleich, und dann
+       fällt der Ball. Bräche hier ab, hielte der Bot einen Ball für in Sicherheit, der es nicht
+       ist – und stünde beim nächsten Schlag mitten über der Lücke. */
+    if (sp < 0.08 && aufTragenderRanke(lv, b, t)) { restT = 0; continue; }
     if (sp < 0.08) { restT += STEP; if (restT > (wartet ? 6 : 0.25)) break; } else restT = 0;
     if (sp < 0.5 && !b.boosted) { slowT += STEP; if (slowT > (wartet ? 8 : 3)) break; } else slowT = 0;
   }
   b.vx = 0; b.vy = 0; b.rider = null; b.air = false; b.z = 0;
   // Wie im Spiel (main.js, ballAtRest): von der Wächte rutscht der Ball herunter
   G.waechteAbrutschen(lv, b);
-  st.t = t + 0.3; st.trace = trace; st.last = 'rest';
+  st.t = t + 0.3; st.trace = trace; st.last = 'rest'; st.zauber = zauberLesen(lv);
   if (st.strokes >= maxStrokes(st.hole)) { st.done = true; st.last = 'max'; }
   return st;
 }
@@ -240,7 +283,28 @@ export function distMap(def) {
     const m = run(true, sw.x, sw.y, 0).d, sx = Math.floor(sw.x), sy = Math.floor(sw.y);
     linked.push({ id: g.linked, sw: { x: sw.x, y: sw.y }, dSw: m, swToGoal: d[0][sy][sx] });
   }
-  const puzzle = { shrink: (def.obstacles || []).some(o => o.type === 'cauldron' || o.type === 'potion'), linked };
+  /* Die Rankenbrücke ist dasselbe Rätsel wie das Schalter-Tor, nur mit einer Blüte statt einer
+     Druckplatte: Solange sie nicht trägt, führt über die Lücke kein Weg, und das nächste Ziel ist
+     nicht das Loch, sondern die Blüte. Ohne dieses Wissen lief der Bot immer wieder geradeaus
+     gegen dieselbe Lücke, fiel hinein und erreichte das Schlaglimit – er hätte jede Bahn mit einer
+     Ranke für unspielbar erklärt, obwohl jeder Spieler auf einen Blick sieht, was zu tun ist.
+     Gerechnet wird zweierlei: die Karte zum Loch OHNE die Lücke (wer sie auch so erreicht, braucht
+     die Ranke nicht mehr) und die Karte zur Blüte. */
+  const ranken = [];
+  for (const o of (def.obstacles || []).filter(o => o.type === 'ranke' && o.bluete)) {
+    const bl = { x: o.bluete.x, y: o.bluete.y }, n0 = o.ebene || 0;
+    const saved = walls.slice();
+    walls.push({ x0: o.x, y0: o.y, x1: o.x + o.w, y1: o.y },
+               { x0: o.x, y0: o.y + o.h, x1: o.x + o.w, y1: o.y + o.h },
+               { x0: o.x, y0: o.y, x1: o.x, y1: o.y + o.h },
+               { x0: o.x + o.w, y0: o.y, x1: o.x + o.w, y1: o.y + o.h });
+    const dOhne = run(true).d;
+    const dBl = run(true, bl.x, bl.y, n0).d;
+    walls.length = 0; walls.push(...saved);
+    const bx = Math.floor(bl.x), by = Math.floor(bl.y);
+    ranken.push({ ob: o, bl, dOhne, dBl, blToGoal: d[n0][by] && isFinite(d[n0][by][bx]) ? d[n0][by][bx] : 20 });
+  }
+  const puzzle = { shrink: (def.obstacles || []).some(o => o.type === 'cauldron' || o.type === 'potion'), linked, ranken };
   const res = { dE: d, d: d[0], dClosedE: dClosed, dClosed: dClosed[0], walk, lv, path, puzzle, ebenen: E,
     at(x, y, n = 0) { const tx = Math.floor(x), ty = Math.floor(y); if (tx < 0 || ty < 0 || tx >= W || ty >= H) return Infinity; return d[n][ty][tx]; } };
   DIST.set(def, res); return res;
@@ -255,6 +319,16 @@ export function activeMap(st) {
     const tx = Math.floor(st.ball.x), ty = Math.floor(st.ball.y), inside = tx >= 0 && ty >= 0 && tx < lv.W && ty < lv.H;
     if (inside && isFinite(dm.dClosedE[n][ty][tx])) return { d: dm.dClosedE[n], goal: lv.goal, extra: 0 }; // schon hinter dem Tor
     return { d: L.dSw[n] || L.dSw[0], goal: L.sw, extra: L.swToGoal + 1 };
+  }
+  for (const r of dm.puzzle.ranken) {
+    if (st.t <= (r.ob.bisT == null ? -99 : r.ob.bisT)) continue;      // sie trägt gerade
+    const tx = Math.floor(st.ball.x), ty = Math.floor(st.ball.y);
+    if (tx < 0 || ty < 0 || tx >= lv.W || ty >= lv.H) continue;
+    const ohne = r.dOhne[n] && r.dOhne[n][ty][tx];
+    if (isFinite(ohne)) continue;                                      // das Loch geht auch ohne sie
+    const zurBluete = r.dBl[n] && r.dBl[n][ty][tx];
+    if (!isFinite(zurBluete)) continue;                                // die Blüte ist von hier nicht zu holen
+    return { d: r.dBl[n], goal: r.bl, extra: r.blToGoal + 1 };
   }
   return { d: dm.dE[n], goal: lv.goal, extra: 0 };
 }

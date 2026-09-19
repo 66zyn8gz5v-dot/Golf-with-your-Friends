@@ -655,7 +655,9 @@
       satz: 'Oben auf dem Turm, wo die Karten des Himmels liegen. Der Mond zieht und stößt im '
           + 'Wechsel, und ein Tor geht erst auf, wenn das Sternbild vollständig ist.' },
     { id: 'loge', hut: 'erzmagierhut', stufe: 'Legende',
-      satz: 'Die Halle, in der die Erzmagier tagen. Wer hier besteht, hat ausgelernt.' },
+      satz: 'Die Halle, in der die Erzmagier tagen, und die Bannkreis-Gruft darunter. Der '
+          + 'Zauberspiegel wirft seitenverkehrt aus – wo man auftrifft, entscheidet, wo man '
+          + 'landet. Wer hier besteht, hat ausgelernt.' },
   ];
 
   function showZauberreich() {
@@ -1810,6 +1812,7 @@
     // Das Zauberreich
     lehrlingsgarten: 'local_florist', gewaechshaus: 'science',
     sternenwarte: 'dark_mode', kartensaal: 'schedule',
+    erzmagierloge: 'crown', bannkreis: 'church',
     // Kolosseum, Tüftlerreich, Wüste
     colosseum: 'stadium', palace: 'temple_buddhist', desert: 'sonne',
   };

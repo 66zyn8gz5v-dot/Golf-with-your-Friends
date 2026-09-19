@@ -2996,6 +2996,17 @@ Aufgabe heißt immer: den Moment abpassen. Hier startet der Spieler die Uhr selb
   die Aufgabe „alles in einem Schlag", und das ist Glück, kein Planen.
   *Das Tor ist eine Wand, kein Loch im Boden:* Boden, der zur Laufzeit entsteht, müßte die ganze
   Wegfindung mitziehen; ein Mauerstück, das der Zeichner malt und die Physik abfragt, kostet nichts.
+* **Der Zauberspiegel** (`zauberspiegel`, Erzmagierloge). Ein hoher Spiegel steht quer im Raum. Wer
+  hineinrollt, kommt drüben wieder heraus – aber **seitenverkehrt**: Wer links auftrifft, kommt
+  rechts heraus, und was sich nach links bewegte, bewegt sich danach nach rechts.
+  *Warum kein Portal:* Ein Portal hat einen festen Ausgang. Hier gibt es keinen – **der Spieler
+  wählt ihn mit seinem Schlag**, stufenlos über die ganze Breite. Das ist keine Frage des Treffens
+  mehr und keine des Zeitpunkts, sondern eine des Rechnens, und dafür ist die Legenden-Stufe da.
+  *Das Spiegelbild ist die Ansage:* Solange der Ball auf einer Seite liegt, steht sein Bild drüben –
+  genau dort, wo er herauskäme, und es bewegt sich seitenverkehrt mit. Man muß nichts ausrechnen;
+  man sieht es. Die Probe in `tools/zauber.mjs` prüft ausdrücklich, daß der Geisterball und die
+  Maschine dieselbe Stelle meinen: Stünde er woanders, wäre die Ansage eine Lüge.
+  *Und er greift nur, wer auf ihn zurollt* – sonst hinge man zwischen beiden Seiten fest.
 
 **Die Optik der alten Maschinen kommt aus dem Bestand** – kein einziges neues Bild, und trotzdem
 sieht keine aus wie im Märchenland: Das Windrad ist hier eine **Ranke** oder ein **Besen**, der
@@ -3004,7 +3015,10 @@ Prellklotz ein **Pilz**, eine **Leuchtkugel** oder ein **Kristall**, der Magnet 
 Baumodus unter *Aussehen* zu finden. In der Sternenwarte geht es so weiter: Das **Auge des
 Turms** aus dem Schattenreich wird zum Fernrohr, das **Pendel** der Uhrwerkstadt zum Lot des
 Astronomen, das **Zahnradfeld** zur Armillarsphäre, der **Strudel** der Flut zum Nebelwirbel und
-das **wandernde Tor** zum Wandelgang.
+das **wandernde Tor** zum Wandelgang. In der Erzmagierloge kommen die härtesten dazu: der
+**Blitz** und der **Aufwind** des Sturmhimmels, das **wandernde Loch** der Uhrwerkstadt und die
+**Grubenlampe** der Zwergenmine – die Bannkreis-Gruft ist dunkel wie die Mine, und das ist die
+einzige Stelle im Zauberreich, an der man sich merken muß, was man beim Hinweg gesehen hat.
 
 **Der Bahnbauer** ist `tools/zauber.py`. Er trägt die Regeln, die aus früheren Welten gelernt
 wurden – Schrägen in jede einspringende Ecke (die Eckkachel selbst wird Boden, sonst bleibt die
@@ -3030,9 +3044,32 @@ Dickicht – und dazu zwei eigene:
   sondern mit gesperrten **Übergängen**: Ein Tor steht zwischen zwei Kachelreihen, nicht auf einer.
 * **Und jeder Stern liegt vor dem Tor.** Ein Stern dahinter machte die Bahn unlösbar: Man käme nur
   durch das Tor an ihn heran, und das Tor ginge nur auf, wenn man ihn hätte.
+* **Neben dem Zauberspiegel liegt auf beiden Seiten Boden** – über seine ganze Breite. Steht vor
+  einem Ende die Wand, kommt man dort nie an; ist hinter einem Ende kein Boden, wirft der Spiegel
+  den Ball ins Nichts. Geprüft wird die Fläche, durch die der Ball geht, nicht die äußersten
+  Enden: Ein Spiegel steckt mit seinen Enden in der Wand, wie eine Tür im Rahmen.
+
+**Der Bot mußte dafür zweimal nachgebessert werden**, und beides ist eine Lehre über Prüfwerkzeuge:
+
+* **Der Prüfstand spielte einen Spielstand, den es nicht gibt.** Der Bot rechnet vor jedem Schlag
+  Dutzende Kandidaten auf demselben Level durch. Ranke und Sternbild merken sich aber etwas über
+  den einzelnen Schlag hinaus – und was ein Kandidat angestoßen hatte, stand danach für den
+  wirklichen Schlag noch offen. Der Bot lochte die Erzmagierloge im Mittel mit **zwei** Schlägen
+  bei Par 5 und hielt die Legenden-Welt damit für leichter als den Lehrlingsgarten. Seitdem wird
+  dieser Zustand wie `switches` im Zustand mitgeführt (`zauberLesen`/`zauberSetzen` in
+  `tools/audit/sim.mjs`).
+* **Und er kannte die Blüte nicht.** Danach lief er immer wieder geradeaus gegen dieselbe Lücke,
+  fiel hinein und erreichte das Schlaglimit – jede Rankenbahn wäre als unspielbar durchgefallen,
+  obwohl jeder Spieler auf einen Blick sieht, was zu tun ist. Die Rankenbrücke ist für den Bot
+  jetzt dasselbe Rätsel wie ein Schalter-Tor: Solange sie nicht trägt, ist nicht das Loch das
+  nächste Ziel, sondern die Blüte (`activeMap`).
+
+Dazu kennt der Prüfstand jetzt auch Fynns Regel vom 19. September: Auf eine Rankenbrücke wird nach
+einem Strafschlag niemand zurückgelegt, und ein Ball, der auf einer tragenden Ranke liegenbleibt,
+ist noch nicht in Sicherheit – sie welkt gleich.
 
 **Geprüft** wird mit `node tools/zauber.mjs` (Verhalten beider Maschinen im echten Ablauf),
-`node tools/validate.mjs` und `GAMES=2 node tools/audit/audit.mjs lehrling` bzw. `… warte`. Die Wegprüfung in
+`node tools/validate.mjs` und `GAMES=2 node tools/audit/audit.mjs lehrling` bzw. `… warte`, `… loge`. Die Wegprüfung in
 `validate.mjs` kennt die Zauberhüte als Verbindung – sonst hielte sie ausgerechnet die Bahn für
 unpassierbar, die den Hut erklärt.
 
@@ -3328,7 +3365,7 @@ tools/online.mjs        fährt zwei Browser gegeneinander: beitreten, spielen, r
 tools/flut.mjs          prüft die Maschinen der Flut: Beckenlauf, Durchrollen, Pumpwerk, jede fertige Bahn
 tools/flut.py           baut die Bahnen der Flut – und lehnt jede ab, auf der man warten müsste
 tools/baumodus.mjs      setzt im Browser jede der 63 Maschinen des Baumodus einmal hin und faßt jeden Regler an
-tools/zauber.mjs        prüft die Maschinen des Zauberreichs: Ranke, Hüte, Mondzieher, Sternbild
+tools/zauber.mjs        prüft die Maschinen des Zauberreichs: Ranke, Hüte, Mondzieher, Sternbild, Spiegel
 tools/ruhepunkt.mjs     prüft, wohin der Ball nach einem Strafschlag zurückkommt – nie dorthin, wo er gleich wieder fällt
 tools/zauber.py         baut die Bahnen des Zauberreichs – und lehnt jede Blüte ab, die man nicht rechtzeitig erreicht
 style.css         Oberfläche

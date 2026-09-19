@@ -1004,6 +1004,113 @@ const Hats = (() => {
       ctx.beginPath(); ctx.arc(mx, my, mr, 0, TAU2); ctx.stroke();
     },
 
+    erzmagierhut(ctx, color, t, fein) {  // Erzmagierloge: der letzte Hut des Zauberreichs
+      /* Der dritte und hoechste. Er muss auf den ersten Blick zur Familie gehoeren und auf den
+         zweiten sagen, dass es darueber nichts mehr gibt. Die Steigerung laeuft ueber die Spitze:
+         Der Lehrling traegt EINEN Stern, der Astronom den MOND - der Erzmagier traegt DREI Sterne,
+         die um die Spitze kreisen, und darunter Runen, die der Reihe nach aufleuchten wie ein
+         Sternbild, das sich schliesst.
+
+         Und der Filz ist schwarz mit Gold. Violett war der Lehrling, nachtblau die Warte; Schwarz
+         ist keine vierte Farbe in derselben Reihe, sondern das Ende der Reihe. */
+      const g = ctx.createRadialGradient(-0.3, -0.24, 0.08, 0, 0, 1);
+      g.addColorStop(0, '#f2e2cf'); g.addColorStop(0.55, '#d9bd9c'); g.addColorStop(1, '#8e7157');
+      ctx.beginPath(); ctx.arc(0, 0, 1, 0, TAU2); ctx.fillStyle = g; ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.4)'; ctx.lineWidth = 0.06; ctx.stroke();
+
+      ctx.save(); kugelMaske(ctx);
+      // Augen tief unter der Krempe - dieselbe Lehre wie bei den beiden anderen
+      ctx.fillStyle = '#1c1428';
+      for (const ax of [-0.28, 0.28]) { ctx.beginPath(); ctx.ellipse(ax, 0.26, 0.09, 0.11, 0, 0, TAU2); ctx.fill(); }
+      if (fein) {
+        // Ein Lichtpunkt je Auge, und dazu ein goldener Schimmer darin: er sieht mehr als andere
+        ctx.fillStyle = 'rgba(255,255,255,0.85)';
+        for (const ax of [-0.25, 0.31]) { ctx.beginPath(); ctx.arc(ax, 0.22, 0.032, 0, TAU2); ctx.fill(); }
+        ctx.fillStyle = `rgba(255,209,102,${0.3 + 0.35 * Math.abs(Math.sin(t * 1.4))})`;
+        for (const ax of [-0.28, 0.28]) { ctx.beginPath(); ctx.arc(ax, 0.3, 0.05, 0, TAU2); ctx.fill(); }
+      }
+      ctx.restore();
+
+      const wippen = Math.sin(t * 1.4) * 0.05;
+      const spitzeX = 0.5 + wippen, spitzeY = -1.66;   // niedriger als die Warte: oben kreisen Sterne
+      /* Der Filz ist dunkel, aber nicht schwarz. Beim ersten Versuch lag er bei #151020, und in
+         der Vorschau war der Hut dann nur noch sein goldener Umriss - eine Kontur ohne Inhalt. */
+      const kg = ctx.createLinearGradient(-0.95, -0.2, 0.95, -1.4);
+      kg.addColorStop(0, '#241a38'); kg.addColorStop(0.5, '#413058'); kg.addColorStop(1, '#1a1228');
+      ctx.beginPath();
+      ctx.moveTo(-1.02, -0.24);
+      ctx.quadraticCurveTo(-0.56, -1.16, spitzeX, spitzeY);
+      ctx.quadraticCurveTo(0.72, -0.82, 1.02, -0.24);
+      ctx.closePath();
+      ctx.fillStyle = kg; ctx.fill();
+      ctx.strokeStyle = '#c9a75a'; ctx.lineWidth = 0.05; ctx.stroke();
+
+      /* EIN KLEINES STERNBILD AUF DEM FILZ. Zuerst standen hier drei frei erfundene Runen, und
+         die sahen im grossen Bild aus wie hingekritzelt - Zeichen, die nichts bedeuten, sehen aus
+         wie ein Fehler. Jetzt ist es dasselbe Bild, das der Erzmagier auf seinen Bahnen schliesst:
+         drei Sterne und die Linien dazwischen, die nacheinander aufleuchten. */
+      if (fein) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(-1.02, -0.24);
+        ctx.quadraticCurveTo(-0.56, -1.16, spitzeX, spitzeY);
+        ctx.quadraticCurveTo(0.72, -0.82, 1.02, -0.24);
+        ctx.closePath(); ctx.clip();
+        const punkte = [[-0.26, -0.92], [0.12, -1.14], [-0.06, -1.42]];   // ueber dem Band, sonst verdeckt es die Krone
+        const takt = (t * 0.6) % 2.4;
+        ctx.lineCap = 'round'; ctx.lineWidth = 0.05;
+        for (let i = 0; i + 1 < punkte.length; i++) {
+          ctx.strokeStyle = takt > i + 0.6 ? 'rgba(255,226,150,0.9)' : 'rgba(201,167,90,0.3)';
+          ctx.beginPath(); ctx.moveTo(punkte[i][0], punkte[i][1]);
+          ctx.lineTo(punkte[i + 1][0], punkte[i + 1][1]); ctx.stroke();
+        }
+        punkte.forEach((p, i) => {
+          const an = takt > i * 0.8;
+          ctx.fillStyle = an ? 'rgba(255,240,190,0.95)' : 'rgba(201,167,90,0.45)';
+          ctx.beginPath(); ctx.arc(p[0], p[1], an ? 0.075 : 0.055, 0, TAU2); ctx.fill();
+        });
+        ctx.restore();
+      }
+
+      // Die Krempe: breit, schwarz, mit goldenem Rand
+      ctx.beginPath(); ctx.ellipse(0, -0.22, 1.3, 0.3, 0, 0, TAU2);
+      const bg = ctx.createLinearGradient(0, -0.44, 0, 0.16);
+      bg.addColorStop(0, '#231a34'); bg.addColorStop(1, '#0d0914');
+      ctx.fillStyle = bg; ctx.fill();
+      ctx.strokeStyle = '#c9a75a'; ctx.lineWidth = 0.055; ctx.stroke();
+
+      /* Das Band ist hier eine KRONE: derselbe Platz, dieselbe Spielerfarbe wie bei den anderen
+         beiden - aber mit Zacken. Man soll die drei nebeneinanderlegen koennen und die Reihenfolge
+         sehen, ohne dass jemand sie erklaert. */
+      ctx.beginPath(); ctx.ellipse(0, -0.42, 0.92, 0.2, 0, 0, TAU2);
+      ctx.fillStyle = color || '#c77dff'; ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 0.04; ctx.stroke();
+      ctx.fillStyle = '#ffd166'; ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 0.03;
+      for (const zx of [-0.66, -0.23, 0.23, 0.66]) {
+        const hoch = Math.abs(zx) < 0.4 ? 0.38 : 0.28;    // die inneren Zacken stehen hoeher
+        ctx.beginPath();
+        ctx.moveTo(zx - 0.085, -0.58); ctx.lineTo(zx, -0.58 - hoch); ctx.lineTo(zx + 0.085, -0.58);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+      }
+
+      /* Drei Sterne um die Spitze. Sie kreisen, und weil sie in verschiedenen Groessen und
+         Helligkeiten laufen, sieht man die Bewegung auch dann, wenn der Ball stillsteht. */
+      for (let i = 0; i < 3; i++) {
+        const a = t * 0.8 + i * (TAU2 / 3);
+        const px = spitzeX + Math.cos(a) * 0.23, py = spitzeY + 0.05 + Math.sin(a) * 0.1;
+        const nah = (Math.sin(a) + 1) / 2;                 // vorn groesser als hinten
+        const r1 = 0.09 + nah * 0.07, r2 = r1 * 0.4;
+        ctx.fillStyle = `rgba(255,240,190,${0.45 + 0.5 * nah})`;
+        ctx.beginPath();
+        for (let k = 0; k < 10; k++) {
+          const w = -Math.PI / 2 + k * (Math.PI / 5) + t * 0.6, rr = k % 2 ? r2 : r1;
+          const qx = px + Math.cos(w) * rr, qy = py + Math.sin(w) * rr;
+          k ? ctx.lineTo(qx, qy) : ctx.moveTo(qx, qy);
+        }
+        ctx.closePath(); ctx.fill();
+      }
+    },
+
     orb(ctx, color, t, fein) {   // Schattenreich: Kristallkugel mit Nebel, Funken und einem Auge, das blinzelt
       glasKugel(ctx, '#e2c8ff', '#5c34a0');
       ctx.save(); kugelMaske(ctx);
@@ -2053,6 +2160,7 @@ const Hats = (() => {
     { id: 'taucherhelm', name: 'Taucherhelm', welt: 'flut', voll: true },
     { id: 'lehrlingshut', name: 'Lehrlingshut', welt: 'lehrling', voll: true },
     { id: 'sternenhut', name: 'Sternenhut', welt: 'warte', voll: true },
+    { id: 'erzmagierhut', name: 'Erzmagierhut', welt: 'loge', voll: true },
     { id: 'champion', name: 'Championhelm', welt: 'colosseum', art: 'turnier' },
   ];
   const byId = id => LIST.find(h => h.id === id);
