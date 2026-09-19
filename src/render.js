@@ -1808,7 +1808,7 @@ class Renderer {
     if (ob.type === 'abflussrohr') { this.drawAbflussFloor(ctx, ob, t); return; }
     if (ob.type === 'schneebruecke') { this.drawSchneebrueckeFloor(ctx, ob, t); return; }
     if (ob.type === 'ranke') { this.drawRankeFloor(ctx, ob, t); return; }
-    if (ob.type === 'zauberhut') { this.drawZauberhutFloor(ctx, ob, t); return; }
+    if (ob.type === 'zauberhut') { this.drawRunensteinFloor(ctx, ob, t); return; }
     if (ob.type === 'mondzieher') { this.drawMondzieherFloor(ctx, ob, t); return; }
     if (ob.type === 'sternbild') { this.drawSternbildFloor(ctx, ob, t); return; }
     if (ob.type === 'zauberspiegel') { this.drawZauberspiegelFloor(ctx, ob, t); return; }
@@ -2167,7 +2167,7 @@ class Renderer {
     } else if (ob.type === 'zauberhut') {
       /* noFade: Welcher Hut leuchtet, ist die ganze Aufgabe. Durchsichtig zu werden, sobald der
          Ball davorliegt, nähme ihr genau das. */
-      items.push({ x: ob.x, y: ob.y, bias: 0.3, noFade: true, draw: () => this.drawZauberhut(ctx, ob, t) });
+      items.push({ x: ob.x, y: ob.y, bias: 0.3, noFade: true, draw: () => this.drawRunenstein(ctx, ob, t) });
     } else if (ob.type === 'zauberspiegel') {
       /* noFade: Der Spiegel ist kein Hindernis, das man umfährt, sondern der Weg selbst.
          Durchsichtig zu werden, sobald der Ball davorliegt, nähme ihm genau das. */

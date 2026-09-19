@@ -18,7 +18,7 @@
                    bei der Schneebrücke, und aus demselben Grund: Boden, der zur Laufzeit
                    entsteht, müßte Wegfindung, Banden und Kamera mitziehen. Boden, der wegfällt,
                    kostet eine Abfrage.
-     'zauberhut'   Drei Hüte, einer leuchtet. Wer in einen rollt, kommt aus dem leuchtenden
+     'zauberhut'   Drei Runensteine, einer leuchtet. Wer in ein Maul rollt, kommt am leuchtenden
                    heraus; wer in den leuchtenden rollt, aus dem nächsten – es gibt keine
                    Sackgasse. Das Leuchten wandert im Takt und kündigt sich an.
 
@@ -156,8 +156,8 @@ const ZAUBER_GARTEN = [
     autoDecor: { density: 0.09, seed: 57 },
   },
   {
-    name: 'Der Hutständer', par: 3, theme: 'gewaechshaus',
-    intro: 'Durch die Mauer kommt nur, wer sich verzaubern läßt. Wer in einen Hut rollt, kommt aus dem heraus, der gerade leuchtet – und wer in den leuchtenden rollt, aus dem nächsten. Einer der beiden Ausgänge steht im Sand. Das Leuchten wandert; man sieht es kommen.',
+    name: 'Der Steinkreis', par: 3, theme: 'gewaechshaus',
+    intro: 'Durch die Mauer kommt nur, wer sich verzaubern läßt. Wer in ein Steinmaul rollt, kommt an dem Stein heraus, der gerade leuchtet – und wer in den leuchtenden rollt, am nächsten. Einer der beiden Ausgänge steht im Sand. Das Leuchten wandert; man sieht es kommen.',
     map: [
       '..............................',
       '..............................',
@@ -209,8 +209,8 @@ const ZAUBER_GARTEN = [
     autoDecor: { density: 0.09, seed: 83 },
   },
   {
-    name: 'Blüte und Hut', par: 4, theme: 'gewaechshaus',
-    intro: 'Erst die Ranke über den Steg – sie trägt hier eine halbe Sekunde länger, der Weg ist weiter. Dann steht die Regalwand im Weg, und wieder helfen nur die Hüte. Wer beim Steg zu viel Kraft gibt, steht drüben zu weit oben und muß noch einmal ansetzen.',
+    name: 'Blüte und Stein', par: 4, theme: 'gewaechshaus',
+    intro: 'Erst die Ranke über den Steg – sie trägt hier eine halbe Sekunde länger, der Weg ist weiter. Dann steht die Regalwand im Weg, und wieder helfen nur die Steine. Wer beim Steg zu viel Kraft gibt, steht drüben zu weit oben und muß noch einmal ansetzen.',
     map: [
       '..................................',
       '..................................',
@@ -272,7 +272,7 @@ const ZAUBER_GARTEN = [
   },
   {
     name: 'Die Lehrlingsprüfung', par: 3, theme: 'lehrlingsgarten',
-    intro: 'Die Prüfung: erst die Ranke, dann zwischen dem Springkraut hindurch, dann der Bienenstand im Takt – und zum Schluß noch einmal die Hüte. Wer hier unter Par bleibt, hat den Lehrlingshut verdient.',
+    intro: 'Die Prüfung: erst die Ranke, dann zwischen dem Springkraut hindurch, dann der Bienenstand im Takt – und zum Schluß noch einmal die Steine. Wer hier unter Par bleibt, hat den Lehrlingshut verdient.',
     map: [
       '..................................',
       '..................................',
@@ -502,8 +502,8 @@ const ZAUBER_WARTE = [
     autoDecor: { density: 0.09, seed: 97 },
   },
   {
-    name: 'Die Hutkammer', par: 4, theme: 'kartensaal',
-    intro: 'Die Hüte aus dem Garten, eine Stufe schärfer: Wo man herauskommt, steht fest - was danach mit dem Ball geschieht, entscheidet der Mond daneben. Wer den Hut im falschen Augenblick nimmt, landet dort, wo er nicht hin wollte.',
+    name: 'Die Steinkammer', par: 4, theme: 'kartensaal',
+    intro: 'Die Steine aus dem Garten, eine Stufe schärfer: Wo man herauskommt, steht fest - was danach mit dem Ball geschieht, entscheidet der Mond daneben. Wer den Stein im falschen Augenblick nimmt, landet dort, wo er nicht hin wollte.',
     map: [
       '................................',
       '................................',
@@ -643,7 +643,7 @@ const ZAUBER_LOGE = [
   },
   {
     name: 'Der Rat der Neun', par: 5, theme: 'erzmagierloge',
-    intro: 'Vier Hueten leuchtet reihum einer, und der Takt ist schnell. Mitten zwischen ihnen steht ein Mond, der zieht und stoesst - wer im falschen Augenblick in den Hut rollt, kommt richtig heraus und landet trotzdem falsch. Am Ende schwingt das Lot des Astronomen.',
+    intro: 'Vier Hueten leuchtet reihum einer, und der Takt ist schnell. Mitten zwischen ihnen steht ein Mond, der zieht und stoesst - wer im falschen Augenblick in das Maul rollt, kommt richtig heraus und landet trotzdem falsch. Am Ende schwingt das Lot des Astronomen.',
     map: [
       '........................................',
       '........................................',
@@ -790,7 +790,7 @@ const ZAUBER_LOGE = [
   },
   {
     name: 'Der Erzmagier', par: 6, theme: 'erzmagierloge',
-    intro: 'Die Pruefung der Loge: die Bluete anstossen, durch den Spiegel, in den richtigen Hut, am Mond vorbei - und dabei die drei Sterne mitnehmen, denn sonst steht am Ende ein Bannmal, das nicht aufgeht. Wer hier unter Par bleibt, hat ausgelernt.',
+    intro: 'Die Pruefung der Loge: die Bluete anstossen, durch den Spiegel, in das richtige Maul, am Mond vorbei - und dabei die drei Sterne mitnehmen, denn sonst steht am Ende ein Bannmal, das nicht aufgeht. Wer hier unter Par bleibt, hat ausgelernt.',
     map: [
       '............................................',
       '............................................',

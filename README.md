@@ -1019,6 +1019,8 @@ Erste Welt der Stufe Legende: schwebende Felsinseln in einer Gewitternacht (`sto
 
 Zweite Welt der Stufe Legende und die schwerste: zehn Bahnen mit schmalen Wegen (zwei bis drei Kacheln), Höhenstufen und Stegen ohne Geländer; Friedhöfe unter blutrotem Mond, Aschegrund, Schattenfeuer statt Lava (`shadow`), der Totensee (`darksea`) und der Thronsaal (`throne`). Gefahren: **Fallbeile** (Klinge wird langsam hochgezogen und knallt schlagartig herunter – wer dann darunter liegt, wird geköpft: Strafschlag, zurück), **Rabenschwärme** (fliegen wie Wellen ihre Bahn und nehmen den Ball mit – Timing!), **verfluchte Ritterstatuen** (erwachen im Takt, ein Schwerthieb belegt den Ball mit dem Ritterfluch: träge bis zum Loch), der **Turm des Auges** (das brennende Auge dreht seinen Lichtkegel – wer darin liegen bleibt, wird erblickt: Strafschlag, zurück), **Knochenrampen** (Sprung über Feuergruben – nur mit Schwung), die **Riesenfledermaus** (lauert am Rand ihres Jagdgrunds und schießt im Takt von der Seite quer über die Lücke – wer dann darüber fliegt, wird gepackt: Strafschlag, zurück; wie Hai und Krokodil), der **Basilisk** (die Riesenarmbrust des Schattenreichs: rollt der Ball in ihre Rinne, wird die Sehne gespannt und er wird weit übers Feld geschossen – der Schaft pendelt), **Sargfähren** über den Totensee, **dunkle Tentakel**, **Sensen**, **Geister** und **Schattenportale**. Zum Ausgleich sind die Löcher im Schattenreich größer und ziehen den Ball stärker an (`cupR`, `cupPull` je Bahn).
 
+**Der Sog des Lochs, seit Fassung 196: 0,50 statt 0,62.** Das Loch zieht einen Ball an, der nah genug vorbeirollt – mit 0,62 Kacheln zog es noch einen Ball, der anderthalb Ballbreiten daneben lag, und das ließ zu viele Putts fallen, die eigentlich daneben waren. Verkürzt wurde bewußt der SOG und nicht der Lochrand (`cupR` bleibt 0,42): Ein kleineres Loch spuckt auch gute Putts wieder aus und fühlt sich kaputt an, ein kürzerer Sog verlangt nur, daß man zielt. Bahnen, die den Wert selbst setzen – das ganze Schattenreich –, bleiben unverändert; dort ist das großzügige Loch Absicht. Beides steht in `src/level.js` (Voreinstellung) und `src/physics.js` (Wirkung).
+
 | Nr. | Bahn | Par | Besonderheit |
 |---|---|---|---|
 | 1 | Friedhofspforte | 3 | schmaler Friedhofsweg mit zwei Kehren, Rabenschwarm trägt über die erste Gerade, Geist, Fallbeil im Tor |
@@ -2975,7 +2977,13 @@ Aufgabe heißt immer: den Moment abpassen. Hier startet der Spieler die Uhr selb
   Ranke sorgt nur dafür, daß man dort **nicht** hindurchfällt – dieselbe Umkehrung wie bei der
   Schneebrücke. Boden, der zur Laufzeit entsteht, müßte Wegfindung, Banden und Kamera mitziehen;
   Boden, der wegfällt, kostet eine Abfrage.
-* **Die Zauberhüte** (`zauberhut`). Zwei bis vier Hüte, genau einer leuchtet. Wer in einen rollt,
+* **Die Runensteine** (`zauberhut`). *Bis Fassung 195 waren das Zauberhüte – ein Filzhut mit Krempe,
+  in den der Ball hineinrollte. Seit 196 stehen dort aufgerichtete Steine mit leuchtenden Zeichen.
+  Das Verhalten ist unverändert; was sich ändert, ist, womit die Maschine ihren Zustand erzählt: Der
+  Hut brauchte dafür einen Stern an der Spitze und einen Schein am Boden, der Stein hat seine Runen.
+  Der interne Name des Typs bleibt `zauberhut`, damit selbstgebaute Bahnen, die ihn schon benutzen,
+  weiter laden – ein umbenannter Typ wäre in fremden Bahnen ein unbekanntes Hindernis.*
+  Zwei bis vier Steine, genau einer leuchtet. Wer in ein Maul rollt,
   kommt aus dem leuchtenden heraus – und wer in den leuchtenden rollt, aus dem **nächsten**, damit
   er keine Sackgasse ist. Das Leuchten wandert im Takt, und der nächste Hut glimmt schon auf,
   bevor er dran ist: Ein wanderndes Ziel, das man nicht kommen sieht, wäre Glück, und Glück ist
@@ -3096,8 +3104,8 @@ ist noch nicht in Sicherheit – sie welkt gleich.
 
 **Geprüft** wird mit `node tools/zauber.mjs` (Verhalten beider Maschinen im echten Ablauf),
 `node tools/validate.mjs` und `GAMES=2 node tools/audit/audit.mjs lehrling` bzw. `… warte`, `… loge`. Die Wegprüfung in
-`validate.mjs` kennt die Zauberhüte als Verbindung – sonst hielte sie ausgerechnet die Bahn für
-unpassierbar, die den Hut erklärt.
+`validate.mjs` kennt die Runensteine als Verbindung – sonst hielte sie ausgerechnet die Bahn für
+unpassierbar, die den Stein erklärt.
 
 ## Eigene Bahnen im Code bauen
 

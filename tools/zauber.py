@@ -23,7 +23,7 @@ das übt ein Lehrling.
 
 DIE MASCHINEN (src/obstacles_zauber.js):
     'ranke'       Blüte anstoßen, dann wächst eine Ranke über die Lücke – für ein paar Sekunden
-    'zauberhut'   drei Hüte; wer in einen rollt, kommt aus dem leuchtenden heraus, und das
+    'zauberhut'   drei Runensteine; wer in ein Maul rollt, kommt am leuchtenden heraus, und das
                   Leuchten wandert im Takt weiter
     'mondzieher'  zieht bei voller Scheibe, stößt bei dunkler, läßt beim Halbmond in Ruhe
     'sternbild'   alle Sterne anfahren, dann geht das Sternentor auf
@@ -35,7 +35,7 @@ DIE REGELN, DIE HIER GEPRÜFT WERDEN, und warum jede einzelne dasteht:
     Spielen sofort.
   * Man muß es in der Zeit auch schaffen. Gerechnet wird mit demselben Reibungswert, den die
     Physik benutzt, und mit einem ehrlichen Tempo an der Blüte – nicht mit dem Höchstschlag.
-  * Jeder Hut steht auf Boden. Ein Hut über dem Abgrund spuckt den Ball ins Nichts.
+  * Jeder Runenstein steht auf Boden. Ein Maul über dem Abgrund spuckt den Ball ins Nichts.
   * Der Sockel des Mondziehers steht auf Boden – er ist fest.
   * Ein Sternentor sperrt wirklich etwas ab, und alle seine Sterne liegen davor. Ein Tor, das
     nichts absperrt, ist Schmuck; ein Stern dahinter macht die Bahn unlösbar.
@@ -305,8 +305,8 @@ def pruefe(b):
     fest = lambda x, y: 0 <= x < breit and 0 <= y < hoch and karte[y][x] in FEST
 
     """Was den Weg verbindet, ohne daß man rollt: Portale und Zauberhüte. Ohne sie hielte die
-       Prüfung jede Bahn für unpassierbar, deren einziger Weg durch einen Hut führt – und das ist
-       ausgerechnet die Bahn, die den Hut erklärt."""
+       Prüfung jede Bahn für unpassierbar, deren einziger Weg durch einen Runenstein führt – und
+       das ist ausgerechnet die Bahn, die den Stein erklärt."""
     spruenge = []
     for o in b['obstacles']:
         if o['type'] == 'portal':
@@ -446,11 +446,11 @@ def pruefe(b):
     # ---- Die Zauberhüte
     for o in [x for x in b['obstacles'] if x['type'] == 'zauberhut']:
         if len(o['plaetze']) < 2:
-            fehler.append('ein Hütchenzauber braucht mindestens zwei Hüte')
+            fehler.append('ein Steinzauber braucht mindestens zwei Runensteine')
         for p in o['plaetze']:
             px, py = int(p[0]), int(p[1])
             if not fest(px, py):
-                fehler.append(f'ein Zauberhut steht auf {px}/{py}, und dort ist kein Boden – '
+                fehler.append(f'ein Runenstein steht auf {px}/{py}, und dort ist kein Boden – '
                               f'er spuckte den Ball ins Nichts')
 
     # ---- Der Mondzieher
@@ -596,20 +596,20 @@ intro='Zwei Lücken, zwei Blüten. Die zweite Blüte liegt hinter der ersten Ran
       'ruhige sind sicherer.')
 
 # --- 5 ---------------------------------------------------------------------
-# Der Hutständer. Eine Mauer quer durch das Treibhaus, und durch sie führt nur der Zauber:
-# hinein in einen Hut, heraus aus dem, der leuchtet. Einer der beiden Ausgänge liegt im Sand.
+# Der Steinkreis. Eine Mauer quer durch das Treibhaus, und durch sie führt nur der Zauber:
+# hinein in ein Maul, heraus am Stein, der leuchtet. Einer der beiden Ausgänge liegt im Sand.
 f = leer(30, 14)
 fuell(f, 1, 2, 28, 11)
 fuell(f, 13, 2, 15, 11, 'x')          # die Mauer
-fuell(f, 19, 9, 24, 11, 's')          # der Sandkasten hinter dem falschen Hut
+fuell(f, 19, 9, 24, 11, 's')          # der Sandkasten hinter dem falschen Stein
 setz(f, 3, 6, 'T'); setz(f, 26, 5, 'H')
-bahn(GARTEN, 'Der Hutständer', 'gewaechshaus', f, [
+bahn(GARTEN, 'Der Steinkreis', 'gewaechshaus', f, [
     huete([(6, 6), (22, 4), (22, 10)], takt=2.6),
     pilz(9.5, 9.5, stil='springkraut'),
 ], par=3,
-intro='Durch die Mauer kommt nur, wer sich verzaubern läßt. Wer in einen Hut rollt, kommt aus dem '
-      'heraus, der gerade leuchtet – und wer in den leuchtenden rollt, aus dem nächsten. Einer der '
-      'beiden Ausgänge steht im Sand. Das Leuchten wandert; man sieht es kommen.')
+intro='Durch die Mauer kommt nur, wer sich verzaubern läßt. Wer in ein Steinmaul rollt, kommt an '
+      'dem Stein heraus, der gerade leuchtet – und wer in den leuchtenden rollt, am nächsten. Einer '
+      'der beiden Ausgänge steht im Sand. Das Leuchten wandert; man sieht es kommen.')
 
 # --- 6 ---------------------------------------------------------------------
 # Das Treibhaus. Der Bienenstand steht quer über dem Weg, dahinter drehen zwei Rasensprenger.
@@ -632,35 +632,35 @@ intro='Der Bienenstand steht quer im Weg, und der Durchlaß zwischen den Körben
       'sind. Einer nach dem anderen.')
 
 # --- 7 ---------------------------------------------------------------------
-# Blüte und Hut. Zuerst die Ranke über den Steg, dann die Hüte durch die Regalwand.
+# Blüte und Stein. Zuerst die Ranke über den Steg, dann die Steine durch die Regalwand.
 f = leer(34, 15)
 fuell(f, 1, 4, 12, 10)                # der Vorraum
 fuell(f, 13, 6, 20, 8)                # der schmale Steg
 fuell(f, 21, 3, 32, 11)               # die Halle
 fuell(f, 27, 3, 28, 8, 'x')           # die Regalwand davor - mit einer Gasse an der Unterkante
 setz(f, 3, 7, 'T'); setz(f, 31, 7, 'H')
-bahn(GARTEN, 'Blüte und Hut', 'gewaechshaus', f, [
+bahn(GARTEN, 'Blüte und Stein', 'gewaechshaus', f, [
     ranke(14, 6, 5, 3, 9.5, 7.5, dauer=5.5),
-    # ZWEI Hüte, nicht drei. Mit dreien brauchte der Normalspieler in der Bot-Prüfung im Schnitt
-    # sieben Schläge und im Median neun: Aus welchem Hut man herauskommt, war dann Glück. Mit
+    # ZWEI Steine, nicht drei. Mit dreien brauchte der Normalspieler in der Bot-Prüfung im Schnitt
+    # sieben Schläge und im Median neun: An welchem Stein man herauskommt, war dann Glück. Mit
     # zweien ist der Weg eindeutig – egal welcher gerade leuchtet, man landet drüben –, und die
     # Aufgabe ist wieder das, was sie sein soll: hineintreffen. Die Wahl zwischen mehreren
     # Ausgängen gehört in die Sternenwarte, nicht in den Garten. 
-    # Und ein weites Maul. Mit 0,42 Kacheln war der Hut ein Nadeloehr: Der ehrlich messende
+    # Und ein weites Maul. Mit 0,42 Kacheln war es ein Nadeloehr: Der ehrlich messende
     # Bot (siehe README, die zwei Fehler im Pruefstand) brauchte im Median NEUN Schlaege bei
-    # Par 4, weil er immer wieder daneben rollte. Ein Hut, den man nur mit Glueck trifft, ist
+    # Par 4, weil er immer wieder daneben rollte. Ein Maul, das man nur mit Glueck trifft, ist
     # keine Aufgabe, sondern eine Pruefung der Geduld.
     #
     # UND DIE REGALWAND HAT JETZT EINE GASSE. Auch mit weitem Maul blieb der Median bei elf:
-    # Wer den Hut verfehlte, stand vor einer Wand ohne Ausweg und musste es noch einmal
-    # versuchen, und noch einmal. Der Hut ist jetzt die ABKUERZUNG, nicht die einzige Tuer -
+    # Wer das Maul verfehlte, stand vor einer Wand ohne Ausweg und musste es noch einmal
+    # versuchen, und noch einmal. Der Stein ist jetzt die ABKUERZUNG, nicht die einzige Tuer -
     # das ist im Garten die richtige Rolle fuer ihn. Wer ihn trifft, spart einen Schlag; wer
     # nicht, geht unten herum.
     huete([(24, 7), (30, 10)], takt=2.4, r=0.62),
     pilz(24.5, 4.5, stil='springkraut'),
 ], par=4,
 intro='Erst die Ranke über den Steg – sie trägt hier eine halbe Sekunde länger, der Weg ist weiter. '
-      'Dann steht die Regalwand im Weg, und wieder helfen nur die Hüte. Wer beim Steg zu viel Kraft '
+      'Dann steht die Regalwand im Weg, und wieder helfen nur die Steine. Wer beim Steg zu viel Kraft '
       'gibt, steht drüben zu weit oben und muß noch einmal ansetzen.')
 
 # --- 8 ---------------------------------------------------------------------
@@ -706,7 +706,7 @@ bahn(GARTEN, 'Die Lehrlingsprüfung', 'lehrlingsgarten', f, [
 ], par=3,
 intro='Die Prüfung: erst die Ranke, dann zwischen dem Springkraut hindurch, dann der Bienenstand im '
       'Takt – und '
-      'zum Schluß noch einmal die Hüte. Wer hier unter Par bleibt, hat den Lehrlingshut verdient.')
+      'zum Schluß noch einmal die Steine. Wer hier unter Par bleibt, hat den Lehrlingshut verdient.')
 
 
 # ===========================================================================
@@ -841,20 +841,20 @@ intro='Das wandernde Tor läuft auf und ab, und der Mond davor zieht den Ball vo
       'und die andere aushalten.')
 
 # --- 8 ---------------------------------------------------------------------
-# Die Hutkammer. Der Rückgriff auf den Lehrlingsgarten: dieselben Zauberhüte, aber jetzt entscheidet
+# Die Steinkammer. Der Rückgriff auf den Lehrlingsgarten: dieselben Runensteine, aber jetzt entscheidet
 # ein Mond mit, wo man ankommt.
 f = leer(32, 15)
 fuell(f, 1, 2, 30, 12)
 fuell(f, 11, 2, 12, 9, 'x')
 fuell(f, 20, 5, 21, 12, 'x')
 setz(f, 3, 7, 'T'); setz(f, 28, 4, 'H')
-bahn(WARTE, 'Die Hutkammer', 'kartensaal', f, [
+bahn(WARTE, 'Die Steinkammer', 'kartensaal', f, [
     huete([(8, 4), (16, 11), (25, 9)], takt=2.4),
     mond(16.0, 4.0, r=3.0, kraft=8.0, takt=6.0, phase=0.25),
     pendel(25.0, 3.0, laenge=3.0, amp=45),
 ], par=4,
-intro='Die Hüte aus dem Garten, eine Stufe schärfer: Wo man herauskommt, steht fest - was danach '
-      'mit dem Ball geschieht, entscheidet der Mond daneben. Wer den Hut im falschen Augenblick '
+intro='Die Steine aus dem Garten, eine Stufe schärfer: Wo man herauskommt, steht fest - was danach '
+      'mit dem Ball geschieht, entscheidet der Mond daneben. Wer den Stein im falschen Augenblick '
       'nimmt, landet dort, wo er nicht hin wollte.')
 
 # --- 9 ---------------------------------------------------------------------
@@ -978,7 +978,7 @@ bahn(LOGE, 'Der Rat der Neun', 'erzmagierloge', f, [
     pendel(33.0, 4.0, laenge=3.4, amp=52),
 ], par=5,
 intro='Vier Hueten leuchtet reihum einer, und der Takt ist schnell. Mitten zwischen ihnen steht ein '
-      'Mond, der zieht und stoesst - wer im falschen Augenblick in den Hut rollt, kommt richtig '
+      'Mond, der zieht und stoesst - wer im falschen Augenblick in das Maul rollt, kommt richtig '
       'heraus und landet trotzdem falsch. Am Ende schwingt das Lot des Astronomen.')
 
 # --- 5 ---------------------------------------------------------------------
@@ -1065,7 +1065,7 @@ intro='Zwei Spiegel, vier Sterne und ein Bannmal vor dem Loch. An zwei der Stern
       'welchen man wofuer nimmt.')
 
 # --- 9 ---------------------------------------------------------------------
-# Der Erzmagier. Die letzte Bahn des Zauberreichs: Ranke, Spiegel, Hut, Mond und Sternbild,
+# Der Erzmagier. Die letzte Bahn des Zauberreichs: Ranke, Spiegel, Stein, Mond und Sternbild,
 # hintereinander, jedes in seinem eigenen Durchlass. Wer hier unter Par bleibt, hat ausgelernt.
 f = leer(44, 18)
 fuell(f, 1, 2, 42, 15)
@@ -1080,7 +1080,7 @@ bahn(LOGE, 'Der Erzmagier', 'erzmagierloge', f, [
     mond(33.0, 10.0, r=3.2, kraft=8.5, takt=5.5, phase=0.1),
     sternbild([(15, 8), (24, 9), (33, 4)], (37, 2, 37, 16)),
 ], par=6,
-intro='Die Pruefung der Loge: die Bluete anstossen, durch den Spiegel, in den richtigen Hut, am '
+intro='Die Pruefung der Loge: die Bluete anstossen, durch den Spiegel, in das richtige Maul, am '
       'Mond vorbei - und dabei die drei Sterne mitnehmen, denn sonst steht am Ende ein Bannmal, '
       'das nicht aufgeht. Wer hier unter Par bleibt, hat ausgelernt.')
 
@@ -1137,7 +1137,7 @@ KOPF = """/* Das Zauberreich: ein Ereignis mit drei Orten, die einen Aufstieg er
                    bei der Schneebrücke, und aus demselben Grund: Boden, der zur Laufzeit
                    entsteht, müßte Wegfindung, Banden und Kamera mitziehen. Boden, der wegfällt,
                    kostet eine Abfrage.
-     'zauberhut'   Drei Hüte, einer leuchtet. Wer in einen rollt, kommt aus dem leuchtenden
+     'zauberhut'   Drei Runensteine, einer leuchtet. Wer in ein Maul rollt, kommt am leuchtenden
                    heraus; wer in den leuchtenden rollt, aus dem nächsten – es gibt keine
                    Sackgasse. Das Leuchten wandert im Takt und kündigt sich an.
 

@@ -35,7 +35,12 @@ function bauFlaeche(rows, W, H, def) {
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const c = tiles[y][x];
     if (c === 'T') tee = { x: x + 0.5, y: y + 0.5 };
-    if (c === 'H') cup = { x: x + 0.5, y: y + 0.5, r: def.cupR || 0.42, pull: def.cupPull || 0.62 }; // cupR/cupPull: größeres Loch (Schattenreich)
+    /* cupR/cupPull: größeres Loch (Schattenreich). Der Sog von 0,50 ist der Wert, der das Loch
+       „etwas schwerer" macht – vorher waren es 0,62, und damit zog das Loch einen Ball noch an,
+       der anderthalb Ballbreiten daneben lag. Es ist bewußt der SOG und nicht der Lochrand: Ein
+       kleineres Loch spuckt auch gute Putts wieder aus, ein kürzerer Sog verlangt nur, daß man
+       zielt. Welten, die den Wert selbst setzen, bleiben, wie sie sind. */
+    if (c === 'H') cup = { x: x + 0.5, y: y + 0.5, r: def.cupR || 0.42, pull: def.cupPull || 0.50 };
     if (c === 'x') blocks.push({ x, y });
   }
 

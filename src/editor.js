@@ -101,7 +101,7 @@ const Editor = (deps) => {
     ]],
     ['Zauberreich', [
       ['ranke', 'Rankenbrücke', 'Die Blüte anstoßen läßt eine Ranke über die Lücke wachsen – für ein paar Sekunden.'],
-      ['zauberhut', 'Zauberhüte', 'Wer in einen Hut rollt, kommt aus dem leuchtenden wieder heraus. Das Leuchten wandert.'],
+      ['zauberhut', 'Runensteine', 'Wer in ein Steinmaul rollt, kommt am leuchtenden Stein wieder heraus. Das Leuchten wandert.'],
       ['mondzieher', 'Mondzieher', 'Zieht und stößt im Wechsel. Volle Scheibe zieht, dunkle stößt, Halbmond läßt in Ruhe.'],
       ['sternbild', 'Sternbild', 'Alle Sterne anfahren, dann geht das Tor auf. Die Linien zeigen, was noch fehlt.'],
       ['zauberspiegel', 'Zauberspiegel', 'Wer hineinrollt, kommt drüben seitenverkehrt heraus. Wo man auftrifft, entscheidet, wo man landet.'],

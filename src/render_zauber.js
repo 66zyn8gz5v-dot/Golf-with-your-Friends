@@ -99,19 +99,39 @@ Object.assign(Renderer.prototype, {
     ctx.beginPath(); ctx.arc(kx, ky, s * 0.1, 0, TAU); ctx.fill();
   },
 
-  /* ================= Die Zauberhüte =================
-     Auf dem Boden steht, welcher Hut gerade der Ausgang ist: ein Kreis aus Sternen unter ihm. Der
-     nächste glimmt schon auf, bevor er dran ist – daran legt man den Schlag an. */
-  drawZauberhutFloor(ctx, ob, t) {
+  /* ================= Die Runensteine =================
+     Die Teleporter des Zauberreichs. Zwei bis vier Steine stehen auf der Bahn, genau einer ist der
+     Ausgang, und das Leuchten wandert im Takt weiter. Wer in ein Maul rollt, kommt am leuchtenden
+     Stein wieder heraus.
+
+     VORHER WAREN ES HÜTE. Ein Filzhut mit Krempe, in den der Ball hineinrollte – das war hübsch,
+     aber es war ein Kleidungsstück und kein Bauwerk: Es stand in der Landschaft herum wie etwas,
+     das jemand verloren hat. Ein Runenstein steht da, als hätte er immer da gestanden, und er kann
+     etwas, was der Hut nicht konnte: LEUCHTENDE ZEICHEN. Der Hut mußte seinen Zustand über einen
+     Stern an der Spitze und einen Schein auf dem Boden erzählen; der Stein erzählt ihn mit seinen
+     eigenen Runen, und das ist dieselbe Vokabel wie das Leuchten selbst.
+
+     DIE STEINE SEHEN EINANDER AN. Ihre beschriftete Seite zeigt zur Mitte der Gruppe – dorthin,
+     wo gespielt wird. Ein Stein, dessen Runen von der Bahn weg zeigen, wäre ein Stein mit einer
+     Rückseite, und man müßte um ihn herumlaufen, um zu wissen, ob er dran ist.
+
+     DER STEIN STEHT HINTER SEINEM MAUL, NICHT DARAUF. Gefangen wird am Boden, im Umkreis von
+     'ob.r'; stünde der Stein mitten darauf, verdeckte er genau die Stelle, die man treffen muß. */
+  drawRunensteinFloor(ctx, ob, t) {
     if (!ob.bereit) return;
     const s = this.scale;
     for (let i = 0; i < ob.orte.length; i++) {
       const [hx, hy] = ob.orte[i];
       const an = i === ob.aktiv, gleich = i === ob.naechste ? ob.gleich : 0;
       const hell = an ? 1 : gleich;
-      this.isoEllipse(ctx, hx, hy, 0.004, ob.r * 2.1, `rgba(120,80,190,${0.18 + 0.3 * hell})`);
+      // Das Maul: die dunkle Öffnung, in die der Ball rollt. Sie ist bei jedem Stein gleich –
+      // hineingehen kann man überall, nur heraus kommt man immer am leuchtenden.
+      this.isoEllipse(ctx, hx, hy, 0.004, ob.r * 2.0, `rgba(96,64,160,${0.18 + 0.3 * hell})`);
+      this.isoEllipse(ctx, hx, hy, 0.006, ob.r * 1.15, 'rgba(10,6,22,0.85)');
+      this.isoEllipse(ctx, hx, hy, 0.008, ob.r * 0.72, `rgba(180,140,255,${0.25 + 0.5 * hell})`);
+      this.isoEllipse(ctx, hx, hy, 0.01, ob.r * 0.45, 'rgba(6,4,14,0.9)');
       if (hell < 0.02) continue;
-      const [cx, cy] = this.proj(hx, hy, 0.006);
+      const [cx, cy] = this.proj(hx, hy, 0.012);
       ctx.strokeStyle = `rgba(255,225,150,${0.35 + 0.6 * hell})`;
       ctx.lineWidth = Math.max(1.5, s * 0.06);
       ctx.beginPath(); ctx.ellipse(cx, cy, ob.r * 1.9 * s, ob.r * 1.9 * s * this.cam.tilt, 0, 0, TAU); ctx.stroke();
@@ -119,86 +139,115 @@ Object.assign(Renderer.prototype, {
       ctx.fillStyle = `rgba(255,240,190,${0.5 + 0.5 * hell})`;
       for (let k = 0; k < 6; k++) {
         const a = t * 1.3 + k * (TAU / 6), rr = ob.r * (1.55 + 0.25 * Math.sin(t * 3 + k));
-        const [sx, sy] = this.proj(hx + Math.cos(a) * rr, hy + Math.sin(a) * rr, 0.01);
+        const [sx, sy] = this.proj(hx + Math.cos(a) * rr, hy + Math.sin(a) * rr, 0.014);
         ctx.beginPath(); ctx.arc(sx, sy, s * 0.05 * (0.6 + hell), 0, TAU); ctx.fill();
       }
     }
   },
 
-  /* Die Hüte selbst: Krempe, Kegel, geknickte Spitze. Der leuchtende trägt einen Stern daran.
-
-     DAS MASS DER ZEICHNUNG IST NICHT DAS MASS DER MASCHINE. Beim ersten Versuch war der Hut genau
-     so breit wie sein Maul (0,42 Kacheln), und in der Schrägsicht wurde daraus ein dünner Dorn –
-     derselbe Fehler wie beim Wasserrad: Was aus schmalen Teilen besteht, zerfällt in dieser Größe
-     zu Gekrissel. Ein Zauberhut ist ein breiter Filzhut mit einer Krempe, unter die ein Ball paßt.
-     Darum rechnet die Zeichnung mit einem eigenen, größeren Maß; gefangen wird weiter am Maul. */
-  drawZauberhut(ctx, ob, t) {
+  drawRunenstein(ctx, ob, t) {
     if (!ob.bereit) return;
     const s = this.scale;
-    const R = Math.max(0.78, ob.r * 2.0);           // so groß ist der Hut fürs Auge
-    /* Von hinten nach vorn: Zwei Hüte hintereinander würden sich sonst falsch überdecken. */
+    /* DER STEIN KOMMT AUS DER WELT, NICHT AUS DER MASCHINE. Eine feste Steinfarbe hieße, daß im
+       Gewächshaus derselbe Block steht wie in der Erzmagierloge. Er ist aus dem Gestein gemauert,
+       aus dem ringsum die Banden sind – was die Welten unterscheidet, sagt die Palette. */
+    const pal = this.theme.block || this.theme.wall;
+    // Von hinten nach vorn, sonst decken sich zwei Steine falsch herum
     const reihe = ob.orte.map((p, i) => ({ i, x: p[0], y: p[1] })).sort((a, b) => (a.x + a.y) - (b.x + b.y));
-    for (const h of reihe) {
-      const an = h.i === ob.aktiv, gleich = h.i === ob.naechste ? ob.gleich : 0;
-      const hell = an ? 1 : gleich * 0.7;
-      /* DER KEGEL WIRD IM BILDRAUM GEBAUT, NICHT IN DER WELTEBENE. Zuerst standen seine beiden
-         Fußpunkte links und rechts auf DERSELBEN Weltkoordinate y – und in der Schrägsicht fallen
-         die dann fast aufeinander: Aus dem Hut wurde ein Strich. Dieselbe Falle wie beim
-         Wasserrad. Gerechnet wird darum nur die HÖHE aus der Projektion; Breite und Knick sind
-         Bildpunkte, und damit steht der Hut immer aufrecht, egal wie die Kamera gedreht ist. */
-      const hoch = 1.05 + 0.05 * Math.sin(t * 2 + h.i);
-      const [cx, cy] = this.proj(h.x, h.y, 0.1);
-      const [, oben] = this.proj(h.x, h.y, hoch * (R / 0.78));
-      const hPx = Math.max(s * 0.6, cy - oben);              // so hoch ist der Hut in Bildpunkten
-      const bPx = R * s * 0.82;                              // und so breit sein Fuß
-      const knick = hPx * (0.26 + 0.03 * Math.sin(t * 1.3 + h.i));
-      const spitze = [cx + knick, cy - hPx];
+    for (const g of reihe) {
+      const an = g.i === ob.aktiv, gleich = g.i === ob.naechste ? ob.gleich : 0;
+      const hell = an ? 1 : gleich * 0.85;
+      const flackern = an ? 0.85 + 0.15 * Math.sin(t * 5 + g.i) : 1;
 
-      // Schatten und Krempe. Die Krempe ist breit – daran erkennt man den Hut von oben.
-      this.isoEllipse(ctx, h.x, h.y, 0.004, R * 1.15, 'rgba(0,0,0,0.28)');
-      this.isoEllipse(ctx, h.x, h.y, 0.08, R * 1.1, an ? '#4a3480' : '#3a2a63');
-      this.isoEllipse(ctx, h.x, h.y, 0.095, R * 0.95, an ? '#5c3fa8' : '#472f82');
-      // Das Maul: der dunkle Ring in der Mitte, in den der Ball rollt
-      this.isoEllipse(ctx, h.x, h.y, 0.1, ob.r * 1.05, '#150e2a');
+      // Blickrichtung: zur Mitte der Gruppe. ob.x/ob.y ist genau diese Mitte.
+      let dx = ob.x - g.x, dy = ob.y - g.y;
+      const L = Math.hypot(dx, dy);
+      if (L < 0.01) { dx = 0; dy = 1; } else { dx /= L; dy /= L; }
+      const nx = -dy, ny = dx;
+      const mx = g.x - dx * 0.78, my = g.y - dy * 0.78;    // der Stein steht hinter dem Maul
 
-      // Der Kegel, in Bildpunkten: zwei Bögen von den Fußpunkten zur Spitze
-      const kg = ctx.createLinearGradient(cx - bPx, cy, spitze[0], spitze[1]);
-      kg.addColorStop(0, an ? '#4a3384' : '#3a2766');
-      kg.addColorStop(0.6, an ? '#6b4bb8' : '#503a8c');
-      kg.addColorStop(1, an ? '#8a68d8' : '#5a3f9c');
-      ctx.fillStyle = kg;
-      ctx.beginPath();
-      ctx.moveTo(cx - bPx, cy - hPx * 0.06);
-      ctx.quadraticCurveTo(cx - bPx * 0.55, cy - hPx * 0.62, spitze[0], spitze[1]);
-      ctx.quadraticCurveTo(cx + bPx * 0.72, cy - hPx * 0.52, cx + bPx, cy - hPx * 0.06);
-      ctx.closePath(); ctx.fill();
-      /* HELLER UMRISS, NICHT SCHWARZER. In der Erzmagierloge steht der Hut auf violettem Marmor,
-         und mit einer schwarzen Kante war vom Kegel nichts mehr zu sehen - nur noch Krempe und
-         Maul, also eine Schale. Ein heller Umriss trägt auf JEDEM Boden, im Garten wie in der
-         Loge, und nimmt dem dunklen Hut nichts von seiner Dunkelheit. */
-      ctx.strokeStyle = 'rgba(226,212,255,0.5)'; ctx.lineWidth = Math.max(1.2, s * 0.04); ctx.stroke();
+      // Ein Klotz: Mitte, halbe Breite quer zur Blickrichtung, halbe Tiefe längs
+      const klotz = (quer, tief) => ([
+        [mx + nx * quer + dx * tief, my + ny * quer + dy * tief],
+        [mx - nx * quer + dx * tief, my - ny * quer + dy * tief],
+        [mx - nx * quer - dx * tief, my - ny * quer - dy * tief],
+        [mx + nx * quer - dx * tief, my + ny * quer - dy * tief],
+      ]);
 
-      // Das Band über der Krempe – ebenfalls in Bildpunkten, damit es am Kegel anliegt
-      ctx.strokeStyle = an ? '#ffd166' : '#a98a46'; ctx.lineWidth = Math.max(2, hPx * 0.13);
-      ctx.beginPath();
-      ctx.moveTo(cx - bPx * 0.86, cy - hPx * 0.13);
-      ctx.quadraticCurveTo(cx, cy - hPx * 0.06, cx + bPx * 0.86, cy - hPx * 0.13);
-      ctx.stroke();
+      if (hell > 0.02) {   // der Schein, den der Stein auf den Boden wirft
+        this.isoEllipse(ctx, mx, my, 0.003, 1.1, `rgba(150,110,255,${0.22 * hell})`);
+      }
+      /* Vier Stufen, nach oben schmaler. Ein einzelner Quader wäre eine Kiste; erst die Verjüngung
+         macht daraus einen aufgerichteten Stein. Jede Stufe ist ein echter Körper mit Deckfläche
+         und Seitenflächen – dieselbe Sprache wie die Mauern ringsum. */
+      /* Aufgehellt gegenüber der Bande. Mit der Palettenfarbe pur verschwanden die dunklen Steine
+         im Kartensaal fast im Boden – und man muß auch den erloschenen finden, denn hineinrollen
+         darf man überall. Der leuchtende ist dann noch einmal heller. */
+      const hellStein = 1.3 + (an ? 0.35 : gleich * 0.3);
+      const oben = shade(pal.top, hellStein), seite = shade(pal.side, hellStein);
+      const kante = shade(pal.side, 0.66);
+      this.prism(ctx, klotz(0.58, 0.36), 0, 0.24, oben, seite, { outline: kante });
+      this.prism(ctx, klotz(0.46, 0.28), 0.24, 0.78, oben, seite, { outline: kante });
+      this.prism(ctx, klotz(0.38, 0.23), 1.02, 0.62, oben, seite, { outline: kante });
+      this.prism(ctx, klotz(0.24, 0.16), 1.64, 0.36, oben, seite, { outline: kante });
 
-      if (hell > 0.02) {   // der Stern an der Spitze: das Zeichen des Ausgangs
-        ctx.save(); ctx.globalAlpha = 0.35 + 0.65 * hell;
-        ctx.fillStyle = '#fff2b8';
-        const r1 = s * 0.2, r2 = s * 0.085;
-        ctx.beginPath();
-        for (let k = 0; k < 10; k++) {
-          const a = -Math.PI / 2 + k * (Math.PI / 5) + t * 0.6, rr = k % 2 ? r2 : r1;
-          const px = spitze[0] + Math.cos(a) * rr, py = spitze[1] + Math.sin(a) * rr;
-          k ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+      /* Die leuchtenden Zeichen. Sie sitzen auf der Seite, die zur Mitte zeigt, und sie sind der
+         ganze Zustand der Maschine: hell = hier kommst du heraus, glimmend = gleich hier, dunkel =
+         eingeritzt und kalt. Drei Stück, weil eines wie ein Fleck aussähe und fünf wie Muster. */
+      const front = 0.25;
+      for (let k = 0; k < 3; k++) {
+        const z = 0.52 + k * 0.48;
+        const [rx, ry] = this.proj(mx + dx * front, my + dy * front, z);
+        const gr = s * (0.1 - k * 0.012);
+        const a = (0.16 + 0.84 * hell) * flackern;
+        if (hell > 0.05) {   // der Hof um die Rune - ohne ihn ist es ein Strich, kein Leuchten
+          ctx.fillStyle = `rgba(190,150,255,${0.3 * hell})`;
+          ctx.beginPath(); ctx.arc(rx, ry, gr * 2.6, 0, TAU); ctx.fill();
         }
-        ctx.closePath(); ctx.fill(); ctx.restore();
+        ctx.strokeStyle = hell > 0.05 ? `rgba(255,236,170,${a})` : 'rgba(30,22,48,0.75)';
+        ctx.lineWidth = Math.max(1.3, s * 0.038);
+        ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        ctx.beginPath();
+        if (k === 0) {        // ein Pfeil nach oben
+          ctx.moveTo(rx - gr, ry + gr * 0.7); ctx.lineTo(rx, ry - gr);
+          ctx.lineTo(rx + gr, ry + gr * 0.7); ctx.moveTo(rx, ry - gr * 0.5); ctx.lineTo(rx, ry + gr);
+        } else if (k === 1) { // eine liegende Raute
+          ctx.moveTo(rx - gr, ry); ctx.lineTo(rx, ry - gr * 0.8);
+          ctx.lineTo(rx + gr, ry); ctx.lineTo(rx, ry + gr * 0.8); ctx.closePath();
+        } else {              // ein Kreuz mit Querstrich
+          ctx.moveTo(rx - gr, ry - gr * 0.6); ctx.lineTo(rx + gr, ry + gr * 0.6);
+          ctx.moveTo(rx + gr, ry - gr * 0.6); ctx.lineTo(rx - gr, ry + gr * 0.6);
+        }
+        ctx.stroke();
+      }
+
+      /* Der Kristall auf der Spitze. Er brennt nur am Ausgang – damit sieht man über die halbe
+         Bahn hinweg, welcher Stein dran ist, auch wenn die Runen von dort zu klein sind. */
+      const [kx, ky] = this.proj(mx, my, 2.02 + 0.03 * Math.sin(t * 2 + g.i));
+      if (hell > 0.03) {
+        ctx.fillStyle = `rgba(190,150,255,${0.3 * hell * flackern})`;
+        ctx.beginPath(); ctx.arc(kx, ky, s * 0.42 * (0.7 + 0.3 * hell), 0, TAU); ctx.fill();
+      }
+      ctx.fillStyle = hell > 0.03 ? `rgba(255,244,200,${0.5 + 0.5 * hell * flackern})` : 'rgba(58,46,82,0.95)';
+      ctx.beginPath();
+      ctx.moveTo(kx, ky - s * 0.2); ctx.lineTo(kx + s * 0.1, ky);
+      ctx.lineTo(kx, ky + s * 0.18); ctx.lineTo(kx - s * 0.1, ky);
+      ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = 'rgba(24,16,44,0.7)'; ctx.lineWidth = Math.max(1, s * 0.025); ctx.stroke();
+
+      // Funken, die am leuchtenden Stein aufsteigen
+      if (an) {
+        for (let k = 0; k < 5; k++) {
+          const u = ((t * 0.7 + k / 5) % 1);
+          const quer = Math.sin(k * 2.3 + t * 0.5) * 0.3;
+          const [px, py] = this.proj(mx + nx * quer, my + ny * quer, 0.2 + u * 2.0);
+          ctx.fillStyle = `rgba(226,200,255,${(1 - u) * 0.8})`;
+          ctx.beginPath(); ctx.arc(px, py, Math.max(1, s * 0.045 * (1 - u * 0.4)), 0, TAU); ctx.fill();
+        }
       }
     }
   },
+
 
   /* ================= Der Mondzieher =================
      Am Boden liegt der Kreis, in dem er greift, und darin laufen Funken. Sie laufen nach INNEN,
