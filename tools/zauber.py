@@ -148,10 +148,19 @@ def riesenbluete(x, y, r=4.2, blaetter=6, takt=8.0, phase=0.0, kraft=26.0):
 
 def sphaere(x, y, ringe, dicke=0.3):
     """Die Große Armillarsphäre – der Endgegner der Sternenwarte. 'ringe' ist eine Liste von
-    (Radius, Gassenbreite im Bogenmaß, Tempo, Versatz)."""
-    return {'type': 'armillar', 'x': x, 'y': y, 'dicke': dicke,
-            'ringe': [{'r': float(a), 'gasse': float(b), 'tempo': float(c), 'phase': float(d)}
-                      for a, b, c, d in ringe]}
+    (Radius, Gassenbreite im Bogenmaß, Tempo, Versatz, Wirkung).
+
+    Die Wirkung gilt im BAND von diesem Ring bis zum nächsten nach innen – man wechselt die Regel
+    also genau dann, wenn man durch eine Gasse gekommen ist. Der innerste Ring bekommt None: Dort
+    liegt das Loch, und ein Wirbel am Loch wäre kein Rätsel mehr, sondern Willkür."""
+    aus = []
+    for e in ringe:
+        a, b, c, d = e[0], e[1], e[2], e[3]
+        w = e[4] if len(e) > 4 else None
+        r = {'r': float(a), 'gasse': float(b), 'tempo': float(c), 'phase': float(d)}
+        if w: r['wirkung'] = w
+        aus.append(r)
+    return {'type': 'armillar', 'x': x, 'y': y, 'dicke': dicke, 'ringe': aus}
 
 def waechter(x, y, r=1.6, weite=11.0, keil=0.42, takt=5.0, phase=0.0, folgen=1.1, wucht=15.0):
     """Der Bannwächter – der Endgegner der Erzmagierloge. Er dreht sich zum Ball und schlägt in
@@ -159,6 +168,16 @@ def waechter(x, y, r=1.6, weite=11.0, keil=0.42, takt=5.0, phase=0.0, folgen=1.1
     return {'type': 'bannwaechter', 'x': x, 'y': y, 'r': r, 'weite': weite, 'keil': keil,
             'takt': takt, 'phase': phase, 'folgen': folgen, 'wucht': wucht,
             'warn': 1.2, 'schlag': 0.3}
+
+def rund(f, cx, cy, r, z='#'):
+    """Füllt eine runde Fläche um (cx, cy). Eine Bahn, auf der ein RUNDES Hindernis die ganze
+    Fläche einnimmt, braucht auch einen runden Rand – ein Kasten darum herum sieht aus, als hätte
+    man das Ding in eine Kiste gelegt. Die Treppenstufen am Rand nimmt schraegen() hinterher weg."""
+    hoch, breit = len(f), len(f[0])
+    for y in range(max(0, int(cy - r) - 1), min(hoch, int(cy + r) + 2)):
+        for x in range(max(0, int(cx - r) - 1), min(breit, int(cx + r) + 2)):
+            if math.hypot(x + 0.5 - cx, y + 0.5 - cy) <= r:
+                setz(f, x, y, z)
 
 def gang(f, x0, y0, x1, y1):
     """Schneidet einen Gang in die Leere. Die Loge ist andersherum gebaut als die ersten beiden
@@ -483,6 +502,15 @@ def pruefe(b):
             elif art == 'mondzieher':
                 # Der Sockel ist fest; außerdem zieht der Mond jeden geraden Schlag krumm.
                 sperren.add((int(o['x']), int(o['y'])))
+            elif art == 'armillar':
+                # Jeder Ring ist eine Wand mit genau einer Gasse. Wo er läuft, ist die gerade
+                # Linie gesperrt - denn die Gasse steht dort nur für einen Augenblick.
+                for ring in o['ringe']:
+                    schritte = max(24, int(ring['r'] * 10))
+                    for k in range(schritte):
+                        a = (k / schritte) * math.tau
+                        sperren.add((int(o['x'] + math.cos(a) * ring['r']),
+                                     int(o['y'] + math.sin(a) * ring['r'])))
             elif art == 'zauberspiegel':
                 # Ein Spiegel ist keine Wand, aber wer hindurchrollt, kommt woanders heraus –
                 # eine gerade Linie durch ihn hindurch ist also keine gerade Linie mehr.
@@ -940,7 +968,7 @@ fuell(f, 1, 8, 30, 11)                # das lange Vorfeld
 fuell(f, 10, 4, 13, 11)               # zwei Ausbuchtungen nach oben und unten
 fuell(f, 19, 8, 22, 15)
 fuell(f, 28, 4, 31, 15)               # der Zugang zum Rondell
-fuell(f, 31, 3, 50, 16)               # das Rondell mit der Blüte
+rund(f, 40.5, 9.5, 9.4)               # das Rondell mit der Blüte – rund, wie sie selbst
 setz(f, 3, 9, 'T'); setz(f, 40, 9, 'H')
 bahn(GARTEN, 'Die Riesenblüte', 'lehrlingsgarten', f, [
     kreis(7.0, 9.5, 'schub', r=1.2),
@@ -1001,8 +1029,18 @@ fuell(f, 1, 2, 30, 10)
 fuell(f, 20, 2, 21, 5, 'x')           # der Mauerdurchbruch, in dem das Tor steht
 fuell(f, 20, 8, 21, 10, 'x')
 setz(f, 3, 6, 'T'); setz(f, 28, 6, 'H')
+# DIE STERNE LAGEN ZU WEIT AB VOM GANG. Bei (6,3), (11,9), (16,3) standen sie dreieinhalb Kacheln
+# neben der Linie vom Abschlag zum Loch - und die Bot-Prüfung erreichte in ZWANZIG von zwanzig
+# Durchgängen das Schlaglimit, der Profi-Sucher fand in sieben Schlägen überhaupt keine Lösung.
+# Der Grund steht schon bei der Sternenprüfung: Der Bot kennt nur „wo ist das Loch" und keine
+# Zwischenziele. Er lief also geradeaus gegen ein Tor, das nie aufging.
+#
+# Das ist nicht nur ein Meßproblem. Diese Bahn ist die, die das Sternbild ERKLÄRT - die zweite der
+# Welt. Wer hier zuerst dreimal quer über den Platz geschickt wird, lernt nicht die Maschine,
+# sondern das Absuchen. Die Sterne liegen jetzt am Gang, anderthalb Kacheln daneben: Man sieht
+# sie, man fährt an ihnen vorbei, und wer sie mitnehmen will, muß nur ein wenig steuern.
 bahn(WARTE, 'Das erste Sternbild', 'sternenwarte', f, [
-    sternbild([(6, 3), (11, 9), (16, 3)], (20, 6, 20, 8)),
+    sternbild([(7, 5), (12, 8), (16, 5)], (20, 6, 20, 8)),
     pilz(13.5, 6.5, stil='meteorit'),
 ], par=3,
 intro='Die drei Sterne wollen angefahren werden - alle drei, in einer Reihenfolge, die man sich '
@@ -1160,7 +1198,7 @@ bahn(WARTE, 'Die Sternenprüfung', 'sternenwarte', f, [
     mond(16.0, 7.0, r=3.2, kraft=8.5, takt=6.5, phase=0.15),
     rampe(21.8, 6.2, 2.0, 2.6, angle=0, land=5.4, speed=6.0, stil='sternschanze'),
     wandertor(28, 2, 28, 13, gasse=2.0, stil='kulisse'),
-], par=5,
+], par=4,   # Bot-Median 3 bei Par 5 – zwei Schläge Vorsprung sind kein Ziel mehr
 intro='Die Prüfung der Warte: erst die Blüte anstoßen und über die Ranke, dann am Mond vorbei. '
       'Danach gibt es zwei Wege. Die Schanze zwischen den Pfeilern ist schmal, wirft aber in '
       'einem Bogen über die Kulisse hinweg; wer sie verfehlt, muß den Augenblick abpassen, in dem '
@@ -1169,36 +1207,38 @@ intro='Die Prüfung der Warte: erst die Blüte anstoßen und über die Ranke, da
 # --- 10 --------------------------------------------------------------------
 # DER ENDGEGNER DER WARTE: Die Große Armillarsphäre.
 #
-# Drei Messingringe um das Loch, jeder mit EINER Gasse, jeder mit eigenem Tempo und eigener
-# Richtung. Die Frage der Sternenwarte war immer „wann" - hier wird sie dreifach gestellt, und die
-# drei Antworten passen nur selten zusammen. Wer nicht warten will, geht in mehreren Schlägen von
-# Ring zu Ring und hält sich zwischen zweien auf.
+# SIE IST DIE BAHN. Die erste Fassung hatte einen langen Aufgang mit Meteorit, Lot, zwei Kreisen
+# und einem Mond, und ganz hinten stand dann die Sphäre - damit war sie die fünfte Aufgabe einer
+# Bahn und nicht ihr Gegner. Fynn: „Das Hindernis soll fast die ganze Map sein, nicht mehr viel
+# davor, nur das Rad, keine anderen Hindernisse." Genau so ist es jetzt: ein kurzer Anlauf, dann
+# nichts als vier Ringe um das Loch.
 #
-# WARUM DIE RINGE VERSCHIEDEN SCHNELL LAUFEN. Liefen sie gleich, stünden ihre Gassen immer
-# übereinander, und die Sphäre wäre ein Tor mit drei Rahmen.
-f = leer(54, 21)
-fuell(f, 1, 9, 26, 12)                # der Aufgang
-fuell(f, 8, 4, 11, 12)
-fuell(f, 8, 4, 20, 7)
-fuell(f, 17, 7, 20, 17)
-fuell(f, 17, 14, 26, 17)
-fuell(f, 23, 9, 26, 17)
-fuell(f, 26, 2, 52, 19)               # der Saal der Sphäre
-setz(f, 3, 10, 'T'); setz(f, 39, 10, 'H')
+# JEDER RING HAT SEINE EIGENE WIRKUNG, und sie gilt im Band von ihm bis zum nächsten nach innen.
+# Von außen nach innen wird es also jedesmal anders, sobald man durch eine Gasse ist:
+#
+#   außen    ZUG      zieht zur Mitte - die einzige Wirkung, die hilft, und sie steht draußen:
+#                     Wer die erste Gasse trifft, wird dafür belohnt.
+#   dann     SCHUB    macht schneller. Gut, um die nächste Gasse zu erwischen; schlecht, wenn sie
+#                     gerade nicht dort ist, wo man hinfährt.
+#   dann     WIRBEL   dreht die Laufrichtung. Hier ist Zielen keine Frage der Richtung mehr.
+#   innen    nichts   Dort liegt das Loch. Ein Wirbel am Loch wäre Willkür, kein Rätsel.
+#
+# Die Ringe laufen verschieden schnell und gegeneinander: Liefen sie gleich, stünden ihre Gassen
+# immer übereinander, und die Sphäre wäre ein Tor mit vier Rahmen.
+f = leer(44, 36)
+rund(f, 21.5, 17.5, 16.6)             # ein einziger RUNDER Saal, sonst nichts
+setz(f, 6, 17, 'T'); setz(f, 21, 17, 'H')
 bahn(WARTE, 'Die Große Armillarsphäre', 'sternenwarte', f, [
-    kreis(6.0, 10.5, 'schub', r=1.3),
-    pilz(14.0, 5.5, stil='meteorit'),
-    pendel(18.5, 10.0, laenge=3.2, amp=55, stil='foucault'),
-    kreis(21.5, 15.5, 'bremse', r=1.3),
-    mond(30.0, 10.5, r=3.0, kraft=7.5, takt=6.0, phase=0.2),
-    sphaere(39.5, 10.5, [(8.2, 0.62, 0.30, 0.0),
-                         (5.6, 0.72, -0.44, 0.35),
-                         (3.1, 0.86, 0.66, 0.7)]),
-], par=6, maxStrokes=18,
-intro='Drei Messingringe um das Loch, jeder mit einer einzigen Gasse, jeder mit eigenem Tempo und '
-      'eigener Richtung. Alle drei zugleich zu erwischen ist möglich, aber selten – der ruhigere '
-      'Weg ist, sich von Ring zu Ring zu arbeiten und zwischen zweien zu warten. Die hellen '
-      'Pfosten zeigen, wo die Gasse gerade steht.')
+    sphaere(21.5, 17.5, [(14.0, 0.60, 0.26, 0.00, 'zug'),
+                         (10.4, 0.68, -0.40, 0.33, 'schub'),
+                         (6.9, 0.78, 0.58, 0.66, 'wirbel'),
+                         (3.4, 0.95, -0.34, 0.15, None)]),
+], par=6, maxStrokes=20,
+intro='Vier Messingringe um das Loch, jeder mit einer einzigen Gasse, jeder mit eigenem Tempo und '
+      'eigener Richtung – und jeder Ring hat seine eigene Wirkung, die im Band hinter ihm gilt. '
+      'Draußen zieht es zur Mitte, dahinter schiebt es, dahinter dreht es einen. Erst ganz innen '
+      'ist Ruhe. Die Farbe am Boden sagt vorher, was gleich gilt; die hellen Pfosten sagen, wo die '
+      'Gasse gerade steht.')
 
 # ===========================================================================
 #  DIE ERZMAGIERLOGE - Legende, neun Bahnen

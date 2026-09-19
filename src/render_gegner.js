@@ -96,47 +96,122 @@ Object.assign(Renderer.prototype, {
     }
   },
 
-  /* ================= Die Große Armillarsphäre (Sternenwarte) ================= */
+  /* ================= Die Große Armillarsphäre (Sternenwarte) =================
+     Sie füllt die ganze Bahn, und sonst steht nichts darauf. Das ist Fynns Entscheidung und die
+     richtige: Ein Endgegner, vor dem noch drei andere Maschinen stehen, ist die vierte Aufgabe
+     einer Bahn. Einer, der die Bahn IST, ist ein Endgegner.
+
+     JEDER RING HAT SEINE EIGENE WIRKUNG, und sie gilt im Band von ihm bis zum nächsten Ring nach
+     innen. Man wechselt die Regel also genau dann, wenn man durch eine Gasse gekommen ist - und
+     weil jedes Band die Farbe seiner Wirkung trägt, sieht man vorher, worauf man sich einläßt.
+     Die Farben sind dieselben wie bei den Zauberkreisen; wer die kennt, muß hier nichts Neues
+     lernen.
+
+     UND SIE LIEGT AUF EINEM GROSSEN BANNKREIS. Der Kreis ist nicht Zierde: Er zieht die Grenze,
+     ab der die Sphäre gilt, und er sagt mit seinem Durchmesser, daß dieses Ding die Bahn ist und
+     nicht ein Gegenstand darauf. */
+  armillarFarbe(wirkung) {
+    return ({ schub: [76, 224, 138], bremse: [79, 176, 255], wirbel: [199, 125, 255],
+              zug: [255, 209, 102] })[wirkung] || null;
+  },
+
   drawArmillarFloor(ctx, ob, t) {
     const s = this.scale;
     const [cx, cy] = this.proj(ob.x, ob.y, 0.004);
+    const gross = Math.max(...ob.ringe.map(r => r.r));
+    const R = gross * s * 1.16;
     ctx.save(); ctx.translate(cx, cy); ctx.scale(1, this.cam.tilt);
-    const gross = Math.max(...ob.ringe.map(r => r.r)) * s;
-    // Die Platte, auf der die Sphäre steht, mit einer Gradteilung am Rand
-    const p = ctx.createRadialGradient(0, 0, 0, 0, 0, gross * 1.12);
-    p.addColorStop(0, 'rgba(120,150,210,0.30)'); p.addColorStop(1, 'rgba(60,72,120,0.05)');
-    ctx.fillStyle = p; ctx.beginPath(); ctx.arc(0, 0, gross * 1.12, 0, TAU); ctx.fill();
-    ctx.strokeStyle = 'rgba(216,176,84,0.45)'; ctx.lineWidth = Math.max(1, s * 0.03);
-    for (let k = 0; k < 36; k++) {
-      const a = (k / 36) * TAU, lang = k % 3 === 0 ? 0.1 : 0.05;
+
+    /* Der große Bannkreis, auf dem alles steht. Erst der Hof, dann zwei Rillen, dazwischen ein
+       Kranz aus Runen - dieselbe Sprache wie die Zauberkreise, nur zwanzigfach. */
+    const hof = ctx.createRadialGradient(0, 0, R * 0.25, 0, 0, R);
+    hof.addColorStop(0, 'rgba(120,150,210,0.26)');
+    hof.addColorStop(0.8, 'rgba(90,110,180,0.16)');
+    hof.addColorStop(1, 'rgba(60,72,120,0)');
+    ctx.fillStyle = hof; ctx.beginPath(); ctx.arc(0, 0, R, 0, TAU); ctx.fill();
+    for (const [rr, dick] of [[R, 0.06], [R * 0.94, 0.035], [R * 0.2, 0.05]]) {
+      ctx.strokeStyle = 'rgba(12,14,30,0.5)'; ctx.lineWidth = Math.max(1.5, s * (dick + 0.03));
+      ctx.beginPath(); ctx.arc(0, 0, rr, 0, TAU); ctx.stroke();
+      ctx.strokeStyle = 'rgba(226,192,114,0.7)'; ctx.lineWidth = Math.max(1.2, s * dick);
+      ctx.beginPath(); ctx.arc(0, 0, rr, 0, TAU); ctx.stroke();
+    }
+    // Der Runenkranz zwischen den beiden äußeren Rillen
+    ctx.strokeStyle = 'rgba(226,192,114,0.6)'; ctx.lineWidth = Math.max(1, s * 0.03);
+    ctx.lineCap = 'round';
+    const anzahl = 48;
+    for (let k = 0; k < anzahl; k++) {
+      const a = (k / anzahl) * TAU;
+      ctx.save();
+      ctx.translate(Math.cos(a) * R * 0.97, Math.sin(a) * R * 0.97);
+      ctx.rotate(a + Math.PI / 2);
+      const g = R * 0.022;
+      const rune = k % 4;
       ctx.beginPath();
-      ctx.moveTo(Math.cos(a) * gross * 1.12, Math.sin(a) * gross * 1.12);
-      ctx.lineTo(Math.cos(a) * gross * (1.12 - lang), Math.sin(a) * gross * (1.12 - lang));
+      ctx.moveTo(0, -g); ctx.lineTo(0, g);
+      if (rune === 0) { ctx.moveTo(-g * 0.7, -g * 0.4); ctx.lineTo(0, 0); }
+      else if (rune === 1) { ctx.moveTo(-g * 0.7, 0); ctx.lineTo(g * 0.7, 0); }
+      else if (rune === 2) { ctx.moveTo(-g * 0.6, g); ctx.lineTo(0, g * 0.2); ctx.moveTo(g * 0.6, g); ctx.lineTo(0, g * 0.2); }
+      else { ctx.moveTo(-g * 0.7, -g); ctx.lineTo(g * 0.7, -g); }
       ctx.stroke();
+      ctx.restore();
+    }
+    // Zwölf Speichen nach außen, damit der Kreis eine Teilung hat
+    ctx.strokeStyle = 'rgba(226,192,114,0.3)'; ctx.lineWidth = Math.max(1, s * 0.03);
+    for (let k = 0; k < 12; k++) {
+      const a = (k / 12) * TAU;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a) * R * 0.2, Math.sin(a) * R * 0.2);
+      ctx.lineTo(Math.cos(a) * R * 0.94, Math.sin(a) * R * 0.94);
+      ctx.stroke();
+    }
+
+    /* Die Bänder der Wirkungen. Jedes liegt zwischen seinem Ring und dem nächsten nach innen und
+       trägt dessen Farbe – schwach, damit der Boden nicht zum Teppich wird, aber deutlich genug,
+       daß man die Grenze sieht, bevor man sie überrollt. */
+    const sortiert = ob.ringe.slice().sort((a, b) => b.r - a.r);
+    for (let k = 0; k < sortiert.length; k++) {
+      const f = this.armillarFarbe(sortiert[k].wirkung);
+      if (!f) continue;
+      const aussen = sortiert[k].r * s, innen = (sortiert[k + 1] ? sortiert[k + 1].r : 0) * s;
+      ctx.beginPath();
+      ctx.arc(0, 0, aussen, 0, TAU);
+      ctx.arc(0, 0, innen, 0, TAU, true);
+      ctx.fillStyle = `rgba(${f[0]},${f[1]},${f[2]},0.24)`; ctx.fill('evenodd');
+      ctx.strokeStyle = `rgba(${f[0]},${f[1]},${f[2]},0.6)`; ctx.lineWidth = Math.max(1.5, s * 0.06);
+      ctx.beginPath(); ctx.arc(0, 0, innen, 0, TAU); ctx.stroke();
     }
     ctx.restore();
   },
 
   drawArmillar(ctx, ob, t) {
     const s = this.scale;
-    this.isoEllipse(ctx, ob.x, ob.y, 0.003, Math.max(...ob.ringe.map(r => r.r)) * 1.1, 'rgba(0,0,0,0.24)');
+    this.isoEllipse(ctx, ob.x, ob.y, 0.003, Math.max(...ob.ringe.map(r => r.r)) * 1.05, 'rgba(0,0,0,0.22)');
     /* Von innen nach außen zeichnen, damit der äußere Ring den inneren verdeckt und nicht
        umgekehrt – sonst stünde die Sphäre auf dem Kopf. */
     const sortiert = ob.ringe.map((r, i) => [r, ob.stand[i]]).sort((a, b) => a[0].r - b[0].r);
     sortiert.forEach(([ring, stand], nr) => {
-      const n = 22, aussen = [], innen = [];
+      const n = 26, aussen = [], innen = [];
       const a0 = stand + ring.gasse / 2, a1 = stand + TAU - ring.gasse / 2;
       for (let k = 0; k <= n; k++) {
         const a = a0 + (a1 - a0) * (k / n);
         aussen.push([ob.x + Math.cos(a) * (ring.r + ob.dicke), ob.y + Math.sin(a) * (ring.r + ob.dicke)]);
         innen.push([ob.x + Math.cos(a) * (ring.r - ob.dicke), ob.y + Math.sin(a) * (ring.r - ob.dicke)]);
       }
-      const hoch = 0.75 + nr * 0.35;          // außen höher: die Sphäre bekommt eine Schale
-      this.prism(ctx, aussen.concat(innen.reverse()), 0, hoch, '#e2c072', '#8a6a24', { outline: '#4a3810' });
+      /* NIEDRIG HALTEN. Bei 0,8 bis 1,7 warfen die vier Ringe so lange Schatten, daß dazwischen
+         schwarze Bänder lagen und die Farben der Wirkungen darin untergingen. Der Schatten ist
+         richtig gerechnet – er war nur wichtiger als das, was er verdeckte. */
+      const hoch = 0.5 + nr * 0.14;          // außen etwas höher: die Sphäre bekommt eine Schale
+      /* Der Ring trägt die Farbe seiner Wirkung – als Messing mit einem Stich, nicht als Anstrich.
+         Ein grellbunter Ring sähe aus wie Spielzeug; das hier ist ein Instrument. */
+      const f = this.armillarFarbe(ring.wirkung);
+      const misch = (a, b, u) => Math.round(a + (b - a) * u);
+      const deck = f ? `rgb(${misch(226, f[0], 0.42)},${misch(192, f[1], 0.42)},${misch(114, f[2], 0.42)})` : '#e2c072';
+      const seite = f ? `rgb(${misch(138, f[0], 0.32)},${misch(106, f[1], 0.32)},${misch(36, f[2], 0.32)})` : '#8a6a24';
+      this.prism(ctx, aussen.concat(innen.reverse()), 0, hoch, deck, seite, { outline: '#4a3810' });
       // Die beiden Gassenkanten bekommen einen hellen Pfosten – daran sieht man, wo die Lücke ist
       for (const a of [a0, a1]) {
         const px = ob.x + Math.cos(a) * ring.r, py = ob.y + Math.sin(a) * ring.r;
-        this.prism(ctx, this.circlePoly(px, py, ob.dicke * 1.25, 6), 0, hoch + 0.3, '#fff0b8', '#a8842a', { outline: '#4a3810' });
+        this.prism(ctx, this.circlePoly(px, py, ob.dicke * 1.3, 6), 0, hoch + 0.45, '#fff0b8', '#a8842a', { outline: '#4a3810' });
       }
     });
   },

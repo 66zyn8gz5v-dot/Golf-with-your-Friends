@@ -3143,6 +3143,43 @@ iPad in der Sonne hat man von Farben allein wenig.
 Das Fernrohr (`tubus`) bleibt im Baumodus wählbar, es ist nur nicht mehr das, was auf der Terrasse
 steht.
 
+## Die Sphäre wird die Bahn (Fassung 215)
+
+Fynn zur ersten Fassung des Warte-Endgegners: *„Das Hindernis soll fast die ganze Map sein, nicht
+mehr viel davor, nur das Rad, keine anderen Hindernisse. In jedem der Ringe soll ein anderer Effekt
+sein. Es soll auf einem großen magischen Kreis liegen."* Alle drei Punkte sind umgesetzt, und der
+erste ist der wichtigste: Vorher stand vor der Sphäre ein langer Aufgang mit Meteorit, Lot, zwei
+Kreisen und einem Mond – damit war sie die **fünfte Aufgabe** einer Bahn und nicht ihr Gegner.
+Jetzt ist die Bahn ein einziger Saal, und darin steht nichts als sie.
+
+**Jeder Ring hat seine eigene Wirkung**, und sie gilt im Band von ihm bis zum nächsten nach innen.
+Man wechselt die Regel also genau dann, wenn man durch eine Gasse gekommen ist:
+
+| Band | Wirkung | Was das heißt |
+| --- | --- | --- |
+| außen | **Zug** (gold) | zieht zur Mitte – die einzige Wirkung, die hilft, und sie steht draußen: Wer die erste Gasse trifft, wird dafür belohnt. |
+| dann | **Schub** (grün) | macht schneller. Gut, um die nächste Gasse zu erwischen; schlecht, wenn sie gerade nicht dort ist, wo man hinfährt. |
+| dann | **Wirbel** (violett) | dreht die Laufrichtung. Hier ist Zielen keine Frage der Richtung mehr. |
+| innen | – | Dort liegt das Loch. Ein Wirbel am Loch wäre Willkür, kein Rätsel. |
+
+Die Farben sind dieselben wie bei den Zauberkreisen, und jedes Band trägt sie auf dem Boden: Man
+sieht vorher, worauf man sich einläßt. Die Ringe selbst bekommen die Farbe nur als Stich ins
+Messing – ein grellbunter Ring sähe aus wie Spielzeug, und das hier ist ein Instrument.
+
+**Die Ringe mußten dafür niedriger werden.** Bei 0,8 bis 1,7 warfen die vier so lange Schatten, daß
+zwischen ihnen schwarze Bänder lagen und die Farben darin untergingen. Der Schatten war richtig
+gerechnet – er war nur wichtiger als das, was er verdeckte.
+
+**Und die Bahn ist rund.** Fynn: *„Die Bahn soll etwas runder gebaut sein, nicht bloß ein Kasten."*
+Ein rundes Ding in einem rechteckigen Saal sieht aus, als hätte man es in eine Kiste gelegt. Der
+neue Helfer `rund()` in `tools/zauber.py` füllt eine runde Fläche; die Treppenstufen am Rand nimmt
+`schraegen()` hinterher weg, das die Ecken ohnehin abschrägt. Das Rondell der Riesenblüte ist aus
+demselben Grund jetzt ebenfalls rund.
+
+Und `pruefe()` kennt die Sphäre jetzt beim **Ass-Test**: Ihre Ringe sind Wände mit je einer Gasse,
+also ist die gerade Linie vom Abschlag zum Loch dort gesperrt. Ohne das hätte die Prüfung jeden
+offenen Saal mit einer Sphäre darin für ein Ass gehalten.
+
 ## Der Garten bleibt ein Garten (Fassung 213)
 
 Drei Bahnen des Lehrlingsgartens standen in der Palette `gewaechshaus` – Glasdach, Töpfe,

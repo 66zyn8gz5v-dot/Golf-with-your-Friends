@@ -527,8 +527,50 @@ class Armillarsphaere {
     Object.assign(this, { ringe: [], dicke: 0.3 }, d);
     this.type = 'armillar';
     this.stand = this.ringe.map(() => 0);
+    /* Die Ringe von außen nach innen. Jeder trägt eine Wirkung, und die gilt in dem BAND von
+       seinem Radius bis zum nächsten Ring einwärts - man wechselt die Regel also genau dann, wenn
+       man durch eine Gasse gekommen ist. Der innerste Ring bleibt ohne Wirkung: Dort liegt das
+       Loch, und ein Wirbel am Loch wäre kein Rätsel mehr, sondern Willkür. */
+    this.sortiert = this.ringe.map((r, i) => ({ ring: r, i })).sort((a, b) => b.ring.r - a.ring.r);
+    this.alwaysForce = true;
   }
   update(t) { this.stand = this.ringe.map(r => (r.phase || 0) * TAU + t * r.tempo); }
+
+  /* In welchem Band liegt ein Punkt? Gibt den Ring zurück, dessen Wirkung dort gilt. */
+  band(px, py) {
+    const d = Math.hypot(px - this.x, py - this.y);
+    for (const { ring } of this.sortiert) if (d <= ring.r) var treffer = ring;
+    return treffer;      // der kleinste Ring, der den Punkt noch umschließt
+  }
+
+  force(ball, dt) {
+    if (ball.air || ball.sunk) return;
+    const ring = this.band(ball.x, ball.y);
+    if (!ring || !ring.wirkung) return;
+    const sp = Math.hypot(ball.vx, ball.vy);
+    if (ring.wirkung === 'schub') {
+      if (sp < 0.4) return;
+      const k = 22 * dt;
+      ball.vx += (ball.vx / sp) * k; ball.vy += (ball.vy / sp) * k;
+      const neu = Math.hypot(ball.vx, ball.vy);
+      if (neu > 19) { ball.vx *= 19 / neu; ball.vy *= 19 / neu; }
+      ball.boosted = true;
+    } else if (ring.wirkung === 'bremse') {
+      const f = Math.max(0, 1 - 2.2 * dt);
+      ball.vx *= f; ball.vy *= f;
+    } else if (ring.wirkung === 'wirbel') {
+      if (sp < 0.3) return;
+      const w = 2.0 * dt, c = Math.cos(w), si = Math.sin(w);
+      const vx = ball.vx * c - ball.vy * si, vy = ball.vx * si + ball.vy * c;
+      ball.vx = vx; ball.vy = vy;
+    } else if (ring.wirkung === 'zug') {
+      /* Der Sog nach innen. Es ist die einzige Wirkung, die dem Spieler HILFT – und sie steht mit
+         Absicht im äußersten Band: Wer die erste Gasse trifft, wird belohnt. */
+      const dx = this.x - ball.x, dy = this.y - ball.y;
+      const d = Math.hypot(dx, dy) || 1;
+      ball.vx += (dx / d) * 6 * dt; ball.vy += (dy / d) * 6 * dt;
+    }
+  }
   segments(out) {
     const n = 14;
     this.ringe.forEach((ring, i) => {
