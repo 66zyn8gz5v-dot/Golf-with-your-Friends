@@ -1063,7 +1063,11 @@ bahn(GARTEN, 'Das Treibhaus', 'lehrlingsgarten', f, [
     pilz(21.5, 8.5, stil='springkraut'),
     pilz(8.5, 4.5, stil='springkraut'),
     pilz(8.5, 8.5, stil='springkraut'),
-], par=4,
+# PAR 4 WAR RICHTIG, SOLANGE DIE SPRENGER DA WAREN. Ohne sie steht die Bot-Prüfung bei Median
+# ZWEI - zwei Schläge unter Par, und die vergibt man nicht. Ein Springkraut, um das man
+# herumspielt, kostet weniger als ein Arm, der den Weg zumacht; daran ist nichts falsch, nur muß
+# das Par es einholen.
+], par=3,
 intro='Der Bienenstand steht quer im Weg, und der Durchlaß zwischen den Körben schließt sich im Takt '
       'mit einer Wabe. Dahinter steht in jeder der beiden Gassen ein Springkraut – wer zu gerade '
       'hindurchfährt, kommt dorthin zurück, wo er herkam. Also erst durch den Durchlaß, dann am '
@@ -1144,7 +1148,12 @@ bahn(GARTEN, 'Die Lehrlingsprüfung', 'lehrlingsgarten', f, [
     pilz(14.5, 9.5, stil='springkraut'),
     muehle(18.5, 7.5, w=7.6, gap=1.2, tempo=0.9, achse='y', stil='bienenstock', tiefe=3.0),
     huete([(24, 5), (24, 10), (29, 11)], takt=2.8, stil='maulwurf'),
-], par=4,   # seit der Bienenstock die Gasse wirklich schließt: Bot-Median 4 statt 3
+# ZWEITE MESSUNG, ANDERES ERGEBNIS: Median SECHS statt vier, Schnitt 5,75, und in zwei von zwölf
+# Durchgängen neun Schläge. Die erste Messung lief unmittelbar nach dem Umbau des Bienenstands und
+# traf offenbar einen günstigen Takt. Bei zwei Messungen, die auseinanderliegen, gilt die
+# schlechtere - ein Par, das man regelmäßig um zwei verfehlt, ist keine Prüfung, sondern ein
+# Vorwurf. Als letzte Bahn des Gartens darf sie fordern, aber sie soll nicht lügen.
+], par=5,
 intro='Die Prüfung: erst die Ranke, dann zwischen dem Springkraut hindurch, dann der Bienenstand im '
       'Takt – und '
       'zum Schluß noch einmal die Hüte. Wer hier unter Par bleibt, hat den Lehrlingshut verdient.')
@@ -1516,7 +1525,9 @@ bahn(LOGE, 'Der Winkelgang', 'erzmagierloge', f, [
     blitz(27.0, 5.5, w=3.0, h=3.2, takt=4.4, stil='bannschlag'),
     kreis(40.0, 13.0, 'bremse', r=1.2, takt=4.2),
     lampe(46.0, 13.0, r=4.0, stil='bannlicht'),
-], par=4,
+# Bot-Median DREI. Die Lehrbahn der Welt ist kurz, und ihre beiden Kehren geben den Ball weiter,
+# statt ihn zu schlucken - genau das soll sie ja zeigen. Par 3 ist die ehrliche Zahl dafür.
+], par=3,
 intro='Drei Läufe, zwei Kehren – und in den Kehren steht keine Ecke, sondern eine Schräge. Wer '
       'mit Tempo hineinspielt, kommt um sie herum; wer zu sacht spielt, liegt davor. Das ist die '
       'Rechnung, die in dieser Welt jede Bahn verlangt.')

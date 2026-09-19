@@ -184,7 +184,7 @@ const ZAUBER_GARTEN = [
     autoDecor: { density: 0.09, seed: 71 },
   },
   {
-    name: 'Das Treibhaus', par: 4, theme: 'lehrlingsgarten',
+    name: 'Das Treibhaus', par: 3, theme: 'lehrlingsgarten',
     intro: 'Der Bienenstand steht quer im Weg, und der Durchlaß zwischen den Körben schließt sich im Takt mit einer Wabe. Dahinter steht in jeder der beiden Gassen ein Springkraut – wer zu gerade hindurchfährt, kommt dorthin zurück, wo er herkam. Also erst durch den Durchlaß, dann am Kraut vorbei.',
     map: [
       '..............................',
@@ -275,7 +275,7 @@ const ZAUBER_GARTEN = [
     autoDecor: { density: 0.09, seed: 109 },
   },
   {
-    name: 'Die Lehrlingsprüfung', par: 4, theme: 'lehrlingsgarten',
+    name: 'Die Lehrlingsprüfung', par: 5, theme: 'lehrlingsgarten',
     intro: 'Die Prüfung: erst die Ranke, dann zwischen dem Springkraut hindurch, dann der Bienenstand im Takt – und zum Schluß noch einmal die Hüte. Wer hier unter Par bleibt, hat den Lehrlingshut verdient.',
     map: [
       '..................................',
@@ -706,7 +706,7 @@ const ZAUBER_WARTE = [
 
 const ZAUBER_LOGE = [
   {
-    name: 'Der Winkelgang', par: 4, theme: 'erzmagierloge',
+    name: 'Der Winkelgang', par: 3, theme: 'erzmagierloge',
     intro: 'Drei Läufe, zwei Kehren – und in den Kehren steht keine Ecke, sondern eine Schräge. Wer mit Tempo hineinspielt, kommt um sie herum; wer zu sacht spielt, liegt davor. Das ist die Rechnung, die in dieser Welt jede Bahn verlangt.',
     map: [
       '....................................................',
