@@ -4,6 +4,9 @@ Das ist der erste Testlauf: zwei Gegenstände, ein Rezept. Absichtlich klein.
 Wenn das im Spiel auftaucht, wissen wir, dass die ganze Kette funktioniert –
 Datei, Installation, Welt. Erst dann bauen wir das Größere darauf.
 
+Wohin das Ganze einmal gehen soll – Rollen, Magie, Aufstieg – steht in
+[PLAN.md](PLAN.md). Gebaut ist davon noch nichts.
+
 ## Was drin ist
 
 * **Glimmerling** – ein scheues Waldwesen, das nachts unterwegs ist, im
