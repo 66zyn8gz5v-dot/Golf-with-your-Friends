@@ -436,3 +436,169 @@ class Zauberkreis {
     }
   }
 }
+
+/* ---------------------------------------------------------------------------
+   DIE DREI ENDGEGNER DES ZAUBERREICHS
+   ---------------------------------------------------------------------------
+   Jede der drei Welten bekommt eine zehnte Bahn, und auf ihr steht eine Maschine, die größer ist
+   als alles andere darin. Sie sind mit Absicht auf DREI VERSCHIEDENE ARTEN schwer – ein Endgegner,
+   der dieselbe Frage stellt wie der vorige, ist kein Endgegner, sondern eine große Kopie.
+
+     Riesenblüte     (Garten, Normal)   schwer durch TAKT      – man muß den Augenblick treffen
+     Armillarsphäre  (Warte, Profi)     schwer durch ABLESEN   – drei Uhren gleichzeitig
+     Bannwächter     (Loge, Legende)    schwer durch REAKTION  – er sieht zu, wo man steht
+
+   Alle drei liegen mit dem Loch in ihrer MITTE. Das ist keine Zierde: Eine große Maschine, an der
+   man vorbeispielt, ist ein Umweg; eine, durch die man hindurch muß, ist ein Gegner. */
+
+/* --- Die Riesenblüte -------------------------------------------------------
+   Sechs Blütenblätter, die sich im Takt öffnen und schließen. Offen stehen zwischen ihnen Lücken,
+   durch die man in den Kelch kommt; geschlossen ist der Ring eine Mauer. Und beim Schließen kommt
+   der Pollenstoß: Wer dann noch drin ist und nicht im Loch, fliegt wieder hinaus.
+
+   WARUM DER STOSS UND NICHT NUR DAS ZUGEHEN. Ohne ihn wäre die geschlossene Blüte ein bequemer
+   Warteraum - man rollt hinein, verpaßt das Loch, und spielt in Ruhe weiter, bis sie wieder
+   aufgeht. Der Stoß macht aus dem Kelch einen Ort, an dem man nicht bleiben kann. */
+class Riesenbluete {
+  constructor(d) {
+    Object.assign(this, { r: 4.2, blaetter: 6, takt: 8.0, phase: 0, kraft: 26, dicke: 0.38 }, d);
+    this.type = 'riesenbluete';
+    this.alwaysForce = true;      // auch einen liegenden Ball wirft der Stoß hinaus
+    this.offen = 0; this.stoss = 0; this.warnung = 0;
+  }
+  update(t) {
+    const u = (((t / this.takt + this.phase) % 1) + 1) % 1;
+    const auf = 0.11;                       // wie lange das Öffnen und das Schließen dauern
+    let o;
+    if (u < 0.40) o = 0;
+    else if (u < 0.40 + auf) o = (u - 0.40) / auf;
+    else if (u < 0.86) o = 1;
+    else if (u < 0.86 + auf) o = 1 - (u - 0.86) / auf;
+    else o = 0;
+    this.offen = o * o * (3 - 2 * o);
+    /* Der Stoß liegt GENAU auf dem Schließen und dauert etwas länger als dieses – sonst wäre er
+       vorbei, bevor die Blätter zu sind, und man käme im letzten Augenblick doch noch hinaus. */
+    this.stoss = (u >= 0.86 && u < 0.86 + auf * 1.8) ? 1 - (u - 0.86) / (auf * 1.8) : 0;
+    // Die Vorwarnung: die letzte Sekunde, bevor es zugeht. Sie steht in der Zeichnung als Glühen.
+    const bisZu = ((0.86 - u) % 1 + 1) % 1;
+    this.warnung = this.offen > 0.5 ? Math.max(0, 1 - (bisZu * this.takt) / 1.2) : 0;
+  }
+  /* Die Blätter als Bogenstücke. Offen bleibt zwischen ihnen eine Lücke, geschlossen schließt der
+     Ring lückenlos - dieselbe Rechnung, die auch die Zeichnung benutzt, damit Bild und Sperre
+     nicht auseinanderlaufen. */
+  bogen(k) {
+    const teil = TAU / this.blaetter;
+    const lueck = teil * 0.46 * this.offen;
+    return [k * teil + lueck / 2, (k + 1) * teil - lueck / 2];
+  }
+  segments(out) {
+    const n = 5;
+    for (let k = 0; k < this.blaetter; k++) {
+      const [a0, a1] = this.bogen(k);
+      const aussen = [], innen = [];
+      for (let i = 0; i <= n; i++) {
+        const a = a0 + (a1 - a0) * (i / n);
+        aussen.push([this.x + Math.cos(a) * (this.r + this.dicke), this.y + Math.sin(a) * (this.r + this.dicke)]);
+        innen.push([this.x + Math.cos(a) * (this.r - this.dicke), this.y + Math.sin(a) * (this.r - this.dicke)]);
+      }
+      polySegments(aussen.concat(innen.reverse()), out, { e: 0.55, kind: 'bluete' });
+    }
+  }
+  force(ball, dt) {
+    if (this.stoss <= 0 || ball.sunk) return;
+    let dx = ball.x - this.x, dy = ball.y - this.y;
+    let d = Math.hypot(dx, dy);
+    if (d > this.r) return;
+    if (d < 0.25) { dx = 1; dy = 0; d = 1; }     // genau in der Mitte gibt es keine Richtung
+    const k = this.kraft * this.stoss * dt;
+    ball.vx += (dx / d) * k; ball.vy += (dy / d) * k;
+  }
+}
+
+/* --- Die Große Armillarsphäre ---------------------------------------------
+   Drei Messingringe um das Loch, jeder mit EINER Lücke, jeder mit eigener Geschwindigkeit und
+   eigener Richtung. Hinein kommt, wer die Lücken übereinander erwischt - oder wer in mehreren
+   Schlägen von Ring zu Ring geht und zwischen zweien wartet.
+
+   DIE RINGE LAUFEN VERSCHIEDEN SCHNELL UND GEGENEINANDER. Liefen sie gleich, stünde die Gasse
+   immer an derselben Stelle und die Sphäre wäre ein Tor mit drei Rahmen. */
+class Armillarsphaere {
+  constructor(d) {
+    Object.assign(this, { ringe: [], dicke: 0.3 }, d);
+    this.type = 'armillar';
+    this.stand = this.ringe.map(() => 0);
+  }
+  update(t) { this.stand = this.ringe.map(r => (r.phase || 0) * TAU + t * r.tempo); }
+  segments(out) {
+    const n = 14;
+    this.ringe.forEach((ring, i) => {
+      const a0 = this.stand[i] + ring.gasse / 2;
+      const a1 = this.stand[i] + TAU - ring.gasse / 2;
+      const aussen = [], innen = [];
+      for (let k = 0; k <= n; k++) {
+        const a = a0 + (a1 - a0) * (k / n);
+        aussen.push([this.x + Math.cos(a) * (ring.r + this.dicke), this.y + Math.sin(a) * (ring.r + this.dicke)]);
+        innen.push([this.x + Math.cos(a) * (ring.r - this.dicke), this.y + Math.sin(a) * (ring.r - this.dicke)]);
+      }
+      polySegments(aussen.concat(innen.reverse()), out, { e: 0.6, kind: 'armillar' });
+    });
+  }
+}
+
+/* --- Der Bannwächter -------------------------------------------------------
+   Der einzige Gegner im Spiel, der ZUSIEHT. Sein Arm dreht sich langsam dorthin, wo der Ball
+   liegt; im Takt glüht dann das Siegel unter dem Arm auf, und wer im Keil steht, wenn es
+   einschlägt, wird hinausgeworfen.
+
+   WARUM ER LANGSAM DREHT. Ein Arm, der sofort auf den Ball zeigt, wäre nicht zu schlagen - man
+   stünde immer im Keil. So aber schleppt er hinterher, und daraus entsteht die Aufgabe: sich
+   bewegen, damit er hinter einem bleibt. Stehenbleiben ist die einzige Antwort, die immer falsch
+   ist. */
+class Bannwaechter {
+  constructor(d) {
+    Object.assign(this, { r: 1.6, weite: 11.0, keil: 0.42, takt: 5.0, phase: 0,
+                          folgen: 1.1, warn: 1.2, schlag: 0.3, wucht: 15 }, d);
+    this.type = 'bannwaechter';
+    this.winkel = this.basis == null ? Math.PI : this.basis;
+    this.zustand = 'ruht'; this.gluehen = 0; this.zielWinkel = this.winkel;
+  }
+  update(t) {
+    const u = (((t / this.takt + this.phase) % 1) + 1) % 1;
+    const wA = 1 - (this.warn + this.schlag) / this.takt;      // ab hier wird gewarnt
+    const sA = 1 - this.schlag / this.takt;                    // ab hier schlägt er
+    this.zustand = u < wA ? 'ruht' : u < sA ? 'warnt' : 'schlaegt';
+    this.gluehen = this.zustand === 'ruht' ? 0
+      : this.zustand === 'warnt' ? (u - wA) / (sA - wA) : 1;
+    this.nachfuehren = this.zustand === 'ruht';
+  }
+  /* Der Arm folgt nur, solange der Wächter ruht. Während er warnt, steht er still – sonst zöge
+     die Warnung mit dem Ball mit und wäre keine Warnung, sondern eine Verfolgung. */
+  force(ball, dt) {
+    if (!this.nachfuehren || ball.sunk) return;
+    this.zielWinkel = Math.atan2(ball.y - this.y, ball.x - this.x);
+    let d = this.zielWinkel - this.winkel;
+    while (d > Math.PI) d -= TAU;
+    while (d < -Math.PI) d += TAU;
+    const schritt = this.folgen * dt;
+    this.winkel += Math.abs(d) < schritt ? d : Math.sign(d) * schritt;
+  }
+  /* Der Schlag selbst. Er wirft hinaus, statt einen Strafschlag zu geben: Ein Strafschlag ist eine
+     Zahl, ein Wurf ist zu sehen – und man verliert genau das, was man sich erspielt hat, nämlich
+     den Weg. */
+  ride(ball, t, events) {
+    if (this.zustand !== 'schlaegt' || ball.air || ball.sunk) return false;
+    if (this.getroffen === t) return false;
+    const dx = ball.x - this.x, dy = ball.y - this.y;
+    const d = Math.hypot(dx, dy);
+    if (d > this.weite || d < 0.3) return false;
+    let ab = Math.atan2(dy, dx) - this.winkel;
+    while (ab > Math.PI) ab -= TAU;
+    while (ab < -Math.PI) ab += TAU;
+    if (Math.abs(ab) > this.keil) return false;
+    ball.vx = (dx / d) * this.wucht; ball.vy = (dy / d) * this.wucht;
+    ball.z = Math.max(ball.z, 0.02); ball.vz = 3.2; ball.air = true;
+    this.getroffen = t;
+    events.push({ type: 'zap', x: ball.x, y: ball.y });
+    return false;
+  }
+}

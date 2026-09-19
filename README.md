@@ -3143,6 +3143,41 @@ iPad in der Sonne hat man von Farben allein wenig.
 Das Fernrohr (`tubus`) bleibt im Baumodus wählbar, es ist nur nicht mehr das, was auf der Terrasse
 steht.
 
+## Die drei Endgegner (Fassung 211)
+
+Jede der drei Zauberreich-Welten hat seit Fassung 211 eine **zehnte Bahn**, und auf ihr steht eine
+Maschine, die um ein Vielfaches größer ist als alles andere darin. Sie sind mit Absicht auf **drei
+verschiedene Arten schwer** – ein Endgegner, der dieselbe Frage stellt wie der vorige, ist kein
+Endgegner, sondern eine große Kopie.
+
+| Welt | Gegner | Schwer durch |
+| --- | --- | --- |
+| Lehrlingsgarten | **Die Riesenblüte** | **Takt.** Sechs Blätter öffnen und schließen sich; das Loch liegt im Kelch. Beim Schließen kommt der Pollenstoß und wirft alles hinaus, was noch drin ist und nicht im Loch. Der Kelch glüht eine Sekunde vorher auf. |
+| Sternenwarte | **Die Große Armillarsphäre** | **Ablesen.** Drei Messingringe um das Loch, jeder mit *einer* Gasse, jeder mit eigenem Tempo und eigener Richtung. Alle drei zugleich zu erwischen geht, ist aber selten; der ruhigere Weg ist, sich von Ring zu Ring zu arbeiten. |
+| Erzmagierloge | **Der Bannwächter** | **Reaktion.** Der einzige Gegner im Spiel, der *zusieht*: Sein Arm dreht sich dorthin, wo der Ball liegt, dann glüht das Siegel unter ihm auf und schlägt ein. Wer steht, wo er hinzeigt, fliegt quer durch den Saal zurück. |
+
+Drei Entscheidungen, die den Unterschied machen:
+
+**Das Loch liegt in der Mitte des Gegners** (bei Blüte und Sphäre) bzw. **hinter ihm** (beim
+Wächter). Eine große Maschine, an der man vorbeispielt, ist ein Umweg; eine, durch die man hindurch
+muß, ist ein Gegner. Beim Wächter lag das Loch in der ersten Fassung am Eingang des Saals und er
+selbst dahinter – man konnte einlochen, ohne ihm je zu begegnen.
+
+**Der Arm des Wächters schleppt absichtlich hinterher** (`folgen` = 1,1 Bogenmaß je Sekunde). Ein
+Arm, der sofort auf den Ball zeigt, wäre nicht zu schlagen. So aber entsteht die Aufgabe daraus,
+sich zu bewegen, damit er hinter einem bleibt: **Stehenbleiben ist die einzige Antwort, die immer
+falsch ist** – und das verlangt keine andere Maschine dieses Spiels. Während er warnt, steht der
+Arm still; sonst zöge die Warnung mit dem Ball mit und wäre keine Warnung, sondern eine Verfolgung.
+
+**Der Pollenstoß der Blüte ist kein Beiwerk.** Ohne ihn wäre die geschlossene Blüte ein bequemer
+Warteraum – hineinrollen, das Loch verpassen, in Ruhe weiterspielen, bis sie wieder aufgeht. Der
+Stoß macht aus dem Kelch einen Ort, an dem man nicht bleiben kann.
+
+Die Ringe der Sphäre laufen **verschieden schnell und gegeneinander**. Liefen sie gleich, stünden
+ihre Gassen immer übereinander, und die Sphäre wäre ein Tor mit drei Rahmen.
+
+Alle drei stehen im Baumodus unter *Zauberreich* und sind dort frei einstellbar.
+
 ## Die Loge, zweite Fassung: schmal statt weit (Fassung 210)
 
 Fynn, zum ersten Entwurf: *„Macht die Bahnen bitte etwas schmaler und komplexer, die Erzmagierwelt

@@ -1802,6 +1802,9 @@ class Renderer {
     if (ob.type === 'pumpwerk') { this.drawPumpwerkFloor(ctx, ob, t); return; }
     if (ob.type === 'stroemung') { this.drawStroemungFloor(ctx, ob, t); return; }
     if (ob.type === 'gearfield' && ob.style === 'meridian') { this.drawMeridianFloor(ctx, ob, t); return; }
+    if (ob.type === 'riesenbluete') { this.drawRiesenblueteFloor(ctx, ob, t); return; }
+    if (ob.type === 'armillar') { this.drawArmillarFloor(ctx, ob, t); return; }
+    if (ob.type === 'bannwaechter') { this.drawBannwaechterFloor(ctx, ob, t); return; }
     if (ob.type === 'zauberkreis') { this.drawZauberkreisFloor(ctx, ob, t); return; }
     if (ob.type === 'strudel') { (ob.style === 'spiralnebel' ? this.drawSpiralnebelFloor : this.drawStrudelFloor).call(this, ctx, ob, t); return; }
     if (ob.type === 'angler') { this.drawAnglerScheinFloor(ctx, ob, t); return; }
@@ -2154,6 +2157,12 @@ class Renderer {
           items.push({ x: px, y: py, bias: 0.45, draw: () => this.drawPipeLauf(ctx, ob, k, t) });
         });
       }
+    } else if (ob.type === 'riesenbluete') {
+      items.push({ x: ob.x, y: ob.y, bias: 0.3, draw: () => this.drawRiesenbluete(ctx, ob, t) });
+    } else if (ob.type === 'armillar') {
+      items.push({ x: ob.x, y: ob.y, bias: 0.3, draw: () => this.drawArmillar(ctx, ob, t) });
+    } else if (ob.type === 'bannwaechter') {
+      items.push({ x: ob.x, y: ob.y, bias: 0.4, draw: () => this.drawBannwaechter(ctx, ob, t) });
     } else if (ob.type === 'gearfield') {
       items.push({ x: (ob.x0 + ob.x1) / 2, y: (ob.y0 + ob.y1) / 2, bias: -0.2, draw: () => (ob.style === 'meridian' ? this.drawMeridian(ctx, ob, t) : this.drawGearField(ctx, ob, t)) });
     } else if (ob.type === 'sweephand') {

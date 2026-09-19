@@ -106,6 +106,9 @@ const Editor = (deps) => {
       ['sternbild', 'Sternbild', 'Alle Sterne anfahren, dann geht das Tor auf. Die Linien zeigen, was noch fehlt.'],
       ['zauberspiegel', 'Zauberspiegel', 'Wer hineinrollt, kommt drüben seitenverkehrt heraus. Wo man auftrifft, entscheidet, wo man landet.'],
       ['zauberkreis', 'Zauberkreis', 'Ein Runenring im Boden. Die Farbe sagt vorher, was er tut: grün schiebt, blau bremst, gold wirft, violett dreht, rot sperrt.'],
+      ['riesenbluete', 'Riesenblüte', 'Der Endgegner des Gartens. Öffnet und schließt sich im Takt; beim Schließen wirft der Pollenstoß alles aus dem Kelch.'],
+      ['armillar', 'Große Armillarsphäre', 'Der Endgegner der Warte. Drei Ringe, jeder mit einer Gasse, jeder mit eigenem Tempo.'],
+      ['bannwaechter', 'Bannwächter', 'Der Endgegner der Loge. Sein Arm dreht sich zum Ball, dann schlägt er in den Keil, in den er zeigt.'],
     ]],
     ['Die Flut', [
       ['flut', 'Flutbecken', 'Ein Becken, das im Takt vollläuft und wieder leerläuft.'],
@@ -260,6 +263,8 @@ const Editor = (deps) => {
     ranke:       [['dauer', 'Wie lange sie trägt', 1.5, 10, 0.25], ['w', 'Breite', 1, 12, 1], ['h', 'Tiefe', 1, 8, 1], null, ['r', 'Wie nah an die Blüte', 0.3, 1.2, 0.05]],
     zauberhut:   [['takt', 'Wie oft das Leuchten wandert', 1, 8, 0.2], ['r', 'Wie groß die Öffnung', 0.25, 0.9, 0.02], null, ['phase', 'Versatz im Takt', 0, 0.95, 0.05]],
     sternbild:   [['r', 'Wie nah an einen Stern', 0.3, 1.2, 0.05]],
+    riesenbluete: [['r', 'Größe', 2.5, 7, 0.1], ['takt', 'Wie lange ein Auf und Zu dauert', 4, 16, 0.5], ['blaetter', 'Wie viele Blätter', 4, 10, 1], null, ['kraft', 'Wie stark der Pollenstoß ist', 10, 45, 1], ['phase', 'Versatz im Takt', 0, 0.95, 0.05]],
+    bannwaechter: [['weite', 'Wie weit er schlägt', 5, 18, 0.5], ['keil', 'Wie breit sein Keil ist', 0.15, 0.9, 0.05], ['takt', 'Wie oft er schlägt', 2.5, 10, 0.5], null, ['folgen', 'Wie schnell sein Arm folgt', 0.3, 3, 0.1], ['wucht', 'Wie weit er wirft', 6, 24, 1], ['r', 'Größe', 1, 3, 0.1], ['phase', 'Versatz im Takt', 0, 0.95, 0.05]],
     zauberkreis: [['r', 'Größe', 0.8, 4, 0.1], ['takt', 'Wie lange ein Lauf dauert (0 = brennt immer)', 0, 12, 0.5], ['weite', 'Wie weit der Sprungkreis wirft', 2, 9, 0.2], null, ['phase', 'Versatz im Takt', 0, 0.95, 0.05]],
     mondzieher:  [['kraft', 'Wie stark', 3, 18, 0.5], ['r', 'Reichweite', 1.5, 7, 0.1], ['takt', 'Wie lange ein Mondlauf dauert', 3, 14, 0.5], null, ['core', 'Wie dick der Sockel', 0.2, 0.9, 0.05], ['phase', 'Versatz im Takt', 0, 0.95, 0.05]],
 
@@ -593,6 +598,11 @@ const Editor = (deps) => {
                                  plaetze: [[x - 3, y], [x, y - 2], [x + 3, y]] };
       case 'mondzieher': return { type: 'mondzieher', x, y, r: 3.4, kraft: 9, takt: 7, core: 0.4, phase: 0 };
       case 'zauberkreis': return { type: 'zauberkreis', x, y, r: 1.6, wirkung: 'schub', takt: 0, phase: 0, weite: 4.2 };
+      case 'riesenbluete': return { type: 'riesenbluete', x, y, r: 4.2, blaetter: 6, takt: 8, phase: 0, kraft: 26, dicke: 0.38 };
+      case 'armillar': return { type: 'armillar', x, y, dicke: 0.3, ringe: [
+        { r: 8.2, gasse: 0.62, tempo: 0.3, phase: 0 }, { r: 5.6, gasse: 0.72, tempo: -0.44, phase: 0.35 },
+        { r: 3.1, gasse: 0.86, tempo: 0.66, phase: 0.7 }] };
+      case 'bannwaechter': return { type: 'bannwaechter', x, y, r: 1.8, weite: 13, keil: 0.4, takt: 5, phase: 0, folgen: 1.1, wucht: 15, warn: 1.2, schlag: 0.3 };
       /* Das Sternbild bringt sein Tor mit: Ohne Tor waeren die Sterne Schmuck. Gesetzt wird es
          rechts daneben; verschieben kann man beide Enden einzeln. */
       case 'sternbild': return { type: 'sternbild', r: 0.5,

@@ -135,6 +135,25 @@ def mond(x, y, r=3.4, kraft=9.0, takt=7.0, phase=0.0, core=0.4):
     return {'type': 'mondzieher', 'x': x, 'y': y, 'r': r, 'kraft': kraft, 'takt': takt,
             'phase': phase, 'core': core}
 
+def riesenbluete(x, y, r=4.2, blaetter=6, takt=8.0, phase=0.0, kraft=26.0):
+    """Die Riesenblüte – der Endgegner des Lehrlingsgartens. Das Loch liegt in ihrer Mitte."""
+    return {'type': 'riesenbluete', 'x': x, 'y': y, 'r': r, 'blaetter': blaetter,
+            'takt': takt, 'phase': phase, 'kraft': kraft, 'dicke': 0.38}
+
+def sphaere(x, y, ringe, dicke=0.3):
+    """Die Große Armillarsphäre – der Endgegner der Sternenwarte. 'ringe' ist eine Liste von
+    (Radius, Gassenbreite im Bogenmaß, Tempo, Versatz)."""
+    return {'type': 'armillar', 'x': x, 'y': y, 'dicke': dicke,
+            'ringe': [{'r': float(a), 'gasse': float(b), 'tempo': float(c), 'phase': float(d)}
+                      for a, b, c, d in ringe]}
+
+def waechter(x, y, r=1.6, weite=11.0, keil=0.42, takt=5.0, phase=0.0, folgen=1.1, wucht=15.0):
+    """Der Bannwächter – der Endgegner der Erzmagierloge. Er dreht sich zum Ball und schlägt in
+    den Keil, in den sein Arm zeigt."""
+    return {'type': 'bannwaechter', 'x': x, 'y': y, 'r': r, 'weite': weite, 'keil': keil,
+            'takt': takt, 'phase': phase, 'folgen': folgen, 'wucht': wucht,
+            'warn': 1.2, 'schlag': 0.3}
+
 def gang(f, x0, y0, x1, y1):
     """Schneidet einen Gang in die Leere. Die Loge ist andersherum gebaut als die ersten beiden
     Orte: Dort war die Karte ein gefüllter Saal, in den Wände gestellt wurden; hier ist sie leer,
@@ -880,6 +899,39 @@ intro='Die Prüfung: erst die Ranke, dann zwischen dem Springkraut hindurch, dan
       'zum Schluß noch einmal die Hüte. Wer hier unter Par bleibt, hat den Lehrlingshut verdient.')
 
 
+# --- 10 --------------------------------------------------------------------
+# DER ENDGEGNER DES GARTENS: Die Riesenblüte.
+#
+# Der Weg dorthin ist lang und ohne Tücke - erst das Vorfeld mit den Maschinen, die man im Garten
+# gelernt hat, dann der Zugang, und ganz am Ende sie selbst. Das ist Absicht: Ein Endgegner soll
+# nicht der letzte von zehn Handgriffen sein, sondern das, worauf es hinausläuft. Wer vor ihr
+# steht, soll noch Schläge übrig haben, um sie zu lernen.
+#
+# DAS LOCH LIEGT IN IHRER MITTE. Eine große Maschine, an der man vorbeispielt, ist ein Umweg;
+# eine, durch die man hindurch muß, ist ein Gegner.
+f = leer(52, 19)
+fuell(f, 1, 8, 30, 11)                # das lange Vorfeld
+fuell(f, 10, 4, 13, 11)               # zwei Ausbuchtungen nach oben und unten
+fuell(f, 19, 8, 22, 15)
+fuell(f, 28, 4, 31, 15)               # der Zugang zum Rondell
+fuell(f, 31, 3, 50, 16)               # das Rondell mit der Blüte
+setz(f, 3, 9, 'T'); setz(f, 40, 9, 'H')
+bahn(GARTEN, 'Die Riesenblüte', 'lehrlingsgarten', f, [
+    kreis(7.0, 9.5, 'schub', r=1.2),
+    windrad(11.5, 6.0, blades=2, laenge=1.4, tempo=0.9, stil='sprenger'),
+    pilz(16.0, 9.5, stil='springkraut'),
+    # Der Bienenstand steht dort, wo der Gang nur vier Kacheln hoch ist: Weiter vorn, an der
+    # Ausbuchtung, müßte er elf Felder weit reichen, um wirklich zuzusperren.
+    muehle(25.5, 10.0, w=4.0, gap=1.5, tempo=0.8, achse='y', stil='bienenstock'),
+    scheibe_(20.5, 13.5, r=1.7, tempo=1.6, aus=0, stil='sonnenblume'),
+    kreis(29.5, 9.5, 'bremse', r=1.3),
+    riesenbluete(40.5, 9.5, r=4.6, blaetter=6, takt=8.5, kraft=26),
+], par=6, maxStrokes=18,
+intro='Am Ende des Gartens steht sie: sechs Blütenblätter, und das Loch liegt in ihrer Mitte. '
+      'Sie öffnet und schließt sich in einem langsamen Takt – aber wenn sie zugeht, kommt der '
+      'Pollenstoß, und wer dann noch im Kelch liegt und nicht im Loch, fliegt wieder hinaus. Der '
+      'Kelch glüht auf, bevor es soweit ist. Das ist die einzige Warnung, und sie reicht.')
+
 # ===========================================================================
 #  DIE STERNENWARTE - Profi, neun Bahnen
 #  Die Terrasse eines Turms über den Wolken und der Kartensaal darunter.
@@ -1083,6 +1135,40 @@ intro='Die Prüfung der Warte: erst die Blüte anstoßen und über die Ranke, da
       'Danach gibt es zwei Wege. Die Schanze zwischen den Pfeilern ist schmal, wirft aber in '
       'einem Bogen über die Kulisse hinweg; wer sie verfehlt, muß den Augenblick abpassen, in dem '
       'die Gasse vor ihm steht. Wer hier unter Par bleibt, hat den Sternenhut verdient.')
+
+# --- 10 --------------------------------------------------------------------
+# DER ENDGEGNER DER WARTE: Die Große Armillarsphäre.
+#
+# Drei Messingringe um das Loch, jeder mit EINER Gasse, jeder mit eigenem Tempo und eigener
+# Richtung. Die Frage der Sternenwarte war immer „wann" - hier wird sie dreifach gestellt, und die
+# drei Antworten passen nur selten zusammen. Wer nicht warten will, geht in mehreren Schlägen von
+# Ring zu Ring und hält sich zwischen zweien auf.
+#
+# WARUM DIE RINGE VERSCHIEDEN SCHNELL LAUFEN. Liefen sie gleich, stünden ihre Gassen immer
+# übereinander, und die Sphäre wäre ein Tor mit drei Rahmen.
+f = leer(54, 21)
+fuell(f, 1, 9, 26, 12)                # der Aufgang
+fuell(f, 8, 4, 11, 12)
+fuell(f, 8, 4, 20, 7)
+fuell(f, 17, 7, 20, 17)
+fuell(f, 17, 14, 26, 17)
+fuell(f, 23, 9, 26, 17)
+fuell(f, 26, 2, 52, 19)               # der Saal der Sphäre
+setz(f, 3, 10, 'T'); setz(f, 39, 10, 'H')
+bahn(WARTE, 'Die Große Armillarsphäre', 'sternenwarte', f, [
+    kreis(6.0, 10.5, 'schub', r=1.3),
+    pilz(14.0, 5.5, stil='meteorit'),
+    pendel(18.5, 10.0, laenge=3.2, amp=55, stil='foucault'),
+    kreis(21.5, 15.5, 'bremse', r=1.3),
+    mond(30.0, 10.5, r=3.0, kraft=7.5, takt=6.0, phase=0.2),
+    sphaere(39.5, 10.5, [(8.2, 0.62, 0.30, 0.0),
+                         (5.6, 0.72, -0.44, 0.35),
+                         (3.1, 0.86, 0.66, 0.7)]),
+], par=6, maxStrokes=18,
+intro='Drei Messingringe um das Loch, jeder mit einer einzigen Gasse, jeder mit eigenem Tempo und '
+      'eigener Richtung. Alle drei zugleich zu erwischen ist möglich, aber selten – der ruhigere '
+      'Weg ist, sich von Ring zu Ring zu arbeiten und zwischen zweien zu warten. Die hellen '
+      'Pfosten zeigen, wo die Gasse gerade steht.')
 
 # ===========================================================================
 #  DIE ERZMAGIERLOGE - Legende, neun Bahnen
@@ -1338,6 +1424,44 @@ intro='Die Prüfung der Loge: Schubkreis, Ranke, Hüte, Schleuder, Mond, Bann �
       'hintereinander, und zwischen ihnen ist nichts. Jeder einzelne ist zu schaffen. Alle sechs '
       'in einem Anlauf ist das, was den Erzmagierhut kostet.')
 
+
+# --- 10 --------------------------------------------------------------------
+# DER ENDGEGNER DER LOGE: Der Bannwächter.
+#
+# Er ist der einzige Gegner im Spiel, der ZUSIEHT. Sein Arm dreht sich langsam dorthin, wo der Ball
+# liegt; dann glüht das Siegel unter dem Arm auf, und wer im Keil steht, wenn es einschlägt, wird
+# quer über den Saal geworfen.
+#
+# DER ARM SCHLEPPT ABSICHTLICH HINTERHER (folgen = 1,1 Bogenmaß je Sekunde). Ein Arm, der sofort
+# auf den Ball zeigt, wäre nicht zu schlagen; so aber entsteht die Aufgabe daraus, sich zu bewegen,
+# damit er hinter einem bleibt. Stehenbleiben ist die einzige Antwort, die immer falsch ist - und
+# das ist etwas, das keine andere Maschine dieses Spiels verlangt.
+#
+# WÄHREND ER WARNT, STEHT DER ARM STILL. Sonst zöge die Warnung mit dem Ball mit und wäre keine
+# Warnung, sondern eine Verfolgung.
+f = leer(56, 21)
+gang(f, 2, 9, 16, 11)                 # der Anmarsch, schmal wie der Rest der Loge
+gang(f, 14, 4, 16, 11)
+gang(f, 14, 4, 26, 6)
+gang(f, 24, 4, 26, 16)
+gang(f, 24, 14, 32, 16)
+gang(f, 32, 2, 54, 19)                # und dann der Saal, in dem er steht
+# DAS LOCH LIEGT HINTER IHM. In der ersten Fassung lag es gleich am Eingang des Saals, und der
+# Wächter stand dahinter in der Ecke - man konnte einlochen, ohne ihm je zu begegnen. Ein
+# Endgegner, an dem man vorbeikommt, ist keiner. Jetzt steht er genau dazwischen.
+setz(f, 3, 10, 'T'); setz(f, 50, 10, 'H')
+bahn(LOGE, 'Der Bannwächter', 'erzmagierloge', f, [
+    kreis(7.0, 10.5, 'schub', r=1.2),
+    blitz(20.0, 5.5, w=3.0, h=3.0, takt=4.2, stil='bannschlag'),
+    kanone(28.0, 15.5, grad=0, weite=8.0, amp=0.0, stil='bannschleuder'),
+    kreis(35.0, 15.0, 'schub', r=1.4),
+    waechter(42.0, 10.5, r=2.2, weite=13.0, keil=0.40, takt=5.0, folgen=1.1, wucht=15),
+    lampe(50.0, 10.5, r=4.2, stil='bannlicht'),
+], par=6, maxStrokes=18,
+intro='Am Ende der Loge steht er und sieht zu. Sein Arm dreht sich dorthin, wo der Ball liegt, '
+      'dann glüht das Siegel unter ihm auf – und wer beim Einschlag im Keil steht, fliegt quer '
+      'durch den Saal zurück. Der Arm ist langsamer als ein Ball. Das ist alles, was man braucht, '
+      'und das einzige, worauf man sich verlassen kann.')
 
 # ---------------------------------------------------------------- Prüfen
 for kennung, jsname, titel, liste in WELTEN:
