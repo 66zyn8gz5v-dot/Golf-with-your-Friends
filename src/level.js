@@ -6,7 +6,11 @@
 // A bis F sind die Münder der Löwentore und Kupferrohre und begehbar; ihre Ausgänge (a bis f)
 // sind Mauer. Sechs Paare, weil der Rohrturm allein sechs Leitungen hat.
 const FLOOR_CHARS = new Set(['#', 's', 'i', 'w', 'l', 'T', 'H', 'o', 'A', 'B', 'C', 'D', 'E', 'F']);
-const WALL_T = 0.38;       // Dicke der Randmauern (nach außen)
+/* Dicke der Randmauern, NACH AUSSEN gerechnet. Sie ist reine Darstellung: Gestoßen wird an den
+   Kanten in 'segs', die genau auf dem Rand der Bodenkacheln liegen. Eine dickere Bande ändert
+   also kein einziges Abprallen, sie gibt der Bahn nur eine Fassung. Mit 0,38 war sie eine
+   Leiste, auf der die Bahn zu liegen schien; mit 0,58 ist sie eine Bande, in der die Bahn steht. */
+const WALL_T = 0.58;
 /* Die Uhrenturm-Welt spielt auf zwei Ebenen. Das ist keine Höhenphysik, sondern ein Umschalter:
    Der Ball ist immer auf genau einer Fläche und kollidiert nur mit deren Wänden. Es dürfen mehr
    als zwei sein; sie stapeln sich der Reihe nach. EBENE_Z ist nur fürs Auge – so hoch liegt jede

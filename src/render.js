@@ -1061,7 +1061,7 @@ class Renderer {
   drawCastShadows(ctx) {
     const lv = this.level, th = this.theme, LX = 0.42, LY = 0.3; // Schattenversatz je Höheneinheit (Weltkoordinaten)
     const boxes = [];
-    for (const w of lv.untenFl.walls) boxes.push([w.x, w.y, w.x + w.w, w.y + w.h, th.wall.style === 'hedge' ? 0.55 : 0.6]);
+    for (const w of lv.untenFl.walls) boxes.push([w.x, w.y, w.x + w.w, w.y + w.h, th.wall.style === 'hedge' ? 0.65 : 0.7]);
     for (const b of lv.untenFl.blocks) boxes.push([b.x, b.y, b.x + 1, b.y + 1, 1.0]);
     for (const o of lv.obstacles) {
       if (o.type === 'wall') { const nx = -(o.y1 - o.y0), ny = o.x1 - o.x0, L = Math.hypot(nx, ny) || 1, tx = nx / L * o.t / 2, ty = ny / L * o.t / 2; boxes.push({ poly: [[o.x0 + tx, o.y0 + ty], [o.x1 + tx, o.y1 + ty], [o.x1 - tx, o.y1 - ty], [o.x0 - tx, o.y0 - ty]], h: o.h }); }
@@ -1523,7 +1523,7 @@ class Renderer {
 
   drawWall(ctx, poly, wall) {
     if (wall.style === 'hedge') {
-      this.prism(ctx, poly, 0, 0.55, wall.top, wall.side);
+      this.prism(ctx, poly, 0, 0.65, wall.top, wall.side);
       // Blätter-Knubbel auf der Oberseite
       const cx = (poly[0][0] + poly[2][0]) / 2, cy = (poly[0][1] + poly[2][1]) / 2;
       const w = poly[2][0] - poly[0][0], h = poly[2][1] - poly[0][1];
@@ -1531,23 +1531,23 @@ class Renderer {
       for (let i = 0; i < n; i++) {
         const u = (i + 0.5) / n;
         const px = along ? poly[0][0] + u * w : cx, py = along ? cy : poly[0][1] + u * h;
-        this.isoEllipse(ctx, px, py, 0.55, 0.22, shade(wall.top, 1.08 - (i % 2) * 0.12));
+        this.isoEllipse(ctx, px, py, 0.65, 0.24, shade(wall.top, 1.08 - (i % 2) * 0.12));
       }
     } else if (wall.style === 'ice') {
-      ctx.globalAlpha = 0.85; this.prism(ctx, poly, 0, 0.6, wall.top, wall.side); ctx.globalAlpha = 1;
+      ctx.globalAlpha = 0.85; this.prism(ctx, poly, 0, 0.7, wall.top, wall.side); ctx.globalAlpha = 1;
     } else if (wall.style === 'brass') {
-      this.prism(ctx, poly, 0, 0.55, wall.top, wall.side, { outline: shade(wall.side, 0.7) });
+      this.prism(ctx, poly, 0, 0.65, wall.top, wall.side, { outline: shade(wall.side, 0.7) });
       // Nieten auf der Oberseite
       const w = poly[2][0] - poly[0][0], h = poly[2][1] - poly[0][1], along = w > h, len = Math.max(w, h), n = Math.max(1, Math.round(len / 0.5));
       ctx.fillStyle = shade(wall.side, 0.9);
       for (let i = 0; i < n; i++) {
         const u = (i + 0.5) / n, px = along ? poly[0][0] + u * w : (poly[0][0] + poly[2][0]) / 2, py = along ? (poly[0][1] + poly[2][1]) / 2 : poly[0][1] + u * h;
-        const [sx, sy] = this.proj(px, py, 0.56); ctx.beginPath(); ctx.arc(sx, sy, Math.max(1, this.scale * 0.035), 0, TAU); ctx.fill();
+        const [sx, sy] = this.proj(px, py, 0.66); ctx.beginPath(); ctx.arc(sx, sy, Math.max(1, this.scale * 0.035), 0, TAU); ctx.fill();
       }
     } else if (wall.style === 'gold') {
-      this.prism(ctx, poly, 0, 0.5, wall.top, wall.side, { outline: shade(wall.side, 0.8) });
+      this.prism(ctx, poly, 0, 0.6, wall.top, wall.side, { outline: shade(wall.side, 0.8) });
     } else {
-      this.prism(ctx, poly, 0, 0.6, wall.top, wall.side, { outline: shade(wall.side, 0.75) });
+      this.prism(ctx, poly, 0, 0.7, wall.top, wall.side, { outline: shade(wall.side, 0.75) });
     }
   }
 
