@@ -42,6 +42,17 @@ zwei Sternenstaub übereinander, darunter ein Stock.
 * **Alte Welten bleiben unverändert.** Das Paket wirkt nur in Welten, in
   denen du es eingeschaltet hast.
 
+## Der Stil: Mittelalter-Fantasy
+
+Alles in diesem Add-on sieht mittelalterlich aus, nicht magisch-modern:
+geschmiedeter Stahl, Bronze, gegerbtes Leder, dunkle Umrisse. Kein Neon,
+kein Violett, keine Leuchtfarben – die hellen Töne sind dem Sternenstaub
+vorbehalten, weil der von sich aus leuchtet.
+
+Die Farben dafür stehen gesammelt in `werkzeuge/texturen_erzeugen.py`
+unter `FARBEN`. Wer neue Gegenstände dazubaut, nimmt die von dort, damit
+alles zusammenpasst.
+
 ## Wie das hier aufgebaut ist
 
 | Ordner | Wofür |
@@ -49,6 +60,7 @@ zwei Sternenstaub übereinander, darunter ein Stock.
 | `verhaltenspaket/` | Die Regeln: welche Gegenstände es gibt, was sie können, wie man sie baut |
 | `ressourcenpaket/` | Das Aussehen: Bilder und Namen in Deutsch und Englisch |
 | `werkzeuge/` | Kleine Programme, die beim Bauen helfen |
+| `vorschau/` | Die Bilder stark vergrößert, zum Anschauen |
 
 Minecraft trennt das strikt: Das Verhaltenspaket weiß nichts davon, wie ein
 Gegenstand aussieht, und das Ressourcenpaket weiß nichts davon, was er tut.

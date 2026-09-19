@@ -19,11 +19,15 @@ FARBEN = {
     "a": (255, 252, 235, 255),   # helles Sternenlicht
     "b": (125, 215, 255, 255),   # Himmelblau
     "c": (55, 135, 225, 255),    # tiefes Blau
-    "h": (205, 240, 255, 255),   # Klinge, helle Seite
-    "s": (150, 200, 240, 255),   # Klinge, Schattenseite
-    "d": (40, 70, 120, 255),     # dunkler Rand
-    "g": (255, 205, 80, 255),    # Parierstange, Gold
-    "r": (95, 60, 145, 255),     # Griff
+    # Mittelalter-Palette: geschmiedeter Stahl, Bronze, gegerbtes Leder.
+    "w": (228, 233, 240, 255),   # Klinge, geschliffene Kante
+    "s": (168, 178, 194, 255),   # Klinge, Schattenseite
+    "d": (104, 114, 134, 255),   # Klinge, tiefer Schatten
+    "k": (44, 46, 58, 255),      # Umriss, fast schwarz
+    "g": (206, 158, 66, 255),    # Bronze, hell
+    "e": (138, 98, 38, 255),     # Bronze, dunkel
+    "l": (146, 98, 56, 255),     # Leder, hell
+    "m": (94, 60, 34, 255),      # Leder, dunkel
 }
 
 STERNENSTAUB = [
@@ -46,22 +50,22 @@ STERNENSTAUB = [
 ]
 
 STERNENKLINGE = [
-    ".............dhh",
-    "............dhhd",
-    "...........dhsd.",
-    "..........dhhd..",
-    ".........dhsd...",
-    "........dhhd....",
-    ".......dhsd.....",
-    "......dhhd......",
-    ".....dhsd.......",
-    "..ggdhhdgg......",
-    "...gdrrdg.......",
-    "...drrd.........",
-    "..drrd..........",
-    ".drrd...........",
-    "drrd............",
-    "dd..............",
+    ".............kwd",
+    "............kwsd",
+    "...........kwsd.",
+    "..........kwsd..",
+    ".........kwsd...",
+    "........kwsd....",
+    ".......kwsd.....",
+    "......kwsd......",
+    ".....kwsd.......",
+    ".eegggkwsdgggee.",
+    "..eekklmlkkee...",
+    "...klmlk........",
+    "..klmlk.........",
+    ".klmlk..........",
+    "kgglgk..........",
+    ".kggk...........",
 ]
 
 
@@ -130,6 +134,11 @@ def main():
         ziel = hier / "ressourcenpaket" / "textures" / "items" / f"{name}.png"
         schreibe_png(ziel, karte_zu_pixeln(karte))
         print(f"  geschrieben  {ziel.relative_to(hier)}")
+
+        # Sechzehnfach vergroessert, weil 16x16 am Bildschirm ein Fleck ist.
+        vorschau = hier / "vorschau" / f"{name}.png"
+        schreibe_png(vorschau, karte_zu_pixeln(karte, 16, (235, 235, 240, 255)))
+        print(f"  geschrieben  {vorschau.relative_to(hier)}")
 
     # Das Paketsymbol steht in der Paketliste des Spiels und darf nicht
     # durchsichtig sein - sonst sieht man dort ein leeres Feld.
