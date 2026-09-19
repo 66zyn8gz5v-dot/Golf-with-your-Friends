@@ -1802,6 +1802,7 @@ class Renderer {
     if (ob.type === 'pumpwerk') { this.drawPumpwerkFloor(ctx, ob, t); return; }
     if (ob.type === 'stroemung') { this.drawStroemungFloor(ctx, ob, t); return; }
     if (ob.type === 'gearfield' && ob.style === 'meridian') { this.drawMeridianFloor(ctx, ob, t); return; }
+    if (ob.type === 'zauberkreis') { this.drawZauberkreisFloor(ctx, ob, t); return; }
     if (ob.type === 'strudel') { (ob.style === 'spiralnebel' ? this.drawSpiralnebelFloor : this.drawStrudelFloor).call(this, ctx, ob, t); return; }
     if (ob.type === 'angler') { this.drawAnglerScheinFloor(ctx, ob, t); return; }
     if (ob.type === 'raucher') { this.drawRaucherFloor(ctx, ob, t); return; }

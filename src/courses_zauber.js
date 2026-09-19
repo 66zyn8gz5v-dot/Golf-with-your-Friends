@@ -267,6 +267,7 @@ const ZAUBER_GARTEN = [
       { type: 'wall', x0: 21, y0: 8, x1: 20, y1: 7, t: 0.22, h: 0.5 },
       { type: 'wall', x0: 10, y0: 8, x1: 11, y1: 9, t: 0.22, h: 0.5 },
       { type: 'wall', x0: 13, y0: 8, x1: 12, y1: 9, t: 0.22, h: 0.5 },
+      { type: 'zauberkreis', x: 15.5, y: 9.5, r: 1.5, wirkung: 'schub', takt: 0.0, phase: 0.0 },
       { type: 'magnet', x: 8.5, y: 9.5, r: 2.6, strength: 5.0, slow: 0, style: 'pollen' },
       { type: 'turntable', x: 15.5, y: 5.5, r: 1.8, speed: 1.8, exit: 90, eject: 4.5, style: 'sonnenblume' },
       { type: 'bumper', x: 22.5, y: 5.5, r: 0.55, style: 'springkraut', kick: 7.5 },
@@ -498,6 +499,8 @@ const ZAUBER_WARTE = [
       '..................................',
     ],
     obstacles: [
+      { type: 'zauberkreis', x: 9.5, y: 7.0, r: 1.7, wirkung: 'wirbel', takt: 0.0, phase: 0.0, kraft: 2.2 },
+      { type: 'zauberkreis', x: 26.0, y: 7.0, r: 1.6, wirkung: 'bremse', takt: 4.2, phase: 0.0 },
       { type: 'wandergate', x0: 18, y0: 3, x1: 18, y1: 11, gap: 1.9, style: 'kulisse' },
       { type: 'mondzieher', x: 13.0, y: 7.0, r: 3.0, kraft: 8.5, takt: 5.5, phase: 0.0, core: 0.4 },
       { type: 'bumper', x: 24.5, y: 4.5, r: 0.55, style: 'meteorit', kick: 7.5 },
@@ -526,6 +529,7 @@ const ZAUBER_WARTE = [
       '................................',
     ],
     obstacles: [
+      { type: 'zauberkreis', x: 16.0, y: 8.0, r: 1.7, wirkung: 'sprung', takt: 0.0, phase: 0.0, weite: 5.6 },
       { type: 'zauberhut', takt: 2.4, phase: 0.0, r: 0.42, plaetze: [[8.0, 4.0], [16.0, 11.0], [25.0, 9.0]] },
       { type: 'mondzieher', x: 16.0, y: 4.0, r: 3.0, kraft: 8.0, takt: 6.0, phase: 0.25, core: 0.4 },
       { type: 'pendulum', x: 25.0, y: 3.0, len: 3.0, amp: 45, ruhe: 90, phase: 0.0, w: 1.2, h: 1.2, style: 'foucault' },
@@ -584,6 +588,7 @@ const ZAUBER_LOGE = [
       '....................................',
     ],
     obstacles: [
+      { type: 'zauberkreis', x: 10.0, y: 7.0, r: 2.0, wirkung: 'bann', takt: 5.0, phase: 0.0 },
       { type: 'zauberspiegel', x0: 18, y0: 4, x1: 18, y1: 11 },
       { type: 'rotor', x: 23.0, y: 10.5, blades: 3, len: 1.5, speed: 1.2, thick: 0.16, style: 'bannzeiger', phase: 0.0 },
     ],
@@ -611,6 +616,8 @@ const ZAUBER_LOGE = [
       '......................................',
     ],
     obstacles: [
+      { type: 'zauberkreis', x: 8.5, y: 8.0, r: 1.6, wirkung: 'schub', takt: 4.6, phase: 0.0 },
+      { type: 'zauberkreis', x: 31.5, y: 6.0, r: 1.7, wirkung: 'bremse', takt: 0.0, phase: 0.0 },
       { type: 'zauberspiegel', x0: 13, y0: 5, x1: 13, y1: 12 },
       { type: 'zauberspiegel', x0: 26, y0: 5, x1: 26, y1: 12 },
       { type: 'bumper', x: 31.5, y: 10.5, r: 0.55, style: 'bannstein', kick: 7.5 },

@@ -3111,6 +3111,31 @@ anderen sechs Bahnen an ihre Stelle getreten ist, ist Takt und Flug: die **Kulis
 | Sprungschanze (Loge) | **Bannschanze** | Schwarzer Marmor mit goldener Wange, zwei Bahnen Bannfeuer und ein Siegel dort, wo der Ball abhebt. |
 | Augenturm (Warte) | **Sternenspiegel** | Eine geschliffene Scheibe auf einer Marmorsäule statt eines Rohres. Wem sie zugewandt ist, sieht die volle Scheibe; dreht sie sich weg, wird sie zum Strich – man liest ihre Blickrichtung an ihrer Breite ab. |
 
+**Und seit Fassung 208 gibt es die Zauberkreise** (`src/render_kreise.js`, Verhalten in
+`src/obstacles_zauber.js`). Runenringe, die in den Boden geschnitten sind und leuchten – außen ein
+Ring aus Runen, innen ein Siegel, dazwischen zwei Rillen.
+
+**Die Farbe ist die Bedienungsanleitung.** Jede andere Maschine des Spiels muß man einmal
+ausprobiert haben, um zu wissen, was sie tut; diese hier sagt es vorher:
+
+| Farbe | Kreis | Was er tut |
+| --- | --- | --- |
+| grün | **Schubkreis** | Beschleunigt in die Richtung, in die der Ball ohnehin läuft. |
+| blau | **Bremskreis** | Frißt Tempo. Wer mittelschnell hineinrollt, bleibt darin liegen – durch kommt nur, wer schnell genug ist. |
+| gold | **Sprungkreis** | Hebt den Ball ab. Er entscheidet nur, **wie weit** geflogen wird, nicht wohin – sonst wäre er eine Kanone, und die gibt es schon. |
+| violett | **Wirbelkreis** | Dreht die Laufrichtung, solange man darin ist. |
+| rot | **Bannkreis** | Ist eine Wand, **solange er brennt**. Deshalb braucht er als einziger einen Takt; einer ohne wäre eine Mauer, die nie aufgeht, und `pruefe()` läßt das nicht durch. |
+
+Jeder Kreis kann im Takt brennen: `takt=0` heißt „immer an", sonst ist er die halbe Periode an und
+die halbe aus – und solange er aus ist, tut er **gar nichts**, dann liegt dort nur eine kalte Rille
+im Stein. Damit ist dieselbe Maschine einmal eine feste Regel und einmal eine Frage des Augenblicks,
+ohne daß es zwei Maschinen sein müßten. Daß ein erloschener Kreis wirklich wirkungslos ist, mißt
+`tools/zauber.mjs` mit – wäre er es nicht, wäre die Farbe eine Lüge.
+
+Die Unterscheidung hängt nicht allein an der Farbe: Jeder Kreis hat auch ein eigenes Siegel in der
+Mitte (Winkel nach außen, Bögen nach innen, Pfeil aus der Schale, Spirale, Knoten). Auf einem hellen
+iPad in der Sonne hat man von Farben allein wenig.
+
 Das Fernrohr (`tubus`) bleibt im Baumodus wählbar, es ist nur nicht mehr das, was auf der Terrasse
 steht. Und weil ein Ball in der Luft **keine Mauern** kennt (`physics.js`), rechnet `pruefe()` seit
 dieser Fassung jeden Landepunkt nach: Eine Schanze, die in eine Wand oder über den Rand wirft, kommt

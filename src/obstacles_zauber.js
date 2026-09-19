@@ -346,3 +346,93 @@ class Zauberspiegel {
     events.push({ type: 'zauberspiegel', x: ball.x, y: ball.y, u: v });
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Die Zauberkreise
+   ---------------------------------------------------------------------------
+   Ein Runenkreis, der in den Boden geschnitten ist und leuchtet. WAS er tut, sagt seine Farbe –
+   und zwar bevor man hineinrollt, nicht danach. Das ist der ganze Sinn dieser Maschine: Bisher muß
+   man jede Maschine des Spiels einmal ausprobiert haben, um zu wissen, was sie tut. Ein Kreis, der
+   grün brennt, schiebt; einer, der blau brennt, bremst. Fünf Farben, fünf Wirkungen, und wer die
+   fünf einmal kennt, liest jede Bahn auf einen Blick.
+
+   JEDER KREIS KANN IM TAKT BRENNEN. Steht takt auf 0, brennt er immer. Sonst ist er die halbe
+   Periode an und die halbe aus, und solange er aus ist, tut er gar nichts - dann liegt dort nur
+   eine kalte Rille im Stein. Damit ist dieselbe Maschine einmal eine feste Regel und einmal eine
+   Frage des Augenblicks, ohne daß es zwei Maschinen sein müßten.
+
+   DER BANNKREIS IST DIE AUSNAHME. Seine Wirkung IST das Brennen: Solange er glüht, ist er eine
+   Wand, die man nicht durchquert. Deshalb hat er als einziger Segmente - und deshalb ist ein
+   Bannkreis ohne Takt sinnlos, denn er wäre eine Mauer, die nie aufgeht. */
+const KREIS_WIRKUNGEN = ['schub', 'bremse', 'sprung', 'wirbel', 'bann'];
+
+class Zauberkreis {
+  constructor(d) {
+    Object.assign(this, { r: 1.6, wirkung: 'schub', takt: 0, phase: 0, kraft: 0, weite: 4.2 }, d);
+    if (!KREIS_WIRKUNGEN.includes(this.wirkung)) this.wirkung = 'schub';
+    this.type = 'zauberkreis';
+    /* Die Stärke steht je Wirkung woanders in der Einheit: Beschleunigung, Bremsanteil,
+       Drehung im Bogenmaß. Wer nichts angibt, bekommt den Wert, mit dem die Bahnen gebaut sind. */
+    /* Die Bremse frißt sich selbst: langsamer heißt länger drin heißt noch langsamer. Wer mit
+       mittlerem Tempo hineinrollt, bleibt darin liegen; durch kommt nur, wer schnell genug ist.
+       Das ist gewollt und steht so auch in der Anleitung - aber es ist keine Sackgasse: Aus dem
+       Stand heraus schafft ein kräftiger Schlag den Kreis wieder. Von 3,4 auf 2,4 gesenkt, damit
+       das auch mit einem mittleren Schlag gelingt. */
+    if (!this.kraft) this.kraft = { schub: 26, bremse: 2.4, sprung: 0, wirbel: 2.6, bann: 0 }[this.wirkung];
+    this.wach = 1; this.aus = false;
+  }
+  update(t) {
+    if (!this.takt) { this.wach = 1; this.aus = false; return; }
+    const u = (((t / this.takt + this.phase) % 1) + 1) % 1;
+    /* Weich überblendet, damit man den Umschlag kommen sieht. Als „an" gilt er erst ab der Hälfte –
+       sonst sperrte der Bannkreis schon, während er für das Auge noch dunkel ist. */
+    const roh = u < 0.5 ? Math.min(1, u / 0.12) : Math.max(0, 1 - (u - 0.5) / 0.12);
+    this.wach = roh; this.aus = roh < 0.5;
+  }
+  drin(px, py) { return Math.hypot(px - this.x, py - this.y) <= this.r; }
+
+  segments(out) {
+    if (this.wirkung !== 'bann' || this.aus) return;
+    const n = 16, poly = [];
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * TAU;
+      poly.push([this.x + Math.cos(a) * this.r, this.y + Math.sin(a) * this.r]);
+    }
+    polySegments(poly, out, { e: 0.75, kind: 'bannkreis' });
+  }
+
+  /* Der Sprungkreis wirft, sobald der Ball ihn mit genug Tempo überrollt. Er behält seine
+     Richtung – der Kreis entscheidet nur, WIE WEIT er fliegt, nicht wohin. Ein Kreis, der auch die
+     Richtung vorgäbe, wäre eine Kanone, und die gibt es schon. */
+  launch(ball, events) {
+    if (this.wirkung !== 'sprung' || this.aus || ball.air) return;
+    if (!this.drin(ball.x, ball.y)) return;
+    const sp = Math.hypot(ball.vx, ball.vy);
+    if (sp < 2.2) return;                       // wer hier ausrollt, bleibt liegen
+    const flug = this.weite / sp;
+    ball.vz = (12 * flug) / 2; ball.z = Math.max(ball.z, 0.01); ball.air = true;
+    events.push({ type: 'jump', x: ball.x, y: ball.y });
+  }
+
+  force(ball, dt) {
+    if (this.aus || ball.air || !this.drin(ball.x, ball.y)) return;
+    const sp = Math.hypot(ball.vx, ball.vy);
+    if (this.wirkung === 'schub') {
+      if (sp < 0.4) return;                     // ein liegender Ball hat keine Richtung zum Schieben
+      const k = this.kraft * dt;
+      ball.vx += (ball.vx / sp) * k; ball.vy += (ball.vy / sp) * k;
+      const neu = Math.hypot(ball.vx, ball.vy);
+      if (neu > 19) { ball.vx *= 19 / neu; ball.vy *= 19 / neu; }
+      ball.boosted = true;
+    } else if (this.wirkung === 'bremse') {
+      const f = Math.max(0, 1 - this.kraft * dt);
+      ball.vx *= f; ball.vy *= f;
+    } else if (this.wirkung === 'wirbel') {
+      if (sp < 0.3) return;
+      const w = this.kraft * dt;
+      const c = Math.cos(w), s = Math.sin(w);
+      const vx = ball.vx * c - ball.vy * s, vy = ball.vx * s + ball.vy * c;
+      ball.vx = vx; ball.vy = vy;
+    }
+  }
+}

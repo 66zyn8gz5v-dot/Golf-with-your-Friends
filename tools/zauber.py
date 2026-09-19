@@ -135,6 +135,17 @@ def mond(x, y, r=3.4, kraft=9.0, takt=7.0, phase=0.0, core=0.4):
     return {'type': 'mondzieher', 'x': x, 'y': y, 'r': r, 'kraft': kraft, 'takt': takt,
             'phase': phase, 'core': core}
 
+def kreis(x, y, wirkung, r=1.6, takt=0.0, phase=0.0, kraft=0.0, weite=4.2):
+    """Ein Zauberkreis. Die Wirkung bestimmt die Farbe, und die Farbe steht im Bild, bevor man
+    hineinrollt: schub (grün), bremse (blau), sprung (gold), wirbel (violett), bann (rot).
+    takt=0 heißt „brennt immer"; sonst ist er die halbe Periode an. Ein Bannkreis OHNE Takt wäre
+    eine Mauer, die nie aufgeht - pruefe() läßt das nicht durch."""
+    o = {'type': 'zauberkreis', 'x': x, 'y': y, 'r': r, 'wirkung': wirkung,
+         'takt': takt, 'phase': phase}
+    if kraft: o['kraft'] = kraft
+    if wirkung == 'sprung': o['weite'] = weite
+    return o
+
 def sternbild(sterne, tor, r=0.5):
     """Sternbild mit Sternentor. Das Tor steht waagerecht oder senkrecht auf einer ganzen Linie –
     nur dann läßt sich prüfen, welche Kachelkanten es sperrt."""
@@ -491,6 +502,22 @@ def pruefe(b):
                           f'{"x" if achse_x else "y"} = {offen[0]} ist noch Boden, ihre Klötze '
                           f'reichen aber nur {reicht:.1f} Felder weit (w={w}, overlap={ueber})')
 
+    # ---- Die Zauberkreise
+    #
+    # Ein Bannkreis ohne Takt ist eine runde Mauer, die nie aufgeht - der Reiz liegt genau darin,
+    # daß er im Takt erlischt. Und jeder Kreis muß ganz auf der Bahn liegen: Ein Kreis, der halb
+    # in der Bande steckt, sieht aus wie ein Fehler und wirkt auch nur halb.
+    for o in [x for x in b['obstacles'] if x['type'] == 'zauberkreis']:
+        if o['wirkung'] == 'bann' and not o['takt']:
+            fehler.append(f'der Bannkreis auf {o["x"]}/{o["y"]} hat keinen Takt – er wäre eine '
+                          f'Mauer, die nie aufgeht')
+        r = o['r']
+        for ex, ey in ((o['x'] - r, o['y']), (o['x'] + r, o['y']), (o['x'], o['y'] - r), (o['x'], o['y'] + r)):
+            if not fest(int(ex), int(ey)):
+                fehler.append(f'der Zauberkreis auf {o["x"]}/{o["y"]} ragt bei {ex:.1f}/{ey:.1f} '
+                              f'über die Bahn hinaus')
+                break
+
     # ---- Die Sprungschanzen
     #
     # IN DER LUFT GIBT ES KEINE MAUERN (siehe physics.js). Das ist der Reiz der Schanze - man
@@ -770,6 +797,9 @@ fuell(f, 18, 7, 20, 11, '.')          # Beet von unten
 fuell(f, 23, 8, 24, 10, 'x')          # Hecke vor dem Loch, mit einer Gasse darunter
 setz(f, 3, 5, 'T'); setz(f, 26, 9, 'H')
 bahn(GARTEN, 'Der Blätterwirbel', 'lehrlingsgarten', f, [
+    # Der erste Zauberkreis des Spiels steht hier, im Garten, und er schiebt: Die freundlichste der
+    # fünf Wirkungen gehört auf die Stufe, auf der man Zaubern lernt.
+    kreis(15.5, 9.5, 'schub', r=1.5),
     magnet(8.5, 9.5, r=2.6, kraft=5.0, stil='pollen'),   # schwach genug, daß es den Ball ablenkt und nicht einfängt
     scheibe_(15.5, 5.5, r=1.8, tempo=1.8, aus=90, stil='sonnenblume'),
     pilz(22.5, 5.5, stil='springkraut'),
@@ -937,6 +967,8 @@ fuell(f, 1, 2, 32, 12)
 fuell(f, 6, 2, 7, 12, 'x'); fuell(f, 6, 6, 7, 8, '#')     # erster Durchlaß, fest
 setz(f, 3, 7, 'T'); setz(f, 30, 7, 'H')
 bahn(WARTE, 'Der Wandelgang', 'kartensaal', f, [
+    kreis(9.5, 7.0, 'wirbel', r=1.7, kraft=2.2),
+    kreis(26.0, 7.0, 'bremse', r=1.6, takt=4.2),
     wandertor(18, 3, 18, 11, gasse=1.9, stil='kulisse'),
     mond(13.0, 7.0, r=3.0, kraft=8.5, takt=5.5),
     pilz(24.5, 4.5, stil='meteorit'),
@@ -955,6 +987,10 @@ fuell(f, 11, 2, 12, 9, 'x')
 fuell(f, 20, 5, 21, 12, 'x')
 setz(f, 3, 7, 'T'); setz(f, 28, 4, 'H')
 bahn(WARTE, 'Die Hutkammer', 'kartensaal', f, [
+    # Der Sprungkreis wirft den Ball ein Stück weit, ohne die Richtung anzurühren: Er entscheidet,
+    # WIE WEIT, nicht wohin. Hier heißt das, daß man über die zweite Wand kommt - wenn man vorher
+    # in die richtige Richtung zeigt.
+    kreis(16.0, 8.0, 'sprung', r=1.7, weite=5.6),
     huete([(8, 4), (16, 11), (25, 9)], takt=2.4),
     mond(16.0, 4.0, r=3.0, kraft=8.0, takt=6.0, phase=0.25),
     pendel(25.0, 3.0, laenge=3.0, amp=45, stil='foucault'),
@@ -1028,6 +1064,7 @@ fuell(f, 18, 2, 19, 3, 'x'); fuell(f, 18, 11, 19, 12, 'x')    # der Rahmen des S
 fuell(f, 26, 2, 27, 8, 'x')                                   # dahinter geht es nur unten weiter
 setz(f, 4, 7, 'T'); setz(f, 32, 11, 'H')
 bahn(LOGE, 'Vor der Loge', 'erzmagierloge', f, [
+    kreis(10.0, 7.0, 'bann', r=2.0, takt=5.0),
     spiegel(18, 4, 18, 11),
     windrad(23.0, 10.5, blades=3, laenge=1.5, tempo=1.2, stil='bannzeiger'),
 ], par=4,
@@ -1045,6 +1082,8 @@ fuell(f, 25, 2, 26, 4, 'x'); fuell(f, 25, 12, 26, 13, 'x')
 fuell(f, 19, 6, 20, 9, 'x')                                   # der Pfeiler dazwischen
 setz(f, 4, 8, 'T'); setz(f, 33, 3, 'H')
 bahn(LOGE, 'Der Spiegelsaal', 'erzmagierloge', f, [
+    kreis(8.5, 8.0, 'schub', r=1.6, takt=4.6),
+    kreis(31.5, 6.0, 'bremse', r=1.7),
     spiegel(13, 5, 13, 12),
     spiegel(26, 5, 26, 12),
     pilz(31.5, 10.5, stil='bannstein'),

@@ -105,6 +105,7 @@ const Editor = (deps) => {
       ['mondzieher', 'Mondzieher', 'Zieht und stößt im Wechsel. Volle Scheibe zieht, dunkle stößt, Halbmond läßt in Ruhe.'],
       ['sternbild', 'Sternbild', 'Alle Sterne anfahren, dann geht das Tor auf. Die Linien zeigen, was noch fehlt.'],
       ['zauberspiegel', 'Zauberspiegel', 'Wer hineinrollt, kommt drüben seitenverkehrt heraus. Wo man auftrifft, entscheidet, wo man landet.'],
+      ['zauberkreis', 'Zauberkreis', 'Ein Runenring im Boden. Die Farbe sagt vorher, was er tut: grün schiebt, blau bremst, gold wirft, violett dreht, rot sperrt.'],
     ]],
     ['Die Flut', [
       ['flut', 'Flutbecken', 'Ein Becken, das im Takt vollläuft und wieder leerläuft.'],
@@ -173,6 +174,11 @@ const Editor = (deps) => {
     gearfield: [['', 'Zahnradfeld'], ['meridian', 'Meridianschiene']],
     strudel: [['', 'Strudel'], ['spiralnebel', 'Spiralnebel']],
     wandergate: [['', 'Wanderndes Tor'], ['kulisse', 'Planetariumskulisse']],
+    /* Beim Zauberkreis ist das „Aussehen" ausnahmsweise auch die Wirkung – genau das ist seine
+       Idee: Man sieht der Farbe an, was der Kreis tut, bevor man hineinrollt. */
+    zauberkreis: [['schub', 'Schubkreis (grün)'], ['bremse', 'Bremskreis (blau)'],
+                  ['sprung', 'Sprungkreis (gold)'], ['wirbel', 'Wirbelkreis (violett)'],
+                  ['bann', 'Bannkreis (rot)']],
     cannon: [['', 'Kanone'], ['ballista', 'Balliste'], ['catapult', 'Katapult'], ['wrackkanone', 'Wrackkanone']],
     turntable: [['', 'Drehscheibe'], ['whirl', 'Strudel'], ['tornado', 'Wirbelsturm'], ['void', 'Leere'],
                 ['sonnenblume', 'Riesen-Sonnenblume']],
@@ -252,6 +258,7 @@ const Editor = (deps) => {
     ranke:       [['dauer', 'Wie lange sie trägt', 1.5, 10, 0.25], ['w', 'Breite', 1, 12, 1], ['h', 'Tiefe', 1, 8, 1], null, ['r', 'Wie nah an die Blüte', 0.3, 1.2, 0.05]],
     zauberhut:   [['takt', 'Wie oft das Leuchten wandert', 1, 8, 0.2], ['r', 'Wie groß die Öffnung', 0.25, 0.9, 0.02], null, ['phase', 'Versatz im Takt', 0, 0.95, 0.05]],
     sternbild:   [['r', 'Wie nah an einen Stern', 0.3, 1.2, 0.05]],
+    zauberkreis: [['r', 'Größe', 0.8, 4, 0.1], ['takt', 'Wie lange ein Lauf dauert (0 = brennt immer)', 0, 12, 0.5], ['weite', 'Wie weit der Sprungkreis wirft', 2, 9, 0.2], null, ['phase', 'Versatz im Takt', 0, 0.95, 0.05]],
     mondzieher:  [['kraft', 'Wie stark', 3, 18, 0.5], ['r', 'Reichweite', 1.5, 7, 0.1], ['takt', 'Wie lange ein Mondlauf dauert', 3, 14, 0.5], null, ['core', 'Wie dick der Sockel', 0.2, 0.9, 0.05], ['phase', 'Versatz im Takt', 0, 0.95, 0.05]],
 
     flut:        [['w', 'Breite', 3, 16, 1], ['h', 'Tiefe', 3, 16, 1], ['max', 'Wie tief es wird', 1, 4, 1], null, ['takt', 'Sekunden je Stufe', 0.4, 3, 0.1], ['halt', 'Wie lange es voll steht', 0.3, 4, 0.1], ['leer', 'Wie lange es leer steht', 1, 10, 0.5], ['start', 'Wann es losgeht', 0, 8, 0.5]],
@@ -583,6 +590,7 @@ const Editor = (deps) => {
       case 'zauberhut': return { type: 'zauberhut', takt: 2.6, r: 0.42, phase: 0,
                                  plaetze: [[x - 3, y], [x, y - 2], [x + 3, y]] };
       case 'mondzieher': return { type: 'mondzieher', x, y, r: 3.4, kraft: 9, takt: 7, core: 0.4, phase: 0 };
+      case 'zauberkreis': return { type: 'zauberkreis', x, y, r: 1.6, wirkung: 'schub', takt: 0, phase: 0, weite: 4.2 };
       /* Das Sternbild bringt sein Tor mit: Ohne Tor waeren die Sterne Schmuck. Gesetzt wird es
          rechts daneben; verschieben kann man beide Enden einzeln. */
       case 'sternbild': return { type: 'sternbild', r: 0.5,
@@ -996,7 +1004,10 @@ const Editor = (deps) => {
     /* Das Aussehen steht ganz oben, vor den Reglern: Es ist das, was man als erstes ändern will,
        und man sieht es sofort auf der Bahn. */
     const stile = AUSSEHEN[o.type] || [];
-    const jetzt = o.style || '';
+    /* Der Zauberkreis trägt seine Gestalt in 'wirkung', nicht in 'style' – bei ihm IST die Farbe
+       die Wirkung, und die Maschine soll nicht zwei Felder für dieselbe Sache haben. */
+    const stilFeld = o.type === 'zauberkreis' ? 'wirkung' : 'style';
+    const jetzt = o[stilFeld] || '';
     const aussehen = stile.length ? `<div class="bl-welt">Aussehen</div><div class="bl-stile">${stile.map(([w, n]) =>
       `<button class="bl-stil${w === jetzt ? ' sel' : ''}" data-s="${w}">${n}</button>`).join('')}</div>` : '';
     const nichts = !oben.length && !unten.length && !stile.length ? '<div class="bl-leer">An dieser Maschine gibt es nichts einzustellen – ihre Plätze bestimmen alles.</div>' : '';
@@ -1025,7 +1036,7 @@ const Editor = (deps) => {
       r.addEventListener('change', () => { ablegen(vorRegler); vorRegler = stand(); });
     });
     ed.blatt.querySelectorAll('.bl-stil').forEach(b => b.addEventListener('click', () => aenderung(() => {
-      if (b.dataset.s) o.style = b.dataset.s; else delete o.style;
+      if (b.dataset.s) o[stilFeld] = b.dataset.s; else delete o[stilFeld];
       rebuild(); blattMaschine(mehr);
     })));
     if ($('bl-mehr')) $('bl-mehr').addEventListener('click', () => blattMaschine(true));

@@ -345,5 +345,67 @@ console.log('\nDer Zauberspiegel');
   }
 }
 
+/* ---------- Die Zauberkreise ----------
+   Fünf Wirkungen, fünf Farben. Gemessen wird, was auf der Packung steht: Schub macht schneller,
+   Bremse macht langsamer, Sprung hebt ab, Wirbel dreht die Richtung, Bann sperrt – aber nur,
+   solange er brennt. Und ein erloschener Kreis darf GAR NICHTS tun; sonst wäre die Farbe eine
+   Lüge, und genau darauf soll man sich hier verlassen können. */
+console.log('\nDie Zauberkreise');
+{
+  /* Der Kreis liegt bei x 5,5 und damit dicht hinter dem Abschlag. Beim ersten Anlauf lag er bei
+     9,5 – dort war der Ball schon ausgerollt, und alle fünf Proben liefen ins Leere, ohne daß es
+     auffiel: Sie maßen einen Ball, der die Maschine nie erreicht hat. */
+  const kreis = (wirkung, mehr = {}) => Object.assign({ type: 'zauberkreis', x: 5.5, y: 1.5, r: 1.6, wirkung }, mehr);
+  const ohne = rolle(bau([]), 9, 1.0);
+
+  /* Für den Wirbel braucht es eine breite Bahn. Im einkachligen Gang oben prallt der Ball sofort
+     an die Bande zurück, sobald er quer läuft – gemessen würde dann die Bande, nicht der Kreis. */
+  const BREIT = ['.........................', '.#######################.', '.#######################.',
+                 '.T#####################H.', '.#######################.', '.#######################.',
+                 '.........................'];
+  const bauBreit = (h) => G.buildLevel({ name: 'Wirbelprobe', par: 3, theme: 'lehrlingsgarten', map: BREIT, obstacles: h });
+  const rolleBreit = (lv, tempo, sekunden, startT = 0) => {
+    const b = G.makeBall(1.5, 3.5, '#fff', 'none');
+    b.vx = tempo; b.vy = 0;
+    let t = startT;
+    for (let i = 0; i < sekunden * 120; i++) { G.stepPhysics(lv, b, 1 / 120, t, true); t += 1 / 120; }
+    return { b };
+  };
+  const tempo = (r) => Math.hypot(r.b.vx, r.b.vy);
+
+  const schub = rolle(bau([kreis('schub')]), 9, 1.0);
+  pruef('der Schubkreis macht schneller', tempo(schub) > tempo(ohne) + 1,
+        `${tempo(ohne).toFixed(1)} ohne, ${tempo(schub).toFixed(1)} mit`);
+
+  const bremse = rolle(bau([kreis('bremse')]), 9, 1.0);
+  pruef('der Bremskreis macht langsamer', tempo(bremse) < tempo(ohne) - 1,
+        `${tempo(ohne).toFixed(1)} ohne, ${tempo(bremse).toFixed(1)} mit`);
+
+  const sprung = rolle(bau([kreis('sprung', { weite: 4.2 })]), 9, 1.0);
+  pruef('der Sprungkreis wirft den Ball', sprung.gesehen.has('jump'));
+
+  const wirbel = rolleBreit(bauBreit([{ type: 'zauberkreis', x: 5.5, y: 3.5, r: 1.6, wirkung: 'wirbel', kraft: 3.0 }]), 9, 1.0);
+  pruef('der Wirbelkreis dreht die Richtung', Math.abs(wirbel.b.vy) > 1,
+        `quer: ${wirbel.b.vy.toFixed(1)}`);
+
+  // Der Bannkreis: brennt er, kommt niemand hindurch; ist er aus, merkt man nichts von ihm.
+  const bann = kreis('bann', { takt: 6, phase: 0 });
+  /* Startzeit 1,0 statt 0: Bei u = 0 blendet der Kreis gerade erst auf und ist noch dunkel – der
+     Ball wäre hineingerollt, bevor die Wand steht, und säße dann darin fest, bis der Kreis wieder
+     erlischt. Das ist im Spiel ein hübscher Zufall („gebannt"), aber es ist nicht das, was hier
+     gemessen werden soll. */
+  const zu = rolle(bau([bann]), 9, 1.0, 1.0);
+  pruef('der brennende Bannkreis läßt niemanden durch', zu.b.x < 4.2,
+        `bis x=${zu.b.x.toFixed(1)}`);
+  const auf = rolle(bau([bann]), 9, 1.0, 3.6);           // t=3,6 liegt in der zweiten: er ist aus
+  pruef('der erloschene Bannkreis sperrt nicht', auf.b.x > 7.5,
+        `bis x=${auf.b.x.toFixed(1)}`);
+
+  // Und ein erloschener Schubkreis muß WIRKUNGSLOS sein, nicht nur schwächer
+  const ausSchub = rolle(bau([kreis('schub', { takt: 6, phase: 0 })]), 9, 1.0, 3.6);
+  pruef('ein erloschener Kreis tut gar nichts', Math.abs(tempo(ausSchub) - tempo(ohne)) < 0.05,
+        `${tempo(ohne).toFixed(2)} ohne, ${tempo(ausSchub).toFixed(2)} über dem dunklen Kreis`);
+}
+
 console.log(fehler ? `\n${fehler} Fehler` : '\nalles bestanden');
 process.exit(fehler ? 1 : 0);
