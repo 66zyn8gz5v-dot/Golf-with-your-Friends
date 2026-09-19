@@ -133,7 +133,11 @@ def gatter(x, y, w=2.0, period=5.0, offen=0.5, achse='x', phase=0.0):
             'open': offen, 'axis': achse, 'phase': phase}
 
 def bande(x0, y0, x1, y1):
-    return {'type': 'wall', 'x0': x0, 'y0': y0, 'x1': x1, 'y1': y1, 't': 0.22, 'h': 0.5}
+    """Eine freistehende Bande mitten im Raum. Dicker und höher als die Schrägbanden, die
+    schraegen() in die Ecken legt (0,22 breit, 0,5 hoch): Die sitzen an einer Wand und werden von
+    ihr mitgetragen, diese hier steht allein im Gang und wäre als Haarstrich kaum zu sehen - und
+    eine Bande, die man übersieht, ist keine Bande, sondern ein Zufall."""
+    return {'type': 'wall', 'x0': x0, 'y0': y0, 'x1': x1, 'y1': y1, 't': 0.42, 'h': 0.85}
 
 
 def mond(x, y, r=3.4, kraft=9.0, takt=7.0, phase=0.0, core=0.4):
