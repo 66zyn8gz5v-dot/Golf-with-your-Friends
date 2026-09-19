@@ -194,91 +194,89 @@ Object.assign(Renderer.prototype, {
     const halb = ob.w / 2 + (ob.overlap == null ? 0.7 : ob.overlap);
     const hoehe = ob.height + 0.95;
 
-    // Der Sockel: ein flacher Erdwall unter dem Stroh, damit der Stock nicht auf dem Rasen schwebt
-    const sockel = [
-      [ob.x + ux * halb + (ax ? 0 : dd), ob.y + uy * halb + (ax ? dd : 0)],
-      [ob.x - ux * halb + (ax ? 0 : dd), ob.y - uy * halb + (ax ? dd : 0)],
-      [ob.x - ux * halb - (ax ? 0 : dd), ob.y - uy * halb - (ax ? dd : 0)],
-      [ob.x + ux * halb - (ax ? 0 : dd), ob.y + uy * halb - (ax ? dd : 0)],
-    ];
-    this.prism(ctx, sockel, 0, 0.14, '#8a6438', '#5a4022', { outline: '#3a2812' });
+    /* DER STOCK IST EIN KORB, ALSO RUND. Zwei Anläufe lagen daneben: erst eine Kulisse auf der
+       Mittelebene (flach), dann eine ausgezogene Silhouette (ein Tonnengewölbe mit geraden Flanken
+       und einem First). Fynn: „Der Bienenstock soll rund sein." Ein Bienenkorb ist ein Körper aus
+       gewickeltem Stroh - rund im Grundriß und nach oben zulaufend.
 
-    /* Der Stock selbst: Strohwülste übereinander, jeder etwas kürzer als der darunter. Gezeichnet
-       wird jeder als dicker Strich von einem Ende zum anderen – die Schrägsicht besorgt dabei die
-       Richtung von selbst, und runde Enden machen aus dem Strich einen Wulst.
-       Von OBEN nach UNTEN, damit der untere Wulst die Unterkante des oberen deckt. */
-    const bahnen = 8;   // weniger, dafuer dickere Wuelste: Stroh ist geflochten, nicht geriffelt
-    const [, obenPx] = this.proj(ob.x, ob.y, hoehe);
-    const [, untenPx] = this.proj(ob.x, ob.y, 0.14);
-    const hPx = Math.max(s * 0.6, untenPx - obenPx);
-    const dick = (hPx / bahnen) * 1.9;
+       Gezeichnet wird er darum als STAPEL VON RINGEN: Jeder Wulst ist eine volle Ellipse in der
+       Bodenebene, und jeder höhere ist kleiner. Weil der höhere den mittleren Teil des tieferen
+       verdeckt, bleibt von jedem nur eine Sichel stehen - genau das, was man an einem gewickelten
+       Korb sieht. Das ist zugleich die einfachste Rechnung von dreien und die einzige, bei der es
+       keine Kanten gibt, die nicht da sein sollten.
 
-    /* Erst die Enden aller Wülste ausrechnen, dann daraus die Silhouette bauen. Die braucht man
-       zweimal: um die Fugen zwischen den Wülsten zu schließen und um Licht und Schatten INNERHALB
-       des Stocks zu malen, ohne dass etwas über die Kante läuft.
-
-       DAS WAR DER GRUND, WARUM DER STOCK FLACH AUSSAH. Jeder Wulst war ein Strich in einer Farbe,
-       und ein Strich in einer Farbe ist ein Band, kein Rohr. Ein geflochtener Strohwulst ist rund:
-       unten im Schatten, oben ein Glanz, und zu den Enden hin dunkler, weil er sich dort wegdreht. */
-    const kanten = [];
-    for (let r = 0; r <= bahnen; r++) {
-      const u = r / bahnen;
-      /* Stark verjuengt: Mit wenig Verjuengung lag dort eine gerollte Matte. Ein Nest ist oben
-         schmal und unten breit - erst dadurch wird aus der Sperre ein Haufen. */
-      const schrumpf = Math.sqrt(Math.max(0.05, 1 - u * u * 0.94));
-      const h = halb * schrumpf;
-      const z = 0.14 + u * (hoehe - 0.14);
-      kanten.push([this.proj(ob.x - ux * h, ob.y - uy * h, z), this.proj(ob.x + ux * h, ob.y + uy * h, z)]);
-    }
-    const umriss = () => {
+       Quer zur Sperre ist er so breit wie seine Wirkung (halb), längs des Weges so tief wie sein
+       Körper (dd) - eine Ellipse also, kein Kreis. Das ist Absicht: Der Grundriß soll zu den
+       Sperrklötzen passen, sonst prallte der Ball an Gras ab. */
+    const px = ax ? 0 : 1, py = ax ? 1 : 0;      // Richtung der Tiefe, quer zur Sperre
+    const bahnen = 9;
+    const ellipse = (aQuer, bTief, z) => {
       ctx.beginPath();
-      ctx.moveTo(kanten[0][0][0], kanten[0][0][1]);
-      for (let r = 1; r <= bahnen; r++) ctx.lineTo(kanten[r][0][0], kanten[r][0][1]);
-      for (let r = bahnen; r >= 0; r--) ctx.lineTo(kanten[r][1][0], kanten[r][1][1]);
+      for (let k = 0; k <= 28; k++) {
+        const w = (k / 28) * TAU;
+        const c = Math.cos(w) * aQuer, d2 = Math.sin(w) * bTief;
+        const q = this.proj(ob.x + ux * c + px * d2, ob.y + uy * c + py * d2, z);
+        k ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]);
+      }
       ctx.closePath();
     };
-    umriss(); ctx.fillStyle = '#c89a4a'; ctx.fill();
 
-    ctx.lineCap = 'round';
-    for (let r = bahnen; r >= 0; r--) {
-      const [p0, p1] = kanten[r];
-      // Der Wulst in drei Lagen: dunkle Unterseite, Filz, Glanz obendrauf - das macht ihn rund
-      ctx.strokeStyle = 'rgba(86,56,16,0.9)'; ctx.lineWidth = dick + Math.max(2, s * 0.05);
-      ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke();
-      ctx.strokeStyle = r % 2 ? '#c99c48' : '#dcb267'; ctx.lineWidth = dick;
-      ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke();
-      ctx.strokeStyle = r % 2 ? '#e7c483' : '#f6dda6'; ctx.lineWidth = dick * 0.42;
-      ctx.beginPath();
-      ctx.moveTo(p0[0], p0[1] - dick * 0.24); ctx.lineTo(p1[0], p1[1] - dick * 0.24); ctx.stroke();
+    // Der Erdwall, auf dem er steht – eine Spur breiter als der unterste Wulst
+    ellipse(halb * 1.06, dd * 1.12, 0.02);
+    ctx.fillStyle = '#6f5028'; ctx.fill();
+    ctx.strokeStyle = 'rgba(48,32,12,0.8)'; ctx.lineWidth = Math.max(1, s * 0.04); ctx.stroke();
+
+    /* Von UNTEN nach OBEN. Jeder Ring deckt die Mitte des vorigen zu; übrig bleibt seine Sichel,
+       und die ist der sichtbare Wulst.
+
+       DIE HÖHE RICHTET SICH NACH DER BREITE, nicht nach ob.height. Beim ersten Versuch stand dort
+       die Spielhöhe (2,65) über einem Grundriß von acht Kacheln – in dieser Schrägsicht, die die
+       Höhe staucht, lag dann eine Muschel auf dem Rasen. Ein Korb ist ungefähr so hoch wie breit;
+       die Spielhöhe sagt nur, wie hoch die Sperre wirkt, und das ist eine andere Frage. */
+    const zeichenH = Math.max(hoehe, halb * 1.25);
+    for (let r = 0; r <= bahnen; r++) {
+      const u = r / bahnen;
+      const schrumpf = Math.sqrt(Math.max(0.03, 1 - u * u * 0.97));
+      const aQ = halb * schrumpf;
+      const bT = dd * (0.40 + 0.60 * schrumpf);
+      const z = 0.1 + u * (zeichenH - 0.1);
+      ellipse(aQ, bT, z);
+      // nach oben hin heller: dorthin fällt das Licht
+      ctx.fillStyle = shade(r % 2 ? '#c99c48' : '#dcb267', 0.82 + 0.22 * u);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(86,56,16,0.85)'; ctx.lineWidth = Math.max(1, s * 0.045); ctx.stroke();
+      /* Und quer über jeden Ring ein Verlauf, der zu beiden Enden hin dunkler wird. Ohne ihn
+         bleibt jeder Wulst ein gleichmäßiges Band, und ein Band ist flach – erst die Wölbung von
+         einem Ende zum anderen macht aus dem Stapel einen Körper. */
+      ctx.save(); ellipse(aQ, bT, z); ctx.clip();
+      const q0 = this.proj(ob.x - ux * aQ, ob.y - uy * aQ, z);
+      const q1 = this.proj(ob.x + ux * aQ, ob.y + uy * aQ, z);
+      const qg = ctx.createLinearGradient(q0[0], q0[1], q1[0], q1[1]);
+      qg.addColorStop(0, 'rgba(70,44,10,0.55)');
+      qg.addColorStop(0.32, 'rgba(70,44,10,0)');
+      qg.addColorStop(0.62, 'rgba(255,242,205,0.22)');
+      qg.addColorStop(1, 'rgba(70,44,10,0.45)');
+      ctx.fillStyle = qg; ellipse(aQ, bT, z); ctx.fill();
+      ctx.restore();
     }
-
-    /* Licht und Schatten über den ganzen Stock, beschnitten am Umriß. Ohne das bleibt er eine
-       Reihe gleich heller Rohre; erst die Wölbung von einem Ende zum anderen macht daraus einen
-       Körper, um den man herumgehen könnte. */
-    ctx.save(); umriss(); ctx.clip();
-    const e0 = this.proj(ob.x - ux * halb, ob.y - uy * halb, 0.14);
-    const e1 = this.proj(ob.x + ux * halb, ob.y + uy * halb, 0.14);
-    const lg = ctx.createLinearGradient(e0[0], e0[1], e1[0], e1[1]);
-    lg.addColorStop(0, 'rgba(70,44,10,0.55)');
-    lg.addColorStop(0.28, 'rgba(70,44,10,0)');
-    lg.addColorStop(0.72, 'rgba(70,44,10,0)');
-    lg.addColorStop(1, 'rgba(70,44,10,0.55)');
-    umriss(); ctx.fillStyle = lg; ctx.fill();
-    const hg = ctx.createLinearGradient(0, obenPx, 0, untenPx);
-    hg.addColorStop(0, 'rgba(255,240,200,0.3)');
-    hg.addColorStop(0.45, 'rgba(255,240,200,0)');
-    hg.addColorStop(1, 'rgba(50,30,6,0.35)');
-    umriss(); ctx.fillStyle = hg; ctx.fill();
-    ctx.restore();
-    umriss(); ctx.strokeStyle = 'rgba(70,44,10,0.75)'; ctx.lineWidth = Math.max(1.5, s * 0.05); ctx.stroke();
+    // Der Knauf oben: das Ende des gewickelten Strohseils
+    const knaufZ = zeichenH + 0.08;
+    this.isoEllipse(ctx, ob.x, ob.y, knaufZ, Math.min(halb, dd) * 0.22, '#8a6128');
+    this.isoEllipse(ctx, ob.x, ob.y, knaufZ + 0.12, Math.min(halb, dd) * 0.15, '#e7c483');
 
     /* Der Tunnel durch den Stock. Gezeichnet wird nur die Seite, die zur Kamera zeigt – sonst
        sähe man durch das Nest hindurch. */
-    const faceN = ax ? [0, 1] : [1, 0];
-    const side = (faceN[0] * this.cam.sin + faceN[1] * this.cam.cos) > 0 ? 1 : -1;
+    /* Welche Seite des Korbs zur Kamera zeigt – dort steht der Tunneleingang. Von hinten sähe man
+       sonst durch den Stock hindurch. */
+    const tiefeN = ax ? [0, 1] : [1, 0];
+    const side = (tiefeN[0] * this.cam.sin + tiefeN[1] * this.cam.cos) > 0 ? 1 : -1;
     const w2 = ob.gap / 2 + 0.12, top = 1.2, rad = Math.min(w2, 0.5);
     const fx = ax ? ob.x : ob.x + side * dd, fy = ax ? ob.y + side * dd : ob.y;
     const at = (u, z) => (ax ? this.proj(fx + u, fy, z) : this.proj(fx, fy + u, z));
+    /* Und derselbe Bogen am HINTEREN Ende des Tunnels. Er ist etwas kleiner und fast schwarz:
+       Erst dadurch sieht man, daß der Gang eine Länge hat, statt daß der Stock ein Loch hätte. */
+    const hx = ax ? ob.x : ob.x - side * dd, hy = ax ? ob.y - side * dd : ob.y;
+    const hin = (u, z) => (ax ? this.proj(hx + u, hy, z) : this.proj(hx, hy + u, z));
     const bogen = () => {
       ctx.beginPath();
       let p = at(-w2, 0.1); ctx.moveTo(p[0], p[1]);
@@ -316,7 +314,35 @@ Object.assign(Renderer.prototype, {
       ctx.restore();
       ctx.strokeStyle = '#7a4a10'; ctx.lineWidth = Math.max(1.5, s * 0.05); bogen(); ctx.stroke();
     } else {
-      ctx.fillStyle = '#1a1206'; bogen(); ctx.fill();
+      /* Der offene Tunnel: erst das Innere als Schacht, dann der dunkle Rand. Der Schacht besteht
+         aus den beiden Wänden zwischen vorderem und hinterem Bogen und dem hinteren Bogen selbst –
+         eine schwarze Fläche allein sähe wieder aus wie ein aufgemaltes Loch. */
+      ctx.save(); bogen(); ctx.clip();
+      ctx.fillStyle = '#2b1e0c';
+      ctx.beginPath();
+      let q = at(-w2, 0.1); ctx.moveTo(q[0], q[1]);
+      q = at(-w2, top); ctx.lineTo(q[0], q[1]);
+      q = hin(-w2 * 0.8, top * 0.92); ctx.lineTo(q[0], q[1]);
+      q = hin(-w2 * 0.8, 0.1); ctx.lineTo(q[0], q[1]);
+      ctx.closePath(); ctx.fill();
+      ctx.beginPath();
+      q = at(w2, 0.1); ctx.moveTo(q[0], q[1]);
+      q = at(w2, top); ctx.lineTo(q[0], q[1]);
+      q = hin(w2 * 0.8, top * 0.92); ctx.lineTo(q[0], q[1]);
+      q = hin(w2 * 0.8, 0.1); ctx.lineTo(q[0], q[1]);
+      ctx.closePath(); ctx.fillStyle = '#3a2a11'; ctx.fill();
+      // Das Ende des Gangs: fast schwarz, und ein Schimmer Tageslicht darin
+      ctx.beginPath();
+      q = hin(-w2 * 0.8, 0.1); ctx.moveTo(q[0], q[1]);
+      q = hin(-w2 * 0.8, top * 0.92); ctx.lineTo(q[0], q[1]);
+      q = hin(w2 * 0.8, top * 0.92); ctx.lineTo(q[0], q[1]);
+      q = hin(w2 * 0.8, 0.1); ctx.lineTo(q[0], q[1]);
+      ctx.closePath(); ctx.fillStyle = '#120c04'; ctx.fill();
+      const [gx, gy] = hin(0, 0.3);
+      const schein = ctx.createRadialGradient(gx, gy, 0, gx, gy, s * w2 * 0.9);
+      schein.addColorStop(0, 'rgba(150,200,120,0.28)'); schein.addColorStop(1, 'rgba(150,200,120,0)');
+      ctx.fillStyle = schein; ctx.beginPath(); ctx.arc(gx, gy, s * w2 * 0.9, 0, TAU); ctx.fill();
+      ctx.restore();
       ctx.strokeStyle = '#6b5a2a'; ctx.lineWidth = Math.max(1, s * 0.04); bogen(); ctx.stroke();
     }
 

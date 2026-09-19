@@ -96,9 +96,13 @@ def windrad(x, y, blades=3, laenge=1.6, tempo=1.3, stil='vine'):
     return {'type': 'rotor', 'x': x, 'y': y, 'blades': blades, 'len': laenge,
             'speed': tempo, 'thick': 0.16, 'style': stil, 'phase': 0.0}
 
-def muehle(x, y, w=3.0, gap=1.0, tempo=1.0, achse='y', phase=0.0, stil=None):
+def muehle(x, y, w=3.0, gap=1.0, tempo=1.0, achse='y', phase=0.0, stil=None, tiefe=1.2):
+    """'tiefe' ist die Ausdehnung QUER zur Sperre - also die Länge des Tunnels durch sie hindurch.
+    Der Bienenstock steht auf 3,0 statt 1,2: Ein Körper, der Dicke hat, braucht einen Gang, der
+    eine Länge hat, sonst ist der Tunnel ein Türrahmen. Die Sperre selbst ändert sich dadurch
+    nicht - sie bleibt gap breit -, nur steht man beim Durchrollen länger darin."""
     o = {'type': 'windmill', 'x': x, 'y': y, 'w': w, 'gap': gap, 'speed': tempo,
-         'blades': 4, 'axis': achse, 'phase': phase, 'depth': 1.2}
+         'blades': 4, 'axis': achse, 'phase': phase, 'depth': tiefe}
     if stil: o['style'] = stil
     return o
 
@@ -577,6 +581,21 @@ def pruefe(b):
                           f'{"x" if achse_x else "y"} = {offen[0]} ist noch Boden, ihre Klötze '
                           f'reichen aber nur {reicht:.1f} Felder weit (w={w}, overlap={ueber})')
 
+    # ---- Die Drehscheiben
+    #
+    # WOHIN SIE WIRFT, MUSS EIN WEG SEIN. Eine Scheibe, die gegen die nächste Wand wirft, fängt den
+    # zurückrollenden Ball wieder ein und wirft ihn wieder - der Ball kommt nie zur Ruhe, und wer
+    # spielt, kommt nie zum Schlagen. Genau das ist auf der Riesenblüte passiert. Geprüft wird
+    # deshalb nicht nur der Auswurfpunkt, sondern auch ein Stück dahinter.
+    for o in [x for x in b['obstacles'] if x['type'] == 'turntable']:
+        a = math.radians(o.get('exit', 0))
+        for weit in (o['r'] + 0.3, o['r'] + 1.8):
+            lx, ly = o['x'] + math.cos(a) * weit, o['y'] + math.sin(a) * weit
+            if not fest(int(lx), int(ly)):
+                fehler.append(f'die Drehscheibe auf {o["x"]}/{o["y"]} wirft nach {lx:.1f}/{ly:.1f} – '
+                              f'dort ist kein Boden; der Ball käme zurück und würde wieder gefangen')
+                break
+
     # ---- Die Zauberkreise
     #
     # Ein Bannkreis ohne Takt ist eine runde Mauer, die nie aufgeht - der Reiz liegt genau darin,
@@ -814,7 +833,7 @@ bahn(GARTEN, 'Das Treibhaus', 'lehrlingsgarten', f, [
     # Die Zahlen stammen aus der Bot-Prüfung: Mit Durchlaß 1,1 und zwei Sprengern zu 1,4 brauchte
     # der Normalspieler im Schnitt fünfeinhalb Schläge – auf der sechsten Bahn einer NORMAL-Welt ist
     # das zu viel. Breiterer Durchlaß, langsamere Sprenger, und sie stehen weiter auseinander.
-    muehle(15.5, 6.5, w=6.8, gap=1.5, tempo=0.85, achse='y', stil='bienenstock'),
+    muehle(15.5, 6.5, w=6.8, gap=1.5, tempo=0.85, achse='y', stil='bienenstock', tiefe=3.0),
     windrad(21.5, 4.5, blades=2, laenge=1.3, tempo=-0.9, stil='sprenger'),
     windrad(21.5, 8.5, blades=2, laenge=1.3, tempo=0.9, stil='sprenger'),
     pilz(8.5, 4.5, stil='springkraut'),
@@ -898,7 +917,7 @@ bahn(GARTEN, 'Die Lehrlingsprüfung', 'lehrlingsgarten', f, [
     ranke(10, 3, 3, 9, 7.5, 7.5, dauer=4.2),
     pilz(14.5, 5.5, stil='springkraut'),
     pilz(14.5, 9.5, stil='springkraut'),
-    muehle(18.5, 7.5, w=7.6, gap=1.2, tempo=0.9, achse='y', stil='bienenstock'),
+    muehle(18.5, 7.5, w=7.6, gap=1.2, tempo=0.9, achse='y', stil='bienenstock', tiefe=3.0),
     huete([(24, 5), (24, 10), (29, 11)], takt=2.8, stil='maulwurf'),
 ], par=4,   # seit der Bienenstock die Gasse wirklich schließt: Bot-Median 4 statt 3
 intro='Die Prüfung: erst die Ranke, dann zwischen dem Springkraut hindurch, dann der Bienenstand im '
@@ -929,8 +948,12 @@ bahn(GARTEN, 'Die Riesenblüte', 'lehrlingsgarten', f, [
     pilz(16.0, 9.5, stil='springkraut'),
     # Der Bienenstand steht dort, wo der Gang nur vier Kacheln hoch ist: Weiter vorn, an der
     # Ausbuchtung, müßte er elf Felder weit reichen, um wirklich zuzusperren.
-    muehle(25.5, 10.0, w=4.0, gap=1.5, tempo=0.8, achse='y', stil='bienenstock'),
-    scheibe_(20.5, 13.5, r=1.7, tempo=1.6, aus=0, stil='sonnenblume'),
+    muehle(25.5, 10.0, w=4.0, gap=1.5, tempo=0.8, achse='y', stil='bienenstock', tiefe=3.0),
+    # AUSWURF NACH OBEN, nicht nach rechts. Mit aus=0 warf die Blume gegen die Wand der Nische,
+    # in der sie steht: Der Ball rollte zurück in die Scheibe, wurde wieder geworfen, und so fort.
+    # Er kam nie zur Ruhe, also kam man nie zum Schlagen – eine Schleife, aus der es kein Heraus
+    # gab. Jetzt wirft sie zurück in den Hauptgang.
+    scheibe_(20.5, 13.5, r=1.7, tempo=1.6, aus=270, stil='sonnenblume'),
     kreis(29.5, 9.5, 'bremse', r=1.3),
     riesenbluete(40.5, 9.5, r=4.6, blaetter=6, takt=8.5, kraft=26),
 ], par=6, maxStrokes=18,
