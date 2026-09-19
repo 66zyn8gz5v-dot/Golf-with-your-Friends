@@ -3760,3 +3760,38 @@ der Loge der **Bannzeiger** – stand in acht Bahnen des Zauberreichs. Es steht 
 Zeichnung und Verhalten bleiben im Spiel: Im Baumodus stehen beide Aussehen weiter unter *Aussehen*
 beim Windrad, und die älteren Welten (Dschungel, Sturm) behalten ihre Windräder. Herausgenommen ist
 es aus den **Bahnen des Zauberreichs**, nicht aus dem Programm.
+
+## Die Loge wird die Welt der Banden (Fassung 220)
+
+*„Die letzte Welt der drei muß nochmal überarbeitet werden oder komplett neu ohne die Drehdinger.
+Mach die Maps lang, und es soll so sein, daß man viel mit Bande spielen muß und mit schicken
+Winkeln."*
+
+Die zweite Fassung der Erzmagierloge war schmal und lang, aber sie bestand aus **rechtwinkligen**
+Gängen – und eine rechtwinklige Kehre schluckt einen Ball: Er läuft in den Winkel und bleibt
+liegen. Man spielt dort nicht um die Ecke, man spielt zweimal.
+
+Die dritte Fassung hat darum **keine einzige rechtwinklige Außenecke mehr**. Der neue Baustein
+heißt `keil(f, x, y, n, ecke)` und frißt eine 45°-Treppe aus dem Boden; `schraegen()` macht daraus
+eine durchgehende Schrägbande. Ein Ball, der mit Tempo hineinläuft, kommt um die Ecke **heraus**
+statt in ihr zum Stehen – und die Richtung, in die er herauskommt, kann man ausrechnen.
+
+Dazu kommt `raute(x, y, r)`: vier freistehende Schrägbanden zu einem Pfeiler, der nach allen vier
+Seiten im Winkel abweist. Sie steht im *Rat der Neun* und vor dem *Bannwächter*.
+
+| | zweite Fassung | dritte Fassung |
+| --- | --- | --- |
+| Karten | 40–56 breit | **50–62 breit**, bis 24 hoch |
+| Gangbreite | 3 Kacheln | **4** – unter vier kann ein Ball nicht im Winkel laufen |
+| Schrägbanden je Bahn | 2–8 | **18–48** |
+| Maschinen je Bahn | 5–8 | **3–6** – wo die Geometrie die Aufgabe ist, muß nicht noch eine Maschine daneben stehen |
+
+Zwei Bahnen sind neu dazugekommen und heißen nach dem, was sie verlangen: **Der Winkelgang**
+(die Lehrbahn – drei Läufe, zwei Kehren, sonst nichts) und **Die Winkelgalerie** (sechs Kehren
+hintereinander, zwei freistehende Banden, keine einzige Maschine mit Takt). Der *Rat der Neun* ist
+jetzt ein Achteck mit der Raute in der Mitte.
+
+**Warum Winkel und nicht noch eine Maschine:** Eine Bande bewegt sich nicht, hat keinen Takt und
+läßt sich nicht auslösen. Sie steht da und antwortet immer gleich. Das ist der Unterschied
+zwischen einer Welt, die man auswendig lernt, und einer, die man *rechnen* kann – und auf der
+letzten der drei Welten ist Rechnen die richtige Aufgabe.
