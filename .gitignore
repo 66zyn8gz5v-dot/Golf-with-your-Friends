@@ -3,3 +3,6 @@ out/
 
 # Bilder, die die Sinnbild-Prüfung ablegt (scratchpad-Kram, nichts fürs Spiel)
 deko/
+
+# Zwischendateien von Python (entstehen beim Ausfuehren der Werkzeuge)
+__pycache__/

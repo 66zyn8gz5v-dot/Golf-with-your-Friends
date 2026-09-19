@@ -1,0 +1,12 @@
+{
+  "resource_pack_name": "sternenpaket",
+  "texture_name": "atlas.items",
+  "texture_data": {
+    "sternenstaub": {
+      "textures": "textures/items/sternenstaub"
+    },
+    "sternenklinge": {
+      "textures": "textures/items/sternenklinge"
+    }
+  }
+}

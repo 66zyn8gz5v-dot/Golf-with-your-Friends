@@ -1,0 +1,24 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "Sternenpaket (Aussehen)",
+    "description": "Bilder und Namen fuer Sternenstaub und Sternenklinge.",
+    "uuid": "a5cf296d-b7bd-4369-bd62-f0fa568672ce",
+    "version": [1, 0, 0],
+    "min_engine_version": [1, 26, 30]
+  },
+  "modules": [
+    {
+      "description": "Texturen und Sprachen",
+      "type": "resources",
+      "uuid": "54d5b655-a9d3-468e-b56f-5dbfd74ec91e",
+      "version": [1, 0, 0]
+    }
+  ],
+  "dependencies": [
+    {
+      "uuid": "d43b628f-9e0f-4620-8d54-792132677dc8",
+      "version": [1, 0, 0]
+    }
+  ]
+}

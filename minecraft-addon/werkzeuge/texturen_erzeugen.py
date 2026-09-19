@@ -1,0 +1,144 @@
+#!/usr/bin/env python3
+"""Erzeugt die Bilddateien des Ressourcenpakets aus Zeichenkarten.
+
+Warum Zeichenkarten statt fertiger PNG-Dateien: So kann das Aussehen hier im
+Text geaendert werden, ohne ein Malprogramm und ohne dass jemand eine
+Binaerdatei im Projekt nachvollziehen muss. Wer einen Punkt in ein 'a'
+aendert, setzt ein Pixel.
+"""
+
+import struct
+import zlib
+from pathlib import Path
+
+GROESSE = 16  # Minecraft erwartet Gegenstandsbilder in 16x16.
+
+# Jedes Zeichen ist eine Farbe. Der Punkt bleibt durchsichtig.
+FARBEN = {
+    ".": (0, 0, 0, 0),
+    "a": (255, 252, 235, 255),   # helles Sternenlicht
+    "b": (125, 215, 255, 255),   # Himmelblau
+    "c": (55, 135, 225, 255),    # tiefes Blau
+    "h": (205, 240, 255, 255),   # Klinge, helle Seite
+    "s": (150, 200, 240, 255),   # Klinge, Schattenseite
+    "d": (40, 70, 120, 255),     # dunkler Rand
+    "g": (255, 205, 80, 255),    # Parierstange, Gold
+    "r": (95, 60, 145, 255),     # Griff
+}
+
+STERNENSTAUB = [
+    "................",
+    "....a......a....",
+    "...aba....aba...",
+    "....a......a....",
+    "................",
+    ".....a....a.....",
+    "......bccb......",
+    ".....bcaacb.....",
+    "....bcaaaacb....",
+    "....bcaaaacb....",
+    ".....bcaacb.....",
+    "......bccb......",
+    ".......aa.......",
+    "...a........a...",
+    "..aba......aba..",
+    "...a........a...",
+]
+
+STERNENKLINGE = [
+    ".............dhh",
+    "............dhhd",
+    "...........dhsd.",
+    "..........dhhd..",
+    ".........dhsd...",
+    "........dhhd....",
+    ".......dhsd.....",
+    "......dhhd......",
+    ".....dhsd.......",
+    "..ggdhhdgg......",
+    "...gdrrdg.......",
+    "...drrd.........",
+    "..drrd..........",
+    ".drrd...........",
+    "drrd............",
+    "dd..............",
+]
+
+
+def pruefe_karte(name, karte):
+    """Ein verrutschtes Zeichen faellt sonst erst im Spiel auf - dort aber
+    als unsichtbares Bild ohne Fehlermeldung."""
+    if len(karte) != GROESSE:
+        raise ValueError(f"{name}: {len(karte)} Zeilen statt {GROESSE}")
+    for nummer, zeile in enumerate(karte):
+        if len(zeile) != GROESSE:
+            raise ValueError(
+                f"{name}, Zeile {nummer}: {len(zeile)} Zeichen statt {GROESSE}"
+            )
+        for zeichen in zeile:
+            if zeichen not in FARBEN:
+                raise ValueError(f"{name}, Zeile {nummer}: '{zeichen}' hat keine Farbe")
+
+
+def schreibe_png(pfad, pixelzeilen):
+    """Schreibt ein PNG von Hand - so braucht das Projekt keine Zusatzpakete."""
+    roh = b""
+    for zeile in pixelzeilen:
+        roh += b"\x00"  # Jede PNG-Zeile beginnt mit ihrer Filterart, hier: keine.
+        for r, g, b, a in zeile:
+            roh += bytes((r, g, b, a))
+
+    def block(art, inhalt):
+        kopf = art + inhalt
+        return struct.pack(">I", len(inhalt)) + kopf + struct.pack(">I", zlib.crc32(kopf))
+
+    breite = len(pixelzeilen[0])
+    hoehe = len(pixelzeilen)
+    kopfdaten = struct.pack(">IIBBBBB", breite, hoehe, 8, 6, 0, 0, 0)
+    daten = (
+        b"\x89PNG\r\n\x1a\n"
+        + block(b"IHDR", kopfdaten)
+        + block(b"IDAT", zlib.compress(roh, 9))
+        + block(b"IEND", b"")
+    )
+    pfad.parent.mkdir(parents=True, exist_ok=True)
+    pfad.write_bytes(daten)
+
+
+def karte_zu_pixeln(karte, vergroesserung=1, hintergrund=None):
+    zeilen = []
+    for zeile in karte:
+        pixelzeile = []
+        for zeichen in zeile:
+            farbe = FARBEN[zeichen]
+            if hintergrund is not None and farbe[3] == 0:
+                farbe = hintergrund
+            pixelzeile.extend([farbe] * vergroesserung)
+        for _ in range(vergroesserung):
+            zeilen.append(pixelzeile)
+    return zeilen
+
+
+def main():
+    hier = Path(__file__).resolve().parent.parent
+    bilder = {
+        "sternenstaub": STERNENSTAUB,
+        "sternenklinge": STERNENKLINGE,
+    }
+    for name, karte in bilder.items():
+        pruefe_karte(name, karte)
+        ziel = hier / "ressourcenpaket" / "textures" / "items" / f"{name}.png"
+        schreibe_png(ziel, karte_zu_pixeln(karte))
+        print(f"  geschrieben  {ziel.relative_to(hier)}")
+
+    # Das Paketsymbol steht in der Paketliste des Spiels und darf nicht
+    # durchsichtig sein - sonst sieht man dort ein leeres Feld.
+    nachtblau = (18, 24, 48, 255)
+    for paket in ("verhaltenspaket", "ressourcenpaket"):
+        ziel = hier / paket / "pack_icon.png"
+        schreibe_png(ziel, karte_zu_pixeln(STERNENSTAUB, 8, nachtblau))
+        print(f"  geschrieben  {ziel.relative_to(hier)}")
+
+
+if __name__ == "__main__":
+    main()
