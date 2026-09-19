@@ -17,6 +17,7 @@ RESSOURCEN = WURZEL / "ressourcenpaket"
 
 fehler = []
 hinweise = []
+EIGENE_GEGENSTAENDE = set()
 
 
 def lies(pfad):
@@ -58,22 +59,9 @@ def pruefe_manifeste():
             hinweise.append(f"{paket.name}: pack_icon.png fehlt (Paket zeigt ein leeres Feld).")
 
 
-def pruefe_gegenstaende():
+def pruefe_gegenstaende(sprachen):
     zuordnung = lies(RESSOURCEN / "textures" / "item_texture.json")
     bekannte_bilder = set((zuordnung or {}).get("texture_data", {}))
-
-    sprachen = {}
-    for kuerzel in ("de_DE", "en_US"):
-        pfad = RESSOURCEN / "texts" / f"{kuerzel}.lang"
-        if not pfad.exists():
-            fehler.append(f"Sprachdatei fehlt: texts/{kuerzel}.lang")
-            sprachen[kuerzel] = set()
-            continue
-        schluessel = set()
-        for zeile in pfad.read_text(encoding="utf-8").splitlines():
-            if "=" in zeile and not zeile.strip().startswith("#"):
-                schluessel.add(zeile.split("=", 1)[0].strip())
-        sprachen[kuerzel] = schluessel
 
     kennungen = set()
     for datei in sorted((VERHALTEN / "items").glob("*.json")):
@@ -132,10 +120,116 @@ def pruefe_rezepte(kennungen):
                     fehler.append(f"{datei.name}: Zeichen '{zeichen}' im Muster hat keine Zutat.")
 
 
+
+def pruefe_wesen(sprachen):
+    """Ein Wesen haengt an vier Dateien, die sich gegenseitig ueber Namen
+    finden muessen. Stimmt einer nicht, erscheint das Tier gar nicht, oder
+    als weisser Wuerfel ohne Bild - beides ohne Fehlermeldung."""
+    modelle = {}
+    for datei in (RESSOURCEN / "models" / "entity").glob("*.json"):
+        inhalt = lies(datei)
+        if not inhalt:
+            continue
+        for teil in inhalt.get("minecraft:geometry", []):
+            kennung = teil["description"]["identifier"]
+            modelle[kennung] = {knochen["name"] for knochen in teil.get("bones", [])}
+
+    aussehen = {}
+    for datei in (RESSOURCEN / "entity").glob("*.json"):
+        inhalt = lies(datei)
+        if inhalt:
+            aussehen[inhalt["minecraft:client_entity"]["description"]["identifier"]] = (
+                inhalt["minecraft:client_entity"]["description"]
+            )
+
+    spawnregeln = set()
+    for datei in (VERHALTEN / "spawn_rules").glob("*.json"):
+        inhalt = lies(datei)
+        if inhalt:
+            spawnregeln.add(inhalt["minecraft:spawn_rules"]["description"]["identifier"])
+
+    for datei in sorted((VERHALTEN / "entities").glob("*.json")):
+        inhalt = lies(datei)
+        if not inhalt:
+            continue
+        beschreibung = inhalt["minecraft:entity"]["description"]
+        kennung = beschreibung["identifier"]
+        bauteile = inhalt["minecraft:entity"]["components"]
+
+        if kennung not in aussehen:
+            fehler.append(f"{datei.name}: kein Aussehen in ressourcenpaket/entity/ fuer '{kennung}'.")
+            continue
+        sicht = aussehen[kennung]
+
+        modell = sicht["geometry"]["default"]
+        if modell not in modelle:
+            fehler.append(f"{kennung}: Modell '{modell}' gibt es nicht.")
+        else:
+            # Die eingebauten Animationen sprechen feste Knochen an. Fehlen
+            # die, steht das Tier still, ohne dass etwas gemeldet wird.
+            benoetigt = set()
+            for animation in sicht.get("animations", {}).values():
+                if animation == "animation.quadruped.walk":
+                    benoetigt |= {"leg0", "leg1", "leg2", "leg3"}
+                if animation == "animation.common.look_at_target":
+                    benoetigt.add("head")
+            fehlend = sorted(benoetigt - modelle[modell])
+            if fehlend:
+                fehler.append(
+                    f"{kennung}: Modell '{modell}' fehlen die Knochen {fehlend} - "
+                    "die eingebaute Animation greift ins Leere."
+                )
+
+        for name, pfad in sicht["textures"].items():
+            if not (RESSOURCEN / (pfad + ".png")).exists():
+                fehler.append(f"{kennung}: Bild fehlt - {pfad}.png")
+
+        beute = bauteile.get("minecraft:loot", {}).get("table")
+        if beute:
+            if not (VERHALTEN / beute).exists():
+                fehler.append(f"{kennung}: Beuteliste fehlt - {beute}")
+            else:
+                inhalt_beute = lies(VERHALTEN / beute)
+                for topf in (inhalt_beute or {}).get("pools", []):
+                    for eintrag in topf.get("entries", []):
+                        stueck = eintrag.get("name", "")
+                        if stueck.startswith("fynn:") and stueck not in EIGENE_GEGENSTAENDE:
+                            fehler.append(f"{beute}: '{stueck}' gibt es als Gegenstand nicht.")
+
+        if beschreibung.get("is_spawnable") and kennung not in spawnregeln:
+            hinweise.append(
+                f"{kennung}: keine Spawnregel - das Wesen erscheint nur per Ei oder Befehl."
+            )
+
+        for kuerzel, schluessel in sprachen.items():
+            if f"entity.{kennung}.name" not in schluessel:
+                fehler.append(f"{kuerzel}.lang: kein Name fuer das Wesen '{kennung}'.")
+
+
+def lies_sprachen():
+    sprachen = {}
+    for kuerzel in ("de_DE", "en_US"):
+        pfad = RESSOURCEN / "texts" / f"{kuerzel}.lang"
+        if not pfad.exists():
+            fehler.append(f"Sprachdatei fehlt: texts/{kuerzel}.lang")
+            sprachen[kuerzel] = set()
+            continue
+        schluessel = set()
+        for zeile in pfad.read_text(encoding="utf-8").splitlines():
+            if "=" in zeile and not zeile.strip().startswith("#"):
+                schluessel.add(zeile.split("=", 1)[0].strip())
+        sprachen[kuerzel] = schluessel
+    return sprachen
+
+
 def main():
+    global EIGENE_GEGENSTAENDE
     pruefe_manifeste()
-    kennungen = pruefe_gegenstaende()
+    sprachen = lies_sprachen()
+    kennungen = pruefe_gegenstaende(sprachen)
+    EIGENE_GEGENSTAENDE = kennungen
     pruefe_rezepte(kennungen)
+    pruefe_wesen(sprachen)
 
     for text in hinweise:
         print(f"  Hinweis: {text}")
@@ -145,7 +239,8 @@ def main():
             print(f"  FEHLER: {text}")
         print(f"\n{len(fehler)} Fehler. Das Paket wuerde im Spiel nicht richtig laufen.")
         return 1
-    print(f"\nAlles in Ordnung. {len(kennungen)} Gegenstaende geprueft.")
+    wesen = len(list((VERHALTEN / "entities").glob("*.json")))
+    print(f"\nAlles in Ordnung. {len(kennungen)} Gegenstaende und {wesen} Wesen geprueft.")
     return 0
 
 

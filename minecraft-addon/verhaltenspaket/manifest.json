@@ -4,21 +4,37 @@
     "name": "Sternenpaket (Regeln)",
     "description": "Sternenstaub und Sternenklinge - das Verhalten.",
     "uuid": "d43b628f-9e0f-4620-8d54-792132677dc8",
-    "version": [1, 0, 0],
-    "min_engine_version": [1, 26, 30]
+    "version": [
+      1,
+      1,
+      0
+    ],
+    "min_engine_version": [
+      1,
+      26,
+      30
+    ]
   },
   "modules": [
     {
       "description": "Gegenstaende und Rezepte",
       "type": "data",
       "uuid": "1b3291db-011e-417e-bf9d-c280a1db6b45",
-      "version": [1, 0, 0]
+      "version": [
+        1,
+        1,
+        0
+      ]
     }
   ],
   "dependencies": [
     {
       "uuid": "a5cf296d-b7bd-4369-bd62-f0fa568672ce",
-      "version": [1, 0, 0]
+      "version": [
+        1,
+        1,
+        0
+      ]
     }
   ]
 }

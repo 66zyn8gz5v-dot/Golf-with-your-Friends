@@ -69,6 +69,69 @@ STERNENKLINGE = [
 ]
 
 
+
+
+# --- Der Glimmerling ---------------------------------------------------
+#
+# Die Mob-Textur ist ein Schnittmuster: Jede Wuerfelflaeche des Modells holt
+# sich ihr Bild aus einem festen Rechteck dieser Datei. Die Bereiche unten
+# entsprechen genau den "uv"-Angaben in glimmerling.geo.json - wer dort etwas
+# verschiebt, muss hier mitziehen.
+#
+# Ein Pixel mit Alpha 254 statt 255 leuchtet im Dunkeln. Das kommt vom
+# Material "entity_emissive_alpha": Es behandelt leicht durchsichtige Pixel
+# als Eigenlicht. So glimmt das Tier nachts, ohne dass es eine Lichtquelle
+# waere - Bedrock kann Mobs die Umgebung nicht erhellen lassen.
+
+MOB_BREITE, MOB_HOEHE = 64, 32
+
+FELL_HELL = (104, 116, 74, 255)
+FELL = (78, 90, 56, 255)
+FELL_DUNKEL = (52, 62, 38, 255)
+HUF = (46, 38, 30, 255)
+GLIMMEN = (255, 214, 120, 254)      # 254 = leuchtet
+GLIMMEN_TIEF = (214, 160, 70, 254)
+AUGE = (255, 246, 214, 254)
+
+
+def rechteck(bild, x, y, breite, hoehe, farbe):
+    for zeile in range(y, y + hoehe):
+        for spalte in range(x, x + breite):
+            bild[zeile][spalte] = farbe
+
+
+def glimmerling_textur():
+    leer = (0, 0, 0, 0)
+    bild = [[leer for _ in range(MOB_BREITE)] for _ in range(MOB_HOEHE)]
+
+    # Rumpf: uv [0,0], Wuerfel 6 breit, 5 hoch, 8 tief.
+    rechteck(bild, 0, 0, 28, 13, FELL)
+    rechteck(bild, 8, 0, 6, 8, FELL_HELL)        # Ruecken
+    rechteck(bild, 14, 0, 6, 8, FELL_DUNKEL)     # Bauch
+    # Glimmflecken auf dem Ruecken, wie Glut unter Moos.
+    for fleck_x, fleck_y in ((9, 2), (12, 4), (10, 6)):
+        rechteck(bild, fleck_x, fleck_y, 2, 1, GLIMMEN)
+    rechteck(bild, 11, 1, 1, 1, GLIMMEN_TIEF)
+
+    # Kopf: uv [28,0], Wuerfel 6x6x6.
+    rechteck(bild, 28, 0, 24, 12, FELL)
+    rechteck(bild, 34, 0, 6, 6, FELL_HELL)       # Schaedeldecke
+    rechteck(bild, 40, 0, 6, 6, FELL_DUNKEL)     # Kehle
+    rechteck(bild, 34, 6, 6, 6, FELL_HELL)       # Gesicht
+    rechteck(bild, 35, 8, 1, 2, AUGE)            # linkes Auge
+    rechteck(bild, 38, 8, 1, 2, AUGE)            # rechtes Auge
+    rechteck(bild, 36, 10, 2, 1, FELL_DUNKEL)    # Schnauze
+    rechteck(bild, 35, 6, 1, 1, GLIMMEN)         # Glimmen ueber den Augen
+    rechteck(bild, 38, 6, 1, 1, GLIMMEN)
+
+    # Beine: uv [0,16], Wuerfel 2x5x2. Alle vier teilen sich dieses Bild.
+    rechteck(bild, 0, 16, 8, 7, FELL_DUNKEL)
+    rechteck(bild, 2, 16, 2, 2, FELL)            # Oberseite am Rumpf
+    rechteck(bild, 0, 21, 8, 2, HUF)             # dunkle Hufe unten
+
+    return bild
+
+
 def pruefe_karte(name, karte):
     """Ein verrutschtes Zeichen faellt sonst erst im Spiel auf - dort aber
     als unsichtbares Bild ohne Fehlermeldung."""
@@ -139,6 +202,16 @@ def main():
         vorschau = hier / "vorschau" / f"{name}.png"
         schreibe_png(vorschau, karte_zu_pixeln(karte, 16, (235, 235, 240, 255)))
         print(f"  geschrieben  {vorschau.relative_to(hier)}")
+
+    mob = hier / "ressourcenpaket" / "textures" / "entity" / "glimmerling.png"
+    haut = glimmerling_textur()
+    schreibe_png(mob, haut)
+    print(f"  geschrieben  {mob.relative_to(hier)}")
+
+    gross = [[farbe for farbe in zeile for _ in range(6)] for zeile in haut]
+    vorschau_mob = hier / "vorschau" / "glimmerling_haut.png"
+    schreibe_png(vorschau_mob, [zeile for zeile in gross for _ in range(6)])
+    print(f"  geschrieben  {vorschau_mob.relative_to(hier)}")
 
     # Alle Gegenstaende nebeneinander. Einzeln sieht fast jedes Bild
     # brauchbar aus; ob es zur uebrigen Welt passt, zeigt erst der direkte

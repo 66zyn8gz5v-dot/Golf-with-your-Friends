@@ -3,3 +3,7 @@ item.fynn:sternenstaub=Sternenstaub
 item.fynn:sternenstaub.name=Sternenstaub
 item.fynn:sternenklinge=Sternenklinge
 item.fynn:sternenklinge.name=Sternenklinge
+
+## Wesen
+entity.fynn:glimmerling.name=Glimmerling
+item.spawn_egg.entity.fynn:glimmerling.name=Glimmerling

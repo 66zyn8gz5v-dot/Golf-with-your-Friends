@@ -6,6 +6,9 @@ Datei, Installation, Welt. Erst dann bauen wir das Größere darauf.
 
 ## Was drin ist
 
+* **Glimmerling** – ein scheues Waldwesen, das nachts unterwegs ist, im
+  Dunkeln glimmt und vor dir wegläuft. Erlegst du eins, lässt es Sternenstaub
+  fallen.
 * **Sternenstaub** – ein leuchtendes Material
 * **Sternenklinge** – ein Schwert aus zwei Sternenstaub und einem Stock,
   etwas stärker und deutlich haltbarer als ein Diamantschwert
@@ -28,9 +31,13 @@ Im **Kreativmodus** liegt der Sternenstaub im Inventar bei den Materialien,
 die Sternenklinge bei den Schwertern. Am schnellsten findest du beide über
 die Suche im Inventar.
 
-Im **Überlebensmodus** bekommst du im Moment noch keinen Sternenstaub – es
-gibt ja noch nichts, das ihn fallen lässt. Der Mob, der das übernimmt, kommt
-als Nächstes. Bis dahin: Kreativmodus.
+Den **Glimmerling** findest du nachts in Wäldern, auf Gras, Podsol oder Moos.
+Er erscheint nur im Dunkeln und in kleinen Gruppen, und er läuft weg, sobald
+du näher als zehn Blöcke kommst – du musst ihn also jagen. Schneller geht es
+mit dem Spawn-Ei aus dem Kreativmodus.
+
+So läuft die Kette im **Überlebensmodus**: Glimmerling suchen, erlegen,
+Sternenstaub einsammeln, an der Werkbank die Klinge bauen.
 
 Gebaut wird die Klinge an der Werkbank wie ein normales Schwert:
 zwei Sternenstaub übereinander, darunter ein Stock.
@@ -77,6 +84,20 @@ Malprogramm.
 
 **Die Werte der Klinge** (Schaden, Haltbarkeit) stehen in
 `verhaltenspaket/items/sternenklinge.json`.
+
+**Wie scheu der Glimmerling ist** steht in
+`verhaltenspaket/entities/glimmerling.json` unter `avoid_mob_type`: `max_dist`
+ist der Abstand, ab dem er flieht.
+
+**Wo er auftaucht** steht in `verhaltenspaket/spawn_rules/glimmerling.json`.
+
+## Warum der Glimmerling glimmt
+
+Bedrock kann Mobs kein Licht abgeben lassen – ein Glimmerling erhellt seine
+Umgebung also nicht. Was geht, ist Eigenlicht auf der Haut: Pixel mit dem
+Alphawert 254 statt 255 leuchten, wenn das Wesen das Material
+`entity_emissive_alpha` benutzt. Deshalb sind die Flecken auf seinem Rücken
+und seine Augen auch nachts hell, während der Rest dunkel bleibt.
 
 ## Neu bauen
 
