@@ -394,7 +394,12 @@ def schraegen(f):
     aus = []
     for x, y, (x0, y0, x1, y1) in ecken:
         f[y][x] = '#'
-        aus.append(bande(x0, y0, x1, y1))
+        # DÜNN UND FLACH, nicht wie eine freistehende Bande. Zweierlei hängt daran: Eine Ecke sitzt
+        # an einer Wand und wird von ihr mitgetragen - sie muß nicht auffallen. Und die Prüfung
+        # hält die beiden an genau dieser Dicke auseinander: Eine Ecke ersetzt eine Wand, die
+        # ohnehin dort stand, eine freistehende Bande stellt eine neue hin und kann damit einen
+        # Gang schließen (siehe banden_kanten()).
+        aus.append({'type': 'wall', 'x0': x0, 'y0': y0, 'x1': x1, 'y1': y1, 't': 0.22, 'h': 0.5})
     return aus
 
 
@@ -560,9 +565,59 @@ def pruefe(b):
                 gesehen.add(n); q.append(n)
         return gesehen
 
+    def banden_kanten():
+        """Welche Übergänge sperrt eine freistehende Bande?
+
+        EINE BANDE IST EINE WAND, UND DIE PRÜFUNG WUSSTE DAS NICHT. In der dritten Fassung der
+        Loge sind zum ersten Mal Banden dazugekommen, die frei im Raum stehen statt an einer
+        Ecke - und zwei davon lagen auf der Winkelgalerie quer über den ganzen Gang. Die Bahn war
+        damit nicht zu lösen, und keine Prüfung hat es gemerkt: `erreichbar` kannte nur Kacheln
+        und Sternentore. Die Bot-Prüfung fand es, in sechs von sechs Durchgängen am Schlaglimit,
+        aber da lag die Bahn schon im Spiel.
+
+        Gesperrt wird jeder Übergang, dessen Verbindungslinie von Kachelmitte zu Kachelmitte die
+        Bande kreuzt - dieselbe Rechnung wie beim Sternentor, nur schräg."""
+        def abstand(ax, ay, bx, by, cx, cy, dx_, dy_):
+            """Kürzester Abstand zwischen zwei Strecken. Ein reiner Schnitt-Test reicht nicht:
+            Eine Bande, die genau durch eine Kachelmitte läuft, BERÜHRT den Übergang nur, und ein
+            Schnitt-Test mit echten Ungleichungen sieht darüber hinweg. Genau so lag die Bande
+            auf der Winkelgalerie. Gerechnet wird darum mit Abstand, nicht mit Schnitt."""
+            def pkt_strecke(px, py, x0, y0, x1, y1):
+                vx, vy = x1 - x0, y1 - y0
+                ll = vx * vx + vy * vy
+                u = 0.0 if ll == 0 else max(0.0, min(1.0, ((px - x0) * vx + (py - y0) * vy) / ll))
+                return math.hypot(px - (x0 + vx * u), py - (y0 + vy * u))
+            return min(pkt_strecke(ax, ay, cx, cy, dx_, dy_), pkt_strecke(bx, by, cx, cy, dx_, dy_),
+                       pkt_strecke(cx, cy, ax, ay, bx, by), pkt_strecke(dx_, dy_, ax, ay, bx, by))
+        aus = set()
+        for o in b['obstacles']:
+            if o['type'] != 'wall': continue
+            # NUR DIE FREISTEHENDEN. Die Schrägbanden, die schraegen() in die Ecken legt, sind
+            # derselbe Typ - aber sie ersetzen eine Wand, die dort ohnehin stand, und sie laufen
+            # genau durch die Mitte ihrer Eckkachel. Zählte man sie mit, wäre jede abgeschrägte
+            # Ecke dieser Welt gesperrt und keine Bahn mehr lösbar. Auseinander hält sie ihre
+            # Dicke: 0,22 an der Ecke, 0,42 freistehend (siehe bande()).
+            if o.get('t', 0.22) < 0.3: continue
+            x0, y0, x1, y1 = o['x0'], o['y0'], o['x1'], o['y1']
+            lo = (int(min(x0, x1)) - 1, int(min(y0, y1)) - 1)
+            hi = (int(max(x0, x1)) + 1, int(max(y0, y1)) + 1)
+            for y in range(max(0, lo[1]), min(hoch, hi[1] + 1)):
+                for x in range(max(0, lo[0]), min(breit, hi[0] + 1)):
+                    for dx, dy in ((1, 0), (0, 1)):
+                        n = (x + dx, y + dy)
+                        if not (fest(x, y) and fest(*n)): continue
+                        # 0,51 = Ballradius 0,3 plus halbe Bandendicke 0,21: Näher kommt die
+                        # Mitte des Balls nicht an die Bande heran, also ist der Übergang zu.
+                        if abstand(x + 0.5, y + 0.5, n[0] + 0.5, n[1] + 0.5, x0, y0, x1, y1) < 0.51:
+                            aus.add(((x, y), n)); aus.add((n, (x, y)))
+        return aus
+
     if tee and cup:
-        if cup not in erreichbar(tee):
-            fehler.append('vom Abschlag führt kein Weg zum Loch')
+        sperr_kanten = banden_kanten()
+        if cup not in erreichbar(tee, kanten=sperr_kanten):
+            fehler.append('vom Abschlag führt kein Weg zum Loch – '
+                          'eine freistehende Bande steht quer davor' if sperr_kanten and
+                          cup in erreichbar(tee) else 'vom Abschlag führt kein Weg zum Loch')
 
         # KEINE FREIE SICHTLINIE. Dieselbe Regel wie in der Flut: Eine Bahn, die ein gerader
         # Schlag löst, ist keine Bahn. Gesperrt zählt, was wirklich im Weg steht.
@@ -811,6 +866,13 @@ def pruefe(b):
         über das man sonst nicht hinwegkäme, und am Ende muß Boden sein."""
         if not fest(int(sx + dx * 0.6), int(sy + dy * 0.6)):
             return False                                   # dort geht es gar nicht entlang
+        """DER BALL MUSS AUCH HERKOMMEN KÖNNEN. Ohne diese Zeile zählte jede Richtung, in die
+        die Maschine zufällig zeigt - und der Bannschacht kam damit durch: Sein Aufwind warf nach
+        Osten in die Leere, aber nach SÜDEN hätte er (über die Leere hinweg) den Grund getroffen,
+        und das genügte der Prüfung. Nach Süden rollt dort nur nie jemand, denn hinter der
+        Maschine ist in dieser Richtung kein Boden."""
+        if not fest(int(sx - dx * 0.6), int(sy - dy * 0.6)):
+            return False                                   # von dort kommt niemand
         zx, zy = sx + dx * weite, sy + dy * weite
         if not fest(int(zx), int(zy)):
             return False                                   # der Ball käme im Nichts auf
@@ -1668,8 +1730,13 @@ bahn(LOGE, 'Die Winkelgalerie', 'erzmagierloge', f, [
     kreis(7.0, 5.0, 'schub', r=1.2),
     rohr('A', grad=0),                # sie überspringt zwei der sechs Kehren - wer sie trifft
 
-    bande(17.0, 9.0, 21.0, 13.0),     # eine Schräge mitten im zweiten Lauf
-    bande(29.0, 18.0, 33.0, 14.0),    # und eine im dritten
+    # SIE DÜRFEN NUR DIE HALBE BREITE SPERREN. In der ersten Fassung liefen beide über die ganze
+    # Höhe des Gangs - und damit war die Bahn nicht zu lösen. Die Bot-Prüfung hat es gefunden
+    # (sechs von sechs Durchgängen am Schlaglimit, der Profi-Sucher fand in neun Schlägen nichts),
+    # die Bahnprüfung nicht: `erreichbar` kannte nur Kacheln und Sternentore, keine Banden. Sie
+    # kennt sie jetzt, und eine Bande, die einen Gang schließt, kommt nicht mehr durch.
+    bande(17.0, 9.0, 19.0, 11.0),     # eine Schräge in der oberen Hälfte des zweiten Laufs
+    bande(29.0, 19.0, 31.0, 17.0),    # und eine in der unteren des dritten
     kreis(44.0, 8.0, 'bremse', r=1.2),
     lampe(47.0, 8.0, r=4.0, stil='bannlicht'),
 ], par=5,
@@ -1697,7 +1764,7 @@ bahn(LOGE, 'Der Bannschacht', 'erzmagierloge', f, [
     kreis(9.0, 5.5, 'schub', r=1.2),
     rohr('A', grad=270),              # vom Grund hinauf in den Aufstieg
     kanone(14.0, 16.5, grad=0, weite=12.0, amp=0.08, tempo=0.9, stil='bannschleuder'),
-    aufwind(20, 4, w=3, h=3, land=11.0, flug=8.5, stil='bannschacht'),
+    aufwind(20, 4, w=3, h=3, land=14.0, flug=8.5, stil='bannschacht'),
     mond(24.0, 16.5, r=3.4, kraft=8.0, takt=6.5, phase=0.3),
     kreis(43.0, 12.0, 'bremse', r=1.2),
     lampe(49.0, 5.5, r=4.0, stil='bannlicht'),
@@ -1839,7 +1906,10 @@ bahn(LOGE, 'Der Bannwächter', 'erzmagierloge', f, ([
 ] + raute(41.0, 11.5, 3.2) + [
     waechter(47.0, 11.5, r=2.2, weite=13.0, keil=0.40, takt=5.0, folgen=1.1, wucht=15),
     lampe(53.0, 11.5, r=4.2, stil='bannlicht'),
-]), par=6, maxStrokes=18,
+# Bot-Median VIER bei Par 6 - zwei Schläge Vorsprung. Der Saal ist groß und offen, und die
+# Schleuder am Eingang wirft in einem Flug an dem Wächter vorbei; wer das kann, braucht die
+# sechs Schläge nicht. Par 5 läßt dem, der es NICHT kann, immer noch Luft für einen Umweg.
+]), par=5, maxStrokes=18,
 intro='Am Ende der Loge steht er und sieht zu. Sein Arm dreht sich dorthin, wo der Ball liegt, '
       'dann glüht das Siegel unter ihm auf – und wer beim Einschlag im Keil steht, fliegt quer '
       'durch den Saal zurück. Vor ihm steht eine Raute, hinter der man sich wegducken kann. Der '
