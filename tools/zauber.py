@@ -671,6 +671,94 @@ def pruefe(b):
                 fehler.append(f'die Schanze auf {o["x"]}/{o["y"]} steht mit einer Ecke '
                               f'({ex:.1f}/{ey:.1f}) nicht auf der Bahn')
 
+    # ---- Springt hier überhaupt jemand über etwas?
+    #
+    # FYNNS EINWAND: „Die spring Dinger sind irgendwie sinnlos." Er zeigte auf den Bannschacht im
+    # Wanderloch, und er hatte recht: Der stand mitten in einem schnurgeraden Gang und hob den Ball
+    # über nichts hinweg. Wer dort landet, wäre auch hingerollt – die Maschine kostet nur Tempo und
+    # bringt nichts ein. Ein Sprung ist erst dann ein Sprung, wenn er über etwas hinweggeht, um das
+    # man sonst herum müßte: eine Sperre, eine Lücke, den Rand, ein Tor.
+    #
+    # Geprüft wird darum für jede springende Maschine, ob auf ihrer Flugbahn überhaupt etwas liegt.
+    # Kreis und Aufwind behalten die Richtung des Balls, also zählt jede der vier Richtungen, in die
+    # man aus ihnen herausrollen kann; die Schanze hat nur ihre eine.
+    sperr_linien = []
+    sperr_felder = []
+    for o in b['obstacles']:
+        if o['type'] in ('wandergate', 'wall', 'zauberspiegel'):
+            sperr_linien.append((o['x0'], o['y0'], o['x1'], o['y1']))
+        elif o['type'] == 'sternbild':
+            t = o['tor']
+            sperr_linien.append((t['x0'], t['y0'], t['x1'], t['y1']))
+        elif o['type'] == 'ranke':
+            sperr_felder.append((o['x'], o['y'], o['w'], o['h']))
+
+    def kreuzt(ax, ay, bx, by):
+        """Schneidet der Flug von a nach b eine der Sperrlinien?"""
+        def seite(px, py, qx, qy, rx, ry):
+            return (qx - px) * (ry - py) - (qy - py) * (rx - px)
+        for (cx, cy, dx_, dy_) in sperr_linien:
+            s1 = seite(ax, ay, bx, by, cx, cy)
+            s2 = seite(ax, ay, bx, by, dx_, dy_)
+            s3 = seite(cx, cy, dx_, dy_, ax, ay)
+            s4 = seite(cx, cy, dx_, dy_, bx, by)
+            if s1 * s2 < 0 and s3 * s4 < 0:
+                return True
+        return False
+
+    def flug_nutzt(sx, sy, dx, dy, weite):
+        """Bringt ein Sprung von (sx,sy) um `weite` Felder in Richtung (dx,dy) etwas ein?
+
+        Drei Dinge müssen zusammenkommen, sonst ist die Maschine Deko oder Falle:
+        man muß in diese Richtung überhaupt losrollen können, auf dem Weg muß etwas liegen,
+        über das man sonst nicht hinwegkäme, und am Ende muß Boden sein."""
+        if not fest(int(sx + dx * 0.6), int(sy + dy * 0.6)):
+            return False                                   # dort geht es gar nicht entlang
+        zx, zy = sx + dx * weite, sy + dy * weite
+        if not fest(int(zx), int(zy)):
+            return False                                   # der Ball käme im Nichts auf
+        if kreuzt(sx, sy, zx, zy):
+            return True                                    # ein Tor, eine Bande, ein Spiegel
+        schritte = max(2, int(weite * 4))
+        for i in range(1, schritte):
+            px, py = sx + dx * weite * i / schritte, sy + dy * weite * i / schritte
+            if not fest(int(px), int(py)):
+                return True                                # eine Sperre oder eine Lücke
+            for (rx, ry, rw, rh) in sperr_felder:
+                if rx <= px <= rx + rw and ry <= py <= ry + rh:
+                    return True                            # die Lücke unter einer Ranke
+        return False
+
+    # Geworfen wird, SOBALD der Ball die Maschine berührt - also von ihrem vorderen Rand aus, nicht
+    # von ihrer Mitte. Das ist der kürzeste Flug, den sie hergibt; wer mit dem Mittelpunkt rechnet,
+    # rechnet sich eine halbe Kachel zu weit und hält eine Sperre für übersprungen, vor der der Ball
+    # in Wahrheit anstößt.
+    VIER = ((1, 0), (-1, 0), (0, 1), (0, -1))
+    for o in b['obstacles']:
+        if o['type'] == 'zauberkreis' and o.get('wirkung') == 'sprung':
+            weite, r = o.get('weite', 4.2), o['r']
+            if not any(flug_nutzt(o['x'] - dx * r, o['y'] - dy * r, dx, dy, weite)
+                       for dx, dy in VIER):
+                fehler.append(f'der Sprungkreis auf {o["x"]}/{o["y"]} überspringt nichts – '
+                              f'nach keiner der vier Seiten liegt in seiner Weite etwas, '
+                              f'um das man sonst herum müßte')
+        elif o['type'] == 'updraft':
+            mx, my = o['x'] + o['w'] / 2, o['y'] + o['h'] / 2
+            weite = o.get('land', 6.0)
+            if not any(flug_nutzt(mx - dx * o['w'] / 2, my - dy * o['h'] / 2, dx, dy, weite)
+                       for dx, dy in VIER):
+                fehler.append(f'der Aufwind auf {o["x"]}/{o["y"]} hebt über nichts hinweg – '
+                              f'nach keiner der vier Seiten liegt in seiner Weite etwas, '
+                              f'um das man sonst herum müßte')
+        elif o['type'] == 'ramp':
+            rad = math.radians(o.get('angle', 90))
+            dx, dy = math.cos(rad), math.sin(rad)
+            mx, my = o['x'] + o['w'] / 2, o['y'] + o['h'] / 2
+            halb = o['w'] / 2 if abs(dx) > 0.5 else o['h'] / 2
+            if not flug_nutzt(mx + dx * halb, my + dy * halb, dx, dy, o['land']):
+                fehler.append(f'die Schanze auf {o["x"]}/{o["y"]} fliegt über nichts hinweg – '
+                              f'auf ihrer Flugbahn liegt nur Boden')
+
     # ---- Die Zauberhüte
     for o in [x for x in b['obstacles'] if x['type'] == 'zauberhut']:
         if len(o['plaetze']) < 2:
@@ -789,7 +877,11 @@ fuell(f, 1, 3, 30, 9)
 setz(f, 3, 6, 'T'); setz(f, 28, 6, 'H')
 bahn(GARTEN, 'Die erste Blüte', 'lehrlingsgarten', f, [
     ranke(14, 3, 4, 7, 10.5, 6.5, dauer=4.0),
-    windrad(21.5, 6.5, blades=3, laenge=1.8, tempo=1.1, stil='sprenger'),
+    # Ohne etwas hinter der Lücke läge die Linie vom Abschlag ins Loch frei - die Lücke selbst
+    # zählt nicht, sie ist in der Karte Boden und wird erst von der Ranke zum Hindernis. Ein
+    # Springkraut, das der Garten von Bahn 1 her kennt, hält die Gerade zu und paßt hierher
+    # besser als der Sprenger, der vorher hier stand.
+    pilz(21.5, 6.5, stil='springkraut'),
 ], par=3,
 intro='Über die Lücke führt nichts – bis man die Blüte anstößt. Dann wächst eine Ranke hinüber und '
       'trägt vier Sekunden lang. Zu sacht geschlagen, und man liegt noch darauf, wenn sie welkt; zu '
@@ -852,13 +944,13 @@ bahn(GARTEN, 'Der Maulwurfshügel', 'lehrlingsgarten', f, [
     huete([(6, 7), (18, 4), (18, 11)], takt=2.6, stil='maulwurf'),
     pilz(9.5, 10.5, stil='springkraut'),
     pilz(24.5, 7.5, stil='springkraut'),
-    windrad(34.5, 6.5, blades=2, laenge=1.3, tempo=0.9, stil='sprenger'),
+    pilz(34.5, 6.5, stil='springkraut'),
 ], par=3,   # die Bot-Prüfung nach dem Umbau: Median 2, Schnitt 2,25 – Par 4 wäre ein geschenkter Schlag
 intro='Durch die erste Hecke kommt nur, wer sich untergräbt: hinein in einen Hügel, heraus aus '
       'dem, in dem der Maulwurf gerade steckt – und wer in dessen Hügel rollt, kommt aus dem '
       'nächsten. Einer der beiden Ausgänge liegt in einer Nische: Von dort muß man erst zur Seite '
       'und dann hinaus, das kostet einen Schlag. Danach ist die Bahn noch nicht zu Ende – die '
-      'zweite Hecke läßt nur oben eine Gasse, und davor dreht der Sprenger.')
+      'zweite Hecke läßt nur oben eine Gasse, und davor federt ein Springkraut.')
 
 # --- 6 ---------------------------------------------------------------------
 # Das Treibhaus. Der Bienenstand steht quer über dem Weg, dahinter drehen zwei Rasensprenger.
@@ -870,15 +962,15 @@ bahn(GARTEN, 'Das Treibhaus', 'lehrlingsgarten', f, [
     # der Normalspieler im Schnitt fünfeinhalb Schläge – auf der sechsten Bahn einer NORMAL-Welt ist
     # das zu viel. Breiterer Durchlaß, langsamere Sprenger, und sie stehen weiter auseinander.
     muehle(15.5, 6.5, w=6.8, gap=1.5, tempo=0.85, achse='y', stil='bienenstock', tiefe=3.0),
-    windrad(21.5, 4.5, blades=2, laenge=1.3, tempo=-0.9, stil='sprenger'),
-    windrad(21.5, 8.5, blades=2, laenge=1.3, tempo=0.9, stil='sprenger'),
+    pilz(21.5, 4.5, stil='springkraut'),
+    pilz(21.5, 8.5, stil='springkraut'),
     pilz(8.5, 4.5, stil='springkraut'),
     pilz(8.5, 8.5, stil='springkraut'),
 ], par=4,
 intro='Der Bienenstand steht quer im Weg, und der Durchlaß zwischen den Körben schließt sich im Takt '
-      'mit einer Wabe. Dahinter drehen zwei Rasensprenger gegeneinander – sie laufen in '
-      'verschiedene Richtungen, also gibt es keinen Augenblick, in dem beide zugleich aus dem Weg '
-      'sind. Einer nach dem anderen.')
+      'mit einer Wabe. Dahinter steht in jeder der beiden Gassen ein Springkraut – wer zu gerade '
+      'hindurchfährt, kommt dorthin zurück, wo er herkam. Also erst durch den Durchlaß, dann am '
+      'Kraut vorbei.')
 
 # --- 7 ---------------------------------------------------------------------
 # Blüte und Hügel. Zuerst die Ranke über den Steg, dann die Hügel durch die Hecke.
@@ -980,7 +1072,6 @@ rund(f, 40.5, 9.5, 9.4)               # das Rondell mit der Blüte – rund, wie
 setz(f, 3, 9, 'T'); setz(f, 40, 9, 'H')
 bahn(GARTEN, 'Die Riesenblüte', 'lehrlingsgarten', f, [
     kreis(7.0, 9.5, 'schub', r=1.2),
-    windrad(11.5, 6.0, blades=2, laenge=1.4, tempo=0.9, stil='sprenger'),
     pilz(16.0, 9.5, stil='springkraut'),
     # Der Bienenstand steht dort, wo der Gang nur vier Kacheln hoch ist: Weiter vorn, an der
     # Ausbuchtung, müßte er elf Felder weit reichen, um wirklich zuzusperren.
@@ -1050,7 +1141,13 @@ setz(f, 3, 6, 'T'); setz(f, 28, 6, 'H')
 bahn(WARTE, 'Das erste Sternbild', 'sternenwarte', f, [
     sternbild([(7, 5), (12, 8), (16, 5)], (20, 6, 20, 8)),
     pilz(13.5, 6.5, stil='meteorit'),
-], par=3,
+# DIESE BAHN IST MIT DEM BOT NICHT ZU MESSEN. Auch mit den Sternen direkt am Gang erreichte er in
+# ZWÖLF von zwölf Durchgängen das Schlaglimit: Er kennt nur „wo ist das Loch" und fährt darum
+# gegen ein Tor, das erst aufgeht, wenn alle drei Sterne brennen. Kein Sternstand der Welt ändert
+# das - er zielt nie auf einen Stern. Das Par steht darum nach Augenmaß und nicht nach Messung:
+# drei Sterne anfahren, dann durchs Tor, dann ins Loch - vier Schläge, wenn man sich die
+# Reihenfolge vorher überlegt.
+], par=4,
 intro='Die drei Sterne wollen angefahren werden - alle drei, in einer Reihenfolge, die man sich '
       'vorher überlegt. Erst dann geht das Tor auf. Die Linien am Boden zeigen, was noch fehlt.')
 
@@ -1172,7 +1269,12 @@ bahn(WARTE, 'Die Hutkammer', 'kartensaal', f, [
     # Der Sprungkreis wirft den Ball ein Stück weit, ohne die Richtung anzurühren: Er entscheidet,
     # WIE WEIT, nicht wohin. Hier heißt das, daß man über die zweite Wand kommt - wenn man vorher
     # in die richtige Richtung zeigt.
-    kreis(16.0, 8.0, 'sprung', r=1.7, weite=5.6),
+    #
+    # ER WARF ZU KURZ. Geworfen wird, sobald der Ball den Kreis berührt, also 1,7 Felder vor
+    # dessen Mitte - und 5,6 Felder weiter war das Regal noch nicht zu Ende. Der Ball kam davor
+    # auf und stieß an; die Maschine sah nach Sprung aus und war keiner. 8,4 Felder tragen über
+    # das Regal hinweg und lassen dahinter noch Platz zum Ausrollen.
+    kreis(16.0, 8.0, 'sprung', r=1.7, weite=8.4),
     huete([(8, 4), (16, 11), (25, 9)], takt=2.4),
     mond(16.0, 4.0, r=3.0, kraft=8.0, takt=6.0, phase=0.25),
     pendel(25.0, 3.0, laenge=3.0, amp=45, stil='foucault'),
@@ -1305,14 +1407,13 @@ gang(f, 25, 12, 38, 14)               # und der letzte Gang zum Loch
 setz(f, 3, 9, 'T'); setz(f, 36, 13, 'H')
 bahn(LOGE, 'Vor der Loge', 'erzmagierloge', f, [
     kreis(8.0, 9.5, 'schub', r=1.2),
-    windrad(12.5, 9.0, blades=3, laenge=1.3, tempo=0.9, stil='bannzeiger'),
     blitz(19.0, 5.5, w=3.0, h=3.0, takt=4.4, stil='bannschlag'),
     kreis(26.5, 9.0, 'bremse', r=1.2, takt=4.0),
     lampe(31.0, 13.5, r=4.0, stil='bannlicht'),
 ], par=4,
 intro='Der Aufgang zur Loge: drei Gänge, zwei Kehren, und neben dem Weg ist nichts. In jedem Gang '
-      'steht eine Sache – erst der Schubkreis, dann der Zeiger, dann der Bann. Wer zu früh zu viel '
-      'Tempo mitnimmt, findet die erste Kehre nicht mehr.')
+      'steht eine Sache – erst der Schubkreis, dann der Bannschlag, dann der Bremskreis. Wer zu '
+      'früh zu viel Tempo mitnimmt, findet die erste Kehre nicht mehr.')
 
 # --- 2 ---------------------------------------------------------------------
 # Der Bannlauf. Hier steht die Bannschleuder zum ersten Mal, und sie steht allein: Der Gang endet
@@ -1329,7 +1430,6 @@ bahn(LOGE, 'Der Bannlauf', 'erzmagierloge', f, [
     kreis(8.5, 8.5, 'schub', r=1.2),
     kanone(20.0, 12.5, grad=0, weite=9.5, amp=0.0, stil='bannschleuder'),
     kreis(35.0, 12.5, 'bremse', r=1.2),
-    windrad(31.5, 8.0, blades=3, laenge=1.3, tempo=-0.9, stil='bannzeiger'),
     lampe(36.0, 4.5, r=4.0, stil='bannlicht'),
 ], par=4,
 intro='Der Gang endet vor der Leere. Hinüber kommt nur, wer sich in den Ring aus Bannfeuer rollen '
@@ -1346,18 +1446,25 @@ gang(f, 13, 8, 15, 15)
 gang(f, 21, 3, 23, 10)
 gang(f, 28, 8, 30, 15)
 gang(f, 32, 8, 38, 10)
+# DER BANNSTEIN. Ohne ihn lag der Sprungkreis mitten im geraden Gang und warf den Ball dorthin,
+# wohin er ohnehin gerollt wäre - Fynn hat das sofort gesehen („die spring Dinger sind irgendwie
+# sinnlos"). Jetzt versperrt ein Block zwei der drei Reihen: Wer springt, ist drüber weg; wer
+# nicht, muß sich an der unteren Reihe vorbeischieben. Ein Stein und kein Abgrund, damit ein
+# verfehlter Sprung anstößt und nicht bestraft wird.
+fuell(f, 10, 8, 13, 9, 'x')
 setz(f, 3, 9, 'T'); setz(f, 36, 9, 'H')
 bahn(LOGE, 'Das Bannmal', 'bannkreis', f, [
     sternbild([(7, 4), (14, 14), (22, 4), (29, 14)], (33, 8, 33, 11)),
-    kreis(10.5, 9.5, 'sprung', r=1.2, weite=4.6),
+    kreis(8.5, 9.5, 'sprung', r=1.2, weite=6.8),
     kreis(18.0, 9.5, 'bremse', r=1.2),
     kreis(25.5, 9.5, 'schub', r=1.2, takt=4.4),
     lampe(7.0, 4.5, r=3.6, stil='bannlicht'),
     lampe(29.0, 14.5, r=3.6, stil='bannlicht'),
 ], par=5, dunkel=0.5, lampe=3.2,
 intro='Vier Sterne liegen in vier Sackgassen, und das Bannmal vor dem Loch geht erst auf, wenn '
-      'alle brennen. In der Gruft sieht man nur, was im Licht steht. Im Hauptgang liegen drei '
-      'Kreise – sie helfen beim Abbiegen und stehen im Weg beim Zurückkommen.')
+      'alle brennen. In der Gruft sieht man nur, was im Licht steht. Der Bannstein im Hauptgang '
+      'läßt nur unten einen Spalt – der goldene Kreis davor trägt darüber hinweg, wenn man mit '
+      'Schwung hineinrollt.')
 
 # --- 4 ---------------------------------------------------------------------
 # Der Rat der Neun. Die Hüte sind hier keine Abkürzung mehr, sondern der einzige Weg: Der Gang ist
@@ -1429,26 +1536,37 @@ intro='Drei Bänne schlagen versetzt in denselben Gang – es gibt keinen Augenb
       'Wer hineinrollt, kommt oben wieder heraus und spart den ganzen Rückweg.')
 
 # --- 7 ---------------------------------------------------------------------
-# Das Wanderloch. Das Loch bleibt nicht, wo es ist - und der Gang davor ist eine Schleife, auf der
-# man immer nur eine der drei Stellen sieht.
+# Das Wanderloch. Das Loch bleibt nicht, wo es ist - und zwischen Abschlag und Schacht klafft die
+# Leere. Es gibt genau zwei Wege hinüber: den Bannschacht, der über die Lücke hebt, und den langen
+# Weg außen herum, am Bannzeiger vorbei.
+#
+# ZWEITE FASSUNG. In der ersten stand der Bannschacht mitten in einem schnurgeraden Gang und hob
+# den Ball über nichts hinweg - er kostete Tempo und brachte nichts ein. Ein Sprung ist erst dann
+# ein Sprung, wenn er über etwas hinweggeht, um das man sonst herum müßte; seitdem prüft pruefe()
+# genau das. Der Sprungkreis, der daneben ebenso sinnlos im Gang lag, ist ganz weg: Eine Bahn
+# braucht eine springende Maschine, nicht zwei.
 f = leer(42, 18)
-gang(f, 2, 8, 14, 10)
-gang(f, 12, 3, 14, 10)
-gang(f, 12, 3, 26, 5)
-gang(f, 24, 3, 26, 15)
-gang(f, 26, 13, 36, 15)
-gang(f, 34, 3, 36, 15)                # der Schacht, in dem das Loch wandert
-setz(f, 3, 9, 'T'); setz(f, 35, 4, 'H')
+gang(f, 2, 8, 14, 10)                 # der Abschlag
+gang(f, 12, 3, 14, 10)                # hinauf auf die Galerie
+gang(f, 12, 3, 24, 5)                 # die Galerie endet über der Leere
+gang(f, 29, 3, 38, 5)                 # drüben geht sie weiter, bis über den Schacht
+gang(f, 12, 10, 14, 16)               # der Umweg: vom Abschlag hinab
+gang(f, 12, 14, 31, 16)               # am Grund entlang, die ganze Bahn
+gang(f, 29, 5, 31, 16)                # und drüben wieder hinauf
+gang(f, 36, 3, 38, 15)                # der Schacht, in dem das Loch wandert
+setz(f, 3, 9, 'T'); setz(f, 37, 4, 'H')
 bahn(LOGE, 'Das Wanderloch', 'bannkreis', f, [
-    wanderloch([(35.5, 4.5), (35.5, 9.5), (35.5, 14.5)], stil='siegelloch'),
-    kreis(8.0, 9.5, 'sprung', r=1.2, weite=4.8),
-    aufwind(24, 8, w=3, h=3, land=6.5, flug=7.5, stil='bannschacht'),
-    windrad(30.0, 14.5, blades=3, laenge=1.3, tempo=0.9, stil='bannzeiger'),
-    kreis(35.5, 11.0, 'bremse', r=1.2, takt=4.6),
+    wanderloch([(37.5, 4.5), (37.5, 9.5), (37.5, 14.5)], stil='siegelloch'),
+    # Vier Kacheln Leere trennen die beiden Galerien. Der Bannschacht trägt neun Felder weit -
+    # damit kommt der Ball drüben mit Abstand zur Kante auf und hat Platz zum Ausrollen.
+    aufwind(21, 3, w=2, h=2, land=9.0, flug=8.0, stil='bannschacht'),
+    mond(20.0, 15.0, r=3.2, kraft=8.0, takt=6.0, phase=0.35),
+    kreis(37.5, 11.0, 'bremse', r=1.2, takt=4.6),
 ], par=5,
 intro='Das Loch wandert zwischen drei Stellen in einem schmalen Schacht, und man sieht immer nur '
-      'die, vor der man steht. Der Bannschacht in der Mitte hebt einen über die Kehre hinweg – '
-      'wenn man ihn trifft. Sonst geht es außen herum, und das dauert.')
+      'die, vor der man steht. Die Galerie oben bricht ab – über die Lücke hebt nur der '
+      'Bannschacht, und dafür muß man mit Schwung hinein. Wer ihn verfehlt, nimmt den Weg am '
+      'Grund: lang, und der Mondzieher steht darin.')
 
 # --- 8 ---------------------------------------------------------------------
 # Die Siegelkammer. Zwei Röhren und eine Schleuder: Auf dieser Bahn gibt es keinen durchgehenden

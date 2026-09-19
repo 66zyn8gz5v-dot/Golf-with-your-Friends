@@ -3107,7 +3107,8 @@ das Sternbild stand in **sechs** der achtzehn Bahnen, die Finsternis in **drei**
 auf **je einmal** zurückgenommen: Das Sammeln gibt es noch in *Das erste Sternbild* (dort, wo es
 den Namen gibt) und in *Das Bannmal*, die Finsternis nur noch in *Die Ranken der Gruft*. Was in den
 anderen sechs Bahnen an ihre Stelle getreten ist, ist Takt und Flug: die **Kulisse** der Warte, der
-**Bannschlag** und der **Bannzeiger** der Loge – und die Schanze.
+**Bannschlag** der Loge – und die Schanze. (Der Bannzeiger stand hier zunächst auch; seit
+Fassung 218 steht er in keiner Bahn mehr, siehe unten.)
 
 | Maschine | Gestalt | Was man ihr ansieht |
 | --- | --- | --- |
@@ -3706,3 +3707,56 @@ src/3d/karte3d.js   die Weltkarte als Insel im Meer, aus gerechneter Küste
 src/3d/spiel3d.js   Ablauf der 3D-Welt: Weltkarte, Bahnwahl, Spielen, Ergebnis
 tools/3d.mjs        prüft die 3D-Welt ohne Browser: Bahnen, Dreiecke, Gelände, Spielbarkeit, Par
 ```
+
+## Ein Sprung muß über etwas hinweggehen (Fassung 218)
+
+Fynn, mit einem roten Kreis um den Bannschacht auf *Das Wanderloch*: *„Die spring Dinger sind
+irgendwie sinnlos."* Er hatte recht, und zwar an vier Stellen. Die Maschine stand mitten in einem
+schnurgeraden Gang und hob den Ball über nichts hinweg – wer dort ankam, wäre auch hingerollt. Sie
+kostete Tempo und brachte nichts ein.
+
+Nachgesehen wurde daraufhin bei jeder springenden Maschine des Zauberreichs:
+
+| Maschine | Bahn | Befund |
+| --- | --- | --- |
+| Bannschacht | Das Wanderloch | übersprang nichts |
+| Sprungkreis | Das Wanderloch | übersprang nichts |
+| Sprungkreis | Das Bannmal | übersprang nichts |
+| Sprungkreis | Die Hutkammer | warf 5,6 Felder – das Regal war erst nach 5,7 zu Ende |
+| Sternschanze | Der Kartensaal | in Ordnung |
+| Sternschanze | Die Sternenprüfung | in Ordnung |
+
+Der vierte Fall ist der lehrreiche: Diese Bahn *sollte* über ein Regal hinwegwerfen, und im
+Quelltext stand das auch so. Geworfen wird aber, **sobald der Ball die Maschine berührt** – also
+1,7 Felder vor ihrer Mitte –, und damit kam der Ball vor dem Regal auf statt dahinter. Wer mit dem
+Mittelpunkt rechnet, rechnet sich eine halbe Kachel zu weit.
+
+`pruefe()` in `tools/zauber.py` prüft seitdem für jeden Sprungkreis, jeden Aufwind und jede Schanze
+drei Dinge auf einmal, vom **vorderen Rand** der Maschine aus gerechnet: ob man in diese Richtung
+überhaupt losrollen kann, ob auf dem Weg etwas liegt, um das man sonst herum müßte (eine Sperre,
+eine Lücke, ein Tor, eine Bande, die Lücke unter einer Ranke), und ob am Ende Boden ist. Fehlt
+eines davon, ist die Maschine Deko oder Falle, und die Bahn kommt nicht durch.
+
+Umgebaut wurden daraufhin *Das Wanderloch* (die obere Galerie bricht jetzt über vier Kacheln Leere
+ab – hinüber hebt nur der Bannschacht, sonst geht es den langen Weg am Grund), *Das Bannmal* (ein
+**Bannstein** versperrt zwei der drei Reihen; ein Stein und kein Abgrund, damit ein verfehlter
+Sprung anstößt statt bestraft zu werden) und *Die Hutkammer* (Wurfweite 5,6 → 8,4).
+
+## Der Bannzeiger ist raus (Fassung 218)
+
+*„Das Dreh Ding nervt, entferne das überall."* Das Windrad – im Garten der **Rasensprenger**, in
+der Loge der **Bannzeiger** – stand in acht Bahnen des Zauberreichs. Es steht in keiner mehr:
+
+| Bahn | Was an seine Stelle tritt |
+| --- | --- |
+| Die erste Blüte | ein Springkraut (ohne etwas hinter der Lücke läge die Gerade ins Loch frei) |
+| Der Maulwurfshügel | ein Springkraut vor der Gasse der zweiten Hecke |
+| Das Treibhaus | ein Springkraut in jeder der beiden Gassen hinter dem Bienenstand |
+| Die Riesenblüte | nichts – die Bahn hat sechs Maschinen genug |
+| Vor der Loge | nichts – jetzt steht in jedem der drei Gänge genau eine Sache |
+| Der Bannlauf | nichts – die Bot-Prüfung stand ohnehin bei Median 6 auf Par 4 |
+| Das Wanderloch | nichts – den langen Weg bewacht der Mondzieher |
+
+Zeichnung und Verhalten bleiben im Spiel: Im Baumodus stehen beide Aussehen weiter unter *Aussehen*
+beim Windrad, und die älteren Welten (Dschungel, Sturm) behalten ihre Windräder. Herausgenommen ist
+es aus den **Bahnen des Zauberreichs**, nicht aus dem Programm.
