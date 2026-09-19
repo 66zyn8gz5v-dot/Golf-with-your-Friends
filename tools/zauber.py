@@ -440,21 +440,39 @@ def pruefe(b):
         elif o['type'] == 'zauberhut':
             spruenge.append([(int(p[0]), int(p[1])) for p in o['plaetze']])
         elif o['type'] == 'cannon':
-            # Die Bannschleuder trägt über die Leere. Ihr Landepunkt steht fest, solange sie nicht
-            # schwenkt (amp = 0) - und in der Loge schwenkt keine. Damit ist der Wurf ein Übergang
-            # wie ein Hut, nur in eine Richtung; für die Frage „kommt man ans Loch" reicht das.
+            # Die Bannschleuder trägt über die Leere. Ihr Wurf ist damit ein Übergang wie ein Hut,
+            # nur in eine Richtung; für die Frage „kommt man ans Loch" reicht der Grundwinkel.
+            #
             # DER BALL BLEIBT NICHT LIEGEN, WO ER AUFKOMMT. Beim Aufsetzen behält er 0,6 seines
             # Flugtempos (physics.js) und rollt damit noch gut drei Kacheln weiter. Fynn ist genau
             # deshalb auf der Siegelkammer in den Abgrund geflogen: Der Landepunkt lag auf dem
             # Gang, der Ausrollweg dahinter nicht mehr. Geprüft wird darum beides.
+            #
+            # UND SEIT SIE SCHWENKEN DARF, REICHT EIN WINKEL NICHT MEHR. Eine Schleuder mit amp > 0
+            # zeigt im Lauf der Zeit überall zwischen base-amp und base+amp hin, und der Spieler
+            # sucht sich den Augenblick aus. Das ist nur dann eine Aufgabe und kein Würfel, wenn
+            # JEDER Winkel des Schwenks auf Boden führt - sonst gibt es Augenblicke, in denen der
+            # Abschuß den Ball in die Leere wirft, ohne daß man es der Maschine ansieht. Geprüft
+            # wird darum der ganze Bogen in Schritten von etwa drei Grad.
             weit = 0.9 + o.get('range', 9.0)
-            for zusatz, was in ((0.0, 'landet'), (3.2, 'rollt danach')):
-                lx = o['x'] + math.cos(o['base']) * (weit + zusatz)
-                ly = o['y'] + math.sin(o['base']) * (weit + zusatz)
-                if not fest(int(lx), int(ly)):
-                    fehler.append(f'die Bannschleuder auf {o["x"]}/{o["y"]} {was} bei '
-                                  f'{lx:.1f}/{ly:.1f} – dort ist kein Boden')
-                    break
+            amp = abs(o.get('amp', 0.0))
+            schritte = max(1, int(amp / 0.05)) if amp else 0
+            winkel = [o['base']] if not amp else [o['base'] - amp + 2 * amp * i / (2 * schritte)
+                                                  for i in range(2 * schritte + 1)]
+            schlecht = None
+            for w in winkel:
+                for zusatz, was in ((0.0, 'landet'), (3.2, 'rollt danach')):
+                    lx = o['x'] + math.cos(w) * (weit + zusatz)
+                    ly = o['y'] + math.sin(w) * (weit + zusatz)
+                    if not fest(int(lx), int(ly)):
+                        schlecht = (math.degrees(w), lx, ly, was)
+                        break
+                if schlecht: break
+            if schlecht:
+                grad, lx, ly, was = schlecht
+                wie = f'bei {grad:.0f}° ' if amp else ''
+                fehler.append(f'die Bannschleuder auf {o["x"]}/{o["y"]} {wie}{was} bei '
+                              f'{lx:.1f}/{ly:.1f} – dort ist kein Boden')
             lx = o['x'] + math.cos(o['base']) * weit
             ly = o['y'] + math.sin(o['base']) * weit
             if fest(int(lx), int(ly)):
@@ -543,6 +561,19 @@ def pruefe(b):
                         a = (k / schritte) * math.tau
                         sperren.add((int(o['x'] + math.cos(a) * ring['r']),
                                      int(o['y'] + math.sin(a) * ring['r'])))
+            elif art == 'wall':
+                # Eine freistehende Bande ist eine Wand - die schrägen zumal. Sie stand bisher
+                # nicht in dieser Liste, weil es bis zur dritten Fassung der Loge keine gab, die
+                # frei im Raum steht; seitdem gibt es sie, und eine Gerade, die durch eine Raute
+                # hindurchführt, ist keine Gerade.
+                for k in range(0, 25):
+                    u = k / 24
+                    sperren.add((int(o['x0'] + (o['x1'] - o['x0']) * u),
+                                 int(o['y0'] + (o['y1'] - o['y0']) * u)))
+            elif art == 'cannon':
+                # Wer in die Schleuder rollt, wird geworfen - eine gerade Linie durch sie hindurch
+                # endet nicht im Loch, sondern in der Luft.
+                sperren.add((int(o['x']), int(o['y'])))
             elif art == 'zauberspiegel':
                 # Ein Spiegel ist keine Wand, aber wer hindurchrollt, kommt woanders heraus –
                 # eine gerade Linie durch ihn hindurch ist also keine gerade Linie mehr.
@@ -1465,9 +1496,14 @@ keil(f, 52, 16, 4, 'ru')              # drüben: Kehre nach Norden
 keil(f, 52, 4, 4, 'ro')               # und Kehre zurück nach Westen
 keil(f, 34, 4, 4, 'lo')               # die Schräge am Ende der Galerie fängt den Ball auf
 setz(f, 4, 8, 'T'); setz(f, 38, 5, 'H')
+setz(f, 12, 8, 'A'); setz(f, 16, 15, 'a')
 bahn(LOGE, 'Der Bannlauf', 'erzmagierloge', f, [
     kreis(8.0, 8.5, 'schub', r=1.2),
-    kanone(24.0, 14.5, grad=0, weite=9.5, amp=0.0, stil='bannschleuder'),
+    rohr('A', grad=0),                # der kurze Weg hinunter, wenn man den Mund trifft
+    # SIE SCHWENKT EIN WENIG. Sechs Grad sind kein Würfel - der Landepunkt wandert um knapp zwei
+    # Kacheln, und das reicht, damit der Augenblick des Abschusses etwas entscheidet. Mehr ginge
+    # hier nicht: pruefe() rechnet jeden Winkel des Bogens nach, und drüben ist der Boden schmal.
+    kanone(24.0, 14.5, grad=0, weite=9.5, amp=0.10, tempo=0.8, stil='bannschleuder'),
     kreis(46.0, 14.5, 'bremse', r=1.2),
     lampe(40.0, 5.5, r=4.0, stil='bannlicht'),
 ], par=5,
@@ -1497,7 +1533,11 @@ keil(f, 37, 17, 3, 'lu'); keil(f, 42, 17, 3, 'ru')
 # schiebt sich unten vorbei. Ein Stein und kein Abgrund, damit ein verfehlter Sprung anstößt.
 fuell(f, 33, 9, 35, 10, 'x')
 setz(f, 3, 10, 'T'); setz(f, 49, 11, 'H')
+setz(f, 10, 7, 'A'); setz(f, 39, 14, 'a')
 bahn(LOGE, 'Das Bannmal', 'bannkreis', f, [
+    # Die Röhre verbindet die erste Nische mit der letzten: Wer den ersten Stern hat, kann sich
+    # den Weg zum vierten sparen - und muß dafür die beiden in der Mitte hinterher holen.
+    rohr('A', grad=90),
     sternbild([(9, 6), (19, 15), (29, 6), (39, 15)], (45, 9, 45, 13)),
     kreis(14.5, 10.5, 'schub', r=1.2, takt=4.4),
     kreis(24.0, 10.5, 'bremse', r=1.2),
@@ -1518,10 +1558,14 @@ fuell(f, 2, 10, 16, 13)               # der Anmarsch
 fuell(f, 12, 4, 44, 19)               # der Saal
 keil(f, 12, 4, 7, 'lo'); keil(f, 44, 4, 7, 'ro')      # aus dem Rechteck wird ein Achteck
 keil(f, 12, 19, 7, 'lu'); keil(f, 44, 19, 7, 'ru')
-keil(f, 16, 13, 3, 'ru')              # der Mund des Anmarschs, angeschrägt
 setz(f, 3, 11, 'T'); setz(f, 40, 11, 'H')
 bahn(LOGE, 'Der Rat der Neun', 'erzmagierloge', f, ([
     kreis(7.0, 11.5, 'schub', r=1.2),
+    # DIE SCHLEUDER DES RATES SCHWENKT WEIT. Sie steht im Saal, und im Saal ist ringsum Boden -
+    # damit darf sie tun, was sie in einem Gang nicht dürfte: über fünfundzwanzig Grad wandern.
+    # Der Ball fliegt über die Raute hinweg, und wo er drüben ankommt, entscheidet allein der
+    # Augenblick, in dem man sich hineinrollen läßt.
+    kanone(17.0, 11.5, grad=0, weite=18.0, amp=0.22, tempo=0.7, stil='bannschleuder'),
 ] + raute(28.0, 11.5, 4.5) + [
     bande(20.0, 5.5, 24.5, 10.0),     # zwei Schrägen an den Ecken des Saals
     bande(20.0, 17.5, 24.5, 13.0),
@@ -1548,16 +1592,19 @@ keil(f, 14, 6, 4, 'ro'); keil(f, 10, 12, 4, 'lu')
 keil(f, 26, 12, 4, 'ru'); keil(f, 22, 18, 4, 'lu')
 keil(f, 38, 18, 4, 'ru'); keil(f, 34, 6, 4, 'lo')
 setz(f, 4, 4, 'T'); setz(f, 47, 7, 'H')
+setz(f, 24, 11, 'A'); setz(f, 35, 16, 'a')
 bahn(LOGE, 'Die Winkelgalerie', 'erzmagierloge', f, [
     kreis(7.0, 5.0, 'schub', r=1.2),
+    rohr('A', grad=0),                # sie überspringt zwei der sechs Kehren - wer sie trifft
+
     bande(17.0, 9.0, 21.0, 13.0),     # eine Schräge mitten im zweiten Lauf
     bande(29.0, 18.0, 33.0, 14.0),    # und eine im dritten
     kreis(44.0, 8.0, 'bremse', r=1.2),
     lampe(47.0, 8.0, r=4.0, stil='bannlicht'),
 ], par=5,
-intro='Sechs Kehren, alle schräg, und dazwischen zwei Banden, die frei im Gang stehen. Keine '
-      'Maschine, kein Takt, nichts zum Abwarten – nur Winkel. Wer hier unter Par bleibt, hat '
-      'verstanden, wie die Loge gespielt wird.')
+intro='Sechs Kehren, alle schräg, und dazwischen zwei Banden, die frei im Gang stehen. Nichts '
+      'hier hat einen Takt, auf den man warten könnte – es gibt nur Winkel. Der Mund der '
+      'Siegelröhre in der dritten Kehre überspringt zwei davon, wenn man ihn trifft.')
 
 # --- 6 ---------------------------------------------------------------------
 # Der Bannschacht. Der Gang bricht über der Leere ab; hinüber hebt nur der Schacht, und dafür
@@ -1574,8 +1621,11 @@ keil(f, 45, 7, 4, 'ru'); keil(f, 52, 4, 4, 'ro')
 # rollte sonst über die Kante. Ein Stein am Ende fängt ihn auf: noch ein Schlag statt einer Strafe.
 fuell(f, 24, 4, 24, 7, 'x')
 setz(f, 3, 5, 'T'); setz(f, 49, 5, 'H')
+setz(f, 30, 17, 'A'); setz(f, 43, 14, 'a')
 bahn(LOGE, 'Der Bannschacht', 'erzmagierloge', f, [
     kreis(9.0, 5.5, 'schub', r=1.2),
+    rohr('A', grad=270),              # vom Grund hinauf in den Aufstieg
+    kanone(14.0, 16.5, grad=0, weite=12.0, amp=0.08, tempo=0.9, stil='bannschleuder'),
     aufwind(20, 4, w=3, h=3, land=11.0, flug=8.5, stil='bannschacht'),
     mond(24.0, 16.5, r=3.4, kraft=8.0, takt=6.5, phase=0.3),
     kreis(43.0, 12.0, 'bremse', r=1.2),
@@ -1593,16 +1643,24 @@ fuell(f, 2, 8, 20, 11)
 fuell(f, 16, 3, 20, 11)
 fuell(f, 16, 3, 34, 6)
 fuell(f, 30, 3, 34, 16)
-fuell(f, 30, 13, 44, 16)
-fuell(f, 40, 3, 44, 16)               # der Schacht, in dem das Loch wandert
+fuell(f, 30, 13, 47, 16)
+# DER SCHACHT IST BREIT GENUG FÜR EINEN FLUG. Mit fünf Kacheln kam der Ball aus der Schleuder
+# zwar an, rollte aber über die Ostkante hinaus - beim Aufsetzen behält er 0,6 seines Flugtempos
+# (siehe physics.js) und läuft damit noch gut drei Kacheln weiter. Acht Kacheln fangen das auf.
+fuell(f, 40, 3, 47, 16)               # der Schacht, in dem das Loch wandert
 keil(f, 20, 11, 4, 'ru'); keil(f, 16, 3, 4, 'lo')
 keil(f, 34, 3, 4, 'ro'); keil(f, 30, 16, 4, 'lu')
-keil(f, 44, 16, 4, 'ru')
+keil(f, 47, 16, 4, 'ru')
 setz(f, 3, 9, 'T'); setz(f, 42, 4, 'H')
 bahn(LOGE, 'Das Wanderloch', 'bannkreis', f, [
     wanderloch([(42.5, 4.5), (42.5, 9.5), (42.5, 14.5)], stil='siegelloch'),
     kreis(8.0, 9.5, 'schub', r=1.2),
     blitz(25.0, 4.5, w=3.0, h=3.2, takt=4.6, stil='bannschlag'),
+    # DIE SCHLEUDER ZIELT IN DEN SCHACHT, UND DER SCHACHT IST HOCH. Sie schwenkt über
+    # siebenundfünfzig Grad, und der ganze Bogen trifft ihn - man sucht sich also aus, auf
+    # welcher HÖHE man drüben ankommt. Das ist die Antwort auf das wandernde Loch: Wer sieht,
+    # wo es gerade steht, kann sich dorthin werfen lassen, statt hinterherzurollen.
+    kanone(32.0, 9.5, grad=0, weite=9.5, amp=0.48, tempo=0.6, stil='bannschleuder'),
     bande(35.0, 16.0, 39.0, 12.0),    # die Schräge, die in den Schacht hineinwirft
     kreis(42.5, 11.0, 'bremse', r=1.2, takt=4.6),
 ], par=5,
@@ -1629,10 +1687,11 @@ keil(f, 40, 5, 4, 'lo')
 setz(f, 3, 10, 'T'); setz(f, 44, 6, 'H')
 setz(f, 12, 10, 'A'); setz(f, 22, 4, 'a')
 setz(f, 32, 4, 'B'); setz(f, 22, 15, 'b')
+setz(f, 33, 17, 'C'); setz(f, 46, 14, 'c')
 bahn(LOGE, 'Die Siegelkammer', 'erzmagierloge', f, [
-    rohr('A', grad=0), rohr('B', grad=90),
+    rohr('A', grad=0), rohr('B', grad=90), rohr('C', grad=0),
     kreis(27.0, 4.5, 'bremse', r=1.2),
-    kanone(30.0, 14.5, grad=0, weite=10.5, amp=0.0, stil='bannschleuder'),
+    kanone(30.0, 14.5, grad=0, weite=10.5, amp=0.09, tempo=0.8, stil='bannschleuder'),
     bande(44.0, 13.0, 48.0, 17.0),    # die Schräge, an der man drüben um die Ecke spielt
     kreis(48.0, 6.5, 'bremse', r=1.2, takt=4.0),
     lampe(44.0, 6.5, r=4.0, stil='bannlicht'),
@@ -1658,11 +1717,13 @@ keil(f, 30, 3, 4, 'ro'); keil(f, 26, 19, 4, 'lu')
 keil(f, 57, 19, 4, 'ru'); keil(f, 57, 7, 4, 'ro')
 keil(f, 38, 7, 4, 'lo')
 setz(f, 3, 10, 'T'); setz(f, 42, 8, 'H')
+setz(f, 14, 10, 'A'); setz(f, 28, 13, 'a')
 bahn(LOGE, 'Der Erzmagier', 'erzmagierloge', f, [
     kreis(7.0, 10.5, 'schub', r=1.2),
+    rohr('A', grad=90),               # sie überspringt den Bannschlag - und die obere Galerie
     blitz(21.0, 4.5, w=3.0, h=3.2, takt=4.0, stil='bannschlag'),
     kreis(28.0, 12.0, 'bremse', r=1.2, takt=4.4),
-    kanone(40.0, 17.5, grad=0, weite=8.5, amp=0.0, stil='bannschleuder'),
+    kanone(40.0, 17.5, grad=0, weite=8.5, amp=0.10, tempo=0.8, stil='bannschleuder'),
     bande(44.0, 10.0, 48.0, 14.0),
     lampe(42.0, 8.5, r=4.2, stil='bannlicht'),
 ], par=6, maxStrokes=18,
@@ -1700,6 +1761,9 @@ bahn(LOGE, 'Der Bannwächter', 'erzmagierloge', f, ([
     kreis(7.0, 11.5, 'schub', r=1.2),
     blitz(22.0, 5.5, w=3.0, h=3.2, takt=4.2, stil='bannschlag'),
     kreis(28.0, 12.0, 'bremse', r=1.2, takt=4.4),
+    # Sie wirft am Wächter vorbei, unten herum - und wo genau man ankommt, wandert über siebzehn
+    # Grad. Man kann sich also aussuchen, auf welcher Seite von ihm man auftaucht.
+    kanone(36.0, 17.0, grad=0, weite=8.0, amp=0.30, tempo=0.6, stil='bannschleuder'),
 ] + raute(41.0, 11.5, 3.2) + [
     waechter(47.0, 11.5, r=2.2, weite=13.0, keil=0.40, takt=5.0, folgen=1.1, wucht=15),
     lampe(53.0, 11.5, r=4.2, stil='bannlicht'),

@@ -3795,3 +3795,42 @@ jetzt ein Achteck mit der Raute in der Mitte.
 läßt sich nicht auslösen. Sie steht da und antwortet immer gleich. Das ist der Unterschied
 zwischen einer Welt, die man auswendig lernt, und einer, die man *rechnen* kann – und auf der
 letzten der drei Welten ist Rechnen die richtige Aufgabe.
+
+## Mehr Röhren, und die Schleudern schwenken (Fassung 222)
+
+*„Ich hätte gerne mehr Kupferrohre und Kanonen, die sich auch drehen."*
+
+Schwenken **konnte** die Bannschleuder schon immer – `amp` ist der halbe Schwenkwinkel im Bogenmaß
+–, sie stand nur im ganzen Zauberreich auf null. Der Grund stand im Quelltext: *„Auf einer Bahn,
+neben der die Leere liegt, ist eine schwenkende Kanone kein Rätsel, sondern ein Würfel."* Das
+stimmt, solange niemand nachrechnet, wohin sie im ungünstigsten Augenblick wirft. Also rechnet
+`pruefe()` das jetzt nach – **jeden Winkel des Bogens** in Schritten von etwa drei Grad, Landepunkt
+und Ausrollweg –, und damit ist der Schwenk erlaubt: Wenn der ganze Bogen auf Boden führt, ist er
+keine Falle mehr, sondern eine Wahl.
+
+| Bahn | Schwenk | was er bedeutet |
+| --- | --- | --- |
+| Der Bannlauf | 6° | der Landepunkt drüben wandert um knapp zwei Kacheln |
+| Die Siegelkammer | 5° | dasselbe, die Kammer ist schmal |
+| Der Erzmagier | 6° | dasselbe |
+| Der Bannwächter | 17° | man sucht sich aus, auf welcher Seite des Wächters man auftaucht |
+| Der Rat der Neun | 25° | im Saal ist ringsum Boden – der Ball fliegt über die Raute, und wo er ankommt, entscheidet der Augenblick |
+| **Das Wanderloch** | **55°** | der ganze Bogen trifft den Schacht: Man wählt die **Höhe**, auf der man drüben ankommt – die Antwort auf ein Loch, das wandert |
+
+Das Wanderloch ist der Fall, für den sich die Mühe gelohnt hat. Das Loch steht auf einer von drei
+Höhen in einem hohen Schacht; die Schleuder davor schwenkt über den ganzen Schacht. Wer sieht, wo
+das Loch gerade steht, kann sich dorthin werfen lassen, statt hinterherzurollen. Der Schacht mußte
+dafür von fünf auf acht Kacheln verbreitert werden – der Ball behält beim Aufsetzen 0,6 seines
+Flugtempos und rollt noch gut drei Kacheln weiter.
+
+**Und die Siegelröhren sind von zwei auf acht gewachsen.** Sie stehen jetzt auf sechs der zehn
+Bahnen, und überall in derselben Rolle: als **Abkürzung, die man treffen muß**. Im *Bannlauf* spart
+sie den Weg hinunter in die Schleuderkammer, im *Bannmal* verbindet sie die erste Nische mit der
+letzten, in der *Winkelgalerie* überspringt sie zwei der sechs Kehren, im *Erzmagier* die ganze
+obere Galerie. Wer den Mund verfehlt, spielt den langen Weg – das ist kein Verlust, nur eine
+Rechnung mehr.
+
+Nebenbei zwei Lücken in der Ass-Prüfung geschlossen: Eine **freistehende Bande** und eine
+**Schleuder** zählen jetzt als Sperre auf der geraden Linie vom Abschlag ins Loch. Vorher taten sie
+das nicht – es gab bis zur dritten Fassung der Loge keine freistehende Bande, und an einer
+Schleuder kommt ohnehin niemand vorbei, ohne geworfen zu werden.
