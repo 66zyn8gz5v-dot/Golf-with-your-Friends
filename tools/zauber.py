@@ -762,7 +762,7 @@ bahn(GARTEN, 'Die Lehrlingsprüfung', 'lehrlingsgarten', f, [
     pilz(14.5, 9.5, stil='springkraut'),
     muehle(18.5, 7.5, w=7.6, gap=1.2, tempo=0.9, achse='y', stil='bienenstock'),
     huete([(24, 5), (24, 10), (29, 11)], takt=2.8),
-], par=3,
+], par=4,   # seit der Bienenstock die Gasse wirklich schließt: Bot-Median 4 statt 3
 intro='Die Prüfung: erst die Ranke, dann zwischen dem Springkraut hindurch, dann der Bienenstand im '
       'Takt – und '
       'zum Schluß noch einmal die Hüte. Wer hier unter Par bleibt, hat den Lehrlingshut verdient.')

@@ -274,7 +274,7 @@ const ZAUBER_GARTEN = [
     autoDecor: { density: 0.09, seed: 109 },
   },
   {
-    name: 'Die Lehrlingsprüfung', par: 3, theme: 'lehrlingsgarten',
+    name: 'Die Lehrlingsprüfung', par: 4, theme: 'lehrlingsgarten',
     intro: 'Die Prüfung: erst die Ranke, dann zwischen dem Springkraut hindurch, dann der Bienenstand im Takt – und zum Schluß noch einmal die Hüte. Wer hier unter Par bleibt, hat den Lehrlingshut verdient.',
     map: [
       '..................................',
