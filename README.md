@@ -350,10 +350,10 @@ dem Browser-Speicher kommt: Der überlebt Fassungswechsel und lässt sich von Ha
 
 Jede Welt hat eine Belohnung, und man verdient sie sich am eigenen Können: **Die Summe der eigenen besten
 Einzelbahnen muss unter dem Par der Welt liegen, und jede Bahn braucht ein Ergebnis.** Gerechnet wird gegen
-das geltende Par – also gegen die Rangliste, siehe oben. **Elf Welten, elf Belohnungen** – zehn
-davon sind **Ganzkörper-Skins**: Sie ersetzen den Ball, statt auf ihm zu sitzen, und bewegen sich.
-Der Championhelm ist der einzige, der nur ein Hut ist; ihn gibt es auch nicht fürs Durchspielen,
-sondern fürs Gewinnen eines Turniers.
+das geltende Par – also gegen die Rangliste, siehe oben. **Vierzehn Welten, vierzehn
+Belohnungen.** Die meisten sind **Ganzkörper-Skins**: Sie ersetzen den Ball, statt auf ihm zu
+sitzen, und bewegen sich. Der Championhelm und die drei Hüte des Zauberreichs sind reine Hüte; den
+Championhelm gibt es auch nicht fürs Durchspielen, sondern fürs Gewinnen eines Turniers.
 
 **Wie der Hut über den Farbreif kommt.** Ein Ganzkörper-Skin bekommt nach dem Zeichnen einen dünnen Reif in
 der Spielerfarbe (sonst wüsste bei vier Bällen niemand, welcher der eigene ist). Läge der Hut darunter, liefe
@@ -2938,6 +2938,17 @@ und genau so sind sie gesetzt – ein Reich, kein Archipel.
 | Lehrlingsgarten | Normal | 9 | Lehrlingshut |
 | Sternenwarte | Profi | 9 | Sternenhut |
 | Erzmagierloge | Legende | 9 | Erzmagierhut |
+
+**Die drei Hüte sind Hüte und sonst nichts.** Zuerst waren sie Ganzkörper-Skins mit einem Gesicht
+darunter – und das war zweimal falsch: Es nahm dem Hut die Hauptrolle, und weil das Gesicht immer
+dasselbe war, sahen sich die drei zu ähnlich. Jetzt sitzen sie auf dem Ball wie jeder andere Hut,
+der Ball behält seine Spielerfarbe, und sie unterscheiden sich an dem, worauf es ankommt: an der
+**Form**. Der Lehrlingshut ist ein schlichter, fast gerader Filzkegel mit kleiner Krempe; der
+Sternenhut ist hoch und geschwungen, seine Spitze rollt sich nach rechts ein und trägt den Mond;
+der Erzmagierhut ist schlaff und zerknautscht, seine Spitze kippt nach **links** über, und darunter
+liegt eine sehr breite, wellige Krempe mit Goldrand. Die Spitzen zeigen mit Absicht in
+verschiedene Richtungen – das ist der Unterschied, den man noch erkennt, wenn der Hut nur so groß
+ist wie ein Daumennagel.
 
 Jeder Ort ist im Spiel eine **eigene Welt** (`WORLDS` in `src/courses_pro.js`) mit eigenem
 Belohnungsskin. Die Bedingung dafür brauchte nichts Neues: Sie steht seit der Zwergenmine in
