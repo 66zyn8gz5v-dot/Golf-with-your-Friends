@@ -1053,7 +1053,10 @@ f = leer(32, 13)
 fuell(f, 1, 3, 30, 9)
 setz(f, 3, 6, 'T'); setz(f, 28, 6, 'H')
 bahn(GARTEN, 'Die erste Blüte', 'lehrlingsgarten', f, [
-    ranke(14, 3, 4, 7, 10.5, 6.5, dauer=4.0),
+    # VIER SEKUNDEN SIND ZU KNAPP. In der Messung fiel der Bot auf dieser Bahn in jedem bis jedem
+    # zweiten Spiel - der höchste Sturzwert im ganzen Spiel, auf der zweiten Bahn der Anfängerwelt.
+    # Der Sturz ist die Lehre dieser Bahn und bleibt; er soll nur nicht der Normalfall sein.
+    ranke(14, 3, 4, 7, 10.5, 6.5, dauer=5.5),
     # Ohne etwas hinter der Lücke läge die Linie vom Abschlag ins Loch frei - die Lücke selbst
     # zählt nicht, sie ist in der Karte Boden und wird erst von der Ranke zum Hindernis. Ein
     # Springkraut, das der Garten von Bahn 1 her kennt, hält die Gerade zu und paßt hierher
@@ -1525,10 +1528,24 @@ f = leer(44, 36)
 rund(f, 21.5, 17.5, 16.6)             # ein einziger RUNDER Saal, sonst nichts
 setz(f, 6, 17, 'T'); setz(f, 21, 17, 'H')
 bahn(WARTE, 'Die Große Armillarsphäre', 'sternenwarte', f, [
-    sphaere(21.5, 17.5, [(14.0, 0.60, 0.26, 0.00, 'zug'),
-                         (10.4, 0.68, -0.40, 0.33, 'schub'),
-                         (6.9, 0.78, 0.58, 0.66, 'wirbel'),
-                         (3.4, 0.95, -0.34, 0.15, None)]),
+    # ZWEITE FASSUNG DER RINGE. Zweimal gemessen, zweimal dasselbe Bild: Bot-Median 14 und 19 bei
+    # Par 6, während der Profi-Sucher beide Male in FÜNF Schlägen durchkam. Ein Abstand von neun
+    # bis vierzehn Schlägen heißt nicht „schwer", sondern „Glück".
+    #
+    # VIER RINGE SIND VIER ZEITFENSTER HINTEREINANDER. Jedes für sich ist fair; alle vier
+    # nacheinander sind es nicht mehr, denn wer am dritten scheitert, steht wieder vor dem ersten.
+    # Drei Ringe, dafür wirklich weite Gassen - fünfzehn, zwölf und sieben Kacheln - und eine
+    # Drehung, die langsam genug ist, daß man sie lesen kann statt sie abzuwarten.
+    #
+    # UND DER WIRBEL IST FORT. Er dreht die Laufrichtung, und in einem Band, das man durchqueren
+    # MUSS, heißt das: Wo man herauskommt, hat man nicht in der Hand. Genau deshalb steht er in
+    # der ganzen Loge auf keiner Bahn - im Endgegner der Warte hatte ich ihn trotzdem gelassen,
+    # weil der Saal groß ist. Das war derselbe Fehler, nur in größer.
+    #
+    # Innen bleibt es wirkungslos: Dort liegt das Loch, und am Loch will niemand geschoben werden.
+    sphaere(21.5, 17.5, [(14.0, 1.10, 0.20, 0.00, 'zug'),
+                         (9.0, 1.30, -0.26, 0.40, 'schub'),
+                         (4.5, 1.60, 0.30, 0.75, None)]),
 ], par=6, maxStrokes=20,
 intro='Vier Messingringe um das Loch, jeder mit einer einzigen Gasse, jeder mit eigenem Tempo und '
       'eigener Richtung – und jeder Ring hat seine eigene Wirkung, die im Band hinter ihm gilt. '

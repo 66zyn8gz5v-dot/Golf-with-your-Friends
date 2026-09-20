@@ -77,7 +77,7 @@ const ZAUBER_GARTEN = [
       '................................',
     ],
     obstacles: [
-      { type: 'ranke', x: 14, y: 3, w: 4, h: 7, dauer: 4.0, r: 0.6, bluete: { x: 10.5, y: 6.5 } },
+      { type: 'ranke', x: 14, y: 3, w: 4, h: 7, dauer: 5.5, r: 0.6, bluete: { x: 10.5, y: 6.5 } },
       { type: 'bumper', x: 21.5, y: 6.5, r: 0.55, style: 'springkraut', kick: 7.5 },
     ],
     autoDecor: { density: 0.09, seed: 29 },
@@ -698,7 +698,7 @@ const ZAUBER_WARTE = [
       { type: 'wall', x0: 29, y0: 33, x1: 30, y1: 32, t: 0.22, h: 0.5 },
       { type: 'wall', x0: 17, y0: 34, x1: 16, y1: 33, t: 0.22, h: 0.5 },
       { type: 'wall', x0: 26, y0: 34, x1: 27, y1: 33, t: 0.22, h: 0.5 },
-      { type: 'armillar', x: 21.5, y: 17.5, dicke: 0.3, ringe: [{ r: 14.0, gasse: 0.6, tempo: 0.26, phase: 0.0, wirkung: 'zug' }, { r: 10.4, gasse: 0.68, tempo: -0.4, phase: 0.33, wirkung: 'schub' }, { r: 6.9, gasse: 0.78, tempo: 0.58, phase: 0.66, wirkung: 'wirbel' }, { r: 3.4, gasse: 0.95, tempo: -0.34, phase: 0.15 }] },
+      { type: 'armillar', x: 21.5, y: 17.5, dicke: 0.3, ringe: [{ r: 14.0, gasse: 1.1, tempo: 0.2, phase: 0.0, wirkung: 'zug' }, { r: 9.0, gasse: 1.3, tempo: -0.26, phase: 0.4, wirkung: 'schub' }, { r: 4.5, gasse: 1.6, tempo: 0.3, phase: 0.75 }] },
     ],
     autoDecor: { density: 0.09, seed: 11 },
   },
