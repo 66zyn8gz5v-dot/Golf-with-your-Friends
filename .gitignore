@@ -6,3 +6,8 @@ deko/
 
 # Zwischendateien von Python (entstehen beim Ausfuehren der Werkzeuge)
 __pycache__/
+
+# Gebaute Pakete fuers iPad. Entstehen aus den Ordnern daneben und gehoeren
+# deshalb nicht ins Verzeichnis - wer sie braucht, baut sie mit bauen.py.
+minecraft-addon/*.mcaddon
+minecraft-addon/*.zip
