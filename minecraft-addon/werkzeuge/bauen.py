@@ -6,13 +6,23 @@ Namensende. Minecraft erkennt daran, dass es die enthaltenen Pakete
 einsortieren soll, statt die Datei nur zu oeffnen.
 """
 
+import json
 import subprocess
 import sys
 import zipfile
 from pathlib import Path
 
 WURZEL = Path(__file__).resolve().parent.parent
-ZIEL = WURZEL / "Sternenpaket.mcaddon"
+def fassung():
+    """Die Versionsnummer aus dem Manifest, als "1.2" geschrieben."""
+    kopf = json.loads((WURZEL / "verhaltenspaket" / "manifest.json")
+                      .read_text(encoding="utf-8"))["header"]["version"]
+    return f"{kopf[0]}.{kopf[1]}"
+
+
+# Die Fassung steht im Dateinamen, damit im Downloads-Ordner des iPads nicht
+# zwei gleich heissende Dateien liegen und die falsche angetippt wird.
+ZIEL = WURZEL / f"Sternenpaket-{fassung()}.mcaddon"
 PAKETE = ("verhaltenspaket", "ressourcenpaket")
 
 # Sachen, die im Archiv nichts verloren haben und auf manchen Systemen
