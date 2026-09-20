@@ -265,6 +265,51 @@
   }
   .graureihe button:hover { border-color: var(--schrift); }
 
+  .feinbereich {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--linie);
+  }
+  .feinzeile {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  #feinrad {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    touch-action: none;
+    cursor: crosshair;
+    flex: none;
+    image-rendering: auto;
+  }
+  .probe {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 84px;
+    flex: 1 1 84px;
+  }
+  .probe .klecks {
+    height: 40px;
+    border: 1px solid var(--linie);
+    border-radius: 3px;
+    background: var(--gewaehlt, #888);
+  }
+  .probe .wert {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 12px;
+    color: var(--schrift-leise);
+    text-align: center;
+  }
+  input[type="range"] {
+    width: 100%;
+    accent-color: var(--bronze);
+    margin: 10px 0 0;
+  }
+
   textarea {
     width: 100%;
     min-height: 200px;
@@ -422,14 +467,33 @@
                     aria-label="Farbrad: außen dunkel, innen hell"></canvas>
           </div>
           <div class="graureihe" id="graureihe"></div>
-          <div class="knopfreihe" style="margin-top:12px">
-            <button type="button" id="farbe-weg">Farbe entfernen</button>
-          </div>
           <p class="hinweis">
             Eine Farbe antippen, und sie wandert nach oben zu deinen Farben — dort
             bleibt sie auch nach dem Schließen. <strong>Farbe entfernen</strong> wirft
             die gerade gewählte wieder weg; die Grundfarben bleiben immer.
           </p>
+          <div class="knopfreihe" style="margin-top:12px">
+            <button type="button" id="farbe-weg">Farbe entfernen</button>
+            <button type="button" id="alle-farben" aria-expanded="false"
+                    aria-controls="feinbereich">Alle Farben</button>
+          </div>
+
+          <div class="feinbereich" id="feinbereich" hidden>
+            <div class="feinzeile">
+              <canvas id="feinrad" width="280" height="280"
+                      aria-label="Farbrad ohne Stufen"></canvas>
+              <div class="probe">
+                <div class="klecks" id="klecks"></div>
+                <div class="wert" id="hexwert">#8A6228</div>
+              </div>
+            </div>
+            <label class="feld" for="helligkeit" style="margin-top:10px">Helligkeit</label>
+            <input type="range" id="helligkeit" min="5" max="100" value="70"
+                   aria-label="Helligkeit">
+            <div class="knopfreihe" style="margin-top:10px">
+              <button type="button" id="fein-nehmen">Diese Farbe nehmen</button>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -1056,6 +1120,123 @@
     ausgabe.focus();
     ausgabe.select();
     meldung("Markiert — jetzt kopieren und in den Chat einfügen.");
+  });
+
+
+  // --- Alle Farben -----------------------------------------------------
+  // Das stufenlose Rad liegt hinter einem Knopf, nicht offen daneben: Fuer
+  // ein Pixelbild reichen die festen Toene, und eine zweite Auswahl gleich
+  // daneben wuerde die einfache nur verwaessern. Gebraucht wird es, wenn
+  // genau ein Ton fehlt.
+  var feinRad = document.getElementById("feinrad");
+  var feinStift = feinRad.getContext("2d");
+  var feinWahl = { ton: 32, kraft: 0.72, helligkeit: 0.7 };
+  var feinBild = null;
+  var feinGemalt = false;
+
+  function alsHex(f) {
+    return "#" + [f[0], f[1], f[2]].map(function (z) {
+      return ("0" + z.toString(16)).slice(-2).toUpperCase();
+    }).join("");
+  }
+
+  function feinMalen() {
+    var g = feinRad.width, m = g / 2;
+    var daten = feinStift.createImageData(g, g);
+    var p = daten.data;
+    for (var y = 0; y < g; y++) {
+      for (var x = 0; x < g; x++) {
+        var dx = x - m, dy = y - m;
+        var abstand = Math.sqrt(dx * dx + dy * dy);
+        var i = (y * g + x) * 4;
+        if (abstand > m - 1) { p[i + 3] = 0; continue; }
+        var winkel = Math.atan2(dy, dx) * 180 / Math.PI;
+        if (winkel < 0) winkel += 360;
+        var farbe = hsvZuRgb(winkel, Math.min(1, abstand / (m - 2)), feinWahl.helligkeit);
+        p[i] = farbe[0]; p[i + 1] = farbe[1]; p[i + 2] = farbe[2]; p[i + 3] = 255;
+      }
+    }
+    feinBild = daten;
+    feinZeigen();
+  }
+
+  function feinZeigen() {
+    if (!feinBild) return;
+    feinStift.putImageData(feinBild, 0, 0);
+    var g = feinRad.width, m = g / 2;
+    var abstand = feinWahl.kraft * (m - 2);
+    var bogen = feinWahl.ton * Math.PI / 180;
+    var x = m + Math.cos(bogen) * abstand;
+    var y = m + Math.sin(bogen) * abstand;
+    feinStift.beginPath();
+    feinStift.arc(x, y, 10, 0, Math.PI * 2);
+    feinStift.strokeStyle = "#ffffff";
+    feinStift.lineWidth = 5;
+    feinStift.stroke();
+    feinStift.strokeStyle = "#000000";
+    feinStift.lineWidth = 2;
+    feinStift.stroke();
+  }
+
+  function feinFarbe() {
+    return hsvZuRgb(feinWahl.ton, feinWahl.kraft, feinWahl.helligkeit);
+  }
+
+  function probeZeigen() {
+    var f = feinFarbe();
+    document.getElementById("klecks").style.setProperty("--gewaehlt", alsHex(f));
+    document.getElementById("hexwert").textContent = alsHex(f);
+  }
+
+  function feinAntippen(e) {
+    var rahmen = feinRad.getBoundingClientRect();
+    var m = rahmen.width / 2;
+    var dx = e.clientX - rahmen.left - m;
+    var dy = e.clientY - rahmen.top - m;
+    var abstand = Math.sqrt(dx * dx + dy * dy);
+    var winkel = Math.atan2(dy, dx) * 180 / Math.PI;
+    if (winkel < 0) winkel += 360;
+    feinWahl.ton = winkel;
+    feinWahl.kraft = Math.min(1, abstand / m);
+    feinZeigen();
+    probeZeigen();
+  }
+
+  var amFein = false;
+  feinRad.addEventListener("pointerdown", function (e) {
+    e.preventDefault();
+    amFein = true;
+    feinRad.setPointerCapture(e.pointerId);
+    feinAntippen(e);
+  });
+  feinRad.addEventListener("pointermove", function (e) {
+    if (amFein) { e.preventDefault(); feinAntippen(e); }
+  });
+  feinRad.addEventListener("pointerup", function () { amFein = false; });
+  feinRad.addEventListener("pointercancel", function () { amFein = false; });
+
+  document.getElementById("helligkeit").addEventListener("input", function () {
+    feinWahl.helligkeit = Number(this.value) / 100;
+    feinMalen();
+    probeZeigen();
+  });
+
+  document.getElementById("fein-nehmen").addEventListener("click", function () {
+    farbeAufnehmen(feinFarbe());
+  });
+
+  document.getElementById("alle-farben").addEventListener("click", function () {
+    var bereich = document.getElementById("feinbereich");
+    var offen = bereich.hidden;
+    bereich.hidden = !offen;
+    this.setAttribute("aria-expanded", offen ? "true" : "false");
+    this.textContent = offen ? "Weniger Farben" : "Alle Farben";
+    // Erst beim ersten Oeffnen zeichnen - das Rad kostet 78400 Pixel.
+    if (offen && !feinGemalt) {
+      feinMalen();
+      probeZeigen();
+      feinGemalt = true;
+    }
   });
 
   // --- Sichern ---------------------------------------------------------
