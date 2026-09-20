@@ -242,10 +242,11 @@ EISENKLINGE = [
     # zusammen, also auch in der Laenge. Zwei duenne Teile, die im Raster
     # aneinanderstossen, haben danach eine Luecke dazwischen. Deshalb
     # ueberlappen die Stuecke hier um mehr, als sie schrumpfen.
-    # Ein Kasten statt zweier Stufen: Zwei Absaetze uebereinander lesen sich
-    # als Sockel, auf dem das Schwert steht. Einer, deutlich breiter als der
-    # Griff, ist ein Knauf. Griff 1,25 - Knauf 1,75.
-    {"name": "knauf",        "origin": [-1.0, 0, -1.0], "size": [2, 2.5, 2], "werkstoff": "eisen", "gemustert": True, "schrumpfen": -0.125},
+    # Der Knauf in zwei Stufen, die nach unten breiter werden. Ich hatte das
+    # zwischendurch zu einem Kasten zusammengezogen, weil es wie ein Sockel
+    # aussah - Fynn gefaellt die Stufe besser, und es ist sein Schwert.
+    {"name": "knauf_platte", "origin": [-1.5, -0.25, -1.0], "size": [3, 1.5, 2], "werkstoff": "eisen", "gemustert": True, "schrumpfen": -0.25},
+    {"name": "knauf_hals",   "origin": [-1.0, 1, -0.5], "size": [2, 1, 1], "werkstoff": "eisen", "gemustert": True},
     {"name": "griff",        "origin": [-1.0,  1.5, -1.0], "size": [2, 5, 2], "werkstoff": "leder", "gewickelt": True, "schrumpfen": -0.375},
     {"name": "parier_mitte", "origin": [-1.5,  6, -1.0], "size": [3, 1, 2], "werkstoff": "eisen", "gemustert": True},
     {"name": "parier_links", "origin": [-3.5,  6, -0.5], "size": [2, 1, 1], "werkstoff": "eisen", "gemustert": True, "schrumpfen": -0.125},
