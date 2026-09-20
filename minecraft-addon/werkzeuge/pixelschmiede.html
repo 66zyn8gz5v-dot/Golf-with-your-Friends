@@ -90,8 +90,20 @@
     gap: 20px;
     align-items: start;
   }
+
+  /* Schmaler Bildschirm: Die beiden Spalten loesen sich auf, damit Werkzeug
+     und Farben direkt unter dem Malfeld stehen statt hinter allem anderen.
+     Auf dem Tablet war sonst nicht zu sehen, dass es sie ueberhaupt gibt. */
   @media (max-width: 760px) {
     .werkbank { grid-template-columns: minmax(0, 1fr); }
+    .spalte { display: contents; }
+    .t-anleitung { order: 1; }
+    .t-malfeld   { order: 2; }
+    .t-werkzeug  { order: 3; }
+    .t-farben    { order: 4; }
+    .t-vorschau  { order: 5; }
+    .t-vorlage   { order: 6; }
+    .t-ausgabe   { order: 7; }
   }
 
   .tafel {
@@ -101,7 +113,19 @@
     padding: 16px;
   }
 
-  .tafel + .tafel { margin-top: 16px; }
+  .spalte > .tafel + .tafel { margin-top: 16px; }
+  @media (max-width: 760px) {
+    .spalte > .tafel + .tafel { margin-top: 0; }
+  }
+
+  .anleitung {
+    margin: 0;
+    padding-left: 22px;
+    display: grid;
+    gap: 6px;
+  }
+  .anleitung li { padding-left: 2px; }
+  .anleitung strong { font-weight: 700; }
 
   h2 {
     font-family: "Cinzel", Georgia, serif;
@@ -299,8 +323,20 @@
   </header>
 
   <div class="werkbank">
-    <div>
-      <section class="tafel">
+    <div class="spalte">
+      <section class="tafel t-anleitung">
+        <h2>So malst du etwas Eigenes</h2>
+        <ol class="anleitung">
+          <li>Bei <strong>Vorlage</strong> „Leer, 16 × 16“ wählen und auf
+            <strong>Laden</strong> tippen — dann ist das Feld frei.</li>
+          <li>Bei <strong>Farben</strong> eine Farbe antippen.</li>
+          <li>Im <strong>Malfeld</strong> ziehen. Danebengegangen? <strong>Rückgängig</strong>.</li>
+          <li>Unten bei <strong>Zum Verschicken</strong> auf
+            <strong>Alles markieren</strong>, kopieren, Claude schicken.</li>
+        </ol>
+      </section>
+
+      <section class="tafel t-malfeld">
         <h2>Malfeld</h2>
         <div id="leinwandfeld">
           <canvas id="leinwand" width="640" height="640" aria-label="Malfeld"></canvas>
@@ -308,7 +344,7 @@
         <p class="hinweis" id="groessenzeile"></p>
       </section>
 
-      <section class="tafel">
+      <section class="tafel t-vorschau">
         <h2>So sieht es im Spiel aus</h2>
         <div class="vorschauzeile">
           <figure>
@@ -322,7 +358,7 @@
         </div>
       </section>
 
-      <section class="tafel">
+      <section class="tafel t-ausgabe">
         <h2>Zum Verschicken</h2>
         <p class="hinweis">
           Diesen Text markieren, kopieren und Claude in den Chat schicken. Du kannst
@@ -338,8 +374,8 @@
       </section>
     </div>
 
-    <div>
-      <section class="tafel">
+    <div class="spalte">
+      <section class="tafel t-werkzeug">
         <h2>Werkzeug</h2>
         <div class="knopfreihe" id="werkzeuge">
           <button type="button" data-werkzeug="stift" aria-pressed="true">Stift</button>
@@ -353,7 +389,7 @@
         </div>
       </section>
 
-      <section class="tafel">
+      <section class="tafel t-farben">
         <h2>Farben</h2>
         <div class="palette" id="palette"></div>
         <div class="neue-farbe">
@@ -366,7 +402,7 @@
         </p>
       </section>
 
-      <section class="tafel">
+      <section class="tafel t-vorlage">
         <h2>Vorlage</h2>
         <label class="feld" for="vorlage">Womit anfangen</label>
         <select id="vorlage">
