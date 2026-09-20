@@ -128,11 +128,17 @@ def baue(name, kennung, kaesten, breite=64, ziel_modell=None, ziel_textur=None):
             male_flaeche(bild, feld, farben, seite, schliff,
                          kasten.get("gewickelt", False))
 
-        knochen_kaesten.append({
+        eintrag = {
             "origin": kasten["origin"],
             "size": kasten["size"],
             "uv": list(uv),
-        })
+        }
+        # Ein negativer Wert schrumpft den Kasten in alle Richtungen. So wird
+        # aus einem Pixel Dicke ein halber - fuer Schneiden, die duenner sind
+        # als der Grat in der Mitte.
+        if kasten.get("schrumpfen"):
+            eintrag["inflate"] = kasten["schrumpfen"]
+        knochen_kaesten.append(eintrag)
 
     modell = {
         "format_version": "1.12.0",
@@ -172,17 +178,17 @@ def baue(name, kennung, kaesten, breite=64, ziel_modell=None, ziel_textur=None):
 # steht seitlich vor - das ist es, was die Waffe von vorne wie eine Raute
 # aussehen laesst statt wie ein Brett.
 EISENKLINGE = [
-    # Eine Klinge ist ein flaches Band: breit, aber duenn. Der erste Versuch
-    # hatte einen Mittelgrat als eigenen Kasten - damit war der Querschnitt
-    # quadratisch, und das Schwert sah aus wie ein Stab. Der Grat sitzt
-    # jetzt in der Textur, als heller Streifen laengs der Mitte, und der
-    # Kasten bleibt einen Pixel duenn.
+    # Der Querschnitt einer Klinge: in der Mitte ein Grat, zu den Schneiden
+    # hin duenner. Die breiten Flaechen sind deshalb geschrumpft, der Grat
+    # behaelt seine volle Dicke. Beides flach zu machen ergab ein Brett,
+    # beides dick einen Stab - erst der Unterschied liest sich als Schneide.
     {"name": "knauf",        "origin": [-1.0,  0, -1.0], "size": [2, 2, 2], "werkstoff": "eisen"},
     {"name": "griff",        "origin": [-1.0,  2, -0.5], "size": [2, 5, 1], "werkstoff": "leder", "gewickelt": True},
     {"name": "parierstange", "origin": [-3.0,  7, -1.0], "size": [6, 1, 2], "werkstoff": "eisen"},
-    {"name": "klinge",       "origin": [-1.5,  8, -0.5], "size": [3, 11, 1], "werkstoff": "stahl", "schliff": True},
-    {"name": "klinge_ort",   "origin": [-1.0, 19, -0.5], "size": [2, 2, 1], "werkstoff": "stahl", "schliff": True},
-    {"name": "spitze",       "origin": [-0.5, 21, -0.5], "size": [1, 1, 1], "werkstoff": "stahl"},
+    {"name": "klinge",       "origin": [-1.5,  8, -0.5], "size": [3, 11, 1], "werkstoff": "stahl", "schliff": True, "schrumpfen": -0.25},
+    {"name": "grat",         "origin": [-0.5,  8, -0.5], "size": [1, 11, 1], "werkstoff": "stahl"},
+    {"name": "klinge_ort",   "origin": [-1.0, 19, -0.5], "size": [2, 2, 1], "werkstoff": "stahl", "schliff": True, "schrumpfen": -0.25},
+    {"name": "spitze",       "origin": [-0.5, 19, -0.5], "size": [1, 3, 1], "werkstoff": "stahl"},
 ]
 
 
