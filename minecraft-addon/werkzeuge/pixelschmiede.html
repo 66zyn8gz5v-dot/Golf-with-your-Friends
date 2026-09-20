@@ -84,6 +84,31 @@
     max-width: 62ch;
   }
 
+  .reiter {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--linie);
+  }
+  .reiter button {
+    font-family: "Cinzel", Georgia, serif;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    padding: 10px 20px;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    border-radius: 0;
+    color: var(--schrift-leise);
+  }
+  .reiter button[aria-selected="true"] {
+    color: var(--schrift);
+    border-bottom-color: var(--bronze);
+  }
+  .reiter button:hover { color: var(--schrift); }
+
   .werkbank {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 260px;
@@ -480,51 +505,26 @@
       Texturen für das Sternenpaket malen. Jedes Feld ist ein Pixel, jede Farbe hat
       ein Zeichen — unten fällt genau der Text heraus, der ins Projekt gehört.
     </p>
-    <div class="knopfreihe" style="margin-top:14px">
-      <button type="button" id="sammlung-auf" aria-expanded="false"
-              aria-controls="sammlung">Sammlung</button>
-    </div>
   </header>
 
-  <section class="tafel t-sammlung" id="sammlung" hidden style="margin-bottom:20px">
-    <h2>Deine Sammlung</h2>
-    <div class="speicherzeile">
-      <input type="text" id="werkname" placeholder="Name, zum Beispiel Speer"
-             aria-label="Name für dieses Werk" maxlength="40">
-      <select id="werkart" aria-label="Kategorie">
-        <option value="waffen">Waffen</option>
-        <option value="werkzeuge">Werkzeuge</option>
-        <option value="ruestung">Rüstung</option>
-        <option value="gegenstaende" selected>Gegenstände</option>
-        <option value="bloecke">Blöcke</option>
-        <option value="wesen">Wesen</option>
-        <option value="sonstiges">Sonstiges</option>
-      </select>
-      <button type="button" id="werk-speichern">Ablegen</button>
-    </div>
+  <div class="reiter" role="tablist">
+    <button type="button" id="reiter-malen" role="tab" aria-selected="true">Malen</button>
+    <button type="button" id="reiter-sammlung" role="tab" aria-selected="false">Sammlung</button>
+  </div>
 
-    <div class="speicherzeile">
-      <input type="search" id="suche" placeholder="Suchen …"
-             aria-label="In der Sammlung suchen">
-    </div>
 
-    <div class="filterleiste" id="filterleiste"></div>
-    <div id="werke"></div>
-  </section>
-
+  <div id="ansicht-malen">
   <div class="werkbank">
     <div class="spalte">
       <section class="tafel t-anleitung">
-        <h2>So malst du etwas Eigenes</h2>
+        <h2>In drei Schritten</h2>
         <ol class="anleitung">
-          <li>Bei <strong>Vorlage</strong> „Leer, 16 × 16“ wählen und auf
-            <strong>Laden</strong> tippen — dann ist das Feld frei.</li>
-          <li>Bei <strong>Farben</strong> eine Farbe antippen.</li>
-          <li>Im <strong>Malfeld</strong> ziehen. Danebengegangen? <strong>Rückgängig</strong>.</li>
-          <li>Unten bei <strong>Zum Verschicken</strong> auf
-            <strong>Alles markieren</strong>, kopieren, Claude schicken.</li>
-          <li>Bevor du etwas Neues anfängst: oben auf <strong>Sammlung</strong>,
-            Namen eintippen, ablegen. Sonst überschreibt das nächste Bild dieses hier.</li>
+          <li>Bei <strong>Farben</strong> eine Farbe antippen, dann im
+            <strong>Malfeld</strong> ziehen.</li>
+          <li>Fertig? Oben auf <strong>Sammlung</strong> wechseln und dort ablegen —
+            sonst überschreibt das nächste Bild dieses hier.</li>
+          <li>Zum Verschicken: ganz unten <strong>Alles markieren</strong>, kopieren,
+            Claude schicken.</li>
         </ol>
       </section>
 
@@ -643,6 +643,36 @@
         </p>
       </section>
     </div>
+  </div>
+
+  </div>
+
+  <div id="ansicht-sammlung" hidden>
+  <section class="tafel t-sammlung" id="sammlung" >
+    <h2>Deine Sammlung</h2>
+    <div class="speicherzeile">
+      <input type="text" id="werkname" placeholder="Name, zum Beispiel Speer"
+             aria-label="Name für dieses Werk" maxlength="40">
+      <select id="werkart" aria-label="Kategorie">
+        <option value="waffen">Waffen</option>
+        <option value="werkzeuge">Werkzeuge</option>
+        <option value="ruestung">Rüstung</option>
+        <option value="gegenstaende" selected>Gegenstände</option>
+        <option value="bloecke">Blöcke</option>
+        <option value="wesen">Wesen</option>
+        <option value="sonstiges">Sonstiges</option>
+      </select>
+      <button type="button" id="werk-speichern">Ablegen</button>
+    </div>
+
+    <div class="speicherzeile">
+      <input type="search" id="suche" placeholder="Suchen …"
+             aria-label="In der Sammlung suchen">
+    </div>
+
+    <div class="filterleiste" id="filterleiste"></div>
+    <div id="werke"></div>
+  </section>
   </div>
 
   <footer>
@@ -1509,7 +1539,7 @@
   function sammlungZeigen() {
     var behaelter = document.getElementById("werke");
     behaelter.textContent = "";
-    document.getElementById("sammlung-auf").textContent =
+    document.getElementById("reiter-sammlung").textContent =
       sammlung.length ? "Sammlung (" + sammlung.length + ")" : "Sammlung";
 
     var vorhanden = {};
@@ -1629,12 +1659,21 @@
     sammlungZeigen();
   });
 
-  document.getElementById("sammlung-auf").addEventListener("click", function () {
-    var tafel = document.getElementById("sammlung");
-    var offen = tafel.hidden;
-    tafel.hidden = !offen;
-    this.setAttribute("aria-expanded", offen ? "true" : "false");
-    if (offen) tafel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  function ansichtWechseln(welche) {
+    document.getElementById("ansicht-malen").hidden = welche !== "malen";
+    document.getElementById("ansicht-sammlung").hidden = welche !== "sammlung";
+    document.getElementById("reiter-malen")
+      .setAttribute("aria-selected", welche === "malen" ? "true" : "false");
+    document.getElementById("reiter-sammlung")
+      .setAttribute("aria-selected", welche === "sammlung" ? "true" : "false");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  document.getElementById("reiter-malen").addEventListener("click", function () {
+    ansichtWechseln("malen");
+  });
+  document.getElementById("reiter-sammlung").addEventListener("click", function () {
+    ansichtWechseln("sammlung");
   });
 
   // --- Sichern ---------------------------------------------------------
