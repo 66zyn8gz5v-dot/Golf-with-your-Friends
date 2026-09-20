@@ -4,8 +4,7 @@
     "description": {
       "identifier": "fynn:sternenklinge",
       "menu_category": {
-        "category": "equipment",
-        "group": "itemGroup.name.sword"
+        "category": "equipment"
       }
     },
     "components": {
@@ -27,7 +26,9 @@
       "minecraft:repairable": {
         "repair_items": [
           {
-            "items": ["fynn:sternenstaub"],
+            "items": [
+              "fynn:sternenstaub"
+            ],
             "repair_amount": 140
           }
         ]
