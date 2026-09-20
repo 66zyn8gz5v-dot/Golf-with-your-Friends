@@ -232,7 +232,9 @@ EISENKLINGE = [
     # zusammen, also auch in der Laenge. Zwei duenne Teile, die im Raster
     # aneinanderstossen, haben danach eine Luecke dazwischen. Deshalb
     # ueberlappen die Stuecke hier um mehr, als sie schrumpfen.
-    {"name": "knauf_platte", "origin": [-1.5,  0, -1.0], "size": [3, 1, 2], "werkstoff": "eisen"},
+    # Der Sockel war im Spiel zu ausladend. Geschrumpft bleibt die Stufe
+    # erhalten, ohne dass das Schwert unten einen Fuss bekommt.
+    {"name": "knauf_platte", "origin": [-1.5, -0.25, -1.0], "size": [3, 1.5, 2], "werkstoff": "eisen", "schrumpfen": -0.25},
     {"name": "knauf_hals",   "origin": [-1.0,  1, -0.5], "size": [2, 1, 1], "werkstoff": "eisen"},
     {"name": "griff",        "origin": [-1.0,  1.5, -1.0], "size": [2, 5, 2], "werkstoff": "leder", "gewickelt": True, "schrumpfen": -0.375},
     {"name": "parier_mitte", "origin": [-1.5,  6, -1.0], "size": [3, 1, 2], "werkstoff": "eisen"},
