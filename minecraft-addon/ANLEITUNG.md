@@ -20,10 +20,16 @@ Ablauf steht zweimal da, einmal je Paket.
 
 1. **Inhalte von URL abrufen** — die obere Adresse einsetzen.
 2. **Archiv entpacken** — nimmt die geladene Datei.
-3. **Datei speichern** — Ziel: `Auf meinem iPad › Minecraft › games › com.mojang ›
-   development_behavior_packs`. Bei „Nachfragen, wo gesichert werden soll" den Haken **weg**, und
-   **Überschreiben, falls vorhanden** an.
-4. bis 6. Dasselbe mit der unteren Adresse, Ziel `development_resource_packs`.
+3. **Datei sichern** — Ziel: `Auf meinem iPad › Minecraft › games › com.mojang ›
+   development_behavior_packs`. Dann: „Nach Speicherort fragen" **aus**, „Überschreiben, falls
+   Datei besteht" **an**, und **Unterpfad** auf `sternenpaket_verhalten`.
+4. bis 6. Dasselbe mit der unteren Adresse, Ziel `development_resource_packs`, Unterpfad
+   `sternenpaket_bilder`.
+
+Der Unterpfad ist der Punkt, an dem es beim ersten Versuch scheiterte: „Archiv extrahieren" gibt
+den *Inhalt* des Archivs weiter, nicht den Ordner darum herum. Ohne Unterpfad liegen `items`,
+`entities` und `manifest.json` lose im Entwicklungsordner, und Minecraft findet dort kein Paket -
+wortlos, wie immer. Der Unterpfad legt den fehlenden Ordner wieder an.
 
 Ohne das Überschreiben legt das iPad bei jedem Mal einen zweiten Ordner mit „2" im Namen an, und
 Minecraft hat dasselbe Paket doppelt.
@@ -32,7 +38,7 @@ Minecraft hat dasselbe Paket doppelt.
 
 Beide Dateien aus `auslieferung/` von Hand laden und in der Dateien-App entpacken. Dabei entsteht
 ein Ordner, der so heisst wie die Zip-Datei, und **darin** liegt der eigentliche Paketordner.
-Gebraucht wird der innere:
+Gebraucht wird der innere (der Kurzbefehl nimmt stattdessen den Unterpfad, siehe oben):
 
 * `paket_verhalten/sternenpaket_verhalten` nach `development_behavior_packs`
 * `paket_bilder/sternenpaket_bilder` nach `development_resource_packs`
