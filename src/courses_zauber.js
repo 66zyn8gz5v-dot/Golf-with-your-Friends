@@ -275,7 +275,7 @@ const ZAUBER_GARTEN = [
     autoDecor: { density: 0.09, seed: 109 },
   },
   {
-    name: 'Die Lehrlingsprüfung', par: 5, theme: 'lehrlingsgarten',
+    name: 'Die Lehrlingsprüfung', par: 4, theme: 'lehrlingsgarten',
     intro: 'Die Prüfung: erst die Ranke, dann zwischen dem Springkraut hindurch, dann der Bienenstand im Takt – und zum Schluß noch einmal die Hüte. Wer hier unter Par bleibt, hat den Lehrlingshut verdient.',
     map: [
       '..................................',
@@ -871,7 +871,7 @@ const ZAUBER_LOGE = [
     autoDecor: { density: 0.09, seed: 43 },
   },
   {
-    name: 'Der Rat der Neun', par: 4, theme: 'erzmagierloge',
+    name: 'Der Rat der Neun', par: 5, theme: 'erzmagierloge',
     intro: 'Der Ratssaal. In seiner Mitte steht die Raute der Neun – vier Schrägen, die nach allen Seiten abweisen, und darin brennt ein Bannkreis im Takt. Geradeaus geht hier nichts; man muß sich aussuchen, an welcher Kante man vorbeiwill. Die Fernschleuder am Eingang wirft über die Raute hinweg, aber sie schwenkt weit – wer im falschen Augenblick hineinrollt, fliegt über den Saal hinaus.',
     map: [
       '..................................................',
@@ -1184,7 +1184,7 @@ const ZAUBER_LOGE = [
     autoDecor: { density: 0.09, seed: 109 },
   },
   {
-    name: 'Der Erzmagier', par: 6, theme: 'erzmagierloge', maxStrokes: 18,
+    name: 'Der Erzmagier', par: 5, theme: 'erzmagierloge', maxStrokes: 18,
     intro: 'Die letzte Bahn vor dem Wächter: erst der Bannschlag, dann die lange Kehre nach unten – und dort steht die Fernschleuder und wirft achtzehneinhalb Kacheln weit ans andere Ende. Auch sie schwenkt; das andere Ufer ist schmal, und daneben ist nichts. Danach die Galerie zurück nach Westen. Keine einzige rechtwinklige Ecke auf der ganzen Strecke.',
     map: [
       '............................................................',

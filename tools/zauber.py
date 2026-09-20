@@ -1228,12 +1228,12 @@ bahn(GARTEN, 'Die Lehrlingsprüfung', 'lehrlingsgarten', f, [
     pilz(14.5, 9.5, stil='springkraut'),
     muehle(18.5, 7.5, w=7.6, gap=1.2, tempo=0.9, achse='y', stil='bienenstock', tiefe=3.0),
     huete([(24, 5), (24, 10), (29, 11)], takt=2.8, stil='maulwurf'),
-# ZWEITE MESSUNG, ANDERES ERGEBNIS: Median SECHS statt vier, Schnitt 5,75, und in zwei von zwölf
-# Durchgängen neun Schläge. Die erste Messung lief unmittelbar nach dem Umbau des Bienenstands und
-# traf offenbar einen günstigen Takt. Bei zwei Messungen, die auseinanderliegen, gilt die
-# schlechtere - ein Par, das man regelmäßig um zwei verfehlt, ist keine Prüfung, sondern ein
-# Vorwurf. Als letzte Bahn des Gartens darf sie fordern, aber sie soll nicht lügen.
-], par=5,
+# DREI MESSUNGEN, DREI ERGEBNISSE: Median 4, dann 6, dann 3. Diese Bahn streut stärker als jede
+# andere - der Bienenstand im Takt und die Hüte machen zusammen aus, wie lange man braucht, und
+# beides ist Glückssache, wenn man den Takt nicht liest. Über alle drei Messungen liegt der Median
+# bei vier, und darauf steht das Par jetzt. Par 5 war nach der zweiten Messung gesetzt und nach
+# der dritten nicht mehr zu halten: Ein Par, das der Bot in drei Schlägen unterbietet, ist keines.
+], par=4,
 intro='Die Prüfung: erst die Ranke, dann zwischen dem Springkraut hindurch, dann der Bienenstand im '
       'Takt – und '
       'zum Schluß noch einmal die Hüte. Wer hier unter Par bleibt, hat den Lehrlingshut verdient.')
@@ -1716,11 +1716,12 @@ bahn(LOGE, 'Der Rat der Neun', 'erzmagierloge', f, ([
     bande(20.0, 17.5, 24.5, 13.0),
     kreis(28.0, 11.5, 'bann', r=1.6, takt=5.0),
     lampe(40.0, 11.5, r=4.2, stil='bannlicht'),
-# Bot-Median DREI bei Par 5 - zwei Schläge Vorsprung, und die vergibt man nicht. Der Grund ist
-# die Fernschleuder: Wer sie im richtigen Augenblick nimmt, kommt in EINEM Flug von der Tür bis
-# hinter die Raute. Das soll sie auch - dafür steht sie da -, nur darf das Par dann nicht so tun,
-# als wäre der lange Weg um den Saal herum der gemeinte.
-]), par=4,
+# ZWEI MESSUNGEN, WEIT AUSEINANDER: Median 3, dann 6. Das ist die Fernschleuder - wer sie im
+# richtigen Augenblick nimmt, kommt in EINEM Flug von der Tür bis hinter die Raute; wer sie
+# verpaßt, spielt um die Raute herum, und das dauert. Genau dafür steht sie da. Das Par steht
+# darum auf dem höheren der beiden Werte minus eins: Wer die Schleuder liest, unterbietet es
+# deutlich, und wer sie nicht liest, wird nicht dafür bestraft, daß er den Saal umrundet.
+]), par=5,
 intro='Der Ratssaal. In seiner Mitte steht die Raute der Neun – vier Schrägen, die nach allen '
       'Seiten abweisen, und darin brennt ein Bannkreis im Takt. Geradeaus geht hier nichts; man '
       'muß sich aussuchen, an welcher Kante man vorbeiwill. Die Fernschleuder am Eingang wirft '
@@ -1890,7 +1891,9 @@ bahn(LOGE, 'Der Erzmagier', 'erzmagierloge', f, [
     fernschleuder(30.0, 17.5, grad=0, weite=18.5, amp=0.13, tempo=0.5),
     bande(44.0, 10.0, 48.0, 14.0),
     lampe(42.0, 8.5, r=4.2, stil='bannlicht'),
-], par=6, maxStrokes=18,
+# Bot-Median VIER bei Par 6, über zwei Messungen (5 und 4) - zwei Schläge Vorsprung. Die
+# Fernschleuder nimmt hier die halbe Bahn auf einmal, und dagegen ist Par 6 zu großzügig.
+], par=5, maxStrokes=18,
 intro='Die letzte Bahn vor dem Wächter: erst der Bannschlag, dann die lange Kehre nach unten – '
       'und dort steht die Fernschleuder und wirft achtzehneinhalb Kacheln weit ans andere Ende. '
       'Auch sie schwenkt; das andere Ufer ist schmal, und daneben ist nichts. Danach die Galerie '
