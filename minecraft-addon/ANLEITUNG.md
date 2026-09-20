@@ -7,8 +7,8 @@ neueste Stand ist im Spiel. Danach Minecraft einmal ganz beenden und neu starten
 
 Der Kurzbefehl holt sich zwei Dateien von hier:
 
-* <https://raw.githubusercontent.com/66zyn8gz5v-dot/Golf-with-your-Friends/claude/minecraft-mod-bedrock-y7faxg/minecraft-addon/auslieferung/sternenpaket_verhalten.zip>
-* <https://raw.githubusercontent.com/66zyn8gz5v-dot/Golf-with-your-Friends/claude/minecraft-mod-bedrock-y7faxg/minecraft-addon/auslieferung/sternenpaket_bilder.zip>
+* <https://raw.githubusercontent.com/66zyn8gz5v-dot/Golf-with-your-Friends/claude/minecraft-mod-bedrock-y7faxg/minecraft-addon/auslieferung/paket_verhalten.zip>
+* <https://raw.githubusercontent.com/66zyn8gz5v-dot/Golf-with-your-Friends/claude/minecraft-mod-bedrock-y7faxg/minecraft-addon/auslieferung/paket_bilder.zip>
 
 Deshalb liegen die gebauten Pakete unter `auslieferung/` im Verzeichnis, obwohl gebaute Dateien
 dort sonst nichts verloren haben: Sie sind hier nicht Abfall, sondern der Weg ins Spiel.
@@ -30,13 +30,14 @@ Minecraft hat dasselbe Paket doppelt.
 
 ## Der lange Weg, wenn der Kurzbefehl klemmt
 
-Beide Dateien aus `auslieferung/` von Hand laden, in der Dateien-App entpacken und die Ordner an
-ihre Plaetze schieben:
+Beide Dateien aus `auslieferung/` von Hand laden und in der Dateien-App entpacken. Dabei entsteht
+ein Ordner, der so heisst wie die Zip-Datei, und **darin** liegt der eigentliche Paketordner.
+Gebraucht wird der innere:
 
-* `sternenpaket_verhalten` nach `development_behavior_packs`
-* `sternenpaket_bilder` nach `development_resource_packs`
+* `paket_verhalten/sternenpaket_verhalten` nach `development_behavior_packs`
+* `paket_bilder/sternenpaket_bilder` nach `development_resource_packs`
 
-Beim Verschieben **Ersetzen** waehlen, nicht „beide behalten".
+Beim Verschieben **Ersetzen** waehlen, nicht „beide behalten". Die leeren Huellen danach loeschen.
 
 ## Der Notweg: die .mcaddon
 

@@ -39,18 +39,23 @@ ENTWICKLUNG = {
 
 
 def packe_entwicklung(name, paket):
-    """Ein Zip je Paket, dessen Inhalt ohne Wurzelordner drinliegt.
+    """Ein Zip je Paket, mit dem Paketordner als Wurzel darin.
 
-    Warum ohne: Die Dateien-App des iPads legt beim Entpacken selbst einen
-    Ordner an, der so heisst wie die Zip-Datei. Waere der Ordner schon im
-    Archiv, laege das Paket danach eine Ebene zu tief - und Minecraft
-    uebersieht es wortlos.
+    Warum mit: Der Kurzbefehl auf dem iPad reicht weiter, was im Archiv
+    steht. Laegen die Dateien lose darin, schuettete er sie einzeln in den
+    Entwicklungsordner statt als Paket - und Minecraft faende nichts.
+
+    Der Preis: Wer von Hand in der Dateien-App entpackt, bekommt den Ordner
+    doppelt verschachtelt und muss den inneren nehmen. Deshalb heisst die
+    Zip-Datei anders als der Ordner darin, dann ist erkennbar, welcher
+    gemeint ist.
     """
     # Nach auslieferung/, weil das iPad sich die Dateien von dort ueber
     # GitHub selbst holt - siehe ANLEITUNG.md.
     ordner_ziel = WURZEL / "auslieferung"
     ordner_ziel.mkdir(exist_ok=True)
-    ziel = ordner_ziel / f"{name}.zip"
+    # Anderer Dateiname als der Ordner darin - siehe oben.
+    ziel = ordner_ziel / f"{name.replace('sternenpaket_', 'paket_')}.zip"
     if ziel.exists():
         ziel.unlink()
     ordner = WURZEL / paket
@@ -59,7 +64,7 @@ def packe_entwicklung(name, paket):
         for datei in sorted(ordner.rglob("*")):
             if not datei.is_file() or datei.name in UNERWUENSCHT:
                 continue
-            archiv.write(datei, str(datei.relative_to(ordner)))
+            archiv.write(datei, f"{name}/{datei.relative_to(ordner)}")
             anzahl += 1
     print(f"Fuer den Entwicklungsordner: {ziel.name} ({anzahl} Dateien)")
 
