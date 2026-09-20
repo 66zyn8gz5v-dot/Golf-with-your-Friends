@@ -236,21 +236,34 @@
     border-top: 1px solid var(--linie);
   }
 
-  .farbraster {
+  .radfeld {
+    display: flex;
+    justify-content: center;
+  }
+  #farbrad {
+    width: 100%;
+    max-width: 210px;
+    height: auto;
+    touch-action: manipulation;
+    cursor: pointer;
+    /* Das Malfeld will harte Pixelkanten, die runden Segmente hier nicht. */
+    image-rendering: auto;
+  }
+
+  .graureihe {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     gap: 4px;
+    margin-top: 10px;
   }
-  .farbraster button {
-    aspect-ratio: 1;
+  .graureihe button {
+    height: 26px;
     padding: 0;
     border: 1px solid var(--linie);
     border-radius: 2px;
     cursor: pointer;
   }
-  .farbraster button:hover {
-    border-color: var(--schrift);
-  }
+  .graureihe button:hover { border-color: var(--schrift); }
 
   textarea {
     width: 100%;
@@ -404,7 +417,11 @@
 
         <div class="mischplatz">
           <h2>Mehr Farben</h2>
-          <div class="farbraster" id="farbraster"></div>
+          <div class="radfeld">
+            <canvas id="farbrad" width="420" height="420"
+                    aria-label="Farbrad: außen dunkel, innen hell"></canvas>
+          </div>
+          <div class="graureihe" id="graureihe"></div>
           <div class="knopfreihe" style="margin-top:12px">
             <button type="button" id="farbe-weg">Farbe entfernen</button>
           </div>
@@ -868,26 +885,82 @@
     meldung("Oben aufgenommen als Zeichen „" + zeichen + "“.");
   }
 
-  function rasterAufbauen() {
-    var behaelter = document.getElementById("farbraster");
-    behaelter.textContent = "";
+  // Rad statt Raster: dieselben Farben, aber als Scheibe. Acht Tortenstuecke
+  // sind die Farbtoene, fuenf Ringe die Helligkeiten - aussen dunkel, innen
+  // hell. Das braucht knapp die Haelfte der Hoehe eines Rasters.
+  var RAD_INNEN = 0.22;   // Anteil des Radius, der frei bleibt
+  var rad = document.getElementById("farbrad");
+  var radStift = rad.getContext("2d");
 
-    function feld(rgb) {
+  function radFarbe(tonNr, stufeNr) {
+    return hsvZuRgb(TOENE[tonNr], STUFEN[stufeNr][0], STUFEN[stufeNr][1]);
+  }
+
+  function radZeichnen() {
+    var g = rad.width, m = g / 2;
+    var aussen = m - 4;
+    var innen = aussen * RAD_INNEN;
+    var ringbreite = (aussen - innen) / STUFEN.length;
+    var stueck = (Math.PI * 2) / TOENE.length;
+
+    radStift.clearRect(0, 0, g, g);
+    for (var t = 0; t < TOENE.length; t++) {
+      for (var s = 0; s < STUFEN.length; s++) {
+        // Stufe 0 ist die dunkelste - die gehoert nach aussen.
+        var r1 = innen + (STUFEN.length - 1 - s) * ringbreite;
+        var r2 = r1 + ringbreite;
+        var a1 = t * stueck - Math.PI / 2;
+        var a2 = a1 + stueck;
+
+        radStift.beginPath();
+        radStift.arc(m, m, r2, a1, a2);
+        radStift.arc(m, m, r1, a2, a1, true);
+        radStift.closePath();
+        radStift.fillStyle = "rgb(" + radFarbe(t, s).join(",") + ")";
+        radStift.fill();
+        radStift.strokeStyle = "rgba(0,0,0,0.22)";
+        radStift.lineWidth = 2;
+        radStift.stroke();
+      }
+    }
+  }
+
+  rad.addEventListener("click", function (e) {
+    var rahmen = rad.getBoundingClientRect();
+    var m = rahmen.width / 2;
+    var dx = e.clientX - rahmen.left - m;
+    var dy = e.clientY - rahmen.top - m;
+    var abstand = Math.sqrt(dx * dx + dy * dy);
+
+    var aussen = m - (4 * rahmen.width / rad.width);
+    var innen = aussen * RAD_INNEN;
+    if (abstand < innen || abstand > aussen) return;   // Mitte und Rand sind taub
+
+    var winkel = Math.atan2(dy, dx) + Math.PI / 2;
+    if (winkel < 0) winkel += Math.PI * 2;
+    var tonNr = Math.floor(winkel / ((Math.PI * 2) / TOENE.length)) % TOENE.length;
+
+    var ringbreite = (aussen - innen) / STUFEN.length;
+    var ringNr = Math.floor((abstand - innen) / ringbreite);
+    if (ringNr > STUFEN.length - 1) ringNr = STUFEN.length - 1;
+    var stufeNr = STUFEN.length - 1 - ringNr;
+
+    farbeAufnehmen(radFarbe(tonNr, stufeNr));
+  });
+
+  function graureiheAufbauen() {
+    var behaelter = document.getElementById("graureihe");
+    behaelter.textContent = "";
+    GRAUSTUFEN.forEach(function (wert) {
+      var rgb = [wert, wert, wert];
       var knopf = document.createElement("button");
       knopf.type = "button";
       knopf.style.background = "rgb(" + rgb.join(",") + ")";
-      knopf.title = "rgb(" + rgb.join(", ") + ")";
-      knopf.setAttribute("aria-label", "Farbe rgb " + rgb.join(" "));
+      knopf.title = "Grau " + wert;
+      knopf.setAttribute("aria-label", "Grauton " + wert);
       knopf.addEventListener("click", function () { farbeAufnehmen(rgb); });
       behaelter.appendChild(knopf);
-    }
-
-    TOENE.forEach(function (ton) {
-      STUFEN.forEach(function (stufe) {
-        feld(hsvZuRgb(ton, stufe[0], stufe[1]));
-      });
     });
-    GRAUSTUFEN.forEach(function (wert) { feld([wert, wert, wert]); });
   }
 
   document.getElementById("farbe-weg").addEventListener("click", function () {
@@ -1035,7 +1108,8 @@
     });
   }
 
-  rasterAufbauen();
+  radZeichnen();
+  graureiheAufbauen();
   paletteAufbauen();
   karteUebernehmen(stand && stand.bild ? stand.bild.slice() : VORLAGEN.sternenstaub.slice());
   bereit = true;
