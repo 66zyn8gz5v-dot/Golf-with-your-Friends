@@ -124,8 +124,8 @@
     .spalte { display: contents; }
     .t-anleitung { order: 1; }
     .t-malfeld   { order: 2; }
-    .t-werkzeug  { order: 3; }
-    .t-farben    { order: 4; }
+    .t-farben    { order: 3; }
+    .t-werkzeug  { order: 4; }
     .t-vorschau  { order: 5; }
     .t-vorlage   { order: 6; }
     .t-ausgabe   { order: 7; }
@@ -142,6 +142,18 @@
   @media (max-width: 760px) {
     .spalte > .tafel + .tafel { margin-top: 0; }
   }
+
+  summary {
+    cursor: pointer;
+    list-style: none;
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary h2 { margin: 0; }
+  summary::after {
+    content: " ▸";
+    color: var(--bronze);
+  }
+  details[open] summary::after { content: " ▾"; }
 
   .anleitung {
     margin: 0;
@@ -178,7 +190,43 @@
     touch-action: none;
     cursor: crosshair;
     max-width: 100%;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
   }
+  #leinwandfeld, .schnellleiste, .palette, .farbraster {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .schnellleiste {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+  .schnellleiste .jetzt {
+    width: 40px;
+    height: 40px;
+    flex: none;
+    border: 2px solid var(--bronze);
+    border-radius: 3px;
+    background-color: var(--jetzt, #888);
+    background-image:
+      repeating-conic-gradient(var(--karo-a) 0% 25%, var(--karo-b) 0% 50%);
+    background-size: 10px 10px;
+    position: relative;
+  }
+  .schnellleiste .jetzt span {
+    position: absolute;
+    inset: 0;
+    background: var(--jetzt, #888);
+    border-radius: 1px;
+  }
+  .schnellleiste button { padding: 9px 13px; }
 
   .knopfreihe {
     display: flex;
@@ -502,8 +550,8 @@
   <header>
     <h1>Pixelschmiede</h1>
     <p class="untertitel">
-      Texturen für das Sternenpaket malen. Jedes Feld ist ein Pixel, jede Farbe hat
-      ein Zeichen — unten fällt genau der Text heraus, der ins Projekt gehört.
+      Texturen fürs Sternenpaket malen. Unten fällt der Text heraus, der ins
+      Projekt gehört.
     </p>
   </header>
 
@@ -517,8 +565,9 @@
   <div class="werkbank">
     <div class="spalte">
       <section class="tafel t-anleitung">
-        <h2>In drei Schritten</h2>
-        <ol class="anleitung">
+        <details>
+          <summary><h2 style="display:inline">So geht das hier</h2></summary>
+        <ol class="anleitung" style="margin-top:12px">
           <li>Bei <strong>Farben</strong> eine Farbe antippen, dann im
             <strong>Malfeld</strong> ziehen.</li>
           <li>Fertig? Oben auf <strong>Sammlung</strong> wechseln und dort ablegen —
@@ -526,12 +575,20 @@
           <li>Zum Verschicken: ganz unten <strong>Alles markieren</strong>, kopieren,
             Claude schicken.</li>
         </ol>
+        </details>
       </section>
 
       <section class="tafel t-malfeld">
         <h2>Malfeld</h2>
         <div id="leinwandfeld">
           <canvas id="leinwand" width="640" height="640" aria-label="Malfeld"></canvas>
+        </div>
+        <div class="schnellleiste">
+          <div class="jetzt" id="jetztfarbe" title="Farbe, mit der du gerade malst"
+               aria-hidden="true"><span></span></div>
+          <button type="button" id="schnell-stift" aria-pressed="true">Stift</button>
+          <button type="button" id="schnell-radierer" aria-pressed="false">Radierer</button>
+          <button type="button" id="schnell-zurueck">Rückgängig</button>
         </div>
         <p class="hinweis" id="groessenzeile"></p>
       </section>
@@ -841,6 +898,10 @@
         werkzeugSetzen(werkzeug === "radierer" ? "stift" : werkzeug);
         paletteAufbauen();
       });
+      if (eintrag.zeichen === aktuellesZeichen) {
+        document.getElementById("jetztfarbe")
+          .style.setProperty("--jetzt", alsCss(eintrag.farbe));
+      }
       behaelter.appendChild(knopf);
     });
   }
@@ -1023,6 +1084,10 @@
         knopf.setAttribute("aria-pressed",
           knopf.getAttribute("data-werkzeug") === neu ? "true" : "false");
       });
+    document.getElementById("schnell-stift")
+      .setAttribute("aria-pressed", neu === "stift" ? "true" : "false");
+    document.getElementById("schnell-radierer")
+      .setAttribute("aria-pressed", neu === "radierer" ? "true" : "false");
   }
 
   Array.prototype.forEach.call(
@@ -1032,6 +1097,16 @@
         werkzeugSetzen(knopf.getAttribute("data-werkzeug"));
       });
     });
+
+  document.getElementById("schnell-stift").addEventListener("click", function () {
+    werkzeugSetzen("stift");
+  });
+  document.getElementById("schnell-radierer").addEventListener("click", function () {
+    werkzeugSetzen("radierer");
+  });
+  document.getElementById("schnell-zurueck").addEventListener("click", function () {
+    document.getElementById("zurueck").click();
+  });
 
   document.getElementById("zurueck").addEventListener("click", function () {
     if (!verlauf.length) {
