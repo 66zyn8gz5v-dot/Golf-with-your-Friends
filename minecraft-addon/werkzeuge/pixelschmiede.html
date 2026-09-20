@@ -236,46 +236,20 @@
     border-top: 1px solid var(--linie);
   }
 
-  .radzeile {
-    display: flex;
-    gap: 14px;
-    align-items: center;
-    flex-wrap: wrap;
+  .farbraster {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 4px;
   }
-
-  #farbrad {
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    touch-action: none;
-    cursor: crosshair;
-    flex: none;
-  }
-
-  .probe {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    min-width: 96px;
-    flex: 1 1 96px;
-  }
-  .probe .klecks {
-    height: 44px;
+  .farbraster button {
+    aspect-ratio: 1;
+    padding: 0;
     border: 1px solid var(--linie);
-    border-radius: 3px;
-    background: var(--gewaehlt, #888);
+    border-radius: 2px;
+    cursor: pointer;
   }
-  .probe .wert {
-    font-family: "IBM Plex Mono", ui-monospace, monospace;
-    font-size: 12px;
-    color: var(--schrift-leise);
-    text-align: center;
-  }
-
-  input[type="range"] {
-    width: 100%;
-    accent-color: var(--bronze);
-    margin: 12px 0 0;
+  .farbraster button:hover {
+    border-color: var(--schrift);
   }
 
   textarea {
@@ -429,25 +403,15 @@
         </p>
 
         <div class="mischplatz">
-          <h2>Eigene Farbe mischen</h2>
-          <div class="radzeile">
-            <canvas id="farbrad" width="300" height="300"
-                    aria-label="Farbrad: außen kräftig, innen blass"></canvas>
-            <div class="probe">
-              <div class="klecks" id="klecks"></div>
-              <div class="wert" id="hexwert">#8A6228</div>
-            </div>
-          </div>
-          <label class="feld" for="helligkeit" style="margin-top:12px">Helligkeit</label>
-          <input type="range" id="helligkeit" min="5" max="100" value="70"
-                 aria-label="Helligkeit">
+          <h2>Mehr Farben</h2>
+          <div class="farbraster" id="farbraster"></div>
           <div class="knopfreihe" style="margin-top:12px">
-            <button type="button" id="farbe-hinzu">Farbe behalten</button>
-            <button type="button" id="farbe-weg">Entfernen</button>
+            <button type="button" id="farbe-weg">Farbe entfernen</button>
           </div>
           <p class="hinweis">
-            Behaltene Farben bleiben auch nach dem Schließen da. Entfernen wirft die
-            gerade gewählte eigene Farbe weg — die Grundfarben bleiben immer.
+            Eine Farbe antippen, und sie wandert nach oben zu deinen Farben — dort
+            bleibt sie auch nach dem Schließen. <strong>Farbe entfernen</strong> wirft
+            die gerade gewählte wieder weg; die Grundfarben bleiben immer.
           </p>
         </div>
       </section>
@@ -836,14 +800,19 @@
     feldZeichnen();
   });
 
-  // --- Farbrad ---------------------------------------------------------
-  // Winkel ist der Farbton, Abstand zur Mitte die Kraft der Farbe, der
-  // Regler darunter die Helligkeit. Zusammen erreicht man damit jede Farbe.
-  var rad = document.getElementById("farbrad");
-  var radStift = rad.getContext("2d");
-  var reglerHelligkeit = document.getElementById("helligkeit");
-  var gewaehlt = { ton: 32, kraft: 0.72, helligkeit: 0.7 };
-  var radBild = null;
+  // --- Farbraster ------------------------------------------------------
+  // Feste Auswahl statt stufenlosem Rad: Bei 16x16 arbeitet man mit einer
+  // Handvoll Farben. Zu viele aehnliche Toene machen ein Pixelbild unruhig,
+  // und auf dem Tablet trifft man ein festes Feld leichter als einen Punkt.
+  var TOENE = [0, 28, 50, 95, 170, 210, 262, 315];
+  var STUFEN = [
+    [0.90, 0.32],   // sehr dunkel
+    [0.85, 0.52],   // dunkel
+    [0.80, 0.74],   // mittel
+    [0.55, 0.92],   // hell
+    [0.25, 1.00]    // fast weiss
+  ];
+  var GRAUSTUFEN = [12, 68, 130, 190, 245];
 
   function hsvZuRgb(ton, kraft, hell) {
     var c = hell * kraft;
@@ -863,103 +832,14 @@
     ];
   }
 
-  function alsHex(f) {
-    return "#" + [f[0], f[1], f[2]].map(function (z) {
-      return ("0" + z.toString(16)).slice(-2).toUpperCase();
-    }).join("");
-  }
-
-  function radMalen() {
-    var g = rad.width, m = g / 2;
-    var daten = radStift.createImageData(g, g);
-    var p = daten.data;
-    for (var y = 0; y < g; y++) {
-      for (var x = 0; x < g; x++) {
-        var dx = x - m, dy = y - m;
-        var abstand = Math.sqrt(dx * dx + dy * dy);
-        var i = (y * g + x) * 4;
-        if (abstand > m - 1) { p[i + 3] = 0; continue; }
-        var winkel = Math.atan2(dy, dx) * 180 / Math.PI;
-        if (winkel < 0) winkel += 360;
-        var farbe = hsvZuRgb(winkel, Math.min(1, abstand / (m - 2)), gewaehlt.helligkeit);
-        p[i] = farbe[0]; p[i + 1] = farbe[1]; p[i + 2] = farbe[2];
-        p[i + 3] = 255;
-      }
-    }
-    radBild = daten;
-    radZeigen();
-  }
-
-  function radZeigen() {
-    if (!radBild) return;
-    radStift.putImageData(radBild, 0, 0);
-    var g = rad.width, m = g / 2;
-    var abstand = gewaehlt.kraft * (m - 2);
-    var bogen = gewaehlt.ton * Math.PI / 180;
-    var x = m + Math.cos(bogen) * abstand;
-    var y = m + Math.sin(bogen) * abstand;
-    radStift.beginPath();
-    radStift.arc(x, y, 11, 0, Math.PI * 2);
-    radStift.strokeStyle = "#ffffff";
-    radStift.lineWidth = 5;
-    radStift.stroke();
-    radStift.strokeStyle = "#000000";
-    radStift.lineWidth = 2;
-    radStift.stroke();
-  }
-
-  function gewaehlteFarbe() {
-    return hsvZuRgb(gewaehlt.ton, gewaehlt.kraft, gewaehlt.helligkeit);
-  }
-
-  function probeZeigen() {
-    var f = gewaehlteFarbe();
-    document.getElementById("klecks").style.setProperty("--gewaehlt", alsHex(f));
-    document.getElementById("hexwert").textContent = alsHex(f);
-  }
-
-  function radAntippen(e) {
-    var rahmen = rad.getBoundingClientRect();
-    var m = rahmen.width / 2;
-    var dx = e.clientX - rahmen.left - m;
-    var dy = e.clientY - rahmen.top - m;
-    var abstand = Math.sqrt(dx * dx + dy * dy);
-    var winkel = Math.atan2(dy, dx) * 180 / Math.PI;
-    if (winkel < 0) winkel += 360;
-    gewaehlt.ton = winkel;
-    gewaehlt.kraft = Math.min(1, abstand / m);
-    radZeigen();
-    probeZeigen();
-  }
-
-  var amRad = false;
-  rad.addEventListener("pointerdown", function (e) {
-    e.preventDefault();
-    amRad = true;
-    rad.setPointerCapture(e.pointerId);
-    radAntippen(e);
-  });
-  rad.addEventListener("pointermove", function (e) {
-    if (amRad) { e.preventDefault(); radAntippen(e); }
-  });
-  rad.addEventListener("pointerup", function () { amRad = false; });
-  rad.addEventListener("pointercancel", function () { amRad = false; });
-
-  reglerHelligkeit.addEventListener("input", function () {
-    gewaehlt.helligkeit = Number(this.value) / 100;
-    radMalen();
-    probeZeigen();
-  });
-
-  document.getElementById("farbe-hinzu").addEventListener("click", function () {
-    var f = gewaehlteFarbe();
+  function farbeAufnehmen(rgb) {
     for (var i = 0; i < palette.length; i++) {
       var v = palette[i].farbe;
-      if (v[3] !== 0 && v[0] === f[0] && v[1] === f[1] && v[2] === f[2]) {
+      if (v[3] !== 0 && v[0] === rgb[0] && v[1] === rgb[1] && v[2] === rgb[2]) {
         aktuellesZeichen = palette[i].zeichen;
         werkzeugSetzen("stift");
         paletteAufbauen();
-        meldung("Die Farbe gibt es schon — Zeichen „" + palette[i].zeichen + "“.");
+        meldung("Farbe „" + palette[i].zeichen + "“ ausgewählt.");
         return;
       }
     }
@@ -971,13 +851,13 @@
       if (!belegt[FREIE_ZEICHEN[j]]) { zeichen = FREIE_ZEICHEN[j]; break; }
     }
     if (!zeichen) {
-      meldung("Kein freies Zeichen mehr übrig.", "fehler");
+      meldung("Kein freies Zeichen mehr übrig — erst eine Farbe entfernen.", "fehler");
       return;
     }
 
     palette.push({
       zeichen: zeichen,
-      farbe: [f[0], f[1], f[2], 255],
+      farbe: [rgb[0], rgb[1], rgb[2], 255],
       name: "eigene Farbe",
       eigen: true
     });
@@ -985,8 +865,30 @@
     werkzeugSetzen("stift");
     paletteAufbauen();
     sichern();
-    meldung("Behalten als Zeichen „" + zeichen + "“.");
-  });
+    meldung("Oben aufgenommen als Zeichen „" + zeichen + "“.");
+  }
+
+  function rasterAufbauen() {
+    var behaelter = document.getElementById("farbraster");
+    behaelter.textContent = "";
+
+    function feld(rgb) {
+      var knopf = document.createElement("button");
+      knopf.type = "button";
+      knopf.style.background = "rgb(" + rgb.join(",") + ")";
+      knopf.title = "rgb(" + rgb.join(", ") + ")";
+      knopf.setAttribute("aria-label", "Farbe rgb " + rgb.join(" "));
+      knopf.addEventListener("click", function () { farbeAufnehmen(rgb); });
+      behaelter.appendChild(knopf);
+    }
+
+    TOENE.forEach(function (ton) {
+      STUFEN.forEach(function (stufe) {
+        feld(hsvZuRgb(ton, stufe[0], stufe[1]));
+      });
+    });
+    GRAUSTUFEN.forEach(function (wert) { feld([wert, wert, wert]); });
+  }
 
   document.getElementById("farbe-weg").addEventListener("click", function () {
     var treffer = -1;
@@ -1133,8 +1035,7 @@
     });
   }
 
-  radMalen();
-  probeZeigen();
+  rasterAufbauen();
   paletteAufbauen();
   karteUebernehmen(stand && stand.bild ? stand.bild.slice() : VORLAGEN.sternenstaub.slice());
   bereit = true;
