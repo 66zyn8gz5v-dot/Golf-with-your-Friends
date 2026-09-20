@@ -265,6 +265,72 @@
   }
   .graureihe button:hover { border-color: var(--schrift); }
 
+  .speicherzeile {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .speicherzeile input {
+    flex: 1 1 160px;
+    min-width: 0;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--schrift);
+    background: var(--stein-tief);
+    border: 1px solid var(--linie);
+    border-radius: 3px;
+    padding: 7px 10px;
+  }
+  .speicherzeile input:focus-visible {
+    outline: 2px solid var(--bronze);
+    outline-offset: 2px;
+  }
+
+  .werke {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(124px, 1fr));
+    gap: 12px;
+  }
+  .werk {
+    border: 1px solid var(--linie);
+    border-radius: 3px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: var(--stein-tief);
+  }
+  .werk .bildfeld {
+    display: flex;
+    justify-content: center;
+    background:
+      repeating-conic-gradient(var(--karo-a) 0% 25%, var(--karo-b) 0% 50%) 0 0 / 10px 10px;
+    border-radius: 2px;
+    padding: 6px;
+  }
+  .werk canvas { cursor: pointer; }
+  .werk .name {
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+  .werk .masse {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 11px;
+    color: var(--schrift-leise);
+    text-align: center;
+  }
+  .werk .knopfreihe { justify-content: center; }
+  .werk button { font-size: 13px; padding: 5px 9px; }
+
+  .leer {
+    color: var(--schrift-leise);
+    font-size: 14px;
+    margin: 0;
+  }
+
   .feinbereich {
     margin-top: 14px;
     padding-top: 14px;
@@ -384,7 +450,21 @@
       Texturen für das Sternenpaket malen. Jedes Feld ist ein Pixel, jede Farbe hat
       ein Zeichen — unten fällt genau der Text heraus, der ins Projekt gehört.
     </p>
+    <div class="knopfreihe" style="margin-top:14px">
+      <button type="button" id="sammlung-auf" aria-expanded="false"
+              aria-controls="sammlung">Sammlung</button>
+    </div>
   </header>
+
+  <section class="tafel t-sammlung" id="sammlung" hidden style="margin-bottom:20px">
+    <h2>Deine Sammlung</h2>
+    <div class="speicherzeile">
+      <input type="text" id="werkname" placeholder="Name, zum Beispiel Speer"
+             aria-label="Name für dieses Werk" maxlength="40">
+      <button type="button" id="werk-speichern">Was im Malfeld ist, hier ablegen</button>
+    </div>
+    <div class="werke" id="werke"></div>
+  </section>
 
   <div class="werkbank">
     <div class="spalte">
@@ -397,6 +477,8 @@
           <li>Im <strong>Malfeld</strong> ziehen. Danebengegangen? <strong>Rückgängig</strong>.</li>
           <li>Unten bei <strong>Zum Verschicken</strong> auf
             <strong>Alles markieren</strong>, kopieren, Claude schicken.</li>
+          <li>Bevor du etwas Neues anfängst: oben auf <strong>Sammlung</strong>,
+            Namen eintippen, ablegen. Sonst überschreibt das nächste Bild dieses hier.</li>
         </ol>
       </section>
 
@@ -1239,6 +1321,181 @@
     }
   });
 
+
+  // --- Sammlung --------------------------------------------------------
+  // Der Malplatz haelt immer nur ein Bild. Ohne Ablage ist jedes Werk weg,
+  // sobald am naechsten angefangen wird. Jedes Werk bringt seine eigenen
+  // Farben mit, sonst fehlen sie beim Oeffnen, falls sie inzwischen aus der
+  // Palette entfernt wurden.
+  var SAMMLUNG_SCHLUESSEL = "pixelschmiede.sammlung";
+  var sammlung = [];
+
+  function sammlungLesen() {
+    try {
+      var roh = window.localStorage.getItem(SAMMLUNG_SCHLUESSEL);
+      var liste = roh ? JSON.parse(roh) : [];
+      return Array.isArray(liste) ? liste : [];
+    } catch (fehler) {
+      return [];
+    }
+  }
+
+  function sammlungSchreiben() {
+    try {
+      window.localStorage.setItem(SAMMLUNG_SCHLUESSEL, JSON.stringify(sammlung));
+      return true;
+    } catch (fehler) {
+      meldung("Der Speicher des Browsers ist voll — älteres Werk löschen.", "fehler");
+      return false;
+    }
+  }
+
+  function benutzteFarben(bild) {
+    var drin = {};
+    bild.forEach(function (zeile) {
+      for (var i = 0; i < zeile.length; i++) drin[zeile[i]] = true;
+    });
+    return palette.filter(function (e) { return drin[e.zeichen]; })
+      .map(function (e) { return { zeichen: e.zeichen, farbe: e.farbe, eigen: !!e.eigen }; });
+  }
+
+  function werkVorschau(werk, faktor) {
+    var nachschlag = {};
+    werk.farben.forEach(function (e) { nachschlag[e.zeichen] = e.farbe; });
+    var hoehe = werk.bild.length, breite = werk.bild[0].length;
+    var flaeche = document.createElement("canvas");
+    flaeche.width = breite * faktor;
+    flaeche.height = hoehe * faktor;
+    var s = flaeche.getContext("2d");
+    for (var y = 0; y < hoehe; y++) {
+      for (var x = 0; x < breite; x++) {
+        var farbe = nachschlag[werk.bild[y][x]];
+        if (farbe && farbe[3] !== 0) {
+          s.fillStyle = alsCss(farbe);
+          s.fillRect(x * faktor, y * faktor, faktor, faktor);
+        }
+      }
+    }
+    return flaeche;
+  }
+
+  function sammlungZeigen() {
+    var behaelter = document.getElementById("werke");
+    behaelter.textContent = "";
+    document.getElementById("sammlung-auf").textContent =
+      sammlung.length ? "Sammlung (" + sammlung.length + ")" : "Sammlung";
+
+    if (!sammlung.length) {
+      var leer = document.createElement("p");
+      leer.className = "leer";
+      leer.textContent = "Noch nichts abgelegt. Male etwas, gib ihm oben einen Namen "
+        + "und leg es hier ab — dann kannst du jederzeit zurück.";
+      behaelter.appendChild(leer);
+      return;
+    }
+
+    sammlung.forEach(function (werk, nummer) {
+      var karte = document.createElement("div");
+      karte.className = "werk";
+
+      var bildfeld = document.createElement("div");
+      bildfeld.className = "bildfeld";
+      var faktor = Math.max(1, Math.floor(96 / Math.max(werk.bild[0].length, werk.bild.length)));
+      var flaeche = werkVorschau(werk, faktor);
+      flaeche.title = "Öffnen";
+      flaeche.addEventListener("click", function () { werkOeffnen(nummer); });
+      bildfeld.appendChild(flaeche);
+      karte.appendChild(bildfeld);
+
+      var name = document.createElement("div");
+      name.className = "name";
+      name.textContent = werk.name;
+      karte.appendChild(name);
+
+      var masse = document.createElement("div");
+      masse.className = "masse";
+      masse.textContent = werk.bild[0].length + " × " + werk.bild.length;
+      karte.appendChild(masse);
+
+      var reihe = document.createElement("div");
+      reihe.className = "knopfreihe";
+      var auf = document.createElement("button");
+      auf.type = "button";
+      auf.textContent = "Öffnen";
+      auf.addEventListener("click", function () { werkOeffnen(nummer); });
+      var weg = document.createElement("button");
+      weg.type = "button";
+      weg.textContent = "Löschen";
+      weg.addEventListener("click", function () { werkLoeschen(nummer); });
+      reihe.appendChild(auf);
+      reihe.appendChild(weg);
+      karte.appendChild(reihe);
+
+      behaelter.appendChild(karte);
+    });
+  }
+
+  function werkOeffnen(nummer) {
+    var werk = sammlung[nummer];
+    if (!werk) return;
+    // Farben nachtragen, die inzwischen fehlen.
+    var ergaenzt = 0;
+    werk.farben.forEach(function (e) {
+      for (var i = 0; i < palette.length; i++) {
+        if (palette[i].zeichen === e.zeichen) return;
+      }
+      palette.push({ zeichen: e.zeichen, farbe: e.farbe, name: "aus der Sammlung", eigen: true });
+      ergaenzt++;
+    });
+    paletteAufbauen();
+    karteUebernehmen(werk.bild.slice());
+    meldung("„" + werk.name + "“ geöffnet"
+      + (ergaenzt ? ", " + ergaenzt + " Farbe(n) zurückgeholt" : "") + ".");
+  }
+
+  function werkLoeschen(nummer) {
+    var werk = sammlung[nummer];
+    if (!werk) return;
+    sammlung.splice(nummer, 1);
+    sammlungSchreiben();
+    sammlungZeigen();
+    meldung("„" + werk.name + "“ gelöscht.");
+  }
+
+  document.getElementById("werk-speichern").addEventListener("click", function () {
+    var feldname = document.getElementById("werkname");
+    var name = feldname.value.trim() || ("Werk " + (sammlung.length + 1));
+
+    var werk = {
+      name: name,
+      bild: feld.slice(),
+      farben: benutzteFarben(feld)
+    };
+
+    // Gleicher Name ersetzt - sonst sammeln sich fuenf "Speer" an und
+    // niemand weiss, welcher der neue ist.
+    var vorhanden = -1;
+    for (var i = 0; i < sammlung.length; i++) {
+      if (sammlung[i].name === name) { vorhanden = i; break; }
+    }
+    if (vorhanden >= 0) sammlung[vorhanden] = werk;
+    else sammlung.push(werk);
+
+    if (sammlungSchreiben()) {
+      sammlungZeigen();
+      feldname.value = "";
+      meldung(vorhanden >= 0 ? "„" + name + "“ ersetzt." : "„" + name + "“ abgelegt.");
+    }
+  });
+
+  document.getElementById("sammlung-auf").addEventListener("click", function () {
+    var tafel = document.getElementById("sammlung");
+    var offen = tafel.hidden;
+    tafel.hidden = !offen;
+    this.setAttribute("aria-expanded", offen ? "true" : "false");
+    if (offen) tafel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  });
+
   // --- Sichern ---------------------------------------------------------
   // Der Speicher des Browsers kann fehlen oder voll sein, und er gehoert
   // nur zu diesem Geraet. Deshalb darf nichts davon abhaengen: geht es
@@ -1289,6 +1546,8 @@
     });
   }
 
+  sammlung = sammlungLesen();
+  sammlungZeigen();
   radZeichnen();
   graureiheAufbauen();
   paletteAufbauen();
