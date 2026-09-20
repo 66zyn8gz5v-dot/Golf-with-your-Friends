@@ -227,6 +227,11 @@
     border-radius: 1px;
   }
   .schnellleiste button { padding: 9px 13px; }
+  .jetztname {
+    font-size: 13px;
+    color: var(--schrift-leise);
+    min-width: 5.5em;
+  }
 
   .knopfreihe {
     display: flex;
@@ -586,6 +591,7 @@
         <div class="schnellleiste">
           <div class="jetzt" id="jetztfarbe" title="Farbe, mit der du gerade malst"
                aria-hidden="true"><span></span></div>
+          <span class="jetztname" id="jetztname"></span>
           <button type="button" id="schnell-stift" aria-pressed="true">Stift</button>
           <button type="button" id="schnell-radierer" aria-pressed="false">Radierer</button>
           <button type="button" id="schnell-zurueck">Rückgängig</button>
@@ -921,6 +927,7 @@
       if (eintrag.zeichen === aktuellesZeichen) {
         document.getElementById("jetztfarbe")
           .style.setProperty("--jetzt", alsCss(eintrag.farbe));
+        document.getElementById("jetztname").textContent = eintrag.name;
       }
       behaelter.appendChild(knopf);
     });
