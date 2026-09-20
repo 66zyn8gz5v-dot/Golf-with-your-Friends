@@ -6,16 +6,16 @@
       "bones": {
         "rightitem": {
           "position": [
-            0,
-            0,
-            0
+            "c.is_first_person ? -3.0 : 0.0",
+            "c.is_first_person ? 1.0 : 0.0",
+            "c.is_first_person ? 1.0 : 0.0"
           ],
           "rotation": [
-            90,
-            0,
-            0
+            "c.is_first_person ? 70.0 : 90.0",
+            "c.is_first_person ? 10.0 : 0.0",
+            "c.is_first_person ? -30.0 : 0.0"
           ],
-          "scale": 0.55
+          "scale": "c.is_first_person ? 0.85 : 0.65"
         }
       }
     }
