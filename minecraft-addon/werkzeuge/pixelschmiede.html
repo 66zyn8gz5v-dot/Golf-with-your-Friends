@@ -1,0 +1,871 @@
+<title>Pixelschmiede</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&family=Karla:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --stein: #E4E1DA;
+    --stein-tief: #D3CFC6;
+    --flaeche: #F6F4EF;
+    --linie: #C2BCB0;
+    --schrift: #22211E;
+    --schrift-leise: #6B655B;
+    --bronze: #8A6228;
+    --bronze-hell: #B5873C;
+    --warnung: #9B3B1F;
+    --raster: rgba(34, 33, 30, 0.14);
+    --karo-a: #ffffff;
+    --karo-b: #E2DED6;
+    --auf-bronze: #FFFFFF;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --stein: #1A1C1E;
+      --stein-tief: #131517;
+      --flaeche: #24262A;
+      --linie: #3A3D42;
+      --schrift: #E4E2DC;
+      --schrift-leise: #9A968E;
+      --bronze: #C99A4B;
+      --bronze-hell: #E0B463;
+      --warnung: #D97757;
+      --raster: rgba(228, 226, 220, 0.16);
+      --karo-a: #34373C;
+      --karo-b: #2A2D31;
+      --auf-bronze: #1A1C1E;
+    }
+  }
+  :root[data-theme="dark"] {
+    --stein: #1A1C1E;
+    --stein-tief: #131517;
+    --flaeche: #24262A;
+    --linie: #3A3D42;
+    --schrift: #E4E2DC;
+    --schrift-leise: #9A968E;
+    --bronze: #C99A4B;
+    --bronze-hell: #E0B463;
+    --warnung: #D97757;
+    --raster: rgba(228, 226, 220, 0.16);
+    --karo-a: #34373C;
+    --karo-b: #2A2D31;
+    --auf-bronze: #1A1C1E;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--stein);
+    color: var(--schrift);
+    font-family: "Karla", system-ui, -apple-system, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .huelle {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding-inline: 16px;
+    padding-block: 24px 48px;
+  }
+
+  header { margin-bottom: 20px; }
+
+  h1 {
+    font-family: "Cinzel", Georgia, serif;
+    font-weight: 600;
+    font-size: clamp(26px, 5vw, 38px);
+    letter-spacing: 0.02em;
+    margin: 0 0 4px;
+    text-wrap: balance;
+  }
+
+  .untertitel {
+    margin: 0;
+    color: var(--schrift-leise);
+    max-width: 62ch;
+  }
+
+  .werkbank {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 260px;
+    gap: 20px;
+    align-items: start;
+  }
+  @media (max-width: 760px) {
+    .werkbank { grid-template-columns: minmax(0, 1fr); }
+  }
+
+  .tafel {
+    background: var(--flaeche);
+    border: 1px solid var(--linie);
+    border-radius: 4px;
+    padding: 16px;
+  }
+
+  .tafel + .tafel { margin-top: 16px; }
+
+  h2 {
+    font-family: "Cinzel", Georgia, serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--schrift-leise);
+    margin: 0 0 12px;
+  }
+
+  #leinwandfeld {
+    display: flex;
+    justify-content: center;
+    background:
+      repeating-conic-gradient(var(--karo-a) 0% 25%, var(--karo-b) 0% 50%) 0 0 / 16px 16px;
+    border: 1px solid var(--linie);
+    border-radius: 2px;
+    overflow-x: auto;
+  }
+
+  canvas {
+    display: block;
+    image-rendering: pixelated;
+    touch-action: none;
+    cursor: crosshair;
+    max-width: 100%;
+  }
+
+  .knopfreihe {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  button, select {
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--schrift);
+    background: var(--stein-tief);
+    border: 1px solid var(--linie);
+    border-radius: 3px;
+    padding: 7px 12px;
+    cursor: pointer;
+  }
+  button:hover, select:hover { border-color: var(--bronze); }
+  button:focus-visible, select:focus-visible,
+  .farbknopf:focus-visible, textarea:focus-visible {
+    outline: 2px solid var(--bronze);
+    outline-offset: 2px;
+  }
+  button[aria-pressed="true"] {
+    background: var(--bronze);
+    border-color: var(--bronze);
+    color: var(--auf-bronze);
+  }
+
+  .palette {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(54px, 1fr));
+    gap: 6px;
+  }
+
+  .farbknopf {
+    aspect-ratio: 1;
+    border: 2px solid var(--linie);
+    border-radius: 3px;
+    padding: 0;
+    position: relative;
+    background-color: var(--f);
+    background-image:
+      repeating-conic-gradient(var(--karo-a) 0% 25%, var(--karo-b) 0% 50%);
+    background-size: 10px 10px;
+    cursor: pointer;
+  }
+  .farbknopf .deckel {
+    position: absolute;
+    inset: 0;
+    background: var(--f);
+    border-radius: 1px;
+  }
+  .farbknopf .zeichen {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--lesbar);
+    text-shadow: none;
+  }
+  .farbknopf[aria-pressed="true"] {
+    border-color: var(--bronze);
+    box-shadow: 0 0 0 2px var(--bronze-hell);
+  }
+
+  label.feld {
+    display: block;
+    font-size: 13px;
+    color: var(--schrift-leise);
+    margin-bottom: 6px;
+  }
+
+  .neue-farbe {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-top: 12px;
+  }
+  .neue-farbe input[type="color"] {
+    width: 44px;
+    height: 34px;
+    padding: 2px;
+    border: 1px solid var(--linie);
+    border-radius: 3px;
+    background: var(--stein-tief);
+    cursor: pointer;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 200px;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--schrift);
+    background: var(--stein-tief);
+    border: 1px solid var(--linie);
+    border-radius: 3px;
+    padding: 10px;
+    resize: vertical;
+    white-space: pre;
+    overflow-wrap: normal;
+    overflow-x: auto;
+  }
+
+  .vorschauzeile {
+    display: flex;
+    align-items: flex-end;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+  .vorschauzeile figure { margin: 0; }
+  .vorschauzeile figcaption {
+    font-size: 12px;
+    color: var(--schrift-leise);
+    margin-top: 6px;
+  }
+  .vorschauzeile canvas {
+    border: 1px solid var(--linie);
+    background:
+      repeating-conic-gradient(var(--karo-a) 0% 25%, var(--karo-b) 0% 50%) 0 0 / 8px 8px;
+    cursor: default;
+  }
+
+  .hinweis {
+    font-size: 13px;
+    color: var(--schrift-leise);
+    margin: 10px 0 0;
+  }
+  .hinweis strong { color: var(--schrift); font-weight: 500; }
+
+  .meldung {
+    font-size: 13px;
+    margin-top: 8px;
+    min-height: 1.4em;
+    color: var(--bronze);
+  }
+  .meldung[data-art="fehler"] { color: var(--warnung); }
+
+  footer {
+    margin-top: 28px;
+    padding-top: 16px;
+    border-top: 1px solid var(--linie);
+    font-size: 13px;
+    color: var(--schrift-leise);
+  }
+  code {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.92em;
+    background: var(--stein-tief);
+    padding: 1px 4px;
+    border-radius: 2px;
+  }
+</style>
+
+<div class="huelle">
+  <header>
+    <h1>Pixelschmiede</h1>
+    <p class="untertitel">
+      Texturen für das Sternenpaket malen. Jedes Feld ist ein Pixel, jede Farbe hat
+      ein Zeichen — unten fällt genau der Text heraus, der ins Projekt gehört.
+    </p>
+  </header>
+
+  <div class="werkbank">
+    <div>
+      <section class="tafel">
+        <h2>Malfeld</h2>
+        <div id="leinwandfeld">
+          <canvas id="leinwand" width="640" height="640" aria-label="Malfeld"></canvas>
+        </div>
+        <p class="hinweis" id="groessenzeile"></p>
+      </section>
+
+      <section class="tafel">
+        <h2>So sieht es im Spiel aus</h2>
+        <div class="vorschauzeile">
+          <figure>
+            <canvas id="vorschau1"></canvas>
+            <figcaption>Originalgröße</figcaption>
+          </figure>
+          <figure>
+            <canvas id="vorschau4"></canvas>
+            <figcaption>Vierfach</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="tafel">
+        <h2>Zum Verschicken</h2>
+        <p class="hinweis">
+          Diesen Text markieren, kopieren und Claude in den Chat schicken. Du kannst
+          hier auch eine alte Zeichenkarte einfügen und auf <strong>Übernehmen</strong>
+          tippen, um weiterzumalen.
+        </p>
+        <textarea id="ausgabe" spellcheck="false" aria-label="Zeichenkarte"></textarea>
+        <div class="knopfreihe" style="margin-top:10px">
+          <button type="button" id="uebernehmen">Übernehmen</button>
+          <button type="button" id="markieren">Alles markieren</button>
+        </div>
+        <p class="meldung" id="meldung" role="status"></p>
+      </section>
+    </div>
+
+    <div>
+      <section class="tafel">
+        <h2>Werkzeug</h2>
+        <div class="knopfreihe" id="werkzeuge">
+          <button type="button" data-werkzeug="stift" aria-pressed="true">Stift</button>
+          <button type="button" data-werkzeug="radierer" aria-pressed="false">Radierer</button>
+          <button type="button" data-werkzeug="fuellen" aria-pressed="false">Füllen</button>
+          <button type="button" data-werkzeug="pipette" aria-pressed="false">Pipette</button>
+        </div>
+        <div class="knopfreihe" style="margin-top:10px">
+          <button type="button" id="zurueck">Rückgängig</button>
+          <button type="button" id="raster" aria-pressed="true">Raster</button>
+        </div>
+      </section>
+
+      <section class="tafel">
+        <h2>Farben</h2>
+        <div class="palette" id="palette"></div>
+        <div class="neue-farbe">
+          <input type="color" id="farbwahl" value="#8A6228" aria-label="Neue Farbe wählen">
+          <button type="button" id="farbe-hinzu">Farbe aufnehmen</button>
+        </div>
+        <p class="hinweis">
+          Das Karo ist durchsichtig — damit radierst du auch. Neue Farben bekommen
+          automatisch ein freies Zeichen.
+        </p>
+      </section>
+
+      <section class="tafel">
+        <h2>Vorlage</h2>
+        <label class="feld" for="vorlage">Womit anfangen</label>
+        <select id="vorlage">
+          <option value="leer16">Leer, 16 × 16 (Gegenstand)</option>
+          <option value="sternenstaub">Sternenstaub</option>
+          <option value="sternenklinge">Sternenklinge</option>
+          <option value="leer32">Leer, 32 × 32 (großer Gegenstand)</option>
+          <option value="leer64">Leer, 64 × 32 (Mob-Haut)</option>
+        </select>
+        <div class="knopfreihe" style="margin-top:10px">
+          <button type="button" id="laden">Laden</button>
+        </div>
+        <p class="hinweis">
+          <strong>Achtung:</strong> Laden wirft weg, was gerade im Malfeld steht.
+        </p>
+      </section>
+    </div>
+  </div>
+
+  <footer>
+    <p style="margin:0">
+      Gegenstände in Minecraft sind <code>16 × 16</code> Pixel groß. Mehr Pixel sehen
+      im Spiel nicht besser aus — sie fallen aus dem Stil, weil alles andere grob
+      bleibt. Die Mittelalter-Palette ist schon geladen: Stahl, Bronze, Leder,
+      dunkle Umrisse.
+    </p>
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // --- Palette ---------------------------------------------------------
+  // Zeichen -> Farbe. Genau dieselben Werte wie in texturen_erzeugen.py,
+  // damit Gemaltes und Gebautes dieselbe Welt treffen.
+  var palette = [];
+  var GRUNDPALETTE = [
+    [".", [0, 0, 0, 0], "durchsichtig"],
+    ["k", [44, 46, 58, 255], "Umriss"],
+    ["w", [228, 233, 240, 255], "Stahl hell"],
+    ["s", [168, 178, 194, 255], "Stahl Schatten"],
+    ["d", [104, 114, 134, 255], "Stahl tief"],
+    ["g", [206, 158, 66, 255], "Bronze hell"],
+    ["e", [138, 98, 38, 255], "Bronze dunkel"],
+    ["l", [146, 98, 56, 255], "Leder hell"],
+    ["m", [94, 60, 34, 255], "Leder dunkel"],
+    ["a", [255, 246, 214, 255], "Sternenlicht"],
+    ["b", [240, 190, 92, 255], "Gold"],
+    ["c", [176, 122, 44, 255], "Bernstein"],
+    ["F", [104, 116, 74, 255], "Fell hell"],
+    ["f", [78, 90, 56, 255], "Fell"],
+    ["n", [52, 62, 38, 255], "Fell dunkel"],
+    ["h", [46, 38, 30, 255], "Huf"]
+  ];
+
+  var FREIE_ZEICHEN = "opqrtuvxyzABCDEHIJKLMNOPQRSTUVWXYZ0123456789";
+
+  // --- Vorlagen --------------------------------------------------------
+  var VORLAGEN = {
+    sternenstaub: [
+      "................",
+      "....a......a....",
+      "...aba....aba...",
+      "....a......a....",
+      "................",
+      "......kkkk......",
+      ".....kbccbk.....",
+      "....kbcaacbk....",
+      "...kbcaaaacbk...",
+      "...kbcaaaacbk...",
+      "....kbcaacbk....",
+      ".....kbccbk.....",
+      "......kkkk......",
+      "...a........a...",
+      "..aba......aba..",
+      "...a........a..."
+    ],
+    sternenklinge: [
+      ".............kwd",
+      "............kwsd",
+      "...........kwsd.",
+      "..........kwsd..",
+      ".........kwsd...",
+      "........kwsd....",
+      ".......kwsd.....",
+      "......kwsd......",
+      ".....kwsd.......",
+      ".eegggkwsdgggee.",
+      "..eekklmlkkee...",
+      "...klmlk........",
+      "..klmlk.........",
+      ".klmlk..........",
+      "kgglgk..........",
+      ".kggk..........."
+    ]
+  };
+
+  function leereKarte(breite, hoehe) {
+    var karte = [];
+    for (var y = 0; y < hoehe; y++) {
+      karte.push(new Array(breite + 1).join("."));
+    }
+    return karte;
+  }
+
+  // --- Zustand ---------------------------------------------------------
+  var breite = 16, hoehe = 16;
+  var feld = [];                 // feld[y][x] = Zeichen
+  var aktuellesZeichen = "k";
+  var werkzeug = "stift";
+  var rasterAn = true;
+  var verlauf = [];              // fuer Rueckgaengig
+  var malt = false;
+
+  var leinwand = document.getElementById("leinwand");
+  var stift = leinwand.getContext("2d");
+  var v1 = document.getElementById("vorschau1");
+  var v4 = document.getElementById("vorschau4");
+  var ausgabe = document.getElementById("ausgabe");
+  var meldungsfeld = document.getElementById("meldung");
+
+  function farbeVon(zeichen) {
+    for (var i = 0; i < palette.length; i++) {
+      if (palette[i].zeichen === zeichen) return palette[i].farbe;
+    }
+    return [0, 0, 0, 0];
+  }
+
+  function alsCss(farbe) {
+    if (farbe[3] === 0) return "transparent";
+    return "rgba(" + farbe[0] + "," + farbe[1] + "," + farbe[2] + "," + (farbe[3] / 255) + ")";
+  }
+
+  // Heller Text auf dunklem Grund und umgekehrt - sonst ist das Zeichen
+  // auf dem Farbknopf nicht zu lesen.
+  function lesbareSchrift(farbe) {
+    if (farbe[3] === 0) return "var(--schrift)";
+    var helligkeit = (farbe[0] * 299 + farbe[1] * 587 + farbe[2] * 114) / 1000;
+    return helligkeit > 140 ? "#1A1C1E" : "#F6F4EF";
+  }
+
+  function meldung(text, art) {
+    meldungsfeld.textContent = text;
+    if (art) meldungsfeld.setAttribute("data-art", art);
+    else meldungsfeld.removeAttribute("data-art");
+  }
+
+  // --- Palette zeichnen ------------------------------------------------
+  function paletteAufbauen() {
+    var behaelter = document.getElementById("palette");
+    behaelter.textContent = "";
+    palette.forEach(function (eintrag) {
+      var knopf = document.createElement("button");
+      knopf.type = "button";
+      knopf.className = "farbknopf";
+      knopf.style.setProperty("--f", alsCss(eintrag.farbe));
+      knopf.style.setProperty("--lesbar", lesbareSchrift(eintrag.farbe));
+      knopf.setAttribute("aria-pressed", eintrag.zeichen === aktuellesZeichen ? "true" : "false");
+      knopf.title = eintrag.name + " (" + eintrag.zeichen + ")";
+
+      var deckel = document.createElement("span");
+      deckel.className = "deckel";
+      knopf.appendChild(deckel);
+
+      var zeichen = document.createElement("span");
+      zeichen.className = "zeichen";
+      zeichen.textContent = eintrag.zeichen;
+      knopf.appendChild(zeichen);
+
+      knopf.addEventListener("click", function () {
+        aktuellesZeichen = eintrag.zeichen;
+        werkzeugSetzen(werkzeug === "radierer" ? "stift" : werkzeug);
+        paletteAufbauen();
+      });
+      behaelter.appendChild(knopf);
+    });
+  }
+
+  // --- Malfeld zeichnen ------------------------------------------------
+  function feldZeichnen() {
+    var kante = Math.max(4, Math.floor(640 / Math.max(breite, hoehe)));
+    leinwand.width = breite * kante;
+    leinwand.height = hoehe * kante;
+    stift.clearRect(0, 0, leinwand.width, leinwand.height);
+
+    for (var y = 0; y < hoehe; y++) {
+      for (var x = 0; x < breite; x++) {
+        var farbe = farbeVon(feld[y][x]);
+        if (farbe[3] !== 0) {
+          stift.fillStyle = alsCss(farbe);
+          stift.fillRect(x * kante, y * kante, kante, kante);
+        }
+      }
+    }
+
+    if (rasterAn && kante >= 6) {
+      stift.strokeStyle = getComputedStyle(document.documentElement)
+        .getPropertyValue("--raster").trim() || "rgba(0,0,0,.15)";
+      stift.lineWidth = 1;
+      for (var i = 0; i <= breite; i++) {
+        stift.beginPath();
+        stift.moveTo(i * kante + 0.5, 0);
+        stift.lineTo(i * kante + 0.5, hoehe * kante);
+        stift.stroke();
+      }
+      for (var j = 0; j <= hoehe; j++) {
+        stift.beginPath();
+        stift.moveTo(0, j * kante + 0.5);
+        stift.lineTo(breite * kante, j * kante + 0.5);
+        stift.stroke();
+      }
+    }
+
+    vorschauZeichnen();
+    ausgabeSchreiben();
+    document.getElementById("groessenzeile").textContent =
+      breite + " × " + hoehe + " Pixel — ziehen zum Malen, auf dem Tablet mit dem Finger.";
+  }
+
+  function aufVorschau(ziel, faktor) {
+    ziel.width = breite * faktor;
+    ziel.height = hoehe * faktor;
+    var s = ziel.getContext("2d");
+    s.clearRect(0, 0, ziel.width, ziel.height);
+    for (var y = 0; y < hoehe; y++) {
+      for (var x = 0; x < breite; x++) {
+        var farbe = farbeVon(feld[y][x]);
+        if (farbe[3] !== 0) {
+          s.fillStyle = alsCss(farbe);
+          s.fillRect(x * faktor, y * faktor, faktor, faktor);
+        }
+      }
+    }
+  }
+
+  function vorschauZeichnen() {
+    aufVorschau(v1, 1);
+    aufVorschau(v4, 4);
+  }
+
+  // --- Ausgabe ---------------------------------------------------------
+  function ausgabeSchreiben() {
+    // Nur die Farben ausgeben, die wirklich vorkommen - eine Palette mit
+    // dreissig ungenutzten Eintraegen hilft beim Einbauen niemandem.
+    var benutzt = {};
+    for (var y = 0; y < hoehe; y++) {
+      for (var x = 0; x < breite; x++) benutzt[feld[y][x]] = true;
+    }
+
+    var zeilen = ["FARBEN = {"];
+    palette.forEach(function (eintrag) {
+      if (!benutzt[eintrag.zeichen]) return;
+      var f = eintrag.farbe;
+      zeilen.push('    "' + eintrag.zeichen + '": (' + f[0] + ", " + f[1] + ", " +
+        f[2] + ", " + f[3] + "),   # " + eintrag.name);
+    });
+    zeilen.push("}");
+    zeilen.push("");
+    zeilen.push("BILD = [");
+    for (var z = 0; z < hoehe; z++) {
+      zeilen.push('    "' + feld[z] + '",');
+    }
+    zeilen.push("]");
+    ausgabe.value = zeilen.join("\n");
+  }
+
+  // --- Malen -----------------------------------------------------------
+  function merken() {
+    verlauf.push(feld.slice());
+    if (verlauf.length > 60) verlauf.shift();
+  }
+
+  function setzen(x, y, zeichen) {
+    if (x < 0 || y < 0 || x >= breite || y >= hoehe) return false;
+    if (feld[y][x] === zeichen) return false;
+    var zeile = feld[y];
+    feld[y] = zeile.substring(0, x) + zeichen + zeile.substring(x + 1);
+    return true;
+  }
+
+  function fuellen(x, y, neu) {
+    var alt = feld[y][x];
+    if (alt === neu) return;
+    var stapel = [[x, y]];
+    var gesehen = {};
+    while (stapel.length) {
+      var p = stapel.pop();
+      var px = p[0], py = p[1];
+      if (px < 0 || py < 0 || px >= breite || py >= hoehe) continue;
+      var schluessel = px + "," + py;
+      if (gesehen[schluessel]) continue;
+      gesehen[schluessel] = true;
+      if (feld[py][px] !== alt) continue;
+      setzen(px, py, neu);
+      stapel.push([px + 1, py], [px - 1, py], [px, py + 1], [px, py - 1]);
+    }
+  }
+
+  function punktAus(ereignis) {
+    var rahmen = leinwand.getBoundingClientRect();
+    var kante = rahmen.width / breite;
+    return {
+      x: Math.floor((ereignis.clientX - rahmen.left) / kante),
+      y: Math.floor((ereignis.clientY - rahmen.top) / kante)
+    };
+  }
+
+  function anwenden(ereignis, istBeginn) {
+    var p = punktAus(ereignis);
+    if (p.x < 0 || p.y < 0 || p.x >= breite || p.y >= hoehe) return;
+
+    if (werkzeug === "pipette") {
+      aktuellesZeichen = feld[p.y][p.x];
+      paletteAufbauen();
+      meldung("Farbe „" + aktuellesZeichen + "“ aufgenommen.");
+      return;
+    }
+    if (werkzeug === "fuellen") {
+      if (!istBeginn) return;
+      merken();
+      fuellen(p.x, p.y, aktuellesZeichen);
+      feldZeichnen();
+      return;
+    }
+    if (istBeginn) merken();
+    if (setzen(p.x, p.y, werkzeug === "radierer" ? "." : aktuellesZeichen)) {
+      feldZeichnen();
+    }
+  }
+
+  leinwand.addEventListener("pointerdown", function (e) {
+    e.preventDefault();
+    malt = true;
+    leinwand.setPointerCapture(e.pointerId);
+    anwenden(e, true);
+  });
+  leinwand.addEventListener("pointermove", function (e) {
+    if (!malt) return;
+    e.preventDefault();
+    anwenden(e, false);
+  });
+  function aufhoeren() { malt = false; }
+  leinwand.addEventListener("pointerup", aufhoeren);
+  leinwand.addEventListener("pointercancel", aufhoeren);
+  leinwand.addEventListener("pointerleave", aufhoeren);
+
+  // --- Werkzeuge -------------------------------------------------------
+  function werkzeugSetzen(neu) {
+    werkzeug = neu;
+    Array.prototype.forEach.call(
+      document.querySelectorAll("#werkzeuge button"),
+      function (knopf) {
+        knopf.setAttribute("aria-pressed",
+          knopf.getAttribute("data-werkzeug") === neu ? "true" : "false");
+      });
+  }
+
+  Array.prototype.forEach.call(
+    document.querySelectorAll("#werkzeuge button"),
+    function (knopf) {
+      knopf.addEventListener("click", function () {
+        werkzeugSetzen(knopf.getAttribute("data-werkzeug"));
+      });
+    });
+
+  document.getElementById("zurueck").addEventListener("click", function () {
+    if (!verlauf.length) {
+      meldung("Nichts mehr rückgängig zu machen.");
+      return;
+    }
+    feld = verlauf.pop();
+    feldZeichnen();
+    meldung("");
+  });
+
+  document.getElementById("raster").addEventListener("click", function () {
+    rasterAn = !rasterAn;
+    this.setAttribute("aria-pressed", rasterAn ? "true" : "false");
+    feldZeichnen();
+  });
+
+  // --- Neue Farbe ------------------------------------------------------
+  document.getElementById("farbe-hinzu").addEventListener("click", function () {
+    var hex = document.getElementById("farbwahl").value;
+    var r = parseInt(hex.substr(1, 2), 16);
+    var g = parseInt(hex.substr(3, 2), 16);
+    var b = parseInt(hex.substr(5, 2), 16);
+
+    for (var i = 0; i < palette.length; i++) {
+      var f = palette[i].farbe;
+      if (f[3] !== 0 && f[0] === r && f[1] === g && f[2] === b) {
+        aktuellesZeichen = palette[i].zeichen;
+        paletteAufbauen();
+        meldung("Die Farbe gibt es schon — Zeichen „" + palette[i].zeichen + "“.");
+        return;
+      }
+    }
+
+    var belegt = {};
+    palette.forEach(function (e) { belegt[e.zeichen] = true; });
+    var zeichen = null;
+    for (var j = 0; j < FREIE_ZEICHEN.length; j++) {
+      if (!belegt[FREIE_ZEICHEN[j]]) { zeichen = FREIE_ZEICHEN[j]; break; }
+    }
+    if (!zeichen) {
+      meldung("Kein freies Zeichen mehr übrig.", "fehler");
+      return;
+    }
+
+    palette.push({ zeichen: zeichen, farbe: [r, g, b, 255], name: "eigene Farbe" });
+    aktuellesZeichen = zeichen;
+    werkzeugSetzen("stift");
+    paletteAufbauen();
+    meldung("Aufgenommen als Zeichen „" + zeichen + "“.");
+  });
+
+  // --- Vorlage laden ---------------------------------------------------
+  function karteUebernehmen(karte) {
+    hoehe = karte.length;
+    breite = karte[0].length;
+    feld = karte.slice();
+    verlauf = [];
+    feldZeichnen();
+  }
+
+  document.getElementById("laden").addEventListener("click", function () {
+    var wahl = document.getElementById("vorlage").value;
+    if (wahl === "leer16") karteUebernehmen(leereKarte(16, 16));
+    else if (wahl === "leer32") karteUebernehmen(leereKarte(32, 32));
+    else if (wahl === "leer64") karteUebernehmen(leereKarte(64, 32));
+    else karteUebernehmen(VORLAGEN[wahl].slice());
+    meldung("Vorlage geladen.");
+  });
+
+  // --- Zeichenkarte einlesen -------------------------------------------
+  document.getElementById("uebernehmen").addEventListener("click", function () {
+    var text = ausgabe.value;
+
+    // Farben aus einem mitgelieferten FARBEN-Block nachtragen, damit
+    // fremde Zeichen nicht als Loch im Bild landen.
+    var farbMuster = /"(.)"\s*:\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/g;
+    var treffer, neueFarben = 0;
+    while ((treffer = farbMuster.exec(text)) !== null) {
+      var zeichen = treffer[1];
+      var vorhanden = false;
+      for (var i = 0; i < palette.length; i++) {
+        if (palette[i].zeichen === zeichen) { vorhanden = true; break; }
+      }
+      if (!vorhanden) {
+        palette.push({
+          zeichen: zeichen,
+          farbe: [+treffer[2], +treffer[3], +treffer[4], +treffer[5]],
+          name: "aus Text"
+        });
+        neueFarben++;
+      }
+    }
+
+    // Bildzeilen sind die Textzeilen in Anfuehrungszeichen, die alle gleich
+    // lang sind - der FARBEN-Block faellt dabei von selbst weg, weil seine
+    // Zeilen einen Doppelpunkt tragen.
+    var zeilen = [];
+    text.split("\n").forEach(function (roh) {
+      if (roh.indexOf(":") !== -1) return;
+      var m = roh.match(/"([^"]*)"/);
+      if (m && m[1].length > 0) zeilen.push(m[1]);
+    });
+
+    if (!zeilen.length) {
+      meldung("Darin steckt keine Zeichenkarte.", "fehler");
+      return;
+    }
+    var laenge = zeilen[0].length;
+    for (var z = 0; z < zeilen.length; z++) {
+      if (zeilen[z].length !== laenge) {
+        meldung("Zeile " + (z + 1) + " ist " + zeilen[z].length +
+          " Zeichen lang, die erste " + laenge + ". Alle müssen gleich sein.", "fehler");
+        return;
+      }
+    }
+
+    paletteAufbauen();
+    karteUebernehmen(zeilen);
+    meldung("Übernommen: " + laenge + " × " + zeilen.length + " Pixel" +
+      (neueFarben ? ", " + neueFarben + " neue Farbe(n)" : "") + ".");
+  });
+
+  document.getElementById("markieren").addEventListener("click", function () {
+    ausgabe.focus();
+    ausgabe.select();
+    meldung("Markiert — jetzt kopieren und in den Chat einfügen.");
+  });
+
+  // --- Start -----------------------------------------------------------
+  GRUNDPALETTE.forEach(function (e) {
+    palette.push({ zeichen: e[0], farbe: e[1], name: e[2] });
+  });
+  paletteAufbauen();
+  karteUebernehmen(VORLAGEN.sternenstaub.slice());
+})();
+</script>
