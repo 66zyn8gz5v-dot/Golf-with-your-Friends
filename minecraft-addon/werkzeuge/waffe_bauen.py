@@ -86,7 +86,7 @@ def uv_feld(uv, groesse, seite):
 
 
 def male_flaeche(bild, feld, farben, seite, schliff, gewickelt=False,
-                 abschnitte=False):
+                 abschnitte=False, gemustert=False):
     """Malt ein Seitenfeld: heller Kern, abgesetzte Kanten.
 
     Keine geschlossene Umrandung. Eine Klinge ist drei Pixel breit - zieht
@@ -99,6 +99,15 @@ def male_flaeche(bild, feld, farben, seite, schliff, gewickelt=False,
     for zeile in range(fh):
         for spalte in range(fw):
             farbe = farben["kern"]
+            if gemustert:
+                # Feste Regel statt Zufall: Gewuerfeltes Rauschen sah beim
+                # Stein nach Bildstoerung aus. Diese Folge wiederholt sich
+                # erst nach vier Pixeln und wirkt deshalb wie gehaemmertes
+                # Metall, nicht wie Flimmern.
+                stufe = (spalte * 3 + zeile * 5) % 4
+                farbe = (farben["glanz"] if stufe == 0
+                         else farben["flanke"] if stufe == 3
+                         else farben["kern"])
             if gewickelt and zeile % 2 == 1:
                 farbe = farben["flanke"]
             if fw >= 3 and (spalte == 0 or spalte == fw - 1):
@@ -172,7 +181,8 @@ def baue(name, kennung, kaesten, breite=64, ziel_modell=None, ziel_textur=None):
                 continue
             male_flaeche(bild, feld, farben, seite, schliff,
                          kasten.get("gewickelt", False),
-                         kasten.get("abschnitte", False))
+                         kasten.get("abschnitte", False),
+                         kasten.get("gemustert", False))
 
         eintrag = {
             "origin": kasten["origin"],
@@ -235,11 +245,11 @@ EISENKLINGE = [
     # Ein Kasten statt zweier Stufen: Zwei Absaetze uebereinander lesen sich
     # als Sockel, auf dem das Schwert steht. Einer, deutlich breiter als der
     # Griff, ist ein Knauf. Griff 1,25 - Knauf 1,75.
-    {"name": "knauf",        "origin": [-1.0, 0, -1.0], "size": [2, 2.5, 2], "werkstoff": "eisen", "schrumpfen": -0.125},
+    {"name": "knauf",        "origin": [-1.0, 0, -1.0], "size": [2, 2.5, 2], "werkstoff": "eisen", "gemustert": True, "schrumpfen": -0.125},
     {"name": "griff",        "origin": [-1.0,  1.5, -1.0], "size": [2, 5, 2], "werkstoff": "leder", "gewickelt": True, "schrumpfen": -0.375},
-    {"name": "parier_mitte", "origin": [-1.5,  6, -1.0], "size": [3, 1, 2], "werkstoff": "eisen"},
-    {"name": "parier_links", "origin": [-3.5,  6, -0.5], "size": [2, 1, 1], "werkstoff": "eisen", "schrumpfen": -0.125},
-    {"name": "parier_rechts","origin": [ 1.5,  6, -0.5], "size": [2, 1, 1], "werkstoff": "eisen", "schrumpfen": -0.125},
+    {"name": "parier_mitte", "origin": [-1.5,  6, -1.0], "size": [3, 1, 2], "werkstoff": "eisen", "gemustert": True},
+    {"name": "parier_links", "origin": [-3.5,  6, -0.5], "size": [2, 1, 1], "werkstoff": "eisen", "gemustert": True, "schrumpfen": -0.125},
+    {"name": "parier_rechts","origin": [ 1.5,  6, -0.5], "size": [2, 1, 1], "werkstoff": "eisen", "gemustert": True, "schrumpfen": -0.125},
     {"name": "klinge",       "origin": [-1.5,  6.5, -0.5], "size": [3, 14, 1], "werkstoff": "stahl", "schliff": True, "schrumpfen": -0.375, "abschnitte": True},
     {"name": "grat",         "origin": [-0.5,  6.5, -0.5], "size": [1, 14, 1], "werkstoff": "stahl", "schrumpfen": -0.25},
     {"name": "klinge_ort",   "origin": [-1.0, 19.5, -0.5], "size": [2, 2, 1], "werkstoff": "stahl", "schliff": True, "schrumpfen": -0.375},
