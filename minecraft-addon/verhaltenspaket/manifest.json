@@ -2,11 +2,11 @@
   "format_version": 2,
   "header": {
     "name": "Sternenpaket (Regeln)",
-    "description": "Fassung 1.15 - Gegenstaende, Rezepte und Wesen.",
+    "description": "Fassung 1.16 - Gegenstaende, Rezepte und Wesen.",
     "uuid": "d43b628f-9e0f-4620-8d54-792132677dc8",
     "version": [
       1,
-      15,
+      16,
       0
     ],
     "min_engine_version": [
@@ -22,7 +22,7 @@
       "uuid": "1b3291db-011e-417e-bf9d-c280a1db6b45",
       "version": [
         1,
-        15,
+        16,
         0
       ]
     }
