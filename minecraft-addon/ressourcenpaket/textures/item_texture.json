@@ -7,6 +7,9 @@
     },
     "sternenklinge": {
       "textures": "textures/items/sternenklinge"
+    },
+    "eisenklinge": {
+      "textures": "textures/items/eisenklinge"
     }
   }
 }

@@ -1,0 +1,144 @@
+{
+  "format_version": "1.12.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.eisenklinge",
+        "texture_width": 64,
+        "texture_height": 16,
+        "visible_bounds_width": 3,
+        "visible_bounds_height": 3,
+        "visible_bounds_offset": [
+          0,
+          1,
+          0
+        ]
+      },
+      "bones": [
+        {
+          "name": "rightitem",
+          "binding": "q.item_slot_to_bone_name(c.item_slot)",
+          "pivot": [
+            0,
+            8,
+            0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -1.5,
+                0,
+                -1.0
+              ],
+              "size": [
+                3,
+                2,
+                2
+              ],
+              "uv": [
+                0,
+                0
+              ]
+            },
+            {
+              "origin": [
+                -1.0,
+                2,
+                -0.5
+              ],
+              "size": [
+                2,
+                4,
+                1
+              ],
+              "uv": [
+                11,
+                0
+              ]
+            },
+            {
+              "origin": [
+                -4.0,
+                6,
+                -1.0
+              ],
+              "size": [
+                8,
+                2,
+                2
+              ],
+              "uv": [
+                18,
+                0
+              ]
+            },
+            {
+              "origin": [
+                -1.5,
+                8,
+                -0.5
+              ],
+              "size": [
+                3,
+                10,
+                1
+              ],
+              "uv": [
+                39,
+                0
+              ]
+            },
+            {
+              "origin": [
+                -0.5,
+                8,
+                -1.0
+              ],
+              "size": [
+                1,
+                10,
+                2
+              ],
+              "uv": [
+                48,
+                0
+              ]
+            },
+            {
+              "origin": [
+                -1.0,
+                18,
+                -0.5
+              ],
+              "size": [
+                2,
+                2,
+                1
+              ],
+              "uv": [
+                55,
+                0
+              ]
+            },
+            {
+              "origin": [
+                -0.5,
+                20,
+                -0.5
+              ],
+              "size": [
+                1,
+                1,
+                1
+              ],
+              "uv": [
+                0,
+                13
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

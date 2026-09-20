@@ -18,3 +18,7 @@ item.fynn:probe_waffe.name=Probe 3 Waffe
 item.fynn:probe_ausruestung=Probe 4 Ausruestung
 item.fynn:probe_ausruestung.name=Probe 4 Ausruestung
 
+## Die erste Waffe mit einem Koerper
+item.fynn:eisenklinge=Eisenklinge
+item.fynn:eisenklinge.name=Eisenklinge
+
