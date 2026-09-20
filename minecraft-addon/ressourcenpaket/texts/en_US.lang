@@ -8,16 +8,6 @@ item.fynn:sternenklinge.name=Starblade
 entity.fynn:glimmerling.name=Glimmerling
 item.spawn_egg.entity.fynn:glimmerling.name=Glimmerling
 
-## Proben zur Fehlersuche - fliegen wieder raus
-item.fynn:probe_schlicht=Probe 1 plain
-item.fynn:probe_schlicht.name=Probe 1 plain
-item.fynn:probe_glanz=Probe 2 glint
-item.fynn:probe_glanz.name=Probe 2 glint
-item.fynn:probe_waffe=Probe 3 weapon
-item.fynn:probe_waffe.name=Probe 3 weapon
-item.fynn:probe_ausruestung=Probe 4 equipment
-item.fynn:probe_ausruestung.name=Probe 4 equipment
-
 ## Die erste Waffe mit einem Koerper
 item.fynn:eisenklinge=Iron Blade
 item.fynn:eisenklinge.name=Iron Blade
