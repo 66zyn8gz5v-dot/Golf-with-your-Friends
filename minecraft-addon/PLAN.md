@@ -114,7 +114,7 @@ guter Boss mehr Arbeit als zehn gewöhnliche Mobs.
 
 ## Strukturen in der Welt
 
-Geht, und ist nicht mehr experimentell. Vier Teile: die Struktur wird im Spiel
+Geht. Vier Teile: die Struktur wird im Spiel
 gebaut und mit einem Strukturblock als `.mcstructure` gespeichert; die Datei
 kommt ins Verhaltenspaket unter `structures/`; ein *Feature* sagt, was
 platziert wird; eine *Feature Rule* sagt, wo und wie oft.
@@ -125,6 +125,12 @@ sie in zehn Minuten und man sieht dabei, ob sie etwas taugt.
 
 Was dabei zu beachten ist:
 
+* **Offene Frage: braucht das einen Experiment-Schalter?** Belegt ist, dass
+  eigene *Biome* einen brauchen. Ob das auch für Features und Feature-Regeln
+  gilt — also für Strukturen und Erze —, ist ungeklärt. Muss im Spiel
+  ausprobiert werden. Falls ja: beim Anlegen der Welt ein Häkchen setzen; die
+  Welt gilt dann als experimentell, was bei Minecraft-Updates gelegentlich
+  Ärger macht.
 * **Nur neues Land.** Weltgenerierung greift ausschließlich in Gebieten, die
   noch nie erzeugt wurden. Zum Ausprobieren gehört eine frische Welt oder ein
   langer Marsch nach draußen.
@@ -194,6 +200,31 @@ Oberfläche, wie Truhe oder Ofen. Das scheitert an derselben Stelle wie die
 Mana-Leiste. Ein Menü mit Knöpfen geht problemlos — nur eben kein Kistengitter
 zum Hineinlegen. Ebenso begrenzt: Redstone-Logik und alles, was größer als ein
 Block sein soll.
+
+## Eigene Erze
+
+Am Beispiel Silber. Ein Erz sind mehrere Teile, alle machbar:
+
+* der **Erzblock** im Stein — eigener Block mit Textur und der Angabe, welche
+  Spitzhacke ihn knackt
+* **Rohsilber**, das beim Abbauen herausfällt
+* der **Silberbarren** aus dem Ofen
+* das **Schmelzrezept** dazwischen
+* die **Weltgenerierung**: in welcher Tiefe, wie häufig, in welchen Biomen
+  (`minecraft:ore_feature` plus eine Feature-Regel)
+
+Es gilt dasselbe wie bei den Strukturen: nur neues Land, und die Frage nach
+dem Experiment-Schalter ist auch hier offen.
+
+**Silber gegen Untote.** In fast jeder Sage wirkt Silber gegen Untote. Eine
+Silberklinge, die gegen Zombies und Skelette doppelt trifft und sonst
+mittelmäßig bleibt, ist interessanter als "Eisen, aber etwas besser". Dafür
+braucht es ein kleines Skript, das beim Treffer nachschaut, wen es erwischt
+hat.
+
+**Nicht zu viele Erze.** Jedes kostet Block, zwei Gegenstände, Texturen,
+Rezepte und Generierung — und je mehr es gibt, desto weniger bedeutet jedes
+einzelne. Silber allein trägt schon eine ganze Ausrüstungsreihe.
 
 ## In welcher Reihenfolge
 
