@@ -226,6 +226,31 @@ hat.
 Rezepte und Generierung — und je mehr es gibt, desto weniger bedeutet jedes
 einzelne. Silber allein trägt schon eine ganze Ausrüstungsreihe.
 
+## Waffen als 3D-Modell (Attachables)
+
+Zwei Fragen fuehren an dieselbe Stelle: eigene Angriffsbewegungen und
+Waffen, die laenger sind als ein Inventarfeld. Beides geht nur ueber ein
+*Attachable* - die Waffe ist dann in der Hand kein flaches Bild mehr,
+sondern ein Modell.
+
+**Was sich damit aendert:** Laenge, Dicke und Haltung sind frei. Ein Speer
+ragt wirklich aus der Faust, ein Langschwert reicht ueber die Schulter. Ohne
+Attachable ist jede Waffe in der Hand genau so gross wie eine Spitzhacke,
+egal wie das Bild aussieht.
+
+**Was bleibt:** Das Symbol im Inventar ist weiterhin ein 16x16-Bild, und
+dort gilt weiterhin die Diagonale von unten links nach oben rechts. Jede
+Waffe braucht also beides - Sprite fuers Inventar, Modell fuer die Hand.
+
+**Aufwand:** Ein Schwertmodell ist erheblich einfacher als ein Mob - ein
+langer duenner Quader fuer die Klinge, ein querliegender fuer die
+Parierstange, einer fuer den Griff, ohne Gelenke. Dazu eine Textur als
+Schnittmuster und die Angabe, wo am Handgelenk die Waffe haengt.
+
+**Und der Haken bleibt:** Fuer eine Angriffsbewegung braucht es zusaetzlich
+ein Skript, weil Minecraft der Animation nicht verraet, dass gerade
+zugeschlagen wird. Siehe oben.
+
 ## In welcher Reihenfolge
 
 Jede Stufe muss für sich funktionieren und spielbar sein.
