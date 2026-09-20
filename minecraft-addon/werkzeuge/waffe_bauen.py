@@ -128,7 +128,34 @@ def male_flaeche(bild, feld, farben, seite, schliff, gewickelt=False,
             bild.putpixel((fu + spalte, fv + zeile), farbe + (255,))
 
 
+def pruefe_luecken(kaesten):
+    """Warnt, wenn zwischen zwei Teilen der Mittelachse Luft bleibt.
+
+    Genau diese Luecke hat Fynn im Spiel gesehen: "schrumpfen" zieht einen
+    Kasten in alle Richtungen zusammen, auch in der Laenge, und dann
+    stossen zwei Teile nicht mehr aneinander. Von aussen sieht man es
+    kaum, im Spiel schwebt die Spitze.
+    """
+    achse = []
+    for k in kaesten:
+        # Teile, die seitlich ausscheren, gehoeren nicht zur Mittelachse.
+        if abs(k["origin"][0] + k["size"][0] / 2) > 0.6:
+            continue
+        s = k.get("schrumpfen", 0)
+        achse.append((k["origin"][1] - s, k["origin"][1] + k["size"][1] + s, k["name"]))
+    achse.sort()
+    luecken = []
+    for (u1, o1, n1), (u2, o2, n2) in zip(achse, achse[1:]):
+        if u2 > o1 + 0.001:
+            luecken.append(f"  zwischen {n1} und {n2}: {o1:.3f} bis {u2:.3f}")
+    if luecken:
+        print("Luecken in der Mittelachse:")
+        print("\n".join(luecken))
+    return not luecken
+
+
 def baue(name, kennung, kaesten, breite=64, ziel_modell=None, ziel_textur=None):
+    pruefe_luecken(kaesten)
     plaetze, hoehe = packe(kaesten, breite)
     hoehe = max(16, 1 << (max(1, hoehe - 1)).bit_length())  # auf Zweierpotenz
 
@@ -199,18 +226,22 @@ def baue(name, kennung, kaesten, breite=64, ziel_modell=None, ziel_textur=None):
 EISENKLINGE = [
     # Aus der Vorlage gemessen, ein Pixel entspricht dort 49 Bildpunkten:
     # Klinge 151 Punkte breit (drei Pixel), Parierstange 340 (sieben), Griff
-    # nur 76 - also anderthalb. Ein zwei Pixel dicker Griff ist der Grund,
-    # warum meine Fassungen ploetzlich plump wirkten.
+    # 76 - also anderthalb, hier noch etwas schlanker.
+    #
+    # Achtung bei "schrumpfen": Es zieht den Kasten in ALLE Richtungen
+    # zusammen, also auch in der Laenge. Zwei duenne Teile, die im Raster
+    # aneinanderstossen, haben danach eine Luecke dazwischen. Deshalb
+    # ueberlappen die Stuecke hier um mehr, als sie schrumpfen.
     {"name": "knauf_platte", "origin": [-1.5,  0, -1.0], "size": [3, 1, 2], "werkstoff": "eisen"},
     {"name": "knauf_hals",   "origin": [-1.0,  1, -0.5], "size": [2, 1, 1], "werkstoff": "eisen"},
-    {"name": "griff",        "origin": [-1.0,  2, -1.0], "size": [2, 4, 2], "werkstoff": "leder", "gewickelt": True, "schrumpfen": -0.25},
+    {"name": "griff",        "origin": [-1.0,  1.5, -1.0], "size": [2, 5, 2], "werkstoff": "leder", "gewickelt": True, "schrumpfen": -0.375},
     {"name": "parier_mitte", "origin": [-1.5,  6, -1.0], "size": [3, 1, 2], "werkstoff": "eisen"},
     {"name": "parier_links", "origin": [-3.5,  6, -0.5], "size": [2, 1, 1], "werkstoff": "eisen", "schrumpfen": -0.125},
     {"name": "parier_rechts","origin": [ 1.5,  6, -0.5], "size": [2, 1, 1], "werkstoff": "eisen", "schrumpfen": -0.125},
-    {"name": "klinge",       "origin": [-1.5,  7, -0.5], "size": [3, 13, 1], "werkstoff": "stahl", "schliff": True, "schrumpfen": -0.375, "abschnitte": True},
-    {"name": "grat",         "origin": [-0.5,  7, -0.5], "size": [1, 13, 1], "werkstoff": "stahl", "schrumpfen": -0.25},
-    {"name": "klinge_ort",   "origin": [-1.0, 20, -0.5], "size": [2, 2, 1], "werkstoff": "stahl", "schliff": True, "schrumpfen": -0.375},
-    {"name": "spitze",       "origin": [-0.5, 20, -0.5], "size": [1, 3, 1], "werkstoff": "stahl", "schrumpfen": -0.25},
+    {"name": "klinge",       "origin": [-1.5,  6.5, -0.5], "size": [3, 14, 1], "werkstoff": "stahl", "schliff": True, "schrumpfen": -0.375, "abschnitte": True},
+    {"name": "grat",         "origin": [-0.5,  6.5, -0.5], "size": [1, 14, 1], "werkstoff": "stahl", "schrumpfen": -0.25},
+    {"name": "klinge_ort",   "origin": [-1.0, 19.5, -0.5], "size": [2, 2, 1], "werkstoff": "stahl", "schliff": True, "schrumpfen": -0.375},
+    {"name": "spitze",       "origin": [-0.5, 20.5, -0.5], "size": [1, 2, 1], "werkstoff": "stahl", "schrumpfen": -0.25},
 ]
 
 
