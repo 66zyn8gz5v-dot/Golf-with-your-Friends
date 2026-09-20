@@ -626,20 +626,20 @@
       </section>
 
       <section class="tafel t-vorlage">
-        <h2>Vorlage</h2>
-        <label class="feld" for="vorlage">Womit anfangen</label>
+        <h2>Neu anfangen</h2>
+        <label class="feld" for="vorlage">Leeres Feld in dieser Größe</label>
         <select id="vorlage">
-          <option value="leer16">Leer, 16 × 16 (Gegenstand)</option>
-          <option value="sternenstaub">Sternenstaub</option>
-          <option value="sternenklinge">Sternenklinge</option>
-          <option value="leer32">Leer, 32 × 32 (großer Gegenstand)</option>
-          <option value="leer64">Leer, 64 × 32 (Mob-Haut)</option>
+          <option value="leer16">16 × 16 — Gegenstand</option>
+          <option value="leer32">32 × 32 — großer Gegenstand</option>
+          <option value="leer64">64 × 32 — Haut für ein Wesen</option>
         </select>
         <div class="knopfreihe" style="margin-top:10px">
-          <button type="button" id="laden">Laden</button>
+          <button type="button" id="laden">Leeres Feld laden</button>
         </div>
         <p class="hinweis">
-          <strong>Achtung:</strong> Laden wirft weg, was gerade im Malfeld steht.
+          <strong>Achtung:</strong> Das wirft weg, was gerade im Malfeld steht — erst
+          ablegen, wenn du es behalten willst. Etwas Vorhandenes öffnest du oben
+          unter <strong>Sammlung</strong>.
         </p>
       </section>
     </div>
@@ -1214,11 +1214,10 @@
 
   document.getElementById("laden").addEventListener("click", function () {
     var wahl = document.getElementById("vorlage").value;
-    if (wahl === "leer16") karteUebernehmen(leereKarte(16, 16));
-    else if (wahl === "leer32") karteUebernehmen(leereKarte(32, 32));
+    if (wahl === "leer32") karteUebernehmen(leereKarte(32, 32));
     else if (wahl === "leer64") karteUebernehmen(leereKarte(64, 32));
-    else karteUebernehmen(VORLAGEN[wahl].slice());
-    meldung("Vorlage geladen.");
+    else karteUebernehmen(leereKarte(16, 16));
+    meldung("Leeres Feld geladen.");
   });
 
   // --- Zeichenkarte einlesen -------------------------------------------
@@ -1456,6 +1455,7 @@
   }
 
   var KATEGORIEN = [
+    ["projekt", "Aus dem Projekt"],
     ["waffen", "Waffen"],
     ["werkzeuge", "Werkzeuge"],
     ["ruestung", "Rüstung"],
@@ -1465,6 +1465,21 @@
     ["sonstiges", "Sonstiges"]
   ];
   var filter = "alle";
+
+  // Was schon im Add-on steckt. Fest, nicht loeschbar - sonst waere es weg,
+  // ohne dass es je jemand abgelegt hat.
+  function projektWerke() {
+    return [
+      { name: "Sternenstaub", kategorie: "projekt", fest: true,
+        bild: VORLAGEN.sternenstaub, farben: benutzteFarben(VORLAGEN.sternenstaub) },
+      { name: "Sternenklinge", kategorie: "projekt", fest: true,
+        bild: VORLAGEN.sternenklinge, farben: benutzteFarben(VORLAGEN.sternenklinge) }
+    ];
+  }
+
+  function alleWerke() {
+    return projektWerke().concat(sammlung);
+  }
 
   function kategorieName(schluessel) {
     for (var i = 0; i < KATEGORIEN.length; i++) {
@@ -1502,17 +1517,19 @@
     auf.type = "button";
     auf.textContent = "Öffnen";
     auf.addEventListener("click", function () { werkOeffnen(nummer); });
-    var weg = document.createElement("button");
-    weg.type = "button";
-    weg.textContent = "Löschen";
-    weg.addEventListener("click", function () { werkLoeschen(nummer); });
     reihe.appendChild(auf);
-    reihe.appendChild(weg);
+    if (!werk.fest) {
+      var weg = document.createElement("button");
+      weg.type = "button";
+      weg.textContent = "Löschen";
+      weg.addEventListener("click", function () { werkLoeschen(nummer); });
+      reihe.appendChild(weg);
+    }
     karte.appendChild(reihe);
     return karte;
   }
 
-  function filterleisteBauen(vorhanden) {
+  function filterleisteBauen(vorhanden, anzahlGesamt) {
     var leiste = document.getElementById("filterleiste");
     leiste.textContent = "";
 
@@ -1528,7 +1545,7 @@
       leiste.appendChild(k);
     }
 
-    knopf("alle", "Alle", sammlung.length);
+    knopf("alle", "Alle", anzahlGesamt);
     // Nur Kategorien anbieten, in denen wirklich etwas liegt - leere Knoepfe
     // sind nur Rauschen.
     KATEGORIEN.forEach(function (eintrag) {
@@ -1540,17 +1557,18 @@
     var behaelter = document.getElementById("werke");
     behaelter.textContent = "";
     document.getElementById("reiter-sammlung").textContent =
-      sammlung.length ? "Sammlung (" + sammlung.length + ")" : "Sammlung";
+      "Sammlung (" + alleWerke().length + ")";
 
+    var werke = alleWerke();
     var vorhanden = {};
-    sammlung.forEach(function (werk) {
+    werke.forEach(function (werk) {
       var art = werk.kategorie || "sonstiges";
       vorhanden[art] = (vorhanden[art] || 0) + 1;
     });
     if (filter !== "alle" && !vorhanden[filter]) filter = "alle";
-    filterleisteBauen(vorhanden);
+    filterleisteBauen(vorhanden, werke.length);
 
-    if (!sammlung.length) {
+    if (!werke.length) {
       var leer = document.createElement("p");
       leer.className = "leer";
       leer.textContent = "Noch nichts abgelegt. Male etwas, gib ihm oben einen Namen "
@@ -1567,7 +1585,7 @@
       if (filter !== "alle" && filter !== schluessel) return;
 
       var treffer = [];
-      sammlung.forEach(function (werk, nummer) {
+      werke.forEach(function (werk, nummer) {
         if ((werk.kategorie || "sonstiges") !== schluessel) return;
         if (gesucht && werk.name.toLowerCase().indexOf(gesucht) === -1) return;
         treffer.push(nummer);
@@ -1584,7 +1602,7 @@
       var raster = document.createElement("div");
       raster.className = "werke";
       treffer.forEach(function (nummer) {
-        raster.appendChild(werkKarte(sammlung[nummer], nummer));
+        raster.appendChild(werkKarte(werke[nummer], nummer));
       });
       gruppe.appendChild(raster);
       behaelter.appendChild(gruppe);
@@ -1602,7 +1620,7 @@
   }
 
   function werkOeffnen(nummer) {
-    var werk = sammlung[nummer];
+    var werk = alleWerke()[nummer];
     if (!werk) return;
     // Farben nachtragen, die inzwischen fehlen.
     var ergaenzt = 0;
@@ -1620,9 +1638,9 @@
   }
 
   function werkLoeschen(nummer) {
-    var werk = sammlung[nummer];
-    if (!werk) return;
-    sammlung.splice(nummer, 1);
+    var werk = alleWerke()[nummer];
+    if (!werk || werk.fest) return;
+    sammlung.splice(nummer - projektWerke().length, 1);
     sammlungSchreiben();
     sammlungZeigen();
     meldung("„" + werk.name + "“ gelöscht.");
