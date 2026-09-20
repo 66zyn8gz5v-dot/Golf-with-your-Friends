@@ -22,7 +22,10 @@ WERKSTOFFE = {
     "stahl": {
         "kern": (216, 216, 216),
         "glanz": (255, 255, 255),
-        "flanke": (150, 150, 150),
+        # Aus Fynns Vorlage gemessen: der Schatten neben dem Grat ist 122,
+        # nicht 150. Der Unterschied entscheidet, ob die Klinge raeumlich
+        # wirkt oder wie angemalt.
+        "flanke": (122, 122, 122),
     },
     "leder": {
         "kern": (104, 78, 30),
@@ -82,7 +85,8 @@ def uv_feld(uv, groesse, seite):
     }[seite]
 
 
-def male_flaeche(bild, feld, farben, seite, schliff, gewickelt=False):
+def male_flaeche(bild, feld, farben, seite, schliff, gewickelt=False,
+                 abschnitte=False):
     """Malt ein Seitenfeld: heller Kern, abgesetzte Kanten.
 
     Keine geschlossene Umrandung. Eine Klinge ist drei Pixel breit - zieht
@@ -113,6 +117,12 @@ def male_flaeche(bild, feld, farben, seite, schliff, gewickelt=False):
                 farbe = farben["glanz"] if spalte == 0 else farben["kern"]
             if fh >= 3 and zeile == fh - 1:
                 farbe = farben["flanke"]
+            # Abschnitte der Laenge nach, zur Spitze hin heller. Eine
+            # einfarbige Klinge sieht aus wie ein ausgeschnittenes Stueck
+            # Papier; die Vorlage staffelt sie in Stufen.
+            if abschnitte and fh >= 6 and farbe != farben["flanke"]:
+                stufe = (zeile * 4) // fh
+                farbe = tuple(min(255, max(0, k + (1 - stufe) * 14)) for k in farbe)
             if seite == "down":
                 farbe = farben["flanke"]
             bild.putpixel((fu + spalte, fv + zeile), farbe + (255,))
@@ -134,7 +144,8 @@ def baue(name, kennung, kaesten, breite=64, ziel_modell=None, ziel_textur=None):
             if feld[2] <= 0 or feld[3] <= 0:
                 continue
             male_flaeche(bild, feld, farben, seite, schliff,
-                         kasten.get("gewickelt", False))
+                         kasten.get("gewickelt", False),
+                         kasten.get("abschnitte", False))
 
         eintrag = {
             "origin": kasten["origin"],
@@ -186,18 +197,17 @@ def baue(name, kennung, kaesten, breite=64, ziel_modell=None, ziel_textur=None):
 # steht seitlich vor - das ist es, was die Waffe von vorne wie eine Raute
 # aussehen laesst statt wie ein Brett.
 EISENKLINGE = [
-    # Filigran heisst hier: mehr Kaesten, jeder duenner als der davor. Der
-    # Knauf ist eine Platte mit Hals, die Parierstange wird zu den Enden hin
-    # schmaler, und die Klinge ist nur noch ein Viertel Pixel dick - der
-    # Grat in der Mitte doppelt so viel. Ein Kasten pro Bauteil sieht aus
-    # wie Spielzeug; das Gefaelle dazwischen macht die Form.
+    # Aus der Vorlage gemessen, ein Pixel entspricht dort 49 Bildpunkten:
+    # Klinge 151 Punkte breit (drei Pixel), Parierstange 340 (sieben), Griff
+    # nur 76 - also anderthalb. Ein zwei Pixel dicker Griff ist der Grund,
+    # warum meine Fassungen ploetzlich plump wirkten.
     {"name": "knauf_platte", "origin": [-1.5,  0, -1.0], "size": [3, 1, 2], "werkstoff": "eisen"},
     {"name": "knauf_hals",   "origin": [-1.0,  1, -0.5], "size": [2, 1, 1], "werkstoff": "eisen"},
-    {"name": "griff",        "origin": [-1.0,  2, -0.5], "size": [2, 4, 1], "werkstoff": "leder", "gewickelt": True},
+    {"name": "griff",        "origin": [-1.0,  2, -1.0], "size": [2, 4, 2], "werkstoff": "leder", "gewickelt": True, "schrumpfen": -0.25},
     {"name": "parier_mitte", "origin": [-1.5,  6, -1.0], "size": [3, 1, 2], "werkstoff": "eisen"},
     {"name": "parier_links", "origin": [-3.5,  6, -0.5], "size": [2, 1, 1], "werkstoff": "eisen", "schrumpfen": -0.125},
     {"name": "parier_rechts","origin": [ 1.5,  6, -0.5], "size": [2, 1, 1], "werkstoff": "eisen", "schrumpfen": -0.125},
-    {"name": "klinge",       "origin": [-1.5,  7, -0.5], "size": [3, 13, 1], "werkstoff": "stahl", "schliff": True, "schrumpfen": -0.375},
+    {"name": "klinge",       "origin": [-1.5,  7, -0.5], "size": [3, 13, 1], "werkstoff": "stahl", "schliff": True, "schrumpfen": -0.375, "abschnitte": True},
     {"name": "grat",         "origin": [-0.5,  7, -0.5], "size": [1, 13, 1], "werkstoff": "stahl", "schrumpfen": -0.25},
     {"name": "klinge_ort",   "origin": [-1.0, 20, -0.5], "size": [2, 2, 1], "werkstoff": "stahl", "schliff": True, "schrumpfen": -0.375},
     {"name": "spitze",       "origin": [-0.5, 20, -0.5], "size": [1, 3, 1], "werkstoff": "stahl", "schrumpfen": -0.25},
