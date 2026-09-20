@@ -9,8 +9,9 @@ Glimmerling. Was hier steht, ist der Plan.
 
 ## Die Rollen
 
-Beim ersten Betreten der Welt öffnet sich ein Menü zur Rollenwahl. Die Wahl
-wird dauerhaft am Spieler gespeichert. Danach gibt es eine Startausrüstung,
+Die Rollenwahl läuft über ein Menü. Am schönsten als Altar zum Anklicken
+(siehe "Eigene Blöcke"); ein Fenster beim ersten Betreten der Welt tut es für
+den Anfang auch. Die Wahl wird dauerhaft am Spieler gespeichert. Danach gibt es eine Startausrüstung,
 die zur Rolle passt.
 
 | Rolle | Besonderheit |
@@ -168,6 +169,31 @@ lohnender früher Versuch.
 
 **Rückfallweg:** Ein eigenes Wellensystem per Skript. Mehr Arbeit, dafür alles
 selbst bestimmt — welche Mobs, wie viele, wie stark, welche Beute.
+
+## Eigene Blöcke
+
+Geht, und weiter als erwartet — Aussehen und Verhalten sind beide offiziell
+und stabil.
+
+**Aussehen:** eigene Textur, eigene Form als Modell, Lichtabgabe, Härte,
+passendes Werkzeug, eigene Drops.
+
+**Verhalten** über eigene Komponenten (JSON-Block plus Skript): Der Block kann
+darauf reagieren, dass er angeklickt wird, dass jemand drauftritt, dass er
+gesetzt oder zerstört wird, oder regelmäßig von selbst etwas tun.
+
+Damit werden aus mehreren Ideen von oben Orte statt Menüs:
+
+* **Altar der Rollenwahl** — anklicken statt eines Fensters, das beim
+  Weltstart aufpoppt. Passt zum Stil und lässt sich hinstellen, wo man will.
+* **Tauschstein** — Kristalle hinein, Essenz heraus.
+* **Beschwörungsaltar** — Sternenkristalle drauf, Boss erscheint.
+
+**Was schwierig bleibt:** ein Block mit eigenem Inventar und eigener
+Oberfläche, wie Truhe oder Ofen. Das scheitert an derselben Stelle wie die
+Mana-Leiste. Ein Menü mit Knöpfen geht problemlos — nur eben kein Kistengitter
+zum Hineinlegen. Ebenso begrenzt: Redstone-Logik und alles, was größer als ein
+Block sein soll.
 
 ## In welcher Reihenfolge
 
