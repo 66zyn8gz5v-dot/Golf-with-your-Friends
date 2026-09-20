@@ -3,17 +3,17 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 const ctx = { console };
 vm.createContext(ctx);
-const GLOBAL = { courses_pro: 'PRO_COURSES', courses_sea: 'SEA_COURSES', courses_jungle: 'JUNGLE_COURSES', courses_storm: 'STORM_COURSES', courses_shadow: 'SHADOW_COURSES', courses_colosseum: 'COLOSSEUM_COURSES', courses_clock: 'CLOCK_COURSES', courses_snow: 'SNOW_COURSES', courses_mine: 'MINE_COURSES', courses_flut: 'FLUT_COURSES', courses_zauber: '[].concat(ZAUBER_GARTEN, ZAUBER_WARTE, ZAUBER_LOGE)', courses_boule: 'BOULE_COURSES' };
+const GLOBAL = { courses_pro: 'PRO_COURSES', courses_sea: 'SEA_COURSES', courses_jungle: 'JUNGLE_COURSES', courses_storm: 'STORM_COURSES', courses_shadow: 'SHADOW_COURSES', courses_colosseum: 'COLOSSEUM_COURSES', courses_clock: 'CLOCK_COURSES', courses_snow: 'SNOW_COURSES', courses_mine: 'MINE_COURSES', courses_flut: 'FLUT_COURSES', courses_boule: 'BOULE_COURSES' };
 const load = f => vm.runInContext(fs.readFileSync(new URL(`../src/${f}.js`, import.meta.url), 'utf8') + `\n;${GLOBAL[f] || f.toUpperCase()}`, ctx);
 // Reihenfolge wie in index.html: courses_pro.js baut die Weltliste und braucht die anderen schon
-const THEMES = load('themes'), COURSES = load('courses'), SEA = load('courses_sea'), JUNGLE = load('courses_jungle'), STORM = load('courses_storm'), SHADOW = load('courses_shadow'), COLOSSEUM = load('courses_colosseum'), CLOCK = load('courses_clock'), SNOW = load('courses_snow'), MINE = load('courses_mine'), FLUT = load('courses_flut'), ZAUBER = load('courses_zauber'), BOULE = load('courses_boule'), PRO = load('courses_pro');
+const THEMES = load('themes'), COURSES = load('courses'), SEA = load('courses_sea'), JUNGLE = load('courses_jungle'), STORM = load('courses_storm'), SHADOW = load('courses_shadow'), COLOSSEUM = load('courses_colosseum'), CLOCK = load('courses_clock'), SNOW = load('courses_snow'), MINE = load('courses_mine'), FLUT = load('courses_flut'), BOULE = load('courses_boule'), PRO = load('courses_pro');
 // A bis F sind die Eingänge der Löwentore und Kupferrohre und begehbar; ihre Ausgänge (a bis f)
 // sind Mauer.
 const FLOOR = new Set(['#', 's', 'i', 'w', 'l', 'T', 'H', 'o', 'A', 'B', 'C', 'D', 'E', 'F']);
 const TOR_PAARE = ['A', 'B', 'C', 'D', 'E', 'F'];
 let ok = true;
 const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, world }]; let d = c.inner, n = 1; while (d) { out.push({ ...d, par: c.par, name: `${c.name} (innen${n > 1 ? ' ' + n : ''})`, world }); d = d.inner; n++; } return out; });
-[...COURSES.map(c => ({ ...c, world: 'Märchenland' })), ...withInner(SEA, 'Meereswelt'), ...withInner(JUNGLE, 'Dschungel'), ...withInner(STORM, 'Sturmhimmel'), ...withInner(SHADOW, 'Schattenreich'), ...withInner(COLOSSEUM, 'Kolosseum'), ...withInner(CLOCK, 'Uhrwerkstadt'), ...withInner(SNOW, 'Schneeberg'), ...withInner(MINE, 'Zwergenmine'), ...withInner(FLUT, 'Die Flut'), ...withInner(ZAUBER, 'Zauberreich'), ...BOULE.map(c => ({ ...c, world: 'Boule-Welt' })), ...PRO.flatMap(c => c.inner ? [{ ...c, world: 'Profi' }, { ...c.inner, par: c.par, name: `${c.name} (innen)`, world: 'Profi' }] : [{ ...c, world: 'Profi' }])].forEach((c, i) => {
+[...COURSES.map(c => ({ ...c, world: 'Märchenland' })), ...withInner(SEA, 'Meereswelt'), ...withInner(JUNGLE, 'Dschungel'), ...withInner(STORM, 'Sturmhimmel'), ...withInner(SHADOW, 'Schattenreich'), ...withInner(COLOSSEUM, 'Kolosseum'), ...withInner(CLOCK, 'Uhrwerkstadt'), ...withInner(SNOW, 'Schneeberg'), ...withInner(MINE, 'Zwergenmine'), ...withInner(FLUT, 'Die Flut'), ...BOULE.map(c => ({ ...c, world: 'Boule-Welt' })), ...PRO.flatMap(c => c.inner ? [{ ...c, world: 'Profi' }, { ...c.inner, par: c.par, name: `${c.name} (innen)`, world: 'Profi' }] : [{ ...c, world: 'Profi' }])].forEach((c, i) => {
   const rows = c.map, H = rows.length, W = rows[0].length;
   const problems = [];
   if (!THEMES[c.theme]) problems.push(`Theme ${c.theme} fehlt`);
@@ -373,14 +373,6 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
         const a = ((o.angle || 0) * Math.PI) / 180;
         return [{ x: ein[0], y: ein[1], tx: aus[0] + Math.cos(a) * 0.95, ty: aus[1] + Math.sin(a) * 0.95 }];
       }))
-      /* Zauberhüte: jeder Hut führt zu jedem anderen. Welcher gerade der Ausgang ist, hängt am
-         Takt – für die Frage, ob das Loch überhaupt erreichbar ist, zählt nur, daß es einen Weg
-         gibt, und den gibt es zu jedem der Hüte. */
-      .concat((c.obstacles || []).filter(o => o.type === 'zauberhut').flatMap(o => {
-        const p = o.plaetze || [], aus = [];
-        for (const a of p) for (const b of p) if (a !== b) aus.push({ x: a[0], y: a[1], tx: b[0], ty: b[1] });
-        return aus;
-      }))
       .concat((c.obstacles || []).filter(o => o.type === 'cannon').map(o => { // Kanone: Landepunkt in Grundrichtung
         const a = o.base || 0, R = 0.9 + (o.range || 9);
         return { x: o.x, y: o.y, tx: o.x + Math.cos(a) * R, ty: o.y + Math.sin(a) * R };
@@ -578,24 +570,8 @@ const withInner = (list, world) => list.flatMap(c => { const out = [{ ...c, worl
       for (let m = n - 1; m >= 0; m--) if (bodenAuf(m, lx, ly)) { landet = true; break; }
       if (!landet) problems.push(`luke bei (${o.x},${o.y}): unter ihr ist auf keiner Ebene Boden – wer hindurchfällt, ist aus`);
     }
-    /* DER AUGENTURM DARF NEBEN DER BAHN STEHEN. Er wirkt auf Entfernung – was auf der Bahn
-       ankommt, ist sein Blick, nicht sein Sockel –, und als Bauwerk gehört er an den Rand wie eine
-       Laterne. Steht er mitten im Weg, ist er zweierlei auf einmal: ein Klotz, um den man
-       herumspielt, UND ein Auge, vor dem man sich versteckt; das erste nimmt dem zweiten die
-       Wirkung. Geprüft wird darum nicht das Feld unter ihm, sondern ob überhaupt Bahn in Reichweite
-       liegt: Ein Turm im Nichts leuchtet auf nichts. */
-    for (const o of (c.obstacles || []).filter(o => o.type === 'eyetower')) {
-      const km = karten[o.ebene || 0] || rows;
-      const tx = Math.floor(o.x), ty = Math.floor(o.y);
-      let nah = false;
-      for (let dy = -3; dy <= 3 && !nah; dy++) for (let dx = -3; dx <= 3; dx++) {
-        const ch = km[ty + dy] && km[ty + dy][tx + dx];
-        if (FLOOR.has(ch)) { nah = true; break; }
-      }
-      if (!nah) problems.push(`eyetower bei (${o.x},${o.y}) steht mehr als drei Felder neben der Bahn – sein Blick trifft nichts`);
-    }
     for (const o of c.obstacles || []) {
-      const pts = o.type === 'portal' ? [[o.x, o.y], [o.tx, o.ty]] : ['bumper', 'rotor', 'switch', 'potion', 'turntable', 'magnet', 'cannon', 'cauldron', 'door', 'spikes', 'lightning', 'trapdoor', 'guillotine'].includes(o.type) ? [[o.x, o.y]] : o.type === 'mover' && o.style !== 'shark' ? [[o.x0, o.y0], [o.x1, o.y1]] : []; // Haie schwimmen im Wasser neben der Bahn
+      const pts = o.type === 'portal' ? [[o.x, o.y], [o.tx, o.ty]] : ['bumper', 'rotor', 'switch', 'potion', 'turntable', 'magnet', 'cannon', 'cauldron', 'door', 'spikes', 'lightning', 'trapdoor', 'guillotine', 'eyetower'].includes(o.type) ? [[o.x, o.y]] : o.type === 'mover' && o.style !== 'shark' ? [[o.x0, o.y0], [o.x1, o.y1]] : []; // Haie schwimmen im Wasser neben der Bahn
       if (o.type === 'rotor' && o.style === 'darktentacle') pts.length = 0; // dunkle Tentakel kriechen von außen (aus dem Wrack) auf die Bahn
       // Ein Hindernis steht auf seiner eigenen Ebene – geprüft wird darum auch dort
       const km = karten[o.ebene || 0] || rows;

@@ -41,9 +41,7 @@ const Share = (() => {
     // Die versunkene Stadt
     'flut', 'pumpwerk', 'stroemung', 'strudel', 'angler', 'muschel', 'tangwald', 'raucher', 'ankerkette', 'wracktor', 'abflussrohr',
     // Kolosseum und Schmelze – seit dem Baumodus auch von Hand zu setzen
-    'liongate', 'wandergate', 'firetower', 'imperialbox', 'giessloeffel',
-    // Das Zauberreich
-    'ranke', 'zauberhut', 'mondzieher', 'sternbild', 'zauberspiegel', 'zauberkreis', 'riesenbluete', 'armillar', 'bannwaechter']);
+    'liongate', 'wandergate', 'firetower', 'imperialbox', 'giessloeffel']);
   const W_MIN = 6, W_MAX = 48, H_MIN = 4, H_MAX = 36;
   const OBJ_MAX = 120, DEKOR_MAX = 120, FELDER_MAX = 24;
 

@@ -6,11 +6,7 @@
 // A bis F sind die Münder der Löwentore und Kupferrohre und begehbar; ihre Ausgänge (a bis f)
 // sind Mauer. Sechs Paare, weil der Rohrturm allein sechs Leitungen hat.
 const FLOOR_CHARS = new Set(['#', 's', 'i', 'w', 'l', 'T', 'H', 'o', 'A', 'B', 'C', 'D', 'E', 'F']);
-/* Dicke der Randmauern, NACH AUSSEN gerechnet. Sie ist reine Darstellung: Gestoßen wird an den
-   Kanten in 'segs', die genau auf dem Rand der Bodenkacheln liegen. Eine dickere Bande ändert
-   also kein einziges Abprallen, sie gibt der Bahn nur eine Fassung. Mit 0,38 war sie eine
-   Leiste, auf der die Bahn zu liegen schien; mit 0,58 ist sie eine Bande, in der die Bahn steht. */
-const WALL_T = 0.58;
+const WALL_T = 0.38;       // Dicke der Randmauern (nach außen)
 /* Die Uhrenturm-Welt spielt auf zwei Ebenen. Das ist keine Höhenphysik, sondern ein Umschalter:
    Der Ball ist immer auf genau einer Fläche und kollidiert nur mit deren Wänden. Es dürfen mehr
    als zwei sein; sie stapeln sich der Reihe nach. EBENE_Z ist nur fürs Auge – so hoch liegt jede
@@ -39,12 +35,7 @@ function bauFlaeche(rows, W, H, def) {
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const c = tiles[y][x];
     if (c === 'T') tee = { x: x + 0.5, y: y + 0.5 };
-    /* cupR/cupPull: größeres Loch (Schattenreich). Der Sog von 0,50 ist der Wert, der das Loch
-       „etwas schwerer" macht – vorher waren es 0,62, und damit zog das Loch einen Ball noch an,
-       der anderthalb Ballbreiten daneben lag. Es ist bewußt der SOG und nicht der Lochrand: Ein
-       kleineres Loch spuckt auch gute Putts wieder aus, ein kürzerer Sog verlangt nur, daß man
-       zielt. Welten, die den Wert selbst setzen, bleiben, wie sie sind. */
-    if (c === 'H') cup = { x: x + 0.5, y: y + 0.5, r: def.cupR || 0.42, pull: def.cupPull || 0.50 };
+    if (c === 'H') cup = { x: x + 0.5, y: y + 0.5, r: def.cupR || 0.42, pull: def.cupPull || 0.62 }; // cupR/cupPull: größeres Loch (Schattenreich)
     if (c === 'x') blocks.push({ x, y });
   }
 

@@ -81,7 +81,7 @@ const SNOW_COURSES = [
     autoDecor: { density: 0.38, seed: 301 },
   },
   {
-    name: 'Waldschneise', par: 3, theme: 'snowfoot', maxStrokes: 14,
+    name: 'Waldschneise', par: 4, theme: 'snowfoot', maxStrokes: 14,
     schnee: 0.0018,
     intro: 'Hier steht der Wind still – die einzige Bahn am Fuß des Berges, auf der er schweigt. Dafür ist der Weg lang: Zwischen den Baumgruppen bleibt nur eine Gasse, und links und rechts liegt Tiefschnee, in dem der Ball fast stehen bleibt. Je weiter der Weg, desto dicker der Ball – das Eisfeld am Ende ist keine Zugabe, sondern Pflicht.',
     map: [
@@ -133,7 +133,7 @@ const SNOW_COURSES = [
     autoDecor: { density: 0.4, seed: 302, ohne: ['windsock'] },
   },
   {
-    name: 'Lawinenhang', par: 3, theme: 'snowfoot', maxStrokes: 16,
+    name: 'Lawinenhang', par: 4, theme: 'snowfoot', maxStrokes: 16,
     schnee: 0.0018,
     intro: 'Über dem Hang hängt eine Wächte, und alle neun Sekunden kommt sie herunter. Vorher staubt es an der Abrisskante – das ist die Vorwarnung. Wer offen liegt, wird ein Stück mitgenommen; wer hinter einem Felsblock liegt, merkt nichts davon. Und wer sich mitnehmen lässt, rollt dabei durch den Schnee und wird dicker.',
     map: [
@@ -188,7 +188,7 @@ const SNOW_COURSES = [
     autoDecor: { density: 0.3, seed: 303 },
   },
   {
-    name: 'Felsband', par: 3, theme: 'snowrock', maxStrokes: 16,
+    name: 'Felsband', par: 4, theme: 'snowrock', maxStrokes: 16,
     schnee: 0.0018,
     intro: 'Ein Band aus Fels, vier Felder breit, und zwei Nasen springen hinein. Hier kostet das Dickwerden zum ersten Mal wirklich: Ein zugeschneiter Ball kommt zwischen den Nasen nicht mehr durch. Die Eisplatte liegt gleich hinter dem Abschlag – man muss also schlank losfahren, nicht schlank ankommen.',
     map: [
@@ -296,7 +296,7 @@ const SNOW_COURSES = [
     autoDecor: { density: 0.2, seed: 305 },
   },
   {
-    name: 'Schneewächte', par: 4, theme: 'snowrock', maxStrokes: 18,
+    name: 'Schneewächte', par: 5, theme: 'snowrock', maxStrokes: 18,
     schnee: 0.0018,
     intro: 'Zwei Wächten liegen über dem Spalt, oben und unten. Jede trägt genau einen Schlag – wer zurückwill, findet nichts mehr vor. Man hat also zwei Versuche, und muss sich beim ersten entscheiden. Das Eis liegt hinter dem Abschlag; auf der anderen Seite des Spalts hilft nur noch, was man mitgebracht hat.',
     map: [
@@ -351,7 +351,7 @@ const SNOW_COURSES = [
     autoDecor: { density: 0.24, seed: 306 },
   },
   {
-    name: 'Blankeis', par: 3, theme: 'glacier', maxStrokes: 16,
+    name: 'Blankeis', par: 4, theme: 'glacier', maxStrokes: 16,
     schnee: 0.0018,
     intro: 'Der Gletscher, und damit die Umkehrung: Hier ist alles Eis. Der Ball setzt nichts an – im Gegenteil, was er mitgebracht hat, streift er gleich auf den ersten Metern ab. Dafür bremst nichts mehr. Ein Schlag, der auf Schnee genau richtig war, ist hier doppelt zu viel.',
     map: [
@@ -402,7 +402,7 @@ const SNOW_COURSES = [
     autoDecor: { density: 0.12, seed: 307 },
   },
   {
-    name: 'Gletscherspalten', par: 4, theme: 'glacier', maxStrokes: 18,
+    name: 'Gletscherspalten', par: 5, theme: 'glacier', maxStrokes: 18,
     schnee: 0.0018,
     intro: 'Drei Spalten queren den Gletscher, in allen steht Schmelzwasser – das erste offene Wasser dieser Welt, und es kostet einen Schlag. Über jede führt eine Firnbrücke, und sie liegen versetzt: einmal oben, einmal in der Mitte, einmal unten. Wind gibt es hier nicht: In der Spalte ist es still.',
     map: [
@@ -509,7 +509,7 @@ const SNOW_COURSES = [
     autoDecor: { density: 0.1, seed: 309 },
   },
   {
-    name: 'Der Grat', par: 3, theme: 'summit', maxStrokes: 18,
+    name: 'Der Grat', par: 5, theme: 'summit', maxStrokes: 18,
     schnee: 0.0018,
     intro: 'Drei Felder breit, links und rechts nichts. Auf dem Grat liegen zwei Felder Tiefschnee – dort bremst der Ball, und dort setzt er am meisten an. Das Eis kommt erst ganz am Ende, drei Felder vor dem Loch: Bis dahin muss man den dicken Ball über den Grat bringen, ohne ihn hinunterzuschießen.',
     map: [
@@ -645,7 +645,7 @@ const SNOW_COURSES = [
     autoDecor: { density: 0.09, seed: 311 },
   },
   {
-    name: 'Der Gipfel', par: 10, theme: 'summit', maxStrokes: 29,
+    name: 'Der Gipfel', par: 8, theme: 'summit', maxStrokes: 29,
     schnee: 0.0018,
     intro: 'Drei Etagen bis zum Gipfel, zwei Gondeln dazwischen, und ganz oben die letzte Eisplatte drei Felder vor dem Loch. Der Wind ist hier am stärksten, der Tiefschnee auf der mittleren Etage am tiefsten, und über dem Spalt liegt eine Wächte, die einmal trägt. Alles, was der Berg kann, auf einer Bahn.',
     map: [

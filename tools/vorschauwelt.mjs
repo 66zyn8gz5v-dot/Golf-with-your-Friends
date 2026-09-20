@@ -32,7 +32,7 @@ const pruef = (name, ok, zusatz = '') => {
 const ctx = { console };
 vm.createContext(ctx);
 for (const f of ['themes', 'courses', 'courses_sea', 'courses_jungle', 'courses_storm', 'courses_shadow',
-                 'courses_colosseum', 'courses_clock', 'courses_snow', 'courses_mine', 'courses_flut', 'courses_zauber', 'courses_pro'])
+                 'courses_colosseum', 'courses_clock', 'courses_snow', 'courses_mine', 'courses_flut', 'courses_pro'])
   vm.runInContext(lies(`src/${f}.js`), ctx);
 const WORLDS = vm.runInContext('WORLDS', ctx);
 

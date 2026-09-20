@@ -15,8 +15,8 @@ const WURZEL = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = path.join(WURZEL, 'src');
 const ctx = { console, performance: { now: () => 0 }, window: {} }; vm.createContext(ctx);
 for (const f of ['themes', 'courses', 'courses_sea', 'courses_jungle', 'courses_storm', 'courses_shadow',
-                 'courses_colosseum', 'courses_clock', 'courses_snow', 'courses_mine', 'courses_flut', 'courses_zauber', 'courses_pro', 'level',
-                 'obstacles', 'obstacles_legend', 'obstacles_snow', 'obstacles_mine', 'obstacles_flut', 'obstacles_zauber', 'physics'])
+                 'courses_colosseum', 'courses_clock', 'courses_snow', 'courses_mine', 'courses_flut', 'courses_pro', 'level',
+                 'obstacles', 'obstacles_legend', 'obstacles_snow', 'obstacles_mine', 'obstacles_flut', 'physics'])
   vm.runInContext(fs.readFileSync(path.join(SRC, `${f}.js`), 'utf8'), ctx);
 // waechteAbrutschen wird weich geholt: Fehlt die Regel, soll diese Datei einen benannten Fehler
 // melden und nicht mit einem ReferenceError abstürzen - ein Absturz sagt nicht, was fehlt.

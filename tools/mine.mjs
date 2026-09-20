@@ -20,8 +20,8 @@ import { fileURLToPath } from 'node:url';
 const SRC = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'src');
 const ctx = { console, performance: { now: () => 0 }, window: {} }; vm.createContext(ctx);
 for (const f of ['themes', 'courses', 'courses_sea', 'courses_jungle', 'courses_storm', 'courses_shadow',
-                 'courses_colosseum', 'courses_clock', 'courses_snow', 'courses_mine', 'courses_flut', 'courses_zauber', 'courses_pro', 'level',
-                 'obstacles', 'obstacles_legend', 'obstacles_snow', 'obstacles_mine', 'obstacles_flut', 'obstacles_zauber', 'physics'])
+                 'courses_colosseum', 'courses_clock', 'courses_snow', 'courses_mine', 'courses_flut', 'courses_pro', 'level',
+                 'obstacles', 'obstacles_legend', 'obstacles_snow', 'obstacles_mine', 'obstacles_flut', 'physics'])
   vm.runInContext(fs.readFileSync(path.join(SRC, `${f}.js`), 'utf8'), ctx);
 const G = vm.runInContext('({buildLevel, makeBall, stepPhysics, SPRENG_TAKT, SPRENG_STOSS, SPRENG_WEITE, KIPP_MITTE})', ctx);
 const STEP = 1 / 240;

@@ -99,17 +99,6 @@ const Editor = (deps) => {
       ['lavafontaene', 'Lavafontäne', 'Schießt im Takt glühend nach oben.'],
       ['giessloeffel', 'Gießlöffel', 'Kippt glühendes Erz in eine Rinne – die glüht dann kurz tödlich.'],
     ]],
-    ['Zauberreich', [
-      ['ranke', 'Rankenbrücke', 'Die Blüte anstoßen läßt eine Ranke über die Lücke wachsen – für ein paar Sekunden.'],
-      ['zauberhut', 'Zauberhüte', 'Wer in einen Hut rollt, kommt aus dem leuchtenden wieder heraus. Das Leuchten wandert.'],
-      ['mondzieher', 'Mondzieher', 'Zieht und stößt im Wechsel. Volle Scheibe zieht, dunkle stößt, Halbmond läßt in Ruhe.'],
-      ['sternbild', 'Sternbild', 'Alle Sterne anfahren, dann geht das Tor auf. Die Linien zeigen, was noch fehlt.'],
-      ['zauberspiegel', 'Zauberspiegel', 'Wer hineinrollt, kommt drüben seitenverkehrt heraus. Wo man auftrifft, entscheidet, wo man landet.'],
-      ['zauberkreis', 'Zauberkreis', 'Ein Runenring im Boden. Die Farbe sagt vorher, was er tut: grün schiebt, blau bremst, gold wirft, violett dreht, rot sperrt.'],
-      ['riesenbluete', 'Riesenblüte', 'Der Endgegner des Gartens. Öffnet und schließt sich im Takt; beim Schließen wirft der Pollenstoß alles aus dem Kelch.'],
-      ['armillar', 'Große Armillarsphäre', 'Der Endgegner der Warte. Drei Ringe, jeder mit einer Gasse, jeder mit eigenem Tempo.'],
-      ['bannwaechter', 'Bannwächter', 'Der Endgegner der Loge. Sein Arm dreht sich zum Ball, dann schlägt er in den Keil, in den er zeigt.'],
-    ]],
     ['Die Flut', [
       ['flut', 'Flutbecken', 'Ein Becken, das im Takt vollläuft und wieder leerläuft.'],
       ['pumpwerk', 'Pumpwerk', 'Wer es berührt, hält die Becken eine Weile leer.'],
@@ -127,7 +116,7 @@ const Editor = (deps) => {
   const MASCHINE_NAME = {}, MASCHINE_SATZ = {};
   for (const [, stuecke] of MASCHINEN) for (const [k, n, s] of stuecke) { MASCHINE_NAME[k] = n; MASCHINE_SATZ[k] = s; }
   /* Maschinen, die zwei Tipper brauchen: eine Strecke oder ein Paar von Plätzen. */
-  const ZWEI_TIPPER = new Set(['wall', 'portal', 'angler', 'wandergate', 'seilbahn', 'liongate', 'copperpipe', 'abflussrohr', 'zauberspiegel']);
+  const ZWEI_TIPPER = new Set(['wall', 'portal', 'angler', 'wandergate', 'seilbahn', 'liongate', 'copperpipe', 'abflussrohr']);
   /* Die drei, die ihre beiden Plätze als Buchstaben in der Karte ablegen – wie im Bahn-Quelltext. */
   const PAAR_MASCHINEN = new Set(['liongate', 'copperpipe', 'abflussrohr']);
 
@@ -153,41 +142,15 @@ const Editor = (deps) => {
   const AUSSEHEN = {
     bumper: [['mushroom', 'Pilz'], ['crystal', 'Kristall'], ['rock', 'Fels'], ['coral', 'Koralle'],
              ['idol', 'Götze'], ['orb', 'Leuchtkugel'], ['grave', 'Grabstein'], ['eye', 'Auge'],
-             ['fass', 'Faß'], ['feder', 'Sprungfeder'], ['springkraut', 'Springkraut'],
-             ['meteorit', 'Meteorit'], ['bannstein', 'Bannstein']],
+             ['fass', 'Faß'], ['feder', 'Sprungfeder']],
     rotor: [['wood', 'Windrad'], ['crystal', 'Kristall'], ['log', 'Baumstamm'], ['stone', 'Steinbalken'],
             ['broom', 'Besen'], ['tentacle', 'Tentakel'], ['darktentacle', 'Dunkler Tentakel'],
             ['knight', 'Ritterstatue'], ['vine', 'Ranke'], ['propeller', 'Propeller'],
-            ['scythe', 'Sense'], ['pendel', 'Pendel'], ['sprenger', 'Rasensprenger'],
-            ['bannzeiger', 'Bannzeiger']],
-    magnet: [['', 'Kristall'], ['pearl', 'Perle'], ['coral', 'Koralle'], ['soul', 'Seelenlicht'],
-             ['pollen', 'Pollenstrudel']],
-    /* Der Runenstein ist der Entwurf aus Fassung 196: im Garten wieder herausgenommen, hier
-       aufgehoben. Für eine Loge oder eine Gruft ist er genau richtig. */
-    zauberhut: [['', 'Zauberhüte'], ['runenstein', 'Runensteine'], ['maulwurf', 'Maulwurfshügel']],
-    /* Die sechs Instrumente der Sternenwarte: dasselbe Verhalten, aus Messing statt aus
-       Uhrwerkstadt, Schattenreich und Flut. */
-    eyetower: [['', 'Turm des Auges'], ['tubus', 'Großes Fernrohr'], ['sternenspiegel', 'Sternenspiegel']],
-    pendulum: [['', 'Pendel'], ['foucault', 'Foucault-Pendel'], ['kettenlot', 'Kettenlot']],
-    /* Die sieben Bannzeichen der Erzmagierloge: schwarzer Marmor, Gold, violettes Bannfeuer. */
-    grubenlampe: [['', 'Grubenlampe'], ['bannlicht', 'Bannlicht']],
-    lightning: [['', 'Blitz'], ['bannschlag', 'Bannschlag']],
-    updraft: [['', 'Aufwind'], ['bannschacht', 'Bannschacht']],
-    wanderloch: [['', 'Wanderndes Loch'], ['siegelloch', 'Siegelloch']],
-    gearfield: [['', 'Zahnradfeld'], ['meridian', 'Meridianschiene']],
-    strudel: [['', 'Strudel'], ['spiralnebel', 'Spiralnebel']],
-    wandergate: [['', 'Wanderndes Tor'], ['kulisse', 'Planetariumskulisse']],
-    /* Beim Zauberkreis ist das „Aussehen" ausnahmsweise auch die Wirkung – genau das ist seine
-       Idee: Man sieht der Farbe an, was der Kreis tut, bevor man hineinrollt. */
-    zauberkreis: [['schub', 'Schubkreis (grün)'], ['bremse', 'Bremskreis (blau)'],
-                  ['sprung', 'Sprungkreis (gold)'], ['wirbel', 'Wirbelkreis (violett)'],
-                  ['bann', 'Bannkreis (rot)']],
-    copperpipe: [['', 'Kupferrohr'], ['siegelroehre', 'Siegelröhre']],
-    cannon: [['', 'Kanone'], ['ballista', 'Balliste'], ['catapult', 'Katapult'], ['wrackkanone', 'Wrackkanone'], ['bannschleuder', 'Bannschleuder'], ['fernschleuder', 'Fernschleuder']],
-    turntable: [['', 'Drehscheibe'], ['whirl', 'Strudel'], ['tornado', 'Wirbelsturm'], ['void', 'Leere'],
-                ['sonnenblume', 'Riesen-Sonnenblume']],
-    windmill: [['', 'Windmühle'], ['ofen', 'Schmelzofen'], ['wasserwand', 'Wasserwand'],
-               ['bienenstock', 'Bienenstock']],
+            ['scythe', 'Sense'], ['pendel', 'Pendel']],
+    magnet: [['', 'Kristall'], ['pearl', 'Perle'], ['coral', 'Koralle'], ['soul', 'Seelenlicht']],
+    cannon: [['', 'Kanone'], ['ballista', 'Balliste'], ['catapult', 'Katapult'], ['wrackkanone', 'Wrackkanone']],
+    turntable: [['', 'Drehscheibe'], ['whirl', 'Strudel'], ['tornado', 'Wirbelsturm'], ['void', 'Leere']],
+    windmill: [['', 'Windmühle'], ['ofen', 'Schmelzofen'], ['wasserwand', 'Wasserwand']],
     sharkjump: [['', 'Hai'], ['croc', 'Krokodil'], ['bat', 'Fledermaus']],
     field: [['wind', 'Wind'], ['current', 'Strömung'], ['steam', 'Dampf'], ['dark', 'Dunkelzone'], ['slope', 'Schräge']],
     mover: FAHRZEUGE, ferry: FAHRZEUGE, wave: FAHRZEUGE,
@@ -247,7 +210,6 @@ const Editor = (deps) => {
     wanderloch:  [['r', 'Größe', 2, 9, 0.25], ['marken', 'Wie viele Marken', 3, 16, 1], null, ['phase', 'Versatz im Takt', 0, 0.95, 0.05]],
     copperpipe:  [],
 
-
     windfahne:   [['kraft', 'Wie stark der Wind', 1, 12, 0.25], null, ['phase', 'Versatz im Takt', 0, 0.95, 0.05]],
     lawine:      [['w', 'Breite', 2, 16, 1], ['h', 'Tiefe', 2, 16, 1], null, ['phase', 'Versatz im Takt', 0, 0.95, 0.05]],
     seilbahn:    [['wait', 'Wie lange sie wartet', 0.5, 6, 0.25], ['travel', 'Wie lange die Fahrt dauert', 1, 8, 0.25], null, ['w', 'Breite', 0.6, 2.5, 0.1], ['h', 'Tiefe', 0.6, 2.5, 0.1]],
@@ -259,14 +221,6 @@ const Editor = (deps) => {
     grubenlampe: [['r', 'Wie weit sie leuchtet', 1.5, 7, 0.25]],
     lavafontaene: [['takt', 'Wie oft (Sekunden)', 1, 8, 0.25], ['hoehe', 'Wie hoch', 1.5, 6, 0.1], null, ['r', 'Größe', 0.4, 2, 0.05], ['oben', 'Wie lange oben', 0.2, 2, 0.05], ['droht', 'Vorwarnung', 0.2, 2, 0.05], ['phase', 'Versatz im Takt', 0, 0.95, 0.05]],
     giessloeffel: [['takt', 'Wie oft (Sekunden)', 1.5, 8, 0.25], ['glut', 'Wie lange es glüht', 0.4, 3, 0.1], null, ['kipp', 'Vorwarnung', 0.3, 2, 0.05], ['phase', 'Versatz im Takt', 0, 0.95, 0.05]],
-
-    ranke:       [['dauer', 'Wie lange sie trägt', 1.5, 10, 0.25], ['w', 'Breite', 1, 12, 1], ['h', 'Tiefe', 1, 8, 1], null, ['r', 'Wie nah an die Blüte', 0.3, 1.2, 0.05]],
-    zauberhut:   [['takt', 'Wie oft das Leuchten wandert', 1, 8, 0.2], ['r', 'Wie groß die Öffnung', 0.25, 0.9, 0.02], null, ['phase', 'Versatz im Takt', 0, 0.95, 0.05]],
-    sternbild:   [['r', 'Wie nah an einen Stern', 0.3, 1.2, 0.05]],
-    riesenbluete: [['r', 'Größe', 2.5, 7, 0.1], ['takt', 'Wie lange ein Auf und Zu dauert', 4, 16, 0.5], ['blaetter', 'Wie viele Blätter', 4, 10, 1], null, ['kraft', 'Wie stark der Pollenstoß ist', 10, 45, 1], ['phase', 'Versatz im Takt', 0, 0.95, 0.05]],
-    bannwaechter: [['weite', 'Wie weit er schlägt', 5, 18, 0.5], ['keil', 'Wie breit sein Keil ist', 0.15, 0.9, 0.05], ['takt', 'Wie oft er schlägt', 2.5, 10, 0.5], null, ['folgen', 'Wie schnell sein Arm folgt', 0.3, 3, 0.1], ['wucht', 'Wie weit er wirft', 6, 24, 1], ['r', 'Größe', 1, 3, 0.1], ['phase', 'Versatz im Takt', 0, 0.95, 0.05]],
-    zauberkreis: [['r', 'Größe', 0.8, 4, 0.1], ['takt', 'Wie lange ein Lauf dauert (0 = brennt immer)', 0, 12, 0.5], ['weite', 'Wie weit der Sprungkreis wirft', 2, 9, 0.2], null, ['phase', 'Versatz im Takt', 0, 0.95, 0.05]],
-    mondzieher:  [['kraft', 'Wie stark', 3, 18, 0.5], ['r', 'Reichweite', 1.5, 7, 0.1], ['takt', 'Wie lange ein Mondlauf dauert', 3, 14, 0.5], null, ['core', 'Wie dick der Sockel', 0.2, 0.9, 0.05], ['phase', 'Versatz im Takt', 0, 0.95, 0.05]],
 
     flut:        [['w', 'Breite', 3, 16, 1], ['h', 'Tiefe', 3, 16, 1], ['max', 'Wie tief es wird', 1, 4, 1], null, ['takt', 'Sekunden je Stufe', 0.4, 3, 0.1], ['halt', 'Wie lange es voll steht', 0.3, 4, 0.1], ['leer', 'Wie lange es leer steht', 1, 10, 0.5], ['start', 'Wann es losgeht', 0, 8, 0.5]],
     pumpwerk:    [['dauer', 'Wie lange es pumpt', 2, 8, 0.25], ['r', 'Größe', 0.4, 1.5, 0.05], null, ['stufen', 'Wie viele Stufen', 1, 9, 1]],
@@ -294,7 +248,6 @@ const Editor = (deps) => {
     ['Schneeberg', [['snowfoot', 'Bergfuß'], ['snowrock', 'Felsstufe'], ['glacier', 'Gletscher'], ['summit', 'Gipfel']]],
     ['Zwergenmine', [['mundloch', 'Mundloch'], ['stollen', 'Stollen'], ['kristall', 'Kristallkammer'], ['schmelze', 'Schmelze']]],
     ['Die Flut', [['wasserlinie', 'Wasserlinie'], ['flachwasser', 'Flachwasser'], ['daemmerzone', 'Dämmerzone'], ['meeresgrund', 'Meeresgrund']]],
-    ['Zauberreich', [['lehrlingsgarten', 'Lehrlingsgarten'], ['gewaechshaus', 'Gewächshaus']]],
   ];
   const THEMA_NAME = {};
   for (const [, liste] of THEMEN) for (const [k, n] of liste) THEMA_NAME[k] = n;
@@ -588,27 +541,6 @@ const Editor = (deps) => {
       // Der Löffel gießt in eine Rinne; sie beginnt gleich neben der Pfanne und läuft nach rechts.
       case 'giessloeffel': return { type: 'giessloeffel', x, y, takt: 3, glut: 1, kipp: 0.8, phase: 0, rinne: { x: tx + 1, y: ty, len: 5, dx: 1, dy: 0 } };
 
-      /* --- Zauberreich ---
-         Die Ranke bringt ihre Blüte mit: Sie ist Teil der Maschine, nicht ein zweites Ding, das
-         man daneben setzen müßte. Die Hüte stehen zu dritt in einer Reihe – zwei wären ein
-         Portal, vier sind auf einer Normal-Bahn zu viel zu merken. */
-      case 'ranke': return { type: 'ranke', x: Math.max(0, tx - 1), y: ty, w: 3, h: 1, dauer: 4, r: 0.6,
-                             bluete: { x: Math.max(0.5, tx - 2.5), y: ty + 0.5 } };
-      case 'zauberhut': return { type: 'zauberhut', takt: 2.6, r: 0.42, phase: 0,
-                                 plaetze: [[x - 3, y], [x, y - 2], [x + 3, y]] };
-      case 'mondzieher': return { type: 'mondzieher', x, y, r: 3.4, kraft: 9, takt: 7, core: 0.4, phase: 0 };
-      case 'zauberkreis': return { type: 'zauberkreis', x, y, r: 1.6, wirkung: 'schub', takt: 0, phase: 0, weite: 4.2 };
-      case 'riesenbluete': return { type: 'riesenbluete', x, y, r: 4.2, blaetter: 6, takt: 8, phase: 0, kraft: 26, dicke: 0.38 };
-      case 'armillar': return { type: 'armillar', x, y, dicke: 0.3, ringe: [
-        { r: 8.2, gasse: 0.62, tempo: 0.3, phase: 0 }, { r: 5.6, gasse: 0.72, tempo: -0.44, phase: 0.35 },
-        { r: 3.1, gasse: 0.86, tempo: 0.66, phase: 0.7 }] };
-      case 'bannwaechter': return { type: 'bannwaechter', x, y, r: 1.8, weite: 13, keil: 0.4, takt: 5, phase: 0, folgen: 1.1, wucht: 15, warn: 1.2, schlag: 0.3 };
-      /* Das Sternbild bringt sein Tor mit: Ohne Tor waeren die Sterne Schmuck. Gesetzt wird es
-         rechts daneben; verschieben kann man beide Enden einzeln. */
-      case 'sternbild': return { type: 'sternbild', r: 0.5,
-                                 sterne: [[x - 3, y - 2], [x, y - 3], [x + 3, y - 2]],
-                                 tor: { x0: x + 5, y0: y - 2, x1: x + 5, y1: y + 2 } };
-
       /* --- Die Flut --- */
       case 'flut': return { type: 'flut', x, y, w: 6, h: 6, max: 3, takt: 1.2, halt: 1, leer: 5, start: 2.5 };
       case 'pumpwerk': return { type: 'pumpwerk', x, y, r: 0.6, dauer: 4, stufen: 9 };
@@ -630,7 +562,6 @@ const Editor = (deps) => {
       case 'angler': return { type: 'angler', x0: a[0], y0: a[1], x1: b[0], y1: b[1], tempo: 2.2, r: 0.62, licht: 3.6, phase: 0 };
       case 'wandergate': return { type: 'wandergate', x0: a[0], y0: a[1], x1: b[0], y1: b[1], gap: 1.7, t: 0.26, h: 0.75 };
       case 'seilbahn': return { type: 'seilbahn', x0: a[0], y0: a[1], x1: b[0], y1: b[1], w: 1.2, h: 1.2, wait: 2.6, travel: 3.4 };
-      case 'zauberspiegel': return { type: 'zauberspiegel', x0: a[0], y0: a[1], x1: b[0], y1: b[1] };
       default: return null;
     }
   }
@@ -658,7 +589,7 @@ const Editor = (deps) => {
      Woran man eine Maschine anfaßt. Maschinen mit zwei Enden haben drei: die beiden Enden – die
      sich einzeln ziehen lassen – und die Mitte, an der das Ganze wandert. */
   const NACH_ECKE = new Set(['field', 'ramp', 'boost', 'spikes', 'updraft', 'lawine', 'kippbuehne', 'schneebruecke']);
-  const MIT_STRECKE = new Set(['mover', 'ferry', 'wave', 'gearfield', 'angler', 'wandergate', 'seilbahn', 'zauberspiegel']);
+  const MIT_STRECKE = new Set(['mover', 'ferry', 'wave', 'gearfield', 'angler', 'wandergate', 'seilbahn']);
   function anchors(o) {
     if (NACH_ECKE.has(o.type)) return [[o.x + (o.w || 1) / 2, o.y + (o.h || 1) / 2]];
     if (MIT_STRECKE.has(o.type)) return [[o.x0, o.y0], [o.x1, o.y1], [(o.x0 + o.x1) / 2, (o.y0 + o.y1) / 2]];
@@ -668,12 +599,6 @@ const Editor = (deps) => {
     if (o.type === 'firetower') return [[o.x, o.y], [o.zx + o.zw / 2, o.zy + o.zh / 2]];
     if (o.type === 'imperialbox') return [[o.x, o.y], [o.lx + o.lw / 2, o.ly + o.lh / 2]];
     if (o.type === 'giessloeffel' && o.rinne) return [[o.x, o.y], [o.rinne.x + 0.5, o.rinne.y + 0.5]];
-    // Die Ranke faßt man an der Brücke oder an ihrer Blüte an, die Hüte einzeln
-    if (o.type === 'ranke') return [[o.x + o.w / 2, o.y + o.h / 2], [o.bluete.x, o.bluete.y]];
-    if (o.type === 'zauberhut' && Array.isArray(o.plaetze)) return o.plaetze.map(p => [p[0], p[1]]);
-    // Das Sternbild faßt man an jedem Stern an, dazu an den beiden Enden seines Tores
-    if (o.type === 'sternbild' && Array.isArray(o.sterne))
-      return o.sterne.map(p => [p[0], p[1]]).concat(o.tor ? [[o.tor.x0, o.tor.y0], [o.tor.x1, o.tor.y1]] : []);
     if (o.x == null) return [];
     return [[o.x, o.y]];
   }
@@ -702,15 +627,6 @@ const Editor = (deps) => {
     if (o.type === 'firetower' && punkt === 1) { o.zx += dx; o.zy += dy; return; }
     if (o.type === 'imperialbox' && punkt === 1) { o.lx += dx; o.ly += dy; return; }
     if (o.type === 'giessloeffel' && punkt === 1 && o.rinne) { o.rinne.x += dx; o.rinne.y += dy; return; }
-    if (o.type === 'ranke' && punkt === 1) { o.bluete.x += dx; o.bluete.y += dy; return; }
-    if (o.type === 'zauberhut' && Array.isArray(o.plaetze)) { const p = o.plaetze[punkt]; if (p) { p[0] += dx; p[1] += dy; } return; }
-    if (o.type === 'sternbild' && Array.isArray(o.sterne)) {
-      const n = o.sterne.length;
-      if (punkt < n) { o.sterne[punkt][0] += dx; o.sterne[punkt][1] += dy; return; }
-      if (o.tor && punkt === n) { o.tor.x0 += dx; o.tor.y0 += dy; return; }
-      if (o.tor) { o.tor.x1 += dx; o.tor.y1 += dy; return; }
-      return;
-    }
     for (const k of ['x', 'y', 'x0', 'y0', 'x1', 'y1', 'tx', 'ty', 'zx', 'zy', 'lx', 'ly']) {
       if (o[k] == null) continue;
       if (k === 'x' || k === 'x0' || k === 'x1' || k === 'tx' || k === 'zx' || k === 'lx') o[k] += dx; else o[k] += dy;
@@ -734,8 +650,7 @@ const Editor = (deps) => {
       // Die Mühle kippt zwischen quer und längs. Ihre Gestalt – Mühle, Schmelzofen, Wasserwand –
       // steht seit Fassung 191 unter „Aussehen“ und hängt nicht mehr mit am Drehen.
       case 'windmill': o.axis = o.axis === 'x' ? 'y' : 'x'; break;
-      case 'mover': case 'ferry': case 'wave': case 'gearfield': case 'angler': case 'wandergate': case 'seilbahn':
-      case 'zauberspiegel': kipp(); break;
+      case 'mover': case 'ferry': case 'wave': case 'gearfield': case 'angler': case 'wandergate': case 'seilbahn': kipp(); break;
       // Drehen dreht nur noch: Balliste, Katapult und Wrackkanone stehen unter „Aussehen“.
       case 'cannon': o.base = Math.round((((o.base || 0) + Math.PI / 2) % (Math.PI * 2)) * 1000) / 1000; break;
       case 'magnet': o.strength = -o.strength; break;
@@ -749,15 +664,6 @@ const Editor = (deps) => {
       case 'sharkjump': o.axis = o.axis === 'x' ? 'y' : 'x'; break;
       case 'spikes': case 'updraft': case 'lightning': case 'guillotine': case 'trapdoor':
       case 'escapement': case 'tangwald': case 'bruchwand': case 'schneebruecke': case 'flut': tausch(); break;
-      // Die Ranke kippt mitsamt ihrer Blüte, die Hüte versetzen ihr Leuchten
-      case 'ranke': { tausch(); const mx = o.x + o.w / 2, my = o.y + o.h / 2;
-        const rx = o.bluete.x - mx, ry = o.bluete.y - my; o.bluete.x = mx - ry; o.bluete.y = my + rx; break; }
-      case 'zauberhut': o.phase = Math.round((((o.phase || 0) + 0.25) % 1) * 100) / 100; break;
-      // Beim Sternbild dreht sich das Tor um seine Mitte – die Sterne bleiben, wo sie stehen
-      case 'sternbild': if (o.tor) { const cx = (o.tor.x0 + o.tor.x1) / 2, cy = (o.tor.y0 + o.tor.y1) / 2;
-        const L = Math.hypot(o.tor.x1 - o.tor.x0, o.tor.y1 - o.tor.y0) / 2;
-        if (Math.abs(o.tor.y1 - o.tor.y0) > Math.abs(o.tor.x1 - o.tor.x0)) { o.tor.y0 = o.tor.y1 = cy; o.tor.x0 = cx - L; o.tor.x1 = cx + L; }
-        else { o.tor.x0 = o.tor.x1 = cx; o.tor.y0 = cy - L; o.tor.y1 = cy + L; } } break;
       case 'eyetower': o.phase = Math.round((((o.phase || 0) + Math.PI / 2) % (Math.PI * 2)) * 100) / 100; break;
       case 'switch': o.target = o.target === 'A' ? 'B' : 'A'; break;
       case 'imperialbox': { tausch(); const w = o.lw; o.lw = o.lh; o.lh = w; break; }
@@ -795,7 +701,6 @@ const Editor = (deps) => {
   const zweiterTipp = kind => kind === 'wall' ? 'Jetzt das Ende der Bande antippen'
     : kind === 'portal' ? 'Jetzt den Ausgang antippen'
     : kind === 'angler' ? 'Jetzt das andere Ende seiner Strecke antippen'
-    : kind === 'zauberspiegel' ? 'Jetzt das andere Ende des Spiegels antippen'
     : kind === 'liongate' ? 'Jetzt den Ausgang antippen – er darf nicht auf dem Weg liegen'
     : (kind === 'copperpipe' || kind === 'abflussrohr') ? 'Jetzt den Auslauf antippen'
     : 'Jetzt das andere Ende antippen';
@@ -1016,10 +921,7 @@ const Editor = (deps) => {
     /* Das Aussehen steht ganz oben, vor den Reglern: Es ist das, was man als erstes ändern will,
        und man sieht es sofort auf der Bahn. */
     const stile = AUSSEHEN[o.type] || [];
-    /* Der Zauberkreis trägt seine Gestalt in 'wirkung', nicht in 'style' – bei ihm IST die Farbe
-       die Wirkung, und die Maschine soll nicht zwei Felder für dieselbe Sache haben. */
-    const stilFeld = o.type === 'zauberkreis' ? 'wirkung' : 'style';
-    const jetzt = o[stilFeld] || '';
+    const jetzt = o.style || '';
     const aussehen = stile.length ? `<div class="bl-welt">Aussehen</div><div class="bl-stile">${stile.map(([w, n]) =>
       `<button class="bl-stil${w === jetzt ? ' sel' : ''}" data-s="${w}">${n}</button>`).join('')}</div>` : '';
     const nichts = !oben.length && !unten.length && !stile.length ? '<div class="bl-leer">An dieser Maschine gibt es nichts einzustellen – ihre Plätze bestimmen alles.</div>' : '';
@@ -1048,7 +950,7 @@ const Editor = (deps) => {
       r.addEventListener('change', () => { ablegen(vorRegler); vorRegler = stand(); });
     });
     ed.blatt.querySelectorAll('.bl-stil').forEach(b => b.addEventListener('click', () => aenderung(() => {
-      if (b.dataset.s) o[stilFeld] = b.dataset.s; else delete o[stilFeld];
+      if (b.dataset.s) o.style = b.dataset.s; else delete o.style;
       rebuild(); blattMaschine(mehr);
     })));
     if ($('bl-mehr')) $('bl-mehr').addEventListener('click', () => blattMaschine(true));
