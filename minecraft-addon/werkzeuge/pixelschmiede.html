@@ -1739,7 +1739,6 @@
   }
 
   var KATEGORIEN = [
-    ["projekt", "Aus dem Projekt"],
     ["waffen", "Waffen"],
     ["werkzeuge", "Werkzeuge"],
     ["ruestung", "Rüstung"],
@@ -1754,13 +1753,13 @@
   // ohne dass es je jemand abgelegt hat.
   function projektWerke() {
     return [
-      { name: "Sternenstaub", kategorie: "projekt", fest: true,
+      { name: "Sternenstaub", kategorie: "gegenstaende", fest: true,
         bild: VORLAGEN.sternenstaub, farben: benutzteFarben(VORLAGEN.sternenstaub) },
-      { name: "Sternenklinge", kategorie: "projekt", fest: true,
+      { name: "Sternenklinge", kategorie: "waffen", fest: true,
         bild: VORLAGEN.sternenklinge, farben: benutzteFarben(VORLAGEN.sternenklinge) },
-      { name: "Erz: Steinuntergrund", kategorie: "projekt", fest: true,
+      { name: "Erz: Steinuntergrund", kategorie: "bloecke", fest: true,
         bild: VORLAGEN.steinuntergrund, farben: benutzteFarben(VORLAGEN.steinuntergrund) },
-      { name: "Silbererz", kategorie: "projekt", fest: true,
+      { name: "Silbererz", kategorie: "bloecke", fest: true,
         bild: VORLAGEN.silbererz, farben: benutzteFarben(VORLAGEN.silbererz) }
     ];
   }
@@ -1796,7 +1795,8 @@
 
     var masse = document.createElement("div");
     masse.className = "masse";
-    masse.textContent = werk.bild[0].length + " × " + werk.bild.length;
+    masse.textContent = werk.bild[0].length + " × " + werk.bild.length
+      + (werk.fest ? " · im Add-on" : "");
     karte.appendChild(masse);
 
     var reihe = document.createElement("div");
