@@ -622,8 +622,9 @@
         </p>
         <textarea id="ausgabe" spellcheck="false" aria-label="Zeichenkarte"></textarea>
         <div class="knopfreihe" style="margin-top:10px">
+          <button type="button" id="kopieren">In die Zwischenablage</button>
+          <button type="button" id="markieren">Nur markieren</button>
           <button type="button" id="uebernehmen">Übernehmen</button>
-          <button type="button" id="markieren">Alles markieren</button>
         </div>
         <p class="meldung" id="meldung" role="status"></p>
       </section>
@@ -1385,10 +1386,35 @@
       (neueFarben ? ", " + neueFarben + " neue Farbe(n)" : "") + ".");
   });
 
+  // Auf dem Tablet ist Markieren-Antippen-Kopieren drei Handgriffe, von denen
+  // der mittlere gern danebengeht. Die Zwischenablage kann in einer
+  // eingebetteten Seite gesperrt sein - dann bleibt der alte Weg uebrig.
+  document.getElementById("kopieren").addEventListener("click", function () {
+    var text = ausgabe.value;
+    function nachricht(erfolg) {
+      if (erfolg) meldung("Kopiert — jetzt im Chat einfügen.");
+      else {
+        ausgabe.focus();
+        ausgabe.select();
+        meldung("Kopieren ging nicht. Der Text ist markiert — "
+          + "draufhalten und „Kopieren“ wählen.", "fehler");
+      }
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () {
+        nachricht(true);
+      }, function () {
+        nachricht(false);
+      });
+      return;
+    }
+    nachricht(false);
+  });
+
   document.getElementById("markieren").addEventListener("click", function () {
     ausgabe.focus();
     ausgabe.select();
-    meldung("Markiert — jetzt kopieren und in den Chat einfügen.");
+    meldung("Markiert — draufhalten und „Kopieren“ wählen.");
   });
 
 
