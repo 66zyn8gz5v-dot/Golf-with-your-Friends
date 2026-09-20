@@ -142,6 +142,33 @@ ein Dungeon, das an drei Stellen klemmt.
 Naheliegende erste Kandidaten: der Altar, an dem der Boss beschworen wird, und
 kleine Ruinen mit Kristalltruhen.
 
+## Prüfungsspawner und Arenen
+
+Der Prüfungsspawner aus den Prüfungskammern spuckt Wellen aus und gibt danach
+Beute — von der Idee her genau das, was eine Arena braucht.
+
+**Geht:** Den Mob eines Prüfungsspawners mit einem Spawn-Ei umstellen, auch
+auf eigene Mobs. Eigene Wesen bekommen ihr Spawn-Ei automatisch.
+
+**Geht nicht:** Das per Add-on festlegen. Die Einstellungen im Spawner
+(`normal_config`, `ominous_config`) sind in Bedrock von aussen nicht
+beschreibbar, anders als in der Java-Version. Die Prüfungskammern, die
+Minecraft selbst erzeugt, behalten also ihre Vanilla-Mobs; jeder Spawner
+müsste von Hand umgestellt werden.
+
+**Geht wieder:** Die Belohnungen. Die Beutelisten der Tresore und Spawner
+lassen sich im eigenen Paket überschreiben — dann liegen in allen
+Prüfungskammern unsere Kristalle.
+
+**Zu prüfen, sobald das Spiel läuft:** Ob ein Strukturblock die Einstellung
+eines umgestellten Prüfungsspawners mitspeichert. Bei gewöhnlichen Spawnern
+tut er das. Wenn ja, lässt sich eine eigene Arena bauen, deren Spawner die
+eigenen Mobs ruft, und die dann überall in der Welt erscheint. Das wäre ein
+lohnender früher Versuch.
+
+**Rückfallweg:** Ein eigenes Wellensystem per Skript. Mehr Arbeit, dafür alles
+selbst bestimmt — welche Mobs, wie viele, wie stark, welche Beute.
+
 ## In welcher Reihenfolge
 
 Jede Stufe muss für sich funktionieren und spielbar sein.
