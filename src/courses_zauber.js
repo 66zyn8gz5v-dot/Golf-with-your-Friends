@@ -1007,7 +1007,7 @@ const ZAUBER_LOGE = [
     autoDecor: { density: 0.09, seed: 71 },
   },
   {
-    name: 'Der Bannschacht', par: 5, theme: 'erzmagierloge',
+    name: 'Der Bannschacht', par: 4, theme: 'erzmagierloge',
     intro: 'Die Galerie bricht über der Leere ab. Hinüber hebt nur der Bannschacht, und in den muß man mit Schwung hineinrollen – wer zu sacht spielt, liegt vor dem Stein am Ende. Dann bleibt der lange Weg am Grund, und dort zieht der Mond.',
     map: [
       '........................................................',

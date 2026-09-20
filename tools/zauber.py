@@ -1791,7 +1791,10 @@ bahn(LOGE, 'Der Bannschacht', 'erzmagierloge', f, [
     mond(24.0, 16.5, r=3.4, kraft=8.0, takt=6.5, phase=0.3),
     kreis(43.0, 12.0, 'bremse', r=1.2),
     lampe(49.0, 5.5, r=4.0, stil='bannlicht'),
-], par=5,
+# Bot-Median DREI, nachdem der falsch gesetzte Keil weg war - zwei Schläge unter Par 5. Der
+# Aufwind trägt jetzt in einem Zug von der Galerie bis fast vor das Loch, und genau das soll er:
+# Wer ihn trifft, hat die Abkürzung verdient. Das Par sagt jetzt dasselbe.
+], par=4,
 intro='Die Galerie bricht über der Leere ab. Hinüber hebt nur der Bannschacht, und in den muß man '
       'mit Schwung hineinrollen – wer zu sacht spielt, liegt vor dem Stein am Ende. Dann bleibt '
       'der lange Weg am Grund, und dort zieht der Mond.')
