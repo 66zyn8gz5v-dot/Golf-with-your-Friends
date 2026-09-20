@@ -1546,12 +1546,19 @@ bahn(WARTE, 'Die Große Armillarsphäre', 'sternenwarte', f, [
     sphaere(21.5, 17.5, [(14.0, 1.10, 0.20, 0.00, 'zug'),
                          (9.0, 1.30, -0.26, 0.40, 'schub'),
                          (4.5, 1.60, 0.30, 0.75, None)]),
-], par=6, maxStrokes=20,
-intro='Vier Messingringe um das Loch, jeder mit einer einzigen Gasse, jeder mit eigenem Tempo und '
-      'eigener Richtung – und jeder Ring hat seine eigene Wirkung, die im Band hinter ihm gilt. '
-      'Draußen zieht es zur Mitte, dahinter schiebt es, dahinter dreht es einen. Erst ganz innen '
-      'ist Ruhe. Die Farbe am Boden sagt vorher, was gleich gilt; die hellen Pfosten sagen, wo die '
-      'Gasse gerade steht.')
+# MIT DREI RINGEN: Bot-Median ACHT, Schnitt 6,7, kein einziger Durchgang am Schlaglimit - gegen
+# Median 14 und 19 mit vieren. Der Profi braucht sechs. Zwei Schläge Abstand zwischen Profi und
+# Normalspieler sind gesund; neun bis vierzehn waren es nicht.
+#
+# Das Par geht darum von 6 auf 7. Nicht weil die Bahn zu schwer wäre, sondern weil sie ehrlich
+# lang ist: drei Gassen, und dazwischen zieht und schiebt es. Wer alle drei im ersten Anlauf
+# trifft, ist bei vier - und das soll sich anfühlen wie etwas, das man erzählt.
+], par=7, maxStrokes=20,
+intro='Drei Messingringe um das Loch, jeder mit einer einzigen Gasse, jeder mit eigenem Tempo und '
+      'eigener Richtung – und die beiden äußeren haben eine Wirkung, die im Band hinter ihnen '
+      'gilt. Draußen zieht es zur Mitte, dahinter schiebt es. Ganz innen ist Ruhe: Am Loch soll '
+      'niemand geschoben werden. Die Farbe am Boden sagt vorher, was gleich gilt; die hellen '
+      'Pfosten sagen, wo die Gasse gerade steht.')
 
 # ===========================================================================
 #  DIE ERZMAGIERLOGE - Legende, neun Bahnen

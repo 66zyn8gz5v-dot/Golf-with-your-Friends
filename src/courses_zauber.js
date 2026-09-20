@@ -621,8 +621,8 @@ const ZAUBER_WARTE = [
     autoDecor: { density: 0.09, seed: 127 },
   },
   {
-    name: 'Die Große Armillarsphäre', par: 6, theme: 'sternenwarte', maxStrokes: 20,
-    intro: 'Vier Messingringe um das Loch, jeder mit einer einzigen Gasse, jeder mit eigenem Tempo und eigener Richtung – und jeder Ring hat seine eigene Wirkung, die im Band hinter ihm gilt. Draußen zieht es zur Mitte, dahinter schiebt es, dahinter dreht es einen. Erst ganz innen ist Ruhe. Die Farbe am Boden sagt vorher, was gleich gilt; die hellen Pfosten sagen, wo die Gasse gerade steht.',
+    name: 'Die Große Armillarsphäre', par: 7, theme: 'sternenwarte', maxStrokes: 20,
+    intro: 'Drei Messingringe um das Loch, jeder mit einer einzigen Gasse, jeder mit eigenem Tempo und eigener Richtung – und die beiden äußeren haben eine Wirkung, die im Band hinter ihnen gilt. Draußen zieht es zur Mitte, dahinter schiebt es. Ganz innen ist Ruhe: Am Loch soll niemand geschoben werden. Die Farbe am Boden sagt vorher, was gleich gilt; die hellen Pfosten sagen, wo die Gasse gerade steht.',
     map: [
       '............................................',
       '................###########.................',
