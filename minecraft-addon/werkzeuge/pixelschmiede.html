@@ -773,13 +773,15 @@
     ["y", [206, 218, 236, 255], "Silber hell"],
     ["x", [152, 168, 194, 255], "Silber Schatten"],
     ["v", [98, 112, 140, 255], "Silber tief"],
-    // Stein fuer den Erzblock.
-    ["p", [138, 138, 138, 255], "Stein hell"],
-    ["o", [112, 112, 112, 255], "Stein"],
-    ["q", [82, 82, 84, 255], "Stein dunkel"]
+    // Stein: die vier Toene aus Minecrafts eigener stone.png, ausgelesen
+    // statt geschaetzt. Eine Naeherung faellt neben echtem Stein sofort auf.
+    ["p", [143, 143, 143, 255], "Stein hell"],
+    ["o", [127, 127, 127, 255], "Stein"],
+    ["u", [116, 116, 116, 255], "Stein mittel"],
+    ["q", [104, 104, 104, 255], "Stein dunkel"]
   ];
 
-  var FREIE_ZEICHEN = "rtuABCDEGHIJKLMNOPQRSTUVWXYZ0123456789";
+  var FREIE_ZEICHEN = "rtABCDEGHIJKLMNOPQRSTUVWXYZ0123456789";
 
   // --- Vorlagen --------------------------------------------------------
   var VORLAGEN = {
@@ -802,22 +804,22 @@
       "...a........a..."
     ],
     steinuntergrund: [
-      "oooooooooooqqooo",
-      "oppoooppooooopoo",
-      "opoooopoooooopoo",
-      "oooooooooooooooo",
-      "ooooppoooooooooo",
-      "ooooooooooqoooqq",
-      "oooooooqqqqooooo",
-      "ooopoooqoooooqqo",
-      "ooppoooooooooqoo",
-      "oooooooooooooooo",
-      "oooooooppooooooo",
-      "ooqooooopooooooo",
-      "ooqooooooooooooo",
-      "ooqoppoooooooooo",
-      "qooopooooooooooo",
-      "qooooooooooqoooo"
+      "ppppouuouquuoooo",
+      "oououooooooqquou",
+      "ouqquuuquuuooooo",
+      "ooppopooppooouuu",
+      "uoouuuouoppppuoo",
+      "opooooooouuququp",
+      "uoopppuppuuuoooo",
+      "uuqququuoouuuooo",
+      "pppopoopppooooou",
+      "oopooopppooppppo",
+      "qououuqquouoouuu",
+      "oooooppoooooppop",
+      "ouuuopouuooqququ",
+      "ppouuoouuuoouuup",
+      "ouuooooooooopppp",
+      "oooooouuoppoouoo"
     ],
     sternenklinge: [
       ".............kwd",
