@@ -82,7 +82,7 @@ def uv_feld(uv, groesse, seite):
     }[seite]
 
 
-def male_flaeche(bild, feld, farben, seite, schliff):
+def male_flaeche(bild, feld, farben, seite, schliff, gewickelt=False):
     """Malt ein Seitenfeld: heller Kern, abgesetzte Kanten.
 
     Keine geschlossene Umrandung. Eine Klinge ist drei Pixel breit - zieht
@@ -95,6 +95,8 @@ def male_flaeche(bild, feld, farben, seite, schliff):
     for zeile in range(fh):
         for spalte in range(fw):
             farbe = farben["kern"]
+            if gewickelt and zeile % 2 == 1:
+                farbe = farben["flanke"]
             if fw >= 3 and (spalte == 0 or spalte == fw - 1):
                 farbe = farben["flanke"]
             # Der helle Streifen laengs der Mitte laesst die flache Seite
@@ -123,7 +125,8 @@ def baue(name, kennung, kaesten, breite=64, ziel_modell=None, ziel_textur=None):
             feld = uv_feld(uv, kasten["size"], seite)
             if feld[2] <= 0 or feld[3] <= 0:
                 continue
-            male_flaeche(bild, feld, farben, seite, schliff)
+            male_flaeche(bild, feld, farben, seite, schliff,
+                         kasten.get("gewickelt", False))
 
         knochen_kaesten.append({
             "origin": kasten["origin"],
@@ -169,13 +172,17 @@ def baue(name, kennung, kaesten, breite=64, ziel_modell=None, ziel_textur=None):
 # steht seitlich vor - das ist es, was die Waffe von vorne wie eine Raute
 # aussehen laesst statt wie ein Brett.
 EISENKLINGE = [
-    {"name": "knauf",        "origin": [-1.5,  0, -1.0], "size": [3, 2, 2], "werkstoff": "eisen"},
-    {"name": "griff",        "origin": [-1.0,  2, -0.5], "size": [2, 4, 1], "werkstoff": "leder"},
-    {"name": "parierstange", "origin": [-4.0,  6, -1.0], "size": [8, 2, 2], "werkstoff": "eisen"},
-    {"name": "klinge",       "origin": [-1.5,  8, -0.5], "size": [3, 10, 1], "werkstoff": "stahl", "schliff": True},
-    {"name": "grat",         "origin": [-0.5,  8, -1.0], "size": [1, 10, 2], "werkstoff": "stahl"},
-    {"name": "spitze",       "origin": [-1.0, 18, -0.5], "size": [2, 2, 1], "werkstoff": "stahl", "schliff": True},
-    {"name": "ort",          "origin": [-0.5, 20, -0.5], "size": [1, 1, 1], "werkstoff": "stahl"},
+    # Verhaeltnisse zaehlen mehr als Einzelmasse: Eine Klinge, die nur
+    # viermal so lang wie breit ist, sieht aus wie ein Stapel Kaesten. Hier
+    # sind es sechs zu eins, und die Parierstange ist schmaler als die
+    # Klinge lang - dann liest sich die Form als Schwert.
+    {"name": "knauf",        "origin": [-1.0,  0, -1.0], "size": [2, 2, 2], "werkstoff": "eisen"},
+    {"name": "griff",        "origin": [-1.0,  2, -0.5], "size": [2, 5, 1], "werkstoff": "leder", "gewickelt": True},
+    {"name": "parierstange", "origin": [-3.0,  7, -1.0], "size": [6, 1, 2], "werkstoff": "eisen"},
+    {"name": "klinge",       "origin": [-1.0,  8, -0.5], "size": [2, 12, 1], "werkstoff": "stahl", "schliff": True},
+    # Der Grat steht seitlich vor und macht aus dem flachen Band eine Raute.
+    {"name": "grat",         "origin": [-0.5,  8, -1.0], "size": [1, 12, 2], "werkstoff": "stahl"},
+    {"name": "spitze",       "origin": [-0.5, 20, -0.5], "size": [1, 2, 1], "werkstoff": "stahl"},
 ]
 
 
