@@ -251,6 +251,34 @@ Schnittmuster und die Angabe, wo am Handgelenk die Waffe haengt.
 ein Skript, weil Minecraft der Animation nicht verraet, dass gerade
 zugeschlagen wird. Siehe oben.
 
+## Werfbare Waffen und das Thema Verzauberungen
+
+**Werfen geht.** `minecraft:throwable` macht einen Gegenstand werfbar wie
+einen Schneeball, `minecraft:projectile` legt fest, was dabei fliegt: Tempo,
+Schwerkraft, Schaden, Wirkung beim Aufprall. Dazu gehoert eine kleine
+Entity, die im Flug den Dolch darstellt. Alles offiziell dokumentiert, ohne
+Skript und ohne Experimente.
+
+**Eigene Verzauberungen gehen nicht.** Die Liste der Verzauberungen ist
+fest; keine neue erscheint im Verzauberungstisch. Add-ons, die mit
+"35 neuen Verzauberungen" werben, bauen sie per Skript nach - das Item
+merkt sich seine Faehigkeit selbst. Das kostet viel Skriptarbeit und
+verlangt meist die **Beta-APIs**, die in den Welteinstellungen
+eingeschaltet werden muessen und **auf Realms nicht laufen**. Fuer den Weg
+zur PS5 scheidet das damit aus.
+
+**Der Umweg, der das Problem aufloest:** Faehigkeiten stecken im
+Gegenstand, nicht in einer Verzauberung. Also zwei Dolche statt einem
+Dolch mit Zauber:
+
+* **Wurfdolch** - geworfen bleibt er liegen und wird geholt.
+* **Treuer Dolch** - kommt von selbst zurueck. Gebaut aus Wurfdolch und
+  einem Sternenkristall.
+
+Spielerisch ist es dasselbe Erlebnis - man will die Rueckkehr, tut etwas
+dafuer, bekommt sie. Nur laeuft es mit stabiler Technik und auf einem
+Realm. Nebenbei bekommen die seltenen Kristalle einen weiteren Zweck.
+
 ## In welcher Reihenfolge
 
 Jede Stufe muss für sich funktionieren und spielbar sein.
