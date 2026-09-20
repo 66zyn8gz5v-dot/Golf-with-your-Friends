@@ -7,3 +7,14 @@ item.fynn:sternenklinge.name=Sternenklinge
 ## Wesen
 entity.fynn:glimmerling.name=Glimmerling
 item.spawn_egg.entity.fynn:glimmerling.name=Glimmerling
+
+## Proben zur Fehlersuche - fliegen wieder raus
+item.fynn:probe_schlicht=Probe 1 schlicht
+item.fynn:probe_schlicht.name=Probe 1 schlicht
+item.fynn:probe_glanz=Probe 2 Glanz
+item.fynn:probe_glanz.name=Probe 2 Glanz
+item.fynn:probe_waffe=Probe 3 Waffe
+item.fynn:probe_waffe.name=Probe 3 Waffe
+item.fynn:probe_ausruestung=Probe 4 Ausruestung
+item.fynn:probe_ausruestung.name=Probe 4 Ausruestung
+
