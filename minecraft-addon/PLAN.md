@@ -111,6 +111,37 @@ Phasen — ab der Hälfte anders kämpfen, Helfer rufen. Phasen gehen ohne
 Skript; Minecraft kann Mobs mitten im Kampf umschalten. Trotzdem ist ein
 guter Boss mehr Arbeit als zehn gewöhnliche Mobs.
 
+## Strukturen in der Welt
+
+Geht, und ist nicht mehr experimentell. Vier Teile: die Struktur wird im Spiel
+gebaut und mit einem Strukturblock als `.mcstructure` gespeichert; die Datei
+kommt ins Verhaltenspaket unter `structures/`; ein *Feature* sagt, was
+platziert wird; eine *Feature Rule* sagt, wo und wie oft.
+
+**Arbeitsteilung:** Fynn baut, Claude verdrahtet. Bauen lässt sich hier nicht
+— ohne Spiel wäre eine Struktur nur blind zusammengerechnet. Im Spiel steht
+sie in zehn Minuten und man sieht dabei, ob sie etwas taugt.
+
+Was dabei zu beachten ist:
+
+* **Nur neues Land.** Weltgenerierung greift ausschließlich in Gebieten, die
+  noch nie erzeugt wurden. Zum Ausprobieren gehört eine frische Welt oder ein
+  langer Marsch nach draußen.
+* **Das Gelände passt sich nicht an.** Auf einem Hang steckt die Struktur halb
+  im Berg oder schwebt. Ruinen, Türme und Bauten mit dickem Fundament
+  verzeihen das; bei einer Ruine sieht schief sogar richtig aus.
+* **Keine zusammengesetzten Dörfer** wie in der Java-Version. Die Struktur
+  erscheint genau so, wie sie gespeichert wurde. Mehrere Varianten zur Auswahl
+  gehen.
+* **Truhen mit Inhalt** kann eine Struktur mitbringen — damit lassen sich
+  Kristalle in Ruinen verstecken.
+
+Klein anfangen: Ein kleiner Turm, der zuverlässig erscheint, ist mehr wert als
+ein Dungeon, das an drei Stellen klemmt.
+
+Naheliegende erste Kandidaten: der Altar, an dem der Boss beschworen wird, und
+kleine Ruinen mit Kristalltruhen.
+
 ## In welcher Reihenfolge
 
 Jede Stufe muss für sich funktionieren und spielbar sein.
