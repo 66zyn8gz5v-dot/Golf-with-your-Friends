@@ -261,11 +261,41 @@
     color: var(--auf-bronze);
   }
 
-  .palette {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(54px, 1fr));
-    gap: 6px;
+  .farbgruppe {
+    font-family: "Cinzel", Georgia, serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--schrift-leise);
+    margin: 14px 0 6px;
   }
+  .farbgruppe:first-child { margin-top: 0; }
+
+  .farbraster-gruppe {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+    gap: 5px;
+  }
+
+  .zuletztleiste {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-top: 8px;
+  }
+  .zuletztleiste .beschriftung {
+    font-size: 12px;
+    color: var(--schrift-leise);
+    margin-right: 2px;
+  }
+  .zuletztleiste .farbknopf {
+    width: 32px;
+    aspect-ratio: 1;
+    border-width: 2px;
+  }
+  .zuletztleiste .zeichen { font-size: 11px; }
 
   .farbknopf {
     aspect-ratio: 1;
@@ -596,6 +626,9 @@
           <button type="button" id="schnell-radierer" aria-pressed="false">Radierer</button>
           <button type="button" id="schnell-zurueck">Rückgängig</button>
         </div>
+        <div class="zuletztleiste" id="zuletztleiste" hidden>
+          <span class="beschriftung">Zuletzt:</span>
+        </div>
         <p class="hinweis" id="groessenzeile"></p>
       </section>
 
@@ -758,35 +791,38 @@
   // damit Gemaltes und Gebautes dieselbe Welt treffen.
   var palette = [];
   var GRUNDPALETTE = [
-    [".", [0, 0, 0, 0], "durchsichtig"],
-    ["k", [44, 46, 58, 255], "Umriss"],
-    ["w", [228, 233, 240, 255], "Stahl hell"],
-    ["s", [168, 178, 194, 255], "Stahl Schatten"],
-    ["d", [104, 114, 134, 255], "Stahl tief"],
-    ["g", [206, 158, 66, 255], "Bronze hell"],
-    ["e", [138, 98, 38, 255], "Bronze dunkel"],
-    ["l", [146, 98, 56, 255], "Leder hell"],
-    ["m", [94, 60, 34, 255], "Leder dunkel"],
-    ["a", [255, 246, 214, 255], "Sternenlicht"],
-    ["b", [240, 190, 92, 255], "Gold"],
-    ["c", [176, 122, 44, 255], "Bernstein"],
-    ["F", [104, 116, 74, 255], "Fell hell"],
-    ["f", [78, 90, 56, 255], "Fell"],
-    ["n", [52, 62, 38, 255], "Fell dunkel"],
-    ["h", [46, 38, 30, 255], "Huf"],
-    // Silber: heller und kuehler als unser Stahl, sonst ist die Silberklinge
-    // von der Sternenklinge nicht zu unterscheiden.
-    ["z", [246, 249, 255, 255], "Silber Glanz"],
-    ["y", [206, 218, 236, 255], "Silber hell"],
-    ["x", [152, 168, 194, 255], "Silber Schatten"],
-    ["v", [98, 112, 140, 255], "Silber tief"],
-    // Stein: die vier Toene aus Minecrafts eigener stone.png, ausgelesen
-    // statt geschaetzt. Eine Naeherung faellt neben echtem Stein sofort auf.
-    ["p", [143, 143, 143, 255], "Stein hell"],
-    ["o", [127, 127, 127, 255], "Stein"],
-    ["u", [116, 116, 116, 255], "Stein mittel"],
-    ["q", [104, 104, 104, 255], "Stein dunkel"]
+    [".", [0, 0, 0, 0], "durchsichtig", "Grundlage"],
+    ["k", [44, 46, 58, 255], "Umriss", "Grundlage"],
+
+    ["z", [246, 249, 255, 255], "Silber Glanz", "Silber"],
+    ["y", [206, 218, 236, 255], "Silber hell", "Silber"],
+    ["x", [152, 168, 194, 255], "Silber Schatten", "Silber"],
+    ["v", [98, 112, 140, 255], "Silber tief", "Silber"],
+
+    ["w", [228, 233, 240, 255], "Stahl hell", "Stahl"],
+    ["s", [168, 178, 194, 255], "Stahl Schatten", "Stahl"],
+    ["d", [104, 114, 134, 255], "Stahl tief", "Stahl"],
+
+    ["p", [143, 143, 143, 255], "Stein hell", "Stein"],
+    ["o", [127, 127, 127, 255], "Stein", "Stein"],
+    ["u", [116, 116, 116, 255], "Stein mittel", "Stein"],
+    ["q", [104, 104, 104, 255], "Stein dunkel", "Stein"],
+
+    ["g", [206, 158, 66, 255], "Bronze hell", "Bronze und Leder"],
+    ["e", [138, 98, 38, 255], "Bronze dunkel", "Bronze und Leder"],
+    ["l", [146, 98, 56, 255], "Leder hell", "Bronze und Leder"],
+    ["m", [94, 60, 34, 255], "Leder dunkel", "Bronze und Leder"],
+
+    ["a", [255, 246, 214, 255], "Sternenlicht", "Licht und Gold"],
+    ["b", [240, 190, 92, 255], "Gold", "Licht und Gold"],
+    ["c", [176, 122, 44, 255], "Bernstein", "Licht und Gold"],
+
+    ["F", [104, 116, 74, 255], "Fell hell", "Fell"],
+    ["f", [78, 90, 56, 255], "Fell", "Fell"],
+    ["n", [52, 62, 38, 255], "Fell dunkel", "Fell"],
+    ["h", [46, 38, 30, 255], "Huf", "Fell"]
   ];
+
 
   var FREIE_ZEICHEN = "rtABCDEGHIJKLMNOPQRSTUVWXYZ0123456789";
 
@@ -899,40 +935,122 @@
   }
 
   // --- Palette zeichnen ------------------------------------------------
-  function paletteAufbauen() {
-    var behaelter = document.getElementById("palette");
-    behaelter.textContent = "";
-    palette.forEach(function (eintrag) {
+  // Beim Malen wechselt man staendig zwischen denselben vier, fuenf Toenen.
+  // Die stehen damit direkt unter dem Malfeld, statt in der Palette gesucht
+  // werden zu muessen.
+  var zuletzt = [];
+
+  function zuletztMerken(zeichen) {
+    if (zeichen === ".") return;
+    var vorher = zuletzt.indexOf(zeichen);
+    if (vorher !== -1) zuletzt.splice(vorher, 1);
+    zuletzt.unshift(zeichen);
+    if (zuletzt.length > 6) zuletzt.length = 6;
+  }
+
+  function zuletztZeigen() {
+    var leiste = document.getElementById("zuletztleiste");
+    Array.prototype.slice.call(leiste.querySelectorAll(".farbknopf"))
+      .forEach(function (alt) { alt.remove(); });
+
+    var gezeigt = 0;
+    zuletzt.forEach(function (zeichen) {
+      var eintrag = null;
+      for (var i = 0; i < palette.length; i++) {
+        if (palette[i].zeichen === zeichen) { eintrag = palette[i]; break; }
+      }
+      if (!eintrag) return;
+
       var knopf = document.createElement("button");
       knopf.type = "button";
       knopf.className = "farbknopf";
       knopf.style.setProperty("--f", alsCss(eintrag.farbe));
       knopf.style.setProperty("--lesbar", lesbareSchrift(eintrag.farbe));
-      knopf.setAttribute("aria-pressed", eintrag.zeichen === aktuellesZeichen ? "true" : "false");
-      knopf.title = eintrag.name + " (" + eintrag.zeichen + ")";
+      knopf.setAttribute("aria-pressed", zeichen === aktuellesZeichen ? "true" : "false");
+      knopf.setAttribute("aria-label", eintrag.name);
+      knopf.title = eintrag.name;
 
       var deckel = document.createElement("span");
       deckel.className = "deckel";
       knopf.appendChild(deckel);
-
-      var zeichen = document.createElement("span");
-      zeichen.className = "zeichen";
-      zeichen.textContent = eintrag.zeichen;
-      knopf.appendChild(zeichen);
+      var text = document.createElement("span");
+      text.className = "zeichen";
+      text.textContent = eintrag.zeichen;
+      knopf.appendChild(text);
 
       knopf.addEventListener("click", function () {
-        aktuellesZeichen = eintrag.zeichen;
+        aktuellesZeichen = zeichen;
+        zuletztMerken(zeichen);
         werkzeugSetzen(werkzeug === "radierer" ? "stift" : werkzeug);
         paletteAufbauen();
       });
-      if (eintrag.zeichen === aktuellesZeichen) {
-        document.getElementById("jetztfarbe")
-          .style.setProperty("--jetzt", alsCss(eintrag.farbe));
-        document.getElementById("jetztname").textContent = eintrag.name;
-      }
-      behaelter.appendChild(knopf);
+      leiste.appendChild(knopf);
+      gezeigt++;
     });
+    leiste.hidden = gezeigt === 0;
   }
+
+  function paletteAufbauen() {
+    var behaelter = document.getElementById("palette");
+    behaelter.textContent = "";
+
+    var reihenfolge = [];
+    palette.forEach(function (eintrag) {
+      var gruppe = eintrag.gruppe || "Deine Farben";
+      if (reihenfolge.indexOf(gruppe) === -1) reihenfolge.push(gruppe);
+    });
+
+    reihenfolge.forEach(function (gruppe) {
+      var titel = document.createElement("h3");
+      titel.className = "farbgruppe";
+      titel.textContent = gruppe;
+      behaelter.appendChild(titel);
+
+      var raster = document.createElement("div");
+      raster.className = "farbraster-gruppe";
+
+      palette.forEach(function (eintrag) {
+        if ((eintrag.gruppe || "Deine Farben") !== gruppe) return;
+
+        var knopf = document.createElement("button");
+        knopf.type = "button";
+        knopf.className = "farbknopf";
+        knopf.style.setProperty("--f", alsCss(eintrag.farbe));
+        knopf.style.setProperty("--lesbar", lesbareSchrift(eintrag.farbe));
+        knopf.setAttribute("aria-pressed", eintrag.zeichen === aktuellesZeichen ? "true" : "false");
+        knopf.setAttribute("aria-label", eintrag.name);
+        knopf.title = eintrag.name + " (" + eintrag.zeichen + ")";
+
+        var deckel = document.createElement("span");
+        deckel.className = "deckel";
+        knopf.appendChild(deckel);
+
+        var zeichen = document.createElement("span");
+        zeichen.className = "zeichen";
+        zeichen.textContent = eintrag.zeichen;
+        knopf.appendChild(zeichen);
+
+        knopf.addEventListener("click", function () {
+          aktuellesZeichen = eintrag.zeichen;
+          zuletztMerken(eintrag.zeichen);
+          werkzeugSetzen(werkzeug === "radierer" ? "stift" : werkzeug);
+          paletteAufbauen();
+        });
+        raster.appendChild(knopf);
+
+        if (eintrag.zeichen === aktuellesZeichen) {
+          document.getElementById("jetztfarbe")
+            .style.setProperty("--jetzt", alsCss(eintrag.farbe));
+          document.getElementById("jetztname").textContent = eintrag.name;
+        }
+      });
+
+      behaelter.appendChild(raster);
+    });
+
+    zuletztZeigen();
+  }
+
 
   // --- Malfeld zeichnen ------------------------------------------------
   function feldZeichnen() {
@@ -1214,10 +1332,11 @@
       eigen: true
     });
     aktuellesZeichen = zeichen;
+    zuletztMerken(zeichen);
     werkzeugSetzen("stift");
     paletteAufbauen();
     sichern();
-    meldung("Oben aufgenommen als Zeichen „" + zeichen + "“.");
+    meldung("Aufgenommen — steht jetzt unter „Deine Farben“.");
   }
 
   // Rad statt Raster: dieselben Farben, aber als Scheibe. Acht Tortenstuecke
@@ -1871,7 +1990,7 @@
 
   // --- Start -----------------------------------------------------------
   GRUNDPALETTE.forEach(function (e) {
-    palette.push({ zeichen: e[0], farbe: e[1], name: e[2] });
+    palette.push({ zeichen: e[0], farbe: e[1], name: e[2], gruppe: e[3] });
   });
 
   var stand = holen();
