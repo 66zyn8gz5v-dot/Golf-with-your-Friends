@@ -186,17 +186,21 @@ def baue(name, kennung, kaesten, breite=64, ziel_modell=None, ziel_textur=None):
 # steht seitlich vor - das ist es, was die Waffe von vorne wie eine Raute
 # aussehen laesst statt wie ein Brett.
 EISENKLINGE = [
-    # Aus Fynns Vorlage ausgemessen statt geschaetzt: Die Parierstange ist
-    # dort 2,1 mal so breit wie die Klinge (331 zu 155 Bildpunkten), die
-    # Klinge selbst gut fuenf mal so lang wie breit. Drei zu sieben und
-    # drei zu sechzehn treffen das.
-    {"name": "knauf",        "origin": [-1.5,  0, -1.0], "size": [3, 2, 2], "werkstoff": "eisen"},
+    # Filigran heisst hier: mehr Kaesten, jeder duenner als der davor. Der
+    # Knauf ist eine Platte mit Hals, die Parierstange wird zu den Enden hin
+    # schmaler, und die Klinge ist nur noch ein Viertel Pixel dick - der
+    # Grat in der Mitte doppelt so viel. Ein Kasten pro Bauteil sieht aus
+    # wie Spielzeug; das Gefaelle dazwischen macht die Form.
+    {"name": "knauf_platte", "origin": [-1.5,  0, -1.0], "size": [3, 1, 2], "werkstoff": "eisen"},
+    {"name": "knauf_hals",   "origin": [-1.0,  1, -0.5], "size": [2, 1, 1], "werkstoff": "eisen"},
     {"name": "griff",        "origin": [-1.0,  2, -0.5], "size": [2, 4, 1], "werkstoff": "leder", "gewickelt": True},
-    {"name": "parierstange", "origin": [-3.5,  6, -1.0], "size": [7, 1, 2], "werkstoff": "eisen"},
-    {"name": "klinge",       "origin": [-1.5,  7, -0.5], "size": [3, 14, 1], "werkstoff": "stahl", "schliff": True, "schrumpfen": -0.25},
-    {"name": "grat",         "origin": [-0.5,  7, -0.5], "size": [1, 14, 1], "werkstoff": "stahl"},
-    {"name": "klinge_ort",   "origin": [-1.0, 21, -0.5], "size": [2, 2, 1], "werkstoff": "stahl", "schliff": True, "schrumpfen": -0.25},
-    {"name": "spitze",       "origin": [-0.5, 21, -0.5], "size": [1, 3, 1], "werkstoff": "stahl"},
+    {"name": "parier_mitte", "origin": [-1.5,  6, -1.0], "size": [3, 1, 2], "werkstoff": "eisen"},
+    {"name": "parier_links", "origin": [-3.5,  6, -0.5], "size": [2, 1, 1], "werkstoff": "eisen", "schrumpfen": -0.125},
+    {"name": "parier_rechts","origin": [ 1.5,  6, -0.5], "size": [2, 1, 1], "werkstoff": "eisen", "schrumpfen": -0.125},
+    {"name": "klinge",       "origin": [-1.5,  7, -0.5], "size": [3, 13, 1], "werkstoff": "stahl", "schliff": True, "schrumpfen": -0.375},
+    {"name": "grat",         "origin": [-0.5,  7, -0.5], "size": [1, 13, 1], "werkstoff": "stahl", "schrumpfen": -0.25},
+    {"name": "klinge_ort",   "origin": [-1.0, 20, -0.5], "size": [2, 2, 1], "werkstoff": "stahl", "schliff": True, "schrumpfen": -0.375},
+    {"name": "spitze",       "origin": [-0.5, 20, -0.5], "size": [1, 3, 1], "werkstoff": "stahl", "schrumpfen": -0.25},
 ]
 
 
