@@ -287,6 +287,36 @@
     outline-offset: 2px;
   }
 
+  .filterleiste {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--linie);
+  }
+  .filterleiste button { font-size: 13px; padding: 5px 10px; }
+
+  .gruppe + .gruppe { margin-top: 18px; }
+  .gruppentitel {
+    font-family: "Cinzel", Georgia, serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--schrift-leise);
+    margin: 0 0 10px;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .gruppentitel::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--linie);
+  }
+
   .werke {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(124px, 1fr));
@@ -461,9 +491,25 @@
     <div class="speicherzeile">
       <input type="text" id="werkname" placeholder="Name, zum Beispiel Speer"
              aria-label="Name für dieses Werk" maxlength="40">
-      <button type="button" id="werk-speichern">Was im Malfeld ist, hier ablegen</button>
+      <select id="werkart" aria-label="Kategorie">
+        <option value="waffen">Waffen</option>
+        <option value="werkzeuge">Werkzeuge</option>
+        <option value="ruestung">Rüstung</option>
+        <option value="gegenstaende" selected>Gegenstände</option>
+        <option value="bloecke">Blöcke</option>
+        <option value="wesen">Wesen</option>
+        <option value="sonstiges">Sonstiges</option>
+      </select>
+      <button type="button" id="werk-speichern">Ablegen</button>
     </div>
-    <div class="werke" id="werke"></div>
+
+    <div class="speicherzeile">
+      <input type="search" id="suche" placeholder="Suchen …"
+             aria-label="In der Sammlung suchen">
+    </div>
+
+    <div class="filterleiste" id="filterleiste"></div>
+    <div id="werke"></div>
   </section>
 
   <div class="werkbank">
@@ -1379,11 +1425,100 @@
     return flaeche;
   }
 
+  var KATEGORIEN = [
+    ["waffen", "Waffen"],
+    ["werkzeuge", "Werkzeuge"],
+    ["ruestung", "Rüstung"],
+    ["gegenstaende", "Gegenstände"],
+    ["bloecke", "Blöcke"],
+    ["wesen", "Wesen"],
+    ["sonstiges", "Sonstiges"]
+  ];
+  var filter = "alle";
+
+  function kategorieName(schluessel) {
+    for (var i = 0; i < KATEGORIEN.length; i++) {
+      if (KATEGORIEN[i][0] === schluessel) return KATEGORIEN[i][1];
+    }
+    return "Sonstiges";
+  }
+
+  function werkKarte(werk, nummer) {
+    var karte = document.createElement("div");
+    karte.className = "werk";
+
+    var bildfeld = document.createElement("div");
+    bildfeld.className = "bildfeld";
+    var faktor = Math.max(1, Math.floor(96 / Math.max(werk.bild[0].length, werk.bild.length)));
+    var flaeche = werkVorschau(werk, faktor);
+    flaeche.title = "Öffnen";
+    flaeche.addEventListener("click", function () { werkOeffnen(nummer); });
+    bildfeld.appendChild(flaeche);
+    karte.appendChild(bildfeld);
+
+    var name = document.createElement("div");
+    name.className = "name";
+    name.textContent = werk.name;
+    karte.appendChild(name);
+
+    var masse = document.createElement("div");
+    masse.className = "masse";
+    masse.textContent = werk.bild[0].length + " × " + werk.bild.length;
+    karte.appendChild(masse);
+
+    var reihe = document.createElement("div");
+    reihe.className = "knopfreihe";
+    var auf = document.createElement("button");
+    auf.type = "button";
+    auf.textContent = "Öffnen";
+    auf.addEventListener("click", function () { werkOeffnen(nummer); });
+    var weg = document.createElement("button");
+    weg.type = "button";
+    weg.textContent = "Löschen";
+    weg.addEventListener("click", function () { werkLoeschen(nummer); });
+    reihe.appendChild(auf);
+    reihe.appendChild(weg);
+    karte.appendChild(reihe);
+    return karte;
+  }
+
+  function filterleisteBauen(vorhanden) {
+    var leiste = document.getElementById("filterleiste");
+    leiste.textContent = "";
+
+    function knopf(schluessel, beschriftung, anzahl) {
+      var k = document.createElement("button");
+      k.type = "button";
+      k.textContent = beschriftung + " (" + anzahl + ")";
+      k.setAttribute("aria-pressed", filter === schluessel ? "true" : "false");
+      k.addEventListener("click", function () {
+        filter = schluessel;
+        sammlungZeigen();
+      });
+      leiste.appendChild(k);
+    }
+
+    knopf("alle", "Alle", sammlung.length);
+    // Nur Kategorien anbieten, in denen wirklich etwas liegt - leere Knoepfe
+    // sind nur Rauschen.
+    KATEGORIEN.forEach(function (eintrag) {
+      if (vorhanden[eintrag[0]]) knopf(eintrag[0], eintrag[1], vorhanden[eintrag[0]]);
+    });
+  }
+
   function sammlungZeigen() {
     var behaelter = document.getElementById("werke");
     behaelter.textContent = "";
     document.getElementById("sammlung-auf").textContent =
       sammlung.length ? "Sammlung (" + sammlung.length + ")" : "Sammlung";
+
+    var vorhanden = {};
+    sammlung.forEach(function (werk) {
+      var art = werk.kategorie || "sonstiges";
+      vorhanden[art] = (vorhanden[art] || 0) + 1;
+    });
+    if (filter !== "alle" && !vorhanden[filter]) filter = "alle";
+    filterleisteBauen(vorhanden);
 
     if (!sammlung.length) {
       var leer = document.createElement("p");
@@ -1394,45 +1529,46 @@
       return;
     }
 
-    sammlung.forEach(function (werk, nummer) {
-      var karte = document.createElement("div");
-      karte.className = "werk";
+    var gesucht = (document.getElementById("suche").value || "").trim().toLowerCase();
+    var gezeigt = 0;
 
-      var bildfeld = document.createElement("div");
-      bildfeld.className = "bildfeld";
-      var faktor = Math.max(1, Math.floor(96 / Math.max(werk.bild[0].length, werk.bild.length)));
-      var flaeche = werkVorschau(werk, faktor);
-      flaeche.title = "Öffnen";
-      flaeche.addEventListener("click", function () { werkOeffnen(nummer); });
-      bildfeld.appendChild(flaeche);
-      karte.appendChild(bildfeld);
+    KATEGORIEN.forEach(function (eintrag) {
+      var schluessel = eintrag[0];
+      if (filter !== "alle" && filter !== schluessel) return;
 
-      var name = document.createElement("div");
-      name.className = "name";
-      name.textContent = werk.name;
-      karte.appendChild(name);
+      var treffer = [];
+      sammlung.forEach(function (werk, nummer) {
+        if ((werk.kategorie || "sonstiges") !== schluessel) return;
+        if (gesucht && werk.name.toLowerCase().indexOf(gesucht) === -1) return;
+        treffer.push(nummer);
+      });
+      if (!treffer.length) return;
 
-      var masse = document.createElement("div");
-      masse.className = "masse";
-      masse.textContent = werk.bild[0].length + " × " + werk.bild.length;
-      karte.appendChild(masse);
+      var gruppe = document.createElement("div");
+      gruppe.className = "gruppe";
+      var titel = document.createElement("h3");
+      titel.className = "gruppentitel";
+      titel.appendChild(document.createTextNode(eintrag[1] + " · " + treffer.length));
+      gruppe.appendChild(titel);
 
-      var reihe = document.createElement("div");
-      reihe.className = "knopfreihe";
-      var auf = document.createElement("button");
-      auf.type = "button";
-      auf.textContent = "Öffnen";
-      auf.addEventListener("click", function () { werkOeffnen(nummer); });
-      var weg = document.createElement("button");
-      weg.type = "button";
-      weg.textContent = "Löschen";
-      weg.addEventListener("click", function () { werkLoeschen(nummer); });
-      reihe.appendChild(auf);
-      reihe.appendChild(weg);
-      karte.appendChild(reihe);
-
-      behaelter.appendChild(karte);
+      var raster = document.createElement("div");
+      raster.className = "werke";
+      treffer.forEach(function (nummer) {
+        raster.appendChild(werkKarte(sammlung[nummer], nummer));
+      });
+      gruppe.appendChild(raster);
+      behaelter.appendChild(gruppe);
+      gezeigt += treffer.length;
     });
+
+    if (!gezeigt) {
+      var nichts = document.createElement("p");
+      nichts.className = "leer";
+      nichts.textContent = gesucht
+        ? "Nichts gefunden, das „" + gesucht + "“ im Namen hat."
+        : "In dieser Kategorie liegt nichts.";
+      behaelter.appendChild(nichts);
+    }
   }
 
   function werkOeffnen(nummer) {
@@ -1468,6 +1604,7 @@
 
     var werk = {
       name: name,
+      kategorie: document.getElementById("werkart").value,
       bild: feld.slice(),
       farben: benutzteFarben(feld)
     };
@@ -1486,6 +1623,10 @@
       feldname.value = "";
       meldung(vorhanden >= 0 ? "„" + name + "“ ersetzt." : "„" + name + "“ abgelegt.");
     }
+  });
+
+  document.getElementById("suche").addEventListener("input", function () {
+    sammlungZeigen();
   });
 
   document.getElementById("sammlung-auf").addEventListener("click", function () {
