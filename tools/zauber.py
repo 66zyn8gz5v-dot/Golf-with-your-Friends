@@ -183,6 +183,24 @@ def keil(f, x, y, n, ecke='ro', z='.'):
     einen Ball; eine schräge gibt ihn weiter."""
     sx = -1 if ecke[0] == 'r' else 1
     sy = -1 if ecke[1] == 'u' else 1
+    """EIN KEIL GEHÖRT AN EINE AUSSENECKE, sonst frißt er ein Loch in die Bahn.
+
+    Auf dem Bannschacht stand einer bei (45,7) und sollte die obere Ecke des Aufstiegs abschrägen -
+    nur war dort keine Ecke, sondern die Mitte der Galerie. Er hat den Weg zum Loch in Schlitze von
+    ein bis zwei Kacheln zerlegt, und die Bot-Prüfung stand danach bei sechs von sechs Durchgängen
+    am Schlaglimit. Die Bahn war nicht kaputt, sie war nur nicht mehr zu spielen - und das sieht man
+    einer Karte aus Rauten und Dreiecken nicht an.
+
+    Geprüft wird die Ecke daran, wo sie hinzeigt: Die beiden Nachbarn NACH AUSSEN (also entgegen
+    der Freßrichtung) müssen beide Leere sein. Bei einer echten Außenecke sind sie das immer.
+    """
+    hoch, breit = len(f), len(f[0])
+    drin = lambda xx, yy: 0 <= xx < breit and 0 <= yy < hoch
+    boden = lambda xx, yy: drin(xx, yy) and f[yy][xx] in BODEN
+    if boden(x - sx, y) or boden(x, y - sy):
+        wo = {'lo': 'links oben', 'ro': 'rechts oben', 'lu': 'links unten', 'ru': 'rechts unten'}[ecke]
+        raise AssertionError(f'keil({x}, {y}, {n}, {ecke!r}): dort ist keine Außenecke {wo} – '
+                             f'nach außen liegt Boden, der Keil würde mitten in die Bahn schneiden')
     for dx in range(n):
         for dy in range(n - dx):
             setz(f, x + sx * dx, y + sy * dy, z)
@@ -1610,7 +1628,7 @@ fuell(f, 14, 13, 26, 16)              # die Kammer der Schleuder
 fuell(f, 46, 13, 52, 16)              # drüben - dazwischen ist nichts
 fuell(f, 48, 4, 52, 16)               # der Aufstieg am Ostende
 fuell(f, 34, 4, 52, 7)                # und die obere Galerie zurück nach Westen
-keil(f, 18, 10, 4, 'ro')              # Kehre nach Süden
+keil(f, 18, 7, 4, 'ro')               # Kehre nach Süden – die Außenecke liegt NORDöstlich
 keil(f, 14, 16, 4, 'lu')              # Kehre nach Osten
 keil(f, 52, 16, 4, 'ru')              # drüben: Kehre nach Norden
 keil(f, 52, 4, 4, 'ro')               # und Kehre zurück nach Westen
@@ -1721,8 +1739,8 @@ fuell(f, 22, 9, 26, 18)
 fuell(f, 22, 15, 38, 18)
 fuell(f, 34, 6, 38, 18)
 fuell(f, 34, 6, 51, 9)
-keil(f, 14, 6, 4, 'ro'); keil(f, 10, 12, 4, 'lu')
-keil(f, 26, 12, 4, 'ru'); keil(f, 22, 18, 4, 'lu')
+keil(f, 14, 3, 4, 'ro'); keil(f, 10, 12, 4, 'lu')
+keil(f, 26, 9, 4, 'ro'); keil(f, 22, 18, 4, 'lu')
 keil(f, 38, 18, 4, 'ru'); keil(f, 34, 6, 4, 'lo')
 setz(f, 4, 4, 'T'); setz(f, 47, 7, 'H')
 setz(f, 24, 11, 'A'); setz(f, 35, 16, 'a')
@@ -1753,8 +1771,13 @@ fuell(f, 33, 4, 52, 7)                # drüben geht sie weiter
 fuell(f, 2, 7, 6, 18)                 # der Umweg: gleich hinter dem Abschlag hinab
 fuell(f, 2, 15, 45, 18)               # am Grund entlang, die ganze Bahn
 fuell(f, 41, 7, 45, 18)               # und drüben wieder hinauf
-keil(f, 6, 18, 4, 'lu'); keil(f, 45, 18, 4, 'ru')
-keil(f, 45, 7, 4, 'ru'); keil(f, 52, 4, 4, 'ro')
+keil(f, 2, 18, 3, 'lu'); keil(f, 45, 18, 4, 'ru')
+# HIER STAND EIN KEIL ZUVIEL: keil(f, 45, 7, 4, 'ru') sollte die obere Ecke des Aufstiegs
+# abschrägen, hat aber mitten in die Galerie geschnitten - und damit den Weg zum Loch in Schlitze
+# von ein bis zwei Kacheln zerlegt. Die Bot-Prüfung stand danach bei sechs von sechs Durchgängen
+# am Schlaglimit, obwohl der Aufwind sauber hinübertrug: Der Ball kam an und fand von dort nicht
+# mehr weiter. Ein Keil gehört an eine AUSSENecke; hier war keine.
+keil(f, 52, 4, 4, 'ro')
 # EINE MAUER GEGEN DEN ABSTURZ. Wer zu langsam in den Schacht rollt, wird nicht gehoben - er
 # rollte sonst über die Kante. Ein Stein am Ende fängt ihn auf: noch ein Schlag statt einer Strafe.
 fuell(f, 24, 4, 24, 7, 'x')
@@ -1818,7 +1841,7 @@ fuell(f, 18, 12, 36, 18)              # drittes Stück, unten - eine Kammer
 fuell(f, 40, 13, 55, 16)              # drüben, wo die Schleuder hinwirft
 fuell(f, 51, 5, 55, 16)               # der Aufstieg am Ostende
 fuell(f, 40, 5, 55, 8)                # und die Galerie mit dem Loch
-keil(f, 20, 3, 4, 'lo'); keil(f, 34, 6, 4, 'ro')
+keil(f, 20, 3, 4, 'lo'); keil(f, 34, 6, 4, 'ru')
 keil(f, 18, 18, 4, 'lu'); keil(f, 36, 18, 4, 'ru')
 keil(f, 55, 16, 4, 'ru'); keil(f, 55, 5, 4, 'ro')
 keil(f, 40, 5, 4, 'lo')
