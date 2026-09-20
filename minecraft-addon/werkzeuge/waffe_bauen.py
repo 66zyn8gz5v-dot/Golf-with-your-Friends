@@ -172,17 +172,17 @@ def baue(name, kennung, kaesten, breite=64, ziel_modell=None, ziel_textur=None):
 # steht seitlich vor - das ist es, was die Waffe von vorne wie eine Raute
 # aussehen laesst statt wie ein Brett.
 EISENKLINGE = [
-    # Verhaeltnisse zaehlen mehr als Einzelmasse: Eine Klinge, die nur
-    # viermal so lang wie breit ist, sieht aus wie ein Stapel Kaesten. Hier
-    # sind es sechs zu eins, und die Parierstange ist schmaler als die
-    # Klinge lang - dann liest sich die Form als Schwert.
+    # Eine Klinge ist ein flaches Band: breit, aber duenn. Der erste Versuch
+    # hatte einen Mittelgrat als eigenen Kasten - damit war der Querschnitt
+    # quadratisch, und das Schwert sah aus wie ein Stab. Der Grat sitzt
+    # jetzt in der Textur, als heller Streifen laengs der Mitte, und der
+    # Kasten bleibt einen Pixel duenn.
     {"name": "knauf",        "origin": [-1.0,  0, -1.0], "size": [2, 2, 2], "werkstoff": "eisen"},
     {"name": "griff",        "origin": [-1.0,  2, -0.5], "size": [2, 5, 1], "werkstoff": "leder", "gewickelt": True},
     {"name": "parierstange", "origin": [-3.0,  7, -1.0], "size": [6, 1, 2], "werkstoff": "eisen"},
-    {"name": "klinge",       "origin": [-1.0,  8, -0.5], "size": [2, 12, 1], "werkstoff": "stahl", "schliff": True},
-    # Der Grat steht seitlich vor und macht aus dem flachen Band eine Raute.
-    {"name": "grat",         "origin": [-0.5,  8, -1.0], "size": [1, 12, 2], "werkstoff": "stahl"},
-    {"name": "spitze",       "origin": [-0.5, 20, -0.5], "size": [1, 2, 1], "werkstoff": "stahl"},
+    {"name": "klinge",       "origin": [-1.5,  8, -0.5], "size": [3, 11, 1], "werkstoff": "stahl", "schliff": True},
+    {"name": "klinge_ort",   "origin": [-1.0, 19, -0.5], "size": [2, 2, 1], "werkstoff": "stahl", "schliff": True},
+    {"name": "spitze",       "origin": [-0.5, 21, -0.5], "size": [1, 1, 1], "werkstoff": "stahl"},
 ]
 
 
