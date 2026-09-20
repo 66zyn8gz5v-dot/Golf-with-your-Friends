@@ -46,7 +46,11 @@ def packe_entwicklung(name, paket):
     Archiv, laege das Paket danach eine Ebene zu tief - und Minecraft
     uebersieht es wortlos.
     """
-    ziel = WURZEL / f"{name}.zip"
+    # Nach auslieferung/, weil das iPad sich die Dateien von dort ueber
+    # GitHub selbst holt - siehe ANLEITUNG.md.
+    ordner_ziel = WURZEL / "auslieferung"
+    ordner_ziel.mkdir(exist_ok=True)
+    ziel = ordner_ziel / f"{name}.zip"
     if ziel.exists():
         ziel.unlink()
     ordner = WURZEL / paket

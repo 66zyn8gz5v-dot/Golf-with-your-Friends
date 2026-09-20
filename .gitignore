@@ -7,7 +7,9 @@ deko/
 # Zwischendateien von Python (entstehen beim Ausfuehren der Werkzeuge)
 __pycache__/
 
-# Gebaute Pakete fuers iPad. Entstehen aus den Ordnern daneben und gehoeren
-# deshalb nicht ins Verzeichnis - wer sie braucht, baut sie mit bauen.py.
+# Gebaute Pakete bleiben draussen - mit einer Ausnahme: Was unter
+# auslieferung/ liegt, holt sich das iPad selbst von GitHub. Diese Dateien
+# sind kein Zwischenstand, sondern der Weg ins Spiel, und muessen deshalb
+# abrufbar sein.
 minecraft-addon/*.mcaddon
 minecraft-addon/*.zip
