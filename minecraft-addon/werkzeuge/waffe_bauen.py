@@ -478,19 +478,18 @@ def aus_zeichenkarte(name, karte, farben, dicke=1.0, mitte=None, anbauten=None,
 
 
 # --------------------------------------------- Die Flammklinge in Eisen
-#
-# Nachgebaut nach einer Vorlage, die Fynn gezeigt hat - dort ein
-# gluehendes Schwert, hier in Eisen.
 
 # Nachgebaut nach Fynns Vorlage, in Eisen statt in Flammen.
 #
-# Die Klinge bleibt von unten bis zur Spitze gleich breit - in der Vorlage
-# wird sie oben nicht dicker, das hatte ich erst falsch. Die Spitze
-# entsteht allein aus der schraegen Kante.
+# Die Masse sind abgezaehlt, nicht geschaetzt: Das Vorlagenbild wurde um
+# die gemessenen 4,06 Grad gerade gedreht - die Klinge stand schief -,
+# dann ein Raster von 79 Bildpunkten darueber gelegt und Feld fuer Feld
+# abgetastet. Dabei kam heraus, dass zwei Sachen vorher falsch waren:
+# die Parierstange war zu schmal und der Griff zu breit.
 #
-# Und die Kante ist keine Treppe: Die Pixel an der Schraege sind gedreht,
-# dann stossen ihre Ecken aneinander und die Kante laeuft glatt durch.
-# Genau so ist es in der Vorlage gemacht.
+# Genauer als so geht es nicht: Die Vorlage ist eine 3D-Ansicht, und die
+# Pixel sind unten groesser als oben. Das Raster passt in der Mitte und
+# franst an den Enden aus.
 KLINGE = [
     "................",
     "......wssd......",
@@ -510,63 +509,29 @@ KLINGE = [
     "......wssd......",
     "......wssd......",
     "......wssd......",
-    "......wssd......",
-    "......wssd......",
-    ".....dssssd.....",
-    ".....dsddsd.....",
-    "......lml.......",
-    "......mlm.......",
-    "......lml.......",
-    "......mlm.......",
-    "......lml.......",
+    "....dssssssd....",
+    "....dssddssd....",
+    ".......ml.......",
+    ".......lm.......",
+    ".......ml.......",
+    ".......lm.......",
+    ".......ml.......",
+    ".......lm.......",
+    ".......ml.......",
     "................",
     "...wsw..........",
     "...sds..........",
     "...wsw..........",
 ]
-# Die Drehkarte: wo eine Kante schraeg laufen soll, steht die Richtung.
-# "/" kippt nach links oben, "\" nach rechts oben.
-WINKEL = [
-    "................",
-    "................",
-    "................",
-    "................",
-    "................",
-    "................",
-    "................",
-    "................",
-    "................",
-    "................",
-    "................",
-    "................",
-    "................",
-    "................",
-    "................",
-    "................",
-    "................",
-    "................",
-    "................",
-    "................",
-    "................",
-    "................",
-    "................",
-    "................",
-    "................",
-    "................",
-    "................",
-    "................",
-    "................",
-    "................",
-    "................",
-]
+WINKEL = ["................"] * len(KLINGE)
 MITTE = 8.0
 MUSTER = 3
 
 KIPP = 25.0
-ARM_LANG = 2.5
+ARM_LANG = 3.0
 sichtbar = len(KLINGE) - MUSTER
-y_parier = sichtbar - 1 - 21
-ansatz = 11 - MITTE        # aeussere Kante der Parierstange (Spalte 5..10)
+y_parier = sichtbar - 1 - 19
+ansatz = 12 - MITTE        # aeussere Kante der Parierstange (Spalte 4..11)
 bogen = math.radians(KIPP)
 ende_x = ansatz + ARM_LANG * math.cos(bogen)
 ende_y = y_parier + 0.25 + ARM_LANG * math.sin(bogen)
@@ -588,11 +553,10 @@ for seite in (1, -1):
         "size": [1.6, 1.5, 1],
         "farbe": "w",
     })
-# Die Spitze: je ein schraeger Kasten von den beiden Klingenkanten zur
-# Mitte. So laeuft die Kante glatt durch, statt in Stufen zu springen -
-# ein gedrehter Einzelpixel ragt an seinen Ecken vor und schwebt.
-y_klinge = sichtbar - 1 - 1          # Oberkante der obersten Klingenzeile
-halbe_klinge = 2.0                   # Klinge ist vier Pixel breit
+
+# Die Spitze: je ein schraeger Kasten von den Klingenkanten zur Mitte.
+y_klinge = sichtbar - 1 - 1
+halbe_klinge = 2.0
 schraeg = halbe_klinge * math.sqrt(2)
 for seite in (1, -1):
     ANBAUTEN.append({
