@@ -335,6 +335,31 @@ def _grad(zeile, spalte):
     return DREHUNGEN.get(zeile[spalte], 0.0)
 
 
+def _pruefe_karte(name, karte, mitte):
+    """Warnt, wenn auf der Mittelachse eine Zeile leer bleibt.
+
+    Ein Loch mittendrin faellt im flachen Bild kaum auf - zwischen Klinge
+    und Parierstange sieht es wie ein Schatten aus. Im Modell schwebt
+    dann der obere Teil, weil ihn nichts mehr traegt. Genau das hat Fynn
+    an seinem eigenen Bild gesehen.
+    """
+    spalte = int(mitte)
+    belegt = []
+    for i, zeile in enumerate(karte):
+        voll = any(c != "." for c in zeile[max(0, spalte-1):spalte+1])
+        belegt.append(voll)
+    erste = next((i for i, v in enumerate(belegt) if v), None)
+    letzte = next((i for i in range(len(belegt)-1, -1, -1) if belegt[i]), None)
+    if erste is None:
+        return True
+    loecher = [i for i in range(erste, letzte + 1) if not belegt[i]]
+    if loecher:
+        print(f"Loch in der Mittelachse von {name}: "
+              + ", ".join(f"Zeile {i}" for i in loecher))
+        print("  Dort traegt nichts - im Modell schwebt, was darueber liegt.")
+    return not loecher
+
+
 def _pruefe_mitte(name, karte, mitte, versatz):
     """Warnt, wenn ein Teil nicht auf der Mittelachse liegt.
 
@@ -560,6 +585,7 @@ def aus_zeichenkarte(name, karte, farben, dicke=1.0, mitte=None, anbauten=None,
     ziel_modell.write_text(json.dumps(modell, indent=2) + "\n", encoding="utf-8")
     bild.save(ziel_textur)
     gemalt = sum(1 for z in sichtbar for c in z if c != ".")
+    _pruefe_karte(name, sichtbar, mitte)
     _pruefe_mitte(name, sichtbar, mitte, versatz)
     _pruefe_anbauten(name, anbauten or [])
 
