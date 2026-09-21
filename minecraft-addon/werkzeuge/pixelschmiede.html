@@ -109,6 +109,52 @@
   }
   .reiter button:hover { color: var(--schrift); }
 
+  /* --- Reiter "Bauen": Kaesten fuer 3D-Waffen ----------------------- */
+  .bauplatz {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 300px;
+    gap: 20px;
+    align-items: start;
+  }
+  @media (max-width: 760px) {
+    .bauplatz { grid-template-columns: minmax(0, 1fr); }
+  }
+  .teil {
+    border: 1px solid var(--linie);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    background: var(--flaeche);
+  }
+  .teil-kopf { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .teil-kopf input[type="text"] {
+    flex: 1; min-width: 0; font: inherit; padding: 5px 7px;
+    border: 1px solid var(--linie); border-radius: 5px; background: #fff;
+  }
+  .masse { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 10px; }
+  .masse label {
+    display: flex; flex-direction: column; gap: 2px;
+    font-size: 11px; color: var(--schrift-leise);
+  }
+  .masse input {
+    font: inherit; font-size: 15px; padding: 7px 4px; text-align: center;
+    border: 1px solid var(--linie); border-radius: 5px; background: #fff; min-width: 0;
+  }
+  .teil select {
+    font: inherit; padding: 6px; border: 1px solid var(--linie);
+    border-radius: 5px; background: #fff;
+  }
+  .weg {
+    border: none; background: none; color: var(--warnung);
+    font-size: 20px; line-height: 1; padding: 2px 8px; cursor: pointer;
+  }
+  #bauschirm {
+    width: 100%; max-width: 420px; border: 1px solid var(--linie);
+    border-radius: 8px; background: var(--flaeche); display: block; touch-action: none;
+  }
+  .bauhinweis { font-size: 13px; line-height: 1.5; color: var(--schrift-leise); margin: 8px 0 0; }
+  .bauhinweis.warnt { color: var(--warnung); }
+
   .werkbank {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 260px;
@@ -592,6 +638,7 @@
 
   <div class="reiter" role="tablist">
     <button type="button" id="reiter-malen" role="tab" aria-selected="true">Malen</button>
+    <button type="button" id="reiter-bauen" role="tab" aria-selected="false">Bauen</button>
     <button type="button" id="reiter-sammlung" role="tab" aria-selected="false">Sammlung</button>
   </div>
 
@@ -742,6 +789,44 @@
     </div>
   </div>
 
+  </div>
+
+  <div id="ansicht-bauen" hidden>
+    <div class="bauplatz">
+      <section>
+        <h2>Bauteile</h2>
+        <p class="bauhinweis">
+          Ein Kasten je Bauteil. Die Zahlen sind Pixel: <b>Ort</b> ist die
+          untere vordere linke Ecke, <b>Groesse</b> die Ausdehnung.
+          Die Klinge zeigt nach oben, also in Richtung Hoehe.
+        </p>
+        <div id="teileliste"></div>
+        <button type="button" id="teil-neu">Bauteil hinzufügen</button>
+      </section>
+
+      <aside>
+        <h2>Ansicht</h2>
+        <canvas id="bauschirm" width="420" height="460"></canvas>
+        <label class="bauhinweis" for="drehregler">
+          Drehen
+          <input type="range" id="drehregler" min="0" max="359" value="25" style="width:100%">
+        </label>
+        <p class="bauhinweis" id="baupruefung"></p>
+
+        <h2>Zum Verschicken</h2>
+        <p class="bauhinweis">
+          Diesen Text kopieren und mir schicken - daraus baue ich das
+          Modell fürs Spiel.
+        </p>
+        <textarea id="bauausgabe" rows="8" readonly
+                  style="width:100%;font-family:ui-monospace,monospace;font-size:11px"></textarea>
+        <div class="knopfreihe">
+          <button type="button" id="bau-kopieren">In die Zwischenablage</button>
+          <button type="button" id="bau-markieren">Nur markieren</button>
+        </div>
+        <p class="meldung" id="baumeldung" role="status"></p>
+      </aside>
+    </div>
   </div>
 
   <div id="ansicht-sammlung" hidden>
@@ -1986,18 +2071,318 @@
     sammlungZeigen();
   });
 
+
+  // --- Reiter "Bauen": Kaesten fuer 3D-Waffen ---------------------------
+  // Warum hier und nicht in Blockbench: Fynn baut auf dem iPad, und der
+  // Weg von einem Entwurf ins Spiel soll ueber dieselbe Werkstatt laufen
+  // wie die Texturen. Gebraucht wird nur, was ein Bedrock-Modell ausmacht:
+  // Kaesten mit Ort, Groesse und Werkstoff.
+
+  var WERKSTOFFE = {
+    stahl:  { name: "Stahl",  kern: [216, 216, 216] },
+    eisen:  { name: "Eisen",  kern: [150, 150, 150] },
+    leder:  { name: "Leder",  kern: [104, 78, 30] },
+    silber: { name: "Silber", kern: [198, 205, 214] },
+    gold:   { name: "Gold",   kern: [206, 158, 66] },
+    stein:  { name: "Stein",  kern: [143, 143, 143] }
+  };
+
+  var teile = [
+    { name: "knauf", ort: [-1.5, 0, -1], gross: [3, 2, 2], stoff: "eisen" },
+    { name: "griff", ort: [-1, 2, -0.5], gross: [2, 4, 1], stoff: "leder" },
+    { name: "parierstange", ort: [-3.5, 6, -1], gross: [7, 1, 2], stoff: "eisen" },
+    { name: "klinge", ort: [-1.5, 7, -0.5], gross: [3, 14, 1], stoff: "stahl" }
+  ];
+
+  var drehung = 25;
+
+  function teilKarte(teil, nummer) {
+    var karte = document.createElement("div");
+    karte.className = "teil";
+
+    var kopf = document.createElement("div");
+    kopf.className = "teil-kopf";
+
+    var name = document.createElement("input");
+    name.type = "text";
+    name.value = teil.name;
+    name.setAttribute("aria-label", "Name des Bauteils");
+    name.addEventListener("input", function () {
+      teil.name = name.value;
+      bauAusgeben();
+    });
+    kopf.appendChild(name);
+
+    var wahl = document.createElement("select");
+    wahl.setAttribute("aria-label", "Werkstoff");
+    Object.keys(WERKSTOFFE).forEach(function (schluessel) {
+      var e = document.createElement("option");
+      e.value = schluessel;
+      e.textContent = WERKSTOFFE[schluessel].name;
+      if (schluessel === teil.stoff) e.selected = true;
+      wahl.appendChild(e);
+    });
+    wahl.addEventListener("change", function () {
+      teil.stoff = wahl.value;
+      bauZeichnen();
+      bauAusgeben();
+    });
+    kopf.appendChild(wahl);
+
+    var weg = document.createElement("button");
+    weg.type = "button";
+    weg.className = "weg";
+    weg.textContent = "×";
+    weg.title = "Bauteil entfernen";
+    weg.setAttribute("aria-label", "Bauteil " + teil.name + " entfernen");
+    weg.addEventListener("click", function () {
+      teile.splice(nummer, 1);
+      teileZeigen();
+      bauZeichnen();
+      bauAusgeben();
+      bauSichern();
+    });
+    kopf.appendChild(weg);
+    karte.appendChild(kopf);
+
+    var masse = document.createElement("div");
+    masse.className = "masse";
+    [
+      ["Ort ↔", "ort", 0], ["Ort ↕", "ort", 1], ["Ort Tiefe", "ort", 2],
+      ["Breite", "gross", 0], ["Höhe", "gross", 1], ["Dicke", "gross", 2]
+    ].forEach(function (feld) {
+      var etikett = document.createElement("label");
+      etikett.appendChild(document.createTextNode(feld[0]));
+      var zahl = document.createElement("input");
+      zahl.type = "number";
+      zahl.step = "0.5";
+      zahl.value = teil[feld[1]][feld[2]];
+      zahl.addEventListener("input", function () {
+        var wert = parseFloat(zahl.value);
+        if (!isNaN(wert)) {
+          teil[feld[1]][feld[2]] = wert;
+          bauZeichnen();
+          bauAusgeben();
+          bauSichern();
+        }
+      });
+      etikett.appendChild(zahl);
+      masse.appendChild(etikett);
+    });
+    karte.appendChild(masse);
+    return karte;
+  }
+
+  function teileZeigen() {
+    var liste = document.getElementById("teileliste");
+    liste.textContent = "";
+    teile.forEach(function (teil, i) {
+      liste.appendChild(teilKarte(teil, i));
+    });
+  }
+
+  // Dieselbe Rechnung wie im Betrachter, nur ohne Textur: Die Farbe kommt
+  // vom Werkstoff, die Tiefe vom Winkel der Flaeche zum Licht.
+  function bauZeichnen() {
+    var schirm = document.getElementById("bauschirm");
+    var stift = schirm.getContext("2d");
+    stift.clearRect(0, 0, schirm.width, schirm.height);
+
+    var bogen = drehung * Math.PI / 180;
+    var neigung = 20 * Math.PI / 180;
+    var richtung = [
+      Math.sin(bogen) * Math.cos(neigung),
+      Math.sin(neigung),
+      -Math.cos(bogen) * Math.cos(neigung)
+    ];
+    var rechts = normiert(kreuz(richtung, [0, 1, 0]));
+    var hoch = kreuz(rechts, richtung);
+
+    function flach(punkt) {
+      return [punktMal(punkt, rechts), -punktMal(punkt, hoch)];
+    }
+
+    var flaechen = [];
+    teile.forEach(function (teil) {
+      var x0 = teil.ort[0], y0 = teil.ort[1], z0 = teil.ort[2];
+      var x1 = x0 + teil.gross[0], y1 = y0 + teil.gross[1], z1 = z0 + teil.gross[2];
+      var seiten = [
+        [[[x0,y1,z0],[x1,y1,z0],[x1,y0,z0],[x0,y0,z0]], [0,0,-1]],
+        [[[x1,y1,z0],[x1,y1,z1],[x1,y0,z1],[x1,y0,z0]], [1,0,0]],
+        [[[x1,y1,z1],[x0,y1,z1],[x0,y0,z1],[x1,y0,z1]], [0,0,1]],
+        [[[x0,y1,z1],[x0,y1,z0],[x0,y0,z0],[x0,y0,z1]], [-1,0,0]],
+        [[[x0,y1,z0],[x1,y1,z0],[x1,y1,z1],[x0,y1,z1]], [0,1,0]],
+        [[[x0,y0,z1],[x1,y0,z1],[x1,y0,z0],[x0,y0,z0]], [0,-1,0]]
+      ];
+      seiten.forEach(function (seite) {
+        if (punktMal(seite[1], richtung) <= 0) return;
+        var mitte = [0, 0, 0];
+        seite[0].forEach(function (e) {
+          mitte[0] += e[0] / 4; mitte[1] += e[1] / 4; mitte[2] += e[2] / 4;
+        });
+        flaechen.push({
+          ecken: seite[0],
+          tiefe: punktMal(mitte, richtung),
+          licht: 0.55 + 0.45 * Math.max(0, punktMal(seite[1], normiert([0.4, 1, -0.5]))),
+          stoff: teil.stoff
+        });
+      });
+    });
+    if (!flaechen.length) return;
+
+    var alle = [];
+    flaechen.forEach(function (f) {
+      f.ecken.forEach(function (e) { alle.push(flach(e)); });
+    });
+    var links = Math.min.apply(null, alle.map(function (p) { return p[0]; }));
+    var rechtsKante = Math.max.apply(null, alle.map(function (p) { return p[0]; }));
+    var oben = Math.min.apply(null, alle.map(function (p) { return p[1]; }));
+    var unten = Math.max.apply(null, alle.map(function (p) { return p[1]; }));
+    var zoom = Math.min((schirm.width - 50) / Math.max(rechtsKante - links, 0.001),
+                        (schirm.height - 50) / Math.max(unten - oben, 0.001));
+    var dx = 25 - links * zoom;
+    var dy = 25 - oben * zoom;
+
+    flaechen.sort(function (a, b) { return a.tiefe - b.tiefe; });
+    flaechen.forEach(function (f) {
+      var grund = (WERKSTOFFE[f.stoff] || WERKSTOFFE.stahl).kern;
+      stift.fillStyle = "rgb(" + grund.map(function (k) {
+        return Math.min(255, Math.round(k * f.licht));
+      }).join(",") + ")";
+      stift.beginPath();
+      f.ecken.forEach(function (e, i) {
+        var p = flach(e);
+        var sx = p[0] * zoom + dx, sy = p[1] * zoom + dy;
+        if (i === 0) stift.moveTo(sx, sy); else stift.lineTo(sx, sy);
+      });
+      stift.closePath();
+      stift.fill();
+    });
+  }
+
+  function kreuz(a, b) {
+    return [a[1]*b[2] - a[2]*b[1], a[2]*b[0] - a[0]*b[2], a[0]*b[1] - a[1]*b[0]];
+  }
+  function punktMal(a, b) { return a[0]*b[0] + a[1]*b[1] + a[2]*b[2]; }
+  function normiert(v) {
+    var l = Math.sqrt(punktMal(v, v)) || 1;
+    return [v[0]/l, v[1]/l, v[2]/l];
+  }
+
+  // Dieselbe Pruefung wie im Werkzeug: Teile in der Mittelachse, die nicht
+  // aneinanderstossen, ergeben im Spiel eine schwebende Spitze.
+  function bauPruefen() {
+    var hinweis = document.getElementById("baupruefung");
+    var achse = teile.filter(function (t) {
+      return Math.abs(t.ort[0] + t.gross[0] / 2) < 0.6;
+    }).map(function (t) {
+      return { unten: t.ort[1], oben: t.ort[1] + t.gross[1], name: t.name };
+    }).sort(function (a, b) { return a.unten - b.unten; });
+
+    var luecken = [];
+    for (var i = 0; i + 1 < achse.length; i++) {
+      if (achse[i + 1].unten > achse[i].oben + 0.001) {
+        luecken.push(achse[i].name + " und " + achse[i + 1].name);
+      }
+    }
+    if (luecken.length) {
+      hinweis.className = "bauhinweis warnt";
+      hinweis.textContent = "Lücke zwischen " + luecken.join(", ")
+        + " - im Spiel schwebt das Teil dann.";
+    } else {
+      hinweis.className = "bauhinweis";
+      hinweis.textContent = teile.length + " Bauteile, keine Lücken.";
+    }
+  }
+
+  function bauAusgeben() {
+    var zeilen = teile.map(function (t) {
+      return '    {"name": "' + t.name + '", "origin": [' + t.ort.join(", ")
+        + '], "size": [' + t.gross.join(", ") + '], "werkstoff": "' + t.stoff + '"},';
+    });
+    document.getElementById("bauausgabe").value =
+      "BAUTEILE = [\n" + zeilen.join("\n") + "\n]";
+    bauPruefen();
+  }
+
+  function bauSichern() {
+    try {
+      window.localStorage.setItem("pixelschmiede.bauteile", JSON.stringify(teile));
+    } catch (fehler) { /* kein Speicher - macht nichts */ }
+  }
+
+  function bauHolen() {
+    try {
+      var roh = window.localStorage.getItem("pixelschmiede.bauteile");
+      if (!roh) return null;
+      var gelesen = JSON.parse(roh);
+      if (!Array.isArray(gelesen) || !gelesen.length) return null;
+      for (var i = 0; i < gelesen.length; i++) {
+        var t = gelesen[i];
+        if (!t || !Array.isArray(t.ort) || t.ort.length !== 3) return null;
+        if (!Array.isArray(t.gross) || t.gross.length !== 3) return null;
+      }
+      return gelesen;
+    } catch (fehler) { return null; }
+  }
+
+  // Kopieren klappt nicht ueberall - auf dem iPad sperrt Safari es manchmal.
+  // Deshalb gibt es daneben "Nur markieren": dann kann man von Hand kopieren.
+  document.getElementById("bau-kopieren").addEventListener("click", function () {
+    var text = document.getElementById("bauausgabe").value;
+    var wohin = document.getElementById("baumeldung");
+    function sagen(gut) {
+      wohin.textContent = gut
+        ? "Kopiert. Jetzt in den Chat einsetzen."
+        : "Hat nicht geklappt - nimm \u201eNur markieren\u201c und kopiere von Hand.";
+      wohin.className = gut ? "meldung" : "meldung warnt";
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { sagen(true); },
+                                              function () { sagen(false); });
+      return;
+    }
+    sagen(false);
+  });
+
+  document.getElementById("bau-markieren").addEventListener("click", function () {
+    var feld = document.getElementById("bauausgabe");
+    feld.focus();
+    feld.select();
+  });
+
+  document.getElementById("teil-neu").addEventListener("click", function () {
+    var oben = 0;
+    teile.forEach(function (t) { oben = Math.max(oben, t.ort[1] + t.gross[1]); });
+    teile.push({ name: "neues Teil", ort: [-1, oben, -0.5], gross: [2, 2, 1], stoff: "stahl" });
+    teileZeigen();
+    bauZeichnen();
+    bauAusgeben();
+    bauSichern();
+  });
+
+  document.getElementById("drehregler").addEventListener("input", function () {
+    drehung = parseFloat(this.value) || 0;
+    bauZeichnen();
+  });
+
   function ansichtWechseln(welche) {
-    document.getElementById("ansicht-malen").hidden = welche !== "malen";
-    document.getElementById("ansicht-sammlung").hidden = welche !== "sammlung";
-    document.getElementById("reiter-malen")
-      .setAttribute("aria-selected", welche === "malen" ? "true" : "false");
-    document.getElementById("reiter-sammlung")
-      .setAttribute("aria-selected", welche === "sammlung" ? "true" : "false");
+    ["malen", "bauen", "sammlung"].forEach(function (name) {
+      document.getElementById("ansicht-" + name).hidden = welche !== name;
+      document.getElementById("reiter-" + name)
+        .setAttribute("aria-selected", welche === name ? "true" : "false");
+    });
+    // Der Schirm hat keine Groesse, solange er verborgen ist - also erst
+    // zeichnen, wenn er zu sehen ist.
+    if (welche === "bauen") bauZeichnen();
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   document.getElementById("reiter-malen").addEventListener("click", function () {
     ansichtWechseln("malen");
+  });
+  document.getElementById("reiter-bauen").addEventListener("click", function () {
+    ansichtWechseln("bauen");
   });
   document.getElementById("reiter-sammlung").addEventListener("click", function () {
     ansichtWechseln("sammlung");
@@ -2052,6 +2437,11 @@
       palette.push({ zeichen: e.zeichen, farbe: e.farbe, name: "eigene Farbe", eigen: true });
     });
   }
+
+  var gemerkteTeile = bauHolen();
+  if (gemerkteTeile) teile = gemerkteTeile;
+  teileZeigen();
+  bauAusgeben();
 
   sammlung = sammlungLesen();
   sammlungZeigen();
