@@ -227,8 +227,25 @@
   .rastknoepfe button { font-size: 12px; padding: 4px 9px; }
   #bauschirm {
     width: 100%; max-width: 420px; border: 1px solid var(--linie);
-    border-radius: 8px; background: var(--flaeche); display: block; touch-action: none;
+    border-radius: 8px; background: var(--flaeche); display: block;
+    touch-action: none; cursor: grab;
   }
+  #bauschirm.zieht { cursor: grabbing; }
+
+  /* Gross: die Masse verschwinden, der Schirm bekommt die ganze Breite.
+     Zum Anschauen und Anfassen - beim Schubsen ueber Knoepfe braucht man
+     die Zahlen, beim Ziehen steht man sich mit ihnen im Weg. */
+  .bauplatz.gross { grid-template-columns: minmax(0, 1fr); }
+  .bauplatz.gross > section { display: none; }
+  .bauplatz.gross > aside { position: static; }
+  .bauplatz.gross #bauschirm { max-width: 100%; }
+  .bauplatz.gross .nur-klein { display: none; }
+  .schirmkopf {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px; margin-bottom: 8px;
+  }
+  .schirmkopf h2 { margin: 0; }
+  .schirmkopf button { font-size: 13px; padding: 5px 10px; }
   .bauhinweis { font-size: 13px; line-height: 1.5; color: var(--schrift-leise); margin: 8px 0 0; }
   .bauhinweis.warnt { color: var(--warnung); }
 
@@ -881,13 +898,21 @@
         <div class="formen" id="formen"></div>
         <div class="knopfreihe" style="margin-top:8px">
           <button type="button" id="teil-kopie">Ausgewählten verdoppeln</button>
+          <button type="button" id="bau-leeren">Von vorn anfangen</button>
         </div>
         <div class="werkstatt" id="werkstatt"></div>
       </section>
 
       <aside>
-        <h2>Ansicht</h2>
-        <canvas id="bauschirm" width="420" height="460"></canvas>
+        <div class="schirmkopf">
+          <h2>Ansicht</h2>
+          <button type="button" id="bau-gross" aria-pressed="false">Groß</button>
+        </div>
+        <canvas id="bauschirm" width="420" height="460"
+                aria-label="Das Modell. Einen Kasten antippen und ziehen."></canvas>
+        <p class="bauhinweis">
+          Einen Kasten im Bild antippen wählt ihn aus — und ziehen verschiebt ihn.
+        </p>
         <label class="bauhinweis" for="drehregler">
           Drehen
           <input type="range" id="drehregler" min="0" max="359" value="25" style="width:100%">
@@ -2624,7 +2649,11 @@
         });
       });
     });
-    if (!flaechen.length) return;
+    if (!flaechen.length) {
+      umrisse = [];
+      sicht = null;
+      return;
+    }
 
     var alle = [];
     flaechen.forEach(function (f) {
@@ -2636,11 +2665,19 @@
     var unten = Math.max.apply(null, alle.map(function (p) { return p[1]; }));
     var zoom = Math.min((schirm.width - 50) / Math.max(rechtsKante - links, 0.001),
                         (schirm.height - 50) / Math.max(unten - oben, 0.001));
-    var dx = 25 - links * zoom;
-    var dy = 25 - oben * zoom;
+    // Mittig statt an die linke obere Ecke: Ein Schwert ist schmal und hoch,
+    // der Zoom richtet sich nach der Hoehe - und dann klebte das Modell am
+    // linken Rand, waehrend rechts die halbe Flaeche leer blieb.
+    var dx = (schirm.width - (rechtsKante - links) * zoom) / 2 - links * zoom;
+    var dy = (schirm.height - (unten - oben) * zoom) / 2 - oben * zoom;
 
     var bronze = getComputedStyle(document.documentElement)
       .getPropertyValue("--bronze").trim() || "#8A6228";
+
+    // Fuer das Ziehen: Wie ein Fingerweg auf dem Schirm in Pixel des
+    // Modells umzurechnen ist, und welche Achse gerade quer im Bild liegt.
+    sicht = { rechts: rechts, hoch: hoch, zoom: zoom, dx: dx, dy: dy };
+    umrisse = [];
 
     flaechen.sort(function (a, b) { return a.tiefe - b.tiefe; });
     flaechen.forEach(function (f) {
@@ -2649,11 +2686,14 @@
         return Math.min(255, Math.round(k * f.licht));
       }).join(",") + ")";
       stift.beginPath();
+      var umriss = [];
       f.ecken.forEach(function (e, i) {
         var p = flach(e);
         var sx = p[0] * zoom + dx, sy = p[1] * zoom + dy;
+        umriss.push([sx, sy]);
         if (i === 0) stift.moveTo(sx, sy); else stift.lineTo(sx, sy);
       });
+      umrisse.push({ nummer: f.nummer, punkte: umriss });
       stift.closePath();
       stift.fill();
       // Der Kasten in Arbeit bekommt eine Kante. Bei zehn aehnlich grauen
@@ -2664,6 +2704,100 @@
         stift.stroke();
       }
     });
+  }
+
+  var umrisse = [];   // gezeichnete Flaechen, um zu wissen, was unter dem Finger liegt
+  var sicht = null;   // Projektion des letzten Zeichnens
+  var zug = null;     // laufendes Ziehen
+
+  // Strahlverfahren: Eine Linie nach rechts ziehen und zaehlen, wie oft sie
+  // den Rand schneidet. Ungerade heisst drinnen.
+  function imUmriss(x, y, punkte) {
+    var drin = false;
+    for (var i = 0, j = punkte.length - 1; i < punkte.length; j = i++) {
+      var xi = punkte[i][0], yi = punkte[i][1];
+      var xj = punkte[j][0], yj = punkte[j][1];
+      if ((yi > y) !== (yj > y) &&
+          x < (xj - xi) * (y - yi) / (yj - yi) + xi) {
+        drin = !drin;
+      }
+    }
+    return drin;
+  }
+
+  // Von vorne nach hinten suchen: Die Flaechen liegen in Zeichenreihenfolge
+  // im Feld, die zuletzt gezeichnete liegt obenauf.
+  function kastenUnter(x, y) {
+    for (var i = umrisse.length - 1; i >= 0; i--) {
+      if (imUmriss(x, y, umrisse[i].punkte)) return umrisse[i].nummer;
+    }
+    return -1;
+  }
+
+  function schirmpunkt(ereignis) {
+    var schirm = document.getElementById("bauschirm");
+    var rahmen = schirm.getBoundingClientRect();
+    // Der Schirm wird per CSS skaliert - der Umriss steckt in
+    // Zeichenkoordinaten, also zurueckrechnen.
+    return [
+      (ereignis.clientX - rahmen.left) * schirm.width / rahmen.width,
+      (ereignis.clientY - rahmen.top) * schirm.height / rahmen.height
+    ];
+  }
+
+  function zugStarten(ereignis) {
+    if (!sicht || !teile.length) return;
+    var p = schirmpunkt(ereignis);
+    var treffer = kastenUnter(p[0], p[1]);
+    if (treffer < 0) return;
+
+    ereignis.preventDefault();
+    gewaehlt = treffer;
+    teileZeigen();
+    werkstattZeigen();
+
+    // Waagerecht ziehen bewegt die Achse, die im Bild gerade am weitesten
+    // quer liegt - bei Blick von vorne ist das links/rechts, gedreht wird
+    // daraus hinten/vorn. Senkrecht ist immer die Hoehe.
+    var quer = Math.abs(sicht.rechts[0]) >= Math.abs(sicht.rechts[2]) ? 0 : 2;
+    zug = {
+      von: p,
+      achse: quer,
+      proQuer: sicht.rechts[quer] * sicht.zoom,
+      proHoch: -sicht.hoch[1] * sicht.zoom,
+      anfang: teile[treffer].ort.slice()
+    };
+    document.getElementById("bauschirm").classList.add("zieht");
+    document.getElementById("bauschirm").setPointerCapture(ereignis.pointerId);
+  }
+
+  function zugFuehren(ereignis) {
+    if (!zug) return;
+    ereignis.preventDefault();
+    var p = schirmpunkt(ereignis);
+    var teil = teile[gewaehlt];
+    if (!teil) return;
+
+    function stufe(weg, pro) {
+      if (!pro) return 0;
+      // Auf halbe Pixel einrasten: Ein Modell aus krummen Zahlen laesst
+      // sich hinterher nicht mehr sauber anstueckeln.
+      return Math.round((weg / pro) * 2) / 2;
+    }
+    teil.ort[zug.achse] = zug.anfang[zug.achse] + stufe(p[0] - zug.von[0], zug.proQuer);
+    teil.ort[1] = zug.anfang[1] + stufe(p[1] - zug.von[1], zug.proHoch);
+
+    teileZeigen();
+    werkstattZeigen();
+    bauZeichnen();
+    bauAusgeben();
+  }
+
+  function zugBeenden() {
+    if (!zug) return;
+    zug = null;
+    document.getElementById("bauschirm").classList.remove("zieht");
+    bauSichern();
   }
 
   function kreuz(a, b) {
@@ -2844,6 +2978,60 @@
   document.getElementById("drehregler").addEventListener("input", function () {
     drehung = parseFloat(this.value) || 0;
     bauZeichnen();
+  });
+
+  var schirm = document.getElementById("bauschirm");
+
+  // Die Zeichenflaeche muss mitwachsen, sonst wird das Bild nur
+  // hochskaliert und franst aus. Im Grossen richtet sich die Hoehe nach
+  // dem Fenster, nicht nach der Breite: Sonst waere der Schirm auf dem
+  // Tablet hoeher als der Bildschirm und man muesste beim Anschauen
+  // scrollen - genau das, was "gross" abschaffen soll.
+  function schirmGroesseSetzen(gross) {
+    var breit = schirm.getBoundingClientRect().width;
+    schirm.width = Math.max(360, Math.round(breit));
+    schirm.height = gross
+      ? Math.max(320, Math.round(Math.min(schirm.width * 0.7,
+                                          window.innerHeight - 200)))
+      : 460;
+  }
+
+  schirm.addEventListener("pointerdown", zugStarten);
+  schirm.addEventListener("pointermove", zugFuehren);
+  schirm.addEventListener("pointerup", zugBeenden);
+  schirm.addEventListener("pointercancel", zugBeenden);
+
+  document.getElementById("bau-gross").addEventListener("click", function () {
+    var platz = document.querySelector(".bauplatz");
+    var gross = !platz.classList.contains("gross");
+    platz.classList.toggle("gross", gross);
+    this.setAttribute("aria-pressed", gross ? "true" : "false");
+    this.textContent = gross ? "Zurück zu den Maßen" : "Groß";
+    // Erst hinscrollen, dann messen: Der Schirm soll oben im Fenster
+    // stehen, sonst haengt die Haelfte darunter und "gross" bringt nichts.
+    if (gross) platz.scrollIntoView({ block: "start" });
+    schirmGroesseSetzen(gross);
+    bauZeichnen();
+  });
+
+  // Wie "Leeres Feld laden" beim Pixeln: Das Beispielschwert ist zum
+  // Zeigen da, nicht zum Behalten - aber es einzeln wegzuklicken sind
+  // vier Handgriffe, und danach ist unklar, ob wirklich alles weg ist.
+  document.getElementById("bau-leeren").addEventListener("click", function () {
+    var wohin = document.getElementById("baumeldung");
+    if (teile.length && !window.confirm(
+        "Alle " + teile.length + " Kästen löschen und von vorn anfangen?")) {
+      return;
+    }
+    teile = [];
+    gewaehlt = 0;
+    teileZeigen();
+    werkstattZeigen();
+    bauZeichnen();
+    bauAusgeben();
+    bauSichern();
+    wohin.className = "meldung";
+    wohin.textContent = "Leer. Nimm dir unten einen Kasten.";
   });
 
   function ansichtWechseln(welche) {
