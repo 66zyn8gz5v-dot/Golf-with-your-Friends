@@ -9,6 +9,8 @@ item.fynn:rohsilber=Rohsilber
 item.fynn:rohsilber.name=Rohsilber
 item.fynn:silberbarren=Silberbarren
 item.fynn:silberbarren.name=Silberbarren
+item.fynn:silbernugget=Silbernugget
+item.fynn:silbernugget.name=Silbernugget
 
 ## Bloecke
 tile.fynn:silbererz.name=Silbererz

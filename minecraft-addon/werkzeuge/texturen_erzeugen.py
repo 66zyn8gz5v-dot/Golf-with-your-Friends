@@ -130,6 +130,29 @@ SILBERBARREN = [
 ]
 
 
+# Ein Bruchstueck des Barrens, halb so gross wie der Rohklumpen. Gemalt von
+# Fynn in der Pixelschmiede, mit dem Nachtton "r" an der Unterkante - die
+# erste Textur, die ihn benutzt.
+SILBERNUGGET = [
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "......kkkk......",
+    "....kkxxxxk.....",
+    "....kxsyzyxk....",
+    "...kxsyyzyyxk...",
+    "...kxyyzsxxxk...",
+    "...kyxzsxvvk....",
+    "....kvvrrkk.....",
+    ".....kkkk.......",
+    "................",
+    "................",
+    "................",
+]
+
+
 SILBERERZ = [
     "ppppouuouquuoooo",
     "oououoooooowduou",
@@ -272,6 +295,7 @@ def main():
         "sternenklinge": STERNENKLINGE,
         "rohsilber": ROHSILBER,
         "silberbarren": SILBERBARREN,
+        "silbernugget": SILBERNUGGET,
     }
     for name, karte in bilder.items():
         pruefe_karte(name, karte)

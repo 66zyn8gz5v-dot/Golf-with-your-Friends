@@ -110,6 +110,7 @@ def pruefe_rezepte(kennungen):
             continue
 
         verwendet = [e["item"] for e in rezept.get("key", {}).values()]
+        verwendet += [e["item"] for e in rezept.get("ingredients", [])]
         verwendet.append(rezept["result"]["item"])
         for eintrag in rezept.get("unlock", []):
             if "item" in eintrag:

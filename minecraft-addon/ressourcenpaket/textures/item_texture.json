@@ -16,6 +16,9 @@
     },
     "silberbarren": {
       "textures": "textures/items/silberbarren"
+    },
+    "silbernugget": {
+      "textures": "textures/items/silbernugget"
     }
   }
 }
