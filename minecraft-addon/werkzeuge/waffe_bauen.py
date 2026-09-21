@@ -488,7 +488,14 @@ def aus_zeichenkarte(name, karte, farben, dicke=1.0, mitte=None, anbauten=None,
     """
     hoehe = len(karte)
     breite = len(karte[0])
-    halb = dicke / 2
+
+    # Die Dicke darf je Zeile verschieden sein. Eine Klinge ist duenn, die
+    # Parierstange wuchtig, der Griff schlank - mit einer Dicke fuer alles
+    # wird entweder die Klinge zum Brett oder die Parierstange zum Blech.
+    def dicke_bei(zeile):
+        if isinstance(dicke, (int, float)):
+            return float(dicke)
+        return float(dicke[zeile] if zeile < len(dicke) else dicke[-1])
     # Welche Spalte auf der Mittelachse liegt. Ohne Angabe die Bildmitte -
     # aber wenn die Klinge nicht mittig gemalt ist, haengt die Waffe sonst
     # schief in der Hand.
@@ -519,9 +526,10 @@ def aus_zeichenkarte(name, karte, farben, dicke=1.0, mitte=None, anbauten=None,
         # bauen, und von Hand nachzurechnen waere bei jeder Zeile eine
         # Gelegenheit, sich zu vertun.
         schiebe = versatz[zeile] if versatz and zeile < len(versatz) else 0.0
+        tief = dicke_bei(zeile)
         eintrag = {
-            "origin": [x - mitte + schiebe, y, -halb],
-            "size": [lang, 1, dicke],
+            "origin": [x - mitte + schiebe, y, -tief / 2],
+            "size": [lang, 1, tief],
             "uv": {
                 # Die Rueckseite spiegelt, sonst stuende das Bild dort
                 # seitenverkehrt - eine negative Breite dreht den Ausschnitt.
@@ -620,7 +628,8 @@ def aus_zeichenkarte(name, karte, farben, dicke=1.0, mitte=None, anbauten=None,
     print(f"gebaut: {ziel_modell.name} aus {breite}x{hoehe} - "
           f"{gemalt} Pixel zu {len(kaesten) - zahl_anbau} Kaesten"
           + (f" plus {zahl_anbau} Anbauten" if zahl_anbau else "")
-          + f", Dicke {dicke}")
+          + (f", Dicke {dicke}" if isinstance(dicke, (int, float))
+             else f", Dicke {min(dicke)} bis {max(dicke)}"))
     return modell
 
 
