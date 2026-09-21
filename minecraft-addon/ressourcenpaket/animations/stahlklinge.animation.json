@@ -1,0 +1,23 @@
+{
+  "format_version": "1.10.0",
+  "animations": {
+    "animation.stahlklinge.halten": {
+      "loop": true,
+      "bones": {
+        "rightitem": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            "c.is_first_person ? (q.is_sprinting ? 110.0 : 85.0) : (q.is_sprinting ? 115.0 : 90.0)",
+            0.0,
+            "c.is_first_person ? (q.is_sprinting ? 35.0 : 15.0) : (q.is_sprinting ? 25.0 : 0.0)"
+          ],
+          "scale": "c.is_first_person ? 0.312 : 0.253"
+        }
+      }
+    }
+  }
+}

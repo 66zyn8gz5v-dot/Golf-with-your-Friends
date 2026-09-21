@@ -292,6 +292,33 @@ EISENKLINGE = [
 
 # ------------------------------------------------- Aus einer Zeichenkarte
 
+def verschmelze(felder, abstand=20):
+    """Fasst Farben zusammen, die praktisch gleich sind.
+
+    Bilder verlieren beim Verschicken durch Messenger an Genauigkeit: Aus
+    zwei Farben werden dreissig, die sich um zwei, drei Stufen
+    unterscheiden. Ungefiltert bekaeme jeder dieser Toene ein eigenes
+    Zeichen, und das Modell zerfiele in lauter Einzelkaesten, statt Balken
+    zusammenzufassen - bei Fynns Stahlschwert 25 Griffarben statt vier.
+
+    Die haeufigste Farbe einer Gruppe gewinnt: Sie ist die, die wirklich
+    gemalt wurde, die anderen sind ihre verrutschten Nachbarn.
+    """
+    from collections import Counter
+    haeufig = Counter(f for z in felder for f in z if f)
+    vertreter = []
+    ersatz = {}
+    for farbe, _ in haeufig.most_common():
+        for v in vertreter:
+            if sum(abs(a - b) for a, b in zip(farbe, v)) <= abstand:
+                ersatz[farbe] = v
+                break
+        else:
+            vertreter.append(farbe)
+            ersatz[farbe] = farbe
+    return [[ersatz[f] if f else None for f in z] for z in felder], len(vertreter)
+
+
 def _balken(karte, winkel=None):
     """Fasst waagerecht benachbarte Pixel gleicher Farbe zusammen.
 
