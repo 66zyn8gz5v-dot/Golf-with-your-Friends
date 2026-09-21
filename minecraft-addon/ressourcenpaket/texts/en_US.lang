@@ -20,3 +20,15 @@ item.fynn:haltung_b.name=Haltung B um X gekippt
 item.fynn:haltung_c=Haltung C um Z gekippt
 item.fynn:haltung_c.name=Haltung C um Z gekippt
 
+## Winkel zum Durchprobieren - fliegen wieder raus
+item.fynn:w1=Winkel 1 wie jetzt
+item.fynn:w1.name=Winkel 1 wie jetzt
+item.fynn:w2=Winkel 2 steiler
+item.fynn:w2.name=Winkel 2 steiler
+item.fynn:w3=Winkel 3 flacher
+item.fynn:w3.name=Winkel 3 flacher
+item.fynn:w4=Winkel 4 mehr gekippt
+item.fynn:w4.name=Winkel 4 mehr gekippt
+item.fynn:w5=Winkel 5 andersherum
+item.fynn:w5.name=Winkel 5 andersherum
+
