@@ -897,6 +897,8 @@
         <p class="bauhinweis" style="margin-top:10px">Neuen Kasten nehmen:</p>
         <div class="formen" id="formen"></div>
         <div class="knopfreihe" style="margin-top:8px">
+          <button type="button" id="bau-zurueck">Rückgängig</button>
+          <button type="button" id="teil-weg">Ausgewählten löschen</button>
           <button type="button" id="teil-kopie">Ausgewählten verdoppeln</button>
           <button type="button" id="bau-leeren">Von vorn anfangen</button>
         </div>
@@ -2278,6 +2280,23 @@
 
   var drehung = 25;     // Blickwinkel auf das ganze Modell
   var gewaehlt = 0;     // welcher Kasten gerade in Arbeit ist
+  var bauVerlauf = [];  // fuer Rueckgaengig
+
+  // Vor jeder Aenderung den ganzen Stand wegsichern. Kopieren statt
+  // verweisen, sonst zeigen alle Eintraege auf dieselben Kaesten und der
+  // Verlauf haelt ueberall denselben Stand.
+  function bauMerken() {
+    bauVerlauf.push(JSON.stringify({ teile: teile, gewaehlt: gewaehlt }));
+    if (bauVerlauf.length > 40) bauVerlauf.shift();
+    bauKnoepfeSetzen();
+  }
+
+  function bauKnoepfeSetzen() {
+    var zurueck = document.getElementById("bau-zurueck");
+    if (zurueck) zurueck.disabled = bauVerlauf.length === 0;
+    var weg = document.getElementById("teil-weg");
+    if (weg) weg.disabled = teile.length === 0;
+  }
 
   // Ein Kasten dreht sich um die Mitte seiner Grundflaeche, nicht um seinen
   // Mittelpunkt. Beim Anstueckeln zaehlt der Fuss: Dreht man um die Mitte,
@@ -2401,6 +2420,7 @@
       wahl.appendChild(e);
     });
     wahl.addEventListener("change", function () {
+      bauMerken();
       teil.stoff = wahl.value;
       teileZeigen();
       bauZeichnen();
@@ -2416,6 +2436,7 @@
     weg.title = "Kasten entfernen";
     weg.setAttribute("aria-label", "Kasten " + teil.name + " entfernen");
     weg.addEventListener("click", function () {
+      bauMerken();
       teile.splice(gewaehlt, 1);
       if (gewaehlt > 0) gewaehlt--;
       teileZeigen();
@@ -2449,6 +2470,7 @@
       feld.setAttribute("aria-label", wofuer);
 
       function setzen(wert) {
+        bauMerken();
         if (kleinstes !== undefined && wert < kleinstes) wert = kleinstes;
         // Auf Viertel runden, sonst sammeln sich aus dem Tippen Werte wie
         // 2.7000000000000002 an und stehen so in der Ausgabe.
@@ -2537,6 +2559,7 @@
         k.textContent = zeichen;
         k.setAttribute("aria-label", achse[0] + " um " + schritt + " Grad");
         k.addEventListener("click", function () {
+          bauMerken();
           var neu = teil.dreh[achse[1]] + schritt;
           // Nicht ueber die halbe Drehung hinaus: -180 und 180 sind
           // dasselbe, und zwei Wege zum selben Winkel verwirren nur.
@@ -2571,6 +2594,7 @@
       k.textContent = wert + "°";
       k.title = "zur Seite kippen: " + wert + " Grad";
       k.addEventListener("click", function () {
+        bauMerken();
         teil.dreh[2] = wert;
         teileZeigen();
         werkstattZeigen();
@@ -2584,6 +2608,7 @@
     aus.type = "button";
     aus.textContent = "gerade stellen";
     aus.addEventListener("click", function () {
+      bauMerken();
       teil.dreh = [0, 0, 0];
       teileZeigen();
       werkstattZeigen();
@@ -2674,6 +2699,18 @@
     var dx = (schirm.width - (rechtsKante - links) * zoom) / 2 - links * zoom;
     var dy = (schirm.height - (unten - oben) * zoom) / 2 - oben * zoom;
 
+    // Waehrend man zieht, bleibt die Ansicht stehen. Sonst rueckt sie bei
+    // jedem Pixel nach, weil sich die Ausdehnung des Modells aendert - und
+    // dann bewegt sich auf dem Schirm fast nichts, obwohl der Kasten laeuft.
+    // Bei einem einzelnen Kasten steht er sogar voellig still, weil die
+    // Ansicht ihn immer wieder mittig rueckt. Genau das fuehlte sich an,
+    // als liesse sich nichts verschieben.
+    if (festeSicht) {
+      zoom = festeSicht.zoom;
+      dx = festeSicht.dx;
+      dy = festeSicht.dy;
+    }
+
     var bronze = getComputedStyle(document.documentElement)
       .getPropertyValue("--bronze").trim() || "#8A6228";
 
@@ -2738,23 +2775,38 @@
     var my = teil.ort[1] + teil.gross[1] / 2;
     var mz = teil.ort[2] + teil.gross[2] / 2;
 
-    var obenAuf = aufSchirm([mx, teil.ort[1] + teil.gross[1], mz]);
-    var rechtsAuf = aufSchirm([teil.ort[0] + teil.gross[0], my, mz]);
     var mitte = aufSchirm([mx, my, mz]);
 
-    // Der Drehkreis sitzt ein Stueck ueber dem Hoehengriff, in derselben
-    // Richtung wie die Oberkante - sonst laege er bei gekippten Kaesten
-    // quer und man wuesste nicht, wozu er gehoert.
-    var weg = [obenAuf[0] - mitte[0], obenAuf[1] - mitte[1]];
-    var laenge = Math.sqrt(weg[0] * weg[0] + weg[1] * weg[1]) || 1;
-    var dreher = [
-      obenAuf[0] + weg[0] / laenge * 34,
-      obenAuf[1] + weg[1] / laenge * 34
-    ];
+    // Die Griffe sitzen NEBEN dem Kasten, nicht darauf.
+    //
+    // Vorher lagen sie genau auf der Kante - und weil ihr Fangbereich
+    // groesser ist als der gemalte Knopf, fingen sie bei kleinen Kaesten
+    // fast jeden Fingertipp ab. Wer den Kasten schieben wollte, zog
+    // stattdessen an der Breite, und der Kasten wurde breiter statt zu
+    // wandern. Die Flaeche des Kastens gehoert jetzt dem Verschieben.
+    var ABSTAND = 20;
+
+    function nachAussen(punkt, wieWeit) {
+      var weg = [punkt[0] - mitte[0], punkt[1] - mitte[1]];
+      var laenge = Math.sqrt(weg[0] * weg[0] + weg[1] * weg[1]) || 1;
+      return [
+        punkt[0] + weg[0] / laenge * wieWeit,
+        punkt[1] + weg[1] / laenge * wieWeit
+      ];
+    }
+
+    var obenKante = aufSchirm([mx, teil.ort[1] + teil.gross[1], mz]);
+    var rechtsKante2 = aufSchirm([teil.ort[0] + teil.gross[0], my, mz]);
+    var obenAuf = nachAussen(obenKante, ABSTAND);
+    var rechtsAuf = nachAussen(rechtsKante2, ABSTAND);
+    // Der Drehkreis sitzt ueber dem Hoehengriff, in derselben Richtung wie
+    // die Oberkante - sonst laege er bei gekippten Kaesten quer und man
+    // wuesste nicht, wozu er gehoert.
+    var dreher = nachAussen(obenKante, ABSTAND + 32);
 
     griffe = [
-      { art: "hoehe",  bei: obenAuf },
-      { art: "breite", bei: rechtsAuf },
+      { art: "hoehe",  bei: obenAuf,   ankerA: obenKante },
+      { art: "breite", bei: rechtsAuf, ankerA: rechtsKante2 },
       { art: "drehen", bei: dreher, von: obenAuf, mitte: mitte }
     ];
   }
@@ -2763,9 +2815,19 @@
     griffeRechnen();
     if (!griffe.length) return;
 
-    var dreher = griffe[2];
+    // Duenne Linien von der Kante zum Griff: Weil die Griffe jetzt neben
+    // dem Kasten stehen, muss zu sehen sein, an welcher Kante sie ziehen.
     stift.strokeStyle = bronze;
     stift.lineWidth = 1.5;
+    griffe.forEach(function (griff) {
+      if (!griff.ankerA) return;
+      stift.beginPath();
+      stift.moveTo(griff.ankerA[0], griff.ankerA[1]);
+      stift.lineTo(griff.bei[0], griff.bei[1]);
+      stift.stroke();
+    });
+
+    var dreher = griffe[2];
     stift.beginPath();
     stift.moveTo(dreher.von[0], dreher.von[1]);
     stift.lineTo(dreher.bei[0], dreher.bei[1]);
@@ -2797,6 +2859,7 @@
   var umrisse = [];   // gezeichnete Flaechen, um zu wissen, was unter dem Finger liegt
   var griffe = [];    // Anfasser am ausgewaehlten Kasten
   var sicht = null;   // Projektion des letzten Zeichnens
+  var festeSicht = null;  // eingefroren, solange gezogen wird
   var zug = null;     // laufendes Ziehen
 
   // Strahlverfahren: Eine Linie nach rechts ziehen und zaehlen, wie oft sie
@@ -2830,8 +2893,8 @@
   function griffUnter(x, y) {
     for (var i = 0; i < griffe.length; i++) {
       var g = griffe[i];
-      if (Math.abs(x - g.bei[0]) <= GRIFFGROESSE + 9 &&
-          Math.abs(y - g.bei[1]) <= GRIFFGROESSE + 9) return g;
+      if (Math.abs(x - g.bei[0]) <= GRIFFGROESSE + 7 &&
+          Math.abs(y - g.bei[1]) <= GRIFFGROESSE + 7) return g;
     }
     return null;
   }
@@ -2847,17 +2910,46 @@
     ];
   }
 
-  // Wie weit eine Fingerbewegung auf dem Schirm einer Modellachse folgt.
-  // Die Achse liegt im Bild schraeg; gesucht ist, wie viele Pixel des
-  // Modells der Weg entspricht, wenn man ihn auf diese Achse legt.
-  function laengsDerAchse(achse, wegX, wegY) {
+  // Wohin eine Modellachse im Bild zeigt: ein Schritt auf dieser Achse
+  // entspricht diesem Weg auf dem Schirm.
+  function achsenWeg(achse) {
     var einheit = [0, 0, 0];
     einheit[achse] = 1;
-    var sx = punktMal(einheit, sicht.rechts) * sicht.zoom;
-    var sy = -punktMal(einheit, sicht.hoch) * sicht.zoom;
-    var quadrat = sx * sx + sy * sy;
+    return [
+      punktMal(einheit, sicht.rechts) * sicht.zoom,
+      -punktMal(einheit, sicht.hoch) * sicht.zoom
+    ];
+  }
+
+  // Wie weit eine Fingerbewegung einer einzelnen Modellachse folgt. Fuer
+  // die Griffe, die nur ein Mass aendern.
+  function laengsDerAchse(achse, wegX, wegY) {
+    var a = achsenWeg(achse);
+    var quadrat = a[0] * a[0] + a[1] * a[1];
     if (quadrat < 0.0001) return 0;
-    return (wegX * sx + wegY * sy) / quadrat;
+    return (wegX * a[0] + wegY * a[1]) / quadrat;
+  }
+
+  // Beim Schieben zaehlt etwas anderes: Der Kasten soll unter dem Finger
+  // bleiben, nicht nur ungefaehr in die richtige Richtung wandern.
+  //
+  // Vorher wurde der Fingerweg auf beide Achsen einzeln projiziert und
+  // beides addiert - und weil die Achsen im Bild schraeg liegen und nicht
+  // senkrecht aufeinander stehen, kam dabei zu viel heraus: Der Kasten
+  // eilte dem Finger davon. Richtig ist, den Weg in die beiden Achsen zu
+  // ZERLEGEN, also das kleine Gleichungssystem zu loesen.
+  function zerlegeWeg(achseA, achseB, wegX, wegY) {
+    var a = achsenWeg(achseA), b = achsenWeg(achseB);
+    var nenner = a[0] * b[1] - a[1] * b[0];
+    // Fallen die beiden Achsen im Bild zusammen, gibt es keine eindeutige
+    // Zerlegung - dann bleibt nur die einzelne Projektion.
+    if (Math.abs(nenner) < 0.0001) {
+      return [laengsDerAchse(achseA, wegX, wegY), 0];
+    }
+    return [
+      (wegX * b[1] - wegY * b[0]) / nenner,
+      (a[0] * wegY - a[1] * wegX) / nenner
+    ];
   }
 
   // Auf halbe Pixel einrasten: Ein Modell aus krummen Zahlen laesst sich
@@ -2871,6 +2963,8 @@
     var griff = griffUnter(p[0], p[1]);
     if (griff) {
       ereignis.preventDefault();
+      bauMerken();
+      festeSicht = { zoom: sicht.zoom, dx: sicht.dx, dy: sicht.dy };
       var teil = teile[gewaehlt];
       zug = {
         art: griff.art,
@@ -2909,6 +3003,8 @@
     teileZeigen();
     werkstattZeigen();
     bauZeichnen();
+    bauMerken();
+    festeSicht = { zoom: sicht.zoom, dx: sicht.dx, dy: sicht.dy };
 
     zug = {
       art: "schieben",
@@ -2955,9 +3051,9 @@
     var wegX = p[0] - zug.von[0], wegY = p[1] - zug.von[1];
 
     if (zug.art === "schieben") {
-      teil.ort[zug.achse] = zug.anfangOrt[zug.achse]
-        + halbe(laengsDerAchse(zug.achse, wegX, wegY));
-      teil.ort[1] = zug.anfangOrt[1] + halbe(laengsDerAchse(1, wegX, wegY));
+      var teile2 = zerlegeWeg(zug.achse, 1, wegX, wegY);
+      teil.ort[zug.achse] = zug.anfangOrt[zug.achse] + halbe(teile2[0]);
+      teil.ort[1] = zug.anfangOrt[1] + halbe(teile2[1]);
 
     } else if (zug.art === "hoehe") {
       // Der Fuss bleibt stehen, nur die Oberkante wandert - sonst rutscht
@@ -3006,7 +3102,15 @@
   function zugBeenden() {
     if (!zug) return;
     zug = null;
+    festeSicht = null;
     document.getElementById("bauschirm").classList.remove("zieht");
+    // Jetzt darf die Ansicht wieder passen - mit weichem Uebergang waere
+    // es schoener, aber ein Sprung am Ende stoert weniger als ein Bild,
+    // das die ganze Zeit unter dem Finger wegrutscht.
+    teileZeigen();
+    werkstattZeigen();
+    bauZeichnen();
+    bauAusgeben();
     bauSichern();
   }
 
@@ -3143,6 +3247,7 @@
       k.textContent = form.was;
       k.title = form.gross.join(" × ") + " Pixel";
       k.addEventListener("click", function () {
+        bauMerken();
         // Oben drauf setzen, mittig: Von dort schiebt man es hin, wo es
         // hin soll, statt es erst aus einem anderen Kasten herauszuholen.
         var oben = 0;
@@ -3169,6 +3274,7 @@
   // Winkel. Die jedes Mal neu einzustellen waere Fleissarbeit.
   document.getElementById("teil-kopie").addEventListener("click", function () {
     if (!teile.length) return;
+    bauMerken();
     var alt = teile[gewaehlt];
     teile.splice(gewaehlt + 1, 0, {
       name: alt.name + " 2",
@@ -3224,6 +3330,32 @@
     bauZeichnen();
   });
 
+  document.getElementById("bau-zurueck").addEventListener("click", function () {
+    if (!bauVerlauf.length) return;
+    var stand = JSON.parse(bauVerlauf.pop());
+    teile = stand.teile;
+    gewaehlt = Math.min(stand.gewaehlt, Math.max(0, teile.length - 1));
+    teileZeigen();
+    werkstattZeigen();
+    bauZeichnen();
+    bauAusgeben();
+    bauSichern();
+    bauKnoepfeSetzen();
+  });
+
+  document.getElementById("teil-weg").addEventListener("click", function () {
+    if (!teile.length) return;
+    bauMerken();
+    teile.splice(gewaehlt, 1);
+    if (gewaehlt > 0) gewaehlt--;
+    teileZeigen();
+    werkstattZeigen();
+    bauZeichnen();
+    bauAusgeben();
+    bauSichern();
+    bauKnoepfeSetzen();
+  });
+
   // Wie "Leeres Feld laden" beim Pixeln: Das Beispielschwert ist zum
   // Zeigen da, nicht zum Behalten - aber es einzeln wegzuklicken sind
   // vier Handgriffe, und danach ist unklar, ob wirklich alles weg ist.
@@ -3233,6 +3365,7 @@
         "Alle " + teile.length + " Kästen löschen und von vorn anfangen?")) {
       return;
     }
+    bauMerken();
     teile = [];
     gewaehlt = 0;
     teileZeigen();
@@ -3322,6 +3455,7 @@
   teileZeigen();
   werkstattZeigen();
   bauAusgeben();
+  bauKnoepfeSetzen();
 
   sammlung = sammlungLesen();
   sammlungZeigen();
