@@ -12,6 +12,7 @@ dem Gefuehl - geschaetzte Metalltoene waren beim Stein schon einmal daneben.
 """
 
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -314,8 +315,8 @@ def _balken(karte):
     return gefunden
 
 
-def aus_zeichenkarte(name, karte, farben, dicke=1.0, ziel_modell=None,
-                     ziel_textur=None):
+def aus_zeichenkarte(name, karte, farben, dicke=1.0, mitte=None, anbauten=None,
+                     ziel_modell=None, ziel_textur=None):
     """Zieht ein flaches Bild in die Tiefe - jeder Pixel wird zum Quader.
 
     Warum das leichter ist als Kaesten zu stapeln: Gemalt wird, was man
@@ -331,6 +332,11 @@ def aus_zeichenkarte(name, karte, farben, dicke=1.0, ziel_modell=None,
     hoehe = len(karte)
     breite = len(karte[0])
     halb = dicke / 2
+    # Welche Spalte auf der Mittelachse liegt. Ohne Angabe die Bildmitte -
+    # aber wenn die Klinge nicht mittig gemalt ist, haengt die Waffe sonst
+    # schief in der Hand.
+    if mitte is None:
+        mitte = breite / 2
 
     bild = Image.new("RGBA", (breite, hoehe), (0, 0, 0, 0))
     for zeile, text in enumerate(karte):
@@ -344,7 +350,7 @@ def aus_zeichenkarte(name, karte, farben, dicke=1.0, ziel_modell=None,
         # Mittig um die Senkrechte, damit die Waffe in der Hand nicht
         # seitlich haengt.
         kaesten.append({
-            "origin": [x - breite / 2, y, -halb],
+            "origin": [x - mitte, y, -halb],
             "size": [lang, 1, dicke],
             "uv": {
                 # Die Rueckseite spiegelt, sonst stuende das Bild dort
@@ -359,6 +365,39 @@ def aus_zeichenkarte(name, karte, farben, dicke=1.0, ziel_modell=None,
                 "down":  {"uv": [x, zeile], "uv_size": [lang, 1]},
             },
         })
+
+    # Anbauten: Teile, die sich nicht malen lassen, weil sie nicht flach
+    # sind - eine geschwungene Parierstange, ein gekippter Knauf. Sie holen
+    # ihre Farbe aus einem Pixel der Karte, damit alles eine Textur bleibt.
+    stellen = {}
+    for zeile, text in enumerate(karte):
+        for spalte, zeichen in enumerate(text):
+            if zeichen != "." and zeichen not in stellen:
+                stellen[zeichen] = (spalte, zeile)
+
+    for anbau in (anbauten or []):
+        zeichen = anbau["farbe"]
+        if zeichen not in stellen:
+            raise ValueError(
+                f"{name}: Anbau '{anbau.get('name', '?')}' will die Farbe "
+                f"'{zeichen}', die kommt im Bild aber nicht vor.")
+        u, v = stellen[zeichen]
+        eintrag = {
+            "origin": list(anbau["origin"]),
+            "size": list(anbau["size"]),
+            # Ein einzelner Pixel, auf die ganze Flaeche gezogen: Ein
+            # Anbau ist einfarbig, da faellt das Strecken nicht auf.
+            "uv": {seite: {"uv": [u, v], "uv_size": [1, 1]}
+                   for seite in ("north", "south", "east", "west", "up", "down")},
+        }
+        if anbau.get("drehung") and any(anbau["drehung"]):
+            eintrag["rotation"] = list(anbau["drehung"])
+            eintrag["pivot"] = list(anbau.get("drehpunkt") or [
+                anbau["origin"][0] + anbau["size"][0] / 2,
+                anbau["origin"][1],
+                anbau["origin"][2] + anbau["size"][2] / 2,
+            ])
+        kaesten.append(eintrag)
 
     modell = {
         "format_version": "1.12.0",
@@ -387,10 +426,97 @@ def aus_zeichenkarte(name, karte, farben, dicke=1.0, ziel_modell=None,
     ziel_modell.write_text(json.dumps(modell, indent=2) + "\n", encoding="utf-8")
     bild.save(ziel_textur)
     gemalt = sum(1 for z in karte for c in z if c != ".")
+    zahl_anbau = len(anbauten or [])
     print(f"gebaut: {ziel_modell.name} aus {breite}x{hoehe} - "
-          f"{gemalt} Pixel zu {len(kaesten)} Kaesten zusammengefasst, "
-          f"Dicke {dicke}")
+          f"{gemalt} Pixel zu {len(kaesten) - zahl_anbau} Kaesten"
+          + (f" plus {zahl_anbau} Anbauten" if zahl_anbau else "")
+          + f", Dicke {dicke}")
     return modell
+
+
+# --------------------------------------------- Die Flammklinge in Eisen
+#
+# Nachgebaut nach einer Vorlage, die Fynn gezeigt hat - dort ein
+# gluehendes Schwert, hier in Eisen. Drei Sachen liessen sich nicht malen,
+# weil sie nicht flach sind, und stecken deshalb in den Anbauten: die
+# Parierstange, die nach oben schwingt, ihre verdickten Enden und der
+# Knauf, der auf der Spitze steht.
+#
+# Die Klinge dagegen ist flach - die kommt aus der Zeichenkarte, wie jedes
+# gepixelte Bild.
+
+# Nachgebaut nach Fynns Vorlage, in Eisen. Aus dem Bild gemessen: Die
+# Klinge ist dort fuenfmal so lang wie breit, die Spitze steht seitlich
+# vor und hat abgeschraegte Ecken. Ein erster Versuch auf 24 Zeilen kam
+# auf 3:1 und sah gedrungen aus - deshalb 28 Zeilen und nur vier Pixel
+# Klingenbreite.
+KLINGE = [
+    ".......ww.......",
+    "......wssw......",
+    ".....wssssw.....",
+    ".....wssssd.....",
+    "......wssd......",
+    "......wssd......",
+    "......wssd......",
+    "......wssd......",
+    "......wssd......",
+    "......wssd......",
+    "......wssd......",
+    "......wssd......",
+    "......wssd......",
+    "......wssd......",
+    "......wssd......",
+    "......wssd......",
+    "......wssd......",
+    "......wssd......",
+    "......wssd......",
+    "......wssd......",
+    ".....dssssd.....",
+    ".....dssssd.....",
+    "......lml.......",
+    "......lml.......",
+    "......lml.......",
+    "......lml.......",
+    "......lml.......",
+    "................",
+]
+MITTE = 8.0          # Klinge auf Spalte 6..9, Spitze 5..10
+
+WINKEL = 25.0
+ARM_LANG = 2.5
+hoch = len(KLINGE)
+y_parier = hoch - 1 - 21         # unterste Zeile der Parierstange
+ansatz = 11 - MITTE              # aeussere Kante des Mittelstuecks
+bogen = math.radians(WINKEL)
+ende_x = ansatz + ARM_LANG * math.cos(bogen)
+ende_y = y_parier + 0.25 + ARM_LANG * math.sin(bogen)
+
+ANBAUTEN = []
+for seite in (1, -1):
+    fuss = ansatz * seite
+    ANBAUTEN.append({
+        "name": "parier_arm",
+        "origin": [fuss if seite > 0 else fuss - ARM_LANG, y_parier + 0.25, -0.5],
+        "size": [ARM_LANG, 1.5, 1],
+        "farbe": "d",
+        "drehung": [0, 0, WINKEL * seite],
+        "drehpunkt": [fuss, y_parier + 0.25, 0],
+    })
+    ANBAUTEN.append({
+        "name": "parier_ende",
+        "origin": [ende_x * seite - (0.3 if seite > 0 else 1.3), ende_y - 0.4, -0.5],
+        "size": [1.6, 1.5, 1],
+        "farbe": "w",
+    })
+# Der Knauf steht auf der Spitze - ein Wuerfel, um 45 Grad gekippt.
+ANBAUTEN.append({
+    "name": "knauf",
+    "origin": [-0.9, -0.3, -0.5],
+    "size": [1.8, 1.8, 1],
+    "farbe": "d",
+    "drehung": [0, 0, 45],
+    "drehpunkt": [0, 0.6, 0],
+})
 
 
 if __name__ == "__main__":
