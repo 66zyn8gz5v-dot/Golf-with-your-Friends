@@ -390,34 +390,35 @@
     border-top: 1px solid var(--linie);
   }
 
-  .radfeld {
-    display: flex;
-    justify-content: center;
-  }
-  #farbrad {
-    width: 100%;
-    max-width: 210px;
-    height: auto;
-    touch-action: manipulation;
-    cursor: pointer;
-    /* Das Malfeld will harte Pixelkanten, die runden Segmente hier nicht. */
-    image-rendering: auto;
-  }
-
-  .graureihe {
+  /* Eine Zeile je Farbton, sieben Kaesten von dunkel nach fast weiss.
+     Die Kaesten teilen sich die Breite auf, damit die Reihe auf dem Tablet
+     nie ueber den Rand laeuft und trotzdem so gross wird wie moeglich. */
+  .tonraster {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 4px;
-    margin-top: 10px;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 3px;
   }
-  .graureihe button {
-    height: 26px;
+  .tonraster button {
+    aspect-ratio: 1;
+    min-height: 26px;
     padding: 0;
     border: 1px solid var(--linie);
     border-radius: 2px;
     cursor: pointer;
   }
-  .graureihe button:hover { border-color: var(--schrift); }
+  .tonraster button:hover { border-color: var(--schrift); }
+  /* Die zuletzt genommene Farbe bleibt markiert - sonst sucht man in
+     hundert Kaesten, wo man gerade war. */
+  .tonraster button[aria-pressed="true"] {
+    border-color: var(--bronze);
+    box-shadow: 0 0 0 2px var(--bronze-hell);
+  }
+  .tonraster .zeilenmarke {
+    grid-column: 1 / -1;
+    height: 1px;
+    background: var(--linie);
+    margin: 5px 0;
+  }
 
   .speicherzeile {
     display: flex;
@@ -734,15 +735,13 @@
 
         <div class="mischplatz">
           <h2>Mehr Farben</h2>
-          <div class="radfeld">
-            <canvas id="farbrad" width="420" height="420"
-                    aria-label="Farbrad: außen dunkel, innen hell"></canvas>
-          </div>
-          <div class="graureihe" id="graureihe"></div>
+          <div class="tonraster" id="tonraster"
+               aria-label="Farbtöne, je Zeile ein Ton von dunkel nach hell"></div>
           <p class="hinweis">
-            Eine Farbe antippen, und sie wandert nach oben zu deinen Farben — dort
-            bleibt sie auch nach dem Schließen. <strong>Farbe entfernen</strong> wirft
-            die gerade gewählte wieder weg; die Grundfarben bleiben immer.
+            Jede Zeile ist ein Farbton: links dunkel, nach rechts immer heller und
+            blasser. Eine Farbe antippen, und sie wandert nach oben zu deinen Farben —
+            dort bleibt sie auch nach dem Schließen. <strong>Farbe entfernen</strong>
+            wirft die gerade gewählte wieder weg; die Grundfarben bleiben immer.
           </p>
           <div class="knopfreihe" style="margin-top:12px">
             <button type="button" id="farbe-weg">Farbe entfernen</button>
@@ -1438,18 +1437,57 @@
   });
 
   // --- Farbraster ------------------------------------------------------
-  // Feste Auswahl statt stufenlosem Rad: Bei 16x16 arbeitet man mit einer
-  // Handvoll Farben. Zu viele aehnliche Toene machen ein Pixelbild unruhig,
-  // und auf dem Tablet trifft man ein festes Feld leichter als einen Punkt.
-  var TOENE = [0, 28, 50, 95, 170, 210, 262, 315];
-  var STUFEN = [
-    [0.90, 0.32],   // sehr dunkel
-    [0.85, 0.52],   // dunkel
-    [0.80, 0.74],   // mittel
-    [0.55, 0.92],   // hell
-    [0.25, 1.00]    // fast weiss
+  // Eine Zeile je Farbton, darin sieben Stufen von dunkel nach fast weiss.
+  //
+  // Warum das ein Rad abgeloest hat: Auf der Scheibe lagen die gedaempften
+  // Toene alle dicht an der Mitte, wo die Tortenstuecke schmal sind - genau
+  // die Toene, aus denen Minecraft-Texturen bestehen, waren am schwersten
+  // zu treffen. Im Raster hat jeder Ton gleich viel Platz.
+  //
+  // Die Reihenfolge folgt dem Regenbogen, ist aber ungleich verteilt: rund
+  // um Blau liegen die Zeilen dicht, weil dort Silber, Stahl und Eis leben.
+  // Gruen und Gelb brauchen hier weniger Auswahl.
+  var TONREIHEN = [
+    { name: "Grau",       ton: null },
+    { name: "Rot",        ton: 0 },
+    { name: "Rost",       ton: 18 },
+    { name: "Orange",     ton: 30 },
+    { name: "Braun",      ton: 40 },
+    { name: "Gold",       ton: 48 },
+    { name: "Gelb",       ton: 58 },
+    { name: "Moos",       ton: 80 },
+    { name: "Grün",       ton: 110 },
+    { name: "Tanne",      ton: 150 },
+    { name: "Türkis",     ton: 175 },
+    { name: "Eis",        ton: 192 },
+    { name: "Himmel",     ton: 205 },
+    { name: "Blau",       ton: 218 },
+    { name: "Tiefblau",   ton: 232 },
+    { name: "Nachtblau",  ton: 248 },
+    { name: "Violett",    ton: 270 },
+    { name: "Purpur",     ton: 295 },
+    { name: "Magenta",    ton: 320 },
+    { name: "Rosa",       ton: 340 }
   ];
-  var GRAUSTUFEN = [12, 68, 130, 190, 245];
+  var STUFENZAHL = 7;
+  var STUFENNAMEN = [
+    "sehr dunkel", "dunkel", "gedämpft", "mittel", "hell", "sehr hell", "fast weiß"
+  ];
+
+  // Nach rechts wird es heller UND blasser zugleich. Beides auf einer Achse,
+  // weil Ton, Kraft und Helligkeit zu dritt keine Flaeche mehr ergeben - und
+  // weil genau dieser Verlauf beim Pixeln gebraucht wird: ein Farbton vom
+  // Schatten bis zum Glanzpunkt.
+  function stufenFarbe(ton, stufe) {
+    var t = stufe / (STUFENZAHL - 1);
+    if (ton === null) {
+      var g = Math.round(16 + t * 239);
+      return [g, g, g];
+    }
+    // Nicht ganz bis Weiss: Bei voller Aufhellung sahen die hellsten Kaesten
+    // aller zwanzig Zeilen gleich aus - eine ganze Spalte ohne Nutzen.
+    return hsvZuRgb(ton, 0.80 - t * 0.64, 0.20 + t * 0.77);
+  }
 
   function hsvZuRgb(ton, kraft, hell) {
     var c = hell * kraft;
@@ -1469,7 +1507,8 @@
     ];
   }
 
-  function farbeAufnehmen(rgb) {
+  function farbeAufnehmen(rgb, name) {
+    name = name || "eigene Farbe";
     for (var i = 0; i < palette.length; i++) {
       var v = palette[i].farbe;
       if (v[3] !== 0 && v[0] === rgb[0] && v[1] === rgb[1] && v[2] === rgb[2]) {
@@ -1495,7 +1534,7 @@
     palette.push({
       zeichen: zeichen,
       farbe: [rgb[0], rgb[1], rgb[2], 255],
-      name: "eigene Farbe",
+      name: name,
       eigen: true
     });
     aktuellesZeichen = zeichen;
@@ -1503,84 +1542,59 @@
     werkzeugSetzen("stift");
     paletteAufbauen();
     sichern();
-    meldung("Aufgenommen — steht jetzt unter „Deine Farben“.");
+    meldung(name + " aufgenommen — steht jetzt unter „Deine Farben“.");
   }
 
-  // Rad statt Raster: dieselben Farben, aber als Scheibe. Acht Tortenstuecke
-  // sind die Farbtoene, fuenf Ringe die Helligkeiten - aussen dunkel, innen
-  // hell. Das braucht knapp die Haelfte der Hoehe eines Rasters.
-  var RAD_INNEN = 0.22;   // Anteil des Radius, der frei bleibt
-  var rad = document.getElementById("farbrad");
-  var radStift = rad.getContext("2d");
+  var tonWahl = null;   // "tonNr:stufe" des zuletzt genommenen Kastens
 
-  function radFarbe(tonNr, stufeNr) {
-    return hsvZuRgb(TOENE[tonNr], STUFEN[stufeNr][0], STUFEN[stufeNr][1]);
-  }
-
-  function radZeichnen() {
-    var g = rad.width, m = g / 2;
-    var aussen = m - 4;
-    var innen = aussen * RAD_INNEN;
-    var ringbreite = (aussen - innen) / STUFEN.length;
-    var stueck = (Math.PI * 2) / TOENE.length;
-
-    radStift.clearRect(0, 0, g, g);
-    for (var t = 0; t < TOENE.length; t++) {
-      for (var s = 0; s < STUFEN.length; s++) {
-        // Stufe 0 ist die dunkelste - die gehoert nach aussen.
-        var r1 = innen + (STUFEN.length - 1 - s) * ringbreite;
-        var r2 = r1 + ringbreite;
-        var a1 = t * stueck - Math.PI / 2;
-        var a2 = a1 + stueck;
-
-        radStift.beginPath();
-        radStift.arc(m, m, r2, a1, a2);
-        radStift.arc(m, m, r1, a2, a1, true);
-        radStift.closePath();
-        radStift.fillStyle = "rgb(" + radFarbe(t, s).join(",") + ")";
-        radStift.fill();
-        radStift.strokeStyle = "rgba(0,0,0,0.22)";
-        radStift.lineWidth = 2;
-        radStift.stroke();
-      }
-    }
-  }
-
-  rad.addEventListener("click", function (e) {
-    var rahmen = rad.getBoundingClientRect();
-    var m = rahmen.width / 2;
-    var dx = e.clientX - rahmen.left - m;
-    var dy = e.clientY - rahmen.top - m;
-    var abstand = Math.sqrt(dx * dx + dy * dy);
-
-    var aussen = m - (4 * rahmen.width / rad.width);
-    var innen = aussen * RAD_INNEN;
-    if (abstand < innen || abstand > aussen) return;   // Mitte und Rand sind taub
-
-    var winkel = Math.atan2(dy, dx) + Math.PI / 2;
-    if (winkel < 0) winkel += Math.PI * 2;
-    var tonNr = Math.floor(winkel / ((Math.PI * 2) / TOENE.length)) % TOENE.length;
-
-    var ringbreite = (aussen - innen) / STUFEN.length;
-    var ringNr = Math.floor((abstand - innen) / ringbreite);
-    if (ringNr > STUFEN.length - 1) ringNr = STUFEN.length - 1;
-    var stufeNr = STUFEN.length - 1 - ringNr;
-
-    farbeAufnehmen(radFarbe(tonNr, stufeNr));
-  });
-
-  function graureiheAufbauen() {
-    var behaelter = document.getElementById("graureihe");
+  function rasterAufbauen() {
+    var behaelter = document.getElementById("tonraster");
     behaelter.textContent = "";
-    GRAUSTUFEN.forEach(function (wert) {
-      var rgb = [wert, wert, wert];
-      var knopf = document.createElement("button");
-      knopf.type = "button";
-      knopf.style.background = "rgb(" + rgb.join(",") + ")";
-      knopf.title = "Grau " + wert;
-      knopf.setAttribute("aria-label", "Grauton " + wert);
-      knopf.addEventListener("click", function () { farbeAufnehmen(rgb); });
-      behaelter.appendChild(knopf);
+
+    TONREIHEN.forEach(function (reihe, tonNr) {
+      // Grau steht fuer sich - ein Strich trennt es von den bunten Zeilen.
+      if (tonNr === 1) {
+        var strich = document.createElement("div");
+        strich.className = "zeilenmarke";
+        behaelter.appendChild(strich);
+      }
+
+      for (var stufe = 0; stufe < STUFENZAHL; stufe++) {
+        (function (stufe) {
+          var rgb = stufenFarbe(reihe.ton, stufe);
+          var name = reihe.name + ", " + STUFENNAMEN[stufe];
+          var marke = tonNr + ":" + stufe;
+
+          var knopf = document.createElement("button");
+          knopf.type = "button";
+          knopf.style.background = "rgb(" + rgb.join(",") + ")";
+          knopf.title = name;
+          knopf.setAttribute("aria-label", name);
+          knopf.setAttribute("aria-pressed", marke === tonWahl ? "true" : "false");
+          knopf.addEventListener("click", function () {
+            tonWahl = marke;
+            rasterMarkieren();
+            farbeAufnehmen(rgb, name);
+          });
+          behaelter.appendChild(knopf);
+        })(stufe);
+      }
+    });
+  }
+
+  // Nur die Markierung umsetzen, statt das ganze Raster neu zu bauen: Das
+  // sind hundertvierzig Knoepfe, und beim Antippen soll nichts stocken.
+  function rasterMarkieren() {
+    var knoepfe = document.getElementById("tonraster").querySelectorAll("button");
+    var nummer = 0;
+    TONREIHEN.forEach(function (reihe, tonNr) {
+      for (var stufe = 0; stufe < STUFENZAHL; stufe++) {
+        var knopf = knoepfe[nummer++];
+        if (knopf) {
+          knopf.setAttribute("aria-pressed",
+            (tonNr + ":" + stufe) === tonWahl ? "true" : "false");
+        }
+      }
     });
   }
 
@@ -2486,8 +2500,7 @@
 
   sammlung = sammlungLesen();
   sammlungZeigen();
-  radZeichnen();
-  graureiheAufbauen();
+  rasterAufbauen();
   paletteAufbauen();
   karteUebernehmen(stand && stand.bild ? stand.bild.slice() : VORLAGEN.sternenstaub.slice());
   bereit = true;
