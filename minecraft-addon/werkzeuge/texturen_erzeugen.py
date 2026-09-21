@@ -83,25 +83,26 @@ STERNENKLINGE = [
 
 
 # Rohsilber, wie es aus dem Fels faellt: ein Klumpen, kein Barren. Gemalt von
-# Fynn in der Pixelschmiede. Bewusst ohne schwarzen Umriss - der Brocken hat
-# stattdessen dunklere Randpixel, so wie Minecrafts eigenes Roheisen.
+# Fynn in der Pixelschmiede. Der Umriss kam in der zweiten Fassung dazu - ohne
+# ihn war der Klumpen der einzige Gegenstand ohne Kante und fiel neben den
+# uebrigen aus der Reihe. Der Klumpen selbst ist Pixel fuer Pixel derselbe.
 ROHSILBER = [
-    "................",
-    "..........xxx...",
-    "........xxzyzx..",
-    ".......wvzyzwx..",
-    "......syzzzwzwx.",
-    "......szzzzzzzs.",
-    ".....syzzzxwzzd.",
-    "....yszxzxwwwzd.",
-    "...dzzzxswwzzzv.",
-    "...vzzzxxzzzzs..",
-    "..vwzzxszzszys..",
-    ".vzzzxxszzzyx...",
-    ".wwzzxzzzzzx....",
-    ".dwwzzzwvwd.....",
-    "..sdvdv.........",
-    "................",
+    "..........kkk...",
+    "........kkxxxk..",
+    ".......kxxzyzxk.",
+    "......kwvzyzwxk.",
+    ".....ksyzzzwzwxk",
+    ".....kszzzzzzzsk",
+    "....ksyzzzxwzzdk",
+    "...kyszxzxwwwzdk",
+    "..kdzzzxswwzzzvk",
+    "..kvzzzxxzzzzsk.",
+    ".kvwzzxszzszysk.",
+    "kvzzzxxszzzyxk..",
+    "kwwzzxzzzzzxk...",
+    "kdwwzzzwvwdk....",
+    ".ksdvdvkkkk.....",
+    "..kkkkk.........",
 ]
 
 
