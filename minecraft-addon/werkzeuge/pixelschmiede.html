@@ -116,8 +116,17 @@
     gap: 20px;
     align-items: start;
   }
+  /* Die Ansicht laeuft mit. Beim Schubsen will man sehen, was passiert -
+     und die Knoepfe stehen weit unter dem Schirm, sobald ein Kasten in
+     Arbeit ist. Nur wo es zwei Spalten gibt: einspaltig stuende die
+     Ansicht sonst ueber dem, was man gerade bearbeitet. */
+  .bauplatz > aside {
+    position: sticky;
+    top: calc(env(safe-area-inset-top, 0px) + 12px);
+  }
   @media (max-width: 760px) {
     .bauplatz { grid-template-columns: minmax(0, 1fr); }
+    .bauplatz > aside { position: static; }
   }
   /* Die Liste zeigt nur noch Namen. Alle sechs Zahlen bei jedem Kasten
      gleichzeitig hiessen: scrollen, bis man den richtigen gefunden hat.
@@ -184,10 +193,10 @@
   /* Drehen: Knoepfe statt Zahlenfeld. Auf dem Tablet ist eine Zahl zu
      tippen drei Handgriffe, ein Knopf einer - und beim Drehen probiert
      man ohnehin, statt einen Wert zu kennen. */
-  .achsen { display: grid; gap: 7px; margin-top: 12px; }
+  .achsen { display: grid; gap: 7px; margin-top: 10px; }
   .achse { display: flex; align-items: center; gap: 6px; }
   .achse .wofuer {
-    font-size: 12px; color: var(--schrift-leise); width: 5.5em; flex: none;
+    font-size: 12px; color: var(--schrift-leise); width: 6.5em; flex: none;
   }
   .achse button {
     font-size: 16px; line-height: 1; padding: 6px 10px; flex: none;
@@ -198,6 +207,22 @@
     font-size: 14px; text-align: center; flex: 1; min-width: 3.5em;
     color: var(--schrift);
   }
+  /* Das Feld zwischen den Knoepfen: schubsen mit den Knoepfen, tippen im
+     Feld. Wer weiss, welche Zahl er will, muss nicht vierzigmal druecken. */
+  .achse input {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 15px; text-align: center; flex: 1; min-width: 0; width: 100%;
+    padding: 6px 2px; color: var(--schrift); background: var(--stein-tief);
+    border: 1px solid var(--linie); border-radius: 5px;
+  }
+  .gruppenmarke {
+    font-family: "Cinzel", Georgia, serif;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--schrift-leise);
+    margin: 14px 0 2px;
+  }
+  .formen { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .formen button { font-size: 13px; padding: 6px 11px; }
   .rastknoepfe { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px; }
   .rastknoepfe button { font-size: 12px; padding: 4px 9px; }
   #bauschirm {
@@ -852,8 +877,9 @@
           zeigt nach oben. Einen Kasten antippen, um ihn zu bearbeiten.
         </p>
         <div id="teileliste"></div>
+        <p class="bauhinweis" style="margin-top:10px">Neuen Kasten nehmen:</p>
+        <div class="formen" id="formen"></div>
         <div class="knopfreihe" style="margin-top:8px">
-          <button type="button" id="teil-neu">Kasten hinzufügen</button>
           <button type="button" id="teil-kopie">Ausgewählten verdoppeln</button>
         </div>
         <div class="werkstatt" id="werkstatt"></div>
@@ -2376,34 +2402,94 @@
     kopf.appendChild(weg);
     platz.appendChild(kopf);
 
-    var masse = document.createElement("div");
-    masse.className = "masse";
-    [
-      ["Ort ↔", "ort", 0], ["Ort ↕", "ort", 1], ["Ort Tiefe", "ort", 2],
-      ["Breite", "gross", 0], ["Höhe", "gross", 1], ["Dicke", "gross", 2]
-    ].forEach(function (feld) {
-      var etikett = document.createElement("label");
-      etikett.appendChild(document.createTextNode(feld[0]));
-      var zahl = document.createElement("input");
-      zahl.type = "number";
+    // Eine Zeile je Mass: schubsen mit den Knoepfen, tippen im Feld.
+    // Vorher standen hier nur Zahlenfelder - auf dem Tablet heisst das
+    // antippen, Tastatur abwarten, Wert loeschen, neu tippen. Zum
+    // Anordnen braucht man aber schubsen, nicht rechnen.
+    function massZeile(wofuer, wo, achse, schritt, kleinstes) {
+      var zeile = document.createElement("div");
+      zeile.className = "achse";
+
+      var marke = document.createElement("span");
+      marke.className = "wofuer";
+      marke.textContent = wofuer;
+      zeile.appendChild(marke);
+
+      var feld = document.createElement("input");
+      feld.type = "number";
       // Viertelpixel: Eine Klinge, die duenner sein soll als ein Pixel,
       // braucht feinere Stufen als das halbe.
-      zahl.step = "0.25";
-      zahl.value = teil[feld[1]][feld[2]];
-      zahl.addEventListener("input", function () {
-        var wert = parseFloat(zahl.value);
+      feld.step = "0.25";
+      feld.value = teil[wo][achse];
+      feld.setAttribute("aria-label", wofuer);
+
+      function setzen(wert) {
+        if (kleinstes !== undefined && wert < kleinstes) wert = kleinstes;
+        // Auf Viertel runden, sonst sammeln sich aus dem Tippen Werte wie
+        // 2.7000000000000002 an und stehen so in der Ausgabe.
+        teil[wo][achse] = Math.round(wert * 4) / 4;
+        feld.value = teil[wo][achse];
+        teileZeigen();
+        bauZeichnen();
+        bauAusgeben();
+        bauSichern();
+      }
+
+      function knopf(zeichen, weite) {
+        var k = document.createElement("button");
+        k.type = "button";
+        k.textContent = zeichen;
+        k.setAttribute("aria-label", wofuer + (weite > 0 ? " mehr" : " weniger"));
+        k.addEventListener("click", function () {
+          setzen(teil[wo][achse] + weite);
+        });
+        return k;
+      }
+
+      feld.addEventListener("input", function () {
+        var wert = parseFloat(feld.value);
         if (!isNaN(wert)) {
-          teil[feld[1]][feld[2]] = wert;
+          teil[wo][achse] = wert;
           teileZeigen();
           bauZeichnen();
           bauAusgeben();
           bauSichern();
         }
       });
-      etikett.appendChild(zahl);
-      masse.appendChild(etikett);
-    });
-    platz.appendChild(masse);
+      feld.addEventListener("blur", function () { setzen(teil[wo][achse]); });
+
+      zeile.appendChild(knopf("−", -schritt));
+      zeile.appendChild(feld);
+      zeile.appendChild(knopf("+", schritt));
+      return zeile;
+    }
+
+    function marke(text) {
+      var m = document.createElement("div");
+      m.className = "gruppenmarke";
+      m.textContent = text;
+      return m;
+    }
+
+    platz.appendChild(marke("Wie groß"));
+    var wieGross = document.createElement("div");
+    wieGross.className = "achsen";
+    // Kleinstes Mass ein Viertelpixel: Null waere ein Kasten ohne Koerper,
+    // und der ist im Spiel unsichtbar, ohne dass jemand sagt warum.
+    wieGross.appendChild(massZeile("Breite", "gross", 0, 0.5, 0.25));
+    wieGross.appendChild(massZeile("Höhe", "gross", 1, 0.5, 0.25));
+    wieGross.appendChild(massZeile("Dicke", "gross", 2, 0.25, 0.25));
+    platz.appendChild(wieGross);
+
+    platz.appendChild(marke("Wohin"));
+    var wohin = document.createElement("div");
+    wohin.className = "achsen";
+    wohin.appendChild(massZeile("links / rechts", "ort", 0, 0.5));
+    wohin.appendChild(massZeile("runter / hoch", "ort", 1, 0.5));
+    wohin.appendChild(massZeile("hinten / vorn", "ort", 2, 0.5));
+    platz.appendChild(wohin);
+
+    platz.appendChild(marke("Drehen"));
 
     var achsen = document.createElement("div");
     achsen.className = "achsen";
@@ -2693,18 +2779,47 @@
     feld.select();
   });
 
-  document.getElementById("teil-neu").addEventListener("click", function () {
-    var oben = 0;
-    teile.forEach(function (t) { oben = Math.max(oben, t.ort[1] + t.gross[1]); });
-    teile.push({ name: "neuer Kasten", ort: [-1, oben, -0.5], gross: [2, 2, 1],
-                 stoff: "stahl", dreh: [0, 0, 0] });
-    gewaehlt = teile.length - 1;
-    teileZeigen();
-    werkstattZeigen();
-    bauZeichnen();
-    bauAusgeben();
-    bauSichern();
-  });
+  // Grundformen statt eines immer gleichen Kaestchens: Eine Klinge aus
+  // einem 2x2x1 herauszuschubsen sind zwanzig Knopfdruecke, bevor ueberhaupt
+  // etwas nach Klinge aussieht.
+  var FORMEN = [
+    { was: "Würfel",  gross: [2, 2, 2], stoff: "stahl" },
+    { was: "Stab",    gross: [1, 5, 1], stoff: "eisen" },
+    { was: "Platte",  gross: [4, 1, 3], stoff: "eisen" },
+    { was: "Klinge",  gross: [3, 9, 1], stoff: "stahl" },
+    { was: "Wicklung",gross: [2, 4, 2], stoff: "leder" }
+  ];
+
+  function formenZeigen() {
+    var reihe = document.getElementById("formen");
+    reihe.textContent = "";
+    FORMEN.forEach(function (form) {
+      var k = document.createElement("button");
+      k.type = "button";
+      k.textContent = form.was;
+      k.title = form.gross.join(" × ") + " Pixel";
+      k.addEventListener("click", function () {
+        // Oben drauf setzen, mittig: Von dort schiebt man es hin, wo es
+        // hin soll, statt es erst aus einem anderen Kasten herauszuholen.
+        var oben = 0;
+        teile.forEach(function (t) { oben = Math.max(oben, t.ort[1] + t.gross[1]); });
+        teile.push({
+          name: form.was.toLowerCase(),
+          ort: [-form.gross[0] / 2, oben, -form.gross[2] / 2],
+          gross: form.gross.slice(),
+          stoff: form.stoff,
+          dreh: [0, 0, 0]
+        });
+        gewaehlt = teile.length - 1;
+        teileZeigen();
+        werkstattZeigen();
+        bauZeichnen();
+        bauAusgeben();
+        bauSichern();
+      });
+      reihe.appendChild(k);
+    });
+  }
 
   // Eine Schraege entsteht aus mehreren gleichen Kaesten mit wachsendem
   // Winkel. Die jedes Mal neu einzustellen waere Fleissarbeit.
@@ -2805,6 +2920,7 @@
 
   var gemerkteTeile = bauHolen();
   if (gemerkteTeile) teile = gemerkteTeile;
+  formenZeigen();
   teileZeigen();
   werkstattZeigen();
   bauAusgeben();
