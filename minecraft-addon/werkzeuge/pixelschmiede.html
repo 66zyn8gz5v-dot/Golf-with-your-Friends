@@ -221,8 +221,17 @@
     text-transform: uppercase; color: var(--schrift-leise);
     margin: 14px 0 2px;
   }
-  .formen { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .werkzeugleiste {
+    display: grid;
+    gap: 6px;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--linie);
+  }
+  .formen { display: flex; gap: 6px; flex-wrap: wrap; }
   .formen button { font-size: 13px; padding: 6px 11px; }
+  .werkzeugleiste .knopfreihe button { font-size: 13px; padding: 6px 11px; }
+  #schirmtitel { overflow-wrap: anywhere; }
   .rastknoepfe { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px; }
   .rastknoepfe button { font-size: 12px; padding: 4px 9px; }
   #bauschirm {
@@ -240,6 +249,7 @@
   .bauplatz.gross > aside { position: static; }
   .bauplatz.gross #bauschirm { max-width: 100%; }
   .bauplatz.gross .nur-klein { display: none; }
+  .bauplatz.gross .werkzeugleiste { margin-bottom: 8px; padding-bottom: 8px; }
   .schirmkopf {
     display: flex; align-items: center; justify-content: space-between;
     gap: 8px; margin-bottom: 8px;
@@ -894,12 +904,7 @@
           zeigt nach oben. Einen Kasten antippen, um ihn zu bearbeiten.
         </p>
         <div id="teileliste"></div>
-        <p class="bauhinweis" style="margin-top:10px">Neuen Kasten nehmen:</p>
-        <div class="formen" id="formen"></div>
         <div class="knopfreihe" style="margin-top:8px">
-          <button type="button" id="bau-zurueck">Rückgängig</button>
-          <button type="button" id="teil-weg">Ausgewählten löschen</button>
-          <button type="button" id="teil-kopie">Ausgewählten verdoppeln</button>
           <button type="button" id="bau-leeren">Von vorn anfangen</button>
         </div>
         <div class="werkstatt" id="werkstatt"></div>
@@ -907,8 +912,19 @@
 
       <aside>
         <div class="schirmkopf">
-          <h2>Ansicht</h2>
+          <h2 id="schirmtitel">Ansicht</h2>
           <button type="button" id="bau-gross" aria-pressed="false">Groß</button>
+        </div>
+        <!-- Die Werkzeuge stehen bei der Ansicht, nicht bei der Liste:
+             Im Grossen ist die Liste ausgeblendet, und dort braucht man sie
+             genauso - neue Kaesten nehmen und alte wegwerfen. -->
+        <div class="werkzeugleiste">
+          <div class="formen" id="formen"></div>
+          <div class="knopfreihe">
+            <button type="button" id="bau-zurueck">Rückgängig</button>
+            <button type="button" id="teil-weg">Löschen</button>
+            <button type="button" id="teil-kopie">Verdoppeln</button>
+          </div>
         </div>
         <canvas id="bauschirm" width="420" height="460"
                 aria-label="Das Modell. Einen Kasten antippen und ziehen."></canvas>
@@ -2291,7 +2307,19 @@
     bauKnoepfeSetzen();
   }
 
+  // Im Grossen ist die Liste ausgeblendet - dann sagt die Ueberschrift,
+  // welcher Kasten gerade dran ist. Sonst weiss man beim Loeschen nicht,
+  // was gleich verschwindet.
+  function schirmtitelSetzen() {
+    var titel = document.getElementById("schirmtitel");
+    if (!titel) return;
+    titel.textContent = teile.length && teile[gewaehlt]
+      ? (teile[gewaehlt].name || "ohne Namen")
+      : "Ansicht";
+  }
+
   function bauKnoepfeSetzen() {
+    schirmtitelSetzen();
     var zurueck = document.getElementById("bau-zurueck");
     if (zurueck) zurueck.disabled = bauVerlauf.length === 0;
     var weg = document.getElementById("teil-weg");
@@ -2339,6 +2367,7 @@
   }
 
   function teileZeigen() {
+    schirmtitelSetzen();
     var liste = document.getElementById("teileliste");
     liste.textContent = "";
 
@@ -3307,8 +3336,8 @@
     var breit = schirm.getBoundingClientRect().width;
     schirm.width = Math.max(360, Math.round(breit));
     schirm.height = gross
-      ? Math.max(320, Math.round(Math.min(schirm.width * 0.7,
-                                          window.innerHeight - 200)))
+      ? Math.max(300, Math.round(Math.min(schirm.width * 0.7,
+                                          window.innerHeight - 260)))
       : 460;
   }
 
