@@ -335,6 +335,37 @@ def _grad(zeile, spalte):
     return DREHUNGEN.get(zeile[spalte], 0.0)
 
 
+def _pruefe_mitte(name, karte, mitte, versatz):
+    """Warnt, wenn ein Teil nicht auf der Mittelachse liegt.
+
+    Der Versatz ist dafuer da, ein Teil mit ungerader Breite mittig zu
+    bekommen - falsch herum angewendet schiebt er ein Teil heraus, das
+    vorher schon richtig lag. Genau das ist mir mit dem Griff passiert,
+    und im Bild sieht man einen halben Pixel Versatz kaum. Deshalb rechnet
+    das Werkzeug es nach.
+
+    Zeilen, die absichtlich aussermittig sind - eine Schneide, eine
+    einseitige Zier -, melden sich hier mit. Die Meldung ist eine Frage,
+    kein Fehler.
+    """
+    schief = []
+    for zeile, text in enumerate(karte):
+        gemalt = [i for i, c in enumerate(text) if c != "."]
+        if not gemalt:
+            continue
+        v = versatz[zeile] if versatz and zeile < len(versatz) else 0.0
+        links = gemalt[0] - mitte + v
+        rechts = gemalt[-1] + 1 - mitte + v
+        versetzt = (links + rechts) / 2
+        if abs(versetzt) > 0.01:
+            schief.append((zeile, versetzt))
+    if schief:
+        print(f"Nicht auf der Mittelachse bei {name}:")
+        for zeile, versetzt in schief:
+            print(f"  Zeile {zeile}: {versetzt:+.2f} Pixel neben der Mitte")
+    return not schief
+
+
 def _ecken(anbau):
     """Die vier Ecken eines Anbaus in der Ansicht von vorne, nach der
     Drehung. Die Tiefe bleibt aussen vor - Luecken entstehen in der
@@ -529,6 +560,7 @@ def aus_zeichenkarte(name, karte, farben, dicke=1.0, mitte=None, anbauten=None,
     ziel_modell.write_text(json.dumps(modell, indent=2) + "\n", encoding="utf-8")
     bild.save(ziel_textur)
     gemalt = sum(1 for z in sichtbar for c in z if c != ".")
+    _pruefe_mitte(name, sichtbar, mitte, versatz)
     _pruefe_anbauten(name, anbauten or [])
 
     zahl_anbau = len(anbauten or [])
@@ -589,9 +621,10 @@ WINKEL = ["................"] * len(KLINGE)
 # Halber Versatz je Zeile. Der Griff sitzt um einen halben Pixel weiter
 # links, damit er mittig unter der Parierstange haengt - in der Vorlage
 # liegen die Reihen nicht stur uebereinander.
+# Halber Versatz je Zeile: Damit laesst sich ein Teil mittig bekommen,
+# dessen Breite ungerade ist - zwei Pixel liegen mittig, drei nicht.
+# Hier braucht ihn gerade keine Zeile.
 VERSATZ = [0.0] * len(KLINGE)
-for z in range(20, 27):
-    VERSATZ[z] = 0.5
 MITTE = 8.0
 MUSTER = 3
 
