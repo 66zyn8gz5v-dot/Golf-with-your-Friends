@@ -289,6 +289,110 @@ EISENKLINGE = [
 ]
 
 
+# ------------------------------------------------- Aus einer Zeichenkarte
+
+def _balken(karte):
+    """Fasst waagerecht benachbarte Pixel gleicher Farbe zusammen.
+
+    Sonst wuerde jeder Pixel ein eigener Kasten: Ein Schwert braechte es auf
+    ueber hundert, und jeder kostet das Spiel Rechenzeit. Waagerecht reicht -
+    bei einer Klinge liegen die gleichen Toene ohnehin in Zeilen.
+    """
+    gefunden = []
+    for zeile, text in enumerate(karte):
+        spalte = 0
+        while spalte < len(text):
+            zeichen = text[spalte]
+            if zeichen == ".":
+                spalte += 1
+                continue
+            ende = spalte
+            while ende + 1 < len(text) and text[ende + 1] == zeichen:
+                ende += 1
+            gefunden.append((spalte, zeile, ende - spalte + 1, zeichen))
+            spalte = ende + 1
+    return gefunden
+
+
+def aus_zeichenkarte(name, karte, farben, dicke=1.0, ziel_modell=None,
+                     ziel_textur=None):
+    """Zieht ein flaches Bild in die Tiefe - jeder Pixel wird zum Quader.
+
+    Warum das leichter ist als Kaesten zu stapeln: Gemalt wird, was man
+    sieht. Die Form stimmt dann von selbst, weil sie dieselbe ist wie im
+    Inventarbild.
+
+    Die Textur ist das gemalte Bild selbst, unveraendert. Jede Flaeche holt
+    sich ihren Ausschnitt daraus - dafuer gibt es in Bedrock die Angabe je
+    Seite. Mit dem sonst ueblichen Kreuz-Layout ginge das nicht: Dort
+    muesste fuer jeden Kasten ein eigenes Feld gepackt werden, und die
+    Farben stuenden nicht mehr da, wo sie gemalt wurden.
+    """
+    hoehe = len(karte)
+    breite = len(karte[0])
+    halb = dicke / 2
+
+    bild = Image.new("RGBA", (breite, hoehe), (0, 0, 0, 0))
+    for zeile, text in enumerate(karte):
+        for spalte, zeichen in enumerate(text):
+            bild.putpixel((spalte, zeile), tuple(farben.get(zeichen, (0, 0, 0, 0))))
+
+    kaesten = []
+    for x, zeile, lang, zeichen in _balken(karte):
+        # Bildzeilen zaehlen von oben, das Modell zaehlt von unten.
+        y = hoehe - 1 - zeile
+        # Mittig um die Senkrechte, damit die Waffe in der Hand nicht
+        # seitlich haengt.
+        kaesten.append({
+            "origin": [x - breite / 2, y, -halb],
+            "size": [lang, 1, dicke],
+            "uv": {
+                # Die Rueckseite spiegelt, sonst stuende das Bild dort
+                # seitenverkehrt - eine negative Breite dreht den Ausschnitt.
+                "north": {"uv": [x, zeile], "uv_size": [lang, 1]},
+                "south": {"uv": [x + lang, zeile], "uv_size": [-lang, 1]},
+                # Die Schmalseiten zeigen denselben Pixel, nur gestreckt -
+                # eine Kante ist einfarbig, da faellt das nicht auf.
+                "east":  {"uv": [x + lang - 1, zeile], "uv_size": [1, 1]},
+                "west":  {"uv": [x, zeile], "uv_size": [1, 1]},
+                "up":    {"uv": [x, zeile], "uv_size": [lang, 1]},
+                "down":  {"uv": [x, zeile], "uv_size": [lang, 1]},
+            },
+        })
+
+    modell = {
+        "format_version": "1.12.0",
+        "minecraft:geometry": [{
+            "description": {
+                "identifier": f"geometry.{name}",
+                "texture_width": breite,
+                "texture_height": hoehe,
+                "visible_bounds_width": 4,
+                "visible_bounds_height": 4,
+                "visible_bounds_offset": [0, 1, 0],
+            },
+            "bones": [{
+                "name": "rightitem",
+                "binding": "q.item_slot_to_bone_name(c.item_slot)",
+                "pivot": [0, 8, 0],
+                "cubes": kaesten,
+            }],
+        }],
+    }
+
+    ziel_modell = Path(ziel_modell or f"{name}.geo.json")
+    ziel_textur = Path(ziel_textur or f"{name}.png")
+    ziel_modell.parent.mkdir(parents=True, exist_ok=True)
+    ziel_textur.parent.mkdir(parents=True, exist_ok=True)
+    ziel_modell.write_text(json.dumps(modell, indent=2) + "\n", encoding="utf-8")
+    bild.save(ziel_textur)
+    gemalt = sum(1 for z in karte for c in z if c != ".")
+    print(f"gebaut: {ziel_modell.name} aus {breite}x{hoehe} - "
+          f"{gemalt} Pixel zu {len(kaesten)} Kaesten zusammengefasst, "
+          f"Dicke {dicke}")
+    return modell
+
+
 if __name__ == "__main__":
     ziel = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(".")
     baue("eisenklinge", "fynn:eisenklinge", EISENKLINGE,

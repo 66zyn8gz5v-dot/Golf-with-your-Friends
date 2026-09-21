@@ -813,6 +813,12 @@
           hier auch eine alte Zeichenkarte einfügen und auf <strong>Übernehmen</strong>
           tippen, um weiterzumalen.
         </p>
+        <p class="hinweis">
+          <strong>Für eine 3D-Waffe:</strong> Schreib dazu, wie <strong>dick</strong>
+          sie sein soll — 1 ist normal, 0,5 dünn wie eine Klinge, 2 wuchtig wie ein
+          Hammer. Aus jedem gemalten Pixel wird dann ein Klötzchen, und die Waffe
+          sieht im Spiel aus wie dein Bild, nur mit Tiefe.
+        </p>
         <textarea id="ausgabe" spellcheck="false" aria-label="Zeichenkarte"></textarea>
         <div class="knopfreihe" style="margin-top:10px">
           <button type="button" id="kopieren">In die Zwischenablage</button>
@@ -884,10 +890,17 @@
         <h2>Neu anfangen</h2>
         <label class="feld" for="vorlage">Leeres Feld in dieser Größe</label>
         <select id="vorlage">
-          <option value="leer16">16 × 16 — Gegenstand</option>
-          <option value="leer32">32 × 32 — großer Gegenstand</option>
-          <option value="leer64">64 × 32 — Haut für ein Wesen</option>
+          <option value="16x16">16 × 16 — Gegenstand, normale Waffe</option>
+          <option value="20x20">20 × 20 — etwas längere Waffe</option>
+          <option value="24x24">24 × 24 — Großschwert, Axt, Speer</option>
+          <option value="32x32">32 × 32 — sehr große Waffe</option>
+          <option value="64x32">64 × 32 — Haut für ein Wesen</option>
         </select>
+        <p class="hinweis">
+          Mehr Pixel heißt <strong>größere Waffe</strong>, nicht feineres Bild:
+          Ein Pixel bleibt ein Pixel. Ein 24 × 24 gepixeltes Schwert ist im
+          Spiel anderthalb Mal so lang wie ein 16 × 16 gepixeltes.
+        </p>
         <div class="knopfreihe" style="margin-top:10px">
           <button type="button" id="laden">Leeres Feld laden</button>
         </div>
@@ -1786,11 +1799,13 @@
   }
 
   document.getElementById("laden").addEventListener("click", function () {
-    var wahl = document.getElementById("vorlage").value;
-    if (wahl === "leer32") karteUebernehmen(leereKarte(32, 32));
-    else if (wahl === "leer64") karteUebernehmen(leereKarte(64, 32));
-    else karteUebernehmen(leereKarte(16, 16));
-    meldung("Leeres Feld geladen.");
+    // Die Groesse steht im Wert selbst, statt sie hier noch einmal
+    // aufzuzaehlen: Wer eine Zeile im Auswahlfeld ergaenzt, ist fertig.
+    var masse = document.getElementById("vorlage").value.split("x");
+    var breit = parseInt(masse[0], 10) || 16;
+    var hoch = parseInt(masse[1], 10) || 16;
+    karteUebernehmen(leereKarte(breit, hoch));
+    meldung("Leeres Feld " + breit + " × " + hoch + " geladen.");
   });
 
   // --- Zeichenkarte einlesen -------------------------------------------

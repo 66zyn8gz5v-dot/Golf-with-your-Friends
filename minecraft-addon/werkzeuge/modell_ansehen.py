@@ -133,8 +133,31 @@ def sammle_flaechen(teil):
         kette = drehungen(name)
         for kasten in k.get("cubes", []):
             uv = kasten.get("uv", [0, 0])
-            if not isinstance(uv, list):
-                continue  # Flaechenweises UV kommt hier (noch) nicht vor.
+
+            if isinstance(uv, list):
+                def feld_fuer(flaeche, _uv=uv, _groesse=kasten["size"]):
+                    return uv_feld(_uv, _groesse, flaeche)
+            else:
+                # Flaechenweises UV: Jede Seite nennt ihren eigenen
+                # Bildausschnitt. So arbeiten die Modelle, die aus einer
+                # Zeichenkarte entstehen - dort ist die Textur das gemalte
+                # Bild selbst, nicht ein gepacktes Kreuz.
+                def feld_fuer(flaeche, _uv=uv):
+                    eintrag = _uv.get(flaeche)
+                    if not eintrag:
+                        return None
+                    u, v = eintrag["uv"]
+                    w, h = eintrag.get("uv_size", [1, 1])
+                    # Ein negatives Mass spiegelt die Flaeche. Fuers Ansehen
+                    # genuegt der Betrag: Gespiegelt oder nicht faellt bei
+                    # einem einfarbigen Ausschnitt nicht auf, und die
+                    # Rueckseite sieht man ohnehin selten.
+                    if w < 0:
+                        u, w = u + w, -w
+                    if h < 0:
+                        v, h = v + h, -h
+                    return (u, v, w, h)
+
             seiten = flaechen_des_kastens(
                 kasten["origin"], kasten["size"], kasten.get("inflate", 0) or 0)
 
@@ -142,6 +165,9 @@ def sammle_flaechen(teil):
             eigener_pivot = kasten.get("pivot", [0, 0, 0])
 
             for flaeche, (ecken, aussen) in seiten.items():
+                feld = feld_fuer(flaeche)
+                if feld is None:
+                    continue
                 mitte = tuple(sum(p[i] for p in ecken) / 4 for i in range(3))
                 # Die Normale wandert als zweiter Punkt mit durch alle
                 # Drehungen - dann stimmt sie auch bei gekippten Teilen.
@@ -156,7 +182,7 @@ def sammle_flaechen(teil):
                     "ecken": gedreht[:4],
                     "mitte": m,
                     "normale": normiert(tuple(a[i] - m[i] for i in range(3))),
-                    "feld": uv_feld(uv, kasten["size"], flaeche),
+                    "feld": feld,
                     "seite": flaeche,
                 })
     return ergebnis
