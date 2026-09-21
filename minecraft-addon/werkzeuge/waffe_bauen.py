@@ -292,31 +292,52 @@ EISENKLINGE = [
 
 # ------------------------------------------------- Aus einer Zeichenkarte
 
-def _balken(karte):
+def _balken(karte, winkel=None):
     """Fasst waagerecht benachbarte Pixel gleicher Farbe zusammen.
 
     Sonst wuerde jeder Pixel ein eigener Kasten: Ein Schwert braechte es auf
     ueber hundert, und jeder kostet das Spiel Rechenzeit. Waagerecht reicht -
     bei einer Klinge liegen die gleichen Toene ohnehin in Zeilen.
+
+    Gedrehte Pixel bleiben einzeln: Jeder hat seinen eigenen Winkel, und
+    zusammengefasst waere aus zwei schraegen Pixeln ein langer schraeger
+    Balken geworden statt zweier Stufen.
     """
     gefunden = []
     for zeile, text in enumerate(karte):
+        dreh_zeile = winkel[zeile] if winkel else None
         spalte = 0
         while spalte < len(text):
             zeichen = text[spalte]
             if zeichen == ".":
                 spalte += 1
                 continue
+            grad = _grad(dreh_zeile, spalte)
             ende = spalte
-            while ende + 1 < len(text) and text[ende + 1] == zeichen:
-                ende += 1
-            gefunden.append((spalte, zeile, ende - spalte + 1, zeichen))
+            if not grad:
+                while (ende + 1 < len(text) and text[ende + 1] == zeichen
+                       and not _grad(dreh_zeile, ende + 1)):
+                    ende += 1
+            gefunden.append((spalte, zeile, ende - spalte + 1, zeichen, grad))
             spalte = ende + 1
     return gefunden
 
 
+# Zeichen der Drehkarte. Die Schraegen zeigen in die Richtung, in die die
+# Kante laeuft - so wie man sie auch hinschreiben wuerde.
+DREHUNGEN = {".": 0.0, " ": 0.0, "/": 45.0, "\\": -45.0,
+             "<": 22.5, ">": -22.5, "x": 90.0}
+
+
+def _grad(zeile, spalte):
+    if not zeile or spalte >= len(zeile):
+        return 0.0
+    return DREHUNGEN.get(zeile[spalte], 0.0)
+
+
 def aus_zeichenkarte(name, karte, farben, dicke=1.0, mitte=None, anbauten=None,
-                     musterzeilen=0, ziel_modell=None, ziel_textur=None):
+                     musterzeilen=0, winkel=None, ziel_modell=None,
+                     ziel_textur=None):
     """Zieht ein flaches Bild in die Tiefe - jeder Pixel wird zum Quader.
 
     Warum das leichter ist als Kaesten zu stapeln: Gemalt wird, was man
@@ -350,12 +371,12 @@ def aus_zeichenkarte(name, karte, farben, dicke=1.0, mitte=None, anbauten=None,
     sichtbar = karte[:hoehe - musterzeilen] if musterzeilen else karte
 
     kaesten = []
-    for x, zeile, lang, zeichen in _balken(sichtbar):
+    for x, zeile, lang, zeichen, grad in _balken(sichtbar, winkel):
         # Bildzeilen zaehlen von oben, das Modell zaehlt von unten.
         y = len(sichtbar) - 1 - zeile
         # Mittig um die Senkrechte, damit die Waffe in der Hand nicht
         # seitlich haengt.
-        kaesten.append({
+        eintrag = {
             "origin": [x - mitte, y, -halb],
             "size": [lang, 1, dicke],
             "uv": {
@@ -370,7 +391,14 @@ def aus_zeichenkarte(name, karte, farben, dicke=1.0, mitte=None, anbauten=None,
                 "up":    {"uv": [x, zeile], "uv_size": [lang, 1]},
                 "down":  {"uv": [x, zeile], "uv_size": [lang, 1]},
             },
-        })
+        }
+        # Ein gedrehter Pixel macht aus einer Treppe eine glatte Kante.
+        # Gedreht wird um die eigene Mitte, damit der Pixel dort bleibt,
+        # wo er gemalt wurde, und nur seine Ecken ausschwenken.
+        if grad:
+            eintrag["rotation"] = [0.0, 0.0, grad]
+            eintrag["pivot"] = [x - mitte + lang / 2, y + 0.5, 0.0]
+        kaesten.append(eintrag)
 
     # Anbauten: Teile, die sich nicht malen lassen, weil sie nicht flach
     # sind - eine geschwungene Parierstange, ein gekippter Knauf. Sie holen
@@ -452,29 +480,24 @@ def aus_zeichenkarte(name, karte, farben, dicke=1.0, mitte=None, anbauten=None,
 # --------------------------------------------- Die Flammklinge in Eisen
 #
 # Nachgebaut nach einer Vorlage, die Fynn gezeigt hat - dort ein
-# gluehendes Schwert, hier in Eisen. Was sich nicht malen laesst, weil es
-# nicht flach ist, steckt in den Anbauten: die Parierstange, die nach oben
-# schwingt, ihre verdickten Enden und der Knauf auf der Spitze.
+# gluehendes Schwert, hier in Eisen.
 
-# Nachgebaut nach Fynns Vorlage, in Eisen statt in Flammen. Alles aus dem
-# Bild abgelesen: die zulaufende Spitze mit abgeschraegten Schultern, die
-# Raute in der oberen Klinge, der karierte Griff, die Parierstange, die
-# nach oben schwingt, und der Knauf als Raute auf der Spitze.
+# Nachgebaut nach Fynns Vorlage, in Eisen statt in Flammen.
 #
-# Die Vorlage ist eine 3D-Ansicht, kein flaches Bild - Pixel fuer Pixel
-# abtasten geht daran nicht, die Perspektive verzerrt. Die Verhaeltnisse
-# sind gemessen: Klinge fuenfmal so lang wie breit, Griff ein Viertel der
-# Klinge, Parierstange gut doppelt so breit wie die Klinge.
+# Die Klinge bleibt von unten bis zur Spitze gleich breit - in der Vorlage
+# wird sie oben nicht dicker, das hatte ich erst falsch. Die Spitze
+# entsteht allein aus der schraegen Kante.
 #
-# Die letzten drei Zeilen sind das Musterfeld: gemalt, aber nicht Teil der
-# Waffe. Von dort holt sich der Knauf sein Bild.
+# Und die Kante ist keine Treppe: Die Pixel an der Schraege sind gedreht,
+# dann stossen ihre Ecken aneinander und die Kante laeuft glatt durch.
+# Genau so ist es in der Vorlage gemacht.
 KLINGE = [
-    ".......ww.......",
-    "......wssw......",
-    ".....wssssw.....",
-    ".....wsddsw.....",
-    "......wddw......",
-    "......wddw......",
+    "................",
+    "......wssd......",
+    "......wssd......",
+    "......wssd......",
+    "......wddd......",
+    "......wddd......",
     "......wssd......",
     "......wssd......",
     "......wssd......",
@@ -497,19 +520,54 @@ KLINGE = [
     "......mlm.......",
     "......lml.......",
     "................",
-    "...wsw..........",   # Musterfeld: der Knauf, drei mal drei
+    "...wsw..........",
     "...sds..........",
     "...wsw..........",
 ]
+# Die Drehkarte: wo eine Kante schraeg laufen soll, steht die Richtung.
+# "/" kippt nach links oben, "\" nach rechts oben.
+WINKEL = [
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+]
 MITTE = 8.0
-MUSTER = 3          # die letzten drei Zeilen sind nur Farbquelle
+MUSTER = 3
 
-WINKEL = 25.0
+KIPP = 25.0
 ARM_LANG = 2.5
 sichtbar = len(KLINGE) - MUSTER
 y_parier = sichtbar - 1 - 21
 ansatz = 11 - MITTE        # aeussere Kante der Parierstange (Spalte 5..10)
-bogen = math.radians(WINKEL)
+bogen = math.radians(KIPP)
 ende_x = ansatz + ARM_LANG * math.cos(bogen)
 ende_y = y_parier + 0.25 + ARM_LANG * math.sin(bogen)
 
@@ -521,7 +579,7 @@ for seite in (1, -1):
         "origin": [fuss if seite > 0 else fuss - ARM_LANG, y_parier + 0.25, -0.5],
         "size": [ARM_LANG, 1.5, 1],
         "farbe": "d",
-        "drehung": [0, 0, WINKEL * seite],
+        "drehung": [0, 0, KIPP * seite],
         "drehpunkt": [fuss, y_parier + 0.25, 0],
     })
     ANBAUTEN.append({
@@ -530,8 +588,23 @@ for seite in (1, -1):
         "size": [1.6, 1.5, 1],
         "farbe": "w",
     })
-# Der Knauf steht auf der Spitze und traegt ein Muster - deshalb holt er
-# sein Bild aus dem Musterfeld, statt eine einzelne Farbe zu tragen.
+# Die Spitze: je ein schraeger Kasten von den beiden Klingenkanten zur
+# Mitte. So laeuft die Kante glatt durch, statt in Stufen zu springen -
+# ein gedrehter Einzelpixel ragt an seinen Ecken vor und schwebt.
+y_klinge = sichtbar - 1 - 1          # Oberkante der obersten Klingenzeile
+halbe_klinge = 2.0                   # Klinge ist vier Pixel breit
+schraeg = halbe_klinge * math.sqrt(2)
+for seite in (1, -1):
+    ANBAUTEN.append({
+        "name": "spitze",
+        "origin": [-halbe_klinge if seite > 0 else halbe_klinge - schraeg,
+                   y_klinge + 1, -0.5],
+        "size": [schraeg, 1, 1],
+        "farbe": "w" if seite > 0 else "d",
+        "drehung": [0, 0, 45 * seite],
+        "drehpunkt": [-halbe_klinge * seite, y_klinge + 1, 0],
+    })
+
 ANBAUTEN.append({
     "name": "knauf",
     "origin": [-1.0, -0.4, -0.5],
