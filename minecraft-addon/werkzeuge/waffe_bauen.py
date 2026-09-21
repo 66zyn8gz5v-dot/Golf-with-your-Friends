@@ -152,7 +152,14 @@ def pruefe_luecken(kaesten):
     kaum, im Spiel schwebt die Spitze.
     """
     achse = []
+    gedreht = 0
     for k in kaesten:
+        # Gedrehte Kaesten bleiben aussen vor: Ihre Kanten liegen nach der
+        # Drehung nicht mehr da, wo die Zahlen stehen, und die Rechnung
+        # haette bei jeder Schraege Alarm geschlagen, wo keiner ist.
+        if k.get("drehung") and any(k["drehung"]):
+            gedreht += 1
+            continue
         # Teile, die seitlich ausscheren, gehoeren nicht zur Mittelachse.
         if abs(k["origin"][0] + k["size"][0] / 2) > 0.6:
             continue
@@ -166,6 +173,9 @@ def pruefe_luecken(kaesten):
     if luecken:
         print("Luecken in der Mittelachse:")
         print("\n".join(luecken))
+    if gedreht:
+        print(f"  ({gedreht} gedrehte Kaesten nicht geprueft - bei schraegen "
+              f"Teilen stimmt die Rechnung nicht.)")
     return not luecken
 
 
@@ -200,6 +210,21 @@ def baue(name, kennung, kaesten, breite=64, ziel_modell=None, ziel_textur=None):
         # als der Grat in der Mitte.
         if kasten.get("schrumpfen"):
             eintrag["inflate"] = kasten["schrumpfen"]
+
+        # Gedrehte Kaesten geben schraege Kanten, die aus geraden Kaesten nur
+        # als Treppe herauskommen - die Klingenspitze der Vorlage ist genau
+        # das. Ohne Drehpunkt dreht der Kasten um die Mitte seiner
+        # Grundflaeche: Beim Anstueckeln zaehlt der Fuss, nicht der
+        # Mittelpunkt, sonst wandert das Teil beim Drehen weg von dem,
+        # woran es sitzen soll.
+        drehung = kasten.get("drehung")
+        if drehung and any(drehung):
+            eintrag["rotation"] = list(drehung)
+            eintrag["pivot"] = list(kasten.get("drehpunkt") or [
+                kasten["origin"][0] + kasten["size"][0] / 2,
+                kasten["origin"][1],
+                kasten["origin"][2] + kasten["size"][2] / 2,
+            ])
         knochen_kaesten.append(eintrag)
 
     modell = {

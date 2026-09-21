@@ -119,17 +119,48 @@
   @media (max-width: 760px) {
     .bauplatz { grid-template-columns: minmax(0, 1fr); }
   }
-  .teil {
-    border: 1px solid var(--linie);
+  /* Die Liste zeigt nur noch Namen. Alle sechs Zahlen bei jedem Kasten
+     gleichzeitig hiessen: scrollen, bis man den richtigen gefunden hat.
+     Jetzt steht ein Kasten in Arbeit, und nur dessen Werte sind da. */
+  .teilzeile {
+    display: flex; align-items: center; gap: 8px;
+    border: 1px solid var(--linie); border-radius: 6px;
+    padding: 8px 10px; margin-bottom: 6px;
+    background: var(--flaeche); cursor: pointer; width: 100%;
+    font: inherit; color: var(--schrift); text-align: left;
+  }
+  /* Hintergrund und Schriftfarbe stehen hier ausdruecklich, obwohl sie
+     gleich bleiben: Die allgemeine Regel fuer button[aria-pressed="true"]
+     faerbt sonst die ganze Zeile bronze, und die Masse rechts sind darauf
+     nicht mehr zu lesen. Nur der Rand soll die Auswahl anzeigen. */
+  .teilzeile[aria-pressed="true"] {
+    background: var(--flaeche);
+    color: var(--schrift);
+    border-color: var(--bronze);
+    box-shadow: 0 0 0 2px var(--bronze-hell);
+  }
+  .teilzeile .punkt {
+    width: 14px; height: 14px; flex: none;
+    border-radius: 3px; border: 1px solid var(--linie);
+  }
+  .teilzeile .wie { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  .teilzeile .zahlen {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 11px; color: var(--schrift-leise); flex: none;
+  }
+  .teilzeile .gedreht { color: var(--bronze); font-size: 12px; flex: none; }
+
+  .werkstatt {
+    border: 1px solid var(--bronze);
     border-radius: 8px;
-    padding: 10px 12px;
-    margin-bottom: 10px;
+    padding: 12px;
+    margin-top: 14px;
     background: var(--flaeche);
   }
-  .teil-kopf { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .teil-kopf { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
   .teil-kopf input[type="text"] {
-    flex: 1; min-width: 0; font: inherit; padding: 5px 7px;
-    border: 1px solid var(--linie); border-radius: 5px; background: #fff;
+    flex: 1; min-width: 0; font: inherit; padding: 6px 8px; color: var(--schrift);
+    border: 1px solid var(--linie); border-radius: 5px; background: var(--stein-tief);
   }
   .masse { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 10px; }
   .masse label {
@@ -138,16 +169,37 @@
   }
   .masse input {
     font: inherit; font-size: 15px; padding: 7px 4px; text-align: center;
-    border: 1px solid var(--linie); border-radius: 5px; background: #fff; min-width: 0;
+    color: var(--schrift); background: var(--stein-tief);
+    border: 1px solid var(--linie); border-radius: 5px; min-width: 0;
   }
-  .teil select {
+  .werkstatt select {
     font: inherit; padding: 6px; border: 1px solid var(--linie);
-    border-radius: 5px; background: #fff;
+    border-radius: 5px; background: var(--stein-tief); color: var(--schrift);
   }
   .weg {
     border: none; background: none; color: var(--warnung);
     font-size: 20px; line-height: 1; padding: 2px 8px; cursor: pointer;
   }
+
+  /* Drehen: Knoepfe statt Zahlenfeld. Auf dem Tablet ist eine Zahl zu
+     tippen drei Handgriffe, ein Knopf einer - und beim Drehen probiert
+     man ohnehin, statt einen Wert zu kennen. */
+  .achsen { display: grid; gap: 7px; margin-top: 12px; }
+  .achse { display: flex; align-items: center; gap: 6px; }
+  .achse .wofuer {
+    font-size: 12px; color: var(--schrift-leise); width: 5.5em; flex: none;
+  }
+  .achse button {
+    font-size: 16px; line-height: 1; padding: 6px 10px; flex: none;
+    min-width: 38px;
+  }
+  .achse .grad {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 14px; text-align: center; flex: 1; min-width: 3.5em;
+    color: var(--schrift);
+  }
+  .rastknoepfe { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px; }
+  .rastknoepfe button { font-size: 12px; padding: 4px 9px; }
   #bauschirm {
     width: 100%; max-width: 420px; border: 1px solid var(--linie);
     border-radius: 8px; background: var(--flaeche); display: block; touch-action: none;
@@ -796,11 +848,15 @@
         <h2>Bauteile</h2>
         <p class="bauhinweis">
           Ein Kasten je Bauteil. Die Zahlen sind Pixel: <b>Ort</b> ist die
-          untere vordere linke Ecke, <b>Groesse</b> die Ausdehnung.
-          Die Klinge zeigt nach oben, also in Richtung Hoehe.
+          untere vordere linke Ecke, <b>Größe</b> die Ausdehnung. Die Klinge
+          zeigt nach oben. Einen Kasten antippen, um ihn zu bearbeiten.
         </p>
         <div id="teileliste"></div>
-        <button type="button" id="teil-neu">Bauteil hinzufügen</button>
+        <div class="knopfreihe" style="margin-top:8px">
+          <button type="button" id="teil-neu">Kasten hinzufügen</button>
+          <button type="button" id="teil-kopie">Ausgewählten verdoppeln</button>
+        </div>
+        <div class="werkstatt" id="werkstatt"></div>
       </section>
 
       <aside>
@@ -2163,28 +2219,124 @@
   };
 
   var teile = [
-    { name: "knauf", ort: [-1.5, 0, -1], gross: [3, 2, 2], stoff: "eisen" },
-    { name: "griff", ort: [-1, 2, -0.5], gross: [2, 4, 1], stoff: "leder" },
-    { name: "parierstange", ort: [-3.5, 6, -1], gross: [7, 1, 2], stoff: "eisen" },
-    { name: "klinge", ort: [-1.5, 7, -0.5], gross: [3, 14, 1], stoff: "stahl" }
+    { name: "knauf", ort: [-1.5, 0, -1], gross: [3, 2, 2], stoff: "eisen", dreh: [0, 0, 0] },
+    { name: "griff", ort: [-1, 2, -0.5], gross: [2, 4, 1], stoff: "leder", dreh: [0, 0, 0] },
+    { name: "parierstange", ort: [-3.5, 6, -1], gross: [7, 1, 2], stoff: "eisen", dreh: [0, 0, 0] },
+    { name: "klinge", ort: [-1.5, 7, -0.5], gross: [3, 14, 1], stoff: "stahl", dreh: [0, 0, 0] }
   ];
 
-  var drehung = 25;
+  var drehung = 25;     // Blickwinkel auf das ganze Modell
+  var gewaehlt = 0;     // welcher Kasten gerade in Arbeit ist
 
-  function teilKarte(teil, nummer) {
-    var karte = document.createElement("div");
-    karte.className = "teil";
+  // Ein Kasten dreht sich um die Mitte seiner Grundflaeche, nicht um seinen
+  // Mittelpunkt. Beim Anstueckeln zaehlt der Fuss: Dreht man um die Mitte,
+  // wandert das Teil beim Drehen weg von dem, woran es sitzen soll.
+  function drehpunktVon(teil) {
+    return [
+      teil.ort[0] + teil.gross[0] / 2,
+      teil.ort[1],
+      teil.ort[2] + teil.gross[2] / 2
+    ];
+  }
+
+  function hatDrehung(teil) {
+    var d = teil.dreh || [0, 0, 0];
+    return d[0] !== 0 || d[1] !== 0 || d[2] !== 0;
+  }
+
+  // Erst um X, dann um Y, dann um Z - dieselbe Reihenfolge, die Bedrock
+  // beim Lesen eines Modells verwendet.
+  function gedreht(punkt, mitte, dreh) {
+    if (!dreh || (!dreh[0] && !dreh[1] && !dreh[2])) return punkt;
+    var x = punkt[0] - mitte[0], y = punkt[1] - mitte[1], z = punkt[2] - mitte[2];
+    var a = dreh[0] * Math.PI / 180,
+        b = dreh[1] * Math.PI / 180,
+        c = dreh[2] * Math.PI / 180;
+    var u, v;
+    u = y * Math.cos(a) - z * Math.sin(a); v = y * Math.sin(a) + z * Math.cos(a);
+    y = u; z = v;
+    u = x * Math.cos(b) + z * Math.sin(b); v = -x * Math.sin(b) + z * Math.cos(b);
+    x = u; z = v;
+    u = x * Math.cos(c) - y * Math.sin(c); v = x * Math.sin(c) + y * Math.cos(c);
+    x = u; y = v;
+    return [x + mitte[0], y + mitte[1], z + mitte[2]];
+  }
+
+  // Die Aussenrichtung einer Flaeche dreht mit, sonst stimmt weder die
+  // Sichtbarkeit noch das Licht. Nur drehen, nicht verschieben.
+  function richtungGedreht(v, dreh) {
+    return gedreht(v, [0, 0, 0], dreh);
+  }
+
+  function teileZeigen() {
+    var liste = document.getElementById("teileliste");
+    liste.textContent = "";
+
+    teile.forEach(function (teil, i) {
+      var zeile = document.createElement("button");
+      zeile.type = "button";
+      zeile.className = "teilzeile";
+      zeile.setAttribute("aria-pressed", i === gewaehlt ? "true" : "false");
+
+      var punkt = document.createElement("span");
+      punkt.className = "punkt";
+      var stoff = WERKSTOFFE[teil.stoff] || WERKSTOFFE.stahl;
+      punkt.style.background = "rgb(" + stoff.kern.join(",") + ")";
+      zeile.appendChild(punkt);
+
+      var wie = document.createElement("span");
+      wie.className = "wie";
+      wie.textContent = teil.name || "ohne Namen";
+      zeile.appendChild(wie);
+
+      if (hatDrehung(teil)) {
+        var marke = document.createElement("span");
+        marke.className = "gedreht";
+        marke.textContent = "↻";
+        marke.title = "gedreht";
+        zeile.appendChild(marke);
+      }
+
+      var zahlen = document.createElement("span");
+      zahlen.className = "zahlen";
+      zahlen.textContent = teil.gross.join("×");
+      zeile.appendChild(zahlen);
+
+      zeile.addEventListener("click", function () {
+        gewaehlt = i;
+        teileZeigen();
+        werkstattZeigen();
+        bauZeichnen();
+      });
+      liste.appendChild(zeile);
+    });
+  }
+
+  function werkstattZeigen() {
+    var platz = document.getElementById("werkstatt");
+    platz.textContent = "";
+    if (!teile.length) {
+      platz.hidden = true;
+      return;
+    }
+    platz.hidden = false;
+    if (gewaehlt >= teile.length) gewaehlt = teile.length - 1;
+    var teil = teile[gewaehlt];
+    if (!teil.dreh) teil.dreh = [0, 0, 0];
 
     var kopf = document.createElement("div");
     kopf.className = "teil-kopf";
 
     var name = document.createElement("input");
     name.type = "text";
+    name.id = "teil-name";
     name.value = teil.name;
-    name.setAttribute("aria-label", "Name des Bauteils");
+    name.setAttribute("aria-label", "Name des Kastens");
     name.addEventListener("input", function () {
       teil.name = name.value;
+      teileZeigen();
       bauAusgeben();
+      bauSichern();
     });
     kopf.appendChild(name);
 
@@ -2199,8 +2351,10 @@
     });
     wahl.addEventListener("change", function () {
       teil.stoff = wahl.value;
+      teileZeigen();
       bauZeichnen();
       bauAusgeben();
+      bauSichern();
     });
     kopf.appendChild(wahl);
 
@@ -2208,17 +2362,19 @@
     weg.type = "button";
     weg.className = "weg";
     weg.textContent = "×";
-    weg.title = "Bauteil entfernen";
-    weg.setAttribute("aria-label", "Bauteil " + teil.name + " entfernen");
+    weg.title = "Kasten entfernen";
+    weg.setAttribute("aria-label", "Kasten " + teil.name + " entfernen");
     weg.addEventListener("click", function () {
-      teile.splice(nummer, 1);
+      teile.splice(gewaehlt, 1);
+      if (gewaehlt > 0) gewaehlt--;
       teileZeigen();
+      werkstattZeigen();
       bauZeichnen();
       bauAusgeben();
       bauSichern();
     });
     kopf.appendChild(weg);
-    karte.appendChild(kopf);
+    platz.appendChild(kopf);
 
     var masse = document.createElement("div");
     masse.className = "masse";
@@ -2230,12 +2386,15 @@
       etikett.appendChild(document.createTextNode(feld[0]));
       var zahl = document.createElement("input");
       zahl.type = "number";
-      zahl.step = "0.5";
+      // Viertelpixel: Eine Klinge, die duenner sein soll als ein Pixel,
+      // braucht feinere Stufen als das halbe.
+      zahl.step = "0.25";
       zahl.value = teil[feld[1]][feld[2]];
       zahl.addEventListener("input", function () {
         var wert = parseFloat(zahl.value);
         if (!isNaN(wert)) {
           teil[feld[1]][feld[2]] = wert;
+          teileZeigen();
           bauZeichnen();
           bauAusgeben();
           bauSichern();
@@ -2244,16 +2403,85 @@
       etikett.appendChild(zahl);
       masse.appendChild(etikett);
     });
-    karte.appendChild(masse);
-    return karte;
-  }
+    platz.appendChild(masse);
 
-  function teileZeigen() {
-    var liste = document.getElementById("teileliste");
-    liste.textContent = "";
-    teile.forEach(function (teil, i) {
-      liste.appendChild(teilKarte(teil, i));
+    var achsen = document.createElement("div");
+    achsen.className = "achsen";
+    [
+      ["nach vorn", 0], ["im Kreis", 1], ["zur Seite", 2]
+    ].forEach(function (achse) {
+      var zeile = document.createElement("div");
+      zeile.className = "achse";
+
+      var wofuer = document.createElement("span");
+      wofuer.className = "wofuer";
+      wofuer.textContent = achse[0];
+      zeile.appendChild(wofuer);
+
+      var anzeige = document.createElement("span");
+
+      function knopf(zeichen, schritt) {
+        var k = document.createElement("button");
+        k.type = "button";
+        k.textContent = zeichen;
+        k.setAttribute("aria-label", achse[0] + " um " + schritt + " Grad");
+        k.addEventListener("click", function () {
+          var neu = teil.dreh[achse[1]] + schritt;
+          // Nicht ueber die halbe Drehung hinaus: -180 und 180 sind
+          // dasselbe, und zwei Wege zum selben Winkel verwirren nur.
+          while (neu > 180) neu -= 360;
+          while (neu <= -180) neu += 360;
+          teil.dreh[achse[1]] = Math.round(neu * 4) / 4;
+          anzeige.textContent = teil.dreh[achse[1]] + "°";
+          teileZeigen();
+          bauZeichnen();
+          bauAusgeben();
+          bauSichern();
+        });
+        return k;
+      }
+
+      zeile.appendChild(knopf("−", -5));
+      anzeige.className = "grad";
+      anzeige.textContent = teil.dreh[achse[1]] + "°";
+      zeile.appendChild(anzeige);
+      zeile.appendChild(knopf("+", 5));
+      achsen.appendChild(zeile);
     });
+    platz.appendChild(achsen);
+
+    var rast = document.createElement("div");
+    rast.className = "rastknoepfe";
+    // Die Winkel, die Minecraft-Modelle tatsaechlich benutzen. Sich mit
+    // Fuenferschritten auf 22,5 zu tippen geht nicht auf.
+    [0, 22.5, 45, -22.5, -45, 90].forEach(function (wert) {
+      var k = document.createElement("button");
+      k.type = "button";
+      k.textContent = wert + "°";
+      k.title = "zur Seite kippen: " + wert + " Grad";
+      k.addEventListener("click", function () {
+        teil.dreh[2] = wert;
+        teileZeigen();
+        werkstattZeigen();
+        bauZeichnen();
+        bauAusgeben();
+        bauSichern();
+      });
+      rast.appendChild(k);
+    });
+    var aus = document.createElement("button");
+    aus.type = "button";
+    aus.textContent = "gerade stellen";
+    aus.addEventListener("click", function () {
+      teil.dreh = [0, 0, 0];
+      teileZeigen();
+      werkstattZeigen();
+      bauZeichnen();
+      bauAusgeben();
+      bauSichern();
+    });
+    rast.appendChild(aus);
+    platz.appendChild(rast);
   }
 
   // Dieselbe Rechnung wie im Betrachter, nur ohne Textur: Die Farbe kommt
@@ -2278,9 +2506,11 @@
     }
 
     var flaechen = [];
-    teile.forEach(function (teil) {
+    teile.forEach(function (teil, nummer) {
       var x0 = teil.ort[0], y0 = teil.ort[1], z0 = teil.ort[2];
       var x1 = x0 + teil.gross[0], y1 = y0 + teil.gross[1], z1 = z0 + teil.gross[2];
+      var dreh = teil.dreh || [0, 0, 0];
+      var punkt = drehpunktVon(teil);
       var seiten = [
         [[[x0,y1,z0],[x1,y1,z0],[x1,y0,z0],[x0,y0,z0]], [0,0,-1]],
         [[[x1,y1,z0],[x1,y1,z1],[x1,y0,z1],[x1,y0,z0]], [1,0,0]],
@@ -2290,16 +2520,21 @@
         [[[x0,y0,z1],[x1,y0,z1],[x1,y0,z0],[x0,y0,z0]], [0,-1,0]]
       ];
       seiten.forEach(function (seite) {
-        if (punktMal(seite[1], richtung) <= 0) return;
+        // Ecken und Aussenrichtung beide drehen, sonst zeigt eine gedrehte
+        // Flaeche in die alte Richtung und verschwindet oder leuchtet falsch.
+        var ecken = seite[0].map(function (e) { return gedreht(e, punkt, dreh); });
+        var aussen = richtungGedreht(seite[1], dreh);
+        if (punktMal(aussen, richtung) <= 0) return;
         var mitte = [0, 0, 0];
-        seite[0].forEach(function (e) {
+        ecken.forEach(function (e) {
           mitte[0] += e[0] / 4; mitte[1] += e[1] / 4; mitte[2] += e[2] / 4;
         });
         flaechen.push({
-          ecken: seite[0],
+          ecken: ecken,
           tiefe: punktMal(mitte, richtung),
-          licht: 0.55 + 0.45 * Math.max(0, punktMal(seite[1], normiert([0.4, 1, -0.5]))),
-          stoff: teil.stoff
+          licht: 0.55 + 0.45 * Math.max(0, punktMal(aussen, normiert([0.4, 1, -0.5]))),
+          stoff: teil.stoff,
+          nummer: nummer
         });
       });
     });
@@ -2318,6 +2553,9 @@
     var dx = 25 - links * zoom;
     var dy = 25 - oben * zoom;
 
+    var bronze = getComputedStyle(document.documentElement)
+      .getPropertyValue("--bronze").trim() || "#8A6228";
+
     flaechen.sort(function (a, b) { return a.tiefe - b.tiefe; });
     flaechen.forEach(function (f) {
       var grund = (WERKSTOFFE[f.stoff] || WERKSTOFFE.stahl).kern;
@@ -2332,6 +2570,13 @@
       });
       stift.closePath();
       stift.fill();
+      // Der Kasten in Arbeit bekommt eine Kante. Bei zehn aehnlich grauen
+      // Teilen weiss man sonst nicht, welches man gerade verschiebt.
+      if (f.nummer === gewaehlt) {
+        stift.strokeStyle = bronze;
+        stift.lineWidth = 1.5;
+        stift.stroke();
+      }
     });
   }
 
@@ -2348,7 +2593,11 @@
   // aneinanderstossen, ergeben im Spiel eine schwebende Spitze.
   function bauPruefen() {
     var hinweis = document.getElementById("baupruefung");
-    var achse = teile.filter(function (t) {
+    // Gedrehte Kaesten bleiben aussen vor: Ihre Ober- und Unterkante liegt
+    // nach der Drehung nicht mehr da, wo die Zahlen stehen, und die
+    // Pruefung haette bei jeder Schraege Alarm geschlagen, wo keiner ist.
+    var gerade = teile.filter(function (t) { return !hatDrehung(t); });
+    var achse = gerade.filter(function (t) {
       return Math.abs(t.ort[0] + t.gross[0] / 2) < 0.6;
     }).map(function (t) {
       return { unten: t.ort[1], oben: t.ort[1] + t.gross[1], name: t.name };
@@ -2360,20 +2609,35 @@
         luecken.push(achse[i].name + " und " + achse[i + 1].name);
       }
     }
+
+    var schraeg = teile.length - gerade.length;
+    var nachsatz = schraeg
+      ? " " + schraeg + (schraeg === 1 ? " gedrehter Kasten" : " gedrehte Kästen")
+        + " ungeprüft - bei schrägen Teilen stimmt die Rechnung nicht."
+      : "";
+
     if (luecken.length) {
       hinweis.className = "bauhinweis warnt";
       hinweis.textContent = "Lücke zwischen " + luecken.join(", ")
-        + " - im Spiel schwebt das Teil dann.";
+        + " - im Spiel schwebt das Teil dann." + nachsatz;
     } else {
       hinweis.className = "bauhinweis";
-      hinweis.textContent = teile.length + " Bauteile, keine Lücken.";
+      hinweis.textContent = teile.length
+        + (teile.length === 1 ? " Kasten" : " Kästen") + ", keine Lücken." + nachsatz;
     }
   }
 
   function bauAusgeben() {
     var zeilen = teile.map(function (t) {
-      return '    {"name": "' + t.name + '", "origin": [' + t.ort.join(", ")
-        + '], "size": [' + t.gross.join(", ") + '], "werkstoff": "' + t.stoff + '"},';
+      var text = '    {"name": "' + t.name + '", "origin": [' + t.ort.join(", ")
+        + '], "size": [' + t.gross.join(", ") + '], "werkstoff": "' + t.stoff + '"';
+      // Drehpunkt nur bei gedrehten Kaesten mitschicken. Sonst steht bei
+      // jedem geraden Teil eine Zahlenreihe, die nichts bewirkt.
+      if (hatDrehung(t)) {
+        text += ', "drehung": [' + t.dreh.join(", ")
+              + '], "drehpunkt": [' + drehpunktVon(t).join(", ") + ']';
+      }
+      return text + "},";
     });
     document.getElementById("bauausgabe").value =
       "BAUTEILE = [\n" + zeilen.join("\n") + "\n]";
@@ -2396,6 +2660,9 @@
         var t = gelesen[i];
         if (!t || !Array.isArray(t.ort) || t.ort.length !== 3) return null;
         if (!Array.isArray(t.gross) || t.gross.length !== 3) return null;
+        // Staende von vor der Drehung haben kein "dreh" - nachtragen,
+        // sonst stolpert die Werkstatt ueber undefined.
+        if (!Array.isArray(t.dreh) || t.dreh.length !== 3) t.dreh = [0, 0, 0];
       }
       return gelesen;
     } catch (fehler) { return null; }
@@ -2429,8 +2696,31 @@
   document.getElementById("teil-neu").addEventListener("click", function () {
     var oben = 0;
     teile.forEach(function (t) { oben = Math.max(oben, t.ort[1] + t.gross[1]); });
-    teile.push({ name: "neues Teil", ort: [-1, oben, -0.5], gross: [2, 2, 1], stoff: "stahl" });
+    teile.push({ name: "neuer Kasten", ort: [-1, oben, -0.5], gross: [2, 2, 1],
+                 stoff: "stahl", dreh: [0, 0, 0] });
+    gewaehlt = teile.length - 1;
     teileZeigen();
+    werkstattZeigen();
+    bauZeichnen();
+    bauAusgeben();
+    bauSichern();
+  });
+
+  // Eine Schraege entsteht aus mehreren gleichen Kaesten mit wachsendem
+  // Winkel. Die jedes Mal neu einzustellen waere Fleissarbeit.
+  document.getElementById("teil-kopie").addEventListener("click", function () {
+    if (!teile.length) return;
+    var alt = teile[gewaehlt];
+    teile.splice(gewaehlt + 1, 0, {
+      name: alt.name + " 2",
+      ort: alt.ort.slice(),
+      gross: alt.gross.slice(),
+      stoff: alt.stoff,
+      dreh: (alt.dreh || [0, 0, 0]).slice()
+    });
+    gewaehlt++;
+    teileZeigen();
+    werkstattZeigen();
     bauZeichnen();
     bauAusgeben();
     bauSichern();
@@ -2516,6 +2806,7 @@
   var gemerkteTeile = bauHolen();
   if (gemerkteTeile) teile = gemerkteTeile;
   teileZeigen();
+  werkstattZeigen();
   bauAusgeben();
 
   sammlung = sammlungLesen();
