@@ -316,7 +316,7 @@ def _balken(karte):
 
 
 def aus_zeichenkarte(name, karte, farben, dicke=1.0, mitte=None, anbauten=None,
-                     ziel_modell=None, ziel_textur=None):
+                     musterzeilen=0, ziel_modell=None, ziel_textur=None):
     """Zieht ein flaches Bild in die Tiefe - jeder Pixel wird zum Quader.
 
     Warum das leichter ist als Kaesten zu stapeln: Gemalt wird, was man
@@ -343,10 +343,16 @@ def aus_zeichenkarte(name, karte, farben, dicke=1.0, mitte=None, anbauten=None,
         for spalte, zeichen in enumerate(text):
             bild.putpixel((spalte, zeile), tuple(farben.get(zeichen, (0, 0, 0, 0))))
 
+    # Die untersten Zeilen koennen ein Musterfeld sein: gemalt, aber nicht
+    # Teil der Waffe. Anbauten holen sich ihr Bild von dort - ein Knauf mit
+    # Verlauf laesst sich sonst nicht machen, weil ein Anbau sonst nur eine
+    # einzelne Farbe traegt.
+    sichtbar = karte[:hoehe - musterzeilen] if musterzeilen else karte
+
     kaesten = []
-    for x, zeile, lang, zeichen in _balken(karte):
+    for x, zeile, lang, zeichen in _balken(sichtbar):
         # Bildzeilen zaehlen von oben, das Modell zaehlt von unten.
-        y = hoehe - 1 - zeile
+        y = len(sichtbar) - 1 - zeile
         # Mittig um die Senkrechte, damit die Waffe in der Hand nicht
         # seitlich haengt.
         kaesten.append({
@@ -382,13 +388,22 @@ def aus_zeichenkarte(name, karte, farben, dicke=1.0, mitte=None, anbauten=None,
                 f"{name}: Anbau '{anbau.get('name', '?')}' will die Farbe "
                 f"'{zeichen}', die kommt im Bild aber nicht vor.")
         u, v = stellen[zeichen]
+        feld = anbau.get("bild") or [u, v, 1, 1]
+        bu, bv, bw, bh = feld
         eintrag = {
             "origin": list(anbau["origin"]),
             "size": list(anbau["size"]),
-            # Ein einzelner Pixel, auf die ganze Flaeche gezogen: Ein
-            # Anbau ist einfarbig, da faellt das Strecken nicht auf.
-            "uv": {seite: {"uv": [u, v], "uv_size": [1, 1]}
-                   for seite in ("north", "south", "east", "west", "up", "down")},
+            # Ohne "bild" ein einzelner Pixel, auf die ganze Flaeche
+            # gezogen - bei einem einfarbigen Anbau faellt das nicht auf.
+            # Mit "bild" ein Ausschnitt der Karte, fuer Teile mit Muster.
+            "uv": {
+                "north": {"uv": [bu, bv], "uv_size": [bw, bh]},
+                "south": {"uv": [bu + bw, bv], "uv_size": [-bw, bh]},
+                "east":  {"uv": [u, v], "uv_size": [1, 1]},
+                "west":  {"uv": [u, v], "uv_size": [1, 1]},
+                "up":    {"uv": [u, v], "uv_size": [1, 1]},
+                "down":  {"uv": [u, v], "uv_size": [1, 1]},
+            },
         }
         if anbau.get("drehung") and any(anbau["drehung"]):
             eintrag["rotation"] = list(anbau["drehung"])
@@ -425,7 +440,7 @@ def aus_zeichenkarte(name, karte, farben, dicke=1.0, mitte=None, anbauten=None,
     ziel_textur.parent.mkdir(parents=True, exist_ok=True)
     ziel_modell.write_text(json.dumps(modell, indent=2) + "\n", encoding="utf-8")
     bild.save(ziel_textur)
-    gemalt = sum(1 for z in karte for c in z if c != ".")
+    gemalt = sum(1 for z in sichtbar for c in z if c != ".")
     zahl_anbau = len(anbauten or [])
     print(f"gebaut: {ziel_modell.name} aus {breite}x{hoehe} - "
           f"{gemalt} Pixel zu {len(kaesten) - zahl_anbau} Kaesten"
@@ -437,26 +452,29 @@ def aus_zeichenkarte(name, karte, farben, dicke=1.0, mitte=None, anbauten=None,
 # --------------------------------------------- Die Flammklinge in Eisen
 #
 # Nachgebaut nach einer Vorlage, die Fynn gezeigt hat - dort ein
-# gluehendes Schwert, hier in Eisen. Drei Sachen liessen sich nicht malen,
-# weil sie nicht flach sind, und stecken deshalb in den Anbauten: die
-# Parierstange, die nach oben schwingt, ihre verdickten Enden und der
-# Knauf, der auf der Spitze steht.
-#
-# Die Klinge dagegen ist flach - die kommt aus der Zeichenkarte, wie jedes
-# gepixelte Bild.
+# gluehendes Schwert, hier in Eisen. Was sich nicht malen laesst, weil es
+# nicht flach ist, steckt in den Anbauten: die Parierstange, die nach oben
+# schwingt, ihre verdickten Enden und der Knauf auf der Spitze.
 
-# Nachgebaut nach Fynns Vorlage, in Eisen. Aus dem Bild gemessen: Die
-# Klinge ist dort fuenfmal so lang wie breit, die Spitze steht seitlich
-# vor und hat abgeschraegte Ecken. Ein erster Versuch auf 24 Zeilen kam
-# auf 3:1 und sah gedrungen aus - deshalb 28 Zeilen und nur vier Pixel
-# Klingenbreite.
+# Nachgebaut nach Fynns Vorlage, in Eisen statt in Flammen. Alles aus dem
+# Bild abgelesen: die zulaufende Spitze mit abgeschraegten Schultern, die
+# Raute in der oberen Klinge, der karierte Griff, die Parierstange, die
+# nach oben schwingt, und der Knauf als Raute auf der Spitze.
+#
+# Die Vorlage ist eine 3D-Ansicht, kein flaches Bild - Pixel fuer Pixel
+# abtasten geht daran nicht, die Perspektive verzerrt. Die Verhaeltnisse
+# sind gemessen: Klinge fuenfmal so lang wie breit, Griff ein Viertel der
+# Klinge, Parierstange gut doppelt so breit wie die Klinge.
+#
+# Die letzten drei Zeilen sind das Musterfeld: gemalt, aber nicht Teil der
+# Waffe. Von dort holt sich der Knauf sein Bild.
 KLINGE = [
     ".......ww.......",
     "......wssw......",
     ".....wssssw.....",
-    ".....wssssd.....",
-    "......wssd......",
-    "......wssd......",
+    ".....wsddsw.....",
+    "......wddw......",
+    "......wddw......",
     "......wssd......",
     "......wssd......",
     "......wssd......",
@@ -472,21 +490,25 @@ KLINGE = [
     "......wssd......",
     "......wssd......",
     ".....dssssd.....",
-    ".....dssssd.....",
+    ".....dsddsd.....",
     "......lml.......",
+    "......mlm.......",
     "......lml.......",
-    "......lml.......",
-    "......lml.......",
+    "......mlm.......",
     "......lml.......",
     "................",
+    "...wsw..........",   # Musterfeld: der Knauf, drei mal drei
+    "...sds..........",
+    "...wsw..........",
 ]
-MITTE = 8.0          # Klinge auf Spalte 6..9, Spitze 5..10
+MITTE = 8.0
+MUSTER = 3          # die letzten drei Zeilen sind nur Farbquelle
 
 WINKEL = 25.0
 ARM_LANG = 2.5
-hoch = len(KLINGE)
-y_parier = hoch - 1 - 21         # unterste Zeile der Parierstange
-ansatz = 11 - MITTE              # aeussere Kante des Mittelstuecks
+sichtbar = len(KLINGE) - MUSTER
+y_parier = sichtbar - 1 - 21
+ansatz = 11 - MITTE        # aeussere Kante der Parierstange (Spalte 5..10)
 bogen = math.radians(WINKEL)
 ende_x = ansatz + ARM_LANG * math.cos(bogen)
 ende_y = y_parier + 0.25 + ARM_LANG * math.sin(bogen)
@@ -508,12 +530,14 @@ for seite in (1, -1):
         "size": [1.6, 1.5, 1],
         "farbe": "w",
     })
-# Der Knauf steht auf der Spitze - ein Wuerfel, um 45 Grad gekippt.
+# Der Knauf steht auf der Spitze und traegt ein Muster - deshalb holt er
+# sein Bild aus dem Musterfeld, statt eine einzelne Farbe zu tragen.
 ANBAUTEN.append({
     "name": "knauf",
-    "origin": [-0.9, -0.3, -0.5],
-    "size": [1.8, 1.8, 1],
+    "origin": [-1.0, -0.4, -0.5],
+    "size": [2, 2, 1],
     "farbe": "d",
+    "bild": [3, len(KLINGE) - MUSTER, 3, 3],
     "drehung": [0, 0, 45],
     "drehpunkt": [0, 0.6, 0],
 })
