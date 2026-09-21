@@ -2663,8 +2663,11 @@
     var rechtsKante = Math.max.apply(null, alle.map(function (p) { return p[0]; }));
     var oben = Math.min.apply(null, alle.map(function (p) { return p[1]; }));
     var unten = Math.max.apply(null, alle.map(function (p) { return p[1]; }));
-    var zoom = Math.min((schirm.width - 50) / Math.max(rechtsKante - links, 0.001),
-                        (schirm.height - 50) / Math.max(unten - oben, 0.001));
+    // Rand fuer die Griffe: Der Drehkreis sitzt ein Stueck ueber dem Modell
+    // und wurde am oberen Bildrand abgeschnitten, sobald das Modell die
+    // ganze Hoehe ausfuellte.
+    var zoom = Math.min((schirm.width - 120) / Math.max(rechtsKante - links, 0.001),
+                        (schirm.height - 120) / Math.max(unten - oben, 0.001));
     // Mittig statt an die linke obere Ecke: Ein Schwert ist schmal und hoch,
     // der Zoom richtet sich nach der Hoehe - und dann klebte das Modell am
     // linken Rand, waehrend rechts die halbe Flaeche leer blieb.
@@ -2676,7 +2679,8 @@
 
     // Fuer das Ziehen: Wie ein Fingerweg auf dem Schirm in Pixel des
     // Modells umzurechnen ist, und welche Achse gerade quer im Bild liegt.
-    sicht = { rechts: rechts, hoch: hoch, zoom: zoom, dx: dx, dy: dy };
+    sicht = { rechts: rechts, hoch: hoch, richtung: richtung,
+              zoom: zoom, dx: dx, dy: dy };
     umrisse = [];
 
     flaechen.sort(function (a, b) { return a.tiefe - b.tiefe; });
@@ -2704,9 +2708,94 @@
         stift.stroke();
       }
     });
+
+    griffeZeichnen(stift, bronze);
+  }
+
+  // --- Griffe am ausgewaehlten Kasten ----------------------------------
+  // Wie beim Bild in einem Schreibprogramm: an den Ecken ziehen macht
+  // groesser, am Kreis daneben dreht man. Zahlen eintippen bleibt daneben
+  // stehen - fuer die Tiefe, die von schraeg oben kaum zu treffen waere,
+  // und fuer den Fall, dass man einen genauen Wert will.
+  var GRIFFGROESSE = 9;
+
+  function griffeRechnen() {
+    griffe = [];
+    if (!sicht || !teile.length || gewaehlt >= teile.length) return;
+    var teil = teile[gewaehlt];
+    var punkt = drehpunktVon(teil);
+    var dreh = teil.dreh || [0, 0, 0];
+
+    function aufSchirm(p) {
+      var g = gedreht(p, punkt, dreh);
+      return [
+        punktMal(g, sicht.rechts) * sicht.zoom + sicht.dx,
+        -punktMal(g, sicht.hoch) * sicht.zoom + sicht.dy
+      ];
+    }
+
+    var mx = teil.ort[0] + teil.gross[0] / 2;
+    var my = teil.ort[1] + teil.gross[1] / 2;
+    var mz = teil.ort[2] + teil.gross[2] / 2;
+
+    var obenAuf = aufSchirm([mx, teil.ort[1] + teil.gross[1], mz]);
+    var rechtsAuf = aufSchirm([teil.ort[0] + teil.gross[0], my, mz]);
+    var mitte = aufSchirm([mx, my, mz]);
+
+    // Der Drehkreis sitzt ein Stueck ueber dem Hoehengriff, in derselben
+    // Richtung wie die Oberkante - sonst laege er bei gekippten Kaesten
+    // quer und man wuesste nicht, wozu er gehoert.
+    var weg = [obenAuf[0] - mitte[0], obenAuf[1] - mitte[1]];
+    var laenge = Math.sqrt(weg[0] * weg[0] + weg[1] * weg[1]) || 1;
+    var dreher = [
+      obenAuf[0] + weg[0] / laenge * 34,
+      obenAuf[1] + weg[1] / laenge * 34
+    ];
+
+    griffe = [
+      { art: "hoehe",  bei: obenAuf },
+      { art: "breite", bei: rechtsAuf },
+      { art: "drehen", bei: dreher, von: obenAuf, mitte: mitte }
+    ];
+  }
+
+  function griffeZeichnen(stift, bronze) {
+    griffeRechnen();
+    if (!griffe.length) return;
+
+    var dreher = griffe[2];
+    stift.strokeStyle = bronze;
+    stift.lineWidth = 1.5;
+    stift.beginPath();
+    stift.moveTo(dreher.von[0], dreher.von[1]);
+    stift.lineTo(dreher.bei[0], dreher.bei[1]);
+    stift.stroke();
+
+    griffe.forEach(function (griff) {
+      stift.fillStyle = "#ffffff";
+      stift.strokeStyle = bronze;
+      stift.lineWidth = 2;
+      stift.beginPath();
+      if (griff.art === "drehen") {
+        stift.arc(griff.bei[0], griff.bei[1], GRIFFGROESSE, 0, Math.PI * 2);
+      } else {
+        stift.rect(griff.bei[0] - GRIFFGROESSE, griff.bei[1] - GRIFFGROESSE,
+                   GRIFFGROESSE * 2, GRIFFGROESSE * 2);
+      }
+      stift.fill();
+      stift.stroke();
+    });
+
+    // Ein Pfeilkringel im Drehknopf, damit er nicht wie die anderen aussieht.
+    stift.strokeStyle = bronze;
+    stift.lineWidth = 2;
+    stift.beginPath();
+    stift.arc(dreher.bei[0], dreher.bei[1], 4.5, 0.6, Math.PI * 1.7);
+    stift.stroke();
   }
 
   var umrisse = [];   // gezeichnete Flaechen, um zu wissen, was unter dem Finger liegt
+  var griffe = [];    // Anfasser am ausgewaehlten Kasten
   var sicht = null;   // Projektion des letzten Zeichnens
   var zug = null;     // laufendes Ziehen
 
@@ -2734,10 +2823,23 @@
     return -1;
   }
 
+  // Griffe gehen vor: Sie liegen auf dem Kasten, und wer den Griff treffen
+  // will, soll nicht stattdessen den Kasten verschieben. Der Fangbereich
+  // ist groesser als der gemalte Knopf - auf dem Tablet trifft ein Finger
+  // keine neun Pixel.
+  function griffUnter(x, y) {
+    for (var i = 0; i < griffe.length; i++) {
+      var g = griffe[i];
+      if (Math.abs(x - g.bei[0]) <= GRIFFGROESSE + 9 &&
+          Math.abs(y - g.bei[1]) <= GRIFFGROESSE + 9) return g;
+    }
+    return null;
+  }
+
   function schirmpunkt(ereignis) {
     var schirm = document.getElementById("bauschirm");
     var rahmen = schirm.getBoundingClientRect();
-    // Der Schirm wird per CSS skaliert - der Umriss steckt in
+    // Der Schirm wird per CSS skaliert - die Umrisse stecken in
     // Zeichenkoordinaten, also zurueckrechnen.
     return [
       (ereignis.clientX - rahmen.left) * schirm.width / rahmen.width,
@@ -2745,9 +2847,60 @@
     ];
   }
 
+  // Wie weit eine Fingerbewegung auf dem Schirm einer Modellachse folgt.
+  // Die Achse liegt im Bild schraeg; gesucht ist, wie viele Pixel des
+  // Modells der Weg entspricht, wenn man ihn auf diese Achse legt.
+  function laengsDerAchse(achse, wegX, wegY) {
+    var einheit = [0, 0, 0];
+    einheit[achse] = 1;
+    var sx = punktMal(einheit, sicht.rechts) * sicht.zoom;
+    var sy = -punktMal(einheit, sicht.hoch) * sicht.zoom;
+    var quadrat = sx * sx + sy * sy;
+    if (quadrat < 0.0001) return 0;
+    return (wegX * sx + wegY * sy) / quadrat;
+  }
+
+  // Auf halbe Pixel einrasten: Ein Modell aus krummen Zahlen laesst sich
+  // hinterher nicht mehr sauber anstueckeln.
+  function halbe(wert) { return Math.round(wert * 2) / 2; }
+
   function zugStarten(ereignis) {
     if (!sicht || !teile.length) return;
     var p = schirmpunkt(ereignis);
+
+    var griff = griffUnter(p[0], p[1]);
+    if (griff) {
+      ereignis.preventDefault();
+      var teil = teile[gewaehlt];
+      zug = {
+        art: griff.art,
+        von: p,
+        anfangOrt: teil.ort.slice(),
+        anfangGross: teil.gross.slice(),
+        anfangDreh: (teil.dreh || [0, 0, 0]).slice()
+      };
+      if (griff.art === "drehen") {
+        zug.mitte = griff.mitte;
+        zug.vonWinkel = Math.atan2(p[1] - griff.mitte[1], p[0] - griff.mitte[0]);
+        // Um welche Achse eine Drehung auf dem Schirm aussieht wie eine
+        // Drehung, haengt vom Blickwinkel ab: Man dreht immer um die Achse,
+        // die am ehesten auf den Betrachter zeigt.
+        var groesste = 0;
+        for (var a = 1; a < 3; a++) {
+          if (Math.abs(sicht.richtung[a]) > Math.abs(sicht.richtung[groesste])) groesste = a;
+        }
+        zug.achse = groesste;
+        // Ob ein Plus im Modell auf dem Schirm im oder gegen den
+        // Uhrzeigersinn aussieht, einmal ausprobieren statt herleiten -
+        // die Herleitung haengt an Blickwinkel, Neigung und Vorzeichen
+        // von drei Vektoren und war bisher jedes Mal falsch geraten.
+        zug.richtungsdreh = probedrehung(teile[gewaehlt], groesste, griff);
+      }
+      document.getElementById("bauschirm").classList.add("zieht");
+      document.getElementById("bauschirm").setPointerCapture(ereignis.pointerId);
+      return;
+    }
+
     var treffer = kastenUnter(p[0], p[1]);
     if (treffer < 0) return;
 
@@ -2755,20 +2908,42 @@
     gewaehlt = treffer;
     teileZeigen();
     werkstattZeigen();
+    bauZeichnen();
 
-    // Waagerecht ziehen bewegt die Achse, die im Bild gerade am weitesten
-    // quer liegt - bei Blick von vorne ist das links/rechts, gedreht wird
-    // daraus hinten/vorn. Senkrecht ist immer die Hoehe.
-    var quer = Math.abs(sicht.rechts[0]) >= Math.abs(sicht.rechts[2]) ? 0 : 2;
     zug = {
+      art: "schieben",
       von: p,
-      achse: quer,
-      proQuer: sicht.rechts[quer] * sicht.zoom,
-      proHoch: -sicht.hoch[1] * sicht.zoom,
-      anfang: teile[treffer].ort.slice()
+      // Waagerecht ziehen bewegt die Achse, die im Bild gerade am weitesten
+      // quer liegt - bei Blick von vorne ist das links/rechts, gedreht wird
+      // daraus hinten/vorn. Senkrecht ist immer die Hoehe.
+      achse: Math.abs(sicht.rechts[0]) >= Math.abs(sicht.rechts[2]) ? 0 : 2,
+      anfangOrt: teile[treffer].ort.slice()
     };
     document.getElementById("bauschirm").classList.add("zieht");
     document.getElementById("bauschirm").setPointerCapture(ereignis.pointerId);
+  }
+
+  // Den Kasten um ein Grad weiterdrehen und nachsehen, wohin der Griff
+  // dabei auf dem Schirm wandert. Nimmt der Winkel zu, ist Plus im Modell
+  // auch Plus auf dem Schirm.
+  function probedrehung(teil, achse, griff) {
+    var punkt = drehpunktVon(teil);
+    var probe = (teil.dreh || [0, 0, 0]).slice();
+    probe[achse] += 1;
+    var mx = teil.ort[0] + teil.gross[0] / 2;
+    var mz = teil.ort[2] + teil.gross[2] / 2;
+    var g = gedreht([mx, teil.ort[1] + teil.gross[1], mz], punkt, probe);
+    var nachher = [
+      punktMal(g, sicht.rechts) * sicht.zoom + sicht.dx,
+      -punktMal(g, sicht.hoch) * sicht.zoom + sicht.dy
+    ];
+    var vorher = griff.von;
+    var w1 = Math.atan2(vorher[1] - griff.mitte[1], vorher[0] - griff.mitte[0]);
+    var w2 = Math.atan2(nachher[1] - griff.mitte[1], nachher[0] - griff.mitte[0]);
+    var d = w2 - w1;
+    while (d > Math.PI) d -= Math.PI * 2;
+    while (d < -Math.PI) d += Math.PI * 2;
+    return d >= 0 ? 1 : -1;
   }
 
   function zugFuehren(ereignis) {
@@ -2777,20 +2952,55 @@
     var p = schirmpunkt(ereignis);
     var teil = teile[gewaehlt];
     if (!teil) return;
+    var wegX = p[0] - zug.von[0], wegY = p[1] - zug.von[1];
 
-    function stufe(weg, pro) {
-      if (!pro) return 0;
-      // Auf halbe Pixel einrasten: Ein Modell aus krummen Zahlen laesst
-      // sich hinterher nicht mehr sauber anstueckeln.
-      return Math.round((weg / pro) * 2) / 2;
+    if (zug.art === "schieben") {
+      teil.ort[zug.achse] = zug.anfangOrt[zug.achse]
+        + halbe(laengsDerAchse(zug.achse, wegX, wegY));
+      teil.ort[1] = zug.anfangOrt[1] + halbe(laengsDerAchse(1, wegX, wegY));
+
+    } else if (zug.art === "hoehe") {
+      // Der Fuss bleibt stehen, nur die Oberkante wandert - sonst rutscht
+      // der Kasten beim Groesserziehen von dem weg, woran er sitzt.
+      var hoch = halbe(zug.anfangGross[1] + laengsDerAchse(1, wegX, wegY));
+      teil.gross[1] = Math.max(0.25, hoch);
+
+    } else if (zug.art === "breite") {
+      // Breiter wird nach beiden Seiten, damit die Mitte stehen bleibt:
+      // Eine Klinge, die beim Verbreitern zur Seite wandert, sitzt
+      // hinterher nicht mehr ueber dem Griff.
+      var breit = Math.max(0.25, halbe(zug.anfangGross[0]
+        + laengsDerAchse(0, wegX, wegY) * 2));
+      teil.gross[0] = breit;
+      teil.ort[0] = zug.anfangOrt[0] + (zug.anfangGross[0] - breit) / 2;
+
+    } else if (zug.art === "drehen") {
+      var jetzt = Math.atan2(p[1] - zug.mitte[1], p[0] - zug.mitte[0]);
+      var d = (jetzt - zug.vonWinkel) * 180 / Math.PI * zug.richtungsdreh;
+      var neu = zug.anfangDreh[zug.achse] + d;
+      while (neu > 180) neu -= 360;
+      while (neu <= -180) neu += 360;
+      // Auf Viertelgrad runden - und in der Naehe der gaengigen Winkel
+      // einrasten, damit 45 Grad auch wirklich 45 werden.
+      neu = Math.round(neu * 4) / 4;
+      [0, 22.5, 45, 90, 135, 180, -22.5, -45, -90, -135].forEach(function (rast) {
+        if (Math.abs(neu - rast) < 3) neu = rast;
+      });
+      teil.dreh[zug.achse] = neu;
     }
-    teil.ort[zug.achse] = zug.anfang[zug.achse] + stufe(p[0] - zug.von[0], zug.proQuer);
-    teil.ort[1] = zug.anfang[1] + stufe(p[1] - zug.von[1], zug.proHoch);
 
-    teileZeigen();
-    werkstattZeigen();
+    // Liste und Werkstatt nur neu bauen, wenn sich wirklich eine Zahl
+    // geaendert hat. Beim Ziehen kommen sechzig Ereignisse je Sekunde, und
+    // jedes Mal zwanzig Felder neu zu setzen laesst das Bild ruckeln -
+    // waehrend die Zahlen ohnehin nur alle paar Pixel umspringen.
+    var jetztStand = teil.ort.join() + "|" + teil.gross.join() + "|" + teil.dreh.join();
+    if (jetztStand !== zug.letzterStand) {
+      zug.letzterStand = jetztStand;
+      teileZeigen();
+      werkstattZeigen();
+      bauAusgeben();
+    }
     bauZeichnen();
-    bauAusgeben();
   }
 
   function zugBeenden() {
