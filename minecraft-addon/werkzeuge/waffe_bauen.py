@@ -335,9 +335,62 @@ def _grad(zeile, spalte):
     return DREHUNGEN.get(zeile[spalte], 0.0)
 
 
+def _ecken(anbau):
+    """Die vier Ecken eines Anbaus in der Ansicht von vorne, nach der
+    Drehung. Die Tiefe bleibt aussen vor - Luecken entstehen in der
+    Flaeche, nicht dahinter."""
+    ox, oy = anbau["origin"][0], anbau["origin"][1]
+    bx, by = anbau["size"][0], anbau["size"][1]
+    dreh = (anbau.get("drehung") or [0, 0, 0])[2]
+    px, py = (anbau.get("drehpunkt") or [ox + bx / 2, oy, 0])[:2]
+    bogen = math.radians(dreh)
+    ecken = []
+    for ex, ey in ((ox, oy), (ox + bx, oy), (ox + bx, oy + by), (ox, oy + by)):
+        dx, dy = ex - px, ey - py
+        ecken.append((px + dx * math.cos(bogen) - dy * math.sin(bogen),
+                      py + dx * math.sin(bogen) + dy * math.cos(bogen)))
+    return ecken
+
+
+def _pruefe_anbauten(name, anbauten):
+    """Warnt, wenn zwei Anbauten sich nicht beruehren.
+
+    Gedrehte Teile stossen fast nie glatt aneinander: Der Winkel laesst
+    an der einen Ecke einen Keil offen. Von aussen sieht man davon wenig,
+    im Spiel aber schwebt das Teil - genau das hat Fynn beim ersten
+    Schwert entdeckt, und hier wieder.
+    """
+    kaesten = []
+    for a in anbauten:
+        ecken = _ecken(a)
+        kaesten.append((a.get("name", "?"),
+                        min(e[0] for e in ecken), max(e[0] for e in ecken),
+                        min(e[1] for e in ecken), max(e[1] for e in ecken)))
+    luecken = []
+    for i, (n1, l1, r1, u1, o1) in enumerate(kaesten):
+        naechster = None
+        for j, (n2, l2, r2, u2, o2) in enumerate(kaesten):
+            if i == j:
+                continue
+            # Ueberschneiden sie sich senkrecht, koennte es ein Nachbar sein.
+            if o2 > u1 - 0.01 and o1 > u2 - 0.01:
+                abstand = max(l2 - r1, l1 - r2)
+                if abstand > 0.001:
+                    naechster = abstand if naechster is None else min(naechster, abstand)
+                else:
+                    naechster = 0.0
+                    break
+        if naechster and naechster > 0.001:
+            luecken.append(f"  {n1}: {naechster:.2f} Pixel Luft zum naechsten Teil")
+    if luecken:
+        print(f"Luecken zwischen den Anbauten von {name}:")
+        print("\n".join(luecken))
+    return not luecken
+
+
 def aus_zeichenkarte(name, karte, farben, dicke=1.0, mitte=None, anbauten=None,
-                     musterzeilen=0, winkel=None, ziel_modell=None,
-                     ziel_textur=None):
+                     musterzeilen=0, winkel=None, versatz=None,
+                     ziel_modell=None, ziel_textur=None):
     """Zieht ein flaches Bild in die Tiefe - jeder Pixel wird zum Quader.
 
     Warum das leichter ist als Kaesten zu stapeln: Gemalt wird, was man
@@ -376,8 +429,15 @@ def aus_zeichenkarte(name, karte, farben, dicke=1.0, mitte=None, anbauten=None,
         y = len(sichtbar) - 1 - zeile
         # Mittig um die Senkrechte, damit die Waffe in der Hand nicht
         # seitlich haengt.
+        # Zeilen koennen um einen halben Pixel versetzt liegen. In Fynns
+        # Vorlage ist der Griff zwei Pixel breit und die Parierstange
+        # darueber drei - das geht nur, wenn die Reihen gegeneinander
+        # verschoben sind. Auf einem starren Raster laesst sich das nicht
+        # bauen, und von Hand nachzurechnen waere bei jeder Zeile eine
+        # Gelegenheit, sich zu vertun.
+        schiebe = versatz[zeile] if versatz and zeile < len(versatz) else 0.0
         eintrag = {
-            "origin": [x - mitte, y, -halb],
+            "origin": [x - mitte + schiebe, y, -halb],
             "size": [lang, 1, dicke],
             "uv": {
                 # Die Rueckseite spiegelt, sonst stuende das Bild dort
@@ -397,7 +457,7 @@ def aus_zeichenkarte(name, karte, farben, dicke=1.0, mitte=None, anbauten=None,
         # wo er gemalt wurde, und nur seine Ecken ausschwenken.
         if grad:
             eintrag["rotation"] = [0.0, 0.0, grad]
-            eintrag["pivot"] = [x - mitte + lang / 2, y + 0.5, 0.0]
+            eintrag["pivot"] = [x - mitte + schiebe + lang / 2, y + 0.5, 0.0]
         kaesten.append(eintrag)
 
     # Anbauten: Teile, die sich nicht malen lassen, weil sie nicht flach
@@ -469,6 +529,8 @@ def aus_zeichenkarte(name, karte, farben, dicke=1.0, mitte=None, anbauten=None,
     ziel_modell.write_text(json.dumps(modell, indent=2) + "\n", encoding="utf-8")
     bild.save(ziel_textur)
     gemalt = sum(1 for z in sichtbar for c in z if c != ".")
+    _pruefe_anbauten(name, anbauten or [])
+
     zahl_anbau = len(anbauten or [])
     print(f"gebaut: {ziel_modell.name} aus {breite}x{hoehe} - "
           f"{gemalt} Pixel zu {len(kaesten) - zahl_anbau} Kaesten"
@@ -524,6 +586,12 @@ KLINGE = [
     "...wsw..........",
 ]
 WINKEL = ["................"] * len(KLINGE)
+# Halber Versatz je Zeile. Der Griff sitzt um einen halben Pixel weiter
+# links, damit er mittig unter der Parierstange haengt - in der Vorlage
+# liegen die Reihen nicht stur uebereinander.
+VERSATZ = [0.0] * len(KLINGE)
+for z in range(20, 27):
+    VERSATZ[z] = 0.5
 MITTE = 8.0
 MUSTER = 3
 
@@ -536,21 +604,29 @@ bogen = math.radians(KIPP)
 ende_x = ansatz + ARM_LANG * math.cos(bogen)
 ende_y = y_parier + 0.25 + ARM_LANG * math.sin(bogen)
 
+# Ueberlappen statt anstossen: Ein gedrehter Arm laesst an seinem Fuss
+# einen Keil offen, weil er sich um eine Ecke dreht. Deshalb beginnt er
+# ein Stueck INNERHALB der Parierstange und das Endstueck greift ein
+# Stueck ueber den Arm.
+UEBERLAPP = 0.6
 ANBAUTEN = []
 for seite in (1, -1):
     fuss = ansatz * seite
+    lang = ARM_LANG + UEBERLAPP
     ANBAUTEN.append({
         "name": "parier_arm",
-        "origin": [fuss if seite > 0 else fuss - ARM_LANG, y_parier + 0.25, -0.5],
-        "size": [ARM_LANG, 1.5, 1],
+        "origin": [fuss - UEBERLAPP if seite > 0 else fuss - ARM_LANG,
+                   y_parier + 0.25, -0.5],
+        "size": [lang, 1.5, 1],
         "farbe": "d",
         "drehung": [0, 0, KIPP * seite],
         "drehpunkt": [fuss, y_parier + 0.25, 0],
     })
     ANBAUTEN.append({
         "name": "parier_ende",
-        "origin": [ende_x * seite - (0.3 if seite > 0 else 1.3), ende_y - 0.4, -0.5],
-        "size": [1.6, 1.5, 1],
+        "origin": [ende_x * seite - (0.9 if seite > 0 else 1.3),
+                   ende_y - 0.55, -0.5],
+        "size": [2.2, 1.7, 1],
         "farbe": "w",
     })
 
