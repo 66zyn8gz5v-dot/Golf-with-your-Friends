@@ -4,6 +4,10 @@ item.fynn:sternenstaub.name=Stardust
 item.fynn:sternenklinge=Starblade
 item.fynn:sternenklinge.name=Starblade
 
+## Was aus dem Berg kommt
+item.fynn:rohsilber=Raw Silver
+item.fynn:rohsilber.name=Raw Silver
+
 ## Creatures
 entity.fynn:glimmerling.name=Glimmerling
 item.spawn_egg.entity.fynn:glimmerling.name=Glimmerling

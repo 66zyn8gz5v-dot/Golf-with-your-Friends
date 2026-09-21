@@ -28,6 +28,12 @@ FARBEN = {
     "e": (138, 98, 38, 255),     # Bronze, dunkel
     "l": (146, 98, 56, 255),     # Leder, hell
     "m": (94, 60, 34, 255),      # Leder, dunkel
+    # Silber ist heller und kuehler als Stahl - sonst waere im Inventar
+    # nicht zu unterscheiden, was aus dem Berg kommt und was geschmiedet ist.
+    "z": (246, 249, 255, 255),   # Silber, Glanzpunkt
+    "y": (206, 218, 236, 255),   # Silber, hell
+    "x": (152, 168, 194, 255),   # Silber, Schatten
+    "v": (98, 112, 140, 255),    # Silber, tief
 }
 
 STERNENSTAUB = [
@@ -69,6 +75,28 @@ STERNENKLINGE = [
 ]
 
 
+
+# Rohsilber, wie es aus dem Fels faellt: ein Klumpen, kein Barren. Gemalt von
+# Fynn in der Pixelschmiede. Bewusst ohne schwarzen Umriss - der Brocken hat
+# stattdessen dunklere Randpixel, so wie Minecrafts eigenes Roheisen.
+ROHSILBER = [
+    "................",
+    "..........xxx...",
+    "........xxzyzx..",
+    ".......wvzyzwx..",
+    "......syzzzwzwx.",
+    "......szzzzzzzs.",
+    ".....syzzzxwzzd.",
+    "....yszxzxwwwzd.",
+    "...dzzzxswwzzzv.",
+    "...vzzzxxzzzzs..",
+    "..vwzzxszzszys..",
+    ".vzzzxxszzzyx...",
+    ".wwzzxzzzzzx....",
+    ".dwwzzzwvwd.....",
+    "..sdvdv.........",
+    "................",
+]
 
 
 # --- Der Glimmerling ---------------------------------------------------
@@ -191,6 +219,7 @@ def main():
     bilder = {
         "sternenstaub": STERNENSTAUB,
         "sternenklinge": STERNENKLINGE,
+        "rohsilber": ROHSILBER,
     }
     for name, karte in bilder.items():
         pruefe_karte(name, karte)

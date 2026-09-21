@@ -10,6 +10,9 @@
     },
     "eisenklinge": {
       "textures": "textures/items/eisenklinge"
+    },
+    "rohsilber": {
+      "textures": "textures/items/rohsilber"
     }
   }
 }
