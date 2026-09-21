@@ -593,6 +593,21 @@ def aus_zeichenkarte(name, karte, farben, dicke=1.0, mitte=None, anbauten=None,
             ])
         kaesten.append(eintrag)
 
+    # Die Waffe wird auf den Drehpunkt gesetzt. Vorher stand sie darauf und
+    # ragte nach oben weg - beim Verkleinern schrumpfte sie dann nicht an
+    # Ort und Stelle, sondern rutschte gleichzeitig nach unten, und beim
+    # Drehen schwenkte sie um ihr unteres Ende aus. Liegt ihre Mitte auf dem
+    # Drehpunkt, dreht und schrumpft sie um sich selbst - so wie Minecraft
+    # es mit dem Bild eines gewoehnlichen Gegenstands auch tut.
+    # 8 ist die Mitte des Feldes, in dem Minecraft das Bild eines
+    # gewoehnlichen Gegenstands zeichnet - ein Quadrat von 16 Kaestchen,
+    # und der Drehpunkt "rightitem" sitzt genau in dessen Mitte.
+    versetze = 8 - len(sichtbar) / 2
+    for kasten in kaesten:
+        kasten["origin"][1] += versetze
+        if "pivot" in kasten:
+            kasten["pivot"][1] += versetze
+
     modell = {
         "format_version": "1.12.0",
         "minecraft:geometry": [{
@@ -604,12 +619,25 @@ def aus_zeichenkarte(name, karte, farben, dicke=1.0, mitte=None, anbauten=None,
                 "visible_bounds_height": 4,
                 "visible_bounds_offset": [0, 1, 0],
             },
-            "bones": [{
-                "name": "rightitem",
-                "binding": "q.item_slot_to_bone_name(c.item_slot)",
-                "pivot": [0, 8, 0],
-                "cubes": kaesten,
-            }],
+            # Zwei Knochen statt einem, und das aus einem Grund: "rightitem"
+            # ist der Knochen, den Minecraft selbst bewegt - er traegt den
+            # Ausholschwung beim Zuschlagen. Wer ihn selbst dreht, ueberschreibt
+            # den Schwung und schlaegt fortan mit einer starren Stange zu.
+            # Die Haltung sitzt deshalb auf einem Kind, und der Schwung bleibt,
+            # wo er hingehoert.
+            "bones": [
+                {
+                    "name": "rightitem",
+                    "binding": "q.item_slot_to_bone_name(c.item_slot)",
+                    "pivot": [0, 8, 0],
+                },
+                {
+                    "name": "waffe",
+                    "parent": "rightitem",
+                    "pivot": [0, 8, 0],
+                    "cubes": kaesten,
+                },
+            ],
         }],
     }
 

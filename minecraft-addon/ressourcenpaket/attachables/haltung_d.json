@@ -2,7 +2,7 @@
   "format_version": "1.10.0",
   "minecraft:attachable": {
     "description": {
-      "identifier": "fynn:haltung_b",
+      "identifier": "fynn:haltung_d",
       "materials": {
         "default": "entity_alphatest",
         "enchanted": "entity_alphatest_glint"
@@ -15,7 +15,7 @@
         "default": "geometry.stahlklinge"
       },
       "animations": {
-        "halten": "animation.haltung_b.halten"
+        "halten": "animation.haltung_d.halten"
       },
       "scripts": {
         "animate": [

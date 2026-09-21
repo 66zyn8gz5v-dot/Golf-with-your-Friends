@@ -24,9 +24,11 @@ item.fynn:eisenklinge=Iron Blade
 item.fynn:eisenklinge.name=Iron Blade
 
 ## Haltungen zum Durchprobieren - fliegen wieder raus
-item.fynn:haltung_a=Haltung A ohne Drehung
-item.fynn:haltung_a.name=Haltung A ohne Drehung
-item.fynn:haltung_b=Haltung B um X gekippt
-item.fynn:haltung_b.name=Haltung B um X gekippt
-item.fynn:haltung_c=Haltung C um Z gekippt
-item.fynn:haltung_c.name=Haltung C um Z gekippt
+item.fynn:haltung_a=Probe A - andersherum geneigt
+item.fynn:haltung_a.name=Probe A - andersherum geneigt
+item.fynn:haltung_b=Probe B - gerade hoch
+item.fynn:haltung_b.name=Probe B - gerade hoch
+item.fynn:haltung_c=Probe C - flach gekippt
+item.fynn:haltung_c.name=Probe C - flach gekippt
+item.fynn:haltung_d=Probe D - halb gekippt
+item.fynn:haltung_d.name=Probe D - halb gekippt

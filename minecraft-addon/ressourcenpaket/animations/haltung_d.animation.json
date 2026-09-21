@@ -1,7 +1,7 @@
 {
   "format_version": "1.10.0",
   "animations": {
-    "animation.haltung_b.halten": {
+    "animation.haltung_d.halten": {
       "loop": true,
       "bones": {
         "waffe": {
@@ -11,9 +11,9 @@
             0.0
           ],
           "rotation": [
+            45.0,
             0.0,
-            0.0,
-            0.0
+            45.0
           ],
           "scale": 0.28
         }
