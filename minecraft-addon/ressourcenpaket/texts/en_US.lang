@@ -8,6 +8,9 @@ item.fynn:sternenklinge.name=Starblade
 item.fynn:rohsilber=Raw Silver
 item.fynn:rohsilber.name=Raw Silver
 
+## Bloecke
+tile.fynn:silbererz.name=Silver Ore
+
 ## Creatures
 entity.fynn:glimmerling.name=Glimmerling
 item.spawn_egg.entity.fynn:glimmerling.name=Glimmerling

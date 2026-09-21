@@ -8,6 +8,9 @@ item.fynn:sternenklinge.name=Sternenklinge
 item.fynn:rohsilber=Rohsilber
 item.fynn:rohsilber.name=Rohsilber
 
+## Bloecke
+tile.fynn:silbererz.name=Silbererz
+
 ## Wesen
 entity.fynn:glimmerling.name=Glimmerling
 item.spawn_egg.entity.fynn:glimmerling.name=Glimmerling

@@ -34,6 +34,12 @@ FARBEN = {
     "y": (206, 218, 236, 255),   # Silber, hell
     "x": (152, 168, 194, 255),   # Silber, Schatten
     "v": (98, 112, 140, 255),    # Silber, tief
+    # Fels. Vier Toene statt einem, damit die Bloecke nicht wie eine glatte
+    # Flaeche wirken - abgelesen an Minecrafts eigenem stone.png.
+    "p": (143, 143, 143, 255),   # Stein, hell
+    "o": (127, 127, 127, 255),   # Stein
+    "u": (116, 116, 116, 255),   # Stein, mittel
+    "q": (104, 104, 104, 255),   # Stein, dunkel
 }
 
 STERNENSTAUB = [
@@ -96,6 +102,26 @@ ROHSILBER = [
     ".dwwzzzwvwd.....",
     "..sdvdv.........",
     "................",
+]
+
+
+SILBERERZ = [
+    "ppppouuouquuoooo",
+    "oououoooooowduou",
+    "ouqquuuquuwsdooo",
+    "ooppopwpppsdouuu",
+    "uoopwwsqpppppuoo",
+    "opowssdoouuququp",
+    "uowsdduppuuwdooo",
+    "uusduquuowwsdooo",
+    "pppopoopwssdooou",
+    "oopoooppwsdppppo",
+    "qououuqqsduoouuu",
+    "oooowspoooowsdop",
+    "ouuwsdouuwwsduqu",
+    "ppwsdoouuwsduuup",
+    "ouddoooowsdopppp",
+    "oooooouupppoouoo",
 ]
 
 
@@ -232,6 +258,19 @@ def main():
         schreibe_png(vorschau, karte_zu_pixeln(karte, 16, (235, 235, 240, 255)))
         print(f"  geschrieben  {vorschau.relative_to(hier)}")
 
+    bloecke = {
+        "silbererz": SILBERERZ,
+    }
+    for name, karte in bloecke.items():
+        pruefe_karte(name, karte)
+        ziel = hier / "ressourcenpaket" / "textures" / "blocks" / f"{name}.png"
+        schreibe_png(ziel, karte_zu_pixeln(karte))
+        print(f"  geschrieben  {ziel.relative_to(hier)}")
+
+        vorschau = hier / "vorschau" / f"{name}.png"
+        schreibe_png(vorschau, karte_zu_pixeln(karte, 16))
+        print(f"  geschrieben  {vorschau.relative_to(hier)}")
+
     mob = hier / "ressourcenpaket" / "textures" / "entity" / "glimmerling.png"
     haut = glimmerling_textur()
     schreibe_png(mob, haut)
@@ -248,7 +287,7 @@ def main():
     hintergrund = (235, 235, 240, 255)
     luecke = [hintergrund] * 20
     nebeneinander = None
-    for karte in bilder.values():
+    for karte in list(bilder.values()) + list(bloecke.values()):
         gross = karte_zu_pixeln(karte, 14, hintergrund)
         if nebeneinander is None:
             nebeneinander = gross

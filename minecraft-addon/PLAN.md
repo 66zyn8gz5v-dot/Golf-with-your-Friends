@@ -205,13 +205,13 @@ Block sein soll.
 
 Am Beispiel Silber. Ein Erz sind mehrere Teile, alle machbar:
 
-* der **Erzblock** im Stein — eigener Block mit Textur und der Angabe, welche
-  Spitzhacke ihn knackt
-* **Rohsilber**, das beim Abbauen herausfällt
-* der **Silberbarren** aus dem Ofen
-* das **Schmelzrezept** dazwischen
-* die **Weltgenerierung**: in welcher Tiefe, wie häufig, in welchen Biomen
-  (`minecraft:ore_feature` plus eine Feature-Regel)
+* ✔ der **Erzblock** im Stein — eigener Block mit Textur und der Angabe, welche
+  Spitzhacke ihn knackt (seit Fassung 1.27)
+* ✔ **Rohsilber**, das beim Abbauen herausfällt (seit Fassung 1.26)
+* der **Silberbarren** aus dem Ofen — die Textur fehlt noch, Fynn malt sie
+* das **Schmelzrezept** dazwischen — wartet auf den Barren
+* ✔ die **Weltgenerierung**: `silbererz_ader` streut in Höhe −40 bis 48 durch
+  alle Oberwelt-Biome. Im Spiel noch nicht nachgesehen.
 
 Es gilt dasselbe wie bei den Strukturen: nur neues Land, und die Frage nach
 dem Experiment-Schalter ist auch hier offen.

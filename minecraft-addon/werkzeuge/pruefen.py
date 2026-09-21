@@ -206,6 +206,97 @@ def pruefe_wesen(sprachen):
                 fehler.append(f"{kuerzel}.lang: kein Name fuer das Wesen '{kennung}'.")
 
 
+def pruefe_bloecke(sprachen, kennungen):
+    """Ein Block haengt an sechs Dateien. Fehlt eine Verbindung, steht im
+    Spiel ein schwarz-violetter Wuerfel - oder der Block ist gar nicht da,
+    beides ohne Fehlermeldung."""
+    zuordnung = lies(RESSOURCEN / "textures" / "terrain_texture.json")
+    bekannte_bilder = set((zuordnung or {}).get("texture_data", {}))
+
+    blockkennungen = set()
+    for datei in sorted((VERHALTEN / "blocks").glob("*.json")):
+        inhalt = lies(datei)
+        if not inhalt:
+            continue
+        block = inhalt["minecraft:block"]
+        kennung = block["description"]["identifier"]
+        blockkennungen.add(kennung)
+        bauteile = block["components"]
+
+        stoffe = bauteile.get("minecraft:material_instances", {})
+        if not stoffe:
+            fehler.append(f"{datei.name}: kein minecraft:material_instances - der Block bliebe unsichtbar.")
+        for seite, angabe in stoffe.items():
+            bild = angabe.get("texture")
+            if bild not in bekannte_bilder:
+                fehler.append(f"{datei.name}: Bild '{bild}' steht nicht in terrain_texture.json.")
+
+        beute = bauteile.get("minecraft:loot")
+        if beute:
+            pfad = VERHALTEN / beute
+            if not pfad.exists():
+                fehler.append(f"{kennung}: Beuteliste fehlt - {beute}")
+            else:
+                inhalt_beute = lies(pfad) or {}
+                gefunden = False
+                for topf in inhalt_beute.get("pools", []):
+                    for eintrag in topf.get("entries", []):
+                        gefunden = True
+                        stueck = eintrag.get("name", "")
+                        if stueck.startswith("fynn:") and stueck not in kennungen:
+                            fehler.append(f"{beute}: '{stueck}' gibt es als Gegenstand nicht.")
+                if not gefunden:
+                    fehler.append(f"{beute}: kein einziger Eintrag - der Block liesse nichts fallen.")
+        else:
+            hinweise.append(f"{kennung}: keine Beuteliste - der Block faellt als er selbst.")
+
+        for kuerzel, schluessel in sprachen.items():
+            if f"tile.{kennung}.name" not in schluessel:
+                fehler.append(f"{kuerzel}.lang: kein Name fuer den Block '{kennung}'.")
+
+    for name, eintrag in (zuordnung or {}).get("texture_data", {}).items():
+        if not (RESSOURCEN / (eintrag["textures"] + ".png")).exists():
+            fehler.append(f"terrain_texture.json: Datei fehlt - {eintrag['textures']}.png")
+
+    return blockkennungen
+
+
+def pruefe_vorkommen(blockkennungen):
+    """Erz im Berg ist eine Kette aus drei Dateien: Regel zeigt auf Streuung,
+    Streuung auf Ader, Ader setzt den Block. Reisst die Kette, erscheint das
+    Erz einfach nirgends."""
+    merkmale = {}
+    for datei in sorted((VERHALTEN / "features").glob("*.json")):
+        inhalt = lies(datei)
+        if not inhalt:
+            continue
+        for art, koerper in inhalt.items():
+            if not art.startswith("minecraft:"):
+                continue
+            kennung = koerper["description"]["identifier"]
+            merkmale[kennung] = (art, koerper, datei.name)
+
+    for kennung, (art, koerper, dateiname) in merkmale.items():
+        if art == "minecraft:ore_feature":
+            for regel in koerper.get("replace_rules", []):
+                gesetzt = regel.get("places_block")
+                if isinstance(gesetzt, str) and gesetzt.startswith("fynn:") \
+                        and gesetzt not in blockkennungen:
+                    fehler.append(f"{dateiname}: setzt '{gesetzt}' - diesen Block gibt es nicht.")
+        weiter = koerper.get("places_feature")
+        if weiter and weiter not in merkmale:
+            fehler.append(f"{dateiname}: zeigt auf '{weiter}' - dieses Merkmal gibt es nicht.")
+
+    for datei in sorted((VERHALTEN / "feature_rules").glob("*.json")):
+        inhalt = lies(datei)
+        if not inhalt:
+            continue
+        beschreibung = inhalt["minecraft:feature_rules"]["description"]
+        weiter = beschreibung.get("places_feature")
+        if weiter not in merkmale:
+            fehler.append(f"{datei.name}: zeigt auf '{weiter}' - dieses Merkmal gibt es nicht.")
+
+
 def lies_sprachen():
     sprachen = {}
     for kuerzel in ("de_DE", "en_US"):
@@ -229,6 +320,8 @@ def main():
     kennungen = pruefe_gegenstaende(sprachen)
     EIGENE_GEGENSTAENDE = kennungen
     pruefe_rezepte(kennungen)
+    bloecke = pruefe_bloecke(sprachen, kennungen)
+    pruefe_vorkommen(bloecke)
     pruefe_wesen(sprachen)
 
     for text in hinweise:
@@ -240,7 +333,9 @@ def main():
         print(f"\n{len(fehler)} Fehler. Das Paket wuerde im Spiel nicht richtig laufen.")
         return 1
     wesen = len(list((VERHALTEN / "entities").glob("*.json")))
-    print(f"\nAlles in Ordnung. {len(kennungen)} Gegenstaende und {wesen} Wesen geprueft.")
+    wort = "Block" if len(bloecke) == 1 else "Bloecke"
+    print(f"\nAlles in Ordnung. {len(kennungen)} Gegenstaende, {len(bloecke)} {wort} "
+          f"und {wesen} Wesen geprueft.")
     return 0
 
 
