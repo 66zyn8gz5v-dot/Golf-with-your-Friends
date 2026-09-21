@@ -7,6 +7,8 @@ item.fynn:sternenklinge.name=Starblade
 ## Was aus dem Berg kommt
 item.fynn:rohsilber=Raw Silver
 item.fynn:rohsilber.name=Raw Silver
+item.fynn:silberbarren=Silver Ingot
+item.fynn:silberbarren.name=Silver Ingot
 
 ## Bloecke
 tile.fynn:silbererz.name=Silver Ore

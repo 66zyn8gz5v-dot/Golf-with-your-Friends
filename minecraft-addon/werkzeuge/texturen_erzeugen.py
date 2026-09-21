@@ -105,6 +105,29 @@ ROHSILBER = [
 ]
 
 
+# Der Silberbarren aus dem Ofen. Gemalt von Fynn in der Pixelschmiede - flach
+# und schraeg, wie Minecraft seine Barren zeichnet, mit dunkler Vorderkante
+# und hellem Ruecken. Diesmal mit Umriss.
+SILBERBARREN = [
+    "................",
+    "................",
+    "................",
+    "..........kk....",
+    ".......kkkyyk...",
+    "....kkkywwwwwk..",
+    ".kkkywwwwwwwwwk.",
+    "kzwwwwwwwwwwzzwk",
+    "kszwwwwwwzzzwxyk",
+    "ksszwwzzzwxvvvyk",
+    "kssszzwxvvvvyyyk",
+    "kxsswxvvvdyyxkk.",
+    ".kxswxdvddkkk...",
+    "..kxsxdkkk......",
+    "...kkkk.........",
+    "................",
+]
+
+
 SILBERERZ = [
     "ppppouuouquuoooo",
     "oououoooooowduou",
@@ -246,6 +269,7 @@ def main():
         "sternenstaub": STERNENSTAUB,
         "sternenklinge": STERNENKLINGE,
         "rohsilber": ROHSILBER,
+        "silberbarren": SILBERBARREN,
     }
     for name, karte in bilder.items():
         pruefe_karte(name, karte)

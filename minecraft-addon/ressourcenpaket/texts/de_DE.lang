@@ -7,6 +7,8 @@ item.fynn:sternenklinge.name=Sternenklinge
 ## Was aus dem Berg kommt
 item.fynn:rohsilber=Rohsilber
 item.fynn:rohsilber.name=Rohsilber
+item.fynn:silberbarren=Silberbarren
+item.fynn:silberbarren.name=Silberbarren
 
 ## Bloecke
 tile.fynn:silbererz.name=Silbererz

@@ -96,6 +96,14 @@ def pruefe_rezepte(kennungen):
         inhalt = lies(datei)
         if not inhalt:
             continue
+        ofen = inhalt.get("minecraft:recipe_furnace")
+        if ofen:
+            for stueck in (ofen["input"], ofen["output"]):
+                name = stueck["item"] if isinstance(stueck, dict) else stueck
+                if name.startswith("fynn:") and name not in kennungen:
+                    fehler.append(f"{datei.name}: '{name}' gibt es als Gegenstand nicht.")
+            continue
+
         rezept = inhalt.get("minecraft:recipe_shaped") or inhalt.get("minecraft:recipe_shapeless")
         if not rezept:
             fehler.append(f"{datei.name}: unbekannte Rezeptart.")

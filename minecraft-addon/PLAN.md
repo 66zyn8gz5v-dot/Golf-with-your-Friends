@@ -208,8 +208,8 @@ Am Beispiel Silber. Ein Erz sind mehrere Teile, alle machbar:
 * ✔ der **Erzblock** im Stein — eigener Block mit Textur und der Angabe, welche
   Spitzhacke ihn knackt (seit Fassung 1.27)
 * ✔ **Rohsilber**, das beim Abbauen herausfällt (seit Fassung 1.26)
-* der **Silberbarren** aus dem Ofen — die Textur fehlt noch, Fynn malt sie
-* das **Schmelzrezept** dazwischen — wartet auf den Barren
+* ✔ der **Silberbarren** aus dem Ofen (seit Fassung 1.28)
+* ✔ das **Schmelzrezept** dazwischen — Ofen und Schmelzofen
 * ✔ die **Weltgenerierung**: `silbererz_ader` streut in Höhe −40 bis 48 durch
   alle Oberwelt-Biome. Im Spiel noch nicht nachgesehen.
 

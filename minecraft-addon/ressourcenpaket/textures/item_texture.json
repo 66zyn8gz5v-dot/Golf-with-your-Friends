@@ -13,6 +13,9 @@
     },
     "rohsilber": {
       "textures": "textures/items/rohsilber"
+    },
+    "silberbarren": {
+      "textures": "textures/items/silberbarren"
     }
   }
 }
