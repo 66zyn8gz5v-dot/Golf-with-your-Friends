@@ -231,6 +231,14 @@
   .formen { display: flex; gap: 6px; flex-wrap: wrap; }
   .formen button { font-size: 13px; padding: 6px 11px; }
   .werkzeugleiste .knopfreihe button { font-size: 13px; padding: 6px 11px; }
+  .dickezeile {
+    display: inline-flex; align-items: center; gap: 5px;
+    border: 1px solid var(--linie); border-radius: 5px;
+    padding: 2px 8px 2px 10px; background: var(--flaeche);
+  }
+  .dickezeile .wofuer { font-size: 12px; color: var(--schrift-leise); width: auto; }
+  .dickezeile .grad { min-width: 2.6em; flex: none; }
+  .dickezeile button { min-width: 34px; }
   #schirmtitel { overflow-wrap: anywhere; }
   .rastknoepfe { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px; }
   .rastknoepfe button { font-size: 12px; padding: 4px 9px; }
@@ -924,6 +932,15 @@
             <button type="button" id="bau-zurueck">Rückgängig</button>
             <button type="button" id="teil-weg">Löschen</button>
             <button type="button" id="teil-kopie">Verdoppeln</button>
+            <!-- Die Dicke ist das einzige Mass ohne Griff im Bild: Von
+                 schraeg oben zeigt die Tiefenachse fast auf den Betrachter,
+                 ein Anfasser dort waere nicht zu treffen. -->
+            <span class="dickezeile">
+              <span class="wofuer">Dicke</span>
+              <button type="button" id="dicke-minus" aria-label="Dicke verringern">−</button>
+              <span class="grad" id="dicke-wert">1</span>
+              <button type="button" id="dicke-plus" aria-label="Dicke erhöhen">+</button>
+            </span>
           </div>
         </div>
         <canvas id="bauschirm" width="420" height="460"
@@ -2312,10 +2329,16 @@
   // was gleich verschwindet.
   function schirmtitelSetzen() {
     var titel = document.getElementById("schirmtitel");
-    if (!titel) return;
-    titel.textContent = teile.length && teile[gewaehlt]
-      ? (teile[gewaehlt].name || "ohne Namen")
-      : "Ansicht";
+    var teil = teile.length ? teile[gewaehlt] : null;
+    if (titel) {
+      titel.textContent = teil ? (teil.name || "ohne Namen") : "Ansicht";
+    }
+    var dicke = document.getElementById("dicke-wert");
+    if (dicke) dicke.textContent = teil ? teil.gross[2] : "–";
+    var minus = document.getElementById("dicke-minus");
+    var plus = document.getElementById("dicke-plus");
+    if (minus) minus.disabled = !teil;
+    if (plus) plus.disabled = !teil;
   }
 
   function bauKnoepfeSetzen() {
@@ -3357,6 +3380,26 @@
     if (gross) platz.scrollIntoView({ block: "start" });
     schirmGroesseSetzen(gross);
     bauZeichnen();
+  });
+
+  // Viertelpixel, wie bei den Massen in der Werkstatt - fuer Klingen, die
+  // duenner sein sollen als ein Pixel. Null waere ein Kasten ohne Koerper
+  // und im Spiel unsichtbar.
+  [["dicke-minus", -0.25], ["dicke-plus", 0.25]].forEach(function (knopf) {
+    document.getElementById(knopf[0]).addEventListener("click", function () {
+      if (!teile.length) return;
+      var teil = teile[gewaehlt];
+      var neuerWert = Math.round((teil.gross[2] + knopf[1]) * 4) / 4;
+      if (neuerWert < 0.25) neuerWert = 0.25;
+      if (neuerWert === teil.gross[2]) return;
+      bauMerken();
+      teil.gross[2] = neuerWert;
+      teileZeigen();
+      werkstattZeigen();
+      bauZeichnen();
+      bauAusgeben();
+      bauSichern();
+    });
   });
 
   document.getElementById("bau-zurueck").addEventListener("click", function () {
