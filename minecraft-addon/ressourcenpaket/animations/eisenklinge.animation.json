@@ -7,16 +7,11 @@
         "rightitem": {
           "position": [ 0.0, 0.0, 0.0 ],
           "rotation": [
-            "c.is_first_person ? (q.is_sprinting ? 75.0 : 45.0) : (q.is_sprinting ? 115.0 : 90.0)",
+            "c.is_first_person ? (q.is_sprinting ? 120.0 : 85.0) : (q.is_sprinting ? 115.0 : 90.0)",
             0.0,
-            "c.is_first_person ? (q.is_sprinting ? -55.0 : -40.0) : (q.is_sprinting ? -30.0 : 0.0)"
+            "c.is_first_person ? (q.is_sprinting ? -35.0 : -8.0) : (q.is_sprinting ? -30.0 : 0.0)"
           ],
-          "scale": "c.is_first_person ? 0.6 : 0.65"
-        },
-        "arm": {
-          "rotation": [ -35.0, 0.0, 0.0 ],
-          "position": [ 0.0, -1.0, 1.0 ],
-          "scale": "c.is_first_person ? 1.0 : 0.0"
+          "scale": "c.is_first_person ? 0.8 : 0.65"
         }
       }
     }

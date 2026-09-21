@@ -193,33 +193,6 @@
               "inflate": -0.25
             }
           ]
-        },
-        {
-          "name": "arm",
-          "binding": "q.item_slot_to_bone_name(c.item_slot)",
-          "pivot": [
-            0,
-            0,
-            0
-          ],
-          "cubes": [
-            {
-              "origin": [
-                -2,
-                -11,
-                -2
-              ],
-              "size": [
-                4,
-                11,
-                4
-              ],
-              "uv": [
-                17,
-                16
-              ]
-            }
-          ]
         }
       ]
     }

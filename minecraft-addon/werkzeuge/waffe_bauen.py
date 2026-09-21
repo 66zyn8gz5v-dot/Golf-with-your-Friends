@@ -171,16 +171,13 @@ def pruefe_luecken(kaesten):
 
 def baue(name, kennung, kaesten, breite=64, ziel_modell=None, ziel_textur=None):
     pruefe_luecken(kaesten)
-    arm = {"name": "__arm", "origin": [-2, -11, -2], "size": [4, 11, 4],
-           "werkstoff": "haut"}
-    plaetze, hoehe = packe(kaesten + [arm], breite)
+    plaetze, hoehe = packe(kaesten, breite)
     hoehe = max(16, 1 << (max(1, hoehe - 1)).bit_length())  # auf Zweierpotenz
 
     bild = Image.new("RGBA", (breite, hoehe), (0, 0, 0, 0))
     knochen_kaesten = []
-    arm_uv = plaetze["__arm"]
 
-    for kasten in list(kaesten) + [arm]:
+    for kasten in kaesten:
         uv = plaetze[kasten["name"]]
         farben = WERKSTOFFE[kasten["werkstoff"]]
         schliff = kasten.get("schliff", False)
@@ -203,8 +200,6 @@ def baue(name, kennung, kaesten, breite=64, ziel_modell=None, ziel_textur=None):
         # als der Grat in der Mitte.
         if kasten.get("schrumpfen"):
             eintrag["inflate"] = kasten["schrumpfen"]
-        if kasten["name"] == "__arm":
-            continue  # Der Arm sitzt in einem eigenen Knochen.
         knochen_kaesten.append(eintrag)
 
     modell = {
@@ -218,28 +213,15 @@ def baue(name, kennung, kaesten, breite=64, ziel_modell=None, ziel_textur=None):
                 "visible_bounds_height": 3,
                 "visible_bounds_offset": [0, 1, 0],
             },
-            "bones": [
-                {
-                    # Der Name ist Vorschrift: Bedrock haengt den Knochen
-                    # "rightitem" an die Hand. Die Bindung daneben sorgt
-                    # dafuer, dass es auch in der linken Hand sitzt.
-                    "name": "rightitem",
-                    "binding": "q.item_slot_to_bone_name(c.item_slot)",
-                    "pivot": [0, 8, 0],
-                    "cubes": knochen_kaesten,
-                },
-                {
-                    # Der Arm. Haengt an derselben Hand, dreht sich aber
-                    # nicht mit der Waffe mit - deshalb ein eigener Knochen.
-                    # In der Ansicht von hinten wird er auf Null gerechnet,
-                    # dort hat der Spieler ja seinen eigenen.
-                    "name": "arm",
-                    "binding": "q.item_slot_to_bone_name(c.item_slot)",
-                    "pivot": [0, 0, 0],
-                    "cubes": [{"origin": [-2, -11, -2], "size": [4, 11, 4],
-                               "uv": list(arm_uv)}],
-                },
-            ],
+            "bones": [{
+                # Der Name ist Vorschrift: Bedrock haengt den Knochen
+                # "rightitem" an die Hand. Die Bindung daneben sorgt dafuer,
+                # dass es auch in der linken Hand sitzt.
+                "name": "rightitem",
+                "binding": "q.item_slot_to_bone_name(c.item_slot)",
+                "pivot": [0, 8, 0],
+                "cubes": knochen_kaesten,
+            }],
         }],
     }
 
