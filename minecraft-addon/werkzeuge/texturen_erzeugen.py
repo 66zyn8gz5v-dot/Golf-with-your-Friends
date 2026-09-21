@@ -34,6 +34,7 @@ FARBEN = {
     "y": (206, 218, 236, 255),   # Silber, hell
     "x": (152, 168, 194, 255),   # Silber, Schatten
     "v": (98, 112, 140, 255),    # Silber, tief
+    "r": (64, 78, 112, 255),     # Silber, Nacht - zwischen "v" und dem Umriss
     # Fels. Vier Toene statt einem, damit die Bloecke nicht wie eine glatte
     # Flaeche wirken - abgelesen an Minecrafts eigenem stone.png.
     "p": (143, 143, 143, 255),   # Stein, hell
