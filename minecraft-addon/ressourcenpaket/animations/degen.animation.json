@@ -23,6 +23,13 @@
             "14 * math.sin(v.attack_time * 180)",
             0.0
           ]
+        },
+        "sicht": {
+          "position": [
+            "c.is_first_person ? 0.0 : 3.5",
+            "c.is_first_person ? 0.0 : 3.5",
+            0.0
+          ]
         }
       }
     }

@@ -16,6 +16,13 @@
             -135.0
           ],
           "scale": 0.28
+        },
+        "sicht": {
+          "position": [
+            "c.is_first_person ? 0.0 : 3.5",
+            "c.is_first_person ? 0.0 : 3.5",
+            0.0
+          ]
         }
       }
     }
