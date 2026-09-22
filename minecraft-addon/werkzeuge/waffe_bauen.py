@@ -646,27 +646,9 @@ def aus_zeichenkarte(name, karte, farben, dicke=1.0, mitte=None, anbauten=None,
                     "binding": "q.item_slot_to_bone_name(c.item_slot)",
                     "pivot": [0, 8, 0],
                 },
-                # Dazwischen einer fuer den Unterschied zwischen den
-                # Perspektiven. Die Verschiebung, die das Schwert in der
-                # Ego-Ansicht an seinen Platz bringt, schiebt es von aussen
-                # gesehen in den Spieler hinein - dort gehoert sie wieder
-                # weg. Er sitzt ueber "waffe", damit seine Schritte
-                # ungedreht und unverkleinert zaehlen und sich mit denen
-                # der Haltung verrechnen lassen.
-                #
-                # Er ist zugleich eine Probe: Ob Minecraft in einer
-                # Verschiebung ueberhaupt rechnet, wissen wir nicht - am
-                # Degen ist genau das schiefgegangen. Rechnet es nicht,
-                # bleibt dieser Knochen auf null, und dann ist alles wie
-                # vorher. Schlimmer wird es also nicht.
-                {
-                    "name": "sicht",
-                    "parent": "rightitem",
-                    "pivot": [0, 8, 0],
-                },
                 {
                     "name": "waffe",
-                    "parent": "sicht",
+                    "parent": "rightitem",
                     "pivot": [0, 8, 0],
                 },
                 # Und noch einer darunter, fuer Bewegung waehrend des

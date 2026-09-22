@@ -25,17 +25,8 @@
           ]
         },
         {
-          "name": "sicht",
-          "parent": "rightitem",
-          "pivot": [
-            0,
-            8,
-            0
-          ]
-        },
-        {
           "name": "waffe",
-          "parent": "sicht",
+          "parent": "rightitem",
           "pivot": [
             0,
             8,
