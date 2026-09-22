@@ -3,11 +3,12 @@
   "animations": {
     "animation.fynn.degen_stich": {
       "loop": true,
+      "override_previous_animation": false,
       "bones": {
         "rightitem": {
           "rotation": [
-            "-45.0 * math.sin(variable.attack_time * 180.0)",
-            0.0,
+            "c.is_first_person ? 0.0 : -90.0 * math.sin((1 - math.pow((1 - variable.attack_time), 4)) * 180.0)",
+            "c.is_first_person ? 90.0 * math.sin((1 - math.pow((1 - variable.attack_time), 4)) * 180.0) : 0.0",
             0.0
           ]
         }
