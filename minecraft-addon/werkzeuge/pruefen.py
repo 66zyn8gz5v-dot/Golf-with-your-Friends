@@ -47,7 +47,7 @@ def pruefe_manifeste():
     if len(set(kennungen)) != len(kennungen):
         fehler.append("Zwei Bausteine haben dieselbe UUID - Minecraft verwechselt sie dann.")
 
-    abhaengig = [e["uuid"] for e in verhalten.get("dependencies", [])]
+    abhaengig = [e.get("uuid") for e in verhalten.get("dependencies", [])]
     if ressourcen["header"]["uuid"] not in abhaengig:
         fehler.append(
             "Das Verhaltenspaket verweist nicht auf das Ressourcenpaket - "
