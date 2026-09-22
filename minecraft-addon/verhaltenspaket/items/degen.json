@@ -23,32 +23,6 @@
       "minecraft:enchantable": {
         "value": 14,
         "slot": "sword"
-      },
-      "minecraft:piercing_weapon": {
-        "reach": {
-          "min": 0.0,
-          "max": 4.0
-        },
-        "hitbox_margin": 0.5
-      },
-      "minecraft:use_modifiers": {
-        "use_duration": 1.0,
-        "start_using": "on_attack",
-        "movement_modifier": 0.75
-      },
-      "minecraft:kinetic_weapon": {
-        "reach": {
-          "min": 0.0,
-          "max": 4.5
-        },
-        "hitbox_margin": 0.5,
-        "delay": 20,
-        "damage_multiplier": 1.0,
-        "damage_modifier": 5.0,
-        "damage_conditions": {
-          "max_duration": 10,
-          "min_speed": 0.05
-        }
       }
     }
   }

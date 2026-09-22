@@ -1,98 +1,119 @@
 // Der Sprungstoss des Degens.
 //
 // Alles andere am Sternenpaket sind Beschreibungen, die Minecraft liest.
-// Das hier ist das erste Stueck, das mitlaeuft, waehrend gespielt wird -
+// Das hier ist das einzige Stueck, das mitlaeuft, waehrend gespielt wird -
 // und zwar, weil es keinen anderen Weg gibt: Einen Spieler nach vorn zu
 // schieben kann keine Gegenstands-Komponente. Es gibt keine dafuer.
 //
-// Was hier steht, muss vorsichtig geschrieben sein. Ein Fehler in dieser
-// Datei laesst nicht nur den Stoss ausfallen, sondern kann das ganze
-// Verhaltenspaket mitreissen - und damit Silbererz, Sternenklinge und
-// alles andere. Deshalb faengt jeder Abschnitt seine Fehler selbst ab.
+// Ein Fehler in dieser Datei laesst nicht nur den Stoss ausfallen,
+// sondern kann das ganze Verhaltenspaket mitreissen - mit Silbererz,
+// Sternenklinge und allem anderen. Deshalb faengt jeder Abschnitt seine
+// Fehler selbst ab.
 
 import { world, system } from "@minecraft/server";
 
 const DEGEN = "fynn:degen";
 
-// Wie lange gehalten werden muss, in Ticks. Zwanzig Ticks sind eine
-// Sekunde; zwoelf sind lang genug, dass es sich nach Ausholen anfuehlt,
-// und kurz genug, dass es mitten im Kampf zu schaffen ist.
-const LADEZEIT = 12;
+// Wie lange geduckt werden muss, in Ticks. Zwanzig sind eine Sekunde.
+const LADEZEIT = 15;
 
-// Wie weit der Stoss traegt. Zwei Bloecke, wie gewuenscht - der Wert ist
-// keine Entfernung, sondern eine Kraft, und zwei Bloecke sind das, was
-// dabei ungefaehr herauskommt.
+// Wie weit der Stoss traegt: eine Kraft, keine Entfernung. Zwei ergeben
+// ungefaehr zwei Bloecke.
 const WEITE = 2.0;
 
-// Ein wenig Hoehe muss mit dazu. Ohne sie bleibt der Spieler am Boden
-// kleben und rutscht nur, statt nach vorn zu setzen.
+// Etwas Hoehe muss dazu, sonst klebt der Spieler am Boden und rutscht nur.
 const HOEHE = 0.25;
 
-// Der Aufschlag auf den Grundschaden des Degens.
+// Der Aufschlag auf den Grundschaden.
 const EXTRA = 5;
 
-// Wer gerade laedt, und seit wann. Der Schluessel ist die Kennung des
-// Spielers, damit im Mehrspielerbetrieb nicht einer den Stoss des
-// anderen ausloest.
-const laedt = new Map();
+// Damit der Stoss nicht in Dauerschleife geht.
+const PAUSE = 60;
 
-world.afterEvents.itemStartUse.subscribe((e) => {
-    if (e.itemStack?.typeId !== DEGEN) return;
-    laedt.set(e.source.id, system.currentTick);
-});
+// Warum gezaehlt und nicht auf die Taste gehoert: Minecraft meldet zwar
+// das Druecken der Duck-Taste, aber auf einem Tastfeld nur fuer einen
+// einzigen Tick - danach gilt sie als losgelassen, auch wenn der Finger
+// liegen bleibt. Auf dem iPad waere das Aufladen damit nie moeglich.
+// Der Zustand "duckt sich gerade" stimmt dagegen immer, egal ob Finger
+// oder Umschalttaste.
+//
+// Und warum das Ducken und nicht die Angriffstaste: Minecraft meldet von
+// allen Tasten nur Springen und Ducken. Die Angriffstaste kommt im Skript
+// gar nicht an.
+const zaehler = new Map();
+const bereit = new Set();
+const pause = new Map();
 
-/**
- * Das Ende der Ladung - egal, wodurch sie endet.
- *
- * Minecraft meldet drei verschiedene Enden: losgelassen, abgebrochen,
- * oder die Ladezeit des Gegenstands ist abgelaufen. Welches davon kommt,
- * haengt daran, wie lange gehalten wurde. Deshalb hoert dieser Abschnitt
- * auf alle drei und merkt sich, dass er schon ausgeloest hat.
- */
-function ladungEndet(e) {
+system.runInterval(() => {
     try {
-        if (e.itemStack?.typeId !== DEGEN) return;
-        const spieler = e.source;
-        const beginn = laedt.get(spieler.id);
-        laedt.delete(spieler.id);
-        if (beginn === undefined) return;
-        if (system.currentTick - beginn < LADEZEIT) return;
-
-        // Nur geduckt. So bleibt der gewoehnliche Schlag unberuehrt -
-        // wer einfach nur zuschlaegt, soll nicht durch die Gegend
-        // geschossen werden.
-        if (!spieler.isSneaking) return;
-
-        stossen(spieler);
+        for (const spieler of world.getAllPlayers()) {
+            pruefeSpieler(spieler);
+        }
     } catch (fehler) {
-        // Ein Fehler hier darf den Rest des Pakets nicht mitnehmen.
-        console.warn(`Degen, Ladung: ${fehler}`);
+        console.warn(`Degen, Schleife: ${fehler}`);
     }
+}, 1);
+
+function pruefeSpieler(spieler) {
+    const kennung = spieler.id;
+    const inDerHand = spieler
+        .getComponent("minecraft:equippable")
+        ?.getEquipment("Mainhand")?.typeId === DEGEN;
+
+    if (!inDerHand) {
+        zaehler.delete(kennung);
+        bereit.delete(kennung);
+        return;
+    }
+
+    if (spieler.isSneaking) {
+        const stand = (zaehler.get(kennung) ?? 0) + 1;
+        zaehler.set(kennung, stand);
+
+        // Ein Ton, sobald genug geladen ist - sonst muesste man raten,
+        // wann es so weit ist.
+        if (stand === LADEZEIT && !bereit.has(kennung)) {
+            bereit.add(kennung);
+            spieler.dimension.playSound("random.orb", spieler.location,
+                { volume: 0.4, pitch: 1.6 });
+        }
+        return;
+    }
+
+    // Nicht mehr geduckt: War lange genug geladen, geht der Stoss los.
+    const stand = zaehler.get(kennung) ?? 0;
+    zaehler.delete(kennung);
+    bereit.delete(kennung);
+    if (stand < LADEZEIT) return;
+
+    const letzte = pause.get(kennung) ?? -PAUSE;
+    if (system.currentTick - letzte < PAUSE) return;
+    pause.set(kennung, system.currentTick);
+
+    stossen(spieler);
 }
 
-world.afterEvents.itemReleaseUse.subscribe(ladungEndet);
-world.afterEvents.itemStopUse.subscribe(ladungEndet);
-world.afterEvents.itemCompleteUse.subscribe(ladungEndet);
-
 function stossen(spieler) {
-    const blick = spieler.getViewDirection();
+    try {
+        const blick = spieler.getViewDirection();
 
-    // Nur die waagerechte Richtung. Ohne das schiesst ein Blick nach oben
-    // den Spieler in den Himmel und ein Blick nach unten in den Boden.
-    const laenge = Math.sqrt(blick.x * blick.x + blick.z * blick.z) || 1;
-    spieler.applyKnockback(
-        { x: (blick.x / laenge) * WEITE, z: (blick.z / laenge) * WEITE },
-        HOEHE,
-    );
+        // Nur die waagerechte Richtung. Sonst schiesst ein Blick nach oben
+        // den Spieler in den Himmel und einer nach unten in den Boden.
+        const laenge = Math.sqrt(blick.x * blick.x + blick.z * blick.z) || 1;
+        spieler.applyKnockback(
+            { x: (blick.x / laenge) * WEITE, z: (blick.z / laenge) * WEITE },
+            HOEHE,
+        );
+        spieler.dimension.playSound("mob.ravager.roar", spieler.location,
+            { volume: 0.3, pitch: 1.8 });
 
-    spieler.dimension.playSound("mob.ravager.roar", spieler.location,
-        { volume: 0.3, pitch: 1.8 });
-
-    // Der Schaden kommt vier Ticks spaeter, wenn der Spieler schon
-    // unterwegs ist. Sofort getroffen wuerde nur, wer schon vorher in
-    // Reichweite stand - und das waere kein Sturmangriff, sondern ein
-    // gewoehnlicher Schlag.
-    system.runTimeout(() => treffen(spieler, blick), 4);
+        // Der Schaden kommt vier Ticks spaeter, wenn der Spieler schon
+        // unterwegs ist - sonst traefe nur, wer ohnehin schon in
+        // Reichweite stand, und das waere kein Sturmangriff.
+        system.runTimeout(() => treffen(spieler, blick), 4);
+    } catch (fehler) {
+        console.warn(`Degen, Stoss: ${fehler}`);
+    }
 }
 
 function treffen(spieler, blick) {
