@@ -4,6 +4,13 @@
     "animation.degen.halten": {
       "loop": true,
       "bones": {
+        "stoss": {
+          "position": [
+            0.0,
+            0.0,
+            "-5.0 * math.sin((1 - math.pow((1 - c.owning_entity->v.attack_time), 4)) * 180.0)"
+          ]
+        },
         "waffe": {
           "position": [
             "c.is_first_person ? -3.5 : 0.0",

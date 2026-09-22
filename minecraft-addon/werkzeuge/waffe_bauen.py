@@ -646,9 +646,20 @@ def aus_zeichenkarte(name, karte, farben, dicke=1.0, mitte=None, anbauten=None,
                     "binding": "q.item_slot_to_bone_name(c.item_slot)",
                     "pivot": [0, 8, 0],
                 },
+                # Dazwischen einer, der nur rechnet. Der Stoss des Degens
+                # faehrt hier, nicht in der Haltung darunter: Ein Ausdruck,
+                # den Minecraft nicht versteht, macht die ganze Zeile zu
+                # Null - stuende die Rechnung in der Haltung, laege die
+                # Waffe bei jedem Fehlschlag wieder mitten im Koerper. Auf
+                # einem eigenen Knochen faellt nur die Bewegung aus.
+                {
+                    "name": "stoss",
+                    "parent": "rightitem",
+                    "pivot": [0, 8, 0],
+                },
                 {
                     "name": "waffe",
-                    "parent": "rightitem",
+                    "parent": "stoss",
                     "pivot": [0, 8, 0],
                 },
                 # Und noch einer darunter: Er bestimmt, wo die Hand
