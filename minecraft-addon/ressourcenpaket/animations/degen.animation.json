@@ -4,6 +4,13 @@
     "animation.degen.halten": {
       "loop": true,
       "bones": {
+        "laden": {
+          "position": [
+            0.0,
+            0.0,
+            "3.0 * c.owning_entity->v.item_use_normalized"
+          ]
+        },
         "stoss": {
           "position": [
             0.0,

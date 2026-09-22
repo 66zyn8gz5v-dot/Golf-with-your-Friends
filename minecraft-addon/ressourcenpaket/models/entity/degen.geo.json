@@ -25,8 +25,17 @@
           ]
         },
         {
-          "name": "stoss",
+          "name": "laden",
           "parent": "rightitem",
+          "pivot": [
+            0,
+            8,
+            0
+          ]
+        },
+        {
+          "name": "stoss",
+          "parent": "laden",
           "pivot": [
             0,
             8,

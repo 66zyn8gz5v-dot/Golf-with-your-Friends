@@ -653,8 +653,13 @@ def aus_zeichenkarte(name, karte, farben, dicke=1.0, mitte=None, anbauten=None,
                 # Waffe bei jedem Fehlschlag wieder mitten im Koerper. Auf
                 # einem eigenen Knochen faellt nur die Bewegung aus.
                 {
-                    "name": "stoss",
+                    "name": "laden",
                     "parent": "rightitem",
+                    "pivot": [0, 8, 0],
+                },
+                {
+                    "name": "stoss",
+                    "parent": "laden",
                     "pivot": [0, 8, 0],
                 },
                 {
