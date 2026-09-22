@@ -30,8 +30,20 @@ item.fynn:eisenklinge.name=Eisenklinge
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 1.63
+item.iron_sword.name=Stahlschwert 1.64
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 1.63
-item.fynn:degen.name=Degen 1.63
+item.fynn:degen=Degen 1.64
+item.fynn:degen.name=Degen 1.64
+
+## Drei Probestuecke. Eines davon wird kein Bild haben - daran
+## ist abzulesen, welche der neuen Komponenten diese Fassung von
+## Minecraft nicht vertraegt. Sie fliegen wieder raus, sobald das
+## geklaert ist.
+item.fynn:probe_stich=Probe 1 Stich
+item.fynn:probe_stich.name=Probe 1 Stich
+item.fynn:probe_laden=Probe 2 Laden
+item.fynn:probe_laden.name=Probe 2 Laden
+item.fynn:probe_wucht=Probe 3 Wucht
+item.fynn:probe_wucht.name=Probe 3 Wucht
+
