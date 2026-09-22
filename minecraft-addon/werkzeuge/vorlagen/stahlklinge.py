@@ -1,32 +1,51 @@
 """Fynns Stahlschwert, abgetastet aus seinem flachen Pixelbild.
 
-Gedacht als Ersatz fuer das Eisenschwert. Zwei Sachen waren dabei zu
-beachten: Der Hintergrund war gemalt statt durchsichtig, und das Bild
-hatte beim Verschicken an Genauigkeit verloren - aus vier Griffarben
-waren fuenfundzwanzig geworden. Beides ist beim Abtasten behandelt.
+Gedacht als Ersatz fuer das Eisenschwert. Zwei Sachen waren beim Abtasten
+zu beachten: Der Hintergrund war gemalt statt durchsichtig, und das Bild
+hatte beim Verschicken an Genauigkeit verloren - aus vier Griffarben waren
+fuenfundzwanzig geworden.
+
+Danach aufgeraeumt. Das Abgetastete trug noch alles mit, was beim Malen
+von Hand entsteht: einzelne Pixel, die aus der Reihe fielen, eine Klinge,
+die zwischendurch heller wurde und wieder dunkler, eine Parierstange ohne
+zwei gleiche Haelften. Im Kleinen sieht das nach Handschrift aus, im Spiel
+nach Schmutz - ein Gegenstand ist dort zwei Zentimeter gross, und was
+nicht in einer klaren Linie liegt, liest sich als Dreck auf der Klinge.
+
+Drei Regeln haben aufgeraeumt:
+
+* Jede Zeile ist spiegelgleich. Ein Schwert hat zwei gleiche Haelften.
+* Die Klinge wird zum Griff hin Stufe um Stufe dunkler und nie wieder
+  heller. Vorher sprang sie hell-dunkel-hell-dunkel.
+* Jeder Teil traegt so wenige Farben wie moeglich: die Klinge vier, die
+  Wicklung zwei Baender, der Knauf drei Stufen.
 """
 
-FARBEN = {'a': (163, 167, 173, 255), 'b': (237, 238, 240, 255), 'c': (192, 195, 199, 255), 'd': (131, 136, 144, 255), 'e': (214, 216, 219, 255), 'f': (102, 107, 115, 255), 'g': (85, 90, 97, 255), 'h': (62, 66, 55, 255), 'i': (122, 128, 136, 255), 'j': (52, 54, 45, 255), 'k': (164, 106, 81, 255), 'l': (133, 90, 72, 255), 'm': (147, 97, 76, 255), 'n': (117, 82, 68, 255), 'o': (67, 71, 68, 255), '.': (0, 0, 0, 0)}
+FARBEN = {'a': (163, 167, 173, 255), 'b': (237, 238, 240, 255), 'c': (192, 195, 199, 255), 'd': (131, 136, 144, 255), 'e': (214, 216, 219, 255), 'f': (102, 107, 115, 255), 'g': (85, 90, 97, 255), 'h': (62, 66, 55, 255), 'i': (122, 128, 136, 255), 'j': (52, 54, 45, 255), 'k': (164, 106, 81, 255), 'n': (117, 82, 68, 255), '.': (0, 0, 0, 0)}
 
 KARTE = [
+    # Spitze
     ".........bb.........",
     "........bbbb........",
     ".......bbbbbb.......",
-    "......bbbaabbb......",
-    "......bbaaaabb......",
+    # Klinge, oberstes Viertel: Schneide fast weiss, Kern hell
+    "......bbbccbbb......",
     "......bbccccbb......",
     "......bbccccbb......",
     "......bbccccbb......",
-    "......bbaccabb......",
+    "......bbccccbb......",
+    "......bbccccbb......",
+    # zweites Viertel: Kern eine Stufe dunkler
     "......bbaaaabb......",
     "......bbaaaabb......",
     "......bbaaaabb......",
-    "......bbdaaabb......",
-    "......bbdaaabb......",
-    "......bbddaabb......",
-    "......bbddaabb......",
-    "......eedddaee......",
-    "......eedddaee......",
+    "......bbaaaabb......",
+    "......bbaaaabb......",
+    "......bbaaaabb......",
+    "......bbaaaabb......",
+    # drittes Viertel: Schneide nimmt zurueck, Kern noch dunkler
+    "......eeddddee......",
+    "......eeddddee......",
     "......eeddddee......",
     "......eeddddee......",
     "......eeddddee......",
@@ -39,6 +58,7 @@ KARTE = [
     "......eeddddee......",
     "......ccddddcc......",
     "......ccddddcc......",
+    # unteres Viertel: am dunkelsten, dort liegt der Schatten der Hand
     "......ccffffcc......",
     "......ccffffcc......",
     "......ccffffcc......",
@@ -49,25 +69,28 @@ KARTE = [
     "......aaffffaa......",
     "......aaffffaa......",
     "......aaffffaa......",
-    ".bb...aaffffaa...cc.",
-    "cbccaccaaiiaaccacbca",
-    "aaaaacaaiiiiaaaaaaaa",
+    # Parierstange: oben die hellere Kante, unten der Koerper
+    ".ee...aaffffaa...ee.",
+    "eecccccaiiiiacccccee",
+    "ccaaaaaaiiiiaaaaaacc",
     "...aaggggggggggaa...",
-    "........hjhj........",
-    "........hhjj........",
-    "........klmn........",
-    "........mknl........",
-    "........ohhj........",
-    "........hojh........",
-    "........klmn........",
-    "........mknl........",
-    "........ohhj........",
-    "........hojh........",
-    "........klmn........",
-    "........mknl........",
-    "........obbj........",
-    "........cbca........",
-    ".......iacaii.......",
+    # Wicklung: zwei Zeilen dunkel, zwei Zeilen Leder, immer abwechselnd
+    "........jhhj........",
+    "........jhhj........",
+    "........nkkn........",
+    "........nkkn........",
+    "........jhhj........",
+    "........jhhj........",
+    "........nkkn........",
+    "........nkkn........",
+    "........jhhj........",
+    "........jhhj........",
+    "........nkkn........",
+    "........nkkn........",
+    # Knauf
+    "........cbbc........",
+    "........acca........",
+    ".......iaccai.......",
     "........iggi........",
     ".........gg.........",
 ]
