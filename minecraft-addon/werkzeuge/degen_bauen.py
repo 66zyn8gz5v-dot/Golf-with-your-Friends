@@ -36,7 +36,7 @@ def main():
     if ziel is None:
         wurzel = Path(__file__).resolve().parent.parent / "ressourcenpaket"
         modell = wurzel / "models" / "entity" / "degen.geo.json"
-        textur = wurzel / "textures" / "entity" / "degen.png"
+        textur = wurzel / "textures" / "entity" / "degen_haut.png"
     else:
         modell, textur = ziel / "degen.geo.json", ziel / "degen.png"
 

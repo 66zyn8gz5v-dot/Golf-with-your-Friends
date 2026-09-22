@@ -322,6 +322,33 @@ def lies_sprachen():
     return sprachen
 
 
+def pruefe_bildnamen():
+    """Zwei Bilder duerfen nicht gleich heissen, auch nicht in verschiedenen Ordnern.
+
+    Am 22. September hatte der Degen im Inventar kein Bild mehr, obwohl
+    alles an seinem Platz lag: das 16x16-Bild in textures/items, der
+    Eintrag in item_texture.json, der Verweis im Gegenstand. Daneben lag
+    aber die Haut seines Modells, 18x70 gross - und die hiess ebenfalls
+    degen.png. Minecraft fuehrt Bilder unter ihrem Kurznamen, nicht unter
+    ihrem Pfad; von zwei gleichnamigen bleibt eines uebrig, und im
+    Inventar stand dann die Modellhaut, zusammengequetscht auf ein
+    Kaestchen. Zu sehen war davon nichts.
+
+    Von aussen sieht so ein Fehler aus wie ein fehlendes Bild, und man
+    sucht an der falschen Stelle - beim Bild, bei der Zuordnung, beim
+    Gegenstand. Deshalb steht die Pruefung hier.
+    """
+    nach_namen = {}
+    for bild in (RESSOURCEN / "textures").rglob("*.png"):
+        nach_namen.setdefault(bild.name, []).append(
+            str(bild.relative_to(RESSOURCEN)))
+    for name, pfade in sorted(nach_namen.items()):
+        if len(pfade) > 1:
+            fehler.append(
+                f"Zwei Bilder heissen {name}: {' und '.join(pfade)} - "
+                "Minecraft behaelt nur eines davon.")
+
+
 def main():
     global EIGENE_GEGENSTAENDE
     pruefe_manifeste()
@@ -332,6 +359,7 @@ def main():
     bloecke = pruefe_bloecke(sprachen, kennungen)
     pruefe_vorkommen(bloecke)
     pruefe_wesen(sprachen)
+    pruefe_bildnamen()
 
     for text in hinweise:
         print(f"  Hinweis: {text}")
