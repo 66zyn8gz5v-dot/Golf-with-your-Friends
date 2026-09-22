@@ -5,17 +5,22 @@
       "loop": true,
       "bones": {
         "laden": {
-          "position": [
+          "rotation": [
             0.0,
             0.0,
-            "3.0 * c.owning_entity->v.item_use_normalized"
+            "8.0 * math.sin(query.life_time * 120.0)"
           ]
         },
         "stoss": {
           "position": [
             0.0,
             0.0,
-            "-5.0 * math.sin((1 - math.pow((1 - c.owning_entity->v.attack_time), 4)) * 180.0)"
+            "-8.0 * math.sin(context.owning_entity->variable.attack_time * 180.0)"
+          ],
+          "rotation": [
+            "-60.0 * math.sin(context.owning_entity->variable.attack_time * 180.0)",
+            0.0,
+            0.0
           ]
         },
         "waffe": {
