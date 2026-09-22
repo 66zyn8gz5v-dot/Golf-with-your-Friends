@@ -46,6 +46,20 @@ def main():
     w.aus_zeichenkarte("degen", v.KARTE, v.FARBEN, dicke=dicken, mitte=v.MITTE,
                        ziel_modell=str(modell), ziel_textur=str(textur))
 
+    # Das Inventarbild kommt aus derselben Vorlage, damit es nicht
+    # irgendwo einzeln liegt und beim naechsten Mal keiner mehr weiss,
+    # woraus es entstanden ist.
+    from PIL import Image
+    bild = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    for y, zeile in enumerate(v.BILD):
+        for x, zeichen in enumerate(zeile):
+            bild.putpixel((x, y), tuple(v.FARBEN.get(zeichen, (0, 0, 0, 0))))
+    ziel_bild = (modell.parent.parent.parent / "textures" / "items" / "degen.png"
+                 if ziel is None else ziel / "degen_bild.png")
+    ziel_bild.parent.mkdir(parents=True, exist_ok=True)
+    bild.save(ziel_bild)
+    print(f"gebaut: {ziel_bild.name} - Fynns Gegenstandsbild")
+
 
 if __name__ == "__main__":
     main()

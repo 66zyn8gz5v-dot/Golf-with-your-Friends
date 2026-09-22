@@ -26,6 +26,9 @@ FARBEN = {
     "K": (27, 25, 13, 255),      # Leder tief
     "j": (52, 46, 24, 255),      # Leder dunkel
     "J": (67, 56, 28, 255),      # Leder
+    # Nur fuers flache Inventarbild: Dort traegt der Umriss die Form,
+    # im Koerper waere er eine schwarze Haut um jedes Teil.
+    "k": (12, 12, 14, 255),
     ".": (0, 0, 0, 0),
 }
 
@@ -94,3 +97,29 @@ KARTE = [
 ]
 # Die Klinge liegt auf den Spalten 8 und 9, ihre Mitte also auf 9.
 MITTE = 9.0
+
+# Das Bild fuers Inventar, 16 mal 16 - von Fynn gepixelt und aus seinem
+# Foto des Bildschirms abgetastet. Entzerrt ueber die vier Ecken der
+# Zeichenflaeche, und je Feld der Mittelwert eines Flecks statt eines
+# einzelnen Punktes: Ein abfotografierter Bildschirm flimmert.
+#
+# Es zeigt andersherum als Mojangs Waffen - dort liegt die Spitze oben
+# rechts. So hat Fynn es gemalt, also bleibt es so.
+BILD = [
+    "kk..............",
+    "kyk.............",
+    ".kyk............",
+    "..kyk...........",
+    "...kyk..........",
+    "....kyk.........",
+    ".....kxk........",
+    "......kxk.......",
+    ".......kvk..kk..",
+    "........krkkek..",
+    ".........krggk..",
+    ".........kgKk...",
+    ".........kgkjk..",
+    ".........kgkkJk.",
+    "..........kggekk",
+    "...........kkkkk"
+]
