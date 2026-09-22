@@ -55,6 +55,21 @@ Datei, und ein Tipp darauf uebergibt sie an Minecraft:
 Die Adresse bleibt immer dieselbe, auch wenn die Fassung sich aendert - deshalb steht keine Nummer
 im Dateinamen.
 
+Und genau daran ist sie am 22. September haengengeblieben: Auf GitHub lag 1.63, im Spiel kam immer
+wieder 1.62 an. Das iPad merkt sich, was hinter einer Adresse steckt, und gibt beim naechsten Mal
+die gemerkte Datei heraus, ohne nachzufragen - die Adresse hat sich ja nicht geaendert. Ein
+Anhaengsel loest das, weil es fuer das iPad eine fremde Adresse ist:
+
+<https://github.com/66zyn8gz5v-dot/Golf-with-your-Friends/raw/claude/minecraft-mod-bedrock-y7faxg/minecraft-addon/auslieferung/Sternenpaket.mcaddon?v=163>
+
+Die Zahl dahinter ist beliebig, sie muss sich nur von der letzten unterscheiden; die Fassungsnummer
+ist deshalb der einfachste Wert. `bauen.py` schreibt die fertige Adresse am Ende jedes Baus hin,
+damit sie im Bericht nicht von Hand zusammengesetzt wird.
+
+Fuer den Kurzbefehl, der immer dieselbe Adresse aufruft, gibt es denselben Trick zum Einbauen:
+hinter die Adresse ein `?v=` setzen und dahinter den Baustein „Aktuelles Datum" einfuegen. Dann ist
+die Adresse bei jedem Lauf eine andere, und das Gedaechtnis des iPads greift nie.
+
 Der Haken: Minecraft kann „Duplikatpaket gefunden" melden und ablehnen, wenn dasselbe Paket schon
 im Speicher liegt. Dann erst unter Einstellungen › Speicher › Ressourcenpakete das alte loeschen.
 Deshalb ist das der Notweg und nicht der Regelweg.

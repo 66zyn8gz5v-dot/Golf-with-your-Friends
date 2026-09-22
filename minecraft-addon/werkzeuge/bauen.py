@@ -23,6 +23,14 @@ def fassung():
 # Die Fassung steht im Dateinamen, damit im Downloads-Ordner des iPads nicht
 # zwei gleich heissende Dateien liegen und die falsche angetippt wird.
 ZIEL = WURZEL / f"Sternenpaket-{fassung()}.mcaddon"
+
+# Wo der Notweg im Netz liegt. Steht hier, damit die Adresse im Bericht
+# nicht von Hand zusammengesetzt wird - dabei verrutscht der Zweigname.
+ADRESSE_NOTWEG = (
+    "https://github.com/66zyn8gz5v-dot/Golf-with-your-Friends/raw/"
+    "claude/minecraft-mod-bedrock-y7faxg/minecraft-addon/auslieferung/"
+    "Sternenpaket.mcaddon"
+)
 PAKETE = ("verhaltenspaket", "ressourcenpaket")
 
 # Sachen, die im Archiv nichts verloren haben und auf manchen Systemen
@@ -107,6 +115,15 @@ def main():
     notweg.parent.mkdir(exist_ok=True)
     notweg.write_bytes(ZIEL.read_bytes())
     print(f"Notweg zum Antippen: {notweg.name}")
+    # Die Adresse mit Anhaengsel, und zwar bei jedem Bau neu ausgerechnet.
+    # Am 22. September blieb eine Auslieferung haengen, obwohl auf GitHub
+    # der neue Stand lag: Das iPad merkt sich, was hinter einer Adresse
+    # steckt, und gibt beim naechsten Antippen die alte Datei aus dem
+    # eigenen Gedaechtnis heraus, ohne nachzufragen. Die Adresse ist ja
+    # dieselbe geblieben. Ein Anhaengsel mit der Fassungsnummer macht
+    # daraus fuer das iPad eine fremde Adresse - und die holt es.
+    print(f"Adresse fuer den Bericht (mit Anhaengsel gegen das Gedaechtnis "
+          f"des iPads):\n  {ADRESSE_NOTWEG}?v={fassung().replace('.', '')}")
 
     for name, paket in ENTWICKLUNG.items():
         packe_entwicklung(name, paket)
