@@ -4,25 +4,6 @@
     "animation.degen.halten": {
       "loop": true,
       "bones": {
-        "laden": {
-          "rotation": [
-            0.0,
-            0.0,
-            "8.0 * math.sin(query.life_time * 120.0)"
-          ]
-        },
-        "stoss": {
-          "position": [
-            0.0,
-            0.0,
-            "-8.0 * math.sin(context.owning_entity->variable.attack_time * 180.0)"
-          ],
-          "rotation": [
-            "-60.0 * math.sin(context.owning_entity->variable.attack_time * 180.0)",
-            0.0,
-            0.0
-          ]
-        },
         "waffe": {
           "position": [
             "c.is_first_person ? -3.5 : 0.0",
@@ -30,7 +11,7 @@
             "c.is_first_person ? 0.0 : -5.0"
           ],
           "rotation": [
-            "c.is_first_person ? 0.0 : 90.0",
+            "c.is_first_person ? 30.0 : 90.0",
             0.0,
             "c.is_first_person ? -135.0 : 0.0"
           ],

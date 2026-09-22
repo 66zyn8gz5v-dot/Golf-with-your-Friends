@@ -646,12 +646,21 @@ def aus_zeichenkarte(name, karte, farben, dicke=1.0, mitte=None, anbauten=None,
                     "binding": "q.item_slot_to_bone_name(c.item_slot)",
                     "pivot": [0, 8, 0],
                 },
-                # Dazwischen einer, der nur rechnet. Der Stoss des Degens
-                # faehrt hier, nicht in der Haltung darunter: Ein Ausdruck,
-                # den Minecraft nicht versteht, macht die ganze Zeile zu
-                # Null - stuende die Rechnung in der Haltung, laege die
-                # Waffe bei jedem Fehlschlag wieder mitten im Koerper. Auf
-                # einem eigenen Knochen faellt nur die Bewegung aus.
+                # Zwei Knochen zum Rechnen, zur Zeit ohne Aufgabe. Sie
+                # waren fuer den Stoss beim Zuschlagen gedacht, und daran
+                # hat sich gezeigt: Die Angriffszeit des Spielers kommt in
+                # den Animationen eines Attachables nicht an, auch nicht
+                # ueber c.owning_entity, obwohl Mojang sie freigibt und
+                # der Weg fuer die Beschreibung dokumentiert ist. Sechzig
+                # Grad Probekippung blieben im Spiel unsichtbar.
+                #
+                # Sie bleiben stehen, weil sie nichts kosten und weil der
+                # Platz fuer eine Bewegung gebraucht wird, sobald sich ein
+                # Auslöser findet, der wirklich ankommt. Was hier rechnet,
+                # gehoert nicht in die Haltung: Ein Ausdruck, den Minecraft
+                # nicht versteht, macht die ganze Zeile zu Null - stuende
+                # die Rechnung in der Haltung, laege die Waffe bei jedem
+                # Fehlschlag mitten im Koerper.
                 {
                     "name": "laden",
                     "parent": "rightitem",
