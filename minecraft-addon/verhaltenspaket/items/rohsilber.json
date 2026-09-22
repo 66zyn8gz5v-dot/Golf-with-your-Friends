@@ -4,7 +4,8 @@
     "description": {
       "identifier": "fynn:rohsilber",
       "menu_category": {
-        "category": "items"
+        "category": "items",
+        "group": "fynn:itemGroup.name.silber"
       }
     },
     "components": {

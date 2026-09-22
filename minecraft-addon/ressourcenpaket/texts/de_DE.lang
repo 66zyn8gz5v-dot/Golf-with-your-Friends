@@ -12,6 +12,9 @@ item.fynn:silberbarren.name=Silberbarren
 item.fynn:silbernugget=Silbernugget
 item.fynn:silbernugget.name=Silbernugget
 
+## Das eigene Fach im Kreativ-Inventar
+fynn:itemGroup.name.silber=Silber
+
 ## Bloecke
 tile.fynn:silbererz.name=Silbererz
 
@@ -27,8 +30,8 @@ item.fynn:eisenklinge.name=Eisenklinge
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 1.60
+item.iron_sword.name=Stahlschwert 1.61
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 1.60
-item.fynn:degen.name=Degen 1.60
+item.fynn:degen=Degen 1.61
+item.fynn:degen.name=Degen 1.61
