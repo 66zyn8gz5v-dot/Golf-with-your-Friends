@@ -31,6 +31,15 @@
             0,
             8,
             0
+          ]
+        },
+        {
+          "name": "stoss",
+          "parent": "waffe",
+          "pivot": [
+            0,
+            8,
+            0
           ],
           "cubes": [
             {

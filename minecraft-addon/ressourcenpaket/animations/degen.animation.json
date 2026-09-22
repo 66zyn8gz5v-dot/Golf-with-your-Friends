@@ -6,8 +6,8 @@
       "bones": {
         "waffe": {
           "position": [
-            "-3.5 - 5.0 * math.sin(v.attack_time * 180)",
-            "-3.5 - 5.0 * math.sin(v.attack_time * 180)",
+            -3.5,
+            -3.5,
             0.0
           ],
           "rotation": [
@@ -16,6 +16,13 @@
             -135.0
           ],
           "scale": 0.28
+        },
+        "stoss": {
+          "position": [
+            0.0,
+            "14 * math.sin(v.attack_time * 180)",
+            0.0
+          ]
         }
       }
     }

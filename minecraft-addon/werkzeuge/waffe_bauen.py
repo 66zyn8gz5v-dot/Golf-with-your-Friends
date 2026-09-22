@@ -650,6 +650,26 @@ def aus_zeichenkarte(name, karte, farben, dicke=1.0, mitte=None, anbauten=None,
                     "name": "waffe",
                     "parent": "rightitem",
                     "pivot": [0, 8, 0],
+                },
+                # Und noch einer darunter, fuer Bewegung waehrend des
+                # Schlags. Warum getrennt: Am Degen stand die Haltung als
+                # Rechenausdruck da, damit er beim Zuschlagen vorschnellt -
+                # und Minecraft hat den Ausdruck nicht ausgerechnet,
+                # sondern die ganze Haltung auf null gesetzt. Die Waffe lag
+                # daraufhin unter dem Bildrand.
+                #
+                # Jetzt traegt "waffe" die Haltung als nackte Zahlen, und
+                # nur dieser Knochen rechnet. Geht das Rechnen schief,
+                # bleibt er auf null stehen - und null heisst hier: keine
+                # Verschiebung. Die Haltung bleibt, wo sie ist.
+                #
+                # Praktisch nebenbei: In diesem Knochen zeigt +Y die
+                # Klinge entlang. Ein Stich ist damit ein Schritt nach
+                # oben, ohne dass jemand wissen muss, wie die Hand liegt.
+                {
+                    "name": "stoss",
+                    "parent": "waffe",
+                    "pivot": [0, 8, 0],
                     "cubes": kaesten,
                 },
             ],
