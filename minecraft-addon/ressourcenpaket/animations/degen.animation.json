@@ -17,10 +17,10 @@
           ],
           "scale": 0.28
         },
-        "stoss": {
+        "griff": {
           "position": [
             0.0,
-            "14 * math.sin(v.attack_time * 180)",
+            "c.is_first_person ? 0.0 : 21.0",
             0.0
           ]
         }

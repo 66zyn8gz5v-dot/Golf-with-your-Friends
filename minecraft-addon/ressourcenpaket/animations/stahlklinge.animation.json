@@ -16,6 +16,13 @@
             "c.is_first_person ? -135.0 : 0.0"
           ],
           "scale": 0.28
+        },
+        "griff": {
+          "position": [
+            0.0,
+            "c.is_first_person ? 0.0 : 21.0",
+            0.0
+          ]
         }
       }
     }

@@ -651,23 +651,19 @@ def aus_zeichenkarte(name, karte, farben, dicke=1.0, mitte=None, anbauten=None,
                     "parent": "rightitem",
                     "pivot": [0, 8, 0],
                 },
-                # Und noch einer darunter, fuer Bewegung waehrend des
-                # Schlags. Warum getrennt: Am Degen stand die Haltung als
-                # Rechenausdruck da, damit er beim Zuschlagen vorschnellt -
-                # und Minecraft hat den Ausdruck nicht ausgerechnet,
-                # sondern die ganze Haltung auf null gesetzt. Die Waffe lag
-                # daraufhin unter dem Bildrand.
+                # Und noch einer darunter: Er bestimmt, wo die Hand
+                # zupackt. Die Waffe liegt im Modell auf ihrer Mitte, und
+                # von aussen sah man deshalb, wie der Spieler sie in der
+                # Mitte haelt - die untere Haelfte steckte im Arm. Ein
+                # Schritt auf diesem Knochen schiebt sie am eigenen
+                # Laengsschnitt entlang, bis der Griff in der Faust liegt.
                 #
-                # Jetzt traegt "waffe" die Haltung als nackte Zahlen, und
-                # nur dieser Knochen rechnet. Geht das Rechnen schief,
-                # bleibt er auf null stehen - und null heisst hier: keine
-                # Verschiebung. Die Haltung bleibt, wo sie ist.
-                #
-                # Praktisch nebenbei: In diesem Knochen zeigt +Y die
-                # Klinge entlang. Ein Stich ist damit ein Schritt nach
-                # oben, ohne dass jemand wissen muss, wie die Hand liegt.
+                # Warum ein eigener Knochen und keine Zahl weiter oben: In
+                # diesem hier zeigt +Y die Klinge entlang, in den Knochen
+                # darueber nicht mehr - dort ist die Waffe schon gedreht,
+                # und zwar in jeder Perspektive anders.
                 {
-                    "name": "stoss",
+                    "name": "griff",
                     "parent": "waffe",
                     "pivot": [0, 8, 0],
                     "cubes": kaesten,
