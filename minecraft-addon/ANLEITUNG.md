@@ -59,6 +59,22 @@ Der Haken: Minecraft kann „Duplikatpaket gefunden" melden und ablehnen, wenn d
 im Speicher liegt. Dann erst unter Einstellungen › Speicher › Ressourcenpakete das alte loeschen.
 Deshalb ist das der Notweg und nicht der Regelweg.
 
+## Die Kennungen wurden am 22. September getauscht
+
+Minecraft unterscheidet Pakete an ihrer UUID, nicht am Namen. Solange zwei Kopien desselben Pakets
+dieselbe Kennung tragen, sind sie fuer Minecraft ein und dasselbe Paket - und es nimmt eine davon,
+ohne zu sagen welche. Genau daran hing es: Der Kurzbefehl schrieb den neuen Stand sauber in den
+Entwicklungsordner, und das Spiel benutzte trotzdem weiter eine alte, importierte Kopie.
+
+Seit Fassung 1.38 tragen beide Pakete neue Kennungen. Alte und neue Fassung stehen damit
+nebeneinander in der Paketliste, statt sich gegenseitig zu verdecken. Wer noch eine alte Kopie
+im Speicher hat, schaltet sie in der Welt aus und das neue Paket ein - oder loescht sie unter
+Einstellungen > Speicher.
+
+Der Preis: Eine `.mcaddon` von vor diesem Tag ist fuer Minecraft ein anderes Paket als eine von
+danach. Beide lassen sich gleichzeitig installieren, und beide gleichzeitig einzuschalten geht
+schief - dann sind alle Gegenstaende doppelt erklaert.
+
 ## Woran man sieht, welche Fassung wirklich im Spiel ist
 
 Die Fassungsnummer steht im **Namen** des Pakets, nicht nur in der Beschreibung darunter. In der

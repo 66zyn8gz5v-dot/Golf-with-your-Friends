@@ -37,4 +37,4 @@ item.fynn:haltung_d.name=Probe D - halb gekippt
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 1.37
+item.iron_sword.name=Stahlschwert 1.38
