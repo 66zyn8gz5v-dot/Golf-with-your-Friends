@@ -20,12 +20,12 @@
         "griff": {
           "position": [
             0.0,
-            "c.is_first_person ? 0.0 : 17.5",
+            "c.is_first_person ? 0.0 : 13.0",
             0.0
           ],
           "rotation": [
             0.0,
-            0.0,
+            "c.is_first_person ? 0.0 : 90.0",
             0.0
           ]
         }
