@@ -619,6 +619,21 @@ def aus_zeichenkarte(name, karte, farben, dicke=1.0, mitte=None, anbauten=None,
                 "visible_bounds_height": 4,
                 "visible_bounds_offset": [0, 1, 0],
             },
+            # Wie die Waffe in der Hand liegt - am 22. September im Spiel
+            # gemessen, nicht hergeleitet:
+            #
+            # Der Knochen der Hand steht auf dem Kopf. Eine Klinge, die im
+            # Modell nach +Y zeigt, haengt im Spiel mit der Spitze nach
+            # unten. Deshalb steht in der Haltung eine Drehung um -135 Grad
+            # und nicht um +45: Beide legen die Waffe auf dieselbe Schraege
+            # des Gegenstandsfeldes, aber nur die erste mit der Spitze nach
+            # oben rechts, wie Minecraft seine Schwerter zeichnet.
+            #
+            # Und Vorsicht mit modell_ansehen.py: Der Betrachter zeichnet
+            # eine gedrehte Waffe spiegelverkehrt zum Spiel. Fuer "sitzen
+            # die Kaesten richtig" taugt er, fuer "zeigt die Spitze nach
+            # oben" nicht.
+            #
             # Zwei Knochen statt einem, und das aus einem Grund: "rightitem"
             # ist der Knochen, den Minecraft selbst bewegt - er traegt den
             # Ausholschwung beim Zuschlagen. Wer ihn selbst dreht, ueberschreibt

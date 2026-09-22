@@ -23,18 +23,8 @@ item.spawn_egg.entity.fynn:glimmerling.name=Glimmerling
 item.fynn:eisenklinge=Eisenklinge
 item.fynn:eisenklinge.name=Eisenklinge
 
-## Haltungen zum Durchprobieren - fliegen wieder raus
-item.fynn:haltung_a=Probe A - andersherum geneigt
-item.fynn:haltung_a.name=Probe A - andersherum geneigt
-item.fynn:haltung_b=Probe B - gerade hoch
-item.fynn:haltung_b.name=Probe B - gerade hoch
-item.fynn:haltung_c=Probe C - flach gekippt
-item.fynn:haltung_c.name=Probe C - flach gekippt
-item.fynn:haltung_d=Probe D - halb gekippt
-item.fynn:haltung_d.name=Probe D - halb gekippt
-
 ## Das Eisenschwert traegt unser Modell - also auch unseren Namen.
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 1.38
+item.iron_sword.name=Stahlschwert 1.39
