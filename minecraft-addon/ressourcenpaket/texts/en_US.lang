@@ -32,3 +32,9 @@ item.fynn:haltung_c=Probe C - flach gekippt
 item.fynn:haltung_c.name=Probe C - flach gekippt
 item.fynn:haltung_d=Probe D - halb gekippt
 item.fynn:haltung_d.name=Probe D - halb gekippt
+
+## Das Eisenschwert traegt unser Modell - also auch unseren Namen.
+## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
+## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
+## Auslieferung zuverlaessig laeuft.
+item.iron_sword.name=Stahlschwert 1.37

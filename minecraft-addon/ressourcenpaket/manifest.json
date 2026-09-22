@@ -1,12 +1,12 @@
 {
   "format_version": 2,
   "header": {
-    "name": "Sternenpaket 1.36 (Aussehen)",
-    "description": "Fassung 1.36 - Bilder, Modelle und Namen.",
+    "name": "Sternenpaket 1.37 (Aussehen)",
+    "description": "Fassung 1.37 - Bilder, Modelle und Namen.",
     "uuid": "a5cf296d-b7bd-4369-bd62-f0fa568672ce",
     "version": [
       1,
-      36,
+      37,
       0
     ],
     "min_engine_version": [
@@ -22,7 +22,7 @@
       "uuid": "54d5b655-a9d3-468e-b56f-5dbfd74ec91e",
       "version": [
         1,
-        36,
+        37,
         0
       ]
     }
@@ -32,7 +32,7 @@
       "uuid": "d43b628f-9e0f-4620-8d54-792132677dc8",
       "version": [
         1,
-        36,
+        37,
         0
       ]
     }

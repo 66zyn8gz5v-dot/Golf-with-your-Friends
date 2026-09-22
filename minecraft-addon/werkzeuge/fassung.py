@@ -40,6 +40,18 @@ def setze(gross, klein):
         daten["header"]["name"] = f"Sternenpaket {gross}.{klein} ({teil})"
         daten["header"]["description"] = f"Fassung {gross}.{klein} - {satz}"
         pfad.write_text(json.dumps(daten, indent=2) + "\n", encoding="utf-8")
+
+    # Der Name des Stahlschwerts traegt die Nummer mit. Sie ist das
+    # Messgeraet fuer die Auslieferung: Was in der Hand steht, ist der
+    # Stand, der wirklich im Spiel liegt.
+    for sprache in ("de_DE", "en_US"):
+        pfad = WURZEL / "ressourcenpaket" / "texts" / f"{sprache}.lang"
+        text = pfad.read_text(encoding="utf-8")
+        neu_text = re.sub(r"(item\.iron_sword\.name=Stahlschwert )[\d.]+",
+                          rf"\g<1>{gross}.{klein}", text)
+        if neu_text != text:
+            pfad.write_text(neu_text, encoding="utf-8")
+
     print(f"Fassung {gross}.{klein}")
 
 
