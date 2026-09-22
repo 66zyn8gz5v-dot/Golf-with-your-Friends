@@ -49,6 +49,8 @@ def setze(gross, klein):
         text = pfad.read_text(encoding="utf-8")
         neu_text = re.sub(r"(item\.iron_sword\.name=Stahlschwert )[\d.]+",
                           rf"\g<1>{gross}.{klein}", text)
+        neu_text = re.sub(r"(item\.fynn:degen(?:\.name)?=Degen )[\d.]+",
+                          rf"\g<1>{gross}.{klein}", neu_text)
         if neu_text != text:
             pfad.write_text(neu_text, encoding="utf-8")
 
