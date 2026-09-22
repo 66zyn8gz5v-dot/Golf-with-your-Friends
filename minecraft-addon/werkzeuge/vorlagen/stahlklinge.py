@@ -90,6 +90,7 @@ KARTE = [
     "........mkkm........",
     "........nmmn........",
     "........nmmn........",
+    "........nmmn........",
     # Knauf: eine Kugel von oben beleuchtet. Vorher waren die beiden
     # obersten Zeilen auf voller Breite hell - das las sich als
     # weisser Klotz unter dem Griff, nicht als Knauf.
