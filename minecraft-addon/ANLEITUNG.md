@@ -45,12 +45,35 @@ Gebraucht wird der innere (der Kurzbefehl nimmt stattdessen den Unterpfad, siehe
 
 Beim Verschieben **Ersetzen** waehlen, nicht „beide behalten". Die leeren Huellen danach loeschen.
 
-## Der Notweg: die .mcaddon
+## Der Notweg: die .mcaddon zum Antippen
 
-`Sternenpaket-<Fassung>.mcaddon` laesst sich antippen und importieren. Das geht nur einmal:
-Beim zweiten Mal sagt Minecraft „Duplikatpaket gefunden" und lehnt ab. Dann muss das alte Paket
-erst unter Einstellungen › Speicher geloescht werden. Deshalb ist das der Notweg und nicht der
-Regelweg.
+Wenn der Kurzbefehl klemmt, geht es auch ohne ihn. Diese Adresse laedt das ganze Add-on als eine
+Datei, und ein Tipp darauf uebergibt sie an Minecraft:
+
+<https://github.com/66zyn8gz5v-dot/Golf-with-your-Friends/raw/claude/minecraft-mod-bedrock-y7faxg/minecraft-addon/auslieferung/Sternenpaket.mcaddon>
+
+Die Adresse bleibt immer dieselbe, auch wenn die Fassung sich aendert - deshalb steht keine Nummer
+im Dateinamen.
+
+Der Haken: Minecraft kann „Duplikatpaket gefunden" melden und ablehnen, wenn dasselbe Paket schon
+im Speicher liegt. Dann erst unter Einstellungen › Speicher › Ressourcenpakete das alte loeschen.
+Deshalb ist das der Notweg und nicht der Regelweg.
+
+## Woran man sieht, welche Fassung wirklich im Spiel ist
+
+Die Fassungsnummer steht im **Namen** des Pakets, nicht nur in der Beschreibung darunter. In der
+Paketliste der Welt - Einstellungen › Ressourcenpakete - steht also zum Beispiel „Sternenpaket
+1.34 (Aussehen)". Was dort steht, ist die Wahrheit; was im Entwicklungsordner liegt, muss nicht
+dasselbe sein.
+
+Zwei Fallen, die sich so aufdecken lassen:
+
+* **Das Paket steht doppelt in der Liste.** Dann ist eines davon aus einer `.mcaddon` importiert
+  und liegt im normalen Paketordner, das andere kommt aus dem Entwicklungsordner. Die Welt benutzt
+  nur eines - und wenn das das importierte ist, aendert der Kurzbefehl nichts. Das importierte
+  unter Einstellungen › Speicher loeschen.
+* **Die Nummer ist eine alte.** Dann ist der Kurzbefehl nicht durchgelaufen oder hat neben den
+  alten Ordner einen zweiten mit „2" im Namen gelegt, statt zu ersetzen.
 
 ## Was sich wann aendert
 

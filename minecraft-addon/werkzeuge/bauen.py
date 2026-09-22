@@ -98,6 +98,16 @@ def main():
     groesse = ZIEL.stat().st_size
     print(f"\nGepackt: {ZIEL.name} ({anzahl} Dateien, {groesse} Bytes)")
 
+    # Dieselbe Datei noch einmal nach auslieferung/, unter einem Namen ohne
+    # Fassungsnummer. Sie ist der Notweg, wenn der Kurzbefehl klemmt: Ein
+    # Tipp auf die Adresse auf GitHub, und Minecraft importiert sie selbst.
+    # Ohne Nummer im Namen bleibt die Adresse immer dieselbe - eine Adresse,
+    # die sich mit jeder Fassung aendert, ist keine, die man sich merkt.
+    notweg = WURZEL / "auslieferung" / "Sternenpaket.mcaddon"
+    notweg.parent.mkdir(exist_ok=True)
+    notweg.write_bytes(ZIEL.read_bytes())
+    print(f"Notweg zum Antippen: {notweg.name}")
+
     for name, paket in ENTWICKLUNG.items():
         packe_entwicklung(name, paket)
     return 0

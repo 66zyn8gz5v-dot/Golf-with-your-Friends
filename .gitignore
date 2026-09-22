@@ -13,3 +13,5 @@ __pycache__/
 # abrufbar sein.
 minecraft-addon/*.mcaddon
 minecraft-addon/*.zip
+# Der Notweg gehoert dagegen dazu - er muss zum Antippen abrufbar sein.
+!minecraft-addon/auslieferung/Sternenpaket.mcaddon
