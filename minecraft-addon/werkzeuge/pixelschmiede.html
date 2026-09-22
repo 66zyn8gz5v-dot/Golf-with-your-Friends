@@ -3489,7 +3489,7 @@
   // --- Sichern ---------------------------------------------------------
   // Der Speicher des Browsers kann fehlen oder voll sein, und er gehoert
   // nur zu diesem Geraet. Deshalb darf nichts davon abhaengen: geht es
-  // schief, faengt man eben mit dem Sternenstaub an.
+  // schief, faengt man eben mit einem leeren Feld an.
   var SCHLUESSEL = "pixelschmiede.stand";
   var bereit = false;
 
@@ -3548,10 +3548,22 @@
   sammlungZeigen();
   rasterAufbauen();
   paletteAufbauen();
-  karteUebernehmen(stand && stand.bild ? stand.bild.slice() : VORLAGEN.sternenstaub.slice());
+  // Was zuletzt gemalt wurde, sonst ein leeres Feld. Frueher stand hier
+  // der Sternenstaub: Beim Aufmachen lag also jedesmal fremdes Zeug im
+  // Malfeld, das erst weggeraeumt werden musste. Die Vorlage ist nicht
+  // weg, sie liegt in der Sammlung - wer sie will, holt sie sich dort.
+  karteUebernehmen(stand && stand.bild ? stand.bild.slice() : leereKarte(16, 16));
   bereit = true;
   if (stand && stand.bild) {
     meldung("Dein letzter Stand ist wieder da.");
   }
+
+  // Sicherheitshalber noch einmal sichern, wenn die Seite in den
+  // Hintergrund geht. Auf dem Tablet wird eine Seite eingefroren statt
+  // geschlossen - "unload" kommt dort nie, "pagehide" schon.
+  window.addEventListener("pagehide", sichern);
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "hidden") sichern();
+  });
 })();
 </script>
