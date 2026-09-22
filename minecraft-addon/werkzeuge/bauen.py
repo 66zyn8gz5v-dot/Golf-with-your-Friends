@@ -115,6 +115,26 @@ def main():
     notweg.parent.mkdir(exist_ok=True)
     notweg.write_bytes(ZIEL.read_bytes())
     print(f"Notweg zum Antippen: {notweg.name}")
+
+    # Dieselbe Datei noch einmal, mit der Nummer im Namen. Am 22. September
+    # kam eine Auslieferung zweimal nicht an, und beide Male lag es am
+    # gleichbleibenden Namen: Erst gab das iPad die gemerkte Datei zur
+    # gemerkten Adresse heraus, dann lagen mehrere "Sternenpaket.mcaddon",
+    # "Sternenpaket-2.mcaddon", "Sternenpaket-3.mcaddon" im Download-Ordner
+    # und es war Glueckssache, welche angetippt wurde.
+    #
+    # Mit der Nummer im Namen ist beides erledigt: neue Adresse, neuer
+    # Dateiname, und auf dem iPad ist auf einen Blick zu sehen, was man
+    # geladen hat. Die namenlose Datei bleibt daneben fuer den Kurzbefehl,
+    # der auf eine feste Adresse zeigt.
+    #
+    # Die vorige nummerierte Datei fliegt raus, sonst sammeln sich hier
+    # sechzig Fassungen an.
+    for alte in notweg.parent.glob("Sternenpaket-*.mcaddon"):
+        alte.unlink()
+    mit_nummer = notweg.parent / f"Sternenpaket-{fassung()}.mcaddon"
+    mit_nummer.write_bytes(notweg.read_bytes())
+    print(f"Mit Nummer im Namen: {mit_nummer.name}")
     # Die Adresse mit Anhaengsel, und zwar bei jedem Bau neu ausgerechnet.
     # Am 22. September blieb eine Auslieferung haengen, obwohl auf GitHub
     # der neue Stand lag: Das iPad merkt sich, was hinter einer Adresse
@@ -122,8 +142,8 @@ def main():
     # eigenen Gedaechtnis heraus, ohne nachzufragen. Die Adresse ist ja
     # dieselbe geblieben. Ein Anhaengsel mit der Fassungsnummer macht
     # daraus fuer das iPad eine fremde Adresse - und die holt es.
-    print(f"Adresse fuer den Bericht (mit Anhaengsel gegen das Gedaechtnis "
-          f"des iPads):\n  {ADRESSE_NOTWEG}?v={fassung().replace('.', '')}")
+    adresse = ADRESSE_NOTWEG.replace("Sternenpaket.mcaddon", mit_nummer.name)
+    print(f"Adresse fuer den Bericht:\n  {adresse}")
 
     for name, paket in ENTWICKLUNG.items():
         packe_entwicklung(name, paket)
