@@ -21,7 +21,7 @@ Drei Regeln haben aufgeraeumt:
   Wicklung zwei Baender, der Knauf drei Stufen.
 """
 
-FARBEN = {'a': (163, 167, 173, 255), 'b': (237, 238, 240, 255), 'c': (192, 195, 199, 255), 'd': (131, 136, 144, 255), 'e': (214, 216, 219, 255), 'f': (102, 107, 115, 255), 'g': (85, 90, 97, 255), 'h': (62, 66, 55, 255), 'i': (122, 128, 136, 255), 'j': (52, 54, 45, 255), 'k': (164, 106, 81, 255), 'n': (117, 82, 68, 255), '.': (0, 0, 0, 0)}
+FARBEN = {'a': (163, 167, 173, 255), 'b': (237, 238, 240, 255), 'c': (192, 195, 199, 255), 'd': (131, 136, 144, 255), 'e': (214, 216, 219, 255), 'f': (102, 107, 115, 255), 'g': (85, 90, 97, 255), 'i': (122, 128, 136, 255), 'k': (164, 106, 81, 255), 'm': (147, 97, 76, 255), 'n': (117, 82, 68, 255), '.': (0, 0, 0, 0)}
 
 KARTE = [
     # Spitze
@@ -74,23 +74,27 @@ KARTE = [
     "eecccccaiiiiacccccee",
     "ccaaaaaaiiiiaaaaaacc",
     "...aaggggggggggaa...",
-    # Wicklung: zwei Zeilen dunkel, zwei Zeilen Leder, immer abwechselnd
-    "........jhhj........",
-    "........jhhj........",
-    "........nkkn........",
-    "........nkkn........",
-    "........jhhj........",
-    "........jhhj........",
-    "........nkkn........",
-    "........nkkn........",
-    "........jhhj........",
-    "........jhhj........",
-    "........nkkn........",
-    "........nkkn........",
-    # Knauf
-    "........cbbc........",
-    "........acca........",
-    ".......iaccai.......",
+    # Wicklung: dunkles Leder, alle vier Zeilen eine helle Naht.
+    # Die unterste Zeile bleibt dunkel - sonst stiesse das Leder
+    # direkt auf den hellen Knauf, und das sticht.
+    "........nmmn........",
+    "........nmmn........",
+    "........mkkm........",
+    "........nmmn........",
+    "........nmmn........",
+    "........nmmn........",
+    "........mkkm........",
+    "........nmmn........",
+    "........nmmn........",
+    "........nmmn........",
+    "........mkkm........",
+    "........nmmn........",
+    # Knauf: eine Kugel von oben beleuchtet. Vorher waren die beiden
+    # obersten Zeilen auf voller Breite hell - das las sich als
+    # weisser Klotz unter dem Griff, nicht als Knauf.
+    "........ibbi........",
+    "........icci........",
+    ".......iaaaai.......",
     "........iggi........",
     ".........gg.........",
 ]
