@@ -19,6 +19,9 @@
     },
     "silbernugget": {
       "textures": "textures/items/silbernugget"
+    },
+    "degen": {
+      "textures": "textures/items/degen"
     }
   }
 }

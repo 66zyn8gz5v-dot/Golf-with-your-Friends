@@ -27,4 +27,8 @@ item.fynn:eisenklinge.name=Iron Blade
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 1.40
+item.iron_sword.name=Stahlschwert 1.41
+
+## Die Stichwaffe
+item.fynn:degen=Degen
+item.fynn:degen.name=Degen

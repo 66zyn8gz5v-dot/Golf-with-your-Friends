@@ -1,0 +1,23 @@
+{
+  "format_version": "1.10.0",
+  "animations": {
+    "animation.degen.halten": {
+      "loop": true,
+      "bones": {
+        "waffe": {
+          "position": [
+            "-3.5 - 5.0 * math.sin(v.attack_time * 180)",
+            "-3.5 - 5.0 * math.sin(v.attack_time * 180)",
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -135.0
+          ],
+          "scale": 0.28
+        }
+      }
+    }
+  }
+}
