@@ -40,17 +40,91 @@
           "render_method": "opaque"
         }
       },
+      "minecraft:collision_box": {
+        "origin": [
+          -8,
+          0,
+          -8
+        ],
+        "size": [
+          16,
+          16,
+          16
+        ]
+      },
+      "minecraft:selection_box": {
+        "origin": [
+          -8,
+          0,
+          -8
+        ],
+        "size": [
+          16,
+          16,
+          16
+        ]
+      },
       "minecraft:destructible_by_mining": {
-        "seconds_to_destroy": 3.5
+        "seconds_to_destroy": 3.5,
+        "item_specific_speeds": [
+          {
+            "item": "minecraft:wooden_pickaxe",
+            "destroy_speed": 1.15
+          },
+          {
+            "item": "minecraft:stone_pickaxe",
+            "destroy_speed": 0.6
+          },
+          {
+            "item": "minecraft:iron_pickaxe",
+            "destroy_speed": 0.4
+          },
+          {
+            "item": "minecraft:golden_pickaxe",
+            "destroy_speed": 0.2
+          },
+          {
+            "item": "minecraft:diamond_pickaxe",
+            "destroy_speed": 0.3
+          },
+          {
+            "item": "minecraft:netherite_pickaxe",
+            "destroy_speed": 0.25
+          }
+        ]
       },
       "minecraft:destructible_by_explosion": {
         "explosion_resistance": 6.0
       },
+      "minecraft:light_dampening": 15,
       "minecraft:map_color": "#4A4A4A"
     },
     "permutations": [
       {
-        "condition": "q.block_state('fynn:brennt')",
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'north' && !q.block_state('fynn:brennt')",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "feuerkasten_seite",
+              "render_method": "opaque"
+            },
+            "north": {
+              "texture": "feuerkasten_vorn",
+              "render_method": "opaque"
+            },
+            "up": {
+              "texture": "feuerkasten_oben",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "feuerkasten_unten",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'north' && q.block_state('fynn:brennt')",
         "components": {
           "minecraft:material_instances": {
             "*": {
@@ -74,51 +148,144 @@
         }
       },
       {
-        "condition": "q.block_state('minecraft:cardinal_direction') == 'north'",
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'east' && !q.block_state('fynn:brennt')",
         "components": {
-          "minecraft:transformation": {
-            "rotation": [
-              0,
-              0,
-              0
-            ]
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "feuerkasten_seite",
+              "render_method": "opaque"
+            },
+            "east": {
+              "texture": "feuerkasten_vorn",
+              "render_method": "opaque"
+            },
+            "up": {
+              "texture": "feuerkasten_oben",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "feuerkasten_unten",
+              "render_method": "opaque"
+            }
           }
         }
       },
       {
-        "condition": "q.block_state('minecraft:cardinal_direction') == 'east'",
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'east' && q.block_state('fynn:brennt')",
         "components": {
-          "minecraft:transformation": {
-            "rotation": [
-              0,
-              270,
-              0
-            ]
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "feuerkasten_seite",
+              "render_method": "opaque"
+            },
+            "east": {
+              "texture": "feuerkasten_vorn_an",
+              "render_method": "opaque"
+            },
+            "up": {
+              "texture": "feuerkasten_oben_an",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "feuerkasten_unten",
+              "render_method": "opaque"
+            }
+          },
+          "minecraft:light_emission": 13
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'south' && !q.block_state('fynn:brennt')",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "feuerkasten_seite",
+              "render_method": "opaque"
+            },
+            "south": {
+              "texture": "feuerkasten_vorn",
+              "render_method": "opaque"
+            },
+            "up": {
+              "texture": "feuerkasten_oben",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "feuerkasten_unten",
+              "render_method": "opaque"
+            }
           }
         }
       },
       {
-        "condition": "q.block_state('minecraft:cardinal_direction') == 'south'",
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'south' && q.block_state('fynn:brennt')",
         "components": {
-          "minecraft:transformation": {
-            "rotation": [
-              0,
-              180,
-              0
-            ]
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "feuerkasten_seite",
+              "render_method": "opaque"
+            },
+            "south": {
+              "texture": "feuerkasten_vorn_an",
+              "render_method": "opaque"
+            },
+            "up": {
+              "texture": "feuerkasten_oben_an",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "feuerkasten_unten",
+              "render_method": "opaque"
+            }
+          },
+          "minecraft:light_emission": 13
+        }
+      },
+      {
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'west' && !q.block_state('fynn:brennt')",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "feuerkasten_seite",
+              "render_method": "opaque"
+            },
+            "west": {
+              "texture": "feuerkasten_vorn",
+              "render_method": "opaque"
+            },
+            "up": {
+              "texture": "feuerkasten_oben",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "feuerkasten_unten",
+              "render_method": "opaque"
+            }
           }
         }
       },
       {
-        "condition": "q.block_state('minecraft:cardinal_direction') == 'west'",
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'west' && q.block_state('fynn:brennt')",
         "components": {
-          "minecraft:transformation": {
-            "rotation": [
-              0,
-              90,
-              0
-            ]
-          }
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "feuerkasten_seite",
+              "render_method": "opaque"
+            },
+            "west": {
+              "texture": "feuerkasten_vorn_an",
+              "render_method": "opaque"
+            },
+            "up": {
+              "texture": "feuerkasten_oben_an",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "feuerkasten_unten",
+              "render_method": "opaque"
+            }
+          },
+          "minecraft:light_emission": 13
         }
       }
     ]

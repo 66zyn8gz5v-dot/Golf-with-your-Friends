@@ -240,6 +240,19 @@ def pruefe_bloecke(sprachen, kennungen):
             if bild not in bekannte_bilder:
                 fehler.append(f"{datei.name}: Bild '{bild}' steht nicht in terrain_texture.json.")
 
+        # Auch in den Permutationen nachsehen. Bei den Oefen steht dort
+        # fast jede Textur - sie wechseln je nach Blickrichtung und
+        # Brennzustand. Ein Tippfehler waere hier bisher durchgerutscht
+        # und haette im Spiel eine schwarz-violette Seite ergeben.
+        for nr, perm in enumerate(block.get("permutations", []), 1):
+            for seite, angabe in perm.get("components", {}) \
+                    .get("minecraft:material_instances", {}).items():
+                bild = angabe.get("texture")
+                if bild not in bekannte_bilder:
+                    fehler.append(
+                        f"{datei.name}, Permutation {nr} ({perm.get('condition','')}): "
+                        f"Bild '{bild}' steht nicht in terrain_texture.json.")
+
         beute = bauteile.get("minecraft:loot")
         if beute:
             pfad = VERHALTEN / beute
