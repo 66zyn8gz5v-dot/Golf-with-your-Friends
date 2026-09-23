@@ -8,34 +8,34 @@
         "body": {
           "rotation": [
             0.0,
-            "40.0 * variable.degen_stellung",
+            "(40.0 - 25.0 * variable.degen_stoss) * variable.degen_stellung",
             0.0
           ]
         },
         "rightarm": {
           "rotation": [
-            "(-75.0 - this) * variable.degen_stellung",
-            "(-25.0 - this) * variable.degen_stellung",
+            "(-75.0 + -25.0 * variable.degen_stoss - this) * variable.degen_stellung",
+            "(-25.0 + 20.0 * variable.degen_stoss - this) * variable.degen_stellung",
             0.0
           ]
         },
         "leftarm": {
           "rotation": [
-            "(25.0 - this) * variable.degen_stellung",
+            "(25.0 + 20.0 * variable.degen_stoss - this) * variable.degen_stellung",
             0.0,
-            "(-35.0 - this) * variable.degen_stellung"
+            "(-35.0 + -20.0 * variable.degen_stoss - this) * variable.degen_stellung"
           ]
         },
         "rightleg": {
           "rotation": [
-            "(-35.0 - this) * variable.degen_stellung",
+            "(-35.0 + -20.0 * variable.degen_stoss - this) * variable.degen_stellung",
             0.0,
             0.0
           ]
         },
         "leftleg": {
           "rotation": [
-            "(20.0 - this) * variable.degen_stellung",
+            "(20.0 + 15.0 * variable.degen_stoss - this) * variable.degen_stellung",
             0.0,
             0.0
           ]
