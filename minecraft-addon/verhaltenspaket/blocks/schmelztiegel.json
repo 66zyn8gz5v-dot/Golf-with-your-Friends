@@ -24,7 +24,19 @@
       "minecraft:geometry": "minecraft:geometry.full_block",
       "minecraft:material_instances": {
         "*": {
-          "texture": "tiegel",
+          "texture": "tiegel_seite",
+          "render_method": "opaque"
+        },
+        "north": {
+          "texture": "tiegel_vorn",
+          "render_method": "opaque"
+        },
+        "up": {
+          "texture": "tiegel_oben",
+          "render_method": "opaque"
+        },
+        "down": {
+          "texture": "tiegel_unten",
           "render_method": "opaque"
         }
       },
@@ -42,7 +54,19 @@
         "components": {
           "minecraft:material_instances": {
             "*": {
-              "texture": "tiegel_an",
+              "texture": "tiegel_seite",
+              "render_method": "opaque"
+            },
+            "north": {
+              "texture": "tiegel_vorn_an",
+              "render_method": "opaque"
+            },
+            "up": {
+              "texture": "tiegel_oben",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "tiegel_unten_an",
               "render_method": "opaque"
             }
           },
