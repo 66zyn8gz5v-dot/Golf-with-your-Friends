@@ -42,14 +42,14 @@
         },
         "rightitem": {
           "rotation": [
-            "90.0 * math.max(variable.degen_stellung, variable.degen_stoss)",
+            "55.0 * math.max(variable.degen_stellung, variable.degen_stoss)",
             0.0,
             0.0
           ],
           "position": [
             0.0,
             0.0,
-            "-8.0 * math.max(variable.degen_stellung, variable.degen_stoss)"
+            "-6.6 * math.max(variable.degen_stellung, variable.degen_stoss)"
           ]
         }
       }
