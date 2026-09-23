@@ -22,6 +22,9 @@
     "feuerkasten_seite": {
       "textures": "textures/blocks/feuerkasten_seite"
     },
+    "feuerkasten_unten": {
+      "textures": "textures/blocks/feuerkasten_unten"
+    },
     "tiegel": {
       "textures": "textures/blocks/tiegel"
     },

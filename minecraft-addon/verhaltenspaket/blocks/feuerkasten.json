@@ -34,6 +34,10 @@
         "up": {
           "texture": "feuerkasten_oben",
           "render_method": "opaque"
+        },
+        "down": {
+          "texture": "feuerkasten_unten",
+          "render_method": "opaque"
         }
       },
       "minecraft:destructible_by_mining": {
@@ -59,6 +63,10 @@
             },
             "up": {
               "texture": "feuerkasten_oben_an",
+              "render_method": "opaque"
+            },
+            "down": {
+              "texture": "feuerkasten_unten",
               "render_method": "opaque"
             }
           },
