@@ -27,7 +27,7 @@
           "texture": "feuerkasten_seite",
           "render_method": "opaque"
         },
-        "north": {
+        "south": {
           "texture": "feuerkasten_vorn",
           "render_method": "opaque"
         },
@@ -108,7 +108,7 @@
               "texture": "feuerkasten_seite",
               "render_method": "opaque"
             },
-            "north": {
+            "south": {
               "texture": "feuerkasten_vorn",
               "render_method": "opaque"
             },
@@ -131,7 +131,7 @@
               "texture": "feuerkasten_seite",
               "render_method": "opaque"
             },
-            "north": {
+            "south": {
               "texture": "feuerkasten_vorn_an",
               "render_method": "opaque"
             },
@@ -155,7 +155,7 @@
               "texture": "feuerkasten_seite",
               "render_method": "opaque"
             },
-            "east": {
+            "west": {
               "texture": "feuerkasten_vorn",
               "render_method": "opaque"
             },
@@ -178,7 +178,7 @@
               "texture": "feuerkasten_seite",
               "render_method": "opaque"
             },
-            "east": {
+            "west": {
               "texture": "feuerkasten_vorn_an",
               "render_method": "opaque"
             },
@@ -202,7 +202,7 @@
               "texture": "feuerkasten_seite",
               "render_method": "opaque"
             },
-            "south": {
+            "north": {
               "texture": "feuerkasten_vorn",
               "render_method": "opaque"
             },
@@ -225,7 +225,7 @@
               "texture": "feuerkasten_seite",
               "render_method": "opaque"
             },
-            "south": {
+            "north": {
               "texture": "feuerkasten_vorn_an",
               "render_method": "opaque"
             },
@@ -249,7 +249,7 @@
               "texture": "feuerkasten_seite",
               "render_method": "opaque"
             },
-            "west": {
+            "east": {
               "texture": "feuerkasten_vorn",
               "render_method": "opaque"
             },
@@ -272,7 +272,7 @@
               "texture": "feuerkasten_seite",
               "render_method": "opaque"
             },
-            "west": {
+            "east": {
               "texture": "feuerkasten_vorn_an",
               "render_method": "opaque"
             },

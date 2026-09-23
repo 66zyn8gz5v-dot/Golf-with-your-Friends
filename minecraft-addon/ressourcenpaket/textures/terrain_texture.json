@@ -45,18 +45,6 @@
     },
     "tiegel_seite": {
       "textures": "textures/blocks/tiegel_seite"
-    },
-    "probe_a": {
-      "textures": "textures/blocks/probe_a"
-    },
-    "probe_b": {
-      "textures": "textures/blocks/probe_b"
-    },
-    "probe_c": {
-      "textures": "textures/blocks/probe_c"
-    },
-    "probe_d": {
-      "textures": "textures/blocks/probe_d"
     }
   }
 }
