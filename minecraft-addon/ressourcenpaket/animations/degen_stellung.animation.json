@@ -15,7 +15,7 @@
         "rightarm": {
           "rotation": [
             "(-75.0 - this) * variable.degen_stellung",
-            "(-25.0 - this) * variable.degen_stellung",
+            "(155.0 - this) * variable.degen_stellung",
             0.0
           ]
         },
@@ -36,13 +36,6 @@
         "leftleg": {
           "rotation": [
             "(20.0 - this) * variable.degen_stellung",
-            0.0,
-            0.0
-          ]
-        },
-        "rightitem": {
-          "rotation": [
-            "variable.is_first_person ? 0.0 : 180.0 * variable.degen_stellung",
             0.0,
             0.0
           ]
