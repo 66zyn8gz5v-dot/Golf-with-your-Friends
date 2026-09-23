@@ -18,6 +18,10 @@ fynn:itemGroup.name.silber=Silber
 ## Bloecke
 tile.fynn:silbererz.name=Silbererz
 
+## Die Schmelze: unten befeuert, oben legiert
+tile.fynn:feuerkasten.name=Feuerkasten
+tile.fynn:schmelztiegel.name=Schmelztiegel
+
 ## Wesen
 entity.fynn:glimmerling.name=Glimmerling
 item.spawn_egg.entity.fynn:glimmerling.name=Glimmerling
@@ -30,8 +34,8 @@ item.fynn:eisenklinge.name=Eisenklinge
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 1.83
+item.iron_sword.name=Stahlschwert 1.84
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 1.83
-item.fynn:degen.name=Degen 1.83
+item.fynn:degen=Degen 1.84
+item.fynn:degen.name=Degen 1.84

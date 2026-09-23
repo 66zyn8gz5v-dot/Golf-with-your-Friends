@@ -178,3 +178,115 @@ function schlieren(spieler, blick) {
         console.warn(`Degen, Schlieren: ${fehler}`);
     }
 }
+
+// ---------------------------------------------------------------------
+// Die Schmelze: unten der Feuerkasten, oben der Tiegel.
+// ---------------------------------------------------------------------
+//
+// Der Feuerkasten nimmt Kohle und brennt eine Weile. Der Tiegel darueber
+// glueht mit, solange unter ihm gefeuert wird - er hat kein eigenes
+// Feuer, er bekommt die Hitze von unten. Genau so hat Fynn es beschrieben,
+// und genau so ist es auch gebaut: Der Tiegel fragt jeden Takt nach, was
+// unter ihm steht.
+//
+// Was noch fehlt: die Metalle und das Legieren selbst. Das kommt, sobald
+// entschieden ist, was womit was ergibt.
+
+const FEUERKASTEN = "fynn:feuerkasten";
+const TIEGEL = "fynn:schmelztiegel";
+
+// Wie lange ein Stueck Kohle traegt, in Ticks. Sechzig Sekunden - so
+// lange wie ein Ofen mit Holzkohle ungefaehr auch braucht.
+const BRENNDAUER = 1200;
+
+const BRENNSTOFF = ["minecraft:coal", "minecraft:charcoal", "minecraft:coal_block"];
+
+// Wo gerade gefeuert wird und bis wann. Der Schluessel ist der Ort als
+// Text, weil sich Orte nicht als Schluessel vergleichen lassen.
+const feuer = new Map();
+
+function ortAlsText(dimension, ort) {
+    return dimension.id + ":" + ort.x + "," + ort.y + "," + ort.z;
+}
+
+world.afterEvents.playerInteractWithBlock.subscribe((e) => {
+    try {
+        if (e.block?.typeId !== FEUERKASTEN) return;
+        const gehalten = e.beforeItemStack;
+        if (!gehalten || BRENNSTOFF.indexOf(gehalten.typeId) < 0) return;
+
+        const schluessel = ortAlsText(e.block.dimension, e.block.location);
+        if (feuer.has(schluessel)) return;   // brennt schon
+
+        // Ein Block Kohle haelt achtmal so lange wie ein Stueck.
+        const dauer = gehalten.typeId === "minecraft:coal_block"
+            ? BRENNDAUER * 8 : BRENNDAUER;
+        feuer.set(schluessel, {
+            bis: system.currentTick + dauer,
+            dimension: e.block.dimension,
+            ort: e.block.location,
+        });
+        anzuenden(e.block, true);
+        e.block.dimension.playSound("fire.ignite", e.block.location, { volume: 0.6 });
+
+        // Die Kohle wird verbraucht - im Ueberleben. Im Kreativmodus
+        // nimmt Minecraft ohnehin nichts weg.
+        const hand = e.player.getComponent("minecraft:equippable")
+            ?.getEquipmentSlot("Mainhand");
+        if (hand && e.player.getGameMode?.() !== "creative") {
+            if (gehalten.amount > 1) {
+                const rest = gehalten.clone();
+                rest.amount = gehalten.amount - 1;
+                hand.setItem(rest);
+            } else {
+                hand.setItem(undefined);
+            }
+        }
+    } catch (fehler) {
+        console.warn(`Feuerkasten: ${fehler}`);
+    }
+});
+
+function anzuenden(block, an) {
+    try {
+        block.setPermutation(block.permutation.withState("fynn:brennt", an));
+    } catch (fehler) {
+        console.warn(`Feuerkasten, Zustand: ${fehler}`);
+    }
+}
+
+// Einmal je Sekunde reicht: Feuer, das auf den Tick genau ausgeht, merkt
+// niemand, und zwanzigmal haeufiger nachsehen kostet nur Rechenzeit.
+system.runInterval(() => {
+    try {
+        for (const [schluessel, herd] of feuer) {
+            const block = herd.dimension.getBlock(herd.ort);
+            if (!block || block.typeId !== FEUERKASTEN) {
+                feuer.delete(schluessel);      // abgebaut
+                continue;
+            }
+            const brennt = system.currentTick < herd.bis;
+            if (!brennt) {
+                anzuenden(block, false);
+                gluehen(block, false);
+                feuer.delete(schluessel);
+                continue;
+            }
+            gluehen(block, true);
+        }
+    } catch (fehler) {
+        console.warn(`Feuerkasten, Runde: ${fehler}`);
+    }
+}, 20);
+
+/** Der Tiegel ueber dem Feuerkasten bekommt die Hitze von unten. */
+function gluehen(feuerkasten, an) {
+    try {
+        const oben = feuerkasten.above();
+        if (!oben || oben.typeId !== TIEGEL) return;
+        if (oben.permutation.getAllStates()["fynn:brennt"] === an) return;
+        oben.setPermutation(oben.permutation.withState("fynn:brennt", an));
+    } catch (fehler) {
+        console.warn(`Tiegel: ${fehler}`);
+    }
+}

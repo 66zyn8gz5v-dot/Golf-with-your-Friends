@@ -6,6 +6,27 @@
   "texture_data": {
     "silbererz": {
       "textures": "textures/blocks/silbererz"
+    },
+    "feuerkasten_vorn": {
+      "textures": "textures/blocks/feuerkasten_vorn"
+    },
+    "feuerkasten_vorn_an": {
+      "textures": "textures/blocks/feuerkasten_vorn_an"
+    },
+    "feuerkasten_oben": {
+      "textures": "textures/blocks/feuerkasten_oben"
+    },
+    "feuerkasten_oben_an": {
+      "textures": "textures/blocks/feuerkasten_oben_an"
+    },
+    "feuerkasten_seite": {
+      "textures": "textures/blocks/feuerkasten_seite"
+    },
+    "tiegel": {
+      "textures": "textures/blocks/tiegel"
+    },
+    "tiegel_an": {
+      "textures": "textures/blocks/tiegel_an"
     }
   }
 }
