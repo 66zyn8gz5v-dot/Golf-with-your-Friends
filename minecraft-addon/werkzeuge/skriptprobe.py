@@ -25,9 +25,11 @@ HIER = Path(__file__).resolve().parent / "probe"
 
 SERVER = '''
 export const gemerkt = { ereignisse: {}, takte: [], eigenschaften: new Map() };
+export const welten = new Map();
 export const world = {
   afterEvents: new Proxy({}, { get: (_, name) => ({
       subscribe: (f) => { (gemerkt.ereignisse[name] ||= []).push(f); } }) }),
+  getDimension: (id) => welten.get(id),
   getAllPlayers: () => [],
   getDynamicProperty: (k) => gemerkt.eigenschaften.get(k),
   setDynamicProperty: (k, v) => v === undefined
@@ -77,16 +79,20 @@ def main():
             (ziel / "index.js").write_text(quelle, encoding="utf-8")
         (platz / "package.json").write_text('{"type":"module"}', encoding="utf-8")
         shutil.copy(WURZEL / "verhaltenspaket" / "scripts" / "main.js", platz / "main.js")
-        shutil.copy(HIER / "durchspielen.mjs", platz / "durchspielen.mjs")
+        for probe in sorted(HIER.glob("*.mjs")):
+            shutil.copy(probe, platz / probe.name)
 
-        lauf = subprocess.run(["node", "durchspielen.mjs"], cwd=platz,
-                              capture_output=True, text=True)
-        print(lauf.stdout)
-        if lauf.returncode != 0:
-            print(lauf.stderr, file=sys.stderr)
-            print("Das Skript ist durchgefallen.")
-            raise SystemExit(1)
-        print("Durchgespielt, ohne Fehler.")
+        for probe in sorted(HIER.glob("*.mjs")):
+            print("=" * 60)
+            print("Probe:", probe.name)
+            lauf = subprocess.run(["node", probe.name], cwd=platz,
+                                  capture_output=True, text=True)
+            print(lauf.stdout)
+            if lauf.returncode != 0:
+                print(lauf.stderr, file=sys.stderr)
+                print("Das Skript ist durchgefallen:", probe.name)
+                raise SystemExit(1)
+        print("Alle Proben durchgespielt, ohne Fehler.")
 
 
 if __name__ == "__main__":

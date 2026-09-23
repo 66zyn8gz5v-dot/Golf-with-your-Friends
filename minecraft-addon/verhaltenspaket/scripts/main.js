@@ -350,11 +350,26 @@ function fensterZeigen(spieler, block, versuche = 10) {
     }).catch((fehler) => console.warn(`Feuerkasten, Fenster: ${fehler}`));
 }
 
+/**
+ * Hat der Block ein echtes Fach? Seit Regelfassung 1.26.20 kann ein
+ * eigener Block eines haben (minecraft:block_entity mit container), und
+ * Minecraft macht es beim Antippen von selbst auf - wie bei einer Kiste.
+ * Dann hat das Formular nichts mehr zu suchen.
+ */
+function fachVon(block) {
+    try {
+        return block.getComponent("minecraft:inventory")?.container;
+    } catch (fehler) {
+        return undefined;
+    }
+}
+
 world.afterEvents.playerInteractWithBlock.subscribe((e) => {
     try {
         if (e.block?.typeId !== FEUERKASTEN) return;
-        // Nicht sofort zeigen: Waehrend das Ereignis laeuft, nimmt
-        // Minecraft kein Formular an.
+        merkeOfen(e.block);
+        // Nur wenn kein Fach da ist, springt das Formular ein.
+        if (fachVon(e.block)) return;
         system.run(() => fensterZeigen(e.player, e.block));
     } catch (fehler) {
         console.warn(`Feuerkasten: ${fehler}`);
@@ -702,6 +717,8 @@ function tiegelZeigen(spieler, block, versuche = 10) {
 world.afterEvents.playerInteractWithBlock.subscribe((e) => {
     try {
         if (e.block?.typeId !== TIEGEL) return;
+        merkeOfen(e.block);
+        if (fachVon(e.block)) return;
         system.run(() => tiegelZeigen(e.player, e.block));
     } catch (fehler) {
         console.warn(`Tiegel: ${fehler}`);
@@ -733,3 +750,179 @@ world.afterEvents.playerBreakBlock.subscribe((e) => {
         console.warn(`Tiegel, Abbau: ${fehler}`);
     }
 });
+
+
+// ---------------------------------------------------------------------
+// Der Ofen mit echten Faechern.
+//
+// Seit Regelfassung 1.26.20 kann ein eigener Block ein Fach tragen, und
+// Minecraft macht es beim Antippen von selbst auf. Damit liegt die Kohle
+// im Feuerkasten und die Metalle im Tiegel - wie bei Mojangs Ofen, nur
+// auf zwei Bloecke verteilt.
+//
+// Ein Haken bleibt: Wird etwas ins Fach gelegt, sagt das niemand an. Es
+// gibt kein Ereignis dafuer. Also wird jede Sekunde nachgesehen - aber
+// nur bei den Oefen, von denen wir wissen. Die Liste steht in der Welt,
+// damit sie einen Neustart uebersteht.
+// ---------------------------------------------------------------------
+
+const OEFEN_LISTE = "oefen";
+
+function oefenLesen() {
+    try {
+        const roh = world.getDynamicProperty(OEFEN_LISTE);
+        return typeof roh === "string" ? JSON.parse(roh) : [];
+    } catch (fehler) {
+        return [];
+    }
+}
+
+function oefenSchreiben(liste) {
+    try {
+        world.setDynamicProperty(OEFEN_LISTE,
+            liste.length ? JSON.stringify(liste.slice(-200)) : undefined);
+    } catch (fehler) {
+        console.warn(`Oefen, Liste: ${fehler}`);
+    }
+}
+
+function merkeOfen(block) {
+    try {
+        const eintrag = { d: block.dimension.id, x: block.location.x,
+                          y: block.location.y, z: block.location.z };
+        const liste = oefenLesen();
+        if (liste.some((o) => o.d === eintrag.d && o.x === eintrag.x
+                           && o.y === eintrag.y && o.z === eintrag.z)) return;
+        liste.push(eintrag);
+        oefenSchreiben(liste);
+    } catch (fehler) {
+        console.warn(`Oefen, Merken: ${fehler}`);
+    }
+}
+
+world.afterEvents.playerPlaceBlock.subscribe((e) => {
+    try {
+        if (e.block?.typeId === FEUERKASTEN || e.block?.typeId === TIEGEL) {
+            merkeOfen(e.block);
+        }
+    } catch (fehler) {
+        console.warn(`Oefen, Setzen: ${fehler}`);
+    }
+});
+
+/** Ein Stueck aus einem Fach nehmen. */
+function ausFachNehmen(fach, platz) {
+    const stueck = fach.getItem(platz);
+    if (!stueck) return undefined;
+    if (stueck.amount > 1) {
+        const rest = stueck.clone();
+        rest.amount = stueck.amount - 1;
+        fach.setItem(platz, rest);
+    } else {
+        fach.setItem(platz, undefined);
+    }
+    return stueck.typeId;
+}
+
+/** Kohle im Fach? Dann anzuenden. */
+function feuerkastenTakt(block) {
+    const fach = fachVon(block);
+    if (!fach) return;
+    const schluessel = ortAlsText(block.dimension, block.location);
+    if (feuer.has(schluessel)) return;         // brennt schon
+    const stueck = fach.getItem(0);
+    if (!stueck || !SORTEN[stueck.typeId]) return;
+    const art = ausFachNehmen(fach, 0);
+    if (art) nachlegen(block, art);
+}
+
+/**
+ * Zwei Metalle im Fach, und es glueht? Dann schmelzen. Das Ergebnis
+ * kommt in dasselbe Fach zurueck, sobald Platz ist - so wie ein Ofen
+ * sein Ergebnis auch dort ablegt, wo man es holt.
+ */
+function tiegelTakt(block) {
+    const fach = fachVon(block);
+    if (!fach) return;
+    // Das letzte Fach gehoert dem Ergebnis, wie beim Ofen. Ohne eigenes
+    // Fach blieb der Tiegel stecken, sobald beide Zutatenfaecher belegt
+    // waren: Das Fertige hatte keinen Platz und wurde nie ausgegeben.
+    const ERGEBNIS = fach.size - 1;
+    const stand = tiegelStand(block);
+
+    if (stand.fertig) {
+        const drin = fach.getItem(ERGEBNIS);
+        if (!drin || drin.typeId === stand.fertig.art) {
+            const schon = drin ? drin.amount : 0;
+            const passt = Math.min(stand.fertig.anzahl, 64 - schon);
+            if (passt > 0) {
+                fach.setItem(ERGEBNIS, new ItemStack(stand.fertig.art, schon + passt));
+                stand.fertig.anzahl -= passt;
+                if (stand.fertig.anzahl <= 0) stand.fertig = null;
+                tiegelSchreiben(block, stand);
+            }
+        }
+        return;
+    }
+    if (stand.schmilzt) return;
+    if (!glueht(block)) return;
+
+    // Was liegt in den Faechern?
+    const drin = {};
+    const plaetze = {};
+    for (let platz = 0; platz < ERGEBNIS; platz++) {
+        const stueck = fach.getItem(platz);
+        if (!stueck || !nimmtAn(stueck.typeId)) continue;
+        drin[stueck.typeId] = (drin[stueck.typeId] ?? 0) + stueck.amount;
+        (plaetze[stueck.typeId] ??= []).push(platz);
+    }
+
+    for (const rezept of REZEPTE) {
+        const mal = wieOft(rezept, drin);
+        if (mal < 1) continue;
+        // Nur einen Durchgang je Takt - so sieht man dem Ofen beim
+        // Arbeiten zu, statt dass alles auf einen Schlag verschwindet.
+        for (const [art, menge] of Object.entries(rezept.zutaten)) {
+            let offen = menge;
+            for (const platz of plaetze[art]) {
+                while (offen > 0) {
+                    const weg = ausFachNehmen(fach, platz);
+                    if (!weg) break;
+                    offen--;
+                }
+                if (offen <= 0) break;
+            }
+        }
+        stand.schmilzt = {
+            art: rezept.ergibt,
+            anzahl: rezept.anzahl,
+            bis: system.currentTick + rezept.dauer,
+        };
+        tiegelSchreiben(block, stand);
+        block.dimension.playSound("random.fizz", block.location, { volume: 0.5 });
+        return;
+    }
+}
+
+system.runInterval(() => {
+    try {
+        const liste = oefenLesen();
+        const bleiben = [];
+        for (const o of liste) {
+            let block;
+            try {
+                block = world.getDimension(o.d).getBlock({ x: o.x, y: o.y, z: o.z });
+            } catch (fehler) {
+                bleiben.push(o);      // Teil der Welt nicht geladen - spaeter wieder
+                continue;
+            }
+            if (!block) { bleiben.push(o); continue; }
+            if (block.typeId === FEUERKASTEN) { bleiben.push(o); feuerkastenTakt(block); }
+            else if (block.typeId === TIEGEL) { bleiben.push(o); tiegelTakt(block); }
+            // Steht dort nichts von uns mehr, faellt der Eintrag weg.
+        }
+        if (bleiben.length !== liste.length) oefenSchreiben(bleiben);
+    } catch (fehler) {
+        console.warn(`Oefen, Runde: ${fehler}`);
+    }
+}, 20);
