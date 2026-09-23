@@ -35,8 +35,14 @@ item.fynn:eisenklinge.name=Eisenklinge
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 1.89
+item.iron_sword.name=Stahlschwert 1.90
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 1.89
-item.fynn:degen.name=Degen 1.89
+item.fynn:degen=Degen 1.90
+item.fynn:degen.name=Degen 1.90
+
+## Probestuecke fuer die Frage, warum sich nichts abbauen laesst
+tile.fynn:probe_a.name=Probe A  (Regelfassung 1.20.0)
+tile.fynn:probe_b.name=Probe B  (Regelfassung 1.21.0)
+tile.fynn:probe_c.name=Probe C  (Regelfassung 1.21.90)
+tile.fynn:probe_d.name=Probe D  (Regelfassung 1.26.30)
