@@ -22,6 +22,9 @@
     },
     "degen": {
       "textures": "textures/items/degen"
+    },
+    "elektrumbarren": {
+      "textures": "textures/items/elektrumbarren"
     }
   }
 }

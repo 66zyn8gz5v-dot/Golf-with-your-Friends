@@ -10,7 +10,7 @@
 // Sternenklinge und allem anderen. Deshalb faengt jeder Abschnitt seine
 // Fehler selbst ab.
 
-import { world, system } from "@minecraft/server";
+import { world, system, ItemStack } from "@minecraft/server";
 import { ActionFormData, FormCancelationReason } from "@minecraft/server-ui";
 
 const DEGEN = "fynn:degen";
@@ -404,3 +404,332 @@ function gluehen(feuerkasten, an) {
         console.warn(`Tiegel: ${fehler}`);
     }
 }
+
+
+// ---------------------------------------------------------------------
+// Der Tiegel: zwei Metalle hinein, eine Legierung heraus.
+//
+// Was drinliegt, steht in einer Welt-Eigenschaft je Ort. Eine Map im
+// Skript waere einfacher, aber sie waere beim naechsten Weltstart leer -
+// und ein Ofen, der ueber Nacht vergisst, was er haelt, frisst Barren.
+// ---------------------------------------------------------------------
+
+/** Wie viel von einer Sorte hineinpasst. */
+const FASST = 8;
+
+/**
+ * Die Rezepte. Was hier steht, bestimmt zugleich, welche Metalle der
+ * Tiegel ueberhaupt annimmt - er soll nichts schlucken, mit dem er
+ * nichts anfangen kann.
+ */
+const REZEPTE = [
+    {
+        name: "Elektrum",
+        zutaten: { "minecraft:gold_ingot": 1, "fynn:silberbarren": 1 },
+        ergibt: "fynn:elektrumbarren",
+        anzahl: 2,
+        dauer: 100,     // fuenf Sekunden
+    },
+];
+
+const METALLE = {
+    "minecraft:gold_ingot": { name: "Gold", bild: "textures/items/gold_ingot" },
+    "fynn:silberbarren": { name: "Silber", bild: "textures/items/silberbarren" },
+    "fynn:elektrumbarren": { name: "Elektrum", bild: "textures/items/elektrumbarren" },
+};
+
+function nimmtAn(art) {
+    return REZEPTE.some((r) => r.zutaten[art] !== undefined);
+}
+
+function metallName(art) {
+    return METALLE[art]?.name ?? art;
+}
+
+// --- Was im Tiegel liegt ---------------------------------------------
+
+function tiegelSchluessel(block) {
+    return "tiegel:" + ortAlsText(block.dimension, block.location);
+}
+
+const LEER = () => ({ metalle: {}, schmilzt: null, fertig: null });
+
+function tiegelLesen(block) {
+    try {
+        const roh = world.getDynamicProperty(tiegelSchluessel(block));
+        if (typeof roh !== "string") return LEER();
+        const stand = JSON.parse(roh);
+        return {
+            metalle: stand.metalle ?? {},
+            schmilzt: stand.schmilzt ?? null,
+            fertig: stand.fertig ?? null,
+        };
+    } catch (fehler) {
+        console.warn(`Tiegel, Lesen: ${fehler}`);
+        return LEER();
+    }
+}
+
+function tiegelSchreiben(block, stand) {
+    try {
+        const leer = Object.keys(stand.metalle).length === 0
+            && !stand.schmilzt && !stand.fertig;
+        world.setDynamicProperty(tiegelSchluessel(block),
+            leer ? undefined : JSON.stringify(stand));
+    } catch (fehler) {
+        console.warn(`Tiegel, Schreiben: ${fehler}`);
+    }
+}
+
+/**
+ * Den Stand holen und dabei nachziehen, was inzwischen fertig geworden
+ * ist. Der Zeitpunkt steht in der Eigenschaft, nicht in einem Timer -
+ * so wird auch abgerechnet, wenn die Welt zwischendurch zu war.
+ */
+function tiegelStand(block) {
+    const stand = tiegelLesen(block);
+    if (stand.schmilzt && system.currentTick >= stand.schmilzt.bis) {
+        stand.fertig = {
+            art: stand.schmilzt.art,
+            anzahl: (stand.fertig?.art === stand.schmilzt.art ? stand.fertig.anzahl : 0)
+                + stand.schmilzt.anzahl,
+        };
+        stand.schmilzt = null;
+        tiegelSchreiben(block, stand);
+    }
+    return stand;
+}
+
+function glueht(block) {
+    try {
+        return block.permutation.getState("fynn:brennt") === true;
+    } catch (fehler) {
+        return false;
+    }
+}
+
+// --- Rechnen ---------------------------------------------------------
+
+/** Wie oft ein Rezept aus dem laeuft, was drinliegt. */
+function wieOft(rezept, metalle) {
+    let mal = Infinity;
+    for (const [art, menge] of Object.entries(rezept.zutaten)) {
+        mal = Math.min(mal, Math.floor((metalle[art] ?? 0) / menge));
+    }
+    return Number.isFinite(mal) ? mal : 0;
+}
+
+function inventarGeben(spieler, art, anzahl) {
+    const kiste = spieler.getComponent("minecraft:inventory")?.container;
+    if (!kiste) return false;
+    let rest = anzahl;
+    while (rest > 0) {
+        const haufen = Math.min(rest, 64);
+        const stueck = new ItemStack(art, haufen);
+        // Passt nichts mehr hinein, faellt der Rest vor die Fuesse -
+        // besser als ihn verschwinden zu lassen.
+        const uebrig = kiste.addItem(stueck);
+        if (uebrig) {
+            spieler.dimension.spawnItem(uebrig, spieler.location);
+        }
+        rest -= haufen;
+    }
+    return true;
+}
+
+function metallAbziehen(spieler, art) {
+    if (spieler.getGameMode?.() === "creative") return true;
+    const kiste = spieler.getComponent("minecraft:inventory")?.container;
+    if (!kiste) return false;
+    for (let platz = 0; platz < kiste.size; platz++) {
+        const stueck = kiste.getItem(platz);
+        if (!stueck || stueck.typeId !== art) continue;
+        if (stueck.amount > 1) {
+            const rest = stueck.clone();
+            rest.amount = stueck.amount - 1;
+            kiste.setItem(platz, rest);
+        } else {
+            kiste.setItem(platz, undefined);
+        }
+        return true;
+    }
+    return false;
+}
+
+/** Was der Spieler an einlegbaren Metallen dabei hat. */
+function vorratAnMetall(spieler) {
+    const kiste = spieler.getComponent("minecraft:inventory")?.container;
+    const gefunden = new Map();
+    if (!kiste) return gefunden;
+    for (let platz = 0; platz < kiste.size; platz++) {
+        const stueck = kiste.getItem(platz);
+        if (!stueck || !nimmtAn(stueck.typeId)) continue;
+        gefunden.set(stueck.typeId, (gefunden.get(stueck.typeId) ?? 0) + stueck.amount);
+    }
+    return gefunden;
+}
+
+// --- Das Fenster am Tiegel -------------------------------------------
+
+function tiegelFenster(spieler, block) {
+    const stand = tiegelStand(block);
+    const heiss = glueht(block);
+    const fenster = new ActionFormData().title("Schmelztiegel");
+    const zeilen = [];
+    const knoepfe = [];   // was jeder Knopf tut, in derselben Reihenfolge
+
+    // Kopf: was drinliegt.
+    const drin = Object.entries(stand.metalle).filter(([, n]) => n > 0);
+    if (drin.length === 0) {
+        // "Leer" nur, wenn wirklich nichts los ist. Waehrend etwas
+        // schmilzt, sind die Zutaten zwar verbraucht - aber dann steht
+        // unten, was gerade passiert, und "leer" darueber verwirrt nur.
+        if (!stand.schmilzt && !stand.fertig) zeilen.push("§7Der Tiegel ist leer.");
+    } else {
+        zeilen.push("§fDrin liegen:");
+        for (const [art, anzahl] of drin) {
+            zeilen.push(`  §e${anzahl}§f × ${metallName(art)}`);
+        }
+    }
+    zeilen.push(heiss ? "§6Er glueht." : "§7Er ist kalt - unten muss Kohle brennen.");
+
+    if (stand.schmilzt) {
+        const noch = Math.max(0, Math.round((stand.schmilzt.bis - system.currentTick) / 20));
+        zeilen.push("");
+        zeilen.push(`§6Es schmilzt noch ${noch} Sekunden.`);
+    }
+
+    if (stand.fertig) {
+        zeilen.push("");
+        zeilen.push(`§aFertig: ${stand.fertig.anzahl} × ${metallName(stand.fertig.art)}`);
+        fenster.button(`Herausnehmen\n§7${stand.fertig.anzahl} × ${metallName(stand.fertig.art)}`,
+            METALLE[stand.fertig.art]?.bild);
+        knoepfe.push({ tun: "holen" });
+    }
+
+    // Einlegen - nur, wenn gerade nichts schmilzt.
+    if (!stand.schmilzt) {
+        for (const [art, dabei] of vorratAnMetall(spieler)) {
+            const schon = stand.metalle[art] ?? 0;
+            if (schon >= FASST) continue;
+            fenster.button(`${metallName(art)} einlegen\n§7dabei: ${dabei}, drin: ${schon}/${FASST}`,
+                METALLE[art]?.bild);
+            knoepfe.push({ tun: "einlegen", art });
+        }
+
+        for (const rezept of REZEPTE) {
+            const mal = wieOft(rezept, stand.metalle);
+            if (mal < 1) continue;
+            const braucht = Object.entries(rezept.zutaten)
+                .map(([a, m]) => `${m * mal} ${metallName(a)}`).join(" + ");
+            fenster.button(`${rezept.name} schmelzen\n§7${braucht} → ${rezept.anzahl * mal}`,
+                METALLE[rezept.ergibt]?.bild);
+            knoepfe.push({ tun: "schmelzen", rezept, mal });
+        }
+    }
+
+    if (drin.length > 0 && !stand.schmilzt) {
+        fenster.button("Alles zurueckholen");
+        knoepfe.push({ tun: "leeren" });
+    }
+    fenster.button("Zumachen");
+    knoepfe.push({ tun: "zu" });
+
+    fenster.body(zeilen.join("\n"));
+    return { fenster, knoepfe };
+}
+
+function tiegelZeigen(spieler, block, versuche = 10) {
+    const { fenster, knoepfe } = tiegelFenster(spieler, block);
+    fenster.show(spieler).then((antwort) => {
+        if (antwort.canceled) {
+            if (antwort.cancelationReason === FormCancelationReason.UserBusy && versuche > 0) {
+                system.runTimeout(() => tiegelZeigen(spieler, block, versuche - 1), 10);
+            }
+            return;
+        }
+        const wahl = knoepfe[antwort.selection];
+        if (!wahl || wahl.tun === "zu") return;
+
+        const jetzt = block.dimension.getBlock(block.location);
+        if (!jetzt || jetzt.typeId !== TIEGEL) return;
+        const stand = tiegelStand(jetzt);
+
+        if (wahl.tun === "holen" && stand.fertig) {
+            inventarGeben(spieler, stand.fertig.art, stand.fertig.anzahl);
+            stand.fertig = null;
+            tiegelSchreiben(jetzt, stand);
+
+        } else if (wahl.tun === "einlegen") {
+            const schon = stand.metalle[wahl.art] ?? 0;
+            if (schon < FASST && metallAbziehen(spieler, wahl.art)) {
+                stand.metalle[wahl.art] = schon + 1;
+                tiegelSchreiben(jetzt, stand);
+                jetzt.dimension.playSound("random.pop", jetzt.location, { volume: 0.5 });
+            }
+
+        } else if (wahl.tun === "leeren") {
+            for (const [art, anzahl] of Object.entries(stand.metalle)) {
+                if (anzahl > 0) inventarGeben(spieler, art, anzahl);
+            }
+            stand.metalle = {};
+            tiegelSchreiben(jetzt, stand);
+
+        } else if (wahl.tun === "schmelzen") {
+            if (!glueht(jetzt)) {
+                spieler.sendMessage("§cDer Tiegel ist kalt. Leg unten Kohle nach.");
+            } else {
+                const { rezept, mal } = wahl;
+                for (const [art, menge] of Object.entries(rezept.zutaten)) {
+                    stand.metalle[art] -= menge * mal;
+                    if (stand.metalle[art] <= 0) delete stand.metalle[art];
+                }
+                stand.schmilzt = {
+                    art: rezept.ergibt,
+                    anzahl: rezept.anzahl * mal,
+                    bis: system.currentTick + rezept.dauer,
+                };
+                tiegelSchreiben(jetzt, stand);
+                jetzt.dimension.playSound("random.fizz", jetzt.location, { volume: 0.7 });
+            }
+        }
+        // Wieder aufmachen: Einlegen macht man mehrfach, und nach dem
+        // Schmelzen will man sehen, wie lange es noch dauert.
+        system.runTimeout(() => tiegelZeigen(spieler, jetzt), 4);
+    }).catch((fehler) => console.warn(`Tiegel, Fenster: ${fehler}`));
+}
+
+world.afterEvents.playerInteractWithBlock.subscribe((e) => {
+    try {
+        if (e.block?.typeId !== TIEGEL) return;
+        system.run(() => tiegelZeigen(e.player, e.block));
+    } catch (fehler) {
+        console.warn(`Tiegel: ${fehler}`);
+    }
+});
+
+/**
+ * Wird der Tiegel abgebaut, faellt heraus, was drinliegt. Sonst waeren
+ * die Barren weg - und eine Eigenschaft bliebe als Muell in der Welt
+ * stehen, fuer einen Block, den es nicht mehr gibt.
+ */
+world.afterEvents.playerBreakBlock.subscribe((e) => {
+    try {
+        if (e.brokenBlockPermutation?.type?.id !== TIEGEL) return;
+        const block = e.block;
+        const stand = tiegelLesen(block);
+        const alles = { ...stand.metalle };
+        for (const teil of [stand.schmilzt, stand.fertig]) {
+            if (teil) alles[teil.art] = (alles[teil.art] ?? 0) + teil.anzahl;
+        }
+        for (const [art, anzahl] of Object.entries(alles)) {
+            for (let rest = anzahl; rest > 0; rest -= 64) {
+                e.dimension.spawnItem(new ItemStack(art, Math.min(rest, 64)),
+                    block.center ? block.center() : block.location);
+            }
+        }
+        world.setDynamicProperty(tiegelSchluessel(block), undefined);
+    } catch (fehler) {
+        console.warn(`Tiegel, Abbau: ${fehler}`);
+    }
+});

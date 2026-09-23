@@ -1,0 +1,93 @@
+#!/usr/bin/env python3
+"""Das Verhaltensskript durchspielen, ohne Minecraft.
+
+main.js kann hier nicht laufen: Es holt sich @minecraft/server, und das
+gibt es nur im Spiel. Also werden die paar Dinge, die es anfasst, als
+Attrappe nachgebaut - Welt, Takte, Gegenstaende, Formulare - und das
+Skript damit von vorn bis hinten durchgespielt: einlegen, schmelzen,
+warten, herausnehmen, abbauen.
+
+Der Grund dafuer ist handfest: Ein Fehler in main.js laesst nicht nur
+den Tiegel ausfallen, sondern reisst das ganze Verhaltenspaket mit -
+Silbererz, Klingen, alles. Und gemerkt haette man es erst auf dem iPad.
+
+    python3 werkzeuge/skriptprobe.py
+"""
+
+import shutil
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+WURZEL = Path(__file__).resolve().parent.parent
+HIER = Path(__file__).resolve().parent / "probe"
+
+SERVER = '''
+export const gemerkt = { ereignisse: {}, takte: [], eigenschaften: new Map() };
+export const world = {
+  afterEvents: new Proxy({}, { get: (_, name) => ({
+      subscribe: (f) => { (gemerkt.ereignisse[name] ||= []).push(f); } }) }),
+  getAllPlayers: () => [],
+  getDynamicProperty: (k) => gemerkt.eigenschaften.get(k),
+  setDynamicProperty: (k, v) => v === undefined
+      ? gemerkt.eigenschaften.delete(k) : gemerkt.eigenschaften.set(k, v),
+};
+export const system = {
+  currentTick: 0,
+  runInterval: (f, n) => gemerkt.takte.push([f, n]),
+  run: (f) => f(),
+  runTimeout: (f, n) => { gemerkt.takte.push(["spaeter", n]); },
+};
+export class ItemStack {
+  constructor(typeId, amount = 1) { this.typeId = typeId; this.amount = amount; }
+  clone() { return new ItemStack(this.typeId, this.amount); }
+}
+'''
+
+SERVER_UI = '''
+export const letztesFenster = { titel: "", text: "", knoepfe: [] };
+export let antwortGeber = () => ({ canceled: true });
+export function setzeAntwort(f) { antwortGeber = f; }
+export class ActionFormData {
+  constructor() { this.knoepfe = []; }
+  title(t) { this.titel = t; return this; }
+  body(t) { this.text = t; return this; }
+  button(beschriftung, bild) { this.knoepfe.push({ beschriftung, bild }); return this; }
+  show() {
+    letztesFenster.titel = this.titel;
+    letztesFenster.text = this.text;
+    letztesFenster.knoepfe = this.knoepfe;
+    return Promise.resolve(antwortGeber(this));
+  }
+}
+export const FormCancelationReason = { UserBusy: "UserBusy", UserClosed: "UserClosed" };
+'''
+
+
+def main():
+    with tempfile.TemporaryDirectory() as ordner:
+        platz = Path(ordner)
+        for name, quelle in [("server", SERVER), ("server-ui", SERVER_UI)]:
+            ziel = platz / "node_modules" / "@minecraft" / name
+            ziel.mkdir(parents=True)
+            (ziel / "package.json").write_text(
+                '{ "name": "@minecraft/%s", "version": "2.0.0",'
+                ' "type": "module", "main": "index.js" }' % name, encoding="utf-8")
+            (ziel / "index.js").write_text(quelle, encoding="utf-8")
+        (platz / "package.json").write_text('{"type":"module"}', encoding="utf-8")
+        shutil.copy(WURZEL / "verhaltenspaket" / "scripts" / "main.js", platz / "main.js")
+        shutil.copy(HIER / "durchspielen.mjs", platz / "durchspielen.mjs")
+
+        lauf = subprocess.run(["node", "durchspielen.mjs"], cwd=platz,
+                              capture_output=True, text=True)
+        print(lauf.stdout)
+        if lauf.returncode != 0:
+            print(lauf.stderr, file=sys.stderr)
+            print("Das Skript ist durchgefallen.")
+            raise SystemExit(1)
+        print("Durchgespielt, ohne Fehler.")
+
+
+if __name__ == "__main__":
+    main()
