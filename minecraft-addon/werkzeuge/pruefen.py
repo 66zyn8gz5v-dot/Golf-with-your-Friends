@@ -11,6 +11,8 @@ import json
 import sys
 from pathlib import Path
 
+import schemapruefung
+
 WURZEL = Path(__file__).resolve().parent.parent
 VERHALTEN = WURZEL / "verhaltenspaket"
 RESSOURCEN = WURZEL / "ressourcenpaket"
@@ -388,6 +390,10 @@ def main():
     pruefe_vorkommen(bloecke)
     pruefe_wesen(sprachen)
     pruefe_bildnamen()
+    # Zum Schluss gegen Mojangs eigene Schemata halten. Das faengt, was
+    # unsere Pruefungen nicht wissen koennen: welche Schreibweise eine
+    # Regelfassung ueberhaupt erlaubt.
+    schemapruefung.pruefe(fehler, hinweise)
 
     for text in hinweise:
         print(f"  Hinweis: {text}")

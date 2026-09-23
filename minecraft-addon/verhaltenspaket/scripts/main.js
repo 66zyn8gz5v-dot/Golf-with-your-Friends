@@ -376,9 +376,13 @@ world.afterEvents.playerInteractWithBlock.subscribe((e) => {
     }
 });
 
+// Der Zustand traegt seit Regelfassung 1.26.20 Woerter statt true und
+// false - Wahrheitswerte sind dort nicht mehr erlaubt.
+const BRENNT = (an) => (an ? "an" : "aus");
+
 function anzuenden(block, an) {
     try {
-        block.setPermutation(block.permutation.withState("fynn:brennt", an));
+        block.setPermutation(block.permutation.withState("fynn:brennt", BRENNT(an)));
     } catch (fehler) {
         console.warn(`Feuerkasten, Zustand: ${fehler}`);
     }
@@ -413,8 +417,8 @@ function gluehen(feuerkasten, an) {
     try {
         const oben = feuerkasten.above();
         if (!oben || oben.typeId !== TIEGEL) return;
-        if (oben.permutation.getAllStates()["fynn:brennt"] === an) return;
-        oben.setPermutation(oben.permutation.withState("fynn:brennt", an));
+        if (oben.permutation.getAllStates()["fynn:brennt"] === BRENNT(an)) return;
+        oben.setPermutation(oben.permutation.withState("fynn:brennt", BRENNT(an)));
     } catch (fehler) {
         console.warn(`Tiegel: ${fehler}`);
     }
@@ -517,7 +521,7 @@ function tiegelStand(block) {
 
 function glueht(block) {
     try {
-        return block.permutation.getState("fynn:brennt") === true;
+        return block.permutation.getState("fynn:brennt") === "an";
     } catch (fehler) {
         return false;
     }

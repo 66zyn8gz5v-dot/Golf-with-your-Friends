@@ -8,8 +8,8 @@
       },
       "states": {
         "fynn:brennt": [
-          false,
-          true
+          "aus",
+          "an"
         ]
       },
       "traits": {
@@ -108,7 +108,7 @@
     },
     "permutations": [
       {
-        "condition": "q.block_state('minecraft:cardinal_direction') == 'north' && !q.block_state('fynn:brennt')",
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'north' && q.block_state('fynn:brennt') == 'aus'",
         "components": {
           "minecraft:material_instances": {
             "*": {
@@ -131,7 +131,7 @@
         }
       },
       {
-        "condition": "q.block_state('minecraft:cardinal_direction') == 'north' && q.block_state('fynn:brennt')",
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'north' && q.block_state('fynn:brennt') == 'an'",
         "components": {
           "minecraft:material_instances": {
             "*": {
@@ -155,7 +155,7 @@
         }
       },
       {
-        "condition": "q.block_state('minecraft:cardinal_direction') == 'east' && !q.block_state('fynn:brennt')",
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'east' && q.block_state('fynn:brennt') == 'aus'",
         "components": {
           "minecraft:material_instances": {
             "*": {
@@ -178,7 +178,7 @@
         }
       },
       {
-        "condition": "q.block_state('minecraft:cardinal_direction') == 'east' && q.block_state('fynn:brennt')",
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'east' && q.block_state('fynn:brennt') == 'an'",
         "components": {
           "minecraft:material_instances": {
             "*": {
@@ -202,7 +202,7 @@
         }
       },
       {
-        "condition": "q.block_state('minecraft:cardinal_direction') == 'south' && !q.block_state('fynn:brennt')",
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'south' && q.block_state('fynn:brennt') == 'aus'",
         "components": {
           "minecraft:material_instances": {
             "*": {
@@ -225,7 +225,7 @@
         }
       },
       {
-        "condition": "q.block_state('minecraft:cardinal_direction') == 'south' && q.block_state('fynn:brennt')",
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'south' && q.block_state('fynn:brennt') == 'an'",
         "components": {
           "minecraft:material_instances": {
             "*": {
@@ -249,7 +249,7 @@
         }
       },
       {
-        "condition": "q.block_state('minecraft:cardinal_direction') == 'west' && !q.block_state('fynn:brennt')",
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'west' && q.block_state('fynn:brennt') == 'aus'",
         "components": {
           "minecraft:material_instances": {
             "*": {
@@ -272,7 +272,7 @@
         }
       },
       {
-        "condition": "q.block_state('minecraft:cardinal_direction') == 'west' && q.block_state('fynn:brennt')",
+        "condition": "q.block_state('minecraft:cardinal_direction') == 'west' && q.block_state('fynn:brennt') == 'an'",
         "components": {
           "minecraft:material_instances": {
             "*": {

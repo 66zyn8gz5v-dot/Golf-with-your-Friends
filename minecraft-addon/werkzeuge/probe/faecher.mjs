@@ -42,8 +42,8 @@ function machBlock(typ, ort, fach, zustand = {}) {
 
 const kastenFach = machFach(1);
 const tiegelFach = machFach(3);
-const kasten = machBlock(FEUERKASTEN, { x: 0, y: 70, z: 0 }, kastenFach, { "fynn:brennt": false });
-const tiegel = machBlock(TIEGEL, { x: 0, y: 71, z: 0 }, tiegelFach, { "fynn:brennt": false });
+const kasten = machBlock(FEUERKASTEN, { x: 0, y: 70, z: 0 }, kastenFach, { "fynn:brennt": "aus" });
+const tiegel = machBlock(TIEGEL, { x: 0, y: 71, z: 0 }, tiegelFach, { "fynn:brennt": "aus" });
 
 welten.set("minecraft:overworld", {
     getBlock: (o) => (o.y === 70 ? kasten : o.y === 71 ? tiegel : undefined),
@@ -66,7 +66,7 @@ lauf();
 console.log("nach einer Sekunde:   ", kastenFach.inhalt(), "| brennt:", kasten.permutation.getState("fynn:brennt"));
 
 // Der Tiegel glueht jetzt, weil unten gefeuert wird.
-tiegel.permutation.withState("fynn:brennt", true);
+tiegel.permutation.withState("fynn:brennt", "an");
 tiegelFach.setItem(0, new ItemStack("minecraft:gold_ingot", 2));
 tiegelFach.setItem(1, new ItemStack("fynn:silberbarren", 2));
 console.log("\nFach des Tiegels:     ", tiegelFach.inhalt());
