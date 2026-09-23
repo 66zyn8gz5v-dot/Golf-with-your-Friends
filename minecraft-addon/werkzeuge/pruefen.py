@@ -355,8 +355,13 @@ def main():
     sprachen = lies_sprachen()
     kennungen = pruefe_gegenstaende(sprachen)
     EIGENE_GEGENSTAENDE = kennungen
-    pruefe_rezepte(kennungen)
+    # Erst die Bloecke, dann die Rezepte: Ein setzbarer Block ist im Spiel
+    # auch ein Gegenstand - er liegt im Inventar und laesst sich verarbeiten.
+    # Vorher lief die Rezeptpruefung zuerst und kannte nur die Dateien aus
+    # items/; ein Rezept mit einem eigenen Block darin galt deshalb als
+    # Fehler, obwohl es im Spiel laeuft.
     bloecke = pruefe_bloecke(sprachen, kennungen)
+    pruefe_rezepte(kennungen | bloecke)
     pruefe_vorkommen(bloecke)
     pruefe_wesen(sprachen)
     pruefe_bildnamen()

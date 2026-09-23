@@ -1,0 +1,36 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:block": {
+    "description": {
+      "identifier": "fynn:silberblock",
+      "menu_category": {
+        "category": "construction"
+      }
+    },
+    "components": {
+      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "silberblock",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:map_color": "#CEDAEC",
+      "minecraft:light_dampening": 15,
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 6.0
+      },
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 7.5,
+        "item_specific_speeds": [
+          { "item": "minecraft:wooden_pickaxe",   "destroy_speed": 1.15 },
+          { "item": "minecraft:stone_pickaxe",    "destroy_speed": 0.6 },
+          { "item": "minecraft:iron_pickaxe",     "destroy_speed": 0.4 },
+          { "item": "minecraft:golden_pickaxe",   "destroy_speed": 0.2 },
+          { "item": "minecraft:diamond_pickaxe",  "destroy_speed": 0.3 },
+          { "item": "minecraft:netherite_pickaxe","destroy_speed": 0.25 }
+        ]
+      }
+    }
+  }
+}

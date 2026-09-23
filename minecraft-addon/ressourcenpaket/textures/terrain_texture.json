@@ -7,6 +7,9 @@
     "silbererz": {
       "textures": "textures/blocks/silbererz"
     },
+    "silberblock": {
+      "textures": "textures/blocks/silberblock"
+    },
     "feuerkasten_vorn": {
       "textures": "textures/blocks/feuerkasten_vorn"
     },

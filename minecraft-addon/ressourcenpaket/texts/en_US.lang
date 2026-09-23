@@ -17,6 +17,7 @@ fynn:itemGroup.name.silber=Silver
 
 ## Bloecke
 tile.fynn:silbererz.name=Silver Ore
+tile.fynn:silberblock.name=Silver Block
 
 ## Die Schmelze: unten befeuert, oben legiert
 tile.fynn:feuerkasten.name=Firebox
@@ -34,8 +35,8 @@ item.fynn:eisenklinge.name=Iron Blade
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 1.84
+item.iron_sword.name=Stahlschwert 1.86
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 1.84
-item.fynn:degen.name=Degen 1.84
+item.fynn:degen=Degen 1.86
+item.fynn:degen.name=Degen 1.86
