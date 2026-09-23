@@ -39,6 +39,13 @@
             0.0,
             0.0
           ]
+        },
+        "rightitem": {
+          "rotation": [
+            "variable.is_first_person ? 0.0 : 180.0 * variable.degen_stellung",
+            0.0,
+            0.0
+          ]
         }
       }
     }
