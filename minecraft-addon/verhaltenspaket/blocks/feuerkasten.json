@@ -97,7 +97,8 @@
         "explosion_resistance": 6.0
       },
       "minecraft:light_dampening": 15,
-      "minecraft:map_color": "#4A4A4A"
+      "minecraft:map_color": "#4A4A4A",
+      "minecraft:loot": "loot_tables/blocks/feuerkasten.json"
     },
     "permutations": [
       {

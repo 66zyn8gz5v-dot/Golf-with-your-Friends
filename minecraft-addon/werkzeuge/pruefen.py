@@ -222,14 +222,24 @@ def pruefe_bloecke(sprachen, kennungen):
     zuordnung = lies(RESSOURCEN / "textures" / "terrain_texture.json")
     bekannte_bilder = set((zuordnung or {}).get("texture_data", {}))
 
+    # Erst alle Blockkennungen einsammeln, dann pruefen. Ein Block, der
+    # sich selbst fallen laesst, steht in seiner eigenen Beuteliste -
+    # und die wird weiter unten gegen die bekannten Namen geprueft. Ohne
+    # diesen ersten Durchgang kennt sie nur die Gegenstaende aus items/,
+    # und jeder Block, der als er selbst faellt, galt als Fehler.
     blockkennungen = set()
+    for datei in sorted((VERHALTEN / "blocks").glob("*.json")):
+        inhalt = lies(datei)
+        if inhalt:
+            blockkennungen.add(inhalt["minecraft:block"]["description"]["identifier"])
+    bekannte_namen = kennungen | blockkennungen
+
     for datei in sorted((VERHALTEN / "blocks").glob("*.json")):
         inhalt = lies(datei)
         if not inhalt:
             continue
         block = inhalt["minecraft:block"]
         kennung = block["description"]["identifier"]
-        blockkennungen.add(kennung)
         bauteile = block["components"]
 
         stoffe = bauteile.get("minecraft:material_instances", {})
@@ -265,7 +275,7 @@ def pruefe_bloecke(sprachen, kennungen):
                     for eintrag in topf.get("entries", []):
                         gefunden = True
                         stueck = eintrag.get("name", "")
-                        if stueck.startswith("fynn:") and stueck not in kennungen:
+                        if stueck.startswith("fynn:") and stueck not in bekannte_namen:
                             fehler.append(f"{beute}: '{stueck}' gibt es als Gegenstand nicht.")
                 if not gefunden:
                     fehler.append(f"{beute}: kein einziger Eintrag - der Block liesse nichts fallen.")
