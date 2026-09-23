@@ -58,6 +58,31 @@ def lade_alle(wurzel):
     return speicher, nach_name
 
 
+def als_zahlen(text):
+    """1.26.20 -> (1, 26, 20). Was sich nicht so lesen laesst - etwa
+    "beta" -, kommt nicht in Frage."""
+    teile = text.split(".")
+    if not teile or not all(t.isdigit() for t in teile):
+        return None
+    return tuple(int(t) for t in teile)
+
+
+def naechste(fassungen, gesucht):
+    """Das Schema der hoechsten Fassung, die nicht neuer ist als die
+    Datei. Gegen ein neueres zu pruefen erzeugt Fehlalarme: Der
+    Glimmerling steht auf 1.21.0, und das beta-Schema beanstandete an
+    ihm eine Schreibweise, die in seiner Fassung voellig in Ordnung
+    ist."""
+    ziel = als_zahlen(gesucht)
+    if ziel is None:
+        return None
+    passende = [(als_zahlen(n), o) for n, o in fassungen.items()
+                if als_zahlen(n) is not None and als_zahlen(n) <= ziel]
+    if not passende:
+        return None
+    return max(passende)[1]
+
+
 def pruefe(fehler, hinweise):
     wurzel = schemaordner()
     if wurzel is None:
@@ -85,35 +110,65 @@ def pruefe(fehler, hinweise):
                 return ref, nach_name[name]
             return ref, {}          # unbekannt: nichts einschraenken
 
-    fassungen = {p.name: p for p in (wurzel / "server" / "block").glob("*") if p.is_dir()}
+    # Was wogegen geprueft wird: Ordner im Paket, Schema-Zweig,
+    # Einstiegsdatei und der Schluessel, unter dem der Inhalt steckt.
+    ARTEN = [
+        ("blocks", "block", "Blocks.json", "minecraft:block"),
+        ("items", "item", "ItemDocument.json", "minecraft:item"),
+        ("entities", "entity", "ActorDocument.json", "minecraft:entity"),
+    ]
 
-    for datei in sorted((WURZEL / "verhaltenspaket" / "blocks").glob("*.json")):
-        inhalt = json.loads(datei.read_text(encoding="utf-8"))
-        fassung = str(inhalt.get("format_version", ""))
-        ordner = fassungen.get(fassung)
-        if ordner is None:
-            # Die Schemata gibt es nur fuer einzelne Fassungen. Gegen die
-            # neueste zu pruefen ist besser als gar nicht - was dort
-            # beanstandet wird, faellt spaetestens beim naechsten
-            # Fassungswechsel auf die Fuesse.
-            ordner = sorted(fassungen.items())[-1][1]
-        haupt = json.loads((ordner / "Blocks.json").read_text(encoding="utf-8"))
-        eigen = dict(speicher)
-        for nachbar in ordner.glob("*.json"):
-            d = json.loads(nachbar.read_text(encoding="utf-8"))
-            for form in ("./" + nachbar.name, urllib.parse.quote("./" + nachbar.name)):
-                eigen[form] = d
-        loeser = Nachsichtig(base_uri="", referrer=haupt, store=eigen)
-        try:
-            gefunden = sorted(Draft7Validator(haupt, resolver=loeser)
-                              .iter_errors(inhalt["minecraft:block"]),
-                              key=lambda e: list(e.path))
-        except Exception as fehlschlag:
-            hinweise.append(f"{datei.name}: Schemapruefung gescheitert ({fehlschlag}).")
+    for ordnername, zweig, einstieg, schluessel in ARTEN:
+        quelle = WURZEL / "verhaltenspaket" / ordnername
+        if not quelle.is_dir():
             continue
-        for f in gefunden:
-            wo = "/".join(str(t) for t in f.path) or "(Wurzel)"
-            fehler.append(f"{datei.name} [{ordner.name}] {wo}: {f.message[:200]}")
+        fassungen = {p.name: p for p in (wurzel / "server" / zweig).glob("*") if p.is_dir()}
+        if not fassungen:
+            continue
+
+        for datei in sorted(quelle.glob("*.json")):
+            inhalt = json.loads(datei.read_text(encoding="utf-8"))
+            if schluessel not in inhalt:
+                continue
+            fassung = str(inhalt.get("format_version", ""))
+            ordner = fassungen.get(fassung) or naechste(fassungen, fassung)
+            # Gibt es gar kein Schema, das alt genug ist, wird gegen das
+            # aelteste vorhandene gehalten - aber nur als Hinweis. Eine
+            # neuere Fassung ist meist strenger, und ein Treffer kann
+            # ebenso gut daher ruehren wie von einem echten Fehler.
+            nur_hinweis = ordner is None
+            if nur_hinweis:
+                ordner = min(((als_zahlen(n), o) for n, o in fassungen.items()
+                              if als_zahlen(n) is not None), default=(None, None))[1]
+            if ordner is None:
+                hinweise.append(f"{datei.name}: kein Schema zu Fassung {fassung}.")
+                continue
+            einstiegsdatei = ordner / einstieg
+            if not einstiegsdatei.exists():
+                hinweise.append(f"{datei.name}: kein Einstiegsschema in {ordner.name}.")
+                continue
+            haupt = json.loads(einstiegsdatei.read_text(encoding="utf-8"))
+            eigen = dict(speicher)
+            for nachbar in ordner.glob("*.json"):
+                d = json.loads(nachbar.read_text(encoding="utf-8"))
+                for form in ("./" + nachbar.name, urllib.parse.quote("./" + nachbar.name)):
+                    eigen[form] = d
+            loeser = Nachsichtig(base_uri="", referrer=haupt, store=eigen)
+            try:
+                gefunden = sorted(Draft7Validator(haupt, resolver=loeser)
+                                  .iter_errors(inhalt[schluessel]),
+                                  key=lambda e: list(e.path))
+            except Exception as fehlschlag:
+                hinweise.append(f"{datei.name}: Schemapruefung gescheitert ({fehlschlag}).")
+                continue
+            for f in gefunden:
+                wo = "/".join(str(t) for t in f.path) or "(Wurzel)"
+                text = f"{datei.name} [{ordner.name}] {wo}: {f.message[:200]}"
+                if nur_hinweis:
+                    hinweise.append(text + f" (nur gegen {ordner.name} geprueft, "
+                                           f"die Datei steht auf {fassung})")
+                else:
+                    fehler.append(text)
 
 
 if __name__ == "__main__":
