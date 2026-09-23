@@ -15,7 +15,7 @@
         "rightarm": {
           "rotation": [
             "(-75.0 - this) * variable.degen_stellung",
-            "(155.0 - this) * variable.degen_stellung",
+            "(-25.0 - this) * variable.degen_stellung",
             0.0
           ]
         },
@@ -37,6 +37,18 @@
           "rotation": [
             "(20.0 - this) * variable.degen_stellung",
             0.0,
+            0.0
+          ]
+        },
+        "rightitem": {
+          "rotation": [
+            "180.0 * variable.degen_stellung",
+            0.0,
+            0.0
+          ],
+          "position": [
+            0.0,
+            "-16.0 * variable.degen_stellung",
             0.0
           ]
         }
