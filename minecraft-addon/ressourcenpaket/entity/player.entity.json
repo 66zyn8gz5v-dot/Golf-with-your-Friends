@@ -49,7 +49,8 @@
           "variable.fp_melee_spear_attack_attachable_rotation_z": "public",
           "variable.tp_melee_spear_attack_attachable_position_z": "public",
           "variable.attack_time": "public",
-          "variable.item_use_normalized": "public"
+          "variable.item_use_normalized": "public",
+          "variable.degen_stellung": "public"
         },
         "should_update_effects_offscreen": "1.0"
       },

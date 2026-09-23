@@ -76,6 +76,18 @@ function pruefeSpieler(spieler) {
             bereit.add(kennung);
             spieler.dimension.playSound("random.orb", spieler.location,
                 { volume: 0.4, pitch: 1.6 });
+
+            // Ein paar Schlieren vor der Brust, sobald geladen ist. In
+            // der Aussenansicht sieht man die Fechtstellung, in der
+            // Ego-Ansicht aber nur die eigene Hand - dort waere der Ton
+            // sonst das einzige Zeichen, und Toene gehen im Kampf unter.
+            const blick = spieler.getViewDirection();
+            const ort = spieler.location;
+            spieler.dimension.spawnParticle("fynn:degen_schliere", {
+                x: ort.x + blick.x * 0.8,
+                y: ort.y + 1.4,
+                z: ort.z + blick.z * 0.8,
+            });
         }
         return;
     }
