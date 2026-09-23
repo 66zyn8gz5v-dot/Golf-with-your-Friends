@@ -8,48 +8,48 @@
         "body": {
           "rotation": [
             0.0,
-            "(40.0 - 25.0 * variable.degen_stoss) * variable.degen_stellung",
+            "(40.0 - 25.0 * variable.degen_stoss) * math.max(variable.degen_stellung, variable.degen_stoss)",
             0.0
           ]
         },
         "rightarm": {
           "rotation": [
-            "(-75.0 + -25.0 * variable.degen_stoss - this) * variable.degen_stellung",
-            "(-25.0 + 20.0 * variable.degen_stoss - this) * variable.degen_stellung",
+            "(-75.0 + -25.0 * variable.degen_stoss - this) * math.max(variable.degen_stellung, variable.degen_stoss)",
+            "(-25.0 + 20.0 * variable.degen_stoss - this) * math.max(variable.degen_stellung, variable.degen_stoss)",
             0.0
           ]
         },
         "leftarm": {
           "rotation": [
-            "(25.0 + 20.0 * variable.degen_stoss - this) * variable.degen_stellung",
+            "(25.0 + 20.0 * variable.degen_stoss - this) * math.max(variable.degen_stellung, variable.degen_stoss)",
             0.0,
-            "(-35.0 + -20.0 * variable.degen_stoss - this) * variable.degen_stellung"
+            "(-35.0 + -20.0 * variable.degen_stoss - this) * math.max(variable.degen_stellung, variable.degen_stoss)"
           ]
         },
         "rightleg": {
           "rotation": [
-            "(-35.0 + -20.0 * variable.degen_stoss - this) * variable.degen_stellung",
+            "(-35.0 + -20.0 * variable.degen_stoss - this) * math.max(variable.degen_stellung, variable.degen_stoss)",
             0.0,
             0.0
           ]
         },
         "leftleg": {
           "rotation": [
-            "(20.0 + 15.0 * variable.degen_stoss - this) * variable.degen_stellung",
+            "(20.0 + 15.0 * variable.degen_stoss - this) * math.max(variable.degen_stellung, variable.degen_stoss)",
             0.0,
             0.0
           ]
         },
         "rightitem": {
           "rotation": [
-            "180.0 * variable.degen_stellung",
+            "90.0 * math.max(variable.degen_stellung, variable.degen_stoss)",
             0.0,
             0.0
           ],
           "position": [
             0.0,
-            "-16.0 * variable.degen_stellung",
-            0.0
+            0.0,
+            "8.0 * math.max(variable.degen_stellung, variable.degen_stoss)"
           ]
         }
       }
