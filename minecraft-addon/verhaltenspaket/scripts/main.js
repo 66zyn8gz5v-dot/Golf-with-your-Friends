@@ -11,6 +11,7 @@
 // Fehler selbst ab.
 
 import { world, system } from "@minecraft/server";
+import { ActionFormData, FormCancelationReason } from "@minecraft/server-ui";
 
 const DEGEN = "fynn:degen";
 
@@ -199,8 +200,6 @@ const TIEGEL = "fynn:schmelztiegel";
 // lange wie ein Ofen mit Holzkohle ungefaehr auch braucht.
 const BRENNDAUER = 1200;
 
-const BRENNSTOFF = ["minecraft:coal", "minecraft:charcoal", "minecraft:coal_block"];
-
 // Wo gerade gefeuert wird und bis wann. Der Schluessel ist der Ort als
 // Text, weil sich Orte nicht als Schluessel vergleichen lassen.
 const feuer = new Map();
@@ -209,39 +208,154 @@ function ortAlsText(dimension, ort) {
     return dimension.id + ":" + ort.x + "," + ort.y + "," + ort.z;
 }
 
+// Wie lange eine Sorte traegt. Ein Kohleblock sind neun Stuecke, haelt
+// aber achtmal so lange - dieselbe Rechnung wie in Minecrafts Ofen.
+const SORTEN = {
+    "minecraft:coal":       { name: "Kohle",      bild: "textures/items/coal",        dauer: BRENNDAUER },
+    "minecraft:charcoal":   { name: "Holzkohle",  bild: "textures/items/charcoal",    dauer: BRENNDAUER },
+    "minecraft:coal_block": { name: "Kohleblock", bild: "textures/blocks/coal_block", dauer: BRENNDAUER * 8 },
+};
+
+function restzeit(schluessel) {
+    const herd = feuer.get(schluessel);
+    if (!herd) return 0;
+    return Math.max(0, Math.round((herd.bis - system.currentTick) / 20));
+}
+
+/** Was der Spieler an Brennbarem dabei hat, je Sorte zusammengezaehlt. */
+function vorratAnKohle(spieler) {
+    const kiste = spieler.getComponent("minecraft:inventory")?.container;
+    const gefunden = new Map();
+    if (!kiste) return gefunden;
+    for (let platz = 0; platz < kiste.size; platz++) {
+        const stueck = kiste.getItem(platz);
+        if (!stueck || !SORTEN[stueck.typeId]) continue;
+        const bisher = gefunden.get(stueck.typeId);
+        if (bisher) bisher.anzahl += stueck.amount;
+        else gefunden.set(stueck.typeId, { anzahl: stueck.amount, platz });
+    }
+    return gefunden;
+}
+
+/** Ein Stueck der Sorte aus dem Inventar nehmen. Im Kreativmodus nicht. */
+function kohleAbziehen(spieler, art) {
+    if (spieler.getGameMode?.() === "creative") return true;
+    const kiste = spieler.getComponent("minecraft:inventory")?.container;
+    if (!kiste) return false;
+    for (let platz = 0; platz < kiste.size; platz++) {
+        const stueck = kiste.getItem(platz);
+        if (!stueck || stueck.typeId !== art) continue;
+        if (stueck.amount > 1) {
+            const rest = stueck.clone();
+            rest.amount = stueck.amount - 1;
+            kiste.setItem(platz, rest);
+        } else {
+            kiste.setItem(platz, undefined);
+        }
+        return true;
+    }
+    return false;
+}
+
+function nachlegen(block, art) {
+    const schluessel = ortAlsText(block.dimension, block.location);
+    const dauer = SORTEN[art].dauer;
+    const herd = feuer.get(schluessel);
+    if (herd) {
+        // Nachgelegt wird angehaengt, nicht ersetzt - sonst waere es ein
+        // Verlust, waehrend er noch brennt nachzulegen.
+        herd.bis += dauer;
+        return;
+    }
+    feuer.set(schluessel, {
+        bis: system.currentTick + dauer,
+        dimension: block.dimension,
+        ort: block.location,
+    });
+    anzuenden(block, true);
+    block.dimension.playSound("fire.ignite", block.location, { volume: 0.6 });
+}
+
+/**
+ * Das Fenster am Feuerkasten.
+ *
+ * Ein Fach, in das man Kohle hineinzieht, gibt es fuer eigene Bloecke in
+ * Bedrock nicht - Behaelter kann nur Mojang. Was geht, ist ein Formular
+ * mit Knoepfen. Jeder Knopf traegt das Bild seiner Sorte, damit es sich
+ * anfuehlt wie ein Fach und nicht wie eine Liste.
+ */
+function feuerkastenFenster(spieler, block) {
+    const schluessel = ortAlsText(block.dimension, block.location);
+    const noch = restzeit(schluessel);
+    const heiss = block.above()?.typeId === TIEGEL;
+
+    const zeilen = [];
+    zeilen.push(noch > 0
+        ? `§eEs brennt noch ${noch} Sekunden.`
+        : "§7Der Kasten ist kalt.");
+    if (heiss) {
+        zeilen.push(noch > 0
+            ? "§7Der Tiegel darueber glueht mit."
+            : "§7Darueber steht ein Tiegel. Er wartet auf Hitze.");
+    }
+
+    const vorrat = vorratAnKohle(spieler);
+    const fenster = new ActionFormData().title("Feuerkasten");
+
+    if (vorrat.size === 0) {
+        zeilen.push("");
+        zeilen.push("§cDu hast nichts dabei, was brennt.");
+        fenster.body(zeilen.join("\n"));
+        fenster.button("Zumachen");
+        return { fenster, arten: [] };
+    }
+
+    zeilen.push("");
+    zeilen.push("§7Antippen legt ein Stueck nach.");
+    fenster.body(zeilen.join("\n"));
+
+    const arten = [];
+    for (const [art, was] of vorrat) {
+        const sorte = SORTEN[art];
+        const sekunden = Math.round(sorte.dauer / 20);
+        fenster.button(`${sorte.name} (${was.anzahl})\n§7+${sekunden} s`, sorte.bild);
+        arten.push(art);
+    }
+    fenster.button("Zumachen");
+    return { fenster, arten };
+}
+
+/**
+ * Formulare lassen sich nicht zeigen, solange der Spieler noch mit etwas
+ * anderem beschaeftigt ist - beim Antippen ist das regelmaessig der Fall.
+ * Deshalb wird es erneut versucht, statt still zu scheitern.
+ */
+function fensterZeigen(spieler, block, versuche = 10) {
+    const { fenster, arten } = feuerkastenFenster(spieler, block);
+    fenster.show(spieler).then((antwort) => {
+        if (antwort.canceled) {
+            if (antwort.cancelationReason === FormCancelationReason.UserBusy && versuche > 0) {
+                system.runTimeout(() => fensterZeigen(spieler, block, versuche - 1), 10);
+            }
+            return;
+        }
+        const art = arten[antwort.selection];
+        if (!art) return;                     // "Zumachen"
+        const jetzt = block.dimension.getBlock(block.location);
+        if (!jetzt || jetzt.typeId !== FEUERKASTEN) return;   // inzwischen abgebaut
+        if (!kohleAbziehen(spieler, art)) return;
+        nachlegen(jetzt, art);
+        // Gleich wieder aufmachen: Wer nachlegt, legt meistens mehrfach nach.
+        system.runTimeout(() => fensterZeigen(spieler, jetzt), 4);
+    }).catch((fehler) => console.warn(`Feuerkasten, Fenster: ${fehler}`));
+}
+
 world.afterEvents.playerInteractWithBlock.subscribe((e) => {
     try {
         if (e.block?.typeId !== FEUERKASTEN) return;
-        const gehalten = e.beforeItemStack;
-        if (!gehalten || BRENNSTOFF.indexOf(gehalten.typeId) < 0) return;
-
-        const schluessel = ortAlsText(e.block.dimension, e.block.location);
-        if (feuer.has(schluessel)) return;   // brennt schon
-
-        // Ein Block Kohle haelt achtmal so lange wie ein Stueck.
-        const dauer = gehalten.typeId === "minecraft:coal_block"
-            ? BRENNDAUER * 8 : BRENNDAUER;
-        feuer.set(schluessel, {
-            bis: system.currentTick + dauer,
-            dimension: e.block.dimension,
-            ort: e.block.location,
-        });
-        anzuenden(e.block, true);
-        e.block.dimension.playSound("fire.ignite", e.block.location, { volume: 0.6 });
-
-        // Die Kohle wird verbraucht - im Ueberleben. Im Kreativmodus
-        // nimmt Minecraft ohnehin nichts weg.
-        const hand = e.player.getComponent("minecraft:equippable")
-            ?.getEquipmentSlot("Mainhand");
-        if (hand && e.player.getGameMode?.() !== "creative") {
-            if (gehalten.amount > 1) {
-                const rest = gehalten.clone();
-                rest.amount = gehalten.amount - 1;
-                hand.setItem(rest);
-            } else {
-                hand.setItem(undefined);
-            }
-        }
+        // Nicht sofort zeigen: Waehrend das Ereignis laeuft, nimmt
+        // Minecraft kein Formular an.
+        system.run(() => fensterZeigen(e.player, e.block));
     } catch (fehler) {
         console.warn(`Feuerkasten: ${fehler}`);
     }
