@@ -106,6 +106,7 @@ function stossen(spieler) {
         );
         spieler.dimension.playSound("mob.ravager.roar", spieler.location,
             { volume: 0.3, pitch: 1.8 });
+        schlieren(spieler, blick);
 
         // Der Schaden kommt vier Ticks spaeter, wenn der Spieler schon
         // unterwegs ist - sonst traefe nur, wer ohnehin schon in
@@ -137,5 +138,31 @@ function treffen(spieler, blick) {
         }
     } catch (fehler) {
         console.warn(`Degen, Treffer: ${fehler}`);
+    }
+}
+
+/**
+ * Die Luftschlieren entlang der Stosslinie.
+ *
+ * Nicht eine Wolke an einer Stelle, sondern sechs Puffs hintereinander
+ * auf der Strecke, die der Degen nimmt. Erst dadurch wird daraus ein
+ * Zug durch die Luft und kein Knall.
+ *
+ * Auf Brusthoehe, nicht auf Fusshoehe: "location" eines Spielers ist der
+ * Punkt zwischen seinen Fuessen.
+ */
+function schlieren(spieler, blick) {
+    try {
+        const ort = spieler.location;
+        for (let schritt = 1; schritt <= 6; schritt++) {
+            const weite = schritt * 0.45;
+            spieler.dimension.spawnParticle("fynn:degen_schliere", {
+                x: ort.x + blick.x * weite,
+                y: ort.y + 1.3 + blick.y * weite,
+                z: ort.z + blick.z * weite,
+            });
+        }
+    } catch (fehler) {
+        console.warn(`Degen, Schlieren: ${fehler}`);
     }
 }

@@ -1,0 +1,46 @@
+{
+  "format_version": "1.10.0",
+  "animations": {
+    "animation.fynn.degen_stellung": {
+      "loop": true,
+      "override_previous_animation": false,
+      "bones": {
+        "body": {
+          "rotation": [
+            0.0,
+            "40.0 * variable.degen_stellung",
+            0.0
+          ]
+        },
+        "rightarm": {
+          "rotation": [
+            "(-75.0 - this) * variable.degen_stellung",
+            "(-25.0 - this) * variable.degen_stellung",
+            0.0
+          ]
+        },
+        "leftarm": {
+          "rotation": [
+            "(25.0 - this) * variable.degen_stellung",
+            0.0,
+            "(-35.0 - this) * variable.degen_stellung"
+          ]
+        },
+        "rightleg": {
+          "rotation": [
+            "(-35.0 - this) * variable.degen_stellung",
+            0.0,
+            0.0
+          ]
+        },
+        "leftleg": {
+          "rotation": [
+            "(20.0 - this) * variable.degen_stellung",
+            0.0,
+            0.0
+          ]
+        }
+      }
+    }
+  }
+}
