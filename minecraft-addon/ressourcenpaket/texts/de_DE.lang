@@ -42,11 +42,11 @@ item.fynn:eisenklinge.name=Eisenklinge
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 2.5
+item.iron_sword.name=Stahlschwert 2.6
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 2.5
-item.fynn:degen.name=Degen 2.5
+item.fynn:degen=Degen 2.6
+item.fynn:degen.name=Degen 2.6
 
 
 
@@ -55,3 +55,8 @@ item.fynn:degen.name=Degen 2.5
 ## haengt nicht an einem Vanilla-Schwert wie die fuenf anderen Klingen.
 item.fynn:silberklinge=Silberklinge
 item.fynn:silberklinge.name=Silberklinge
+
+## Das Grossschwert aus dem Vorlagenbild. Elektrum ist die Legierung aus
+## Gold und Silber - bisher gab es den Barren, aber nichts daraus.
+item.fynn:elektrumklinge=Elektrumklinge
+item.fynn:elektrumklinge.name=Elektrumklinge

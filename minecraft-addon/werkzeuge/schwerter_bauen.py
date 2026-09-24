@@ -42,6 +42,7 @@ KLINGEN = [
     # Silber hat kein Gegenstueck in Minecraft - die Klinge ist ein eigener
     # Gegenstand und hat darum auch ein eigenes Inventarbild.
     ("silberklinge",   None,                         "silberklinge_haut"),
+    ("elektrumklinge", None,                         "elektrumklinge_haut"),
 ]
 
 
@@ -52,14 +53,36 @@ def spannweite(text):
 
 
 def parierstange(karte):
-    """Die Zeilen der Parierstange: der breite Block in der Mitte.
+    """Die Zeilen der Parierstange: der breite Block um die breiteste Zeile.
 
-    Gesucht wird von der breitesten Zeile aus nach oben und unten, solange
-    die Zeilen noch mindestens halb so breit sind.
+    Massstab ist die Klinge, nicht die Parierstange. Die Klinge ist die
+    haeufigste Zeilenbreite - sie hat mit Abstand die meisten Zeilen - und
+    zur Parierstange gehoert, was von der breitesten Stelle aus zusammen-
+    haengend breiter ist als sie.
+
+    Vorher war der Massstab "mindestens halb so breit wie die breiteste
+    Zeile". Das ging, solange die Klinge schmal war: sechs Pixel gegen eine
+    Parierstange von zwanzig. Bei der Elektrumklinge steht eine Klinge von
+    dreizehn gegen eine Parierstange von dreiundzwanzig - die Klinge ist
+    selbst breiter als die halbe Parierstange, und die Erkennung lief durch
+    das ganze Schwert. Die Folge waere eine Klinge von Parierstangendicke
+    gewesen, also ein Brett.
+
+    "Zusammenhaengend" zaehlt mit, weil manche Klingen sich kurz vor der
+    Spitze noch einmal verbreitern. Ein blosses "breiter als die Klinge"
+    haette diese Stelle zu einer zweiten Parierstange gemacht.
+
+    Warum nicht einfach "breiter als die Klinge", sondern ein Fuenftel des
+    Ueberstands darueber: Bei der Goldklinge laeuft der Griff schraeg aus
+    dem Bild, seine Zeilen sind dadurch breiter als die Klinge, und die
+    Erkennung lief den halben Griff hinunter. Ein Fuenftel reicht, um den
+    schraegen Griff auszuschliessen, und laesst die auslaufenden Enden
+    einer V-foermigen Parierstange noch drin.
     """
     weiten = [spannweite(z) for z in karte]
+    klinge = max(set(weiten), key=weiten.count)
+    schwelle = klinge + (max(weiten) - klinge) / 5
     breiteste = weiten.index(max(weiten))
-    schwelle = max(weiten) / 2
     oben = breiteste
     while oben > 0 and weiten[oben - 1] >= schwelle:
         oben -= 1

@@ -31,6 +31,9 @@
     },
     "silberklinge": {
       "textures": "textures/items/silberklinge"
+    },
+    "elektrumklinge": {
+      "textures": "textures/items/elektrumklinge"
     }
   }
 }
