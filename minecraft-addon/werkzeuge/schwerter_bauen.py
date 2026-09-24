@@ -36,8 +36,8 @@ DICKE_GRIFF = 1.5
 RELIEF_KLINGE = 1.0     # duenner als die alte Klinge
 RELIEF_GRIFF = 1.25     # etwas schlanker als der alte Griff
 RELIEF_PARIER_DUNKEL = 1.5   # noch fast Klinge
-RELIEF_PARIER_HELL = 2.5     # die Lichtkanten des Dreiecks stehen vor
-RELIEF_GRIFF_HELL = 2.0      # damit auch der Knauf hervortritt
+RELIEF_PARIER_HELL = 3.5     # die Lichtkanten des Dreiecks stehen vor
+RELIEF_GRIFF_HELL = 2.75     # damit auch der Knauf hervortritt
 
 # Ab hier gilt ein Ton als hell. Die elf Elektrumtoene teilen sich an
 # dieser Grenze genau so auf, wie man sie im Bild sieht: die sieben
