@@ -22,6 +22,12 @@
     },
     "components": {
       "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:crafting_table": {
+        "crafting_tags": [
+          "fynn_tiegel"
+        ],
+        "table_name": "tile.fynn:schmelztiegel.name"
+      },
       "minecraft:material_instances": {
         "*": {
           "texture": "tiegel_seite",
