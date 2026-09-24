@@ -757,6 +757,22 @@ world.afterEvents.playerBreakBlock.subscribe((e) => {
 
 
 // ---------------------------------------------------------------------
+// ACHTUNG, gemessen am 24. September: Fynns Minecraft kennt die
+// Regelfassung 1.26.20 nicht. Ein Block, der sie in format_version
+// stehen hat, taucht bei ihm nicht einmal im Kreativmenue auf -
+// nachgewiesen mit zwei Probebloecken, die sich von einem sichtbaren
+// Block nur in dieser Zahl unterschieden.
+//
+// Damit ist minecraft:block_entity mit container fuer uns nicht zu
+// haben: Es gibt die Komponente erst ab 1.26.20. Die Bloecke bleiben
+// auf 1.21.90, und der Ofen wird ueber die Formulare bedient.
+//
+// Der Abschnitt hier bleibt trotzdem stehen. Er schadet nicht - findet
+// das Skript kein Fach, laeuft alles ueber die Formulare - und sobald
+// auf dem iPad eine neuere Minecraft-Fassung liegt, reicht es, in den
+// beiden Blockdateien die Fassung hochzusetzen und das Fach
+// einzutragen.
+// ---------------------------------------------------------------------
 // Der Ofen mit echten Faechern.
 //
 // Seit Regelfassung 1.26.20 kann ein eigener Block ein Fach tragen, und
