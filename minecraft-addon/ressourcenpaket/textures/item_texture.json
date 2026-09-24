@@ -25,6 +25,9 @@
     },
     "elektrumbarren": {
       "textures": "textures/items/elektrumbarren"
+    },
+    "stahlbarren": {
+      "textures": "textures/items/stahlbarren"
     }
   }
 }

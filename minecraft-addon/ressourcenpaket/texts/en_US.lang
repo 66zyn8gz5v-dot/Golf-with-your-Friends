@@ -19,6 +19,8 @@ fynn:itemGroup.name.legierungen=Alloys
 ## Was der Tiegel hergibt
 item.fynn:elektrumbarren=Electrum Ingot
 item.fynn:elektrumbarren.name=Electrum Ingot
+item.fynn:stahlbarren=Steel Ingot
+item.fynn:stahlbarren.name=Steel Ingot
 
 ## Bloecke
 tile.fynn:silbererz.name=Silver Ore
@@ -40,10 +42,10 @@ item.fynn:eisenklinge.name=Iron Blade
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 2.0
+item.iron_sword.name=Stahlschwert 2.1
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 2.0
-item.fynn:degen.name=Degen 2.0
+item.fynn:degen=Degen 2.1
+item.fynn:degen.name=Degen 2.1
 
 
