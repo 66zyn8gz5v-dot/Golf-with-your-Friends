@@ -1,0 +1,23 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:ritter",
+      "materials": { "default": "entity_alphatest" },
+      "textures": { "default": "textures/entity/ritter" },
+      "geometry": { "default": "geometry.ritter" },
+      "animations": {
+        "gehen": "animation.ritter.gehen",
+        "umschauen": "animation.common.look_at_target"
+      },
+      "scripts": {
+        "animate": [
+          { "gehen": "query.modified_move_speed" },
+          "umschauen"
+        ]
+      },
+      "render_controllers": [ "controller.render.default" ],
+      "spawn_egg": { "base_color": "#8A94A6", "overlay_color": "#5E3C22" }
+    }
+  }
+}

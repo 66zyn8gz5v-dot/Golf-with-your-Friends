@@ -42,11 +42,11 @@ item.fynn:eisenklinge.name=Eisenklinge
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 3.2
+item.iron_sword.name=Stahlschwert 3.3
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 3.2
-item.fynn:degen.name=Degen 3.2
+item.fynn:degen=Degen 3.3
+item.fynn:degen.name=Degen 3.3
 
 
 
@@ -60,3 +60,7 @@ item.fynn:silberklinge.name=Silberklinge
 ## Gold und Silber - bisher gab es den Barren, aber nichts daraus.
 item.fynn:elektrumklinge=Elektrumklinge
 item.fynn:elektrumklinge.name=Elektrumklinge
+
+## Der Ritter, erste Sorte: nur mit Schwert
+entity.fynn:ritter.name=Ritter
+item.spawn_egg.entity.fynn:ritter.name=Ritter

@@ -19,13 +19,61 @@ from pathlib import Path
 WURZEL = Path(__file__).resolve().parent.parent
 BILDER = WURZEL / "ressourcenpaket"
 
-# Zwei Bloecke hoch, wie ein Dorfbewohner: 32 Pixel vom Boden bis zum
-# Scheitel. Beine 12, Koerper 12, Kopf 8.
-BEIN, RUMPF, KOPF = 12, 12, 8
+# Die Statur ist die eines Dorfbewohners, nicht die eines Spielers:
+# grosser Kopf, tieferer Rumpf, kurze Beine. Zusammen 32 Pixel, also zwei
+# Bloecke.
+BEIN, RUMPF, KOPF = 12, 10, 10
+TIEFE = 6                 # der Rumpf ist tiefer als bei einem Spieler
+SCHULTER = BEIN + RUMPF   # Oberkante des Rumpfs
 
 
-def kasten(ort, groesse, uv, blaehen=0.0):
-    k = {"origin": ort, "size": groesse, "uv": uv}
+class Packer:
+    """Sucht jedem Kasten einen freien Platz im Hautbild.
+
+    Von Hand ging das, solange ein Mensch aus acht Wuerfeln bestand. Mit
+    Helmglocke, Visier, Nackenschutz, Brustpanzer, Kittel und zwei
+    Schulterstuecken sind es dreizehn, und die Netze haben krumme Masse.
+    Beim ersten Versuch lief die Helmglocke rechts aus dem Bild: Ihr Netz
+    ist 36 Pixel breit, und sie sollte bei x=32 anfangen.
+
+    Ein Netz ist (Tiefe + Breite) * 2 breit und (Tiefe + Hoehe) hoch - so
+    rechnet Minecraft es aus origin und size aus, und deshalb wird hier
+    genauso gerechnet statt geschaetzt.
+    """
+
+    def __init__(self, breite=64, hoehe=128):
+        self.breite, self.hoehe = breite, hoehe
+        self.belegt = []
+
+    def platz(self, b, h, t):
+        netz_b, netz_h = 2 * (t + b), t + h
+        for v in range(self.hoehe - netz_h + 1):
+            for u in range(self.breite - netz_b + 1):
+                kasten = (u, v, netz_b, netz_h)
+                if not any(self._stoesst(kasten, alt) for alt in self.belegt):
+                    self.belegt.append(kasten)
+                    return [u, v]
+        raise ValueError(
+            f"Kein Platz mehr fuer ein Netz {netz_b} x {netz_h} in "
+            f"{self.breite} x {self.hoehe} - die Haut muss groesser werden.")
+
+    def fuellung(self):
+        """Wie viel vom Bild belegt ist - wird es eng, sagt es das hier,
+        bevor der naechste Kasten scheitert."""
+        return sum(b * h for _, _, b, h in self.belegt) / (self.breite * self.hoehe)
+
+    @staticmethod
+    def _stoesst(a, b):
+        return not (a[0] + a[2] <= b[0] or b[0] + b[2] <= a[0]
+                    or a[1] + a[3] <= b[1] or b[1] + b[3] <= a[1])
+
+
+def kasten(packer, ort, groesse, blaehen=0.0):
+    """Ein Kasten samt Platz in der Haut. Die Masse werden aufgerundet:
+    Ein Kasten von 1,5 Pixeln Tiefe braucht trotzdem zwei Pixel Bild."""
+    import math
+    b, h, t = (max(1, math.ceil(m)) for m in groesse)
+    k = {"origin": ort, "size": groesse, "uv": packer.platz(b, h, t)}
     if blaehen:
         k["inflate"] = blaehen
     return k
@@ -33,53 +81,62 @@ def kasten(ort, groesse, uv, blaehen=0.0):
 
 def modell():
     """Die Knochen. Die Namen sind die von Minecraft - daran haengen die
-    eingebauten Animationen fuers Gehen, Schlagen und Umschauen."""
-    return {
+    eingebauten Animationen fuers Gehen, Schlagen und Umschauen.
+
+    Helm und Panzer sind eigene Kaesten, keine aufgeblasene zweite Haut.
+    Eine aufgeblasene Haut waechst nach allen Seiten gleich und bleibt
+    deshalb ein Wuerfel - sie kann keine Helmglocke, kein Visier und keine
+    Schulterstuecke. Als eigene Kaesten ragen sie ueber die Silhouette
+    hinaus, und der Ritter sieht von der Seite aus wie ein Ritter.
+    """
+    p = Packer()
+    # Erst die grossen Teile, dann die kleinen: Ein Packer, der von oben
+    # links sucht, verbaut sich sonst den Platz mit Kleinkram.
+    teile = {}
+    def nimm(name, *masse):
+        teile[name] = kasten(p, *masse)
+        return teile[name]
+
+    kopf   = nimm("kopf",   [-4, SCHULTER, -4], [8, KOPF, 8])
+    rumpf  = nimm("rumpf",   [-4, BEIN, -3], [8, RUMPF, TIEFE])
+    glocke = nimm("glocke",  [-4.5, SCHULTER + 3, -4.5], [9, KOPF - 2, 9])
+    kittel = nimm("kittel",  [-4.5, BEIN - 1, -3.5], [9, 5, TIEFE + 1])
+    arm_r  = nimm("arm_r",   [-8, BEIN, -2], [4, RUMPF, 4])
+    arm_l  = nimm("arm_l",   [4, BEIN, -2], [4, RUMPF, 4])
+    bein_r = nimm("bein_r",  [-4, 0, -2], [4, BEIN, 4])
+    bein_l = nimm("bein_l",  [0, 0, -2], [4, BEIN, 4])
+    schulter_r = nimm("schulter_r", [-9, SCHULTER - 4, -3], [6, 5, 6])
+    schulter_l = nimm("schulter_l", [3, SCHULTER - 4, -3], [6, 5, 6])
+    panzer = nimm("panzer",  [-4.5, BEIN + 3, -3.8], [9, RUMPF - 3, 2])
+    visier = nimm("visier",  [-4, SCHULTER + 2, -5], [8, 5, 1])
+    nacken = nimm("nacken",  [-4, SCHULTER, 3.5], [8, 4, 1.5])
+
+    return teile, {
         "format_version": "1.12.0",
         "minecraft:geometry": [{
             "description": {
                 "identifier": "geometry.ritter",
                 "texture_width": 64,
-                "texture_height": 64,
+                "texture_height": 128,
                 "visible_bounds_width": 2,
                 "visible_bounds_height": 3,
                 "visible_bounds_offset": [0, 1.5, 0],
             },
             "bones": [
-                {"name": "body", "pivot": [0, BEIN, 0], "cubes": [
-                    kasten([-4, BEIN, -2], [8, RUMPF, 4], [16, 16]),
-                    # Die Ruestung sitzt als zweite Haut darueber, einen
-                    # Viertelpixel abgehoben. Sonst flackert sie mit dem
-                    # Koerper darunter um dieselben Flaechen.
-                    kasten([-4, BEIN, -2], [8, RUMPF, 4], [16, 32], 0.25),
-                ]},
-                {"name": "head", "parent": "body", "pivot": [0, BEIN + RUMPF, 0], "cubes": [
-                    kasten([-4, BEIN + RUMPF, -4], [8, KOPF, 8], [0, 0]),
-                ]},
-                # Der Helm ist eine eigene Schicht ueber dem Kopf. So laesst
-                # er sich je Rittersorte austauschen, ohne das Gesicht
-                # noch einmal zu malen.
-                {"name": "hat", "parent": "head", "pivot": [0, BEIN + RUMPF, 0], "cubes": [
-                    kasten([-4, BEIN + RUMPF, -4], [8, KOPF, 8], [32, 0], 0.5),
-                ]},
-                {"name": "rightArm", "parent": "body", "pivot": [-5, BEIN + RUMPF - 2, 0], "cubes": [
-                    kasten([-8, BEIN, -2], [4, RUMPF, 4], [40, 16]),
-                    kasten([-8, BEIN, -2], [4, RUMPF, 4], [40, 32], 0.25),
-                ]},
-                {"name": "leftArm", "parent": "body", "pivot": [5, BEIN + RUMPF - 2, 0], "cubes": [
-                    kasten([4, BEIN, -2], [4, RUMPF, 4], [32, 48]),
-                    kasten([4, BEIN, -2], [4, RUMPF, 4], [48, 48], 0.25),
-                ]},
-                {"name": "rightLeg", "parent": "body", "pivot": [-2, BEIN, 0], "cubes": [
-                    kasten([-4, 0, -2], [4, BEIN, 4], [0, 16]),
-                    kasten([-4, 0, -2], [4, BEIN, 4], [0, 32], 0.25),
-                ]},
-                {"name": "leftLeg", "parent": "body", "pivot": [2, BEIN, 0], "cubes": [
-                    kasten([0, 0, -2], [4, BEIN, 4], [16, 48]),
-                    kasten([0, 0, -2], [4, BEIN, 4], [0, 48], 0.25),
-                ]},
-                # Leere Knochen fuer das, was er traegt. Minecraft haengt
-                # Gegenstaende an genau diese Namen.
+                {"name": "body", "pivot": [0, BEIN, 0],
+                 "cubes": [rumpf, panzer, kittel]},
+                {"name": "head", "parent": "body", "pivot": [0, SCHULTER, 0],
+                 "cubes": [kopf]},
+                {"name": "hat", "parent": "head", "pivot": [0, SCHULTER, 0],
+                 "cubes": [glocke, visier, nacken]},
+                {"name": "rightArm", "parent": "body", "pivot": [-5, SCHULTER - 2, 0],
+                 "cubes": [arm_r, schulter_r]},
+                {"name": "leftArm", "parent": "body", "pivot": [5, SCHULTER - 2, 0],
+                 "cubes": [arm_l, schulter_l]},
+                {"name": "rightLeg", "parent": "body", "pivot": [-2, BEIN, 0],
+                 "cubes": [bein_r]},
+                {"name": "leftLeg", "parent": "body", "pivot": [2, BEIN, 0],
+                 "cubes": [bein_l]},
                 {"name": "rightItem", "parent": "rightArm", "pivot": [-6, BEIN + 2, 1]},
                 {"name": "leftItem", "parent": "leftArm", "pivot": [6, BEIN + 2, 1]},
             ],
@@ -88,9 +145,11 @@ def modell():
 
 
 def main():
+    teile, geo = modell()
     ziel = BILDER / "models" / "entity" / "ritter.geo.json"
-    ziel.write_text(json.dumps(modell(), indent=2) + "\n")
-    b = modell()["minecraft:geometry"][0]["bones"]
+    ziel.write_text(json.dumps(geo, indent=2) + "\n")
+    grundhaut(teile).save(BILDER / "textures" / "entity" / "ritter.png")
+    b = geo["minecraft:geometry"][0]["bones"]
     print(f"gebaut: {ziel.name} - {len(b)} Knochen, "
           f"{sum(len(k.get('cubes', [])) for k in b)} Kaesten, "
           f"{BEIN + RUMPF + KOPF} Pixel hoch")
@@ -140,75 +199,57 @@ def fuelle(bild, feld, farbe):
     ImageDraw.Draw(bild).rectangle([x, y, x + b - 1, y + h - 1], fill=farbe)
 
 
-def grundhaut(mit_feder=False):
-    """Ein schlichter Ritter zum Weitermalen - keine fertige Gestaltung.
+# Welcher Teil welche Farbe bekommt. Nur die Grundierung - das Bild ist
+# zum Weitermalen da, nicht als fertige Gestaltung.
+ANSTRICH = {
+    "kopf":       (HAUT, HAUT_S),
+    "rumpf":      (LEDER_H, LEDER_D),
+    "kittel":     (LEDER_H, LEDER_D),
+    "glocke":     (STAHL_S, STAHL_T),
+    "visier":     (UMRISS, UMRISS),
+    "nacken":     (STAHL_S, STAHL_T),
+    "panzer":     (STAHL_H, STAHL_S),
+    "arm_r":      (STAHL_S, STAHL_T),
+    "arm_l":      (STAHL_H, STAHL_S),
+    "schulter_r": (STAHL_H, STAHL_S),
+    "schulter_l": (STAHL_H, STAHL_S),
+    "bein_r":     (LEDER_H, LEDER_D),
+    "bein_l":     (LEDER_H, LEDER_D),
+}
 
-    Absicht ist eine Haut, auf der jedes Feld schon die richtige Grundfarbe
-    hat und die Koerperteile sich voneinander abheben. Wer von einer leeren
-    Flaeche anfaengt, muss erst herausfinden, welches der zwanzig Rechtecke
-    der linke Oberarm ist - und auf einer einfarbigen sieht man nicht, ob
-    die Arme ueberhaupt am richtigen Platz sitzen.
 
-    Die zweite Schicht - in Minecraft die Huelle ueber Koerper und
-    Gliedern - bleibt hier weitgehend leer und traegt nur den Brustpanzer
-    und die Schulterstuecke. Deckt sie alles, ist die erste Schicht
-    unsichtbar, und man malt an etwas, das niemand je sieht.
+def grundhaut(teile, mit_feder=False):
+    """Malt jedes Netz in seiner Grundfarbe.
+
+    Die Felder kommen aus dem Modell, nicht aus einer zweiten Liste. Sonst
+    laufen beide auseinander, sobald ein Kasten wandert - und man sieht es
+    erst im Spiel, wenn ein Arm ploetzlich das Muster des Helms traegt.
     """
-    bild = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
+    import math
+    bild = Image.new("RGBA", (64, 128), (0, 0, 0, 0))
+    for name, k in teile.items():
+        u, v = k["uv"]
+        b, h, t = (max(1, math.ceil(m)) for m in k["size"])
+        vorn, hinten = ANSTRICH[name]
+        for seite, feld in flaechen(u, v, b, h, t).items():
+            fuelle(bild, feld, hinten if seite in ("hinten", "unten") else vorn)
 
-    kopf = flaechen(0, 0, 8, 8, 8)
-    for seite in kopf.values():
-        fuelle(bild, seite, HAUT_S)
-    fuelle(bild, kopf["vorn"], HAUT)
-    x, y, b, h = kopf["vorn"]
+    # Gesicht: zwei Augen auf die Vorderseite des Kopfes
+    u, v = teile["kopf"]["uv"]
+    x, y, b, h = flaechen(u, v, 8, KOPF, 8)["vorn"]
     for dx in (2, 5):
-        fuelle(bild, (x + dx, y + 3, 1, 1), AUGE)
+        fuelle(bild, (x + dx, y + 4, 1, 1), AUGE)
 
-    helm = flaechen(32, 0, 8, 8, 8)
-    for name, seite in helm.items():
-        fuelle(bild, seite, STAHL_T if name == "hinten" else STAHL_S)
-    fuelle(bild, helm["oben"], STAHL_H)
-    x, y, b, h = helm["vorn"]
-    fuelle(bild, (x, y + 3, 8, 2), UMRISS)          # Sehschlitz
-    fuelle(bild, (x + 3, y + 5, 2, 3), STAHL_T)     # Nasensteg
+    # Sehschlitz ins Visier, sonst ist es nur ein schwarzes Brett
+    u, v = teile["visier"]["uv"]
+    x, y, b, h = flaechen(u, v, 8, 5, 1)["vorn"]
+    fuelle(bild, (x, y + 1, 8, 2), STAHL_T)
+    fuelle(bild, (x + 3, y + 1, 2, 2), UMRISS)
+
     if mit_feder:
-        ox, oy, ob, ot = helm["oben"]
-        fuelle(bild, (ox + 3, oy, 2, 8), FEDER)
-        hx, hy, hb, hh = helm["hinten"]
-        fuelle(bild, (hx + 3, hy, 2, 4), FEDER)
-
-    # Rumpf: Untergewand dunkel, damit der Panzer darueber zu sehen ist
-    for name, seite in flaechen(16, 16, 8, 12, 4).items():
-        fuelle(bild, seite, LEDER_D if name in ("oben", "unten") else LEDER_H)
-    # Brustpanzer als zweite Schicht, Schultern etwas heller
-    for name, seite in flaechen(16, 32, 8, 12, 4).items():
-        if name in ("vorn", "hinten", "rechts", "links"):
-            x, y, b, h = seite
-            fuelle(bild, (x, y, b, 8), STAHL_S)
-            fuelle(bild, (x, y, b, 2), STAHL_H)
-        elif name == "oben":
-            fuelle(bild, seite, STAHL_H)
-
-    # Arme: der rechte etwas dunkler, sonst sieht man im Bild nicht,
-    # welcher welcher ist
-    for (u, v), ton in (((40, 16), STAHL_S), ((32, 48), STAHL_H)):
-        for name, seite in flaechen(u, v, 4, 12, 4).items():
-            fuelle(bild, seite, STAHL_T if name in ("oben", "unten") else ton)
-    for u, v in ((40, 32), (48, 48)):          # Schulterstuecke
-        for name, seite in flaechen(u, v, 4, 12, 4).items():
-            if name in ("vorn", "hinten", "rechts", "links"):
-                x, y, b, h = seite
-                fuelle(bild, (x, y, b, 4), STAHL_H)
-            elif name == "oben":
-                fuelle(bild, seite, STAHL_H)
-
-    # Beine: Leder oben, Stahlschiene unten
-    for (u, v), ton in (((0, 16), LEDER_H), ((16, 48), LEDER_H)):
-        for name, seite in flaechen(u, v, 4, 12, 4).items():
-            fuelle(bild, seite, LEDER_D if name in ("oben", "unten") else ton)
-            if name in ("vorn", "hinten", "rechts", "links"):
-                x, y, b, h = seite
-                fuelle(bild, (x, y + 7, b, 5), STAHL_T)
+        u, v = teile["glocke"]["uv"]
+        x, y, b, h = flaechen(u, v, 9, 8, 9)["oben"]
+        fuelle(bild, (x + 3, y, 3, 9), FEDER)
     return bild
 
 

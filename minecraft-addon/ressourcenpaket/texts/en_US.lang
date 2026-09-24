@@ -42,11 +42,11 @@ item.fynn:eisenklinge.name=Iron Blade
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 3.2
+item.iron_sword.name=Stahlschwert 3.3
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 3.2
-item.fynn:degen.name=Degen 3.2
+item.fynn:degen=Degen 3.3
+item.fynn:degen.name=Degen 3.3
 
 
 
@@ -55,3 +55,6 @@ item.fynn:silberklinge.name=Silver Blade
 
 item.fynn:elektrumklinge=Electrum Blade
 item.fynn:elektrumklinge.name=Electrum Blade
+
+entity.fynn:ritter.name=Knight
+item.spawn_egg.entity.fynn:ritter.name=Knight
