@@ -75,6 +75,11 @@ KLINGEN = [
 # aendern - das gehoert nicht in einen Auftrag, der von einem handelt.
 MIT_RELIEF = {"elektrumklinge"}
 
+# Wem die gemalte Aussenkontur abgenommen wird, bevor das Modell entsteht.
+# Sie stammt aus einer Zeichnung, die fuer sich stehen sollte; am Modell
+# macht die Geometrie ihre Kanten selbst.
+OHNE_KONTUR = {"elektrumklinge"}
+
 
 def spannweite(text):
     """Wie breit eine Zeile ist, von der ersten bis zur letzten Farbe."""
@@ -156,17 +161,21 @@ def main():
     import importlib
     for name, _ersetzt, texturname in KLINGEN:
         v = importlib.import_module("vorlagen." + name)
+        karte = v.KARTE
+        if name in OHNE_KONTUR:
+            karte, gefallen = w.aussenlinie_weg(karte)
+            print(f"  {name}: {gefallen} Pixel Aussenkontur abgenommen")
         if name in MIT_RELIEF:
-            dicken, oben, unten = reliefdicke(v.KARTE, v.FARBEN)
+            dicken, oben, unten = reliefdicke(karte, v.FARBEN)
         else:
-            dicken, oben, unten = dickenliste(v.KARTE)
+            dicken, oben, unten = dickenliste(karte)
         modell = wurzel / "models" / "entity" / (name + ".geo.json")
         textur = wurzel / "textures" / "entity" / (texturname + ".png")
-        w.aus_zeichenkarte(name, v.KARTE, v.FARBEN, dicke=dicken,
+        w.aus_zeichenkarte(name, karte, v.FARBEN, dicke=dicken,
                            mitte=v.MITTE,
                            ziel_modell=str(modell), ziel_textur=str(textur))
         print(f"  {name}: Parierstange in Zeile {oben}-{unten} "
-              f"von {len(v.KARTE)}")
+              f"von {len(karte)}")
 
 
 if __name__ == "__main__":

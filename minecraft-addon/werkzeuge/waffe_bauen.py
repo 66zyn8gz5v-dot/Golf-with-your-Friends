@@ -857,3 +857,34 @@ if __name__ == "__main__":
     baue("eisenklinge", "fynn:eisenklinge", EISENKLINGE,
          ziel_modell=ziel / "eisenklinge.geo.json",
          ziel_textur=ziel / "eisenklinge.png")
+
+
+def aussenlinie_weg(karte):
+    """Nimmt die aeusserste Pixelschicht der Form weg.
+
+    Ein gemaltes Bild traegt seine Kontur mit sich: aussen herum eine
+    Linie, damit die Form sich vom Hintergrund abhebt. Fuer ein Bild ist
+    das richtig. Fuer ein Modell nicht - dort macht die Geometrie ihre
+    Kanten selbst, und die gemalte Kontur legt sich als Saum darueber, der
+    bei jeder Drehung an der falschen Stelle sitzt. Darunter kommt die
+    Lichtkante zum Vorschein, die eigentlich den Rand bilden soll.
+
+    Zwei Versuche mit Helligkeitsregeln gingen daneben: Der erste riss
+    Loecher mitten in die Parierstange, weil ein Pixel am oberen Rand
+    liegen und trotzdem mitten in seiner Zeile stehen kann. Der zweite
+    traf nur eine einseitige Schattenkante am Griff, nicht die Kontur.
+    Die Kontur ist keine Frage der Farbe, sondern der Lage: Sie ist
+    schlicht das, was aussen liegt.
+    """
+    hoehe, breite = len(karte), len(karte[0])
+
+    def gemalt(x, y):
+        return 0 <= x < breite and 0 <= y < hoehe and karte[y][x] != "."
+
+    weg = {(x, y) for y in range(hoehe) for x in range(breite)
+           if gemalt(x, y) and not all(
+               gemalt(a, b) for a, b in
+               ((x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)))}
+
+    return ["".join("." if (x, y) in weg else c for x, c in enumerate(z))
+            for y, z in enumerate(karte)], len(weg)
