@@ -34,6 +34,9 @@
     },
     "elektrumklinge": {
       "textures": "textures/items/elektrumklinge"
+    },
+    "ritter_ei": {
+      "textures": "textures/items/ritter_ei"
     }
   }
 }
