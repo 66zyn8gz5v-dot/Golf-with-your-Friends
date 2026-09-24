@@ -56,11 +56,6 @@ def modell():
         "bein_l": k([0, 0, -2], [4, BEIN, TIEFE], [16, 48]),
     }
     teile["huelle"]["inflate"] = 0.5
-    # Der Helmkamm ist ein eigener Kasten. Gemalt bliebe er ein heller
-    # Streifen auf einem Wuerfel - Volumen bekommt er erst, wenn er
-    # wirklich heraussteht. Er sitzt am Helm, nicht am Kopf: Wer den Helm
-    # spaeter austauscht, nimmt den Kamm mit.
-    teile["kamm"] = k([-1, SCHULTER + KOPF, -4.5], [2, 2, 9], [0, 32])
 
     return teile, {
         "format_version": "1.12.0",
@@ -81,7 +76,7 @@ def modell():
                 # ist - aber der Knochen steht schon da, damit die Ruestung
                 # spaeter einen Platz hat.
                 {"name": "hat", "parent": "head", "pivot": [0, SCHULTER, 0],
-                 "cubes": [teile["huelle"], teile["kamm"]]},
+                 "cubes": [teile["huelle"]]},
                 {"name": "rightArm", "parent": "body", "pivot": [-5, SCHULTER - 2, 0],
                  "cubes": [teile["arm_r"]]},
                 {"name": "leftArm", "parent": "body", "pivot": [5, SCHULTER - 2, 0],
@@ -247,7 +242,9 @@ def helm_aufsetzen(bild, teile, vorn, hinten, links, rechts):
 
     Seine Gestaltung bleibt dabei unangetastet; sie wandert nur eine
     Schicht nach aussen. Etwas Eigenes zu malen waere einfacher gewesen,
-    haette aber seine Arbeit ueberdeckt.
+    haette aber seine Arbeit ueberdeckt. Aus demselben Grund sitzt nichts
+    mehr obendrauf: Ein Kamm als Kasten stand hier, aber er passte nicht
+    zum Helm darunter.
 
     Ausgestanzt wird, was dunkel ist - aber nicht, wenn die ganze Zeile
     dunkel ist. Eine durchgehend dunkle Zeile ist ein Stirnband oder eine
@@ -281,13 +278,6 @@ def helm_aufsetzen(bild, teile, vorn, hinten, links, rechts):
             if ist_dunkel:
                 bild.putpixel((x + dx, y + dy), (0, 0, 0, 0))
 
-    # Der Kamm bekommt seine eigenen Toene - er ist kein gemaltes Teil
-    F = {"G": (226, 232, 242, 255), "H": (168, 176, 192, 255),
-         "T": (74, 81, 98, 255), "K": (22, 25, 34, 255)}
-    kamm = flaechen(*teile["kamm"]["uv"], 2, 2, 9)
-    for seite, ton in (("oben", "G"), ("vorn", "H"), ("hinten", "H"),
-                       ("rechts", "T"), ("links", "T"), ("unten", "K")):
-        fuelle(bild, kamm[seite], F[ton])
     return bild
 
 
