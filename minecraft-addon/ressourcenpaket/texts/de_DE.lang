@@ -40,9 +40,13 @@ item.fynn:eisenklinge.name=Eisenklinge
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 1.96
+item.iron_sword.name=Stahlschwert 1.97
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 1.96
-item.fynn:degen.name=Degen 1.96
+item.fynn:degen=Degen 1.97
+item.fynn:degen.name=Degen 1.97
 
+
+## Probestuecke: woran haengt das Verschwinden
+tile.fynn:probe_neu.name=Probe GRUEN  (1.26.20, ohne Fach)
+tile.fynn:probe_fach.name=Probe BLAU  (1.26.20, mit Fach)

@@ -1,5 +1,5 @@
 {
-  "format_version": "1.26.20",
+  "format_version": "1.21.90",
   "minecraft:block": {
     "description": {
       "identifier": "fynn:schmelztiegel",
@@ -22,12 +22,6 @@
     },
     "components": {
       "minecraft:geometry": "minecraft:geometry.full_block",
-      "minecraft:block_entity": {
-        "dynamic_properties": true,
-        "container": {
-          "slot_count": 3
-        }
-      },
       "minecraft:material_instances": {
         "*": {
           "texture": "tiegel_seite",
