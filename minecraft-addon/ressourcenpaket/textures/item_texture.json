@@ -28,6 +28,9 @@
     },
     "stahlbarren": {
       "textures": "textures/items/stahlbarren"
+    },
+    "silberklinge": {
+      "textures": "textures/items/silberklinge"
     }
   }
 }

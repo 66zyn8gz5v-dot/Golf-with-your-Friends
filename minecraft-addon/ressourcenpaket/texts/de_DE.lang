@@ -42,10 +42,16 @@ item.fynn:eisenklinge.name=Eisenklinge
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 2.3
+item.iron_sword.name=Stahlschwert 2.4
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 2.3
-item.fynn:degen.name=Degen 2.3
+item.fynn:degen=Degen 2.4
+item.fynn:degen.name=Degen 2.4
 
 
+
+## Fynns Silberklinge - die erste Waffe aus eigenem Metall. Silber hat kein
+## Gegenstueck in Minecraft, deshalb ist sie ein eigener Gegenstand und
+## haengt nicht an einem Vanilla-Schwert wie die fuenf anderen Klingen.
+item.fynn:silberklinge=Silberklinge
+item.fynn:silberklinge.name=Silberklinge

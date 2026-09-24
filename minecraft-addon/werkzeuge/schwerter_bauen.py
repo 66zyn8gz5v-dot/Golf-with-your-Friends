@@ -25,13 +25,23 @@ DICKE_KLINGE = 1.25
 DICKE_PARIER = 2.0
 DICKE_GRIFF = 1.5
 
-# Vorlage, Modellname und das Vanilla-Schwert, das sie ersetzt.
+# Vorlage, das Vanilla-Schwert, das sie ersetzt, und der Name der Textur.
+#
+# Der Texturname steht daneben, weil er nicht immer dem Modell gleicht:
+# Minecraft wirft alle Bilder in einen Topf, egal aus welchem Ordner sie
+# kommen. Wo es neben dem Modell auch ein Inventarbild gibt, braucht die
+# Modelltextur deshalb einen eigenen Namen - sonst behaelt das Spiel nur
+# eines der beiden. Die fuenf Vanilla-Ersetzungen haben kein eigenes
+# Inventarbild und kommen ohne Zusatz aus.
 KLINGEN = [
-    ("holzklinge",     "minecraft:wooden_sword"),
-    ("kupferklinge",   "minecraft:copper_sword"),
-    ("goldklinge",     "minecraft:golden_sword"),
-    ("diamantklinge",  "minecraft:diamond_sword"),
-    ("netheritklinge", "minecraft:netherite_sword"),
+    ("holzklinge",     "minecraft:wooden_sword",     "holzklinge"),
+    ("kupferklinge",   "minecraft:copper_sword",     "kupferklinge"),
+    ("goldklinge",     "minecraft:golden_sword",     "goldklinge"),
+    ("diamantklinge",  "minecraft:diamond_sword",    "diamantklinge"),
+    ("netheritklinge", "minecraft:netherite_sword",  "netheritklinge"),
+    # Silber hat kein Gegenstueck in Minecraft - die Klinge ist ein eigener
+    # Gegenstand und hat darum auch ein eigenes Inventarbild.
+    ("silberklinge",   None,                         "silberklinge_haut"),
 ]
 
 
@@ -76,11 +86,11 @@ def dickenliste(karte):
 def main():
     wurzel = Path(__file__).resolve().parent.parent / "ressourcenpaket"
     import importlib
-    for name, _ersetzt in KLINGEN:
+    for name, _ersetzt, texturname in KLINGEN:
         v = importlib.import_module("vorlagen." + name)
         dicken, oben, unten = dickenliste(v.KARTE)
         modell = wurzel / "models" / "entity" / (name + ".geo.json")
-        textur = wurzel / "textures" / "entity" / (name + ".png")
+        textur = wurzel / "textures" / "entity" / (texturname + ".png")
         w.aus_zeichenkarte(name, v.KARTE, v.FARBEN, dicke=dicken,
                            mitte=v.MITTE,
                            ziel_modell=str(modell), ziel_textur=str(textur))
