@@ -503,14 +503,14 @@ def aus_zeichenkarte(name, karte, farben, dicke=1.0, mitte=None, anbauten=None,
     # Parierstange wuchtig, der Griff schlank - mit einer Dicke fuer alles
     # wird entweder die Klinge zum Brett oder die Parierstange zum Blech.
     #
-    # Und sie darf je Pixel verschieden sein: eine Funktion bekommt Zeile
-    # und Zeichen und entscheidet selbst. Damit laesst sich die Tiefe an
+    # Und sie darf je Pixel verschieden sein: eine Funktion bekommt Zeile,
+    # Spalte und Zeichen und entscheidet selbst. Damit laesst sich die Tiefe an
     # der Farbe festmachen statt an der Hoehe - was hell gemalt ist, steht
     # vor und faengt deshalb Licht. Eine Parierstange bekommt so ihre
     # Kanten, ohne dass jemand Zeile fuer Zeile Werte eintippt.
-    def dicke_bei(zeile, zeichen):
+    def dicke_bei(zeile, spalte, zeichen):
         if callable(dicke):
-            return float(dicke(zeile, zeichen))
+            return float(dicke(zeile, spalte, zeichen))
         if isinstance(dicke, (int, float)):
             return float(dicke)
         return float(dicke[zeile] if zeile < len(dicke) else dicke[-1])
@@ -544,7 +544,7 @@ def aus_zeichenkarte(name, karte, farben, dicke=1.0, mitte=None, anbauten=None,
         # bauen, und von Hand nachzurechnen waere bei jeder Zeile eine
         # Gelegenheit, sich zu vertun.
         schiebe = versatz[zeile] if versatz and zeile < len(versatz) else 0.0
-        tief = dicke_bei(zeile, zeichen)
+        tief = dicke_bei(zeile, x, zeichen)
         eintrag = {
             "origin": [x - mitte + schiebe, y, -tief / 2],
             "size": [lang, 1, tief],

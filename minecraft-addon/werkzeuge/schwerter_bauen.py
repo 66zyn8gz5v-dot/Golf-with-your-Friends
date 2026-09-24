@@ -141,17 +141,56 @@ def dickenliste(karte):
     return liste, oben, unten
 
 
+def griffschutzflaeche(karte, farben, oben, unten):
+    """Die hellen Pixel, die mit der Parierstange zusammenhaengen.
+
+    Ein Griffschutz endet nicht dort, wo seine breiteste Zeile endet. Bei
+    der Elektrumklinge laeuft er als Dreieck ueber die Parierstange hinaus
+    die Klinge hinauf - vier Zeilen weit. Nach Zeilennummern gerechnet
+    waere dieses Dreieck Klinge und damit duenn, obwohl es sichtbar zum
+    Beschlag gehoert.
+
+    Gesucht wird deshalb nicht nach Hoehe, sondern nach Zusammenhang: Von
+    den hellen Pixeln der Parierstange aus wird ueber helle Nachbarn
+    weitergelaufen, auch ueber Eck. Was dabei erreicht wird, ist Beschlag.
+    Die Klinge selbst wird nicht mitgenommen, weil zwischen ihren Raendern
+    und dem Dreieck nur dunkle Toene liegen.
+    """
+    hoehe, breite = len(karte), len(karte[0])
+
+    def hell_bei(x, y):
+        return (0 <= x < breite and 0 <= y < hoehe
+                and karte[y][x] != "." and ist_hell(karte[y][x], farben))
+
+    stapel = [(x, y) for y in range(oben, unten + 1)
+              for x in range(breite) if hell_bei(x, y)]
+    flaeche = set(stapel)
+    while stapel:
+        x, y = stapel.pop()
+        for dx in (-1, 0, 1):
+            for dy in (-1, 0, 1):
+                n = (x + dx, y + dy)
+                if n not in flaeche and hell_bei(*n):
+                    flaeche.add(n)
+                    stapel.append(n)
+    return flaeche
+
+
 def reliefdicke(karte, farben):
     """Eine Tiefe je Pixel: aus dem Bauteil und aus der Helligkeit."""
     oben, unten = parierstange(karte)
+    schutz = griffschutzflaeche(karte, farben, oben, unten)
 
-    def tief(zeile, zeichen):
-        if zeile < oben:
-            return RELIEF_KLINGE
-        hell = ist_hell(zeichen, farben)
-        if zeile <= unten:
-            return RELIEF_PARIER_HELL if hell else RELIEF_PARIER_DUNKEL
-        return RELIEF_GRIFF_HELL if hell else RELIEF_GRIFF
+    def tief(zeile, spalte, zeichen):
+        if (spalte, zeile) in schutz:
+            return RELIEF_PARIER_HELL
+        if zeile > unten:
+            return (RELIEF_GRIFF_HELL if ist_hell(zeichen, farben)
+                    else RELIEF_GRIFF)
+        # Alles andere ist Klinge - auch das Dunkle zwischen den hellen
+        # Linien des Beschlags. Es ist dort nicht Beschlag, sondern die
+        # Klinge, die hinter ihm durchlaeuft.
+        return RELIEF_KLINGE
 
     return tief, oben, unten
 
