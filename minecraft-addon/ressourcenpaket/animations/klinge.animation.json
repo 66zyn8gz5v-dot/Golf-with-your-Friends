@@ -1,7 +1,7 @@
 {
   "format_version": "1.10.0",
   "animations": {
-    "animation.stahlklinge.halten": {
+    "animation.klinge.halten": {
       "loop": true,
       "bones": {
         "waffe": {
