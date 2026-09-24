@@ -23,16 +23,6 @@
       "minecraft:enchantable": {
         "value": 14,
         "slot": "sword"
-      },
-      "minecraft:repairable": {
-        "repair_items": [
-          {
-            "items": [
-              "fynn:elektrumbarren"
-            ],
-            "repair_amount": 80
-          }
-        ]
       }
     }
   }
