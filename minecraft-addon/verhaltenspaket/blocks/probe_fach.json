@@ -4,7 +4,7 @@
     "description": {
       "identifier": "fynn:probe_fach",
       "menu_category": {
-        "category": "construction"
+        "category": "equipment"
       }
     },
     "components": {

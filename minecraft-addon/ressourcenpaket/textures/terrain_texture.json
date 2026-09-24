@@ -51,6 +51,9 @@
     },
     "probe_fach": {
       "textures": "textures/blocks/probe_fach"
+    },
+    "probe_alt": {
+      "textures": "textures/blocks/probe_alt"
     }
   }
 }
