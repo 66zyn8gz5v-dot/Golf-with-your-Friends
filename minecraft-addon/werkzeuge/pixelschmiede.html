@@ -284,9 +284,10 @@
     .t-malfeld   { order: 2; }
     .t-farben    { order: 3; }
     .t-werkzeug  { order: 4; }
-    .t-vorschau  { order: 5; }
-    .t-vorlage   { order: 6; }
-    .t-ausgabe   { order: 7; }
+    .t-greifer   { order: 5; }
+    .t-vorschau  { order: 6; }
+    .t-vorlage   { order: 7; }
+    .t-ausgabe   { order: 8; }
   }
 
   .tafel {
@@ -429,6 +430,25 @@
     margin: 14px 0 6px;
   }
   .farbgruppe:first-child { margin-top: 0; }
+  button.farbgruppe, button.satztitel {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    padding: 2px 0;
+    cursor: pointer;
+  }
+  button.farbgruppe:hover, button.satztitel:hover { color: var(--bronze); }
+  button.satztitel {
+    font-family: "Cinzel", Georgia, serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--schrift-leise);
+    margin: 10px 0 6px;
+  }
 
   .farbraster-gruppe {
     display: grid;
@@ -488,6 +508,35 @@
     border-color: var(--bronze);
     box-shadow: 0 0 0 2px var(--bronze-hell);
   }
+
+  .greifknopf {
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--schrift);
+    background: var(--stein-tief);
+    border: 1px solid var(--linie);
+    border-radius: 3px;
+    padding: 7px 12px;
+    cursor: pointer;
+    display: inline-block;
+  }
+  .greifknopf:hover { border-color: var(--bronze); }
+  #greiffeld {
+    display: flex;
+    justify-content: center;
+    background:
+      repeating-conic-gradient(var(--karo-a) 0% 25%, var(--karo-b) 0% 50%) 0 0 / 12px 12px;
+    border: 1px solid var(--linie);
+    border-radius: 2px;
+    padding: 6px;
+    margin-bottom: 10px;
+  }
+  /* Die ganze Tafel ist das Ziel, nicht nur das Bildfeld: Solange noch
+     kein Bild da ist, ist das Feld verborgen - man koennte nichts treffen. */
+  #greiftafel.zielt { outline: 2px dashed var(--bronze); outline-offset: -4px; }
+  /* Kurzes Aufblinken, wenn der Werkzeugknopf hierherspringt: Auf dem Tablet
+     steht die Tafel weit unten, und ohne Blinken sucht man, was sich getan hat. */
+  #greiftafel.beachte { outline: 2px solid var(--bronze); outline-offset: -4px; }
 
   label.feld {
     display: block;
@@ -836,8 +885,15 @@
           <button type="button" data-werkzeug="stift" aria-pressed="true">Stift</button>
           <button type="button" data-werkzeug="radierer" aria-pressed="false">Radierer</button>
           <button type="button" data-werkzeug="fuellen" aria-pressed="false">Füllen</button>
-          <button type="button" data-werkzeug="pipette" aria-pressed="false">Pipette</button>
+          <button type="button" data-werkzeug="farbholen" aria-pressed="false"
+                  title="Im Malfeld eine Farbe antippen — damit malst du weiter">Farbe holen</button>
+          <button type="button" id="werkzeug-bildfarbe" aria-pressed="false"
+                  title="Eine Farbe aus einem fremden Bild holen">Farbe aus Bild</button>
         </div>
+        <p class="hinweis" style="margin:8px 0 0">
+          <strong>Farbe holen</strong> nimmt aus deinem Malfeld,
+          <strong>Farbe aus Bild</strong> aus einem fremden.
+        </p>
         <div class="knopfreihe" style="margin-top:10px">
           <button type="button" id="zurueck">Rückgängig</button>
           <button type="button" id="raster" aria-pressed="true">Raster</button>
@@ -884,6 +940,28 @@
             </div>
           </div>
         </div>
+      </section>
+
+      <section class="tafel t-greifer" id="greiftafel">
+        <h2>Farbe aus einem Bild</h2>
+        <p class="hinweis" style="margin-top:0">
+          Ein Bild hineinlegen und antippen: Die Farbe darunter wandert zu
+          <strong>Deine Farben</strong> und ist gleich ausgewählt.
+        </p>
+        <div id="greiffeld" hidden>
+          <canvas id="greifschirm" width="240" height="240"
+                  aria-label="Bild zum Farben greifen"></canvas>
+        </div>
+        <p class="hinweis" id="greifwert" hidden></p>
+        <div class="knopfreihe" style="margin-top:10px">
+          <label class="greifknopf" for="greifdatei">Bild wählen</label>
+          <input type="file" id="greifdatei" accept="image/*" style="display:none">
+          <button type="button" id="greifweg" hidden>Bild weg</button>
+        </div>
+        <p class="hinweis">
+          Du kannst ein Bild auch <strong>hierher ziehen</strong> oder mit
+          <strong>Einfügen</strong> aus der Zwischenablage hineinwerfen.
+        </p>
       </section>
 
       <section class="tafel t-vorlage">
@@ -1029,6 +1107,23 @@
   // Zeichen -> Farbe. Genau dieselben Werte wie in texturen_erzeugen.py,
   // damit Gemaltes und Gebautes dieselbe Welt treffen.
   var palette = [];
+
+  // Welche Gruppen zugeklappt sind. Die Ofenfarben und die Ofenbloecke
+  // fuellen sonst die halbe Seite, obwohl man sie selten braucht.
+  var GRUPPEN_SCHLUESSEL = "pixelschmiede.zugeklappt";
+  var zugeklappt = (function () {
+    try { return JSON.parse(window.localStorage.getItem(GRUPPEN_SCHLUESSEL)) || {}; }
+    catch (e) { return {}; }
+  })();
+  function klappSchalten(name, anzahl, grenze) {
+    zugeklappt[name] = !istZu(name, anzahl || 0, grenze);
+    try { window.localStorage.setItem(GRUPPEN_SCHLUESSEL, JSON.stringify(zugeklappt)); }
+    catch (e) {}
+  }
+  function istZu(name, anzahl, grenze) {
+    if (Object.prototype.hasOwnProperty.call(zugeklappt, name)) return !!zugeklappt[name];
+    return anzahl > (grenze === undefined ? 8 : grenze);
+  }
   var GRUNDPALETTE = [
     [".", [0, 0, 0, 0], "durchsichtig", "Grundlage"],
     ["k", [44, 46, 58, 255], "Umriss", "Grundlage"],
@@ -1069,11 +1164,75 @@
     ["F", [104, 116, 74, 255], "Fell hell", "Fell"],
     ["f", [78, 90, 56, 255], "Fell", "Fell"],
     ["n", [52, 62, 38, 255], "Fell dunkel", "Fell"],
-    ["h", [46, 38, 30, 255], "Huf", "Fell"]
+    ["h", [46, 38, 30, 255], "Huf", "Fell"],
+
+    // Der Ofen, nach den Bildern von Fynns Freund. Zwei Gruppen, weil der
+    // Stein und die Glut beim Malen nie zusammen gebraucht werden.
+    ["V", [17, 17, 17, 255], "Ruß", "Ofen"],
+    ["W", [47, 46, 46, 255], "Kammer Schatten", "Ofen"],
+    ["X", [58, 57, 57, 255], "Kammer tief", "Ofen"],
+    ["Y", [69, 65, 65, 255], "Kammer", "Ofen"],
+    ["Z", [75, 75, 75, 255], "Öffnung", "Ofen"],
+    ["Q", [91, 95, 89, 255], "Moos dunkel", "Ofen"],
+    ["R", [101, 105, 99, 255], "Moos", "Ofen"],
+    ["U", [118, 118, 118, 255], "Ofenstein dunkel", "Ofen"],
+    ["I", [129, 129, 129, 255], "Ofenstein", "Ofen"],
+    ["M", [138, 138, 138, 255], "Ofenstein hell", "Ofen"],
+    ["P", [149, 149, 149, 255], "Fuge", "Ofen"],
+    ["6", [162, 162, 162, 255], "Kante", "Ofen"],
+    ["7", [172, 172, 172, 255], "Kante hell", "Ofen"],
+
+    ["O", [90, 80, 66, 255], "Lehm", "Ofen: Glut"],
+    ["L", [146, 133, 125, 255], "Asche", "Ofen: Glut"],
+    ["5", [187, 153, 134, 255], "Asche hell", "Ofen: Glut"],
+    ["S", [221, 73, 41, 255], "Glut dunkel", "Ofen: Glut"],
+    ["G", [221, 88, 41, 255], "Glut", "Ofen: Glut"],
+    ["J", [221, 104, 41, 255], "Glut hell", "Ofen: Glut"],
+    ["K", [225, 103, 60, 255], "Glut rot", "Ofen: Glut"],
+    ["N", [221, 120, 41, 255], "Flamme", "Ofen: Glut"],
+    ["B", [221, 152, 41, 255], "Flamme hell", "Ofen: Glut"],
+    ["8", [221, 184, 41, 255], "Flamme gelb", "Ofen: Glut"],
+    ["H", [240, 80, 46, 255], "Feuer rot", "Ofen: Glut"],
+    ["A", [255, 135, 0, 255], "Feuer", "Ofen: Glut"],
+
+    // Tiefenschiefer: der dunkle Stein unter Y=0. Die fuenf Werte sind aus
+    // Minecrafts deepslate.png ausgelesen, nicht geschaetzt - nur so trifft
+    // eine eigene Textur den Stein, in den sie eingesetzt wird. Zwei der
+    // Toene ziehen leicht ins Blaue, deshalb stehen sie nicht bei "Stein".
+    ["@", [47, 47, 55, 255], "Schiefer tief", "Tiefenschiefer"],
+    ["%", [61, 61, 67, 255], "Schiefer dunkel", "Tiefenschiefer"],
+    ["&", [81, 81, 81, 255], "Schiefer", "Tiefenschiefer"],
+    ["$", [100, 100, 100, 255], "Schiefer hell", "Tiefenschiefer"],
+    ["?", [121, 121, 121, 255], "Schiefer Kante", "Tiefenschiefer"],
+
+    // Rubin: der neue Edelstein. Fuenf Stufen plus ein Funkeln, damit der
+    // Schliff oben eine helle Tafel bekommt.
+    ["#", [255, 214, 218, 255], "Rubin Funkeln", "Rubin"],
+    ["+", [240, 120, 132, 255], "Rubin Glanz", "Rubin"],
+    ["-", [222, 66, 86, 255], "Rubin hell", "Rubin"],
+    ["*", [186, 32, 56, 255], "Rubin", "Rubin"],
+    ["/", [138, 20, 40, 255], "Rubin dunkel", "Rubin"],
+    ["=", [74, 10, 22, 255], "Rubin Umriss", "Rubin"],
+
+    // Die Zwischenstufen im hellen Silber. Vorher sprang die Palette von
+    // 206/218/236 auf 246/249/255 - dazwischen lag nichts, und jede
+    // Struktur in einer hellen Flaeche wurde sofort zu Flecken. Diese
+    // sechs liegen zwoelf bis vierzehn Stufen auseinander: unterscheidbar,
+    // aber nah genug, dass eine Flaeche daraus ruhig bleibt.
+    ["C", [238, 244, 253, 255], "Silber Schimmer", "Silber hell"],
+    ["D", [227, 235, 249, 255], "Silber Milch", "Silber hell"],
+    ["E", [216, 227, 243, 255], "Silber Dunst", "Silber hell"],
+    ["i", [193, 208, 231, 255], "Silber Wolke", "Silber hell"],
+    ["j", [180, 197, 222, 255], "Silber Rauch", "Silber hell"],
+    ["0", [166, 185, 212, 255], "Silber Kante", "Silber hell"]
   ];
 
 
-  var FREIE_ZEICHEN = "ABCDEGHIJKLMNOPQRSUVWXYZ56789";
+  // Die fünfundzwanzig Ofenfarben belegen fast den ganzen alten Vorrat -
+  // ohne Nachschub bliebe für eigene Farben kaum ein Zeichen übrig.
+  // Doppelpunkt und Anführungszeichen fehlen mit Absicht: An denen erkennt
+  // das Einlesen, was Farbliste und was Bildzeile ist.
+  var FREIE_ZEICHEN = "ABCDEGHIJKLMNOPQRSUVWXYZ56789ij0+-*/=#@%&$?!<>~^";
 
   // --- Vorlagen --------------------------------------------------------
   var VORLAGEN = {
@@ -1094,6 +1253,80 @@
       "...a........a...",
       "..aba......aba..",
       "...a........a..."
+    ],
+    // Pixel fuer Pixel aus Minecrafts deepslate.png. Als Vorlage zum
+    // Ueberarbeiten - wer ein Erz hineinsetzt, faengt beim echten Stein an.
+    tiefenschiefer: [
+      "?$&&&&%%$$$&&%&&",
+      "&%@@%%%%&$&&%%&%",
+      "$$?$$&&@@@@%%@%%",
+      "%&$&&%%%&$??$$$&",
+      "@%&&%%%&$$$?$$&%",
+      "??&$&&@&$$&$&&&$",
+      "?$$&&@%%&&%%@@%&",
+      "$&%%%%$?$$&%@%&&",
+      "&%&%%%&?$&$&%%%&",
+      "%%@@&&&$&&%&%@@%",
+      "$&$&%&&%%@@%&&??",
+      "$$&%$???&%&%%&?$",
+      "$&%%&?$$$&%%%&$$",
+      "%%%@@&$$&%@%@@%%",
+      "??$$&%%@%?$&&$$?",
+      "??$&$&&@&?$$&&$$"
+    ],
+    rubinerz_tiefenschiefer: [
+      "?$&&&&%%$$$&&%&&",
+      "&%@@#-%%&$&&%%&%",
+      "$$?$-/&@@@@%#@%%",
+      "%&$&&%%%&$?-*-$&",
+      "@#-&%%#-$$$?/$&%",
+      "?*&$&&@*/$&$&&&$",
+      "?/$&&@%%&&%%#@%&",
+      "$&%%%%$?$$&%/%&&",
+      "&%&%-#-?$&$&%%%&",
+      "%%@@*-/$&#-&%@@%",
+      "$&$&%&&%%-/%&&??",
+      "$$#%$???&%&%-#?$",
+      "$-*-&?$$$&%%*-$$",
+      "%%/@@&$$&%@%@*/%",
+      "??$$&%%@%?$&&$$?",
+      "??$&$&&@&?$$&&$$"
+    ],
+    rubin: [
+      "................",
+      "................",
+      "................",
+      ".....======.....",
+      "....=##++##=....",
+      "...=+--**--+=...",
+      "...=-**//**-=...",
+      "...=-*/////*=...",
+      "....=*////*=....",
+      ".....=*//*=.....",
+      "......=**=......",
+      ".......==.......",
+      "................",
+      "................",
+      "................",
+      "................"
+    ],
+    rubinerz: [
+      "ppppouuouquuoooo",
+      "oouo#-oooooqquou",
+      "ouqq-/uquuuo#ooo",
+      "ooppopooppo-*-uu",
+      "u#-uuu#-oppp/uoo",
+      "o*ooooo*/uuququp",
+      "u/opppuppuuu#ooo",
+      "uuqququuoouu/ooo",
+      "pppo-#-pppooooou",
+      "oopo*-/pp#-ppppo",
+      "qououuqqu-/oouuu",
+      "oo#ooppooooo-#op",
+      "o-*-opouuooq*-qu",
+      "pp/uuoouuuoou*/p",
+      "ouuooooooooopppp",
+      "oooooouuoppoouoo"
     ],
     steinuntergrund: [
       "ppppouuouquuoooo",
@@ -1254,6 +1487,13 @@
     return [0, 0, 0, 0];
   }
 
+  function farbnameVon(zeichen) {
+    for (var i = 0; i < palette.length; i++) {
+      if (palette[i].zeichen === zeichen) return palette[i].name;
+    }
+    return "Farbe " + zeichen;
+  }
+
   function alsCss(farbe) {
     if (farbe[3] === 0) return "transparent";
     return "rgba(" + farbe[0] + "," + farbe[1] + "," + farbe[2] + "," + (farbe[3] / 255) + ")";
@@ -1340,13 +1580,28 @@
     });
 
     reihenfolge.forEach(function (gruppe) {
-      var titel = document.createElement("h3");
+      var anzahl = 0, hatAktuelle = false;
+      palette.forEach(function (e) {
+        if ((e.gruppe || "Deine Farben") !== gruppe) return;
+        anzahl++;
+        if (e.zeichen === aktuellesZeichen) hatAktuelle = true;
+      });
+      var zu = hatAktuelle ? false : istZu("farben:" + gruppe, anzahl);
+
+      var titel = document.createElement("button");
+      titel.type = "button";
       titel.className = "farbgruppe";
-      titel.textContent = gruppe;
+      titel.setAttribute("aria-expanded", zu ? "false" : "true");
+      titel.textContent = (zu ? "\u25b8 " : "\u25be ") + gruppe + " \u00b7 " + anzahl;
+      titel.addEventListener("click", function () {
+        klappSchalten("farben:" + gruppe, anzahl);
+        paletteAufbauen();
+      });
       behaelter.appendChild(titel);
 
       var raster = document.createElement("div");
       raster.className = "farbraster-gruppe";
+      raster.hidden = zu;
 
       palette.forEach(function (eintrag) {
         if ((eintrag.gruppe || "Deine Farben") !== gruppe) return;
@@ -1525,10 +1780,19 @@
     var p = punktAus(ereignis);
     if (p.x < 0 || p.y < 0 || p.x >= breite || p.y >= hoehe) return;
 
-    if (werkzeug === "pipette") {
-      aktuellesZeichen = feld[p.y][p.x];
+    if (werkzeug === "farbholen") {
+      var getroffen = feld[p.y][p.x];
+      aktuellesZeichen = getroffen;
+      zuletztMerken(getroffen);
+      // Gleich zurueck auf den Stift: Wer sich eine Farbe holt, will damit
+      // malen und nicht erst wieder umschalten. Und "malt" ausschalten,
+      // damit derselbe Fingerzug nicht sofort losmalt.
+      malt = false;
+      werkzeugSetzen("stift");
       paletteAufbauen();
-      meldung("Farbe „" + aktuellesZeichen + "“ aufgenommen.");
+      meldung(getroffen === "."
+        ? "Durchsichtig aufgenommen — damit radierst du."
+        : "„" + farbnameVon(getroffen) + "“ aufgenommen — jetzt malst du damit.");
       return;
     }
     if (werkzeug === "fuellen") {
@@ -1564,11 +1828,16 @@
   function werkzeugSetzen(neu) {
     werkzeug = neu;
     Array.prototype.forEach.call(
-      document.querySelectorAll("#werkzeuge button"),
+      document.querySelectorAll("#werkzeuge button[data-werkzeug]"),
       function (knopf) {
         knopf.setAttribute("aria-pressed",
           knopf.getAttribute("data-werkzeug") === neu ? "true" : "false");
       });
+    // Sobald ein Malwerkzeug gilt, ist das Greifen vorbei. Das passiert auch
+    // von selbst: Eine gegriffene Farbe schaltet auf den Stift zurueck, damit
+    // man gleich damit malen kann.
+    var bildfarbe = document.getElementById("werkzeug-bildfarbe");
+    if (bildfarbe) bildfarbe.setAttribute("aria-pressed", "false");
     document.getElementById("schnell-stift")
       .setAttribute("aria-pressed", neu === "stift" ? "true" : "false");
     document.getElementById("schnell-radierer")
@@ -1576,7 +1845,7 @@
   }
 
   Array.prototype.forEach.call(
-    document.querySelectorAll("#werkzeuge button"),
+    document.querySelectorAll("#werkzeuge button[data-werkzeug]"),
     function (knopf) {
       knopf.addEventListener("click", function () {
         werkzeugSetzen(knopf.getAttribute("data-werkzeug"));
@@ -2086,6 +2355,15 @@
         bild: VORLAGEN.sternenstaub, farben: benutzteFarben(VORLAGEN.sternenstaub) },
       { name: "Sternenklinge", kategorie: "waffen", fest: true,
         bild: VORLAGEN.sternenklinge, farben: benutzteFarben(VORLAGEN.sternenklinge) },
+      { name: "Rubin", kategorie: "gegenstaende", fest: true,
+        bild: VORLAGEN.rubin, farben: benutzteFarben(VORLAGEN.rubin) },
+      { name: "Rubinerz", kategorie: "bloecke", fest: true,
+        bild: VORLAGEN.rubinerz, farben: benutzteFarben(VORLAGEN.rubinerz) },
+      { name: "Rubinerz im Tiefenschiefer", kategorie: "bloecke", fest: true,
+        bild: VORLAGEN.rubinerz_tiefenschiefer,
+        farben: benutzteFarben(VORLAGEN.rubinerz_tiefenschiefer) },
+      { name: "Erz: Tiefenschiefer", kategorie: "bloecke", fest: true,
+        bild: VORLAGEN.tiefenschiefer, farben: benutzteFarben(VORLAGEN.tiefenschiefer) },
       { name: "Erz: Steinuntergrund", kategorie: "bloecke", fest: true,
         bild: VORLAGEN.steinuntergrund, farben: benutzteFarben(VORLAGEN.steinuntergrund) },
       { name: "Silbererz", kategorie: "bloecke", fest: true,
@@ -2097,7 +2375,322 @@
       { name: "Silbernugget", kategorie: "gegenstaende", fest: true,
         bild: VORLAGEN.silbernugget, farben: benutzteFarben(VORLAGEN.silbernugget) },
       { name: "Silberklinge", kategorie: "waffen", fest: true,
-        bild: VORLAGEN.silberklinge, farben: benutzteFarben(VORLAGEN.silberklinge) }
+        bild: VORLAGEN.silberklinge, farben: benutzteFarben(VORLAGEN.silberklinge) },
+      { name: "Ofen: T\u00fcr", kategorie: "bloecke", fest: true,
+        bild: [
+          "7PMUIMIIMMMI7IMM",
+          "UMZZZZZZZZZZZZ7M",
+          "PZZZZZZZZZZZZZZP",
+          "PZZZZZZZZZZZZZZI",
+          "MZZZZZZZZZZZZZZM",
+          "IZZZZYYYYYYZZZZM",
+          "MZZZZYYXXYYZZZZI",
+          "IZZZZYXWWXYZZZZM",
+          "MZZZZYXWWXYZZZZM",
+          "IZZZZYYXXYYZZZZM",
+          "MZZZZYYYYYYZZZZI",
+          "MZZZZZZZZZZZZZZM",
+          "IZZZZZZZZZZZZZZP",
+          "PZZZZZZZZZZZZZZP",
+          "MUZZZZZZZZZZZZ7U",
+          "MPMUIMIIMMMI7IM7"
+        ],
+        farben: [
+          { zeichen: "W", farbe: [47, 46, 46, 255], eigen: true },
+          { zeichen: "X", farbe: [58, 57, 57, 255], eigen: true },
+          { zeichen: "Y", farbe: [69, 65, 65, 255], eigen: true },
+          { zeichen: "Z", farbe: [75, 75, 75, 255], eigen: true },
+          { zeichen: "U", farbe: [118, 118, 118, 255], eigen: true },
+          { zeichen: "I", farbe: [129, 129, 129, 255], eigen: true },
+          { zeichen: "M", farbe: [138, 138, 138, 255], eigen: true },
+          { zeichen: "P", farbe: [149, 149, 149, 255], eigen: true },
+          { zeichen: "7", farbe: [172, 172, 172, 255], eigen: true }
+        ] },
+      { name: "Ofen: T\u00fcr, befeuert", kategorie: "bloecke", fest: true,
+        bild: [
+          "7PMUIMIIMMMI7IMM",
+          "UMZZZZZZZZZZZZ7M",
+          "PZZZZZZZZZZZZZZP",
+          "PZZZZZZZZZZZZZZI",
+          "MZZZZZZZZZZZZZZM",
+          "IZZZZYYYYYYZZZZM",
+          "MZZZZYYXXYYZZZZI",
+          "IZZZZYXSAXYZZZZM",
+          "MZZZZYXKHXYZZZZM",
+          "IZZZZYYXXYYZZZZM",
+          "MZZZZYYYYYYZZZZI",
+          "MZZZZZZZZZZZZZZM",
+          "IZZZZZZZZZZZZZZP",
+          "PZZZZZZZZZZZZZZP",
+          "MUZZZZZZZZZZZZ7U",
+          "MPMUIMIIMMMI7IM7"
+        ],
+        farben: [
+          { zeichen: "X", farbe: [58, 57, 57, 255], eigen: true },
+          { zeichen: "Y", farbe: [69, 65, 65, 255], eigen: true },
+          { zeichen: "Z", farbe: [75, 75, 75, 255], eigen: true },
+          { zeichen: "S", farbe: [221, 73, 41, 255], eigen: true },
+          { zeichen: "U", farbe: [118, 118, 118, 255], eigen: true },
+          { zeichen: "H", farbe: [240, 80, 46, 255], eigen: true },
+          { zeichen: "I", farbe: [129, 129, 129, 255], eigen: true },
+          { zeichen: "K", farbe: [225, 103, 60, 255], eigen: true },
+          { zeichen: "M", farbe: [138, 138, 138, 255], eigen: true },
+          { zeichen: "P", farbe: [149, 149, 149, 255], eigen: true },
+          { zeichen: "A", farbe: [255, 135, 0, 255], eigen: true },
+          { zeichen: "7", farbe: [172, 172, 172, 255], eigen: true }
+        ] },
+      { name: "Ofen: Platte", kategorie: "bloecke", fest: true,
+        bild: [
+          "7PMUIMIIMMMI7IMM",
+          "UZZMZZZZZZZZPZZM",
+          "PZPPZZZZZZZZMMZP",
+          "PMUMZZZZZZZZMPMI",
+          "MZZZZZZZZZZZZZZM",
+          "IZZZZZZZZZZZZZZM",
+          "MZZP77776MMMIZZI",
+          "IZZ6677VVM77MZZM",
+          "MZZM6VMVV7V7MZZM",
+          "Z7MI6V7777VMI77Z",
+          "ZPMU677VVP77IPMZ",
+          "ZMIRPV7VV7V7IMMZ",
+          "ZMMRP7677P76RMMZ",
+          "YMMZQQQRRRRRQMMY",
+          "YMMPIUUUUUUIIIIY",
+          "XZZZZZZZZZZZZZZX"
+        ],
+        farben: [
+          { zeichen: "V", farbe: [17, 17, 17, 255], eigen: true },
+          { zeichen: "X", farbe: [58, 57, 57, 255], eigen: true },
+          { zeichen: "Y", farbe: [69, 65, 65, 255], eigen: true },
+          { zeichen: "Z", farbe: [75, 75, 75, 255], eigen: true },
+          { zeichen: "Q", farbe: [91, 95, 89, 255], eigen: true },
+          { zeichen: "R", farbe: [101, 105, 99, 255], eigen: true },
+          { zeichen: "U", farbe: [118, 118, 118, 255], eigen: true },
+          { zeichen: "I", farbe: [129, 129, 129, 255], eigen: true },
+          { zeichen: "M", farbe: [138, 138, 138, 255], eigen: true },
+          { zeichen: "P", farbe: [149, 149, 149, 255], eigen: true },
+          { zeichen: "6", farbe: [162, 162, 162, 255], eigen: true },
+          { zeichen: "7", farbe: [172, 172, 172, 255], eigen: true }
+        ] },
+      { name: "Ofen: Platte, gl\u00fchend", kategorie: "bloecke", fest: true,
+        bild: [
+          "7PMUIMIIMMMI7IMM",
+          "UZZMZZZZZZZZPZZM",
+          "PZPPZZZZZZZZMMZP",
+          "PMUMZZZZZZZZMPMI",
+          "MZZZZZZZZZZZZZZM",
+          "IZZZZZZZZZZZZZZM",
+          "MZZP77776MMMIZZI",
+          "IZZ6677SSM77MZZM",
+          "MZZM6SMJJ7G7MZZM",
+          "Z7MI6J7777JMI77Z",
+          "ZPMU677BNP77IPMZ",
+          "ZMIRPN78B7B7IMMZ",
+          "ZMMRP7677P76RMMZ",
+          "YMMZQQQRRRRRQMMY",
+          "YMMPIUUUUUUIIIIY",
+          "XZZZZZZZZZZZZZZX"
+        ],
+        farben: [
+          { zeichen: "X", farbe: [58, 57, 57, 255], eigen: true },
+          { zeichen: "Y", farbe: [69, 65, 65, 255], eigen: true },
+          { zeichen: "Z", farbe: [75, 75, 75, 255], eigen: true },
+          { zeichen: "Q", farbe: [91, 95, 89, 255], eigen: true },
+          { zeichen: "R", farbe: [101, 105, 99, 255], eigen: true },
+          { zeichen: "S", farbe: [221, 73, 41, 255], eigen: true },
+          { zeichen: "U", farbe: [118, 118, 118, 255], eigen: true },
+          { zeichen: "G", farbe: [221, 88, 41, 255], eigen: true },
+          { zeichen: "I", farbe: [129, 129, 129, 255], eigen: true },
+          { zeichen: "J", farbe: [221, 104, 41, 255], eigen: true },
+          { zeichen: "M", farbe: [138, 138, 138, 255], eigen: true },
+          { zeichen: "N", farbe: [221, 120, 41, 255], eigen: true },
+          { zeichen: "P", farbe: [149, 149, 149, 255], eigen: true },
+          { zeichen: "B", farbe: [221, 152, 41, 255], eigen: true },
+          { zeichen: "6", farbe: [162, 162, 162, 255], eigen: true },
+          { zeichen: "7", farbe: [172, 172, 172, 255], eigen: true },
+          { zeichen: "8", farbe: [221, 184, 41, 255], eigen: true }
+        ] },
+      { name: "Ofen: Stein", kategorie: "bloecke", fest: true,
+        bild: [
+          "XZZZZZZZZZZZZZZX",
+          "ZZZZZZZZZZZZZZZZ",
+          "ZZZZZZZZZZZZZZZZ",
+          "ZZZZZZZZZZZZZZZZ",
+          "ZZZZZZZZZZZZZZZZ",
+          "ZZZZZZZZZZZZZZZZ",
+          "ZZZZZZZZZZZZZZZZ",
+          "ZZZZZZZZZZZZZZZZ",
+          "ZZZZZZZZZZZZZZZZ",
+          "ZZZZZZZZZZZZZZZZ",
+          "ZZZZZZZZZZZZZZZZ",
+          "ZZZZZZZZZZZZZZZZ",
+          "ZZZZZZZZZZZZZZZZ",
+          "ZZZZZZZZZZZZZZZZ",
+          "ZZZZZZZZZZZZZZZZ",
+          "XZZZZZZZZZZZZZZX"
+        ],
+        farben: [
+          { zeichen: "X", farbe: [58, 57, 57, 255], eigen: true },
+          { zeichen: "Z", farbe: [75, 75, 75, 255], eigen: true }
+        ] },
+      { name: "Ofen: Bottich", kategorie: "bloecke", fest: true,
+        bild: [
+          "7PMUIMIIMMMI7IMM",
+          "UZZMZZZZZZZZPZZM",
+          "PZPPZZZZZZZZMMZP",
+          "PMUMZZZZZZZZMPMI",
+          "MZZZZZZZZZZZZZZM",
+          "IZZZZZMMMMZZZZZM",
+          "MZZZZMZZZZMZZZZI",
+          "IZZZMZZZZZZMZZZM",
+          "MZZZMZZWWZZMZZZM",
+          "Z7M7ZM7WWM7ZM77Z",
+          "ZPMMZPMMMMMZPPMZ",
+          "ZMMMIZMMMMZIMMMZ",
+          "ZMMMMMZZZZMMMMMZ",
+          "YMMMMMMMMMMMMMMY",
+          "YMMMMMMMIMMMMIIY",
+          "XZZZZZZZZZZZZZZX"
+        ],
+        farben: [
+          { zeichen: "W", farbe: [47, 46, 46, 255], eigen: true },
+          { zeichen: "X", farbe: [58, 57, 57, 255], eigen: true },
+          { zeichen: "Y", farbe: [69, 65, 65, 255], eigen: true },
+          { zeichen: "Z", farbe: [75, 75, 75, 255], eigen: true },
+          { zeichen: "U", farbe: [118, 118, 118, 255], eigen: true },
+          { zeichen: "I", farbe: [129, 129, 129, 255], eigen: true },
+          { zeichen: "M", farbe: [138, 138, 138, 255], eigen: true },
+          { zeichen: "P", farbe: [149, 149, 149, 255], eigen: true },
+          { zeichen: "7", farbe: [172, 172, 172, 255], eigen: true }
+        ] },
+      { name: "Silberblock", kategorie: "bloecke", fest: true,
+        bild: [
+          "0000000x0000x000",
+          "0zzzzCzzzzzCzzDx",
+          "0zyDDyEEEEyyyyjx",
+          "0zyCCEEEEyyyyD0x",
+          "0CyCyyyyEEEEyyjx",
+          "0zyyyyyEEEEyyEjx",
+          "xzyyyyEEEEDyiEjx",
+          "0zyyyEEEEDDEiijx",
+          "0zyyyyyyEEyyEEjx",
+          "0zyyyDyEEyyEEyjx",
+          "0CDyyDEEyyyEEyjx",
+          "0zDDyEEyyyyyjE0x",
+          "xzyyDDEEyyyjjyjx",
+          "0zyDDiEyyyyyyyjx",
+          "0Djj0jjjj0jjjjjx",
+          "0xxxxxxxxxxxxxxx"
+        ],
+        farben: [
+          { zeichen: "z", farbe: [246, 249, 255, 255] },
+          { zeichen: "C", farbe: [238, 244, 253, 255] },
+          { zeichen: "D", farbe: [227, 235, 249, 255] },
+          { zeichen: "E", farbe: [216, 227, 243, 255] },
+          { zeichen: "y", farbe: [206, 218, 236, 255] },
+          { zeichen: "i", farbe: [193, 208, 231, 255] },
+          { zeichen: "j", farbe: [180, 197, 222, 255] },
+          { zeichen: "0", farbe: [166, 185, 212, 255] },
+          { zeichen: "x", farbe: [152, 168, 194, 255] }
+        ] },
+      { name: "Ofen: Front, mit Tiefe", kategorie: "bloecke", fest: true,
+        bild: [
+          "7PMUIMIIMMMI7IMM",
+          "UZZMZZZZZZZZPZZM",
+          "PZPPZZZZZZZZMMZP",
+          "PMUMZZZZZZZZMPMI",
+          "MZYYZZZZZYYZZZYM",
+          "IZZXXZZZZZZZZYZM",
+          "MZYZZZYYZZZZZZZI",
+          "IYZZWWZZXXZZYZZM",
+          "MWXXYYXXWWXYXXWM",
+          "M7M7MM7MIM7MM77M",
+          "MPMMMPMMMMMMPPMM",
+          "MMMMMMMMMMMIMMMM",
+          "II7PMMMMMMMMP77I",
+          "MMP7MMMMMMMM7PMM",
+          "MMM7MMMMIMMMPIIp",
+          "MMMPIIMMMMMMIMMM"
+        ],
+        farben: [
+          { zeichen: "W", farbe: [47, 46, 46, 255] },
+          { zeichen: "X", farbe: [58, 57, 57, 255] },
+          { zeichen: "Y", farbe: [69, 65, 65, 255] },
+          { zeichen: "Z", farbe: [75, 75, 75, 255] },
+          { zeichen: "U", farbe: [118, 118, 118, 255] },
+          { zeichen: "I", farbe: [129, 129, 129, 255] },
+          { zeichen: "M", farbe: [138, 138, 138, 255] },
+          { zeichen: "p", farbe: [143, 143, 143, 255] },
+          { zeichen: "P", farbe: [149, 149, 149, 255] },
+          { zeichen: "7", farbe: [172, 172, 172, 255] }
+        ] },
+      { name: "Ofen: Front, angefangen", kategorie: "bloecke", fest: true,
+        bild: [
+          "7PMUIMIIMMMI7IMM",
+          "UZZMZZZZZZZZPZZM",
+          "PZPPZZZZZZZZMMZP",
+          "PMUMZZZZZZZZMPMI",
+          "MZZZZZZZZZZZZZZM",
+          "IZZZZZZZZZZZZZZM",
+          "MZZZZZZZZZZZZZZI",
+          "IZZZZZZZZZZZZZZM",
+          "MZZZZZZZZZZZZZZM",
+          "M7M7MM7MIM7MM77M",
+          "MPMMMPMMMMMMPPMM",
+          "MMMMMMMMMMMIMMMM",
+          "II7PMMMMMMMMP77I",
+          "MMP7MMMMMMMM7PMM",
+          "MMM7MMMMIMMMPIIp",
+          "MMMPIIMMMMMMIMMM"
+        ],
+        // Die sechs Grautoene sind dieselben wie bei den anderen Ofenbildern,
+        // "p" kommt aus der Grundpalette - es muss trotzdem hier stehen,
+        // sonst faellt der eine Pixel in der Vorschau durchsichtig aus.
+        farben: [
+          { zeichen: "Z", farbe: [75, 75, 75, 255], eigen: true },
+          { zeichen: "U", farbe: [118, 118, 118, 255], eigen: true },
+          { zeichen: "I", farbe: [129, 129, 129, 255], eigen: true },
+          { zeichen: "M", farbe: [138, 138, 138, 255], eigen: true },
+          { zeichen: "p", farbe: [143, 143, 143, 255], eigen: false },
+          { zeichen: "P", farbe: [149, 149, 149, 255], eigen: true },
+          { zeichen: "7", farbe: [172, 172, 172, 255], eigen: true }
+        ] },
+      { name: "Ofen: Bottich, gl\u00fchend", kategorie: "bloecke", fest: true,
+        bild: [
+          "7PMUIMIIMMMI7IMM",
+          "UZZMZZZZZZZZPZZM",
+          "PZPPZZZZZZZZMMZP",
+          "PMUMZZZZZZZZMPMI",
+          "MZZZZZZZZZZZZZZM",
+          "IZZZZZMMMMZZZZZM",
+          "MZZZZMZZZZMZZZZI",
+          "IZZZMZZOOZZMZZZM",
+          "MZZZMZOSGOZMZZZM",
+          "Z7M7ZL5JB5LZM77Z",
+          "ZPMMZPL55LMZPPMZ",
+          "ZMMMIZMLLMZIMMMZ",
+          "ZMMMMMZZZZMMMMMZ",
+          "YMMMMMMMMMMMMMMY",
+          "YMMMMMMMIMMMMIIY",
+          "XZZZZZZZZZZZZZZX"
+        ],
+        farben: [
+          { zeichen: "X", farbe: [58, 57, 57, 255], eigen: true },
+          { zeichen: "Y", farbe: [69, 65, 65, 255], eigen: true },
+          { zeichen: "Z", farbe: [75, 75, 75, 255], eigen: true },
+          { zeichen: "O", farbe: [90, 80, 66, 255], eigen: true },
+          { zeichen: "S", farbe: [221, 73, 41, 255], eigen: true },
+          { zeichen: "U", farbe: [118, 118, 118, 255], eigen: true },
+          { zeichen: "G", farbe: [221, 88, 41, 255], eigen: true },
+          { zeichen: "I", farbe: [129, 129, 129, 255], eigen: true },
+          { zeichen: "J", farbe: [221, 104, 41, 255], eigen: true },
+          { zeichen: "L", farbe: [146, 133, 125, 255], eigen: true },
+          { zeichen: "M", farbe: [138, 138, 138, 255], eigen: true },
+          { zeichen: "P", farbe: [149, 149, 149, 255], eigen: true },
+          { zeichen: "B", farbe: [221, 152, 41, 255], eigen: true },
+          { zeichen: "5", farbe: [187, 153, 134, 255], eigen: true },
+          { zeichen: "7", farbe: [172, 172, 172, 255], eigen: true }
+        ] }
     ];
   }
 
@@ -2224,12 +2817,54 @@
       titel.appendChild(document.createTextNode(eintrag[1] + " · " + treffer.length));
       gruppe.appendChild(titel);
 
+      // Werke, deren Name mit "Etwas: " beginnt, gehoeren zusammen. Ab drei
+      // Stueck wandern sie in einen eigenen Klappsatz, damit eine lange
+      // Reihe wie der Ofen nicht die ganze Kategorie zuschuettet.
+      var saetze = {}, einzeln = [];
+      treffer.forEach(function (nummer) {
+        var teil = werke[nummer].name.split(":");
+        var kopf = teil.length > 1 ? teil[0].trim() : null;
+        if (kopf) { (saetze[kopf] = saetze[kopf] || []).push(nummer); }
+        else einzeln.push(nummer);
+      });
+      Object.keys(saetze).forEach(function (kopf) {
+        if (saetze[kopf].length < 3) {
+          einzeln = einzeln.concat(saetze[kopf]);
+          delete saetze[kopf];
+        }
+      });
+
       var raster = document.createElement("div");
       raster.className = "werke";
-      treffer.forEach(function (nummer) {
+      einzeln.forEach(function (nummer) {
         raster.appendChild(werkKarte(werke[nummer], nummer));
       });
-      gruppe.appendChild(raster);
+      if (einzeln.length) gruppe.appendChild(raster);
+
+      Object.keys(saetze).sort().forEach(function (kopf) {
+        var liste = saetze[kopf];
+        var marke = "werke:" + schluessel + ":" + kopf;
+        var zu = gesucht ? false : istZu(marke, liste.length, 0);
+
+        var knopf = document.createElement("button");
+        knopf.type = "button";
+        knopf.className = "satztitel";
+        knopf.setAttribute("aria-expanded", zu ? "false" : "true");
+        knopf.textContent = (zu ? "\u25b8 " : "\u25be ") + kopf + " \u00b7 " + liste.length;
+        knopf.addEventListener("click", function () {
+          klappSchalten(marke, liste.length, 0);
+          sammlungZeigen();
+        });
+        gruppe.appendChild(knopf);
+
+        var satzraster = document.createElement("div");
+        satzraster.className = "werke";
+        satzraster.hidden = zu;
+        liste.forEach(function (nummer) {
+          satzraster.appendChild(werkKarte(werke[nummer], nummer));
+        });
+        gruppe.appendChild(satzraster);
+      });
       behaelter.appendChild(gruppe);
       gezeigt += treffer.length;
     });
@@ -3519,6 +4154,168 @@
       return null;
     }
   }
+
+
+  // --- Farbe aus einem Bild holen --------------------------------------
+  // Beim Nachbauen einer vorhandenen Textur ist die Farbe das Erste, was
+  // fehlt: Man sieht sie, kann sie aber nicht benennen. Hier wird sie
+  // angetippt statt geschaetzt - und landet gleich in der Palette, wo sie
+  // zum Malen gebraucht wird.
+  var greifSchirm = document.getElementById("greifschirm");
+  var greifStift = greifSchirm.getContext("2d", { willReadFrequently: true });
+  var greifFeld = document.getElementById("greiffeld");
+  var greifBild = null;      // die gelesenen Pixel
+  var greifBreite = 0, greifHoehe = 0, greifKante = 12;
+
+  function greifLaden(quelle) {
+    var neu = new Image();
+    neu.onload = function () {
+      greifBreite = neu.naturalWidth;
+      greifHoehe = neu.naturalHeight;
+      // Grosse Bilder auf ein vernuenftiges Mass bringen: Zum Farben
+      // greifen reicht das Bild in Daumengroesse, und ein Foto mit
+      // dreitausend Pixeln Breite wuerde nur den Speicher fuellen.
+      var hilfe = document.createElement("canvas");
+      hilfe.width = greifBreite;
+      hilfe.height = greifHoehe;
+      var h = hilfe.getContext("2d", { willReadFrequently: true });
+      h.drawImage(neu, 0, 0);
+      var daten;
+      try {
+        daten = h.getImageData(0, 0, greifBreite, greifHoehe).data;
+      } catch (fehler) {
+        meldung("Das Bild lässt sich nicht lesen.", "fehler");
+        return;
+      }
+      greifBild = [];
+      for (var y = 0; y < greifHoehe; y++) {
+        var zeile = [];
+        for (var x = 0; x < greifBreite; x++) {
+          var i = (y * greifBreite + x) * 4;
+          zeile.push([daten[i], daten[i + 1], daten[i + 2], daten[i + 3]]);
+        }
+        greifBild.push(zeile);
+      }
+      greifKante = Math.max(1, Math.min(14, Math.floor(240 / Math.max(greifBreite, greifHoehe))));
+      greifZeichnen();
+      greifFeld.hidden = false;
+      document.getElementById("greifweg").hidden = false;
+      document.getElementById("greifwert").hidden = true;
+      meldung(greifBreite + " × " + greifHoehe + " Pixel — jetzt eine Farbe antippen.");
+    };
+    neu.onerror = function () {
+      meldung("Das Bild konnte nicht geladen werden.", "fehler");
+    };
+    neu.src = quelle;
+  }
+
+  function greifZeichnen() {
+    greifSchirm.width = greifBreite * greifKante;
+    greifSchirm.height = greifHoehe * greifKante;
+    greifStift.clearRect(0, 0, greifSchirm.width, greifSchirm.height);
+    for (var y = 0; y < greifHoehe; y++) {
+      for (var x = 0; x < greifBreite; x++) {
+        var f = greifBild[y][x];
+        if (f[3] === 0) continue;
+        greifStift.fillStyle = alsCss(f);
+        greifStift.fillRect(x * greifKante, y * greifKante, greifKante, greifKante);
+      }
+    }
+  }
+
+  function greifen(ereignis) {
+    if (!greifBild) return;
+    var rahmen = greifSchirm.getBoundingClientRect();
+    var x = Math.floor((ereignis.clientX - rahmen.left) / (rahmen.width / greifBreite));
+    var y = Math.floor((ereignis.clientY - rahmen.top) / (rahmen.height / greifHoehe));
+    if (x < 0 || y < 0 || x >= greifBreite || y >= greifHoehe) return;
+    var f = greifBild[y][x];
+    var wohin = document.getElementById("greifwert");
+    if (f[3] === 0) {
+      wohin.hidden = false;
+      wohin.textContent = "Da ist nichts — durchsichtig. Dafür gibt es den Punkt.";
+      return;
+    }
+    wohin.hidden = false;
+    wohin.textContent = alsHex(f) + " — " + f[0] + ", " + f[1] + ", " + f[2];
+    farbeAufnehmen([f[0], f[1], f[2]], "aus einem Bild");
+  }
+
+  greifSchirm.addEventListener("pointerdown", function (e) {
+    e.preventDefault();
+    greifSchirm.setPointerCapture(e.pointerId);
+    greifen(e);
+  });
+  greifSchirm.addEventListener("pointermove", function (e) {
+    if (e.buttons) greifen(e);
+  });
+
+  function greifDatei(datei) {
+    if (!datei) return;
+    var leser = new FileReader();
+    leser.onload = function () { greifLaden(leser.result); };
+    leser.readAsDataURL(datei);
+  }
+
+  document.getElementById("greifdatei").addEventListener("change", function (e) {
+    greifDatei(e.target.files && e.target.files[0]);
+    e.target.value = "";     // dieselbe Datei soll nochmal gehen
+  });
+
+  document.getElementById("greifweg").addEventListener("click", function () {
+    greifBild = null;
+    greifFeld.hidden = true;
+    this.hidden = true;
+    document.getElementById("greifwert").hidden = true;
+  });
+
+  var greifTafel = document.getElementById("greiftafel");
+  ["dragenter", "dragover"].forEach(function (was) {
+    greifTafel.addEventListener(was, function (e) {
+      e.preventDefault();
+      greifTafel.classList.add("zielt");
+    });
+  });
+  ["dragleave", "drop"].forEach(function (was) {
+    greifTafel.addEventListener(was, function () { greifTafel.classList.remove("zielt"); });
+  });
+  greifTafel.addEventListener("drop", function (e) {
+    e.preventDefault();
+    greifDatei(e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]);
+  });
+
+  // Der Knopf in der Werkzeugleiste ist der Weg hierher: Beim Malen schaut
+  // man nach oben zu den Werkzeugen, nicht nach unten zu den Tafeln.
+  document.getElementById("werkzeug-bildfarbe").addEventListener("click", function () {
+    this.setAttribute("aria-pressed", "true");
+    Array.prototype.forEach.call(
+      document.querySelectorAll("#werkzeuge button[data-werkzeug]"),
+      function (k) { k.setAttribute("aria-pressed", "false"); });
+
+    greifTafel.scrollIntoView({ block: "center", behavior: "smooth" });
+    greifTafel.classList.add("beachte");
+    window.setTimeout(function () { greifTafel.classList.remove("beachte"); }, 1400);
+
+    if (!greifBild) {
+      // Noch kein Bild da: Dann ist die Dateiauswahl der naechste Handgriff,
+      // und den spart man sich.
+      document.getElementById("greifdatei").click();
+      meldung("Such dir ein Bild aus — danach tippst du die Farbe darin an.");
+    } else {
+      meldung("Tipp im Bild die Farbe an, mit der du malen willst.");
+    }
+  });
+
+  window.addEventListener("paste", function (e) {
+    var sachen = e.clipboardData && e.clipboardData.items;
+    if (!sachen) return;
+    for (var i = 0; i < sachen.length; i++) {
+      if (sachen[i].type.indexOf("image") === 0) {
+        greifDatei(sachen[i].getAsFile());
+        return;
+      }
+    }
+  });
 
   // --- Start -----------------------------------------------------------
   GRUNDPALETTE.forEach(function (e) {
