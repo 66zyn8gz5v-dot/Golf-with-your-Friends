@@ -56,6 +56,11 @@ def modell():
         "bein_l": k([0, 0, -2], [4, BEIN, TIEFE], [16, 48]),
     }
     teile["huelle"]["inflate"] = 0.5
+    # Der Helmkamm ist ein eigener Kasten. Gemalt bliebe er ein heller
+    # Streifen auf einem Wuerfel - Volumen bekommt er erst, wenn er
+    # wirklich heraussteht. Er sitzt am Helm, nicht am Kopf: Wer den Helm
+    # spaeter austauscht, nimmt den Kamm mit.
+    teile["kamm"] = k([-1, SCHULTER + KOPF, -4.5], [2, 2, 9], [0, 32])
 
     return teile, {
         "format_version": "1.12.0",
@@ -76,7 +81,7 @@ def modell():
                 # ist - aber der Knochen steht schon da, damit die Ruestung
                 # spaeter einen Platz hat.
                 {"name": "hat", "parent": "head", "pivot": [0, SCHULTER, 0],
-                 "cubes": [teile["huelle"]]},
+                 "cubes": [teile["huelle"], teile["kamm"]]},
                 {"name": "rightArm", "parent": "body", "pivot": [-5, SCHULTER - 2, 0],
                  "cubes": [teile["arm_r"]]},
                 {"name": "leftArm", "parent": "body", "pivot": [5, SCHULTER - 2, 0],
@@ -233,41 +238,49 @@ def helm_aufsetzen(bild, teile):
 
     Deshalb wird der Kopf ueberhaupt geschwaerzt: Nicht weil man ihn sehen
     soll, sondern damit man ihn NICHT sieht.
+
+    Das Metall ist dunkel gehalten und die Glanzkanten hell. Ein Helm in
+    durchgehendem Mittelgrau hat keine Kanten - er sieht aus wie ein
+    Karton. Erst der Sprung von der Kante zur Flaeche macht ihn aus Stahl.
     """
-    kopf = flaechen(*teile["kopf"]["uv"], 8, KOPF, 8)
-    for feld in kopf.values():
+    O = (0, 0, 0, 0)
+    FARBEN = {"G": (226, 232, 242, 255), "H": (168, 176, 192, 255),
+              "M": (112, 120, 138, 255), "T": (74, 81, 98, 255),
+              "S": (44, 49, 64, 255),    "K": (22, 25, 34, 255), "O": O}
+
+    # Ein durchgehender Sehspalt mit Nasensteg in der Mitte wirkt
+    # gefaehrlicher als zwei einzelne Loecher - und er zeigt mehr von der
+    # Schwaerze dahinter.
+    # Auf dem Dach nichts als Metall: Der Kamm ist jetzt ein Kasten, und
+    # ein zweiter, gemalter daneben sieht aus wie drei Kaemme.
+    VORN  = ["HHHHHHHH", "MMMMMMMM", "SSSSSSSS", "TOOTTOOT",
+             "HHHHHHHH", "MMTMMTMM", "MMMMMMMM", "KKSSSSKK"]
+    SEITE = ["HHHHHHHH", "MMMMMMMM", "SSSSSSSS", "TTMMMMTT",
+             "HHHHHHHH", "MMMOOMMM", "MMMMMMMM", "KKSSSSKK"]
+    OBEN  = ["HMMMMMMH", "MMMMMMMM", "MMMMMMMM", "MMMMMMMM",
+             "MMMMMMMM", "MMMMMMMM", "MMMMMMMM", "HMMMMMMH"]
+
+    for feld in flaechen(*teile["kopf"]["uv"], 8, KOPF, 8).values():
         fuelle(bild, feld, SCHWARZ)
 
     huelle = flaechen(*teile["huelle"]["uv"], 8, KOPF, 8)
-
-    # Oberseite und Rueckseite: glattes Metall mit einer helleren Kante
-    fuelle(bild, huelle["oben"], H_GLANZ)
-    x, y, b, h = huelle["oben"]
-    fuelle(bild, (x, y, b, 1), H_HELL)
-    for seite in ("hinten", "rechts", "links"):
-        fuelle(bild, huelle[seite], H_MITTE)
+    for seite, muster in (("vorn", VORN), ("oben", OBEN), ("rechts", SEITE),
+                          ("links", SEITE), ("hinten", SEITE)):
         x, y, b, h = huelle[seite]
-        fuelle(bild, (x, y, b, 2), H_HELL)          # Helmdach
-        fuelle(bild, (x, y + 2, b, 1), H_KANTE)     # Stirnband
-        fuelle(bild, (x, y + h - 1, b, 1), H_SCHATT)
-    fuelle(bild, huelle["unten"], H_KANTE)
+        for dy, zeile in enumerate(muster[:h]):
+            for dx, c in enumerate(zeile[:b]):
+                bild.putpixel((x + dx, y + dy), FARBEN[c])
+    fuelle(bild, huelle["unten"], FARBEN["K"])
 
-    # Die Vorderseite traegt Sehschlitze und Lueftung
-    x, y, b, h = huelle["vorn"]
-    fuelle(bild, (x, y, b, h), H_MITTE)
-    fuelle(bild, (x, y, b, 2), H_HELL)              # Helmdach
-    fuelle(bild, (x, y + 2, b, 1), H_KANTE)         # Stirnband
-    fuelle(bild, (x, y + 3, b, 1), H_TIEF)          # Schattenkante darunter
-    fuelle(bild, (x + 3, y + 4, 2, 3), H_TIEF)      # Nasensteg
-    fuelle(bild, (x, y + h - 1, b, 1), H_SCHATT)    # Kinnrand
-
-    # Die Sehschlitze bleiben LEER - genau darin liegt die Tiefe.
-    for dx in (1, 5):
-        for sx in range(dx, dx + 2):
-            bild.putpixel((x + sx, y + 3), (0, 0, 0, 0))
-    # Lueftungsloecher unter den Augen, ebenfalls offen
-    for dx in (2, 5):
-        bild.putpixel((x + dx, y + 6), (0, 0, 0, 0))
+    # Der Kamm: oben der Glanz, an den Flanken der Schatten
+    kamm = flaechen(*teile["kamm"]["uv"], 2, 2, 9)
+    for seite, farbe in (("oben", "G"), ("vorn", "H"), ("hinten", "H"),
+                         ("rechts", "T"), ("links", "T"), ("unten", "K")):
+        fuelle(bild, kamm[seite], FARBEN[farbe])
+    x, y, b, h = kamm["rechts"]
+    fuelle(bild, (x, y, b, 1), FARBEN["H"])
+    x, y, b, h = kamm["links"]
+    fuelle(bild, (x, y, b, 1), FARBEN["H"])
     return bild
 
 
