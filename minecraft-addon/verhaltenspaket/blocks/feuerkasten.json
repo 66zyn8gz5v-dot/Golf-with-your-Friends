@@ -27,6 +27,10 @@
           "texture": "feuerkasten_seite",
           "render_method": "opaque"
         },
+        "north": {
+          "texture": "feuerkasten_vorn",
+          "render_method": "opaque"
+        },
         "south": {
           "texture": "feuerkasten_vorn",
           "render_method": "opaque"

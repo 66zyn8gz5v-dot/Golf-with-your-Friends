@@ -33,6 +33,10 @@
           "texture": "tiegel_seite",
           "render_method": "opaque"
         },
+        "north": {
+          "texture": "tiegel_vorn",
+          "render_method": "opaque"
+        },
         "south": {
           "texture": "tiegel_vorn",
           "render_method": "opaque"
