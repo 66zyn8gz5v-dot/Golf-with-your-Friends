@@ -100,7 +100,11 @@ def modell():
     kopf   = nimm("kopf",   [-4, SCHULTER, -4], [8, KOPF, 8])
     rumpf  = nimm("rumpf",   [-4, BEIN, -3], [8, RUMPF, TIEFE])
     glocke = nimm("glocke",  [-4.5, SCHULTER + 3, -4.5], [9, KOPF - 2, 9])
-    kittel = nimm("kittel",  [-4.5, BEIN - 1, -3.5], [9, 5, TIEFE + 1])
+    # Der Wappenrock reicht bei Fynns Entwurf bis unter die Knie - von
+    # den Beinen bleiben nur Schienen und Stiefel sichtbar. Er haengt
+    # am Rumpf, nicht an den Beinen: An den Beinen wuerde er beim
+    # Laufen in der Mitte aufreissen.
+    kittel = nimm("kittel",  [-4.5, 4, -3.5], [9, 12, TIEFE + 1])
     arm_r  = nimm("arm_r",   [-8, BEIN, -2], [4, RUMPF, 4])
     arm_l  = nimm("arm_l",   [4, BEIN, -2], [4, RUMPF, 4])
     bein_r = nimm("bein_r",  [-4, 0, -2], [4, BEIN, 4])
@@ -148,15 +152,25 @@ def main():
     teile, geo = modell()
     ziel = BILDER / "models" / "entity" / "ritter.geo.json"
     ziel.write_text(json.dumps(geo, indent=2) + "\n")
-    grundhaut(teile).save(BILDER / "textures" / "entity" / "ritter.png")
+
+    # Liegen Fynns drei Ansichten vor, wird die Haut daraus gemalt. Sonst
+    # die Grundierung - damit das Werkzeug auch dann laeuft, wenn jemand
+    # nur die Koerperform aendern will.
+    vorlagen = Path(__file__).resolve().parent / "vorlagen" / "ritter"
+    drei = [vorlagen / (n + ".png") for n in ("vorn", "hinten", "seite")]
+    if all(d.exists() for d in drei):
+        haut = aus_ansichten(teile, *(Image.open(d).convert("RGB") for d in drei))
+        woher = "aus Fynns drei Ansichten"
+    else:
+        haut, woher = grundhaut(teile), "grundiert"
+    haut.save(BILDER / "textures" / "entity" / "ritter.png")
+    print(f"  Haut {woher}: {haut.width} x {haut.height}")
+
     b = geo["minecraft:geometry"][0]["bones"]
     print(f"gebaut: {ziel.name} - {len(b)} Knochen, "
           f"{sum(len(k.get('cubes', [])) for k in b)} Kaesten, "
           f"{BEIN + RUMPF + KOPF} Pixel hoch")
 
-
-if __name__ == "__main__":
-    main()
 
 
 # ----------------------------------------------------- Die Haut
@@ -277,3 +291,57 @@ def feldkarte():
                     "rechts": 0.85, "hinten": 0.7, "unten": 0.6}[name]
             fuelle(bild, seite, tuple(min(255, int(k * hell)) for k in farbe))
     return bild, felder
+
+
+# ------------------------------------------ Eine Haut aus drei Ansichten
+
+def aus_ansichten(teile, vorn, hinten, seite):
+    """Malt die Haut aus drei Bildern der fertigen Figur.
+
+    Eine Skin-Vorschau zeigt, wie der Ritter aussehen soll - aber nicht,
+    welches Rechteck im Hautbild dazu gehoert. Das laesst sich ausrechnen:
+    Jeder Kasten weiss, wo er im Raum steht, und jede seiner sechs Seiten
+    schaut in eine bekannte Richtung. Die Vorderseite holt sich ihren
+    Ausschnitt aus der Vorderansicht, die Seiten aus der Seitenansicht.
+
+    Oben und unten kommen in einer Vorschau nicht vor. Sie bekommen die
+    oberste beziehungsweise unterste Zeile ihrer Vorderseite - besser als
+    eine geratene Farbe, und an einem Helm sieht man die Oberseite ohnehin
+    nur von einer Leiter aus.
+    """
+    import math
+    bild = Image.new("RGBA", (64, 128), (0, 0, 0, 0))
+    hoch = vorn.height
+
+    def hole(quelle, bx, by):
+        """Ein Pixel aus einer Ansicht, am Rand festgehalten."""
+        x = min(max(bx, 0), quelle.width - 1)
+        y = min(max(by, 0), quelle.height - 1)
+        return quelle.getpixel((x, y))
+
+    for name, k in teile.items():
+        ox, oy, oz = k["origin"]
+        b, h, t = k["size"]
+        u, v = k["uv"]
+        felder = flaechen(u, v, math.ceil(b), math.ceil(h), math.ceil(t))
+        for seiten_name, (fx, fy, fb, fh) in felder.items():
+            for dy in range(fh):
+                for dx in range(fb):
+                    # Wo dieser Pixel am Koerper sitzt, in Modellmassen
+                    if seiten_name in ("vorn", "hinten"):
+                        mx = ox + (dx if seiten_name == "vorn" else b - 1 - dx)
+                        my = oy + h - 1 - dy
+                        quelle, qx = (vorn if seiten_name == "vorn" else hinten), mx + 8
+                    elif seiten_name in ("rechts", "links"):
+                        mz = oz + (dx if seiten_name == "links" else t - 1 - dx)
+                        my = oy + h - 1 - dy
+                        quelle, qx = seite, mz + 4
+                    else:                       # oben und unten
+                        mx = ox + dx
+                        my = oy + h - 1 if seiten_name == "oben" else oy
+                        quelle, qx = vorn, mx + 8
+                    farbe = hole(quelle, int(qx), int(hoch - 1 - my))
+                    bild.putpixel((fx + dx, fy + dy), farbe + (255,))
+    return bild
+if __name__ == "__main__":
+    main()
