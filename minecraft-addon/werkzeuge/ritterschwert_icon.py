@@ -50,9 +50,16 @@ STEIN      = (150, 38, 50, 255)
 STEIN_TIEF = (96, 24, 34, 255)
 
 # Die Abschnitte entlang der Achse, in Anteilen der Gesamtlaenge.
-KNAUF_BIS   = 0.09
-GRIFF_BIS   = 0.31
-PARIER_BIS  = 0.40
+#
+# Es ist ein Langschwert: lange Klinge, langer Griff fuer zwei Haende,
+# schmale Parierstange. Der erste Versuch gab dem Griffbereich vierzig
+# Prozent und der Klinge eine Breite von fast sechs Pixeln - daraus wurde
+# ein gedrungenes Breitschwert. Fynn: "Die Klinge soll ein duenneres
+# Design haben, es soll so ein Ritter-Langschwert werden." Jetzt traegt
+# die Klinge einundsiebzig Prozent der Laenge.
+KNAUF_BIS   = 0.06
+GRIFF_BIS   = 0.24
+PARIER_BIS  = 0.29
 
 
 def ton(l, q):
@@ -73,7 +80,7 @@ def ton(l, q):
         return LEDER_DUNK if int(l) % 2 else LEDER_HELL
 
     if a < PARIER_BIS:                                  # Parierstange
-        breite = 7.5
+        breite = 7.5   # die Parierstange bleibt breit - sie gibt dem schlanken Schwert Halt
         if abs(q) > breite: return None
         # Der Stein sitzt rund um den Kreuzungspunkt statt in einem
         # Streifen quer darueber - als Streifen franste er die
@@ -82,7 +89,7 @@ def ton(l, q):
         if (l - mitte)**2 + q*q < 2.6:
             if l < mitte and q < 0: return STEIN_HELL
             return STEIN if (l-mitte)**2 + q*q < 1.2 else STEIN_TIEF
-        if abs(q) > breite - 1.2:
+        if abs(q) > breite - 1.1:
             return BESCHL_TIEF                          # die Enden setzen ab
         return BESCHL_HELL if q < -0.6 else (BESCHL_MITT if q < 1.2 else BESCHL_TIEF)
 
@@ -90,13 +97,17 @@ def ton(l, q):
     rest = (a - PARIER_BIS) / (1.0 - PARIER_BIS)
     # Die Spitze laeuft ueber das letzte Fuenftel zusammen. Kuerzer
     # gerechnet bricht die Klinge stumpf ab, statt spitz zu werden.
-    breite = 2.4 - 2.0 * max(0.0, rest - 0.78) / 0.22
+    breite = 1.4 - 1.05 * max(0.0, rest - 0.80) / 0.20
     if abs(q) > breite:
         return None
-    if q < -breite + 0.9: return GRAT
-    if q < -0.1:          return HELL
-    if q < 0.9:           return MITTE
-    if q < breite - 0.6:  return SCHATT
+    # Bei knapp drei Pixeln Breite bleibt fuer den Verlauf wenig Platz:
+    # ein heller Grat auf der Lichtseite, die Mitte, eine dunkle
+    # Schattenkante. Vier Stufen wie beim breiten Entwurf wuerden hier zu
+    # je einem halben Pixel und waeren im Spiel nicht mehr zu sehen.
+    if q < -breite + 0.75: return GRAT
+    if q < -0.05:          return HELL
+    if q < 0.75:           return MITTE
+    if q < breite - 0.5:   return SCHATT
     return TIEF
 
 
