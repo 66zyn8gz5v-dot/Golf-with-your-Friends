@@ -57,9 +57,9 @@ STEIN_TIEF = (96, 24, 34, 255)
 # ein gedrungenes Breitschwert. Fynn: "Die Klinge soll ein duenneres
 # Design haben, es soll so ein Ritter-Langschwert werden." Jetzt traegt
 # die Klinge einundsiebzig Prozent der Laenge.
-KNAUF_BIS   = 0.06
-GRIFF_BIS   = 0.24
-PARIER_BIS  = 0.29
+KNAUF_BIS   = 0.05
+GRIFF_BIS   = 0.31
+PARIER_BIS  = 0.355
 
 
 def ton(l, q):
@@ -75,7 +75,13 @@ def ton(l, q):
         return BESCHL_HELL if q < -0.8 else (BESCHL_MITT if q < 1.0 else BESCHL_TIEF)
 
     if a < GRIFF_BIS:                                   # Wicklung
-        if abs(q) > 1.7: return None
+        # Der Griff war zuerst dicker als die Klinge und kaum laenger als
+        # die Parierstange breit ist - Fynn: "der Griff ist zu dick und zu
+        # klein". Jetzt ist er schmaler als die Klinge und reicht ein
+        # Stueck unter die Parierstange, wie es ein Griff fuer zwei Haende
+        # tut. Der Platz dafuer geht von der Klinge ab: sie traegt
+        # fuenfundsechzig statt einundsiebzig Prozent der Laenge.
+        if abs(q) > 1.25: return None
         # Die Baender laufen quer ueber den Griff: jedes zweite dunkel.
         return LEDER_DUNK if int(l) % 2 else LEDER_HELL
 
