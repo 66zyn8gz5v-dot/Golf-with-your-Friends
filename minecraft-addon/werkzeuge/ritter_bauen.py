@@ -196,6 +196,7 @@ def main():
             "Die drei Ansichten fehlen in " + str(vorlagen) + " - ohne sie "
             "gibt es keine Haut.")
     haut = aus_ansichten(teile, *(Image.open(d).convert("RGB") for d in drei))
+    helm_aufsetzen(haut, teile)
     haut.save(BILDER / "textures" / "entity" / "ritter.png")
 
     b = geo["minecraft:geometry"][0]["bones"]
@@ -203,6 +204,71 @@ def main():
           f"{sum(len(k.get('cubes', [])) for k in b)} Kaesten, "
           f"{BEIN + RUMPF + KOPF} Pixel hoch")
     print(f"  Haut aus Fynns drei Ansichten: {haut.width} x {haut.height}")
+
+
+
+
+# ---------------------------------------------------------- Der Helm
+
+# Die Stahltoene aus Fynns eigenem Entwurf, damit der Helm zum Rest passt.
+H_GLANZ  = (214, 221, 231, 255)
+H_HELL   = (180, 188, 201, 255)
+H_MITTE  = (143, 151, 170, 255)
+H_TIEF   = (104, 109, 125, 255)
+H_SCHATT = (67, 74, 92, 255)
+H_KANTE  = (39, 44, 59, 255)
+SCHWARZ  = (12, 12, 16, 255)
+
+
+def helm_aufsetzen(bild, teile):
+    """Setzt einen geschlossenen Helm auf die Kopfhuelle und schwaerzt den
+    Kopf darunter.
+
+    Der Trick steckt in zwei Schichten: Die Huelle steht einen halben Pixel
+    vor dem Kopf, und wo in ihr ein Loch bleibt, schaut man in diesen
+    Zwischenraum hinein. Waeren die Sehschlitze bloss schwarz gemalt, laegen
+    sie in derselben Ebene wie das Metall - flach, wie aufgedruckt. Als
+    Loecher haben sie Tiefe, und dahinter liegt ein schwarzer Kopf, also
+    sieht man nichts als Dunkelheit.
+
+    Deshalb wird der Kopf ueberhaupt geschwaerzt: Nicht weil man ihn sehen
+    soll, sondern damit man ihn NICHT sieht.
+    """
+    kopf = flaechen(*teile["kopf"]["uv"], 8, KOPF, 8)
+    for feld in kopf.values():
+        fuelle(bild, feld, SCHWARZ)
+
+    huelle = flaechen(*teile["huelle"]["uv"], 8, KOPF, 8)
+
+    # Oberseite und Rueckseite: glattes Metall mit einer helleren Kante
+    fuelle(bild, huelle["oben"], H_GLANZ)
+    x, y, b, h = huelle["oben"]
+    fuelle(bild, (x, y, b, 1), H_HELL)
+    for seite in ("hinten", "rechts", "links"):
+        fuelle(bild, huelle[seite], H_MITTE)
+        x, y, b, h = huelle[seite]
+        fuelle(bild, (x, y, b, 2), H_HELL)          # Helmdach
+        fuelle(bild, (x, y + 2, b, 1), H_KANTE)     # Stirnband
+        fuelle(bild, (x, y + h - 1, b, 1), H_SCHATT)
+    fuelle(bild, huelle["unten"], H_KANTE)
+
+    # Die Vorderseite traegt Sehschlitze und Lueftung
+    x, y, b, h = huelle["vorn"]
+    fuelle(bild, (x, y, b, h), H_MITTE)
+    fuelle(bild, (x, y, b, 2), H_HELL)              # Helmdach
+    fuelle(bild, (x, y + 2, b, 1), H_KANTE)         # Stirnband
+    fuelle(bild, (x, y + 3, b, 1), H_TIEF)          # Schattenkante darunter
+    fuelle(bild, (x + 3, y + 4, 2, 3), H_TIEF)      # Nasensteg
+    fuelle(bild, (x, y + h - 1, b, 1), H_SCHATT)    # Kinnrand
+
+    # Die Sehschlitze bleiben LEER - genau darin liegt die Tiefe.
+    for dx in (1, 5):
+        for sx in range(dx, dx + 2):
+            bild.putpixel((x + sx, y + 3), (0, 0, 0, 0))
+    # Lueftungsloecher unter den Augen, ebenfalls offen
+    for dx in (2, 5):
+        bild.putpixel((x + dx, y + 6), (0, 0, 0, 0))
+    return bild
 
 
 if __name__ == "__main__":
