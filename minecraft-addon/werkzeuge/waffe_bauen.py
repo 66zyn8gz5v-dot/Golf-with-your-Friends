@@ -471,6 +471,16 @@ def _pruefe_anbauten(name, anbauten):
     return not luecken
 
 
+def _dickenmeldung(dicke, kaesten):
+    """Was am Ende an Tiefen herauskam - fuer die Zeile auf dem Schirm."""
+    if isinstance(dicke, (int, float)):
+        return f", Dicke {dicke}"
+    if callable(dicke):
+        tiefen = sorted({k["size"][2] for k in kaesten})
+        return ", Dicke nach Helligkeit: " + " / ".join(str(x) for x in tiefen)
+    return f", Dicke {min(dicke)} bis {max(dicke)}"
+
+
 def aus_zeichenkarte(name, karte, farben, dicke=1.0, mitte=None, anbauten=None,
                      musterzeilen=0, winkel=None, versatz=None,
                      ziel_modell=None, ziel_textur=None):
@@ -492,7 +502,15 @@ def aus_zeichenkarte(name, karte, farben, dicke=1.0, mitte=None, anbauten=None,
     # Die Dicke darf je Zeile verschieden sein. Eine Klinge ist duenn, die
     # Parierstange wuchtig, der Griff schlank - mit einer Dicke fuer alles
     # wird entweder die Klinge zum Brett oder die Parierstange zum Blech.
-    def dicke_bei(zeile):
+    #
+    # Und sie darf je Pixel verschieden sein: eine Funktion bekommt Zeile
+    # und Zeichen und entscheidet selbst. Damit laesst sich die Tiefe an
+    # der Farbe festmachen statt an der Hoehe - was hell gemalt ist, steht
+    # vor und faengt deshalb Licht. Eine Parierstange bekommt so ihre
+    # Kanten, ohne dass jemand Zeile fuer Zeile Werte eintippt.
+    def dicke_bei(zeile, zeichen):
+        if callable(dicke):
+            return float(dicke(zeile, zeichen))
         if isinstance(dicke, (int, float)):
             return float(dicke)
         return float(dicke[zeile] if zeile < len(dicke) else dicke[-1])
@@ -526,7 +544,7 @@ def aus_zeichenkarte(name, karte, farben, dicke=1.0, mitte=None, anbauten=None,
         # bauen, und von Hand nachzurechnen waere bei jeder Zeile eine
         # Gelegenheit, sich zu vertun.
         schiebe = versatz[zeile] if versatz and zeile < len(versatz) else 0.0
-        tief = dicke_bei(zeile)
+        tief = dicke_bei(zeile, zeichen)
         eintrag = {
             "origin": [x - mitte + schiebe, y, -tief / 2],
             "size": [lang, 1, tief],
@@ -712,8 +730,7 @@ def aus_zeichenkarte(name, karte, farben, dicke=1.0, mitte=None, anbauten=None,
     print(f"gebaut: {ziel_modell.name} aus {breite}x{hoehe} - "
           f"{gemalt} Pixel zu {len(kaesten) - zahl_anbau} Kaesten"
           + (f" plus {zahl_anbau} Anbauten" if zahl_anbau else "")
-          + (f", Dicke {dicke}" if isinstance(dicke, (int, float))
-             else f", Dicke {min(dicke)} bis {max(dicke)}"))
+          + _dickenmeldung(dicke, kaesten))
     return modell
 
 

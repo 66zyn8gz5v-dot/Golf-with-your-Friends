@@ -34,13 +34,18 @@ FARBEN = {
 # oben - so erwartet es das Bauwerkzeug, und so liegen auch die
 # anderen Klingen.
 
-# Sechsundzwanzig Spalten - die Mitte liegt bei dreizehn.
-MITTE = 13.0
+# Die bemalten Spalten laufen von 7 bis 19 - dreizehn Stueck, also eine
+# ungerade Zahl. Die Symmetrieachse liegt damit nicht zwischen zwei
+# Spalten, sondern mitten auf der dreizehnten: 13,5 in Kastenmassen.
+# Mit 13,0 haengt das Schwert einen halben Pixel schief in der Hand.
+MITTE = 13.5
 
 KARTE = [
     "............hnl...........",
     "...........hnwnl..........",
-    "..........lswgme..........",
+    # Im Bild fehlte hier rechts ein Pixel - die weichen JPEG-Kanten
+    # haben ihn verschluckt. Die Mittenpruefung hat es gefunden.
+    "..........lswgmel.........",
     "..........mmlggkl.........",
     ".........hngggggke........",
     "........lswggmggetl.......",

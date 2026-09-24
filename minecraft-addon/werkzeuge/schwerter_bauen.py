@@ -25,6 +25,30 @@ DICKE_KLINGE = 1.25
 DICKE_PARIER = 2.0
 DICKE_GRIFF = 1.5
 
+# Das zweite Verfahren: Die Tiefe haengt nicht nur davon ab, in welchem
+# Teil der Waffe ein Pixel liegt, sondern auch davon, wie hell er gemalt
+# ist. Wer eine Parierstange zeichnet, setzt die Lichtkante dorthin, wo
+# das Metall vorsteht - die Helligkeit sagt also schon, was vorn ist.
+#
+# Fuer die Elektrumklinge gebraucht: Ihr Dreieck hat helle Linien auf
+# dunklem Grund, und flach gebaut verschwindet dieser Unterschied. Die
+# dunklen Stellen darin gehoeren ohnehin eher zur Klinge als zum Beschlag.
+RELIEF_KLINGE = 1.0     # duenner als die alte Klinge
+RELIEF_GRIFF = 1.25     # etwas schlanker als der alte Griff
+RELIEF_PARIER_DUNKEL = 1.5   # noch fast Klinge
+RELIEF_PARIER_HELL = 2.5     # die Lichtkanten des Dreiecks stehen vor
+RELIEF_GRIFF_HELL = 2.0      # damit auch der Knauf hervortritt
+
+# Ab hier gilt ein Ton als hell. Die elf Elektrumtoene teilen sich an
+# dieser Grenze genau so auf, wie man sie im Bild sieht: die sieben
+# Schattentoene unten, die vier Lichttoene oben.
+HELLGRENZE = 380
+
+
+def ist_hell(zeichen, farben):
+    f = farben.get(zeichen)
+    return bool(f) and sum(f[:3]) > HELLGRENZE
+
 # Vorlage, das Vanilla-Schwert, das sie ersetzt, und der Name der Textur.
 #
 # Der Texturname steht daneben, weil er nicht immer dem Modell gleicht:
@@ -44,6 +68,12 @@ KLINGEN = [
     ("silberklinge",   None,                         "silberklinge_haut"),
     ("elektrumklinge", None,                         "elektrumklinge_haut"),
 ]
+
+# Wer die Tiefe nach der Helligkeit bekommt statt nach drei festen Stufen.
+# Die uebrigen bleiben ausdruecklich beim alten Verfahren: Ihre Modelle
+# liegen im Spiel, und ein Verfahren zu wechseln heisst, sie alle zu
+# aendern - das gehoert nicht in einen Auftrag, der von einem handelt.
+MIT_RELIEF = {"elektrumklinge"}
 
 
 def spannweite(text):
@@ -106,12 +136,30 @@ def dickenliste(karte):
     return liste, oben, unten
 
 
+def reliefdicke(karte, farben):
+    """Eine Tiefe je Pixel: aus dem Bauteil und aus der Helligkeit."""
+    oben, unten = parierstange(karte)
+
+    def tief(zeile, zeichen):
+        if zeile < oben:
+            return RELIEF_KLINGE
+        hell = ist_hell(zeichen, farben)
+        if zeile <= unten:
+            return RELIEF_PARIER_HELL if hell else RELIEF_PARIER_DUNKEL
+        return RELIEF_GRIFF_HELL if hell else RELIEF_GRIFF
+
+    return tief, oben, unten
+
+
 def main():
     wurzel = Path(__file__).resolve().parent.parent / "ressourcenpaket"
     import importlib
     for name, _ersetzt, texturname in KLINGEN:
         v = importlib.import_module("vorlagen." + name)
-        dicken, oben, unten = dickenliste(v.KARTE)
+        if name in MIT_RELIEF:
+            dicken, oben, unten = reliefdicke(v.KARTE, v.FARBEN)
+        else:
+            dicken, oben, unten = dickenliste(v.KARTE)
         modell = wurzel / "models" / "entity" / (name + ".geo.json")
         textur = wurzel / "textures" / "entity" / (texturname + ".png")
         w.aus_zeichenkarte(name, v.KARTE, v.FARBEN, dicke=dicken,
