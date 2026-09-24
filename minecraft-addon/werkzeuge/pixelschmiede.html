@@ -972,7 +972,8 @@
           <option value="20x20">20 × 20 — etwas längere Waffe</option>
           <option value="24x24">24 × 24 — Großschwert, Axt, Speer</option>
           <option value="32x32">32 × 32 — sehr große Waffe</option>
-          <option value="64x32">64 × 32 — Haut für ein Wesen</option>
+          <option value="64x32">64 × 32 — Haut für ein Tier</option>
+          <option value="64x64">64 × 64 — Haut für einen Menschen</option>
         </select>
         <p class="hinweis">
           Mehr Pixel heißt <strong>größere Waffe</strong>, nicht feineres Bild:
@@ -1195,6 +1196,11 @@
     ["H", [240, 80, 46, 255], "Feuer rot", "Ofen: Glut"],
     ["A", [255, 135, 0, 255], "Feuer", "Ofen: Glut"],
 
+    // Haut fuer Wesen. Bisher gab es im Paket nur Metall, Stein und
+    // Leder - ein Gesicht laesst sich daraus nicht malen.
+    ["]", [214, 170, 132, 255], "Haut", "Wesen"],
+    ["}", [176, 134, 100, 255], "Haut Schatten", "Wesen"],
+
     // Tiefenschiefer: der dunkle Stein unter Y=0. Die fuenf Werte sind aus
     // Minecrafts deepslate.png ausgelesen, nicht geschaetzt - nur so trifft
     // eine eigene Textur den Stein, in den sie eingesetzt wird. Zwei der
@@ -1391,6 +1397,76 @@
       "......''''''''......",
       ".....'''(((('''.....",
       "......''''''''......"
+    ],
+    // Der Ritter, wie das Werkzeug ihn anlegt. Zum Ueberarbeiten gedacht:
+    // Jedes Feld hat schon seine Grundfarbe, und die Koerperteile heben
+    // sich voneinander ab - auf einer einfarbigen Haut sieht man nicht,
+    // ob die Arme am richtigen Platz sitzen.
+    ritterhaut: [
+      "........}}}}}}}}}}}}}}}}................wwwwwwwwssssssss........",
+      "........}}}}}}}}}}}}}}}}................wwwwwwwwssssssss........",
+      "........}}}}}}}}}}}}}}}}................wwwwwwwwssssssss........",
+      "........}}}}}}}}}}}}}}}}................wwwwwwwwssssssss........",
+      "........}}}}}}}}}}}}}}}}................wwwwwwwwssssssss........",
+      "........}}}}}}}}}}}}}}}}................wwwwwwwwssssssss........",
+      "........}}}}}}}}}}}}}}}}................wwwwwwwwssssssss........",
+      "........}}}}}}}}}}}}}}}}................wwwwwwwwssssssss........",
+      "}}}}}}}}]]]]]]]]}}}}}}}}}}}}}}}}ssssssssssssssssssssssssdddddddd",
+      "}}}}}}}}]]]]]]]]}}}}}}}}}}}}}}}}ssssssssssssssssssssssssdddddddd",
+      "}}}}}}}}]]]]]]]]}}}}}}}}}}}}}}}}ssssssssssssssssssssssssdddddddd",
+      "}}}}}}}}]]k]]k]]}}}}}}}}}}}}}}}}sssssssskkkkkkkkssssssssdddddddd",
+      "}}}}}}}}]]]]]]]]}}}}}}}}}}}}}}}}sssssssskkkkkkkkssssssssdddddddd",
+      "}}}}}}}}]]]]]]]]}}}}}}}}}}}}}}}}sssssssssssddsssssssssssdddddddd",
+      "}}}}}}}}]]]]]]]]}}}}}}}}}}}}}}}}sssssssssssddsssssssssssdddddddd",
+      "}}}}}}}}]]]]]]]]}}}}}}}}}}}}}}}}sssssssssssddsssssssssssdddddddd",
+      "....mmmmmmmm........mmmmmmmmmmmmmmmm........dddddddd............",
+      "....mmmmmmmm........mmmmmmmmmmmmmmmm........dddddddd............",
+      "....mmmmmmmm........mmmmmmmmmmmmmmmm........dddddddd............",
+      "....mmmmmmmm........mmmmmmmmmmmmmmmm........dddddddd............",
+      "llllllllllllllllllllllllllllllllllllllllssssssssssssssss........",
+      "llllllllllllllllllllllllllllllllllllllllssssssssssssssss........",
+      "llllllllllllllllllllllllllllllllllllllllssssssssssssssss........",
+      "llllllllllllllllllllllllllllllllllllllllssssssssssssssss........",
+      "llllllllllllllllllllllllllllllllllllllllssssssssssssssss........",
+      "llllllllllllllllllllllllllllllllllllllllssssssssssssssss........",
+      "llllllllllllllllllllllllllllllllllllllllssssssssssssssss........",
+      "ddddddddddddddddllllllllllllllllllllllllssssssssssssssss........",
+      "ddddddddddddddddllllllllllllllllllllllllssssssssssssssss........",
+      "ddddddddddddddddllllllllllllllllllllllllssssssssssssssss........",
+      "ddddddddddddddddllllllllllllllllllllllllssssssssssssssss........",
+      "ddddddddddddddddllllllllllllllllllllllllssssssssssssssss........",
+      "....................wwwwwwww................wwww................",
+      "....................wwwwwwww................wwww................",
+      "....................wwwwwwww................wwww................",
+      "....................wwwwwwww................wwww................",
+      "................wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww........",
+      "................wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww........",
+      "................sssssssssssssssssssssssswwwwwwwwwwwwwwww........",
+      "................sssssssssssssssssssssssswwwwwwwwwwwwwwww........",
+      "................ssssssssssssssssssssssss........................",
+      "................ssssssssssssssssssssssss........................",
+      "................ssssssssssssssssssssssss........................",
+      "................ssssssssssssssssssssssss........................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "....................mmmmmmmm........dddddddd........wwww........",
+      "....................mmmmmmmm........dddddddd........wwww........",
+      "....................mmmmmmmm........dddddddd........wwww........",
+      "....................mmmmmmmm........dddddddd........wwww........",
+      "................llllllllllllllllwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww",
+      "................llllllllllllllllwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww",
+      "................llllllllllllllllwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww",
+      "................llllllllllllllllwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww",
+      "................llllllllllllllllwwwwwwwwwwwwwwww................",
+      "................llllllllllllllllwwwwwwwwwwwwwwww................",
+      "................llllllllllllllllwwwwwwwwwwwwwwww................",
+      "................ddddddddddddddddwwwwwwwwwwwwwwww................",
+      "................ddddddddddddddddwwwwwwwwwwwwwwww................",
+      "................ddddddddddddddddwwwwwwwwwwwwwwww................",
+      "................ddddddddddddddddwwwwwwwwwwwwwwww................",
+      "................ddddddddddddddddwwwwwwwwwwwwwwww................"
     ],
     sternenstaub: [
       "................",
@@ -2513,6 +2589,8 @@
         bild: VORLAGEN.messingklinge, farben: benutzteFarben(VORLAGEN.messingklinge) },
       { name: "Feuerklinge", kategorie: "waffen", fest: true,
         bild: VORLAGEN.feuerklinge, farben: benutzteFarben(VORLAGEN.feuerklinge) },
+      { name: "Ritter: Haut", kategorie: "wesen", fest: true,
+        bild: VORLAGEN.ritterhaut, farben: benutzteFarben(VORLAGEN.ritterhaut) },
       { name: "Sternenklinge", kategorie: "waffen", fest: true,
         bild: VORLAGEN.sternenklinge, farben: benutzteFarben(VORLAGEN.sternenklinge) },
       { name: "Rubin", kategorie: "gegenstaende", fest: true,
