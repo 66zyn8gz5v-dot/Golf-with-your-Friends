@@ -25,6 +25,8 @@
       "minecraft:conditional_bandwidth_optimization": {},
 
       "minecraft:attack": { "damage": 5 },
+
+      "minecraft:equip_item": {},
       "minecraft:equipment": { "table": "loot_tables/ausruestung/ritter.json" },
       "minecraft:equippable": {
         "slots": [
