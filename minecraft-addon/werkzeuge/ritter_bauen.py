@@ -139,7 +139,7 @@ def fuelle(bild, feld, farbe):
 
 # Welcher Teil welche Farbe bekommt. Nur die Grundierung - das Bild ist
 # zum Weitermalen da, nicht als fertige Gestaltung.
-def aus_ansichten(teile, vorn, hinten, seite):
+def aus_ansichten(teile, vorn, hinten, seite_links, seite_rechts=None):
     """Malt die Haut aus drei Bildern der fertigen Figur.
 
     Eine Skin-Vorschau zeigt, wie der Ritter aussehen soll - aber nicht,
@@ -154,6 +154,8 @@ def aus_ansichten(teile, vorn, hinten, seite):
     nur von einer Leiter aus.
     """
     import math
+    if seite_rechts is None:
+        seite_rechts = seite_links     # eine Ansicht fuer beide Seiten
     bild = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
     hoch = vorn.height
 
@@ -181,7 +183,8 @@ def aus_ansichten(teile, vorn, hinten, seite):
                     elif seiten_name in ("rechts", "links"):
                         mz = oz + (dx if seiten_name == "links" else t - 1 - dx)
                         my = oy + h - 1 - dy
-                        quelle, qx = seite, mz + 4
+                        quelle = seite_links if seiten_name == "links" else seite_rechts
+                        qx = mz + 4
                     else:                       # oben und unten
                         mx = ox + dx
                         my = oy + h - 1 if seiten_name == "oben" else oy
@@ -195,13 +198,20 @@ def main():
     ziel.write_text(json.dumps(geo, indent=2) + "\n")
 
     vorlagen = Path(__file__).resolve().parent / "vorlagen" / "ritter"
-    drei = [vorlagen / (n + ".png") for n in ("vorn", "hinten", "seite")]
-    if not all(d.exists() for d in drei):
-        raise SystemExit(
-            "Die drei Ansichten fehlen in " + str(vorlagen) + " - ohne sie "
-            "gibt es keine Haut.")
-    haut = aus_ansichten(teile, *(Image.open(d).convert("RGB") for d in drei))
-    helm_aufsetzen(haut, teile)
+    # Vier Ansichten, wenn es sie gibt - die Vorschau aus dem anderen Chat
+    # zeigt beide Seiten, und die sind nicht gleich. Sonst drei, mit einer
+    # Seitenansicht fuer links und rechts.
+    namen = ["vorn", "hinten", "links", "rechts"]
+    if not (vorlagen / "links.png").exists():
+        namen = ["vorn", "hinten", "seite"]
+    fehlend = [n for n in namen if not (vorlagen / (n + ".png")).exists()]
+    if fehlend:
+        raise SystemExit("Ansichten fehlen in %s: %s" % (vorlagen, fehlend))
+    haut = aus_ansichten(teile, *(Image.open(vorlagen / (n + ".png")).convert("RGB")
+                                  for n in namen))
+    helm_aufsetzen(haut, teile,
+                   *(Image.open(vorlagen / (n + ".png")).convert("RGB")
+                     for n in namen))
     haut.save(BILDER / "textures" / "entity" / "ritter.png")
 
     b = geo["minecraft:geometry"][0]["bones"]
@@ -225,62 +235,59 @@ H_KANTE  = (39, 44, 59, 255)
 SCHWARZ  = (12, 12, 16, 255)
 
 
-def helm_aufsetzen(bild, teile):
-    """Setzt einen geschlossenen Helm auf die Kopfhuelle und schwaerzt den
-    Kopf darunter.
+def helm_aufsetzen(bild, teile, vorn, hinten, links, rechts):
+    """Hebt den gemalten Helm auf die Kopfhuelle und stanzt die Sehschlitze
+    aus.
 
-    Der Trick steckt in zwei Schichten: Die Huelle steht einen halben Pixel
-    vor dem Kopf, und wo in ihr ein Loch bleibt, schaut man in diesen
-    Zwischenraum hinein. Waeren die Sehschlitze bloss schwarz gemalt, laegen
-    sie in derselben Ebene wie das Metall - flach, wie aufgedruckt. Als
-    Loecher haben sie Tiefe, und dahinter liegt ein schwarzer Kopf, also
-    sieht man nichts als Dunkelheit.
+    Der Helm ist in Fynns Entwurf auf den Kopf gemalt. Dort ist er flach:
+    Die Sehschlitze liegen in derselben Ebene wie das Metall, wie
+    aufgedruckt. Auf der Huelle - die einen halben Pixel weiter aussen
+    liegt - werden dieselben Schlitze zu Loechern, und dahinter liegt der
+    geschwaerzte Kopf. Man schaut in den Helm hinein und sieht nichts.
 
-    Deshalb wird der Kopf ueberhaupt geschwaerzt: Nicht weil man ihn sehen
-    soll, sondern damit man ihn NICHT sieht.
+    Seine Gestaltung bleibt dabei unangetastet; sie wandert nur eine
+    Schicht nach aussen. Etwas Eigenes zu malen waere einfacher gewesen,
+    haette aber seine Arbeit ueberdeckt.
 
-    Das Metall ist dunkel gehalten und die Glanzkanten hell. Ein Helm in
-    durchgehendem Mittelgrau hat keine Kanten - er sieht aus wie ein
-    Karton. Erst der Sprung von der Kante zur Flaeche macht ihn aus Stahl.
+    Ausgestanzt wird, was dunkel ist - aber nicht, wenn die ganze Zeile
+    dunkel ist. Eine durchgehend dunkle Zeile ist ein Stirnband oder eine
+    Kante, kein Schlitz. Ohne diese Unterscheidung faellt der Helm ausein-
+    ander: Das Stirnband ist genauso schwarz wie der Sehspalt.
     """
-    O = (0, 0, 0, 0)
-    FARBEN = {"G": (226, 232, 242, 255), "H": (168, 176, 192, 255),
-              "M": (112, 120, 138, 255), "T": (74, 81, 98, 255),
-              "S": (44, 49, 64, 255),    "K": (22, 25, 34, 255), "O": O}
+    kopf_felder = flaechen(*teile["kopf"]["uv"], 8, KOPF, 8)
+    huelle = flaechen(*teile["huelle"]["uv"], 8, KOPF, 8)
 
-    # Ein durchgehender Sehspalt mit Nasensteg in der Mitte wirkt
-    # gefaehrlicher als zwei einzelne Loecher - und er zeigt mehr von der
-    # Schwaerze dahinter.
-    # Auf dem Dach nichts als Metall: Der Kamm ist jetzt ein Kasten, und
-    # ein zweiter, gemalter daneben sieht aus wie drei Kaemme.
-    VORN  = ["HHHHHHHH", "MMMMMMMM", "SSSSSSSS", "TOOTTOOT",
-             "HHHHHHHH", "MMTMMTMM", "MMMMMMMM", "KKSSSSKK"]
-    SEITE = ["HHHHHHHH", "MMMMMMMM", "SSSSSSSS", "TTMMMMTT",
-             "HHHHHHHH", "MMMOOMMM", "MMMMMMMM", "KKSSSSKK"]
-    OBEN  = ["HMMMMMMH", "MMMMMMMM", "MMMMMMMM", "MMMMMMMM",
-             "MMMMMMMM", "MMMMMMMM", "MMMMMMMM", "HMMMMMMH"]
+    # Den gemalten Helm von der Kopfschicht auf die Huelle heben
+    for name in huelle:
+        qx, qy, qb, qh = kopf_felder[name]
+        zx, zy, zb, zh = huelle[name]
+        for dy in range(min(qh, zh)):
+            for dx in range(min(qb, zb)):
+                bild.putpixel((zx + dx, zy + dy), bild.getpixel((qx + dx, qy + dy)))
 
-    for feld in flaechen(*teile["kopf"]["uv"], 8, KOPF, 8).values():
+    # Der Kopf darunter wird schwarz - nicht damit man ihn sieht, sondern
+    # damit man ihn nicht sieht.
+    for feld in kopf_felder.values():
         fuelle(bild, feld, SCHWARZ)
 
-    huelle = flaechen(*teile["huelle"]["uv"], 8, KOPF, 8)
-    for seite, muster in (("vorn", VORN), ("oben", OBEN), ("rechts", SEITE),
-                          ("links", SEITE), ("hinten", SEITE)):
-        x, y, b, h = huelle[seite]
-        for dy, zeile in enumerate(muster[:h]):
-            for dx, c in enumerate(zeile[:b]):
-                bild.putpixel((x + dx, y + dy), FARBEN[c])
-    fuelle(bild, huelle["unten"], FARBEN["K"])
+    # Die Schlitze ausstanzen, nur auf der Vorderseite
+    x, y, b, h = huelle["vorn"]
+    for dy in range(h):
+        zeile = [bild.getpixel((x + dx, y + dy)) for dx in range(b)]
+        dunkel = [sum(p[:3]) < 260 for p in zeile]
+        if all(dunkel):
+            continue                      # Stirnband oder Kante
+        for dx, ist_dunkel in enumerate(dunkel):
+            if ist_dunkel:
+                bild.putpixel((x + dx, y + dy), (0, 0, 0, 0))
 
-    # Der Kamm: oben der Glanz, an den Flanken der Schatten
+    # Der Kamm bekommt seine eigenen Toene - er ist kein gemaltes Teil
+    F = {"G": (226, 232, 242, 255), "H": (168, 176, 192, 255),
+         "T": (74, 81, 98, 255), "K": (22, 25, 34, 255)}
     kamm = flaechen(*teile["kamm"]["uv"], 2, 2, 9)
-    for seite, farbe in (("oben", "G"), ("vorn", "H"), ("hinten", "H"),
-                         ("rechts", "T"), ("links", "T"), ("unten", "K")):
-        fuelle(bild, kamm[seite], FARBEN[farbe])
-    x, y, b, h = kamm["rechts"]
-    fuelle(bild, (x, y, b, 1), FARBEN["H"])
-    x, y, b, h = kamm["links"]
-    fuelle(bild, (x, y, b, 1), FARBEN["H"])
+    for seite, ton in (("oben", "G"), ("vorn", "H"), ("hinten", "H"),
+                       ("rechts", "T"), ("links", "T"), ("unten", "K")):
+        fuelle(bild, kamm[seite], F[ton])
     return bild
 
 
