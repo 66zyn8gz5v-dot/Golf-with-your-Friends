@@ -67,7 +67,20 @@ KLINGEN = [
     # Gegenstand und hat darum auch ein eigenes Inventarbild.
     ("silberklinge",   None,                         "silberklinge_haut"),
     ("elektrumklinge", None,                         "elektrumklinge_haut"),
+    ("ritterschwert",  None,                         "ritterschwert_haut"),
 ]
+
+# Wer nicht die drei Dicken von oben nimmt, sondern eigene.
+#
+# Das Ritterschwert steht hier, weil Fynn ausdruecklich eine duenne
+# Klinge wollte. Sie ist einen Pixel breiter als die der Stahlklinge, und
+# mit deren 1.25 waere sie zum Balken geworden. Der Griff bekommt
+# dagegen mehr als die uebrigen: Er ist nur zwei Pixel breit, und mit 1.5
+# liegt ein flacher Riemen in der Hand statt eines runden Griffs. Zwei
+# auf zwei ist quadratisch und liest sich als rund.
+EIGENE_DICKEN = {
+    "ritterschwert": (1.0, 2.0, 2.0),   # Klinge, Parierstange, Griff
+}
 
 # Wer die Tiefe nach der Helligkeit bekommt statt nach drei festen Stufen.
 # Die uebrigen bleiben ausdruecklich beim alten Verfahren: Ihre Modelle
@@ -127,17 +140,18 @@ def parierstange(karte):
     return oben, unten
 
 
-def dickenliste(karte):
+def dickenliste(karte, dicken=None):
     """Eine Tiefe je Bildzeile, von oben nach unten."""
+    klinge, parier, griff = dicken or (DICKE_KLINGE, DICKE_PARIER, DICKE_GRIFF)
     oben, unten = parierstange(karte)
     liste = []
     for zeile in range(len(karte)):
         if zeile < oben:
-            liste.append(DICKE_KLINGE)
+            liste.append(klinge)
         elif zeile <= unten:
-            liste.append(DICKE_PARIER)
+            liste.append(parier)
         else:
-            liste.append(DICKE_GRIFF)
+            liste.append(griff)
     return liste, oben, unten
 
 
@@ -207,7 +221,7 @@ def main():
         if name in MIT_RELIEF:
             dicken, oben, unten = reliefdicke(karte, v.FARBEN)
         else:
-            dicken, oben, unten = dickenliste(karte)
+            dicken, oben, unten = dickenliste(karte, EIGENE_DICKEN.get(name))
         modell = wurzel / "models" / "entity" / (name + ".geo.json")
         textur = wurzel / "textures" / "entity" / (texturname + ".png")
         w.aus_zeichenkarte(name, karte, v.FARBEN, dicke=dicken,

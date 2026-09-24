@@ -37,6 +37,9 @@
     },
     "ritter_ei": {
       "textures": "textures/items/ritter_ei"
+    },
+    "ritterschwert": {
+      "textures": "textures/items/ritterschwert"
     }
   }
 }

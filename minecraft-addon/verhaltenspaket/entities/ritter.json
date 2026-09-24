@@ -30,7 +30,7 @@
       "minecraft:equipment": { "table": "loot_tables/ausruestung/ritter.json" },
       "minecraft:equippable": {
         "slots": [
-          { "slot": "slot.weapon.mainhand", "item": "fynn:eisenklinge" }
+          { "slot": "slot.weapon.mainhand", "item": "fynn:ritterschwert" }
         ]
       },
 

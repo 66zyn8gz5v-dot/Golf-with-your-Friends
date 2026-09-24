@@ -42,11 +42,11 @@ item.fynn:eisenklinge.name=Eisenklinge
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.2
+item.iron_sword.name=Stahlschwert 4.3
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.2
-item.fynn:degen.name=Degen 4.2
+item.fynn:degen=Degen 4.3
+item.fynn:degen.name=Degen 4.3
 
 
 
@@ -64,3 +64,5 @@ item.fynn:elektrumklinge.name=Elektrumklinge
 ## Der Ritter, erste Sorte: nur mit Schwert
 entity.fynn:ritter.name=Ritter
 item.spawn_egg.entity.fynn:ritter.name=Ritter
+item.fynn:ritterschwert=Ritterschwert
+item.fynn:ritterschwert.name=Ritterschwert
