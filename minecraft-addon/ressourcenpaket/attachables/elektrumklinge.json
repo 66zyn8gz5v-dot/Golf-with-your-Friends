@@ -15,11 +15,13 @@
         "default": "geometry.elektrumklinge"
       },
       "animations": {
-        "halten": "animation.klinge.halten"
+        "halten": "animation.klinge.halten",
+        "schlag": "animation.klinge.schlag"
       },
       "scripts": {
         "animate": [
-          "halten"
+          "halten",
+          "schlag"
         ]
       },
       "render_controllers": [

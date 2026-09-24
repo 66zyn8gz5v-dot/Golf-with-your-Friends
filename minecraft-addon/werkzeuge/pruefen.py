@@ -374,6 +374,65 @@ def pruefe_bildnamen():
                 "Minecraft behaelt nur eines davon.")
 
 
+def pruefe_attachables():
+    """Haelt jedes Attachable gegen das, worauf es zeigt.
+
+    Ein Attachable nennt eine Geometrie, Texturen und Animationen nur beim
+    Namen. Stimmt einer davon nicht, sagt Minecraft nichts - der
+    Gegenstand liegt einfach unsichtbar oder unbewegt in der Hand, und man
+    sucht den Fehler im Modell statt im Namen.
+    """
+    bekannte = {}
+    for datei in sorted((RESSOURCEN / "animations").glob("*.json")):
+        inhalt = lies(datei)
+        if inhalt:
+            for name in inhalt.get("animations", {}):
+                bekannte[name] = datei.name
+
+    for datei in sorted((RESSOURCEN / "attachables").glob("*.json")):
+        inhalt = lies(datei)
+        if not inhalt:
+            continue
+        beschreibung = inhalt.get("minecraft:attachable", {}).get("description", {})
+
+        modell = beschreibung.get("geometry", {}).get("default", "")
+        knochen = []
+        if modell:
+            pfad = RESSOURCEN / "models" / "entity" / (modell.replace("geometry.", "") + ".geo.json")
+            gelesen = lies(pfad) if pfad.exists() else None
+            if gelesen is None:
+                fehler.append(f"{datei.name}: Modell '{modell}' gibt es nicht.")
+            else:
+                knochen = [k["name"] for k in gelesen["minecraft:geometry"][0]["bones"]]
+
+        for zweck, pfad in beschreibung.get("textures", {}).items():
+            if pfad.startswith("textures/misc/"):
+                continue          # kommt aus Minecraft selbst
+            if not (RESSOURCEN / (pfad + ".png")).exists():
+                fehler.append(f"{datei.name}: Bild fehlt - {pfad}.png")
+
+        animationen = beschreibung.get("animations", {})
+        for marke, name in animationen.items():
+            if name not in bekannte:
+                fehler.append(f"{datei.name}: Animation '{name}' gibt es nirgends.")
+                continue
+            # Eine Animation, die einen Knochen bewegt, den das Modell
+            # nicht hat, laeuft ins Leere - ohne Meldung im Spiel.
+            inhalt_anim = lies(RESSOURCEN / "animations" / bekannte[name])
+            for knochen_name in inhalt_anim["animations"][name].get("bones", {}):
+                if knochen and knochen_name not in knochen:
+                    fehler.append(
+                        f"{datei.name}: '{name}' bewegt den Knochen "
+                        f"'{knochen_name}', den es in '{modell}' nicht gibt.")
+
+        for eintrag in beschreibung.get("scripts", {}).get("animate", []):
+            marke = eintrag if isinstance(eintrag, str) else next(iter(eintrag))
+            if marke not in animationen:
+                fehler.append(
+                    f"{datei.name}: spielt '{marke}' ab, sagt aber nirgends, "
+                    f"welche Animation das ist.")
+
+
 def main():
     global EIGENE_GEGENSTAENDE
     pruefe_manifeste()
@@ -390,6 +449,7 @@ def main():
     pruefe_vorkommen(bloecke)
     pruefe_wesen(sprachen)
     pruefe_bildnamen()
+    pruefe_attachables()
     # Zum Schluss gegen Mojangs eigene Schemata halten. Das faengt, was
     # unsere Pruefungen nicht wissen koennen: welche Schreibweise eine
     # Regelfassung ueberhaupt erlaubt.

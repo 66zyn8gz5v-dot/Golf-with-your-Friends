@@ -30,6 +30,23 @@
           ]
         }
       }
+    },
+    "animation.klinge.schlag": {
+      "loop": true,
+      "bones": {
+        "stoss": {
+          "rotation": [
+            "-math.sin(v.attack_time * 180.0) * 55.0",
+            "math.sin(v.attack_time * 180.0) * 12.0",
+            "math.sin(v.attack_time * 180.0) * 8.0"
+          ],
+          "position": [
+            0.0,
+            "-math.sin(v.attack_time * 180.0) * 1.5",
+            "math.sin(v.attack_time * 180.0) * 2.5"
+          ]
+        }
+      }
     }
   }
 }
