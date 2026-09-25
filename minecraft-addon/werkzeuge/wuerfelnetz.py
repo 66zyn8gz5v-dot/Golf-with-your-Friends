@@ -36,7 +36,7 @@ NETZ = [(1, 0, "1", "OBEN"), (0, 1, "2", "LINKS"), (1, 1, "3", "VORN"),
 BILDER = [
     ("A", "feuerkasten_vorn",  "feuerkasten_vorn_an", "Tuer mit Gitter"),
     ("B", "feuerkasten_oben",  "feuerkasten_oben_an", "Platte mit Loch"),
-    ("C", "tiegel_vorn",       "tiegel_vorn_an",      "runder Bottich"),
+    ("C", "feuerkasten_rund",  "feuerkasten_rund_an", "runder Bottich"),
     ("D", "feuerkasten_seite", None,                  "schlichter Stein"),
     ("E", "feuerkasten_unten", None,                  "glatt, dunkel"),
 ]

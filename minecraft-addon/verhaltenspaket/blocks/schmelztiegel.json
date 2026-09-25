@@ -30,23 +30,23 @@
       },
       "minecraft:material_instances": {
         "*": {
-          "texture": "tiegel_seite",
+          "texture": "feuerkasten_seite",
           "render_method": "opaque"
         },
         "north": {
-          "texture": "tiegel_vorn",
+          "texture": "feuerkasten_rund",
           "render_method": "opaque"
         },
         "south": {
-          "texture": "tiegel_vorn",
+          "texture": "feuerkasten_rund",
           "render_method": "opaque"
         },
         "up": {
-          "texture": "tiegel_oben",
+          "texture": "feuerkasten_oben",
           "render_method": "opaque"
         },
         "down": {
-          "texture": "tiegel_unten",
+          "texture": "feuerkasten_oben",
           "render_method": "opaque"
         }
       },
@@ -116,19 +116,19 @@
         "components": {
           "minecraft:material_instances": {
             "*": {
-              "texture": "tiegel_seite",
+              "texture": "feuerkasten_seite",
               "render_method": "opaque"
             },
             "south": {
-              "texture": "tiegel_vorn",
+              "texture": "feuerkasten_rund",
               "render_method": "opaque"
             },
             "up": {
-              "texture": "tiegel_oben",
+              "texture": "feuerkasten_oben",
               "render_method": "opaque"
             },
             "down": {
-              "texture": "tiegel_unten",
+              "texture": "feuerkasten_oben",
               "render_method": "opaque"
             }
           }
@@ -139,19 +139,19 @@
         "components": {
           "minecraft:material_instances": {
             "*": {
-              "texture": "tiegel_seite",
+              "texture": "feuerkasten_seite",
               "render_method": "opaque"
             },
             "south": {
-              "texture": "tiegel_vorn_an",
+              "texture": "feuerkasten_rund_an",
               "render_method": "opaque"
             },
             "up": {
-              "texture": "tiegel_oben",
+              "texture": "feuerkasten_oben",
               "render_method": "opaque"
             },
             "down": {
-              "texture": "tiegel_unten_an",
+              "texture": "feuerkasten_oben_an",
               "render_method": "opaque"
             }
           },
@@ -163,19 +163,19 @@
         "components": {
           "minecraft:material_instances": {
             "*": {
-              "texture": "tiegel_seite",
+              "texture": "feuerkasten_seite",
               "render_method": "opaque"
             },
             "west": {
-              "texture": "tiegel_vorn",
+              "texture": "feuerkasten_rund",
               "render_method": "opaque"
             },
             "up": {
-              "texture": "tiegel_oben",
+              "texture": "feuerkasten_oben",
               "render_method": "opaque"
             },
             "down": {
-              "texture": "tiegel_unten",
+              "texture": "feuerkasten_oben",
               "render_method": "opaque"
             }
           }
@@ -186,19 +186,19 @@
         "components": {
           "minecraft:material_instances": {
             "*": {
-              "texture": "tiegel_seite",
+              "texture": "feuerkasten_seite",
               "render_method": "opaque"
             },
             "west": {
-              "texture": "tiegel_vorn_an",
+              "texture": "feuerkasten_rund_an",
               "render_method": "opaque"
             },
             "up": {
-              "texture": "tiegel_oben",
+              "texture": "feuerkasten_oben",
               "render_method": "opaque"
             },
             "down": {
-              "texture": "tiegel_unten_an",
+              "texture": "feuerkasten_oben_an",
               "render_method": "opaque"
             }
           },
@@ -210,19 +210,19 @@
         "components": {
           "minecraft:material_instances": {
             "*": {
-              "texture": "tiegel_seite",
+              "texture": "feuerkasten_seite",
               "render_method": "opaque"
             },
             "north": {
-              "texture": "tiegel_vorn",
+              "texture": "feuerkasten_rund",
               "render_method": "opaque"
             },
             "up": {
-              "texture": "tiegel_oben",
+              "texture": "feuerkasten_oben",
               "render_method": "opaque"
             },
             "down": {
-              "texture": "tiegel_unten",
+              "texture": "feuerkasten_oben",
               "render_method": "opaque"
             }
           }
@@ -233,19 +233,19 @@
         "components": {
           "minecraft:material_instances": {
             "*": {
-              "texture": "tiegel_seite",
+              "texture": "feuerkasten_seite",
               "render_method": "opaque"
             },
             "north": {
-              "texture": "tiegel_vorn_an",
+              "texture": "feuerkasten_rund_an",
               "render_method": "opaque"
             },
             "up": {
-              "texture": "tiegel_oben",
+              "texture": "feuerkasten_oben",
               "render_method": "opaque"
             },
             "down": {
-              "texture": "tiegel_unten_an",
+              "texture": "feuerkasten_oben_an",
               "render_method": "opaque"
             }
           },
@@ -257,19 +257,19 @@
         "components": {
           "minecraft:material_instances": {
             "*": {
-              "texture": "tiegel_seite",
+              "texture": "feuerkasten_seite",
               "render_method": "opaque"
             },
             "east": {
-              "texture": "tiegel_vorn",
+              "texture": "feuerkasten_rund",
               "render_method": "opaque"
             },
             "up": {
-              "texture": "tiegel_oben",
+              "texture": "feuerkasten_oben",
               "render_method": "opaque"
             },
             "down": {
-              "texture": "tiegel_unten",
+              "texture": "feuerkasten_oben",
               "render_method": "opaque"
             }
           }
@@ -280,19 +280,19 @@
         "components": {
           "minecraft:material_instances": {
             "*": {
-              "texture": "tiegel_seite",
+              "texture": "feuerkasten_seite",
               "render_method": "opaque"
             },
             "east": {
-              "texture": "tiegel_vorn_an",
+              "texture": "feuerkasten_rund_an",
               "render_method": "opaque"
             },
             "up": {
-              "texture": "tiegel_oben",
+              "texture": "feuerkasten_oben",
               "render_method": "opaque"
             },
             "down": {
-              "texture": "tiegel_unten_an",
+              "texture": "feuerkasten_oben_an",
               "render_method": "opaque"
             }
           },

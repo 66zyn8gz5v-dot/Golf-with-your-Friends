@@ -35,6 +35,14 @@
           "texture": "feuerkasten_vorn",
           "render_method": "opaque"
         },
+        "east": {
+          "texture": "feuerkasten_rund",
+          "render_method": "opaque"
+        },
+        "west": {
+          "texture": "feuerkasten_rund",
+          "render_method": "opaque"
+        },
         "up": {
           "texture": "feuerkasten_oben",
           "render_method": "opaque"
@@ -117,6 +125,14 @@
               "texture": "feuerkasten_vorn",
               "render_method": "opaque"
             },
+            "east": {
+              "texture": "feuerkasten_rund",
+              "render_method": "opaque"
+            },
+            "west": {
+              "texture": "feuerkasten_rund",
+              "render_method": "opaque"
+            },
             "up": {
               "texture": "feuerkasten_oben",
               "render_method": "opaque"
@@ -138,6 +154,14 @@
             },
             "south": {
               "texture": "feuerkasten_vorn_an",
+              "render_method": "opaque"
+            },
+            "east": {
+              "texture": "feuerkasten_rund_an",
+              "render_method": "opaque"
+            },
+            "west": {
+              "texture": "feuerkasten_rund_an",
               "render_method": "opaque"
             },
             "up": {
@@ -164,6 +188,14 @@
               "texture": "feuerkasten_vorn",
               "render_method": "opaque"
             },
+            "north": {
+              "texture": "feuerkasten_rund",
+              "render_method": "opaque"
+            },
+            "south": {
+              "texture": "feuerkasten_rund",
+              "render_method": "opaque"
+            },
             "up": {
               "texture": "feuerkasten_oben",
               "render_method": "opaque"
@@ -185,6 +217,14 @@
             },
             "west": {
               "texture": "feuerkasten_vorn_an",
+              "render_method": "opaque"
+            },
+            "north": {
+              "texture": "feuerkasten_rund_an",
+              "render_method": "opaque"
+            },
+            "south": {
+              "texture": "feuerkasten_rund_an",
               "render_method": "opaque"
             },
             "up": {
@@ -211,6 +251,14 @@
               "texture": "feuerkasten_vorn",
               "render_method": "opaque"
             },
+            "east": {
+              "texture": "feuerkasten_rund",
+              "render_method": "opaque"
+            },
+            "west": {
+              "texture": "feuerkasten_rund",
+              "render_method": "opaque"
+            },
             "up": {
               "texture": "feuerkasten_oben",
               "render_method": "opaque"
@@ -232,6 +280,14 @@
             },
             "north": {
               "texture": "feuerkasten_vorn_an",
+              "render_method": "opaque"
+            },
+            "east": {
+              "texture": "feuerkasten_rund_an",
+              "render_method": "opaque"
+            },
+            "west": {
+              "texture": "feuerkasten_rund_an",
               "render_method": "opaque"
             },
             "up": {
@@ -258,6 +314,14 @@
               "texture": "feuerkasten_vorn",
               "render_method": "opaque"
             },
+            "north": {
+              "texture": "feuerkasten_rund",
+              "render_method": "opaque"
+            },
+            "south": {
+              "texture": "feuerkasten_rund",
+              "render_method": "opaque"
+            },
             "up": {
               "texture": "feuerkasten_oben",
               "render_method": "opaque"
@@ -279,6 +343,14 @@
             },
             "east": {
               "texture": "feuerkasten_vorn_an",
+              "render_method": "opaque"
+            },
+            "north": {
+              "texture": "feuerkasten_rund_an",
+              "render_method": "opaque"
+            },
+            "south": {
+              "texture": "feuerkasten_rund_an",
               "render_method": "opaque"
             },
             "up": {

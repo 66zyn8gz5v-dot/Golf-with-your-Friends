@@ -28,9 +28,34 @@ BLOCKS = WURZEL / "ressourcenpaket" / "textures" / "blocks"
 SCHRIFT = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 SCHMAL = "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf"
 
-ROLLE = {"up": "oben", "down": "unten",
-         "north": "vorn", "south": "vorn", "east": "vorn", "west": "vorn",
-         "*": "Seiten"}
+GEGEN = {"north": "south", "east": "west", "south": "north", "west": "east"}
+
+
+def rolle(seite, richtung):
+    """Was eine Himmelsrichtung am Block bedeutet.
+
+    Sie bedeutet nichts fuer sich: Welche Wand vorn ist, haengt daran,
+    wohin der Block gesetzt wurde. Bei placement_direction zeigt er sein
+    Gesicht zum Spieler, also der Ausrichtung entgegen - steht
+    cardinal_direction auf 'north', ist die Suedseite die Vorderseite.
+
+    Die erste Fassung dieser Tabelle fuehrte alle vier Himmelsrichtungen
+    als "vorn". Das stimmte, solange nur die Vorderseite ein eigenes Bild
+    hatte. Seit die Querseiten das runde Bild tragen, meldete sie es als
+    Vorderseite - eine Uebersicht, die etwas Falsches behauptet, ist
+    schlimmer als keine.
+    """
+    if seite in ("up", "down"):
+        return {"up": "oben", "down": "unten"}[seite]
+    if seite == "*":
+        return "Rest"
+    if richtung is None:
+        return f"Seite {seite}"
+    if seite == GEGEN[richtung]:
+        return "vorn"
+    if seite == richtung:
+        return "hinten"
+    return "Querseite"
 
 
 def verwendung():
@@ -40,18 +65,21 @@ def verwendung():
         d = json.loads(datei.read_text(encoding="utf-8"))["minecraft:block"]
         block = datei.stem
 
-        def sammeln(instanzen, zustand):
+        def sammeln(instanzen, zustand, richtung):
             for seite, wert in instanzen.items():
                 kurz = wert.get("texture")
                 if kurz:
-                    wo.setdefault(kurz, set()).add((block, ROLLE.get(seite, seite), zustand))
+                    wo.setdefault(kurz, set()).add(
+                        (block, rolle(seite, richtung), zustand))
 
         grund = d["components"].get("minecraft:material_instances", {})
-        sammeln(grund, "")
+        sammeln(grund, "", None)
         for p in d.get("permutations", []):
-            an = "'an'" in p.get("condition", "")
+            bedingung = p.get("condition", "")
+            an = "'an'" in bedingung
+            richtung = next((r for r in GEGEN if f"'{r}'" in bedingung), None)
             sammeln(p["components"].get("minecraft:material_instances", {}),
-                    "brennt" if an else "aus")
+                    "brennt" if an else "aus", richtung)
     return wo
 
 
