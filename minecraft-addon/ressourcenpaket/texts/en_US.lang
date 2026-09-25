@@ -42,11 +42,11 @@ item.fynn:eisenklinge.name=Iron Blade
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.9
+item.iron_sword.name=Stahlschwert 4.10
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.9
-item.fynn:degen.name=Degen 4.9
+item.fynn:degen=Degen 4.10
+item.fynn:degen.name=Degen 4.10
 
 
 
@@ -60,3 +60,13 @@ entity.fynn:ritter.name=Knight
 item.spawn_egg.entity.fynn:ritter.name=Knight
 item.fynn:ritterschwert=Knight Sword
 item.fynn:ritterschwert.name=Knight Sword
+
+## Fynn's knight armour.
+item.fynn:ritterhelm=Knight Helmet
+item.fynn:ritterhelm.name=Knight Helmet
+item.fynn:ritterbrustpanzer=Knight Chestplate
+item.fynn:ritterbrustpanzer.name=Knight Chestplate
+item.fynn:ritterbeinschutz=Knight Leggings
+item.fynn:ritterbeinschutz.name=Knight Leggings
+item.fynn:ritterstiefel=Knight Boots
+item.fynn:ritterstiefel.name=Knight Boots

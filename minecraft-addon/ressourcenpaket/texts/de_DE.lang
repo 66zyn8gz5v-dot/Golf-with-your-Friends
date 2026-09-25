@@ -42,11 +42,11 @@ item.fynn:eisenklinge.name=Eisenklinge
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.9
+item.iron_sword.name=Stahlschwert 4.10
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.9
-item.fynn:degen.name=Degen 4.9
+item.fynn:degen=Degen 4.10
+item.fynn:degen.name=Degen 4.10
 
 
 
@@ -66,3 +66,13 @@ entity.fynn:ritter.name=Ritter
 item.spawn_egg.entity.fynn:ritter.name=Ritter
 item.fynn:ritterschwert=Ritterschwert
 item.fynn:ritterschwert.name=Ritterschwert
+
+## Fynns Ritterruestung - zum Anziehen, mit Schulterplatten, Kinnschutz und Knieplatten.
+item.fynn:ritterhelm=Ritterhelm
+item.fynn:ritterhelm.name=Ritterhelm
+item.fynn:ritterbrustpanzer=Ritterbrustpanzer
+item.fynn:ritterbrustpanzer.name=Ritterbrustpanzer
+item.fynn:ritterbeinschutz=Ritterbeinschutz
+item.fynn:ritterbeinschutz.name=Ritterbeinschutz
+item.fynn:ritterstiefel=Ritterstiefel
+item.fynn:ritterstiefel.name=Ritterstiefel

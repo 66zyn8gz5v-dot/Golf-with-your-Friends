@@ -40,6 +40,18 @@
     },
     "ritterschwert": {
       "textures": "textures/items/ritterschwert"
+    },
+    "ritterhelm": {
+      "textures": "textures/items/ritterhelm"
+    },
+    "ritterbrustpanzer": {
+      "textures": "textures/items/ritterbrustpanzer"
+    },
+    "ritterbeinschutz": {
+      "textures": "textures/items/ritterbeinschutz"
+    },
+    "ritterstiefel": {
+      "textures": "textures/items/ritterstiefel"
     }
   }
 }
