@@ -17,6 +17,13 @@ WURZEL = Path(__file__).resolve().parent.parent
 VERHALTEN = WURZEL / "verhaltenspaket"
 RESSOURCEN = WURZEL / "ressourcenpaket"
 
+# Was Minecraft selbst mitbringt und darum nicht im Paket liegt. Nur
+# Eintraege, die in Mojangs eigenen Dateien belegt sind - sonst wird aus
+# der Liste ein Weg, echte Fehler wegzuschweigen. Der Feuerball des
+# Feuerstabs sieht aus wie Minecrafts kleiner Feuerball; Modell und Bild
+# stehen so in dessen small_fireball.entity.json.
+AUS_MINECRAFT = {"geometry.fireball", "textures/items/fireball"}
+
 fehler = []
 hinweise = []
 EIGENE_GEGENSTAENDE = set()
@@ -173,7 +180,9 @@ def pruefe_wesen(sprachen):
         sicht = aussehen[kennung]
 
         modell = sicht["geometry"]["default"]
-        if modell not in modelle:
+        if modell in AUS_MINECRAFT:
+            pass
+        elif modell not in modelle:
             fehler.append(f"{kennung}: Modell '{modell}' gibt es nicht.")
         else:
             # Die eingebauten Animationen sprechen feste Knochen an. Fehlen
@@ -192,7 +201,7 @@ def pruefe_wesen(sprachen):
                 )
 
         for name, pfad in sicht["textures"].items():
-            if not (RESSOURCEN / (pfad + ".png")).exists():
+            if pfad not in AUS_MINECRAFT and not (RESSOURCEN / (pfad + ".png")).exists():
                 fehler.append(f"{kennung}: Bild fehlt - {pfad}.png")
 
         beute = bauteile.get("minecraft:loot", {}).get("table")

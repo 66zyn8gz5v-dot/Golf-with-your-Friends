@@ -81,9 +81,13 @@ def tiefen(karte):
 
 
 def fuss(karte):
-    """Das untere Ende des Stiels: der Stielpixel am weitesten unten links."""
-    stiel = [(s, z) for z, t in enumerate(karte) for s, c in enumerate(t) if c == STIEL]
-    s, z = max(stiel, key=lambda p: p[1] - p[0])
+    """Das untere Ende des Stabs: der gemalte Pixel am weitesten unten links.
+
+    Beim ersten Stab ist das ein Stielpixel, beim zweiten die goldene
+    Spitze - gesucht wird deshalb nach der Lage, nicht nach der Farbe.
+    """
+    gemalt = [(s, z) for z, t in enumerate(karte) for s, c in enumerate(t) if c != "."]
+    s, z = max(gemalt, key=lambda p: p[1] - p[0])
     return s + 0.5, len(karte) - 1 - z + 0.5          # in Modellkoordinaten
 
 
@@ -158,20 +162,71 @@ def ohne_fernen_rauch(karte):
     return neu, weg
 
 
-def main():
-    karte, weg = ohne_fernen_rauch(vorlage.KARTE)
-    print(f"Rauchpunkte fern der Kugel: {weg} nicht im Modell")
-    modell = RES / "models" / "entity" / "feuerstab.geo.json"
-    textur = RES / "textures" / "entity" / "feuerstab_haut.png"
+# --- Feuerstab 2 --------------------------------------------------------
+
+from vorlagen import feuerstab_2 as vorlage_2
+
+FLAMME_2 = set("abce")     # rot, orange, gelb, fast weiss
+GOLD_2 = set("fgh")
+UMRISS_2 = "d"
+
+
+def tiefen_2(karte):
+    """Die Flamme wird rund wie beim ersten Stab die Kugel, der goldene Kopf
+    und die Spitze wuchtig, der Holzstiel ein Stock."""
+    flamme = [(s, z) for z, t in enumerate(karte) for s, c in enumerate(t) if c in FLAMME_2]
+    mx = sum(s for s, _ in flamme) / len(flamme) + 0.5
+    my = sum(z for _, z in flamme) / len(flamme) + 0.5
+    r = max(math.hypot(s + 0.5 - mx, z + 0.5 - my) for s, z in flamme) + 0.5
+
+    def tief(zeile, spalte, zeichen):
+        if zeichen in FLAMME_2:
+            d = math.hypot(spalte + 0.5 - mx, zeile + 0.5 - my) / r
+            return round((1.25 + 2.25 * math.sqrt(max(0.0, 1 - d * d))) * 2) / 2
+        if zeichen in GOLD_2:
+            return 3.0
+        return STIEL_DICKE
+    return tief
+
+
+def ohne_umriss(karte):
+    """Der dunkle Umriss gehoert zur flachen Zeichnung, nicht ins Modell.
+
+    Beim ersten Stab wollte Fynn das Modell ausdruecklich ohne die schwarzen
+    Pixel; am Modell zieht die Geometrie ihre Kanten selbst. Im
+    Inventarbild bleibt der Umriss - dort traegt er die Form.
+    """
+    return [z.replace(UMRISS_2, ".") for z in karte]
+
+
+def baue(name, karte, farben, tiefe):
+    modell = RES / "models" / "entity" / f"{name}.geo.json"
+    textur = RES / "textures" / "entity" / f"{name}_haut.png"
     # Jeder Pixel mit "/" in der Drehkarte: gedreht und damit einzeln - aus
     # zusammengefassten Zeilen wuerden schraege Balken.
-    w.aus_zeichenkarte("feuerstab", karte, vorlage.FARBEN, dicke=tiefen(karte),
+    w.aus_zeichenkarte(name, karte, farben, dicke=tiefe,
                        mitte=0, winkel=["/" * len(karte[0])] * len(karte),
                        ziel_modell=str(modell), ziel_textur=str(textur))
     n = aufrichten(modell, karte)
-    print(f"aufgerichtet: {n} Kaesten um 45 Grad")
+    print(f"{name}: {n} Kaesten um 45 Grad aufgerichtet")
+    return modell
+
+
+def main():
+    karte, weg = ohne_fernen_rauch(vorlage.KARTE)
+    print(f"Rauchpunkte fern der Kugel: {weg} nicht im Modell")
+    baue("feuerstab", karte, vorlage.FARBEN, tiefen(karte))
     inventarbild(vorlage.KARTE).save(RES / "textures" / "items" / "feuerstab.png")
-    print("Inventarbild: 20 x 20")
+
+    karte_2 = ohne_umriss(vorlage_2.KARTE)
+    baue("feuerstab_2", karte_2, vorlage_2.FARBEN, tiefen_2(karte_2))
+    # Sechzehn mal sechzehn - passt ohne Beschnitt unter Fynns Obergrenze.
+    bild = Image.new("RGBA", (16, 16))
+    for y, zeile in enumerate(vorlage_2.KARTE):
+        for x, z in enumerate(zeile):
+            bild.putpixel((x, y), tuple(vorlage_2.FARBEN[z]))
+    bild.save(RES / "textures" / "items" / "feuerstab_2.png")
+    print("Inventarbilder: feuerstab (20 x 20), feuerstab_2 (16 x 16)")
 
 
 if __name__ == "__main__":

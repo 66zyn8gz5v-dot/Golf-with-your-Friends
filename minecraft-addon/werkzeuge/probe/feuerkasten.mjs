@@ -41,7 +41,10 @@ const spieler = {
 };
 
 const antippen = gemerkt.ereignisse["playerInteractWithBlock"];
-const takt = gemerkt.takte.filter((t) => typeof t[0] === "function").pop()[0];
+// Der Takt des Feuerkastens, erkannt an seinen zwanzig Ticks. Frueher
+// war es einfach der letzte angemeldete - bis der Feuerstab dahinter
+// seine eigene Schleife anmeldete und die Probe die falsche erwischte.
+const takt = gemerkt.takte.filter((t) => typeof t[0] === "function" && t[1] === 20).pop()[0];
 
 console.log("Zustand am Anfang:", zustandKasten["fynn:brennt"], "| Tiegel:", zustandTiegel["fynn:brennt"]);
 

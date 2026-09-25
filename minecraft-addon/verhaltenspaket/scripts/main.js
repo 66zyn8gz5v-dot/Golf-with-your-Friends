@@ -323,3 +323,93 @@ system.runInterval(() => {
         console.warn(`Feuerkasten, Runde: ${fehler}`);
     }
 }, 20);
+
+// ---------------------------------------------------------------------
+// Feuerstab II: Flammen am Stab und ein Feuerball auf Knopfdruck.
+// ---------------------------------------------------------------------
+//
+// Der Schuss haengt am Benutzen, nicht am Zuschlagen: Die Angriffstaste
+// kommt im Skript nicht an (siehe Degen), das Benutzen schon - dafuer
+// traegt der Stab minecraft:use_modifiers. Auf dem iPad heisst das:
+// antippen und kurz halten. Die Sekunde Pause zwischen zwei Schuessen
+// regelt das Spiel selbst ueber minecraft:cooldown; die Sperre hier ist
+// nur der Riegel dahinter, falls ein Benutzen doppelt gemeldet wird.
+//
+// Das Geschoss ist fynn:feuerball, nicht Minecrafts kleiner Feuerball:
+// Der setzt Bloecke in Brand, und ein Fehlschuss wuerde ein Holzhaus
+// abfackeln. Unserer zuendet nur, was er trifft.
+
+const FEUERSTAB = "fynn:feuerstab_2";
+const FEUERBALL = "fynn:feuerball";
+const SCHUSSTEMPO = 1.6;           // Bloecke je Tick, etwa wie beim Lohen
+const SPERRE = 18;                 // Ticks
+const letzterSchuss = new Map();
+
+function haeltFeuerstab(spieler) {
+    return spieler.getComponent("minecraft:equippable")
+        ?.getEquipment("Mainhand")?.typeId === FEUERSTAB;
+}
+
+world.afterEvents.itemUse.subscribe((e) => {
+    try {
+        if (e.itemStack?.typeId !== FEUERSTAB) return;
+        const spieler = e.source;
+        const jetzt = system.currentTick;
+        if (jetzt - (letzterSchuss.get(spieler.id) ?? -SPERRE) < SPERRE) return;
+        letzterSchuss.set(spieler.id, jetzt);
+
+        const blick = spieler.getViewDirection();
+        const kopf = spieler.getHeadLocation();
+        // Etwas vor dem Kopf starten, sonst trifft der Ball den Schuetzen.
+        const start = {
+            x: kopf.x + blick.x * 1.2,
+            y: kopf.y + blick.y * 1.2 - 0.2,
+            z: kopf.z + blick.z * 1.2,
+        };
+        const ball = spieler.dimension.spawnEntity(FEUERBALL, start);
+        const geschoss = ball.getComponent("minecraft:projectile");
+        const flug = { x: blick.x * SCHUSSTEMPO, y: blick.y * SCHUSSTEMPO, z: blick.z * SCHUSSTEMPO };
+        if (geschoss) {
+            // Der Schuetze als Besitzer: Dann zaehlt ein Treffer als seiner,
+            // und der Ball verschont ihn selbst.
+            geschoss.owner = spieler;
+            geschoss.shoot(flug);
+        } else {
+            ball.applyImpulse(flug);
+        }
+        spieler.dimension.playSound("mob.blaze.shoot", start, { volume: 0.8 });
+        for (let i = 0; i < 6; i++) {
+            spieler.dimension.spawnParticle("minecraft:basic_flame_particle", {
+                x: start.x + (Math.random() - 0.5) * 0.4,
+                y: start.y + (Math.random() - 0.5) * 0.4,
+                z: start.z + (Math.random() - 0.5) * 0.4,
+            });
+        }
+    } catch (fehler) {
+        console.warn(`Feuerstab, Schuss: ${fehler}`);
+    }
+});
+
+// Flammen, solange der Stab in der Hand liegt. Sie entstehen in der Welt,
+// nicht am Modell - rechts vor dem Kopf, wo der Stab von innen gesehen
+// liegt. Von aussen sieht man sie an der Schulter des Traegers.
+system.runInterval(() => {
+    try {
+        for (const spieler of world.getAllPlayers()) {
+            if (!haeltFeuerstab(spieler)) continue;
+            const blick = spieler.getViewDirection();
+            const kopf = spieler.getHeadLocation();
+            // Rechts neben der Blickrichtung: in Minecraft zeigt x nach
+            // Osten und z nach Sueden, rechts von (x, z) liegt (-z, x).
+            const laenge = Math.hypot(blick.x, blick.z) || 1;
+            const rechts = { x: -blick.z / laenge, z: blick.x / laenge };
+            spieler.dimension.spawnParticle("minecraft:basic_flame_particle", {
+                x: kopf.x + blick.x * 0.8 + rechts.x * 0.45 + (Math.random() - 0.5) * 0.15,
+                y: kopf.y - 0.3 + Math.random() * 0.15,
+                z: kopf.z + blick.z * 0.8 + rechts.z * 0.45 + (Math.random() - 0.5) * 0.15,
+            });
+        }
+    } catch (fehler) {
+        console.warn(`Feuerstab, Flammen: ${fehler}`);
+    }
+}, 4);
