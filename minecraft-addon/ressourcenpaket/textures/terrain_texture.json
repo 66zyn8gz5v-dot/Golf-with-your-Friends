@@ -33,6 +33,24 @@
     },
     "feuerkasten_rund_an": {
       "textures": "textures/blocks/feuerkasten_rund_an"
+    },
+    "tiegel_seite": {
+      "textures": "textures/blocks/tiegel_seite"
+    },
+    "tiegel_vorn": {
+      "textures": "textures/blocks/tiegel_vorn"
+    },
+    "tiegel_vorn_an": {
+      "textures": "textures/blocks/tiegel_vorn_an"
+    },
+    "tiegel_oben": {
+      "textures": "textures/blocks/tiegel_oben"
+    },
+    "tiegel_oben_an": {
+      "textures": "textures/blocks/tiegel_oben_an"
+    },
+    "tiegel_unten": {
+      "textures": "textures/blocks/tiegel_unten"
     }
   }
 }

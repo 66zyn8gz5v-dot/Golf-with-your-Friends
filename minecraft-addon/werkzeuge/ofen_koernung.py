@@ -21,6 +21,11 @@ Pixeln. Kanten, Rahmen und der Ring des Bottichs bestehen aus anderen
 Toenen und bleiben damit von selbst stehen - ohne dass irgendwo eine
 Liste steht, was Detail ist und was Flaeche.
 
+Achtung: Das Werkzeug koernt die Bilder an Ort und Stelle. Ein zweiter
+Lauf koernt die schon gekoernten noch einmal - vorher die Bilder aus Git
+zuruecksetzen. Andere Werkzeuge benutzen nur koernen() und sind davon
+nicht betroffen.
+
     python3 werkzeuge/ofen_koernung.py
 """
 
@@ -112,13 +117,22 @@ def fleckentoene(ton, palette):
     return nah
 
 
-def koernen(bild, salz=0):
+def koernen(bild, salz=0, ausgenommen=()):
+    """Koernt die glatten Felder eines Bildes.
+
+    'ausgenommen' sind Toene, deren Felder glatt bleiben sollen. Der
+    Schmelztiegel braucht das fuer seine Stahlreifen: Ein Reifen ist ein
+    glattes Feld von vierzehn Pixeln und wuerde sonst mit grauen
+    Steinflecken besprenkelt - Stahl, der aussieht wie Mauerwerk.
+    """
     n = bild.width
     aus = bild.copy()
     px, ziel = bild.load(), aus.load()
     palette = set(bild.get_flattened_data())
     angefasst = 0
     for ton, feld in felder(px, n):
+        if ton in ausgenommen:
+            continue
         toene = fleckentoene(ton, palette)
         for x, y in sorted(feld):
             w = streu(x, y, salz)

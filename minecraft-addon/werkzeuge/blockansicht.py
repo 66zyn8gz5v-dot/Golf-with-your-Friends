@@ -10,6 +10,7 @@ sind hart. Fuer die Frage "liegt das richtige Bild auf der richtigen
 Seite" reicht es.
 
     python3 werkzeuge/blockansicht.py feuerkasten
+    python3 werkzeuge/blockansicht.py schmelztiegel feuerkasten   (uebereinander)
 """
 
 import json
@@ -81,7 +82,47 @@ def texturen(block, brennt):
             m.get("east", m["*"])["texture"])
 
 
+def turm(oben_block, unten_block):
+    """Zwei Bloecke uebereinander, wie der Tiegel auf dem Feuerkasten.
+
+    Ob zwei Bloecke zusammenpassen, sieht man einzeln nicht: Es entscheidet
+    sich an der Naht, wo der Boden des oberen auf dem Deckel des unteren
+    sitzt. Der untere Wuerfel wird zuerst gemalt, der obere eine
+    Kantenlaenge hoeher darueber - er deckt dabei genau den Deckel des
+    unteren ab, so wie im Spiel.
+    """
+    schrift = ImageFont.truetype(SCHRIFT, 19)
+    teile = []
+    for brennt, wie in ((False, "aus"), (True, "brennt")):
+        wuerfel_paar = []
+        for block in (unten_block, oben_block):
+            namen = texturen(block, brennt)
+            bilder = [Image.open(BLOCKS / f"{n}.png").convert("RGBA").resize((N, N), Image.NEAREST)
+                      for n in namen]
+            wuerfel_paar.append(wuerfel(*bilder))
+        unten, oben = wuerfel_paar
+        stapel = Image.new("RGBA", (unten.width, unten.height + N), (0, 0, 0, 0))
+        stapel.paste(unten, (0, N), unten)
+        stapel.paste(oben, (0, 0), oben)
+        teile.append((wie, stapel))
+
+    w = teile[0][1].width
+    blatt = Image.new("RGB", (len(teile) * (w + 60) + 40, teile[0][1].height + 70),
+                      (248, 248, 250))
+    mal = ImageDraw.Draw(blatt)
+    for i, (wie, bild) in enumerate(teile):
+        x = 40 + i * (w + 60)
+        mal.text((x, 14), wie, fill=(30, 30, 40), font=schrift)
+        blatt.paste(bild, (x, 46), bild)
+    ziel = WURZEL / "vorschau" / f"{oben_block}_auf_{unten_block}.png"
+    blatt.save(ziel)
+    print(f"gezeichnet: {ziel.name}")
+
+
 def main():
+    if len(sys.argv) > 2:
+        turm(sys.argv[1], sys.argv[2])
+        return
     block = sys.argv[1] if len(sys.argv) > 1 else "feuerkasten"
     schrift = ImageFont.truetype(SCHRIFT, 19)
     teile = []
@@ -103,7 +144,7 @@ def main():
         blatt.paste(bild, (x, 44), bild)
         for j, (rolle, name) in enumerate(zip(("oben", "vorn", "rechts"), namen)):
             mal.text((x, 44 + bild.height + 10 + j * 22),
-                     f"{rolle:7s}{name.replace('feuerkasten_', '')}",
+                     f"{rolle:7s}{name.replace('feuerkasten_', '').replace('tiegel_', '')}",
                      fill=(90, 90, 100), font=schrift)
     ziel = WURZEL / "vorschau" / f"{block}_wuerfel.png"
     blatt.save(ziel)
