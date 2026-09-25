@@ -16,7 +16,7 @@
         "face_player": "animation.actor.billboard"
       },
       "scripts": {
-        "scale": "0.5",
+        "scale": "0.8",
         "animate": [
           "face_player"
         ]

@@ -40,9 +40,20 @@ KUGEL = set("g)*/")        # was zur Feuerkugel gehoert
 STIEL = "4"
 FUNKE, RAUCH = "'", "k"
 
-KUGEL_RAND = 1.25          # Tiefe am Goldring
+KUGEL_RAND = 2.0           # Tiefe am Goldring
 KUGEL_MITTE = 4.0          # Tiefe im Kern
-STIEL_DICKE = 2.0          # so dick wie breit - ein Stock, kein Brett
+# Der Stiel duenner als alles oben. Erst stand er auf 2 - so dick wie
+# breit, ein Stock -, und die Kugel lief am Goldring auf 1,25 aus. Dann
+# war der Griff dicker als der Rand des Kopfes, und Fynn: "die Dicke des
+# Griffes soll duenner sein als die des oberen Teils". Jetzt ist er
+# duenner als die duennste Stelle oben, bei beiden Staeben.
+STIEL_DICKE = 1.0
+
+# Wie viel groesser als gemalt. Ein Pixel wird sonst ein Pixel, und die
+# Staebe lagen kleiner in der Hand als die Schwerter - der zweite, mit
+# sechzehn Pixeln gemalt, deutlich. Vergroessert wird um den Fuss herum,
+# damit die Hand bleibt, wo sie ist, und nur der Stab laenger wird.
+GROESSE = {"feuerstab": 1.3, "feuerstab_2": 1.8}
 FUNKEN_DICKE = 0.75
 RAUCH_DICKE = 0.5
 
@@ -91,7 +102,7 @@ def fuss(karte):
     return s + 0.5, len(karte) - 1 - z + 0.5          # in Modellkoordinaten
 
 
-def aufrichten(modelldatei, karte):
+def aufrichten(modelldatei, karte, faktor=1.0):
     """Dreht das schraege Modell um 45 Grad aufrecht, den Fuss nach unten.
 
     Im Modell zeigt Bildspalte x nach +x und die Bildzeile nach oben, die
@@ -110,8 +121,14 @@ def aufrichten(modelldatei, karte):
             nx = fx + (px - fx) * c - (py - fy) * s
             ny = fy + (px - fx) * s + (py - fy) * c
             dx, dy = nx - px - fx, ny - py - fy + 0.5
-            k["origin"] = [k["origin"][0] + dx, k["origin"][1] + dy, k["origin"][2]]
-            k["pivot"] = [px + dx, py + dy, pz]
+            ursprung = [k["origin"][0] + dx, k["origin"][1] + dy, k["origin"][2]]
+            drehpunkt = [px + dx, py + dy, pz]
+            # Vergroessern um den Nullpunkt, in dem jetzt der Fuss steht.
+            # Alles gleichmaessig, auch die Tiefe - sonst wuerde aus dem
+            # duennen Griff wieder ein dicker.
+            k["origin"] = [v * faktor for v in ursprung]
+            k["pivot"] = [v * faktor for v in drehpunkt]
+            k["size"] = [v * faktor for v in k["size"]]
             anzahl += 1
     modelldatei.write_text(json.dumps(geo, indent=2) + "\n")
     return anzahl
@@ -166,25 +183,41 @@ def ohne_fernen_rauch(karte):
 
 from vorlagen import feuerstab_2 as vorlage_2
 
-FLAMME_2 = set("abce")     # rot, orange, gelb, fast weiss
 GOLD_2 = set("fgh")
 UMRISS_2 = "d"
 
 
-def tiefen_2(karte):
-    """Die Flamme wird rund wie beim ersten Stab die Kugel, der goldene Kopf
-    und die Spitze wuchtig, der Holzstiel ein Stock."""
-    flamme = [(s, z) for z, t in enumerate(karte) for s, c in enumerate(t) if c in FLAMME_2]
-    mx = sum(s for s, _ in flamme) / len(flamme) + 0.5
-    my = sum(z for _, z in flamme) / len(flamme) + 0.5
-    r = max(math.hypot(s + 0.5 - mx, z + 0.5 - my) for s, z in flamme) + 0.5
+# Die Flamme, nach Farbe gestaffelt: Der fast weisse Kern steht am
+# weitesten vor, die roten Spitzen sind am duennsten. Zuerst war sie rund
+# gerechnet wie die Kugel des ersten Stabs, bis 3,5 dick - dicker als der
+# goldene Kopf, der sie haelt. Fynn: "Die Flamme soll nicht so dick sein
+# wie das goldene Teil" und "unterschiedlich dick an verschiedenen
+# Stellen". Darum oben hoechstens 2,5 bei einem Kopf von 3, und auf jede
+# Stelle ein kleiner Versatz, der von Pixel zu Pixel springt: Eine Flamme
+# mit glatter Oberflaeche saehe aus wie aus Holz geschnitzt.
+FLAMMEN_TIEFE = {"e": 2.5, "c": 2.0, "b": 1.5, "a": 1.25}
+GOLD_TIEFE = 3.0
 
+
+def flackern(spalte, zeile):
+    """-0,25, 0 oder +0,25 - fest je Stelle, aber ohne Muster.
+
+    Dieselbe Verwuerfelung wie in der Koernung: Eine Summe aus Spalte und
+    Zeile gaebe Streifen.
+    """
+    h = (spalte * 73856093) ^ (zeile * 19349663)
+    h = (h ^ (h >> 13)) * 1274126177
+    return ((h ^ (h >> 16)) % 3 - 1) * 0.25
+
+
+def tiefen_2(karte):
     def tief(zeile, spalte, zeichen):
-        if zeichen in FLAMME_2:
-            d = math.hypot(spalte + 0.5 - mx, zeile + 0.5 - my) / r
-            return round((1.25 + 2.25 * math.sqrt(max(0.0, 1 - d * d))) * 2) / 2
+        if zeichen in FLAMMEN_TIEFE:
+            wert = FLAMMEN_TIEFE[zeichen] + flackern(spalte, zeile)
+            # Nie dicker als 2,5 und nie so duenn wie der Griff.
+            return min(2.5, max(STIEL_DICKE + 0.25, wert))
         if zeichen in GOLD_2:
-            return 3.0
+            return GOLD_TIEFE
         return STIEL_DICKE
     return tief
 
@@ -207,7 +240,7 @@ def baue(name, karte, farben, tiefe):
     w.aus_zeichenkarte(name, karte, farben, dicke=tiefe,
                        mitte=0, winkel=["/" * len(karte[0])] * len(karte),
                        ziel_modell=str(modell), ziel_textur=str(textur))
-    n = aufrichten(modell, karte)
+    n = aufrichten(modell, karte, GROESSE[name])
     print(f"{name}: {n} Kaesten um 45 Grad aufgerichtet")
     return modell
 

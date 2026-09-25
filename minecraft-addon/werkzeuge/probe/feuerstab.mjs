@@ -1,58 +1,84 @@
-// Der Feuerstab ohne Spiel: einmal schiessen, gleich noch einmal (muss
-// gesperrt sein), und die Flammen einmal ticken lassen.
+// Die Feuerstaebe ohne Spiel: laden wie beim Degen, schiessen, fliegen,
+// einschlagen - fuer beide Staebe, und mit einem Stock nichts.
 import { gemerkt, system, world } from "@minecraft/server";
 await import("./main.js");
 
-const gespawnt = [], partikel = [], toene = [];
-let geschossen = null, besitzer = null;
+const explosionen = [], partikel = [], toene = [], baelle = [];
+let blockBei = null, wesenBei = null;
 const dimension = {
     spawnEntity: (typ, ort) => {
-        gespawnt.push({ typ, ort });
-        return { getComponent: (n) => n === "minecraft:projectile"
-            ? { set owner(o) { besitzer = o; }, shoot: (v) => { geschossen = v; } } : undefined };
+        const ball = { typ, id: "ball" + baelle.length, location: { ...ort }, isValid: true,
+            teleport(z) { this.location = { ...z }; }, remove() { this.isValid = false; } };
+        ball.dimension = dimension;
+        baelle.push(ball);
+        return ball;
     },
     spawnParticle: (n, ort) => partikel.push({ n, ort }),
     playSound: (n) => toene.push(n),
+    createExplosion: (ort, wucht, opt) => explosionen.push({ ort, wucht, opt }),
+    getBlockFromRay: (ort, r, o) => blockBei !== null && ort.z + r.z * o.maxDistance <= blockBei
+        ? { block: { location: { x: 10, y: 65, z: blockBei - 1 } }, faceLocation: { x: 0.5, y: 0.5, z: 1 } }
+        : undefined,
+    getEntitiesFromRay: () => (wesenBei ? [{ entity: wesenBei, distance: 0.5 }] : []),
 };
 const spieler = {
-    id: "fynn", dimension,
-    getViewDirection: () => ({ x: 0, y: 0, z: -1 }),      // Blick nach Norden
+    id: "fynn", dimension, inHand: "fynn:feuerstab_2", isSneaking: false,
+    location: { x: 10, y: 64, z: 10 },
+    getViewDirection: () => ({ x: 0, y: 0, z: -1 }),       // Blick nach Norden
     getHeadLocation: () => ({ x: 10, y: 65.6, z: 10 }),
-    getComponent: (n) => n === "minecraft:equippable"
-        ? { getEquipment: () => ({ typeId: "fynn:feuerstab_2" }) } : undefined,
+    getComponent(n) { return n === "minecraft:equippable"
+        ? { getEquipment: () => ({ typeId: this.inHand }) } : undefined; },
 };
 world.getAllPlayers = () => [spieler];
 
-const benutzen = gemerkt.ereignisse["itemUse"];
-const stab = { typeId: "fynn:feuerstab_2" };
+const takte = gemerkt.takte.filter((t) => typeof t[0] === "function" && t[1] === 1).map((t) => t[0]);
+const flammen = gemerkt.takte.filter((t) => typeof t[0] === "function" && t[1] === 4).pop()[0];
+function tick(n = 1) { for (let i = 0; i < n; i++) { system.currentTick += 1; for (const f of takte) f(); } }
+const ergebnisse = [];
+function pruefe(was, ok) { ergebnisse.push(ok); console.log(`${ok ? "ok  " : "NEIN"} ${was}`); }
 
 system.currentTick = 100;
-for (const f of benutzen) f({ itemStack: stab, source: spieler });
-console.log("Schuss 1:", gespawnt.map((g) => g.typ).join(","), "| Flug:", JSON.stringify(geschossen),
-            "| Besitzer:", besitzer?.id, "| Ton:", toene.join(","));
-const start = gespawnt[0]?.ort;
-console.log("  Start vor dem Kopf:", JSON.stringify(start));
+spieler.isSneaking = true; tick(8); spieler.isSneaking = false; tick(1);
+pruefe("kurz geduckt: kein Schuss", baelle.length === 0);
 
-system.currentTick = 105;
-for (const f of benutzen) f({ itemStack: stab, source: spieler });
-console.log("Schuss 2 nach 5 Ticks:", gespawnt.length === 1 ? "gesperrt" : "NICHT gesperrt");
+spieler.isSneaking = true; tick(20);
+pruefe("voll geladen: Zischen", toene.includes("mob.blaze.breathe"));
+pruefe("und noch kein Schuss, solange geduckt", baelle.length === 0);
+spieler.isSneaking = false; tick(1);
+pruefe("beim Aufstehen fliegt ein fynn:feuerball", baelle.length === 1 && baelle[0].typ === "fynn:feuerball");
 
-system.currentTick = 130;
-for (const f of benutzen) f({ itemStack: stab, source: spieler });
-console.log("Schuss 3 nach 30 Ticks:", gespawnt.length === 2 ? "geht wieder" : "FEHLT");
+const vorher = baelle[0].location.z;
+tick(3);
+pruefe(`der Ball fliegt nach vorn (z ${vorher.toFixed(1)} -> ${baelle[0].location.z.toFixed(1)})`,
+       baelle[0].location.z < vorher - 3);
+blockBei = baelle[0].location.z - 1; tick(1); blockBei = null;
+const e = explosionen[0];
+pruefe("am Block schlaegt er ein", explosionen.length === 1 && !baelle[0].isValid);
+pruefe("ohne Bloecke zu zerstoeren und ohne Brand", e && e.opt.breaksBlocks === false && e.opt.causesFire === false);
 
-for (const f of benutzen) f({ itemStack: { typeId: "minecraft:stick" }, source: spieler });
-console.log("Mit einem Stock:", gespawnt.length === 2 ? "kein Schuss" : "FALSCH geschossen");
+spieler.inHand = "fynn:feuerstab";
+spieler.isSneaking = true; tick(20); spieler.isSneaking = false; tick(1);
+pruefe("Stab I laedt und schiesst genauso", baelle.length === 2);
+let brennt = 0;
+wesenBei = { id: "schwein", typeId: "minecraft:pig", location: { x: 10, y: 65, z: 7 }, isValid: true,
+             setOnFire: (s) => { brennt = s; } };
+tick(1); wesenBei = null;
+pruefe("ein Schwein im Weg: Explosion, und es brennt", explosionen.length === 2 && brennt > 0);
 
-const vorher = partikel.length;
-const flammen = gemerkt.takte.filter((t) => typeof t[0] === "function" && t[1] === 4).pop()[0];
-flammen();
-const f = partikel.at(-1);
-console.log("Flammen am Stab:", partikel.length - vorher, "| bei", JSON.stringify(f?.ort));
+spieler.isSneaking = true; tick(20); spieler.isSneaking = false; tick(1);
+tick(70);
+pruefe("ohne Ziel verpufft er nach seiner Flugzeit", baelle.length === 3 && !baelle[2].isValid && explosionen.length === 2);
 
-// Blick nach Norden: rechts ist Osten, also groesseres x. Vorn ist kleineres z.
-const gut = geschossen && geschossen.z < 0 && Math.abs(geschossen.x) < 1e-9
-    && besitzer === spieler && start.z < 10 && gespawnt.length === 2
-    && f && f.ort.x > 10 && f.ort.z < 10;
+spieler.inHand = "minecraft:stick";
+spieler.isSneaking = true; tick(30); spieler.isSneaking = false; tick(1);
+pruefe("mit einem Stock laedt nichts", baelle.length === 3);
+
+for (const stab of ["fynn:feuerstab", "fynn:feuerstab_2"]) {
+    spieler.inHand = stab;
+    const n = partikel.length; flammen(); const f = partikel.at(-1);
+    pruefe(`Flammen rechts vor dem Kopf mit ${stab}`, partikel.length === n + 1 && f.ort.x > 10 && f.ort.z < 10);
+}
+
+const gut = ergebnisse.every(Boolean);
 console.log("\nAlles wie erwartet:", gut ? "ja" : "NEIN");
 if (!gut) process.exit(1);

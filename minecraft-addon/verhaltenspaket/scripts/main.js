@@ -325,72 +325,194 @@ system.runInterval(() => {
 }, 20);
 
 // ---------------------------------------------------------------------
-// Feuerstab II: Flammen am Stab und ein Feuerball auf Knopfdruck.
+// Die Feuerstaebe: Flammen in der Hand und Feuerbaelle auf Knopfdruck.
 // ---------------------------------------------------------------------
 //
-// Der Schuss haengt am Benutzen, nicht am Zuschlagen: Die Angriffstaste
-// kommt im Skript nicht an (siehe Degen), das Benutzen schon - dafuer
-// traegt der Stab minecraft:use_modifiers. Auf dem iPad heisst das:
-// antippen und kurz halten. Die Sekunde Pause zwischen zwei Schuessen
-// regelt das Spiel selbst ueber minecraft:cooldown; die Sperre hier ist
-// nur der Riegel dahinter, falls ein Benutzen doppelt gemeldet wird.
+// Aufgeladen wird wie beim Degen: ducken und geduckt bleiben, bis es
+// zischt und die Flammen auflodern - beim Aufstehen fliegt der Ball.
+// Fynn wollte es ausdruecklich so. Gezaehlt wird der Zustand "duckt
+// sich", nicht die Taste, aus demselben Grund wie beim Degen: Auf dem
+// iPad meldet Minecraft die Taste nur fuer einen Tick.
 //
-// Das Geschoss ist fynn:feuerball, nicht Minecrafts kleiner Feuerball:
-// Der setzt Bloecke in Brand, und ein Fehlschuss wuerde ein Holzhaus
-// abfackeln. Unserer zuendet nur, was er trifft.
+// Die erste Fassung schoss beim Benutzen (antippen und halten). Das ist
+// raus; die Staebe tragen dafuer auch kein use_modifiers mehr.
+//
+// Der Flug ist hier gerechnet, nicht Minecrafts Geschossen ueberlassen.
+// Die erste Fassung hat den Ball mit der Geschoss-Schnittstelle
+// abgeschossen - im Spiel blieb er neben dem Spieler in der Luft haengen,
+// und wer hineinlief, brannte. Jetzt schaut der Ball jeden Tick mit einem
+// Strahl eine Flugweite voraus: Ist dort ein Block oder ein Wesen, schlaegt
+// er ein, sonst rueckt er vor.
+//
+// Der Einschlag ist eine Explosion - Schaden, Rueckstoss, Knall -, aber
+// ohne Bloecke zu zerstoeren und ohne Brand in der Welt. Ein Fehlschuss
+// soll kein Haus sprengen oder abfackeln. Was direkt getroffen wird,
+// brennt.
 
-const FEUERSTAB = "fynn:feuerstab_2";
+const FEUERSTAEBE = new Set(["fynn:feuerstab", "fynn:feuerstab_2"]);
 const FEUERBALL = "fynn:feuerball";
-const SCHUSSTEMPO = 1.6;           // Bloecke je Tick, etwa wie beim Lohen
-const SPERRE = 18;                 // Ticks
+const TEMPO = 1.2;              // Bloecke je Tick
+const FLUGZEIT = 60;            // Ticks, dann verpufft er - gut 70 Bloecke
+const WUCHT = 1.6;              // Explosion; ein Creeper hat 3
+const BRANDDAUER = 5;           // Sekunden, die ein Getroffener brennt
+const LADEZEIT_FEUER = 20;      // Ticks geduckt, eine Sekunde
+const SPERRE = 18;              // Ticks zwischen zwei Schuessen
 const letzterSchuss = new Map();
+const feuerLaden = new Map();   // Spieler -> Ticks geduckt
+const fluege = new Map();
 
 function haeltFeuerstab(spieler) {
-    return spieler.getComponent("minecraft:equippable")
-        ?.getEquipment("Mainhand")?.typeId === FEUERSTAB;
+    return FEUERSTAEBE.has(spieler.getComponent("minecraft:equippable")
+        ?.getEquipment("Mainhand")?.typeId);
 }
 
-world.afterEvents.itemUse.subscribe((e) => {
+// In der 2.0-Schnittstelle ist isValid eine Eigenschaft, frueher eine
+// Methode. Beides abfangen kostet nichts.
+function lebt(wesen) {
     try {
-        if (e.itemStack?.typeId !== FEUERSTAB) return;
-        const spieler = e.source;
-        const jetzt = system.currentTick;
-        if (jetzt - (letzterSchuss.get(spieler.id) ?? -SPERRE) < SPERRE) return;
-        letzterSchuss.set(spieler.id, jetzt);
-
-        const blick = spieler.getViewDirection();
-        const kopf = spieler.getHeadLocation();
-        // Etwas vor dem Kopf starten, sonst trifft der Ball den Schuetzen.
-        const start = {
-            x: kopf.x + blick.x * 1.2,
-            y: kopf.y + blick.y * 1.2 - 0.2,
-            z: kopf.z + blick.z * 1.2,
-        };
-        const ball = spieler.dimension.spawnEntity(FEUERBALL, start);
-        const geschoss = ball.getComponent("minecraft:projectile");
-        const flug = { x: blick.x * SCHUSSTEMPO, y: blick.y * SCHUSSTEMPO, z: blick.z * SCHUSSTEMPO };
-        if (geschoss) {
-            // Der Schuetze als Besitzer: Dann zaehlt ein Treffer als seiner,
-            // und der Ball verschont ihn selbst.
-            geschoss.owner = spieler;
-            geschoss.shoot(flug);
-        } else {
-            ball.applyImpulse(flug);
-        }
-        spieler.dimension.playSound("mob.blaze.shoot", start, { volume: 0.8 });
-        for (let i = 0; i < 6; i++) {
-            spieler.dimension.spawnParticle("minecraft:basic_flame_particle", {
-                x: start.x + (Math.random() - 0.5) * 0.4,
-                y: start.y + (Math.random() - 0.5) * 0.4,
-                z: start.z + (Math.random() - 0.5) * 0.4,
-            });
-        }
+        return typeof wesen.isValid === "function" ? wesen.isValid() : !!wesen.isValid;
     } catch (fehler) {
-        console.warn(`Feuerstab, Schuss: ${fehler}`);
+        return false;
     }
-});
+}
 
-// Flammen, solange der Stab in der Hand liegt. Sie entstehen in der Welt,
+function flamme(dimension, ort, streuung) {
+    dimension.spawnParticle("minecraft:basic_flame_particle", {
+        x: ort.x + (Math.random() - 0.5) * streuung,
+        y: ort.y + (Math.random() - 0.5) * streuung,
+        z: ort.z + (Math.random() - 0.5) * streuung,
+    });
+}
+
+function schiessen(spieler) {
+    const jetzt = system.currentTick;
+    if (jetzt - (letzterSchuss.get(spieler.id) ?? -SPERRE) < SPERRE) return;
+    letzterSchuss.set(spieler.id, jetzt);
+
+    const blick = spieler.getViewDirection();
+    const kopf = spieler.getHeadLocation();
+    // Etwas vor dem Kopf starten, sonst trifft der Ball den Schuetzen.
+    const start = {
+        x: kopf.x + blick.x * 1.2,
+        y: kopf.y + blick.y * 1.2 - 0.2,
+        z: kopf.z + blick.z * 1.2,
+    };
+    const ball = spieler.dimension.spawnEntity(FEUERBALL, start);
+    fluege.set(ball.id, { ball, richtung: blick, schuetze: spieler, alter: 0 });
+    spieler.dimension.playSound("mob.blaze.shoot", start, { volume: 0.8 });
+    for (let i = 0; i < 6; i++) flamme(spieler.dimension, start, 0.4);
+}
+
+// Aufladen, jeden Tick: geduckt zaehlen, bei voller Ladung ein Zeichen,
+// beim Aufstehen schiessen - wenn genug geladen war.
+system.runInterval(() => {
+    for (const spieler of world.getAllPlayers()) {
+        try {
+            const kennung = spieler.id;
+            if (!haeltFeuerstab(spieler)) {
+                feuerLaden.delete(kennung);
+                continue;
+            }
+            if (spieler.isSneaking) {
+                const stand = (feuerLaden.get(kennung) ?? 0) + 1;
+                feuerLaden.set(kennung, stand);
+                if (stand === LADEZEIT_FEUER) {
+                    // Geladen: ein Zischen und ein Aufflackern vor der
+                    // Brust. In der Ego-Ansicht waere der Ton sonst das
+                    // einzige Zeichen, und Toene gehen im Kampf unter.
+                    spieler.dimension.playSound("mob.blaze.breathe", spieler.location,
+                        { volume: 0.6, pitch: 1.4 });
+                    const blick = spieler.getViewDirection();
+                    const kopf = spieler.getHeadLocation();
+                    for (let i = 0; i < 8; i++) {
+                        flamme(spieler.dimension, {
+                            x: kopf.x + blick.x * 0.9,
+                            y: kopf.y - 0.3,
+                            z: kopf.z + blick.z * 0.9,
+                        }, 0.6);
+                    }
+                }
+                continue;
+            }
+            const stand = feuerLaden.get(kennung) ?? 0;
+            feuerLaden.delete(kennung);
+            if (stand >= LADEZEIT_FEUER) schiessen(spieler);
+        } catch (fehler) {
+            console.warn(`Feuerstab, Laden: ${fehler}`);
+        }
+    }
+}, 1);
+
+function einschlag(flug, ort, getroffen) {
+    const dimension = flug.ball.dimension;
+    try {
+        flug.ball.remove();
+    } catch (fehler) {
+        // schon weg - dann eben ohne Ball
+    }
+    dimension.createExplosion(ort, WUCHT, {
+        breaksBlocks: false,
+        causesFire: false,
+        source: lebt(flug.schuetze) ? flug.schuetze : undefined,
+    });
+    if (getroffen && lebt(getroffen)) getroffen.setOnFire(BRANDDAUER, true);
+}
+
+system.runInterval(() => {
+    for (const [kennung, flug] of fluege) {
+        try {
+            if (!lebt(flug.ball)) {
+                fluege.delete(kennung);
+                continue;
+            }
+            const ort = flug.ball.location;
+            const dimension = flug.ball.dimension;
+            const r = flug.richtung;
+
+            // Was liegt auf dieser Flugweite im Weg? Durchlaessiges wie Gras
+            // und Blumen zaehlt nicht, Wasser auch nicht.
+            const block = dimension.getBlockFromRay(ort, r, {
+                maxDistance: TEMPO, includeLiquidBlocks: false, includePassableBlocks: false,
+            });
+            const wesen = dimension.getEntitiesFromRay(ort, r, { maxDistance: TEMPO })
+                .filter((t) => t.entity.id !== flug.ball.id
+                    && t.entity.id !== flug.schuetze?.id
+                    && t.entity.typeId !== FEUERBALL
+                    && t.entity.typeId !== "minecraft:item"
+                    && t.entity.typeId !== "minecraft:xp_orb")
+                .sort((a, b) => a.distance - b.distance)[0];
+
+            if (wesen) {
+                fluege.delete(kennung);
+                einschlag(flug, wesen.entity.location, wesen.entity);
+                continue;
+            }
+            if (block) {
+                fluege.delete(kennung);
+                const b = block.block.location;
+                const f = block.faceLocation;
+                einschlag(flug, { x: b.x + f.x, y: b.y + f.y, z: b.z + f.z }, null);
+                continue;
+            }
+
+            flug.alter += 1;
+            if (flug.alter > FLUGZEIT) {
+                fluege.delete(kennung);
+                for (let i = 0; i < 5; i++) flamme(dimension, ort, 0.5);
+                flug.ball.remove();
+                continue;
+            }
+            const weiter = { x: ort.x + r.x * TEMPO, y: ort.y + r.y * TEMPO, z: ort.z + r.z * TEMPO };
+            flug.ball.teleport(weiter);
+            flamme(dimension, ort, 0.2);
+        } catch (fehler) {
+            fluege.delete(kennung);
+            console.warn(`Feuerstab, Flug: ${fehler}`);
+        }
+    }
+}, 1);
+
+// Flammen, solange ein Stab in der Hand liegt. Sie entstehen in der Welt,
 // nicht am Modell - rechts vor dem Kopf, wo der Stab von innen gesehen
 // liegt. Von aussen sieht man sie an der Schulter des Traegers.
 system.runInterval(() => {
@@ -403,11 +525,11 @@ system.runInterval(() => {
             // Osten und z nach Sueden, rechts von (x, z) liegt (-z, x).
             const laenge = Math.hypot(blick.x, blick.z) || 1;
             const rechts = { x: -blick.z / laenge, z: blick.x / laenge };
-            spieler.dimension.spawnParticle("minecraft:basic_flame_particle", {
-                x: kopf.x + blick.x * 0.8 + rechts.x * 0.45 + (Math.random() - 0.5) * 0.15,
-                y: kopf.y - 0.3 + Math.random() * 0.15,
-                z: kopf.z + blick.z * 0.8 + rechts.z * 0.45 + (Math.random() - 0.5) * 0.15,
-            });
+            flamme(spieler.dimension, {
+                x: kopf.x + blick.x * 0.8 + rechts.x * 0.45,
+                y: kopf.y - 0.25,
+                z: kopf.z + blick.z * 0.8 + rechts.z * 0.45,
+            }, 0.15);
         }
     } catch (fehler) {
         console.warn(`Feuerstab, Flammen: ${fehler}`);

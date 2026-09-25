@@ -19,15 +19,6 @@
       "minecraft:damage": 5,
       "minecraft:durability": {
         "max_durability": 300
-      },
-      "minecraft:use_modifiers": {
-        "use_duration": 0.2,
-        "movement_modifier": 1.0
-      },
-      "minecraft:cooldown": {
-        "category": "fynn_feuerstab",
-        "duration": 1.0,
-        "type": "use"
       }
     }
   }
