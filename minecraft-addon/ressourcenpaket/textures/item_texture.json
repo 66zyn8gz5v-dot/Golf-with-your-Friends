@@ -52,6 +52,9 @@
     },
     "ritterstiefel": {
       "textures": "textures/items/ritterstiefel"
+    },
+    "feuerstab": {
+      "textures": "textures/items/feuerstab"
     }
   }
 }

@@ -672,6 +672,14 @@ def aus_zeichenkarte(name, karte, farben, dicke=1.0, mitte=None, anbauten=None,
                 # der Weg fuer die Beschreibung dokumentiert ist. Sechzig
                 # Grad Probekippung blieben im Spiel unsichtbar.
                 #
+                # Am 25. September ist der Weg trotzdem wieder eingebaut
+                # (klinge.animation.json, Fassung 4.11) - in Klammern, weil
+                # der alte Versuch ohne Klammern geschrieben war und die
+                # Reihenfolge von Pfeil und Malzeichen nirgends steht. Mojangs
+                # eigener Speer liest seine Werte genau so. Ob es diesmal
+                # ankommt, muss das Spiel zeigen; wirkungslos ergibt der
+                # Ausdruck 0 und schadet nicht.
+                #
                 # Sie bleiben stehen, weil sie nichts kosten und weil der
                 # Platz fuer eine Bewegung gebraucht wird, sobald sich ein
                 # Auslöser findet, der wirklich ankommt. Was hier rechnet,

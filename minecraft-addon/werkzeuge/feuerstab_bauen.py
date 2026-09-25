@@ -1,0 +1,178 @@
+#!/usr/bin/env python3
+"""Baut den Feuerstab als 3D-Gegenstand - gepixelt von Fynns Cousin.
+
+Zwei Dinge unterscheiden ihn von den Schwertern:
+
+Er ist schraeg gezeichnet, Stiel unten links, Kugel oben rechts. Die
+Halteanimation der Klingen erwartet aber eine Waffe, die im Modell nach
+oben zeigt. Das Bild zu drehen wuerde die Pixelzeichnung zerstoeren -
+gedreht wird deshalb das Modell: jeder Pixel ein eigener Kasten, dessen
+Mitte um 45 Grad um den Fuss des Stiels wandert und der sich selbst um 45
+Grad um seine Mitte dreht. Welche Richtung Minecraft fuer die Drehung des
+Kastens annimmt, ist dabei gleich: Ein einfarbiges Quadrat sieht um +45
+und um -45 Grad gedreht gleich aus, und das Gitter schliesst in beiden
+Faellen lueckenlos. Die Lage der Mitten dagegen ist hier gerechnet, nicht
+Minecraft ueberlassen - dort steckt die Richtung, die zaehlt.
+
+Und er ist rund, wo die Schwerter flach sind: Die Feuerkugel bekommt die
+Tiefe einer Kugel, in der Mitte am dicksten, zum Goldring hin flacher.
+Der Stiel ist ein Stock, die Funken schweben als duenne Flocken.
+
+    python3 werkzeuge/feuerstab_bauen.py
+"""
+
+import json
+import math
+import sys
+from pathlib import Path
+
+from PIL import Image
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+import waffe_bauen as w
+from vorlagen import feuerstab as vorlage
+
+WURZEL = Path(__file__).resolve().parent.parent
+RES = WURZEL / "ressourcenpaket"
+
+KUGEL = set("g)*/")        # was zur Feuerkugel gehoert
+STIEL = "4"
+FUNKE, RAUCH = "'", "k"
+
+KUGEL_RAND = 1.25          # Tiefe am Goldring
+KUGEL_MITTE = 4.0          # Tiefe im Kern
+STIEL_DICKE = 2.0          # so dick wie breit - ein Stock, kein Brett
+FUNKEN_DICKE = 0.75
+RAUCH_DICKE = 0.5
+
+
+def kugel_mass(karte):
+    """Mitte und Halbmesser der Kugel, am Bild gemessen.
+
+    Die Mitte ist der Schwerpunkt des roten Kerns, der Halbmesser der
+    Abstand zum aeussersten Pixel des Goldrings. So passt sich die Tiefe
+    an, falls der Cousin die Kugel noch einmal umzeichnet.
+    """
+    kern = [(s, z) for z, t in enumerate(karte) for s, c in enumerate(t) if c in "*/"]
+    mx = sum(s for s, _ in kern) / len(kern) + 0.5
+    my = sum(z for _, z in kern) / len(kern) + 0.5
+    rand = max(math.hypot(s + 0.5 - mx, z + 0.5 - my)
+               for z, t in enumerate(karte) for s, c in enumerate(t) if c in KUGEL)
+    return mx, my, rand + 0.5
+
+
+def tiefen(karte):
+    mx, my, r = kugel_mass(karte)
+
+    def tief(zeile, spalte, zeichen):
+        if zeichen in KUGEL:
+            d = math.hypot(spalte + 0.5 - mx, zeile + 0.5 - my) / r
+            genau = KUGEL_RAND + (KUGEL_MITTE - KUGEL_RAND) * math.sqrt(max(0.0, 1 - d * d))
+            # Auf halbe Pixel gerundet: Stufen statt einer glatt gedrehten
+            # Kugel. Glatt sah sie gedrechselt aus, in Stufen nach Minecraft.
+            return round(genau * 2) / 2
+        if zeichen == STIEL:
+            return STIEL_DICKE
+        if zeichen == FUNKE:
+            return FUNKEN_DICKE
+        return RAUCH_DICKE
+    return tief
+
+
+def fuss(karte):
+    """Das untere Ende des Stiels: der Stielpixel am weitesten unten links."""
+    stiel = [(s, z) for z, t in enumerate(karte) for s, c in enumerate(t) if c == STIEL]
+    s, z = max(stiel, key=lambda p: p[1] - p[0])
+    return s + 0.5, len(karte) - 1 - z + 0.5          # in Modellkoordinaten
+
+
+def aufrichten(modelldatei, karte):
+    """Dreht das schraege Modell um 45 Grad aufrecht, den Fuss nach unten.
+
+    Im Modell zeigt Bildspalte x nach +x und die Bildzeile nach oben, die
+    Kugel liegt also bei +x und +y vom Stiel aus. Eine Drehung um +45 Grad
+    in dieser Ebene (x nach rechts, y nach oben) bringt sie senkrecht ueber
+    den Fuss. Danach wird der Fuss in den Nullpunkt geschoben - dort, wo
+    auch bei den Schwertern das untere Ende sitzt.
+    """
+    geo = json.loads(modelldatei.read_text())
+    fx, fy = fuss(karte)
+    c, s = math.cos(math.radians(45)), math.sin(math.radians(45))
+    anzahl = 0
+    for knochen in geo["minecraft:geometry"][0]["bones"]:
+        for k in knochen.get("cubes", []):
+            px, py, pz = k["pivot"]
+            nx = fx + (px - fx) * c - (py - fy) * s
+            ny = fy + (px - fx) * s + (py - fy) * c
+            dx, dy = nx - px - fx, ny - py - fy + 0.5
+            k["origin"] = [k["origin"][0] + dx, k["origin"][1] + dy, k["origin"][2]]
+            k["pivot"] = [px + dx, py + dy, pz]
+            anzahl += 1
+    modelldatei.write_text(json.dumps(geo, indent=2) + "\n")
+    return anzahl
+
+
+def inventarbild(karte):
+    """Das Bild fuers Inventar, auf zwanzig mal zwanzig beschnitten.
+
+    Fynn hat fuer neue Waffen hoechstens zwanzig Pixel festgelegt - mehr
+    faellt neben den Vanilla-Gegenstaenden auf. Der Stab selbst passt
+    hinein (Spalten 0 bis 19, Zeilen 4 bis 23), verloren gehen nur Funken
+    und Rauchpunkte am Rand. Im 3D-Modell bleiben sie alle.
+    """
+    stueck = [z[0:20] for z in karte[4:24]]
+    for z, t in enumerate(karte):
+        for s, ch in enumerate(t):
+            if ch not in ".'k":
+                assert 0 <= s < 20 and 4 <= z < 24, f"Stab ragt aus dem Ausschnitt: {(s, z)}"
+    bild = Image.new("RGBA", (20, 20))
+    for y, t in enumerate(stueck):
+        for x, ch in enumerate(t):
+            bild.putpixel((x, y), tuple(vorlage.FARBEN[ch]))
+    return bild
+
+
+# Wie weit ein Rauchpunkt von der Kugel weg sein darf, um ins Modell zu
+# kommen. Im flachen Bild lesen sich die dunklen Punkte als Rauch. Im
+# Modell wurde aus der Reihe unten rechts ein schwarzer Stab, der neben
+# der Kugel in der Luft hing. Die Punkte nahe der Kugel durften zuerst
+# bleiben, als Rauchfahne - Fynn wollte das Modell dann ganz ohne die
+# schwarzen Pixel. Null heisst: keiner kommt hinein. Im Inventarbild
+# bleiben sie alle, dort gehoeren sie zur Zeichnung.
+RAUCH_REICHWEITE = 0.0
+
+
+def ohne_fernen_rauch(karte):
+    kugel = [(s, z) for z, t in enumerate(karte) for s, c in enumerate(t) if c in KUGEL]
+    neu, weg = [], 0
+    for z, t in enumerate(karte):
+        zeile = ""
+        for s, c in enumerate(t):
+            if c == RAUCH and min(math.hypot(s - a, z - b) for a, b in kugel) > RAUCH_REICHWEITE:
+                zeile += "."
+                weg += 1
+            else:
+                zeile += c
+        neu.append(zeile)
+    return neu, weg
+
+
+def main():
+    karte, weg = ohne_fernen_rauch(vorlage.KARTE)
+    print(f"Rauchpunkte fern der Kugel: {weg} nicht im Modell")
+    modell = RES / "models" / "entity" / "feuerstab.geo.json"
+    textur = RES / "textures" / "entity" / "feuerstab_haut.png"
+    # Jeder Pixel mit "/" in der Drehkarte: gedreht und damit einzeln - aus
+    # zusammengefassten Zeilen wuerden schraege Balken.
+    w.aus_zeichenkarte("feuerstab", karte, vorlage.FARBEN, dicke=tiefen(karte),
+                       mitte=0, winkel=["/" * len(karte[0])] * len(karte),
+                       ziel_modell=str(modell), ziel_textur=str(textur))
+    n = aufrichten(modell, karte)
+    print(f"aufgerichtet: {n} Kaesten um 45 Grad")
+    inventarbild(vorlage.KARTE).save(RES / "textures" / "items" / "feuerstab.png")
+    print("Inventarbild: 20 x 20")
+
+
+if __name__ == "__main__":
+    main()

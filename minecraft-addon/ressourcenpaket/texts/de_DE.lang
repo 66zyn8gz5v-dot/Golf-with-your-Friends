@@ -42,11 +42,11 @@ item.fynn:eisenklinge.name=Eisenklinge
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.11
+item.iron_sword.name=Stahlschwert 4.12
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.11
-item.fynn:degen.name=Degen 4.11
+item.fynn:degen=Degen 4.12
+item.fynn:degen.name=Degen 4.12
 
 
 
@@ -76,3 +76,7 @@ item.fynn:ritterbeinschutz=Ritterbeinschutz
 item.fynn:ritterbeinschutz.name=Ritterbeinschutz
 item.fynn:ritterstiefel=Ritterstiefel
 item.fynn:ritterstiefel.name=Ritterstiefel
+
+## Der Feuerstab - gepixelt von Fynns Cousin. Ein Sondergegenstand.
+item.fynn:feuerstab=Feuerstab
+item.fynn:feuerstab.name=Feuerstab
