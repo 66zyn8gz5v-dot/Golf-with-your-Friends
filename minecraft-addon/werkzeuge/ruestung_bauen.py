@@ -163,6 +163,12 @@ UV_KINN = (32, 12)       # Ebene 1
 UV_KNIE = (0, 0)         # Ebene 2
 UV_TASCHE = (16, 0)      # Ebene 2
 
+# Die Gesichtsoeffnung im Helm, in Pixeln der Helmfront. Durchsichtig
+# heisst hier wirklich offen: Minecrafts Ruestungsmaterial laesst Luecken
+# durch, so wie beim Kettenhemd.
+GESICHT_ZEILEN = (3, 4)
+GESICHT_SPALTEN = range(1, 7)
+
 
 def bild_aus(karte):
     b = Image.new("RGBA", (len(karte[0]), len(karte)))
@@ -184,6 +190,15 @@ def texturen():
         "west": vorlage.HELM_WEST, "vorn": vorlage.HELM_VORN,
         "ost": vorlage.HELM_OST, "hinten": vorlage.HELM_HINTEN,
     }, ueberschreiben=True)
+    # Das Gesicht bleibt auf Augenhoehe frei: Zeilen 3 und 4 der
+    # Helmfront, Spalten 1 bis 6. Fynn wollte vom Skin noch etwas sehen.
+    # Darunter sitzt der Kinnschutz, ueber der Oeffnung Band und Stirn -
+    # ein offener Helm statt eines geschlossenen. Die Helmfront liegt im
+    # Kastennetz bei (8, 8).
+    px = eins.load()
+    for zeile in GESICHT_ZEILEN:
+        for spalte in GESICHT_SPALTEN:
+            px[8 + spalte, 8 + zeile] = (0, 0, 0, 0)
     netz(eins, *UV_SCHULTER, SCHULTER, SCHULTER_SEITEN)
     netz(eins, *UV_KINN, KINN, dict(KINN_SEITEN, vorn=vorlage.VISIER_VORN))
     zwei = bild_aus(vorlage.TRAGE_2)
@@ -232,15 +247,18 @@ def modelle():
     ]
     brust = [
         knochen("body", DREH["body"], [kasten([-4, 12, -2], (8, 12, 4), (16, 16), a["brust"])]),
+        # Keine Aermel. Die erste Fassung hatte sie, aufgeblasen wie bei
+        # Minecrafts Ruestung - und darin steckte die Hand: Das Schwert lag
+        # im Blech statt in der Hand. Fynn: "die Arme muessten frei bleiben".
+        # Die Schulterplatten bleiben; sie sitzen oben am Arm, weit weg von
+        # dem, was man haelt.
         knochen("rightArm", DREH["rightArm"], [
-            kasten([-8, 12, -2], (4, 12, 4), (40, 16), a["brust"]),
-            # Die Platte umschliesst die Armspitze (x -9 bis -3, bis y 25)
+            # Die Platte sitzt auf der Armspitze (x -8 bis -4, bis y 24)
             # und steht nach innen zwei Pixel ueber die Brust - von vorn
             # sieht man sie deshalb breiter als den Arm, wie in der Vorschau.
             kasten([-9.5, 20.5, -3.5], SCHULTER, UV_SCHULTER),
         ]),
         knochen("leftArm", DREH["leftArm"], [
-            kasten([4, 12, -2], (4, 12, 4), (40, 16), a["brust"], gespiegelt=True),
             kasten([2.5, 20.5, -3.5], SCHULTER, UV_SCHULTER, gespiegelt=True),
         ]),
     ]

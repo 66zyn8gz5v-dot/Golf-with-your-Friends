@@ -22,7 +22,10 @@
             "gehen": "query.modified_move_speed"
           },
           "umschauen"
-        ]
+        ],
+        "variables": {
+          "variable.attack_time": "public"
+        }
       },
       "render_controllers": [
         "controller.render.default"

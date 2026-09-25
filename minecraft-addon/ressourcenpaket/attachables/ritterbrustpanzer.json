@@ -14,9 +14,6 @@
       "geometry": {
         "default": "geometry.ritterbrustpanzer"
       },
-      "scripts": {
-        "parent_setup": "variable.chest_layer_visible = 0.0;"
-      },
       "render_controllers": [
         "controller.render.armor"
       ]
