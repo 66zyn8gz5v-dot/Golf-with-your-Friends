@@ -87,8 +87,11 @@ SAPHIRSCHWERT = {
         "e": (150, 190, 250), "E": (44, 78, 196),  # Saphir hell / dunkel
         "L": (40, 54, 124), "l": (24, 32, 86),     # blaues Leder am Griff
     },
-    "tiefe": {"w": 1.0, "s": 1.0, "d": 1.0, "b": 1.0, "q": 2.0, "Q": 2.0,
-              "e": 3.0, "E": 2.5, "L": 2.0, "l": 2.0},
+    # Fynn: "Wir brauchen auch Dicke bei dem Schwert." Die Klinge hat einen
+    # Grat (Mitte dicker als die Schneiden), die Parierstange steht deutlich
+    # vor, die Saphire noch weiter - sie sollen funkeln, nicht kleben.
+    "tiefe": {"w": 1.5, "s": 2.0, "d": 1.5, "b": 2.0, "q": 3.0, "Q": 3.0,
+              "e": 4.0, "E": 3.5, "L": 2.5, "l": 2.5},
     "mitte": 4.5,
     "griff": "Ll",
 }
@@ -102,7 +105,7 @@ EISENSCHWERT = {
                                                           "...L...", "...l...", "..QqQ.."],
     "farben": {"w": (236, 238, 242), "s": (196, 200, 206), "d": (130, 134, 142),
                "q": (178, 182, 188), "Q": (104, 108, 116), "L": (104, 78, 30), "l": (73, 54, 21)},
-    "tiefe": {"w": 1.0, "s": 1.0, "d": 1.0, "q": 2.0, "Q": 2.0, "L": 2.0, "l": 2.0},
+    "tiefe": {"w": 1.5, "s": 2.0, "d": 1.5, "q": 3.0, "Q": 3.0, "L": 2.5, "l": 2.5},
     "mitte": 3.5, "griff": "Ll",
 }
 
@@ -290,6 +293,9 @@ def aussen_wert(w):
     return float(w)
 
 
+GRIFF_NACH_VORN = 2.66
+
+
 def klinge_am_arm(teil, geo, bild, halte):
     """Haengt eine Klinge fest an den rechten Arm des Ritters.
 
@@ -333,6 +339,15 @@ def klinge_am_arm(teil, geo, bild, halte):
     for name, werte in halte["bones"].items():
         haltung["klinge_" + name] = {art: ([aussen_wert(x) for x in wert] if isinstance(wert, list)
                                            else aussen_wert(wert)) for art, wert in werte.items()}
+    # Die Haltung ist fuer die Hand des Spielers eingemessen. Am Ritter lag
+    # so die Griffmitte 2,7 Pixel hinter der Faust und auf ihrer Unterkante -
+    # er hielt das Schwert an der Parierstange (Fynn). Nachgemessen mit der
+    # Knochenrechnung der Mob-Schau: Die Klinge ruckt um diese 2,7 Pixel nach
+    # vorn (im Griffknochen laengs der Klinge, darum durch die Groesse
+    # geteilt) und einen Pixel hoch, mitten in die Faust.
+    groesse = haltung["klinge_waffe"].get("scale", 1.0)
+    haltung["klinge_griff"]["position"][1] = round(haltung["klinge_griff"]["position"][1] + GRIFF_NACH_VORN / groesse, 2)
+    haltung["klinge_waffe"]["position"][1] += 1.0
     return {f"animation.fynn.ritter_{teil}.halten": {"loop": True, "bones": haltung}}
 
 
