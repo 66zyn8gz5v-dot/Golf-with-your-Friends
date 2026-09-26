@@ -1,0 +1,87 @@
+{
+  "format_version": "1.10.0",
+  "animations": {
+    "animation.fynn.eiswolf.stehen": {
+      "loop": true,
+      "bones": {
+        "schwanz": {
+          "rotation": [
+            0.0,
+            "math.sin(query.life_time * 200.0) * 15.0",
+            0.0
+          ]
+        },
+        "kopf": {
+          "rotation": [
+            "math.sin(query.life_time * 80.0) * 3.0",
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.eiswolf.laufen": {
+      "anim_time_update": "query.modified_distance_moved",
+      "loop": true,
+      "bones": {
+        "bein0": {
+          "rotation": [
+            "math.cos(query.anim_time * 38.17) * 45.0",
+            0.0,
+            0.0
+          ]
+        },
+        "bein3": {
+          "rotation": [
+            "math.cos(query.anim_time * 38.17) * 45.0",
+            0.0,
+            0.0
+          ]
+        },
+        "bein1": {
+          "rotation": [
+            "math.cos(query.anim_time * 38.17) * -45.0",
+            0.0,
+            0.0
+          ]
+        },
+        "bein2": {
+          "rotation": [
+            "math.cos(query.anim_time * 38.17) * -45.0",
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.eiswolf.biss": {
+      "animation_length": 0.4,
+      "bones": {
+        "kopf": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.15": [
+              -20,
+              0,
+              0
+            ],
+            "0.25": [
+              20,
+              0,
+              0
+            ],
+            "0.4": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      }
+    }
+  }
+}

@@ -394,6 +394,15 @@
     },
     "kopfgeldbrief": {
       "textures": "textures/items/kopfgeldbrief"
+    },
+    "frostzahn": {
+      "textures": "textures/items/frostzahn"
+    },
+    "herz_des_winters": {
+      "textures": "textures/items/herz_des_winters"
+    },
+    "frostruf": {
+      "textures": "textures/items/frostruf"
     }
   }
 }

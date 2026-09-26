@@ -44,11 +44,11 @@ item.fynn:eisenklinge.name=Iron Blade
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.61
+item.iron_sword.name=Stahlschwert 4.62
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.61
-item.fynn:degen.name=Degen 4.61
+item.fynn:degen=Degen 4.62
+item.fynn:degen.name=Degen 4.62
 
 
 
@@ -441,3 +441,15 @@ item.fynn:fehdehandschuh=Gauntlet of Challenge
 item.fynn:fehdehandschuh.name=Gauntlet of Challenge
 entity.fynn:roland.name=Sir Roland
 item.spawn_egg.entity.fynn:roland.name=Sir Roland of Roncevaux
+
+## Hrimgar, das Frostmammut
+entity.fynn:frostmammut.name=Hrimgar
+item.spawn_egg.entity.fynn:frostmammut.name=Hrimgar the Frost Mammoth
+entity.fynn:eiswolf.name=Ice Wolf
+item.spawn_egg.entity.fynn:eiswolf.name=Ice Wolf
+item.fynn:frostzahn=Frost Tusk
+item.fynn:frostzahn.name=Frost Tusk
+item.fynn:herz_des_winters=Heart of Winter
+item.fynn:herz_des_winters.name=Heart of Winter
+item.fynn:frostruf=Frost Call
+item.fynn:frostruf.name=Frost Call

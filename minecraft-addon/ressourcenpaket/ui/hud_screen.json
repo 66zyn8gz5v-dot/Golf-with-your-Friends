@@ -18,6 +18,9 @@
       },
       {
         "fynn_rabenfuerst_leiste@hud.fynn_rabenfuerst_leiste": {}
+      },
+      {
+        "fynn_frostmammut_leiste@hud.fynn_frostmammut_leiste": {}
       }
     ],
     "bindings": [
@@ -57,7 +60,7 @@
       },
       {
         "binding_type": "view",
-        "source_property_name": "(((#bossName - 'Roland') = #bossName) and ((#bossName - 'Morvan') = #bossName))",
+        "source_property_name": "(((#bossName - 'Roland') = #bossName) and ((#bossName - 'Morvan') = #bossName) and ((#bossName - 'Hrimgar') = #bossName))",
         "target_property_name": "#visible"
       }
     ]
@@ -516,6 +519,235 @@
       {
         "binding_type": "view",
         "source_property_name": "(not ((#bossName - 'Morvan') = #bossName))",
+        "target_property_name": "#visible"
+      }
+    ]
+  },
+  "fynn_frostmammut_leiste": {
+    "type": "panel",
+    "size": [
+      "100%",
+      "100%"
+    ],
+    "controls": [
+      {
+        "name_gebunden": {
+          "type": "label",
+          "text": "#bossName",
+          "color": [
+            0.9,
+            0.97,
+            1.0
+          ],
+          "shadow": true,
+          "enable_profanity_filter": false,
+          "anchor_from": "top_middle",
+          "anchor_to": "top_middle",
+          "bindings": [
+            {
+              "binding_type": "collection",
+              "binding_collection_name": "boss_bars",
+              "binding_name": "#bossName"
+            },
+            {
+              "binding_type": "view",
+              "source_property_name": "((#bossName - 'Phase 2') = #bossName)",
+              "target_property_name": "#visible"
+            }
+          ]
+        }
+      },
+      {
+        "name_entfesselt": {
+          "type": "label",
+          "text": "#bossName",
+          "color": [
+            0.55,
+            0.88,
+            1.0
+          ],
+          "shadow": true,
+          "enable_profanity_filter": false,
+          "anchor_from": "top_middle",
+          "anchor_to": "top_middle",
+          "bindings": [
+            {
+              "binding_type": "collection",
+              "binding_collection_name": "boss_bars",
+              "binding_name": "#bossName"
+            },
+            {
+              "binding_type": "view",
+              "source_property_name": "(not ((#bossName - 'Phase 2') = #bossName))",
+              "target_property_name": "#visible"
+            }
+          ]
+        }
+      },
+      {
+        "leiste": {
+          "type": "panel",
+          "size": [
+            182,
+            17
+          ],
+          "offset": [
+            0,
+            11
+          ],
+          "anchor_from": "top_middle",
+          "anchor_to": "top_middle",
+          "controls": [
+            {
+              "leer": {
+                "type": "image",
+                "texture": "textures/ui/fynn_bossleiste_frostmammut_leer",
+                "size": [
+                  172,
+                  5
+                ],
+                "offset": [
+                  5,
+                  6
+                ],
+                "anchor_from": "top_left",
+                "anchor_to": "top_left",
+                "layer": 1
+              }
+            },
+            {
+              "voll": {
+                "type": "image",
+                "texture": "textures/ui/fynn_bossleiste_frostmammut_voll",
+                "size": [
+                  172,
+                  5
+                ],
+                "offset": [
+                  5,
+                  6
+                ],
+                "anchor_from": "top_left",
+                "anchor_to": "top_left",
+                "layer": 2,
+                "clip_direction": "left",
+                "clip_pixelperfect": true,
+                "bindings": [
+                  {
+                    "binding_name": "#progress_percentage",
+                    "binding_name_override": "#clip_ratio",
+                    "binding_type": "collection",
+                    "binding_collection_name": "boss_bars"
+                  },
+                  {
+                    "binding_type": "collection",
+                    "binding_collection_name": "boss_bars",
+                    "binding_name": "#bossName"
+                  },
+                  {
+                    "binding_type": "view",
+                    "source_property_name": "((#bossName - 'Phase 2') = #bossName)",
+                    "target_property_name": "#visible"
+                  }
+                ]
+              }
+            },
+            {
+              "voll_entfesselt": {
+                "type": "image",
+                "texture": "textures/ui/fynn_bossleiste_frostmammut_entfesselt",
+                "size": [
+                  172,
+                  5
+                ],
+                "offset": [
+                  5,
+                  6
+                ],
+                "anchor_from": "top_left",
+                "anchor_to": "top_left",
+                "layer": 2,
+                "clip_direction": "left",
+                "clip_pixelperfect": true,
+                "bindings": [
+                  {
+                    "binding_name": "#progress_percentage",
+                    "binding_name_override": "#clip_ratio",
+                    "binding_type": "collection",
+                    "binding_collection_name": "boss_bars"
+                  },
+                  {
+                    "binding_type": "collection",
+                    "binding_collection_name": "boss_bars",
+                    "binding_name": "#bossName"
+                  },
+                  {
+                    "binding_type": "view",
+                    "source_property_name": "(not ((#bossName - 'Phase 2') = #bossName))",
+                    "target_property_name": "#visible"
+                  }
+                ]
+              }
+            },
+            {
+              "rahmen": {
+                "type": "image",
+                "texture": "textures/ui/fynn_bossleiste_frostmammut_rahmen",
+                "size": [
+                  182,
+                  17
+                ],
+                "layer": 3,
+                "bindings": [
+                  {
+                    "binding_type": "collection",
+                    "binding_collection_name": "boss_bars",
+                    "binding_name": "#bossName"
+                  },
+                  {
+                    "binding_type": "view",
+                    "source_property_name": "((#bossName - 'Phase 2') = #bossName)",
+                    "target_property_name": "#visible"
+                  }
+                ]
+              }
+            },
+            {
+              "rahmen_entfesselt": {
+                "type": "image",
+                "texture": "textures/ui/fynn_bossleiste_frostmammut_rahmen_entfesselt",
+                "size": [
+                  182,
+                  17
+                ],
+                "layer": 3,
+                "bindings": [
+                  {
+                    "binding_type": "collection",
+                    "binding_collection_name": "boss_bars",
+                    "binding_name": "#bossName"
+                  },
+                  {
+                    "binding_type": "view",
+                    "source_property_name": "(not ((#bossName - 'Phase 2') = #bossName))",
+                    "target_property_name": "#visible"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "bindings": [
+      {
+        "binding_type": "collection",
+        "binding_collection_name": "boss_bars",
+        "binding_name": "#bossName"
+      },
+      {
+        "binding_type": "view",
+        "source_property_name": "(not ((#bossName - 'Hrimgar') = #bossName))",
         "target_property_name": "#visible"
       }
     ]

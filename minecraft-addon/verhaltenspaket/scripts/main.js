@@ -21,6 +21,7 @@ import "./banditen.js";
 import "./rucksack.js";
 import "./roland.js";
 import "./rabenfuerst.js";
+import "./frostmammut.js";
 
 const DEGEN = "fynn:degen";
 

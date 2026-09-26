@@ -457,6 +457,8 @@ def mob_daten(kennung, entitaet_datei, gruppe, info):
             # Eine ganze Pose (Rolands Angriffe): Solange sie spielt, ruht
             # alles andere, und ihre Zeit beginnt beim Druck auf den Knopf.
             animationen[kurz] = js[:-1] + ",voll:1}" if kurz in sonder else js
+            if kurz in info.get("bleibend", []):
+                animationen[kurz] = animationen[kurz][:-1] + ",bleibt:1}"
     for kurz, (anim, _) in extra_anim.items():
         animationen[kurz] = animation_js(anim)
     ablauf = []
@@ -621,6 +623,32 @@ def alle_mobs():
                          "Rabenschwarm, Schattensprung; in Phase 2 die Rabennacht (Dunkelheit)"],
             ["Rufen", "Kopfgeldbrief lesen (Papier, Tinte, Smaragd, Gold)"],
             ["Beute", "Rabenklinge, Rauchbomben, Smaragde, Gold, Diamanten; jeder Mitkämpfer seinen Anteil"]]}}))
+    import frostmammut_bauen as fm
+    mobs.append(mob_daten("frostmammut", "frostmammut.entity.json", "Bosse", {
+        "gross": 1.35,
+        "grund": [{"haltung": 1.0}, {"gang": "math.clamp(query.modified_move_speed * 2.0, 0.0, 1.0)"},
+                  {"panzer_weg": "query.property('fynn:phase') == 2"}],
+        "ohne_schalter": ["fynn:phase", "fynn:angriff"],
+        "bleibend": ["panzer_weg"],
+        "sonder": {
+            "auftritt": "Auftritt", "hieb_kopf": "Kopfstoß", "hieb_stampf": "Tritt", "ansturm": "Ansturm",
+            "stampfen": "Stampfen", "stosszahnfeger": "Stoßzahnfeger", "eiszapfenregen": "Eiszapfenregen",
+            "ruesselschleuder": "Rüsselschleuder", "frostatem": "Frostatem", "eiswoelfe": "Eiswölfe",
+            "wechsel": "Phasenwechsel", "abschied": "Abschied",
+        },
+        "steckbrief": {"name": "Hrimgar, das Frostmammut", "en": "Hrimgar the Frost Mammoth", "zeilen": [
+            ["Rang", "uraltes Mammut aus dem Eis – der dritte Boss"],
+            ["Leben", f"je Phase {fm.GRUNDLEBEN // 2} Herzen allein – je Mitspieler die Hälfte mehr"],
+            ["Phasen", "ist Phase 1 leer, bricht es in die Knie und sammelt den Frost; dann zerspringt "
+                       "sein Eispanzer, und der Frostkern in der Brust glüht"],
+            ["Angriffe", "Ansturm, Stampfen (wer springt, entgeht der Welle), Stoßzahnfeger, Eiszapfenregen, "
+                         "Rüsselschleuder; in Phase 2 Frostatem und Eiswölfe"],
+            ["Rufen", "Frostruf blasen (Bisonhorn, Packeis, Diamant)"],
+            ["Beute", "Frostzahn, Herz des Winters, Diamanten, Blaueis, Leder; jeder Mitkämpfer seinen Anteil"]]}}))
+    mobs.append(mob_daten("eiswolf", "eiswolf.entity.json", "Bosse", {"steckbrief": {
+        "name": "Eiswolf", "en": "Ice Wolf", "zeilen": [
+            ["Leben", "8 Herzen"], ["Verhalten", "Hrimgars Gefolge in Phase 2 – beißt und verlangsamt"],
+            ["Dauer", "zerfällt nach 45 Sekunden zu Schnee"]]}}))
     wo = biom_text(biome_aus_spawnregel("fynn:glimmerling"))
     mobs.append(mob_daten("glimmerling", "glimmerling.entity.json", "Weitere", {"steckbrief": {
         "name": "Glimmerling", "en": "Glimmerling", "zeilen": [
