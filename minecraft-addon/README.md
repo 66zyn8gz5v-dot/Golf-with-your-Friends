@@ -117,6 +117,19 @@ und trägt die Teile in die Spielerdatei ein. Mit `--bilder ORDNER` zeichnet es
 jede Bewegung in mehreren Augenblicken, aus der Ich-Sicht und von außen –
 so lässt sich eine Änderung ansehen, ohne Minecraft zu starten.
 
+## Lebendige Grafik: Licht, Himmel, Wind
+
+Das Paket bringt Einstellungen für Mojangs **Lebendige Grafik** (Vibrant
+Visuals) mit: goldene Sonnenauf- und -untergänge, eine schräg laufende Sonne
+mit langen Schatten, Dunst, durch den Lichtstrahlen fallen, Wellen auf dem
+Wasser, Fackeln und Laternen als Lichter mit eigenem Schatten, und Laub und
+Gras, das im Wind raschelt. Einschalten: Einstellungen → Video →
+Grafikmodus → „Lebendige Grafik“. Ohne sie läuft alles wie gewohnt, nur das
+Rascheln der Blätter bleibt.
+
+Die Werte stehen in `werkzeuge/licht_bauen.py`; Mojangs Vorlagen dazu in
+`werkzeuge/mojang/vv`.
+
 ## Warum der Glimmerling glimmt
 
 Bedrock kann Mobs kein Licht abgeben lassen – ein Glimmerling erhellt seine
