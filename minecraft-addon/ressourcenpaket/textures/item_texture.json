@@ -121,6 +121,21 @@
     },
     "assassinenstiefel": {
       "textures": "textures/items/assassinenstiefel"
+    },
+    "kriegshammer": {
+      "textures": "textures/items/kriegshammer"
+    },
+    "frostzepter": {
+      "textures": "textures/items/frostzepter"
+    },
+    "sturmbogen": {
+      "textures": "textures/items/sturmbogen"
+    },
+    "wurfstern": {
+      "textures": "textures/items/wurfstern"
+    },
+    "frostkugel": {
+      "textures": "textures/items/frostkugel"
     }
   }
 }

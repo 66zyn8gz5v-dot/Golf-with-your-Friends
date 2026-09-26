@@ -358,8 +358,16 @@ system.runInterval(() => {
 // soll kein Haus sprengen oder abfackeln. Was direkt getroffen wird,
 // brennt.
 
-const FEUERSTAEBE = new Set(["fynn:feuerstab", "fynn:feuerstab_2"]);
+// Welcher Stab was verschiesst. Das Frostzepter fliegt denselben Weg wie
+// die Feuerbaelle, nur mit anderer Kugel und anderem Einschlag: keine
+// Explosion, sondern Kaelte - wer getroffen wird, friert fast ein, und
+// wer daneben steht, wird langsamer.
+const STAEBE = { "fynn:feuerstab": "feuer", "fynn:feuerstab_2": "feuer", "fynn:frostzepter": "frost" };
 const FEUERBALL = "fynn:feuerball";
+const KUGEL = { feuer: FEUERBALL, frost: "fynn:frostkugel" };
+const FUNKEN = { feuer: "minecraft:basic_flame_particle", frost: "minecraft:endrod" };
+const FROST_SCHADEN = 6;
+const FROST_WEITE = 2.5;        // so weit reicht die Kaelte um den Einschlag
 const TEMPO = 1.2;              // Bloecke je Tick
 const FLUGZEIT = 60;            // Ticks, dann verpufft er - gut 70 Bloecke
 const WUCHT = 1.6;              // Explosion; ein Creeper hat 3
@@ -371,9 +379,8 @@ const letzterSchuss = new Map();
 const feuerLaden = new Map();   // Spieler -> Ticks geduckt
 const fluege = new Map();
 
-function haeltFeuerstab(spieler) {
-    return FEUERSTAEBE.has(spieler.getComponent("minecraft:equippable")
-        ?.getEquipment("Mainhand")?.typeId);
+function stabArt(spieler) {
+    return STAEBE[spieler.getComponent("minecraft:equippable")?.getEquipment("Mainhand")?.typeId];
 }
 
 // In der 2.0-Schnittstelle ist isValid eine Eigenschaft, frueher eine
@@ -386,8 +393,8 @@ function lebt(wesen) {
     }
 }
 
-function flamme(dimension, ort, streuung) {
-    dimension.spawnParticle("minecraft:basic_flame_particle", {
+function flamme(dimension, ort, streuung, art = "feuer") {
+    dimension.spawnParticle(FUNKEN[art], {
         x: ort.x + (Math.random() - 0.5) * streuung,
         y: ort.y + (Math.random() - 0.5) * streuung,
         z: ort.z + (Math.random() - 0.5) * streuung,
@@ -409,10 +416,12 @@ function schiessen(spieler) {
         y: kopf.y + blick.y * 1.2 - 0.2,
         z: kopf.z + blick.z * 1.2,
     };
-    const ball = spieler.dimension.spawnEntity(FEUERBALL, start);
-    fluege.set(ball.id, { ball, richtung: blick, schuetze: spieler, alter: 0 });
-    spieler.dimension.playSound("mob.blaze.shoot", start, { volume: 0.8 });
-    for (let i = 0; i < 6; i++) flamme(spieler.dimension, start, 0.4);
+    const art = stabArt(spieler) ?? "feuer";
+    const ball = spieler.dimension.spawnEntity(KUGEL[art], start);
+    fluege.set(ball.id, { ball, richtung: blick, schuetze: spieler, alter: 0, art });
+    spieler.dimension.playSound(art === "frost" ? "random.glass" : "mob.blaze.shoot", start,
+        { volume: 0.8, pitch: art === "frost" ? 1.6 : 1.0 });
+    for (let i = 0; i < 6; i++) flamme(spieler.dimension, start, 0.4, art);
 }
 
 // Aufladen, jeden Tick: geduckt zaehlen, bei voller Ladung ein Zeichen,
@@ -421,7 +430,8 @@ system.runInterval(() => {
     for (const spieler of world.getAllPlayers()) {
         try {
             const kennung = spieler.id;
-            if (!haeltFeuerstab(spieler)) {
+            const art = stabArt(spieler);
+            if (!art) {
                 feuerLaden.delete(kennung);
                 continue;
             }
@@ -434,8 +444,8 @@ system.runInterval(() => {
                     // Geladen: ein Zischen und ein Aufflackern vor der
                     // Brust. In der Ego-Ansicht waere der Ton sonst das
                     // einzige Zeichen, und Toene gehen im Kampf unter.
-                    spieler.dimension.playSound("mob.blaze.breathe", spieler.location,
-                        { volume: 0.6, pitch: 1.4 });
+                    spieler.dimension.playSound(art === "frost" ? "random.orb" : "mob.blaze.breathe",
+                        spieler.location, { volume: 0.6, pitch: art === "frost" ? 0.7 : 1.4 });
                     const blick = spieler.getViewDirection();
                     const kopf = spieler.getHeadLocation();
                     for (let i = 0; i < 8; i++) {
@@ -443,7 +453,7 @@ system.runInterval(() => {
                             x: kopf.x + blick.x * 0.9,
                             y: kopf.y - 0.3,
                             z: kopf.z + blick.z * 0.9,
-                        }, 0.6);
+                        }, 0.6, art);
                     }
                 }
                 continue;
@@ -464,12 +474,36 @@ function einschlag(flug, ort, getroffen) {
     } catch (fehler) {
         // schon weg - dann eben ohne Ball
     }
+    if (flug.art === "frost") {
+        frost(dimension, flug, ort, getroffen);
+        return;
+    }
     dimension.createExplosion(ort, WUCHT, {
         breaksBlocks: false,
         causesFire: false,
         source: lebt(flug.schuetze) ? flug.schuetze : undefined,
     });
     if (getroffen && lebt(getroffen)) getroffen.setOnFire(BRANDDAUER, true);
+}
+
+function frost(dimension, flug, ort, getroffen) {
+    const schuetze = lebt(flug.schuetze) ? flug.schuetze : undefined;
+    for (let i = 0; i < 14; i++) flamme(dimension, ort, 1.6, "frost");
+    dimension.playSound("random.glass", ort, { volume: 0.9, pitch: 1.3 });
+    if (getroffen && lebt(getroffen)) {
+        getroffen.applyDamage(FROST_SCHADEN, schuetze
+            ? { cause: "freezing", damagingEntity: schuetze } : { cause: "freezing" });
+        // Fast eingefroren: kaum noch Schritte, kaum noch Schlaege.
+        getroffen.addEffect("slowness", 100, { amplifier: 3 });
+        getroffen.addEffect("mining_fatigue", 100, { amplifier: 1 });
+        getroffen.extinguishFire?.();
+    }
+    // Die Kaelte streut: Wer nah dran steht, wird langsamer.
+    for (const nah of dimension.getEntities({ location: ort, maxDistance: FROST_WEITE,
+        excludeTypes: ["minecraft:item", "minecraft:xp_orb", "fynn:frostkugel"] })) {
+        if (nah.id === schuetze?.id || nah.id === getroffen?.id) continue;
+        nah.addEffect("slowness", 60, { amplifier: 1 });
+    }
 }
 
 system.runInterval(() => {
@@ -491,7 +525,7 @@ system.runInterval(() => {
             const wesen = dimension.getEntitiesFromRay(ort, r, { maxDistance: TEMPO })
                 .filter((t) => t.entity.id !== flug.ball.id
                     && t.entity.id !== flug.schuetze?.id
-                    && t.entity.typeId !== FEUERBALL
+                    && !Object.values(KUGEL).includes(t.entity.typeId)
                     && t.entity.typeId !== "minecraft:item"
                     && t.entity.typeId !== "minecraft:xp_orb")
                 .sort((a, b) => a.distance - b.distance)[0];
@@ -512,13 +546,13 @@ system.runInterval(() => {
             flug.alter += 1;
             if (flug.alter > FLUGZEIT) {
                 fluege.delete(kennung);
-                for (let i = 0; i < 5; i++) flamme(dimension, ort, 0.5);
+                for (let i = 0; i < 5; i++) flamme(dimension, ort, 0.5, flug.art);
                 flug.ball.remove();
                 continue;
             }
             const weiter = { x: ort.x + r.x * TEMPO, y: ort.y + r.y * TEMPO, z: ort.z + r.z * TEMPO };
             flug.ball.teleport(weiter);
-            flamme(dimension, ort, 0.2);
+            flamme(dimension, ort, 0.2, flug.art);
         } catch (fehler) {
             fluege.delete(kennung);
             console.warn(`Feuerstab, Flug: ${fehler}`);
@@ -532,7 +566,8 @@ system.runInterval(() => {
 system.runInterval(() => {
     try {
         for (const spieler of world.getAllPlayers()) {
-            if (!haeltFeuerstab(spieler)) continue;
+            const art = stabArt(spieler);
+            if (!art) continue;
             const blick = spieler.getViewDirection();
             const kopf = spieler.getHeadLocation();
             // Rechts neben der Blickrichtung: in Minecraft zeigt x nach
@@ -543,7 +578,7 @@ system.runInterval(() => {
                 x: kopf.x + blick.x * 0.8 + rechts.x * 0.45,
                 y: kopf.y - 0.25,
                 z: kopf.z + blick.z * 0.8 + rechts.z * 0.45,
-            }, 0.15);
+            }, 0.15, art);
         }
     } catch (fehler) {
         console.warn(`Feuerstab, Flammen: ${fehler}`);

@@ -96,11 +96,31 @@ pruefe(`mit ${eigenschaften.get("fynn:kraft")} Mana: kein Ball mehr`, baelle.len
 pruefe("Hinweis: zu wenig Mana", leiste.at(-1).includes("Zu wenig Mana"));
 pruefe("die Leiste steht unter dem Hinweis, mit Kugeln", /Mana [\ue300-\ue3ff]{10}$/.test(leiste.at(-1)));
 
+// --- Frostzepter: gleicher Flug, aber Kaelte statt Explosion
+eigenschaften.set("fynn:rolle", "magier");
+spieler.inHand = "fynn:frostzepter";
+for (let i = 0; i < 200; i++) for (const [f, n] of gemerkt.takte) if (n === 5) f();
+system.currentTick += 40;
+const explosionenVorher = explosionen.length;
+spieler.isSneaking = true; tick(20); spieler.isSneaking = false; tick(1);
+const kugel = baelle.at(-1);
+pruefe(`Frostzepter schiesst ${kugel.typ}`, kugel.typ === "fynn:frostkugel");
+tick(2);
+pruefe("Spur aus weissen Funken", partikel.at(-1).n === "minecraft:endrod");
+const eis = { id: "eis", typeId: "minecraft:zombie", location: { x: 10, y: 65, z: 4 }, isValid: true,
+    schaden: 0, wirkungen: [], applyDamage(n) { this.schaden += n; }, addEffect(id) { this.wirkungen.push(id); },
+    setOnFire() { this.brennt = true; } };
+dimension.getEntities = () => [eis];
+wesenBei = eis; tick(1); wesenBei = null;
+pruefe("Frost: keine Explosion, kein Feuer", explosionen.length === explosionenVorher && !eis.brennt);
+pruefe(`Frost: ${eis.schaden} Schaden, fast eingefroren`, eis.schaden === 6
+       && eis.wirkungen.includes("slowness") && eis.wirkungen.includes("mining_fatigue"));
+
 spieler.inHand = "minecraft:stick";
 spieler.isSneaking = true; tick(30); spieler.isSneaking = false; tick(1);
-pruefe("mit einem Stock laedt nichts", baelle.length === 4);
+pruefe("mit einem Stock laedt nichts", baelle.length === 5);
 
-for (const stab of ["fynn:feuerstab", "fynn:feuerstab_2"]) {
+for (const stab of ["fynn:feuerstab", "fynn:feuerstab_2", "fynn:frostzepter"]) {
     spieler.inHand = stab;
     const n = partikel.length; flammen(); const f = partikel.at(-1);
     pruefe(`Flammen rechts vor dem Kopf mit ${stab}`, partikel.length === n + 1 && f.ort.x > 10 && f.ort.z < 10);

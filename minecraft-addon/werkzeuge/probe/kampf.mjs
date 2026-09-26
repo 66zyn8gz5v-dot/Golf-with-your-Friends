@@ -25,6 +25,7 @@ function wesen(id, typeId, ort, blick = { x: 0, y: 0, z: 1 }) {
         getViewDirection: () => blick,
         applyDamage(n) { this.schaden += n; },
         applyKnockback(h, v) { this.stoss = { h, v }; },
+        wirkungen: [], addEffect(id) { this.wirkungen.push(id); },
     };
 }
 
@@ -124,6 +125,23 @@ spieler.isSneaking = true; tick(15);
 pruefe("zu wenig Kraft: Hinweis", leiste.at(-1).includes("Zu wenig Schatten"));
 spieler.isSneaking = false; tick(1);
 pruefe("und kein Sprung", spieler.stoss === null);
+
+// --- Ritter mit Kriegshammer: Erdbeben
+eigenschaften.set("fynn:rolle", "ritter");
+spieler.inHand = "fynn:kriegshammer";
+const fern = wesen("z9", "minecraft:zombie", { x: 4, y: 64, z: 0 });
+umgebung = [spieler, fern, freund];
+auffuellen(); system.currentTick += 40;
+spieler.isSneaking = true; tick(20); spieler.isSneaking = false; tick(1);
+pruefe("Hammer nach 20 Ticks: noch nicht geladen", fern.schaden === 0);
+system.currentTick += 40;
+spieler.isSneaking = true; tick(25);
+pruefe("nach 25 Ticks: Erdbeben bereit", leiste.at(-1).includes("Erdbeben bereit"));
+spieler.isSneaking = false; tick(1);
+pruefe(`Erdbeben trifft auch vier Bloecke weit (${fern.schaden})`, fern.schaden === 6);
+pruefe(`und wirft hoch (${fern.stoss?.v})`, fern.stoss?.v >= 0.8 && fern.wirkungen.includes("slowness"));
+pruefe("den Mitspieler nicht", freund.schaden === 0);
+pruefe("Brueller-Welle", partikel.includes("minecraft:knockback_roar_particle"));
 
 // --- Bogenschuetze: Pfeilhagel
 const pfeile = [];

@@ -42,11 +42,11 @@ item.fynn:eisenklinge.name=Eisenklinge
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.22
+item.iron_sword.name=Stahlschwert 4.23
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.22
-item.fynn:degen.name=Degen 4.22
+item.fynn:degen=Degen 4.23
+item.fynn:degen.name=Degen 4.23
 
 
 
@@ -124,3 +124,13 @@ item.fynn:assassinenhose.name=Assassinenhose
 item.fynn:assassinenstiefel=Assassinenstiefel
 item.fynn:assassinenstiefel.name=Assassinenstiefel
 entity.fynn:statue.name=Statue
+item.fynn:kriegshammer=Kriegshammer
+item.fynn:frostzepter=Frostzepter
+item.fynn:sturmbogen=Sturmbogen
+item.fynn:wurfstern=Wurfstern
+item.fynn:kriegshammer.name=Kriegshammer
+item.fynn:frostzepter.name=Frostzepter
+item.fynn:sturmbogen.name=Sturmbogen
+item.fynn:wurfstern.name=Wurfstern
+entity.fynn:frostkugel.name=Frostkugel
+entity.fynn:wurfstern.name=Wurfstern

@@ -1,0 +1,29 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:wurfstern",
+      "materials": {
+        "default": "snowball"
+      },
+      "textures": {
+        "default": "textures/items/wurfstern"
+      },
+      "geometry": {
+        "default": "geometry.item_sprite"
+      },
+      "render_controllers": [
+        "controller.render.item_sprite"
+      ],
+      "animations": {
+        "flying": "animation.actor.billboard"
+      },
+      "scripts": {
+        "scale": "0.6",
+        "animate": [
+          "flying"
+        ]
+      }
+    }
+  }
+}

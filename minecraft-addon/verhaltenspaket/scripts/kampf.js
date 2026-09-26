@@ -30,7 +30,7 @@ const SCHWERTER = new Set([
     "fynn:elektrumklinge", "fynn:sternenklinge",
 ]);
 
-const BOEGEN = new Set(["minecraft:bow", "minecraft:crossbow"]);
+const BOEGEN = new Set(["minecraft:bow", "minecraft:crossbow", "fynn:sturmbogen"]);
 
 // Was von einem Angriff nie getroffen wird: Gegenstaende am Boden,
 // Erfahrung, Geschosse - und Mitspieler. Ein Wirbelschlag unter Freunden
@@ -47,7 +47,17 @@ const FAECHER = [-16, -8, 0, 8, 16];    // Grad links und rechts der Blickrichtu
 const PFEIL_TEMPO = 3.0;        // so schnell wie ein voll gespannter Bogen
 const PFEIL_LEBEN = 60;         // Ticks, dann sind die Hagelpfeile weg
 
+const ERDBEBEN_WEITE = 5;
+const ERDBEBEN_SCHADEN = 6;
+
 const ANGRIFFE = [
+    {
+        // Der Kriegshammer ist das Werkzeug des Ritters fuer Meuten: Er
+        // laedt laenger und kostet mehr als der Wirbelschlag, reicht aber
+        // weiter und wirft alles in die Luft.
+        name: "Erdbeben", rolle: "ritter", ladezeit: 25, kosten: 50,
+        passt: (id) => id === "fynn:kriegshammer", los: erdbeben,
+    },
     {
         name: "Wirbelschlag", rolle: "ritter", ladezeit: 20, kosten: 40,
         passt: (id) => SCHWERTER.has(id), los: wirbelschlag,
@@ -149,6 +159,39 @@ function wirbelschlag(spieler) {
         });
     }
     dimension.playSound("mob.irongolem.throw", ort, { volume: 0.9, pitch: 0.7 });
+}
+
+// ---------------------------------------------------------- Erdbeben
+
+/**
+ * Der Ritter schlaegt den Hammer auf den Boden: Alles in fuenf Bloecken
+ * Umkreis nimmt Schaden, fliegt hoch und ein Stueck nach aussen und ist
+ * danach kurz benommen (langsamer).
+ */
+function erdbeben(spieler) {
+    const ort = spieler.location;
+    const dimension = spieler.dimension;
+    for (const ziel of dimension.getEntities({
+        location: ort, maxDistance: ERDBEBEN_WEITE,
+        excludeTypes: NIE_TREFFEN, excludeFamilies: ["inanimate"],
+    })) {
+        if (ziel.id === spieler.id) continue;
+        ziel.applyDamage(ERDBEBEN_SCHADEN, { cause: "entityAttack", damagingEntity: spieler });
+        const weg = waagerecht({ x: ziel.location.x - ort.x, z: ziel.location.z - ort.z }) ?? { x: 0, z: 1 };
+        ziel.applyKnockback({ x: weg.x * 0.6, z: weg.z * 0.6 }, 0.9);
+        ziel.addEffect("slowness", 60, { amplifier: 1 });
+    }
+    // Staub in zwei Ringen am Boden, dazu Minecrafts Brueller-Welle.
+    for (const r of [1.5, 3.5]) {
+        for (let i = 0; i < 12; i++) {
+            const winkel = (i / 12) * Math.PI * 2;
+            dimension.spawnParticle("minecraft:basic_smoke_particle", {
+                x: ort.x + Math.cos(winkel) * r, y: ort.y + 0.2, z: ort.z + Math.sin(winkel) * r,
+            });
+        }
+    }
+    dimension.spawnParticle("minecraft:knockback_roar_particle", { x: ort.x, y: ort.y + 0.5, z: ort.z });
+    dimension.playSound("random.explode", ort, { volume: 0.7, pitch: 0.6 });
 }
 
 // ---------------------------------------------------- Schattensprung

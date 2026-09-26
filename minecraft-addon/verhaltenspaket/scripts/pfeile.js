@@ -16,7 +16,16 @@ import { hinweis } from "./rollen.js";
 import { istHagelpfeil } from "./kampf.js";
 
 const PFEIL = "minecraft:arrow";
-const BOEGEN = new Set(["minecraft:bow", "minecraft:crossbow"]);
+const BOEGEN = new Set(["minecraft:bow", "minecraft:crossbow", "fynn:sturmbogen"]);
+
+// Der Sturmbogen: Ein voll gespannter Schuss holt beim Einschlag einen
+// Blitz herunter. "Voll gespannt" liest das Skript am Tempo des Pfeils ab
+// - ein Bogen gibt ihm bei voller Spannung gut drei Bloecke je Tick mit,
+// halb gespannt weniger als zwei. So gibt es den Blitz nicht fuer jedes
+// Antippen.
+const STURMBOGEN = "fynn:sturmbogen";
+const STURM_TEMPO = 2.4;
+const sturmpfeile = new Map();
 
 // Je Sorte: die Spur im Flug und was beim Treffer geschieht.
 const SORTEN = {
@@ -86,6 +95,13 @@ world.afterEvents.entitySpawn.subscribe((e) => {
         const ausruestung = schuetze.getComponent("minecraft:equippable");
         const bogen = ausruestung?.getEquipment("Mainhand");
         if (!BOEGEN.has(bogen?.typeId)) return;
+        if (bogen.typeId === STURMBOGEN) {
+            const v = pfeil.getVelocity?.() ?? { x: 0, y: 0, z: 0 };
+            if (Math.hypot(v.x, v.y, v.z) >= STURM_TEMPO) {
+                sturmpfeile.set(pfeil.id, pfeil);
+                schuetze.dimension.playSound("item.trident.thunder", schuetze.location, { volume: 0.3, pitch: 1.6 });
+            }
+        }
         const links = ausruestung.getEquipment("Offhand");
         if (!links || !SORTEN[links.typeId]) return;
 
@@ -114,6 +130,23 @@ world.afterEvents.entitySpawn.subscribe((e) => {
     }
 });
 
+function blitz(dimension, ort) {
+    try {
+        dimension.spawnEntity("minecraft:lightning_bolt", ort);
+    } catch (fehler) {
+        console.warn(`Sturmbogen, Blitz: ${fehler}`);
+    }
+}
+
+world.afterEvents.projectileHitEntity.subscribe((e) => {
+    const sturm = sturmpfeile.get(e.projectile?.id);
+    if (sturm) {
+        sturmpfeile.delete(e.projectile.id);
+        const ziel = e.getEntityHit()?.entity;
+        blitz(e.dimension, ziel?.location ?? e.location);
+    }
+});
+
 world.afterEvents.projectileHitEntity.subscribe((e) => {
     try {
         const flug = fliegend.get(e.projectile?.id);
@@ -128,6 +161,10 @@ world.afterEvents.projectileHitEntity.subscribe((e) => {
 
 world.afterEvents.projectileHitBlock.subscribe((e) => {
     fliegend.delete(e.projectile?.id);
+    if (sturmpfeile.has(e.projectile?.id)) {
+        sturmpfeile.delete(e.projectile.id);
+        blitz(e.dimension, e.location);
+    }
 });
 
 // Die Spur, jeden zweiten Tick. Pfeile, die es nicht mehr gibt, fallen

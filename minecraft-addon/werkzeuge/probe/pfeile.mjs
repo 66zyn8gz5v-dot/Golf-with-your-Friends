@@ -108,6 +108,24 @@ zweithand = new ItemStack("fynn:silberpfeil", 2);
 feuere("entitySpawn", { entity: pfeil({ typeId: "minecraft:skeleton", id: "sk" }) });
 pruefe("Skelettpfeile bleiben unberuehrt", zweithand.amount === 2);
 
+// Sturmbogen: voll gespannt ein Blitz beim Einschlag, halb gespannt nicht.
+const blitze = [];
+dimension.spawnEntity = (typ, ort) => blitze.push({ typ, ort });
+dimension.playSound = () => {};
+bogen = { typeId: "fynn:sturmbogen", getComponent: () => undefined };
+zweithand = null;
+const voll = pfeil(); voll.getVelocity = () => ({ x: 0, y: 0.2, z: 3.0 });
+const halb = pfeil(); halb.getVelocity = () => ({ x: 0, y: 0.1, z: 1.4 });
+feuere("entitySpawn", { entity: voll });
+feuere("entitySpawn", { entity: halb });
+feuere("projectileHitBlock", { projectile: halb, dimension, location: { x: 1, y: 64, z: 9 } });
+pruefe("halb gespannt: kein Blitz", blitze.length === 0);
+feuere("projectileHitEntity", { projectile: voll, dimension, location: { x: 0, y: 64, z: 20 },
+    getEntityHit: () => ({ entity: { location: { x: 0, y: 64, z: 21 } } }) });
+pruefe("voll gespannt: Blitz auf das Ziel", blitze.length === 1 && blitze[0].typ === "minecraft:lightning_bolt" && blitze[0].ort.z === 21);
+bogen = { typeId: "minecraft:bow", getComponent: () => ({ getEnchantment: () => undefined }) };
+zweithand = new ItemStack("fynn:silberpfeil", 2);
+
 // Hinweis, wenn kein gewoehnlicher Pfeil dabei ist.
 inventar.length = 0;
 for (const [f, n] of gemerkt.takte) if (n === 40) f();

@@ -23,7 +23,13 @@ RESSOURCEN = WURZEL / "ressourcenpaket"
 # Feuerstabs sieht aus wie Minecrafts kleiner Feuerball; Modell und Bild
 # stehen so in dessen small_fireball.entity.json. Die Statue im Tempel
 # hat die Gestalt des Spielers, geometry.humanoid.custom aus mobs.json.
-AUS_MINECRAFT = {"geometry.fireball", "textures/items/fireball", "geometry.humanoid.custom"}
+# Frostkugel und Wurfstern fliegen als flaches Bild wie Minecrafts
+# Schneeball (geometry.item_sprite), der Sturmbogen nimmt Modelle und
+# Spannbewegung von Minecrafts eigenem Bogen (bow.geo.json,
+# bow.animation.json) - so steht es in Mojangs Beispielpaket.
+AUS_MINECRAFT = {"geometry.fireball", "textures/items/fireball", "geometry.humanoid.custom",
+                 "geometry.item_sprite", "geometry.bow_standby",
+                 "animation.bow.wield", "animation.bow.wield_first_person_pull"}
 
 fehler = []
 hinweise = []
@@ -421,7 +427,7 @@ def pruefe_attachables():
 
         modell = beschreibung.get("geometry", {}).get("default", "")
         knochen = []
-        if modell:
+        if modell and modell not in AUS_MINECRAFT:
             pfad = RESSOURCEN / "models" / "entity" / (modell.replace("geometry.", "") + ".geo.json")
             gelesen = lies(pfad) if pfad.exists() else None
             if gelesen is None:
@@ -437,6 +443,8 @@ def pruefe_attachables():
 
         animationen = beschreibung.get("animations", {})
         for marke, name in animationen.items():
+            if name in AUS_MINECRAFT:
+                continue
             if name not in bekannte:
                 fehler.append(f"{datei.name}: Animation '{name}' gibt es nirgends.")
                 continue

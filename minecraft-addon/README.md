@@ -15,6 +15,13 @@ Himmel. Dort stehen vier Steinstatuen, jede in der Startausrüstung ihrer
 Rolle, und davor die Altäre. Altar antippen, bestätigen – dann gibt es die
 Ausrüstung, und es geht hinunter in die Welt.
 
+Waffen, die es nur hier gibt (jede lädt wie die anderen: ducken, aufstehen):
+
+* **Kriegshammer** (Ritter) – Erdbeben: alles ringsum fliegt hoch.
+* **Frostzepter** (Magier) – Frostkugel: Getroffene frieren fast ein.
+* **Sturmbogen** (Bogenschütze) – voll gespannt holt jeder Pfeil einen Blitz.
+* **Wurfsterne** (Assassine) – werfen wie Schneebälle, vergiften kurz.
+
 ## Was drin ist
 
 * **Glimmerling** – ein scheues Waldwesen, das nachts unterwegs ist, im
