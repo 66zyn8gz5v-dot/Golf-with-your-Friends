@@ -247,6 +247,86 @@ TIERE = [
         "laute": {"hurt": "mob.fish.hurt", "death": "mob.fish.hurt", "flop": "mob.fish.flop", "pitch": [0.8, 1.0]},
         "ei": ("#2e2644", "#c4ccd4"), "angriff": "spiess",
     },
+    # ---------------------------------------------------- Fassung 4.41
+    {
+        "id": "elefant", "name": ("Elefant", "Elephant"), "gestalt": "elefant",
+        "varianten": [("savanne", 60), ("grau", 40)], "baby_textur": "kalb",
+        "art": "land", "verhalten": "neutral", "herdenwut": True, "leben": 80, "schaden": 10, "tempo": 0.2,
+        "kollision": (2.2, 2.8), "baby": True, "herde": (2, 4), "stoss": 2.0,
+        "futter": ["minecraft:melon_slice", "minecraft:wheat", "minecraft:apple"],
+        "biome": [["savanna"]], "gewicht": 5,
+        "boden": ["minecraft:grass_block", "minecraft:coarse_dirt"],
+        "beute": [("minecraft:leather", 2, 4, 1.0, False)],
+        "laute": {"ambient": "mob.ravager.roar", "hurt": "mob.ravager.hurt", "death": "mob.ravager.death",
+                  "step": "mob.ravager.step", "pitch": [1.2, 1.4]},
+        "ei": ("#8a8078", "#ece4cc"), "angriff": "stoss",
+        "zeigen": {"stosszaehne": "!query.is_baby"},
+    },
+    {
+        "id": "nashorn", "name": ("Nashorn", "Rhino"), "gestalt": "nashorn",
+        "varianten": [("grau", 70), ("dunkel", 30)], "baby_textur": "kalb",
+        "art": "land", "verhalten": "neutral", "leben": 50, "schaden": 9, "tempo": 0.24,
+        "kollision": (1.6, 1.9), "baby": True, "herde": (1, 2), "stoss": 2.5,
+        "futter": ["minecraft:wheat", "minecraft:hay_block"],
+        "biome": [["savanna"]], "gewicht": 4,
+        "boden": ["minecraft:grass_block", "minecraft:coarse_dirt"],
+        "beute": [("minecraft:leather", 1, 3, 1.0, False)],
+        "laute": {"ambient": "mob.hoglin.ambient", "hurt": "mob.hoglin.hurt", "death": "mob.hoglin.death",
+                  "step": "mob.ravager.step", "pitch": [0.55, 0.7]},
+        "ei": ("#8a8884", "#5e5a56"), "angriff": "stoss",
+        "zeigen": {"horn": "!query.is_baby"},
+    },
+    {
+        "id": "gorilla", "name": ("Gorilla", "Gorilla"), "gestalt": "gorilla",
+        "varianten": [("silberruecken", 35), ("schwarz", 65)], "baby_textur": "jung",
+        "art": "land", "verhalten": "neutral", "herdenwut": True, "leben": 40, "schaden": 8, "tempo": 0.26,
+        "kollision": (1.3, 1.8), "baby": True, "herde": (2, 4), "baby_beine": 1.0,
+        "futter": ["minecraft:melon_slice", "minecraft:sweet_berries", "minecraft:bamboo"],
+        "biome": [["jungle"]], "gewicht": 5,
+        "boden": ["minecraft:grass_block", "minecraft:podzol", "minecraft:moss_block"],
+        "beute": [("minecraft:leather", 0, 1, 1.0, False)],
+        "laute": {"ambient": "mob.panda.idle.aggressive", "hurt": "mob.panda.hurt", "death": "mob.panda.death",
+                  "step": "mob.polarbear.step", "pitch": [0.5, 0.65]},
+        "ei": ("#2c2a28", "#8a8884"), "angriff": "tatze", "trommelt": True,
+    },
+    {
+        "id": "walross", "name": ("Walross", "Walrus"), "gestalt": "walross",
+        "varianten": [("braun", 100)], "baby_textur": "jung",
+        "art": "amphib", "verhalten": "neutral", "herdenwut": True, "leben": 40, "schaden": 6, "tempo": 0.12,
+        "wassertempo": 0.08, "kollision": (1.6, 1.2), "baby": True, "herde": (2, 5), "stoss": 1.5,
+        "futter": ["minecraft:cod", "minecraft:salmon"],
+        "biome": [["frozen", "ocean"], ["beach", "cold"]], "gewicht": 7,
+        "boden": ["minecraft:ice", "minecraft:packed_ice", "minecraft:snow", "minecraft:snow_layer", "minecraft:gravel",
+                  "minecraft:stone", "minecraft:sand"],
+        "beute": [("minecraft:cod", 1, 3, 1.0, True), ("minecraft:leather", 0, 2, 1.0, False)],
+        "laute": {"ambient": "mob.cow.say", "hurt": "mob.cow.hurt", "death": "mob.cow.hurt",
+                  "step": "mob.turtle.step", "pitch": [0.4, 0.5]},
+        "ei": ("#9a6a52", "#ece2c8"), "angriff": "stoss",
+        "zeigen": {"zaehne": "!query.is_baby"},
+    },
+    {
+        "id": "mantarochen", "name": ("Mantarochen", "Manta Ray"), "gestalt": "manta",
+        "varianten": [("ozean", 70), ("riff", 30)],
+        "art": "fisch", "verhalten": "friedlich", "leben": 30, "tempo": 0.1, "wassertempo": 0.12,
+        "kollision": (1.8, 0.4), "baby": False, "herde": (1, 2), "fluegel": True,
+        "biome": [["ocean", "warm"], ["ocean", "lukewarm"]], "gewicht": 4, "wasser": True,
+        "beute": [("minecraft:prismarine_crystals", 0, 1, 1.0, False)],
+        "laute": {"hurt": "mob.fish.hurt", "death": "mob.fish.hurt", "flop": "mob.fish.flop", "pitch": [0.5, 0.6]},
+        "ei": ("#23272e", "#e8eaec"),
+    },
+    {
+        "id": "steinadler", "name": ("Steinadler", "Golden Eagle"), "gestalt": "adler",
+        "varianten": [("altvogel", 70), ("jungvogel", 30)],
+        "art": "vogel", "verhalten": "neutral", "leben": 16, "schaden": 4, "tempo": 1.2,
+        "kollision": (1.0, 0.6), "baby": False, "herde": (1, 1),
+        "jagt": ["minecraft:rabbit", "minecraft:chicken"],
+        "biome": [["mountains"], ["extreme_hills"], ["meadow"]], "gewicht": 4,
+        "boden": ["minecraft:grass_block", "minecraft:stone", "minecraft:snow_layer", "minecraft:gravel"],
+        "beute": [("minecraft:feather", 1, 3, 1.0, False)],
+        "laute": {"ambient": "mob.parrot.idle", "hurt": "mob.parrot.hurt", "death": "mob.parrot.death",
+                  "pitch": [0.55, 0.65]},
+        "ei": ("#4a3222", "#b8863a"), "angriff": "krallen",
+    },
 ]
 
 
@@ -379,13 +459,36 @@ def verhalten(t, varianten_namen):
             "minecraft:behavior.random_breach": {"priority": 6, "interval": 200, "xz_dist": 6, "cooldown_time": 20.0},
         })
 
+    elif art == "vogel":
+        # Wie Mojangs Phantom: gleitet ohne Schwerkraft, kreist hoch ueber
+        # einem Punkt und stoesst von oben herab - auf Kaninchen und
+        # Huehner, und auf jeden, der ihn angreift.
+        c.update({
+            "minecraft:movement.glide": {"start_speed": 0.1, "speed_when_turning": 0.2},
+            "minecraft:physics": {"has_gravity": False},
+            "minecraft:breathable": {"total_supply": 15, "suffocate_time": 0},
+            "minecraft:game_event_movement_tracking": {"emit_flap": True},
+            "minecraft:follow_range": {"value": 48, "max": 48},
+            "minecraft:attack": {"damage": t["schaden"]},
+            "minecraft:behavior.circle_around_anchor": {
+                "priority": 3, "goal_radius": 1, "radius_range": {"min": 6.0, "max": 14.0},
+                "height_offset_range": {"min": -3, "max": 4},
+                "height_above_target_range": {"min": 14, "max": 26}},
+            "minecraft:behavior.swoop_attack": {"priority": 2, "damage_reach": 0.3, "speed_multiplier": 1.0,
+                                                "delay_range": {"min": 8.0, "max": 16.0}},
+            "minecraft:behavior.nearest_attackable_target": {
+                "priority": 2, "must_see": True, "reselect_targets": True, "within_radius": 40,
+                "target_search_height": 40,
+                "entity_types": [{"filters": familie(*[n.split(":")[1] for n in t["jagt"]]), "max_dist": 40}]},
+        })
+
     # --- Verhalten und Junge
     gruppen = {}
     ereignisse = {}
     erwachsen, baby = "fynn:erwachsen", "fynn:baby"
     gruppen[erwachsen] = {"minecraft:loot": {"table": f"loot_tables/entities/{t['id']}.json"}}
 
-    if t["verhalten"] == "neutral":
+    if t["verhalten"] == "neutral" and art != "vogel":
         # Wie Mojangs Eisbaer: ruhig, bis man es angreift - oder bis man einem
         # Jungen zu nahe kommt. Dann ruft das Junge, und die Alten kommen.
         gruppen["fynn:ruhig"] = {
@@ -407,10 +510,10 @@ def verhalten(t, varianten_namen):
                                                               "within_radius": 24, "entity_types": angriffsziele(t)}}
         f.update(angriffsbausteine(t))
         gruppen["fynn:jagd"] = f
-    else:
+    elif art != "vogel":
         c["minecraft:behavior.panic"] = {"priority": 1, "speed_multiplier": 1.3}
 
-    erwachsen_liste = [erwachsen] + (["fynn:ruhig"] if t["verhalten"] == "neutral" else []) + \
+    erwachsen_liste = [erwachsen] + (["fynn:ruhig"] if "fynn:ruhig" in gruppen else []) + \
                       (["fynn:jagd"] if t["verhalten"] == "feindlich" else [])
     if t.get("reiten"):
         erwachsen_liste.append("fynn:wild")
@@ -621,6 +724,69 @@ def spawnregel(t):
 
 # ------------------------------------------------------------ Bewegung
 
+def elefant_dazu(a, T):
+    """Der Ruessel pendelt im Gehen und tastet im Stehen herum, die Spitze
+    rollt sich ein; die grossen Ohren faecheln - so kuehlen sich Elefanten."""
+    lt = "query.life_time"
+    for anim, x, y, spitze in (
+            (a["laufen"], f"math.sin({T} * 2.0) * 5.0", f"math.sin({T}) * 12.0", f"math.sin({T} * 2.0 - 60.0) * 12.0"),
+            (a["stehen"], f"math.sin({lt} * 40.0) * 8.0 - 4.0", f"math.sin({lt} * 27.0) * 10.0",
+             f"math.sin({lt} * 55.0 - 80.0) * 18.0 - 12.0")):
+        anim["bones"]["ruessel1"] = {"rotation": [x, y, 0.0]}
+        anim["bones"]["ruessel2"] = {"rotation": [f"({x}) * 1.4", f"({y}) * 0.6", 0.0]}
+        anim["bones"]["ruessel3"] = {"rotation": [spitze, 0.0, 0.0]}
+    faecheln = f"(math.sin({lt} * 70.0) * 0.5 + 0.5) * 22.0"
+    a["stehen"]["bones"]["ohr_links"] = {"rotation": [0.0, f"-{faecheln}", 0.0]}
+    a["stehen"]["bones"]["ohr_rechts"] = {"rotation": [0.0, faecheln, 0.0]}
+    a["laufen"]["bones"]["ohr_links"] = {"rotation": [0.0, f"-math.abs(math.sin({T})) * 10.0", 0.0]}
+    a["laufen"]["bones"]["ohr_rechts"] = {"rotation": [0.0, f"math.abs(math.sin({T})) * 10.0", 0.0]}
+
+
+# Der Gorilla trommelt: Er richtet sich auf, legt den Kopf zurueck und
+# schlaegt abwechselnd mit beiden Haenden auf die Brust. Wann, rechnet
+# variable.trommeln (siehe aussehen): alle gut 15 Sekunden fuer etwa drei.
+TROMMELN = {"loop": True, "bones": {
+    "body": {"rotation": [-32.0, 0.0, 0.0], "position": [0.0, 3.0, 0.0]},
+    "head": {"rotation": [-18.0, 0.0, 0.0]},
+    "leg0": {"rotation": ["-22.0 + math.sin(query.life_time * 900.0) * 16.0", 0.0, 20.0]},
+    "leg1": {"rotation": ["-22.0 - math.sin(query.life_time * 900.0) * 16.0", 0.0, -20.0]},
+    "leg2": {"rotation": [32.0, 0.0, 0.0]},
+    "leg3": {"rotation": [32.0, 0.0, 0.0]},
+}}
+TROMMELN_WANN = "variable.trommeln = math.clamp(math.sin(query.life_time * 22.0) * 5.0 - 4.2, 0.0, 1.0);"
+
+
+def vogelbewegungen():
+    """Der Adler segelt: Fluegel weit und leicht nach oben (V-Form), sie
+    atmen langsam mit; alle paar Sekunden ein paar kraeftige Schlaege,
+    deren Spitzen etwas spaeter nachkommen. In der Kurve rollt er hinein,
+    der Schwanz steuert. Stoesst er herab, legt er die Schwingen an und
+    streckt die Faenge vor."""
+    lt = "query.life_time"
+    schlagen = f"math.clamp(math.sin({lt} * 24.0) * 3.0 - 2.0, 0.0, 1.0)"
+    schlag = f"math.sin({lt} * 520.0) * 38.0 * {schlagen}"
+    nach = f"math.sin({lt} * 520.0 - 60.0) * 26.0 * {schlagen}"
+    fliegen = {"loop": True, "bones": {
+        "rumpf": {"rotation": ["-query.target_x_rotation * 0.5", 0.0, "variable.fynn_dreh * 2.5"]},
+        "kopf": {"rotation": [f"math.sin({lt} * 13.0) * 8.0", f"math.sin({lt} * 31.0) * 22.0", 0.0]},
+        "fluegel_links": {"rotation": [0.0, 0.0, f"-8.0 - math.sin({lt} * 60.0) * 3.0 - {schlag}"]},
+        "fluegel_rechts": {"rotation": [0.0, 0.0, f"8.0 + math.sin({lt} * 60.0) * 3.0 + {schlag}"]},
+        "fluegelspitze_links": {"rotation": [0.0, 0.0, f"-4.0 - {nach}"]},
+        "fluegelspitze_rechts": {"rotation": [0.0, 0.0, f"4.0 + {nach}"]},
+        "schwanz": {"rotation": [f"math.sin({lt} * 40.0) * 4.0", "-variable.fynn_dreh * 3.0", 0.0]},
+        "fuesse": {"rotation": [70.0, 0.0, 0.0]},
+    }}
+    stossen = {"loop": True, "bones": {
+        "fluegel_links": {"rotation": [0.0, -40.0, -25.0]},
+        "fluegel_rechts": {"rotation": [0.0, 40.0, 25.0]},
+        "fluegelspitze_links": {"rotation": [0.0, -35.0, 0.0]},
+        "fluegelspitze_rechts": {"rotation": [0.0, 35.0, 0.0]},
+        "fuesse": {"rotation": [-60.0, 0.0, 0.0]},
+        "kopf": {"rotation": [20.0, 0.0, 0.0]},
+    }}
+    return {"fliegen": fliegen, "stossen": stossen}
+
+
 def bewegungen(t, modell):
     """Animationen je nach Bauart. Knochen, die es im Modell gibt, bestimmen,
     was sich bewegt.
@@ -697,6 +863,10 @@ def bewegungen(t, modell):
                 a["stehen"]["bones"][k] = {"rotation": [0.0, f"math.sin(query.life_time * 40.0 - {40 * i}) * {3 + 3 * i}",
                                                         0.0]}
         a["blick"] = "animation.common.look_at_target"
+        if "ruessel1" in da:
+            elefant_dazu(a, T)
+        if t.get("trommelt"):
+            a["trommeln"] = TROMMELN
         # In die Kurve legen: Der Kopf geht voraus, der Koerper neigt sich
         # nach innen, der Schwanz schwingt nach aussen (v.fynn_dreh, siehe
         # DREHUNG).
@@ -714,6 +884,8 @@ def bewegungen(t, modell):
             a["schwimmen"]["bones"]["body"] = {"rotation": [0.0, "math.sin(query.life_time * 200.0 + 90.0) * 4.0", 0.0]}
             for bein in ("leg0", "leg1", "leg2", "leg3"):
                 a["schwimmen"]["bones"][bein] = {"rotation": [70.0, 0.0, 0.0]}
+    elif art == "vogel":
+        a.update(vogelbewegungen())
     else:
         # Im Wasser: Fische schlagen seitlich (um y), Wale auf und ab (um x).
         kette = [k for k in ("schwanz1", "schwanz2", "fluke", "schwanzflosse") if k in da]
@@ -727,7 +899,14 @@ def bewegungen(t, modell):
             w[achse] = f"math.sin(query.life_time * {tempo} - {45 * i}) * {amp} * {staerke}"
             knochen[k] = {"rotation": w}
         for seite, zeichen in (("flosse_links", 1), ("flosse_rechts", -1)):
-            if seite in da:
+            if seite in da and t.get("fluegel"):
+                # Der Manta fliegt durchs Wasser: grosse, langsame Schlaege,
+                # die aussen etwas spaeter ankommen - eine Welle durch die
+                # ganze Schwinge.
+                spitze = seite.replace("flosse", "spitze")
+                knochen[seite] = {"rotation": [0.0, 0.0, f"math.sin(query.life_time * 150.0) * {24 * zeichen}"]}
+                knochen[spitze] = {"rotation": [0.0, 0.0, f"math.sin(query.life_time * 150.0 - 70.0) * {20 * zeichen}"]}
+            elif seite in da:
                 knochen[seite] = {"rotation": [f"math.sin(query.life_time * {tempo * 0.5}) * 6.0",
                                                0.0, f"math.sin(query.life_time * {tempo * 0.7}) * {12 * zeichen}"]}
         if kopf and art != "wal" and "mantel" not in da:
@@ -792,6 +971,9 @@ def bewegungen(t, modell):
     elif art_angriff == "spiess":
         ang = {kopf: {"rotation": [0.0, "math.sin(variable.attack_time * 360.0) * 30.0", 0.0]},
                "rumpf": {"rotation": [0.0, "-math.sin(variable.attack_time * 360.0) * 12.0", 0.0]}}
+    elif art_angriff == "krallen":
+        ang = {"fuesse": {"rotation": [f"-{stoss} * 110.0", 0.0, 0.0]},
+               "kopf": {"rotation": [f"{stoss} * 30.0", 0.0, 0.0]}}
     elif art_angriff == "arme":
         for i in range(g.KALMAR_ARME):
             ang[f"arm{i}"] = {"rotation": [f"-{stoss} * 30.0", 0.0, 0.0]}
@@ -809,7 +991,7 @@ def bewegungen(t, modell):
         jung = {kopf: {"scale": 1.6, "position": [0.0, 1.0, 1.0]}}
         if "leg0" in da:
             bein = next(k for k in modell.knochen if k.name == "leg0").kaesten[0].groesse[1]
-            faktor = 0.8 if art == "amphib" else 0.62
+            faktor = t.get("baby_beine", 0.8 if art == "amphib" else 0.62)
             for b_ in ("leg0", "leg1", "leg2", "leg3"):
                 jung[b_] = {"scale": [1.2, faktor, 1.2]}
             jung["body"] = {"position": [0.0, round(-(1 - faktor) * bein, 2), 0.0]}
@@ -862,6 +1044,12 @@ def animate_liste(t, anims):
         liste.append({"schwimmen": "query.is_in_water" if "an_land" in anims else "1.0"})
         if "an_land" in anims:
             liste.append({"an_land": "!query.is_in_water"})
+    if "fliegen" in anims:
+        liste.append("fliegen")
+        # Im Sturzflug die Schwingen anlegen.
+        liste.append({"stossen": "math.clamp(-query.vertical_speed * 0.6 - 0.2, 0.0, 1.0)"})
+    if "trommeln" in anims:
+        liste.append({"trommeln": "(1.0 - math.clamp(query.modified_move_speed * 3.0, 0.0, 1.0)) * variable.trommeln"})
     if "angriff" in anims:
         liste.append({"angriff": "variable.attack_time > 0.0"})
     if "jung" in anims:
@@ -881,7 +1069,8 @@ def aussehen(t, anims, texturen):
         "geometry": {"default": f"geometry.fynn.{name}"},
         "animations": kurz,
         "scripts": {"initialize": DREHUNG_START,
-                    "pre_animation": DREHUNG + ([f"variable.galopp = {GALOPP};"] if "galopp" in anims else []),
+                    "pre_animation": DREHUNG + ([f"variable.galopp = {GALOPP};"] if "galopp" in anims else [])
+                    + ([TROMMELN_WANN] if "trommeln" in anims else []),
                     "animate": animate_liste(t, anims)},
         "render_controllers": [f"controller.render.fynn.{name}"],
         "spawn_egg": {"base_color": t["ei"][0], "overlay_color": t["ei"][1]},
@@ -1031,7 +1220,8 @@ def main():
     sprache()
     print(f"gebaut: {len(TIERE)} Tiere, "
           f"{sum(1 for t in TIERE if t['art'] in ('land', 'amphib'))} an Land, "
-          f"{sum(1 for t in TIERE if t['art'] in ('fisch', 'wal'))} im Wasser")
+          f"{sum(1 for t in TIERE if t['art'] in ('fisch', 'wal'))} im Wasser, "
+          f"{sum(1 for t in TIERE if t['art'] == 'vogel')} in der Luft")
     if bilder is not None:
         vorschau(bilder, sys.argv[sys.argv.index("--bilder") + 1])
 

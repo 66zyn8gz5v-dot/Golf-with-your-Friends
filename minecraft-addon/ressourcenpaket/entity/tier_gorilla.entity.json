@@ -1,0 +1,72 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:gorilla",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "silberruecken": "textures/entity/tiere/gorilla_silberruecken",
+        "schwarz": "textures/entity/tiere/gorilla_schwarz",
+        "jung": "textures/entity/tiere/gorilla_jung"
+      },
+      "geometry": {
+        "default": "geometry.fynn.gorilla"
+      },
+      "animations": {
+        "laufen": "animation.fynn.gorilla.laufen",
+        "galopp": "animation.fynn.gorilla.galopp",
+        "stehen": "animation.fynn.gorilla.stehen",
+        "blick": "animation.common.look_at_target",
+        "trommeln": "animation.fynn.gorilla.trommeln",
+        "drehen": "animation.fynn.gorilla.drehen",
+        "angriff": "animation.fynn.gorilla.angriff",
+        "jung": "animation.fynn.gorilla.jung"
+      },
+      "scripts": {
+        "initialize": [
+          "variable.fynn_gier_alt = query.body_y_rotation;",
+          "variable.fynn_dreh = 0.0;"
+        ],
+        "pre_animation": [
+          "variable.fynn_d = query.body_y_rotation - variable.fynn_gier_alt;",
+          "variable.fynn_d = variable.fynn_d > 180.0 ? variable.fynn_d - 360.0 : (variable.fynn_d < -180.0 ? variable.fynn_d + 360.0 : variable.fynn_d);",
+          "variable.fynn_gier_alt = query.body_y_rotation;",
+          "variable.fynn_dreh = math.lerp(variable.fynn_dreh, math.clamp(variable.fynn_d / math.max(query.delta_time, 0.01) / 20.0, -10.0, 10.0), 0.12);",
+          "variable.galopp = math.clamp((query.modified_move_speed - 0.6) * 3.0, 0.0, 1.0);",
+          "variable.trommeln = math.clamp(math.sin(query.life_time * 22.0) * 5.0 - 4.2, 0.0, 1.0);"
+        ],
+        "animate": [
+          {
+            "laufen": "math.clamp(query.modified_move_speed * 1.4, 0.0, 1.0) * (1.0 - variable.galopp)"
+          },
+          {
+            "galopp": "variable.galopp"
+          },
+          {
+            "stehen": "1.0 - math.clamp(query.modified_move_speed * 2.0, 0.0, 0.8)"
+          },
+          "blick",
+          "drehen",
+          {
+            "trommeln": "(1.0 - math.clamp(query.modified_move_speed * 3.0, 0.0, 1.0)) * variable.trommeln"
+          },
+          {
+            "angriff": "variable.attack_time > 0.0"
+          },
+          {
+            "jung": "query.is_baby"
+          }
+        ]
+      },
+      "render_controllers": [
+        "controller.render.fynn.gorilla"
+      ],
+      "spawn_egg": {
+        "base_color": "#2c2a28",
+        "overlay_color": "#8a8884"
+      }
+    }
+  }
+}

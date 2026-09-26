@@ -320,6 +320,156 @@
             "volume": 1.0
           }
         }
+      },
+      "fynn:elefant": {
+        "volume": 1.0,
+        "pitch": [
+          1.2,
+          1.4
+        ],
+        "events": {
+          "ambient": {
+            "sound": "mob.ravager.roar",
+            "volume": 1.0
+          },
+          "hurt": {
+            "sound": "mob.ravager.hurt",
+            "volume": 1.0
+          },
+          "death": {
+            "sound": "mob.ravager.death",
+            "volume": 1.0
+          },
+          "step": {
+            "sound": "mob.ravager.step",
+            "volume": 0.25
+          }
+        }
+      },
+      "fynn:nashorn": {
+        "volume": 1.0,
+        "pitch": [
+          0.55,
+          0.7
+        ],
+        "events": {
+          "ambient": {
+            "sound": "mob.hoglin.ambient",
+            "volume": 1.0
+          },
+          "hurt": {
+            "sound": "mob.hoglin.hurt",
+            "volume": 1.0
+          },
+          "death": {
+            "sound": "mob.hoglin.death",
+            "volume": 1.0
+          },
+          "step": {
+            "sound": "mob.ravager.step",
+            "volume": 0.25
+          }
+        }
+      },
+      "fynn:gorilla": {
+        "volume": 1.0,
+        "pitch": [
+          0.5,
+          0.65
+        ],
+        "events": {
+          "ambient": {
+            "sound": "mob.panda.idle.aggressive",
+            "volume": 1.0
+          },
+          "hurt": {
+            "sound": "mob.panda.hurt",
+            "volume": 1.0
+          },
+          "death": {
+            "sound": "mob.panda.death",
+            "volume": 1.0
+          },
+          "step": {
+            "sound": "mob.polarbear.step",
+            "volume": 0.25
+          }
+        }
+      },
+      "fynn:walross": {
+        "volume": 1.0,
+        "pitch": [
+          0.4,
+          0.5
+        ],
+        "events": {
+          "ambient": {
+            "sound": "mob.cow.say",
+            "volume": 1.0
+          },
+          "hurt": {
+            "sound": "mob.cow.hurt",
+            "volume": 1.0
+          },
+          "death": {
+            "sound": "mob.cow.hurt",
+            "volume": 1.0
+          },
+          "step": {
+            "sound": "mob.turtle.step",
+            "volume": 0.25
+          }
+        }
+      },
+      "fynn:mantarochen": {
+        "volume": 1.0,
+        "pitch": [
+          0.5,
+          0.6
+        ],
+        "events": {
+          "hurt": {
+            "sound": "mob.fish.hurt",
+            "volume": 1.0
+          },
+          "hurt.in.water": {
+            "sound": "mob.fish.hurt",
+            "volume": 1.0
+          },
+          "death": {
+            "sound": "mob.fish.hurt",
+            "volume": 1.0
+          },
+          "death.in.water": {
+            "sound": "mob.fish.hurt",
+            "volume": 1.0
+          },
+          "flop": {
+            "sound": "mob.fish.flop",
+            "volume": 1.0
+          }
+        }
+      },
+      "fynn:steinadler": {
+        "volume": 1.0,
+        "pitch": [
+          0.55,
+          0.65
+        ],
+        "events": {
+          "ambient": {
+            "sound": "mob.parrot.idle",
+            "volume": 1.0
+          },
+          "hurt": {
+            "sound": "mob.parrot.hurt",
+            "volume": 1.0
+          },
+          "death": {
+            "sound": "mob.parrot.death",
+            "volume": 1.0
+          }
+        }
       }
     }
   }

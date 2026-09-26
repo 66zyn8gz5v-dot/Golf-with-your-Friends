@@ -1,0 +1,230 @@
+{
+  "format_version": "1.12.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.fynn.mantarochen",
+        "texture_width": 64,
+        "texture_height": 128,
+        "visible_bounds_width": 3,
+        "visible_bounds_height": 1,
+        "visible_bounds_offset": [
+          0,
+          0.5,
+          0
+        ]
+      },
+      "bones": [
+        {
+          "name": "rumpf",
+          "pivot": [
+            0.0,
+            4.0,
+            0.0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                2.0,
+                -8.0
+              ],
+              "size": [
+                8,
+                3,
+                16
+              ],
+              "uv": [
+                0,
+                0
+              ]
+            },
+            {
+              "origin": [
+                -3.0,
+                5.0,
+                -6.0
+              ],
+              "size": [
+                6,
+                1,
+                11
+              ],
+              "uv": [
+                0,
+                45
+              ]
+            },
+            {
+              "origin": [
+                2.5,
+                2.0,
+                -11.0
+              ],
+              "size": [
+                2,
+                2,
+                3
+              ],
+              "uv": [
+                26,
+                57
+              ]
+            },
+            {
+              "origin": [
+                -4.5,
+                2.0,
+                -11.0
+              ],
+              "size": [
+                2,
+                2,
+                3
+              ],
+              "uv": [
+                36,
+                57
+              ]
+            }
+          ]
+        },
+        {
+          "name": "flosse_links",
+          "pivot": [
+            4.0,
+            3.5,
+            0.0
+          ],
+          "parent": "rumpf",
+          "cubes": [
+            {
+              "origin": [
+                4.0,
+                3.0,
+                -7.0
+              ],
+              "size": [
+                7,
+                1,
+                12
+              ],
+              "uv": [
+                0,
+                19
+              ]
+            }
+          ]
+        },
+        {
+          "name": "spitze_links",
+          "pivot": [
+            11.0,
+            3.5,
+            0.0
+          ],
+          "parent": "flosse_links",
+          "cubes": [
+            {
+              "origin": [
+                11.0,
+                3.0,
+                -4.0
+              ],
+              "size": [
+                6,
+                1,
+                7
+              ],
+              "uv": [
+                34,
+                45
+              ]
+            }
+          ]
+        },
+        {
+          "name": "flosse_rechts",
+          "pivot": [
+            -4.0,
+            3.5,
+            0.0
+          ],
+          "parent": "rumpf",
+          "cubes": [
+            {
+              "origin": [
+                -11.0,
+                3.0,
+                -7.0
+              ],
+              "size": [
+                7,
+                1,
+                12
+              ],
+              "uv": [
+                0,
+                32
+              ]
+            }
+          ]
+        },
+        {
+          "name": "spitze_rechts",
+          "pivot": [
+            -11.0,
+            3.5,
+            0.0
+          ],
+          "parent": "flosse_rechts",
+          "cubes": [
+            {
+              "origin": [
+                -17.0,
+                3.0,
+                -4.0
+              ],
+              "size": [
+                6,
+                1,
+                7
+              ],
+              "uv": [
+                0,
+                57
+              ]
+            }
+          ]
+        },
+        {
+          "name": "schwanz1",
+          "pivot": [
+            0.0,
+            3.5,
+            8.0
+          ],
+          "parent": "rumpf",
+          "cubes": [
+            {
+              "origin": [
+                -0.5,
+                3.0,
+                8.0
+              ],
+              "size": [
+                1,
+                1,
+                12
+              ],
+              "uv": [
+                38,
+                32
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

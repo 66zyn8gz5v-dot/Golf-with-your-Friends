@@ -1,0 +1,69 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:elefant",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "savanne": "textures/entity/tiere/elefant_savanne",
+        "grau": "textures/entity/tiere/elefant_grau",
+        "kalb": "textures/entity/tiere/elefant_kalb"
+      },
+      "geometry": {
+        "default": "geometry.fynn.elefant"
+      },
+      "animations": {
+        "laufen": "animation.fynn.elefant.laufen",
+        "galopp": "animation.fynn.elefant.galopp",
+        "stehen": "animation.fynn.elefant.stehen",
+        "blick": "animation.common.look_at_target",
+        "drehen": "animation.fynn.elefant.drehen",
+        "angriff": "animation.fynn.elefant.angriff",
+        "jung": "animation.fynn.elefant.jung",
+        "teile": "animation.fynn.elefant.teile"
+      },
+      "scripts": {
+        "initialize": [
+          "variable.fynn_gier_alt = query.body_y_rotation;",
+          "variable.fynn_dreh = 0.0;"
+        ],
+        "pre_animation": [
+          "variable.fynn_d = query.body_y_rotation - variable.fynn_gier_alt;",
+          "variable.fynn_d = variable.fynn_d > 180.0 ? variable.fynn_d - 360.0 : (variable.fynn_d < -180.0 ? variable.fynn_d + 360.0 : variable.fynn_d);",
+          "variable.fynn_gier_alt = query.body_y_rotation;",
+          "variable.fynn_dreh = math.lerp(variable.fynn_dreh, math.clamp(variable.fynn_d / math.max(query.delta_time, 0.01) / 20.0, -10.0, 10.0), 0.12);",
+          "variable.galopp = math.clamp((query.modified_move_speed - 0.6) * 3.0, 0.0, 1.0);"
+        ],
+        "animate": [
+          {
+            "laufen": "math.clamp(query.modified_move_speed * 1.4, 0.0, 1.0) * (1.0 - variable.galopp)"
+          },
+          {
+            "galopp": "variable.galopp"
+          },
+          {
+            "stehen": "1.0 - math.clamp(query.modified_move_speed * 2.0, 0.0, 0.8)"
+          },
+          "blick",
+          "drehen",
+          {
+            "angriff": "variable.attack_time > 0.0"
+          },
+          {
+            "jung": "query.is_baby"
+          },
+          "teile"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.fynn.elefant"
+      ],
+      "spawn_egg": {
+        "base_color": "#8a8078",
+        "overlay_color": "#ece4cc"
+      }
+    }
+  }
+}

@@ -1016,3 +1016,9 @@ def schwertfisch_maler(variante):
                 return ton(silber, p, n, texel, 239, straehne=0.0)   # silbrige Flanke
         return ton(haut, p, n, texel, 241, straehne=0.0)
     return f
+
+
+# Die sechs Tiere aus Fassung 4.41 stehen in einer eigenen Datei, damit
+# diese nicht endlos wird - hier hereingeholt, damit tiere_bauen.py alle
+# Tiere an einer Stelle findet.
+from tiere_gestalt_neu import *  # noqa: E402,F401,F403

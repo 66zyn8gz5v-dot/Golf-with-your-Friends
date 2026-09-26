@@ -1,0 +1,306 @@
+{
+  "format_version": "1.10.0",
+  "animations": {
+    "animation.fynn.gorilla.laufen": {
+      "anim_time_update": "query.modified_distance_moved",
+      "loop": true,
+      "bones": {
+        "leg0": {
+          "rotation": [
+            "math.cos(query.anim_time * 19.91) * 36.0",
+            0.0,
+            0.0
+          ]
+        },
+        "leg1": {
+          "rotation": [
+            "math.cos(query.anim_time * 19.91) * -36.0",
+            0.0,
+            0.0
+          ]
+        },
+        "leg2": {
+          "rotation": [
+            "math.cos(query.anim_time * 19.91) * -36.0",
+            0.0,
+            0.0
+          ]
+        },
+        "leg3": {
+          "rotation": [
+            "math.cos(query.anim_time * 19.91) * 36.0",
+            0.0,
+            0.0
+          ]
+        },
+        "body": {
+          "position": [
+            0.0,
+            "-math.cos(query.anim_time * 19.91 * 2.0) * 0.4",
+            0.0
+          ],
+          "rotation": [
+            "math.sin(query.anim_time * 19.91 * 2.0) * 1.2",
+            0.0,
+            "math.cos(query.anim_time * 19.91) * 1.5"
+          ]
+        },
+        "head": {
+          "rotation": [
+            "math.sin(query.anim_time * 19.91 * 2.0 + 40.0) * 4.0",
+            "math.cos(query.anim_time * 19.91) * 3.0",
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.gorilla.galopp": {
+      "anim_time_update": "query.modified_distance_moved",
+      "loop": true,
+      "bones": {
+        "leg0": {
+          "rotation": [
+            "math.cos(query.anim_time * 19.91) * 48.6",
+            0.0,
+            0.0
+          ]
+        },
+        "leg1": {
+          "rotation": [
+            "math.cos(query.anim_time * 19.91 - 20.0) * 48.6",
+            0.0,
+            0.0
+          ]
+        },
+        "leg2": {
+          "rotation": [
+            "math.cos(query.anim_time * 19.91 + 180.0) * 48.6",
+            0.0,
+            0.0
+          ]
+        },
+        "leg3": {
+          "rotation": [
+            "math.cos(query.anim_time * 19.91 + 160.0) * 48.6",
+            0.0,
+            0.0
+          ]
+        },
+        "body": {
+          "rotation": [
+            "math.sin(query.anim_time * 19.91) * 7.0",
+            0.0,
+            0.0
+          ],
+          "position": [
+            0.0,
+            "(1.0 - math.cos(query.anim_time * 19.91 * 2.0)) * 0.75",
+            0.0
+          ]
+        },
+        "head": {
+          "rotation": [
+            "-math.sin(query.anim_time * 19.91) * 6.0",
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.gorilla.stehen": {
+      "loop": true,
+      "bones": {
+        "body": {
+          "scale": [
+            1.0,
+            "1.0 + math.sin(query.life_time * 60.0) * 0.012",
+            1.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(query.life_time * 21.0) * 1.2"
+          ]
+        },
+        "head": {
+          "rotation": [
+            "math.sin(query.life_time * 17.0) * 3.0",
+            "math.sin(query.life_time * 23.0) * 9.0 + math.sin(query.life_time * 61.0) * 3.0",
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.gorilla.trommeln": {
+      "loop": true,
+      "bones": {
+        "body": {
+          "rotation": [
+            -32.0,
+            0.0,
+            0.0
+          ],
+          "position": [
+            0.0,
+            3.0,
+            0.0
+          ]
+        },
+        "head": {
+          "rotation": [
+            -18.0,
+            0.0,
+            0.0
+          ]
+        },
+        "leg0": {
+          "rotation": [
+            "-22.0 + math.sin(query.life_time * 900.0) * 16.0",
+            0.0,
+            20.0
+          ]
+        },
+        "leg1": {
+          "rotation": [
+            "-22.0 - math.sin(query.life_time * 900.0) * 16.0",
+            0.0,
+            -20.0
+          ]
+        },
+        "leg2": {
+          "rotation": [
+            32.0,
+            0.0,
+            0.0
+          ]
+        },
+        "leg3": {
+          "rotation": [
+            32.0,
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.gorilla.drehen": {
+      "loop": true,
+      "bones": {
+        "body": {
+          "rotation": [
+            0.0,
+            0.0,
+            "-variable.fynn_dreh * 0.8"
+          ]
+        },
+        "head": {
+          "rotation": [
+            0.0,
+            "variable.fynn_dreh * 1.6",
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.gorilla.angriff": {
+      "loop": true,
+      "bones": {
+        "body": {
+          "rotation": [
+            "-math.sin(variable.attack_time * 180.0) * 28.0",
+            0.0,
+            0.0
+          ],
+          "position": [
+            0.0,
+            "math.sin(variable.attack_time * 180.0) * 2.0",
+            0.0
+          ]
+        },
+        "leg0": {
+          "rotation": [
+            "-math.sin(variable.attack_time * 180.0) * 95.0",
+            0.0,
+            "math.sin(variable.attack_time * 180.0) * 15.0"
+          ]
+        },
+        "leg1": {
+          "rotation": [
+            "-math.sin(math.clamp(variable.attack_time * 1.4 - 0.2, 0.0, 1.0) * 180.0) * 80.0",
+            0.0,
+            "-math.sin(math.clamp(variable.attack_time * 1.4 - 0.2, 0.0, 1.0) * 180.0) * 15.0"
+          ]
+        },
+        "leg2": {
+          "rotation": [
+            "math.sin(variable.attack_time * 180.0) * 25.0",
+            0.0,
+            0.0
+          ]
+        },
+        "leg3": {
+          "rotation": [
+            "math.sin(variable.attack_time * 180.0) * 25.0",
+            0.0,
+            0.0
+          ]
+        },
+        "head": {
+          "rotation": [
+            "math.sin(variable.attack_time * 180.0) * 18.0",
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.gorilla.jung": {
+      "loop": true,
+      "bones": {
+        "head": {
+          "scale": 1.6,
+          "position": [
+            0.0,
+            1.0,
+            1.0
+          ]
+        },
+        "leg0": {
+          "scale": [
+            1.2,
+            1.0,
+            1.2
+          ]
+        },
+        "leg1": {
+          "scale": [
+            1.2,
+            1.0,
+            1.2
+          ]
+        },
+        "leg2": {
+          "scale": [
+            1.2,
+            1.0,
+            1.2
+          ]
+        },
+        "leg3": {
+          "scale": [
+            1.2,
+            1.0,
+            1.2
+          ]
+        },
+        "body": {
+          "position": [
+            0.0,
+            -0.0,
+            0.0
+          ]
+        }
+      }
+    }
+  }
+}

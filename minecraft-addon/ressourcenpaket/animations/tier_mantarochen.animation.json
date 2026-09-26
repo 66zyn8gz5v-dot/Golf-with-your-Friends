@@ -1,0 +1,69 @@
+{
+  "format_version": "1.10.0",
+  "animations": {
+    "animation.fynn.mantarochen.schwimmen": {
+      "loop": true,
+      "bones": {
+        "schwanz1": {
+          "rotation": [
+            0.0,
+            "math.sin(query.life_time * 260.0 - 0) * 9 * (0.6 + query.modified_move_speed * 1.2)",
+            0.0
+          ]
+        },
+        "flosse_links": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(query.life_time * 150.0) * 24"
+          ]
+        },
+        "spitze_links": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(query.life_time * 150.0 - 70.0) * 20"
+          ]
+        },
+        "flosse_rechts": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(query.life_time * 150.0) * -24"
+          ]
+        },
+        "spitze_rechts": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(query.life_time * 150.0 - 70.0) * -20"
+          ]
+        },
+        "rumpf": {
+          "rotation": [
+            "query.target_x_rotation * 0.6",
+            0.0,
+            "math.sin(query.life_time * 130.0) * 4.0 - variable.fynn_dreh * 2.0"
+          ]
+        }
+      }
+    },
+    "animation.fynn.mantarochen.an_land": {
+      "loop": true,
+      "bones": {
+        "rumpf": {
+          "rotation": [
+            0.0,
+            "math.sin(query.life_time * 700.0) * 15.0",
+            "90.0 + math.sin(query.life_time * 900.0) * 8.0"
+          ],
+          "position": [
+            0.0,
+            -3.0,
+            0.0
+          ]
+        }
+      }
+    }
+  }
+}

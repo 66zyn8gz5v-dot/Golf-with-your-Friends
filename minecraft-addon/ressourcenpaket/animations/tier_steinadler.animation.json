@@ -1,0 +1,132 @@
+{
+  "format_version": "1.10.0",
+  "animations": {
+    "animation.fynn.steinadler.fliegen": {
+      "loop": true,
+      "bones": {
+        "rumpf": {
+          "rotation": [
+            "-query.target_x_rotation * 0.5",
+            0.0,
+            "variable.fynn_dreh * 2.5"
+          ]
+        },
+        "kopf": {
+          "rotation": [
+            "math.sin(query.life_time * 13.0) * 8.0",
+            "math.sin(query.life_time * 31.0) * 22.0",
+            0.0
+          ]
+        },
+        "fluegel_links": {
+          "rotation": [
+            0.0,
+            0.0,
+            "-8.0 - math.sin(query.life_time * 60.0) * 3.0 - math.sin(query.life_time * 520.0) * 38.0 * math.clamp(math.sin(query.life_time * 24.0) * 3.0 - 2.0, 0.0, 1.0)"
+          ]
+        },
+        "fluegel_rechts": {
+          "rotation": [
+            0.0,
+            0.0,
+            "8.0 + math.sin(query.life_time * 60.0) * 3.0 + math.sin(query.life_time * 520.0) * 38.0 * math.clamp(math.sin(query.life_time * 24.0) * 3.0 - 2.0, 0.0, 1.0)"
+          ]
+        },
+        "fluegelspitze_links": {
+          "rotation": [
+            0.0,
+            0.0,
+            "-4.0 - math.sin(query.life_time * 520.0 - 60.0) * 26.0 * math.clamp(math.sin(query.life_time * 24.0) * 3.0 - 2.0, 0.0, 1.0)"
+          ]
+        },
+        "fluegelspitze_rechts": {
+          "rotation": [
+            0.0,
+            0.0,
+            "4.0 + math.sin(query.life_time * 520.0 - 60.0) * 26.0 * math.clamp(math.sin(query.life_time * 24.0) * 3.0 - 2.0, 0.0, 1.0)"
+          ]
+        },
+        "schwanz": {
+          "rotation": [
+            "math.sin(query.life_time * 40.0) * 4.0",
+            "-variable.fynn_dreh * 3.0",
+            0.0
+          ]
+        },
+        "fuesse": {
+          "rotation": [
+            70.0,
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.steinadler.stossen": {
+      "loop": true,
+      "bones": {
+        "fluegel_links": {
+          "rotation": [
+            0.0,
+            -40.0,
+            -25.0
+          ]
+        },
+        "fluegel_rechts": {
+          "rotation": [
+            0.0,
+            40.0,
+            25.0
+          ]
+        },
+        "fluegelspitze_links": {
+          "rotation": [
+            0.0,
+            -35.0,
+            0.0
+          ]
+        },
+        "fluegelspitze_rechts": {
+          "rotation": [
+            0.0,
+            35.0,
+            0.0
+          ]
+        },
+        "fuesse": {
+          "rotation": [
+            -60.0,
+            0.0,
+            0.0
+          ]
+        },
+        "kopf": {
+          "rotation": [
+            20.0,
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.steinadler.angriff": {
+      "loop": true,
+      "bones": {
+        "fuesse": {
+          "rotation": [
+            "-math.sin(variable.attack_time * 180.0) * 110.0",
+            0.0,
+            0.0
+          ]
+        },
+        "kopf": {
+          "rotation": [
+            "math.sin(variable.attack_time * 180.0) * 30.0",
+            0.0,
+            0.0
+          ]
+        }
+      }
+    }
+  }
+}

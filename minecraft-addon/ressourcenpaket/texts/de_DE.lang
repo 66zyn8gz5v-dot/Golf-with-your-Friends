@@ -42,11 +42,11 @@ item.fynn:eisenklinge.name=Eisenklinge
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.40
+item.iron_sword.name=Stahlschwert 4.41
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.40
-item.fynn:degen.name=Degen 4.40
+item.fynn:degen=Degen 4.41
+item.fynn:degen.name=Degen 4.41
 
 
 
@@ -335,6 +335,15 @@ tile.fynn:obst.name=Frucht am Zweig
 
 
 
+
+## Rucksack
+item.fynn:rucksack=Rucksack
+item.fynn:rucksack.name=Rucksack
+entity.fynn:rucksack_abgestellt.name=Rucksack
+
+## Weidenroeschen
+tile.fynn:weidenroeschen.name=Weidenröschen
+
 ## Die Tiere
 entity.fynn:braunbaer.name=Braunbär
 item.spawn_egg.entity.fynn:braunbaer.name=Braunbär-Spawn-Ei
@@ -360,11 +369,15 @@ entity.fynn:riesenkalmar.name=Riesenkalmar
 item.spawn_egg.entity.fynn:riesenkalmar.name=Riesenkalmar-Spawn-Ei
 entity.fynn:schwertfisch.name=Schwertfisch
 item.spawn_egg.entity.fynn:schwertfisch.name=Schwertfisch-Spawn-Ei
-
-## Rucksack
-item.fynn:rucksack=Rucksack
-item.fynn:rucksack.name=Rucksack
-entity.fynn:rucksack_abgestellt.name=Rucksack
-
-## Weidenroeschen
-tile.fynn:weidenroeschen.name=Weidenröschen
+entity.fynn:elefant.name=Elefant
+item.spawn_egg.entity.fynn:elefant.name=Elefant-Spawn-Ei
+entity.fynn:nashorn.name=Nashorn
+item.spawn_egg.entity.fynn:nashorn.name=Nashorn-Spawn-Ei
+entity.fynn:gorilla.name=Gorilla
+item.spawn_egg.entity.fynn:gorilla.name=Gorilla-Spawn-Ei
+entity.fynn:walross.name=Walross
+item.spawn_egg.entity.fynn:walross.name=Walross-Spawn-Ei
+entity.fynn:mantarochen.name=Mantarochen
+item.spawn_egg.entity.fynn:mantarochen.name=Mantarochen-Spawn-Ei
+entity.fynn:steinadler.name=Steinadler
+item.spawn_egg.entity.fynn:steinadler.name=Steinadler-Spawn-Ei

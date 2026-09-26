@@ -1,0 +1,67 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:walross",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "braun": "textures/entity/tiere/walross_braun",
+        "jung": "textures/entity/tiere/walross_jung"
+      },
+      "geometry": {
+        "default": "geometry.fynn.walross"
+      },
+      "animations": {
+        "laufen": "animation.fynn.walross.laufen",
+        "stehen": "animation.fynn.walross.stehen",
+        "blick": "animation.common.look_at_target",
+        "drehen": "animation.fynn.walross.drehen",
+        "schwimmen": "animation.fynn.walross.schwimmen",
+        "angriff": "animation.fynn.walross.angriff",
+        "jung": "animation.fynn.walross.jung",
+        "teile": "animation.fynn.walross.teile"
+      },
+      "scripts": {
+        "initialize": [
+          "variable.fynn_gier_alt = query.body_y_rotation;",
+          "variable.fynn_dreh = 0.0;"
+        ],
+        "pre_animation": [
+          "variable.fynn_d = query.body_y_rotation - variable.fynn_gier_alt;",
+          "variable.fynn_d = variable.fynn_d > 180.0 ? variable.fynn_d - 360.0 : (variable.fynn_d < -180.0 ? variable.fynn_d + 360.0 : variable.fynn_d);",
+          "variable.fynn_gier_alt = query.body_y_rotation;",
+          "variable.fynn_dreh = math.lerp(variable.fynn_dreh, math.clamp(variable.fynn_d / math.max(query.delta_time, 0.01) / 20.0, -10.0, 10.0), 0.12);"
+        ],
+        "animate": [
+          {
+            "laufen": "!query.is_in_water ? math.clamp(query.modified_move_speed * 1.4, 0.0, 1.0) : 0.0"
+          },
+          {
+            "schwimmen": "query.is_in_water"
+          },
+          {
+            "stehen": "1.0 - math.clamp(query.modified_move_speed * 2.0, 0.0, 0.8)"
+          },
+          "blick",
+          "drehen",
+          {
+            "angriff": "variable.attack_time > 0.0"
+          },
+          {
+            "jung": "query.is_baby"
+          },
+          "teile"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.fynn.walross"
+      ],
+      "spawn_egg": {
+        "base_color": "#9a6a52",
+        "overlay_color": "#ece2c8"
+      }
+    }
+  }
+}
