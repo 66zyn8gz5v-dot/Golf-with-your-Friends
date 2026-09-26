@@ -11,7 +11,7 @@
             0.0
           ],
           "rotation": [
-            "c.is_first_person ? 0.0 : 40.0",
+            "c.is_first_person ? 0.0 : 62.0",
             0.0,
             "c.is_first_person ? -135.0 : 0.0"
           ],
@@ -20,7 +20,7 @@
         "griff": {
           "position": [
             0.0,
-            "c.is_first_person ? 0.00 : 3.47",
+            "c.is_first_person ? 2.50 : 5.97",
             0.0
           ],
           "rotation": [
@@ -41,7 +41,7 @@
             0.0
           ],
           "rotation": [
-            40.0,
+            62.0,
             0.0,
             0.0
           ],
@@ -50,7 +50,7 @@
         "griff_l": {
           "position": [
             0.0,
-            3.47,
+            5.97,
             0.0
           ],
           "rotation": [
@@ -71,8 +71,8 @@
             153.23
           ],
           "position": [
-            -7.1,
-            -5.93,
+            -7.58,
+            -5.05,
             16.22
           ],
           "scale": "c.is_first_person ? 0.400 : 0.0"

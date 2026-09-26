@@ -7,10 +7,11 @@ einheitlich, und eine Aenderung an der Form trifft alle sechs.
 
 Zwei Bilder:
 
-* KARTE ist der Dolch hochkant fuer das 3D-Modell, 9 breit und 19 hoch.
+* KARTE ist der Dolch hochkant fuer das 3D-Modell, 9 breit und 25 hoch.
   Die Klinge ist drei Pixel breit - Lichtkante, Kern, Schatten -, die
-  Parierstange sieben, der Griff einen. Neben einem Schwert von 63
-  Zeilen ist er gut ein Drittel so lang.
+  Parierstange sieben, der Griff einen. Zuerst waren es 19 Zeilen; Fynn
+  wollte sie "insgesamt ein bisschen laenger". Die Klinge hat dafuer
+  fuenf Zeilen mehr und eine schlankere Spitze, der Griff eine.
 * SYMBOL ist das Inventarbild: zwei gekreuzte Dolche auf 16 mal 16. Fynns
   Regel fuer neue Waffen - hoechstens 20 mal 20 - gilt auch hier. Zwei
   parallele Dolche flossen bei dieser Groesse zu einem Brett zusammen,
@@ -25,6 +26,11 @@ MITTE = 4.5
 
 KARTE = [
     "....L....",
+    "...LM....",
+    "...LMS...",
+    "...LMS...",
+    "...LMS...",
+    "...LMS...",
     "...LMS...",
     "...LMS...",
     "...LMS...",
@@ -41,6 +47,7 @@ KARTE = [
     "....w....",
     "....W....",
     "....w....",
+    "....W....",
     "...PPp...",
     "....p....",
 ]

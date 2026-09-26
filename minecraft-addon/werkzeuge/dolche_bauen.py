@@ -61,12 +61,16 @@ GROESSE_AUSSEN = 0.55
 GROESSE_ICH = 0.40
 # Von aussen zeigt die Klinge nicht waagerecht nach vorn, sondern schraeg
 # nach oben - so sieht man sie auch von vorn.
-KIPPEN_AUSSEN = 40.0
+KIPPEN_AUSSEN = 62.0
 # In der Ich-Ansicht: rechts sitzt die Parierstange knapp ueber der Faust
 # (nachgesehen mit spieler_ansehen - tiefer verschwindet der Dolch hinter
 # der Hand). Links gibt es keine Hand; dort liegt der Dolch tiefer, damit
 # sein Griff unten aus dem Bild laeuft, statt frei in der Luft zu enden.
-ICH_VERSATZ_RECHTS = 0.0
+#
+# Gemessen vom tieferen linken Versatz aus, nicht als feste Zahl: Wird der
+# Dolch laenger, wandert seine Griffmitte, und ein fester Wert saesse dann
+# nicht mehr an der Faust.
+ICH_ANHEBEN_RECHTS = 8.9
 
 
 def griffmitte(karte):
@@ -124,7 +128,9 @@ def symbol(farben):
     return bild
 
 
-def animation(links_ich=None, ich=ICH_VERSATZ_RECHTS):
+def animation(links_ich=None, ich=None):
+    if ich is None:
+        ich = dolch_griffversatz(v.KARTE)[1] + ICH_ANHEBEN_RECHTS
     aussen, _ = dolch_griffversatz(v.KARTE)
     halten = {
         "waffe": {
@@ -321,7 +327,7 @@ def main():
     sprache(RES / "texts" / "de_DE.lang", deutsch)
     sprache(RES / "texts" / "en_US.lang", englisch)
     aussen, ich = dolch_griffversatz(v.KARTE)
-    print(f"Griffversatz: aussen {aussen:+.2f}, Ich-Ansicht rechts {ICH_VERSATZ_RECHTS:+.2f}, links {ich:+.2f}")
+    print(f"Griffversatz: aussen {aussen:+.2f}, Ich-Ansicht rechts {ich + ICH_ANHEBEN_RECHTS:+.2f}, links {ich:+.2f}")
     print("Linker Dolch, Ich-Ansicht: Drehung {}, Ort {}, Groesse {:.3f}".format(
         [round(w, 1) for w in links_ich[0]], [round(w, 1) for w in links_ich[1]], links_ich[2]))
 
