@@ -353,18 +353,6 @@
     "rubin": {
       "textures": "textures/items/rubin"
     },
-    "rubinhelm": {
-      "textures": "textures/items/rubinhelm"
-    },
-    "rubinharnisch": {
-      "textures": "textures/items/rubinharnisch"
-    },
-    "rubinbeinschutz": {
-      "textures": "textures/items/rubinbeinschutz"
-    },
-    "rubinstiefel": {
-      "textures": "textures/items/rubinstiefel"
-    },
     "baerenkapuze": {
       "textures": "textures/items/baerenkapuze"
     },

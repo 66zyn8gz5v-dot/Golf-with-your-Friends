@@ -1,0 +1,31 @@
+{
+  "format_version": "1.10.0",
+  "animations": {
+    "animation.fynn_ruestung.baerenumhang": {
+      "loop": true,
+      "bones": {
+        "umhang": {
+          "rotation": [
+            "(c.owning_entity->v.fynn_umhang) * 0.8 + math.sin(q.life_time * 90.0) * 1.2 + math.sin((c.owning_entity->v.fynn_gang) * 2.0) * 3.0 * (c.owning_entity->v.fynn_tempo)",
+            0.0,
+            "math.sin((c.owning_entity->v.fynn_gang)) * 3.5 * (c.owning_entity->v.fynn_tempo)"
+          ]
+        },
+        "umhang_mitte": {
+          "rotation": [
+            "(c.owning_entity->v.fynn_umhang) * 0.35 + math.sin(q.life_time * 90.0 - 40.0) * 1.5 + math.sin((c.owning_entity->v.fynn_gang) * 2.0 - 60.0) * 5.0 * (c.owning_entity->v.fynn_tempo)",
+            0.0,
+            "math.sin((c.owning_entity->v.fynn_gang) - 50.0) * 4.0 * (c.owning_entity->v.fynn_tempo)"
+          ]
+        },
+        "umhang_unten": {
+          "rotation": [
+            "(c.owning_entity->v.fynn_umhang) * 0.25 + math.sin(q.life_time * 90.0 - 80.0) * 2.0 + math.sin((c.owning_entity->v.fynn_gang) * 2.0 - 120.0) * 7.0 * (c.owning_entity->v.fynn_tempo)",
+            0.0,
+            "math.sin((c.owning_entity->v.fynn_gang) - 100.0) * 5.0 * (c.owning_entity->v.fynn_tempo)"
+          ]
+        }
+      }
+    }
+  }
+}

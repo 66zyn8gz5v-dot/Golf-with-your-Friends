@@ -8,16 +8,16 @@
       "crafting_table"
     ],
     "pattern": [
-      "FFF",
-      "L L",
+      "FIF",
+      "I I",
       "F F"
     ],
     "key": {
       "F": {
         "item": "fynn:baerenfell"
       },
-      "L": {
-        "item": "minecraft:leather"
+      "I": {
+        "item": "minecraft:iron_ingot"
       }
     },
     "unlock": [

@@ -61,27 +61,51 @@ def bluete_modell():
     return m
 
 
+# Fynn: "Aepfel und Birnen brauchen mehr Detail. Schicker, ein bisschen
+# runder, ein bisschen cleaner." Darum ist keine Frucht mehr ein Wuerfel:
+# Jede ist aus Scheiben gestapelt, und jede Scheibe ist ein Achteck aus
+# drei Kaesten (ein Kreuz und ein Quadrat dazwischen) - so wirkt sie rund,
+# bleibt aber in Minecrafts Pixelart.
+#
+# Die Scheiben je Sorte, von unten nach oben: (Breite, Hoehe, Unterkante).
+FORM = {
+    "klein":    [(2, 1, 9), (3, 2, 10), (2, 1, 12)],
+    "apfel":    [(3, 1, 7), (5, 3, 8), (4, 1, 11)],
+    "birne":    [(3, 1, 5), (5, 3, 6), (4, 1, 9), (3, 2, 10), (2, 1, 12)],
+    "pfirsich": [(3, 1, 7), (5, 3, 8), (3, 1, 11)],
+    "pflaume":  [(2, 1, 6), (4, 4, 7), (2, 1, 11)],
+}
+
+
+def scheibe(b, breite, hoehe, unten, stoff):
+    """Eine runde Scheibe: bei vier und mehr Pixeln ein Achteck."""
+    if breite >= 4:
+        for bx, bz in ((breite, breite - 2), (breite - 2, breite), (breite - 1, breite - 1)):
+            b.kasten([-bx / 2, unten, -bz / 2], [bx, hoehe, bz], stoff)
+    else:
+        b.kasten([-breite / 2, unten, -breite / 2], [breite, hoehe, breite], stoff)
+
+
 def frucht_modell(sorte, gross):
     m = Modell(f"obst_{sorte}_{'gross' if gross else 'klein'}", sichtbreite=1, sichthoehe=1)
     b = m.knoch("obst", [0, 16, 0])
-    b.kasten([-0.5, 13, -0.5], [1, 3, 1], "stiel")
-    b.kasten([0.5, 14, -0.5], [3, 0, 2], "blatt")
-    if not gross:
-        b.kasten([-1.5, 10, -1.5], [3, 3, 3], "frucht")
-    elif sorte == "birne":
-        # Die Birne: unten bauchig, oben schmaler Hals.
-        b.kasten([-2, 7, -2], [4, 4, 4], "frucht")
-        b.kasten([-1.5, 11, -1.5], [3, 2, 3], "hals")
-    elif sorte == "pflaume":
-        b.kasten([-1.5, 8, -1.5], [3, 5, 3], "frucht")
-    else:
-        b.kasten([-2, 8, -2], [4, 5, 4], "frucht")
+    scheiben = FORM[sorte] if gross else FORM["klein"]
+    for breite, hoehe, unten in scheiben:
+        scheibe(b, breite, hoehe, unten, "frucht")
+    oben = scheiben[-1][1] + scheiben[-1][2]
+    # Der Stiel, leicht schraeg, und ein Blatt daran.
+    b.kasten([-0.5, oben, -0.5], [1, 16 - oben, 1], "stiel", drehung=[0, 0, 8], drehpunkt=[0, oben, 0])
+    b.kasten([0.5, 13, 0], [3, 2, 0], "blatt", drehung=[0, -35, 25], drehpunkt=[0.5, 14, 0])
     return m
 
 
 def maler(sorte, reife):
     unreif, halb, reif, tupf, bluete = FARBEN[sorte]
     grund = hexfarbe({1: unreif, 2: halb, 3: reif}.get(reife, reif))
+    scheiben = FORM[sorte] if reife >= 2 else FORM["klein"]
+    unten = scheiben[0][2]
+    oben = scheiben[-1][1] + scheiben[-1][2]
+    mitte_y = (unten + oben) / 2
 
     def f(stoff, p, n, texel):
         if stoff == "bluete":
@@ -98,26 +122,39 @@ def maler(sorte, reife):
                 return hexfarbe("#5a8a34")                  # Stielchen
             return None
         if stoff == "stiel":
-            return hexfarbe("#5a3e22")
+            return hexfarbe("#6a4a2a") if n[0] > 0.5 or n[1] > 0.5 else hexfarbe("#4a3220")
         if stoff == "blatt":
-            return hexfarbe("#4e8a30") if (texel[0] + texel[1]) % 3 else hexfarbe("#3c7026")
-        c = grund
-        if n[1] > 0.5:
-            c = mische(c, (255, 255, 255), 0.12)
-        elif n[1] < -0.5:
-            c = mische(c, (0, 0, 0), 0.15)
-        elif n[0] > 0.5 or n[2] < -0.5:
-            c = mische(c, (255, 255, 255), 0.06)
+            # Ein Blatt mit Spitze und Mittelrippe, die Ecken bleiben frei.
+            x, y = texel[0] % 3, texel[1] % 2
+            if x == 2 and y == 1:
+                return None                                 # die Spitze
+            return hexfarbe("#6aa040") if y == 0 else hexfarbe("#4e8a30")
+        # Die Frucht: oben Licht, unten Schatten, in wenigen ruhigen Stufen.
+        hoch = (p[1] - mitte_y) / max(1.0, (oben - unten) / 2)
+        licht = 0.06 * hoch + 0.1 * n[1] + (0.04 if n[2] < -0.5 or n[0] > 0.5 else -0.03 if n[2] > 0.5 else 0.0)
+        c = mische(grund, (255, 255, 255), max(0.0, licht)) if licht > 0 else mische(grund, (0, 0, 0), -licht)
+        c = tuple(int(round(v / 6) * 6) for v in c)
+        if n[1] > 0.5 and abs(p[0]) < 0.6 and abs(p[2]) < 0.6:
+            return mische(grund, (40, 24, 12), 0.5)          # Mulde am Stiel
+        if n[1] < -0.5 and abs(p[0]) < 0.6 and abs(p[2]) < 0.6 and reife >= 2:
+            return hexfarbe("#4a3622")                      # Kelch unten
+        # Ein Glanzpunkt vorn oben - macht die Frucht rund und saftig.
+        if n[2] < -0.5 and reife >= 2 and abs(p[0] + 1.0) < 0.45 and abs(p[1] - (oben - 1.5)) < 0.45 \
+                and sorte != "pfirsich":
+            return mische(c, (255, 255, 255), 0.35)
         if reife == 3:
             s = streu(texel[0], texel[1], 7)
-            if sorte == "apfel" and s < 0.12:
-                c = hexfarbe(tupf)                          # gelbe Sprenkel
-            if sorte == "birne" and s < 0.1:
-                c = hexfarbe(tupf)                          # braune Sprenkel
-            if sorte == "pfirsich" and (n[0] > 0.5 or n[2] < -0.5) and p[1] > 9:
-                c = mische(c, hexfarbe(tupf), 0.55)         # rote Wange
-            if sorte == "pflaume" and s < 0.18:
-                c = hexfarbe(tupf)                          # heller Reif
+            if sorte == "apfel" and n[2] > 0.5:
+                c = mische(c, hexfarbe(tupf), 0.35)         # die Sonnenseite gelblich
+            if sorte == "birne" and s < 0.06:
+                c = mische(c, hexfarbe(tupf), 0.6)          # wenige braune Sprenkel
+            if sorte == "pfirsich":
+                if (n[0] > 0.5 or n[2] < -0.5) and p[1] > mitte_y - 1:
+                    c = mische(c, hexfarbe(tupf), 0.45)     # rote Wange
+                if n[2] < -0.5 and abs(p[0]) < 0.6:
+                    c = mische(c, (60, 20, 10), 0.25)       # die Naht
+            if sorte == "pflaume" and n[1] > -0.5 and s < 0.14:
+                c = mische(c, hexfarbe(tupf), 0.5)          # heller Reif, zart
         return c
     return f
 
@@ -182,54 +219,54 @@ OBSTFORMEN = {
     "birne": [
         "................",
         "........s.......",
-        ".......sgg......",
-        "......##.gg.....",
-        "......##........",
-        ".....####.......",
-        ".....####.......",
-        "....######......",
-        "...##w#####.....",
-        "...#w######.....",
-        "...########.....",
-        "...########.....",
-        "....######......",
-        ".....####.......",
-        "................",
+        "........sgg.....",
+        ".......s.ggg....",
+        "......####......",
+        "......####......",
+        ".....######.....",
+        ".....######.....",
+        "....########....",
+        "...##w#######...",
+        "...#w######f#...",
+        "...##########...",
+        "...#####f####...",
+        "....########....",
+        ".....######.....",
         "................",
     ],
     "pfirsich": [
         "................",
-        "........sgg.....",
-        ".......s..gg....",
-        "....#######.....",
-        "...##w######....",
-        "..##w###f#####..",
-        "..######f#####..",
-        "..#####f######..",
-        "..#####f######..",
-        "..#####f######..",
-        "...####f#####...",
-        "....#########...",
-        ".....#######....",
         "................",
+        "........s.gg....",
+        "........sggg....",
+        ".....###f###....",
+        "....####f####...",
+        "...##w##f##rr#..",
+        "...#w###f#rrr#..",
+        "...#####f#rrr#..",
+        "...#####f#rrr#..",
+        "...######frr##..",
+        "....#####f###...",
+        ".....#######....",
+        "......#####.....",
         "................",
         "................",
     ],
     "pflaume": [
         "................",
+        ".........s......",
         "........s.......",
-        ".......s........",
+        "......####......",
         ".....######.....",
-        "....########....",
-        "...##w#######...",
-        "...#w########...",
-        "...##########...",
-        "...#####f####...",
-        "...#####f####...",
+        "....##w#####....",
+        "....#w######....",
+        "....#b######....",
         "....####f###....",
+        "....####f###....",
+        "....####f###....",
+        "....####f##b....",
         ".....######.....",
-        "................",
-        "................",
+        "......####......",
         "................",
         "................",
     ],
@@ -274,12 +311,14 @@ FORMEN.update(OBSTFORMEN)
 
 GEGENSTAENDE = [
     # (Kennung, Namen, Form, Farben, Naehrwert, Saettigung, wird zu, Stapel, glanz)
-    ("birne", ("Birne", "Pear"), "birne", {"#": "#d8c04a", "s": "#5a3e22", "g": "#4e8a30", "w": "#fff4b0"},
+    ("birne", ("Birne", "Pear"), "birne", {"#": "#d8c04a", "s": "#5a3e22", "g": "#4e8a30", "w": "#fff4b0",
+                                          "f": "#a88a3a"},
      4, 0.3, None, 64),
     ("pfirsich", ("Pfirsich", "Peach"), "pfirsich",
-     {"#": "#f2a262", "f": "#c8503e", "s": "#5a3e22", "g": "#4e8a30", "w": "#ffe0c8"}, 4, 0.35, None, 64),
+     {"#": "#f2a262", "f": "#d0704a", "r": "#e2704e", "s": "#5a3e22", "g": "#4e8a30", "w": "#ffe0c8"},
+     4, 0.35, None, 64),
     ("pflaume", ("Pflaume", "Plum"), "pflaume",
-     {"#": "#58306e", "f": "#3a1c4a", "s": "#5a3e22", "w": "#9a80b4"}, 3, 0.3, None, 64),
+     {"#": "#58306e", "f": "#44245a", "b": "#7a6090", "s": "#5a3e22", "w": "#b8a0d0"}, 3, 0.3, None, 64),
     ("obstsalat", ("Obstsalat", "Fruit Salad"), "eintopf",
      {"#": "#f0d8c0", "f": "#f2a262", "g": "#b8c046", "s": "#8a6a44"}, 12, 0.9, "minecraft:bowl", 1),
     ("pflaumenkuchen", ("Pflaumenkuchen", "Plum Cake"), "kuchenstueck",

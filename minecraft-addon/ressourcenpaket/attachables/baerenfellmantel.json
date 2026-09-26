@@ -8,7 +8,7 @@
         "enchanted": "armor_enchanted"
       },
       "textures": {
-        "default": "textures/models/armor/baerenfellruestung",
+        "default": "textures/models/armor/baerenruestung",
         "enchanted": "textures/misc/enchanted_item_glint"
       },
       "geometry": {
@@ -18,7 +18,7 @@
         "controller.render.armor"
       ],
       "animations": {
-        "umhang": "animation.fynn_ruestung.umhang"
+        "umhang": "animation.fynn_ruestung.baerenumhang"
       },
       "scripts": {
         "animate": [

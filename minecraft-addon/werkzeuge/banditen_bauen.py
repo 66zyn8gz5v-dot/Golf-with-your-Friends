@@ -256,7 +256,8 @@ BEWEGUNG = {
         "leftLeg": {"rotation": [f"-math.cos({LAUF}) * 40.0", 0.0, 0.0]},
         "rightArm": {"rotation": [f"-math.cos({LAUF}) * 32.0", 0.0, 0.0]},
         "leftArm": {"rotation": [f"math.cos({LAUF}) * 32.0", 0.0, 0.0]},
-        "body": {"position": [0.0, f"math.abs(math.cos({LAUF})) * 0.6 - 0.3", 0.0],
+        # Weiches Wippen: oben, wenn die Beine senkrecht stehen.
+        "body": {"position": [0.0, f"-math.cos({LAUF} * 2.0) * 0.3", 0.0],
                  "rotation": [3.0, f"math.cos({LAUF}) * 5.0", 0.0]},
     }},
     "stehen": {"loop": True, "bones": {
@@ -369,7 +370,7 @@ def aussehen(b):
     anim = {k: f"animation.fynn.{b['id']}.{k}" for k in BEWEGUNG
             if k != "umhang" or b["id"] == "bandenchef"}
     anim["blick"] = "animation.common.look_at_target"
-    liste = [{"laufen": "query.modified_move_speed"}, "stehen", "blick", "halten",
+    liste = [{"laufen": "math.clamp(query.modified_move_speed * 1.4, 0.0, 1.0)"}, "stehen", "blick", "halten",
              {"hieb": "variable.attack_time > 0.0"}]
     if b["art"] == "fern":
         liste.append({"bogen": "query.has_target"})

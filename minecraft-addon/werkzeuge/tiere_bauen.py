@@ -572,8 +572,10 @@ def bewegungen(t, modell):
         winkel = 22.0 if art == "amphib" else 36.0
         T = f"query.anim_time * {schritt}"
         extra = {
-            "body": {"position": [0.0, f"math.abs(math.cos({T})) * 0.8 - 0.4", 0.0],
-                     "rotation": [f"math.sin({T} * 2.0) * 1.5", 0.0, f"math.cos({T}) * 1.5"]},
+            # Am hoechsten, wenn die Beine senkrecht stehen - als weiche
+            # Welle, nicht mit dem Knick von math.abs, der ruckelt.
+            "body": {"position": [0.0, f"-math.cos({T} * 2.0) * 0.4", 0.0],
+                     "rotation": [f"math.sin({T} * 2.0) * 1.2", 0.0, f"math.cos({T}) * 1.5"]},
         }
         if kopf:
             extra[kopf] = {"rotation": [f"math.sin({T} * 2.0 + 40.0) * 4.0", f"math.cos({T}) * 3.0", 0.0]}
@@ -592,15 +594,18 @@ def bewegungen(t, modell):
                 "leg2": {"rotation": [f"math.cos({T} + 180.0) * {g_winkel}", 0.0, 0.0]},
                 "leg3": {"rotation": [f"math.cos({T} + 160.0) * {g_winkel}", 0.0, 0.0]},
                 "body": {"rotation": [f"math.sin({T}) * 7.0", 0.0, 0.0],
-                         "position": [0.0, f"math.abs(math.sin({T})) * 1.5", 0.0]},
+                         "position": [0.0, f"(1.0 - math.cos({T} * 2.0)) * 0.75", 0.0]},
             }
             if kopf:
                 galopp[kopf] = {"rotation": [f"-math.sin({T}) * 6.0", 0.0, 0.0]}
             for i, k in enumerate(schwanzkette):
                 galopp[k] = {"rotation": [f"-20.0 + math.sin({T} * 2.0) * 8.0", 0.0, 0.0]}
             a["galopp"] = {"anim_time_update": "query.modified_distance_moved", "loop": True, "bones": galopp}
+        # Stehen: atmen und ab und zu das Gewicht verlagern - langsam, damit
+        # nichts zittert.
         a["stehen"] = {"loop": True, "bones": {
-            "body": {"scale": [1.0, "1.0 + math.sin(query.life_time * 60.0) * 0.012", 1.0]}}}
+            "body": {"scale": [1.0, "1.0 + math.sin(query.life_time * 60.0) * 0.012", 1.0],
+                     "rotation": [0.0, 0.0, "math.sin(query.life_time * 21.0) * 1.2"]}}}
         if kopf:
             # Umschauen: langsam und nicht ganz regelmaessig (zwei Wellen).
             a["stehen"]["bones"][kopf] = {"rotation": [
@@ -614,6 +619,15 @@ def bewegungen(t, modell):
                 a["stehen"]["bones"][k] = {"rotation": [0.0, f"math.sin(query.life_time * 40.0 - {40 * i}) * {3 + 3 * i}",
                                                         0.0]}
         a["blick"] = "animation.common.look_at_target"
+        # In die Kurve legen: Der Kopf geht voraus, der Koerper neigt sich
+        # nach innen, der Schwanz schwingt nach aussen (v.fynn_dreh, siehe
+        # DREHUNG).
+        drehen = {"body": {"rotation": [0.0, 0.0, "-variable.fynn_dreh * 0.8"]}}
+        if kopf:
+            drehen[kopf] = {"rotation": [0.0, "variable.fynn_dreh * 1.6", 0.0]}
+        for i, k in enumerate(schwanzkette + [k for k in ("schwanz1", "schwanz2", "schwanz3") if k in da]):
+            drehen[k] = {"rotation": [0.0, f"-variable.fynn_dreh * {1.5 + i}", 0.0]}
+        a["drehen"] = {"loop": True, "bones": drehen}
         if art == "amphib":
             # Im Wasser: Beine angelegt, der Schwanz treibt.
             a["schwimmen"] = {"loop": True, "bones": {
@@ -661,9 +675,10 @@ def bewegungen(t, modell):
         # Den ganzen Koerper in Schwimmrichtung neigen, wie der Delfin, und
         # dabei leicht rollen.
         rumpf = "mantel" if "mantel" in da else "rumpf"
+        # In der Kurve rollt er nach innen, wie ein Flugzeug.
         knochen.setdefault(rumpf, {})["rotation"] = [
             "query.target_x_rotation * 0.6", 0.0,
-            f"math.sin(query.life_time * {tempo * 0.5}) * {2.0 if art == 'wal' else 4.0}"]
+            f"math.sin(query.life_time * {tempo * 0.5}) * {2.0 if art == 'wal' else 4.0} - variable.fynn_dreh * 2.0"]
         a["schwimmen"] = {"loop": True, "bones": knochen}
         if art == "fisch" and name != "riesenkalmar":
             # An Land liegt der Fisch auf der Seite und zappelt.
@@ -734,6 +749,20 @@ def bewegungen(t, modell):
 
 
 GALOPP = "math.clamp((query.modified_move_speed - 0.6) * 3.0, 0.0, 1.0)"
+# Wie stark die Gehbewegung wirkt: mit dem Tempo, aber nie ueber 1 - sonst
+# schlagen die Beine bei schnellen Tieren weiter aus, als sie duerfen.
+GEHEN = "math.clamp(query.modified_move_speed * 1.4, 0.0, 1.0)"
+# Wie schnell sich das Tier gerade dreht, weich nachgezogen, in etwa Grad
+# je zwanzigstel Sekunde; Spruenge ueber die 180-Grad-Grenze abgefangen.
+DREHUNG_START = ["variable.fynn_gier_alt = query.body_y_rotation;", "variable.fynn_dreh = 0.0;"]
+DREHUNG = [
+    "variable.fynn_d = query.body_y_rotation - variable.fynn_gier_alt;",
+    "variable.fynn_d = variable.fynn_d > 180.0 ? variable.fynn_d - 360.0 : "
+    "(variable.fynn_d < -180.0 ? variable.fynn_d + 360.0 : variable.fynn_d);",
+    "variable.fynn_gier_alt = query.body_y_rotation;",
+    "variable.fynn_dreh = math.lerp(variable.fynn_dreh, "
+    "math.clamp(variable.fynn_d / math.max(query.delta_time, 0.01) / 20.0, -10.0, 10.0), 0.12);",
+]
 
 
 def animate_liste(t, anims):
@@ -741,15 +770,16 @@ def animate_liste(t, anims):
     wasser = t["art"] in ("fisch", "wal")
     if "laufen" in anims:
         if t["art"] == "amphib":
-            liste.append({"laufen": "!query.is_in_water ? query.modified_move_speed : 0.0"})
+            liste.append({"laufen": f"!query.is_in_water ? {GEHEN} : 0.0"})
             liste.append({"schwimmen": "query.is_in_water"})
         elif "galopp" in anims:
-            liste.append({"laufen": "query.modified_move_speed * (1.0 - variable.galopp)"})
+            liste.append({"laufen": f"{GEHEN} * (1.0 - variable.galopp)"})
             liste.append({"galopp": "variable.galopp"})
         else:
-            liste.append({"laufen": "query.modified_move_speed"})
+            liste.append({"laufen": GEHEN})
         liste.append({"stehen": "1.0 - math.clamp(query.modified_move_speed * 2.0, 0.0, 0.8)"})
         liste.append("blick")
+        liste.append("drehen")
     if wasser:
         liste.append({"schwimmen": "query.is_in_water" if "an_land" in anims else "1.0"})
         if "an_land" in anims:
@@ -772,8 +802,9 @@ def aussehen(t, anims, texturen):
         "textures": {k: f"textures/entity/tiere/{name}_{k}" for k in texturen},
         "geometry": {"default": f"geometry.fynn.{name}"},
         "animations": kurz,
-        "scripts": {"animate": animate_liste(t, anims)} if "galopp" not in anims else {
-            "pre_animation": [f"variable.galopp = {GALOPP};"], "animate": animate_liste(t, anims)},
+        "scripts": {"initialize": DREHUNG_START,
+                    "pre_animation": DREHUNG + ([f"variable.galopp = {GALOPP};"] if "galopp" in anims else []),
+                    "animate": animate_liste(t, anims)},
         "render_controllers": [f"controller.render.fynn.{name}"],
         "spawn_egg": {"base_color": t["ei"][0], "overlay_color": t["ei"][1]},
     }

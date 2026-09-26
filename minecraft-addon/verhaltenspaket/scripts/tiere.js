@@ -24,8 +24,6 @@ const JAEGERKETTE = "fynn:jaegerkette";
 export const SAETZE = [
     { teile: ["fynn:baerenkapuze", "fynn:baerenfellmantel", "fynn:baerenfellhose", "fynn:baerenfellstiefel"],
       wirkung: "strength", stufe: 0 },
-    { teile: ["fynn:rubinhelm", "fynn:rubinharnisch", "fynn:rubinbeinschutz", "fynn:rubinstiefel"],
-      wirkung: "fire_resistance", stufe: 0 },
 ];
 
 export function ganzerSatz(spieler) {

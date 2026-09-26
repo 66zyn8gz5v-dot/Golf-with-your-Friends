@@ -9,14 +9,14 @@
     ],
     "pattern": [
       "F F",
-      "L L"
+      "I I"
     ],
     "key": {
       "F": {
         "item": "fynn:baerenfell"
       },
-      "L": {
-        "item": "minecraft:leather"
+      "I": {
+        "item": "minecraft:iron_ingot"
       }
     },
     "unlock": [

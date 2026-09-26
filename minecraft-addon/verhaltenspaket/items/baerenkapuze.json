@@ -20,7 +20,7 @@
         "protection": 2
       },
       "minecraft:durability": {
-        "max_durability": 200
+        "max_durability": 150
       },
       "minecraft:enchantable": {
         "slot": "armor_head",
@@ -30,9 +30,9 @@
         "repair_items": [
           {
             "items": [
-              "fynn:baerenfell"
+              "minecraft:iron_ingot"
             ],
-            "repair_amount": 50
+            "repair_amount": 37
           }
         ]
       },

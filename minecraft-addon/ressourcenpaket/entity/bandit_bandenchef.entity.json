@@ -24,7 +24,7 @@
       "scripts": {
         "animate": [
           {
-            "laufen": "query.modified_move_speed"
+            "laufen": "math.clamp(query.modified_move_speed * 1.4, 0.0, 1.0)"
           },
           "stehen",
           "blick",

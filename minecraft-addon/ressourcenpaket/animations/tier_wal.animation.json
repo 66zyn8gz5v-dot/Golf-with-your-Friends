@@ -43,7 +43,7 @@
           "rotation": [
             "query.target_x_rotation * 0.6",
             0.0,
-            "math.sin(query.life_time * 45.0) * 2.0"
+            "math.sin(query.life_time * 45.0) * 2.0 - variable.fynn_dreh * 2.0"
           ]
         }
       }
