@@ -44,11 +44,11 @@ item.fynn:eisenklinge.name=Iron Blade
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.48
+item.iron_sword.name=Stahlschwert 4.49
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.48
-item.fynn:degen.name=Degen 4.48
+item.fynn:degen=Degen 4.49
+item.fynn:degen.name=Degen 4.49
 
 
 
@@ -206,43 +206,6 @@ item.fynn:waldlaeuferstiefel.name=Ranger Boots
 
 
 
-## Die Tiere
-entity.fynn:braunbaer.name=Brown Bear
-item.spawn_egg.entity.fynn:braunbaer.name=Brown Bear Spawn Egg
-entity.fynn:elch.name=Moose
-item.spawn_egg.entity.fynn:elch.name=Moose Spawn Egg
-entity.fynn:wildschwein.name=Wild Boar
-item.spawn_egg.entity.fynn:wildschwein.name=Wild Boar Spawn Egg
-entity.fynn:bison.name=Bison
-item.spawn_egg.entity.fynn:bison.name=Bison Spawn Egg
-entity.fynn:loewe.name=Lion
-item.spawn_egg.entity.fynn:loewe.name=Lion Spawn Egg
-entity.fynn:tiger.name=Tiger
-item.spawn_egg.entity.fynn:tiger.name=Tiger Spawn Egg
-entity.fynn:krokodil.name=Crocodile
-item.spawn_egg.entity.fynn:krokodil.name=Crocodile Spawn Egg
-entity.fynn:schneeleopard.name=Snow Leopard
-item.spawn_egg.entity.fynn:schneeleopard.name=Snow Leopard Spawn Egg
-entity.fynn:wal.name=Humpback Whale
-item.spawn_egg.entity.fynn:wal.name=Humpback Whale Spawn Egg
-entity.fynn:hai.name=Shark
-item.spawn_egg.entity.fynn:hai.name=Shark Spawn Egg
-entity.fynn:riesenkalmar.name=Giant Squid
-item.spawn_egg.entity.fynn:riesenkalmar.name=Giant Squid Spawn Egg
-entity.fynn:schwertfisch.name=Swordfish
-item.spawn_egg.entity.fynn:schwertfisch.name=Swordfish Spawn Egg
-entity.fynn:elefant.name=Elephant
-item.spawn_egg.entity.fynn:elefant.name=Elephant Spawn Egg
-entity.fynn:nashorn.name=Rhino
-item.spawn_egg.entity.fynn:nashorn.name=Rhino Spawn Egg
-entity.fynn:gorilla.name=Gorilla
-item.spawn_egg.entity.fynn:gorilla.name=Gorilla Spawn Egg
-entity.fynn:walross.name=Walrus
-item.spawn_egg.entity.fynn:walross.name=Walrus Spawn Egg
-entity.fynn:mantarochen.name=Manta Ray
-item.spawn_egg.entity.fynn:mantarochen.name=Manta Ray Spawn Egg
-entity.fynn:steinadler.name=Golden Eagle
-item.spawn_egg.entity.fynn:steinadler.name=Golden Eagle Spawn Egg
 
 ## Rucksack
 item.fynn:rucksack=Backpack
@@ -411,3 +374,41 @@ item.fynn:haizahnsaebel.name=Shark Tooth Sabre
 tile.fynn:rubinerz.name=Ruby Ore
 tile.fynn:tiefenrubinerz.name=Deepslate Ruby Ore
 tile.fynn:rubinblock.name=Block of Ruby
+
+## Die Tiere
+entity.fynn:braunbaer.name=Brown Bear
+item.spawn_egg.entity.fynn:braunbaer.name=Brown Bear Spawn Egg
+entity.fynn:elch.name=Moose
+item.spawn_egg.entity.fynn:elch.name=Moose Spawn Egg
+entity.fynn:wildschwein.name=Wild Boar
+item.spawn_egg.entity.fynn:wildschwein.name=Wild Boar Spawn Egg
+entity.fynn:bison.name=Bison
+item.spawn_egg.entity.fynn:bison.name=Bison Spawn Egg
+entity.fynn:loewe.name=Lion
+item.spawn_egg.entity.fynn:loewe.name=Lion Spawn Egg
+entity.fynn:tiger.name=Tiger
+item.spawn_egg.entity.fynn:tiger.name=Tiger Spawn Egg
+entity.fynn:krokodil.name=Crocodile
+item.spawn_egg.entity.fynn:krokodil.name=Crocodile Spawn Egg
+entity.fynn:schneeleopard.name=Snow Leopard
+item.spawn_egg.entity.fynn:schneeleopard.name=Snow Leopard Spawn Egg
+entity.fynn:wal.name=Humpback Whale
+item.spawn_egg.entity.fynn:wal.name=Humpback Whale Spawn Egg
+entity.fynn:hai.name=Shark
+item.spawn_egg.entity.fynn:hai.name=Shark Spawn Egg
+entity.fynn:riesenkalmar.name=Giant Squid
+item.spawn_egg.entity.fynn:riesenkalmar.name=Giant Squid Spawn Egg
+entity.fynn:schwertfisch.name=Swordfish
+item.spawn_egg.entity.fynn:schwertfisch.name=Swordfish Spawn Egg
+entity.fynn:elefant.name=Elephant
+item.spawn_egg.entity.fynn:elefant.name=Elephant Spawn Egg
+entity.fynn:nashorn.name=Rhino
+item.spawn_egg.entity.fynn:nashorn.name=Rhino Spawn Egg
+entity.fynn:gorilla.name=Gorilla
+item.spawn_egg.entity.fynn:gorilla.name=Gorilla Spawn Egg
+entity.fynn:walross.name=Walrus
+item.spawn_egg.entity.fynn:walross.name=Walrus Spawn Egg
+entity.fynn:mantarochen.name=Manta Ray
+item.spawn_egg.entity.fynn:mantarochen.name=Manta Ray Spawn Egg
+entity.fynn:steinadler.name=Golden Eagle
+item.spawn_egg.entity.fynn:steinadler.name=Golden Eagle Spawn Egg

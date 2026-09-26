@@ -180,6 +180,10 @@ class Pose:
         laenge = animation.get("animation_length")
         if animation.get("loop") is True and laenge:
             zeit = math.fmod(zeit, laenge)
+        # q.anim_time in den Formeln ist die Zeit DIESER Animation - bei
+        # den Laufbewegungen die gelaufene Strecke. Vorher stand hier noch
+        # die Lebenszeit, und jedes Bild eines Schritts sah gleich aus.
+        u.werte["q.anim_time"] = zeit
         for name, kanaele in animation.get("bones", {}).items():
             ziel = self.von(name)
             if kanaele.get("relative_to", {}).get("rotation") == "entity":

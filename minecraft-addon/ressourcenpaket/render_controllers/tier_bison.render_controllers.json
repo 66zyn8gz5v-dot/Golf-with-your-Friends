@@ -6,7 +6,9 @@
         "textures": {
           "Array.haut": [
             "Texture.prarie",
-            "Texture.winter"
+            "Texture.winter",
+            "Texture.wald",
+            "Texture.weiss"
           ]
         }
       },

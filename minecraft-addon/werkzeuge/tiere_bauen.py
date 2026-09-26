@@ -122,9 +122,11 @@ TIERE = [
     },
     {
         "id": "bison", "grast": True, "scharrt": True, "name": ("Bison", "Bison"), "gestalt": "bison",
-        "varianten": [("prarie", 100), ("winter", 0)], "baby_textur": "kalb",
-        "art": "land", "verhalten": "neutral", "herdenwut": True, "leben": 45, "schaden": 6, "tempo": 0.22,
-        "kollision": (1.6, 1.9), "baby": True, "herde": (3, 6), "stoss": 2.0,
+        # Waldbisons sind dunkler; ganz selten ein weisser Bison - bei den
+        # Praerievoelkern ein heiliges Tier.
+        "varianten": [("prarie", 72), ("winter", 0), ("wald", 26), ("weiss", 2)], "baby_textur": "kalb",
+        "art": "land", "verhalten": "neutral", "herdenwut": True, "leben": 50, "schaden": 7, "tempo": 0.22,
+        "kollision": (1.8, 2.2), "baby": True, "herde": (3, 6), "stoss": 2.0,
         "futter": ["minecraft:wheat"],
         "biome": [["plains"], ["ice_plains", "!mutated"], ["meadow"]], "gewicht": 9,
         "boden": ["minecraft:grass_block", "minecraft:snow_layer"],
@@ -877,6 +879,89 @@ def zusatzbewegungen(t, da, kopf, schwanzkette):
     return z
 
 
+# ------------------------------------------------------------ Gangarten
+#
+# Fynn: "Die gehen noch ein bisschen wild ... mit diesen Kloetzen als
+# Beine. Vielleicht brauchst du noch ein Gelenk, ein bisschen Knie-maessig."
+#
+# Wie Vierbeiner wirklich laufen (siehe Animationsleitfaeden, z. B.
+# Animation Mentor, AnimSchool): Im Schritt setzen sie die Fuesse einzeln,
+# immer in derselben Reihenfolge - hinten links, vorn links, hinten rechts,
+# vorn rechts, je eine Viertelrunde versetzt ("lateraler Viertakt"); drei
+# Fuesse stehen fast immer. Beim Vorschwingen knickt das Knie ein und der
+# Huf hebt sich nach hinten; steht der Fuss, ist das Bein gerade. Schneller
+# wird daraus der Trab: die diagonalen Beine gemeinsam. Nur Katzen
+# galoppieren, mit gebogenem Ruecken.
+#
+# Drehrichtung: Positiv um x schwingt ein haengendes Bein nach hinten.
+# Die Oberschenkel schwingen mit cos(T + Phase); nach vorn (und damit in
+# der Luft) sind sie, solange sin(T + Phase) positiv ist - genau dann
+# knickt das Knie ein.
+
+VIERTAKT = {"leg2": 0.0, "leg0": -90.0, "leg3": -180.0, "leg1": -270.0}
+DIAGONAL = {"leg0": 0.0, "leg3": 0.0, "leg1": -180.0, "leg2": -180.0}
+
+
+def beinpaar(T, phasen, winkel, knie, knie_da):
+    knochen = {}
+    for bein, phase in phasen.items():
+        knochen[bein] = {"rotation": [f"math.cos({T} + {phase}) * {winkel}", 0.0, 0.0]}
+        k = "knie" + bein[-1]
+        if k in knie_da:
+            # Nur in der Luft einknicken, und dort weich an- und abschwellend.
+            knochen[k] = {"rotation": [f"math.max(0.0, math.sin({T} + {phase}) - 0.15) * {knie / 0.85:.1f}", 0.0, 0.0]}
+    return knochen
+
+
+def schrittgang(T, art, da, kopf, schwanzkette):
+    """Der ruhige Schritt im Viertakt."""
+    knie_da = {k for k in da if k.startswith("knie")}
+    knochen = beinpaar(T, VIERTAKT, 14.0 if art == "amphib" else 22.0, 38.0, knie_da)
+    # Der Koerper hebt und senkt sich zweimal je Runde, wiegt sich sacht
+    # zur Seite des Beins, das gerade vorschwingt; der Kopf nickt mit den
+    # Vorderbeinen.
+    knochen["body"] = {"position": [0.0, f"-math.cos({T} * 2.0) * 0.3", 0.0],
+                       "rotation": [f"math.sin({T} * 2.0 - 90.0) * 0.8", 0.0, f"math.sin({T} - 45.0) * 1.4"]}
+    if kopf:
+        knochen[kopf] = {"rotation": [f"math.sin({T} * 2.0 - 30.0) * 2.5", f"math.sin({T} - 90.0) * 2.0", 0.0]}
+    for i, k in enumerate(schwanzkette):
+        knochen[k] = {"rotation": [f"math.cos({T} * 2.0) * 3.0", f"math.sin({T} - {40 + 30 * i}) * {8 + 5 * i}", 0.0]}
+    if "schwanz1" in da:
+        for i, k in enumerate(("schwanz1", "schwanz2", "schwanz3")):
+            knochen[k] = {"rotation": [0.0, f"math.sin({T} - {40 * i}) * {8 + 5 * i}", 0.0]}
+    return {"anim_time_update": "query.modified_distance_moved", "loop": True, "bones": knochen}
+
+
+def trab(T, da, kopf, schwanzkette):
+    """Schneller: der Trab, diagonale Beine gemeinsam, weite Schritte."""
+    knie_da = {k for k in da if k.startswith("knie")}
+    T2 = f"({T} * 0.8)"
+    knochen = beinpaar(T2, DIAGONAL, 30.0, 58.0, knie_da)
+    knochen["body"] = {"position": [0.0, f"-math.cos({T2} * 2.0) * 0.6", 0.0],
+                       "rotation": [f"math.sin({T2} * 2.0) * 1.5", 0.0, 0.0]}
+    if kopf:
+        knochen[kopf] = {"rotation": [f"math.sin({T2} * 2.0 + 60.0) * 3.0", 0.0, 0.0]}
+    for i, k in enumerate(schwanzkette):
+        knochen[k] = {"rotation": [f"-12.0 + math.sin({T2} * 2.0) * 6.0", f"math.sin({T2}) * 8.0", 0.0]}
+    return {"anim_time_update": "query.modified_distance_moved", "loop": True, "bones": knochen}
+
+
+def galopp(T, da, kopf, schwanzkette):
+    """Katzen: Sprunggalopp - vorn und hinten je fast gemeinsam, der Ruecken
+    streckt und beugt sich, die Knie falten weit ein. Weicher als frueher."""
+    knie_da = {k for k in da if k.startswith("knie")}
+    T2 = f"({T} * 0.7)"
+    phasen = {"leg0": 0.0, "leg1": -25.0, "leg2": -180.0, "leg3": -205.0}
+    knochen = beinpaar(T2, phasen, 34.0, 55.0, knie_da)
+    knochen["body"] = {"position": [0.0, f"(1.0 - math.cos({T2} * 2.0)) * 0.5", 0.0],
+                       "rotation": [f"math.sin({T2}) * 4.0", 0.0, 0.0]}
+    if kopf:
+        knochen[kopf] = {"rotation": [f"-math.sin({T2}) * 4.0", 0.0, 0.0]}
+    for i, k in enumerate(schwanzkette):
+        knochen[k] = {"rotation": [f"-15.0 + math.sin({T2} * 2.0) * 6.0", 0.0, 0.0]}
+    return {"anim_time_update": "query.modified_distance_moved", "loop": True, "bones": knochen}
+
+
 def elefant_dazu(a, T):
     """Der Ruessel pendelt im Gehen und tastet im Stehen herum, die Spitze
     rollt sich ein; die grossen Ohren faecheln - so kuehlen sich Elefanten."""
@@ -973,40 +1058,14 @@ def bewegungen(t, modell):
     kopf = "head" if "head" in da else ("kopf" if "kopf" in da else None)
     schwanzkette = [k for k in ("tail", "tail2") if k in da]
     if art in ("land", "amphib"):
-        beinlaenge = next(k for k in modell.knochen if k.name == "leg0").kaesten[0].groesse[1]
+        # Beinlaenge = Hoehe der Huefte (die Beine reichen bis zum Boden).
+        beinlaenge = next(k for k in modell.knochen if k.name == "leg0").drehpunkt[1]
         schritt = round(38.17 * (12.0 / max(6.0, beinlaenge)), 2)
-        winkel = 22.0 if art == "amphib" else 36.0
         T = f"query.anim_time * {schritt}"
-        extra = {
-            # Am hoechsten, wenn die Beine senkrecht stehen - als weiche
-            # Welle, nicht mit dem Knick von math.abs, der ruckelt.
-            "body": {"position": [0.0, f"-math.cos({T} * 2.0) * 0.4", 0.0],
-                     "rotation": [f"math.sin({T} * 2.0) * 1.2", 0.0, f"math.cos({T}) * 1.5"]},
-        }
-        if kopf:
-            extra[kopf] = {"rotation": [f"math.sin({T} * 2.0 + 40.0) * 4.0", f"math.cos({T}) * 3.0", 0.0]}
-        for i, k in enumerate(schwanzkette):
-            extra[k] = {"rotation": [f"math.cos({T} * 2.0) * 5.0", f"math.sin({T} - {30 * i}) * {12 + 6 * i}", 0.0]}
-        if "schwanz1" in da:
-            for i, k in enumerate(("schwanz1", "schwanz2", "schwanz3")):
-                extra[k] = {"rotation": [0.0, f"math.sin({T} - {40 * i}) * {8 + 5 * i}", 0.0]}
-        a["laufen"] = tm.lauf_animation(g.VIERBEINER, schritt=schritt, winkel=winkel, extra=extra)
+        katze = t.get("gestalt") in ("loewe", "tiger", "schneeleopard")
+        a["laufen"] = schrittgang(T, art, da, kopf, schwanzkette)
         if art == "land":
-            # Galopp: vorn beide zugleich, hinten beide zugleich, versetzt.
-            g_winkel = winkel * 1.35
-            galopp = {
-                "leg0": {"rotation": [f"math.cos({T}) * {g_winkel}", 0.0, 0.0]},
-                "leg1": {"rotation": [f"math.cos({T} - 20.0) * {g_winkel}", 0.0, 0.0]},
-                "leg2": {"rotation": [f"math.cos({T} + 180.0) * {g_winkel}", 0.0, 0.0]},
-                "leg3": {"rotation": [f"math.cos({T} + 160.0) * {g_winkel}", 0.0, 0.0]},
-                "body": {"rotation": [f"math.sin({T}) * 7.0", 0.0, 0.0],
-                         "position": [0.0, f"(1.0 - math.cos({T} * 2.0)) * 0.75", 0.0]},
-            }
-            if kopf:
-                galopp[kopf] = {"rotation": [f"-math.sin({T}) * 6.0", 0.0, 0.0]}
-            for i, k in enumerate(schwanzkette):
-                galopp[k] = {"rotation": [f"-20.0 + math.sin({T} * 2.0) * 8.0", 0.0, 0.0]}
-            a["galopp"] = {"anim_time_update": "query.modified_distance_moved", "loop": True, "bones": galopp}
+            a["galopp"] = galopp(T, da, kopf, schwanzkette) if katze else trab(T, da, kopf, schwanzkette)
         # Stehen: atmen und ab und zu das Gewicht verlagern - langsam, damit
         # nichts zittert.
         a["stehen"] = {"loop": True, "bones": {
@@ -1162,7 +1221,7 @@ def bewegungen(t, modell):
     if t.get("baby") and kopf:
         jung = {kopf: {"scale": 1.6, "position": [0.0, 1.0, 1.0]}}
         if "leg0" in da:
-            bein = next(k for k in modell.knochen if k.name == "leg0").kaesten[0].groesse[1]
+            bein = next(k for k in modell.knochen if k.name == "leg0").drehpunkt[1]
             faktor = t.get("baby_beine", 0.8 if art == "amphib" else 0.62)
             for b_ in ("leg0", "leg1", "leg2", "leg3"):
                 jung[b_] = {"scale": [1.2, faktor, 1.2]}
@@ -1188,7 +1247,10 @@ def bewegungen(t, modell):
     return a
 
 
-GALOPP = "math.clamp((query.modified_move_speed - 0.6) * 3.0, 0.0, 1.0)"
+# Trab bzw. Galopp erst, wenn es schneller geht als beim Umherstreifen -
+# beim Fliehen und Angreifen. Frueher schon ab 0.6: Da trabten Bisons beim
+# gemuetlichen Grasen wild durch die Gegend.
+GALOPP = "math.clamp((query.modified_move_speed - 0.95) * 4.0, 0.0, 1.0)"
 # Wie stark die Gehbewegung wirkt: mit dem Tempo, aber nie ueber 1 - sonst
 # schlagen die Beine bei schnellen Tieren weiter aus, als sie duerfen.
 GEHEN = "math.clamp(query.modified_move_speed * 1.4, 0.0, 1.0)"

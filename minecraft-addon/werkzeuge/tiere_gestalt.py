@@ -86,22 +86,32 @@ def paar(knochen, ursprung, groesse, stoff, **weiter):
     knochen.kasten(gespiegelt, groesse, stoff, **weiter)
 
 
-def beine(m, eltern, x, z_vorn, z_hinten, groesse, huefte, stoff="bein", pfote=None, krallen=False):
+def beine(m, eltern, x, z_vorn, z_hinten, groesse, huefte, stoff="bein", pfote=None, krallen=False, knie=0.45):
     """Vier Beine: leg0 vorn links, leg1 vorn rechts, leg2 hinten links,
     leg3 hinten rechts. pfote: (Breite, Hoehe, Tiefe) eines breiteren
-    Fusses unten; krallen: drei kleine Krallen vorn an jedem Fuss."""
+    Fusses unten; krallen: drei kleine Krallen vorn an jedem Fuss.
+
+    Jedes Bein hat ein Knie (knie0 bis knie3) auf knie mal Beinhoehe -
+    Fynn: "Vielleicht brauchst du noch ein Gelenk, ein bisschen Knie-
+    maessig." Der Unterschenkel reicht einen Pixel in den Oberschenkel
+    hinein und ist einen Hauch duenner: So klafft beim Einknicken keine
+    Luecke, und gerade flimmert nichts."""
     w, h, d = groesse
-    for name, bx, bz in (("leg0", x, z_vorn), ("leg1", -x, z_vorn), ("leg2", x, z_hinten), ("leg3", -x, z_hinten)):
+    kh = max(2, round(h * knie))
+    for i, (name, bx, bz) in enumerate((("leg0", x, z_vorn), ("leg1", -x, z_vorn),
+                                        ("leg2", x, z_hinten), ("leg3", -x, z_hinten))):
         b = m.knoch(name, [bx, huefte, bz], eltern)
-        b.kasten([bx - w / 2, huefte - h, bz - d / 2], [w, h, d], stoff)
+        b.kasten([bx - w / 2, huefte - h + kh, bz - d / 2], [w, h - kh, d], stoff)
+        u = m.knoch(f"knie{i}", [bx, huefte - h + kh, bz], name)
+        u.kasten([bx - w / 2, huefte - h, bz - d / 2], [w, kh + 1, d], stoff, aufblasen=-0.12)
         if pfote:
             pw, ph, pd = pfote
             vorne = bz - d / 2 - (pd - d)
-            b.kasten([bx - pw / 2, 0, vorne], [pw, ph, pd], "pfote")
+            u.kasten([bx - pw / 2, huefte - h, vorne], [pw, ph, pd], "pfote")
             if krallen:
-                for i in range(3):
-                    kx = bx - pw / 2 + 0.5 + i * (pw - 2) / 2
-                    b.kasten([kx, 0, vorne - 1], [1, 1, 1], "kralle")
+                for j in range(3):
+                    kx = bx - pw / 2 + 0.5 + j * (pw - 2) / 2
+                    u.kasten([kx, huefte - h, vorne - 1], [1, 1, 1], "kralle")
 
 
 VIERBEINER = [("leg0", 1), ("leg1", -1), ("leg2", -1), ("leg3", 1)]
@@ -378,60 +388,131 @@ def wildschwein_maler(variante):
 # ================================================================== Bison
 
 def bison_modell():
-    m = Modell("bison", sichtbreite=3.5, sichthoehe=3)
-    body = m.knoch("body", [0, 18, 0])
-    body.kasten([-8, 10, -14], [16, 17, 15], "zottel")
-    body.kasten([-7, 27, -13], [14, 2, 11], "zottel")          # hoher Buckel
-    body.kasten([-5, 29, -12], [10, 1, 7], "zottel")
-    body.kasten([-6, 11, 1], [12, 12, 13], "fell")
-    body.kasten([-5, 12, 14], [10, 10, 1], "fell")
-    kopf = m.knoch("head", [0, 20, -14], "body")
-    kopf.kasten([-5, 10, -21], [10, 11, 7], "kopf")
-    kopf.kasten([-5.5, 19, -21], [11, 4, 6], "stirnpelz")
-    kopf.kasten([-2.5, 5, -20], [5, 5, 4], "bart")
-    kopf.kasten([-3, 10, -22], [6, 4, 1], "nase")
-    paar(kopf, [5, 17, -18], [3, 2, 2], "horn")
-    paar(kopf, [7, 18, -18], [2, 2, 2], "horn")
-    paar(kopf, [7, 20, -18], [2, 2, 2], "hornspitze")
-    schwanz = m.knoch("tail", [0, 22, 14], "body")
-    schwanz.kasten([-0.5, 14, 14], [1, 8, 1], "fell")
-    schwanz.kasten([-1, 11, 13.5], [2, 3, 2], "zottel")
-    beine(m, "body", 4.5, -9, 9, (4, 11, 4), 11, pfote=(4, 2, 5))
-    # Die "Pluderhosen": langes Fell an den Vorderbeinen.
-    for name, x in (("leg0", 4.5), ("leg1", -4.5)):
-        m.finde(name).kasten([x - 2.5, 5, -11.5], [5, 6, 5], "zottel")
+    """Der Bison, dritte Fassung (Fynn: "wirklich deutlich mehr Detail ...
+    bisschen realistischer, bisschen groesser"). Wie der echte
+    Praeriebison: vorn ein maechtiger Pelzmantel mit einem Buckel ueber den
+    Schultern, der Kopf tief und breit mit Stirnpelz und Bart, kurze nach
+    oben gebogene Hoerner; hinten schmaler, mit kurzem Fell; lange Zotteln
+    an den Vorderbeinen; ein duenner Schwanz mit Quaste. Etwa ein Sechstel
+    groesser als vorher - der Buckel reicht jetzt ueber zwei Bloecke."""
+    m = Modell("bison", sichtbreite=4, sichthoehe=3.2)
+    body = m.knoch("body", [0, 20, 0])
+    body.kasten([-9.5, 12, -17], [19, 19, 16], "zottel")        # der Pelzmantel vorn
+    body.kasten([-8.5, 31, -16], [17, 3, 13], "zottel")          # Buckel, in Stufen gerundet
+    body.kasten([-6.5, 34, -15], [13, 2, 10], "zottel")
+    body.kasten([-4, 36, -13], [8, 1, 6], "zottel")
+    body.kasten([-7, 9, -16], [14, 3, 12], "zottel")             # Fransen unter der Brust
+    body.kasten([-7.5, 13, -1], [15, 15, 14], "fell")            # hinten: kurzes Fell
+    body.kasten([-6.5, 28, -1], [13, 2, 8], "fell")              # der Ruecken faellt vom Buckel ab
+    body.kasten([-6.5, 12, -1], [13, 1, 13], "bauch")
+    body.kasten([-7, 14, 13], [14, 13, 2], "fell")               # Keule
+    paar(body, [7.5, 16, 5], [1, 9, 6], "fell")                  # Oberschenkel treten hervor
+    kopf = m.knoch("head", [0, 22, -17], "body")
+    kopf.kasten([-5.5, 8, -26], [11, 13, 9], "kopf")
+    kopf.kasten([-6.5, 18, -26.5], [13, 6, 9], "stirnpelz")      # der dicke Pelz auf der Stirn
+    kopf.kasten([-5.5, 24, -25.5], [11, 1, 7], "stirnpelz")      # oben gerundet
+    kopf.kasten([-3.5, 8, -28], [7, 6, 2], "nase")
+    kopf.kasten([-3.5, 2, -25], [7, 6, 6], "bart")
+    kopf.kasten([-2.5, 1, -24], [5, 1, 4], "bart")
+    paar(kopf, [5.5, 9, -25], [1, 9, 7], "stirnpelz")             # Backenbart
+    paar(kopf, [6, 15, -21], [2, 1, 2], "ohr")
+    paar(kopf, [6, 18, -22], [2, 2, 2], "horn")
+    paar(kopf, [7.5, 19, -22], [2, 3, 2], "horn", drehung=[0, 0, -25], drehpunkt=[8.5, 19.5, -21])
+    paar(kopf, [8.3, 21.5, -21.8], [1, 2, 1], "hornspitze", drehung=[-10, 0, -10], drehpunkt=[8.8, 21.5, -21.3])
+    schwanz = m.knoch("tail", [0, 26, 15], "body")
+    schwanz.kasten([-0.5, 16, 15], [1, 10, 1], "fell")
+    schwanz.kasten([-1, 12, 14.5], [2, 4, 2], "quaste")
+    beine(m, "body", 5, -10, 10, (5, 13, 5), 13, pfote=(5, 2, 6))
+    # Die "Pluderhosen": langes Fell an den Vorderbeinen, bis zum Knie.
+    for name, x in (("leg0", 5), ("leg1", -5)):
+        m.finde(name).kasten([x - 3, 6, -13], [6, 7, 6], "zottel")
     return m
 
 
+# Farben je Variante: Pelzmantel, Buckel und Stirn (von der Sonne
+# ausgeblichen), Hinterteil, Beine, Nase.
+BISON_FARBEN = {
+    "prarie": ("#36221a", "#8a6238", "#8c6642", "#2a1c14", "#1a1410"),
+    "winter": ("#36221a", "#8a6238", "#8c6642", "#2a1c14", "#1a1410"),
+    "wald":   ("#241610", "#5e4028", "#62462e", "#1e140e", "#141010"),
+    "weiss":  ("#cfc6b4", "#ece6d8", "#e0d8c8", "#aca290", "#8a7068"),
+    "kalb":   ("#a0643a", "#c08450", "#b07446", "#7a4c2c", "#3a2a22"),
+}
+
+
+def weich(a, b, t, stufen=4):
+    """Von Farbe a nach b, t zwischen 0 und 1, in wenigen Stufen - ein
+    Uebergang, keine Kante und kein Rauschen."""
+    t = max(0.0, min(1.0, t))
+    a = hexfarbe(a) if isinstance(a, str) else a
+    b = hexfarbe(b) if isinstance(b, str) else b
+    return mische(a, b, round(t * stufen) / stufen)
+
+
+def wuerfel(p, saat, stark=0.09):
+    """Kleine Flecken aus 2 und 4 Pixeln - Fell, das lebt, ohne Striche."""
+    return ((streu(p[0] // 4, p[1] // 4, p[2] // 4, saat) - 0.5) * stark
+            + (streu(p[0] // 2, p[1] // 2, p[2] // 2, saat + 1) - 0.5) * stark * 0.6)
+
+
 def bison_maler(variante):
+    mantel, buckel, hinten, bein, nase = BISON_FARBEN[variante]
     winter = variante == "winter"
-    kalb = variante == "kalb"
-    vorn = "#a26c3a" if kalb else "#4a3122"
-    hinten = "#b27c46" if kalb else "#6e4e32"
+    weiss = variante == "weiss"
+
+    def fell(farbe, p, n, texel, saat, hell=0.0):
+        if winter and n[1] > 0.2 and wolken(p, 6.0, 51, 1) > 0.38:
+            # Raureif: grosse weiche Flaechen oben auf dem Pelz, nach aussen
+            # duenner werdend - keine Tupfen.
+            staerke = min(1.0, (wolken(p, 6.0, 51, 1) - 0.38) * 5)
+            farbe = mische(farbe, hexfarbe("#e8eef2"), round(staerke * 3) / 3 * 0.85)
+        return ton(farbe, p, n, texel, saat, hell=hell + wuerfel(p, saat), straehne=0.0, wolke=0.04)
 
     def f(stoff, p, n, texel):
-        if winter and n[1] > 0.5 and wolken(p, 4.0, 51, 1) > 0.42:
-            return ton("#e8eef2", p, n, texel, 52, straehne=0.02)   # Raureif
+        # Vom dunklen Mantel vorn zum helleren Hinterteil, weich ueber
+        # sechs Pixel; oben auf Buckel und Stirn von der Sonne heller.
+        vorn_hinten = (p[2] + 3) / 7
+        oben = (p[1] - 27) / 9
+        grund = weich(mantel, hinten, vorn_hinten)
         if stoff == "hornspitze":
             return hexfarbe("#1c1a18")
         if stoff == "horn":
-            return ton("#3a342e", p, n, texel, 53, straehne=0.0)
+            return ton("#6e665a" if not weiss else "#7a7064", p, n, texel, 53, straehne=0.0,
+                       hell=0.06 if n[1] > 0.5 else 0.0)
         if stoff == "pfote":
-            return hexfarbe("#16100b")
+            if n[2] < -0.5 and abs(p[0] % 5 - 2.5) < 0.6:
+                return hexfarbe("#0c0908")                           # der Spalt im Huf
+            return ton("#1c1612", p, n, texel, 54, straehne=0.0, hell=0.06 if n[1] > 0.5 else 0.0)
         if stoff == "nase":
-            if n[2] < -0.5 and 0.6 < abs(p[0]) < 2.2 and p[1] > 11.5:
-                return hexfarbe("#0a0605")
-            return hexfarbe("#241a14")
+            if n[2] < -0.5 and 1.0 < abs(p[0]) < 2.0 and 10.5 < p[1] < 12.5:
+                return hexfarbe("#0a0605")                           # Nuestern
+            if n[2] < -0.5 and p[1] < 9.5:
+                return ton("#3a2a24", p, n, texel, 55, straehne=0.0)  # Maul
+            return ton(nase, p, n, texel, 56, straehne=0.0, hell=0.05 if n[1] > 0.5 else 0.0)
         if stoff == "kopf":
-            a = auge(p, n, [(-4.5, 16.5, -19.5), (4.5, 16.5, -19.5)], "#2a1c10", halb=(0.5, 0.5, 0.6))
+            a = auge(p, n, [(-5.5, 15, -23.5), (5.5, 15, -23.5)], "#6a4a2a", halb=(0.5, 0.5, 0.6))
             if a and abs(n[0]) > 0.5:
                 return a
-            return ton(vorn, p, n, texel, 55, hell=-0.05)
-        if stoff in ("zottel", "stirnpelz", "bart"):
-            return ton(vorn, p, n, texel, 57, straehne=0.06, hell=0.04 if stoff == "stirnpelz" else 0.0)
+            return fell(weich(mantel, nase, 0.35), p, n, texel, 57)
+        if stoff == "ohr":
+            return fell(weich(mantel, nase, 0.5), p, n, texel, 58)
+        if stoff == "stirnpelz":
+            # Oben hell ausgeblichen, zu den Augen hin dunkler.
+            return fell(weich(mantel, buckel, (p[1] - 17) / 7), p, n, texel, 59)
+        if stoff == "bart":
+            return fell(weich(mantel, bein, 0.8), p, n, texel, 60, hell=-0.04)
+        if stoff == "quaste":
+            return fell(bein, p, n, texel, 61)
+        if stoff == "zottel":
+            if p[1] < 12.5 and stoff == "zottel" and abs(p[0]) < 7.5 and p[2] < -3:
+                return fell(weich(mantel, bein, 0.4), p, n, texel, 62)   # Brustfransen
+            return fell(weich(grund, buckel, oben), p, n, texel, 63)
         if stoff == "bein":
-            return ton(vorn, p, n, texel, 59, hell=-0.08)
-        return ton(hinten, p, n, texel, 61)
+            return fell(weich(bein, mantel, (p[1] - 4) / 10), p, n, texel, 64)
+        if stoff == "bauch":
+            return fell(weich(grund, bein, 0.5), p, n, texel, 65)
+        # Das Hinterteil: kurzes Fell, oben etwas heller.
+        return fell(weich(grund, buckel, (p[1] - 20) / 16), p, n, texel, 66)
     return f
 
 
