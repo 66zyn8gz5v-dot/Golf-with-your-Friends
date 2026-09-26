@@ -7,36 +7,43 @@
         "schwanz1": {
           "rotation": [
             0.0,
-            "math.sin(query.life_time * 260.0 - 0) * 10.0 * (0.5 + query.modified_move_speed)",
+            "math.sin(query.life_time * 260.0 - 0) * 9 * (0.6 + query.modified_move_speed * 1.2)",
             0.0
           ]
         },
         "schwanzflosse": {
           "rotation": [
             0.0,
-            "math.sin(query.life_time * 260.0 - 45) * 18.0 * (0.5 + query.modified_move_speed)",
+            "math.sin(query.life_time * 260.0 - 45) * 17 * (0.6 + query.modified_move_speed * 1.2)",
             0.0
           ]
         },
         "flosse_links": {
           "rotation": [
+            "math.sin(query.life_time * 130.0) * 6.0",
             0.0,
-            0.0,
-            "math.sin(query.life_time * 182.0) * 10.0"
+            "math.sin(query.life_time * 182.0) * 12"
           ]
         },
         "flosse_rechts": {
           "rotation": [
+            "math.sin(query.life_time * 130.0) * 6.0",
             0.0,
+            "math.sin(query.life_time * 182.0) * -12"
+          ]
+        },
+        "kopf": {
+          "rotation": [
             0.0,
-            "math.sin(query.life_time * 182.0) * -10.0"
+            "-math.sin(query.life_time * 260.0) * 4.0 * (0.6 + query.modified_move_speed * 1.2)",
+            0.0
           ]
         },
         "rumpf": {
           "rotation": [
             "query.target_x_rotation * 0.6",
             0.0,
-            0.0
+            "math.sin(query.life_time * 130.0) * 4.0"
           ]
         }
       }
@@ -47,7 +54,7 @@
         "rumpf": {
           "rotation": [
             0.0,
-            0.0,
+            "math.sin(query.life_time * 700.0) * 15.0",
             "90.0 + math.sin(query.life_time * 900.0) * 8.0"
           ],
           "position": [
@@ -64,7 +71,14 @@
         "kopf": {
           "rotation": [
             0.0,
-            "math.sin(variable.attack_time * 360.0) * 25.0",
+            "math.sin(variable.attack_time * 360.0) * 30.0",
+            0.0
+          ]
+        },
+        "rumpf": {
+          "rotation": [
+            0.0,
+            "-math.sin(variable.attack_time * 360.0) * 12.0",
             0.0
           ]
         }

@@ -7,36 +7,129 @@
       "bones": {
         "leg0": {
           "rotation": [
-            "math.cos(query.anim_time * 65.43) * 38.0",
+            "math.cos(query.anim_time * 65.43) * 36.0",
             0.0,
             0.0
           ]
         },
         "leg1": {
           "rotation": [
-            "math.cos(query.anim_time * 65.43) * -38.0",
+            "math.cos(query.anim_time * 65.43) * -36.0",
             0.0,
             0.0
           ]
         },
         "leg2": {
           "rotation": [
-            "math.cos(query.anim_time * 65.43) * -38.0",
+            "math.cos(query.anim_time * 65.43) * -36.0",
             0.0,
             0.0
           ]
         },
         "leg3": {
           "rotation": [
-            "math.cos(query.anim_time * 65.43) * 38.0",
+            "math.cos(query.anim_time * 65.43) * 36.0",
+            0.0,
+            0.0
+          ]
+        },
+        "body": {
+          "position": [
+            0.0,
+            "math.abs(math.cos(query.anim_time * 65.43)) * 0.8 - 0.4",
+            0.0
+          ],
+          "rotation": [
+            "math.sin(query.anim_time * 65.43 * 2.0) * 1.5",
+            0.0,
+            "math.cos(query.anim_time * 65.43) * 1.5"
+          ]
+        },
+        "head": {
+          "rotation": [
+            "math.sin(query.anim_time * 65.43 * 2.0 + 40.0) * 4.0",
+            "math.cos(query.anim_time * 65.43) * 3.0",
+            0.0
+          ]
+        },
+        "tail": {
+          "rotation": [
+            "math.cos(query.anim_time * 65.43 * 2.0) * 5.0",
+            "math.sin(query.anim_time * 65.43 - 0) * 12",
+            0.0
+          ]
+        },
+        "tail2": {
+          "rotation": [
+            "math.cos(query.anim_time * 65.43 * 2.0) * 5.0",
+            "math.sin(query.anim_time * 65.43 - 30) * 18",
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.schneeleopard.galopp": {
+      "anim_time_update": "query.modified_distance_moved",
+      "loop": true,
+      "bones": {
+        "leg0": {
+          "rotation": [
+            "math.cos(query.anim_time * 65.43) * 48.6",
+            0.0,
+            0.0
+          ]
+        },
+        "leg1": {
+          "rotation": [
+            "math.cos(query.anim_time * 65.43 - 20.0) * 48.6",
+            0.0,
+            0.0
+          ]
+        },
+        "leg2": {
+          "rotation": [
+            "math.cos(query.anim_time * 65.43 + 180.0) * 48.6",
+            0.0,
+            0.0
+          ]
+        },
+        "leg3": {
+          "rotation": [
+            "math.cos(query.anim_time * 65.43 + 160.0) * 48.6",
+            0.0,
+            0.0
+          ]
+        },
+        "body": {
+          "rotation": [
+            "math.sin(query.anim_time * 65.43) * 7.0",
+            0.0,
+            0.0
+          ],
+          "position": [
+            0.0,
+            "math.abs(math.sin(query.anim_time * 65.43)) * 1.5",
+            0.0
+          ]
+        },
+        "head": {
+          "rotation": [
+            "-math.sin(query.anim_time * 65.43) * 6.0",
             0.0,
             0.0
           ]
         },
         "tail": {
           "rotation": [
+            "-20.0 + math.sin(query.anim_time * 65.43 * 2.0) * 8.0",
             0.0,
-            "math.sin(query.anim_time * 65.43) * 12.0",
+            0.0
+          ]
+        },
+        "tail2": {
+          "rotation": [
+            "-20.0 + math.sin(query.anim_time * 65.43 * 2.0) * 8.0",
+            0.0,
             0.0
           ]
         }
@@ -45,18 +138,32 @@
     "animation.fynn.schneeleopard.stehen": {
       "loop": true,
       "bones": {
-        "tail": {
-          "rotation": [
-            0.0,
-            "math.sin(query.life_time * 70.0) * 8.0",
-            0.0
-          ]
-        },
         "body": {
           "scale": [
             1.0,
             "1.0 + math.sin(query.life_time * 60.0) * 0.012",
             1.0
+          ]
+        },
+        "head": {
+          "rotation": [
+            "math.sin(query.life_time * 17.0) * 3.0",
+            "math.sin(query.life_time * 23.0) * 9.0 + math.sin(query.life_time * 61.0) * 3.0",
+            0.0
+          ]
+        },
+        "tail": {
+          "rotation": [
+            0.0,
+            "math.sin(query.life_time * 70.0 - 0) * 8",
+            0.0
+          ]
+        },
+        "tail2": {
+          "rotation": [
+            0.0,
+            "math.sin(query.life_time * 70.0 - 40) * 14",
+            0.0
           ]
         }
       }
@@ -66,21 +173,47 @@
       "bones": {
         "body": {
           "rotation": [
-            "-math.sin(variable.attack_time * 180.0) * 25.0",
+            "-math.sin(variable.attack_time * 180.0) * 28.0",
             0.0,
+            0.0
+          ],
+          "position": [
+            0.0,
+            "math.sin(variable.attack_time * 180.0) * 2.0",
             0.0
           ]
         },
         "leg0": {
           "rotation": [
-            "-math.sin(variable.attack_time * 180.0) * 80.0",
+            "-math.sin(variable.attack_time * 180.0) * 95.0",
             0.0,
-            "math.sin(variable.attack_time * 180.0) * 10.0"
+            "math.sin(variable.attack_time * 180.0) * 15.0"
+          ]
+        },
+        "leg1": {
+          "rotation": [
+            "-math.sin(math.clamp(variable.attack_time * 1.4 - 0.2, 0.0, 1.0) * 180.0) * 80.0",
+            0.0,
+            "-math.sin(math.clamp(variable.attack_time * 1.4 - 0.2, 0.0, 1.0) * 180.0) * 15.0"
+          ]
+        },
+        "leg2": {
+          "rotation": [
+            "math.sin(variable.attack_time * 180.0) * 25.0",
+            0.0,
+            0.0
+          ]
+        },
+        "leg3": {
+          "rotation": [
+            "math.sin(variable.attack_time * 180.0) * 25.0",
+            0.0,
+            0.0
           ]
         },
         "head": {
           "rotation": [
-            "math.sin(variable.attack_time * 180.0) * 12.0",
+            "math.sin(variable.attack_time * 180.0) * 18.0",
             0.0,
             0.0
           ]

@@ -30,7 +30,7 @@ const SCHWERTER = new Set([
     "fynn:elektrumklinge", "fynn:sternenklinge", "fynn:schwertfischklinge",
 ]);
 
-const BOEGEN = new Set(["minecraft:bow", "minecraft:crossbow", "fynn:sturmbogen"]);
+const BOEGEN = new Set(["minecraft:bow", "minecraft:crossbow", "fynn:sturmbogen", "fynn:geweihbogen"]);
 
 // Was von einem Angriff nie getroffen wird: Gegenstaende am Boden,
 // Erfahrung, Geschosse - und Mitspieler. Ein Wirbelschlag unter Freunden

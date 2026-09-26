@@ -42,11 +42,11 @@ item.fynn:eisenklinge.name=Eisenklinge
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.35
+item.iron_sword.name=Stahlschwert 4.36
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.35
-item.fynn:degen.name=Degen 4.35
+item.fynn:degen=Degen 4.36
+item.fynn:degen.name=Degen 4.36
 
 
 
@@ -155,6 +155,18 @@ item.fynn:netheritdolche.name=Netheritdolche
 item.fynn:netheritdolch_links=Linker Netheritdolch (Zweithand)
 item.fynn:netheritdolch_links.name=Linker Netheritdolch (Zweithand)
 
+
+
+
+
+
+
+
+
+
+
+item.fynn:geweihbogen=Elchgeweihbogen
+item.fynn:geweihbogen.name=Elchgeweihbogen
 
 
 

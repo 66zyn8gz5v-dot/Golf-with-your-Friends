@@ -29,7 +29,9 @@
           {
             "schwimmen": "query.is_in_water"
           },
-          "stehen",
+          {
+            "stehen": "1.0 - math.clamp(query.modified_move_speed * 2.0, 0.0, 0.8)"
+          },
           "blick",
           {
             "angriff": "variable.attack_time > 0.0"

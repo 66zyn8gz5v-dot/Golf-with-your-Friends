@@ -16,7 +16,7 @@ import { hinweis } from "./rollen.js";
 import { istHagelpfeil } from "./kampf.js";
 
 const PFEIL = "minecraft:arrow";
-const BOEGEN = new Set(["minecraft:bow", "minecraft:crossbow", "fynn:sturmbogen"]);
+const BOEGEN = new Set(["minecraft:bow", "minecraft:crossbow", "fynn:sturmbogen", "fynn:geweihbogen"]);
 
 // Der Sturmbogen: Ein voll gespannter Schuss holt beim Einschlag einen
 // Blitz herunter. "Voll gespannt" liest das Skript am Tempo des Pfeils ab
@@ -26,6 +26,10 @@ const BOEGEN = new Set(["minecraft:bow", "minecraft:crossbow", "fynn:sturmbogen"
 const STURMBOGEN = "fynn:sturmbogen";
 const STURM_TEMPO = 2.4;
 const sturmpfeile = new Map();
+const GEWEIHBOGEN = "fynn:geweihbogen";
+const JAGD_EXTRA = 4;           // Schaden obendrauf, wenn ein wildes Tier getroffen wird
+// Pfeile aus dem Geweihbogen, die noch fliegen.
+const jagdpfeile = new Set();
 
 // Je Sorte: die Spur im Flug und was beim Treffer geschieht.
 const SORTEN = {
@@ -95,6 +99,7 @@ world.afterEvents.entitySpawn.subscribe((e) => {
         const ausruestung = schuetze.getComponent("minecraft:equippable");
         const bogen = ausruestung?.getEquipment("Mainhand");
         if (!BOEGEN.has(bogen?.typeId)) return;
+        if (bogen.typeId === GEWEIHBOGEN) jagdpfeile.add(pfeil.id);
         if (bogen.typeId === STURMBOGEN) {
             const v = pfeil.getVelocity?.() ?? { x: 0, y: 0, z: 0 };
             if (Math.hypot(v.x, v.y, v.z) >= STURM_TEMPO) {
@@ -159,7 +164,22 @@ world.afterEvents.projectileHitEntity.subscribe((e) => {
     }
 });
 
+// Der Elchgeweihbogen ist ein Jagdbogen: Seine Pfeile treffen wilde Tiere
+// (alles aus tiere_bauen.py, Familie fynn_tier) haerter.
+world.afterEvents.projectileHitEntity.subscribe((e) => {
+    try {
+        if (!jagdpfeile.delete(e.projectile?.id)) return;
+        const ziel = e.getEntityHit()?.entity;
+        if (ziel && lebt(ziel) && ziel.matches?.({ families: ["fynn_tier"] })) {
+            ziel.applyDamage(JAGD_EXTRA);
+        }
+    } catch (fehler) {
+        console.warn(`Geweihbogen, Treffer: ${fehler}`);
+    }
+});
+
 world.afterEvents.projectileHitBlock.subscribe((e) => {
+    jagdpfeile.delete(e.projectile?.id);
     fliegend.delete(e.projectile?.id);
     if (sturmpfeile.has(e.projectile?.id)) {
         sturmpfeile.delete(e.projectile.id);

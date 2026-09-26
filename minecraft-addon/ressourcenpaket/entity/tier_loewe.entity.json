@@ -16,6 +16,7 @@
       },
       "animations": {
         "laufen": "animation.fynn.loewe.laufen",
+        "galopp": "animation.fynn.loewe.galopp",
         "stehen": "animation.fynn.loewe.stehen",
         "blick": "animation.common.look_at_target",
         "angriff": "animation.fynn.loewe.angriff",
@@ -23,11 +24,19 @@
         "teile": "animation.fynn.loewe.teile"
       },
       "scripts": {
+        "pre_animation": [
+          "variable.galopp = math.clamp((query.modified_move_speed - 0.6) * 3.0, 0.0, 1.0);"
+        ],
         "animate": [
           {
-            "laufen": "query.modified_move_speed"
+            "laufen": "query.modified_move_speed * (1.0 - variable.galopp)"
           },
-          "stehen",
+          {
+            "galopp": "variable.galopp"
+          },
+          {
+            "stehen": "1.0 - math.clamp(query.modified_move_speed * 2.0, 0.0, 0.8)"
+          },
           "blick",
           {
             "angriff": "variable.attack_time > 0.0"

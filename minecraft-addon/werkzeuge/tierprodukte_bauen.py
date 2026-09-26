@@ -55,7 +55,13 @@ def dunkler(c, t):
 
 # ------------------------------------------------------------ Malen
 
-def male(form, farben, muster=None):
+def male(form, farben, muster=None, glanz=False, fell=False):
+    """Malt einen Umriss aus vorlagen/tierformen.py.
+
+    Zweite Fassung (Fynn: "mehr Detail in die Items"): Jede Flaeche hat
+    Volumen - von oben links nach unten rechts in drei sanften Stufen
+    dunkler, der Umriss dunkel und je Seite verschieden, dazu wahlweise
+    ein Glanzstreif (rohes Fleisch, Zaehne, Horn) oder Fellstriche."""
     zeilen = FORMEN[form]
     assert len(zeilen) == 16 and all(len(z) == 16 for z in zeilen), form
     bild = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
@@ -63,46 +69,69 @@ def male(form, farben, muster=None):
     def da(x, y):
         return 0 <= x < 16 and 0 <= y < 16 and zeilen[y][x] != "."
 
-    for y in range(16):
-        for x in range(16):
-            z = zeilen[y][x]
-            if z == ".":
-                continue
-            if muster and z == "#":
-                z = muster(x, y) or z
-            if z == "w":
-                bild.putpixel((x, y), hexfarbe(farben.get("w", "#ffffff")) + (255,))
-                continue
-            if z == "e":
-                # Ohne Farbe bleibt ein Loch - die Mitte der Calamari-Ringe.
-                if farben.get("e", "#1a1210"):
-                    bild.putpixel((x, y), hexfarbe(farben.get("e", "#1a1210")) + (255,))
-                continue
-            grund = hexfarbe(farben.get(z, farben["#"]))
-            oben, links, unten, rechts = da(x, y - 1), da(x - 1, y), da(x, y + 1), da(x + 1, y)
-            duenn = (not links and not rechts) or (not oben and not unten)
-            if duenn:
-                c = grund
-            elif not unten or not rechts:
-                c = dunkler(grund, 0.42)            # Umriss unten rechts
-            elif not oben or not links:
-                c = dunkler(grund, 0.28)            # Umriss oben links
-            elif not da(x - 1, y - 1) or not da(x, y - 2) or not da(x - 2, y):
-                c = heller(grund, 0.22)             # Licht an der oberen Kante
-            elif not da(x + 1, y + 1) or not da(x, y + 2):
-                c = dunkler(grund, 0.16)            # Schatten unten
-            else:
-                c = grund
-            bild.putpixel((x, y), c + (255,))
+    punkte = [(x, y) for y in range(16) for x in range(16) if da(x, y)]
+    if not punkte:
+        return bild
+    x0 = min(p[0] for p in punkte)
+    y0 = min(p[1] for p in punkte)
+    spanne = max(1, max(p[0] + p[1] for p in punkte) - (x0 + y0))
+    # Der Glanz: ein kurzer schraeger Strich ein Stueck innen oben links.
+    glanzpunkte = set()
+    if glanz:
+        innen = [p for p in punkte if all(da(p[0] + dx, p[1] + dy) for dx in (-1, 0, 1) for dy in (-1, 0, 1))]
+        if innen:
+            start = min(innen, key=lambda p: p[0] + p[1] * 1.2)
+            for i in range(3):
+                q = (start[0] + 1 + i, start[1] + 1 - (i // 2))
+                if q in innen:
+                    glanzpunkte.add(q)
+
+    for x, y in punkte:
+        z = zeilen[y][x]
+        if muster and z == "#":
+            z = muster(x, y) or z
+        if z == "w":
+            bild.putpixel((x, y), hexfarbe(farben.get("w", "#ffffff")) + (255,))
+            continue
+        if z == "e":
+            # Ohne Farbe bleibt ein Loch - die Mitte der Calamari-Ringe.
+            if farben.get("e", "#1a1210"):
+                bild.putpixel((x, y), hexfarbe(farben.get("e", "#1a1210")) + (255,))
+            continue
+        # Pfoten ('g') ohne eigene Farbe: etwas dunkler als das Fell.
+        grund = hexfarbe(farben[z]) if z in farben else (
+            dunkler(hexfarbe(farben["#"]), 0.3) if z == "g" else hexfarbe(farben["#"]))
+        oben, links, unten, rechts = da(x, y - 1), da(x - 1, y), da(x, y + 1), da(x + 1, y)
+        duenn = (not links and not rechts) or (not oben and not unten)
+        # Volumen: je weiter unten rechts, desto dunkler, in drei Stufen.
+        lage = ((x + y) - (x0 + y0)) / spanne
+        c = heller(grund, 0.12) if lage < 0.3 else (grund if lage < 0.65 else dunkler(grund, 0.1))
+        if duenn:
+            c = grund
+        elif not unten or not rechts:
+            c = dunkler(grund, 0.45)            # Umriss unten rechts
+        elif not oben or not links:
+            c = dunkler(grund, 0.3)             # Umriss oben links
+        elif not da(x - 1, y - 1) or not da(x, y - 2) or not da(x - 2, y):
+            c = heller(c, 0.18)                 # Licht an der oberen Kante
+        elif not da(x + 1, y + 1) or not da(x, y + 2):
+            c = dunkler(c, 0.14)                # Schatten unten
+        elif fell and z == "#" and (x * 2 + y) % 4 == 0:
+            c = dunkler(c, 0.12)                # Fellstriche
+        elif fell and z == "#" and (x * 2 + y) % 4 == 2 and (x + y) % 3 == 0:
+            c = heller(c, 0.1)
+        if (x, y) in glanzpunkte:
+            c = heller(c, 0.45)
+        bild.putpixel((x, y), c + (255,))
     return bild
 
 
 def streifen(abstand, dicke=1, versatz=0):
-    return lambda x, y: "e" if (x + y + versatz) % abstand < dicke else None
+    return lambda x, y: "f" if (x + y + versatz) % abstand < dicke else None
 
 
 def flecken(x, y):
-    return "e" if (x * 7 + y * 13) % 11 in (0, 5) else None
+    return "f" if (x * 7 + y * 13) % 11 in (0, 5) else None
 
 
 # ------------------------------------------------------------ Die Gegenstaende
@@ -146,24 +175,24 @@ BEUTE = [
      "rare"),
     ("bisonfell", ("Bisonfell", "Bison Hide"), "fell", {"#": "#4e3322"}, None, "uncommon"),
     ("bisonhorn", ("Bisonhorn", "Bison Horn"), "horn", {"#": "#2e2a26", "s": "#6a5a48"}, None, "rare"),
-    ("loewenfell", ("Löwenfell", "Lion Pelt"), "fell", {"#": "#d0a060", "e": "#8a5a2a"},
-     lambda x, y: "e" if y <= 2 else None, "uncommon"),
+    ("loewenfell", ("Löwenfell", "Lion Pelt"), "fell", {"#": "#d0a060", "f": "#8a5a2a"},
+     lambda x, y: "f" if y <= 2 else None, "uncommon"),
     # Der Loewenzahn - ein Zahn vom Loewen, und doch ein bisschen Blume:
     # ein gelber Tupfer an der Wurzel.
     ("loewenzahn", ("Löwenzahn", "Lion Fang"), "zahn", {"#": "#f2ead8", "e": "#f0c820"},
      lambda x, y: "e" if y == 2 and 5 <= x <= 10 else None, "rare"),
-    ("tigerfell", ("Tigerfell", "Tiger Pelt"), "fell", {"#": "#e8923a", "e": "#1c1410"}, streifen(4), "uncommon"),
+    ("tigerfell", ("Tigerfell", "Tiger Pelt"), "fell", {"#": "#e8923a", "f": "#1c1410"}, streifen(4), "uncommon"),
     ("tigerkralle", ("Tigerkralle", "Tiger Claw"), "kralle", {"#": "#e8e0cc", "w": "#ffffff"}, None, "rare"),
-    ("schneeleopardenfell", ("Schneeleopardenfell", "Snow Leopard Pelt"), "fell", {"#": "#e0e0da", "e": "#4a4844"},
+    ("schneeleopardenfell", ("Schneeleopardenfell", "Snow Leopard Pelt"), "fell", {"#": "#e0e0da", "f": "#4a4844"},
      flecken, "rare"),
-    ("krokodilleder", ("Krokodilleder", "Crocodile Leather"), "fell", {"#": "#56663a", "e": "#3a4424"},
-     lambda x, y: "e" if (x % 3 == 0 or y % 3 == 0) else None, "uncommon"),
+    ("krokodilleder", ("Krokodilleder", "Crocodile Leather"), "fell", {"#": "#56663a", "f": "#3a4424"},
+     lambda x, y: "f" if (x % 3 == 0 or y % 3 == 0) else None, "uncommon"),
     ("krokodilzahn", ("Krokodilzahn", "Crocodile Tooth"), "zahn", {"#": "#e8e2c8"}, None, "rare"),
     ("walbarte", ("Walbarte", "Baleen"), "barte", {"#": "#6a6458", "s": "#9a9080"}, None, "common"),
     ("ambra", ("Ambra", "Ambergris"), "ambra", {"#": "#b4ac98", "f": "#8a8474", "w": "#e8e4d8"}, None, "epic"),
     ("haizahn", ("Haizahn", "Shark Tooth"), "haizahn", {"#": "#f4f0e4", "s": "#c8b89a"}, None, "rare"),
-    ("haihaut", ("Haihaut", "Shark Skin"), "fell", {"#": "#7c8a94", "e": "#eef0f0"},
-     lambda x, y: "e" if y >= 9 else None, "uncommon"),
+    ("haihaut", ("Haihaut", "Shark Skin"), "fell", {"#": "#7c8a94", "f": "#eef0f0"},
+     lambda x, y: "f" if y >= 9 else None, "uncommon"),
     ("kalmarauge", ("Riesenkalmarauge", "Giant Squid Eye"), "auge",
      {"#": "#e8e0d0", "s": "#4a6ab0", "e": "#050608", "w": "#ffffff"}, None, "epic"),
     ("schwertfischspiess", ("Schwertfisch-Schwert", "Swordfish Bill"), "spitze", {"#": "#3a3440", "s": "#6a6070",
@@ -260,7 +289,7 @@ def alles():
     for roh, rn, gar, gn, froh, fgar, froh_c, fgar_c, (nr, ng) in FLEISCH:
         teile[roh] = gegenstand(roh, essen(nr, 0.3), "items", "minecraft:itemGroup.name.miscFood")
         teile[gar] = gegenstand(gar, essen(ng, 0.8), "items", "minecraft:itemGroup.name.miscFood")
-        bilder[roh] = male(froh, froh_c)
+        bilder[roh] = male(froh, froh_c, glanz=True)
         bilder[gar] = male(fgar, fgar_c)
         rezepte[f"{gar}_braten"] = ofenrezept(roh, gar)
         namen += [(roh, rn), (gar, gn)]
@@ -288,7 +317,8 @@ def alles():
     namen.append("## Was die Tiere hergeben")
     for k, n, form, farben, muster, selten in BEUTE:
         teile[k] = gegenstand(k, {"minecraft:max_stack_size": 64, "minecraft:rarity": selten})
-        bilder[k] = male(form, farben, muster)
+        bilder[k] = male(form, farben, muster, glanz=form in ("zahn", "haizahn", "hauer", "horn", "ambra", "kralle"),
+                         fell=form == "fell" and k not in ("krokodilleder", "haihaut"))
         namen.append((k, n))
     for fell, anzahl in (("baerenfell", 3), ("bisonfell", 3), ("loewenfell", 2), ("tigerfell", 2),
                          ("schneeleopardenfell", 2), ("krokodilleder", 2), ("haihaut", 1)):
@@ -338,6 +368,21 @@ def alles():
     return teile, bilder, rezepte, namen
 
 
+def klinge_3d():
+    """Die Schwertfischklinge als 3D-Waffe, wie Kriegshammer und Frostzepter."""
+    import waffe_bauen as w
+    from neue_waffen_bauen import halten, waffen_attachable
+    from vorlagen.tierwaffen import SCHWERTFISCHKLINGE as v
+    name = "schwertfischklinge"
+    w.aus_zeichenkarte(name, v["karte"], {k: f + (255,) for k, f in v["farben"].items()},
+                       dicke=lambda zeile, spalte, zeichen, t=v["tiefe"]: t[zeichen], mitte=v["mitte"],
+                       ziel_modell=str(RES / "models" / "entity" / f"{name}.geo.json"),
+                       ziel_textur=str(RES / "textures" / "entity" / f"{name}_haut.png"))
+    schreibe(RES / "attachables" / f"{name}.json", waffen_attachable(name))
+    schreibe(RES / "animations" / "tierwaffen.animation.json",
+             {"format_version": "1.10.0", "animations": {f"animation.{name}.halten": halten(v["karte"], v["griff"])}})
+
+
 def sprache(namen):
     for datei, i in (("de_DE.lang", 0), ("en_US.lang", 1)):
         pfad = RES / "texts" / datei
@@ -370,7 +415,8 @@ def main():
     for name, daten in rezepte.items():
         schreibe(VER / "recipes" / f"tier_{name}.json", daten)
     sprache(namen)
-    print(f"gebaut: {len(teile)} Gegenstaende, {len(rezepte)} Rezepte")
+    klinge_3d()
+    print(f"gebaut: {len(teile)} Gegenstaende, {len(rezepte)} Rezepte, Schwertfischklinge in 3D")
     if "--bilder" in sys.argv:
         ordner = Path(sys.argv[sys.argv.index("--bilder") + 1])
         ordner.mkdir(parents=True, exist_ok=True)

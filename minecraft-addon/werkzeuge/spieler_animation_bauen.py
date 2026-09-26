@@ -38,7 +38,7 @@ SPIELER = RES / "entity" / "player.entity.json"
 # Was sich beim Schleichen aufladen laesst (Wirbelschlag, Schattensprung in
 # kampf.js): Schwerter und Dolche.
 HIEBWAFFEN = k.GEGENSTAENDE[k.SCHWERT] + k.GEGENSTAENDE[k.DOLCHE]
-BOEGEN = ["minecraft:bow", "fynn:sturmbogen"]
+BOEGEN = ["minecraft:bow", "fynn:sturmbogen", "fynn:geweihbogen"]
 PFEILE = ["minecraft:arrow", "fynn:eisenpfeil", "fynn:silberpfeil", "fynn:goldpfeil", "fynn:elektrumpfeil"]
 
 

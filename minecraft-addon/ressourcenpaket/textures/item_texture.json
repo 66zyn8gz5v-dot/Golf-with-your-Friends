@@ -313,6 +313,18 @@
     },
     "trank_der_tiefe": {
       "textures": "textures/items/tiere/trank_der_tiefe"
+    },
+    "geweihbogen": {
+      "textures": "textures/items/geweihbogen"
+    },
+    "geweihbogen_pulling_0": {
+      "textures": "textures/items/geweihbogen_pulling_0"
+    },
+    "geweihbogen_pulling_1": {
+      "textures": "textures/items/geweihbogen_pulling_1"
+    },
+    "geweihbogen_pulling_2": {
+      "textures": "textures/items/geweihbogen_pulling_2"
     }
   }
 }
