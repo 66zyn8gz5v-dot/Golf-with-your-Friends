@@ -31,6 +31,66 @@
         }
       }
     },
+    "animation.fynn.ritter_eisenschwert.halten": {
+      "loop": true,
+      "bones": {
+        "klinge_waffe": {
+          "position": [
+            0.0,
+            -2.0,
+            0.0
+          ],
+          "rotation": [
+            90.0,
+            0.0,
+            0.0
+          ],
+          "scale": 0.75
+        },
+        "klinge_griff": {
+          "position": [
+            0.0,
+            6.78,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            90.0,
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.ritter_saphirschwert.halten": {
+      "loop": true,
+      "bones": {
+        "klinge_waffe": {
+          "position": [
+            0.0,
+            -2.0,
+            0.0
+          ],
+          "rotation": [
+            90.0,
+            0.0,
+            0.0
+          ],
+          "scale": 0.75
+        },
+        "klinge_griff": {
+          "position": [
+            0.0,
+            7.78,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            90.0,
+            0.0
+          ]
+        }
+      }
+    },
     "animation.fynn.ritter.laufen": {
       "anim_time_update": "query.modified_distance_moved",
       "loop": true,

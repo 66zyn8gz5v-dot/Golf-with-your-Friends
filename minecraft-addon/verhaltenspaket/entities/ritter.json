@@ -14,15 +14,6 @@
         "minecraft:attack": {
           "damage": 4
         },
-        "minecraft:equipment": {
-          "table": "loot_tables/ausruestung/ritter_schwert.json",
-          "slot_drop_chance": [
-            {
-              "slot": "slot.weapon.mainhand",
-              "drop_chance": 0.08
-            }
-          ]
-        },
         "minecraft:behavior.melee_box_attack": {
           "priority": 3,
           "speed_multiplier": 1.2,
@@ -52,9 +43,13 @@
       }
     },
     "components": {
+      "minecraft:experience_reward": {
+        "on_death": "query.last_hit_by_player ? 8 : 0"
+      },
       "minecraft:type_family": {
         "family": [
           "ritter",
+          "monster",
           "mob"
         ]
       },
@@ -101,39 +96,25 @@
         "priority": 2,
         "must_see": true,
         "reselect_targets": true,
-        "within_radius": 20,
+        "within_radius": 24,
         "entity_types": [
-          {
-            "filters": {
-              "test": "is_family",
-              "subject": "other",
-              "value": "bandit"
-            },
-            "max_dist": 20
-          },
           {
             "filters": {
               "all_of": [
                 {
                   "test": "is_family",
                   "subject": "other",
-                  "value": "monster"
+                  "value": "player"
                 },
                 {
-                  "test": "is_family",
+                  "test": "has_ability",
                   "subject": "other",
-                  "operator": "!=",
-                  "value": "creeper"
-                },
-                {
-                  "test": "is_family",
-                  "subject": "other",
-                  "operator": "!=",
-                  "value": "bandit"
+                  "value": "instabuild",
+                  "operator": "!="
                 }
               ]
             },
-            "max_dist": 14
+            "max_dist": 20
           }
         ]
       },

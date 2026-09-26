@@ -245,34 +245,6 @@ def anbauen(g, unten, zusatz, bindung=None):
     return oberste
 
 
-# Minecrafts Eisenschwert gibt es im Paket nicht als Modell - das Spiel
-# bringt es mit. Fuer die Schau ein Nachbild aus einer Zeichenkarte, gebaut
-# wie die eigenen Klingen; ins Paket kommt es nicht.
-EISENSCHWERT_NACHBILD = {
-    "karte": ["...w...", "..wsd.."] + ["..wsd.."] * 15 + [".QqqqQ.", "QqqqqqQ", "...L...", "...l...",
-                                                          "...L...", "...l...", "..QqQ.."],
-    "farben": {"w": (236, 238, 242), "s": (196, 200, 206), "d": (130, 134, 142),
-               "q": (178, 182, 188), "Q": (104, 108, 116), "L": (104, 78, 30), "l": (73, 54, 21)},
-    "tiefe": {"w": 1.0, "s": 1.0, "d": 1.0, "q": 2.0, "Q": 2.0, "L": 2.0, "l": 2.0},
-    "mitte": 3.5, "griff": "Ll",
-}
-
-
-def nachbild_waffe(karte_daten):
-    """Baut aus einer Zeichenkarte ein Waffenmodell in einen Zwischenordner
-    und gibt Geometrie, Bild und Haltebewegung zurueck."""
-    import tempfile
-    import waffe_bauen
-    from neue_waffen_bauen import halten
-    v = karte_daten
-    ordner = Path(tempfile.mkdtemp())
-    waffe_bauen.aus_zeichenkarte("nachbild", v["karte"], {k: f + (255,) for k, f in v["farben"].items()},
-                                 dicke=lambda zeile, spalte, zeichen: v["tiefe"][zeichen], mitte=v["mitte"],
-                                 ziel_modell=str(ordner / "nachbild.geo.json"), ziel_textur=str(ordner / "nachbild.png"))
-    geo = lade(ordner / "nachbild.geo.json")["minecraft:geometry"][0]
-    return geo, Image.open(ordner / "nachbild.png").convert("RGBA"), halten(v["karte"], v["griff"])
-
-
 def biome_aus_spawnregel(ident):
     """Die Biom-Stichworte aus der Spawnregel, ohne die ausgeschlossenen."""
     kurz = ident.split(":")[1]
@@ -562,28 +534,21 @@ def alle_mobs():
     for b in banditen_bauen.BANDITEN:
         mobs.append(mob_daten(b["id"], f"bandit_{b['id']}.entity.json", "Banditen",
                               {"steckbrief": steckbrief_bandit(b), "gross": b.get("gross", 1.0)}))
-    import ritterorden_bauen as ro
-    eisen = nachbild_waffe(EISENSCHWERT_NACHBILD)
-    saphir = (lade(RES / "models" / "entity" / "saphirschwert.geo.json")["minecraft:geometry"][0],
-              Image.open(RES / "textures" / "entity" / "saphirschwert_haut.png").convert("RGBA"),
-              ALLE_ANIMATIONEN["animation.saphirschwert.halten"])
     mobs.append(mob_daten("ritter", "ritter.entity.json", "Ritter", {
         "ausruestung": [("mit Eisenschwert", 70), ("mit Armbrust", 30)],
-        "waffen": [eisen + ("query.variant == 0",)],
         "steckbrief": {"name": "Ritter", "en": "Knight", "zeilen": [
             ["Leben", "15 Herzen"],
-            ["Verhalten", "schützt das Land: greift Banditen und Monster an, wehrt sich"],
+            ["Verhalten", "feindlich: greift Spieler an, 2 Herzen Schaden"],
             ["Waffe", "Eisenschwert (7 von 10) oder Armbrust (3 von 10)"],
             ["Größe", "0,7 × 1,95 Blöcke"],
             ["Beute", "Eisen, Eisenklumpen, Brot, Äpfel, selten Stahlbarren; "
                       "Armbrustschützen dazu Pfeile, selten eine Armbrust; "
-                      "manchmal fällt das abgenutzte Eisenschwert"]]}}))
+                      "selten fällt das abgenutzte Eisenschwert"]]}}))
     mobs.append(mob_daten("ritterhauptmann", "ritterhauptmann.entity.json", "Ritter", {
         "gross": 1.06,
-        "waffen": [saphir + ("1.0",)],
         "steckbrief": {"name": "Ritterhauptmann", "en": "Knight Captain", "zeilen": [
             ["Leben", "25 Herzen"],
-            ["Verhalten", "schützt das Land, 3,5 Herzen Schaden plus Saphirschwert"],
+            ["Verhalten", "feindlich: greift Spieler an, 3,5 Herzen Schaden"],
             ["Waffe", "Saphirschwert"],
             ["Größe", "etwas größer als ein Ritter, blauer Helmbusch"],
             ["Beute", "Eisen, Goldklumpen, Brot, Äpfel, Steak, oft Stahlbarren, selten Smaragd "

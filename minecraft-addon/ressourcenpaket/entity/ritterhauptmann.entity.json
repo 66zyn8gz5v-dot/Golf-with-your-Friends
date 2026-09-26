@@ -8,19 +8,21 @@
       },
       "textures": {
         "default": "textures/entity/ritterhauptmann",
-        "helmbusch": "textures/entity/ritter_helmbusch"
+        "helmbusch": "textures/entity/ritter_helmbusch",
+        "saphirschwert": "textures/entity/ritter_saphirschwert"
       },
       "geometry": {
         "default": "geometry.ritter",
-        "helmbusch": "geometry.fynn.ritter_helmbusch"
+        "helmbusch": "geometry.fynn.ritter_helmbusch",
+        "saphirschwert": "geometry.fynn.ritter_saphirschwert"
       },
-      "enable_attachables": true,
       "animations": {
         "laufen": "animation.fynn.ritterhauptmann.laufen",
         "stehen": "animation.fynn.ritterhauptmann.stehen",
         "halten": "animation.fynn.ritterhauptmann.halten",
         "hieb": "animation.fynn.ritterhauptmann.hieb",
-        "blick": "animation.common.look_at_target"
+        "blick": "animation.common.look_at_target",
+        "klinge": "animation.fynn.ritter_saphirschwert.halten"
       },
       "scripts": {
         "animate": [
@@ -34,7 +36,8 @@
           },
           {
             "hieb": "variable.attack_time > 0.0 && 1.0"
-          }
+          },
+          "klinge"
         ],
         "variables": {
           "variable.attack_time": "public",
@@ -55,6 +58,9 @@
         "controller.render.default",
         {
           "controller.render.fynn.ritter_helmbusch": "1.0"
+        },
+        {
+          "controller.render.fynn.ritter_saphirschwert": "1.0"
         }
       ],
       "spawn_egg": {

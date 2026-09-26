@@ -13,16 +13,20 @@ das Eisenschwert auch.
 
 Was hier entsteht:
 * Ritter (fynn:ritter): sieben von zehn mit Eisenschwert, drei mit
-  Armbrust. Die Armbrust ist kein Gegenstand, sondern ein eigenes Modell,
-  das mit dem rechten Arm mitgeht - so darf sie aussehen, wie sie will,
-  und muss nicht wie Mojangs Armbrust gespannt werden.
+  Armbrust. Beide Waffen sind keine Gegenstaende, sondern eigene Modelle,
+  die mit dem rechten Arm mitgehen - so darf die Armbrust aussehen, wie
+  sie will, und das Schwert ist in 3D, statt als flaches Bild in der Hand
+  zu stecken (Fynn: "Das Schwert auch 3D und gib es dem Ritter in die
+  Hand").
 * Ritterhauptmann (fynn:ritterhauptmann): kraeftiger, blauer Helmbusch,
-  Saphirschwert.
+  Saphirschwert - ebenfalls fest in der Hand.
+* Beide sind feindlich ("die Ritter sind feindliche Mobs"): Sie greifen
+  Spieler an, wie die Banditen.
 * Saphirschwert (fynn:saphirschwert): in 3D wie die anderen Klingen,
   staerker als Eisen, nur als Beute zu haben.
 
-Der Koerper bleibt der des Ritters (ritter_bauen.py, Fynns Haut). Armbrust
-und Helmbusch sind eigene kleine Modelle mit eigener Textur, die ueber
+Der Koerper bleibt der des Ritters (ritter_bauen.py, Fynns Haut). Armbrust,
+Schwerter und Helmbusch sind eigene kleine Modelle mit eigener Textur, die ueber
 einen zweiten Steuerplan dazukommen - ihre Knochen heissen wie die des
 Ritters, deshalb bewegen sie sich mit.
 
@@ -88,6 +92,20 @@ SAPHIRSCHWERT = {
     "mitte": 4.5,
     "griff": "Ll",
 }
+
+# Minecrafts Eisenschwert, Pixel fuer Pixel in die Tiefe gezogen: helle
+# Kante, graue Klinge, dunkle Kante, eine wuchtige Parierstange und der
+# braune Holzgriff. Das Spiel bringt sein Schwert nur flach mit - der Ritter
+# traegt dieses hier.
+EISENSCHWERT = {
+    "karte": ["...w...", "..wsd.."] + ["..wsd.."] * 15 + [".QqqqQ.", "QqqqqqQ", "...L...", "...l...",
+                                                          "...L...", "...l...", "..QqQ.."],
+    "farben": {"w": (236, 238, 242), "s": (196, 200, 206), "d": (130, 134, 142),
+               "q": (178, 182, 188), "Q": (104, 108, 116), "L": (104, 78, 30), "l": (73, 54, 21)},
+    "tiefe": {"w": 1.0, "s": 1.0, "d": 1.0, "q": 2.0, "Q": 2.0, "L": 2.0, "l": 2.0},
+    "mitte": 3.5, "griff": "Ll",
+}
+
 
 def saphirschwert_bild():
     """Inventarbild, 16 mal 16: die Klinge schraeg nach oben rechts, wie
@@ -262,6 +280,80 @@ def helmbusch_maler(stoff, p, n, texel):
     return ton("#%02x%02x%02x" % grund, p, n, texel, 913, hell=fahne)
 
 
+# ============================================================ Schwert am Arm
+
+def aussen_wert(w):
+    """Aus "c.is_first_person ? A : B" den Wert B - am Ritter gibt es keine
+    Ich-Sicht, die Haltung von aussen gilt immer."""
+    if isinstance(w, str) and "?" in w:
+        return float(w.split(":")[-1])
+    return float(w)
+
+
+def klinge_am_arm(teil, geo, bild, halte):
+    """Haengt eine Klinge fest an den rechten Arm des Ritters.
+
+    Als Gegenstand in der Hand zeichnet das Spiel ein Eisenschwert nur
+    flach, und ob es ein 3D-Anbauteil an einem Mob ueberhaupt zeichnet,
+    haengt an Einstellungen, die man nicht sieht. Als Teil des Modells ist
+    es immer da, in 3D, und geht mit jedem Hieb mit.
+
+    Die Knochen der Waffe bekommen die Vorsilbe "klinge_": Ihr Wurzelknochen
+    heisst "rightitem", und Bedrock unterscheidet bei Knochennamen nicht
+    zwischen gross und klein - er fiele mit dem rightItem des Ritters
+    zusammen. Die Wurzel sitzt mit ihrem Drehpunkt auf dem der Hand, wie es
+    das Spiel mit einem Anbauteil auch taete."""
+    hand = [-6, 14, 1]
+    wurzel = next(k for k in geo["bones"] if k["name"].lower() == "rightitem")
+    versatz = [hand[i] - wurzel["pivot"][i] for i in range(3)]
+
+    def schieben(p):
+        return [p[i] + versatz[i] for i in range(3)]
+    knochen = [{"name": "body", "pivot": [0, 12, 0]},
+               {"name": "rightArm", "parent": "body", "pivot": [-5, 22, 0]},
+               {"name": "rightItem", "parent": "rightArm", "pivot": hand}]
+    for k in geo["bones"]:
+        k = json.loads(json.dumps(k))
+        k["parent"] = "rightItem" if k is wurzel or k["name"].lower() == "rightitem" else "klinge_" + k["parent"]
+        k["name"] = "klinge_" + k["name"]
+        k["pivot"] = schieben(k.get("pivot", [0, 0, 0]))
+        for c in k.get("cubes", []):
+            c["origin"] = schieben(c["origin"])
+            if "pivot" in c:
+                c["pivot"] = schieben(c["pivot"])
+        knochen.append(k)
+    beschreibung = {"identifier": f"geometry.fynn.ritter_{teil}",
+                    "texture_width": bild.width, "texture_height": bild.height,
+                    "visible_bounds_width": 3, "visible_bounds_height": 3.5, "visible_bounds_offset": [0, 1.25, 0]}
+    schreibe(RES / "models" / "entity" / f"ritter_{teil}.geo.json", {
+        "format_version": "1.16.0", "minecraft:geometry": [{"description": beschreibung, "bones": knochen}]})
+    bild.save(RES / "textures" / "entity" / f"ritter_{teil}.png")
+    schreibe(RES / "render_controllers" / f"ritter_{teil}.render_controllers.json", steuerplan(teil))
+    haltung = {}
+    for name, werte in halte["bones"].items():
+        haltung["klinge_" + name] = {art: ([aussen_wert(x) for x in wert] if isinstance(wert, list)
+                                           else aussen_wert(wert)) for art, wert in werte.items()}
+    return {f"animation.fynn.ritter_{teil}.halten": {"loop": True, "bones": haltung}}
+
+
+def klingen(saphir_halten):
+    import tempfile
+    import waffe_bauen as w
+    from neue_waffen_bauen import halten
+    v = EISENSCHWERT
+    ordner = Path(tempfile.mkdtemp())
+    w.aus_zeichenkarte("eisenschwert", v["karte"], {k: f + (255,) for k, f in v["farben"].items()},
+                       dicke=lambda zeile, spalte, zeichen: v["tiefe"][zeichen], mitte=v["mitte"],
+                       ziel_modell=str(ordner / "e.geo.json"), ziel_textur=str(ordner / "e.png"))
+    lade = lambda p: json.loads(Path(p).read_text(encoding="utf-8"))["minecraft:geometry"][0]
+    anims = klinge_am_arm("eisenschwert", lade(ordner / "e.geo.json"),
+                          Image.open(ordner / "e.png").convert("RGBA"), halten(v["karte"], v["griff"]))
+    anims.update(klinge_am_arm("saphirschwert", lade(RES / "models" / "entity" / "saphirschwert.geo.json"),
+                               Image.open(RES / "textures" / "entity" / "saphirschwert_haut.png").convert("RGBA"),
+                               saphir_halten))
+    return anims
+
+
 # ============================================================ Haut des Hauptmanns
 
 def hauptmann_haut():
@@ -307,12 +399,13 @@ def animationen(name):
     return eigene
 
 
-def aussehen(name, ei, extra):
+def aussehen(name, ei, extra, klinge):
     anim = {k.split(".")[-1]: k for k in animationen(name)}
     anim["blick"] = "animation.common.look_at_target"
+    anim["klinge"] = f"animation.fynn.ritter_{klinge}.halten"
     schwert = "query.variant == 0" if name == "ritter" else "1.0"
     liste = [{"laufen": "math.clamp(query.modified_move_speed * 1.4, 0.0, 1.0)"}, "stehen", "blick",
-             {"halten": schwert}, {"hieb": f"variable.attack_time > 0.0 && {schwert}"}]
+             {"halten": schwert}, {"hieb": f"variable.attack_time > 0.0 && {schwert}"}, "klinge"]
     if name == "ritter":
         liste += [{"armbrust": "query.variant == 1"}, {"zielen": "query.variant == 1 && query.has_target"}]
     geometrie = {"default": "geometry.ritter"}
@@ -337,9 +430,6 @@ def aussehen(name, ei, extra):
         "materials": {"default": "entity_alphatest"},
         "textures": texturen,
         "geometry": geometrie,
-        # Ohne das zeichnet das Spiel keine 3D-Waffen (Anbauteile) in der
-        # Hand eines Mobs - das Saphirschwert bliebe unsichtbar.
-        "enable_attachables": True,
         "animations": anim,
         "scripts": skripte,
         "render_controllers": steuer,
@@ -359,18 +449,17 @@ SPIELER = {"test": "is_family", "subject": "other", "value": "player"}
 
 
 def feinde():
-    """Ritter schuetzen das Land: Sie gehen auf Banditen und auf Monster
-    los - nur nicht auf Creeper, die zu schlagen ist dumm."""
-    return {"priority": 2, "must_see": True, "reselect_targets": True, "within_radius": 20, "entity_types": [
-        {"filters": {"test": "is_family", "subject": "other", "value": "bandit"}, "max_dist": 20},
-        {"filters": {"all_of": [{"test": "is_family", "subject": "other", "value": "monster"},
-                                {"test": "is_family", "subject": "other", "operator": "!=", "value": "creeper"},
-                                {"test": "is_family", "subject": "other", "operator": "!=", "value": "bandit"}]},
-         "max_dist": 14}]}
+    """Ritter sind feindlich: Sie gehen auf Spieler los - nicht im
+    Kreativmodus, da baut man und will seine Ruhe haben (wie bei den
+    Banditen)."""
+    return {"priority": 2, "must_see": True, "reselect_targets": True, "within_radius": 24, "entity_types": [
+        {"filters": {"all_of": [SPIELER, {"test": "has_ability", "subject": "other", "value": "instabuild",
+                                          "operator": "!="}]}, "max_dist": 20}]}
 
 
-def grundteile(leben, tempo, familie):
+def grundteile(leben, tempo, familie, erfahrung):
     return {
+        "minecraft:experience_reward": {"on_death": f"query.last_hit_by_player ? {erfahrung} : 0"},
         "minecraft:type_family": {"family": familie},
         "minecraft:collision_box": {"width": 0.7, "height": 1.95},
         "minecraft:health": {"value": leben, "max": leben},
@@ -395,15 +484,13 @@ def grundteile(leben, tempo, familie):
 
 
 def ritter_verhalten():
-    c = grundteile(30, 0.24, ["ritter", "mob"])
+    # "monster": So halten Eisengolems sie fuer Feinde, und der Ritter
+    # zaehlt ueberall dort mit, wo das Spiel feindliche Mobs meint.
+    c = grundteile(30, 0.24, ["ritter", "monster", "mob"], 8)
     gruppen = {
         "fynn:schwertritter": {
             "minecraft:variant": {"value": 0},
             "minecraft:attack": {"damage": 4},
-            # Die Waffe in der Hand; faellt selten mit herunter, dann
-            # abgenutzt - ein Ritter kaempft nicht mit einem neuen Schwert.
-            "minecraft:equipment": {"table": "loot_tables/ausruestung/ritter_schwert.json",
-                                    "slot_drop_chance": [{"slot": "slot.weapon.mainhand", "drop_chance": 0.08}]},
             "minecraft:behavior.melee_box_attack": {"priority": 3, "speed_multiplier": 1.2, "track_target": True},
             "minecraft:loot": {"table": "loot_tables/entities/ritter.json"},
         },
@@ -424,12 +511,10 @@ def ritter_verhalten():
 
 
 def hauptmann_verhalten():
-    c = grundteile(50, 0.25, ["ritter", "ritterhauptmann", "mob"])
+    c = grundteile(50, 0.25, ["ritter", "ritterhauptmann", "monster", "mob"], 15)
     c.update({
         "minecraft:attack": {"damage": 7},
         "minecraft:knockback_resistance": {"value": 0.4},
-        "minecraft:equipment": {"table": "loot_tables/ausruestung/ritterhauptmann.json",
-                                "slot_drop_chance": [{"slot": "slot.weapon.mainhand", "drop_chance": 0.05}]},
         "minecraft:behavior.melee_box_attack": {"priority": 3, "speed_multiplier": 1.25, "track_target": True},
         "minecraft:loot": {"table": "loot_tables/entities/ritterhauptmann.json"},
     })
@@ -465,8 +550,12 @@ def beute():
         topf("minecraft:apple", 1, 1, chance=0.4),
     ]
     return {
+        # Das Schwert ist Teil des Modells, nicht der Hand - es faellt also
+        # aus der Beuteliste, selten und abgenutzt: Ein Ritter kaempft nicht
+        # mit einem neuen Schwert.
         "entities/ritter.json": {"pools": brot_und_eisen + [
-            topf("fynn:stahlbarren", 1, 1, chance=0.08, nur_spieler=True)]},
+            topf("fynn:stahlbarren", 1, 1, chance=0.08, nur_spieler=True),
+            topf("minecraft:iron_sword", 1, 1, chance=0.08, schaden=(0.4, 0.9))]},
         "entities/ritter_armbrust.json": {"pools": brot_und_eisen + [
             topf("minecraft:arrow", 1, 5),
             topf("minecraft:crossbow", 1, 1, chance=0.05, nur_spieler=True, schaden=(0.3, 0.7))]},
@@ -478,15 +567,9 @@ def beute():
             topf("minecraft:cooked_beef", 0, 2, chance=0.5),
             topf("fynn:stahlbarren", 1, 2, chance=0.25, nur_spieler=True),
             topf("minecraft:emerald", 1, 1, chance=0.1, nur_spieler=True),
-            topf("minecraft:golden_apple", 1, 1, chance=0.03, nur_spieler=True)]},
-        # Was sie in der Hand tragen. Beim Hauptmann steht das
-        # Saphirschwert auf drei Vierteln - so faellt es auch herunter.
-        "ausruestung/ritter_schwert.json": {"pools": [{"rolls": 1, "entries": [
-            {"type": "item", "name": "minecraft:iron_sword", "weight": 1,
-             "functions": [{"function": "set_damage", "damage": {"min": 0.4, "max": 0.9}}]}]}]},
-        "ausruestung/ritterhauptmann.json": {"pools": [{"rolls": 1, "entries": [
-            {"type": "item", "name": "fynn:saphirschwert", "weight": 1,
-             "functions": [{"function": "set_damage", "damage": 0.75}]}]}]},
+            topf("minecraft:golden_apple", 1, 1, chance=0.03, nur_spieler=True),
+            # Selten, und immer auf drei Vierteln Haltbarkeit.
+            topf("fynn:saphirschwert", 1, 1, chance=0.05, schaden=(0.75, 0.75))]},
     }
 
 
@@ -527,6 +610,7 @@ def in_liste_eintragen():
 
 def main():
     waffe_anims, icon = saphirschwert()
+    klingen_anims = klingen(waffe_anims["animation.saphirschwert.halten"])
     for modell, maler, teil in ((armbrust_modell(), armbrust_maler, "armbrust"),
                                 (helmbusch_modell(), helmbusch_maler, "helmbusch")):
         schreibe(RES / "models" / "entity" / f"ritter_{teil}.geo.json", modell.geometrie())
@@ -535,6 +619,7 @@ def main():
     hauptmann_haut().save(RES / "textures" / "entity" / "ritterhauptmann.png")
 
     alle = dict(waffe_anims)
+    alle.update(klingen_anims)
     alle.update(animationen("ritter"))
     alle.update(animationen("ritterhauptmann"))
     schreibe(RES / "animations" / "ritterorden.animation.json", {"format_version": "1.10.0", "animations": alle})
@@ -544,14 +629,18 @@ def main():
         alt.unlink()
 
     schreibe(RES / "entity" / "ritter.entity.json", aussehen(
-        "ritter", {"texture": "ritter_ei", "texture_index": 0}, [("armbrust", "query.variant == 1")]))
+        "ritter", {"texture": "ritter_ei", "texture_index": 0},
+        [("armbrust", "query.variant == 1"), ("eisenschwert", "query.variant == 0")], "eisenschwert"))
     schreibe(RES / "entity" / "ritterhauptmann.entity.json", aussehen(
-        "ritterhauptmann", {"base_color": "#2e4a9a", "overlay_color": "#d8b050"}, [("helmbusch", "1.0")]))
+        "ritterhauptmann", {"base_color": "#2e4a9a", "overlay_color": "#d8b050"},
+        [("helmbusch", "1.0"), ("saphirschwert", "1.0")], "saphirschwert"))
     schreibe(VER / "entities" / "ritter.json", ritter_verhalten())
     schreibe(VER / "entities" / "ritterhauptmann.json", hauptmann_verhalten())
     for name, tabelle in beute().items():
         schreibe(VER / "loot_tables" / name, tabelle)
-    for veraltet in (VER / "loot_tables" / "ausruestung" / "ritter.json", VER / "loot_tables" / "wesen" / "ritter.json"):
+    for veraltet in (VER / "loot_tables" / "ausruestung" / "ritter.json", VER / "loot_tables" / "wesen" / "ritter.json",
+                     VER / "loot_tables" / "ausruestung" / "ritter_schwert.json",
+                     VER / "loot_tables" / "ausruestung" / "ritterhauptmann.json"):
         if veraltet.exists():
             veraltet.unlink()
     sprache()
@@ -581,7 +670,11 @@ def zusammensetzen(geo_a, bild_a, geo_b, bild_b):
             continue
         k = json.loads(json.dumps(k))
         for c in k.get("cubes", []):
-            c["uv"] = [c["uv"][0], c["uv"][1] + unten]
+            if isinstance(c["uv"], list):
+                c["uv"] = [c["uv"][0], c["uv"][1] + unten]
+            else:                               # Felder je Seite (Klingen)
+                for f in c["uv"].values():
+                    f["uv"] = [f["uv"][0], f["uv"][1] + unten]
         a["bones"].append(k)
     bild = Image.new("RGBA", (max(bild_a.width, bild_b.width), unten + bild_b.height), (0, 0, 0, 0))
     bild.paste(bild_a, (0, 0))
@@ -598,15 +691,18 @@ def vorschau(ordner, icon):
     koerper = lade(RES / "models" / "entity" / "ritter.geo.json")
     anims = lade(RES / "animations" / "ritterorden.animation.json")["animations"]
     zellen = []
-    for name, haut, teil, posen in (
-            ("Ritter mit Armbrust", "ritter", "armbrust", ["stehen", "armbrust"]),
-            ("Ritter zielt", "ritter", "armbrust", ["armbrust", "zielen"]),
-            ("Ritterhauptmann", "ritterhauptmann", "helmbusch", ["stehen", "halten"])):
-        geo, bild = zusammensetzen(koerper, Image.open(RES / "textures" / "entity" / f"{haut}.png").convert("RGBA"),
-                                   lade(RES / "models" / "entity" / f"ritter_{teil}.geo.json"),
-                                   Image.open(RES / "textures" / "entity" / f"ritter_{teil}.png").convert("RGBA"))
+    for name, haut, teile, posen in (
+            ("Ritter mit Schwert", "ritter", ["eisenschwert"], ["stehen", "halten"]),
+            ("Ritter mit Armbrust", "ritter", ["armbrust"], ["stehen", "armbrust"]),
+            ("Ritter zielt", "ritter", ["armbrust"], ["armbrust", "zielen"]),
+            ("Ritterhauptmann", "ritterhauptmann", ["helmbusch", "saphirschwert"], ["stehen", "halten"])):
+        geo, bild = koerper, Image.open(RES / "textures" / "entity" / f"{haut}.png").convert("RGBA")
+        for teil in teile:
+            geo, bild = zusammensetzen(geo, bild, lade(RES / "models" / "entity" / f"ritter_{teil}.geo.json"),
+                                       Image.open(RES / "textures" / "entity" / f"ritter_{teil}.png").convert("RGBA"))
         wer = "ritter" if haut == "ritter" else "ritterhauptmann"
         liste = [(anims[f"animation.fynn.{wer}.{p}"], 1.0) for p in posen]
+        liste += [(anims[f"animation.fynn.ritter_{t}.halten"], 1.0) for t in teile if "schwert" in t]
         for gier in (35, 150):
             zellen.append((tm.ansehen(geo, bild, liste, {"q.has_target": 1.0}, gier=gier, neigung=8,
                                       breite=240, hoehe=300, zoom=7.5, mitte=(0, 18, 0)), f"{name}, {gier} Grad"))
