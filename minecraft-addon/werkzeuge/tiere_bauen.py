@@ -261,6 +261,15 @@ TIERE = [
                   "step": "mob.ravager.step", "pitch": [1.2, 1.4]},
         "ei": ("#8a8078", "#ece4cc"), "angriff": "stoss",
         "zeigen": {"stosszaehne": "!query.is_baby"},
+        # Fynn: "Es gibt eine geringe Wahrscheinlichkeit, dass besonders
+        # grosse Elefanten spawnen. Auf dem kann man dann einen Spezialsattel
+        # drauf machen ... ordentlich Stauraum ... bis zu drei Spieler."
+        "riese": {"chance": 6, "gross": 1.4, "leben": 140, "kollision": (2.9, 3.8), "tempo": 0.22,
+                  "zaehmen": ["minecraft:hay_block", "minecraft:melon_block"], "zaehmchance": 0.25,
+                  "sattel": "fynn:elefantensattel",
+                  # Plattform oben bei y = 42 Pixel, um 1.4 vergroessert:
+                  # 42 * 1.4 / 16 = 3.7 Bloecke; die Reiter sitzen knapp darunter.
+                  "sitze": [[0.0, 3.45, 0.5], [-0.35, 3.45, -0.35], [0.35, 3.45, -0.35]]},
     },
     {
         "id": "nashorn", "grast": True, "scharrt": True, "name": ("Nashorn", "Rhino"), "gestalt": "nashorn",
@@ -569,6 +578,12 @@ def verhalten(t, varianten_namen):
     zufall = [{"weight": w, "add": {"component_groups": [f"fynn:variante_{i}"]}}
               for i, (_, w) in enumerate(t["varianten"]) if w > 0]
     alter = [{"weight": 88, "add": {"component_groups": erwachsen_liste}}]
+    if t.get("riese"):
+        rie = t["riese"]
+        alter = [{"weight": 88 - rie["chance"], "add": {"component_groups": erwachsen_liste}},
+                 {"weight": rie["chance"], "add": {"component_groups": erwachsen_liste + ["fynn:riese"]},
+                  "set_property": {"fynn:riese": True}}]
+        riesenreittier(t, c, gruppen, ereignisse)
     if t.get("baby"):
         alter.append({"weight": 12, "add": {"component_groups": [baby]}})
     folge = []
@@ -589,6 +604,8 @@ def verhalten(t, varianten_namen):
 
     beschreibung = {"identifier": kennung, "spawn_category": "water_creature" if wasser else "creature",
                     "is_spawnable": True, "is_summonable": True}
+    if t.get("riese"):
+        beschreibung["properties"] = {"fynn:riese": {"type": "bool", "default": False, "client_sync": True}}
     if t.get("reiten"):
         # Wie viele Rucksaecke der Elch traegt (0 bis 2) - das Spiel zeigt
         # danach die Taschen an den Flanken (verhaltenspaket/scripts/rucksack.js).
@@ -664,6 +681,66 @@ def reittier(t, c, gruppen, ereignisse):
              "remove": {"component_groups": ["fynn:wuetend"]}, "add": {"component_groups": ["fynn:ruhig"]}},
             {"filters": {"test": "is_tamed", "subject": "self", "value": True},
              "remove": {"component_groups": ["fynn:wuetend"]}}]}
+
+
+def riesenreittier(t, c, gruppen, ereignisse):
+    """Der Riesenelefant: selten, gross, gutmuetig. Mit Heuballen oder
+    Melonen zaehmen, dann den Elefantensattel auflegen (mit der Schere
+    wieder ab). Gesattelt tragen sie drei Reiter - wer zuerst aufsteigt,
+    lenkt - und eine Kiste mit 15 Plaetzen (geduckt antippen oder beim
+    Reiten das Inventar oeffnen)."""
+    r = t["riese"]
+    nicht_geduckt = {"test": "is_sneak_held", "subject": "other", "value": False}
+    gesattelt = {"test": "has_component", "subject": "self", "value": "minecraft:is_saddled"}
+    gruppen["fynn:riese"] = {
+        "minecraft:collision_box": {"width": r["kollision"][0], "height": r["kollision"][1]},
+        "minecraft:health": {"value": r["leben"], "max": r["leben"]},
+        "minecraft:variable_max_auto_step": {"base_value": 1.5625, "controlled_value": 1.5625,
+                                             "jump_prevented_value": 1.5625},
+        "minecraft:tameable": {"probability": r["zaehmchance"], "tame_items": r["zaehmen"],
+                               "tame_event": {"event": "fynn:gezaehmt", "target": "self"}},
+    }
+    gruppen["fynn:gezaehmt"] = {
+        "minecraft:is_tamed": {},
+        "minecraft:inventory": {"container_type": "horse", "inventory_size": 16},
+        "minecraft:interact": {"interactions": [
+            {"on_interact": {"filters": {"all_of": [
+                dict(gesattelt, operator="!="),
+                {"test": "has_equipment", "subject": "other", "domain": "hand", "value": r["sattel"]},
+                nicht_geduckt]}, "event": "fynn:gesattelt", "target": "self"},
+             "use_item": True, "play_sounds": "saddle", "interact_text": "action.interact.saddle"},
+            {"on_interact": {"filters": {"all_of": [
+                gesattelt, {"test": "rider_count", "subject": "self", "operator": "equals", "value": 0},
+                {"test": "has_equipment", "subject": "other", "domain": "hand", "value": "shears"}, nicht_geduckt]},
+                "event": "fynn:abgesattelt", "target": "self"},
+             "hurt_item": 1, "spawn_items": {"table": "loot_tables/elefantensattel.json"},
+             "play_sounds": "unsaddle", "interact_text": "action.interact.removesaddle"},
+        ]},
+    }
+    gruppen["fynn:gesattelt"] = {
+        "minecraft:is_saddled": {},
+        "minecraft:is_chested": {},
+        "minecraft:input_ground_controlled": {},
+        "minecraft:behavior.player_ride_tamed": {},
+        "minecraft:movement": {"value": r["tempo"]},
+        "minecraft:rideable": {"seat_count": len(r["sitze"]), "controlling_seat": 0, "crouching_skip_interact": True,
+                               "family_types": ["player"], "interact_text": "action.interact.ride.horse",
+                               "seats": [{"position": pos} for pos in r["sitze"]]},
+    }
+    ereignisse["fynn:gezaehmt"] = {"remove": {"component_groups": ["fynn:ruhig", "fynn:wuetend"]},
+                                    "add": {"component_groups": ["fynn:gezaehmt"]}}
+    ereignisse["fynn:gesattelt"] = {"add": {"component_groups": ["fynn:gesattelt"]}}
+    ereignisse["fynn:abgesattelt"] = {"remove": {"component_groups": ["fynn:gesattelt"]}}
+    # Zum Ausprobieren, ohne lange zu suchen:
+    #     /event entity @e[type=fynn:elefant,r=10] fynn:wird_riese
+    ereignisse["fynn:wird_riese"] = {"add": {"component_groups": ["fynn:riese"]}, "set_property": {"fynn:riese": True}}
+    c["minecraft:despawn"] = {"despawn_from_distance": {},
+                              "filters": {"test": "is_tamed", "subject": "self", "operator": "!=", "value": True}}
+    ereignisse["fynn:beruhigt"] = {"sequence": [
+        {"filters": {"test": "is_tamed", "subject": "self", "value": False},
+         "remove": {"component_groups": ["fynn:wuetend"]}, "add": {"component_groups": ["fynn:ruhig"]}},
+        {"filters": {"test": "is_tamed", "subject": "self", "value": True},
+         "remove": {"component_groups": ["fynn:wuetend"]}}]}
 
 
 def beuteliste(eintraege):
@@ -1097,6 +1174,14 @@ def bewegungen(t, modell):
                 jung[seite] = {"scale": 0.8}
         a["jung"] = {"loop": True, "bones": jung}
 
+    # --- Der Riese: alles um den Faktor groesser. Weil die Beine am Rumpf
+    # haengen und der Rumpf in seinem Drehpunkt waechst, wird er um genau
+    # so viel angehoben, dass die Fuesse wieder auf dem Boden stehen.
+    if t.get("riese"):
+        f = t["riese"]["gross"]
+        rumpf_y = next(k.drehpunkt[1] for k in modell.knochen if k.name == "body")
+        a["riese"] = {"loop": True, "bones": {"body": {"scale": f, "position": [0.0, round(rumpf_y * (f - 1), 2), 0.0]}}}
+
     # --- Teile, die nur manche Varianten haben (Geweih, Maehne, Hammerkopf)
     if t.get("zeigen"):
         a["teile"] = {"loop": True, "bones": {k: {"scale": f"({bed}) ? 1.0 : 0.0"} for k, bed in t["zeigen"].items()}}
@@ -1155,6 +1240,8 @@ def animate_liste(t, anims):
         liste.append({"jung": "query.is_baby"})
     if "teile" in anims:
         liste.append("teile")
+    if "riese" in anims:
+        liste.append({"riese": "query.property('fynn:riese')"})
     return liste
 
 
@@ -1196,6 +1283,8 @@ def steuerung(t, texturen):
         "materials": [{"*": "Material.default"}],
         "textures": [bild],
     }
+    if t.get("riese"):
+        steuer["part_visibility"] = [{"saenfte": "query.is_saddled"}]
     if t.get("reiten"):
         steuer["part_visibility"] = [{"sattel": "query.is_saddled"},
                                      {"tasche_links": "query.property('fynn:taschen') >= 1"},
@@ -1289,6 +1378,8 @@ def vorschau(bilder, ordner):
                      "q.is_in_water": 1.0}
             anims = [(a, 1.0) for k, a in eigene.items() if k.endswith((".teile", ".jung")) and
                      (not k.endswith(".jung") or baby)]
+            if t.get("riese"):
+                anims.append(({"loop": True, "bones": {"saenfte": {"scale": 0.0}}}, 1.0))
             if t.get("reiten"):
                 # Im Spiel blendet die Darstellung Sattel und Taschen aus,
                 # solange keine da sind - hier dasselbe von Hand.

@@ -429,6 +429,19 @@
         }
       }
     },
+    "animation.fynn.elefant.riese": {
+      "loop": true,
+      "bones": {
+        "body": {
+          "scale": 1.4,
+          "position": [
+            0.0,
+            10.4,
+            0.0
+          ]
+        }
+      }
+    },
     "animation.fynn.elefant.teile": {
       "loop": true,
       "bones": {

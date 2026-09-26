@@ -25,6 +25,7 @@
         "drehen": "animation.fynn.elefant.drehen",
         "angriff": "animation.fynn.elefant.angriff",
         "jung": "animation.fynn.elefant.jung",
+        "riese": "animation.fynn.elefant.riese",
         "teile": "animation.fynn.elefant.teile"
       },
       "scripts": {
@@ -67,7 +68,10 @@
           {
             "jung": "query.is_baby"
           },
-          "teile"
+          "teile",
+          {
+            "riese": "query.property('fynn:riese')"
+          }
         ]
       },
       "render_controllers": [

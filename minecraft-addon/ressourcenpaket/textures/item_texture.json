@@ -367,6 +367,9 @@
     },
     "rucksack": {
       "textures": "textures/items/rucksack"
+    },
+    "elefantensattel": {
+      "textures": "textures/items/elefantensattel"
     }
   }
 }

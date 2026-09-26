@@ -137,8 +137,10 @@ def pruefe_rezepte(kennungen):
             fehler.append(f"{datei.name}: unbekannte Rezeptart.")
             continue
 
-        verwendet = [e["item"] for e in rezept.get("key", {}).values()]
-        verwendet += [e["item"] for e in rezept.get("ingredients", [])]
+        # Zutaten ueber eine Gruppe ("tag": "minecraft:planks") sind keine
+        # einzelnen Gegenstaende - die kennt das Spiel selbst.
+        verwendet = [e["item"] for e in rezept.get("key", {}).values() if "item" in e]
+        verwendet += [e["item"] for e in rezept.get("ingredients", []) if "item" in e]
         verwendet.append(rezept["result"]["item"])
         for eintrag in rezept.get("unlock", []):
             if "item" in eintrag:

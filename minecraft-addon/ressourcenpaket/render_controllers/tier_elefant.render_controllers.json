@@ -18,6 +18,11 @@
       ],
       "textures": [
         "query.is_baby ? Texture.kalb : Array.haut[query.variant]"
+      ],
+      "part_visibility": [
+        {
+          "saenfte": "query.is_saddled"
+        }
       ]
     }
   }

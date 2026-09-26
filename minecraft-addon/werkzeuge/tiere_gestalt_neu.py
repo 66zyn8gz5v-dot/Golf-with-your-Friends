@@ -85,7 +85,38 @@ def elefant_modell():
     # Knie und Fussgelenke: die Beine werden an zwei Stellen dicker.
     for name, x, z in (("leg0", 6, -9), ("leg1", -6, -9), ("leg2", 6, 9), ("leg3", -6, 9)):
         m.finde(name).kasten([x - 4, 8, z - 4], [8, 3, 8], "knie")
+    saenfte(m)
     return m
+
+
+def saenfte(m):
+    """Der Elefantensattel: eine Saenfte wie in Indien - Decke mit
+    Goldborte, Holzplattform mit Bruestung, drei Kissen, vier Pfosten und
+    ein Dach mit Spitze; an den Flanken zwei Kisten fuer den Stauraum.
+    Nur zu sehen, wenn der Elefant gesattelt ist (part_visibility)."""
+    s = m.knoch("saenfte", [0, 40, 0], "body")
+    s.kasten([-10.5, 40, -11], [21, 1, 20], "decke")
+    paar(s, [10, 29, -10], [1, 11, 18], "decke")
+    paar(s, [10.2, 28, -10], [1, 1, 18], "borte")
+    s.kasten([-8, 41, -9], [16, 1, 18], "holz")
+    s.kasten([-8, 42, -9], [16, 3, 1], "wand")
+    s.kasten([-8, 42, 8], [16, 3, 1], "wand")
+    paar(s, [7, 42, -8], [1, 3, 16], "wand")
+    for x in (-8, 7):
+        for z in (-9, 8):
+            s.kasten([x, 45, z], [1, 15, 1], "pfosten")
+    s.kasten([-6, 42, -7], [12, 1, 5], "kissen")                  # vorn der Lenker
+    paar(s, [0.5, 42, 1], [5, 1, 5], "kissen")                     # hinten zwei
+    s.kasten([-9.5, 60, -10.5], [19, 1, 21], "dach")
+    s.kasten([-7.5, 61, -8.5], [15, 1, 17], "dach")
+    s.kasten([-5, 62, -6], [10, 1, 12], "dach")
+    s.kasten([-2, 63, -3], [4, 1, 6], "dach")
+    s.kasten([-0.5, 64, -0.5], [1, 3, 1], "gold")                  # Spitze
+    s.kasten([-9.5, 59, -10.5], [19, 1, 1], "fransen")
+    s.kasten([-9.5, 59, 9.5], [19, 1, 1], "fransen")
+    paar(s, [8.5, 59, -9.5], [1, 1, 19], "fransen")
+    paar(s, [10.5, 25, -3], [3, 6, 6], "kiste")                    # Stauraum an den Flanken
+    paar(s, [13.5, 27, -0.5], [1, 1, 1], "gold")                   # Schloss
 
 
 ELEFANT_FARBEN = {"savanne": "#8a8078", "grau": "#7a7a78", "kalb": "#9a928a"}
@@ -109,6 +140,8 @@ def elefant_maler(variante):
         return ton(farbe, p, n, texel, saat, hell=h, straehne=0.0, wolke=0.05)
 
     def f(stoff, p, n, texel):
+        if stoff in SAENFTE:
+            return saenfte_maler(stoff, p, n, texel)
         if stoff == "stosszahn":
             return ton("#ece4cc", p, n, texel, 301, straehne=0.0, hell=0.05 if n[1] > 0.5 else 0.0)
         if stoff == "ohrrand":
@@ -159,6 +192,27 @@ def elefant_maler(variante):
             return falten(p, n, texel, 323, hell=-0.04 - (0.05 if int(p[0] + p[2]) % 3 == 0 else 0.0))
         return falten(p, n, texel, 325, hell=0.04 * (p[1] - 28) / 10)
     return f
+
+
+SAENFTE = {"decke": "#9a2a2a", "borte": "#d8b050", "holz": "#6a4428", "wand": "#6a4428", "pfosten": "#4a2e1a",
+           "kissen": "#3a5a8a", "dach": "#a83232", "gold": "#e0b850", "fransen": "#d8b050", "kiste": "#6a4428"}
+
+
+def saenfte_maler(stoff, p, n, texel):
+    if stoff == "decke" and n[1] > 0.5 and (abs(abs(p[0]) - 9.5) < 0.6 or abs(p[2] + 10.5) < 0.6 or abs(p[2] - 8.5) < 0.6):
+        return ton("#d8b050", p, n, texel, 461, straehne=0.0)          # Goldborte oben
+    if stoff == "decke" and abs(n[0]) > 0.5 and abs(p[1] - 34.5) < 0.5:
+        return ton("#d8b050", p, n, texel, 463, straehne=0.0)          # Muster an der Seite
+    if stoff == "wand" and p[1] > 44.4:
+        return ton("#d8b050", p, n, texel, 465, straehne=0.0)          # vergoldeter Handlauf
+    if stoff == "dach" and abs(n[1]) > 0.5 and int(abs(p[0]) + 0.5) % 4 < 2:
+        return ton("#e0b850", p, n, texel, 467, straehne=0.0)          # Streifen im Dachstoff
+    if stoff == "kiste" and (abs(p[1] - 28) < 0.5 or abs(abs(p[2] - 0) - 2.5) < 0.5):
+        return ton("#3a3a40", p, n, texel, 469, straehne=0.0)          # Eisenbaender
+    if stoff == "fransen" and texel[0] % 2 == 1:
+        return None
+    return ton(SAENFTE[stoff], p, n, texel, 471, straehne=0.03 if stoff in ("holz", "wand", "pfosten", "kiste") else 0.0,
+               hell=0.05 if n[1] > 0.5 else 0.0)
 
 
 # ================================================================== Nashorn
@@ -364,6 +418,8 @@ def walross_maler(variante):
     haut = "#8a6a5a" if variante == "jung" else "#9a6a52"
 
     def f(stoff, p, n, texel):
+        if stoff in SAENFTE:
+            return saenfte_maler(stoff, p, n, texel)
         if stoff == "stosszahn":
             return ton("#ece2c8", p, n, texel, 381, straehne=0.0)
         if stoff == "flosse":

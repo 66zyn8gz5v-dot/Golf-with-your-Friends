@@ -42,11 +42,11 @@ item.fynn:eisenklinge.name=Iron Blade
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.42
+item.iron_sword.name=Stahlschwert 4.43
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.42
-item.fynn:degen.name=Degen 4.42
+item.fynn:degen=Degen 4.43
+item.fynn:degen.name=Degen 4.43
 
 
 
@@ -337,6 +337,11 @@ entity.fynn:rucksack_abgestellt.name=Backpack
 
 ## Weidenroeschen
 tile.fynn:weidenroeschen.name=Fireweed
+
+
+## Elefantensattel
+item.fynn:elefantensattel=Elephant Howdah
+item.fynn:elefantensattel.name=Elephant Howdah
 
 ## Die Tiere
 entity.fynn:braunbaer.name=Brown Bear
