@@ -58,8 +58,10 @@ GRIFF_ICH = -22.0
 # (0.37 und 0.28) waren sie sieben Pixel lang, zwei davon Griff: Von vorn
 # sah man nur den Knauf, und Fynn schrieb, sie "stecken noch in der Hand".
 # Jetzt etwa halb so lang wie ein Schwert, wie ein Dolch eben ist.
-GROESSE_AUSSEN = 0.55
-GROESSE_ICH = 0.40
+# Fassung 4.48: noch einmal groesser, wie alle Waffen - sie "versanken"
+# in der Hand.
+GROESSE_AUSSEN = 0.68
+GROESSE_ICH = 0.46
 # Von aussen zeigt die Klinge nicht waagerecht nach vorn, sondern schraeg
 # nach oben - so sieht man sie auch von vorn.
 KIPPEN_AUSSEN = 62.0

@@ -87,7 +87,8 @@ def modell(sorte):
 
 
 def animation():
-    aussen, ich = griffversatz(KARTE, "g")
+    # Pfeile bleiben so klein wie bisher - sie sind Munition, keine Waffe.
+    aussen, ich = griffversatz(KARTE, "g", 0.37, 0.28)
     # In der Zweithand steht alles spiegelverkehrt: links statt rechts.
     zweit = "c.item_slot == 'slot.weapon.offhand'"
     return {"format_version": "1.10.0", "animations": {"animation.erzpfeil.halten": {"loop": True, "bones": {

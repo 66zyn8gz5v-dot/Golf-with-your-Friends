@@ -44,11 +44,11 @@ item.fynn:eisenklinge.name=Eisenklinge
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.47
+item.iron_sword.name=Stahlschwert 4.48
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.47
-item.fynn:degen.name=Degen 4.47
+item.fynn:degen=Degen 4.48
+item.fynn:degen.name=Degen 4.48
 
 
 
@@ -97,40 +97,6 @@ item.fynn:artefaktentasche=Artefaktentasche
 item.fynn:artefaktentasche.name=Artefaktentasche
 tile.fynn:rollenaltar.name=Rollenaltar
 tile.fynn:tempelaltar.name=Tempelaltar
-item.fynn:kriegshammer=Kriegshammer
-item.fynn:frostzepter=Frostzepter
-item.fynn:sturmbogen=Sturmbogen
-item.fynn:wurfstern=Wurfstern
-item.fynn:kriegshammer.name=Kriegshammer
-item.fynn:frostzepter.name=Frostzepter
-item.fynn:sturmbogen.name=Sturmbogen
-item.fynn:wurfstern.name=Wurfstern
-entity.fynn:frostkugel.name=Frostkugel
-entity.fynn:wurfstern.name=Wurfstern
-item.fynn:eisendolche=Eisendolche
-item.fynn:eisendolche.name=Eisendolche
-item.fynn:eisendolch_links=Linker Eisendolch (Zweithand)
-item.fynn:eisendolch_links.name=Linker Eisendolch (Zweithand)
-item.fynn:silberdolche=Silberdolche
-item.fynn:silberdolche.name=Silberdolche
-item.fynn:silberdolch_links=Linker Silberdolch (Zweithand)
-item.fynn:silberdolch_links.name=Linker Silberdolch (Zweithand)
-item.fynn:stahldolche=Stahldolche
-item.fynn:stahldolche.name=Stahldolche
-item.fynn:stahldolch_links=Linker Stahldolch (Zweithand)
-item.fynn:stahldolch_links.name=Linker Stahldolch (Zweithand)
-item.fynn:elektrumdolche=Elektrumdolche
-item.fynn:elektrumdolche.name=Elektrumdolche
-item.fynn:elektrumdolch_links=Linker Elektrumdolch (Zweithand)
-item.fynn:elektrumdolch_links.name=Linker Elektrumdolch (Zweithand)
-item.fynn:diamantdolche=Diamantdolche
-item.fynn:diamantdolche.name=Diamantdolche
-item.fynn:diamantdolch_links=Linker Diamantdolch (Zweithand)
-item.fynn:diamantdolch_links.name=Linker Diamantdolch (Zweithand)
-item.fynn:netheritdolche=Netheritdolche
-item.fynn:netheritdolche.name=Netheritdolche
-item.fynn:netheritdolch_links=Linker Netheritdolch (Zweithand)
-item.fynn:netheritdolch_links.name=Linker Netheritdolch (Zweithand)
 
 
 
@@ -161,16 +127,6 @@ item.fynn:geweihbogen.name=Elchgeweihbogen
 
 
 
-## Rubin und neue Schwerter
-item.fynn:rubin=Rubin
-item.fynn:rubin.name=Rubin
-item.fynn:rubinklinge=Rubinklinge
-item.fynn:rubinklinge.name=Rubinklinge
-item.fynn:haizahnsaebel=Haizahnsäbel
-item.fynn:haizahnsaebel.name=Haizahnsäbel
-tile.fynn:rubinerz.name=Rubinerz
-tile.fynn:tiefenrubinerz.name=Tiefenschiefer-Rubinerz
-tile.fynn:rubinblock.name=Rubinblock
 
 
 
@@ -249,6 +205,88 @@ item.fynn:waldlaeuferhose=Waldläuferhose
 item.fynn:waldlaeuferhose.name=Waldläuferhose
 item.fynn:waldlaeuferstiefel=Waldläuferstiefel
 item.fynn:waldlaeuferstiefel.name=Waldläuferstiefel
+
+
+
+
+
+
+
+## Die Tiere
+entity.fynn:braunbaer.name=Braunbär
+item.spawn_egg.entity.fynn:braunbaer.name=Braunbär-Spawn-Ei
+entity.fynn:elch.name=Elch
+item.spawn_egg.entity.fynn:elch.name=Elch-Spawn-Ei
+entity.fynn:wildschwein.name=Wildschwein
+item.spawn_egg.entity.fynn:wildschwein.name=Wildschwein-Spawn-Ei
+entity.fynn:bison.name=Bison
+item.spawn_egg.entity.fynn:bison.name=Bison-Spawn-Ei
+entity.fynn:loewe.name=Löwe
+item.spawn_egg.entity.fynn:loewe.name=Löwe-Spawn-Ei
+entity.fynn:tiger.name=Tiger
+item.spawn_egg.entity.fynn:tiger.name=Tiger-Spawn-Ei
+entity.fynn:krokodil.name=Krokodil
+item.spawn_egg.entity.fynn:krokodil.name=Krokodil-Spawn-Ei
+entity.fynn:schneeleopard.name=Schneeleopard
+item.spawn_egg.entity.fynn:schneeleopard.name=Schneeleopard-Spawn-Ei
+entity.fynn:wal.name=Buckelwal
+item.spawn_egg.entity.fynn:wal.name=Buckelwal-Spawn-Ei
+entity.fynn:hai.name=Hai
+item.spawn_egg.entity.fynn:hai.name=Hai-Spawn-Ei
+entity.fynn:riesenkalmar.name=Riesenkalmar
+item.spawn_egg.entity.fynn:riesenkalmar.name=Riesenkalmar-Spawn-Ei
+entity.fynn:schwertfisch.name=Schwertfisch
+item.spawn_egg.entity.fynn:schwertfisch.name=Schwertfisch-Spawn-Ei
+entity.fynn:elefant.name=Elefant
+item.spawn_egg.entity.fynn:elefant.name=Elefant-Spawn-Ei
+entity.fynn:nashorn.name=Nashorn
+item.spawn_egg.entity.fynn:nashorn.name=Nashorn-Spawn-Ei
+entity.fynn:gorilla.name=Gorilla
+item.spawn_egg.entity.fynn:gorilla.name=Gorilla-Spawn-Ei
+entity.fynn:walross.name=Walross
+item.spawn_egg.entity.fynn:walross.name=Walross-Spawn-Ei
+entity.fynn:mantarochen.name=Mantarochen
+item.spawn_egg.entity.fynn:mantarochen.name=Mantarochen-Spawn-Ei
+entity.fynn:steinadler.name=Steinadler
+item.spawn_egg.entity.fynn:steinadler.name=Steinadler-Spawn-Ei
+
+## Rucksack
+item.fynn:rucksack=Rucksack
+item.fynn:rucksack.name=Rucksack
+entity.fynn:rucksack_abgestellt.name=Rucksack
+
+
+
+
+
+item.fynn:eisendolche=Eisendolche
+item.fynn:eisendolche.name=Eisendolche
+item.fynn:eisendolch_links=Linker Eisendolch (Zweithand)
+item.fynn:eisendolch_links.name=Linker Eisendolch (Zweithand)
+item.fynn:silberdolche=Silberdolche
+item.fynn:silberdolche.name=Silberdolche
+item.fynn:silberdolch_links=Linker Silberdolch (Zweithand)
+item.fynn:silberdolch_links.name=Linker Silberdolch (Zweithand)
+item.fynn:stahldolche=Stahldolche
+item.fynn:stahldolche.name=Stahldolche
+item.fynn:stahldolch_links=Linker Stahldolch (Zweithand)
+item.fynn:stahldolch_links.name=Linker Stahldolch (Zweithand)
+item.fynn:elektrumdolche=Elektrumdolche
+item.fynn:elektrumdolche.name=Elektrumdolche
+item.fynn:elektrumdolch_links=Linker Elektrumdolch (Zweithand)
+item.fynn:elektrumdolch_links.name=Linker Elektrumdolch (Zweithand)
+item.fynn:diamantdolche=Diamantdolche
+item.fynn:diamantdolche.name=Diamantdolche
+item.fynn:diamantdolch_links=Linker Diamantdolch (Zweithand)
+item.fynn:diamantdolch_links.name=Linker Diamantdolch (Zweithand)
+item.fynn:netheritdolche=Netheritdolche
+item.fynn:netheritdolche.name=Netheritdolche
+item.fynn:netheritdolch_links=Linker Netheritdolch (Zweithand)
+item.fynn:netheritdolch_links.name=Linker Netheritdolch (Zweithand)
+
+
+
+
 
 
 ## Tierfleisch
@@ -354,49 +392,28 @@ item.fynn:jagdhorn=Jagdhorn
 item.fynn:jagdhorn.name=Jagdhorn
 item.fynn:schwertfischklinge=Schwertfischklinge
 item.fynn:schwertfischklinge.name=Schwertfischklinge
+item.fynn:schwertfischschwert=Schwertfischschwert
+item.fynn:schwertfischschwert.name=Schwertfischschwert
 item.fynn:trank_der_tiefe=Trank der Tiefe
 item.fynn:trank_der_tiefe.name=Trank der Tiefe
+item.fynn:kriegshammer=Kriegshammer
+item.fynn:frostzepter=Frostzepter
+item.fynn:sturmbogen=Sturmbogen
+item.fynn:wurfstern=Wurfstern
+item.fynn:kriegshammer.name=Kriegshammer
+item.fynn:frostzepter.name=Frostzepter
+item.fynn:sturmbogen.name=Sturmbogen
+item.fynn:wurfstern.name=Wurfstern
+entity.fynn:frostkugel.name=Frostkugel
+entity.fynn:wurfstern.name=Wurfstern
 
-
-## Die Tiere
-entity.fynn:braunbaer.name=Braunbär
-item.spawn_egg.entity.fynn:braunbaer.name=Braunbär-Spawn-Ei
-entity.fynn:elch.name=Elch
-item.spawn_egg.entity.fynn:elch.name=Elch-Spawn-Ei
-entity.fynn:wildschwein.name=Wildschwein
-item.spawn_egg.entity.fynn:wildschwein.name=Wildschwein-Spawn-Ei
-entity.fynn:bison.name=Bison
-item.spawn_egg.entity.fynn:bison.name=Bison-Spawn-Ei
-entity.fynn:loewe.name=Löwe
-item.spawn_egg.entity.fynn:loewe.name=Löwe-Spawn-Ei
-entity.fynn:tiger.name=Tiger
-item.spawn_egg.entity.fynn:tiger.name=Tiger-Spawn-Ei
-entity.fynn:krokodil.name=Krokodil
-item.spawn_egg.entity.fynn:krokodil.name=Krokodil-Spawn-Ei
-entity.fynn:schneeleopard.name=Schneeleopard
-item.spawn_egg.entity.fynn:schneeleopard.name=Schneeleopard-Spawn-Ei
-entity.fynn:wal.name=Buckelwal
-item.spawn_egg.entity.fynn:wal.name=Buckelwal-Spawn-Ei
-entity.fynn:hai.name=Hai
-item.spawn_egg.entity.fynn:hai.name=Hai-Spawn-Ei
-entity.fynn:riesenkalmar.name=Riesenkalmar
-item.spawn_egg.entity.fynn:riesenkalmar.name=Riesenkalmar-Spawn-Ei
-entity.fynn:schwertfisch.name=Schwertfisch
-item.spawn_egg.entity.fynn:schwertfisch.name=Schwertfisch-Spawn-Ei
-entity.fynn:elefant.name=Elefant
-item.spawn_egg.entity.fynn:elefant.name=Elefant-Spawn-Ei
-entity.fynn:nashorn.name=Nashorn
-item.spawn_egg.entity.fynn:nashorn.name=Nashorn-Spawn-Ei
-entity.fynn:gorilla.name=Gorilla
-item.spawn_egg.entity.fynn:gorilla.name=Gorilla-Spawn-Ei
-entity.fynn:walross.name=Walross
-item.spawn_egg.entity.fynn:walross.name=Walross-Spawn-Ei
-entity.fynn:mantarochen.name=Mantarochen
-item.spawn_egg.entity.fynn:mantarochen.name=Mantarochen-Spawn-Ei
-entity.fynn:steinadler.name=Steinadler
-item.spawn_egg.entity.fynn:steinadler.name=Steinadler-Spawn-Ei
-
-## Rucksack
-item.fynn:rucksack=Rucksack
-item.fynn:rucksack.name=Rucksack
-entity.fynn:rucksack_abgestellt.name=Rucksack
+## Rubin und neue Schwerter
+item.fynn:rubin=Rubin
+item.fynn:rubin.name=Rubin
+item.fynn:rubinklinge=Rubinklinge
+item.fynn:rubinklinge.name=Rubinklinge
+item.fynn:haizahnsaebel=Haizahnsäbel
+item.fynn:haizahnsaebel.name=Haizahnsäbel
+tile.fynn:rubinerz.name=Rubinerz
+tile.fynn:tiefenrubinerz.name=Tiefenschiefer-Rubinerz
+tile.fynn:rubinblock.name=Rubinblock

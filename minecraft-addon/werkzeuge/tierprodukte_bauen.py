@@ -367,6 +367,22 @@ def alles():
                                             {"P": "fynn:schwertfischspiess", "L": "minecraft:leather",
                                              "S": "minecraft:stick"}, "fynn:schwertfischklinge")
     namen.append(("schwertfischklinge", ("Schwertfischklinge", "Swordfish Blade")))
+    # Das grosse Schwert: aus zwei Schwertern des Fischs und der kleinen
+    # Klinge als Griffstueck - staerker und langlebiger.
+    teile["schwertfischschwert"] = gegenstand("schwertfischschwert", {
+        "minecraft:max_stack_size": 1, "minecraft:hand_equipped": True, "minecraft:damage": 9,
+        "minecraft:rarity": "epic",
+        "minecraft:durability": {"max_durability": 1100},
+        "minecraft:enchantable": {"value": 15, "slot": "sword"},
+        "minecraft:repairable": {"repair_items": [{"items": ["fynn:schwertfischspiess"], "repair_amount": 400}]},
+    }, "equipment", "minecraft:itemGroup.name.sword")
+    FORMEN["schwertfisch_gross"] = grosses_schwert_symbol()
+    bilder["schwertfischschwert"] = male("schwertfisch_gross", {
+        "#": "#4a4458", "w": "#9a94a4", "f": "#2e4678", "g": "#ece4d0", "s": "#6e4a2c", "o": "#e0b030"})
+    rezepte["schwertfischschwert"] = geformt("schwertfischschwert", ["P", "P", "K"],
+                                             {"P": "fynn:schwertfischspiess", "K": "fynn:schwertfischklinge"},
+                                             "fynn:schwertfischschwert")
+    namen.append(("schwertfischschwert", ("Schwertfischschwert", "Swordfish Greatsword")))
     teile["trank_der_tiefe"] = gegenstand("trank_der_tiefe", dict(
         essen(0, 0.0, "minecraft:glass_bottle", immer=True, trinken=True, stapel=16),
         **{"minecraft:rarity": "epic", "minecraft:glint": True}), "items", "minecraft:itemGroup.name.miscFood")
@@ -377,19 +393,42 @@ def alles():
     return teile, bilder, rezepte, namen
 
 
+def grosses_schwert_symbol():
+    """Das Symbol des grossen Schwertfischschwerts, 16 mal 16: eine lange
+    Klinge schraeg nach oben rechts, links am Ansatz die Rueckenflosse wie
+    ein Segel, Parierstange quer, Griff und goldener Knauf unten links."""
+    feld = [["."] * 16 for _ in range(16)]
+    for r in range(10):                      # die Klinge, zwei Pixel breit
+        feld[r][15 - r] = "w"
+        if 14 - r >= 0 and r > 0:
+            feld[r][14 - r] = "#"
+    for r, c in ((5, 8), (6, 7), (6, 6), (7, 6), (7, 5), (8, 5), (7, 4), (8, 4)):
+        feld[r][c] = "f"                     # das Segel
+    for r, c in ((8, 3), (9, 4), (10, 5), (11, 6), (12, 7)):
+        feld[r][c] = "g"                     # Parierstange aus Knochen
+    for r, c in ((11, 4), (12, 3), (13, 2)):
+        feld[r][c] = "s"                     # Griff
+    feld[14][1] = "o"                        # Knauf
+    feld[15][0] = "f"
+    feld[13][0] = "f"
+    return ["".join(z) for z in feld]
+
+
 def klinge_3d():
-    """Die Schwertfischklinge als 3D-Waffe, wie Kriegshammer und Frostzepter."""
+    """Schwertfischklinge und -schwert als 3D-Waffen, wie Kriegshammer und
+    Frostzepter."""
     import waffe_bauen as w
     from neue_waffen_bauen import halten, waffen_attachable
-    from vorlagen.tierwaffen import SCHWERTFISCHKLINGE as v
-    name = "schwertfischklinge"
-    w.aus_zeichenkarte(name, v["karte"], {k: f + (255,) for k, f in v["farben"].items()},
-                       dicke=lambda zeile, spalte, zeichen, t=v["tiefe"]: t[zeichen], mitte=v["mitte"],
-                       ziel_modell=str(RES / "models" / "entity" / f"{name}.geo.json"),
-                       ziel_textur=str(RES / "textures" / "entity" / f"{name}_haut.png"))
-    schreibe(RES / "attachables" / f"{name}.json", waffen_attachable(name))
-    schreibe(RES / "animations" / "tierwaffen.animation.json",
-             {"format_version": "1.10.0", "animations": {f"animation.{name}.halten": halten(v["karte"], v["griff"])}})
+    from vorlagen.tierwaffen import SCHWERTFISCHKLINGE, SCHWERTFISCHSCHWERT
+    animationen = {}
+    for name, v in (("schwertfischklinge", SCHWERTFISCHKLINGE), ("schwertfischschwert", SCHWERTFISCHSCHWERT)):
+        w.aus_zeichenkarte(name, v["karte"], {k: f + (255,) for k, f in v["farben"].items()},
+                           dicke=lambda zeile, spalte, zeichen, t=v["tiefe"]: t[zeichen], mitte=v["mitte"],
+                           ziel_modell=str(RES / "models" / "entity" / f"{name}.geo.json"),
+                           ziel_textur=str(RES / "textures" / "entity" / f"{name}_haut.png"))
+        schreibe(RES / "attachables" / f"{name}.json", waffen_attachable(name))
+        animationen[f"animation.{name}.halten"] = halten(v["karte"], v["griff"])
+    schreibe(RES / "animations" / "tierwaffen.animation.json", {"format_version": "1.10.0", "animations": animationen})
 
 
 def sprache(namen):

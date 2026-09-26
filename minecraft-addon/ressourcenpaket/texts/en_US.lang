@@ -44,11 +44,11 @@ item.fynn:eisenklinge.name=Iron Blade
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.47
+item.iron_sword.name=Stahlschwert 4.48
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.47
-item.fynn:degen.name=Degen 4.47
+item.fynn:degen=Degen 4.48
+item.fynn:degen.name=Degen 4.48
 
 
 
@@ -91,40 +91,6 @@ item.fynn:artefaktentasche=Artifact Pouch
 item.fynn:artefaktentasche.name=Artifact Pouch
 tile.fynn:rollenaltar.name=Role Altar
 tile.fynn:tempelaltar.name=Temple Altar
-item.fynn:kriegshammer=War Hammer
-item.fynn:frostzepter=Frost Scepter
-item.fynn:sturmbogen=Storm Bow
-item.fynn:wurfstern=Throwing Star
-item.fynn:kriegshammer.name=War Hammer
-item.fynn:frostzepter.name=Frost Scepter
-item.fynn:sturmbogen.name=Storm Bow
-item.fynn:wurfstern.name=Throwing Star
-entity.fynn:frostkugel.name=Frost Orb
-entity.fynn:wurfstern.name=Throwing Star
-item.fynn:eisendolche=Iron Daggers
-item.fynn:eisendolche.name=Iron Daggers
-item.fynn:eisendolch_links=Left Iron Dagger (off hand)
-item.fynn:eisendolch_links.name=Left Iron Dagger (off hand)
-item.fynn:silberdolche=Silver Daggers
-item.fynn:silberdolche.name=Silver Daggers
-item.fynn:silberdolch_links=Left Silver Dagger (off hand)
-item.fynn:silberdolch_links.name=Left Silver Dagger (off hand)
-item.fynn:stahldolche=Steel Daggers
-item.fynn:stahldolche.name=Steel Daggers
-item.fynn:stahldolch_links=Left Steel Dagger (off hand)
-item.fynn:stahldolch_links.name=Left Steel Dagger (off hand)
-item.fynn:elektrumdolche=Electrum Daggers
-item.fynn:elektrumdolche.name=Electrum Daggers
-item.fynn:elektrumdolch_links=Left Electrum Dagger (off hand)
-item.fynn:elektrumdolch_links.name=Left Electrum Dagger (off hand)
-item.fynn:diamantdolche=Diamond Daggers
-item.fynn:diamantdolche.name=Diamond Daggers
-item.fynn:diamantdolch_links=Left Diamond Dagger (off hand)
-item.fynn:diamantdolch_links.name=Left Diamond Dagger (off hand)
-item.fynn:netheritdolche=Netherite Daggers
-item.fynn:netheritdolche.name=Netherite Daggers
-item.fynn:netheritdolch_links=Left Netherite Dagger (off hand)
-item.fynn:netheritdolch_links.name=Left Netherite Dagger (off hand)
 
 
 
@@ -155,16 +121,6 @@ item.fynn:geweihbogen.name=Moose Antler Bow
 
 
 
-## Rubin und neue Schwerter
-item.fynn:rubin=Ruby
-item.fynn:rubin.name=Ruby
-item.fynn:rubinklinge=Ruby Blade
-item.fynn:rubinklinge.name=Ruby Blade
-item.fynn:haizahnsaebel=Shark Tooth Sabre
-item.fynn:haizahnsaebel.name=Shark Tooth Sabre
-tile.fynn:rubinerz.name=Ruby Ore
-tile.fynn:tiefenrubinerz.name=Deepslate Ruby Ore
-tile.fynn:rubinblock.name=Block of Ruby
 
 
 
@@ -243,6 +199,88 @@ item.fynn:waldlaeuferhose=Ranger Trousers
 item.fynn:waldlaeuferhose.name=Ranger Trousers
 item.fynn:waldlaeuferstiefel=Ranger Boots
 item.fynn:waldlaeuferstiefel.name=Ranger Boots
+
+
+
+
+
+
+
+## Die Tiere
+entity.fynn:braunbaer.name=Brown Bear
+item.spawn_egg.entity.fynn:braunbaer.name=Brown Bear Spawn Egg
+entity.fynn:elch.name=Moose
+item.spawn_egg.entity.fynn:elch.name=Moose Spawn Egg
+entity.fynn:wildschwein.name=Wild Boar
+item.spawn_egg.entity.fynn:wildschwein.name=Wild Boar Spawn Egg
+entity.fynn:bison.name=Bison
+item.spawn_egg.entity.fynn:bison.name=Bison Spawn Egg
+entity.fynn:loewe.name=Lion
+item.spawn_egg.entity.fynn:loewe.name=Lion Spawn Egg
+entity.fynn:tiger.name=Tiger
+item.spawn_egg.entity.fynn:tiger.name=Tiger Spawn Egg
+entity.fynn:krokodil.name=Crocodile
+item.spawn_egg.entity.fynn:krokodil.name=Crocodile Spawn Egg
+entity.fynn:schneeleopard.name=Snow Leopard
+item.spawn_egg.entity.fynn:schneeleopard.name=Snow Leopard Spawn Egg
+entity.fynn:wal.name=Humpback Whale
+item.spawn_egg.entity.fynn:wal.name=Humpback Whale Spawn Egg
+entity.fynn:hai.name=Shark
+item.spawn_egg.entity.fynn:hai.name=Shark Spawn Egg
+entity.fynn:riesenkalmar.name=Giant Squid
+item.spawn_egg.entity.fynn:riesenkalmar.name=Giant Squid Spawn Egg
+entity.fynn:schwertfisch.name=Swordfish
+item.spawn_egg.entity.fynn:schwertfisch.name=Swordfish Spawn Egg
+entity.fynn:elefant.name=Elephant
+item.spawn_egg.entity.fynn:elefant.name=Elephant Spawn Egg
+entity.fynn:nashorn.name=Rhino
+item.spawn_egg.entity.fynn:nashorn.name=Rhino Spawn Egg
+entity.fynn:gorilla.name=Gorilla
+item.spawn_egg.entity.fynn:gorilla.name=Gorilla Spawn Egg
+entity.fynn:walross.name=Walrus
+item.spawn_egg.entity.fynn:walross.name=Walrus Spawn Egg
+entity.fynn:mantarochen.name=Manta Ray
+item.spawn_egg.entity.fynn:mantarochen.name=Manta Ray Spawn Egg
+entity.fynn:steinadler.name=Golden Eagle
+item.spawn_egg.entity.fynn:steinadler.name=Golden Eagle Spawn Egg
+
+## Rucksack
+item.fynn:rucksack=Backpack
+item.fynn:rucksack.name=Backpack
+entity.fynn:rucksack_abgestellt.name=Backpack
+
+
+
+
+
+item.fynn:eisendolche=Iron Daggers
+item.fynn:eisendolche.name=Iron Daggers
+item.fynn:eisendolch_links=Left Iron Dagger (off hand)
+item.fynn:eisendolch_links.name=Left Iron Dagger (off hand)
+item.fynn:silberdolche=Silver Daggers
+item.fynn:silberdolche.name=Silver Daggers
+item.fynn:silberdolch_links=Left Silver Dagger (off hand)
+item.fynn:silberdolch_links.name=Left Silver Dagger (off hand)
+item.fynn:stahldolche=Steel Daggers
+item.fynn:stahldolche.name=Steel Daggers
+item.fynn:stahldolch_links=Left Steel Dagger (off hand)
+item.fynn:stahldolch_links.name=Left Steel Dagger (off hand)
+item.fynn:elektrumdolche=Electrum Daggers
+item.fynn:elektrumdolche.name=Electrum Daggers
+item.fynn:elektrumdolch_links=Left Electrum Dagger (off hand)
+item.fynn:elektrumdolch_links.name=Left Electrum Dagger (off hand)
+item.fynn:diamantdolche=Diamond Daggers
+item.fynn:diamantdolche.name=Diamond Daggers
+item.fynn:diamantdolch_links=Left Diamond Dagger (off hand)
+item.fynn:diamantdolch_links.name=Left Diamond Dagger (off hand)
+item.fynn:netheritdolche=Netherite Daggers
+item.fynn:netheritdolche.name=Netherite Daggers
+item.fynn:netheritdolch_links=Left Netherite Dagger (off hand)
+item.fynn:netheritdolch_links.name=Left Netherite Dagger (off hand)
+
+
+
+
 
 
 ## Tierfleisch
@@ -348,49 +386,28 @@ item.fynn:jagdhorn=Hunting Horn
 item.fynn:jagdhorn.name=Hunting Horn
 item.fynn:schwertfischklinge=Swordfish Blade
 item.fynn:schwertfischklinge.name=Swordfish Blade
+item.fynn:schwertfischschwert=Swordfish Greatsword
+item.fynn:schwertfischschwert.name=Swordfish Greatsword
 item.fynn:trank_der_tiefe=Potion of the Deep
 item.fynn:trank_der_tiefe.name=Potion of the Deep
+item.fynn:kriegshammer=War Hammer
+item.fynn:frostzepter=Frost Scepter
+item.fynn:sturmbogen=Storm Bow
+item.fynn:wurfstern=Throwing Star
+item.fynn:kriegshammer.name=War Hammer
+item.fynn:frostzepter.name=Frost Scepter
+item.fynn:sturmbogen.name=Storm Bow
+item.fynn:wurfstern.name=Throwing Star
+entity.fynn:frostkugel.name=Frost Orb
+entity.fynn:wurfstern.name=Throwing Star
 
-
-## Die Tiere
-entity.fynn:braunbaer.name=Brown Bear
-item.spawn_egg.entity.fynn:braunbaer.name=Brown Bear Spawn Egg
-entity.fynn:elch.name=Moose
-item.spawn_egg.entity.fynn:elch.name=Moose Spawn Egg
-entity.fynn:wildschwein.name=Wild Boar
-item.spawn_egg.entity.fynn:wildschwein.name=Wild Boar Spawn Egg
-entity.fynn:bison.name=Bison
-item.spawn_egg.entity.fynn:bison.name=Bison Spawn Egg
-entity.fynn:loewe.name=Lion
-item.spawn_egg.entity.fynn:loewe.name=Lion Spawn Egg
-entity.fynn:tiger.name=Tiger
-item.spawn_egg.entity.fynn:tiger.name=Tiger Spawn Egg
-entity.fynn:krokodil.name=Crocodile
-item.spawn_egg.entity.fynn:krokodil.name=Crocodile Spawn Egg
-entity.fynn:schneeleopard.name=Snow Leopard
-item.spawn_egg.entity.fynn:schneeleopard.name=Snow Leopard Spawn Egg
-entity.fynn:wal.name=Humpback Whale
-item.spawn_egg.entity.fynn:wal.name=Humpback Whale Spawn Egg
-entity.fynn:hai.name=Shark
-item.spawn_egg.entity.fynn:hai.name=Shark Spawn Egg
-entity.fynn:riesenkalmar.name=Giant Squid
-item.spawn_egg.entity.fynn:riesenkalmar.name=Giant Squid Spawn Egg
-entity.fynn:schwertfisch.name=Swordfish
-item.spawn_egg.entity.fynn:schwertfisch.name=Swordfish Spawn Egg
-entity.fynn:elefant.name=Elephant
-item.spawn_egg.entity.fynn:elefant.name=Elephant Spawn Egg
-entity.fynn:nashorn.name=Rhino
-item.spawn_egg.entity.fynn:nashorn.name=Rhino Spawn Egg
-entity.fynn:gorilla.name=Gorilla
-item.spawn_egg.entity.fynn:gorilla.name=Gorilla Spawn Egg
-entity.fynn:walross.name=Walrus
-item.spawn_egg.entity.fynn:walross.name=Walrus Spawn Egg
-entity.fynn:mantarochen.name=Manta Ray
-item.spawn_egg.entity.fynn:mantarochen.name=Manta Ray Spawn Egg
-entity.fynn:steinadler.name=Golden Eagle
-item.spawn_egg.entity.fynn:steinadler.name=Golden Eagle Spawn Egg
-
-## Rucksack
-item.fynn:rucksack=Backpack
-item.fynn:rucksack.name=Backpack
-entity.fynn:rucksack_abgestellt.name=Backpack
+## Rubin und neue Schwerter
+item.fynn:rubin=Ruby
+item.fynn:rubin.name=Ruby
+item.fynn:rubinklinge=Ruby Blade
+item.fynn:rubinklinge.name=Ruby Blade
+item.fynn:haizahnsaebel=Shark Tooth Sabre
+item.fynn:haizahnsaebel.name=Shark Tooth Sabre
+tile.fynn:rubinerz.name=Ruby Ore
+tile.fynn:tiefenrubinerz.name=Deepslate Ruby Ore
+tile.fynn:rubinblock.name=Block of Ruby

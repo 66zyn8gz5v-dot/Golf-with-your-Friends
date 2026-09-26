@@ -370,6 +370,9 @@
     },
     "elefantensattel": {
       "textures": "textures/items/elefantensattel"
+    },
+    "schwertfischschwert": {
+      "textures": "textures/items/tiere/schwertfischschwert"
     }
   }
 }

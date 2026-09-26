@@ -176,11 +176,27 @@ def sturmbogen_bild(karte):
 
 # ============================================================ 3D-Waffen
 
-def griffversatz(karte, griffzeichen):
+# Wie gross die 3D-Waffen aus Pixelbildern in der Hand sind. Frueher 0.37
+# (aussen) und 0.28 (Ich-Ansicht) - dieselben Zahlen wie bei der Stahl-
+# klinge. Nur ist deren Modell 63 Einheiten lang, ein Pixelbild-Schwert
+# aber 24 (ein Pixel, eine Einheit): In der Hand war es nicht einmal halb
+# so gross und steckte in der Faust. Fynn: "Der Dolch versinkt so ein
+# bisschen in der Hand, der sollte groesser sein, das gilt auch fuer die
+# anderen Modelle." Jetzt ist ein Pixelbild-Schwert von aussen gut einen
+# Block lang - laenger als ein Dolch, kuerzer als die Stahlklinge.
+GROESSE_AUSSEN = 0.75
+GROESSE_ICH = 0.42
+
+
+def griffversatz(karte, griffzeichen, aussen=GROESSE_AUSSEN, ich=GROESSE_ICH):
+    """Wie weit der Griff verschoben wird, damit seine Mitte in der Faust
+    sitzt. GRIFF_AUSSEN und GRIFF_ICH sind bei der alten Groesse (0.37 und
+    0.28) gemessen; bei anderer Groesse wird umgerechnet, damit die Faust
+    an derselben Stelle der Waffe bleibt."""
     zeilen = [i for i, z in enumerate(karte) if any(c in griffzeichen for c in z)]
     mitte = (zeilen[0] + zeilen[-1]) / 2
     y = len(karte) - 1 - mitte + 0.5 + (8 - len(karte) / 2)
-    return GRIFF_AUSSEN - (y - 8), GRIFF_ICH - (y - 8)
+    return GRIFF_AUSSEN * 0.37 / aussen - (y - 8), GRIFF_ICH * 0.28 / ich - (y - 8)
 
 
 def halten(karte, griffzeichen):
@@ -189,7 +205,7 @@ def halten(karte, griffzeichen):
         "waffe": {
             "position": ["c.is_first_person ? -3.5 : 0.0", "c.is_first_person ? -3.5 : -2.0", 0.0],
             "rotation": ["c.is_first_person ? 0.0 : 90.0", 0.0, "c.is_first_person ? -135.0 : 0.0"],
-            "scale": "c.is_first_person ? 0.28 : 0.37",
+            "scale": f"c.is_first_person ? {GROESSE_ICH} : {GROESSE_AUSSEN}",
         },
         "griff": {
             "position": [0.0, f"c.is_first_person ? {ich:.2f} : {aussen:.2f}", 0.0],
