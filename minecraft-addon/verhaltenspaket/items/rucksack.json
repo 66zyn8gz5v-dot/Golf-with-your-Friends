@@ -4,8 +4,8 @@
     "description": {
       "identifier": "fynn:rucksack",
       "menu_category": {
-        "category": "equipment",
-        "group": "minecraft:itemGroup.name.chest"
+        "category": "items",
+        "group": "minecraft:itemGroup.name.shulkerBox"
       }
     },
     "components": {
@@ -14,7 +14,8 @@
           "default": "rucksack"
         }
       },
-      "minecraft:max_stack_size": 1
+      "minecraft:max_stack_size": 1,
+      "fynn:rucksack": {}
     }
   }
 }

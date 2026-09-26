@@ -4,7 +4,8 @@
     "description": {
       "identifier": "fynn:trank_der_tiefe",
       "menu_category": {
-        "category": "items"
+        "category": "items",
+        "group": "minecraft:itemGroup.name.miscFood"
       }
     },
     "components": {

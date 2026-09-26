@@ -260,8 +260,13 @@ SYMBOLFARBEN = {"#": FARBEN["sack"], "k": FARBEN["deckel"], "b": FARBEN["schnall
 
 
 def gegenstand():
-    return tp.gegenstand("rucksack", {"minecraft:max_stack_size": 1}, "equipment",
-                         "minecraft:itemGroup.name.chest")
+    # "fynn:rucksack" ist eine eigene Komponente (rucksack.js): Sie meldet,
+    # wenn man mit dem Rucksack auf einen Block tippt - verlaesslicher als
+    # das allgemeine Antipp-Ereignis, das fuer einen Gegenstand ohne eigene
+    # Funktion nicht immer kommt. Im Kreativ-Inventar liegt er bei den
+    # Shulkerkisten, denn so funktioniert er ja.
+    return tp.gegenstand("rucksack", {"minecraft:max_stack_size": 1, "fynn:rucksack": {}}, "items",
+                         "minecraft:itemGroup.name.shulkerBox")
 
 
 def rezept():

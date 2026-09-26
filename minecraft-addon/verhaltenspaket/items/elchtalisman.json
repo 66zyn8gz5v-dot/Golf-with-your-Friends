@@ -4,7 +4,8 @@
     "description": {
       "identifier": "fynn:elchtalisman",
       "menu_category": {
-        "category": "equipment"
+        "category": "equipment",
+        "group": "fynn:itemGroup.name.jagd"
       }
     },
     "components": {

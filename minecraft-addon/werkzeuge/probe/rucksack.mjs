@@ -101,6 +101,32 @@ pruefe("mit demselben Inhalt", abgestellt.inhalt[3] === diamant && abgestellt.in
 pruefe("an der neuen Stelle", abgestellt.location.x === -19.5 && abgestellt.location.y === 64);
 pruefe("die Struktur ist wieder geloescht", strukturen.size === 0);
 
+// --- Abstellen ueber die eigene Komponente (onUseOn), wie im Spiel
+const komponenten = {};
+for (const f of gemerkt.ereignisse["system.startup"] ?? []) {
+    f({ itemComponentRegistry: { registerCustomComponent: (n, d) => { komponenten[n] = d; } },
+        blockComponentRegistry: { registerCustomComponent() { } } });
+}
+pruefe("Komponente fynn:rucksack angemeldet", typeof komponenten["fynn:rucksack"]?.onUseOn === "function");
+const s4 = spieler([r.rucksackStapel()]);
+const vorher = wesen.length;
+system.currentTick = 500;
+komponenten["fynn:rucksack"].onUseOn({ source: s4, block: boden, blockFace: "Up" });
+pruefe("Antippen mit dem Rucksack stellt ihn ab", wesen.length === vorher + 1 && !s4.plaetze[0]);
+s4.plaetze[0] = r.rucksackStapel();
+const truhe = { location: { x: 8, y: 63, z: 8 }, typeId: "minecraft:chest", getComponent: (n) => (n === "minecraft:inventory" ? {} : undefined) };
+system.currentTick = 520;
+komponenten["fynn:rucksack"].onUseOn({ source: s4, block: truhe, blockFace: "Up" });
+pruefe("auf einer Truhe (nicht geduckt): die Truhe geht auf, kein Abstellen", s4.plaetze[0]?.typeId === r.RUCKSACK);
+const antippen = gemerkt.ereignisse["vorher.playerInteractWithBlock"][0];
+const doppelt = { cancel: false, itemStack: s4.plaetze[0], isFirstEvent: true, player: s4, block: boden, blockFace: "Up" };
+system.currentTick = 540;
+komponenten["fynn:rucksack"].onUseOn({ source: s4, block: boden, blockFace: "Up" });
+const nachEinem = wesen.length;
+s4.plaetze[0] = r.rucksackStapel();
+antippen(doppelt);
+pruefe("beide Wege im selben Augenblick: nur einmal abgestellt", wesen.length === nachEinem && s4.plaetze[0]);
+
 // --- Nur ein voller Rucksack
 r.aufheben(s, abgestellt);
 const zweiter = neuesWesen(r.ABGESTELLT, { x: 0.5, y: 64, z: 0.5 }, [new ItemStack("minecraft:stone", 64)]);

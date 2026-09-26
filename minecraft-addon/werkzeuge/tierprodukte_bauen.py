@@ -281,14 +281,23 @@ def geformt(name, muster, schluessel, ergebnis, anzahl=1):
         "result": {"item": ergebnis, "count": anzahl}}}
 
 
+# Eigene Faecher im Kreativ-Inventar - wie schon "Silber" und "Legierungen".
+BEUTEFACH = "fynn:itemGroup.name.tierbeute"
+JAGDFACH = "fynn:itemGroup.name.jagd"
+FACHNAMEN = {BEUTEFACH: ("Tierbeute", "Animal Drops"), JAGDFACH: ("Talismane und Jagd", "Talismans and Hunting")}
+
+
 def alles():
     """Liefert (Gegenstaende, Bilder, Rezepte, Namen)."""
     teile, bilder, rezepte, namen = {}, {}, {}, []
 
     namen.append("## Tierfleisch")
     for roh, rn, gar, gn, froh, fgar, froh_c, fgar_c, (nr, ng) in FLEISCH:
-        teile[roh] = gegenstand(roh, essen(nr, 0.3), "items", "minecraft:itemGroup.name.miscFood")
-        teile[gar] = gegenstand(gar, essen(ng, 0.8), "items", "minecraft:itemGroup.name.miscFood")
+        # Im Kreativ-Inventar zu Minecrafts eigenem Fleisch: roh zu roh,
+        # gebraten zu gebraten (Fynn: "Fleisch und so kannst du bestimmt
+        # auch im Inventar unter den Kategorien einordnen").
+        teile[roh] = gegenstand(roh, essen(nr, 0.3), "items", "minecraft:itemGroup.name.rawFood")
+        teile[gar] = gegenstand(gar, essen(ng, 0.8), "items", "minecraft:itemGroup.name.cookedFood")
         bilder[roh] = male(froh, froh_c, glanz=True)
         bilder[gar] = male(fgar, fgar_c)
         rezepte[f"{gar}_braten"] = ofenrezept(roh, gar)
@@ -316,7 +325,7 @@ def alles():
 
     namen.append("## Was die Tiere hergeben")
     for k, n, form, farben, muster, selten in BEUTE:
-        teile[k] = gegenstand(k, {"minecraft:max_stack_size": 64, "minecraft:rarity": selten})
+        teile[k] = gegenstand(k, {"minecraft:max_stack_size": 64, "minecraft:rarity": selten}, "items", BEUTEFACH)
         bilder[k] = male(form, farben, muster, glanz=form in ("zahn", "haizahn", "hauer", "horn", "ambra", "kralle"),
                          fell=form == "fell" and k not in ("krokodilleder", "haihaut"))
         namen.append((k, n))
@@ -329,19 +338,19 @@ def alles():
     namen.append("## Talismane und Jagdzeug")
     for k, n, zutat, farbe, kraft_de, kraft_en in TALISMANE:
         teile[k] = gegenstand(k, {"minecraft:max_stack_size": 1, "minecraft:rarity": "rare", "minecraft:glint": True},
-                              "equipment", None)
+                              "equipment", JAGDFACH)
         bilder[k] = male("talisman", {"#": farbe, "s": "#8a6a44", "g": "#e0b030", "w": "#ffffff"})
         rezepte[k] = geformt(k, [" S ", "S S", " T "], {"S": "minecraft:string", "T": f"fynn:{zutat}"}, f"fynn:{k}")
         namen.append((k, n))
     teile["jaegerkette"] = gegenstand("jaegerkette", {"minecraft:max_stack_size": 1, "minecraft:rarity": "epic",
-                                                      "minecraft:glint": True}, "equipment")
+                                                      "minecraft:glint": True}, "equipment", JAGDFACH)
     bilder["jaegerkette"] = male("kette", {"#": "#eee6d2", "s": "#8a6a44", "g": "#e0b030", "w": "#ffffff"})
     rezepte["jaegerkette"] = formlos("jaegerkette", ["minecraft:string", "fynn:wildschweinhauer", "fynn:krokodilzahn",
                                                      "fynn:haizahn", "minecraft:gold_nugget"], "fynn:jaegerkette")
     namen.append(("jaegerkette", ("Jägerkette", "Hunter's Necklace")))
     teile["jagdhorn"] = gegenstand("jagdhorn", {"minecraft:max_stack_size": 1, "minecraft:rarity": "rare",
                                                 "minecraft:use_modifiers": {"use_duration": 0.1}},
-                                   "equipment")
+                                   "equipment", JAGDFACH)
     bilder["jagdhorn"] = male("jagdhorn", {"#": "#3a342c", "s": "#8a5a34", "g": "#e0b030"})
     rezepte["jagdhorn"] = formlos("jagdhorn", ["fynn:bisonhorn", "minecraft:leather", "minecraft:gold_ingot"],
                                   "fynn:jagdhorn")
@@ -360,7 +369,7 @@ def alles():
     namen.append(("schwertfischklinge", ("Schwertfischklinge", "Swordfish Blade")))
     teile["trank_der_tiefe"] = gegenstand("trank_der_tiefe", dict(
         essen(0, 0.0, "minecraft:glass_bottle", immer=True, trinken=True, stapel=16),
-        **{"minecraft:rarity": "epic", "minecraft:glint": True}), "items")
+        **{"minecraft:rarity": "epic", "minecraft:glint": True}), "items", "minecraft:itemGroup.name.miscFood")
     bilder["trank_der_tiefe"] = male("trank", {"#": "#1e4aa8", "w": "#9ae8ff", "s": "#8a6a44", "g": "#c8d8e0"})
     rezepte["trank_der_tiefe"] = formlos("trank_der_tiefe", ["minecraft:glass_bottle", "fynn:kalmarauge", "fynn:ambra",
                                                              "minecraft:prismarine_crystals"], "fynn:trank_der_tiefe")
@@ -398,6 +407,11 @@ def sprache(namen):
             else:
                 k, name = n
                 zeilen += [f"item.fynn:{k}={name[i]}", f"item.fynn:{k}.name={name[i]}"]
+        # Die Namen der eigenen Faecher stehen oben bei den anderen Faechern.
+        zeilen = [z for z in zeilen if z.split("=")[0] not in FACHNAMEN]
+        oben = next((j + 1 for j, z in enumerate(zeilen) if z.startswith("fynn:itemGroup.name.")), 0)
+        for fach, n in FACHNAMEN.items():
+            zeilen.insert(oben, f"{fach}={n[i]}")
         pfad.write_text("\n".join(zeilen) + "\n", encoding="utf-8")
 
 

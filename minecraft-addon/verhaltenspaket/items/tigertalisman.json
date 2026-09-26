@@ -4,7 +4,8 @@
     "description": {
       "identifier": "fynn:tigertalisman",
       "menu_category": {
-        "category": "equipment"
+        "category": "equipment",
+        "group": "fynn:itemGroup.name.jagd"
       }
     },
     "components": {

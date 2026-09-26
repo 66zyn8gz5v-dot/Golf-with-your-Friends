@@ -4,7 +4,8 @@
     "description": {
       "identifier": "fynn:wildschweinhauer",
       "menu_category": {
-        "category": "items"
+        "category": "items",
+        "group": "fynn:itemGroup.name.tierbeute"
       }
     },
     "components": {

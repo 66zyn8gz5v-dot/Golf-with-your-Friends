@@ -87,12 +87,20 @@ function benutzbar(block) {
 
 // ------------------------------------------------------------ Abstellen
 
+// Gras, Farn und Schnee duerfen im Weg sein - der Rucksack steht dann darin.
+const WEICH = new Set(["minecraft:short_grass", "minecraft:tall_grass", "minecraft:fern", "minecraft:large_fern",
+    "minecraft:snow_layer", "minecraft:dead_bush", "minecraft:seagrass"]);
+
+function frei(b) {
+    return !!b && (b.isAir || WEICH.has(b.typeId));
+}
+
 export function abstellen(spieler, block, seite) {
-    const d = RICHTUNG[seite] ?? [0, 1, 0];
+    const d = WEICH.has(block.typeId) ? [0, 0, 0] : (RICHTUNG[seite] ?? [0, 1, 0]);
     const ziel = { x: block.location.x + d[0], y: block.location.y + d[1], z: block.location.z + d[2] };
     const dimension = spieler.dimension;
     const platz = dimension.getBlock(ziel);
-    if (!platz?.isAir) {
+    if (!frei(platz)) {
         sage(spieler, "§7Da ist kein Platz für den Rucksack.");
         return false;
     }
@@ -122,19 +130,58 @@ export function abstellen(spieler, block, seite) {
     return true;
 }
 
+// Zwei Wege fuehren zum Abstellen, weil das Spiel nicht immer beide meldet:
+// die eigene Komponente "fynn:rucksack" am Gegenstand (onUseOn) und das
+// allgemeine Antippen eines Blocks. Was zuerst kommt, stellt ab; der zweite
+// findet danach keinen Rucksack mehr in der Hand oder kommt im selben
+// Augenblick und wird uebergangen.
+const zuletzt = new Map();
+
+export function versucheAbzustellen(spieler, block, seite) {
+    const jetzt = system.currentTick;
+    if (jetzt - (zuletzt.get(spieler.id) ?? -100) < 5) return false;
+    zuletzt.set(spieler.id, jetzt);
+    return abstellen(spieler, block, seite);
+}
+
+function spaeter(spieler, block, seite) {
+    system.run(() => {
+        try {
+            versucheAbzustellen(spieler, block, seite);
+        } catch (fehler) {
+            console.warn(`Rucksack, abstellen: ${fehler}`);
+        }
+    });
+}
+
+system.beforeEvents.startup.subscribe((e) => {
+    try {
+        melde(e.itemComponentRegistry);
+    } catch (fehler) {
+        console.warn(`Rucksack, Anmelden: ${fehler}`);
+    }
+});
+
+function melde(register) {
+    register.registerCustomComponent("fynn:rucksack", {
+        onUseOn(ereignis) {
+            try {
+                if (ereignis.source?.typeId !== "minecraft:player") return;
+                if (benutzbar(ereignis.block) && !ereignis.source.isSneaking) return;
+                spaeter(ereignis.source, ereignis.block, ereignis.blockFace);
+            } catch (fehler) {
+                console.warn(`Rucksack, abstellen: ${fehler}`);
+            }
+        },
+    });
+}
+
 world.beforeEvents.playerInteractWithBlock.subscribe((e) => {
     try {
         if (e.itemStack?.typeId !== RUCKSACK || !e.isFirstEvent) return;
         if (benutzbar(e.block) && !e.player.isSneaking) return;
         e.cancel = true;
-        const { player, block, blockFace } = e;
-        system.run(() => {
-            try {
-                abstellen(player, block, blockFace);
-            } catch (fehler) {
-                console.warn(`Rucksack, abstellen: ${fehler}`);
-            }
-        });
+        spaeter(e.player, e.block, e.blockFace);
     } catch (fehler) {
         console.warn(`Rucksack, abstellen: ${fehler}`);
     }

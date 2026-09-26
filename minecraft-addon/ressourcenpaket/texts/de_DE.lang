@@ -14,6 +14,8 @@ item.fynn:silbernugget.name=Silbernugget
 
 ## Das eigene Fach im Kreativ-Inventar
 fynn:itemGroup.name.silber=Silber
+fynn:itemGroup.name.jagd=Talismane und Jagd
+fynn:itemGroup.name.tierbeute=Tierbeute
 fynn:itemGroup.name.legierungen=Legierungen
 
 ## Was der Tiegel hergibt
@@ -42,11 +44,11 @@ item.fynn:eisenklinge.name=Eisenklinge
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.45
+item.iron_sword.name=Stahlschwert 4.46
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.45
-item.fynn:degen.name=Degen 4.45
+item.fynn:degen=Degen 4.46
+item.fynn:degen.name=Degen 4.46
 
 
 
@@ -146,6 +148,107 @@ item.fynn:geweihbogen.name=Elchgeweihbogen
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Rubin und neue Schwerter
+item.fynn:rubin=Rubin
+item.fynn:rubin.name=Rubin
+item.fynn:rubinklinge=Rubinklinge
+item.fynn:rubinklinge.name=Rubinklinge
+item.fynn:haizahnsaebel=Haizahnsäbel
+item.fynn:haizahnsaebel.name=Haizahnsäbel
+tile.fynn:rubinerz.name=Rubinerz
+tile.fynn:tiefenrubinerz.name=Tiefenschiefer-Rubinerz
+tile.fynn:rubinblock.name=Rubinblock
+
+
+
+## Banditen
+entity.fynn:bandit.name=Bandit
+item.spawn_egg.entity.fynn:bandit.name=Bandit-Spawn-Ei
+entity.fynn:wilderer.name=Wilderer
+item.spawn_egg.entity.fynn:wilderer.name=Wilderer-Spawn-Ei
+entity.fynn:bandenchef.name=Bandenchef
+item.spawn_egg.entity.fynn:bandenchef.name=Bandenchef-Spawn-Ei
+
+
+## Obst
+item.fynn:birne=Birne
+item.fynn:birne.name=Birne
+item.fynn:pfirsich=Pfirsich
+item.fynn:pfirsich.name=Pfirsich
+item.fynn:pflaume=Pflaume
+item.fynn:pflaume.name=Pflaume
+item.fynn:obstsalat=Obstsalat
+item.fynn:obstsalat.name=Obstsalat
+item.fynn:pflaumenkuchen=Pflaumenkuchen
+item.fynn:pflaumenkuchen.name=Pflaumenkuchen
+item.fynn:apfelstrudel=Apfelstrudel
+item.fynn:apfelstrudel.name=Apfelstrudel
+tile.fynn:obst.name=Frucht am Zweig
+
+
+
+
+
+
+## Weidenroeschen
+tile.fynn:weidenroeschen.name=Weidenröschen
+
+
+## Elefantensattel
+item.fynn:elefantensattel=Elefantensattel
+item.fynn:elefantensattel.name=Elefantensattel
+
+
+
+entity.fynn:statue.name=Statue
+
+
+## Neue Ruestungen
+item.fynn:baerenkapuze=Bärenhelm
+item.fynn:baerenkapuze.name=Bärenhelm
+item.fynn:baerenfellmantel=Bärenpanzer
+item.fynn:baerenfellmantel.name=Bärenpanzer
+item.fynn:baerenfellhose=Bärenbeinschutz
+item.fynn:baerenfellhose.name=Bärenbeinschutz
+item.fynn:baerenfellstiefel=Bärenstiefel
+item.fynn:baerenfellstiefel.name=Bärenstiefel
+item.fynn:magierhut=Zauberhut
+item.fynn:magierhut.name=Zauberhut
+item.fynn:magierrobe=Magierrobe
+item.fynn:magierrobe.name=Magierrobe
+item.fynn:magierrock=Robenrock
+item.fynn:magierrock.name=Robenrock
+item.fynn:magierschuhe=Schnabelschuhe
+item.fynn:magierschuhe.name=Schnabelschuhe
+item.fynn:assassinenkapuze=Assassinenkapuze
+item.fynn:assassinenkapuze.name=Assassinenkapuze
+item.fynn:assassinenharnisch=Assassinenharnisch
+item.fynn:assassinenharnisch.name=Assassinenharnisch
+item.fynn:assassinenhose=Assassinenhose
+item.fynn:assassinenhose.name=Assassinenhose
+item.fynn:assassinenstiefel=Assassinenstiefel
+item.fynn:assassinenstiefel.name=Assassinenstiefel
+item.fynn:waldlaeuferkapuze=Waldläuferkapuze
+item.fynn:waldlaeuferkapuze.name=Waldläuferkapuze
+item.fynn:waldlaeuferwams=Waldläuferwams
+item.fynn:waldlaeuferwams.name=Waldläuferwams
+item.fynn:waldlaeuferhose=Waldläuferhose
+item.fynn:waldlaeuferhose.name=Waldläuferhose
+item.fynn:waldlaeuferstiefel=Waldläuferstiefel
+item.fynn:waldlaeuferstiefel.name=Waldläuferstiefel
 
 
 ## Tierfleisch
@@ -254,66 +357,10 @@ item.fynn:schwertfischklinge.name=Schwertfischklinge
 item.fynn:trank_der_tiefe=Trank der Tiefe
 item.fynn:trank_der_tiefe.name=Trank der Tiefe
 
-
-
-
-
-
-
-
-## Rubin und neue Schwerter
-item.fynn:rubin=Rubin
-item.fynn:rubin.name=Rubin
-item.fynn:rubinklinge=Rubinklinge
-item.fynn:rubinklinge.name=Rubinklinge
-item.fynn:haizahnsaebel=Haizahnsäbel
-item.fynn:haizahnsaebel.name=Haizahnsäbel
-tile.fynn:rubinerz.name=Rubinerz
-tile.fynn:tiefenrubinerz.name=Tiefenschiefer-Rubinerz
-tile.fynn:rubinblock.name=Rubinblock
-
-
-
-## Banditen
-entity.fynn:bandit.name=Bandit
-item.spawn_egg.entity.fynn:bandit.name=Bandit-Spawn-Ei
-entity.fynn:wilderer.name=Wilderer
-item.spawn_egg.entity.fynn:wilderer.name=Wilderer-Spawn-Ei
-entity.fynn:bandenchef.name=Bandenchef
-item.spawn_egg.entity.fynn:bandenchef.name=Bandenchef-Spawn-Ei
-
-
-## Obst
-item.fynn:birne=Birne
-item.fynn:birne.name=Birne
-item.fynn:pfirsich=Pfirsich
-item.fynn:pfirsich.name=Pfirsich
-item.fynn:pflaume=Pflaume
-item.fynn:pflaume.name=Pflaume
-item.fynn:obstsalat=Obstsalat
-item.fynn:obstsalat.name=Obstsalat
-item.fynn:pflaumenkuchen=Pflaumenkuchen
-item.fynn:pflaumenkuchen.name=Pflaumenkuchen
-item.fynn:apfelstrudel=Apfelstrudel
-item.fynn:apfelstrudel.name=Apfelstrudel
-tile.fynn:obst.name=Frucht am Zweig
-
-
-
-
-
-
-## Weidenroeschen
-tile.fynn:weidenroeschen.name=Weidenröschen
-
-
-## Elefantensattel
-item.fynn:elefantensattel=Elefantensattel
-item.fynn:elefantensattel.name=Elefantensattel
-
-
-
-entity.fynn:statue.name=Statue
+## Rucksack
+item.fynn:rucksack=Rucksack
+item.fynn:rucksack.name=Rucksack
+entity.fynn:rucksack_abgestellt.name=Rucksack
 
 ## Die Tiere
 entity.fynn:braunbaer.name=Braunbär
@@ -352,42 +399,3 @@ entity.fynn:mantarochen.name=Mantarochen
 item.spawn_egg.entity.fynn:mantarochen.name=Mantarochen-Spawn-Ei
 entity.fynn:steinadler.name=Steinadler
 item.spawn_egg.entity.fynn:steinadler.name=Steinadler-Spawn-Ei
-
-## Neue Ruestungen
-item.fynn:baerenkapuze=Bärenhelm
-item.fynn:baerenkapuze.name=Bärenhelm
-item.fynn:baerenfellmantel=Bärenpanzer
-item.fynn:baerenfellmantel.name=Bärenpanzer
-item.fynn:baerenfellhose=Bärenbeinschutz
-item.fynn:baerenfellhose.name=Bärenbeinschutz
-item.fynn:baerenfellstiefel=Bärenstiefel
-item.fynn:baerenfellstiefel.name=Bärenstiefel
-item.fynn:magierhut=Zauberhut
-item.fynn:magierhut.name=Zauberhut
-item.fynn:magierrobe=Magierrobe
-item.fynn:magierrobe.name=Magierrobe
-item.fynn:magierrock=Robenrock
-item.fynn:magierrock.name=Robenrock
-item.fynn:magierschuhe=Schnabelschuhe
-item.fynn:magierschuhe.name=Schnabelschuhe
-item.fynn:assassinenkapuze=Assassinenkapuze
-item.fynn:assassinenkapuze.name=Assassinenkapuze
-item.fynn:assassinenharnisch=Assassinenharnisch
-item.fynn:assassinenharnisch.name=Assassinenharnisch
-item.fynn:assassinenhose=Assassinenhose
-item.fynn:assassinenhose.name=Assassinenhose
-item.fynn:assassinenstiefel=Assassinenstiefel
-item.fynn:assassinenstiefel.name=Assassinenstiefel
-item.fynn:waldlaeuferkapuze=Waldläuferkapuze
-item.fynn:waldlaeuferkapuze.name=Waldläuferkapuze
-item.fynn:waldlaeuferwams=Waldläuferwams
-item.fynn:waldlaeuferwams.name=Waldläuferwams
-item.fynn:waldlaeuferhose=Waldläuferhose
-item.fynn:waldlaeuferhose.name=Waldläuferhose
-item.fynn:waldlaeuferstiefel=Waldläuferstiefel
-item.fynn:waldlaeuferstiefel.name=Waldläuferstiefel
-
-## Rucksack
-item.fynn:rucksack=Rucksack
-item.fynn:rucksack.name=Rucksack
-entity.fynn:rucksack_abgestellt.name=Rucksack

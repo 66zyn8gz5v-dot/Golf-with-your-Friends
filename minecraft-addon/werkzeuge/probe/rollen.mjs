@@ -10,7 +10,8 @@ const warte = () => new Promise((fertig) => setTimeout(fertig, 0));
 // Beim Start meldet das Skript die Blockkomponente an.
 const komponenten = new Map();
 for (const f of gemerkt.ereignisse["system.startup"] ?? []) {
-    f({ blockComponentRegistry: { registerCustomComponent: (n, k) => komponenten.set(n, k) } });
+    f({ blockComponentRegistry: { registerCustomComponent: (n, k) => komponenten.set(n, k) },
+        itemComponentRegistry: { registerCustomComponent() { } } });
 }
 pruefe("die Komponente fynn:rollenwahl ist angemeldet", komponenten.has("fynn:rollenwahl"));
 
