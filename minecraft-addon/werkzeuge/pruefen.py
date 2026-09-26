@@ -21,8 +21,9 @@ RESSOURCEN = WURZEL / "ressourcenpaket"
 # Eintraege, die in Mojangs eigenen Dateien belegt sind - sonst wird aus
 # der Liste ein Weg, echte Fehler wegzuschweigen. Der Feuerball des
 # Feuerstabs sieht aus wie Minecrafts kleiner Feuerball; Modell und Bild
-# stehen so in dessen small_fireball.entity.json.
-AUS_MINECRAFT = {"geometry.fireball", "textures/items/fireball"}
+# stehen so in dessen small_fireball.entity.json. Die Statue im Tempel
+# hat die Gestalt des Spielers, geometry.humanoid.custom aus mobs.json.
+AUS_MINECRAFT = {"geometry.fireball", "textures/items/fireball", "geometry.humanoid.custom"}
 
 fehler = []
 hinweise = []

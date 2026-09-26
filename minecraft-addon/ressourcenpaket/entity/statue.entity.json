@@ -1,0 +1,29 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:statue",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/statue"
+      },
+      "geometry": {
+        "default": "geometry.humanoid.custom"
+      },
+      "enable_attachables": true,
+      "animations": {
+        "pose": "animation.statue.pose"
+      },
+      "scripts": {
+        "animate": [
+          "pose"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.default"
+      ]
+    }
+  }
+}

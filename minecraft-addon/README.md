@@ -10,6 +10,11 @@ Wohin das Ganze einmal gehen soll – Rollen, Magie, Aufstieg – steht in
 Rolle hat eine Kraftleiste über der Schnellleiste und einen aufgeladenen
 Angriff – Waffe der Rolle in die Hand, ducken, bis es klingt, aufstehen.
 
+Wer zum ersten Mal in eine Welt kommt, landet im **Starttempel** hoch am
+Himmel. Dort stehen vier Steinstatuen, jede in der Startausrüstung ihrer
+Rolle, und davor die Altäre. Altar antippen, bestätigen – dann gibt es die
+Ausrüstung, und es geht hinunter in die Welt.
+
 ## Was drin ist
 
 * **Glimmerling** – ein scheues Waldwesen, das nachts unterwegs ist, im

@@ -42,11 +42,11 @@ item.fynn:eisenklinge.name=Iron Blade
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.21
+item.iron_sword.name=Stahlschwert 4.22
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.21
-item.fynn:degen.name=Degen 4.21
+item.fynn:degen=Degen 4.22
+item.fynn:degen.name=Degen 4.22
 
 
 
@@ -117,3 +117,4 @@ item.fynn:assassinenhose=Assassin Trousers
 item.fynn:assassinenhose.name=Assassin Trousers
 item.fynn:assassinenstiefel=Assassin Boots
 item.fynn:assassinenstiefel.name=Assassin Boots
+entity.fynn:statue.name=Statue

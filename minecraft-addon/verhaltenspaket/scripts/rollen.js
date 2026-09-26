@@ -230,6 +230,11 @@ async function waehlen(spieler, versuch = 0) {
         return;
     }
 
+    setzeRolle(spieler, neu);
+}
+
+/** Macht aus dem Spieler einen Ritter, Magier ... - fuer Altar und Tempel. */
+export function setzeRolle(spieler, neu) {
     spieler.setDynamicProperty(ROLLE_SCHLUESSEL, neu);
     // Halbe Kraft nach jedem Wechsel: Sonst liesse sich die Leiste durch
     // Hin- und Herwechseln auffuellen.

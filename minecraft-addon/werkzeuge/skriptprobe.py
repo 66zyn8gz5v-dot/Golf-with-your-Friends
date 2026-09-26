@@ -44,8 +44,11 @@ export const system = {
   run: (f) => f(),
   runTimeout: (f, n) => { gemerkt.takte.push(["spaeter", n]); },
 };
+export const BlockPermutation = { resolve: (typ, zustaende) => ({ typ, zustaende }) };
+export const GameMode = { Adventure: "Adventure", Creative: "Creative", Spectator: "Spectator", Survival: "Survival" };
 export class ItemStack {
   constructor(typeId, amount = 1) { this.typeId = typeId; this.amount = amount; }
+  getComponent() { return undefined; }
   clone() { return new ItemStack(this.typeId, this.amount); }
 }
 '''
