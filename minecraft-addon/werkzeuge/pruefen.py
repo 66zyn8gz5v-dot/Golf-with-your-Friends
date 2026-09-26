@@ -300,7 +300,9 @@ def pruefe_bloecke(sprachen, kennungen):
                         stueck = eintrag.get("name", "")
                         if stueck.startswith("fynn:") and stueck not in bekannte_namen:
                             fehler.append(f"{beute}: '{stueck}' gibt es als Gegenstand nicht.")
-                if not gefunden:
+                # leer.json ist mit Absicht leer: Der Tempelaltar soll
+                # nichts fallen lassen, weil es ihn nur im Tempel gibt.
+                if not gefunden and pfad.name != "leer.json":
                     fehler.append(f"{beute}: kein einziger Eintrag - der Block liesse nichts fallen.")
         else:
             hinweise.append(f"{kennung}: keine Beuteliste - der Block faellt als er selbst.")

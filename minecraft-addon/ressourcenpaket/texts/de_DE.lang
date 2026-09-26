@@ -42,11 +42,11 @@ item.fynn:eisenklinge.name=Eisenklinge
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.19
+item.iron_sword.name=Stahlschwert 4.20
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.19
-item.fynn:degen.name=Degen 4.19
+item.fynn:degen=Degen 4.20
+item.fynn:degen.name=Degen 4.20
 
 
 
@@ -83,7 +83,6 @@ item.fynn:feuerstab.name=Feuerstab
 item.fynn:feuerstab_2=Feuerstab II
 item.fynn:feuerstab_2.name=Feuerstab II
 entity.fynn:feuerball.name=Feuerball
-tile.fynn:wappenstein.name=Wappenstein
 item.fynn:eisendolche=Eisendolche
 item.fynn:eisendolche.name=Eisendolche
 item.fynn:silberdolche=Silberdolche
@@ -106,3 +105,5 @@ item.fynn:elektrumpfeil=Elektrumpfeil
 item.fynn:elektrumpfeil.name=Elektrumpfeil
 item.fynn:artefaktentasche=Artefaktentasche
 item.fynn:artefaktentasche.name=Artefaktentasche
+tile.fynn:rollenaltar.name=Rollenaltar
+tile.fynn:tempelaltar.name=Tempelaltar

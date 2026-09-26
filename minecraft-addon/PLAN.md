@@ -6,7 +6,7 @@ damit es nicht verloren geht, auch wenn wochenlang nichts passiert.
 
 Was hier steht, ist der Plan. Gebaut ist inzwischen (Fassung 4.15 bis 4.19):
 
-* **Rollenwahl** am Wappenstein, ein Fenster mit vier Knöpfen: Ritter,
+* **Rollenwahl** am Rollenaltar, ein Fenster mit vier Knöpfen: Ritter,
   Magier, Bogenschütze, Assassine. Die Rolle bleibt am Spieler.
 * **Kraftleiste** über der Schnellleiste, zehn Kugeln in der Farbe der
   Rolle (beim Magier heißt sie Mana). Sie füllt sich von selbst.

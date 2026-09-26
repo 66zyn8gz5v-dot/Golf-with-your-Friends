@@ -190,11 +190,9 @@ def main():
     zeichenseite().save(ziel / "glyph_E3.png")
     print("gemalt: font/glyph_E3.png")
 
-    bloecke = RES / "textures" / "blocks"
-    male(mauer(), SCHILD, 2, 2, salz=31).save(bloecke / "wappenstein_seite.png")
-    male(mauer(), RAUTE, 5, 5, salz=37).save(bloecke / "wappenstein_oben.png")
-    male(mauer(), salz=41).save(bloecke / "wappenstein_unten.png")
-    print("gemalt: wappenstein_seite, _oben, _unten")
+    # Der Wappenstein, fuer den SCHILD und RAUTE gemalt waren, ist seit
+    # 4.20 durch den Rollenaltar ersetzt (altar_bauen.py). Die Mauer
+    # nimmt der Altar weiter von hier.
 
 
 if __name__ == "__main__":

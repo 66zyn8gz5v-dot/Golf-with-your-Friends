@@ -52,14 +52,20 @@
     "tiegel_unten": {
       "textures": "textures/blocks/tiegel_unten"
     },
-    "wappenstein_seite": {
-      "textures": "textures/blocks/wappenstein_seite"
+    "rollenaltar_alle": {
+      "textures": "textures/blocks/rollenaltar_alle"
     },
-    "wappenstein_oben": {
-      "textures": "textures/blocks/wappenstein_oben"
+    "rollenaltar_ritter": {
+      "textures": "textures/blocks/rollenaltar_ritter"
     },
-    "wappenstein_unten": {
-      "textures": "textures/blocks/wappenstein_unten"
+    "rollenaltar_magier": {
+      "textures": "textures/blocks/rollenaltar_magier"
+    },
+    "rollenaltar_bogenschuetze": {
+      "textures": "textures/blocks/rollenaltar_bogenschuetze"
+    },
+    "rollenaltar_assassine": {
+      "textures": "textures/blocks/rollenaltar_assassine"
     }
   }
 }

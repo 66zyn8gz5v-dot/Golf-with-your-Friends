@@ -1,4 +1,4 @@
-// Die Rollen ohne Spiel: Stein antippen, waehlen, Staerke, Kraftleiste.
+// Die Rollen ohne Spiel: Altar antippen, waehlen, Staerke, Kraftleiste.
 import { gemerkt, system, world } from "@minecraft/server";
 import { letztesFenster, setzeAntwort } from "@minecraft/server-ui";
 await import("./main.js");

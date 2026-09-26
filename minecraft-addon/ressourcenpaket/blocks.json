@@ -10,7 +10,10 @@
   "fynn:silberblock": {
     "sound": "metal"
   },
-  "fynn:wappenstein": {
+  "fynn:rollenaltar": {
+    "sound": "stone"
+  },
+  "fynn:tempelaltar": {
     "sound": "stone"
   }
 }

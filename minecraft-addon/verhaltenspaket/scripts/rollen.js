@@ -1,9 +1,9 @@
 // Die Rollen: Ritter, Magier, Bogenschuetze, Assassine.
 //
-// Gewaehlt wird am Wappenstein - antippen, ein Fenster mit vier Knoepfen.
+// Gewaehlt wird am Rollenaltar - antippen, ein Fenster mit vier Knoepfen.
 // Die Rolle haengt am Spieler selbst (eine Eigenschaft, die Minecraft mit
 // der Welt speichert), sie ueberlebt also Tod und Neustart. Wechseln geht
-// jederzeit am Stein.
+// jederzeit am Altar.
 //
 // Jede Rolle hat eine Kraft, die sich von selbst auffuellt: der Magier
 // Mana, die anderen Ausdauer, Fokus oder Schatten. Die aufgeladenen
@@ -21,7 +21,7 @@
 import { world, system } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
 
-export const WAPPENSTEIN = "fynn:wappenstein";
+export const ROLLENALTAR = "fynn:rollenaltar";
 export const KRAFT_MAX = 100;
 const ROLLE_SCHLUESSEL = "fynn:rolle";
 const KRAFT_SCHLUESSEL = "fynn:kraft";
@@ -155,7 +155,7 @@ function zeige(spieler) {
 export function angriffErlaubt(spieler, rolle, kosten, still = false) {
     const r = ROLLEN[rolle];
     if (rolleVon(spieler) !== rolle) {
-        if (!still) hinweis(spieler, `§7Das kann nur ein ${r.farbe}${r.name}§7. Wähle deine Rolle am Wappenstein.`);
+        if (!still) hinweis(spieler, `§7Das kann nur ein ${r.farbe}${r.name}§7. Wähle deine Rolle am Rollenaltar.`);
         return false;
     }
     if (kraftVon(spieler) < kosten) {
@@ -181,7 +181,7 @@ async function waehlen(spieler, versuch = 0) {
             + "Aufgeladene Angriffe kosten Kraft, sie kommt von selbst wieder.\n\n"
             + "Aufladen: die Waffe deiner Rolle in die Hand, ducken, bis es klingt, "
             + "dann aufstehen.\n\n"
-            + "Wechseln kannst du jederzeit hier am Stein.");
+            + "Wechseln kannst du jederzeit hier am Altar.");
     for (const k of REIHENFOLGE) {
         form.button(`${ROLLEN[k].farbe}${ROLLEN[k].name}\n§8${ROLLEN[k].kurz}`, ROLLEN[k].bild);
     }
@@ -225,7 +225,7 @@ async function waehlen(spieler, versuch = 0) {
 }
 
 // Ueber eine eigene Blockkomponente statt ueber das allgemeine Antippen:
-// Nur so weiss das Spiel, dass man den Stein benutzen kann, und nimmt das
+// Nur so weiss das Spiel, dass man den Altar benutzen kann, und nimmt das
 // Antippen auch mit leerer Hand an.
 system.beforeEvents.startup.subscribe((e) => {
     e.blockComponentRegistry.registerCustomComponent("fynn:rollenwahl", {
