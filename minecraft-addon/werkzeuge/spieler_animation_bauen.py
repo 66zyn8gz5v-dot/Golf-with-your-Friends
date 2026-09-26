@@ -406,6 +406,10 @@ def spielerdatei():
     s["pre_animation"] = [z for z in s["pre_animation"] if not z.startswith(eigene_vars)] + VORBERECHNUNG
     s["animate"] = [e for e in s["animate"] if (next(iter(e)) if isinstance(e, dict) else e) not in unsere]
     s["animate"] += [{n: bedingung} for n, _, _, bedingung in TEILE]
+    # Nur unsere eigenen oeffentlichen Werte neu setzen; was eine fruehere
+    # Fassung freigab und diese nicht mehr kennt, kommt weg.
+    for v in [v for v in s["variables"] if v.startswith("variable.fynn_") and v not in OEFFENTLICH]:
+        del s["variables"][v]
     for v in OEFFENTLICH:
         s["variables"][v] = "public"
     for n, name, *_ in TEILE:

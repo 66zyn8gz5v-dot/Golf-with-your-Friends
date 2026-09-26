@@ -239,7 +239,6 @@
           "variable.fynn_tempo": "public",
           "variable.fynn_gang": "public",
           "variable.fynn_pfeile": "public",
-          "variable.fynn_hieb_seite": "public",
           "variable.fynn_waffe": "public",
           "variable.fynn_schlag": "public",
           "variable.fynn_hiebzeit": "public"
