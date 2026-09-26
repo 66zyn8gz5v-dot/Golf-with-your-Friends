@@ -48,7 +48,7 @@ export const ROLLEN = {
     bogenschuetze: {
         name: "Bogenschütze", farbe: "§a", kraft: "Fokus", feld: 3,
         bild: "textures/items/bow_standby",
-        kurz: "schneller zu Fuß",
+        kurz: "Pfeilhagel · schneller zu Fuß",
         wirkung: { id: "speed", stufe: 0 },
         nachschub: 1,
     },

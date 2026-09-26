@@ -1,5 +1,5 @@
-// Die aufgeladenen Angriffe von Ritter und Assassine, dazu die Regel,
-// dass die Dolche beide Haende brauchen.
+// Die aufgeladenen Angriffe von Ritter, Assassine und Bogenschuetze,
+// dazu die Regel, dass die Dolche beide Haende brauchen.
 //
 // Aufgeladen wird ueberall gleich, wie beim Degen und den Feuerstaeben:
 // Waffe in die Hand, ducken, geduckt bleiben, bis es klingt - beim
@@ -30,6 +30,8 @@ const SCHWERTER = new Set([
     "fynn:elektrumklinge", "fynn:sternenklinge",
 ]);
 
+const BOEGEN = new Set(["minecraft:bow", "minecraft:crossbow"]);
+
 // Was von einem Angriff nie getroffen wird: Gegenstaende am Boden,
 // Erfahrung, Geschosse - und Mitspieler. Ein Wirbelschlag unter Freunden
 // soll keinen Streit ausloesen.
@@ -41,6 +43,9 @@ const WIRBEL_WEITE = 3.5;       // Bloecke rund um den Ritter
 const SPRUNG_WEITE = 10;        // so weit sieht der Assassine sein Ziel
 const HINTERHALT = 10;          // Schaden von hinten: fuenf Herzen
 const SPERRE = 20;              // Ticks zwischen zwei Angriffen
+const FAECHER = [-16, -8, 0, 8, 16];    // Grad links und rechts der Blickrichtung
+const PFEIL_TEMPO = 3.0;        // so schnell wie ein voll gespannter Bogen
+const PFEIL_LEBEN = 60;         // Ticks, dann sind die Hagelpfeile weg
 
 const ANGRIFFE = [
     {
@@ -52,6 +57,10 @@ const ANGRIFFE = [
         // und er laedt im Schatten - geduckt ist er ohnehin unsichtbar.
         name: "Schattensprung", rolle: "assassine", ladezeit: 15, kosten: 35,
         passt: (id) => DOLCHE.has(id), los: schattensprung,
+    },
+    {
+        name: "Pfeilhagel", rolle: "bogenschuetze", ladezeit: 20, kosten: 40,
+        passt: (id) => BOEGEN.has(id), los: pfeilhagel,
     },
 ];
 
@@ -212,6 +221,62 @@ function schattensprung(spieler) {
     }, 2);
     if (geschafft) rauch(dimension, hinter);
 }
+
+// -------------------------------------------------------- Pfeilhagel
+
+const hagel = new Map();        // Pfeil -> bis wann er bleiben darf
+
+/**
+ * Fuenf Pfeile auf einmal, gefaechert ueber gut dreissig Grad: gegen eine
+ * Gruppe, oder gegen einen, der ausweicht.
+ *
+ * Gespannt wird dafuer nicht: Der Hagel kommt aus der Kraft des Schuetzen,
+ * nicht aus dem Koecher, und kostet keine Pfeile. Damit er nicht zur
+ * Pfeilquelle wird, verschwinden die Hagelpfeile nach drei Sekunden
+ * wieder - bis dahin stecken sie laengst.
+ */
+function pfeilhagel(spieler) {
+    const dimension = spieler.dimension;
+    const blick = spieler.getViewDirection();
+    const kopf = spieler.getHeadLocation();
+    for (const grad of FAECHER) {
+        // Um die Senkrechte drehen: Der Faecher liegt waagerecht, die
+        // Neigung des Blicks bleibt fuer alle fuenf gleich.
+        const w = (grad * Math.PI) / 180;
+        const r = {
+            x: blick.x * Math.cos(w) - blick.z * Math.sin(w),
+            y: blick.y,
+            z: blick.x * Math.sin(w) + blick.z * Math.cos(w),
+        };
+        const start = { x: kopf.x + r.x * 0.8, y: kopf.y + r.y * 0.8 - 0.1, z: kopf.z + r.z * 0.8 };
+        const pfeil = dimension.spawnEntity("minecraft:arrow", start);
+        const tempo = { x: r.x * PFEIL_TEMPO, y: r.y * PFEIL_TEMPO, z: r.z * PFEIL_TEMPO };
+        const geschoss = pfeil.getComponent("minecraft:projectile");
+        if (geschoss) {
+            geschoss.owner = spieler;
+            geschoss.shoot(tempo);
+        } else {
+            pfeil.applyImpulse(tempo);
+        }
+        hagel.set(pfeil.id, { pfeil, bis: system.currentTick + PFEIL_LEBEN });
+    }
+    dimension.playSound("random.bow", spieler.location, { volume: 1.0, pitch: 0.8 });
+}
+
+system.runInterval(() => {
+    for (const [kennung, eintrag] of hagel) {
+        try {
+            if (!lebt(eintrag.pfeil)) {
+                hagel.delete(kennung);
+            } else if (system.currentTick >= eintrag.bis) {
+                eintrag.pfeil.remove();
+                hagel.delete(kennung);
+            }
+        } catch (fehler) {
+            hagel.delete(kennung);
+        }
+    }
+}, 10);
 
 // ------------------------------------------------ Zweithand sperren
 

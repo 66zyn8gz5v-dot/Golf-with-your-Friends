@@ -125,6 +125,34 @@ pruefe("zu wenig Kraft: Hinweis", leiste.at(-1).includes("Zu wenig Schatten"));
 spieler.isSneaking = false; tick(1);
 pruefe("und kein Sprung", spieler.stoss === null);
 
+// --- Bogenschuetze: Pfeilhagel
+const pfeile = [];
+dimension.spawnEntity = (typ, ort) => {
+    const pfeil = { typ, id: "pf" + pfeile.length, ort, isValid: true, tempo: null, owner: null,
+        getComponent: (n) => (n === "minecraft:projectile"
+            ? { set owner(o) { pfeil.owner = o; }, shoot: (v) => { pfeil.tempo = v; } } : undefined),
+        remove() { this.isValid = false; } };
+    pfeile.push(pfeil);
+    return pfeil;
+};
+eigenschaften.set("fynn:rolle", "bogenschuetze");
+spieler.inHand = "minecraft:bow";
+auffuellen(); system.currentTick += 40;
+spieler.isSneaking = true; tick(20);
+pruefe("Bogen geladen: Hinweis", leiste.at(-1).includes("Pfeilhagel bereit"));
+spieler.isSneaking = false; tick(1);
+pruefe(`fuenf Pfeile (${pfeile.length})`, pfeile.length === 5 && pfeile.every((p) => p.typ === "minecraft:arrow"));
+pruefe("alle abgeschossen, der Schuetze ist Besitzer", pfeile.every((p) => p.tempo && p.owner === spieler));
+const seiten = pfeile.map((p) => p.tempo.x.toFixed(2)).join(" ");
+pruefe(`gefaechert, die Mitte geradeaus (x: ${seiten})`,
+       Math.abs(pfeile[2].tempo.x) < 1e-9 && pfeile[0].tempo.x * pfeile[4].tempo.x < 0
+       && pfeile.every((p) => p.tempo.z > 2.5));
+system.currentTick += 30; for (const f of halbSekunde) f();
+pruefe("nach anderthalb Sekunden noch da", pfeile.every((p) => p.isValid));
+system.currentTick += 40; for (const f of halbSekunde) f();
+pruefe("nach drei Sekunden weg", pfeile.every((p) => !p.isValid));
+spieler.inHand = "fynn:stahldolche";
+
 // --- Zweithand
 zweithand = { typeId: "minecraft:shield" };
 for (const f of halbSekunde) f();
