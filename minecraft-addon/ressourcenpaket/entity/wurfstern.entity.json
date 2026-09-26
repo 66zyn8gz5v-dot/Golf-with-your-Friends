@@ -4,26 +4,26 @@
     "description": {
       "identifier": "fynn:wurfstern",
       "materials": {
-        "default": "snowball"
+        "default": "entity_alphatest"
       },
       "textures": {
         "default": "textures/items/wurfstern"
       },
       "geometry": {
-        "default": "geometry.item_sprite"
+        "default": "geometry.wurfstern_flug"
       },
-      "render_controllers": [
-        "controller.render.item_sprite"
-      ],
       "animations": {
-        "flying": "animation.actor.billboard"
+        "drehen": "animation.wurfstern.drehen"
       },
       "scripts": {
-        "scale": "0.6",
+        "scale": "0.45",
         "animate": [
-          "flying"
+          "drehen"
         ]
-      }
+      },
+      "render_controllers": [
+        "controller.render.default"
+      ]
     }
   }
 }

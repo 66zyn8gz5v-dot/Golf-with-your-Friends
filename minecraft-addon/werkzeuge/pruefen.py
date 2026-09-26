@@ -404,6 +404,22 @@ def pruefe_bildnamen():
                 "Minecraft behaelt nur eines davon.")
 
 
+_modelle = None
+
+
+def alle_modelle():
+    """Jedes Modell im Paket nach seinem Namen - auch wenn mehrere in einer
+    Datei stehen, wie die vier Spannstufen des Bogens in fynn_bogen.geo.json."""
+    global _modelle
+    if _modelle is None:
+        _modelle = {}
+        for pfad in (RESSOURCEN / "models" / "entity").glob("*.geo.json"):
+            inhalt = lies(pfad) or {}
+            for geo in inhalt.get("minecraft:geometry", []):
+                _modelle[geo["description"]["identifier"]] = geo
+    return _modelle
+
+
 def pruefe_attachables():
     """Haelt jedes Attachable gegen das, worauf es zeigt.
 
@@ -428,12 +444,11 @@ def pruefe_attachables():
         modell = beschreibung.get("geometry", {}).get("default", "")
         knochen = []
         if modell and modell not in AUS_MINECRAFT:
-            pfad = RESSOURCEN / "models" / "entity" / (modell.replace("geometry.", "") + ".geo.json")
-            gelesen = lies(pfad) if pfad.exists() else None
-            if gelesen is None:
+            geo = alle_modelle().get(modell)
+            if geo is None:
                 fehler.append(f"{datei.name}: Modell '{modell}' gibt es nicht.")
             else:
-                knochen = [k["name"] for k in gelesen["minecraft:geometry"][0]["bones"]]
+                knochen = [k["name"] for k in geo["bones"]]
 
         for zweck, pfad in beschreibung.get("textures", {}).items():
             if pfad.startswith("textures/misc/"):

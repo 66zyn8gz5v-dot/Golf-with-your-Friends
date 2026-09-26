@@ -210,30 +210,6 @@ def waffen_attachable(name):
     }}}
 
 
-def bogen_attachable():
-    # Wie Minecrafts eigener Bogen (attachables/bow.json), nur mit den
-    # Bildern des Sturmbogens: dieselben Modelle, die das Spiel aus dem
-    # Bild zieht, und dieselbe Umschaltung beim Spannen.
-    t = {"default": "textures/items/sturmbogen"}
-    t.update({f"bow_pulling_{i}": f"textures/items/sturmbogen_pulling_{i}" for i in range(3)})
-    t["enchanted"] = "textures/misc/enchanted_item_glint"
-    return {"format_version": "1.10.0", "minecraft:attachable": {"description": {
-        "identifier": "fynn:sturmbogen",
-        "materials": {"default": "entity_alphatest", "enchanted": "entity_alphatest_glint"},
-        "textures": t,
-        "geometry": {"default": "geometry.bow_standby", "bow_pulling_0": "geometry.bow_pulling_0",
-                     "bow_pulling_1": "geometry.bow_pulling_1", "bow_pulling_2": "geometry.bow_pulling_2"},
-        "animations": {"wield": "animation.bow.wield",
-                       "wield_first_person_pull": "animation.bow.wield_first_person_pull"},
-        "scripts": {
-            "pre_animation": ["variable.charge_amount = math.clamp((query.main_hand_item_max_duration - "
-                              "(query.main_hand_item_use_duration - query.frame_alpha + 1.0)) / 10.0, 0.0, 1.0f);"],
-            "animate": ["wield", {"wield_first_person_pull": "query.main_hand_item_use_duration > 0.0f && c.is_first_person"}],
-        },
-        "render_controllers": ["controller.render.bow"],
-    }}}
-
-
 # ============================================================ Gegenstaende
 
 def gegenstand(name, teile, gruppe="minecraft:itemGroup.name.sword", stapel=1):
@@ -342,7 +318,8 @@ def main():
     for name, karte in bogen.BILDER.items():
         ziel = "sturmbogen" if name == "bow_standby" else name.replace("bow", "sturmbogen")
         sturmbogen_bild(karte).save(items / f"{ziel}.png")
-    schreibe(RES / "attachables" / "sturmbogen.json", bogen_attachable())
+    # Das Attachable des Sturmbogens baut bogen_3d_bauen.py - mit dem
+    # 3D-Bogen statt Minecrafts flachem Bildmodell.
     schreibe(VER / "items" / "sturmbogen.json", gegenstand("sturmbogen", {
         "minecraft:hand_equipped": True,
         "minecraft:durability": {"max_durability": 600},
@@ -369,8 +346,8 @@ def main():
         "mob_effect": {"effect": "poison", "durationeasy": 40, "durationnormal": 60,
                        "durationhard": 80, "amplifier": 0},
     }))
-    schreibe(RES / "entity" / "wurfstern.entity.json",
-             sprite_aussehen("wurfstern", "textures/items/wurfstern", "0.6"))
+    # Wie der Wurfstern aussieht - in der Hand und im Flug, beides in 3D -,
+    # baut wurfstern_3d_bauen.py.
     schreibe(VER / "recipes" / "wurfstern.json", rezept("wurfstern", [" I ", "I I", " I "],
                                                         {"I": "minecraft:iron_nugget"}, anzahl=4))
 
