@@ -86,7 +86,7 @@ TIERE = [
         "ei": ("#6b4424", "#c9a26f"), "angriff": "tatze",
     },
     {
-        "id": "elch", "name": ("Elch", "Moose"), "gestalt": "elch",
+        "id": "elch", "grast": True, "scharrt": True, "name": ("Elch", "Moose"), "gestalt": "elch",
         "varianten": [("bulle", 50), ("kuh", 50)], "baby_textur": "kalb",
         "art": "land", "verhalten": "neutral", "leben": 36, "schaden": 6, "tempo": 0.23,
         "kollision": (1.5, 2.3), "baby": True, "herde": (1, 3), "stoss": 1.6,
@@ -108,7 +108,7 @@ TIERE = [
         "zeigen": {"geweih": "query.variant == 0 && !query.is_baby"},
     },
     {
-        "id": "wildschwein", "name": ("Wildschwein", "Wild Boar"), "gestalt": "wildschwein",
+        "id": "wildschwein", "grast": True, "name": ("Wildschwein", "Wild Boar"), "gestalt": "wildschwein",
         "varianten": [("erwachsen", 100)], "baby_textur": "frischling",
         "art": "land", "verhalten": "feindlich", "reichweite": 5, "leben": 22, "schaden": 5, "tempo": 0.27,
         "kollision": (0.9, 0.9), "baby": True, "herde": (2, 4), "stoss": 1.2,
@@ -121,7 +121,7 @@ TIERE = [
         "ei": ("#4a3c30", "#a88478"), "angriff": "stoss",
     },
     {
-        "id": "bison", "name": ("Bison", "Bison"), "gestalt": "bison",
+        "id": "bison", "grast": True, "scharrt": True, "name": ("Bison", "Bison"), "gestalt": "bison",
         "varianten": [("prarie", 100), ("winter", 0)], "baby_textur": "kalb",
         "art": "land", "verhalten": "neutral", "herdenwut": True, "leben": 45, "schaden": 6, "tempo": 0.22,
         "kollision": (1.6, 1.9), "baby": True, "herde": (3, 6), "stoss": 2.0,
@@ -263,7 +263,7 @@ TIERE = [
         "zeigen": {"stosszaehne": "!query.is_baby"},
     },
     {
-        "id": "nashorn", "name": ("Nashorn", "Rhino"), "gestalt": "nashorn",
+        "id": "nashorn", "grast": True, "scharrt": True, "name": ("Nashorn", "Rhino"), "gestalt": "nashorn",
         "varianten": [("grau", 70), ("dunkel", 30)], "baby_textur": "kalb",
         "art": "land", "verhalten": "neutral", "leben": 50, "schaden": 9, "tempo": 0.24,
         "kollision": (1.6, 1.9), "baby": True, "herde": (1, 2), "stoss": 2.5,
@@ -724,6 +724,82 @@ def spawnregel(t):
 
 # ------------------------------------------------------------ Bewegung
 
+# Kleine Dinge, die Tiere zwischendurch tun. Jede kommt in Abstaenden, je
+# Tier versetzt (variable.fynn_zufall), damit eine Herde nicht im Gleichtakt
+# zuckt. puls(): 0, und fuer kurze Zeit 1 - weich an- und abschwellend.
+def puls(tempo, versatz, schwelle):
+    k = round(1.5 / (1.0 - schwelle), 2)
+    return (f"math.clamp((math.sin(query.life_time * {tempo} + variable.fynn_zufall + {versatz}) - {schwelle})"
+            f" * {k}, 0.0, 1.0)")
+
+
+STEHT = "(1.0 - math.clamp(query.modified_move_speed * 3.0, 0.0, 1.0))"
+ZUSATZ_GEWICHT = {
+    "kopfschuetteln": f"{STEHT} * {puls(19.0, 0, 0.93)}",
+    "schwanzschlag": puls(31.0, 120, 0.8),
+    "grasen": f"{STEHT} * {puls(13.0, 200, 0.7)}",
+    "scharren": f"query.is_angry * {STEHT}",
+    "trompeten": puls(14.0, 40, 0.93),
+    "kratzen": f"{STEHT} * {puls(11.0, 300, 0.9)}",
+    "bruellen": f"{STEHT} * {puls(17.0, 60, 0.9)}",
+    "wedeln": f"{STEHT} * {puls(23.0, 90, 0.85)}",
+    "sonnen": f"{STEHT} * (1.0 - query.is_in_water) * {puls(9.0, 0, 0.5)}",
+    "schrei": puls(21.0, 0, 0.93),
+    "salto": "1.0",
+}
+
+
+def zusatzbewegungen(t, da, kopf, schwanzkette):
+    """Kopfschuetteln (gegen Fliegen), Schwanzschlagen, Grasen, Scharren vor
+    dem Angriff - und was nur ein Tier tut: Elefanten trompeten, Gorillas
+    kratzen sich am Kopf, Walrosse bruellen und wedeln mit der Flosse,
+    Krokodile liegen mit offenem Maul in der Sonne."""
+    lt = "query.life_time"
+    z = {}
+    ohren = [o for o in ("ohr_links", "ohr_rechts") if o in da]
+    if kopf:
+        schuetteln = {kopf: {"rotation": [0.0, f"math.sin({lt} * 1100.0) * 9.0", f"math.sin({lt} * 1100.0 + 90.0) * 12.0"]}}
+        for o in ohren:
+            schuetteln[o] = {"rotation": [0.0, f"math.sin({lt} * 1100.0 + 60.0) * {-25 if o == 'ohr_links' else 25}", 0.0]}
+        z["kopfschuetteln"] = {"loop": True, "bones": schuetteln}
+    if schwanzkette:
+        z["schwanzschlag"] = {"loop": True, "bones": {
+            k: {"rotation": [f"-10.0 - {i * 5}", f"math.sin({lt} * 700.0 - {i * 60}) * {30 + 10 * i}", 0.0]}
+            for i, k in enumerate(schwanzkette)}}
+    if t.get("grast") and kopf:
+        z["grasen"] = {"loop": True, "bones": {
+            kopf: {"rotation": [f"48.0 + math.sin({lt} * 400.0) * 3.0", f"math.sin({lt} * 60.0) * 8.0", 0.0]},
+            "body": {"rotation": [4.0, 0.0, 0.0]}}}
+    if t.get("scharrt"):
+        z["scharren"] = {"loop": True, "bones": {
+            "leg0": {"rotation": [f"-15.0 + math.sin({lt} * 500.0) * 28.0", 0.0, 0.0]},
+            kopf: {"rotation": [22.0, f"math.sin({lt} * 250.0) * 6.0", 0.0]}}}
+    if "ruessel1" in da:
+        z["trompeten"] = {"loop": True, "bones": {
+            kopf: {"rotation": [-22.0, 0.0, 0.0]},
+            "ruessel1": {"rotation": [-85.0, 0.0, 0.0]},
+            "ruessel2": {"rotation": [-55.0, 0.0, 0.0]},
+            "ruessel3": {"rotation": [f"-45.0 + math.sin({lt} * 900.0) * 8.0", 0.0, 0.0]},
+            "kiefer": {"rotation": [22.0, 0.0, 0.0]},
+            "ohr_links": {"rotation": [0.0, -38.0, 0.0]},
+            "ohr_rechts": {"rotation": [0.0, 38.0, 0.0]}}}
+    if t["id"] == "gorilla":
+        z["kratzen"] = {"loop": True, "bones": {
+            "leg0": {"rotation": [f"-92.0 + math.sin({lt} * 800.0) * 6.0", 0.0, 42.0]},
+            kopf: {"rotation": [8.0, -12.0, -14.0]},
+            "body": {"rotation": [-10.0, 0.0, 0.0]}}}
+    if t["id"] == "walross":
+        z["bruellen"] = {"loop": True, "bones": {
+            kopf: {"rotation": [f"-38.0 + math.sin({lt} * 300.0) * 4.0", 0.0, 0.0]},
+            "body": {"rotation": [-8.0, 0.0, 0.0]}}}
+        z["wedeln"] = {"loop": True, "bones": {
+            "leg0": {"rotation": [0.0, f"math.sin({lt} * 400.0) * 20.0", f"-25.0 + math.sin({lt} * 400.0) * 15.0"]}}}
+    if "kiefer" in da and t["id"] == "krokodil":
+        z["sonnen"] = {"loop": True, "bones": {"kiefer": {"rotation": [32.0, 0.0, 0.0]},
+                                               kopf: {"rotation": [-6.0, 0.0, 0.0]}}}
+    return z
+
+
 def elefant_dazu(a, T):
     """Der Ruessel pendelt im Gehen und tastet im Stehen herum, die Spitze
     rollt sich ein; die grossen Ohren faecheln - so kuehlen sich Elefanten."""
@@ -748,6 +824,7 @@ def elefant_dazu(a, T):
 TROMMELN = {"loop": True, "bones": {
     "body": {"rotation": [-32.0, 0.0, 0.0], "position": [0.0, 3.0, 0.0]},
     "head": {"rotation": [-18.0, 0.0, 0.0]},
+    "kiefer": {"rotation": ["18.0 + math.sin(query.life_time * 450.0) * 6.0", 0.0, 0.0]},
     "leg0": {"rotation": ["-22.0 + math.sin(query.life_time * 900.0) * 16.0", 0.0, 20.0]},
     "leg1": {"rotation": ["-22.0 - math.sin(query.life_time * 900.0) * 16.0", 0.0, -20.0]},
     "leg2": {"rotation": [32.0, 0.0, 0.0]},
@@ -768,12 +845,16 @@ def vogelbewegungen():
     nach = f"math.sin({lt} * 520.0 - 60.0) * 26.0 * {schlagen}"
     fliegen = {"loop": True, "bones": {
         "rumpf": {"rotation": ["-query.target_x_rotation * 0.5", 0.0, "variable.fynn_dreh * 2.5"]},
-        "kopf": {"rotation": [f"math.sin({lt} * 13.0) * 8.0", f"math.sin({lt} * 31.0) * 22.0", 0.0]},
+        # Greifvoegel schauen ruckartig: alle zwei Drittel Sekunden ein
+        # neuer Blickwinkel, dazwischen steht der Kopf still.
+        "kopf": {"rotation": [f"math.sin(math.floor({lt} * 1.5) * 57.0) * 10.0",
+                              f"math.sin(math.floor({lt} * 1.5) * 97.0) * 30.0", 0.0]},
         "fluegel_links": {"rotation": [0.0, 0.0, f"-8.0 - math.sin({lt} * 60.0) * 3.0 - {schlag}"]},
         "fluegel_rechts": {"rotation": [0.0, 0.0, f"8.0 + math.sin({lt} * 60.0) * 3.0 + {schlag}"]},
         "fluegelspitze_links": {"rotation": [0.0, 0.0, f"-4.0 - {nach}"]},
         "fluegelspitze_rechts": {"rotation": [0.0, 0.0, f"4.0 + {nach}"]},
-        "schwanz": {"rotation": [f"math.sin({lt} * 40.0) * 4.0", "-variable.fynn_dreh * 3.0", 0.0]},
+        "schwanz": {"rotation": [f"math.sin({lt} * 40.0) * 4.0", "-variable.fynn_dreh * 3.0", 0.0],
+                    "scale": ["1.0 + math.min(math.abs(variable.fynn_dreh) * 0.04, 0.35)", 1.0, 1.0]},
         "fuesse": {"rotation": [70.0, 0.0, 0.0]},
     }}
     stossen = {"loop": True, "bones": {
@@ -784,7 +865,11 @@ def vogelbewegungen():
         "fuesse": {"rotation": [-60.0, 0.0, 0.0]},
         "kopf": {"rotation": [20.0, 0.0, 0.0]},
     }}
-    return {"fliegen": fliegen, "stossen": stossen}
+    schrei = {"loop": True, "bones": {
+        "unterschnabel": {"rotation": [28.0, 0.0, 0.0]},
+        "kopf": {"rotation": [-22.0, 0.0, 0.0]},
+    }}
+    return {"fliegen": fliegen, "stossen": stossen, "schrei": schrei}
 
 
 def bewegungen(t, modell):
@@ -867,6 +952,7 @@ def bewegungen(t, modell):
             elefant_dazu(a, T)
         if t.get("trommelt"):
             a["trommeln"] = TROMMELN
+        a.update(zusatzbewegungen(t, da, kopf, schwanzkette))
         # In die Kurve legen: Der Kopf geht voraus, der Koerper neigt sich
         # nach innen, der Schwanz schwingt nach aussen (v.fynn_dreh, siehe
         # DREHUNG).
@@ -937,6 +1023,15 @@ def bewegungen(t, modell):
             "query.target_x_rotation * 0.6", 0.0,
             f"math.sin(query.life_time * {tempo * 0.5}) * {2.0 if art == 'wal' else 4.0} - variable.fynn_dreh * 2.0"]
         a["schwimmen"] = {"loop": True, "bones": knochen}
+        if "horn_links" in da:
+            # Die Kopflappen rollen sich auf und ein; alle halbe Minute
+            # schlaegt der Manta einen Salto - wie beim Fressen im Plankton.
+            for seite, zeichen in (("horn_links", 1), ("horn_rechts", -1)):
+                knochen[seite] = {"rotation": ["math.sin(query.life_time * 45.0) * 25.0 - 10.0", 0.0,
+                                               f"math.sin(query.life_time * 45.0) * {8 * zeichen}"]}
+            zeit = "math.mod(query.life_time + variable.fynn_zufall * 0.1, 30.0)"
+            a["salto"] = {"loop": True, "bones": {"rumpf": {"rotation": [
+                f"{zeit} < 2.5 ? math.pow(math.sin({zeit} / 2.5 * 90.0), 2.0) * 360.0 : 0.0", 0.0, 0.0]}}}
         if art == "fisch" and name != "riesenkalmar":
             # An Land liegt der Fisch auf der Seite und zappelt.
             a["an_land"] = {"loop": True, "bones": {rumpf: {
@@ -1014,7 +1109,8 @@ GALOPP = "math.clamp((query.modified_move_speed - 0.6) * 3.0, 0.0, 1.0)"
 GEHEN = "math.clamp(query.modified_move_speed * 1.4, 0.0, 1.0)"
 # Wie schnell sich das Tier gerade dreht, weich nachgezogen, in etwa Grad
 # je zwanzigstel Sekunde; Spruenge ueber die 180-Grad-Grenze abgefangen.
-DREHUNG_START = ["variable.fynn_gier_alt = query.body_y_rotation;", "variable.fynn_dreh = 0.0;"]
+DREHUNG_START = ["variable.fynn_gier_alt = query.body_y_rotation;", "variable.fynn_dreh = 0.0;",
+                 "variable.fynn_zufall = math.random(0.0, 360.0);"]
 DREHUNG = [
     "variable.fynn_d = query.body_y_rotation - variable.fynn_gier_alt;",
     "variable.fynn_d = variable.fynn_d > 180.0 ? variable.fynn_d - 360.0 : "
@@ -1044,6 +1140,9 @@ def animate_liste(t, anims):
         liste.append({"schwimmen": "query.is_in_water" if "an_land" in anims else "1.0"})
         if "an_land" in anims:
             liste.append({"an_land": "!query.is_in_water"})
+    for name, gewicht in ZUSATZ_GEWICHT.items():
+        if name in anims:
+            liste.append({name: gewicht})
     if "fliegen" in anims:
         liste.append("fliegen")
         # Im Sturzflug die Schwingen anlegen.

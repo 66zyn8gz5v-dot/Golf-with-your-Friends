@@ -17,6 +17,8 @@
         "laufen": "animation.fynn.krokodil.laufen",
         "stehen": "animation.fynn.krokodil.stehen",
         "blick": "animation.common.look_at_target",
+        "kopfschuetteln": "animation.fynn.krokodil.kopfschuetteln",
+        "sonnen": "animation.fynn.krokodil.sonnen",
         "drehen": "animation.fynn.krokodil.drehen",
         "schwimmen": "animation.fynn.krokodil.schwimmen",
         "angriff": "animation.fynn.krokodil.angriff",
@@ -25,7 +27,8 @@
       "scripts": {
         "initialize": [
           "variable.fynn_gier_alt = query.body_y_rotation;",
-          "variable.fynn_dreh = 0.0;"
+          "variable.fynn_dreh = 0.0;",
+          "variable.fynn_zufall = math.random(0.0, 360.0);"
         ],
         "pre_animation": [
           "variable.fynn_d = query.body_y_rotation - variable.fynn_gier_alt;",
@@ -45,6 +48,12 @@
           },
           "blick",
           "drehen",
+          {
+            "kopfschuetteln": "(1.0 - math.clamp(query.modified_move_speed * 3.0, 0.0, 1.0)) * math.clamp((math.sin(query.life_time * 19.0 + variable.fynn_zufall + 0) - 0.93) * 21.43, 0.0, 1.0)"
+          },
+          {
+            "sonnen": "(1.0 - math.clamp(query.modified_move_speed * 3.0, 0.0, 1.0)) * (1.0 - query.is_in_water) * math.clamp((math.sin(query.life_time * 9.0 + variable.fynn_zufall + 0) - 0.5) * 3.0, 0.0, 1.0)"
+          },
           {
             "angriff": "variable.attack_time > 0.0"
           },

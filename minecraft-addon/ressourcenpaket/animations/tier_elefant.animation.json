@@ -222,6 +222,98 @@
         }
       }
     },
+    "animation.fynn.elefant.kopfschuetteln": {
+      "loop": true,
+      "bones": {
+        "head": {
+          "rotation": [
+            0.0,
+            "math.sin(query.life_time * 1100.0) * 9.0",
+            "math.sin(query.life_time * 1100.0 + 90.0) * 12.0"
+          ]
+        },
+        "ohr_links": {
+          "rotation": [
+            0.0,
+            "math.sin(query.life_time * 1100.0 + 60.0) * -25",
+            0.0
+          ]
+        },
+        "ohr_rechts": {
+          "rotation": [
+            0.0,
+            "math.sin(query.life_time * 1100.0 + 60.0) * 25",
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.elefant.schwanzschlag": {
+      "loop": true,
+      "bones": {
+        "tail": {
+          "rotation": [
+            "-10.0 - 0",
+            "math.sin(query.life_time * 700.0 - 0) * 30",
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.elefant.trompeten": {
+      "loop": true,
+      "bones": {
+        "head": {
+          "rotation": [
+            -22.0,
+            0.0,
+            0.0
+          ]
+        },
+        "ruessel1": {
+          "rotation": [
+            -85.0,
+            0.0,
+            0.0
+          ]
+        },
+        "ruessel2": {
+          "rotation": [
+            -55.0,
+            0.0,
+            0.0
+          ]
+        },
+        "ruessel3": {
+          "rotation": [
+            "-45.0 + math.sin(query.life_time * 900.0) * 8.0",
+            0.0,
+            0.0
+          ]
+        },
+        "kiefer": {
+          "rotation": [
+            22.0,
+            0.0,
+            0.0
+          ]
+        },
+        "ohr_links": {
+          "rotation": [
+            0.0,
+            -38.0,
+            0.0
+          ]
+        },
+        "ohr_rechts": {
+          "rotation": [
+            0.0,
+            38.0,
+            0.0
+          ]
+        }
+      }
+    },
     "animation.fynn.elefant.drehen": {
       "loop": true,
       "bones": {

@@ -152,6 +152,49 @@
         }
       }
     },
+    "animation.fynn.wildschwein.kopfschuetteln": {
+      "loop": true,
+      "bones": {
+        "head": {
+          "rotation": [
+            0.0,
+            "math.sin(query.life_time * 1100.0) * 9.0",
+            "math.sin(query.life_time * 1100.0 + 90.0) * 12.0"
+          ]
+        }
+      }
+    },
+    "animation.fynn.wildschwein.schwanzschlag": {
+      "loop": true,
+      "bones": {
+        "tail": {
+          "rotation": [
+            "-10.0 - 0",
+            "math.sin(query.life_time * 700.0 - 0) * 30",
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.wildschwein.grasen": {
+      "loop": true,
+      "bones": {
+        "head": {
+          "rotation": [
+            "48.0 + math.sin(query.life_time * 400.0) * 3.0",
+            "math.sin(query.life_time * 60.0) * 8.0",
+            0.0
+          ]
+        },
+        "body": {
+          "rotation": [
+            4.0,
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
     "animation.fynn.wildschwein.drehen": {
       "loop": true,
       "bones": {

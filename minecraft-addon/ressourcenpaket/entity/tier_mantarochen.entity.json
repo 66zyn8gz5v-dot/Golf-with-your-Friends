@@ -15,12 +15,14 @@
       },
       "animations": {
         "schwimmen": "animation.fynn.mantarochen.schwimmen",
+        "salto": "animation.fynn.mantarochen.salto",
         "an_land": "animation.fynn.mantarochen.an_land"
       },
       "scripts": {
         "initialize": [
           "variable.fynn_gier_alt = query.body_y_rotation;",
-          "variable.fynn_dreh = 0.0;"
+          "variable.fynn_dreh = 0.0;",
+          "variable.fynn_zufall = math.random(0.0, 360.0);"
         ],
         "pre_animation": [
           "variable.fynn_d = query.body_y_rotation - variable.fynn_gier_alt;",
@@ -34,6 +36,9 @@
           },
           {
             "an_land": "!query.is_in_water"
+          },
+          {
+            "salto": "1.0"
           }
         ]
       },

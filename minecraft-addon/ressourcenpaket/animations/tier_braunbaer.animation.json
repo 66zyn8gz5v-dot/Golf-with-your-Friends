@@ -152,6 +152,30 @@
         }
       }
     },
+    "animation.fynn.braunbaer.kopfschuetteln": {
+      "loop": true,
+      "bones": {
+        "head": {
+          "rotation": [
+            0.0,
+            "math.sin(query.life_time * 1100.0) * 9.0",
+            "math.sin(query.life_time * 1100.0 + 90.0) * 12.0"
+          ]
+        }
+      }
+    },
+    "animation.fynn.braunbaer.schwanzschlag": {
+      "loop": true,
+      "bones": {
+        "tail": {
+          "rotation": [
+            "-10.0 - 0",
+            "math.sin(query.life_time * 700.0 - 0) * 30",
+            0.0
+          ]
+        }
+      }
+    },
     "animation.fynn.braunbaer.drehen": {
       "loop": true,
       "bones": {

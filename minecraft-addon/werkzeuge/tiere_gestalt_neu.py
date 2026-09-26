@@ -21,7 +21,7 @@ alle Tiere an einer Stelle findet.
 
 import tiere_gestalt as g
 from tiere_gestalt import beine, nah, paar, ton
-from tiermodell import Modell, hexfarbe, wolken
+from tiermodell import Modell, hexfarbe, mische, wolken
 
 
 # Nur Modelle und Maler gehen nach tiere_gestalt - die Hilfen dort bleiben.
@@ -41,31 +41,50 @@ def elefant_modell():
     body = m.knoch("body", [0, 26, 0])
     body.kasten([-10, 18, -14], [20, 20, 28], "haut")
     body.kasten([-8, 38, -13], [16, 2, 22], "haut")            # runder Ruecken
+    body.kasten([-2, 40, -11], [4, 1, 16], "haut")             # Rueckgrat
     body.kasten([-9, 17, -12], [18, 1, 24], "bauch")
+    body.kasten([-7, 16, -8], [14, 1, 15], "bauch")            # der Bauch haengt etwas
     body.kasten([-9, 19, 14], [18, 17, 1], "haut")             # Hinterteil
     body.kasten([-9, 19, -15], [18, 17, 1], "haut")            # Brust
+    # Schultern und Hueften treten an den Flanken hervor.
+    paar(body, [9.5, 20, -13], [1, 16, 9], "haut")
+    paar(body, [9.5, 20, 4], [1, 15, 9], "haut")
     kopf = m.knoch("head", [0, 34, -14], "body")
     kopf.kasten([-7, 25, -26], [14, 15, 12], "kopf")
     kopf.kasten([-6, 40, -24], [12, 2, 8], "kopf")             # hohe Stirn
-    kopf.kasten([-3, 23, -26], [6, 2, 3], "maul")              # Unterlippe
+    paar(kopf, [1, 42, -23], [4, 1, 5], "kopf")               # die zwei Beulen oben auf dem Kopf
+    paar(kopf, [6.5, 26, -25], [1, 7, 8], "kopf")             # Wangen
+    paar(kopf, [6.5, 35, -25], [1, 1, 4], "braue")
+    kiefer = m.knoch("kiefer", [0, 25, -22], "head")
+    kiefer.kasten([-3, 22, -27], [6, 3, 4], "maul")            # Unterlippe, oeffnet sich beim Trompeten
     zaehne = m.knoch("stosszaehne", [0, 26, -25], "head")
     paar(zaehne, [3, 23, -32], [2, 2, 7], "stosszahn", drehung=[-25, 0, 0], drehpunkt=[4, 25, -26])
+    paar(zaehne, [3.5, 26.5, -35], [1, 1, 4], "stosszahn", drehung=[-50, 0, 0], drehpunkt=[4, 27, -31])
     # Die grossen Ohren stehen seitlich vom Kopf ab, weit ueber den Rumpf
-    # hinaus - Scharnier am Kopf, damit sie faecheln koennen.
+    # hinaus - Scharnier am Kopf, damit sie faecheln koennen. Unten ein
+    # Lappen, oben ein umgeschlagener Rand, wie beim afrikanischen Elefanten.
     for name, x, zeichen in (("ohr_links", 7, 1), ("ohr_rechts", -7, -1)):
         ohr = m.knoch(name, [x, 32, -20], "head")
         ohr.kasten([x if zeichen > 0 else x - 10, 22, -21], [10, 17, 1], "ohr")
+        ohr.kasten([x + 1 if zeichen > 0 else x - 7, 18, -21], [6, 4, 1], "ohr")
+        ohr.kasten([x if zeichen > 0 else x - 10, 38, -21.5], [10, 1, 2], "ohrrand")
+        ohr.kasten([x + 9 if zeichen > 0 else x - 10, 23, -21.5], [1, 15, 2], "ohrrand")
     r1 = m.knoch("ruessel1", [0, 30, -27], "head")
-    r1.kasten([-2.5, 20, -30], [5, 11, 4], "ruessel")
+    r1.kasten([-3, 26, -30.5], [6, 5, 5], "ruessel")           # breiter Ansatz
+    r1.kasten([-2.5, 20, -30], [5, 6, 4], "ruessel")
     r2 = m.knoch("ruessel2", [0, 20, -28], "ruessel1")
-    r2.kasten([-2, 11, -29.5], [4, 9, 3], "ruessel")
+    r2.kasten([-2.5, 11, -30], [5, 9, 4], "ruessel")
     r3 = m.knoch("ruessel3", [0, 11, -28], "ruessel2")
-    r3.kasten([-1.5, 4, -29], [3, 7, 2], "ruessel")
-    r3.kasten([-2, 3, -29.5], [4, 1, 3], "ruesselspitze")
+    r3.kasten([-2, 4, -29.5], [4, 7, 3], "ruessel")
+    r3.kasten([-2.5, 3, -30], [5, 1, 4], "ruesselspitze")
+    paar(r3, [0.5, 2, -30.5], [1, 1, 1], "ruesselspitze")         # die zwei "Finger" an der Spitze
     schwanz = m.knoch("tail", [0, 34, 14], "body")
     schwanz.kasten([-0.5, 22, 14], [1, 12, 1], "haut")
     schwanz.kasten([-1, 19, 13.5], [2, 3, 2], "quaste")
     beine(m, "body", 6, -9, 9, (7, 18, 7), 18, pfote=(8, 2, 8))
+    # Knie und Fussgelenke: die Beine werden an zwei Stellen dicker.
+    for name, x, z in (("leg0", 6, -9), ("leg1", -6, -9), ("leg2", 6, 9), ("leg3", -6, 9)):
+        m.finde(name).kasten([x - 4, 8, z - 4], [8, 3, 8], "knie")
     return m
 
 
@@ -75,18 +94,35 @@ ELEFANT_FARBEN = {"savanne": "#8a8078", "grau": "#7a7a78", "kalb": "#9a928a"}
 def elefant_maler(variante):
     haut = ELEFANT_FARBEN[variante]
 
+    staub = "#8a6a58" if variante == "savanne" else None
+
     def falten(p, n, texel, saat, hell=0.0):
-        # Die Haut: feine waagerechte Falten, jede zweite Zeile ein Hauch
-        # dunkler - ruhig, keine Punkte.
-        h = hell - (0.035 if int(p[1] * 1.0) % 3 == 0 and abs(n[1]) < 0.5 else 0.0)
-        return ton(haut, p, n, texel, saat, hell=h, straehne=0.0, wolke=0.05)
+        # Die Haut: waagerechte Falten in jeder dritten Zeile, oben heller
+        # von der Sonne. Savannenelefanten tragen unten roten Staub - sie
+        # bewerfen sich damit gegen die Hitze.
+        h = hell - (0.045 if int(p[1]) % 3 == 0 and abs(n[1]) < 0.5 else 0.0)
+        h += 0.05 if n[1] > 0.5 else 0.0
+        farbe = haut
+        if staub and p[1] < 16:
+            # weich nach unten, in drei Stufen - kein Muster
+            farbe = mische(hexfarbe(haut), hexfarbe(staub), min(0.6, round((16 - p[1]) / 16 * 3) / 3 * 0.6))
+        return ton(farbe, p, n, texel, saat, hell=h, straehne=0.0, wolke=0.05)
 
     def f(stoff, p, n, texel):
         if stoff == "stosszahn":
             return ton("#ece4cc", p, n, texel, 301, straehne=0.0, hell=0.05 if n[1] > 0.5 else 0.0)
+        if stoff == "ohrrand":
+            return falten(p, n, texel, 302, hell=-0.06)
+        if stoff == "braue":
+            return falten(p, n, texel, 306, hell=-0.1)
+        if stoff == "knie":
+            # Tiefe Falten um das Knie herum.
+            return falten(p, n, texel, 308, hell=-0.1 if int(p[1]) == 9 else -0.03)
         if stoff == "ohr":
             if n[2] > 0.5 and abs(p[0]) > 8:
-                return ton("#a08a86", p, n, texel, 303, straehne=0.0)       # hinten rosig, voller Adern
+                # Hinten rosig, mit dunkleren Adern, die sich verzweigen.
+                ader = abs((abs(p[0]) - 8) * 0.8 - (p[1] - 22) * 0.5 - 3) < 0.45 or abs(p[1] - 30.5) < 0.45
+                return ton("#8a7470" if ader else "#a08a86", p, n, texel, 303, straehne=0.0)
             if n[2] < -0.5 and (abs(p[0]) > 15.4 or p[1] < 22.6 or p[1] > 38.4):
                 return falten(p, n, texel, 304, hell=-0.08)                  # dunkler Rand
             return falten(p, n, texel, 305, hell=-0.03)
@@ -97,6 +133,8 @@ def elefant_maler(variante):
         if stoff == "ruesselspitze":
             return ton(haut, p, n, texel, 309, hell=-0.12, straehne=0.0)
         if stoff == "maul":
+            if n[1] > 0.5:
+                return ton("#a0706c", p, n, texel, 310, straehne=0.0)       # rosa Innenseite
             return ton("#6a5a58", p, n, texel, 311, straehne=0.0)
         if stoff == "quaste":
             return ton("#2a2420", p, n, texel, 313, straehne=0.05)
@@ -104,6 +142,10 @@ def elefant_maler(variante):
             a = auge(p, n, [(-7, 34, -23), (7, 34, -23)], "#3a2a1c")
             if a and abs(n[0]) > 0.5:
                 return a
+            if abs(n[0]) > 0.5 and nah(p, (0, 33.5, -23), (8, 1.5, 2.2)):
+                return falten(p, n, texel, 316, hell=-0.1)                   # Runzeln ums Auge
+            if abs(n[0]) > 0.5 and abs(p[1] - 30.5) < 0.5 and -25 < p[2] < -18:
+                return falten(p, n, texel, 318, hell=-0.12)                  # Schlaefe
             if g.JUNG and n[1] > 0.5 and p[1] > 41:
                 return ton("#5a524a", p, n, texel, 315, straehne=0.06)      # Flaum auf dem Kopf
             return falten(p, n, texel, 317, hell=0.02)
@@ -113,7 +155,8 @@ def elefant_maler(variante):
         if stoff == "bauch":
             return falten(p, n, texel, 321, hell=-0.1)
         if stoff == "bein":
-            return falten(p, n, texel, 323, hell=-0.04)
+            # Senkrechte Runzeln an den Beinen.
+            return falten(p, n, texel, 323, hell=-0.04 - (0.05 if int(p[0] + p[2]) % 3 == 0 else 0.0))
         return falten(p, n, texel, 325, hell=0.04 * (p[1] - 28) / 10)
     return f
 
@@ -131,11 +174,21 @@ def nashorn_modell():
     # Die grossen Hautfalten an Schulter und Huefte - wie Panzerplatten.
     paar(body, [8, 13, -8], [1, 12, 1], "falte")
     paar(body, [8, 13, 6], [1, 12, 1], "falte")
+    body.kasten([-7.5, 12, -14], [15, 13, 1], "falte")          # der Halskragen
+    paar(body, [8, 22, -12], [1, 5, 4], "haut")                 # Schulterpanzer
+    paar(body, [8, 21, 7], [1, 5, 5], "haut")                   # Hueftpanzer
+    for z in (-10, -6, -2, 2, 6):
+        body.kasten([-1, 29 if z < 0 else 28, z], [2, 1, 2], "haut")   # kleine Hoecker am Rueckgrat
     kopf = m.knoch("head", [0, 22, -13], "body")
     kopf.kasten([-5, 10, -25], [10, 10, 12], "kopf")
     kopf.kasten([-4, 9, -31], [8, 7, 6], "schnauze")
-    kopf.kasten([-3.5, 8, -31], [7, 1, 5], "lippe")
-    paar(kopf, [3.5, 19, -16], [2, 3, 1], "ohr", drehung=[0, 0, -20], drehpunkt=[4.5, 19, -15.5])
+    kopf.kasten([-4.5, 8, -31], [9, 1, 5], "lippe")             # die breite, eckige Lippe
+    paar(kopf, [5, 12, -23], [1, 5, 6], "kopf")                 # Backen
+    paar(kopf, [5, 16, -22], [1, 1, 3], "falte")                # Falte ueber dem Auge
+    for name, x in (("ohr_links", 4.5), ("ohr_rechts", -4.5)):
+        ohr = m.knoch(name, [x, 19, -15.5], "head", drehung=[0, 0, -20 if x > 0 else 20])
+        ohr.kasten([x - 1, 19, -16], [2, 4, 1], "ohr")
+        ohr.kasten([x - 1, 23, -16], [2, 1, 1], "ohrhaar")
     hoerner = m.knoch("horn", [0, 16, -28], "head")
     hoerner.kasten([-1.5, 16, -30], [3, 5, 3], "horn")
     hoerner.kasten([-1, 20, -29.5], [2, 3, 2], "horn", drehung=[-15, 0, 0], drehpunkt=[0, 20, -28.5])
@@ -145,6 +198,8 @@ def nashorn_modell():
     schwanz.kasten([-0.5, 17, 13], [1, 8, 1], "haut")
     schwanz.kasten([-1, 15, 12.5], [2, 2, 2], "quaste")
     beine(m, "body", 5, -9, 9, (5, 12, 5), 12, pfote=(6, 2, 6))
+    for name, x, z in (("leg0", 5, -9), ("leg1", -5, -9), ("leg2", 5, 9), ("leg3", -5, 9)):
+        m.finde(name).kasten([x - 3, 5, z - 3], [6, 2, 6], "falte")   # Knie
     return m
 
 
@@ -158,7 +213,9 @@ def nashorn_maler(variante):
         if stoff == "hornspitze":
             return hexfarbe("#3a3430")
         if stoff == "horn":
-            return ton("#6a6258", p, n, texel, 331, straehne=0.04, hell=0.06 if p[1] > 19 else 0.0)
+            # Horn waechst in Ringen - feine waagerechte Linien.
+            return ton("#6a6258", p, n, texel, 331, straehne=0.04,
+                       hell=(0.06 if p[1] > 19 else 0.0) - (0.06 if int(p[1]) % 2 == 0 and abs(n[1]) < 0.5 else 0.0))
         if stoff == "pfote":
             if n[2] < -0.5 and p[1] < 1.6 and abs(p[0] % 2.0 - 1.0) < 0.5:
                 return hexfarbe("#3a342e")                                 # drei Zehen
@@ -167,6 +224,8 @@ def nashorn_maler(variante):
             return ton(haut, p, n, texel, 335, hell=-0.14, straehne=0.0)
         if stoff == "quaste":
             return ton("#2a2622", p, n, texel, 337, straehne=0.04)
+        if stoff == "ohrhaar":
+            return ton("#3a3430", p, n, texel, 338, straehne=0.0)
         if stoff == "ohr":
             if n[2] < -0.5:
                 return ton("#6a5e58", p, n, texel, 339, straehne=0.0)
@@ -204,21 +263,31 @@ def gorilla_modell():
     body.kasten([-6, 12, 1], [12, 11, 9], "fell")
     body.kasten([-6, 27, -10], [12, 2, 8], "fell")            # Schulterbuckel
     body.kasten([-5, 23, 1], [10, 1, 7], "fell")
+    paar(body, [0.5, 19, -11.6], [5, 6, 1], "brust")          # Brustmuskeln
+    body.kasten([-4, 13.5, -11.3], [8, 5, 1], "brust")        # Bauch
+    paar(body, [7.5, 20, -10], [1, 6, 7], "fell")              # Schultern
     kopf = m.knoch("head", [0, 26, -11], "body")
     kopf.kasten([-4, 23, -17], [8, 8, 7], "kopf")
     kopf.kasten([-4.5, 29, -18], [9, 2, 2], "braue")          # der Wulst ueber den Augen
-    kopf.kasten([-3, 23, -19], [6, 4, 2], "gesicht")          # Maul
+    kopf.kasten([-3, 25, -19], [6, 2, 2], "gesicht")          # Nase und Oberlippe
+    kopf.kasten([-1.5, 27, -18.5], [3, 2, 1], "gesicht")      # Nasenruecken
     kopf.kasten([-2, 31, -15], [4, 2, 5], "kopf")             # Scheitelkamm
+    kopf.kasten([-1, 33, -13], [2, 1, 3], "kopf")
     paar(kopf, [4, 26, -14], [1, 2, 2], "ohr")
+    kiefer = m.knoch("kiefer", [0, 24, -15], "head")
+    kiefer.kasten([-3, 22, -19], [6, 3, 3], "gesicht")        # Unterkiefer - klappt beim Bruellen auf
+    kiefer.kasten([-2, 24, -18.5], [4, 1, 1], "zahn")
     # Arme vorn (leg0, leg1), lang und kraeftig, mit der Faust auf dem Boden.
     for name, x in (("leg0", 8.5), ("leg1", -8.5)):
         b = m.knoch(name, [x, 26, -7], "body")
         b.kasten([x - 2.5, 3, -9.5], [5, 23, 5], "arm")
+        b.kasten([x - 3, 3, -10], [6, 9, 6], "arm")                # kraeftige Unterarme
         b.kasten([x - 3, 0, -10.5], [6, 3, 6], "faust")
     for name, x in (("leg2", 4), ("leg3", -4)):
         b = m.knoch(name, [x, 12, 6], "body")
         b.kasten([x - 2.5, 2, 3.5], [5, 10, 5], "fell")
         b.kasten([x - 2.5, 0, 2.5], [5, 2, 6], "fuss")
+        b.kasten([x - 3, 5, 3], [6, 5, 6], "fell")                  # Oberschenkel
     return m
 
 
@@ -228,6 +297,10 @@ def gorilla_maler(variante):
     fell = "#4a4440" if jung else "#3e3a37"
 
     def f(stoff, p, n, texel):
+        if stoff == "zahn":
+            return ton("#e0d8c8", p, n, texel, 360, straehne=0.0)
+        if stoff == "faust" and n[2] < -0.5 and texel[0] % 2 == 0 and p[1] > 1:
+            return ton("#121010", p, n, texel, 359, straehne=0.0)          # Fingerknoechel
         if stoff in ("gesicht", "faust", "fuss"):
             if stoff == "gesicht" and n[2] < -0.5 and p[1] > 25.5 and 0.5 < abs(p[0]) < 1.8:
                 return hexfarbe("#0a0808")                                 # Nasenloecher
@@ -263,17 +336,27 @@ def walross_modell():
     body.kasten([-7, 15, -8], [14, 2, 16], "haut")
     body.kasten([-7, 0, -8], [14, 1, 16], "bauch")
     body.kasten([-6, 3, 10], [12, 10, 3], "haut")             # das Hinterteil wird schmal
+    body.kasten([-7.5, 3, -11], [15, 11, 1], "falte")         # Speckfalte am Hals
+    paar(body, [8, 3, -5], [1, 10, 11], "haut")                # dicke Flanken
+    body.kasten([-5, 17, -6], [10, 1, 10], "haut")             # Buckel
     kopf = m.knoch("head", [0, 12, -10], "body")
     kopf.kasten([-5, 9, -17], [10, 9, 7], "kopf")
     kopf.kasten([-4.5, 8, -20], [9, 5, 3], "schnauze")
+    paar(kopf, [0.5, 8, -21], [4, 4, 1], "bartpolster")      # die zwei dicken Bartpolster
+    kopf.kasten([-2, 13, -19.5], [4, 1, 2], "schnauze")       # Nasenruecken
+    paar(kopf, [4.5, 15, -15], [1, 1, 2], "falte")            # Brauen
     zaehne = m.knoch("zaehne", [0, 8, -19], "head")
     paar(zaehne, [2.5, 1, -19], [1, 7, 1], "stosszahn")
+    paar(zaehne, [2, 7, -19.5], [2, 1, 2], "bartpolster")    # wo die Zaehne aus der Lippe kommen
     for name, x in (("leg0", 7), ("leg1", -7)):
         b = m.knoch(name, [x, 4, -6], "body")
         b.kasten([x if x > 0 else x - 4, 0, -9], [4, 2, 5], "flosse")
+        b.kasten([x + (4 if x > 0 else -5), 0, -8.5], [1, 1, 4], "flosse")    # Fingerspitzen
+        b.kasten([x - 1 if x > 0 else x - 2, 2, -8], [3, 3, 3], "haut")      # Oberarm
     for name, x in (("leg2", 3), ("leg3", -3)):
         b = m.knoch(name, [x, 3, 12], "body")
         b.kasten([x - 2, 0, 12], [4, 2, 6], "flosse")
+        b.kasten([x - 2.5, 0, 17], [5, 1, 2], "flosse")                       # gespreizte Hinterflosse
     return m
 
 
@@ -284,7 +367,15 @@ def walross_maler(variante):
         if stoff == "stosszahn":
             return ton("#ece2c8", p, n, texel, 381, straehne=0.0)
         if stoff == "flosse":
+            if n[1] > 0.5 and texel[0] % 2 == 0:
+                return ton(haut, p, n, texel, 382, hell=-0.2, straehne=0.0)   # Zehenlinien
             return ton(haut, p, n, texel, 383, hell=-0.12, straehne=0.0)
+        if stoff == "falte":
+            return ton(haut, p, n, texel, 384, hell=-0.1, straehne=0.0)
+        if stoff == "bartpolster":
+            if n[2] < -0.5 and texel[1] % 2 == 0:
+                return ton("#d8ccb8", p, n, texel, 385, straehne=0.0)         # Borsten in Reihen
+            return ton(haut, p, n, texel, 386, hell=0.08, straehne=0.0)
         if stoff == "schnauze":
             # Der Bart: helle Borsten in Reihen.
             if n[2] < -0.5 and p[1] < 11 and int(p[0] + 10) % 2 == 0 and int(p[1]) % 2 == 0:
@@ -310,10 +401,17 @@ def manta_modell():
     rumpf = m.knoch("rumpf", [0, 4, 0])
     rumpf.kasten([-4, 2, -8], [8, 3, 16], "koerper")
     rumpf.kasten([-3, 5, -6], [6, 1, 11], "koerper")
-    paar(rumpf, [2.5, 2, -11], [2, 2, 3], "horn")               # die Kopflappen
+    rumpf.kasten([-2, 6, -4], [4, 1, 7], "koerper")             # der Ruecken woelbt sich
+    rumpf.kasten([-3, 2.5, -8.3], [6, 1, 1], "maul")
+    rumpf.kasten([-0.5, 5, 6], [1, 2, 2], "koerper")             # kleine Rueckenflosse
+    for name, x in (("horn_links", 3), ("horn_rechts", -3)):
+        h = m.knoch(name, [x, 3, -8], "rumpf")
+        h.kasten([x - 1 if x > 0 else x - 1, 2, -11], [2, 2, 3], "horn")         # die Kopflappen
+        h.kasten([x - 0.5 if x > 0 else x - 0.5, 2, -12], [1, 3, 1], "horn")      # eingerollt
     for name, spitze, x, z in (("flosse_links", "spitze_links", 4, 1), ("flosse_rechts", "spitze_rechts", -4, -1)):
         f = m.knoch(name, [x, 3.5, 0], "rumpf")
         f.kasten([x if z > 0 else x - 7, 3, -7], [7, 1, 12], "fluegel")
+        f.kasten([x if z > 0 else x - 5, 3, 5], [5, 1, 2], "fluegel")         # geschwungene Hinterkante
         s = m.knoch(spitze, [x + 7 * z, 3.5, 0], name)
         s.kasten([x + 7 * z if z > 0 else x - 13, 3, -4], [6, 1, 7], "fluegel")
     s1 = m.knoch("schwanz1", [0, 3.5, 8], "rumpf")
@@ -325,6 +423,11 @@ def manta_maler(variante):
     riff = variante == "riff"
 
     def f(stoff, p, n, texel):
+        if stoff == "maul":
+            return ton("#101216", p, n, texel, 400, straehne=0.0)
+        if n[1] < -0.5 and stoff == "koerper" and abs(abs(p[0]) - 2.5) < 1.6 and -6 < p[2] < -1 \
+                and texel[1] % 2 == 0:
+            return ton("#9aa0a8", p, n, texel, 402, straehne=0.0)            # Kiemenspalten
         if n[1] < -0.5:
             # Bauch weiss, mit ein paar dunklen Tupfen - an denen man jeden
             # Manta erkennt.
@@ -355,16 +458,24 @@ def adler_modell():
     kopf.kasten([-1, 8, -11], [2, 2, 2], "schnabel")
     kopf.kasten([-0.5, 7, -11], [1, 1, 1], "schnabelspitze")
     kopf.kasten([-2.5, 11, -9], [5, 1, 3], "braue")
+    kopf.kasten([-2.5, 8, -6], [5, 4, 2], "haube")            # goldene Nackenfedern
+    kopf.kasten([-1, 7.5, -11.5], [2, 1, 1], "schnabelspitze") # der Haken
+    unten = m.knoch("unterschnabel", [0, 8, -9], "kopf")
+    unten.kasten([-0.5, 7, -10.5], [1, 1, 2], "schnabel")
     for name, spitze, x, z in (("fluegel_links", "fluegelspitze_links", 2.5, 1),
                                ("fluegel_rechts", "fluegelspitze_rechts", -2.5, -1)):
         f = m.knoch(name, [x, 9, -2], "rumpf")
         f.kasten([x if z > 0 else x - 10, 8.5, -4], [10, 1, 7], "fluegel")
         s = m.knoch(spitze, [x + 10 * z, 9, -2], name)
         s.kasten([x + 10 * z if z > 0 else x - 18, 8.5, -3.5], [8, 1, 6], "schwinge")
+        f.kasten([x if z > 0 else x - 7, 9.2, -4], [7, 1, 4], "deckfedern")    # Deckfedern obenauf
+        f.kasten([x + 2 if z > 0 else x - 10, 8.5, 3], [8, 1, 1], "fluegel")   # Armschwingen hinten
     schwanz = m.knoch("schwanz", [0, 8, 5], "rumpf")
     schwanz.kasten([-2.5, 7.5, 5], [5, 1, 6], "schwanzfeder")
+    schwanz.kasten([-3.5, 7.5, 9], [7, 1, 3], "schwanzfeder")   # der Faecher wird hinten breiter
     fuesse = m.knoch("fuesse", [0, 5, 1], "rumpf")
     paar(fuesse, [0.5, 2, 0], [1, 3, 1], "fang")
+    paar(fuesse, [0, 3.5, -0.5], [2, 2, 2], "hose")           # befiederte "Hosen" bis zum Fuss
     paar(fuesse, [0, 1, -1], [2, 1, 2], "kralle")
     return m
 
@@ -386,6 +497,14 @@ def adler_maler(variante):
             return hexfarbe("#1a1614") if p[2] < -0.5 else ton("#e0b840", p, n, texel, 427, straehne=0.0)
         if stoff == "braue":
             return ton(dunkel, p, n, texel, 429, straehne=0.0)
+        if stoff == "haube":
+            return ton(gold, p, n, texel, 430, straehne=0.06, hell=0.04)
+        if stoff == "hose":
+            return ton("#6a4a2c", p, n, texel, 428, straehne=0.05)
+        if stoff == "deckfedern":
+            if texel[0] % 3 == 0:
+                return ton(dunkel, p, n, texel, 426, straehne=0.0)           # die Federreihen
+            return ton("#5a3e28", p, n, texel, 424, straehne=0.03)
         if stoff == "kopf":
             a = auge(p, n, [(-2, 10.5, -7.5), (2, 10.5, -7.5)], "#c07a20")
             if a and abs(n[0]) > 0.5:
