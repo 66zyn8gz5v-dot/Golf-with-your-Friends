@@ -133,9 +133,12 @@ def animation(ich=None):
     seite = "(c.owning_entity->v.fynn_hieb_seite)"
     stoss = f"(({seite} >= 0.5 && {zeit} > 0.0) ? math.sin({zeit} * 180.0) : 0.0)"
     links = {
+        # Rueckwaertsgriff: um den Griff herum umgedreht, die Klinge liegt
+        # am Unterarm entlang nach hinten. Fynn: "der eine Dolch wird so
+        # rueckwaerts gehalten."
         "waffe": {
             "position": [0.0, -2.0, 0.0],
-            "rotation": [KIPPEN_AUSSEN, 0.0, 0.0],
+            "rotation": [KIPPEN_AUSSEN - 180.0, 0.0, 0.0],
             "scale": f"c.is_first_person ? 0.0 : {GROESSE_AUSSEN}",
         },
         "griff": {
@@ -181,6 +184,16 @@ def linkes_modell(modell, links):
         o = kasten["origin"]
         kasten["origin"] = [o[0] + SCHILD_GRIFF[0], o[1] + SCHILD_GRIFF[1] - y, o[2] + SCHILD_GRIFF[2]]
         verschoben.append(kasten)
+    # Die Kette fuer aussen heisst "leftitem". Hiess sie wie beim rechten
+    # Dolch "rightitem", haengte Minecraft sie ueber den Namen an die
+    # rechte Hand - dort steckte der linke Dolch unsichtbar im rechten
+    # (Fynns Bildschirmfoto, Fassung 4.31).
+    for k in kette:
+        if k["name"] == "rightitem":
+            k["name"] = "leftitem"
+            k["binding"] = "'leftitem'"
+        elif k.get("parent") == "rightitem":
+            k["parent"] = "leftitem"
     geo["bones"] = kette + [
         {"name": "schild", "binding": "q.item_slot_to_bone_name(c.item_slot)", "pivot": SCHILD_DREHPUNKT},
         {"name": "dolch_ich", "parent": "schild", "pivot": SCHILD_GRIFF, "cubes": verschoben},

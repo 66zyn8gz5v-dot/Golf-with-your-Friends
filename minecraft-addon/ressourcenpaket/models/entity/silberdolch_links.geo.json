@@ -16,8 +16,8 @@
       },
       "bones": [
         {
-          "name": "rightitem",
-          "binding": "q.item_slot_to_bone_name(c.item_slot)",
+          "name": "leftitem",
+          "binding": "'leftitem'",
           "pivot": [
             0,
             8,
@@ -26,7 +26,7 @@
         },
         {
           "name": "laden",
-          "parent": "rightitem",
+          "parent": "leftitem",
           "pivot": [
             0,
             8,
