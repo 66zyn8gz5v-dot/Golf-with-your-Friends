@@ -1,0 +1,37 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:schattendoppelgaenger",
+      "materials": {
+        "default": "entity_emissive_alpha"
+      },
+      "textures": {
+        "default": "textures/entity/rabenfuerst_schatten"
+      },
+      "geometry": {
+        "default": "geometry.fynn.rabenfuerst"
+      },
+      "animations": {
+        "haltung": "animation.fynn.rabenfuerst.haltung",
+        "gang": "animation.fynn.rabenfuerst.gang",
+        "hieb": "animation.fynn.rabenfuerst.hieb_links"
+      },
+      "scripts": {
+        "scale": "1.1",
+        "animate": [
+          "haltung",
+          {
+            "gang": "math.clamp(query.modified_move_speed * 2.0, 0.0, 1.0)"
+          },
+          {
+            "hieb": "variable.attack_time > 0.0"
+          }
+        ]
+      },
+      "render_controllers": [
+        "controller.render.default"
+      ]
+    }
+  }
+}

@@ -44,11 +44,11 @@ item.fynn:eisenklinge.name=Iron Blade
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.60
+item.iron_sword.name=Stahlschwert 4.61
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.60
-item.fynn:degen.name=Degen 4.60
+item.fynn:degen=Degen 4.61
+item.fynn:degen.name=Degen 4.61
 
 
 
@@ -419,6 +419,18 @@ item.spawn_egg.entity.fynn:ritterhauptmann.name=Knight Captain
 item.fynn:saphirschwert=Sapphire Sword
 item.fynn:saphirschwert.name=Sapphire Sword
 
+
+
+## Morvan, der Rabenfuerst
+entity.fynn:rabenfuerst.name=Morvan
+item.spawn_egg.entity.fynn:rabenfuerst.name=Morvan the Raven Lord
+entity.fynn:schattendoppelgaenger.name=Shadow Double
+item.fynn:rabenklinge=Raven Blade
+item.fynn:rabenklinge.name=Raven Blade
+item.fynn:rauchbombe=Smoke Bomb
+item.fynn:rauchbombe.name=Smoke Bomb
+item.fynn:kopfgeldbrief=Bounty Letter
+item.fynn:kopfgeldbrief.name=Bounty Letter
 
 ## Sir Roland
 item.fynn:durendal=Durendal

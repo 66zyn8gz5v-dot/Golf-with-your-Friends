@@ -20,6 +20,7 @@ import "./obst.js";
 import "./banditen.js";
 import "./rucksack.js";
 import "./roland.js";
+import "./rabenfuerst.js";
 
 const DEGEN = "fynn:degen";
 

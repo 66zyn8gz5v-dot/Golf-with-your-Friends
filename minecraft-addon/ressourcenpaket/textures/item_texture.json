@@ -385,6 +385,15 @@
     },
     "fehdehandschuh": {
       "textures": "textures/items/fehdehandschuh"
+    },
+    "rabenklinge": {
+      "textures": "textures/items/rabenklinge"
+    },
+    "rauchbombe": {
+      "textures": "textures/items/rauchbombe"
+    },
+    "kopfgeldbrief": {
+      "textures": "textures/items/kopfgeldbrief"
     }
   }
 }

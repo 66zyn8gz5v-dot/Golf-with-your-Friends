@@ -602,6 +602,25 @@ def alle_mobs():
             ["Rufen", "Fehdehandschuh werfen (5 Stahlbarren, Goldbarren, Lapis)"],
             ["Beute", "Durendal, Olifant, Diamanten, Gold, Smaragde, goldene Äpfel, oft das Saphirschwert; "
                       "jeder Mitkämpfer bekommt seinen Anteil"]]}}))
+    import rabenfuerst_bauen as rf
+    mobs.append(mob_daten("rabenfuerst", "rabenfuerst.entity.json", "Bosse", {
+        "gross": 1.15,
+        "grund": [{"haltung": 1.0}, {"gang": "math.clamp(query.modified_move_speed * 2.0, 0.0, 1.0)"}],
+        "sonder": {
+            "auftritt": "Auftritt", "hieb_links": "Hieb links", "hieb_rechts": "Hieb rechts",
+            "hieb_kreuz": "Kreuzhieb", "dolchfaecher": "Dolchfächer", "rauchbombe": "Rauchbombe",
+            "doppelgaenger": "Doppelgänger", "rabenschwarm": "Rabenschwarm", "schattensprung": "Schattensprung",
+            "rabennacht": "Rabennacht", "wechsel": "Phasenwechsel", "abschied": "Abschied",
+        },
+        "steckbrief": {"name": "Morvan, der Rabenfürst", "en": "Morvan the Raven Lord", "zeilen": [
+            ["Rang", "König aller Banditen – der zweite Boss"],
+            ["Leben", f"je Phase {rf.GRUNDLEBEN // 2} Herzen allein – je Mitspieler die Hälfte mehr"],
+            ["Phasen", "ist Phase 1 leer, hüllt er sich unverwundbar in Rauch und Raben und kehrt als "
+                       "Schattengestalt zurück"],
+            ["Angriffe", "Dolchhiebe, Dolchfächer (Gift), Rauchbombe mit Stich von hinten, Schattendoppelgänger, "
+                         "Rabenschwarm, Schattensprung; in Phase 2 die Rabennacht (Dunkelheit)"],
+            ["Rufen", "Kopfgeldbrief lesen (Papier, Tinte, Smaragd, Gold)"],
+            ["Beute", "Rabenklinge, Rauchbomben, Smaragde, Gold, Diamanten; jeder Mitkämpfer seinen Anteil"]]}}))
     wo = biom_text(biome_aus_spawnregel("fynn:glimmerling"))
     mobs.append(mob_daten("glimmerling", "glimmerling.entity.json", "Weitere", {"steckbrief": {
         "name": "Glimmerling", "en": "Glimmerling", "zeilen": [

@@ -187,11 +187,17 @@ def binde_name(bedingung):
     ]
 
 
-HAT_ROLAND = "(not ((#bossName - 'Roland') = #bossName))"
-HAT_KEIN_ROLAND = "((#bossName - 'Roland') = #bossName)"
-# In Phase 2 heisst er "Sir Roland · Phase 2" (setzt das Kampfskript).
-ENTFESSELT = "(not ((#bossName - 'Phase 2') = #bossName))"
-GEBUNDEN = "((#bossName - 'Phase 2') = #bossName)"
+def hat(wort):
+    return f"(not ((#bossName - '{wort}') = #bossName))"
+
+
+def hat_nicht(wort):
+    return f"((#bossName - '{wort}') = #bossName)"
+
+
+# In Phase 2 steht bei jedem Boss "Phase 2" im Namen (setzt das Kampfskript).
+ENTFESSELT = hat("Phase 2")
+GEBUNDEN = hat_nicht("Phase 2")
 
 
 def fuellung(textur, sichtbar):
@@ -210,18 +216,13 @@ def fuellung(textur, sichtbar):
         "bindings": [
             {"binding_name": "#progress_percentage", "binding_name_override": "#clip_ratio",
              "binding_type": "collection", "binding_collection_name": "boss_bars"},
-            {"binding_type": "collection", "binding_collection_name": "boss_bars", "binding_name": "#bossName"},
-            {"binding_type": "view", "source_property_name": sichtbar, "target_property_name": "#visible"},
-        ],
+        ] + binde_name(sichtbar),
     }
 
 
 def rahmenbild(textur, sichtbar):
     return {"type": "image", "texture": textur, "size": [BREITE, HOEHE], "layer": 3,
-            "bindings": [
-                {"binding_type": "collection", "binding_collection_name": "boss_bars", "binding_name": "#bossName"},
-                {"binding_type": "view", "source_property_name": sichtbar, "target_property_name": "#visible"},
-            ]}
+            "bindings": binde_name(sichtbar)}
 
 
 def name(farbe, sichtbar):
@@ -233,27 +234,55 @@ def name(farbe, sichtbar):
         "enable_profanity_filter": False,
         "anchor_from": "top_middle",
         "anchor_to": "top_middle",
-        "bindings": [
-            {"binding_type": "collection", "binding_collection_name": "boss_bars", "binding_name": "#bossName"},
-            {"binding_type": "view", "source_property_name": sichtbar, "target_property_name": "#visible"},
-        ],
+        "bindings": binde_name(sichtbar),
     }
 
 
-def oberflaeche():
+def leiste_panel(l):
+    k = l["kennung"]
+    t = f"textures/ui/fynn_bossleiste_{k}_"
     return {
+        "type": "panel",
+        "size": ["100%", "100%"],
+        "controls": [
+            {"name_gebunden": name(l["namensfarben"][0], GEBUNDEN)},
+            {"name_entfesselt": name(l["namensfarben"][1], ENTFESSELT)},
+            {"leiste": {
+                "type": "panel",
+                "size": [BREITE, HOEHE],
+                # Eine Zeile Luft unter dem Namen, wie in Fynns Entwurf.
+                "offset": [0, 11],
+                "anchor_from": "top_middle",
+                "anchor_to": "top_middle",
+                "controls": [
+                    {"leer": {"type": "image", "texture": t + "leer",
+                              "size": [RINNE[2], RINNE[3]], "offset": [RINNE[0], RINNE[1]],
+                              "anchor_from": "top_left", "anchor_to": "top_left", "layer": 1}},
+                    {"voll": fuellung(t + "voll", GEBUNDEN)},
+                    {"voll_entfesselt": fuellung(t + "entfesselt", ENTFESSELT)},
+                    {"rahmen": rahmenbild(t + "rahmen", GEBUNDEN)},
+                    {"rahmen_entfesselt": rahmenbild(t + "rahmen_entfesselt", ENTFESSELT)},
+                ],
+            }},
+        ],
+        "bindings": binde_name(hat(l["marke"])),
+    }
+
+
+def oberflaeche(leisten):
+    """Mojangs Feld, darin Mojangs Leiste (fuer alle anderen Bosse) und je
+    Boss unsere - welche zu sehen ist, entscheidet der Name."""
+    keiner = " and ".join(hat_nicht(l["marke"]) for l in leisten)
+    daten = {
         "namespace": "hud",
-        # Mojangs Feld, mit denselben Teilen - nur neben unseren.
         "boss_health_panel": {
             "type": "panel",
             "size": [BREITE, 28],
             "anchor_from": "top_middle",
             "anchor_to": "top_middle",
             "$progress_bar_collection": "boss_bars",
-            "controls": [
-                {"fynn_mojang_leiste@hud.fynn_mojang_leiste": {}},
-                {"fynn_roland_leiste@hud.fynn_roland_leiste": {}},
-            ],
+            "controls": [{"fynn_mojang_leiste@hud.fynn_mojang_leiste": {}}] + [
+                {f"fynn_{l['kennung']}_leiste@hud.fynn_{l['kennung']}_leiste": {}} for l in leisten],
             "bindings": [
                 {"binding_name": "#bar_visible", "binding_type": "collection",
                  "binding_collection_name": "boss_bars", "binding_name_override": "#visible"},
@@ -267,36 +296,12 @@ def oberflaeche():
                 {"boss_name@hud.boss_name_panel": {}},
                 {"progress_bar_for_collections@common.progress_bar_for_collections": {"offset": [0, 10]}},
             ],
-            "bindings": binde_name(HAT_KEIN_ROLAND),
-        },
-        "fynn_roland_leiste": {
-            "type": "panel",
-            "size": ["100%", "100%"],
-            "controls": [
-                {"name_gebunden": name([0.96, 0.84, 0.48], GEBUNDEN)},
-                {"name_entfesselt": name([0.6, 0.9, 1.0], ENTFESSELT)},
-                {"leiste": {
-                    "type": "panel",
-                    "size": [BREITE, HOEHE],
-                    # Eine Zeile Luft unter dem Namen, wie in Fynns Entwurf.
-                    "offset": [0, 11],
-                    "anchor_from": "top_middle",
-                    "anchor_to": "top_middle",
-                    "controls": [
-                        {"leer": {"type": "image", "texture": "textures/ui/fynn_bossleiste_leer",
-                                  "size": [RINNE[2], RINNE[3]], "offset": [RINNE[0], RINNE[1]],
-                                  "anchor_from": "top_left", "anchor_to": "top_left", "layer": 1}},
-                        {"voll": fuellung("textures/ui/fynn_bossleiste_voll", GEBUNDEN)},
-                        {"voll_entfesselt": fuellung("textures/ui/fynn_bossleiste_entfesselt", ENTFESSELT)},
-                        {"rahmen": rahmenbild("textures/ui/fynn_bossleiste_rahmen", GEBUNDEN)},
-                        {"rahmen_entfesselt": rahmenbild("textures/ui/fynn_bossleiste_rahmen_entfesselt",
-                                                         ENTFESSELT)},
-                    ],
-                }},
-            ],
-            "bindings": binde_name(HAT_ROLAND),
+            "bindings": binde_name(f"({keiner})"),
         },
     }
+    for l in leisten:
+        daten[f"fynn_{l['kennung']}_leiste"] = leiste_panel(l)
+    return daten
 
 
 def schreibe(pfad, daten):
@@ -304,14 +309,76 @@ def schreibe(pfad, daten):
     pfad.write_text(json.dumps(daten, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
-def bilder():
+# ============================================================ Andere Bosse
+
+def umgefaerbt(bild, tausch):
+    """Fynns Rahmen in anderen Farben: jede Farbe aus tausch wird ersetzt."""
+    b = bild.copy()
+    for y in range(b.height):
+        for x in range(b.width):
+            f = b.getpixel((x, y))
+            if f[3] and f[:3] in tausch:
+                b.putpixel((x, y), tuple(tausch[f[:3]]) + (f[3],))
+    return b
+
+
+def mit_medaillon(bild, karte, farben, x0=84):
+    """Ein anderes Zeichen in die Mitte, 14 breit und 17 hoch wie Fynns
+    Medaillon. '.' laesst stehen, ' ' macht durchsichtig."""
+    b = bild.copy()
+    for y, zeile in enumerate(karte):
+        for i, z in enumerate(zeile):
+            if z == ".":
+                continue
+            b.putpixel((x0 + i, y), (0, 0, 0, 0) if z == " " else tuple(farben[z]) + (255,))
+    return b
+
+
+def mit_schein(bild, farbe):
+    """Ein Schein von einem Pixel um die ganze Leiste - wie in Fynns Rahmen
+    fuer Phase 2 -, aber nicht in den Balken hinein."""
+    b = bild.copy()
+    rx, ry, rw, rh = RINNE
+    for y in range(bild.height):
+        for x in range(bild.width):
+            if bild.getpixel((x, y))[3]:
+                continue
+            if rx <= x < rx + rw and ry <= y < ry + rh:
+                continue
+            for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                nx, ny = x + dx, y + dy
+                if 0 <= nx < bild.width and 0 <= ny < bild.height and bild.getpixel((nx, ny))[3]:
+                    b.putpixel((x, y), tuple(farbe) + (255,))
+                    break
+    return b
+
+
+def roland_leiste():
     return {
-        "rahmen": rahmen(),
-        "rahmen_entfesselt": Image.open(RAHMEN_PHASE2).convert("RGBA"),
-        "leer": rinne(None, leer=True),
-        "voll": rinne(FUELLUNG[1]),
-        "entfesselt": rinne(FUELLUNG[2]),
+        "kennung": "roland", "marke": "Roland", "titel": ("Sir Roland", "Sir Roland · Phase 2"),
+        "namensfarben": ([0.96, 0.84, 0.48], [0.6, 0.9, 1.0]),
+        "teile": {
+            "rahmen": rahmen(),
+            "rahmen_entfesselt": Image.open(RAHMEN_PHASE2).convert("RGBA"),
+            "leer": rinne(None, leer=True),
+            "voll": rinne(FUELLUNG[1]),
+            "entfesselt": rinne(FUELLUNG[2]),
+        },
     }
+
+
+# Die Bosse nach Roland bringen ihre Leiste selbst mit (Funktion bossleiste()
+# in ihrem Bauskript).
+WEITERE = ["rabenfuerst_bauen", "frostmammut_bauen"]
+
+
+def alle_leisten():
+    import importlib
+    leisten = [roland_leiste()]
+    for modul in WEITERE:
+        if (Path(__file__).resolve().parent / f"{modul}.py").exists():
+            leisten.append(importlib.import_module(modul).bossleiste())
+    return leisten
 
 
 def zusammen(teile, anteil, phase):
@@ -326,16 +393,15 @@ def zusammen(teile, anteil, phase):
     return b
 
 
-def vorschau(ordner, teile):
-    """Ein Himmel, darauf die Leiste dreimal gross in drei Zustaenden, mit
+def vorschau(ziel, l):
+    """Ein Himmel, darauf die Leiste viermal gross in drei Zustaenden, mit
     dem Namen darueber - so ungefaehr sieht es oben im Bild aus."""
     from PIL import ImageDraw
     massstab = 4
-    zustaende = [(1.0, 1, "Sir Roland"), (0.62, 1, "Sir Roland"),
-                 (0.31, 2, "Sir Roland · Phase 2")]
+    teile = l["teile"]
+    zustaende = [(1.0, 1, l["titel"][0]), (0.62, 1, l["titel"][0]), (0.31, 2, l["titel"][1])]
     w, h = BREITE * massstab + 80, len(zustaende) * 110 + 30
     bild = Image.new("RGBA", (w, h), (120, 168, 255, 255))
-    # Himmel: oben dunkler, unten heller - in Stufen wie Minecrafts Himmel.
     for y in range(h):
         t = y / h
         f = tuple(int(a + (b - a) * (int(t * 6) / 6)) for a, b in zip((96, 142, 236), (170, 206, 255)))
@@ -346,7 +412,8 @@ def vorschau(ordner, teile):
         leiste = zusammen(teile, anteil, phase).resize((BREITE * massstab, HOEHE * massstab), Image.NEAREST)
         y = 30 + i * 110
         bild.alpha_composite(leiste, (40, y + 26))
-        farbe = (245, 214, 122, 255) if phase == 1 else (158, 219, 255, 255)
+        farbe = tuple(int(c * 255) for c in l["namensfarben"][phase - 1]) + (255,)
+        text = text.replace("·", "-")
         tw = zeichner.textlength(text) * 2
         klein = Image.new("RGBA", (int(tw / 2) + 4, 14), (0, 0, 0, 0))
         ImageDraw.Draw(klein).text((1, 1), text, fill=(40, 40, 40, 255))
@@ -355,20 +422,27 @@ def vorschau(ordner, teile):
         bild.alpha_composite(klein, (int(w / 2 - klein.width / 2), y))
         zeichner.text((44, y + 26 + HOEHE * massstab + 4), f"{round(anteil * 100)} % - Phase {phase}",
                       fill=(20, 30, 60, 255))
-    Path(ordner).mkdir(parents=True, exist_ok=True)
-    bild.save(Path(ordner) / "bossleiste.png")
-    print("gezeichnet:", Path(ordner) / "bossleiste.png")
+    bild.save(ziel)
+    print("gezeichnet:", ziel)
 
 
 def main():
-    teile = bilder()
-    (RES / "textures" / "ui").mkdir(parents=True, exist_ok=True)
-    for name_, bild in teile.items():
-        bild.save(RES / "textures" / "ui" / f"fynn_bossleiste_{name_}.png")
-    schreibe(RES / "ui" / "hud_screen.json", oberflaeche())
-    print("gebaut: Bossleiste (ui/hud_screen.json, textures/ui/fynn_bossleiste_*.png)")
+    leisten = alle_leisten()
+    ordner = RES / "textures" / "ui"
+    ordner.mkdir(parents=True, exist_ok=True)
+    # Die Namen von vor 4.61 (nur Roland) aufraeumen.
+    for alt in ("rahmen", "rahmen_entfesselt", "leer", "voll", "entfesselt"):
+        (ordner / f"fynn_bossleiste_{alt}.png").unlink(missing_ok=True)
+    for l in leisten:
+        for name_, bild in l["teile"].items():
+            bild.save(ordner / f"fynn_bossleiste_{l['kennung']}_{name_}.png")
+    schreibe(RES / "ui" / "hud_screen.json", oberflaeche(leisten))
+    print("gebaut: Bossleisten fuer", ", ".join(l["kennung"] for l in leisten))
     if "--bilder" in sys.argv:
-        vorschau(Path(sys.argv[sys.argv.index("--bilder") + 1]), teile)
+        ordner = Path(sys.argv[sys.argv.index("--bilder") + 1])
+        ordner.mkdir(parents=True, exist_ok=True)
+        for l in leisten:
+            vorschau(ordner / ("bossleiste.png" if l["kennung"] == "roland" else f"bossleiste_{l['kennung']}.png"), l)
 
 
 if __name__ == "__main__":
