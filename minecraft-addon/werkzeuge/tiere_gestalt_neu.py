@@ -21,7 +21,7 @@ alle Tiere an einer Stelle findet.
 
 import tiere_gestalt as g
 from tiere_gestalt import beine, nah, paar, ton
-from tiermodell import Modell, hexfarbe, mische, wolken
+from tiermodell import Modell, hexfarbe, mische, streu, wolken
 
 
 # Nur Modelle und Maler gehen nach tiere_gestalt - die Hilfen dort bleiben.
@@ -128,10 +128,14 @@ def elefant_maler(variante):
     staub = "#8a6a58" if variante == "savanne" else None
 
     def falten(p, n, texel, saat, hell=0.0):
-        # Die Haut: waagerechte Falten in jeder dritten Zeile, oben heller
-        # von der Sonne. Savannenelefanten tragen unten roten Staub - sie
-        # bewerfen sich damit gegen die Hitze.
-        h = hell - (0.045 if int(p[1]) % 3 == 0 and abs(n[1]) < 0.5 else 0.0)
+        # Die Haut: keine Striche (Fynn: "Ich mag es lieber wuerfelig und
+        # schoen mit Uebergaengen verteilt"). Stattdessen kleine Wuerfel -
+        # Flecken aus 2 und 4 Pixeln, jeder einen Hauch heller oder dunkler,
+        # dazu grosse weiche Wolken. Oben etwas heller von der Sonne.
+        # Savannenelefanten tragen unten roten Staub.
+        grob = streu(p[0] // 4, p[1] // 4, p[2] // 4, saat) - 0.5
+        fein = streu(p[0] // 2, p[1] // 2, p[2] // 2, saat + 7) - 0.5
+        h = hell + grob * 0.08 + fein * 0.04
         h += 0.05 if n[1] > 0.5 else 0.0
         farbe = haut
         if staub and p[1] < 16:
@@ -150,7 +154,7 @@ def elefant_maler(variante):
             return falten(p, n, texel, 306, hell=-0.1)
         if stoff == "knie":
             # Tiefe Falten um das Knie herum.
-            return falten(p, n, texel, 308, hell=-0.1 if int(p[1]) == 9 else -0.03)
+            return falten(p, n, texel, 308, hell=-0.05)
         if stoff == "ohr":
             if n[2] > 0.5 and abs(p[0]) > 8:
                 # Hinten rosig, mit dunkleren Adern, die sich verzweigen.
@@ -177,19 +181,19 @@ def elefant_maler(variante):
                 return a
             if abs(n[0]) > 0.5 and nah(p, (0, 33.5, -23), (8, 1.5, 2.2)):
                 return falten(p, n, texel, 316, hell=-0.1)                   # Runzeln ums Auge
-            if abs(n[0]) > 0.5 and abs(p[1] - 30.5) < 0.5 and -25 < p[2] < -18:
-                return falten(p, n, texel, 318, hell=-0.12)                  # Schlaefe
+            if abs(n[0]) > 0.5 and nah(p, (0, 30, -20), (8, 1.5, 2)):
+                return falten(p, n, texel, 318, hell=-0.08)                  # Schlaefe, eingesunken
             if g.JUNG and n[1] > 0.5 and p[1] > 41:
                 return ton("#5a524a", p, n, texel, 315, straehne=0.06)      # Flaum auf dem Kopf
             return falten(p, n, texel, 317, hell=0.02)
         if stoff == "ruessel":
             # Ringe um den Ruessel.
-            return falten(p, n, texel, 319, hell=-0.04 if int(p[1]) % 2 else 0.0)
+            return falten(p, n, texel, 319, hell=-0.02)
         if stoff == "bauch":
             return falten(p, n, texel, 321, hell=-0.1)
         if stoff == "bein":
             # Senkrechte Runzeln an den Beinen.
-            return falten(p, n, texel, 323, hell=-0.04 - (0.05 if int(p[0] + p[2]) % 3 == 0 else 0.0))
+            return falten(p, n, texel, 323, hell=-0.04)
         return falten(p, n, texel, 325, hell=0.04 * (p[1] - 28) / 10)
     return f
 
@@ -299,10 +303,10 @@ def nashorn_maler(variante):
             return ton(haut, p, n, texel, 349, hell=-0.1, straehne=0.0)
         if stoff == "bein":
             return ton(haut, p, n, texel, 351, hell=-0.05, straehne=0.0)
-        # Der Rumpf: eine waagerechte Falte an der Flanke, sonst ruhig.
-        if abs(n[0]) > 0.5 and abs(p[1] - 16.5) < 0.5:
-            return ton(haut, p, n, texel, 353, hell=-0.1, straehne=0.0)
-        return ton(haut, p, n, texel, 355, straehne=0.0, hell=0.03 * (p[1] - 19) / 8)
+        # Der Rumpf: dicke Haut in kleinen Wuerfeln statt Strichen.
+        grob = streu(p[0] // 4, p[1] // 4, p[2] // 4, 353) - 0.5
+        fein = streu(p[0] // 2, p[1] // 2, p[2] // 2, 354) - 0.5
+        return ton(haut, p, n, texel, 355, straehne=0.0, hell=0.03 * (p[1] - 19) / 8 + grob * 0.08 + fein * 0.04)
     return f
 
 
