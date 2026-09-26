@@ -1,0 +1,423 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "fynn:roland",
+      "is_spawnable": true,
+      "is_summonable": true,
+      "properties": {
+        "fynn:phase": {
+          "type": "int",
+          "range": [
+            1,
+            2
+          ],
+          "default": 1,
+          "client_sync": true
+        },
+        "fynn:angriff": {
+          "type": "int",
+          "range": [
+            0,
+            11
+          ],
+          "default": 0,
+          "client_sync": true
+        }
+      }
+    },
+    "component_groups": {
+      "fynn:nahkampf": {
+        "minecraft:behavior.melee_box_attack": {
+          "priority": 3,
+          "speed_multiplier": 1.15,
+          "track_target": true
+        }
+      },
+      "fynn:verwundbar": {
+        "minecraft:damage_sensor": {
+          "triggers": [
+            {
+              "cause": "fall",
+              "deals_damage": "no"
+            },
+            {
+              "on_damage": {
+                "filters": {
+                  "test": "is_family",
+                  "subject": "other",
+                  "value": "ritter"
+                }
+              },
+              "deals_damage": "no"
+            },
+            {
+              "on_damage": {
+                "filters": {
+                  "test": "actor_health",
+                  "subject": "self",
+                  "operator": "<=",
+                  "value": 30
+                }
+              },
+              "deals_damage": "no"
+            }
+          ]
+        }
+      },
+      "fynn:unverwundbar": {
+        "minecraft:damage_sensor": {
+          "triggers": [
+            {
+              "cause": "all",
+              "deals_damage": "no"
+            }
+          ]
+        }
+      },
+      "fynn:entfesselt": {
+        "minecraft:movement": {
+          "value": 0.3
+        }
+      },
+      "fynn:auftritt": {
+        "minecraft:timer": {
+          "time": 3.4,
+          "looping": false,
+          "time_down_event": {
+            "event": "fynn:auftritt_fertig"
+          }
+        }
+      },
+      "fynn:staerke_1": {
+        "minecraft:health": {
+          "value": 320,
+          "max": 320
+        },
+        "minecraft:attack": {
+          "damage": 9.0
+        }
+      },
+      "fynn:staerke_2": {
+        "minecraft:health": {
+          "value": 480,
+          "max": 480
+        },
+        "minecraft:attack": {
+          "damage": 10.3
+        }
+      },
+      "fynn:staerke_3": {
+        "minecraft:health": {
+          "value": 640,
+          "max": 640
+        },
+        "minecraft:attack": {
+          "damage": 11.7
+        }
+      },
+      "fynn:staerke_4": {
+        "minecraft:health": {
+          "value": 800,
+          "max": 800
+        },
+        "minecraft:attack": {
+          "damage": 13.0
+        }
+      },
+      "fynn:staerke_5": {
+        "minecraft:health": {
+          "value": 960,
+          "max": 960
+        },
+        "minecraft:attack": {
+          "damage": 14.4
+        }
+      },
+      "fynn:staerke_6": {
+        "minecraft:health": {
+          "value": 1120,
+          "max": 1120
+        },
+        "minecraft:attack": {
+          "damage": 15.8
+        }
+      }
+    },
+    "components": {
+      "minecraft:type_family": {
+        "family": [
+          "roland",
+          "ritter",
+          "monster",
+          "mob"
+        ]
+      },
+      "minecraft:boss": {
+        "hud_range": 48,
+        "should_darken_sky": false
+      },
+      "minecraft:collision_box": {
+        "width": 1.1,
+        "height": 2.5
+      },
+      "minecraft:health": {
+        "value": 320,
+        "max": 320
+      },
+      "minecraft:attack": {
+        "damage": 9.0
+      },
+      "minecraft:movement": {
+        "value": 0.26
+      },
+      "minecraft:movement.basic": {},
+      "minecraft:navigation.walk": {
+        "can_path_over_water": false,
+        "avoid_water": true,
+        "can_open_doors": false,
+        "avoid_damage_blocks": true
+      },
+      "minecraft:jump.static": {},
+      "minecraft:can_climb": {},
+      "minecraft:variable_max_auto_step": {
+        "base_value": 1.0625,
+        "jump_prevented_value": 1.0625
+      },
+      "minecraft:physics": {},
+      "minecraft:pushable": {
+        "is_pushable": false,
+        "is_pushable_by_piston": true
+      },
+      "minecraft:knockback_resistance": {
+        "value": 0.85
+      },
+      "minecraft:fire_immune": true,
+      "minecraft:breathable": {
+        "breathes_water": true
+      },
+      "minecraft:persistent": {},
+      "minecraft:nameable": {},
+      "minecraft:follow_range": {
+        "value": 48,
+        "max": 48
+      },
+      "minecraft:experience_reward": {
+        "on_death": "query.last_hit_by_player ? 120 : 0"
+      },
+      "minecraft:loot": {
+        "table": "loot_tables/entities/roland.json"
+      },
+      "minecraft:behavior.float": {
+        "priority": 0
+      },
+      "minecraft:behavior.hurt_by_target": {
+        "priority": 1
+      },
+      "minecraft:behavior.nearest_attackable_target": {
+        "priority": 2,
+        "must_see": false,
+        "reselect_targets": true,
+        "within_radius": 32,
+        "entity_types": [
+          {
+            "filters": {
+              "all_of": [
+                {
+                  "test": "is_family",
+                  "subject": "other",
+                  "value": "player"
+                },
+                {
+                  "test": "has_ability",
+                  "subject": "other",
+                  "value": "instabuild",
+                  "operator": "!="
+                }
+              ]
+            },
+            "max_dist": 32
+          }
+        ]
+      },
+      "minecraft:behavior.look_at_player": {
+        "priority": 6,
+        "look_distance": 12.0,
+        "probability": 0.05
+      },
+      "minecraft:behavior.random_stroll": {
+        "priority": 7,
+        "speed_multiplier": 0.7
+      },
+      "minecraft:behavior.random_look_around": {
+        "priority": 8
+      }
+    },
+    "events": {
+      "minecraft:entity_spawned": {
+        "add": {
+          "component_groups": [
+            "fynn:unverwundbar",
+            "fynn:staerke_1",
+            "fynn:auftritt"
+          ]
+        }
+      },
+      "fynn:auftritt_fertig": {
+        "remove": {
+          "component_groups": [
+            "fynn:auftritt",
+            "fynn:unverwundbar"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "fynn:verwundbar",
+            "fynn:nahkampf"
+          ]
+        }
+      },
+      "fynn:angriff_beginn": {
+        "remove": {
+          "component_groups": [
+            "fynn:nahkampf"
+          ]
+        }
+      },
+      "fynn:angriff_ende": {
+        "add": {
+          "component_groups": [
+            "fynn:nahkampf"
+          ]
+        }
+      },
+      "fynn:schutz_an": {
+        "remove": {
+          "component_groups": [
+            "fynn:verwundbar"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "fynn:unverwundbar"
+          ]
+        }
+      },
+      "fynn:schutz_aus": {
+        "remove": {
+          "component_groups": [
+            "fynn:unverwundbar"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "fynn:verwundbar"
+          ]
+        }
+      },
+      "fynn:entfesseln": {
+        "add": {
+          "component_groups": [
+            "fynn:entfesselt"
+          ]
+        }
+      },
+      "fynn:staerke_1": {
+        "remove": {
+          "component_groups": [
+            "fynn:staerke_2",
+            "fynn:staerke_3",
+            "fynn:staerke_4",
+            "fynn:staerke_5",
+            "fynn:staerke_6"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "fynn:staerke_1"
+          ]
+        }
+      },
+      "fynn:staerke_2": {
+        "remove": {
+          "component_groups": [
+            "fynn:staerke_1",
+            "fynn:staerke_3",
+            "fynn:staerke_4",
+            "fynn:staerke_5",
+            "fynn:staerke_6"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "fynn:staerke_2"
+          ]
+        }
+      },
+      "fynn:staerke_3": {
+        "remove": {
+          "component_groups": [
+            "fynn:staerke_1",
+            "fynn:staerke_2",
+            "fynn:staerke_4",
+            "fynn:staerke_5",
+            "fynn:staerke_6"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "fynn:staerke_3"
+          ]
+        }
+      },
+      "fynn:staerke_4": {
+        "remove": {
+          "component_groups": [
+            "fynn:staerke_1",
+            "fynn:staerke_2",
+            "fynn:staerke_3",
+            "fynn:staerke_5",
+            "fynn:staerke_6"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "fynn:staerke_4"
+          ]
+        }
+      },
+      "fynn:staerke_5": {
+        "remove": {
+          "component_groups": [
+            "fynn:staerke_1",
+            "fynn:staerke_2",
+            "fynn:staerke_3",
+            "fynn:staerke_4",
+            "fynn:staerke_6"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "fynn:staerke_5"
+          ]
+        }
+      },
+      "fynn:staerke_6": {
+        "remove": {
+          "component_groups": [
+            "fynn:staerke_1",
+            "fynn:staerke_2",
+            "fynn:staerke_3",
+            "fynn:staerke_4",
+            "fynn:staerke_5"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "fynn:staerke_6"
+          ]
+        }
+      }
+    }
+  }
+}

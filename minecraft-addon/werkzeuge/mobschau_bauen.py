@@ -91,9 +91,23 @@ def fn(ausdruck):
 
 
 def kanal_js(kanal):
-    """Ein Animationskanal: ein Wert fuer alle drei Achsen oder drei eigene."""
+    """Ein Animationskanal: ein Wert fuer alle drei Achsen oder drei eigene -
+    oder Schluesselbilder (Rolands Bewegungen). Die rechnet M.sb im
+    Betrachter aus, weich (Catmull-Rom) oder gerade, mit Spruengen."""
     if isinstance(kanal, dict):
-        raise ValueError("Schluesselbilder kommen in den Mob-Animationen nicht vor")
+        bilder = []
+        for zeit in sorted(kanal, key=float):
+            w = kanal[zeit]
+            if isinstance(w, dict):
+                vor, nach = w.get("pre", w.get("post")), w.get("post", w.get("pre"))
+                art = 1 if w.get("lerp_mode") == "catmullrom" else 0
+            else:
+                vor = nach = w
+                art = 0
+            vor = vor if isinstance(vor, list) else [vor] * 3
+            nach = nach if isinstance(nach, list) else [nach] * 3
+            bilder.append([float(zeit), [float(x) for x in vor], [float(x) for x in nach], art])
+        return fn("M.sb((Q.anim_time||0)," + json.dumps(bilder, separators=(",", ":")) + ")")
     if not isinstance(kanal, list):
         kanal = [kanal, kanal, kanal]
     return fn("[" + ",".join(js_ausdruck(w, i) for i, w in enumerate(kanal)) + "]")
@@ -312,6 +326,7 @@ VARIANTENNAME = {
     "prarie": "Prärie", "weiss": "Weiß", "weisser_hai": "Weißer Hai", "tigerhai": "Tigerhai",
     "hammerhai": "Hammerhai", "loewe": "Löwe", "loewin": "Löwin", "silberruecken": "Silberrücken",
     "junges": "Junges", "jungvogel": "Jungvogel", "altvogel": "Altvogel", "default": "Standard",
+    "entfesselt": "Entfesselt (Phase 2)",
 }
 
 VERHALTEN = {"friedlich": "friedlich", "neutral": "wehrt sich", "feindlich": "greift an"}
@@ -435,13 +450,19 @@ def mob_daten(kennung, entitaet_datei, gruppe, info):
             sichtbar.append(json.dumps(knochen.lower()) + ":" + fn(js_ausdruck(bedingung)))
 
     animationen = {}
+    sonder = info.get("sonder", {})
     for kurz, voll in d.get("animations", {}).items():
         if voll in ALLE_ANIMATIONEN:
-            animationen[kurz] = animation_js(ALLE_ANIMATIONEN[voll])
+            js = animation_js(ALLE_ANIMATIONEN[voll])
+            # Eine ganze Pose (Rolands Angriffe): Solange sie spielt, ruht
+            # alles andere, und ihre Zeit beginnt beim Druck auf den Knopf.
+            animationen[kurz] = js[:-1] + ",voll:1}" if kurz in sonder else js
     for kurz, (anim, _) in extra_anim.items():
         animationen[kurz] = animation_js(anim)
     ablauf = []
-    for eintrag in skripte.get("animate", []):
+    # Wird der Ablauf von einer Animationssteuerung bestimmt (Roland), sagt
+    # der Steckbrief, was von selbst laeuft; die Angriffe sind Knoepfe.
+    for eintrag in info.get("grund", skripte.get("animate", [])):
         if isinstance(eintrag, str):
             eintrag = {eintrag: 1.0}
         for kurz, gewicht in eintrag.items():
@@ -449,6 +470,9 @@ def mob_daten(kennung, entitaet_datei, gruppe, info):
                 ablauf.append("[" + json.dumps(kurz) + "," + fn(js_ausdruck(gewicht)) + "]")
     for kurz, (_, bedingung) in extra_anim.items():
         ablauf.append("[" + json.dumps(kurz) + "," + fn(js_ausdruck(bedingung)) + "]")
+    for kurz in sonder:
+        if kurz in animationen:
+            ablauf.append("[" + json.dumps(kurz) + "," + fn("0") + "]")
 
     alles = " ".join([json.dumps(skripte), json.dumps(steuer.get("part_visibility", []))])
     schalter = []
@@ -469,7 +493,9 @@ def mob_daten(kennung, entitaet_datei, gruppe, info):
         "start:function(Q,V,M,P){" + js_anweisungen(skripte.get("initialize", [])) + "}",
         "vorher:function(Q,V,M,P){" + js_anweisungen(skripte.get("pre_animation", [])) + "}",
         "sicht:{" + ",".join(sichtbar) + "}",
-        "schalter:" + json.dumps([[s, SCHALTER.get(s, s)] for s in dict.fromkeys(schalter)], ensure_ascii=False),
+        "schalter:" + json.dumps([[s, SCHALTER.get(s, s)] for s in dict.fromkeys(schalter)
+                                  if s not in info.get("ohne_schalter", [])], ensure_ascii=False),
+        "knoepfe:" + json.dumps(sonder, ensure_ascii=False),
     ]
     return "{" + ",\n".join(teile) + "}"
 
@@ -553,6 +579,28 @@ def alle_mobs():
             ["Größe", "etwas größer als ein Ritter, blauer Helmbusch"],
             ["Beute", "Eisen, Goldklumpen, Brot, Äpfel, Steak, oft Stahlbarren, selten Smaragd "
                       "oder goldener Apfel; mit 5 % das Saphirschwert – mit drei Vierteln Haltbarkeit"]]}}))
+    import roland_bauen
+    l1, s1 = roland_bauen.staerke(1)
+    l4, _ = roland_bauen.staerke(4)
+    mobs.append(mob_daten("roland", "roland.entity.json", "Bosse", {
+        "gross": 1.2,
+        "grund": [{"haltung": 1.0}, {"gang": "math.clamp(query.modified_move_speed * 2.0, 0.0, 1.0)"}],
+        "sonder": {
+            "auftritt": "Auftritt", "hieb_schraeg": "Hieb schräg", "hieb_quer": "Hieb quer",
+            "hieb_stoss": "Stoß", "schildstoss": "Schildstoß", "klingenwirbel": "Klingenwirbel",
+            "sprungschlag": "Sprungschlag", "schildwall": "Schildwall", "konter": "Konter",
+            "sternenklingen": "Sternenklingen", "saphirwelle": "Saphirwelle",
+            "ruf_des_ordens": "Ruf des Ordens", "phasenwechsel": "Phasenwechsel", "abschied": "Abschied",
+        },
+        "steckbrief": {"name": "Sir Roland von Ronceval", "en": "Sir Roland of Roncevaux", "zeilen": [
+            ["Rang", "Oberkommandant des Ritterordens – der erste Boss"],
+            ["Leben", f"{l1 // 2} Herzen allein, {l4 // 2} zu viert – je Mitspieler die Hälfte mehr"],
+            ["Phasen", "bei halbem Leben kniet er, steht entfesselt wieder auf und ruft den Orden"],
+            ["Angriffe", "Hiebfolge, Schildstoß, Klingenwirbel, Sprungschlag, Schildwall mit Konter, "
+                         "Sternenklingen, Saphirwelle; in Phase 2 Ruf des Ordens"],
+            ["Rufen", "Fehdehandschuh werfen (5 Stahlbarren, Goldbarren, Lapis)"],
+            ["Beute", "Durendal, Olifant, Diamanten, Gold, Smaragde, goldene Äpfel, oft das Saphirschwert; "
+                      "jeder Mitkämpfer bekommt seinen Anteil"]]}}))
     wo = biom_text(biome_aus_spawnregel("fynn:glimmerling"))
     mobs.append(mob_daten("glimmerling", "glimmerling.entity.json", "Weitere", {"steckbrief": {
         "name": "Glimmerling", "en": "Glimmerling", "zeilen": [

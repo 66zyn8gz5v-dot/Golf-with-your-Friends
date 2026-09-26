@@ -44,11 +44,11 @@ item.fynn:eisenklinge.name=Iron Blade
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.56
+item.iron_sword.name=Stahlschwert 4.57
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.56
-item.fynn:degen.name=Degen 4.56
+item.fynn:degen=Degen 4.57
+item.fynn:degen.name=Degen 4.57
 
 
 
@@ -418,3 +418,14 @@ entity.fynn:ritterhauptmann.name=Knight Captain
 item.spawn_egg.entity.fynn:ritterhauptmann.name=Knight Captain
 item.fynn:saphirschwert=Sapphire Sword
 item.fynn:saphirschwert.name=Sapphire Sword
+
+## Sir Roland
+item.fynn:durendal=Durendal
+item.fynn:durendal.name=Durendal
+item.fynn:olifant=Oliphant
+item.fynn:olifant.name=Oliphant
+item.fynn:fehdehandschuh=Gauntlet of Challenge
+item.fynn:fehdehandschuh.name=Gauntlet of Challenge
+entity.fynn:roland.name=Sir Roland of Roncevaux
+item.spawn_egg.entity.fynn:roland.name=Sir Roland of Roncevaux
+entity.fynn:roland_abschied.name=Sir Roland of Roncevaux

@@ -51,7 +51,7 @@ GEGENSTAENDE = {
               "minecraft:golden_sword", "minecraft:diamond_sword", "minecraft:netherite_sword",
               "minecraft:copper_sword",
               "fynn:ritterschwert", "fynn:eisenklinge", "fynn:silberklinge",
-              "fynn:elektrumklinge", "fynn:sternenklinge", "fynn:schwertfischklinge", "fynn:schwertfischschwert", "fynn:saphirschwert",
+              "fynn:elektrumklinge", "fynn:sternenklinge", "fynn:schwertfischklinge", "fynn:schwertfischschwert", "fynn:saphirschwert", "fynn:durendal",
               "fynn:rubinklinge", "fynn:haizahnsaebel"],
     DOLCHE: ["fynn:eisendolche", "fynn:silberdolche", "fynn:stahldolche",
              "fynn:elektrumdolche", "fynn:diamantdolche", "fynn:netheritdolche"],

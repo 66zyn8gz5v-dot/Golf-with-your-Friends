@@ -1,0 +1,256 @@
+{
+  "namespace": "hud",
+  "boss_health_panel": {
+    "type": "panel",
+    "size": [
+      182,
+      24
+    ],
+    "anchor_from": "top_middle",
+    "anchor_to": "top_middle",
+    "$progress_bar_collection": "boss_bars",
+    "controls": [
+      {
+        "fynn_mojang_leiste@hud.fynn_mojang_leiste": {}
+      },
+      {
+        "fynn_roland_leiste@hud.fynn_roland_leiste": {}
+      }
+    ],
+    "bindings": [
+      {
+        "binding_name": "#bar_visible",
+        "binding_type": "collection",
+        "binding_collection_name": "boss_bars",
+        "binding_name_override": "#visible"
+      }
+    ]
+  },
+  "fynn_mojang_leiste": {
+    "type": "panel",
+    "size": [
+      "100%",
+      "100%"
+    ],
+    "$progress_bar_collection": "boss_bars",
+    "controls": [
+      {
+        "boss_name@hud.boss_name_panel": {}
+      },
+      {
+        "progress_bar_for_collections@common.progress_bar_for_collections": {
+          "offset": [
+            0,
+            10
+          ]
+        }
+      }
+    ],
+    "bindings": [
+      {
+        "binding_type": "collection",
+        "binding_collection_name": "boss_bars",
+        "binding_name": "#bossName"
+      },
+      {
+        "binding_type": "view",
+        "source_property_name": "((#bossName - 'Roland') = #bossName)",
+        "target_property_name": "#visible"
+      }
+    ]
+  },
+  "fynn_roland_leiste": {
+    "type": "panel",
+    "size": [
+      "100%",
+      "100%"
+    ],
+    "controls": [
+      {
+        "name_gebunden": {
+          "type": "label",
+          "text": "#bossName",
+          "color": [
+            0.96,
+            0.84,
+            0.48
+          ],
+          "shadow": true,
+          "enable_profanity_filter": false,
+          "anchor_from": "top_middle",
+          "anchor_to": "top_middle",
+          "bindings": [
+            {
+              "binding_type": "collection",
+              "binding_collection_name": "boss_bars",
+              "binding_name": "#bossName"
+            },
+            {
+              "binding_type": "view",
+              "source_property_name": "((#bossName - 'entfesselt') = #bossName)",
+              "target_property_name": "#visible"
+            }
+          ]
+        }
+      },
+      {
+        "name_entfesselt": {
+          "type": "label",
+          "text": "#bossName",
+          "color": [
+            0.62,
+            0.86,
+            1.0
+          ],
+          "shadow": true,
+          "enable_profanity_filter": false,
+          "anchor_from": "top_middle",
+          "anchor_to": "top_middle",
+          "bindings": [
+            {
+              "binding_type": "collection",
+              "binding_collection_name": "boss_bars",
+              "binding_name": "#bossName"
+            },
+            {
+              "binding_type": "view",
+              "source_property_name": "(not ((#bossName - 'entfesselt') = #bossName))",
+              "target_property_name": "#visible"
+            }
+          ]
+        }
+      },
+      {
+        "leiste": {
+          "type": "panel",
+          "size": [
+            182,
+            13
+          ],
+          "offset": [
+            0,
+            10
+          ],
+          "anchor_from": "top_middle",
+          "anchor_to": "top_middle",
+          "controls": [
+            {
+              "leer": {
+                "type": "image",
+                "texture": "textures/ui/fynn_bossleiste_leer",
+                "size": [
+                  158,
+                  5
+                ],
+                "offset": [
+                  12,
+                  4
+                ],
+                "anchor_from": "top_left",
+                "anchor_to": "top_left",
+                "layer": 1
+              }
+            },
+            {
+              "voll": {
+                "type": "image",
+                "texture": "textures/ui/fynn_bossleiste_voll",
+                "size": [
+                  158,
+                  5
+                ],
+                "offset": [
+                  12,
+                  4
+                ],
+                "anchor_from": "top_left",
+                "anchor_to": "top_left",
+                "layer": 2,
+                "clip_direction": "left",
+                "clip_pixelperfect": true,
+                "bindings": [
+                  {
+                    "binding_name": "#progress_percentage",
+                    "binding_name_override": "#clip_ratio",
+                    "binding_type": "collection",
+                    "binding_collection_name": "boss_bars"
+                  },
+                  {
+                    "binding_type": "collection",
+                    "binding_collection_name": "boss_bars",
+                    "binding_name": "#bossName"
+                  },
+                  {
+                    "binding_type": "view",
+                    "source_property_name": "((#bossName - 'entfesselt') = #bossName)",
+                    "target_property_name": "#visible"
+                  }
+                ]
+              }
+            },
+            {
+              "voll_entfesselt": {
+                "type": "image",
+                "texture": "textures/ui/fynn_bossleiste_entfesselt",
+                "size": [
+                  158,
+                  5
+                ],
+                "offset": [
+                  12,
+                  4
+                ],
+                "anchor_from": "top_left",
+                "anchor_to": "top_left",
+                "layer": 2,
+                "clip_direction": "left",
+                "clip_pixelperfect": true,
+                "bindings": [
+                  {
+                    "binding_name": "#progress_percentage",
+                    "binding_name_override": "#clip_ratio",
+                    "binding_type": "collection",
+                    "binding_collection_name": "boss_bars"
+                  },
+                  {
+                    "binding_type": "collection",
+                    "binding_collection_name": "boss_bars",
+                    "binding_name": "#bossName"
+                  },
+                  {
+                    "binding_type": "view",
+                    "source_property_name": "(not ((#bossName - 'entfesselt') = #bossName))",
+                    "target_property_name": "#visible"
+                  }
+                ]
+              }
+            },
+            {
+              "rahmen": {
+                "type": "image",
+                "texture": "textures/ui/fynn_bossleiste_rahmen",
+                "size": [
+                  182,
+                  13
+                ],
+                "layer": 3
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "bindings": [
+      {
+        "binding_type": "collection",
+        "binding_collection_name": "boss_bars",
+        "binding_name": "#bossName"
+      },
+      {
+        "binding_type": "view",
+        "source_property_name": "(not ((#bossName - 'Roland') = #bossName))",
+        "target_property_name": "#visible"
+      }
+    ]
+  }
+}

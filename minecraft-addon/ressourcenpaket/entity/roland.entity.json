@@ -1,0 +1,54 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:roland",
+      "materials": {
+        "default": "entity_emissive_alpha"
+      },
+      "textures": {
+        "default": "textures/entity/roland",
+        "entfesselt": "textures/entity/roland_entfesselt"
+      },
+      "geometry": {
+        "default": "geometry.fynn.roland"
+      },
+      "animations": {
+        "haltung": "animation.fynn.roland.haltung",
+        "gang": "animation.fynn.roland.gang",
+        "blick": "animation.fynn.roland.blick",
+        "hieb_schraeg": "animation.fynn.roland.hieb_schraeg",
+        "hieb_quer": "animation.fynn.roland.hieb_quer",
+        "hieb_stoss": "animation.fynn.roland.hieb_stoss",
+        "schildstoss": "animation.fynn.roland.schildstoss",
+        "klingenwirbel": "animation.fynn.roland.klingenwirbel",
+        "sprungschlag": "animation.fynn.roland.sprungschlag",
+        "schildwall": "animation.fynn.roland.schildwall",
+        "sternenklingen": "animation.fynn.roland.sternenklingen",
+        "saphirwelle": "animation.fynn.roland.saphirwelle",
+        "ruf_des_ordens": "animation.fynn.roland.ruf_des_ordens",
+        "phasenwechsel": "animation.fynn.roland.phasenwechsel",
+        "auftritt": "animation.fynn.roland.auftritt",
+        "konter": "animation.fynn.roland.konter",
+        "abschied": "animation.fynn.roland.abschied",
+        "kampf": "controller.animation.fynn.roland.kampf"
+      },
+      "scripts": {
+        "scale": "1.2",
+        "initialize": [
+          "variable.hieb = 0;"
+        ],
+        "animate": [
+          "kampf"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.fynn.roland"
+      ],
+      "spawn_egg": {
+        "base_color": "#2b48a4",
+        "overlay_color": "#e2ba4e"
+      }
+    }
+  }
+}

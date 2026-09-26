@@ -376,6 +376,15 @@
     },
     "saphirschwert": {
       "textures": "textures/items/saphirschwert"
+    },
+    "durendal": {
+      "textures": "textures/items/durendal"
+    },
+    "olifant": {
+      "textures": "textures/items/olifant"
+    },
+    "fehdehandschuh": {
+      "textures": "textures/items/fehdehandschuh"
     }
   }
 }
