@@ -44,7 +44,7 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import tierprodukte_bauen as tp                 # noqa: E402
 from tiere_gestalt import ton                   # noqa: E402
-from tiermodell import Modell, hexfarbe         # noqa: E402
+from tiermodell import Modell, hexfarbe, streu  # noqa: E402
 
 WURZEL = Path(__file__).resolve().parent.parent
 RES = WURZEL / "ressourcenpaket"
@@ -52,72 +52,99 @@ VER = WURZEL / "verhaltenspaket"
 
 # Dieselben Farben wie die Taschen am Elch (tiere_gestalt.REITZEUG).
 FARBEN = {"sack": "#9a6438", "deckel": "#6e4424", "klappe": "#6e4424", "schnalle": "#d8b060",
-          "fach": "#8a5630", "seitenfach": "#8a5630", "rolle": "#4a6a3e", "riemen": "#3e2616"}
+          "fach": "#8a5630", "fachdeckel": "#6e4424", "gurt": "#3e2616", "rolle": "#8a2e2a",
+          "rollriemen": "#3e2616", "griff": "#3e2616", "becher": "#9aa0a8", "riemen": "#3e2616"}
 
 
 # ------------------------------------------------------------ Gestalt
 
-def rucksack(b, o, r):
+def rucksack(b, o, r, vorsilbe="", becher=True):
     """Den Rucksack in einen Knochen bauen. o: Mitte der Rueckwand unten;
     r: +1, wenn die Aussenseite nach +z zeigt (auf dem Ruecken), -1 nach -z
-    (abgestellt, mit der Tasche nach vorn)."""
+    (abgestellt, mit der Tasche nach vorn). vorsilbe: vor jeden Stoffnamen,
+    damit er sich am Elch nicht mit dessen Stoffen verwechselt.
+
+    Zweite Fassung (Fynn: "an der Seite noch ein bisschen verbuggt ... mehr
+    Detail"): Alles bleibt innerhalb von 3.5 Pixeln neben der Mitte - so
+    schwingen die Arme des Spielers (ab 4 Pixeln) beim Gehen nicht mehr
+    hindurch. Die Seitentaschen sind darum weg; dafuer: zwei Gurte mit
+    Schnallen ueber dem Deckel, eine Aussentasche mit eigenem Deckel und
+    Knopf, eine karierte Schlafrolle mit zwei Riemen, ein Tragegriff und
+    ein Blechbecher, der unten am Karabiner baumelt."""
     ox, oy, oz = o
 
     def k(x, y, z, w, h, d, stoff):
         wz = oz + z if r > 0 else oz - z - d
-        b.kasten([ox + x, oy + y, wz], [w, h, d], stoff)
+        b.kasten([ox + x, oy + y, wz], [w, h, d], vorsilbe + stoff)
 
-    k(-4, 0, 0, 8, 9, 4, "sack")
-    k(-4.5, 8.5, -0.5, 9, 1, 5, "deckel")
+    k(-3.5, 0, 0, 7, 9, 4, "sack")
+    k(-3.5, 8.5, -0.5, 7, 1, 5, "deckel")
     k(-3, 5.5, 4, 6, 4, 1, "klappe")             # der Deckel faellt vorn herab
-    k(-0.5, 6, 5, 1, 1, 1, "schnalle")
+    k(-2.5, 4.5, 5, 1, 5, 1, "gurt")             # zwei Gurte mit Schnallen
+    k(1.5, 4.5, 5, 1, 5, 1, "gurt")
     k(-3, 1, 4, 6, 4, 1, "fach")                 # Aussentasche
-    k(-5, 1, 1, 1, 4, 2, "seitenfach")
-    k(4, 1, 1, 1, 4, 2, "seitenfach")
-    k(-5, 9.5, 0.5, 10, 2, 3, "rolle")           # Schlafrolle obenauf
+    k(-2.5, 4, 5, 5, 1, 1, "fachdeckel")
+    k(-0.5, 3, 5, 1, 1, 1, "schnalle")           # Knopf der Aussentasche
+    k(-3.5, 9.5, 0.5, 7, 2, 3, "rolle")          # Schlafrolle obenauf
+    k(-2.5, 9.3, 0.3, 1, 1, 1, "rollriemen")
+    k(1.5, 9.3, 0.3, 1, 1, 1, "rollriemen")
+    k(-1, 9.5, 3.5, 2, 1, 1, "griff")            # Tragegriff
+    if becher:                                   # (abgestellt stuende er im Boden)
+        k(-0.5, -1.5, 4.2, 1, 1, 1, "becher")    # Blechbecher am Karabiner
 
 
-def maler(o, r):
-    """Malt in Koordinaten des Rucksacks (x quer, y hoch, z nach aussen)."""
+def maler(o, r, vorsilbe=""):
+    """Malt in Koordinaten des Rucksacks (x quer, y hoch, z nach aussen).
+    Wuerfelig statt strichig, wie Fynn es mag. Fuer fremde Stoffe: None."""
     ox, oy, oz = o
 
     def f(stoff, p, n, texel):
+        if not stoff.startswith(vorsilbe) or stoff[len(vorsilbe):] not in FARBEN:
+            return None
+        stoff = stoff[len(vorsilbe):]
         x, y, z = p[0] - ox, p[1] - oy, (p[2] - oz) * r
         nz = n[2] * r
         grund = FARBEN[stoff]
         if stoff == "rolle":
-            if abs(abs(x) - 3.5) < 0.3 and abs(n[0]) < 0.5:
-                return ton(FARBEN["riemen"], p, n, texel, 91, straehne=0.0)       # zwei Riemen um die Rolle
-            if abs(n[0]) > 0.5 and abs(y - 10.5) < 0.6 and abs(z - 2.0) < 0.6:
-                return ton("#7a9a6a", p, n, texel, 93, straehne=0.0)             # die Wicklung an den Enden
-            return ton(grund, p, n, texel, 95, straehne=0.03)
+            # Karierte Wolldecke: Wuerfel aus zwei Pixeln, rot und dunkelrot,
+            # mit einem helleren Kreuzungspunkt.
+            a, c = int((x + 8) // 2) % 2, int((z + y + 8) // 2) % 2
+            farbe = "#b24a3a" if a and c else ("#8a2e2a" if a or c else "#6a2220")
+            return ton(farbe, p, n, texel, 95, straehne=0.0)
+        if stoff == "rollriemen" or stoff == "gurt":
+            if stoff == "gurt" and abs(y - 6.0) < 0.6 and nz > 0.5:
+                return ton(FARBEN["schnalle"], p, n, texel, 90, straehne=0.0)     # Schnalle am Gurt
+            return ton(FARBEN["riemen"], p, n, texel, 91, straehne=0.0)
         if stoff == "sack":
-            if abs(n[0]) > 0.5 and abs(z - 2.0) < 0.5:
-                return ton("#6e4424", p, n, texel, 97, straehne=0.0)             # Naht an der Seite
-            if y < 0.6:
-                return ton("#5e3a20", p, n, texel, 99, straehne=0.0)             # Boden
-            return ton(grund, p, n, texel, 101, straehne=0.02, hell=0.04 if n[1] > 0.5 else 0.0)
+            if y < 0.9:
+                return ton("#5e3a20", p, n, texel, 99, straehne=0.0)             # verstaerkter Boden
+            # Das Leder: kleine Wuerfel, jeder einen Hauch anders.
+            flecken = (streu(x // 2, y // 2, z // 2, 101) - 0.5) * 0.06
+            return ton(grund, p, n, texel, 101, straehne=0.0, hell=flecken + (0.05 if n[1] > 0.5 else 0.0))
         if stoff == "klappe":
+            if nz > 0.5 and (abs(abs(x) - 2.5) < 0.6 and y < 6.1):
+                return ton(FARBEN["schnalle"], p, n, texel, 102, straehne=0.0)   # Nieten an den Ecken
             if y < 6.1 and nz > 0.5:
                 return ton("#5a361c", p, n, texel, 103, straehne=0.0)            # Kante unten
             return ton(grund, p, n, texel, 105, straehne=0.0)
         if stoff == "fach":
-            if y > 4.4 and nz > 0.5:
-                return ton("#6e4424", p, n, texel, 107, straehne=0.0)            # Naht oben
-            return ton(grund, p, n, texel, 109, straehne=0.0)
-        if stoff == "deckel":
+            flecken = (streu(x // 2, y // 2, 107) - 0.5) * 0.06
+            return ton(grund, p, n, texel, 109, straehne=0.0, hell=flecken)
+        if stoff in ("deckel", "fachdeckel"):
             return ton(grund, p, n, texel, 111, straehne=0.0, hell=0.06 if n[1] > 0.5 else 0.0)
         if stoff == "schnalle":
             return ton(grund, p, n, texel, 113, straehne=0.0, hell=0.1 if nz > 0.5 else 0.0)
+        if stoff == "becher":
+            return ton(grund, p, n, texel, 114, straehne=0.0, hell=0.12 if n[1] > 0.5 else 0.0)
         if stoff == "riemen":
-            if abs(y - 19.5) < 0.5 and abs(x) < 0.6:
+            if abs(p[1] - 19.5) < 0.5 and abs(p[0]) < 0.6:
                 return ton(FARBEN["schnalle"], p, n, texel, 115, straehne=0.0)   # Brustschnalle
             return ton(grund, p, n, texel, 117, straehne=0.0)
         return ton(grund, p, n, texel, 119, straehne=0.0)
     return f
 
 
-RUECKEN = (0, 12, 3)       # auf dem Ruecken: unten an den Hueften, hinter der Brustplatte
+RUECKEN = (0, 12, 3.5)     # auf dem Ruecken, hinter jeder Brustplatte (die reicht bis 3)
 STEHT = (0, 0, 2)          # abgestellt: auf dem Boden, mittig
 HAND = (0, -3.5, -2)       # in der Hand: haengt unter der Faust
 
@@ -125,7 +152,7 @@ HAND = (0, -3.5, -2)       # in der Hand: haengt unter der Faust
 def ruecken_modell():
     m = Modell("rucksack_ruecken", sichtbreite=2, sichthoehe=3)
     m.knoch("body", [0, 24, 0])
-    rucksack(m.knoch("fynn_rucksack", [0, 12, 3], "body"), RUECKEN, 1)
+    rucksack(m.knoch("fynn_rucksack", [0, 12, 3.5], "body"), RUECKEN, 1)
     riemen = m.knoch("fynn_riemen", [0, 24, 0], "body")
     for x in (-3, 2):
         riemen.kasten([x, 24, -2.5], [1, 1, 6], "riemen")          # ueber die Schulter
@@ -136,7 +163,7 @@ def ruecken_modell():
 
 def steht_modell():
     m = Modell("rucksack_abgestellt", sichtbreite=1, sichthoehe=1)
-    rucksack(m.knoch("rucksack", [0, 0, 0]), STEHT, -1)
+    rucksack(m.knoch("rucksack", [0, 0, 0]), STEHT, -1, becher=False)
     return m
 
 
@@ -211,24 +238,25 @@ def spieler_einbauen(d):
 
 SYMBOL = [
     "................",
-    "................",
-    "....gggggggg....",
-    "...grggggggrg...",
-    "....gggggggg....",
-    "...kkkkkkkkkk...",
-    "...#kkkkkkkk#...",
-    "...#kkkkkkkk#...",
-    "...##kkbbkk##...",
-    "..s##########s..",
-    "..s#pppppppp#s..",
-    "..s#pppppppp#s..",
-    "..s#pppppppp#s..",
-    "...##########...",
-    "...##########...",
-    "................",
+    "....rRrRrRrR....",
+    "...grRrRrRrRg...",
+    "....rRrRrRrR....",
+    "....kkkkkkkk....",
+    "....kkkkkkkk....",
+    "....#nkkkkn#....",
+    "....#nkkkkn#....",
+    "....#bkkkkb#....",
+    "....#n####n#....",
+    "....#pppppp#....",
+    "....#ppbbpp#....",
+    "....#pppppp#....",
+    "....########....",
+    "....dddddddd....",
+    ".......c........",
 ]
 SYMBOLFARBEN = {"#": FARBEN["sack"], "k": FARBEN["deckel"], "b": FARBEN["schnalle"], "p": FARBEN["fach"],
-                "s": FARBEN["seitenfach"], "g": FARBEN["rolle"], "r": FARBEN["riemen"]}
+                "n": FARBEN["gurt"], "r": "#8a2e2a", "R": "#b24a3a", "g": FARBEN["rollriemen"], "d": "#5e3a20",
+                "c": FARBEN["becher"]}
 
 
 def gegenstand():

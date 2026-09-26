@@ -235,16 +235,18 @@ def reitzeug(m):
     sattel.kasten([-3, 30, 6], [6, 2, 1], "sitz")
     paar(sattel, [6.5, 19, 2], [1, 5, 1], "riemen")
     paar(sattel, [6.5, 17, 1.5], [1, 2, 2], "buegel")
+    # Die Rucksaecke an den Flanken sind dieselben wie auf dem Ruecken des
+    # Spielers (rucksack_bauen.rucksack) - der Knochen ist um 90 Grad
+    # gedreht, damit die Aussentasche nach aussen zeigt.
+    import rucksack_bauen
     for name, seite in (("tasche_links", 1), ("tasche_rechts", -1)):
-        t = m.knoch(name, [6 * seite, 28, 9], "body")
-        x = 6 if seite > 0 else -9
-        aussen = 9 if seite > 0 else -10
-        t.kasten([x, 20, 6], [3, 8, 6], "tasche")                     # der Rucksack
-        t.kasten([aussen, 21, 7], [1, 4, 4], "tasche_fach")            # Aussentasche
-        t.kasten([x, 27, 5.5], [3, 1, 7], "tasche_klappe")             # Deckel
-        t.kasten([aussen, 24.5, 8.5], [1, 1, 1], "schnalle")
-        t.kasten([x, 28, 7], [3, 2, 4], "rolle")                       # Schlafrolle obenauf
-    m.finde("tasche_links").kasten([-6, 29, 8], [12, 1, 2], "riemen")  # Gurt ueber den Ruecken
+        t = m.knoch(name, TASCHE[name], "body", drehung=[0, 90 * seite, 0])
+        rucksack_bauen.rucksack(t, TASCHE[name], 1, vorsilbe="rs_")
+
+
+# Wo die Rucksaecke am Elch haengen: Rueckwand an der Flanke (hinter der
+# Satteldecke), mittig ueber den Hinterbeinen.
+TASCHE = {"tasche_links": (7, 19, 10.5), "tasche_rechts": (-7, 19, 10.5)}
 
 
 # Das Reitzeug: dunkles Leder, Messing, eine rote Decke - die Rucksaecke in
@@ -255,6 +257,11 @@ REITZEUG = {"decke": "#8a2e2a", "sitz": "#5a3820", "knauf": "#c8a050", "riemen":
 
 
 def reitzeug_maler(stoff, p, n, texel):
+    if stoff.startswith("rs_"):
+        import rucksack_bauen
+        # Die Seite am Ort erkennen: links liegt alles bei x > 0.
+        name = "tasche_links" if p[0] > 0 else "tasche_rechts"
+        return rucksack_bauen.maler(TASCHE[name], 1, "rs_")(stoff, p, n, texel)
     if stoff not in REITZEUG:
         return False
     if stoff == "decke" and abs(p[1] - 24.5) < 0.5:

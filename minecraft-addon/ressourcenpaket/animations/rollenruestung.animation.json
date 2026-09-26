@@ -6,14 +6,14 @@
       "bones": {
         "umhang": {
           "rotation": [
-            "(c.owning_entity->v.fynn_umhang) + math.sin(q.life_time * 400.0) * 2.0 * (c.owning_entity->v.fynn_tempo)",
+            "(c.owning_entity->v.fynn_umhang) + (c.owning_entity->v.fynn_rucksack) * 38.0 + math.sin(q.life_time * 400.0) * 2.0 * (c.owning_entity->v.fynn_tempo)",
             0.0,
             "math.sin(q.life_time * 230.0) * 1.5 * (c.owning_entity->v.fynn_tempo)"
           ]
         },
         "umhang_unten": {
           "rotation": [
-            "(c.owning_entity->v.fynn_umhang) * 0.4 + math.sin(q.life_time * 400.0 - 70.0) * 4.0 * (c.owning_entity->v.fynn_tempo)",
+            "(c.owning_entity->v.fynn_umhang) * 0.4 - (c.owning_entity->v.fynn_rucksack) * 20.0 + math.sin(q.life_time * 400.0 - 70.0) * 4.0 * (c.owning_entity->v.fynn_tempo)",
             0.0,
             0.0
           ]

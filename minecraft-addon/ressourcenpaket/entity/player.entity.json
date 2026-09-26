@@ -275,7 +275,8 @@
           "variable.fynn_pfeile": "public",
           "variable.fynn_waffe": "public",
           "variable.fynn_schlag": "public",
-          "variable.fynn_hiebzeit": "public"
+          "variable.fynn_hiebzeit": "public",
+          "variable.fynn_rucksack": "public"
         },
         "should_update_effects_offscreen": "1.0"
       },
@@ -371,6 +372,7 @@
         "fynn_zucken": "animation.fynn.zucken",
         "fynn_strecken": "animation.fynn.strecken",
         "fynn_essen": "animation.fynn.essen",
+        "fynn_rucksack_sitz": "animation.fynn.rucksack_sitz",
         "fynn_h_schwert": "animation.fynn.haltung.schwert",
         "fynn_h_dolche": "animation.fynn.haltung.dolche",
         "fynn_h_hammer": "animation.fynn.haltung.hammer",
@@ -404,8 +406,7 @@
         "fynn_a_stab_oben": "animation.fynn.angriff.stab_oben",
         "fynn_i_stab_oben": "animation.fynn.angriff_ich.stab_oben",
         "fynn_a_wurf_wurf": "animation.fynn.angriff.wurf_wurf",
-        "fynn_i_wurf_wurf": "animation.fynn.angriff_ich.wurf_wurf",
-        "fynn_rucksack_sitz": "animation.fynn.rucksack_sitz"
+        "fynn_i_wurf_wurf": "animation.fynn.angriff_ich.wurf_wurf"
       },
       "render_controllers": [
         {

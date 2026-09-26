@@ -42,11 +42,11 @@ item.fynn:eisenklinge.name=Iron Blade
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.44
+item.iron_sword.name=Stahlschwert 4.45
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.44
-item.fynn:degen.name=Degen 4.44
+item.fynn:degen=Degen 4.45
+item.fynn:degen.name=Degen 4.45
 
 
 
@@ -99,31 +99,6 @@ item.fynn:sturmbogen.name=Storm Bow
 item.fynn:wurfstern.name=Throwing Star
 entity.fynn:frostkugel.name=Frost Orb
 entity.fynn:wurfstern.name=Throwing Star
-entity.fynn:statue.name=Statue
-item.fynn:magierhut=Wizard Hat
-item.fynn:magierhut.name=Wizard Hat
-item.fynn:magierrobe=Mage Robe
-item.fynn:magierrobe.name=Mage Robe
-item.fynn:magierrock=Robe Skirt
-item.fynn:magierrock.name=Robe Skirt
-item.fynn:magierschuhe=Pointed Shoes
-item.fynn:magierschuhe.name=Pointed Shoes
-item.fynn:assassinenkapuze=Assassin Hood
-item.fynn:assassinenkapuze.name=Assassin Hood
-item.fynn:assassinenharnisch=Assassin Harness
-item.fynn:assassinenharnisch.name=Assassin Harness
-item.fynn:assassinenhose=Assassin Trousers
-item.fynn:assassinenhose.name=Assassin Trousers
-item.fynn:assassinenstiefel=Assassin Boots
-item.fynn:assassinenstiefel.name=Assassin Boots
-item.fynn:waldlaeuferkapuze=Ranger Hood
-item.fynn:waldlaeuferkapuze.name=Ranger Hood
-item.fynn:waldlaeuferwams=Ranger Jerkin
-item.fynn:waldlaeuferwams.name=Ranger Jerkin
-item.fynn:waldlaeuferhose=Ranger Trousers
-item.fynn:waldlaeuferhose.name=Ranger Trousers
-item.fynn:waldlaeuferstiefel=Ranger Boots
-item.fynn:waldlaeuferstiefel.name=Ranger Boots
 item.fynn:eisendolche=Iron Daggers
 item.fynn:eisendolche.name=Iron Daggers
 item.fynn:eisendolch_links=Left Iron Dagger (off hand)
@@ -291,15 +266,6 @@ tile.fynn:rubinerz.name=Ruby Ore
 tile.fynn:tiefenrubinerz.name=Deepslate Ruby Ore
 tile.fynn:rubinblock.name=Block of Ruby
 
-## Neue Ruestungen
-item.fynn:baerenkapuze=Bear Helmet
-item.fynn:baerenkapuze.name=Bear Helmet
-item.fynn:baerenfellmantel=Bear Chestplate
-item.fynn:baerenfellmantel.name=Bear Chestplate
-item.fynn:baerenfellhose=Bear Leggings
-item.fynn:baerenfellhose.name=Bear Leggings
-item.fynn:baerenfellstiefel=Bear Boots
-item.fynn:baerenfellstiefel.name=Bear Boots
 
 
 ## Banditen
@@ -330,10 +296,6 @@ tile.fynn:obst.name=Fruit on the Branch
 
 
 
-## Rucksack
-item.fynn:rucksack=Backpack
-item.fynn:rucksack.name=Backpack
-entity.fynn:rucksack_abgestellt.name=Backpack
 
 ## Weidenroeschen
 tile.fynn:weidenroeschen.name=Fireweed
@@ -342,6 +304,10 @@ tile.fynn:weidenroeschen.name=Fireweed
 ## Elefantensattel
 item.fynn:elefantensattel=Elephant Howdah
 item.fynn:elefantensattel.name=Elephant Howdah
+
+
+
+entity.fynn:statue.name=Statue
 
 ## Die Tiere
 entity.fynn:braunbaer.name=Brown Bear
@@ -380,3 +346,42 @@ entity.fynn:mantarochen.name=Manta Ray
 item.spawn_egg.entity.fynn:mantarochen.name=Manta Ray Spawn Egg
 entity.fynn:steinadler.name=Golden Eagle
 item.spawn_egg.entity.fynn:steinadler.name=Golden Eagle Spawn Egg
+
+## Neue Ruestungen
+item.fynn:baerenkapuze=Bear Helmet
+item.fynn:baerenkapuze.name=Bear Helmet
+item.fynn:baerenfellmantel=Bear Chestplate
+item.fynn:baerenfellmantel.name=Bear Chestplate
+item.fynn:baerenfellhose=Bear Leggings
+item.fynn:baerenfellhose.name=Bear Leggings
+item.fynn:baerenfellstiefel=Bear Boots
+item.fynn:baerenfellstiefel.name=Bear Boots
+item.fynn:magierhut=Wizard Hat
+item.fynn:magierhut.name=Wizard Hat
+item.fynn:magierrobe=Mage Robe
+item.fynn:magierrobe.name=Mage Robe
+item.fynn:magierrock=Robe Skirt
+item.fynn:magierrock.name=Robe Skirt
+item.fynn:magierschuhe=Pointed Shoes
+item.fynn:magierschuhe.name=Pointed Shoes
+item.fynn:assassinenkapuze=Assassin Hood
+item.fynn:assassinenkapuze.name=Assassin Hood
+item.fynn:assassinenharnisch=Assassin Harness
+item.fynn:assassinenharnisch.name=Assassin Harness
+item.fynn:assassinenhose=Assassin Trousers
+item.fynn:assassinenhose.name=Assassin Trousers
+item.fynn:assassinenstiefel=Assassin Boots
+item.fynn:assassinenstiefel.name=Assassin Boots
+item.fynn:waldlaeuferkapuze=Ranger Hood
+item.fynn:waldlaeuferkapuze.name=Ranger Hood
+item.fynn:waldlaeuferwams=Ranger Jerkin
+item.fynn:waldlaeuferwams.name=Ranger Jerkin
+item.fynn:waldlaeuferhose=Ranger Trousers
+item.fynn:waldlaeuferhose.name=Ranger Trousers
+item.fynn:waldlaeuferstiefel=Ranger Boots
+item.fynn:waldlaeuferstiefel.name=Ranger Boots
+
+## Rucksack
+item.fynn:rucksack=Backpack
+item.fynn:rucksack.name=Backpack
+entity.fynn:rucksack_abgestellt.name=Backpack

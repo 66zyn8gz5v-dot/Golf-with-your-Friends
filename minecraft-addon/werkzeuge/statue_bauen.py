@@ -94,9 +94,11 @@ def aussehen():
                 # Umhang haengt, und im Koecher stecken Pfeile.
                 "scripts": {
                     "initialize": ["variable.fynn_pfeile = 1.0;", "variable.fynn_umhang = 4.0;",
-                                   "variable.fynn_tempo = 0.0;", "variable.fynn_gang = 0.0;"],
+                                   "variable.fynn_tempo = 0.0;", "variable.fynn_gang = 0.0;",
+                                   "variable.fynn_rucksack = 0.0;"],
                     "variables": {"variable.fynn_pfeile": "public", "variable.fynn_umhang": "public",
-                                  "variable.fynn_tempo": "public", "variable.fynn_gang": "public"},
+                                  "variable.fynn_tempo": "public", "variable.fynn_gang": "public",
+                                  "variable.fynn_rucksack": "public"},
                     "animate": ["pose"],
                 },
                 "render_controllers": ["controller.render.default"],

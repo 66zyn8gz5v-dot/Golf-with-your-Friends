@@ -864,14 +864,19 @@ U = "(c.owning_entity->v.fynn_umhang)"
 T = "(c.owning_entity->v.fynn_tempo)"
 G = "(c.owning_entity->v.fynn_gang)"
 P = "(c.owning_entity->v.fynn_pfeile)"
+R = "(c.owning_entity->v.fynn_rucksack)"
 
 BEWEGUNGEN = {
     # Der Umhang weht nach hinten, je schneller, desto hoeher; das untere
     # Glied schwingt nach, so biegt er sich wie Stoff. Dazu ein Flattern.
     "animation.fynn_ruestung.umhang": {
-        "umhang": {"rotation": [f"{U} + math.sin(q.life_time * 400.0) * 2.0 * {T}", 0.0,
+        # Traegt man einen Rucksack, faellt der Umhang von den Schultern
+        # schraeg ueber ihn, statt mitten hindurch (v.fynn_rucksack, siehe
+        # rucksack_bauen.py); unten haengt er wieder gerader.
+        "umhang": {"rotation": [f"{U} + {R} * 38.0 + math.sin(q.life_time * 400.0) * 2.0 * {T}", 0.0,
                                f"math.sin(q.life_time * 230.0) * 1.5 * {T}"]},
-        "umhang_unten": {"rotation": [f"{U} * 0.4 + math.sin(q.life_time * 400.0 - 70.0) * 4.0 * {T}", 0.0, 0.0]},
+        "umhang_unten": {"rotation": [f"{U} * 0.4 - {R} * 20.0 + math.sin(q.life_time * 400.0 - 70.0) * 4.0 * {T}",
+                                     0.0, 0.0]},
     },
     # Die Hutspitze wippt bei jedem Schritt und legt sich im Wind zurueck.
     "animation.fynn_ruestung.hutspitze": {

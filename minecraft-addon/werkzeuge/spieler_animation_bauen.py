@@ -145,7 +145,7 @@ VORBERECHNUNG = [
 # Das Attachable liest diese Werte ueber c.owning_entity - das Schwert
 # seinen Hieb, die Ruestungen Umhang, Schritt und Pfeile.
 OEFFENTLICH = ["variable.fynn_schwert", "variable.fynn_umhang", "variable.fynn_tempo",
-               "variable.fynn_gang", "variable.fynn_pfeile"] + k.OEFFENTLICH
+               "variable.fynn_gang", "variable.fynn_pfeile", "variable.fynn_rucksack"] + k.OEFFENTLICH
 
 
 # ------------------------------------------------------------ Laufen
@@ -558,7 +558,9 @@ def klingenschlag():
             neu = []
             for w in knochen[kanal]:
                 if isinstance(w, str):
-                    w = w.split(" * (1.0 - (c.owning_entity")[0]
+                    # Was ein frueherer Lauf angehaengt hat, erst abschneiden -
+                    # sonst haengt jeder Lauf den Faktor noch einmal an.
+                    w = w.split(" * (1.0 - ((c.owning_entity")[0]
                     w = f"{w} * {ruhe}"
                 neu.append(w)
             knochen[kanal] = neu

@@ -244,10 +244,13 @@ def baer_maler():
 U = "(c.owning_entity->v.fynn_umhang)"
 T = "(c.owning_entity->v.fynn_tempo)"
 G = "(c.owning_entity->v.fynn_gang)"
+R = "(c.owning_entity->v.fynn_rucksack)"
 UMHANG = {
-    "umhang": {"rotation": [f"{U} * 0.8 + math.sin(q.life_time * 90.0) * 1.2 + math.sin({G} * 2.0) * 3.0 * {T}", 0.0,
-                            f"math.sin({G}) * 3.5 * {T}"]},
-    "umhang_mitte": {"rotation": [f"{U} * 0.35 + math.sin(q.life_time * 90.0 - 40.0) * 1.5 "
+    # Mit Rucksack faellt der Pelz von den Schultern schraeg ueber den
+    # Rucksack, statt mitten hindurch; weiter unten haengt er gerader.
+    "umhang": {"rotation": [f"{U} * 0.8 + {R} * 40.0 + math.sin(q.life_time * 90.0) * 1.2 "
+                            f"+ math.sin({G} * 2.0) * 3.0 * {T}", 0.0, f"math.sin({G}) * 3.5 * {T}"]},
+    "umhang_mitte": {"rotation": [f"{U} * 0.35 - {R} * 22.0 + math.sin(q.life_time * 90.0 - 40.0) * 1.5 "
                                   f"+ math.sin({G} * 2.0 - 60.0) * 5.0 * {T}", 0.0,
                                   f"math.sin({G} - 50.0) * 4.0 * {T}"]},
     "umhang_unten": {"rotation": [f"{U} * 0.25 + math.sin(q.life_time * 90.0 - 80.0) * 2.0 "
