@@ -551,8 +551,8 @@ class Waffe:
                             if v in alle and k in [s if isinstance(s, str) else next(iter(s)) for s in
                                      d.get("scripts", {}).get("animate", [])]]
 
-    def pose(self, spieler_u, ich):
-        werte = {"c.is_first_person": 1.0 if ich else 0.0, "c.item_slot": "slot.weapon.mainhand"}
+    def pose(self, spieler_u, ich, platz="slot.weapon.mainhand"):
+        werte = {"c.is_first_person": 1.0 if ich else 0.0, "c.item_slot": platz}
         for k, v in spieler_u.werte.items():
             if k.startswith("v."):
                 werte["owner:" + k] = v
@@ -567,7 +567,7 @@ class Waffe:
 
 def bild(spieler, zustand, waffe=None, ich=False, zustaende=None, zeiten=None,
          breite=360, hoehe=420, gier=30, neigung=10, zoom=9.0, auge=(2.5, 25.0, -3.0), nachher=None,
-         ruestung=()):
+         ruestung=(), zweithand=None):
     zustand = dict(zustand)
     zustand["v.is_first_person"] = 1.0 if ich else 0.0
     if waffe:
@@ -583,6 +583,15 @@ def bild(spieler, zustand, waffe=None, ich=False, zustaende=None, zeiten=None,
         knochen.update(_modellknochen(waffe.geo, "w:", bindung="rightitem"))
         posen["w:"] = waffe.pose(u, ich)
         texturen["w:"] = waffe.textur
+    if zweithand is not None and zweithand.geo:
+        # In der Zweithand: gebunden an leftItem. In der Ich-Sicht bewegt
+        # Minecraft den linken Arm nicht vor die Kamera - er bleibt, wo er
+        # ist, und das Attachable schiebt sich selbst ins Bild (so macht es
+        # Mojangs Schild, siehe links_ich_haltung in dolche_bauen.py).
+        zustand.setdefault("zweithand", zweithand.kennung)
+        knochen.update(_modellknochen(zweithand.geo, "z:", bindung="leftitem"))
+        posen["z:"] = zweithand.pose(u, ich, "slot.weapon.offhand")
+        texturen["z:"] = zweithand.textur
     for i, datei in enumerate(ruestung):
         # Ruestungsteile heften sich ueber den Namen an: Ein Knochen "head"
         # im Ruestungsmodell sitzt auf dem Kopf des Spielers. Ihre eigenen
@@ -605,7 +614,10 @@ def bild(spieler, zustand, waffe=None, ich=False, zustaende=None, zeiten=None,
         texturen[praefix] = teil.textur
     drehpunkte = {n: k["pivot"] for n, k in knochen.items()}
     matrizen = baue_matrizen(knochen, posen, drehpunkte)
-    seiten = flaechen(knochen, matrizen, texturen, nur=ICH_SICHTBAR if ich else None)
+    # Mojangs Ich-Sicht zeigt den rechten Arm nur mit leerer Hand; mit
+    # einer Waffe sieht man nur die Waffe (render controller first_person).
+    sichtbar = (ICH_SICHTBAR if not zustand.get("hand") else set()) if ich else None
+    seiten = flaechen(knochen, matrizen, texturen, nur=sichtbar)
     if ich:
         return ansicht_ich(seiten, breite, hoehe, auge=auge), u
     return ansicht_aussen(seiten, gier, neigung, breite, hoehe, zoom), u

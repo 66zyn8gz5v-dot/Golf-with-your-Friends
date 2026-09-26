@@ -47,7 +47,12 @@ const spieler = {
             getEquipment: (slot) => (slot === "Mainhand" ? { typeId: this.inHand } : zweithand),
             setEquipment: (slot, item) => { if (slot === "Offhand") zweithand = item ?? null; },
         };
-        if (n === "minecraft:inventory") return { container: { addItem: (i) => { eingesammelt.push(i); } } };
+        if (n === "minecraft:inventory") return { container: {
+            size: 36,
+            addItem: (i) => { eingesammelt.push(i); },
+            getItem: (k) => eingesammelt[k],
+            setItem: (k, i) => { if (i === undefined) eingesammelt.splice(k, 1); else eingesammelt[k] = i; },
+        } };
     },
 };
 world.getAllPlayers = () => [spieler];
@@ -171,14 +176,28 @@ system.currentTick += 40; for (const f of halbSekunde) f();
 pruefe("nach drei Sekunden weg", pfeile.every((p) => !p.isValid));
 spieler.inHand = "fynn:stahldolche";
 
-// --- Zweithand
+// --- Zweithand: der linke Dolch
+const zweithandTakt = gemerkt.takte.filter((t) => t[1] === 4).map((t) => t[0]);
 zweithand = { typeId: "minecraft:shield" };
-for (const f of halbSekunde) f();
-pruefe("Schild aus der Zweithand ins Inventar", zweithand === null && eingesammelt[0]?.typeId === "minecraft:shield");
-pruefe("mit Hinweis", leiste.at(-1).includes("beide Hände"));
+for (const f of zweithandTakt) f();
+pruefe("Schild aus der Zweithand in den Rucksack", eingesammelt[0]?.typeId === "minecraft:shield");
+pruefe(`links steckt jetzt der linke Dolch (${zweithand?.typeId})`, zweithand?.typeId === "fynn:stahldolch_links");
+pruefe("festgesetzt und beim Tod behalten", zweithand?.lockMode === "slot" && zweithand?.keepOnDeath === true);
+pruefe("mit Hinweis", leiste.at(-1).includes("Beide Hände"));
+for (const f of zweithandTakt) f();
+pruefe("bleibt beim naechsten Takt, kein zweiter Hinweis noetig", zweithand?.typeId === "fynn:stahldolch_links"
+       && eingesammelt.length === 1);
+spieler.inHand = "fynn:netheritdolche";
+for (const f of zweithandTakt) f();
+pruefe("andere Dolchsorte: anderer linker Dolch", zweithand?.typeId === "fynn:netheritdolch_links");
 spieler.inHand = "minecraft:iron_sword";
-zweithand = { typeId: "minecraft:shield" };
-for (const f of halbSekunde) f();
+for (const f of zweithandTakt) f();
+pruefe("zum Schwert gewechselt: der Schild kommt zurueck", zweithand?.typeId === "minecraft:shield"
+       && eingesammelt.length === 0);
+eingesammelt.push({ typeId: "fynn:eisendolch_links" });
+for (const f of zweithandTakt) f();
+pruefe("verirrter linker Dolch im Rucksack: entfernt", eingesammelt.length === 0);
+for (const f of zweithandTakt) f();
 pruefe("mit dem Schwert bleibt der Schild", zweithand?.typeId === "minecraft:shield");
 
 const gut = ergebnisse.every(Boolean);

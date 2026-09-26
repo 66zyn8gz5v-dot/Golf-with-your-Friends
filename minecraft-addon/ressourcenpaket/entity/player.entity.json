@@ -53,6 +53,7 @@
           "variable.degen_stellung = (query.is_sneaking && query.is_item_name_any('slot.weapon.mainhand', 'fynn:degen')) ? math.min(variable.degen_stellung + 0.06, 1.0) : math.max(variable.degen_stellung - 0.15, 0.0);",
           "variable.fynn_schwert = query.is_item_name_any('slot.weapon.mainhand', 'minecraft:wooden_sword', 'minecraft:stone_sword', 'minecraft:iron_sword', 'minecraft:golden_sword', 'minecraft:diamond_sword', 'minecraft:netherite_sword', 'minecraft:copper_sword', 'fynn:ritterschwert', 'fynn:eisenklinge', 'fynn:silberklinge', 'fynn:elektrumklinge', 'fynn:sternenklinge', 'fynn:eisendolche', 'fynn:silberdolche', 'fynn:stahldolche', 'fynn:elektrumdolche', 'fynn:diamantdolche', 'fynn:netheritdolche');",
           "variable.fynn_bogen = query.is_item_name_any('slot.weapon.mainhand', 'minecraft:bow', 'fynn:sturmbogen');",
+          "variable.fynn_dolche = query.is_item_name_any('slot.weapon.mainhand', 'fynn:eisendolche', 'fynn:silberdolche', 'fynn:stahldolche', 'fynn:elektrumdolche', 'fynn:diamantdolche', 'fynn:netheritdolche');",
           "variable.fynn_hieb_seite = (variable.attack_time > 0.0 && (variable.fynn_hieb_zuvor <= 0.0 || variable.attack_time < variable.fynn_hieb_zuvor)) ? 1.0 - variable.fynn_hieb_seite : variable.fynn_hieb_seite;",
           "variable.fynn_hieb_zuvor = variable.attack_time;",
           "variable.fynn_gang = query.modified_distance_moved * 38.17;",
@@ -106,13 +107,19 @@
             "fynn_hieb_ich_vor": "variable.is_first_person && !variable.is_paperdoll && variable.fynn_schwert && variable.attack_time > 0.0 && variable.fynn_hieb_seite < 0.5"
           },
           {
-            "fynn_hieb_ich_rueck": "variable.is_first_person && !variable.is_paperdoll && variable.fynn_schwert && variable.attack_time > 0.0 && variable.fynn_hieb_seite >= 0.5"
+            "fynn_hieb_ich_rueck": "variable.is_first_person && !variable.is_paperdoll && variable.fynn_schwert && !variable.fynn_dolche && variable.attack_time > 0.0 && variable.fynn_hieb_seite >= 0.5"
+          },
+          {
+            "fynn_hieb_ich_ruhe": "variable.is_first_person && !variable.is_paperdoll && variable.fynn_dolche && variable.attack_time > 0.0 && variable.fynn_hieb_seite >= 0.5"
           },
           {
             "fynn_hieb_aussen_vor": "!variable.is_first_person && !variable.is_paperdoll && !variable.map_face_icon && !query.is_riding && !query.is_sleeping && variable.fynn_schwert && variable.attack_time > 0.0 && variable.fynn_hieb_seite < 0.5"
           },
           {
-            "fynn_hieb_aussen_rueck": "!variable.is_first_person && !variable.is_paperdoll && !variable.map_face_icon && !query.is_riding && !query.is_sleeping && variable.fynn_schwert && variable.attack_time > 0.0 && variable.fynn_hieb_seite >= 0.5"
+            "fynn_hieb_aussen_rueck": "!variable.is_first_person && !variable.is_paperdoll && !variable.map_face_icon && !query.is_riding && !query.is_sleeping && variable.fynn_schwert && !variable.fynn_dolche && variable.attack_time > 0.0 && variable.fynn_hieb_seite >= 0.5"
+          },
+          {
+            "fynn_hieb_aussen_links": "!variable.is_first_person && !variable.is_paperdoll && !variable.map_face_icon && !query.is_riding && !query.is_sleeping && variable.fynn_dolche && variable.attack_time > 0.0 && variable.fynn_hieb_seite >= 0.5"
           }
         ],
         "variables": {
@@ -128,7 +135,8 @@
           "variable.fynn_umhang": "public",
           "variable.fynn_tempo": "public",
           "variable.fynn_gang": "public",
-          "variable.fynn_pfeile": "public"
+          "variable.fynn_pfeile": "public",
+          "variable.fynn_hieb_seite": "public"
         },
         "should_update_effects_offscreen": "1.0"
       },
@@ -219,7 +227,9 @@
         "fynn_hieb_aussen_rueck": "animation.fynn.hieb_aussen_rueckhand",
         "fynn_sturz": "animation.fynn.sturz",
         "fynn_atmen": "animation.fynn.atmen",
-        "fynn_flug": "animation.fynn.flug"
+        "fynn_flug": "animation.fynn.flug",
+        "fynn_hieb_ich_ruhe": "animation.fynn.hieb_ich_ruhe",
+        "fynn_hieb_aussen_links": "animation.fynn.hieb_aussen_links"
       },
       "render_controllers": [
         {

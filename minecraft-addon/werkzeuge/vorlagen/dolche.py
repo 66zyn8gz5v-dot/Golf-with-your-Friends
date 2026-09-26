@@ -71,6 +71,28 @@ SYMBOL = [
     ".K............K.",
 ]
 
+# Der linke Dolch fuer sich: das Inventarbild des Gegenstands, der in der
+# Zweithand steckt, solange man das Paar fuehrt. Einer der beiden Dolche
+# aus SYMBOL, allein.
+EINZEL = [
+    "................",
+    "............KK..",
+    "...........KLLK.",
+    "..........KLSK..",
+    ".........KLSK...",
+    "........KLSK....",
+    ".......KLSK.....",
+    "......KLSK......",
+    "..K..KLSK.......",
+    "..KGKLSK........",
+    "...KGSK.........",
+    "..KwKgK.........",
+    ".KWK.K..........",
+    "KPK.............",
+    ".K..............",
+    "................",
+]
+
 # Je Sorte: Name, Barren fuer Rezept und Reparatur, Schaden, Haltbarkeit
 # und die Farben. Der Schaden liegt einen unter dem Schwert derselben
 # Stufe - die Staerke der Dolche ist der Schattensprung, nicht der Hieb.

@@ -2,7 +2,7 @@
   "format_version": "1.10.0",
   "minecraft:attachable": {
     "description": {
-      "identifier": "fynn:stahldolche",
+      "identifier": "fynn:stahldolch_links",
       "materials": {
         "default": "entity_alphatest",
         "enchanted": "entity_alphatest_glint"
@@ -12,16 +12,14 @@
         "enchanted": "textures/misc/enchanted_item_glint"
       },
       "geometry": {
-        "default": "geometry.stahldolche"
+        "default": "geometry.stahldolch_links"
       },
       "animations": {
-        "halten": "animation.dolche.halten",
-        "schlag": "animation.klinge.schlag"
+        "links": "animation.dolche.links"
       },
       "scripts": {
         "animate": [
-          "halten",
-          "schlag"
+          "links"
         ]
       },
       "render_controllers": [

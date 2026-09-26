@@ -148,6 +148,24 @@
     },
     "waldlaeuferstiefel": {
       "textures": "textures/items/waldlaeuferstiefel"
+    },
+    "eisendolch_links": {
+      "textures": "textures/items/eisendolch_links"
+    },
+    "silberdolch_links": {
+      "textures": "textures/items/silberdolch_links"
+    },
+    "stahldolch_links": {
+      "textures": "textures/items/stahldolch_links"
+    },
+    "elektrumdolch_links": {
+      "textures": "textures/items/elektrumdolch_links"
+    },
+    "diamantdolch_links": {
+      "textures": "textures/items/diamantdolch_links"
+    },
+    "netheritdolch_links": {
+      "textures": "textures/items/netheritdolch_links"
     }
   }
 }

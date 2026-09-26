@@ -56,6 +56,8 @@ HIEBWAFFEN = [
     "fynn:eisendolche", "fynn:silberdolche", "fynn:stahldolche",
     "fynn:elektrumdolche", "fynn:diamantdolche", "fynn:netheritdolche",
 ]
+# Die Dolchpaare: Bei ihnen fuehrt jeden zweiten Hieb die linke Hand.
+DOLCHPAARE = [n for n in HIEBWAFFEN if n.endswith("dolche")]
 BOEGEN = ["minecraft:bow", "fynn:sturmbogen"]
 PFEILE = ["minecraft:arrow", "fynn:eisenpfeil", "fynn:silberpfeil", "fynn:goldpfeil", "fynn:elektrumpfeil"]
 
@@ -98,6 +100,7 @@ INITIALISIEREN = [
 VORBERECHNUNG = [
     f"variable.fynn_schwert = query.is_item_name_any('slot.weapon.mainhand', {namen(HIEBWAFFEN)});",
     f"variable.fynn_bogen = query.is_item_name_any('slot.weapon.mainhand', {namen(BOEGEN)});",
+    f"variable.fynn_dolche = query.is_item_name_any('slot.weapon.mainhand', {namen(DOLCHPAARE)});",
     # Ein neuer Hieb beginnt, wenn der Zaehler von null loslaeuft - oder
     # neu anfaengt, bevor der alte fertig war (schnelles Tippen). Dann
     # wechselt die Seite: Vorhand, Rueckhand, Vorhand ...
@@ -159,7 +162,7 @@ VORBERECHNUNG = [
 # Das Attachable liest diese Werte ueber c.owning_entity - das Schwert
 # seinen Hieb, die Ruestungen Umhang, Schritt und Pfeile.
 OEFFENTLICH = ["variable.fynn_schwert", "variable.fynn_umhang", "variable.fynn_tempo",
-               "variable.fynn_gang", "variable.fynn_pfeile"]
+               "variable.fynn_gang", "variable.fynn_pfeile", "variable.fynn_hieb_seite"]
 
 
 # ------------------------------------------------------------ Hilfen
@@ -276,6 +279,15 @@ def hieb_ich(folge):
     }
 
 
+# Beim Stich des linken Dolchs (Dolchpaar, jeder zweite Hieb) steht der
+# rechte Arm still; Minecrafts eigener kleiner Schwung wird aufgehoben.
+ICH_RUHE = {
+    "loop": True,
+    "bones": {"rightarm": {"rotation": [f"{a} - this" for a in ICH_ARM_ROT],
+                           "position": [f"{a} - this" for a in ICH_ARM_POS]}},
+}
+
+
 # ------------------------------------------------------------ Hieb, von aussen
 
 # Winkel direkt in Bedrocks Schreibweise - von aussen sind sie anschaulich:
@@ -315,7 +327,16 @@ def huelle(t):
     return 1.0
 
 
-def hieb_aussen(folge):
+def spiegeln(folge):
+    """Derselbe Hieb mit der linken Hand: rechts und links getauscht, und
+    was um y und z dreht, dreht andersherum."""
+    def sp(w):
+        return (w[0], -w[1], -w[2])
+    return [(t, sp(links), sp(rechts), sp(taille), lbein, rbein, gelenk)
+            for t, rechts, links, taille, rbein, lbein, gelenk in folge]
+
+
+def hieb_aussen(folge, links_fuehrt=False):
     ra, la, ta, rb, lb, hg = [], [], [], [], [], []
     for t in ZEITEN:
         rechts, links, taille, rbein, lbein, gelenk = zwischen(folge, t, 6)
@@ -336,7 +357,7 @@ def hieb_aussen(folge):
             "waist": {"rotation": schluessel(ta)},
             "rightleg": {"rotation": schluessel(rb)},
             "leftleg": {"rotation": schluessel(lb)},
-            "rightitem": {"rotation": schluessel(hg)},
+            ("leftitem" if links_fuehrt else "rightitem"): {"rotation": schluessel(hg)},
         },
     }
 
@@ -579,11 +600,23 @@ TEILE = [
     ("fynn_hieb_ich_vor", "animation.fynn.hieb_ich_vorhand", None,
      "variable.is_first_person && !variable.is_paperdoll && variable.fynn_schwert && variable.attack_time > 0.0 && variable.fynn_hieb_seite < 0.5"),
     ("fynn_hieb_ich_rueck", "animation.fynn.hieb_ich_rueckhand", None,
-     "variable.is_first_person && !variable.is_paperdoll && variable.fynn_schwert && variable.attack_time > 0.0 && variable.fynn_hieb_seite >= 0.5"),
+     "variable.is_first_person && !variable.is_paperdoll && variable.fynn_schwert && !variable.fynn_dolche && "
+     "variable.attack_time > 0.0 && variable.fynn_hieb_seite >= 0.5"),
+    # Mit dem Dolchpaar sticht bei jedem zweiten Hieb der linke Dolch
+    # (dolche_bauen: animation.dolche.links); der rechte Arm ruht.
+    ("fynn_hieb_ich_ruhe", "animation.fynn.hieb_ich_ruhe", ICH_RUHE,
+     "variable.is_first_person && !variable.is_paperdoll && variable.fynn_dolche && "
+     "variable.attack_time > 0.0 && variable.fynn_hieb_seite >= 0.5"),
     ("fynn_hieb_aussen_vor", "animation.fynn.hieb_aussen_vorhand", None,
      f"{AUSSEN_FREI} && variable.fynn_schwert && variable.attack_time > 0.0 && variable.fynn_hieb_seite < 0.5"),
     ("fynn_hieb_aussen_rueck", "animation.fynn.hieb_aussen_rueckhand", None,
-     f"{AUSSEN_FREI} && variable.fynn_schwert && variable.attack_time > 0.0 && variable.fynn_hieb_seite >= 0.5"),
+     f"{AUSSEN_FREI} && variable.fynn_schwert && !variable.fynn_dolche && variable.attack_time > 0.0 && "
+     "variable.fynn_hieb_seite >= 0.5"),
+    # Von aussen: Mit dem Dolchpaar schlaegt jeder zweite Hieb links -
+    # derselbe Hieb, gespiegelt. Fynn: "dass man auch mit beiden Dolchen
+    # angreift".
+    ("fynn_hieb_aussen_links", "animation.fynn.hieb_aussen_links", None,
+     f"{AUSSEN_FREI} && variable.fynn_dolche && variable.attack_time > 0.0 && variable.fynn_hieb_seite >= 0.5"),
 ]
 
 
@@ -593,6 +626,7 @@ def animationen():
         "animation.fynn.hieb_ich_rueckhand": hieb_ich(ICH_RUECKHAND),
         "animation.fynn.hieb_aussen_vorhand": hieb_aussen(AUSSEN_VORHAND),
         "animation.fynn.hieb_aussen_rueckhand": hieb_aussen(AUSSEN_RUECKHAND),
+        "animation.fynn.hieb_aussen_links": hieb_aussen(spiegeln(AUSSEN_VORHAND), links_fuehrt=True),
     }
     for _, name, anim, _ in TEILE:
         if anim is not None:
@@ -612,7 +646,7 @@ def spielerdatei():
     s["initialize"] = [z for z in s["initialize"] if "fynn_" not in z] + INITIALISIEREN
     eigene_vars = ("variable.fynn_schwert", "variable.fynn_bogen", "variable.fynn_hieb", "variable.fynn_gang",
                    "variable.fynn_tempo", "variable.fynn_luft", "variable.fynn_sturz", "variable.fynn_umhang",
-                   "variable.fynn_flug",
+                   "variable.fynn_flug", "variable.fynn_dolche",
                    "variable.fynn_pfeil", "variable.fynn_lade", "variable.fynn_spannen",
                    "variable.fynn_los")
     s["pre_animation"] = [z for z in s["pre_animation"] if not z.startswith(eigene_vars)] + VORBERECHNUNG

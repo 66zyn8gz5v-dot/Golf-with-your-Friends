@@ -42,11 +42,11 @@ item.fynn:eisenklinge.name=Iron Blade
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.30
+item.iron_sword.name=Stahlschwert 4.31
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.30
-item.fynn:degen.name=Degen 4.30
+item.fynn:degen=Degen 4.31
+item.fynn:degen.name=Degen 4.31
 
 
 
@@ -99,18 +99,6 @@ item.fynn:sturmbogen.name=Storm Bow
 item.fynn:wurfstern.name=Throwing Star
 entity.fynn:frostkugel.name=Frost Orb
 entity.fynn:wurfstern.name=Throwing Star
-item.fynn:eisendolche=Iron Daggers
-item.fynn:eisendolche.name=Iron Daggers
-item.fynn:silberdolche=Silver Daggers
-item.fynn:silberdolche.name=Silver Daggers
-item.fynn:stahldolche=Steel Daggers
-item.fynn:stahldolche.name=Steel Daggers
-item.fynn:elektrumdolche=Electrum Daggers
-item.fynn:elektrumdolche.name=Electrum Daggers
-item.fynn:diamantdolche=Diamond Daggers
-item.fynn:diamantdolche.name=Diamond Daggers
-item.fynn:netheritdolche=Netherite Daggers
-item.fynn:netheritdolche.name=Netherite Daggers
 entity.fynn:statue.name=Statue
 item.fynn:magierhut=Wizard Hat
 item.fynn:magierhut.name=Wizard Hat
@@ -136,3 +124,27 @@ item.fynn:waldlaeuferhose=Ranger Trousers
 item.fynn:waldlaeuferhose.name=Ranger Trousers
 item.fynn:waldlaeuferstiefel=Ranger Boots
 item.fynn:waldlaeuferstiefel.name=Ranger Boots
+item.fynn:eisendolche=Iron Daggers
+item.fynn:eisendolche.name=Iron Daggers
+item.fynn:eisendolch_links=Left Iron Dagger (off hand)
+item.fynn:eisendolch_links.name=Left Iron Dagger (off hand)
+item.fynn:silberdolche=Silver Daggers
+item.fynn:silberdolche.name=Silver Daggers
+item.fynn:silberdolch_links=Left Silver Dagger (off hand)
+item.fynn:silberdolch_links.name=Left Silver Dagger (off hand)
+item.fynn:stahldolche=Steel Daggers
+item.fynn:stahldolche.name=Steel Daggers
+item.fynn:stahldolch_links=Left Steel Dagger (off hand)
+item.fynn:stahldolch_links.name=Left Steel Dagger (off hand)
+item.fynn:elektrumdolche=Electrum Daggers
+item.fynn:elektrumdolche.name=Electrum Daggers
+item.fynn:elektrumdolch_links=Left Electrum Dagger (off hand)
+item.fynn:elektrumdolch_links.name=Left Electrum Dagger (off hand)
+item.fynn:diamantdolche=Diamond Daggers
+item.fynn:diamantdolche.name=Diamond Daggers
+item.fynn:diamantdolch_links=Left Diamond Dagger (off hand)
+item.fynn:diamantdolch_links.name=Left Diamond Dagger (off hand)
+item.fynn:netheritdolche=Netherite Daggers
+item.fynn:netheritdolche.name=Netherite Daggers
+item.fynn:netheritdolch_links=Left Netherite Dagger (off hand)
+item.fynn:netheritdolch_links.name=Left Netherite Dagger (off hand)

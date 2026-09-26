@@ -6,22 +6,22 @@ Je Sorte entsteht alles, was ein Gegenstand braucht: Inventarbild,
 Sorten stehen in vorlagen/dolche.py; wer eine neue will, traegt sie dort
 ein und laesst dieses Werkzeug noch einmal laufen.
 
-Zwei Dolche, ein Gegenstand: Bedrock hat keine richtige zweite Hand fuer
-eigene Waffen. Darum ist das Paar ein einziger Gegenstand, und sein
-Modell traegt zwei Dolche. Der eine haengt am rechten Handknochen, wie
-jede Waffe; der andere an "leftitem", dem Knochen der linken Hand. Das
-geht, weil ein Attachable seine Knochen ueber den Namen an den Traeger
-bindet - dasselbe, womit die Ritterruestung an Armen und Beinen sitzt.
+Zwei Dolche: Das Paar ist ein Gegenstand in der Haupthand; den linken
+Dolch legt das Skript (kampf.js) als eigenen, festgesetzten Gegenstand in
+die Zweithand, solange man das Paar haelt - "<sorte>dolch_links". So ist
+auch sichtbar, dass die Zweithand belegt ist: Dort steckt der Dolch, kein
+Schild passt dazu.
 
-In der Ich-Ansicht zeigt Minecraft keinen linken Arm, und "leftitem" liegt
-dort irgendwo hinter der Kamera. Der linke Dolch der Ich-Ansicht ist darum
-eine dritte Kette, gebunden an "body" - der Koerper dreht sich in der
-Ich-Ansicht mit dem Blick, er steht also fest vor der Kamera. Dort sitzt
-der linke Dolch spiegelbildlich zum rechten, unten links im Bild. Wo genau,
-wird nicht geschaetzt, sondern aus dem rechten gerechnet (links_ich).
+Warum ein eigener Gegenstand: In der Ich-Sicht zeichnet Minecraft vom
+Spieler nur, was in den Haenden liegt. Ein zweiter Dolch, der am linken
+Arm oder am Koerper des Paars hing, war dort unsichtbar (Fynns
+Bildschirmfoto, Fassung 4.28). Gegenstaende in der Zweithand dagegen
+zeichnet das Spiel auch in der Ich-Sicht.
 
-Was nicht hier steht: dass die Zweithand leer bleibt, solange man die
-Dolche haelt. Das macht das Skript (dolche.js).
+Wo der linke Dolch in der Ich-Sicht liegt, ist nicht geraten: Er haengt an
+einem Knochen wie Mojangs Schild, mit genau dessen Werten fuer die
+Zweithand, und sitzt dort, wo der Schild seinen Griff hat. Der Schild
+erscheint im Spiel richtig - der Dolch also an derselben Stelle.
 
     python3 werkzeuge/dolche_bauen.py
 """
@@ -96,29 +96,6 @@ def dolch_griffversatz(karte):
             GRIFF_ICH * 0.28 / GROESSE_ICH - (y - 8))
 
 
-def mit_linker_hand(modell):
-    """Haengt eine Kopie der Knochenkette an die linke Hand."""
-    geo = modell["minecraft:geometry"][0]
-    rechts = geo["bones"]
-    links = []
-    for knochen in rechts:
-        neu = copy.deepcopy(knochen)
-        if neu["name"] == "rightitem":
-            neu["name"] = "leftitem"
-            neu["binding"] = "'leftitem'"
-        else:
-            neu["name"] += "_l"
-            neu["parent"] = "leftitem" if neu["parent"] == "rightitem" else neu["parent"] + "_l"
-        links.append(neu)
-    # Die dritte Kette fuer die Ich-Ansicht, am Koerper.
-    griff = next(k for k in rechts if k["name"] == "griff")
-    ich = [{"name": "links_ich", "binding": "'body'", "pivot": [0, 8, 0]},
-           {"name": "griff_li", "parent": "links_ich", "pivot": [0, 8, 0],
-            "cubes": copy.deepcopy(griff["cubes"])}]
-    geo["bones"] = rechts + links + ich
-    return modell
-
-
 def symbol(farben):
     bild = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
     for y, zeile in enumerate(v.SYMBOL):
@@ -128,7 +105,7 @@ def symbol(farben):
     return bild
 
 
-def animation(links_ich=None, ich=None):
+def animation(ich=None):
     if ich is None:
         ich = dolch_griffversatz(v.KARTE)[1] + ICH_ANHEBEN_RECHTS
     aussen, _ = dolch_griffversatz(v.KARTE)
@@ -143,63 +120,115 @@ def animation(links_ich=None, ich=None):
             "rotation": [0.0, "c.is_first_person ? 0.0 : 90.0", 0.0],
         },
     }
+    # Der linke Dolch. Von aussen wie der rechte, an der linken Hand. In
+    # der Ich-Sicht die Kette "schild" mit Mojangs Schildwerten fuer die
+    # Zweithand (shield.entity.json: off_hand_first_person_*), darin der
+    # Dolch am Schildgriff, leicht nach aussen geneigt wie das
+    # Spiegelbild des rechten.
+    #
+    # Beim Rueckhandhieb sticht er zu: Bei jedem zweiten Schlag mit dem
+    # Paar fuehrt die linke Hand (spieler_animation_bauen), in der Ich-Sicht
+    # stoesst dieser Dolch zur Bildmitte vor.
+    zeit = "(c.owning_entity->v.attack_time)"
+    seite = "(c.owning_entity->v.fynn_hieb_seite)"
+    stoss = f"(({seite} >= 0.5 && {zeit} > 0.0) ? math.sin({zeit} * 180.0) : 0.0)"
     links = {
-        "waffe_l": {
+        "waffe": {
             "position": [0.0, -2.0, 0.0],
             "rotation": [KIPPEN_AUSSEN, 0.0, 0.0],
-            # In der Ich-Ansicht weg - dort uebernimmt links_ich.
             "scale": f"c.is_first_person ? 0.0 : {GROESSE_AUSSEN}",
         },
-        "griff_l": {
+        "griff": {
             "position": [0.0, round(aussen, 2), 0.0],
             "rotation": [0.0, 90.0, 0.0],
+        },
+        "schild": {
+            "position": [-13.5, -5.8, 5.1],
+            "rotation": [1.0, 176.0, -2.5],
+            "scale": "c.is_first_person ? 1.0 : 0.0",
+        },
+        "dolch_ich": {
+            "position": [f"-5.0 * {stoss}", f"2.0 * {stoss}", f"-7.0 * {stoss}"],
+            "rotation": [f"-20.0 * {stoss}", 0.0, f"{LINKS_NEIGUNG} - 30.0 * {stoss}"],
+            "scale": GROESSE_ICH,
         },
     }
     anims = {
         "animation.dolche.halten": {"loop": True, "bones": halten},
         "animation.dolche.links": {"loop": True, "bones": links},
     }
-    if links_ich:
-        rot, pos, groesse = links_ich
-        anims["animation.dolche.links_ich"] = {"loop": True, "bones": {"links_ich": {
-            "rotation": [round(w, 2) for w in rot],
-            "position": [round(w, 2) for w in pos],
-            "scale": f"c.is_first_person ? {groesse:.3f} : 0.0",
-        }}}
     return {"format_version": "1.10.0", "animations": anims}
 
 
-def links_ich_haltung(name):
-    """Der linke Dolch der Ich-Ansicht: das Spiegelbild des rechten.
+SCHILD_DREHPUNKT = [1.0, 15.5, 3.0]     # Mojangs shield.geo.json
+SCHILD_GRIFF = [1.0, 28.0, 3.0]         # Mitte des Schildgriffs dort
+LINKS_NEIGUNG = 20.0                    # Spitze leicht nach aussen
 
-    Gerechnet mit spieler_ansehen - wo der rechte Dolch in Ruhe vor der
-    Kamera liegt, gespiegelt an der senkrechten Bildmitte (die Kamera sitzt
-    bei x = 2.5). Der Dolch selbst ist symmetrisch, darum wird er dabei
-    auch in sich gespiegelt; zusammen ist das wieder eine reine Drehung.
-    """
-    import haltung
-    import spieler_ansehen as s
 
-    sp = s.Spieler()
-    waffe = s.Waffe(RES / "attachables" / f"{name}.json")
-    pose, u = sp.pose({"v.is_first_person": 1.0, "hand": waffe.kennung, "q.life_time": 0.0})
-    geo = s.lade(s.MOJANG / "humanoid_custom.geo.json")["geometry.humanoid.custom"]
-    knochen = s._modellknochen(geo)
-    knochen.update(s._modellknochen(waffe.geo, "w:", bindung="rightitem"))
-    m = s.baue_matrizen(knochen, {"": pose, "w:": waffe.pose(u, True)},
-                        {n: k["pivot"] for n, k in knochen.items()})["w:griff"]
-    auge_x = 2.5
-    lin = [[m[i][j] * (-1 if (i == 0) != (j == 0) else 1) for j in range(3)] for i in range(3)]
-    ort = (2 * auge_x - m[0][3], m[1][3], m[2][3])
-    groesse = abs(lin[0][0] * (lin[1][1] * lin[2][2] - lin[1][2] * lin[2][1])
-                  - lin[0][1] * (lin[1][0] * lin[2][2] - lin[1][2] * lin[2][0])
-                  + lin[0][2] * (lin[1][0] * lin[2][1] - lin[1][1] * lin[2][0])) ** (1 / 3)
-    dreh = [[lin[i][j] / groesse for j in range(3)] + [0] for i in range(3)] + [[0, 0, 0, 1]]
-    drehpunkt = (0, 8, 0)
-    bindung = (0, 24 - 8, 0)       # Drehpunkt von body minus eigener
-    welt = [sum(lin[i][k] * drehpunkt[k] for k in range(3)) + ort[i] for i in range(3)]
-    pos = [welt[i] - drehpunkt[i] - bindung[i] for i in range(3)]
-    return haltung.zerlege(dreh), pos, groesse
+def linker_name(name):
+    return name[:-1] + "_links"        # eisendolche -> eisendolch_links
+
+
+def linkes_modell(modell, links):
+    """Zwei Ketten: aussen wie der rechte Dolch, innen am Schildknochen."""
+    geo = copy.deepcopy(modell["minecraft:geometry"][0])
+    geo["description"]["identifier"] = f"geometry.{links}"
+    kette = geo["bones"]
+    griff = next(k for k in kette if k["name"] == "griff")
+    y = griffmitte(v.KARTE)
+    verschoben = []
+    for kasten in copy.deepcopy(griff["cubes"]):
+        o = kasten["origin"]
+        kasten["origin"] = [o[0] + SCHILD_GRIFF[0], o[1] + SCHILD_GRIFF[1] - y, o[2] + SCHILD_GRIFF[2]]
+        verschoben.append(kasten)
+    geo["bones"] = kette + [
+        {"name": "schild", "binding": "q.item_slot_to_bone_name(c.item_slot)", "pivot": SCHILD_DREHPUNKT},
+        {"name": "dolch_ich", "parent": "schild", "pivot": SCHILD_GRIFF, "cubes": verschoben},
+    ]
+    return {"format_version": modell["format_version"], "minecraft:geometry": [geo]}
+
+
+def einzeln(farben):
+    bild = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    for y, zeile in enumerate(v.EINZEL):
+        for x, z in enumerate(zeile):
+            if z != ".":
+                bild.putpixel((x, y), farben[z] + (255,))
+    return bild
+
+
+def linkes_attachable(name, links):
+    return {
+        "format_version": "1.10.0",
+        "minecraft:attachable": {
+            "description": {
+                "identifier": f"fynn:{links}",
+                "materials": {"default": "entity_alphatest", "enchanted": "entity_alphatest_glint"},
+                "textures": {"default": f"textures/entity/{name}_haut",
+                             "enchanted": "textures/misc/enchanted_item_glint"},
+                "geometry": {"default": f"geometry.{links}"},
+                "animations": {"links": "animation.dolche.links"},
+                "scripts": {"animate": ["links"]},
+                "render_controllers": ["controller.render.item_default"],
+            }
+        },
+    }
+
+
+def linker_gegenstand(links):
+    """Nur fuer die Zweithand; nicht im Kreativinventar, kein Rezept."""
+    return {
+        "format_version": "1.26.30",
+        "minecraft:item": {
+            "description": {"identifier": f"fynn:{links}", "menu_category": {"category": "none"}},
+            "components": {
+                "minecraft:icon": {"textures": {"default": links}},
+                "minecraft:max_stack_size": 1,
+                "minecraft:allow_off_hand": True,
+                "minecraft:hand_equipped": True,
+            },
+        },
+    }
 
 
 def attachable(name):
@@ -216,11 +245,9 @@ def attachable(name):
                 "geometry": {"default": f"geometry.{name}"},
                 "animations": {
                     "halten": "animation.dolche.halten",
-                    "links": "animation.dolche.links",
-                    "links_ich": "animation.dolche.links_ich",
                     "schlag": "animation.klinge.schlag",
                 },
-                "scripts": {"animate": ["halten", "links", "links_ich", "schlag"]},
+                "scripts": {"animate": ["halten", "schlag"]},
                 "render_controllers": ["controller.render.item_default"],
             }
         },
@@ -305,7 +332,13 @@ def main():
             dicke=dicke, mitte=v.MITTE,
             ziel_modell=str(RES / "models" / "entity" / f"{name}.geo.json"),
             ziel_textur=str(RES / "textures" / "entity" / f"{name}_haut.png"))
-        schreibe(RES / "models" / "entity" / f"{name}.geo.json", mit_linker_hand(modell))
+        schreibe(RES / "models" / "entity" / f"{name}.geo.json", modell)
+        links = linker_name(name)
+        schreibe(RES / "models" / "entity" / f"{links}.geo.json", linkes_modell(modell, links))
+        einzeln(sorte["farben"]).save(RES / "textures" / "items" / f"{links}.png")
+        liste["texture_data"][links] = {"textures": f"textures/items/{links}"}
+        schreibe(RES / "attachables" / f"{links}.json", linkes_attachable(name, links))
+        schreibe(VER / "items" / f"{links}.json", linker_gegenstand(links))
 
         symbol(sorte["farben"]).save(RES / "textures" / "items" / f"{name}.png")
         liste["texture_data"][name] = {"textures": f"textures/items/{name}"}
@@ -317,19 +350,18 @@ def main():
         de, en = sorte["name"]
         deutsch += [(f"item.fynn:{name}", de), (f"item.fynn:{name}.name", de)]
         englisch += [(f"item.fynn:{name}", en), (f"item.fynn:{name}.name", en)]
+        de_l = "Linker " + de[:-1] + " (Zweithand)"          # Eisendolche -> Linker Eisendolch
+        en_l = "Left " + en[:-1] + " (off hand)"
+        deutsch += [(f"item.fynn:{links}", de_l), (f"item.fynn:{links}.name", de_l)]
+        englisch += [(f"item.fynn:{links}", en_l), (f"item.fynn:{links}.name", en_l)]
 
-    # Erst ohne den linken Dolch der Ich-Ansicht schreiben - er wird aus der
-    # fertigen Haltung des rechten gerechnet.
-    schreibe(RES / "animations" / "dolche.animation.json", animation(ich=dolch_griffversatz(v.KARTE)[1]))
-    links_ich = links_ich_haltung(next(iter(v.SORTEN)))
-    schreibe(RES / "animations" / "dolche.animation.json", animation(links_ich))
+    schreibe(RES / "animations" / "dolche.animation.json", animation())
     texturliste.write_text(json.dumps(liste, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     sprache(RES / "texts" / "de_DE.lang", deutsch)
     sprache(RES / "texts" / "en_US.lang", englisch)
     aussen, ich = dolch_griffversatz(v.KARTE)
     print(f"Griffversatz: aussen {aussen:+.2f}, Ich-Ansicht rechts {ich + ICH_ANHEBEN_RECHTS:+.2f}, links {ich:+.2f}")
-    print("Linker Dolch, Ich-Ansicht: Drehung {}, Ort {}, Groesse {:.3f}".format(
-        [round(w, 1) for w in links_ich[0]], [round(w, 1) for w in links_ich[1]], links_ich[2]))
+    print("Linker Dolch: eigener Gegenstand je Sorte, Ich-Sicht am Schildknochen")
 
 
 if __name__ == "__main__":

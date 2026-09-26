@@ -34,7 +34,7 @@
     "animation.dolche.links": {
       "loop": true,
       "bones": {
-        "waffe_l": {
+        "waffe": {
           "position": [
             0.0,
             -2.0,
@@ -47,7 +47,7 @@
           ],
           "scale": "c.is_first_person ? 0.0 : 0.55"
         },
-        "griff_l": {
+        "griff": {
           "position": [
             0.0,
             5.97,
@@ -58,24 +58,32 @@
             90.0,
             0.0
           ]
-        }
-      }
-    },
-    "animation.dolche.links_ich": {
-      "loop": true,
-      "bones": {
-        "links_ich": {
-          "rotation": [
-            178.23,
-            -86.47,
-            153.23
-          ],
+        },
+        "schild": {
           "position": [
-            -7.58,
-            -5.05,
-            16.22
+            -13.5,
+            -5.8,
+            5.1
           ],
-          "scale": "c.is_first_person ? 0.400 : 0.0"
+          "rotation": [
+            1.0,
+            176.0,
+            -2.5
+          ],
+          "scale": "c.is_first_person ? 1.0 : 0.0"
+        },
+        "dolch_ich": {
+          "position": [
+            "-5.0 * (((c.owning_entity->v.fynn_hieb_seite) >= 0.5 && (c.owning_entity->v.attack_time) > 0.0) ? math.sin((c.owning_entity->v.attack_time) * 180.0) : 0.0)",
+            "2.0 * (((c.owning_entity->v.fynn_hieb_seite) >= 0.5 && (c.owning_entity->v.attack_time) > 0.0) ? math.sin((c.owning_entity->v.attack_time) * 180.0) : 0.0)",
+            "-7.0 * (((c.owning_entity->v.fynn_hieb_seite) >= 0.5 && (c.owning_entity->v.attack_time) > 0.0) ? math.sin((c.owning_entity->v.attack_time) * 180.0) : 0.0)"
+          ],
+          "rotation": [
+            "-20.0 * (((c.owning_entity->v.fynn_hieb_seite) >= 0.5 && (c.owning_entity->v.attack_time) > 0.0) ? math.sin((c.owning_entity->v.attack_time) * 180.0) : 0.0)",
+            0.0,
+            "20.0 - 30.0 * (((c.owning_entity->v.fynn_hieb_seite) >= 0.5 && (c.owning_entity->v.attack_time) > 0.0) ? math.sin((c.owning_entity->v.attack_time) * 180.0) : 0.0)"
+          ],
+          "scale": 0.4
         }
       }
     }

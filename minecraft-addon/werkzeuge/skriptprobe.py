@@ -44,6 +44,7 @@ export const system = {
   run: (f) => f(),
   runTimeout: (f, n) => { gemerkt.takte.push(["spaeter", n]); },
 };
+export const ItemLockMode = { inventory: "inventory", none: "none", slot: "slot" };
 export const BlockPermutation = { resolve: (typ, zustaende) => ({ typ, zustaende }) };
 export const GameMode = { Adventure: "Adventure", Creative: "Creative", Spectator: "Spectator", Survival: "Survival" };
 export class ItemStack {

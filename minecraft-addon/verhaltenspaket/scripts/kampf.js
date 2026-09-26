@@ -13,7 +13,7 @@
 // jedes Mal eine Meldung waere laestig. Nur wer die Rolle hat und zu
 // wenig Kraft, bekommt das gesagt.
 
-import { world, system } from "@minecraft/server";
+import { world, system, ItemStack, ItemLockMode } from "@minecraft/server";
 import { angriffErlaubt, hinweis, rolleVon, verbrauche } from "./rollen.js";
 
 export const DOLCHE = new Set([
@@ -327,26 +327,92 @@ system.runInterval(() => {
     }
 }, 10);
 
-// ------------------------------------------------ Zweithand sperren
+// ------------------------------------------------ Zweithand: beide Haende
 
-// Die Dolche liegen in beiden Haenden. Was in der Zweithand steckt -
-// ein Schild, eine Fackel -, kommt deshalb ins Inventar, solange die
-// Dolche gehalten werden. Ist das Inventar voll, faellt es vor die Fuesse.
-// Zweimal je Sekunde nachsehen reicht: Wer schneller umraeumt, sieht den
-// Schild fuer einen Augenblick, mehr nicht.
+// Beidhaendige Waffen belegen die Zweithand. Bei den Dolchen steckt dort
+// der linke Dolch als eigener Gegenstand, festgesetzt: Man sieht ihn im
+// Zweithandplatz, er laesst sich nicht herausnehmen, und er macht den
+// zweiten Dolch sichtbar - auch in der Ich-Sicht, wo Minecraft vom
+// Spieler nur zeichnet, was in den Haenden liegt.
+//
+// Was vorher links war - ein Schild, eine Fackel -, kommt in den Rucksack
+// und nach dem Wechsel zu einer anderen Waffe zurueck. Fynn: "richtig
+// visuell sichtbar machen, dass man das Schild nicht ausruesten kann".
+// Spaeter koennen hier Zweihaender dazukommen; dann mit einem Platzhalter
+// statt eines Dolchs.
+export const ZWEITHAND = new Map([...DOLCHE].map((d) => [d, d.replace(/e$/, "_links")]));
+const LINKE = new Set(ZWEITHAND.values());
+const ABGELEGT = "fynn:zweithand_abgelegt";     // am Spieler: was links war
+
+function zweithandPruefen(spieler) {
+    const ausruestung = spieler.getComponent("minecraft:equippable");
+    const inventar = spieler.getComponent("minecraft:inventory")?.container;
+    if (!ausruestung) return;
+    const soll = ZWEITHAND.get(inDerHand(spieler));
+    const links = ausruestung.getEquipment("Offhand");
+
+    if (soll) {
+        if (links?.typeId === soll) return;
+        if (links && !LINKE.has(links.typeId)) {
+            const rest = inventar?.addItem(links);
+            if (rest) spieler.dimension.spawnItem(rest, spieler.location);
+            spieler.setDynamicProperty(ABGELEGT, links.typeId);
+            const name = links.typeId === "minecraft:shield" ? "Der Schild" : "Was links war";
+            hinweis(spieler, `§eBeide Hände führen die Dolche.§7 ${name} liegt im Rucksack.`, 80);
+            try {
+                spieler.playSound("armor.equip_leather", { pitch: 0.8 });
+            } catch (e) {
+                // ohne Ton geht es auch
+            }
+        }
+        const dolch = new ItemStack(soll, 1);
+        dolch.lockMode = ItemLockMode.slot;
+        dolch.keepOnDeath = true;
+        ausruestung.setEquipment("Offhand", dolch);
+        return;
+    }
+
+    // Keine beidhaendige Waffe mehr: den linken Dolch weg, das Abgelegte zurueck.
+    if (links && LINKE.has(links.typeId)) {
+        ausruestung.setEquipment("Offhand", undefined);
+        const zurueck = spieler.getDynamicProperty(ABGELEGT);
+        spieler.setDynamicProperty(ABGELEGT, undefined);
+        if (typeof zurueck === "string" && inventar) {
+            for (let i = 0; i < inventar.size; i++) {
+                const stueck = inventar.getItem(i);
+                if (stueck?.typeId !== zurueck) continue;
+                inventar.setItem(i, undefined);
+                ausruestung.setEquipment("Offhand", stueck);
+                break;
+            }
+        }
+    }
+    // Ein linker Dolch hat hier nichts zu suchen, wo auch immer er steckt.
+    if (inventar) {
+        for (let i = 0; i < inventar.size; i++) {
+            if (LINKE.has(inventar.getItem(i)?.typeId)) inventar.setItem(i, undefined);
+        }
+    }
+}
+
 system.runInterval(() => {
     for (const spieler of world.getAllPlayers()) {
         try {
-            if (!DOLCHE.has(inDerHand(spieler))) continue;
-            const ausruestung = spieler.getComponent("minecraft:equippable");
-            const links = ausruestung?.getEquipment("Offhand");
-            if (!links) continue;
-            ausruestung.setEquipment("Offhand", undefined);
-            const rest = spieler.getComponent("minecraft:inventory")?.container?.addItem(links);
-            if (rest) spieler.dimension.spawnItem(rest, spieler.location);
-            hinweis(spieler, "§7Die Dolche brauchen beide Hände. Was links war, liegt jetzt im Inventar.", 80);
+            zweithandPruefen(spieler);
         } catch (fehler) {
             console.warn(`Kampf, Zweithand: ${fehler}`);
         }
     }
-}, 10);
+}, 4);
+
+// Faellt ein linker Dolch doch einmal auf den Boden (etwa beim Tod, falls
+// das Festhalten nicht greift), verschwindet er.
+world.afterEvents.entitySpawn.subscribe((e) => {
+    try {
+        const ding = e.entity;
+        if (ding?.typeId !== "minecraft:item") return;
+        if (LINKE.has(ding.getComponent("minecraft:item")?.itemStack?.typeId)) ding.remove();
+    } catch (fehler) {
+        // schon weg
+    }
+});
