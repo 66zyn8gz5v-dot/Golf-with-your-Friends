@@ -51,25 +51,57 @@ def nah(p, mitte, halb):
 JUNG = False
 
 
-def auge(p, n, orte, iris="#1a120c", halb=(0.5, 0.5, 0.5)):
-    """Ein Auge aus zwei Bildpunkten nebeneinander: innen die dunkle
-    Pupille, aussen die Iris. So wirken sie lebendig statt aufgemalt.
+def auge(p, n, orte, iris="#1a120c", halb=(0.5, 0.5, 0.5), ring=None, gross=False):
+    """Ein Auge, Bildpunkt fuer Bildpunkt auf genau einer Seite des Kopfes.
 
-    Bei Jungtieren (JUNG) sind es zwei mal zwei Punkte, dunkel, mit einem
-    weissen Glanzpunkt oben aussen - grosse Kulleraugen."""
+    Fynn: "An die Augen musst du noch mal ran." Vorher war es eine Wolke um
+    einen Punkt im Raum: Bei dunklem Fell verschwanden dunkle Pupille und
+    dunkle Iris ganz (Elch, Bison, Wildschwein), und die Jungtiere hatten
+    tiefschwarze Klumpen von zwei mal zwei Punkten - bei Loewe und Tiger
+    sah das aus wie ein Panda.
+
+    Jetzt ein festes Muster, gezaehlt von der Augenmitte aus:
+      Alttier:  vorn/innen die Pupille, hinten/aussen die Iris.
+      Jungtier: zwei Reihen - vorn die Pupille, hinten unten die Iris,
+                hinten oben ein heller Glanzpunkt.
+    Grosse Koepfe (gross) bekommen das zweireihige Auge auch als Alttier:
+    Auf dem Elchkopf war eine einzelne Reihe aus der Naehe gerade noch zu
+    finden, aus Spielentfernung nicht mehr.
+    Mit ring bekommt das Auge darunter einen hellen Lidrand. Den brauchen
+    die Tiere mit dunklem Fell, sonst ist das Auge nicht zu finden.
+
+    "Vorn" heisst auf der Kopfseite zur Schnauze hin, auf dem Gesicht zur
+    Mitte hin - so schauen die Augen nach vorn."""
+    if abs(n[0]) > 0.5:
+        achse, quer = 0, 2          # Kopfseite: waagerecht laeuft z
+    elif n[2] < -0.5:
+        achse, quer = 2, 0          # Gesicht: waagerecht laeuft x
+    else:
+        return None
     for o in orte:
-        if JUNG:
-            if nah(p, o, (halb[0] + 0.5, halb[1] + 0.5, halb[2] + 0.5)):
-                aussen = abs(p[0]) > abs(o[0]) or p[2] < o[2] - 0.1
-                if p[1] > o[1] and aussen:
-                    return hexfarbe("#ffffff")
-                return hexfarbe("#0c0908")
+        if (p[0] < 0) != (o[0] < 0):
             continue
-        if nah(p, o, halb):
-            return hexfarbe("#0c0908")
-        breiter = (halb[0] + 1.0, halb[1], halb[2] + 1.0)
-        if nah(p, o, breiter) and abs(p[0]) > abs(o[0]) - 0.1:
-            return hexfarbe(iris)
+        if abs(p[achse] - o[achse]) > halb[achse] + 0.05:
+            continue
+        # Nach hinten bzw. nach aussen positiv.
+        h = p[2] - o[2] if quer == 2 else abs(p[0]) - abs(o[0])
+        i = math.floor(h + 1e-6)
+        j = math.floor(p[1] - o[1] + 0.5 + 1e-6)
+        if i not in (-1, 0):
+            continue
+        if JUNG or gross:
+            if j == 1:
+                return hexfarbe("#0c0908") if i == -1 else hexfarbe("#f4f0e6")
+            if j == 0:
+                if i == -1:
+                    return hexfarbe("#0c0908")
+                # Jungtiere haben helleres Fell als die Alten; mit der Iris
+                # der Alten blieb vom Auge nur ein schwarzer Strich uebrig.
+                return mische(hexfarbe(iris), (232, 216, 192), 0.3) if JUNG else hexfarbe(iris)
+        elif j == 0:
+            return hexfarbe("#0c0908") if i == -1 else hexfarbe(iris)
+        if j == -1 and ring:
+            return hexfarbe(ring)
     return None
 
 
@@ -168,7 +200,7 @@ def baer_maler(variante):
                 return hexfarbe("#3a2616")                  # Maul
             return ton(schnauze, p, n, texel, 5, straehne=0.02)
         if stoff == "kopf":
-            a = auge(p, n, [(-3.5, 20.5, -20), (3.5, 20.5, -20)], "#4a2c14")
+            a = auge(p, n, [(-3.5, 20.5, -20), (3.5, 20.5, -20)], "#8a5a2a")
             if a and n[2] < -0.5:
                 return a
             return ton(fell, p, n, texel, 7)
@@ -310,7 +342,7 @@ def elch_maler(variante):
         if stoff == "schnauze":
             return ton(schnauze, p, n, texel, 25)
         if stoff == "kopf":
-            a = auge(p, n, [(-3.5, 29.5, -22), (3.5, 29.5, -22)], "#3a2412")
+            a = auge(p, n, [(-3.5, 29.5, -22), (3.5, 29.5, -22)], "#7a4a24", ring="#9a7a5c", gross=True)
             if a and abs(n[0]) > 0.5:
                 return a
             return ton(fell, p, n, texel, 27, hell=0.04)
@@ -371,7 +403,7 @@ def wildschwein_maler(variante):
         if stoff == "ruessel":
             return ton(fell, p, n, texel, 41, hell=0.06)
         if stoff == "kopf":
-            a = auge(p, n, [(-3, 11.5, -16), (3, 11.5, -16)], "#2a1c10")
+            a = auge(p, n, [(-3, 11.5, -16), (3, 11.5, -16)], "#6a4a2a", ring="#8a7058", gross=True)
             if a and n[2] < -0.5:
                 return a
             return ton(fell, p, n, texel, 43)
@@ -495,13 +527,17 @@ def bison_maler(variante):
                 return ton("#3a2a24", p, n, texel, 55, straehne=0.0)  # Maul
             return ton(nase, p, n, texel, 56, straehne=0.0, hell=0.05 if n[1] > 0.5 else 0.0)
         if stoff == "kopf":
-            a = auge(p, n, [(-5.5, 15, -23.5), (5.5, 15, -23.5)], "#6a4a2a", halb=(0.5, 0.5, 0.6))
-            if a and abs(n[0]) > 0.5:
-                return a
             return fell(weich(mantel, nase, 0.35), p, n, texel, 57)
         if stoff == "ohr":
             return fell(weich(mantel, nase, 0.5), p, n, texel, 58)
         if stoff == "stirnpelz":
+            # Das Auge sitzt aussen auf dem Backenbart, gleich unter dem
+            # Stirnpelz - wie beim echten Bison, dem es aus dem Fell guckt.
+            # Auf dem Kopf darunter lag es verdeckt und war nie zu sehen.
+            if p[1] < 18:
+                a = auge(p, n, [(-6.5, 16.5, -23), (6.5, 16.5, -23)], "#8a5a30", ring="#9a7a58", gross=True)
+                if a:
+                    return a
             # Oben hell ausgeblichen, zu den Augen hin dunkler.
             return fell(weich(mantel, buckel, (p[1] - 17) / 7), p, n, texel, 59)
         if stoff == "bart":

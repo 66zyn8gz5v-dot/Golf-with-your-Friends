@@ -29,9 +29,9 @@ __all__ = [f"{t}_{w}" for t in ("elefant", "nashorn", "gorilla", "walross", "man
            for w in ("modell", "maler")]
 
 
-def auge(p, n, orte, iris="#1a120c", halb=(0.5, 0.5, 0.5)):
+def auge(p, n, orte, iris="#1a120c", halb=(0.5, 0.5, 0.5), ring=None, gross=False):
     # Ueber das Modul, damit g.JUNG (grosse Babyaugen) gilt.
-    return g.auge(p, n, orte, iris, halb)
+    return g.auge(p, n, orte, iris, halb, ring, gross)
 
 
 # ================================================================== Elefant
@@ -176,7 +176,7 @@ def elefant_maler(variante):
         if stoff == "quaste":
             return ton("#2a2420", p, n, texel, 313, straehne=0.05)
         if stoff == "kopf":
-            a = auge(p, n, [(-7, 34, -23), (7, 34, -23)], "#3a2a1c")
+            a = auge(p, n, [(-7, 34.5, -23), (7, 34.5, -23)], "#6a4a30", gross=True)
             if a and abs(n[0]) > 0.5:
                 return a
             if abs(n[0]) > 0.5 and nah(p, (0, 33.5, -23), (8, 1.5, 2.2)):
@@ -295,7 +295,9 @@ def nashorn_maler(variante):
                 return hexfarbe("#1a1614")                                 # Nuestern
             return ton(haut, p, n, texel, 345, straehne=0.0)
         if stoff == "kopf":
-            a = auge(p, n, [(-5, 15, -21), (5, 15, -21)], "#2a1e14")
+            # Auf der Aussenseite der Backen, gleich unter der Falte. Auf der
+            # Kopfseite dahinter war es von den Backen verdeckt.
+            a = auge(p, n, [(-6, 14.5, -21), (6, 14.5, -21)], "#5a3e28", gross=True)
             if a and abs(n[0]) > 0.5:
                 return a
             return ton(haut, p, n, texel, 347, straehne=0.0, hell=0.02)
@@ -366,7 +368,7 @@ def gorilla_maler(variante):
         if stoff == "braue":
             return ton("#1e1c1a", p, n, texel, 363, straehne=0.0)
         if stoff == "kopf":
-            a = auge(p, n, [(-2, 27.5, -17), (2, 27.5, -17)], "#4a2e1a")
+            a = auge(p, n, [(-2, 27.5, -17), (2, 27.5, -17)], "#8a5228", ring="#5a5450")
             if a and n[2] < -0.5:
                 return a
             if n[2] < -0.5 and p[1] < 29 and abs(p[0]) < 3.5:
@@ -442,7 +444,7 @@ def walross_maler(variante):
                 return hexfarbe("#e0d4c0")
             return ton(haut, p, n, texel, 385, hell=0.06, straehne=0.0)
         if stoff == "kopf":
-            a = auge(p, n, [(-5, 15, -14), (5, 15, -14)], "#2a1a12")
+            a = auge(p, n, [(-5, 15.5, -14), (5, 15.5, -14)], "#5a3a24", gross=True)
             if a and abs(n[0]) > 0.5:
                 return a
             return ton(haut, p, n, texel, 387, straehne=0.0)
