@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Baut Fynns fuenf weitere Klingen - Holz, Kupfer, Gold, Diamant, Netherit.
+"""Baut Fynns Klingen - Holz, Stein, Kupfer, Gold, Diamant, Netherit und die eigenen.
 
 Dasselbe Verfahren wie beim Stahlschwert, nur fuer alle auf einmal: Die
 Zeichnung wird zeilenweise zu Kaesten, und die Tiefe richtet sich danach,
@@ -68,6 +68,8 @@ KLINGEN = [
     ("silberklinge",   None,                         "silberklinge_haut"),
     ("elektrumklinge", None,                         "elektrumklinge_haut"),
     ("ritterschwert",  None,                         "ritterschwert_haut"),
+    # Fynns eigene Zeichnung fuer das Steinschwert.
+    ("steinklinge",    "minecraft:stone_sword",      "steinklinge"),
 ]
 
 # Wer nicht die drei Dicken von oben nimmt, sondern eigene.
@@ -92,6 +94,51 @@ MIT_RELIEF = {"elektrumklinge"}
 # Sie stammt aus einer Zeichnung, die fuer sich stehen sollte; am Modell
 # macht die Geometrie ihre Kanten selbst.
 OHNE_KONTUR = {"elektrumklinge"}
+
+# Das dritte Verfahren, fuer das Steinschwert: eine Klinge mit Keilschliff.
+#
+# Fynn hat die Klinge in Baendern gemalt - aussen hell, innen dunkel, wie
+# ein geschlagener Stein, dessen Kanten Licht fangen. Flach gebaut waere
+# das nur Farbe. Hier wird die Klinge zur Mitte hin dicker, so wie ein
+# Faustkeil: Die Schneide ist duenn, der Kern massiv. Weil die Dicke vom
+# Rand der jeweiligen Zeile aus gezaehlt wird, bekommen auch die beiden
+# Ausbrueche eine eigene duenne Kante - dort ist der Stein abgeplatzt.
+MIT_KEIL = {"steinklinge"}
+KEIL_SCHNEIDE = (1.0, 1.25, 1.5)   # Randpixel, der daneben, alles innen
+KEIL_PARIER = 2.0
+KEIL_GRIFF = 2.0     # vier Pixel breit, zwei tief - liest sich als rund
+KEIL_MESSING = 2.5   # der Knoten und der Ring stehen vor
+# Der Knauf nach Breite: der breite Stein am dicksten, die Spitze darunter
+# schmal - so wird er rund statt eckig.
+KEIL_KNAUF = {6: 2.5, 4: 2.0, 2: 1.5}
+LEDER = set("rstu")
+
+
+def ist_messing(zeichen, farben):
+    """Messing ist das einzige Warme am Stein: deutlich mehr Rot als Blau."""
+    f = farben.get(zeichen)
+    return bool(f) and f[0] - f[2] > 40
+
+
+def keilform(karte, farben):
+    """Eine Tiefe je Pixel: Keilschliff an der Klinge, Messing steht vor."""
+    oben, unten = parierstange(karte)
+
+    def tief(zeile, spalte, zeichen):
+        if ist_messing(zeichen, farben):
+            return KEIL_MESSING
+        text = karte[zeile]
+        if zeile < oben:
+            gemalt = [i for i, z in enumerate(text) if z != "."]
+            rand = min(spalte - gemalt[0], gemalt[-1] - spalte)
+            return KEIL_SCHNEIDE[min(rand, len(KEIL_SCHNEIDE) - 1)]
+        if zeile <= unten:
+            return KEIL_PARIER
+        if zeichen in LEDER:
+            return KEIL_GRIFF
+        return KEIL_KNAUF.get(spannweite(text), KEIL_GRIFF)
+
+    return tief, oben, unten
 
 
 def spannweite(text):
@@ -220,6 +267,8 @@ def main():
             print(f"  {name}: {gefallen} Pixel Aussenkontur abgenommen")
         if name in MIT_RELIEF:
             dicken, oben, unten = reliefdicke(karte, v.FARBEN)
+        elif name in MIT_KEIL:
+            dicken, oben, unten = keilform(karte, v.FARBEN)
         else:
             dicken, oben, unten = dickenliste(karte, EIGENE_DICKEN.get(name))
         modell = wurzel / "models" / "entity" / (name + ".geo.json")
