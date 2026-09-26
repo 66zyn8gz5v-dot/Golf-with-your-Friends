@@ -58,6 +58,12 @@ def schreibe(pfad, daten):
 
 # ============================================================ Saphirschwert
 
+# Zeilen der Klinge. Fynn: "Mach das Schwert laenger" - von 15 auf 21, am
+# Ritter damit gut sechzehn statt elf Pixel Klinge, gut die Haelfte seiner
+# Groesse. Die Griffhaltung rechnet sich aus der Karte, die Faust bleibt am
+# Griff.
+KLINGE = 21
+
 # Ein Eisenschwert mit blauer Blutrinne, Saphiren an den Enden der
 # Parierstange und einem grossen in ihrer Mitte, dazu blau umwickelter
 # Griff und ein Saphir im Knauf. Schmal wie ein echtes Eisenschwert -
@@ -67,7 +73,7 @@ SAPHIRSCHWERT = {
         "....w....",
         "...wsd...",
         "...wsd...",
-    ] + ["...wbd..."] * 15 + [
+    ] + ["...wbd..."] * KLINGE + [
         "...wsd...",
         "..EqqqE..",
         "EeqqeqqeE",
@@ -101,7 +107,7 @@ SAPHIRSCHWERT = {
 # braune Holzgriff. Das Spiel bringt sein Schwert nur flach mit - der Ritter
 # traegt dieses hier.
 EISENSCHWERT = {
-    "karte": ["...w...", "..wsd.."] + ["..wsd.."] * 15 + [".QqqqQ.", "QqqqqqQ", "...L...", "...l...",
+    "karte": ["...w...", "..wsd.."] + ["..wsd.."] * KLINGE + [".QqqqQ.", "QqqqqqQ", "...L...", "...l...",
                                                           "...L...", "...l...", "..QqQ.."],
     "farben": {"w": (236, 238, 242), "s": (196, 200, 206), "d": (130, 134, 142),
                "q": (178, 182, 188), "Q": (104, 108, 116), "L": (104, 78, 30), "l": (73, 54, 21)},

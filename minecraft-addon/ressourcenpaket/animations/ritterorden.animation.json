@@ -20,7 +20,7 @@
         "griff": {
           "position": [
             0.0,
-            "c.is_first_person ? -4.67 : 7.78",
+            "c.is_first_person ? -1.67 : 10.78",
             0.0
           ],
           "rotation": [
@@ -50,7 +50,7 @@
         "klinge_griff": {
           "position": [
             0.0,
-            10.33,
+            13.33,
             0.0
           ],
           "rotation": [
@@ -80,7 +80,7 @@
         "klinge_griff": {
           "position": [
             0.0,
-            11.33,
+            14.33,
             0.0
           ],
           "rotation": [
