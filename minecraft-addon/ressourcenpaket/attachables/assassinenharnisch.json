@@ -16,7 +16,15 @@
       },
       "render_controllers": [
         "controller.render.armor"
-      ]
+      ],
+      "animations": {
+        "schal": "animation.fynn_ruestung.schal"
+      },
+      "scripts": {
+        "animate": [
+          "schal"
+        ]
+      }
     }
   }
 }

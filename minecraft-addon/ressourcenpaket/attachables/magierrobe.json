@@ -16,7 +16,15 @@
       },
       "render_controllers": [
         "controller.render.armor"
-      ]
+      ],
+      "animations": {
+        "umhang": "animation.fynn_ruestung.umhang"
+      },
+      "scripts": {
+        "animate": [
+          "umhang"
+        ]
+      }
     }
   }
 }

@@ -42,11 +42,11 @@ item.fynn:eisenklinge.name=Iron Blade
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.29
+item.iron_sword.name=Stahlschwert 4.30
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.29
-item.fynn:degen.name=Degen 4.29
+item.fynn:degen=Degen 4.30
+item.fynn:degen.name=Degen 4.30
 
 
 
@@ -89,7 +89,6 @@ item.fynn:artefaktentasche=Artifact Pouch
 item.fynn:artefaktentasche.name=Artifact Pouch
 tile.fynn:rollenaltar.name=Role Altar
 tile.fynn:tempelaltar.name=Temple Altar
-entity.fynn:statue.name=Statue
 item.fynn:kriegshammer=War Hammer
 item.fynn:frostzepter=Frost Scepter
 item.fynn:sturmbogen=Storm Bow
@@ -112,6 +111,7 @@ item.fynn:diamantdolche=Diamond Daggers
 item.fynn:diamantdolche.name=Diamond Daggers
 item.fynn:netheritdolche=Netherite Daggers
 item.fynn:netheritdolche.name=Netherite Daggers
+entity.fynn:statue.name=Statue
 item.fynn:magierhut=Wizard Hat
 item.fynn:magierhut.name=Wizard Hat
 item.fynn:magierrobe=Mage Robe

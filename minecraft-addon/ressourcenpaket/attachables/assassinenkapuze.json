@@ -16,7 +16,15 @@
       },
       "render_controllers": [
         "controller.render.armor"
-      ]
+      ],
+      "animations": {
+        "zipfel": "animation.fynn_ruestung.zipfel"
+      },
+      "scripts": {
+        "animate": [
+          "zipfel"
+        ]
+      }
     }
   }
 }

@@ -16,7 +16,15 @@
       },
       "render_controllers": [
         "controller.render.armor"
-      ]
+      ],
+      "animations": {
+        "koecher": "animation.fynn_ruestung.koecher"
+      },
+      "scripts": {
+        "animate": [
+          "koecher"
+        ]
+      }
     }
   }
 }

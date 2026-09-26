@@ -213,10 +213,10 @@ class Atlas:
             return heller(z, self.rampen)
         if flaeche == "down":
             return dunkler(z, self.rampen)
-        if fh >= 3 and y == 0:
+        # Nur die Oberkante hell. Eine dunkle Unterkante an jedem Kasten
+        # zeichnete jede Kastengrenze nach - Fynn: "nicht ganz so kantig".
+        if fh >= 4 and y == 0:
             return heller(z, self.rampen)
-        if fh >= 3 and y == fh - 1:
-            return dunkler(z, self.rampen)
         if falten and fh >= 6 and y >= fh // 3 and x % 3 == 1:
             return dunkler(z, self.rampen)
         return z
@@ -293,7 +293,10 @@ def magierrobe():
         knochen("body"),
         knochen("head", [
             a.kasten([-4, 29, -4], (8, 4, 8), mit(blau_hell, stern((4, 1), "north"), goldband), 0.6),
-            a.kasten([-7, 28.6, -7], (14, 1, 14), mit(blau, saum("o", 1))),
+            # Die Krempe rund statt quadratisch: zwei ueberkreuzte Platten
+            # ergeben ein Achteck.
+            a.kasten([-7, 28.6, -5], (14, 1, 10), mit(blau, saum("o", 1))),
+            a.kasten([-5, 28.6, -7], (10, 1, 14), mit(blau, saum("o", 1))),
         ]),
         knochen("hut1", [a.kasten([-3, 33, -3], (6, 3, 6), blau_hell)],
                 eltern="head", drehpunkt=[0, 33, 0], drehung=[-8, 0, 0]),
@@ -317,34 +320,57 @@ def magierrobe():
     robe = [
         knochen("body", [
             a.kasten([-4, 12, -2], (8, 12, 4), mit(blau, borte_vorn("G", (3, 4)), guertel,
-                                                   saum("g", 1), saum("G", 0, 1)), 1.0, falten=True),
+                                                   saum("g", 1), saum("G", 0, 1)), 0.55, falten=True),
+            # Eine Tasche an der rechten Huefte, mit Goldknopf
+            a.kasten([-5.4, 12.8, -1.2], (1.2, 2.4, 2.4), mit(voll("c"), saum("b", 0, 1))),
+            a.kasten([-5.6, 14.2, -0.3], (0.4, 0.6, 0.6), gold),
             # Die Schliesse am Hals und die Guertelschnalle, beide Gold
             a.kasten([-1, 22, -3.4], (2, 1.5, 0.6), gold),
             a.kasten([-1.5, 15.5, -3.4], (3, 2, 0.6), gold),
-            # Der Umhang: von den Schultern bis an die Waden, hinten
-            a.kasten([-4.5, 3, 3.2], (9, 21, 0.5), mit(blau, stern((4, 6), "south"), saum("G", 1)), falten=True),
         ]),
+        # Der Umhang, in zwei Gliedern, damit er sich im Wind biegt: Das
+        # obere haengt an den Schultern, das untere am oberen. Wie weit er
+        # weht, liest die Animation vom Traeger (animation.fynn_ruestung.umhang).
+        knochen("umhang", [
+            a.kasten([-4.5, 12, 2.7], (9, 12, 0.5), mit(blau, stern((4, 5), "south")), falten=True),
+        ], drehpunkt=[0, 24, 2.95]),
+        knochen("umhang_unten", [
+            a.kasten([-4.5, 3, 2.7], (9, 9, 0.5), mit(blau, saum("G", 1)), falten=True),
+        ], eltern="umhang", drehpunkt=[0, 12, 2.95]),
         # Ein Stehkragen im Nacken, leicht nach hinten gestellt - statt der
         # goldenen Kloetze auf den Schultern, die im Spiel wie Fremdkoerper
         # aussahen.
         knochen("kragen", [
-            a.kasten([-4.5, 24, 2.4], (9, 3, 1), mit(blau, saum("G", 0, 1))),
-        ], drehpunkt=[0, 24, 2.9], drehung=[-15, 0, 0]),
+            a.kasten([-4.5, 24, 1.9], (9, 3, 1), mit(blau, saum("G", 0, 1))),
+        ], drehpunkt=[0, 24, 2.4], drehung=[-15, 0, 0]),
         # Ein Zauberbuch an der linken Huefte, an einer Goldkette
         knochen("zauberbuch", [
             a.kasten([4.4, 11.5, -2], (1.5, 4, 3), mit(voll("o"), saum("G", 0, 1), saum("g", 1))),
             a.kasten([4.6, 15.5, -0.8], (0.6, 1, 0.6), gold),
         ], drehpunkt=[5, 15.5, 0], drehung=[0, 0, 8]),
     ]
+    def runen(f, x, y, w, h):
+        # Eine Reihe goldener Zeichen ueber dem Saum
+        if f in ("up", "down"):
+            return None
+        return "G" if y == h - 2 and x % 2 == 0 else None
+
     rock = [
         knochen("body"),
-        knochen("rightLeg", [a.kasten([-3.9, 0, -2], (4, 12, 4), mit(blau, saum("G", 1)), 0.75, falten=True)]),
-        knochen("leftLeg", [a.kasten([-0.1, 0, -2], (4, 12, 4), mit(blau, saum("G", 1)), 0.75, falten=True)]),
+        knochen("rightLeg", [
+            a.kasten([-3.9, 2, -2], (4, 10, 4), mit(blau, runen), 0.45, falten=True),
+            # Unten weiter: der Rock faellt glockig aus
+            a.kasten([-4.3, 0, -2.4], (4.8, 2.5, 4.8), mit(blau, saum("G", 1)), 0.2),
+        ]),
+        knochen("leftLeg", [
+            a.kasten([-0.1, 2, -2], (4, 10, 4), mit(blau, runen), 0.45, falten=True),
+            a.kasten([-0.5, 0, -2.4], (4.8, 2.5, 4.8), mit(blau, saum("G", 1)), 0.2),
+        ]),
     ]
 
     def schuh(x):
         return [
-            a.kasten([x, 0, -2], (4, 3, 4), mit(blau, saum("k", 1)), 0.6),
+            a.kasten([x, 0, -2], (4, 3, 4), mit(blau, saum("k", 1)), 0.5),
             # Die Spitze: vorn heraus und nach oben gebogen
             a.kasten([x + 1, 0, -4], (2, 1.5, 2), gold),
             a.kasten([x + 1.5, 1.5, -4.5], (1, 1, 1), gold),
@@ -385,21 +411,26 @@ def assassinenmontur():
     kapuze = [
         knochen("body"),
         knochen("head", [
-            a.kasten([-4, 24, -4], (8, 8, 8), ohne_x(mit(dunkel, kapuzenfront)), 1.0),
+            a.kasten([-4, 24, -4], (8, 8, 8), ohne_x(mit(dunkel, kapuzenfront)), 0.6),
+            # Oben abgerundet: eine schmalere Lage auf dem Scheitel
+            a.kasten([-3.5, 32.4, -3.5], (7, 0.6, 7), dunkel),
             # Der Rand steht ueber die Stirn vor und wirft Schatten
-            a.kasten([-4.5, 31, -5.6], (9, 1.5, 1.5), dunkler),
+            a.kasten([-4.2, 30.8, -5.1], (8.4, 1.2, 1.2), dunkler),
         ]),
         # Der Zipfel haengt hinten am Kopf herab. Die erste Fassung war
         # gedreht und stand als Klappe nach oben ab.
         knochen("zipfel", [
-            a.kasten([-2, 27, 4.8], (4, 4, 1.5), dunkel),
-            a.kasten([-1, 25, 5.2], (2, 2, 1), dunkler),
+            a.kasten([-2, 27, 4.4], (4, 4, 1.5), dunkel),
+            a.kasten([-1, 25, 4.8], (2, 2, 1), dunkler),
         ], eltern="head", drehpunkt=[0, 31, 5]),
     ]
     harnisch = [
         knochen("body", [
             a.kasten([-4, 12, -2], (8, 12, 4), mit(dunkel, schraeg_vorn("R", "r", -2),
-                                                   saum("L", 2), saum("k", 0, 1)), 1.0),
+                                                   saum("L", 2), saum("k", 0, 1)), 0.5),
+            # Zwei Guerteltaschen, eine an jeder Huefte
+            a.kasten([-5.2, 12.3, -1.5], (1.3, 2.2, 2.4), mit(grund("L", "L", "l", salz=47), saum("l", 0, 1))),
+            a.kasten([3.9, 12.3, -1.5], (1.3, 2.2, 2.4), mit(grund("L", "L", "l", salz=53), saum("l", 0, 1))),
             # Der Schal um den Hals
             a.kasten([-4.5, 22.5, -3.3], (9, 2, 6.6), rot),
             # Zwei Wurfmesser in der Schaerpe
@@ -438,9 +469,14 @@ def assassinenmontur():
 
     def stiefel(x):
         return [
-            a.kasten([x, 0, -2], (4, 5, 4), mit(dunkler, saum("k", 1)), 1.0),
+            a.kasten([x, 0, -2], (4, 5, 4), mit(dunkler, saum("k", 1)), 0.6),
+            # Runde Kappe vorn am Fuss
+            a.kasten([x + 0.5, 0, -2.9], (3, 1.5, 1), dunkler),
+            # Ein Riemen mit Schnalle
+            a.kasten([x - 0.1, 2.2, -2.7], (4.2, 0.6, 5.4), voll("l")),
+            a.kasten([x + 1.6, 2.1, -2.95], (0.8, 0.8, 0.4), voll("s")),
             # Umgeschlagener Schaft
-            a.kasten([x - 0.5, 5, -2.5], (5, 1, 5), grund("L", "L", "l", salz=19)),
+            a.kasten([x - 0.4, 5, -2.4], (4.8, 1, 4.8), grund("L", "L", "l", salz=19)),
         ]
     stiefelpaar = [
         knochen("body"),
@@ -481,14 +517,15 @@ def waldlaeufer():
     kapuze = [
         knochen("body"),
         knochen("head", [
-            a.kasten([-4, 24, -4], (8, 8, 8), ohne_x(mit(gruen, gesicht_frei)), 1.0),
+            a.kasten([-4, 24, -4], (8, 8, 8), ohne_x(mit(gruen, gesicht_frei)), 0.6),
+            a.kasten([-3.5, 32.4, -3.5], (7, 0.6, 7), gruen),
             # Der Rand steht ueber die Stirn vor
-            a.kasten([-4.5, 31, -5.6], (9, 1.5, 1.5), gruen_dunkel),
+            a.kasten([-4.2, 30.8, -5.1], (8.4, 1.2, 1.2), gruen_dunkel),
         ]),
         # Der Zipfel faellt hinten auf die Schultern
         knochen("zipfel", [
-            a.kasten([-2.5, 26, 4.8], (5, 5, 1.5), gruen),
-            a.kasten([-1.5, 23.5, 5.2], (3, 2.5, 1), gruen_dunkel),
+            a.kasten([-2.5, 26, 4.4], (5, 5, 1.5), gruen),
+            a.kasten([-1.5, 23.5, 4.8], (3, 2.5, 1), gruen_dunkel),
         ], eltern="head", drehpunkt=[0, 31, 5]),
         # Eine Feder an der rechten Seite, schraeg nach hinten
         knochen("feder", [
@@ -504,10 +541,17 @@ def waldlaeufer():
             return "n" if y == 9 else "m"
         return None
 
+    def schnuerung(f, x, y, w, h):
+        if f in ("up", "down"):
+            return None
+        return "L" if (x + y) % 3 == 0 and 0 < y < h - 1 else None
+
     wams = [
         knochen("body", [
             a.kasten([-4, 12, -2], (8, 12, 4), mit(gruen, schraeg_vorn("l", "m", -1), guertel,
-                                                   saum("o", 1), saum("L", 0, 1)), 0.75),
+                                                   saum("o", 1), saum("L", 0, 1)), 0.5),
+            # Eine Tasche am Guertel, rechts
+            a.kasten([-5.1, 12.2, -1.6], (1.2, 2.4, 2.6), mit(leder, saum("n", 0, 1))),
             # Lederkragen
             a.kasten([-4.5, 22.5, -3], (9, 1.5, 6), leder),
             # Die Guertelschnalle
@@ -515,8 +559,19 @@ def waldlaeufer():
         ]),
         # Der Koecher: schraeg ueber den Ruecken, oben an der rechten
         # Schulter (x negativ), unten an der linken Huefte.
+        # Der Armschutz des Bogenschuetzen am linken Unterarm - Leder mit
+        # Schnuerung. Nur der Unterarm, die Hand bleibt frei.
+        knochen("leftArm", [
+            a.kasten([4, 13.5, -2], (4, 4, 4), mit(leder_dunkel, schnuerung), 0.35),
+        ], eltern="body"),
         knochen("koecher", [
-            a.kasten([-2, 11, 3], (3.5, 11, 3.5), mit(leder, saum("n", 1), saum("m", 0, 1))),
+            # Rund statt kantig: zwei ueberkreuzte Kaesten
+            a.kasten([-1.75, 11, 3], (3, 11, 3.5), mit(leder, saum("n", 1), saum("m", 0, 1))),
+            a.kasten([-2, 11, 3.25], (3.5, 11, 3), mit(leder, saum("n", 1), saum("m", 0, 1))),
+        ], drehpunkt=[0, 17, 4.5], drehung=[0, 0, -28]),
+        # Pfeile im Koecher - nur zu sehen, wenn man Pfeile dabei hat
+        # (animation.fynn_ruestung.koecher liest das vom Traeger).
+        knochen("pfeile", [
             # Pfeilschaefte und Federn, die oben herausschauen
             # (eine Stufe hoeher als zuerst - so ragen die Federn auch von
             # vorn gesehen ueber die Schulter)
@@ -525,7 +580,7 @@ def waldlaeufer():
             a.kasten([-1.7, 24.5, 3.3], (1.4, 2.6, 1.4), voll("F")),
             a.kasten([-0.2, 25, 4.3], (1.4, 2.6, 1.4), voll("f")),
             a.kasten([0.8, 23.8, 3.4], (1.2, 2.4, 1.2), voll("F")),
-        ], drehpunkt=[0, 17, 4.5], drehung=[0, 0, -28]),
+        ], eltern="koecher", drehpunkt=[0, 22, 4.5]),
     ]
 
     def knieflicken(f, x, y, w, h):
@@ -541,9 +596,10 @@ def waldlaeufer():
 
     def stiefel(x):
         return [
-            a.kasten([x, 0, -2], (4, 6, 4), mit(leder_dunkel, saum("n", 1)), 1.0),
+            a.kasten([x, 0, -2], (4, 6, 4), mit(leder_dunkel, saum("n", 1)), 0.6),
+            a.kasten([x + 0.5, 0, -2.9], (3, 1.5, 1), leder_dunkel),
             # Umgeschlagener Schaft, gruen gefuettert
-            a.kasten([x - 0.5, 6, -2.5], (5, 1.5, 5), gruen_dunkel),
+            a.kasten([x - 0.4, 6, -2.4], (4.8, 1.5, 4.8), gruen_dunkel),
         ]
     stiefelpaar = [
         knochen("body"),
@@ -795,6 +851,67 @@ def gegenstand(name):
     }
 
 
+# ============================================================ Bewegung
+
+# Was an den Ruestungen sich bewegt. Die Werte kommen vom Traeger
+# (c.owning_entity), berechnet in der Spielerdatei (spieler_animation_bauen):
+# fynn_umhang - wie weit der Wind den Umhang hebt, in Grad
+# fynn_tempo  - wie schnell man geht, 0 bis 1
+# fynn_gang   - der Schritttakt, derselbe wie der der Beine
+# fynn_pfeile - 1, wenn Pfeile im Inventar sind
+# Eine Statue gibt feste Werte vor (statue_bauen).
+U = "(c.owning_entity->v.fynn_umhang)"
+T = "(c.owning_entity->v.fynn_tempo)"
+G = "(c.owning_entity->v.fynn_gang)"
+P = "(c.owning_entity->v.fynn_pfeile)"
+
+BEWEGUNGEN = {
+    # Der Umhang weht nach hinten, je schneller, desto hoeher; das untere
+    # Glied schwingt nach, so biegt er sich wie Stoff. Dazu ein Flattern.
+    "animation.fynn_ruestung.umhang": {
+        "umhang": {"rotation": [f"{U} + math.sin(q.life_time * 400.0) * 2.0 * {T}", 0.0,
+                               f"math.sin(q.life_time * 230.0) * 1.5 * {T}"]},
+        "umhang_unten": {"rotation": [f"{U} * 0.4 + math.sin(q.life_time * 400.0 - 70.0) * 4.0 * {T}", 0.0, 0.0]},
+    },
+    # Die Hutspitze wippt bei jedem Schritt und legt sich im Wind zurueck.
+    "animation.fynn_ruestung.hutspitze": {
+        "hut3": {"rotation": [f"-{U} * 0.15 + math.sin({G} * 2.0) * 4.0 * {T}", 0.0,
+                              f"math.sin({G}) * 5.0 * {T}"]},
+        "hut4": {"rotation": [f"-{U} * 0.2 + math.sin({G} * 2.0 - 40.0) * 6.0 * {T}", 0.0,
+                              f"math.sin({G} - 30.0) * 7.0 * {T}"]},
+    },
+    "animation.fynn_ruestung.zipfel": {
+        "zipfel": {"rotation": [f"{U} * 0.5 + math.sin(q.life_time * 380.0) * 2.0 * {T}", 0.0, 0.0]},
+    },
+    "animation.fynn_ruestung.schal": {
+        "schalende": {"rotation": [f"{U} * 0.9 + math.sin(q.life_time * 420.0) * 5.0 * {T}", 0.0,
+                                   f"math.sin(q.life_time * 260.0) * 4.0 * {T}"]},
+    },
+    "animation.fynn_ruestung.feder": {
+        "feder": {"rotation": [f"-{U} * 0.2", 0.0,
+                               f"math.sin({G} * 2.0) * 6.0 * {T} + math.sin(q.life_time * 500.0) * 1.5 * {T}"]},
+    },
+    # Pfeile nur, wenn man welche hat; der Koecher klappert beim Gehen.
+    "animation.fynn_ruestung.koecher": {
+        "pfeile": {"scale": P},
+        "koecher": {"rotation": [0.0, 0.0, f"math.sin({G} * 2.0) * 2.0 * {T}"]},
+    },
+}
+BEWEGT = {
+    "magierhut": ["hutspitze"],
+    "magierrobe": ["umhang"],
+    "assassinenkapuze": ["zipfel"],
+    "assassinenharnisch": ["schal"],
+    "waldlaeuferkapuze": ["zipfel", "feder"],
+    "waldlaeuferwams": ["koecher"],
+}
+
+
+def bewegungen():
+    return {"format_version": "1.10.0", "animations": {
+        name: {"loop": True, "bones": knochen} for name, knochen in BEWEGUNGEN.items()}}
+
+
 def attachable(name, textur):
     slot = TEILE[name][0]
     beschreibung = {
@@ -805,12 +922,15 @@ def attachable(name, textur):
         "geometry": {"default": f"geometry.{name}"},
         "render_controllers": ["controller.render.armor"],
     }
+    if name in BEWEGT:
+        beschreibung["animations"] = {k: f"animation.fynn_ruestung.{k}" for k in BEWEGT[name]}
+        beschreibung["scripts"] = {"animate": list(BEWEGT[name])}
     # Hose und Schuhe blenden die zweite Hautschicht der Beine aus, wie
     # beim Ritter - sonst schaut sie durch den Stoff.
     if slot == "legs":
-        beschreibung["scripts"] = {"parent_setup": "variable.leg_layer_visible = 0.0;"}
+        beschreibung.setdefault("scripts", {})["parent_setup"] = "variable.leg_layer_visible = 0.0;"
     if slot == "feet":
-        beschreibung["scripts"] = {"parent_setup": "variable.boot_layer_visible = 0.0;"}
+        beschreibung.setdefault("scripts", {})["parent_setup"] = "variable.boot_layer_visible = 0.0;"
     return {"format_version": "1.10.0", "minecraft:attachable": {"description": beschreibung}}
 
 
@@ -890,6 +1010,7 @@ def main():
             englisch += [(f"item.fynn:{name}", en), (f"item.fynn:{name}.name", en)]
         ansicht(textur, teile, WURZEL / "vorschau" / f"{satz}.png")
         print(f"gebaut: {satz} ({', '.join(teile)})")
+    schreibe(RES / "animations" / "rollenruestung.animation.json", bewegungen())
     liste_pfad.write_text(json.dumps(liste, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     sprache(RES / "texts" / "de_DE.lang", deutsch)
     sprache(RES / "texts" / "en_US.lang", englisch)

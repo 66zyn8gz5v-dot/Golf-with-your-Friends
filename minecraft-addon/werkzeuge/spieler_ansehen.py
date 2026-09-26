@@ -296,8 +296,17 @@ class Spieler:
         zeiten = zeiten or {}
         u = self.umgebung(zustand)
         skripte = self.beschreibung.get("scripts", {})
-        for zeile in skripte.get("pre_animation", []):
+        for zeile in skripte.get("initialize", []):
             molang.rechne(zeile, u)
+        # Mehrere Bilder lang vorrechnen: Manche Werte laufen weich nach
+        # (math.lerp auf den eigenen alten Wert) und stehen erst nach einer
+        # Weile dort, wo sie im Spiel waeren.
+        for _ in range(60):
+            for k, v in zustand.items():
+                if k not in ("hand", "zweithand") and not molang.normname(k).startswith("v."):
+                    u.werte[molang.normname(k)] = v
+            for zeile in skripte.get("pre_animation", []):
+                molang.rechne(zeile, u)
         # Vom Werkzeug gesetzte Werte gewinnen gegen die Vorberechnung - sonst
         # liesse sich ein Zwischenwert wie v.hieb_zeit nicht vorgeben.
         for k, v in zustand.items():
@@ -576,22 +585,24 @@ def bild(spieler, zustand, waffe=None, ich=False, zustaende=None, zeiten=None,
         texturen["w:"] = waffe.textur
     for i, datei in enumerate(ruestung):
         # Ruestungsteile heften sich ueber den Namen an: Ein Knochen "head"
-        # im Ruestungsmodell sitzt auf dem Kopf des Spielers.
-        d = lade(datei)["minecraft:attachable"]["description"]
+        # im Ruestungsmodell sitzt auf dem Kopf des Spielers. Ihre eigenen
+        # Animationen (Umhang, Hutspitze) lesen den Spieler wie im Spiel.
+        teil = Waffe(datei)
         praefix = f"r{i}:"
-        for g in (RES / "models" / "entity").glob("*.json"):
-            for geo_r in lade(g).get("minecraft:geometry", []):
-                if geo_r["description"]["identifier"] != d["geometry"]["default"]:
-                    continue
-                teile = _modellknochen(geo_r, praefix)
-                for name, k in teile.items():
-                    kurz = name[len(praefix):]
-                    if kurz in knochen and not k["eltern"]:
-                        k["eltern"] = kurz
-                    elif k["eltern"] and k["eltern"][len(praefix):] in knochen and k["eltern"] not in teile:
-                        k["eltern"] = k["eltern"][len(praefix):]
-                knochen.update(teile)
-        texturen[praefix] = Image.open(RES / (d["textures"]["default"] + ".png")).convert("RGBA")
+        knochenliste = _modellknochen(teil.geo, praefix)
+        for name, k in knochenliste.items():
+            kurz = name[len(praefix):]
+            if kurz in knochen and not k["eltern"]:
+                k["eltern"] = kurz
+            elif k["eltern"] and k["eltern"] not in knochenliste and k["eltern"][len(praefix):] in knochen:
+                k["eltern"] = k["eltern"][len(praefix):]
+            elif k["eltern"] and k["eltern"] in knochenliste and kurz in knochen:
+                # Ein Ruestungsknochen, der wie ein Spielerknochen heisst
+                # (leftArm im Wams), haengt am Spielerknochen, nicht an body.
+                k["eltern"] = kurz
+        knochen.update(knochenliste)
+        posen[praefix] = teil.pose(u, ich)
+        texturen[praefix] = teil.textur
     drehpunkte = {n: k["pivot"] for n, k in knochen.items()}
     matrizen = baue_matrizen(knochen, posen, drehpunkte)
     seiten = flaechen(knochen, matrizen, texturen, nur=ICH_SICHTBAR if ich else None)

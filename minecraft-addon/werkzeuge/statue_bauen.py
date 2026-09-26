@@ -89,7 +89,16 @@ def aussehen():
                 "geometry": {"default": "geometry.humanoid.custom"},
                 "enable_attachables": True,
                 "animations": {"pose": "animation.statue.pose"},
-                "scripts": {"animate": ["pose"]},
+                # Was die Ruestungen vom Traeger lesen (siehe
+                # rollenruestung_bauen.py): Eine Statue steht still, ihr
+                # Umhang haengt, und im Koecher stecken Pfeile.
+                "scripts": {
+                    "initialize": ["variable.fynn_pfeile = 1.0;", "variable.fynn_umhang = 4.0;",
+                                   "variable.fynn_tempo = 0.0;", "variable.fynn_gang = 0.0;"],
+                    "variables": {"variable.fynn_pfeile": "public", "variable.fynn_umhang": "public",
+                                  "variable.fynn_tempo": "public", "variable.fynn_gang": "public"},
+                    "animate": ["pose"],
+                },
                 "render_controllers": ["controller.render.default"],
             }
         },

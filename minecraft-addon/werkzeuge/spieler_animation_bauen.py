@@ -57,6 +57,20 @@ HIEBWAFFEN = [
     "fynn:elektrumdolche", "fynn:diamantdolche", "fynn:netheritdolche",
 ]
 BOEGEN = ["minecraft:bow", "fynn:sturmbogen"]
+PFEILE = ["minecraft:arrow", "fynn:eisenpfeil", "fynn:silberpfeil", "fynn:goldpfeil", "fynn:elektrumpfeil"]
+
+
+def pfeilsuche():
+    """Hat der Spieler irgendwo Pfeile? Zweithand, Schnellleiste, Rucksack.
+
+    Molang kann in jeden Platz schauen (query.is_item_name_any mit Platz
+    und Nummer), aber nur einzeln - also 37 Blicke. Das Spiel kennt so nur
+    das eigene Inventar; bei Mitspielern bleibt der Koecher leer."""
+    n = namen(PFEILE)
+    teile = [f"query.is_item_name_any('slot.weapon.offhand', 0, {n})"]
+    teile += [f"query.is_item_name_any('slot.hotbar', {i}, {n})" for i in range(9)]
+    teile += [f"query.is_item_name_any('slot.inventory', {i}, {n})" for i in range(27)]
+    return " || ".join(teile)
 
 
 def namen(liste):
@@ -71,6 +85,11 @@ INITIALISIEREN = [
     "variable.fynn_hieb_zuvor = 0.0;",
     "variable.fynn_luft = 0.0;",
     "variable.fynn_sturz = 0.0;",
+    "variable.fynn_flugzeit = 0.0;",
+    "variable.fynn_flug = 0.0;",
+    "variable.fynn_umhang = 4.0;",
+    "variable.fynn_pfeile = 0.0;",
+    "variable.fynn_pfeiltakt = 0.0;",
     "variable.fynn_lade = 0.0;",
     "variable.fynn_los = 0.0;",
     "variable.fynn_spannen_zuvor = 0.0;",
@@ -98,6 +117,16 @@ VORBERECHNUNG = [
     # sich die Haltung wieder.
     "variable.fynn_sturz = math.lerp(variable.fynn_sturz, (!query.is_on_ground && query.vertical_speed < -12.0 && "
     "!query.is_gliding && !query.is_swimming && !query.is_riding) ? 1.0 : 0.0, 0.08);",
+    # Fliegen im Kreativmodus. Minecraft verraet das nicht (query.is_flying
+    # gibt es nicht), also wird es erkannt: Wer laenger als eine knappe
+    # halbe Sekunde in der Luft ist, ohne zu fallen, fliegt. Ein Sprung
+    # schwebt nur um den hoechsten Punkt herum so langsam - zu kurz. Beim
+    # Hoch- und Runterfliegen bleibt der Wert stehen; echtes Fallen (schneller
+    # als 12 je Sekunde) und der Boden setzen ihn zurueck.
+    "variable.fynn_flugzeit = (query.is_on_ground || query.is_swimming || query.is_gliding || query.is_riding || "
+    "query.is_levitating || query.vertical_speed < -12.0) ? 0.0 : (math.abs(query.vertical_speed) < 4.0 ? "
+    "variable.fynn_flugzeit + query.delta_time : variable.fynn_flugzeit);",
+    "variable.fynn_flug = math.lerp(variable.fynn_flug, math.clamp((variable.fynn_flugzeit - 0.45) / 0.35, 0.0, 1.0), 0.15);",
     # Aufladen: Schleichen mit Schwert oder Dolch laedt in kampf.js den
     # Wirbelschlag und den Schattensprung. Hier waechst die Ausholhaltung
     # im selben Takt mit - eine Sekunde bis ganz.
@@ -108,14 +137,29 @@ VORBERECHNUNG = [
     # rechnet auch Mojangs eigener Bogen.
     "variable.fynn_spannen = (variable.fynn_bogen && query.main_hand_item_use_duration > 0.0) ? "
     "math.clamp((query.main_hand_item_max_duration - query.main_hand_item_use_duration) / 20.0, 0.0, 1.0) : 0.0;",
+    # Wie weit der Umhang nach hinten weht, in Grad: im Stehen fast
+    # senkrecht, im Gehen und Rennen hoch, im freien Fall fast waagerecht.
+    # Weich nachgezogen, damit er nicht springt, wenn man anhaelt.
+    # Im Flug liegt der Koerper schon schraeg im Wind - dort braucht der
+    # Umhang nur wenig mehr, um waagerecht hinterherzuwehen.
+    "variable.fynn_umhang = math.lerp(variable.fynn_umhang, (4.0 + 26.0 * variable.fynn_tempo + "
+    "(query.is_sprinting ? 10.0 : 0.0) + (query.is_on_ground ? 0.0 : 8.0)) * (1.0 - variable.fynn_flug) + "
+    "variable.fynn_flug * (6.0 + 25.0 * variable.fynn_tempo) + 60.0 * variable.fynn_sturz, 0.12);",
+    # Pfeile im Inventar - nur jedes zwanzigste Bild nachgesehen, das sind
+    # 37 Plaetze. Der Koecher des Waldlaeufers zeigt danach Pfeile oder nicht.
+    "variable.fynn_pfeiltakt = variable.fynn_pfeiltakt + 1.0;",
+    "variable.fynn_pfeile = math.mod(variable.fynn_pfeiltakt, 20.0) < 1.0 ? ((" + pfeilsuche() + ") ? 1.0 : 0.0) "
+    ": variable.fynn_pfeile;",
     # Losgelassen: eine Viertelsekunde Rueckstoss.
     "variable.fynn_los = (variable.fynn_spannen_zuvor > 0.25 && variable.fynn_spannen <= 0.0) ? 1.0 : "
     "math.max(variable.fynn_los - query.delta_time * 4.0, 0.0);",
     "variable.fynn_spannen_zuvor = variable.fynn_spannen;",
 ]
 
-# Das Attachable liest diese Werte ueber c.owning_entity.
-OEFFENTLICH = ["variable.fynn_schwert"]
+# Das Attachable liest diese Werte ueber c.owning_entity - das Schwert
+# seinen Hieb, die Ruestungen Umhang, Schritt und Pfeile.
+OEFFENTLICH = ["variable.fynn_schwert", "variable.fynn_umhang", "variable.fynn_tempo",
+               "variable.fynn_gang", "variable.fynn_pfeile"]
 
 
 # ------------------------------------------------------------ Hilfen
@@ -309,24 +353,38 @@ RENNEN = "(query.is_sprinting ? 1.0 : 0.0)"
 # Die Arme schwingen nur, wenn sie frei sind - nicht beim Zielen.
 FREI = "(variable.fynn_spannen <= 0.0)"
 
+# Zweite Fassung, dynamischer (Fynn: "beim Laufen die Animation noch ein
+# bisschen dynamischer"): tieferes Wippen, mehr Schulterdrehung, der
+# Oberkoerper nickt bei jedem Schritt nach vorn und wiegt sich seitlich,
+# die Arme schwingen weiter aus.
 LAUFEN = {
     "loop": True,
     "bones": {
         # Der Koerper wippt: am tiefsten, wenn die Beine am weitesten
         # auseinander stehen, am hoechsten, wenn sie aneinander vorbei gehen.
-        "root": {"position": [0.0, f"(math.abs(math.sin({GANG})) - 1.0) * 0.9 * {TEMPO}", 0.0]},
+        "root": {"position": [0.0, f"(math.abs(math.sin({GANG})) - 1.0) * 1.3 * {TEMPO}", 0.0]},
         # Die Schultern drehen gegen die Huefte, wie beim echten Gehen: Der
-        # Arm, der vorn ist, nimmt seine Schulter mit. Beim Rennen lehnt der
-        # Oberkoerper nach vorn.
-        "waist": {"rotation": [f"(4.0 + 8.0 * {RENNEN}) * {TEMPO}",
-                               f"-math.cos({GANG}) * 9.0 * {TEMPO}",
-                               f"math.sin({GANG}) * 1.5 * {TEMPO}"]},
-        # Mehr Schwung in den Armen, beim Rennen etwas abgespreizt. Die Beine
-        # bleiben bei Minecrafts Schwung - der ist beim Rennen schon 70 Grad.
-        "rightarm": {"rotation": [f"-variable.tcos0 * (0.2 + 0.2 * {RENNEN}) * {FREI}", 0.0,
-                                  f"(2.0 + 4.0 * {RENNEN}) * {TEMPO} * {FREI}"]},
-        "leftarm": {"rotation": [f"variable.tcos0 * (0.2 + 0.2 * {RENNEN}) * {FREI}", 0.0,
-                                 f"-(2.0 + 4.0 * {RENNEN}) * {TEMPO} * {FREI}"]},
+        # Arm, der vorn ist, nimmt seine Schulter mit. Bei jedem Aufsetzen
+        # nickt der Oberkoerper ein wenig; beim Rennen lehnt er weit vor.
+        "waist": {"rotation": [f"(4.0 + 10.0 * {RENNEN} + math.abs(math.cos({GANG})) * 3.0) * {TEMPO}",
+                               f"-math.cos({GANG}) * 12.0 * {TEMPO}",
+                               f"math.sin({GANG}) * 3.0 * {TEMPO}"]},
+        # Mehr Schwung in den Armen, beim Rennen weit und abgespreizt. Die
+        # Beine bleiben bei Minecrafts Schwung - der ist beim Rennen schon
+        # 70 Grad.
+        "rightarm": {"rotation": [f"-variable.tcos0 * (0.35 + 0.35 * {RENNEN}) * {FREI}", 0.0,
+                                  f"(3.0 + 6.0 * {RENNEN}) * {TEMPO} * {FREI}"]},
+        "leftarm": {"rotation": [f"variable.tcos0 * (0.35 + 0.35 * {RENNEN}) * {FREI}", 0.0,
+                                 f"-(3.0 + 6.0 * {RENNEN}) * {TEMPO} * {FREI}"]},
+    },
+}
+
+# Im Stehen atmet man: Der Oberkoerper hebt und senkt sich kaum sichtbar.
+ATMEN = {
+    "loop": True,
+    "bones": {
+        "waist": {"rotation": ["math.sin(query.life_time * 80.0) * 1.2", 0.0, 0.0]},
+        "head": {"position": [0.0, "math.sin(query.life_time * 80.0) * 0.15", 0.0]},
     },
 }
 
@@ -390,6 +448,33 @@ LUFT = {
         "rightarm": {"rotation": [f"-12.0 * {FREI}", 0.0, f"18.0 * {FREI}"]},
         "leftarm": {"rotation": [f"-8.0 * {FREI}", 0.0, f"-18.0 * {FREI}"]},
         "waist": {"rotation": [-4.0, 0.0, 0.0]},
+    },
+}
+
+
+# ------------------------------------------------------------ Fliegen
+
+# Fliegen im Kreativmodus (Fynn: "im Kreativmodus brauchen wir auch eine
+# Fluganimation"). Im Schweben ein ruhiges Auf und Ab, die Arme locker
+# ausgebreitet, die Beine wechselnd; im Vorwaertsflug legt sich der
+# Koerper nach vorn, je schneller, desto flacher, die Arme gehen an den
+# Koerper - wie ein Held im Flug. Gedreht wird um die Koerpermitte.
+NEIGUNG = f"(15.0 + 50.0 * {TEMPO})"
+SCHWEBEN = f"(1.0 - {TEMPO})"
+WELLE = "math.sin(query.life_time * 120.0)"
+FLUG = {
+    "loop": True,
+    "bones": {
+        "root": {"rotation": [f"{NEIGUNG} - this", 0.0, 0.0],
+                 "position": [0.0, f"12.0 - 12.0 * math.cos({NEIGUNG}) + {WELLE} * 0.8 * {SCHWEBEN} - this",
+                              f"12.0 * math.sin({NEIGUNG}) - this"]},
+        "waist": {"rotation": ["-this", "-this", "-this"]},
+        "rightarm": {"rotation": [f"-15.0 + 40.0 * {TEMPO} + {WELLE} * 5.0 * {SCHWEBEN} - this", "-this",
+                                  f"14.0 - 8.0 * {TEMPO} - this"]},
+        "leftarm": {"rotation": [f"-15.0 + 40.0 * {TEMPO} - {WELLE} * 5.0 * {SCHWEBEN} - this", "-this",
+                                 f"-14.0 + 8.0 * {TEMPO} - this"]},
+        "rightleg": {"rotation": [f"10.0 + {WELLE} * 8.0 * {SCHWEBEN} - this", "-this", "3.0 - this"]},
+        "leftleg": {"rotation": [f"4.0 - {WELLE} * 8.0 * {SCHWEBEN} - this", "-this", "-3.0 - this"]},
     },
 }
 
@@ -477,9 +562,12 @@ BEWEGT = f"{AUSSEN_FREI} && !query.is_swimming && !query.is_gliding && !query.is
 TEILE = [
     ("fynn_laufen", "animation.fynn.laufen", LAUFEN,
      f"{BEWEGT} && !query.is_sneaking && variable.fynn_luft < 0.5"),
+    ("fynn_atmen", "animation.fynn.atmen", ATMEN,
+     f"{BEWEGT} && !query.is_sneaking && variable.fynn_tempo < 0.05 && variable.fynn_luft < 0.5"),
     ("fynn_schleichen", "animation.fynn.schleichen", SCHLEICHEN,
      f"{BEWEGT} && query.is_sneaking && !query.is_item_name_any('slot.weapon.mainhand', 'fynn:degen')"),
-    ("fynn_luft", "animation.fynn.luft", LUFT, f"({BEWEGT}) * variable.fynn_luft"),
+    ("fynn_luft", "animation.fynn.luft", LUFT, f"({BEWEGT}) * variable.fynn_luft * (1.0 - variable.fynn_flug)"),
+    ("fynn_flug", "animation.fynn.flug", FLUG, f"({AUSSEN_FREI} && !query.is_gliding) * variable.fynn_flug"),
     ("fynn_sturz", "animation.fynn.sturz", STURZ, f"({AUSSEN_FREI}) * variable.fynn_sturz"),
     ("fynn_aufladen", "animation.fynn.aufladen", AUFLADEN, f"{BEWEGT} && variable.fynn_lade > 0.0"),
     ("fynn_aufladen_ich", "animation.fynn.aufladen_ich", AUFLADEN_ICH,
@@ -523,7 +611,9 @@ def spielerdatei():
     unsere = {k for k, *_ in TEILE}
     s["initialize"] = [z for z in s["initialize"] if "fynn_" not in z] + INITIALISIEREN
     eigene_vars = ("variable.fynn_schwert", "variable.fynn_bogen", "variable.fynn_hieb", "variable.fynn_gang",
-                   "variable.fynn_tempo", "variable.fynn_luft", "variable.fynn_sturz", "variable.fynn_lade", "variable.fynn_spannen",
+                   "variable.fynn_tempo", "variable.fynn_luft", "variable.fynn_sturz", "variable.fynn_umhang",
+                   "variable.fynn_flug",
+                   "variable.fynn_pfeil", "variable.fynn_lade", "variable.fynn_spannen",
                    "variable.fynn_los")
     s["pre_animation"] = [z for z in s["pre_animation"] if not z.startswith(eigene_vars)] + VORBERECHNUNG
     s["animate"] = [e for e in s["animate"] if (next(iter(e)) if isinstance(e, dict) else e) not in unsere]
