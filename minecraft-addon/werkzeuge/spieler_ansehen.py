@@ -324,8 +324,14 @@ def _modellknochen(geo, praefix="", bindung=None):
         # Gebunden ist ein Knochen mit "binding" - oder einer, der so heisst
         # wie der Handknochen des Spielers (so machen es Mojangs Bogen).
         if bindung and ("binding" in k or k["name"].lower() == bindung):
-            eintrag["eltern"] = bindung
-            eintrag["gebunden"] = bindung
+            ziel = bindung
+            # Eine feste Bindung wie "'leftitem'" oder "'body'" nennt ihren
+            # Knochen selbst; q.item_slot_to_bone_name meint die Waffenhand.
+            fest = re.fullmatch(r"\s*'([A-Za-z_]+)'\s*", k.get("binding", ""))
+            if fest:
+                ziel = fest.group(1).lower()
+            eintrag["eltern"] = ziel
+            eintrag["gebunden"] = ziel
         aus[name] = eintrag
     return aus
 
@@ -344,8 +350,8 @@ def baue_matrizen(knochen, posen, drehpunkte):
         if name in fertig:
             return fertig[name]
         k = knochen[name]
-        praefix = "w:" if name.startswith("w:") else ""
-        eigen = posen[praefix].k.get(name[len(praefix):], None)
+        praefix = name.split(":")[0] + ":" if ":" in name else ""
+        eigen = posen[praefix].k.get(name[len(praefix):], None) if praefix in posen else None
         rot = [k["grund"][i] + (eigen["rotation"][i] if eigen else 0) for i in range(3)]
         pos = eigen["position"] if eigen else [0, 0, 0]
         sk = eigen["scale"] if eigen else [1, 1, 1]
@@ -378,12 +384,13 @@ def flaechen(knochen, matrizen, texturen, nur=None, ohne_deckschicht=True):
     aus = []
     for name, k in knochen.items():
         kurz = name.split(":")[-1]
-        if nur is not None and not name.startswith("w:") and kurz not in nur:
+        praefix = name.split(":")[0] + ":" if ":" in name else ""
+        if nur is not None and not praefix and kurz not in nur:
             continue
-        if ohne_deckschicht and not name.startswith("w:") and kurz in DECKSCHICHT:
+        if ohne_deckschicht and not praefix and kurz in DECKSCHICHT:
             continue
         m = matrizen[name]
-        tex = texturen["w:" if name.startswith("w:") else ""]
+        tex = texturen[praefix]
         for kasten in k["kaesten"]:
             seiten = flaechen_des_kastens(kasten["origin"], kasten["size"], kasten.get("inflate", 0) or 0)
             uv = kasten.get("uv", [0, 0])
@@ -420,7 +427,7 @@ def _spiegel(p):
     return (-p[0], p[1], p[2])
 
 
-def male(seiten, projektion, sichtpunkt, breite, hoehe, hintergrund, bild=None):
+def male(seiten, projektion, sichtpunkt, breite, hoehe, hintergrund, bild=None, tiefe=None):
     """Maler-Verfahren: hinten zuerst. projektion: Raumpunkt -> Bildpunkt oder None."""
     bild = bild or Image.new("RGBA", (breite, hoehe), hintergrund)
     zeichne = ImageDraw.Draw(bild)
@@ -431,7 +438,11 @@ def male(seiten, projektion, sichtpunkt, breite, hoehe, hintergrund, bild=None):
         zur_kamera = sichtpunkt(m)
         if sum(n[i] * zur_kamera[i] for i in range(3)) <= 0:
             continue
-        liste.append((sum(c * c for c in zur_kamera), f))
+        # Wie weit weg: ohne Fluchtpunkt entlang der Blickrichtung, sonst
+        # der Abstand zur Kamera. (Anfangs stand hier fuer beide der
+        # Abstand - ohne Fluchtpunkt ist der ueberall gleich, und der
+        # Koecher lag vor der Brust statt dahinter.)
+        liste.append((tiefe(m) if tiefe else sum(c * c for c in zur_kamera), f))
     licht = (0.35, 0.9, -0.25)
     for _, f in sorted(liste, key=lambda t: -t[0]):
         ecken = [_spiegel(p) for p in f["ecken"]]
@@ -483,7 +494,8 @@ def ansicht_aussen(seiten, gier, neigung, breite, hoehe, zoom, mitte=(0, 16, 0),
         return (breite / 2 + zoom * sum(d[i] * rechts[i] for i in range(3)),
                 hoehe / 2 - zoom * sum(d[i] * hoch[i] for i in range(3)))
 
-    return male(seiten, proj, lambda p: richtung, breite, hoehe, hintergrund)
+    return male(seiten, proj, lambda p: richtung, breite, hoehe, hintergrund,
+                tiefe=lambda p: -sum(p[i] * richtung[i] for i in range(3)))
 
 
 def ansicht_ich(seiten, breite, hoehe, auge=(2.5, 25.0, -3.0), sichtfeld=55.0, hintergrund=(150, 190, 235, 255)):
@@ -545,7 +557,8 @@ class Waffe:
 
 
 def bild(spieler, zustand, waffe=None, ich=False, zustaende=None, zeiten=None,
-         breite=360, hoehe=420, gier=30, neigung=10, zoom=9.0, auge=(2.5, 25.0, -3.0), nachher=None):
+         breite=360, hoehe=420, gier=30, neigung=10, zoom=9.0, auge=(2.5, 25.0, -3.0), nachher=None,
+         ruestung=()):
     zustand = dict(zustand)
     zustand["v.is_first_person"] = 1.0 if ich else 0.0
     if waffe:
@@ -561,6 +574,24 @@ def bild(spieler, zustand, waffe=None, ich=False, zustaende=None, zeiten=None,
         knochen.update(_modellknochen(waffe.geo, "w:", bindung="rightitem"))
         posen["w:"] = waffe.pose(u, ich)
         texturen["w:"] = waffe.textur
+    for i, datei in enumerate(ruestung):
+        # Ruestungsteile heften sich ueber den Namen an: Ein Knochen "head"
+        # im Ruestungsmodell sitzt auf dem Kopf des Spielers.
+        d = lade(datei)["minecraft:attachable"]["description"]
+        praefix = f"r{i}:"
+        for g in (RES / "models" / "entity").glob("*.json"):
+            for geo_r in lade(g).get("minecraft:geometry", []):
+                if geo_r["description"]["identifier"] != d["geometry"]["default"]:
+                    continue
+                teile = _modellknochen(geo_r, praefix)
+                for name, k in teile.items():
+                    kurz = name[len(praefix):]
+                    if kurz in knochen and not k["eltern"]:
+                        k["eltern"] = kurz
+                    elif k["eltern"] and k["eltern"][len(praefix):] in knochen and k["eltern"] not in teile:
+                        k["eltern"] = k["eltern"][len(praefix):]
+                knochen.update(teile)
+        texturen[praefix] = Image.open(RES / (d["textures"]["default"] + ".png")).convert("RGBA")
     drehpunkte = {n: k["pivot"] for n, k in knochen.items()}
     matrizen = baue_matrizen(knochen, posen, drehpunkte)
     seiten = flaechen(knochen, matrizen, texturen, nur=ICH_SICHTBAR if ich else None)

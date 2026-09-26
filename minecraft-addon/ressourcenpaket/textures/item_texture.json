@@ -136,6 +136,18 @@
     },
     "frostkugel": {
       "textures": "textures/items/frostkugel"
+    },
+    "waldlaeuferkapuze": {
+      "textures": "textures/items/waldlaeuferkapuze"
+    },
+    "waldlaeuferwams": {
+      "textures": "textures/items/waldlaeuferwams"
+    },
+    "waldlaeuferhose": {
+      "textures": "textures/items/waldlaeuferhose"
+    },
+    "waldlaeuferstiefel": {
+      "textures": "textures/items/waldlaeuferstiefel"
     }
   }
 }

@@ -70,13 +70,12 @@ const STERN = 9;
 
 // Die Ruestung jeder Rolle. Wer alle vier Teile traegt, bekommt die Kraft
 // schneller zurueck (einen Punkt mehr je halbe Sekunde), und hinter der
-// Leiste steht ein goldener Stern. Der Bogenschuetze hat keine eigene
-// Ruestung - fuer ihn zaehlt Leder, die Kleidung eines Waldlaeufers.
+// Leiste steht ein goldener Stern.
 const SETS = {
     ritter: ["fynn:ritterhelm", "fynn:ritterbrustpanzer", "fynn:ritterbeinschutz", "fynn:ritterstiefel"],
     magier: ["fynn:magierhut", "fynn:magierrobe", "fynn:magierrock", "fynn:magierschuhe"],
-    bogenschuetze: ["minecraft:leather_helmet", "minecraft:leather_chestplate",
-        "minecraft:leather_leggings", "minecraft:leather_boots"],
+    bogenschuetze: ["fynn:waldlaeuferkapuze", "fynn:waldlaeuferwams", "fynn:waldlaeuferhose",
+        "fynn:waldlaeuferstiefel"],
     assassine: ["fynn:assassinenkapuze", "fynn:assassinenharnisch", "fynn:assassinenhose",
         "fynn:assassinenstiefel"],
 };

@@ -13,8 +13,12 @@ jede Waffe; der andere an "leftitem", dem Knochen der linken Hand. Das
 geht, weil ein Attachable seine Knochen ueber den Namen an den Traeger
 bindet - dasselbe, womit die Ritterruestung an Armen und Beinen sitzt.
 
-In der Ich-Ansicht ist der linke Dolch ausgeblendet: Dort gibt es keinen
-linken Arm, an dem er haengen koennte, und er schwebte irgendwo im Bild.
+In der Ich-Ansicht zeigt Minecraft keinen linken Arm, und "leftitem" liegt
+dort irgendwo hinter der Kamera. Der linke Dolch der Ich-Ansicht ist darum
+eine dritte Kette, gebunden an "body" - der Koerper dreht sich in der
+Ich-Ansicht mit dem Blick, er steht also fest vor der Kamera. Dort sitzt
+der linke Dolch spiegelbildlich zum rechten, unten links im Bild. Wo genau,
+wird nicht geschaetzt, sondern aus dem rechten gerechnet (links_ich).
 
 Was nicht hier steht: dass die Zweithand leer bleibt, solange man die
 Dolche haelt. Das macht das Skript (dolche.js).
@@ -49,6 +53,21 @@ TIEFE = {"L": 1.0, "M": 1.0, "S": 1.0, "G": 2.0, "g": 2.0,
 GRIFF_AUSSEN = -4.5
 GRIFF_ICH = -22.0
 
+# Wie gross die Dolche in der Hand sind. Mit der Groesse der Schwerter
+# (0.37 und 0.28) waren sie sieben Pixel lang, zwei davon Griff: Von vorn
+# sah man nur den Knauf, und Fynn schrieb, sie "stecken noch in der Hand".
+# Jetzt etwa halb so lang wie ein Schwert, wie ein Dolch eben ist.
+GROESSE_AUSSEN = 0.55
+GROESSE_ICH = 0.40
+# Von aussen zeigt die Klinge nicht waagerecht nach vorn, sondern schraeg
+# nach oben - so sieht man sie auch von vorn.
+KIPPEN_AUSSEN = 40.0
+# In der Ich-Ansicht: rechts sitzt die Parierstange knapp ueber der Faust
+# (nachgesehen mit spieler_ansehen - tiefer verschwindet der Dolch hinter
+# der Hand). Links gibt es keine Hand; dort liegt der Dolch tiefer, damit
+# sein Griff unten aus dem Bild laeuft, statt frei in der Luft zu enden.
+ICH_VERSATZ_RECHTS = 0.0
+
 
 def griffmitte(karte):
     """Hoehe der Griffmitte im Modell, samt Knauf - wie bei den Schwertern."""
@@ -62,6 +81,15 @@ def griffmitte(karte):
 def griffversatz(karte):
     y = griffmitte(karte)
     return GRIFF_AUSSEN - (y - 8), GRIFF_ICH - (y - 8)
+
+
+def dolch_griffversatz(karte):
+    """Wie griffversatz, aber fuer die groesseren Dolche: Der Versatz liegt
+    im verkleinerten Knochen, also muss er mit der Groesse umgerechnet
+    werden, damit die Griffmitte an derselben Stelle der Faust bleibt."""
+    y = griffmitte(karte)
+    return (GRIFF_AUSSEN * 0.37 / GROESSE_AUSSEN - (y - 8),
+            GRIFF_ICH * 0.28 / GROESSE_ICH - (y - 8))
 
 
 def mit_linker_hand(modell):
@@ -78,7 +106,12 @@ def mit_linker_hand(modell):
             neu["name"] += "_l"
             neu["parent"] = "leftitem" if neu["parent"] == "rightitem" else neu["parent"] + "_l"
         links.append(neu)
-    geo["bones"] = rechts + links
+    # Die dritte Kette fuer die Ich-Ansicht, am Koerper.
+    griff = next(k for k in rechts if k["name"] == "griff")
+    ich = [{"name": "links_ich", "binding": "'body'", "pivot": [0, 8, 0]},
+           {"name": "griff_li", "parent": "links_ich", "pivot": [0, 8, 0],
+            "cubes": copy.deepcopy(griff["cubes"])}]
+    geo["bones"] = rechts + links + ich
     return modell
 
 
@@ -91,13 +124,13 @@ def symbol(farben):
     return bild
 
 
-def animation():
-    aussen, ich = griffversatz(v.KARTE)
+def animation(links_ich=None, ich=ICH_VERSATZ_RECHTS):
+    aussen, _ = dolch_griffversatz(v.KARTE)
     halten = {
         "waffe": {
             "position": ["c.is_first_person ? -3.5 : 0.0", "c.is_first_person ? -3.5 : -2.0", 0.0],
-            "rotation": ["c.is_first_person ? 0.0 : 90.0", 0.0, "c.is_first_person ? -135.0 : 0.0"],
-            "scale": "c.is_first_person ? 0.28 : 0.37",
+            "rotation": [f"c.is_first_person ? 0.0 : {KIPPEN_AUSSEN}", 0.0, "c.is_first_person ? -135.0 : 0.0"],
+            "scale": f"c.is_first_person ? {GROESSE_ICH} : {GROESSE_AUSSEN}",
         },
         "griff": {
             "position": [0.0, f"c.is_first_person ? {ich:.2f} : {aussen:.2f}", 0.0],
@@ -107,22 +140,60 @@ def animation():
     links = {
         "waffe_l": {
             "position": [0.0, -2.0, 0.0],
-            "rotation": [90.0, 0.0, 0.0],
-            # In der Ich-Ansicht weg - dort fehlt der linke Arm.
-            "scale": "c.is_first_person ? 0.0 : 0.37",
+            "rotation": [KIPPEN_AUSSEN, 0.0, 0.0],
+            # In der Ich-Ansicht weg - dort uebernimmt links_ich.
+            "scale": f"c.is_first_person ? 0.0 : {GROESSE_AUSSEN}",
         },
         "griff_l": {
             "position": [0.0, round(aussen, 2), 0.0],
             "rotation": [0.0, 90.0, 0.0],
         },
     }
-    return {
-        "format_version": "1.10.0",
-        "animations": {
-            "animation.dolche.halten": {"loop": True, "bones": halten},
-            "animation.dolche.links": {"loop": True, "bones": links},
-        },
+    anims = {
+        "animation.dolche.halten": {"loop": True, "bones": halten},
+        "animation.dolche.links": {"loop": True, "bones": links},
     }
+    if links_ich:
+        rot, pos, groesse = links_ich
+        anims["animation.dolche.links_ich"] = {"loop": True, "bones": {"links_ich": {
+            "rotation": [round(w, 2) for w in rot],
+            "position": [round(w, 2) for w in pos],
+            "scale": f"c.is_first_person ? {groesse:.3f} : 0.0",
+        }}}
+    return {"format_version": "1.10.0", "animations": anims}
+
+
+def links_ich_haltung(name):
+    """Der linke Dolch der Ich-Ansicht: das Spiegelbild des rechten.
+
+    Gerechnet mit spieler_ansehen - wo der rechte Dolch in Ruhe vor der
+    Kamera liegt, gespiegelt an der senkrechten Bildmitte (die Kamera sitzt
+    bei x = 2.5). Der Dolch selbst ist symmetrisch, darum wird er dabei
+    auch in sich gespiegelt; zusammen ist das wieder eine reine Drehung.
+    """
+    import haltung
+    import spieler_ansehen as s
+
+    sp = s.Spieler()
+    waffe = s.Waffe(RES / "attachables" / f"{name}.json")
+    pose, u = sp.pose({"v.is_first_person": 1.0, "hand": waffe.kennung, "q.life_time": 0.0})
+    geo = s.lade(s.MOJANG / "humanoid_custom.geo.json")["geometry.humanoid.custom"]
+    knochen = s._modellknochen(geo)
+    knochen.update(s._modellknochen(waffe.geo, "w:", bindung="rightitem"))
+    m = s.baue_matrizen(knochen, {"": pose, "w:": waffe.pose(u, True)},
+                        {n: k["pivot"] for n, k in knochen.items()})["w:griff"]
+    auge_x = 2.5
+    lin = [[m[i][j] * (-1 if (i == 0) != (j == 0) else 1) for j in range(3)] for i in range(3)]
+    ort = (2 * auge_x - m[0][3], m[1][3], m[2][3])
+    groesse = abs(lin[0][0] * (lin[1][1] * lin[2][2] - lin[1][2] * lin[2][1])
+                  - lin[0][1] * (lin[1][0] * lin[2][2] - lin[1][2] * lin[2][0])
+                  + lin[0][2] * (lin[1][0] * lin[2][1] - lin[1][1] * lin[2][0])) ** (1 / 3)
+    dreh = [[lin[i][j] / groesse for j in range(3)] + [0] for i in range(3)] + [[0, 0, 0, 1]]
+    drehpunkt = (0, 8, 0)
+    bindung = (0, 24 - 8, 0)       # Drehpunkt von body minus eigener
+    welt = [sum(lin[i][k] * drehpunkt[k] for k in range(3)) + ort[i] for i in range(3)]
+    pos = [welt[i] - drehpunkt[i] - bindung[i] for i in range(3)]
+    return haltung.zerlege(dreh), pos, groesse
 
 
 def attachable(name):
@@ -140,9 +211,10 @@ def attachable(name):
                 "animations": {
                     "halten": "animation.dolche.halten",
                     "links": "animation.dolche.links",
+                    "links_ich": "animation.dolche.links_ich",
                     "schlag": "animation.klinge.schlag",
                 },
-                "scripts": {"animate": ["halten", "links", "schlag"]},
+                "scripts": {"animate": ["halten", "links", "links_ich", "schlag"]},
                 "render_controllers": ["controller.render.item_default"],
             }
         },
@@ -240,12 +312,18 @@ def main():
         deutsch += [(f"item.fynn:{name}", de), (f"item.fynn:{name}.name", de)]
         englisch += [(f"item.fynn:{name}", en), (f"item.fynn:{name}.name", en)]
 
-    schreibe(RES / "animations" / "dolche.animation.json", animation())
+    # Erst ohne den linken Dolch der Ich-Ansicht schreiben - er wird aus der
+    # fertigen Haltung des rechten gerechnet.
+    schreibe(RES / "animations" / "dolche.animation.json", animation(ich=dolch_griffversatz(v.KARTE)[1]))
+    links_ich = links_ich_haltung(next(iter(v.SORTEN)))
+    schreibe(RES / "animations" / "dolche.animation.json", animation(links_ich))
     texturliste.write_text(json.dumps(liste, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     sprache(RES / "texts" / "de_DE.lang", deutsch)
     sprache(RES / "texts" / "en_US.lang", englisch)
-    aussen, ich = griffversatz(v.KARTE)
-    print(f"Griffversatz: aussen {aussen:+.2f}, Ich-Ansicht {ich:+.2f}")
+    aussen, ich = dolch_griffversatz(v.KARTE)
+    print(f"Griffversatz: aussen {aussen:+.2f}, Ich-Ansicht rechts {ICH_VERSATZ_RECHTS:+.2f}, links {ich:+.2f}")
+    print("Linker Dolch, Ich-Ansicht: Drehung {}, Ort {}, Groesse {:.3f}".format(
+        [round(w, 1) for w in links_ich[0]], [round(w, 1) for w in links_ich[1]], links_ich[2]))
 
 
 if __name__ == "__main__":

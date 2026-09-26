@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Baut zwei neue Ruestungen: die Magierrobe und die Assassinen-Montur.
+"""Baut die Ruestungen der Rollen: Magierrobe, Assassinen-Montur, Waldlaeufer.
 
 Fynn wollte zu den Rollen passende Ruestungen, "denk dir was Geiles aus".
 Der Ritter hat seine schon; dazu kommen:
@@ -19,6 +19,15 @@ Assassinen-Montur, fast schwarz mit Rot:
     einem roten Schal, dessen Ende hinten herabweht,
   * Hose - mit hellen Wickeln an den Knien,
   * Stiefel - weich, mit umgeschlagenem Schaft.
+
+Waldlaeufer, fuer den Bogenschuetzen, gruen mit braunem Leder (spaeter
+dazugekommen - Fynn: "der Bogenschuetze braucht eine eigene
+Spezialruestung", bis dahin trug er gefaerbtes Leder):
+  * Kapuze - vorn offen, mit Stirnrand, Zipfel und einer Feder,
+  * Wams - mit Koecherriemen quer ueber die Brust, Guertel und einem
+    Koecher auf dem Ruecken, aus dem Pfeilfedern ueber die Schulter ragen,
+  * Hose - Leder mit Knieflicken,
+  * Stiefel - hoch, mit gruen gefuettertem Umschlag.
 
 Wie bei der Ritterruestung liegt jedes Teil als Kaesten ueber dem
 Koerper, die Knochen heissen wie beim Spieler. Keine Aermel: Fynn will
@@ -57,6 +66,13 @@ MAGIER = {
     "a": (96, 120, 220), "b": (66, 88, 190), "c": (46, 62, 150), "d": (32, 44, 112),
     "o": (24, 32, 86), "k": (14, 18, 52),
     "G": (250, 214, 90), "g": (190, 140, 40), "S": (255, 252, 220),
+}
+WALD = {
+    "a": (122, 164, 82), "b": (88, 130, 60), "c": (64, 100, 46), "d": (46, 74, 34),
+    "o": (32, 52, 26), "k": (18, 30, 14),
+    "L": (156, 110, 66), "l": (118, 80, 46), "m": (88, 58, 34), "n": (62, 42, 26),
+    "F": (236, 234, 226), "f": (196, 58, 48), "g": (150, 150, 146), "H": (132, 96, 58),
+    "T": (156, 110, 66), "t": (118, 80, 46), "u": (62, 42, 26),
 }
 ASSASSINE = {
     "a": (100, 100, 114), "b": (72, 72, 84), "c": (52, 52, 62), "d": (38, 38, 46),
@@ -328,6 +344,109 @@ def assassinenmontur():
                     "assassinenhose": hose, "assassinenstiefel": stiefelpaar}
 
 
+# ============================================================ Waldlaeufer
+
+def waldlaeufer():
+    """Fuer den Bogenschuetzen: gruenes Tuch, braunes Leder, ein Koecher.
+
+    Das Erkennungszeichen ist der Koecher auf dem Ruecken: schraeg, mit
+    Pfeilfedern, die ueber der rechten Schulter herausschauen - von vorn
+    wie von hinten sieht man, wer hier der Schuetze ist.
+    """
+    a = Atlas(WALD)
+    gruen = grund(salz=23)
+    gruen_dunkel = grund("c", "d", "o", salz=29)
+    leder = grund("L", "l", "m", salz=31)
+    leder_dunkel = grund("l", "m", "n", salz=37)
+
+    def gesicht_frei(f, x, y, w, h):
+        # Vorn offen vom dritten Pixel an - Fynn will das Gesicht sehen.
+        if f == "north" and y >= 2 and 1 <= x <= 6:
+            return "X"
+        return None
+
+    def ohne_x(stoff):
+        def s(f, x, y, w, h):
+            z = stoff(f, x, y, w, h)
+            return None if z == "X" else z
+        return s
+
+    kapuze = [
+        knochen("body"),
+        knochen("head", [
+            a.kasten([-4, 24, -4], (8, 8, 8), ohne_x(mit(gruen, gesicht_frei)), 1.0),
+            # Der Rand steht ueber die Stirn vor
+            a.kasten([-4.5, 31, -5.6], (9, 1.5, 1.5), gruen_dunkel),
+        ]),
+        # Der Zipfel faellt hinten auf die Schultern
+        knochen("zipfel", [
+            a.kasten([-2.5, 26, 4.8], (5, 5, 1.5), gruen),
+            a.kasten([-1.5, 23.5, 5.2], (3, 2.5, 1), gruen_dunkel),
+        ], eltern="head", drehpunkt=[0, 31, 5]),
+        # Eine Feder an der rechten Seite, schraeg nach hinten
+        knochen("feder", [
+            a.kasten([-5.9, 30, -1], (0.6, 5, 1.2), mit(voll("F"), saum("f", 0, 2))),
+            a.kasten([-5.9, 29, -0.8], (0.6, 1, 0.8), voll("n")),
+        ], eltern="head", drehpunkt=[-5.6, 29.5, -0.4], drehung=[-30, 0, 15]),
+    ]
+
+    def guertel(f, x, y, w, h):
+        if f in ("up", "down"):
+            return None
+        if y in (8, 9):
+            return "n" if y == 9 else "m"
+        return None
+
+    wams = [
+        knochen("body", [
+            a.kasten([-4, 12, -2], (8, 12, 4), mit(gruen, schraeg_vorn("l", "m", -1), guertel,
+                                                   saum("o", 1), saum("L", 0, 1)), 0.75),
+            # Lederkragen
+            a.kasten([-4.5, 22.5, -3], (9, 1.5, 6), leder),
+            # Die Guertelschnalle
+            a.kasten([-1, 14.5, -3.1], (2, 2, 0.5), voll("g")),
+        ]),
+        # Der Koecher: schraeg ueber den Ruecken, oben an der rechten
+        # Schulter (x negativ), unten an der linken Huefte.
+        knochen("koecher", [
+            a.kasten([-2, 11, 3], (3.5, 11, 3.5), mit(leder, saum("n", 1), saum("m", 0, 1))),
+            # Pfeilschaefte und Federn, die oben herausschauen
+            # (eine Stufe hoeher als zuerst - so ragen die Federn auch von
+            # vorn gesehen ueber die Schulter)
+            a.kasten([-1.4, 22, 3.6], (0.8, 3, 0.8), voll("H")),
+            a.kasten([0.1, 22, 4.6], (0.8, 3.5, 0.8), voll("H")),
+            a.kasten([-1.7, 24.5, 3.3], (1.4, 2.6, 1.4), voll("F")),
+            a.kasten([-0.2, 25, 4.3], (1.4, 2.6, 1.4), voll("f")),
+            a.kasten([0.8, 23.8, 3.4], (1.2, 2.4, 1.2), voll("F")),
+        ], drehpunkt=[0, 17, 4.5], drehung=[0, 0, -28]),
+    ]
+
+    def knieflicken(f, x, y, w, h):
+        if f in ("up", "down"):
+            return None
+        return "m" if 4 <= y <= 6 and 1 <= x <= w - 2 else None
+
+    hose = [
+        knochen("body"),
+        knochen("rightLeg", [a.kasten([-3.9, 0, -2], (4, 12, 4), mit(leder, knieflicken), 0.5)]),
+        knochen("leftLeg", [a.kasten([-0.1, 0, -2], (4, 12, 4), mit(leder, knieflicken), 0.5)]),
+    ]
+
+    def stiefel(x):
+        return [
+            a.kasten([x, 0, -2], (4, 6, 4), mit(leder_dunkel, saum("n", 1)), 1.0),
+            # Umgeschlagener Schaft, gruen gefuettert
+            a.kasten([x - 0.5, 6, -2.5], (5, 1.5, 5), gruen_dunkel),
+        ]
+    stiefelpaar = [
+        knochen("body"),
+        knochen("rightLeg", stiefel(-3.9)),
+        knochen("leftLeg", stiefel(-0.1)),
+    ]
+    return a.bild, {"waldlaeuferkapuze": kapuze, "waldlaeuferwams": wams,
+                    "waldlaeuferhose": hose, "waldlaeuferstiefel": stiefelpaar}
+
+
 # ============================================================ Inventar
 
 # Die Umrisse von Minecrafts Lederruestung (Grautoene a bis k, Lederbesatz
@@ -367,6 +486,24 @@ KAPUZE = [
     "....kbbbbcck....",
     ".....kkkkkk.....",
     "................",
+    "................",
+]
+WALDKAPUZE = [
+    "................",
+    "..........F.....",
+    "......kkkkFf....",
+    ".....kaabbkf....",
+    "....kaabbbbck...",
+    "...kaabbbbbbck..",
+    "...kabkkkkkcck..",
+    "...kabk....kck..",
+    "...kabk....kck..",
+    "...kabk....kck..",
+    "...kaabkkkkbcck.",
+    "...kabbbbbbccck.",
+    "....kbbbbbcccdk.",
+    ".....kkkkkkdddk.",
+    "..............k.",
     "................",
 ]
 BRUST = [
@@ -454,7 +591,24 @@ def symbole():
         d = x - y
         return "R" if d == -2 else ("r" if d == -1 else z)
 
+    def riemen(x, y, z):
+        if z in ".ko":
+            return z
+        d = x - y
+        if d == -1:
+            return "l"
+        if d == -2:
+            return "m"
+        return "n" if y == 10 else z
+
+    w = WALD
     return {
+        "waldlaeuferkapuze": symbol(WALDKAPUZE, w, {}),
+        "waldlaeuferwams": symbol(BRUST, w, {}, riemen),
+        "waldlaeuferhose": symbol(HOSE, {**w, "a": w["L"], "b": w["l"], "c": w["m"], "d": w["n"]},
+                                  {"T": "a", "t": "c", "u": "k"}),
+        "waldlaeuferstiefel": symbol(STIEFEL, {**w, "a": w["l"], "b": w["m"], "c": w["n"]},
+                                     {"T": "b", "t": "d", "u": "k"}),
         "magierhut": symbol(HUT, m, {}),
         "magierrobe": symbol(BRUST, m, {}, robe),
         "magierrock": symbol(HOSE, m, {"T": "G", "t": "g", "u": "k"}),
@@ -478,6 +632,10 @@ TEILE = {
     "assassinenharnisch": ("chest", 5, 320, "Assassinenharnisch", "Assassin Harness"),
     "assassinenhose":     ("legs", 4, 300, "Assassinenhose", "Assassin Trousers"),
     "assassinenstiefel":  ("feet", 1, 260, "Assassinenstiefel", "Assassin Boots"),
+    "waldlaeuferkapuze":  ("head", 2, 200, "Waldläuferkapuze", "Ranger Hood"),
+    "waldlaeuferwams":    ("chest", 4, 280, "Waldläuferwams", "Ranger Jerkin"),
+    "waldlaeuferhose":    ("legs", 3, 260, "Waldläuferhose", "Ranger Trousers"),
+    "waldlaeuferstiefel": ("feet", 1, 220, "Waldläuferstiefel", "Ranger Boots"),
 }
 SLOT = {"head": ("slot.armor.head", "armor_head", "helmet"),
         "chest": ("slot.armor.chest", "armor_torso", "chestplate"),
@@ -495,14 +653,22 @@ REZEPTE = {
     "assassinenharnisch": (["L L", "LRL", "LLL"], {"L": "minecraft:leather", "R": "minecraft:red_wool"}),
     "assassinenhose":     (["DDD", "D D", "L L"], {"D": "minecraft:black_wool", "L": "minecraft:leather"}),
     "assassinenstiefel":  (["D D", "L L"], {"D": "minecraft:black_wool", "L": "minecraft:leather"}),
+    # Waldlaeufer aus gruener Wolle und Leder; die Kapuze traegt eine Feder,
+    # das Wams einen Pfeil fuer den Koecher.
+    "waldlaeuferkapuze":  (["GFG", "G G"], {"G": "minecraft:green_wool", "F": "minecraft:feather"}),
+    "waldlaeuferwams":    (["L L", "GAG", "LLL"], {"L": "minecraft:leather", "G": "minecraft:green_wool",
+                                                   "A": "minecraft:arrow"}),
+    "waldlaeuferhose":    (["LLL", "G G", "L L"], {"L": "minecraft:leather", "G": "minecraft:green_wool"}),
+    "waldlaeuferstiefel": (["G G", "L L"], {"G": "minecraft:green_wool", "L": "minecraft:leather"}),
 }
-REPARATUR = {"magier": "minecraft:blue_wool", "assassinen": "minecraft:leather"}
+REPARATUR = {"magier": "minecraft:blue_wool", "assassinen": "minecraft:leather",
+             "waldlaeufer": "minecraft:leather"}
 
 
 def gegenstand(name):
     slot, schutz, haltbar, _, _ = TEILE[name]
     slot_name, verzauber, gruppe = SLOT[slot]
-    reparatur = REPARATUR["magier" if name.startswith("magier") else "assassinen"]
+    reparatur = next(v for k, v in REPARATUR.items() if name.startswith(k))
     return {
         "format_version": "1.26.30",
         "minecraft:item": {
@@ -600,7 +766,8 @@ def main():
     # Namens behaelt Minecraft nur einmal, und "magierrobe" ist schon das
     # Inventarbild der Robe.
     for satz, stoff, bauer in (("magierrobe", "magier_stoff", magierrobe),
-                               ("assassinenmontur", "assassinen_stoff", assassinenmontur)):
+                               ("assassinenmontur", "assassinen_stoff", assassinenmontur),
+                               ("waldlaeufer", "waldlaeufer_stoff", waldlaeufer)):
         textur, teile = bauer()
         (RES / "textures" / "models" / "armor").mkdir(parents=True, exist_ok=True)
         textur.save(RES / "textures" / "models" / "armor" / f"{stoff}.png")

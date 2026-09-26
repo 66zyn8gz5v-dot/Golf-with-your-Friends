@@ -42,11 +42,11 @@ item.fynn:eisenklinge.name=Iron Blade
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.26
+item.iron_sword.name=Stahlschwert 4.27
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.26
-item.fynn:degen.name=Degen 4.26
+item.fynn:degen=Degen 4.27
+item.fynn:degen.name=Degen 4.27
 
 
 
@@ -77,18 +77,6 @@ item.fynn:feuerstab.name=Fire Staff
 item.fynn:feuerstab_2=Fire Staff II
 item.fynn:feuerstab_2.name=Fire Staff II
 entity.fynn:feuerball.name=Fireball
-item.fynn:eisendolche=Iron Daggers
-item.fynn:eisendolche.name=Iron Daggers
-item.fynn:silberdolche=Silver Daggers
-item.fynn:silberdolche.name=Silver Daggers
-item.fynn:stahldolche=Steel Daggers
-item.fynn:stahldolche.name=Steel Daggers
-item.fynn:elektrumdolche=Electrum Daggers
-item.fynn:elektrumdolche.name=Electrum Daggers
-item.fynn:diamantdolche=Diamond Daggers
-item.fynn:diamantdolche.name=Diamond Daggers
-item.fynn:netheritdolche=Netherite Daggers
-item.fynn:netheritdolche.name=Netherite Daggers
 item.fynn:eisenpfeil=Iron Arrow
 item.fynn:eisenpfeil.name=Iron Arrow
 item.fynn:silberpfeil=Silver Arrow
@@ -101,6 +89,29 @@ item.fynn:artefaktentasche=Artifact Pouch
 item.fynn:artefaktentasche.name=Artifact Pouch
 tile.fynn:rollenaltar.name=Role Altar
 tile.fynn:tempelaltar.name=Temple Altar
+entity.fynn:statue.name=Statue
+item.fynn:kriegshammer=War Hammer
+item.fynn:frostzepter=Frost Scepter
+item.fynn:sturmbogen=Storm Bow
+item.fynn:wurfstern=Throwing Star
+item.fynn:kriegshammer.name=War Hammer
+item.fynn:frostzepter.name=Frost Scepter
+item.fynn:sturmbogen.name=Storm Bow
+item.fynn:wurfstern.name=Throwing Star
+entity.fynn:frostkugel.name=Frost Orb
+entity.fynn:wurfstern.name=Throwing Star
+item.fynn:eisendolche=Iron Daggers
+item.fynn:eisendolche.name=Iron Daggers
+item.fynn:silberdolche=Silver Daggers
+item.fynn:silberdolche.name=Silver Daggers
+item.fynn:stahldolche=Steel Daggers
+item.fynn:stahldolche.name=Steel Daggers
+item.fynn:elektrumdolche=Electrum Daggers
+item.fynn:elektrumdolche.name=Electrum Daggers
+item.fynn:diamantdolche=Diamond Daggers
+item.fynn:diamantdolche.name=Diamond Daggers
+item.fynn:netheritdolche=Netherite Daggers
+item.fynn:netheritdolche.name=Netherite Daggers
 item.fynn:magierhut=Wizard Hat
 item.fynn:magierhut.name=Wizard Hat
 item.fynn:magierrobe=Mage Robe
@@ -117,14 +128,11 @@ item.fynn:assassinenhose=Assassin Trousers
 item.fynn:assassinenhose.name=Assassin Trousers
 item.fynn:assassinenstiefel=Assassin Boots
 item.fynn:assassinenstiefel.name=Assassin Boots
-entity.fynn:statue.name=Statue
-item.fynn:kriegshammer=War Hammer
-item.fynn:frostzepter=Frost Scepter
-item.fynn:sturmbogen=Storm Bow
-item.fynn:wurfstern=Throwing Star
-item.fynn:kriegshammer.name=War Hammer
-item.fynn:frostzepter.name=Frost Scepter
-item.fynn:sturmbogen.name=Storm Bow
-item.fynn:wurfstern.name=Throwing Star
-entity.fynn:frostkugel.name=Frost Orb
-entity.fynn:wurfstern.name=Throwing Star
+item.fynn:waldlaeuferkapuze=Ranger Hood
+item.fynn:waldlaeuferkapuze.name=Ranger Hood
+item.fynn:waldlaeuferwams=Ranger Jerkin
+item.fynn:waldlaeuferwams.name=Ranger Jerkin
+item.fynn:waldlaeuferhose=Ranger Trousers
+item.fynn:waldlaeuferhose.name=Ranger Trousers
+item.fynn:waldlaeuferstiefel=Ranger Boots
+item.fynn:waldlaeuferstiefel.name=Ranger Boots

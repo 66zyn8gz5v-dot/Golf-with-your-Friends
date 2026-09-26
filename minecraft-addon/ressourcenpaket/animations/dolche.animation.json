@@ -11,16 +11,16 @@
             0.0
           ],
           "rotation": [
-            "c.is_first_person ? 0.0 : 90.0",
+            "c.is_first_person ? 0.0 : 40.0",
             0.0,
             "c.is_first_person ? -135.0 : 0.0"
           ],
-          "scale": "c.is_first_person ? 0.28 : 0.37"
+          "scale": "c.is_first_person ? 0.4 : 0.55"
         },
         "griff": {
           "position": [
             0.0,
-            "c.is_first_person ? -15.50 : 2.00",
+            "c.is_first_person ? 0.00 : 3.47",
             0.0
           ],
           "rotation": [
@@ -41,16 +41,16 @@
             0.0
           ],
           "rotation": [
-            90.0,
+            40.0,
             0.0,
             0.0
           ],
-          "scale": "c.is_first_person ? 0.0 : 0.37"
+          "scale": "c.is_first_person ? 0.0 : 0.55"
         },
         "griff_l": {
           "position": [
             0.0,
-            2.0,
+            3.47,
             0.0
           ],
           "rotation": [
@@ -58,6 +58,24 @@
             90.0,
             0.0
           ]
+        }
+      }
+    },
+    "animation.dolche.links_ich": {
+      "loop": true,
+      "bones": {
+        "links_ich": {
+          "rotation": [
+            178.23,
+            -86.47,
+            153.23
+          ],
+          "position": [
+            -7.1,
+            -5.93,
+            16.22
+          ],
+          "scale": "c.is_first_person ? 0.400 : 0.0"
         }
       }
     }

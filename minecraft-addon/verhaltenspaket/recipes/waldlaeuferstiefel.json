@@ -1,0 +1,31 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "fynn:waldlaeuferstiefel"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "G G",
+      "L L"
+    ],
+    "key": {
+      "G": {
+        "item": "minecraft:green_wool"
+      },
+      "L": {
+        "item": "minecraft:leather"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:green_wool"
+      }
+    ],
+    "result": {
+      "item": "fynn:waldlaeuferstiefel"
+    }
+  }
+}

@@ -83,10 +83,13 @@ abarbeiten();
 const mitte = JSON.parse(world.getDynamicProperty("fynn:tempel"));
 pruefe(`Tempel gebaut bei y ${mitte.y} (50 ueber dem Spawn)`, mitte.y === 114 && gesetzt.length === plan.length);
 pruefe("vier Statuen mit Namen", figuren.length === 4 && figuren.every((f) => f.typ === "fynn:statue" && f.marken.length === 1));
-pruefe("die Ritterstatue traegt Ritterhelm, Schwert und Schild",
-       ["slot.armor.head 0 fynn:ritterhelm", "slot.weapon.mainhand 0 fynn:ritterschwert", "slot.weapon.offhand 0 minecraft:shield"]
+pruefe("die Ritterstatue traegt Ritterhelm, Steinschwert und Schild",
+       ["slot.armor.head 0 fynn:ritterhelm", "slot.weapon.mainhand 0 minecraft:stone_sword", "slot.weapon.offhand 0 minecraft:shield"]
            .every((t) => befehle.some((b) => b.includes("fynn_statue_ritter") && b.endsWith(t))));
 pruefe("die Magierstatue den Zauberhut", befehle.some((b) => b.includes("fynn_statue_magier") && b.endsWith("fynn:magierhut")));
+pruefe("die Bogenschuetzenstatue Kapuze und Wams des Waldlaeufers",
+       ["slot.armor.head 0 fynn:waldlaeuferkapuze", "slot.armor.chest 0 fynn:waldlaeuferwams"]
+           .every((t) => befehle.some((b) => b.includes("fynn_statue_bogenschuetze") && b.endsWith(t))));
 pruefe(`Spieler steht in der Mitte (${fynn.location.x}, ${fynn.location.y}, ${fynn.location.z})`,
        fynn.location.x === 10.5 && fynn.location.y === 114 && fynn.location.z === -20.5);
 pruefe("Abenteuermodus im Tempel", fynn.modus === "Adventure");

@@ -17,12 +17,14 @@
       "animations": {
         "halten": "animation.dolche.halten",
         "links": "animation.dolche.links",
+        "links_ich": "animation.dolche.links_ich",
         "schlag": "animation.klinge.schlag"
       },
       "scripts": {
         "animate": [
           "halten",
           "links",
+          "links_ich",
           "schlag"
         ]
       },

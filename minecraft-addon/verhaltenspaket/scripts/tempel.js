@@ -53,26 +53,15 @@ function ding(typ, anzahl = 1) {
     return () => new ItemStack(typ, anzahl);
 }
 
-function leder(typ) {
-    return () => {
-        const stueck = new ItemStack(typ, 1);
-        try {
-            // Waldgruen - Leder in seiner Naturfarbe waere ein Bauer.
-            stueck.getComponent("minecraft:dyeable").color = { red: 0.22, green: 0.42, blue: 0.2 };
-        } catch (fehler) {
-            // ungefaerbt geht auch
-        }
-        return stueck;
-    };
-}
-
 // Je Rolle: was angezogen wird (Kopf, Brust, Beine, Fuesse), was in die
 // Haende kommt und was ins Inventar. Die Statuen tragen dasselbe.
 export const AUSRUESTUNG = {
     ritter: {
-        text: "Ritterrüstung, Ritterschwert, Schild",
+        // Ein Steinschwert, kein Eisen: Fynn fand ein Eisenschwert zum Start
+        // "schon ein krankes Starter-Equip". Das bessere findet man unterwegs.
+        text: "Ritterrüstung, Steinschwert, Schild",
         anziehen: ["fynn:ritterhelm", "fynn:ritterbrustpanzer", "fynn:ritterbeinschutz", "fynn:ritterstiefel"].map((t) => ding(t)),
-        haupthand: ding("fynn:ritterschwert"),
+        haupthand: ding("minecraft:stone_sword"),
         zweithand: ding("minecraft:shield"),
         dazu: [ding("minecraft:bread", 8)],
     },
@@ -83,9 +72,9 @@ export const AUSRUESTUNG = {
         dazu: [ding("minecraft:bread", 8)],
     },
     bogenschuetze: {
-        text: "Waldläufer-Leder, Bogen, Pfeile und Eisenpfeile",
-        anziehen: ["minecraft:leather_helmet", "minecraft:leather_chestplate",
-            "minecraft:leather_leggings", "minecraft:leather_boots"].map(leder),
+        text: "Waldläufer-Rüstung mit Köcher, Bogen, Pfeile und Eisenpfeile",
+        anziehen: ["fynn:waldlaeuferkapuze", "fynn:waldlaeuferwams", "fynn:waldlaeuferhose",
+            "fynn:waldlaeuferstiefel"].map((t) => ding(t)),
         haupthand: ding("minecraft:bow"),
         dazu: [ding("minecraft:arrow", 32), ding("fynn:eisenpfeil", 16), ding("minecraft:bread", 8)],
     },
