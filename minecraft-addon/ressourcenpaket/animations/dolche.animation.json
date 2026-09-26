@@ -1,0 +1,65 @@
+{
+  "format_version": "1.10.0",
+  "animations": {
+    "animation.dolche.halten": {
+      "loop": true,
+      "bones": {
+        "waffe": {
+          "position": [
+            "c.is_first_person ? -3.5 : 0.0",
+            "c.is_first_person ? -3.5 : -2.0",
+            0.0
+          ],
+          "rotation": [
+            "c.is_first_person ? 0.0 : 90.0",
+            0.0,
+            "c.is_first_person ? -135.0 : 0.0"
+          ],
+          "scale": "c.is_first_person ? 0.28 : 0.37"
+        },
+        "griff": {
+          "position": [
+            0.0,
+            "c.is_first_person ? -15.50 : 2.00",
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            "c.is_first_person ? 0.0 : 90.0",
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.dolche.links": {
+      "loop": true,
+      "bones": {
+        "waffe_l": {
+          "position": [
+            0.0,
+            -2.0,
+            0.0
+          ],
+          "rotation": [
+            90.0,
+            0.0,
+            0.0
+          ],
+          "scale": "c.is_first_person ? 0.0 : 0.37"
+        },
+        "griff_l": {
+          "position": [
+            0.0,
+            2.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            90.0,
+            0.0
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "fynn:elektrumdolche"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "X X",
+      "# #"
+    ],
+    "key": {
+      "X": {
+        "item": "fynn:elektrumbarren"
+      },
+      "#": {
+        "item": "minecraft:stick"
+      }
+    },
+    "unlock": [
+      {
+        "item": "fynn:elektrumbarren"
+      }
+    ],
+    "result": {
+      "item": "fynn:elektrumdolche"
+    }
+  }
+}

@@ -113,6 +113,18 @@ def pruefe_rezepte(kennungen):
                     fehler.append(f"{datei.name}: '{name}' gibt es als Gegenstand nicht.")
             continue
 
+        # Am Schmiedetisch: Vorlage, Grundstueck und Zusatz werden zum
+        # Ergebnis. So entstehen die Netheritdolche aus den Diamantdolchen.
+        schmiede = inhalt.get("minecraft:recipe_smithing_transform")
+        if schmiede:
+            for teil in ("template", "base", "addition", "result"):
+                name = schmiede.get(teil)
+                if not name:
+                    fehler.append(f"{datei.name}: Schmiederezept ohne '{teil}'.")
+                elif name.startswith("fynn:") and name not in kennungen:
+                    fehler.append(f"{datei.name}: '{name}' gibt es als Gegenstand nicht.")
+            continue
+
         rezept = inhalt.get("minecraft:recipe_shaped") or inhalt.get("minecraft:recipe_shapeless")
         if not rezept:
             fehler.append(f"{datei.name}: unbekannte Rezeptart.")

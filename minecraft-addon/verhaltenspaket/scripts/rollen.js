@@ -32,14 +32,14 @@ export const ROLLEN = {
     ritter: {
         name: "Ritter", farbe: "§6", kraft: "Ausdauer", feld: 1,
         bild: "textures/items/ritterhelm",
-        kurz: "Hält mehr aus",
+        kurz: "Wirbelschlag · hält mehr aus",
         wirkung: { id: "resistance", stufe: 0 },
         nachschub: 1,
     },
     magier: {
         name: "Magier", farbe: "§9", kraft: "Mana", feld: 2,
         bild: "textures/items/feuerstab_2",
-        kurz: "Feuerbälle, feuerfest",
+        kurz: "Feuerball · feuerfest",
         wirkung: { id: "fire_resistance", stufe: 0 },
         // Der Magier lebt von seiner Kraft, also kommt sie doppelt so
         // schnell wieder.
@@ -48,14 +48,14 @@ export const ROLLEN = {
     bogenschuetze: {
         name: "Bogenschütze", farbe: "§a", kraft: "Fokus", feld: 3,
         bild: "textures/items/bow_standby",
-        kurz: "Schneller zu Fuß",
+        kurz: "schneller zu Fuß",
         wirkung: { id: "speed", stufe: 0 },
         nachschub: 1,
     },
     assassine: {
         name: "Assassine", farbe: "§c", kraft: "Schatten", feld: 4,
-        bild: "textures/items/iron_sword",
-        kurz: "Springt höher, unsichtbar beim Ducken",
+        bild: "textures/items/eisendolche",
+        kurz: "Schattensprung · unsichtbar",
         wirkung: { id: "jump_boost", stufe: 0 },
         nachschub: 1,
     },
@@ -176,6 +176,8 @@ async function waehlen(spieler, versuch = 0) {
         .body((jetzt ? `Du bist gerade ${ROLLEN[jetzt].farbe}${ROLLEN[jetzt].name}§r.\n\n` : "")
             + "Jede Rolle hat ihre eigene Kraft - die Kugeln über der Schnellleiste. "
             + "Aufgeladene Angriffe kosten Kraft, sie kommt von selbst wieder.\n\n"
+            + "Aufladen: die Waffe deiner Rolle in die Hand, ducken, bis es klingt, "
+            + "dann aufstehen.\n\n"
             + "Wechseln kannst du jederzeit hier am Stein.");
     for (const k of REIHENFOLGE) {
         form.button(`${ROLLEN[k].farbe}${ROLLEN[k].name}\n§8${ROLLEN[k].kurz}`, ROLLEN[k].bild);

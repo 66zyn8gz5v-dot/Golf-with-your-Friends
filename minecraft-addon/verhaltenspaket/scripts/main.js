@@ -12,6 +12,7 @@
 
 import { world, system } from "@minecraft/server";
 import { angriffErlaubt, hinweis, verbrauche } from "./rollen.js";
+import "./kampf.js";
 
 const DEGEN = "fynn:degen";
 

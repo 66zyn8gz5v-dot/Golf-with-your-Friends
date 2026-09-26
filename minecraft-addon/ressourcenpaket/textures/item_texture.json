@@ -58,6 +58,24 @@
     },
     "feuerstab_2": {
       "textures": "textures/items/feuerstab_2"
+    },
+    "eisendolche": {
+      "textures": "textures/items/eisendolche"
+    },
+    "silberdolche": {
+      "textures": "textures/items/silberdolche"
+    },
+    "stahldolche": {
+      "textures": "textures/items/stahldolche"
+    },
+    "elektrumdolche": {
+      "textures": "textures/items/elektrumdolche"
+    },
+    "diamantdolche": {
+      "textures": "textures/items/diamantdolche"
+    },
+    "netheritdolche": {
+      "textures": "textures/items/netheritdolche"
     }
   }
 }
