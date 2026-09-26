@@ -71,6 +71,9 @@ INITIALISIEREN = k.INITIALISIEREN + [
     "variable.fynn_pfeiltakt = 0.0;",
     "variable.fynn_lade = 0.0;",
     "variable.fynn_los = 0.0;",
+    "variable.fynn_landung = 0.0;",
+    "variable.fynn_luft_zuvor = 0.0;",
+    "variable.fynn_still = 0.0;",
     "variable.fynn_spannen_zuvor = 0.0;",
 ]
 
@@ -127,6 +130,15 @@ VORBERECHNUNG = [
     "variable.fynn_los = (variable.fynn_spannen_zuvor > 0.25 && variable.fynn_spannen <= 0.0) ? 1.0 : "
     "math.max(variable.fynn_los - query.delta_time * 4.0, 0.0);",
     "variable.fynn_spannen_zuvor = variable.fynn_spannen;",
+    # Landen: War der Spieler eben noch ganz in der Luft und steht jetzt,
+    # geben die Knie kurz nach - eine Viertelsekunde.
+    "variable.fynn_landung = (query.is_on_ground && variable.fynn_luft_zuvor > 0.85) ? 1.0 : "
+    "math.max(variable.fynn_landung - query.delta_time * 4.0, 0.0);",
+    "variable.fynn_luft_zuvor = variable.fynn_luft;",
+    # Wie lange der Spieler schon still steht - fuers Strecken.
+    "variable.fynn_still = (variable.fynn_tempo < 0.05 && query.is_on_ground && !query.is_sneaking && "
+    "variable.attack_time <= 0.0 && !query.is_using_item && !query.is_in_water) ? "
+    "variable.fynn_still + query.delta_time : 0.0;",
 ] + k.vorberechnung() + k.rollen_vorberechnung()
 
 # Das Attachable liest diese Werte ueber c.owning_entity - das Schwert
@@ -344,6 +356,108 @@ BOGEN_ICH = {
 }
 
 
+# ------------------------------------------------------------ Wasser, Boot, Alltag
+#
+# Fynn: "Wir brauchen ganz viele Animationen ... Neue Schwimmanimationen ...
+# das Boot, Ruder Animationen."
+
+# Kraulen (Sprintschwimmen): Die Arme kreisen im Wechsel ueber den Kopf nach
+# vorn und ziehen unter dem Koerper durch, die Beine schlagen schnell, der
+# Koerper rollt mit jedem Zug zur Seite. Minecrafts eigener Schwimmzug
+# bleibt fuer Lage und Neigung zustaendig; die Arme ersetzen wir.
+ZUG = "query.life_time * 250.0"
+KRAUL = {
+    "loop": True,
+    "bones": {
+        "rightarm": {"rotation": [f"-math.mod({ZUG}, 360.0) - this", "-this", "6.0 - this"]},
+        "leftarm": {"rotation": [f"-math.mod({ZUG} + 180.0, 360.0) - this", "-this", "-6.0 - this"]},
+        "rightleg": {"rotation": ["math.sin(query.life_time * 900.0) * 22.0 - this", "-this", "-this"]},
+        "leftleg": {"rotation": ["-math.sin(query.life_time * 900.0) * 22.0 - this", "-this", "-this"]},
+        "waist": {"rotation": [0.0, f"math.sin({ZUG}) * 16.0", 0.0]},
+    },
+}
+
+# Brustschwimmen und Wassertreten - im Wasser, aber nicht beim Kraulen: Die
+# Arme schieben nach vorn, ziehen weit zur Seite auseinander und kommen
+# wieder zusammen; die Beine machen den Froschschlag.
+BRUST = f"(query.life_time * 330.0)"
+BRUSTSCHWIMMEN = {
+    "loop": True,
+    "bones": {
+        "waist": {"rotation": [18.0, 0.0, 0.0]},
+        "rightarm": {"rotation": [f"-115.0 + math.cos({BRUST}) * 30.0 - this", "-this",
+                                  f"25.0 + (0.5 + 0.5 * math.sin({BRUST})) * 45.0 - this"]},
+        "leftarm": {"rotation": [f"-115.0 + math.cos({BRUST}) * 30.0 - this", "-this",
+                                 f"-25.0 - (0.5 + 0.5 * math.sin({BRUST})) * 45.0 - this"]},
+        "rightleg": {"rotation": [f"20.0 + math.sin({BRUST} + 90.0) * 22.0 - this", "-this",
+                                  f"8.0 + (0.5 + 0.5 * math.sin({BRUST} + 90.0)) * 18.0 - this"]},
+        "leftleg": {"rotation": [f"20.0 + math.sin({BRUST} + 90.0) * 22.0 - this", "-this",
+                                 f"-8.0 - (0.5 + 0.5 * math.sin({BRUST} + 90.0)) * 18.0 - this"]},
+    },
+}
+
+# Rudern im Boot: nach vorn greifen, durchziehen, der Oberkoerper geht mit.
+# Minecrafts Boot bewegt seine Ruder selbst; die Arme machen jetzt den Zug
+# dazu - auch im Stand ein wenig, auf Fahrt kraeftig.
+RUDER = "query.life_time * 230.0"
+RUDERN = {
+    "loop": True,
+    "bones": {
+        "waist": {"rotation": [f"math.sin({RUDER}) * 10.0", 0.0, 0.0]},
+        "rightarm": {"rotation": [f"-60.0 + math.sin({RUDER}) * 32.0 - this", "-12.0 - this",
+                                  f"10.0 + math.cos({RUDER}) * 6.0 - this"]},
+        "leftarm": {"rotation": [f"-60.0 + math.sin({RUDER}) * 32.0 - this", "12.0 - this",
+                                 f"-10.0 - math.cos({RUDER}) * 6.0 - this"]},
+    },
+}
+
+# Essen und Trinken von aussen: die Hand zum Mund, kauen.
+ESSEN = {
+    "loop": True,
+    "bones": {
+        "rightarm": {"rotation": ["-105.0 + math.sin(query.life_time * 1300.0) * 6.0 - this", "-38.0 - this", "-this"]},
+        "head": {"rotation": ["math.sin(query.life_time * 1300.0) * 3.0", 0.0, 0.0]},
+    },
+}
+
+# Landen nach einem Sprung: Knie geben nach, der Oberkoerper nickt, die Arme
+# fangen ab.
+LANDUNG = {
+    "loop": True,
+    "bones": {
+        "root": {"position": [0.0, -1.2, 0.0]},
+        "waist": {"rotation": [14.0, 0.0, 0.0]},
+        "rightleg": {"rotation": [-22.0, 0.0, 6.0]},
+        "leftleg": {"rotation": [18.0, 0.0, -6.0]},
+        "rightarm": {"rotation": [-15.0, 0.0, 22.0]},
+        "leftarm": {"rotation": [-15.0, 0.0, -22.0]},
+    },
+}
+
+# Getroffen: kurz zusammenzucken.
+ZUCKEN = {
+    "loop": True,
+    "bones": {
+        "waist": {"rotation": [-12.0, 0.0, 0.0]},
+        "rightarm": {"rotation": [-20.0, 0.0, 18.0]},
+        "leftarm": {"rotation": [-20.0, 0.0, -18.0]},
+    },
+}
+
+# Wer lange still steht, streckt sich einmal - Arme hoch, zuruecklehnen.
+# Nach acht Sekunden das erste Mal, dann alle vierzehn.
+STRECKEN_WANN = ("(variable.fynn_still > 8.0 ? math.clamp(1.0 - math.abs(math.mod(variable.fynn_still, 14.0) - 11.0) "
+                 "/ 1.2, 0.0, 1.0) : 0.0)")
+STRECKEN = {
+    "loop": True,
+    "bones": {
+        "waist": {"rotation": [-10.0, 0.0, 0.0]},
+        "rightarm": {"rotation": ["(-172.0 - this)", "-this", "(12.0 - this)"]},
+        "leftarm": {"rotation": ["(-172.0 - this)", "-this", "(-12.0 - this)"]},
+    },
+}
+
+
 # ------------------------------------------------------------ Zusammenbau
 
 AUSSEN_FREI = ("!variable.is_first_person && !variable.is_paperdoll && !variable.map_face_icon && "
@@ -364,6 +478,15 @@ TEILE = [
     ("fynn_luft", "animation.fynn.luft", LUFT, f"({BEWEGT}) * variable.fynn_luft * (1.0 - variable.fynn_flug)"),
     ("fynn_flug", "animation.fynn.flug", FLUG, f"({AUSSEN_FREI} && !query.is_gliding) * variable.fynn_flug"),
     ("fynn_sturz", "animation.fynn.sturz", STURZ, f"({AUSSEN_FREI}) * variable.fynn_sturz"),
+    ("fynn_kraul", "animation.fynn.kraul", KRAUL, f"({AUSSEN_FREI}) * math.clamp(variable.swim_amount, 0.0, 1.0)"),
+    ("fynn_brustschwimmen", "animation.fynn.brustschwimmen", BRUSTSCHWIMMEN,
+     f"{AUSSEN_FREI} && query.is_in_water && !query.is_on_ground && variable.swim_amount <= 0.0"),
+    ("fynn_rudern", "animation.fynn.rudern", RUDERN,
+     "!variable.is_first_person && !variable.is_paperdoll && !variable.map_face_icon && "
+     "query.is_riding_any_entity_of_type('minecraft:boat', 'minecraft:chest_boat')"),
+    ("fynn_landung", "animation.fynn.landung", LANDUNG, f"({BEWEGT} && !query.is_sneaking) * variable.fynn_landung"),
+    ("fynn_zucken", "animation.fynn.zucken", ZUCKEN, f"({AUSSEN_FREI}) * math.clamp(query.hurt_time / 10.0, 0.0, 1.0)"),
+    ("fynn_strecken", "animation.fynn.strecken", STRECKEN, f"({BEWEGT}) * {STRECKEN_WANN}"),
     ("fynn_aufladen", "animation.fynn.aufladen", AUFLADEN, f"{BEWEGT} && variable.fynn_lade > 0.0"),
     ("fynn_aufladen_ich", "animation.fynn.aufladen_ich", AUFLADEN_ICH,
      "variable.is_first_person && !variable.is_paperdoll && variable.fynn_lade > 0.0 && variable.fynn_hiebzeit <= 0.0"),
@@ -371,6 +494,7 @@ TEILE = [
      f"{AUSSEN_FREI} && (variable.fynn_spannen > 0.0 || variable.fynn_los > 0.0)"),
     ("fynn_bogen_ich", "animation.fynn.bogen_ich", BOGEN_ICH,
      "variable.is_first_person && !variable.is_paperdoll && (variable.fynn_spannen >= 1.0 || variable.fynn_los > 0.0)"),
+    ("fynn_essen", "animation.fynn.essen", ESSEN, f"{AUSSEN_FREI} && query.is_eating"),
 ] + k.teile(AUSSEN_FREI) + k.rollen_teile(AUSSEN_FREI)
 
 
@@ -402,7 +526,7 @@ def spielerdatei():
                    "variable.fynn_tempo", "variable.fynn_luft", "variable.fynn_sturz", "variable.fynn_umhang",
                    "variable.fynn_flug", "variable.fynn_dolche",
                    "variable.fynn_pfeil", "variable.fynn_lade", "variable.fynn_spannen",
-                   "variable.fynn_los") + k.EIGENE_VARS
+                   "variable.fynn_los", "variable.fynn_landung", "variable.fynn_still") + k.EIGENE_VARS
     s["pre_animation"] = [z for z in s["pre_animation"] if not z.startswith(eigene_vars)] + VORBERECHNUNG
     s["animate"] = [e for e in s["animate"] if (next(iter(e)) if isinstance(e, dict) else e) not in unsere]
     s["animate"] += [{n: bedingung} for n, _, _, bedingung in TEILE]

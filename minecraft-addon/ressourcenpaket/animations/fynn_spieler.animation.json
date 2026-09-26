@@ -423,6 +423,211 @@
         }
       }
     },
+    "animation.fynn.kraul": {
+      "loop": true,
+      "bones": {
+        "rightarm": {
+          "rotation": [
+            "-math.mod(query.life_time * 250.0, 360.0) - this",
+            "-this",
+            "6.0 - this"
+          ]
+        },
+        "leftarm": {
+          "rotation": [
+            "-math.mod(query.life_time * 250.0 + 180.0, 360.0) - this",
+            "-this",
+            "-6.0 - this"
+          ]
+        },
+        "rightleg": {
+          "rotation": [
+            "math.sin(query.life_time * 900.0) * 22.0 - this",
+            "-this",
+            "-this"
+          ]
+        },
+        "leftleg": {
+          "rotation": [
+            "-math.sin(query.life_time * 900.0) * 22.0 - this",
+            "-this",
+            "-this"
+          ]
+        },
+        "waist": {
+          "rotation": [
+            0.0,
+            "math.sin(query.life_time * 250.0) * 16.0",
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.brustschwimmen": {
+      "loop": true,
+      "bones": {
+        "waist": {
+          "rotation": [
+            18.0,
+            0.0,
+            0.0
+          ]
+        },
+        "rightarm": {
+          "rotation": [
+            "-115.0 + math.cos((query.life_time * 330.0)) * 30.0 - this",
+            "-this",
+            "25.0 + (0.5 + 0.5 * math.sin((query.life_time * 330.0))) * 45.0 - this"
+          ]
+        },
+        "leftarm": {
+          "rotation": [
+            "-115.0 + math.cos((query.life_time * 330.0)) * 30.0 - this",
+            "-this",
+            "-25.0 - (0.5 + 0.5 * math.sin((query.life_time * 330.0))) * 45.0 - this"
+          ]
+        },
+        "rightleg": {
+          "rotation": [
+            "20.0 + math.sin((query.life_time * 330.0) + 90.0) * 22.0 - this",
+            "-this",
+            "8.0 + (0.5 + 0.5 * math.sin((query.life_time * 330.0) + 90.0)) * 18.0 - this"
+          ]
+        },
+        "leftleg": {
+          "rotation": [
+            "20.0 + math.sin((query.life_time * 330.0) + 90.0) * 22.0 - this",
+            "-this",
+            "-8.0 - (0.5 + 0.5 * math.sin((query.life_time * 330.0) + 90.0)) * 18.0 - this"
+          ]
+        }
+      }
+    },
+    "animation.fynn.rudern": {
+      "loop": true,
+      "bones": {
+        "waist": {
+          "rotation": [
+            "math.sin(query.life_time * 230.0) * 10.0",
+            0.0,
+            0.0
+          ]
+        },
+        "rightarm": {
+          "rotation": [
+            "-60.0 + math.sin(query.life_time * 230.0) * 32.0 - this",
+            "-12.0 - this",
+            "10.0 + math.cos(query.life_time * 230.0) * 6.0 - this"
+          ]
+        },
+        "leftarm": {
+          "rotation": [
+            "-60.0 + math.sin(query.life_time * 230.0) * 32.0 - this",
+            "12.0 - this",
+            "-10.0 - math.cos(query.life_time * 230.0) * 6.0 - this"
+          ]
+        }
+      }
+    },
+    "animation.fynn.landung": {
+      "loop": true,
+      "bones": {
+        "root": {
+          "position": [
+            0.0,
+            -1.2,
+            0.0
+          ]
+        },
+        "waist": {
+          "rotation": [
+            14.0,
+            0.0,
+            0.0
+          ]
+        },
+        "rightleg": {
+          "rotation": [
+            -22.0,
+            0.0,
+            6.0
+          ]
+        },
+        "leftleg": {
+          "rotation": [
+            18.0,
+            0.0,
+            -6.0
+          ]
+        },
+        "rightarm": {
+          "rotation": [
+            -15.0,
+            0.0,
+            22.0
+          ]
+        },
+        "leftarm": {
+          "rotation": [
+            -15.0,
+            0.0,
+            -22.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.zucken": {
+      "loop": true,
+      "bones": {
+        "waist": {
+          "rotation": [
+            -12.0,
+            0.0,
+            0.0
+          ]
+        },
+        "rightarm": {
+          "rotation": [
+            -20.0,
+            0.0,
+            18.0
+          ]
+        },
+        "leftarm": {
+          "rotation": [
+            -20.0,
+            0.0,
+            -18.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.strecken": {
+      "loop": true,
+      "bones": {
+        "waist": {
+          "rotation": [
+            -10.0,
+            0.0,
+            0.0
+          ]
+        },
+        "rightarm": {
+          "rotation": [
+            "(-172.0 - this)",
+            "-this",
+            "(12.0 - this)"
+          ]
+        },
+        "leftarm": {
+          "rotation": [
+            "(-172.0 - this)",
+            "-this",
+            "(-12.0 - this)"
+          ]
+        }
+      }
+    },
     "animation.fynn.aufladen": {
       "loop": true,
       "bones": {
@@ -505,6 +710,25 @@
           ],
           "rotation": [
             "-8.0 * variable.fynn_los",
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.essen": {
+      "loop": true,
+      "bones": {
+        "rightarm": {
+          "rotation": [
+            "-105.0 + math.sin(query.life_time * 1300.0) * 6.0 - this",
+            "-38.0 - this",
+            "-this"
+          ]
+        },
+        "head": {
+          "rotation": [
+            "math.sin(query.life_time * 1300.0) * 3.0",
             0.0,
             0.0
           ]

@@ -77,7 +77,8 @@ TIERE = [
         # sie nach, und mit Honig bekommen sie Junge.
         "futter": ["minecraft:honeycomb", "minecraft:sweet_berries", "minecraft:salmon"],
         "jagt": ["minecraft:salmon", "minecraft:cod"],
-        "biome": [["taiga"]], "gewicht": 4,
+        "biome": [["taiga"], ["extreme_hills", "forest"], ["roofed"]], "gewicht": 6,
+        "boden": ["minecraft:grass_block", "minecraft:podzol", "minecraft:snow_layer", "minecraft:coarse_dirt"],
         "beute": [("fynn:baerenfleisch", 1, 3, 1.0, True), ("fynn:baerenfell", 1, 1, 0.5, False),
                   ("fynn:baerenkralle", 1, 1, 0.08, False)],
         "laute": {"ambient": "mob.polarbear.idle", "hurt": "mob.polarbear.hurt", "death": "mob.polarbear.death",
@@ -90,7 +91,8 @@ TIERE = [
         "art": "land", "verhalten": "neutral", "leben": 36, "schaden": 6, "tempo": 0.23,
         "kollision": (1.5, 2.3), "baby": True, "herde": (1, 3), "stoss": 1.6,
         "futter": ["minecraft:apple", "minecraft:sweet_berries"],
-        "biome": [["taiga"]], "gewicht": 4,
+        "biome": [["taiga"], ["swamp"]], "gewicht": 6,
+        "boden": ["minecraft:grass_block", "minecraft:podzol", "minecraft:snow_layer", "minecraft:coarse_dirt"],
         "beute": [("fynn:elchfleisch", 1, 3, 1.0, True), ("minecraft:leather", 0, 2, 1.0, False)],
         # Das Geweih verlieren nur die Bullen - das entscheidet tiere.js,
         # denn eine Beuteliste weiss nicht, welche Variante gestorben ist.
@@ -105,7 +107,8 @@ TIERE = [
         "art": "land", "verhalten": "feindlich", "reichweite": 5, "leben": 22, "schaden": 5, "tempo": 0.27,
         "kollision": (0.9, 0.9), "baby": True, "herde": (2, 4), "stoss": 1.2,
         "futter": ["minecraft:carrot", "minecraft:potato", "minecraft:beetroot", "minecraft:apple"],
-        "biome": [["forest", "!taiga", "!mountains"]], "gewicht": 6,
+        "biome": [["forest", "!taiga", "!mountains"]], "gewicht": 8,
+        "boden": ["minecraft:grass_block", "minecraft:podzol", "minecraft:coarse_dirt"],
         "beute": [("fynn:wildschweinfleisch", 1, 3, 1.0, True), ("fynn:wildschweinhauer", 1, 1, 0.12, False)],
         "laute": {"ambient": "mob.hoglin.ambient", "hurt": "mob.hoglin.hurt", "death": "mob.hoglin.death",
                   "step": "mob.hoglin.step", "pitch": [1.0, 1.2]},
@@ -117,7 +120,8 @@ TIERE = [
         "art": "land", "verhalten": "neutral", "herdenwut": True, "leben": 45, "schaden": 6, "tempo": 0.22,
         "kollision": (1.6, 1.9), "baby": True, "herde": (3, 6), "stoss": 2.0,
         "futter": ["minecraft:wheat"],
-        "biome": [["plains"], ["ice_plains", "!mutated"]], "gewicht": 7,
+        "biome": [["plains"], ["ice_plains", "!mutated"], ["meadow"]], "gewicht": 9,
+        "boden": ["minecraft:grass_block", "minecraft:snow_layer"],
         # Im Schnee tragen sie Raureif auf dem Fell.
         "variante_nach_biom": {"frozen": 1},
         "beute": [("fynn:bisonfleisch", 2, 4, 1.0, True), ("fynn:bisonfell", 1, 1, 0.4, False),
@@ -134,7 +138,8 @@ TIERE = [
         "kollision": (1.1, 1.3), "baby": True, "herde": (2, 4),
         "futter": ["minecraft:beef", "minecraft:mutton", "minecraft:porkchop"],
         "jagt": ["minecraft:cow", "minecraft:sheep", "minecraft:pig", "minecraft:horse", "minecraft:donkey"],
-        "biome": [["savanna"]], "gewicht": 5,
+        "biome": [["savanna"]], "gewicht": 6,
+        "boden": ["minecraft:grass_block", "minecraft:coarse_dirt"],
         "beute": [("fynn:loewenfell", 1, 1, 0.35, False), ("fynn:loewenzahn", 1, 1, 0.15, False)],
         "laute": {"ambient": "mob.polarbear.warning", "hurt": "mob.cat.hit", "death": "mob.polarbear.death",
                   "step": "mob.polarbear.step", "pitch": [0.75, 0.9]},
@@ -148,7 +153,8 @@ TIERE = [
         "kollision": (1.1, 1.2), "baby": True, "herde": (1, 1),
         "futter": ["minecraft:beef", "minecraft:porkchop", "minecraft:chicken"],
         "jagt": ["minecraft:pig", "minecraft:chicken", "minecraft:ocelot", "minecraft:panda"],
-        "biome": [["jungle"]], "gewicht": 3,
+        "biome": [["jungle"]], "gewicht": 5,
+        "boden": ["minecraft:grass_block", "minecraft:podzol", "minecraft:moss_block"],
         "beute": [("fynn:tigerfell", 1, 1, 0.35, False), ("fynn:tigerkralle", 1, 1, 0.12, False)],
         "laute": {"ambient": "mob.polarbear.warning", "hurt": "mob.cat.hit", "death": "mob.polarbear.death",
                   "step": "mob.polarbear.step", "pitch": [0.85, 1.0]},
@@ -161,7 +167,8 @@ TIERE = [
         "wassertempo": 0.09, "kollision": (1.2, 0.6), "baby": True, "herde": (1, 2),
         "futter": ["minecraft:cod", "minecraft:salmon", "minecraft:chicken"],
         "jagt": ["minecraft:chicken", "minecraft:pig", "minecraft:cod", "minecraft:salmon", "minecraft:frog"],
-        "biome": [["swamp"], ["mangrove_swamp"]], "gewicht": 5,
+        "biome": [["swamp"], ["mangrove_swamp"]], "gewicht": 6,
+        "boden": ["minecraft:grass_block", "minecraft:mud", "minecraft:mangrove_roots", "minecraft:muddy_mangrove_roots"],
         "beute": [("fynn:krokodilfleisch", 1, 2, 1.0, True), ("fynn:krokodilleder", 1, 1, 0.5, False),
                   ("fynn:krokodilzahn", 1, 1, 0.12, False)],
         "laute": {"ambient": "mob.turtle.ambient", "hurt": "mob.turtle.hurt", "death": "mob.turtle.death",
@@ -175,7 +182,9 @@ TIERE = [
         "kollision": (0.9, 1.0), "baby": True, "herde": (1, 1),
         "futter": ["minecraft:mutton", "minecraft:rabbit"],
         "jagt": ["minecraft:goat", "minecraft:rabbit", "minecraft:sheep"],
-        "biome": [["frozen_peaks"], ["jagged_peaks"], ["snowy_slopes"], ["grove"]], "gewicht": 4,
+        "biome": [["frozen_peaks"], ["jagged_peaks"], ["snowy_slopes"], ["grove"]], "gewicht": 6,
+        "boden": ["minecraft:snow", "minecraft:snow_layer", "minecraft:stone", "minecraft:packed_ice",
+                  "minecraft:grass_block", "minecraft:powder_snow"],
         "beute": [("fynn:schneeleopardenfell", 1, 1, 0.4, False)],
         "laute": {"ambient": "mob.ocelot.idle", "hurt": "mob.cat.hit", "death": "mob.ocelot.death",
                   "pitch": [0.55, 0.7]},
@@ -512,6 +521,9 @@ def spawnregel(t):
                 b["minecraft:brightness_filter"] = {"min": 0, "max": 6, "adjust_for_weather": False}
         else:
             b["minecraft:spawns_on_surface"] = {}
+            if t.get("boden"):
+                # Nur auf passendem Boden - nicht auf Blaettern oder Dachziegeln.
+                b["minecraft:spawns_on_block_filter"] = t["boden"]
             b["minecraft:brightness_filter"] = {"min": 7, "max": 15, "adjust_for_weather": False}
             b["minecraft:density_limit"] = {"surface": 4}
         bedingungen.append(b)
@@ -696,9 +708,24 @@ def bewegungen(t, modell):
     if ang:
         a["angriff"] = {"loop": True, "bones": {k: v for k, v in ang.items() if k}}
 
-    # --- Junge: grosser Kopf, wie bei Mojangs Jungtieren
+    # --- Junge: so gebaut wie Mojangs neue Tierbabys - grosser runder
+    # Kopf, kurze stummelige Beine, kurzer Schwanz. Die Beine werden an der
+    # Huefte gestaucht; damit die Fuesse trotzdem am Boden stehen, sinkt der
+    # Koerper um genau das Stueck, das die Beine kuerzer werden.
     if t.get("baby") and kopf:
-        a["jung"] = {"loop": True, "bones": {kopf: {"scale": 1.4}}}
+        jung = {kopf: {"scale": 1.6, "position": [0.0, 1.0, 1.0]}}
+        if "leg0" in da:
+            bein = next(k for k in modell.knochen if k.name == "leg0").kaesten[0].groesse[1]
+            faktor = 0.8 if art == "amphib" else 0.62
+            for b_ in ("leg0", "leg1", "leg2", "leg3"):
+                jung[b_] = {"scale": [1.2, faktor, 1.2]}
+            jung["body"] = {"position": [0.0, round(-(1 - faktor) * bein, 2), 0.0]}
+        for k in schwanzkette:
+            jung[k] = {"scale": 0.7}
+        for seite in ("flosse_links", "flosse_rechts"):
+            if seite in da:
+                jung[seite] = {"scale": 0.8}
+        a["jung"] = {"loop": True, "bones": jung}
 
     # --- Teile, die nur manche Varianten haben (Geweih, Maehne, Hammerkopf)
     if t.get("zeigen"):
@@ -753,12 +780,19 @@ def aussehen(t, anims, texturen):
     return {"format_version": "1.10.0", "minecraft:client_entity": {"description": d}}
 
 
+def babyhaut(t):
+    """Name der Haut fuer die Jungen - oder None, wenn das Tier keine hat."""
+    if not t.get("baby"):
+        return None
+    return t.get("baby_textur") or "jung"
+
+
 def steuerung(t, texturen):
     """Welche Haut: die Variante - und bei manchen Jungen eine eigene."""
     varianten = [f"Texture.{v}" for v, _ in t["varianten"]]
     bild = "Array.haut[query.variant]"
-    if t.get("baby_textur"):
-        bild = f"query.is_baby ? Texture.{t['baby_textur']} : Array.haut[query.variant]"
+    if babyhaut(t):
+        bild = f"query.is_baby ? Texture.{babyhaut(t)} : Array.haut[query.variant]"
     return {"format_version": "1.8.0", "render_controllers": {f"controller.render.fynn.{t['id']}": {
         "arrays": {"textures": {"Array.haut": varianten}},
         "geometry": "Geometry.default",
@@ -777,9 +811,13 @@ def baue(t, bilder=None):
     schreibe(RES / "models" / "entity" / f"tier_{name}.geo.json", geo)
 
     texturen = {}
-    namen = [v for v, _ in t["varianten"]] + ([t["baby_textur"]] if t.get("baby_textur") else [])
+    namen = [v for v, _ in t["varianten"]] + ([babyhaut(t)] if babyhaut(t) else [])
     for v in namen:
-        bild = modell.male(maler(v))
+        # Jungtiere: eigene Haut mit grossen, glaenzenden Augen. Wer keine
+        # eigene Jungtierfarbe hat, nimmt die der ersten Variante.
+        g.JUNG = v == babyhaut(t)
+        bild = modell.male(maler(t.get("baby_textur") or t["varianten"][0][0] if g.JUNG else v))
+        g.JUNG = False
         ziel = RES / "textures" / "entity" / "tiere" / f"{name}_{v}.png"
         ziel.parent.mkdir(parents=True, exist_ok=True)
         bild.save(ziel)
@@ -843,7 +881,7 @@ def vorschau(bilder, ordner):
     zellen = []
     for t, geo, texturen, eigene in bilder:
         for v, bild in texturen.items():
-            baby = v == t.get("baby_textur")
+            baby = v == babyhaut(t)
             werte = {"q.is_baby": 1.0 if baby else 0.0,
                      "q.variant": float(next((i for i, (n, _) in enumerate(t["varianten"]) if n == v), 0)),
                      "q.is_in_water": 1.0}

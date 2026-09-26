@@ -42,11 +42,11 @@ item.fynn:eisenklinge.name=Iron Blade
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.36
+item.iron_sword.name=Stahlschwert 4.37
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.36
-item.fynn:degen.name=Degen 4.36
+item.fynn:degen=Degen 4.37
+item.fynn:degen.name=Degen 4.37
 
 
 
@@ -166,31 +166,6 @@ item.fynn:geweihbogen.name=Moose Antler Bow
 
 
 
-## Die Tiere
-entity.fynn:braunbaer.name=Brown Bear
-item.spawn_egg.entity.fynn:braunbaer.name=Brown Bear Spawn Egg
-entity.fynn:elch.name=Moose
-item.spawn_egg.entity.fynn:elch.name=Moose Spawn Egg
-entity.fynn:wildschwein.name=Wild Boar
-item.spawn_egg.entity.fynn:wildschwein.name=Wild Boar Spawn Egg
-entity.fynn:bison.name=Bison
-item.spawn_egg.entity.fynn:bison.name=Bison Spawn Egg
-entity.fynn:loewe.name=Lion
-item.spawn_egg.entity.fynn:loewe.name=Lion Spawn Egg
-entity.fynn:tiger.name=Tiger
-item.spawn_egg.entity.fynn:tiger.name=Tiger Spawn Egg
-entity.fynn:krokodil.name=Crocodile
-item.spawn_egg.entity.fynn:krokodil.name=Crocodile Spawn Egg
-entity.fynn:schneeleopard.name=Snow Leopard
-item.spawn_egg.entity.fynn:schneeleopard.name=Snow Leopard Spawn Egg
-entity.fynn:wal.name=Humpback Whale
-item.spawn_egg.entity.fynn:wal.name=Humpback Whale Spawn Egg
-entity.fynn:hai.name=Shark
-item.spawn_egg.entity.fynn:hai.name=Shark Spawn Egg
-entity.fynn:riesenkalmar.name=Giant Squid
-item.spawn_egg.entity.fynn:riesenkalmar.name=Giant Squid Spawn Egg
-entity.fynn:schwertfisch.name=Swordfish
-item.spawn_egg.entity.fynn:schwertfisch.name=Swordfish Spawn Egg
 
 ## Tierfleisch
 item.fynn:baerenfleisch=Raw Bear Meat
@@ -297,3 +272,46 @@ item.fynn:schwertfischklinge=Swordfish Blade
 item.fynn:schwertfischklinge.name=Swordfish Blade
 item.fynn:trank_der_tiefe=Potion of the Deep
 item.fynn:trank_der_tiefe.name=Potion of the Deep
+
+
+
+## Die Tiere
+entity.fynn:braunbaer.name=Brown Bear
+item.spawn_egg.entity.fynn:braunbaer.name=Brown Bear Spawn Egg
+entity.fynn:elch.name=Moose
+item.spawn_egg.entity.fynn:elch.name=Moose Spawn Egg
+entity.fynn:wildschwein.name=Wild Boar
+item.spawn_egg.entity.fynn:wildschwein.name=Wild Boar Spawn Egg
+entity.fynn:bison.name=Bison
+item.spawn_egg.entity.fynn:bison.name=Bison Spawn Egg
+entity.fynn:loewe.name=Lion
+item.spawn_egg.entity.fynn:loewe.name=Lion Spawn Egg
+entity.fynn:tiger.name=Tiger
+item.spawn_egg.entity.fynn:tiger.name=Tiger Spawn Egg
+entity.fynn:krokodil.name=Crocodile
+item.spawn_egg.entity.fynn:krokodil.name=Crocodile Spawn Egg
+entity.fynn:schneeleopard.name=Snow Leopard
+item.spawn_egg.entity.fynn:schneeleopard.name=Snow Leopard Spawn Egg
+entity.fynn:wal.name=Humpback Whale
+item.spawn_egg.entity.fynn:wal.name=Humpback Whale Spawn Egg
+entity.fynn:hai.name=Shark
+item.spawn_egg.entity.fynn:hai.name=Shark Spawn Egg
+entity.fynn:riesenkalmar.name=Giant Squid
+item.spawn_egg.entity.fynn:riesenkalmar.name=Giant Squid Spawn Egg
+entity.fynn:schwertfisch.name=Swordfish
+item.spawn_egg.entity.fynn:schwertfisch.name=Swordfish Spawn Egg
+
+## Obst
+item.fynn:birne=Pear
+item.fynn:birne.name=Pear
+item.fynn:pfirsich=Peach
+item.fynn:pfirsich.name=Peach
+item.fynn:pflaume=Plum
+item.fynn:pflaume.name=Plum
+item.fynn:obstsalat=Fruit Salad
+item.fynn:obstsalat.name=Fruit Salad
+item.fynn:pflaumenkuchen=Plum Cake
+item.fynn:pflaumenkuchen.name=Plum Cake
+item.fynn:apfelstrudel=Apple Strudel
+item.fynn:apfelstrudel.name=Apple Strudel
+tile.fynn:obst.name=Fruit on the Branch

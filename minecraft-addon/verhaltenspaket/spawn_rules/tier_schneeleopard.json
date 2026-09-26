@@ -8,7 +8,7 @@
     "conditions": [
       {
         "minecraft:weight": {
-          "default": 4
+          "default": 6
         },
         "minecraft:herd": {
           "min_size": 1,
@@ -22,6 +22,14 @@
           }
         ],
         "minecraft:spawns_on_surface": {},
+        "minecraft:spawns_on_block_filter": [
+          "minecraft:snow",
+          "minecraft:snow_layer",
+          "minecraft:stone",
+          "minecraft:packed_ice",
+          "minecraft:grass_block",
+          "minecraft:powder_snow"
+        ],
         "minecraft:brightness_filter": {
           "min": 7,
           "max": 15,
@@ -33,7 +41,7 @@
       },
       {
         "minecraft:weight": {
-          "default": 4
+          "default": 6
         },
         "minecraft:herd": {
           "min_size": 1,
@@ -47,6 +55,14 @@
           }
         ],
         "minecraft:spawns_on_surface": {},
+        "minecraft:spawns_on_block_filter": [
+          "minecraft:snow",
+          "minecraft:snow_layer",
+          "minecraft:stone",
+          "minecraft:packed_ice",
+          "minecraft:grass_block",
+          "minecraft:powder_snow"
+        ],
         "minecraft:brightness_filter": {
           "min": 7,
           "max": 15,
@@ -58,7 +74,7 @@
       },
       {
         "minecraft:weight": {
-          "default": 4
+          "default": 6
         },
         "minecraft:herd": {
           "min_size": 1,
@@ -72,6 +88,14 @@
           }
         ],
         "minecraft:spawns_on_surface": {},
+        "minecraft:spawns_on_block_filter": [
+          "minecraft:snow",
+          "minecraft:snow_layer",
+          "minecraft:stone",
+          "minecraft:packed_ice",
+          "minecraft:grass_block",
+          "minecraft:powder_snow"
+        ],
         "minecraft:brightness_filter": {
           "min": 7,
           "max": 15,
@@ -83,7 +107,7 @@
       },
       {
         "minecraft:weight": {
-          "default": 4
+          "default": 6
         },
         "minecraft:herd": {
           "min_size": 1,
@@ -97,6 +121,14 @@
           }
         ],
         "minecraft:spawns_on_surface": {},
+        "minecraft:spawns_on_block_filter": [
+          "minecraft:snow",
+          "minecraft:snow_layer",
+          "minecraft:stone",
+          "minecraft:packed_ice",
+          "minecraft:grass_block",
+          "minecraft:powder_snow"
+        ],
         "minecraft:brightness_filter": {
           "min": 7,
           "max": 15,

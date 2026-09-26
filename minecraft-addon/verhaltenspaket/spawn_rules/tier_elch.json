@@ -8,7 +8,7 @@
     "conditions": [
       {
         "minecraft:weight": {
-          "default": 4
+          "default": 6
         },
         "minecraft:herd": {
           "min_size": 1,
@@ -22,6 +22,43 @@
           }
         ],
         "minecraft:spawns_on_surface": {},
+        "minecraft:spawns_on_block_filter": [
+          "minecraft:grass_block",
+          "minecraft:podzol",
+          "minecraft:snow_layer",
+          "minecraft:coarse_dirt"
+        ],
+        "minecraft:brightness_filter": {
+          "min": 7,
+          "max": 15,
+          "adjust_for_weather": false
+        },
+        "minecraft:density_limit": {
+          "surface": 4
+        }
+      },
+      {
+        "minecraft:weight": {
+          "default": 6
+        },
+        "minecraft:herd": {
+          "min_size": 1,
+          "max_size": 3
+        },
+        "minecraft:biome_filter": [
+          {
+            "test": "has_biome_tag",
+            "operator": "==",
+            "value": "swamp"
+          }
+        ],
+        "minecraft:spawns_on_surface": {},
+        "minecraft:spawns_on_block_filter": [
+          "minecraft:grass_block",
+          "minecraft:podzol",
+          "minecraft:snow_layer",
+          "minecraft:coarse_dirt"
+        ],
         "minecraft:brightness_filter": {
           "min": 7,
           "max": 15,

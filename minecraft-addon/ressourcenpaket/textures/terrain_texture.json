@@ -66,6 +66,54 @@
     },
     "rollenaltar_assassine": {
       "textures": "textures/blocks/rollenaltar_assassine"
+    },
+    "obst_apfel_bluete": {
+      "textures": "textures/blocks/obst/obst_apfel_bluete"
+    },
+    "obst_apfel_1": {
+      "textures": "textures/blocks/obst/obst_apfel_1"
+    },
+    "obst_apfel_2": {
+      "textures": "textures/blocks/obst/obst_apfel_2"
+    },
+    "obst_apfel_3": {
+      "textures": "textures/blocks/obst/obst_apfel_3"
+    },
+    "obst_birne_bluete": {
+      "textures": "textures/blocks/obst/obst_birne_bluete"
+    },
+    "obst_birne_1": {
+      "textures": "textures/blocks/obst/obst_birne_1"
+    },
+    "obst_birne_2": {
+      "textures": "textures/blocks/obst/obst_birne_2"
+    },
+    "obst_birne_3": {
+      "textures": "textures/blocks/obst/obst_birne_3"
+    },
+    "obst_pfirsich_bluete": {
+      "textures": "textures/blocks/obst/obst_pfirsich_bluete"
+    },
+    "obst_pfirsich_1": {
+      "textures": "textures/blocks/obst/obst_pfirsich_1"
+    },
+    "obst_pfirsich_2": {
+      "textures": "textures/blocks/obst/obst_pfirsich_2"
+    },
+    "obst_pfirsich_3": {
+      "textures": "textures/blocks/obst/obst_pfirsich_3"
+    },
+    "obst_pflaume_bluete": {
+      "textures": "textures/blocks/obst/obst_pflaume_bluete"
+    },
+    "obst_pflaume_1": {
+      "textures": "textures/blocks/obst/obst_pflaume_1"
+    },
+    "obst_pflaume_2": {
+      "textures": "textures/blocks/obst/obst_pflaume_2"
+    },
+    "obst_pflaume_3": {
+      "textures": "textures/blocks/obst/obst_pflaume_3"
     }
   }
 }

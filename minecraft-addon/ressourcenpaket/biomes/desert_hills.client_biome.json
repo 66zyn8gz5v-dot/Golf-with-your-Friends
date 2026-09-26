@@ -9,7 +9,8 @@
         "fog_identifier": "fynn:fog_desert_hills"
       },
       "minecraft:water_appearance": {
-        "surface_color": "#1a7aa1"
+        "surface_color": "#1A83AE",
+        "surface_opacity": 0.6
       },
       "minecraft:atmosphere_identifier": {
         "atmosphere_identifier": "minecraft:desert_atmospherics"

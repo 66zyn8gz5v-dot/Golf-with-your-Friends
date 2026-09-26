@@ -9,7 +9,8 @@
         "fog_identifier": "fynn:fog_extreme_hills_edge"
       },
       "minecraft:water_appearance": {
-        "surface_color": "#045cd5"
+        "surface_color": "#2275E6",
+        "surface_opacity": 0.6
       },
       "minecraft:atmosphere_identifier": {
         "atmosphere_identifier": "fynn:himmel"

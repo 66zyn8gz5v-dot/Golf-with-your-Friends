@@ -1,0 +1,37 @@
+{
+  "format_version": "1.12",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "fynn:obstsalat"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:bowl"
+      },
+      {
+        "item": "minecraft:apple"
+      },
+      {
+        "item": "fynn:birne"
+      },
+      {
+        "item": "fynn:pfirsich"
+      },
+      {
+        "item": "fynn:pflaume"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "minecraft:bowl"
+      }
+    ],
+    "result": {
+      "item": "fynn:obstsalat",
+      "count": 1
+    }
+  }
+}

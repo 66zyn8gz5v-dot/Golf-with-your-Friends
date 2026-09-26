@@ -16,6 +16,7 @@ import "./kampf.js";
 import "./pfeile.js";
 import "./tempel.js";
 import "./tiere.js";
+import "./obst.js";
 
 const DEGEN = "fynn:degen";
 

@@ -8,7 +8,7 @@
     "conditions": [
       {
         "minecraft:weight": {
-          "default": 7
+          "default": 9
         },
         "minecraft:herd": {
           "min_size": 3,
@@ -22,6 +22,10 @@
           }
         ],
         "minecraft:spawns_on_surface": {},
+        "minecraft:spawns_on_block_filter": [
+          "minecraft:grass_block",
+          "minecraft:snow_layer"
+        ],
         "minecraft:brightness_filter": {
           "min": 7,
           "max": 15,
@@ -33,7 +37,7 @@
       },
       {
         "minecraft:weight": {
-          "default": 7
+          "default": 9
         },
         "minecraft:herd": {
           "min_size": 3,
@@ -52,6 +56,39 @@
           }
         ],
         "minecraft:spawns_on_surface": {},
+        "minecraft:spawns_on_block_filter": [
+          "minecraft:grass_block",
+          "minecraft:snow_layer"
+        ],
+        "minecraft:brightness_filter": {
+          "min": 7,
+          "max": 15,
+          "adjust_for_weather": false
+        },
+        "minecraft:density_limit": {
+          "surface": 4
+        }
+      },
+      {
+        "minecraft:weight": {
+          "default": 9
+        },
+        "minecraft:herd": {
+          "min_size": 3,
+          "max_size": 6
+        },
+        "minecraft:biome_filter": [
+          {
+            "test": "has_biome_tag",
+            "operator": "==",
+            "value": "meadow"
+          }
+        ],
+        "minecraft:spawns_on_surface": {},
+        "minecraft:spawns_on_block_filter": [
+          "minecraft:grass_block",
+          "minecraft:snow_layer"
+        ],
         "minecraft:brightness_filter": {
           "min": 7,
           "max": 15,

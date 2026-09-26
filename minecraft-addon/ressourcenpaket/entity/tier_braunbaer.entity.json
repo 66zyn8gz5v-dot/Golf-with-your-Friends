@@ -9,7 +9,8 @@
       "textures": {
         "braun": "textures/entity/tiere/braunbaer_braun",
         "grizzly": "textures/entity/tiere/braunbaer_grizzly",
-        "schwarz": "textures/entity/tiere/braunbaer_schwarz"
+        "schwarz": "textures/entity/tiere/braunbaer_schwarz",
+        "jung": "textures/entity/tiere/braunbaer_jung"
       },
       "geometry": {
         "default": "geometry.fynn.braunbaer"

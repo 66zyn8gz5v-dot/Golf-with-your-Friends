@@ -46,10 +46,25 @@ def nah(p, mitte, halb):
     return all(abs(p[i] - mitte[i]) <= halb[i] for i in range(3))
 
 
+# Beim Malen der Jungtiere gesetzt: dann werden die Augen gross und
+# glaenzend - wie bei Mojangs neuen, suesseren Tierbabys.
+JUNG = False
+
+
 def auge(p, n, orte, iris="#1a120c", halb=(0.5, 0.5, 0.5)):
     """Ein Auge aus zwei Bildpunkten nebeneinander: innen die dunkle
-    Pupille, aussen die Iris. So wirken sie lebendig statt aufgemalt."""
+    Pupille, aussen die Iris. So wirken sie lebendig statt aufgemalt.
+
+    Bei Jungtieren (JUNG) sind es zwei mal zwei Punkte, dunkel, mit einem
+    weissen Glanzpunkt oben aussen - grosse Kulleraugen."""
     for o in orte:
+        if JUNG:
+            if nah(p, o, (halb[0] + 0.5, halb[1] + 0.5, halb[2] + 0.5)):
+                aussen = abs(p[0]) > abs(o[0]) or p[2] < o[2] - 0.1
+                if p[1] > o[1] and aussen:
+                    return hexfarbe("#ffffff")
+                return hexfarbe("#0c0908")
+            continue
         if nah(p, o, halb):
             return hexfarbe("#0c0908")
         breiter = (halb[0] + 1.0, halb[1], halb[2] + 1.0)

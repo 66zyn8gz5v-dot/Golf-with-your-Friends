@@ -9,7 +9,8 @@
         "fog_identifier": "fynn:fog_cold_beach"
       },
       "minecraft:water_appearance": {
-        "surface_color": "#1463a5"
+        "surface_color": "#1B85B2",
+        "surface_opacity": 0.5
       },
       "minecraft:atmosphere_identifier": {
         "atmosphere_identifier": "fynn:himmel"

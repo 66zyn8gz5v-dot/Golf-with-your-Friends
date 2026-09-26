@@ -9,7 +9,8 @@
         "fog_identifier": "fynn:fog_cold_taiga"
       },
       "minecraft:water_appearance": {
-        "surface_color": "#205e83"
+        "surface_color": "#1A628D",
+        "surface_opacity": 0.6
       },
       "minecraft:atmosphere_identifier": {
         "atmosphere_identifier": "fynn:himmel"

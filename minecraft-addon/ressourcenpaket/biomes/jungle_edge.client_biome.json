@@ -9,7 +9,8 @@
         "fog_identifier": "fynn:fog_jungle_edge"
       },
       "minecraft:water_appearance": {
-        "surface_color": "#0D8AE3"
+        "surface_color": "#22B0E6",
+        "surface_opacity": 0.5
       },
       "minecraft:atmosphere_identifier": {
         "atmosphere_identifier": "minecraft:warmish_atmospherics"

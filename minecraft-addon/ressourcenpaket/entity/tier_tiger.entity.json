@@ -8,7 +8,8 @@
       },
       "textures": {
         "orange": "textures/entity/tiere/tiger_orange",
-        "weiss": "textures/entity/tiere/tiger_weiss"
+        "weiss": "textures/entity/tiere/tiger_weiss",
+        "jung": "textures/entity/tiere/tiger_jung"
       },
       "geometry": {
         "default": "geometry.fynn.tiger"

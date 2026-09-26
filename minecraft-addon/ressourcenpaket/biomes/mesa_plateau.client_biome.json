@@ -9,7 +9,8 @@
         "fog_identifier": "fynn:fog_mesa_plateau"
       },
       "minecraft:water_appearance": {
-        "surface_color": "#55809E"
+        "surface_color": "#5588AB",
+        "surface_opacity": 0.6
       },
       "minecraft:atmosphere_identifier": {
         "atmosphere_identifier": "minecraft:mesa_atmospherics"

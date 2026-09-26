@@ -52,7 +52,18 @@
       "loop": true,
       "bones": {
         "kopf": {
-          "scale": 1.4
+          "scale": 1.6,
+          "position": [
+            0.0,
+            1.0,
+            1.0
+          ]
+        },
+        "flosse_links": {
+          "scale": 0.8
+        },
+        "flosse_rechts": {
+          "scale": 0.8
         }
       }
     }

@@ -181,17 +181,45 @@ def farbe():
 # ------------------------------------------------------------ Wasser
 
 def wasser():
+    """Lebendige Grafik: klareres Wasser (Fynn: "schoeneres Wasser").
+    Weniger Schwebstoffe und Algen - man sieht tiefer hinunter und das Blau
+    wird tuerkis, wo die Landschaft es hergibt. Kraeftigere Lichtmuster
+    (Kaustik) am Grund und etwas hoehere Wellen."""
     w = lade(VV / "water" / "water.json")
     s = w["minecraft:water_settings"]
     s["description"]["identifier"] = "fynn:wasser"
-    s["particle_concentrations"] = {"chlorophyll": 0.3, "suspended_sediment": 1.0, "cdom": 0.2}
-    s["caustics"] = {"enabled": True, "frame_length": 0.08, "scale": 0.5, "power": 2}
-    s["waves"] = {"enabled": True, "frequency": 1.0, "octaves": 16, "depth": 0.6, "speed": 1.2,
-                  "shape": 1.6, "pull": 0.35, "mix": 0.25, "frequency_scaling": 1.2,
+    s["particle_concentrations"] = {"chlorophyll": 0.12, "suspended_sediment": 0.35, "cdom": 0.08}
+    s["caustics"] = {"enabled": True, "frame_length": 0.07, "scale": 0.6, "power": 3}
+    s["waves"] = {"enabled": True, "frequency": 1.0, "octaves": 16, "depth": 0.8, "speed": 1.25,
+                  "shape": 1.7, "pull": 0.4, "mix": 0.25, "frequency_scaling": 1.2,
                   "speed_scaling": 1.03, "direction_increment": 25.0}
-    s["biome_water_color_contribution"] = 0.3
+    s["biome_water_color_contribution"] = 0.5
     w["format_version"] = "1.26.0"
     return w
+
+
+def wasserfarbe(name, farbe):
+    """Die Oberflaeche in der gewoehnlichen Grafik: kraeftiger und klarer.
+
+    Jede Landschaft behaelt ihren Charakter (der Sumpf bleibt truebe, das
+    Eismeer kuehl), wird aber etwas satter und heller; warme Meere und
+    Dschungel ziehen ins Tuerkis. Dazu weniger Deckkraft - man sieht den
+    Grund durch."""
+    import colorsys
+    r, g, b = (int(farbe.lstrip("#")[i:i + 2], 16) / 255 for i in (0, 2, 4))
+    h, sat, v = colorsys.rgb_to_hsv(r, g, b)
+    warm = any(w in name for w in ("warm", "jungle", "beach", "mushroom"))
+    truebe = any(w in name for w in ("swamp", "mangrove"))
+    if warm:
+        h = h + (0.49 - h) * 0.3            # Richtung Tuerkis
+    if not truebe:
+        # Satter und heller - aber nicht grell: gedeckelt, sonst leuchtet
+        # das warme Meer wie ein Neonschild.
+        sat = min(0.85, sat * 1.08)
+        v = min(0.9, v * 1.08)
+    r, g, b = colorsys.hsv_to_rgb(h % 1.0, sat, v)
+    deckkraft = 0.8 if truebe else (0.5 if warm else 0.6)
+    return "#%02X%02X%02X" % (round(r * 255), round(g * 255), round(b * 255)), deckkraft
 
 
 # ------------------------------------------------------------ Nebel
@@ -233,6 +261,10 @@ def nebel(vanilla_id):
         return None, None
     s = datei["minecraft:fog_settings"]
     s["description"]["identifier"] = f"fynn:{name}"
+    # Unter Wasser weiter sehen: der Nebel faengt spaeter an, dicht zu werden.
+    unter = s.get("distance", {}).get("water")
+    if unter and "fog_end" in unter and "swamp" not in name and "mangrove" not in name:
+        unter["fog_end"] = round(unter["fog_end"] * 1.5, 1)
     eigen = s.get("volumetric", {})
     streut = max(eigen.get("media_coefficients", {}).get("air", {}).get("scattering", [0.0])) if eigen else 0.0
     if streut > 0:
@@ -419,6 +451,11 @@ def main():
         if k.get("minecraft:water_identifier", {}).get("water_identifier",
                                                        "minecraft:default_water") == "minecraft:default_water":
             k["minecraft:water_identifier"] = {"water_identifier": "fynn:wasser"}
+        wasser_aussehen = k.get("minecraft:water_appearance")
+        if wasser_aussehen and "surface_color" in wasser_aussehen:
+            farbe_neu, deckkraft = wasserfarbe(name, wasser_aussehen["surface_color"])
+            wasser_aussehen["surface_color"] = farbe_neu
+            wasser_aussehen["surface_opacity"] = deckkraft
         nebel_alt = k.get("minecraft:fog_appearance", {}).get("fog_identifier")
         if nebel_alt:
             if nebel_alt not in nebel_neu:

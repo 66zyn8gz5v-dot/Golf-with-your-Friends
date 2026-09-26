@@ -160,6 +160,11 @@
         "minecraft:variant": {
           "value": 0
         }
+      },
+      "fynn:variante_1": {
+        "minecraft:variant": {
+          "value": 1
+        }
       }
     },
     "components": {

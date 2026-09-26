@@ -8,7 +8,7 @@
     "conditions": [
       {
         "minecraft:weight": {
-          "default": 5
+          "default": 6
         },
         "minecraft:herd": {
           "min_size": 1,
@@ -22,6 +22,12 @@
           }
         ],
         "minecraft:spawns_on_surface": {},
+        "minecraft:spawns_on_block_filter": [
+          "minecraft:grass_block",
+          "minecraft:mud",
+          "minecraft:mangrove_roots",
+          "minecraft:muddy_mangrove_roots"
+        ],
         "minecraft:brightness_filter": {
           "min": 7,
           "max": 15,
@@ -33,7 +39,7 @@
       },
       {
         "minecraft:weight": {
-          "default": 5
+          "default": 6
         },
         "minecraft:herd": {
           "min_size": 1,
@@ -47,6 +53,12 @@
           }
         ],
         "minecraft:spawns_on_surface": {},
+        "minecraft:spawns_on_block_filter": [
+          "minecraft:grass_block",
+          "minecraft:mud",
+          "minecraft:mangrove_roots",
+          "minecraft:muddy_mangrove_roots"
+        ],
         "minecraft:brightness_filter": {
           "min": 7,
           "max": 15,
@@ -59,7 +71,7 @@
       {
         "minecraft:spawns_underwater": {},
         "minecraft:weight": {
-          "default": 5
+          "default": 6
         },
         "minecraft:herd": {
           "min_size": 1,
@@ -80,7 +92,7 @@
       {
         "minecraft:spawns_underwater": {},
         "minecraft:weight": {
-          "default": 5
+          "default": 6
         },
         "minecraft:herd": {
           "min_size": 1,

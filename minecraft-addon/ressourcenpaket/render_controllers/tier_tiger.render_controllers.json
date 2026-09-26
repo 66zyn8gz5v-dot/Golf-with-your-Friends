@@ -17,7 +17,7 @@
         }
       ],
       "textures": [
-        "Array.haut[query.variant]"
+        "query.is_baby ? Texture.jung : Array.haut[query.variant]"
       ]
     }
   }

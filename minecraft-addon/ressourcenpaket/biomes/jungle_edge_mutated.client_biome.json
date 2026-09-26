@@ -9,7 +9,8 @@
         "fog_identifier": "fynn:fog_humid"
       },
       "minecraft:water_appearance": {
-        "surface_color": "#44AFF5"
+        "surface_color": "#32B7E6",
+        "surface_opacity": 0.5
       },
       "minecraft:atmosphere_identifier": {
         "atmosphere_identifier": "minecraft:warmish_atmospherics"

@@ -325,6 +325,24 @@
     },
     "geweihbogen_pulling_2": {
       "textures": "textures/items/geweihbogen_pulling_2"
+    },
+    "birne": {
+      "textures": "textures/items/obst/birne"
+    },
+    "pfirsich": {
+      "textures": "textures/items/obst/pfirsich"
+    },
+    "pflaume": {
+      "textures": "textures/items/obst/pflaume"
+    },
+    "obstsalat": {
+      "textures": "textures/items/obst/obstsalat"
+    },
+    "pflaumenkuchen": {
+      "textures": "textures/items/obst/pflaumenkuchen"
+    },
+    "apfelstrudel": {
+      "textures": "textures/items/obst/apfelstrudel"
     }
   }
 }
