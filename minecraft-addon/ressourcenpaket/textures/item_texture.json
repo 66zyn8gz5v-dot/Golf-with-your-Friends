@@ -88,6 +88,15 @@
     },
     "elektrumpfeil": {
       "textures": "textures/items/elektrumpfeil"
+    },
+    "artefaktentasche": {
+      "textures": "textures/items/artefaktentasche"
+    },
+    "artefaktentasche_open_back": {
+      "textures": "textures/items/artefaktentasche_open_back"
+    },
+    "artefaktentasche_open_front": {
+      "textures": "textures/items/artefaktentasche_open_front"
     }
   }
 }

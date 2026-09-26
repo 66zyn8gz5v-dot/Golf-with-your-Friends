@@ -5,7 +5,10 @@ Wenn das im Spiel auftaucht, wissen wir, dass die ganze Kette funktioniert –
 Datei, Installation, Welt. Erst dann bauen wir das Größere darauf.
 
 Wohin das Ganze einmal gehen soll – Rollen, Magie, Aufstieg – steht in
-[PLAN.md](PLAN.md). Gebaut ist davon noch nichts.
+[PLAN.md](PLAN.md). Die Rollen daraus sind seit Fassung 4.15 gebaut: Am
+**Wappenstein** wählt man Ritter, Magier, Bogenschütze oder Assassine. Jede
+Rolle hat eine Kraftleiste über der Schnellleiste und einen aufgeladenen
+Angriff – Waffe der Rolle in die Hand, ducken, bis es klingt, aufstehen.
 
 ## Was drin ist
 

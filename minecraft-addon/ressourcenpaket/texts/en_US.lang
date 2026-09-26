@@ -42,11 +42,11 @@ item.fynn:eisenklinge.name=Iron Blade
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.18
+item.iron_sword.name=Stahlschwert 4.19
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.18
-item.fynn:degen.name=Degen 4.18
+item.fynn:degen=Degen 4.19
+item.fynn:degen.name=Degen 4.19
 
 
 
@@ -98,3 +98,5 @@ item.fynn:goldpfeil=Gold Arrow
 item.fynn:goldpfeil.name=Gold Arrow
 item.fynn:elektrumpfeil=Electrum Arrow
 item.fynn:elektrumpfeil.name=Electrum Arrow
+item.fynn:artefaktentasche=Artifact Pouch
+item.fynn:artefaktentasche.name=Artifact Pouch

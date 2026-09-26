@@ -48,15 +48,18 @@ export const ROLLEN = {
     bogenschuetze: {
         name: "Bogenschütze", farbe: "§a", kraft: "Fokus", feld: 3,
         bild: "textures/items/bow_standby",
-        kurz: "Pfeilhagel · schneller zu Fuß",
-        wirkung: { id: "speed", stufe: 0 },
+        kurz: "Pfeilhagel · springt höher",
+        // Hoch hinaus, wo man ueber die Koepfe schiessen kann.
+        wirkung: { id: "jump_boost", stufe: 0 },
         nachschub: 1,
     },
     assassine: {
         name: "Assassine", farbe: "§c", kraft: "Schatten", feld: 4,
         bild: "textures/items/eisendolche",
-        kurz: "Schattensprung · unsichtbar",
-        wirkung: { id: "jump_boost", stufe: 0 },
+        kurz: "Schattensprung · flink, unsichtbar",
+        // Leichtfuessig und schneller als die anderen - so steht es in
+        // PLAN.md, seit Fynn die Rollen zum ersten Mal beschrieben hat.
+        wirkung: { id: "speed", stufe: 0 },
         nachschub: 1,
     },
 };

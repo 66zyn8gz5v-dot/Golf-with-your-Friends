@@ -4,8 +4,21 @@ Fynns Ziel: aus dem Sternenpaket ein kleines Rollenspiel machen. Rollen,
 Fähigkeiten, Magie, Aufstieg. Diese Datei hält fest, was besprochen ist —
 damit es nicht verloren geht, auch wenn wochenlang nichts passiert.
 
-Nichts davon ist gebaut. Gebaut sind bisher: Sternenstaub, Sternenklinge,
-Glimmerling. Was hier steht, ist der Plan.
+Was hier steht, ist der Plan. Gebaut ist inzwischen (Fassung 4.15 bis 4.19):
+
+* **Rollenwahl** am Wappenstein, ein Fenster mit vier Knöpfen: Ritter,
+  Magier, Bogenschütze, Assassine. Die Rolle bleibt am Spieler.
+* **Kraftleiste** über der Schnellleiste, zehn Kugeln in der Farbe der
+  Rolle (beim Magier heißt sie Mana). Sie füllt sich von selbst.
+* **Je Rolle ein aufgeladener Angriff** (ducken, bis es klingt, aufstehen):
+  Ritter Wirbelschlag mit dem Schwert, Magier Feuerball mit den Feuerstäben,
+  Bogenschütze Pfeilhagel, Assassine Schattensprung mit den Dolchen.
+* Dolchpaare in sechs Sorten, Erzpfeile, die Artefaktentasche.
+
+Anders als unten geplant: Der Ritter hat keine Extraherzen, sondern
+Resistenz. Ein dauerhaft aufgefrischter Herzeffekt setzt bei jedem
+Auffrischen die Herzen zurück; Resistenz hält gleich viel mehr aus, ohne
+dieses Flackern.
 
 ## Die Rollen
 
@@ -16,9 +29,10 @@ die zur Rolle passt.
 
 | Rolle | Besonderheit |
 | --- | --- |
-| Assassine | leichtfüßig, dauerhaft etwas schneller als die anderen |
-| Ritter | mehr Leben |
-| Magier | mehr Mana |
+| Assassine | leichtfüßig, dauerhaft etwas schneller als die anderen; geduckt unsichtbar |
+| Ritter | mehr Leben (gebaut als Resistenz) |
+| Magier | mehr Mana (Mana kommt doppelt so schnell wieder), feuerfest |
+| Bogenschütze | springt höher |
 
 ## Mana
 

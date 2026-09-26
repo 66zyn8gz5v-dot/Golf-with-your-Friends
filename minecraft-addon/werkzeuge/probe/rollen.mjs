@@ -72,7 +72,7 @@ spieler.isSneaking = false; wirkungen.length = 0;
 for (const f of runden(5)) f();
 pruefe("aufgestanden: nicht mehr", !wirkungen.some((w) => w.id === "invisibility"));
 for (const f of runden(40)) f();
-pruefe("Sprungkraft als Staerke", wirkungen.some((w) => w.id === "jump_boost"));
+pruefe("Tempo als Staerke", wirkungen.some((w) => w.id === "speed"));
 
 // Beschaeftigt: Das Fenster wird spaeter noch einmal versucht.
 const vorher = gemerkt.takte.length;
