@@ -72,8 +72,8 @@
         "controller.render.fynn.walross"
       ],
       "spawn_egg": {
-        "base_color": "#9a6a52",
-        "overlay_color": "#ece2c8"
+        "texture": "walross_ei",
+        "texture_index": 0
       }
     }
   }

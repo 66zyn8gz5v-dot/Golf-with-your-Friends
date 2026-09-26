@@ -78,8 +78,8 @@
         "controller.render.fynn.elch"
       ],
       "spawn_egg": {
-        "base_color": "#3e2a1a",
-        "overlay_color": "#d8c8a0"
+        "texture": "elch_ei",
+        "texture_index": 0
       }
     }
   }

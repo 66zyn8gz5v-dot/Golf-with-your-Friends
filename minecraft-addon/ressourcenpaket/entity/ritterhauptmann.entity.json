@@ -64,8 +64,8 @@
         }
       ],
       "spawn_egg": {
-        "base_color": "#2e4a9a",
-        "overlay_color": "#d8b050"
+        "texture": "ritterhauptmann_ei",
+        "texture_index": 0
       }
     }
   }

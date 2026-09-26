@@ -48,8 +48,8 @@
         "controller.render.fynn.steinadler"
       ],
       "spawn_egg": {
-        "base_color": "#4a3222",
-        "overlay_color": "#b8863a"
+        "texture": "steinadler_ei",
+        "texture_index": 0
       }
     }
   }

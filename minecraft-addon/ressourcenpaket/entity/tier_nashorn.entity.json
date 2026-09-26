@@ -78,8 +78,8 @@
         "controller.render.fynn.nashorn"
       ],
       "spawn_egg": {
-        "base_color": "#8a8884",
-        "overlay_color": "#5e5a56"
+        "texture": "nashorn_ei",
+        "texture_index": 0
       }
     }
   }

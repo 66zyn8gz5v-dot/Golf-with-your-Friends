@@ -78,8 +78,8 @@
         "controller.render.fynn.bison"
       ],
       "spawn_egg": {
-        "base_color": "#3a2618",
-        "overlay_color": "#7a5636"
+        "texture": "bison_ei",
+        "texture_index": 0
       }
     }
   }

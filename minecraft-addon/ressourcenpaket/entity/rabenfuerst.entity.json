@@ -45,8 +45,8 @@
         "controller.render.fynn.rabenfuerst"
       ],
       "spawn_egg": {
-        "base_color": "#2b2533",
-        "overlay_color": "#8e1d27"
+        "texture": "rabenfuerst_ei",
+        "texture_index": 0
       }
     }
   }

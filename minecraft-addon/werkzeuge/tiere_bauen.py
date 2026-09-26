@@ -40,6 +40,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import tiere_gestalt as g                               # noqa: E402
 import tiermodell as tm                                 # noqa: E402
+from spawneier import ei_eintrag  # noqa: E402
 
 WURZEL = Path(__file__).resolve().parent.parent
 RES = WURZEL / "ressourcenpaket"
@@ -1368,7 +1369,7 @@ def aussehen(t, anims, texturen):
                     + ([TROMMELN_WANN] if "trommeln" in anims else []),
                     "animate": animate_liste(t, anims)},
         "render_controllers": [f"controller.render.fynn.{name}"],
-        "spawn_egg": {"base_color": t["ei"][0], "overlay_color": t["ei"][1]},
+        "spawn_egg": ei_eintrag(t["id"], {"base_color": t["ei"][0], "overlay_color": t["ei"][1]}),
     }
     return {"format_version": "1.10.0", "minecraft:client_entity": {"description": d}}
 

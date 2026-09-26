@@ -68,8 +68,8 @@
         "controller.render.fynn.tiger"
       ],
       "spawn_egg": {
-        "base_color": "#e8923a",
-        "overlay_color": "#1c1410"
+        "texture": "tiger_ei",
+        "texture_index": 0
       }
     }
   }

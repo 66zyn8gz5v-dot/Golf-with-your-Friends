@@ -69,8 +69,8 @@
         "controller.render.fynn.braunbaer"
       ],
       "spawn_egg": {
-        "base_color": "#6b4424",
-        "overlay_color": "#c9a26f"
+        "texture": "braunbaer_ei",
+        "texture_index": 0
       }
     }
   }

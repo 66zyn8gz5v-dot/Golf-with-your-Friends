@@ -44,11 +44,11 @@ item.fynn:eisenklinge.name=Iron Blade
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.62
+item.iron_sword.name=Stahlschwert 4.63
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.62
-item.fynn:degen.name=Degen 4.62
+item.fynn:degen=Degen 4.63
+item.fynn:degen.name=Degen 4.63
 
 
 
@@ -124,13 +124,6 @@ item.fynn:geweihbogen.name=Moose Antler Bow
 
 
 
-## Banditen
-entity.fynn:bandit.name=Bandit
-item.spawn_egg.entity.fynn:bandit.name=Bandit Spawn Egg
-entity.fynn:wilderer.name=Poacher
-item.spawn_egg.entity.fynn:wilderer.name=Poacher Spawn Egg
-entity.fynn:bandenchef.name=Bandit Chief
-item.spawn_egg.entity.fynn:bandenchef.name=Bandit Chief Spawn Egg
 
 
 ## Obst
@@ -375,6 +368,22 @@ tile.fynn:rubinerz.name=Ruby Ore
 tile.fynn:tiefenrubinerz.name=Deepslate Ruby Ore
 tile.fynn:rubinblock.name=Block of Ruby
 
+
+
+
+
+
+## Sir Roland
+item.fynn:durendal=Durendal
+item.fynn:durendal.name=Durendal
+item.fynn:olifant=Oliphant
+item.fynn:olifant.name=Oliphant
+item.fynn:fehdehandschuh=Gauntlet of Challenge
+item.fynn:fehdehandschuh.name=Gauntlet of Challenge
+entity.fynn:roland.name=Sir Roland
+item.spawn_egg.entity.fynn:roland.name=Sir Roland of Roncevaux
+
+
 ## Die Tiere
 entity.fynn:braunbaer.name=Brown Bear
 item.spawn_egg.entity.fynn:braunbaer.name=Brown Bear Spawn Egg
@@ -413,13 +422,19 @@ item.spawn_egg.entity.fynn:mantarochen.name=Manta Ray Spawn Egg
 entity.fynn:steinadler.name=Golden Eagle
 item.spawn_egg.entity.fynn:steinadler.name=Golden Eagle Spawn Egg
 
+## Banditen
+entity.fynn:bandit.name=Bandit
+item.spawn_egg.entity.fynn:bandit.name=Bandit Spawn Egg
+entity.fynn:wilderer.name=Poacher
+item.spawn_egg.entity.fynn:wilderer.name=Poacher Spawn Egg
+entity.fynn:bandenchef.name=Bandit Chief
+item.spawn_egg.entity.fynn:bandenchef.name=Bandit Chief Spawn Egg
+
 ## Ritterorden
 entity.fynn:ritterhauptmann.name=Knight Captain
 item.spawn_egg.entity.fynn:ritterhauptmann.name=Knight Captain
 item.fynn:saphirschwert=Sapphire Sword
 item.fynn:saphirschwert.name=Sapphire Sword
-
-
 
 ## Morvan, der Rabenfuerst
 entity.fynn:rabenfuerst.name=Morvan
@@ -431,16 +446,6 @@ item.fynn:rauchbombe=Smoke Bomb
 item.fynn:rauchbombe.name=Smoke Bomb
 item.fynn:kopfgeldbrief=Bounty Letter
 item.fynn:kopfgeldbrief.name=Bounty Letter
-
-## Sir Roland
-item.fynn:durendal=Durendal
-item.fynn:durendal.name=Durendal
-item.fynn:olifant=Oliphant
-item.fynn:olifant.name=Oliphant
-item.fynn:fehdehandschuh=Gauntlet of Challenge
-item.fynn:fehdehandschuh.name=Gauntlet of Challenge
-entity.fynn:roland.name=Sir Roland
-item.spawn_egg.entity.fynn:roland.name=Sir Roland of Roncevaux
 
 ## Hrimgar, das Frostmammut
 entity.fynn:frostmammut.name=Hrimgar

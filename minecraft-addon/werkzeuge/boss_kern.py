@@ -19,6 +19,8 @@ neuen Bosse bauen hierauf.
 import json
 from pathlib import Path
 
+from spawneier import ei_eintrag
+
 WURZEL = Path(__file__).resolve().parent.parent
 RES = WURZEL / "ressourcenpaket"
 VER = WURZEL / "verhaltenspaket"
@@ -139,7 +141,7 @@ def aussehen(typ, name, animationen, praefix, groesse, ei, material="entity_emis
         "animations": anims,
         "scripts": s,
         "render_controllers": [f"controller.render.fynn.{name}"],
-        "spawn_egg": ei,
+        "spawn_egg": ei_eintrag(typ.split(":", 1)[1], ei),
     }}}
 
 

@@ -29,6 +29,7 @@ import boss_kern as bk                                          # noqa: E402
 import tiermodell as tm                                         # noqa: E402
 from tiermodell import Modell, hexfarbe, mische, streu, wolken  # noqa: E402
 from roland_bauen import Ruestung, randabstand                  # noqa: E402
+from spawneier import ei_eintrag  # noqa: E402
 
 RES = bk.RES
 VER = bk.VER
@@ -529,7 +530,7 @@ def wolf_aussehen():
         "scripts": {"animate": ["stehen", {"laufen": "math.clamp(query.modified_move_speed * 2.0, 0.0, 1.0)"},
                                 {"biss": "variable.attack_time > 0.0"}]},
         "render_controllers": ["controller.render.default"],
-        "spawn_egg": {"base_color": "#e4eef6", "overlay_color": "#6ec8f0"},
+        "spawn_egg": ei_eintrag("eiswolf", {"base_color": "#e4eef6", "overlay_color": "#6ec8f0"}),
     }}}
 
 

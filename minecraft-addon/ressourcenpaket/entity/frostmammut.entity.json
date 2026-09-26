@@ -48,8 +48,8 @@
         "controller.render.fynn.frostmammut"
       ],
       "spawn_egg": {
-        "base_color": "#5b3b27",
-        "overlay_color": "#bfe6ff"
+        "texture": "frostmammut_ei",
+        "texture_index": 0
       }
     }
   }

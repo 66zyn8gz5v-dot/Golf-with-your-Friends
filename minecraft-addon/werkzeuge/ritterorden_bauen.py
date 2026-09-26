@@ -44,6 +44,7 @@ import tiermodell as tm                                   # noqa: E402
 from tiermodell import Modell, hexfarbe, mische, streu    # noqa: E402
 import banditen_bauen as bb                               # noqa: E402
 from tiere_gestalt import ton                             # noqa: E402
+from spawneier import ei_eintrag  # noqa: E402
 
 WURZEL = Path(__file__).resolve().parent.parent
 RES = WURZEL / "ressourcenpaket"
@@ -454,7 +455,7 @@ def aussehen(name, ei, extra, klinge):
         "animations": anim,
         "scripts": skripte,
         "render_controllers": steuer,
-        "spawn_egg": ei,
+        "spawn_egg": ei_eintrag(name, ei),
     }}}
 
 

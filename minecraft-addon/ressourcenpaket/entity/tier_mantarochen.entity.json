@@ -46,8 +46,8 @@
         "controller.render.fynn.mantarochen"
       ],
       "spawn_egg": {
-        "base_color": "#23272e",
-        "overlay_color": "#e8eaec"
+        "texture": "mantarochen_ei",
+        "texture_index": 0
       }
     }
   }

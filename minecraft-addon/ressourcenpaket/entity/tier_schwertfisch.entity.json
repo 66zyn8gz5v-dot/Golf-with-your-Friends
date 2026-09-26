@@ -45,8 +45,8 @@
         "controller.render.fynn.schwertfisch"
       ],
       "spawn_egg": {
-        "base_color": "#2e2644",
-        "overlay_color": "#c4ccd4"
+        "texture": "schwertfisch_ei",
+        "texture_index": 0
       }
     }
   }

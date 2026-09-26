@@ -49,8 +49,8 @@
         "controller.render.fynn.hai"
       ],
       "spawn_egg": {
-        "base_color": "#5a6670",
-        "overlay_color": "#eef0f0"
+        "texture": "hai_ei",
+        "texture_index": 0
       }
     }
   }

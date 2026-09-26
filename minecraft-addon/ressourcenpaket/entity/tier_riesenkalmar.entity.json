@@ -41,8 +41,8 @@
         "controller.render.fynn.riesenkalmar"
       ],
       "spawn_egg": {
-        "base_color": "#8a2a34",
-        "overlay_color": "#e8a0a0"
+        "texture": "riesenkalmar_ei",
+        "texture_index": 0
       }
     }
   }

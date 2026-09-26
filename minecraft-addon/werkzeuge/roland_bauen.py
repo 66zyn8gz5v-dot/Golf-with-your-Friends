@@ -30,6 +30,7 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import tiermodell as tm                                        # noqa: E402
 from tiermodell import Modell, hexfarbe, mische, streu, wolken  # noqa: E402
+from spawneier import ei_eintrag  # noqa: E402
 
 WURZEL = Path(__file__).resolve().parent.parent
 RES = WURZEL / "ressourcenpaket"
@@ -542,7 +543,7 @@ def aussehen():
             "animate": ["kampf"],
         },
         "render_controllers": ["controller.render.fynn.roland"],
-        "spawn_egg": {"base_color": "#2b48a4", "overlay_color": "#e2ba4e"},
+        "spawn_egg": ei_eintrag("roland", {"base_color": "#2b48a4", "overlay_color": "#e2ba4e"}),
     }}}
 
 

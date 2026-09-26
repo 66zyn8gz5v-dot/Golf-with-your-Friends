@@ -77,8 +77,8 @@
         "controller.render.fynn.gorilla"
       ],
       "spawn_egg": {
-        "base_color": "#2c2a28",
-        "overlay_color": "#8a8884"
+        "texture": "gorilla_ei",
+        "texture_index": 0
       }
     }
   }

@@ -47,8 +47,8 @@
         "controller.render.fynn.roland"
       ],
       "spawn_egg": {
-        "base_color": "#2b48a4",
-        "overlay_color": "#e2ba4e"
+        "texture": "roland_ei",
+        "texture_index": 0
       }
     }
   }

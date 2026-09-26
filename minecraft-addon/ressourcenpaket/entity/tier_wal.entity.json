@@ -43,8 +43,8 @@
         "controller.render.fynn.wal"
       ],
       "spawn_egg": {
-        "base_color": "#1e2328",
-        "overlay_color": "#e6eaec"
+        "texture": "wal_ei",
+        "texture_index": 0
       }
     }
   }

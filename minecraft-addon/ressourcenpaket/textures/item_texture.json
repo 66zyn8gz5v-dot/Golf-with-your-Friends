@@ -403,6 +403,87 @@
     },
     "frostruf": {
       "textures": "textures/items/frostruf"
+    },
+    "braunbaer_ei": {
+      "textures": "textures/items/braunbaer_ei"
+    },
+    "elch_ei": {
+      "textures": "textures/items/elch_ei"
+    },
+    "wildschwein_ei": {
+      "textures": "textures/items/wildschwein_ei"
+    },
+    "bison_ei": {
+      "textures": "textures/items/bison_ei"
+    },
+    "loewe_ei": {
+      "textures": "textures/items/loewe_ei"
+    },
+    "tiger_ei": {
+      "textures": "textures/items/tiger_ei"
+    },
+    "krokodil_ei": {
+      "textures": "textures/items/krokodil_ei"
+    },
+    "schneeleopard_ei": {
+      "textures": "textures/items/schneeleopard_ei"
+    },
+    "wal_ei": {
+      "textures": "textures/items/wal_ei"
+    },
+    "hai_ei": {
+      "textures": "textures/items/hai_ei"
+    },
+    "riesenkalmar_ei": {
+      "textures": "textures/items/riesenkalmar_ei"
+    },
+    "schwertfisch_ei": {
+      "textures": "textures/items/schwertfisch_ei"
+    },
+    "elefant_ei": {
+      "textures": "textures/items/elefant_ei"
+    },
+    "nashorn_ei": {
+      "textures": "textures/items/nashorn_ei"
+    },
+    "gorilla_ei": {
+      "textures": "textures/items/gorilla_ei"
+    },
+    "walross_ei": {
+      "textures": "textures/items/walross_ei"
+    },
+    "mantarochen_ei": {
+      "textures": "textures/items/mantarochen_ei"
+    },
+    "steinadler_ei": {
+      "textures": "textures/items/steinadler_ei"
+    },
+    "bandit_ei": {
+      "textures": "textures/items/bandit_ei"
+    },
+    "wilderer_ei": {
+      "textures": "textures/items/wilderer_ei"
+    },
+    "bandenchef_ei": {
+      "textures": "textures/items/bandenchef_ei"
+    },
+    "ritterhauptmann_ei": {
+      "textures": "textures/items/ritterhauptmann_ei"
+    },
+    "roland_ei": {
+      "textures": "textures/items/roland_ei"
+    },
+    "rabenfuerst_ei": {
+      "textures": "textures/items/rabenfuerst_ei"
+    },
+    "frostmammut_ei": {
+      "textures": "textures/items/frostmammut_ei"
+    },
+    "eiswolf_ei": {
+      "textures": "textures/items/eiswolf_ei"
+    },
+    "glimmerling_ei": {
+      "textures": "textures/items/glimmerling_ei"
     }
   }
 }

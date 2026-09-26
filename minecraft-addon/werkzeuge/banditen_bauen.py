@@ -36,6 +36,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import tierprodukte_bauen as tp                          # noqa: E402
 from tiere_gestalt import nah, ton                       # noqa: E402
 from tiermodell import Modell, hexfarbe, ansehen        # noqa: E402
+from spawneier import ei_eintrag  # noqa: E402
 
 WURZEL = Path(__file__).resolve().parent.parent
 RES = WURZEL / "ressourcenpaket"
@@ -394,7 +395,7 @@ def aussehen(b):
         "animations": anim,
         "scripts": skripte,
         "render_controllers": ["controller.render.default"],
-        "spawn_egg": {"base_color": b["ei"][0], "overlay_color": b["ei"][1]},
+        "spawn_egg": ei_eintrag(b["id"], {"base_color": b["ei"][0], "overlay_color": b["ei"][1]}),
     }}}
 
 

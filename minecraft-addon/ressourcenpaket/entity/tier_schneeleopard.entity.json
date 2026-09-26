@@ -67,8 +67,8 @@
         "controller.render.fynn.schneeleopard"
       ],
       "spawn_egg": {
-        "base_color": "#e0e0dc",
-        "overlay_color": "#4a4844"
+        "texture": "schneeleopard_ei",
+        "texture_index": 0
       }
     }
   }

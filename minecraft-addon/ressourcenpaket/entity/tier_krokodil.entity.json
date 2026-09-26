@@ -66,8 +66,8 @@
         "controller.render.fynn.krokodil"
       ],
       "spawn_egg": {
-        "base_color": "#3e4a22",
-        "overlay_color": "#d8cf9c"
+        "texture": "krokodil_ei",
+        "texture_index": 0
       }
     }
   }

@@ -70,8 +70,8 @@
         "controller.render.fynn.loewe"
       ],
       "spawn_egg": {
-        "base_color": "#d8a864",
-        "overlay_color": "#6a3e1a"
+        "texture": "loewe_ei",
+        "texture_index": 0
       }
     }
   }
