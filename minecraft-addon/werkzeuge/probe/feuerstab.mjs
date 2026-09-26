@@ -21,8 +21,14 @@ const dimension = {
         : undefined,
     getEntitiesFromRay: () => (wesenBei ? [{ entity: wesenBei, distance: 0.5 }] : []),
 };
+const eigenschaften = new Map([["fynn:rolle", "magier"], ["fynn:kraft", 100]]);
+const leiste = [];
 const spieler = {
     id: "fynn", dimension, inHand: "fynn:feuerstab_2", isSneaking: false,
+    getDynamicProperty: (k) => eigenschaften.get(k),
+    setDynamicProperty: (k, v) => eigenschaften.set(k, v),
+    addEffect() {}, removeEffect() {},
+    onScreenDisplay: { setActionBar: (t) => leiste.push(t.replace(/§./g, "")), setTitle() {} },
     location: { x: 10, y: 64, z: 10 },
     getViewDirection: () => ({ x: 0, y: 0, z: -1 }),       // Blick nach Norden
     getHeadLocation: () => ({ x: 10, y: 65.6, z: 10 }),
@@ -46,6 +52,7 @@ pruefe("voll geladen: Zischen", toene.includes("mob.blaze.breathe"));
 pruefe("und noch kein Schuss, solange geduckt", baelle.length === 0);
 spieler.isSneaking = false; tick(1);
 pruefe("beim Aufstehen fliegt ein fynn:feuerball", baelle.length === 1 && baelle[0].typ === "fynn:feuerball");
+pruefe(`der Ball kostet 25 Mana (100 -> ${eigenschaften.get("fynn:kraft")})`, eigenschaften.get("fynn:kraft") === 75);
 
 const vorher = baelle[0].location.z;
 tick(3);
@@ -69,9 +76,29 @@ spieler.isSneaking = true; tick(20); spieler.isSneaking = false; tick(1);
 tick(70);
 pruefe("ohne Ziel verpufft er nach seiner Flugzeit", baelle.length === 3 && !baelle[2].isValid && explosionen.length === 2);
 
+// Wer kein Magier ist, laedt vergeblich - und bekommt gesagt, warum.
+eigenschaften.set("fynn:rolle", "ritter");
+spieler.inHand = "fynn:feuerstab_2";
+system.currentTick += 40;
+spieler.isSneaking = true; tick(20); spieler.isSneaking = false; tick(1);
+pruefe("als Ritter: kein Ball", baelle.length === 3);
+pruefe("und ein Hinweis ueber der Leiste", leiste.at(-1).includes("nur ein Magier"));
+
+// Die Leiste steht jetzt bei 25: ein Ball noch, dann ist Schluss.
+eigenschaften.set("fynn:rolle", "magier");
+system.currentTick += 40;
+spieler.isSneaking = true; tick(20); spieler.isSneaking = false; tick(1);
+pruefe("mit den letzten 25 Mana: noch ein Ball", baelle.length === 4);
+tick(70);
+system.currentTick += 40;
+spieler.isSneaking = true; tick(20); spieler.isSneaking = false; tick(1);
+pruefe(`mit ${eigenschaften.get("fynn:kraft")} Mana: kein Ball mehr`, baelle.length === 4);
+pruefe("Hinweis: zu wenig Mana", leiste.at(-1).includes("Zu wenig Mana"));
+pruefe("die Leiste steht unter dem Hinweis, mit Kugeln", /Mana [\ue300-\ue3ff]{10}$/.test(leiste.at(-1)));
+
 spieler.inHand = "minecraft:stick";
 spieler.isSneaking = true; tick(30); spieler.isSneaking = false; tick(1);
-pruefe("mit einem Stock laedt nichts", baelle.length === 3);
+pruefe("mit einem Stock laedt nichts", baelle.length === 4);
 
 for (const stab of ["fynn:feuerstab", "fynn:feuerstab_2"]) {
     spieler.inHand = stab;

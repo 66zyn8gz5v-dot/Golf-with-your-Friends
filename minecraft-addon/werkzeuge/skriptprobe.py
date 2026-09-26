@@ -26,9 +26,11 @@ HIER = Path(__file__).resolve().parent / "probe"
 SERVER = '''
 export const gemerkt = { ereignisse: {}, takte: [], eigenschaften: new Map() };
 export const welten = new Map();
+const abo = (vorsilbe) => new Proxy({}, { get: (_, name) => ({
+    subscribe: (f) => { (gemerkt.ereignisse[vorsilbe + name] ||= []).push(f); } }) });
 export const world = {
-  afterEvents: new Proxy({}, { get: (_, name) => ({
-      subscribe: (f) => { (gemerkt.ereignisse[name] ||= []).push(f); } }) }),
+  afterEvents: abo(""),
+  beforeEvents: abo("vorher."),
   getDimension: (id) => welten.get(id),
   getAllPlayers: () => [],
   getDynamicProperty: (k) => gemerkt.eigenschaften.get(k),
@@ -37,6 +39,7 @@ export const world = {
 };
 export const system = {
   currentTick: 0,
+  beforeEvents: abo("system."),
   runInterval: (f, n) => gemerkt.takte.push([f, n]),
   run: (f) => f(),
   runTimeout: (f, n) => { gemerkt.takte.push(["spaeter", n]); },
@@ -78,7 +81,10 @@ def main():
                 ' "type": "module", "main": "index.js" }' % name, encoding="utf-8")
             (ziel / "index.js").write_text(quelle, encoding="utf-8")
         (platz / "package.json").write_text('{"type":"module"}', encoding="utf-8")
-        shutil.copy(WURZEL / "verhaltenspaket" / "scripts" / "main.js", platz / "main.js")
+        # Alle Skriptdateien, nicht nur main.js: main.js holt sich die
+        # Rollen aus rollen.js.
+        for skript in (WURZEL / "verhaltenspaket" / "scripts").glob("*.js"):
+            shutil.copy(skript, platz / skript.name)
         for probe in sorted(HIER.glob("*.mjs")):
             shutil.copy(probe, platz / probe.name)
 

@@ -11,6 +11,7 @@
 // Fehler selbst ab.
 
 import { world, system } from "@minecraft/server";
+import { angriffErlaubt, hinweis, verbrauche } from "./rollen.js";
 
 const DEGEN = "fynn:degen";
 
@@ -275,14 +276,14 @@ world.afterEvents.playerInteractWithBlock.subscribe((e) => {
             // dafuer aufzumachen waere zu viel fuer eine Auskunft.
             const herd = feuer.get(schluessel);
             const noch = herd ? Math.max(0, Math.round((herd.bis - system.currentTick) / 20)) : 0;
-            e.player.onScreenDisplay.setActionBar(noch > 0
+            hinweis(e.player, noch > 0
                 ? `§6Der Feuerkasten brennt noch ${noch} Sekunden.`
                 : "§7Der Feuerkasten ist kalt. Nimm Kohle in die Hand.");
             return;
         }
 
         const noch = nachlegen(e.block, gehalten.typeId);
-        e.player.onScreenDisplay.setActionBar(`§6Brennt noch ${noch} Sekunden.`);
+        hinweis(e.player, `§6Brennt noch ${noch} Sekunden.`);
 
         // Im Kreativmodus nimmt Minecraft ohnehin nichts weg.
         if (e.player.getGameMode?.() === "creative") return;
@@ -344,6 +345,9 @@ system.runInterval(() => {
 // Strahl eine Flugweite voraus: Ist dort ein Block oder ein Wesen, schlaegt
 // er ein, sonst rueckt er vor.
 //
+// Feuerbaelle sind Sache des Magiers: Nur er kann sie aufladen, und jeder
+// kostet ihn Mana. Schwingen kann den Stab jeder.
+//
 // Der Einschlag ist eine Explosion - Schaden, Rueckstoss, Knall -, aber
 // ohne Bloecke zu zerstoeren und ohne Brand in der Welt. Ein Fehlschuss
 // soll kein Haus sprengen oder abfackeln. Was direkt getroffen wird,
@@ -357,6 +361,7 @@ const WUCHT = 1.6;              // Explosion; ein Creeper hat 3
 const BRANDDAUER = 5;           // Sekunden, die ein Getroffener brennt
 const LADEZEIT_FEUER = 20;      // Ticks geduckt, eine Sekunde
 const SPERRE = 18;              // Ticks zwischen zwei Schuessen
+const KOSTEN_FEUER = 25;        // Mana je Ball: vier aus voller Leiste
 const letzterSchuss = new Map();
 const feuerLaden = new Map();   // Spieler -> Ticks geduckt
 const fluege = new Map();
@@ -387,7 +392,9 @@ function flamme(dimension, ort, streuung) {
 function schiessen(spieler) {
     const jetzt = system.currentTick;
     if (jetzt - (letzterSchuss.get(spieler.id) ?? -SPERRE) < SPERRE) return;
+    if (!angriffErlaubt(spieler, "magier", KOSTEN_FEUER)) return;
     letzterSchuss.set(spieler.id, jetzt);
+    verbrauche(spieler, KOSTEN_FEUER);
 
     const blick = spieler.getViewDirection();
     const kopf = spieler.getHeadLocation();
@@ -416,7 +423,9 @@ system.runInterval(() => {
             if (spieler.isSneaking) {
                 const stand = (feuerLaden.get(kennung) ?? 0) + 1;
                 feuerLaden.set(kennung, stand);
-                if (stand === LADEZEIT_FEUER) {
+                // Wer kein Magier ist oder zu wenig Mana hat, bekommt es
+                // gesagt, sobald er voll geladen haette - und kein Zischen.
+                if (stand === LADEZEIT_FEUER && angriffErlaubt(spieler, "magier", KOSTEN_FEUER)) {
                     // Geladen: ein Zischen und ein Aufflackern vor der
                     // Brust. In der Ego-Ansicht waere der Ton sonst das
                     // einzige Zeichen, und Toene gehen im Kampf unter.

@@ -9,5 +9,8 @@
   },
   "fynn:silberblock": {
     "sound": "metal"
+  },
+  "fynn:wappenstein": {
+    "sound": "stone"
   }
 }

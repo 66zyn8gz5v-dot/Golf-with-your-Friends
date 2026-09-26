@@ -51,6 +51,15 @@
     },
     "tiegel_unten": {
       "textures": "textures/blocks/tiegel_unten"
+    },
+    "wappenstein_seite": {
+      "textures": "textures/blocks/wappenstein_seite"
+    },
+    "wappenstein_oben": {
+      "textures": "textures/blocks/wappenstein_oben"
+    },
+    "wappenstein_unten": {
+      "textures": "textures/blocks/wappenstein_unten"
     }
   }
 }
