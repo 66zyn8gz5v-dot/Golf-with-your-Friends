@@ -1,0 +1,23 @@
+{
+  "format_version": "1.8.0",
+  "render_controllers": {
+    "controller.render.fynn.wildschwein": {
+      "arrays": {
+        "textures": {
+          "Array.haut": [
+            "Texture.erwachsen"
+          ]
+        }
+      },
+      "geometry": "Geometry.default",
+      "materials": [
+        {
+          "*": "Material.default"
+        }
+      ],
+      "textures": [
+        "query.is_baby ? Texture.frischling : Array.haut[query.variant]"
+      ]
+    }
+  }
+}

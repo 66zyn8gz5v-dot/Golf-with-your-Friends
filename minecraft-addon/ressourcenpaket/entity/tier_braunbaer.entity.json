@@ -1,0 +1,48 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:braunbaer",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "braun": "textures/entity/tiere/braunbaer_braun",
+        "grizzly": "textures/entity/tiere/braunbaer_grizzly",
+        "schwarz": "textures/entity/tiere/braunbaer_schwarz"
+      },
+      "geometry": {
+        "default": "geometry.fynn.braunbaer"
+      },
+      "animations": {
+        "laufen": "animation.fynn.braunbaer.laufen",
+        "stehen": "animation.fynn.braunbaer.stehen",
+        "blick": "animation.common.look_at_target",
+        "angriff": "animation.fynn.braunbaer.angriff",
+        "jung": "animation.fynn.braunbaer.jung"
+      },
+      "scripts": {
+        "animate": [
+          {
+            "laufen": "query.modified_move_speed"
+          },
+          "stehen",
+          "blick",
+          {
+            "angriff": "variable.attack_time > 0.0"
+          },
+          {
+            "jung": "query.is_baby"
+          }
+        ]
+      },
+      "render_controllers": [
+        "controller.render.fynn.braunbaer"
+      ],
+      "spawn_egg": {
+        "base_color": "#6b4424",
+        "overlay_color": "#c9a26f"
+      }
+    }
+  }
+}

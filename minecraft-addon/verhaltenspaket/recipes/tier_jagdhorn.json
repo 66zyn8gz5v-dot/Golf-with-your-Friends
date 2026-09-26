@@ -1,0 +1,31 @@
+{
+  "format_version": "1.12",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "fynn:jagdhorn"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "fynn:bisonhorn"
+      },
+      {
+        "item": "minecraft:leather"
+      },
+      {
+        "item": "minecraft:gold_ingot"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "fynn:bisonhorn"
+      }
+    ],
+    "result": {
+      "item": "fynn:jagdhorn",
+      "count": 1
+    }
+  }
+}

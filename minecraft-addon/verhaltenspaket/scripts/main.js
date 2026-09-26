@@ -15,6 +15,7 @@ import { angriffErlaubt, hinweis, verbrauche } from "./rollen.js";
 import "./kampf.js";
 import "./pfeile.js";
 import "./tempel.js";
+import "./tiere.js";
 
 const DEGEN = "fynn:degen";
 

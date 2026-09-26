@@ -1,0 +1,29 @@
+{
+  "format_version": "1.26.30",
+  "minecraft:item": {
+    "description": {
+      "identifier": "fynn:bisonfleisch",
+      "menu_category": {
+        "category": "items",
+        "group": "minecraft:itemGroup.name.miscFood"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "bisonfleisch"
+        }
+      },
+      "minecraft:food": {
+        "nutrition": 3,
+        "saturation_modifier": 0.3
+      },
+      "minecraft:use_modifiers": {
+        "use_duration": 1.6,
+        "movement_modifier": 0.35
+      },
+      "minecraft:use_animation": "eat",
+      "minecraft:max_stack_size": 64
+    }
+  }
+}

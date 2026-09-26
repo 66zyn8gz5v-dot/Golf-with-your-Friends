@@ -398,9 +398,15 @@ def flaechen(knochen, matrizen, texturen, nur=None, ohne_deckschicht=True):
             continue
         if ohne_deckschicht and not praefix and kurz in DECKSCHICHT:
             continue
-        m = matrizen[name]
         tex = texturen[praefix]
         for kasten in k["kaesten"]:
+            m = matrizen[name]
+            if kasten.get("rotation"):
+                # Ein Kasten kann selbst gekippt sein (Flossen, Schwanz) - um
+                # seinen eigenen Drehpunkt, innerhalb seines Knochens.
+                kp = kasten.get("pivot", [0, 0, 0])
+                m = mal(m, mal(verschiebung(*kp), mal(drehmatrix(*kasten["rotation"]),
+                                                      verschiebung(-kp[0], -kp[1], -kp[2]))))
             seiten = flaechen_des_kastens(kasten["origin"], kasten["size"], kasten.get("inflate", 0) or 0)
             uv = kasten.get("uv", [0, 0])
             for seite, (ecken, aussen) in seiten.items():

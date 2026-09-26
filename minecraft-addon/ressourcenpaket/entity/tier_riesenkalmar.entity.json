@@ -1,0 +1,38 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:riesenkalmar",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "rot": "textures/entity/tiere/riesenkalmar_rot"
+      },
+      "geometry": {
+        "default": "geometry.fynn.riesenkalmar"
+      },
+      "animations": {
+        "schwimmen": "animation.fynn.riesenkalmar.schwimmen",
+        "angriff": "animation.fynn.riesenkalmar.angriff"
+      },
+      "scripts": {
+        "animate": [
+          {
+            "schwimmen": "1.0"
+          },
+          {
+            "angriff": "variable.attack_time > 0.0"
+          }
+        ]
+      },
+      "render_controllers": [
+        "controller.render.fynn.riesenkalmar"
+      ],
+      "spawn_egg": {
+        "base_color": "#8a2a34",
+        "overlay_color": "#e8a0a0"
+      }
+    }
+  }
+}

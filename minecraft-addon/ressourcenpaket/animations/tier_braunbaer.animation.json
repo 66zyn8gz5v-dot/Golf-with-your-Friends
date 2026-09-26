@@ -1,0 +1,99 @@
+{
+  "format_version": "1.10.0",
+  "animations": {
+    "animation.fynn.braunbaer.laufen": {
+      "anim_time_update": "query.modified_distance_moved",
+      "loop": true,
+      "bones": {
+        "leg0": {
+          "rotation": [
+            "math.cos(query.anim_time * 38.17) * 38.0",
+            0.0,
+            0.0
+          ]
+        },
+        "leg1": {
+          "rotation": [
+            "math.cos(query.anim_time * 38.17) * -38.0",
+            0.0,
+            0.0
+          ]
+        },
+        "leg2": {
+          "rotation": [
+            "math.cos(query.anim_time * 38.17) * -38.0",
+            0.0,
+            0.0
+          ]
+        },
+        "leg3": {
+          "rotation": [
+            "math.cos(query.anim_time * 38.17) * 38.0",
+            0.0,
+            0.0
+          ]
+        },
+        "tail": {
+          "rotation": [
+            0.0,
+            "math.sin(query.anim_time * 38.17) * 12.0",
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.braunbaer.stehen": {
+      "loop": true,
+      "bones": {
+        "tail": {
+          "rotation": [
+            0.0,
+            "math.sin(query.life_time * 70.0) * 8.0",
+            0.0
+          ]
+        },
+        "body": {
+          "scale": [
+            1.0,
+            "1.0 + math.sin(query.life_time * 60.0) * 0.012",
+            1.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.braunbaer.angriff": {
+      "loop": true,
+      "bones": {
+        "body": {
+          "rotation": [
+            "-math.sin(variable.attack_time * 180.0) * 25.0",
+            0.0,
+            0.0
+          ]
+        },
+        "leg0": {
+          "rotation": [
+            "-math.sin(variable.attack_time * 180.0) * 80.0",
+            0.0,
+            "math.sin(variable.attack_time * 180.0) * 10.0"
+          ]
+        },
+        "head": {
+          "rotation": [
+            "math.sin(variable.attack_time * 180.0) * 12.0",
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.braunbaer.jung": {
+      "loop": true,
+      "bones": {
+        "head": {
+          "scale": 1.4
+        }
+      }
+    }
+  }
+}

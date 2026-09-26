@@ -1,0 +1,48 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:bison",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "prarie": "textures/entity/tiere/bison_prarie",
+        "winter": "textures/entity/tiere/bison_winter",
+        "kalb": "textures/entity/tiere/bison_kalb"
+      },
+      "geometry": {
+        "default": "geometry.fynn.bison"
+      },
+      "animations": {
+        "laufen": "animation.fynn.bison.laufen",
+        "stehen": "animation.fynn.bison.stehen",
+        "blick": "animation.common.look_at_target",
+        "angriff": "animation.fynn.bison.angriff",
+        "jung": "animation.fynn.bison.jung"
+      },
+      "scripts": {
+        "animate": [
+          {
+            "laufen": "query.modified_move_speed"
+          },
+          "stehen",
+          "blick",
+          {
+            "angriff": "variable.attack_time > 0.0"
+          },
+          {
+            "jung": "query.is_baby"
+          }
+        ]
+      },
+      "render_controllers": [
+        "controller.render.fynn.bison"
+      ],
+      "spawn_egg": {
+        "base_color": "#3a2618",
+        "overlay_color": "#7a5636"
+      }
+    }
+  }
+}

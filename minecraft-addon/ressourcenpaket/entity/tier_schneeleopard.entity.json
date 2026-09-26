@@ -1,0 +1,46 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:schneeleopard",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "grau": "textures/entity/tiere/schneeleopard_grau"
+      },
+      "geometry": {
+        "default": "geometry.fynn.schneeleopard"
+      },
+      "animations": {
+        "laufen": "animation.fynn.schneeleopard.laufen",
+        "stehen": "animation.fynn.schneeleopard.stehen",
+        "blick": "animation.common.look_at_target",
+        "angriff": "animation.fynn.schneeleopard.angriff",
+        "jung": "animation.fynn.schneeleopard.jung"
+      },
+      "scripts": {
+        "animate": [
+          {
+            "laufen": "query.modified_move_speed"
+          },
+          "stehen",
+          "blick",
+          {
+            "angriff": "variable.attack_time > 0.0"
+          },
+          {
+            "jung": "query.is_baby"
+          }
+        ]
+      },
+      "render_controllers": [
+        "controller.render.fynn.schneeleopard"
+      ],
+      "spawn_egg": {
+        "base_color": "#e0e0dc",
+        "overlay_color": "#4a4844"
+      }
+    }
+  }
+}

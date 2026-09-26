@@ -1,0 +1,40 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:wal",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "hell": "textures/entity/tiere/wal_hell",
+        "dunkel": "textures/entity/tiere/wal_dunkel",
+        "kalb": "textures/entity/tiere/wal_kalb"
+      },
+      "geometry": {
+        "default": "geometry.fynn.wal"
+      },
+      "animations": {
+        "schwimmen": "animation.fynn.wal.schwimmen",
+        "jung": "animation.fynn.wal.jung"
+      },
+      "scripts": {
+        "animate": [
+          {
+            "schwimmen": "1.0"
+          },
+          {
+            "jung": "query.is_baby"
+          }
+        ]
+      },
+      "render_controllers": [
+        "controller.render.fynn.wal"
+      ],
+      "spawn_egg": {
+        "base_color": "#1e2328",
+        "overlay_color": "#e6eaec"
+      }
+    }
+  }
+}

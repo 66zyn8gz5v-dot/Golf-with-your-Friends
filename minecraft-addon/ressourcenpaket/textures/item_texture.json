@@ -166,6 +166,153 @@
     },
     "netheritdolch_links": {
       "textures": "textures/items/netheritdolch_links"
+    },
+    "baerenfleisch": {
+      "textures": "textures/items/tiere/baerenfleisch"
+    },
+    "baerenbraten": {
+      "textures": "textures/items/tiere/baerenbraten"
+    },
+    "elchfleisch": {
+      "textures": "textures/items/tiere/elchfleisch"
+    },
+    "elchsteak": {
+      "textures": "textures/items/tiere/elchsteak"
+    },
+    "wildschweinfleisch": {
+      "textures": "textures/items/tiere/wildschweinfleisch"
+    },
+    "wildschweinbraten": {
+      "textures": "textures/items/tiere/wildschweinbraten"
+    },
+    "bisonfleisch": {
+      "textures": "textures/items/tiere/bisonfleisch"
+    },
+    "bisonsteak": {
+      "textures": "textures/items/tiere/bisonsteak"
+    },
+    "krokodilfleisch": {
+      "textures": "textures/items/tiere/krokodilfleisch"
+    },
+    "krokodilsteak": {
+      "textures": "textures/items/tiere/krokodilsteak"
+    },
+    "haifleisch": {
+      "textures": "textures/items/tiere/haifleisch"
+    },
+    "haisteak": {
+      "textures": "textures/items/tiere/haisteak"
+    },
+    "schwertfischfilet": {
+      "textures": "textures/items/tiere/schwertfischfilet"
+    },
+    "schwertfischsteak": {
+      "textures": "textures/items/tiere/schwertfischsteak"
+    },
+    "kalmarfleisch": {
+      "textures": "textures/items/tiere/kalmarfleisch"
+    },
+    "calamari": {
+      "textures": "textures/items/tiere/calamari"
+    },
+    "wildeintopf": {
+      "textures": "textures/items/tiere/wildeintopf"
+    },
+    "bisonburger": {
+      "textures": "textures/items/tiere/bisonburger"
+    },
+    "jaegerspiess": {
+      "textures": "textures/items/tiere/jaegerspiess"
+    },
+    "sushi": {
+      "textures": "textures/items/tiere/sushi"
+    },
+    "honigbraten": {
+      "textures": "textures/items/tiere/honigbraten"
+    },
+    "baerenfell": {
+      "textures": "textures/items/tiere/baerenfell"
+    },
+    "baerenkralle": {
+      "textures": "textures/items/tiere/baerenkralle"
+    },
+    "elchgeweih": {
+      "textures": "textures/items/tiere/elchgeweih"
+    },
+    "wildschweinhauer": {
+      "textures": "textures/items/tiere/wildschweinhauer"
+    },
+    "bisonfell": {
+      "textures": "textures/items/tiere/bisonfell"
+    },
+    "bisonhorn": {
+      "textures": "textures/items/tiere/bisonhorn"
+    },
+    "loewenfell": {
+      "textures": "textures/items/tiere/loewenfell"
+    },
+    "loewenzahn": {
+      "textures": "textures/items/tiere/loewenzahn"
+    },
+    "tigerfell": {
+      "textures": "textures/items/tiere/tigerfell"
+    },
+    "tigerkralle": {
+      "textures": "textures/items/tiere/tigerkralle"
+    },
+    "schneeleopardenfell": {
+      "textures": "textures/items/tiere/schneeleopardenfell"
+    },
+    "krokodilleder": {
+      "textures": "textures/items/tiere/krokodilleder"
+    },
+    "krokodilzahn": {
+      "textures": "textures/items/tiere/krokodilzahn"
+    },
+    "walbarte": {
+      "textures": "textures/items/tiere/walbarte"
+    },
+    "ambra": {
+      "textures": "textures/items/tiere/ambra"
+    },
+    "haizahn": {
+      "textures": "textures/items/tiere/haizahn"
+    },
+    "haihaut": {
+      "textures": "textures/items/tiere/haihaut"
+    },
+    "kalmarauge": {
+      "textures": "textures/items/tiere/kalmarauge"
+    },
+    "schwertfischspiess": {
+      "textures": "textures/items/tiere/schwertfischspiess"
+    },
+    "baerentalisman": {
+      "textures": "textures/items/tiere/baerentalisman"
+    },
+    "loewentalisman": {
+      "textures": "textures/items/tiere/loewentalisman"
+    },
+    "tigertalisman": {
+      "textures": "textures/items/tiere/tigertalisman"
+    },
+    "haitalisman": {
+      "textures": "textures/items/tiere/haitalisman"
+    },
+    "elchtalisman": {
+      "textures": "textures/items/tiere/elchtalisman"
+    },
+    "jaegerkette": {
+      "textures": "textures/items/tiere/jaegerkette"
+    },
+    "jagdhorn": {
+      "textures": "textures/items/tiere/jagdhorn"
+    },
+    "schwertfischklinge": {
+      "textures": "textures/items/tiere/schwertfischklinge"
+    },
+    "trank_der_tiefe": {
+      "textures": "textures/items/tiere/trank_der_tiefe"
     }
   }
 }

@@ -1,0 +1,51 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:krokodil",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "alt": "textures/entity/tiere/krokodil_alt",
+        "jung": "textures/entity/tiere/krokodil_jung"
+      },
+      "geometry": {
+        "default": "geometry.fynn.krokodil"
+      },
+      "animations": {
+        "laufen": "animation.fynn.krokodil.laufen",
+        "stehen": "animation.fynn.krokodil.stehen",
+        "blick": "animation.common.look_at_target",
+        "schwimmen": "animation.fynn.krokodil.schwimmen",
+        "angriff": "animation.fynn.krokodil.angriff",
+        "jung": "animation.fynn.krokodil.jung"
+      },
+      "scripts": {
+        "animate": [
+          {
+            "laufen": "!query.is_in_water ? query.modified_move_speed : 0.0"
+          },
+          {
+            "schwimmen": "query.is_in_water"
+          },
+          "stehen",
+          "blick",
+          {
+            "angriff": "variable.attack_time > 0.0"
+          },
+          {
+            "jung": "query.is_baby"
+          }
+        ]
+      },
+      "render_controllers": [
+        "controller.render.fynn.krokodil"
+      ],
+      "spawn_egg": {
+        "base_color": "#3e4a22",
+        "overlay_color": "#d8cf9c"
+      }
+    }
+  }
+}

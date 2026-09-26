@@ -1,0 +1,74 @@
+{
+  "format_version": "1.10.0",
+  "animations": {
+    "animation.fynn.schwertfisch.schwimmen": {
+      "loop": true,
+      "bones": {
+        "schwanz1": {
+          "rotation": [
+            0.0,
+            "math.sin(query.life_time * 260.0 - 0) * 10.0 * (0.5 + query.modified_move_speed)",
+            0.0
+          ]
+        },
+        "schwanzflosse": {
+          "rotation": [
+            0.0,
+            "math.sin(query.life_time * 260.0 - 45) * 18.0 * (0.5 + query.modified_move_speed)",
+            0.0
+          ]
+        },
+        "flosse_links": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(query.life_time * 182.0) * 10.0"
+          ]
+        },
+        "flosse_rechts": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(query.life_time * 182.0) * -10.0"
+          ]
+        },
+        "rumpf": {
+          "rotation": [
+            "query.target_x_rotation * 0.6",
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.schwertfisch.an_land": {
+      "loop": true,
+      "bones": {
+        "rumpf": {
+          "rotation": [
+            0.0,
+            0.0,
+            "90.0 + math.sin(query.life_time * 900.0) * 8.0"
+          ],
+          "position": [
+            0.0,
+            -3.0,
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.schwertfisch.angriff": {
+      "loop": true,
+      "bones": {
+        "kopf": {
+          "rotation": [
+            0.0,
+            "math.sin(variable.attack_time * 360.0) * 25.0",
+            0.0
+          ]
+        }
+      }
+    }
+  }
+}

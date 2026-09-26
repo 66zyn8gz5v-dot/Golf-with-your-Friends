@@ -83,6 +83,18 @@ def naechste(fassungen, gesucht):
     return max(passende)[1]
 
 
+def filter_mehrdeutig(f):
+    """Mojangs Schema beschreibt Filter doppelt (als einzelnen Test und als
+    Gruppe), beide mit "oneOf" - ein gewoehnlicher Filter passt auf beide
+    und gilt damit als ungueltig. Mojangs eigener Eisbaer, Wolf, Delfin und
+    Hoglin fallen genau so durch (nachgeprueft, Fassung 1.26.30). Solche
+    Meldungen an Filtern sind also keine Fehler im Paket."""
+    pfad = [str(t) for t in f.path]
+    an_filter = any(t in ("filters", "entity_types") for t in pfad)
+    return an_filter and ("is valid under each of" in f.message
+                          or "is not valid under any of the given schemas" in f.message)
+
+
 def pruefe(fehler, hinweise):
     wurzel = schemaordner()
     if wurzel is None:
@@ -162,6 +174,8 @@ def pruefe(fehler, hinweise):
                 hinweise.append(f"{datei.name}: Schemapruefung gescheitert ({fehlschlag}).")
                 continue
             for f in gefunden:
+                if filter_mehrdeutig(f):
+                    continue
                 wo = "/".join(str(t) for t in f.path) or "(Wurzel)"
                 text = f"{datei.name} [{ordner.name}] {wo}: {f.message[:200]}"
                 if nur_hinweis:

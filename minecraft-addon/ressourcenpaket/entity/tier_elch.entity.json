@@ -1,0 +1,50 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:elch",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "bulle": "textures/entity/tiere/elch_bulle",
+        "kuh": "textures/entity/tiere/elch_kuh",
+        "kalb": "textures/entity/tiere/elch_kalb"
+      },
+      "geometry": {
+        "default": "geometry.fynn.elch"
+      },
+      "animations": {
+        "laufen": "animation.fynn.elch.laufen",
+        "stehen": "animation.fynn.elch.stehen",
+        "blick": "animation.common.look_at_target",
+        "angriff": "animation.fynn.elch.angriff",
+        "jung": "animation.fynn.elch.jung",
+        "teile": "animation.fynn.elch.teile"
+      },
+      "scripts": {
+        "animate": [
+          {
+            "laufen": "query.modified_move_speed"
+          },
+          "stehen",
+          "blick",
+          {
+            "angriff": "variable.attack_time > 0.0"
+          },
+          {
+            "jung": "query.is_baby"
+          },
+          "teile"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.fynn.elch"
+      ],
+      "spawn_egg": {
+        "base_color": "#3e2a1a",
+        "overlay_color": "#d8c8a0"
+      }
+    }
+  }
+}

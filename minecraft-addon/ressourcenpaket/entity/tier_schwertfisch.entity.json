@@ -1,0 +1,42 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:schwertfisch",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "blau": "textures/entity/tiere/schwertfisch_blau"
+      },
+      "geometry": {
+        "default": "geometry.fynn.schwertfisch"
+      },
+      "animations": {
+        "schwimmen": "animation.fynn.schwertfisch.schwimmen",
+        "an_land": "animation.fynn.schwertfisch.an_land",
+        "angriff": "animation.fynn.schwertfisch.angriff"
+      },
+      "scripts": {
+        "animate": [
+          {
+            "schwimmen": "query.is_in_water"
+          },
+          {
+            "an_land": "!query.is_in_water"
+          },
+          {
+            "angriff": "variable.attack_time > 0.0"
+          }
+        ]
+      },
+      "render_controllers": [
+        "controller.render.fynn.schwertfisch"
+      ],
+      "spawn_egg": {
+        "base_color": "#2e2644",
+        "overlay_color": "#c4ccd4"
+      }
+    }
+  }
+}

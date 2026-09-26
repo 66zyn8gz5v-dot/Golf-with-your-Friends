@@ -1,0 +1,25 @@
+{
+  "format_version": "1.12",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "fynn:knochenmehl_aus_walbarte"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "fynn:walbarte"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "fynn:walbarte"
+      }
+    ],
+    "result": {
+      "item": "minecraft:bone_meal",
+      "count": 4
+    }
+  }
+}

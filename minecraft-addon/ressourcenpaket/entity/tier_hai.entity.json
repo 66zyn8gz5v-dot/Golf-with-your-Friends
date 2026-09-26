@@ -1,0 +1,46 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:hai",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "weisser_hai": "textures/entity/tiere/hai_weisser_hai",
+        "tigerhai": "textures/entity/tiere/hai_tigerhai",
+        "hammerhai": "textures/entity/tiere/hai_hammerhai"
+      },
+      "geometry": {
+        "default": "geometry.fynn.hai"
+      },
+      "animations": {
+        "schwimmen": "animation.fynn.hai.schwimmen",
+        "an_land": "animation.fynn.hai.an_land",
+        "angriff": "animation.fynn.hai.angriff",
+        "teile": "animation.fynn.hai.teile"
+      },
+      "scripts": {
+        "animate": [
+          {
+            "schwimmen": "query.is_in_water"
+          },
+          {
+            "an_land": "!query.is_in_water"
+          },
+          {
+            "angriff": "variable.attack_time > 0.0"
+          },
+          "teile"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.fynn.hai"
+      ],
+      "spawn_egg": {
+        "base_color": "#5a6670",
+        "overlay_color": "#eef0f0"
+      }
+    }
+  }
+}

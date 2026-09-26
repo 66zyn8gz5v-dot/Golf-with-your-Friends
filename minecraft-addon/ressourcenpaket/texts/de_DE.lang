@@ -42,11 +42,11 @@ item.fynn:eisenklinge.name=Eisenklinge
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.34
+item.iron_sword.name=Stahlschwert 4.35
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.34
-item.fynn:degen.name=Degen 4.34
+item.fynn:degen=Degen 4.35
+item.fynn:degen.name=Degen 4.35
 
 
 
@@ -154,3 +154,140 @@ item.fynn:netheritdolche=Netheritdolche
 item.fynn:netheritdolche.name=Netheritdolche
 item.fynn:netheritdolch_links=Linker Netheritdolch (Zweithand)
 item.fynn:netheritdolch_links.name=Linker Netheritdolch (Zweithand)
+
+
+
+
+
+
+## Die Tiere
+entity.fynn:braunbaer.name=Braunbär
+item.spawn_egg.entity.fynn:braunbaer.name=Braunbär-Spawn-Ei
+entity.fynn:elch.name=Elch
+item.spawn_egg.entity.fynn:elch.name=Elch-Spawn-Ei
+entity.fynn:wildschwein.name=Wildschwein
+item.spawn_egg.entity.fynn:wildschwein.name=Wildschwein-Spawn-Ei
+entity.fynn:bison.name=Bison
+item.spawn_egg.entity.fynn:bison.name=Bison-Spawn-Ei
+entity.fynn:loewe.name=Löwe
+item.spawn_egg.entity.fynn:loewe.name=Löwe-Spawn-Ei
+entity.fynn:tiger.name=Tiger
+item.spawn_egg.entity.fynn:tiger.name=Tiger-Spawn-Ei
+entity.fynn:krokodil.name=Krokodil
+item.spawn_egg.entity.fynn:krokodil.name=Krokodil-Spawn-Ei
+entity.fynn:schneeleopard.name=Schneeleopard
+item.spawn_egg.entity.fynn:schneeleopard.name=Schneeleopard-Spawn-Ei
+entity.fynn:wal.name=Buckelwal
+item.spawn_egg.entity.fynn:wal.name=Buckelwal-Spawn-Ei
+entity.fynn:hai.name=Hai
+item.spawn_egg.entity.fynn:hai.name=Hai-Spawn-Ei
+entity.fynn:riesenkalmar.name=Riesenkalmar
+item.spawn_egg.entity.fynn:riesenkalmar.name=Riesenkalmar-Spawn-Ei
+entity.fynn:schwertfisch.name=Schwertfisch
+item.spawn_egg.entity.fynn:schwertfisch.name=Schwertfisch-Spawn-Ei
+
+## Tierfleisch
+item.fynn:baerenfleisch=Rohes Bärenfleisch
+item.fynn:baerenfleisch.name=Rohes Bärenfleisch
+item.fynn:baerenbraten=Bärenbraten
+item.fynn:baerenbraten.name=Bärenbraten
+item.fynn:elchfleisch=Rohes Elchfleisch
+item.fynn:elchfleisch.name=Rohes Elchfleisch
+item.fynn:elchsteak=Elchsteak
+item.fynn:elchsteak.name=Elchsteak
+item.fynn:wildschweinfleisch=Rohe Wildschweinkeule
+item.fynn:wildschweinfleisch.name=Rohe Wildschweinkeule
+item.fynn:wildschweinbraten=Wildschweinbraten
+item.fynn:wildschweinbraten.name=Wildschweinbraten
+item.fynn:bisonfleisch=Rohes Bisonfleisch
+item.fynn:bisonfleisch.name=Rohes Bisonfleisch
+item.fynn:bisonsteak=Bison-T-Bone
+item.fynn:bisonsteak.name=Bison-T-Bone
+item.fynn:krokodilfleisch=Rohes Krokodilfleisch
+item.fynn:krokodilfleisch.name=Rohes Krokodilfleisch
+item.fynn:krokodilsteak=Gegrilltes Krokodil
+item.fynn:krokodilsteak.name=Gegrilltes Krokodil
+item.fynn:haifleisch=Rohes Haifleisch
+item.fynn:haifleisch.name=Rohes Haifleisch
+item.fynn:haisteak=Haisteak
+item.fynn:haisteak.name=Haisteak
+item.fynn:schwertfischfilet=Rohes Schwertfischfilet
+item.fynn:schwertfischfilet.name=Rohes Schwertfischfilet
+item.fynn:schwertfischsteak=Gegrillter Schwertfisch
+item.fynn:schwertfischsteak.name=Gegrillter Schwertfisch
+item.fynn:kalmarfleisch=Rohes Kalmarfleisch
+item.fynn:kalmarfleisch.name=Rohes Kalmarfleisch
+item.fynn:calamari=Calamari
+item.fynn:calamari.name=Calamari
+
+## Gerichte
+item.fynn:wildeintopf=Wildeintopf
+item.fynn:wildeintopf.name=Wildeintopf
+item.fynn:bisonburger=Bisonburger
+item.fynn:bisonburger.name=Bisonburger
+item.fynn:jaegerspiess=Jägerspieß
+item.fynn:jaegerspiess.name=Jägerspieß
+item.fynn:sushi=Schwertfisch-Sushi
+item.fynn:sushi.name=Schwertfisch-Sushi
+item.fynn:honigbraten=Honigbraten
+item.fynn:honigbraten.name=Honigbraten
+
+## Was die Tiere hergeben
+item.fynn:baerenfell=Bärenfell
+item.fynn:baerenfell.name=Bärenfell
+item.fynn:baerenkralle=Bärenkralle
+item.fynn:baerenkralle.name=Bärenkralle
+item.fynn:elchgeweih=Elchgeweih
+item.fynn:elchgeweih.name=Elchgeweih
+item.fynn:wildschweinhauer=Wildschweinhauer
+item.fynn:wildschweinhauer.name=Wildschweinhauer
+item.fynn:bisonfell=Bisonfell
+item.fynn:bisonfell.name=Bisonfell
+item.fynn:bisonhorn=Bisonhorn
+item.fynn:bisonhorn.name=Bisonhorn
+item.fynn:loewenfell=Löwenfell
+item.fynn:loewenfell.name=Löwenfell
+item.fynn:loewenzahn=Löwenzahn
+item.fynn:loewenzahn.name=Löwenzahn
+item.fynn:tigerfell=Tigerfell
+item.fynn:tigerfell.name=Tigerfell
+item.fynn:tigerkralle=Tigerkralle
+item.fynn:tigerkralle.name=Tigerkralle
+item.fynn:schneeleopardenfell=Schneeleopardenfell
+item.fynn:schneeleopardenfell.name=Schneeleopardenfell
+item.fynn:krokodilleder=Krokodilleder
+item.fynn:krokodilleder.name=Krokodilleder
+item.fynn:krokodilzahn=Krokodilzahn
+item.fynn:krokodilzahn.name=Krokodilzahn
+item.fynn:walbarte=Walbarte
+item.fynn:walbarte.name=Walbarte
+item.fynn:ambra=Ambra
+item.fynn:ambra.name=Ambra
+item.fynn:haizahn=Haizahn
+item.fynn:haizahn.name=Haizahn
+item.fynn:haihaut=Haihaut
+item.fynn:haihaut.name=Haihaut
+item.fynn:kalmarauge=Riesenkalmarauge
+item.fynn:kalmarauge.name=Riesenkalmarauge
+item.fynn:schwertfischspiess=Schwertfisch-Schwert
+item.fynn:schwertfischspiess.name=Schwertfisch-Schwert
+
+## Talismane und Jagdzeug
+item.fynn:baerentalisman=Bärentalisman
+item.fynn:baerentalisman.name=Bärentalisman
+item.fynn:loewentalisman=Löwentalisman
+item.fynn:loewentalisman.name=Löwentalisman
+item.fynn:tigertalisman=Tigertalisman
+item.fynn:tigertalisman.name=Tigertalisman
+item.fynn:haitalisman=Haitalisman
+item.fynn:haitalisman.name=Haitalisman
+item.fynn:elchtalisman=Elchtalisman
+item.fynn:elchtalisman.name=Elchtalisman
+item.fynn:jaegerkette=Jägerkette
+item.fynn:jaegerkette.name=Jägerkette
+item.fynn:jagdhorn=Jagdhorn
+item.fynn:jagdhorn.name=Jagdhorn
+item.fynn:schwertfischklinge=Schwertfischklinge
+item.fynn:schwertfischklinge.name=Schwertfischklinge
+item.fynn:trank_der_tiefe=Trank der Tiefe
+item.fynn:trank_der_tiefe.name=Trank der Tiefe

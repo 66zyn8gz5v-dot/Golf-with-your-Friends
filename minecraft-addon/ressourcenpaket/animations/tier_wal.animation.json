@@ -1,0 +1,60 @@
+{
+  "format_version": "1.10.0",
+  "animations": {
+    "animation.fynn.wal.schwimmen": {
+      "loop": true,
+      "bones": {
+        "schwanz1": {
+          "rotation": [
+            "math.sin(query.life_time * 90.0 - 0) * 6.0 * (0.5 + query.modified_move_speed)",
+            0.0,
+            0.0
+          ]
+        },
+        "schwanz2": {
+          "rotation": [
+            "math.sin(query.life_time * 90.0 - 45) * 11.0 * (0.5 + query.modified_move_speed)",
+            0.0,
+            0.0
+          ]
+        },
+        "fluke": {
+          "rotation": [
+            "math.sin(query.life_time * 90.0 - 90) * 16.0 * (0.5 + query.modified_move_speed)",
+            0.0,
+            0.0
+          ]
+        },
+        "flosse_links": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(query.life_time * 63.0) * 10.0"
+          ]
+        },
+        "flosse_rechts": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(query.life_time * 63.0) * -10.0"
+          ]
+        },
+        "rumpf": {
+          "rotation": [
+            "query.target_x_rotation * 0.6",
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.wal.jung": {
+      "loop": true,
+      "bones": {
+        "kopf": {
+          "scale": 1.4
+        }
+      }
+    }
+  }
+}

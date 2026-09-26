@@ -1,0 +1,50 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:loewe",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "loewe": "textures/entity/tiere/loewe_loewe",
+        "loewin": "textures/entity/tiere/loewe_loewin",
+        "junges": "textures/entity/tiere/loewe_junges"
+      },
+      "geometry": {
+        "default": "geometry.fynn.loewe"
+      },
+      "animations": {
+        "laufen": "animation.fynn.loewe.laufen",
+        "stehen": "animation.fynn.loewe.stehen",
+        "blick": "animation.common.look_at_target",
+        "angriff": "animation.fynn.loewe.angriff",
+        "jung": "animation.fynn.loewe.jung",
+        "teile": "animation.fynn.loewe.teile"
+      },
+      "scripts": {
+        "animate": [
+          {
+            "laufen": "query.modified_move_speed"
+          },
+          "stehen",
+          "blick",
+          {
+            "angriff": "variable.attack_time > 0.0"
+          },
+          {
+            "jung": "query.is_baby"
+          },
+          "teile"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.fynn.loewe"
+      ],
+      "spawn_egg": {
+        "base_color": "#d8a864",
+        "overlay_color": "#6a3e1a"
+      }
+    }
+  }
+}
