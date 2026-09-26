@@ -186,7 +186,8 @@
         },
         "angriff_8": {
           "animations": [
-            "phasenwechsel"
+            "phasenwechsel",
+            "phasen_beben"
           ],
           "transitions": [
             {

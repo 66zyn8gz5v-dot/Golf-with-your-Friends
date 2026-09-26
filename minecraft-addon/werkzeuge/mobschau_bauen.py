@@ -594,8 +594,9 @@ def alle_mobs():
         },
         "steckbrief": {"name": "Sir Roland von Ronceval", "en": "Sir Roland of Roncevaux", "zeilen": [
             ["Rang", "Oberkommandant des Ritterordens – der erste Boss"],
-            ["Leben", f"{l1 // 2} Herzen allein, {l4 // 2} zu viert – je Mitspieler die Hälfte mehr"],
-            ["Phasen", "bei halbem Leben kniet er, steht entfesselt wieder auf und ruft den Orden"],
+            ["Leben", f"je Phase {l1 // 2} Herzen allein, {l4 // 2} zu viert – je Mitspieler die Hälfte mehr"],
+            ["Phasen", "ist Phase 1 leer, kniet er, lädt sich unverwundbar wieder auf und steht in "
+                       "Phase 2 auf – dann ruft er den Orden"],
             ["Angriffe", "Hiebfolge, Schildstoß, Klingenwirbel, Sprungschlag, Schildwall mit Konter, "
                          "Sternenklingen, Saphirwelle; in Phase 2 Ruf des Ordens"],
             ["Rufen", "Fehdehandschuh werfen (5 Stahlbarren, Goldbarren, Lapis)"],

@@ -50,9 +50,12 @@ function welt(alle) {
     return d;
 }
 
-function roland(alle, lebenMax = 320) {
+let bossNummer = 0;
+function roland(alle, lebenMax = 240) {
     const b = {
-        id: "roland1", typeId: "fynn:roland", location: { x: 0, y: 64, z: 0 }, isValid: true,
+        // Jeder Probe-Boss mit eigener Kennung - sonst erbt er den Zustand
+        // (laufender Angriff, Gefolge) des vorigen.
+        id: `roland${++bossNummer}`, typeId: "fynn:roland", location: { x: 0, y: 64, z: 0 }, isValid: true,
         eig: new Map([["fynn:phase", 1], ["fynn:angriff", 0]]), ereignisse: [], nameTag: "",
         lebenJetzt: lebenMax, lebenMax, dyn: new Map(), weg: false, drehung: 0,
         getComponent(n) {
@@ -66,7 +69,7 @@ function roland(alle, lebenMax = 320) {
         triggerEvent(n) {
             this.ereignisse.push(n);
             const m = /^fynn:staerke_(\d)$/.exec(n);
-            if (m) { this.lebenMax = [0, 320, 480, 640, 800, 960, 1120][+m[1]]; this.lebenJetzt = this.lebenMax; }
+            if (m) { this.lebenMax = [0, 240, 360, 480, 600, 720, 840][+m[1]]; this.lebenJetzt = this.lebenMax; }
         },
         addEffect() { }, removeEffect() { },
         teleport(o) { this.location = { ...o }; },
@@ -89,10 +92,10 @@ function laufe(z, ticks) {
 }
 
 // ---- Staerke nach Zahl der Spieler
-pruefe("allein: 320 Leben, Faktor 1", r.staerkeFuer(1).leben === 320 && r.staerkeFuer(1).faktor === 1);
-pruefe("zu dritt: 640 Leben, 30 % mehr Schaden", r.staerkeFuer(3).leben === 640 && Math.abs(r.staerkeFuer(3).faktor - 1.3) < 1e-9);
+pruefe("allein: 240 Leben je Phase, Faktor 1", r.staerkeFuer(1).leben === 240 && r.staerkeFuer(1).faktor === 1);
+pruefe("zu dritt: 480 Leben, 30 % mehr Schaden", r.staerkeFuer(3).leben === 480 && Math.abs(r.staerkeFuer(3).faktor - 1.3) < 1e-9);
 pruefe("ab sechs waechst er nicht weiter", r.staerkeFuer(9).leben === r.staerkeFuer(6).leben);
-pruefe("niemand da zaehlt wie einer", r.staerkeFuer(0).leben === 320);
+pruefe("niemand da zaehlt wie einer", r.staerkeFuer(0).leben === 240);
 
 // ---- Auftritt mit drei Spielern
 let alle = [spieler("a", 5, 0), spieler("b", -6, 3), spieler("c", 2, 20), spieler("fern", 200, 0), spieler("k", 3, 3, "Creative")];
@@ -100,7 +103,7 @@ let boss = roland(alle);
 let z = r.zustandVon(boss);
 r.starte(z, "auftritt");
 laufe(z, 1);
-pruefe("Auftritt: Staerke fuer drei Spieler (Kreativ und Ferne zaehlen nicht)", boss.ereignisse.includes("fynn:staerke_3") && boss.lebenMax === 640);
+pruefe("Auftritt: Staerke fuer drei Spieler (Kreativ und Ferne zaehlen nicht)", boss.ereignisse.includes("fynn:staerke_3") && boss.lebenMax === 480);
 pruefe("Auftritt: Titel fuer die Spieler", alle[0].titel.some(([t]) => t.includes("Sir Roland")));
 pruefe("Auftritt: Eigenschaft angriff = 9", boss.eig.get("fynn:angriff") === ANGRIFFE.auftritt.nr);
 laufe(z, ANGRIFFE.auftritt.laenge + 2);
@@ -142,36 +145,50 @@ z = r.zustandVon(boss);
 boss.drehung = 0;   // blickt nach Sueden, also zum Spieler
 r.starte(z, "schildwall", { ziel: alle[0] });
 laufe(z, ANGRIFFE.schildwall.von + 2);
-boss.lebenJetzt = 300;
+boss.lebenJetzt = 200;
 const getroffen = gemerkt.ereignisse["entityHurt"].at(-1);
 getroffen({ hurtEntity: boss, damage: 20, damageSource: { damagingEntity: alle[0] } });
-pruefe("Schildwall: der Schlag von vorn heilt zurueck", boss.lebenJetzt === 320);
+pruefe("Schildwall: der Schlag von vorn heilt zurueck", boss.lebenJetzt === 220);
 pruefe("Schildwall: wer schlaegt, kaempft mit", z.teilnehmer.has("a"));
 laufe(z, 1);
 pruefe("Schildwall: danach der Konter", z.aktion?.name === "konter" && boss.eig.get("fynn:angriff") === ANGRIFFE.konter.nr);
 laufe(z, ANGRIFFE.konter.laenge);
 pruefe("Konter trifft", alle[0].schaden.length === 1);
 alle.push(spieler("hinten", 0, -3));
-boss.lebenJetzt = 300;
+boss.lebenJetzt = 200;
 r.starte(z, "schildwall");
 laufe(z, ANGRIFFE.schildwall.von + 2);
 getroffen({ hurtEntity: boss, damage: 20, damageSource: { damagingEntity: alle[1] } });
-pruefe("Schildwall: von hinten hilft der Schild nicht", boss.lebenJetzt === 300);
+pruefe("Schildwall: von hinten hilft der Schild nicht", boss.lebenJetzt === 200);
 
-// ---- Phase zwei bei halbem Leben
+// ---- Phase eins leer: aufladen, unverwundbar, Phase zwei
 alle = [spieler("a", 4, 0), spieler("b", -4, 0)];
-boss = roland(alle);
+boss = roland(alle, 480);
 z = r.zustandVon(boss);
 z.n = 2;
 z.pause = 1e12;
-boss.lebenJetzt = 150;
+boss.lebenJetzt = 240;
 laufe(z, 1);
-pruefe("halbes Leben: Phasenwechsel beginnt, unverwundbar", z.aktion?.name === "phasenwechsel" && boss.ereignisse.includes("fynn:schutz_an"));
-laufe(z, ANGRIFFE.phasenwechsel.laenge + 1);
+pruefe("halbes Leben: noch kein Wechsel", z.aktion === null && z.phase === 1);
+boss.lebenJetzt = 25;
+laufe(z, 1);
+pruefe("Phase eins leer: Wechsel beginnt, unverwundbar", z.aktion?.name === "phasenwechsel" && boss.ereignisse.includes("fynn:schutz_an"));
+pruefe("die Leiste zeigt leer", boss.lebenJetzt === 1);
+const pw = ANGRIFFE.phasenwechsel;
+laufe(z, pw.laden_von + Math.floor((pw.laden_bis - pw.laden_von) / 2));
+pruefe("beim Aufladen steigt das Leben", boss.lebenJetzt > 150 && boss.lebenJetzt < 400);
+pruefe("waehrend des Aufladens kein zweiter Wechsel", z.aktion?.name === "phasenwechsel");
+pruefe("die Leiste der zweiten Phase fuellt sich schon", boss.nameTag.includes("Phase 2"));
+laufe(z, pw.laden_bis - pw.laden_von);
+pruefe("aufgeladen: volles Leben", boss.lebenJetzt === 480);
+// Bis der Wechsel vorbei ist - danach nicht weiter, sonst waehlt er schon
+// den naechsten Angriff (etwa den Ruf) und die Zahl der Ritter stimmt nicht.
+while (z.aktion) laufe(z, 1);
+z.pause = 1e12;
 pruefe("Phase zwei: Eigenschaft und Name fuer die Bossleiste", boss.eig.get("fynn:phase") === 2
     && boss.nameTag.includes("Roland") && boss.nameTag.includes("Phase 2"));
 pruefe("Phase zwei: entfesselt, danach wieder verwundbar", boss.ereignisse.includes("fynn:entfesseln")
-    && boss.ereignisse.includes("fynn:schutz_aus"));
+    && boss.ereignisse.includes("fynn:schutz_aus") && boss.lebenJetzt === 480);
 pruefe("Phase zwei: zwei Ritter treten aus dem Licht", boss.dimension.gerufen.length === 2
     && boss.dimension.gerufen.every((w) => w.tags.includes("roland_gefolge")));
 pruefe("Phase zwei: mehr Schaden", Math.abs(z.faktor - 1.15 * 1.2) < 1e-9);
@@ -185,10 +202,11 @@ alle = [spieler("a", 4, 0), spieler("b", -4, 0), spieler("c", 0, 5)];
 boss = roland(alle);
 z = r.zustandVon(boss);
 z.teilnehmer = new Set(["a", "b", "c"]);
+z.phase = 2;
 r.rufe(z, 2);
 boss.lebenJetzt = 25;
 laufe(z, 1);
-pruefe("unter der letzten Kraft: Abschied, unverwundbar", z.besiegt && z.aktion?.name === "abschied"
+pruefe("Phase zwei leer: Abschied, unverwundbar, Leiste leer", boss.lebenJetzt === 1 && z.besiegt && z.aktion?.name === "abschied"
     && boss.ereignisse.includes("fynn:schutz_an"));
 pruefe("das Gefolge geht mit", boss.dimension.gerufen.every((w) => !w.isValid));
 laufe(z, ANGRIFFE.abschied.laenge + 2);

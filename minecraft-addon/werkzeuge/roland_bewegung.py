@@ -341,21 +341,49 @@ def ruf_des_ordens():
 
 
 def phasenwechsel():
-    """Getroffen taumelt er, sinkt auf ein Knie, stuetzt sich auf Durendal
-    - der Umhang hebt sich wie im Wind, die Rinne beginnt zu gluehen - und
-    er steht auf, die Klinge zum Himmel: Schockwelle bei 3,0 s."""
-    return ablauf(4.0, [
+    """Phase eins ist leer. Fynn: "Wenn man ihn in Phase 1 auf null HP
+    gebracht hat, laedt er sich auf und seine HP steigen und er wechselt in
+    Phase 2 ... und er soll waehrend dieser Animation immun sein."
+
+    Er taumelt unter dem letzten Schlag, sinkt auf ein Knie und stuetzt
+    sich auf Durendal, den Kopf gesenkt (bis 1,0 s). Dann laedt er sich auf:
+    Der Kopf hebt sich langsam, der Schildarm oeffnet sich, der Umhang
+    steigt wie in einem Wind von unten, der ganze Koerper bebt (das Beben
+    liegt als eigene Bewegung darueber, phasen_beben). Waehrenddessen fuellt
+    das Skript sein Leben wieder auf (1,0 bis 3,6 s). Bei 3,6 s reisst es
+    ihn hoch, die Klinge zum Himmel, und bei 4,2 s bricht die Schockwelle
+    los - Phase zwei."""
+    knie = dict(KNIEN, **KLINGE_IM_BODEN, huefte=[0, 0, 0], schild=[0, 0, 0])
+    return ablauf(5.0, [
         (0.35, {"koerper": [-18, 24, 0], "kopf": [-20, -20, 0], "wurzel": {"position": [0, 0, 1.5]},
                 "rechter_arm": [-10, 30, 30], "linker_arm": [10, -20, -30], "schild": [0, 0, 0]}),
-        (0.90, dict(KNIEN, **KLINGE_IM_BODEN, koerper=[28, 0, 0], kopf=[30, 0, 0], huefte=[0, 0, 0],
-                    linker_arm=[-20, 0, -20], umhang=[-14, 0, 0])),
-        (2.30, {"umhang": [8, 0, 0], "umhang_unten": [24, 0, 0], "kopf": [20, 0, 0]}),
-        (2.60, dict(AUFRECHT, koerper=[-8, 0, 0], kopf=[-10, 0, 0], umhang=[40, 0, 0])),
-        (3.00, dict(KLINGE_ZUM_HIMMEL, koerper=[-24, 0, 0], kopf=[-30, 0, 0], linker_arm=[-120, 0, -50],
-                    schild=[110, 0, 0],
-                    wurzel={"position": [0, 1.0, 0]}, umhang=[60, 0, 0], umhang_unten=[30, 0, 0])),
-        (3.40, {"koerper": [-20, 0, 0], "wurzel": {"position": [0, 0.5, 0]}}),
+        (1.00, dict(knie, koerper=[30, 0, 0], kopf=[36, 0, 0], linker_arm=[-20, 0, -20], umhang=[-14, 0, 0])),
+        (1.80, dict(knie, koerper=[26, 0, 0], kopf=[26, 0, 0], linker_arm=[-24, 0, -34], umhang=[-2, 0, 0],
+                    umhang_unten=[18, 0, 0])),
+        (2.80, dict(knie, koerper=[14, 0, 0], kopf=[4, 0, 0], linker_arm=[-30, 0, -58], umhang=[18, 0, 0],
+                    umhang_unten=[30, 0, 0])),
+        (3.60, dict(knie, koerper=[6, 0, 0], kopf=[-18, 0, 0], linker_arm=[-36, 0, -72], umhang=[34, 0, 0],
+                    umhang_unten=[38, 0, 0])),
+        (3.95, dict(AUFRECHT, **KLINGE_ZUM_HIMMEL, koerper=[-14, 0, 0], kopf=[-24, 0, 0],
+                    linker_arm=[-120, 0, -50], schild=[110, 0, 0],
+                    wurzel={"position": [0, 0.6, 0]}, umhang=[40, 0, 0], umhang_unten=[24, 0, 0])),
+        (4.20, {"koerper": [-26, 0, 0], "kopf": [-32, 0, 0], "wurzel": {"position": [0, 1.2, 0]},
+                "umhang": [62, 0, 0], "umhang_unten": [32, 0, 0]}),
+        (4.60, {"koerper": [-12, 0, 0], "kopf": [-12, 0, 0], "wurzel": {"position": [0, 0.2, 0]},
+                "umhang": [20, 0, 0], "umhang_unten": [8, 0, 0]}),
     ])
+
+
+def phasen_beben():
+    """Das Beben beim Aufladen: schnell und klein, anschwellend, solange er
+    kniet und laedt (1,0 bis 3,6 s). Liegt ueber dem Phasenwechsel."""
+    huelle = "math.clamp((query.anim_time - 1.0) / 2.6, 0.0, 1.0) * (query.anim_time < 3.6)"
+    return {"loop": "hold_on_last_frame", "animation_length": 5.0, "bones": {
+        "koerper": {"rotation": [f"math.sin(query.anim_time * 2600.0) * 1.6 * {huelle}",
+                                 f"math.sin(query.anim_time * 1900.0) * 1.2 * {huelle}", 0.0]},
+        "kopf": {"rotation": [0.0, f"math.sin(query.anim_time * 2300.0) * 1.5 * {huelle}", 0.0]},
+        "linker_arm": {"rotation": [f"math.sin(query.anim_time * 2100.0) * 2.0 * {huelle}", 0.0, 0.0]},
+    }}
 
 
 def auftritt():
@@ -406,7 +434,7 @@ ANGRIFFE = {
     5: ("sternenklingen", sternenklingen, {"zeichen": [0.6, 1.3], "einschlag": [1.5, 2.2]}),
     6: ("saphirwelle", saphirwelle, {"welle": 0.7}),
     7: ("ruf_des_ordens", ruf_des_ordens, {"ruf": 1.0}),
-    8: ("phasenwechsel", phasenwechsel, {"knien": 0.9, "welle": 3.0}),
+    8: ("phasenwechsel", phasenwechsel, {"knien": 1.0, "laden_von": 1.0, "laden_bis": 3.6, "welle": 4.2}),
     9: ("auftritt", auftritt, {"bereit": 3.0}),
     10: ("konter", konter, {"treffer": 0.24}),
     11: ("abschied", abschied, {"licht": 3.2}),
@@ -416,6 +444,7 @@ HIEBE = [("hieb_schraeg", hieb_schraeg), ("hieb_quer", hieb_quer), ("hieb_stoss"
 
 def alle_animationen():
     anims = {PRAEFIX + "haltung": haltung(), PRAEFIX + "gang": gang(),
+             PRAEFIX + "phasen_beben": phasen_beben(),
              # Mojangs Blick-Animation dreht einen Knochen namens "head" -
              # Rolands Kopf heisst "kopf".
              PRAEFIX + "blick": {"loop": True, "bones": {"kopf": {"rotation": [
@@ -452,7 +481,7 @@ def steuerung():
     }
     for nr, (name, _, _) in ANGRIFFE.items():
         zustaende[f"angriff_{nr}"] = {
-            "animations": [name],
+            "animations": [name] + (["phasen_beben"] if name == "phasenwechsel" else []),
             "transitions": [{"bereit": f"query.property('fynn:angriff') != {nr}"}],
             "blend_transition": 0.15,
         }

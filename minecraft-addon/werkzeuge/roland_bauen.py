@@ -695,7 +695,9 @@ def partikel_bilder():
 # sind. Fynn: "wenn mehrere Spieler online sind ... dass der Boss dann
 # staerker ist, mehr Leben hat." Jeder weitere Spieler: halb so viel Leben
 # mehr, ein Siebtel mehr Schaden. Ab sechs Spielern waechst er nicht mehr.
-GRUNDLEBEN = 320
+# Das Leben gilt je Phase - ist Phase eins leer, laedt er sich wieder voll
+# auf (roland.js).
+GRUNDLEBEN = 240
 GRUNDSCHADEN = 9
 MEHR_SPIELER = 6
 
@@ -705,9 +707,9 @@ def staerke(anzahl):
     return round(GRUNDLEBEN * (1 + 0.5 * (n - 1))), round(GRUNDSCHADEN * (1 + 0.15 * (n - 1)), 1)
 
 
-# Unter dieser Grenze nimmt Roland keinen Schaden mehr: Der naechste Treffer
-# besiegt ihn, statt ihn umfallen zu lassen - das Kampfskript spielt dann
-# seinen Abschied und legt die Beute ab. Hoeher als der staerkste Schlag
+# Unter dieser Grenze nimmt Roland keinen Schaden mehr: Das Kampfskript
+# zeigt die Leiste leer und startet in Phase eins den Wechsel (er laedt sich
+# auf), in Phase zwei den Abschied mit der Beute - er faellt nie einfach um. Hoeher als der staerkste Schlag
 # eines Spielers, damit kein Treffer ueber die Grenze hinweg toetet.
 LETZTE_KRAFT = 30
 

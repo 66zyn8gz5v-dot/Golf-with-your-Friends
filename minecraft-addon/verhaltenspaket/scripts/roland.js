@@ -485,17 +485,51 @@ function ruf_des_ordens(z, a, t) {
     if (t === ANGRIFFE.ruf_des_ordens.ruf) rufe(z, 2 + Math.floor(((z.n ?? 1) - 1) / 2));
 }
 
-// ---- Phasenwechsel: bei halbem Leben.
+// ---- Phasenwechsel: Phase eins ist leer - er laedt sich auf.
+//
+// Fynn: "Wenn man ihn in Phase 1 auf null HP gebracht hat, laedt er sich
+// auf und seine HP steigen und er wechselt in Phase 2 ... immun gegen
+// Attacken, damit man ihn dort nicht toeten kann." Jede Phase hat ihre
+// eigene volle Leiste. Waehrend des ganzen Wechsels traegt er die Gruppe
+// fynn:unverwundbar; das Leben steigt Tick fuer Tick von fast null auf voll.
+export function ladeStand(t, d = ANGRIFFE.phasenwechsel) {
+    return Math.max(0, Math.min(1, (t - d.laden_von) / (d.laden_bis - d.laden_von)));
+}
+
 function phasenwechsel(z, a, t) {
     const d = ANGRIFFE.phasenwechsel;
     const dim = z.boss.dimension;
     const ort = z.boss.location;
+    const l = leben(z.boss);
     if (t === 0) {
         ereignis(z.boss, "fynn:schutz_an");
+        // Die Leiste zeigt: leer.
+        if (l) l.h.setCurrentValue(1);
         ton(dim, "mob.irongolem.hit", ort, 1.5, 0.5);
+        for (const s of spielerBei(z.boss, UMKREIS_STAERKE)) {
+            try {
+                s.onScreenDisplay.setTitle("§bSir Roland lädt sich auf", { subtitle: "§7Er ist unverwundbar",
+                    fadeInDuration: 5, stayDuration: 50, fadeOutDuration: 10 });
+            } catch (e) { /* egal */ }
+        }
     }
-    if (t >= d.knien && t < d.welle && t % 6 === 0) funken(dim, "fynn:saphiraura", ort);
-    if (t === d.knien) ton(dim, "mob.evocation_illager.cast_spell", ort, 1.5, 0.6);
+    if (t === d.laden_von) {
+        // Ab jetzt fuellt sich schon die Leiste der zweiten Phase.
+        try { z.boss.nameTag = NAME_ENTFESSELT; } catch (e) { /* egal */ }
+        ton(dim, "mob.evocation_illager.cast_spell", ort, 1.5, 0.6);
+        ton(dim, "beacon.activate", ort, 1.5, 0.8);
+    }
+    if (t > d.laden_von && t <= d.laden_bis && l) {
+        l.h.setCurrentValue(Math.max(1, Math.round(l.max * ladeStand(t, d))));
+        // Blaue Funken sammeln sich um ihn, immer dichter.
+        const dichte = 1 + Math.floor(ladeStand(t, d) * 3);
+        if (t % Math.max(2, 7 - dichte * 2) === 0) funken(dim, "fynn:saphiraura", ort);
+        if (t % 8 === 0) {
+            const w = t * 0.7;
+            funken(dim, "fynn:saphirfunken", { x: ort.x + Math.cos(w) * 1.6, y: ort.y + 0.4 + ladeStand(t, d) * 1.6, z: ort.z + Math.sin(w) * 1.6 });
+        }
+    }
+    if (t === d.laden_bis) funken(dim, "fynn:ordenslicht", ort);
     if (t === d.welle) {
         z.phase = 2;
         z.faktor = faktorVon(z);
@@ -518,7 +552,10 @@ function phasenwechsel(z, a, t) {
             } catch (e) { /* egal */ }
         }
     }
-    if (t === d.laenge - 1) ereignis(z.boss, "fynn:schutz_aus");
+    if (t === d.laenge - 1) {
+        if (l) l.h.setCurrentValue(l.max);
+        ereignis(z.boss, "fynn:schutz_aus");
+    }
 }
 
 // ---- Auftritt: kniend erscheinen, aufstehen, gruessen.
@@ -606,6 +643,8 @@ export function besiegen(z) {
     z.besiegt = true;
     if (z.aktion) beende(z);
     ereignis(z.boss, "fynn:schutz_an");
+    const l = leben(z.boss);
+    if (l) l.h.setCurrentValue(1);
     starte(z, "abschied");
     // Fuer immer stillstehen - nach dem Abschied ist er fort.
     try { z.boss.addEffect("slowness", 400, { amplifier: 20, showParticles: false }); } catch (e) { /* egal */ }
@@ -628,15 +667,17 @@ export function takt(z) {
         abschied(z, z.aktion, z.aktion.t);
         return;
     }
-    if (l && !z.besiegt && l.jetzt <= LETZTE_KRAFT + 0.5) {
-        besiegen(z);
-        abschied(z, z.aktion, 0);
-        return;
-    }
-    if (l && z.phase === 1 && l.jetzt <= l.max / 2 && z.aktion?.name !== "phasenwechsel"
-        && z.aktion?.name !== "auftritt") {
-        if (z.aktion) beende(z);
-        starte(z, "phasenwechsel");
+    // Leer: in Phase eins der Wechsel, in Phase zwei der Abschied. Waehrend
+    // des Wechsels ist das Leben absichtlich niedrig - dann nicht noch einmal.
+    if (l && !z.besiegt && l.jetzt <= LETZTE_KRAFT + 0.5 && z.aktion?.name !== "phasenwechsel") {
+        if (z.phase === 1) {
+            if (z.aktion) beende(z);
+            starte(z, "phasenwechsel");
+        } else {
+            besiegen(z);
+            abschied(z, z.aktion, 0);
+            return;
+        }
     }
     if (z.aktion) {
         const a = z.aktion;

@@ -16,6 +16,7 @@
       "animations": {
         "haltung": "animation.fynn.roland.haltung",
         "gang": "animation.fynn.roland.gang",
+        "phasen_beben": "animation.fynn.roland.phasen_beben",
         "blick": "animation.fynn.roland.blick",
         "hieb_schraeg": "animation.fynn.roland.hieb_schraeg",
         "hieb_quer": "animation.fynn.roland.hieb_quer",

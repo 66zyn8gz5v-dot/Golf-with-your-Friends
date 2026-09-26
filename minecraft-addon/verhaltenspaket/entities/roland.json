@@ -91,8 +91,8 @@
       },
       "fynn:staerke_1": {
         "minecraft:health": {
-          "value": 320,
-          "max": 320
+          "value": 240,
+          "max": 240
         },
         "minecraft:attack": {
           "damage": 9.0
@@ -100,8 +100,8 @@
       },
       "fynn:staerke_2": {
         "minecraft:health": {
-          "value": 480,
-          "max": 480
+          "value": 360,
+          "max": 360
         },
         "minecraft:attack": {
           "damage": 10.3
@@ -109,8 +109,8 @@
       },
       "fynn:staerke_3": {
         "minecraft:health": {
-          "value": 640,
-          "max": 640
+          "value": 480,
+          "max": 480
         },
         "minecraft:attack": {
           "damage": 11.7
@@ -118,8 +118,8 @@
       },
       "fynn:staerke_4": {
         "minecraft:health": {
-          "value": 800,
-          "max": 800
+          "value": 600,
+          "max": 600
         },
         "minecraft:attack": {
           "damage": 13.0
@@ -127,8 +127,8 @@
       },
       "fynn:staerke_5": {
         "minecraft:health": {
-          "value": 960,
-          "max": 960
+          "value": 720,
+          "max": 720
         },
         "minecraft:attack": {
           "damage": 14.4
@@ -136,8 +136,8 @@
       },
       "fynn:staerke_6": {
         "minecraft:health": {
-          "value": 1120,
-          "max": 1120
+          "value": 840,
+          "max": 840
         },
         "minecraft:attack": {
           "damage": 15.8
@@ -162,8 +162,8 @@
         "height": 2.5
       },
       "minecraft:health": {
-        "value": 320,
-        "max": 320
+        "value": 240,
+        "max": 240
       },
       "minecraft:attack": {
         "damage": 9.0

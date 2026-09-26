@@ -52,9 +52,11 @@ export const ANGRIFFE = {
     },
     "phasenwechsel": {
         "nr": 8,
-        "laenge": 80,
-        "knien": 18,
-        "welle": 60
+        "laenge": 100,
+        "knien": 20,
+        "laden_von": 20,
+        "laden_bis": 72,
+        "welle": 84
     },
     "auftritt": {
         "nr": 9,
