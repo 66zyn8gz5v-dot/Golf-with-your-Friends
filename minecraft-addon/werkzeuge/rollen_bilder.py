@@ -98,7 +98,30 @@ def zeichenseite():
     for i, rolle in enumerate(ROLLEN):
         setze(1 + i, kugel(KUGELFARBEN[rolle]))
         setze(5 + i, kugel(KUGELFARBEN[rolle], HALB_BIS))
+    # Feld 9: ein goldener Stern hinter der Leiste, solange man die volle
+    # Ruestung seiner Rolle traegt - dann kommt die Kraft schneller.
+    stern = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    for y, zeile in enumerate(STERN):
+        for x, z in enumerate(zeile):
+            if z != ".":
+                for dy in range(2):
+                    for dx in range(2):
+                        stern.putpixel((x * 2 + dx, 1 + y * 2 + dy), STERNFARBEN[z] + (255,))
+    setze(9, stern)
     return seite
+
+
+STERN = [
+    "...K...",
+    "..KwK..",
+    "KKKhKKK",
+    "KhhhccK",
+    ".KhcdK.",
+    "KhcKdcK",
+    "KKK.KKK",
+]
+STERNFARBEN = {"w": (255, 250, 214), "h": (255, 228, 110), "c": (234, 184, 40),
+               "d": (186, 130, 22), "K": (72, 50, 12)}
 
 
 # ------------------------------------------------------------ Wappenstein

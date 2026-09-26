@@ -66,6 +66,31 @@ export const ROLLEN = {
 export const REIHENFOLGE = ["ritter", "magier", "bogenschuetze", "assassine"];
 
 const zeichen = (feld) => String.fromCharCode(0xe300 + feld);
+const STERN = 9;
+
+// Die Ruestung jeder Rolle. Wer alle vier Teile traegt, bekommt die Kraft
+// schneller zurueck (einen Punkt mehr je halbe Sekunde), und hinter der
+// Leiste steht ein goldener Stern. Der Bogenschuetze hat keine eigene
+// Ruestung - fuer ihn zaehlt Leder, die Kleidung eines Waldlaeufers.
+const SETS = {
+    ritter: ["fynn:ritterhelm", "fynn:ritterbrustpanzer", "fynn:ritterbeinschutz", "fynn:ritterstiefel"],
+    magier: ["fynn:magierhut", "fynn:magierrobe", "fynn:magierrock", "fynn:magierschuhe"],
+    bogenschuetze: ["minecraft:leather_helmet", "minecraft:leather_chestplate",
+        "minecraft:leather_leggings", "minecraft:leather_boots"],
+    assassine: ["fynn:assassinenkapuze", "fynn:assassinenharnisch", "fynn:assassinenhose",
+        "fynn:assassinenstiefel"],
+};
+const PLAETZE = ["Head", "Chest", "Legs", "Feet"];
+
+export function vollesSet(spieler, rolle) {
+    try {
+        const ausruestung = spieler.getComponent("minecraft:equippable");
+        if (!ausruestung || !SETS[rolle]) return false;
+        return PLAETZE.every((platz, i) => ausruestung.getEquipment(platz)?.typeId === SETS[rolle][i]);
+    } catch (fehler) {
+        return false;
+    }
+}
 
 // ------------------------------------------------------------ Speicher
 
@@ -125,6 +150,7 @@ function leiste(spieler, rolle) {
         const rest = wert - i * 10;
         kugeln += zeichen(rest >= 10 ? r.feld : rest >= 5 ? r.feld + 4 : 0);
     }
+    if (vollesSet(spieler, rolle)) kugeln += zeichen(STERN);
     // Weiss vor den Kugeln, damit die Schriftfarbe sie nicht einfaerbt.
     return `${r.farbe}${r.kraft} §f${kugeln}`;
 }
@@ -181,6 +207,8 @@ async function waehlen(spieler, versuch = 0) {
             + "Aufgeladene Angriffe kosten Kraft, sie kommt von selbst wieder.\n\n"
             + "Aufladen: die Waffe deiner Rolle in die Hand, ducken, bis es klingt, "
             + "dann aufstehen.\n\n"
+            + "Trägst du die ganze Rüstung deiner Rolle, kommt die Kraft schneller - "
+            + "dann steht ein goldener Stern hinter der Leiste.\n\n"
             + "Wechseln kannst du jederzeit hier am Altar.");
     for (const k of REIHENFOLGE) {
         form.button(`${ROLLEN[k].farbe}${ROLLEN[k].name}\n§8${ROLLEN[k].kurz}`, ROLLEN[k].bild);
@@ -268,7 +296,8 @@ system.runInterval(() => {
         try {
             const rolle = rolleVon(spieler);
             if (rolle && runde % 2 === 0) {
-                setzeKraft(spieler, kraftVon(spieler) + ROLLEN[rolle].nachschub);
+                const bonus = vollesSet(spieler, rolle) ? 1 : 0;
+                setzeKraft(spieler, kraftVon(spieler) + ROLLEN[rolle].nachschub + bonus);
             }
             if (rolle === "assassine" && spieler.isSneaking) {
                 // Kurz, damit er beim Aufstehen sofort wieder zu sehen ist.

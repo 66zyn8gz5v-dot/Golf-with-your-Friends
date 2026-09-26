@@ -55,6 +55,20 @@ pruefe(`Mana waechst (50 -> ${eigenschaften.get("fynn:kraft")})`, eigenschaften.
 const halbe = [...leiste.at(-1).split("§f")[1]].map((z) => z.charCodeAt(0) - 0xe300);
 pruefe(`bei 56 eine halbe Kugel: ${halbe.join(",")}`, halbe[5] === 6);
 
+// Volle Magierrobe: ein Punkt mehr je Nachschub und ein Stern hinter der Leiste.
+const robe = { Head: "fynn:magierhut", Chest: "fynn:magierrobe", Legs: "fynn:magierrock", Feet: "fynn:magierschuhe" };
+spieler.getComponent = (n) => (n === "minecraft:equippable"
+    ? { getEquipment: (platz) => ({ typeId: robe[platz] }) } : undefined);
+const vorRobe = eigenschaften.get("fynn:kraft");
+for (let i = 0; i < 2; i++) for (const f of runden(5)) f();
+pruefe(`volle Robe: Mana waechst um 3 statt 2 (${vorRobe} -> ${eigenschaften.get("fynn:kraft")})`,
+       eigenschaften.get("fynn:kraft") === vorRobe + 3);
+pruefe("und ein Stern hinter der Leiste", leiste.at(-1).endsWith(String.fromCharCode(0xe309)));
+robe.Feet = "minecraft:leather_boots";
+for (const f of runden(5)) f();
+pruefe("ein Teil fehlt: kein Stern", !leiste.at(-1).endsWith(String.fromCharCode(0xe309)));
+delete spieler.getComponent;
+
 // Nichts im Chat: keine sendMessage, nur Leiste und Titel.
 pruefe("kein Chat", spieler.sendMessage === undefined);
 

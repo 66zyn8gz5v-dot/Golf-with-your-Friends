@@ -42,11 +42,11 @@ item.fynn:eisenklinge.name=Iron Blade
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.20
+item.iron_sword.name=Stahlschwert 4.21
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.20
-item.fynn:degen.name=Degen 4.20
+item.fynn:degen=Degen 4.21
+item.fynn:degen.name=Degen 4.21
 
 
 
@@ -101,3 +101,19 @@ item.fynn:artefaktentasche=Artifact Pouch
 item.fynn:artefaktentasche.name=Artifact Pouch
 tile.fynn:rollenaltar.name=Role Altar
 tile.fynn:tempelaltar.name=Temple Altar
+item.fynn:magierhut=Wizard Hat
+item.fynn:magierhut.name=Wizard Hat
+item.fynn:magierrobe=Mage Robe
+item.fynn:magierrobe.name=Mage Robe
+item.fynn:magierrock=Robe Skirt
+item.fynn:magierrock.name=Robe Skirt
+item.fynn:magierschuhe=Pointed Shoes
+item.fynn:magierschuhe.name=Pointed Shoes
+item.fynn:assassinenkapuze=Assassin Hood
+item.fynn:assassinenkapuze.name=Assassin Hood
+item.fynn:assassinenharnisch=Assassin Harness
+item.fynn:assassinenharnisch.name=Assassin Harness
+item.fynn:assassinenhose=Assassin Trousers
+item.fynn:assassinenhose.name=Assassin Trousers
+item.fynn:assassinenstiefel=Assassin Boots
+item.fynn:assassinenstiefel.name=Assassin Boots

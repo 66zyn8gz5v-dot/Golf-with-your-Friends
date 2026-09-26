@@ -1,0 +1,201 @@
+{
+  "format_version": "1.16.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.assassinenhose",
+        "texture_width": 128,
+        "texture_height": 128,
+        "visible_bounds_width": 3,
+        "visible_bounds_height": 3.5,
+        "visible_bounds_offset": [
+          0,
+          1.5,
+          0
+        ]
+      },
+      "bones": [
+        {
+          "name": "body",
+          "pivot": [
+            0,
+            24,
+            0
+          ]
+        },
+        {
+          "name": "rightLeg",
+          "pivot": [
+            -1.9,
+            12,
+            0
+          ],
+          "parent": "body",
+          "cubes": [
+            {
+              "origin": [
+                -3.9,
+                0,
+                -2
+              ],
+              "size": [
+                4,
+                12,
+                4
+              ],
+              "uv": {
+                "north": {
+                  "uv": [
+                    108,
+                    12
+                  ],
+                  "uv_size": [
+                    4,
+                    12
+                  ]
+                },
+                "south": {
+                  "uv": [
+                    112,
+                    12
+                  ],
+                  "uv_size": [
+                    4,
+                    12
+                  ]
+                },
+                "east": {
+                  "uv": [
+                    116,
+                    12
+                  ],
+                  "uv_size": [
+                    4,
+                    12
+                  ]
+                },
+                "west": {
+                  "uv": [
+                    120,
+                    12
+                  ],
+                  "uv_size": [
+                    4,
+                    12
+                  ]
+                },
+                "up": {
+                  "uv": [
+                    124,
+                    12
+                  ],
+                  "uv_size": [
+                    4,
+                    4
+                  ]
+                },
+                "down": {
+                  "uv": [
+                    0,
+                    24
+                  ],
+                  "uv_size": [
+                    4,
+                    4
+                  ]
+                }
+              },
+              "inflate": 0.5
+            }
+          ]
+        },
+        {
+          "name": "leftLeg",
+          "pivot": [
+            1.9,
+            12,
+            0
+          ],
+          "parent": "body",
+          "cubes": [
+            {
+              "origin": [
+                -0.1,
+                0,
+                -2
+              ],
+              "size": [
+                4,
+                12,
+                4
+              ],
+              "uv": {
+                "north": {
+                  "uv": [
+                    4,
+                    24
+                  ],
+                  "uv_size": [
+                    4,
+                    12
+                  ]
+                },
+                "south": {
+                  "uv": [
+                    8,
+                    24
+                  ],
+                  "uv_size": [
+                    4,
+                    12
+                  ]
+                },
+                "east": {
+                  "uv": [
+                    12,
+                    24
+                  ],
+                  "uv_size": [
+                    4,
+                    12
+                  ]
+                },
+                "west": {
+                  "uv": [
+                    16,
+                    24
+                  ],
+                  "uv_size": [
+                    4,
+                    12
+                  ]
+                },
+                "up": {
+                  "uv": [
+                    20,
+                    24
+                  ],
+                  "uv_size": [
+                    4,
+                    4
+                  ]
+                },
+                "down": {
+                  "uv": [
+                    24,
+                    24
+                  ],
+                  "uv_size": [
+                    4,
+                    4
+                  ]
+                }
+              },
+              "inflate": 0.5
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

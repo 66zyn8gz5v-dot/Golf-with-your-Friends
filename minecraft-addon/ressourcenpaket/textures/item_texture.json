@@ -97,6 +97,30 @@
     },
     "artefaktentasche_open_front": {
       "textures": "textures/items/artefaktentasche_open_front"
+    },
+    "magierhut": {
+      "textures": "textures/items/magierhut"
+    },
+    "magierrobe": {
+      "textures": "textures/items/magierrobe"
+    },
+    "magierrock": {
+      "textures": "textures/items/magierrock"
+    },
+    "magierschuhe": {
+      "textures": "textures/items/magierschuhe"
+    },
+    "assassinenkapuze": {
+      "textures": "textures/items/assassinenkapuze"
+    },
+    "assassinenharnisch": {
+      "textures": "textures/items/assassinenharnisch"
+    },
+    "assassinenhose": {
+      "textures": "textures/items/assassinenhose"
+    },
+    "assassinenstiefel": {
+      "textures": "textures/items/assassinenstiefel"
     }
   }
 }
