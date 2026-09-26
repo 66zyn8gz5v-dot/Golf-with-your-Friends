@@ -28,7 +28,11 @@ for (const s of SEITEN) {
            altar?.typ === "fynn:tempelaltar" && altar.zustaende["fynn:rolle"] === s.rolle);
 }
 pruefe("Mitte: Quarz unter den Fuessen", bei(0, 99, 0)?.typ === "minecraft:chiseled_quartz_block");
-pruefe("Mauer rundum", bei(3, 100, -7)?.typ === "minecraft:stone_brick_wall" && bei(-7, 100, 2)?.typ === "minecraft:stone_brick_wall");
+pruefe("rund: Mauer auf dem Rand", bei(0, 100, 8)?.typ === "minecraft:stone_brick_wall" && bei(-8, 100, 0)?.typ === "minecraft:stone_brick_wall"
+       && bei(7, 99, 7) === undefined && bei(8, 99, 0)?.typ === "minecraft:stone_bricks");
+pruefe("mit Dach und Glaskuppel", bei(4, 105, 4)?.typ === "minecraft:stone_bricks" && bei(0, 107, 0)?.typ === "minecraft:glass"
+       && bei(0, 105, 0)?.typ === "minecraft:air");
+pruefe("Mauerstuecke verbunden", bei(0, 100, 8)?.zustaende?.wall_connection_type_east === "short");
 pruefe("Luft wird zuerst gesetzt, Altaere danach", plan[0].typ === "minecraft:air"
        && plan.findIndex((p) => p.typ === "fynn:tempelaltar") > plan.findLastIndex((p) => p.typ === "minecraft:air"));
 pruefe("Mitte ist frei zum Stehen", bei(0, 100, 0)?.typ === "minecraft:air" && bei(0, 101, 0)?.typ === "minecraft:air");
@@ -118,9 +122,9 @@ pruefe(`im Inventar: ${fynn.inventar.map((s) => s.typeId.replace(/.*:/, "")).joi
        fynn.inventar.some((s) => s.typeId === "fynn:feuerstab_2") && fynn.inventar.some((s) => s.typeId === "minecraft:bread"));
 pruefe("wieder Ueberleben, noch oben", fynn.modus === "Survival" && fynn.location.y === 290);
 pruefe(`Titel: ${fynn.onScreenDisplay.letzter}`, fynn.onScreenDisplay.letzter.includes("Spring"));
-const tor = gesetzt.slice(-45);
-pruefe("das Tor in der Mitte ist offen (3 x 3, fuenf tief)",
-       tor.length === 45 && tor.every((b) => b.typ === "minecraft:air" && Math.abs(b.ort.x - 10) <= 1 && b.ort.y < 290));
+const tor = gesetzt.slice(-63);
+pruefe("das Tor in der Mitte ist offen (3 x 3, sieben tief)",
+       tor.length === 63 && tor.every((b) => b.typ === "minecraft:air" && Math.abs(b.ort.x - 10) <= 1 && b.ort.y < 290));
 
 // --- Der Sprung
 const sturz = gemerkt.takte.find(([f]) => f.name === "sturzTakt")[0];
@@ -178,8 +182,30 @@ world.getAllPlayers = () => [lea, tom];
 const vorTor = gesetzt.length;
 sturz();
 pruefe("Mitspieler oben: Tempel bleibt, Tor wieder zu",
-       world.getDynamicProperty("fynn:tempel_steht") === true && gesetzt.length - vorTor === 37   // 9+9+9+9+1: die Insel wird nach unten spitz
+       world.getDynamicProperty("fynn:tempel_steht") === true
+       && gesetzt.length - vorTor === plan.filter((b) => Math.abs(b.ort.x) <= 1 && Math.abs(b.ort.z) <= 1
+           && b.ort.y < 100 && b.typ !== "minecraft:air").length
        && gesetzt.slice(vorTor).every((b) => b.typ !== "minecraft:air"));
+world.getAllPlayers = () => [];
+
+// Schnee auf dem Tempel wird weggeraeumt.
+const weg = [];
+const altesGetBlock = dimension.getBlock;
+dimension.getBlock = (o) => (o.x === 12 && o.y === 290 && o.z === -18
+    ? { typeId: "minecraft:snow_layer", setType: (t) => weg.push(t) } : {});
+gemerkt.takte.find(([f]) => f.name === "schneeWeg")[0]();
+pruefe("Schnee auf dem Tempelboden: weggeraeumt", weg.length === 1 && weg[0] === "minecraft:air");
+dimension.getBlock = altesGetBlock;
+
+// Ein eckiger Tempel (4.32) wird gegen den runden getauscht.
+world.setDynamicProperty("fynn:tempel_bauart", undefined);
+const vorUmbau = gesetzt.length;
+tom.location = { x: 15, y: 290, z: -20 };
+world.getAllPlayers = () => [tom];
+gemerkt.takte.find(([f]) => f.name === "eckigZuRund")[0]();
+pruefe("eckig zu rund: abgebaut, neu gebaut, Mitspieler in die Mitte",
+       world.getDynamicProperty("fynn:tempel_bauart") === 2 && gesetzt.length - vorUmbau > plan.length
+       && tom.location.x === 10.5 && tom.location.z === -20.5);
 world.getAllPlayers = () => [];
 
 // Ein alter Tempel (bis 4.28, 50 ueber dem Spawn) wird aufgeraeumt.

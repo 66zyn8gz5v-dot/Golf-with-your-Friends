@@ -31,6 +31,8 @@ const TEMPEL_SCHLUESSEL = "fynn:tempel";        // an der Welt: wo er steht
 const GESTARTET = "fynn:gestartet";             // am Spieler: war schon oben
 const AUSGERUESTET = "fynn:ausgeruestet";       // am Spieler: Startausruestung bekommen
 const STEHT = "fynn:tempel_steht";              // an der Welt: gerade aufgebaut?
+const BAUART = "fynn:tempel_bauart";            // an der Welt: 2 = rund, mit Dach
+const RUND = 2;
 const MODUS = "fynn:modus";                     // am Spieler: Spielmodus vor dem Tempel
 const STURZ = "fynn:sturz";                     // am Spieler: faellt gerade vom Tempel
 
@@ -131,7 +133,9 @@ function ausruesten(spieler, rolle) {
  * Alles, was den Tempel ausmacht, als Liste: Ort, Block, Zustaende.
  * Mitte ist der Punkt, auf dem man in der Mitte steht (die Fuesse).
  */
-export function bauplan(mitte) {
+// Der eckige Tempel bis Fassung 4.32. Er wird nicht mehr gebaut, aber
+// sein Plan bleibt, damit ein alter Tempel vollstaendig abgebaut werden kann.
+export function bauplanEckig(mitte) {
     const plan = [];
     const setze = (dx, dy, dz, typ, zustaende) =>
         plan.push({ ort: { x: mitte.x + dx, y: mitte.y + dy, z: mitte.z + dz }, typ, zustaende });
@@ -195,12 +199,148 @@ export function bauplan(mitte) {
     return plan;
 }
 
+// ------------------------------------------------------------ Der runde Tempel
+
+// Fynn: "machst du es bitte kreisfoermig? Die Spawninsel." und "das Menue
+// braucht eine Ueberdachung" - in einer Schneelandschaft schneite es auf
+// Boden und Altaere, und im Abenteuermodus liess sich der Schnee nicht
+// wegraeumen; an die Altaere kam man nicht mehr heran.
+//
+// Rund, 17 Bloecke im Durchmesser, rundum eine niedrige Mauer, acht Saeulen
+// zwischen den vier Altaeren, darueber ein gestuftes Dach mit einer
+// Glaskuppel in der Mitte, damit Tageslicht hereinfaellt. Unter dem Dach
+// haengen Laternen. Darunter die Insel als umgedrehter, runder Kegel.
+const RADIUS = 8;
+const DACH = 5;                 // Hoehe der Dachunterkante ueber dem Boden
+
+function imKreis(dx, dz, r) {
+    return dx * dx + dz * dz <= (r + 0.5) * (r + 0.5);
+}
+
+export function bauplan(mitte) {
+    const plan = [];
+    const setze = (dx, dy, dz, typ, zustaende) =>
+        plan.push({ ort: { x: mitte.x + dx, y: mitte.y + dy, z: mitte.z + dz }, typ, zustaende });
+    const ueberall = (r, f) => {
+        for (let dx = -r; dx <= r; dx++) for (let dz = -r; dz <= r; dz++) if (imKreis(dx, dz, r)) f(dx, dz);
+    };
+
+    // Die Insel: ein runder Kegel, nach unten spitz.
+    for (const [tiefe, r, typ] of [[-2, 8, "minecraft:stone_bricks"], [-3, 7, "minecraft:cobblestone"],
+        [-4, 5, "minecraft:mossy_cobblestone"], [-5, 3, "minecraft:mossy_cobblestone"],
+        [-6, 2, "minecraft:mossy_cobblestone"], [-7, 0, "minecraft:mossy_cobblestone"]]) {
+        ueberall(r, (dx, dz) => setze(dx, tiefe, dz, typ));
+    }
+
+    // Der Boden: Steinziegel, ein Ring aus gemeisselten Ziegeln, in der
+    // Mitte Quarz, von dort farbige Wege zu den Altaeren.
+    ueberall(RADIUS, (dx, dz) => {
+        const r = Math.sqrt(dx * dx + dz * dz);
+        let typ = "minecraft:stone_bricks";
+        if (r <= 1.5) typ = "minecraft:chiseled_quartz_block";
+        else if (r >= 5 && r < 6) typ = "minecraft:chiseled_stone_bricks";
+        setze(dx, -1, dz, typ);
+    });
+    for (const s of SEITEN) {
+        for (let schritt = 2; schritt <= 4; schritt++) setze(s.dx * schritt, -1, s.dz * schritt, WEGFARBE[s.rolle]);
+    }
+
+    // Saeulen: acht, jeweils zwischen zwei Altaeren, auf dem Rand.
+    const saeulen = [];
+    for (let i = 0; i < 8; i++) {
+        const w = (i + 0.5) * Math.PI / 4;
+        saeulen.push([Math.round(Math.cos(w) * 7.5), Math.round(Math.sin(w) * 7.5)]);
+    }
+    const istSaeule = (dx, dz) => saeulen.some(([x, z]) => x === dx && z === dz);
+
+    // Die Mauer auf dem Rand, anderthalb Bloecke hoch: Man sieht hinaus,
+    // faellt aber nicht aus Versehen hinunter. Mauern verbinden sich nicht
+    // von selbst, wenn ein Skript sie setzt - darum wird fuer jedes Stueck
+    // ausgerechnet, zu welchen Nachbarn es reicht.
+    const mauer = new Set();
+    ueberall(RADIUS, (dx, dz) => {
+        const r2 = dx * dx + dz * dz;
+        if (r2 > (RADIUS - 0.5) * (RADIUS - 0.5) && !istSaeule(dx, dz)) mauer.add(`${dx},${dz}`);
+    });
+    const fest = (dx, dz) => mauer.has(`${dx},${dz}`) || istSaeule(dx, dz);
+    for (const schluessel of mauer) {
+        const [dx, dz] = schluessel.split(",").map(Number);
+        const n = fest(dx, dz - 1), sued = fest(dx, dz + 1), o = fest(dx + 1, dz), w = fest(dx - 1, dz);
+        const gerade = (n && sued && !o && !w) || (o && w && !n && !sued);
+        setze(dx, 0, dz, "minecraft:stone_brick_wall", {
+            wall_connection_type_north: n ? "short" : "none", wall_connection_type_south: sued ? "short" : "none",
+            wall_connection_type_east: o ? "short" : "none", wall_connection_type_west: w ? "short" : "none",
+            wall_post_bit: !gerade,
+        });
+    }
+    for (const [dx, dz] of saeulen) {
+        for (let dy = 0; dy < DACH; dy++) setze(dx, dy, dz, dy === DACH - 1 ? "minecraft:chiseled_stone_bricks" : "minecraft:stone_bricks");
+    }
+
+    // Das Dach: drei Stufen, die oberste mit einer Glaskuppel.
+    ueberall(RADIUS + 1, (dx, dz) => setze(dx, DACH, dz, "minecraft:stone_bricks"));
+    ueberall(6, (dx, dz) => setze(dx, DACH + 1, dz, "minecraft:stone_bricks"));
+    ueberall(3, (dx, dz) => setze(dx, DACH + 2, dz, imKreis(dx, dz, 2) ? "minecraft:glass" : "minecraft:chiseled_stone_bricks"));
+    // Unter der Kuppel ist das Dach offen - so faellt das Licht durchs Glas
+    // bis auf den Boden. Auch das Loch in der mittleren Stufe.
+    ueberall(2, (dx, dz) => {
+        setze(dx, DACH, dz, "minecraft:air");
+        setze(dx, DACH + 1, dz, "minecraft:air");
+    });
+
+    // Je Seite: Sockel fuer die Statue, davor der Altar.
+    for (const s of SEITEN) {
+        setze(s.dx * 6, 0, s.dz * 6, "minecraft:chiseled_stone_bricks");
+        setze(s.dx * 4, 0, s.dz * 4, "fynn:tempelaltar",
+            { "fynn:rolle": s.rolle, "minecraft:cardinal_direction": s.zustand });
+    }
+
+    // Laternen haengen unter dem Dach, innen an jeder Saeule.
+    for (const [dx, dz] of saeulen) {
+        const ix = Math.round(dx * 6 / 7.5), iz = Math.round(dz * 6 / 7.5);
+        setze(ix, DACH - 1, iz, "minecraft:lantern", { hanging: true });
+    }
+
+    // Vorher: Luft ueber dem Boden, damit nichts im Weg steht.
+    const belegt = new Set(plan.map((p) => `${p.ort.x},${p.ort.y},${p.ort.z}`));
+    ueberall(RADIUS, (dx, dz) => {
+        for (let dy = 0; dy < DACH; dy++) {
+            const ort = { x: mitte.x + dx, y: mitte.y + dy, z: mitte.z + dz };
+            if (!belegt.has(`${ort.x},${ort.y},${ort.z}`)) plan.unshift({ ort, typ: "minecraft:air" });
+        }
+    });
+    return plan;
+}
+
+// Schnee, der trotz Dach hereinweht (am offenen Rand), wird weggeraeumt,
+// solange der Tempel steht - im Abenteuermodus kann man ihn nicht abbauen.
+function schneeWeg() {
+    try {
+        if (world.getDynamicProperty(STEHT) !== true) return;
+        const mitte = tempelOrt();
+        if (!mitte) return;
+        const dimension = world.getDimension("overworld");
+        for (let dx = -RADIUS; dx <= RADIUS; dx++) {
+            for (let dz = -RADIUS; dz <= RADIUS; dz++) {
+                if (!imKreis(dx, dz, RADIUS)) continue;
+                for (const dy of [0, 1]) {
+                    const block = dimension.getBlock({ x: mitte.x + dx, y: mitte.y + dy, z: mitte.z + dz });
+                    if (block?.typeId === "minecraft:snow_layer") block.setType("minecraft:air");
+                }
+            }
+        }
+    } catch (fehler) {
+        // Gegend nicht geladen
+    }
+}
+system.runInterval(schneeWeg, 40);
+
 // Das Tor in der Mitte: drei mal drei Bloecke, durch Boden und Insel.
 function torBloecke(mitte) {
     const ort = [];
     for (let dx = -1; dx <= 1; dx++) {
         for (let dz = -1; dz <= 1; dz++) {
-            for (let dy = -1; dy >= -5; dy--) ort.push({ x: mitte.x + dx, y: mitte.y + dy, z: mitte.z + dz });
+            for (let dy = -1; dy >= -7; dy--) ort.push({ x: mitte.x + dx, y: mitte.y + dy, z: mitte.z + dz });
         }
     }
     return ort;
@@ -234,7 +374,8 @@ function torZu(dimension, mitte) {
 }
 
 export function abbauen(dimension, mitte) {
-    for (const teil of bauplan(mitte)) {
+    // Beide Bauarten: Ein alter, eckiger Tempel geht so ebenfalls ganz weg.
+    for (const teil of [...bauplan(mitte), ...bauplanEckig(mitte)]) {
         if (teil.typ === "minecraft:air") continue;
         try {
             dimension.setBlockType(teil.ort, "minecraft:air");
@@ -274,6 +415,7 @@ function bauen(dimension, mitte) {
     }
     for (const s of SEITEN) statue(dimension, mitte, s);
     world.setDynamicProperty(STEHT, true);
+    world.setDynamicProperty(BAUART, RUND);
     if (fehler) console.warn(`Tempel: ${fehler} Bloecke nicht gesetzt`);
 }
 
@@ -454,6 +596,28 @@ function alterTempelWeg() {
     }
 }
 system.runInterval(alterTempelWeg, 100);
+
+// Steht noch der eckige Tempel ohne Dach (Fassung 4.32), wird er gegen den
+// runden getauscht, an derselben Stelle. Wer oben steht, landet danach
+// in der Mitte - dort ist beim runden Tempel sicher Platz.
+function eckigZuRund() {
+    try {
+        if (world.getDynamicProperty(STEHT) !== true || world.getDynamicProperty(BAUART) === RUND) return;
+        const mitte = tempelOrt();
+        const dimension = world.getDimension("overworld");
+        if (!mitte || !dimension.getBlock(mitte)) return;
+        const oben = world.getAllPlayers().filter((p) => {
+            const o = p.location;
+            return Math.abs(o.x - mitte.x) <= 10 && Math.abs(o.z - mitte.z) <= 10 && Math.abs(o.y - mitte.y) <= 6;
+        });
+        abbauen(dimension, mitte);
+        bauen(dimension, mitte);
+        for (const p of oben) p.teleport({ x: mitte.x + 0.5, y: mitte.y, z: mitte.z + 0.5 }, { dimension });
+    } catch (fehler) {
+        console.warn(`Tempel, Umbau: ${fehler}`);
+    }
+}
+system.runInterval(eckigZuRund, 100);
 
 async function tempelwahl(spieler, rolle, versuch = 0) {
     const r = ROLLEN[rolle];
