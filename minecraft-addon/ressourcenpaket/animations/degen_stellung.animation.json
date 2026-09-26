@@ -1,0 +1,58 @@
+{
+  "format_version": "1.10.0",
+  "animations": {
+    "animation.fynn.degen_stellung": {
+      "loop": true,
+      "override_previous_animation": false,
+      "bones": {
+        "body": {
+          "rotation": [
+            0.0,
+            "(40.0 - 25.0 * variable.degen_stoss) * math.max(variable.degen_stellung, variable.degen_stoss)",
+            0.0
+          ]
+        },
+        "rightarm": {
+          "rotation": [
+            "(-75.0 + -25.0 * variable.degen_stoss - this) * math.max(variable.degen_stellung, variable.degen_stoss)",
+            "(-25.0 + 20.0 * variable.degen_stoss - this) * math.max(variable.degen_stellung, variable.degen_stoss)",
+            0.0
+          ]
+        },
+        "leftarm": {
+          "rotation": [
+            "(25.0 + 20.0 * variable.degen_stoss - this) * math.max(variable.degen_stellung, variable.degen_stoss)",
+            0.0,
+            "(-35.0 + -20.0 * variable.degen_stoss - this) * math.max(variable.degen_stellung, variable.degen_stoss)"
+          ]
+        },
+        "rightleg": {
+          "rotation": [
+            "(-35.0 + -20.0 * variable.degen_stoss - this) * math.max(variable.degen_stellung, variable.degen_stoss)",
+            0.0,
+            0.0
+          ]
+        },
+        "leftleg": {
+          "rotation": [
+            "(20.0 + 15.0 * variable.degen_stoss - this) * math.max(variable.degen_stellung, variable.degen_stoss)",
+            0.0,
+            0.0
+          ]
+        },
+        "rightitem": {
+          "rotation": [
+            "55.0 * math.max(variable.degen_stellung, variable.degen_stoss)",
+            0.0,
+            0.0
+          ],
+          "position": [
+            0.0,
+            0.0,
+            "-4.6 * math.max(variable.degen_stellung, variable.degen_stoss)"
+          ]
+        }
+      }
+    }
+  }
+}

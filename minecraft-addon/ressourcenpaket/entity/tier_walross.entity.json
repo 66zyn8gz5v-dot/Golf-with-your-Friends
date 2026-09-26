@@ -1,0 +1,80 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:walross",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "braun": "textures/entity/tiere/walross_braun",
+        "jung": "textures/entity/tiere/walross_jung"
+      },
+      "geometry": {
+        "default": "geometry.fynn.walross"
+      },
+      "animations": {
+        "laufen": "animation.fynn.walross.laufen",
+        "stehen": "animation.fynn.walross.stehen",
+        "blick": "animation.common.look_at_target",
+        "kopfschuetteln": "animation.fynn.walross.kopfschuetteln",
+        "bruellen": "animation.fynn.walross.bruellen",
+        "wedeln": "animation.fynn.walross.wedeln",
+        "drehen": "animation.fynn.walross.drehen",
+        "schwimmen": "animation.fynn.walross.schwimmen",
+        "angriff": "animation.fynn.walross.angriff",
+        "jung": "animation.fynn.walross.jung",
+        "teile": "animation.fynn.walross.teile"
+      },
+      "scripts": {
+        "initialize": [
+          "variable.fynn_gier_alt = query.body_y_rotation;",
+          "variable.fynn_dreh = 0.0;",
+          "variable.fynn_zufall = math.random(0.0, 360.0);"
+        ],
+        "pre_animation": [
+          "variable.fynn_d = query.body_y_rotation - variable.fynn_gier_alt;",
+          "variable.fynn_d = variable.fynn_d > 180.0 ? variable.fynn_d - 360.0 : (variable.fynn_d < -180.0 ? variable.fynn_d + 360.0 : variable.fynn_d);",
+          "variable.fynn_gier_alt = query.body_y_rotation;",
+          "variable.fynn_dreh = math.lerp(variable.fynn_dreh, math.clamp(variable.fynn_d / math.max(query.delta_time, 0.01) / 20.0, -10.0, 10.0), 0.12);"
+        ],
+        "animate": [
+          {
+            "laufen": "!query.is_in_water ? math.clamp(query.modified_move_speed * 1.4, 0.0, 1.0) : 0.0"
+          },
+          {
+            "schwimmen": "query.is_in_water"
+          },
+          {
+            "stehen": "1.0 - math.clamp(query.modified_move_speed * 2.0, 0.0, 0.8)"
+          },
+          "blick",
+          "drehen",
+          {
+            "kopfschuetteln": "(1.0 - math.clamp(query.modified_move_speed * 3.0, 0.0, 1.0)) * math.clamp((math.sin(query.life_time * 19.0 + variable.fynn_zufall + 0) - 0.93) * 21.43, 0.0, 1.0)"
+          },
+          {
+            "bruellen": "(1.0 - math.clamp(query.modified_move_speed * 3.0, 0.0, 1.0)) * math.clamp((math.sin(query.life_time * 17.0 + variable.fynn_zufall + 60) - 0.9) * 15.0, 0.0, 1.0)"
+          },
+          {
+            "wedeln": "(1.0 - math.clamp(query.modified_move_speed * 3.0, 0.0, 1.0)) * math.clamp((math.sin(query.life_time * 23.0 + variable.fynn_zufall + 90) - 0.85) * 10.0, 0.0, 1.0)"
+          },
+          {
+            "angriff": "variable.attack_time > 0.0"
+          },
+          {
+            "jung": "query.is_baby"
+          },
+          "teile"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.fynn.walross"
+      ],
+      "spawn_egg": {
+        "texture": "walross_ei",
+        "texture_index": 0
+      }
+    }
+  }
+}

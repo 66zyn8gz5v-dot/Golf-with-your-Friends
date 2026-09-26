@@ -1,0 +1,492 @@
+{
+  "resource_pack_name": "sternenpaket",
+  "texture_name": "atlas.items",
+  "texture_data": {
+    "sternenstaub": {
+      "textures": "textures/items/sternenstaub"
+    },
+    "sternenklinge": {
+      "textures": "textures/items/sternenklinge"
+    },
+    "eisenklinge": {
+      "textures": "textures/items/eisenklinge"
+    },
+    "rohsilber": {
+      "textures": "textures/items/rohsilber"
+    },
+    "silberbarren": {
+      "textures": "textures/items/silberbarren"
+    },
+    "silbernugget": {
+      "textures": "textures/items/silbernugget"
+    },
+    "degen": {
+      "textures": "textures/items/degen"
+    },
+    "elektrumbarren": {
+      "textures": "textures/items/elektrumbarren"
+    },
+    "stahlbarren": {
+      "textures": "textures/items/stahlbarren"
+    },
+    "silberklinge": {
+      "textures": "textures/items/silberklinge"
+    },
+    "elektrumklinge": {
+      "textures": "textures/items/elektrumklinge"
+    },
+    "ritter_ei": {
+      "textures": "textures/items/ritter_ei"
+    },
+    "ritterschwert": {
+      "textures": "textures/items/ritterschwert"
+    },
+    "ritterhelm": {
+      "textures": "textures/items/ritterhelm"
+    },
+    "ritterbrustpanzer": {
+      "textures": "textures/items/ritterbrustpanzer"
+    },
+    "ritterbeinschutz": {
+      "textures": "textures/items/ritterbeinschutz"
+    },
+    "ritterstiefel": {
+      "textures": "textures/items/ritterstiefel"
+    },
+    "feuerstab": {
+      "textures": "textures/items/feuerstab"
+    },
+    "feuerstab_2": {
+      "textures": "textures/items/feuerstab_2"
+    },
+    "eisendolche": {
+      "textures": "textures/items/eisendolche"
+    },
+    "silberdolche": {
+      "textures": "textures/items/silberdolche"
+    },
+    "stahldolche": {
+      "textures": "textures/items/stahldolche"
+    },
+    "elektrumdolche": {
+      "textures": "textures/items/elektrumdolche"
+    },
+    "diamantdolche": {
+      "textures": "textures/items/diamantdolche"
+    },
+    "netheritdolche": {
+      "textures": "textures/items/netheritdolche"
+    },
+    "eisenpfeil": {
+      "textures": "textures/items/eisenpfeil"
+    },
+    "silberpfeil": {
+      "textures": "textures/items/silberpfeil"
+    },
+    "goldpfeil": {
+      "textures": "textures/items/goldpfeil"
+    },
+    "elektrumpfeil": {
+      "textures": "textures/items/elektrumpfeil"
+    },
+    "artefaktentasche": {
+      "textures": "textures/items/artefaktentasche"
+    },
+    "artefaktentasche_open_back": {
+      "textures": "textures/items/artefaktentasche_open_back"
+    },
+    "artefaktentasche_open_front": {
+      "textures": "textures/items/artefaktentasche_open_front"
+    },
+    "magierhut": {
+      "textures": "textures/items/magierhut"
+    },
+    "magierrobe": {
+      "textures": "textures/items/magierrobe"
+    },
+    "magierrock": {
+      "textures": "textures/items/magierrock"
+    },
+    "magierschuhe": {
+      "textures": "textures/items/magierschuhe"
+    },
+    "assassinenkapuze": {
+      "textures": "textures/items/assassinenkapuze"
+    },
+    "assassinenharnisch": {
+      "textures": "textures/items/assassinenharnisch"
+    },
+    "assassinenhose": {
+      "textures": "textures/items/assassinenhose"
+    },
+    "assassinenstiefel": {
+      "textures": "textures/items/assassinenstiefel"
+    },
+    "kriegshammer": {
+      "textures": "textures/items/kriegshammer"
+    },
+    "frostzepter": {
+      "textures": "textures/items/frostzepter"
+    },
+    "sturmbogen": {
+      "textures": "textures/items/sturmbogen"
+    },
+    "wurfstern": {
+      "textures": "textures/items/wurfstern"
+    },
+    "frostkugel": {
+      "textures": "textures/items/frostkugel"
+    },
+    "waldlaeuferkapuze": {
+      "textures": "textures/items/waldlaeuferkapuze"
+    },
+    "waldlaeuferwams": {
+      "textures": "textures/items/waldlaeuferwams"
+    },
+    "waldlaeuferhose": {
+      "textures": "textures/items/waldlaeuferhose"
+    },
+    "waldlaeuferstiefel": {
+      "textures": "textures/items/waldlaeuferstiefel"
+    },
+    "eisendolch_links": {
+      "textures": "textures/items/eisendolch_links"
+    },
+    "silberdolch_links": {
+      "textures": "textures/items/silberdolch_links"
+    },
+    "stahldolch_links": {
+      "textures": "textures/items/stahldolch_links"
+    },
+    "elektrumdolch_links": {
+      "textures": "textures/items/elektrumdolch_links"
+    },
+    "diamantdolch_links": {
+      "textures": "textures/items/diamantdolch_links"
+    },
+    "netheritdolch_links": {
+      "textures": "textures/items/netheritdolch_links"
+    },
+    "baerenfleisch": {
+      "textures": "textures/items/tiere/baerenfleisch"
+    },
+    "baerenbraten": {
+      "textures": "textures/items/tiere/baerenbraten"
+    },
+    "elchfleisch": {
+      "textures": "textures/items/tiere/elchfleisch"
+    },
+    "elchsteak": {
+      "textures": "textures/items/tiere/elchsteak"
+    },
+    "wildschweinfleisch": {
+      "textures": "textures/items/tiere/wildschweinfleisch"
+    },
+    "wildschweinbraten": {
+      "textures": "textures/items/tiere/wildschweinbraten"
+    },
+    "bisonfleisch": {
+      "textures": "textures/items/tiere/bisonfleisch"
+    },
+    "bisonsteak": {
+      "textures": "textures/items/tiere/bisonsteak"
+    },
+    "krokodilfleisch": {
+      "textures": "textures/items/tiere/krokodilfleisch"
+    },
+    "krokodilsteak": {
+      "textures": "textures/items/tiere/krokodilsteak"
+    },
+    "haifleisch": {
+      "textures": "textures/items/tiere/haifleisch"
+    },
+    "haisteak": {
+      "textures": "textures/items/tiere/haisteak"
+    },
+    "schwertfischfilet": {
+      "textures": "textures/items/tiere/schwertfischfilet"
+    },
+    "schwertfischsteak": {
+      "textures": "textures/items/tiere/schwertfischsteak"
+    },
+    "kalmarfleisch": {
+      "textures": "textures/items/tiere/kalmarfleisch"
+    },
+    "calamari": {
+      "textures": "textures/items/tiere/calamari"
+    },
+    "wildeintopf": {
+      "textures": "textures/items/tiere/wildeintopf"
+    },
+    "bisonburger": {
+      "textures": "textures/items/tiere/bisonburger"
+    },
+    "jaegerspiess": {
+      "textures": "textures/items/tiere/jaegerspiess"
+    },
+    "sushi": {
+      "textures": "textures/items/tiere/sushi"
+    },
+    "honigbraten": {
+      "textures": "textures/items/tiere/honigbraten"
+    },
+    "baerenfell": {
+      "textures": "textures/items/tiere/baerenfell"
+    },
+    "baerenkralle": {
+      "textures": "textures/items/tiere/baerenkralle"
+    },
+    "elchgeweih": {
+      "textures": "textures/items/tiere/elchgeweih"
+    },
+    "wildschweinhauer": {
+      "textures": "textures/items/tiere/wildschweinhauer"
+    },
+    "bisonfell": {
+      "textures": "textures/items/tiere/bisonfell"
+    },
+    "bisonhorn": {
+      "textures": "textures/items/tiere/bisonhorn"
+    },
+    "loewenfell": {
+      "textures": "textures/items/tiere/loewenfell"
+    },
+    "loewenzahn": {
+      "textures": "textures/items/tiere/loewenzahn"
+    },
+    "tigerfell": {
+      "textures": "textures/items/tiere/tigerfell"
+    },
+    "tigerkralle": {
+      "textures": "textures/items/tiere/tigerkralle"
+    },
+    "schneeleopardenfell": {
+      "textures": "textures/items/tiere/schneeleopardenfell"
+    },
+    "krokodilleder": {
+      "textures": "textures/items/tiere/krokodilleder"
+    },
+    "krokodilzahn": {
+      "textures": "textures/items/tiere/krokodilzahn"
+    },
+    "walbarte": {
+      "textures": "textures/items/tiere/walbarte"
+    },
+    "ambra": {
+      "textures": "textures/items/tiere/ambra"
+    },
+    "haizahn": {
+      "textures": "textures/items/tiere/haizahn"
+    },
+    "haihaut": {
+      "textures": "textures/items/tiere/haihaut"
+    },
+    "kalmarauge": {
+      "textures": "textures/items/tiere/kalmarauge"
+    },
+    "schwertfischspiess": {
+      "textures": "textures/items/tiere/schwertfischspiess"
+    },
+    "baerentalisman": {
+      "textures": "textures/items/tiere/baerentalisman"
+    },
+    "loewentalisman": {
+      "textures": "textures/items/tiere/loewentalisman"
+    },
+    "tigertalisman": {
+      "textures": "textures/items/tiere/tigertalisman"
+    },
+    "haitalisman": {
+      "textures": "textures/items/tiere/haitalisman"
+    },
+    "elchtalisman": {
+      "textures": "textures/items/tiere/elchtalisman"
+    },
+    "jaegerkette": {
+      "textures": "textures/items/tiere/jaegerkette"
+    },
+    "jagdhorn": {
+      "textures": "textures/items/tiere/jagdhorn"
+    },
+    "schwertfischklinge": {
+      "textures": "textures/items/tiere/schwertfischklinge"
+    },
+    "trank_der_tiefe": {
+      "textures": "textures/items/tiere/trank_der_tiefe"
+    },
+    "geweihbogen": {
+      "textures": "textures/items/geweihbogen"
+    },
+    "geweihbogen_pulling_0": {
+      "textures": "textures/items/geweihbogen_pulling_0"
+    },
+    "geweihbogen_pulling_1": {
+      "textures": "textures/items/geweihbogen_pulling_1"
+    },
+    "geweihbogen_pulling_2": {
+      "textures": "textures/items/geweihbogen_pulling_2"
+    },
+    "birne": {
+      "textures": "textures/items/obst/birne"
+    },
+    "pfirsich": {
+      "textures": "textures/items/obst/pfirsich"
+    },
+    "pflaume": {
+      "textures": "textures/items/obst/pflaume"
+    },
+    "obstsalat": {
+      "textures": "textures/items/obst/obstsalat"
+    },
+    "pflaumenkuchen": {
+      "textures": "textures/items/obst/pflaumenkuchen"
+    },
+    "apfelstrudel": {
+      "textures": "textures/items/obst/apfelstrudel"
+    },
+    "rubinklinge": {
+      "textures": "textures/items/rubinklinge"
+    },
+    "haizahnsaebel": {
+      "textures": "textures/items/haizahnsaebel"
+    },
+    "rubin": {
+      "textures": "textures/items/rubin"
+    },
+    "baerenkapuze": {
+      "textures": "textures/items/baerenkapuze"
+    },
+    "baerenfellmantel": {
+      "textures": "textures/items/baerenfellmantel"
+    },
+    "baerenfellhose": {
+      "textures": "textures/items/baerenfellhose"
+    },
+    "baerenfellstiefel": {
+      "textures": "textures/items/baerenfellstiefel"
+    },
+    "rucksack": {
+      "textures": "textures/items/rucksack"
+    },
+    "elefantensattel": {
+      "textures": "textures/items/elefantensattel"
+    },
+    "schwertfischschwert": {
+      "textures": "textures/items/tiere/schwertfischschwert"
+    },
+    "saphirschwert": {
+      "textures": "textures/items/saphirschwert"
+    },
+    "durendal": {
+      "textures": "textures/items/durendal"
+    },
+    "olifant": {
+      "textures": "textures/items/olifant"
+    },
+    "fehdehandschuh": {
+      "textures": "textures/items/fehdehandschuh"
+    },
+    "rabenklinge": {
+      "textures": "textures/items/rabenklinge"
+    },
+    "rauchbombe": {
+      "textures": "textures/items/rauchbombe"
+    },
+    "kopfgeldbrief": {
+      "textures": "textures/items/kopfgeldbrief"
+    },
+    "frostzahn": {
+      "textures": "textures/items/frostzahn"
+    },
+    "herz_des_winters": {
+      "textures": "textures/items/herz_des_winters"
+    },
+    "frostruf": {
+      "textures": "textures/items/frostruf"
+    },
+    "braunbaer_ei": {
+      "textures": "textures/items/braunbaer_ei"
+    },
+    "elch_ei": {
+      "textures": "textures/items/elch_ei"
+    },
+    "wildschwein_ei": {
+      "textures": "textures/items/wildschwein_ei"
+    },
+    "bison_ei": {
+      "textures": "textures/items/bison_ei"
+    },
+    "loewe_ei": {
+      "textures": "textures/items/loewe_ei"
+    },
+    "tiger_ei": {
+      "textures": "textures/items/tiger_ei"
+    },
+    "krokodil_ei": {
+      "textures": "textures/items/krokodil_ei"
+    },
+    "schneeleopard_ei": {
+      "textures": "textures/items/schneeleopard_ei"
+    },
+    "wal_ei": {
+      "textures": "textures/items/wal_ei"
+    },
+    "hai_ei": {
+      "textures": "textures/items/hai_ei"
+    },
+    "riesenkalmar_ei": {
+      "textures": "textures/items/riesenkalmar_ei"
+    },
+    "schwertfisch_ei": {
+      "textures": "textures/items/schwertfisch_ei"
+    },
+    "elefant_ei": {
+      "textures": "textures/items/elefant_ei"
+    },
+    "nashorn_ei": {
+      "textures": "textures/items/nashorn_ei"
+    },
+    "gorilla_ei": {
+      "textures": "textures/items/gorilla_ei"
+    },
+    "walross_ei": {
+      "textures": "textures/items/walross_ei"
+    },
+    "mantarochen_ei": {
+      "textures": "textures/items/mantarochen_ei"
+    },
+    "steinadler_ei": {
+      "textures": "textures/items/steinadler_ei"
+    },
+    "bandit_ei": {
+      "textures": "textures/items/bandit_ei"
+    },
+    "wilderer_ei": {
+      "textures": "textures/items/wilderer_ei"
+    },
+    "bandenchef_ei": {
+      "textures": "textures/items/bandenchef_ei"
+    },
+    "ritterhauptmann_ei": {
+      "textures": "textures/items/ritterhauptmann_ei"
+    },
+    "roland_ei": {
+      "textures": "textures/items/roland_ei"
+    },
+    "rabenfuerst_ei": {
+      "textures": "textures/items/rabenfuerst_ei"
+    },
+    "frostmammut_ei": {
+      "textures": "textures/items/frostmammut_ei"
+    },
+    "eiswolf_ei": {
+      "textures": "textures/items/eiswolf_ei"
+    },
+    "glimmerling_ei": {
+      "textures": "textures/items/glimmerling_ei"
+    },
+    "bosschronik": {
+      "textures": "textures/items/bosschronik"
+    }
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:loewe",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "loewe": "textures/entity/tiere/loewe_loewe",
+        "loewin": "textures/entity/tiere/loewe_loewin",
+        "junges": "textures/entity/tiere/loewe_junges"
+      },
+      "geometry": {
+        "default": "geometry.fynn.loewe"
+      },
+      "animations": {
+        "laufen": "animation.fynn.loewe.laufen",
+        "galopp": "animation.fynn.loewe.galopp",
+        "stehen": "animation.fynn.loewe.stehen",
+        "blick": "animation.common.look_at_target",
+        "kopfschuetteln": "animation.fynn.loewe.kopfschuetteln",
+        "schwanzschlag": "animation.fynn.loewe.schwanzschlag",
+        "drehen": "animation.fynn.loewe.drehen",
+        "angriff": "animation.fynn.loewe.angriff",
+        "jung": "animation.fynn.loewe.jung",
+        "teile": "animation.fynn.loewe.teile"
+      },
+      "scripts": {
+        "initialize": [
+          "variable.fynn_gier_alt = query.body_y_rotation;",
+          "variable.fynn_dreh = 0.0;",
+          "variable.fynn_zufall = math.random(0.0, 360.0);"
+        ],
+        "pre_animation": [
+          "variable.fynn_d = query.body_y_rotation - variable.fynn_gier_alt;",
+          "variable.fynn_d = variable.fynn_d > 180.0 ? variable.fynn_d - 360.0 : (variable.fynn_d < -180.0 ? variable.fynn_d + 360.0 : variable.fynn_d);",
+          "variable.fynn_gier_alt = query.body_y_rotation;",
+          "variable.fynn_dreh = math.lerp(variable.fynn_dreh, math.clamp(variable.fynn_d / math.max(query.delta_time, 0.01) / 20.0, -10.0, 10.0), 0.12);",
+          "variable.galopp = math.clamp((query.modified_move_speed - 0.95) * 4.0, 0.0, 1.0);"
+        ],
+        "animate": [
+          {
+            "laufen": "math.clamp(query.modified_move_speed * 1.4, 0.0, 1.0) * (1.0 - variable.galopp)"
+          },
+          {
+            "galopp": "variable.galopp"
+          },
+          {
+            "stehen": "1.0 - math.clamp(query.modified_move_speed * 2.0, 0.0, 0.8)"
+          },
+          "blick",
+          "drehen",
+          {
+            "kopfschuetteln": "(1.0 - math.clamp(query.modified_move_speed * 3.0, 0.0, 1.0)) * math.clamp((math.sin(query.life_time * 19.0 + variable.fynn_zufall + 0) - 0.93) * 21.43, 0.0, 1.0)"
+          },
+          {
+            "schwanzschlag": "math.clamp((math.sin(query.life_time * 31.0 + variable.fynn_zufall + 120) - 0.8) * 7.5, 0.0, 1.0)"
+          },
+          {
+            "angriff": "variable.attack_time > 0.0"
+          },
+          {
+            "jung": "query.is_baby"
+          },
+          "teile"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.fynn.loewe"
+      ],
+      "spawn_egg": {
+        "texture": "loewe_ei",
+        "texture_index": 0
+      }
+    }
+  }
+}

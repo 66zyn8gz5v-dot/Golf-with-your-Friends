@@ -1,0 +1,46 @@
+{
+  "format_version": "1.8.0",
+  "minecraft:spawn_rules": {
+    "description": {
+      "identifier": "fynn:riesenkalmar",
+      "population_control": "water_animal"
+    },
+    "conditions": [
+      {
+        "minecraft:weight": {
+          "default": 3
+        },
+        "minecraft:herd": {
+          "min_size": 1,
+          "max_size": 1
+        },
+        "minecraft:biome_filter": [
+          {
+            "test": "has_biome_tag",
+            "operator": "==",
+            "value": "ocean"
+          },
+          {
+            "test": "has_biome_tag",
+            "operator": "==",
+            "value": "deep"
+          }
+        ],
+        "minecraft:spawns_underwater": {},
+        "minecraft:height_filter": {
+          "min": -20,
+          "max": 40
+        },
+        "minecraft:density_limit": {
+          "surface": 4,
+          "underground": 1
+        },
+        "minecraft:brightness_filter": {
+          "min": 0,
+          "max": 6,
+          "adjust_for_weather": false
+        }
+      }
+    ]
+  }
+}

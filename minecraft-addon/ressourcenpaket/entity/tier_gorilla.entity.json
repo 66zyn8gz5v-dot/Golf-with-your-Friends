@@ -1,0 +1,85 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:gorilla",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "silberruecken": "textures/entity/tiere/gorilla_silberruecken",
+        "schwarz": "textures/entity/tiere/gorilla_schwarz",
+        "jung": "textures/entity/tiere/gorilla_jung"
+      },
+      "geometry": {
+        "default": "geometry.fynn.gorilla"
+      },
+      "animations": {
+        "laufen": "animation.fynn.gorilla.laufen",
+        "galopp": "animation.fynn.gorilla.galopp",
+        "stehen": "animation.fynn.gorilla.stehen",
+        "blick": "animation.common.look_at_target",
+        "trommeln": "animation.fynn.gorilla.trommeln",
+        "kopfschuetteln": "animation.fynn.gorilla.kopfschuetteln",
+        "kratzen": "animation.fynn.gorilla.kratzen",
+        "drehen": "animation.fynn.gorilla.drehen",
+        "angriff": "animation.fynn.gorilla.angriff",
+        "jung": "animation.fynn.gorilla.jung",
+        "gross0": "animation.fynn.gorilla.gross0"
+      },
+      "scripts": {
+        "initialize": [
+          "variable.fynn_gier_alt = query.body_y_rotation;",
+          "variable.fynn_dreh = 0.0;",
+          "variable.fynn_zufall = math.random(0.0, 360.0);"
+        ],
+        "pre_animation": [
+          "variable.fynn_d = query.body_y_rotation - variable.fynn_gier_alt;",
+          "variable.fynn_d = variable.fynn_d > 180.0 ? variable.fynn_d - 360.0 : (variable.fynn_d < -180.0 ? variable.fynn_d + 360.0 : variable.fynn_d);",
+          "variable.fynn_gier_alt = query.body_y_rotation;",
+          "variable.fynn_dreh = math.lerp(variable.fynn_dreh, math.clamp(variable.fynn_d / math.max(query.delta_time, 0.01) / 20.0, -10.0, 10.0), 0.12);",
+          "variable.galopp = math.clamp((query.modified_move_speed - 0.95) * 4.0, 0.0, 1.0);",
+          "variable.trommeln = math.clamp(math.sin(query.life_time * 22.0) * 5.0 - 4.2, 0.0, 1.0);"
+        ],
+        "animate": [
+          {
+            "laufen": "math.clamp(query.modified_move_speed * 1.4, 0.0, 1.0) * (1.0 - variable.galopp)"
+          },
+          {
+            "galopp": "variable.galopp"
+          },
+          {
+            "stehen": "1.0 - math.clamp(query.modified_move_speed * 2.0, 0.0, 0.8)"
+          },
+          "blick",
+          "drehen",
+          {
+            "kopfschuetteln": "(1.0 - math.clamp(query.modified_move_speed * 3.0, 0.0, 1.0)) * math.clamp((math.sin(query.life_time * 19.0 + variable.fynn_zufall + 0) - 0.93) * 21.43, 0.0, 1.0)"
+          },
+          {
+            "kratzen": "(1.0 - math.clamp(query.modified_move_speed * 3.0, 0.0, 1.0)) * math.clamp((math.sin(query.life_time * 11.0 + variable.fynn_zufall + 300) - 0.9) * 15.0, 0.0, 1.0)"
+          },
+          {
+            "trommeln": "(1.0 - math.clamp(query.modified_move_speed * 3.0, 0.0, 1.0)) * variable.trommeln"
+          },
+          {
+            "angriff": "variable.attack_time > 0.0"
+          },
+          {
+            "jung": "query.is_baby"
+          },
+          {
+            "gross0": "query.variant == 0 && !query.is_baby"
+          }
+        ]
+      },
+      "render_controllers": [
+        "controller.render.fynn.gorilla"
+      ],
+      "spawn_egg": {
+        "texture": "gorilla_ei",
+        "texture_index": 0
+      }
+    }
+  }
+}

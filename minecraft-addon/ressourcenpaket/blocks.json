@@ -1,0 +1,31 @@
+{
+  "format_version": [
+    1,
+    1,
+    0
+  ],
+  "fynn:silbererz": {
+    "sound": "stone"
+  },
+  "fynn:silberblock": {
+    "sound": "metal"
+  },
+  "fynn:rollenaltar": {
+    "sound": "stone"
+  },
+  "fynn:tempelaltar": {
+    "sound": "stone"
+  },
+  "fynn:rubinerz": {
+    "sound": "stone"
+  },
+  "fynn:tiefenrubinerz": {
+    "sound": "deepslate"
+  },
+  "fynn:rubinblock": {
+    "sound": "metal"
+  },
+  "fynn:weidenroeschen": {
+    "sound": "grass"
+  }
+}

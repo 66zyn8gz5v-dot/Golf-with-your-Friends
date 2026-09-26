@@ -1,0 +1,53 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:rabenfuerst",
+      "materials": {
+        "default": "entity_emissive_alpha"
+      },
+      "textures": {
+        "default": "textures/entity/rabenfuerst",
+        "entfesselt": "textures/entity/rabenfuerst_entfesselt"
+      },
+      "geometry": {
+        "default": "geometry.fynn.rabenfuerst"
+      },
+      "animations": {
+        "haltung": "animation.fynn.rabenfuerst.haltung",
+        "gang": "animation.fynn.rabenfuerst.gang",
+        "beben": "animation.fynn.rabenfuerst.beben",
+        "blick": "animation.fynn.rabenfuerst.blick",
+        "hieb_links": "animation.fynn.rabenfuerst.hieb_links",
+        "hieb_rechts": "animation.fynn.rabenfuerst.hieb_rechts",
+        "hieb_kreuz": "animation.fynn.rabenfuerst.hieb_kreuz",
+        "dolchfaecher": "animation.fynn.rabenfuerst.dolchfaecher",
+        "rauchbombe": "animation.fynn.rabenfuerst.rauchbombe",
+        "doppelgaenger": "animation.fynn.rabenfuerst.doppelgaenger",
+        "rabenschwarm": "animation.fynn.rabenfuerst.rabenschwarm",
+        "schattensprung": "animation.fynn.rabenfuerst.schattensprung",
+        "rabennacht": "animation.fynn.rabenfuerst.rabennacht",
+        "wechsel": "animation.fynn.rabenfuerst.wechsel",
+        "auftritt": "animation.fynn.rabenfuerst.auftritt",
+        "abschied": "animation.fynn.rabenfuerst.abschied",
+        "kampf": "controller.animation.fynn.rabenfuerst.kampf"
+      },
+      "scripts": {
+        "scale": "1.15",
+        "initialize": [
+          "variable.hieb = 0;"
+        ],
+        "animate": [
+          "kampf"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.fynn.rabenfuerst"
+      ],
+      "spawn_egg": {
+        "texture": "rabenfuerst_ei",
+        "texture_index": 0
+      }
+    }
+  }
+}

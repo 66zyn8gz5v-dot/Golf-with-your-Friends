@@ -1,0 +1,19 @@
+{
+  "format_version": "1.13.0",
+  "minecraft:feature_rules": {
+    "description": {
+      "identifier": "fynn:tiefenrubinerz_regel",
+      "places_feature": "fynn:tiefenrubinerz_streuung"
+    },
+    "conditions": {
+      "placement_pass": "underground_pass",
+      "minecraft:biome_filter": [
+        {
+          "test": "has_biome_tag",
+          "operator": "==",
+          "value": "overworld"
+        }
+      ]
+    }
+  }
+}

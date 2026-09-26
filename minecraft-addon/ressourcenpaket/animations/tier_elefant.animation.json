@@ -1,0 +1,509 @@
+{
+  "format_version": "1.10.0",
+  "animations": {
+    "animation.fynn.elefant.laufen": {
+      "anim_time_update": "query.modified_distance_moved",
+      "loop": true,
+      "bones": {
+        "leg2": {
+          "rotation": [
+            "math.cos(query.anim_time * 25.45 + 0.0) * 22.0",
+            0.0,
+            0.0
+          ]
+        },
+        "knie2": {
+          "rotation": [
+            "math.max(0.0, math.sin(query.anim_time * 25.45 + 0.0) - 0.15) * 44.7",
+            0.0,
+            0.0
+          ]
+        },
+        "leg0": {
+          "rotation": [
+            "math.cos(query.anim_time * 25.45 + -90.0) * 22.0",
+            0.0,
+            0.0
+          ]
+        },
+        "knie0": {
+          "rotation": [
+            "math.max(0.0, math.sin(query.anim_time * 25.45 + -90.0) - 0.15) * 44.7",
+            0.0,
+            0.0
+          ]
+        },
+        "leg3": {
+          "rotation": [
+            "math.cos(query.anim_time * 25.45 + -180.0) * 22.0",
+            0.0,
+            0.0
+          ]
+        },
+        "knie3": {
+          "rotation": [
+            "math.max(0.0, math.sin(query.anim_time * 25.45 + -180.0) - 0.15) * 44.7",
+            0.0,
+            0.0
+          ]
+        },
+        "leg1": {
+          "rotation": [
+            "math.cos(query.anim_time * 25.45 + -270.0) * 22.0",
+            0.0,
+            0.0
+          ]
+        },
+        "knie1": {
+          "rotation": [
+            "math.max(0.0, math.sin(query.anim_time * 25.45 + -270.0) - 0.15) * 44.7",
+            0.0,
+            0.0
+          ]
+        },
+        "body": {
+          "position": [
+            0.0,
+            "-math.cos(query.anim_time * 25.45 * 2.0) * 0.3",
+            0.0
+          ],
+          "rotation": [
+            "math.sin(query.anim_time * 25.45 * 2.0 - 90.0) * 0.8",
+            0.0,
+            "math.sin(query.anim_time * 25.45 - 45.0) * 1.4"
+          ]
+        },
+        "head": {
+          "rotation": [
+            "math.sin(query.anim_time * 25.45 * 2.0 - 30.0) * 2.5",
+            "math.sin(query.anim_time * 25.45 - 90.0) * 2.0",
+            0.0
+          ]
+        },
+        "tail": {
+          "rotation": [
+            "math.cos(query.anim_time * 25.45 * 2.0) * 3.0",
+            "math.sin(query.anim_time * 25.45 - 40) * 8",
+            0.0
+          ]
+        },
+        "ruessel1": {
+          "rotation": [
+            "math.sin(query.anim_time * 25.45 * 2.0) * 5.0",
+            "math.sin(query.anim_time * 25.45) * 12.0",
+            0.0
+          ]
+        },
+        "ruessel2": {
+          "rotation": [
+            "(math.sin(query.anim_time * 25.45 * 2.0) * 5.0) * 1.4",
+            "(math.sin(query.anim_time * 25.45) * 12.0) * 0.6",
+            0.0
+          ]
+        },
+        "ruessel3": {
+          "rotation": [
+            "math.sin(query.anim_time * 25.45 * 2.0 - 60.0) * 12.0",
+            0.0,
+            0.0
+          ]
+        },
+        "ohr_links": {
+          "rotation": [
+            0.0,
+            "-math.abs(math.sin(query.anim_time * 25.45)) * 10.0",
+            0.0
+          ]
+        },
+        "ohr_rechts": {
+          "rotation": [
+            0.0,
+            "math.abs(math.sin(query.anim_time * 25.45)) * 10.0",
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.elefant.galopp": {
+      "anim_time_update": "query.modified_distance_moved",
+      "loop": true,
+      "bones": {
+        "leg0": {
+          "rotation": [
+            "math.cos((query.anim_time * 25.45 * 0.8) + 0.0) * 30.0",
+            0.0,
+            0.0
+          ]
+        },
+        "knie0": {
+          "rotation": [
+            "math.max(0.0, math.sin((query.anim_time * 25.45 * 0.8) + 0.0) - 0.15) * 68.2",
+            0.0,
+            0.0
+          ]
+        },
+        "leg3": {
+          "rotation": [
+            "math.cos((query.anim_time * 25.45 * 0.8) + 0.0) * 30.0",
+            0.0,
+            0.0
+          ]
+        },
+        "knie3": {
+          "rotation": [
+            "math.max(0.0, math.sin((query.anim_time * 25.45 * 0.8) + 0.0) - 0.15) * 68.2",
+            0.0,
+            0.0
+          ]
+        },
+        "leg1": {
+          "rotation": [
+            "math.cos((query.anim_time * 25.45 * 0.8) + -180.0) * 30.0",
+            0.0,
+            0.0
+          ]
+        },
+        "knie1": {
+          "rotation": [
+            "math.max(0.0, math.sin((query.anim_time * 25.45 * 0.8) + -180.0) - 0.15) * 68.2",
+            0.0,
+            0.0
+          ]
+        },
+        "leg2": {
+          "rotation": [
+            "math.cos((query.anim_time * 25.45 * 0.8) + -180.0) * 30.0",
+            0.0,
+            0.0
+          ]
+        },
+        "knie2": {
+          "rotation": [
+            "math.max(0.0, math.sin((query.anim_time * 25.45 * 0.8) + -180.0) - 0.15) * 68.2",
+            0.0,
+            0.0
+          ]
+        },
+        "body": {
+          "position": [
+            0.0,
+            "-math.cos((query.anim_time * 25.45 * 0.8) * 2.0) * 0.6",
+            0.0
+          ],
+          "rotation": [
+            "math.sin((query.anim_time * 25.45 * 0.8) * 2.0) * 1.5",
+            0.0,
+            0.0
+          ]
+        },
+        "head": {
+          "rotation": [
+            "math.sin((query.anim_time * 25.45 * 0.8) * 2.0 + 60.0) * 3.0",
+            0.0,
+            0.0
+          ]
+        },
+        "tail": {
+          "rotation": [
+            "-12.0 + math.sin((query.anim_time * 25.45 * 0.8) * 2.0) * 6.0",
+            "math.sin((query.anim_time * 25.45 * 0.8)) * 8.0",
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.elefant.stehen": {
+      "loop": true,
+      "bones": {
+        "body": {
+          "scale": [
+            1.0,
+            "1.0 + math.sin(query.life_time * 60.0) * 0.012",
+            1.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(query.life_time * 21.0) * 1.2"
+          ]
+        },
+        "head": {
+          "rotation": [
+            "math.sin(query.life_time * 17.0) * 3.0",
+            "math.sin(query.life_time * 23.0) * 9.0 + math.sin(query.life_time * 61.0) * 3.0",
+            0.0
+          ]
+        },
+        "tail": {
+          "rotation": [
+            0.0,
+            "math.sin(query.life_time * 70.0 - 0) * 8",
+            0.0
+          ]
+        },
+        "ruessel1": {
+          "rotation": [
+            "math.sin(query.life_time * 40.0) * 8.0 - 4.0",
+            "math.sin(query.life_time * 27.0) * 10.0",
+            0.0
+          ]
+        },
+        "ruessel2": {
+          "rotation": [
+            "(math.sin(query.life_time * 40.0) * 8.0 - 4.0) * 1.4",
+            "(math.sin(query.life_time * 27.0) * 10.0) * 0.6",
+            0.0
+          ]
+        },
+        "ruessel3": {
+          "rotation": [
+            "math.sin(query.life_time * 55.0 - 80.0) * 18.0 - 12.0",
+            0.0,
+            0.0
+          ]
+        },
+        "ohr_links": {
+          "rotation": [
+            0.0,
+            "-(math.sin(query.life_time * 70.0) * 0.5 + 0.5) * 22.0",
+            0.0
+          ]
+        },
+        "ohr_rechts": {
+          "rotation": [
+            0.0,
+            "(math.sin(query.life_time * 70.0) * 0.5 + 0.5) * 22.0",
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.elefant.kopfschuetteln": {
+      "loop": true,
+      "bones": {
+        "head": {
+          "rotation": [
+            0.0,
+            "math.sin(query.life_time * 1100.0) * 9.0",
+            "math.sin(query.life_time * 1100.0 + 90.0) * 12.0"
+          ]
+        },
+        "ohr_links": {
+          "rotation": [
+            0.0,
+            "math.sin(query.life_time * 1100.0 + 60.0) * -25",
+            0.0
+          ]
+        },
+        "ohr_rechts": {
+          "rotation": [
+            0.0,
+            "math.sin(query.life_time * 1100.0 + 60.0) * 25",
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.elefant.schwanzschlag": {
+      "loop": true,
+      "bones": {
+        "tail": {
+          "rotation": [
+            "-10.0 - 0",
+            "math.sin(query.life_time * 700.0 - 0) * 30",
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.elefant.trompeten": {
+      "loop": true,
+      "bones": {
+        "head": {
+          "rotation": [
+            -22.0,
+            0.0,
+            0.0
+          ]
+        },
+        "ruessel1": {
+          "rotation": [
+            -85.0,
+            0.0,
+            0.0
+          ]
+        },
+        "ruessel2": {
+          "rotation": [
+            -55.0,
+            0.0,
+            0.0
+          ]
+        },
+        "ruessel3": {
+          "rotation": [
+            "-45.0 + math.sin(query.life_time * 900.0) * 8.0",
+            0.0,
+            0.0
+          ]
+        },
+        "kiefer": {
+          "rotation": [
+            22.0,
+            0.0,
+            0.0
+          ]
+        },
+        "ohr_links": {
+          "rotation": [
+            0.0,
+            -38.0,
+            0.0
+          ]
+        },
+        "ohr_rechts": {
+          "rotation": [
+            0.0,
+            38.0,
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.elefant.drehen": {
+      "loop": true,
+      "bones": {
+        "body": {
+          "rotation": [
+            0.0,
+            0.0,
+            "-variable.fynn_dreh * 0.8"
+          ]
+        },
+        "head": {
+          "rotation": [
+            0.0,
+            "variable.fynn_dreh * 1.6",
+            0.0
+          ]
+        },
+        "tail": {
+          "rotation": [
+            0.0,
+            "-variable.fynn_dreh * 1.5",
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.elefant.angriff": {
+      "loop": true,
+      "bones": {
+        "head": {
+          "rotation": [
+            "math.sin(variable.attack_time * 180.0) * 38.0",
+            0.0,
+            0.0
+          ]
+        },
+        "body": {
+          "rotation": [
+            "math.sin(variable.attack_time * 180.0) * 6.0",
+            0.0,
+            0.0
+          ],
+          "position": [
+            0.0,
+            0.0,
+            "-math.sin(variable.attack_time * 180.0) * 3.0"
+          ]
+        },
+        "leg2": {
+          "rotation": [
+            "math.sin(variable.attack_time * 180.0) * 30.0",
+            0.0,
+            0.0
+          ]
+        },
+        "leg3": {
+          "rotation": [
+            "math.sin(variable.attack_time * 180.0) * 30.0",
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.elefant.jung": {
+      "loop": true,
+      "bones": {
+        "head": {
+          "scale": [
+            1.2,
+            1.2,
+            1.02
+          ]
+        },
+        "leg0": {
+          "scale": [
+            1.1,
+            0.76,
+            1.1
+          ]
+        },
+        "leg1": {
+          "scale": [
+            1.1,
+            0.76,
+            1.1
+          ]
+        },
+        "leg2": {
+          "scale": [
+            1.1,
+            0.76,
+            1.1
+          ]
+        },
+        "leg3": {
+          "scale": [
+            1.1,
+            0.76,
+            1.1
+          ]
+        },
+        "body": {
+          "position": [
+            0.0,
+            -4.32,
+            0.0
+          ]
+        },
+        "tail": {
+          "scale": 0.7
+        }
+      }
+    },
+    "animation.fynn.elefant.riese": {
+      "loop": true,
+      "bones": {
+        "body": {
+          "scale": 1.4,
+          "position": [
+            0.0,
+            10.4,
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.elefant.teile": {
+      "loop": true,
+      "bones": {
+        "stosszaehne": {
+          "scale": "(!query.is_baby) ? 1.0 : 0.0"
+        }
+      }
+    }
+  }
+}

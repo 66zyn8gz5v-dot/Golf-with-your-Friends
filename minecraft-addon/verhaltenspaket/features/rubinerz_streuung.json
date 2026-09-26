@@ -1,0 +1,32 @@
+{
+  "format_version": "1.13.0",
+  "minecraft:scatter_feature": {
+    "description": {
+      "identifier": "fynn:rubinerz_streuung"
+    },
+    "places_feature": "fynn:rubinerz_ader",
+    "iterations": 6,
+    "project_input_to_floor": false,
+    "x": {
+      "distribution": "uniform",
+      "extent": [
+        0,
+        16
+      ]
+    },
+    "y": {
+      "distribution": "uniform",
+      "extent": [
+        0,
+        120
+      ]
+    },
+    "z": {
+      "distribution": "uniform",
+      "extent": [
+        0,
+        16
+      ]
+    }
+  }
+}

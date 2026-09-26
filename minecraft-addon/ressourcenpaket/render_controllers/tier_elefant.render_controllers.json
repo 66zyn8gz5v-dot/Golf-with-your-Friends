@@ -1,0 +1,29 @@
+{
+  "format_version": "1.8.0",
+  "render_controllers": {
+    "controller.render.fynn.elefant": {
+      "arrays": {
+        "textures": {
+          "Array.haut": [
+            "Texture.savanne",
+            "Texture.grau"
+          ]
+        }
+      },
+      "geometry": "Geometry.default",
+      "materials": [
+        {
+          "*": "Material.default"
+        }
+      ],
+      "textures": [
+        "query.is_baby ? Texture.kalb : Array.haut[query.variant]"
+      ],
+      "part_visibility": [
+        {
+          "saenfte": "query.is_saddled"
+        }
+      ]
+    }
+  }
+}

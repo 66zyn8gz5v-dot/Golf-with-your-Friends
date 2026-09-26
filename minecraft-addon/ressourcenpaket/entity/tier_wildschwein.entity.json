@@ -1,0 +1,79 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:wildschwein",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "erwachsen": "textures/entity/tiere/wildschwein_erwachsen",
+        "frischling": "textures/entity/tiere/wildschwein_frischling"
+      },
+      "geometry": {
+        "default": "geometry.fynn.wildschwein"
+      },
+      "animations": {
+        "laufen": "animation.fynn.wildschwein.laufen",
+        "galopp": "animation.fynn.wildschwein.galopp",
+        "stehen": "animation.fynn.wildschwein.stehen",
+        "blick": "animation.common.look_at_target",
+        "kopfschuetteln": "animation.fynn.wildschwein.kopfschuetteln",
+        "schwanzschlag": "animation.fynn.wildschwein.schwanzschlag",
+        "grasen": "animation.fynn.wildschwein.grasen",
+        "drehen": "animation.fynn.wildschwein.drehen",
+        "angriff": "animation.fynn.wildschwein.angriff",
+        "jung": "animation.fynn.wildschwein.jung"
+      },
+      "scripts": {
+        "initialize": [
+          "variable.fynn_gier_alt = query.body_y_rotation;",
+          "variable.fynn_dreh = 0.0;",
+          "variable.fynn_zufall = math.random(0.0, 360.0);"
+        ],
+        "pre_animation": [
+          "variable.fynn_d = query.body_y_rotation - variable.fynn_gier_alt;",
+          "variable.fynn_d = variable.fynn_d > 180.0 ? variable.fynn_d - 360.0 : (variable.fynn_d < -180.0 ? variable.fynn_d + 360.0 : variable.fynn_d);",
+          "variable.fynn_gier_alt = query.body_y_rotation;",
+          "variable.fynn_dreh = math.lerp(variable.fynn_dreh, math.clamp(variable.fynn_d / math.max(query.delta_time, 0.01) / 20.0, -10.0, 10.0), 0.12);",
+          "variable.galopp = math.clamp((query.modified_move_speed - 0.95) * 4.0, 0.0, 1.0);"
+        ],
+        "animate": [
+          {
+            "laufen": "math.clamp(query.modified_move_speed * 1.4, 0.0, 1.0) * (1.0 - variable.galopp)"
+          },
+          {
+            "galopp": "variable.galopp"
+          },
+          {
+            "stehen": "1.0 - math.clamp(query.modified_move_speed * 2.0, 0.0, 0.8)"
+          },
+          "blick",
+          "drehen",
+          {
+            "kopfschuetteln": "(1.0 - math.clamp(query.modified_move_speed * 3.0, 0.0, 1.0)) * math.clamp((math.sin(query.life_time * 19.0 + variable.fynn_zufall + 0) - 0.93) * 21.43, 0.0, 1.0)"
+          },
+          {
+            "schwanzschlag": "math.clamp((math.sin(query.life_time * 31.0 + variable.fynn_zufall + 120) - 0.8) * 7.5, 0.0, 1.0)"
+          },
+          {
+            "grasen": "(1.0 - math.clamp(query.modified_move_speed * 3.0, 0.0, 1.0)) * math.clamp((math.sin(query.life_time * 13.0 + variable.fynn_zufall + 200) - 0.7) * 5.0, 0.0, 1.0)"
+          },
+          {
+            "angriff": "variable.attack_time > 0.0"
+          },
+          {
+            "jung": "query.is_baby"
+          }
+        ]
+      },
+      "render_controllers": [
+        "controller.render.fynn.wildschwein"
+      ],
+      "spawn_egg": {
+        "texture": "wildschwein_ei",
+        "texture_index": 0
+      }
+    }
+  }
+}

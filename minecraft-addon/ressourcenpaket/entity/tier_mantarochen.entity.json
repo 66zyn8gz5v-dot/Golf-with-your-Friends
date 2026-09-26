@@ -1,0 +1,54 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:mantarochen",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "ozean": "textures/entity/tiere/mantarochen_ozean",
+        "riff": "textures/entity/tiere/mantarochen_riff"
+      },
+      "geometry": {
+        "default": "geometry.fynn.mantarochen"
+      },
+      "animations": {
+        "schwimmen": "animation.fynn.mantarochen.schwimmen",
+        "salto": "animation.fynn.mantarochen.salto",
+        "an_land": "animation.fynn.mantarochen.an_land"
+      },
+      "scripts": {
+        "initialize": [
+          "variable.fynn_gier_alt = query.body_y_rotation;",
+          "variable.fynn_dreh = 0.0;",
+          "variable.fynn_zufall = math.random(0.0, 360.0);"
+        ],
+        "pre_animation": [
+          "variable.fynn_d = query.body_y_rotation - variable.fynn_gier_alt;",
+          "variable.fynn_d = variable.fynn_d > 180.0 ? variable.fynn_d - 360.0 : (variable.fynn_d < -180.0 ? variable.fynn_d + 360.0 : variable.fynn_d);",
+          "variable.fynn_gier_alt = query.body_y_rotation;",
+          "variable.fynn_dreh = math.lerp(variable.fynn_dreh, math.clamp(variable.fynn_d / math.max(query.delta_time, 0.01) / 20.0, -10.0, 10.0), 0.12);"
+        ],
+        "animate": [
+          {
+            "schwimmen": "query.is_in_water"
+          },
+          {
+            "an_land": "!query.is_in_water"
+          },
+          {
+            "salto": "1.0"
+          }
+        ]
+      },
+      "render_controllers": [
+        "controller.render.fynn.mantarochen"
+      ],
+      "spawn_egg": {
+        "texture": "mantarochen_ei",
+        "texture_index": 0
+      }
+    }
+  }
+}

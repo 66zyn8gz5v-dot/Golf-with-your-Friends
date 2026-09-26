@@ -1,0 +1,131 @@
+{
+  "resource_pack_name": "sternenpaket",
+  "texture_name": "atlas.terrain",
+  "padding": 8,
+  "num_mip_levels": 4,
+  "texture_data": {
+    "silbererz": {
+      "textures": "textures/blocks/silbererz"
+    },
+    "silberblock": {
+      "textures": "textures/blocks/silberblock"
+    },
+    "feuerkasten_vorn": {
+      "textures": "textures/blocks/feuerkasten_vorn"
+    },
+    "feuerkasten_vorn_an": {
+      "textures": "textures/blocks/feuerkasten_vorn_an"
+    },
+    "feuerkasten_oben": {
+      "textures": "textures/blocks/feuerkasten_oben"
+    },
+    "feuerkasten_oben_an": {
+      "textures": "textures/blocks/feuerkasten_oben_an"
+    },
+    "feuerkasten_seite": {
+      "textures": "textures/blocks/feuerkasten_seite"
+    },
+    "feuerkasten_unten": {
+      "textures": "textures/blocks/feuerkasten_unten"
+    },
+    "feuerkasten_rund": {
+      "textures": "textures/blocks/feuerkasten_rund"
+    },
+    "feuerkasten_rund_an": {
+      "textures": "textures/blocks/feuerkasten_rund_an"
+    },
+    "tiegel_seite": {
+      "textures": "textures/blocks/tiegel_seite"
+    },
+    "tiegel_vorn": {
+      "textures": "textures/blocks/tiegel_vorn"
+    },
+    "tiegel_vorn_an": {
+      "textures": "textures/blocks/tiegel_vorn_an"
+    },
+    "tiegel_oben": {
+      "textures": "textures/blocks/tiegel_oben"
+    },
+    "tiegel_oben_an": {
+      "textures": "textures/blocks/tiegel_oben_an"
+    },
+    "tiegel_unten": {
+      "textures": "textures/blocks/tiegel_unten"
+    },
+    "rollenaltar_alle": {
+      "textures": "textures/blocks/rollenaltar_alle"
+    },
+    "rollenaltar_ritter": {
+      "textures": "textures/blocks/rollenaltar_ritter"
+    },
+    "rollenaltar_magier": {
+      "textures": "textures/blocks/rollenaltar_magier"
+    },
+    "rollenaltar_bogenschuetze": {
+      "textures": "textures/blocks/rollenaltar_bogenschuetze"
+    },
+    "rollenaltar_assassine": {
+      "textures": "textures/blocks/rollenaltar_assassine"
+    },
+    "obst_apfel_bluete": {
+      "textures": "textures/blocks/obst/obst_apfel_bluete"
+    },
+    "obst_apfel_1": {
+      "textures": "textures/blocks/obst/obst_apfel_1"
+    },
+    "obst_apfel_2": {
+      "textures": "textures/blocks/obst/obst_apfel_2"
+    },
+    "obst_apfel_3": {
+      "textures": "textures/blocks/obst/obst_apfel_3"
+    },
+    "obst_birne_bluete": {
+      "textures": "textures/blocks/obst/obst_birne_bluete"
+    },
+    "obst_birne_1": {
+      "textures": "textures/blocks/obst/obst_birne_1"
+    },
+    "obst_birne_2": {
+      "textures": "textures/blocks/obst/obst_birne_2"
+    },
+    "obst_birne_3": {
+      "textures": "textures/blocks/obst/obst_birne_3"
+    },
+    "obst_pfirsich_bluete": {
+      "textures": "textures/blocks/obst/obst_pfirsich_bluete"
+    },
+    "obst_pfirsich_1": {
+      "textures": "textures/blocks/obst/obst_pfirsich_1"
+    },
+    "obst_pfirsich_2": {
+      "textures": "textures/blocks/obst/obst_pfirsich_2"
+    },
+    "obst_pfirsich_3": {
+      "textures": "textures/blocks/obst/obst_pfirsich_3"
+    },
+    "obst_pflaume_bluete": {
+      "textures": "textures/blocks/obst/obst_pflaume_bluete"
+    },
+    "obst_pflaume_1": {
+      "textures": "textures/blocks/obst/obst_pflaume_1"
+    },
+    "obst_pflaume_2": {
+      "textures": "textures/blocks/obst/obst_pflaume_2"
+    },
+    "obst_pflaume_3": {
+      "textures": "textures/blocks/obst/obst_pflaume_3"
+    },
+    "rubinerz": {
+      "textures": "textures/blocks/rubinerz"
+    },
+    "tiefenrubinerz": {
+      "textures": "textures/blocks/tiefenrubinerz"
+    },
+    "rubinblock": {
+      "textures": "textures/blocks/rubinblock"
+    },
+    "weidenroeschen": {
+      "textures": "textures/blocks/weidenroeschen"
+    }
+  }
+}

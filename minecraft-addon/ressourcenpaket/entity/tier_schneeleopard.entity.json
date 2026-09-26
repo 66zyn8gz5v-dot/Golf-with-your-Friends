@@ -1,0 +1,75 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:schneeleopard",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "grau": "textures/entity/tiere/schneeleopard_grau",
+        "jung": "textures/entity/tiere/schneeleopard_jung"
+      },
+      "geometry": {
+        "default": "geometry.fynn.schneeleopard"
+      },
+      "animations": {
+        "laufen": "animation.fynn.schneeleopard.laufen",
+        "galopp": "animation.fynn.schneeleopard.galopp",
+        "stehen": "animation.fynn.schneeleopard.stehen",
+        "blick": "animation.common.look_at_target",
+        "kopfschuetteln": "animation.fynn.schneeleopard.kopfschuetteln",
+        "schwanzschlag": "animation.fynn.schneeleopard.schwanzschlag",
+        "drehen": "animation.fynn.schneeleopard.drehen",
+        "angriff": "animation.fynn.schneeleopard.angriff",
+        "jung": "animation.fynn.schneeleopard.jung"
+      },
+      "scripts": {
+        "initialize": [
+          "variable.fynn_gier_alt = query.body_y_rotation;",
+          "variable.fynn_dreh = 0.0;",
+          "variable.fynn_zufall = math.random(0.0, 360.0);"
+        ],
+        "pre_animation": [
+          "variable.fynn_d = query.body_y_rotation - variable.fynn_gier_alt;",
+          "variable.fynn_d = variable.fynn_d > 180.0 ? variable.fynn_d - 360.0 : (variable.fynn_d < -180.0 ? variable.fynn_d + 360.0 : variable.fynn_d);",
+          "variable.fynn_gier_alt = query.body_y_rotation;",
+          "variable.fynn_dreh = math.lerp(variable.fynn_dreh, math.clamp(variable.fynn_d / math.max(query.delta_time, 0.01) / 20.0, -10.0, 10.0), 0.12);",
+          "variable.galopp = math.clamp((query.modified_move_speed - 0.95) * 4.0, 0.0, 1.0);"
+        ],
+        "animate": [
+          {
+            "laufen": "math.clamp(query.modified_move_speed * 1.4, 0.0, 1.0) * (1.0 - variable.galopp)"
+          },
+          {
+            "galopp": "variable.galopp"
+          },
+          {
+            "stehen": "1.0 - math.clamp(query.modified_move_speed * 2.0, 0.0, 0.8)"
+          },
+          "blick",
+          "drehen",
+          {
+            "kopfschuetteln": "(1.0 - math.clamp(query.modified_move_speed * 3.0, 0.0, 1.0)) * math.clamp((math.sin(query.life_time * 19.0 + variable.fynn_zufall + 0) - 0.93) * 21.43, 0.0, 1.0)"
+          },
+          {
+            "schwanzschlag": "math.clamp((math.sin(query.life_time * 31.0 + variable.fynn_zufall + 120) - 0.8) * 7.5, 0.0, 1.0)"
+          },
+          {
+            "angriff": "variable.attack_time > 0.0"
+          },
+          {
+            "jung": "query.is_baby"
+          }
+        ]
+      },
+      "render_controllers": [
+        "controller.render.fynn.schneeleopard"
+      ],
+      "spawn_egg": {
+        "texture": "schneeleopard_ei",
+        "texture_index": 0
+      }
+    }
+  }
+}

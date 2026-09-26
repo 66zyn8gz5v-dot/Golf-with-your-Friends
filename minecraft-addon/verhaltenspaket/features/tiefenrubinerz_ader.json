@@ -1,0 +1,22 @@
+{
+  "format_version": "1.13.0",
+  "minecraft:ore_feature": {
+    "description": {
+      "identifier": "fynn:tiefenrubinerz_ader"
+    },
+    "count": 3,
+    "replace_rules": [
+      {
+        "places_block": "fynn:tiefenrubinerz",
+        "may_replace": [
+          {
+            "name": "minecraft:deepslate"
+          },
+          {
+            "name": "minecraft:tuff"
+          }
+        ]
+      }
+    ]
+  }
+}

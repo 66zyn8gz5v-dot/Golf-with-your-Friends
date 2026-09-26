@@ -1,0 +1,72 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:ritterhauptmann",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/ritterhauptmann",
+        "helmbusch": "textures/entity/ritter_helmbusch",
+        "saphirschwert": "textures/entity/ritter_saphirschwert"
+      },
+      "geometry": {
+        "default": "geometry.ritter",
+        "helmbusch": "geometry.fynn.ritter_helmbusch",
+        "saphirschwert": "geometry.fynn.ritter_saphirschwert"
+      },
+      "animations": {
+        "laufen": "animation.fynn.ritterhauptmann.laufen",
+        "stehen": "animation.fynn.ritterhauptmann.stehen",
+        "halten": "animation.fynn.ritterhauptmann.halten",
+        "hieb": "animation.fynn.ritterhauptmann.hieb",
+        "blick": "animation.common.look_at_target",
+        "klinge": "animation.fynn.ritter_saphirschwert.halten"
+      },
+      "scripts": {
+        "animate": [
+          {
+            "laufen": "math.clamp(query.modified_move_speed * 1.4, 0.0, 1.0)"
+          },
+          "stehen",
+          "blick",
+          {
+            "halten": "1.0"
+          },
+          {
+            "hieb": "variable.attack_time > 0.0 && 1.0"
+          },
+          "klinge"
+        ],
+        "variables": {
+          "variable.attack_time": "public",
+          "variable.fynn_schwert": "public",
+          "variable.fynn_waffe": "public",
+          "variable.fynn_schlag": "public",
+          "variable.fynn_hiebzeit": "public"
+        },
+        "initialize": [
+          "variable.fynn_schwert = 0.0;",
+          "variable.fynn_waffe = 0.0;",
+          "variable.fynn_schlag = 0.0;",
+          "variable.fynn_hiebzeit = 0.0;"
+        ],
+        "scale": "1.06"
+      },
+      "render_controllers": [
+        "controller.render.default",
+        {
+          "controller.render.fynn.ritter_helmbusch": "1.0"
+        },
+        {
+          "controller.render.fynn.ritter_saphirschwert": "1.0"
+        }
+      ],
+      "spawn_egg": {
+        "texture": "ritterhauptmann_ei",
+        "texture_index": 0
+      }
+    }
+  }
+}

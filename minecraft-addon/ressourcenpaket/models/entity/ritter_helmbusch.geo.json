@@ -1,0 +1,145 @@
+{
+  "format_version": "1.12.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.fynn.ritter_helmbusch",
+        "texture_width": 16,
+        "texture_height": 32,
+        "visible_bounds_width": 2,
+        "visible_bounds_height": 3,
+        "visible_bounds_offset": [
+          0,
+          1.5,
+          0
+        ]
+      },
+      "bones": [
+        {
+          "name": "body",
+          "pivot": [
+            0.0,
+            12.0,
+            0.0
+          ]
+        },
+        {
+          "name": "head",
+          "pivot": [
+            0.0,
+            24.0,
+            0.0
+          ],
+          "parent": "body"
+        },
+        {
+          "name": "busch",
+          "pivot": [
+            0.0,
+            32.0,
+            0.0
+          ],
+          "parent": "head",
+          "cubes": [
+            {
+              "origin": [
+                -1.0,
+                32.0,
+                -2.0
+              ],
+              "size": [
+                2,
+                2,
+                2
+              ],
+              "uv": [
+                8,
+                19
+              ]
+            },
+            {
+              "origin": [
+                -1.5,
+                34.0,
+                -3.0
+              ],
+              "size": [
+                3,
+                3,
+                4
+              ],
+              "uv": [
+                0,
+                0
+              ]
+            },
+            {
+              "origin": [
+                -1.5,
+                35.0,
+                1.0
+              ],
+              "size": [
+                3,
+                3,
+                3
+              ],
+              "uv": [
+                0,
+                7
+              ]
+            },
+            {
+              "origin": [
+                -1.5,
+                33.0,
+                4.0
+              ],
+              "size": [
+                3,
+                4,
+                2
+              ],
+              "uv": [
+                0,
+                13
+              ]
+            },
+            {
+              "origin": [
+                -1.0,
+                30.0,
+                5.5
+              ],
+              "size": [
+                2,
+                4,
+                2
+              ],
+              "uv": [
+                0,
+                19
+              ]
+            },
+            {
+              "origin": [
+                -0.5,
+                28.0,
+                6.0
+              ],
+              "size": [
+                1,
+                2,
+                1
+              ],
+              "uv": [
+                0,
+                25
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

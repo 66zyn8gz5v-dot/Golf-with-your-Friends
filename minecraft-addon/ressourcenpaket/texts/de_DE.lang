@@ -1,0 +1,469 @@
+## Namen der Gegenstaende
+item.fynn:sternenstaub=Sternenstaub
+item.fynn:sternenstaub.name=Sternenstaub
+item.fynn:sternenklinge=Sternenklinge
+item.fynn:sternenklinge.name=Sternenklinge
+
+## Was aus dem Berg kommt
+item.fynn:rohsilber=Rohsilber
+item.fynn:rohsilber.name=Rohsilber
+item.fynn:silberbarren=Silberbarren
+item.fynn:silberbarren.name=Silberbarren
+item.fynn:silbernugget=Silbernugget
+item.fynn:silbernugget.name=Silbernugget
+
+## Das eigene Fach im Kreativ-Inventar
+fynn:itemGroup.name.silber=Silber
+fynn:itemGroup.name.jagd=Talismane und Jagd
+fynn:itemGroup.name.tierbeute=Tierbeute
+fynn:itemGroup.name.legierungen=Legierungen
+
+## Was der Tiegel hergibt
+item.fynn:elektrumbarren=Elektrumbarren
+item.fynn:elektrumbarren.name=Elektrumbarren
+item.fynn:stahlbarren=Stahlbarren
+item.fynn:stahlbarren.name=Stahlbarren
+
+## Bloecke
+tile.fynn:silbererz.name=Silbererz
+tile.fynn:silberblock.name=Silberblock
+
+## Die Schmelze: unten befeuert, oben legiert
+tile.fynn:feuerkasten.name=Feuerkasten
+tile.fynn:schmelztiegel.name=Schmelztiegel
+
+## Wesen
+entity.fynn:glimmerling.name=Glimmerling
+item.spawn_egg.entity.fynn:glimmerling.name=Glimmerling
+
+## Die erste Waffe mit einem Koerper
+item.fynn:eisenklinge=Eisenklinge
+item.fynn:eisenklinge.name=Eisenklinge
+
+## Das Eisenschwert traegt unser Modell - also auch unseren Namen.
+## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
+## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
+## Auslieferung zuverlaessig laeuft.
+item.iron_sword.name=Stahlschwert 4.64
+
+## Die Stichwaffe
+item.fynn:degen=Degen 4.64
+item.fynn:degen.name=Degen 4.64
+
+
+
+## Fynns Silberklinge - die erste Waffe aus eigenem Metall. Silber hat kein
+## Gegenstueck in Minecraft, deshalb ist sie ein eigener Gegenstand und
+## haengt nicht an einem Vanilla-Schwert wie die fuenf anderen Klingen.
+item.fynn:silberklinge=Silberklinge
+item.fynn:silberklinge.name=Silberklinge
+
+## Das Grossschwert aus dem Vorlagenbild. Elektrum ist die Legierung aus
+## Gold und Silber - bisher gab es den Barren, aber nichts daraus.
+item.fynn:elektrumklinge=Elektrumklinge
+item.fynn:elektrumklinge.name=Elektrumklinge
+
+## Der Ritter, erste Sorte: nur mit Schwert
+entity.fynn:ritter.name=Ritter
+item.spawn_egg.entity.fynn:ritter.name=Ritter
+item.fynn:ritterschwert=Ritterschwert
+item.fynn:ritterschwert.name=Ritterschwert
+
+## Fynns Ritterruestung - zum Anziehen, mit Schulterplatten, Kinnschutz und Knieplatten.
+item.fynn:ritterhelm=Ritterhelm
+item.fynn:ritterhelm.name=Ritterhelm
+item.fynn:ritterbrustpanzer=Ritterbrustpanzer
+item.fynn:ritterbrustpanzer.name=Ritterbrustpanzer
+item.fynn:ritterbeinschutz=Ritterbeinschutz
+item.fynn:ritterbeinschutz.name=Ritterbeinschutz
+item.fynn:ritterstiefel=Ritterstiefel
+item.fynn:ritterstiefel.name=Ritterstiefel
+
+## Der Feuerstab - gepixelt von Fynns Cousin. Ein Sondergegenstand.
+item.fynn:feuerstab=Feuerstab
+item.fynn:feuerstab.name=Feuerstab
+item.fynn:feuerstab_2=Feuerstab II
+item.fynn:feuerstab_2.name=Feuerstab II
+entity.fynn:feuerball.name=Feuerball
+item.fynn:eisenpfeil=Eisenpfeil
+item.fynn:eisenpfeil.name=Eisenpfeil
+item.fynn:silberpfeil=Silberpfeil
+item.fynn:silberpfeil.name=Silberpfeil
+item.fynn:goldpfeil=Goldpfeil
+item.fynn:goldpfeil.name=Goldpfeil
+item.fynn:elektrumpfeil=Elektrumpfeil
+item.fynn:elektrumpfeil.name=Elektrumpfeil
+item.fynn:artefaktentasche=Artefaktentasche
+item.fynn:artefaktentasche.name=Artefaktentasche
+tile.fynn:rollenaltar.name=Rollenaltar
+tile.fynn:tempelaltar.name=Tempelaltar
+
+
+
+
+
+
+
+
+
+
+
+item.fynn:geweihbogen=Elchgeweihbogen
+item.fynn:geweihbogen.name=Elchgeweihbogen
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Obst
+item.fynn:birne=Birne
+item.fynn:birne.name=Birne
+item.fynn:pfirsich=Pfirsich
+item.fynn:pfirsich.name=Pfirsich
+item.fynn:pflaume=Pflaume
+item.fynn:pflaume.name=Pflaume
+item.fynn:obstsalat=Obstsalat
+item.fynn:obstsalat.name=Obstsalat
+item.fynn:pflaumenkuchen=Pflaumenkuchen
+item.fynn:pflaumenkuchen.name=Pflaumenkuchen
+item.fynn:apfelstrudel=Apfelstrudel
+item.fynn:apfelstrudel.name=Apfelstrudel
+tile.fynn:obst.name=Frucht am Zweig
+
+
+
+
+
+
+## Weidenroeschen
+tile.fynn:weidenroeschen.name=Weidenröschen
+
+
+## Elefantensattel
+item.fynn:elefantensattel=Elefantensattel
+item.fynn:elefantensattel.name=Elefantensattel
+
+
+
+entity.fynn:statue.name=Statue
+
+
+## Neue Ruestungen
+item.fynn:baerenkapuze=Bärenhelm
+item.fynn:baerenkapuze.name=Bärenhelm
+item.fynn:baerenfellmantel=Bärenpanzer
+item.fynn:baerenfellmantel.name=Bärenpanzer
+item.fynn:baerenfellhose=Bärenbeinschutz
+item.fynn:baerenfellhose.name=Bärenbeinschutz
+item.fynn:baerenfellstiefel=Bärenstiefel
+item.fynn:baerenfellstiefel.name=Bärenstiefel
+item.fynn:magierhut=Zauberhut
+item.fynn:magierhut.name=Zauberhut
+item.fynn:magierrobe=Magierrobe
+item.fynn:magierrobe.name=Magierrobe
+item.fynn:magierrock=Robenrock
+item.fynn:magierrock.name=Robenrock
+item.fynn:magierschuhe=Schnabelschuhe
+item.fynn:magierschuhe.name=Schnabelschuhe
+item.fynn:assassinenkapuze=Assassinenkapuze
+item.fynn:assassinenkapuze.name=Assassinenkapuze
+item.fynn:assassinenharnisch=Assassinenharnisch
+item.fynn:assassinenharnisch.name=Assassinenharnisch
+item.fynn:assassinenhose=Assassinenhose
+item.fynn:assassinenhose.name=Assassinenhose
+item.fynn:assassinenstiefel=Assassinenstiefel
+item.fynn:assassinenstiefel.name=Assassinenstiefel
+item.fynn:waldlaeuferkapuze=Waldläuferkapuze
+item.fynn:waldlaeuferkapuze.name=Waldläuferkapuze
+item.fynn:waldlaeuferwams=Waldläuferwams
+item.fynn:waldlaeuferwams.name=Waldläuferwams
+item.fynn:waldlaeuferhose=Waldläuferhose
+item.fynn:waldlaeuferhose.name=Waldläuferhose
+item.fynn:waldlaeuferstiefel=Waldläuferstiefel
+item.fynn:waldlaeuferstiefel.name=Waldläuferstiefel
+
+
+
+
+
+
+
+
+## Rucksack
+item.fynn:rucksack=Rucksack
+item.fynn:rucksack.name=Rucksack
+entity.fynn:rucksack_abgestellt.name=Rucksack
+
+
+
+
+
+item.fynn:eisendolche=Eisendolche
+item.fynn:eisendolche.name=Eisendolche
+item.fynn:eisendolch_links=Linker Eisendolch (Zweithand)
+item.fynn:eisendolch_links.name=Linker Eisendolch (Zweithand)
+item.fynn:silberdolche=Silberdolche
+item.fynn:silberdolche.name=Silberdolche
+item.fynn:silberdolch_links=Linker Silberdolch (Zweithand)
+item.fynn:silberdolch_links.name=Linker Silberdolch (Zweithand)
+item.fynn:stahldolche=Stahldolche
+item.fynn:stahldolche.name=Stahldolche
+item.fynn:stahldolch_links=Linker Stahldolch (Zweithand)
+item.fynn:stahldolch_links.name=Linker Stahldolch (Zweithand)
+item.fynn:elektrumdolche=Elektrumdolche
+item.fynn:elektrumdolche.name=Elektrumdolche
+item.fynn:elektrumdolch_links=Linker Elektrumdolch (Zweithand)
+item.fynn:elektrumdolch_links.name=Linker Elektrumdolch (Zweithand)
+item.fynn:diamantdolche=Diamantdolche
+item.fynn:diamantdolche.name=Diamantdolche
+item.fynn:diamantdolch_links=Linker Diamantdolch (Zweithand)
+item.fynn:diamantdolch_links.name=Linker Diamantdolch (Zweithand)
+item.fynn:netheritdolche=Netheritdolche
+item.fynn:netheritdolche.name=Netheritdolche
+item.fynn:netheritdolch_links=Linker Netheritdolch (Zweithand)
+item.fynn:netheritdolch_links.name=Linker Netheritdolch (Zweithand)
+
+
+
+
+
+
+## Tierfleisch
+item.fynn:baerenfleisch=Rohes Bärenfleisch
+item.fynn:baerenfleisch.name=Rohes Bärenfleisch
+item.fynn:baerenbraten=Bärenbraten
+item.fynn:baerenbraten.name=Bärenbraten
+item.fynn:elchfleisch=Rohes Elchfleisch
+item.fynn:elchfleisch.name=Rohes Elchfleisch
+item.fynn:elchsteak=Elchsteak
+item.fynn:elchsteak.name=Elchsteak
+item.fynn:wildschweinfleisch=Rohe Wildschweinkeule
+item.fynn:wildschweinfleisch.name=Rohe Wildschweinkeule
+item.fynn:wildschweinbraten=Wildschweinbraten
+item.fynn:wildschweinbraten.name=Wildschweinbraten
+item.fynn:bisonfleisch=Rohes Bisonfleisch
+item.fynn:bisonfleisch.name=Rohes Bisonfleisch
+item.fynn:bisonsteak=Bison-T-Bone
+item.fynn:bisonsteak.name=Bison-T-Bone
+item.fynn:krokodilfleisch=Rohes Krokodilfleisch
+item.fynn:krokodilfleisch.name=Rohes Krokodilfleisch
+item.fynn:krokodilsteak=Gegrilltes Krokodil
+item.fynn:krokodilsteak.name=Gegrilltes Krokodil
+item.fynn:haifleisch=Rohes Haifleisch
+item.fynn:haifleisch.name=Rohes Haifleisch
+item.fynn:haisteak=Haisteak
+item.fynn:haisteak.name=Haisteak
+item.fynn:schwertfischfilet=Rohes Schwertfischfilet
+item.fynn:schwertfischfilet.name=Rohes Schwertfischfilet
+item.fynn:schwertfischsteak=Gegrillter Schwertfisch
+item.fynn:schwertfischsteak.name=Gegrillter Schwertfisch
+item.fynn:kalmarfleisch=Rohes Kalmarfleisch
+item.fynn:kalmarfleisch.name=Rohes Kalmarfleisch
+item.fynn:calamari=Calamari
+item.fynn:calamari.name=Calamari
+
+## Gerichte
+item.fynn:wildeintopf=Wildeintopf
+item.fynn:wildeintopf.name=Wildeintopf
+item.fynn:bisonburger=Bisonburger
+item.fynn:bisonburger.name=Bisonburger
+item.fynn:jaegerspiess=Jägerspieß
+item.fynn:jaegerspiess.name=Jägerspieß
+item.fynn:sushi=Schwertfisch-Sushi
+item.fynn:sushi.name=Schwertfisch-Sushi
+item.fynn:honigbraten=Honigbraten
+item.fynn:honigbraten.name=Honigbraten
+
+## Was die Tiere hergeben
+item.fynn:baerenfell=Bärenfell
+item.fynn:baerenfell.name=Bärenfell
+item.fynn:baerenkralle=Bärenkralle
+item.fynn:baerenkralle.name=Bärenkralle
+item.fynn:elchgeweih=Elchgeweih
+item.fynn:elchgeweih.name=Elchgeweih
+item.fynn:wildschweinhauer=Wildschweinhauer
+item.fynn:wildschweinhauer.name=Wildschweinhauer
+item.fynn:bisonfell=Bisonfell
+item.fynn:bisonfell.name=Bisonfell
+item.fynn:bisonhorn=Bisonhorn
+item.fynn:bisonhorn.name=Bisonhorn
+item.fynn:loewenfell=Löwenfell
+item.fynn:loewenfell.name=Löwenfell
+item.fynn:loewenzahn=Löwenzahn
+item.fynn:loewenzahn.name=Löwenzahn
+item.fynn:tigerfell=Tigerfell
+item.fynn:tigerfell.name=Tigerfell
+item.fynn:tigerkralle=Tigerkralle
+item.fynn:tigerkralle.name=Tigerkralle
+item.fynn:schneeleopardenfell=Schneeleopardenfell
+item.fynn:schneeleopardenfell.name=Schneeleopardenfell
+item.fynn:krokodilleder=Krokodilleder
+item.fynn:krokodilleder.name=Krokodilleder
+item.fynn:krokodilzahn=Krokodilzahn
+item.fynn:krokodilzahn.name=Krokodilzahn
+item.fynn:walbarte=Walbarte
+item.fynn:walbarte.name=Walbarte
+item.fynn:ambra=Ambra
+item.fynn:ambra.name=Ambra
+item.fynn:haizahn=Haizahn
+item.fynn:haizahn.name=Haizahn
+item.fynn:haihaut=Haihaut
+item.fynn:haihaut.name=Haihaut
+item.fynn:kalmarauge=Riesenkalmarauge
+item.fynn:kalmarauge.name=Riesenkalmarauge
+item.fynn:schwertfischspiess=Schwertfisch-Schwert
+item.fynn:schwertfischspiess.name=Schwertfisch-Schwert
+
+## Talismane und Jagdzeug
+item.fynn:baerentalisman=Bärentalisman
+item.fynn:baerentalisman.name=Bärentalisman
+item.fynn:loewentalisman=Löwentalisman
+item.fynn:loewentalisman.name=Löwentalisman
+item.fynn:tigertalisman=Tigertalisman
+item.fynn:tigertalisman.name=Tigertalisman
+item.fynn:haitalisman=Haitalisman
+item.fynn:haitalisman.name=Haitalisman
+item.fynn:elchtalisman=Elchtalisman
+item.fynn:elchtalisman.name=Elchtalisman
+item.fynn:jaegerkette=Jägerkette
+item.fynn:jaegerkette.name=Jägerkette
+item.fynn:jagdhorn=Jagdhorn
+item.fynn:jagdhorn.name=Jagdhorn
+item.fynn:schwertfischklinge=Schwertfischklinge
+item.fynn:schwertfischklinge.name=Schwertfischklinge
+item.fynn:schwertfischschwert=Schwertfischschwert
+item.fynn:schwertfischschwert.name=Schwertfischschwert
+item.fynn:trank_der_tiefe=Trank der Tiefe
+item.fynn:trank_der_tiefe.name=Trank der Tiefe
+item.fynn:kriegshammer=Kriegshammer
+item.fynn:frostzepter=Frostzepter
+item.fynn:sturmbogen=Sturmbogen
+item.fynn:wurfstern=Wurfstern
+item.fynn:kriegshammer.name=Kriegshammer
+item.fynn:frostzepter.name=Frostzepter
+item.fynn:sturmbogen.name=Sturmbogen
+item.fynn:wurfstern.name=Wurfstern
+entity.fynn:frostkugel.name=Frostkugel
+entity.fynn:wurfstern.name=Wurfstern
+
+## Rubin und neue Schwerter
+item.fynn:rubin=Rubin
+item.fynn:rubin.name=Rubin
+item.fynn:rubinklinge=Rubinklinge
+item.fynn:rubinklinge.name=Rubinklinge
+item.fynn:haizahnsaebel=Haizahnsäbel
+item.fynn:haizahnsaebel.name=Haizahnsäbel
+tile.fynn:rubinerz.name=Rubinerz
+tile.fynn:tiefenrubinerz.name=Tiefenschiefer-Rubinerz
+tile.fynn:rubinblock.name=Rubinblock
+
+
+
+
+
+
+## Sir Roland
+item.fynn:durendal=Durendal
+item.fynn:durendal.name=Durendal
+item.fynn:olifant=Olifant
+item.fynn:olifant.name=Olifant
+item.fynn:fehdehandschuh=Fehdehandschuh
+item.fynn:fehdehandschuh.name=Fehdehandschuh
+entity.fynn:roland.name=Sir Roland
+item.spawn_egg.entity.fynn:roland.name=Sir Roland von Ronceval
+
+
+## Die Tiere
+entity.fynn:braunbaer.name=Braunbär
+item.spawn_egg.entity.fynn:braunbaer.name=Braunbär-Spawn-Ei
+entity.fynn:elch.name=Elch
+item.spawn_egg.entity.fynn:elch.name=Elch-Spawn-Ei
+entity.fynn:wildschwein.name=Wildschwein
+item.spawn_egg.entity.fynn:wildschwein.name=Wildschwein-Spawn-Ei
+entity.fynn:bison.name=Bison
+item.spawn_egg.entity.fynn:bison.name=Bison-Spawn-Ei
+entity.fynn:loewe.name=Löwe
+item.spawn_egg.entity.fynn:loewe.name=Löwe-Spawn-Ei
+entity.fynn:tiger.name=Tiger
+item.spawn_egg.entity.fynn:tiger.name=Tiger-Spawn-Ei
+entity.fynn:krokodil.name=Krokodil
+item.spawn_egg.entity.fynn:krokodil.name=Krokodil-Spawn-Ei
+entity.fynn:schneeleopard.name=Schneeleopard
+item.spawn_egg.entity.fynn:schneeleopard.name=Schneeleopard-Spawn-Ei
+entity.fynn:wal.name=Buckelwal
+item.spawn_egg.entity.fynn:wal.name=Buckelwal-Spawn-Ei
+entity.fynn:hai.name=Hai
+item.spawn_egg.entity.fynn:hai.name=Hai-Spawn-Ei
+entity.fynn:riesenkalmar.name=Riesenkalmar
+item.spawn_egg.entity.fynn:riesenkalmar.name=Riesenkalmar-Spawn-Ei
+entity.fynn:schwertfisch.name=Schwertfisch
+item.spawn_egg.entity.fynn:schwertfisch.name=Schwertfisch-Spawn-Ei
+entity.fynn:elefant.name=Elefant
+item.spawn_egg.entity.fynn:elefant.name=Elefant-Spawn-Ei
+entity.fynn:nashorn.name=Nashorn
+item.spawn_egg.entity.fynn:nashorn.name=Nashorn-Spawn-Ei
+entity.fynn:gorilla.name=Gorilla
+item.spawn_egg.entity.fynn:gorilla.name=Gorilla-Spawn-Ei
+entity.fynn:walross.name=Walross
+item.spawn_egg.entity.fynn:walross.name=Walross-Spawn-Ei
+entity.fynn:mantarochen.name=Mantarochen
+item.spawn_egg.entity.fynn:mantarochen.name=Mantarochen-Spawn-Ei
+entity.fynn:steinadler.name=Steinadler
+item.spawn_egg.entity.fynn:steinadler.name=Steinadler-Spawn-Ei
+
+## Banditen
+entity.fynn:bandit.name=Bandit
+item.spawn_egg.entity.fynn:bandit.name=Bandit-Spawn-Ei
+entity.fynn:wilderer.name=Wilderer
+item.spawn_egg.entity.fynn:wilderer.name=Wilderer-Spawn-Ei
+entity.fynn:bandenchef.name=Bandenchef
+item.spawn_egg.entity.fynn:bandenchef.name=Bandenchef-Spawn-Ei
+
+## Ritterorden
+entity.fynn:ritterhauptmann.name=Ritterhauptmann
+item.spawn_egg.entity.fynn:ritterhauptmann.name=Ritterhauptmann
+item.fynn:saphirschwert=Saphirschwert
+item.fynn:saphirschwert.name=Saphirschwert
+
+## Morvan, der Rabenfuerst
+entity.fynn:rabenfuerst.name=Morvan
+item.spawn_egg.entity.fynn:rabenfuerst.name=Morvan, der Rabenfürst
+entity.fynn:schattendoppelgaenger.name=Schattendoppelgänger
+item.fynn:rabenklinge=Rabenklinge
+item.fynn:rabenklinge.name=Rabenklinge
+item.fynn:rauchbombe=Rauchbombe
+item.fynn:rauchbombe.name=Rauchbombe
+item.fynn:kopfgeldbrief=Kopfgeldbrief
+item.fynn:kopfgeldbrief.name=Kopfgeldbrief
+
+## Hrimgar, das Frostmammut
+entity.fynn:frostmammut.name=Hrimgar
+item.spawn_egg.entity.fynn:frostmammut.name=Hrimgar, das Frostmammut
+entity.fynn:eiswolf.name=Eiswolf
+item.spawn_egg.entity.fynn:eiswolf.name=Eiswolf
+item.fynn:frostzahn=Frostzahn
+item.fynn:frostzahn.name=Frostzahn
+item.fynn:herz_des_winters=Herz des Winters
+item.fynn:herz_des_winters.name=Herz des Winters
+item.fynn:frostruf=Frostruf
+item.fynn:frostruf.name=Frostruf
+
+## Chronik der Bosse
+item.fynn:bosschronik=Chronik der Bosse

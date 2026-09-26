@@ -1,0 +1,34 @@
+{
+  "format_version": "1.12",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "fynn:trank_der_tiefe"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:glass_bottle"
+      },
+      {
+        "item": "fynn:kalmarauge"
+      },
+      {
+        "item": "fynn:ambra"
+      },
+      {
+        "item": "minecraft:prismarine_crystals"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "minecraft:glass_bottle"
+      }
+    ],
+    "result": {
+      "item": "fynn:trank_der_tiefe",
+      "count": 1
+    }
+  }
+}

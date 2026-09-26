@@ -1,0 +1,36 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "fynn:fehdehandschuh"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "s s",
+      "sgs",
+      " l "
+    ],
+    "key": {
+      "s": {
+        "item": "fynn:stahlbarren"
+      },
+      "g": {
+        "item": "minecraft:gold_ingot"
+      },
+      "l": {
+        "item": "minecraft:lapis_lazuli"
+      }
+    },
+    "unlock": [
+      {
+        "item": "fynn:stahlbarren"
+      }
+    ],
+    "result": {
+      "item": "fynn:fehdehandschuh",
+      "count": 1
+    }
+  }
+}

@@ -1,0 +1,195 @@
+{
+  "format_version": "1.16.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.baerenfellmantel",
+        "texture_width": 64,
+        "texture_height": 128,
+        "visible_bounds_width": 3,
+        "visible_bounds_height": 3.5,
+        "visible_bounds_offset": [
+          0,
+          1.5,
+          0
+        ]
+      },
+      "bones": [
+        {
+          "name": "body",
+          "pivot": [
+            0.0,
+            24.0,
+            0.0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                12.0,
+                -2.0
+              ],
+              "size": [
+                8,
+                12,
+                4
+              ],
+              "uv": [
+                0,
+                16
+              ],
+              "inflate": 1.0
+            },
+            {
+              "origin": [
+                -5.0,
+                21.5,
+                -3.5
+              ],
+              "size": [
+                10,
+                3,
+                7
+              ],
+              "uv": [
+                0,
+                32
+              ],
+              "inflate": 0.3
+            },
+            {
+              "origin": [
+                2.0,
+                16.5,
+                -4.0
+              ],
+              "size": [
+                2,
+                5,
+                1
+              ],
+              "uv": [
+                0,
+                64
+              ]
+            },
+            {
+              "origin": [
+                -4.0,
+                16.5,
+                -4.0
+              ],
+              "size": [
+                2,
+                5,
+                1
+              ],
+              "uv": [
+                6,
+                64
+              ]
+            },
+            {
+              "origin": [
+                -4.0,
+                12.0,
+                -2.0
+              ],
+              "size": [
+                8,
+                2,
+                4
+              ],
+              "uv": [
+                18,
+                57
+              ],
+              "inflate": 1.3
+            }
+          ]
+        },
+        {
+          "name": "umhang",
+          "pivot": [
+            0.0,
+            24.0,
+            3.7
+          ],
+          "parent": "body",
+          "cubes": [
+            {
+              "origin": [
+                -5.0,
+                16.0,
+                3.2
+              ],
+              "size": [
+                10,
+                8,
+                1
+              ],
+              "uv": [
+                34,
+                32
+              ]
+            }
+          ]
+        },
+        {
+          "name": "umhang_mitte",
+          "pivot": [
+            0.0,
+            16.0,
+            3.7
+          ],
+          "parent": "umhang",
+          "cubes": [
+            {
+              "origin": [
+                -5.0,
+                10.0,
+                3.2
+              ],
+              "size": [
+                10,
+                6,
+                1
+              ],
+              "uv": [
+                0,
+                50
+              ]
+            }
+          ]
+        },
+        {
+          "name": "umhang_unten",
+          "pivot": [
+            0.0,
+            10.0,
+            3.7
+          ],
+          "parent": "umhang_mitte",
+          "cubes": [
+            {
+              "origin": [
+                -5.0,
+                5.0,
+                3.2
+              ],
+              "size": [
+                10,
+                5,
+                1
+              ],
+              "uv": [
+                42,
+                57
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

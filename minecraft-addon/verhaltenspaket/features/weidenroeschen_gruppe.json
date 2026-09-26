@@ -1,0 +1,29 @@
+{
+  "format_version": "1.13.0",
+  "minecraft:scatter_feature": {
+    "description": {
+      "identifier": "fynn:weidenroeschen_gruppe"
+    },
+    "places_feature": "fynn:weidenroeschen_einzeln",
+    "iterations": 7,
+    "scatter_chance": {
+      "numerator": 1,
+      "denominator": 5
+    },
+    "x": {
+      "distribution": "uniform",
+      "extent": [
+        0,
+        15
+      ]
+    },
+    "y": "query.heightmap(variable.worldx, variable.worldz)",
+    "z": {
+      "distribution": "uniform",
+      "extent": [
+        0,
+        15
+      ]
+    }
+  }
+}

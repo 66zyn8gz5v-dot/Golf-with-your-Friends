@@ -1,0 +1,214 @@
+{
+  "format_version": "1.10.0",
+  "animation_controllers": {
+    "controller.animation.fynn.frostmammut.kampf": {
+      "initial_state": "bereit",
+      "states": {
+        "bereit": {
+          "animations": [
+            "haltung",
+            {
+              "gang": "math.clamp(query.modified_move_speed * 2.5, 0.0, 1.0)"
+            }
+          ],
+          "transitions": [
+            {
+              "angriff_1": "query.property('fynn:angriff') == 1"
+            },
+            {
+              "angriff_2": "query.property('fynn:angriff') == 2"
+            },
+            {
+              "angriff_3": "query.property('fynn:angriff') == 3"
+            },
+            {
+              "angriff_4": "query.property('fynn:angriff') == 4"
+            },
+            {
+              "angriff_5": "query.property('fynn:angriff') == 5"
+            },
+            {
+              "angriff_6": "query.property('fynn:angriff') == 6"
+            },
+            {
+              "angriff_7": "query.property('fynn:angriff') == 7"
+            },
+            {
+              "angriff_8": "query.property('fynn:angriff') == 8"
+            },
+            {
+              "angriff_9": "query.property('fynn:angriff') == 9"
+            },
+            {
+              "angriff_10": "query.property('fynn:angriff') == 10"
+            },
+            {
+              "hieb": "variable.attack_time > 0.0"
+            }
+          ],
+          "blend_transition": 0.2
+        },
+        "hieb": {
+          "on_entry": [
+            "variable.hieb = math.mod(variable.hieb + 1, 2);"
+          ],
+          "animations": [
+            {
+              "hieb_kopf": "variable.hieb == 0"
+            },
+            {
+              "hieb_stampf": "variable.hieb == 1"
+            }
+          ],
+          "transitions": [
+            {
+              "angriff_1": "query.property('fynn:angriff') == 1"
+            },
+            {
+              "angriff_2": "query.property('fynn:angriff') == 2"
+            },
+            {
+              "angriff_3": "query.property('fynn:angriff') == 3"
+            },
+            {
+              "angriff_4": "query.property('fynn:angriff') == 4"
+            },
+            {
+              "angriff_5": "query.property('fynn:angriff') == 5"
+            },
+            {
+              "angriff_6": "query.property('fynn:angriff') == 6"
+            },
+            {
+              "angriff_7": "query.property('fynn:angriff') == 7"
+            },
+            {
+              "angriff_8": "query.property('fynn:angriff') == 8"
+            },
+            {
+              "angriff_9": "query.property('fynn:angriff') == 9"
+            },
+            {
+              "angriff_10": "query.property('fynn:angriff') == 10"
+            },
+            {
+              "bereit": "query.all_animations_finished"
+            }
+          ],
+          "blend_transition": 0.12
+        },
+        "angriff_1": {
+          "animations": [
+            "ansturm"
+          ],
+          "transitions": [
+            {
+              "bereit": "query.property('fynn:angriff') != 1"
+            }
+          ],
+          "blend_transition": 0.15
+        },
+        "angriff_2": {
+          "animations": [
+            "stampfen"
+          ],
+          "transitions": [
+            {
+              "bereit": "query.property('fynn:angriff') != 2"
+            }
+          ],
+          "blend_transition": 0.15
+        },
+        "angriff_3": {
+          "animations": [
+            "stosszahnfeger"
+          ],
+          "transitions": [
+            {
+              "bereit": "query.property('fynn:angriff') != 3"
+            }
+          ],
+          "blend_transition": 0.15
+        },
+        "angriff_4": {
+          "animations": [
+            "eiszapfenregen"
+          ],
+          "transitions": [
+            {
+              "bereit": "query.property('fynn:angriff') != 4"
+            }
+          ],
+          "blend_transition": 0.15
+        },
+        "angriff_5": {
+          "animations": [
+            "ruesselschleuder"
+          ],
+          "transitions": [
+            {
+              "bereit": "query.property('fynn:angriff') != 5"
+            }
+          ],
+          "blend_transition": 0.15
+        },
+        "angriff_6": {
+          "animations": [
+            "frostatem"
+          ],
+          "transitions": [
+            {
+              "bereit": "query.property('fynn:angriff') != 6"
+            }
+          ],
+          "blend_transition": 0.15
+        },
+        "angriff_7": {
+          "animations": [
+            "eiswoelfe"
+          ],
+          "transitions": [
+            {
+              "bereit": "query.property('fynn:angriff') != 7"
+            }
+          ],
+          "blend_transition": 0.15
+        },
+        "angriff_8": {
+          "animations": [
+            "wechsel",
+            "beben"
+          ],
+          "transitions": [
+            {
+              "bereit": "query.property('fynn:angriff') != 8"
+            }
+          ],
+          "blend_transition": 0.15
+        },
+        "angriff_9": {
+          "animations": [
+            "auftritt"
+          ],
+          "transitions": [
+            {
+              "bereit": "query.property('fynn:angriff') != 9"
+            }
+          ],
+          "blend_transition": 0.15
+        },
+        "angriff_10": {
+          "animations": [
+            "abschied"
+          ],
+          "transitions": [
+            {
+              "bereit": "query.property('fynn:angriff') != 10"
+            }
+          ],
+          "blend_transition": 0.15
+        }
+      }
+    }
+  }
+}

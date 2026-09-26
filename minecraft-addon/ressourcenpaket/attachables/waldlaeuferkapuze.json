@@ -1,0 +1,32 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:attachable": {
+    "description": {
+      "identifier": "fynn:waldlaeuferkapuze",
+      "materials": {
+        "default": "armor",
+        "enchanted": "armor_enchanted"
+      },
+      "textures": {
+        "default": "textures/models/armor/waldlaeufer_stoff",
+        "enchanted": "textures/misc/enchanted_item_glint"
+      },
+      "geometry": {
+        "default": "geometry.waldlaeuferkapuze"
+      },
+      "render_controllers": [
+        "controller.render.armor"
+      ],
+      "animations": {
+        "zipfel": "animation.fynn_ruestung.zipfel",
+        "feder": "animation.fynn_ruestung.feder"
+      },
+      "scripts": {
+        "animate": [
+          "zipfel",
+          "feder"
+        ]
+      }
+    }
+  }
+}

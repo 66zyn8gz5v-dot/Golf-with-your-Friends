@@ -1,0 +1,69 @@
+{
+  "format_version": "1.21.120",
+  "minecraft:local_light_settings": {
+    "minecraft:torch": {
+      "light_color": "#FFB060",
+      "light_type": "point_light"
+    },
+    "minecraft:wall_torch": {
+      "light_color": "#FFB060",
+      "light_type": "point_light"
+    },
+    "minecraft:lantern": {
+      "light_color": "#FFC070",
+      "light_type": "point_light"
+    },
+    "minecraft:soul_torch": {
+      "light_color": "#70D8FF",
+      "light_type": "point_light"
+    },
+    "minecraft:soul_lantern": {
+      "light_color": "#70D8FF",
+      "light_type": "point_light"
+    },
+    "minecraft:campfire": {
+      "light_color": "#FF9040",
+      "light_type": "point_light"
+    },
+    "minecraft:soul_campfire": {
+      "light_color": "#70D8FF",
+      "light_type": "point_light"
+    },
+    "minecraft:lit_pumpkin": {
+      "light_color": "#FFA040",
+      "light_type": "point_light"
+    },
+    "minecraft:redstone_torch": {
+      "light_color": "#FF4020",
+      "light_type": "point_light"
+    },
+    "minecraft:glowstone": {
+      "light_color": "#FFD890",
+      "light_type": "static_light"
+    },
+    "minecraft:sea_lantern": {
+      "light_color": "#CFF0FF",
+      "light_type": "static_light"
+    },
+    "minecraft:shroomlight": {
+      "light_color": "#FFB070",
+      "light_type": "static_light"
+    },
+    "fynn:feuerkasten": {
+      "light_color": "#FF8A3A",
+      "light_type": "point_light"
+    },
+    "fynn:schmelztiegel": {
+      "light_color": "#FF7A30",
+      "light_type": "point_light"
+    },
+    "fynn:rollenaltar": {
+      "light_color": "#B8C8FF",
+      "light_type": "static_light"
+    },
+    "fynn:tempelaltar": {
+      "light_color": "#B8C8FF",
+      "light_type": "static_light"
+    }
+  }
+}

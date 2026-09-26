@@ -1,0 +1,57 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:hai",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "weisser_hai": "textures/entity/tiere/hai_weisser_hai",
+        "tigerhai": "textures/entity/tiere/hai_tigerhai",
+        "hammerhai": "textures/entity/tiere/hai_hammerhai"
+      },
+      "geometry": {
+        "default": "geometry.fynn.hai"
+      },
+      "animations": {
+        "schwimmen": "animation.fynn.hai.schwimmen",
+        "an_land": "animation.fynn.hai.an_land",
+        "angriff": "animation.fynn.hai.angriff",
+        "teile": "animation.fynn.hai.teile"
+      },
+      "scripts": {
+        "initialize": [
+          "variable.fynn_gier_alt = query.body_y_rotation;",
+          "variable.fynn_dreh = 0.0;",
+          "variable.fynn_zufall = math.random(0.0, 360.0);"
+        ],
+        "pre_animation": [
+          "variable.fynn_d = query.body_y_rotation - variable.fynn_gier_alt;",
+          "variable.fynn_d = variable.fynn_d > 180.0 ? variable.fynn_d - 360.0 : (variable.fynn_d < -180.0 ? variable.fynn_d + 360.0 : variable.fynn_d);",
+          "variable.fynn_gier_alt = query.body_y_rotation;",
+          "variable.fynn_dreh = math.lerp(variable.fynn_dreh, math.clamp(variable.fynn_d / math.max(query.delta_time, 0.01) / 20.0, -10.0, 10.0), 0.12);"
+        ],
+        "animate": [
+          {
+            "schwimmen": "query.is_in_water"
+          },
+          {
+            "an_land": "!query.is_in_water"
+          },
+          {
+            "angriff": "variable.attack_time > 0.0"
+          },
+          "teile"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.fynn.hai"
+      ],
+      "spawn_egg": {
+        "texture": "hai_ei",
+        "texture_index": 0
+      }
+    }
+  }
+}
