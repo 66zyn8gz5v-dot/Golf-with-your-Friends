@@ -14,12 +14,75 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw
 
+import kampf_animationen as k
 import spieler_ansehen as s
+
+A = s.RES / "attachables"
+# Womit jede Waffenart gezeigt wird - rechts, und links (Zweithand).
+VERTRETER = {k.SCHWERT: ("steinschwert", None), k.DOLCHE: ("eisendolche", "eisendolch_links"),
+             k.HAMMER: ("kriegshammer", None), k.DEGEN: ("degen", None), k.STAB: ("feuerstab", None),
+             k.WURF: ("wurfstern", None)}
+
+
+def waffen(art):
+    rechts, links = VERTRETER[art]
+    return s.Waffe(A / f"{rechts}.json"), (s.Waffe(A / f"{links}.json") if links else None)
+
+
+def angriffe(ordner, sp):
+    """Je Waffenart ein Bogen: jeder Schlag der Folge von vorn, von der
+    Seite und aus der Ich-Sicht. (Den linken Dolch zeichnet die Ich-Sicht
+    hier nicht - er haengt an Mojangs Schildknochen, siehe dolche_bauen.)"""
+    fertig = []
+    for art in k.ANGRIFFE:
+        w, z = waffen(art)
+        zeilen = []
+        for i, angriff in enumerate(k.ANGRIFFE[art]):
+            for text, ich, gier in (("von vorn", False, 35), ("von der Seite", False, 100), ("Ich-Sicht", True, 0)):
+                reihe = []
+                for t in (0.0, 0.2, 0.3, 0.4, 0.5, 0.65, 0.85):
+                    zustand = {"v.fynn_waffe": float(art), "v.fynn_schlag": float(i), "v.fynn_hiebzeit": t,
+                               "v.fynn_kombo_waffe": float(art)}
+                    # Die Ich-Sicht im Seitenverhaeltnis des iPads, sonst faellt
+                    # rechts ab, was im Spiel noch zu sehen ist.
+                    b, _ = s.bild(sp, zustand, w, ich=ich, gier=gier, zoom=5.0, breite=320 if ich else 240,
+                                  hoehe=240, zweithand=z)
+                    reihe.append((b, f"t = {t:.2f}"))
+                zeilen.append((f"{i + 1}. {angriff.name} ({angriff.dauer} s), {text}", reihe))
+        fertig.append(bogen(zeilen, ordner / f"angriff_{k.ARTNAME[art]}.png",
+                            f"Schlagfolge {k.ARTNAME[art]}: {len(k.ANGRIFFE[art])} Schlaege"))
+    return fertig
+
+
+def haltungen(ordner, sp):
+    zeilen = []
+    for gier in (35, 100):
+        reihe = []
+        for art in k.HALTUNGEN:
+            w, z = waffen(art)
+            b, _ = s.bild(sp, {}, w, gier=gier, zoom=5.0, breite=220, hoehe=240, zweithand=z)
+            reihe.append((b, k.ARTNAME[art]))
+        zeilen.append((f"im Stehen, Blick {gier} Grad", reihe))
+    return bogen(zeilen, ordner / "haltungen.png", "Kampfhaltungen je Waffenart")
+
+
+def rolle(ordner, sp, w):
+    zeilen = []
+    for gier in (100, 35):
+        reihe = []
+        for t in (0.0, 0.1, 0.25, 0.4, 0.55, 0.7, 0.85, 0.95):
+            zustand = {"v.fynn_rollzeit": t, "q.is_sneaking": 1.0, "q.is_on_ground": 0.0}
+            b, _ = s.bild(sp, zustand, w, gier=gier, zoom=4.0, breite=200, hoehe=240)
+            reihe.append((b, f"t = {t:.2f}"))
+        zeilen.append((f"Blick {gier} Grad", reihe))
+    return bogen(zeilen, ordner / "rolle.png", "Rolle vorwaerts (geduckt springen)")
 
 
 def bogen(zeilen, ziel, titel):
     """zeilen: Liste von (Beschriftung, [(Bild, Text), ...])."""
-    b, hoehe = zeilen[0][1][0][0].size
+    # Die Spalten so breit wie das breiteste Bild (die Ich-Sicht ist breiter).
+    b = max(einzel.size[0] for _, bilder in zeilen for einzel, _ in bilder)
+    hoehe = max(einzel.size[1] for _, bilder in zeilen for einzel, _ in bilder)
     spalten = max(len(z[1]) for z in zeilen)
     kopf = 34
     gesamt = Image.new("RGBA", (spalten * b, kopf + len(zeilen) * (hoehe + 40)), (250, 250, 252, 255))
@@ -43,33 +106,9 @@ def alle(ordner):
     bogenwaffe = s.Waffe(s.RES / "attachables" / "bogen.json")
     fertig = []
 
-    # Hieb aus der Ich-Sicht
-    zeiten = (0.0, 0.15, 0.3, 0.42, 0.55, 0.75)
-    zeilen = []
-    for seite, name in ((1.0, "Vorhand"), (0.0, "Rueckhand")):
-        reihe = []
-        for t in zeiten:
-            # Die Seite kippt beim Loslaufen des Zaehlers; vorher steht sie
-            # auf dem Gegenteil.
-            zustand = {"v.attack_time": t, "v.fynn_hieb_seite": seite, "v.fynn_hieb_zuvor": 0.0 if t else 0.0}
-            if t:
-                zustand["v.fynn_hieb_zuvor"] = t
-                zustand["v.fynn_hieb_seite"] = 1.0 - seite
-            b, _ = s.bild(sp, zustand, schwert, ich=True, breite=300, hoehe=208)
-            reihe.append((b, f"t = {t:.2f}"))
-        zeilen.append((f"Hieb, Ich-Sicht, {name}", reihe))
-    fertig.append(bogen(zeilen, ordner / "hieb_ich.png", "Schwerthieb aus der Ich-Sicht (Steinschwert)"))
-
-    # Hieb von aussen
-    zeilen = []
-    for seite, name in ((1.0, "Vorhand"), (0.0, "Rueckhand")):
-        reihe = []
-        for t in (0.0, 0.18, 0.35, 0.48, 0.62, 0.85):
-            zustand = {"v.attack_time": t, "v.fynn_hieb_zuvor": t, "v.fynn_hieb_seite": 1.0 - seite if t else seite}
-            b, _ = s.bild(sp, zustand, schwert, gier=35, zoom=6.0, breite=240, hoehe=300)
-            reihe.append((b, f"t = {t:.2f}"))
-        zeilen.append((f"Hieb von aussen, {name}", reihe))
-    fertig.append(bogen(zeilen, ordner / "hieb_aussen.png", "Schwerthieb von aussen"))
+    fertig += angriffe(ordner, sp)
+    fertig.append(haltungen(ordner, sp))
+    fertig.append(rolle(ordner, sp, schwert))
 
     # Laufen, Rennen, Schleichen, Sprung
     zeilen = []

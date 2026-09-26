@@ -200,6 +200,31 @@ pruefe("verirrter linker Dolch im Rucksack: entfernt", eingesammelt.length === 0
 for (const f of zweithandTakt) f();
 pruefe("mit dem Schwert bleibt der Schild", zweithand?.typeId === "minecraft:shield");
 
+// --- Rolle: geduckt springen
+const wirkt = [];
+spieler.addEffect = (id) => wirkt.push(id);
+spieler.getVelocity = () => ({ x: 0.1, y: 0, z: 0 });
+spieler.isOnGround = true; spieler.isJumping = false; spieler.isSneaking = false; spieler.stoss = null;
+tick(30);
+spieler.isJumping = true; tick(1); spieler.isJumping = false;
+pruefe("Springen ohne Ducken: keine Rolle", spieler.stoss === null);
+spieler.isSneaking = true; tick(1);
+pruefe("nur geduckt: keine Rolle", spieler.stoss === null);
+spieler.isJumping = true; tick(1); spieler.isJumping = false;
+pruefe(`geduckt gesprungen: Stoss in Laufrichtung (${JSON.stringify(spieler.stoss)})`,
+       spieler.stoss?.h.x > 0.7 && Math.abs(spieler.stoss.h.z) < 0.01 && spieler.stoss.v > 0);
+pruefe("mit kurzem Widerstand", wirkt.includes("resistance"));
+spieler.stoss = null; tick(5);
+spieler.isJumping = true; tick(1); spieler.isJumping = false;
+pruefe("gleich noch einmal: gesperrt", spieler.stoss === null);
+tick(30);
+// Die Taste kommt nicht an, aber der Spieler hebt ab: Auch das ist ein Sprung.
+spieler.getVelocity = () => ({ x: 0, y: 0.42, z: 0 });
+spieler.isOnGround = true; tick(1); spieler.isOnGround = false; tick(1);
+pruefe(`Absprung ohne Taste erkannt, im Stehen in Blickrichtung (${JSON.stringify(spieler.stoss)})`,
+       spieler.stoss?.h.z > 0.7);
+spieler.isSneaking = false; spieler.isOnGround = true; tick(1);
+
 const gut = ergebnisse.every(Boolean);
 console.log("\nAlles wie erwartet:", gut ? "ja" : "NEIN");
 if (!gut) process.exit(1);

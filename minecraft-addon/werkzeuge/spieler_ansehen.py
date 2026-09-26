@@ -227,7 +227,7 @@ class Spieler:
         werte = {
             "q.life_time": 1.0, "q.modified_distance_moved": 0.0, "q.modified_move_speed": 0.0,
             "q.walk_distance": 0.0, "q.is_on_ground": 1.0, "q.is_alive": 1.0,
-            "q.target_x_rotation": 0.0, "q.target_y_rotation": 0.0,
+            "q.target_x_rotation": 0.0, "q.ground_speed": 0.0, "q.target_y_rotation": 0.0,
             "q.main_hand_item_max_duration": 72000.0, "q.main_hand_item_use_duration": 0.0,
             "v.attack_time": 0.0, "v.is_first_person": 0.0, "v.gliding_speed_value": 1.0,
             "v.first_person_item_rotation_factor": 1.0 if hand else 0.0,

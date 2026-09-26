@@ -127,6 +127,61 @@ system.runInterval(() => {
     }
 }, 1);
 
+// ------------------------------------------------------------- Rolle
+
+// Geduckt springen heisst rollen: ein flacher Stoss nach vorn - in
+// Laufrichtung, im Stehen in Blickrichtung - und fuer eine halbe Sekunde
+// Widerstand, damit man durch einen Angriff hindurchrollen kann. Wie in
+// Kampfspielen ein Ausweichen, fuer jede Rolle. Die Bewegung dazu zeigt
+// der Spieler selbst (spieler_animation_bauen: animation.fynn.rolle); sie
+// erkennt die Rolle am Tempo, das dieser Stoss erzeugt.
+//
+// Der Sprung wird zweifach erkannt: an isJumping, und daran, dass der
+// Spieler eben noch am Boden stand und jetzt nach oben fliegt. Auf dem
+// iPad kommt die Taste manchmal nur fuer einen Tick an - dann greift das
+// zweite.
+const ROLL_WEITE = 0.75;        // Stoss waagerecht - etwa vier Bloecke weit
+const ROLL_HOEHE = 0.22;
+const ROLL_SPERRE = 25;         // Ticks bis zur naechsten Rolle
+const amBoden = new Map();
+const letzteRolle = new Map();
+
+export function rollRichtung(spieler) {
+    const v = spieler.getVelocity();
+    return (Math.hypot(v.x, v.z) > 0.03 ? waagerecht(v) : undefined) ?? waagerecht(spieler.getViewDirection());
+}
+
+export function rolltSich(spieler, warAmBoden) {
+    if (!spieler.isSneaking || spieler.isGliding || spieler.isSwimming || spieler.isInWater) return false;
+    if (spieler.getComponent("minecraft:riding")) return false;
+    const absprung = spieler.isJumping ? spieler.isOnGround || warAmBoden
+        : warAmBoden && !spieler.isOnGround && spieler.getVelocity().y > 0.1;
+    if (!absprung) return false;
+    return system.currentTick - (letzteRolle.get(spieler.id) ?? -ROLL_SPERRE) >= ROLL_SPERRE;
+}
+
+system.runInterval(() => {
+    for (const spieler of world.getAllPlayers()) {
+        try {
+            const warAmBoden = amBoden.get(spieler.id) ?? false;
+            amBoden.set(spieler.id, spieler.isOnGround);
+            if (!rolltSich(spieler, warAmBoden)) continue;
+            const richtung = rollRichtung(spieler);
+            if (!richtung) continue;
+            letzteRolle.set(spieler.id, system.currentTick);
+            spieler.applyKnockback({ x: richtung.x * ROLL_WEITE, z: richtung.z * ROLL_WEITE }, ROLL_HOEHE);
+            spieler.addEffect("resistance", 10, { amplifier: 2, showParticles: false });
+            try {
+                spieler.dimension.playSound("armor.equip_leather", spieler.location, { volume: 0.7, pitch: 1.4 });
+            } catch (e) {
+                // ohne Ton geht es auch
+            }
+        } catch (fehler) {
+            console.warn(`Kampf, Rolle: ${fehler}`);
+        }
+    }
+}, 1);
+
 // ------------------------------------------------------ Wirbelschlag
 
 /**

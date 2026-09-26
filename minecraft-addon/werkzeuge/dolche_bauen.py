@@ -35,6 +35,7 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import waffe_bauen as w                 # noqa: E402
+import kampf_animationen                # noqa: E402
 from vorlagen import dolche as v        # noqa: E402
 
 WURZEL = Path(__file__).resolve().parent.parent
@@ -126,12 +127,11 @@ def animation(ich=None):
     # Dolch am Schildgriff, leicht nach aussen geneigt wie das
     # Spiegelbild des rechten.
     #
-    # Beim Rueckhandhieb sticht er zu: Bei jedem zweiten Schlag mit dem
-    # Paar fuehrt die linke Hand (spieler_animation_bauen), in der Ich-Sicht
-    # stoesst dieser Dolch zur Bildmitte vor.
-    zeit = "(c.owning_entity->v.attack_time)"
-    seite = "(c.owning_entity->v.fynn_hieb_seite)"
-    stoss = f"(({seite} >= 0.5 && {zeit} > 0.0) ? math.sin({zeit} * 180.0) : 0.0)"
+    # In der Schlagfolge der Dolche (kampf_animationen) fuehrt beim zweiten
+    # Schlag die linke Hand: In der Ich-Sicht stoesst dieser Dolch zur
+    # Bildmitte vor. Beim Kreuzschnitt am Ende schneidet er quer nach
+    # aussen, gegen den rechten.
+    stoss, schnitt = kampf_animationen.links_ich_stoss()
     links = {
         # Rueckwaertsgriff: um den Griff herum umgedreht, die Klinge liegt
         # am Unterarm entlang nach hinten. Fynn: "der eine Dolch wird so
@@ -151,8 +151,10 @@ def animation(ich=None):
             "scale": "c.is_first_person ? 1.0 : 0.0",
         },
         "dolch_ich": {
-            "position": [f"-5.0 * {stoss}", f"2.0 * {stoss}", f"-7.0 * {stoss}"],
-            "rotation": [f"-20.0 * {stoss}", 0.0, f"{LINKS_NEIGUNG} - 30.0 * {stoss}"],
+            "position": [f"-5.0 * {stoss} + 3.0 * {schnitt}", f"2.0 * {stoss} - 4.0 * {schnitt}",
+                         f"-7.0 * {stoss} - 3.0 * {schnitt}"],
+            "rotation": [f"-20.0 * {stoss} - 25.0 * {schnitt}", 0.0,
+                         f"{LINKS_NEIGUNG} - 30.0 * {stoss} + 50.0 * {schnitt}"],
             "scale": GROESSE_ICH,
         },
     }
