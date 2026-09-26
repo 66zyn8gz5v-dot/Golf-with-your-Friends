@@ -5,8 +5,9 @@ Fynn: "den ersten Boss ... mit einer richtigen Bossbar, die gepixelt ist."
 
 Das Aussehen ist Fynns eigener Entwurf: goldene Endkappen, Trennstriche,
 in der Mitte ein Medaillon mit Saphir zwischen zwei kurzen Klingen, der
-Balken in fuenf Blautoenen. In der zweiten Phase glueht der Balken heller,
-der Name wird blau. (Vorher war die Leiste ein Schwert - Fynn hat
+Balken in fuenf Blautoenen. Fuer die zweite Phase hat Fynn einen
+eigenen Rahmen gepixelt (tuerkiser Schein, leuchtende Klingen), der
+Balken wird eisblau, der Name hellblau. (Vorher war die Leiste ein Schwert - Fynn hat
 nachgelegt.)
 
 Wie sie ins Spiel kommt: Roland hat Minecrafts eigene Bossleiste
@@ -15,7 +16,7 @@ sich allen Spielern im Umkreis und folgt dem Leben von selbst. Nur ihr
 Aussehen wird ausgetauscht: ui/hud_screen.json ersetzt das Feld einer
 Bossleiste durch zwei Fassungen, Mojangs und unsere. Welche zu sehen ist,
 entscheidet der Name des Bosses - steht "Roland" darin, unsere; sonst
-bleibt fuer Wither und Enderdrache alles, wie es war. Steht "entfesselt"
+bleibt fuer Wither und Enderdrache alles, wie es war. Steht "Phase 2"
 darin (das Kampfskript setzt den Namen in Phase zwei), die gluehende.
 
 Warum ueber den Namen: Mehr erfaehrt die Oberflaeche von einer Bossleiste
@@ -89,9 +90,14 @@ MEDAILLON = [
 FUELLUNG = {
     # Fynns Blau, von hell oben nach dunkel unten.
     1: [(166, 190, 245), (83, 119, 220), (51, 82, 188), (36, 54, 138), (24, 32, 86)],
-    # Entfesselt: dasselbe Blau, heller und kraeftiger - der Balken glueht.
-    2: [(222, 240, 255), (120, 196, 255), (70, 150, 250), (44, 100, 220), (30, 60, 160)],
+    # Phase 2, ebenfalls Fynns Entwurf: fast weiss oben, dann Eisblau.
+    2: [(232, 251, 255), (138, 228, 255), (74, 184, 240), (42, 128, 208), (26, 78, 154)],
 }
+# Fynns zweiter Entwurf: der Rahmen fuer Phase 2 - ein tuerkiser Schein um
+# die ganze Leiste, leuchtende Klingen, im Medaillon ein weisser Kern mit
+# vier eisblauen Funken. Als Bild abgelegt, so wie er es gepixelt hat (aus
+# seinem Bildschirmfoto zurueckgerechnet; wo der Balken durchscheint, leer).
+RAHMEN_PHASE2 = Path(__file__).resolve().parent / "vorlagen" / "fynn_bossleiste_phase2.png"
 LEER = [(27, 30, 48), (24, 27, 42), (20, 23, 37), (17, 19, 31), (13, 16, 24)]
 
 
@@ -183,8 +189,9 @@ def binde_name(bedingung):
 
 HAT_ROLAND = "(not ((#bossName - 'Roland') = #bossName))"
 HAT_KEIN_ROLAND = "((#bossName - 'Roland') = #bossName)"
-ENTFESSELT = "(not ((#bossName - 'entfesselt') = #bossName))"
-GEBUNDEN = "((#bossName - 'entfesselt') = #bossName)"
+# In Phase 2 heisst er "Sir Roland · Phase 2" (setzt das Kampfskript).
+ENTFESSELT = "(not ((#bossName - 'Phase 2') = #bossName))"
+GEBUNDEN = "((#bossName - 'Phase 2') = #bossName)"
 
 
 def fuellung(textur, sichtbar):
@@ -207,6 +214,14 @@ def fuellung(textur, sichtbar):
             {"binding_type": "view", "source_property_name": sichtbar, "target_property_name": "#visible"},
         ],
     }
+
+
+def rahmenbild(textur, sichtbar):
+    return {"type": "image", "texture": textur, "size": [BREITE, HOEHE], "layer": 3,
+            "bindings": [
+                {"binding_type": "collection", "binding_collection_name": "boss_bars", "binding_name": "#bossName"},
+                {"binding_type": "view", "source_property_name": sichtbar, "target_property_name": "#visible"},
+            ]}
 
 
 def name(farbe, sichtbar):
@@ -259,7 +274,7 @@ def oberflaeche():
             "size": ["100%", "100%"],
             "controls": [
                 {"name_gebunden": name([0.96, 0.84, 0.48], GEBUNDEN)},
-                {"name_entfesselt": name([0.62, 0.86, 1.0], ENTFESSELT)},
+                {"name_entfesselt": name([0.6, 0.9, 1.0], ENTFESSELT)},
                 {"leiste": {
                     "type": "panel",
                     "size": [BREITE, HOEHE],
@@ -273,8 +288,9 @@ def oberflaeche():
                                   "anchor_from": "top_left", "anchor_to": "top_left", "layer": 1}},
                         {"voll": fuellung("textures/ui/fynn_bossleiste_voll", GEBUNDEN)},
                         {"voll_entfesselt": fuellung("textures/ui/fynn_bossleiste_entfesselt", ENTFESSELT)},
-                        {"rahmen": {"type": "image", "texture": "textures/ui/fynn_bossleiste_rahmen",
-                                    "size": [BREITE, HOEHE], "layer": 3}},
+                        {"rahmen": rahmenbild("textures/ui/fynn_bossleiste_rahmen", GEBUNDEN)},
+                        {"rahmen_entfesselt": rahmenbild("textures/ui/fynn_bossleiste_rahmen_entfesselt",
+                                                         ENTFESSELT)},
                     ],
                 }},
             ],
@@ -291,6 +307,7 @@ def schreibe(pfad, daten):
 def bilder():
     return {
         "rahmen": rahmen(),
+        "rahmen_entfesselt": Image.open(RAHMEN_PHASE2).convert("RGBA"),
         "leer": rinne(None, leer=True),
         "voll": rinne(FUELLUNG[1]),
         "entfesselt": rinne(FUELLUNG[2]),
@@ -305,7 +322,7 @@ def zusammen(teile, anteil, phase):
     breite = round(RINNE[2] * anteil)
     if breite:
         b.alpha_composite(voll.crop((0, 0, breite, RINNE[3])), RINNE[:2])
-    b.alpha_composite(teile["rahmen"])
+    b.alpha_composite(teile["rahmen" if phase == 1 else "rahmen_entfesselt"])
     return b
 
 
@@ -315,7 +332,7 @@ def vorschau(ordner, teile):
     from PIL import ImageDraw
     massstab = 4
     zustaende = [(1.0, 1, "Sir Roland"), (0.62, 1, "Sir Roland"),
-                 (0.31, 2, "Sir Roland - entfesselt")]
+                 (0.31, 2, "Sir Roland · Phase 2")]
     w, h = BREITE * massstab + 80, len(zustaende) * 110 + 30
     bild = Image.new("RGBA", (w, h), (120, 168, 255, 255))
     # Himmel: oben dunkler, unten heller - in Stufen wie Minecrafts Himmel.

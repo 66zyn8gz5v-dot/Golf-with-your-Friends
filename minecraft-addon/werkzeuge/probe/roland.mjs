@@ -169,7 +169,7 @@ laufe(z, 1);
 pruefe("halbes Leben: Phasenwechsel beginnt, unverwundbar", z.aktion?.name === "phasenwechsel" && boss.ereignisse.includes("fynn:schutz_an"));
 laufe(z, ANGRIFFE.phasenwechsel.laenge + 1);
 pruefe("Phase zwei: Eigenschaft und Name fuer die Bossleiste", boss.eig.get("fynn:phase") === 2
-    && boss.nameTag.includes("Roland") && boss.nameTag.includes("entfesselt"));
+    && boss.nameTag.includes("Roland") && boss.nameTag.includes("Phase 2"));
 pruefe("Phase zwei: entfesselt, danach wieder verwundbar", boss.ereignisse.includes("fynn:entfesseln")
     && boss.ereignisse.includes("fynn:schutz_aus"));
 pruefe("Phase zwei: zwei Ritter treten aus dem Licht", boss.dimension.gerufen.length === 2

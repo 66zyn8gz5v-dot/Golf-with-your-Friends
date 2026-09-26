@@ -87,7 +87,7 @@
             },
             {
               "binding_type": "view",
-              "source_property_name": "((#bossName - 'entfesselt') = #bossName)",
+              "source_property_name": "((#bossName - 'Phase 2') = #bossName)",
               "target_property_name": "#visible"
             }
           ]
@@ -98,8 +98,8 @@
           "type": "label",
           "text": "#bossName",
           "color": [
-            0.62,
-            0.86,
+            0.6,
+            0.9,
             1.0
           ],
           "shadow": true,
@@ -114,7 +114,7 @@
             },
             {
               "binding_type": "view",
-              "source_property_name": "(not ((#bossName - 'entfesselt') = #bossName))",
+              "source_property_name": "(not ((#bossName - 'Phase 2') = #bossName))",
               "target_property_name": "#visible"
             }
           ]
@@ -182,7 +182,7 @@
                   },
                   {
                     "binding_type": "view",
-                    "source_property_name": "((#bossName - 'entfesselt') = #bossName)",
+                    "source_property_name": "((#bossName - 'Phase 2') = #bossName)",
                     "target_property_name": "#visible"
                   }
                 ]
@@ -219,7 +219,7 @@
                   },
                   {
                     "binding_type": "view",
-                    "source_property_name": "(not ((#bossName - 'entfesselt') = #bossName))",
+                    "source_property_name": "(not ((#bossName - 'Phase 2') = #bossName))",
                     "target_property_name": "#visible"
                   }
                 ]
@@ -233,7 +233,42 @@
                   182,
                   17
                 ],
-                "layer": 3
+                "layer": 3,
+                "bindings": [
+                  {
+                    "binding_type": "collection",
+                    "binding_collection_name": "boss_bars",
+                    "binding_name": "#bossName"
+                  },
+                  {
+                    "binding_type": "view",
+                    "source_property_name": "((#bossName - 'Phase 2') = #bossName)",
+                    "target_property_name": "#visible"
+                  }
+                ]
+              }
+            },
+            {
+              "rahmen_entfesselt": {
+                "type": "image",
+                "texture": "textures/ui/fynn_bossleiste_rahmen_entfesselt",
+                "size": [
+                  182,
+                  17
+                ],
+                "layer": 3,
+                "bindings": [
+                  {
+                    "binding_type": "collection",
+                    "binding_collection_name": "boss_bars",
+                    "binding_name": "#bossName"
+                  },
+                  {
+                    "binding_type": "view",
+                    "source_property_name": "(not ((#bossName - 'Phase 2') = #bossName))",
+                    "target_property_name": "#visible"
+                  }
+                ]
               }
             }
           ]

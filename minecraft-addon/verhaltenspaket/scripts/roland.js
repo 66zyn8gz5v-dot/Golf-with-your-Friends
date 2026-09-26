@@ -19,9 +19,10 @@ import { ANGRIFFE } from "./roland_daten.js";
 import { LEBEN, MEHR_SPIELER, LETZTE_KRAFT, BEUTE, ANTEIL } from "./roland_werte.js";
 
 export const TYP = "fynn:roland";
-// Der Name in Phase zwei. Die Bossleiste (ui/hud_screen.json) erkennt an
-// "Roland" ihr Aussehen und an "entfesselt" die gluehende Fassung.
-export const NAME_ENTFESSELT = "Sir Roland - entfesselt";
+// Der Name in Phase zwei, wie in Fynns Entwurf. Die Bossleiste
+// (ui/hud_screen.json) erkennt an "Roland" ihr Aussehen und an "Phase 2"
+// den Rahmen der zweiten Phase.
+export const NAME_ENTFESSELT = "Sir Roland · Phase 2";
 const UMKREIS_STAERKE = 48;      // wer beim Auftritt so nah ist, zaehlt mit
 const UMKREIS_KAMPF = 32;
 const SPIELERZAHL = "fynn:roland_spieler";
