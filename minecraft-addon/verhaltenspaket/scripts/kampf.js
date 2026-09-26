@@ -27,7 +27,7 @@ const SCHWERTER = new Set([
     "minecraft:golden_sword", "minecraft:diamond_sword", "minecraft:netherite_sword",
     "minecraft:copper_sword",
     "fynn:ritterschwert", "fynn:eisenklinge", "fynn:silberklinge",
-    "fynn:elektrumklinge", "fynn:sternenklinge", "fynn:schwertfischklinge", "fynn:schwertfischschwert",
+    "fynn:elektrumklinge", "fynn:sternenklinge", "fynn:schwertfischklinge", "fynn:schwertfischschwert", "fynn:saphirschwert",
     "fynn:rubinklinge", "fynn:haizahnsaebel",
 ]);
 

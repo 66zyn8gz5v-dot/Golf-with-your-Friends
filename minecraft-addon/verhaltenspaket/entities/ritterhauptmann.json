@@ -2,59 +2,15 @@
   "format_version": "1.21.90",
   "minecraft:entity": {
     "description": {
-      "identifier": "fynn:ritter",
+      "identifier": "fynn:ritterhauptmann",
       "is_spawnable": true,
       "is_summonable": true
-    },
-    "component_groups": {
-      "fynn:schwertritter": {
-        "minecraft:variant": {
-          "value": 0
-        },
-        "minecraft:attack": {
-          "damage": 4
-        },
-        "minecraft:equipment": {
-          "table": "loot_tables/ausruestung/ritter_schwert.json",
-          "slot_drop_chance": [
-            {
-              "slot": "slot.weapon.mainhand",
-              "drop_chance": 0.08
-            }
-          ]
-        },
-        "minecraft:behavior.melee_box_attack": {
-          "priority": 3,
-          "speed_multiplier": 1.2,
-          "track_target": true
-        },
-        "minecraft:loot": {
-          "table": "loot_tables/entities/ritter.json"
-        }
-      },
-      "fynn:armbrustritter": {
-        "minecraft:variant": {
-          "value": 1
-        },
-        "minecraft:shooter": {
-          "def": "minecraft:arrow"
-        },
-        "minecraft:behavior.ranged_attack": {
-          "priority": 3,
-          "attack_interval_min": 1.6,
-          "attack_interval_max": 2.6,
-          "attack_radius": 18.0,
-          "speed_multiplier": 1.0
-        },
-        "minecraft:loot": {
-          "table": "loot_tables/entities/ritter_armbrust.json"
-        }
-      }
     },
     "components": {
       "minecraft:type_family": {
         "family": [
           "ritter",
+          "ritterhauptmann",
           "mob"
         ]
       },
@@ -63,11 +19,11 @@
         "height": 1.95
       },
       "minecraft:health": {
-        "value": 30,
-        "max": 30
+        "value": 50,
+        "max": 50
       },
       "minecraft:movement": {
-        "value": 0.24
+        "value": 0.25
       },
       "minecraft:movement.basic": {},
       "minecraft:navigation.walk": {
@@ -148,28 +104,29 @@
       },
       "minecraft:behavior.random_look_around": {
         "priority": 8
-      }
-    },
-    "events": {
-      "minecraft:entity_spawned": {
-        "randomize": [
+      },
+      "minecraft:attack": {
+        "damage": 7
+      },
+      "minecraft:knockback_resistance": {
+        "value": 0.4
+      },
+      "minecraft:equipment": {
+        "table": "loot_tables/ausruestung/ritterhauptmann.json",
+        "slot_drop_chance": [
           {
-            "weight": 70,
-            "add": {
-              "component_groups": [
-                "fynn:schwertritter"
-              ]
-            }
-          },
-          {
-            "weight": 30,
-            "add": {
-              "component_groups": [
-                "fynn:armbrustritter"
-              ]
-            }
+            "slot": "slot.weapon.mainhand",
+            "drop_chance": 0.05
           }
         ]
+      },
+      "minecraft:behavior.melee_box_attack": {
+        "priority": 3,
+        "speed_multiplier": 1.25,
+        "track_target": true
+      },
+      "minecraft:loot": {
+        "table": "loot_tables/entities/ritterhauptmann.json"
       }
     }
   }

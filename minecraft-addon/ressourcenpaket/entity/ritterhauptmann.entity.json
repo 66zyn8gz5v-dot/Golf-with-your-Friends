@@ -2,26 +2,24 @@
   "format_version": "1.10.0",
   "minecraft:client_entity": {
     "description": {
-      "identifier": "fynn:ritter",
+      "identifier": "fynn:ritterhauptmann",
       "materials": {
         "default": "entity_alphatest"
       },
       "textures": {
-        "default": "textures/entity/ritter",
-        "armbrust": "textures/entity/ritter_armbrust"
+        "default": "textures/entity/ritterhauptmann",
+        "helmbusch": "textures/entity/ritter_helmbusch"
       },
       "geometry": {
         "default": "geometry.ritter",
-        "armbrust": "geometry.fynn.ritter_armbrust"
+        "helmbusch": "geometry.fynn.ritter_helmbusch"
       },
       "enable_attachables": true,
       "animations": {
-        "laufen": "animation.fynn.ritter.laufen",
-        "stehen": "animation.fynn.ritter.stehen",
-        "halten": "animation.fynn.ritter.halten",
-        "hieb": "animation.fynn.ritter.hieb",
-        "armbrust": "animation.fynn.ritter.armbrust",
-        "zielen": "animation.fynn.ritter.zielen",
+        "laufen": "animation.fynn.ritterhauptmann.laufen",
+        "stehen": "animation.fynn.ritterhauptmann.stehen",
+        "halten": "animation.fynn.ritterhauptmann.halten",
+        "hieb": "animation.fynn.ritterhauptmann.hieb",
         "blick": "animation.common.look_at_target"
       },
       "scripts": {
@@ -32,16 +30,10 @@
           "stehen",
           "blick",
           {
-            "halten": "query.variant == 0"
+            "halten": "1.0"
           },
           {
-            "hieb": "variable.attack_time > 0.0 && query.variant == 0"
-          },
-          {
-            "armbrust": "query.variant == 1"
-          },
-          {
-            "zielen": "query.variant == 1 && query.has_target"
+            "hieb": "variable.attack_time > 0.0 && 1.0"
           }
         ],
         "variables": {
@@ -56,17 +48,18 @@
           "variable.fynn_waffe = 0.0;",
           "variable.fynn_schlag = 0.0;",
           "variable.fynn_hiebzeit = 0.0;"
-        ]
+        ],
+        "scale": "1.06"
       },
       "render_controllers": [
         "controller.render.default",
         {
-          "controller.render.fynn.ritter_armbrust": "query.variant == 1"
+          "controller.render.fynn.ritter_helmbusch": "1.0"
         }
       ],
       "spawn_egg": {
-        "texture": "ritter_ei",
-        "texture_index": 0
+        "base_color": "#2e4a9a",
+        "overlay_color": "#d8b050"
       }
     }
   }

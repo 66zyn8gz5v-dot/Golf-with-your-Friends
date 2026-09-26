@@ -373,6 +373,9 @@
     },
     "schwertfischschwert": {
       "textures": "textures/items/tiere/schwertfischschwert"
+    },
+    "saphirschwert": {
+      "textures": "textures/items/saphirschwert"
     }
   }
 }

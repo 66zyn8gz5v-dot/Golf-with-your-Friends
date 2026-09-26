@@ -19,6 +19,7 @@ Bewegungen, die sie im Spiel haben, und die Seite braucht kein eval.
 """
 
 import base64
+import io
 import json
 import re
 import sys
@@ -28,6 +29,7 @@ HIER = Path(__file__).resolve().parent
 sys.path.insert(0, str(HIER))
 import tiere_bauen                     # noqa: E402
 import banditen_bauen                  # noqa: E402
+from PIL import Image                  # noqa: E402
 
 WURZEL = HIER.parent
 RES = WURZEL / "ressourcenpaket"
@@ -151,9 +153,15 @@ for datei in sorted((RES / "models" / "entity").glob("*.geo.json")):
         GEOMETRIEN[g["description"]["identifier"]] = g
 
 
-def geometrie_daten(ident):
-    """Knochen und Kaesten, knapp als Listen - die Seite baut die Flaechen."""
-    g = GEOMETRIEN[ident]
+SEITEN = ("north", "east", "south", "west", "up", "down")
+
+
+def geometrie_daten(g):
+    """Knochen und Kaesten, knapp als Listen - die Seite baut die Flaechen.
+
+    Kaesten mit flaechenweisem UV (die 3D-Waffen aus Zeichenkarten) haengen
+    als sechzehnten Eintrag ihre sechs Felder an, in der Reihenfolge von
+    SEITEN; fehlt eine Seite, steht dort null."""
     d = g["description"]
     namen = [b["name"].lower() for b in g["bones"]]
     knochen = []
@@ -162,12 +170,16 @@ def geometrie_daten(ident):
         kaesten = []
         for c in b.get("cubes", []):
             uv = c.get("uv", [0, 0])
-            if not isinstance(uv, list):
-                raise ValueError(f"{ident}: flaechenweises UV kommt bei den Mobs nicht vor")
             r = c.get("rotation", [0, 0, 0])
             p = c.get("pivot", [0, 0, 0])
-            kaesten.append(list(c["origin"]) + list(c["size"]) + list(uv)
-                           + [c.get("inflate", 0) or 0] + list(r) + list(p))
+            felder = None
+            if not isinstance(uv, list):
+                felder = [(uv[f]["uv"] + uv[f].get("uv_size", [1, 1])) if f in uv else None for f in SEITEN]
+                uv = [0, 0]
+            kasten = list(c["origin"]) + list(c["size"]) + list(uv) + [c.get("inflate", 0) or 0] + list(r) + list(p)
+            if felder:
+                kasten.append(felder)
+            kaesten.append(kasten)
         knochen.append([b["name"].lower(), namen.index(eltern) if eltern in namen else -1,
                         b.get("pivot", [0, 0, 0]), b.get("rotation", [0, 0, 0]), kaesten])
     return {"tw": d.get("texture_width", 64), "th": d.get("texture_height", 64), "k": knochen}
@@ -175,6 +187,90 @@ def geometrie_daten(ident):
 
 def bild_daten(pfad):
     return "data:image/png;base64," + base64.b64encode(Path(pfad).read_bytes()).decode("ascii")
+
+
+def bild_als_daten(bild):
+    puffer = io.BytesIO()
+    bild.save(puffer, "PNG")
+    return "data:image/png;base64," + base64.b64encode(puffer.getvalue()).decode("ascii")
+
+
+def anbauen(g, unten, zusatz, bindung=None):
+    """Haengt ein Zusatzmodell an das Modell des Mobs.
+
+    Das Bild des Zusatzes kommt unter das bisherige; seine Kaesten holen
+    ihre Felder um "unten" weiter unten. Knochen, die es schon gibt, sind
+    im Zusatz nur Gelenke (Armbrust und Helmbusch haengen an rightArm und
+    head) und fallen weg. Mit bindung wird eine Waffe an die Hand gehaengt:
+    Ihr Wurzelknochen "rightitem" sitzt im Spiel mit seinem Drehpunkt auf
+    dem der Hand - alles wird um diesen Abstand verschoben.
+
+    Gibt die Namen der neuen obersten Knochen zurueck - an ihnen haengt die
+    Bedingung, wann der Zusatz zu sehen ist."""
+    namen = {k["name"].lower(): k for k in g["bones"]}
+    versatz = [0, 0, 0]
+    if bindung:
+        wurzel = next(k for k in zusatz["bones"] if k["name"].lower() == "rightitem")
+        ziel = namen[bindung]["pivot"]
+        versatz = [ziel[i] - wurzel["pivot"][i] for i in range(3)]
+
+    def schieben(p):
+        return [p[i] + versatz[i] for i in range(3)]
+    oberste = []
+    for k in zusatz["bones"]:
+        name = k["name"].lower()
+        if name in namen:
+            if k.get("cubes"):
+                raise ValueError(f"{name}: vorhandener Knochen mit eigenen Kaesten")
+            continue
+        k = json.loads(json.dumps(k))
+        eltern = (k.get("parent") or "").lower()
+        if bindung and eltern == "rightitem":
+            eltern = bindung
+        k["parent"] = eltern
+        k["pivot"] = schieben(k.get("pivot", [0, 0, 0]))
+        for c in k.get("cubes", []):
+            c["origin"] = schieben(c["origin"])
+            if "pivot" in c:
+                c["pivot"] = schieben(c["pivot"])
+            if isinstance(c.get("uv"), list):
+                c["uv"] = [c["uv"][0], c["uv"][1] + unten]
+            else:
+                for f in c["uv"].values():
+                    f["uv"] = [f["uv"][0], f["uv"][1] + unten]
+        g["bones"].append(k)
+        if eltern in namen:
+            oberste.append(name)
+        namen[name] = k
+    return oberste
+
+
+# Minecrafts Eisenschwert gibt es im Paket nicht als Modell - das Spiel
+# bringt es mit. Fuer die Schau ein Nachbild aus einer Zeichenkarte, gebaut
+# wie die eigenen Klingen; ins Paket kommt es nicht.
+EISENSCHWERT_NACHBILD = {
+    "karte": ["...w...", "..wsd.."] + ["..wsd.."] * 15 + [".QqqqQ.", "QqqqqqQ", "...L...", "...l...",
+                                                          "...L...", "...l...", "..QqQ.."],
+    "farben": {"w": (236, 238, 242), "s": (196, 200, 206), "d": (130, 134, 142),
+               "q": (178, 182, 188), "Q": (104, 108, 116), "L": (104, 78, 30), "l": (73, 54, 21)},
+    "tiefe": {"w": 1.0, "s": 1.0, "d": 1.0, "q": 2.0, "Q": 2.0, "L": 2.0, "l": 2.0},
+    "mitte": 3.5, "griff": "Ll",
+}
+
+
+def nachbild_waffe(karte_daten):
+    """Baut aus einer Zeichenkarte ein Waffenmodell in einen Zwischenordner
+    und gibt Geometrie, Bild und Haltebewegung zurueck."""
+    import tempfile
+    import waffe_bauen
+    from neue_waffen_bauen import halten
+    v = karte_daten
+    ordner = Path(tempfile.mkdtemp())
+    waffe_bauen.aus_zeichenkarte("nachbild", v["karte"], {k: f + (255,) for k, f in v["farben"].items()},
+                                 dicke=lambda zeile, spalte, zeichen: v["tiefe"][zeichen], mitte=v["mitte"],
+                                 ziel_modell=str(ordner / "nachbild.geo.json"), ziel_textur=str(ordner / "nachbild.png"))
+    geo = lade(ordner / "nachbild.geo.json")["minecraft:geometry"][0]
+    return geo, Image.open(ordner / "nachbild.png").convert("RGBA"), halten(v["karte"], v["griff"])
 
 
 def biome_aus_spawnregel(ident):
@@ -294,18 +390,72 @@ def mob_daten(kennung, entitaet_datei, gruppe, info):
     baby = re.search(r"query\.is_baby\s*\?\s*Texture\.(\w+)", ausdruck)
     baby = baby.group(1) if baby else None
     if not reihe:
-        reihe = [k for k in texturen if k != baby]
+        # Texturen der Zusatzmodelle (Helmbusch, Armbrust) sind keine
+        # eigenen Varianten, auch wenn sie in derselben Liste stehen.
+        fremd = set()
+        for plan in (d.get("render_controllers") or [])[1:]:
+            name = next(iter(plan)) if isinstance(plan, dict) else plan
+            for t in RENDER.get(name, {}).get("textures", []):
+                fremd.add(t.split(".", 1)[1])
+        reihe = [k for k in texturen if k != baby and k not in fremd]
     gewichte = dict(info.get("varianten", []))
+
+    # Zusatzmodelle aus weiteren Steuerplaenen (Armbrust, Helmbusch) und
+    # Waffen in der Hand: alles in ein Modell und ein Bild.
+    geo = json.loads(json.dumps(GEOMETRIEN[geo_id]))
+    hoehe = geo["description"].get("texture_height", 64)
+    zusatzbilder, bedingungen, extra_anim = [], [], {}
+    for eintrag in (d.get("render_controllers") or [])[1:]:
+        name, bedingung = (eintrag, "1.0") if isinstance(eintrag, str) else next(iter(eintrag.items()))
+        plan = RENDER[name]
+        g_name = plan["geometry"].split(".", 1)[1]
+        t_name = plan["textures"][0].split(".", 1)[1]
+        zusatz = GEOMETRIEN[d["geometry"][g_name]]
+        bild = Image.open(RES / (texturen[t_name] + ".png")).convert("RGBA")
+        for k in anbauen(geo, hoehe, zusatz):
+            bedingungen.append((k, bedingung))
+        zusatzbilder.append(bild)
+        hoehe += bild.height
+    for nr, (zgeo, bild, halte, bedingung) in enumerate(info.get("waffen", [])):
+        for k in anbauen(geo, hoehe, zgeo, bindung="rightitem"):
+            bedingungen.append((k, bedingung))
+        extra_anim[f"waffe{nr}"] = (halte, bedingung)
+        zusatzbilder.append(bild)
+        hoehe += bild.height
+
+    def mit_zusatz(pfad):
+        if not zusatzbilder:
+            return bild_daten(pfad)
+        grund = Image.open(pfad).convert("RGBA")
+        alle = [grund] + zusatzbilder
+        atlas = Image.new("RGBA", (max(b.width for b in alle), sum(b.height for b in alle)), (0, 0, 0, 0))
+        y = 0
+        for b in alle:
+            atlas.paste(b, (0, y))
+            y += b.height
+        return bild_als_daten(atlas)
+    if zusatzbilder:
+        geo["description"] = dict(geo["description"], texture_height=hoehe, texture_width=max(
+            [geo["description"].get("texture_width", 64)] + [b.width for b in zusatzbilder]))
+
     varianten = []
-    for i, schluessel in enumerate(reihe):
-        varianten.append({"n": VARIANTENNAME.get(schluessel, schluessel.replace("_", " ").capitalize()),
-                          "b": bild_daten(RES / (texturen[schluessel] + ".png")),
-                          "v": i, "w": gewichte.get(schluessel)})
+    if info.get("ausruestung"):
+        # Varianten, die sich nur in der Ausruestung unterscheiden (der
+        # Ritter mit Schwert oder Armbrust): dieselbe Haut, andere Nummer.
+        for i, (name, w) in enumerate(info["ausruestung"]):
+            varianten.append({"n": name, "b": mit_zusatz(RES / (texturen[reihe[0]] + ".png")), "v": i, "w": w})
+    else:
+        for i, schluessel in enumerate(reihe):
+            varianten.append({"n": VARIANTENNAME.get(schluessel, schluessel.replace("_", " ").capitalize()),
+                              "b": mit_zusatz(RES / (texturen[schluessel] + ".png")),
+                              "v": i, "w": gewichte.get(schluessel)})
     if baby:
         varianten.append({"n": VARIANTENNAME.get(baby, baby.capitalize()),
-                          "b": bild_daten(RES / (texturen[baby] + ".png")), "v": 0, "baby": 1})
+                          "b": mit_zusatz(RES / (texturen[baby] + ".png")), "v": 0, "baby": 1})
 
     sichtbar = []
+    for knochen, bedingung in bedingungen:
+        sichtbar.append(json.dumps(knochen) + ":" + fn(js_ausdruck(bedingung)))
     for eintrag in steuer.get("part_visibility", []):
         for knochen, bedingung in eintrag.items():
             if knochen == "*":
@@ -316,6 +466,8 @@ def mob_daten(kennung, entitaet_datei, gruppe, info):
     for kurz, voll in d.get("animations", {}).items():
         if voll in ALLE_ANIMATIONEN:
             animationen[kurz] = animation_js(ALLE_ANIMATIONEN[voll])
+    for kurz, (anim, _) in extra_anim.items():
+        animationen[kurz] = animation_js(anim)
     ablauf = []
     for eintrag in skripte.get("animate", []):
         if isinstance(eintrag, str):
@@ -323,6 +475,8 @@ def mob_daten(kennung, entitaet_datei, gruppe, info):
         for kurz, gewicht in eintrag.items():
             if kurz in animationen:
                 ablauf.append("[" + json.dumps(kurz) + "," + fn(js_ausdruck(gewicht)) + "]")
+    for kurz, (_, bedingung) in extra_anim.items():
+        ablauf.append("[" + json.dumps(kurz) + "," + fn(js_ausdruck(bedingung)) + "]")
 
     alles = " ".join([json.dumps(skripte), json.dumps(steuer.get("part_visibility", []))])
     schalter = []
@@ -336,7 +490,7 @@ def mob_daten(kennung, entitaet_datei, gruppe, info):
         f"id:{json.dumps(kennung)}", f"ident:{json.dumps(ident)}", f"gruppe:{json.dumps(gruppe)}",
         f"gross:{float(info.get('gross', 1.0))}",
         "info:" + json.dumps(info["steckbrief"], ensure_ascii=False),
-        "geo:" + json.dumps(geometrie_daten(geo_id), separators=(",", ":")),
+        "geo:" + json.dumps(geometrie_daten(geo), separators=(",", ":")),
         "var:" + json.dumps(varianten, ensure_ascii=False, separators=(",", ":")),
         "anim:{" + ",".join(json.dumps(k) + ":" + v for k, v in animationen.items()) + "}",
         "ablauf:[" + ",".join(ablauf) + "]",
@@ -408,10 +562,32 @@ def alle_mobs():
     for b in banditen_bauen.BANDITEN:
         mobs.append(mob_daten(b["id"], f"bandit_{b['id']}.entity.json", "Banditen",
                               {"steckbrief": steckbrief_bandit(b), "gross": b.get("gross", 1.0)}))
-    mobs.append(mob_daten("ritter", "ritter.entity.json", "Weitere", {"steckbrief": {
-        "name": "Ritter", "en": "Knight", "zeilen": [
-            ["Leben", "15 Herzen"], ["Verhalten", "greift an, 2,5 Herzen Schaden"],
-            ["Größe", "0,7 × 1,95 Blöcke"], ["Rüstung", "Ritterhelm, -brustpanzer, -beinschutz, -stiefel"]]}}))
+    import ritterorden_bauen as ro
+    eisen = nachbild_waffe(EISENSCHWERT_NACHBILD)
+    saphir = (lade(RES / "models" / "entity" / "saphirschwert.geo.json")["minecraft:geometry"][0],
+              Image.open(RES / "textures" / "entity" / "saphirschwert_haut.png").convert("RGBA"),
+              ALLE_ANIMATIONEN["animation.saphirschwert.halten"])
+    mobs.append(mob_daten("ritter", "ritter.entity.json", "Ritter", {
+        "ausruestung": [("mit Eisenschwert", 70), ("mit Armbrust", 30)],
+        "waffen": [eisen + ("query.variant == 0",)],
+        "steckbrief": {"name": "Ritter", "en": "Knight", "zeilen": [
+            ["Leben", "15 Herzen"],
+            ["Verhalten", "schützt das Land: greift Banditen und Monster an, wehrt sich"],
+            ["Waffe", "Eisenschwert (7 von 10) oder Armbrust (3 von 10)"],
+            ["Größe", "0,7 × 1,95 Blöcke"],
+            ["Beute", "Eisen, Eisenklumpen, Brot, Äpfel, selten Stahlbarren; "
+                      "Armbrustschützen dazu Pfeile, selten eine Armbrust; "
+                      "manchmal fällt das abgenutzte Eisenschwert"]]}}))
+    mobs.append(mob_daten("ritterhauptmann", "ritterhauptmann.entity.json", "Ritter", {
+        "gross": 1.06,
+        "waffen": [saphir + ("1.0",)],
+        "steckbrief": {"name": "Ritterhauptmann", "en": "Knight Captain", "zeilen": [
+            ["Leben", "25 Herzen"],
+            ["Verhalten", "schützt das Land, 3,5 Herzen Schaden plus Saphirschwert"],
+            ["Waffe", "Saphirschwert"],
+            ["Größe", "etwas größer als ein Ritter, blauer Helmbusch"],
+            ["Beute", "Eisen, Goldklumpen, Brot, Äpfel, Steak, oft Stahlbarren, selten Smaragd "
+                      "oder goldener Apfel; mit 5 % das Saphirschwert – mit drei Vierteln Haltbarkeit"]]}}))
     wo = biom_text(biome_aus_spawnregel("fynn:glimmerling"))
     mobs.append(mob_daten("glimmerling", "glimmerling.entity.json", "Weitere", {"steckbrief": {
         "name": "Glimmerling", "en": "Glimmerling", "zeilen": [
