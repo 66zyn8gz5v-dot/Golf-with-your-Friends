@@ -16,12 +16,30 @@
       },
       "bones": [
         {
+          "name": "root",
+          "pivot": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "waist",
+          "pivot": [
+            0.0,
+            12.0,
+            0.0
+          ],
+          "parent": "root"
+        },
+        {
           "name": "body",
           "pivot": [
             0.0,
             24.0,
             0.0
-          ]
+          ],
+          "parent": "waist"
         },
         {
           "name": "fynn_rucksack",

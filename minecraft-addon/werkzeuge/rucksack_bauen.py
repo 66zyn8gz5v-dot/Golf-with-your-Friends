@@ -151,7 +151,14 @@ HAND = (0, -3.5, -2)       # in der Hand: haengt unter der Faust
 
 def ruecken_modell():
     m = Modell("rucksack_ruecken", sichtbreite=2, sichthoehe=3)
-    m.knoch("body", [0, 24, 0])
+    # Dieselbe Knochenkette wie beim Spieler (root - waist - body): Die
+    # Flug- und Schwimmbewegungen drehen den ganzen Spieler an "root", das
+    # Gehen neigt "waist". Fehlen die beiden, bleibt der Rucksack beim
+    # Fliegen senkrecht haengen, waehrend der Spieler waagerecht liegt
+    # (Fynns Bild vom 26. September).
+    m.knoch("root", [0, 0, 0])
+    m.knoch("waist", [0, 12, 0], "root")
+    m.knoch("body", [0, 24, 0], "waist")
     rucksack(m.knoch("fynn_rucksack", [0, 12, 3.5], "body"), RUECKEN, 1)
     riemen = m.knoch("fynn_riemen", [0, 24, 0], "body")
     for x in (-3, 2):

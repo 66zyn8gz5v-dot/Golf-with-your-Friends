@@ -44,11 +44,11 @@ item.fynn:eisenklinge.name=Eisenklinge
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.46
+item.iron_sword.name=Stahlschwert 4.47
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.46
-item.fynn:degen.name=Degen 4.46
+item.fynn:degen=Degen 4.47
+item.fynn:degen.name=Degen 4.47
 
 
 
@@ -357,10 +357,6 @@ item.fynn:schwertfischklinge.name=Schwertfischklinge
 item.fynn:trank_der_tiefe=Trank der Tiefe
 item.fynn:trank_der_tiefe.name=Trank der Tiefe
 
-## Rucksack
-item.fynn:rucksack=Rucksack
-item.fynn:rucksack.name=Rucksack
-entity.fynn:rucksack_abgestellt.name=Rucksack
 
 ## Die Tiere
 entity.fynn:braunbaer.name=Braunbär
@@ -399,3 +395,8 @@ entity.fynn:mantarochen.name=Mantarochen
 item.spawn_egg.entity.fynn:mantarochen.name=Mantarochen-Spawn-Ei
 entity.fynn:steinadler.name=Steinadler
 item.spawn_egg.entity.fynn:steinadler.name=Steinadler-Spawn-Ei
+
+## Rucksack
+item.fynn:rucksack=Rucksack
+item.fynn:rucksack.name=Rucksack
+entity.fynn:rucksack_abgestellt.name=Rucksack
