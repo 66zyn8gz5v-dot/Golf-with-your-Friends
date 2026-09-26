@@ -13,6 +13,7 @@
 import { world, system } from "@minecraft/server";
 import { angriffErlaubt, hinweis, verbrauche } from "./rollen.js";
 import "./kampf.js";
+import "./pfeile.js";
 
 const DEGEN = "fynn:degen";
 
@@ -286,8 +287,10 @@ world.afterEvents.playerInteractWithBlock.subscribe((e) => {
         const noch = nachlegen(e.block, gehalten.typeId);
         hinweis(e.player, `§6Brennt noch ${noch} Sekunden.`);
 
-        // Im Kreativmodus nimmt Minecraft ohnehin nichts weg.
-        if (e.player.getGameMode?.() === "creative") return;
+        // Im Kreativmodus nimmt Minecraft ohnehin nichts weg. Die
+        // 2.0-Schnittstelle schreibt den Modus gross ("Creative"), die
+        // alte klein - verglichen wird darum ohne Gross und Klein.
+        if (String(e.player.getGameMode?.() ?? "").toLowerCase() === "creative") return;
         const hand = e.player.getComponent("minecraft:equippable")
             ?.getEquipmentSlot("Mainhand");
         if (!hand) return;

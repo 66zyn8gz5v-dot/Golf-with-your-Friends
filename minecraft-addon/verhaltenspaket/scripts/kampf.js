@@ -226,6 +226,12 @@ function schattensprung(spieler) {
 
 const hagel = new Map();        // Pfeil -> bis wann er bleiben darf
 
+// Fuer pfeile.js: Hagelpfeile werden nie zu Erzpfeilen - sonst kostete
+// jeder Hagel fuenf davon.
+export function istHagelpfeil(kennung) {
+    return hagel.has(kennung);
+}
+
 /**
  * Fuenf Pfeile auf einmal, gefaechert ueber gut dreissig Grad: gegen eine
  * Gruppe, oder gegen einen, der ausweicht.

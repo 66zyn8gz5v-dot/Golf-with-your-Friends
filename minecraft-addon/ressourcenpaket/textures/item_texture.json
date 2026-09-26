@@ -76,6 +76,18 @@
     },
     "netheritdolche": {
       "textures": "textures/items/netheritdolche"
+    },
+    "eisenpfeil": {
+      "textures": "textures/items/eisenpfeil"
+    },
+    "silberpfeil": {
+      "textures": "textures/items/silberpfeil"
+    },
+    "goldpfeil": {
+      "textures": "textures/items/goldpfeil"
+    },
+    "elektrumpfeil": {
+      "textures": "textures/items/elektrumpfeil"
     }
   }
 }
