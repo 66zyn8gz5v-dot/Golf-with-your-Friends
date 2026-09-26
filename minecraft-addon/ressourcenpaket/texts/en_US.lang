@@ -42,11 +42,11 @@ item.fynn:eisenklinge.name=Iron Blade
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.28
+item.iron_sword.name=Stahlschwert 4.29
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.28
-item.fynn:degen.name=Degen 4.28
+item.fynn:degen=Degen 4.29
+item.fynn:degen.name=Degen 4.29
 
 
 
@@ -100,6 +100,18 @@ item.fynn:sturmbogen.name=Storm Bow
 item.fynn:wurfstern.name=Throwing Star
 entity.fynn:frostkugel.name=Frost Orb
 entity.fynn:wurfstern.name=Throwing Star
+item.fynn:eisendolche=Iron Daggers
+item.fynn:eisendolche.name=Iron Daggers
+item.fynn:silberdolche=Silver Daggers
+item.fynn:silberdolche.name=Silver Daggers
+item.fynn:stahldolche=Steel Daggers
+item.fynn:stahldolche.name=Steel Daggers
+item.fynn:elektrumdolche=Electrum Daggers
+item.fynn:elektrumdolche.name=Electrum Daggers
+item.fynn:diamantdolche=Diamond Daggers
+item.fynn:diamantdolche.name=Diamond Daggers
+item.fynn:netheritdolche=Netherite Daggers
+item.fynn:netheritdolche.name=Netherite Daggers
 item.fynn:magierhut=Wizard Hat
 item.fynn:magierhut.name=Wizard Hat
 item.fynn:magierrobe=Mage Robe
@@ -124,15 +136,3 @@ item.fynn:waldlaeuferhose=Ranger Trousers
 item.fynn:waldlaeuferhose.name=Ranger Trousers
 item.fynn:waldlaeuferstiefel=Ranger Boots
 item.fynn:waldlaeuferstiefel.name=Ranger Boots
-item.fynn:eisendolche=Iron Daggers
-item.fynn:eisendolche.name=Iron Daggers
-item.fynn:silberdolche=Silver Daggers
-item.fynn:silberdolche.name=Silver Daggers
-item.fynn:stahldolche=Steel Daggers
-item.fynn:stahldolche.name=Steel Daggers
-item.fynn:elektrumdolche=Electrum Daggers
-item.fynn:elektrumdolche.name=Electrum Daggers
-item.fynn:diamantdolche=Diamond Daggers
-item.fynn:diamantdolche.name=Diamond Daggers
-item.fynn:netheritdolche=Netherite Daggers
-item.fynn:netheritdolche.name=Netherite Daggers

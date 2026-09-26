@@ -42,11 +42,11 @@ item.fynn:eisenklinge.name=Eisenklinge
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.28
+item.iron_sword.name=Stahlschwert 4.29
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.28
-item.fynn:degen.name=Degen 4.28
+item.fynn:degen=Degen 4.29
+item.fynn:degen.name=Degen 4.29
 
 
 
@@ -106,6 +106,18 @@ item.fynn:sturmbogen.name=Sturmbogen
 item.fynn:wurfstern.name=Wurfstern
 entity.fynn:frostkugel.name=Frostkugel
 entity.fynn:wurfstern.name=Wurfstern
+item.fynn:eisendolche=Eisendolche
+item.fynn:eisendolche.name=Eisendolche
+item.fynn:silberdolche=Silberdolche
+item.fynn:silberdolche.name=Silberdolche
+item.fynn:stahldolche=Stahldolche
+item.fynn:stahldolche.name=Stahldolche
+item.fynn:elektrumdolche=Elektrumdolche
+item.fynn:elektrumdolche.name=Elektrumdolche
+item.fynn:diamantdolche=Diamantdolche
+item.fynn:diamantdolche.name=Diamantdolche
+item.fynn:netheritdolche=Netheritdolche
+item.fynn:netheritdolche.name=Netheritdolche
 item.fynn:magierhut=Zauberhut
 item.fynn:magierhut.name=Zauberhut
 item.fynn:magierrobe=Magierrobe
@@ -130,15 +142,3 @@ item.fynn:waldlaeuferhose=Waldläuferhose
 item.fynn:waldlaeuferhose.name=Waldläuferhose
 item.fynn:waldlaeuferstiefel=Waldläuferstiefel
 item.fynn:waldlaeuferstiefel.name=Waldläuferstiefel
-item.fynn:eisendolche=Eisendolche
-item.fynn:eisendolche.name=Eisendolche
-item.fynn:silberdolche=Silberdolche
-item.fynn:silberdolche.name=Silberdolche
-item.fynn:stahldolche=Stahldolche
-item.fynn:stahldolche.name=Stahldolche
-item.fynn:elektrumdolche=Elektrumdolche
-item.fynn:elektrumdolche.name=Elektrumdolche
-item.fynn:diamantdolche=Diamantdolche
-item.fynn:diamantdolche.name=Diamantdolche
-item.fynn:netheritdolche=Netheritdolche
-item.fynn:netheritdolche.name=Netheritdolche

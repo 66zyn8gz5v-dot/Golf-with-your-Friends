@@ -1,4 +1,5 @@
-// Der Starttempel ohne Spiel: bauen, ankommen, waehlen, ausruesten, zurueck.
+// Der Starttempel ohne Spiel: bauen, ankommen, waehlen, ausruesten, springen,
+// sicher landen, Tempel weg.
 import { gemerkt, system, world } from "@minecraft/server";
 import { letztesFenster, setzeAntwort } from "@minecraft/server-ui";
 await import("./main.js");
@@ -34,16 +35,20 @@ pruefe("Mitte ist frei zum Stehen", bei(0, 100, 0)?.typ === "minecraft:air" && b
 
 // --- Die Welt
 const gesetzt = [], befehle = [], figuren = [];
+let bodenNah = false;
 const dimension = {
     id: "minecraft:overworld",
     getBlock: () => ({}),
     setBlockType: (ort, typ) => gesetzt.push({ ort, typ }),
     setBlockPermutation: (ort, perm) => gesetzt.push({ ort, typ: perm.typ, zustaende: perm.zustaende }),
     spawnEntity: (typ, ort) => {
-        const f = { typ, ort, marken: [], setRotation(r) { this.drehung = r; }, addTag(t) { this.marken.push(t); } };
+        const f = { typ, ort, marken: [], setRotation(r) { this.drehung = r; }, addTag(t) { this.marken.push(t); },
+                    remove() { this.weg = true; } };
         figuren.push(f);
         return f;
     },
+    getEntities: (o) => figuren.filter((f) => !f.weg && o.tags.every((t) => f.marken.includes(t))),
+    getBlockFromRay: () => (bodenNah ? {} : undefined),
     runCommand: (b) => befehle.push(b),
     spawnItem() {},
     playSound() {},
@@ -62,6 +67,7 @@ function neuerSpieler(id) {
         getGameMode() { return this.modus; },
         setGameMode(m) { this.modus = m; },
         teleport(ort, o) { this.location = ort; this.sprung = o; },
+        isOnGround: true, isInWater: false,
         addEffect(id) { this.wirkungen.push(id); }, removeEffect() {},
         onScreenDisplay: { setActionBar() {}, setTitle(t) { this.letzter = t; } },
         getComponent(n) {
@@ -81,7 +87,7 @@ for (const f of gemerkt.ereignisse["playerSpawn"]) f({ player: fynn, initialSpaw
 pruefe("nicht sofort - erst wenn die Welt geladen ist", spaeter.length === 1 && gesetzt.length === 0);
 abarbeiten();
 const mitte = JSON.parse(world.getDynamicProperty("fynn:tempel"));
-pruefe(`Tempel gebaut bei y ${mitte.y} (50 ueber dem Spawn)`, mitte.y === 114 && gesetzt.length === plan.length);
+pruefe(`Tempel gebaut bei y ${mitte.y} (ganz oben)`, mitte.y === 290 && gesetzt.length === plan.length);
 pruefe("vier Statuen mit Namen", figuren.length === 4 && figuren.every((f) => f.typ === "fynn:statue" && f.marken.length === 1));
 pruefe("die Ritterstatue traegt Ritterhelm, Steinschwert und Schild",
        ["slot.armor.head 0 fynn:ritterhelm", "slot.weapon.mainhand 0 minecraft:stone_sword", "slot.weapon.offhand 0 minecraft:shield"]
@@ -91,7 +97,7 @@ pruefe("die Bogenschuetzenstatue Kapuze und Wams des Waldlaeufers",
        ["slot.armor.head 0 fynn:waldlaeuferkapuze", "slot.armor.chest 0 fynn:waldlaeuferwams"]
            .every((t) => befehle.some((b) => b.includes("fynn_statue_bogenschuetze") && b.endsWith(t))));
 pruefe(`Spieler steht in der Mitte (${fynn.location.x}, ${fynn.location.y}, ${fynn.location.z})`,
-       fynn.location.x === 10.5 && fynn.location.y === 114 && fynn.location.z === -20.5);
+       fynn.location.x === 10.5 && fynn.location.y === 290 && fynn.location.z === -20.5);
 pruefe("Abenteuermodus im Tempel", fynn.modus === "Adventure");
 pruefe(`Titel: ${fynn.onScreenDisplay.letzter}`, fynn.onScreenDisplay.letzter.includes("Willkommen"));
 
@@ -110,9 +116,34 @@ pruefe("Rolle: magier", fynn.eigenschaften.get("fynn:rolle") === "magier");
 pruefe("Magierrobe angezogen", fynn.angezogen.Head === "fynn:magierhut" && fynn.angezogen.Feet === "fynn:magierschuhe");
 pruefe(`im Inventar: ${fynn.inventar.map((s) => s.typeId.replace(/.*:/, "")).join(", ")}`,
        fynn.inventar.some((s) => s.typeId === "fynn:feuerstab_2") && fynn.inventar.some((s) => s.typeId === "minecraft:bread"));
-pruefe(`zurueck an den alten Platz (${fynn.location.x}, ${fynn.location.y}, ${fynn.location.z})`,
-       fynn.location.x === 10.3 && fynn.location.y === 64 && fynn.location.z === -20.7);
-pruefe("wieder Ueberleben, sanfte Landung", fynn.modus === "Survival" && fynn.wirkungen.includes("slow_falling"));
+pruefe("wieder Ueberleben, noch oben", fynn.modus === "Survival" && fynn.location.y === 290);
+pruefe(`Titel: ${fynn.onScreenDisplay.letzter}`, fynn.onScreenDisplay.letzter.includes("Spring"));
+const tor = gesetzt.slice(-45);
+pruefe("das Tor in der Mitte ist offen (3 x 3, fuenf tief)",
+       tor.length === 45 && tor.every((b) => b.typ === "minecraft:air" && Math.abs(b.ort.x - 10) <= 1 && b.ort.y < 290));
+
+// --- Der Sprung
+const sturz = gemerkt.takte.find(([f]) => f.name === "sturzTakt")[0];
+world.getAllPlayers = () => [fynn];
+fynn.location = { x: 10.5, y: 250, z: -20.5 };
+fynn.isOnGround = false;
+fynn.wirkungen.length = 0;
+const vorAbbau = gesetzt.length;
+sturz();
+pruefe("im Fall: Resistenz V", fynn.wirkungen.includes("resistance") && fynn.eigenschaften.get("fynn:sturz") === true);
+pruefe("niemand mehr oben: Tempel abgebaut, Statuen weg",
+       world.getDynamicProperty("fynn:tempel_steht") === false && figuren.every((f) => f.weg)
+       && gesetzt.length - vorAbbau > 400 && gesetzt.slice(vorAbbau).every((b) => b.typ === "minecraft:air"));
+pruefe("noch weit oben: kein Fallschirm", !fynn.wirkungen.includes("slow_falling"));
+bodenNah = true;
+sturz();
+pruefe("nah am Boden: langsames Fallen", fynn.wirkungen.includes("slow_falling"));
+fynn.isOnGround = true;
+sturz();
+pruefe(`gelandet: ${fynn.onScreenDisplay.letzter}`, fynn.eigenschaften.get("fynn:sturz") === undefined
+       && fynn.onScreenDisplay.letzter.includes("Gelandet"));
+bodenNah = false;
+world.getAllPlayers = () => [];
 
 // Noch einmal zum Tempelaltar (etwa per Befehl hinauf): Rolle ja, Ausruestung nein.
 const vorher = fynn.inventar.length;
@@ -134,7 +165,29 @@ lea.location = { x: 500, y: 70, z: 500 };
 const bloecke = gesetzt.length;
 for (const f of gemerkt.ereignisse["playerSpawn"]) f({ player: lea, initialSpawn: true });
 abarbeiten();
-pruefe("zweiter Spieler: in denselben Tempel", lea.location.x === 10.5 && lea.location.y === 114 && gesetzt.length === bloecke);
+pruefe("zweiter Spieler: der Tempel entsteht neu, an derselben Stelle",
+       lea.location.x === 10.5 && lea.location.y === 290 && gesetzt.length === bloecke + plan.length
+       && world.getDynamicProperty("fynn:tempel_steht") === true);
+
+// Ein Mitspieler steht noch oben: dann nur das Tor zu, der Tempel bleibt.
+const tom = neuerSpieler("tom");
+tom.location = { x: 12, y: 290, z: -19 };
+lea.location = { x: 10.5, y: 250, z: -20.5 };
+lea.isOnGround = false;
+world.getAllPlayers = () => [lea, tom];
+const vorTor = gesetzt.length;
+sturz();
+pruefe("Mitspieler oben: Tempel bleibt, Tor wieder zu",
+       world.getDynamicProperty("fynn:tempel_steht") === true && gesetzt.length - vorTor === 37   // 9+9+9+9+1: die Insel wird nach unten spitz
+       && gesetzt.slice(vorTor).every((b) => b.typ !== "minecraft:air"));
+world.getAllPlayers = () => [];
+
+// Ein alter Tempel (bis 4.28, 50 ueber dem Spawn) wird aufgeraeumt.
+world.setDynamicProperty("fynn:tempel", JSON.stringify({ x: 0, y: 114, z: 0 }));
+world.setDynamicProperty("fynn:tempel_steht", undefined);
+gemerkt.takte.find(([f]) => f.name === "alterTempelWeg")[0]();
+pruefe("alter Tempel: abgebaut und vergessen", world.getDynamicProperty("fynn:tempel") === undefined
+       && world.getDynamicProperty("fynn:tempel_steht") === false);
 
 // Beim Wiederbeleben (nicht das erste Erscheinen): nichts
 const vorher2 = spaeter.length;

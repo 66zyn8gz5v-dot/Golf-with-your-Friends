@@ -6,13 +6,19 @@
 // was man da bekommt." Darum steht an jeder der vier Seiten eine
 // Steinstatue, die genau die Startausruestung ihrer Rolle traegt, davor
 // der Altar dieser Rolle. Antippen, bestaetigen - dann gibt es die
-// Ausruestung, und es geht hinunter in die Welt, dorthin, wo man vorher
-// stand.
+// Ausruestung, und in der Mitte oeffnet sich ein Tor im Boden.
 //
-// Gebaut wird der Tempel vom Skript, Block fuer Block, einmal je Welt:
-// ueber dem Ort, an dem der erste Spieler erscheint. Wer spaeter
-// dazukommt, landet im selben Tempel. Wer schon eine Rolle hatte (aus der
-// Zeit vor dem Tempel), wird nicht hinaufgeholt.
+// Hinunter geht es zu Fuss: Fynn wollte "runterspringen ... eine
+// Fallanimation, aber keinen Fallschaden", um "die Umgebung abzuchecken".
+// Der Tempel steht deshalb ganz oben (Hoehe 290), man faellt gut 200
+// Bloecke durch die Luft, und kurz vor dem Boden bremst ein Fallschirm-
+// Effekt (langsames Fallen). Den ganzen Sturz ueber schuetzt Resistenz V.
+//
+// Danach verschwindet der Tempel wieder - "er soll nicht einfach in der
+// Welt rumchillen". Sobald niemand mehr oben steht, wird er abgebaut, samt
+// Statuen. Kommt spaeter ein neuer Spieler, entsteht er fuer ihn neu, an
+// derselben Stelle. Wer schon eine Rolle hatte (aus der Zeit vor dem
+// Tempel), wird nicht hinaufgeholt.
 //
 // Solange man im Tempel ist, gilt der Abenteuermodus: Abbauen geht nicht,
 // man faellt also auch nicht aus Versehen durch den Boden.
@@ -24,11 +30,16 @@ import { ROLLEN, rolleVon, setzeRolle } from "./rollen.js";
 const TEMPEL_SCHLUESSEL = "fynn:tempel";        // an der Welt: wo er steht
 const GESTARTET = "fynn:gestartet";             // am Spieler: war schon oben
 const AUSGERUESTET = "fynn:ausgeruestet";       // am Spieler: Startausruestung bekommen
-const RUECKKEHR = "fynn:rueckkehr";             // am Spieler: wohin es danach geht
+const STEHT = "fynn:tempel_steht";              // an der Welt: gerade aufgebaut?
 const MODUS = "fynn:modus";                     // am Spieler: Spielmodus vor dem Tempel
+const STURZ = "fynn:sturz";                     // am Spieler: faellt gerade vom Tempel
 
-const HOEHE_UEBER_SPAWN = 50;
-const HOECHSTE_HOEHE = 300;
+// Ganz oben, damit der Sprung lang wird. Die Welt endet bei 319; darunter
+// braucht der Tempel noch Platz fuer Laternen und Insel.
+const TEMPEL_HOEHE = 290;
+const HOECHSTE_HOEHE = 312;
+// Ab dieser Entfernung zum Boden bremst der Fallschirm.
+const BREMSWEG = 14;
 
 // Welche Rolle an welcher Seite steht, und wohin Altar und Statue dann
 // schauen. "blick" ist die Richtung von der Seite zur Mitte; "zustand"
@@ -184,6 +195,65 @@ export function bauplan(mitte) {
     return plan;
 }
 
+// Das Tor in der Mitte: drei mal drei Bloecke, durch Boden und Insel.
+function torBloecke(mitte) {
+    const ort = [];
+    for (let dx = -1; dx <= 1; dx++) {
+        for (let dz = -1; dz <= 1; dz++) {
+            for (let dy = -1; dy >= -5; dy--) ort.push({ x: mitte.x + dx, y: mitte.y + dy, z: mitte.z + dz });
+        }
+    }
+    return ort;
+}
+
+function torAuf(dimension, mitte) {
+    for (const ort of torBloecke(mitte)) {
+        try {
+            dimension.setBlockType(ort, "minecraft:air");
+        } catch (e) {
+            // nicht geladen - dann bleibt der Block
+        }
+    }
+    try {
+        dimension.playSound("block.iron_door.open", { x: mitte.x + 0.5, y: mitte.y, z: mitte.z + 0.5 });
+    } catch (e) {
+        // ohne Ton geht es auch
+    }
+}
+
+function torZu(dimension, mitte) {
+    const schluessel = new Set(torBloecke(mitte).map((o) => `${o.x},${o.y},${o.z}`));
+    for (const teil of bauplan(mitte)) {
+        if (!schluessel.has(`${teil.ort.x},${teil.ort.y},${teil.ort.z}`)) continue;
+        try {
+            dimension.setBlockType(teil.ort, teil.typ);
+        } catch (e) {
+            // nicht geladen
+        }
+    }
+}
+
+export function abbauen(dimension, mitte) {
+    for (const teil of bauplan(mitte)) {
+        if (teil.typ === "minecraft:air") continue;
+        try {
+            dimension.setBlockType(teil.ort, "minecraft:air");
+        } catch (e) {
+            // nicht geladen - der Rest geht trotzdem
+        }
+    }
+    for (const s of SEITEN) {
+        for (const figur of dimension.getEntities({ tags: [`fynn_statue_${s.rolle}`] })) {
+            try {
+                figur.remove();
+            } catch (e) {
+                // schon weg
+            }
+        }
+    }
+    world.setDynamicProperty(STEHT, false);
+}
+
 function bauen(dimension, mitte) {
     let fehler = 0;
     for (const teil of bauplan(mitte)) {
@@ -203,6 +273,7 @@ function bauen(dimension, mitte) {
         }
     }
     for (const s of SEITEN) statue(dimension, mitte, s);
+    world.setDynamicProperty(STEHT, true);
     if (fehler) console.warn(`Tempel: ${fehler} Bloecke nicht gesetzt`);
 }
 
@@ -235,13 +306,21 @@ function hinauf(spieler, versuch = 0) {
     try {
         const dimension = world.getDimension("overworld");
         let mitte = tempelOrt();
+        if (mitte && world.getDynamicProperty(STEHT) === undefined) {
+            // Ein alter, niedriger Tempel (siehe alterTempelWeg): weg damit,
+            // der neue kommt nach oben.
+            abbauen(dimension, mitte);
+            mitte = undefined;
+        }
         if (!mitte) {
             const hier = spieler.location;
             mitte = {
                 x: Math.floor(hier.x),
-                y: Math.min(HOECHSTE_HOEHE, Math.floor(hier.y) + HOEHE_UEBER_SPAWN),
+                y: Math.min(HOECHSTE_HOEHE, Math.max(TEMPEL_HOEHE, Math.floor(hier.y) + 30)),
                 z: Math.floor(hier.z),
             };
+        }
+        if (world.getDynamicProperty(STEHT) !== true) {
             // Nur bauen, wenn die Gegend geladen ist - kurz nach dem
             // Erscheinen ist sie das manchmal noch nicht.
             if (!dimension.getBlock(mitte)) throw new Error("noch nicht geladen");
@@ -249,10 +328,6 @@ function hinauf(spieler, versuch = 0) {
             world.setDynamicProperty(TEMPEL_SCHLUESSEL, JSON.stringify(mitte));
         }
 
-        spieler.setDynamicProperty(RUECKKEHR, JSON.stringify({
-            x: spieler.location.x, y: spieler.location.y, z: spieler.location.z,
-            dimension: spieler.dimension.id,
-        }));
         const modus = String(spieler.getGameMode());
         if (modus.toLowerCase() === "survival") {
             spieler.setDynamicProperty(MODUS, modus);
@@ -288,21 +363,97 @@ world.afterEvents.playerSpawn.subscribe((e) => {
 
 // ------------------------------------------------------------ Wahl
 
-function hinunter(spieler) {
-    const zurueck = spieler.getDynamicProperty(RUECKKEHR);
+// Nach der Wahl: Spielmodus zurueck, Tor auf, Sprung.
+function losspringen(spieler) {
     const modus = spieler.getDynamicProperty(MODUS);
     if (typeof modus === "string") {
         spieler.setGameMode(modus);
         spieler.setDynamicProperty(MODUS, undefined);
     }
     spieler.setDynamicProperty(GESTARTET, true);
-    if (typeof zurueck === "string") {
-        const z = JSON.parse(zurueck);
-        spieler.teleport({ x: z.x, y: z.y, z: z.z }, { dimension: world.getDimension(z.dimension) });
-    }
-    // Falls der alte Platz inzwischen in der Luft liegt: sanft landen.
-    spieler.addEffect("slow_falling", 200, { amplifier: 0, showParticles: false });
+    const mitte = tempelOrt();
+    if (mitte) torAuf(world.getDimension("overworld"), mitte);
+    spieler.onScreenDisplay.setTitle("§6Spring!", {
+        subtitle: "§7Das Tor in der Mitte ist offen - unten landest du sicher",
+        fadeInDuration: 5, stayDuration: 60, fadeOutDuration: 15,
+    });
 }
+
+// ------------------------------------------------------------ Sturz
+
+// Wer unter dem Tempel faellt, faellt sicher: Resistenz V nimmt jeden
+// Schaden, und nahe am Boden bremst langsames Fallen, das den Fallschaden
+// ohnehin aufhebt - doppelt, weil ein Sturz aus 200 Bloecken keinen
+// zweiten Versuch hat. Gilt fuer jeden, der aus dem Tempel faellt, auch
+// wer ohne Wahl durchs offene Tor rutscht.
+function unterDemTempel(spieler, mitte) {
+    const o = spieler.location;
+    return Math.abs(o.x - (mitte.x + 0.5)) <= 9 && Math.abs(o.z - (mitte.z + 0.5)) <= 9 && o.y < mitte.y - 6;
+}
+
+function obenImTempel(spieler, mitte) {
+    const o = spieler.location;
+    return Math.abs(o.x - (mitte.x + 0.5)) <= 8 && Math.abs(o.z - (mitte.z + 0.5)) <= 8
+        && o.y >= mitte.y - 2 && o.y <= mitte.y + 6;
+}
+
+function sturzTakt() {
+    if (world.getDynamicProperty(STEHT) !== true && !world.getAllPlayers().some((p) => p.getDynamicProperty(STURZ))) return;
+    const mitte = tempelOrt();
+    if (!mitte) return;
+    const dimension = world.getDimension("overworld");
+    for (const spieler of world.getAllPlayers()) {
+        try {
+            if (!spieler.getDynamicProperty(STURZ)) {
+                if (world.getDynamicProperty(STEHT) !== true || !unterDemTempel(spieler, mitte)) continue;
+                if (spieler.dimension.id !== dimension.id) continue;
+                spieler.setDynamicProperty(STURZ, true);
+                const modus = spieler.getDynamicProperty(MODUS);
+                if (typeof modus === "string") {
+                    spieler.setGameMode(modus);
+                    spieler.setDynamicProperty(MODUS, undefined);
+                }
+                // Ist oben niemand mehr, wird der Tempel abgebaut; sonst
+                // nur das Tor geschlossen, damit keiner vor der Wahl faellt.
+                if (world.getAllPlayers().some((p) => p.id !== spieler.id && obenImTempel(p, mitte))) torZu(dimension, mitte);
+                else abbauen(dimension, mitte);
+            }
+            spieler.addEffect("resistance", 40, { amplifier: 4, showParticles: false });
+            if (spieler.isOnGround || spieler.isInWater) {
+                spieler.setDynamicProperty(STURZ, undefined);
+                spieler.onScreenDisplay.setTitle("§aGelandet", {
+                    subtitle: "§7Viel Glück da draußen", fadeInDuration: 5, stayDuration: 40, fadeOutDuration: 15,
+                });
+                continue;
+            }
+            const boden = spieler.dimension.getBlockFromRay(spieler.location, { x: 0, y: -1, z: 0 },
+                { maxDistance: BREMSWEG, includeLiquidBlocks: true });
+            if (boden) spieler.addEffect("slow_falling", 60, { amplifier: 0, showParticles: false });
+        } catch (fehler) {
+            console.warn(`Tempel, Sturz: ${fehler}`);
+        }
+    }
+}
+system.runInterval(sturzTakt, 2);
+
+// Aufraeumen nach dem Wechsel auf diese Fassung: Bis 4.28 stand der
+// Tempel 50 Bloecke ueber dem Spawn und blieb fuer immer stehen - so in
+// Fynns Welt. Einen solchen alten Tempel erkennt man daran, dass die Welt
+// noch nie "steht" gespeichert hat. Er wird abgebaut, sobald seine Gegend
+// geladen ist, und sein Ort vergessen; ein neuer Tempel entsteht dann oben.
+function alterTempelWeg() {
+    try {
+        const mitte = tempelOrt();
+        if (!mitte || world.getDynamicProperty(STEHT) !== undefined) return;
+        const dimension = world.getDimension("overworld");
+        if (!dimension.getBlock(mitte)) return;           // noch nicht geladen
+        abbauen(dimension, mitte);
+        world.setDynamicProperty(TEMPEL_SCHLUESSEL, undefined);
+    } catch (fehler) {
+        // Gegend nicht geladen - beim naechsten Takt wieder
+    }
+}
+system.runInterval(alterTempelWeg, 100);
 
 async function tempelwahl(spieler, rolle, versuch = 0) {
     const r = ROLLEN[rolle];
@@ -327,8 +478,8 @@ async function tempelwahl(spieler, rolle, versuch = 0) {
 
     setzeRolle(spieler, rolle);
     const uebrig = schonAusgeruestet ? [] : ausruesten(spieler, rolle);
-    hinunter(spieler);
     for (const rest of uebrig) spieler.dimension.spawnItem(rest, spieler.location);
+    losspringen(spieler);
 }
 
 system.beforeEvents.startup.subscribe((e) => {

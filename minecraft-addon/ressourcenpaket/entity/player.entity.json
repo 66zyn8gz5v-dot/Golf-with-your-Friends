@@ -27,6 +27,7 @@
           "variable.fynn_hieb_seite = 1.0;",
           "variable.fynn_hieb_zuvor = 0.0;",
           "variable.fynn_luft = 0.0;",
+          "variable.fynn_sturz = 0.0;",
           "variable.fynn_lade = 0.0;",
           "variable.fynn_los = 0.0;",
           "variable.fynn_spannen_zuvor = 0.0;"
@@ -52,6 +53,7 @@
           "variable.fynn_gang = query.modified_distance_moved * 38.17;",
           "variable.fynn_tempo = math.clamp(query.modified_move_speed, 0.0, 1.0);",
           "variable.fynn_luft = math.lerp(variable.fynn_luft, (!query.is_on_ground && !query.is_in_water && !query.is_riding && !query.is_gliding && !query.is_swimming) ? 1.0 : 0.0, 0.2);",
+          "variable.fynn_sturz = math.lerp(variable.fynn_sturz, (!query.is_on_ground && query.vertical_speed < -12.0 && !query.is_gliding && !query.is_swimming && !query.is_riding) ? 1.0 : 0.0, 0.08);",
           "variable.fynn_lade = (query.is_sneaking && variable.fynn_schwert) ? math.min(variable.fynn_lade + query.delta_time, 1.0) : math.max(variable.fynn_lade - query.delta_time * 5.0, 0.0);",
           "variable.fynn_spannen = (variable.fynn_bogen && query.main_hand_item_use_duration > 0.0) ? math.clamp((query.main_hand_item_max_duration - query.main_hand_item_use_duration) / 20.0, 0.0, 1.0) : 0.0;",
           "variable.fynn_los = (variable.fynn_spannen_zuvor > 0.25 && variable.fynn_spannen <= 0.0) ? 1.0 : math.max(variable.fynn_los - query.delta_time * 4.0, 0.0);",
@@ -68,6 +70,9 @@
           },
           {
             "fynn_luft": "(!variable.is_first_person && !variable.is_paperdoll && !variable.map_face_icon && !query.is_riding && !query.is_sleeping && !query.is_swimming && !query.is_gliding && !query.is_crawling) * variable.fynn_luft"
+          },
+          {
+            "fynn_sturz": "(!variable.is_first_person && !variable.is_paperdoll && !variable.map_face_icon && !query.is_riding && !query.is_sleeping) * variable.fynn_sturz"
           },
           {
             "fynn_aufladen": "!variable.is_first_person && !variable.is_paperdoll && !variable.map_face_icon && !query.is_riding && !query.is_sleeping && !query.is_swimming && !query.is_gliding && !query.is_crawling && variable.fynn_lade > 0.0"
@@ -191,7 +196,8 @@
         "fynn_hieb_ich_vor": "animation.fynn.hieb_ich_vorhand",
         "fynn_hieb_ich_rueck": "animation.fynn.hieb_ich_rueckhand",
         "fynn_hieb_aussen_vor": "animation.fynn.hieb_aussen_vorhand",
-        "fynn_hieb_aussen_rueck": "animation.fynn.hieb_aussen_rueckhand"
+        "fynn_hieb_aussen_rueck": "animation.fynn.hieb_aussen_rueckhand",
+        "fynn_sturz": "animation.fynn.sturz"
       },
       "render_controllers": [
         {

@@ -2107,6 +2107,58 @@
         }
       }
     },
+    "animation.fynn.sturz": {
+      "loop": true,
+      "bones": {
+        "root": {
+          "rotation": [
+            "70.0 - this",
+            0.0,
+            0.0
+          ],
+          "position": [
+            0.0,
+            "12.0 - 12.0 * math.cos(70.0) - this",
+            "-12.0 * math.sin(70.0) * -1.0 - this"
+          ]
+        },
+        "waist": {
+          "rotation": [
+            "-this",
+            "-this",
+            "-this"
+          ]
+        },
+        "rightarm": {
+          "rotation": [
+            "-130.0 + math.sin(query.life_time * 1500.0) * 4.0 - this",
+            "-this",
+            "-55.0 + math.sin(query.life_time * 1500.0) * 3.0 - this"
+          ]
+        },
+        "leftarm": {
+          "rotation": [
+            "-130.0 - math.sin(query.life_time * 1500.0) * 4.0 - this",
+            "-this",
+            "55.0 - math.sin(query.life_time * 1500.0) * 3.0 - this"
+          ]
+        },
+        "rightleg": {
+          "rotation": [
+            "10.0 + math.sin(query.life_time * 1500.0) * 2.0 - this",
+            "-this",
+            "18.0 - this"
+          ]
+        },
+        "leftleg": {
+          "rotation": [
+            "10.0 - math.sin(query.life_time * 1500.0) * 2.0 - this",
+            "-this",
+            "-18.0 - this"
+          ]
+        }
+      }
+    },
     "animation.fynn.aufladen": {
       "loop": true,
       "bones": {

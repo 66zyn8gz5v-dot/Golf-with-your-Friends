@@ -70,6 +70,7 @@ INITIALISIEREN = [
     "variable.fynn_hieb_seite = 1.0;",
     "variable.fynn_hieb_zuvor = 0.0;",
     "variable.fynn_luft = 0.0;",
+    "variable.fynn_sturz = 0.0;",
     "variable.fynn_lade = 0.0;",
     "variable.fynn_los = 0.0;",
     "variable.fynn_spannen_zuvor = 0.0;",
@@ -92,6 +93,11 @@ VORBERECHNUNG = [
     # bei jeder Stufe, die man hochlaeuft.
     "variable.fynn_luft = math.lerp(variable.fynn_luft, (!query.is_on_ground && !query.is_in_water && "
     "!query.is_riding && !query.is_gliding && !query.is_swimming) ? 1.0 : 0.0, 0.2);",
+    # Freier Fall, etwa vom Starttempel: schneller als 12 Bloecke je
+    # Sekunde nach unten. Bremst der Fallschirm (langsames Fallen), loest
+    # sich die Haltung wieder.
+    "variable.fynn_sturz = math.lerp(variable.fynn_sturz, (!query.is_on_ground && query.vertical_speed < -12.0 && "
+    "!query.is_gliding && !query.is_swimming && !query.is_riding) ? 1.0 : 0.0, 0.08);",
     # Aufladen: Schleichen mit Schwert oder Dolch laedt in kampf.js den
     # Wirbelschlag und den Schattensprung. Hier waechst die Ausholhaltung
     # im selben Takt mit - eine Sekunde bis ganz.
@@ -388,6 +394,31 @@ LUFT = {
 }
 
 
+# ------------------------------------------------------------ Sturz
+
+# Fallschirmspringer: der Koerper flach, Bauch nach unten, Arme und Beine
+# weit gespreizt, die Arme flattern im Fahrtwind. Fynn wollte beim Sprung
+# vom Starttempel "eine Fallanimation" - und dabei die Gegend sehen.
+# Gedreht wird um die Koerpermitte, nicht um die Fuesse (dort sitzt der
+# Drehpunkt von root) - sonst schwaenge der ganze Spieler zur Seite weg.
+FLATTERN = "math.sin(query.life_time * 1500.0)"
+STURZ = {
+    "loop": True,
+    "bones": {
+        "root": {"rotation": ["70.0 - this", 0.0, 0.0],
+                 "position": [0.0, "12.0 - 12.0 * math.cos(70.0) - this",
+                              "-12.0 * math.sin(70.0) * -1.0 - this"]},
+        "waist": {"rotation": ["-this", "-this", "-this"]},
+        # Die Arme seitlich weit ab und nach vorn, wie Fluegel. (Bei
+        # gehobenem Arm spreizt z mit umgekehrtem Vorzeichen ab.)
+        "rightarm": {"rotation": [f"-130.0 + {FLATTERN} * 4.0 - this", "-this", f"-55.0 + {FLATTERN} * 3.0 - this"]},
+        "leftarm": {"rotation": [f"-130.0 - {FLATTERN} * 4.0 - this", "-this", f"55.0 - {FLATTERN} * 3.0 - this"]},
+        "rightleg": {"rotation": [f"10.0 + {FLATTERN} * 2.0 - this", "-this", "18.0 - this"]},
+        "leftleg": {"rotation": [f"10.0 - {FLATTERN} * 2.0 - this", "-this", "-18.0 - this"]},
+    },
+}
+
+
 # ------------------------------------------------------------ Bogen
 
 SPANNEN = "variable.fynn_spannen"
@@ -449,6 +480,7 @@ TEILE = [
     ("fynn_schleichen", "animation.fynn.schleichen", SCHLEICHEN,
      f"{BEWEGT} && query.is_sneaking && !query.is_item_name_any('slot.weapon.mainhand', 'fynn:degen')"),
     ("fynn_luft", "animation.fynn.luft", LUFT, f"({BEWEGT}) * variable.fynn_luft"),
+    ("fynn_sturz", "animation.fynn.sturz", STURZ, f"({AUSSEN_FREI}) * variable.fynn_sturz"),
     ("fynn_aufladen", "animation.fynn.aufladen", AUFLADEN, f"{BEWEGT} && variable.fynn_lade > 0.0"),
     ("fynn_aufladen_ich", "animation.fynn.aufladen_ich", AUFLADEN_ICH,
      "variable.is_first_person && !variable.is_paperdoll && variable.fynn_lade > 0.0 && variable.attack_time <= 0.0"),
@@ -491,7 +523,7 @@ def spielerdatei():
     unsere = {k for k, *_ in TEILE}
     s["initialize"] = [z for z in s["initialize"] if "fynn_" not in z] + INITIALISIEREN
     eigene_vars = ("variable.fynn_schwert", "variable.fynn_bogen", "variable.fynn_hieb", "variable.fynn_gang",
-                   "variable.fynn_tempo", "variable.fynn_luft", "variable.fynn_lade", "variable.fynn_spannen",
+                   "variable.fynn_tempo", "variable.fynn_luft", "variable.fynn_sturz", "variable.fynn_lade", "variable.fynn_spannen",
                    "variable.fynn_los")
     s["pre_animation"] = [z for z in s["pre_animation"] if not z.startswith(eigene_vars)] + VORBERECHNUNG
     s["animate"] = [e for e in s["animate"] if (next(iter(e)) if isinstance(e, dict) else e) not in unsere]

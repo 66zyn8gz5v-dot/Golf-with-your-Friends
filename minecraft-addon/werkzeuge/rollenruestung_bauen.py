@@ -82,6 +82,33 @@ ASSASSINE = {
     "s": (196, 200, 208),
 }
 
+# Farbleitern, hell nach dunkel. Aus ihnen holt sich das Kantenlicht den
+# naechsthelleren und naechstdunkleren Ton (siehe Atlas.kasten).
+RAMPEN = {
+    # Weiss (S) steht nicht in der blauen Leiter: Sonst wuerde jede helle
+    # Faser an einer Oberkante zum weissen Fleck.
+    "magier": ["abcdok", "SGg"],
+    "assassine": ["abcdok", "eRr", "WwL", "Ll"],
+    "wald": ["abcdok", "Llmn"],
+}
+
+
+def heller(z, rampen):
+    for r in rampen:
+        i = r.find(z)
+        if i > 0:
+            return r[i - 1]
+    return z
+
+
+def dunkler(z, rampen):
+    for r in rampen:
+        i = r.find(z)
+        if 0 <= i < len(r) - 1:
+            return r[i + 1]
+    return z
+
+
 # ============================================================ Stoffe
 #
 # Ein Stoff ist eine Funktion: Flaeche, Spalte, Zeile, Breite, Hoehe ->
@@ -89,15 +116,18 @@ ASSASSINE = {
 # dem Betrachter zugewandt), south (hinten), east, west, up, down.
 
 def grund(hell="b", mitte="c", dunkel="d", salz=0):
-    """Ein Stoff mit eingewebten Flecken: meist der Mittelton, ab und zu
-    heller oder dunkler, paarweise wie bei der Koernung der Burg."""
+    """Ein Stoff: fast nur der Mittelton, dazu wenige einzelne helle und
+    noch weniger dunkle Faeden.
+
+    Die erste Fassung streute je ein Fuenfzehntel helle und dunkle
+    Flecken, paarweise - im Spiel sah die Robe damit fleckig aus, eher
+    schmutzig als gewebt ("ueberzeugt mich noch nicht"). Tiefe kommt jetzt
+    aus dem Kantenlicht und den Falten, nicht aus dem Rauschen."""
     def stoff(f, x, y, w, h):
-        z = streu(x // 2, y + 17 * "nsewud".index(f[0]), salz)
-        # Je etwa ein Fuenfzehntel hell und dunkel. Mit einem Siebtel sah
-        # die Robe im ersten Bild fleckig aus statt gewebt.
-        if z < 18:
+        z = streu(x, y + 17 * "nsewud".index(f[0]), salz)
+        if z < 9:
             return hell
-        if z > 238:
+        if z > 250:
             return dunkel
         return mitte
     return stoff
@@ -155,8 +185,9 @@ class Atlas:
     Krempe - nicht auf.
     """
 
-    def __init__(self, farben, breite=128, hoehe=128):
+    def __init__(self, farben, breite=128, hoehe=128, rampen=()):
         self.farben = farben
+        self.rampen = rampen
         self.bild = Image.new("RGBA", (breite, hoehe), (0, 0, 0, 0))
         self.x = self.y = self.zeile = 0
 
@@ -170,7 +201,27 @@ class Atlas:
         self.zeile = max(self.zeile, h)
         return u, v
 
-    def kasten(self, ursprung, groesse, stoff, aufblasen=0.0, drehung=None, drehpunkt=None):
+    def licht(self, flaeche, x, y, fw, fh, z, falten):
+        """Kantenlicht, wie man Minecraft-Ruestungen schattiert: Licht von
+        oben - die oberste Zeile jeder Seite einen Ton heller, die unterste
+        einen dunkler, Deckel heller, Boden dunkler. Dazu auf Wunsch
+        Falten: jede dritte Spalte ab dem oberen Drittel einen Ton dunkler,
+        wie ein Stoff, der faellt."""
+        if not self.rampen or z is None:
+            return z
+        if flaeche == "up":
+            return heller(z, self.rampen)
+        if flaeche == "down":
+            return dunkler(z, self.rampen)
+        if fh >= 3 and y == 0:
+            return heller(z, self.rampen)
+        if fh >= 3 and y == fh - 1:
+            return dunkler(z, self.rampen)
+        if falten and fh >= 6 and y >= fh // 3 and x % 3 == 1:
+            return dunkler(z, self.rampen)
+        return z
+
+    def kasten(self, ursprung, groesse, stoff, aufblasen=0.0, drehung=None, drehpunkt=None, falten=False):
         import math
         w, h, d = (max(1, math.ceil(g)) for g in groesse)
         masse = {"north": (w, h), "south": (w, h), "east": (d, h), "west": (d, h),
@@ -180,7 +231,7 @@ class Atlas:
             u, v = self.feld(fw, fh)
             for y in range(fh):
                 for x in range(fw):
-                    z = stoff(flaeche, x, y, fw, fh)
+                    z = self.licht(flaeche, x, y, fw, fh, stoff(flaeche, x, y, fw, fh), falten)
                     if z is not None:
                         self.bild.putpixel((u + x, v + y), self.farben[z] + (255,))
             uv[flaeche] = {"uv": [u, v], "uv_size": [fw, fh]}
@@ -207,44 +258,88 @@ def knochen(name, kaesten=(), eltern="body", drehpunkt=None, drehung=None):
 # ============================================================ Magierrobe
 
 def magierrobe():
-    a = Atlas(MAGIER)
+    a = Atlas(MAGIER, rampen=RAMPEN["magier"])
     blau = grund(salz=3)
     blau_hell = grund("a", "b", "c", salz=5)
     gold = grund("G", "G", "g", salz=7)
 
+    def stern(mitte, flaeche):
+        """Ein kleiner Stern: die Mitte hell, die vier Zacken Gold."""
+        mx, my = mitte
+
+        def s(f, x, y, w, h):
+            if f != flaeche:
+                return None
+            if (x, y) == (mx, my):
+                return "S"
+            if abs(x - mx) + abs(y - my) == 1:
+                return "G"
+            return None
+        return s
+
+    def goldband(f, x, y, w, h):
+        # Das Hutband: die unteren beiden Zeilen der Seiten.
+        if f in ("up", "down"):
+            return None
+        return "G" if y >= h - 2 else None
+
+    # Der Hut sitzt jetzt auf dem Kopf statt obendrauf. Fynn: "dass der Hut
+    # ein bisschen besser sitzt" - in der ersten Fassung lag die Krempe auf
+    # dem Scheitel, und von hinten sah man darunter die ganzen Haare. Jetzt
+    # umschliesst der Hutkopf den oberen Kopf bis knapp ueber die Augen,
+    # die Krempe sitzt auf Stirnhoehe, und die Spitze knickt in vier
+    # Gliedern immer weiter nach hinten ab, bis sie fast waagerecht haengt.
     hut = [
         knochen("body"),
         knochen("head", [
-            # Die Krempe, zwei Pixel breiter als der Kopf auf jeder Seite
-            a.kasten([-6, 31.5, -6], (12, 1, 12), mit(blau, saum("k"))),
-            # Das Goldband ueber der Krempe
-            a.kasten([-4.5, 32.5, -4.5], (9, 1, 9), gold),
-            a.kasten([-4, 33.5, -4], (8, 3, 8), blau_hell),
+            a.kasten([-4, 29, -4], (8, 4, 8), mit(blau_hell, stern((4, 1), "north"), goldband), 0.6),
+            a.kasten([-7, 28.6, -7], (14, 1, 14), mit(blau, saum("o", 1))),
         ]),
-        # Der obere Teil knickt nach hinten ab - der Hut eines Zauberers
-        # steht nie gerade.
-        knochen("hutspitze", [
-            a.kasten([-3, 36.5, -3], (6, 3, 6), mit(blau_hell, lambda f, x, y, w, h:
-                                                  "S" if f == "north" and (x, y) == (2, 1) else None)),
-            a.kasten([-2, 39.5, -2], (4, 3, 4), blau),
-            a.kasten([-1, 42.5, -1], (2, 2, 2), blau),
-            a.kasten([-0.5, 44, -0.5], (1, 1, 1), gold),
-        ], eltern="head", drehpunkt=[0, 36.5, 0], drehung=[-22.5, 0, 0]),
+        knochen("hut1", [a.kasten([-3, 33, -3], (6, 3, 6), blau_hell)],
+                eltern="head", drehpunkt=[0, 33, 0], drehung=[-8, 0, 0]),
+        knochen("hut2", [a.kasten([-2, 36, -2], (4, 3, 4), blau)],
+                eltern="hut1", drehpunkt=[0, 36, 0], drehung=[-18, 0, 0]),
+        knochen("hut3", [a.kasten([-1.5, 39, -1.5], (3, 2, 3), blau)],
+                eltern="hut2", drehpunkt=[0, 39, 0], drehung=[-25, 0, 0]),
+        knochen("hut4", [
+            a.kasten([-1, 41, -1], (2, 2, 2), blau),
+            # Ein goldenes Gloeckchen an der Spitze
+            a.kasten([-0.5, 43, -0.5], (1, 1, 1), gold),
+        ], eltern="hut3", drehpunkt=[0, 41, 0], drehung=[-30, 0, 0]),
     ]
+
+    def guertel(f, x, y, w, h):
+        if f in ("up", "down"):
+            return None
+        # Ein dunkler Guertel - in Gold ergab er mit der Borte ein Kreuz
+        return "o" if y == 7 else ("k" if y == 8 else None)
+
     robe = [
         knochen("body", [
-            a.kasten([-4, 12, -2], (8, 12, 4), mit(blau, borte_vorn("G", (3, 4)),
-                                                   saum("g", 1), saum("G", 0, 1)), 1.0),
-            # Kragen, ein Stueck weiter als der Koerper
-            a.kasten([-5, 22.5, -3.5], (10, 2, 7), mit(gold, saum("g", 1))),
+            a.kasten([-4, 12, -2], (8, 12, 4), mit(blau, borte_vorn("G", (3, 4)), guertel,
+                                                   saum("g", 1), saum("G", 0, 1)), 1.0, falten=True),
+            # Die Schliesse am Hals und die Guertelschnalle, beide Gold
+            a.kasten([-1, 22, -3.4], (2, 1.5, 0.6), gold),
+            a.kasten([-1.5, 15.5, -3.4], (3, 2, 0.6), gold),
             # Der Umhang: von den Schultern bis an die Waden, hinten
-            a.kasten([-4.5, 3, 3.2], (9, 21, 0.5), mit(blau, saum("G", 1))),
+            a.kasten([-4.5, 3, 3.2], (9, 21, 0.5), mit(blau, stern((4, 6), "south"), saum("G", 1)), falten=True),
         ]),
+        # Ein Stehkragen im Nacken, leicht nach hinten gestellt - statt der
+        # goldenen Kloetze auf den Schultern, die im Spiel wie Fremdkoerper
+        # aussahen.
+        knochen("kragen", [
+            a.kasten([-4.5, 24, 2.4], (9, 3, 1), mit(blau, saum("G", 0, 1))),
+        ], drehpunkt=[0, 24, 2.9], drehung=[-15, 0, 0]),
+        # Ein Zauberbuch an der linken Huefte, an einer Goldkette
+        knochen("zauberbuch", [
+            a.kasten([4.4, 11.5, -2], (1.5, 4, 3), mit(voll("o"), saum("G", 0, 1), saum("g", 1))),
+            a.kasten([4.6, 15.5, -0.8], (0.6, 1, 0.6), gold),
+        ], drehpunkt=[5, 15.5, 0], drehung=[0, 0, 8]),
     ]
     rock = [
         knochen("body"),
-        knochen("rightLeg", [a.kasten([-3.9, 0, -2], (4, 12, 4), mit(blau, saum("G", 1)), 0.75)]),
-        knochen("leftLeg", [a.kasten([-0.1, 0, -2], (4, 12, 4), mit(blau, saum("G", 1)), 0.75)]),
+        knochen("rightLeg", [a.kasten([-3.9, 0, -2], (4, 12, 4), mit(blau, saum("G", 1)), 0.75, falten=True)]),
+        knochen("leftLeg", [a.kasten([-0.1, 0, -2], (4, 12, 4), mit(blau, saum("G", 1)), 0.75, falten=True)]),
     ]
 
     def schuh(x):
@@ -265,7 +360,7 @@ def magierrobe():
 # ============================================================ Assassine
 
 def assassinenmontur():
-    a = Atlas(ASSASSINE)
+    a = Atlas(ASSASSINE, rampen=RAMPEN["assassine"])
     dunkel = grund(salz=11)
     dunkler = grund("c", "d", "o", salz=13)
     rot = grund("R", "R", "r", salz=17)
@@ -311,6 +406,18 @@ def assassinenmontur():
             a.kasten([1.2, 16, -3.4], (1, 3, 0.6), voll("s")),
             a.kasten([2.8, 15, -3.4], (1, 3, 0.6), voll("s")),
         ]),
+        # Zwei Klingen in Scheiden, ueber Kreuz auf dem Ruecken - die
+        # Griffe ragen ueber die Schultern.
+        knochen("scheide_r", [
+            a.kasten([-0.5, 13, 2.9], (1, 9, 0.8), mit(grund("L", "L", "l", salz=41), saum("l", 1))),
+            a.kasten([-0.5, 22, 3.0], (1, 3, 0.6), voll("c")),
+            a.kasten([-1.5, 21.6, 2.8], (3, 0.6, 1), voll("s")),
+        ], drehpunkt=[0, 17, 3.3], drehung=[0, 0, 32]),
+        knochen("scheide_l", [
+            a.kasten([-0.5, 13, 3.6], (1, 9, 0.8), mit(grund("L", "L", "l", salz=43), saum("l", 1))),
+            a.kasten([-0.5, 22, 3.7], (1, 3, 0.6), voll("c")),
+            a.kasten([-1.5, 21.6, 3.5], (3, 0.6, 1), voll("s")),
+        ], drehpunkt=[0, 17, 4], drehung=[0, 0, -32]),
         # Das Schalende weht hinten herab, leicht schraeg
         knochen("schalende", [
             a.kasten([0.5, 14, 3.1], (2.5, 9, 0.5), mit(rot, saum("r", 1))),
@@ -353,7 +460,7 @@ def waldlaeufer():
     Pfeilfedern, die ueber der rechten Schulter herausschauen - von vorn
     wie von hinten sieht man, wer hier der Schuetze ist.
     """
-    a = Atlas(WALD)
+    a = Atlas(WALD, rampen=RAMPEN["wald"])
     gruen = grund(salz=23)
     gruen_dunkel = grund("c", "d", "o", salz=29)
     leder = grund("L", "l", "m", salz=31)
