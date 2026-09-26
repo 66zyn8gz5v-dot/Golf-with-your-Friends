@@ -20,6 +20,21 @@ export const TALISMANE = {
 };
 const JAEGERKETTE = "fynn:jaegerkette";
 
+// Ganze Ruestungen: Wer alle vier Teile traegt, bekommt ihre Kraft.
+export const SAETZE = [
+    { teile: ["fynn:baerenkapuze", "fynn:baerenfellmantel", "fynn:baerenfellhose", "fynn:baerenfellstiefel"],
+      wirkung: "strength", stufe: 0 },
+    { teile: ["fynn:rubinhelm", "fynn:rubinharnisch", "fynn:rubinbeinschutz", "fynn:rubinstiefel"],
+      wirkung: "fire_resistance", stufe: 0 },
+];
+
+export function ganzerSatz(spieler) {
+    const ausruestung = spieler.getComponent("minecraft:equippable");
+    if (!ausruestung) return undefined;
+    const an = ["Head", "Chest", "Legs", "Feet"].map((platz) => ausruestung.getEquipment(platz)?.typeId);
+    return SAETZE.find((satz) => satz.teile.every((teil, i) => an[i] === teil));
+}
+
 export function getragen(spieler) {
     const dabei = new Set();
     const inventar = spieler.getComponent("minecraft:inventory")?.container;
@@ -44,6 +59,8 @@ system.runInterval(() => {
                 // Etwas laenger als der Takt, damit die Wirkung nie flackert.
                 spieler.addEffect(t.wirkung, 60, { amplifier: t.stufe, showParticles: false });
             }
+            const satz = ganzerSatz(spieler);
+            if (satz) spieler.addEffect(satz.wirkung, 60, { amplifier: satz.stufe, showParticles: false });
         } catch (fehler) {
             console.warn(`Tiere, Talismane: ${fehler}`);
         }

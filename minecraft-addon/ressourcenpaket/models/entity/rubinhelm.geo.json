@@ -1,0 +1,112 @@
+{
+  "format_version": "1.16.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.rubinhelm",
+        "texture_width": 64,
+        "texture_height": 64,
+        "visible_bounds_width": 3,
+        "visible_bounds_height": 3.5,
+        "visible_bounds_offset": [
+          0,
+          1.5,
+          0
+        ]
+      },
+      "bones": [
+        {
+          "name": "head",
+          "pivot": [
+            0.0,
+            24.0,
+            0.0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                24.0,
+                -4.0
+              ],
+              "size": [
+                8,
+                8,
+                8
+              ],
+              "uv": [
+                0,
+                0
+              ],
+              "inflate": 1.0
+            },
+            {
+              "origin": [
+                -1.0,
+                33.0,
+                -5.0
+              ],
+              "size": [
+                2,
+                2,
+                10
+              ],
+              "uv": [
+                0,
+                16
+              ]
+            },
+            {
+              "origin": [
+                -1.0,
+                29.0,
+                -5.6
+              ],
+              "size": [
+                2,
+                2,
+                1
+              ],
+              "uv": [
+                10,
+                46
+              ]
+            },
+            {
+              "origin": [
+                4.6,
+                23.5,
+                -5.4
+              ],
+              "size": [
+                1,
+                5,
+                4
+              ],
+              "uv": [
+                0,
+                37
+              ]
+            },
+            {
+              "origin": [
+                -5.6,
+                23.5,
+                -5.4
+              ],
+              "size": [
+                1,
+                5,
+                4
+              ],
+              "uv": [
+                10,
+                37
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

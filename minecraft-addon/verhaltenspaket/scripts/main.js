@@ -17,6 +17,7 @@ import "./pfeile.js";
 import "./tempel.js";
 import "./tiere.js";
 import "./obst.js";
+import "./banditen.js";
 
 const DEGEN = "fynn:degen";
 

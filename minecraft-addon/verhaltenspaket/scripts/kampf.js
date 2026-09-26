@@ -28,6 +28,7 @@ const SCHWERTER = new Set([
     "minecraft:copper_sword",
     "fynn:ritterschwert", "fynn:eisenklinge", "fynn:silberklinge",
     "fynn:elektrumklinge", "fynn:sternenklinge", "fynn:schwertfischklinge",
+    "fynn:rubinklinge", "fynn:haizahnsaebel",
 ]);
 
 const BOEGEN = new Set(["minecraft:bow", "minecraft:crossbow", "fynn:sturmbogen", "fynn:geweihbogen"]);

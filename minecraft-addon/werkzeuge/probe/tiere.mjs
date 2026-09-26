@@ -37,6 +37,21 @@ s.isInWater = true;
 for (const f of talismanTakt) f();
 pruefe("Haitalisman im Wasser: Unterwasserkraft", s.wirkungen.some((w) => w[0] === "conduit_power"));
 
+// --- Ganze Ruestung
+const baer = ["fynn:baerenkapuze", "fynn:baerenfellmantel", "fynn:baerenfellhose", "fynn:baerenfellstiefel"];
+const traeger = spielerMit([]);
+traeger.getComponent = (n) => n === "minecraft:equippable" ? { getEquipment: (platz) =>
+    ({ typeId: baer[["Head", "Chest", "Legs", "Feet"].indexOf(platz)] }) } : { container: { getItem: () => undefined } };
+world.getAllPlayers = () => [traeger];
+for (const f of talismanTakt) f();
+pruefe("ganze Baerenfellruestung: Staerke", traeger.wirkungen.some((w) => w[0] === "strength"));
+const halb = spielerMit([]);
+halb.getComponent = (n) => n === "minecraft:equippable" ? { getEquipment: (platz) =>
+    (platz === "Head" ? { typeId: baer[0] } : undefined) } : { container: { getItem: () => undefined } };
+world.getAllPlayers = () => [halb];
+for (const f of talismanTakt) f();
+pruefe("nur die Kapuze: keine Kraft", !halb.wirkungen.some((w) => w[0] === "strength"));
+
 // --- Jagdhorn
 const mitjaeger = spielerMit([]);
 const blaeser = spielerMit([]);

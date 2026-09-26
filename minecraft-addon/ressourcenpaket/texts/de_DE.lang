@@ -42,11 +42,11 @@ item.fynn:eisenklinge.name=Eisenklinge
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.37
+item.iron_sword.name=Stahlschwert 4.38
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.37
-item.fynn:degen.name=Degen 4.37
+item.fynn:degen=Degen 4.38
+item.fynn:degen.name=Degen 4.38
 
 
 
@@ -321,3 +321,41 @@ item.fynn:pflaumenkuchen.name=Pflaumenkuchen
 item.fynn:apfelstrudel=Apfelstrudel
 item.fynn:apfelstrudel.name=Apfelstrudel
 tile.fynn:obst.name=Frucht am Zweig
+
+
+## Neue Ruestungen
+item.fynn:rubinhelm=Rubinhelm
+item.fynn:rubinhelm.name=Rubinhelm
+item.fynn:rubinharnisch=Rubinharnisch
+item.fynn:rubinharnisch.name=Rubinharnisch
+item.fynn:rubinbeinschutz=Rubinbeinschutz
+item.fynn:rubinbeinschutz.name=Rubinbeinschutz
+item.fynn:rubinstiefel=Rubinstiefel
+item.fynn:rubinstiefel.name=Rubinstiefel
+item.fynn:baerenkapuze=Bärenkopf-Kapuze
+item.fynn:baerenkapuze.name=Bärenkopf-Kapuze
+item.fynn:baerenfellmantel=Bärenfellmantel
+item.fynn:baerenfellmantel.name=Bärenfellmantel
+item.fynn:baerenfellhose=Bärenfellhose
+item.fynn:baerenfellhose.name=Bärenfellhose
+item.fynn:baerenfellstiefel=Bärenfellstiefel
+item.fynn:baerenfellstiefel.name=Bärenfellstiefel
+
+## Banditen
+entity.fynn:bandit.name=Bandit
+item.spawn_egg.entity.fynn:bandit.name=Bandit-Spawn-Ei
+entity.fynn:wilderer.name=Wilderer
+item.spawn_egg.entity.fynn:wilderer.name=Wilderer-Spawn-Ei
+entity.fynn:bandenchef.name=Bandenchef
+item.spawn_egg.entity.fynn:bandenchef.name=Bandenchef-Spawn-Ei
+
+## Rubin und neue Schwerter
+item.fynn:rubin=Rubin
+item.fynn:rubin.name=Rubin
+item.fynn:rubinklinge=Rubinklinge
+item.fynn:rubinklinge.name=Rubinklinge
+item.fynn:haizahnsaebel=Haizahnsäbel
+item.fynn:haizahnsaebel.name=Haizahnsäbel
+tile.fynn:rubinerz.name=Rubinerz
+tile.fynn:tiefenrubinerz.name=Tiefenschiefer-Rubinerz
+tile.fynn:rubinblock.name=Rubinblock

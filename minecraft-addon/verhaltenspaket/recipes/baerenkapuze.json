@@ -1,0 +1,29 @@
+{
+  "format_version": "1.12",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "fynn:baerenkapuze"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "FFF",
+      "F F"
+    ],
+    "key": {
+      "F": {
+        "item": "fynn:baerenfell"
+      }
+    },
+    "unlock": [
+      {
+        "item": "fynn:baerenfell"
+      }
+    ],
+    "result": {
+      "item": "fynn:baerenkapuze",
+      "count": 1
+    }
+  }
+}

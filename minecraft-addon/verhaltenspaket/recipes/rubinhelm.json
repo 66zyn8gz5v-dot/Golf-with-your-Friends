@@ -1,0 +1,29 @@
+{
+  "format_version": "1.12",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "fynn:rubinhelm"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "RRR",
+      "R R"
+    ],
+    "key": {
+      "R": {
+        "item": "fynn:rubin"
+      }
+    },
+    "unlock": [
+      {
+        "item": "fynn:rubin"
+      }
+    ],
+    "result": {
+      "item": "fynn:rubinhelm",
+      "count": 1
+    }
+  }
+}

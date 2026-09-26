@@ -15,5 +15,14 @@
   },
   "fynn:tempelaltar": {
     "sound": "stone"
+  },
+  "fynn:rubinerz": {
+    "sound": "stone"
+  },
+  "fynn:tiefenrubinerz": {
+    "sound": "deepslate"
+  },
+  "fynn:rubinblock": {
+    "sound": "metal"
   }
 }

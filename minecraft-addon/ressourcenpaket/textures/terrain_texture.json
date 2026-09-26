@@ -114,6 +114,15 @@
     },
     "obst_pflaume_3": {
       "textures": "textures/blocks/obst/obst_pflaume_3"
+    },
+    "rubinerz": {
+      "textures": "textures/blocks/rubinerz"
+    },
+    "tiefenrubinerz": {
+      "textures": "textures/blocks/tiefenrubinerz"
+    },
+    "rubinblock": {
+      "textures": "textures/blocks/rubinblock"
     }
   }
 }

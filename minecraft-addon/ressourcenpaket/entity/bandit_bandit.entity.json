@@ -1,0 +1,58 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:bandit",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/banditen/bandit"
+      },
+      "geometry": {
+        "default": "geometry.fynn.bandit"
+      },
+      "animations": {
+        "laufen": "animation.fynn.bandit.laufen",
+        "stehen": "animation.fynn.bandit.stehen",
+        "halten": "animation.fynn.bandit.halten",
+        "hieb": "animation.fynn.bandit.hieb",
+        "bogen": "animation.fynn.bandit.bogen",
+        "blick": "animation.common.look_at_target"
+      },
+      "scripts": {
+        "animate": [
+          {
+            "laufen": "query.modified_move_speed"
+          },
+          "stehen",
+          "blick",
+          "halten",
+          {
+            "hieb": "variable.attack_time > 0.0"
+          }
+        ],
+        "variables": {
+          "variable.attack_time": "public",
+          "variable.fynn_schwert": "public",
+          "variable.fynn_waffe": "public",
+          "variable.fynn_schlag": "public",
+          "variable.fynn_hiebzeit": "public"
+        },
+        "initialize": [
+          "variable.fynn_schwert = 0.0;",
+          "variable.fynn_waffe = 0.0;",
+          "variable.fynn_schlag = 0.0;",
+          "variable.fynn_hiebzeit = 0.0;"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.default"
+      ],
+      "spawn_egg": {
+        "base_color": "#5e3a22",
+        "overlay_color": "#9a2a26"
+      }
+    }
+  }
+}
