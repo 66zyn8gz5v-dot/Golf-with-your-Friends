@@ -4,7 +4,7 @@
     "type": "panel",
     "size": [
       182,
-      24
+      28
     ],
     "anchor_from": "top_middle",
     "anchor_to": "top_middle",
@@ -125,11 +125,11 @@
           "type": "panel",
           "size": [
             182,
-            13
+            17
           ],
           "offset": [
             0,
-            10
+            11
           ],
           "anchor_from": "top_middle",
           "anchor_to": "top_middle",
@@ -139,12 +139,12 @@
                 "type": "image",
                 "texture": "textures/ui/fynn_bossleiste_leer",
                 "size": [
-                  158,
+                  172,
                   5
                 ],
                 "offset": [
-                  12,
-                  4
+                  5,
+                  6
                 ],
                 "anchor_from": "top_left",
                 "anchor_to": "top_left",
@@ -156,12 +156,12 @@
                 "type": "image",
                 "texture": "textures/ui/fynn_bossleiste_voll",
                 "size": [
-                  158,
+                  172,
                   5
                 ],
                 "offset": [
-                  12,
-                  4
+                  5,
+                  6
                 ],
                 "anchor_from": "top_left",
                 "anchor_to": "top_left",
@@ -193,12 +193,12 @@
                 "type": "image",
                 "texture": "textures/ui/fynn_bossleiste_entfesselt",
                 "size": [
-                  158,
+                  172,
                   5
                 ],
                 "offset": [
-                  12,
-                  4
+                  5,
+                  6
                 ],
                 "anchor_from": "top_left",
                 "anchor_to": "top_left",
@@ -231,7 +231,7 @@
                 "texture": "textures/ui/fynn_bossleiste_rahmen",
                 "size": [
                   182,
-                  13
+                  17
                 ],
                 "layer": 3
               }

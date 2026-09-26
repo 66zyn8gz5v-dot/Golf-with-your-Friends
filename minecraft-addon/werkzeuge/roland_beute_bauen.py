@@ -225,9 +225,10 @@ NAMEN = [
     ("item.fynn:olifant.name", "Olifant", "Oliphant"),
     ("item.fynn:fehdehandschuh", "Fehdehandschuh", "Gauntlet of Challenge"),
     ("item.fynn:fehdehandschuh.name", "Fehdehandschuh", "Gauntlet of Challenge"),
-    ("entity.fynn:roland.name", "Sir Roland von Ronceval", "Sir Roland of Roncevaux"),
+    # Kurz, wie in Fynns Entwurf der Bossleiste. Den vollen Namen zeigt der
+    # Titel beim Auftritt.
+    ("entity.fynn:roland.name", "Sir Roland", "Sir Roland"),
     ("item.spawn_egg.entity.fynn:roland.name", "Sir Roland von Ronceval", "Sir Roland of Roncevaux"),
-    ("entity.fynn:roland_abschied.name", "Sir Roland von Ronceval", "Sir Roland of Roncevaux"),
 ]
 
 

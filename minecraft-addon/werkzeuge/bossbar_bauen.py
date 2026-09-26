@@ -3,10 +3,11 @@
 
 Fynn: "den ersten Boss ... mit einer richtigen Bossbar, die gepixelt ist."
 
-Die Leiste ist ein Schwert - Durendal selbst: links der Griff mit Knauf
-und Parierstange, nach rechts die Klinge, und die Blutrinne der Klinge ist
-das Leben. Sie leert sich von der Spitze her zum Griff. In der zweiten
-Phase glueht die Rinne heller, der Name wird blau.
+Das Aussehen ist Fynns eigener Entwurf: goldene Endkappen, Trennstriche,
+in der Mitte ein Medaillon mit Saphir zwischen zwei kurzen Klingen, der
+Balken in fuenf Blautoenen. In der zweiten Phase glueht der Balken heller,
+der Name wird blau. (Vorher war die Leiste ein Schwert - Fynn hat
+nachgelegt.)
 
 Wie sie ins Spiel kommt: Roland hat Minecrafts eigene Bossleiste
 (Komponente minecraft:boss) - die weiss schon, wer in der Naehe ist, zeigt
@@ -38,130 +39,133 @@ WURZEL = Path(__file__).resolve().parent.parent
 RES = WURZEL / "ressourcenpaket"
 
 BREITE = 182            # wie Mojangs Leiste: so bleibt das Raster der Bossleisten gleich
-HOEHE = 13
-RINNE = (12, 4, 158, 5)  # x, y, Breite, Hoehe der Blutrinne im Rahmenbild
+HOEHE = 17
+RINNE = (5, 6, 172, 5)   # x, y, Breite, Hoehe des Lebensbalkens im Rahmenbild
 
-# Farben. Kein reines Schwarz: der Umriss ist ein sehr dunkles Blau, das
-# auf hellem Himmel wie im Dunkeln haelt.
-UMRISS = (22, 26, 44)
-STAHL = [(236, 241, 248), (190, 200, 214), (140, 150, 166), (96, 106, 122)]
-GOLD = [(252, 228, 140), (230, 186, 74), (170, 124, 36)]
-SAPHIR = [(170, 214, 255), (64, 120, 230), (30, 58, 150)]
-LEDER = [(56, 70, 140), (34, 42, 96)]
-LEER = [(26, 30, 58), (18, 22, 44), (14, 17, 36)]
-FUELLUNG = {
-    1: [(150, 196, 255), (82, 142, 240), (54, 104, 214), (40, 78, 184), (28, 56, 140)],
-    # Entfesselt: heller Kern, kraeftiges Tuerkisblau, goldene Funken - die
-    # Klinge brennt.
-    2: [(226, 250, 255), (110, 226, 255), (48, 176, 255), (34, 112, 240), (26, 66, 196)],
+# Fynns Entwurf (September 2026): eine Leiste mit goldenen Endkappen,
+# Trennstrichen bei einem und zwei Sechsteln, in der Mitte ein goldenes
+# Medaillon mit Saphir, links und rechts davon je eine kurze Klinge mit
+# blauer Rinne und goldener Spitze. Der Balken laeuft unter dem Schmuck
+# hindurch. Aus seinem Bild Pixel fuer Pixel zurueckgerechnet (es war
+# sechsfach vergroessert und als JPEG etwas verwaschen) und sauber
+# nachgezeichnet - links nach seinem Bild, rechts gespiegelt; nur das
+# Medaillon behaelt sein Licht von links.
+FARBE = {
+    "a": (19, 18, 23),       # Umriss
+    "c": (183, 183, 190),    # Stahl hell (Oberkante)
+    "b": (85, 87, 95),       # Stahl dunkel (Unterkante)
+    "m": (232, 230, 234),    # Klinge, Glanz
+    "q": (69, 89, 184),      # Klinge, blaue Rinne
+    "x": (240, 232, 189),    # Gold, Glanzlicht
+    "f": (237, 211, 131),    # Gold hell
+    "j": (204, 160, 75),     # Gold
+    "r": (193, 154, 83),     # Gold, halbdunkel
+    "g": (143, 109, 51),     # Gold dunkel
+    "n": (37, 35, 62),       # Medaillon, tiefes Blau
+    "e": (24, 32, 86),       # Medaillon, Blau
+    "C": (148, 176, 243),    # Saphir
+    "s": (180, 186, 200),    # Steinchen oben
 }
-FUNKEN = {1: (206, 230, 255), 2: (255, 226, 120)}
+# Das Medaillon, 14 breit, 17 hoch, ab x = 84.
+MEDAILLON = [
+    ".....asma.....",
+    "...aajssjaa...",
+    ".aaffjjjjjfaa.",
+    "aafjjnnnnjjfaa",
+    "afjjneeeenjjra",
+    "fjjjjrjjrjjjjr",
+    "fjnrnfnnfnrnjr",
+    "fjnrfneenfrnjr",
+    "fjnrneCCenrnjr",
+    "fjnrfeeeefrnjr",
+    "fjnrnfnnfnrnjr",
+    "fjjjjrjjrjjjjr",
+    "afjgneeeengjra",
+    "aagggnnnngggaa",
+    ".aaggggggggaa.",
+    "...aaggggaa...",
+    ".....aaaa.....",
+]
+FUELLUNG = {
+    # Fynns Blau, von hell oben nach dunkel unten.
+    1: [(166, 190, 245), (83, 119, 220), (51, 82, 188), (36, 54, 138), (24, 32, 86)],
+    # Entfesselt: dasselbe Blau, heller und kraeftiger - der Balken glueht.
+    2: [(222, 240, 255), (120, 196, 255), (70, 150, 250), (44, 100, 220), (30, 60, 160)],
+}
+LEER = [(27, 30, 48), (24, 27, 42), (20, 23, 37), (17, 19, 31), (13, 16, 24)]
 
 
 def rahmen():
-    """Klinge, Griff und Spitze, 182 mal 13. Die Mitte der Rinne bleibt
-    frei - dort liegen Leere und Fuellung darunter."""
+    """Alles ausser dem Balken selbst: Kappen, Stahlkanten, Trennstriche,
+    Klingen, Medaillon. Wo der Balken zu sehen sein soll, bleibt es leer."""
     b = Image.new("RGBA", (BREITE, HOEHE), (0, 0, 0, 0))
+    halb = {}
 
-    def p(x, y, f):
-        if 0 <= x < BREITE and 0 <= y < HOEHE:
-            b.putpixel((x, y), tuple(f) + (255,))
+    def p(x, y, z):
+        halb[(x, y)] = z
 
-    rx, ry, rw, rh = RINNE
-    # Die Klinge: zwei Stahlkanten ueber und unter der Rinne, aussen der Umriss.
-    for x in range(rx - 1, rx + rw + 1):
-        p(x, ry - 3, UMRISS)
-        p(x, ry - 2, STAHL[0])
-        p(x, ry - 1, STAHL[1])
-        p(x, ry + rh, STAHL[2])
-        p(x, ry + rh + 1, STAHL[3])
-        p(x, ry + rh + 2, UMRISS)
-    # Die Spitze: Die Kanten laufen in Stufen zusammen, die Rinne endet
-    # vorher in einem Punkt.
-    ende = rx + rw
-    for i in range(12):
-        x = ende + i
-        oben, unten = ry - 3 + (i + 1) // 2, ry + rh + 2 - (i + 1) // 2
-        if oben > unten:
-            break
-        for y in range(oben, unten + 1):
-            if y in (oben, unten):
-                farbe = UMRISS
-            elif y == oben + 1:
-                farbe = STAHL[0]
-            elif y == unten - 1:
-                farbe = STAHL[3]
-            else:
-                farbe = STAHL[1] if y < ry + rh // 2 + 1 else STAHL[2]
-            p(x, y, farbe)
-    # Kleine Kerben alle 25 Prozent in der oberen Kante, bei 50 Prozent in
-    # Gold: Dort wechselt Roland in die zweite Phase.
-    for anteil in (0.25, 0.5, 0.75):
-        x = rx + round(rw * anteil)
-        if anteil == 0.5:
-            p(x, ry - 2, GOLD[0])
-            p(x, ry - 3, GOLD[1])
-            p(x, ry + rh + 1, GOLD[2])
-            p(x, ry + rh + 2, GOLD[1])
-        else:
-            p(x, ry - 2, STAHL[2])
-
-    # Parierstange: senkrecht, golden, ueber die ganze Hoehe, mit einem
-    # Saphir in der Mitte und hochgebogenen Enden.
-    for y in range(0, HOEHE):
-        for x in (7, 8, 9):
-            p(x, y, GOLD[0] if x == 7 else (GOLD[1] if x == 8 else GOLD[2]))
-        p(6, y, UMRISS)
-        p(10, y, UMRISS)
-    for y in (0, HOEHE - 1):
-        for x in range(6, 11):
-            p(x, y, UMRISS)
-    p(11, 0, UMRISS), p(11, 1, GOLD[1]), p(11, HOEHE - 1, UMRISS), p(11, HOEHE - 2, GOLD[2])
-    mitte = HOEHE // 2
-    p(8, mitte, SAPHIR[0]), p(8, mitte - 1, SAPHIR[1]), p(8, mitte + 1, SAPHIR[2])
-    p(7, mitte, SAPHIR[1]), p(9, mitte, SAPHIR[2])
-    # Griff: blaues Leder mit Golddraht.
-    for x in range(3, 6):
-        p(x, mitte - 2, UMRISS)
-        p(x, mitte + 2, UMRISS)
-        for y in range(mitte - 1, mitte + 2):
-            draht = (x + y) % 3 == 0
-            p(x, y, GOLD[1] if draht else LEDER[0 if y < mitte + 1 else 1])
-    # Knauf: goldene Kugel mit Saphir.
-    for y in range(mitte - 2, mitte + 3):
-        p(0, y, UMRISS)
-    for x, y, f in ((1, mitte - 2, GOLD[0]), (2, mitte - 2, GOLD[1]), (1, mitte + 2, GOLD[2]), (2, mitte + 2, GOLD[2]),
-                    (1, mitte - 1, GOLD[0]), (2, mitte - 1, SAPHIR[0]), (1, mitte, GOLD[1]), (2, mitte, SAPHIR[1]),
-                    (1, mitte + 1, GOLD[2]), (2, mitte + 1, GOLD[2])):
-        p(x, y, f)
-    for x in (1, 2):
-        p(x, mitte - 3, UMRISS)
-        p(x, mitte + 3, UMRISS)
+    # Endkappe links: Gold mit einem Stein aus Weiss und Blau.
+    for y in range(2, 15):
+        for x in range(0, 5):
+            p(x, y, "a")
+    for y in range(3, 14):
+        p(1, y, "f")
+        p(2, y, "j")
+        p(3, y, "g")
+    p(1, 3, "x"), p(2, 3, "x"), p(3, 3, "x")
+    for y in (6, 7, 9, 10):
+        p(2, y, "m")
+    p(2, 8, "q")
+    p(1, 13, "g"), p(2, 13, "g")
+    # Die Leiste: Umriss, helle und dunkle Stahlkante; der Balken dazwischen.
+    for x in range(5, 91):
+        p(x, 4, "a")
+        p(x, 5, "c")
+        p(x, 11, "b")
+        p(x, 12, "a")
+    # Trennstriche, zwei Pixel breit, hell links.
+    for x0 in (24, 49):
+        for y in range(5, 12):
+            p(x0, y, "f")
+            p(x0 + 1, y, "g")
+    # Die Klinge links der Mitte, mit goldener Spitze nach aussen.
+    for x in range(66, 81):
+        p(x, 6, "a")
+        p(x, 7, "m")
+        p(x, 8, "q" if (x - 66) % 3 else "c")
+        p(x, 9, "b")
+        p(x, 10, "a")
+    for y in range(6, 11):
+        p(65, y, "f")
+    p(64, 6, "a"), p(64, 7, "r"), p(64, 8, "j"), p(64, 9, "r"), p(64, 10, "a")
+    p(63, 7, "a"), p(63, 8, "r"), p(63, 9, "a"), p(62, 8, "a")
+    p(65, 5, "a"), p(65, 11, "a")
+    # Die Parierstange neben dem Medaillon.
+    for y in range(3, 14):
+        p(81, y, "a" if y in (3, 13) else ("g" if y in (4, 12) else "j"))
+        p(82, y, "a" if y in (3, 13) else "f")
+        p(83, y, "a")
+    # Rechts gespiegelt.
+    for (x, y), z in list(halb.items()):
+        halb[(BREITE - 1 - x, y)] = z
+    # Das Medaillon mit seinem eigenen Licht.
+    for y, zeile in enumerate(MEDAILLON):
+        for i, z in enumerate(zeile):
+            if z != ".":
+                halb[(84 + i, y)] = z
+    for (x, y), z in halb.items():
+        b.putpixel((x, y), FARBE[z] + (255,))
     return b
 
 
-def rinne(farben, funke=None, leer=False):
-    """Die Blutrinne, 158 mal 5: oben hell, unten dunkel, in kleinen
-    Stufen. Funken in unregelmaessigem Abstand - nie als Streifen."""
+def rinne(farben, leer=False):
+    """Der Balken, 172 mal 5: fuenf Zeilen Blau, oben hell, unten dunkel."""
     _, _, w, h = RINNE
     b = Image.new("RGBA", (w, h), (0, 0, 0, 0))
-    for x in range(w):
-        for y in range(h):
-            if leer:
-                f = LEER[0] if y == 0 else (LEER[2] if y == h - 1 else LEER[1])
-            else:
-                f = farben[min(y, len(farben) - 1)]
+    for y in range(h):
+        f = (LEER if leer else farben)[y]
+        for x in range(w):
             b.putpixel((x, y), f + (255,))
-    if funke and not leer:
-        x, schritt = 5, [11, 17, 8, 14, 20, 9, 13]
-        i = 0
-        while x < w - 2:
-            y = 1 + (i % 3 == 1)
-            b.putpixel((x, y), funke + (255,))
-            if i % 2 == 0:
-                b.putpixel((x + 1, y), farben[0] + (255,))
-            x += schritt[i % len(schritt)]
-            i += 1
     return b
 
 
@@ -227,7 +231,7 @@ def oberflaeche():
         # Mojangs Feld, mit denselben Teilen - nur neben unseren.
         "boss_health_panel": {
             "type": "panel",
-            "size": [BREITE, 24],
+            "size": [BREITE, 28],
             "anchor_from": "top_middle",
             "anchor_to": "top_middle",
             "$progress_bar_collection": "boss_bars",
@@ -259,7 +263,8 @@ def oberflaeche():
                 {"leiste": {
                     "type": "panel",
                     "size": [BREITE, HOEHE],
-                    "offset": [0, 10],
+                    # Eine Zeile Luft unter dem Namen, wie in Fynns Entwurf.
+                    "offset": [0, 11],
                     "anchor_from": "top_middle",
                     "anchor_to": "top_middle",
                     "controls": [
@@ -287,8 +292,8 @@ def bilder():
     return {
         "rahmen": rahmen(),
         "leer": rinne(None, leer=True),
-        "voll": rinne(FUELLUNG[1], FUNKEN[1]),
-        "entfesselt": rinne(FUELLUNG[2], FUNKEN[2]),
+        "voll": rinne(FUELLUNG[1]),
+        "entfesselt": rinne(FUELLUNG[2]),
     }
 
 
@@ -309,7 +314,7 @@ def vorschau(ordner, teile):
     dem Namen darueber - so ungefaehr sieht es oben im Bild aus."""
     from PIL import ImageDraw
     massstab = 4
-    zustaende = [(1.0, 1, "Sir Roland von Ronceval"), (0.62, 1, "Sir Roland von Ronceval"),
+    zustaende = [(1.0, 1, "Sir Roland"), (0.62, 1, "Sir Roland"),
                  (0.31, 2, "Sir Roland - entfesselt")]
     w, h = BREITE * massstab + 80, len(zustaende) * 110 + 30
     bild = Image.new("RGBA", (w, h), (120, 168, 255, 255))
