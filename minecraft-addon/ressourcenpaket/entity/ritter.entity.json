@@ -24,8 +24,12 @@
           "umschauen"
         ],
         "variables": {
-          "variable.attack_time": "public"
-        }
+          "variable.attack_time": "public",
+          "variable.fynn_schwert": "public"
+        },
+        "initialize": [
+          "variable.fynn_schwert = 0.0;"
+        ]
       },
       "render_controllers": [
         "controller.render.default"

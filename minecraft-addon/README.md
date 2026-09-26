@@ -109,6 +109,14 @@ ist der Abstand, ab dem er flieht.
 
 **Wo er auftaucht** steht in `verhaltenspaket/spawn_rules/glimmerling.json`.
 
+**Wie sich der Spieler bewegt** – Schwerthieb, Laufen, Schleichen, Sprung,
+Bogen – steht in `werkzeuge/spieler_animation_bauen.py` als
+Schlüsselhaltungen („Schulter so weit gedreht, Handgelenk so weit“). Das
+Programm schreibt daraus `ressourcenpaket/animations/fynn_spieler.animation.json`
+und trägt die Teile in die Spielerdatei ein. Mit `--bilder ORDNER` zeichnet es
+jede Bewegung in mehreren Augenblicken, aus der Ich-Sicht und von außen –
+so lässt sich eine Änderung ansehen, ohne Minecraft zu starten.
+
 ## Warum der Glimmerling glimmt
 
 Bedrock kann Mobs kein Licht abgeben lassen – ein Glimmerling erhellt seine

@@ -23,13 +23,7 @@
           "variable.is_holding_right = 0.0;",
           "variable.is_blinking = 0.0;",
           "variable.last_blink_time = 0.0;",
-          "variable.hand_bob = 0.0;",
-          "variable.fynn_hieb_seite = 1.0;",
-          "variable.fynn_hieb_zuvor = 0.0;",
-          "variable.fynn_luft = 0.0;",
-          "variable.fynn_lade = 0.0;",
-          "variable.fynn_los = 0.0;",
-          "variable.fynn_spannen_zuvor = 0.0;"
+          "variable.hand_bob = 0.0;"
         ],
         "pre_animation": [
           "variable.helmet_layer_visible = !query.has_head_gear;",
@@ -42,57 +36,10 @@
           "variable.hand_bob = query.life_time < 0.01 ? 0.0 : variable.hand_bob + ((query.is_on_ground && query.is_alive ? math.clamp(math.sqrt(math.pow(query.position_delta(0), 2.0) + math.pow(query.position_delta(2), 2.0)), 0.0, 0.1) : 0.0) - variable.hand_bob) * 0.02;",
           "variable.map_angle = math.clamp(1 - variable.player_x_rotation / 45.1, 0.0, 1.0);",
           "variable.item_use_normalized = query.main_hand_item_use_duration / query.main_hand_item_max_duration;",
-          "variable.riding_y_offset = query.is_riding_any_entity_of_type('minecraft:minecart', 'minecraft:boat', 'minecraft:chest_boat', 'minecraft:strider') ? -3.0 : 0.0;",
-          "variable.degen_stoss = (!(query.is_sneaking && query.is_item_name_any('slot.weapon.mainhand', 'fynn:degen')) && variable.degen_stellung > 0.95 && query.is_item_name_any('slot.weapon.mainhand', 'fynn:degen')) ? 1.0 : math.max(variable.degen_stoss - 0.07, 0.0);",
-          "variable.degen_stellung = (query.is_sneaking && query.is_item_name_any('slot.weapon.mainhand', 'fynn:degen')) ? math.min(variable.degen_stellung + 0.06, 1.0) : math.max(variable.degen_stellung - 0.15, 0.0);",
-          "variable.fynn_schwert = query.is_item_name_any('slot.weapon.mainhand', 'minecraft:wooden_sword', 'minecraft:stone_sword', 'minecraft:iron_sword', 'minecraft:golden_sword', 'minecraft:diamond_sword', 'minecraft:netherite_sword', 'minecraft:copper_sword', 'fynn:ritterschwert', 'fynn:eisenklinge', 'fynn:silberklinge', 'fynn:elektrumklinge', 'fynn:sternenklinge', 'fynn:eisendolche', 'fynn:silberdolche', 'fynn:stahldolche', 'fynn:elektrumdolche', 'fynn:diamantdolche', 'fynn:netheritdolche');",
-          "variable.fynn_bogen = query.is_item_name_any('slot.weapon.mainhand', 'minecraft:bow', 'fynn:sturmbogen');",
-          "variable.fynn_hieb_seite = (variable.attack_time > 0.0 && (variable.fynn_hieb_zuvor <= 0.0 || variable.attack_time < variable.fynn_hieb_zuvor)) ? 1.0 - variable.fynn_hieb_seite : variable.fynn_hieb_seite;",
-          "variable.fynn_hieb_zuvor = variable.attack_time;",
-          "variable.fynn_gang = query.modified_distance_moved * 38.17;",
-          "variable.fynn_tempo = math.clamp(query.modified_move_speed, 0.0, 1.0);",
-          "variable.fynn_luft = math.lerp(variable.fynn_luft, (!query.is_on_ground && !query.is_in_water && !query.is_riding && !query.is_gliding && !query.is_swimming) ? 1.0 : 0.0, 0.2);",
-          "variable.fynn_lade = (query.is_sneaking && variable.fynn_schwert) ? math.min(variable.fynn_lade + query.delta_time, 1.0) : math.max(variable.fynn_lade - query.delta_time * 5.0, 0.0);",
-          "variable.fynn_spannen = (variable.fynn_bogen && query.main_hand_item_use_duration > 0.0) ? math.clamp((query.main_hand_item_max_duration - query.main_hand_item_use_duration) / 20.0, 0.0, 1.0) : 0.0;",
-          "variable.fynn_los = (variable.fynn_spannen_zuvor > 0.25 && variable.fynn_spannen <= 0.0) ? 1.0 : math.max(variable.fynn_los - query.delta_time * 4.0, 0.0);",
-          "variable.fynn_spannen_zuvor = variable.fynn_spannen;"
+          "variable.riding_y_offset = query.is_riding_any_entity_of_type('minecraft:minecart', 'minecraft:boat', 'minecraft:chest_boat', 'minecraft:strider') ? -3.0 : 0.0;"
         ],
         "animate": [
-          "root",
-          "fynn_degen_stellung",
-          {
-            "fynn_laufen": "!variable.is_first_person && !variable.is_paperdoll && !variable.map_face_icon && !query.is_riding && !query.is_sleeping && !query.is_swimming && !query.is_gliding && !query.is_crawling && !query.is_sneaking && variable.fynn_luft < 0.5"
-          },
-          {
-            "fynn_schleichen": "!variable.is_first_person && !variable.is_paperdoll && !variable.map_face_icon && !query.is_riding && !query.is_sleeping && !query.is_swimming && !query.is_gliding && !query.is_crawling && query.is_sneaking && !query.is_item_name_any('slot.weapon.mainhand', 'fynn:degen')"
-          },
-          {
-            "fynn_luft": "(!variable.is_first_person && !variable.is_paperdoll && !variable.map_face_icon && !query.is_riding && !query.is_sleeping && !query.is_swimming && !query.is_gliding && !query.is_crawling) * variable.fynn_luft"
-          },
-          {
-            "fynn_aufladen": "!variable.is_first_person && !variable.is_paperdoll && !variable.map_face_icon && !query.is_riding && !query.is_sleeping && !query.is_swimming && !query.is_gliding && !query.is_crawling && variable.fynn_lade > 0.0"
-          },
-          {
-            "fynn_aufladen_ich": "variable.is_first_person && !variable.is_paperdoll && variable.fynn_lade > 0.0 && variable.attack_time <= 0.0"
-          },
-          {
-            "fynn_bogen_aussen": "!variable.is_first_person && !variable.is_paperdoll && !variable.map_face_icon && !query.is_riding && !query.is_sleeping && (variable.fynn_spannen > 0.0 || variable.fynn_los > 0.0)"
-          },
-          {
-            "fynn_bogen_ich": "variable.is_first_person && !variable.is_paperdoll && (variable.fynn_spannen >= 1.0 || variable.fynn_los > 0.0)"
-          },
-          {
-            "fynn_hieb_ich_vor": "variable.is_first_person && !variable.is_paperdoll && variable.fynn_schwert && variable.attack_time > 0.0 && variable.fynn_hieb_seite < 0.5"
-          },
-          {
-            "fynn_hieb_ich_rueck": "variable.is_first_person && !variable.is_paperdoll && variable.fynn_schwert && variable.attack_time > 0.0 && variable.fynn_hieb_seite >= 0.5"
-          },
-          {
-            "fynn_hieb_aussen_vor": "!variable.is_first_person && !variable.is_paperdoll && !variable.map_face_icon && !query.is_riding && !query.is_sleeping && variable.fynn_schwert && variable.attack_time > 0.0 && variable.fynn_hieb_seite < 0.5"
-          },
-          {
-            "fynn_hieb_aussen_rueck": "!variable.is_first_person && !variable.is_paperdoll && !variable.map_face_icon && !query.is_riding && !query.is_sleeping && variable.fynn_schwert && variable.attack_time > 0.0 && variable.fynn_hieb_seite >= 0.5"
-          }
+          "root"
         ],
         "variables": {
           "variable.fp_melee_spear_use_attachable_rotation_z": "public",
@@ -100,10 +47,7 @@
           "variable.fp_melee_spear_attack_attachable_rotation_z": "public",
           "variable.tp_melee_spear_attack_attachable_position_z": "public",
           "variable.attack_time": "public",
-          "variable.item_use_normalized": "public",
-          "variable.degen_stellung": "public",
-          "variable.degen_stoss": "public",
-          "variable.fynn_schwert": "public"
+          "variable.item_use_normalized": "public"
         },
         "should_update_effects_offscreen": "1.0"
       },
@@ -179,19 +123,7 @@
         "third_person_melee_spear_use": "animation.humanoid.melee_spear_use",
         "third_person_melee_spear_hold": "animation.humanoid.melee_spear_hold",
         "third_person_melee_spear_attack": "animation.player.melee_spear_attack",
-        "third_person_melee_spear_controller": "controller.animation.player.melee_spear",
-        "fynn_degen_stellung": "animation.fynn.degen_stellung",
-        "fynn_laufen": "animation.fynn.laufen",
-        "fynn_schleichen": "animation.fynn.schleichen",
-        "fynn_luft": "animation.fynn.luft",
-        "fynn_aufladen": "animation.fynn.aufladen",
-        "fynn_aufladen_ich": "animation.fynn.aufladen_ich",
-        "fynn_bogen_aussen": "animation.fynn.bogen_aussen",
-        "fynn_bogen_ich": "animation.fynn.bogen_ich",
-        "fynn_hieb_ich_vor": "animation.fynn.hieb_ich_vorhand",
-        "fynn_hieb_ich_rueck": "animation.fynn.hieb_ich_rueckhand",
-        "fynn_hieb_aussen_vor": "animation.fynn.hieb_aussen_vorhand",
-        "fynn_hieb_aussen_rueck": "animation.fynn.hieb_aussen_rueckhand"
+        "third_person_melee_spear_controller": "controller.animation.player.melee_spear"
       },
       "render_controllers": [
         {

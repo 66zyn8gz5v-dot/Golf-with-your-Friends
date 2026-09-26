@@ -39,15 +39,20 @@ def normiert(v):
 def drehe(punkt, pivot, winkel):
     """Dreht um den Drehpunkt, in Bedrocks Reihenfolge und Vorzeichen.
 
-    Bedrock dreht im Uhrzeigersinn, wenn man entlang der Achse blickt -
-    deshalb stehen hier die Minuszeichen. Ohne sie kippen gedrehte Teile
+    Bedrock dreht um x und z im Uhrzeigersinn, wenn man entlang der Achse
+    blickt - deshalb stehen dort die Minuszeichen. Ohne sie kippen gedrehte Teile
     (Fluegel, angewinkelte Arme) auf die falsche Seite.
     """
     x = punkt[0] - pivot[0]
     y = punkt[1] - pivot[1]
     z = punkt[2] - pivot[2]
 
-    rx, ry, rz = (math.radians(-w) for w in winkel)
+    # Um y dreht Bedrock mit dem gewoehnlichen Vorzeichen, nur x und z sind
+    # umgekehrt. Bis Fassung 4.25 stand hier auch bei y ein Minus; das fiel
+    # erst auf, als spieler_ansehen.py den Spieler nachrechnete (siehe
+    # drehmatrix dort - nachgeprueft an Mojangs Bogenhaltung).
+    rx, rz = math.radians(-winkel[0]), math.radians(-winkel[2])
+    ry = math.radians(winkel[1])
 
     y, z = y * math.cos(rx) - z * math.sin(rx), y * math.sin(rx) + z * math.cos(rx)
     x, z = x * math.cos(ry) + z * math.sin(ry), -x * math.sin(ry) + z * math.cos(ry)
