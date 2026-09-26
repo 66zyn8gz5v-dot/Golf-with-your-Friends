@@ -24,7 +24,8 @@
         "kratzen": "animation.fynn.gorilla.kratzen",
         "drehen": "animation.fynn.gorilla.drehen",
         "angriff": "animation.fynn.gorilla.angriff",
-        "jung": "animation.fynn.gorilla.jung"
+        "jung": "animation.fynn.gorilla.jung",
+        "gross0": "animation.fynn.gorilla.gross0"
       },
       "scripts": {
         "initialize": [
@@ -66,6 +67,9 @@
           },
           {
             "jung": "query.is_baby"
+          },
+          {
+            "gross0": "query.variant == 0 && !query.is_baby"
           }
         ]
       },

@@ -290,6 +290,10 @@ TIERE = [
     {
         "id": "gorilla", "name": ("Gorilla", "Gorilla"), "gestalt": "gorilla",
         "varianten": [("silberruecken", 35), ("schwarz", 65)], "baby_textur": "jung",
+        # Fynn: "Der Silberruecken muss ein bisschen groesser sein als der
+        # normale Affe." Wie in echt: Der alte Anfuehrer der Gruppe ist der
+        # schwerste Gorilla, gut ein Siebtel groesser als die anderen.
+        "variante_gross": {0: 1.15},
         "art": "land", "verhalten": "neutral", "herdenwut": True, "leben": 40, "schaden": 8, "tempo": 0.26,
         "kollision": (1.3, 1.8), "baby": True, "herde": (2, 4),
         "futter": ["minecraft:melon_slice", "minecraft:sweet_berries", "minecraft:bamboo"],
@@ -1272,6 +1276,16 @@ def bewegungen(t, modell):
         rumpf_y = next(k.drehpunkt[1] for k in modell.knochen if k.name == "body")
         a["riese"] = {"loop": True, "bones": {"body": {"scale": f, "position": [0.0, round(rumpf_y * (f - 1), 2), 0.0]}}}
 
+    # --- Einzelne Varianten groesser (der Silberruecken). Nur gezeichnet:
+    # Eine Groesse im Verhaltenspaket stritte sich mit der des Jungtiers,
+    # und beim Erwachsenwerden fiele sie mit dessen Gruppe wieder weg.
+    # Angehoben wie beim Riesen, damit die Fuesse am Boden bleiben.
+    if t.get("variante_gross"):
+        rumpf_y = next(k.drehpunkt[1] for k in modell.knochen if k.name == "body")
+        for nr, f in t["variante_gross"].items():
+            a[f"gross{nr}"] = {"loop": True, "bones": {"body": {
+                "scale": f, "position": [0.0, round(rumpf_y * (f - 1), 2), 0.0]}}}
+
     # --- Teile, die nur manche Varianten haben (Geweih, Maehne, Hammerkopf)
     if t.get("zeigen"):
         a["teile"] = {"loop": True, "bones": {k: {"scale": f"({bed}) ? 1.0 : 0.0"} for k, bed in t["zeigen"].items()}}
@@ -1335,6 +1349,8 @@ def animate_liste(t, anims):
         liste.append("teile")
     if "riese" in anims:
         liste.append({"riese": "query.property('fynn:riese')"})
+    for nr in t.get("variante_gross", {}):
+        liste.append({f"gross{nr}": f"query.variant == {nr} && !query.is_baby"})
     return liste
 
 
@@ -1471,6 +1487,9 @@ def vorschau(bilder, ordner):
                      "q.is_in_water": 1.0}
             anims = [(a, 1.0) for k, a in eigene.items() if k.endswith((".teile", ".jung")) and
                      (not k.endswith(".jung") or baby)]
+            nr = int(werte["q.variant"])
+            if not baby and nr in t.get("variante_gross", {}):
+                anims += [(a, 1.0) for k, a in eigene.items() if k.endswith(f".gross{nr}")]
             if t.get("riese"):
                 anims.append(({"loop": True, "bones": {"saenfte": {"scale": 0.0}}}, 1.0))
             if t.get("reiten"):

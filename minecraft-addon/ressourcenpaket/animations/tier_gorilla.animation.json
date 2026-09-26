@@ -345,6 +345,19 @@
           ]
         }
       }
+    },
+    "animation.fynn.gorilla.gross0": {
+      "loop": true,
+      "bones": {
+        "body": {
+          "scale": 1.15,
+          "position": [
+            0.0,
+            3.0,
+            0.0
+          ]
+        }
+      }
     }
   }
 }
