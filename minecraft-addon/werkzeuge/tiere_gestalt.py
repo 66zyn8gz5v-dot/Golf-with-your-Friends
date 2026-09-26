@@ -212,7 +212,12 @@ def elch_modell():
     kopf.kasten([-3, 22, -31], [6, 7, 8], "schnauze")
     # Die ueberhaengende Oberlippe - die dicke Elchnase.
     kopf.kasten([-3.5, 25, -33], [7, 4, 3], "lippe")
-    kopf.kasten([-1, 15, -23], [2, 7, 2], "glocke")
+    # Die Glocke haengt in die Schnauze hinein statt nur an deren Kante:
+    # vorher beruehrten sich die beiden an einer Linie, und von der Seite
+    # sah es aus, als schwebe ein Strich unter dem Kopf. Eigener Knochen,
+    # damit das Kalb eine kleine bekommen kann - junge Elche haben kaum eine.
+    glocke = m.knoch("glocke", [0, 23, -23], "head")
+    glocke.kasten([-1, 15, -25], [2, 9, 2], "glocke")
     paar(kopf, [3.5, 30, -21], [4, 2, 1], "ohr", drehung=[0, 0, -20], drehpunkt=[3.5, 31, -20.5])
     geweih = m.knoch("geweih", [0, 32, -20], "head")
     # Das Schaufelgeweih: Stange, breite Schaufel, Zacken am Rand.

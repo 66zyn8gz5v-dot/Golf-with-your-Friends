@@ -291,7 +291,7 @@ TIERE = [
         "id": "gorilla", "name": ("Gorilla", "Gorilla"), "gestalt": "gorilla",
         "varianten": [("silberruecken", 35), ("schwarz", 65)], "baby_textur": "jung",
         "art": "land", "verhalten": "neutral", "herdenwut": True, "leben": 40, "schaden": 8, "tempo": 0.26,
-        "kollision": (1.3, 1.8), "baby": True, "herde": (2, 4), "baby_beine": 1.0,
+        "kollision": (1.3, 1.8), "baby": True, "herde": (2, 4),
         "futter": ["minecraft:melon_slice", "minecraft:sweet_berries", "minecraft:bamboo"],
         "biome": [["jungle"]], "gewicht": 5,
         "boden": ["minecraft:grass_block", "minecraft:podzol", "minecraft:moss_block"],
@@ -1034,6 +1034,29 @@ def vogelbewegungen():
     return {"fliegen": fliegen, "stossen": stossen, "schrei": schrei}
 
 
+# Kopf und Beine der Jungtiere, je Tier. Fynn: "Die haben oft ein bisschen
+# zu grossen Kopf, vor allem der Elch." Vorher bekamen alle denselben
+# anderthalbfachen Kopf - bei einer Katze niedlich, bei einem Tier mit langem
+# Schaedel wie Elch oder Nashorn ein Klotz. Kaelber von Huftieren haben
+# ausserdem lange Beine, sie laufen gleich nach der Geburt mit der Herde;
+# gestauchte Stummelbeine passen nur zu Baeren und Katzen.
+BABY = {          # Kopf, Beinlaenge
+    "elch":        (1.15, 0.82),
+    "bison":       (1.2, 0.76),
+    "nashorn":     (1.15, 0.74),
+    "elefant":     (1.2, 0.76),
+    "wildschwein": (1.15, 0.72),
+    "braunbaer":   (1.3, 0.7),
+    "loewe":       (1.35, 0.72),
+    "tiger":       (1.35, 0.72),
+    "schneeleopard": (1.35, 0.72),
+    "gorilla":     (1.3, 1.0),
+    "krokodil":    (1.2, 0.85),
+    "walross":     (1.2, 0.85),
+    "wal":         (1.2, 1.0),
+}
+
+
 def bewegungen(t, modell):
     """Animationen je nach Bauart. Knochen, die es im Modell gibt, bestimmen,
     was sich bewegt.
@@ -1219,12 +1242,20 @@ def bewegungen(t, modell):
     # Huefte gestaucht; damit die Fuesse trotzdem am Boden stehen, sinkt der
     # Koerper um genau das Stueck, das die Beine kuerzer werden.
     if t.get("baby") and kopf:
-        jung = {kopf: {"scale": 1.6, "position": [0.0, 1.0, 1.0]}}
+        kopfmass, faktor = BABY.get(t["id"], (1.3, 0.8 if art == "amphib" else 0.72))
+        # Der Kopf waechst um seinen Drehpunkt, und der sitzt am Koerper -
+        # so bleibt er angewachsen. Vorher wurde er zusaetzlich um einen
+        # Pixel nach oben und hinten geschoben; beim Walross sass er damit
+        # eine Stufe ueber dem Ruecken. Die Schnauze waechst weniger mit als
+        # der Rest: Jungtiere haben kurze Gesichter, und ein langer Kopf in
+        # voller Vergroesserung war beim Nashorn hoeher als der ganze Koerper.
+        jung = {kopf: {"scale": [kopfmass, kopfmass, round(kopfmass * 0.85, 3)]}}
+        if "glocke" in da:
+            jung["glocke"] = {"scale": [1.0, 0.45, 1.0]}
         if "leg0" in da:
             bein = next(k for k in modell.knochen if k.name == "leg0").drehpunkt[1]
-            faktor = t.get("baby_beine", 0.8 if art == "amphib" else 0.62)
             for b_ in ("leg0", "leg1", "leg2", "leg3"):
-                jung[b_] = {"scale": [1.2, faktor, 1.2]}
+                jung[b_] = {"scale": [1.1, faktor, 1.1]}
             jung["body"] = {"position": [0.0, round(-(1 - faktor) * bein, 2), 0.0]}
         for k in schwanzkette:
             jung[k] = {"scale": 0.7}
