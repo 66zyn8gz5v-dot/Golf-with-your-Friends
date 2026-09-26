@@ -176,6 +176,26 @@ export function ruht(spieler, was, dauer) {
     return false;
 }
 
+// Die Chronik der Bosse zaehlt Siege - je Spieler und Boss eine Zahl, die
+// am Spieler haengt und darum auch nach dem Neuladen der Welt noch stimmt.
+export function siegSchluessel(typ) {
+    return `fynn:siege_${typ.split(":").pop()}`;
+}
+
+export function siegeVon(spieler, typ) {
+    try {
+        return spieler.getDynamicProperty(siegSchluessel(typ)) ?? 0;
+    } catch (e) {
+        return 0;
+    }
+}
+
+export function merkeSiege(spielerListe, typ) {
+    for (const s of spielerListe) {
+        try { s.setDynamicProperty(siegSchluessel(typ), siegeVon(s, typ) + 1); } catch (e) { /* egal */ }
+    }
+}
+
 export function beuteListe(liste, zufall = Math.random) {
     const aus = [];
     for (const [name, lo, hi, chance] of liste) {
@@ -388,8 +408,9 @@ export function bossKampf(art) {
         art.abschied?.(z, a, t);
         if (t === d.beute) {
             const nahe = spielerBei(z.boss, 64);
-            const anwesend = [...z.teilnehmer].filter((id) => nahe.some((s) => s.id === id)).length;
-            legeBeute(dim, ort, anwesend, art.beute, art.anteil);
+            const sieger = nahe.filter((s) => z.teilnehmer.has(s.id));
+            legeBeute(dim, ort, sieger.length, art.beute, art.anteil);
+            merkeSiege(sieger, art.typ);
             titel(nahe, "§6Sieg", art.titelSieg, 60);
         }
         if (t >= d.laenge) {

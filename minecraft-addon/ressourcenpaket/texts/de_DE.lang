@@ -44,11 +44,11 @@ item.fynn:eisenklinge.name=Eisenklinge
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.63
+item.iron_sword.name=Stahlschwert 4.64
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.63
-item.fynn:degen.name=Degen 4.63
+item.fynn:degen=Degen 4.64
+item.fynn:degen.name=Degen 4.64
 
 
 
@@ -464,3 +464,6 @@ item.fynn:herz_des_winters=Herz des Winters
 item.fynn:herz_des_winters.name=Herz des Winters
 item.fynn:frostruf=Frostruf
 item.fynn:frostruf.name=Frostruf
+
+## Chronik der Bosse
+item.fynn:bosschronik=Chronik der Bosse

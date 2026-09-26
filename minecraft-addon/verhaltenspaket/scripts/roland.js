@@ -17,6 +17,7 @@
 import { world, system, ItemStack } from "@minecraft/server";
 import { ANGRIFFE } from "./roland_daten.js";
 import { LEBEN, MEHR_SPIELER, LETZTE_KRAFT, BEUTE, ANTEIL } from "./roland_werte.js";
+import { merkeSiege } from "./boss_kern.js";
 
 export const TYP = "fynn:roland";
 // Der Name in Phase zwei, wie in Fynns Entwurf. Die Bossleiste
@@ -621,8 +622,9 @@ function abschied(z, a, t) {
     if (t === d.licht) {
         funken(dim, "fynn:ordenslicht", ort);
         ton(dim, "random.totem", ort, 1, 0.8);
-        const anwesend = [...z.teilnehmer].filter((id) => spielerBei(z.boss, 64).some((s) => s.id === id)).length;
-        legeBeute(dim, ort, anwesend);
+        const sieger = spielerBei(z.boss, 64).filter((s) => z.teilnehmer.has(s.id));
+        legeBeute(dim, ort, sieger.length);
+        merkeSiege(sieger, TYP);
         for (const s of spielerBei(z.boss, 64)) {
             try {
                 s.onScreenDisplay.setTitle("§6Sieg", { subtitle: "§7Sir Roland legt Durendal nieder", fadeInDuration: 10, stayDuration: 60, fadeOutDuration: 20 });

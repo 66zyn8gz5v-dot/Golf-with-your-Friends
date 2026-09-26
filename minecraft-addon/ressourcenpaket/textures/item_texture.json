@@ -484,6 +484,9 @@
     },
     "glimmerling_ei": {
       "textures": "textures/items/glimmerling_ei"
+    },
+    "bosschronik": {
+      "textures": "textures/items/bosschronik"
     }
   }
 }
