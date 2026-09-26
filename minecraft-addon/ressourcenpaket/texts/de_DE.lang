@@ -42,11 +42,11 @@ item.fynn:eisenklinge.name=Eisenklinge
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.39
+item.iron_sword.name=Stahlschwert 4.40
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.39
-item.fynn:degen.name=Degen 4.39
+item.fynn:degen=Degen 4.40
+item.fynn:degen.name=Degen 4.40
 
 
 
@@ -316,6 +316,25 @@ item.spawn_egg.entity.fynn:wilderer.name=Wilderer-Spawn-Ei
 entity.fynn:bandenchef.name=Bandenchef
 item.spawn_egg.entity.fynn:bandenchef.name=Bandenchef-Spawn-Ei
 
+
+## Obst
+item.fynn:birne=Birne
+item.fynn:birne.name=Birne
+item.fynn:pfirsich=Pfirsich
+item.fynn:pfirsich.name=Pfirsich
+item.fynn:pflaume=Pflaume
+item.fynn:pflaume.name=Pflaume
+item.fynn:obstsalat=Obstsalat
+item.fynn:obstsalat.name=Obstsalat
+item.fynn:pflaumenkuchen=Pflaumenkuchen
+item.fynn:pflaumenkuchen.name=Pflaumenkuchen
+item.fynn:apfelstrudel=Apfelstrudel
+item.fynn:apfelstrudel.name=Apfelstrudel
+tile.fynn:obst.name=Frucht am Zweig
+
+
+
+
 ## Die Tiere
 entity.fynn:braunbaer.name=Braunbär
 item.spawn_egg.entity.fynn:braunbaer.name=Braunbär-Spawn-Ei
@@ -342,17 +361,10 @@ item.spawn_egg.entity.fynn:riesenkalmar.name=Riesenkalmar-Spawn-Ei
 entity.fynn:schwertfisch.name=Schwertfisch
 item.spawn_egg.entity.fynn:schwertfisch.name=Schwertfisch-Spawn-Ei
 
-## Obst
-item.fynn:birne=Birne
-item.fynn:birne.name=Birne
-item.fynn:pfirsich=Pfirsich
-item.fynn:pfirsich.name=Pfirsich
-item.fynn:pflaume=Pflaume
-item.fynn:pflaume.name=Pflaume
-item.fynn:obstsalat=Obstsalat
-item.fynn:obstsalat.name=Obstsalat
-item.fynn:pflaumenkuchen=Pflaumenkuchen
-item.fynn:pflaumenkuchen.name=Pflaumenkuchen
-item.fynn:apfelstrudel=Apfelstrudel
-item.fynn:apfelstrudel.name=Apfelstrudel
-tile.fynn:obst.name=Frucht am Zweig
+## Rucksack
+item.fynn:rucksack=Rucksack
+item.fynn:rucksack.name=Rucksack
+entity.fynn:rucksack_abgestellt.name=Rucksack
+
+## Weidenroeschen
+tile.fynn:weidenroeschen.name=Weidenröschen

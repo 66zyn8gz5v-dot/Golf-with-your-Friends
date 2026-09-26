@@ -24,5 +24,8 @@
   },
   "fynn:rubinblock": {
     "sound": "metal"
+  },
+  "fynn:weidenroeschen": {
+    "sound": "grass"
   }
 }

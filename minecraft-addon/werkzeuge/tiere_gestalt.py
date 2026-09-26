@@ -216,13 +216,63 @@ def elch_modell():
     paar(geweih, [11, 33, -28], [1, 2, 1], "zacke", **kippen)
     m.knoch("tail", [0, 27, 13], "body").kasten([-1.5, 24, 13], [3, 3, 1], "fell")
     beine(m, "body", 4, -9, 9, (4, 18, 4), 18, pfote=(4, 2, 5))
+    reitzeug(m)
     return m
+
+
+def reitzeug(m):
+    """Sattel und zwei Rucksaecke an den Flanken. Das Spiel zeigt sie nur,
+    wenn der Elch gesattelt ist bzw. Rucksaecke traegt (part_visibility in
+    der Darstellung, tiere_bauen.steuerung)."""
+    sattel = m.knoch("sattel", [0, 29, 3], "body")
+    # Hinter dem Buckel: eine Satteldecke, die an den Seiten herabfaellt,
+    # darauf der Ledersitz mit Knauf und hinterer Lehne, Steigbuegel.
+    sattel.kasten([-6.5, 29, -2], [13, 1, 10], "decke")
+    paar(sattel, [6, 24, -1], [1, 5, 8], "decke")
+    sattel.kasten([-4, 30, 0], [8, 1, 6], "sitz")
+    sattel.kasten([-2, 30, -1], [4, 2, 1], "sitz")
+    sattel.kasten([-0.5, 32, -1], [1, 1, 1], "knauf")
+    sattel.kasten([-3, 30, 6], [6, 2, 1], "sitz")
+    paar(sattel, [6.5, 19, 2], [1, 5, 1], "riemen")
+    paar(sattel, [6.5, 17, 1.5], [1, 2, 2], "buegel")
+    for name, seite in (("tasche_links", 1), ("tasche_rechts", -1)):
+        t = m.knoch(name, [6 * seite, 28, 9], "body")
+        x = 6 if seite > 0 else -9
+        aussen = 9 if seite > 0 else -10
+        t.kasten([x, 20, 6], [3, 8, 6], "tasche")                     # der Rucksack
+        t.kasten([aussen, 21, 7], [1, 4, 4], "tasche_fach")            # Aussentasche
+        t.kasten([x, 27, 5.5], [3, 1, 7], "tasche_klappe")             # Deckel
+        t.kasten([aussen, 24.5, 8.5], [1, 1, 1], "schnalle")
+        t.kasten([x, 28, 7], [3, 2, 4], "rolle")                       # Schlafrolle obenauf
+    m.finde("tasche_links").kasten([-6, 29, 8], [12, 1, 2], "riemen")  # Gurt ueber den Ruecken
+
+
+# Das Reitzeug: dunkles Leder, Messing, eine rote Decke - die Rucksaecke in
+# denselben Farben wie der Rucksack des Spielers (rucksack_bauen.py).
+REITZEUG = {"decke": "#8a2e2a", "sitz": "#5a3820", "knauf": "#c8a050", "riemen": "#3e2616", "buegel": "#8a8e96",
+            "tasche": "#9a6438", "tasche_fach": "#8a5630", "tasche_klappe": "#6e4424", "schnalle": "#c8a050",
+            "rolle": "#3e5a3a"}
+
+
+def reitzeug_maler(stoff, p, n, texel):
+    if stoff not in REITZEUG:
+        return False
+    if stoff == "decke" and abs(p[1] - 24.5) < 0.5:
+        return ton("#d8b060", p, n, texel, 81, straehne=0.0)          # goldene Borte unten
+    if stoff == "rolle" and abs(p[2] - 9.0) < 0.5:
+        return ton("#3e2616", p, n, texel, 83, straehne=0.0)          # Riemen um die Rolle
+    if stoff == "tasche" and n[1] < 0.5 and abs(p[1] - 22.5) < 0.5:
+        return ton("#5e3a20", p, n, texel, 85, straehne=0.0)          # Naht
+    return ton(REITZEUG[stoff], p, n, texel, 87, straehne=0.02, hell=0.05 if n[1] > 0.5 else 0.0)
 
 
 def elch_maler(variante):
     fell, bein, schnauze = ELCH_FARBEN[variante]
 
     def f(stoff, p, n, texel):
+        zeug = reitzeug_maler(stoff, p, n, texel)
+        if zeug is not False:
+            return zeug
         if stoff in ("geweih", "schaufel", "zacke"):
             hell = 0.08 if stoff == "zacke" else (-0.04 if n[1] < 0 else 0.0)
             return ton("#cdbb92", p, n, texel, 21, hell=hell, straehne=0.02)

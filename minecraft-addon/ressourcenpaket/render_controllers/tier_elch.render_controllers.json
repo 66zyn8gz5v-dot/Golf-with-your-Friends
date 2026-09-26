@@ -18,6 +18,17 @@
       ],
       "textures": [
         "query.is_baby ? Texture.kalb : Array.haut[query.variant]"
+      ],
+      "part_visibility": [
+        {
+          "sattel": "query.is_saddled"
+        },
+        {
+          "tasche_links": "query.property('fynn:taschen') >= 1"
+        },
+        {
+          "tasche_rechts": "query.property('fynn:taschen') >= 2"
+        }
       ]
     }
   }

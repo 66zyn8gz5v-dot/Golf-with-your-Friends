@@ -90,7 +90,13 @@ TIERE = [
         "varianten": [("bulle", 50), ("kuh", 50)], "baby_textur": "kalb",
         "art": "land", "verhalten": "neutral", "leben": 36, "schaden": 6, "tempo": 0.23,
         "kollision": (1.5, 2.3), "baby": True, "herde": (1, 3), "stoss": 1.6,
-        "futter": ["minecraft:apple", "minecraft:sweet_berries"],
+        "futter": ["minecraft:apple", "minecraft:sweet_berries", "fynn:weidenroeschen"],
+        # Fynn: "Man kann jetzt auch den Elch reiten. Zaehmen mit irgendwas,
+        # was der frisst - eine Pflanze, oder Setzlinge." Elche fressen im
+        # Sommer Weidenroeschen und junge Baeume - beides zaehmt ihn.
+        "reiten": {"zaehmen": ["fynn:weidenroeschen", "minecraft:birch_sapling", "minecraft:spruce_sapling",
+                               "minecraft:oak_sapling", "minecraft:dark_oak_sapling", "minecraft:cherry_sapling"],
+                   "chance": 0.2, "tempo": 0.25, "sitz": [0.0, 1.75, -0.19], "sprung": 0.7},
         "biome": [["taiga"], ["swamp"]], "gewicht": 6,
         "boden": ["minecraft:grass_block", "minecraft:podzol", "minecraft:snow_layer", "minecraft:coarse_dirt"],
         "beute": [("fynn:elchfleisch", 1, 3, 1.0, True), ("minecraft:leather", 0, 2, 1.0, False)],
@@ -406,6 +412,9 @@ def verhalten(t, varianten_namen):
 
     erwachsen_liste = [erwachsen] + (["fynn:ruhig"] if t["verhalten"] == "neutral" else []) + \
                       (["fynn:jagd"] if t["verhalten"] == "feindlich" else [])
+    if t.get("reiten"):
+        erwachsen_liste.append("fynn:wild")
+        reittier(t, c, gruppen, ereignisse)
 
     if t.get("baby"):
         gruppen[baby] = {
@@ -439,7 +448,9 @@ def verhalten(t, varianten_namen):
                                                    "add": {"component_groups": erwachsen_liste}}
         ereignisse["minecraft:entity_born"] = {"add": {"component_groups": [baby]}}
         if t.get("futter"):
-            c["minecraft:breedable"] = {"require_tame": False, "breed_items": t["futter"],
+            # Reittiere bekommen Junge nur, wenn sie gezaehmt sind - wie
+            # Pferde. So stoert das Fuettern das Zaehmen nicht.
+            c["minecraft:breedable"] = {"require_tame": bool(t.get("reiten")), "breed_items": t["futter"],
                                         "breeds_with": {"mate_type": kennung, "baby_type": kennung,
                                                         "breed_event": {"event": "minecraft:entity_born",
                                                                         "target": "baby"}}}
@@ -473,16 +484,83 @@ def verhalten(t, varianten_namen):
         ereignisse["minecraft:entity_born"] = {"sequence": [{"add": {"component_groups": [baby]}},
                                                             {"randomize": zufall}]}
 
+    beschreibung = {"identifier": kennung, "spawn_category": "water_creature" if wasser else "creature",
+                    "is_spawnable": True, "is_summonable": True}
+    if t.get("reiten"):
+        # Wie viele Rucksaecke der Elch traegt (0 bis 2) - das Spiel zeigt
+        # danach die Taschen an den Flanken (verhaltenspaket/scripts/rucksack.js).
+        beschreibung["properties"] = {"fynn:taschen": {"type": "int", "range": [0, 2], "default": 0,
+                                                       "client_sync": True}}
     return {
         "format_version": "1.26.30",
         "minecraft:entity": {
-            "description": {"identifier": kennung, "spawn_category": "water_creature" if wasser else "creature",
-                            "is_spawnable": True, "is_summonable": True},
+            "description": beschreibung,
             "component_groups": gruppen,
             "components": c,
             "events": ereignisse,
         },
     }
+
+
+def reittier(t, c, gruppen, ereignisse):
+    """Zaehmen, Satteln, Reiten - nach Mojangs Kamel und Pferd.
+
+    Wild: Fuettern mit dem, was in "zaehmen" steht, zaehmt mit einer
+    Chance. Gezaehmt: vergisst jede Wut, bleibt fuer immer, laesst einen
+    Sattel auflegen (mit der Schere wieder ab) und traegt einen Reiter.
+    Gesattelt: laesst sich lenken, so schnell wie ein Pferd, springt hoch,
+    wenn man die Sprungtaste haelt."""
+    r = t["reiten"]
+    sattel_in_hand = {"test": "has_equipment", "subject": "other", "domain": "hand", "value": "saddle"}
+    hat_sattel = {"test": "has_equipment", "subject": "self", "domain": "inventory", "value": "saddle"}
+    nicht_geduckt = {"test": "is_sneak_held", "subject": "other", "value": False}
+    gruppen["fynn:wild"] = {"minecraft:tameable": {
+        "probability": r["chance"], "tame_items": r["zaehmen"],
+        "tame_event": {"event": "fynn:gezaehmt", "target": "self"}}}
+    gruppen["fynn:gezaehmt"] = {
+        "minecraft:is_tamed": {},
+        "minecraft:inventory": {"container_type": "horse"},
+        "minecraft:equippable": {"slots": [{"slot": 0, "item": "saddle", "accepted_items": ["saddle"],
+                                            "on_equip": {"event": "fynn:gesattelt"},
+                                            "on_unequip": {"event": "fynn:abgesattelt"}}]},
+        "minecraft:interact": {"interactions": [
+            {"on_interact": {"filters": {"all_of": [dict(hat_sattel, operator="not"), sattel_in_hand, nicht_geduckt]}},
+             "equip_item_slot": "0", "interact_text": "action.interact.saddle"},
+            {"on_interact": {"filters": {"all_of": [
+                hat_sattel, {"test": "rider_count", "subject": "self", "operator": "equals", "value": 0},
+                {"test": "has_equipment", "subject": "other", "domain": "hand", "value": "shears"}, nicht_geduckt]}},
+             "hurt_item": 1, "drop_item_slot": "0", "drop_item_y_offset": 2,
+             "interact_text": "action.interact.removesaddle", "play_sounds": "unsaddle"},
+        ]},
+        "minecraft:rideable": {"seat_count": 1, "crouching_skip_interact": True, "family_types": ["player"],
+                               "interact_text": "action.interact.ride.horse",
+                               "seats": [{"position": r["sitz"]}]},
+        "minecraft:variable_max_auto_step": {"base_value": 1.0625, "controlled_value": 1.0625,
+                                             "jump_prevented_value": 0.5625},
+    }
+    gruppen["fynn:gesattelt"] = {
+        "minecraft:is_saddled": {},
+        "minecraft:input_ground_controlled": {},
+        "minecraft:behavior.player_ride_tamed": {},
+        "minecraft:movement": {"value": r["tempo"]},
+        "minecraft:can_power_jump": {},
+        "minecraft:horse.jump_strength": {"value": r["sprung"]},
+    }
+    ereignisse["fynn:gezaehmt"] = {"remove": {"component_groups": ["fynn:wild", "fynn:ruhig", "fynn:wuetend"]},
+                                    "add": {"component_groups": ["fynn:gezaehmt"]}}
+    ereignisse["fynn:gesattelt"] = {"add": {"component_groups": ["fynn:gesattelt"]}}
+    ereignisse["fynn:abgesattelt"] = {"remove": {"component_groups": ["fynn:gesattelt"]}}
+    # Ein gezaehmtes Tier verschwindet nie, auch wenn man weit weg ist.
+    c["minecraft:despawn"] = {"despawn_from_distance": {},
+                              "filters": {"test": "is_tamed", "subject": "self", "operator": "!=", "value": True}}
+    # Wer wuetend ist, laesst sich nicht zaehmen - der Eisbaer-Wutzustand
+    # bleibt fuer wilde Elche.
+    if "fynn:ruhig" in gruppen:
+        ereignisse["fynn:beruhigt"] = {"sequence": [
+            {"filters": {"test": "is_tamed", "subject": "self", "value": False},
+             "remove": {"component_groups": ["fynn:wuetend"]}, "add": {"component_groups": ["fynn:ruhig"]}},
+            {"filters": {"test": "is_tamed", "subject": "self", "value": True},
+             "remove": {"component_groups": ["fynn:wuetend"]}}]}
 
 
 def beuteliste(eintraege):
@@ -824,12 +902,17 @@ def steuerung(t, texturen):
     bild = "Array.haut[query.variant]"
     if babyhaut(t):
         bild = f"query.is_baby ? Texture.{babyhaut(t)} : Array.haut[query.variant]"
-    return {"format_version": "1.8.0", "render_controllers": {f"controller.render.fynn.{t['id']}": {
+    steuer = {
         "arrays": {"textures": {"Array.haut": varianten}},
         "geometry": "Geometry.default",
         "materials": [{"*": "Material.default"}],
         "textures": [bild],
-    }}}
+    }
+    if t.get("reiten"):
+        steuer["part_visibility"] = [{"sattel": "query.is_saddled"},
+                                     {"tasche_links": "query.property('fynn:taschen') >= 1"},
+                                     {"tasche_rechts": "query.property('fynn:taschen') >= 2"}]
+    return {"format_version": "1.8.0", "render_controllers": {f"controller.render.fynn.{t['id']}": steuer}}
 
 
 # ------------------------------------------------------------ Zusammenbau
@@ -918,6 +1001,11 @@ def vorschau(bilder, ordner):
                      "q.is_in_water": 1.0}
             anims = [(a, 1.0) for k, a in eigene.items() if k.endswith((".teile", ".jung")) and
                      (not k.endswith(".jung") or baby)]
+            if t.get("reiten"):
+                # Im Spiel blendet die Darstellung Sattel und Taschen aus,
+                # solange keine da sind - hier dasselbe von Hand.
+                anims.append(({"loop": True, "bones": {k: {"scale": 0.0} for k in
+                                                        ("sattel", "tasche_links", "tasche_rechts")}}, 1.0))
             b = tm.ansehen(geo, bild, anims, werte, gier=35, neigung=20, breite=260, hoehe=220)
             # Die Schrift der Vorschau kennt keine Umlaute.
             name = t["name"][0].replace("ä", "ae").replace("ö", "oe").replace("ü", "ue")

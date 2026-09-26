@@ -11,11 +11,13 @@
       },
       "textures": {
         "default": "textures/entity/steve",
-        "cape": "textures/entity/cape_invisible"
+        "cape": "textures/entity/cape_invisible",
+        "fynn_rucksack": "textures/entity/rucksack/ruecken"
       },
       "geometry": {
         "default": "geometry.humanoid.custom",
-        "cape": "geometry.cape"
+        "cape": "geometry.cape",
+        "fynn_rucksack": "geometry.fynn.rucksack_ruecken"
       },
       "scripts": {
         "scale": "0.9375",
@@ -45,7 +47,9 @@
           "variable.fynn_landung = 0.0;",
           "variable.fynn_luft_zuvor = 0.0;",
           "variable.fynn_still = 0.0;",
-          "variable.fynn_spannen_zuvor = 0.0;"
+          "variable.fynn_spannen_zuvor = 0.0;",
+          "variable.fynn_rucksack = 0.0;",
+          "variable.fynn_rucksack_seit = -10.0;"
         ],
         "pre_animation": [
           "variable.helmet_layer_visible = !query.has_head_gear;",
@@ -250,6 +254,9 @@
           },
           {
             "fynn_rolle": "!variable.is_first_person && !variable.is_paperdoll && !variable.map_face_icon && !query.is_riding && !query.is_sleeping && variable.fynn_rollzeit > 0.0"
+          },
+          {
+            "fynn_rucksack_sitz": "variable.fynn_rucksack > 0.5 && !variable.is_first_person"
           }
         ],
         "variables": {
@@ -397,7 +404,8 @@
         "fynn_a_stab_oben": "animation.fynn.angriff.stab_oben",
         "fynn_i_stab_oben": "animation.fynn.angriff_ich.stab_oben",
         "fynn_a_wurf_wurf": "animation.fynn.angriff.wurf_wurf",
-        "fynn_i_wurf_wurf": "animation.fynn.angriff_ich.wurf_wurf"
+        "fynn_i_wurf_wurf": "animation.fynn.angriff_ich.wurf_wurf",
+        "fynn_rucksack_sitz": "animation.fynn.rucksack_sitz"
       },
       "render_controllers": [
         {
@@ -414,6 +422,9 @@
         },
         {
           "controller.render.player.map": "variable.map_face_icon"
+        },
+        {
+          "controller.render.fynn_rucksack": "variable.fynn_rucksack > 0.5 && !variable.is_first_person && !variable.map_face_icon"
         }
       ],
       "enable_attachables": true

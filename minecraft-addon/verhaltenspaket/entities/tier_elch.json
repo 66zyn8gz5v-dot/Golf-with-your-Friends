@@ -5,7 +5,18 @@
       "identifier": "fynn:elch",
       "spawn_category": "creature",
       "is_spawnable": true,
-      "is_summonable": true
+      "is_summonable": true,
+      "properties": {
+        "fynn:taschen": {
+          "type": "int",
+          "range": [
+            0,
+            2
+          ],
+          "default": 0,
+          "client_sync": true
+        }
+      }
     },
     "component_groups": {
       "fynn:erwachsen": {
@@ -47,6 +58,148 @@
           "track_target": true
         }
       },
+      "fynn:wild": {
+        "minecraft:tameable": {
+          "probability": 0.2,
+          "tame_items": [
+            "fynn:weidenroeschen",
+            "minecraft:birch_sapling",
+            "minecraft:spruce_sapling",
+            "minecraft:oak_sapling",
+            "minecraft:dark_oak_sapling",
+            "minecraft:cherry_sapling"
+          ],
+          "tame_event": {
+            "event": "fynn:gezaehmt",
+            "target": "self"
+          }
+        }
+      },
+      "fynn:gezaehmt": {
+        "minecraft:is_tamed": {},
+        "minecraft:inventory": {
+          "container_type": "horse"
+        },
+        "minecraft:equippable": {
+          "slots": [
+            {
+              "slot": 0,
+              "item": "saddle",
+              "accepted_items": [
+                "saddle"
+              ],
+              "on_equip": {
+                "event": "fynn:gesattelt"
+              },
+              "on_unequip": {
+                "event": "fynn:abgesattelt"
+              }
+            }
+          ]
+        },
+        "minecraft:interact": {
+          "interactions": [
+            {
+              "on_interact": {
+                "filters": {
+                  "all_of": [
+                    {
+                      "test": "has_equipment",
+                      "subject": "self",
+                      "domain": "inventory",
+                      "value": "saddle",
+                      "operator": "not"
+                    },
+                    {
+                      "test": "has_equipment",
+                      "subject": "other",
+                      "domain": "hand",
+                      "value": "saddle"
+                    },
+                    {
+                      "test": "is_sneak_held",
+                      "subject": "other",
+                      "value": false
+                    }
+                  ]
+                }
+              },
+              "equip_item_slot": "0",
+              "interact_text": "action.interact.saddle"
+            },
+            {
+              "on_interact": {
+                "filters": {
+                  "all_of": [
+                    {
+                      "test": "has_equipment",
+                      "subject": "self",
+                      "domain": "inventory",
+                      "value": "saddle"
+                    },
+                    {
+                      "test": "rider_count",
+                      "subject": "self",
+                      "operator": "equals",
+                      "value": 0
+                    },
+                    {
+                      "test": "has_equipment",
+                      "subject": "other",
+                      "domain": "hand",
+                      "value": "shears"
+                    },
+                    {
+                      "test": "is_sneak_held",
+                      "subject": "other",
+                      "value": false
+                    }
+                  ]
+                }
+              },
+              "hurt_item": 1,
+              "drop_item_slot": "0",
+              "drop_item_y_offset": 2,
+              "interact_text": "action.interact.removesaddle",
+              "play_sounds": "unsaddle"
+            }
+          ]
+        },
+        "minecraft:rideable": {
+          "seat_count": 1,
+          "crouching_skip_interact": true,
+          "family_types": [
+            "player"
+          ],
+          "interact_text": "action.interact.ride.horse",
+          "seats": [
+            {
+              "position": [
+                0.0,
+                1.75,
+                -0.19
+              ]
+            }
+          ]
+        },
+        "minecraft:variable_max_auto_step": {
+          "base_value": 1.0625,
+          "controlled_value": 1.0625,
+          "jump_prevented_value": 0.5625
+        }
+      },
+      "fynn:gesattelt": {
+        "minecraft:is_saddled": {},
+        "minecraft:input_ground_controlled": {},
+        "minecraft:behavior.player_ride_tamed": {},
+        "minecraft:movement": {
+          "value": 0.25
+        },
+        "minecraft:can_power_jump": {},
+        "minecraft:horse.jump_strength": {
+          "value": 0.7
+        }
+      },
       "fynn:baby": {
         "minecraft:is_baby": {},
         "minecraft:scale": {
@@ -56,7 +209,8 @@
           "duration": 1200,
           "feed_items": [
             "minecraft:apple",
-            "minecraft:sweet_berries"
+            "minecraft:sweet_berries",
+            "fynn:weidenroeschen"
           ],
           "grow_up": {
             "event": "minecraft:ageable_grow_up",
@@ -172,7 +326,13 @@
         "max": 24
       },
       "minecraft:despawn": {
-        "despawn_from_distance": {}
+        "despawn_from_distance": {},
+        "filters": {
+          "test": "is_tamed",
+          "subject": "self",
+          "operator": "!=",
+          "value": true
+        }
       },
       "minecraft:conditional_bandwidth_optimization": {},
       "minecraft:experience_reward": {
@@ -212,10 +372,11 @@
         "probability": 0.02
       },
       "minecraft:breedable": {
-        "require_tame": false,
+        "require_tame": true,
         "breed_items": [
           "minecraft:apple",
-          "minecraft:sweet_berries"
+          "minecraft:sweet_berries",
+          "fynn:weidenroeschen"
         ],
         "breeds_with": {
           "mate_type": "fynn:elch",
@@ -235,7 +396,8 @@
         "speed_multiplier": 1.1,
         "items": [
           "minecraft:apple",
-          "minecraft:sweet_berries"
+          "minecraft:sweet_berries",
+          "fynn:weidenroeschen"
         ],
         "can_tempt_vertically": true
       }
@@ -254,14 +416,63 @@
         }
       },
       "fynn:beruhigt": {
+        "sequence": [
+          {
+            "filters": {
+              "test": "is_tamed",
+              "subject": "self",
+              "value": false
+            },
+            "remove": {
+              "component_groups": [
+                "fynn:wuetend"
+              ]
+            },
+            "add": {
+              "component_groups": [
+                "fynn:ruhig"
+              ]
+            }
+          },
+          {
+            "filters": {
+              "test": "is_tamed",
+              "subject": "self",
+              "value": true
+            },
+            "remove": {
+              "component_groups": [
+                "fynn:wuetend"
+              ]
+            }
+          }
+        ]
+      },
+      "fynn:gezaehmt": {
         "remove": {
           "component_groups": [
+            "fynn:wild",
+            "fynn:ruhig",
             "fynn:wuetend"
           ]
         },
         "add": {
           "component_groups": [
-            "fynn:ruhig"
+            "fynn:gezaehmt"
+          ]
+        }
+      },
+      "fynn:gesattelt": {
+        "add": {
+          "component_groups": [
+            "fynn:gesattelt"
+          ]
+        }
+      },
+      "fynn:abgesattelt": {
+        "remove": {
+          "component_groups": [
+            "fynn:gesattelt"
           ]
         }
       },
@@ -289,7 +500,8 @@
         "add": {
           "component_groups": [
             "fynn:erwachsen",
-            "fynn:ruhig"
+            "fynn:ruhig",
+            "fynn:wild"
           ]
         }
       },
@@ -353,7 +565,8 @@
                 "add": {
                   "component_groups": [
                     "fynn:erwachsen",
-                    "fynn:ruhig"
+                    "fynn:ruhig",
+                    "fynn:wild"
                   ]
                 }
               },

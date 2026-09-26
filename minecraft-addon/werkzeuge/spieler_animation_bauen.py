@@ -30,6 +30,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import kampf_animationen as k                       # noqa: E402
 from dolche_bauen import schreibe                   # noqa: E402
+import rucksack_bauen as rs                         # noqa: E402
 
 WURZEL = Path(__file__).resolve().parent.parent
 RES = WURZEL / "ressourcenpaket"
@@ -495,7 +496,7 @@ TEILE = [
     ("fynn_bogen_ich", "animation.fynn.bogen_ich", BOGEN_ICH,
      "variable.is_first_person && !variable.is_paperdoll && (variable.fynn_spannen >= 1.0 || variable.fynn_los > 0.0)"),
     ("fynn_essen", "animation.fynn.essen", ESSEN, f"{AUSSEN_FREI} && query.is_eating"),
-] + k.teile(AUSSEN_FREI) + k.rollen_teile(AUSSEN_FREI)
+] + k.teile(AUSSEN_FREI) + k.rollen_teile(AUSSEN_FREI) + rs.SPIELER_TEILE
 
 
 def animationen():
@@ -521,7 +522,7 @@ def spielerdatei():
     for n in alt:
         del d["animations"][n]
     unsere |= set(alt)
-    s["initialize"] = [z for z in s["initialize"] if "fynn_" not in z] + INITIALISIEREN
+    s["initialize"] = [z for z in s["initialize"] if "fynn_" not in z] + INITIALISIEREN + rs.SPIELER_START
     eigene_vars = ("variable.fynn_schwert", "variable.fynn_bogen", "variable.fynn_hieb", "variable.fynn_gang",
                    "variable.fynn_tempo", "variable.fynn_luft", "variable.fynn_sturz", "variable.fynn_umhang",
                    "variable.fynn_flug", "variable.fynn_dolche",
@@ -538,6 +539,8 @@ def spielerdatei():
         s["variables"][v] = "public"
     for n, name, *_ in TEILE:
         d["animations"][n] = name
+    # Der Rucksack auf dem Ruecken: eigenes Modell, eigene Darstellung.
+    rs.spieler_einbauen(d)
     SPIELER.write_text(json.dumps(datei, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 

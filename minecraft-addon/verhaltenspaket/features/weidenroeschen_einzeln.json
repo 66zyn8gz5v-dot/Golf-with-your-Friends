@@ -1,0 +1,27 @@
+{
+  "format_version": "1.13.0",
+  "minecraft:single_block_feature": {
+    "description": {
+      "identifier": "fynn:weidenroeschen_einzeln"
+    },
+    "places_block": "fynn:weidenroeschen",
+    "enforce_placement_rules": true,
+    "enforce_survivability_rules": true,
+    "may_attach_to": {
+      "min_sides_must_attach": 1,
+      "auto_rotate": false,
+      "bottom": [
+        "minecraft:grass_block",
+        "minecraft:dirt",
+        "minecraft:podzol",
+        "minecraft:coarse_dirt",
+        "minecraft:moss_block",
+        "minecraft:mud",
+        "minecraft:rooted_dirt"
+      ]
+    },
+    "may_replace": [
+      "minecraft:air"
+    ]
+  }
+}

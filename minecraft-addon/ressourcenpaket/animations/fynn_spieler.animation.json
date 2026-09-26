@@ -20495,6 +20495,40 @@
           }
         }
       }
+    },
+    "animation.fynn.rucksack_sitz": {
+      "loop": true,
+      "bones": {
+        "fynn_rucksack": {
+          "position": [
+            0.0,
+            "-7.0 * math.pow(1.0 - math.clamp((query.life_time - variable.fynn_rucksack_seit) / 0.45, 0.0, 1.0), 2.0) + math.sin(math.clamp((query.life_time - variable.fynn_rucksack_seit) / 0.45, 0.0, 1.0) * 180.0) * 1.2 - math.cos(variable.fynn_gang * 2.0 - 60.0) * 0.35 * variable.fynn_tempo",
+            0.0
+          ],
+          "rotation": [
+            "-math.sin(math.clamp((query.life_time - variable.fynn_rucksack_seit) / 0.45, 0.0, 1.0) * 180.0) * 12.0 + math.sin(variable.fynn_gang * 2.0 - 60.0) * 3.0 * variable.fynn_tempo - (query.is_sprinting ? 6.0 : 0.0)",
+            0.0,
+            "math.sin(variable.fynn_gang) * 2.0 * variable.fynn_tempo"
+          ]
+        },
+        "fynn_riemen": {
+          "scale": "math.clamp((query.life_time - variable.fynn_rucksack_seit) / 0.45, 0.0, 1.0) > 0.3 ? 1.0 : 0.0"
+        },
+        "rightArm": {
+          "rotation": [
+            "math.sin(math.clamp((query.life_time - variable.fynn_rucksack_seit) / 0.45, 0.0, 1.0) * 180.0) * 22.0",
+            0.0,
+            "math.sin(math.clamp((query.life_time - variable.fynn_rucksack_seit) / 0.45, 0.0, 1.0) * 180.0) * 8.0"
+          ]
+        },
+        "leftArm": {
+          "rotation": [
+            "math.sin(math.clamp((query.life_time - variable.fynn_rucksack_seit) / 0.45, 0.0, 1.0) * 180.0) * 22.0",
+            0.0,
+            "-math.sin(math.clamp((query.life_time - variable.fynn_rucksack_seit) / 0.45, 0.0, 1.0) * 180.0) * 8.0"
+          ]
+        }
+      }
     }
   }
 }

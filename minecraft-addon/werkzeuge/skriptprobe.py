@@ -47,10 +47,15 @@ export const system = {
 export const ItemLockMode = { inventory: "inventory", none: "none", slot: "slot" };
 export const BlockPermutation = { resolve: (typ, zustaende) => ({ typ, zustaende }) };
 export const GameMode = { Adventure: "Adventure", Creative: "Creative", Spectator: "Spectator", Survival: "Survival" };
+export const StructureSaveMode = { Memory: "Memory", World: "World" };
 export class ItemStack {
-  constructor(typeId, amount = 1) { this.typeId = typeId; this.amount = amount; }
+  constructor(typeId, amount = 1) { this.typeId = typeId; this.amount = amount; this.eigen = {}; this.lore = []; }
   getComponent() { return undefined; }
-  clone() { return new ItemStack(this.typeId, this.amount); }
+  getDynamicProperty(k) { return this.eigen[k]; }
+  setDynamicProperty(k, v) { if (v === undefined) delete this.eigen[k]; else this.eigen[k] = v; }
+  setLore(l) { this.lore = l ?? []; }
+  getLore() { return this.lore; }
+  clone() { const c = new ItemStack(this.typeId, this.amount); c.eigen = { ...this.eigen }; c.lore = [...this.lore]; return c; }
 }
 '''
 

@@ -364,6 +364,9 @@
     },
     "baerenfellstiefel": {
       "textures": "textures/items/baerenfellstiefel"
+    },
+    "rucksack": {
+      "textures": "textures/items/rucksack"
     }
   }
 }

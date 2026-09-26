@@ -123,6 +123,9 @@
     },
     "rubinblock": {
       "textures": "textures/blocks/rubinblock"
+    },
+    "weidenroeschen": {
+      "textures": "textures/blocks/weidenroeschen"
     }
   }
 }
