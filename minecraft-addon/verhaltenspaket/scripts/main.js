@@ -13,6 +13,9 @@
 import { world, system } from "@minecraft/server";
 import { angriffErlaubt, hinweis, verbrauche } from "./rollen.js";
 import { STAEBE } from "./waffenarten.js";
+import { rang } from "./faehigkeiten.js";
+import "./erfahrung.js";
+import "./faehigkeiten.js";
 import "./kampf.js";
 import "./pfeile.js";
 import "./tempel.js";
@@ -24,7 +27,6 @@ import "./roland.js";
 import "./rabenfuerst.js";
 import "./frostmammut.js";
 import "./chronik.js";
-import "./ruhm.js";
 
 const DEGEN = "fynn:degen";
 
@@ -487,12 +489,15 @@ function einschlag(flug, ort, getroffen) {
         frost(dimension, flug, ort, getroffen);
         return;
     }
-    dimension.createExplosion(ort, WUCHT, {
+    // Feuerkraft (Buch der Faehigkeiten, Magier): staerkere Wucht, laengerer
+    // Brand. Auch auf Stufe 5 bleibt die Wucht unter der eines Creepers.
+    const kraft = lebt(flug.schuetze) ? rang(flug.schuetze, "feuerkraft") : 0;
+    dimension.createExplosion(ort, WUCHT * (1 + 0.12 * kraft), {
         breaksBlocks: false,
         causesFire: false,
         source: lebt(flug.schuetze) ? flug.schuetze : undefined,
     });
-    if (getroffen && lebt(getroffen)) getroffen.setOnFire(BRANDDAUER, true);
+    if (getroffen && lebt(getroffen)) getroffen.setOnFire(BRANDDAUER + kraft, true);
 }
 
 function frost(dimension, flug, ort, getroffen) {
@@ -500,7 +505,8 @@ function frost(dimension, flug, ort, getroffen) {
     for (let i = 0; i < 14; i++) flamme(dimension, ort, 1.6, "frost");
     dimension.playSound("random.glass", ort, { volume: 0.9, pitch: 1.3 });
     if (getroffen && lebt(getroffen)) {
-        getroffen.applyDamage(FROST_SCHADEN, schuetze
+        const kraft = schuetze ? rang(schuetze, "feuerkraft") : 0;
+        getroffen.applyDamage(Math.round(FROST_SCHADEN * (1 + 0.12 * kraft)), schuetze
             ? { cause: "freezing", damagingEntity: schuetze } : { cause: "freezing" });
         // Fast eingefroren: kaum noch Schritte, kaum noch Schlaege.
         getroffen.addEffect("slowness", 100, { amplifier: 3 });

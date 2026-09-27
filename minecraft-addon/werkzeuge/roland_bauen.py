@@ -718,6 +718,7 @@ LETZTE_KRAFT = 30
 # gekaempft hat, bekommt seinen eigenen Anteil (das Skript legt ihn ab).
 BEUTE = [
     # (Gegenstand, von, bis, Chance)
+    ("fynn:erfahrungsgefaess", 1, 1, 1.0),
     ("fynn:durendal", 1, 1, 1.0),
     ("fynn:olifant", 1, 1, 1.0),
     ("minecraft:diamond", 3, 5, 1.0),
@@ -731,6 +732,8 @@ BEUTE = [
     ("fynn:saphirschwert", 1, 1, 0.35),
 ]
 ANTEIL = [
+    # Jeder Mitkaempfer bekommt ein Erfahrungsgefaess (15 Level, erfahrung.js).
+    ("fynn:erfahrungsgefaess", 1, 1, 1.0),
     ("minecraft:diamond", 2, 3, 1.0),
     ("minecraft:gold_ingot", 2, 4, 1.0),
     ("minecraft:golden_apple", 1, 1, 1.0),

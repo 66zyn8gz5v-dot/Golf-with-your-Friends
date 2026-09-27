@@ -63,5 +63,5 @@ export const ANGRIFFE = {
 export const LEBEN = {"1": 280, "2": 420, "3": 560, "4": 700, "5": 840, "6": 980};
 export const MEHR_SPIELER = 6;
 export const LETZTE_KRAFT = 30;
-export const BEUTE = [["fynn:frostzahn", 1, 1, 1.0], ["fynn:herz_des_winters", 1, 1, 1.0], ["minecraft:diamond", 3, 6, 1.0], ["minecraft:packed_ice", 8, 16, 1.0], ["minecraft:blue_ice", 2, 4, 1.0], ["minecraft:leather", 6, 12, 1.0], ["minecraft:emerald", 2, 4, 1.0], ["minecraft:experience_bottle", 4, 8, 1.0]];
-export const ANTEIL = [["fynn:herz_des_winters", 1, 1, 0.5], ["minecraft:diamond", 1, 3, 1.0], ["minecraft:blue_ice", 1, 2, 1.0], ["minecraft:leather", 3, 6, 1.0], ["minecraft:experience_bottle", 2, 4, 1.0]];
+export const BEUTE = [["fynn:erfahrungsgefaess", 1, 1, 1.0], ["fynn:frostzahn", 1, 1, 1.0], ["fynn:herz_des_winters", 1, 1, 1.0], ["minecraft:diamond", 3, 6, 1.0], ["minecraft:packed_ice", 8, 16, 1.0], ["minecraft:blue_ice", 2, 4, 1.0], ["minecraft:leather", 6, 12, 1.0], ["minecraft:emerald", 2, 4, 1.0], ["minecraft:experience_bottle", 4, 8, 1.0]];
+export const ANTEIL = [["fynn:erfahrungsgefaess", 1, 1, 1.0], ["fynn:herz_des_winters", 1, 1, 0.5], ["minecraft:diamond", 1, 3, 1.0], ["minecraft:blue_ice", 1, 2, 1.0], ["minecraft:leather", 3, 6, 1.0], ["minecraft:experience_bottle", 2, 4, 1.0]];

@@ -947,6 +947,7 @@ def gegenstaende():
 GRUNDLEBEN = 200
 GRUNDSCHADEN = 8
 BEUTE = [
+    ("fynn:erfahrungsgefaess", 1, 1, 1.0),
     ("fynn:rabenklinge", 1, 1, 1.0),
     ("fynn:rauchbombe", 4, 8, 1.0),
     ("minecraft:emerald", 4, 8, 1.0),
@@ -958,6 +959,8 @@ BEUTE = [
     ("fynn:haizahnsaebel", 1, 1, 0.3),
 ]
 ANTEIL = [
+    # Jeder Mitkaempfer bekommt ein Erfahrungsgefaess (15 Level, erfahrung.js).
+    ("fynn:erfahrungsgefaess", 1, 1, 1.0),
     ("minecraft:emerald", 2, 4, 1.0),
     ("minecraft:gold_ingot", 2, 3, 1.0),
     ("fynn:rauchbombe", 2, 3, 1.0),

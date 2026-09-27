@@ -44,11 +44,11 @@ item.fynn:eisenklinge.name=Eisenklinge
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.70
+item.iron_sword.name=Stahlschwert 4.71
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.70
-item.fynn:degen.name=Degen 4.70
+item.fynn:degen=Degen 4.71
+item.fynn:degen.name=Degen 4.71
 
 
 
@@ -449,6 +449,16 @@ item.fynn:saphirschwert.name=Saphirschwert
 ## Chronik der Bosse
 item.fynn:bosschronik=Chronik der Bosse
 item.fynn:bosschronik.name=Chronik der Bosse
+
+
+
+## Erfahrung und Fähigkeiten
+item.fynn:erfahrungsfunke=Erfahrungsfunke
+item.fynn:erfahrungsfunke.name=Erfahrungsfunke
+item.fynn:erfahrungsgefaess=Erfahrungsgefäß
+item.fynn:erfahrungsgefaess.name=Erfahrungsgefäß
+item.fynn:heldenbuch=Buch der Fähigkeiten
+item.fynn:heldenbuch.name=Buch der Fähigkeiten
 
 ## Morvan, der Rabenfuerst
 entity.fynn:rabenfuerst.name=Morvan

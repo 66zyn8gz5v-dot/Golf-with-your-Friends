@@ -29,7 +29,7 @@
 import { world, system } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
 import { artInDerHand } from "./waffenarten.js";
-import { kraftBonus, stufeVon } from "./ruhm.js";
+import { kraftBonus } from "./faehigkeiten.js";
 
 export const ROLLENALTAR = "fynn:rollenaltar";
 export const KRAFT_MAX = 100;
@@ -161,13 +161,7 @@ function leiste(spieler, rolle) {
     }
     if (vollesSet(spieler, rolle)) kugeln += zeichen(STERN);
     // Weiss vor den Kugeln, damit die Schriftfarbe sie nicht einfaerbt.
-    return `${stufenMarke(spieler)} ${r.farbe}${r.kraft} §f${kugeln}`;
-}
-
-// Die Stufe aus ruhm.js steht vor der Leiste - oder allein, wer weder Rolle
-// noch Waffe hat: So sieht jeder, dass es Stufen gibt.
-function stufenMarke(spieler) {
-    return `§6Stufe ${stufeVon(spieler)}`;
+    return `${r.farbe}${r.kraft} §f${kugeln}`;
 }
 
 function zeige(spieler) {
@@ -177,7 +171,7 @@ function zeige(spieler) {
         if (h && h.bis > system.currentTick) zeilen.push(h.text);
         else hinweise.delete(spieler.id);
         const art = anzeigeArt(spieler);
-        zeilen.push(art ? leiste(spieler, art) : stufenMarke(spieler));
+        if (art) zeilen.push(leiste(spieler, art));
         if (zeilen.length) spieler.onScreenDisplay.setActionBar(zeilen.join("\n"));
     } catch (fehler) {
         console.warn(`Rollen, Anzeige: ${fehler}`);
@@ -299,7 +293,7 @@ system.runInterval(() => {
             const art = anzeigeArt(spieler);
             if (art && runde % 2 === 0) {
                 const bonus = vollesSet(spieler, art) ? 1 : 0;
-                setzeKraft(spieler, kraftVon(spieler) + ROLLEN[art].nachschub + bonus + kraftBonus(spieler));
+                setzeKraft(spieler, kraftVon(spieler) + ROLLEN[art].nachschub + bonus + kraftBonus(spieler, art));
                 wirken(spieler);
             }
             zeige(spieler);

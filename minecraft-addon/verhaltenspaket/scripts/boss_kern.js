@@ -15,7 +15,7 @@
 // Bossen gleich (fynn:angriff_beginn, fynn:schutz_an, fynn:staerke_N ...).
 
 import { world, system, ItemStack } from "@minecraft/server";
-import { BOSS_RUHM, gibRuhm } from "./ruhm.js";
+import { BOSS_LEVEL } from "./erfahrung.js";
 
 // ------------------------------------------------------------ Hilfen
 
@@ -194,8 +194,8 @@ export function siegeVon(spieler, typ) {
 export function merkeSiege(spielerListe, typ) {
     for (const s of spielerListe) {
         try { s.setDynamicProperty(siegSchluessel(typ), siegeVon(s, typ) + 1); } catch (e) { /* egal */ }
-        // Jeder Mitkaempfer bekommt den ganzen Ruhm des Bosses.
-        try { gibRuhm(s, BOSS_RUHM[typ] ?? 0); } catch (e) { /* egal */ }
+        // Jeder Mitkaempfer bekommt die Level des Bosses ganz.
+        try { s.addLevels(BOSS_LEVEL[typ] ?? 0); } catch (e) { /* egal */ }
     }
 }
 

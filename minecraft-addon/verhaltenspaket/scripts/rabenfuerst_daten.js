@@ -61,5 +61,5 @@ export const ANGRIFFE = {
 export const LEBEN = {"1": 200, "2": 300, "3": 400, "4": 500, "5": 600, "6": 700};
 export const MEHR_SPIELER = 6;
 export const LETZTE_KRAFT = 30;
-export const BEUTE = [["fynn:rabenklinge", 1, 1, 1.0], ["fynn:rauchbombe", 4, 8, 1.0], ["minecraft:emerald", 4, 8, 1.0], ["minecraft:gold_ingot", 3, 6, 1.0], ["minecraft:gold_nugget", 8, 16, 1.0], ["minecraft:diamond", 1, 3, 1.0], ["minecraft:golden_apple", 1, 1, 1.0], ["minecraft:experience_bottle", 3, 6, 1.0], ["fynn:haizahnsaebel", 1, 1, 0.3]];
-export const ANTEIL = [["minecraft:emerald", 2, 4, 1.0], ["minecraft:gold_ingot", 2, 3, 1.0], ["fynn:rauchbombe", 2, 3, 1.0], ["minecraft:golden_apple", 1, 1, 0.5], ["minecraft:experience_bottle", 2, 3, 1.0]];
+export const BEUTE = [["fynn:erfahrungsgefaess", 1, 1, 1.0], ["fynn:rabenklinge", 1, 1, 1.0], ["fynn:rauchbombe", 4, 8, 1.0], ["minecraft:emerald", 4, 8, 1.0], ["minecraft:gold_ingot", 3, 6, 1.0], ["minecraft:gold_nugget", 8, 16, 1.0], ["minecraft:diamond", 1, 3, 1.0], ["minecraft:golden_apple", 1, 1, 1.0], ["minecraft:experience_bottle", 3, 6, 1.0], ["fynn:haizahnsaebel", 1, 1, 0.3]];
+export const ANTEIL = [["fynn:erfahrungsgefaess", 1, 1, 1.0], ["minecraft:emerald", 2, 4, 1.0], ["minecraft:gold_ingot", 2, 3, 1.0], ["fynn:rauchbombe", 2, 3, 1.0], ["minecraft:golden_apple", 1, 1, 0.5], ["minecraft:experience_bottle", 2, 3, 1.0]];

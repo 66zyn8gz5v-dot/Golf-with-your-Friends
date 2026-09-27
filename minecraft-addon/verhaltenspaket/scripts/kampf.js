@@ -14,6 +14,7 @@
 import { world, system, ItemStack, ItemLockMode } from "@minecraft/server";
 import { angriffErlaubt, hinweis, verbrauche } from "./rollen.js";
 import { BOEGEN, DOLCHE, HAEMMER, SCHWERTER } from "./waffenarten.js";
+import { rang } from "./faehigkeiten.js";
 
 export { DOLCHE } from "./waffenarten.js";
 
@@ -176,13 +177,15 @@ system.runInterval(() => {
 function wirbelschlag(spieler) {
     const ort = spieler.location;
     const dimension = spieler.dimension;
+    // Wirbelsturm (Buch der Faehigkeiten, Ritter): mehr Schaden, weiter.
+    const sturm = rang(spieler, "wirbelsturm");
     const ziele = dimension.getEntities({
-        location: ort, maxDistance: WIRBEL_WEITE,
+        location: ort, maxDistance: WIRBEL_WEITE + 0.3 * sturm,
         excludeTypes: NIE_TREFFEN, excludeFamilies: ["inanimate"],
     });
     for (const ziel of ziele) {
         if (ziel.id === spieler.id) continue;
-        ziel.applyDamage(WIRBEL_SCHADEN, { cause: "entityAttack", damagingEntity: spieler });
+        ziel.applyDamage(Math.round(WIRBEL_SCHADEN * (1 + 0.2 * sturm)), { cause: "entityAttack", damagingEntity: spieler });
         const weg = waagerecht({ x: ziel.location.x - ort.x, z: ziel.location.z - ort.z })
             ?? { x: 0, z: 1 };
         ziel.applyKnockback({ x: weg.x * 1.2, z: weg.z * 1.2 }, 0.35);
@@ -258,8 +261,11 @@ function rauch(dimension, ort) {
 function schattensprung(spieler) {
     const dimension = spieler.dimension;
     const blick = spieler.getViewDirection();
+    // Schattenschritt (Buch der Faehigkeiten, Assassine): weiter, haerter.
+    const schritt = rang(spieler, "schattenschritt");
+    const hinterhalt = Math.round(HINTERHALT * (1 + 0.15 * schritt));
     const treffer = dimension.getEntitiesFromRay(spieler.getHeadLocation(), blick, {
-        maxDistance: SPRUNG_WEITE, excludeTypes: NIE_TREFFEN, excludeFamilies: ["inanimate"],
+        maxDistance: SPRUNG_WEITE + 2 * schritt, excludeTypes: NIE_TREFFEN, excludeFamilies: ["inanimate"],
     }).filter((t) => t.entity.id !== spieler.id)
         .sort((a, b) => a.distance - b.distance)[0];
 
@@ -291,7 +297,7 @@ function schattensprung(spieler) {
     system.runTimeout(() => {
         try {
             if (!lebt(ziel)) return;
-            ziel.applyDamage(geschafft ? HINTERHALT : HINTERHALT / 2, {
+            ziel.applyDamage(geschafft ? hinterhalt : hinterhalt / 2, {
                 cause: "entityAttack", damagingEntity: spieler,
             });
             dimension.spawnParticle("minecraft:critical_hit_emitter", {
@@ -327,7 +333,11 @@ function pfeilhagel(spieler) {
     const dimension = spieler.dimension;
     const blick = spieler.getViewDirection();
     const kopf = spieler.getHeadLocation();
-    for (const grad of FAECHER) {
+    // Pfeilregen (Buch der Faehigkeiten, Bogenschuetze): je Stufe ein Pfeil
+    // mehr, abwechselnd links und rechts aussen.
+    const faecher = [...FAECHER];
+    for (let i = 0; i < rang(spieler, "pfeilregen"); i++) faecher.push((i % 2 ? -1 : 1) * (24 + 8 * Math.floor(i / 2)));
+    for (const grad of faecher) {
         // Um die Senkrechte drehen: Der Faecher liegt waagerecht, die
         // Neigung des Blicks bleibt fuer alle fuenf gleich.
         const w = (grad * Math.PI) / 180;

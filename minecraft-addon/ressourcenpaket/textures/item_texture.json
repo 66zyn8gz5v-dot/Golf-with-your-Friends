@@ -487,6 +487,15 @@
     },
     "bosschronik": {
       "textures": "textures/items/bosschronik"
+    },
+    "erfahrungsfunke": {
+      "textures": "textures/items/erfahrungsfunke"
+    },
+    "erfahrungsgefaess": {
+      "textures": "textures/items/erfahrungsgefaess"
+    },
+    "heldenbuch": {
+      "textures": "textures/items/heldenbuch"
     }
   }
 }
