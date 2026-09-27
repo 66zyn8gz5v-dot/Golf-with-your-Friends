@@ -44,11 +44,11 @@ item.fynn:eisenklinge.name=Eisenklinge
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.68
+item.iron_sword.name=Stahlschwert 4.69
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.68
-item.fynn:degen.name=Degen 4.68
+item.fynn:degen=Degen 4.69
+item.fynn:degen.name=Degen 4.69
 
 
 
@@ -442,6 +442,14 @@ item.spawn_egg.entity.fynn:ritterhauptmann.name=Ritterhauptmann
 item.fynn:saphirschwert=Saphirschwert
 item.fynn:saphirschwert.name=Saphirschwert
 
+
+
+
+
+## Chronik der Bosse
+item.fynn:bosschronik=Chronik der Bosse
+item.fynn:bosschronik.name=Chronik der Bosse
+
 ## Morvan, der Rabenfuerst
 entity.fynn:rabenfuerst.name=Morvan
 item.spawn_egg.entity.fynn:rabenfuerst.name=Morvan, der Rabenfürst
@@ -452,8 +460,6 @@ item.fynn:rauchbombe=Rauchbombe
 item.fynn:rauchbombe.name=Rauchbombe
 item.fynn:kopfgeldbrief=Kopfgeldbrief
 item.fynn:kopfgeldbrief.name=Kopfgeldbrief
-
-
 
 ## Frosthauer, das Frostmammut
 entity.fynn:frostmammut.name=Frosthauer
@@ -466,7 +472,3 @@ item.fynn:herz_des_winters=Herz des Winters
 item.fynn:herz_des_winters.name=Herz des Winters
 item.fynn:frostruf=Frostruf
 item.fynn:frostruf.name=Frostruf
-
-## Chronik der Bosse
-item.fynn:bosschronik=Chronik der Bosse
-item.fynn:bosschronik.name=Chronik der Bosse

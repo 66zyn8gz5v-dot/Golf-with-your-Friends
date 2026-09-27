@@ -442,6 +442,22 @@ export function bossKampf(art) {
         if (t === A[art.auftrittName].bereit) ereignis(z.boss, "fynn:auftritt_fertig");
     }
 
+    // Leer: in Phase eins der Wechsel, in Phase zwei der Abschied. Gerufen,
+    // wenn das Leben unten ist - oder wenn das Tier meldet, dass es einen
+    // Treffer an der Grenze abgefangen hat (fynn:letzte_kraft). Gibt true
+    // zurueck, wenn der Abschied begonnen hat.
+    function amEnde(z) {
+        if (z.besiegt || z.aktion?.name === art.wechselName) return false;
+        if (z.phase === 1) {
+            if (z.aktion) beende(z);
+            starte(z, art.wechselName);
+            return false;
+        }
+        besiegen(z);
+        abschied(z, z.aktion, 0);
+        return true;
+    }
+
     function takt(z) {
         const boss = z.boss;
         if (!gueltig(boss)) return;
@@ -451,17 +467,7 @@ export function bossKampf(art) {
             return;
         }
         const l = leben(boss);
-        // Leer: in Phase eins der Wechsel, in Phase zwei der Abschied.
-        if (l && !z.besiegt && l.jetzt <= art.letzteKraft + 0.5 && z.aktion?.name !== art.wechselName) {
-            if (z.phase === 1) {
-                if (z.aktion) beende(z);
-                starte(z, art.wechselName);
-            } else {
-                besiegen(z);
-                abschied(z, z.aktion, 0);
-                return;
-            }
-        }
+        if (l && l.jetzt <= art.letzteKraft + 0.5 && amEnde(z)) return;
         if (z.aktion) {
             const a = z.aktion;
             const schritt = a.name === art.wechselName ? wechsel
@@ -482,7 +488,7 @@ export function bossKampf(art) {
     }
 
     const kampf = { kaempfe, staerkeFuer, zustandVon, starte, beende, treffe, bereit, rufe, gefolgeZahl,
-        besiegen, takt, zielVon };
+        besiegen, takt, zielVon, amEnde };
 
     system.runInterval(() => {
         for (const z of [...kaempfe.values()]) {
@@ -513,6 +519,15 @@ export function bossKampf(art) {
             starte(zustandVon(e.entity), art.auftrittName);
         } catch (fehler) {
             console.warn(`Boss ${art.typ}, Auftritt: ${fehler}`);
+        }
+    });
+
+    world.afterEvents.dataDrivenEntityTrigger.subscribe((e) => {
+        try {
+            if (e.entity?.typeId !== art.typ || e.eventId !== "fynn:letzte_kraft") return;
+            amEnde(zustandVon(e.entity));
+        } catch (fehler) {
+            console.warn(`Boss ${art.typ}, letzte Kraft: ${fehler}`);
         }
     });
 

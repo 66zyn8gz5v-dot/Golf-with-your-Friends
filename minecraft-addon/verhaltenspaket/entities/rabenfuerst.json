@@ -58,7 +58,9 @@
                   "subject": "self",
                   "operator": "<=",
                   "value": 30
-                }
+                },
+                "event": "fynn:letzte_kraft",
+                "target": "self"
               },
               "deals_damage": "no"
             }
@@ -287,6 +289,18 @@
         }
       },
       "fynn:schutz_an": {
+        "remove": {
+          "component_groups": [
+            "fynn:verwundbar"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "fynn:unverwundbar"
+          ]
+        }
+      },
+      "fynn:letzte_kraft": {
         "remove": {
           "component_groups": [
             "fynn:verwundbar"

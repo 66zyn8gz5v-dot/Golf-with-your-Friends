@@ -166,6 +166,19 @@ k.starte(z, "ruesselschleuder", { ziel: alle[0] });
 laufe(z, ANGRIFFE.ruesselschleuder.laenge + 1);
 pruefe("Schleuder: getroffen und hochgeworfen", alle[0].schaden.length === 1 && alle[0].stoss[1] >= 1.4);
 
+// ---- Knapp ueber der Grenze haengen geblieben (Fynn, 4.67): Das Tier faengt
+// den Treffer ab und meldet fynn:letzte_kraft - der Wechsel beginnt trotzdem.
+alle = [spieler("a", 5, 0)];
+boss = hrimgar(alle);
+z = k.zustandVon(boss);
+z.pause = 1e12;
+boss.lebenJetzt = 36;
+laufe(z, 3);
+pruefe("bei 36 Leben: noch kein Wechsel", z.aktion === null);
+for (const f of gemerkt.ereignisse["dataDrivenEntityTrigger"] ?? []) f({ entity: boss, eventId: "fynn:letzte_kraft" });
+laufe(z, 1);
+pruefe("Treffer an der Grenze abgefangen: der Wechsel beginnt", z.aktion?.name === "wechsel" && boss.lebenJetzt === 1);
+
 // ---- Phase eins leer: Wechsel
 alle = [spieler("a", 5, 0)];
 boss = hrimgar(alle);

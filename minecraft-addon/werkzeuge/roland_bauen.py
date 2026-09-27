@@ -767,8 +767,13 @@ def verhalten():
             {"cause": "fall", "deals_damage": "no"},
             {"on_damage": {"filters": {"test": "is_family", "subject": "other", "value": "ritter"}},
              "deals_damage": "no"},
+            # Wird hier ein Treffer abgefangen, meldet das Tier es dem Skript
+            # (fynn:letzte_kraft), und der Phasenwechsel beginnt sofort. Ohne
+            # die Meldung blieb Fynns Mammut in 4.67 knapp ueber der Grenze
+            # stehen: jeder Treffer abgefangen, der Wechsel nie begonnen.
             {"on_damage": {"filters": {"test": "actor_health", "subject": "self", "operator": "<=",
-                                       "value": LETZTE_KRAFT}}, "deals_damage": "no"},
+                                       "value": LETZTE_KRAFT},
+                           "event": "fynn:letzte_kraft", "target": "self"}, "deals_damage": "no"},
         ]}},
         # Auftritt, Phasenwechsel, Abschied: nichts trifft.
         "fynn:unverwundbar": {"minecraft:damage_sensor": {"triggers": [{"cause": "all", "deals_damage": "no"}]}},
@@ -791,6 +796,8 @@ def verhalten():
         "fynn:angriff_ende": {"add": {"component_groups": ["fynn:nahkampf"]}},
         "fynn:schutz_an": {"remove": {"component_groups": ["fynn:verwundbar"]},
                            "add": {"component_groups": ["fynn:unverwundbar"]}},
+        "fynn:letzte_kraft": {"remove": {"component_groups": ["fynn:verwundbar"]},
+                              "add": {"component_groups": ["fynn:unverwundbar"]}},
         "fynn:schutz_aus": {"remove": {"component_groups": ["fynn:unverwundbar"]},
                             "add": {"component_groups": ["fynn:verwundbar"]}},
         "fynn:entfesseln": {"add": {"component_groups": ["fynn:entfesselt"]}},

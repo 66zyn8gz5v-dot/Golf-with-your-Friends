@@ -667,6 +667,23 @@ const SCHRITTE = {
 
 // ------------------------------------------------------------ Takt
 
+// Leer: in Phase eins der Wechsel, in Phase zwei der Abschied. Gerufen, wenn
+// das Leben unten ist - oder wenn Roland meldet, dass er einen Treffer an der
+// Grenze abgefangen hat (fynn:letzte_kraft). Waehrend des Wechsels ist das
+// Leben absichtlich niedrig - dann nicht noch einmal. Gibt true zurueck, wenn
+// der Abschied begonnen hat.
+export function amEnde(z) {
+    if (z.besiegt || z.aktion?.name === "phasenwechsel") return false;
+    if (z.phase === 1) {
+        if (z.aktion) beende(z);
+        starte(z, "phasenwechsel");
+        return false;
+    }
+    besiegen(z);
+    abschied(z, z.aktion, 0);
+    return true;
+}
+
 export function takt(z) {
     const boss = z.boss;
     if (!gueltig(boss)) return;
@@ -676,18 +693,7 @@ export function takt(z) {
         abschied(z, z.aktion, z.aktion.t);
         return;
     }
-    // Leer: in Phase eins der Wechsel, in Phase zwei der Abschied. Waehrend
-    // des Wechsels ist das Leben absichtlich niedrig - dann nicht noch einmal.
-    if (l && !z.besiegt && l.jetzt <= LETZTE_KRAFT + 0.5 && z.aktion?.name !== "phasenwechsel") {
-        if (z.phase === 1) {
-            if (z.aktion) beende(z);
-            starte(z, "phasenwechsel");
-        } else {
-            besiegen(z);
-            abschied(z, z.aktion, 0);
-            return;
-        }
-    }
+    if (l && l.jetzt <= LETZTE_KRAFT + 0.5 && amEnde(z)) return;
     if (z.aktion) {
         const a = z.aktion;
         const schritt = SCHRITTE[a.name];
@@ -749,6 +755,15 @@ world.afterEvents.entitySpawn.subscribe((e) => {
 
 // Wer ihn trifft, kaempft mit (und bekommt beim Sieg seinen Anteil). Und:
 // Im Schildwall prallt ab, was von vorn kommt.
+world.afterEvents.dataDrivenEntityTrigger.subscribe((e) => {
+    try {
+        if (e.entity?.typeId !== TYP || e.eventId !== "fynn:letzte_kraft") return;
+        amEnde(zustandVon(e.entity));
+    } catch (fehler) {
+        console.warn(`Roland, letzte Kraft: ${fehler}`);
+    }
+});
+
 world.afterEvents.entityHurt.subscribe((e) => {
     try {
         if (e.hurtEntity?.typeId !== TYP) return;
