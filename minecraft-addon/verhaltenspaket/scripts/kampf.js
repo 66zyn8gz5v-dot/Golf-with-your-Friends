@@ -104,7 +104,7 @@ system.runInterval(() => {
             if (system.currentTick - (letzter.get(spieler.id) ?? -SPERRE) < SPERRE) continue;
             if (!angriffErlaubt(spieler, angriff.rolle, angriff.kosten, true)) continue;
             letzter.set(spieler.id, system.currentTick);
-            verbrauche(spieler, angriff.kosten);
+            verbrauche(spieler, angriff.kosten, angriff.rolle);
             angriff.los(spieler);
         } catch (fehler) {
             console.warn(`Kampf, Laden: ${fehler}`);
@@ -174,18 +174,24 @@ system.runInterval(() => {
  * dreieinhalb Bloecken Umkreis nimmt Schaden und fliegt nach aussen.
  * Gegen eine Meute, die ihn umringt - dafuer ist der Ritter gebaut.
  */
-function wirbelschlag(spieler) {
+function wirbelschlag(spieler, zweiter = false) {
     const ort = spieler.location;
     const dimension = spieler.dimension;
-    // Wirbelsturm (Buch der Faehigkeiten, Ritter): mehr Schaden, weiter.
+    // Wirbelsturm (Buch der Faehigkeiten, Ritter): je Stufe 4 % mehr Schaden
+    // und etwas weiter; auf Stufe 25 folgt ein zweiter Wirbel.
     const sturm = rang(spieler, "wirbelsturm");
+    if (sturm >= 25 && !zweiter) {
+        system.runTimeout(() => {
+            try { if (lebt(spieler)) wirbelschlag(spieler, true); } catch (fehler) { /* weg */ }
+        }, 12);
+    }
     const ziele = dimension.getEntities({
-        location: ort, maxDistance: WIRBEL_WEITE + 0.3 * sturm,
+        location: ort, maxDistance: WIRBEL_WEITE + 0.06 * sturm,
         excludeTypes: NIE_TREFFEN, excludeFamilies: ["inanimate"],
     });
     for (const ziel of ziele) {
         if (ziel.id === spieler.id) continue;
-        ziel.applyDamage(Math.round(WIRBEL_SCHADEN * (1 + 0.2 * sturm)), { cause: "entityAttack", damagingEntity: spieler });
+        ziel.applyDamage(Math.round(WIRBEL_SCHADEN * (1 + 0.04 * sturm)), { cause: "entityAttack", damagingEntity: spieler });
         const weg = waagerecht({ x: ziel.location.x - ort.x, z: ziel.location.z - ort.z })
             ?? { x: 0, z: 1 };
         ziel.applyKnockback({ x: weg.x * 1.2, z: weg.z * 1.2 }, 0.35);
@@ -261,11 +267,12 @@ function rauch(dimension, ort) {
 function schattensprung(spieler) {
     const dimension = spieler.dimension;
     const blick = spieler.getViewDirection();
-    // Schattenschritt (Buch der Faehigkeiten, Assassine): weiter, haerter.
+    // Schattenschritt (Buch der Faehigkeiten, Assassine): je Stufe weiter
+    // und 3 % haerter; auf Stufe 25 danach drei Sekunden Tempo II.
     const schritt = rang(spieler, "schattenschritt");
-    const hinterhalt = Math.round(HINTERHALT * (1 + 0.15 * schritt));
+    const hinterhalt = Math.round(HINTERHALT * (1 + 0.03 * schritt));
     const treffer = dimension.getEntitiesFromRay(spieler.getHeadLocation(), blick, {
-        maxDistance: SPRUNG_WEITE + 2 * schritt, excludeTypes: NIE_TREFFEN, excludeFamilies: ["inanimate"],
+        maxDistance: SPRUNG_WEITE + 0.4 * schritt, excludeTypes: NIE_TREFFEN, excludeFamilies: ["inanimate"],
     }).filter((t) => t.entity.id !== spieler.id)
         .sort((a, b) => a.distance - b.distance)[0];
 
@@ -300,6 +307,7 @@ function schattensprung(spieler) {
             ziel.applyDamage(geschafft ? hinterhalt : hinterhalt / 2, {
                 cause: "entityAttack", damagingEntity: spieler,
             });
+            if (schritt >= 25) spieler.addEffect("speed", 60, { amplifier: 1, showParticles: false });
             dimension.spawnParticle("minecraft:critical_hit_emitter", {
                 x: ziel.location.x, y: ziel.location.y + 1, z: ziel.location.z,
             });
@@ -333,10 +341,11 @@ function pfeilhagel(spieler) {
     const dimension = spieler.dimension;
     const blick = spieler.getViewDirection();
     const kopf = spieler.getHeadLocation();
-    // Pfeilregen (Buch der Faehigkeiten, Bogenschuetze): je Stufe ein Pfeil
-    // mehr, abwechselnd links und rechts aussen.
+    // Pfeilregen (Buch der Faehigkeiten, Bogenschuetze): je fuenf Stufen ein
+    // Pfeil mehr, abwechselnd links und rechts aussen; auf 25 brennen sie.
+    const regen = rang(spieler, "pfeilregen");
     const faecher = [...FAECHER];
-    for (let i = 0; i < rang(spieler, "pfeilregen"); i++) faecher.push((i % 2 ? -1 : 1) * (24 + 8 * Math.floor(i / 2)));
+    for (let i = 0; i < Math.floor(regen / 5); i++) faecher.push((i % 2 ? -1 : 1) * (24 + 8 * Math.floor(i / 2)));
     for (const grad of faecher) {
         // Um die Senkrechte drehen: Der Faecher liegt waagerecht, die
         // Neigung des Blicks bleibt fuer alle fuenf gleich.
@@ -356,6 +365,7 @@ function pfeilhagel(spieler) {
         } else {
             pfeil.applyImpulse(tempo);
         }
+        if (regen >= 25) pfeil.setOnFire?.(10, true);
         hagel.set(pfeil.id, { pfeil, bis: system.currentTick + PFEIL_LEBEN });
     }
     dimension.playSound("random.bow", spieler.location, { volume: 1.0, pitch: 0.8 });

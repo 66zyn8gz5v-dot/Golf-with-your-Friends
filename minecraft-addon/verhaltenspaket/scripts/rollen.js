@@ -28,8 +28,8 @@
 
 import { world, system } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
-import { artInDerHand } from "./waffenarten.js";
-import { kraftBonus } from "./faehigkeiten.js";
+import { artInDerHand, waffeInDerHand } from "./waffenarten.js";
+import { fehlendeWerte, kostenRabatt, kraftBonus } from "./faehigkeiten.js";
 
 export const ROLLENALTAR = "fynn:rollenaltar";
 export const KRAFT_MAX = 100;
@@ -192,16 +192,33 @@ export function anzeigeArt(spieler) {
  */
 export function angriffErlaubt(spieler, art, kosten, still = false) {
     const r = ROLLEN[art];
-    if (kraftVon(spieler) < kosten) {
+    // Die Waffe verlangt Werte (Buch der Faehigkeiten) - ohne sie kein Angriff.
+    const fehlt = fehlendeWerte(spieler, waffeInDerHand(spieler));
+    if (fehlt.length) {
+        if (!still) hinweis(spieler, `§cDafür brauchst du ${fehlt.join(", ")}.`);
+        return false;
+    }
+    if (kraftVon(spieler) < echteKosten(spieler, art, kosten)) {
         if (!still) hinweis(spieler, `§7Zu wenig ${r.kraft}.`);
         return false;
     }
     return true;
 }
 
-export function verbrauche(spieler, menge) {
-    setzeKraft(spieler, kraftVon(spieler) - menge);
+// Was ein Angriff wirklich kostet: Die erste Rollenfaehigkeit macht ihn ab
+// Stufe 10 und 20 billiger.
+function echteKosten(spieler, art, kosten) {
+    return Math.max(0, kosten - (art ? kostenRabatt(spieler, art) : 0));
+}
+
+export function verbrauche(spieler, menge, art) {
+    setzeKraft(spieler, kraftVon(spieler) - echteKosten(spieler, art, menge));
     zeige(spieler);
+}
+
+/** Kraft dazu - die Manaquelle gibt sie fuer Treffer mit dem Stab. */
+export function gibKraft(spieler, menge) {
+    setzeKraft(spieler, kraftVon(spieler) + menge);
 }
 
 // --------------------------------------------------------- Rollenwahl
@@ -279,6 +296,10 @@ function wirken(spieler) {
     const art = artInDerHand(spieler);
     if (!art) return;
     const w = ROLLEN[art].wirkung;
+    // Gibt das Buch der Faehigkeiten dieselbe Staerke schon laenger oder
+    // staerker (Tempo aus Agility), nicht mit der kurzen ueberschreiben.
+    const alt = spieler.getEffect?.(w.id);
+    if (alt && alt.amplifier >= w.stufe && alt.duration > 40) return;
     spieler.addEffect(w.id, 30, { amplifier: w.stufe, showParticles: false });
 }
 

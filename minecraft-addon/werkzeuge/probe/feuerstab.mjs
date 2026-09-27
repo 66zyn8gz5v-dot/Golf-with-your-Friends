@@ -21,7 +21,9 @@ const dimension = {
         : undefined,
     getEntitiesFromRay: () => (wesenBei ? [{ entity: wesenBei, distance: 0.5 }] : []),
 };
-const eigenschaften = new Map([["fynn:rolle", "magier"], ["fynn:kraft", 100]]);
+// Die Waffen verlangen Werte aus dem Buch der Faehigkeiten (4.72) - dieser
+// Spieler hat sie alle.
+const eigenschaften = new Map([["fynn:rolle", "magier"], ["fynn:kraft", 100], ["fynn:fk_angriff", 50], ["fynn:fk_agility", 50], ["fynn:fk_mining", 50], ["fynn:fk_ruestung", 50]]);
 const leiste = [];
 const spieler = {
     id: "fynn", dimension, inHand: "fynn:feuerstab_2", isSneaking: false,

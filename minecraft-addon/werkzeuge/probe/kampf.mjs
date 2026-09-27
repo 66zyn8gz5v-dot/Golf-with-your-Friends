@@ -29,7 +29,9 @@ function wesen(id, typeId, ort, blick = { x: 0, y: 0, z: 1 }) {
     };
 }
 
-const eigenschaften = new Map([["fynn:rolle", "ritter"], ["fynn:kraft", 100]]);
+// Die Waffen verlangen Werte aus dem Buch der Faehigkeiten (4.72) - dieser
+// Spieler hat sie alle.
+const eigenschaften = new Map([["fynn:rolle", "ritter"], ["fynn:kraft", 100], ["fynn:fk_angriff", 50], ["fynn:fk_agility", 50], ["fynn:fk_mining", 50], ["fynn:fk_ruestung", 50]]);
 const leiste = [];
 let zweithand = null;
 const eingesammelt = [];

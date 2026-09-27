@@ -417,7 +417,7 @@ function schiessen(spieler) {
     if (jetzt - (letzterSchuss.get(spieler.id) ?? -SPERRE) < SPERRE) return;
     if (!angriffErlaubt(spieler, "magier", KOSTEN_FEUER)) return;
     letzterSchuss.set(spieler.id, jetzt);
-    verbrauche(spieler, KOSTEN_FEUER);
+    verbrauche(spieler, KOSTEN_FEUER, "magier");
 
     const blick = spieler.getViewDirection();
     const kopf = spieler.getHeadLocation();
@@ -489,24 +489,40 @@ function einschlag(flug, ort, getroffen) {
         frost(dimension, flug, ort, getroffen);
         return;
     }
-    // Feuerkraft (Buch der Faehigkeiten, Magier): staerkere Wucht, laengerer
-    // Brand. Auch auf Stufe 5 bleibt die Wucht unter der eines Creepers.
+    // Feuerkraft (Buch der Faehigkeiten, Magier): je Stufe 3 % mehr Wucht,
+    // alle fuenf Stufen eine Sekunde laenger Brand. Auch auf Stufe 25 bleibt
+    // die Wucht unter der eines Creepers.
     const kraft = lebt(flug.schuetze) ? rang(flug.schuetze, "feuerkraft") : 0;
-    dimension.createExplosion(ort, WUCHT * (1 + 0.12 * kraft), {
+    if (kraft >= 25) glutring(dimension, ort, flug.schuetze, "feuer");
+    dimension.createExplosion(ort, WUCHT * (1 + 0.03 * kraft), {
         breaksBlocks: false,
         causesFire: false,
         source: lebt(flug.schuetze) ? flug.schuetze : undefined,
     });
-    if (getroffen && lebt(getroffen)) getroffen.setOnFire(BRANDDAUER + kraft, true);
+    if (getroffen && lebt(getroffen)) getroffen.setOnFire(BRANDDAUER + Math.floor(kraft / 5), true);
+}
+
+// Glutring (Feuerkraft 25): um den Einschlag brennt - oder friert - alles.
+function glutring(dimension, ort, schuetze, art) {
+    for (const nah of dimension.getEntities({ location: ort, maxDistance: 3,
+        excludeTypes: ["minecraft:item", "minecraft:xp_orb", "minecraft:player", FEUERBALL, "fynn:frostkugel"] })) {
+        if (nah.id === schuetze?.id) continue;
+        try {
+            if (art === "frost") nah.addEffect("slowness", 80, { amplifier: 2 });
+            else nah.setOnFire(4, true);
+        } catch (fehler) { /* egal */ }
+    }
+    for (let i = 0; i < 12; i++) flamme(dimension, ort, 3, art);
 }
 
 function frost(dimension, flug, ort, getroffen) {
     const schuetze = lebt(flug.schuetze) ? flug.schuetze : undefined;
+    const kraftFrost = schuetze ? rang(schuetze, "feuerkraft") : 0;
+    if (kraftFrost >= 25) glutring(dimension, ort, schuetze, "frost");
     for (let i = 0; i < 14; i++) flamme(dimension, ort, 1.6, "frost");
     dimension.playSound("random.glass", ort, { volume: 0.9, pitch: 1.3 });
     if (getroffen && lebt(getroffen)) {
-        const kraft = schuetze ? rang(schuetze, "feuerkraft") : 0;
-        getroffen.applyDamage(Math.round(FROST_SCHADEN * (1 + 0.12 * kraft)), schuetze
+        getroffen.applyDamage(Math.round(FROST_SCHADEN * (1 + 0.03 * kraftFrost)), schuetze
             ? { cause: "freezing", damagingEntity: schuetze } : { cause: "freezing" });
         // Fast eingefroren: kaum noch Schritte, kaum noch Schlaege.
         getroffen.addEffect("slowness", 100, { amplifier: 3 });

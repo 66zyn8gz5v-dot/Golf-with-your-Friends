@@ -13,7 +13,7 @@
 //
 // * Wer ein Monster besiegt, bekommt zu Minecrafts Kugeln noch Erfahrung
 //   obendrauf (EXTRA).
-// * Monster lassen manchmal einen Erfahrungsfunken fallen (30 Punkte),
+// * Monster lassen manchmal einen Erfahrungsfunken fallen (50 Punkte),
 //   starke Gegner ein Erfahrungsgefaess (15 Level auf einen Schlag).
 // * Bosse geben jedem Mitkaempfer Level (BOSS_LEVEL) und immer ein Gefaess
 //   in der Beute.
@@ -23,7 +23,7 @@ import { verbrauche, istKreativ, ruht } from "./boss_kern.js";
 
 export const FUNKE = "fynn:erfahrungsfunke";
 export const GEFAESS = "fynn:erfahrungsgefaess";
-export const FUNKE_PUNKTE = 30;
+export const FUNKE_PUNKTE = 50;
 export const GEFAESS_LEVEL = 15;
 
 // Erfahrungspunkte zusaetzlich zu Minecrafts Kugeln. Ein Zombie gibt von
@@ -41,6 +41,9 @@ const EXTRA = {
     "fynn:bandenchef": 40, "fynn:eiswolf": 10, "fynn:schattendoppelgaenger": 3,
 };
 const STANDARD_MONSTER = 6;
+// Seit 4.72 kosten die Faehigkeiten viel mehr (bis 50 Stufen, Stufe n kostet
+// n Level) - darum zaehlt jeder Zuschlag doppelt.
+const ZUSCHLAG = 2;
 
 // Die Chance auf ein Gefaess bei starken Gegnern (sonst keine).
 const GEFAESS_CHANCE = {
@@ -65,8 +68,8 @@ function istMonster(wesen) {
 export function extraFuer(wesen) {
     const typ = wesen?.typeId;
     if (!typ || typ === "minecraft:player") return 0;
-    if (EXTRA[typ] !== undefined) return EXTRA[typ];
-    return istMonster(wesen) ? STANDARD_MONSTER : 0;
+    if (EXTRA[typ] !== undefined) return EXTRA[typ] * ZUSCHLAG;
+    return istMonster(wesen) ? STANDARD_MONSTER * ZUSCHLAG : 0;
 }
 
 /** Was ein besiegtes Wesen fallen laesst: [Gegenstand, Anzahl]. */
