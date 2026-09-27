@@ -181,17 +181,26 @@ def farbe():
 # ------------------------------------------------------------ Wasser
 
 def wasser():
-    """Lebendige Grafik: klareres Wasser (Fynn: "schoeneres Wasser").
-    Weniger Schwebstoffe und Algen - man sieht tiefer hinunter und das Blau
-    wird tuerkis, wo die Landschaft es hergibt. Kraeftigere Lichtmuster
-    (Kaustik) am Grund und etwas hoehere Wellen."""
+    """Lebendige Grafik: klares Wasser (Fynn: "schoeneres Wasser", in 4.65
+    noch einmal: "besseres Wasser").
+
+    * Klarer: weniger Schwebstoffe, Algen und Braunstoffe - man sieht
+      tiefer hinunter, und das Blau zieht ins Tuerkis, wo die Landschaft
+      es hergibt. Ganz auf null (wie Mojangs Voreinstellung) nicht: Dann
+      fehlt dem Wasser die Farbe, und die Tiefe sieht aus wie Glas.
+    * Lichtmuster am Grund (Kaustik) feiner und etwas schneller, wie bei
+      Sonne in flachem Wasser.
+    * Wellen: ruhiger und feiner als bisher. Die alten waren fuer einen
+      Teich zu hoch; jetzt kraeuselt sich die Oberflaeche, statt zu
+      schaukeln. 20 Stufen (Mojang rechnet 28) - fein genug, und die PS5
+      muss nicht mehr rechnen als bei Mojangs eigenen Wellen."""
     w = lade(VV / "water" / "water.json")
     s = w["minecraft:water_settings"]
     s["description"]["identifier"] = "fynn:wasser"
-    s["particle_concentrations"] = {"chlorophyll": 0.12, "suspended_sediment": 0.35, "cdom": 0.08}
-    s["caustics"] = {"enabled": True, "frame_length": 0.07, "scale": 0.6, "power": 3}
-    s["waves"] = {"enabled": True, "frequency": 1.0, "octaves": 16, "depth": 0.8, "speed": 1.25,
-                  "shape": 1.7, "pull": 0.4, "mix": 0.25, "frequency_scaling": 1.2,
+    s["particle_concentrations"] = {"chlorophyll": 0.07, "suspended_sediment": 0.18, "cdom": 0.04}
+    s["caustics"] = {"enabled": True, "frame_length": 0.06, "scale": 0.5, "power": 3}
+    s["waves"] = {"enabled": True, "frequency": 1.1, "octaves": 20, "depth": 0.55, "speed": 1.1,
+                  "shape": 1.6, "pull": 0.4, "mix": 0.3, "frequency_scaling": 1.2,
                   "speed_scaling": 1.03, "direction_increment": 25.0}
     s["biome_water_color_contribution"] = 0.5
     w["format_version"] = "1.26.0"
@@ -230,26 +239,51 @@ def wasserfarbe(name, farbe):
 #
 # Die Groessenordnung ist Mojangs: Wo ihre Landschaften Dunst haben (Strand,
 # Taiga, Dschungel), steht max_density 0.05 und scattering 0.04 bis 0.06.
-# Viele haben gar keinen (Ebene, Blumenwald, Wueste: 0.0) - dort gibt es
-# darum auch keine Strahlen. Jetzt ueberall ein wenig, und staerker nach
-# vorn gestreut (g 0.75 statt oft 0.4 bis 0.6), damit die Strahlen zur
-# Sonne hin sichtbar werden.
+#
+# Fynn (4.65): "diese Lichtstreifen oder Gottes Lichter muessen besser -
+# aber uebertreib nicht, ich habe ja nur eine PS5." Die Strahlen sieht man,
+# wo beleuchteter und beschatteter Dunst nebeneinander liegen - also vor
+# allem im Wald, unter Laub. Darum zwei Stufen:
+#
+# * Wald: deutlich mehr Dunst und staerker nach vorn gestreut. Dort
+#   entstehen die Strahlen, und das Laub nimmt die Weite, die der Dunst
+#   sonst truebe machen wuerde.
+# * Offenes Land und Meer: nur etwas mehr als bisher, damit die Fernsicht
+#   klar bleibt. Hier bringt vor allem das staerkere Vorwaertsstreuen (g)
+#   etwas: Der Dunst leuchtet zur tiefen Sonne hin, von ihr weg bleibt er
+#   klar.
+#
+# Kosten macht das auf der PS5 keine: Den Nebel rechnet die Lebendige
+# Grafik immer, die Zahlen aendern nur, wie viel davon man sieht.
 DUNST = {
     "density": {
-        "air": {"max_density": 0.06, "uniform": False, "zero_density_height": 200, "max_density_height": 62},
+        "air": {"max_density": 0.075, "uniform": False, "zero_density_height": 190, "max_density_height": 62},
         "weather": {"max_density": 0.12, "uniform": True},
     },
     "media_coefficients": {
-        "air": {"scattering": [0.05, 0.05, 0.05], "absorption": [0.0, 0.0, 0.0]},
+        "air": {"scattering": [0.06, 0.06, 0.06], "absorption": [0.0, 0.0, 0.0]},
     },
-    "henyey_greenstein_g": {"air": {"henyey_greenstein_g": 0.75}},
+    "henyey_greenstein_g": {"air": {"henyey_greenstein_g": 0.82}},
 }
+WALDDUNST = {
+    "density": {
+        "air": {"max_density": 0.1, "uniform": False, "zero_density_height": 180, "max_density_height": 64},
+        "weather": {"max_density": 0.12, "uniform": True},
+    },
+    "media_coefficients": {
+        # Ein Hauch mehr Gruen und Gold als Blau: das Licht im Wald ist warm.
+        "air": {"scattering": [0.078, 0.076, 0.07], "absorption": [0.0, 0.0, 0.0]},
+    },
+    "henyey_greenstein_g": {"air": {"henyey_greenstein_g": 0.86}},
+}
+WAELDER = ("forest", "taiga", "jungle", "cherry_grove", "plus_trees", "fog_humid", "fog_semi_humid")
+# Landschaften mit eigener Stimmung (Sumpf, bleicher Garten, Hoehlen, Pilzinsel,
+# Eisspitzen) behalten ihren Dunst - nur das Vorwaertsstreuen wird kraeftiger.
+EIGENE_STIMMUNG = ("swamp", "mangrove", "pale_garden", "caves", "mushroom", "ice_plains_spikes")
 
 
 def nebel(vanilla_id):
-    """Mojangs Nebel einer Landschaft mit unserem Dunst. Hat die Landschaft
-    schon eigenen Dunst, bleibt dessen Dichte; nur das Streuen nach vorn
-    wird kraeftiger."""
+    """Mojangs Nebel einer Landschaft mit unserem Dunst."""
     name = vanilla_id.split(":")[1]
     datei = None
     for f in (VV / "fogs").glob("*.json"):
@@ -266,11 +300,12 @@ def nebel(vanilla_id):
     if unter and "fog_end" in unter and "swamp" not in name and "mangrove" not in name:
         unter["fog_end"] = round(unter["fog_end"] * 1.5, 1)
     eigen = s.get("volumetric", {})
-    streut = max(eigen.get("media_coefficients", {}).get("air", {}).get("scattering", [0.0])) if eigen else 0.0
-    if streut > 0:
-        eigen.setdefault("henyey_greenstein_g", {})["air"] = {"henyey_greenstein_g": max(
-            0.72, eigen.get("henyey_greenstein_g", {}).get("air", {}).get("henyey_greenstein_g", 0.0))}
+    if eigen and any(w in name for w in EIGENE_STIMMUNG):
+        g = eigen.setdefault("henyey_greenstein_g", {}).setdefault("air", {})
+        g["henyey_greenstein_g"] = max(0.8, g.get("henyey_greenstein_g", 0.0))
         s["volumetric"] = eigen
+    elif any(w in name for w in WAELDER):
+        s["volumetric"] = copy.deepcopy(WALDDUNST)
     else:
         s["volumetric"] = copy.deepcopy(DUNST)
     datei["format_version"] = "1.21.90"
