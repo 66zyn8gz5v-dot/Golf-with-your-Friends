@@ -64,8 +64,7 @@ const ANGRIFFE = [
         passt: (id) => SCHWERTER.has(id), los: wirbelschlag,
     },
     {
-        // Kuerzer geladen als der Wirbel: Der Assassine ist schnell,
-        // und er laedt im Schatten - geduckt ist er ohnehin unsichtbar.
+        // Kuerzer geladen als der Wirbel: Der Assassine ist schnell.
         name: "Schattensprung", rolle: "assassine", ladezeit: 15, kosten: 35,
         passt: (id) => DOLCHE.has(id), los: schattensprung,
     },

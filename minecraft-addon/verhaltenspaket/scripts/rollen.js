@@ -56,7 +56,7 @@ export const ROLLEN = {
     assassine: {
         name: "Assassine", farbe: "§c", kraft: "Schatten", feld: 4,
         bild: "textures/items/eisendolche",
-        kurz: "Schattensprung · flink, unsichtbar",
+        kurz: "Schattensprung · flink",
         // Leichtfuessig und schneller als die anderen - so steht es in
         // PLAN.md, seit Fynn die Rollen zum ersten Mal beschrieben hat.
         wirkung: { id: "speed", stufe: 0 },
@@ -290,7 +290,7 @@ system.runInterval(() => {
     }
 }, 40);
 
-// Alle fuenf Ticks: Leiste neu zeigen, Assassine im Schatten. Nachschub
+// Alle fuenf Ticks: Leiste neu zeigen. Nachschub
 // jede zweite Runde, also zweimal je Sekunde - vom leeren zum vollen
 // Balken knapp eine Minute, beim Magier eine halbe.
 let runde = 0;
@@ -302,10 +302,6 @@ system.runInterval(() => {
             if (rolle && runde % 2 === 0) {
                 const bonus = vollesSet(spieler, rolle) ? 1 : 0;
                 setzeKraft(spieler, kraftVon(spieler) + ROLLEN[rolle].nachschub + bonus);
-            }
-            if (rolle === "assassine" && spieler.isSneaking) {
-                // Kurz, damit er beim Aufstehen sofort wieder zu sehen ist.
-                spieler.addEffect("invisibility", 10, { amplifier: 0, showParticles: false });
             }
             zeige(spieler);
         } catch (fehler) {

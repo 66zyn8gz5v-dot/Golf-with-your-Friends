@@ -73,7 +73,7 @@ delete spieler.getComponent;
 // Nichts im Chat: keine sendMessage, nur Leiste und Titel.
 pruefe("kein Chat", spieler.sendMessage === undefined);
 
-// Wechsel zum Assassinen: ducken macht unsichtbar.
+// Wechsel zum Assassinen: ducken macht nicht mehr unsichtbar (Fynn: "unnoetig").
 setzeAntwort(() => ({ canceled: false, selection: 3 }));
 komponenten.get("fynn:rollenwahl").onPlayerInteract({ player: spieler });
 await warte();
@@ -82,7 +82,7 @@ pruefe("Rolle jetzt assassine, Kraft wieder halb",
 wirkungen.length = 0;
 spieler.isSneaking = true;
 for (const f of runden(5)) f();
-pruefe("geduckt unsichtbar", wirkungen.some((w) => w.id === "invisibility"));
+pruefe("geduckt: sichtbar", !wirkungen.some((w) => w.id === "invisibility"));
 spieler.isSneaking = false; wirkungen.length = 0;
 for (const f of runden(5)) f();
 pruefe("aufgestanden: nicht mehr", !wirkungen.some((w) => w.id === "invisibility"));
