@@ -84,14 +84,14 @@ pruefe("Skelett fliegt nach Norden", skelett.stoss?.h.z < 0);
 pruefe(`kostet 40 Ausdauer (100 -> ${eigenschaften.get("fynn:kraft")})`, eigenschaften.get("fynn:kraft") === 60);
 pruefe("Funkenring", partikel.filter((p) => p === "minecraft:critical_hit_emitter").length === 16);
 
-// --- Ohne die Rolle laedt nichts, und es kommt auch kein Hinweis.
+// --- Der Angriff kommt von der Waffe, nicht von der Rolle (4.67):
+// Auch ein Magier mit Schwert wirbelt.
 eigenschaften.set("fynn:rolle", "magier");
-const hinweiseVorher = leiste.filter((z) => z.includes("bereit") || z.includes("nur ein")).length;
+auffuellen();
 zombie.schaden = 0; system.currentTick += 40;
 spieler.isSneaking = true; tick(30); spieler.isSneaking = false; tick(1);
-pruefe("Magier mit Schwert: kein Wirbel", zombie.schaden === 0);
-pruefe("und kein Hinweis beim Ducken",
-       leiste.filter((z) => z.includes("bereit") || z.includes("nur ein")).length === hinweiseVorher);
+pruefe(`Magier mit Schwert: Wirbelschlag (${zombie.schaden})`, zombie.schaden === 7);
+auffuellen();
 
 // --- Assassine: Schattensprung hinter den Zombie
 eigenschaften.set("fynn:rolle", "assassine");

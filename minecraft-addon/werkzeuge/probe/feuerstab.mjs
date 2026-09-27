@@ -76,19 +76,13 @@ spieler.isSneaking = true; tick(20); spieler.isSneaking = false; tick(1);
 tick(70);
 pruefe("ohne Ziel verpufft er nach seiner Flugzeit", baelle.length === 3 && !baelle[2].isValid && explosionen.length === 2);
 
-// Wer kein Magier ist, laedt vergeblich - und bekommt gesagt, warum.
+// Der Ball kommt vom Stab, nicht von der Rolle (4.67): Auch ein Ritter
+// schiesst - mit den letzten 25 Mana.
 eigenschaften.set("fynn:rolle", "ritter");
 spieler.inHand = "fynn:feuerstab_2";
 system.currentTick += 40;
 spieler.isSneaking = true; tick(20); spieler.isSneaking = false; tick(1);
-pruefe("als Ritter: kein Ball", baelle.length === 3);
-pruefe("und ein Hinweis ueber der Leiste", leiste.at(-1).includes("nur ein Magier"));
-
-// Die Leiste steht jetzt bei 25: ein Ball noch, dann ist Schluss.
-eigenschaften.set("fynn:rolle", "magier");
-system.currentTick += 40;
-spieler.isSneaking = true; tick(20); spieler.isSneaking = false; tick(1);
-pruefe("mit den letzten 25 Mana: noch ein Ball", baelle.length === 4);
+pruefe("als Ritter mit Stab: der Ball fliegt", baelle.length === 4);
 tick(70);
 system.currentTick += 40;
 spieler.isSneaking = true; tick(20); spieler.isSneaking = false; tick(1);

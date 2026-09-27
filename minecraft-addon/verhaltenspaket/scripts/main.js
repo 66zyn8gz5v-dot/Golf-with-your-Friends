@@ -12,6 +12,7 @@
 
 import { world, system } from "@minecraft/server";
 import { angriffErlaubt, hinweis, verbrauche } from "./rollen.js";
+import { STAEBE } from "./waffenarten.js";
 import "./kampf.js";
 import "./pfeile.js";
 import "./tempel.js";
@@ -358,8 +359,8 @@ system.runInterval(() => {
 // Strahl eine Flugweite voraus: Ist dort ein Block oder ein Wesen, schlaegt
 // er ein, sonst rueckt er vor.
 //
-// Feuerbaelle sind Sache des Magiers: Nur er kann sie aufladen, und jeder
-// kostet ihn Mana. Schwingen kann den Stab jeder.
+// Feuerbaelle gehoeren zum Stab, nicht zur Rolle (Fynn, 4.67): Wer einen
+// Stab haelt, kann sie aufladen, und jeder kostet Mana.
 //
 // Der Einschlag ist eine Explosion - Schaden, Rueckstoss, Knall -, aber
 // ohne Bloecke zu zerstoeren und ohne Brand in der Welt. Ein Fehlschuss
@@ -370,7 +371,6 @@ system.runInterval(() => {
 // die Feuerbaelle, nur mit anderer Kugel und anderem Einschlag: keine
 // Explosion, sondern Kaelte - wer getroffen wird, friert fast ein, und
 // wer daneben steht, wird langsamer.
-const STAEBE = { "fynn:feuerstab": "feuer", "fynn:feuerstab_2": "feuer", "fynn:frostzepter": "frost" };
 const FEUERBALL = "fynn:feuerball";
 const KUGEL = { feuer: FEUERBALL, frost: "fynn:frostkugel" };
 const FUNKEN = { feuer: "minecraft:basic_flame_particle", frost: "minecraft:endrod" };
@@ -446,7 +446,7 @@ system.runInterval(() => {
             if (spieler.isSneaking) {
                 const stand = (feuerLaden.get(kennung) ?? 0) + 1;
                 feuerLaden.set(kennung, stand);
-                // Wer kein Magier ist oder zu wenig Mana hat, bekommt es
+                // Wer zu wenig Mana hat, bekommt es
                 // gesagt, sobald er voll geladen haette - und kein Zischen.
                 if (stand === LADEZEIT_FEUER && angriffErlaubt(spieler, "magier", KOSTEN_FEUER)) {
                     // Geladen: ein Zischen und ein Aufflackern vor der

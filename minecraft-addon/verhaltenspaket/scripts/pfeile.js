@@ -14,9 +14,9 @@
 import { world, system, ItemStack } from "@minecraft/server";
 import { hinweis } from "./rollen.js";
 import { istHagelpfeil } from "./kampf.js";
+import { BOEGEN } from "./waffenarten.js";
 
 const PFEIL = "minecraft:arrow";
-const BOEGEN = new Set(["minecraft:bow", "minecraft:crossbow", "fynn:sturmbogen", "fynn:geweihbogen"]);
 
 // Der Sturmbogen: Ein voll gespannter Schuss holt beim Einschlag einen
 // Blitz herunter. "Voll gespannt" liest das Skript am Tempo des Pfeils ab

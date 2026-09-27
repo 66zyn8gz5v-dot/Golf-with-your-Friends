@@ -5,8 +5,15 @@
 // der Welt speichert), sie ueberlebt also Tod und Neustart. Wechseln geht
 // jederzeit am Altar.
 //
-// Jede Rolle hat eine Kraft, die sich von selbst auffuellt: der Magier
-// Mana, die anderen Ausdauer, Fokus oder Schatten. Die aufgeladenen
+// Seit 4.67 kommen Kraft, Staerke und die aufgeladenen Angriffe von der
+// Waffe in der Hand, nicht mehr von der Rolle (Fynn: "Die Effekte und
+// Faehigkeiten sollen von Waffen ausgehen"). Die Rolle bestimmt noch die
+// Startausruestung im Tempel und welche Leiste man sieht, wenn man keine
+// Waffe haelt.
+//
+// Jede Kampfart hat eine Kraft, die sich von selbst auffuellt: der Magier
+// Mana, die anderen Ausdauer, Fokus oder Schatten. Es ist ein Vorrat fuer
+// alle Arten - wer die Waffe wechselt, nimmt ihn mit. Die aufgeladenen
 // Angriffe kosten davon. Angezeigt wird sie als Kugelreihe ueber der
 // Schnellleiste - nicht im Chat, das wollte Fynn ausdruecklich nicht.
 // Die Kugeln sind Bilder aus font/glyph_E3.png, die an Stelle von
@@ -14,12 +21,14 @@
 // Schnellleiste laesst sich ohne Umbau der Spieloberflaeche nicht
 // beschreiben.
 //
-// Dazu gibt jede Rolle eine kleine Staerke, dauerhaft, solange man sie
-// hat. Aufgefrischt wird sie alle zwei Sekunden mit vier Sekunden Dauer,
-// damit sie nie auslaeuft, aber nach einem Wechsel schnell verschwindet.
+// Dazu gibt jede Waffenart eine kleine Staerke, solange man die Waffe in
+// der Hand haelt. Aufgefrischt wird sie jede halbe Sekunde mit anderthalb
+// Sekunden Dauer: Sie laeuft nie aus, verschwindet aber kurz nach dem
+// Wegstecken der Waffe.
 
 import { world, system } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
+import { artInDerHand } from "./waffenarten.js";
 
 export const ROLLENALTAR = "fynn:rollenaltar";
 export const KRAFT_MAX = 100;
@@ -160,29 +169,28 @@ function zeige(spieler) {
         const h = hinweise.get(spieler.id);
         if (h && h.bis > system.currentTick) zeilen.push(h.text);
         else hinweise.delete(spieler.id);
-        const rolle = rolleVon(spieler);
-        if (rolle) zeilen.push(leiste(spieler, rolle));
+        const art = anzeigeArt(spieler);
+        if (art) zeilen.push(leiste(spieler, art));
         if (zeilen.length) spieler.onScreenDisplay.setActionBar(zeilen.join("\n"));
     } catch (fehler) {
         console.warn(`Rollen, Anzeige: ${fehler}`);
     }
 }
 
+/** Welche Leiste zu sehen ist: die der Waffe in der Hand, sonst die der Rolle. */
+export function anzeigeArt(spieler) {
+    return artInDerHand(spieler) ?? rolleVon(spieler);
+}
+
 // ------------------------------------------------- Angriffe und Kosten
 
 /**
- * Darf dieser Spieler den Angriff dieser Rolle ausloesen?
- *
- * Die Waffen selbst kann jeder schwingen; nur die aufgeladenen Angriffe
- * gehoeren zur Rolle. Wer es trotzdem versucht, bekommt gesagt, warum
- * nichts passiert - sonst saehe es aus wie ein Fehler.
+ * Reicht die Kraft fuer diesen Angriff? Wer die Waffe haelt, darf ihn
+ * ausloesen, gleich welche Rolle er hat - es fehlt hoechstens Kraft, und
+ * das wird gesagt, sonst saehe es aus wie ein Fehler.
  */
-export function angriffErlaubt(spieler, rolle, kosten, still = false) {
-    const r = ROLLEN[rolle];
-    if (rolleVon(spieler) !== rolle) {
-        if (!still) hinweis(spieler, `§7Das kann nur ein ${r.farbe}${r.name}§7. Wähle deine Rolle am Rollenaltar.`);
-        return false;
-    }
+export function angriffErlaubt(spieler, art, kosten, still = false) {
+    const r = ROLLEN[art];
     if (kraftVon(spieler) < kosten) {
         if (!still) hinweis(spieler, `§7Zu wenig ${r.kraft}.`);
         return false;
@@ -202,11 +210,12 @@ async function waehlen(spieler, versuch = 0) {
     const form = new ActionFormData()
         .title("Wähle deine Rolle")
         .body((jetzt ? `Du bist gerade ${ROLLEN[jetzt].farbe}${ROLLEN[jetzt].name}§r.\n\n` : "")
-            + "Jede Rolle hat ihre eigene Kraft - die Kugeln über der Schnellleiste. "
-            + "Aufgeladene Angriffe kosten Kraft, sie kommt von selbst wieder.\n\n"
-            + "Aufladen: die Waffe deiner Rolle in die Hand, ducken, bis es klingt, "
-            + "dann aufstehen.\n\n"
-            + "Trägst du die ganze Rüstung deiner Rolle, kommt die Kraft schneller - "
+            + "Kraft, Stärke und Fähigkeiten kommen von der Waffe in deiner Hand: "
+            + "Schwert oder Hammer wie ein Ritter, Stab wie ein Magier, Bogen wie ein "
+            + "Bogenschütze, Dolche wie ein Assassine. Die Rolle bestimmt deine Leiste, "
+            + "wenn du keine Waffe hältst.\n\n"
+            + "Aufladen: Waffe in die Hand, ducken, bis es klingt, dann aufstehen.\n\n"
+            + "Trägst du die ganze Rüstung zur Waffe, kommt die Kraft schneller - "
             + "dann steht ein goldener Stern hinter der Leiste.\n\n"
             + "Wechseln kannst du jederzeit hier am Altar.");
     for (const k of REIHENFOLGE) {
@@ -238,14 +247,6 @@ export function setzeRolle(spieler, neu) {
     // Halbe Kraft nach jedem Wechsel: Sonst liesse sich die Leiste durch
     // Hin- und Herwechseln auffuellen.
     setzeKraft(spieler, KRAFT_MAX / 2);
-    for (const k of REIHENFOLGE) {
-        try {
-            spieler.removeEffect(ROLLEN[k].wirkung.id);
-        } catch (fehler) {
-            // hatte er nicht
-        }
-    }
-    wirken(spieler);
 
     const r = ROLLEN[neu];
     spieler.onScreenDisplay.setTitle(`${r.farbe}${r.name}`, {
@@ -274,34 +275,25 @@ system.beforeEvents.startup.subscribe((e) => {
 // ---------------------------------------------------------- Schleifen
 
 function wirken(spieler) {
-    const rolle = rolleVon(spieler);
-    if (!rolle) return;
-    const w = ROLLEN[rolle].wirkung;
-    spieler.addEffect(w.id, 80, { amplifier: w.stufe, showParticles: false });
+    const art = artInDerHand(spieler);
+    if (!art) return;
+    const w = ROLLEN[art].wirkung;
+    spieler.addEffect(w.id, 30, { amplifier: w.stufe, showParticles: false });
 }
 
-system.runInterval(() => {
-    for (const spieler of world.getAllPlayers()) {
-        try {
-            wirken(spieler);
-        } catch (fehler) {
-            console.warn(`Rollen, Staerke: ${fehler}`);
-        }
-    }
-}, 40);
-
-// Alle fuenf Ticks: Leiste neu zeigen. Nachschub
-// jede zweite Runde, also zweimal je Sekunde - vom leeren zum vollen
-// Balken knapp eine Minute, beim Magier eine halbe.
+// Alle fuenf Ticks: Leiste neu zeigen. Nachschub und Staerke jede zweite
+// Runde, also zweimal je Sekunde - vom leeren zum vollen Balken knapp eine
+// Minute, mit einem Stab in der Hand eine halbe.
 let runde = 0;
 system.runInterval(() => {
     runde += 1;
     for (const spieler of world.getAllPlayers()) {
         try {
-            const rolle = rolleVon(spieler);
-            if (rolle && runde % 2 === 0) {
-                const bonus = vollesSet(spieler, rolle) ? 1 : 0;
-                setzeKraft(spieler, kraftVon(spieler) + ROLLEN[rolle].nachschub + bonus);
+            const art = anzeigeArt(spieler);
+            if (art && runde % 2 === 0) {
+                const bonus = vollesSet(spieler, art) ? 1 : 0;
+                setzeKraft(spieler, kraftVon(spieler) + ROLLEN[art].nachschub + bonus);
+                wirken(spieler);
             }
             zeige(spieler);
         } catch (fehler) {

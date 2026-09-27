@@ -7,31 +7,15 @@
 // nicht die Taste: Auf dem iPad meldet Minecraft die Taste nur fuer einen
 // Tick.
 //
-// Die Angriffe gehoeren zur Rolle. Wer eine andere Rolle hat, laedt gar
-// nicht erst - und bekommt auch keinen Hinweis. Ducken mit dem Schwert in
-// der Hand ist sonst alltaeglich (an Kanten, beim Bruecken bauen), und
-// jedes Mal eine Meldung waere laestig. Nur wer die Rolle hat und zu
-// wenig Kraft, bekommt das gesagt.
+// Die Angriffe gehoeren zur Waffe, nicht zur Rolle (Fynn, 4.67): Wer ein
+// Schwert haelt, kann den Wirbelschlag, gleich welche Rolle er hat. Wer zu
+// wenig Kraft hat, bekommt das gesagt, sobald er voll geladen haette.
 
 import { world, system, ItemStack, ItemLockMode } from "@minecraft/server";
-import { angriffErlaubt, hinweis, rolleVon, verbrauche } from "./rollen.js";
+import { angriffErlaubt, hinweis, verbrauche } from "./rollen.js";
+import { BOEGEN, DOLCHE, HAEMMER, SCHWERTER } from "./waffenarten.js";
 
-export const DOLCHE = new Set([
-    "fynn:eisendolche", "fynn:silberdolche", "fynn:stahldolche",
-    "fynn:elektrumdolche", "fynn:diamantdolche", "fynn:netheritdolche",
-]);
-
-// Alle Schwerter ausser dem Degen: Der hat seinen eigenen Sprungstoss.
-const SCHWERTER = new Set([
-    "minecraft:wooden_sword", "minecraft:stone_sword", "minecraft:iron_sword",
-    "minecraft:golden_sword", "minecraft:diamond_sword", "minecraft:netherite_sword",
-    "minecraft:copper_sword",
-    "fynn:ritterschwert", "fynn:eisenklinge", "fynn:silberklinge",
-    "fynn:elektrumklinge", "fynn:sternenklinge", "fynn:schwertfischklinge", "fynn:schwertfischschwert", "fynn:saphirschwert", "fynn:durendal", "fynn:rabenklinge", "fynn:frostzahn",
-    "fynn:rubinklinge", "fynn:haizahnsaebel",
-]);
-
-const BOEGEN = new Set(["minecraft:bow", "minecraft:crossbow", "fynn:sturmbogen", "fynn:geweihbogen"]);
+export { DOLCHE } from "./waffenarten.js";
 
 // Was von einem Angriff nie getroffen wird: Gegenstaende am Boden,
 // Erfahrung, Geschosse - und Mitspieler. Ein Wirbelschlag unter Freunden
@@ -57,7 +41,7 @@ const ANGRIFFE = [
         // laedt laenger und kostet mehr als der Wirbelschlag, reicht aber
         // weiter und wirft alles in die Luft.
         name: "Erdbeben", rolle: "ritter", ladezeit: 25, kosten: 50,
-        passt: (id) => id === "fynn:kriegshammer", los: erdbeben,
+        passt: (id) => HAEMMER.has(id), los: erdbeben,
     },
     {
         name: "Wirbelschlag", rolle: "ritter", ladezeit: 20, kosten: 40,
@@ -101,7 +85,7 @@ system.runInterval(() => {
         try {
             const angriff = ANGRIFFE.find((a) => a.passt(inDerHand(spieler)));
             const lauf = laden.get(spieler.id);
-            if (!angriff || rolleVon(spieler) !== angriff.rolle) {
+            if (!angriff) {
                 laden.delete(spieler.id);
                 continue;
             }

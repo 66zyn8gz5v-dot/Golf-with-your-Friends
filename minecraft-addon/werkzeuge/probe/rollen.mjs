@@ -41,7 +41,7 @@ pruefe(`vier Knoepfe: ${letztesFenster.knoepfe.map((k) => k.beschriftung.split("
 pruefe("jeder Knopf hat ein Bild", letztesFenster.knoepfe.every((k) => k.bild?.startsWith("textures/")));
 pruefe("Rolle gespeichert: magier", eigenschaften.get("fynn:rolle") === "magier");
 pruefe(`Titel auf dem Bildschirm: "${titel[0]}"`, titel[0] === "Magier ist jetzt deine Rolle");
-pruefe("feuerfest ohne Partikel", wirkungen.some((w) => w.id === "fire_resistance" && w.o.showParticles === false));
+pruefe("die Rolle allein gibt keine Staerke (4.67: sie kommt von der Waffe)", !wirkungen.some((w) => w.id === "fire_resistance"));
 pruefe("halbe Kraft nach der Wahl", eigenschaften.get("fynn:kraft") === 50);
 
 // Die Leiste: zehn Zeichen, fuenf volle blaue Kugeln (Feld 2), der Rest leer.
@@ -55,6 +55,16 @@ for (let i = 0; i < 6; i++) for (const f of runden(5)) f();
 pruefe(`Mana waechst (50 -> ${eigenschaften.get("fynn:kraft")})`, eigenschaften.get("fynn:kraft") === 56);
 const halbe = [...leiste.at(-1).split("§f")[1]].map((z) => z.charCodeAt(0) - 0xe300);
 pruefe(`bei 56 eine halbe Kugel: ${halbe.join(",")}`, halbe[5] === 6);
+
+// Ein Stab in der Hand macht feuerfest - ohne Partikel. Gleich wieder weg,
+// damit die Zaehlung unten stimmt.
+const inHand = (typ) => (n) => (n === "minecraft:equippable"
+    ? { getEquipment: (platz) => (platz === "Mainhand" ? { typeId: typ } : undefined) } : undefined);
+spieler.getComponent = inHand("fynn:feuerstab");
+for (const f of runden(5)) { f(); f(); }
+pruefe("Stab in der Hand: feuerfest ohne Partikel",
+       wirkungen.some((w) => w.id === "fire_resistance" && w.o.showParticles === false));
+delete spieler.getComponent;
 
 // Volle Magierrobe: ein Punkt mehr je Nachschub und ein Stern hinter der Leiste.
 const robe = { Head: "fynn:magierhut", Chest: "fynn:magierrobe", Legs: "fynn:magierrock", Feet: "fynn:magierschuhe" };
@@ -86,8 +96,17 @@ pruefe("geduckt: sichtbar", !wirkungen.some((w) => w.id === "invisibility"));
 spieler.isSneaking = false; wirkungen.length = 0;
 for (const f of runden(5)) f();
 pruefe("aufgestanden: nicht mehr", !wirkungen.some((w) => w.id === "invisibility"));
-for (const f of runden(40)) f();
-pruefe("Tempo als Staerke", wirkungen.some((w) => w.id === "speed"));
+for (const f of runden(5)) { f(); f(); }
+pruefe("ohne Dolche: kein Tempo", !wirkungen.some((w) => w.id === "speed"));
+spieler.getComponent = inHand("fynn:eisendolche");
+for (const f of runden(5)) { f(); f(); }
+pruefe("Dolche in der Hand: Tempo", wirkungen.some((w) => w.id === "speed"));
+spieler.getComponent = inHand("minecraft:iron_sword");
+wirkungen.length = 0;
+for (const f of runden(5)) { f(); f(); }
+pruefe("Assassine mit Schwert: Widerstand wie ein Ritter, Leiste Ausdauer",
+       wirkungen.some((w) => w.id === "resistance") && leiste.at(-1).includes("Ausdauer"));
+delete spieler.getComponent;
 
 // Beschaeftigt: Das Fenster wird spaeter noch einmal versucht.
 const vorher = gemerkt.takte.length;
