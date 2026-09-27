@@ -23,6 +23,7 @@ export const TYP = "fynn:roland";
 // Der Name in Phase zwei, wie in Fynns Entwurf. Die Bossleiste
 // (ui/hud_screen.json) erkennt an "Roland" ihr Aussehen und an "Phase 2"
 // den Rahmen der zweiten Phase.
+export const NAME = "Sir Roland";
 export const NAME_ENTFESSELT = "Sir Roland · Phase 2";
 const UMKREIS_STAERKE = 48;      // wer beim Auftritt so nah ist, zaehlt mit
 const UMKREIS_KAMPF = 32;
@@ -183,6 +184,12 @@ export function zustandVon(boss) {
             teilnehmer: new Set(), gefolge: [], besiegt: false, faktor: 1,
         };
         kaempfe.set(boss.id, z);
+        // Den Namen fest an den Boss: Ohne Namensschild zeigt Minecraft ueber
+        // der Bossleiste "Unbekannt" (so bei Fynn mit dem Mammut, 4.67) - und
+        // unsere Leiste erkennt ihren Boss am Namen, sie blieb dann aus.
+        try {
+            if (!boss.nameTag) boss.nameTag = phase === 2 ? NAME_ENTFESSELT : NAME;
+        } catch (e) { /* egal */ }
     }
     z.boss = boss;
     z.faktor = faktorVon(z);

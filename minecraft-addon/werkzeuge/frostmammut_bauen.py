@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Der dritte Boss: Hrimgar, das Frostmammut.
+"""Der dritte Boss: Frosthauer, das Frostmammut.
+
+Bis 4.67 hiess es Hrimgar. Fynn hat in einem eigenen Gespraech eine
+Bossleiste fuer das Mammut entworfen und es dort "Frosthauer" getauft -
+seit 4.68 heisst es so.
 
 Fynn: "Mach jetzt bitte zwei weitere Bosse, ich lasse dir da Freiraum."
 
@@ -599,16 +603,41 @@ ZAHNWAPPEN_FARBEN = {"a": (19, 18, 23), "s": (206, 230, 244), "m": (240, 250, 25
                      "Z": (238, 228, 200), "I": (140, 220, 255), "i": (230, 250, 255)}
 
 
+# Fynns Leiste "Frosthauer" (in einem eigenen Gespraech entworfen, als
+# Bildschirmfoto geschickt): Eiskristalle an den Enden, zwei Stosszaehne,
+# die ueber die Leiste ragen, ein Eis-Medaillon, Zapfen darunter. Aus dem
+# Foto abgetastet, auf 14 Farben gebracht und von links nach rechts
+# gespiegelt - der Entwurf ist symmetrisch, so verschwindet die Unschaerfe
+# des Fotos. Der Balken liegt bei x 6, y 8 und ist 184 breit, 5 hoch.
+FROSTHAUER = Path(__file__).resolve().parent / "vorlagen" / "fynn_bossleiste_frosthauer.png"
+FROSTHAUER_RINNE = (6, 8, 184, 5)
+# Die Fuellung aus Fynns Vorschau, Zeile fuer Zeile abgelesen.
+FUELLUNG_1 = [(230, 255, 255), (138, 236, 242), (64, 194, 212), (34, 136, 166), (20, 88, 114)]
+# Phase zwei: kaelter und heller - der Panzer ist weg, der Frostkern glueht.
+FUELLUNG_2 = [(246, 254, 255), (176, 242, 255), (104, 214, 248), (56, 160, 226), (30, 100, 180)]
+
+
+def frostbalken(farben, r):
+    """Der Balken mit Eisglitzern: alle elf Pixel ein weisser Punkt in den
+    oberen zwei Zeilen, wie in Fynns Vorschau."""
+    import bossbar_bauen as bb
+    b = bb.rinne(farben, r=r)
+    for x in range(3, r[2], 11):
+        b.putpixel((x, 1 if (x // 11) % 2 else 0), (252, 255, 255, 255))
+    return b
+
+
 def bossleiste():
     import bossbar_bauen as bb
-    grund_ = bb.umgefaerbt(bb.rahmen(), EISTAUSCH)
-    rahmen1 = bb.mit_medaillon(grund_, ZAHNWAPPEN, ZAHNWAPPEN_FARBEN)
-    rahmen2 = bb.mit_schein(rahmen1, (150, 214, 245))
+    rahmen1 = Image.open(FROSTHAUER).convert("RGBA")
+    rahmen2 = bb.mit_schein(rahmen1, (150, 214, 245), FROSTHAUER_RINNE)
+    r = FROSTHAUER_RINNE
     return {
-        "kennung": NAME, "marke": "Hrimgar", "titel": ("Hrimgar", "Hrimgar · Phase 2"),
-        "namensfarben": ([0.9, 0.97, 1.0], [0.55, 0.88, 1.0]),
-        "teile": {"rahmen": rahmen1, "rahmen_entfesselt": rahmen2, "leer": bb.rinne(None, leer=True),
-                  "voll": bb.rinne(BALKEN_1), "entfesselt": bb.rinne(BALKEN_2)},
+        "kennung": NAME, "marke": "Frosthauer", "titel": ("Frosthauer", "Frosthauer · Phase 2"),
+        "masse": (rahmen1.width, rahmen1.height, r), "ueber": 2,
+        "namensfarben": ([0.72, 0.93, 1.0], [0.55, 0.88, 1.0]),
+        "teile": {"rahmen": rahmen1, "rahmen_entfesselt": rahmen2, "leer": bb.rinne(None, leer=True, r=r),
+                  "voll": frostbalken(FUELLUNG_1, r), "entfesselt": frostbalken(FUELLUNG_2, r)},
     }
 
 
@@ -848,8 +877,8 @@ def verhalten():
 
 
 NAMEN = [
-    ("entity.fynn:frostmammut.name", "Hrimgar", "Hrimgar"),
-    ("item.spawn_egg.entity.fynn:frostmammut.name", "Hrimgar, das Frostmammut", "Hrimgar the Frost Mammoth"),
+    ("entity.fynn:frostmammut.name", "Frosthauer", "Frosthauer"),
+    ("item.spawn_egg.entity.fynn:frostmammut.name", "Frosthauer, das Frostmammut", "Frosthauer the Frost Mammoth"),
     ("entity.fynn:eiswolf.name", "Eiswolf", "Ice Wolf"),
     ("item.spawn_egg.entity.fynn:eiswolf.name", "Eiswolf", "Ice Wolf"),
     ("item.fynn:frostzahn", "Frostzahn", "Frost Tusk"),
@@ -897,8 +926,8 @@ def main():
         + bk.werte_js("frostmammut_bauen.py", GRUNDLEBEN, 6, 30, BEUTE, ANTEIL).split("\n", 1)[1],
         encoding="utf-8")
     bk.item_bilder(gegenstaende())
-    bk.sprache("Hrimgar, das Frostmammut", NAMEN)
-    print("gebaut: Hrimgar, das Frostmammut")
+    bk.sprache("Frosthauer, das Frostmammut", NAMEN)
+    print("gebaut: Frosthauer, das Frostmammut")
     if "--bilder" in sys.argv:
         vorschau(Path(sys.argv[sys.argv.index("--bilder") + 1]), geo, h1, h2)
 

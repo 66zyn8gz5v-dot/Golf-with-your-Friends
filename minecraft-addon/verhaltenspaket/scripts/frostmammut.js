@@ -1,6 +1,6 @@
-// Hrimgar, das Frostmammut - der dritte Boss. Der Kampf.
+// Frosthauer, das Frostmammut - der dritte Boss. Der Kampf.
 //
-// Roland ficht, Morvan weicht aus, Hrimgar walzt: Es stuermt durch die
+// Roland ficht, Morvan weicht aus, Frosthauer walzt: Es stuermt durch die
 // Reihen, stampft eine Welle in den Boden (wer springt, entgeht ihr), fegt
 // mit den Stosszaehnen, schleudert mit dem Ruessel und laesst Eiszapfen
 // regnen. In Phase zwei zerspringt der Eispanzer; dann speit es Frostatem
@@ -254,15 +254,15 @@ export function moeglich(z, weite, bereit) {
 
 export const kampf = bossKampf({
     typ: TYP,
-    name2: "Hrimgar · Phase 2",
+    name1: "Frosthauer", name2: "Frosthauer · Phase 2",
     angriffe: A, leben: LEBEN, mehrSpieler: MEHR_SPIELER, letzteKraft: LETZTE_KRAFT,
     beute: BEUTE, anteil: ANTEIL,
     pause: { 1: [50, 90], 2: [35, 65] },
     abklingen: ABKLINGEN,
     wechselName: "wechsel", auftrittName: "auftritt", abschiedName: "abschied",
-    titelAuftritt: ["§bHrimgar, das Frostmammut", "§7Es erwacht aus dem Eis"],
-    titelWechsel: ["§bHrimgar sammelt den Frost", "§7Es ist unverwundbar"],
-    titelSieg: "§7Hrimgar sinkt in den Schnee",
+    titelAuftritt: ["§bFrosthauer, das Frostmammut", "§7Es erwacht aus dem Eis"],
+    titelWechsel: ["§bFrosthauer sammelt den Frost", "§7Es ist unverwundbar"],
+    titelSieg: "§7Frosthauer sinkt in den Schnee",
     gefolgeWeg: "fynn:frostwolke",
     schritte: { ansturm, stampfen, stosszahnfeger, eiszapfenregen, ruesselschleuder, frostatem, eiswoelfe },
     waehle(z, ziel, weite) {
@@ -305,7 +305,7 @@ export const kampf = bossKampf({
             frieren(w, 60, 1);
         }
         kampf.rufe(z, WOLF, 2, 4, 3.5);
-        titel(spielerBei(z.boss, 48), "§bDer Eispanzer zerspringt", "§7Hrimgar wird wild");
+        titel(spielerBei(z.boss, 48), "§bDer Eispanzer zerspringt", "§7Frosthauer wird wild");
     },
     auftritt(z, a, t) {
         const dim = z.boss.dimension;
@@ -391,13 +391,13 @@ export function herzDesWinters(spieler) {
     return true;
 }
 
-// Frostruf: das Horn aus dem Eis. Hrimgar kommt.
+// Frostruf: das Horn aus dem Eis. Frosthauer kommt.
 export function frostruf(spieler) {
     const dim = spieler.dimension;
     let schonDa = [];
     try { schonDa = dim.getEntities({ type: TYP, location: spieler.location, maxDistance: 96 }); } catch (e) { /* egal */ }
     if (schonDa.length) {
-        try { spieler.onScreenDisplay?.setActionBar("§7Hrimgar ist schon hier."); } catch (e) { /* egal */ }
+        try { spieler.onScreenDisplay?.setActionBar("§7Frosthauer ist schon hier."); } catch (e) { /* egal */ }
         return false;
     }
     if (ruht(spieler, "frostruf", 100)) return false;
@@ -409,7 +409,7 @@ export function frostruf(spieler) {
     ton(dim, "mob.polarbear.warning", ort, 2, 0.4);
     for (let i = 0; i < 6; i++) system.runTimeout(() => ring(dim, ort, 3 - i * 0.4, 10, "fynn:flocke"), i * 6);
     system.runTimeout(() => {
-        try { dim.spawnEntity(TYP, ort); } catch (e) { console.warn(`Hrimgar, Frostruf: ${e}`); }
+        try { dim.spawnEntity(TYP, ort); } catch (e) { console.warn(`Frosthauer, Frostruf: ${e}`); }
     }, 40);
     return true;
 }
@@ -421,6 +421,6 @@ world.afterEvents.itemUse.subscribe((e) => {
         else if (typ === "fynn:herz_des_winters") herzDesWinters(e.source);
         else if (typ === "fynn:frostruf") frostruf(e.source);
     } catch (fehler) {
-        console.warn(`Hrimgar, Gegenstand: ${fehler}`);
+        console.warn(`Frosthauer, Gegenstand: ${fehler}`);
     }
 });

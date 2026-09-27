@@ -1,4 +1,4 @@
-// Hrimgar, das Frostmammut, durchgespielt - ohne Spiel.
+// Frosthauer, das Frostmammut, durchgespielt - ohne Spiel.
 import { gemerkt, system } from "@minecraft/server";
 const r = await import("./frostmammut.js");
 const { ANGRIFFE } = await import("./frostmammut_daten.js");
@@ -95,6 +95,7 @@ let z = k.zustandVon(boss);
 k.starte(z, "auftritt");
 laufe(z, 1);
 pruefe("Auftritt: Staerke fuer zwei", boss.ereignisse.includes("fynn:staerke_2") && boss.lebenMax === 420);
+pruefe(`der Name steht fest am Boss (sonst "Unbekannt"): ${boss.nameTag}`, boss.nameTag === "Frosthauer");
 laufe(z, ANGRIFFE.auftritt.laenge + 2);
 pruefe("nach dem Auftritt: kampfbereit", boss.ereignisse.includes("fynn:auftritt_fertig") && boss.eig.get("fynn:angriff") === 0);
 
@@ -177,7 +178,7 @@ pruefe("Phase eins leer: es laedt sich auf, unverwundbar, Leiste leer", z.aktion
 const w = ANGRIFFE.wechsel;
 laufe(z, w.laden_von + Math.floor((w.laden_bis - w.laden_von) / 2));
 pruefe("beim Aufladen steigt das Leben", boss.lebenJetzt > 80 && boss.lebenJetzt < 220);
-pruefe("die Leiste der zweiten Phase", boss.nameTag === "Hrimgar · Phase 2");
+pruefe("die Leiste der zweiten Phase", boss.nameTag === "Frosthauer · Phase 2");
 while (z.aktion) laufe(z, 1);
 z.pause = 1e12;
 pruefe("Phase zwei: voll, verwundbar, Panzer weg", z.phase === 2 && boss.lebenJetzt === 280
@@ -221,7 +222,7 @@ s.getComponent = (n) => (n === "minecraft:inventory" ? { container: {
 s.removeEffect = () => { };
 pruefe("Herz des Winters: Extra-Herzen, Widerstand, eines weniger", r.herzDesWinters(s) && s.wirkungen.includes("absorption")
     && s.wirkungen.includes("resistance") && rest?.amount === 1);
-pruefe("Frostruf: ruft Hrimgar", r.frostruf(s) === true);
+pruefe("Frostruf: ruft Frosthauer", r.frostruf(s) === true);
 
 const gut = ergebnisse.every(Boolean);
 console.log("\nAlles wie erwartet:", gut ? "ja" : "NEIN");

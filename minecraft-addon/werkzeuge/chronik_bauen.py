@@ -62,6 +62,7 @@ def buch_bild():
 
 NAMEN = [
     ("item.fynn:bosschronik", "Chronik der Bosse", "Chronicle of Bosses"),
+    ("item.fynn:bosschronik.name", "Chronik der Bosse", "Chronicle of Bosses"),
 ]
 
 

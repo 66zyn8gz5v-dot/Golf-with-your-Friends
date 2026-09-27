@@ -164,9 +164,9 @@ def rahmen():
     return b
 
 
-def rinne(farben, leer=False):
+def rinne(farben, leer=False, r=RINNE):
     """Der Balken, 172 mal 5: fuenf Zeilen Blau, oben hell, unten dunkel."""
-    _, _, w, h = RINNE
+    _, _, w, h = r
     b = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     for y in range(h):
         f = (LEER if leer else farben)[y]
@@ -200,8 +200,16 @@ ENTFESSELT = hat("Phase 2")
 GEBUNDEN = hat_nicht("Phase 2")
 
 
-def fuellung(textur, sichtbar):
-    rx, ry, rw, rh = RINNE
+def masse(l):
+    """Breite, Hoehe und Balken einer Leiste. Fynns Frosthauer-Rahmen ist
+    breiter und hoeher als die Vorlage (Eiskristalle an den Enden, Zaehne
+    und Zapfen ueber und unter der Leiste) - darum darf jede Leiste ihre
+    eigenen Masse mitbringen."""
+    return l.get("masse", (BREITE, HOEHE, RINNE))
+
+
+def fuellung(textur, sichtbar, r=RINNE):
+    rx, ry, rw, rh = r
     return {
         "type": "image",
         "texture": textur,
@@ -220,8 +228,8 @@ def fuellung(textur, sichtbar):
     }
 
 
-def rahmenbild(textur, sichtbar):
-    return {"type": "image", "texture": textur, "size": [BREITE, HOEHE], "layer": 3,
+def rahmenbild(textur, sichtbar, breite=BREITE, hoehe=HOEHE):
+    return {"type": "image", "texture": textur, "size": [breite, hoehe], "layer": 3,
             "bindings": binde_name(sichtbar)}
 
 
@@ -241,6 +249,7 @@ def name(farbe, sichtbar):
 def leiste_panel(l):
     k = l["kennung"]
     t = f"textures/ui/fynn_bossleiste_{k}_"
+    breite, hoehe, r = masse(l)
     return {
         "type": "panel",
         "size": ["100%", "100%"],
@@ -249,19 +258,20 @@ def leiste_panel(l):
             {"name_entfesselt": name(l["namensfarben"][1], ENTFESSELT)},
             {"leiste": {
                 "type": "panel",
-                "size": [BREITE, HOEHE],
-                # Eine Zeile Luft unter dem Namen, wie in Fynns Entwurf.
-                "offset": [0, 11],
+                "size": [breite, hoehe],
+                # Eine Zeile Luft unter dem Namen, wie in Fynns Entwurf; was
+                # ueber die Vorlage hinausragt, ragt nach oben ueber die Zeile.
+                "offset": [0, 11 - l.get("ueber", 0)],
                 "anchor_from": "top_middle",
                 "anchor_to": "top_middle",
                 "controls": [
                     {"leer": {"type": "image", "texture": t + "leer",
-                              "size": [RINNE[2], RINNE[3]], "offset": [RINNE[0], RINNE[1]],
+                              "size": [r[2], r[3]], "offset": [r[0], r[1]],
                               "anchor_from": "top_left", "anchor_to": "top_left", "layer": 1}},
-                    {"voll": fuellung(t + "voll", GEBUNDEN)},
-                    {"voll_entfesselt": fuellung(t + "entfesselt", ENTFESSELT)},
-                    {"rahmen": rahmenbild(t + "rahmen", GEBUNDEN)},
-                    {"rahmen_entfesselt": rahmenbild(t + "rahmen_entfesselt", ENTFESSELT)},
+                    {"voll": fuellung(t + "voll", GEBUNDEN, r)},
+                    {"voll_entfesselt": fuellung(t + "entfesselt", ENTFESSELT, r)},
+                    {"rahmen": rahmenbild(t + "rahmen", GEBUNDEN, breite, hoehe)},
+                    {"rahmen_entfesselt": rahmenbild(t + "rahmen_entfesselt", ENTFESSELT, breite, hoehe)},
                 ],
             }},
         ],
@@ -334,11 +344,11 @@ def mit_medaillon(bild, karte, farben, x0=84):
     return b
 
 
-def mit_schein(bild, farbe):
+def mit_schein(bild, farbe, r=RINNE):
     """Ein Schein von einem Pixel um die ganze Leiste - wie in Fynns Rahmen
     fuer Phase 2 -, aber nicht in den Balken hinein."""
     b = bild.copy()
-    rx, ry, rw, rh = RINNE
+    rx, ry, rw, rh = r
     for y in range(bild.height):
         for x in range(bild.width):
             if bild.getpixel((x, y))[3]:
@@ -381,14 +391,15 @@ def alle_leisten():
     return leisten
 
 
-def zusammen(teile, anteil, phase):
+def zusammen(teile, anteil, phase, m=(BREITE, HOEHE, RINNE)):
     """Die Leiste, wie sie im Spiel aussieht - fuer die Vorschau."""
-    b = Image.new("RGBA", (BREITE, HOEHE), (0, 0, 0, 0))
-    b.paste(teile["leer"], RINNE[:2])
+    w, h, r = m
+    b = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    b.paste(teile["leer"], r[:2])
     voll = teile["voll" if phase == 1 else "entfesselt"]
-    breite = round(RINNE[2] * anteil)
+    breite = round(r[2] * anteil)
     if breite:
-        b.alpha_composite(voll.crop((0, 0, breite, RINNE[3])), RINNE[:2])
+        b.alpha_composite(voll.crop((0, 0, breite, r[3])), r[:2])
     b.alpha_composite(teile["rahmen" if phase == 1 else "rahmen_entfesselt"])
     return b
 
@@ -399,8 +410,9 @@ def vorschau(ziel, l):
     from PIL import ImageDraw
     massstab = 4
     teile = l["teile"]
+    lw, lh, _ = masse(l)
     zustaende = [(1.0, 1, l["titel"][0]), (0.62, 1, l["titel"][0]), (0.31, 2, l["titel"][1])]
-    w, h = BREITE * massstab + 80, len(zustaende) * 110 + 30
+    w, h = lw * massstab + 80, len(zustaende) * (lh * massstab + 42) + 30
     bild = Image.new("RGBA", (w, h), (120, 168, 255, 255))
     for y in range(h):
         t = y / h
@@ -409,8 +421,8 @@ def vorschau(ziel, l):
             bild.putpixel((x, y), f + (255,))
     zeichner = ImageDraw.Draw(bild)
     for i, (anteil, phase, text) in enumerate(zustaende):
-        leiste = zusammen(teile, anteil, phase).resize((BREITE * massstab, HOEHE * massstab), Image.NEAREST)
-        y = 30 + i * 110
+        leiste = zusammen(teile, anteil, phase, masse(l)).resize((lw * massstab, lh * massstab), Image.NEAREST)
+        y = 30 + i * (lh * massstab + 42)
         bild.alpha_composite(leiste, (40, y + 26))
         farbe = tuple(int(c * 255) for c in l["namensfarben"][phase - 1]) + (255,)
         text = text.replace("·", "-")
@@ -420,7 +432,7 @@ def vorschau(ziel, l):
         ImageDraw.Draw(klein).text((0, 0), text, fill=farbe)
         klein = klein.resize((klein.width * 2, klein.height * 2), Image.NEAREST)
         bild.alpha_composite(klein, (int(w / 2 - klein.width / 2), y))
-        zeichner.text((44, y + 26 + HOEHE * massstab + 4), f"{round(anteil * 100)} % - Phase {phase}",
+        zeichner.text((44, y + 26 + lh * massstab + 4), f"{round(anteil * 100)} % - Phase {phase}",
                       fill=(20, 30, 60, 255))
     bild.save(ziel)
     print("gezeichnet:", ziel)

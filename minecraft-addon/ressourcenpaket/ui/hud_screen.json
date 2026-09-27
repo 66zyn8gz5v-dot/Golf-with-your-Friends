@@ -60,7 +60,7 @@
       },
       {
         "binding_type": "view",
-        "source_property_name": "(((#bossName - 'Roland') = #bossName) and ((#bossName - 'Morvan') = #bossName) and ((#bossName - 'Hrimgar') = #bossName))",
+        "source_property_name": "(((#bossName - 'Roland') = #bossName) and ((#bossName - 'Morvan') = #bossName) and ((#bossName - 'Frosthauer') = #bossName))",
         "target_property_name": "#visible"
       }
     ]
@@ -535,8 +535,8 @@
           "type": "label",
           "text": "#bossName",
           "color": [
-            0.9,
-            0.97,
+            0.72,
+            0.93,
             1.0
           ],
           "shadow": true,
@@ -588,12 +588,12 @@
         "leiste": {
           "type": "panel",
           "size": [
-            182,
-            17
+            196,
+            22
           ],
           "offset": [
             0,
-            11
+            9
           ],
           "anchor_from": "top_middle",
           "anchor_to": "top_middle",
@@ -603,12 +603,12 @@
                 "type": "image",
                 "texture": "textures/ui/fynn_bossleiste_frostmammut_leer",
                 "size": [
-                  172,
+                  184,
                   5
                 ],
                 "offset": [
-                  5,
-                  6
+                  6,
+                  8
                 ],
                 "anchor_from": "top_left",
                 "anchor_to": "top_left",
@@ -620,12 +620,12 @@
                 "type": "image",
                 "texture": "textures/ui/fynn_bossleiste_frostmammut_voll",
                 "size": [
-                  172,
+                  184,
                   5
                 ],
                 "offset": [
-                  5,
-                  6
+                  6,
+                  8
                 ],
                 "anchor_from": "top_left",
                 "anchor_to": "top_left",
@@ -657,12 +657,12 @@
                 "type": "image",
                 "texture": "textures/ui/fynn_bossleiste_frostmammut_entfesselt",
                 "size": [
-                  172,
+                  184,
                   5
                 ],
                 "offset": [
-                  5,
-                  6
+                  6,
+                  8
                 ],
                 "anchor_from": "top_left",
                 "anchor_to": "top_left",
@@ -694,8 +694,8 @@
                 "type": "image",
                 "texture": "textures/ui/fynn_bossleiste_frostmammut_rahmen",
                 "size": [
-                  182,
-                  17
+                  196,
+                  22
                 ],
                 "layer": 3,
                 "bindings": [
@@ -717,8 +717,8 @@
                 "type": "image",
                 "texture": "textures/ui/fynn_bossleiste_frostmammut_rahmen_entfesselt",
                 "size": [
-                  182,
-                  17
+                  196,
+                  22
                 ],
                 "layer": 3,
                 "bindings": [
@@ -747,7 +747,7 @@
       },
       {
         "binding_type": "view",
-        "source_property_name": "(not ((#bossName - 'Hrimgar') = #bossName))",
+        "source_property_name": "(not ((#bossName - 'Frosthauer') = #bossName))",
         "target_property_name": "#visible"
       }
     ]

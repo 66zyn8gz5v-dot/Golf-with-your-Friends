@@ -210,7 +210,7 @@ export function moeglich(z, weite, bereit) {
 
 export const kampf = bossKampf({
     typ: TYP,
-    name2: "Morvan · Phase 2",
+    name1: "Morvan", name2: "Morvan · Phase 2",
     angriffe: A, leben: LEBEN, mehrSpieler: MEHR_SPIELER, letzteKraft: LETZTE_KRAFT,
     beute: BEUTE, anteil: ANTEIL,
     pause: { 1: [50, 90], 2: [30, 60] },

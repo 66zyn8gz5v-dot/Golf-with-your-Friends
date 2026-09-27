@@ -261,6 +261,12 @@ export function bossKampf(art) {
             z = { boss, n, phase, aktion: null, pause: system.currentTick + 40, abkling: {},
                 teilnehmer: new Set(), gefolge: [], besiegt: false, faktor: 1, merk: {} };
             kaempfe.set(boss.id, z);
+        // Den Namen fest an den Boss: Ohne Namensschild zeigt Minecraft ueber
+        // der Bossleiste "Unbekannt" (so bei Fynn mit dem Mammut, 4.67) - und
+        // unsere Leiste erkennt ihren Boss am Namen, sie blieb dann aus.
+            try {
+                if (!boss.nameTag) boss.nameTag = phase === 2 ? art.name2 : art.name1;
+            } catch (e) { /* egal */ }
         }
         z.boss = boss;
         z.faktor = faktorVon(z);

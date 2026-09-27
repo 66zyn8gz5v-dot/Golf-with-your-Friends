@@ -636,7 +636,7 @@ def alle_mobs():
             "ruesselschleuder": "Rüsselschleuder", "frostatem": "Frostatem", "eiswoelfe": "Eiswölfe",
             "wechsel": "Phasenwechsel", "abschied": "Abschied",
         },
-        "steckbrief": {"name": "Hrimgar, das Frostmammut", "en": "Hrimgar the Frost Mammoth", "zeilen": [
+        "steckbrief": {"name": "Frosthauer, das Frostmammut", "en": "Frosthauer the Frost Mammoth", "zeilen": [
             ["Rang", "uraltes Mammut aus dem Eis – der dritte Boss"],
             ["Leben", f"je Phase {fm.GRUNDLEBEN // 2} Herzen allein – je Mitspieler die Hälfte mehr"],
             ["Phasen", "ist Phase 1 leer, bricht es in die Knie und sammelt den Frost; dann zerspringt "
@@ -647,7 +647,7 @@ def alle_mobs():
             ["Beute", "Frostzahn, Herz des Winters, Diamanten, Blaueis, Leder; jeder Mitkämpfer seinen Anteil"]]}}))
     mobs.append(mob_daten("eiswolf", "eiswolf.entity.json", "Bosse", {"steckbrief": {
         "name": "Eiswolf", "en": "Ice Wolf", "zeilen": [
-            ["Leben", "8 Herzen"], ["Verhalten", "Hrimgars Gefolge in Phase 2 – beißt und verlangsamt"],
+            ["Leben", "8 Herzen"], ["Verhalten", "Frosthauers Gefolge in Phase 2 – beißt und verlangsamt"],
             ["Dauer", "zerfällt nach 45 Sekunden zu Schnee"]]}}))
     wo = biom_text(biome_aus_spawnregel("fynn:glimmerling"))
     mobs.append(mob_daten("glimmerling", "glimmerling.entity.json", "Weitere", {"steckbrief": {

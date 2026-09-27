@@ -32,7 +32,7 @@ export const BOSSE = [
         beute: "Rabenklinge, Rauchbomben, Smaragde, Gold, Diamanten.",
     },
     {
-        typ: "fynn:frostmammut", name: "Hrimgar, das Frostmammut", farbe: "§b", bild: "textures/items/frostmammut_ei",
+        typ: "fynn:frostmammut", name: "Frosthauer, das Frostmammut", farbe: "§b", bild: "textures/items/frostmammut_ei",
         rang: "Uraltes Mammut aus dem ewigen Eis",
         rufen: "Blase den §fFrostruf§r: ein Bisonhorn, drei Packeis, ein Diamant.",
         angriffe: "Ansturm, Stampfen, Stoßzahnfeger, Eiszapfenregen, Rüsselschleuder. "

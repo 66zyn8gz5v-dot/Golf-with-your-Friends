@@ -17,7 +17,7 @@ pruefe("noch nichts besiegt", k.siegeVon(s, "fynn:roland") === 0);
 k.merkeSiege([s], "fynn:roland");
 k.merkeSiege([s], "fynn:roland");
 k.merkeSiege([s], "fynn:frostmammut");
-pruefe("zwei Siege ueber Roland, einer ueber Hrimgar", k.siegeVon(s, "fynn:roland") === 2 && k.siegeVon(s, "fynn:frostmammut") === 1);
+pruefe("zwei Siege ueber Roland, einer ueber Frosthauer", k.siegeVon(s, "fynn:roland") === 2 && k.siegeVon(s, "fynn:frostmammut") === 1);
 pruefe("ein Spieler ohne Speicher zaehlt nicht, stuerzt aber nicht", k.siegeVon({}, "fynn:roland") === 0);
 
 setzeAntwort(() => ({ canceled: true, cancelationReason: "UserClosed" }));
@@ -30,9 +30,9 @@ pruefe("Knopf Morvan: noch unbesiegt", letztesFenster.knoepfe[1].beschriftung.in
 let schritt = 0;
 setzeAntwort(() => (schritt++ === 0 ? { canceled: false, selection: 2 } : { canceled: true, cancelationReason: "UserClosed" }));
 await c.zeigeChronik(s);
-pruefe("Seite Hrimgar: Rufen, Tipp, Beute", letztesFenster.titel.includes("Hrimgar") && letztesFenster.text.includes("Frostruf")
+pruefe("Seite Frosthauer: Rufen, Tipp, Beute", letztesFenster.titel.includes("Frosthauer") && letztesFenster.text.includes("Frostruf")
     && letztesFenster.text.includes("Spring") && letztesFenster.text.includes("Frostzahn"));
-pruefe("Seite Hrimgar: einmal besiegt", letztesFenster.text.includes("1× besiegt"));
+pruefe("Seite Frosthauer: einmal besiegt", letztesFenster.text.includes("1× besiegt"));
 
 // ---- Geschenk beim ersten Betreten
 const fach = [];
