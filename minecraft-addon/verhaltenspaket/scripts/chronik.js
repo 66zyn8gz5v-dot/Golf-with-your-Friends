@@ -9,6 +9,7 @@
 import { world, system, ItemStack } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
 import { siegeVon } from "./boss_kern.js";
+import { BELOHNUNGEN, BOSS_RUHM, ruhmVon, stufeAus } from "./ruhm.js";
 
 export const BOSSE = [
     {
@@ -62,7 +63,7 @@ export function seitenText(boss, siege) {
         "",
         `§6Tipp§r\n${boss.tipp}`,
         "",
-        `§6Beute§r\n${boss.beute}`,
+        `§6Beute§r\n${boss.beute} Dazu ${BOSS_RUHM[boss.typ]} Ruhm für jeden Mitkämpfer.`,
         "",
         siege > 0 ? `§2Du hast ${boss.name.split(",")[0]} ${siege}× besiegt.` : "§8Du hast diesen Boss noch nicht besiegt.",
     ].join("\n");
@@ -78,12 +79,23 @@ function nochmal(spieler, antwort, weiter, versuch) {
     return false;
 }
 
+// Die Stufe gehoert mit in die Chronik: Die Bosse bringen den meisten Ruhm.
+export function stufenText(spieler) {
+    const s = stufeAus(ruhmVon(spieler));
+    const naechste = BELOHNUNGEN.find((b) => b.ab > s.stufe);
+    return `§6Stufe ${s.stufe}§r`
+        + (s.noetig ? ` §7- ${s.rest}/${s.noetig} Ruhm bis Stufe ${s.stufe + 1}` : " §7- höchste Stufe")
+        + (naechste ? `\n§7Nächste Belohnung auf Stufe ${naechste.ab}: §f${naechste.text}` : "")
+        + "\n§7Ruhm gibt es für jedes besiegte Monster - und viel für einen Boss.";
+}
+
 export async function zeigeChronik(spieler, versuch = 0) {
     const besiegt = BOSSE.filter((b) => siegeVon(spieler, b.typ) > 0).length;
     const form = new ActionFormData()
         .title("Chronik der Bosse")
         .body(`Drei Bosse erwarten dich - keiner kommt von selbst, du musst ihn rufen.\n\n`
-            + `§7Besiegt: ${besiegt} von ${BOSSE.length}`);
+            + `§7Besiegt: ${besiegt} von ${BOSSE.length}\n\n`
+            + stufenText(spieler));
     for (const b of BOSSE) form.button(knopfText(b, siegeVon(spieler, b.typ)), b.bild);
     const antwort = await form.show(spieler);
     if (antwort.canceled) {

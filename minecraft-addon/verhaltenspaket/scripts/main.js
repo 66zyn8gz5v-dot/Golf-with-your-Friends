@@ -24,6 +24,7 @@ import "./roland.js";
 import "./rabenfuerst.js";
 import "./frostmammut.js";
 import "./chronik.js";
+import "./ruhm.js";
 
 const DEGEN = "fynn:degen";
 

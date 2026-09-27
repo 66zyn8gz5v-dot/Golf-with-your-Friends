@@ -47,8 +47,8 @@ pruefe("halbe Kraft nach der Wahl", eigenschaften.get("fynn:kraft") === 50);
 // Die Leiste: zehn Zeichen, fuenf volle blaue Kugeln (Feld 2), der Rest leer.
 const zeile = leiste.at(-1);
 const kugeln = [...zeile.split("§f")[1]].map((z) => z.charCodeAt(0) - 0xe300);
-pruefe(`Leiste "${zeile.split(" ")[0].replace(/§./g, "")}" mit Feldern ${kugeln.join(",")}`,
-       zeile.startsWith("§9Mana") && kugeln.join(",") === "2,2,2,2,2,0,0,0,0,0");
+pruefe(`Leiste "${zeile.split("§f")[0].replace(/§./g, "").trim()}" mit Feldern ${kugeln.join(",")}`,
+       zeile.startsWith("§6Stufe 1 §9Mana") && kugeln.join(",") === "2,2,2,2,2,0,0,0,0,0");
 
 // Nachschub: sechs Runden (30 Ticks), jede zweite gibt dem Magier +2.
 for (let i = 0; i < 6; i++) for (const f of runden(5)) f();
