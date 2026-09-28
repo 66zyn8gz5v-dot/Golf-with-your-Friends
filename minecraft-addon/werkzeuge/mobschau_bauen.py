@@ -334,6 +334,7 @@ VERHALTEN = {"friedlich": "friedlich", "neutral": "wehrt sich", "feindlich": "gr
 # Wie ein Schalter heisst, der eine Abfrage im Modell setzt.
 SCHALTER = {
     "is_saddled": "Sattel", "is_angry": "wütend", "fynn:riese": "Riese", "fynn:taschen": "Rucksäcke",
+    "fynn:tun": "Aufgabe", "fynn:sturm": "Sturmangriff", "fynn:sprung": "Sprung",
 }
 
 

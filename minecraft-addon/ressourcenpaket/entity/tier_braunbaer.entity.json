@@ -22,6 +22,10 @@
         "blick": "animation.common.look_at_target",
         "kopfschuetteln": "animation.fynn.braunbaer.kopfschuetteln",
         "schwanzschlag": "animation.fynn.braunbaer.schwanzschlag",
+        "honig": "animation.fynn.braunbaer.honig",
+        "beeren": "animation.fynn.braunbaer.beeren",
+        "angeln": "animation.fynn.braunbaer.angeln",
+        "warnen": "animation.fynn.braunbaer.warnen",
         "drehen": "animation.fynn.braunbaer.drehen",
         "angriff": "animation.fynn.braunbaer.angriff",
         "jung": "animation.fynn.braunbaer.jung"
@@ -56,6 +60,18 @@
           },
           {
             "schwanzschlag": "math.clamp((math.sin(query.life_time * 31.0 + variable.fynn_zufall + 120) - 0.8) * 7.5, 0.0, 1.0)"
+          },
+          {
+            "honig": "query.property('fynn:tun') == 1"
+          },
+          {
+            "beeren": "query.property('fynn:tun') == 2"
+          },
+          {
+            "angeln": "query.property('fynn:tun') == 3"
+          },
+          {
+            "warnen": "query.property('fynn:tun') == 4"
           },
           {
             "angriff": "variable.attack_time > 0.0"

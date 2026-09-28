@@ -5,7 +5,14 @@
       "identifier": "fynn:wal",
       "spawn_category": "water_creature",
       "is_spawnable": true,
-      "is_summonable": true
+      "is_summonable": true,
+      "properties": {
+        "fynn:sprung": {
+          "type": "bool",
+          "default": false,
+          "client_sync": true
+        }
+      }
     },
     "component_groups": {
       "fynn:erwachsen": {

@@ -85,6 +85,14 @@ TIERE = [
         "laute": {"ambient": "mob.polarbear.idle", "hurt": "mob.polarbear.hurt", "death": "mob.polarbear.death",
                   "step": "mob.polarbear.step", "pitch": [0.7, 0.9]},
         "ei": ("#6b4424", "#c9a26f"), "angriff": "tatze",
+        # Fynn (4.74): "Die Tiere sollen eine richtige Mission haben, nicht
+        # einfach durch die Welt latschen - der Braunbaer sucht Honig oder
+        # holt Lachs. Aggressiv ist er, wenn er Jungtiere hat, sonst nicht,
+        # ausser wenn man ihn anschlaegt." Die Ziele sucht er selbst
+        # (move_to_block), was er dort tut, steuert scripts/tiere.js ueber
+        # fynn:tun (1 Honig, 2 Beeren, 3 Angeln, 4 Warnen).
+        "aufgaben": True,
+        "eigenschaften": {"fynn:tun": {"type": "int", "range": [0, 4], "default": 0, "client_sync": True}},
     },
     {
         "id": "elch", "grast": True, "scharrt": True, "name": ("Elch", "Moose"), "gestalt": "elch",
@@ -202,6 +210,10 @@ TIERE = [
     {
         "id": "wal", "name": ("Buckelwal", "Humpback Whale"), "gestalt": "wal",
         "varianten": [("hell", 60), ("dunkel", 40)], "baby_textur": "kalb",
+        # Fynn (4.75): "Der Buckelwal soll auch aus dem Wasser springen und
+        # dann darauf klatschen koennen." Den Sprung stoesst scripts/tiere.js
+        # an (fynn:sprung), die Bewegung steht in wal_sprung().
+        "eigenschaften": {"fynn:sprung": {"type": "bool", "default": False, "client_sync": True}},
         "art": "wal", "verhalten": "friedlich", "leben": 100, "tempo": 0.06, "wassertempo": 0.06,
         "kollision": (3.0, 2.2), "baby": True, "herde": (1, 2), "luft": 1200,
         "futter": ["minecraft:cod", "minecraft:salmon"],
@@ -391,6 +403,39 @@ def angriffsziele(t):
     return ziele
 
 
+def baerenaufgaben(t, gruppen, ereignisse):
+    """Der Baer geht von selbst zu Bienennestern, Beerenstraeuchern und ans
+    Wasser - aber nur, solange er ruhig ist. Kommt er an, meldet er es dem
+    Skript (fynn:ziel_erreicht), und das laesst ihn Honig holen, Beeren
+    fressen oder nach Lachsen schlagen.
+
+    Die Baerenmutter: Das Skript warnt erst (aufrichten, bruellen); kommt man
+    trotzdem naeher, loest es fynn:baerenmutter aus - dann greift sie jeden
+    Spieler in der Naehe an, zwoelf Sekunden lang."""
+    gruppen["fynn:ruhig"]["minecraft:behavior.move_to_block"] = {
+        "priority": 5, "tick_interval": 300, "start_chance": 0.6, "search_range": 16, "search_height": 4,
+        "goal_radius": 1.6, "stay_duration": 4.0, "speed_multiplier": 0.9,
+        "target_blocks": ["minecraft:bee_nest", "minecraft:beehive", "minecraft:sweet_berry_bush", "minecraft:water"],
+        "on_reach": [{"event": "fynn:ziel_erreicht", "target": "self"}]}
+    gruppen["fynn:aufgabe"] = {"minecraft:timer": {"time": 6.0, "looping": False,
+                                                   "time_down_event": {"event": "fynn:aufgabe_ende", "target": "self"}}}
+    ereignisse["fynn:ziel_erreicht"] = {"add": {"component_groups": ["fynn:aufgabe"]}}
+    ereignisse["fynn:aufgabe_ende"] = {"remove": {"component_groups": ["fynn:aufgabe"]}}
+    mutter = {
+        "minecraft:behavior.nearest_attackable_target": {
+            "priority": 1, "must_see": False, "reselect_targets": True, "within_radius": 16,
+            "entity_types": [{"filters": {"all_of": [SPIELER, KEIN_KREATIV]}, "max_dist": 16}]},
+        "minecraft:timer": {"time": 12.0, "looping": False,
+                            "time_down_event": {"event": "fynn:baerenmutter_ruhig", "target": "self"}},
+    }
+    mutter.update(angriffsbausteine(t))
+    gruppen["fynn:baerenmutter"] = mutter
+    ereignisse["fynn:baerenmutter"] = {"remove": {"component_groups": ["fynn:ruhig"]},
+                                       "add": {"component_groups": ["fynn:baerenmutter"]}}
+    ereignisse["fynn:baerenmutter_ruhig"] = {"remove": {"component_groups": ["fynn:baerenmutter"]},
+                                             "add": {"component_groups": ["fynn:ruhig"]}}
+
+
 def angriffsbausteine(t, prio=2):
     b = {
         "minecraft:attack": {"damage": t["schaden"]},
@@ -537,6 +582,9 @@ def verhalten(t, varianten_namen):
         gruppen["fynn:jagd"] = f
     elif art != "vogel":
         c["minecraft:behavior.panic"] = {"priority": 1, "speed_multiplier": 1.3}
+
+    if t.get("aufgaben"):
+        baerenaufgaben(t, gruppen, ereignisse)
 
     erwachsen_liste = [erwachsen] + (["fynn:ruhig"] if "fynn:ruhig" in gruppen else []) + \
                       (["fynn:jagd"] if t["verhalten"] == "feindlich" else [])
@@ -842,7 +890,60 @@ ZUSATZ_GEWICHT = {
     "sonnen": f"{STEHT} * (1.0 - query.is_in_water) * {puls(9.0, 0, 0.5)}",
     "schrei": puls(21.0, 0, 0.93),
     "salto": "1.0",
+    # Der Braunbaer bei seinen Aufgaben (scripts/tiere.js setzt fynn:tun).
+    "honig": "query.property('fynn:tun') == 1",
+    "beeren": "query.property('fynn:tun') == 2",
+    "angeln": "query.property('fynn:tun') == 3",
+    "warnen": "query.property('fynn:tun') == 4",
+    "sprung": "query.property('fynn:sprung')",
 }
+
+
+def aufrecht(winkel, anheben):
+    """Auf den Hinterbeinen: Der Rumpf kippt nach hinten, die Hinterbeine
+    drehen um denselben Winkel zurueck und bleiben senkrecht, der Koerper
+    wird so weit gehoben, dass die Fuesse am Boden bleiben."""
+    return {"body": {"rotation": [f"-{winkel}", 0.0, 0.0], "position": [0.0, anheben, 0.0]},
+            "leg2": {"rotation": [f"{winkel}", 0.0, 0.0]}, "leg3": {"rotation": [f"{winkel}", 0.0, 0.0]}}
+
+
+def baerenbewegungen(lt):
+    """Was der Baer bei seinen Aufgaben tut (Gewicht: fynn:tun)."""
+    z = {}
+    # Honig: aufgerichtet am Nest, die Tatzen schlagen abwechselnd hinein,
+    # der Kopf reckt sich nach oben.
+    honig = aufrecht(50.0, 3.0)
+    honig.update({
+        "leg0": {"rotation": [f"-95.0 + math.sin({lt} * 400.0) * 35.0", 0.0, 12.0]},
+        "leg1": {"rotation": [f"-95.0 + math.sin({lt} * 400.0 + 180.0) * 35.0", 0.0, -12.0]},
+        "knie0": {"rotation": [f"-25.0 + math.sin({lt} * 400.0) * 20.0", 0.0, 0.0]},
+        "knie1": {"rotation": [f"-25.0 + math.sin({lt} * 400.0 + 180.0) * 20.0", 0.0, 0.0]},
+        "head": {"rotation": [f"25.0 + math.sin({lt} * 300.0) * 6.0", 0.0, 0.0]}})
+    z["honig"] = {"loop": True, "bones": honig}
+    # Beeren: Kopf tief im Strauch, kauen, ab und zu ein Zupfen.
+    z["beeren"] = {"loop": True, "bones": {
+        "head": {"rotation": [f"38.0 + math.sin({lt} * 700.0) * 4.0", f"math.sin({lt} * 150.0) * 10.0", 0.0]},
+        "body": {"rotation": [5.0, 0.0, 0.0]}}}
+    # Angeln: vorgebeugt am Wasser, der Blick geht nach unten; die rechte
+    # Tatze hebt sich langsam und schlaegt dann schnell ins Wasser.
+    schlag = f"math.pow(math.abs(math.sin({lt} * 150.0)), 6.0)"
+    auf = f"math.clamp(math.sin({lt} * 150.0 + 90.0), 0.0, 1.0)"
+    z["angeln"] = {"loop": True, "bones": {
+        "body": {"rotation": [14.0, 0.0, 0.0]},
+        "head": {"rotation": [f"40.0 - {schlag} * 12.0", 0.0, 0.0]},
+        "leg0": {"rotation": [f"-80.0 * {auf} + {schlag} * 30.0", 0.0, 8.0]},
+        "knie0": {"rotation": [f"-50.0 * {auf}", 0.0, 0.0]},
+        "leg2": {"rotation": [-8.0, 0.0, 0.0]}, "leg3": {"rotation": [-8.0, 0.0, 0.0]}}}
+    # Warnen: ganz aufgerichtet, Tatzen weit auseinander, der Kopf schlaegt
+    # beim Bruellen hin und her.
+    warnen = aufrecht(62.0, 4.5)
+    warnen.update({
+        "leg0": {"rotation": [-60.0, 0.0, f"45.0 + math.sin({lt} * 500.0) * 6.0"]},
+        "leg1": {"rotation": [-60.0, 0.0, f"-45.0 - math.sin({lt} * 500.0) * 6.0"]},
+        "knie0": {"rotation": [-35.0, 0.0, 0.0]}, "knie1": {"rotation": [-35.0, 0.0, 0.0]},
+        "head": {"rotation": [f"40.0 + math.sin({lt} * 900.0) * 5.0", f"math.sin({lt} * 450.0) * 14.0", 0.0]}})
+    z["warnen"] = {"loop": True, "bones": warnen}
+    return z
 
 
 def zusatzbewegungen(t, da, kopf, schwanzkette):
@@ -862,6 +963,8 @@ def zusatzbewegungen(t, da, kopf, schwanzkette):
         z["schwanzschlag"] = {"loop": True, "bones": {
             k: {"rotation": [f"-10.0 - {i * 5}", f"math.sin({lt} * 700.0 - {i * 60}) * {30 + 10 * i}", 0.0]}
             for i, k in enumerate(schwanzkette)}}
+    if t.get("aufgaben"):
+        z.update(baerenbewegungen(lt))
     if t.get("grast") and kopf:
         z["grasen"] = {"loop": True, "bones": {
             kopf: {"rotation": [f"48.0 + math.sin({lt} * 400.0) * 3.0", f"math.sin({lt} * 60.0) * 8.0", 0.0]},
@@ -1212,6 +1315,8 @@ def bewegungen(t, modell):
             a["an_land"] = an_land(da, rumpf, kopf)
         if t.get("sturm"):
             a["sturm"] = sturm(da, kopf)
+        if name == "wal":
+            a["sprung"] = wal_sprung()
 
     # --- Angriff: am Zaehler v.attack_time des Spiels
     stoss = "math.sin(variable.attack_time * 180.0)"
@@ -1375,6 +1480,31 @@ def sturm(da, kopf):
     if "kiefer" in da:
         k["kiefer"] = {"rotation": [28.0, 0.0, 0.0]}
     return {"loop": True, "bones": k}
+
+
+def wal_sprung():
+    """Der Sprung des Buckelwals, drei Sekunden: steil aus dem Wasser, oben
+    dreht er sich auf die Seite und breitet die langen Brustflossen aus, dann
+    faellt er rueckwaerts und klatscht mit dem ganzen Koerper aufs Wasser.
+    Die Schwanzflosse schlaegt beim Absprung kraeftig und rollt sich beim
+    Fallen ein."""
+    def kf(werte):
+        return {str(z): v for z, v in werte}
+    return {"animation_length": 3.0, "loop": "hold_on_last_frame", "bones": {
+        "rumpf": {"rotation": kf([(0.0, [-50, 0, 0]), (0.6, [-65, 0, 20]), (1.2, [-30, 0, 80]),
+                                  (1.8, [15, 0, 120]), (2.3, [30, 0, 100]), (3.0, [0, 0, 0])])},
+        "kopf": {"rotation": kf([(0.0, [-10, 0, 0]), (1.2, [5, 0, 0]), (2.3, [15, 0, 0]), (3.0, [0, 0, 0])])},
+        "flosse_links": {"rotation": kf([(0.0, [0, 0, 10]), (1.0, [0, -20, 70]), (2.0, [0, 0, 80]),
+                                         (2.4, [0, 0, 20]), (3.0, [0, 0, 0])])},
+        "flosse_rechts": {"rotation": kf([(0.0, [0, 0, -10]), (1.0, [0, 20, -70]), (2.0, [0, 0, -80]),
+                                          (2.4, [0, 0, -20]), (3.0, [0, 0, 0])])},
+        "schwanz1": {"rotation": kf([(0.0, [25, 0, 0]), (0.3, [-20, 0, 0]), (0.6, [15, 0, 0]),
+                                     (1.8, [-10, 0, 0]), (2.3, [20, 0, 0]), (3.0, [0, 0, 0])])},
+        "schwanz2": {"rotation": kf([(0.0, [30, 0, 0]), (0.3, [-30, 0, 0]), (0.6, [20, 0, 0]),
+                                     (1.8, [-15, 0, 0]), (2.3, [25, 0, 0]), (3.0, [0, 0, 0])])},
+        "fluke": {"rotation": kf([(0.0, [35, 0, 0]), (0.3, [-35, 0, 0]), (0.6, [25, 0, 0]),
+                                  (1.8, [-25, 0, 0]), (2.3, [30, 0, 0]), (3.0, [0, 0, 0])])},
+    }}
 
 
 def animate_liste(t, anims):

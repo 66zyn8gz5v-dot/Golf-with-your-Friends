@@ -5,7 +5,18 @@
       "identifier": "fynn:braunbaer",
       "spawn_category": "creature",
       "is_spawnable": true,
-      "is_summonable": true
+      "is_summonable": true,
+      "properties": {
+        "fynn:tun": {
+          "type": "int",
+          "range": [
+            0,
+            4
+          ],
+          "default": 0,
+          "client_sync": true
+        }
+      }
     },
     "component_groups": {
       "fynn:erwachsen": {
@@ -21,6 +32,28 @@
         "minecraft:on_friendly_anger": {
           "event": "fynn:wuetend",
           "target": "self"
+        },
+        "minecraft:behavior.move_to_block": {
+          "priority": 5,
+          "tick_interval": 300,
+          "start_chance": 0.6,
+          "search_range": 16,
+          "search_height": 4,
+          "goal_radius": 1.6,
+          "stay_duration": 4.0,
+          "speed_multiplier": 0.9,
+          "target_blocks": [
+            "minecraft:bee_nest",
+            "minecraft:beehive",
+            "minecraft:sweet_berry_bush",
+            "minecraft:water"
+          ],
+          "on_reach": [
+            {
+              "event": "fynn:ziel_erreicht",
+              "target": "self"
+            }
+          ]
         }
       },
       "fynn:wuetend": {
@@ -33,6 +66,60 @@
           ],
           "calm_event": {
             "event": "fynn:beruhigt",
+            "target": "self"
+          }
+        },
+        "minecraft:attack": {
+          "damage": 7
+        },
+        "minecraft:behavior.melee_box_attack": {
+          "priority": 2,
+          "speed_multiplier": 1.3,
+          "track_target": true
+        }
+      },
+      "fynn:aufgabe": {
+        "minecraft:timer": {
+          "time": 6.0,
+          "looping": false,
+          "time_down_event": {
+            "event": "fynn:aufgabe_ende",
+            "target": "self"
+          }
+        }
+      },
+      "fynn:baerenmutter": {
+        "minecraft:behavior.nearest_attackable_target": {
+          "priority": 1,
+          "must_see": false,
+          "reselect_targets": true,
+          "within_radius": 16,
+          "entity_types": [
+            {
+              "filters": {
+                "all_of": [
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "player"
+                  },
+                  {
+                    "test": "has_ability",
+                    "subject": "other",
+                    "value": "instabuild",
+                    "operator": "!="
+                  }
+                ]
+              },
+              "max_dist": 16
+            }
+          ]
+        },
+        "minecraft:timer": {
+          "time": 12.0,
+          "looping": false,
+          "time_down_event": {
+            "event": "fynn:baerenmutter_ruhig",
             "target": "self"
           }
         },
@@ -263,6 +350,44 @@
         "remove": {
           "component_groups": [
             "fynn:wuetend"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "fynn:ruhig"
+          ]
+        }
+      },
+      "fynn:ziel_erreicht": {
+        "add": {
+          "component_groups": [
+            "fynn:aufgabe"
+          ]
+        }
+      },
+      "fynn:aufgabe_ende": {
+        "remove": {
+          "component_groups": [
+            "fynn:aufgabe"
+          ]
+        }
+      },
+      "fynn:baerenmutter": {
+        "remove": {
+          "component_groups": [
+            "fynn:ruhig"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "fynn:baerenmutter"
+          ]
+        }
+      },
+      "fynn:baerenmutter_ruhig": {
+        "remove": {
+          "component_groups": [
+            "fynn:baerenmutter"
           ]
         },
         "add": {

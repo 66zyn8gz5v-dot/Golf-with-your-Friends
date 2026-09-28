@@ -324,3 +324,259 @@ system.runInterval(() => {
         console.warn(`Tiere, Hai: ${fehler}`);
     }
 }, 2);
+
+// ------------------------------------------------------------ Braunbaer
+
+// Fynn (4.74): "Die Tiere sollen eine richtige Mission haben - der
+// Braunbaer sucht Honig oder holt Lachs. Aggressiv ist er, wenn er
+// Jungtiere hat, sonst nicht, ausser wenn man ihn anschlaegt."
+//
+// Die Ziele sucht sich der Baer selbst (move_to_block: Bienennest,
+// Beerenstrauch, Wasser). Kommt er an, meldet er fynn:ziel_erreicht, und
+// hier entscheidet sich, was er tut: Am Nest richtet er sich auf und holt
+// den Honig heraus (das Nest ist danach leer), am Strauch frisst er die
+// Beeren, am Wasser schlaegt er nach Lachsen - manchmal fliegt einer ans
+// Ufer. Waehrend er beschaeftigt ist, bleibt er stehen.
+export const AUFGABEN = {
+    honig: { tun: 1, dauer: 80 },
+    beeren: { tun: 2, dauer: 60 },
+    angeln: { tun: 3, dauer: 120 },
+};
+const BAER = "fynn:braunbaer";
+const aufgaben = new Map();         // Baer -> { baer, art, start, bis, block }
+
+function istKreativ(spieler) {
+    try { return String(spieler.getGameMode?.()).toLowerCase() === "creative"; } catch (e) { return false; }
+}
+
+/** Was es um den Baer herum gibt: Nest vor Strauch vor Wasser. */
+export function aufgabeAm(baer) {
+    const o = baer.location;
+    const funde = {};
+    for (let dy = -1; dy <= 2; dy++) {
+        for (let dx = -2; dx <= 2; dx++) {
+            for (let dz = -2; dz <= 2; dz++) {
+                let b;
+                try { b = baer.dimension.getBlock({ x: Math.floor(o.x) + dx, y: Math.floor(o.y) + dy, z: Math.floor(o.z) + dz }); } catch (e) { b = undefined; }
+                const id = b?.typeId;
+                if (id === "minecraft:bee_nest" || id === "minecraft:beehive") funde.honig ??= b;
+                else if (id === "minecraft:sweet_berry_bush") funde.beeren ??= b;
+                else if (id === "minecraft:water") funde.angeln ??= b;
+            }
+        }
+    }
+    for (const art of ["honig", "beeren", "angeln"]) if (funde[art]) return { art, block: funde[art] };
+    return null;
+}
+
+export function beginneAufgabe(baer, jetzt) {
+    if (istJung(baer) || aufgaben.has(baer.id)) return null;
+    const f = aufgabeAm(baer);
+    if (!f) return null;
+    const a = AUFGABEN[f.art];
+    aufgaben.set(baer.id, { baer, art: f.art, start: jetzt, bis: jetzt + a.dauer, block: f.block });
+    try {
+        baer.setProperty("fynn:tun", a.tun);
+        baer.addEffect("slowness", a.dauer + 5, { amplifier: 10, showParticles: false });
+        // Zum Ziel schauen.
+        const l = f.block.location;
+        const gier = Math.atan2(-(l.x + 0.5 - baer.location.x), l.z + 0.5 - baer.location.z) * 180 / Math.PI;
+        baer.setRotation?.({ x: 0, y: gier });
+    } catch (e) { /* egal */ }
+    return f.art;
+}
+
+function zustandSetzen(block, name, wert) {
+    try { block.setPermutation(block.permutation.withState(name, wert)); } catch (e) { /* ohne diesen Zustand */ }
+}
+
+export function aufgabeTakt(baer, jetzt, zufall = Math.random) {
+    const a = aufgaben.get(baer.id);
+    if (!a) return null;
+    const dim = baer.dimension;
+    // Der Takt laeuft alle zehn Ticks - gezaehlt wird in Takten, nicht Ticks.
+    const n = Math.floor((jetzt - a.start) / 10);
+    const l = a.block.location;
+    const ueber = { x: l.x + 0.5, y: l.y + 1, z: l.z + 0.5 };
+    try {
+        if (a.art === "honig" && n % 2 === 0) dim.playSound("mob.bee.aggressive", ueber, { volume: 0.7, pitch: 1 });
+        if (a.art === "angeln" && n % 3 === 1) {
+            dim.spawnParticle("minecraft:water_splash_particle", ueber);
+            dim.playSound("random.splash", ueber, { volume: 0.5, pitch: 1.2 });
+        }
+    } catch (e) { /* egal */ }
+    if (jetzt < a.bis) return a.art;
+
+    aufgaben.delete(baer.id);
+    let ergebnis = a.art;
+    try {
+        baer.setProperty("fynn:tun", 0);
+        baer.removeEffect("slowness");
+        if (a.art === "honig") {
+            zustandSetzen(a.block, "honey_level", 0);
+            dim.spawnParticle("minecraft:villager_happy", { x: baer.location.x, y: baer.location.y + 1.5, z: baer.location.z });
+        }
+        if (a.art === "beeren") zustandSetzen(a.block, "growth", 1);
+        if (a.art === "angeln" && zufall() < 0.5) {
+            ergebnis = "angeln:lachs";
+            dim.spawnParticle("minecraft:water_splash_particle", ueber);
+            // Meist frisst er ihn gleich, manchmal fliegt der Lachs ans Ufer.
+            if (zufall() < 0.3) {
+                dim.spawnItem(new ItemStack("minecraft:salmon", 1), { x: baer.location.x, y: baer.location.y + 1, z: baer.location.z });
+                ergebnis = "angeln:lachs_am_ufer";
+            }
+        }
+        dim.playSound("random.eat", baer.location, { volume: 0.8, pitch: 0.7 });
+    } catch (e) { /* egal */ }
+    return `fertig:${ergebnis}`;
+}
+
+world.afterEvents.dataDrivenEntityTrigger.subscribe((e) => {
+    try {
+        if (e.entity?.typeId !== BAER || e.eventId !== "fynn:ziel_erreicht") return;
+        beginneAufgabe(e.entity, system.currentTick);
+    } catch (fehler) {
+        console.warn(`Tiere, Baer: ${fehler}`);
+    }
+});
+
+// Die Baerenmutter: Sind Junge in der Naehe und kommt ein Spieler naeher als
+// zwoelf Bloecke, richtet sie sich auf und bruellt - eine Warnung. Geht er
+// trotzdem naeher als sieben Bloecke heran, greift sie an.
+const muetter = new Map();          // Baer -> { gewarnt, warnBis, wut }
+
+export function mutterTakt(baer, jetzt, spielerNah, jungesNah) {
+    const m = muetter.get(baer.id) ?? {};
+    muetter.set(baer.id, m);
+    if (m.warnBis && jetzt >= m.warnBis) {
+        m.warnBis = 0;
+        if (!aufgaben.has(baer.id)) try { baer.setProperty("fynn:tun", 0); } catch (e) { /* egal */ }
+    }
+    if (!jungesNah || !spielerNah.length) return "ruhig";
+    if (m.wut && jetzt < m.wut) return "wut";
+    const weite = Math.min(...spielerNah.map((s) => Math.hypot(s.location.x - baer.location.x, s.location.z - baer.location.z)));
+    if (!m.gewarnt || jetzt - m.gewarnt > 200) {
+        m.gewarnt = jetzt;
+        m.warnBis = jetzt + 50;
+        try {
+            baer.setProperty("fynn:tun", 4);
+            baer.dimension.playSound("mob.polarbear.warning", baer.location, { volume: 1.5, pitch: 0.8 });
+        } catch (e) { /* egal */ }
+        return "warnt";
+    }
+    if (weite < 7) {
+        m.wut = jetzt + 240;
+        m.warnBis = 0;
+        try {
+            baer.setProperty("fynn:tun", 0);
+            baer.triggerEvent("fynn:baerenmutter");
+        } catch (e) { /* egal */ }
+        return "greift an";
+    }
+    return "beobachtet";
+}
+
+system.runInterval(() => {
+    try {
+        const jetzt = system.currentTick;
+        const welt = world.getDimension("overworld");
+        for (const baer of welt.getEntities({ type: BAER })) {
+            if (istJung(baer)) continue;
+            try {
+                aufgabeTakt(baer, jetzt);
+                const nah = welt.getEntities({ type: BAER, location: baer.location, maxDistance: 12 });
+                const spieler = welt.getPlayers({ location: baer.location, maxDistance: 12 }).filter((s) => !istKreativ(s));
+                mutterTakt(baer, jetzt, spieler, nah.some(istJung));
+            } catch (fehler) { /* dieser Baer ist gerade weg */ }
+        }
+        for (const [id, a] of aufgaben) {
+            if (!lebt(a.baer)) aufgaben.delete(id);
+        }
+    } catch (fehler) {
+        console.warn(`Tiere, Baeren: ${fehler}`);
+    }
+}, 10);
+
+// ------------------------------------------------------------ Walsprung
+
+// Fynn (4.75): "Der Buckelwal soll aus dem Wasser springen und dann darauf
+// klatschen koennen." Ab und zu - ein erwachsener Wal, dicht unter der
+// Oberflaeche - stoesst er sich ab: ein kraeftiger Schub nach oben und vorn,
+// fynn:sprung spielt die Drehung in der Luft. Faellt er zurueck ins Wasser,
+// klatscht es: eine Wand aus Gischt, ein tiefer Schlag, und wer in der Naehe
+// schwimmt, wird weggespuelt.
+export const WALSPRUNG = { chance: 0.02, pause: 1200, laenge: 60 };
+const spruenge = new Map();         // Wal -> { wal, start, inDerLuft }
+const walPause = new Map();
+
+export function darfSpringen(wal) {
+    if (istJung(wal) || !wal.isInWater) return false;
+    const { x, y, z } = wal.location;
+    try {
+        const ueber = wal.dimension.getBlock({ x, y: y + 3, z });
+        const unten = wal.dimension.getBlock({ x, y: y + 1, z });
+        return !!ueber?.isAir && unten?.typeId === "minecraft:water";
+    } catch (e) {
+        return false;
+    }
+}
+
+export function walTakt(wal, jetzt, zufall = Math.random) {
+    const s = spruenge.get(wal.id);
+    if (!s) {
+        if (jetzt < (walPause.get(wal.id) ?? 0) || zufall() >= WALSPRUNG.chance || !darfSpringen(wal)) return "schwimmt";
+        const blick = wal.getViewDirection?.() ?? { x: 0, z: 1 };
+        const l = Math.hypot(blick.x, blick.z) || 1;
+        spruenge.set(wal.id, { wal, start: jetzt, inDerLuft: false });
+        try {
+            wal.setProperty("fynn:sprung", true);
+            wal.applyImpulse({ x: blick.x / l * 0.45, y: 1.05, z: blick.z / l * 0.45 });
+            wal.dimension.playSound("mob.dolphin.blowhole", wal.location, { volume: 2, pitch: 0.4 });
+        } catch (e) { /* egal */ }
+        return "springt";
+    }
+    if (!wal.isInWater) {
+        s.inDerLuft = true;
+        return "fliegt";
+    }
+    if (!s.inDerLuft && jetzt - s.start < WALSPRUNG.laenge) return "springt";
+    // Zurueck im Wasser (oder der Sprung kam nicht hoch): Platsch.
+    spruenge.delete(wal.id);
+    walPause.set(wal.id, jetzt + WALSPRUNG.pause + Math.floor(zufall() * 600));
+    try { wal.setProperty("fynn:sprung", false); } catch (e) { /* egal */ }
+    if (!s.inDerLuft) return "abgebrochen";
+    klatschen(wal);
+    return "klatscht";
+}
+
+function klatschen(wal) {
+    const dim = wal.dimension;
+    const o = wal.location;
+    try {
+        for (let i = 0; i < 16; i++) {
+            const w = (i / 16) * Math.PI * 2;
+            dim.spawnParticle("minecraft:water_splash_particle", { x: o.x + Math.cos(w) * 3, y: o.y + 1.5, z: o.z + Math.sin(w) * 3 });
+            dim.spawnParticle("fynn:walfontaene", { x: o.x + Math.cos(w) * 2, y: o.y + 0.8, z: o.z + Math.sin(w) * 2 });
+        }
+        dim.playSound("random.explode", o, { volume: 1.2, pitch: 0.4 });
+        dim.playSound("random.splash", o, { volume: 2, pitch: 0.5 });
+        for (const w of dim.getEntities({ location: o, maxDistance: 7, excludeTypes: ["fynn:wal", "minecraft:item"] })) {
+            const d = { x: w.location.x - o.x, z: w.location.z - o.z };
+            const l = Math.hypot(d.x, d.z) || 1;
+            try { w.applyKnockback({ x: d.x / l * 1.2, z: d.z / l * 1.2 }, 0.5); } catch (e) { /* Boote u. a. */ }
+        }
+    } catch (e) { /* egal */ }
+}
+
+system.runInterval(() => {
+    try {
+        const jetzt = system.currentTick;
+        for (const wal of world.getDimension("overworld").getEntities({ type: "fynn:wal" })) {
+            // Die Springenden jeden Takt, die anderen nur ab und zu wuerfeln.
+            if (!spruenge.has(wal.id) && jetzt % 20 !== 0) continue;
+            try { walTakt(wal, jetzt); } catch (fehler) { /* dieser Wal ist gerade weg */ }
+        }
+    } catch (fehler) {
+        console.warn(`Tiere, Walsprung: ${fehler}`);
+    }
+}, 2);

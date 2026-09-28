@@ -144,6 +144,69 @@ const h3 = hai(beute);
 h3.id = "hai3"; h3.isInWater = false;
 pruefe("an Land: kein Anlauf", t.haiTakt(h3, 100) === "an_land");
 
+// --- Braunbaer: Aufgaben und die Baerenmutter
+function baerBei(bloecke, id = "baer1") {
+    const b = { id, location: { x: 0.5, y: 64, z: 0.5 }, isValid: true, eig: {}, wirkungen: [], toene: [], gegenstaende: [],
+        setProperty(k, v) { this.eig[k] = v; }, addEffect(n) { this.wirkungen.push(n); }, removeEffect() { },
+        setRotation(r) { this.blick = r.y; }, triggerEvent(n) { this.ereignis = n; },
+        getComponent: () => undefined };
+    b.dimension = {
+        getBlock: ({ x, y, z }) => {
+            const typ = bloecke[`${x},${y},${z}`];
+            return typ ? { typeId: typ, location: { x, y, z }, permutation: { withState: (n, w) => ({ n, w }) },
+                setPermutation(p) { b.gesetzt = p; } } : { typeId: "minecraft:air", location: { x, y, z } };
+        },
+        playSound: (n) => b.toene.push(n), spawnParticle() { },
+        spawnItem: (i) => b.gegenstaende.push(i.typeId),
+    };
+    return b;
+}
+const imWald = baerBei({ "1,65,0": "minecraft:bee_nest", "-1,64,1": "minecraft:sweet_berry_bush", "0,63,2": "minecraft:water" });
+pruefe("am Bienennest: Honig geht vor Beeren und Wasser", t.aufgabeAm(imWald).art === "honig");
+pruefe("Aufgabe beginnt: aufgerichtet (fynn:tun 1), steht still", t.beginneAufgabe(imWald, 1000) === "honig"
+    && imWald.eig["fynn:tun"] === 1 && imWald.wirkungen.includes("slowness"));
+pruefe("waehrenddessen summen die Bienen", t.aufgabeTakt(imWald, 1040) === "honig" && imWald.toene.includes("mob.bee.aggressive"));
+pruefe("fertig: Nest leer, gefressen", t.aufgabeTakt(imWald, 1085) === "fertig:honig" && imWald.gesetzt?.n === "honey_level"
+    && imWald.eig["fynn:tun"] === 0 && imWald.toene.includes("random.eat"));
+const amFluss = baerBei({ "1,63,1": "minecraft:water" }, "baer2");
+pruefe("am Wasser: angeln (fynn:tun 3)", t.beginneAufgabe(amFluss, 2000) === "angeln" && amFluss.eig["fynn:tun"] === 3);
+pruefe("ein Lachs fliegt ans Ufer", t.aufgabeTakt(amFluss, 2125, () => 0.1) === "fertig:angeln:lachs_am_ufer"
+    && amFluss.gegenstaende.includes("minecraft:salmon"));
+pruefe("nichts in der Naehe: keine Aufgabe", t.beginneAufgabe(baerBei({}, "baer3"), 100) === null);
+
+const mama = baerBei({}, "mama");
+const wanderer = { location: { x: 10, y: 64, z: 0.5 } };
+pruefe("ohne Junge: ruhig, auch wenn jemand kommt", t.mutterTakt(mama, 100, [wanderer], false) === "ruhig");
+pruefe("mit Jungen, Spieler in 10 Bloecken: sie warnt (aufgerichtet, bruellt)", t.mutterTakt(mama, 100, [wanderer], true) === "warnt"
+    && mama.eig["fynn:tun"] === 4 && mama.toene.includes("mob.polarbear.warning"));
+pruefe("er bleibt auf Abstand: sie beobachtet nur", t.mutterTakt(mama, 120, [wanderer], true) === "beobachtet" && !mama.ereignis);
+wanderer.location = { x: 5, y: 64, z: 0.5 };
+pruefe("er kommt naeher als sieben Bloecke: Angriff", t.mutterTakt(mama, 140, [wanderer], true) === "greift an"
+    && mama.ereignis === "fynn:baerenmutter");
+
+// --- Walsprung
+const platsch = [];
+function springwal() {
+    return { id: "wal1", location: { x: 0, y: 58, z: 0 }, isInWater: true, isValid: true, eig: {}, schub: null,
+        getComponent: () => undefined, getViewDirection: () => ({ x: 0, y: 0, z: 1 }),
+        setProperty(k, v) { this.eig[k] = v; }, applyImpulse(i) { this.schub = i; },
+        dimension: { getBlock: ({ y }) => (y >= 60 ? { isAir: true, typeId: "minecraft:air" } : { isAir: false, typeId: "minecraft:water" }),
+            playSound: (n) => platsch.push(n), spawnParticle() { }, getEntities: () => [] } };
+}
+const w1 = springwal();
+pruefe("dicht unter der Oberflaeche, Glueck: er springt", t.walTakt(w1, 100, () => 0.001) === "springt"
+    && w1.eig["fynn:sprung"] === true && w1.schub.y > 1);
+w1.isInWater = false;
+pruefe("in der Luft", t.walTakt(w1, 110) === "fliegt");
+w1.isInWater = true;
+pruefe("zurueck im Wasser: es klatscht", t.walTakt(w1, 150) === "klatscht" && platsch.includes("random.splash")
+    && w1.eig["fynn:sprung"] === false);
+pruefe("danach eine lange Pause", t.walTakt(w1, 200, () => 0.001) === "schwimmt");
+const tief = springwal();
+tief.id = "wal2";
+tief.dimension.getBlock = () => ({ isAir: false, typeId: "minecraft:water" });
+pruefe("tief unten: kein Sprung", t.walTakt(tief, 100, () => 0.001) === "schwimmt");
+
 const gut = ergebnisse.every(Boolean);
 console.log("\nAlles wie erwartet:", gut ? "ja" : "NEIN");
 if (!gut) process.exit(1);
