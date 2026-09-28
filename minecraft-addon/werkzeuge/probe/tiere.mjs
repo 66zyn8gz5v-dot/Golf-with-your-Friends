@@ -185,22 +185,29 @@ pruefe("er kommt naeher als sieben Bloecke: Angriff", t.mutterTakt(mama, 140, [w
     && mama.ereignis === "fynn:baerenmutter");
 
 // --- Walsprung
-const platsch = [];
+const platsch = [], gischt = [];
 function springwal() {
     return { id: "wal1", location: { x: 0, y: 58, z: 0 }, isInWater: true, isValid: true, eig: {}, schub: null,
         getComponent: () => undefined, getViewDirection: () => ({ x: 0, y: 0, z: 1 }),
         setProperty(k, v) { this.eig[k] = v; }, applyImpulse(i) { this.schub = i; },
         dimension: { getBlock: ({ y }) => (y >= 60 ? { isAir: true, typeId: "minecraft:air" } : { isAir: false, typeId: "minecraft:water" }),
-            playSound: (n) => platsch.push(n), spawnParticle() { }, getEntities: () => [] } };
+            playSound: (n) => platsch.push(n), spawnParticle: (n, o) => gischt.push([n, o]), getEntities: () => [] } };
 }
 const w1 = springwal();
 pruefe("dicht unter der Oberflaeche, Glueck: er springt", t.walTakt(w1, 100, () => 0.001) === "springt"
     && w1.eig["fynn:sprung"] === true && w1.schub.y > 1);
 w1.isInWater = false;
+pruefe("beim Absprung spritzt es an der Oberflaeche",
+    gischt.some(([n, o]) => n === "fynn:walgischt" && o.y === 60.1) && gischt.some(([n]) => n === "fynn:walschaum"));
+gischt.length = 0;
 pruefe("in der Luft", t.walTakt(w1, 110) === "fliegt");
 w1.isInWater = true;
 pruefe("zurueck im Wasser: es klatscht", t.walTakt(w1, 150) === "klatscht" && platsch.includes("random.splash")
     && w1.eig["fynn:sprung"] === false);
+pruefe("beim Aufschlagen Gischt entlang des Koerpers",
+    gischt.filter(([n]) => n === "fynn:walgischt").length === 5 && gischt.filter(([n]) => n === "fynn:walschaum").length === 3
+    && new Set(gischt.filter(([n]) => n === "fynn:walgischt").map(([, o]) => o.z)).size === 5);
+pruefe("ohne Wasser darueber: knapp ueber dem Wal", t.oberflaeche({}, { x: 0, y: 10, z: 0 }) === 11);
 pruefe("danach eine lange Pause", t.walTakt(w1, 200, () => 0.001) === "schwimmt");
 const tief = springwal();
 tief.id = "wal2";

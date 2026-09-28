@@ -513,6 +513,8 @@ def mob_daten(kennung, entitaet_datei, gruppe, info):
                                   if s not in info.get("ohne_schalter", [])], ensure_ascii=False),
         "knoepfe:" + json.dumps(sonder, ensure_ascii=False),
     ]
+    if info.get("gischt"):
+        teile.append("gischt:" + json.dumps(info["gischt"], separators=(",", ":")))
     return "{" + ",\n".join(teile) + "}"
 
 
@@ -529,6 +531,15 @@ TIER_EXTRA = {
         "bahn": {"sprung": {"rumpf": {"position": {
             "0.0": [0, -12, 0], "0.5": [0, 24, -6], "1.2": [0, 44, -14], "1.8": [0, 34, -20],
             "2.3": [0, -4, -24], "2.7": [0, -14, -24], "3.0": [0, 0, 0]}}}},
+        # Fynn: "Da muss so eine Wasser-Platsch-Animation, dass da ein bisschen
+        # Wasser hochspritzt." Zwei Stoesse Gischt: beim Durchbrechen der
+        # Oberflaeche ein schmaler, beim Aufklatschen ein breiter entlang des
+        # ganzen Koerpers - dazu je ein Schaumring, der auseinanderlaeuft.
+        # Orte in Modellpixeln [x, z], die Oberflaeche liegt knapp ueber dem
+        # Ruecken des ruhenden Wals.
+        "gischt": {"anim": "sprung", "oberflaeche": 21, "stoesse": [
+            {"t": 0.05, "o": [0, -22], "lang": 22, "breit": 14, "zahl": 90, "kraft": 1.0},
+            {"t": 2.2, "o": [0, -30], "lang": 76, "breit": 24, "zahl": 240, "kraft": 1.3}]},
     },
 }
 

@@ -1485,9 +1485,11 @@ def sturm(da, kopf):
 # Wie der Wal sich beim Sprung dreht: (Zeit, aufgerichtet, um die Laengsachse
 # gerollt), in Grad. Er schiesst fast senkrecht hoch, rollt dabei auf den
 # Ruecken, kippt vornueber und schlaegt so mit dem Ruecken aufs Wasser -
-# wie ein echter Buckelwal. Unter Wasser rollt er sich zurueck.
+# wie ein echter Buckelwal. Unter Wasser rollt er sich denselben Weg zurueck:
+# Endete er bei 360 Grad, drehte er sich beim Ausblenden noch einmal ein
+# Stueck, weil Minecraft von 360 nach 0 zurueckrechnet.
 WALSPRUNG_LAGE = [(0.0, 50, 0), (0.6, 72, 50), (1.2, 78, 150), (1.8, 40, 185),
-                  (2.3, -6, 180), (2.7, 0, 280), (3.0, 0, 360)]
+                  (2.3, -6, 180), (2.7, 0, 70), (3.0, 0, 0)]
 
 
 def _mal(a, b):
@@ -1559,6 +1561,56 @@ def wal_sprung():
         "fluke": {"rotation": kf([(0.0, [35, 0, 0]), (0.3, [-35, 0, 0]), (0.6, [25, 0, 0]),
                                   (1.8, [-25, 0, 0]), (2.3, [30, 0, 0]), (3.0, [0, 0, 0])])},
     }}
+
+
+def _partikel(kennung, teile):
+    return {"format_version": "1.10.0", "particle_effect": {
+        "description": {"identifier": kennung, "basic_render_parameters": {
+            "material": "particles_alpha", "texture": "textures/particle/walfontaene"}},
+        "components": teile}}
+
+
+def wal_partikel():
+    """Die Gischt beim Walsprung (Fynn: "dass da so ein bisschen Wasser
+    hochspritzt"). Zwei Teile: eine Krone aus Tropfen, von denen die meisten
+    niedrig bleiben und nur wenige hoch fliegen - und ein flacher Schaumring,
+    der auf dem Wasser auseinanderlaeuft. Tropfen, die zurueck ins Wasser
+    fallen, verschwinden dort, statt durch die Oberflaeche zu sinken."""
+    uv = {"texture_width": 8, "texture_height": 8, "uv": [0, 0], "uv_size": [8, 8]}
+    schreibe(RES / "particles" / "walgischt.particle.json", _partikel("fynn:walgischt", {
+        "minecraft:emitter_rate_instant": {"num_particles": 90},
+        "minecraft:emitter_lifetime_once": {"active_time": 0.1},
+        "minecraft:emitter_shape_disc": {
+            "radius": 1.6, "plane_normal": "y",
+            "direction": ["(variable.particle_random_1 - 0.5) * 1.4", 1.0,
+                          "(variable.particle_random_2 - 0.5) * 1.4"]},
+        "minecraft:particle_lifetime_expression": {"max_lifetime": "0.9 + variable.particle_random_3 * 1.1"},
+        # Quadriert: viele niedrige Spritzer, wenige hohe.
+        "minecraft:particle_initial_speed": "4.0 + variable.particle_random_3 * variable.particle_random_3 * 9.0",
+        "minecraft:particle_motion_dynamic": {"linear_acceleration": [0, -16, 0], "linear_drag_coefficient": 0.4},
+        "minecraft:particle_expire_if_in_blocks": ["minecraft:water", "minecraft:flowing_water"],
+        "minecraft:particle_appearance_billboard": {
+            "size": ["0.1 + variable.particle_random_4 * 0.14", "0.1 + variable.particle_random_4 * 0.14"],
+            "facing_camera_mode": "rotate_xyz", "uv": uv},
+        "minecraft:particle_appearance_tinting": {"color": [
+            "0.78 + variable.particle_random_2 * 0.22", "0.9 + variable.particle_random_2 * 0.1", 1,
+            "math.min(1, 3 * (1 - variable.particle_age / variable.particle_lifetime))"]},
+    }))
+    schreibe(RES / "particles" / "walschaum.particle.json", _partikel("fynn:walschaum", {
+        "minecraft:emitter_rate_instant": {"num_particles": 70},
+        "minecraft:emitter_lifetime_once": {"active_time": 0.1},
+        "minecraft:emitter_shape_disc": {"radius": 1.2, "plane_normal": "y", "surface_only": True,
+                                         "direction": "outwards"},
+        "minecraft:particle_lifetime_expression": {"max_lifetime": "1.4 + variable.particle_random_1 * 0.5"},
+        "minecraft:particle_initial_speed": "3.0 + variable.particle_random_2 * 1.5",
+        "minecraft:particle_motion_dynamic": {"linear_drag_coefficient": 1.3},
+        # Flach auf dem Wasser, nicht zur Kamera gedreht - ein Ring aus Schaum.
+        "minecraft:particle_appearance_billboard": {
+            "size": ["0.22 + variable.particle_random_3 * 0.12", "0.22 + variable.particle_random_3 * 0.12"],
+            "facing_camera_mode": "emitter_transform_xz", "uv": uv},
+        "minecraft:particle_appearance_tinting": {"color": [
+            1, 1, 1, "0.85 * (1 - variable.particle_age / variable.particle_lifetime)"]},
+    }))
 
 
 def animate_liste(t, anims):
@@ -1770,6 +1822,7 @@ def main():
         baue(t, bilder)
     laute()
     sprache()
+    wal_partikel()
     print(f"gebaut: {len(TIERE)} Tiere, "
           f"{sum(1 for t in TIERE if t['art'] in ('land', 'amphib'))} an Land, "
           f"{sum(1 for t in TIERE if t['art'] in ('fisch', 'wal'))} im Wasser, "

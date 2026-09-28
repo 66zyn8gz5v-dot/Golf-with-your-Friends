@@ -532,6 +532,12 @@ export function walTakt(wal, jetzt, zufall = Math.random) {
             wal.setProperty("fynn:sprung", true);
             wal.applyImpulse({ x: blick.x / l * 0.45, y: 1.05, z: blick.z / l * 0.45 });
             wal.dimension.playSound("mob.dolphin.blowhole", wal.location, { volume: 2, pitch: 0.4 });
+            // Wo er die Oberflaeche durchbricht, spritzt es schon beim Absprung.
+            const o = wal.location, y = oberflaeche(wal.dimension, o);
+            const vorn = { x: o.x + blick.x / l * 1.5, y, z: o.z + blick.z / l * 1.5 };
+            wal.dimension.spawnParticle("fynn:walgischt", vorn);
+            wal.dimension.spawnParticle("fynn:walschaum", vorn);
+            wal.dimension.playSound("random.splash", vorn, { volume: 1.5, pitch: 0.7 });
         } catch (e) { /* egal */ }
         return "springt";
     }
@@ -549,14 +555,37 @@ export function walTakt(wal, jetzt, zufall = Math.random) {
     return "klatscht";
 }
 
+/** Die Hoehe, auf der das Wasser ueber dem Wal endet - dort beginnt die
+ *  Gischt. Ohne Wasser darueber (oder ohne Welt, in der Probe) knapp ueber ihm. */
+export function oberflaeche(dim, o) {
+    try {
+        for (let dy = 0; dy < 8; dy++) {
+            const b = dim.getBlock?.({ x: o.x, y: o.y + dy, z: o.z });
+            if (!b) break;
+            if (!b.typeId.includes("water")) return Math.floor(o.y + dy) + 0.1;
+        }
+    } catch (e) { /* ausserhalb der geladenen Welt */ }
+    return o.y + 1;
+}
+
 function klatschen(wal) {
     const dim = wal.dimension;
     const o = wal.location;
     try {
+        // Er schlaegt der Laenge nach auf: Gischt entlang des ganzen Koerpers,
+        // eine Krone an jedem Stueck, und in der Mitte der groesste Schaumring.
+        const blick = wal.getViewDirection?.() ?? { x: 0, z: 1 };
+        const l = Math.hypot(blick.x, blick.z) || 1;
+        const y = oberflaeche(dim, o);
+        for (const s of [-3, -1.5, 0, 1.5, 3]) {
+            const p = { x: o.x + blick.x / l * s, y, z: o.z + blick.z / l * s };
+            dim.spawnParticle("fynn:walgischt", p);
+            if (s % 3 === 0) dim.spawnParticle("fynn:walschaum", p);
+        }
         for (let i = 0; i < 16; i++) {
             const w = (i / 16) * Math.PI * 2;
-            dim.spawnParticle("minecraft:water_splash_particle", { x: o.x + Math.cos(w) * 3, y: o.y + 1.5, z: o.z + Math.sin(w) * 3 });
-            dim.spawnParticle("fynn:walfontaene", { x: o.x + Math.cos(w) * 2, y: o.y + 0.8, z: o.z + Math.sin(w) * 2 });
+            dim.spawnParticle("minecraft:water_splash_particle", { x: o.x + Math.cos(w) * 3, y: y + 0.4, z: o.z + Math.sin(w) * 3 });
+            if (i % 2 === 0) dim.spawnParticle("fynn:walfontaene", { x: o.x + Math.cos(w) * 2, y, z: o.z + Math.sin(w) * 2 });
         }
         dim.playSound("random.explode", o, { volume: 1.2, pitch: 0.4 });
         dim.playSound("random.splash", o, { volume: 2, pitch: 0.5 });
