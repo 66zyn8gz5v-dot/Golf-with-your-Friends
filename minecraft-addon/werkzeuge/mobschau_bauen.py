@@ -454,10 +454,20 @@ def mob_daten(kennung, entitaet_datei, gruppe, info):
     sonder = info.get("sonder", {})
     for kurz, voll in d.get("animations", {}).items():
         if voll in ALLE_ANIMATIONEN:
-            js = animation_js(ALLE_ANIMATIONEN[voll])
+            anim = ALLE_ANIMATIONEN[voll]
+            if kurz in info.get("bahn", {}):
+                # Was im Spiel die Physik tut (der Wal fliegt aus dem Wasser),
+                # macht in der Schau eine Bahn am Wurzelknochen.
+                anim = json.loads(json.dumps(anim))
+                for knochen, kanaele in info["bahn"][kurz].items():
+                    anim["bones"].setdefault(knochen, {}).update(kanaele)
+            js = animation_js(anim)
             # Eine ganze Pose (Rolands Angriffe): Solange sie spielt, ruht
             # alles andere, und ihre Zeit beginnt beim Druck auf den Knopf.
             animationen[kurz] = js[:-1] + ",voll:1}" if kurz in sonder else js
+            if kurz in info.get("bahn", {}):
+                # Die Kamera tritt zurueck, solange die Bahn fliegt.
+                animationen[kurz] = animationen[kurz][:-1] + ",weit:1}"
             if kurz in info.get("bleibend", []):
                 animationen[kurz] = animationen[kurz][:-1] + ",bleibt:1}"
     for kurz, (anim, _) in extra_anim.items():
@@ -474,7 +484,10 @@ def mob_daten(kennung, entitaet_datei, gruppe, info):
     for kurz, (_, bedingung) in extra_anim.items():
         ablauf.append("[" + json.dumps(kurz) + "," + fn(js_ausdruck(bedingung)) + "]")
     for kurz in sonder:
-        if kurz in animationen:
+        # Steht die Bewegung schon im Ablauf (der Sprung des Wals haengt im
+        # Spiel an einer Eigenschaft), zaehlte sie beim Druck auf den Knopf
+        # doppelt - der Wal ueberschlug sich mit doppelten Winkeln.
+        if kurz in animationen and not any(e.startswith("[" + json.dumps(kurz) + ",") for e in ablauf):
             ablauf.append("[" + json.dumps(kurz) + "," + fn("0") + "]")
 
     alles = " ".join([json.dumps(skripte), json.dumps(steuer.get("part_visibility", []))])
@@ -504,6 +517,21 @@ def mob_daten(kennung, entitaet_datei, gruppe, info):
 
 
 # ------------------------------------------------------------ Steckbriefe
+
+# Fynn (4.75): "Der Wal soll auch in der Pixelschmiede den Sprung mit
+# Animation machen." Im Spiel stoesst das Skript ihn aus dem Wasser; hier
+# spielt ein Knopf den ganzen Sprung ab - mit der Flugbahn, die sonst die
+# Physik macht: hoch aus dem Wasser, ein Stueck nach vorn, zurueck ins Meer.
+TIER_EXTRA = {
+    "wal": {
+        "sonder": {"sprung": "Sprung"},
+        "ohne_schalter": ["fynn:sprung"],
+        "bahn": {"sprung": {"rumpf": {"position": {
+            "0.0": [0, -12, 0], "0.5": [0, 24, -6], "1.2": [0, 44, -14], "1.8": [0, 34, -20],
+            "2.3": [0, -4, -24], "2.7": [0, -14, -24], "3.0": [0, 0, 0]}}}},
+    },
+}
+
 
 def zahl(wert):
     """Deutsch geschrieben: 3,5 statt 3.5."""
@@ -558,8 +586,9 @@ GRUPPE = {"land": "An Land", "amphib": "Am Wasser", "wal": "Im Wasser", "fisch":
 def alle_mobs():
     mobs = []
     for t in tiere_bauen.TIERE:
-        mobs.append(mob_daten(t["id"], f"tier_{t['id']}.entity.json", GRUPPE.get(t["art"], "An Land"),
-                              {"varianten": t["varianten"], "steckbrief": steckbrief_tier(t)}))
+        info = {"varianten": t["varianten"], "steckbrief": steckbrief_tier(t)}
+        info.update(TIER_EXTRA.get(t["id"], {}))
+        mobs.append(mob_daten(t["id"], f"tier_{t['id']}.entity.json", GRUPPE.get(t["art"], "An Land"), info))
     for b in banditen_bauen.BANDITEN:
         mobs.append(mob_daten(b["id"], f"bandit_{b['id']}.entity.json", "Banditen",
                               {"steckbrief": steckbrief_bandit(b), "gross": b.get("gross", 1.0)}))

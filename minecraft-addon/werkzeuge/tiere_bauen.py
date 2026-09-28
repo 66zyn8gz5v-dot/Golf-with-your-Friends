@@ -1482,17 +1482,71 @@ def sturm(da, kopf):
     return {"loop": True, "bones": k}
 
 
+# Wie der Wal sich beim Sprung dreht: (Zeit, aufgerichtet, um die Laengsachse
+# gerollt), in Grad. Er schiesst fast senkrecht hoch, rollt dabei auf den
+# Ruecken, kippt vornueber und schlaegt so mit dem Ruecken aufs Wasser -
+# wie ein echter Buckelwal. Unter Wasser rollt er sich zurueck.
+WALSPRUNG_LAGE = [(0.0, 50, 0), (0.6, 72, 50), (1.2, 78, 150), (1.8, 40, 185),
+                  (2.3, -6, 180), (2.7, 0, 280), (3.0, 0, 360)]
+
+
+def _mal(a, b):
+    return [[sum(a[i][k] * b[k][j] for k in range(3)) for j in range(3)] for i in range(3)]
+
+
+def walsprung_drehung(zeit):
+    """Die Drehung des Rumpfes als Bedrock-Winkel.
+
+    Bedrock dreht einen Knochen erst um X, dann um Y, dann um Z - jeweils um
+    die Achsen des Elternteils. Ein Rollen als Z-Wert kippte den aufrecht
+    stehenden Wal darum seitlich um, statt ihn um sich selbst zu drehen
+    (4.74 purzelte er so durch die Luft). Hier wird zuerst um die eigene
+    Laengsachse gerollt und dann aufgerichtet, und daraus die drei Winkel
+    zurueckgerechnet."""
+    import math
+    lage = WALSPRUNG_LAGE
+    for (t0, a0, r0), (t1, a1, r1) in zip(lage, lage[1:]):
+        if t0 <= zeit <= t1:
+            f = (zeit - t0) / (t1 - t0)
+            f = f * f * (3 - 2 * f)
+            auf, roll = a0 + (a1 - a0) * f, r0 + (r1 - r0) * f
+            break
+    a, r = math.radians(auf), math.radians(roll)
+    ca, sa, cr, sr = math.cos(a), math.sin(a), math.cos(r), math.sin(r)
+    m = _mal([[1, 0, 0], [0, ca, -sa], [0, sa, ca]], [[cr, -sr, 0], [sr, cr, 0], [0, 0, 1]])
+    # m = Rz(A) * Ry(B) * Rx(C); Bedrock zaehlt X und Z andersherum.
+    b = math.asin(max(-1.0, min(1.0, -m[2][0])))
+    c = math.atan2(m[2][1], m[2][2])
+    z = math.atan2(m[1][0], m[0][0])
+    return [-math.degrees(c), math.degrees(b), -math.degrees(z)]
+
+
+def walsprung_rumpf():
+    """Alle zehntel Sekunden ein Schluessel - zwischen zweien rechnet Bedrock
+    die Winkel einzeln, und nur so dicht bleibt das die richtige Drehung.
+    Sprunge um eine ganze Umdrehung werden ausgeglichen, sonst wirbelte er
+    zwischen zwei Schluesseln einmal um sich selbst."""
+    schluessel, vorher = {}, None
+    for i in range(31):
+        zeit = i / 10
+        w = walsprung_drehung(zeit)
+        if vorher:
+            w = [x + 360 * round((v - x) / 360) for x, v in zip(w, vorher)]
+        schluessel[f"{zeit:g}"] = [round(x, 1) for x in w]
+        vorher = w
+    return schluessel
+
+
 def wal_sprung():
     """Der Sprung des Buckelwals, drei Sekunden: steil aus dem Wasser, oben
-    dreht er sich auf die Seite und breitet die langen Brustflossen aus, dann
-    faellt er rueckwaerts und klatscht mit dem ganzen Koerper aufs Wasser.
+    rollt er auf den Ruecken und breitet die langen Brustflossen aus, dann
+    kippt er vornueber und klatscht mit dem Ruecken aufs Wasser.
     Die Schwanzflosse schlaegt beim Absprung kraeftig und rollt sich beim
     Fallen ein."""
     def kf(werte):
         return {str(z): v for z, v in werte}
     return {"animation_length": 3.0, "loop": "hold_on_last_frame", "bones": {
-        "rumpf": {"rotation": kf([(0.0, [-50, 0, 0]), (0.6, [-65, 0, 20]), (1.2, [-30, 0, 80]),
-                                  (1.8, [15, 0, 120]), (2.3, [30, 0, 100]), (3.0, [0, 0, 0])])},
+        "rumpf": {"rotation": walsprung_rumpf()},
         "kopf": {"rotation": kf([(0.0, [-10, 0, 0]), (1.2, [5, 0, 0]), (2.3, [15, 0, 0]), (3.0, [0, 0, 0])])},
         "flosse_links": {"rotation": kf([(0.0, [0, 0, 10]), (1.0, [0, -20, 70]), (2.0, [0, 0, 80]),
                                          (2.4, [0, 0, 20]), (3.0, [0, 0, 0])])},
