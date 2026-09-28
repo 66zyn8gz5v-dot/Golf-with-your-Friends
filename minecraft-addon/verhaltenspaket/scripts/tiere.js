@@ -242,3 +242,85 @@ system.runInterval(() => {
         console.warn(`Tiere, Wal: ${fehler}`);
     }
 }, 60);
+
+// ------------------------------------------------------------ Hai
+
+// Fynn (4.73): "Die Angriffsanimation: Der soll auf einen zuschwimmen und
+// dann auch ein bisschen beschleunigen." Hat ein Hai im Wasser ein Ziel in
+// 4 bis 14 Bloecken, nimmt er Anlauf: knapp eine Sekunde lang schiebt ihn
+// jeder Schub etwas staerker auf das Ziel zu, er zieht eine Blasenspur, und
+// fynn:sturm spielt die gestreckte Sturm-Bewegung mit offenem Maul. Den Biss
+// selbst macht sein gewoehnlicher Nahkampf. Danach braucht er ein paar
+// Sekunden, bevor er wieder anlaeuft.
+export const STURM = { von: 4, bis: 14, dauer: 16, pause: 100 };
+const stuerme = new Map();          // Hai -> { start, ziel }
+const sturmPause = new Map();       // Hai -> Tick, ab dem er wieder darf
+
+function lebt(wesen) {
+    try {
+        return typeof wesen?.isValid === "function" ? wesen.isValid() : !!wesen?.isValid;
+    } catch (e) {
+        return false;
+    }
+}
+
+function sturmEnde(hai, jetzt) {
+    stuerme.delete(hai.id);
+    sturmPause.set(hai.id, jetzt + STURM.pause + Math.floor(Math.random() * 60));
+    try { hai.setProperty("fynn:sturm", false); } catch (e) { /* weg */ }
+}
+
+/** Ein Takt fuer einen Hai; sagt, was er gerade tut (fuer die Probe). */
+export function haiTakt(hai, jetzt) {
+    const lauf = stuerme.get(hai.id);
+    if (lauf) {
+        const n = jetzt - lauf.start;
+        const z = lauf.ziel;
+        if (n > STURM.dauer || !hai.isInWater || !lebt(z)) {
+            sturmEnde(hai, jetzt);
+            return "ende";
+        }
+        const d = { x: z.location.x - hai.location.x, y: z.location.y + 0.6 - hai.location.y, z: z.location.z - hai.location.z };
+        const l = Math.hypot(d.x, d.y, d.z);
+        if (l < 1.8) {
+            sturmEnde(hai, jetzt);
+            return "ende";
+        }
+        // Immer kraeftiger - er beschleunigt, bis er fast da ist.
+        const schub = 0.04 + n * 0.012;
+        const v = hai.getVelocity?.() ?? { x: 0, y: 0, z: 0 };
+        if (Math.hypot(v.x, v.y, v.z) < 1.1) {
+            hai.applyImpulse({ x: d.x / l * schub, y: d.y / l * schub * 0.6, z: d.z / l * schub });
+        }
+        try {
+            hai.dimension.spawnParticle("minecraft:basic_bubble_particle",
+                { x: hai.location.x, y: hai.location.y + 0.5, z: hai.location.z });
+        } catch (e) { /* egal */ }
+        return "sturm";
+    }
+    if (jetzt < (sturmPause.get(hai.id) ?? 0)) return "pause";
+    if (!hai.isInWater) return "an_land";
+    let ziel;
+    try { ziel = hai.target; } catch (e) { ziel = undefined; }
+    if (!lebt(ziel)) return "ruhig";
+    const weite = Math.hypot(ziel.location.x - hai.location.x, ziel.location.y - hai.location.y,
+        ziel.location.z - hai.location.z);
+    if (weite < STURM.von || weite > STURM.bis) return "wartet";
+    stuerme.set(hai.id, { start: jetzt, ziel });
+    try {
+        hai.setProperty("fynn:sturm", true);
+        hai.dimension.playSound("mob.guardian.attack_loop", hai.location, { volume: 0.8, pitch: 1.4 });
+    } catch (e) { /* egal */ }
+    return "los";
+}
+
+system.runInterval(() => {
+    try {
+        const jetzt = system.currentTick;
+        for (const hai of world.getDimension("overworld").getEntities({ type: "fynn:hai" })) {
+            try { haiTakt(hai, jetzt); } catch (fehler) { /* dieser Hai ist gerade weg */ }
+        }
+    } catch (fehler) {
+        console.warn(`Tiere, Hai: ${fehler}`);
+    }
+}, 2);

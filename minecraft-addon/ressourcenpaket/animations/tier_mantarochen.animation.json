@@ -79,14 +79,35 @@
       "bones": {
         "rumpf": {
           "rotation": [
-            0.0,
-            "math.sin(query.life_time * 700.0) * 15.0",
-            "90.0 + math.sin(query.life_time * 900.0) * 8.0"
+            "math.sin((query.life_time + variable.fynn_zufall * 0.01) * 260.0) * 6.0 * (0.35 + 0.65 * math.pow(math.abs(math.sin((query.life_time + variable.fynn_zufall * 0.01) * 55.0)), 0.6))",
+            "math.sin((query.life_time + variable.fynn_zufall * 0.01) * 520.0) * 12.0 * (0.35 + 0.65 * math.pow(math.abs(math.sin((query.life_time + variable.fynn_zufall * 0.01) * 55.0)), 0.6))",
+            "90.0 + math.sin((query.life_time + variable.fynn_zufall * 0.01) * 780.0) * 7.0 * (0.35 + 0.65 * math.pow(math.abs(math.sin((query.life_time + variable.fynn_zufall * 0.01) * 55.0)), 0.6))"
           ],
           "position": [
             0.0,
-            -3.0,
+            "-3.0 + math.abs(math.sin((query.life_time + variable.fynn_zufall * 0.01) * 520.0)) * 1.6 * (0.35 + 0.65 * math.pow(math.abs(math.sin((query.life_time + variable.fynn_zufall * 0.01) * 55.0)), 0.6))",
             0.0
+          ]
+        },
+        "schwanz1": {
+          "rotation": [
+            0.0,
+            "math.sin((query.life_time + variable.fynn_zufall * 0.01) * 520.0 - 40.0) * 20.0 * (0.35 + 0.65 * math.pow(math.abs(math.sin((query.life_time + variable.fynn_zufall * 0.01) * 55.0)), 0.6))",
+            0.0
+          ]
+        },
+        "flosse_links": {
+          "rotation": [
+            "math.sin((query.life_time + variable.fynn_zufall * 0.01) * 640.0) * 10.0",
+            0.0,
+            "math.sin((query.life_time + variable.fynn_zufall * 0.01) * 900.0) * 22.0"
+          ]
+        },
+        "flosse_rechts": {
+          "rotation": [
+            "math.sin((query.life_time + variable.fynn_zufall * 0.01) * 640.0) * 10.0",
+            0.0,
+            "math.sin((query.life_time + variable.fynn_zufall * 0.01) * 900.0) * -22.0"
           ]
         }
       }

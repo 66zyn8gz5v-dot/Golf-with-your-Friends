@@ -213,7 +213,16 @@ TIERE = [
     },
     {
         "id": "hai", "name": ("Hai", "Shark"), "gestalt": "hai",
-        "varianten": [("weisser_hai", 50), ("tigerhai", 30), ("hammerhai", 20)],
+        "varianten": [("weisser_hai", 30), ("tigerhai", 40), ("hammerhai", 30)],
+        # Fynn (4.73): "Es soll den weissen Hai geben, der ist deutlich
+        # groesser." Er waechst im Verhaltenspaket (mit Trefferkasten), hat
+        # mehr Leben und beisst haerter.
+        "variante_zusatz": {0: {"minecraft:scale": {"value": 1.6}, "minecraft:health": {"value": 60, "max": 60},
+                                "minecraft:attack": {"damage": 11}}},
+        # Der Sturmangriff (scripts/tiere.js): Er nimmt Anlauf auf sein Ziel
+        # und wird dabei schneller; das Skript setzt fynn:sturm.
+        "eigenschaften": {"fynn:sturm": {"type": "bool", "default": False, "client_sync": True}},
+        "sturm": True,
         "art": "fisch", "verhalten": "feindlich", "reichweite": 12, "blut": 24,
         "leben": 34, "schaden": 7, "tempo": 0.12, "wassertempo": 0.16,
         "kollision": (1.2, 0.8), "baby": False, "herde": (1, 2),
@@ -581,6 +590,7 @@ def verhalten(t, varianten_namen):
     # --- Varianten
     for i, _ in enumerate(varianten_namen):
         gruppen[f"fynn:variante_{i}"] = {"minecraft:variant": {"value": i}}
+        gruppen[f"fynn:variante_{i}"].update(t.get("variante_zusatz", {}).get(i, {}))
 
     zufall = [{"weight": w, "add": {"component_groups": [f"fynn:variante_{i}"]}}
               for i, (_, w) in enumerate(t["varianten"]) if w > 0]
@@ -618,6 +628,8 @@ def verhalten(t, varianten_namen):
         # danach die Taschen an den Flanken (verhaltenspaket/scripts/rucksack.js).
         beschreibung["properties"] = {"fynn:taschen": {"type": "int", "range": [0, 2], "default": 0,
                                                        "client_sync": True}}
+    if t.get("eigenschaften"):
+        beschreibung.setdefault("properties", {}).update(t["eigenschaften"])
     return {
         "format_version": "1.26.30",
         "minecraft:entity": {
@@ -1197,11 +1209,9 @@ def bewegungen(t, modell):
             a["salto"] = {"loop": True, "bones": {"rumpf": {"rotation": [
                 f"{zeit} < 2.5 ? math.pow(math.sin({zeit} / 2.5 * 90.0), 2.0) * 360.0 : 0.0", 0.0, 0.0]}}}
         if art == "fisch" and name != "riesenkalmar":
-            # An Land liegt der Fisch auf der Seite und zappelt.
-            a["an_land"] = {"loop": True, "bones": {rumpf: {
-                "rotation": [0.0, "math.sin(query.life_time * 700.0) * 15.0",
-                             "90.0 + math.sin(query.life_time * 900.0) * 8.0"],
-                "position": [0.0, -3.0, 0.0]}}}
+            a["an_land"] = an_land(da, rumpf, kopf)
+        if t.get("sturm"):
+            a["sturm"] = sturm(da, kopf)
 
     # --- Angriff: am Zaehler v.attack_time des Spiels
     stoss = "math.sin(variable.attack_time * 180.0)"
@@ -1314,6 +1324,59 @@ DREHUNG = [
 ]
 
 
+def an_land(da, rumpf, kopf):
+    """An Land liegt der Fisch auf der Seite und zappelt.
+
+    Fynn (4.73): "Der Haifisch braucht an Land eine bessere Animation des
+    Zappelns. Da sollen die ganzen Gelenke sich bewegen - dann sieht es
+    dynamischer aus, als wenn er wie ein Brett zappelt." Frueher drehte sich
+    nur der Rumpf. Jetzt biegt sich der ganze Fisch zu einem C und wieder
+    zurueck: Kopf und Schwanz schlagen gegeneinander, jedes Schwanzglied
+    etwas spaeter als das vorige (eine Welle), der Koerper hebt bei jedem
+    Schlag kurz ab, der Kiefer schnappt nach Luft, die Brustflossen flattern.
+    Die Schlaege kommen in Schueben - ein paar heftige, dann eine kurze
+    Pause, wie bei einem echten Fisch, der Kraft sammelt."""
+    t = "(query.life_time + variable.fynn_zufall * 0.01)"
+    schlag = f"math.sin({t} * 520.0)"
+    # Schub: laut und leise im Wechsel, nie ganz still.
+    schub = f"(0.35 + 0.65 * math.pow(math.abs(math.sin({t} * 55.0)), 0.6))"
+    knochen = {rumpf: {
+        "rotation": [f"math.sin({t} * 260.0) * 6.0 * {schub}", f"{schlag} * 12.0 * {schub}",
+                     f"90.0 + math.sin({t} * 780.0) * 7.0 * {schub}"],
+        # Bei jedem Schlag hebt er kurz ab.
+        "position": [0.0, f"-3.0 + math.abs({schlag}) * 1.6 * {schub}", 0.0]}}
+    if kopf:
+        knochen[kopf] = {"rotation": [0.0, f"-{schlag} * 16.0 * {schub}", 0.0]}
+    kette = [k for k in ("schwanz1", "schwanz2", "schwanz3", "schwanzflosse") if k in da]
+    for i, k in enumerate(kette):
+        knochen[k] = {"rotation": [0.0, f"math.sin({t} * 520.0 - {40 + 35 * i}.0) * {20 + 6 * i}.0 * {schub}", 0.0]}
+    if "kiefer" in da:
+        knochen["kiefer"] = {"rotation": [f"math.pow(math.abs(math.sin({t} * 160.0)), 3.0) * 26.0", 0.0, 0.0]}
+    for seite, zeichen in (("flosse_links", 1), ("flosse_rechts", -1)):
+        if seite in da:
+            knochen[seite] = {"rotation": [f"math.sin({t} * 640.0) * 10.0", 0.0,
+                                           f"math.sin({t} * 900.0) * {22 * zeichen}.0"]}
+    return {"loop": True, "bones": knochen}
+
+
+def sturm(da, kopf):
+    """Der Hai nimmt Anlauf (Fynn: "auf einen zuschwimmen und dann auch ein
+    bisschen beschleunigen"): gestreckt, die Brustflossen angelegt, der
+    Schwanz schlaegt doppelt so schnell und weit, das Maul geht auf."""
+    k = {}
+    kette = [x for x in ("schwanz1", "schwanz2", "schwanzflosse") if x in da]
+    for i, x in enumerate(kette):
+        k[x] = {"rotation": [0.0, f"math.sin(query.life_time * 1100.0 - {40 * i}.0) * {14 + 8 * i}.0", 0.0]}
+    for seite, zeichen in (("flosse_links", 1), ("flosse_rechts", -1)):
+        if seite in da:
+            k[seite] = {"rotation": [0.0, f"{-25 * zeichen}.0", f"{-15 * zeichen}.0"]}
+    if kopf:
+        k[kopf] = {"rotation": [-6.0, 0.0, 0.0]}
+    if "kiefer" in da:
+        k["kiefer"] = {"rotation": [28.0, 0.0, 0.0]}
+    return {"loop": True, "bones": k}
+
+
 def animate_liste(t, anims):
     liste = []
     wasser = t["art"] in ("fisch", "wal")
@@ -1333,6 +1396,8 @@ def animate_liste(t, anims):
         liste.append({"schwimmen": "query.is_in_water" if "an_land" in anims else "1.0"})
         if "an_land" in anims:
             liste.append({"an_land": "!query.is_in_water"})
+    if "sturm" in anims:
+        liste.append({"sturm": "query.property('fynn:sturm')"})
     for name, gewicht in ZUSATZ_GEWICHT.items():
         if name in anims:
             liste.append({name: gewicht})

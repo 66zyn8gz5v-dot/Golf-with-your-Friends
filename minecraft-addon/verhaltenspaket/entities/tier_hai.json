@@ -5,7 +5,14 @@
       "identifier": "fynn:hai",
       "spawn_category": "water_creature",
       "is_spawnable": true,
-      "is_summonable": true
+      "is_summonable": true,
+      "properties": {
+        "fynn:sturm": {
+          "type": "bool",
+          "default": false,
+          "client_sync": true
+        }
+      }
     },
     "component_groups": {
       "fynn:erwachsen": {
@@ -123,6 +130,16 @@
       "fynn:variante_0": {
         "minecraft:variant": {
           "value": 0
+        },
+        "minecraft:scale": {
+          "value": 1.6
+        },
+        "minecraft:health": {
+          "value": 60,
+          "max": 60
+        },
+        "minecraft:attack": {
+          "damage": 11
         }
       },
       "fynn:variante_1": {
@@ -231,7 +248,7 @@
           {
             "randomize": [
               {
-                "weight": 50,
+                "weight": 30,
                 "add": {
                   "component_groups": [
                     "fynn:variante_0"
@@ -239,7 +256,7 @@
                 }
               },
               {
-                "weight": 30,
+                "weight": 40,
                 "add": {
                   "component_groups": [
                     "fynn:variante_1"
@@ -247,7 +264,7 @@
                 }
               },
               {
-                "weight": 20,
+                "weight": 30,
                 "add": {
                   "component_groups": [
                     "fynn:variante_2"

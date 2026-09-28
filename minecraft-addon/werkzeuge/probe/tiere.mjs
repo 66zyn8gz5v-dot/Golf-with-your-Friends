@@ -120,6 +120,30 @@ function wal(obenLuft, untenWasser) {
 pruefe("Wal an der Oberflaeche: Fontaene", t.blaestAus(wal(true, true)) && teilchen.includes("fynn:walfontaene"));
 pruefe("Wal tief unten: keine", !t.blaestAus(wal(false, true)));
 
+// --- Hai: Anlauf mit Beschleunigung
+function hai(ziel) {
+    const h = { id: "hai1", location: { x: 0, y: 50, z: 0 }, isInWater: true, isValid: true, target: ziel,
+        eig: {}, schuebe: [], dimension: { spawnParticle() { }, playSound() { } },
+        setProperty(k, v) { this.eig[k] = v; }, getVelocity: () => ({ x: 0, y: 0, z: 0 }),
+        applyImpulse(i) { this.schuebe.push(Math.hypot(i.x, i.y, i.z)); } };
+    return h;
+}
+const beute = { location: { x: 10, y: 50, z: 0 }, isValid: true };
+const h1 = hai(beute);
+pruefe("Ziel in 10 Bloecken: Anlauf", t.haiTakt(h1, 100) === "los" && h1.eig["fynn:sturm"] === true);
+for (let i = 1; i <= 6; i++) t.haiTakt(h1, 100 + i);
+pruefe(`er wird schneller (${h1.schuebe.map((x) => x.toFixed(3)).join(" < ")})`,
+    h1.schuebe.length === 6 && h1.schuebe.every((x, i) => i === 0 || x > h1.schuebe[i - 1]));
+beute.location = { x: 1, y: 50, z: 0 };
+pruefe("angekommen: Sturm vorbei, Maul zu", t.haiTakt(h1, 107) === "ende" && h1.eig["fynn:sturm"] === false);
+pruefe("gleich danach: Pause", t.haiTakt(h1, 110) === "pause");
+const h2 = hai({ location: { x: 2, y: 50, z: 0 }, isValid: true });
+h2.id = "hai2";
+pruefe("Ziel zu nah: kein Anlauf, er beisst einfach", t.haiTakt(h2, 100) === "wartet");
+const h3 = hai(beute);
+h3.id = "hai3"; h3.isInWater = false;
+pruefe("an Land: kein Anlauf", t.haiTakt(h3, 100) === "an_land");
+
 const gut = ergebnisse.every(Boolean);
 console.log("\nAlles wie erwartet:", gut ? "ja" : "NEIN");
 if (!gut) process.exit(1);
