@@ -85,6 +85,7 @@ TIERE = [
         "laute": {"ambient": "mob.polarbear.idle", "hurt": "mob.polarbear.hurt", "death": "mob.polarbear.death",
                   "step": "mob.polarbear.step", "pitch": [0.7, 0.9]},
         "ei": ("#6b4424", "#c9a26f"), "angriff": "tatze",
+        "verteidigt": ["loewe", "tiger"],
         # Fynn (4.74): "Die Tiere sollen eine richtige Mission haben, nicht
         # einfach durch die Welt latschen - der Braunbaer sucht Honig oder
         # holt Lachs. Aggressiv ist er, wenn er Jungtiere hat, sonst nicht,
@@ -114,6 +115,8 @@ TIERE = [
         "laute": {"ambient": "mob.cow.say", "hurt": "mob.cow.hurt", "death": "mob.cow.hurt",
                   "step": "mob.cow.step", "pitch": [0.45, 0.6]},
         "ei": ("#3e2a1a", "#d8c8a0"), "angriff": "stoss",
+        # Elche fliehen vor dem Baeren und dem Krokodil am Ufer.
+        "flieht": ["braunbaer", "krokodil"],
         "zeigen": {"geweih": "query.variant == 0 && !query.is_baby"},
     },
     {
@@ -128,6 +131,7 @@ TIERE = [
         "laute": {"ambient": "mob.hoglin.ambient", "hurt": "mob.hoglin.hurt", "death": "mob.hoglin.death",
                   "step": "mob.hoglin.step", "pitch": [1.0, 1.2]},
         "ei": ("#4a3c30", "#a88478"), "angriff": "stoss",
+        "flieht": ["loewe", "tiger", "krokodil", "braunbaer"],
     },
     {
         "id": "bison", "grast": True, "scharrt": True, "name": ("Bison", "Bison"), "gestalt": "bison",
@@ -146,6 +150,9 @@ TIERE = [
         "laute": {"ambient": "mob.cow.say", "hurt": "mob.cow.hurt", "death": "mob.cow.hurt",
                   "step": "mob.cow.step", "pitch": [0.35, 0.5]},
         "ei": ("#3a2618", "#7a5636"), "angriff": "stoss",
+        # Kommt ein Loewe der Herde zu nahe, stellen sich die Bisons ihm
+        # entgegen - die ganze Herde, und die Kaelber laufen weg.
+        "verteidigt": ["loewe"], "jung_flieht": ["loewe", "braunbaer"],
     },
     {
         "id": "loewe", "name": ("Löwe", "Lion"), "gestalt": "loewe",
@@ -154,7 +161,12 @@ TIERE = [
         "leben": 32, "schaden": 7, "tempo": 0.3,
         "kollision": (1.1, 1.3), "baby": True, "herde": (2, 4),
         "futter": ["minecraft:beef", "minecraft:mutton", "minecraft:porkchop"],
-        "jagt": ["minecraft:cow", "minecraft:sheep", "minecraft:pig", "minecraft:horse", "minecraft:donkey"],
+        "jagt": ["minecraft:cow", "minecraft:sheep", "minecraft:pig", "minecraft:horse", "minecraft:donkey",
+                 "fynn:wildschwein"],
+        # Erwachsene Bisons und Nashoerner sind zu stark - nur ihre Jungen.
+        "jagt_jung": ["bison", "nashorn", "elefant"],
+        # Vor einer Elefantenherde weicht jedes Rudel zurueck.
+        "flieht": ["elefant"],
         "biome": [["savanna"]], "gewicht": 6,
         "boden": ["minecraft:grass_block", "minecraft:coarse_dirt"],
         "beute": [("fynn:loewenfell", 1, 1, 0.35, False), ("fynn:loewenzahn", 1, 1, 0.15, False)],
@@ -169,7 +181,8 @@ TIERE = [
         "art": "land", "verhalten": "feindlich", "reichweite": 10, "leben": 32, "schaden": 8, "tempo": 0.3,
         "kollision": (1.1, 1.2), "baby": True, "herde": (1, 1),
         "futter": ["minecraft:beef", "minecraft:porkchop", "minecraft:chicken"],
-        "jagt": ["minecraft:pig", "minecraft:chicken", "minecraft:ocelot", "minecraft:panda"],
+        "jagt": ["minecraft:pig", "minecraft:chicken", "minecraft:ocelot", "minecraft:panda", "fynn:wildschwein"],
+        "jagt_jung": ["gorilla", "elefant"], "flieht": ["elefant"],
         "biome": [["jungle"]], "gewicht": 5,
         "boden": ["minecraft:grass_block", "minecraft:podzol", "minecraft:moss_block"],
         "beute": [("fynn:tigerfell", 1, 1, 0.35, False), ("fynn:tigerkralle", 1, 1, 0.12, False)],
@@ -183,7 +196,10 @@ TIERE = [
         "art": "amphib", "verhalten": "feindlich", "reichweite": 7, "leben": 30, "schaden": 8, "tempo": 0.17,
         "wassertempo": 0.09, "kollision": (1.2, 0.6), "baby": True, "herde": (1, 2),
         "futter": ["minecraft:cod", "minecraft:salmon", "minecraft:chicken"],
-        "jagt": ["minecraft:chicken", "minecraft:pig", "minecraft:cod", "minecraft:salmon", "minecraft:frog"],
+        "jagt": ["minecraft:chicken", "minecraft:pig", "minecraft:cod", "minecraft:salmon", "minecraft:frog",
+                 "fynn:wildschwein"],
+        # Am Ufer packt es, was zum Trinken kommt.
+        "jagt_jung": ["elch"],
         "biome": [["swamp"], ["mangrove_swamp"]], "gewicht": 6,
         "boden": ["minecraft:grass_block", "minecraft:mud", "minecraft:mangrove_roots", "minecraft:muddy_mangrove_roots"],
         "beute": [("fynn:krokodilfleisch", 1, 2, 1.0, True), ("fynn:krokodilleder", 1, 1, 0.5, False),
@@ -199,6 +215,7 @@ TIERE = [
         "kollision": (0.9, 1.0), "baby": True, "herde": (1, 1),
         "futter": ["minecraft:mutton", "minecraft:rabbit"],
         "jagt": ["minecraft:goat", "minecraft:rabbit", "minecraft:sheep"],
+        "flieht": ["braunbaer"],
         "biome": [["frozen_peaks"], ["jagged_peaks"], ["snowy_slopes"], ["grove"]], "gewicht": 6,
         "boden": ["minecraft:snow", "minecraft:snow_layer", "minecraft:stone", "minecraft:packed_ice",
                   "minecraft:grass_block", "minecraft:powder_snow"],
@@ -214,6 +231,10 @@ TIERE = [
         # dann darauf klatschen koennen." Den Sprung stoesst scripts/tiere.js
         # an (fynn:sprung), die Bewegung steht in wal_sprung().
         "eigenschaften": {"fynn:sprung": {"type": "bool", "default": False, "client_sync": True}},
+        # Fynn: "Der Wal jagt ja diesen Riesenkalmar." Spielern tut er nichts,
+        # aber einen Kalmar in der Tiefe greift er an - rammt ihn mit dem
+        # Kopf, und der Kalmar wehrt sich (scripts/begegnungen.js).
+        "jagt": ["fynn:riesenkalmar"], "schaden": 9, "angriff": "ramme",
         "art": "wal", "verhalten": "friedlich", "leben": 100, "tempo": 0.06, "wassertempo": 0.06,
         "kollision": (3.0, 2.2), "baby": True, "herde": (1, 2), "luft": 1200,
         "futter": ["minecraft:cod", "minecraft:salmon"],
@@ -253,6 +274,8 @@ TIERE = [
         "art": "fisch", "verhalten": "feindlich", "reichweite": 10, "leben": 50, "schaden": 6,
         "tempo": 0.1, "wassertempo": 0.1, "kollision": (1.6, 1.0), "baby": False, "herde": (1, 1),
         "jagt": ["minecraft:squid", "minecraft:cod", "minecraft:salmon"],
+        # Gegen den Wal wehrt er sich - umschlingt ihn (scripts/begegnungen.js).
+        "verteidigt": ["wal"],
         "biome": [["ocean", "deep"]], "gewicht": 3, "wasser": True, "tief": 40,
         "beute": [("fynn:kalmarfleisch", 2, 3, 1.0, True), ("minecraft:ink_sac", 1, 3, 1.0, False),
                   ("fynn:kalmarauge", 1, 1, 0.1, False)],
@@ -284,6 +307,8 @@ TIERE = [
         "laute": {"ambient": "mob.ravager.roar", "hurt": "mob.ravager.hurt", "death": "mob.ravager.death",
                   "step": "mob.ravager.step", "pitch": [1.2, 1.4]},
         "ei": ("#8a8078", "#ece4cc"), "angriff": "stoss",
+        # Elefanten dulden keine Grosskatzen bei der Herde - sie vertreiben sie.
+        "verteidigt": ["loewe", "tiger"],
         "zeigen": {"stosszaehne": "!query.is_baby"},
         # Fynn: "Es gibt eine geringe Wahrscheinlichkeit, dass besonders
         # grosse Elefanten spawnen. Auf dem kann man dann einen Spezialsattel
@@ -307,6 +332,7 @@ TIERE = [
         "laute": {"ambient": "mob.hoglin.ambient", "hurt": "mob.hoglin.hurt", "death": "mob.hoglin.death",
                   "step": "mob.ravager.step", "pitch": [0.55, 0.7]},
         "ei": ("#8a8884", "#5e5a56"), "angriff": "stoss",
+        "verteidigt": ["loewe"], "jung_flieht": ["loewe"],
         "zeigen": {"horn": "!query.is_baby"},
     },
     {
@@ -325,6 +351,8 @@ TIERE = [
         "laute": {"ambient": "mob.panda.idle.aggressive", "hurt": "mob.panda.hurt", "death": "mob.panda.death",
                   "step": "mob.polarbear.step", "pitch": [0.5, 0.65]},
         "ei": ("#2c2a28", "#8a8884"), "angriff": "tatze", "trommelt": True,
+        # Der Silberruecken stellt sich dem Tiger, die Jungen fliehen.
+        "verteidigt": ["tiger"], "jung_flieht": ["tiger"],
     },
     {
         "id": "walross", "name": ("Walross", "Walrus"), "gestalt": "walross",
@@ -356,7 +384,8 @@ TIERE = [
         "varianten": [("altvogel", 70), ("jungvogel", 30)],
         "art": "vogel", "verhalten": "neutral", "leben": 16, "schaden": 4, "tempo": 1.2,
         "kollision": (1.0, 0.6), "baby": False, "herde": (1, 1),
-        "jagt": ["minecraft:rabbit", "minecraft:chicken"],
+        # Seit 4.77 auch Singvoegel und Eichhoernchen - die fliehen vor ihm.
+        "jagt": ["minecraft:rabbit", "minecraft:chicken", "fynn:singvogel", "fynn:eichhoernchen"],
         "biome": [["mountains"], ["extreme_hills"], ["meadow"]], "gewicht": 4,
         "boden": ["minecraft:grass_block", "minecraft:stone", "minecraft:snow_layer", "minecraft:gravel"],
         "beute": [("minecraft:feather", 1, 3, 1.0, False)],
@@ -365,6 +394,12 @@ TIERE = [
         "ei": ("#4a3222", "#b8863a"), "angriff": "krallen",
     },
 ]
+
+
+# Die Kleintiere (4.77) stehen in eigenen Dateien - Gestalt in
+# kleintiere_gestalt.py, Steckbriefe in kleintiere_daten.py.
+from kleintiere_daten import KLEINTIERE  # noqa: E402
+TIERE += KLEINTIERE
 
 
 # ------------------------------------------------------------ Verhalten
@@ -400,7 +435,19 @@ def angriffsziele(t):
                           "max_dist": t["nachts"]})
     if t.get("jagt"):
         ziele.append({"filters": familie(*[n.split(":")[1] for n in t["jagt"]]), "max_dist": 12})
+    if t.get("jagt_jung"):
+        ziele.append({"filters": {"all_of": [familie(*t["jagt_jung"]),
+                                              {"test": "is_baby", "subject": "other", "value": True}]},
+                      "max_dist": 12})
     return ziele
+
+
+def flucht(familien, weite=10):
+    """Vor wem ein Tier wegrennt - vorrangig vor allem anderen, auch vor der
+    eigenen Jagd."""
+    return {"priority": 1, "remove_target": True, "entity_types": [
+        {"filters": familie(*familien), "max_dist": weite, "walk_speed_multiplier": 1.25,
+         "sprint_speed_multiplier": 1.45}]}
 
 
 def baerenaufgaben(t, gruppen, ereignisse):
@@ -473,6 +520,8 @@ def verhalten(t, varianten_namen):
     }
     if t["verhalten"] != "friedlich":
         c["minecraft:behavior.hurt_by_target"] = {"priority": 1}
+    if t.get("flieht"):
+        c["minecraft:behavior.avoid_mob_type"] = flucht(t["flieht"])
 
     # --- Bewegung
     if art == "land":
@@ -529,6 +578,8 @@ def verhalten(t, varianten_namen):
             "minecraft:behavior.random_breach": {"priority": 6, "interval": 200, "xz_dist": 6, "cooldown_time": 20.0},
         })
 
+    elif art in ("kleinvogel", "kriecher"):
+        pass    # alles Noetige steht in t["komponenten"]
     elif art == "vogel":
         # Wie Mojangs Phantom: gleitet ohne Schwerkraft, kreist hoch ueber
         # einem Punkt und stoesst von oben herab - auf Kaninchen und
@@ -552,9 +603,16 @@ def verhalten(t, varianten_namen):
                 "entity_types": [{"filters": familie(*[n.split(":")[1] for n in t["jagt"]]), "max_dist": 40}]},
         })
 
+    # Was nur dieses Tier hat (die Kleintiere bringen es fertig mit).
+    c.update(t.get("komponenten", {}))
+    for weg in t.get("ohne", []):
+        c.pop(weg, None)
+    if t.get("skalierung"):
+        c["minecraft:scale"] = {"value": t["skalierung"]}
+
     # --- Verhalten und Junge
-    gruppen = {}
-    ereignisse = {}
+    gruppen = dict(t.get("gruppen", {}))
+    ereignisse = dict(t.get("ereignisse", {}))
     erwachsen, baby = "fynn:erwachsen", "fynn:baby"
     gruppen[erwachsen] = {"minecraft:loot": {"table": f"loot_tables/entities/{t['id']}.json"}}
 
@@ -571,13 +629,32 @@ def verhalten(t, varianten_namen):
                                    "calm_event": {"event": "fynn:beruhigt", "target": "self"}}}
         wut.update(angriffsbausteine(t))
         gruppen["fynn:wuetend"] = wut
+        if t.get("verteidigt"):
+            # Kommt ein Raeuber nahe, wird das Tier wuetend wie bei einem
+            # Angriff - bei Herdentieren die ganze Herde.
+            gruppen["fynn:ruhig"]["minecraft:behavior.nearest_attackable_target"] = {
+                "priority": 2, "must_see": True, "reselect_targets": True, "within_radius": 10,
+                "entity_types": [{"filters": familie(*t["verteidigt"]), "max_dist": 10}]}
         ereignisse["fynn:wuetend"] = {"remove": {"component_groups": ["fynn:ruhig"]},
                                        "add": {"component_groups": ["fynn:wuetend"]}}
         ereignisse["fynn:beruhigt"] = {"remove": {"component_groups": ["fynn:wuetend"]},
                                         "add": {"component_groups": ["fynn:ruhig"]}}
     elif t["verhalten"] == "feindlich":
+        ziele = angriffsziele(t)
+        if t.get("verteidigt"):
+            ziele.append({"filters": familie(*t["verteidigt"]), "max_dist": 10})
         f = {"minecraft:behavior.nearest_attackable_target": {"priority": 3, "must_see": True, "reselect_targets": True,
-                                                              "within_radius": 24, "entity_types": angriffsziele(t)}}
+                                                              "within_radius": 24, "entity_types": ziele}}
+        f.update(angriffsbausteine(t))
+        gruppen["fynn:jagd"] = f
+    elif t.get("jagt") and art == "wal":
+        # Friedlich zu Spielern, aber ein Jaeger: Er sucht nur seine Beute
+        # und wehrt sich nur gegen sie - wer ihn schlaegt, vor dem taucht er ab.
+        f = {"minecraft:behavior.nearest_attackable_target": {
+                 "priority": 3, "must_see": False, "reselect_targets": True, "within_radius": 24,
+                 "entity_types": [{"filters": familie(*[n.split(":")[1] for n in t["jagt"]]), "max_dist": 24}]},
+             "minecraft:behavior.hurt_by_target": {
+                 "priority": 1, "entity_types": {"filters": familie(*[n.split(":")[1] for n in t["jagt"]])}}}
         f.update(angriffsbausteine(t))
         gruppen["fynn:jagd"] = f
     elif art != "vogel":
@@ -587,7 +664,8 @@ def verhalten(t, varianten_namen):
         baerenaufgaben(t, gruppen, ereignisse)
 
     erwachsen_liste = [erwachsen] + (["fynn:ruhig"] if "fynn:ruhig" in gruppen else []) + \
-                      (["fynn:jagd"] if t["verhalten"] == "feindlich" else [])
+                      (["fynn:jagd"] if "fynn:jagd" in gruppen else [])
+    erwachsen_liste += t.get("start_gruppen", [])
     if t.get("reiten"):
         erwachsen_liste.append("fynn:wild")
         reittier(t, c, gruppen, ereignisse)
@@ -601,6 +679,8 @@ def verhalten(t, varianten_namen):
             "minecraft:behavior.follow_parent": {"priority": 4, "speed_multiplier": 1.2},
             "minecraft:behavior.panic": {"priority": 1, "speed_multiplier": 1.4},
         }
+        if t.get("jung_flieht"):
+            gruppen[baby]["minecraft:behavior.avoid_mob_type"] = flucht(t["jung_flieht"], 12)
         if t["verhalten"] != "friedlich" and not wasser:
             # Ein Junges, dem ein Spieler zu nahe kommt, ruft die Alten.
             gruppen[baby]["minecraft:behavior.nearest_attackable_target"] = {
@@ -1251,6 +1331,8 @@ def bewegungen(t, modell):
                 a["schwimmen"]["bones"][bein] = {"rotation": [70.0, 0.0, 0.0]}
     elif art == "vogel":
         a.update(vogelbewegungen())
+    elif art in ("kleinvogel", "kriecher"):
+        pass    # ihre Bewegungen bringen sie mit (eigene_bewegungen)
     else:
         # Im Wasser: Fische schlagen seitlich (um y), Wale auf und ab (um x).
         kette = [k for k in ("schwanz1", "schwanz2", "fluke", "schwanzflosse") if k in da]
@@ -1348,6 +1430,12 @@ def bewegungen(t, modell):
     elif art_angriff == "krallen":
         ang = {"fuesse": {"rotation": [f"-{stoss} * 110.0", 0.0, 0.0]},
                "kopf": {"rotation": [f"{stoss} * 30.0", 0.0, 0.0]}}
+    elif art_angriff == "ramme":
+        # Der Wal holt mit dem Kopf aus und stoesst vor, die Fluke schlaegt nach.
+        ang = {"rumpf": {"rotation": [f"-{stoss} * 10.0", 0.0, 0.0], "position": [0.0, 0.0, f"-{stoss} * 8.0"]},
+               "kopf": {"rotation": [f"{stoss} * 12.0", 0.0, 0.0]},
+               "schwanz1": {"rotation": [f"{nach} * 25.0", 0.0, 0.0]},
+               "fluke": {"rotation": [f"{nach} * 40.0", 0.0, 0.0]}}
     elif art_angriff == "arme":
         for i in range(g.KALMAR_ARME):
             ang[f"arm{i}"] = {"rotation": [f"-{stoss} * 30.0", 0.0, 0.0]}
@@ -1405,6 +1493,8 @@ def bewegungen(t, modell):
     # --- Teile, die nur manche Varianten haben (Geweih, Maehne, Hammerkopf)
     if t.get("zeigen"):
         a["teile"] = {"loop": True, "bones": {k: {"scale": f"({bed}) ? 1.0 : 0.0"} for k, bed in t["zeigen"].items()}}
+    for name, (anim, _) in t.get("eigene_bewegungen", {}).items():
+        a[name] = anim
     return a
 
 
@@ -1613,6 +1703,30 @@ def wal_partikel():
     }))
 
 
+def tintenwolke():
+    """Die Tinte des Riesenkalmars, wenn der Wal ihn rammt: eine dunkle,
+    langsam aufquellende Wolke, in der er verschwindet."""
+    teile = {
+        "minecraft:emitter_rate_instant": {"num_particles": 40},
+        "minecraft:emitter_lifetime_once": {"active_time": 0.05},
+        "minecraft:emitter_shape_sphere": {"radius": 1.2, "direction": "outwards"},
+        "minecraft:particle_lifetime_expression": {"max_lifetime": "2.5 + variable.particle_random_1 * 1.5"},
+        "minecraft:particle_initial_speed": "0.6 + variable.particle_random_2 * 1.4",
+        "minecraft:particle_motion_dynamic": {"linear_drag_coefficient": 1.5},
+        "minecraft:particle_appearance_billboard": {
+            "size": ["0.5 + variable.particle_age * 0.6", "0.5 + variable.particle_age * 0.6"],
+            "facing_camera_mode": "rotate_xyz",
+            "uv": {"texture_width": 8, "texture_height": 8, "uv": [0, 0], "uv_size": [8, 8]}},
+        "minecraft:particle_appearance_tinting": {"color": [
+            0.08, 0.06, "0.12 + variable.particle_random_3 * 0.08",
+            "0.9 * (1 - variable.particle_age / variable.particle_lifetime)"]},
+    }
+    daten = _partikel("fynn:tintenwolke", teile)
+    daten["particle_effect"]["description"]["basic_render_parameters"] = {
+        "material": "particles_blend", "texture": "textures/particle/fynn_rauch"}
+    schreibe(RES / "particles" / "tintenwolke.particle.json", daten)
+
+
 def animate_liste(t, anims):
     liste = []
     wasser = t["art"] in ("fisch", "wal")
@@ -1641,6 +1755,8 @@ def animate_liste(t, anims):
         liste.append("fliegen")
         # Im Sturzflug die Schwingen anlegen.
         liste.append({"stossen": "math.clamp(-query.vertical_speed * 0.6 - 0.2, 0.0, 1.0)"})
+    for name, (_, gewicht) in t.get("eigene_bewegungen", {}).items():
+        liste.append({name: gewicht})
     if "trommeln" in anims:
         liste.append({"trommeln": "(1.0 - math.clamp(query.modified_move_speed * 3.0, 0.0, 1.0)) * variable.trommeln"})
     if "angriff" in anims:
@@ -1823,6 +1939,7 @@ def main():
     laute()
     sprache()
     wal_partikel()
+    tintenwolke()
     print(f"gebaut: {len(TIERE)} Tiere, "
           f"{sum(1 for t in TIERE if t['art'] in ('land', 'amphib'))} an Land, "
           f"{sum(1 for t in TIERE if t['art'] in ('fisch', 'wal'))} im Wasser, "

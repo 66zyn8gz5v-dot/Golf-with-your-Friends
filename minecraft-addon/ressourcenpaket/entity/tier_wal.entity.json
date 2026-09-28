@@ -17,6 +17,7 @@
       "animations": {
         "schwimmen": "animation.fynn.wal.schwimmen",
         "sprung": "animation.fynn.wal.sprung",
+        "angriff": "animation.fynn.wal.angriff",
         "jung": "animation.fynn.wal.jung"
       },
       "scripts": {
@@ -37,6 +38,9 @@
           },
           {
             "sprung": "query.property('fynn:sprung')"
+          },
+          {
+            "angriff": "variable.attack_time > 0.0"
           },
           {
             "jung": "query.is_baby"

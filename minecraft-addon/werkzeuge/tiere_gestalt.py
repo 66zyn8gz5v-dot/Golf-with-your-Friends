@@ -1151,3 +1151,4 @@ def schwertfisch_maler(variante):
 # diese nicht endlos wird - hier hereingeholt, damit tiere_bauen.py alle
 # Tiere an einer Stelle findet.
 from tiere_gestalt_neu import *  # noqa: E402,F401,F403
+from kleintiere_gestalt import *  # noqa: E402,F401,F403

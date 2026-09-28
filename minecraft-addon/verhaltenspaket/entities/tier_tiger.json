@@ -60,6 +60,37 @@
                     "test": "is_family",
                     "subject": "other",
                     "value": "panda"
+                  },
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "wildschwein"
+                  }
+                ]
+              },
+              "max_dist": 12
+            },
+            {
+              "filters": {
+                "all_of": [
+                  {
+                    "any_of": [
+                      {
+                        "test": "is_family",
+                        "subject": "other",
+                        "value": "gorilla"
+                      },
+                      {
+                        "test": "is_family",
+                        "subject": "other",
+                        "value": "elefant"
+                      }
+                    ]
+                  },
+                  {
+                    "test": "is_baby",
+                    "subject": "other",
+                    "value": true
                   }
                 ]
               },
@@ -232,6 +263,26 @@
       },
       "minecraft:behavior.hurt_by_target": {
         "priority": 1
+      },
+      "minecraft:behavior.avoid_mob_type": {
+        "priority": 1,
+        "remove_target": true,
+        "entity_types": [
+          {
+            "filters": {
+              "any_of": [
+                {
+                  "test": "is_family",
+                  "subject": "other",
+                  "value": "elefant"
+                }
+              ]
+            },
+            "max_dist": 10,
+            "walk_speed_multiplier": 1.25,
+            "sprint_speed_multiplier": 1.45
+          }
+        ]
       },
       "minecraft:navigation.walk": {
         "can_path_over_water": true,

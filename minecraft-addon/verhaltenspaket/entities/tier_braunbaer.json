@@ -33,6 +33,31 @@
           "event": "fynn:wuetend",
           "target": "self"
         },
+        "minecraft:behavior.nearest_attackable_target": {
+          "priority": 2,
+          "must_see": true,
+          "reselect_targets": true,
+          "within_radius": 10,
+          "entity_types": [
+            {
+              "filters": {
+                "any_of": [
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "loewe"
+                  },
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "tiger"
+                  }
+                ]
+              },
+              "max_dist": 10
+            }
+          ]
+        },
         "minecraft:behavior.move_to_block": {
           "priority": 5,
           "tick_interval": 300,

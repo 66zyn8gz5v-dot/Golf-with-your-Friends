@@ -1,0 +1,25 @@
+{
+  "format_version": "1.8.0",
+  "render_controllers": {
+    "controller.render.fynn.singvogel": {
+      "arrays": {
+        "textures": {
+          "Array.haut": [
+            "Texture.rotkehlchen",
+            "Texture.blaumeise",
+            "Texture.spatz"
+          ]
+        }
+      },
+      "geometry": "Geometry.default",
+      "materials": [
+        {
+          "*": "Material.default"
+        }
+      ],
+      "textures": [
+        "Array.haut[query.variant]"
+      ]
+    }
+  }
+}

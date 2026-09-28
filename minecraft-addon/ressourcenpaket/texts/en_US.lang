@@ -44,11 +44,11 @@ item.fynn:eisenklinge.name=Iron Blade
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.76
+item.iron_sword.name=Stahlschwert 4.77
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.76
-item.fynn:degen.name=Degen 4.76
+item.fynn:degen=Degen 4.77
+item.fynn:degen.name=Degen 4.77
 
 
 
@@ -440,6 +440,10 @@ item.fynn:herz_des_winters.name=Heart of Winter
 item.fynn:frostruf=Frost Call
 item.fynn:frostruf.name=Frost Call
 
+
+
+
+
 ## Die Tiere
 entity.fynn:braunbaer.name=Brown Bear
 item.spawn_egg.entity.fynn:braunbaer.name=Brown Bear Spawn Egg
@@ -477,3 +481,22 @@ entity.fynn:mantarochen.name=Manta Ray
 item.spawn_egg.entity.fynn:mantarochen.name=Manta Ray Spawn Egg
 entity.fynn:steinadler.name=Golden Eagle
 item.spawn_egg.entity.fynn:steinadler.name=Golden Eagle Spawn Egg
+entity.fynn:singvogel.name=Songbird
+item.spawn_egg.entity.fynn:singvogel.name=Songbird Spawn Egg
+entity.fynn:specht.name=Woodpecker
+item.spawn_egg.entity.fynn:specht.name=Woodpecker Spawn Egg
+entity.fynn:schnecke.name=Snail
+item.spawn_egg.entity.fynn:schnecke.name=Snail Spawn Egg
+entity.fynn:eichhoernchen.name=Squirrel
+item.spawn_egg.entity.fynn:eichhoernchen.name=Squirrel Spawn Egg
+
+## Kleintiere
+item.fynn:kaeferlarve=Beetle Grub
+item.fynn:kaeferlarve.name=Beetle Grub
+item.fynn:schneckenschleim=Snail Slime
+item.fynn:schneckenschleim.name=Snail Slime
+item.fynn:schneckenhaus=Snail Shell
+item.fynn:schneckenhaus.name=Snail Shell
+item.fynn:nuss=Hazelnut
+item.fynn:nuss.name=Hazelnut
+action.interact.fynn_schleim=Collect slime

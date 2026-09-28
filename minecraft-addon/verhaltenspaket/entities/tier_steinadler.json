@@ -139,6 +139,16 @@
                   "test": "is_family",
                   "subject": "other",
                   "value": "chicken"
+                },
+                {
+                  "test": "is_family",
+                  "subject": "other",
+                  "value": "singvogel"
+                },
+                {
+                  "test": "is_family",
+                  "subject": "other",
+                  "value": "eichhoernchen"
                 }
               ]
             },

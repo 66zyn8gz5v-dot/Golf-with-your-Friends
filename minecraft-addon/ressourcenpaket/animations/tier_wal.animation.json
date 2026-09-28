@@ -397,6 +397,44 @@
         }
       }
     },
+    "animation.fynn.wal.angriff": {
+      "loop": true,
+      "bones": {
+        "rumpf": {
+          "rotation": [
+            "-math.sin(variable.attack_time * 180.0) * 10.0",
+            0.0,
+            0.0
+          ],
+          "position": [
+            0.0,
+            0.0,
+            "-math.sin(variable.attack_time * 180.0) * 8.0"
+          ]
+        },
+        "kopf": {
+          "rotation": [
+            "math.sin(variable.attack_time * 180.0) * 12.0",
+            0.0,
+            0.0
+          ]
+        },
+        "schwanz1": {
+          "rotation": [
+            "math.sin(math.clamp(variable.attack_time * 1.4 - 0.2, 0.0, 1.0) * 180.0) * 25.0",
+            0.0,
+            0.0
+          ]
+        },
+        "fluke": {
+          "rotation": [
+            "math.sin(math.clamp(variable.attack_time * 1.4 - 0.2, 0.0, 1.0) * 180.0) * 40.0",
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
     "animation.fynn.wal.jung": {
       "loop": true,
       "bones": {

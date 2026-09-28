@@ -496,6 +496,30 @@
     },
     "heldenbuch": {
       "textures": "textures/items/heldenbuch"
+    },
+    "kaeferlarve": {
+      "textures": "textures/items/kaeferlarve"
+    },
+    "schneckenschleim": {
+      "textures": "textures/items/schneckenschleim"
+    },
+    "schneckenhaus": {
+      "textures": "textures/items/schneckenhaus"
+    },
+    "nuss": {
+      "textures": "textures/items/nuss"
+    },
+    "singvogel_ei": {
+      "textures": "textures/items/singvogel_ei"
+    },
+    "specht_ei": {
+      "textures": "textures/items/specht_ei"
+    },
+    "schnecke_ei": {
+      "textures": "textures/items/schnecke_ei"
+    },
+    "eichhoernchen_ei": {
+      "textures": "textures/items/eichhoernchen_ei"
     }
   }
 }

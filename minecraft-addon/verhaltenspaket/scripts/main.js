@@ -20,6 +20,8 @@ import "./kampf.js";
 import "./pfeile.js";
 import "./tempel.js";
 import "./tiere.js";
+import "./begegnungen.js";
+import "./kleintiere.js";
 import "./obst.js";
 import "./banditen.js";
 import "./rucksack.js";

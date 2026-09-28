@@ -21,6 +21,26 @@
         "minecraft:on_friendly_anger": {
           "event": "fynn:wuetend",
           "target": "self"
+        },
+        "minecraft:behavior.nearest_attackable_target": {
+          "priority": 2,
+          "must_see": true,
+          "reselect_targets": true,
+          "within_radius": 10,
+          "entity_types": [
+            {
+              "filters": {
+                "any_of": [
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "loewe"
+                  }
+                ]
+              },
+              "max_dist": 10
+            }
+          ]
         }
       },
       "fynn:wuetend": {
@@ -69,6 +89,31 @@
         "minecraft:behavior.panic": {
           "priority": 1,
           "speed_multiplier": 1.4
+        },
+        "minecraft:behavior.avoid_mob_type": {
+          "priority": 1,
+          "remove_target": true,
+          "entity_types": [
+            {
+              "filters": {
+                "any_of": [
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "loewe"
+                  },
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "braunbaer"
+                  }
+                ]
+              },
+              "max_dist": 12,
+              "walk_speed_multiplier": 1.25,
+              "sprint_speed_multiplier": 1.45
+            }
+          ]
         },
         "minecraft:behavior.nearest_attackable_target": {
           "priority": 5,

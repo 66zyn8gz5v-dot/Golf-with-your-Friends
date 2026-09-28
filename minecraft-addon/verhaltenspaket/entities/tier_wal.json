@@ -20,6 +20,50 @@
           "table": "loot_tables/entities/wal.json"
         }
       },
+      "fynn:jagd": {
+        "minecraft:behavior.nearest_attackable_target": {
+          "priority": 3,
+          "must_see": false,
+          "reselect_targets": true,
+          "within_radius": 24,
+          "entity_types": [
+            {
+              "filters": {
+                "any_of": [
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "riesenkalmar"
+                  }
+                ]
+              },
+              "max_dist": 24
+            }
+          ]
+        },
+        "minecraft:behavior.hurt_by_target": {
+          "priority": 1,
+          "entity_types": {
+            "filters": {
+              "any_of": [
+                {
+                  "test": "is_family",
+                  "subject": "other",
+                  "value": "riesenkalmar"
+                }
+              ]
+            }
+          }
+        },
+        "minecraft:attack": {
+          "damage": 9
+        },
+        "minecraft:behavior.melee_box_attack": {
+          "priority": 2,
+          "speed_multiplier": 1.3,
+          "track_target": true
+        }
+      },
       "fynn:baby": {
         "minecraft:is_baby": {},
         "minecraft:scale": {
@@ -155,10 +199,6 @@
         "xz_dist": 6,
         "cooldown_time": 20.0
       },
-      "minecraft:behavior.panic": {
-        "priority": 1,
-        "speed_multiplier": 1.3
-      },
       "minecraft:breedable": {
         "require_tame": false,
         "breed_items": [
@@ -198,7 +238,8 @@
         },
         "add": {
           "component_groups": [
-            "fynn:erwachsen"
+            "fynn:erwachsen",
+            "fynn:jagd"
           ]
         }
       },
@@ -261,7 +302,8 @@
                 "weight": 88,
                 "add": {
                   "component_groups": [
-                    "fynn:erwachsen"
+                    "fynn:erwachsen",
+                    "fynn:jagd"
                   ]
                 }
               },

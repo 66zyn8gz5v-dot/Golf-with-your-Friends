@@ -64,6 +64,18 @@
                 ]
               },
               "max_dist": 12
+            },
+            {
+              "filters": {
+                "any_of": [
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "wal"
+                  }
+                ]
+              },
+              "max_dist": 10
             }
           ]
         },

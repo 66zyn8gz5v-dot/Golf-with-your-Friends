@@ -65,6 +65,32 @@
                     "test": "is_family",
                     "subject": "other",
                     "value": "frog"
+                  },
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "wildschwein"
+                  }
+                ]
+              },
+              "max_dist": 12
+            },
+            {
+              "filters": {
+                "all_of": [
+                  {
+                    "any_of": [
+                      {
+                        "test": "is_family",
+                        "subject": "other",
+                        "value": "elch"
+                      }
+                    ]
+                  },
+                  {
+                    "test": "is_baby",
+                    "subject": "other",
+                    "value": true
                   }
                 ]
               },

@@ -327,6 +327,8 @@ VARIANTENNAME = {
     "hammerhai": "Hammerhai", "loewe": "Löwe", "loewin": "Löwin", "silberruecken": "Silberrücken",
     "junges": "Junges", "jungvogel": "Jungvogel", "altvogel": "Altvogel", "default": "Standard",
     "entfesselt": "Entfesselt (Phase 2)",
+    "rotkehlchen": "Rotkehlchen", "blaumeise": "Blaumeise", "spatz": "Spatz", "maennchen": "Männchen",
+    "weibchen": "Weibchen", "weinberg": "Weinbergschnecke", "baender": "Bänderschnecke",
 }
 
 VERHALTEN = {"friedlich": "friedlich", "neutral": "wehrt sich", "feindlich": "greift an"}
@@ -335,6 +337,8 @@ VERHALTEN = {"friedlich": "friedlich", "neutral": "wehrt sich", "feindlich": "gr
 SCHALTER = {
     "is_saddled": "Sattel", "is_angry": "wütend", "fynn:riese": "Riese", "fynn:taschen": "Rucksäcke",
     "fynn:tun": "Aufgabe", "fynn:sturm": "Sturmangriff", "fynn:sprung": "Sprung",
+    "fynn:warnt": "Warnt vor Monstern", "fynn:hackt": "Hämmert am Stamm", "fynn:versteckt": "Im Haus",
+    "fynn:klettert": "Klettert", "fynn:graebt": "Vergräbt eine Nuss",
 }
 
 
@@ -550,7 +554,9 @@ def zahl(wert):
 
 
 def steckbrief_tier(t):
-    kol = t.get("kollision", (1, 1))
+    # Die Kleintiere sind groesser gebaut und im Spiel verkleinert.
+    f = t.get("skalierung", 1.0)
+    kol = [round(x * f, 2) for x in t.get("kollision", (1, 1))]
     zeilen = [
         ["Leben", f"{zahl(t['leben'] / 2)} Herzen"],
         ["Verhalten", VERHALTEN.get(t["verhalten"], t["verhalten"])
@@ -569,6 +575,7 @@ def steckbrief_tier(t):
     if t["id"] == "elefant":
         zeilen.append(["Selten", "Riesenelefant: mit Heuballen oder Melonen zähmen, "
                                  "mit dem Elefantensattel reiten – drei Plätze und eine Truhe"])
+    zeilen += t.get("steckbrief_extra", [])
     beute = [gegenstandsname(b[0]) for b in t.get("beute", [])]
     if beute:
         zeilen.append(["Beute", ", ".join(dict.fromkeys(beute))])
@@ -599,7 +606,8 @@ def alle_mobs():
     for t in tiere_bauen.TIERE:
         info = {"varianten": t["varianten"], "steckbrief": steckbrief_tier(t)}
         info.update(TIER_EXTRA.get(t["id"], {}))
-        mobs.append(mob_daten(t["id"], f"tier_{t['id']}.entity.json", GRUPPE.get(t["art"], "An Land"), info))
+        mobs.append(mob_daten(t["id"], f"tier_{t['id']}.entity.json",
+                              t.get("gruppe") or GRUPPE.get(t["art"], "An Land"), info))
     for b in banditen_bauen.BANDITEN:
         mobs.append(mob_daten(b["id"], f"bandit_{b['id']}.entity.json", "Banditen",
                               {"steckbrief": steckbrief_bandit(b), "gross": b.get("gross", 1.0)}))

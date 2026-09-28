@@ -199,6 +199,41 @@
       "minecraft:behavior.hurt_by_target": {
         "priority": 1
       },
+      "minecraft:behavior.avoid_mob_type": {
+        "priority": 1,
+        "remove_target": true,
+        "entity_types": [
+          {
+            "filters": {
+              "any_of": [
+                {
+                  "test": "is_family",
+                  "subject": "other",
+                  "value": "loewe"
+                },
+                {
+                  "test": "is_family",
+                  "subject": "other",
+                  "value": "tiger"
+                },
+                {
+                  "test": "is_family",
+                  "subject": "other",
+                  "value": "krokodil"
+                },
+                {
+                  "test": "is_family",
+                  "subject": "other",
+                  "value": "braunbaer"
+                }
+              ]
+            },
+            "max_dist": 10,
+            "walk_speed_multiplier": 1.25,
+            "sprint_speed_multiplier": 1.45
+          }
+        ]
+      },
       "minecraft:navigation.walk": {
         "can_path_over_water": true,
         "avoid_damage_blocks": true
