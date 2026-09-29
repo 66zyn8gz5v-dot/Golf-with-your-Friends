@@ -22,6 +22,7 @@ import { getragen } from "./tiere.js";
 export const GREIF = "fynn:greif";
 export const FEDER = "fynn:greifenfeder";
 export const FLUG = { tempo: 0.95, steigen: 0.11, nachziehen: 0.14, schwebe: 0.035, hoechstSteigen: 0.55 };
+const GREIFFLUG = FLUG;
 
 function reiterVon(greif) {
     try { return greif.getComponent("minecraft:rideable")?.getRiders?.()?.[0]; } catch (e) { return undefined; }
@@ -36,8 +37,9 @@ function springt(spieler) {
     }
 }
 
-/** Ein Tick fuer einen Greif. Liefert, was er tut. */
-export function flugTakt(greif) {
+/** Ein Tick fuer einen Greif - oder einen Drachen (scripts/drachen.js), der
+ *  mit eigenen Flugwerten dieselbe Steuerung nimmt. Liefert, was er tut. */
+export function flugTakt(greif, FLUG = GREIFFLUG) {
     const reiter = reiterVon(greif);
     const amBoden = !!greif.isOnGround;
     try {

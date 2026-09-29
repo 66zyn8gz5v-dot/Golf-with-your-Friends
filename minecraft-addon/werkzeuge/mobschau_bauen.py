@@ -345,7 +345,7 @@ SCHALTER = {
     "fynn:unten": "Unter dem Sand", "fynn:feuer": "Feueratem",
     "fynn:spinnt": "Spinnt ein Netz", "fynn:lockt": "Lockt",
     "fynn:wolf": "Wolfsgestalt", "fynn:wandelt": "Verwandelt sich", "fynn:schlaeft": "Schläft",
-    "fynn:fliegt": "Fliegt",
+    "fynn:fliegt": "Fliegt", "fynn:besiegt": "Besiegt",
 }
 
 
@@ -627,9 +627,8 @@ def alle_mobs():
         if t.get("art") == "drache" and hasattr(drachen_gestalt, f"{t['gestalt']}_modell"):
             getattr(drachen_gestalt, f"{t['gestalt']}_modell")()
         if t["id"] in drachen_gestalt.MAEULER:
-            knochen, ort = drachen_gestalt.MAEULER[t["id"]]
-            info["atem"] = {"knochen": knochen, "punkt": ort, "eig": "fynn:feuer",
-                            "art": t.get("atemart", "feuer")}
+            info["atem"] = {"koepfe": [{"knochen": k, "punkt": o} for k, o in drachen_gestalt.MAEULER[t["id"]]],
+                            "eig": "fynn:feuer", "art": t.get("atemart", "feuer")}
         mobs.append(mob_daten(t["id"], f"tier_{t['id']}.entity.json",
                               t.get("gruppe") or GRUPPE.get(t["art"], "An Land"), info))
     for b in banditen_bauen.BANDITEN:

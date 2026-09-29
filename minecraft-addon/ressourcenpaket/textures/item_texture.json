@@ -637,6 +637,9 @@
     },
     "greifenei": {
       "textures": "textures/items/greifenei"
+    },
+    "drachenpfeife": {
+      "textures": "textures/items/drachenpfeife"
     }
   }
 }

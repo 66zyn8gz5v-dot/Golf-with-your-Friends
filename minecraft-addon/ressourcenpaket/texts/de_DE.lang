@@ -564,6 +564,11 @@ item.fynn:frostpanzer.name=Frostpanzer
 item.fynn:frosttalisman.name=Frosttalisman
 item.fynn:basiliskenauge.name=Basiliskenauge
 
+
+## Drachen
+item.fynn:drachenpfeife=Drachenpfeife
+item.fynn:drachenpfeife.name=Drachenpfeife
+
 ## Die Tiere
 entity.fynn:braunbaer.name=Braunbär
 item.spawn_egg.entity.fynn:braunbaer.name=Braunbär-Spawn-Ei

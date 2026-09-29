@@ -1946,6 +1946,9 @@ def steuerung(t, texturen):
         steuer["part_visibility"] = [{"sattel": "query.is_saddled"},
                                      {"tasche_links": "query.property('fynn:taschen') >= 1"},
                                      {"tasche_rechts": "query.property('fynn:taschen') >= 2"}]
+    if t.get("sichtbarkeit"):
+        # Was eine Art selbst ein- und ausblendet (die Augenlider der Drachen).
+        steuer.setdefault("part_visibility", []).extend(t["sichtbarkeit"])
     return {"format_version": "1.8.0", "render_controllers": {f"controller.render.fynn.{t['id']}": steuer}}
 
 

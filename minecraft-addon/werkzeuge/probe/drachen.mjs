@@ -99,7 +99,7 @@ function wesen(w, typeId, ort, extra = {}) {
     const w = welt();
     const drache = wesen(w, "fynn:lindwurm", { x: 0, y: 90, z: 0 }, { eig: { "fynn:fliegt": true } });
     pruefe("Ein Drache aus einer alten Welt wird eingerichtet",
-        d.flugTakt(drache, 0) === "eingerichtet" && drache.ereignisse.includes("fynn:abheben"));
+        d.flugTakt(drache, 0) === "eingerichtet" && drache.ereignisse.includes("fynn:einrichten"));
     const art = d.DRACHEN["fynn:lindwurm"];
     pruefe("Er kreist erst eine Weile", d.flugTakt(drache, 20, () => 0) === "fliegt");
     pruefe("Ohne Ziel landet er irgendwann - sanft",
