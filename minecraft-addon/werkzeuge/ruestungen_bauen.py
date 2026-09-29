@@ -266,6 +266,154 @@ SLOTS = {"helm": ("slot.armor.head", "armor_head", "helmet"),
          "hose": ("slot.armor.legs", "armor_legs", "leggings"),
          "stiefel": ("slot.armor.feet", "armor_feet", "boots")}
 
+# ================================================================== Drache (4.80)
+#
+# Die Drachenschuppen-Ruestung aus der Beute des Lindwurms: rote Schuppen
+# mit goldenen Raendern, Hoerner am Helm, ein Kamm darueber, Schulter-
+# platten und Rueckenzacken am Panzer, Krallen an den Stiefeln. Stark wie
+# Diamant; wer alle vier Teile traegt, ist gegen Feuer gefeit (tiere.js).
+
+def drache_satz():
+    s = Satz("drachenruestung")
+    s.k("helm", "head", [-4, 24, -4], [8, 8, 8], "haube", aufblasen=0.6)
+    s.k("helm", "head", [-0.5, 32.4, -3], [1, 2, 7], "kamm")
+    s.paar("helm", "head", [3.2, 30.5, -1], [1, 2, 5], "horn", drehung=[28, 0, 0], drehpunkt=[3.7, 31.5, -1])
+    s.paar("helm", "head", [4.2, 27.5, -3.5], [1, 3, 1], "horn")                # Wangenzacken
+    s.k("brust", "body", [-4, 12, -2], [8, 12, 4], "panzer", aufblasen=1.0)
+    s.paar("brust", "body", [2.5, 21.5, -3.2], [3, 3, 6.4], "schulter")
+    s.k("brust", "body", [-3, 13, -3.3], [6, 8, 1], "bauchplatte")
+    for y in (14.5, 17.5, 20.5):
+        s.k("brust", "body", [-0.5, y, 2.8], [1, 2, 2], "zacke")
+    s.k("hose", "body", [-4, 11, -2], [8, 3, 4], "guertel", aufblasen=0.6)
+    for b in ("rightLeg", "leftLeg"):
+        x = BEIN_X[b]
+        s.k("hose", b, [x, 4, -2], [4, 8, 4], "hose", aufblasen=0.5)
+        s.k("hose", b, [x + 1, 5, -3.2], [2, 2, 1], "knie")
+    for b in ("rightLeg", "leftLeg"):
+        x = BEIN_X[b]
+        s.k("stiefel", b, [x, 0, -2], [4, 4, 4], "stiefel", aufblasen=1.0)
+        for i in range(3):
+            s.k("stiefel", b, [x + 0.3 + i * 1.3, 0, -3.8], [1, 1, 1], "kralle")
+    return s
+
+
+DRACHE_ROT, DRACHE_DUNKEL, DRACHE_GOLD, DRACHE_HORN = "#7a2420", "#4a1412", "#d8b050", "#d8ccb0"
+
+
+def drache_maler():
+    def schuppe(p, n, texel, saat):
+        # Ruhige Schuppen: Reihen zu drei Punkten, im Versatz; nur der
+        # untere Rand jeder Schuppe ist dunkler - wie Fynn es mag, Flaechen
+        # statt Streifen.
+        reihe = int(texel[1] // 3)
+        spalte = int((texel[0] + (reihe % 2) * 2) // 4)
+        if texel[1] % 3 == 2 and (texel[0] + (reihe % 2) * 2) % 4 != 0:
+            return ton(DRACHE_DUNKEL, p, n, texel, saat, straehne=0.0, hell=0.1)
+        return ton(DRACHE_ROT, p, n, texel, saat + 2, straehne=0.0, hell=0.06 if (spalte + reihe) % 2 else 0.0)
+
+    def f(stoff, p, n, texel):
+        vorn = n[2] < -0.5
+        if stoff == "haube":
+            # Das Gesicht bleibt frei; ein goldener Stirnreif.
+            if vorn and abs(p[0]) < 3.2 and 25.2 < p[1] < 29.8:
+                return None
+            if vorn and 29.8 <= p[1] < 30.8:
+                return ton(DRACHE_GOLD, p, n, texel, 401, straehne=0.0)
+            return schuppe(p, n, texel, 402)
+        if stoff in ("horn", "kralle"):
+            return ton(DRACHE_HORN, p, n, texel, 405, straehne=0.0, hell=-0.2 if p[1] < 2 else 0.0)
+        if stoff in ("kamm", "zacke"):
+            return ton(DRACHE_DUNKEL, p, n, texel, 406, straehne=0.0, hell=0.1)
+        if stoff in ("bauchplatte", "guertel"):
+            if int(p[1]) % 2 == 0:
+                return ton(DRACHE_GOLD, p, n, texel, 407, straehne=0.0, hell=-0.12)
+            return ton(DRACHE_GOLD, p, n, texel, 408, straehne=0.0)
+        if stoff == "schulter":
+            if n[1] > 0.5 and texel[0] % 2 == 0:
+                return ton(DRACHE_GOLD, p, n, texel, 409, straehne=0.0)
+            return schuppe(p, n, texel, 410)
+        if stoff == "knie":
+            return ton(DRACHE_GOLD, p, n, texel, 411, straehne=0.0)
+        return schuppe(p, n, texel, 412)
+    return f
+
+
+DRACHEN_SYMBOLFARBEN = {"#": DRACHE_ROT, "d": DRACHE_DUNKEL, "g": DRACHE_GOLD, "h": DRACHE_HORN, "e": "#1e0c0a"}
+DRACHEN_SYMBOLFORMEN = {
+    "helm": [
+        "................",
+        "..h..........h..",
+        "..hh...dd...hh..",
+        "...hh.dddd.hh...",
+        "....#########...",
+        "...###########..",
+        "..##d#####d###..",
+        "..#gggggggggg#..",
+        "..##........##..",
+        "..#d........d#..",
+        "..#d........d#..",
+        "..#h........h#..",
+        "...h........h...",
+        "................",
+        "................",
+        "................",
+    ],
+    "brust": [
+        "................",
+        ".dd###....###dd.",
+        ".d#g##d..d##g#d.",
+        ".d############d.",
+        "..###gggggg###..",
+        "..###gggggg###..",
+        "...#d#gggg#d#...",
+        "...##gggggg##...",
+        "...#d#gggg#d#...",
+        "...##gggggg##...",
+        "...#d######d#...",
+        "...##########...",
+        "...dddddddddd...",
+        "................",
+        "................",
+        "................",
+    ],
+    "hose": [
+        "................",
+        "................",
+        "...gggggggggg...",
+        "...##########...",
+        "...#d##..##d#...",
+        "...####..####...",
+        "...#d##..##d#...",
+        "...##g#..#g##...",
+        "...#d##..##d#...",
+        "...####..####...",
+        "...#d##..##d#...",
+        "...####..####...",
+        "...dddd..dddd...",
+        "................",
+        "................",
+        "................",
+    ],
+    "stiefel": [
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        "...####..####...",
+        "...#d##..##d#...",
+        "...####..####...",
+        "...#d##..##d#...",
+        "..g####..####g..",
+        "..######..#####.",
+        "..hdhdh...hdhdh.",
+        "................",
+        "................",
+        "................",
+        "................",
+    ],
+}
+
 SAETZE = [
     # (Satz, Maler, Textur, Teile {teil: (Kennung, Namen, Schutz, Haltbarkeit, Muster)}, Material, Reparatur)
     # Etwas schwaecher als Eisen (2/6/5/2, 165/240/225/195), wie Fynn es will.
@@ -275,7 +423,18 @@ SAETZE = [
         "hose": ("baerenfellhose", ("Bärenbeinschutz", "Bear Leggings"), 4, 205, ["FIF", "I I", "F F"]),
         "stiefel": ("baerenfellstiefel", ("Bärenstiefel", "Bear Boots"), 2, 180, ["F F", "I I"]),
     }, "fynn:baerenfell", "minecraft:iron_ingot", 1),
+    # Stark wie Diamant (3/8/6/3), dazu etwas haltbarer; gebaut aus
+    # Drachenschuppen und Gold.
+    ("drache", drache_satz, drache_maler, "drachenruestung", {
+        "helm": ("drachenhelm", ("Drachenhelm", "Dragon Helmet"), 3, 420, ["FIF", "F F"]),
+        "brust": ("drachenpanzer", ("Drachenpanzer", "Dragon Chestplate"), 8, 600, ["F F", "FIF", "FFF"]),
+        "hose": ("drachenbeinschutz", ("Drachenbeinschutz", "Dragon Leggings"), 6, 560, ["FIF", "F F", "F F"]),
+        "stiefel": ("drachenstiefel", ("Drachenstiefel", "Dragon Boots"), 3, 490, ["F F", "I I"]),
+    }, "fynn:drachenschuppe", "fynn:drachenschuppe", 2),
 ]
+
+# Welches Metall in den Rezepten steckt (I) und wie die Symbole aussehen.
+ZUTAT = {"baer": "minecraft:iron_ingot", "drache": "minecraft:gold_ingot"}
 
 
 def gegenstand(kennung, teil, schutz, haltbar, reparatur, haerte):
@@ -396,6 +555,7 @@ def bewegung():
 def main():
     from vorlagen.tierformen import FORMEN
     FORMEN.update({f"ruestung_{k}": v for k, v in SYMBOLFORMEN.items()})
+    FORMEN.update({f"drache_{k}": v for k, v in DRACHEN_SYMBOLFORMEN.items()})
     liste_pfad = RES / "textures" / "item_texture.json"
     liste = json.loads(liste_pfad.read_text(encoding="utf-8"))
     namen = []
@@ -411,10 +571,11 @@ def main():
             tp.schreibe(RES / "attachables" / f"{kennung}.json",
                         attachable(kennung, teil, textur, bewegt=(kurz == "baer" and teil == "brust")))
             tp.schreibe(VER / "items" / f"{kennung}.json", gegenstand(kennung, teil, schutz, haltbar, reparatur, haerte))
-            schluessel = {"F": material, "I": "minecraft:iron_ingot"}
+            schluessel = {"F": material, "I": ZUTAT[kurz]}
             schluessel = {k: v for k, v in schluessel.items() if any(k in z for z in muster)}
             tp.schreibe(VER / "recipes" / f"{kennung}.json", tp.geformt(kennung, muster, schluessel, f"fynn:{kennung}"))
-            symbol = tp.male(f"ruestung_{teil}", SYMBOLFARBEN)
+            symbol = tp.male(f"ruestung_{teil}" if kurz == "baer" else f"{kurz}_{teil}",
+                             SYMBOLFARBEN if kurz == "baer" else DRACHEN_SYMBOLFARBEN)
             symbol.save(RES / "textures" / "items" / f"{kennung}.png")
             liste["texture_data"][kennung] = {"textures": f"textures/items/{kennung}"}
             namen.append(("item", kennung, name))

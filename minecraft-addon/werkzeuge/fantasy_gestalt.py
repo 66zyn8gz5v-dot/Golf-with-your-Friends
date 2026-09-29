@@ -408,3 +408,132 @@ def sandwurm_maler(variante):
             return ton(sand, p, n, texel, 862, straehne=0.0)
         return ton(haut, p, n, texel, 863)
     return male
+
+
+# ================================================================== Lindwurm (4.80)
+
+def lindwurm_modell():
+    """Der Drache des Mittelalters: zwei Beine, zwei grosse Lederschwingen,
+    langer Hals, langer Schwanz mit Pfeilspitze. Die Schwingen haben einen
+    Arm und einen Finger - so falten sie sich im Flug."""
+    m = Modell("lindwurm", sichtbreite=6.0, sichthoehe=2.5)
+    rumpf = m.knoch("rumpf", [0, 20, 0])
+    rumpf.kasten([-7, 14, -12], [14, 13, 24], "schuppen")
+    rumpf.kasten([-6, 13, -11], [12, 1, 22], "bauch")
+    for z in range(-10, 11, 4):
+        rumpf.kasten([-0.5, 27, z], [1, 3, 2], "zacke")
+    # Der Hals in drei Gliedern.
+    h1 = m.knoch("hals1", [0, 23, -12], "rumpf")
+    h1.kasten([-4, 19, -20], [8, 8, 8], "schuppen")
+    h1.kasten([-0.5, 27, -18], [1, 2, 2], "zacke")
+    h2 = m.knoch("hals2", [0, 24, -20], "hals1")
+    h2.kasten([-3.5, 20.5, -27], [7, 7, 7], "schuppen")
+    h2.kasten([-0.5, 27.5, -25], [1, 2, 2], "zacke")
+    h3 = m.knoch("hals3", [0, 25, -27], "hals2")
+    h3.kasten([-3, 22, -33], [6, 6, 6], "schuppen")
+    kopf = m.knoch("kopf", [0, 26, -33], "hals3")
+    kopf.kasten([-4.5, 23, -44], [9, 7, 11], "kopf")
+    kopf.kasten([-3.5, 24, -50], [7, 4, 6], "schnauze")
+    kopf.kasten([-4.5, 29.5, -43], [9, 1, 4], "braue")
+    paar(kopf, [2.5, 29, -38], [2, 2, 8], "horn", drehung=[22, 12, 0], drehpunkt=[3.5, 30, -38])
+    paar(kopf, [3.5, 26, -39], [2, 1, 4], "horn", drehung=[5, 25, 0], drehpunkt=[4.5, 26.5, -39])
+    kiefer = m.knoch("kiefer", [0, 24, -40], "kopf")
+    kiefer.kasten([-3.5, 21.5, -50], [7, 2, 10], "kiefer")
+    # Der Schwanz in vier Gliedern, am Ende eine Pfeilspitze.
+    teile = [([-5, 16, 12], [10, 9, 10]), ([-4, 17, 22], [8, 7, 10]), ([-3, 18, 32], [6, 5, 11]),
+             ([-2, 18.5, 43], [4, 4, 12])]
+    eltern = "rumpf"
+    for i, (ursprung, groesse) in enumerate(teile):
+        b = m.knoch(f"schwanz{i + 1}", [0, 20, ursprung[2]], eltern)
+        b.kasten(ursprung, groesse, "schuppen")
+        b.kasten([-0.5, ursprung[1] + groesse[1], ursprung[2] + 2], [1, 2, 2], "zacke")
+        eltern = f"schwanz{i + 1}"
+    m.finde("schwanz4").kasten([-4, 19, 55], [8, 2, 6], "spitze")
+    # Die Schwingen: Arm mit Flughaut, daran der Finger mit mehr Flughaut.
+    for seite, x in (("links", 7), ("rechts", -7)):
+        z_ = 1 if x > 0 else -1
+        arm = m.knoch(f"fluegel_{seite}", [x, 26, -6], "rumpf")
+        arm.kasten([x if x > 0 else x - 18, 25, -7], [18, 3, 3], "knochen")
+        arm.kasten([x if x > 0 else x - 18, 25.5, -4], [18, 1, 20], "haut")
+        finger = m.knoch(f"fluegelspitze_{seite}", [x + 18 * z_, 26, -6], f"fluegel_{seite}")
+        fx = x + 18 * z_
+        finger.kasten([fx if x > 0 else fx - 22, 25, -6.5], [22, 2, 2], "knochen")
+        finger.kasten([fx if x > 0 else fx - 22, 25.5, -4.5], [22, 1, 24], "haut")
+        finger.kasten([fx + (20 if x > 0 else -22), 25, -8], [2, 2, 2], "kralle")
+    # Zwei kraeftige Beine mit Knie und Krallenfuss.
+    for seite, x in (("links", 5), ("rechts", -5)):
+        bein = m.knoch(f"bein_{seite}", [x, 16, 3], "rumpf")
+        bein.kasten([x - 2.5, 8, 0], [5, 9, 6], "schuppen")
+        unter = m.knoch(f"unterbein_{seite}", [x, 9, 3], f"bein_{seite}")
+        unter.kasten([x - 1.5, 2, 2], [3, 8, 3], "schuppen")
+        unter.kasten([x - 2.5, 0, -2], [5, 2, 7], "fuss")
+        for i in range(3):
+            unter.kasten([x - 2.5 + i * 2, 0, -3], [1, 1, 1], "kralle")
+    return m
+
+
+LINDWURM_FARBEN = {
+    # Schuppen, Schuppen dunkel, Bauch, Flughaut, Augen
+    "gruen":   ("#3a5a2e", "#243a1e", "#c0b078", "#5a4a2e", "#ffa21a"),
+    "rot":     ("#7a2420", "#4a1412", "#d8b050", "#6a2a1e", "#ffd21a"),
+    "schwarz": ("#26262c", "#141418", "#6a5a78", "#2e2a36", "#b86aff"),
+}
+
+
+def lindwurm_maler(variante):
+    schuppen, dunkel, bauch, haut, augen = LINDWURM_FARBEN.get(variante, LINDWURM_FARBEN["gruen"])
+
+    def male(stoff, p, n, texel):
+        x, y, z = p
+        if stoff in ("schuppen", "kopf", "schnauze"):
+            if stoff == "kopf":
+                for ax in (-4.5, 4.5):
+                    if abs(n[0]) > 0.5 and x * ax > 0 and abs(y - 27.5) < 0.6 and abs(z + 41) < 1.1:
+                        return glut(augen) if abs(z + 41) > 0.4 else hexfarbe("#140a04")
+            if stoff == "schnauze" and n[2] < -0.5 and y > 26.5 and abs(x) > 1.5:
+                return hexfarbe("#140c08")                                    # Nuestern
+            if n[1] < -0.5:
+                # Der Bauch in Querschilden.
+                return ton(bauch, p, n, texel, 871, straehne=0.0, hell=-0.12 if int(z) % 2 == 0 else 0.0)
+            # Schuppen im Versatz: zwei mal zwei, jede zweite Reihe verschoben.
+            reihe = int(math.floor(y / 2))
+            spalte = int(math.floor((texel[0] + reihe) / 2))
+            if (spalte + reihe) % 3 == 0:
+                return ton(dunkel, p, n, texel, 872, straehne=0.0)
+            return ton(schuppen, p, n, texel, 873, straehne=0.0, hell=0.06 if n[1] > 0.5 else 0.0)
+        if stoff == "bauch":
+            return ton(bauch, p, n, texel, 874, straehne=0.0, hell=-0.12 if int(z) % 2 == 0 else 0.0)
+        if stoff == "braue":
+            return ton(dunkel, p, n, texel, 875, straehne=0.0)
+        if stoff in ("horn", "kralle"):
+            return ton("#d8ccb0", p, n, texel, 876, straehne=0.0, hell=-0.25 if stoff == "kralle" else 0.0)
+        if stoff == "kiefer":
+            if n[1] > 0.5 and (abs(x) > 2.5 or z < -48.5) and texel[0] % 2 == 0:
+                return hexfarbe("#f0e8d4")                                    # Zaehne
+            if n[1] > 0.5:
+                return ton("#6a1a1a", p, n, texel, 877, straehne=0.0)
+            return ton(bauch if n[1] < -0.5 else schuppen, p, n, texel, 878, straehne=0.0)
+        if stoff == "zacke":
+            return ton(dunkel, p, n, texel, 879, straehne=0.0, hell=-0.1)
+        if stoff == "spitze":
+            # Die Pfeilspitze am Schwanz: vorn breit, hinten spitz.
+            if abs(x) > 4 - (z - 55) * 0.66:
+                return None
+            return ton(dunkel, p, n, texel, 880, straehne=0.0)
+        if stoff == "knochen":
+            return ton(dunkel, p, n, texel, 881, straehne=0.0, hell=0.1)
+        if stoff == "haut":
+            # Flughaut mit Adern; die Hinterkante in Boegen ausgeschnitten.
+            hinten = z - (-4.5)
+            # Zur Spitze hin laeuft die Schwinge schmal zu.
+            tiefe = 20 if abs(x) < 25 else 24 - (abs(x) - 25) * 0.8
+            bogen = abs(math.sin(abs(x) / 6.5 * math.pi)) * 3.5
+            if hinten > tiefe - bogen:
+                return None
+            if texel[0] % 6 == 0:
+                return ton(dunkel, p, n, texel, 882, straehne=0.0, hell=0.15)
+            return ton(haut, p, n, texel, 883, straehne=0.0, hell=-0.05 if n[1] < 0 else 0.05)
+        if stoff == "fuss":
+            return ton(dunkel, p, n, texel, 884, straehne=0.0)
+        return ton(schuppen, p, n, texel, 885)
+    return male

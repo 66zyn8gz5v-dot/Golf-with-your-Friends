@@ -505,6 +505,19 @@ EIER = {
         },
         "farben": {"T": "#f0e8d4", "M": "#8a2a2a", "m": "#5a1414", "k": "#1a0a08", "R": "#7a5a36"},
     },
+    "lindwurm": {
+        "oben": "#3a5a2e", "unten": "#c0b078", "teilung": 11, "flecken": ("#243a1e", 0.3),
+        "karte": {
+            1: "...h........h...",
+            2: "...hh......hh...",
+            3: "....hh....hh....",
+            6: ".....y....y.....",
+            8: "..WW........WW..",
+            9: ".WWW........WWW.",
+            10: "WWW..........WWW",
+        },
+        "farben": {"h": "#d8ccb0", "y": "#ffa21a", "W": "#5a4a2e"},
+    },
     "glimmerling": {
         "oben": "#4e5a38", "flecken": ("#5e6a44", 0.25),
         "karte": {

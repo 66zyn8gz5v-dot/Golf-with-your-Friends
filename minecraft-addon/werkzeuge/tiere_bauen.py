@@ -582,7 +582,7 @@ def verhalten(t, varianten_namen):
             "minecraft:behavior.random_breach": {"priority": 6, "interval": 200, "xz_dist": 6, "cooldown_time": 20.0},
         })
 
-    elif art in ("kleinvogel", "kriecher", "insekt"):
+    elif art in ("kleinvogel", "kriecher", "insekt", "drache"):
         pass    # alles Noetige steht in t["komponenten"]
     elif art == "vogel":
         # Wie Mojangs Phantom: gleitet ohne Schwerkraft, kreist hoch ueber
@@ -1342,7 +1342,7 @@ def bewegungen(t, modell):
                 a["schwimmen"]["bones"][bein] = {"rotation": [70.0, 0.0, 0.0]}
     elif art == "vogel":
         a.update(vogelbewegungen())
-    elif art in ("kleinvogel", "kriecher", "insekt"):
+    elif art in ("kleinvogel", "kriecher", "insekt", "drache"):
         pass    # ihre Bewegungen bringen sie mit (eigene_bewegungen)
     else:
         # Im Wasser: Fische schlagen seitlich (um y), Wale auf und ab (um x).

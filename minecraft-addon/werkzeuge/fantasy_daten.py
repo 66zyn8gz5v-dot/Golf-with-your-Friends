@@ -440,4 +440,121 @@ def _sandwurm():
     }
 
 
-FANTASY = [_feuermuecke(), _sturmlibelle(), _frostkaefer(), _basilisk(), _sandwurm()]
+# ------------------------------------------------------------ Lindwurm (4.80)
+
+def lindwurm_bewegungen():
+    # Kraeftige Schlaege, dazwischen gleitet er (puls): Dann stehen die
+    # Schwingen weit, und nur die Spitzen wippen.
+    schlagen = f"(0.35 + 0.65 * math.clamp(math.sin({LT} * 30.0) * 2.0 + 0.6, 0.0, 1.0))"
+    schlag = f"math.sin({LT} * 250.0) * 42.0 * {schlagen}"
+    nach = f"math.sin({LT} * 250.0 - 55.0) * 30.0 * {schlagen}"
+    flug = {"loop": True, "bones": {
+        "fluegel_links": {"rotation": [0.0, 0.0, f"-6.0 - {schlag}"]},
+        "fluegel_rechts": {"rotation": [0.0, 0.0, f"6.0 + {schlag}"]},
+        "fluegelspitze_links": {"rotation": [0.0, 0.0, f"-{nach}"]},
+        "fluegelspitze_rechts": {"rotation": [0.0, 0.0, f"{nach}"]},
+        "rumpf": {"rotation": ["-query.target_x_rotation * 0.4", 0.0, "variable.fynn_dreh * 2.5"],
+                  "position": [0.0, f"-math.sin({LT} * 250.0 - 30.0) * 1.5 * {schlagen}", 0.0]},
+        # Der Hals schwingt im S, der Kopf haelt dagegen.
+        "hals1": {"rotation": [f"-8.0 + math.sin({LT} * 60.0) * 4.0", f"math.sin({LT} * 45.0) * 6.0", 0.0]},
+        "hals2": {"rotation": [f"6.0 + math.sin({LT} * 60.0 - 40.0) * 4.0", f"math.sin({LT} * 45.0 - 40.0) * 6.0", 0.0]},
+        "hals3": {"rotation": [f"6.0", f"math.sin({LT} * 45.0 - 80.0) * 6.0", 0.0]},
+        "kopf": {"rotation": [f"math.sin({LT} * 60.0 - 120.0) * 4.0",
+                              f"-math.sin({LT} * 45.0) * 10.0 - variable.fynn_dreh * 2.0", 0.0]},
+        **{f"schwanz{i}": {"rotation": [f"math.sin({LT} * 70.0 - {i * 40}) * 4.0",
+                                        f"math.sin({LT} * 55.0 - {i * 45}) * {5 + i * 3} - variable.fynn_dreh * {i}",
+                                        0.0]} for i in range(1, 5)},
+        # Im Flug: die Beine angezogen.
+        "bein_links": {"rotation": [55.0, 0.0, 0.0]}, "bein_rechts": {"rotation": [55.0, 0.0, 0.0]},
+        "unterbein_links": {"rotation": [40.0, 0.0, 0.0]}, "unterbein_rechts": {"rotation": [40.0, 0.0, 0.0]},
+    }}
+    # Am Boden: Schwingen angelegt, Hals aufgerichtet, der Schwanz liegt.
+    stehen = {"loop": True, "bones": {
+        "fluegel_links": {"rotation": [0.0, -55.0, -60.0]},
+        "fluegel_rechts": {"rotation": [0.0, 55.0, 60.0]},
+        "fluegelspitze_links": {"rotation": [0.0, 150.0, 0.0]},
+        "fluegelspitze_rechts": {"rotation": [0.0, -150.0, 0.0]},
+        "hals1": {"rotation": [-25.0, 0.0, 0.0]}, "hals2": {"rotation": [-10.0, 0.0, 0.0]},
+        "kopf": {"rotation": [f"30.0 + math.sin({LT} * 40.0) * 3.0", f"math.sin({LT} * 23.0) * 15.0", 0.0]},
+        "rumpf": {"scale": [1.0, f"1.0 + math.sin({LT} * 60.0) * 0.015", 1.0]},
+        **{f"schwanz{i}": {"rotation": [8.0 if i == 1 else 2.0, f"math.sin({LT} * 30.0 - {i * 40}) * 6.0", 0.0]}
+           for i in range(1, 5)},
+    }}
+    # Feueratem: Hals gestreckt, Kopf vor, das Maul weit auf, die Schwingen
+    # halten still.
+    feuer = {"loop": True, "bones": {
+        "hals1": {"rotation": [-4.0, 0.0, 0.0]}, "hals2": {"rotation": [-4.0, 0.0, 0.0]},
+        "hals3": {"rotation": [-4.0, 0.0, 0.0]},
+        "kopf": {"rotation": [f"14.0 + math.sin({LT} * 900.0) * 2.0", 0.0, 0.0]},
+        "kiefer": {"rotation": [38.0, 0.0, 0.0]},
+    }}
+    # Im Sturzflug die Schwingen anlegen, die Krallen voraus.
+    stossen = {"loop": True, "bones": {
+        "fluegel_links": {"rotation": [0.0, -35.0, -20.0]}, "fluegel_rechts": {"rotation": [0.0, 35.0, 20.0]},
+        "fluegelspitze_links": {"rotation": [0.0, -60.0, 0.0]}, "fluegelspitze_rechts": {"rotation": [0.0, 60.0, 0.0]},
+        "bein_links": {"rotation": [-50.0, 0.0, 0.0]}, "bein_rechts": {"rotation": [-50.0, 0.0, 0.0]},
+        "kiefer": {"rotation": [25.0, 0.0, 0.0]},
+    }}
+    return {
+        "flug": (flug, "1.0 - query.is_on_ground"),
+        "stand": (stehen, "query.is_on_ground"),
+        "feueratem": (feuer, "query.property('fynn:feuer')"),
+        "sturzflug": (stossen, "math.clamp(-query.vertical_speed * 0.6 - 0.2, 0.0, 1.0)"),
+    }
+
+
+def _lindwurm():
+    kein_kreativ = {"test": "has_ability", "subject": "other", "value": "instabuild", "operator": "!="}
+    k = {
+        # Er fliegt wie Mojangs Phantom: kreist hoch oben und stoesst herab.
+        "minecraft:movement.glide": {"start_speed": 0.12, "speed_when_turning": 0.2},
+        "minecraft:physics": {"has_gravity": False},
+        "minecraft:breathable": {"total_supply": 15, "suffocate_time": 0},
+        "minecraft:fire_immune": {},
+        "minecraft:follow_range": {"value": 64, "max": 64},
+        "minecraft:knockback_resistance": {"value": 0.8},
+        "minecraft:game_event_movement_tracking": {"emit_flap": True},
+        "minecraft:attack": {"damage": 12},
+        "minecraft:behavior.hurt_by_target": {"priority": 1},
+        "minecraft:behavior.circle_around_anchor": {
+            "priority": 3, "goal_radius": 1.5, "radius_range": {"min": 12.0, "max": 22.0},
+            "height_offset_range": {"min": -4, "max": 6}, "height_above_target_range": {"min": 16, "max": 30}},
+        "minecraft:behavior.swoop_attack": {"priority": 2, "damage_reach": 0.6, "speed_multiplier": 1.0,
+                                            "delay_range": {"min": 10.0, "max": 20.0}},
+        "minecraft:behavior.nearest_attackable_target": {
+            "priority": 2, "must_see": True, "reselect_targets": True, "within_radius": 48,
+            "target_search_height": 48,
+            "entity_types": [{"filters": {"all_of": [SPIELER, kein_kreativ]}, "max_dist": 48},
+                             {"filters": familie("cow", "sheep", "horse", "bison", "elch"), "max_dist": 32}]},
+    }
+    return {
+        "id": "lindwurm", "name": ("Lindwurm", "Wyvern"), "gestalt": "lindwurm", "gruppe": "Fantasy",
+        "varianten": [("gruen", 50), ("rot", 35), ("schwarz", 15)],
+        "art": "drache", "verhalten": "drache", "keine_panik": True,
+        "leben": 120, "schaden": 12, "tempo": 1.4, "kollision": (3.0, 2.2), "baby": False, "herde": (1, 1),
+        "biome": [["mountains"], ["extreme_hills"]], "gewicht": 1,
+        "spawn_bedingungen": [{"minecraft:spawns_on_surface": {}, "minecraft:weight": {"default": 1},
+                               "minecraft:herd": {"min_size": 1, "max_size": 1},
+                               "minecraft:density_limit": {"surface": 1},
+                               "minecraft:height_filter": {"min": 90, "max": 320},
+                               "minecraft:biome_filter": [{"test": "has_biome_tag", "operator": "==",
+                                                           "value": tag}]}
+                              for tag in ("mountains", "extreme_hills", "frozen_peaks", "jagged_peaks")],
+        "population": "monster",
+        "material": "entity_emissive_alpha",
+        "beute": [("fynn:drachenschuppe", 4, 7, 1.0, False), ("minecraft:bone", 1, 3, 1.0, False)],
+        "laute": {"ambient": "mob.enderdragon.growl", "hurt": "mob.enderdragon.hit", "death": "mob.ravager.death",
+                  "pitch": [1.2, 1.4]},
+        "ei": ("#3a5a2e", "#ffa21a"),
+        "komponenten": k,
+        "eigenschaften": eigenschaft("fynn:feuer"),
+        "eigene_bewegungen": lindwurm_bewegungen(),
+        "steckbrief_extra": [
+            ["Lebt", "selten, hoch in den Bergen – kreist über den Gipfeln"],
+            ["Angriff", "stößt aus der Höhe herab und speit Feuer"],
+            ["Drachenschuppen", "daraus die Drachenschuppen-Rüstung (stark wie Diamant) – "
+                                "ganz getragen schützt sie vor Feuer"]],
+    }
+
+
+FANTASY = [_feuermuecke(), _sturmlibelle(), _frostkaefer(), _basilisk(), _sandwurm(), _lindwurm()]

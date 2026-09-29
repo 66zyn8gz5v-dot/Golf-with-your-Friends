@@ -1,0 +1,32 @@
+{
+  "format_version": "1.12",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "fynn:drachenstiefel"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "F F",
+      "I I"
+    ],
+    "key": {
+      "F": {
+        "item": "fynn:drachenschuppe"
+      },
+      "I": {
+        "item": "minecraft:gold_ingot"
+      }
+    },
+    "unlock": [
+      {
+        "item": "fynn:drachenschuppe"
+      }
+    ],
+    "result": {
+      "item": "fynn:drachenstiefel",
+      "count": 1
+    }
+  }
+}

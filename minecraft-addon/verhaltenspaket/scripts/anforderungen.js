@@ -64,6 +64,7 @@ const SAETZE = {
     waldlaeufer: [{ ruestung: 8, agility: 5 }, ["waldlaeuferkapuze", "waldlaeuferwams", "waldlaeuferhose", "waldlaeuferstiefel"]],
     assassine: [{ ruestung: 8, agility: 10 }, ["assassinenkapuze", "assassinenharnisch", "assassinenhose", "assassinenstiefel"]],
     baer: [{ ruestung: 12 }, ["baerenkapuze", "baerenfellmantel", "baerenfellhose", "baerenfellstiefel"]],
+    drache: [{ ruestung: 32 }, ["drachenhelm", "drachenpanzer", "drachenbeinschutz", "drachenstiefel"]],
 };
 for (const [werte, teile] of Object.values(SAETZE)) for (const t of teile) EIGENE[`fynn:${t}`] = werte;
 

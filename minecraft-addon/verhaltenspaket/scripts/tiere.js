@@ -27,6 +27,9 @@ const JAEGERKETTE = "fynn:jaegerkette";
 export const SAETZE = [
     { teile: ["fynn:baerenkapuze", "fynn:baerenfellmantel", "fynn:baerenfellhose", "fynn:baerenfellstiefel"],
       wirkung: "strength", stufe: 0 },
+    // Die Drachenschuppen-Ruestung (4.80): ganz getragen gegen Feuer gefeit.
+    { teile: ["fynn:drachenhelm", "fynn:drachenpanzer", "fynn:drachenbeinschutz", "fynn:drachenstiefel"],
+      wirkung: "fire_resistance", stufe: 0 },
 ];
 
 export function ganzerSatz(spieler) {

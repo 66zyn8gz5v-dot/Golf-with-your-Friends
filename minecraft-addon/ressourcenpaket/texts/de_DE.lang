@@ -44,11 +44,11 @@ item.fynn:eisenklinge.name=Eisenklinge
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.79
+item.iron_sword.name=Stahlschwert 4.80
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.79
-item.fynn:degen.name=Degen 4.79
+item.fynn:degen=Degen 4.80
+item.fynn:degen.name=Degen 4.80
 
 
 
@@ -165,15 +165,6 @@ item.fynn:elefantensattel.name=Elefantensattel
 entity.fynn:statue.name=Statue
 
 
-## Neue Ruestungen
-item.fynn:baerenkapuze=Bärenhelm
-item.fynn:baerenkapuze.name=Bärenhelm
-item.fynn:baerenfellmantel=Bärenpanzer
-item.fynn:baerenfellmantel.name=Bärenpanzer
-item.fynn:baerenfellhose=Bärenbeinschutz
-item.fynn:baerenfellhose.name=Bärenbeinschutz
-item.fynn:baerenfellstiefel=Bärenstiefel
-item.fynn:baerenfellstiefel.name=Bärenstiefel
 item.fynn:magierhut=Zauberhut
 item.fynn:magierhut.name=Zauberhut
 item.fynn:magierrobe=Magierrobe
@@ -469,27 +460,9 @@ action.interact.fynn_schleim=Schleim abfüllen
 
 
 
-## Fantasy-Wesen
-item.fynn:wurmzahn=Wurmzahn
-item.fynn:sandperle=Sandperle
-item.fynn:sandklopfer=Sandklopfer
-item.fynn:glutstaub=Glutstaub
-item.fynn:glutflasche=Glutflasche
-item.fynn:sturmfluegel=Sturmflügel
-item.fynn:frostpanzer=Frostpanzer
-item.fynn:frosttalisman=Frosttalisman
-item.fynn:basiliskenauge=Basiliskenauge
-entity.fynn:glutflasche_wurf.name=Glutflasche
-action.interact.fynn_fangen=Einfangen
-item.fynn:wurmzahn.name=Wurmzahn
-item.fynn:sandperle.name=Sandperle
-item.fynn:sandklopfer.name=Sandklopfer
-item.fynn:glutstaub.name=Glutstaub
-item.fynn:glutflasche.name=Glutflasche
-item.fynn:sturmfluegel.name=Sturmflügel
-item.fynn:frostpanzer.name=Frostpanzer
-item.fynn:frosttalisman.name=Frosttalisman
-item.fynn:basiliskenauge.name=Basiliskenauge
+
+
+
 
 ## Die Tiere
 entity.fynn:braunbaer.name=Braunbär
@@ -546,3 +519,47 @@ entity.fynn:basilisk.name=Basilisk
 item.spawn_egg.entity.fynn:basilisk.name=Basilisk-Spawn-Ei
 entity.fynn:sandwurm.name=Sandwurm
 item.spawn_egg.entity.fynn:sandwurm.name=Sandwurm-Spawn-Ei
+entity.fynn:lindwurm.name=Lindwurm
+item.spawn_egg.entity.fynn:lindwurm.name=Lindwurm-Spawn-Ei
+
+## Fantasy-Wesen
+item.fynn:wurmzahn=Wurmzahn
+item.fynn:sandperle=Sandperle
+item.fynn:sandklopfer=Sandklopfer
+item.fynn:drachenschuppe=Drachenschuppe
+item.fynn:glutstaub=Glutstaub
+item.fynn:glutflasche=Glutflasche
+item.fynn:sturmfluegel=Sturmflügel
+item.fynn:frostpanzer=Frostpanzer
+item.fynn:frosttalisman=Frosttalisman
+item.fynn:basiliskenauge=Basiliskenauge
+entity.fynn:glutflasche_wurf.name=Glutflasche
+action.interact.fynn_fangen=Einfangen
+item.fynn:wurmzahn.name=Wurmzahn
+item.fynn:sandperle.name=Sandperle
+item.fynn:sandklopfer.name=Sandklopfer
+item.fynn:drachenschuppe.name=Drachenschuppe
+item.fynn:glutstaub.name=Glutstaub
+item.fynn:glutflasche.name=Glutflasche
+item.fynn:sturmfluegel.name=Sturmflügel
+item.fynn:frostpanzer.name=Frostpanzer
+item.fynn:frosttalisman.name=Frosttalisman
+item.fynn:basiliskenauge.name=Basiliskenauge
+
+## Neue Ruestungen
+item.fynn:baerenkapuze=Bärenhelm
+item.fynn:baerenkapuze.name=Bärenhelm
+item.fynn:baerenfellmantel=Bärenpanzer
+item.fynn:baerenfellmantel.name=Bärenpanzer
+item.fynn:baerenfellhose=Bärenbeinschutz
+item.fynn:baerenfellhose.name=Bärenbeinschutz
+item.fynn:baerenfellstiefel=Bärenstiefel
+item.fynn:baerenfellstiefel.name=Bärenstiefel
+item.fynn:drachenhelm=Drachenhelm
+item.fynn:drachenhelm.name=Drachenhelm
+item.fynn:drachenpanzer=Drachenpanzer
+item.fynn:drachenpanzer.name=Drachenpanzer
+item.fynn:drachenbeinschutz=Drachenbeinschutz
+item.fynn:drachenbeinschutz.name=Drachenbeinschutz
+item.fynn:drachenstiefel=Drachenstiefel
+item.fynn:drachenstiefel.name=Drachenstiefel

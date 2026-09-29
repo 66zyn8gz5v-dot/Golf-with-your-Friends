@@ -562,6 +562,24 @@
     },
     "sandwurm_ei": {
       "textures": "textures/items/sandwurm_ei"
+    },
+    "drachenschuppe": {
+      "textures": "textures/items/drachenschuppe"
+    },
+    "drachenhelm": {
+      "textures": "textures/items/drachenhelm"
+    },
+    "drachenpanzer": {
+      "textures": "textures/items/drachenpanzer"
+    },
+    "drachenbeinschutz": {
+      "textures": "textures/items/drachenbeinschutz"
+    },
+    "drachenstiefel": {
+      "textures": "textures/items/drachenstiefel"
+    },
+    "lindwurm_ei": {
+      "textures": "textures/items/lindwurm_ei"
     }
   }
 }

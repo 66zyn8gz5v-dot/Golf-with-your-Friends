@@ -1,0 +1,317 @@
+{
+  "format_version": "1.10.0",
+  "animations": {
+    "animation.fynn.lindwurm.flug": {
+      "loop": true,
+      "bones": {
+        "fluegel_links": {
+          "rotation": [
+            0.0,
+            0.0,
+            "-6.0 - math.sin(query.life_time * 250.0) * 42.0 * (0.35 + 0.65 * math.clamp(math.sin(query.life_time * 30.0) * 2.0 + 0.6, 0.0, 1.0))"
+          ]
+        },
+        "fluegel_rechts": {
+          "rotation": [
+            0.0,
+            0.0,
+            "6.0 + math.sin(query.life_time * 250.0) * 42.0 * (0.35 + 0.65 * math.clamp(math.sin(query.life_time * 30.0) * 2.0 + 0.6, 0.0, 1.0))"
+          ]
+        },
+        "fluegelspitze_links": {
+          "rotation": [
+            0.0,
+            0.0,
+            "-math.sin(query.life_time * 250.0 - 55.0) * 30.0 * (0.35 + 0.65 * math.clamp(math.sin(query.life_time * 30.0) * 2.0 + 0.6, 0.0, 1.0))"
+          ]
+        },
+        "fluegelspitze_rechts": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(query.life_time * 250.0 - 55.0) * 30.0 * (0.35 + 0.65 * math.clamp(math.sin(query.life_time * 30.0) * 2.0 + 0.6, 0.0, 1.0))"
+          ]
+        },
+        "rumpf": {
+          "rotation": [
+            "-query.target_x_rotation * 0.4",
+            0.0,
+            "variable.fynn_dreh * 2.5"
+          ],
+          "position": [
+            0.0,
+            "-math.sin(query.life_time * 250.0 - 30.0) * 1.5 * (0.35 + 0.65 * math.clamp(math.sin(query.life_time * 30.0) * 2.0 + 0.6, 0.0, 1.0))",
+            0.0
+          ]
+        },
+        "hals1": {
+          "rotation": [
+            "-8.0 + math.sin(query.life_time * 60.0) * 4.0",
+            "math.sin(query.life_time * 45.0) * 6.0",
+            0.0
+          ]
+        },
+        "hals2": {
+          "rotation": [
+            "6.0 + math.sin(query.life_time * 60.0 - 40.0) * 4.0",
+            "math.sin(query.life_time * 45.0 - 40.0) * 6.0",
+            0.0
+          ]
+        },
+        "hals3": {
+          "rotation": [
+            "6.0",
+            "math.sin(query.life_time * 45.0 - 80.0) * 6.0",
+            0.0
+          ]
+        },
+        "kopf": {
+          "rotation": [
+            "math.sin(query.life_time * 60.0 - 120.0) * 4.0",
+            "-math.sin(query.life_time * 45.0) * 10.0 - variable.fynn_dreh * 2.0",
+            0.0
+          ]
+        },
+        "schwanz1": {
+          "rotation": [
+            "math.sin(query.life_time * 70.0 - 40) * 4.0",
+            "math.sin(query.life_time * 55.0 - 45) * 8 - variable.fynn_dreh * 1",
+            0.0
+          ]
+        },
+        "schwanz2": {
+          "rotation": [
+            "math.sin(query.life_time * 70.0 - 80) * 4.0",
+            "math.sin(query.life_time * 55.0 - 90) * 11 - variable.fynn_dreh * 2",
+            0.0
+          ]
+        },
+        "schwanz3": {
+          "rotation": [
+            "math.sin(query.life_time * 70.0 - 120) * 4.0",
+            "math.sin(query.life_time * 55.0 - 135) * 14 - variable.fynn_dreh * 3",
+            0.0
+          ]
+        },
+        "schwanz4": {
+          "rotation": [
+            "math.sin(query.life_time * 70.0 - 160) * 4.0",
+            "math.sin(query.life_time * 55.0 - 180) * 17 - variable.fynn_dreh * 4",
+            0.0
+          ]
+        },
+        "bein_links": {
+          "rotation": [
+            55.0,
+            0.0,
+            0.0
+          ]
+        },
+        "bein_rechts": {
+          "rotation": [
+            55.0,
+            0.0,
+            0.0
+          ]
+        },
+        "unterbein_links": {
+          "rotation": [
+            40.0,
+            0.0,
+            0.0
+          ]
+        },
+        "unterbein_rechts": {
+          "rotation": [
+            40.0,
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.lindwurm.stand": {
+      "loop": true,
+      "bones": {
+        "fluegel_links": {
+          "rotation": [
+            0.0,
+            -55.0,
+            -60.0
+          ]
+        },
+        "fluegel_rechts": {
+          "rotation": [
+            0.0,
+            55.0,
+            60.0
+          ]
+        },
+        "fluegelspitze_links": {
+          "rotation": [
+            0.0,
+            150.0,
+            0.0
+          ]
+        },
+        "fluegelspitze_rechts": {
+          "rotation": [
+            0.0,
+            -150.0,
+            0.0
+          ]
+        },
+        "hals1": {
+          "rotation": [
+            -25.0,
+            0.0,
+            0.0
+          ]
+        },
+        "hals2": {
+          "rotation": [
+            -10.0,
+            0.0,
+            0.0
+          ]
+        },
+        "kopf": {
+          "rotation": [
+            "30.0 + math.sin(query.life_time * 40.0) * 3.0",
+            "math.sin(query.life_time * 23.0) * 15.0",
+            0.0
+          ]
+        },
+        "rumpf": {
+          "scale": [
+            1.0,
+            "1.0 + math.sin(query.life_time * 60.0) * 0.015",
+            1.0
+          ]
+        },
+        "schwanz1": {
+          "rotation": [
+            8.0,
+            "math.sin(query.life_time * 30.0 - 40) * 6.0",
+            0.0
+          ]
+        },
+        "schwanz2": {
+          "rotation": [
+            2.0,
+            "math.sin(query.life_time * 30.0 - 80) * 6.0",
+            0.0
+          ]
+        },
+        "schwanz3": {
+          "rotation": [
+            2.0,
+            "math.sin(query.life_time * 30.0 - 120) * 6.0",
+            0.0
+          ]
+        },
+        "schwanz4": {
+          "rotation": [
+            2.0,
+            "math.sin(query.life_time * 30.0 - 160) * 6.0",
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.lindwurm.feueratem": {
+      "loop": true,
+      "bones": {
+        "hals1": {
+          "rotation": [
+            -4.0,
+            0.0,
+            0.0
+          ]
+        },
+        "hals2": {
+          "rotation": [
+            -4.0,
+            0.0,
+            0.0
+          ]
+        },
+        "hals3": {
+          "rotation": [
+            -4.0,
+            0.0,
+            0.0
+          ]
+        },
+        "kopf": {
+          "rotation": [
+            "14.0 + math.sin(query.life_time * 900.0) * 2.0",
+            0.0,
+            0.0
+          ]
+        },
+        "kiefer": {
+          "rotation": [
+            38.0,
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.lindwurm.sturzflug": {
+      "loop": true,
+      "bones": {
+        "fluegel_links": {
+          "rotation": [
+            0.0,
+            -35.0,
+            -20.0
+          ]
+        },
+        "fluegel_rechts": {
+          "rotation": [
+            0.0,
+            35.0,
+            20.0
+          ]
+        },
+        "fluegelspitze_links": {
+          "rotation": [
+            0.0,
+            -60.0,
+            0.0
+          ]
+        },
+        "fluegelspitze_rechts": {
+          "rotation": [
+            0.0,
+            60.0,
+            0.0
+          ]
+        },
+        "bein_links": {
+          "rotation": [
+            -50.0,
+            0.0,
+            0.0
+          ]
+        },
+        "bein_rechts": {
+          "rotation": [
+            -50.0,
+            0.0,
+            0.0
+          ]
+        },
+        "kiefer": {
+          "rotation": [
+            25.0,
+            0.0,
+            0.0
+          ]
+        }
+      }
+    }
+  }
+}

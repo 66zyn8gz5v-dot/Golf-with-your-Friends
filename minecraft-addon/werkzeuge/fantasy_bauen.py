@@ -206,6 +206,54 @@ SANDKLOPFER = [
 SANDKLOPFER_F = {"k": K, "L": (150, 100, 60), "I": (200, 200, 205), "z": (238, 230, 210), "S": (120, 84, 50)}
 
 
+# --- Lindwurm (4.80)
+DRACHENSCHUPPE = [
+    "................",
+    "................",
+    "......kkkk......",
+    ".....kRRRRk.....",
+    "....kRrRRrRk....",
+    "...kRrRRRRrRk...",
+    "...kRRRRRRRRk...",
+    "...kRrRRRRrRk...",
+    "...kRRrRRrRRk...",
+    "...kGRRRRRRGk...",
+    "....kGRRRRGk....",
+    ".....kGGGGk.....",
+    "......kGGk......",
+    ".......kk.......",
+    "................",
+    "................",
+]
+DRACHENSCHUPPE_F = {"k": K, "R": (150, 44, 36), "r": (200, 80, 60), "G": (216, 176, 80)}
+
+
+def drachenfeuer():
+    """Der Feueratem des Lindwurms: ein Kegel aus Flammen."""
+    return {"format_version": "1.10.0", "particle_effect": {
+        "description": {"identifier": "fynn:drachenfeuer", "basic_render_parameters": {
+            "material": "particles_blend", "texture": "textures/particle/fynn_rauch"}},
+        "components": {
+            "minecraft:emitter_rate_steady": {"spawn_rate": 90, "max_particles": 120},
+            "minecraft:emitter_lifetime_once": {"active_time": 0.4},
+            "minecraft:emitter_shape_point": {"direction": [
+                "variable.fynn_x + (variable.particle_random_1 - 0.5) * 0.35",
+                "variable.fynn_y + (variable.particle_random_2 - 0.5) * 0.35",
+                "variable.fynn_z + (variable.particle_random_3 - 0.5) * 0.35"]},
+            "minecraft:particle_lifetime_expression": {"max_lifetime": "0.7 + variable.particle_random_4 * 0.4"},
+            "minecraft:particle_initial_speed": 14.0,
+            "minecraft:particle_motion_dynamic": {"linear_acceleration": [0, 1.5, 0], "linear_drag_coefficient": 2.2},
+            "minecraft:particle_appearance_billboard": {
+                "size": ["0.25 + variable.particle_age * 1.6", "0.25 + variable.particle_age * 1.6"],
+                "facing_camera_mode": "rotate_xyz",
+                "uv": {"texture_width": 8, "texture_height": 8, "uv": [0, 0], "uv_size": [8, 8]}},
+            "minecraft:particle_appearance_lighting": {},
+            "minecraft:particle_appearance_tinting": {"color": {
+                "interpolant": "variable.particle_age / variable.particle_lifetime",
+                "gradient": {"0.0": "#FFFFF0A0", "0.3": "#FFFF9A2A", "0.7": "#CCD2401A", "1.0": "#00401A10"}}},
+        }}}
+
+
 def sandstaub():
     """Aufwirbelnder Sand, wo der Wurm unter dem Boden zieht."""
     return {"format_version": "1.10.0", "particle_effect": {
@@ -233,6 +281,7 @@ NAMEN = [
     ("item.fynn:wurmzahn", "Wurmzahn", "Sandworm Tooth"),
     ("item.fynn:sandperle", "Sandperle", "Sand Pearl"),
     ("item.fynn:sandklopfer", "Sandklopfer", "Sand Thumper"),
+    ("item.fynn:drachenschuppe", "Drachenschuppe", "Dragon Scale"),
     ("item.fynn:glutstaub", "Glutstaub", "Ember Dust"),
     ("item.fynn:glutflasche", "Glutflasche", "Ember Bottle"),
     ("item.fynn:sturmfluegel", "Sturmflügel", "Storm Wing"),
@@ -252,7 +301,8 @@ def bilder():
             "frosttalisman": rbb.male(FROSTTALISMAN, FROSTTALISMAN_F),
             "basiliskenauge": rbb.male(BASILISKENAUGE, BASILISKENAUGE_F),
             "wurmzahn": rbb.male(WURMZAHN, WURMZAHN_F), "sandperle": rbb.male(SANDPERLE, SANDPERLE_F),
-            "sandklopfer": rbb.male(SANDKLOPFER, SANDKLOPFER_F)}
+            "sandklopfer": rbb.male(SANDKLOPFER, SANDKLOPFER_F),
+            "drachenschuppe": rbb.male(DRACHENSCHUPPE, DRACHENSCHUPPE_F)}
 
 
 def steinstaub():
@@ -329,10 +379,15 @@ def main():
                         {"z": "fynn:wurmzahn", "L": "minecraft:leather", "I": "minecraft:iron_ingot",
                          "S": "minecraft:stick"}, "fynn:sandklopfer"))
     bk.schreibe(RES / "particles" / "sandstaub.particle.json", sandstaub())
+    # Lindwurm (4.80): die Schuppe (daraus die Ruestung, ruestungen_bauen.py)
+    # und sein Feueratem.
+    bk.schreibe(VER / "items" / "drachenschuppe.json", gegenstand("drachenschuppe", {
+        "minecraft:max_stack_size": 64, "minecraft:rarity": "rare"}, "items", BEUTEFACH))
+    bk.schreibe(RES / "particles" / "drachenfeuer.particle.json", drachenfeuer())
     bk.item_bilder(bilder())
     bk.sprache("Fantasy-Wesen", NAMEN)
     print("gebaut: Glutstaub, Glutflasche, Sturmflügel, Frostpanzer, Frosttalisman, Basiliskenauge, "
-          "Wurmzahn, Sandperle, Sandklopfer")
+          "Wurmzahn, Sandperle, Sandklopfer, Drachenschuppe")
     if "--bilder" in sys.argv:
         from PIL import Image
         ordner = Path(sys.argv[sys.argv.index("--bilder") + 1])
