@@ -80,6 +80,27 @@ export const ATEMARTEN = {
             return n;
         },
     },
+    // Der Sturmhauch (Himmelsdrache, 4.92): ein Windstoss voller Funken.
+    // Er schleudert weg, was im Strahl steht, und trifft mit einem Schlag.
+    sturm: {
+        teilchen: "fynn:sturmatem", weite: 14, kegel: 1.1, dauer: 30, anlauf: 6, pause: [120, 200],
+        laut: "mob.breeze.shoot", knistern: "mob.breeze.wind_burst",
+        wesen(ziel, drache) {
+            try {
+                const d = drache.location, o = ziel.location;
+                const r = einheit({ x: o.x - d.x, y: 0, z: o.z - d.z });
+                ziel.applyKnockback({ x: r.x * 2.6, z: r.z * 2.6 }, 0.8);
+            } catch (e) {
+                try { ziel.applyImpulse({ x: 0, y: 0.8, z: 0 }); } catch (f) { /* egal */ }
+            }
+            try { ziel.applyDamage(2, { cause: "lightning", damagingEntity: drache }); } catch (e) { /* egal */ }
+            try {
+                ziel.dimension.spawnParticle("minecraft:electric_spark_particle",
+                    { x: ziel.location.x, y: ziel.location.y + 1, z: ziel.location.z });
+            } catch (e) { /* egal */ }
+        },
+        block() { return 0; },
+    },
 };
 
 export const FAEHIGKEITEN = {
@@ -127,12 +148,35 @@ FAEHIGKEITEN.eiskristalle = {
     },
 };
 
+// Drei Blitze rund um das Ziel, einer nach dem anderen (Himmelsdrache).
+FAEHIGKEITEN.blitzschlag = {
+    min: 8, max: 40, pause: [240, 360], name: "Blitzschlag",
+    wirken(drache, mund, r, ziel) {
+        const dim = drache.dimension;
+        const mitte = ziel?.location ?? { x: mund.x + r.x * 16, y: mund.y + r.y * 16, z: mund.z + r.z * 16 };
+        try { dim.playSound("ambient.weather.thunder", drache.location, { volume: 3, pitch: 1.2 }); } catch (e) { /* egal */ }
+        [0, 10, 20].forEach((warte, i) => {
+            const o = i === 0 ? mitte : { x: mitte.x + (Math.random() - 0.5) * 6, y: mitte.y, z: mitte.z + (Math.random() - 0.5) * 6 };
+            system.runTimeout(() => {
+                try { dim.spawnEntity("minecraft:lightning_bolt", o); } catch (e) { /* egal */ }
+            }, warte);
+        });
+        return mitte;
+    },
+};
+
 export const DRACHEN = {
     "fynn:lindwurm": {
         name: "Lindwurm", atem: "feuer", faehigkeit: "feuerkugel", maul: 5.0, hoehe: 1.8,
         luft: [1200, 2400], boden: [800, 1800],
         // Wie er mit Reiter fliegt: schneller als der Greif, steigt kraeftiger.
         reitflug: { tempo: 1.3, steigen: 0.14, nachziehen: 0.12, schwebe: 0.04, hoechstSteigen: 0.75 },
+    },
+    // Er schwebt: mit Reiter der schnellste, und er faellt kaum.
+    "fynn:himmelsdrache": {
+        name: "Himmelsdrache", atem: "sturm", faehigkeit: "blitzschlag", maul: 3.2, hoehe: 1.3,
+        luft: [1600, 3000], boden: [400, 900],
+        reitflug: { tempo: 1.6, steigen: 0.15, nachziehen: 0.15, schwebe: 0.06, hoechstSteigen: 0.8 },
     },
     // Kleiner und wendiger: fliegt mit Reiter schneller, steigt leichter.
     "fynn:frostwyvern": {
@@ -329,7 +373,7 @@ export function faehigkeitTakt(drache, jetzt, richtung = undefined, zufall = Mat
         r = einheit({ x: ziel.location.x - mund.x, y: ziel.location.y + 0.8 - mund.y, z: ziel.location.z - mund.z });
     }
     z.kugelPause = jetzt + f.pause[0] + Math.floor(zufall() * (f.pause[1] - f.pause[0]));
-    f.wirken(drache, mund, r);
+    f.wirken(drache, mund, r, richtung ? undefined : zielFuer(drache, z, jetzt));
     return f.name;
 }
 

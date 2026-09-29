@@ -44,11 +44,11 @@ item.fynn:eisenklinge.name=Iron Blade
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.91
+item.iron_sword.name=Stahlschwert 4.92
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.91
-item.fynn:degen.name=Degen 4.91
+item.fynn:degen=Degen 4.92
+item.fynn:degen.name=Degen 4.92
 
 
 
@@ -563,6 +563,14 @@ item.fynn:frosttalisman.name=Frost Talisman
 item.fynn:basiliskenauge.name=Basilisk Eye
 
 
+
+
+
+## Drachen
+item.fynn:drachenpfeife=Dragon Whistle
+entity.fynn:eissplitter.name=Ice Shard
+item.fynn:drachenpfeife.name=Dragon Whistle
+
 ## Die Tiere
 entity.fynn:braunbaer.name=Brown Bear
 item.spawn_egg.entity.fynn:braunbaer.name=Brown Bear Spawn Egg
@@ -634,8 +642,5 @@ entity.fynn:lindwurm.name=Fire Dragon
 item.spawn_egg.entity.fynn:lindwurm.name=Fire Dragon Spawn Egg
 entity.fynn:frostwyvern.name=Frost Wyvern
 item.spawn_egg.entity.fynn:frostwyvern.name=Frost Wyvern Spawn Egg
-
-## Drachen
-item.fynn:drachenpfeife=Dragon Whistle
-entity.fynn:eissplitter.name=Ice Shard
-item.fynn:drachenpfeife.name=Dragon Whistle
+entity.fynn:himmelsdrache.name=Sky Serpent
+item.spawn_egg.entity.fynn:himmelsdrache.name=Sky Serpent Spawn Egg

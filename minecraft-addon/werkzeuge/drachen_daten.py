@@ -366,8 +366,92 @@ def eigenschaften_drache():
     return e
 
 
-def drache(eintrag, schwinge, **bewegung):
-    """Setzt zusammen, was alle Drachen gemeinsam haben."""
+def schlangen_bewegungen(glieder=14, hals=2):
+    """Der Himmelsdrache (4.92) hat keine Schwingen: Er schwimmt durch die
+    Luft. Zwei Wellen laufen gleichzeitig von vorn nach hinten durch den
+    Leib - eine seitliche (das Schlaengeln) und eine flachere auf und ab.
+    Jedes Glied kommt einen Takt spaeter, und nach hinten schwingt es weiter
+    aus. Die Beine paddeln, die Barthaare wehen."""
+    def seiten(knochen, werte):
+        for seite, z in (("links", 1), ("rechts", -1)):
+            for name, (x, y, zz) in werte.items():
+                knochen[f"{name}_{seite}"] = {"rotation": [x, y if isinstance(y, (int, float)) else f"{z} * ({y})",
+                                                           zz if isinstance(zz, (int, float)) else f"{z} * ({zz})"]}
+
+    flug = {}
+    flug["rumpf"] = {"rotation": ["-query.target_x_rotation * 0.3", f"math.sin({LT} * 120.0 + 35.0) * 6.0",
+                                  "variable.fynn_dreh * 1.5"],
+                     "position": [0.0, f"math.sin({LT} * 95.0) * 1.2", 0.0]}
+    for i in range(1, glieder + 1):
+        flug[f"schwanz{i}"] = {"rotation": [f"math.sin({LT} * 95.0 - {i * 28}) * 3.5",
+                                            f"math.sin({LT} * 120.0 - {i * 35}) * {7 + i * 0.45:.2f}"
+                                            f" - variable.fynn_dreh * 0.8", 0.0]}
+    for i in range(1, hals + 1):
+        flug[f"hals{i}"] = {"rotation": [f"math.sin({LT} * 95.0 + {40 + i * 20}) * 3.0",
+                                         f"-math.sin({LT} * 120.0 + {35 + i * 30}) * 5.0", 0.0]}
+    flug["kopf"] = {"rotation": [f"math.sin({LT} * 95.0 + 120.0) * 3.0", f"-math.sin({LT} * 120.0 + 120.0) * 6.0", 0.0]}
+    seiten(flug, {"bart": [f"math.sin({LT} * 160.0) * 10.0", f"math.sin({LT} * 130.0) * 12.0", 0.0]})
+    for teil, versatz in (("vorn", 0.0), ("hinten", 90.0)):
+        for seite, ph in (("links", 0.0), ("rechts", 180.0)):
+            p_ = f"{LT} * 120.0 + {versatz + ph}"
+            flug[f"bein_{teil}_{seite}"] = {"rotation": [f"45.0 + math.sin({p_}) * 25.0", 0.0, 0.0]}
+            flug[f"unterbein_{teil}_{seite}"] = {"rotation": [f"-30.0 + math.cos({p_}) * 20.0", 0.0, 0.0]}
+            flug[f"fuss_{teil}_{seite}"] = {"rotation": [40.0, 0.0, 0.0]}
+
+    # Am Boden: Er kriecht in Wellen, im Tempo seines Weges.
+    w = "query.modified_distance_moved * 22.0"
+    gang = {"rumpf": {"rotation": [0.0, f"math.sin({w}) * 5.0", 0.0]}}
+    for i in range(1, glieder + 1):
+        gang[f"schwanz{i}"] = {"rotation": [0.0, f"math.sin({w} - {i * 35}) * {5 + i * 0.4:.2f}", 0.0]}
+    for teil, versatz in (("vorn", 0.0), ("hinten", 180.0)):
+        for seite, ph in (("links", 0.0), ("rechts", 180.0)):
+            gang[f"bein_{teil}_{seite}"] = {"rotation": [f"math.sin({w} + {versatz + ph}) * 30.0", 0.0, 0.0]}
+    stand = {"rumpf": {"scale": [1.0, f"1.0 + math.sin({LT} * 50.0) * 0.015", 1.0]}}
+    for i in range(1, glieder + 1):
+        stand[f"schwanz{i}"] = {"rotation": [0.0, f"math.sin({LT} * 30.0 - {i * 30}) * 3.0", 0.0]}
+    stand["kopf"] = {"rotation": [f"10.0 + math.sin({LT} * 40.0) * 3.0", f"math.sin({LT} * 21.0) * 14.0", 0.0]}
+    seiten(stand, {"bart": [f"math.sin({LT} * 60.0) * 6.0", f"math.sin({LT} * 45.0) * 6.0", 0.0]})
+
+    # Liegen (Schlaf, besiegt): zusammengerollt wie eine Schlange, der Kopf
+    # obenauf.
+    liegen = {"rumpf": {"position": [0.0, -8.0, 0.0],
+                        "scale": [f"1.0 + math.sin({LT} * 40.0) * 0.02", f"1.0 + math.sin({LT} * 40.0) * 0.03", 1.0]}}
+    # Eine Spirale: nach hinten immer enger, so liegt der Schwanz innen.
+    for i in range(1, glieder + 1):
+        liegen[f"schwanz{i}"] = {"rotation": [0.0, 18.0 + i * 2.5, 0.0]}
+    for i in range(1, hals + 1):
+        liegen[f"hals{i}"] = {"rotation": [8.0, -30.0, 0.0]}
+    liegen["kopf"] = {"rotation": [-5.0, -30.0, 0.0]}
+    for teil in ("vorn", "hinten"):
+        for seite in ("links", "rechts"):
+            liegen[f"bein_{teil}_{seite}"] = {"rotation": [-70.0, 0.0, 0.0]}
+            liegen[f"unterbein_{teil}_{seite}"] = {"rotation": [100.0, 0.0, 0.0]}
+    benommen = {"kopf": {"rotation": [f"math.max(0.0, math.sin({LT} * 50.0)) * 6.0", 0.0, 0.0]},
+                "kiefer": {"rotation": [10.0, 0.0, 0.0]}}
+    # Der Sturmhauch: Hals gerade, das Maul weit auf, die Maehne gestraeubt.
+    feuer = {f"hals{i}": {"rotation": [-2.0, 0.0, 0.0]} for i in range(1, hals + 1)}
+    feuer["kopf"] = {"rotation": [f"6.0 + math.sin({LT} * 900.0) * 1.5", 0.0, 0.0]}
+    feuer["kiefer"] = {"rotation": [f"40.0 + math.sin({LT} * 700.0) * 2.0", 0.0, 0.0]}
+    zeit = f"math.mod({LT}, 19.0)"
+    auf = f"math.clamp(math.sin({zeit} / 2.2 * 180.0) * 2.0, 0.0, 1.0)"
+    bruellen = {"kopf": {"rotation": [f"-{auf} * 35.0", 0.0, 0.0]}, "kiefer": {"rotation": [f"{auf} * 35.0", 0.0, 0.0]},
+                "hals1": {"rotation": [f"-{auf} * 15.0", 0.0, 0.0]}}
+    ruht = f"(1.0 - {LIEGT})"
+    return {
+        "flug": ({"loop": True, "bones": flug}, f"{FLIEGT} * {ruht}"),
+        "stand": ({"loop": True, "bones": stand}, f"(1.0 - {FLIEGT}) * {ruht}"),
+        "gehen": ({"loop": True, "bones": gang}, f"(1.0 - {FLIEGT}) * {LAEUFT} * {ruht}"),
+        "liegen": ({"loop": True, "bones": liegen}, LIEGT),
+        "benommen": ({"loop": True, "bones": benommen}, "query.property('fynn:besiegt')"),
+        "feueratem": ({"loop": True, "bones": feuer}, FEUER),
+        "drachenbruellen": ({"loop": True, "bones": bruellen},
+                            f"(1.0 - {FLIEGT}) * (1.0 - {LAEUFT}) * (1.0 - {FEUER}) * {ruht} * ({zeit} < 2.2)"),
+    }
+
+
+def drache(eintrag, schwinge, bewegungen=None, **bewegung):
+    """Setzt zusammen, was alle Drachen gemeinsam haben. bewegungen: eigene
+    (der Himmelsdrache ohne Schwingen); sonst die der Drachen mit Schwingen."""
     gruppen, ereignisse = drachen_zustaende(eintrag.pop("tempo_luft"), eintrag.pop("tempo_boden"),
                                             eintrag.pop("jagt_tiere"), eintrag.pop("sitz"),
                                             schwimmt=eintrag.pop("schwimmt", False))
@@ -378,7 +462,7 @@ def drache(eintrag, schwinge, **bewegung):
         "komponenten": k, "gruppen": gruppen, "ereignisse": ereignisse,
         "start_gruppen": ["fynn:luft", "fynn:wildjagd"], "start_setzen": {"fynn:fliegt": True},
         "eigenschaften": eigenschaften_drache(),
-        "eigene_bewegungen": drachen_bewegungen(schwinge, **bewegung),
+        "eigene_bewegungen": bewegungen or drachen_bewegungen(schwinge, **bewegung),
         # Augenlider nur im Schlaf und besiegt, der Sattel nur gesattelt.
         "sichtbarkeit": [{"lider": "query.property('fynn:schlaeft') || query.property('fynn:besiegt')"},
                          {"sattel": "query.is_saddled"}],
@@ -464,4 +548,42 @@ def _frostwyvern():
     }, dg.FROSTWYVERN_SCHWINGE, hals=4, schwanz=8, beinhoehe=18, stuetzt=True)
 
 
-DRACHEN = [_lindwurm(), _frostwyvern()]
+# ------------------------------------------------------------ Himmelsdrache
+
+def _himmelsdrache():
+    import drachen_gestalt as dg
+    return drache({
+        "id": "himmelsdrache", "name": ("Himmelsdrache", "Sky Serpent"), "gestalt": "himmelsdrache",
+        "varianten": [("jade", 50), ("perle", 35), ("gold", 15)],
+        "leben": 130, "schaden": 8, "tempo": 1.3, "tempo_luft": 1.3, "tempo_boden": 0.2,
+        "kollision": (2.0, 1.6), "herde": (1, 1),
+        "jagt_tiere": ["sheep", "goat", "llama", "rabbit"],
+        "sitz": [0.0, 1.2, -0.1],
+        "biome": [["meadow"], ["savanna"]], "gewicht": 1,
+        "spawn_bedingungen": [{"minecraft:spawns_on_surface": {}, "minecraft:weight": {"default": 1},
+                               "minecraft:herd": {"min_size": 1, "max_size": 1},
+                               "minecraft:density_limit": {"surface": 1},
+                               "minecraft:height_filter": {"min": 80, "max": 320},
+                               "minecraft:biome_filter": [{"test": "has_biome_tag", "operator": "==",
+                                                           "value": tag}]}
+                              for tag in ("meadow", "cherry_grove", "savanna", "extreme_hills", "stony_peaks")],
+        "population": "monster",
+        "material": "entity_emissive_alpha",
+        "beute": [("fynn:drachenschuppe", 2, 4, 1.0, False), ("minecraft:feather", 2, 5, 1.0, False),
+                  ("minecraft:gold_nugget", 3, 8, 1.0, False)],
+        "laute": {"ambient": "mob.enderdragon.growl", "hurt": "mob.enderdragon.hit", "death": "mob.ravager.death",
+                  "pitch": [1.8, 2.0]},
+        "ei": ("#3c8a64", "#e8b030"),
+        # Seine eigenen Blitze tun ihm nichts.
+        "komponenten": {"minecraft:attack": {"damage": 8},
+                        "minecraft:damage_sensor": {"triggers": [{"cause": "fall", "deals_damage": False},
+                                                                 {"cause": "lightning", "deals_damage": False}]}},
+        "atemart": "blitz",
+        "steckbrief_extra": [
+            ["Lebt", "sehr selten über Bergwiesen, Kirschhainen und Savannen – schwebt schlängelnd ohne Flügel"],
+            ["Sturmhauch", "ein Windstoß mit Funken, der alles weit wegschleudert"],
+            ["Blitzschlag", "auf weite Entfernung: drei Blitze, einer nach dem anderen, rund um sein Ziel"]],
+    }, None, bewegungen=schlangen_bewegungen(dg.HIMMELSDRACHE_GLIEDER, 2))
+
+
+DRACHEN = [_lindwurm(), _frostwyvern(), _himmelsdrache()]

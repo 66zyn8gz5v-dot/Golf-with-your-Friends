@@ -651,3 +651,84 @@ def frostwyvern_maler(variante):
                                   H.hoehe(p, n, texel) if abs(n[1]) < 0.5 else (1.0 if n[1] > 0 else 0.3), 3))
         return False
     return drachen_maler("frostwyvern", f, FROSTWYVERN_SCHWINGE, eis)
+
+
+# ================================================================== Himmelsdrache (4.92)
+
+HIMMELSDRACHE_GLIEDER = 14
+
+
+def himmelsdrache_modell():
+    """Der Himmelsdrache: lang wie eine Schlange, keine Schwingen - er
+    schwebt schlaengelnd durch die Luft wie die Drachen aus dem Osten. Ein
+    Vorderleib mit kleinen Beinen, ein kurzer Hals, ein Kopf mit Geweih,
+    langen Barthaaren und einer Maehne, dann vierzehn Glieder, an denen
+    weiter hinten das zweite Beinpaar sitzt, und am Ende eine Quaste."""
+    m = Modell("himmelsdrache", sichtbreite=9.0, sichthoehe=3.0)
+    MAEULER.pop("himmelsdrache", None)
+    r = m.knoch("rumpf", [0, 14, 0])
+    r.kasten([-4.5, 10, -6], [9, 8, 12], "leib")
+    r.kasten([-3.5, 9.5, -5], [7, 1, 10], "bauch")
+    for z in (-5, -1, 3):
+        r.kasten([-0.5, 18, z], [1, 3, 3], "maehne")
+    hals, ende = glieder(m, "hals", "rumpf", (0, 15, -6), -1, [(6, 8, 8, 1.5), (6, 7, 7, 1.0)], stoff="leib")
+    for h in hals:
+        k = m.finde(h)
+        z0 = k.kaesten[0].ursprung[2]
+        k.kasten([-0.5, k.kaesten[0].ursprung[1] + k.kaesten[0].groesse[1], z0 + 1], [1, 3, 4], "maehne")
+    _, ky, kz = ende
+    kopf_bauen(m, "himmelsdrache", hals[-1], ky, kz, schaedel=(8, 6, 8), schnauze=(6, 4, 7), hoerner="geweih")
+    # Die Barthaare: zwei lange, duenne Faeden von der Schnauze, jeder mit
+    # eigenem Knochen, damit sie im Flug wehen.
+    for seite, x in (("links", 1), ("rechts", -1)):
+        b = m.knoch(f"bart_{seite}", [x * 3, ky - 1, kz - 13], "kopf")
+        b.kasten([x * 3 - 0.5, ky - 1.5, kz - 13], [1, 1, 12], "bart", drehung=[20, -x * 30, 0],
+                 drehpunkt=[x * 3, ky - 1, kz - 13])
+        # Die Maehne am Hinterkopf: zwei breite Buschel.
+        m.finde("kopf").kasten([x * 4 - (0 if x > 0 else 1), ky, kz - 3], [1, 5, 5], "maehne",
+                                drehung=[-25, -x * 20, 0], drehpunkt=[x * 4, ky + 2, kz - 3])
+    teile = []
+    for i in range(HIMMELSDRACHE_GLIEDER):
+        dicke = max(3, round(8 - i * 0.4))
+        teile.append((7, dicke, dicke, 0.0))
+    schwanz, ende = glieder(m, "schwanz", "rumpf", (0, 14, 6), 1, teile, stoff="leib", zacken="maehne")
+    _, sy, sz = ende
+    quaste = m.finde(schwanz[-1])
+    quaste.kasten([-2, sy - 2, sz - 2], [4, 4, 6], "maehne")
+    quaste.kasten([-0.5, sy - 4, sz - 1], [1, 8, 5], "maehne")
+    for seite, x in (("links", 4), ("rechts", -4)):
+        bein_bauen(m, f"bein_vorn_{seite}", "rumpf", (x, 12, -2), (3, 5, 3), (2, 5, 2), (3, 2, 4), krallen=4)
+        # Das hintere Beinpaar sitzt am vierten Glied und schwingt mit ihm.
+        bein_bauen(m, f"bein_hinten_{seite}", "schwanz4", (x * 0.8, 12, 30), (3, 5, 3), (2, 5, 2), (3, 2, 4), krallen=4)
+    sattel_bauen(m, "rumpf", 18, -1, 9)
+    return m
+
+
+HIMMELSDRACHE_FARBEN = {
+    "jade":  {"leib": "#3c8a64", "ruecken": "#1e5a44", "bauch": "#e8d890", "haut": "#e8b030",
+              "augen": "#ffe25a", "glut": "#e8fffa", "horn": ("#8a6a30", "#d8b060", "#f8e8b0"), "kralle": "#e8c860",
+              "maehne": ("#c83a22", "#f0a030"), "bart": "#f0c850"},
+    "perle": {"leib": "#dce8f0", "ruecken": "#7a9ec0", "bauch": "#fbf6e8", "haut": "#9ac8e8",
+              "augen": "#60c8ff", "glut": "#f4fbff", "horn": ("#a0a8b8", "#dce2ec", "#ffffff"), "kralle": "#c0ccda",
+              "maehne": ("#5a8ad8", "#b8e0ff"), "bart": "#e0eaf4"},
+    "gold":  {"leib": "#d8a830", "ruecken": "#9a5a18", "bauch": "#f8e8b0", "haut": "#c83a22",
+              "augen": "#ff5a2a", "glut": "#fff4d0", "horn": ("#7a4a1a", "#c89048", "#f0d8a0"), "kralle": "#7a4a1a",
+              "maehne": ("#b0201a", "#ff7a2a"), "bart": "#fff0b0"},
+}
+
+
+def himmelsdrache_maler(variante):
+    f = HIMMELSDRACHE_FARBEN.get(variante, HIMMELSDRACHE_FARBEN["jade"])
+
+    def besonders(stoff, p, n, texel):
+        if stoff == "maehne":
+            # Die Maehne und die Rueckenkaemme: vom Ansatz zur Spitze heller.
+            t = H.hoehe(p, n, texel) if abs(n[1]) < 0.5 else (1.0 if n[1] > 0 else 0.0)
+            return H.verlauf([f["maehne"][0], f["maehne"][1]], t, 3)
+        if stoff == "bart":
+            return H.verlauf([H.dunkler(f["bart"], 0.15), f["bart"]], 1 - H.laenge(p, texel, 2), 3)
+        if stoff == "leib" and n[1] < -0.5:
+            # Der Bauch ist ein durchgehendes helles Band mit Querschilden.
+            return H.dunkler(f["bauch"], 0.12) if int(p[2] // 1) % 2 == 0 else H.farbe(f["bauch"])
+        return False
+    return drachen_maler("himmelsdrache", f, None, besonders)

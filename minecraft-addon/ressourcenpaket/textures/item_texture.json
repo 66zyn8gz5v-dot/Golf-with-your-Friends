@@ -646,6 +646,9 @@
     },
     "frostwyvern_ei": {
       "textures": "textures/items/frostwyvern_ei"
+    },
+    "himmelsdrache_ei": {
+      "textures": "textures/items/himmelsdrache_ei"
     }
   }
 }

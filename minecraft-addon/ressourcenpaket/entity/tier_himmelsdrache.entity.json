@@ -1,0 +1,71 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:himmelsdrache",
+      "materials": {
+        "default": "entity_emissive_alpha"
+      },
+      "textures": {
+        "jade": "textures/entity/tiere/himmelsdrache_jade",
+        "perle": "textures/entity/tiere/himmelsdrache_perle",
+        "gold": "textures/entity/tiere/himmelsdrache_gold"
+      },
+      "geometry": {
+        "default": "geometry.fynn.himmelsdrache"
+      },
+      "animations": {
+        "flug": "animation.fynn.himmelsdrache.flug",
+        "stand": "animation.fynn.himmelsdrache.stand",
+        "gehen": "animation.fynn.himmelsdrache.gehen",
+        "liegen": "animation.fynn.himmelsdrache.liegen",
+        "benommen": "animation.fynn.himmelsdrache.benommen",
+        "feueratem": "animation.fynn.himmelsdrache.feueratem",
+        "drachenbruellen": "animation.fynn.himmelsdrache.drachenbruellen"
+      },
+      "scripts": {
+        "initialize": [
+          "variable.fynn_gier_alt = query.body_y_rotation;",
+          "variable.fynn_dreh = 0.0;",
+          "variable.fynn_zufall = math.random(0.0, 360.0);"
+        ],
+        "pre_animation": [
+          "variable.fynn_d = query.body_y_rotation - variable.fynn_gier_alt;",
+          "variable.fynn_d = variable.fynn_d > 180.0 ? variable.fynn_d - 360.0 : (variable.fynn_d < -180.0 ? variable.fynn_d + 360.0 : variable.fynn_d);",
+          "variable.fynn_gier_alt = query.body_y_rotation;",
+          "variable.fynn_dreh = math.lerp(variable.fynn_dreh, math.clamp(variable.fynn_d / math.max(query.delta_time, 0.01) / 20.0, -10.0, 10.0), 0.12);"
+        ],
+        "animate": [
+          {
+            "flug": "query.property('fynn:fliegt') * (1.0 - math.max(query.property('fynn:schlaeft'), query.property('fynn:besiegt')))"
+          },
+          {
+            "stand": "(1.0 - query.property('fynn:fliegt')) * (1.0 - math.max(query.property('fynn:schlaeft'), query.property('fynn:besiegt')))"
+          },
+          {
+            "gehen": "(1.0 - query.property('fynn:fliegt')) * math.clamp(query.modified_move_speed * 4.0, 0.0, 1.0) * (1.0 - math.max(query.property('fynn:schlaeft'), query.property('fynn:besiegt')))"
+          },
+          {
+            "liegen": "math.max(query.property('fynn:schlaeft'), query.property('fynn:besiegt'))"
+          },
+          {
+            "benommen": "query.property('fynn:besiegt')"
+          },
+          {
+            "feueratem": "query.property('fynn:feuer')"
+          },
+          {
+            "drachenbruellen": "(1.0 - query.property('fynn:fliegt')) * (1.0 - math.clamp(query.modified_move_speed * 4.0, 0.0, 1.0)) * (1.0 - query.property('fynn:feuer')) * (1.0 - math.max(query.property('fynn:schlaeft'), query.property('fynn:besiegt'))) * (math.mod(query.life_time, 19.0) < 2.2)"
+          }
+        ]
+      },
+      "render_controllers": [
+        "controller.render.fynn.himmelsdrache"
+      ],
+      "spawn_egg": {
+        "texture": "himmelsdrache_ei",
+        "texture_index": 0
+      }
+    }
+  }
+}

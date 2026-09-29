@@ -40,7 +40,7 @@ const EXTRA = {
     "fynn:ritter": 20, "fynn:ritterhauptmann": 40, "fynn:bandit": 15, "fynn:wilderer": 15,
     "fynn:bandenchef": 40, "fynn:eiswolf": 10, "fynn:schattendoppelgaenger": 3,
     // Die Fantasy-Wesen (4.78 bis 4.80).
-    "fynn:basilisk": 25, "fynn:sandwurm": 40, "fynn:lindwurm": 120, "fynn:frostwyvern": 100, "fynn:feuermuecke": 3,
+    "fynn:basilisk": 25, "fynn:sandwurm": 40, "fynn:lindwurm": 120, "fynn:frostwyvern": 100, "fynn:himmelsdrache": 110, "fynn:feuermuecke": 3,
 };
 const STANDARD_MONSTER = 6;
 // Seit 4.72 kosten die Faehigkeiten viel mehr (bis 50 Stufen, Stufe n kostet
@@ -52,7 +52,7 @@ const GEFAESS_CHANCE = {
     "fynn:ritterhauptmann": 0.12, "fynn:bandenchef": 0.12, "minecraft:evocation_illager": 0.2,
     "minecraft:ravager": 0.25, "minecraft:piglin_brute": 0.15, "minecraft:elder_guardian": 1,
     "minecraft:warden": 1, "minecraft:wither": 1, "minecraft:ender_dragon": 1,
-    "fynn:lindwurm": 1, "fynn:frostwyvern": 0.9, "fynn:sandwurm": 0.3, "fynn:basilisk": 0.15,
+    "fynn:lindwurm": 1, "fynn:frostwyvern": 0.9, "fynn:himmelsdrache": 1, "fynn:sandwurm": 0.3, "fynn:basilisk": 0.15,
 };
 const FUNKE_CHANCE = 0.2;
 

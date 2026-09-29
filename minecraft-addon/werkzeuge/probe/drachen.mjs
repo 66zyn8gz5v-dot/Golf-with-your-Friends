@@ -239,6 +239,26 @@ function wesen(w, typeId, ort, extra = {}) {
         && splitter[0].flug.x !== splitter[2].flug.x);
 }
 
+// --- Himmelsdrache: Sturmhauch und Blitzschlag
+{
+    const w = welt();
+    const hd = wesen(w, "fynn:himmelsdrache", { x: 0, y: 66, z: 0 }, { eig: { "fynn:fliegt": true } });
+    hd.dyn["fynn:drache490"] = true;
+    const stoesse = [];
+    const opfer = wesen(w, "minecraft:player", { x: 0, y: 64, z: 8 },
+        { applyKnockback(v, h) { stoesse.push([v, h]); } });
+    hd.target = opfer;
+    for (let t = 40000; t < 40000 + 50; t += 2) d.atemTakt(hd, t, () => 0);
+    pruefe("Sturmhauch: Windstoss mit Funken", w.teilchen.includes("fynn:sturmatem"));
+    pruefe("... wer drin steht, fliegt weg - vom Drachen fort", stoesse.length > 0 && stoesse[0][0].z > 1
+        && opfer.schaden > 0 && opfer.brand === 0);
+    pruefe("... und kein Feuer, kein Eis", !Object.values(w.bloecke).some((b) => b === "minecraft:fire" || b === "minecraft:ice"));
+    const vorher = gemerkt.takte.filter(([f]) => f === "spaeter").length;
+    opfer.location = { x: 0, y: 64, z: 24 };
+    pruefe("Blitzschlag: drei Blitze nacheinander", d.faehigkeitTakt(hd, 50000, undefined, () => 0) === "Blitzschlag"
+        && gemerkt.takte.filter(([f]) => f === "spaeter").length - vorher === 3);
+}
+
 pruefe("Anmeldung: der Takt alle zwei Ticks", gemerkt.takte.some(([f, t]) => typeof f === "function" && t === 2));
 
 const gut = ergebnisse.every(Boolean);

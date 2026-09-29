@@ -531,6 +531,18 @@ EIER = {
         },
         "farben": {"c": "#e8faff", "y": "#7ae8ff", "W": "#4a7aa8"},
     },
+    "himmelsdrache": {
+        "oben": "#3c8a64", "unten": "#e8d890", "teilung": 10,
+        "karte": {
+            1: "....a......a....",
+            2: "...aa.a..a.aa...",
+            3: "....aa....aa....",
+            6: ".....y....y.....",
+            11: "..r..r..r..r..r.",
+            12: ".rr.rr.rr.rr.rr.",
+        },
+        "farben": {"a": "#e8c860", "y": "#ffe25a", "r": "#c83a22"},
+    },
     # Zweite Fantasy-Welle (4.81).
     "glutskorpion": {
         "oben": "#2a2226", "flecken": ("#3e3438", 0.25),

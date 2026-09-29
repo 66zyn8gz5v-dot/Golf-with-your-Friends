@@ -101,6 +101,7 @@ NAMEN += [(k + ".name", d, e) for k, d, e in NAMEN if k.startswith("item.")]
 # (fantasy_bauen.drachenfeuer), nur in ihren Farben.
 ATEMFARBEN = {
     "frostatem": {"0.0": "#FFFFFFFF", "0.2": "#FFE4F8FF", "0.5": "#E0A8DCF8", "0.8": "#A07AB4E6", "1.0": "#00C8E0F0"},
+    "sturmatem": {"0.0": "#FFFFFFFF", "0.15": "#FFE8F0FF", "0.4": "#D0B8C8FF", "0.7": "#8098A8E8", "1.0": "#00C0C8E0"},
 }
 
 
