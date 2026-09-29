@@ -13,6 +13,7 @@ import math
 from tiermodell import Modell, hexfarbe, mische, streu
 from tiere_gestalt import ton, paar
 from fantasy_gestalt import glut
+import haut as H
 
 
 # ================================================================== Glutskorpion
@@ -60,36 +61,38 @@ GLUTSKORPION_FARBEN = {
 
 
 def glutskorpion_maler(variante):
+    """4.88: Basaltplatten im Verlauf, die Glut nur noch in den Fugen
+    zwischen den Platten - durchgehende Linien, keine verstreuten Punkte."""
     panzer, hell, glutfarbe, gluthell = GLUTSKORPION_FARBEN.get(variante, GLUTSKORPION_FARBEN["glut"])
 
     def male(stoff, p, n, texel):
         x, y, z = p
+        platte = H.verlauf([H.dunkler(panzer, 0.2), panzer, hell], H.hoehe(p, n, texel), 3)
         if stoff == "panzer":
-            # Basaltplatten mit gluehenden Rissen dazwischen.
-            if n[1] > 0.5 and int(math.floor(z)) % 3 == 0:
-                return glut(glutfarbe)
-            if streu(texel[0], texel[1], 901) < 0.08:
-                return glut(glutfarbe, -0.2)
             if abs(n[0]) > 0.5 and abs(z + 3.5) < 0.6 and y > 4.2:
                 return glut(gluthell)                                           # Augen
-            return ton(hell if n[1] > 0.5 else panzer, p, n, texel, 902, straehne=0.0)
+            if n[1] > 0.5 and int(math.floor(z)) % 3 == 0:
+                return glut(glutfarbe)
+            if abs(n[0]) > 0.5 and int(math.floor(z)) % 3 == 0 and H.hoehe(p, n, texel) > 0.5:
+                return glut(glutfarbe, -0.25)                                   # die Fuge laeuft die Flanke hinab
+            return platte
         if stoff == "unterseite":
             return glut(glutfarbe, -0.45)
         if stoff == "schere":
-            if n[1] > 0.5 and texel[0] % 3 == 0:
+            if n[1] > 0.5 and abs(x) % 3 < 0.6:
                 return glut(glutfarbe, -0.15)
-            return ton(hell, p, n, texel, 903, straehne=0.0)
+            return platte
         if stoff == "schwanz":
             if int(math.floor(z)) % 4 == 0:
                 return glut(glutfarbe, -0.1)
-            return ton(panzer, p, n, texel, 904, straehne=0.0, hell=0.08)
+            return platte
         if stoff == "blase":
-            return glut(glutfarbe)
+            return glut(H.verlauf([glutfarbe, gluthell], H.hoehe(p, n, texel), 3))
         if stoff == "stachel":
             return glut(gluthell)
         if stoff == "bein":
-            return ton(panzer, p, n, texel, 905, straehne=0.0, hell=0.12)
-        return ton(panzer, p, n, texel, 906)
+            return H.verlauf([panzer, hell], H.hoehe(p, n, texel), 2)
+        return platte
     return male
 
 
@@ -127,33 +130,30 @@ KRISTALLSPINNE_FARBEN = {
 
 
 def kristallspinne_maler(variante):
+    """4.88: ohne helle Sprenkel. Das Chitin wird zum Ruecken hin heller,
+    die Kristalle leuchten von unten dunkel nach oben hell, die Beine haben
+    helle Gelenkringe."""
     chitin, hell, kristall, kristallhell = KRISTALLSPINNE_FARBEN.get(variante, KRISTALLSPINNE_FARBEN["amethyst"])
 
     def male(stoff, p, n, texel):
         x, y, z = p
         if stoff == "kristall":
-            if n[1] > 0.5 or texel[0] % 2 == 0:
-                return glut(kristallhell, -0.1)
-            return glut(kristall)
+            return glut(H.verlauf([kristall, kristallhell], H.hoehe(p, n, texel), 3), -0.05)
         if stoff == "kopf":
-            # Acht Augen vorn, leuchtend wie die Kristalle.
             if n[2] < -0.5 and y > 6.5 and int(x + 3) % 2 == 0:
                 return glut(kristallhell)
-            return ton(hell, p, n, texel, 911, straehne=0.0)
+            return H.koerper(p, n, texel, H.dunkler(chitin, 0.1), chitin, hell, stufen=3)
         if stoff == "chitin":
-            # Ein Rautenmuster auf dem Hinterleib, leise in Kristallfarbe.
             if n[1] > 0.5 and z > 0 and abs(abs(x) - abs(z - 5)) < 0.6:
                 return glut(mische(hexfarbe(kristall), hexfarbe(chitin), 0.55))
-            if streu(texel[0], texel[1], 912) < 0.15:
-                return ton(hell, p, n, texel, 913, straehne=0.0)
-            return ton(chitin, p, n, texel, 914, straehne=0.0)
+            return H.koerper(p, n, texel, H.dunkler(chitin, 0.15), chitin, hell, grenze=0.25, stufen=4)
         if stoff == "fang":
             return glut(kristall, -0.3)
         if stoff == "bein":
             if texel[0] % 4 == 0:
-                return ton(hell, p, n, texel, 915, straehne=0.0)
-            return ton(chitin, p, n, texel, 916, straehne=0.0)
-        return ton(chitin, p, n, texel, 917)
+                return H.farbe(hell)                                            # Gelenkring
+            return H.verlauf([H.dunkler(chitin, 0.1), chitin], H.hoehe(p, n, texel), 2)
+        return H.farbe(chitin)
     return male
 
 
@@ -180,16 +180,25 @@ IRRLICHT_FARBEN = {"blass": ("#e0fff0", "#7affc0"), "blau": ("#e0f4ff", "#6ab8ff
 
 
 def irrlicht_maler(variante):
+    """4.88: Die Huelle ist kein Funkenregen mehr, sondern ein leuchtendes
+    Gitter an ihren Kanten - wie ein Kaefig aus Licht um den Kern."""
     innen, aussen = IRRLICHT_FARBEN.get(variante, IRRLICHT_FARBEN["blass"])
 
     def male(stoff, p, n, texel):
         if stoff == "kern":
             return glut(innen)
         if stoff == "huelle":
-            # Nur vereinzelte Funken - dazwischen sieht man den Kern.
-            if (texel[0] * 7 + texel[1] * 3) % 5 == 0:
+            k = H.kasten_von(texel)
+            if k is None:
                 return glut(aussen, -0.1)
-            return None
+            nah = 0
+            for a in range(3):
+                if abs(n[a]) > 0.5:
+                    continue
+                lo, hi = k.ursprung[a], k.ursprung[a] + k.groesse[a]
+                if min(p[a] - lo, hi - p[a]) < 0.7:
+                    nah += 1
+            return glut(aussen, -0.1) if nah else None
         if stoff == "zunge":
             return glut(mische(hexfarbe(innen), hexfarbe(aussen), 0.5))
         return glut(aussen)
@@ -253,59 +262,63 @@ WERWOLF_FARBEN = {
 
 
 def werwolf_maler(variante):
+    """4.88: Fell ohne Flecken - der Ruecken dunkel, zum Bauch und zur Brust
+    hin in Stufen heller; die Maehne als ganze dunkle Flaeche."""
     fell, dunkel, mantel, augen = WERWOLF_FARBEN.get(variante, WERWOLF_FARBEN["grau"])
+    bauch = mische(hexfarbe(fell), (220, 210, 190), 0.3)
+
+    def pelz(p, n, texel):
+        return H.koerper(p, n, texel, bauch, fell, dunkel, grenze=0.25, stufen=4)
 
     def male(stoff, p, n, texel):
         x, y, z = p
         if stoff == "gesicht":
             if n[2] < -0.5:
                 if abs(y - 28.5) < 0.6 and abs(abs(x) - 2) < 0.6:
-                    return glut(augen, -0.3)                                   # schon als Mensch ein Glimmen
+                    return glut(augen, -0.3)
                 if 25 < y < 27.5 and abs(x) < 2.5:
-                    return ton(dunkel, p, n, texel, 921, straehne=0.0)        # der Bart
-                return ton("#b08a6a", p, n, texel, 922, straehne=0.0)
-            return ton(dunkel, p, n, texel, 923, straehne=0.0)
+                    return H.farbe(dunkel)                                    # der Bart
+                return hexfarbe("#b08a6a")
+            return H.farbe(dunkel)
         if stoff == "kapuze":
             if n[2] < -0.5 and abs(x) < 3.5 and y < 31:
-                return None                                                   # das Gesicht schaut heraus
-            return ton(mantel, p, n, texel, 924, straehne=0.03)
+                return None
+            return H.verlauf([H.dunkler(mantel, 0.15), mantel], H.hoehe(p, n, texel), 3)
         if stoff in ("mantel", "aermel"):
             if stoff == "mantel" and 12 < y < 13.5:
-                return ton("#2a1e14", p, n, texel, 925, straehne=0.0)         # Guertel
-            return ton(mantel, p, n, texel, 926, straehne=0.04)
+                return hexfarbe("#2a1e14")                                    # Guertel
+            return H.verlauf([H.dunkler(mantel, 0.2), mantel, H.heller(mantel, 0.08)], H.hoehe(p, n, texel), 3)
         if stoff == "hose":
-            return ton("#3a3228", p, n, texel, 927, straehne=0.03)
+            return H.verlauf(["#2e2820", "#3a3228"], H.hoehe(p, n, texel), 2)
         if stoff == "stab":
-            return ton("#6a4a2a", p, n, texel, 928, straehne=0.0)
-        if stoff in ("fell", "maehne"):
-            if stoff == "maehne" or streu(texel[0] // 2, texel[1] // 2, 929) < 0.12:
-                return ton(dunkel, p, n, texel, 930, straehne=0.06)
-            if n[1] < -0.5 or (n[2] < -0.5 and stoff == "fell" and y > 14):
-                return ton(mische(hexfarbe(fell), (220, 210, 190), 0.3), p, n, texel, 931, straehne=0.04)
-            return ton(fell, p, n, texel, 932, straehne=0.06)
+            return hexfarbe("#6a4a2a")
+        if stoff == "maehne":
+            return H.verlauf([H.dunkler(dunkel, 0.15), dunkel], H.hoehe(p, n, texel), 2)
+        if stoff == "fell":
+            if n[2] < -0.5 and y > 14:
+                return bauch                                                  # helle Brust
+            return pelz(p, n, texel)
         if stoff == "wolfskopf":
             if abs(n[0]) > 0.5 and abs(y - 30.5) < 0.6 and -10 < z < -8:
                 return glut(augen)
-            if n[1] > 0.5:
-                return ton(dunkel, p, n, texel, 933, straehne=0.05)
-            return ton(fell, p, n, texel, 934, straehne=0.05)
+            return pelz(p, n, texel)
         if stoff == "schnauze":
             if n[2] < -0.5 and y > 28.5:
                 return hexfarbe("#141010")                                    # Nase
             if n[1] < -0.5 or y < 27:
-                return hexfarbe("#f0e8d4") if texel[0] % 2 == 0 else ton(dunkel, p, n, texel, 935)
-            return ton(fell, p, n, texel, 936, straehne=0.03)
+                return hexfarbe("#f0e8d4") if texel[0] % 2 == 0 else H.farbe(dunkel)
+            return pelz(p, n, texel)
         if stoff == "kiefer":
             if n[1] > 0.5 and texel[0] % 2 == 0:
                 return hexfarbe("#f0e8d4")
-            return ton(dunkel, p, n, texel, 937, straehne=0.0)
+            return H.farbe(dunkel)
         if stoff == "ohr":
-            return ton(dunkel, p, n, texel, 938, straehne=0.0)
-        if stoff in ("kralle",):
+            return H.farbe(dunkel)
+        if stoff == "kralle":
             return hexfarbe("#e0d8c4")
         if stoff == "pfote":
-            return ton(dunkel, p, n, texel, 939, straehne=0.0)
-        return ton(fell, p, n, texel, 940)
+            return H.farbe(dunkel)
+        return pelz(p, n, texel)
     return male
 
 
@@ -344,38 +357,48 @@ MOOSGOLEM_FARBEN = {
 
 
 def moosgolem_maler(variante):
+    """4.88: Steinquader mit Fugen (Linien), oben bemoost als ganze Kante
+    statt verstreuter Moospunkte; das Moos selbst oben hell, unten dunkler."""
     stein, dunkel, moos, kern = MOOSGOLEM_FARBEN.get(variante, MOOSGOLEM_FARBEN["wald"])
 
     def male(stoff, p, n, texel):
         x, y, z = p
         if stoff == "stein":
-            # Grobe Quader mit Fugen; wo es oben liegt, waechst schon Moos.
-            if texel[1] % 5 == 0 or (texel[0] + (texel[1] // 5) * 3) % 6 == 0:
-                return ton(dunkel, p, n, texel, 951, straehne=0.0)
-            if n[1] > 0.5 or streu(texel[0] // 2, texel[1] // 2, 952) < 0.15:
-                return ton(moos, p, n, texel, 953, straehne=0.0)
-            if stoff == "stein" and y > 34 and n[2] < -0.5 and abs(y - 37) < 1 and abs(abs(x) - 2.5) < 1:
+            if y > 34 and n[2] < -0.5 and abs(y - 37) < 1 and abs(abs(x) - 2.5) < 1:
                 return glut(kern)                                               # Augen
-            return ton(stein, p, n, texel, 954, straehne=0.0)
+            if n[1] > 0.5:
+                return H.farbe(moos)
+            if texel[1] % 5 == 0 or (texel[0] + (texel[1] // 5) * 3) % 6 == 0:
+                return H.farbe(dunkel)                                        # Fugen
+            # Oben an der Flanke kriecht das Moos ein Stueck herunter.
+            if H.hoehe(p, n, texel) > 0.9:
+                return H.dunkler(moos, 0.1)
+            return H.verlauf([H.dunkler(stein, 0.1), stein], H.hoehe(p, n, texel), 3)
         if stoff == "moos":
-            if streu(texel[0], texel[1], 955) < 0.2:
-                return ton(mische(hexfarbe(moos), (140, 170, 60), 0.4), p, n, texel, 956, straehne=0.0)
             if n[1] < -0.5 and texel[0] % 3 == 0:
                 return None                                                   # herabhaengende Faeden
-            return ton(moos, p, n, texel, 957, straehne=0.0)
+            return H.verlauf([H.dunkler(moos, 0.2), moos, mische(hexfarbe(moos), (140, 170, 60), 0.3)],
+                             H.hoehe(p, n, texel), 3)
         if stoff == "kern":
-            if (texel[0] + texel[1]) % 3 == 0:
-                return ton(dunkel, p, n, texel, 958, straehne=0.0)
+            # Von der Mitte nach aussen: hell, Glut, dunkler Rand.
+            k = H.kasten_von(texel)
+            if k is not None:
+                mx = k.ursprung[0] + k.groesse[0] / 2
+                my = k.ursprung[1] + k.groesse[1] / 2
+                r = max(abs(x - mx) / (k.groesse[0] / 2), abs(y - my) / (k.groesse[1] / 2))
+                if r > 0.8:
+                    return H.farbe(dunkel)
+                return glut(H.verlauf([H.heller(kern, 0.4), kern], r / 0.8, 3))
             return glut(kern)
         if stoff == "braue":
-            return ton(dunkel, p, n, texel, 959, straehne=0.0)
+            return H.farbe(dunkel)
         if stoff == "blume":
-            return glut("#ff8ab8") if n[1] > 0.5 else ton("#3a6a22", p, n, texel, 960, straehne=0.0)
+            return glut("#ff8ab8") if n[1] > 0.5 else hexfarbe("#3a6a22")
         if stoff == "ranke":
             if texel[0] % 2 == 0:
-                return ton("#3a5a1e", p, n, texel, 961, straehne=0.0)
+                return hexfarbe("#3a5a1e")
             return None
-        return ton(stein, p, n, texel, 962)
+        return H.farbe(stein)
     return male
 
 
@@ -428,51 +451,54 @@ GREIF_FARBEN = {
 
 
 def greif_maler(variante):
+    """4.88: Federn als Reihen - jede Reihe unten mit einer dunkleren Kante,
+    wie Dachziegel - statt eines Schachbretts; das Loewenfell im Verlauf vom
+    hellen Bauch zum dunkleren Ruecken."""
     kopf, kopfdunkel, loewe, loewedunkel, schwinge = GREIF_FARBEN.get(variante, GREIF_FARBEN["gold"])
+    bauch = mische(hexfarbe(loewe), (240, 225, 190), 0.35)
+
+    def federreihen(grund, p, n, texel):
+        if texel[1] % 3 == 2:
+            return H.dunkler(grund, 0.18)
+        return H.verlauf([H.dunkler(grund, 0.06), grund], H.hoehe(p, n, texel), 2)
 
     def male(stoff, p, n, texel):
         x, y, z = p
         if stoff == "kopf":
             if abs(n[0]) > 0.5 and abs(y - 19.5) < 0.6 and abs(z + 10.5) < 1.1:
                 return hexfarbe("#140a04") if abs(z + 10.5) < 0.4 else glut("#ffb21a", -0.2)
-            if n[1] > 0.5 and texel[0] % 3 == 0:
-                return ton(kopfdunkel, p, n, texel, 971, straehne=0.0)
-            return ton(kopf, p, n, texel, 972, straehne=0.03)
+            return H.verlauf([H.heller(kopf, 0.08), kopf, mische(hexfarbe(kopf), hexfarbe(kopfdunkel), 0.35)],
+                             H.hoehe(p, n, texel), 3)
         if stoff == "schnabel":
-            return ton("#e0b030" if y > 16 else "#8a6a2a", p, n, texel, 973, straehne=0.0)
-        if stoff in ("brustfedern", "deckfedern"):
-            # Federschuppen: jede zweite Reihe versetzt, die Spitzen dunkler.
-            if texel[1] % 2 == 0 and (texel[0] + texel[1] // 2) % 2 == 0:
-                return ton(kopfdunkel, p, n, texel, 974, straehne=0.0)
-            return ton(kopf if stoff == "brustfedern" else schwinge, p, n, texel, 975, straehne=0.0)
+            return H.verlauf(["#8a6a2a", "#e0b030"], H.hoehe(p, n, texel), 2)
+        if stoff == "brustfedern":
+            return federreihen(kopf, p, n, texel)
+        if stoff == "deckfedern":
+            return federreihen(schwinge, p, n, texel)
         if stoff == "schwinge":
-            # Schwungfedern mit Luecken an der Hinterkante.
             hinten = z - (-4)
             if hinten > 8 - (1 if texel[0] % 2 else 0) and abs(x) > 8:
                 return None
             if texel[0] % 3 == 0:
-                return ton(kopfdunkel, p, n, texel, 976, straehne=0.0)
-            return ton(schwinge, p, n, texel, 977, straehne=0.03)
+                return H.dunkler(schwinge, 0.25)                               # Federkiele
+            return H.verlauf([schwinge, H.heller(schwinge, 0.12)], hinten / 8.0, 3)
         if stoff == "fell":
-            if n[1] < -0.5:
-                return ton(mische(hexfarbe(loewe), (240, 225, 190), 0.35), p, n, texel, 978, straehne=0.0)
-            return ton(loewe, p, n, texel, 979, straehne=0.05)
+            return H.koerper(p, n, texel, bauch, loewe, loewedunkel, grenze=0.25, stufen=4)
         if stoff == "quaste":
-            return ton(loewedunkel, p, n, texel, 980, straehne=0.06)
+            return H.farbe(loewedunkel)
         if stoff == "bein":
-            # Vorn gelbe, geschuppte Adlerlaeufe, hinten Loewenbeine.
             if z < 0:
-                if texel[1] % 2 == 0:
-                    return ton("#c89a30", p, n, texel, 981, straehne=0.0)
-                return ton("#e0b030", p, n, texel, 982, straehne=0.0)
-            return ton(loewe, p, n, texel, 983, straehne=0.04)
+                return H.dunkler("#e0b030", 0.12) if texel[1] % 2 == 0 else hexfarbe("#e0b030")
+            return H.verlauf([loewedunkel, loewe], H.hoehe(p, n, texel), 3)
         if stoff == "pfote":
-            return ton("#e0b030" if z < 0 else loewedunkel, p, n, texel, 984, straehne=0.0)
+            return hexfarbe("#e0b030") if z < 0 else H.farbe(loewedunkel)
         if stoff == "kralle":
             return hexfarbe("#1a1410")
         if stoff == "sattel":
             if texel[0] % 4 == 0:
-                return ton("#a8894a", p, n, texel, 985, straehne=0.0)
-            return ton("#5a3a22", p, n, texel, 986, straehne=0.0)
-        return ton(loewe, p, n, texel, 987)
+                return hexfarbe("#a8894a")
+            return hexfarbe("#5a3a22")
+        return H.farbe(loewe)
     return male
+
+

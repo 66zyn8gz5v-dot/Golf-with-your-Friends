@@ -100,6 +100,10 @@ def kaefer_bewegungen():
         krabbeln_bones[f"bein{i}"] = {"rotation": [
             f"math.max(0.0, math.sin({lauf} + {gruppe} + 90.0)) * -18.0",
             f"math.sin({lauf} + {gruppe}) * 22.0 * {seite}", 0.0]}
+        # 4.88: Das Knie hebt den Fuss im Vorschwingen an und streckt ihn beim
+        # Aufsetzen - so tastet sich der Kaefer vorwaerts statt zu rutschen.
+        krabbeln_bones[f"unterbein{i}"] = {"rotation": [
+            0.0, 0.0, f"math.max(0.0, math.sin({lauf} + {gruppe} + 90.0)) * 25.0 * {seite}"]}
     krabbeln_bones["koerper"] = {"rotation": [0.0, f"math.sin({lauf} * 2.0) * 1.5", 0.0]}
     krabbeln = {"loop": True, "bones": krabbeln_bones}
     tasten = {"loop": True, "bones": {
@@ -117,6 +121,18 @@ def kaefer_bewegungen():
         panzer_links={"rotation": [0.0, 0.0, -18.0]},
         panzer_rechts={"rotation": [0.0, 0.0, 18.0]},
     )}
+    # 4.88: Ab und zu klappt er die Deckfluegel auf, die Hautfluegel
+    # schnellen heraus und schwirren - und alles legt sich wieder zusammen.
+    auf = f"math.clamp(math.sin(math.mod({LT}, 23.0) / 1.6 * 180.0) * 2.0, 0.0, 1.0)"
+    surr = f"math.sin({LT} * 3600.0)"
+    schwirren = {"loop": True, "bones": {
+        "panzer_links": {"rotation": [f"-{auf} * 15.0", 0.0, f"-{auf} * 55.0"]},
+        "panzer_rechts": {"rotation": [f"-{auf} * 15.0", 0.0, f"{auf} * 55.0"]},
+        "fluegel_links": {"rotation": [0.0, f"-{auf} * 70.0", f"-{auf} * (25.0 + {surr} * 30.0)"]},
+        "fluegel_rechts": {"rotation": [0.0, f"{auf} * 70.0", f"{auf} * (25.0 + {surr} * 30.0)"]},
+        "koerper": {"position": [0.0, f"{auf} * 0.8", 0.0]},
+        "kopf": {"rotation": [f"-{auf} * 10.0", 0.0, 0.0]},
+    }}
     beissen = {"loop": True, "bones": {
         "kiefer_links": {"rotation": [0.0, "-math.sin(variable.attack_time * 540.0) * 35.0", 0.0]},
         "kiefer_rechts": {"rotation": [0.0, "math.sin(variable.attack_time * 540.0) * 35.0", 0.0]},
@@ -126,6 +142,8 @@ def kaefer_bewegungen():
         "krabbeln": (krabbeln, "math.clamp(query.modified_move_speed * 5.0, 0.0, 1.0)"),
         "tasten": (tasten, "1.0"),
         "einrollen": (gerollt, "query.property('fynn:gerollt')"),
+        "schwirren": (schwirren, f"(math.mod({LT}, 23.0) < 1.6) * (1.0 - query.property('fynn:gerollt'))"
+                                 f" * (1.0 - math.clamp(query.modified_move_speed * 5.0, 0.0, 1.0))"),
         "beissen": (beissen, "variable.attack_time > 0.0"),
     }
 

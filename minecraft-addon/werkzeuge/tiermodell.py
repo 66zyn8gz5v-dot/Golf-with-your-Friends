@@ -230,7 +230,9 @@ class Modell:
                         for i in range(w):
                             s, t = (i + 0.5) / w, (j + 0.5) / h
                             p = tuple(tl[a] + (tr[a] - tl[a]) * s + (bl[a] - tl[a]) * t for a in range(3))
-                            farbe = maler(k.stoff, p, normale, (u + i, v + j, name, b.name))
+                            # Der Kasten selbst kommt als fuenfter Wert mit: Die ruhige
+                            # Haut (haut.py) rechnet ihren Verlauf von seiner Unter- zur Oberkante.
+                            farbe = maler(k.stoff, p, normale, (u + i, v + j, name, b.name, k))
                             if farbe is None:
                                 continue
                             if len(farbe) == 3:

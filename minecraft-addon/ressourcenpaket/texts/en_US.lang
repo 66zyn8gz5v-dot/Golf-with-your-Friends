@@ -44,11 +44,11 @@ item.fynn:eisenklinge.name=Iron Blade
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.87
+item.iron_sword.name=Stahlschwert 4.88
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.87
-item.fynn:degen.name=Degen 4.87
+item.fynn:degen=Degen 4.88
+item.fynn:degen.name=Degen 4.88
 
 
 
@@ -540,6 +540,22 @@ item.fynn:moosherz.name=Moss Heart
 item.fynn:greifenfeder.name=Griffin Feather
 
 
+
+## Nester und Eier
+item.fynn:vogelei=Bird Egg
+item.fynn:vogelei.name=Bird Egg
+item.fynn:spechtei=Woodpecker Egg
+item.fynn:spechtei.name=Woodpecker Egg
+item.fynn:adlerei=Eagle Egg
+item.fynn:adlerei.name=Eagle Egg
+item.fynn:greifenei=Griffin Egg
+item.fynn:greifenei.name=Griffin Egg
+tile.fynn:vogelnest.name=Bird Nest
+tile.fynn:spechthoehle.name=Woodpecker Hollow
+tile.fynn:kobel.name=Squirrel Drey
+tile.fynn:adlerhorst.name=Eagle Eyrie
+tile.fynn:greifennest.name=Griffin Nest
+
 ## Die Tiere
 entity.fynn:braunbaer.name=Brown Bear
 item.spawn_egg.entity.fynn:braunbaer.name=Brown Bear Spawn Egg
@@ -609,18 +625,3 @@ entity.fynn:moosgolem.name=Moss Golem
 item.spawn_egg.entity.fynn:moosgolem.name=Moss Golem Spawn Egg
 entity.fynn:greif.name=Griffin
 item.spawn_egg.entity.fynn:greif.name=Griffin Spawn Egg
-
-## Nester und Eier
-item.fynn:vogelei=Bird Egg
-item.fynn:vogelei.name=Bird Egg
-item.fynn:spechtei=Woodpecker Egg
-item.fynn:spechtei.name=Woodpecker Egg
-item.fynn:adlerei=Eagle Egg
-item.fynn:adlerei.name=Eagle Egg
-item.fynn:greifenei=Griffin Egg
-item.fynn:greifenei.name=Griffin Egg
-tile.fynn:vogelnest.name=Bird Nest
-tile.fynn:spechthoehle.name=Woodpecker Hollow
-tile.fynn:kobel.name=Squirrel Drey
-tile.fynn:adlerhorst.name=Eagle Eyrie
-tile.fynn:greifennest.name=Griffin Nest

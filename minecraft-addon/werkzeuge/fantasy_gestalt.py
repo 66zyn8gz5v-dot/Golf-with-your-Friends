@@ -20,6 +20,7 @@ import math
 
 from tiermodell import Modell, hexfarbe, mische, streu
 from tiere_gestalt import ton, auge, paar, beine
+import haut as H
 
 LEUCHT = 254
 
@@ -67,18 +68,19 @@ def feuermuecke_maler(variante):
             # Der glimmende Hinterleib: helle Glut, dunkle Ringe dazwischen.
             if int(math.floor(z)) % 2 == 0:
                 return glut(mische(hexfarbe(hell), hexfarbe(dunkel), min(1.0, max(0.0, (z - 1) / 6))))
-            return ton(panzer, p, n, texel, 801, straehne=0.0, hell=0.1)
+            return H.heller(panzer, 0.1)
         if stoff == "brust":
-            # Gluehende Risse im dunklen Panzer.
-            if streu(texel[0], texel[1], 802) < 0.2:
+            # 4.88: statt Glutpunkten eine gluehende Naht den Ruecken entlang,
+            # und der Panzer die Flanke hinab in Stufen dunkler.
+            if n[1] > 0.5 and abs(x) < 0.55:
                 return glut(dunkel)
-            return ton(panzer, p, n, texel, 803, straehne=0.0)
+            return H.koerper(p, n, texel, H.heller(panzer, 0.18), panzer, H.dunkler(panzer, 0.2), grenze=0.2, stufen=3)
         if stoff == "kopf":
             if abs(n[0]) > 0.5 and y > 6.5:
                 return glut(dunkel, -0.2)                                       # rote Facettenaugen
-            return ton(panzer, p, n, texel, 804, straehne=0.0)
+            return H.koerper(p, n, texel, H.heller(panzer, 0.15), panzer, H.dunkler(panzer, 0.2), stufen=3)
         if stoff == "ruessel":
-            return ton("#4a2a1a", p, n, texel, 805, straehne=0.0)
+            return H.verlauf(["#6a3a22", "#4a2a1a"], H.laenge(p, texel), 3)
         if stoff == "fluegel":
             # Durchscheinend kann Minecraft nicht - also ein heller, leise
             # gluehender Fluegel mit dunkleren Adern und hellem Rand.
@@ -88,8 +90,8 @@ def feuermuecke_maler(variante):
                 return glut(mische(hexfarbe(rand), (40, 20, 10), 0.5))
             return glut(mische(hexfarbe(rand), (255, 250, 230), 0.72), -0.08)
         if stoff == "bein":
-            return ton(mische(hexfarbe(panzer), hexfarbe(dunkel), 0.35), p, n, texel, 806, straehne=0.0)
-        return ton(panzer, p, n, texel, 807)
+            return H.verlauf([mische(hexfarbe(panzer), hexfarbe(dunkel), 0.35), panzer], H.hoehe(p, n, texel), 2)
+        return H.farbe(panzer)
     return male
 
 
@@ -131,19 +133,21 @@ def sturmlibelle_maler(variante):
         if stoff == "kopf":
             # Riesige Facettenaugen, die fast den ganzen Kopf einnehmen.
             if abs(x) > 0.6 and (abs(n[0]) > 0.5 or n[1] > 0.5 or n[2] < -0.5) and y > 5.8:
-                if streu(texel[0], texel[1], 811) < 0.25:
-                    return glut(augen, 0.2)
-                return ton(augen, p, n, texel, 812, straehne=0.0)
-            return ton(koerper, p, n, texel, 813, straehne=0.0)
+                # 4.88: ein glattes Facettenauge - oben ein zusammenhaengender
+                # Glanz, nach unten dunkler - statt Glitzerpunkten.
+                if n[1] > 0.5 and abs(x) > 1.2:
+                    return glut(augen, 0.25)
+                return H.verlauf([H.dunkler(augen, 0.3), augen, H.heller(augen, 0.2)], H.hoehe(p, n, texel), 3)
+            return H.koerper(p, n, texel, H.heller(koerper, 0.2), koerper, H.dunkler(koerper, 0.2), stufen=3)
         if stoff in ("brust", "leib"):
             # Metallisch glaenzend, mit einer Blitzader den Ruecken entlang.
             if n[1] > 0.5 and abs(x) < 0.6:
                 return glut(blitz)
             if int(math.floor(z)) % 3 == 0:
-                return ton(koerper, p, n, texel, 814, straehne=0.0, hell=-0.2)
-            return ton(hell if n[1] > 0.5 else koerper, p, n, texel, 815, straehne=0.0)
+                return H.dunkler(koerper, 0.22)                                  # die Ringe des Leibs
+            return H.koerper(p, n, texel, H.heller(koerper, 0.15), koerper, hell, grenze=0.2, stufen=3)
         if stoff == "zange":
-            return ton(koerper, p, n, texel, 816, straehne=0.0, hell=-0.25)
+            return H.dunkler(koerper, 0.25)
         if stoff == "fluegel":
             # Adernetz mit leuchtendem Rand; die Zellen bleiben frei.
             # Voll, hell und glasig, mit dunklem Adernetz, einem dunklen
@@ -152,43 +156,67 @@ def sturmlibelle_maler(variante):
                 return ton("#1a2430", p, n, texel, 817, straehne=0.0)         # das Flecklein an der Spitze
             if texel[1] % 3 == 0 or texel[0] % 4 == 0:
                 return glut(mische(hexfarbe(blitz), hexfarbe(koerper), 0.55), -0.2)
-            if streu(texel[0], texel[1], 818) < 0.08:
-                return glut(blitz)                                             # kleine Funken
             return glut(mische(hexfarbe(blitz), (255, 255, 255), 0.7), -0.12)
         if stoff == "bein":
-            return ton("#1a1e24", p, n, texel, 818, straehne=0.0)
-        return ton(koerper, p, n, texel, 819)
+            return H.farbe("#1a1e24")
+        return H.farbe(koerper)
     return male
 
 
 # ================================================================== Frostkaefer
 
 def frostkaefer_modell():
+    """4.88 neu gebaut. Fynn: "Die Fluegel von den Kaefern ... sind nicht so
+    richtig connected, einzelne Teile."
+
+    Jetzt wie ein echter Kaefer: Kopf, Halsschild, dann zwei Deckfluegel,
+    die an der Mittelnaht schliessen und vorn innen ihr Gelenk haben - so
+    klappen sie wie Tueren nach oben und aussen. Darunter liegen gefaltet
+    die duennen Hautfluegel, die beim Aufschwirren herauskommen. Die
+    Eiskristalle wachsen als feste Bueschel aus den Deckfluegeln und gehen
+    mit ihnen mit. Beine mit Knie, Fuehler mit Knick."""
     m = Modell("frostkaefer", sichtbreite=1.4, sichthoehe=1.0)
     k = m.knoch("koerper", [0, 4, 0])
-    k.kasten([-3, 2, -4], [6, 3, 9], "unterseite")
-    for name, x0 in (("panzer_links", 0), ("panzer_rechts", -3.5)):
-        pz = m.knoch(name, [0 if x0 == 0 else 0, 6, -3.5], "koerper")
-        pz.kasten([x0, 4.5, -3.5], [3.5, 2.5, 9], "panzer")
-    kr = m.knoch("kristalle", [0, 7, 0], "koerper")
-    kr.kasten([1, 7, -1], [1, 1, 1], "kristall")
-    kr.kasten([-2, 7, 1], [1, 2, 1], "kristall")
-    kr.kasten([1.5, 7, 3], [1, 1, 1], "kristall")
-    kr.kasten([-1, 7, -2.5], [1, 1, 1], "kristall")
-    kopf = m.knoch("kopf", [0, 4, -4], "koerper")
-    kopf.kasten([-2, 2.5, -6.5], [4, 2.5, 2.5], "kopf")
+    k.kasten([-3.5, 2, -3.5], [7, 3, 10], "unterseite")
+    # Das Halsschild: breit, vorn etwas schmaler, gewoelbt.
+    k.kasten([-3.5, 3, -6.5], [7, 3, 3], "halsschild")
+    k.kasten([-2.5, 6, -6], [5, 1, 2], "halsschild")
+    for seite, z_ in (("links", 1), ("rechts", -1)):
+        x0 = 0 if z_ > 0 else -4
+        pz = m.knoch(f"panzer_{seite}", [0, 7, -3.5], "koerper")
+        # Deckfluegel: Grundplatte, gewoelbter Ruecken, abgerundetes Ende.
+        pz.kasten([x0, 4, -3.5], [4, 3, 9], "panzer")
+        pz.kasten([x0 + (0 if z_ > 0 else 1), 7, -3], [3, 1, 8], "panzer")
+        pz.kasten([x0 + (0 if z_ > 0 else 1), 4.5, 5.5], [3, 2, 1], "panzer")
+        # Ein Kristallbueschel, das aus dem Deckfluegel waechst: breiter Fuss,
+        # darauf die Spitzen - ein Stueck, keine losen Wuerfel.
+        bx = 1 if z_ > 0 else -3
+        pz.kasten([bx, 8, -1], [2, 1, 3], "kristall")
+        pz.kasten([bx + (1 if z_ > 0 else 0), 9, -0.5], [1, 2, 1], "kristall")
+        pz.kasten([bx + (0 if z_ > 0 else 1), 9, 0.5], [1, 1, 1], "kristall")
+        pz.kasten([bx, 8, 2.5], [2, 1, 2], "kristall")
+        pz.kasten([bx + (0 if z_ > 0 else 1), 9, 3], [1, 2, 1], "kristall")
+        # Der Hautfluegel darunter, gefaltet; das Gelenk sitzt an der Schulter.
+        hf = m.knoch(f"fluegel_{seite}", [z_ * 1.0, 6.5, -3], "koerper")
+        hf.kasten([0.5 if z_ > 0 else -3.5, 6.5, -3], [3, 0, 8], "hautfluegel")
+    kopf = m.knoch("kopf", [0, 4, -6.5], "koerper")
+    kopf.kasten([-2, 2.5, -9], [4, 3, 3], "kopf")
     for name, x in (("kiefer_links", 1), ("kiefer_rechts", -1)):
-        kf = m.knoch(name, [x, 3, -6.5], "kopf")
-        kf.kasten([x - 0.5, 2.5, -8.5], [1, 1, 2], "kiefer")
+        kf = m.knoch(name, [x, 3, -9], "kopf")
+        kf.kasten([x - 0.5, 2.5, -11], [1, 1, 2], "kiefer")
+        kf.kasten([x - 0.5 - x * 0.5, 2.5, -11.5], [1, 1, 1], "kiefer")
     for name, x in (("fuehler_links", 1), ("fuehler_rechts", -1)):
-        f = m.knoch(name, [x, 4.5, -6.5], "kopf", drehung=[-30, 20 if x < 0 else -20, 0])
-        f.kasten([x - 0.5, 4.5, -10.5], [1, 1, 4], "fuehler")
-    # Sechs Beine, je ein Knochen, damit sie im Dreiergang laufen koennen.
-    for i, (x, z) in enumerate(((3, -2.5), (-3, -2.5), (3, 0.5), (-3, 0.5), (3, 3.5), (-3, 3.5))):
+        f = m.knoch(name, [x, 5, -8.5], "kopf", drehung=[-30, 20 if x < 0 else -20, 0])
+        f.kasten([x - 0.5, 5, -11.5], [1, 1, 3], "fuehler")
+        f2 = m.knoch(name + "_spitze", [x, 5.5, -11.5], name, drehung=[25, 0, 0])
+        f2.kasten([x - 0.5, 5, -14], [1, 1, 3], "fuehlerspitze")
+    # Sechs Beine, jedes mit Oberschenkel und Unterschenkel (Knie dazwischen).
+    for i, (x, z) in enumerate(((3.5, -2.5), (-3.5, -2.5), (3.5, 0.5), (-3.5, 0.5), (3.5, 3.5), (-3.5, 3.5))):
+        aussen = 1 if x > 0 else -1
         b = m.knoch(f"bein{i}", [x, 3, z], "koerper")
-        aussen = x if x > 0 else x - 2
-        b.kasten([aussen, 2.5, z - 0.5], [2, 1, 1], "bein")
-        b.kasten([x + 1 if x > 0 else x - 2, 0, z - 0.5], [1, 3, 1], "bein")
+        b.kasten([x if x > 0 else x - 2, 2.5, z - 0.5], [2, 1, 1], "bein")
+        u = m.knoch(f"unterbein{i}", [x + 2 * aussen, 3, z], f"bein{i}")
+        u.kasten([x + 2 * aussen - (0 if x > 0 else 1), 0, z - 0.5], [1, 3, 1], "bein")
     return m
 
 
@@ -200,31 +228,40 @@ FROSTKAEFER_FARBEN = {
 
 
 def frostkaefer_maler(variante):
+    """4.88: ohne Raureif-Flecken. Die Deckfluegel sind unten am Rand dunkel
+    und werden nach oben in Stufen eisig hell; eine helle Naht in der Mitte
+    und ein heller Saum am Rand halten sie als eine Form zusammen."""
     panzer, hell, unten, kristall = FROSTKAEFER_FARBEN.get(variante, FROSTKAEFER_FARBEN["eis"])
 
     def male(stoff, p, n, texel):
         x, y, z = p
         if stoff == "panzer":
-            # Eisfacetten: helle Kanten an der Naht und am Rand, dazwischen
-            # Flecken aus Raureif.
-            if abs(x) < 0.55 and n[1] > 0.5:
-                return ton(unten, p, n, texel, 821, straehne=0.0, hell=0.3)       # die Naht
-            if streu(texel[0] // 2, texel[1] // 2, 822) < 0.3:
-                return ton(hell, p, n, texel, 823, straehne=0.0)
-            return ton(panzer, p, n, texel, 824, straehne=0.0)
+            if n[1] > 0.5 and abs(x) < 0.55:
+                return H.heller(hell, 0.2)                                     # die Naht
+            if n[1] > 0.5 and abs(x) > 3.4:
+                return H.heller(hell, 0.1)                                     # der Saum
+            return H.verlauf([H.dunkler(panzer, 0.25), panzer, hell], H.hoehe(p, n, texel) * 0.8 + (0.2 if y > 6.9 else 0), 4)
+        if stoff == "halsschild":
+            return H.verlauf([H.dunkler(panzer, 0.35), H.dunkler(panzer, 0.1), panzer], H.hoehe(p, n, texel), 3)
         if stoff == "kristall":
-            return glut(kristall, -0.05 if n[1] > 0.5 else -0.2)
+            return glut(H.verlauf([H.mische(H.farbe(kristall), H.farbe(panzer), 0.4), kristall], H.hoehe(p, n, texel), 2),
+                        -0.05 if n[1] > 0.5 else -0.15)
+        if stoff == "hautfluegel":
+            # Duenn und hell, mit wenigen dunklen Laengsadern.
+            if texel[0] % 3 == 0:
+                return H.dunkler(hell, 0.25)
+            return H.heller(hell, 0.35)
         if stoff == "kopf":
-            if abs(n[0]) > 0.5 and y > 3.8 and z < -5.5:
+            if abs(n[0]) > 0.5 and y > 4.3 and z < -8:
                 return glut("#7ae8ff")                                          # eisblaue Augen
-            return ton(unten, p, n, texel, 825, straehne=0.0, hell=0.15)
-        if stoff in ("kiefer", "fuehler"):
-            return ton(hell, p, n, texel, 826, straehne=0.0, hell=-0.1)
+            return H.verlauf([unten, H.heller(unten, 0.15)], H.hoehe(p, n, texel), 3)
+        if stoff in ("kiefer", "fuehler", "fuehlerspitze"):
+            return H.verlauf([H.dunkler(hell, 0.2), hell], H.laenge(p, texel), 3)
         if stoff == "unterseite":
-            return ton(unten, p, n, texel, 827, straehne=0.0)
-        if stoff == "bein":
-            return ton(unten, p, n, texel, 828, straehne=0.0, hell=0.2)
-        return ton(panzer, p, n, texel, 829)
+            return H.verlauf([H.dunkler(unten, 0.1), unten], H.hoehe(p, n, texel), 2)
+        if stoff in ("bein", "fuss"):
+            return H.heller(unten, 0.2)
+        return H.farbe(panzer)
     return male
 
 
@@ -265,51 +302,44 @@ BASILISK_FARBEN = {
 
 
 def basilisk_maler(variante):
+    """4.88: statt Schachbrett ein Verlauf vom hellen Bauch zum dunklen
+    Ruecken, darauf eine zusammenhaengende Rautenkette wie bei einer Viper."""
     schuppen, muster, bauch, kamm = BASILISK_FARBEN.get(variante, BASILISK_FARBEN["wueste"])
 
     def male(stoff, p, n, texel):
         x, y, z = p
         if stoff == "kopf":
-            # Gelb gluehende Augen mit Schlitzpupille.
             for ax in (-2.5, 2.5):
                 if abs(n[0]) > 0.5 and x * ax > 0 and abs(y - 6.5) < 0.6 and abs(z + 10.5) < 1.1:
                     return hexfarbe("#140a04") if abs(z + 10.5) < 0.4 else glut("#ffd21a")
-            if n[1] > 0.5:
-                return ton(muster, p, n, texel, 831, straehne=0.0)
-            return ton(schuppen, p, n, texel, 832, straehne=0.0)
+            return H.koerper(p, n, texel, bauch, schuppen, muster, grenze=0.25, stufen=3)
         if stoff == "schnauze":
             if n[2] < -0.5 and y > 5.5 and abs(x) > 0.8:
                 return hexfarbe("#1a1008")                                      # Nasenloecher
-            return ton(schuppen, p, n, texel, 833, straehne=0.0, hell=-0.05)
+            return H.koerper(p, n, texel, bauch, schuppen, muster, grenze=0.3, stufen=3)
         if stoff == "schuppen":
-            # Schuppen im Versatz, oben ein dunkles Rautenmuster.
-            if n[1] < -0.5:
-                return ton(bauch, p, n, texel, 834, straehne=0.0)
-            reihe = int(math.floor(z / 2))
-            if (texel[0] + reihe) % 2 == 0 and (n[1] > 0.5 or y > 6):
-                return ton(muster, p, n, texel, 835, straehne=0.0)
-            if abs(z % 4 - 2) + abs(x) < 1.6 and n[1] > 0.5:
-                return ton(muster, p, n, texel, 836, straehne=0.0, hell=-0.2)
-            return ton(schuppen, p, n, texel, 837, straehne=0.0)
+            # Die Rautenkette: auf dem Ruecken und ein Stueck die Flanke hinab.
+            if n[1] > 0.5 or H.hoehe(p, n, texel) > 0.8:
+                raute = abs((z % 4) - 2) + abs(x) * (1.0 if n[1] > 0.5 else 0.0)
+                if n[1] > 0.5 and raute < 1.6:
+                    return H.dunkler(muster, 0.15)
+            return H.koerper(p, n, texel, bauch, schuppen, muster, grenze=0.25, stufen=4, schilde=2)
         if stoff == "bauch":
-            if int(math.floor(z)) % 2 == 0:
-                return ton(bauch, p, n, texel, 838, straehne=0.0, hell=-0.1)
-            return ton(bauch, p, n, texel, 839, straehne=0.0)
+            return H.koerper(p, n, texel, bauch, schuppen, muster, grenze=1.1, schilde=2)
         if stoff == "kamm":
-            # Ein gezackter Kamm: nur jeder zweite Streifen steht.
             oben = 9.0 if z < 7 else 8.25
             if y > oben and texel[0] % 2 == 1:
                 return None
-            return ton(kamm, p, n, texel, 840, straehne=0.0)
+            return H.verlauf([H.dunkler(kamm, 0.2), kamm, H.heller(kamm, 0.15)], H.hoehe(p, n, texel), 3)
         if stoff in ("krone", "zacke"):
             if stoff == "zacke" and n[1] > 0.5:
                 return glut("#ff3a2a")                                          # rote Steine
-            return ton("#e0b030", p, n, texel, 841, straehne=0.0, hell=0.05)
+            return H.verlauf(["#b8862a", "#e0b030", "#f4d468"], H.hoehe(p, n, texel), 3)
         if stoff in ("bein", "pfote"):
-            return ton(schuppen, p, n, texel, 842, straehne=0.0, hell=-0.1)
+            return H.koerper(p, n, texel, bauch, schuppen, muster, grenze=0.15, stufen=3)
         if stoff == "kralle":
             return hexfarbe("#1a140e")
-        return ton(schuppen, p, n, texel, 843)
+        return H.koerper(p, n, texel, bauch, schuppen, muster)
     return male
 
 
@@ -365,23 +395,23 @@ SANDWURM_FARBEN = {
 
 
 def sandwurm_maler(variante):
+    """4.88: ohne Sprenkel. Die Haut wird zum Kopf hin in Stufen heller,
+    jedes Glied ist unten dunkler als oben (so sieht man die Ringe), und
+    Laengsfurchen laufen als durchgehende Linien."""
     haut, falte, sand, rachen = SANDWURM_FARBEN.get(variante, SANDWURM_FARBEN["wueste"])
 
     def male(stoff, p, n, texel):
         x, y, z = p
         if stoff == "haut":
-            # Laengsfurchen und grobe Platten, zum Kopf hin heller.
             winkel = math.atan2(z, x)
             if int(math.floor((winkel + math.pi) / (2 * math.pi) * 16)) % 4 == 0 and abs(n[1]) < 0.5:
-                return ton(falte, p, n, texel, 851, straehne=0.0)
-            if streu(texel[0] // 3, texel[1] // 3, 852) < 0.2:
-                return ton(falte, p, n, texel, 853, straehne=0.0, hell=0.2)
-            return ton(haut, p, n, texel, 854, straehne=0.0, hell=min(0.15, y / 600))
+                return H.mische(H.farbe(haut), H.farbe(falte), 0.55)
+            grund = H.verlauf([falte, haut, H.heller(haut, 0.18)], min(1.0, y / (SANDWURM_GLIEDER * SANDWURM_HOEHE)), 5)
+            return H.verlauf([H.dunkler(grund, 0.12), grund], H.hoehe(p, n, texel), 3)
         if stoff == "ring":
-            return ton(mische(hexfarbe(haut), hexfarbe(falte), 0.45), p, n, texel, 855, straehne=0.0)
+            return H.mische(H.farbe(haut), H.farbe(falte), 0.45)
         if stoff == "kopf":
             if n[1] > 0.5:
-                # Das Maul von oben: dunkler Schlund, Zahnringe darum.
                 r = math.hypot(x, z)
                 w = math.degrees(math.atan2(z, x))
                 if r < 3:
@@ -390,23 +420,22 @@ def sandwurm_maler(variante):
                     return hexfarbe("#f0e8d4")
                 if 6 < r < 7.5 and int(w // 15) % 2 == 1:
                     return hexfarbe("#e8dcc4")
-                return ton(rachen, p, n, texel, 856, straehne=0.0, hell=-0.1 * (1 - r / 9))
-            return ton(haut, p, n, texel, 857, straehne=0.0, hell=0.12)
+                return H.verlauf([H.dunkler(rachen, 0.3), rachen], r / 9, 4)
+            return H.heller(haut, 0.12)
         if stoff == "klappe":
-            # Innen (zur Mitte hin) rot mit Zahnreihen, aussen Haut.
             innen = (x * n[0] + z * n[2]) < 0
             if innen:
-                if int(y) % 3 == 0 and texel[0] % 2 == 0:
+                # Zahnreihen als durchgehende Leisten, dazwischen dunkler Rachen.
+                if int(y) % 3 == 0:
                     return hexfarbe("#f0e8d4")
-                return ton(rachen, p, n, texel, 858, straehne=0.0)
+                return H.verlauf([H.dunkler(rachen, 0.3), rachen], (y % 3) / 3, 2)
             if n[1] > 0.5:
                 return hexfarbe("#f0e8d4")                                    # die Zahnspitzen oben
-            return ton(haut, p, n, texel, 859, straehne=0.0, hell=0.08)
+            return H.verlauf([haut, H.heller(haut, 0.15)], H.hoehe(p, n, texel), 3)
         if stoff == "sand":
-            if streu(texel[0], texel[1], 860) < 0.12:
-                return ton(sand, p, n, texel, 861, straehne=0.0, hell=-0.18)  # Kiesel
-            return ton(sand, p, n, texel, 862, straehne=0.0)
-        return ton(haut, p, n, texel, 863)
+            # Der Huegel: oben hell, zu den Raendern hin in Baendern dunkler.
+            return H.verlauf([H.dunkler(sand, 0.12), sand, H.heller(sand, 0.08)], H.hoehe(p, n, texel), 3)
+        return H.farbe(haut)
     return male
 
 
@@ -481,7 +510,14 @@ LINDWURM_FARBEN = {
 
 
 def lindwurm_maler(variante):
+    """4.88: Keine Schuppen-Punkte mehr. Heller Bauch mit Querschilden, die
+    Flanken hinauf dunkler, ein dunkler Aalstrich den Ruecken entlang; die
+    Flughaut vom Knochen zur Hinterkante heller, mit feinen Adern."""
     schuppen, dunkel, bauch, haut, augen = LINDWURM_FARBEN.get(variante, LINDWURM_FARBEN["gruen"])
+
+    def leib(p, n, texel, schilde=2):
+        return H.koerper(p, n, texel, bauch, schuppen, dunkel, grenze=0.28, stufen=4, schilde=schilde,
+                         aalstrich=H.dunkler(dunkel, 0.2))
 
     def male(stoff, p, n, texel):
         x, y, z = p
@@ -492,48 +528,42 @@ def lindwurm_maler(variante):
                         return glut(augen) if abs(z + 41) > 0.4 else hexfarbe("#140a04")
             if stoff == "schnauze" and n[2] < -0.5 and y > 26.5 and abs(x) > 1.5:
                 return hexfarbe("#140c08")                                    # Nuestern
-            if n[1] < -0.5:
-                # Der Bauch in Querschilden.
-                return ton(bauch, p, n, texel, 871, straehne=0.0, hell=-0.12 if int(z) % 2 == 0 else 0.0)
-            # Schuppen im Versatz: zwei mal zwei, jede zweite Reihe verschoben.
-            reihe = int(math.floor(y / 2))
-            spalte = int(math.floor((texel[0] + reihe) / 2))
-            if (spalte + reihe) % 3 == 0:
-                return ton(dunkel, p, n, texel, 872, straehne=0.0)
-            return ton(schuppen, p, n, texel, 873, straehne=0.0, hell=0.06 if n[1] > 0.5 else 0.0)
+            return leib(p, n, texel, schilde=0 if stoff != "schuppen" else 2)
         if stoff == "bauch":
-            return ton(bauch, p, n, texel, 874, straehne=0.0, hell=-0.12 if int(z) % 2 == 0 else 0.0)
+            return H.koerper(p, n, texel, bauch, schuppen, dunkel, grenze=1.1, schilde=2)
         if stoff == "braue":
-            return ton(dunkel, p, n, texel, 875, straehne=0.0)
+            return H.farbe(dunkel)
         if stoff in ("horn", "kralle"):
-            return ton("#d8ccb0", p, n, texel, 876, straehne=0.0, hell=-0.25 if stoff == "kralle" else 0.0)
+            # Vom Ansatz zur Spitze heller - wie echtes Horn.
+            t = H.laenge(p, texel, 2 if stoff == "horn" else 1)
+            return H.verlauf(["#8a7a60", "#d8ccb0", "#f0e8d8"], t if stoff == "horn" else 1 - t, 3)
         if stoff == "kiefer":
             if n[1] > 0.5 and (abs(x) > 2.5 or z < -48.5) and texel[0] % 2 == 0:
                 return hexfarbe("#f0e8d4")                                    # Zaehne
             if n[1] > 0.5:
-                return ton("#6a1a1a", p, n, texel, 877, straehne=0.0)
-            return ton(bauch if n[1] < -0.5 else schuppen, p, n, texel, 878, straehne=0.0)
+                return hexfarbe("#6a1a1a")
+            return leib(p, n, texel, schilde=0)
         if stoff == "zacke":
-            return ton(dunkel, p, n, texel, 879, straehne=0.0, hell=-0.1)
+            return H.verlauf([dunkel, H.dunkler(dunkel, 0.3)], H.hoehe(p, n, texel), 2)
         if stoff == "spitze":
-            # Die Pfeilspitze am Schwanz: vorn breit, hinten spitz.
             if abs(x) > 4 - (z - 55) * 0.66:
                 return None
-            return ton(dunkel, p, n, texel, 880, straehne=0.0)
+            return H.farbe(dunkel)
         if stoff == "knochen":
-            return ton(dunkel, p, n, texel, 881, straehne=0.0, hell=0.1)
+            return H.verlauf([H.dunkler(dunkel, 0.1), H.heller(dunkel, 0.12)], H.hoehe(p, n, texel), 2)
         if stoff == "haut":
-            # Flughaut mit Adern; die Hinterkante in Boegen ausgeschnitten.
             hinten = z - (-4.5)
-            # Zur Spitze hin laeuft die Schwinge schmal zu.
             tiefe = 20 if abs(x) < 25 else 24 - (abs(x) - 25) * 0.8
             bogen = abs(math.sin(abs(x) / 6.5 * math.pi)) * 3.5
             if hinten > tiefe - bogen:
                 return None
+            # Adern als Linien, die vom Arm nach hinten laufen.
             if texel[0] % 6 == 0:
-                return ton(dunkel, p, n, texel, 882, straehne=0.0, hell=0.15)
-            return ton(haut, p, n, texel, 883, straehne=0.0, hell=-0.05 if n[1] < 0 else 0.05)
+                return H.dunkler(haut, 0.18)
+            return H.verlauf([H.dunkler(haut, 0.12), haut, H.heller(haut, 0.14)], hinten / 20.0, 4)
         if stoff == "fuss":
-            return ton(dunkel, p, n, texel, 884, straehne=0.0)
-        return ton(schuppen, p, n, texel, 885)
+            return H.farbe(dunkel)
+        return leib(p, n, texel)
     return male
+
+

@@ -17,6 +17,7 @@
         "krabbeln": "animation.fynn.frostkaefer.krabbeln",
         "tasten": "animation.fynn.frostkaefer.tasten",
         "einrollen": "animation.fynn.frostkaefer.einrollen",
+        "schwirren": "animation.fynn.frostkaefer.schwirren",
         "beissen": "animation.fynn.frostkaefer.beissen"
       },
       "scripts": {
@@ -40,6 +41,9 @@
           },
           {
             "einrollen": "query.property('fynn:gerollt')"
+          },
+          {
+            "schwirren": "(math.mod(query.life_time, 23.0) < 1.6) * (1.0 - query.property('fynn:gerollt')) * (1.0 - math.clamp(query.modified_move_speed * 5.0, 0.0, 1.0))"
           },
           {
             "beissen": "variable.attack_time > 0.0"
