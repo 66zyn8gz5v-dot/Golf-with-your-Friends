@@ -680,6 +680,77 @@
             "volume": 1.0
           }
         }
+      },
+      "fynn:glutskorpion": {
+        "volume": 1.0,
+        "pitch": [
+          0.6,
+          0.8
+        ],
+        "events": {
+          "ambient": {
+            "sound": "mob.silverfish.say",
+            "volume": 1.0
+          },
+          "hurt": {
+            "sound": "mob.blaze.hit",
+            "volume": 1.0
+          },
+          "death": {
+            "sound": "mob.blaze.death",
+            "volume": 1.0
+          },
+          "step": {
+            "sound": "mob.spider.step",
+            "volume": 0.25
+          }
+        }
+      },
+      "fynn:kristallspinne": {
+        "volume": 1.0,
+        "pitch": [
+          0.7,
+          0.85
+        ],
+        "events": {
+          "ambient": {
+            "sound": "mob.spider.say",
+            "volume": 1.0
+          },
+          "hurt": {
+            "sound": "mob.spider.say",
+            "volume": 1.0
+          },
+          "death": {
+            "sound": "mob.spider.death",
+            "volume": 1.0
+          },
+          "step": {
+            "sound": "mob.spider.step",
+            "volume": 0.25
+          }
+        }
+      },
+      "fynn:irrlicht": {
+        "volume": 1.0,
+        "pitch": [
+          0.5,
+          0.7
+        ],
+        "events": {
+          "ambient": {
+            "sound": "mob.allay.idle",
+            "volume": 1.0
+          },
+          "hurt": {
+            "sound": "mob.allay.hurt",
+            "volume": 1.0
+          },
+          "death": {
+            "sound": "mob.allay.death",
+            "volume": 1.0
+          }
+        }
       }
     }
   }

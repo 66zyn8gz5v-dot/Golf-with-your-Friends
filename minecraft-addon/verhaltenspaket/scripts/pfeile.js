@@ -52,6 +52,11 @@ const SORTEN = {
         spur: "minecraft:villager_happy",
         treffer: (ziel) => ziel.addEffect("levitation", 40, { amplifier: 1 }),
     },
+    // Aus dem Stachel des Glutskorpions (4.81): Was er trifft, brennt.
+    "fynn:glutpfeil": {
+        spur: "minecraft:basic_flame_particle",
+        treffer: (ziel) => ziel.setOnFire(6, true),
+    },
     "fynn:elektrumpfeil": {
         spur: "minecraft:blue_flame_particle",
         // Gelaehmt: fast stehen bleiben und schwach zuschlagen.

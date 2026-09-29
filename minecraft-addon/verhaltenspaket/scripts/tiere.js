@@ -20,6 +20,9 @@ export const TALISMANE = {
     // Aus den Panzern des Frostkaefers (4.78); das Eis unter den Fuessen
     // macht fantasy.js.
     "fynn:frosttalisman": { wirkung: "fire_resistance", stufe: 0 },
+    // Aus dem Kristall der Kristallspinne (4.81). Nachtsicht blinkt, wenn
+    // sie unter zehn Sekunden faellt - darum laenger als die anderen.
+    "fynn:hoehlenauge": { wirkung: "night_vision", stufe: 0, dauer: 300 },
 };
 const JAEGERKETTE = "fynn:jaegerkette";
 
@@ -61,7 +64,7 @@ system.runInterval(() => {
                 if (!dabei.has(name)) continue;
                 if (t.nurImWasser && !spieler.isInWater) continue;
                 // Etwas laenger als der Takt, damit die Wirkung nie flackert.
-                spieler.addEffect(t.wirkung, 60, { amplifier: t.stufe, showParticles: false });
+                spieler.addEffect(t.wirkung, t.dauer ?? 60, { amplifier: t.stufe, showParticles: false });
             }
             const satz = ganzerSatz(spieler);
             if (satz) spieler.addEffect(satz.wirkung, 60, { amplifier: satz.stufe, showParticles: false });

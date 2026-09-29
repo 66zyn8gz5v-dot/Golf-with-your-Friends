@@ -580,6 +580,30 @@
     },
     "lindwurm_ei": {
       "textures": "textures/items/lindwurm_ei"
+    },
+    "glutstachel": {
+      "textures": "textures/items/glutstachel"
+    },
+    "glutpfeil": {
+      "textures": "textures/items/glutpfeil"
+    },
+    "spinnenkristall": {
+      "textures": "textures/items/spinnenkristall"
+    },
+    "hoehlenauge": {
+      "textures": "textures/items/hoehlenauge"
+    },
+    "irrlichtflasche": {
+      "textures": "textures/items/irrlichtflasche"
+    },
+    "glutskorpion_ei": {
+      "textures": "textures/items/glutskorpion_ei"
+    },
+    "kristallspinne_ei": {
+      "textures": "textures/items/kristallspinne_ei"
+    },
+    "irrlicht_ei": {
+      "textures": "textures/items/irrlicht_ei"
     }
   }
 }

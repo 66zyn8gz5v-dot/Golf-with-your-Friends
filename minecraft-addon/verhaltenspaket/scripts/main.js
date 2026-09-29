@@ -25,6 +25,7 @@ import "./kleintiere.js";
 import "./fantasy.js";
 import "./sandwurm.js";
 import "./lindwurm.js";
+import "./fantasy2.js";
 import "./obst.js";
 import "./banditen.js";
 import "./rucksack.js";
