@@ -214,6 +214,38 @@ def verschiebe(m, namen, dx):
                 c.drehpunkt = [c.drehpunkt[0] + dx, c.drehpunkt[1], c.drehpunkt[2]]
 
 
+def becken_abtrennen(m, z_grenze, y):
+    """Teilt den Rumpf in Brust und Becken (4.94). Fynn: "Mach die Drachen
+    dynamischer, gib ihnen mehr Gelenke." Ein Rumpf aus einem Stueck ist ein
+    Brett - so biegt sich der Ruecken: Beim Gehen dreht das Becken gegen die
+    Schultern, beim Aufbaeumen bleibt es unten, waehrend die Brust steigt.
+    Alles hinter z_grenze (Huefte, Hinterbeine, Schwanz) haengt am Becken;
+    Kaesten, die ueber die Grenze reichen, werden dort geteilt."""
+    r = m.finde("rumpf")
+    becken = m.knoch("becken", [0, y, z_grenze], "rumpf")
+    # Gleich hinter den Rumpf in die Reihe, damit Eltern vor Kindern stehen.
+    m.knochen.remove(becken)
+    m.knochen.insert(m.knochen.index(r) + 1, becken)
+    bleibt = []
+    for c in r.kaesten:
+        anfang, ende = c.ursprung[2], c.ursprung[2] + c.groesse[2]
+        if anfang >= z_grenze - 0.01:
+            becken.kaesten.append(c)
+        elif ende > z_grenze + 0.5 and not c.drehung and float(z_grenze - anfang).is_integer():
+            vorn = int(z_grenze - anfang)
+            bleibt.append(c)
+            becken.kasten([c.ursprung[0], c.ursprung[1], z_grenze], [c.groesse[0], c.groesse[1], c.groesse[2] - vorn],
+                          c.stoff, aufblasen=c.aufblasen)
+            c.groesse[2] = vorn
+        else:
+            bleibt.append(c)
+    r.kaesten = bleibt
+    for k in m.knochen:
+        if k.eltern == "rumpf" and (k.name.startswith("bein_hinten") or k.name == "schwanz1"):
+            k.eltern = "becken"
+    return becken
+
+
 def glieder(m, name, eltern, start, richtung, teile, stoff="leib", zacken=None, drehung=None):
     """Eine Kette von Gliedern (Hals oder Schwanz). teile: Liste von
     (Laenge, Breite, Hoehe, Anstieg). richtung -1 = nach vorn (Hals),
@@ -261,11 +293,15 @@ def bein_bauen(m, name, eltern, huefte, oben, unten, fuss, krallen=3, vorn=-1):
     fy = ky - unten[1]
     fu = m.knoch(name.replace("bein", "fuss"), [hx, fy, hz], name.replace("bein", "unterbein"))
     fu.kasten([hx - fuss[0] / 2, fy - fuss[1], hz - fuss[2] + 1.5], [fuss[0], fuss[1], fuss[2]], "fuss")
+    # Die Krallen sitzen auf einem eigenen Gelenk vorn am Fuss (4.94): Beim
+    # Heben krallen sie sich ein, beim Aufsetzen spreizen sie sich.
+    vorn_z = hz - fuss[2] + 1.5
+    ze = m.knoch(name.replace("bein", "zehen"), [hx, fy - fuss[1] + 0.5, vorn_z], name.replace("bein", "fuss"))
     for j in range(krallen):
         # Lange, nach unten gebogene Krallen: ein Glied vorn, die Spitze tiefer.
         kx = hx - fuss[0] / 2 + j * (fuss[0] - 1) / max(1, krallen - 1)
-        fu.kasten([kx, fy - fuss[1], hz - fuss[2] - 0.5], [1, 1, 2], "kralle")
-        fu.kasten([kx, fy - fuss[1] - 0.01, hz - fuss[2] - 1.5], [1, 1, 1], "kralle",
+        ze.kasten([kx, fy - fuss[1], hz - fuss[2] - 0.5], [1, 1, 2], "kralle")
+        ze.kasten([kx, fy - fuss[1] - 0.01, hz - fuss[2] - 1.5], [1, 1, 1], "kralle",
                   drehung=[25, 0, 0], drehpunkt=[kx + 0.5, fy - fuss[1] + 0.5, hz - fuss[2] - 0.5])
     return fy - fuss[1]
 
@@ -408,6 +444,7 @@ def lindwurm_modell():
         bein_bauen(m, f"bein_hinten_{seite}", "rumpf", (x, 21, 12), (8, 9, 10), (6, 8, 6), (8, 4, 10), krallen=4)
         bein_bauen(m, f"bein_vorn_{seite}", "rumpf", (x, 20, -10), (7, 8, 7), (5, 8, 5), (7, 4, 8), krallen=4)
     schwinge_bauen(m, LINDWURM_SCHWINGE)
+    becken_abtrennen(m, 8, 21)
     sattel_bauen(m, "rumpf", 31, -3, 18)
     return m
 
@@ -638,6 +675,7 @@ def frostwyvern_modell():
         h = m.finde(f"hand_{seite}")
         hx = FROSTWYVERN_SCHWINGE.handgelenk[0] * (1 if seite == "links" else -1)
         h.kasten([hx - 1, 21, -11], [2, 2, 3], "kralle")
+    becken_abtrennen(m, 7, 17)
     sattel_bauen(m, "rumpf", 22, -3, 12)
     return m
 
@@ -795,6 +833,7 @@ def giftdrache_modell():
         bein_bauen(m, f"bein_hinten_{seite}", "rumpf", (x, 18, 10), (6, 8, 7), (4, 7, 4), (6, 3, 7), krallen=3)
         bein_bauen(m, f"bein_vorn_{seite}", "rumpf", (x, 17, -8), (5, 7, 5), (4, 7, 4), (5, 3, 6), krallen=3)
     schwinge_bauen(m, GIFTDRACHE_SCHWINGE)
+    becken_abtrennen(m, 8, 17)
     sattel_bauen(m, "rumpf", 24, -3, 14)
     return m
 

@@ -16,13 +16,16 @@
       },
       "animations": {
         "flug": "animation.fynn.lindwurm.flug",
+        "schweben": "animation.fynn.lindwurm.schweben",
         "stand": "animation.fynn.lindwurm.stand",
         "gehen": "animation.fynn.lindwurm.gehen",
         "liegen": "animation.fynn.lindwurm.liegen",
         "benommen": "animation.fynn.lindwurm.benommen",
         "feueratem": "animation.fynn.lindwurm.feueratem",
         "drachenbruellen": "animation.fynn.lindwurm.drachenbruellen",
-        "sturzflug": "animation.fynn.lindwurm.sturzflug"
+        "sturzflug": "animation.fynn.lindwurm.sturzflug",
+        "drachenblick": "animation.fynn.lindwurm.drachenblick",
+        "drachenbiss": "animation.fynn.lindwurm.drachenbiss"
       },
       "scripts": {
         "initialize": [
@@ -34,11 +37,21 @@
           "variable.fynn_d = query.body_y_rotation - variable.fynn_gier_alt;",
           "variable.fynn_d = variable.fynn_d > 180.0 ? variable.fynn_d - 360.0 : (variable.fynn_d < -180.0 ? variable.fynn_d + 360.0 : variable.fynn_d);",
           "variable.fynn_gier_alt = query.body_y_rotation;",
-          "variable.fynn_dreh = math.lerp(variable.fynn_dreh, math.clamp(variable.fynn_d / math.max(query.delta_time, 0.01) / 20.0, -10.0, 10.0), 0.12);"
+          "variable.fynn_dreh = math.lerp(variable.fynn_dreh, math.clamp(variable.fynn_d / math.max(query.delta_time, 0.01) / 20.0, -10.0, 10.0), 0.12);",
+          "variable.fynn_t = query.life_time + variable.fynn_zufall * 0.05;",
+          "variable.fynn_ruhig = (1.0 - math.clamp(query.modified_move_speed * 4.0, 0.0, 1.0)) * (1.0 - query.property('fynn:feuer')) * (1.0 - query.property('fynn:fliegt')) * (1.0 - math.max(query.property('fynn:schlaeft'), query.property('fynn:besiegt')));",
+          "variable.fynn_bz = math.mod(variable.fynn_t, 17.0);",
+          "variable.fynn_bruell = variable.fynn_bz < 2.4 ? math.clamp(math.sin(variable.fynn_bz / 2.4 * 180.0) * 2.2, 0.0, 1.0) * variable.fynn_ruhig : 0.0;",
+          "variable.fynn_sz = math.mod(variable.fynn_t + 6.0, 31.0);",
+          "variable.fynn_offen_l = math.max(variable.fynn_bruell, math.clamp(math.sin(math.clamp((variable.fynn_sz - 0.0) / 3.2, 0.0, 1.0) * 180.0) * 1.6, 0.0, 1.0) * variable.fynn_ruhig);",
+          "variable.fynn_offen_r = math.max(variable.fynn_bruell, math.clamp(math.sin(math.clamp((variable.fynn_sz - 3.8) / 3.2, 0.0, 1.0) * 180.0) * 1.6, 0.0, 1.0) * variable.fynn_ruhig);"
         ],
         "animate": [
           {
             "flug": "query.property('fynn:fliegt') * (1.0 - math.max(query.property('fynn:schlaeft'), query.property('fynn:besiegt')))"
+          },
+          {
+            "schweben": "query.property('fynn:fliegt') * query.property('fynn:feuer') * (1.0 - math.max(query.property('fynn:schlaeft'), query.property('fynn:besiegt')))"
           },
           {
             "stand": "(1.0 - query.property('fynn:fliegt')) * (1.0 - math.max(query.property('fynn:schlaeft'), query.property('fynn:besiegt')))"
@@ -56,10 +69,16 @@
             "feueratem": "query.property('fynn:feuer')"
           },
           {
-            "drachenbruellen": "(1.0 - query.property('fynn:fliegt')) * (1.0 - math.clamp(query.modified_move_speed * 4.0, 0.0, 1.0)) * (1.0 - query.property('fynn:feuer')) * (1.0 - math.max(query.property('fynn:schlaeft'), query.property('fynn:besiegt'))) * (math.mod(query.life_time, 17.0) < 2.2)"
+            "drachenbruellen": "variable.fynn_bruell"
           },
           {
             "sturzflug": "query.property('fynn:fliegt') * math.clamp(-query.vertical_speed * 0.6 - 0.2, 0.0, 1.0)"
+          },
+          {
+            "drachenblick": "(1.0 - math.max(query.property('fynn:schlaeft'), query.property('fynn:besiegt')))"
+          },
+          {
+            "drachenbiss": "(variable.attack_time > 0.0) * (1.0 - math.max(query.property('fynn:schlaeft'), query.property('fynn:besiegt')))"
           }
         ]
       },

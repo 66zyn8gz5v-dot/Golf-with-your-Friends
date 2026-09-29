@@ -44,11 +44,11 @@ item.fynn:eisenklinge.name=Iron Blade
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.93
+item.iron_sword.name=Stahlschwert 4.94
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.93
-item.fynn:degen.name=Degen 4.93
+item.fynn:degen=Degen 4.94
+item.fynn:degen.name=Degen 4.94
 
 
 
@@ -518,49 +518,6 @@ item.fynn:greifenfeder.name=Griffin Feather
 
 
 
-## Nester und Eier
-item.fynn:vogelei=Bird Egg
-item.fynn:vogelei.name=Bird Egg
-item.fynn:spechtei=Woodpecker Egg
-item.fynn:spechtei.name=Woodpecker Egg
-item.fynn:adlerei=Eagle Egg
-item.fynn:adlerei.name=Eagle Egg
-item.fynn:greifenei=Griffin Egg
-item.fynn:greifenei.name=Griffin Egg
-tile.fynn:vogelnest.name=Bird Nest
-tile.fynn:spechthoehle.name=Woodpecker Hollow
-tile.fynn:kobel.name=Squirrel Drey
-tile.fynn:adlerhorst.name=Eagle Eyrie
-tile.fynn:greifennest.name=Griffin Nest
-
-
-
-
-
-
-## Fantasy-Wesen
-item.fynn:wurmzahn=Sandworm Tooth
-item.fynn:sandperle=Sand Pearl
-item.fynn:sandklopfer=Sand Thumper
-item.fynn:drachenschuppe=Dragon Scale
-item.fynn:glutstaub=Ember Dust
-item.fynn:glutflasche=Ember Bottle
-item.fynn:sturmfluegel=Storm Wing
-item.fynn:frostpanzer=Frost Carapace
-item.fynn:frosttalisman=Frost Talisman
-item.fynn:basiliskenauge=Basilisk Eye
-entity.fynn:glutflasche_wurf.name=Ember Bottle
-action.interact.fynn_fangen=Catch
-item.fynn:wurmzahn.name=Sandworm Tooth
-item.fynn:sandperle.name=Sand Pearl
-item.fynn:sandklopfer.name=Sand Thumper
-item.fynn:drachenschuppe.name=Dragon Scale
-item.fynn:glutstaub.name=Ember Dust
-item.fynn:glutflasche.name=Ember Bottle
-item.fynn:sturmfluegel.name=Storm Wing
-item.fynn:frostpanzer.name=Frost Carapace
-item.fynn:frosttalisman.name=Frost Talisman
-item.fynn:basiliskenauge.name=Basilisk Eye
 
 
 
@@ -568,10 +525,12 @@ item.fynn:basiliskenauge.name=Basilisk Eye
 
 
 
-## Drachen
-item.fynn:drachenpfeife=Dragon Whistle
-entity.fynn:eissplitter.name=Ice Shard
-item.fynn:drachenpfeife.name=Dragon Whistle
+
+
+
+
+
+
 
 ## Die Tiere
 entity.fynn:braunbaer.name=Brown Bear
@@ -648,3 +607,47 @@ entity.fynn:himmelsdrache.name=Sky Serpent
 item.spawn_egg.entity.fynn:himmelsdrache.name=Sky Serpent Spawn Egg
 entity.fynn:giftdrache.name=Twin-Headed Venom Dragon
 item.spawn_egg.entity.fynn:giftdrache.name=Twin-Headed Venom Dragon Spawn Egg
+
+## Fantasy-Wesen
+item.fynn:wurmzahn=Sandworm Tooth
+item.fynn:sandperle=Sand Pearl
+item.fynn:sandklopfer=Sand Thumper
+item.fynn:drachenschuppe=Dragon Scale
+item.fynn:glutstaub=Ember Dust
+item.fynn:glutflasche=Ember Bottle
+item.fynn:sturmfluegel=Storm Wing
+item.fynn:frostpanzer=Frost Carapace
+item.fynn:frosttalisman=Frost Talisman
+item.fynn:basiliskenauge=Basilisk Eye
+entity.fynn:glutflasche_wurf.name=Ember Bottle
+action.interact.fynn_fangen=Catch
+item.fynn:wurmzahn.name=Sandworm Tooth
+item.fynn:sandperle.name=Sand Pearl
+item.fynn:sandklopfer.name=Sand Thumper
+item.fynn:drachenschuppe.name=Dragon Scale
+item.fynn:glutstaub.name=Ember Dust
+item.fynn:glutflasche.name=Ember Bottle
+item.fynn:sturmfluegel.name=Storm Wing
+item.fynn:frostpanzer.name=Frost Carapace
+item.fynn:frosttalisman.name=Frost Talisman
+item.fynn:basiliskenauge.name=Basilisk Eye
+
+## Drachen
+item.fynn:drachenpfeife=Dragon Whistle
+entity.fynn:eissplitter.name=Ice Shard
+item.fynn:drachenpfeife.name=Dragon Whistle
+
+## Nester und Eier
+item.fynn:vogelei=Bird Egg
+item.fynn:vogelei.name=Bird Egg
+item.fynn:spechtei=Woodpecker Egg
+item.fynn:spechtei.name=Woodpecker Egg
+item.fynn:adlerei=Eagle Egg
+item.fynn:adlerei.name=Eagle Egg
+item.fynn:greifenei=Griffin Egg
+item.fynn:greifenei.name=Griffin Egg
+tile.fynn:vogelnest.name=Bird Nest
+tile.fynn:spechthoehle.name=Woodpecker Hollow
+tile.fynn:kobel.name=Squirrel Drey
+tile.fynn:adlerhorst.name=Eagle Eyrie
+tile.fynn:greifennest.name=Griffin Nest

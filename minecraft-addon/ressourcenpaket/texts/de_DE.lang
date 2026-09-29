@@ -44,11 +44,11 @@ item.fynn:eisenklinge.name=Eisenklinge
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.93
+item.iron_sword.name=Stahlschwert 4.94
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.93
-item.fynn:degen.name=Degen 4.93
+item.fynn:degen=Degen 4.94
+item.fynn:degen.name=Degen 4.94
 
 
 
@@ -524,49 +524,6 @@ item.fynn:greifenfeder.name=Greifenfeder
 
 
 
-## Nester und Eier
-item.fynn:vogelei=Vogelei
-item.fynn:vogelei.name=Vogelei
-item.fynn:spechtei=Spechtei
-item.fynn:spechtei.name=Spechtei
-item.fynn:adlerei=Adlerei
-item.fynn:adlerei.name=Adlerei
-item.fynn:greifenei=Greifenei
-item.fynn:greifenei.name=Greifenei
-tile.fynn:vogelnest.name=Vogelnest
-tile.fynn:spechthoehle.name=Spechthöhle
-tile.fynn:kobel.name=Kobel
-tile.fynn:adlerhorst.name=Adlerhorst
-tile.fynn:greifennest.name=Greifennest
-
-
-
-
-
-
-## Fantasy-Wesen
-item.fynn:wurmzahn=Wurmzahn
-item.fynn:sandperle=Sandperle
-item.fynn:sandklopfer=Sandklopfer
-item.fynn:drachenschuppe=Drachenschuppe
-item.fynn:glutstaub=Glutstaub
-item.fynn:glutflasche=Glutflasche
-item.fynn:sturmfluegel=Sturmflügel
-item.fynn:frostpanzer=Frostpanzer
-item.fynn:frosttalisman=Frosttalisman
-item.fynn:basiliskenauge=Basiliskenauge
-entity.fynn:glutflasche_wurf.name=Glutflasche
-action.interact.fynn_fangen=Einfangen
-item.fynn:wurmzahn.name=Wurmzahn
-item.fynn:sandperle.name=Sandperle
-item.fynn:sandklopfer.name=Sandklopfer
-item.fynn:drachenschuppe.name=Drachenschuppe
-item.fynn:glutstaub.name=Glutstaub
-item.fynn:glutflasche.name=Glutflasche
-item.fynn:sturmfluegel.name=Sturmflügel
-item.fynn:frostpanzer.name=Frostpanzer
-item.fynn:frosttalisman.name=Frosttalisman
-item.fynn:basiliskenauge.name=Basiliskenauge
 
 
 
@@ -574,10 +531,12 @@ item.fynn:basiliskenauge.name=Basiliskenauge
 
 
 
-## Drachen
-item.fynn:drachenpfeife=Drachenpfeife
-entity.fynn:eissplitter.name=Eissplitter
-item.fynn:drachenpfeife.name=Drachenpfeife
+
+
+
+
+
+
 
 ## Die Tiere
 entity.fynn:braunbaer.name=Braunbär
@@ -654,3 +613,47 @@ entity.fynn:himmelsdrache.name=Himmelsdrache
 item.spawn_egg.entity.fynn:himmelsdrache.name=Himmelsdrache-Spawn-Ei
 entity.fynn:giftdrache.name=Giftdrache
 item.spawn_egg.entity.fynn:giftdrache.name=Giftdrache-Spawn-Ei
+
+## Fantasy-Wesen
+item.fynn:wurmzahn=Wurmzahn
+item.fynn:sandperle=Sandperle
+item.fynn:sandklopfer=Sandklopfer
+item.fynn:drachenschuppe=Drachenschuppe
+item.fynn:glutstaub=Glutstaub
+item.fynn:glutflasche=Glutflasche
+item.fynn:sturmfluegel=Sturmflügel
+item.fynn:frostpanzer=Frostpanzer
+item.fynn:frosttalisman=Frosttalisman
+item.fynn:basiliskenauge=Basiliskenauge
+entity.fynn:glutflasche_wurf.name=Glutflasche
+action.interact.fynn_fangen=Einfangen
+item.fynn:wurmzahn.name=Wurmzahn
+item.fynn:sandperle.name=Sandperle
+item.fynn:sandklopfer.name=Sandklopfer
+item.fynn:drachenschuppe.name=Drachenschuppe
+item.fynn:glutstaub.name=Glutstaub
+item.fynn:glutflasche.name=Glutflasche
+item.fynn:sturmfluegel.name=Sturmflügel
+item.fynn:frostpanzer.name=Frostpanzer
+item.fynn:frosttalisman.name=Frosttalisman
+item.fynn:basiliskenauge.name=Basiliskenauge
+
+## Drachen
+item.fynn:drachenpfeife=Drachenpfeife
+entity.fynn:eissplitter.name=Eissplitter
+item.fynn:drachenpfeife.name=Drachenpfeife
+
+## Nester und Eier
+item.fynn:vogelei=Vogelei
+item.fynn:vogelei.name=Vogelei
+item.fynn:spechtei=Spechtei
+item.fynn:spechtei.name=Spechtei
+item.fynn:adlerei=Adlerei
+item.fynn:adlerei.name=Adlerei
+item.fynn:greifenei=Greifenei
+item.fynn:greifenei.name=Greifenei
+tile.fynn:vogelnest.name=Vogelnest
+tile.fynn:spechthoehle.name=Spechthöhle
+tile.fynn:kobel.name=Kobel
+tile.fynn:adlerhorst.name=Adlerhorst
+tile.fynn:greifennest.name=Greifennest

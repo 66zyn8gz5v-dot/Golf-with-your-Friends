@@ -22,10 +22,10 @@
       ],
       "part_visibility": [
         {
-          "lider_a": "query.property('fynn:schlaeft') || query.property('fynn:besiegt')"
+          "lider_a": "query.property('fynn:schlaeft') || query.property('fynn:besiegt') || math.mod(variable.fynn_t + 0.0, 4.7) < 0.14"
         },
         {
-          "lider_b": "query.property('fynn:schlaeft') || query.property('fynn:besiegt')"
+          "lider_b": "query.property('fynn:schlaeft') || query.property('fynn:besiegt') || math.mod(variable.fynn_t + 0.9, 4.7) < 0.14"
         },
         {
           "sattel": "query.is_saddled"

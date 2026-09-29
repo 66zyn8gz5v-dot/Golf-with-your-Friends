@@ -1913,7 +1913,10 @@ def aussehen(t, anims, texturen):
         "animations": kurz,
         "scripts": {"initialize": DREHUNG_START,
                     "pre_animation": DREHUNG + ([f"variable.galopp = {GALOPP};"] if "galopp" in anims else [])
-                    + ([TROMMELN_WANN] if "trommeln" in anims else []),
+                    + ([TROMMELN_WANN] if "trommeln" in anims else [])
+                    # Was die Bewegungen eines Tiers gemeinsam brauchen (die
+                    # Drachen: wann er bruellt, wann er sich streckt).
+                    + t.get("vorher", []),
                     "animate": animate_liste(t, anims)},
         "render_controllers": [f"controller.render.fynn.{name}"],
         "spawn_egg": ei_eintrag(t["id"], {"base_color": t["ei"][0], "overlay_color": t["ei"][1]}),
