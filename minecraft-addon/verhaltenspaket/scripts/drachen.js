@@ -52,6 +52,34 @@ export const ATEMARTEN = {
             return n;
         },
     },
+    // Der Frosthauch (Frostwyvern, 4.91): Wer darin steht, wird stark
+    // verlangsamt und friert; Wasser gefriert zu Eis, auf den Boden faellt Schnee.
+    frost: {
+        teilchen: "fynn:frostatem", weite: 13, kegel: 1.0, dauer: 44, anlauf: 8, pause: [140, 220],
+        laut: "random.glass", knistern: "block.powder_snow.step",
+        wesen(ziel, drache) {
+            try { ziel.addEffect("slowness", 100, { amplifier: 3 }); } catch (e) { /* egal */ }
+            try { ziel.addEffect("mining_fatigue", 100, { amplifier: 1 }); } catch (e) { /* egal */ }
+            try { ziel.extinguishFire?.(); } catch (e) { /* egal */ }
+            try { ziel.applyDamage(2, { cause: "freezing", damagingEntity: drache }); } catch (e) { /* egal */ }
+        },
+        block(dim, getroffen, zufall) {
+            let n = 0;
+            for (const [dx, dz] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1]]) {
+                if ((dx || dz) && zufall() > 0.5) continue;
+                const o = { x: getroffen.x + dx, y: getroffen.y, z: getroffen.z + dz };
+                try {
+                    const b = dim.getBlock(o);
+                    if (b?.typeId === "minecraft:water" || b?.typeId === "minecraft:flowing_water") {
+                        b.setType("minecraft:ice"); n++; continue;
+                    }
+                    const oben = dim.getBlock({ x: o.x, y: o.y + 1, z: o.z });
+                    if (oben?.isAir && b && !b.isAir && !b.isLiquid) { oben.setType("minecraft:snow_layer"); n++; }
+                } catch (e) { /* ungeladen */ }
+            }
+            return n;
+        },
+    },
 };
 
 export const FAEHIGKEITEN = {
@@ -76,12 +104,41 @@ export const FAEHIGKEITEN = {
     },
 };
 
+// Drei Eissplitter im Faecher (Frostwyvern): Die Splitter sind echte
+// Geschosse (fynn:eissplitter) - sie treffen hart und verlangsamen.
+FAEHIGKEITEN.eiskristalle = {
+    min: 10, max: 36, pause: [160, 260], name: "Eiskristalle",
+    wirken(drache, mund, r) {
+        const dim = drache.dimension;
+        try { dim.playSound("random.glass", mund, { volume: 2, pitch: 1.6 }); } catch (e) { /* egal */ }
+        const splitter = [];
+        for (const w of [-0.14, 0, 0.14]) {
+            // Seitlich gefaechert: um die Hochachse gedreht.
+            const c = Math.cos(w), s = Math.sin(w);
+            const q = einheit({ x: r.x * c - r.z * s, y: r.y + 0.04, z: r.x * s + r.z * c });
+            try {
+                const e = dim.spawnEntity("fynn:eissplitter", mund);
+                const p = e.getComponent("minecraft:projectile");
+                if (p) { p.owner = drache; p.shoot({ x: q.x * 1.9, y: q.y * 1.9, z: q.z * 1.9 }); }
+                splitter.push(e);
+            } catch (e) { /* egal */ }
+        }
+        return splitter;
+    },
+};
+
 export const DRACHEN = {
     "fynn:lindwurm": {
         name: "Lindwurm", atem: "feuer", faehigkeit: "feuerkugel", maul: 5.0, hoehe: 1.8,
         luft: [1200, 2400], boden: [800, 1800],
         // Wie er mit Reiter fliegt: schneller als der Greif, steigt kraeftiger.
         reitflug: { tempo: 1.3, steigen: 0.14, nachziehen: 0.12, schwebe: 0.04, hoechstSteigen: 0.75 },
+    },
+    // Kleiner und wendiger: fliegt mit Reiter schneller, steigt leichter.
+    "fynn:frostwyvern": {
+        name: "Frostwyvern", atem: "frost", faehigkeit: "eiskristalle", maul: 3.8, hoehe: 1.6,
+        luft: [1000, 2000], boden: [600, 1400],
+        reitflug: { tempo: 1.45, steigen: 0.15, nachziehen: 0.14, schwebe: 0.045, hoechstSteigen: 0.8 },
     },
 };
 
@@ -226,7 +283,8 @@ export function atemTakt(drache, jetzt, zufall = Math.random) {
                 try {
                     const hit = dim.getBlockFromRay(mund, r, { maxDistance: atem.weite, includeLiquidBlocks: true,
                                                                 includePassableBlocks: false });
-                    if (hit?.block && !hit.block.isLiquid) atem.block(dim, hit.block.location, zufall);
+                    // Ob der Block passt, weiss die Atemart: Feuer nicht auf Wasser, Frost gerade dort.
+                    if (hit?.block) atem.block(dim, hit.block.location, zufall);
                 } catch (e) { /* egal */ }
             }
             try { dim.playSound(atem.knistern, mund, { volume: 1.5, pitch: 0.8 }); } catch (e) { /* egal */ }

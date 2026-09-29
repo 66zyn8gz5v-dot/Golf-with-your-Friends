@@ -214,6 +214,31 @@ function wesen(w, typeId, ort, extra = {}) {
     pruefe("... dann eine Pause", d.faehigkeitTakt(drache, 120, undefined, () => 0) === "wartet");
 }
 
+// --- Frostwyvern: Frosthauch und Eiskristalle
+{
+    const w = welt();
+    // Ein Teich vor ihm: Wasser bei y = 63.
+    for (let x = -3; x <= 3; x++) for (let z = 4; z <= 14; z++) w.bloecke[`${x},63,${z}`] = "minecraft:water";
+    const blockBei = w.dim.getBlock;
+    w.dim.getBlock = (o) => { const b = blockBei(o); b.isLiquid = b.typeId === "minecraft:water"; return b; };
+    const wyvern = wesen(w, "fynn:frostwyvern", { x: 0, y: 66, z: 0 }, { eig: { "fynn:fliegt": false } });
+    wyvern.dyn["fynn:drache490"] = true;
+    const effekte = [];
+    const opfer = wesen(w, "minecraft:player", { x: 0, y: 64, z: 9 }, { addEffect(n) { effekte.push(n); } });
+    wyvern.target = opfer;
+    for (let t = 20000; t < 20000 + 60; t += 2) d.atemTakt(wyvern, t, () => 0);
+    pruefe("Frosthauch: Er speit Frost, nicht Feuer",
+        w.teilchen.includes("fynn:frostatem") && !w.teilchen.includes("fynn:drachenfeuer"));
+    pruefe("... wer drin steht, wird langsam und friert", effekte.includes("slowness") && opfer.schaden > 0 && opfer.brand === 0);
+    pruefe("... und das Wasser gefriert", Object.values(w.bloecke).includes("minecraft:ice"));
+    const splitter = [];
+    w.dim.spawnEntity = (typ, o) => { const k = { typ, flug: null, getComponent: () => ({ set owner(x) {}, shoot(v) { k.flug = v; } }) }; splitter.push(k); return k; };
+    opfer.location = { x: 0, y: 64, z: 25 };
+    pruefe("Eiskristalle: drei Splitter im Faecher", d.faehigkeitTakt(wyvern, 30000, undefined, () => 0) === "Eiskristalle"
+        && splitter.length === 3 && splitter.every((k) => k.typ === "fynn:eissplitter" && k.flug.z > 1)
+        && splitter[0].flug.x !== splitter[2].flug.x);
+}
+
 pruefe("Anmeldung: der Takt alle zwei Ticks", gemerkt.takte.some(([f, t]) => typeof f === "function" && t === 2));
 
 const gut = ergebnisse.every(Boolean);

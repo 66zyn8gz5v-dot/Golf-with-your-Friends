@@ -1,0 +1,33 @@
+{
+  "format_version": "1.8.0",
+  "render_controllers": {
+    "controller.render.fynn.frostwyvern": {
+      "arrays": {
+        "textures": {
+          "Array.haut": [
+            "Texture.eis",
+            "Texture.gletscher",
+            "Texture.nacht"
+          ]
+        }
+      },
+      "geometry": "Geometry.default",
+      "materials": [
+        {
+          "*": "Material.default"
+        }
+      ],
+      "textures": [
+        "Array.haut[query.variant]"
+      ],
+      "part_visibility": [
+        {
+          "lider": "query.property('fynn:schlaeft') || query.property('fynn:besiegt')"
+        },
+        {
+          "sattel": "query.is_saddled"
+        }
+      ]
+    }
+  }
+}

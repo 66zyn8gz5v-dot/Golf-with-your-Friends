@@ -67,11 +67,12 @@ def zusammen(knochen, finger=5):
 
 # ------------------------------------------------------------ Bewegungen
 
-def drachen_bewegungen(schwinge, hals=4, schwanz=6, tempo=220.0, beinhoehe=20, finger=None):
+def drachen_bewegungen(schwinge, hals=4, schwanz=6, tempo=220.0, beinhoehe=20, finger=None, stuetzt=False):
     """schwinge: die Schwinge der Art (fuer die ausgerechnete Faltung);
-    beinhoehe: wie tief der Leib beim Liegen sinkt."""
+    beinhoehe: wie tief der Leib beim Liegen sinkt; stuetzt: ein Wyvern,
+    der am Boden auf den Handgelenken der Schwingen geht."""
     import drachen_gestalt as dg
-    falt = dg.faltung(schwinge)
+    falt = dg.faltung(schwinge, stuetzt)
     finger = schwinge.anzahl
     phi = f"{LT} * {tempo}"
     # Kraeftige Schlaege, dazwischen gleitet er: Dann stehen die Schwingen
@@ -134,6 +135,12 @@ def drachen_bewegungen(schwinge, hals=4, schwanz=6, tempo=220.0, beinhoehe=20, f
             gang[f"unterbein_{teil}_{seite}"] = {"rotation": [
                 f"math.max(0.0, -math.cos({p})) * {-28.0 if teil == 'vorn' else 30.0}", 0.0, 0.0]}
             gang[f"fuss_{teil}_{seite}"] = {"rotation": [f"-math.sin({p}) * 14.0", 0.0, 0.0]}
+    if stuetzt:
+        # Der Wyvern setzt die Handgelenke im Wechsel mit den Fuessen vor,
+        # wie eine Fledermaus am Boden: die Schulter schwingt vor und zurueck.
+        for seite, phase, zeichen in (("links", 180.0, 1), ("rechts", 0.0, -1)):
+            gang[f"fluegel_{seite}"] = {"rotation": [0.0, f"math.sin({w} + {phase}) * 14.0 * {zeichen}",
+                                                     f"math.max(0.0, math.cos({w} + {phase})) * -8.0 * {zeichen}"]}
     gang["rumpf"] = {"rotation": [0.0, f"math.sin({w}) * 3.0", f"math.sin({w}) * 2.0"],
                      "position": [0.0, f"math.abs(math.sin({w})) * 0.6", 0.0]}
     for i in range(1, schwanz + 1):
@@ -421,4 +428,40 @@ def _lindwurm():
     }, dg.LINDWURM_SCHWINGE, hals=5, schwanz=8, beinhoehe=21)
 
 
-DRACHEN = [_lindwurm()]
+# ------------------------------------------------------------ Frostwyvern
+
+def _frostwyvern():
+    import drachen_gestalt as dg
+    return drache({
+        "id": "frostwyvern", "name": ("Frostwyvern", "Frost Wyvern"), "gestalt": "frostwyvern",
+        "varianten": [("eis", 60), ("gletscher", 30), ("nacht", 10)],
+        "leben": 120, "schaden": 9, "tempo": 1.5, "tempo_luft": 1.55, "tempo_boden": 0.22,
+        "kollision": (2.6, 2.0), "herde": (1, 1),
+        "jagt_tiere": ["sheep", "rabbit", "fox", "polar_bear", "eiswolf"],
+        "sitz": [0.0, 1.6, -0.2],
+        "biome": [["frozen"]], "gewicht": 2,
+        "spawn_bedingungen": [{"minecraft:spawns_on_surface": {}, "minecraft:weight": {"default": 2},
+                               "minecraft:herd": {"min_size": 1, "max_size": 1},
+                               "minecraft:density_limit": {"surface": 1},
+                               "minecraft:height_filter": {"min": 70, "max": 320},
+                               "minecraft:biome_filter": [{"test": "has_biome_tag", "operator": "==",
+                                                           "value": tag}]}
+                              for tag in ("frozen_peaks", "jagged_peaks", "ice_plains", "snowy_slopes", "grove")],
+        "population": "monster",
+        "material": "entity_emissive_alpha",
+        "beute": [("fynn:drachenschuppe", 2, 5, 1.0, False), ("minecraft:blue_ice", 1, 3, 1.0, False),
+                  ("minecraft:bone", 1, 2, 1.0, False)],
+        "laute": {"ambient": "mob.enderdragon.growl", "hurt": "mob.enderdragon.hit", "death": "mob.ravager.death",
+                  "pitch": [1.5, 1.7]},
+        "ei": ("#b8d4e6", "#4a7aa8"),
+        "komponenten": {"minecraft:freezing_immune": {}, "minecraft:attack": {"damage": 9}},
+        "atemart": "frost",
+        "steckbrief_extra": [
+            ["Lebt", "in Eisbergen, auf Gletschern und Schneehängen – häufiger als der Lindwurm, aber kleiner"],
+            ["Gestalt", "ein Wyvern: nur zwei Beine, die Schwingen sind seine Vorderbeine"],
+            ["Frosthauch", "verlangsamt stark, lässt Wasser zu Eis gefrieren und Schnee fallen"],
+            ["Eiskristalle", "auf weite Entfernung: drei Eissplitter im Fächer, die treffen und verlangsamen"]],
+    }, dg.FROSTWYVERN_SCHWINGE, hals=4, schwanz=8, beinhoehe=18, stuetzt=True)
+
+
+DRACHEN = [_lindwurm(), _frostwyvern()]

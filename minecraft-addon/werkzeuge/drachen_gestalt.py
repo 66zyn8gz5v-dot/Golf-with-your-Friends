@@ -499,13 +499,17 @@ def lindwurm_maler(variante):
 _faltungen = {}
 
 
-def faltung(s):
+def faltung(s, stuetzt=False):
     """Wie die Schwinge am Boden zusammengelegt wird - ausgerechnet statt
     geraten: Der Ellbogen liegt hinten oben am Leib, das Handgelenk steht als
     Buckel ueber der Schulter, und alle Finger liegen eng an der Flanke nach
     hinten. Gesucht wird grob, dann fein; das Ergebnis sind die Winkel
-    (links) fuer Schulter, Unterarm, Hand und jeden Finger."""
-    schluessel = (s.schulter, s.oberarm, s.unterarm, s.finger, s.winkel)
+    (links) fuer Schulter, Unterarm, Hand und jeden Finger.
+
+    stuetzt: ein Wyvern hat keine Vorderbeine - er stuetzt sich auf die
+    Handgelenke der gefalteten Schwingen, wie eine Fledermaus am Boden.
+    Dann sitzt das Handgelenk unten vorn neben der Brust."""
+    schluessel = (s.schulter, s.oberarm, s.unterarm, s.finger, s.winkel, stuetzt)
     if schluessel in _faltungen:
         return _faltungen[schluessel]
     import modell_ansehen as ma
@@ -513,6 +517,9 @@ def faltung(s):
     ziel_x = S[0] + 3
     ziel_e = (S[0] + 1, S[1] + 3, S[2] + 12)
     ziel_h = (S[0] + 4, S[1] + 6, S[2] - 2)
+    if stuetzt:
+        ziel_e = (S[0] + 3, S[1] + 4, S[2] + 6)
+        ziel_h = (S[0] + 5, 1.5, S[2] - 4)
 
     def welt(p, kette):
         for piv, rot in kette:
@@ -528,32 +535,119 @@ def faltung(s):
             fi = c - 0.75 * s.winkel[i]
             t = welt((W[0] + s.finger[i], W[1], W[2]), [(W, [0, s.winkel[i] + fi, 0]), kW, kE, kS])
             f += (t[0] - ziel_x) ** 2 + (t[1] - S[1] - 1) ** 2 + (0 if t[2] > S[2] + 18 else (S[2] + 18 - t[2]) ** 2)
+            if t[1] < 1:
+                f += 50 * (1 - t[1]) ** 2               # nicht in den Boden
         return f
 
     best = None
-    for fy in range(-100, -49, 8):
-        for fz in range(-70, -9, 10):
-            for uy in range(120, 181, 10):
-                for hx in range(-90, 91, 30):
-                    for hy in range(-180, -99, 10):
-                        for c in range(-30, 31, 10):
-                            f = fehler(fy, fz, uy, hx, hy, c)
-                            if best is None or f < best[0]:
-                                best = (f, fy, fz, uy, hx, hy, c)
-    # Fein nachsuchen um den besten Punkt.
-    _, fy0, fz0, uy0, hx0, hy0, c0 = best
-    for fy in range(fy0 - 6, fy0 + 7, 3):
-        for fz in range(fz0 - 8, fz0 + 9, 4):
-            for uy in range(uy0 - 8, uy0 + 9, 4):
-                for hx in range(hx0 - 20, hx0 + 21, 10):
-                    for hy in range(hy0 - 8, hy0 + 9, 4):
-                        for c in range(c0 - 8, c0 + 9, 4):
-                            f = fehler(fy, fz, uy, hx, hy, c)
-                            if f < best[0]:
-                                best = (f, fy, fz, uy, hx, hy, c)
+    if stuetzt:
+        raster = (range(-150, 151, 30), range(-90, 91, 30), range(-180, 181, 30), range(-90, 91, 45),
+                  range(-180, 181, 45), range(-30, 31, 15))
+    else:
+        raster = (range(-100, -49, 8), range(-70, -9, 10), range(120, 181, 10), range(-90, 91, 30),
+                  range(-180, -99, 10), range(-30, 31, 10))
+    import itertools
+    for werte in itertools.product(*raster):
+        f = fehler(*werte)
+        if best is None or f < best[0]:
+            best = (f,) + werte
+    # Dann Schritt fuer Schritt verfeinern: jeden Winkel einzeln ein Stueck
+    # hin und her, solange es besser wird, mit immer kleineren Schritten.
+    werte = list(best[1:])
+    for schritt in (16, 8, 4, 2, 1):
+        besser = True
+        while besser:
+            besser = False
+            for i in range(len(werte)):
+                for d in (-schritt, schritt):
+                    probe = list(werte)
+                    probe[i] += d
+                    f = fehler(*probe)
+                    if f < best[0]:
+                        best = (f,) + tuple(probe)
+                        werte = probe
+                        besser = True
     _, fy, fz, uy, hx, hy, c = best
     w = {"fluegel": [0.0, float(fy), float(fz)], "unterarm": [0.0, float(uy), 0.0], "hand": [float(hx), float(hy), 0.0]}
     for i in range(s.anzahl):
         w[f"finger{i + 1}"] = [0.0, round(c - 0.75 * s.winkel[i], 1), 0.0]
     _faltungen[schluessel] = w
     return w
+
+
+# ================================================================== Frostwyvern (4.91)
+
+# Ein Wyvern: Die Schwingen sind zugleich seine Vorderbeine. Der Arm ist
+# deshalb laenger und kraeftiger, die Finger etwas kuerzer als beim Lindwurm.
+FROSTWYVERN_SCHWINGE = Schwinge((6.5, 23, -8), oberarm=13, unterarm=17, finger=(42, 38, 32, 25),
+                                winkel=(14, -14, -42, -72), hinterkante=(6, 14), dicke=(4, 3, 2))
+
+
+def frostwyvern_modell():
+    """Der Frostwyvern: schlanker als der Lindwurm, zwei Beine, die
+    Schwingen als Vorderbeine, ein langer duenner Hals mit einem schmalen
+    Kopf voller Eisdornen, ein langer Schwanz, der in einem Faecher aus
+    Eiszacken endet. Ueber den Ruecken wachsen leuchtende Eiskristalle."""
+    m = Modell("frostwyvern", sichtbreite=9.0, sichthoehe=3.5)
+    MAEULER.pop("frostwyvern", None)
+    r = m.knoch("rumpf", [0, 18, 0])
+    r.kasten([-6, 10, -11], [12, 12, 11], "leib")                    # Brust
+    r.kasten([-5.5, 10.5, -1], [11, 11, 9], "leib")                  # Bauch
+    r.kasten([-5, 11, 7], [10, 10, 7], "leib")                       # Huefte
+    r.kasten([-4.5, 9.5, -10], [9, 1, 23], "bauch")
+    # Eiskristalle auf dem Ruecken: Bueschel aus zwei, drei Spitzen.
+    for z, h in ((-10, 5), (-6, 6), (-2, 5), (2, 5), (6, 4), (10, 3)):
+        top = 22 if z < 0 else 21
+        r.kasten([-1, top - 0.5, z], [2, h - 1, 2], "eiszacke", drehung=[-15, 0, 0], drehpunkt=[0, top, z + 1])
+        r.kasten([-0.5, top + h - 2, z + 0.5], [1, 2, 1], "eiszacke", drehung=[-15, 0, 0], drehpunkt=[0, top, z + 1])
+        r.kasten([1, top - 0.5, z + 0.5], [1, h - 2, 1], "eiszacke", drehung=[-15, 0, -25], drehpunkt=[1, top, z + 1])
+    hals, ende = glieder(m, "hals", "rumpf", (0, 20, -11),
+                         -1, [(6, 8, 8, 2.0), (6, 7, 7, 2.0), (6, 7, 7, 1.5), (5, 6, 6, 1.0)],
+                         stoff="leib", zacken="eiszacke")
+    _, ky, kz = ende
+    kopf_bauen(m, "frostwyvern", hals[-1], ky, kz, schaedel=(8, 6, 9), schnauze=(6, 4, 9), hoerner="stacheln")
+    schwanz, ende = glieder(m, "schwanz", "rumpf", (0, 17, 14),
+                            1, [(8, 9, 8, -0.4), (8, 7, 6, -0.3), (8, 6, 5, -0.2), (8, 5, 4, 0.0),
+                                (8, 4, 4, 0.0), (8, 3, 3, 0.0), (8, 3, 3, 0.0), (7, 2, 2, 0.0)],
+                            stoff="leib", zacken="eiszacke")
+    _, sy, sz = ende
+    # Das Schwanzende: ein Faecher aus Eiszacken.
+    letztes = m.finde(schwanz[-1])
+    for w in (-40, -15, 15, 40):
+        letztes.kasten([-0.5, sy - 0.5, sz - 1], [1, 1, 7], "eiszacke", drehung=[0, w, 0], drehpunkt=[0, sy, sz - 1])
+    for seite, x in (("links", 5.5), ("rechts", -5.5)):
+        bein_bauen(m, f"bein_hinten_{seite}", "rumpf", (x, 18, 9), (6, 8, 8), (4, 7, 4), (6, 3, 8), krallen=3)
+    schwinge_bauen(m, FROSTWYVERN_SCHWINGE)
+    # Die Handgelenke tragen ihn am Boden: dort sitzt eine grosse Klaue.
+    for seite in ("links", "rechts"):
+        h = m.finde(f"hand_{seite}")
+        hx = FROSTWYVERN_SCHWINGE.handgelenk[0] * (1 if seite == "links" else -1)
+        h.kasten([hx - 1, 21, -11], [2, 2, 3], "kralle")
+    sattel_bauen(m, "rumpf", 22, -3, 12)
+    return m
+
+
+FROSTWYVERN_FARBEN = {
+    "eis":       {"leib": "#b8d4e6", "ruecken": "#4a7aa8", "bauch": "#eef6fa", "haut": "#8cb8d8",
+                  "augen": "#7ae8ff", "glut": "#c0f4ff", "horn": ("#8ab8d8", "#d0ecfa", "#f4fcff"),
+                  "kralle": "#1e3a58"},
+    "gletscher": {"leib": "#98ccc8", "ruecken": "#2a6a74", "bauch": "#e0f4f0", "haut": "#78b4b0",
+                  "augen": "#b0fff0", "glut": "#c8fff4", "horn": ("#7ab8b0", "#c8f0e8", "#f0fffc"),
+                  "kralle": "#1a3a3a"},
+    "nacht":     {"leib": "#3e5282", "ruecken": "#182444", "bauch": "#a0b4de", "haut": "#2c3e6c",
+                  "augen": "#9ad8ff", "glut": "#b8e4ff", "horn": ("#6a88c0", "#b8ccf0", "#e8f0ff"),
+                  "kralle": "#0e1428"},
+}
+
+
+def frostwyvern_maler(variante):
+    f = FROSTWYVERN_FARBEN.get(variante, FROSTWYVERN_FARBEN["eis"])
+
+    def eis(stoff, p, n, texel):
+        if stoff == "eiszacke":
+            # Durchscheinendes Eis kann Minecraft nicht - also leuchtend, unten
+            # tiefer blau, zur Spitze fast weiss.
+            return glut(H.verlauf([H.dunkler(f["glut"], 0.35), f["glut"], "#ffffff"],
+                                  H.hoehe(p, n, texel) if abs(n[1]) < 0.5 else (1.0 if n[1] > 0 else 0.3), 3))
+        return False
+    return drachen_maler("frostwyvern", f, FROSTWYVERN_SCHWINGE, eis)

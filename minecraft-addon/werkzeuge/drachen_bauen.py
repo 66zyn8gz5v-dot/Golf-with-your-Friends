@@ -21,6 +21,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import boss_kern as bk                                               # noqa: E402
 import roland_beute_bauen as rbb                                     # noqa: E402
 from tierprodukte_bauen import gegenstand, geformt, JAGDFACH          # noqa: E402
+from neue_waffen_bauen import geschoss, sprite_aussehen              # noqa: E402
 
 VER, RES = bk.VER, bk.RES
 K = rbb.UMRISS
@@ -68,10 +69,47 @@ STERN_BILD = [
     ".kk...kk",
 ]
 
+# Der Eissplitter des Frostwyverns (4.91): ein spitzer Kristall.
+EISSPLITTER = [
+    "................",
+    "................",
+    "............kk..",
+    "...........kWk..",
+    "..........kWCk..",
+    ".........kWCk...",
+    "........kWCk....",
+    ".......kWCk.....",
+    "......kCCk......",
+    ".....kCBk.......",
+    "....kCBk........",
+    "...kBBk.........",
+    "..kBkk..........",
+    "..kk............",
+    "................",
+    "................",
+]
+EISSPLITTER_F = {"k": (30, 70, 110), "W": (250, 254, 255), "C": (170, 226, 250), "B": (90, 160, 214)}
+
 NAMEN = [
     ("item.fynn:drachenpfeife", "Drachenpfeife", "Dragon Whistle"),
+    ("entity.fynn:eissplitter.name", "Eissplitter", "Ice Shard"),
 ]
 NAMEN += [(k + ".name", d, e) for k, d, e in NAMEN if k.startswith("item.")]
+
+
+# Die Atemarten der Drachen: dasselbe Strahlbild wie das Drachenfeuer
+# (fantasy_bauen.drachenfeuer), nur in ihren Farben.
+ATEMFARBEN = {
+    "frostatem": {"0.0": "#FFFFFFFF", "0.2": "#FFE4F8FF", "0.5": "#E0A8DCF8", "0.8": "#A07AB4E6", "1.0": "#00C8E0F0"},
+}
+
+
+def atem_teilchen(name, verlauf):
+    import fantasy_bauen as fb
+    t = fb.drachenfeuer()
+    t["particle_effect"]["description"]["identifier"] = f"fynn:{name}"
+    t["particle_effect"]["components"]["minecraft:particle_appearance_tinting"]["color"]["gradient"] = verlauf
+    return t
 
 
 def schlaf_z():
@@ -128,7 +166,8 @@ def teilchenbild(muster, farben):
 
 
 def bilder():
-    return {"drachenpfeife": rbb.male(DRACHENPFEIFE, DRACHENPFEIFE_F)}
+    return {"drachenpfeife": rbb.male(DRACHENPFEIFE, DRACHENPFEIFE_F),
+            "eissplitter": rbb.male(EISSPLITTER, EISSPLITTER_F)}
 
 
 def main():
@@ -142,6 +181,14 @@ def main():
                         {"G": "minecraft:gold_ingot", "K": "minecraft:bone", "F": "minecraft:string"},
                         "fynn:drachenpfeife"))
     bk.schreibe(RES / "particles" / "schlaf_z.particle.json", schlaf_z())
+    for name, verlauf in ATEMFARBEN.items():
+        bk.schreibe(RES / "particles" / f"{name}.particle.json", atem_teilchen(name, verlauf))
+    # Eissplitter: fliegt wie ein Schneeball, trifft hart und verlangsamt.
+    bk.schreibe(VER / "entities" / "eissplitter.json", geschoss("eissplitter", 5, {
+        "mob_effect": {"effect": "slowness", "durationeasy": 100, "durationnormal": 120, "durationhard": 160,
+                       "amplifier": 2}}))
+    bk.schreibe(RES / "entity" / "eissplitter.entity.json",
+                sprite_aussehen("eissplitter", "textures/items/eissplitter", "1.4"))
     bk.schreibe(RES / "particles" / "benommen.particle.json", benommen())
     ordner = RES / "textures" / "particle"
     ordner.mkdir(parents=True, exist_ok=True)
@@ -149,7 +196,7 @@ def main():
     teilchenbild(STERN_BILD, {"k": (90, 60, 10), "Y": (255, 214, 60), "W": (255, 250, 210)}).save(ordner / "fynn_stern.png")
     bk.item_bilder(bilder())
     bk.sprache("Drachen", NAMEN)
-    print("gebaut: Drachenpfeife, Schlaf-Z, Benommen-Sterne")
+    print("gebaut: Drachenpfeife, Schlaf-Z, Benommen-Sterne, Frostatem, Eissplitter")
     if "--bilder" in sys.argv:
         from PIL import Image
         ziel = Path(sys.argv[sys.argv.index("--bilder") + 1])

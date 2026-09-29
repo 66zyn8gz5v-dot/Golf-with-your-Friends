@@ -1,7 +1,7 @@
 {
   "format_version": "1.10.0",
   "animations": {
-    "animation.fynn.lindwurm.flug": {
+    "animation.fynn.frostwyvern.flug": {
       "loop": true,
       "bones": {
         "fluegel_links": {
@@ -85,20 +85,6 @@
           "rotation": [
             0.0,
             "-(-math.max(0.0, -math.sin(query.life_time * 220.0)) * 16.0)",
-            -0.0
-          ]
-        },
-        "finger5_links": {
-          "rotation": [
-            0.0,
-            "-math.max(0.0, -math.sin(query.life_time * 220.0)) * 20.0",
-            0.0
-          ]
-        },
-        "finger5_rechts": {
-          "rotation": [
-            0.0,
-            "-(-math.max(0.0, -math.sin(query.life_time * 220.0)) * 20.0)",
             -0.0
           ]
         },
@@ -226,16 +212,9 @@
             0.0
           ]
         },
-        "hals5": {
-          "rotation": [
-            "-3.0 + math.sin(query.life_time * 60.0 - 150) * 3.0",
-            "math.sin(query.life_time * 45.0 - 175) * 5.0",
-            0.0
-          ]
-        },
         "kopf": {
           "rotation": [
-            "math.sin(query.life_time * 60.0 - 180) * 4.0",
+            "math.sin(query.life_time * 60.0 - 150) * 4.0",
             "-math.sin(query.life_time * 45.0) * 8.0 - variable.fynn_dreh * 2.0",
             0.0
           ]
@@ -298,118 +277,104 @@
         }
       }
     },
-    "animation.fynn.lindwurm.stand": {
+    "animation.fynn.frostwyvern.stand": {
       "loop": true,
       "bones": {
         "fluegel_links": {
           "rotation": [
             0.0,
-            -76.0,
-            -67.0
+            -60.0,
+            73.0
           ]
         },
         "fluegel_rechts": {
           "rotation": [
             0.0,
-            76.0,
-            67.0
+            60.0,
+            -73.0
           ]
         },
         "unterarm_links": {
           "rotation": [
             0.0,
-            140.0,
+            103.0,
             0.0
           ]
         },
         "unterarm_rechts": {
           "rotation": [
             0.0,
-            -140.0,
+            -103.0,
             -0.0
           ]
         },
         "hand_links": {
           "rotation": [
-            -28.0,
-            -160.0,
+            -10.0,
+            -193.0,
             0.0
           ]
         },
         "hand_rechts": {
           "rotation": [
-            -28.0,
-            160.0,
+            -10.0,
+            193.0,
             -0.0
           ]
         },
         "finger1_links": {
           "rotation": [
             0.0,
-            -12.0,
+            21.5,
             0.0
           ]
         },
         "finger1_rechts": {
           "rotation": [
             0.0,
-            12.0,
+            -21.5,
             -0.0
           ]
         },
         "finger2_links": {
           "rotation": [
             0.0,
-            7.5,
+            42.5,
             0.0
           ]
         },
         "finger2_rechts": {
           "rotation": [
             0.0,
-            -7.5,
+            -42.5,
             -0.0
           ]
         },
         "finger3_links": {
           "rotation": [
             0.0,
-            27.0,
+            63.5,
             0.0
           ]
         },
         "finger3_rechts": {
           "rotation": [
             0.0,
-            -27.0,
+            -63.5,
             -0.0
           ]
         },
         "finger4_links": {
           "rotation": [
             0.0,
-            46.5,
+            86.0,
             0.0
           ]
         },
         "finger4_rechts": {
           "rotation": [
             0.0,
-            -46.5,
-            -0.0
-          ]
-        },
-        "finger5_links": {
-          "rotation": [
-            0.0,
-            67.5,
-            0.0
-          ]
-        },
-        "finger5_rechts": {
-          "rotation": [
-            0.0,
-            -67.5,
+            -86.0,
             -0.0
           ]
         },
@@ -442,13 +407,6 @@
           ]
         },
         "fingerhaut3_links": {
-          "scale": [
-            1.0,
-            1.0,
-            0.12
-          ]
-        },
-        "fingerhaut4_links": {
           "scale": [
             1.0,
             1.0,
@@ -490,13 +448,6 @@
             0.12
           ]
         },
-        "fingerhaut4_rechts": {
-          "scale": [
-            1.0,
-            1.0,
-            0.12
-          ]
-        },
         "hals1": {
           "rotation": [
             "-14.0 + math.sin(query.life_time * 40.0 - 0) * 1.5",
@@ -521,13 +472,6 @@
         "hals4": {
           "rotation": [
             "6.0 + math.sin(query.life_time * 40.0 - 75) * 1.5",
-            0.0,
-            0.0
-          ]
-        },
-        "hals5": {
-          "rotation": [
-            "8.0 + math.sin(query.life_time * 40.0 - 100) * 1.5",
             0.0,
             0.0
           ]
@@ -604,7 +548,7 @@
         }
       }
     },
-    "animation.fynn.lindwurm.gehen": {
+    "animation.fynn.frostwyvern.gehen": {
       "loop": true,
       "bones": {
         "bein_vorn_links": {
@@ -689,6 +633,20 @@
             "-math.sin(query.modified_distance_moved * 22.0 + 360.0) * 14.0",
             0.0,
             0.0
+          ]
+        },
+        "fluegel_links": {
+          "rotation": [
+            0.0,
+            "math.sin(query.modified_distance_moved * 22.0 + 180.0) * 14.0 * 1",
+            "math.max(0.0, math.cos(query.modified_distance_moved * 22.0 + 180.0)) * -8.0 * 1"
+          ]
+        },
+        "fluegel_rechts": {
+          "rotation": [
+            0.0,
+            "math.sin(query.modified_distance_moved * 22.0 + 0.0) * 14.0 * -1",
+            "math.max(0.0, math.cos(query.modified_distance_moved * 22.0 + 0.0)) * -8.0 * -1"
           ]
         },
         "rumpf": {
@@ -786,128 +744,107 @@
             "-math.sin(query.modified_distance_moved * 22.0) * 2.0",
             0.0
           ]
-        },
-        "hals5": {
-          "rotation": [
-            "math.sin(query.modified_distance_moved * 22.0 * 2.0) * 1.5",
-            "-math.sin(query.modified_distance_moved * 22.0) * 2.0",
-            0.0
-          ]
         }
       }
     },
-    "animation.fynn.lindwurm.liegen": {
+    "animation.fynn.frostwyvern.liegen": {
       "loop": true,
       "bones": {
         "fluegel_links": {
           "rotation": [
             0.0,
-            -76.0,
-            -67.0
+            -60.0,
+            73.0
           ]
         },
         "fluegel_rechts": {
           "rotation": [
             0.0,
-            76.0,
-            67.0
+            60.0,
+            -73.0
           ]
         },
         "unterarm_links": {
           "rotation": [
             0.0,
-            140.0,
+            103.0,
             0.0
           ]
         },
         "unterarm_rechts": {
           "rotation": [
             0.0,
-            -140.0,
+            -103.0,
             -0.0
           ]
         },
         "hand_links": {
           "rotation": [
-            -28.0,
-            -160.0,
+            -10.0,
+            -193.0,
             0.0
           ]
         },
         "hand_rechts": {
           "rotation": [
-            -28.0,
-            160.0,
+            -10.0,
+            193.0,
             -0.0
           ]
         },
         "finger1_links": {
           "rotation": [
             0.0,
-            -12.0,
+            21.5,
             0.0
           ]
         },
         "finger1_rechts": {
           "rotation": [
             0.0,
-            12.0,
+            -21.5,
             -0.0
           ]
         },
         "finger2_links": {
           "rotation": [
             0.0,
-            7.5,
+            42.5,
             0.0
           ]
         },
         "finger2_rechts": {
           "rotation": [
             0.0,
-            -7.5,
+            -42.5,
             -0.0
           ]
         },
         "finger3_links": {
           "rotation": [
             0.0,
-            27.0,
+            63.5,
             0.0
           ]
         },
         "finger3_rechts": {
           "rotation": [
             0.0,
-            -27.0,
+            -63.5,
             -0.0
           ]
         },
         "finger4_links": {
           "rotation": [
             0.0,
-            46.5,
+            86.0,
             0.0
           ]
         },
         "finger4_rechts": {
           "rotation": [
             0.0,
-            -46.5,
-            -0.0
-          ]
-        },
-        "finger5_links": {
-          "rotation": [
-            0.0,
-            67.5,
-            0.0
-          ]
-        },
-        "finger5_rechts": {
-          "rotation": [
-            0.0,
-            -67.5,
+            -86.0,
             -0.0
           ]
         },
@@ -946,13 +883,6 @@
             0.12
           ]
         },
-        "fingerhaut4_links": {
-          "scale": [
-            1.0,
-            1.0,
-            0.12
-          ]
-        },
         "armhaut_rechts": {
           "scale": [
             1.0,
@@ -982,13 +912,6 @@
           ]
         },
         "fingerhaut3_rechts": {
-          "scale": [
-            1.0,
-            1.0,
-            0.12
-          ]
-        },
-        "fingerhaut4_rechts": {
           "scale": [
             1.0,
             1.0,
@@ -1082,7 +1005,7 @@
         "rumpf": {
           "position": [
             0.0,
-            -14.0,
+            -11.0,
             0.0
           ],
           "scale": [
@@ -1113,13 +1036,6 @@
           ]
         },
         "hals4": {
-          "rotation": [
-            6.0,
-            24.0,
-            0.0
-          ]
-        },
-        "hals5": {
           "rotation": [
             6.0,
             24.0,
@@ -1191,7 +1107,7 @@
         }
       }
     },
-    "animation.fynn.lindwurm.benommen": {
+    "animation.fynn.frostwyvern.benommen": {
       "loop": true,
       "bones": {
         "kopf": {
@@ -1217,7 +1133,7 @@
         }
       }
     },
-    "animation.fynn.lindwurm.feueratem": {
+    "animation.fynn.frostwyvern.feueratem": {
       "loop": true,
       "bones": {
         "hals1": {
@@ -1248,13 +1164,6 @@
             0.0
           ]
         },
-        "hals5": {
-          "rotation": [
-            "-3.0 + (1.0 - query.property('fynn:fliegt')) * -6.0",
-            0.0,
-            0.0
-          ]
-        },
         "kopf": {
           "rotation": [
             "8.0 - (1.0 - query.property('fynn:fliegt')) * 30.0 + math.sin(query.life_time * 900.0) * 1.5",
@@ -1271,7 +1180,7 @@
         }
       }
     },
-    "animation.fynn.lindwurm.drachenbruellen": {
+    "animation.fynn.frostwyvern.drachenbruellen": {
       "loop": true,
       "bones": {
         "fluegel_links": {
@@ -1346,7 +1255,7 @@
         }
       }
     },
-    "animation.fynn.lindwurm.sturzflug": {
+    "animation.fynn.frostwyvern.sturzflug": {
       "loop": true,
       "bones": {
         "fluegel_links": {

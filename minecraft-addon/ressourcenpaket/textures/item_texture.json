@@ -640,6 +640,12 @@
     },
     "drachenpfeife": {
       "textures": "textures/items/drachenpfeife"
+    },
+    "eissplitter": {
+      "textures": "textures/items/eissplitter"
+    },
+    "frostwyvern_ei": {
+      "textures": "textures/items/frostwyvern_ei"
     }
   }
 }

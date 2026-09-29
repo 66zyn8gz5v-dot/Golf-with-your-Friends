@@ -518,6 +518,19 @@ EIER = {
         },
         "farben": {"h": "#d8ccb0", "y": "#ffa21a", "W": "#5a4a2e"},
     },
+    # Die Drachenarten (ab 4.91).
+    "frostwyvern": {
+        "oben": "#b8d4e6", "unten": "#eef6fa", "teilung": 11,
+        "karte": {
+            1: "..c..c..c..c....",
+            2: "..cc.cc.cc.cc...",
+            6: ".....y....y.....",
+            8: "..WW........WW..",
+            9: ".WWW........WWW.",
+            10: "WWW..........WWW",
+        },
+        "farben": {"c": "#e8faff", "y": "#7ae8ff", "W": "#4a7aa8"},
+    },
     # Zweite Fantasy-Welle (4.81).
     "glutskorpion": {
         "oben": "#2a2226", "flecken": ("#3e3438", 0.25),

@@ -1,0 +1,75 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:frostwyvern",
+      "materials": {
+        "default": "entity_emissive_alpha"
+      },
+      "textures": {
+        "eis": "textures/entity/tiere/frostwyvern_eis",
+        "gletscher": "textures/entity/tiere/frostwyvern_gletscher",
+        "nacht": "textures/entity/tiere/frostwyvern_nacht"
+      },
+      "geometry": {
+        "default": "geometry.fynn.frostwyvern"
+      },
+      "animations": {
+        "flug": "animation.fynn.frostwyvern.flug",
+        "stand": "animation.fynn.frostwyvern.stand",
+        "gehen": "animation.fynn.frostwyvern.gehen",
+        "liegen": "animation.fynn.frostwyvern.liegen",
+        "benommen": "animation.fynn.frostwyvern.benommen",
+        "feueratem": "animation.fynn.frostwyvern.feueratem",
+        "drachenbruellen": "animation.fynn.frostwyvern.drachenbruellen",
+        "sturzflug": "animation.fynn.frostwyvern.sturzflug"
+      },
+      "scripts": {
+        "initialize": [
+          "variable.fynn_gier_alt = query.body_y_rotation;",
+          "variable.fynn_dreh = 0.0;",
+          "variable.fynn_zufall = math.random(0.0, 360.0);"
+        ],
+        "pre_animation": [
+          "variable.fynn_d = query.body_y_rotation - variable.fynn_gier_alt;",
+          "variable.fynn_d = variable.fynn_d > 180.0 ? variable.fynn_d - 360.0 : (variable.fynn_d < -180.0 ? variable.fynn_d + 360.0 : variable.fynn_d);",
+          "variable.fynn_gier_alt = query.body_y_rotation;",
+          "variable.fynn_dreh = math.lerp(variable.fynn_dreh, math.clamp(variable.fynn_d / math.max(query.delta_time, 0.01) / 20.0, -10.0, 10.0), 0.12);"
+        ],
+        "animate": [
+          {
+            "flug": "query.property('fynn:fliegt') * (1.0 - math.max(query.property('fynn:schlaeft'), query.property('fynn:besiegt')))"
+          },
+          {
+            "stand": "(1.0 - query.property('fynn:fliegt')) * (1.0 - math.max(query.property('fynn:schlaeft'), query.property('fynn:besiegt')))"
+          },
+          {
+            "gehen": "(1.0 - query.property('fynn:fliegt')) * math.clamp(query.modified_move_speed * 4.0, 0.0, 1.0) * (1.0 - math.max(query.property('fynn:schlaeft'), query.property('fynn:besiegt')))"
+          },
+          {
+            "liegen": "math.max(query.property('fynn:schlaeft'), query.property('fynn:besiegt'))"
+          },
+          {
+            "benommen": "query.property('fynn:besiegt')"
+          },
+          {
+            "feueratem": "query.property('fynn:feuer')"
+          },
+          {
+            "drachenbruellen": "(1.0 - query.property('fynn:fliegt')) * (1.0 - math.clamp(query.modified_move_speed * 4.0, 0.0, 1.0)) * (1.0 - query.property('fynn:feuer')) * (1.0 - math.max(query.property('fynn:schlaeft'), query.property('fynn:besiegt'))) * (math.mod(query.life_time, 17.0) < 2.2)"
+          },
+          {
+            "sturzflug": "query.property('fynn:fliegt') * math.clamp(-query.vertical_speed * 0.6 - 0.2, 0.0, 1.0)"
+          }
+        ]
+      },
+      "render_controllers": [
+        "controller.render.fynn.frostwyvern"
+      ],
+      "spawn_egg": {
+        "texture": "frostwyvern_ei",
+        "texture_index": 0
+      }
+    }
+  }
+}
