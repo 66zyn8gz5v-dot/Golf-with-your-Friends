@@ -240,6 +240,15 @@
     },
     "fynn_splint_blasseiche": {
       "textures": "textures/blocks/stripped_pale_oak_log_side"
+    },
+    "fynn_rinde_pappel": {
+      "textures": "textures/blocks/poplar_log_side"
+    },
+    "fynn_stirn_pappel": {
+      "textures": "textures/blocks/poplar_log_top"
+    },
+    "fynn_splint_pappel": {
+      "textures": "textures/blocks/stripped_poplar_log_side"
     }
   }
 }

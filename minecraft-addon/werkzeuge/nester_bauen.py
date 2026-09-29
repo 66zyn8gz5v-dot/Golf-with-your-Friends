@@ -132,6 +132,9 @@ HOLZARTEN = [
     ("mangrove", "mangrove_log", "mangrove_log_side", "mangrove_log_top", "stripped_mangrove_log_side"),
     ("kirsche", "cherry_log", "cherry_log_side", "cherry_log_top", "stripped_cherry_log_side"),
     ("blasseiche", "pale_oak_log", "pale_oak_log_side", "pale_oak_log_top", "stripped_pale_oak_log_side"),
+    # Die Pappel aus dem Herbstwald (Minecraft 1.26.50). Sie steht hinten,
+    # damit die Nummern der anderen Arten gleich bleiben.
+    ("pappel", "poplar_log", "poplar_log_side", "poplar_log_top", "stripped_poplar_log_side"),
 ]
 VANILLE = Path(__file__).resolve().parent / "mojang" / "vv" / "staemme"
 

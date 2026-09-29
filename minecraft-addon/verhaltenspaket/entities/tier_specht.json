@@ -197,7 +197,8 @@
           "minecraft:acacia_log",
           "minecraft:cherry_log",
           "minecraft:mangrove_log",
-          "minecraft:pale_oak_log"
+          "minecraft:pale_oak_log",
+          "minecraft:poplar_log"
         ],
         "on_reach": [
           {

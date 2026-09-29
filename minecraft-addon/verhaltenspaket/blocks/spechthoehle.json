@@ -23,7 +23,7 @@
         "fynn:holz": {
           "values": {
             "min": 0,
-            "max": 8
+            "max": 9
           }
         }
       }
@@ -360,6 +360,33 @@
             },
             "*": {
               "texture": "fynn_rinde_blasseiche",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('fynn:holz') == 9",
+        "components": {
+          "minecraft:material_instances": {
+            "rinde": {
+              "texture": "fynn_rinde_pappel",
+              "render_method": "opaque"
+            },
+            "stirn": {
+              "texture": "fynn_stirn_pappel",
+              "render_method": "opaque"
+            },
+            "innen": {
+              "texture": "fynn_splint_pappel",
+              "render_method": "opaque"
+            },
+            "loch": {
+              "texture": "fynn_spechtloch",
+              "render_method": "opaque"
+            },
+            "*": {
+              "texture": "fynn_rinde_pappel",
               "render_method": "opaque"
             }
           }

@@ -35,7 +35,7 @@ SAMEN = ["minecraft:wheat_seeds", "minecraft:pumpkin_seeds", "minecraft:melon_se
          "minecraft:beetroot_seeds", "minecraft:torchflower_seeds"]
 STAEMME = ["minecraft:oak_log", "minecraft:birch_log", "minecraft:spruce_log", "minecraft:jungle_log",
            "minecraft:dark_oak_log", "minecraft:acacia_log", "minecraft:cherry_log", "minecraft:mangrove_log",
-           "minecraft:pale_oak_log"]
+           "minecraft:pale_oak_log", "minecraft:poplar_log"]
 LT = "query.life_time"
 STEHT = "(1.0 - math.clamp(query.modified_move_speed * 3.0, 0.0, 1.0))"
 

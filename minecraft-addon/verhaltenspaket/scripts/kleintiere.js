@@ -28,11 +28,13 @@ export const SCHNECKE = "fynn:schnecke";
 export const LARVE = "fynn:kaeferlarve";
 export const NUSS = "fynn:nuss";
 
-const STAMM = /^minecraft:(oak|birch|spruce|jungle|dark_oak|acacia|cherry|mangrove|pale_oak)_log$/;
+// Die Pappel kam mit dem Herbstwald (Minecraft 1.26.50).
+const STAMM = /^minecraft:(oak|birch|spruce|jungle|dark_oak|acacia|cherry|mangrove|pale_oak|poplar)_log$/;
 const SETZLING = {
     oak: "minecraft:oak_sapling", birch: "minecraft:birch_sapling", spruce: "minecraft:spruce_sapling",
     jungle: "minecraft:jungle_sapling", dark_oak: "minecraft:dark_oak_sapling", acacia: "minecraft:acacia_sapling",
     cherry: "minecraft:cherry_sapling", mangrove: "minecraft:mangrove_propagule", pale_oak: "minecraft:pale_oak_sapling",
+    poplar: "minecraft:poplar_sapling",
 };
 const FUTTER = new Set(["minecraft:sweet_berries", "minecraft:glow_berries", "minecraft:wheat_seeds",
     "minecraft:pumpkin_seeds", "minecraft:melon_seeds", "minecraft:beetroot_seeds", "minecraft:torchflower_seeds"]);

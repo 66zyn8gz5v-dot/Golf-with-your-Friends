@@ -44,11 +44,11 @@ item.fynn:eisenklinge.name=Iron Blade
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.86
+item.iron_sword.name=Stahlschwert 4.87
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.86
-item.fynn:degen.name=Degen 4.86
+item.fynn:degen=Degen 4.87
+item.fynn:degen.name=Degen 4.87
 
 
 
@@ -482,6 +482,64 @@ item.fynn:drachenstiefel.name=Dragon Boots
 
 
 
+
+## Kleintiere
+item.fynn:kaeferlarve=Beetle Grub
+item.fynn:kaeferlarve.name=Beetle Grub
+item.fynn:schneckenschleim=Snail Slime
+item.fynn:schneckenschleim.name=Snail Slime
+item.fynn:schneckenhaus=Snail Shell
+item.fynn:schneckenhaus.name=Snail Shell
+item.fynn:nuss=Hazelnut
+item.fynn:nuss.name=Hazelnut
+action.interact.fynn_schleim=Collect slime
+
+## Fantasy-Wesen
+item.fynn:wurmzahn=Sandworm Tooth
+item.fynn:sandperle=Sand Pearl
+item.fynn:sandklopfer=Sand Thumper
+item.fynn:drachenschuppe=Dragon Scale
+item.fynn:glutstaub=Ember Dust
+item.fynn:glutflasche=Ember Bottle
+item.fynn:sturmfluegel=Storm Wing
+item.fynn:frostpanzer=Frost Carapace
+item.fynn:frosttalisman=Frost Talisman
+item.fynn:basiliskenauge=Basilisk Eye
+entity.fynn:glutflasche_wurf.name=Ember Bottle
+action.interact.fynn_fangen=Catch
+item.fynn:wurmzahn.name=Sandworm Tooth
+item.fynn:sandperle.name=Sand Pearl
+item.fynn:sandklopfer.name=Sand Thumper
+item.fynn:drachenschuppe.name=Dragon Scale
+item.fynn:glutstaub.name=Ember Dust
+item.fynn:glutflasche.name=Ember Bottle
+item.fynn:sturmfluegel.name=Storm Wing
+item.fynn:frostpanzer.name=Frost Carapace
+item.fynn:frosttalisman.name=Frost Talisman
+item.fynn:basiliskenauge.name=Basilisk Eye
+
+## Fantasy-Wesen, zweite Welle
+item.fynn:glutstachel=Ember Stinger
+item.fynn:glutpfeil=Ember Arrow
+item.fynn:spinnenkristall=Spider Crystal
+item.fynn:hoehlenauge=Cave Eye
+item.fynn:irrlichtflasche=Wisp in a Bottle
+entity.fynn:irrlichtflasche_wurf.name=Wisp in a Bottle
+item.fynn:werwolfsklaue=Werewolf Claw
+item.fynn:mondtalisman=Moon Talisman
+item.fynn:moosherz=Moss Heart
+item.fynn:greifenfeder=Griffin Feather
+item.fynn:glutstachel.name=Ember Stinger
+item.fynn:glutpfeil.name=Ember Arrow
+item.fynn:spinnenkristall.name=Spider Crystal
+item.fynn:hoehlenauge.name=Cave Eye
+item.fynn:irrlichtflasche.name=Wisp in a Bottle
+item.fynn:werwolfsklaue.name=Werewolf Claw
+item.fynn:mondtalisman.name=Moon Talisman
+item.fynn:moosherz.name=Moss Heart
+item.fynn:greifenfeder.name=Griffin Feather
+
+
 ## Die Tiere
 entity.fynn:braunbaer.name=Brown Bear
 item.spawn_egg.entity.fynn:braunbaer.name=Brown Bear Spawn Egg
@@ -551,62 +609,6 @@ entity.fynn:moosgolem.name=Moss Golem
 item.spawn_egg.entity.fynn:moosgolem.name=Moss Golem Spawn Egg
 entity.fynn:greif.name=Griffin
 item.spawn_egg.entity.fynn:greif.name=Griffin Spawn Egg
-
-## Kleintiere
-item.fynn:kaeferlarve=Beetle Grub
-item.fynn:kaeferlarve.name=Beetle Grub
-item.fynn:schneckenschleim=Snail Slime
-item.fynn:schneckenschleim.name=Snail Slime
-item.fynn:schneckenhaus=Snail Shell
-item.fynn:schneckenhaus.name=Snail Shell
-item.fynn:nuss=Hazelnut
-item.fynn:nuss.name=Hazelnut
-action.interact.fynn_schleim=Collect slime
-
-## Fantasy-Wesen
-item.fynn:wurmzahn=Sandworm Tooth
-item.fynn:sandperle=Sand Pearl
-item.fynn:sandklopfer=Sand Thumper
-item.fynn:drachenschuppe=Dragon Scale
-item.fynn:glutstaub=Ember Dust
-item.fynn:glutflasche=Ember Bottle
-item.fynn:sturmfluegel=Storm Wing
-item.fynn:frostpanzer=Frost Carapace
-item.fynn:frosttalisman=Frost Talisman
-item.fynn:basiliskenauge=Basilisk Eye
-entity.fynn:glutflasche_wurf.name=Ember Bottle
-action.interact.fynn_fangen=Catch
-item.fynn:wurmzahn.name=Sandworm Tooth
-item.fynn:sandperle.name=Sand Pearl
-item.fynn:sandklopfer.name=Sand Thumper
-item.fynn:drachenschuppe.name=Dragon Scale
-item.fynn:glutstaub.name=Ember Dust
-item.fynn:glutflasche.name=Ember Bottle
-item.fynn:sturmfluegel.name=Storm Wing
-item.fynn:frostpanzer.name=Frost Carapace
-item.fynn:frosttalisman.name=Frost Talisman
-item.fynn:basiliskenauge.name=Basilisk Eye
-
-## Fantasy-Wesen, zweite Welle
-item.fynn:glutstachel=Ember Stinger
-item.fynn:glutpfeil=Ember Arrow
-item.fynn:spinnenkristall=Spider Crystal
-item.fynn:hoehlenauge=Cave Eye
-item.fynn:irrlichtflasche=Wisp in a Bottle
-entity.fynn:irrlichtflasche_wurf.name=Wisp in a Bottle
-item.fynn:werwolfsklaue=Werewolf Claw
-item.fynn:mondtalisman=Moon Talisman
-item.fynn:moosherz=Moss Heart
-item.fynn:greifenfeder=Griffin Feather
-item.fynn:glutstachel.name=Ember Stinger
-item.fynn:glutpfeil.name=Ember Arrow
-item.fynn:spinnenkristall.name=Spider Crystal
-item.fynn:hoehlenauge.name=Cave Eye
-item.fynn:irrlichtflasche.name=Wisp in a Bottle
-item.fynn:werwolfsklaue.name=Werewolf Claw
-item.fynn:mondtalisman.name=Moon Talisman
-item.fynn:moosherz.name=Moss Heart
-item.fynn:greifenfeder.name=Griffin Feather
 
 ## Nester und Eier
 item.fynn:vogelei=Bird Egg

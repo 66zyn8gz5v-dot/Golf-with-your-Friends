@@ -29,7 +29,10 @@ export const HOLZ = "fynn:holz";
 // Die Baumarten der Spechthoehle, in der Reihenfolge von fynn:holz. Die
 // Hoehle traegt die Rinde des Stamms, in den sie gehackt ist
 // (werkzeuge/nester_bauen.py, HOLZARTEN).
-export const HOLZARTEN = ["oak", "birch", "spruce", "jungle", "acacia", "dark_oak", "mangrove", "cherry", "pale_oak"];
+// Die Pappel aus dem Herbstwald (Minecraft 1.26.50) steht hinten - so
+// behalten die Hoehlen, die schon in einer Welt stehen, ihre Baumart.
+export const HOLZARTEN = ["oak", "birch", "spruce", "jungle", "acacia", "dark_oak", "mangrove", "cherry", "pale_oak",
+    "poplar"];
 export function holzVon(typeId) {
     const m = /^minecraft:(.+)_log$/.exec(typeId ?? "");
     const i = m ? HOLZARTEN.indexOf(m[1]) : -1;
@@ -61,9 +64,9 @@ export const LEGEN = { weite: 16, chance: 0.5 };
 export const SUCHE = { takt: 200, stellen: 30, weite: 32, hoehe: 14, chance: 0.3 };
 export const BAUEN = { chance: 0.25, weite: 6, pause: 6000 };
 
-const LAUB = /^minecraft:(oak|birch|spruce|jungle|dark_oak|acacia|cherry|mangrove|pale_oak|azalea)_leaves$/;
-const KOBELLAUB = /^minecraft:(oak|birch|spruce|dark_oak|pale_oak)_leaves$/;
-const STAMM = /^minecraft:(oak|birch|spruce|jungle|dark_oak|acacia|cherry|mangrove|pale_oak)_log$/;
+const LAUB = /^minecraft:(oak|birch|spruce|jungle|dark_oak|acacia|cherry|mangrove|pale_oak|azalea|(orange|red|yellow)_poplar)_leaves$/;
+const KOBELLAUB = /^minecraft:(oak|birch|spruce|dark_oak|pale_oak|(orange|red|yellow)_poplar)_leaves$/;
+const STAMM = /^minecraft:(oak|birch|spruce|jungle|dark_oak|acacia|cherry|mangrove|pale_oak|poplar)_log$/;
 const FELS = new Set(["minecraft:stone", "minecraft:granite", "minecraft:diorite", "minecraft:andesite",
     "minecraft:calcite", "minecraft:tuff", "minecraft:gravel", "minecraft:snow", "minecraft:snow_layer",
     "minecraft:grass_block", "minecraft:dirt", "minecraft:coarse_dirt", "minecraft:packed_ice",

@@ -80,6 +80,11 @@ const immer = () => 0.0, nie = () => 0.99;
     baum(w, 40, 0, "pale_oak");
     const p = n.nestFuer(w.dim, { x: 40, y: 66, z: 0 });
     pruefe("... Blasseiche ebenso", p?.nest === "fynn:spechthoehle" && p.holz === n.HOLZARTEN.indexOf("pale_oak"));
+    // Die Pappel aus dem Herbstwald: Stamm und orangefarbenes Laub.
+    for (let y = 64; y < 69; y++) w.setze({ x: 50, y, z: 0 }, "minecraft:poplar_log");
+    w.setze({ x: 50, y: 69, z: 0 }, "minecraft:orange_poplar_leaves", { persistent_bit: false });
+    pruefe("Pappel: Hoehle mit Pappelrinde", n.platzImStamm(w.dim, { x: 50, y: 66, z: 0 })?.holz === n.HOLZARTEN.indexOf("poplar"));
+    pruefe("... und oben ins bunte Laub ein Nest", n.platzAufLaub(w.dim, { x: 50, y: 69, z: 0 })?.y === 70);
     // Ein Balken im Haus: Holz uebereinander, aber keine Krone.
     for (let y = 64; y < 68; y++) w.setze({ x: 20, y, z: 20 }, "minecraft:oak_log");
     pruefe("... aber nicht in einen Balken ohne Krone", !n.platzImStamm(w.dim, { x: 20, y: 66, z: 20 }));
