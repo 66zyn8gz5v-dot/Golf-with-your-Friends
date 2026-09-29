@@ -520,6 +520,36 @@
     },
     "eichhoernchen_ei": {
       "textures": "textures/items/eichhoernchen_ei"
+    },
+    "glutstaub": {
+      "textures": "textures/items/glutstaub"
+    },
+    "glutflasche": {
+      "textures": "textures/items/glutflasche"
+    },
+    "sturmfluegel": {
+      "textures": "textures/items/sturmfluegel"
+    },
+    "frostpanzer": {
+      "textures": "textures/items/frostpanzer"
+    },
+    "frosttalisman": {
+      "textures": "textures/items/frosttalisman"
+    },
+    "basiliskenauge": {
+      "textures": "textures/items/basiliskenauge"
+    },
+    "feuermuecke_ei": {
+      "textures": "textures/items/feuermuecke_ei"
+    },
+    "sturmlibelle_ei": {
+      "textures": "textures/items/sturmlibelle_ei"
+    },
+    "frostkaefer_ei": {
+      "textures": "textures/items/frostkaefer_ei"
+    },
+    "basilisk_ei": {
+      "textures": "textures/items/basilisk_ei"
     }
   }
 }

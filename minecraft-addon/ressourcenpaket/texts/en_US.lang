@@ -44,11 +44,11 @@ item.fynn:eisenklinge.name=Iron Blade
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.77
+item.iron_sword.name=Stahlschwert 4.78
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.77
-item.fynn:degen.name=Degen 4.77
+item.fynn:degen=Degen 4.78
+item.fynn:degen.name=Degen 4.78
 
 
 
@@ -444,6 +444,20 @@ item.fynn:frostruf.name=Frost Call
 
 
 
+
+## Kleintiere
+item.fynn:kaeferlarve=Beetle Grub
+item.fynn:kaeferlarve.name=Beetle Grub
+item.fynn:schneckenschleim=Snail Slime
+item.fynn:schneckenschleim.name=Snail Slime
+item.fynn:schneckenhaus=Snail Shell
+item.fynn:schneckenhaus.name=Snail Shell
+item.fynn:nuss=Hazelnut
+item.fynn:nuss.name=Hazelnut
+action.interact.fynn_schleim=Collect slime
+
+
+
 ## Die Tiere
 entity.fynn:braunbaer.name=Brown Bear
 item.spawn_egg.entity.fynn:braunbaer.name=Brown Bear Spawn Egg
@@ -489,14 +503,27 @@ entity.fynn:schnecke.name=Snail
 item.spawn_egg.entity.fynn:schnecke.name=Snail Spawn Egg
 entity.fynn:eichhoernchen.name=Squirrel
 item.spawn_egg.entity.fynn:eichhoernchen.name=Squirrel Spawn Egg
+entity.fynn:feuermuecke.name=Fire Gnat
+item.spawn_egg.entity.fynn:feuermuecke.name=Fire Gnat Spawn Egg
+entity.fynn:sturmlibelle.name=Storm Dragonfly
+item.spawn_egg.entity.fynn:sturmlibelle.name=Storm Dragonfly Spawn Egg
+entity.fynn:frostkaefer.name=Frost Beetle
+item.spawn_egg.entity.fynn:frostkaefer.name=Frost Beetle Spawn Egg
+entity.fynn:basilisk.name=Basilisk
+item.spawn_egg.entity.fynn:basilisk.name=Basilisk Spawn Egg
 
-## Kleintiere
-item.fynn:kaeferlarve=Beetle Grub
-item.fynn:kaeferlarve.name=Beetle Grub
-item.fynn:schneckenschleim=Snail Slime
-item.fynn:schneckenschleim.name=Snail Slime
-item.fynn:schneckenhaus=Snail Shell
-item.fynn:schneckenhaus.name=Snail Shell
-item.fynn:nuss=Hazelnut
-item.fynn:nuss.name=Hazelnut
-action.interact.fynn_schleim=Collect slime
+## Fantasy-Wesen
+item.fynn:glutstaub=Ember Dust
+item.fynn:glutflasche=Ember Bottle
+item.fynn:sturmfluegel=Storm Wing
+item.fynn:frostpanzer=Frost Carapace
+item.fynn:frosttalisman=Frost Talisman
+item.fynn:basiliskenauge=Basilisk Eye
+entity.fynn:glutflasche_wurf.name=Ember Bottle
+action.interact.fynn_fangen=Catch
+item.fynn:glutstaub.name=Ember Dust
+item.fynn:glutflasche.name=Ember Bottle
+item.fynn:sturmfluegel.name=Storm Wing
+item.fynn:frostpanzer.name=Frost Carapace
+item.fynn:frosttalisman.name=Frost Talisman
+item.fynn:basiliskenauge.name=Basilisk Eye

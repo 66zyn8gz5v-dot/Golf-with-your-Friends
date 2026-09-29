@@ -550,6 +550,98 @@
             "volume": 1.0
           }
         }
+      },
+      "fynn:feuermuecke": {
+        "volume": 1.0,
+        "pitch": [
+          1.8,
+          2.1
+        ],
+        "events": {
+          "ambient": {
+            "sound": "mob.bee.aggressive",
+            "volume": 1.0
+          },
+          "hurt": {
+            "sound": "mob.bee.hurt",
+            "volume": 1.0
+          },
+          "death": {
+            "sound": "mob.bee.death",
+            "volume": 1.0
+          }
+        }
+      },
+      "fynn:sturmlibelle": {
+        "volume": 1.0,
+        "pitch": [
+          0.9,
+          1.1
+        ],
+        "events": {
+          "ambient": {
+            "sound": "mob.bee.aggressive",
+            "volume": 1.0
+          },
+          "hurt": {
+            "sound": "mob.bee.hurt",
+            "volume": 1.0
+          },
+          "death": {
+            "sound": "mob.bee.death",
+            "volume": 1.0
+          }
+        }
+      },
+      "fynn:frostkaefer": {
+        "volume": 1.0,
+        "pitch": [
+          0.5,
+          0.65
+        ],
+        "events": {
+          "ambient": {
+            "sound": "mob.silverfish.say",
+            "volume": 1.0
+          },
+          "hurt": {
+            "sound": "mob.silverfish.hit",
+            "volume": 1.0
+          },
+          "death": {
+            "sound": "mob.silverfish.kill",
+            "volume": 1.0
+          },
+          "step": {
+            "sound": "mob.silverfish.step",
+            "volume": 0.25
+          }
+        }
+      },
+      "fynn:basilisk": {
+        "volume": 1.0,
+        "pitch": [
+          0.5,
+          0.65
+        ],
+        "events": {
+          "ambient": {
+            "sound": "mob.cat.hiss",
+            "volume": 1.0
+          },
+          "hurt": {
+            "sound": "mob.turtle.hurt",
+            "volume": 1.0
+          },
+          "death": {
+            "sound": "mob.turtle.death",
+            "volume": 1.0
+          },
+          "step": {
+            "sound": "mob.turtle.step",
+            "volume": 0.25
+          }
+        }
       }
     }
   }

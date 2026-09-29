@@ -1152,3 +1152,4 @@ def schwertfisch_maler(variante):
 # Tiere an einer Stelle findet.
 from tiere_gestalt_neu import *  # noqa: E402,F401,F403
 from kleintiere_gestalt import *  # noqa: E402,F401,F403
+from fantasy_gestalt import *  # noqa: E402,F401,F403

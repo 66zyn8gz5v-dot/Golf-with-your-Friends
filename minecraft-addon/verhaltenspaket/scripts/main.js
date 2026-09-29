@@ -22,6 +22,7 @@ import "./tempel.js";
 import "./tiere.js";
 import "./begegnungen.js";
 import "./kleintiere.js";
+import "./fantasy.js";
 import "./obst.js";
 import "./banditen.js";
 import "./rucksack.js";

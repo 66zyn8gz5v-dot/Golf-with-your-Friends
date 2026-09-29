@@ -17,6 +17,9 @@ export const TALISMANE = {
     "fynn:tigertalisman": { wirkung: "speed", stufe: 0 },
     "fynn:haitalisman": { wirkung: "conduit_power", stufe: 0, nurImWasser: true },
     "fynn:elchtalisman": { wirkung: "jump_boost", stufe: 1 },
+    // Aus den Panzern des Frostkaefers (4.78); das Eis unter den Fuessen
+    // macht fantasy.js.
+    "fynn:frosttalisman": { wirkung: "fire_resistance", stufe: 0 },
 };
 const JAEGERKETTE = "fynn:jaegerkette";
 

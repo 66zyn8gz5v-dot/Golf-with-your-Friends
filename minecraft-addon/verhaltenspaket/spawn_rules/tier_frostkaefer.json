@@ -1,0 +1,176 @@
+{
+  "format_version": "1.8.0",
+  "minecraft:spawn_rules": {
+    "description": {
+      "identifier": "fynn:frostkaefer",
+      "population_control": "animal"
+    },
+    "conditions": [
+      {
+        "minecraft:spawns_on_surface": {},
+        "minecraft:weight": {
+          "default": 6
+        },
+        "minecraft:herd": {
+          "min_size": 1,
+          "max_size": 3
+        },
+        "minecraft:spawns_on_block_filter": [
+          "minecraft:snow",
+          "minecraft:snow_layer",
+          "minecraft:ice",
+          "minecraft:packed_ice",
+          "minecraft:grass_block",
+          "minecraft:stone"
+        ],
+        "minecraft:brightness_filter": {
+          "min": 7,
+          "max": 15,
+          "adjust_for_weather": false
+        },
+        "minecraft:density_limit": {
+          "surface": 3
+        },
+        "minecraft:biome_filter": [
+          {
+            "test": "has_biome_tag",
+            "operator": "==",
+            "value": "frozen"
+          }
+        ]
+      },
+      {
+        "minecraft:spawns_on_surface": {},
+        "minecraft:weight": {
+          "default": 6
+        },
+        "minecraft:herd": {
+          "min_size": 1,
+          "max_size": 3
+        },
+        "minecraft:spawns_on_block_filter": [
+          "minecraft:snow",
+          "minecraft:snow_layer",
+          "minecraft:ice",
+          "minecraft:packed_ice",
+          "minecraft:grass_block",
+          "minecraft:stone"
+        ],
+        "minecraft:brightness_filter": {
+          "min": 7,
+          "max": 15,
+          "adjust_for_weather": false
+        },
+        "minecraft:density_limit": {
+          "surface": 3
+        },
+        "minecraft:biome_filter": [
+          {
+            "test": "has_biome_tag",
+            "operator": "==",
+            "value": "ice_plains"
+          }
+        ]
+      },
+      {
+        "minecraft:spawns_on_surface": {},
+        "minecraft:weight": {
+          "default": 6
+        },
+        "minecraft:herd": {
+          "min_size": 1,
+          "max_size": 3
+        },
+        "minecraft:spawns_on_block_filter": [
+          "minecraft:snow",
+          "minecraft:snow_layer",
+          "minecraft:ice",
+          "minecraft:packed_ice",
+          "minecraft:grass_block",
+          "minecraft:stone"
+        ],
+        "minecraft:brightness_filter": {
+          "min": 7,
+          "max": 15,
+          "adjust_for_weather": false
+        },
+        "minecraft:density_limit": {
+          "surface": 3
+        },
+        "minecraft:biome_filter": [
+          {
+            "test": "has_biome_tag",
+            "operator": "==",
+            "value": "snowy_slopes"
+          }
+        ]
+      },
+      {
+        "minecraft:spawns_on_surface": {},
+        "minecraft:weight": {
+          "default": 6
+        },
+        "minecraft:herd": {
+          "min_size": 1,
+          "max_size": 3
+        },
+        "minecraft:spawns_on_block_filter": [
+          "minecraft:snow",
+          "minecraft:snow_layer",
+          "minecraft:ice",
+          "minecraft:packed_ice",
+          "minecraft:grass_block",
+          "minecraft:stone"
+        ],
+        "minecraft:brightness_filter": {
+          "min": 7,
+          "max": 15,
+          "adjust_for_weather": false
+        },
+        "minecraft:density_limit": {
+          "surface": 3
+        },
+        "minecraft:biome_filter": [
+          {
+            "test": "has_biome_tag",
+            "operator": "==",
+            "value": "grove"
+          }
+        ]
+      },
+      {
+        "minecraft:spawns_on_surface": {},
+        "minecraft:weight": {
+          "default": 6
+        },
+        "minecraft:herd": {
+          "min_size": 1,
+          "max_size": 3
+        },
+        "minecraft:spawns_on_block_filter": [
+          "minecraft:snow",
+          "minecraft:snow_layer",
+          "minecraft:ice",
+          "minecraft:packed_ice",
+          "minecraft:grass_block",
+          "minecraft:stone"
+        ],
+        "minecraft:brightness_filter": {
+          "min": 7,
+          "max": 15,
+          "adjust_for_weather": false
+        },
+        "minecraft:density_limit": {
+          "surface": 3
+        },
+        "minecraft:biome_filter": [
+          {
+            "test": "has_biome_tag",
+            "operator": "==",
+            "value": "frozen_peaks"
+          }
+        ]
+      }
+    ]
+  }
+}

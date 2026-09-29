@@ -1,0 +1,58 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:frostkaefer",
+      "materials": {
+        "default": "entity_emissive_alpha"
+      },
+      "textures": {
+        "eis": "textures/entity/tiere/frostkaefer_eis",
+        "gletscher": "textures/entity/tiere/frostkaefer_gletscher"
+      },
+      "geometry": {
+        "default": "geometry.fynn.frostkaefer"
+      },
+      "animations": {
+        "krabbeln": "animation.fynn.frostkaefer.krabbeln",
+        "tasten": "animation.fynn.frostkaefer.tasten",
+        "einrollen": "animation.fynn.frostkaefer.einrollen",
+        "beissen": "animation.fynn.frostkaefer.beissen"
+      },
+      "scripts": {
+        "initialize": [
+          "variable.fynn_gier_alt = query.body_y_rotation;",
+          "variable.fynn_dreh = 0.0;",
+          "variable.fynn_zufall = math.random(0.0, 360.0);"
+        ],
+        "pre_animation": [
+          "variable.fynn_d = query.body_y_rotation - variable.fynn_gier_alt;",
+          "variable.fynn_d = variable.fynn_d > 180.0 ? variable.fynn_d - 360.0 : (variable.fynn_d < -180.0 ? variable.fynn_d + 360.0 : variable.fynn_d);",
+          "variable.fynn_gier_alt = query.body_y_rotation;",
+          "variable.fynn_dreh = math.lerp(variable.fynn_dreh, math.clamp(variable.fynn_d / math.max(query.delta_time, 0.01) / 20.0, -10.0, 10.0), 0.12);"
+        ],
+        "animate": [
+          {
+            "krabbeln": "math.clamp(query.modified_move_speed * 5.0, 0.0, 1.0)"
+          },
+          {
+            "tasten": "1.0"
+          },
+          {
+            "einrollen": "query.property('fynn:gerollt')"
+          },
+          {
+            "beissen": "variable.attack_time > 0.0"
+          }
+        ]
+      },
+      "render_controllers": [
+        "controller.render.fynn.frostkaefer"
+      ],
+      "spawn_egg": {
+        "texture": "frostkaefer_ei",
+        "texture_index": 0
+      }
+    }
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:basilisk",
+      "materials": {
+        "default": "entity_emissive_alpha"
+      },
+      "textures": {
+        "wueste": "textures/entity/tiere/basilisk_wueste",
+        "schatten": "textures/entity/tiere/basilisk_schatten"
+      },
+      "geometry": {
+        "default": "geometry.fynn.basilisk"
+      },
+      "animations": {
+        "laufen": "animation.fynn.basilisk.laufen",
+        "galopp": "animation.fynn.basilisk.galopp",
+        "stehen": "animation.fynn.basilisk.stehen",
+        "blick": "animation.common.look_at_target",
+        "kopfschuetteln": "animation.fynn.basilisk.kopfschuetteln",
+        "schwanzschlag": "animation.fynn.basilisk.schwanzschlag",
+        "drehen": "animation.fynn.basilisk.drehen",
+        "angriff": "animation.fynn.basilisk.angriff",
+        "starren": "animation.fynn.basilisk.starren",
+        "zischen": "animation.fynn.basilisk.zischen",
+        "schlaengeln": "animation.fynn.basilisk.schlaengeln"
+      },
+      "scripts": {
+        "initialize": [
+          "variable.fynn_gier_alt = query.body_y_rotation;",
+          "variable.fynn_dreh = 0.0;",
+          "variable.fynn_zufall = math.random(0.0, 360.0);"
+        ],
+        "pre_animation": [
+          "variable.fynn_d = query.body_y_rotation - variable.fynn_gier_alt;",
+          "variable.fynn_d = variable.fynn_d > 180.0 ? variable.fynn_d - 360.0 : (variable.fynn_d < -180.0 ? variable.fynn_d + 360.0 : variable.fynn_d);",
+          "variable.fynn_gier_alt = query.body_y_rotation;",
+          "variable.fynn_dreh = math.lerp(variable.fynn_dreh, math.clamp(variable.fynn_d / math.max(query.delta_time, 0.01) / 20.0, -10.0, 10.0), 0.12);",
+          "variable.galopp = math.clamp((query.modified_move_speed - 0.95) * 4.0, 0.0, 1.0);"
+        ],
+        "animate": [
+          {
+            "laufen": "math.clamp(query.modified_move_speed * 1.4, 0.0, 1.0) * (1.0 - variable.galopp)"
+          },
+          {
+            "galopp": "variable.galopp"
+          },
+          {
+            "stehen": "1.0 - math.clamp(query.modified_move_speed * 2.0, 0.0, 0.8)"
+          },
+          "blick",
+          "drehen",
+          {
+            "kopfschuetteln": "(1.0 - math.clamp(query.modified_move_speed * 3.0, 0.0, 1.0)) * math.clamp((math.sin(query.life_time * 19.0 + variable.fynn_zufall + 0) - 0.93) * 21.43, 0.0, 1.0)"
+          },
+          {
+            "schwanzschlag": "math.clamp((math.sin(query.life_time * 31.0 + variable.fynn_zufall + 120) - 0.8) * 7.5, 0.0, 1.0)"
+          },
+          {
+            "starren": "query.property('fynn:starrt')"
+          },
+          {
+            "zischen": "(1.0 - math.clamp(query.modified_move_speed * 3.0, 0.0, 1.0)) * math.clamp((math.sin(query.life_time * 15.0 + variable.fynn_zufall + 80) - 0.88) * 12.5, 0.0, 1.0) * (1.0 - query.property('fynn:starrt'))"
+          },
+          {
+            "schlaengeln": "1.0"
+          },
+          {
+            "angriff": "variable.attack_time > 0.0"
+          }
+        ]
+      },
+      "render_controllers": [
+        "controller.render.fynn.basilisk"
+      ],
+      "spawn_egg": {
+        "texture": "basilisk_ei",
+        "texture_index": 0
+      }
+    }
+  }
+}

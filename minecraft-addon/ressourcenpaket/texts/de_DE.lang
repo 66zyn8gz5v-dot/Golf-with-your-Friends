@@ -44,11 +44,11 @@ item.fynn:eisenklinge.name=Eisenklinge
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.77
+item.iron_sword.name=Stahlschwert 4.78
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.77
-item.fynn:degen.name=Degen 4.77
+item.fynn:degen=Degen 4.78
+item.fynn:degen.name=Degen 4.78
 
 
 
@@ -450,6 +450,20 @@ item.fynn:frostruf.name=Frostruf
 
 
 
+
+## Kleintiere
+item.fynn:kaeferlarve=Käferlarve
+item.fynn:kaeferlarve.name=Käferlarve
+item.fynn:schneckenschleim=Schneckenschleim
+item.fynn:schneckenschleim.name=Schneckenschleim
+item.fynn:schneckenhaus=Schneckenhaus
+item.fynn:schneckenhaus.name=Schneckenhaus
+item.fynn:nuss=Haselnuss
+item.fynn:nuss.name=Haselnuss
+action.interact.fynn_schleim=Schleim abfüllen
+
+
+
 ## Die Tiere
 entity.fynn:braunbaer.name=Braunbär
 item.spawn_egg.entity.fynn:braunbaer.name=Braunbär-Spawn-Ei
@@ -495,14 +509,27 @@ entity.fynn:schnecke.name=Schnecke
 item.spawn_egg.entity.fynn:schnecke.name=Schnecke-Spawn-Ei
 entity.fynn:eichhoernchen.name=Eichhörnchen
 item.spawn_egg.entity.fynn:eichhoernchen.name=Eichhörnchen-Spawn-Ei
+entity.fynn:feuermuecke.name=Feuermücke
+item.spawn_egg.entity.fynn:feuermuecke.name=Feuermücke-Spawn-Ei
+entity.fynn:sturmlibelle.name=Sturmlibelle
+item.spawn_egg.entity.fynn:sturmlibelle.name=Sturmlibelle-Spawn-Ei
+entity.fynn:frostkaefer.name=Frostkäfer
+item.spawn_egg.entity.fynn:frostkaefer.name=Frostkäfer-Spawn-Ei
+entity.fynn:basilisk.name=Basilisk
+item.spawn_egg.entity.fynn:basilisk.name=Basilisk-Spawn-Ei
 
-## Kleintiere
-item.fynn:kaeferlarve=Käferlarve
-item.fynn:kaeferlarve.name=Käferlarve
-item.fynn:schneckenschleim=Schneckenschleim
-item.fynn:schneckenschleim.name=Schneckenschleim
-item.fynn:schneckenhaus=Schneckenhaus
-item.fynn:schneckenhaus.name=Schneckenhaus
-item.fynn:nuss=Haselnuss
-item.fynn:nuss.name=Haselnuss
-action.interact.fynn_schleim=Schleim abfüllen
+## Fantasy-Wesen
+item.fynn:glutstaub=Glutstaub
+item.fynn:glutflasche=Glutflasche
+item.fynn:sturmfluegel=Sturmflügel
+item.fynn:frostpanzer=Frostpanzer
+item.fynn:frosttalisman=Frosttalisman
+item.fynn:basiliskenauge=Basiliskenauge
+entity.fynn:glutflasche_wurf.name=Glutflasche
+action.interact.fynn_fangen=Einfangen
+item.fynn:glutstaub.name=Glutstaub
+item.fynn:glutflasche.name=Glutflasche
+item.fynn:sturmfluegel.name=Sturmflügel
+item.fynn:frostpanzer.name=Frostpanzer
+item.fynn:frosttalisman.name=Frosttalisman
+item.fynn:basiliskenauge.name=Basiliskenauge

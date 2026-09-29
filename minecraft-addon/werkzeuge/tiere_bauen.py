@@ -399,7 +399,8 @@ TIERE = [
 # Die Kleintiere (4.77) stehen in eigenen Dateien - Gestalt in
 # kleintiere_gestalt.py, Steckbriefe in kleintiere_daten.py.
 from kleintiere_daten import KLEINTIERE  # noqa: E402
-TIERE += KLEINTIERE
+from fantasy_daten import FANTASY  # noqa: E402
+TIERE += KLEINTIERE + FANTASY
 
 
 # ------------------------------------------------------------ Verhalten
@@ -494,6 +495,9 @@ def angriffsbausteine(t, prio=2):
     if t.get("stoss"):
         b["minecraft:attack"]["effect_name"] = "slowness"
         b["minecraft:attack"]["effect_duration"] = 1
+    if t.get("gift"):
+        b["minecraft:attack"]["effect_name"] = "poison"
+        b["minecraft:attack"]["effect_duration"] = 5
     return b
 
 
@@ -578,7 +582,7 @@ def verhalten(t, varianten_namen):
             "minecraft:behavior.random_breach": {"priority": 6, "interval": 200, "xz_dist": 6, "cooldown_time": 20.0},
         })
 
-    elif art in ("kleinvogel", "kriecher"):
+    elif art in ("kleinvogel", "kriecher", "insekt"):
         pass    # alles Noetige steht in t["komponenten"]
     elif art == "vogel":
         # Wie Mojangs Phantom: gleitet ohne Schwerkraft, kreist hoch ueber
@@ -932,6 +936,10 @@ def spawnregel(t):
             b["minecraft:brightness_filter"] = {"min": 7, "max": 15, "adjust_for_weather": False}
             b["minecraft:density_limit"] = {"surface": 4}
         bedingungen.append(b)
+    if t.get("spawn_bedingungen"):
+        # Wesen mit eigenen Regeln (die Feuermuecke im Nether und nachts in
+        # der Wueste) bringen sie vollstaendig mit.
+        bedingungen = t["spawn_bedingungen"]
     if t["art"] == "amphib":
         # Krokodile auch im flachen Sumpfwasser.
         for merkmale in t["biome"]:
@@ -942,7 +950,7 @@ def spawnregel(t):
                                                             "value": merkmale[0]}]})
     return {"format_version": "1.8.0", "minecraft:spawn_rules": {
         "description": {"identifier": f"fynn:{t['id']}",
-                        "population_control": "water_animal" if t.get("wasser") else "animal"},
+                        "population_control": t.get("population") or ("water_animal" if t.get("wasser") else "animal")},
         "conditions": bedingungen}}
 
 
@@ -1331,7 +1339,7 @@ def bewegungen(t, modell):
                 a["schwimmen"]["bones"][bein] = {"rotation": [70.0, 0.0, 0.0]}
     elif art == "vogel":
         a.update(vogelbewegungen())
-    elif art in ("kleinvogel", "kriecher"):
+    elif art in ("kleinvogel", "kriecher", "insekt"):
         pass    # ihre Bewegungen bringen sie mit (eigene_bewegungen)
     else:
         # Im Wasser: Fische schlagen seitlich (um y), Wale auf und ab (um x).
@@ -1777,7 +1785,9 @@ def aussehen(t, anims, texturen):
     kurz = {k: (v if isinstance(v, str) else f"animation.fynn.{name}.{k}") for k, v in anims.items()}
     d = {
         "identifier": f"fynn:{name}",
-        "materials": {"default": "entity_alphatest"},
+        # Leuchtende Wesen (Feuermuecke, Basilisk) gluehen, wo die Haut
+        # Alpha 254 hat.
+        "materials": {"default": t.get("material", "entity_alphatest")},
         "textures": {k: f"textures/entity/tiere/{name}_{k}" for k in texturen},
         "geometry": {"default": f"geometry.fynn.{name}"},
         "animations": kurz,

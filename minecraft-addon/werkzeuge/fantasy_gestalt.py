@@ -1,0 +1,313 @@
+#!/usr/bin/env python3
+"""Die Fantasy-Wesen, erste Welle (4.78): Feuermuecke, Sturmlibelle,
+Frostkaefer, Basilisk - Gestalt und Haut.
+
+Fynn: "ein paar Fantasy-Tiere ... nicht Einhorn, eher Drachen und sowas,
+was im Mittelalter eine grosse Rolle gespielt hat. Ein bisschen
+Elementtiere - nicht Feuerloewe, sondern wie eine Feuermuecke. Insekten
+finde ich cool."
+
+Was leuchtet, bekommt in der Haut Alpha 254: Das Material
+entity_emissive_alpha laesst genau diese Punkte im Dunkeln gluehen - die
+Glut der Muecke, die Blitzadern der Libelle, die Eiskristalle des Kaefers,
+die Augen des Basilisken.
+
+Die Insekten sind doppelt so gross gebaut und werden im Spiel verkleinert
+(wie die Kleintiere), damit ihre Haut feiner wird.
+"""
+
+import math
+
+from tiermodell import Modell, hexfarbe, mische, streu
+from tiere_gestalt import ton, auge, paar, beine
+
+LEUCHT = 254
+
+
+def glut(farbe, hell=0.0):
+    """Eine leuchtende Farbe: Alpha 254."""
+    f = hexfarbe(farbe) if isinstance(farbe, str) else farbe
+    f = tuple(max(0, min(255, int(c * (1 + hell)))) for c in f)
+    return f + (LEUCHT,)
+
+
+# ================================================================== Feuermuecke
+
+def feuermuecke_modell():
+    m = Modell("feuermuecke", sichtbreite=1.0, sichthoehe=1.0)
+    rumpf = m.knoch("rumpf", [0, 6, 0])
+    rumpf.kasten([-1.5, 5, -2], [3, 3, 3], "brust")
+    leib = m.knoch("hinterleib", [0, 6, 1], "rumpf", drehung=[-18, 0, 0])
+    leib.kasten([-1, 4.5, 1], [2, 2, 6], "leib")
+    kopf = m.knoch("kopf", [0, 6.5, -2], "rumpf")
+    kopf.kasten([-1, 5.5, -4], [2, 2, 2], "kopf")
+    kopf.kasten([-0.5, 5.5, -7], [1, 1, 3], "ruessel")
+    for name, x in (("fluegel_links", 1.5), ("fluegel_rechts", -1.5)):
+        f = m.knoch(name, [x, 8, -0.5], "rumpf")
+        f.kasten([x if x > 0 else x - 6, 8, -1.5], [6, 0, 3], "fluegel")
+    beine_ = m.knoch("beine", [0, 5, -0.5], "rumpf")
+    for z in (-1.5, -0.5, 0.5):
+        paar(beine_, [0.5, 2.5, z], [1, 3, 0], "bein")
+    return m
+
+
+FEUERMUECKE_FARBEN = {
+    # Panzer, Glut hell, Glut dunkel, Fluegelrand
+    "glut": ("#2a1a14", "#ffd24a", "#ff6a1a", "#ff9a3a"),
+    "seelenglut": ("#141c24", "#9af0ff", "#2aa8d8", "#5ad0f0"),
+}
+
+
+def feuermuecke_maler(variante):
+    panzer, hell, dunkel, rand = FEUERMUECKE_FARBEN.get(variante, FEUERMUECKE_FARBEN["glut"])
+
+    def male(stoff, p, n, texel):
+        x, y, z = p
+        if stoff == "leib":
+            # Der glimmende Hinterleib: helle Glut, dunkle Ringe dazwischen.
+            if int(math.floor(z)) % 2 == 0:
+                return glut(mische(hexfarbe(hell), hexfarbe(dunkel), min(1.0, max(0.0, (z - 1) / 6))))
+            return ton(panzer, p, n, texel, 801, straehne=0.0, hell=0.1)
+        if stoff == "brust":
+            # Gluehende Risse im dunklen Panzer.
+            if streu(texel[0], texel[1], 802) < 0.2:
+                return glut(dunkel)
+            return ton(panzer, p, n, texel, 803, straehne=0.0)
+        if stoff == "kopf":
+            if abs(n[0]) > 0.5 and y > 6.5:
+                return glut(dunkel, -0.2)                                       # rote Facettenaugen
+            return ton(panzer, p, n, texel, 804, straehne=0.0)
+        if stoff == "ruessel":
+            return ton("#4a2a1a", p, n, texel, 805, straehne=0.0)
+        if stoff == "fluegel":
+            # Durchscheinend kann Minecraft nicht - also ein heller, leise
+            # gluehender Fluegel mit dunkleren Adern und hellem Rand.
+            if abs(x) > 6.3 or abs(z) > 1.2:
+                return glut(rand, -0.05)
+            if texel[0] % 3 == 0:
+                return glut(mische(hexfarbe(rand), (40, 20, 10), 0.5))
+            return glut(mische(hexfarbe(rand), (255, 250, 230), 0.72), -0.08)
+        if stoff == "bein":
+            return ton(mische(hexfarbe(panzer), hexfarbe(dunkel), 0.35), p, n, texel, 806, straehne=0.0)
+        return ton(panzer, p, n, texel, 807)
+    return male
+
+
+# ================================================================== Sturmlibelle
+
+def sturmlibelle_modell():
+    m = Modell("sturmlibelle", sichtbreite=1.6, sichthoehe=1.0)
+    rumpf = m.knoch("rumpf", [0, 6, 0])
+    rumpf.kasten([-1.5, 5, -2], [3, 3, 4], "brust")
+    kopf = m.knoch("kopf", [0, 6.5, -2], "rumpf")
+    kopf.kasten([-2, 5, -5], [4, 3, 3], "kopf")
+    leib = m.knoch("hinterleib", [0, 6.5, 2], "rumpf")
+    leib.kasten([-1, 5.5, 2], [2, 2, 6], "leib")
+    spitze = m.knoch("leibspitze", [0, 6.5, 8], "hinterleib")
+    spitze.kasten([-0.5, 6, 8], [1, 1, 7], "leib")
+    spitze.kasten([-1, 6, 15], [2, 1, 1], "zange")
+    for name, x, z, lang in (("fluegel_vorn_links", 1.5, -1, 11), ("fluegel_hinten_links", 1.5, 1, 10),
+                             ("fluegel_vorn_rechts", -1.5, -1, 11), ("fluegel_hinten_rechts", -1.5, 1, 10)):
+        f = m.knoch(name, [x, 8, z], "rumpf")
+        f.kasten([x if x > 0 else x - lang, 8, z - 1.5], [lang, 0, 3], "fluegel")
+    beine_ = m.knoch("beine", [0, 5, 0], "rumpf")
+    for z in (-1.5, 0, 1.5):
+        paar(beine_, [1, 2, z], [1, 3, 0], "bein")
+    return m
+
+
+STURMLIBELLE_FARBEN = {
+    # Koerper, Koerper hell, Blitzader, Augen
+    "blau": ("#1e5a8a", "#3a8ac0", "#8af4ff", "#2ab89a"),
+    "gewitter": ("#3a2a6a", "#6a4aa8", "#e0a8ff", "#a86ae0"),
+}
+
+
+def sturmlibelle_maler(variante):
+    koerper, hell, blitz, augen = STURMLIBELLE_FARBEN.get(variante, STURMLIBELLE_FARBEN["blau"])
+
+    def male(stoff, p, n, texel):
+        x, y, z = p
+        if stoff == "kopf":
+            # Riesige Facettenaugen, die fast den ganzen Kopf einnehmen.
+            if abs(x) > 0.6 and (abs(n[0]) > 0.5 or n[1] > 0.5 or n[2] < -0.5) and y > 5.8:
+                if streu(texel[0], texel[1], 811) < 0.25:
+                    return glut(augen, 0.2)
+                return ton(augen, p, n, texel, 812, straehne=0.0)
+            return ton(koerper, p, n, texel, 813, straehne=0.0)
+        if stoff in ("brust", "leib"):
+            # Metallisch glaenzend, mit einer Blitzader den Ruecken entlang.
+            if n[1] > 0.5 and abs(x) < 0.6:
+                return glut(blitz)
+            if int(math.floor(z)) % 3 == 0:
+                return ton(koerper, p, n, texel, 814, straehne=0.0, hell=-0.2)
+            return ton(hell if n[1] > 0.5 else koerper, p, n, texel, 815, straehne=0.0)
+        if stoff == "zange":
+            return ton(koerper, p, n, texel, 816, straehne=0.0, hell=-0.25)
+        if stoff == "fluegel":
+            # Adernetz mit leuchtendem Rand; die Zellen bleiben frei.
+            # Voll, hell und glasig, mit dunklem Adernetz, einem dunklen
+            # Fleck an der Spitze (wie bei echten Libellen) und leuchtendem Rand.
+            if abs(x) > 9.5:
+                return ton("#1a2430", p, n, texel, 817, straehne=0.0)         # das Flecklein an der Spitze
+            if texel[1] % 3 == 0 or texel[0] % 4 == 0:
+                return glut(mische(hexfarbe(blitz), hexfarbe(koerper), 0.55), -0.2)
+            if streu(texel[0], texel[1], 818) < 0.08:
+                return glut(blitz)                                             # kleine Funken
+            return glut(mische(hexfarbe(blitz), (255, 255, 255), 0.7), -0.12)
+        if stoff == "bein":
+            return ton("#1a1e24", p, n, texel, 818, straehne=0.0)
+        return ton(koerper, p, n, texel, 819)
+    return male
+
+
+# ================================================================== Frostkaefer
+
+def frostkaefer_modell():
+    m = Modell("frostkaefer", sichtbreite=1.4, sichthoehe=1.0)
+    k = m.knoch("koerper", [0, 4, 0])
+    k.kasten([-3, 2, -4], [6, 3, 9], "unterseite")
+    for name, x0 in (("panzer_links", 0), ("panzer_rechts", -3.5)):
+        pz = m.knoch(name, [0 if x0 == 0 else 0, 6, -3.5], "koerper")
+        pz.kasten([x0, 4.5, -3.5], [3.5, 2.5, 9], "panzer")
+    kr = m.knoch("kristalle", [0, 7, 0], "koerper")
+    kr.kasten([1, 7, -1], [1, 1, 1], "kristall")
+    kr.kasten([-2, 7, 1], [1, 2, 1], "kristall")
+    kr.kasten([1.5, 7, 3], [1, 1, 1], "kristall")
+    kr.kasten([-1, 7, -2.5], [1, 1, 1], "kristall")
+    kopf = m.knoch("kopf", [0, 4, -4], "koerper")
+    kopf.kasten([-2, 2.5, -6.5], [4, 2.5, 2.5], "kopf")
+    for name, x in (("kiefer_links", 1), ("kiefer_rechts", -1)):
+        kf = m.knoch(name, [x, 3, -6.5], "kopf")
+        kf.kasten([x - 0.5, 2.5, -8.5], [1, 1, 2], "kiefer")
+    for name, x in (("fuehler_links", 1), ("fuehler_rechts", -1)):
+        f = m.knoch(name, [x, 4.5, -6.5], "kopf", drehung=[-30, 20 if x < 0 else -20, 0])
+        f.kasten([x - 0.5, 4.5, -10.5], [1, 1, 4], "fuehler")
+    # Sechs Beine, je ein Knochen, damit sie im Dreiergang laufen koennen.
+    for i, (x, z) in enumerate(((3, -2.5), (-3, -2.5), (3, 0.5), (-3, 0.5), (3, 3.5), (-3, 3.5))):
+        b = m.knoch(f"bein{i}", [x, 3, z], "koerper")
+        aussen = x if x > 0 else x - 2
+        b.kasten([aussen, 2.5, z - 0.5], [2, 1, 1], "bein")
+        b.kasten([x + 1 if x > 0 else x - 2, 0, z - 0.5], [1, 3, 1], "bein")
+    return m
+
+
+FROSTKAEFER_FARBEN = {
+    # Panzer, Panzer hell, Unterseite, Kristall
+    "eis": ("#6aa8d8", "#b8e0f4", "#243040", "#d8f8ff"),
+    "gletscher": ("#5ac0b8", "#c8f0e8", "#1e3434", "#e8fff8"),
+}
+
+
+def frostkaefer_maler(variante):
+    panzer, hell, unten, kristall = FROSTKAEFER_FARBEN.get(variante, FROSTKAEFER_FARBEN["eis"])
+
+    def male(stoff, p, n, texel):
+        x, y, z = p
+        if stoff == "panzer":
+            # Eisfacetten: helle Kanten an der Naht und am Rand, dazwischen
+            # Flecken aus Raureif.
+            if abs(x) < 0.55 and n[1] > 0.5:
+                return ton(unten, p, n, texel, 821, straehne=0.0, hell=0.3)       # die Naht
+            if streu(texel[0] // 2, texel[1] // 2, 822) < 0.3:
+                return ton(hell, p, n, texel, 823, straehne=0.0)
+            return ton(panzer, p, n, texel, 824, straehne=0.0)
+        if stoff == "kristall":
+            return glut(kristall, -0.05 if n[1] > 0.5 else -0.2)
+        if stoff == "kopf":
+            if abs(n[0]) > 0.5 and y > 3.8 and z < -5.5:
+                return glut("#7ae8ff")                                          # eisblaue Augen
+            return ton(unten, p, n, texel, 825, straehne=0.0, hell=0.15)
+        if stoff in ("kiefer", "fuehler"):
+            return ton(hell, p, n, texel, 826, straehne=0.0, hell=-0.1)
+        if stoff == "unterseite":
+            return ton(unten, p, n, texel, 827, straehne=0.0)
+        if stoff == "bein":
+            return ton(unten, p, n, texel, 828, straehne=0.0, hell=0.2)
+        return ton(panzer, p, n, texel, 829)
+    return male
+
+
+# ================================================================== Basilisk
+
+def basilisk_modell():
+    m = Modell("basilisk", sichtbreite=3.0, sichthoehe=1.4)
+    body = m.knoch("body", [0, 6, 0])
+    body.kasten([-3, 3, -7], [6, 5, 14], "schuppen")
+    body.kasten([-2.5, 2.5, -6], [5, 1, 12], "bauch")
+    body.kasten([-0.5, 8, -6], [1, 2, 12], "kamm")
+    kopf = m.knoch("head", [0, 7, -7], "body")
+    kopf.kasten([-2.5, 4, -12], [5, 4, 5], "kopf")
+    kopf.kasten([-2, 5, -15], [4, 2, 3], "schnauze")
+    kiefer = m.knoch("kiefer", [0, 5, -12], "head")
+    kiefer.kasten([-2, 4, -15], [4, 1, 3], "schnauze")
+    # Die Krone - der Basilisk ist der Koenig der Schlangen.
+    krone = m.knoch("krone", [0, 8, -10], "head")
+    krone.kasten([-2.5, 8, -11.5], [5, 1, 3], "krone")
+    for x, z, h in ((-2.5, -11.5, 2), (-0.5, -12, 3), (1.5, -11.5, 2), (-1.5, -9.5, 2), (0.5, -9.5, 2)):
+        krone.kasten([x, 9, z], [1, h, 1], "zacke")
+    schwanz = m.knoch("tail", [0, 6, 7], "body")
+    schwanz.kasten([-2, 4, 7], [4, 3.5, 8], "schuppen")
+    schwanz.kasten([-0.5, 7.5, 7], [1, 1.5, 8], "kamm")
+    s2 = m.knoch("tail2", [0, 5.5, 15], "tail")
+    s2.kasten([-1.5, 4.5, 15], [3, 2.5, 8], "schuppen")
+    s3 = m.knoch("tail3", [0, 5.5, 23], "tail2")
+    s3.kasten([-1, 5, 23], [2, 1.5, 6], "schuppen")
+    beine(m, "body", 3.5, -5, 5, (2, 4, 2), 4, pfote=(3, 1, 3), krallen=True)
+    return m
+
+
+BASILISK_FARBEN = {
+    # Schuppen, Muster, Bauch, Kamm
+    "wueste": ("#9a8248", "#5a4424", "#e0cc94", "#a8321e"),
+    "schatten": ("#3a4a26", "#1c2414", "#a8b070", "#6a1a2a"),
+}
+
+
+def basilisk_maler(variante):
+    schuppen, muster, bauch, kamm = BASILISK_FARBEN.get(variante, BASILISK_FARBEN["wueste"])
+
+    def male(stoff, p, n, texel):
+        x, y, z = p
+        if stoff == "kopf":
+            # Gelb gluehende Augen mit Schlitzpupille.
+            for ax in (-2.5, 2.5):
+                if abs(n[0]) > 0.5 and x * ax > 0 and abs(y - 6.5) < 0.6 and abs(z + 10.5) < 1.1:
+                    return hexfarbe("#140a04") if abs(z + 10.5) < 0.4 else glut("#ffd21a")
+            if n[1] > 0.5:
+                return ton(muster, p, n, texel, 831, straehne=0.0)
+            return ton(schuppen, p, n, texel, 832, straehne=0.0)
+        if stoff == "schnauze":
+            if n[2] < -0.5 and y > 5.5 and abs(x) > 0.8:
+                return hexfarbe("#1a1008")                                      # Nasenloecher
+            return ton(schuppen, p, n, texel, 833, straehne=0.0, hell=-0.05)
+        if stoff == "schuppen":
+            # Schuppen im Versatz, oben ein dunkles Rautenmuster.
+            if n[1] < -0.5:
+                return ton(bauch, p, n, texel, 834, straehne=0.0)
+            reihe = int(math.floor(z / 2))
+            if (texel[0] + reihe) % 2 == 0 and (n[1] > 0.5 or y > 6):
+                return ton(muster, p, n, texel, 835, straehne=0.0)
+            if abs(z % 4 - 2) + abs(x) < 1.6 and n[1] > 0.5:
+                return ton(muster, p, n, texel, 836, straehne=0.0, hell=-0.2)
+            return ton(schuppen, p, n, texel, 837, straehne=0.0)
+        if stoff == "bauch":
+            if int(math.floor(z)) % 2 == 0:
+                return ton(bauch, p, n, texel, 838, straehne=0.0, hell=-0.1)
+            return ton(bauch, p, n, texel, 839, straehne=0.0)
+        if stoff == "kamm":
+            # Ein gezackter Kamm: nur jeder zweite Streifen steht.
+            oben = 9.0 if z < 7 else 8.25
+            if y > oben and texel[0] % 2 == 1:
+                return None
+            return ton(kamm, p, n, texel, 840, straehne=0.0)
+        if stoff in ("krone", "zacke"):
+            if stoff == "zacke" and n[1] > 0.5:
+                return glut("#ff3a2a")                                          # rote Steine
+            return ton("#e0b030", p, n, texel, 841, straehne=0.0, hell=0.05)
+        if stoff in ("bein", "pfote"):
+            return ton(schuppen, p, n, texel, 842, straehne=0.0, hell=-0.1)
+        if stoff == "kralle":
+            return hexfarbe("#1a140e")
+        return ton(schuppen, p, n, texel, 843)
+    return male

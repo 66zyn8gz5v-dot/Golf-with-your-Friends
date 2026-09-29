@@ -329,6 +329,7 @@ VARIANTENNAME = {
     "entfesselt": "Entfesselt (Phase 2)",
     "rotkehlchen": "Rotkehlchen", "blaumeise": "Blaumeise", "spatz": "Spatz", "maennchen": "Männchen",
     "weibchen": "Weibchen", "weinberg": "Weinbergschnecke", "baender": "Bänderschnecke",
+    "seelenglut": "Seelenglut", "gletscher": "Gletscher", "wueste": "Wüste",
 }
 
 VERHALTEN = {"friedlich": "friedlich", "neutral": "wehrt sich", "feindlich": "greift an"}
@@ -339,6 +340,7 @@ SCHALTER = {
     "fynn:tun": "Aufgabe", "fynn:sturm": "Sturmangriff", "fynn:sprung": "Sprung",
     "fynn:warnt": "Warnt vor Monstern", "fynn:hackt": "Hämmert am Stamm", "fynn:versteckt": "Im Haus",
     "fynn:klettert": "Klettert", "fynn:graebt": "Vergräbt eine Nuss",
+    "fynn:gerollt": "Eingerollt", "fynn:starrt": "Starrt (versteinernder Blick)",
 }
 
 
