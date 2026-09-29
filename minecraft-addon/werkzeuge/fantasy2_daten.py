@@ -434,4 +434,59 @@ def _moosgolem():
     }
 
 
-FANTASY2 = [_glutskorpion(), _kristallspinne(), _irrlicht(), _werwolf(), _moosgolem()]
+# ------------------------------------------------------------ Greif (4.83)
+
+def greif_bewegungen():
+    fliegt = "query.property('fynn:fliegt')"
+    # Am Boden: die Schwingen angelegt, nach hinten gefaltet.
+    ruhe = {"loop": True, "bones": {
+        "fluegel_links": {"rotation": [0.0, -70.0, -8.0]},
+        "fluegel_rechts": {"rotation": [0.0, 70.0, 8.0]},
+        "fluegelspitze_links": {"rotation": [0.0, -95.0, 0.0]},
+        "fluegelspitze_rechts": {"rotation": [0.0, 95.0, 0.0]},
+    }}
+    schlag = f"math.sin({LT} * 320.0) * 45.0"
+    nach = f"math.sin({LT} * 320.0 - 55.0) * 30.0"
+    flug = {"loop": True, "bones": {
+        "fluegel_links": {"rotation": [0.0, 0.0, f"-5.0 - {schlag}"]},
+        "fluegel_rechts": {"rotation": [0.0, 0.0, f"5.0 + {schlag}"]},
+        "fluegelspitze_links": {"rotation": [0.0, 0.0, f"-{nach}"]},
+        "fluegelspitze_rechts": {"rotation": [0.0, 0.0, f"{nach}"]},
+        "body": {"rotation": ["-query.target_x_rotation * 0.4", 0.0, "variable.fynn_dreh * 2.0"],
+                 "position": [0.0, f"-math.sin({LT} * 320.0 - 30.0) * 0.8", 0.0]},
+        "leg0": {"rotation": [-50.0, 0.0, 0.0]}, "leg1": {"rotation": [-50.0, 0.0, 0.0]},
+        "leg2": {"rotation": [60.0, 0.0, 0.0]}, "leg3": {"rotation": [60.0, 0.0, 0.0]},
+        "tail": {"rotation": [20.0, f"math.sin({LT} * 80.0) * 8.0", 0.0]},
+        "head": {"rotation": [-10.0, 0.0, 0.0]},
+    }}
+    return {"schwingen_angelegt": (ruhe, f"1.0 - {fliegt}"), "greifenflug": (flug, fliegt)}
+
+
+def _greif():
+    fleisch = ["minecraft:beef", "minecraft:mutton", "minecraft:porkchop", "minecraft:chicken", "minecraft:rabbit",
+               "fynn:elchfleisch", "fynn:bisonfleisch"]
+    k = {"minecraft:damage_sensor": {"triggers": [{"cause": "fall", "deals_damage": False}]}}
+    return {
+        "id": "greif", "name": ("Greif", "Griffin"), "gestalt": "greif", "gruppe": "Fantasy",
+        "varianten": [("gold", 55), ("weiss", 35), ("schwarz", 10)],
+        "art": "land", "verhalten": "neutral", "leben": 40, "schaden": 7, "tempo": 0.25,
+        "kollision": (1.4, 1.6), "baby": False, "herde": (1, 2),
+        # Zaehmen mit rohem Fleisch, dann satteln - und fliegen (scripts/greif.js).
+        "reiten": {"zaehmen": fleisch, "chance": 0.2, "tempo": 0.32, "sitz": [0.0, 1.15, 0.0], "sprung": 0.8},
+        "biome": [["mountains"], ["extreme_hills"], ["meadow"]], "gewicht": 3,
+        "boden": ["minecraft:grass_block", "minecraft:stone", "minecraft:snow_layer", "minecraft:gravel"],
+        "beute": [("minecraft:feather", 1, 3, 1.0, False), ("fynn:greifenfeder", 1, 1, 0.35, False)],
+        "laute": {"ambient": "mob.parrot.idle", "hurt": "mob.cat.hit", "death": "mob.parrot.death",
+                  "step": "mob.cat.step", "pitch": [0.5, 0.6]},
+        "ei": ("#c89a58", "#e8d8a8"), "angriff": "tatze",
+        "komponenten": k,
+        "eigenschaften": eigenschaft("fynn:fliegt"),
+        "eigene_bewegungen": greif_bewegungen(),
+        "steckbrief_extra": [
+            ["Fliegen", "gesattelt die Sprungtaste halten: Er steigt auf. Er fliegt, wohin du schaust – "
+                        "schau nach unten, um zu landen"],
+            ["Greifenfeder", "in der Schnellleiste: Fällst du tief, schwebst du sanft hinunter"]],
+    }
+
+
+FANTASY2 = [_glutskorpion(), _kristallspinne(), _irrlicht(), _werwolf(), _moosgolem(), _greif()]

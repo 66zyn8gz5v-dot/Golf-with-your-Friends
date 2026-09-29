@@ -789,6 +789,31 @@
             "volume": 0.25
           }
         }
+      },
+      "fynn:greif": {
+        "volume": 1.0,
+        "pitch": [
+          0.5,
+          0.6
+        ],
+        "events": {
+          "ambient": {
+            "sound": "mob.parrot.idle",
+            "volume": 1.0
+          },
+          "hurt": {
+            "sound": "mob.cat.hit",
+            "volume": 1.0
+          },
+          "death": {
+            "sound": "mob.parrot.death",
+            "volume": 1.0
+          },
+          "step": {
+            "sound": "mob.cat.step",
+            "volume": 0.25
+          }
+        }
       }
     }
   }

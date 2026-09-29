@@ -330,7 +330,7 @@ VARIANTENNAME = {
     "rotkehlchen": "Rotkehlchen", "blaumeise": "Blaumeise", "spatz": "Spatz", "maennchen": "Männchen",
     "weibchen": "Weibchen", "weinberg": "Weinbergschnecke", "baender": "Bänderschnecke",
     "seelenglut": "Seelenglut", "gletscher": "Gletscher", "wueste": "Wüste", "rotsand": "Roter Sand", "gruen": "Grün", "seele": "Seelenglut",
-    "blass": "Blass", "smaragd": "Smaragd", "tiefwald": "Tiefer Wald",
+    "blass": "Blass", "smaragd": "Smaragd", "tiefwald": "Tiefer Wald", "gold": "Gold",
 }
 
 VERHALTEN = {"friedlich": "friedlich", "neutral": "wehrt sich", "feindlich": "greift an"}
@@ -345,6 +345,7 @@ SCHALTER = {
     "fynn:unten": "Unter dem Sand", "fynn:feuer": "Feueratem",
     "fynn:spinnt": "Spinnt ein Netz", "fynn:lockt": "Lockt",
     "fynn:wolf": "Wolfsgestalt", "fynn:wandelt": "Verwandelt sich", "fynn:schlaeft": "Schläft",
+    "fynn:fliegt": "Fliegt",
 }
 
 

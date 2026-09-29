@@ -44,11 +44,11 @@ item.fynn:eisenklinge.name=Iron Blade
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.82
+item.iron_sword.name=Stahlschwert 4.83
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.82
-item.fynn:degen.name=Degen 4.82
+item.fynn:degen=Degen 4.83
+item.fynn:degen.name=Degen 4.83
 
 
 
@@ -507,6 +507,10 @@ item.fynn:drachenstiefel.name=Dragon Boots
 
 
 
+
+
+
+
 ## Die Tiere
 entity.fynn:braunbaer.name=Brown Bear
 item.spawn_egg.entity.fynn:braunbaer.name=Brown Bear Spawn Egg
@@ -574,6 +578,8 @@ entity.fynn:werwolf.name=Werewolf
 item.spawn_egg.entity.fynn:werwolf.name=Werewolf Spawn Egg
 entity.fynn:moosgolem.name=Moss Golem
 item.spawn_egg.entity.fynn:moosgolem.name=Moss Golem Spawn Egg
+entity.fynn:greif.name=Griffin
+item.spawn_egg.entity.fynn:greif.name=Griffin Spawn Egg
 
 ## Fantasy-Wesen, zweite Welle
 item.fynn:glutstachel=Ember Stinger
@@ -585,6 +591,7 @@ entity.fynn:irrlichtflasche_wurf.name=Wisp in a Bottle
 item.fynn:werwolfsklaue=Werewolf Claw
 item.fynn:mondtalisman=Moon Talisman
 item.fynn:moosherz=Moss Heart
+item.fynn:greifenfeder=Griffin Feather
 item.fynn:glutstachel.name=Ember Stinger
 item.fynn:glutpfeil.name=Ember Arrow
 item.fynn:spinnenkristall.name=Spider Crystal
@@ -593,3 +600,4 @@ item.fynn:irrlichtflasche.name=Wisp in a Bottle
 item.fynn:werwolfsklaue.name=Werewolf Claw
 item.fynn:mondtalisman.name=Moon Talisman
 item.fynn:moosherz.name=Moss Heart
+item.fynn:greifenfeder.name=Griffin Feather

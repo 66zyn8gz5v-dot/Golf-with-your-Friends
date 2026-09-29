@@ -1,0 +1,36 @@
+{
+  "format_version": "1.8.0",
+  "render_controllers": {
+    "controller.render.fynn.greif": {
+      "arrays": {
+        "textures": {
+          "Array.haut": [
+            "Texture.gold",
+            "Texture.weiss",
+            "Texture.schwarz"
+          ]
+        }
+      },
+      "geometry": "Geometry.default",
+      "materials": [
+        {
+          "*": "Material.default"
+        }
+      ],
+      "textures": [
+        "Array.haut[query.variant]"
+      ],
+      "part_visibility": [
+        {
+          "sattel": "query.is_saddled"
+        },
+        {
+          "tasche_links": "query.property('fynn:taschen') >= 1"
+        },
+        {
+          "tasche_rechts": "query.property('fynn:taschen') >= 2"
+        }
+      ]
+    }
+  }
+}

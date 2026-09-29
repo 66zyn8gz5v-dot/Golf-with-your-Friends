@@ -184,6 +184,27 @@ MOOSHERZ = [
 ]
 MOOSHERZ_F = {"k": K, "M": (78, 122, 46), "m": (140, 170, 60), "G": (122, 255, 160)}
 
+# --- Greif (4.83)
+GREIFENFEDER = [
+    "................",
+    "............kk..",
+    "...........kWk..",
+    "..........kWGk..",
+    ".........kWGGk..",
+    "........kWGGk...",
+    ".......kWGGGk...",
+    "......kWGGGk....",
+    ".....kWGGGk.....",
+    "....kWGGGk......",
+    "...kWGGk........",
+    "...kGGk.........",
+    "..kbkk..........",
+    ".kbk............",
+    ".kk.............",
+    "................",
+]
+GREIFENFEDER_F = {"k": K, "W": (250, 240, 210), "G": (200, 154, 88), "b": (120, 90, 50)}
+
 NAMEN = [
     ("item.fynn:glutstachel", "Glutstachel", "Ember Stinger"),
     ("item.fynn:glutpfeil", "Glutpfeil", "Ember Arrow"),
@@ -194,6 +215,7 @@ NAMEN = [
     ("item.fynn:werwolfsklaue", "Werwolfsklaue", "Werewolf Claw"),
     ("item.fynn:mondtalisman", "Mondtalisman", "Moon Talisman"),
     ("item.fynn:moosherz", "Moosherz", "Moss Heart"),
+    ("item.fynn:greifenfeder", "Greifenfeder", "Griffin Feather"),
 ]
 NAMEN += [(k + ".name", d, e) for k, d, e in NAMEN if k.startswith("item.")]
 
@@ -204,7 +226,8 @@ def bilder():
             "hoehlenauge": rbb.male(HOEHLENAUGE, HOEHLENAUGE_F),
             "irrlichtflasche": rbb.male(IRRLICHTFLASCHE, IRRLICHTFLASCHE_F),
             "werwolfsklaue": rbb.male(WERWOLFSKLAUE, WERWOLFSKLAUE_F),
-            "mondtalisman": rbb.male(MONDTALISMAN, MONDTALISMAN_F), "moosherz": rbb.male(MOOSHERZ, MOOSHERZ_F)}
+            "mondtalisman": rbb.male(MONDTALISMAN, MONDTALISMAN_F), "moosherz": rbb.male(MOOSHERZ, MOOSHERZ_F),
+            "greifenfeder": rbb.male(GREIFENFEDER, GREIFENFEDER_F)}
 
 
 def main():
@@ -245,10 +268,13 @@ def main():
     bk.schreibe(VER / "items" / "moosherz.json", gegenstand("moosherz", {
         "minecraft:max_stack_size": 16, "minecraft:use_modifiers": {"use_duration": 0.05},
         "minecraft:cooldown": {"category": "fynn:moosherz", "duration": 3.0}}, "items", BEUTEFACH))
+    bk.schreibe(VER / "items" / "greifenfeder.json",
+                gegenstand("greifenfeder", {"minecraft:max_stack_size": 1, "minecraft:glint": True},
+                           "equipment", JAGDFACH))
     bk.item_bilder(bilder())
     bk.sprache("Fantasy-Wesen, zweite Welle", NAMEN)
     print("gebaut: Glutstachel, Glutpfeil, Spinnenkristall, Höhlenauge, Irrlichtflasche, "
-          "Werwolfsklaue, Mondtalisman, Moosherz")
+          "Werwolfsklaue, Mondtalisman, Moosherz, Greifenfeder")
     if "--bilder" in sys.argv:
         from PIL import Image
         ordner = Path(sys.argv[sys.argv.index("--bilder") + 1])

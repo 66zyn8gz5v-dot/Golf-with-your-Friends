@@ -44,11 +44,11 @@ item.fynn:eisenklinge.name=Eisenklinge
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.82
+item.iron_sword.name=Stahlschwert 4.83
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.82
-item.fynn:degen.name=Degen 4.82
+item.fynn:degen=Degen 4.83
+item.fynn:degen.name=Degen 4.83
 
 
 
@@ -513,6 +513,10 @@ item.fynn:drachenstiefel.name=Drachenstiefel
 
 
 
+
+
+
+
 ## Die Tiere
 entity.fynn:braunbaer.name=Braunbär
 item.spawn_egg.entity.fynn:braunbaer.name=Braunbär-Spawn-Ei
@@ -580,6 +584,8 @@ entity.fynn:werwolf.name=Werwolf
 item.spawn_egg.entity.fynn:werwolf.name=Werwolf-Spawn-Ei
 entity.fynn:moosgolem.name=Moosgolem
 item.spawn_egg.entity.fynn:moosgolem.name=Moosgolem-Spawn-Ei
+entity.fynn:greif.name=Greif
+item.spawn_egg.entity.fynn:greif.name=Greif-Spawn-Ei
 
 ## Fantasy-Wesen, zweite Welle
 item.fynn:glutstachel=Glutstachel
@@ -591,6 +597,7 @@ entity.fynn:irrlichtflasche_wurf.name=Irrlichtflasche
 item.fynn:werwolfsklaue=Werwolfsklaue
 item.fynn:mondtalisman=Mondtalisman
 item.fynn:moosherz=Moosherz
+item.fynn:greifenfeder=Greifenfeder
 item.fynn:glutstachel.name=Glutstachel
 item.fynn:glutpfeil.name=Glutpfeil
 item.fynn:spinnenkristall.name=Spinnenkristall
@@ -599,3 +606,4 @@ item.fynn:irrlichtflasche.name=Irrlichtflasche
 item.fynn:werwolfsklaue.name=Werwolfsklaue
 item.fynn:mondtalisman.name=Mondtalisman
 item.fynn:moosherz.name=Moosherz
+item.fynn:greifenfeder.name=Greifenfeder

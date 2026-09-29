@@ -619,6 +619,12 @@
     },
     "moosgolem_ei": {
       "textures": "textures/items/moosgolem_ei"
+    },
+    "greifenfeder": {
+      "textures": "textures/items/greifenfeder"
+    },
+    "greif_ei": {
+      "textures": "textures/items/greif_ei"
     }
   }
 }

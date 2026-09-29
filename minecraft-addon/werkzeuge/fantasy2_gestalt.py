@@ -377,3 +377,102 @@ def moosgolem_maler(variante):
             return None
         return ton(stein, p, n, texel, 962)
     return male
+
+
+# ================================================================== Greif (4.83)
+
+from tiere_gestalt import beine  # noqa: E402
+
+
+def greif_modell():
+    """Adlerkopf, Loewenkoerper, grosse Federschwingen - das Wappentier des
+    Mittelalters. Vorn Adlerfaenge, hinten Loewenpfoten, der Schwanz mit
+    Quaste. Mit Sattel (der Knochen heisst wie beim Elch, dann schaltet ihn
+    dieselbe Darstellung ein)."""
+    m = Modell("greif", sichtbreite=3.2, sichthoehe=2.0)
+    body = m.knoch("body", [0, 13, 0])
+    body.kasten([-4, 9, -6], [8, 8, 14], "fell")
+    body.kasten([-4.5, 9.5, -7.5], [9, 8.5, 5], "brustfedern")
+    kopf = m.knoch("head", [0, 17, -7], "body")
+    kopf.kasten([-3, 16, -12], [6, 6, 6], "kopf")
+    kopf.kasten([-3.5, 14.5, -9], [7, 4, 3], "brustfedern")                 # die Halskrause
+    kopf.kasten([-1.5, 16.5, -15], [3, 3, 3], "schnabel")
+    kopf.kasten([-1, 15.5, -15.5], [2, 1, 1.5], "schnabel")                  # der Haken
+    paar(kopf, [1.5, 21.5, -8.5], [1, 2, 2], "brustfedern")                   # Federohren
+    schwanz = m.knoch("tail", [0, 15, 8], "body", drehung=[-25, 0, 0])
+    schwanz.kasten([-1, 14, 8], [2, 2, 10], "fell")
+    s2 = m.knoch("tail2", [0, 15, 18], "tail", drehung=[20, 0, 0])
+    s2.kasten([-1, 14, 18], [2, 2, 5], "fell")
+    s2.kasten([-1.5, 13.5, 22], [3, 3, 3], "quaste")
+    for seite, x in (("links", 4), ("rechts", -4)):
+        z_ = 1 if x > 0 else -1
+        f = m.knoch(f"fluegel_{seite}", [x, 16, -3], "body")
+        f.kasten([x if x > 0 else x - 12, 15.5, -4], [12, 1, 9], "schwinge")
+        f.kasten([x if x > 0 else x - 7, 16.2, -4], [7, 1, 5], "deckfedern")
+        sp = m.knoch(f"fluegelspitze_{seite}", [x + 12 * z_, 16, -3], f"fluegel_{seite}")
+        sx = x + 12 * z_
+        sp.kasten([sx if x > 0 else sx - 13, 15.5, -3.5], [13, 1, 8], "schwinge")
+    sattel = m.knoch("sattel", [0, 17, 0], "body")
+    sattel.kasten([-4.5, 16.8, -2.5], [9, 1, 7], "sattel")
+    sattel.kasten([-1, 17.8, -2.5], [2, 1, 1], "sattel")
+    beine(m, "body", 2.5, -3.5, 5, (3, 9, 3), 9, pfote=(4, 2, 4), krallen=True)
+    return m
+
+
+GREIF_FARBEN = {
+    # Kopf, Kopf dunkel, Loewe, Loewe dunkel, Schwinge
+    "gold": ("#e8d8a8", "#a0784a", "#c89a58", "#8a6a3a", "#6a4a2a"),
+    "weiss": ("#f4f2ea", "#b8b4a8", "#c8a468", "#8e6e40", "#4a3a2e"),
+    "schwarz": ("#3a3a40", "#1e1e22", "#2e2c2a", "#1a1918", "#26262c"),
+}
+
+
+def greif_maler(variante):
+    kopf, kopfdunkel, loewe, loewedunkel, schwinge = GREIF_FARBEN.get(variante, GREIF_FARBEN["gold"])
+
+    def male(stoff, p, n, texel):
+        x, y, z = p
+        if stoff == "kopf":
+            if abs(n[0]) > 0.5 and abs(y - 19.5) < 0.6 and abs(z + 10.5) < 1.1:
+                return hexfarbe("#140a04") if abs(z + 10.5) < 0.4 else glut("#ffb21a", -0.2)
+            if n[1] > 0.5 and texel[0] % 3 == 0:
+                return ton(kopfdunkel, p, n, texel, 971, straehne=0.0)
+            return ton(kopf, p, n, texel, 972, straehne=0.03)
+        if stoff == "schnabel":
+            return ton("#e0b030" if y > 16 else "#8a6a2a", p, n, texel, 973, straehne=0.0)
+        if stoff in ("brustfedern", "deckfedern"):
+            # Federschuppen: jede zweite Reihe versetzt, die Spitzen dunkler.
+            if texel[1] % 2 == 0 and (texel[0] + texel[1] // 2) % 2 == 0:
+                return ton(kopfdunkel, p, n, texel, 974, straehne=0.0)
+            return ton(kopf if stoff == "brustfedern" else schwinge, p, n, texel, 975, straehne=0.0)
+        if stoff == "schwinge":
+            # Schwungfedern mit Luecken an der Hinterkante.
+            hinten = z - (-4)
+            if hinten > 8 - (1 if texel[0] % 2 else 0) and abs(x) > 8:
+                return None
+            if texel[0] % 3 == 0:
+                return ton(kopfdunkel, p, n, texel, 976, straehne=0.0)
+            return ton(schwinge, p, n, texel, 977, straehne=0.03)
+        if stoff == "fell":
+            if n[1] < -0.5:
+                return ton(mische(hexfarbe(loewe), (240, 225, 190), 0.35), p, n, texel, 978, straehne=0.0)
+            return ton(loewe, p, n, texel, 979, straehne=0.05)
+        if stoff == "quaste":
+            return ton(loewedunkel, p, n, texel, 980, straehne=0.06)
+        if stoff == "bein":
+            # Vorn gelbe, geschuppte Adlerlaeufe, hinten Loewenbeine.
+            if z < 0:
+                if texel[1] % 2 == 0:
+                    return ton("#c89a30", p, n, texel, 981, straehne=0.0)
+                return ton("#e0b030", p, n, texel, 982, straehne=0.0)
+            return ton(loewe, p, n, texel, 983, straehne=0.04)
+        if stoff == "pfote":
+            return ton("#e0b030" if z < 0 else loewedunkel, p, n, texel, 984, straehne=0.0)
+        if stoff == "kralle":
+            return hexfarbe("#1a1410")
+        if stoff == "sattel":
+            if texel[0] % 4 == 0:
+                return ton("#a8894a", p, n, texel, 985, straehne=0.0)
+            return ton("#5a3a22", p, n, texel, 986, straehne=0.0)
+        return ton(loewe, p, n, texel, 987)
+    return male
