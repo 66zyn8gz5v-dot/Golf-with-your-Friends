@@ -44,6 +44,7 @@ function wesen(w, typeId, ort, extra = {}) {
             if (n === "fynn:landen") this.eig["fynn:fliegt"] = false;
             if (n === "fynn:abheben") this.eig["fynn:fliegt"] = true; },
         addEffect(n) { this.effekte.push(n); }, removeEffect() {}, applyImpulse(v) { this.stoesse.push(v); },
+        teleport(o) { this.location = { ...o }; },
         getViewDirection: () => ({ x: 0, y: 0, z: 1 }), ...extra };
     w.wesen.push(e);
     return e;
@@ -118,6 +119,99 @@ function wesen(w, typeId, ort, extra = {}) {
     d.flugTakt(drache, gelandet, () => 0);
     pruefe("... und nach genug Laufen auch von allein",
         d.flugTakt(drache, gelandet + art.boden[0] + 1, () => 0) === "hebt ab");
+}
+
+// --- Besiegt, Gnadenstoss, Heilen, Erholen
+{
+    const w = welt();
+    const leben = { currentValue: 100, effectiveMax: 160, setCurrentValue(v) { this.currentValue = v; },
+                    resetToMaxValue() { this.currentValue = this.effectiveMax; } };
+    const drache = wesen(w, "fynn:lindwurm", { x: 0, y: 64, z: 0 }, { eig: { "fynn:fliegt": false } });
+    drache.dyn["fynn:drache490"] = true;
+    drache.getComponent = (n) => (n === "minecraft:health" ? leben : undefined);
+    const spieler = wesen(w, "minecraft:player", { x: 3, y: 64, z: 0 },
+        { onScreenDisplay: { leiste: [], setActionBar(t) { this.leiste.push(t); } } });
+    pruefe("Bei viel Leben: kein Zusammenbruch", !d.getroffen(drache, 100));
+    leben.currentValue = 30;
+    pruefe("Bei einem Viertel: Er bricht zusammen", d.getroffen(drache, 100)
+        && drache.ereignisse.includes("fynn:niedergeschlagen")
+        && spieler.onScreenDisplay.leiste.at(-1).includes("Goldapfel"));
+    drache.eig["fynn:besiegt"] = true;
+    pruefe("... und nicht noch einmal", !d.getroffen(drache, 101));
+    pruefe("Besiegt: Er atmet kein Feuer", d.atemTakt(drache, 102) === "ruht");
+    pruefe("Erster und zweiter Schlag zaehlen nur", d.schlag(drache, spieler, 110) === 1 && d.schlag(drache, spieler, 120) === 2
+        && !drache.ereignisse.includes("fynn:gnadenstoss"));
+    pruefe("Der dritte ist der Gnadenstoss", d.schlag(drache, spieler, 130) === 3
+        && drache.ereignisse.includes("fynn:gnadenstoss")
+        && gemerkt.takte.some(([f, t]) => f === "spaeter" && t === 2));
+    const zweiter = wesen(w, "fynn:lindwurm", { x: 20, y: 64, z: 0 }, { eig: { "fynn:besiegt": true } });
+    zweiter.dyn["fynn:drache490"] = true;
+    const leben2 = { currentValue: 20, effectiveMax: 160, setCurrentValue(v) { this.currentValue = v; },
+                     resetToMaxValue() { this.currentValue = this.effectiveMax; } };
+    zweiter.getComponent = (n) => (n === "minecraft:health" ? leben2 : undefined);
+    d.besiegtTakt(zweiter, 1000);
+    pruefe("Niemand entscheidet: Er wartet ...", d.besiegtTakt(zweiter, 1000 + d.BESIEGT.dauer - 10) === "besiegt");
+    pruefe("... und erholt sich nach fuenf Minuten", d.besiegtTakt(zweiter, 1000 + d.BESIEGT.dauer + 1) === "erholt sich"
+        && zweiter.ereignisse.includes("fynn:erholt") && leben2.currentValue > 20);
+    const dritter = wesen(w, "fynn:lindwurm", { x: 40, y: 64, z: 0 }, { eig: { "fynn:besiegt": true } });
+    const leben3 = { currentValue: 20, effectiveMax: 160, resetToMaxValue() { this.currentValue = this.effectiveMax; } };
+    dritter.getComponent = (n) => (n === "minecraft:health" ? leben3 : undefined);
+    d.geheilt(dritter, spieler);
+    pruefe("Mit dem Goldapfel geheilt: volles Leben, er gehoert dir",
+        leben3.currentValue === 160 && dritter.dyn["fynn:besitzer"] === spieler.id
+        && spieler.onScreenDisplay.leiste.at(-1).includes("gehört jetzt dir"));
+}
+
+// --- Zahm: bleiben, folgen, Pfeife ruft
+{
+    const w = welt();
+    const zahm = { "minecraft:is_tamed": {} };
+    const drache = wesen(w, "fynn:lindwurm", { x: 50, y: 64, z: 50 });
+    drache.getComponent = (n) => zahm[n];
+    const spieler = wesen(w, "minecraft:player", { x: 0, y: 64, z: 0 },
+        { onScreenDisplay: { setActionBar() {} }, getViewDirection: () => ({ x: 0, y: 0, z: 1 }) });
+    drache.dyn["fynn:besitzer"] = spieler.id;
+    pruefe("Schleichend antippen: Er bleibt", d.bleibOderKomm(drache, spieler) === "bleibt"
+        && drache.ereignisse.includes("fynn:bleiben"));
+    pruefe("... noch einmal: Er kommt mit", d.bleibOderKomm(drache, spieler) === "folgt");
+    pruefe("Zahme Drachen landen und fliegen nicht von allein", d.flugTakt(drache, 5000) === "zahm"
+        || drache.dyn["fynn:drache490"] === true);
+    drache.dyn["fynn:drache490"] = true;
+    pruefe("... wirklich nicht", d.flugTakt(drache, 5001) === "zahm");
+    const gerufen = d.pfeife(spieler, 6000);
+    pruefe("Die Pfeife ruft ihn herbei", gerufen === 1
+        && Math.hypot(drache.location.x - 3, drache.location.z - 3) < 1e-9);
+}
+
+// --- Schlaf
+{
+    const w = welt();
+    world.getTimeOfDay = () => 18000;
+    const drache = wesen(w, "fynn:lindwurm", { x: 0, y: 64, z: 0 }, { eig: { "fynn:fliegt": false } });
+    drache.dyn["fynn:drache490"] = true;
+    d.flugTakt(drache, 7000, () => 0.5);
+    pruefe("Nachts, eine Weile am Boden: Er schlaeft ein",
+        d.flugTakt(drache, 7300, () => 0.0) === "schlaeft ein" && drache.ereignisse.includes("fynn:einschlafen"));
+    drache.eig["fynn:schlaeft"] = true;
+    const leise = wesen(w, "minecraft:player", { x: 4, y: 64, z: 0 }, { isSneaking: true });
+    pruefe("Wer schleicht, weckt ihn nicht", d.flugTakt(drache, 7320, () => 0.0) === "schlaeft");
+    leise.isSneaking = false;
+    pruefe("Wer laut vorbeilaeuft, schon", d.flugTakt(drache, 7340, () => 0.0) === "wacht auf");
+    world.getTimeOfDay = undefined;
+}
+
+// --- Die Feuerkugel
+{
+    const w = welt();
+    const kugeln = [];
+    w.dim.spawnEntity = (typ, o) => { const k = { typ, o, flug: null, getComponent: () => ({ set owner(x) {}, shoot(v) { k.flug = v; } }) }; kugeln.push(k); return k; };
+    const drache = wesen(w, "fynn:lindwurm", { x: 0, y: 80, z: 0 });
+    drache.target = wesen(w, "minecraft:player", { x: 0, y: 78, z: 5 });
+    pruefe("Ziel zu nah: keine Feuerkugel", d.faehigkeitTakt(drache, 100, undefined, () => 0) === "wartet");
+    drache.target.location = { x: 0, y: 64, z: 30 };
+    pruefe("Ziel weit weg: Feuerkugel", d.faehigkeitTakt(drache, 110, undefined, () => 0) === "Feuerkugel"
+        && kugeln[0]?.typ === "minecraft:fireball" && kugeln[0].flug.z > 0.5);
+    pruefe("... dann eine Pause", d.faehigkeitTakt(drache, 120, undefined, () => 0) === "wartet");
 }
 
 pruefe("Anmeldung: der Takt alle zwei Ticks", gemerkt.takte.some(([f, t]) => typeof f === "function" && t === 2));
