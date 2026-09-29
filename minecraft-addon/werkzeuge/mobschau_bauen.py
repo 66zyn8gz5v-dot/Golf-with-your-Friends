@@ -627,8 +627,10 @@ def alle_mobs():
         if t.get("art") == "drache" and hasattr(drachen_gestalt, f"{t['gestalt']}_modell"):
             getattr(drachen_gestalt, f"{t['gestalt']}_modell")()
         if t["id"] in drachen_gestalt.MAEULER:
-            info["atem"] = {"koepfe": [{"knochen": k, "punkt": o} for k, o in drachen_gestalt.MAEULER[t["id"]]],
-                            "eig": "fynn:feuer", "art": t.get("atemart", "feuer")}
+            arten = t.get("atemarten") or [t.get("atemart", "feuer")]
+            info["atem"] = {"koepfe": [{"knochen": k, "punkt": o, "art": arten[min(i, len(arten) - 1)]}
+                                       for i, (k, o) in enumerate(drachen_gestalt.MAEULER[t["id"]])],
+                            "eig": "fynn:feuer", "art": arten[0]}
         mobs.append(mob_daten(t["id"], f"tier_{t['id']}.entity.json",
                               t.get("gruppe") or GRUPPE.get(t["art"], "An Land"), info))
     for b in banditen_bauen.BANDITEN:

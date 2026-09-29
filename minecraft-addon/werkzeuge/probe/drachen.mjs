@@ -259,6 +259,32 @@ function wesen(w, typeId, ort, extra = {}) {
         && gemerkt.takte.filter(([f]) => f === "spaeter").length - vorher === 3);
 }
 
+// --- Giftdrache: Giftwolke und Funken
+{
+    const w = welt();
+    world.gameRules = { mobGriefing: false };
+    const gd = wesen(w, "fynn:giftdrache", { x: 0, y: 66, z: 0 }, { eig: { "fynn:fliegt": false } });
+    gd.dyn["fynn:drache490"] = true;
+    const effekte = [];
+    const opfer = wesen(w, "minecraft:player", { x: 0, y: 64, z: 8 }, { addEffect(n) { effekte.push(n); } });
+    gd.target = opfer;
+    const links = d.maul(gd, 0), rechts = d.maul(gd, 1);
+    pruefe("Zwei Maeuler, links und rechts", Math.abs(links.x - rechts.x) > 3);
+    for (let t = 60000; t < 60000 + 60; t += 2) d.atemTakt(gd, t, () => 0);
+    pruefe("Linker Kopf: Giftstrahl, wer drin steht, ist vergiftet",
+        w.teilchen.includes("fynn:giftatem") && effekte.includes("poison"));
+    pruefe("... und eine Giftwolke bleibt liegen - auch ohne mobGriefing", d.wolken.length === 1);
+    effekte.length = 0;
+    d.wolkenTakt(60100);
+    pruefe("Die Wolke vergiftet, wer darin steht", effekte.includes("poison") && w.teilchen.includes("fynn:giftwolke"));
+    opfer.location = { ...d.wolken[0].ort };
+    pruefe("Rechter Kopf: Funken in die Wolke - sie explodiert",
+        d.faehigkeitTakt(gd, 60200, undefined, () => 0) === "Explosion" && d.wolken.length === 0
+        && w.teilchen.includes("fynn:funken"));
+    d.wolkenTakt(60300 + d.WOLKE.dauer);
+    world.gameRules = undefined;
+}
+
 pruefe("Anmeldung: der Takt alle zwei Ticks", gemerkt.takte.some(([f, t]) => typeof f === "function" && t === 2));
 
 const gut = ergebnisse.every(Boolean);

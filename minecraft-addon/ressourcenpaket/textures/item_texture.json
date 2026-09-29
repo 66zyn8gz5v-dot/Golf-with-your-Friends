@@ -649,6 +649,9 @@
     },
     "himmelsdrache_ei": {
       "textures": "textures/items/himmelsdrache_ei"
+    },
+    "giftdrache_ei": {
+      "textures": "textures/items/giftdrache_ei"
     }
   }
 }

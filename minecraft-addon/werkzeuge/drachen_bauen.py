@@ -102,6 +102,7 @@ NAMEN += [(k + ".name", d, e) for k, d, e in NAMEN if k.startswith("item.")]
 ATEMFARBEN = {
     "frostatem": {"0.0": "#FFFFFFFF", "0.2": "#FFE4F8FF", "0.5": "#E0A8DCF8", "0.8": "#A07AB4E6", "1.0": "#00C8E0F0"},
     "sturmatem": {"0.0": "#FFFFFFFF", "0.15": "#FFE8F0FF", "0.4": "#D0B8C8FF", "0.7": "#8098A8E8", "1.0": "#00C0C8E0"},
+    "giftatem": {"0.0": "#FFE8FFB0", "0.2": "#FFB8F050", "0.5": "#E080C830", "0.8": "#A0507A28", "1.0": "#00384A20"},
 }
 
 
@@ -111,6 +112,55 @@ def atem_teilchen(name, verlauf):
     t["particle_effect"]["description"]["identifier"] = f"fynn:{name}"
     t["particle_effect"]["components"]["minecraft:particle_appearance_tinting"]["color"]["gradient"] = verlauf
     return t
+
+
+def giftwolke():
+    """Eine liegende Giftwolke: dicke gruene Schwaden, die langsam wabern
+    und steigen. Das Skript stoesst sie jede Sekunde neu aus, solange die
+    Wolke liegt."""
+    return {"format_version": "1.10.0", "particle_effect": {
+        "description": {"identifier": "fynn:giftwolke", "basic_render_parameters": {
+            "material": "particles_blend", "texture": "textures/particle/fynn_rauch"}},
+        "components": {
+            "minecraft:emitter_rate_instant": {"num_particles": 18},
+            "minecraft:emitter_lifetime_once": {"active_time": 0.05},
+            "minecraft:emitter_shape_sphere": {"radius": 2.6, "direction": "outwards"},
+            "minecraft:particle_lifetime_expression": {"max_lifetime": "1.4 + variable.particle_random_1 * 0.6"},
+            "minecraft:particle_initial_speed": 0.15,
+            "minecraft:particle_motion_dynamic": {"linear_acceleration": [0, 0.25, 0], "linear_drag_coefficient": 0.8},
+            "minecraft:particle_appearance_billboard": {
+                "size": ["0.6 + variable.particle_age * 0.6", "0.6 + variable.particle_age * 0.6"],
+                "facing_camera_mode": "rotate_xyz",
+                "uv": {"texture_width": 8, "texture_height": 8, "uv": [0, 0], "uv_size": [8, 8]}},
+            "minecraft:particle_appearance_tinting": {"color": {
+                "interpolant": "variable.particle_age / variable.particle_lifetime",
+                "gradient": {"0.0": "#0098D040", "0.3": "#A088C034", "0.8": "#7060902C", "1.0": "#00405020"}}},
+        }}}
+
+
+def funken():
+    """Der Funkenschwall des rechten Kopfes: kurze, helle Funken, die im
+    Bogen fliegen und schnell verglimmen."""
+    return {"format_version": "1.10.0", "particle_effect": {
+        "description": {"identifier": "fynn:funken", "basic_render_parameters": {
+            "material": "particles_add", "texture": "textures/particle/particles"}},
+        "components": {
+            "minecraft:emitter_rate_instant": {"num_particles": 40},
+            "minecraft:emitter_lifetime_once": {"active_time": 0.05},
+            "minecraft:emitter_shape_point": {"direction": [
+                "variable.fynn_x + (variable.particle_random_1 - 0.5) * 0.3",
+                "variable.fynn_y + (variable.particle_random_2 - 0.5) * 0.3",
+                "variable.fynn_z + (variable.particle_random_3 - 0.5) * 0.3"]},
+            "minecraft:particle_lifetime_expression": {"max_lifetime": "0.5 + variable.particle_random_4 * 0.4"},
+            "minecraft:particle_initial_speed": "14.0 + variable.particle_random_1 * 8.0",
+            "minecraft:particle_motion_dynamic": {"linear_acceleration": [0, -9.0, 0], "linear_drag_coefficient": 1.5},
+            "minecraft:particle_appearance_billboard": {
+                "size": [0.08, 0.08], "facing_camera_mode": "lookat_xyz",
+                "uv": {"texture_width": 128, "texture_height": 128, "uv": [0, 24], "uv_size": [8, 8]}},
+            "minecraft:particle_appearance_tinting": {"color": {
+                "interpolant": "variable.particle_age / variable.particle_lifetime",
+                "gradient": {"0.0": "#FFFFFFD0", "0.4": "#FFFFC040", "1.0": "#00FF6010"}}},
+        }}}
 
 
 def schlaf_z():
@@ -182,6 +232,8 @@ def main():
                         {"G": "minecraft:gold_ingot", "K": "minecraft:bone", "F": "minecraft:string"},
                         "fynn:drachenpfeife"))
     bk.schreibe(RES / "particles" / "schlaf_z.particle.json", schlaf_z())
+    bk.schreibe(RES / "particles" / "giftwolke.particle.json", giftwolke())
+    bk.schreibe(RES / "particles" / "funken.particle.json", funken())
     for name, verlauf in ATEMFARBEN.items():
         bk.schreibe(RES / "particles" / f"{name}.particle.json", atem_teilchen(name, verlauf))
     # Eissplitter: fliegt wie ein Schneeball, trifft hart und verlangsamt.
@@ -197,7 +249,7 @@ def main():
     teilchenbild(STERN_BILD, {"k": (90, 60, 10), "Y": (255, 214, 60), "W": (255, 250, 210)}).save(ordner / "fynn_stern.png")
     bk.item_bilder(bilder())
     bk.sprache("Drachen", NAMEN)
-    print("gebaut: Drachenpfeife, Schlaf-Z, Benommen-Sterne, Frostatem, Eissplitter")
+    print("gebaut: Drachenpfeife, Schlaf-Z, Benommen-Sterne, Atemarten, Giftwolke, Funken, Eissplitter")
     if "--bilder" in sys.argv:
         from PIL import Image
         ziel = Path(sys.argv[sys.argv.index("--bilder") + 1])

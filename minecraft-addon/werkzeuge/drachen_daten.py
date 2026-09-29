@@ -28,6 +28,8 @@ dann sind die zugeneigt, man kann sie dann reiten"):
 * fynn:wildjagd - nur wilde Drachen suchen sich Spieler als Beute.
 """
 
+import json
+
 from kleintiere_daten import familie, SPIELER, LT, eigenschaft
 
 FLIEGT = "query.property('fynn:fliegt')"
@@ -449,7 +451,30 @@ def schlangen_bewegungen(glieder=14, hals=2):
     }
 
 
-def drache(eintrag, schwinge, bewegungen=None, **bewegung):
+def mehrere_koepfe(bewegungen, koepfe):
+    """Macht aus Bewegungen fuer einen Kopf solche fuer mehrere: Jeder Hals
+    (hals1, hals2 ...), jeder Kopf und jeder Kiefer bekommt seine Kopie
+    (hals_a1, kopf_a ...). Die Koepfe laufen zeitversetzt - so sieht jeder
+    fuer sich umher, statt dass beide dasselbe tun."""
+    import re
+    muster = re.compile(r"^(hals)(\d+)$|^(kopf|kiefer)$")
+    aus = {}
+    for name, (anim, gewicht) in bewegungen.items():
+        knochen = {}
+        for k, werte in anim["bones"].items():
+            treffer = muster.match(k)
+            if not treffer:
+                knochen[k] = werte
+                continue
+            for j, s in enumerate(koepfe):
+                neu = f"hals{s}{treffer.group(2)}" if treffer.group(1) else f"{treffer.group(3)}{s}"
+                text = json.dumps(werte).replace(LT, f"({LT} + {j * 1.7})")
+                knochen[neu] = json.loads(text)
+        aus[name] = (dict(anim, bones=knochen), gewicht)
+    return aus
+
+
+def drache(eintrag, schwinge, bewegungen=None, koepfe=("",), **bewegung):
     """Setzt zusammen, was alle Drachen gemeinsam haben. bewegungen: eigene
     (der Himmelsdrache ohne Schwingen); sonst die der Drachen mit Schwingen."""
     gruppen, ereignisse = drachen_zustaende(eintrag.pop("tempo_luft"), eintrag.pop("tempo_boden"),
@@ -462,10 +487,11 @@ def drache(eintrag, schwinge, bewegungen=None, **bewegung):
         "komponenten": k, "gruppen": gruppen, "ereignisse": ereignisse,
         "start_gruppen": ["fynn:luft", "fynn:wildjagd"], "start_setzen": {"fynn:fliegt": True},
         "eigenschaften": eigenschaften_drache(),
-        "eigene_bewegungen": bewegungen or drachen_bewegungen(schwinge, **bewegung),
+        "eigene_bewegungen": mehrere_koepfe(bewegungen or drachen_bewegungen(schwinge, **bewegung), koepfe)
+        if len(koepfe) > 1 else (bewegungen or drachen_bewegungen(schwinge, **bewegung)),
         # Augenlider nur im Schlaf und besiegt, der Sattel nur gesattelt.
-        "sichtbarkeit": [{"lider": "query.property('fynn:schlaeft') || query.property('fynn:besiegt')"},
-                         {"sattel": "query.is_saddled"}],
+        "sichtbarkeit": [{f"lider{k}": "query.property('fynn:schlaeft') || query.property('fynn:besiegt')"}
+                         for k in koepfe] + [{"sattel": "query.is_saddled"}],
         "gruppe": "Drachen",
     })
     eintrag["steckbrief_extra"] = eintrag.get("steckbrief_extra", []) + [
@@ -586,4 +612,39 @@ def _himmelsdrache():
     }, None, bewegungen=schlangen_bewegungen(dg.HIMMELSDRACHE_GLIEDER, 2))
 
 
-DRACHEN = [_lindwurm(), _frostwyvern(), _himmelsdrache()]
+# ------------------------------------------------------------ Giftdrache
+
+def _giftdrache():
+    import drachen_gestalt as dg
+    return drache({
+        "id": "giftdrache", "name": ("Giftdrache", "Twin-Headed Venom Dragon"), "gestalt": "giftdrache",
+        "varianten": [("sumpf", 55), ("moor", 30), ("gift", 15)],
+        "leben": 140, "schaden": 10, "tempo": 1.35, "tempo_luft": 1.35, "tempo_boden": 0.2,
+        "kollision": (2.8, 2.2), "herde": (1, 1),
+        "jagt_tiere": ["pig", "frog", "cow", "krokodil"],
+        "sitz": [0.0, 1.65, -0.2], "schwimmt": True,
+        "biome": [["swamp"], ["mangrove_swamp"]], "gewicht": 2,
+        "spawn_bedingungen": [{"minecraft:spawns_on_surface": {}, "minecraft:weight": {"default": 2},
+                               "minecraft:herd": {"min_size": 1, "max_size": 1},
+                               "minecraft:density_limit": {"surface": 1},
+                               "minecraft:biome_filter": [{"test": "has_biome_tag", "operator": "==",
+                                                           "value": tag}]}
+                              for tag in ("swamp", "mangrove_swamp")],
+        "population": "monster",
+        "material": "entity_emissive_alpha",
+        "beute": [("fynn:drachenschuppe", 3, 5, 1.0, False), ("minecraft:slime_ball", 2, 5, 1.0, False),
+                  ("minecraft:spider_eye", 1, 3, 1.0, False)],
+        "laute": {"ambient": "mob.enderdragon.growl", "hurt": "mob.enderdragon.hit", "death": "mob.ravager.death",
+                  "pitch": [1.1, 1.3]},
+        "ei": ("#5a8a3a", "#6a3a78"),
+        "komponenten": {"minecraft:attack": {"damage": 10, "effect_name": "poison", "effect_duration": 6}},
+        "atemarten": ["gift", "funken"],
+        "steckbrief_extra": [
+            ["Lebt", "in Sümpfen und Mangrovensümpfen – zwei Köpfe, zwei Aufgaben"],
+            ["Linker Kopf", "bläst eine Giftwolke, die eine Weile liegen bleibt – wer hineingerät, wird vergiftet"],
+            ["Rechter Kopf", "spuckt Funken: Trifft er die Wolke, explodiert sie"],
+            ["Biss", "vergiftet"]],
+    }, dg.GIFTDRACHE_SCHWINGE, koepfe=("_a", "_b"), hals=5, schwanz=7, beinhoehe=17)
+
+
+DRACHEN = [_lindwurm(), _frostwyvern(), _himmelsdrache(), _giftdrache()]

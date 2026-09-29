@@ -543,6 +543,16 @@ EIER = {
         },
         "farben": {"a": "#e8c860", "y": "#ffe25a", "r": "#c83a22"},
     },
+    "giftdrache": {
+        "oben": "#5a8a3a", "unten": "#d8d070", "teilung": 11,
+        "karte": {
+            3: "..y..y....y..y..",
+            8: "..WW........WW..",
+            9: ".WWW........WWW.",
+            10: "WWW..........WWW",
+        },
+        "farben": {"y": "#d8ff4a", "W": "#6a3a78"},
+    },
     # Zweite Fantasy-Welle (4.81).
     "glutskorpion": {
         "oben": "#2a2226", "flecken": ("#3e3438", 0.25),

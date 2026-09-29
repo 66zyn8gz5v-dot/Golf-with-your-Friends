@@ -201,7 +201,20 @@ def schwinge_maler(s, haut, knochen, aderfarbe=None):
     return male
 
 
-def glieder(m, name, eltern, start, richtung, teile, stoff="leib", zacken=None):
+def verschiebe(m, namen, dx):
+    """Schiebt Knochen samt Kaesten seitlich (fuer Koepfe, die nicht in der
+    Mitte sitzen - der Giftdrache hat zwei)."""
+    for k in m.knochen:
+        if k.name not in namen:
+            continue
+        k.drehpunkt[0] += dx
+        for c in k.kaesten:
+            c.ursprung[0] += dx
+            if c.drehpunkt:
+                c.drehpunkt = [c.drehpunkt[0] + dx, c.drehpunkt[1], c.drehpunkt[2]]
+
+
+def glieder(m, name, eltern, start, richtung, teile, stoff="leib", zacken=None, drehung=None):
     """Eine Kette von Gliedern (Hals oder Schwanz). teile: Liste von
     (Laenge, Breite, Hoehe, Anstieg). richtung -1 = nach vorn (Hals),
     +1 = nach hinten (Schwanz). Jedes Glied haengt am vorigen; sein
@@ -211,25 +224,27 @@ def glieder(m, name, eltern, start, richtung, teile, stoff="leib", zacken=None):
     namen = []
     for i, (lang, breit, hoch, steig) in enumerate(teile):
         n = f"{name}{i + 1}"
-        g = m.knoch(n, [0, y, z], eltern)
+        # drehung: nur das erste Glied - es stellt die ganze Kette schraeg
+        # (die beiden Haelse des Giftdrachen stehen auseinander).
+        g = m.knoch(n, [x0, y, z], eltern, drehung=drehung if i == 0 else None)
         z_anfang = z if richtung > 0 else z - lang
         # Ein Pixel Ueberlappung zum vorigen Glied: So klafft beim Biegen nichts.
-        g.kasten([-breit / 2, y - hoch / 2, z_anfang - (1 if (richtung > 0 and i) else 0)],
+        g.kasten([x0 - breit / 2, y - hoch / 2, z_anfang - (1 if (richtung > 0 and i) else 0)],
                  [breit, hoch, lang + (1 if i else 0)], stoff)
         if zacken:
             # Ein hoher Stachel, unten breit, oben schmal und nach hinten
             # geneigt - wie die Rueckenkaemme auf Fynns Vorbildern.
             zh = max(2, round(hoch * 0.5))
             mitte = z_anfang + lang / 2
-            g.kasten([-0.5, y + hoch / 2 - 0.5, mitte - 1.5], [1, zh, 3], zacken,
-                     drehung=[-20 * richtung, 0, 0], drehpunkt=[0, y + hoch / 2, mitte])
-            g.kasten([-0.5, y + hoch / 2 + zh - 1, mitte - 0.5 + richtung], [1, 2, 1], zacken,
-                     drehung=[-20 * richtung, 0, 0], drehpunkt=[0, y + hoch / 2, mitte])
+            g.kasten([x0 - 0.5, y + hoch / 2 - 0.5, mitte - 1.5], [1, zh, 3], zacken,
+                     drehung=[-20 * richtung, 0, 0], drehpunkt=[x0, y + hoch / 2, mitte])
+            g.kasten([x0 - 0.5, y + hoch / 2 + zh - 1, mitte - 0.5 + richtung], [1, 2, 1], zacken,
+                     drehung=[-20 * richtung, 0, 0], drehpunkt=[x0, y + hoch / 2, mitte])
         eltern = n
         namen.append(n)
         z = z + richtung * lang
         y = y + steig
-    return namen, (0, y, z)
+    return namen, (x0, y, z)
 
 
 def bein_bauen(m, name, eltern, huefte, oben, unten, fuss, krallen=3, vorn=-1):
@@ -732,3 +747,73 @@ def himmelsdrache_maler(variante):
             return H.dunkler(f["bauch"], 0.12) if int(p[2] // 1) % 2 == 0 else H.farbe(f["bauch"])
         return False
     return drachen_maler("himmelsdrache", f, None, besonders)
+
+
+# ================================================================== Giftdrache (4.93)
+
+GIFTDRACHE_SCHWINGE = Schwinge((6.5, 24, -6), oberarm=11, unterarm=14, finger=(38, 34, 29, 22),
+                               winkel=(14, -12, -38, -66), hinterkante=(6, 14), dicke=(4, 3, 2))
+
+
+def giftdrache_modell():
+    """Der Giftdrache: zwei lange Haelse, zwei Koepfe - Fynn: "der
+    Giftdrache, so maessig zwei Koepfe". Aus der Brust wachsen links und
+    rechts je ein Hals, leicht auseinandergestellt; die Koepfe haben kurze
+    Hoerner. Der Leib ist schmaler und laenger als beim Lindwurm, die
+    Schwingen mittelgross, der Schwanz lang mit einem Stachelkamm."""
+    m = Modell("giftdrache", sichtbreite=8.0, sichthoehe=3.2)
+    MAEULER.pop("giftdrache", None)
+    r = m.knoch("rumpf", [0, 18, 0])
+    r.kasten([-7, 11, -11], [14, 13, 11], "leib")                    # Brust: breit fuer zwei Haelse
+    r.kasten([-6, 11.5, -1], [12, 12, 10], "leib")
+    r.kasten([-5.5, 12, 8], [11, 10, 7], "leib")
+    r.kasten([-5, 10.5, -10], [10, 1, 23], "bauch")
+    for z, h in ((-2, 4), (2, 4), (6, 3), (10, 3)):
+        r.kasten([-0.5, 23.5, z], [1, h - 1, 3], "stachel", drehung=[-20, 0, 0], drehpunkt=[0, 24, z + 1.5])
+    kopfbau = []
+    for s, x, w in (("_a", 3.5, -16), ("_b", -3.5, 16)):
+        # Die Haelse: fuenf Glieder, jeder etwas nach aussen gestellt.
+        hals, ende = glieder(m, f"hals{s}", "rumpf", (x, 20, -11), -1,
+                             [(6, 7, 7, 1.5), (6, 6, 6, 1.5), (6, 6, 6, 1.0), (5, 5, 5, 0.5), (5, 5, 5, 0.5)],
+                             stoff="leib", zacken="stachel", drehung=[0, w, 0])
+        vorher = {k.name for k in m.knochen}
+        _, ky, kz = ende
+        kopf_bauen(m, "giftdrache", hals[-1], ky, kz, schaedel=(7, 5, 8), schnauze=(5, 3, 7), hoerner="stumpf", s=s)
+        neu = [k.name for k in m.knochen if k.name not in vorher]
+        verschiebe(m, neu, x)
+        kopfbau.append((s, x))
+    # Die Maeuler liegen seitlich: MAEULER hat sie noch in der Mitte.
+    MAEULER["giftdrache"] = [(k, [o[0] + (3.5 if k.endswith("_a") else -3.5), o[1], o[2]])
+                             for k, o in MAEULER["giftdrache"]]
+    schwanz, ende = glieder(m, "schwanz", "rumpf", (0, 17.5, 15),
+                            1, [(8, 9, 8, -0.5), (8, 7, 6, -0.4), (8, 6, 5, -0.2), (8, 5, 4, 0.0),
+                                (8, 4, 4, 0.0), (8, 3, 3, 0.0), (7, 2, 2, 0.0)],
+                            stoff="leib", zacken="stachel")
+    _, sy, sz = ende
+    m.finde(schwanz[-1]).kasten([-3, sy - 0.5, sz - 1], [6, 1, 6], "spitze")
+    for seite, x in (("links", 6), ("rechts", -6)):
+        bein_bauen(m, f"bein_hinten_{seite}", "rumpf", (x, 18, 10), (6, 8, 7), (4, 7, 4), (6, 3, 7), krallen=3)
+        bein_bauen(m, f"bein_vorn_{seite}", "rumpf", (x, 17, -8), (5, 7, 5), (4, 7, 4), (5, 3, 6), krallen=3)
+    schwinge_bauen(m, GIFTDRACHE_SCHWINGE)
+    sattel_bauen(m, "rumpf", 24, -3, 14)
+    return m
+
+
+GIFTDRACHE_FARBEN = {
+    "sumpf": {"leib": "#5a8a3a", "ruecken": "#2a4a1e", "bauch": "#d8d070", "haut": "#6a3a78",
+              "augen": "#d8ff4a", "glut": "#a8ff3a", "horn": ("#3a2e1a", "#6a5a30", "#a89a60"), "kralle": "#1a1a10"},
+    "moor":  {"leib": "#6a5a34", "ruecken": "#3a2e1a", "bauch": "#d8b060", "haut": "#9a5222",
+              "augen": "#ffb030", "glut": "#ffd040", "horn": ("#2a2014", "#5a4828", "#9a8a58"), "kralle": "#1a140c"},
+    "gift":  {"leib": "#8ac030", "ruecken": "#1a1c16", "bauch": "#e8f090", "haut": "#34363a",
+              "augen": "#ff3aff", "glut": "#d0ff40", "horn": ("#1a1a1a", "#4a4a4a", "#8a8a8a"), "kralle": "#101010"},
+}
+
+
+def giftdrache_maler(variante):
+    f = GIFTDRACHE_FARBEN.get(variante, GIFTDRACHE_FARBEN["sumpf"])
+
+    def besonders(stoff, p, n, texel):
+        if stoff == "leib" and n[1] > 0.5 and abs(abs(p[0]) - 3.5) < 1.0 and p[2] < -10:
+            return H.dunkler(f["ruecken"], 0.1)          # der Aalstrich laeuft jeden Hals hinauf
+        return False
+    return drachen_maler("giftdrache", f, GIFTDRACHE_SCHWINGE, besonders)

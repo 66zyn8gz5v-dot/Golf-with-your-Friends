@@ -44,11 +44,11 @@ item.fynn:eisenklinge.name=Eisenklinge
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.92
+item.iron_sword.name=Stahlschwert 4.93
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.92
-item.fynn:degen.name=Degen 4.92
+item.fynn:degen=Degen 4.93
+item.fynn:degen.name=Degen 4.93
 
 
 
@@ -572,6 +572,8 @@ item.fynn:basiliskenauge.name=Basiliskenauge
 
 
 
+
+
 ## Drachen
 item.fynn:drachenpfeife=Drachenpfeife
 entity.fynn:eissplitter.name=Eissplitter
@@ -650,3 +652,5 @@ entity.fynn:frostwyvern.name=Frostwyvern
 item.spawn_egg.entity.fynn:frostwyvern.name=Frostwyvern-Spawn-Ei
 entity.fynn:himmelsdrache.name=Himmelsdrache
 item.spawn_egg.entity.fynn:himmelsdrache.name=Himmelsdrache-Spawn-Ei
+entity.fynn:giftdrache.name=Giftdrache
+item.spawn_egg.entity.fynn:giftdrache.name=Giftdrache-Spawn-Ei

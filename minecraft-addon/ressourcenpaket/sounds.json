@@ -856,6 +856,27 @@
             "volume": 1.0
           }
         }
+      },
+      "fynn:giftdrache": {
+        "volume": 1.0,
+        "pitch": [
+          1.1,
+          1.3
+        ],
+        "events": {
+          "ambient": {
+            "sound": "mob.enderdragon.growl",
+            "volume": 1.0
+          },
+          "hurt": {
+            "sound": "mob.enderdragon.hit",
+            "volume": 1.0
+          },
+          "death": {
+            "sound": "mob.ravager.death",
+            "volume": 1.0
+          }
+        }
       }
     }
   }

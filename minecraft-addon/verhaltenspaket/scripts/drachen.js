@@ -31,7 +31,7 @@ const { world, system } = mc;
 
 export const ATEMARTEN = {
     feuer: {
-        teilchen: "fynn:drachenfeuer", weite: 14, kegel: 0.9, dauer: 44, anlauf: 8, pause: [140, 220],
+        teilchen: "fynn:drachenfeuer", weite: 14, kegel: 0.9, dauer: 44, anlauf: 8, pause: [140, 220], veraendert: true,
         laut: "mob.blaze.shoot", knistern: "fire.fire",
         wesen(ziel, drache) {
             try { ziel.setOnFire(5, true); } catch (e) { /* manche brennen nicht */ }
@@ -55,7 +55,7 @@ export const ATEMARTEN = {
     // Der Frosthauch (Frostwyvern, 4.91): Wer darin steht, wird stark
     // verlangsamt und friert; Wasser gefriert zu Eis, auf den Boden faellt Schnee.
     frost: {
-        teilchen: "fynn:frostatem", weite: 13, kegel: 1.0, dauer: 44, anlauf: 8, pause: [140, 220],
+        teilchen: "fynn:frostatem", weite: 13, kegel: 1.0, dauer: 44, anlauf: 8, pause: [140, 220], veraendert: true,
         laut: "random.glass", knistern: "block.powder_snow.step",
         wesen(ziel, drache) {
             try { ziel.addEffect("slowness", 100, { amplifier: 3 }); } catch (e) { /* egal */ }
@@ -101,7 +101,53 @@ export const ATEMARTEN = {
         },
         block() { return 0; },
     },
+    // Das Gift (linker Kopf des Giftdrachen, 4.93): Wer im Strahl steht,
+    // wird vergiftet, und wo der Strahl auftrifft, bleibt eine Giftwolke liegen.
+    gift: {
+        teilchen: "fynn:giftatem", weite: 12, kegel: 1.0, dauer: 40, anlauf: 8, pause: [140, 220],
+        laut: "mob.witch.throw", knistern: "random.fizz",
+        wesen(ziel) {
+            try { ziel.addEffect("poison", 120, { amplifier: 1 }); } catch (e) { /* egal */ }
+            try { ziel.addEffect("nausea", 120, { amplifier: 0 }); } catch (e) { /* egal */ }
+        },
+        block(dim, getroffen, zufall, jetzt) {
+            wolkeLegen(dim, { x: getroffen.x + 0.5, y: getroffen.y + 1.2, z: getroffen.z + 0.5 }, jetzt);
+            return 1;
+        },
+    },
 };
+
+// ------------------------------------------------------------ Giftwolken
+
+export const WOLKE = { dauer: 200, weite: 3.5, abstand: 3 };
+export const wolken = [];        // { dim, ort, bis }
+let wolkenUhr = 0;
+
+/** Eine Giftwolke - wo schon eine liegt, wird sie nur aufgefrischt. */
+export function wolkeLegen(dim, ort, jetzt = wolkenUhr) {
+    const nah = wolken.find((w) => w.dim === dim && weite(w.ort, ort) < WOLKE.abstand);
+    if (nah) { nah.bis = jetzt + WOLKE.dauer; return nah; }
+    const w = { dim, ort, bis: jetzt + WOLKE.dauer };
+    wolken.push(w);
+    return w;
+}
+
+/** Jede Sekunde: Die Wolken wabern und vergiften, wer darin steht. */
+export function wolkenTakt(jetzt) {
+    wolkenUhr = jetzt;
+    for (let i = wolken.length - 1; i >= 0; i--) {
+        const w = wolken[i];
+        if (jetzt >= w.bis) { wolken.splice(i, 1); continue; }
+        teilchen(w.dim, "fynn:giftwolke", w.ort);
+        let drin = [];
+        try { drin = w.dim.getEntities({ location: w.ort, maxDistance: WOLKE.weite }); } catch (e) { /* egal */ }
+        for (const e of drin) {
+            if (DRACHEN[e.typeId] || e.typeId === "minecraft:item") continue;
+            try { e.addEffect("poison", 60, { amplifier: 1 }); } catch (f) { /* egal */ }
+        }
+    }
+    return wolken.length;
+}
 
 export const FAEHIGKEITEN = {
     // Eine grosse Feuerkugel wie die des Ghasts: fliegt geradeaus und
@@ -165,12 +211,43 @@ FAEHIGKEITEN.blitzschlag = {
     },
 };
 
+// Funken (rechter Kopf des Giftdrachen): Liegt eine Giftwolke nahe dem
+// Ziel, fliegt sie in die Luft. Sonst setzt der Funke das Ziel in Brand.
+FAEHIGKEITEN.zuenden = {
+    min: 3, max: 26, pause: [100, 180], name: "Funken", kopf: 1,
+    wirken(drache, mund, r, ziel) {
+        const dim = drache.dimension;
+        teilchen(dim, "fynn:funken", mund, r);
+        try { dim.playSound("fire.ignite", mund, { volume: 2, pitch: 0.8 }); } catch (e) { /* egal */ }
+        const wo = ziel?.location ?? { x: mund.x + r.x * 12, y: mund.y + r.y * 12, z: mund.z + r.z * 12 };
+        const wolke = wolken.find((w) => w.dim === dim && weite(w.ort, wo) < 8);
+        if (wolke) {
+            wolken.splice(wolken.indexOf(wolke), 1);
+            system.runTimeout(() => {
+                try {
+                    dim.createExplosion(wolke.ort, 3, { causesFire: erlaubtZuZuendeln(), breaksBlocks: erlaubtZuZuendeln(),
+                                                      source: drache });
+                } catch (e) { /* egal */ }
+            }, 6);
+            return "Explosion";
+        }
+        try { ziel?.setOnFire?.(4, true); } catch (e) { /* egal */ }
+        return "Funken";
+    },
+};
+
 export const DRACHEN = {
     "fynn:lindwurm": {
         name: "Lindwurm", atem: "feuer", faehigkeit: "feuerkugel", maul: 5.0, hoehe: 1.8,
         luft: [1200, 2400], boden: [800, 1800],
         // Wie er mit Reiter fliegt: schneller als der Greif, steigt kraeftiger.
         reitflug: { tempo: 1.3, steigen: 0.14, nachziehen: 0.12, schwebe: 0.04, hoechstSteigen: 0.75 },
+    },
+    // Zwei Koepfe: der linke (1,8 Bloecke daneben) speit Gift, der rechte Funken.
+    "fynn:giftdrache": {
+        name: "Giftdrache", atem: "gift", faehigkeit: "zuenden", maul: 3.8, hoehe: 1.5, koepfe: [1.6, -1.6],
+        luft: [1000, 2000], boden: [800, 1600],
+        reitflug: { tempo: 1.25, steigen: 0.13, nachziehen: 0.12, schwebe: 0.04, hoechstSteigen: 0.7 },
     },
     // Er schwebt: mit Reiter der schnellste, und er faellt kaum.
     "fynn:himmelsdrache": {
@@ -226,14 +303,17 @@ function leiste(dim, ort, text, weite = 24) {
     } catch (e) { /* egal */ }
 }
 
-/** Wo das Maul ist: vor dem Leib in Blickrichtung, etwas hoeher. */
-export function maul(drache) {
+/** Wo das Maul ist: vor dem Leib in Blickrichtung, etwas hoeher. kopf:
+ *  welcher Kopf (der Giftdrache hat zwei, seitlich versetzt). */
+export function maul(drache, kopf = 0) {
     const art = DRACHEN[drache.typeId] ?? DRACHEN["fynn:lindwurm"];
     const o = drache.location;
     let b = { x: 0, y: 0, z: 1 };
     try { b = drache.getViewDirection(); } catch (e) { /* geradeaus */ }
     const flach = einheit({ x: b.x, y: 0, z: b.z });
-    return { x: o.x + flach.x * art.maul, y: o.y + art.hoehe, z: o.z + flach.z * art.maul };
+    const seite = art.koepfe?.[kopf] ?? 0;
+    return { x: o.x + flach.x * art.maul - flach.z * seite, y: o.y + art.hoehe,
+             z: o.z + flach.z * art.maul + flach.x * seite };
 }
 
 function teilchen(dim, name, ort, r) {
@@ -323,12 +403,14 @@ export function atemTakt(drache, jetzt, zufall = Math.random) {
         teilchen(dim, atem.teilchen, mund, r);
         if ((jetzt - z.ab) % 6 === 0) {
             for (const w of imKegel(dim, mund, r, atem, drache)) atem.wesen(w, drache);
-            if (erlaubtZuZuendeln()) {
+            // Was die Welt veraendert (Feuer, Eis, Schnee), nur mit mobGriefing;
+            // eine Giftwolke dagegen immer.
+            if (!atem.veraendert || erlaubtZuZuendeln()) {
                 try {
                     const hit = dim.getBlockFromRay(mund, r, { maxDistance: atem.weite, includeLiquidBlocks: true,
                                                                 includePassableBlocks: false });
                     // Ob der Block passt, weiss die Atemart: Feuer nicht auf Wasser, Frost gerade dort.
-                    if (hit?.block) atem.block(dim, hit.block.location, zufall);
+                    if (hit?.block) atem.block(dim, hit.block.location, zufall, jetzt);
                 } catch (e) { /* egal */ }
             }
             try { dim.playSound(atem.knistern, mund, { volume: 1.5, pitch: 0.8 }); } catch (e) { /* egal */ }
@@ -362,7 +444,7 @@ export function faehigkeitTakt(drache, jetzt, richtung = undefined, zufall = Mat
     if (!f || eig(drache, "fynn:besiegt") || eig(drache, "fynn:schlaeft")) return "nichts";
     const z = von(drache);
     if (jetzt < z.kugelPause || z.bis) return "wartet";
-    const mund = maul(drache);
+    const mund = maul(drache, f.kopf ?? 0);
     let r = richtung;
     if (!r) {
         if (reiterVon(drache)) return "wartet";
@@ -373,8 +455,8 @@ export function faehigkeitTakt(drache, jetzt, richtung = undefined, zufall = Mat
         r = einheit({ x: ziel.location.x - mund.x, y: ziel.location.y + 0.8 - mund.y, z: ziel.location.z - mund.z });
     }
     z.kugelPause = jetzt + f.pause[0] + Math.floor(zufall() * (f.pause[1] - f.pause[0]));
-    f.wirken(drache, mund, r, richtung ? undefined : zielFuer(drache, z, jetzt));
-    return f.name;
+    const was = f.wirken(drache, mund, r, richtung ? undefined : zielFuer(drache, z, jetzt));
+    return typeof was === "string" ? was : f.name;
 }
 
 // ------------------------------------------------------------ Landen, Schlafen, Abheben
@@ -675,6 +757,7 @@ system.runInterval(() => {
     try {
         const jetzt = system.currentTick;
         const r = runde++;
+        if (r % 10 === 0 && wolken.length) wolkenTakt(jetzt);
         for (const dimName of ["overworld", "nether"]) {
             let welt;
             try { welt = world.getDimension(dimName); } catch (f) { continue; }
