@@ -642,6 +642,23 @@
             "volume": 0.25
           }
         }
+      },
+      "fynn:sandwurm": {
+        "volume": 1.0,
+        "pitch": [
+          0.45,
+          0.55
+        ],
+        "events": {
+          "hurt": {
+            "sound": "mob.ravager.hurt",
+            "volume": 1.0
+          },
+          "death": {
+            "sound": "mob.ravager.death",
+            "volume": 1.0
+          }
+        }
       }
     }
   }

@@ -490,6 +490,21 @@ EIER = {
         },
         "farben": {"G": "#e0b030", "R": "#ff3a2a", "y": "#ffd21a", "k": "#140a04", "M": "#e0cc94"},
     },
+    "sandwurm": {
+        "oben": "#b8925e", "flecken": ("#7a5a36", 0.2),
+        "karte": {
+            2: "....TT....TT....",
+            3: ".....TMMMMT.....",
+            4: "....TMMmmMMT....",
+            5: "....MMmkkmMM....",
+            6: "....TMMmmMMT....",
+            7: ".....TMMMMT.....",
+            8: "....TT....TT....",
+            11: "..RRRRRRRRRRRR..",
+            14: "..RRRRRRRRRRRR..",
+        },
+        "farben": {"T": "#f0e8d4", "M": "#8a2a2a", "m": "#5a1414", "k": "#1a0a08", "R": "#7a5a36"},
+    },
     "glimmerling": {
         "oben": "#4e5a38", "flecken": ("#5e6a44", 0.25),
         "karte": {

@@ -309,4 +309,135 @@ def _basilisk():
     }
 
 
-FANTASY = [_feuermuecke(), _sturmlibelle(), _frostkaefer(), _basilisk()]
+# ------------------------------------------------------------ Sandwurm (4.79)
+
+def maul(offen):
+    """Die vier Kieferklappen, um 'offen' Grad nach aussen geklappt."""
+    return {"kiefer_nord": {"rotation": [offen, 0.0, 0.0]},
+            "kiefer_sued": {"rotation": [f"-({offen})", 0.0, 0.0]},
+            "kiefer_ost": {"rotation": [0.0, 0.0, offen]},
+            "kiefer_west": {"rotation": [0.0, 0.0, f"-({offen})"]}}
+
+
+def sandwurm_bewegungen():
+    from fantasy_gestalt import SANDWURM_GLIEDER as N
+    # Aufgerichtet wie eine Kobra: unten gerade, oben zur Beute vorgebeugt
+    # - und dabei langsam wiegend.
+    wiegen = {f"glied{i}": {"rotation": [f"{max(0, i - 3) * 7} + math.sin({LT} * 70.0 + {i * 35}) * {2.5 + i * 0.4}",
+                                         0.0, f"math.cos({LT} * 55.0 + {i * 35}) * {2.5 + i * 0.4}"]}
+              for i in range(1, N)}
+    wiegen.update(maul(f"28.0 + math.sin({LT} * 110.0) * 14.0"))
+    wiegen["kopf"] = {"rotation": [f"math.sin({LT} * 90.0) * 6.0", f"math.sin({LT} * 40.0) * 20.0", 0.0]}
+    # Unter dem Sand: vom Wurm ist nichts zu sehen, nur der Huegel wandert
+    # und bebt.
+    unten = {"loop": True, "bones": {
+        "koerper": {"scale": 0.0},
+        "huegel": {"scale": [f"1.0 + math.sin({LT} * 400.0) * 0.05", f"1.0 + math.sin({LT} * 520.0) * 0.15",
+                             f"1.0 + math.cos({LT} * 400.0) * 0.05"]},
+    }}
+    oben = {"loop": True, "bones": {"huegel": {"scale": 0.0}}}
+    # Auftauchen: Er schiesst aus dem Sand, das Maul reisst auf, die Glieder
+    # peitschen nach - dann steht er.
+    auf = {"animation_length": 1.3, "loop": "hold_on_last_frame", "bones": {
+        "koerper": {"position": {"0.0": [0, -95, 0], "0.45": [0, -35, 0], "0.85": [0, 6, 0], "1.3": [0, 0, 0]}},
+        "huegel": {"scale": {"0.0": [1.4, 1.6, 1.4], "0.3": [1.2, 0.8, 1.2], "0.5": [0.0, 0.0, 0.0]}},
+    }}
+    # Das Maul: erst zu, dann weit auf, dann halb offen stehen.
+    for k, v in maul(1.0).items():
+        r = v["rotation"]
+        zeichen = [(-1 if isinstance(a, str) else 1) if a else 0 for a in r]
+        offen = [z * 65 for z in zeichen]
+        auf["bones"][k] = {"rotation": {"0.0": [0, 0, 0], "0.55": [z * -20 for z in zeichen], "0.9": offen,
+                                        "1.3": [z * 20 for z in zeichen]}}
+    for i in range(1, N):
+        # Jedes Glied nur ein wenig - zusammen sind es sonst ueber sechzig Grad.
+        peitsche = 5 - i * 0.4
+        auf["bones"][f"glied{i}"] = {"rotation": {"0.0": [0, 0, 0], "0.7": [-peitsche, 0, 0],
+                                                  "0.95": [peitsche * 0.8, 0, 0], "1.3": [0, 0, 0]}}
+    # Abtauchen: Er beugt sich vornueber und gleitet zurueck in den Sand.
+    ab = {"animation_length": 1.1, "loop": "hold_on_last_frame", "bones": {
+        "koerper": {"position": {"0.0": [0, 0, 0], "0.3": [0, 4, 0], "1.1": [0, -95, 0]}},
+    }}
+    for i in range(3, N):
+        ab["bones"][f"glied{i}"] = {"rotation": {"0.0": [0, 0, 0], "0.5": [10 + i, 0, 0], "1.1": [18 + i, 0, 0]}}
+    # Zuschnappen: Die oberen Glieder stossen vor, das Maul klappt auf.
+    schnappen = {"loop": True, "bones": dict(
+        {f"glied{i}": {"rotation": [f"math.sin(variable.attack_time * 180.0) * {6 + (i - 4) * 4}", 0.0, 0.0]}
+         for i in range(4, N)},
+        kopf={"rotation": ["math.sin(variable.attack_time * 180.0) * 28.0", 0.0, 0.0]},
+        **maul("math.sin(variable.attack_time * 180.0) * 60.0"))}
+    return {
+        "wiegen": ({"loop": True, "bones": wiegen}, "1.0 - query.property('fynn:unten')"),
+        "unten": (unten, "query.property('fynn:unten')"),
+        "oben": (oben, "1.0 - query.property('fynn:unten')"),
+        "auftauchen": (auf, "query.property('fynn:auf')"),
+        "abtauchen": (ab, "query.property('fynn:ab')"),
+        "schnappen": (schnappen, "variable.attack_time > 0.0"),
+    }
+
+
+def _sandwurm():
+    hoert = {"all_of": [SPIELER, {"test": "has_ability", "subject": "other", "value": "instabuild", "operator": "!="},
+                        {"test": "is_sneaking", "subject": "other", "value": False}]}
+    k = {
+        "minecraft:navigation.walk": {"avoid_water": True, "can_path_over_water": False, "avoid_damage_blocks": True},
+        "minecraft:movement.basic": {},
+        "minecraft:jump.static": {},
+        "minecraft:breathable": {"total_supply": 15, "suffocate_time": 0, "breathes_solids": True},
+        "minecraft:knockback_resistance": {"value": 1.0},
+        "minecraft:behavior.hurt_by_target": {"priority": 1},
+        "minecraft:behavior.random_stroll": {"priority": 7, "speed_multiplier": 1.0, "interval": 60},
+    }
+    unten = {
+        # Unter dem Sand ist er nicht zu treffen.
+        "minecraft:damage_sensor": {"triggers": [{"cause": "all", "deals_damage": False}]},
+        # Er hoert Schritte - wer schleicht, den findet er nicht.
+        "minecraft:behavior.nearest_attackable_target": {
+            "priority": 2, "must_see": False, "reselect_targets": True, "within_radius": 24,
+            "entity_types": [{"filters": hoert, "max_dist": 24}]},
+        "minecraft:behavior.move_towards_target": {"priority": 3, "within_radius": 32, "speed_multiplier": 1.3},
+    }
+    oben = {
+        "minecraft:movement": {"value": 0.0},
+        "minecraft:attack": {"damage": 10},
+        "minecraft:behavior.melee_box_attack": {"priority": 2, "speed_multiplier": 1.0, "track_target": True},
+        "minecraft:behavior.nearest_attackable_target": {
+            "priority": 2, "must_see": True, "reselect_targets": True, "within_radius": 12,
+            "entity_types": [{"filters": {"all_of": [SPIELER, {"test": "has_ability", "subject": "other",
+                                                               "value": "instabuild", "operator": "!="}]},
+                              "max_dist": 12}]},
+    }
+    return {
+        "id": "sandwurm", "name": ("Sandwurm", "Sandworm"), "gestalt": "sandwurm", "gruppe": "Fantasy",
+        "varianten": [("wueste", 70), ("rotsand", 30)], "variante_nach_biom": {"mesa": 1},
+        "art": "kriecher", "verhalten": "wurm", "keine_panik": True,
+        "leben": 80, "schaden": 10, "tempo": 0.22, "kollision": (2.2, 3.5), "baby": False, "herde": (1, 1),
+        "biome": [["desert"], ["mesa"]], "gewicht": 2,
+        "boden": ["minecraft:sand", "minecraft:red_sand"],
+        "population": "monster",
+        "beute": [("fynn:wurmzahn", 1, 3, 1.0, False), ("fynn:sandperle", 1, 1, 0.25, False)],
+        "laute": {"hurt": "mob.ravager.hurt", "death": "mob.ravager.death", "pitch": [0.45, 0.55]},
+        "ei": ("#b8925e", "#8a2a2a"),
+        "komponenten": k,
+        "gruppen": {"fynn:unten": unten, "fynn:oben": oben},
+        "ereignisse": {
+            "fynn:auftauchen": {"remove": {"component_groups": ["fynn:unten"]}, "add": {"component_groups": ["fynn:oben"]},
+                                "set_property": {"fynn:unten": False, "fynn:auf": True, "fynn:ab": False}},
+            "fynn:steht": {"set_property": {"fynn:auf": False}},
+            "fynn:abtauchen": {"set_property": {"fynn:ab": True, "fynn:auf": False}},
+            "fynn:versunken": {"remove": {"component_groups": ["fynn:oben"]}, "add": {"component_groups": ["fynn:unten"]},
+                               "set_property": {"fynn:unten": True, "fynn:ab": False}},
+        },
+        "start_gruppen": ["fynn:unten"], "start_setzen": {"fynn:unten": True},
+        "eigenschaften": eigenschaft("fynn:unten", "fynn:auf", "fynn:ab"),
+        "eigene_bewegungen": sandwurm_bewegungen(),
+        "steckbrief_extra": [
+            ["Unter dem Sand", "nur ein wandernder Sandhügel – der Boden bebt; dort ist er nicht zu treffen"],
+            ["Hört", "Schritte – wer schleicht, den findet er nicht"],
+            ["Angriff", "bricht direkt unter dir aus dem Sand und schnappt zu, dann taucht er wieder ab"],
+            ["Sandklopfer", "aus Wurmzähnen – klopft auf Sand und lockt Sandwürmer an"],
+            ["Sandperle", "selten – wer sie trägt, den hört er nicht, und auf Sand bist du schneller"]],
+    }
+
+
+FANTASY = [_feuermuecke(), _sturmlibelle(), _frostkaefer(), _basilisk(), _sandwurm()]

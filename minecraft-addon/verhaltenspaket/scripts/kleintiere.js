@@ -391,22 +391,26 @@ world.afterEvents.playerInteractWithEntity.subscribe((e) => {
     }
 });
 
+// Eigener Zaehler: currentTick % 10 traefe nie, wenn der Takt bei einer
+// ungeraden Zahl begonnen hat.
+let runde = 0;
 system.runInterval(() => {
     try {
         const jetzt = system.currentTick;
+        const r = runde++;
         if (hackende.size) hackTakt(jetzt);
         if (kletternde.size) kletterTakt(jetzt);
         if (fuetterungen.length) nussTakt(jetzt);
-        if (jetzt % 10 !== 0) return;
+        if (r % 5 !== 0) return;
         const welt = world.getDimension("overworld");
         for (const s of welt.getEntities({ type: SCHNECKE })) {
             try { schneckenTakt(s, jetzt); } catch (f) { /* diese ist gerade fort */ }
         }
-        if (jetzt % 20 !== 0) return;
+        if (r % 10 !== 0) return;
         for (const v of welt.getEntities({ type: SINGVOGEL })) {
             try { warnTakt(v, jetzt); } catch (f) { /* egal */ }
         }
-        if (jetzt % 200 !== 0) return;
+        if (r % 100 !== 0) return;
         for (const t of welt.getEntities({ type: EICHHOERNCHEN })) {
             try { grabTakt(t, jetzt); } catch (f) { /* egal */ }
         }

@@ -661,7 +661,7 @@ def verhalten(t, varianten_namen):
                  "priority": 1, "entity_types": {"filters": familie(*[n.split(":")[1] for n in t["jagt"]])}}}
         f.update(angriffsbausteine(t))
         gruppen["fynn:jagd"] = f
-    elif art != "vogel":
+    elif art != "vogel" and not t.get("keine_panik"):
         c["minecraft:behavior.panic"] = {"priority": 1, "speed_multiplier": 1.3}
 
     if t.get("aufgaben"):
@@ -746,6 +746,9 @@ def verhalten(t, varianten_namen):
     else:
         folge.append({"randomize": zufall})
     folge.append({"randomize": alter})
+    if t.get("start_setzen"):
+        # Was von Anfang an gilt (der Sandwurm beginnt unter dem Sand).
+        folge.append({"set_property": t["start_setzen"]})
     ereignisse["minecraft:entity_spawned"] = {"sequence": folge}
     if t.get("baby"):
         ereignisse["minecraft:entity_born"] = {"sequence": [{"add": {"component_groups": [baby]}},

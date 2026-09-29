@@ -600,12 +600,16 @@ function klatschen(wal) {
     } catch (e) { /* egal */ }
 }
 
+// Ein eigener Zaehler statt currentTick % 20: Der Takt beginnt nicht
+// unbedingt bei einer geraden Zahl, und dann traefe "% 20" nie.
+let walRunde = 0;
 system.runInterval(() => {
     try {
         const jetzt = system.currentTick;
+        const wuerfeln = walRunde++ % 10 === 0;
         for (const wal of world.getDimension("overworld").getEntities({ type: "fynn:wal" })) {
             // Die Springenden jeden Takt, die anderen nur ab und zu wuerfeln.
-            if (!spruenge.has(wal.id) && jetzt % 20 !== 0) continue;
+            if (!spruenge.has(wal.id) && !wuerfeln) continue;
             try { walTakt(wal, jetzt); } catch (fehler) { /* dieser Wal ist gerade weg */ }
         }
     } catch (fehler) {

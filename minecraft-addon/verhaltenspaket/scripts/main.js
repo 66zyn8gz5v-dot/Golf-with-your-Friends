@@ -23,6 +23,7 @@ import "./tiere.js";
 import "./begegnungen.js";
 import "./kleintiere.js";
 import "./fantasy.js";
+import "./sandwurm.js";
 import "./obst.js";
 import "./banditen.js";
 import "./rucksack.js";

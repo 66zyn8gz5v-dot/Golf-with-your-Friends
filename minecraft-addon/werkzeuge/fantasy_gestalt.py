@@ -311,3 +311,100 @@ def basilisk_maler(variante):
             return hexfarbe("#1a140e")
         return ton(schuppen, p, n, texel, 843)
     return male
+
+
+# ================================================================== Sandwurm (4.79)
+
+SANDWURM_GLIEDER = 8
+SANDWURM_HOEHE = 10       # je Glied
+
+
+def sandwurm_modell():
+    """Senkrecht gebaut, wie er aus dem Sand ragt: unten das dickste Glied,
+    oben der Kopf mit dem Maul aus vier Klappen. Jedes Glied haengt am
+    darunter, so kann er sich wiegen wie eine Schlange. Der Sandhuegel ist
+    ein eigener Knochen - man sieht ihn, solange der Wurm unter dem Sand ist."""
+    m = Modell("sandwurm", sichtbreite=2.4, sichthoehe=6.0)
+    m.knoch("koerper", [0, 0, 0])
+    eltern = "koerper"
+    for i in range(SANDWURM_GLIEDER):
+        r = 11 - i * 0.25 if i < 4 else 10 - (i - 4) * 0.5
+        r = round(r)
+        y0 = i * SANDWURM_HOEHE
+        g = m.knoch(f"glied{i}", [0, y0, 0], eltern)
+        g.kasten([-r, y0, -r], [2 * r, SANDWURM_HOEHE, 2 * r], "haut")
+        # Ein flacher Wulst oben an jedem Glied - die Ringe des Wurms.
+        g.kasten([-r - 0.5, y0 + 8, -r - 0.5], [2 * r + 1, 1, 2 * r + 1], "ring")
+        eltern = f"glied{i}"
+    oben = SANDWURM_GLIEDER * SANDWURM_HOEHE
+    kopf = m.knoch("kopf", [0, oben, 0], eltern)
+    kopf.kasten([-9, oben, -9], [18, 6, 18], "kopf")
+    for name, ursprung, groesse, dreh in (
+            ("kiefer_nord", [-8, oben + 6, -9], [16, 9, 2], [0, oben + 6, -8]),
+            ("kiefer_sued", [-8, oben + 6, 7], [16, 9, 2], [0, oben + 6, 8]),
+            ("kiefer_ost", [7, oben + 6, -8], [2, 9, 16], [8, oben + 6, 0]),
+            ("kiefer_west", [-9, oben + 6, -8], [2, 9, 16], [-8, oben + 6, 0])):
+        k = m.knoch(name, dreh, "kopf")
+        k.kasten(ursprung, groesse, "klappe")
+        # Die Spitze jeder Klappe: schmaler, wie ein riesiger Zahn.
+        spitze = [ursprung[0] + (4 if groesse[0] > 2 else 0), ursprung[1] + groesse[1],
+                  ursprung[2] + (4 if groesse[2] > 2 else 0)]
+        k.kasten(spitze, [8 if groesse[0] > 2 else 2, 4, 8 if groesse[2] > 2 else 2], "klappe")
+    huegel = m.knoch("huegel", [0, 0, 0])
+    huegel.kasten([-14, 0, -14], [28, 3, 28], "sand")
+    huegel.kasten([-9, 3, -9], [18, 3, 18], "sand")
+    huegel.kasten([-4, 6, -4], [8, 2, 8], "sand")
+    return m
+
+
+SANDWURM_FARBEN = {
+    # Haut, Falten, Sand, Klappe innen
+    "wueste": ("#b8925e", "#7a5a36", "#dccb96", "#8a2a2a"),
+    "rotsand": ("#b0643a", "#6e3a1e", "#c47a44", "#6a1a22"),
+}
+
+
+def sandwurm_maler(variante):
+    haut, falte, sand, rachen = SANDWURM_FARBEN.get(variante, SANDWURM_FARBEN["wueste"])
+
+    def male(stoff, p, n, texel):
+        x, y, z = p
+        if stoff == "haut":
+            # Laengsfurchen und grobe Platten, zum Kopf hin heller.
+            winkel = math.atan2(z, x)
+            if int(math.floor((winkel + math.pi) / (2 * math.pi) * 16)) % 4 == 0 and abs(n[1]) < 0.5:
+                return ton(falte, p, n, texel, 851, straehne=0.0)
+            if streu(texel[0] // 3, texel[1] // 3, 852) < 0.2:
+                return ton(falte, p, n, texel, 853, straehne=0.0, hell=0.2)
+            return ton(haut, p, n, texel, 854, straehne=0.0, hell=min(0.15, y / 600))
+        if stoff == "ring":
+            return ton(mische(hexfarbe(haut), hexfarbe(falte), 0.45), p, n, texel, 855, straehne=0.0)
+        if stoff == "kopf":
+            if n[1] > 0.5:
+                # Das Maul von oben: dunkler Schlund, Zahnringe darum.
+                r = math.hypot(x, z)
+                w = math.degrees(math.atan2(z, x))
+                if r < 3:
+                    return hexfarbe("#1a0a08")
+                if 3.5 < r < 5 and int(w // 20) % 2 == 0:
+                    return hexfarbe("#f0e8d4")
+                if 6 < r < 7.5 and int(w // 15) % 2 == 1:
+                    return hexfarbe("#e8dcc4")
+                return ton(rachen, p, n, texel, 856, straehne=0.0, hell=-0.1 * (1 - r / 9))
+            return ton(haut, p, n, texel, 857, straehne=0.0, hell=0.12)
+        if stoff == "klappe":
+            # Innen (zur Mitte hin) rot mit Zahnreihen, aussen Haut.
+            innen = (x * n[0] + z * n[2]) < 0
+            if innen:
+                if int(y) % 3 == 0 and texel[0] % 2 == 0:
+                    return hexfarbe("#f0e8d4")
+                return ton(rachen, p, n, texel, 858, straehne=0.0)
+            if n[1] > 0.5:
+                return hexfarbe("#f0e8d4")                                    # die Zahnspitzen oben
+            return ton(haut, p, n, texel, 859, straehne=0.0, hell=0.08)
+        if stoff == "sand":
+            if streu(texel[0], texel[1], 860) < 0.12:
+                return ton(sand, p, n, texel, 861, straehne=0.0, hell=-0.18)  # Kiesel
+            return ton(sand, p, n, texel, 862, straehne=0.0)
+        return ton(haut, p, n, texel, 863)
+    return male

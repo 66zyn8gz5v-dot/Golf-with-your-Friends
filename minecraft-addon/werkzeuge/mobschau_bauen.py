@@ -329,7 +329,7 @@ VARIANTENNAME = {
     "entfesselt": "Entfesselt (Phase 2)",
     "rotkehlchen": "Rotkehlchen", "blaumeise": "Blaumeise", "spatz": "Spatz", "maennchen": "Männchen",
     "weibchen": "Weibchen", "weinberg": "Weinbergschnecke", "baender": "Bänderschnecke",
-    "seelenglut": "Seelenglut", "gletscher": "Gletscher", "wueste": "Wüste",
+    "seelenglut": "Seelenglut", "gletscher": "Gletscher", "wueste": "Wüste", "rotsand": "Roter Sand",
 }
 
 VERHALTEN = {"friedlich": "friedlich", "neutral": "wehrt sich", "feindlich": "greift an"}
@@ -341,6 +341,7 @@ SCHALTER = {
     "fynn:warnt": "Warnt vor Monstern", "fynn:hackt": "Hämmert am Stamm", "fynn:versteckt": "Im Haus",
     "fynn:klettert": "Klettert", "fynn:graebt": "Vergräbt eine Nuss",
     "fynn:gerollt": "Eingerollt", "fynn:starrt": "Starrt (versteinernder Blick)",
+    "fynn:unten": "Unter dem Sand",
 }
 
 
@@ -531,6 +532,12 @@ def mob_daten(kennung, entitaet_datei, gruppe, info):
 # spielt ein Knopf den ganzen Sprung ab - mit der Flugbahn, die sonst die
 # Physik macht: hoch aus dem Wasser, ein Stueck nach vorn, zurueck ins Meer.
 TIER_EXTRA = {
+    # Der Sandwurm: Auf- und Abtauchen als Knoepfe; ob er unter dem Sand
+    # ist, ein Schalter.
+    "sandwurm": {
+        "sonder": {"auftauchen": "Auftauchen", "abtauchen": "Abtauchen"},
+        "ohne_schalter": ["fynn:auf", "fynn:ab"],
+    },
     "wal": {
         "sonder": {"sprung": "Sprung"},
         "ohne_schalter": ["fynn:sprung"],

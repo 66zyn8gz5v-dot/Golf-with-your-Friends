@@ -297,11 +297,15 @@ export function zeigeRuecken(spieler, jetzt) {
     return true;
 }
 
+// Gezaehlt in eigenen Schritten zu zehn: currentTick beginnt nicht
+// unbedingt bei einem Vielfachen von zehn, dann traefe "% 200" nie.
+let rueckenRunde = 0;
 system.runInterval(() => {
+    const jetzt = 10 * rueckenRunde++;
     for (const spieler of world.getAllPlayers()) {
         try {
             nurEinVoller(spieler);
-            zeigeRuecken(spieler, system.currentTick);
+            zeigeRuecken(spieler, jetzt);
         } catch (fehler) {
             console.warn(`Rucksack, Ruecken: ${fehler}`);
         }

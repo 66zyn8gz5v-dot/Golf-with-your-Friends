@@ -550,6 +550,18 @@
     },
     "basilisk_ei": {
       "textures": "textures/items/basilisk_ei"
+    },
+    "wurmzahn": {
+      "textures": "textures/items/wurmzahn"
+    },
+    "sandperle": {
+      "textures": "textures/items/sandperle"
+    },
+    "sandklopfer": {
+      "textures": "textures/items/sandklopfer"
+    },
+    "sandwurm_ei": {
+      "textures": "textures/items/sandwurm_ei"
     }
   }
 }

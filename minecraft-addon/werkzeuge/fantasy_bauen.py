@@ -144,7 +144,95 @@ BASILISKENAUGE = [
 ]
 BASILISKENAUGE_F = {"k": K, "o": (130, 70, 20), "y": (230, 170, 30), "Y": (255, 220, 60)}
 
+# --- Sandwurm (4.79)
+WURMZAHN = [
+    "................",
+    "................",
+    "..kkk...........",
+    "..kWWkk.........",
+    "...kWWWkk.......",
+    "...kWWWWWkk.....",
+    "....kWWWWWWkk...",
+    "....kWWWWWWWWk..",
+    ".....kWWWWWWSk..",
+    ".....kWWWWWSSk..",
+    "......kWWWSSk...",
+    ".......kSSSSk...",
+    "........kkkk....",
+    "................",
+    "................",
+    "................",
+]
+WURMZAHN_F = {"k": K, "W": (238, 230, 210), "S": (190, 170, 130)}
+
+SANDPERLE = [
+    "................",
+    "................",
+    "................",
+    "......kkkk......",
+    ".....kHHHHk.....",
+    "....kHWWHHHk....",
+    "...kHWWHHHHGk...",
+    "...kHWHHHHHGk...",
+    "...kHHHHHHGGk...",
+    "...kHHHHHGGGk...",
+    "....kHHHGGGk....",
+    ".....kGGGGk.....",
+    "......kkkk......",
+    "................",
+    "................",
+    "................",
+]
+SANDPERLE_F = {"k": K, "H": (236, 214, 150), "W": (255, 250, 230), "G": (196, 160, 90)}
+
+SANDKLOPFER = [
+    "................",
+    "....kkkkkkkk....",
+    "...kLLLLLLLLk...",
+    "...kIIIIIIIIk...",
+    "...kLLLLLLLLk...",
+    "...kLzLLLLzLk...",
+    "....kkkIIkkk....",
+    "......kIIk......",
+    "......kSSk......",
+    "......kSSk......",
+    "......kSSk......",
+    "......kSSk......",
+    "......kSSk......",
+    ".......kk.......",
+    "................",
+    "................",
+]
+SANDKLOPFER_F = {"k": K, "L": (150, 100, 60), "I": (200, 200, 205), "z": (238, 230, 210), "S": (120, 84, 50)}
+
+
+def sandstaub():
+    """Aufwirbelnder Sand, wo der Wurm unter dem Boden zieht."""
+    return {"format_version": "1.10.0", "particle_effect": {
+        "description": {"identifier": "fynn:sandstaub", "basic_render_parameters": {
+            "material": "particles_alpha", "texture": "textures/particle/walfontaene"}},
+        "components": {
+            "minecraft:emitter_rate_instant": {"num_particles": 24},
+            "minecraft:emitter_lifetime_once": {"active_time": 0.05},
+            "minecraft:emitter_shape_disc": {"radius": 1.4, "plane_normal": "y",
+                                             "direction": ["(variable.particle_random_1 - 0.5) * 0.8", 1.0,
+                                                           "(variable.particle_random_2 - 0.5) * 0.8"]},
+            "minecraft:particle_lifetime_expression": {"max_lifetime": "0.7 + variable.particle_random_3 * 0.6"},
+            "minecraft:particle_initial_speed": "1.5 + variable.particle_random_3 * 3.0",
+            "minecraft:particle_motion_dynamic": {"linear_acceleration": [0, -10, 0], "linear_drag_coefficient": 0.6},
+            "minecraft:particle_appearance_billboard": {
+                "size": ["0.08 + variable.particle_random_4 * 0.1", "0.08 + variable.particle_random_4 * 0.1"],
+                "facing_camera_mode": "rotate_xyz",
+                "uv": {"texture_width": 8, "texture_height": 8, "uv": [0, 0], "uv_size": [8, 8]}},
+            "minecraft:particle_appearance_tinting": {"color": [
+                "0.82 + variable.particle_random_4 * 0.1", "0.72 + variable.particle_random_4 * 0.1", 0.5, 1.0]},
+        }}}
+
+
 NAMEN = [
+    ("item.fynn:wurmzahn", "Wurmzahn", "Sandworm Tooth"),
+    ("item.fynn:sandperle", "Sandperle", "Sand Pearl"),
+    ("item.fynn:sandklopfer", "Sandklopfer", "Sand Thumper"),
     ("item.fynn:glutstaub", "Glutstaub", "Ember Dust"),
     ("item.fynn:glutflasche", "Glutflasche", "Ember Bottle"),
     ("item.fynn:sturmfluegel", "Sturmflügel", "Storm Wing"),
@@ -162,7 +250,9 @@ def bilder():
             "sturmfluegel": rbb.male(STURMFLUEGEL, STURMFLUEGEL_F),
             "frostpanzer": rbb.male(FROSTPANZER, FROSTPANZER_F),
             "frosttalisman": rbb.male(FROSTTALISMAN, FROSTTALISMAN_F),
-            "basiliskenauge": rbb.male(BASILISKENAUGE, BASILISKENAUGE_F)}
+            "basiliskenauge": rbb.male(BASILISKENAUGE, BASILISKENAUGE_F),
+            "wurmzahn": rbb.male(WURMZAHN, WURMZAHN_F), "sandperle": rbb.male(SANDPERLE, SANDPERLE_F),
+            "sandklopfer": rbb.male(SANDKLOPFER, SANDKLOPFER_F)}
 
 
 def steinstaub():
@@ -224,9 +314,25 @@ def main():
                 geformt("frosttalisman", [" p ", "pDp", " p "],
                         {"p": "fynn:frostpanzer", "D": "minecraft:diamond"}, "fynn:frosttalisman"))
     bk.schreibe(RES / "particles" / "steinstaub.particle.json", steinstaub())
+    # Sandwurm (4.79): Zahn, Perle, und der Klopfer, der Wuermer anlockt.
+    bk.schreibe(VER / "items" / "wurmzahn.json",
+                gegenstand("wurmzahn", {"minecraft:max_stack_size": 64}, "items", BEUTEFACH))
+    bk.schreibe(VER / "items" / "sandperle.json",
+                gegenstand("sandperle", {"minecraft:max_stack_size": 1, "minecraft:glint": True},
+                           "equipment", JAGDFACH))
+    bk.schreibe(VER / "items" / "sandklopfer.json", gegenstand("sandklopfer", {
+        "minecraft:max_stack_size": 16, "minecraft:use_modifiers": {"use_duration": 0.05},
+        "minecraft:cooldown": {"category": "fynn:sandklopfer", "duration": 2.0},
+    }, "equipment", JAGDFACH))
+    bk.schreibe(VER / "recipes" / "sandklopfer.json",
+                geformt("sandklopfer", ["zLz", "ISI", " S "],
+                        {"z": "fynn:wurmzahn", "L": "minecraft:leather", "I": "minecraft:iron_ingot",
+                         "S": "minecraft:stick"}, "fynn:sandklopfer"))
+    bk.schreibe(RES / "particles" / "sandstaub.particle.json", sandstaub())
     bk.item_bilder(bilder())
     bk.sprache("Fantasy-Wesen", NAMEN)
-    print("gebaut: Glutstaub, Glutflasche, Sturmflügel, Frostpanzer, Frosttalisman, Basiliskenauge")
+    print("gebaut: Glutstaub, Glutflasche, Sturmflügel, Frostpanzer, Frosttalisman, Basiliskenauge, "
+          "Wurmzahn, Sandperle, Sandklopfer")
     if "--bilder" in sys.argv:
         from PIL import Image
         ordner = Path(sys.argv[sys.argv.index("--bilder") + 1])

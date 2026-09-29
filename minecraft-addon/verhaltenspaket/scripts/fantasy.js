@@ -326,9 +326,11 @@ world.afterEvents.itemUse.subscribe((e) => {
     }
 });
 
+let runde = 0;
 system.runInterval(() => {
     try {
         const jetzt = system.currentTick;
+        const r = runde++;
         if (gerollt.size) ausrollTakt(jetzt);
         const welt = world.getDimension("overworld");
         // Basilisken: alle 5 Ticks, fuer jeden Spieler in der Naehe.
@@ -348,7 +350,7 @@ system.runInterval(() => {
                 if (!s.isInWater && getragen(s).has(FROSTTALISMAN)) friere(s.dimension, s.location, 2);
             } catch (f) { /* egal */ }
         }
-        if (jetzt % 20 !== 0) return;
+        if (r % 4 !== 0) return;
         for (const k of welt.getEntities({ type: KAEFER })) {
             try { friere(k.dimension, k.location); } catch (f) { /* egal */ }
         }
