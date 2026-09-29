@@ -401,7 +401,8 @@ TIERE = [
 from kleintiere_daten import KLEINTIERE  # noqa: E402
 from fantasy_daten import FANTASY  # noqa: E402
 from fantasy2_daten import FANTASY2  # noqa: E402
-TIERE += KLEINTIERE + FANTASY + FANTASY2
+from drachen_daten import DRACHEN  # noqa: E402
+TIERE += KLEINTIERE + FANTASY + FANTASY2 + DRACHEN
 
 
 # ------------------------------------------------------------ Verhalten

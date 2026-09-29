@@ -229,28 +229,34 @@ DRACHENSCHUPPE_F = {"k": K, "R": (150, 44, 36), "r": (200, 80, 60), "G": (216, 1
 
 
 def drachenfeuer():
-    """Der Feueratem des Lindwurms: ein Kegel aus Flammen."""
+    """Der Feueratem (4.89): ein Strahl statt eines Puffs. Das Skript
+    stoesst alle zwei Ticks einen kurzen Schwall aus (scripts/drachen.js);
+    jeder Schwall schiesst schnell nach vorn, wird dabei breiter und
+    verglimmt von weissgelb ueber orange zu rotem Rauch. Hintereinander
+    ergibt das einen durchgehenden Flammenstrahl von rund vierzehn Bloecken."""
     return {"format_version": "1.10.0", "particle_effect": {
         "description": {"identifier": "fynn:drachenfeuer", "basic_render_parameters": {
             "material": "particles_blend", "texture": "textures/particle/fynn_rauch"}},
         "components": {
-            "minecraft:emitter_rate_steady": {"spawn_rate": 90, "max_particles": 120},
-            "minecraft:emitter_lifetime_once": {"active_time": 0.4},
-            "minecraft:emitter_shape_point": {"direction": [
-                "variable.fynn_x + (variable.particle_random_1 - 0.5) * 0.35",
-                "variable.fynn_y + (variable.particle_random_2 - 0.5) * 0.35",
-                "variable.fynn_z + (variable.particle_random_3 - 0.5) * 0.35"]},
-            "minecraft:particle_lifetime_expression": {"max_lifetime": "0.7 + variable.particle_random_4 * 0.4"},
-            "minecraft:particle_initial_speed": 14.0,
-            "minecraft:particle_motion_dynamic": {"linear_acceleration": [0, 1.5, 0], "linear_drag_coefficient": 2.2},
+            "minecraft:emitter_rate_steady": {"spawn_rate": 260, "max_particles": 120},
+            "minecraft:emitter_lifetime_once": {"active_time": 0.1},
+            "minecraft:emitter_shape_sphere": {"radius": 0.25, "direction": [
+                "variable.fynn_x + (variable.particle_random_1 - 0.5) * 0.22",
+                "variable.fynn_y + (variable.particle_random_2 - 0.5) * 0.22",
+                "variable.fynn_z + (variable.particle_random_3 - 0.5) * 0.22"]},
+            "minecraft:particle_lifetime_expression": {"max_lifetime": "0.55 + variable.particle_random_4 * 0.25"},
+            "minecraft:particle_initial_speed": "20.0 + variable.particle_random_1 * 4.0",
+            "minecraft:particle_motion_dynamic": {"linear_acceleration": [0, 2.0, 0], "linear_drag_coefficient": 2.6},
+            "minecraft:particle_motion_collision": {"collision_radius": 0.1, "coefficient_of_restitution": 0.0,
+                                                    "collision_drag": 6.0},
             "minecraft:particle_appearance_billboard": {
-                "size": ["0.25 + variable.particle_age * 1.6", "0.25 + variable.particle_age * 1.6"],
+                "size": ["0.2 + variable.particle_age * 2.4", "0.2 + variable.particle_age * 2.4"],
                 "facing_camera_mode": "rotate_xyz",
                 "uv": {"texture_width": 8, "texture_height": 8, "uv": [0, 0], "uv_size": [8, 8]}},
-            "minecraft:particle_appearance_lighting": {},
             "minecraft:particle_appearance_tinting": {"color": {
                 "interpolant": "variable.particle_age / variable.particle_lifetime",
-                "gradient": {"0.0": "#FFFFF0A0", "0.3": "#FFFF9A2A", "0.7": "#CCD2401A", "1.0": "#00401A10"}}},
+                "gradient": {"0.0": "#FFFFFBD0", "0.15": "#FFFFE070", "0.4": "#FFFF8A20",
+                             "0.7": "#E6D2380E", "1.0": "#00382010"}}},
         }}}
 
 

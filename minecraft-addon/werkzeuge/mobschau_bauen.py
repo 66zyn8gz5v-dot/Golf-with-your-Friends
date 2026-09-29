@@ -526,6 +526,8 @@ def mob_daten(kennung, entitaet_datei, gruppe, info):
     ]
     if info.get("gischt"):
         teile.append("gischt:" + json.dumps(info["gischt"], separators=(",", ":")))
+    if info.get("atem"):
+        teile.append("atem:" + json.dumps(info["atem"], separators=(",", ":")))
     return "{" + ",\n".join(teile) + "}"
 
 
@@ -619,6 +621,15 @@ def alle_mobs():
     for t in tiere_bauen.TIERE:
         info = {"varianten": t["varianten"], "steckbrief": steckbrief_tier(t)}
         info.update(TIER_EXTRA.get(t["id"], {}))
+        # Drachen: Wo das Maul ist, damit der Atem dort herauskommt. Das
+        # Modell traegt es beim Bauen ein.
+        import drachen_gestalt
+        if t.get("art") == "drache" and hasattr(drachen_gestalt, f"{t['gestalt']}_modell"):
+            getattr(drachen_gestalt, f"{t['gestalt']}_modell")()
+        if t["id"] in drachen_gestalt.MAEULER:
+            knochen, ort = drachen_gestalt.MAEULER[t["id"]]
+            info["atem"] = {"knochen": knochen, "punkt": ort, "eig": "fynn:feuer",
+                            "art": t.get("atemart", "feuer")}
         mobs.append(mob_daten(t["id"], f"tier_{t['id']}.entity.json",
                               t.get("gruppe") or GRUPPE.get(t["art"], "An Land"), info))
     for b in banditen_bauen.BANDITEN:

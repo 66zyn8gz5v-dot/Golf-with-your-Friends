@@ -11,10 +11,197 @@
           "type": "bool",
           "default": false,
           "client_sync": true
+        },
+        "fynn:fliegt": {
+          "type": "bool",
+          "default": false,
+          "client_sync": true
         }
       }
     },
     "component_groups": {
+      "fynn:luft": {
+        "minecraft:movement": {
+          "value": 1.4
+        },
+        "minecraft:movement.glide": {
+          "start_speed": 0.12,
+          "speed_when_turning": 0.2
+        },
+        "minecraft:physics": {
+          "has_gravity": false
+        },
+        "minecraft:behavior.circle_around_anchor": {
+          "priority": 3,
+          "goal_radius": 1.5,
+          "radius_range": {
+            "min": 12.0,
+            "max": 22.0
+          },
+          "height_offset_range": {
+            "min": -4,
+            "max": 6
+          },
+          "height_above_target_range": {
+            "min": 14,
+            "max": 26
+          }
+        },
+        "minecraft:behavior.swoop_attack": {
+          "priority": 2,
+          "damage_reach": 0.6,
+          "speed_multiplier": 1.0,
+          "delay_range": {
+            "min": 10.0,
+            "max": 20.0
+          }
+        },
+        "minecraft:behavior.nearest_attackable_target": {
+          "priority": 2,
+          "must_see": true,
+          "reselect_targets": true,
+          "within_radius": 48,
+          "target_search_height": 48,
+          "entity_types": [
+            {
+              "filters": {
+                "all_of": [
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "player"
+                  },
+                  {
+                    "test": "has_ability",
+                    "subject": "other",
+                    "value": "instabuild",
+                    "operator": "!="
+                  }
+                ]
+              },
+              "max_dist": 48
+            },
+            {
+              "filters": {
+                "any_of": [
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "cow"
+                  },
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "sheep"
+                  },
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "horse"
+                  },
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "bison"
+                  },
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "elch"
+                  }
+                ]
+              },
+              "max_dist": 32
+            }
+          ]
+        }
+      },
+      "fynn:boden": {
+        "minecraft:movement": {
+          "value": 0.2
+        },
+        "minecraft:movement.basic": {},
+        "minecraft:navigation.walk": {
+          "can_path_over_water": false,
+          "avoid_water": true,
+          "avoid_damage_blocks": true
+        },
+        "minecraft:physics": {},
+        "minecraft:behavior.melee_box_attack": {
+          "priority": 3,
+          "speed_multiplier": 1.3,
+          "track_target": true
+        },
+        "minecraft:behavior.random_stroll": {
+          "priority": 6,
+          "speed_multiplier": 0.8,
+          "xz_dist": 12
+        },
+        "minecraft:behavior.look_at_player": {
+          "priority": 7,
+          "look_distance": 16,
+          "probability": 0.05
+        },
+        "minecraft:behavior.nearest_attackable_target": {
+          "priority": 2,
+          "must_see": true,
+          "reselect_targets": true,
+          "within_radius": 48,
+          "target_search_height": 48,
+          "entity_types": [
+            {
+              "filters": {
+                "all_of": [
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "player"
+                  },
+                  {
+                    "test": "has_ability",
+                    "subject": "other",
+                    "value": "instabuild",
+                    "operator": "!="
+                  }
+                ]
+              },
+              "max_dist": 48
+            },
+            {
+              "filters": {
+                "any_of": [
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "cow"
+                  },
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "sheep"
+                  },
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "horse"
+                  },
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "bison"
+                  },
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "elch"
+                  }
+                ]
+              },
+              "max_dist": 32
+            }
+          ]
+        }
+      },
       "fynn:erwachsen": {
         "minecraft:loot": {
           "table": "loot_tables/entities/lindwurm.json"
@@ -45,8 +232,8 @@
         ]
       },
       "minecraft:health": {
-        "value": 120,
-        "max": 120
+        "value": 140,
+        "max": 140
       },
       "minecraft:collision_box": {
         "width": 3.0,
@@ -70,9 +257,7 @@
         ]
       },
       "minecraft:nameable": {},
-      "minecraft:physics": {
-        "has_gravity": false
-      },
+      "minecraft:physics": {},
       "minecraft:pushable_by_entity": {},
       "minecraft:pushable_by_block": {},
       "minecraft:jump.static": {},
@@ -93,110 +278,63 @@
       "minecraft:behavior.hurt_by_target": {
         "priority": 1
       },
-      "minecraft:movement.glide": {
-        "start_speed": 0.12,
-        "speed_when_turning": 0.2
-      },
       "minecraft:breathable": {
         "total_supply": 15,
         "suffocate_time": 0
       },
-      "minecraft:fire_immune": {},
       "minecraft:knockback_resistance": {
         "value": 0.8
       },
       "minecraft:game_event_movement_tracking": {
         "emit_flap": true
       },
-      "minecraft:attack": {
-        "damage": 12
-      },
-      "minecraft:behavior.circle_around_anchor": {
-        "priority": 3,
-        "goal_radius": 1.5,
-        "radius_range": {
-          "min": 12.0,
-          "max": 22.0
-        },
-        "height_offset_range": {
-          "min": -4,
-          "max": 6
-        },
-        "height_above_target_range": {
-          "min": 16,
-          "max": 30
-        }
-      },
-      "minecraft:behavior.swoop_attack": {
-        "priority": 2,
-        "damage_reach": 0.6,
-        "speed_multiplier": 1.0,
-        "delay_range": {
-          "min": 10.0,
-          "max": 20.0
-        }
-      },
-      "minecraft:behavior.nearest_attackable_target": {
-        "priority": 2,
-        "must_see": true,
-        "reselect_targets": true,
-        "within_radius": 48,
-        "target_search_height": 48,
-        "entity_types": [
+      "minecraft:damage_sensor": {
+        "triggers": [
           {
-            "filters": {
-              "all_of": [
-                {
-                  "test": "is_family",
-                  "subject": "other",
-                  "value": "player"
-                },
-                {
-                  "test": "has_ability",
-                  "subject": "other",
-                  "value": "instabuild",
-                  "operator": "!="
-                }
-              ]
-            },
-            "max_dist": 48
-          },
-          {
-            "filters": {
-              "any_of": [
-                {
-                  "test": "is_family",
-                  "subject": "other",
-                  "value": "cow"
-                },
-                {
-                  "test": "is_family",
-                  "subject": "other",
-                  "value": "sheep"
-                },
-                {
-                  "test": "is_family",
-                  "subject": "other",
-                  "value": "horse"
-                },
-                {
-                  "test": "is_family",
-                  "subject": "other",
-                  "value": "bison"
-                },
-                {
-                  "test": "is_family",
-                  "subject": "other",
-                  "value": "elch"
-                }
-              ]
-            },
-            "max_dist": 32
+            "cause": "fall",
+            "deals_damage": false
           }
         ]
+      },
+      "minecraft:behavior.float": {
+        "priority": 0
+      },
+      "minecraft:fire_immune": {},
+      "minecraft:attack": {
+        "damage": 12
       }
     },
     "events": {
+      "fynn:landen": {
+        "remove": {
+          "component_groups": [
+            "fynn:luft"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "fynn:boden"
+          ]
+        },
+        "set_property": {
+          "fynn:fliegt": false
+        }
+      },
+      "fynn:abheben": {
+        "remove": {
+          "component_groups": [
+            "fynn:boden"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "fynn:luft"
+          ]
+        },
+        "set_property": {
+          "fynn:fliegt": true
+        }
+      },
       "minecraft:entity_spawned": {
         "sequence": [
           {
@@ -233,11 +371,17 @@
                 "weight": 88,
                 "add": {
                   "component_groups": [
-                    "fynn:erwachsen"
+                    "fynn:erwachsen",
+                    "fynn:luft"
                   ]
                 }
               }
             ]
+          },
+          {
+            "set_property": {
+              "fynn:fliegt": true
+            }
           }
         ]
       }

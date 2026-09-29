@@ -24,7 +24,7 @@ import "./begegnungen.js";
 import "./kleintiere.js";
 import "./fantasy.js";
 import "./sandwurm.js";
-import "./lindwurm.js";
+import "./drachen.js";
 import "./fantasy2.js";
 import "./greif.js";
 import "./nester.js";

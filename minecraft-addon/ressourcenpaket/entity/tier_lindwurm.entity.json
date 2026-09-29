@@ -17,7 +17,9 @@
       "animations": {
         "flug": "animation.fynn.lindwurm.flug",
         "stand": "animation.fynn.lindwurm.stand",
+        "gehen": "animation.fynn.lindwurm.gehen",
         "feueratem": "animation.fynn.lindwurm.feueratem",
+        "bruellen": "animation.fynn.lindwurm.bruellen",
         "sturzflug": "animation.fynn.lindwurm.sturzflug"
       },
       "scripts": {
@@ -34,16 +36,25 @@
         ],
         "animate": [
           {
-            "flug": "1.0 - query.is_on_ground"
+            "bruellen": "(1.0 - math.clamp(query.modified_move_speed * 3.0, 0.0, 1.0)) * math.clamp((math.sin(query.life_time * 17.0 + variable.fynn_zufall + 60) - 0.9) * 15.0, 0.0, 1.0)"
           },
           {
-            "stand": "query.is_on_ground"
+            "flug": "query.property('fynn:fliegt')"
+          },
+          {
+            "stand": "(1.0 - query.property('fynn:fliegt'))"
+          },
+          {
+            "gehen": "(1.0 - query.property('fynn:fliegt')) * math.clamp(query.modified_move_speed * 4.0, 0.0, 1.0)"
           },
           {
             "feueratem": "query.property('fynn:feuer')"
           },
           {
-            "sturzflug": "math.clamp(-query.vertical_speed * 0.6 - 0.2, 0.0, 1.0)"
+            "bruellen": "(1.0 - query.property('fynn:fliegt')) * (1.0 - math.clamp(query.modified_move_speed * 4.0, 0.0, 1.0)) * (1.0 - query.property('fynn:feuer')) * (math.mod(query.life_time, 17.0) < 2.2)"
+          },
+          {
+            "sturzflug": "query.property('fynn:fliegt') * math.clamp(-query.vertical_speed * 0.6 - 0.2, 0.0, 1.0)"
           }
         ]
       },
