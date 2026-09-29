@@ -106,13 +106,27 @@ def eigenschaft(*namen):
 def vogelbewegungen_klein(specht=False):
     """Kleine Voegel schlagen schnell mit den Fluegeln, hopsen am Boden,
     picken und schauen sich ruckartig um."""
-    schlag = f"math.sin({LT} * 2600.0) * 55.0"
+    # Kleine Voegel fliegen in Wellen: ein paar schnelle Schlaege, dann die
+    # Fluegel kurz anlegen und durchsacken - darum der Puls "schlaegt".
+    # Der Schlag selbst: kraeftig nach unten, locker wieder hoch.
+    schlaegt = f"math.clamp(math.sin({LT} * 170.0) * 3.0 + 1.6, 0.0, 1.0)"
+    welle = f"(math.sin({LT} * 2600.0) + math.sin({LT} * 5200.0 + 90.0) * 0.35)"
+    schlag = f"{welle} * 52.0 * {schlaegt}"
+    angelegt = f"(1.0 - {schlaegt})"
     fliegen = {"loop": True, "bones": {
-        "fluegel_links": {"rotation": [0.0, 0.0, f"-35.0 - {schlag}"]},
-        "fluegel_rechts": {"rotation": [0.0, 0.0, f"35.0 + {schlag}"]},
-        "rumpf": {"rotation": [f"-query.target_x_rotation * 0.3 + math.sin({LT} * 1300.0) * 3.0", 0.0, 0.0]},
-        "fuesse": {"rotation": [65.0, 0.0, 0.0]},
-        "schwanz": {"rotation": [f"8.0 + math.sin({LT} * 1300.0) * 6.0", 0.0, 0.0]},
+        "fluegel_links": {"rotation": [0.0, f"math.cos({LT} * 2600.0) * 12.0 * {schlaegt} - {angelegt} * 25.0",
+                                       f"(-35.0 - {schlag}) * {schlaegt} + {angelegt} * 4.0"]},
+        "fluegel_rechts": {"rotation": [0.0, f"-math.cos({LT} * 2600.0) * 12.0 * {schlaegt} + {angelegt} * 25.0",
+                                        f"(35.0 + {schlag}) * {schlaegt} - {angelegt} * 4.0"]},
+        "rumpf": {"rotation": [f"-query.target_x_rotation * 0.3 + math.sin({LT} * 2600.0 + 150.0) * 4.0 * {schlaegt}"
+                               f" + {angelegt} * 8.0", 0.0, "variable.fynn_dreh * 2.0"],
+                  "position": [0.0, f"-math.sin({LT} * 2600.0 + 30.0) * 0.6 * {schlaegt} - {angelegt} * 1.0", 0.0]},
+        # Der Kopf bleibt ruhig, waehrend der Rumpf auf und ab geht.
+        "kopf": {"rotation": [f"-math.sin({LT} * 2600.0 + 150.0) * 3.0 * {schlaegt} - {angelegt} * 6.0", 0.0, 0.0]},
+        "fuesse": {"rotation": [70.0, 0.0, 0.0]},
+        # Beim Schlagen faechert der Schwanz, im Durchsacken schliesst er sich.
+        "schwanz": {"rotation": [f"8.0 + math.sin({LT} * 1300.0) * 6.0 * {schlaegt}", "-variable.fynn_dreh * 2.0", 0.0],
+                    "scale": [f"1.0 + {schlaegt} * 0.25", 1.0, 1.0]},
     }}
     hopsen = {"loop": True, "bones": {
         "rumpf": {"position": [0.0, f"math.abs(math.sin({LT} * 720.0)) * 2.0", 0.0]},
@@ -186,8 +200,8 @@ def eichhoernchenbewegungen():
         "leg1": {"rotation": [f"-40.0 - math.sin({LT} * 1100.0) * 35.0", 0.0, -25.0]},
         "leg2": {"rotation": [f"30.0 - math.sin({LT} * 1100.0) * 35.0", 0.0, 25.0]},
         "leg3": {"rotation": [f"30.0 + math.sin({LT} * 1100.0) * 35.0", 0.0, -25.0]},
-        "tail": {"rotation": [70.0, f"math.sin({LT} * 400.0) * 15.0", 0.0]},
-        "tail2": {"rotation": [30.0, 0.0, 0.0]},
+        "tail": {"rotation": [-60.0, f"math.sin({LT} * 400.0) * 15.0", 0.0]},
+        "tail2": {"rotation": [-45.0, 0.0, 0.0]},
     }}
     graben = {"loop": True, "bones": {
         "body": {"rotation": [18.0, 0.0, 0.0]},
@@ -205,7 +219,17 @@ def eichhoernchenbewegungen():
         "leg2": {"rotation": [50.0, 0.0, 0.0]},
         "leg3": {"rotation": [50.0, 0.0, 0.0]},
     }}
+    # Eichhoernchen zucken mit dem Schwanz, wenn sie stehen - kurze, schnelle
+    # Wellen von der Wurzel zur Spitze.
+    zucken = f"math.pow(math.max(0.0, math.sin({LT} * 900.0)), 3.0)"
+    schwanzzucken = {"loop": True, "bones": {
+        "tail": {"rotation": [f"{zucken} * 18.0", f"math.sin({LT} * 900.0) * 6.0", 0.0]},
+        "tail2": {"rotation": [f"math.pow(math.max(0.0, math.sin({LT} * 900.0 - 70.0)), 3.0) * 28.0",
+                               f"math.sin({LT} * 900.0 - 70.0) * 10.0", 0.0]},
+        "head": {"rotation": [0.0, f"math.sin(math.floor({LT} * 3.0) * 71.0) * 20.0", 0.0]},
+    }}
     return {
+        "schwanzzucken": (schwanzzucken, f"{STEHT} * {puls(16.0, 60, 0.75)}"),
         "klettern": (klettern, "query.property('fynn:klettert')"),
         "graben": (graben, "query.property('fynn:graebt')"),
         "knabbern": (knabbern, f"{STEHT} * query.is_on_ground * {puls(12.0, 150, 0.7)} "
@@ -346,7 +370,7 @@ def _eichhoernchen():
         "id": "eichhoernchen", "name": ("Eichhörnchen", "Squirrel"), "gestalt": "eichhoernchen",
         "gruppe": "Kleintiere",
         "varianten": [("rot", 70), ("grau", 30)],
-        "art": "land", "verhalten": "friedlich", "leben": 6, "tempo": 0.32,
+        "art": "land", "gang": "huepfen", "verhalten": "friedlich", "leben": 6, "tempo": 0.32,
         "kollision": (0.7, 0.9), "skalierung": 0.7, "baby": False, "herde": (1, 2),
         "biome": [["forest"], ["taiga"], ["roofed"], ["birch"]], "gewicht": 7,
         "boden": ["minecraft:grass_block", "minecraft:podzol", "minecraft:coarse_dirt"],

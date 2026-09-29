@@ -180,21 +180,28 @@
       "bones": {
         "kiefer": {
           "rotation": [
-            "math.sin(variable.attack_time * 180.0) * 45.0",
+            "math.sin(math.clamp(variable.attack_time / 0.35, 0.0, 1.0) * 180.0) * 50.0 + math.sin(math.clamp((variable.attack_time - 0.3) / 0.7, 0.0, 1.0) * 180.0) * 10.0",
             0.0,
             0.0
           ]
         },
         "kopf": {
           "rotation": [
-            "-math.sin(variable.attack_time * 180.0) * 14.0",
-            "math.sin(variable.attack_time * 540.0) * 8.0",
-            0.0
+            "-math.sin(math.clamp(variable.attack_time / 0.35, 0.0, 1.0) * 180.0) * 16.0 + math.sin(math.clamp((variable.attack_time - 0.3) / 0.7, 0.0, 1.0) * 180.0) * 6.0",
+            "math.sin(variable.attack_time * 900.0) * 12.0 * math.sin(math.clamp((variable.attack_time - 0.3) / 0.7, 0.0, 1.0) * 180.0)",
+            "math.sin(variable.attack_time * 900.0 + 90.0) * 8.0 * math.sin(math.clamp((variable.attack_time - 0.3) / 0.7, 0.0, 1.0) * 180.0)"
           ],
           "position": [
             0.0,
             0.0,
-            "-math.sin(variable.attack_time * 180.0) * 2.0"
+            "math.sin(math.clamp(variable.attack_time / 0.35, 0.0, 1.0) * 180.0) * 1.0 - math.sin(math.clamp((variable.attack_time - 0.3) / 0.7, 0.0, 1.0) * 180.0) * 3.0"
+          ]
+        },
+        "body": {
+          "position": [
+            0.0,
+            0.0,
+            "-math.sin(math.clamp((variable.attack_time - 0.3) / 0.7, 0.0, 1.0) * 180.0) * 2.0"
           ]
         }
       }

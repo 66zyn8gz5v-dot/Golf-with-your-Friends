@@ -64,33 +64,33 @@
         "body": {
           "position": [
             0.0,
-            "-math.cos(query.anim_time * 76.34 * 2.0) * 0.3",
+            "-math.cos(query.anim_time * 76.34 * 2.0) * 0.45",
             0.0
           ],
           "rotation": [
-            "math.sin(query.anim_time * 76.34 * 2.0 - 90.0) * 0.8",
-            0.0,
-            "math.sin(query.anim_time * 76.34 - 45.0) * 1.4"
+            "math.sin(query.anim_time * 76.34 * 2.0 - 90.0) * 1.4000000000000001",
+            "math.sin(query.anim_time * 76.34 - 20.0) * 1.32",
+            "math.sin(query.anim_time * 76.34 - 45.0) * 2.2"
           ]
         },
         "head": {
           "rotation": [
-            "math.sin(query.anim_time * 76.34 * 2.0 - 30.0) * 2.5",
-            "math.sin(query.anim_time * 76.34 - 90.0) * 2.0",
-            0.0
+            "math.sin(query.anim_time * 76.34 * 2.0 - 50.0) * 3.5 - math.sin(query.anim_time * 76.34 * 2.0 - 90.0) * 1.05",
+            "math.sin(query.anim_time * 76.34 - 80.0) * 2.64",
+            "-math.sin(query.anim_time * 76.34 - 45.0) * 1.54"
           ]
         },
         "tail": {
           "rotation": [
-            "math.cos(query.anim_time * 76.34 * 2.0) * 3.0",
-            "math.sin(query.anim_time * 76.34 - 40) * 8",
+            "math.cos(query.anim_time * 76.34 * 2.0 - 30) * 3.15",
+            "math.sin(query.anim_time * 76.34 - 40) * 9.0",
             0.0
           ]
         },
         "tail2": {
           "rotation": [
-            "math.cos(query.anim_time * 76.34 * 2.0) * 3.0",
-            "math.sin(query.anim_time * 76.34 - 70) * 13",
+            "math.cos(query.anim_time * 76.34 * 2.0 - 65) * 4.65",
+            "math.sin(query.anim_time * 76.34 - 75) * 14.0",
             0.0
           ]
         }
@@ -159,33 +159,33 @@
         "body": {
           "position": [
             0.0,
-            "-math.cos((query.anim_time * 76.34 * 0.8) * 2.0) * 0.6",
+            "-math.cos((query.anim_time * 76.34 * 0.8) * 2.0) * 0.8",
             0.0
           ],
           "rotation": [
-            "math.sin((query.anim_time * 76.34 * 0.8) * 2.0) * 1.5",
-            0.0,
-            0.0
+            "math.sin((query.anim_time * 76.34 * 0.8) * 2.0 - 90.0) * 1.6",
+            "math.sin((query.anim_time * 76.34 * 0.8) - 20.0) * 0.84",
+            "math.sin((query.anim_time * 76.34 * 0.8) - 45.0) * 1.4"
           ]
         },
         "head": {
           "rotation": [
-            "math.sin((query.anim_time * 76.34 * 0.8) * 2.0 + 60.0) * 3.0",
-            0.0,
-            0.0
+            "math.sin((query.anim_time * 76.34 * 0.8) * 2.0 - 50.0) * 4.0 - math.sin((query.anim_time * 76.34 * 0.8) * 2.0 - 90.0) * 1.2",
+            "math.sin((query.anim_time * 76.34 * 0.8) - 80.0) * 1.68",
+            "-math.sin((query.anim_time * 76.34 * 0.8) - 45.0) * 0.9799999999999999"
           ]
         },
         "tail": {
           "rotation": [
-            "-12.0 + math.sin((query.anim_time * 76.34 * 0.8) * 2.0) * 6.0",
-            "math.sin((query.anim_time * 76.34 * 0.8)) * 8.0",
+            "-12.0 + math.cos((query.anim_time * 76.34 * 0.8) * 2.0 - 30) * 2.4499999999999997",
+            "math.sin((query.anim_time * 76.34 * 0.8) - 40) * 7.0",
             0.0
           ]
         },
         "tail2": {
           "rotation": [
-            "-12.0 + math.sin((query.anim_time * 76.34 * 0.8) * 2.0) * 6.0",
-            "math.sin((query.anim_time * 76.34 * 0.8)) * 8.0",
+            "-12.0 + math.cos((query.anim_time * 76.34 * 0.8) * 2.0 - 65) * 3.9499999999999997",
+            "math.sin((query.anim_time * 76.34 * 0.8) - 75) * 12.0",
             0.0
           ]
         }
@@ -260,6 +260,25 @@
         }
       }
     },
+    "animation.fynn.basilisk.schnuppern": {
+      "loop": true,
+      "bones": {
+        "head": {
+          "rotation": [
+            "30.0 + math.sin(query.life_time * 1500.0) * 1.5",
+            "math.sin(query.life_time * 90.0) * 25.0",
+            0.0
+          ]
+        },
+        "body": {
+          "rotation": [
+            2.0,
+            "math.sin(query.life_time * 90.0 - 40.0) * 3.0",
+            0.0
+          ]
+        }
+      }
+    },
     "animation.fynn.basilisk.drehen": {
       "loop": true,
       "bones": {
@@ -298,21 +317,28 @@
       "bones": {
         "kiefer": {
           "rotation": [
-            "math.sin(variable.attack_time * 180.0) * 45.0",
+            "math.sin(math.clamp(variable.attack_time / 0.35, 0.0, 1.0) * 180.0) * 50.0 + math.sin(math.clamp((variable.attack_time - 0.3) / 0.7, 0.0, 1.0) * 180.0) * 10.0",
             0.0,
             0.0
           ]
         },
         "head": {
           "rotation": [
-            "-math.sin(variable.attack_time * 180.0) * 14.0",
-            "math.sin(variable.attack_time * 540.0) * 8.0",
-            0.0
+            "-math.sin(math.clamp(variable.attack_time / 0.35, 0.0, 1.0) * 180.0) * 16.0 + math.sin(math.clamp((variable.attack_time - 0.3) / 0.7, 0.0, 1.0) * 180.0) * 6.0",
+            "math.sin(variable.attack_time * 900.0) * 12.0 * math.sin(math.clamp((variable.attack_time - 0.3) / 0.7, 0.0, 1.0) * 180.0)",
+            "math.sin(variable.attack_time * 900.0 + 90.0) * 8.0 * math.sin(math.clamp((variable.attack_time - 0.3) / 0.7, 0.0, 1.0) * 180.0)"
           ],
           "position": [
             0.0,
             0.0,
-            "-math.sin(variable.attack_time * 180.0) * 2.0"
+            "math.sin(math.clamp(variable.attack_time / 0.35, 0.0, 1.0) * 180.0) * 1.0 - math.sin(math.clamp((variable.attack_time - 0.3) / 0.7, 0.0, 1.0) * 180.0) * 3.0"
+          ]
+        },
+        "body": {
+          "position": [
+            0.0,
+            0.0,
+            "-math.sin(math.clamp((variable.attack_time - 0.3) / 0.7, 0.0, 1.0) * 180.0) * 2.0"
           ]
         }
       }

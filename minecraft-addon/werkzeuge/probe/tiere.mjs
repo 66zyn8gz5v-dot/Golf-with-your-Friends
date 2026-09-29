@@ -214,6 +214,25 @@ tief.id = "wal2";
 tief.dimension.getBlock = () => ({ isAir: false, typeId: "minecraft:water" });
 pruefe("tief unten: kein Sprung", t.walTakt(tief, 100, () => 0.001) === "schwimmt");
 
+// --- Familien: ein Junges allein bekommt eine Mutter
+{
+    const neu = [];
+    const dim = { spawnEntity: (typ, ort) => { const m = { typeId: typ, location: ort, dyn: {}, ereignisse: [],
+        getComponent: (n) => (n === "minecraft:is_baby" ? {} : undefined), triggerEvent(e) { this.ereignisse.push(e); },
+        setDynamicProperty(k, v) { this.dyn[k] = v; } }; neu.push(m); return m; } };
+    function tier(id, baby, x) {
+        return { id, typeId: "fynn:bison", location: { x, y: 64, z: 0 }, dimension: dim, dyn: {},
+            getComponent: (n) => (n === "minecraft:is_baby" && baby ? {} : undefined),
+            getDynamicProperty(k) { return this.dyn[k]; }, setDynamicProperty(k, v) { this.dyn[k] = v; } };
+    }
+    const allein = tier("j1", true, 0);
+    pruefe("Ein Junges allein: die Mutter kommt", t.mutterSuchen(allein, [allein]) === "Mutter kommt"
+        && neu.length === 1 && neu[0].ereignisse.includes("minecraft:ageable_grow_up"));
+    pruefe("... nur einmal", t.mutterSuchen(allein, [allein]) === "schon gesucht" && neu.length === 1);
+    const kalb = tier("j2", true, 50), kuh = tier("k", false, 55);
+    pruefe("Mit Eltern in der Naehe: keine neue Mutter", t.mutterSuchen(kalb, [kalb, kuh]) === "hat Eltern" && neu.length === 1);
+}
+
 const gut = ergebnisse.every(Boolean);
 console.log("\nAlles wie erwartet:", gut ? "ja" : "NEIN");
 if (!gut) process.exit(1);

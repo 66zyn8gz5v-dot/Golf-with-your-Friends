@@ -618,6 +618,52 @@ function klatschen(wal) {
     } catch (e) { /* egal */ }
 }
 
+// ------------------------------------------------------------ Familien
+//
+// Fynn (4.84): "Babys sollen in der Naehe der Erwachsenen laufen." Das
+// Verhalten laesst Junge ihren Eltern folgen - aber nur, wenn es Eltern
+// gibt. Ein Junges, das ganz allein erscheint, bekommt eine Mutter: einmal,
+// zwei Bloecke neben sich.
+export const FAMILIE = { weite: 24, suche: 200 };
+const MIT_JUNGEN = ["braunbaer", "elch", "wildschwein", "bison", "loewe", "tiger", "krokodil", "schneeleopard",
+    "wal", "elefant", "nashorn", "gorilla", "walross"].map((n) => `fynn:${n}`);
+
+function istJungtier(tier) {
+    try { return !!tier.getComponent("minecraft:is_baby"); } catch (e) { return false; }
+}
+
+export function mutterSuchen(junges, verwandte) {
+    try { if (junges.getDynamicProperty("fynn:mutter_gesucht")) return "schon gesucht"; } catch (e) { return "?"; }
+    const o = junges.location;
+    const eltern = verwandte.some((w) => w.id !== junges.id && !istJungtier(w)
+        && Math.hypot(w.location.x - o.x, w.location.z - o.z) <= FAMILIE.weite);
+    junges.setDynamicProperty("fynn:mutter_gesucht", true);
+    if (eltern) return "hat Eltern";
+    try {
+        const mutter = junges.dimension.spawnEntity(junges.typeId, { x: o.x + 2, y: o.y, z: o.z + 1 });
+        // Kommt die Mutter selbst als Junges zur Welt, waechst sie sofort.
+        if (istJungtier(mutter)) mutter.triggerEvent("minecraft:ageable_grow_up");
+        mutter.setDynamicProperty?.("fynn:mutter_gesucht", true);
+    } catch (e) { return "?"; }
+    return "Mutter kommt";
+}
+
+let familienRunde = 0;
+system.runInterval(() => {
+    familienRunde++;
+    try {
+        const welt = world.getDimension("overworld");
+        for (const typ of MIT_JUNGEN) {
+            const alle = welt.getEntities({ type: typ });
+            for (const t of alle) {
+                if (istJungtier(t)) mutterSuchen(t, alle);
+            }
+        }
+    } catch (fehler) {
+        console.warn(`Tiere, Familien: ${fehler}`);
+    }
+}, FAMILIE.suche);
+
 // Ein eigener Zaehler statt currentTick % 20: Der Takt beginnt nicht
 // unbedingt bei einer geraden Zahl, und dann traefe "% 20" nie.
 let walRunde = 0;

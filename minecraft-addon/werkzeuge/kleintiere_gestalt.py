@@ -256,9 +256,11 @@ def eichhoernchen_modell():
     paar(kopf, [1, 12, -6], [1, 1, 1], "pinsel")
     # Der buschige Schwanz: erst nach hinten, dann steil hoch, oben
     # eingerollt - fast so gross wie das ganze Tier.
-    schwanz = m.knoch("tail", [0, 7, 4], "body", drehung=[-35, 0, 0])
+    # Positiv um x hebt ein nach hinten zeigendes Glied an - so steht der
+    # Schwanz hoch ueber dem Ruecken und rollt sich oben nach vorn.
+    schwanz = m.knoch("tail", [0, 7, 4], "body", drehung=[40, 0, 0])
     schwanz.kasten([-2, 5, 4], [4, 4, 5], "schwanz")
-    oben = m.knoch("tail2", [0, 7, 8.5], "tail", drehung=[-45, 0, 0])
+    oben = m.knoch("tail2", [0, 7, 8.5], "tail", drehung=[55, 0, 0])
     oben.kasten([-2, 5, 8.5], [4, 4, 6], "schwanz")
     beine(m, "body", 1.5, -2.5, 2.5, (1, 4, 2), 4)
     return m

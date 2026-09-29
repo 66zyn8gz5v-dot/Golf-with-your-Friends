@@ -20,6 +20,7 @@
         "blick": "animation.common.look_at_target",
         "kopfschuetteln": "animation.fynn.schneeleopard.kopfschuetteln",
         "schwanzschlag": "animation.fynn.schneeleopard.schwanzschlag",
+        "schnuppern": "animation.fynn.schneeleopard.schnuppern",
         "drehen": "animation.fynn.schneeleopard.drehen",
         "angriff": "animation.fynn.schneeleopard.angriff",
         "jung": "animation.fynn.schneeleopard.jung"
@@ -54,6 +55,9 @@
           },
           {
             "schwanzschlag": "math.clamp((math.sin(query.life_time * 31.0 + variable.fynn_zufall + 120) - 0.8) * 7.5, 0.0, 1.0)"
+          },
+          {
+            "schnuppern": "(1.0 - math.clamp(query.modified_move_speed * 3.0, 0.0, 1.0)) * math.clamp((math.sin(query.life_time * 7.0 + variable.fynn_zufall + 40) - 0.88) * 12.5, 0.0, 1.0)"
           },
           {
             "angriff": "variable.attack_time > 0.0"

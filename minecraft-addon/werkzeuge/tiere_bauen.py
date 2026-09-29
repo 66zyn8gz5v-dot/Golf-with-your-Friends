@@ -681,7 +681,11 @@ def verhalten(t, varianten_namen):
             "minecraft:scale": {"value": 0.5},
             "minecraft:ageable": {"duration": 1200, "feed_items": t.get("futter", []),
                                   "grow_up": {"event": "minecraft:ageable_grow_up", "target": "self"}},
-            "minecraft:behavior.follow_parent": {"priority": 4, "speed_multiplier": 1.2},
+            # Fynn: "Babys sollen in der Naehe der Erwachsenen laufen." Das
+            # Junge folgt eng, und wenn es selbst herumlaeuft, dann nur ein
+            # paar Schritte weit.
+            "minecraft:behavior.follow_parent": {"priority": 3, "speed_multiplier": 1.3},
+            "minecraft:behavior.random_stroll": {"priority": 7, "speed_multiplier": 0.8, "xz_dist": 3, "y_dist": 1},
             "minecraft:behavior.panic": {"priority": 1, "speed_multiplier": 1.4},
         }
         if t.get("jung_flieht"):
@@ -974,6 +978,9 @@ ZUSATZ_GEWICHT = {
     "kopfschuetteln": f"{STEHT} * {puls(19.0, 0, 0.93)}",
     "schwanzschlag": puls(31.0, 120, 0.8),
     "grasen": f"{STEHT} * {puls(13.0, 200, 0.7)}",
+    "rupfen": f"{STEHT} * {puls(9.0, 90, 0.86)}",
+    "kauen": f"{STEHT} * {puls(11.0, 310, 0.84)}",
+    "schnuppern": f"{STEHT} * {puls(7.0, 40, 0.88)}",
     "scharren": f"query.is_angry * {STEHT}",
     "trompeten": puls(14.0, 40, 0.93),
     "kratzen": f"{STEHT} * {puls(11.0, 300, 0.9)}",
@@ -1058,9 +1065,31 @@ def zusatzbewegungen(t, da, kopf, schwanzkette):
     if t.get("aufgaben"):
         z.update(baerenbewegungen(lt))
     if t.get("grast") and kopf:
+        # Fynn: "verschiedene Grasanimationen, also Fressanimationen" - vier
+        # Arten, die sich abwechseln (siehe ZUSATZ_GEWICHT):
+        # Grasen: Kopf unten, das Maul mahlt, der Kopf wandert langsam weiter.
         z["grasen"] = {"loop": True, "bones": {
-            kopf: {"rotation": [f"48.0 + math.sin({lt} * 400.0) * 3.0", f"math.sin({lt} * 60.0) * 8.0", 0.0]},
-            "body": {"rotation": [4.0, 0.0, 0.0]}}}
+            kopf: {"rotation": [f"48.0 + math.sin({lt} * 400.0) * 3.0",
+                                f"math.sin({lt} * 60.0) * 10.0", f"math.sin({lt} * 400.0 + 90.0) * 2.0"]},
+            "body": {"rotation": [4.0, 0.0, 0.0], "position": [0.0, -0.3, 0.0]}}}
+        # Rupfen: ein Ruck zur Seite und nach oben - das Bueschel reisst ab.
+        ruck = f"math.pow(math.max(0.0, math.sin({lt} * 220.0)), 6.0)"
+        z["rupfen"] = {"loop": True, "bones": {
+            kopf: {"rotation": [f"44.0 - {ruck} * 22.0", f"{ruck} * 18.0", f"{ruck} * -8.0"]},
+            "body": {"rotation": [f"3.0 - {ruck} * 3.0", 0.0, 0.0]},
+            "leg0": {"rotation": [f"-{ruck} * 6.0", 0.0, 0.0]}, "leg1": {"rotation": [f"-{ruck} * 6.0", 0.0, 0.0]}}}
+        # Kauen: den Kopf gehoben, der Unterkiefer (oder der ganze Kopf) mahlt.
+        kauen = {kopf: {"rotation": [f"8.0 + math.sin({lt} * 700.0) * 2.5", f"math.sin({lt} * 350.0) * 4.0",
+                                     f"math.sin({lt} * 700.0 + 90.0) * 2.0"]}}
+        if "kiefer" in da:
+            kauen["kiefer"] = {"rotation": [f"math.max(0.0, math.sin({lt} * 700.0)) * 10.0", 0.0, 0.0]}
+        z["kauen"] = {"loop": True, "bones": kauen}
+    if kopf and t["art"] in ("land", "amphib"):
+        # Schnuppern - das tun alle: die Nase am Boden, hin und her, kurze Stoesse.
+        schnuff = f"math.sin({lt} * 1500.0) * 1.5"
+        z["schnuppern"] = {"loop": True, "bones": {
+            kopf: {"rotation": [f"30.0 + {schnuff}", f"math.sin({lt} * 90.0) * 25.0", 0.0]},
+            "body": {"rotation": [2.0, f"math.sin({lt} * 90.0 - 40.0) * 3.0", 0.0]}}}
     if t.get("scharrt"):
         z["scharren"] = {"loop": True, "bones": {
             "leg0": {"rotation": [f"-15.0 + math.sin({lt} * 500.0) * 28.0", 0.0, 0.0]},
@@ -1125,52 +1154,98 @@ def beinpaar(T, phasen, winkel, knie, knie_da):
     return knochen
 
 
+def nachschwingen(knochen, T, da, kopf, schwanzkette, heben, rollen, nicken, wedeln, tempo=2.0):
+    """Was ein Tier beim Laufen lebendig macht - ohne neue Gelenke, nur mit
+    mehr Bewegung in denen, die es gibt (Fynn: "nicht mehr Gelenke, sondern
+    mehr Bewegung der Gelenke, die schon vorhanden sind"):
+
+    * Der Koerper federt zweimal je Runde, rollt zur Seite des Beins, das
+      gerade traegt, und dreht die Hueften ein wenig mit.
+    * Der Kopf haelt dagegen: Er gleicht Heben und Rollen zum Teil aus und
+      nickt etwas spaeter nach - so wirkt er schwer und doch ruhig, wie bei
+      echten Tieren, die ihren Blick stillhalten.
+    * Ohren wippen einen Hauch nach dem Kopf.
+    * Der Schwanz folgt als Welle: jedes Glied spaeter und weiter als das
+      davor, dazu ein Auf und Ab mit dem Koerper."""
+    knochen["body"] = {
+        "position": [0.0, f"-math.cos({T} * {tempo}) * {heben}", 0.0],
+        "rotation": [f"math.sin({T} * {tempo} - 90.0) * {nicken * 0.4}",
+                     f"math.sin({T} - 20.0) * {rollen * 0.6}",
+                     f"math.sin({T} - 45.0) * {rollen}"]}
+    if kopf:
+        knochen[kopf] = {"rotation": [
+            f"math.sin({T} * {tempo} - 50.0) * {nicken} - math.sin({T} * {tempo} - 90.0) * {nicken * 0.3}",
+            f"math.sin({T} - 80.0) * {rollen * 1.2}",
+            f"-math.sin({T} - 45.0) * {rollen * 0.7}"]}
+    for seite, zeichen in (("ohr_links", 1), ("ohr_rechts", -1)):
+        if seite in da:
+            knochen[seite] = {"rotation": [f"math.sin({T} * {tempo} - 110.0) * {nicken * 1.5}", 0.0,
+                                           f"{zeichen} * math.sin({T} * {tempo} - 120.0) * {nicken * 2.0}"]}
+    kette = list(schwanzkette) + [k for k in ("schwanz1", "schwanz2", "schwanz3") if k in da]
+    for i, k in enumerate(kette):
+        knochen[k] = {"rotation": [
+            f"math.cos({T} * {tempo} - {30 + 35 * i}) * {wedeln * 0.35 + i * 1.5}",
+            f"math.sin({T} - {40 + 35 * i}) * {wedeln + 5 * i}", 0.0]}
+    return knochen
+
+
 def schrittgang(T, art, da, kopf, schwanzkette):
-    """Der ruhige Schritt im Viertakt."""
+    """Der ruhige Schritt im Viertakt - mit Nachschwingen."""
     knie_da = {k for k in da if k.startswith("knie")}
     knochen = beinpaar(T, VIERTAKT, 14.0 if art == "amphib" else 22.0, 38.0, knie_da)
-    # Der Koerper hebt und senkt sich zweimal je Runde, wiegt sich sacht
-    # zur Seite des Beins, das gerade vorschwingt; der Kopf nickt mit den
-    # Vorderbeinen.
-    knochen["body"] = {"position": [0.0, f"-math.cos({T} * 2.0) * 0.3", 0.0],
-                       "rotation": [f"math.sin({T} * 2.0 - 90.0) * 0.8", 0.0, f"math.sin({T} - 45.0) * 1.4"]}
-    if kopf:
-        knochen[kopf] = {"rotation": [f"math.sin({T} * 2.0 - 30.0) * 2.5", f"math.sin({T} - 90.0) * 2.0", 0.0]}
-    for i, k in enumerate(schwanzkette):
-        knochen[k] = {"rotation": [f"math.cos({T} * 2.0) * 3.0", f"math.sin({T} - {40 + 30 * i}) * {8 + 5 * i}", 0.0]}
-    if "schwanz1" in da:
-        for i, k in enumerate(("schwanz1", "schwanz2", "schwanz3")):
-            knochen[k] = {"rotation": [0.0, f"math.sin({T} - {40 * i}) * {8 + 5 * i}", 0.0]}
+    nachschwingen(knochen, T, da, kopf, schwanzkette, heben=0.45, rollen=2.2, nicken=3.5, wedeln=9.0)
     return {"anim_time_update": "query.modified_distance_moved", "loop": True, "bones": knochen}
 
 
 def trab(T, da, kopf, schwanzkette):
-    """Schneller: der Trab, diagonale Beine gemeinsam, weite Schritte."""
+    """Schneller: der Trab, diagonale Beine gemeinsam, weite Schritte - der
+    Koerper federt kraeftiger, der Schwanz steht etwas hoch."""
     knie_da = {k for k in da if k.startswith("knie")}
     T2 = f"({T} * 0.8)"
     knochen = beinpaar(T2, DIAGONAL, 30.0, 58.0, knie_da)
-    knochen["body"] = {"position": [0.0, f"-math.cos({T2} * 2.0) * 0.6", 0.0],
-                       "rotation": [f"math.sin({T2} * 2.0) * 1.5", 0.0, 0.0]}
-    if kopf:
-        knochen[kopf] = {"rotation": [f"math.sin({T2} * 2.0 + 60.0) * 3.0", 0.0, 0.0]}
-    for i, k in enumerate(schwanzkette):
-        knochen[k] = {"rotation": [f"-12.0 + math.sin({T2} * 2.0) * 6.0", f"math.sin({T2}) * 8.0", 0.0]}
+    nachschwingen(knochen, T2, da, kopf, schwanzkette, heben=0.8, rollen=1.4, nicken=4.0, wedeln=7.0)
+    for k in schwanzkette:
+        r = knochen[k]["rotation"]
+        knochen[k]["rotation"] = [f"-12.0 + {r[0]}", r[1], r[2]]
     return {"anim_time_update": "query.modified_distance_moved", "loop": True, "bones": knochen}
 
 
 def galopp(T, da, kopf, schwanzkette):
     """Katzen: Sprunggalopp - vorn und hinten je fast gemeinsam, der Ruecken
-    streckt und beugt sich, die Knie falten weit ein. Weicher als frueher."""
+    streckt und beugt sich weit, der Kopf bleibt dabei erstaunlich ruhig,
+    der Schwanz steuert als lange Welle."""
     knie_da = {k for k in da if k.startswith("knie")}
     T2 = f"({T} * 0.7)"
     phasen = {"leg0": 0.0, "leg1": -25.0, "leg2": -180.0, "leg3": -205.0}
-    knochen = beinpaar(T2, phasen, 34.0, 55.0, knie_da)
-    knochen["body"] = {"position": [0.0, f"(1.0 - math.cos({T2} * 2.0)) * 0.5", 0.0],
-                       "rotation": [f"math.sin({T2}) * 4.0", 0.0, 0.0]}
+    knochen = beinpaar(T2, phasen, 38.0, 60.0, knie_da)
+    nachschwingen(knochen, T2, da, kopf, schwanzkette, heben=0.7, rollen=1.0, nicken=2.0, wedeln=10.0, tempo=1.0)
+    knochen["body"]["rotation"][0] = f"math.sin({T2}) * 7.0"
+    knochen["body"]["position"][1] = f"(1.0 - math.cos({T2} * 2.0)) * 0.7"
     if kopf:
-        knochen[kopf] = {"rotation": [f"-math.sin({T2}) * 4.0", 0.0, 0.0]}
+        knochen[kopf]["rotation"][0] = f"-math.sin({T2}) * 6.0 + math.sin({T2} * 2.0 - 60.0) * 2.0"
     for i, k in enumerate(schwanzkette):
-        knochen[k] = {"rotation": [f"-15.0 + math.sin({T2} * 2.0) * 6.0", 0.0, 0.0]}
+        knochen[k]["rotation"][0] = f"-15.0 + math.sin({T2} * 2.0 - {50 + 40 * i}) * {8 + 6 * i}"
+    return {"anim_time_update": "query.modified_distance_moved", "loop": True, "bones": knochen}
+
+
+def huepfen(T, da, kopf, schwanzkette, schnell=False):
+    """Das Eichhoernchen laeuft nicht, es huepft in Saetzen: beide Vorder-
+    pfoten zugleich, dann beide Hinterbeine, der Ruecken biegt sich wie eine
+    Feder - und der buschige Schwanz wogt dabei in einer grossen Welle hinter
+    ihm her (Fynn: "dass sich der Schwanz beim Laufen ein bisschen mehr
+    bewegt")."""
+    knie_da = {k for k in da if k.startswith("knie")}
+    T2 = f"({T} * {0.9 if schnell else 0.75})"
+    phasen = {"leg0": 0.0, "leg1": -12.0, "leg2": -170.0, "leg3": -182.0}
+    knochen = beinpaar(T2, phasen, 48.0 if schnell else 40.0, 65.0, knie_da)
+    knochen["body"] = {"position": [0.0, f"math.max(0.0, math.sin({T2})) * {2.2 if schnell else 1.6}", 0.0],
+                       "rotation": [f"math.sin({T2} + 90.0) * {12.0 if schnell else 9.0}", 0.0, 0.0]}
+    if kopf:
+        knochen[kopf] = {"rotation": [f"-math.sin({T2} + 90.0) * 8.0 + math.sin({T2} * 2.0) * 3.0", 0.0, 0.0]}
+    for i, k in enumerate(schwanzkette):
+        # Hoch getragen und wogend: jedes Glied spaeter, die Spitze am weitesten.
+        knochen[k] = {"rotation": [f"math.sin({T2} - {70 + 60 * i}) * {12 + 12 * i}",
+                                   f"math.sin({T2} * 0.5 - {40 * i}) * {6 + 4 * i}", 0.0]}
     return {"anim_time_update": "query.modified_distance_moved", "loop": True, "bones": knochen}
 
 
@@ -1215,29 +1290,47 @@ def vogelbewegungen():
     streckt die Faenge vor."""
     lt = "query.life_time"
     schlagen = f"math.clamp(math.sin({lt} * 24.0) * 3.0 - 2.0, 0.0, 1.0)"
-    schlag = f"math.sin({lt} * 520.0) * 38.0 * {schlagen}"
-    nach = f"math.sin({lt} * 520.0 - 60.0) * 26.0 * {schlagen}"
+    # Fynn: "Der Fluegelschlag muss noch geiler sein." Ein echter Schlag ist
+    # nicht gleichmaessig: der Abschlag kraeftig und schnell, der Aufschlag
+    # langsamer - darum die zweite Welle (doppelte Frequenz) dazu. Beim
+    # Abschlag dreht sich die Schwinge nach vorn, beim Aufschlag klappen die
+    # Spitzen ein; der Rumpf hebt sich mit jedem Abschlag.
+    welle = f"(math.sin({lt} * 520.0) + math.sin({lt} * 1040.0 + 90.0) * 0.3)"
+    schlag = f"{welle} * 40.0 * {schlagen}"
+    nach = f"math.sin({lt} * 520.0 - 70.0) * 32.0 * {schlagen}"
+    drehen = f"math.cos({lt} * 520.0) * 12.0 * {schlagen}"
     fliegen = {"loop": True, "bones": {
-        "rumpf": {"rotation": ["-query.target_x_rotation * 0.5", 0.0, "variable.fynn_dreh * 2.5"]},
+        "rumpf": {"rotation": [f"-query.target_x_rotation * 0.5 + math.sin({lt} * 520.0 + 150.0) * 3.0 * {schlagen}",
+                               0.0, "variable.fynn_dreh * 2.5"],
+                  "position": [0.0, f"-math.sin({lt} * 520.0 + 30.0) * 0.8 * {schlagen}", 0.0]},
         # Greifvoegel schauen ruckartig: alle zwei Drittel Sekunden ein
-        # neuer Blickwinkel, dazwischen steht der Kopf still.
-        "kopf": {"rotation": [f"math.sin(math.floor({lt} * 1.5) * 57.0) * 10.0",
+        # neuer Blickwinkel, dazwischen steht der Kopf still - auch gegen
+        # das Auf und Ab des Rumpfes.
+        "kopf": {"rotation": [f"math.sin(math.floor({lt} * 1.5) * 57.0) * 10.0 - math.sin({lt} * 520.0 + 150.0) * 3.0 * {schlagen}",
                               f"math.sin(math.floor({lt} * 1.5) * 97.0) * 30.0", 0.0]},
-        "fluegel_links": {"rotation": [0.0, 0.0, f"-8.0 - math.sin({lt} * 60.0) * 3.0 - {schlag}"]},
-        "fluegel_rechts": {"rotation": [0.0, 0.0, f"8.0 + math.sin({lt} * 60.0) * 3.0 + {schlag}"]},
-        "fluegelspitze_links": {"rotation": [0.0, 0.0, f"-4.0 - {nach}"]},
-        "fluegelspitze_rechts": {"rotation": [0.0, 0.0, f"4.0 + {nach}"]},
-        "schwanz": {"rotation": [f"math.sin({lt} * 40.0) * 4.0", "-variable.fynn_dreh * 3.0", 0.0],
+        "fluegel_links": {"rotation": [0.0, f"{drehen}", f"-8.0 - math.sin({lt} * 60.0) * 3.0 - {schlag}"]},
+        "fluegel_rechts": {"rotation": [0.0, f"-{drehen}", f"8.0 + math.sin({lt} * 60.0) * 3.0 + {schlag}"]},
+        "fluegelspitze_links": {"rotation": [0.0, f"math.max(0.0, -{nach}) * 0.6", f"-4.0 - {nach}"],
+                                "scale": [1.0, 1.0, f"1.0 + math.max(0.0, {welle}) * 0.12 * {schlagen}"]},
+        "fluegelspitze_rechts": {"rotation": [0.0, f"-math.max(0.0, -{nach}) * 0.6", f"4.0 + {nach}"],
+                                 "scale": [1.0, 1.0, f"1.0 + math.max(0.0, {welle}) * 0.12 * {schlagen}"]},
+        "schwanz": {"rotation": [f"math.sin({lt} * 40.0) * 4.0", "-variable.fynn_dreh * 3.0", "variable.fynn_dreh * 2.0"],
                     "scale": ["1.0 + math.min(math.abs(variable.fynn_dreh) * 0.04, 0.35)", 1.0, 1.0]},
         "fuesse": {"rotation": [70.0, 0.0, 0.0]},
     }}
+    # Fynn: "ein krankerer Sturzflug". Steil vornueber, die Schwingen ganz an
+    # den Koerper, die Spitzen nach hinten, der Schwanz geschlossen, die
+    # Faenge eng angelegt - und bei dem Tempo zittert alles ein wenig.
+    zittern = f"math.sin({lt} * 2200.0)"
     stossen = {"loop": True, "bones": {
-        "fluegel_links": {"rotation": [0.0, -40.0, -25.0]},
-        "fluegel_rechts": {"rotation": [0.0, 40.0, 25.0]},
-        "fluegelspitze_links": {"rotation": [0.0, -35.0, 0.0]},
-        "fluegelspitze_rechts": {"rotation": [0.0, 35.0, 0.0]},
-        "fuesse": {"rotation": [-60.0, 0.0, 0.0]},
-        "kopf": {"rotation": [20.0, 0.0, 0.0]},
+        "rumpf": {"rotation": [f"38.0 + {zittern} * 1.5", 0.0, f"math.sin({lt} * 300.0) * 6.0"]},
+        "fluegel_links": {"rotation": [0.0, f"-72.0 + {zittern} * 3.0", -12.0]},
+        "fluegel_rechts": {"rotation": [0.0, f"72.0 - {zittern} * 3.0", 12.0]},
+        "fluegelspitze_links": {"rotation": [0.0, -55.0, f"{zittern} * 4.0"]},
+        "fluegelspitze_rechts": {"rotation": [0.0, 55.0, f"-{zittern} * 4.0"]},
+        "schwanz": {"rotation": [-8.0, 0.0, 0.0], "scale": [0.55, 1.0, 1.0]},
+        "fuesse": {"rotation": [85.0, 0.0, 0.0]},
+        "kopf": {"rotation": [-28.0, 0.0, 0.0]},
     }}
     schrei = {"loop": True, "bones": {
         "unterschnabel": {"rotation": [28.0, 0.0, 0.0]},
@@ -1298,9 +1391,13 @@ def bewegungen(t, modell):
         schritt = round(38.17 * (12.0 / max(6.0, beinlaenge)), 2)
         T = f"query.anim_time * {schritt}"
         katze = t.get("gestalt") in ("loewe", "tiger", "schneeleopard")
-        a["laufen"] = schrittgang(T, art, da, kopf, schwanzkette)
-        if art == "land":
-            a["galopp"] = galopp(T, da, kopf, schwanzkette) if katze else trab(T, da, kopf, schwanzkette)
+        if t.get("gang") == "huepfen":
+            a["laufen"] = huepfen(T, da, kopf, schwanzkette)
+            a["galopp"] = huepfen(T, da, kopf, schwanzkette, schnell=True)
+        else:
+            a["laufen"] = schrittgang(T, art, da, kopf, schwanzkette)
+            if art == "land":
+                a["galopp"] = galopp(T, da, kopf, schwanzkette) if katze else trab(T, da, kopf, schwanzkette)
         # Stehen: atmen und ab und zu das Gewicht verlagern - langsam, damit
         # nichts zittert.
         a["stehen"] = {"loop": True, "bones": {
@@ -1415,33 +1512,51 @@ def bewegungen(t, modell):
     # --- Angriff: am Zaehler v.attack_time des Spiels
     stoss = "math.sin(variable.attack_time * 180.0)"
     nach = "math.sin(math.clamp(variable.attack_time * 1.4 - 0.2, 0.0, 1.0) * 180.0)"
+    # Erst ausholen (das erste Drittel), dann zuschlagen - so sieht man den
+    # Schlag kommen, und er trifft mit Wucht.
+    aus = "math.sin(math.clamp(variable.attack_time / 0.35, 0.0, 1.0) * 180.0)"
+    zu = "math.sin(math.clamp((variable.attack_time - 0.3) / 0.7, 0.0, 1.0) * 180.0)"
     ang = {}
     art_angriff = t.get("angriff")
     if art_angriff == "tatze":
         # Aufrichten, und dann beide Tatzen nacheinander.
-        ang = {"body": {"rotation": [f"-{stoss} * 28.0", 0.0, 0.0], "position": [0.0, f"{stoss} * 2.0", 0.0]},
-               "leg0": {"rotation": [f"-{stoss} * 95.0", 0.0, f"{stoss} * 15.0"]},
-               "leg1": {"rotation": [f"-{nach} * 80.0", 0.0, f"-{nach} * 15.0"]},
-               "leg2": {"rotation": [f"{stoss} * 25.0", 0.0, 0.0]},
-               "leg3": {"rotation": [f"{stoss} * 25.0", 0.0, 0.0]},
-               kopf: {"rotation": [f"{stoss} * 18.0", 0.0, 0.0]}}
+        ang = {"body": {"rotation": [f"-{aus} * 30.0 - {zu} * 12.0", f"{zu} * 6.0", 0.0],
+                        "position": [0.0, f"{aus} * 2.5", f"-{zu} * 2.0"]},
+               "leg0": {"rotation": [f"-{aus} * 120.0 + {zu} * 40.0", 0.0, f"{aus} * 18.0"]},
+               "leg1": {"rotation": [f"-{nach} * 85.0", 0.0, f"-{nach} * 15.0"]},
+               "leg2": {"rotation": [f"{aus} * 28.0", 0.0, 0.0]},
+               "leg3": {"rotation": [f"{aus} * 28.0", 0.0, 0.0]},
+               kopf: {"rotation": [f"-{aus} * 10.0 + {zu} * 22.0", f"{zu} * 10.0", 0.0]}}
     elif art_angriff == "stoss":
         # Kopf runter, Hinterbeine stemmen, der ganze Koerper schiesst vor.
-        ang = {kopf: {"rotation": [f"{stoss} * 38.0", 0.0, 0.0]},
-               "body": {"rotation": [f"{stoss} * 6.0", 0.0, 0.0], "position": [0.0, 0.0, f"-{stoss} * 3.0"]},
-               "leg2": {"rotation": [f"{stoss} * 30.0", 0.0, 0.0]},
-               "leg3": {"rotation": [f"{stoss} * 30.0", 0.0, 0.0]}}
+        # Den Kopf senken und zuruecknehmen, dann mit ganzem Gewicht vor.
+        ang = {kopf: {"rotation": [f"{aus} * 30.0 + {zu} * 20.0", f"{zu} * 12.0", 0.0]},
+               "body": {"rotation": [f"{aus} * 4.0 + {zu} * 6.0", 0.0, 0.0],
+                        "position": [0.0, f"-{aus} * 0.8", f"{aus} * 1.5 - {zu} * 4.5"]},
+               "leg0": {"rotation": [f"{aus} * 12.0 - {zu} * 18.0", 0.0, 0.0]},
+               "leg1": {"rotation": [f"{aus} * 12.0 - {zu} * 18.0", 0.0, 0.0]},
+               "leg2": {"rotation": [f"-{aus} * 8.0 + {zu} * 34.0", 0.0, 0.0]},
+               "leg3": {"rotation": [f"-{aus} * 8.0 + {zu} * 34.0", 0.0, 0.0]}}
     elif art_angriff == "biss":
+        # Maul auf, vorschnellen, zupacken - und den Kopf schuetteln.
         if "kiefer" in da:
-            ang["kiefer"] = {"rotation": [f"{stoss} * 45.0", 0.0, 0.0]}
-        ang[kopf] = {"rotation": [f"-{stoss} * 14.0", f"math.sin(variable.attack_time * 540.0) * 8.0", 0.0],
-                     "position": [0.0, 0.0, f"-{stoss} * 2.0"]}
+            ang["kiefer"] = {"rotation": [f"{aus} * 50.0 + {zu} * 10.0", 0.0, 0.0]}
+        ang[kopf] = {"rotation": [f"-{aus} * 16.0 + {zu} * 6.0", f"math.sin(variable.attack_time * 900.0) * 12.0 * {zu}",
+                                  f"math.sin(variable.attack_time * 900.0 + 90.0) * 8.0 * {zu}"],
+                     "position": [0.0, 0.0, f"{aus} * 1.0 - {zu} * 3.0"]}
+        ang["body"] = {"position": [0.0, 0.0, f"-{zu} * 2.0"]}
     elif art_angriff == "spiess":
         ang = {kopf: {"rotation": [0.0, "math.sin(variable.attack_time * 360.0) * 30.0", 0.0]},
                "rumpf": {"rotation": [0.0, "-math.sin(variable.attack_time * 360.0) * 12.0", 0.0]}}
     elif art_angriff == "krallen":
-        ang = {"fuesse": {"rotation": [f"-{stoss} * 110.0", 0.0, 0.0]},
-               "kopf": {"rotation": [f"{stoss} * 30.0", 0.0, 0.0]}}
+        # Der Adler faengt ab: Schwingen weit nach vorn gerissen, Schwanz
+        # gefaechert, die Faenge weit voraus - und zupacken.
+        ang = {"fuesse": {"rotation": [f"-{aus} * 100.0 - {zu} * 20.0", 0.0, 0.0]},
+               "kopf": {"rotation": [f"-{aus} * 15.0 + {zu} * 35.0", 0.0, 0.0]},
+               "fluegel_links": {"rotation": [0.0, f"{aus} * 30.0", f"-{aus} * 35.0"]},
+               "fluegel_rechts": {"rotation": [0.0, f"-{aus} * 30.0", f"{aus} * 35.0"]},
+               "schwanz": {"rotation": [f"-{aus} * 25.0", 0.0, 0.0], "scale": [f"1.0 + {aus} * 0.5", 1.0, 1.0]},
+               "rumpf": {"rotation": [f"-{aus} * 30.0", 0.0, 0.0]}}
     elif art_angriff == "ramme":
         # Der Wal holt mit dem Kopf aus und stoesst vor, die Fluke schlaegt nach.
         ang = {"rumpf": {"rotation": [f"-{stoss} * 10.0", 0.0, 0.0], "position": [0.0, 0.0, f"-{stoss} * 8.0"]},

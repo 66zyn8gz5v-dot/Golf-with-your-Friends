@@ -18,6 +18,7 @@
         "stehen": "animation.fynn.walross.stehen",
         "blick": "animation.common.look_at_target",
         "kopfschuetteln": "animation.fynn.walross.kopfschuetteln",
+        "schnuppern": "animation.fynn.walross.schnuppern",
         "bruellen": "animation.fynn.walross.bruellen",
         "wedeln": "animation.fynn.walross.wedeln",
         "drehen": "animation.fynn.walross.drehen",
@@ -52,6 +53,9 @@
           "drehen",
           {
             "kopfschuetteln": "(1.0 - math.clamp(query.modified_move_speed * 3.0, 0.0, 1.0)) * math.clamp((math.sin(query.life_time * 19.0 + variable.fynn_zufall + 0) - 0.93) * 21.43, 0.0, 1.0)"
+          },
+          {
+            "schnuppern": "(1.0 - math.clamp(query.modified_move_speed * 3.0, 0.0, 1.0)) * math.clamp((math.sin(query.life_time * 7.0 + variable.fynn_zufall + 40) - 0.88) * 12.5, 0.0, 1.0)"
           },
           {
             "bruellen": "(1.0 - math.clamp(query.modified_move_speed * 3.0, 0.0, 1.0)) * math.clamp((math.sin(query.life_time * 17.0 + variable.fynn_zufall + 60) - 0.9) * 15.0, 0.0, 1.0)"

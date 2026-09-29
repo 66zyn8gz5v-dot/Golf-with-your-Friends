@@ -445,11 +445,12 @@ def greif_bewegungen():
         "fluegelspitze_links": {"rotation": [0.0, -95.0, 0.0]},
         "fluegelspitze_rechts": {"rotation": [0.0, 95.0, 0.0]},
     }}
-    schlag = f"math.sin({LT} * 320.0) * 45.0"
-    nach = f"math.sin({LT} * 320.0 - 55.0) * 30.0"
+    # Wie beim Adler: kraeftiger Abschlag, lockerer Aufschlag.
+    schlag = f"(math.sin({LT} * 320.0) + math.sin({LT} * 640.0 + 90.0) * 0.3) * 45.0"
+    nach = f"math.sin({LT} * 320.0 - 70.0) * 34.0"
     flug = {"loop": True, "bones": {
-        "fluegel_links": {"rotation": [0.0, 0.0, f"-5.0 - {schlag}"]},
-        "fluegel_rechts": {"rotation": [0.0, 0.0, f"5.0 + {schlag}"]},
+        "fluegel_links": {"rotation": [0.0, f"math.cos({LT} * 320.0) * 12.0", f"-5.0 - {schlag}"]},
+        "fluegel_rechts": {"rotation": [0.0, f"-math.cos({LT} * 320.0) * 12.0", f"5.0 + {schlag}"]},
         "fluegelspitze_links": {"rotation": [0.0, 0.0, f"-{nach}"]},
         "fluegelspitze_rechts": {"rotation": [0.0, 0.0, f"{nach}"]},
         "body": {"rotation": ["-query.target_x_rotation * 0.4", 0.0, "variable.fynn_dreh * 2.0"],

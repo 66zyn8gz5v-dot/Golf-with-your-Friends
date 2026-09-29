@@ -64,26 +64,26 @@
         "body": {
           "position": [
             0.0,
-            "-math.cos(query.anim_time * 25.45 * 2.0) * 0.3",
+            "-math.cos(query.anim_time * 25.45 * 2.0) * 0.45",
             0.0
           ],
           "rotation": [
-            "math.sin(query.anim_time * 25.45 * 2.0 - 90.0) * 0.8",
-            0.0,
-            "math.sin(query.anim_time * 25.45 - 45.0) * 1.4"
+            "math.sin(query.anim_time * 25.45 * 2.0 - 90.0) * 1.4000000000000001",
+            "math.sin(query.anim_time * 25.45 - 20.0) * 1.32",
+            "math.sin(query.anim_time * 25.45 - 45.0) * 2.2"
           ]
         },
         "head": {
           "rotation": [
-            "math.sin(query.anim_time * 25.45 * 2.0 - 30.0) * 2.5",
-            "math.sin(query.anim_time * 25.45 - 90.0) * 2.0",
-            0.0
+            "math.sin(query.anim_time * 25.45 * 2.0 - 50.0) * 3.5 - math.sin(query.anim_time * 25.45 * 2.0 - 90.0) * 1.05",
+            "math.sin(query.anim_time * 25.45 - 80.0) * 2.64",
+            "-math.sin(query.anim_time * 25.45 - 45.0) * 1.54"
           ]
         },
         "tail": {
           "rotation": [
-            "math.cos(query.anim_time * 25.45 * 2.0) * 3.0",
-            "math.sin(query.anim_time * 25.45 - 40) * 8",
+            "math.cos(query.anim_time * 25.45 * 2.0 - 30) * 3.15",
+            "math.sin(query.anim_time * 25.45 - 40) * 9.0",
             0.0
           ]
         }
@@ -152,26 +152,26 @@
         "body": {
           "position": [
             0.0,
-            "-math.cos((query.anim_time * 25.45 * 0.8) * 2.0) * 0.6",
+            "-math.cos((query.anim_time * 25.45 * 0.8) * 2.0) * 0.8",
             0.0
           ],
           "rotation": [
-            "math.sin((query.anim_time * 25.45 * 0.8) * 2.0) * 1.5",
-            0.0,
-            0.0
+            "math.sin((query.anim_time * 25.45 * 0.8) * 2.0 - 90.0) * 1.6",
+            "math.sin((query.anim_time * 25.45 * 0.8) - 20.0) * 0.84",
+            "math.sin((query.anim_time * 25.45 * 0.8) - 45.0) * 1.4"
           ]
         },
         "head": {
           "rotation": [
-            "math.sin((query.anim_time * 25.45 * 0.8) * 2.0 + 60.0) * 3.0",
-            0.0,
-            0.0
+            "math.sin((query.anim_time * 25.45 * 0.8) * 2.0 - 50.0) * 4.0 - math.sin((query.anim_time * 25.45 * 0.8) * 2.0 - 90.0) * 1.2",
+            "math.sin((query.anim_time * 25.45 * 0.8) - 80.0) * 1.68",
+            "-math.sin((query.anim_time * 25.45 * 0.8) - 45.0) * 0.9799999999999999"
           ]
         },
         "tail": {
           "rotation": [
-            "-12.0 + math.sin((query.anim_time * 25.45 * 0.8) * 2.0) * 6.0",
-            "math.sin((query.anim_time * 25.45 * 0.8)) * 8.0",
+            "-12.0 + math.cos((query.anim_time * 25.45 * 0.8) * 2.0 - 30) * 2.4499999999999997",
+            "math.sin((query.anim_time * 25.45 * 0.8) - 40) * 7.0",
             0.0
           ]
         }
@@ -238,14 +238,83 @@
         "head": {
           "rotation": [
             "48.0 + math.sin(query.life_time * 400.0) * 3.0",
-            "math.sin(query.life_time * 60.0) * 8.0",
-            0.0
+            "math.sin(query.life_time * 60.0) * 10.0",
+            "math.sin(query.life_time * 400.0 + 90.0) * 2.0"
           ]
         },
         "body": {
           "rotation": [
             4.0,
             0.0,
+            0.0
+          ],
+          "position": [
+            0.0,
+            -0.3,
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.elch.rupfen": {
+      "loop": true,
+      "bones": {
+        "head": {
+          "rotation": [
+            "44.0 - math.pow(math.max(0.0, math.sin(query.life_time * 220.0)), 6.0) * 22.0",
+            "math.pow(math.max(0.0, math.sin(query.life_time * 220.0)), 6.0) * 18.0",
+            "math.pow(math.max(0.0, math.sin(query.life_time * 220.0)), 6.0) * -8.0"
+          ]
+        },
+        "body": {
+          "rotation": [
+            "3.0 - math.pow(math.max(0.0, math.sin(query.life_time * 220.0)), 6.0) * 3.0",
+            0.0,
+            0.0
+          ]
+        },
+        "leg0": {
+          "rotation": [
+            "-math.pow(math.max(0.0, math.sin(query.life_time * 220.0)), 6.0) * 6.0",
+            0.0,
+            0.0
+          ]
+        },
+        "leg1": {
+          "rotation": [
+            "-math.pow(math.max(0.0, math.sin(query.life_time * 220.0)), 6.0) * 6.0",
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.elch.kauen": {
+      "loop": true,
+      "bones": {
+        "head": {
+          "rotation": [
+            "8.0 + math.sin(query.life_time * 700.0) * 2.5",
+            "math.sin(query.life_time * 350.0) * 4.0",
+            "math.sin(query.life_time * 700.0 + 90.0) * 2.0"
+          ]
+        }
+      }
+    },
+    "animation.fynn.elch.schnuppern": {
+      "loop": true,
+      "bones": {
+        "head": {
+          "rotation": [
+            "30.0 + math.sin(query.life_time * 1500.0) * 1.5",
+            "math.sin(query.life_time * 90.0) * 25.0",
+            0.0
+          ]
+        },
+        "body": {
+          "rotation": [
+            2.0,
+            "math.sin(query.life_time * 90.0 - 40.0) * 3.0",
             0.0
           ]
         }
@@ -301,33 +370,47 @@
       "bones": {
         "head": {
           "rotation": [
-            "math.sin(variable.attack_time * 180.0) * 38.0",
-            0.0,
+            "math.sin(math.clamp(variable.attack_time / 0.35, 0.0, 1.0) * 180.0) * 30.0 + math.sin(math.clamp((variable.attack_time - 0.3) / 0.7, 0.0, 1.0) * 180.0) * 20.0",
+            "math.sin(math.clamp((variable.attack_time - 0.3) / 0.7, 0.0, 1.0) * 180.0) * 12.0",
             0.0
           ]
         },
         "body": {
           "rotation": [
-            "math.sin(variable.attack_time * 180.0) * 6.0",
+            "math.sin(math.clamp(variable.attack_time / 0.35, 0.0, 1.0) * 180.0) * 4.0 + math.sin(math.clamp((variable.attack_time - 0.3) / 0.7, 0.0, 1.0) * 180.0) * 6.0",
             0.0,
             0.0
           ],
           "position": [
             0.0,
+            "-math.sin(math.clamp(variable.attack_time / 0.35, 0.0, 1.0) * 180.0) * 0.8",
+            "math.sin(math.clamp(variable.attack_time / 0.35, 0.0, 1.0) * 180.0) * 1.5 - math.sin(math.clamp((variable.attack_time - 0.3) / 0.7, 0.0, 1.0) * 180.0) * 4.5"
+          ]
+        },
+        "leg0": {
+          "rotation": [
+            "math.sin(math.clamp(variable.attack_time / 0.35, 0.0, 1.0) * 180.0) * 12.0 - math.sin(math.clamp((variable.attack_time - 0.3) / 0.7, 0.0, 1.0) * 180.0) * 18.0",
             0.0,
-            "-math.sin(variable.attack_time * 180.0) * 3.0"
+            0.0
+          ]
+        },
+        "leg1": {
+          "rotation": [
+            "math.sin(math.clamp(variable.attack_time / 0.35, 0.0, 1.0) * 180.0) * 12.0 - math.sin(math.clamp((variable.attack_time - 0.3) / 0.7, 0.0, 1.0) * 180.0) * 18.0",
+            0.0,
+            0.0
           ]
         },
         "leg2": {
           "rotation": [
-            "math.sin(variable.attack_time * 180.0) * 30.0",
+            "-math.sin(math.clamp(variable.attack_time / 0.35, 0.0, 1.0) * 180.0) * 8.0 + math.sin(math.clamp((variable.attack_time - 0.3) / 0.7, 0.0, 1.0) * 180.0) * 34.0",
             0.0,
             0.0
           ]
         },
         "leg3": {
           "rotation": [
-            "math.sin(variable.attack_time * 180.0) * 30.0",
+            "-math.sin(math.clamp(variable.attack_time / 0.35, 0.0, 1.0) * 180.0) * 8.0 + math.sin(math.clamp((variable.attack_time - 0.3) / 0.7, 0.0, 1.0) * 180.0) * 34.0",
             0.0,
             0.0
           ]

@@ -36,20 +36,20 @@
         "body": {
           "position": [
             0.0,
-            "-math.cos(query.anim_time * 76.34 * 2.0) * 0.3",
+            "-math.cos(query.anim_time * 76.34 * 2.0) * 0.45",
             0.0
           ],
           "rotation": [
-            "math.sin(query.anim_time * 76.34 * 2.0 - 90.0) * 0.8",
-            0.0,
-            "math.sin(query.anim_time * 76.34 - 45.0) * 1.4"
+            "math.sin(query.anim_time * 76.34 * 2.0 - 90.0) * 1.4000000000000001",
+            "math.sin(query.anim_time * 76.34 - 20.0) * 1.32",
+            "math.sin(query.anim_time * 76.34 - 45.0) * 2.2"
           ]
         },
         "head": {
           "rotation": [
-            "math.sin(query.anim_time * 76.34 * 2.0 - 30.0) * 2.5",
-            "math.sin(query.anim_time * 76.34 - 90.0) * 2.0",
-            0.0
+            "math.sin(query.anim_time * 76.34 * 2.0 - 50.0) * 3.5 - math.sin(query.anim_time * 76.34 * 2.0 - 90.0) * 1.05",
+            "math.sin(query.anim_time * 76.34 - 80.0) * 2.64",
+            "-math.sin(query.anim_time * 76.34 - 45.0) * 1.54"
           ]
         }
       }
@@ -86,6 +86,25 @@
             0.0,
             "math.sin(query.life_time * 1100.0) * 9.0",
             "math.sin(query.life_time * 1100.0 + 90.0) * 12.0"
+          ]
+        }
+      }
+    },
+    "animation.fynn.walross.schnuppern": {
+      "loop": true,
+      "bones": {
+        "head": {
+          "rotation": [
+            "30.0 + math.sin(query.life_time * 1500.0) * 1.5",
+            "math.sin(query.life_time * 90.0) * 25.0",
+            0.0
+          ]
+        },
+        "body": {
+          "rotation": [
+            2.0,
+            "math.sin(query.life_time * 90.0 - 40.0) * 3.0",
+            0.0
           ]
         }
       }
@@ -206,33 +225,47 @@
       "bones": {
         "head": {
           "rotation": [
-            "math.sin(variable.attack_time * 180.0) * 38.0",
-            0.0,
+            "math.sin(math.clamp(variable.attack_time / 0.35, 0.0, 1.0) * 180.0) * 30.0 + math.sin(math.clamp((variable.attack_time - 0.3) / 0.7, 0.0, 1.0) * 180.0) * 20.0",
+            "math.sin(math.clamp((variable.attack_time - 0.3) / 0.7, 0.0, 1.0) * 180.0) * 12.0",
             0.0
           ]
         },
         "body": {
           "rotation": [
-            "math.sin(variable.attack_time * 180.0) * 6.0",
+            "math.sin(math.clamp(variable.attack_time / 0.35, 0.0, 1.0) * 180.0) * 4.0 + math.sin(math.clamp((variable.attack_time - 0.3) / 0.7, 0.0, 1.0) * 180.0) * 6.0",
             0.0,
             0.0
           ],
           "position": [
             0.0,
+            "-math.sin(math.clamp(variable.attack_time / 0.35, 0.0, 1.0) * 180.0) * 0.8",
+            "math.sin(math.clamp(variable.attack_time / 0.35, 0.0, 1.0) * 180.0) * 1.5 - math.sin(math.clamp((variable.attack_time - 0.3) / 0.7, 0.0, 1.0) * 180.0) * 4.5"
+          ]
+        },
+        "leg0": {
+          "rotation": [
+            "math.sin(math.clamp(variable.attack_time / 0.35, 0.0, 1.0) * 180.0) * 12.0 - math.sin(math.clamp((variable.attack_time - 0.3) / 0.7, 0.0, 1.0) * 180.0) * 18.0",
             0.0,
-            "-math.sin(variable.attack_time * 180.0) * 3.0"
+            0.0
+          ]
+        },
+        "leg1": {
+          "rotation": [
+            "math.sin(math.clamp(variable.attack_time / 0.35, 0.0, 1.0) * 180.0) * 12.0 - math.sin(math.clamp((variable.attack_time - 0.3) / 0.7, 0.0, 1.0) * 180.0) * 18.0",
+            0.0,
+            0.0
           ]
         },
         "leg2": {
           "rotation": [
-            "math.sin(variable.attack_time * 180.0) * 30.0",
+            "-math.sin(math.clamp(variable.attack_time / 0.35, 0.0, 1.0) * 180.0) * 8.0 + math.sin(math.clamp((variable.attack_time - 0.3) / 0.7, 0.0, 1.0) * 180.0) * 34.0",
             0.0,
             0.0
           ]
         },
         "leg3": {
           "rotation": [
-            "math.sin(variable.attack_time * 180.0) * 30.0",
+            "-math.sin(math.clamp(variable.attack_time / 0.35, 0.0, 1.0) * 180.0) * 8.0 + math.sin(math.clamp((variable.attack_time - 0.3) / 0.7, 0.0, 1.0) * 180.0) * 34.0",
             0.0,
             0.0
           ]
