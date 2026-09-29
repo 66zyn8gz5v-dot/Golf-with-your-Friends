@@ -23,6 +23,8 @@ export const TALISMANE = {
     // Aus dem Kristall der Kristallspinne (4.81). Nachtsicht blinkt, wenn
     // sie unter zehn Sekunden faellt - darum laenger als die anderen.
     "fynn:hoehlenauge": { wirkung: "night_vision", stufe: 0, dauer: 300 },
+    // Aus der Klaue des Werwolfs (4.82): nachts Staerke.
+    "fynn:mondtalisman": { wirkung: "strength", stufe: 0, nurNachts: true },
 };
 const JAEGERKETTE = "fynn:jaegerkette";
 
@@ -40,6 +42,15 @@ export function ganzerSatz(spieler) {
     if (!ausruestung) return undefined;
     const an = ["Head", "Chest", "Legs", "Feet"].map((platz) => ausruestung.getEquipment(platz)?.typeId);
     return SAETZE.find((satz) => satz.teile.every((teil, i) => an[i] === teil));
+}
+
+function nachts() {
+    try {
+        const zeit = world.getTimeOfDay();
+        return zeit >= 13000 && zeit <= 23000;
+    } catch (e) {
+        return false;
+    }
 }
 
 export function getragen(spieler) {
@@ -63,6 +74,7 @@ system.runInterval(() => {
             for (const [name, t] of Object.entries(TALISMANE)) {
                 if (!dabei.has(name)) continue;
                 if (t.nurImWasser && !spieler.isInWater) continue;
+                if (t.nurNachts && !nachts()) continue;
                 // Etwas laenger als der Takt, damit die Wirkung nie flackert.
                 spieler.addEffect(t.wirkung, t.dauer ?? 60, { amplifier: t.stufe, showParticles: false });
             }

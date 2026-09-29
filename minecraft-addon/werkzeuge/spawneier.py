@@ -557,6 +557,31 @@ EIER = {
         },
         "farben": {"g": "#3ac890", "G": "#7affc0", "W": "#e0fff0"},
     },
+    "werwolf": {
+        "oben": "#6a665e", "unten": "#4a3a2a", "teilung": 11, "flecken": ("#3e3a36", 0.25),
+        "karte": {
+            2: "....dd....dd....",
+            3: "....ddd..ddd....",
+            6: ".....y....y.....",
+            8: "......MMMM......",
+            9: ".....MnMMnM.....",
+            10: "......wwww......",
+        },
+        "farben": {"d": "#3e3a36", "y": "#ffcf2a", "M": "#8a867e", "n": "#141010", "w": "#f0e8d4"},
+    },
+    "moosgolem": {
+        "oben": "#7a7a74", "flecken": ("#4e4e4a", 0.3),
+        "karte": {
+            1: "....MMMMMMMM....",
+            2: "...MMMMMMMMMM...",
+            3: "..MMM.MMM.MMM...",
+            6: ".....g....g.....",
+            9: ".......GG.......",
+            10: "......GGGG......",
+            11: ".......GG.......",
+        },
+        "farben": {"M": "#4e7a2e", "g": "#7affa0", "G": "#7affa0"},
+    },
     "glimmerling": {
         "oben": "#4e5a38", "flecken": ("#5e6a44", 0.25),
         "karte": {

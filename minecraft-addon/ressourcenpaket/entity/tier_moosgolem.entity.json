@@ -1,0 +1,58 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:moosgolem",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "wald": "textures/entity/tiere/moosgolem_wald",
+        "tiefwald": "textures/entity/tiere/moosgolem_tiefwald"
+      },
+      "geometry": {
+        "default": "geometry.fynn.moosgolem"
+      },
+      "animations": {
+        "schlafen": "animation.fynn.moosgolem.schlafen",
+        "golem_geht": "animation.fynn.moosgolem.golem_geht",
+        "golem_steht": "animation.fynn.moosgolem.golem_steht",
+        "schlag": "animation.fynn.moosgolem.schlag"
+      },
+      "scripts": {
+        "initialize": [
+          "variable.fynn_gier_alt = query.body_y_rotation;",
+          "variable.fynn_dreh = 0.0;",
+          "variable.fynn_zufall = math.random(0.0, 360.0);"
+        ],
+        "pre_animation": [
+          "variable.fynn_d = query.body_y_rotation - variable.fynn_gier_alt;",
+          "variable.fynn_d = variable.fynn_d > 180.0 ? variable.fynn_d - 360.0 : (variable.fynn_d < -180.0 ? variable.fynn_d + 360.0 : variable.fynn_d);",
+          "variable.fynn_gier_alt = query.body_y_rotation;",
+          "variable.fynn_dreh = math.lerp(variable.fynn_dreh, math.clamp(variable.fynn_d / math.max(query.delta_time, 0.01) / 20.0, -10.0, 10.0), 0.12);"
+        ],
+        "animate": [
+          {
+            "schlafen": "query.property('fynn:schlaeft')"
+          },
+          {
+            "golem_geht": "(1.0 - query.property('fynn:schlaeft')) * math.clamp(query.modified_move_speed * 4.0, 0.0, 1.0)"
+          },
+          {
+            "golem_steht": "(1.0 - query.property('fynn:schlaeft')) * (1.0 - math.clamp(query.modified_move_speed * 4.0, 0.0, 1.0))"
+          },
+          {
+            "schlag": "(1.0 - query.property('fynn:schlaeft')) * (variable.attack_time > 0.0)"
+          }
+        ]
+      },
+      "render_controllers": [
+        "controller.render.fynn.moosgolem"
+      ],
+      "spawn_egg": {
+        "texture": "moosgolem_ei",
+        "texture_index": 0
+      }
+    }
+  }
+}

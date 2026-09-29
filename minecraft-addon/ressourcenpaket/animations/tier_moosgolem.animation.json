@@ -1,0 +1,152 @@
+{
+  "format_version": "1.10.0",
+  "animations": {
+    "animation.fynn.moosgolem.schlafen": {
+      "loop": true,
+      "bones": {
+        "koerper": {
+          "position": [
+            0.0,
+            -15.0,
+            0.0
+          ],
+          "rotation": [
+            18.0,
+            0.0,
+            0.0
+          ],
+          "scale": [
+            1.0,
+            "1.0 + math.sin(query.life_time * 25.0) * 0.015",
+            1.0
+          ]
+        },
+        "kopf": {
+          "position": [
+            0.0,
+            -5.0,
+            2.0
+          ],
+          "rotation": [
+            30.0,
+            0.0,
+            0.0
+          ]
+        },
+        "arm_links": {
+          "rotation": [
+            -35.0,
+            0.0,
+            45.0
+          ]
+        },
+        "arm_rechts": {
+          "rotation": [
+            -35.0,
+            0.0,
+            -45.0
+          ]
+        },
+        "bein_links": {
+          "scale": [
+            1.0,
+            0.1,
+            1.0
+          ]
+        },
+        "bein_rechts": {
+          "scale": [
+            1.0,
+            0.1,
+            1.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.moosgolem.golem_geht": {
+      "loop": true,
+      "bones": {
+        "bein_links": {
+          "rotation": [
+            "math.sin(query.life_time * 260.0) * 22.0",
+            0.0,
+            0.0
+          ]
+        },
+        "bein_rechts": {
+          "rotation": [
+            "-math.sin(query.life_time * 260.0) * 22.0",
+            0.0,
+            0.0
+          ]
+        },
+        "arm_links": {
+          "rotation": [
+            "-math.sin(query.life_time * 260.0) * 16.0",
+            0.0,
+            0.0
+          ]
+        },
+        "arm_rechts": {
+          "rotation": [
+            "math.sin(query.life_time * 260.0) * 16.0",
+            0.0,
+            0.0
+          ]
+        },
+        "koerper": {
+          "rotation": [
+            4.0,
+            0.0,
+            "math.sin(query.life_time * 260.0) * 3.0"
+          ]
+        }
+      }
+    },
+    "animation.fynn.moosgolem.golem_steht": {
+      "loop": true,
+      "bones": {
+        "koerper": {
+          "scale": [
+            1.0,
+            "1.0 + math.sin(query.life_time * 40.0) * 0.01",
+            1.0
+          ]
+        },
+        "kopf": {
+          "rotation": [
+            "math.sin(query.life_time * 20.0) * 4.0",
+            "math.sin(query.life_time * 13.0) * 20.0",
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.moosgolem.schlag": {
+      "loop": true,
+      "bones": {
+        "arm_links": {
+          "rotation": [
+            "-math.sin(variable.attack_time * 180.0) * 150.0",
+            0.0,
+            0.0
+          ]
+        },
+        "arm_rechts": {
+          "rotation": [
+            "-math.sin(variable.attack_time * 180.0) * 150.0",
+            0.0,
+            0.0
+          ]
+        },
+        "koerper": {
+          "rotation": [
+            "math.sin(variable.attack_time * 180.0) * 12.0",
+            0.0,
+            0.0
+          ]
+        }
+      }
+    }
+  }
+}

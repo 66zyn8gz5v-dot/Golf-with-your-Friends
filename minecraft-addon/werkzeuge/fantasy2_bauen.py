@@ -123,6 +123,67 @@ IRRLICHTFLASCHE = [
 IRRLICHTFLASCHE_F = {"k": K, "b": (120, 84, 50), "w": (206, 232, 236), "G": (122, 255, 192),
                      "W": (230, 255, 240), "g": (160, 240, 200)}
 
+# --- Werwolf und Moosgolem (4.82)
+WERWOLFSKLAUE = [
+    "................",
+    "................",
+    "...kk...........",
+    "...kWk...kk.....",
+    "....kWk..kWk....",
+    "....kWWk..kWk...",
+    ".....kWWk.kWWk..",
+    ".....kWWWkkWWk..",
+    "......kFFFFFFk..",
+    ".....kFFfFFfFk..",
+    ".....kFfFFfFFk..",
+    "......kFFFFFk...",
+    ".......kkkkk....",
+    "................",
+    "................",
+    "................",
+]
+WERWOLFSKLAUE_F = {"k": K, "W": (230, 222, 200), "F": (106, 102, 94), "f": (62, 58, 54)}
+
+MONDTALISMAN = [
+    "....ssssssss....",
+    "...s........s...",
+    "..s..........s..",
+    "...s...kk...s...",
+    "....s.kMMk.s....",
+    ".....kMMkk......",
+    "....kMMk........",
+    "....kMMk........",
+    "....kMMk........",
+    ".....kMMkk......",
+    "......kMMMk.....",
+    ".......kkk......",
+    "................",
+    "................",
+    "................",
+    "................",
+]
+MONDTALISMAN_F = {"k": K, "s": (190, 195, 205), "M": (235, 240, 255)}
+
+MOOSHERZ = [
+    "................",
+    "................",
+    "...kkk....kkk...",
+    "..kMMMk..kMMMk..",
+    ".kMmMMMkkMMMmMk.",
+    ".kMMMGMMMMGMMMk.",
+    ".kMMGGGMMGGGMMk.",
+    ".kMMMGGGGGGMMMk.",
+    "..kMMMGGGGMMMk..",
+    "...kMMMGGMMMk...",
+    "....kMMMMMMk....",
+    ".....kMMMMk.....",
+    "......kMMk......",
+    ".......kk.......",
+    "................",
+    "................",
+]
+MOOSHERZ_F = {"k": K, "M": (78, 122, 46), "m": (140, 170, 60), "G": (122, 255, 160)}
+
 NAMEN = [
     ("item.fynn:glutstachel", "Glutstachel", "Ember Stinger"),
     ("item.fynn:glutpfeil", "Glutpfeil", "Ember Arrow"),
@@ -130,6 +191,9 @@ NAMEN = [
     ("item.fynn:hoehlenauge", "Höhlenauge", "Cave Eye"),
     ("item.fynn:irrlichtflasche", "Irrlichtflasche", "Wisp in a Bottle"),
     ("entity.fynn:irrlichtflasche_wurf.name", "Irrlichtflasche", "Wisp in a Bottle"),
+    ("item.fynn:werwolfsklaue", "Werwolfsklaue", "Werewolf Claw"),
+    ("item.fynn:mondtalisman", "Mondtalisman", "Moon Talisman"),
+    ("item.fynn:moosherz", "Moosherz", "Moss Heart"),
 ]
 NAMEN += [(k + ".name", d, e) for k, d, e in NAMEN if k.startswith("item.")]
 
@@ -138,7 +202,9 @@ def bilder():
     return {"glutstachel": rbb.male(GLUTSTACHEL, GLUTSTACHEL_F), "glutpfeil": rbb.male(GLUTPFEIL, GLUTPFEIL_F),
             "spinnenkristall": rbb.male(SPINNENKRISTALL, SPINNENKRISTALL_F),
             "hoehlenauge": rbb.male(HOEHLENAUGE, HOEHLENAUGE_F),
-            "irrlichtflasche": rbb.male(IRRLICHTFLASCHE, IRRLICHTFLASCHE_F)}
+            "irrlichtflasche": rbb.male(IRRLICHTFLASCHE, IRRLICHTFLASCHE_F),
+            "werwolfsklaue": rbb.male(WERWOLFSKLAUE, WERWOLFSKLAUE_F),
+            "mondtalisman": rbb.male(MONDTALISMAN, MONDTALISMAN_F), "moosherz": rbb.male(MOOSHERZ, MOOSHERZ_F)}
 
 
 def main():
@@ -167,9 +233,22 @@ def main():
     bk.schreibe(VER / "entities" / "irrlichtflasche_wurf.json", geschoss("irrlichtflasche_wurf", 0))
     bk.schreibe(RES / "entity" / "irrlichtflasche_wurf.entity.json",
                 sprite_aussehen("irrlichtflasche_wurf", "textures/items/irrlichtflasche"))
+    # Werwolf und Moosgolem (4.82).
+    bk.schreibe(VER / "items" / "werwolfsklaue.json",
+                gegenstand("werwolfsklaue", {"minecraft:max_stack_size": 64}, "items", BEUTEFACH))
+    bk.schreibe(VER / "items" / "mondtalisman.json",
+                gegenstand("mondtalisman", {"minecraft:max_stack_size": 1, "minecraft:glint": True},
+                           "equipment", JAGDFACH))
+    bk.schreibe(VER / "recipes" / "mondtalisman.json",
+                geformt("mondtalisman", [" S ", "SkS", " S "],
+                        {"S": "fynn:silberbarren", "k": "fynn:werwolfsklaue"}, "fynn:mondtalisman"))
+    bk.schreibe(VER / "items" / "moosherz.json", gegenstand("moosherz", {
+        "minecraft:max_stack_size": 16, "minecraft:use_modifiers": {"use_duration": 0.05},
+        "minecraft:cooldown": {"category": "fynn:moosherz", "duration": 3.0}}, "items", BEUTEFACH))
     bk.item_bilder(bilder())
     bk.sprache("Fantasy-Wesen, zweite Welle", NAMEN)
-    print("gebaut: Glutstachel, Glutpfeil, Spinnenkristall, Höhlenauge, Irrlichtflasche")
+    print("gebaut: Glutstachel, Glutpfeil, Spinnenkristall, Höhlenauge, Irrlichtflasche, "
+          "Werwolfsklaue, Mondtalisman, Moosherz")
     if "--bilder" in sys.argv:
         from PIL import Image
         ordner = Path(sys.argv[sys.argv.index("--bilder") + 1])

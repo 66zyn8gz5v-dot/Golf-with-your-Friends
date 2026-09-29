@@ -202,12 +202,179 @@ export function lichterTakt(jetzt) {
     }
 }
 
+// ------------------------------------------------------------ Werwolf (4.82)
+
+export const WERWOLF = "fynn:werwolf";
+export const GOLEM = "fynn:moosgolem";
+export const WANDELN = { dauer: 30 };
+// Wann der Wolf herauskommt: nachts, wenn der Mond voll oder fast voll ist
+// (0 Vollmond, 1 und 7 die Naechte davor und danach).
+const HELLE_MONDE = new Set([0, 1, 7]);
+
+export function mondnacht(zeit, mond) {
+    return zeit >= 13000 && zeit <= 23000 && HELLE_MONDE.has(mond);
+}
+
+const wandelnd = new Map();      // Werwolf-Id -> { bis, zumWolf }
+
+/** Ein Takt (alle 20 Ticks): Passt die Gestalt zur Nacht? */
+export function werwolfTakt(werwolf, jetzt, nachtJetzt) {
+    const w = wandelnd.get(werwolf.id);
+    if (w) {
+        if (jetzt < w.bis) return "wandelt";
+        wandelnd.delete(werwolf.id);
+        try {
+            werwolf.triggerEvent(w.zumWolf ? "fynn:zum_wolf" : "fynn:zum_menschen");
+            if (w.zumWolf) werwolf.dimension.playSound("mob.wolf.howl", werwolf.location, { volume: 3, pitch: 0.5 });
+        } catch (e) { /* egal */ }
+        return w.zumWolf ? "ist Wolf" : "ist Mensch";
+    }
+    let istWolf = false;
+    try { istWolf = !!werwolf.getProperty("fynn:wolf"); } catch (e) { /* egal */ }
+    if (istWolf === nachtJetzt) return istWolf ? "Wolf" : "Mensch";
+    try { werwolf.triggerEvent("fynn:wandeln"); } catch (e) { return "?"; }
+    wandelnd.set(werwolf.id, { bis: jetzt + WANDELN.dauer, zumWolf: nachtJetzt });
+    try { werwolf.dimension.playSound("mob.wolf.growl", werwolf.location, { volume: 2, pitch: 0.5 }); } catch (e) { /* egal */ }
+    return "beginnt";
+}
+
+/** Silber trifft den Wolf doppelt - der Rest nur halb (siehe Verhalten). */
+export function silberTreffer(werwolf, taeter, schaden) {
+    let wolf = false;
+    try { wolf = !!werwolf.getProperty("fynn:wolf"); } catch (e) { return 0; }
+    if (!wolf || taeter?.typeId !== "minecraft:player") return 0;
+    let waffe;
+    try { waffe = taeter.getComponent("minecraft:equippable")?.getEquipment("Mainhand")?.typeId; } catch (e) { /* egal */ }
+    if (!waffe || !waffe.includes("silber")) return 0;
+    // Das Verhalten hat den Schlag halbiert: dreimal so viel obendrauf ergibt
+    // das Doppelte des vollen Schlags.
+    const extra = schaden * 3;
+    try {
+        werwolf.applyDamage(extra, { cause: "magic", damagingEntity: taeter });
+        werwolf.dimension.spawnParticle("minecraft:endrod", { x: werwolf.location.x, y: werwolf.location.y + 1.5, z: werwolf.location.z });
+    } catch (e) { /* egal */ }
+    return extra;
+}
+
+// ------------------------------------------------------------ Moosgolem (4.82)
+
+export const GOLEMZEIT = { wach: 1200, wurzelPause: 100, weckWeite: 12 };
+const golems = new Map();        // Id -> { ruhe, wurzeln }
+
+export function wecken(golem, jetzt) {
+    const z = golems.get(golem.id) ?? { ruhe: 0, wurzeln: 0 };
+    golems.set(golem.id, z);
+    z.ruhe = jetzt + GOLEMZEIT.wach;
+    let schlaeft = true;
+    try { schlaeft = golem.getProperty("fynn:schlaeft") !== false; } catch (e) { /* egal */ }
+    if (!schlaeft) return false;
+    try {
+        golem.triggerEvent("fynn:aufwachen");
+        golem.dimension.playSound("mob.irongolem.death", golem.location, { volume: 1.5, pitch: 0.4 });
+        golem.dimension.spawnParticle("minecraft:crop_growth_emitter", golem.location);
+    } catch (e) { /* egal */ }
+    return true;
+}
+
+/** Wer Baeume faellt, weckt die schlafenden Golems in der Naehe. */
+export function baumGefaellt(dim, ort, jetzt) {
+    let geweckt = 0;
+    let nahe = [];
+    try { nahe = dim.getEntities({ type: GOLEM, location: ort, maxDistance: GOLEMZEIT.weckWeite }); } catch (e) { /* egal */ }
+    for (const g of nahe) if (wecken(g, jetzt)) geweckt++;
+    return geweckt;
+}
+
+export function wurzeln(ziel) {
+    try {
+        ziel.applyDamage(5, { cause: "entityAttack" });
+        ziel.addEffect("slowness", 60, { amplifier: 4, showParticles: false });
+        const o = ziel.location;
+        ziel.dimension.spawnParticle("minecraft:crop_growth_emitter", o);
+        ziel.dimension.spawnParticle("fynn:steinstaub", o);
+        ziel.dimension.playSound("dig.grass", o, { volume: 1.5, pitch: 0.5 });
+        ziel.onScreenDisplay?.setActionBar("§2Wurzeln brechen aus dem Boden und halten dich fest!");
+    } catch (e) { /* egal */ }
+}
+
+/** Ein Takt (alle 20 Ticks) fuer einen Golem. */
+export function golemTakt(golem, jetzt) {
+    const z = golems.get(golem.id);
+    if (!z) return "schlaeft";
+    let ziel;
+    try { ziel = golem.target; } catch (e) { /* egal */ }
+    if (lebt(ziel)) {
+        z.ruhe = jetzt + GOLEMZEIT.wach;
+        if (jetzt >= z.wurzeln && weite(golem.location, ziel.location) <= 10
+            && !(ziel.typeId === "minecraft:player" && istKreativ(ziel))) {
+            z.wurzeln = jetzt + GOLEMZEIT.wurzelPause;
+            wurzeln(ziel);
+            return "wurzeln";
+        }
+        return "kaempft";
+    }
+    if (jetzt >= z.ruhe) {
+        golems.delete(golem.id);
+        try { golem.triggerEvent("fynn:einschlafen"); } catch (e) { /* egal */ }
+        return "schlaeft ein";
+    }
+    return "wacht";
+}
+
+/** Das Moosherz: rundum reift das Getreide, und im Gras spriessen Blumen. */
+const BLUMEN = ["minecraft:poppy", "minecraft:dandelion", "minecraft:cornflower", "minecraft:oxeye_daisy",
+    "minecraft:azure_bluet", "minecraft:allium"];
+
+export function moosherz(spieler, zufall = Math.random) {
+    const dim = spieler.dimension, o = spieler.location;
+    let gewachsen = 0;
+    for (let dx = -4; dx <= 4; dx++) {
+        for (let dz = -4; dz <= 4; dz++) {
+            for (let dy = -2; dy <= 1; dy++) {
+                const b = block(dim, o.x + dx, o.y + dy, o.z + dz);
+                if (!b) continue;
+                try {
+                    const reif = b.permutation?.getState?.("growth");
+                    if (reif !== undefined && reif < 7) {
+                        b.setPermutation(b.permutation.withState("growth", 7));
+                        gewachsen++;
+                        continue;
+                    }
+                } catch (e) { /* kein Getreide */ }
+                if (b.typeId === "minecraft:grass_block" && zufall() < 0.25) {
+                    const drueber = block(dim, o.x + dx, o.y + dy + 1, o.z + dz);
+                    if (drueber?.typeId === "minecraft:air") {
+                        try { drueber.setType(BLUMEN[Math.floor(zufall() * BLUMEN.length)]); gewachsen++; } catch (e) { /* egal */ }
+                    }
+                }
+            }
+        }
+    }
+    try {
+        dim.spawnParticle("minecraft:crop_growth_emitter", o);
+        dim.playSound("item.bone_meal.use", o, { volume: 1, pitch: 1 });
+    } catch (e) { /* egal */ }
+    if (!istKreativ(spieler)) {
+        try {
+            const inv = spieler.getComponent("minecraft:inventory")?.container;
+            const platz = spieler.selectedSlotIndex ?? 0;
+            const ding = inv?.getItem(platz);
+            if (ding && ding.amount > 1) { ding.amount -= 1; inv.setItem(platz, ding); } else inv?.setItem(platz, undefined);
+        } catch (e) { /* egal */ }
+    }
+    return gewachsen;
+}
+
 // ------------------------------------------------------------ Anbindung
 
 world.afterEvents.entityHurt.subscribe((e) => {
     try {
         const taeter = e.damageSource?.damagingEntity;
         if (taeter?.typeId === SKORPION) skorpionStich(e.hurtEntity);
+        if (e.hurtEntity?.typeId === WERWOLF && e.damageSource?.cause !== "magic") {
+            silberTreffer(e.hurtEntity, taeter, e.damage);
+        }
+        if (e.hurtEntity?.typeId === GOLEM && taeter) wecken(e.hurtEntity, system.currentTick);
         if (e.hurtEntity?.typeId === IRRLICHT && taeter) {
             // Geschlagen verlischt das Irrlicht - es flieht in die Nacht.
             const o = e.hurtEntity.location;
@@ -239,6 +406,24 @@ world.afterEvents.projectileHitEntity.subscribe((e) => {
     lichtAnOrt(e, { x: o.x, y: o.y + 1, z: o.z });
 });
 
+world.afterEvents.playerBreakBlock.subscribe((e) => {
+    try {
+        if (/_log$|_wood$|_stem$/.test(e.brokenBlockPermutation?.type?.id ?? "")) {
+            baumGefaellt(e.dimension, e.block.location, system.currentTick);
+        }
+    } catch (fehler) {
+        console.warn(`Moosgolem, Baum: ${fehler}`);
+    }
+});
+
+world.afterEvents.itemUse.subscribe((e) => {
+    try {
+        if (e.itemStack?.typeId === "fynn:moosherz") moosherz(e.source);
+    } catch (fehler) {
+        console.warn(`Moosherz: ${fehler}`);
+    }
+});
+
 let runde = 0;
 system.runInterval(() => {
     try {
@@ -255,6 +440,15 @@ system.runInterval(() => {
             try { irrlichtTakt(i, spieler); } catch (f) { /* egal */ }
         }
         if (r % 20 === 0 && lichter.length) lichterTakt(jetzt);
+        if (r % 4 !== 0) return;
+        let nacht = false;
+        try { nacht = mondnacht(world.getTimeOfDay(), world.getMoonPhase()); } catch (f) { /* egal */ }
+        for (const w of welt.getEntities({ type: WERWOLF })) {
+            try { werwolfTakt(w, jetzt, nacht); } catch (f) { /* egal */ }
+        }
+        for (const g of welt.getEntities({ type: GOLEM })) {
+            try { golemTakt(g, jetzt); } catch (f) { /* egal */ }
+        }
     } catch (fehler) {
         console.warn(`Fantasy 2: ${fehler}`);
     }

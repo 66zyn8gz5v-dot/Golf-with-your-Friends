@@ -604,6 +604,21 @@
     },
     "irrlicht_ei": {
       "textures": "textures/items/irrlicht_ei"
+    },
+    "werwolfsklaue": {
+      "textures": "textures/items/werwolfsklaue"
+    },
+    "mondtalisman": {
+      "textures": "textures/items/mondtalisman"
+    },
+    "moosherz": {
+      "textures": "textures/items/moosherz"
+    },
+    "werwolf_ei": {
+      "textures": "textures/items/werwolf_ei"
+    },
+    "moosgolem_ei": {
+      "textures": "textures/items/moosgolem_ei"
     }
   }
 }
