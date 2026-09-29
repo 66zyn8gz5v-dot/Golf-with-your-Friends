@@ -637,18 +637,6 @@
     },
     "greifenei": {
       "textures": "textures/items/greifenei"
-    },
-    "nest_vogelnest_symbol": {
-      "textures": "textures/items/nest_vogelnest_symbol"
-    },
-    "nest_kobel_symbol": {
-      "textures": "textures/items/nest_kobel_symbol"
-    },
-    "nest_adlerhorst_symbol": {
-      "textures": "textures/items/nest_adlerhorst_symbol"
-    },
-    "nest_greifennest_symbol": {
-      "textures": "textures/items/nest_greifennest_symbol"
     }
   }
 }

@@ -31,6 +31,33 @@ AUS_MINECRAFT = {"geometry.fireball", "textures/items/fireball", "geometry.human
                  "geometry.item_sprite", "geometry.bow_standby",
                  "animation.bow.wield", "animation.bow.wield_first_person_pull"}
 
+
+
+def minecraft_bilder():
+    """Blockbilder, die Minecraft selbst mitbringt - belegt durch Mojangs
+    eigene terrain_texture.json in werkzeuge/mojang. Die Spechthoehle (4.86)
+    traegt so die echte Rinde jeder Baumart, statt einer nachgemalten."""
+    datei = Path(__file__).resolve().parent / "mojang" / "vv" / "terrain_texture.json"
+    try:
+        text = "\n".join(z for z in datei.read_text(encoding="utf-8").splitlines() if not z.lstrip().startswith("//"))
+        daten = json.loads(text)["texture_data"]
+    except (OSError, ValueError, KeyError):
+        return set()
+    pfade = set()
+
+    def sammle(wert):
+        if isinstance(wert, str):
+            pfade.add(wert)
+        elif isinstance(wert, list):
+            for w in wert:
+                sammle(w)
+        elif isinstance(wert, dict):
+            sammle(wert.get("path") or wert.get("textures"))
+    for eintrag in daten.values():
+        sammle(eintrag.get("textures"))
+    return pfade
+
+
 fehler = []
 hinweise = []
 EIGENE_GEGENSTAENDE = set()
@@ -321,6 +348,8 @@ def pruefe_bloecke(sprachen, kennungen):
                 fehler.append(f"{kuerzel}.lang: kein Name fuer den Block '{kennung}'.")
 
     for name, eintrag in (zuordnung or {}).get("texture_data", {}).items():
+        if eintrag["textures"] in minecraft_bilder():
+            continue
         if not (RESSOURCEN / (eintrag["textures"] + ".png")).exists():
             fehler.append(f"terrain_texture.json: Datei fehlt - {eintrag['textures']}.png")
 

@@ -3216,10 +3216,10 @@
     {
       "description": {
         "identifier": "geometry.fynn.spechthoehle",
-        "texture_width": 64,
-        "texture_height": 32,
-        "visible_bounds_width": 1,
-        "visible_bounds_height": 1,
+        "texture_width": 16,
+        "texture_height": 16,
+        "visible_bounds_width": 2,
+        "visible_bounds_height": 2,
         "visible_bounds_offset": [
           0,
           0.5,
@@ -3230,26 +3230,598 @@
         {
           "name": "stamm",
           "pivot": [
-            0.0,
-            0.0,
-            0.0
+            0,
+            0,
+            0
           ],
           "cubes": [
             {
               "origin": [
-                -8.0,
-                0.0,
-                -8.0
+                -8,
+                13,
+                -8
               ],
               "size": [
                 16,
-                16,
+                3,
                 16
               ],
-              "uv": [
+              "uv": {
+                "north": {
+                  "uv": [
+                    0.0,
+                    0.0
+                  ],
+                  "uv_size": [
+                    16.0,
+                    3.0
+                  ],
+                  "material_instance": "rinde"
+                },
+                "east": {
+                  "uv": [
+                    0.0,
+                    0.0
+                  ],
+                  "uv_size": [
+                    16.0,
+                    3.0
+                  ],
+                  "material_instance": "rinde"
+                },
+                "south": {
+                  "uv": [
+                    0.0,
+                    0.0
+                  ],
+                  "uv_size": [
+                    16.0,
+                    3.0
+                  ],
+                  "material_instance": "rinde"
+                },
+                "west": {
+                  "uv": [
+                    0.0,
+                    0.0
+                  ],
+                  "uv_size": [
+                    16.0,
+                    3.0
+                  ],
+                  "material_instance": "rinde"
+                },
+                "up": {
+                  "uv": [
+                    0.0,
+                    0.0
+                  ],
+                  "uv_size": [
+                    16.0,
+                    16.0
+                  ],
+                  "material_instance": "stirn"
+                },
+                "down": {
+                  "uv": [
+                    0.0,
+                    0.0
+                  ],
+                  "uv_size": [
+                    16.0,
+                    16.0
+                  ],
+                  "material_instance": "innen"
+                }
+              }
+            },
+            {
+              "origin": [
+                -8,
                 0,
-                0
-              ]
+                -8
+              ],
+              "size": [
+                16,
+                7,
+                16
+              ],
+              "uv": {
+                "north": {
+                  "uv": [
+                    0.0,
+                    9.0
+                  ],
+                  "uv_size": [
+                    16.0,
+                    7.0
+                  ],
+                  "material_instance": "rinde"
+                },
+                "east": {
+                  "uv": [
+                    0.0,
+                    9.0
+                  ],
+                  "uv_size": [
+                    16.0,
+                    7.0
+                  ],
+                  "material_instance": "rinde"
+                },
+                "south": {
+                  "uv": [
+                    0.0,
+                    9.0
+                  ],
+                  "uv_size": [
+                    16.0,
+                    7.0
+                  ],
+                  "material_instance": "rinde"
+                },
+                "west": {
+                  "uv": [
+                    0.0,
+                    9.0
+                  ],
+                  "uv_size": [
+                    16.0,
+                    7.0
+                  ],
+                  "material_instance": "rinde"
+                },
+                "down": {
+                  "uv": [
+                    0.0,
+                    0.0
+                  ],
+                  "uv_size": [
+                    16.0,
+                    16.0
+                  ],
+                  "material_instance": "stirn"
+                },
+                "up": {
+                  "uv": [
+                    0.0,
+                    0.0
+                  ],
+                  "uv_size": [
+                    16.0,
+                    16.0
+                  ],
+                  "material_instance": "innen"
+                }
+              }
+            },
+            {
+              "origin": [
+                -8,
+                7,
+                -5
+              ],
+              "size": [
+                16,
+                6,
+                13
+              ],
+              "uv": {
+                "east": {
+                  "uv": [
+                    3.0,
+                    3.0
+                  ],
+                  "uv_size": [
+                    13.0,
+                    6.0
+                  ],
+                  "material_instance": "rinde"
+                },
+                "south": {
+                  "uv": [
+                    0.0,
+                    3.0
+                  ],
+                  "uv_size": [
+                    16.0,
+                    6.0
+                  ],
+                  "material_instance": "rinde"
+                },
+                "west": {
+                  "uv": [
+                    0.0,
+                    3.0
+                  ],
+                  "uv_size": [
+                    13.0,
+                    6.0
+                  ],
+                  "material_instance": "rinde"
+                },
+                "north": {
+                  "uv": [
+                    0.0,
+                    3.0
+                  ],
+                  "uv_size": [
+                    16.0,
+                    6.0
+                  ],
+                  "material_instance": "loch"
+                }
+              }
+            },
+            {
+              "origin": [
+                -8,
+                7,
+                -8
+              ],
+              "size": [
+                5,
+                6,
+                3
+              ],
+              "uv": {
+                "north": {
+                  "uv": [
+                    0.0,
+                    3.0
+                  ],
+                  "uv_size": [
+                    5.0,
+                    6.0
+                  ],
+                  "material_instance": "rinde"
+                },
+                "west": {
+                  "uv": [
+                    13.0,
+                    3.0
+                  ],
+                  "uv_size": [
+                    3.0,
+                    6.0
+                  ],
+                  "material_instance": "rinde"
+                },
+                "east": {
+                  "uv": [
+                    0.0,
+                    3.0
+                  ],
+                  "uv_size": [
+                    3.0,
+                    6.0
+                  ],
+                  "material_instance": "innen"
+                }
+              }
+            },
+            {
+              "origin": [
+                3,
+                7,
+                -8
+              ],
+              "size": [
+                5,
+                6,
+                3
+              ],
+              "uv": {
+                "north": {
+                  "uv": [
+                    11.0,
+                    3.0
+                  ],
+                  "uv_size": [
+                    5.0,
+                    6.0
+                  ],
+                  "material_instance": "rinde"
+                },
+                "east": {
+                  "uv": [
+                    0.0,
+                    3.0
+                  ],
+                  "uv_size": [
+                    3.0,
+                    6.0
+                  ],
+                  "material_instance": "rinde"
+                },
+                "west": {
+                  "uv": [
+                    13.0,
+                    3.0
+                  ],
+                  "uv_size": [
+                    3.0,
+                    6.0
+                  ],
+                  "material_instance": "innen"
+                }
+              }
+            },
+            {
+              "origin": [
+                -3,
+                7,
+                -8
+              ],
+              "size": [
+                1,
+                1,
+                3
+              ],
+              "uv": {
+                "north": {
+                  "uv": [
+                    5.0,
+                    8.0
+                  ],
+                  "uv_size": [
+                    1.0,
+                    1.0
+                  ],
+                  "material_instance": "rinde"
+                },
+                "east": {
+                  "uv": [
+                    0.0,
+                    8.0
+                  ],
+                  "uv_size": [
+                    3.0,
+                    1.0
+                  ],
+                  "material_instance": "innen"
+                },
+                "west": {
+                  "uv": [
+                    13.0,
+                    8.0
+                  ],
+                  "uv_size": [
+                    3.0,
+                    1.0
+                  ],
+                  "material_instance": "innen"
+                },
+                "up": {
+                  "uv": [
+                    5.0,
+                    0.0
+                  ],
+                  "uv_size": [
+                    1.0,
+                    3.0
+                  ],
+                  "material_instance": "innen"
+                },
+                "down": {
+                  "uv": [
+                    5.0,
+                    13.0
+                  ],
+                  "uv_size": [
+                    1.0,
+                    3.0
+                  ],
+                  "material_instance": "innen"
+                }
+              }
+            },
+            {
+              "origin": [
+                -3,
+                12,
+                -8
+              ],
+              "size": [
+                1,
+                1,
+                3
+              ],
+              "uv": {
+                "north": {
+                  "uv": [
+                    5.0,
+                    3.0
+                  ],
+                  "uv_size": [
+                    1.0,
+                    1.0
+                  ],
+                  "material_instance": "rinde"
+                },
+                "east": {
+                  "uv": [
+                    0.0,
+                    3.0
+                  ],
+                  "uv_size": [
+                    3.0,
+                    1.0
+                  ],
+                  "material_instance": "innen"
+                },
+                "west": {
+                  "uv": [
+                    13.0,
+                    3.0
+                  ],
+                  "uv_size": [
+                    3.0,
+                    1.0
+                  ],
+                  "material_instance": "innen"
+                },
+                "up": {
+                  "uv": [
+                    5.0,
+                    0.0
+                  ],
+                  "uv_size": [
+                    1.0,
+                    3.0
+                  ],
+                  "material_instance": "innen"
+                },
+                "down": {
+                  "uv": [
+                    5.0,
+                    13.0
+                  ],
+                  "uv_size": [
+                    1.0,
+                    3.0
+                  ],
+                  "material_instance": "innen"
+                }
+              }
+            },
+            {
+              "origin": [
+                2,
+                7,
+                -8
+              ],
+              "size": [
+                1,
+                1,
+                3
+              ],
+              "uv": {
+                "north": {
+                  "uv": [
+                    10.0,
+                    8.0
+                  ],
+                  "uv_size": [
+                    1.0,
+                    1.0
+                  ],
+                  "material_instance": "rinde"
+                },
+                "east": {
+                  "uv": [
+                    0.0,
+                    8.0
+                  ],
+                  "uv_size": [
+                    3.0,
+                    1.0
+                  ],
+                  "material_instance": "innen"
+                },
+                "west": {
+                  "uv": [
+                    13.0,
+                    8.0
+                  ],
+                  "uv_size": [
+                    3.0,
+                    1.0
+                  ],
+                  "material_instance": "innen"
+                },
+                "up": {
+                  "uv": [
+                    10.0,
+                    0.0
+                  ],
+                  "uv_size": [
+                    1.0,
+                    3.0
+                  ],
+                  "material_instance": "innen"
+                },
+                "down": {
+                  "uv": [
+                    10.0,
+                    13.0
+                  ],
+                  "uv_size": [
+                    1.0,
+                    3.0
+                  ],
+                  "material_instance": "innen"
+                }
+              }
+            },
+            {
+              "origin": [
+                2,
+                12,
+                -8
+              ],
+              "size": [
+                1,
+                1,
+                3
+              ],
+              "uv": {
+                "north": {
+                  "uv": [
+                    10.0,
+                    3.0
+                  ],
+                  "uv_size": [
+                    1.0,
+                    1.0
+                  ],
+                  "material_instance": "rinde"
+                },
+                "east": {
+                  "uv": [
+                    0.0,
+                    3.0
+                  ],
+                  "uv_size": [
+                    3.0,
+                    1.0
+                  ],
+                  "material_instance": "innen"
+                },
+                "west": {
+                  "uv": [
+                    13.0,
+                    3.0
+                  ],
+                  "uv_size": [
+                    3.0,
+                    1.0
+                  ],
+                  "material_instance": "innen"
+                },
+                "up": {
+                  "uv": [
+                    10.0,
+                    0.0
+                  ],
+                  "uv_size": [
+                    1.0,
+                    3.0
+                  ],
+                  "material_instance": "innen"
+                },
+                "down": {
+                  "uv": [
+                    10.0,
+                    13.0
+                  ],
+                  "uv_size": [
+                    1.0,
+                    3.0
+                  ],
+                  "material_instance": "innen"
+                }
+              }
             }
           ]
         }

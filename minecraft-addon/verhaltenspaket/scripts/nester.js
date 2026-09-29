@@ -25,6 +25,16 @@ import { world, system, BlockPermutation, ItemStack } from "@minecraft/server";
 
 export const INHALT = "fynn:inhalt";
 export const SEITE = "fynn:seite";
+export const HOLZ = "fynn:holz";
+// Die Baumarten der Spechthoehle, in der Reihenfolge von fynn:holz. Die
+// Hoehle traegt die Rinde des Stamms, in den sie gehackt ist
+// (werkzeuge/nester_bauen.py, HOLZARTEN).
+export const HOLZARTEN = ["oak", "birch", "spruce", "jungle", "acacia", "dark_oak", "mangrove", "cherry", "pale_oak"];
+export function holzVon(typeId) {
+    const m = /^minecraft:(.+)_log$/.exec(typeId ?? "");
+    const i = m ? HOLZARTEN.indexOf(m[1]) : -1;
+    return i < 0 ? 0 : i;
+}
 
 // Welches Nest wem gehoert und was darin liegt.
 export const NESTER = {
@@ -88,11 +98,12 @@ function natuerlichesLaub(b, muster = LAUB) {
 
 // ------------------------------------------------------------ Nester setzen
 
-export function setzeNest(dim, o, nest, inhalt = 0, seite = undefined) {
+export function setzeNest(dim, o, nest, inhalt = 0, seite = undefined, holz = undefined) {
     const b = blockBei(dim, o);
     if (!b) return false;
     const zustaende = { [INHALT]: Math.min(inhalt, NESTER[nest].max) };
     if (seite !== undefined) zustaende[SEITE] = seite;
+    if (holz !== undefined) zustaende[HOLZ] = holz;
     b.setPermutation(BlockPermutation.resolve(nest, zustaende));
     bekannt.set(schluessel(o), nest);
     return true;
@@ -131,7 +142,7 @@ export function platzImStamm(dim, o) {
     if (!krone) return undefined;
     for (let s = 0; s < 4; s++) {
         const [dx, dz] = RICHTUNGEN[s];
-        if (istLuft(blockBei(dim, { x: o.x + dx, y: o.y, z: o.z + dz }))) return { ort: { ...o }, seite: s };
+        if (istLuft(blockBei(dim, { x: o.x + dx, y: o.y, z: o.z + dz }))) return { ort: { ...o }, seite: s, holz: holzVon(b.typeId) };
     }
     return undefined;
 }
@@ -159,7 +170,7 @@ export function nestFuer(dim, o, wurf = Math.random) {
     }
     if (STAMM.test(b.typeId)) {
         const p = platzImStamm(dim, o);
-        return p ? { nest: "fynn:spechthoehle", ort: p.ort, seite: p.seite } : undefined;
+        return p ? { nest: "fynn:spechthoehle", ort: p.ort, seite: p.seite, holz: p.holz } : undefined;
     }
     const ort = platzAufFels(dim, o);
     if (!ort) return undefined;
@@ -219,7 +230,7 @@ export function suche(spieler, wurf = Math.random) {
         feldMerken(f);
         if (wurf() >= SUCHE.chance) return undefined;
         const inhalt = Math.min(NESTER[p.nest].max, 1 + (wurf() < 0.4 ? 1 : 0));
-        setzeNest(dim, p.ort, p.nest, inhalt, p.seite);
+        setzeNest(dim, p.ort, p.nest, inhalt, p.seite, p.holz);
         return p;
     }
     return undefined;
@@ -312,13 +323,20 @@ export function elternMerkenEs(block, spieler) {
     return wuetend;
 }
 
-/** Abgebaut: Die Eier fallen mit heraus. */
-export function abgebaut(dim, ort, permutation) {
-    const n = NESTER[permutation?.type?.id];
+/** Abgebaut: Die Eier fallen mit heraus - und aus der Spechthoehle der
+ *  Stamm, der sie einmal war, in seiner Baumart. */
+export function abgebaut(dim, ort, permutation, spieler = undefined) {
+    const typ = permutation?.type?.id;
+    const n = NESTER[typ];
     bekannt.delete(schluessel(ort));
     if (!n) return 0;
+    const mitte = { x: ort.x + 0.5, y: ort.y + 0.5, z: ort.z + 0.5 };
     const inhalt = permutation.getState(INHALT) ?? 0;
-    if (inhalt > 0) dim.spawnItem(new ItemStack(n.ei, inhalt), { x: ort.x + 0.5, y: ort.y + 0.5, z: ort.z + 0.5 });
+    if (inhalt > 0) dim.spawnItem(new ItemStack(n.ei, inhalt), mitte);
+    if (typ === "fynn:spechthoehle" && !kreativ(spieler)) {
+        const holz = HOLZARTEN[permutation.getState(HOLZ) ?? 0] ?? "oak";
+        dim.spawnItem(new ItemStack(`minecraft:${holz}_log`, 1), mitte);
+    }
     return inhalt;
 }
 
@@ -366,7 +384,7 @@ export function nestFinden(tier, jetzt, wurf = Math.random) {
     if (jetzt - zuletzt < BAUEN.pause || wurf() >= BAUEN.chance) return undefined;
     const p = bauplatz(tier, wurf);
     if (!p) return undefined;
-    setzeNest(tier.dimension, p.ort, art, 0, p.seite);
+    setzeNest(tier.dimension, p.ort, art, 0, p.seite, p.holz);
     try { tier.setDynamicProperty(GEBAUT, jetzt); } catch (e) { /* egal */ }
     try { tier.dimension.playSound(art === "fynn:spechthoehle" ? "hit.wood" : "block.bamboo.place", p.ort,
                                    { volume: 0.8, pitch: 1.2 }); } catch (e) { /* egal */ }
@@ -493,7 +511,7 @@ export function zaehmen(kueken, spieler) {
 }
 
 function kreativ(spieler) {
-    try { return spieler.getGameMode?.() === "Creative"; } catch (e) { return false; }
+    try { return spieler?.getGameMode?.() === "Creative"; } catch (e) { return false; }
 }
 function verbrauchen(spieler, typ) {
     try {
@@ -529,7 +547,7 @@ system.beforeEvents.startup.subscribe((e) => {
 world.afterEvents.playerBreakBlock.subscribe((e) => {
     try {
         abbauBemerkt(e);
-        abgebaut(e.dimension, e.block.location, e.brokenBlockPermutation);
+        abgebaut(e.dimension, e.block.location, e.brokenBlockPermutation, e.player);
     } catch (fehler) {
         console.warn(`Nest, Abbauen: ${fehler}`);
     }

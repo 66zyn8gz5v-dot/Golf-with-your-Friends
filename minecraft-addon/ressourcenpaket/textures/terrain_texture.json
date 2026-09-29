@@ -157,8 +157,89 @@
     "nest_kobel": {
       "textures": "textures/blocks/nester/nest_kobel"
     },
-    "nest_spechthoehle": {
-      "textures": "textures/blocks/nester/nest_spechthoehle"
+    "fynn_spechtloch": {
+      "textures": "textures/blocks/nester/spechtloch"
+    },
+    "fynn_rinde_eiche": {
+      "textures": "textures/blocks/log_oak"
+    },
+    "fynn_stirn_eiche": {
+      "textures": "textures/blocks/log_oak_top"
+    },
+    "fynn_splint_eiche": {
+      "textures": "textures/blocks/stripped_oak_log"
+    },
+    "fynn_rinde_birke": {
+      "textures": "textures/blocks/log_birch"
+    },
+    "fynn_stirn_birke": {
+      "textures": "textures/blocks/log_birch_top"
+    },
+    "fynn_splint_birke": {
+      "textures": "textures/blocks/stripped_birch_log"
+    },
+    "fynn_rinde_fichte": {
+      "textures": "textures/blocks/log_spruce"
+    },
+    "fynn_stirn_fichte": {
+      "textures": "textures/blocks/log_spruce_top"
+    },
+    "fynn_splint_fichte": {
+      "textures": "textures/blocks/stripped_spruce_log"
+    },
+    "fynn_rinde_tropenbaum": {
+      "textures": "textures/blocks/log_jungle"
+    },
+    "fynn_stirn_tropenbaum": {
+      "textures": "textures/blocks/log_jungle_top"
+    },
+    "fynn_splint_tropenbaum": {
+      "textures": "textures/blocks/stripped_jungle_log"
+    },
+    "fynn_rinde_akazie": {
+      "textures": "textures/blocks/log_acacia"
+    },
+    "fynn_stirn_akazie": {
+      "textures": "textures/blocks/log_acacia_top"
+    },
+    "fynn_splint_akazie": {
+      "textures": "textures/blocks/stripped_acacia_log"
+    },
+    "fynn_rinde_schwarzeiche": {
+      "textures": "textures/blocks/log_big_oak"
+    },
+    "fynn_stirn_schwarzeiche": {
+      "textures": "textures/blocks/log_big_oak_top"
+    },
+    "fynn_splint_schwarzeiche": {
+      "textures": "textures/blocks/stripped_dark_oak_log"
+    },
+    "fynn_rinde_mangrove": {
+      "textures": "textures/blocks/mangrove_log_side"
+    },
+    "fynn_stirn_mangrove": {
+      "textures": "textures/blocks/mangrove_log_top"
+    },
+    "fynn_splint_mangrove": {
+      "textures": "textures/blocks/stripped_mangrove_log_side"
+    },
+    "fynn_rinde_kirsche": {
+      "textures": "textures/blocks/cherry_log_side"
+    },
+    "fynn_stirn_kirsche": {
+      "textures": "textures/blocks/cherry_log_top"
+    },
+    "fynn_splint_kirsche": {
+      "textures": "textures/blocks/stripped_cherry_log_side"
+    },
+    "fynn_rinde_blasseiche": {
+      "textures": "textures/blocks/pale_oak_log_side"
+    },
+    "fynn_stirn_blasseiche": {
+      "textures": "textures/blocks/pale_oak_log_top"
+    },
+    "fynn_splint_blasseiche": {
+      "textures": "textures/blocks/stripped_pale_oak_log_side"
     }
   }
 }

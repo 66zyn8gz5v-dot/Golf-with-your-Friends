@@ -10,3 +10,6 @@ Spieler bewegt, bevor unsere eigenen Animationen dazukommen.
   `player.animation_controllers.json`, `humanoid.animation.json`, `bow.animation.json`
 * `humanoid_custom.geo.json` – der Spielerkörper, aus `models/mobs.json` herausgelöst
 * `steve.png` – die Haut, mit der die Vorschaubilder gemalt werden
+* `vv/staemme/` – die Stammbilder der neun Baumarten (Rinde, Stirnseite,
+  entrindetes Holz) aus `textures/blocks`. Die Spechthöhle (4.86) nimmt im
+  Spiel Minecrafts eigene Bilder; diese Kopien braucht nur das Vorschaubild.

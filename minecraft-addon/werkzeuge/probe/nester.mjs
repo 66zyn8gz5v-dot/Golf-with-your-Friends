@@ -74,6 +74,12 @@ const immer = () => 0.0, nie = () => 0.99;
     pruefe("Stamm: Specht findet eine freie Seite", s && s.seite === 0 && s.ort.y === 66);
     w.setze({ x: 0, y: 66, z: -1 }, "minecraft:dirt");
     pruefe("... nach Norden zu, dann nach Westen", n.platzImStamm(w.dim, { x: 0, y: 66, z: 0 })?.seite === 1);
+    baum(w, 30, 0, "cherry");
+    pruefe("Kirschstamm: die Hoehle bekommt Kirschrinde",
+        n.platzImStamm(w.dim, { x: 30, y: 66, z: 0 })?.holz === n.HOLZARTEN.indexOf("cherry"));
+    baum(w, 40, 0, "pale_oak");
+    const p = n.nestFuer(w.dim, { x: 40, y: 66, z: 0 });
+    pruefe("... Blasseiche ebenso", p?.nest === "fynn:spechthoehle" && p.holz === n.HOLZARTEN.indexOf("pale_oak"));
     // Ein Balken im Haus: Holz uebereinander, aber keine Krone.
     for (let y = 64; y < 68; y++) w.setze({ x: 20, y, z: 20 }, "minecraft:oak_log");
     pruefe("... aber nicht in einen Balken ohne Krone", !n.platzImStamm(w.dim, { x: 20, y: 66, z: 20 }));
@@ -143,6 +149,15 @@ const immer = () => 0.0, nie = () => 0.99;
         wild.schaden.length === 1 && zahm.schaden.length === 0);
     pruefe("Abgebaut: die Eier fallen mit heraus",
         n.abgebaut(w.dim, { x: 0, y: 120, z: 0 }, perm("fynn:adlerhorst", { "fynn:inhalt": 1 })) === 1);
+    w.dinge.length = 0;
+    n.abgebaut(w.dim, { x: 5, y: 66, z: 0 }, perm("fynn:spechthoehle", { "fynn:inhalt": 2, "fynn:holz": 1 }),
+               { getGameMode: () => "Survival" });
+    pruefe("Spechthoehle abgebaut: zwei Eier und ein Birkenstamm",
+        w.dinge.some(([t, a]) => t === "fynn:spechtei" && a === 2) && w.dinge.some(([t]) => t === "minecraft:birch_log"));
+    w.dinge.length = 0;
+    n.abgebaut(w.dim, { x: 5, y: 66, z: 0 }, perm("fynn:spechthoehle", { "fynn:inhalt": 0, "fynn:holz": 1 }),
+               { getGameMode: () => "Creative" });
+    pruefe("... im Kreativmodus kein Stamm", w.dinge.length === 0);
 }
 
 // --- Tiere und ihr Nest
@@ -153,7 +168,8 @@ const immer = () => 0.0, nie = () => 0.99;
     const specht = tier(w, "fynn:specht", { x: 1.5, y: 66, z: 0.5 });
     const r = n.heimTakt(specht, 10000, false, immer);
     const o = n.nestVon(specht);
-    pruefe("Specht hackt sich eine Hoehle in den Stamm", r === "nest" && o && w.typ(o) === "fynn:spechthoehle");
+    pruefe("Specht hackt sich eine Hoehle in den Stamm", r === "nest" && o && w.typ(o) === "fynn:spechthoehle"
+        && w.bloecke.get(`${o.x},${o.y},${o.z}`).getState("fynn:holz") === 0);
     const zweiter = tier(w, "fynn:specht", { x: 4.5, y: 66, z: 0.5 });
     pruefe("... ein zweiter zieht mit ein, statt neu zu bauen",
         n.heimTakt(zweiter, 10000, false, nie) === "nest" && n.nestVon(zweiter)?.y === o.y);
