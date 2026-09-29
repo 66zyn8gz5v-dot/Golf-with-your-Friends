@@ -24,6 +24,34 @@
       }
     },
     "component_groups": {
+      "fynn:kueken": {
+        "minecraft:is_baby": {},
+        "minecraft:scale": {
+          "value": 0.45
+        },
+        "minecraft:ageable": {
+          "duration": 1200,
+          "feed_items": [
+            "minecraft:beef",
+            "minecraft:mutton",
+            "minecraft:porkchop",
+            "minecraft:chicken",
+            "minecraft:rabbit",
+            "fynn:elchfleisch",
+            "fynn:bisonfleisch"
+          ],
+          "grow_up": {
+            "event": "fynn:kueken_gross",
+            "target": "self"
+          }
+        },
+        "minecraft:behavior.follow_owner": {
+          "priority": 3,
+          "speed_multiplier": 1.2,
+          "start_distance": 8,
+          "stop_distance": 2
+        }
+      },
       "fynn:erwachsen": {
         "minecraft:loot": {
           "table": "loot_tables/entities/greif.json"
@@ -318,6 +346,58 @@
       }
     },
     "events": {
+      "fynn:schluepft": {
+        "sequence": [
+          {
+            "randomize": [
+              {
+                "weight": 55,
+                "add": {
+                  "component_groups": [
+                    "fynn:variante_0"
+                  ]
+                }
+              },
+              {
+                "weight": 35,
+                "add": {
+                  "component_groups": [
+                    "fynn:variante_1"
+                  ]
+                }
+              },
+              {
+                "weight": 10,
+                "add": {
+                  "component_groups": [
+                    "fynn:variante_2"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "add": {
+              "component_groups": [
+                "fynn:kueken",
+                "fynn:wild"
+              ]
+            }
+          }
+        ]
+      },
+      "fynn:kueken_gross": {
+        "remove": {
+          "component_groups": [
+            "fynn:kueken"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "fynn:erwachsen"
+          ]
+        }
+      },
       "fynn:wuetend": {
         "remove": {
           "component_groups": [

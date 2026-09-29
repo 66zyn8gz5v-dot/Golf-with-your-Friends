@@ -625,6 +625,30 @@
     },
     "greif_ei": {
       "textures": "textures/items/greif_ei"
+    },
+    "vogelei": {
+      "textures": "textures/items/vogelei"
+    },
+    "spechtei": {
+      "textures": "textures/items/spechtei"
+    },
+    "adlerei": {
+      "textures": "textures/items/adlerei"
+    },
+    "greifenei": {
+      "textures": "textures/items/greifenei"
+    },
+    "nest_vogelnest_symbol": {
+      "textures": "textures/items/nest_vogelnest_symbol"
+    },
+    "nest_kobel_symbol": {
+      "textures": "textures/items/nest_kobel_symbol"
+    },
+    "nest_adlerhorst_symbol": {
+      "textures": "textures/items/nest_adlerhorst_symbol"
+    },
+    "nest_greifennest_symbol": {
+      "textures": "textures/items/nest_greifennest_symbol"
     }
   }
 }

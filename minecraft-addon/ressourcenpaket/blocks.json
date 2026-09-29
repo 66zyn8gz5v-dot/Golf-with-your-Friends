@@ -27,5 +27,20 @@
   },
   "fynn:weidenroeschen": {
     "sound": "grass"
+  },
+  "fynn:vogelnest": {
+    "sound": "grass"
+  },
+  "fynn:spechthoehle": {
+    "sound": "wood"
+  },
+  "fynn:kobel": {
+    "sound": "grass"
+  },
+  "fynn:adlerhorst": {
+    "sound": "grass"
+  },
+  "fynn:greifennest": {
+    "sound": "grass"
   }
 }

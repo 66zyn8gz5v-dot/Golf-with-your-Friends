@@ -126,6 +126,39 @@
     },
     "weidenroeschen": {
       "textures": "textures/blocks/weidenroeschen"
+    },
+    "nest_vogelnest_0": {
+      "textures": "textures/blocks/nester/nest_vogelnest_0"
+    },
+    "nest_vogelnest_1": {
+      "textures": "textures/blocks/nester/nest_vogelnest_1"
+    },
+    "nest_vogelnest_2": {
+      "textures": "textures/blocks/nester/nest_vogelnest_2"
+    },
+    "nest_vogelnest_3": {
+      "textures": "textures/blocks/nester/nest_vogelnest_3"
+    },
+    "nest_adlerhorst_0": {
+      "textures": "textures/blocks/nester/nest_adlerhorst_0"
+    },
+    "nest_adlerhorst_1": {
+      "textures": "textures/blocks/nester/nest_adlerhorst_1"
+    },
+    "nest_adlerhorst_2": {
+      "textures": "textures/blocks/nester/nest_adlerhorst_2"
+    },
+    "nest_greifennest_0": {
+      "textures": "textures/blocks/nester/nest_greifennest_0"
+    },
+    "nest_greifennest_1": {
+      "textures": "textures/blocks/nester/nest_greifennest_1"
+    },
+    "nest_kobel": {
+      "textures": "textures/blocks/nester/nest_kobel"
+    },
+    "nest_spechthoehle": {
+      "textures": "textures/blocks/nester/nest_spechthoehle"
     }
   }
 }

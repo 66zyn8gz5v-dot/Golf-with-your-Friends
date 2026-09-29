@@ -1,0 +1,105 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:block": {
+    "description": {
+      "identifier": "fynn:spechthoehle",
+      "menu_category": {
+        "category": "nature",
+        "group": "minecraft:itemGroup.name.leaves"
+      },
+      "states": {
+        "fynn:inhalt": {
+          "values": {
+            "min": 0,
+            "max": 3
+          }
+        },
+        "fynn:seite": {
+          "values": {
+            "min": 0,
+            "max": 3
+          }
+        }
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 2.0
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 1.0
+      },
+      "minecraft:flammable": {
+        "catch_chance_modifier": 30,
+        "destroy_chance_modifier": 60
+      },
+      "minecraft:map_color": "#6a4a2a",
+      "minecraft:tick": {
+        "interval_range": [
+          1200,
+          2400
+        ],
+        "looping": true
+      },
+      "fynn:nest": {},
+      "minecraft:geometry": "geometry.fynn.spechthoehle",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "nest_spechthoehle",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:loot": "loot_tables/blocks/spechthoehle.json"
+    },
+    "permutations": [
+      {
+        "condition": "q.block_state('fynn:seite') == 0",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('fynn:seite') == 1",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              90,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('fynn:seite') == 2",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              180,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('fynn:seite') == 3",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              270,
+              0
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

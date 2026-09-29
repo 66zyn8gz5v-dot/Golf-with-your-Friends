@@ -467,9 +467,27 @@ def _greif():
     fleisch = ["minecraft:beef", "minecraft:mutton", "minecraft:porkchop", "minecraft:chicken", "minecraft:rabbit",
                "fynn:elchfleisch", "fynn:bisonfleisch"]
     k = {"minecraft:damage_sensor": {"triggers": [{"cause": "fall", "deals_damage": False}]}}
+    # Aus dem Greifenei (4.85, scripts/nester.js) schluepft ein Kueken: halb so
+    # gross, laeuft seinem Besitzer nach und wird in zwanzig Minuten gross -
+    # mit Fleisch schneller. Geritten wird es erst dann.
+    kueken = {
+        "minecraft:is_baby": {},
+        "minecraft:scale": {"value": 0.45},
+        "minecraft:ageable": {"duration": 1200, "feed_items": fleisch,
+                              "grow_up": {"event": "fynn:kueken_gross", "target": "self"}},
+        "minecraft:behavior.follow_owner": {"priority": 3, "speed_multiplier": 1.2,
+                                            "start_distance": 8, "stop_distance": 2},
+    }
+    varianten = [("gold", 55), ("weiss", 35), ("schwarz", 10)]
+    schluepft = {"sequence": [
+        {"randomize": [{"weight": w, "add": {"component_groups": [f"fynn:variante_{i}"]}}
+                       for i, (_, w) in enumerate(varianten)]},
+        # "wild" nur fuer den Augenblick: Darin steckt das Zaehmen, und das
+        # Skript zaehmt es gleich danach fuer den Spieler.
+        {"add": {"component_groups": ["fynn:kueken", "fynn:wild"]}}]}
     return {
         "id": "greif", "name": ("Greif", "Griffin"), "gestalt": "greif", "gruppe": "Fantasy",
-        "varianten": [("gold", 55), ("weiss", 35), ("schwarz", 10)],
+        "varianten": varianten,
         "art": "land", "verhalten": "neutral", "leben": 40, "schaden": 7, "tempo": 0.25,
         "kollision": (1.4, 1.6), "baby": False, "herde": (1, 2),
         # Zaehmen mit rohem Fleisch, dann satteln - und fliegen (scripts/greif.js).
@@ -481,12 +499,18 @@ def _greif():
                   "step": "mob.cat.step", "pitch": [0.5, 0.6]},
         "ei": ("#c89a58", "#e8d8a8"), "angriff": "tatze",
         "komponenten": k,
+        "gruppen": {"fynn:kueken": kueken},
+        "ereignisse": {"fynn:schluepft": schluepft,
+                       "fynn:kueken_gross": {"remove": {"component_groups": ["fynn:kueken"]},
+                                             "add": {"component_groups": ["fynn:erwachsen"]}}},
         "eigenschaften": eigenschaft("fynn:fliegt"),
         "eigene_bewegungen": greif_bewegungen(),
         "steckbrief_extra": [
             ["Fliegen", "gesattelt die Sprungtaste halten: Er steigt auf. Er fliegt, wohin du schaust – "
                         "schau nach unten, um zu landen"],
-            ["Greifenfeder", "in der Schnellleiste: Fällst du tief, schwebst du sanft hinunter"]],
+            ["Greifenfeder", "in der Schnellleiste: Fällst du tief, schwebst du sanft hinunter"],
+            ["Greifenei", "liegt im Greifennest hoch in den Bergen – benutzt schlüpft daraus ein junger Greif, "
+                          "der dir gehört. Aber Vorsicht: Die Eltern greifen an"]],
     }
 
 
