@@ -708,35 +708,108 @@ def nachtschwinge_maler(variante):
 # ================================================================== Uralte Drachen (4.97)
 
 def uralt_zier(m, koepfe=("kopf",)):
-    """Was nur ein uralter Drache hat (Fynn: "zu einer sehr geringen
-    Wahrscheinlichkeit ... riesig ... sehen maechtiger aus"): eine Krone aus
-    Klingen um den Hinterkopf, gluehende Adern an Schaedel und Flanken, hohe
-    Klingen zwischen den Rueckenstacheln. Die Knochen uralt_... sind nur zu
-    sehen, wenn fynn:uralt gesetzt ist (Sichtbarkeit im Aussehen)."""
+    """Was nur ein uralter Drache hat (4.97, und 4.98 - Fynn: "die uralten
+    Versionen sollten ausergewoehnlicher sein ... deutlich groesser, mehr
+    Stacheln, sollen gefaehrlicher aussehen, groessere Geweihe"):
+
+    * ein maechtiges Geweih: zwei Stangen, die sich nach hinten und oben
+      biegen, jede mit drei Enden;
+    * eine Krone aus Klingen um den Hinterkopf, Dornen an Kinn und Wangen;
+    * auf jedem Halsglied, jedem Schwanzglied und entlang des Rueckens hohe
+      Klingen, dazu seitliche Dornenreihen;
+    * Dornen an Ellbogen und Knien, an der Vorderkante der Schwingen;
+    * gluehende Adern an Schaedel und Flanken.
+
+    Alle Knochen heissen uralt_... und sind nur zu sehen, wenn fynn:uralt
+    gesetzt ist (Sichtbarkeit im Aussehen)."""
+    import re
+
+    def zier(eltern):
+        k = m.finde(eltern)
+        return k, m.knoch(f"uralt_{eltern}", list(k.drehpunkt), eltern)
+
+    def dorn(z, x, y, zz, lang, w_seite, w_neig=-30):
+        z.kasten([x - 0.5, y - 0.5, zz - 0.5], [1, 1, lang], "horn",
+                 drehung=[w_neig, w_seite, 0], drehpunkt=[x, y, zz])
+
     for kn in koepfe:
-        k = m.finde(kn)
+        k, z = zier(kn)
         c = k.kaesten[0]
         x0, y0, z0 = c.ursprung
         b, h, l = c.groesse
         oben = y0 + h
-        z = m.knoch(f"uralt_{kn}", list(k.drehpunkt), kn)
         # Die Krone: fuenf Klingen im Halbkreis um den Hinterkopf.
         for i, w in enumerate((-60, -30, 0, 30, 60)):
-            klinge(z, x0 + b / 2, oben - 1, z0 + l - 2, 7 - abs(i - 2), 4, neigung=-45, seite=w)
-        for x in (x0 - 0.05, x0 + b + 0.05):
-            z.kasten([x, y0 + 2, z0 + 1], [0, 1, l - 2], "glutader")
-            z.kasten([x, y0 + 3, z0 + l - 4], [0, 3, 1], "glutader")
-    r = m.finde("rumpf")
+            klinge(z, x0 + b / 2, oben - 1, z0 + l - 2, 8 - abs(i - 2), 4, neigung=-45, seite=w)
+        for seite, x in (("links", 1), ("rechts", -1)):
+            rand = x0 + b / 2 + x * b / 2
+            # Wangendornen, drei uebereinander, nach hinten und aussen.
+            for j in range(3):
+                dorn(z, rand, y0 + 1 + j * 2, z0 + l - 3, 5 - j, -x * (35 + j * 10))
+            # Kinndornen unter dem Schaedel.
+            dorn(z, x0 + b / 2 + x * 2, y0 + 0.5, z0 + 2, 4, -x * 15, 35)
+            # Gluehende Adern.
+            z.kasten([rand + x * 0.05 - (0 if x > 0 else 0), y0 + 2, z0 + 1], [0, 1, l - 2], "glutader")
+            z.kasten([rand + x * 0.05, y0 + 3, z0 + l - 4], [0, 3, 1], "glutader")
+            # Das Geweih: eine Stange, die sich zweimal nach oben biegt, mit
+            # drei Enden.
+            gx, gy, gz = x0 + b / 2 + x * (b / 2 - 1.5), oben - 0.5, z0 + l - 3
+            g1 = m.knoch(f"uralt_geweih{kn[4:]}_{seite}", [gx, gy, gz], f"uralt_{kn}", drehung=[28, -x * 28, 0])
+            g1.kasten([gx - 1.5, gy - 1.5, gz], [3, 3, 15], "horn")
+            g1.kasten([gx - 0.5, gy, gz + 5], [1, 7, 1], "horn", drehung=[-20, 0, 0], drehpunkt=[gx, gy + 1, gz + 5.5])
+            g1.kasten([gx - 0.5, gy, gz + 10], [1, 5, 1], "horn", drehung=[-10, 0, -x * 25], drehpunkt=[gx, gy + 1, gz + 10.5])
+            g2 = m.knoch(f"uralt_geweih{kn[4:]}2_{seite}", [gx, gy, gz + 15], f"uralt_geweih{kn[4:]}_{seite}",
+                         drehung=[-35, -x * 10, 0])
+            g2.kasten([gx - 1, gy - 1, gz + 14.5], [2, 2, 11], "horn")
+            g2.kasten([gx - 0.5, gy, gz + 20], [1, 6, 1], "horn", drehung=[-15, 0, -x * 15],
+                      drehpunkt=[gx, gy + 1, gz + 20.5])
+            g2.kasten([gx - 0.5, gy - 0.5, gz + 24], [1, 1, 7], "horn", drehung=[-25, 0, 0], drehpunkt=[gx, gy, gz + 24])
+    # Hohe Klingen und seitliche Dornen auf Hals und Schwanz.
+    for kn in [k.name for k in m.knochen]:
+        treffer = re.match(r"^(hals.*?)(\d+)$|^(schwanz)(\d+)$", kn)
+        if not treffer or kn.startswith("uralt_"):
+            continue
+        nr = int(treffer.group(2) or treffer.group(4))
+        if kn.startswith("schwanz") and len([k for k in m.knochen if k.name.startswith("schwanz")]) > 12 and nr % 2:
+            continue
+        k, z = zier(kn)
+        c = k.kaesten[0]
+        x0, y0, z0 = c.ursprung
+        b, h, l = c.groesse
+        klinge(z, x0 + b / 2, y0 + h - 0.5, z0 + l / 2, max(3, round(h * 0.9)), max(2, l - 2), neigung=-35)
+        for x in (1, -1):
+            dorn(z, x0 + b / 2 + x * b / 2, y0 + h * 0.7, z0 + l / 2, max(2, round(h * 0.45)), -x * 55, -25)
+    r, z = zier("rumpf")
     c = r.kaesten[0]
     x0, y0, z0 = c.ursprung
     b, h, l = c.groesse
-    z = m.knoch("uralt_rumpf", list(r.drehpunkt), "rumpf")
-    for i in range(4):
-        klinge(z, 0, y0 + h - 1, z0 + 2 + i * 5, 11 - i, 4, neigung=-35)
+    for i in range(5):
+        klinge(z, 0, y0 + h - 1, z0 + 1 + i * 5, 12 - i, 4, neigung=-35)
     for x in (x0 - 0.05, x0 + b + 0.05):
         z.kasten([x, y0 + h * 0.55, z0 + 1], [0, 1, l + 12], "glutader")
         z.kasten([x, y0 + h * 0.35, z0 + 3], [0, 1, l + 6], "glutader")
-    return ["uralt_" + kn for kn in koepfe] + ["uralt_rumpf"]
+    for x in (1, -1):
+        # Zwei Reihen Dornen die Flanken entlang.
+        for j in range(5):
+            dorn(z, x0 + b / 2 + x * b / 2, y0 + h * 0.8, z0 + 1 + j * 5, 4, -x * 60, -20)
+            dorn(z, x0 + b / 2 + x * b / 2, y0 + h * 0.55, z0 + 3 + j * 5, 3, -x * 70, -10)
+    # Dornen an Ellbogen, Knien und an der Vorderkante der Schwingen.
+    for kn in [k.name for k in m.knochen]:
+        if re.match(r"^bein_(vorn|hinten)_(links|rechts)$", kn):
+            k, z = zier(kn)
+            c = k.kaesten[0]
+            x = 1 if kn.endswith("links") else -1
+            dorn(z, c.ursprung[0] + c.groesse[0] / 2, c.ursprung[1] + 1, c.ursprung[2] + c.groesse[2], 4, 0, -40)
+            dorn(z, c.ursprung[0] + c.groesse[0] / 2 + x * c.groesse[0] / 2, c.ursprung[1] + c.groesse[1] * 0.6,
+                 c.ursprung[2] + c.groesse[2] / 2, 3, -x * 60, -20)
+        elif re.match(r"^h?(fluegel|unterarm)_(links|rechts)$", kn):
+            k, z = zier(kn)
+            c = k.kaesten[0]
+            for j in range(3):
+                t = (j + 0.5) / 3
+                x_ = c.ursprung[0] + c.groesse[0] * t
+                dorn(z, x_, c.ursprung[1] + c.groesse[1], c.ursprung[2] + 0.5, 4, 0, -150)
+    return [k.name for k in m.knochen if k.name.startswith("uralt_")]
 
 
 def glutader(f):

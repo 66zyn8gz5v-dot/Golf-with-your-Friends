@@ -34,10 +34,109 @@
           "uralt_kopf_a": "query.property('fynn:uralt')"
         },
         {
+          "uralt_geweih_a_links": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_geweih_a2_links": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_geweih_a_rechts": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_geweih_a2_rechts": "query.property('fynn:uralt')"
+        },
+        {
           "uralt_kopf_b": "query.property('fynn:uralt')"
         },
         {
+          "uralt_geweih_b_links": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_geweih_b2_links": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_geweih_b_rechts": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_geweih_b2_rechts": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_hals_a1": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_hals_a2": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_hals_a3": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_hals_a4": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_hals_a5": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_hals_b1": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_hals_b2": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_hals_b3": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_hals_b4": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_hals_b5": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_schwanz1": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_schwanz2": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_schwanz3": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_schwanz4": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_schwanz5": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_schwanz6": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_schwanz7": "query.property('fynn:uralt')"
+        },
+        {
           "uralt_rumpf": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_bein_hinten_links": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_bein_vorn_links": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_bein_hinten_rechts": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_bein_vorn_rechts": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_fluegel_links": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_unterarm_links": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_fluegel_rechts": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_unterarm_rechts": "query.property('fynn:uralt')"
         }
       ]
     }

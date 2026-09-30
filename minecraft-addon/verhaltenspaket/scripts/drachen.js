@@ -311,7 +311,7 @@ export const DRACHEN = {
 export const BESIEGT = { anteil: 0.25, dauer: 6000, hiebe: 3 };
 // Uralte Drachen (4.97): so selten, so viel groesser (wie URALT_GROESSE in
 // drachen_daten.py), so viel staerker.
-export const URALT = { chance: 0.04, groesse: 1.6, weite: 1.5, kegel: 1.3, schaden: 4, pause: 0.5, flug: 1.35,
+export const URALT = { chance: 0.04, groesse: 2.2, weite: 1.5, kegel: 1.3, schaden: 4, pause: 0.5, flug: 1.35,
                        schuppen: 8 };
 export const SCHLAF = { weckweite: 8, weckchance: 0.35 };
 export const PFEIFE = "fynn:drachenpfeife";

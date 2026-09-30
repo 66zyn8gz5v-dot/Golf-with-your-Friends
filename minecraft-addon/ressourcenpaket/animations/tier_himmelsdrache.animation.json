@@ -1359,7 +1359,7 @@
           "rotation": [
             0.0,
             0.0,
-            110.0
+            72.0
           ],
           "position": [
             0.0,
@@ -1599,71 +1599,71 @@
         "flosse3_links": {
           "rotation": [
             0.0,
-            "1 * (30.0)",
-            "1 * (25.0)"
+            "1 * (-50.0)",
+            "1 * (-10.0)"
           ]
         },
         "flosse3_rechts": {
           "rotation": [
             0.0,
-            "-1 * (30.0)",
-            "-1 * (25.0)"
+            "-1 * (-50.0)",
+            "-1 * (-10.0)"
           ]
         },
         "flosse7_links": {
           "rotation": [
             0.0,
-            "1 * (30.0)",
-            "1 * (25.0)"
+            "1 * (-50.0)",
+            "1 * (-10.0)"
           ]
         },
         "flosse7_rechts": {
           "rotation": [
             0.0,
-            "-1 * (30.0)",
-            "-1 * (25.0)"
+            "-1 * (-50.0)",
+            "-1 * (-10.0)"
           ]
         },
         "flosse11_links": {
           "rotation": [
             0.0,
-            "1 * (30.0)",
-            "1 * (25.0)"
+            "1 * (-50.0)",
+            "1 * (-10.0)"
           ]
         },
         "flosse11_rechts": {
           "rotation": [
             0.0,
-            "-1 * (30.0)",
-            "-1 * (25.0)"
+            "-1 * (-50.0)",
+            "-1 * (-10.0)"
           ]
         },
         "flosse15_links": {
           "rotation": [
             0.0,
-            "1 * (30.0)",
-            "1 * (25.0)"
+            "1 * (-50.0)",
+            "1 * (-10.0)"
           ]
         },
         "flosse15_rechts": {
           "rotation": [
             0.0,
-            "-1 * (30.0)",
-            "-1 * (25.0)"
+            "-1 * (-50.0)",
+            "-1 * (-10.0)"
           ]
         },
         "flosse19_links": {
           "rotation": [
             0.0,
-            "1 * (30.0)",
-            "1 * (25.0)"
+            "1 * (-50.0)",
+            "1 * (-10.0)"
           ]
         },
         "flosse19_rechts": {
           "rotation": [
             0.0,
-            "-1 * (30.0)",
-            "-1 * (25.0)"
+            "-1 * (-50.0)",
+            "-1 * (-10.0)"
           ]
         },
         "schwanzflosse": {
@@ -1675,56 +1675,112 @@
         },
         "bein_vorn_links": {
           "rotation": [
-            -20.0,
+            -38.0,
+            0.0,
+            0.0
+          ]
+        },
+        "unterbein_vorn_links": {
+          "rotation": [
+            62.0,
+            0.0,
+            0.0
+          ]
+        },
+        "fuss_vorn_links": {
+          "rotation": [
+            25.0,
             0.0,
             0.0
           ]
         },
         "zehen_vorn_links": {
           "rotation": [
-            35.0,
+            40.0,
             0.0,
             0.0
           ]
         },
         "bein_vorn_rechts": {
           "rotation": [
-            -20.0,
+            -38.0,
+            0.0,
+            0.0
+          ]
+        },
+        "unterbein_vorn_rechts": {
+          "rotation": [
+            62.0,
+            0.0,
+            0.0
+          ]
+        },
+        "fuss_vorn_rechts": {
+          "rotation": [
+            25.0,
             0.0,
             0.0
           ]
         },
         "zehen_vorn_rechts": {
           "rotation": [
-            35.0,
+            40.0,
             0.0,
             0.0
           ]
         },
         "bein_hinten_links": {
           "rotation": [
-            -20.0,
+            -38.0,
+            0.0,
+            0.0
+          ]
+        },
+        "unterbein_hinten_links": {
+          "rotation": [
+            62.0,
+            0.0,
+            0.0
+          ]
+        },
+        "fuss_hinten_links": {
+          "rotation": [
+            25.0,
             0.0,
             0.0
           ]
         },
         "zehen_hinten_links": {
           "rotation": [
-            35.0,
+            40.0,
             0.0,
             0.0
           ]
         },
         "bein_hinten_rechts": {
           "rotation": [
-            -20.0,
+            -38.0,
+            0.0,
+            0.0
+          ]
+        },
+        "unterbein_hinten_rechts": {
+          "rotation": [
+            62.0,
+            0.0,
+            0.0
+          ]
+        },
+        "fuss_hinten_rechts": {
+          "rotation": [
+            25.0,
             0.0,
             0.0
           ]
         },
         "zehen_hinten_rechts": {
           "rotation": [
-            35.0,
+            40.0,
             0.0,
             0.0
           ]

@@ -150,8 +150,11 @@ def schwinge_bauen(m, s, eltern="rumpf", zusatz=None):
     unter.kasten([ex, sy - d1 / 2, sz - d1 / 2], [s.unterarm, d1, d1], "knochen")
     letzte = s.spitze(s.anzahl - 1)
     breite = int(math.ceil(max(letzte[0], hx) - ex)) + 1
+    # Die Haut am Unterarm reicht drei Pixel ueber den Ellbogen zurueck: Knickt
+    # der Unterarm, liegt sie unter der des Oberarms, statt einen Spalt
+    # aufzureissen.
     m.knoch("unterarmhaut_links", [ex, sy, sz], "unterarm_links").kasten(
-        [ex, sy, sz + 0.5], [breite, 0, s.hinterkante[1] - sz + 2], "flughaut_unterarm")
+        [ex - 3, sy - 0.02, sz + 0.5], [breite + 3, 0, s.hinterkante[1] - sz + 2], "flughaut_unterarm")
     hand = m.knoch("hand_links", [hx, sy, sz], "unterarm_links")
     hand.kasten([hx - 1.5, sy - 1.5, sz - 1.5], [3, 3, 3], "knochen")
     # Der Daumen: eine kurze Klaue vorn am Handgelenk.
