@@ -55,7 +55,8 @@ export const ATEMARTEN = {
     // Der Frosthauch (Frostwyvern, 4.91): Wer darin steht, wird stark
     // verlangsamt und friert; Wasser gefriert zu Eis, auf den Boden faellt Schnee.
     frost: {
-        teilchen: "fynn:frostatem", weite: 13, kegel: 1.0, dauer: 44, anlauf: 20, pause: [140, 220], veraendert: true,
+        teilchen: "fynn:frostatem", beiteilchen: "fynn:frostsplitter",
+        weite: 13, kegel: 1.0, dauer: 44, anlauf: 20, pause: [140, 220], veraendert: true,
         laut: "random.glass", knistern: "block.powder_snow.step",
         wesen(ziel, drache) {
             try { ziel.addEffect("slowness", 100, { amplifier: 3 }); } catch (e) { /* egal */ }
@@ -126,6 +127,31 @@ ATEMARTEN.schatten = {
         try { ziel.addEffect("blindness", 80, { amplifier: 0 }); } catch (e) { /* egal */ }
         try { ziel.addEffect("wither", 60, { amplifier: 0 }); } catch (e) { /* egal */ }
         try { ziel.applyDamage(2, { cause: "magic", damagingEntity: drache }); } catch (e) { /* egal */ }
+    },
+    block() { return 0; },
+};
+
+// Das Schallbruellen (Schlunddrache, 5.00): Schallringe laufen den Strahl
+// entlang nach vorn; wer darin steht, fliegt weit weg und ist benommen.
+ATEMARTEN.schall = {
+    teilchen: "minecraft:sonic_explosion", weite: 14, kegel: 1.1, dauer: 36, anlauf: 20, pause: [140, 220],
+    laut: "mob.warden.sonic_charge", knistern: "mob.warden.sonic_boom",
+    wesen(ziel, drache) {
+        try {
+            const d = drache.location, o = ziel.location;
+            const r = einheit({ x: o.x - d.x, y: 0, z: o.z - d.z });
+            ziel.applyKnockback({ x: r.x * 3.2, z: r.z * 3.2 }, 0.6);
+        } catch (e) { /* egal */ }
+        try { ziel.applyDamage(3, { cause: "sonic_boom", damagingEntity: drache }); } catch (e) { /* egal */ }
+        try { ziel.addEffect("nausea", 120, { amplifier: 0 }); } catch (e) { /* egal */ }
+        try { ziel.addEffect("slowness", 60, { amplifier: 1 }); } catch (e) { /* egal */ }
+    },
+    // Alle vier Ticks ein Ring in drei, sechs, neun und zwoelf Bloecken.
+    strahl(dim, mund, r, jetzt) {
+        if (jetzt % 4) return;
+        for (const s of [3, 6, 9, 12]) {
+            teilchen(dim, "minecraft:sonic_explosion", { x: mund.x + r.x * s, y: mund.y + r.y * s, z: mund.z + r.z * s });
+        }
     },
     block() { return 0; },
 };
@@ -209,6 +235,37 @@ export function plasmaTreffer(dim, ort, quelle) {
     } catch (e) { /* egal */ }
     teilchen(dim, "fynn:plasmaknall", ort);
 }
+
+// Der Schnappbiss (Schlunddrache, 5.00): Er schnellt auf sein Ziel zu und
+// beisst. Kleine Tiere verschlingt er ganz (und wird davon heiler), alle
+// anderen trifft es hart.
+FAEHIGKEITEN.schnappen = {
+    min: 4, max: 16, pause: [120, 200], name: "Schnappbiss",
+    wirken(drache, mund, r, ziel) {
+        if (!lebt(ziel)) return undefined;
+        const d = drache.location, o = ziel.location;
+        const weg = Math.hypot(o.x - d.x, o.z - d.z) || 1;
+        const vor = Math.max(0, weg - 2.5);
+        try {
+            drache.teleport({ x: d.x + (o.x - d.x) / weg * vor, y: Math.max(d.y, o.y), z: d.z + (o.z - d.z) / weg * vor },
+                            { facingLocation: o });
+        } catch (e) { /* egal */ }
+        try { drache.dimension.playSound("mob.ravager.bite", o, { volume: 3, pitch: 0.6 }); } catch (e) { /* egal */ }
+        let leben;
+        try { leben = ziel.getComponent("minecraft:health"); } catch (e) { /* egal */ }
+        const klein = ziel.typeId !== "minecraft:player" && leben && leben.effectiveMax <= 20;
+        if (klein) {
+            try { ziel.kill(); } catch (e) { /* egal */ }
+            try {
+                const eigen = drache.getComponent("minecraft:health");
+                eigen?.setCurrentValue(Math.min(eigen.effectiveMax, eigen.currentValue + 10));
+            } catch (e) { /* egal */ }
+            return "verschlungen";
+        }
+        try { ziel.applyDamage(14, { cause: "entityAttack", damagingEntity: drache }); } catch (e) { /* egal */ }
+        return "gebissen";
+    },
+};
 
 // Drei Eissplitter im Faecher (Frostwyvern): Die Splitter sind echte
 // Geschosse (fynn:eissplitter) - sie treffen hart und verlangsamen.
@@ -299,6 +356,12 @@ export const DRACHEN = {
         name: "Nachtschwinge", atem: "schatten", faehigkeit: "plasma", maul: 3.6, hoehe: 1.4, groesse: 1.0,
         luft: [1400, 2600], boden: [600, 1200],
         reitflug: { tempo: 1.8, steigen: 0.17, nachziehen: 0.16, schwebe: 0.05, hoechstSteigen: 0.85 },
+    },
+    // Der Schlunddrache (5.00): schwer, aber kraeftig.
+    "fynn:schlunddrache": {
+        name: "Schlunddrache", atem: "schall", faehigkeit: "schnappen", maul: 3.4, hoehe: 1.5, groesse: 1.2,
+        luft: [1000, 2000], boden: [800, 1600],
+        reitflug: { tempo: 1.2, steigen: 0.13, nachziehen: 0.11, schwebe: 0.04, hoechstSteigen: 0.7 },
     },
     // Kleiner und wendiger: fliegt mit Reiter schneller, steigt leichter.
     "fynn:frostwyvern": {
@@ -479,6 +542,9 @@ export function atemTakt(drache, jetzt, zufall = Math.random) {
         r = einheit({ x: r.x - r.z * schwenk, y: r.y, z: r.z + r.x * schwenk });
         const dim = drache.dimension;
         teilchen(dim, atem.teilchen, mund, r);
+        // Was jede Art zusaetzlich ausstoesst (Eissplitter, Schallringe ...).
+        if (atem.beiteilchen) teilchen(dim, atem.beiteilchen, mund, r);
+        if (atem.strahl) atem.strahl(dim, mund, r, jetzt);
         if ((jetzt - z.ab) % 6 === 0) {
             for (const w of imKegel(dim, mund, r, atem, drache)) atem.wesen(w, drache);
             // Was die Welt veraendert (Feuer, Eis, Schnee), nur mit mobGriefing;

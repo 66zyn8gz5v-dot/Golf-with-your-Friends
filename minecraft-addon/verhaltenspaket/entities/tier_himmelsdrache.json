@@ -31,6 +31,11 @@
           "type": "bool",
           "default": false,
           "client_sync": true
+        },
+        "fynn:wartet": {
+          "type": "bool",
+          "default": false,
+          "client_sync": true
         }
       }
     },
@@ -627,6 +632,9 @@
           "component_groups": [
             "fynn:bleibt"
           ]
+        },
+        "set_property": {
+          "fynn:wartet": true
         }
       },
       "fynn:folgen": {
@@ -639,6 +647,9 @@
           "component_groups": [
             "fynn:folgt"
           ]
+        },
+        "set_property": {
+          "fynn:wartet": false
         }
       },
       "fynn:einrichten": {

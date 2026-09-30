@@ -1191,14 +1191,14 @@
         }
       }
     },
-    "animation.fynn.giftdrache.schlafen": {
+    "animation.fynn.giftdrache.platz": {
       "loop": true,
       "bones": {
         "fluegel_links": {
           "rotation": [
             0.0,
-            -63.8,
-            "-42.4 + math.pow(math.max(0.0, math.sin(variable.fynn_t * 5.0)), 40.0) * 8.0"
+            -75.0,
+            -64.0
           ]
         },
         "fluegel_rechts": {
@@ -1211,7 +1211,7 @@
         "unterarm_links": {
           "rotation": [
             0.0,
-            126.6,
+            149.0,
             0.0
           ]
         },
@@ -1224,8 +1224,8 @@
         },
         "hand_links": {
           "rotation": [
-            -32.3,
-            -144.5,
+            -38.0,
+            -170.0,
             0.0
           ]
         },
@@ -1239,7 +1239,7 @@
         "finger1_links": {
           "rotation": [
             0.0,
-            -8.9,
+            -10.5,
             0.0
           ]
         },
@@ -1253,7 +1253,7 @@
         "finger2_links": {
           "rotation": [
             0.0,
-            7.6,
+            9.0,
             0.0
           ]
         },
@@ -1267,7 +1267,7 @@
         "finger3_links": {
           "rotation": [
             0.0,
-            24.2,
+            28.5,
             0.0
           ]
         },
@@ -1281,7 +1281,7 @@
         "finger4_links": {
           "rotation": [
             0.0,
-            42.1,
+            49.5,
             0.0
           ]
         },
@@ -1296,35 +1296,35 @@
           "scale": [
             1.0,
             1.0,
-            0.35
+            0.15
           ]
         },
         "unterarmhaut_links": {
           "scale": [
             1.0,
             1.0,
-            0.35
+            0.15
           ]
         },
         "fingerhaut1_links": {
           "scale": [
             1.0,
             1.0,
-            0.3
+            0.12
           ]
         },
         "fingerhaut2_links": {
           "scale": [
             1.0,
             1.0,
-            0.3
+            0.12
           ]
         },
         "fingerhaut3_links": {
           "scale": [
             1.0,
             1.0,
-            0.3
+            0.12
           ]
         },
         "armhaut_rechts": {
@@ -1364,112 +1364,112 @@
         },
         "bein_vorn_links": {
           "rotation": [
-            -75.0,
+            22.0,
             0.0,
-            0.0
+            -4.0
           ]
         },
         "bein_vorn_rechts": {
           "rotation": [
-            -75.0,
+            22.0,
             -0.0,
-            -0.0
+            4.0
           ]
         },
         "unterbein_vorn_links": {
           "rotation": [
-            55.0,
+            -108.0,
             0.0,
             0.0
           ]
         },
         "unterbein_vorn_rechts": {
           "rotation": [
-            55.0,
+            -108.0,
             -0.0,
             -0.0
           ]
         },
         "fuss_vorn_links": {
           "rotation": [
-            20.0,
+            86.0,
             0.0,
             0.0
           ]
         },
         "fuss_vorn_rechts": {
           "rotation": [
-            20.0,
+            86.0,
             -0.0,
             -0.0
           ]
         },
         "zehen_vorn_links": {
           "rotation": [
-            15.0,
+            4.0,
             0.0,
             0.0
           ]
         },
         "zehen_vorn_rechts": {
           "rotation": [
-            15.0,
+            4.0,
             -0.0,
             -0.0
           ]
         },
         "bein_hinten_links": {
           "rotation": [
-            -60.0,
+            -62.0,
             0.0,
-            0.0
+            -14.0
           ]
         },
         "bein_hinten_rechts": {
           "rotation": [
-            -60.0,
+            -62.0,
             -0.0,
-            -0.0
+            14.0
           ]
         },
         "unterbein_hinten_links": {
           "rotation": [
-            120.0,
+            118.0,
             0.0,
             0.0
           ]
         },
         "unterbein_hinten_rechts": {
           "rotation": [
-            120.0,
+            118.0,
             -0.0,
             -0.0
           ]
         },
         "fuss_hinten_links": {
           "rotation": [
-            -55.0,
+            -52.0,
             0.0,
             0.0
           ]
         },
         "fuss_hinten_rechts": {
           "rotation": [
-            -55.0,
+            -52.0,
             -0.0,
             -0.0
           ]
         },
         "zehen_hinten_links": {
           "rotation": [
-            20.0,
+            8.0,
             0.0,
             0.0
           ]
         },
         "zehen_hinten_rechts": {
           "rotation": [
-            20.0,
+            8.0,
             -0.0,
             -0.0
           ]
@@ -1477,104 +1477,548 @@
         "rumpf": {
           "position": [
             0.0,
-            -11.0,
+            -9.5,
             0.0
           ],
           "scale": [
-            "1.0 + math.sin(variable.fynn_t * 24.0) * 0.025",
-            "1.0 + math.sin(variable.fynn_t * 24.0) * 0.04",
+            1.0,
+            "1.0 + math.sin(variable.fynn_t * 40.0) * 0.015",
             1.0
-          ]
-        },
-        "becken": {
-          "rotation": [
-            0.0,
-            -16.0,
-            0.0
           ]
         },
         "hals_a1": {
           "rotation": [
-            14.0,
-            26.0,
+            "-16.0 + math.sin((variable.fynn_t + 0.0) * 30.0 - 0) * 1.5",
+            "math.sin((variable.fynn_t + 0.0) * 13.0 - 0) * 5.0",
             0.0
           ]
         },
         "hals_b1": {
           "rotation": [
-            14.0,
-            26.0,
+            "-16.0 + math.sin((variable.fynn_t + 1.7) * 30.0 - 0) * 1.5",
+            "math.sin((variable.fynn_t + 1.7) * 13.0 - 0) * 5.0",
             0.0
           ]
         },
         "hals_a2": {
           "rotation": [
-            7.0,
-            26.0,
+            "-10.0 + math.sin((variable.fynn_t + 0.0) * 30.0 - 25) * 1.5",
+            "math.sin((variable.fynn_t + 0.0) * 13.0 - 20) * 5.0",
             0.0
           ]
         },
         "hals_b2": {
           "rotation": [
-            7.0,
-            26.0,
+            "-10.0 + math.sin((variable.fynn_t + 1.7) * 30.0 - 25) * 1.5",
+            "math.sin((variable.fynn_t + 1.7) * 13.0 - 20) * 5.0",
             0.0
           ]
         },
         "hals_a3": {
           "rotation": [
-            7.0,
-            26.0,
+            "-4.0 + math.sin((variable.fynn_t + 0.0) * 30.0 - 50) * 1.5",
+            "math.sin((variable.fynn_t + 0.0) * 13.0 - 40) * 5.0",
             0.0
           ]
         },
         "hals_b3": {
           "rotation": [
-            7.0,
-            26.0,
+            "-4.0 + math.sin((variable.fynn_t + 1.7) * 30.0 - 50) * 1.5",
+            "math.sin((variable.fynn_t + 1.7) * 13.0 - 40) * 5.0",
             0.0
           ]
         },
         "hals_a4": {
           "rotation": [
-            7.0,
-            26.0,
+            "2.0 + math.sin((variable.fynn_t + 0.0) * 30.0 - 75) * 1.5",
+            "math.sin((variable.fynn_t + 0.0) * 13.0 - 60) * 5.0",
             0.0
           ]
         },
         "hals_b4": {
           "rotation": [
-            7.0,
-            26.0,
+            "2.0 + math.sin((variable.fynn_t + 1.7) * 30.0 - 75) * 1.5",
+            "math.sin((variable.fynn_t + 1.7) * 13.0 - 60) * 5.0",
             0.0
           ]
         },
         "hals_a5": {
           "rotation": [
-            7.0,
-            26.0,
+            "6.0 + math.sin((variable.fynn_t + 0.0) * 30.0 - 100) * 1.5",
+            "math.sin((variable.fynn_t + 0.0) * 13.0 - 80) * 5.0",
             0.0
           ]
         },
         "hals_b5": {
           "rotation": [
-            7.0,
-            26.0,
+            "6.0 + math.sin((variable.fynn_t + 1.7) * 30.0 - 100) * 1.5",
+            "math.sin((variable.fynn_t + 1.7) * 13.0 - 80) * 5.0",
             0.0
           ]
         },
         "kopf_a": {
           "rotation": [
-            -4.0,
+            "14.0 - math.pow(math.max(0.0, math.sin((variable.fynn_t + 0.0) * 16.0)), 30.0) * 25.0",
+            "math.sin((variable.fynn_t + 0.0) * 19.0) * 18.0",
+            "math.sin((variable.fynn_t + 0.0) * 11.0) * 6.0"
+          ]
+        },
+        "kopf_b": {
+          "rotation": [
+            "14.0 - math.pow(math.max(0.0, math.sin((variable.fynn_t + 1.7) * 16.0)), 30.0) * 25.0",
+            "math.sin((variable.fynn_t + 1.7) * 19.0) * 18.0",
+            "math.sin((variable.fynn_t + 1.7) * 11.0) * 6.0"
+          ]
+        },
+        "kiefer_a": {
+          "rotation": [
+            "math.pow(math.max(0.0, math.sin((variable.fynn_t + 0.0) * 16.0)), 30.0) * 45.0",
+            0.0,
+            0.0
+          ]
+        },
+        "kiefer_b": {
+          "rotation": [
+            "math.pow(math.max(0.0, math.sin((variable.fynn_t + 1.7) * 16.0)), 30.0) * 45.0",
+            0.0,
+            0.0
+          ]
+        },
+        "schwanz1": {
+          "rotation": [
+            -16.0,
+            "-5.7 + math.sin(variable.fynn_t * 26.0 - 35) * 2.3",
+            0.0
+          ]
+        },
+        "schwanz2": {
+          "rotation": [
+            3.0,
+            "-5.7 + math.sin(variable.fynn_t * 26.0 - 70) * 3.1",
+            0.0
+          ]
+        },
+        "schwanz3": {
+          "rotation": [
+            1.0,
+            "-5.7 + math.sin(variable.fynn_t * 26.0 - 105) * 3.9",
+            0.0
+          ]
+        },
+        "schwanz4": {
+          "rotation": [
+            1.0,
+            "-5.7 + math.sin(variable.fynn_t * 26.0 - 140) * 4.7",
+            0.0
+          ]
+        },
+        "schwanz5": {
+          "rotation": [
+            1.0,
+            "-5.7 + math.sin(variable.fynn_t * 26.0 - 175) * 5.5",
+            0.0
+          ]
+        },
+        "schwanz6": {
+          "rotation": [
+            1.0,
+            "-5.7 + math.sin(variable.fynn_t * 26.0 - 210) * 6.3",
+            0.0
+          ]
+        },
+        "schwanz7": {
+          "rotation": [
+            1.0,
+            "-5.7 + math.sin(variable.fynn_t * 26.0 - 245) * 7.1",
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.giftdrache.schlafen": {
+      "loop": true,
+      "bones": {
+        "fluegel_links": {
+          "rotation": [
+            0.0,
+            -75.0,
+            "-64.0 + math.pow(math.max(0.0, math.sin(variable.fynn_t * 5.0)), 40.0) * 6.0"
+          ]
+        },
+        "fluegel_rechts": {
+          "rotation": [
+            0.0,
+            75.0,
+            64.0
+          ]
+        },
+        "unterarm_links": {
+          "rotation": [
+            0.0,
+            149.0,
+            0.0
+          ]
+        },
+        "unterarm_rechts": {
+          "rotation": [
+            0.0,
+            -149.0,
+            -0.0
+          ]
+        },
+        "hand_links": {
+          "rotation": [
+            -38.0,
+            -170.0,
+            0.0
+          ]
+        },
+        "hand_rechts": {
+          "rotation": [
+            -38.0,
+            170.0,
+            -0.0
+          ]
+        },
+        "finger1_links": {
+          "rotation": [
+            0.0,
+            -10.5,
+            0.0
+          ]
+        },
+        "finger1_rechts": {
+          "rotation": [
+            0.0,
+            10.5,
+            -0.0
+          ]
+        },
+        "finger2_links": {
+          "rotation": [
+            0.0,
+            9.0,
+            0.0
+          ]
+        },
+        "finger2_rechts": {
+          "rotation": [
+            0.0,
+            -9.0,
+            -0.0
+          ]
+        },
+        "finger3_links": {
+          "rotation": [
+            0.0,
+            28.5,
+            0.0
+          ]
+        },
+        "finger3_rechts": {
+          "rotation": [
+            0.0,
+            -28.5,
+            -0.0
+          ]
+        },
+        "finger4_links": {
+          "rotation": [
+            0.0,
+            49.5,
+            0.0
+          ]
+        },
+        "finger4_rechts": {
+          "rotation": [
+            0.0,
+            -49.5,
+            -0.0
+          ]
+        },
+        "armhaut_links": {
+          "scale": [
+            1.0,
+            1.0,
+            0.15
+          ]
+        },
+        "unterarmhaut_links": {
+          "scale": [
+            1.0,
+            1.0,
+            0.15
+          ]
+        },
+        "fingerhaut1_links": {
+          "scale": [
+            1.0,
+            1.0,
+            0.12
+          ]
+        },
+        "fingerhaut2_links": {
+          "scale": [
+            1.0,
+            1.0,
+            0.12
+          ]
+        },
+        "fingerhaut3_links": {
+          "scale": [
+            1.0,
+            1.0,
+            0.12
+          ]
+        },
+        "armhaut_rechts": {
+          "scale": [
+            1.0,
+            1.0,
+            0.15
+          ]
+        },
+        "unterarmhaut_rechts": {
+          "scale": [
+            1.0,
+            1.0,
+            0.15
+          ]
+        },
+        "fingerhaut1_rechts": {
+          "scale": [
+            1.0,
+            1.0,
+            0.12
+          ]
+        },
+        "fingerhaut2_rechts": {
+          "scale": [
+            1.0,
+            1.0,
+            0.12
+          ]
+        },
+        "fingerhaut3_rechts": {
+          "scale": [
+            1.0,
+            1.0,
+            0.12
+          ]
+        },
+        "bein_vorn_links": {
+          "rotation": [
             22.0,
+            0.0,
+            -4.0
+          ]
+        },
+        "bein_vorn_rechts": {
+          "rotation": [
+            22.0,
+            -0.0,
+            4.0
+          ]
+        },
+        "unterbein_vorn_links": {
+          "rotation": [
+            -108.0,
+            0.0,
+            0.0
+          ]
+        },
+        "unterbein_vorn_rechts": {
+          "rotation": [
+            -108.0,
+            -0.0,
+            -0.0
+          ]
+        },
+        "fuss_vorn_links": {
+          "rotation": [
+            86.0,
+            0.0,
+            0.0
+          ]
+        },
+        "fuss_vorn_rechts": {
+          "rotation": [
+            86.0,
+            -0.0,
+            -0.0
+          ]
+        },
+        "zehen_vorn_links": {
+          "rotation": [
+            4.0,
+            0.0,
+            0.0
+          ]
+        },
+        "zehen_vorn_rechts": {
+          "rotation": [
+            4.0,
+            -0.0,
+            -0.0
+          ]
+        },
+        "bein_hinten_links": {
+          "rotation": [
+            -62.0,
+            0.0,
+            -14.0
+          ]
+        },
+        "bein_hinten_rechts": {
+          "rotation": [
+            -62.0,
+            -0.0,
+            14.0
+          ]
+        },
+        "unterbein_hinten_links": {
+          "rotation": [
+            118.0,
+            0.0,
+            0.0
+          ]
+        },
+        "unterbein_hinten_rechts": {
+          "rotation": [
+            118.0,
+            -0.0,
+            -0.0
+          ]
+        },
+        "fuss_hinten_links": {
+          "rotation": [
+            -52.0,
+            0.0,
+            0.0
+          ]
+        },
+        "fuss_hinten_rechts": {
+          "rotation": [
+            -52.0,
+            -0.0,
+            -0.0
+          ]
+        },
+        "zehen_hinten_links": {
+          "rotation": [
+            8.0,
+            0.0,
+            0.0
+          ]
+        },
+        "zehen_hinten_rechts": {
+          "rotation": [
+            8.0,
+            -0.0,
+            -0.0
+          ]
+        },
+        "rumpf": {
+          "position": [
+            0.0,
+            -9.5,
+            0.0
+          ],
+          "scale": [
+            "1.0 + math.sin(variable.fynn_t * 24.0) * 0.02",
+            "1.0 + math.sin(variable.fynn_t * 24.0) * 0.03",
+            1.0
+          ]
+        },
+        "hals_a1": {
+          "rotation": [
+            10.8,
+            12.4,
+            0.0
+          ]
+        },
+        "hals_b1": {
+          "rotation": [
+            10.8,
+            12.4,
+            0.0
+          ]
+        },
+        "hals_a2": {
+          "rotation": [
+            6.8,
+            12.4,
+            0.0
+          ]
+        },
+        "hals_b2": {
+          "rotation": [
+            6.8,
+            12.4,
+            0.0
+          ]
+        },
+        "hals_a3": {
+          "rotation": [
+            6.8,
+            12.4,
+            0.0
+          ]
+        },
+        "hals_b3": {
+          "rotation": [
+            6.8,
+            12.4,
+            0.0
+          ]
+        },
+        "hals_a4": {
+          "rotation": [
+            6.8,
+            12.4,
+            0.0
+          ]
+        },
+        "hals_b4": {
+          "rotation": [
+            6.8,
+            12.4,
+            0.0
+          ]
+        },
+        "hals_a5": {
+          "rotation": [
+            6.8,
+            12.4,
+            0.0
+          ]
+        },
+        "hals_b5": {
+          "rotation": [
+            6.8,
+            12.4,
+            0.0
+          ]
+        },
+        "kopf_a": {
+          "rotation": [
+            -18.0,
+            18.0,
             12.0
           ]
         },
         "kopf_b": {
           "rotation": [
-            -4.0,
-            22.0,
+            -18.0,
+            18.0,
             12.0
+          ]
+        },
+        "becken": {
+          "rotation": [
+            0.0,
+            -8.0,
+            0.0
           ]
         },
         "kiefer_a": {
@@ -1593,50 +2037,50 @@
         },
         "schwanz1": {
           "rotation": [
-            -14.0,
-            -27.1,
+            -16.0,
+            -18.6,
             0.0
           ]
         },
         "schwanz2": {
           "rotation": [
             3.0,
-            -27.1,
+            -18.6,
             0.0
           ]
         },
         "schwanz3": {
           "rotation": [
             1.0,
-            -27.1,
+            -18.6,
             0.0
           ]
         },
         "schwanz4": {
           "rotation": [
             1.0,
-            -27.1,
+            -18.6,
             0.0
           ]
         },
         "schwanz5": {
           "rotation": [
             1.0,
-            -27.1,
+            -18.6,
             0.0
           ]
         },
         "schwanz6": {
           "rotation": [
             1.0,
-            -27.1,
+            -18.6,
             0.0
           ]
         },
         "schwanz7": {
           "rotation": [
             1.0,
-            -27.1,
+            -18.6,
             "math.pow(math.max(0.0, math.sin(variable.fynn_t * 9.0)), 30.0) * math.sin(variable.fynn_t * 500.0) * 12.0"
           ]
         }
@@ -1821,7 +2265,7 @@
           ],
           "position": [
             0.0,
-            -10.0,
+            -8.5,
             0.0
           ],
           "scale": [

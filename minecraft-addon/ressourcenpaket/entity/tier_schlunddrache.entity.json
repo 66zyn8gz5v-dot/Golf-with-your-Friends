@@ -2,31 +2,33 @@
   "format_version": "1.10.0",
   "minecraft:client_entity": {
     "description": {
-      "identifier": "fynn:himmelsdrache",
+      "identifier": "fynn:schlunddrache",
       "materials": {
         "default": "entity_emissive_alpha"
       },
       "textures": {
-        "jade": "textures/entity/tiere/himmelsdrache_jade",
-        "perle": "textures/entity/tiere/himmelsdrache_perle",
-        "gold": "textures/entity/tiere/himmelsdrache_gold"
+        "moos": "textures/entity/tiere/schlunddrache_moos",
+        "knochen": "textures/entity/tiere/schlunddrache_knochen",
+        "tiefsee": "textures/entity/tiere/schlunddrache_tiefsee"
       },
       "geometry": {
-        "default": "geometry.fynn.himmelsdrache"
+        "default": "geometry.fynn.schlunddrache"
       },
       "animations": {
-        "flug": "animation.fynn.himmelsdrache.flug",
-        "stand": "animation.fynn.himmelsdrache.stand",
-        "gehen": "animation.fynn.himmelsdrache.gehen",
-        "platz": "animation.fynn.himmelsdrache.platz",
-        "schlafen": "animation.fynn.himmelsdrache.schlafen",
-        "niederliegen": "animation.fynn.himmelsdrache.niederliegen",
-        "luftholen": "animation.fynn.himmelsdrache.luftholen",
-        "sturmhauch": "animation.fynn.himmelsdrache.sturmhauch",
-        "drachenbruellen": "animation.fynn.himmelsdrache.drachenbruellen",
-        "drachenblick": "animation.fynn.himmelsdrache.drachenblick",
-        "drachenbiss": "animation.fynn.himmelsdrache.drachenbiss",
-        "uralt": "animation.fynn.himmelsdrache.uralt"
+        "flug": "animation.fynn.schlunddrache.flug",
+        "schweben": "animation.fynn.schlunddrache.schweben",
+        "stand": "animation.fynn.schlunddrache.stand",
+        "gehen": "animation.fynn.schlunddrache.gehen",
+        "platz": "animation.fynn.schlunddrache.platz",
+        "schlafen": "animation.fynn.schlunddrache.schlafen",
+        "niederliegen": "animation.fynn.schlunddrache.niederliegen",
+        "luftholen": "animation.fynn.schlunddrache.luftholen",
+        "schallbruellen": "animation.fynn.schlunddrache.schallbruellen",
+        "drachenbruellen": "animation.fynn.schlunddrache.drachenbruellen",
+        "sturzflug": "animation.fynn.schlunddrache.sturzflug",
+        "drachenblick": "animation.fynn.schlunddrache.drachenblick",
+        "drachenbiss": "animation.fynn.schlunddrache.drachenbiss",
+        "uralt": "animation.fynn.schlunddrache.uralt"
       },
       "scripts": {
         "initialize": [
@@ -48,12 +50,15 @@
           "variable.fynn_holen = query.property('fynn:feuer') * math.clamp(variable.fynn_az / 0.25, 0.0, 1.0) * (1.0 - math.clamp((variable.fynn_az - 1.0) / 0.12, 0.0, 1.0));",
           "variable.fynn_speit = query.property('fynn:feuer') * math.clamp((variable.fynn_az - 1.0) / 0.12, 0.0, 1.0);",
           "variable.fynn_ruck = variable.fynn_speit * math.max(0.0, 1.0 - (variable.fynn_az - 1.0) / 0.4);",
-          "variable.fynn_offen_l = math.max(math.max(variable.fynn_bruell, math.clamp(math.sin(math.clamp((variable.fynn_sz - 0.0) / 3.2, 0.0, 1.0) * 180.0) * 1.6, 0.0, 1.0) * variable.fynn_ruhig), variable.fynn_speit * 0.0);",
-          "variable.fynn_offen_r = math.max(math.max(variable.fynn_bruell, math.clamp(math.sin(math.clamp((variable.fynn_sz - 3.8) / 3.2, 0.0, 1.0) * 180.0) * 1.6, 0.0, 1.0) * variable.fynn_ruhig), variable.fynn_speit * 0.0);"
+          "variable.fynn_offen_l = math.max(math.max(variable.fynn_bruell, math.clamp(math.sin(math.clamp((variable.fynn_sz - 0.0) / 3.2, 0.0, 1.0) * 180.0) * 1.6, 0.0, 1.0) * variable.fynn_ruhig), variable.fynn_speit * 0.5);",
+          "variable.fynn_offen_r = math.max(math.max(variable.fynn_bruell, math.clamp(math.sin(math.clamp((variable.fynn_sz - 3.8) / 3.2, 0.0, 1.0) * 180.0) * 1.6, 0.0, 1.0) * variable.fynn_ruhig), variable.fynn_speit * 0.5);"
         ],
         "animate": [
           {
             "flug": "query.property('fynn:fliegt') * (1.0 - math.max(query.property('fynn:schlaeft'), query.property('fynn:besiegt')))"
+          },
+          {
+            "schweben": "query.property('fynn:fliegt') * query.property('fynn:feuer') * (1.0 - math.max(query.property('fynn:schlaeft'), query.property('fynn:besiegt')))"
           },
           {
             "stand": "(1.0 - query.property('fynn:fliegt')) * (1.0 - math.max(query.property('fynn:schlaeft'), query.property('fynn:besiegt'))) * (1.0 - (query.property('fynn:wartet') * (1.0 - query.has_rider)))"
@@ -74,10 +79,13 @@
             "luftholen": "variable.fynn_holen"
           },
           {
-            "sturmhauch": "variable.fynn_speit"
+            "schallbruellen": "variable.fynn_speit"
           },
           {
-            "drachenbruellen": "(1.0 - query.property('fynn:fliegt')) * (1.0 - math.clamp(query.modified_move_speed * 4.0, 0.0, 1.0)) * (1.0 - query.property('fynn:feuer')) * (1.0 - math.max(query.property('fynn:schlaeft'), query.property('fynn:besiegt'))) * (math.mod(variable.fynn_t, 19.0) < 2.2)"
+            "drachenbruellen": "variable.fynn_bruell"
+          },
+          {
+            "sturzflug": "query.property('fynn:fliegt') * math.clamp(-query.vertical_speed * 0.6 - 0.2, 0.0, 1.0)"
           },
           {
             "drachenblick": "(1.0 - math.max(query.property('fynn:schlaeft'), query.property('fynn:besiegt')))"
@@ -89,13 +97,13 @@
             "uralt": "query.property('fynn:uralt')"
           }
         ],
-        "scale": "1.15"
+        "scale": "1.2"
       },
       "render_controllers": [
-        "controller.render.fynn.himmelsdrache"
+        "controller.render.fynn.schlunddrache"
       ],
       "spawn_egg": {
-        "texture": "himmelsdrache_ei",
+        "texture": "schlunddrache_ei",
         "texture_index": 0
       }
     }

@@ -963,3 +963,132 @@ def giftdrache_maler(variante):
             return H.dunkler(c, 0.2) if int(p[1] // 2) % 2 == 0 and t < 0.8 else c
         return False
     return klotz_maler("giftdrache", f, GIFTDRACHE_SCHWINGE, besonders, saat=21)
+
+
+# ================================================================== Schlunddrache (5.00)
+
+# Nach Fynns tuerkisem Vorbild aus dem Bild mit den drei Drachen: lange,
+# duenne Knochenschwingen mit blasser Haut.
+SCHLUNDDRACHE_SCHWINGE = Schwinge((7, 26, -7), oberarm=16, unterarm=20, finger=(52, 48, 42, 34),
+                                  winkel=(14, -12, -40, -68), hinterkante=(7, 16), dicke=(3, 3, 2),
+                                  biegung=12, bogen=6.0)
+
+
+def schlund_kopf(m, eltern, ky, kz):
+    """Der Kopf, um den es geht (Fynn: "der so einen grossen Kopf hat"):
+    ein riesiger Kasten, fast so breit wie die Brust, und vorn ein Schlund,
+    der immer ein Stueck offen steht - ringsum lange Fangzaehne oben und
+    unten, innen ein dunkelroter Rachen. Vier kleine Augen, zwei auf jeder
+    Seite, ein Kranz Knochendornen nach hinten, Knochenplatten ueber den
+    Brauen."""
+    MAEULER.pop("schlunddrache", None)
+    b, h, l = 16, 12, 16
+    y0 = ky - 4
+    kopf = m.knoch("kopf", [0, ky, kz], eltern)
+    kopf.kasten([-b / 2, y0, kz - l], [b, h, l], "kopf")
+    kopf.kasten([-b / 2 - 0.5, y0 + h - 3, kz - l + 2], [b + 1, 3, 6], "braue")        # Knochenplatte
+    kopf.kasten([-b / 2 + 2, y0 + h, kz - l + 1], [b - 4, 2, 5], "knochenplatte")
+    kopf.kasten([-b / 2 + 3, y0 - 2, kz - 7], [b - 6, 2, 7], "kehle")
+    # Oben: ein Kranz langer Fangzaehne ringsum, vorn die laengsten.
+    for x in range(int(-b / 2 + 1), int(b / 2 - 1), 2):
+        lang = 4 if abs(x) < 4 else 3
+        kopf.kasten([x, y0 - lang, kz - l], [1, lang, 1], "zahn")
+    for z in range(int(kz - l + 2), int(kz - 3), 2):
+        for x in (b / 2 - 1, -b / 2):
+            kopf.kasten([x, y0 - 3, z], [1, 3, 1], "zahn")
+    # Der Unterkiefer haengt offen (Grundstellung 22 Grad) - ein Schlund.
+    kiefer = m.knoch("kiefer", [0, y0, kz - 3], "kopf", drehung=[22, 0, 0])
+    kiefer.kasten([-b / 2 + 0.5, y0 - 4, kz - l], [b - 1, 4, l - 3], "kiefer")
+    kiefer.kasten([-b / 2 + 2.5, y0 - 1.5, kz - l + 2], [b - 5, 1, l - 7], "zunge")
+    for x in range(int(-b / 2 + 1.5), int(b / 2 - 1), 2):
+        kiefer.kasten([x, y0, kz - l + 0.5], [1, 4 if abs(x) < 4 else 3, 1], "zahn")
+    for z in range(int(kz - l + 3), int(kz - 4), 2):
+        for x in (b / 2 - 1.5, -b / 2 + 0.5):
+            kiefer.kasten([x, y0, z], [1, 3, 1], "zahn")
+    MAEULER.setdefault("schlunddrache", []).append(("kopf", [0, y0 - 1, kz - l]))
+    # Vier Augen: zwei uebereinander auf jeder Seite.
+    oy, oz = y0 + h - 5, kz - l + 4
+    AUGEN["schlunddrache"] = (oy, oz, b / 2 + 1)
+    lid = m.knoch("lider", [0, ky, kz], "kopf")
+    for x in (1, -1):
+        for dy, dz in ((0, 0), (-3, 3)):
+            kopf.kasten([x * b / 2 - (0 if x > 0 else 1), oy - 1 + dy, oz - 2 + dz], [1, 2, 3], "auge")
+            lid.kasten([x * (b / 2 + 1.1), oy - 1 + dy, oz - 2 + dz], [0, 2, 3], "lid")
+        # Kiemenartige Wangenflossen hinten am Kopf.
+        for j in range(3):
+            kopf.kasten([x * b / 2 - (0 if x > 0 else 1), y0 + 2 + j * 3, kz - 3], [1, 2, 6], "knochenstachel",
+                        drehung=[-10, -x * (30 + j * 12), 0], drehpunkt=[x * b / 2, y0 + 3 + j * 3, kz - 3])
+    # Ein Kranz Knochendornen nach hinten.
+    for i, w in enumerate((-50, -25, 0, 25, 50)):
+        kopf.kasten([-0.5 + w / 12, y0 + h - 1, kz - 4], [1, 1, 9 - abs(i - 2) * 2], "knochenstachel",
+                    drehung=[25, w, 0], drehpunkt=[w / 12, y0 + h - 0.5, kz - 4])
+    return kopf
+
+
+def schlunddrache_modell():
+    """Der Schlunddrache: ein schlanker Leib, ein kurzer, dicker Hals, der
+    den riesigen Kopf traegt, vier duenne Beine mit Krallen, lange
+    Knochenschwingen mit blasser Haut, weisse Knochenstacheln und ein langer,
+    duenner Schwanz mit einer Knochenspitze."""
+    m = Modell("schlunddrache", sichtbreite=10.0, sichthoehe=3.5)
+    r = m.knoch("rumpf", [0, 20, 0])
+    r.kasten([-7, 12, -11], [14, 13, 11], "leib")
+    r.kasten([-6, 11.5, -12], [12, 10, 2], "brust")
+    r.kasten([-6, 12.5, -1], [12, 11, 9], "leib")
+    r.kasten([-6, 13, 8], [12, 10, 7], "leib")
+    r.kasten([-5, 11.5, -10], [10, 1, 23], "bauch")
+    for z, h in ((-9, 6), (-4, 7), (1, 7), (6, 6), (11, 5)):
+        klinge(r, 0, 25 if z < 6 else 23, z, h, 3, neigung=-35, stoff="knochenstachel")
+    hals, ende = glieder(m, "hals", "rumpf", (0, 22, -11), -1,
+                         [(6, 11, 11, 2.0), (5, 11, 11, 1.5), (5, 12, 12, 0.5)], stoff="leib")
+    klingen_reihe(m, hals, stoff="knochenstachel", hoehe=(5, 4), neigung=-40)
+    _, ky, kz = ende
+    schlund_kopf(m, hals[-1], ky, kz)
+    schwanz, ende = glieder(m, "schwanz", "rumpf", (0, 19, 14), 1,
+                            [(8, 9, 8, -0.4), (8, 7, 6, -0.3), (8, 6, 5, -0.2), (8, 5, 4, 0.0), (8, 4, 4, 0.0),
+                             (8, 3, 3, 0.0), (8, 3, 3, 0.0), (7, 2, 2, 0.0), (6, 2, 2, 0.0)], stoff="leib")
+    klingen_reihe(m, schwanz, stoff="knochenstachel", hoehe=(5, 2), neigung=-40)
+    _, sy, sz = ende
+    spitze = m.finde(schwanz[-1])
+    spitze.kasten([-2, sy - 1, sz - 1], [4, 2, 4], "knochenplatte")
+    spitze.kasten([-1, sy - 0.5, sz + 3], [2, 1, 4], "knochenplatte")
+    for seite, x in (("links", 1), ("rechts", -1)):
+        bein_klotz(m, f"bein_hinten_{seite}", "rumpf", (x * 6, 20, 11), (6, 9, 7), (4, 8, 4), (6, 3, 5),
+                   zehen=3, zehlang=5)
+        bein_klotz(m, f"bein_vorn_{seite}", "rumpf", (x * 6, 19, -8), (5, 9, 5), (4, 7, 4), (5, 3, 4),
+                   zehen=3, zehlang=4)
+    schwinge_bauen(m, SCHLUNDDRACHE_SCHWINGE, zusatz=fingerkrallen)
+    becken_abtrennen(m, 8, 19)
+    sattel_bauen(m, "rumpf", 26, -3, 14)
+    uralt_zier(m)
+    sattelzone(m)
+    return m
+
+
+SCHLUNDDRACHE_FARBEN = {
+    # Wie das Vorbild: moosiges Tuerkisgruen, blasse Knochen und Flughaut.
+    "moos":    {"leib": "#6a9a82", "ruecken": "#3a6a5a", "bauch": "#d8e4c8", "fleck": "#4e8070",
+                "haut": "#e8e4d0", "hautfleck": "#c8c4a8", "augen": "#ffe86a", "glut": "#c0ffe8",
+                "horn": ("#b8b4a0", "#e4e0cc", "#fcfaf0"), "kralle": "#1e2a24", "zunge": "#c85a6a",
+                "rachen": "#3a0e14", "zacken": 2.4},
+    "knochen": {"leib": "#b8b4a4", "ruecken": "#7a766a", "bauch": "#ece8dc", "fleck": "#96928a",
+                "haut": "#f0ece0", "hautfleck": "#d0ccbc", "augen": "#ff5a3a", "glut": "#ffd0b0",
+                "horn": ("#8a8678", "#d8d4c4", "#ffffff"), "kralle": "#2a2620", "zunge": "#b04a5a",
+                "rachen": "#2a0a10", "zacken": 2.4},
+    "tiefsee": {"leib": "#2e5a6a", "ruecken": "#142e3a", "bauch": "#9ac8c8", "fleck": "#1e4452",
+                "haut": "#a8c8d0", "hautfleck": "#6a98a8", "augen": "#6affe8", "glut": "#8affff",
+                "horn": ("#5a7a80", "#a8c8c8", "#e8fafa"), "kralle": "#0a1418", "zunge": "#6a5a8a",
+                "rachen": "#0e0a1a", "zacken": 2.4},
+}
+
+
+def schlunddrache_maler(variante):
+    f = SCHLUNDDRACHE_FARBEN.get(variante, SCHLUNDDRACHE_FARBEN["moos"])
+
+    def besonders(stoff, p, n, texel):
+        if stoff in ("knochenstachel", "knochenplatte"):
+            return H.verlauf(list(f["horn"]), H.hoehe(p, n, texel) if stoff == "knochenstachel" else 0.6, 3)
+        if stoff == "kopf" and n[1] < -0.5:
+            return H.farbe(f["rachen"])                      # der Gaumen im offenen Schlund
+        return False
+    return klotz_maler("schlunddrache", f, SCHLUNDDRACHE_SCHWINGE, besonders, saat=29)

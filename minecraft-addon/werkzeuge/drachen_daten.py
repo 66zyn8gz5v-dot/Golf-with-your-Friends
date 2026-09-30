@@ -81,7 +81,10 @@ T = "variable.fynn_t"
 BRUELL = "variable.fynn_bruell"
 OFFEN = {"links": "variable.fynn_offen_l", "rechts": "variable.fynn_offen_r"}
 # Ob er gerade Zeit fuer so etwas hat: am Boden, still, ohne Feuer, wach.
-RUHIG = (f"(1.0 - {LAEUFT}) * (1.0 - {FEUER}) * (1.0 - {FLIEGT}) * (1.0 - {LIEGT})")
+# Liegt er auf "Platz" (bleib hier)? Dann steht er nicht, geht nicht,
+# baeumt sich nicht auf - ausser jemand sitzt auf ihm.
+PLATZ = "(query.property('fynn:wartet') * (1.0 - query.has_rider))"
+RUHIG = (f"(1.0 - {LAEUFT}) * (1.0 - {FEUER}) * (1.0 - {FLIEGT}) * (1.0 - {LIEGT}) * (1.0 - {PLATZ})")
 
 
 def strecken(ab, dauer=3.2):
@@ -134,7 +137,7 @@ BESIEGT = "query.property('fynn:besiegt')"
 # in der Pixelschmiede.
 ATEMARTEN = {"feuer": ("Feueratem", "feueratem"), "frost": ("Frosthauch", "frosthauch"),
              "blitz": ("Sturmhauch", "sturmhauch"), "gift": ("Giftodem", "giftodem"),
-             "schatten": ("Schattenatem", "schattenatem")}
+             "schatten": ("Schattenatem", "schattenatem"), "schall": ("Schallbrüllen", "schallbruellen")}
 
 
 def atem_posen(art, hals, schwanz, stuetzt=False):
@@ -297,13 +300,15 @@ def hinterfluegel(bewegungen, nachlauf=0.18):
 
 
 def drachen_bewegungen(schwinge, hals=4, schwanz=6, tempo=220.0, beinhoehe=20, finger=None, stuetzt=False,
-                       atem="feuer"):
+                       atem="feuer", bauch=None):
     """schwinge: die Schwinge der Art (fuer die ausgerechnete Faltung);
     beinhoehe: wie tief der Leib beim Liegen sinkt; stuetzt: ein Wyvern,
     der am Boden auf den Handgelenken der Schwingen geht."""
     import drachen_gestalt as dg
     falt = dg.faltung(schwinge, stuetzt)
     finger = schwinge.anzahl
+    # Wie hoch der Bauch im Stehen ueber dem Boden ist - so tief legt er sich.
+    bauch = bauch if bauch is not None else beinhoehe - 7.0
     phi = f"{T} * {tempo}"
     # Kraeftige Schlaege, dazwischen gleitet er: Dann stehen die Schwingen
     # weit, nur leicht angehoben, und schlagen kaum. Speit er Feuer, gleitet
@@ -489,42 +494,63 @@ def drachen_bewegungen(schwinge, hals=4, schwanz=6, tempo=220.0, beinhoehe=20, f
     for i in range(1, schwanz + 1):
         stoss[f"schwanz{i}"] = {"rotation": [-2.0, f"-math.sin({T} * 55.0 - {i * 40}) * {3 + i * 1.5}", 0.0]}
 
-    # Schlafen und besiegt sehen verschieden aus (4.95, Fynn: "Das soll
-    # nicht die gleiche sein").
-    #
-    # Schlafen: eingerollt wie eine Katze, flach auf dem Bauch, die Beine
-    # untergeschlagen, der Hals zur Seite gebogen, der Kopf ruht beim
-    # Becken, der Schwanz legt sich darum. Die aeussere Schwinge liegt halb
-    # offen wie eine Decke ueber ihm. Er atmet tief und langsam, schnarcht
-    # mit leicht offenem Maul, im Traum zucken Schwinge und Schwanzspitze.
-    schlaf = {}
-    beidseitig(schlaf, dict(falt))
-    zusammen(schlaf, finger)
-    for name, (x, y, z) in falt.items():
-        w = [round(x * 0.85, 1), round(y * 0.85, 1), round(z * 0.85, 1)]
-        if name == "fluegel":
-            w[2] += 12.0
-            w = [w[0], w[1], f"{w[2]} + {zucken(5.0, 40.0)} * 8.0"]
-        schlaf[f"{name}_links"] = {"rotation": w}
-    schlaf["armhaut_links"] = {"scale": [1.0, 1.0, 0.35]}
-    schlaf["unterarmhaut_links"] = {"scale": [1.0, 1.0, 0.35]}
-    for i in range(1, finger):
-        schlaf[f"fingerhaut{i}_links"] = {"scale": [1.0, 1.0, 0.3]}
-    beidseitig(schlaf, {"bein_vorn": [-75.0, 0.0, 0.0], "unterbein_vorn": [55.0, 0.0, 0.0],
-                        "fuss_vorn": [20.0, 0.0, 0.0], "zehen_vorn": [15.0, 0.0, 0.0],
-                        "bein_hinten": [-60.0, 0.0, 0.0], "unterbein_hinten": [120.0, 0.0, 0.0],
-                        "fuss_hinten": [-55.0, 0.0, 0.0], "zehen_hinten": [20.0, 0.0, 0.0]})
-    schlaf["rumpf"] = {"position": [0.0, -(beinhoehe - 7.0), 0.0],
-                       "scale": [f"1.0 + math.sin({T} * 24.0) * 0.025", f"1.0 + math.sin({T} * 24.0) * 0.04", 1.0]}
-    schlaf["becken"] = {"rotation": [0.0, -16.0, 0.0]}
+    # Liegen (5.00 neu) - Fynn: "Die Schlafanimation ... sind ein bisschen
+    # zusammengequetscht und sehen kleiner aus, als sie in Wirklichkeit
+    # sind ... die grossen Drachen sollen gross bleiben." Frueher sank der
+    # Leib tiefer, als der Bauch hoch ist, und rollte sich zur Kugel. Jetzt
+    # liegt der Bauch genau auf dem Boden (bauch: wie hoch er beim Stehen
+    # ist), und er liegt lang wie ein Hund: die Vorderpfoten flach nach vorn,
+    # die Hinterbeine seitlich untergeschlagen, die Schwingen angelegt.
+    # Der Wyvern stuetzt sich im Liegen nicht auf die Handgelenke - er legt
+    # die Schwingen an wie die anderen.
+    falt_liegen = dg.faltung(schwinge, False)
+
+    def liegend():
+        k = {}
+        beidseitig(k, dict(falt_liegen))
+        zusammen(k, finger)
+        beidseitig(k, {"bein_vorn": [22.0, 0.0, -4.0], "unterbein_vorn": [-108.0, 0.0, 0.0],
+                       "fuss_vorn": [86.0, 0.0, 0.0], "zehen_vorn": [4.0, 0.0, 0.0],
+                       "bein_hinten": [-62.0, 0.0, -14.0], "unterbein_hinten": [118.0, 0.0, 0.0],
+                       "fuss_hinten": [-52.0, 0.0, 0.0], "zehen_hinten": [8.0, 0.0, 0.0]})
+        k["rumpf"] = {"position": [0.0, -bauch, 0.0]}
+        return k
+
+    # Schlafen: lang ausgestreckt und doch leicht eingedreht (Fynn: "Der soll
+    # sich trotzdem so leicht eindrehen") - der Hals biegt sich in einem
+    # weiten Bogen zur Seite, der Kopf ruht neben den Vorderpfoten, der
+    # Schwanz legt sich im Bogen nach vorn um ihn. Er bleibt so lang und
+    # gross, wie er ist. Er atmet tief und langsam, schnarcht mit leicht
+    # offenem Maul, im Traum zucken eine Schwinge und die Schwanzspitze.
+    schlaf = liegend()
+    schlaf["fluegel_links"]["rotation"][2] = f"{schlaf['fluegel_links']['rotation'][2]} + {zucken(5.0, 40.0)} * 6.0"
+    schlaf["rumpf"]["scale"] = [f"1.0 + math.sin({T} * 24.0) * 0.02", f"1.0 + math.sin({T} * 24.0) * 0.03", 1.0]
     for i in range(1, hals + 1):
-        schlaf[f"hals{i}"] = {"rotation": [14.0 if i == 1 else 7.0, round(130.0 / hals, 1), 0.0]}
-    schlaf["kopf"] = {"rotation": [-4.0, 22.0, 12.0]}
+        schlaf[f"hals{i}"] = {"rotation": [round(34.0 / hals + (4.0 if i == 1 else 0.0), 1), round(62.0 / hals, 1), 0.0]}
+    schlaf["kopf"] = {"rotation": [-18.0, 18.0, 12.0]}
+    schlaf["becken"] = {"rotation": [0.0, -8.0, 0.0]}
     schlaf["kiefer"] = {"rotation": [f"math.max(0.0, math.sin({T} * 24.0)) * 5.0", 0.0, 0.0]}
     for i in range(1, schwanz + 1):
         traum = f"{zucken(9.0, 30.0)} * math.sin({T} * 500.0) * 12.0" if i == schwanz else 0.0
-        schlaf[f"schwanz{i}"] = {"rotation": [-14.0 if i == 1 else (3.0 if i == 2 else 1.0),
-                                              round(-190.0 / schwanz, 1), traum]}
+        schlaf[f"schwanz{i}"] = {"rotation": [-16.0 if i == 1 else (3.0 if i == 2 else 1.0),
+                                              round(-130.0 / schwanz, 1), traum]}
+
+    # Platz (5.00 neu): Wer seinem Drachen "bleib hier" sagt, dem legt er
+    # sich hin wie ein Hund - wach, den Kopf erhoben, er sieht sich um,
+    # waelzt ab und zu den Schwanz, gaehnt und blinzelt.
+    ruhen = liegend()
+    for i, w in enumerate((-16.0, -10.0, -4.0, 2.0, 6.0)[:hals]):
+        ruhen[f"hals{i + 1}"] = {"rotation": [f"{w} + math.sin({T} * 30.0 - {i * 25}) * 1.5",
+                                              f"math.sin({T} * 13.0 - {i * 20}) * 5.0", 0.0]}
+    gaehnen = f"math.pow(math.max(0.0, math.sin({T} * 16.0)), 30.0)"
+    ruhen["kopf"] = {"rotation": [f"14.0 - {gaehnen} * 25.0", f"math.sin({T} * 19.0) * 18.0",
+                                  f"math.sin({T} * 11.0) * 6.0"]}
+    ruhen["kiefer"] = {"rotation": [f"{gaehnen} * 45.0", 0.0, 0.0]}
+    ruhen["rumpf"]["scale"] = [1.0, f"1.0 + math.sin({T} * 40.0) * 0.015", 1.0]
+    for i in range(1, schwanz + 1):
+        ruhen[f"schwanz{i}"] = {"rotation": [-16.0 if i == 1 else (3.0 if i == 2 else 1.0),
+                                             f"{round(-40.0 / schwanz, 1)} + math.sin({T} * 26.0 - {i * 35}) * {1.5 + i * 0.8:.1f}",
+                                             0.0]}
 
     # Besiegt (4.98 neu) - Fynn: "sieht nicht realistisch aus, wenn die Beine
     # einfach so gerade stehen ... er sollte so liegen, als waere er wirklich
@@ -553,7 +579,7 @@ def drachen_bewegungen(schwinge, hals=4, schwanz=6, tempo=220.0, beinhoehe=20, f
             nieder[f"fingerhaut{i}_{seite}"] = {"scale": [1.0, 1.0, 0.75]}
     nieder["fluegel_rechts"]["rotation"][2] = (f"{nieder['fluegel_rechts']['rotation'][2]}"
                                                f" - {zucken(4.0, 40.0)} * 6.0")
-    nieder["rumpf"] = {"rotation": [3.0, 0.0, -6.0], "position": [0.0, -(beinhoehe - 8.0), 0.0],
+    nieder["rumpf"] = {"rotation": [3.0, 0.0, -6.0], "position": [0.0, -(bauch - 1.0), 0.0],
                        "scale": [f"1.0 + math.sin({T} * 170.0) * 0.012", f"1.0 + math.sin({T} * 170.0) * 0.02", 1.0]}
     nieder["becken"] = {"rotation": [0.0, 8.0, 8.0]}
     # Beine: schlaff, jedes Gelenk ein wenig geknickt, nach aussen weggerutscht
@@ -588,8 +614,9 @@ def drachen_bewegungen(schwinge, hals=4, schwanz=6, tempo=220.0, beinhoehe=20, f
     return {
         "flug": ({"loop": True, "bones": flug}, f"{FLIEGT} * {ruht}"),
         "schweben": ({"loop": True, "bones": schweben}, f"{FLIEGT} * {FEUER} * {ruht}"),
-        "stand": ({"loop": True, "bones": stand}, f"(1.0 - {FLIEGT}) * {ruht}"),
-        "gehen": ({"loop": True, "bones": gang}, f"(1.0 - {FLIEGT}) * {LAEUFT} * {ruht}"),
+        "stand": ({"loop": True, "bones": stand}, f"(1.0 - {FLIEGT}) * {ruht} * (1.0 - {PLATZ})"),
+        "gehen": ({"loop": True, "bones": gang}, f"(1.0 - {FLIEGT}) * {LAEUFT} * {ruht} * (1.0 - {PLATZ})"),
+        "platz": ({"loop": True, "bones": ruhen}, f"(1.0 - {FLIEGT}) * {ruht} * {PLATZ}"),
         "schlafen": ({"loop": True, "bones": schlaf}, SCHLAEFT),
         "niederliegen": ({"loop": True, "bones": nieder}, BESIEGT),
         "luftholen": ({"loop": True, "bones": holen}, HOLEN),
@@ -717,8 +744,10 @@ def drachen_zustaende(tempo_luft, tempo_boden, beute, sitz, reitflug=0.5, reichw
                          "set_property": {"fynn:besiegt": False, "fynn:fliegt": False}},
         "fynn:gesattelt": {"add": {"component_groups": ["fynn:gesattelt"]}},
         "fynn:abgesattelt": {"remove": {"component_groups": ["fynn:gesattelt"]}},
-        "fynn:bleiben": {"remove": {"component_groups": ["fynn:folgt"]}, "add": {"component_groups": ["fynn:bleibt"]}},
-        "fynn:folgen": {"remove": {"component_groups": ["fynn:bleibt"]}, "add": {"component_groups": ["fynn:folgt"]}},
+        "fynn:bleiben": {"remove": {"component_groups": ["fynn:folgt"]}, "add": {"component_groups": ["fynn:bleibt"]},
+                         "set_property": {"fynn:wartet": True}},
+        "fynn:folgen": {"remove": {"component_groups": ["fynn:bleibt"]}, "add": {"component_groups": ["fynn:folgt"]},
+                        "set_property": {"fynn:wartet": False}},
         # Drachen aus aelteren Welten (4.89 und davor) bekommen einmal ihre
         # Zustaende - das Skript loest das aus.
         "fynn:einrichten": {"sequence": [
@@ -748,7 +777,7 @@ def drachen_grundlage():
 
 def eigenschaften_drache():
     e = {}
-    for n in ("fynn:feuer", "fynn:fliegt", "fynn:schlaeft", "fynn:besiegt", "fynn:uralt"):
+    for n in ("fynn:feuer", "fynn:fliegt", "fynn:schlaeft", "fynn:besiegt", "fynn:uralt", "fynn:wartet"):
         e.update(eigenschaft(n))
     return e
 
@@ -844,7 +873,8 @@ def schlangen_bewegungen(glieder=22, hals=2, flossen=(), beinglied=6):
     schlaf = {"rumpf": {"position": [0.0, -8.0, 0.0],
                         "scale": [f"1.0 + math.sin({T} * 24.0) * 0.025", f"1.0 + math.sin({T} * 24.0) * 0.04", 1.0]}}
     for i in range(1, glieder + 1):
-        schlaf[f"schwanz{i}"] = {"rotation": [0.0, round(19.0 + i * 1.2, 1), 0.0]}
+        # Eine lockere Spirale (5.00): nicht eng zusammengeschnuert.
+        schlaf[f"schwanz{i}"] = {"rotation": [0.0, round(8.0 + i * 0.55, 1), 0.0]}
     schlaf[f"schwanz{glieder}"]["rotation"][2] = f"{zucken(9.0, 30.0)} * math.sin({T} * 500.0) * 14.0"
     for i in range(1, hals + 1):
         schlaf[f"hals{i}"] = {"rotation": [8.0, -30.0, 0.0]}
@@ -921,11 +951,27 @@ def schlangen_bewegungen(glieder=22, hals=2, flossen=(), beinglied=6):
                       "bein_vorn": [f"-{auf} * 40.0", 0.0, 0.0], "zehen_vorn": [f"-{auf} * 40.0", 0.0, 0.0]})
     for n in flossen:
         seiten(bruellen, {f"flosse{n}": [0.0, f"{auf} * 30.0", f"{auf} * 25.0"]})
+    # Platz (5.00): Er legt sich in einer lockeren S-Kurve flach hin, der
+    # Vorderleib bleibt erhoben, der Kopf sieht sich um.
+    ruhen = {"rumpf": {"position": [0.0, -6.0, 0.0], "rotation": [-6.0, 0.0, 0.0],
+                       "scale": [1.0, f"1.0 + math.sin({T} * 40.0) * 0.015", 1.0]}}
+    for i in range(1, glieder + 1):
+        ruhen[f"schwanz{i}"] = {"rotation": [2.0 if i == 1 else 0.0,
+                                             f"{round(math.sin(math.radians(i * 22)) * 9.0, 1)} + math.sin({T} * 20.0 - {i * 20}) * 1.0",
+                                             0.0]}
+    for i in range(1, hals + 1):
+        ruhen[f"hals{i}"] = {"rotation": [-8.0, f"math.sin({T} * 13.0 - {i * 20}) * 8.0", 0.0]}
+    ruhen["kopf"] = {"rotation": [14.0, f"math.sin({T} * 19.0) * 18.0", f"math.sin({T} * 11.0) * 6.0"]}
+    for teil in ("vorn", "hinten"):
+        for seite in ("links", "rechts"):
+            ruhen[f"bein_{teil}_{seite}"] = {"rotation": [-60.0, 0.0, 0.0]}
+            ruhen[f"unterbein_{teil}_{seite}"] = {"rotation": [90.0, 0.0, 0.0]}
     ruht = f"(1.0 - {LIEGT})"
     return {
         "flug": ({"loop": True, "bones": flug}, f"{FLIEGT} * {ruht}"),
-        "stand": ({"loop": True, "bones": stand}, f"(1.0 - {FLIEGT}) * {ruht}"),
-        "gehen": ({"loop": True, "bones": gang}, f"(1.0 - {FLIEGT}) * {LAEUFT} * {ruht}"),
+        "stand": ({"loop": True, "bones": stand}, f"(1.0 - {FLIEGT}) * {ruht} * (1.0 - {PLATZ})"),
+        "gehen": ({"loop": True, "bones": gang}, f"(1.0 - {FLIEGT}) * {LAEUFT} * {ruht} * (1.0 - {PLATZ})"),
+        "platz": ({"loop": True, "bones": ruhen}, f"(1.0 - {FLIEGT}) * {ruht} * {PLATZ}"),
         "schlafen": ({"loop": True, "bones": schlaf}, SCHLAEFT),
         "niederliegen": ({"loop": True, "bones": nieder}, BESIEGT),
         "luftholen": ({"loop": True, "bones": holen}, HOLEN),
@@ -1011,6 +1057,10 @@ def drache(eintrag, schwinge, bewegungen=None, koepfe=("",), **bewegung):
                              "minecraft:attack": angriff}
     ereignisse["fynn:uralt_werden"] = {"add": {"component_groups": ["fynn:uralt"]},
                                        "set_property": {"fynn:uralt": True}}
+    if bewegungen is None:
+        import drachen_gestalt as dg
+        r = getattr(dg, f"{eintrag['gestalt']}_modell")().finde("rumpf")
+        bewegung.setdefault("bauch", min(c.ursprung[1] for c in r.kaesten))
     vier = bewegung.pop("vier_fluegel", False)
     bew = bewegungen or drachen_bewegungen(schwinge, **bewegung)
     if vier:
@@ -1252,4 +1302,39 @@ def _nachtschwinge():
     }, dg.NACHTSCHWINGE_SCHWINGE, hals=5, schwanz=8, beinhoehe=19, tempo=260.0, vier_fluegel=True)
 
 
-DRACHEN = [_lindwurm(), _frostwyvern(), _himmelsdrache(), _giftdrache(), _nachtschwinge()]
+# ------------------------------------------------------------ Schlunddrache
+
+def _schlunddrache():
+    import drachen_gestalt as dg
+    return drache({
+        "id": "schlunddrache", "name": ("Schlunddrache", "Maw Dragon"), "gestalt": "schlunddrache",
+        "varianten": [("moos", 55), ("knochen", 30), ("tiefsee", 15)],
+        "leben": 150, "schaden": 14, "tempo": 1.3, "tempo_luft": 1.3, "tempo_boden": 0.22,
+        "kollision": (2.8, 2.4), "herde": (1, 1), "groesse": 1.2, "atemfluegel": 0.5,
+        "jagt_tiere": ["cow", "pig", "sheep", "panda", "ocelot", "parrot"],
+        "sitz": [0.0, 1.8, -0.1],
+        "biome": [["jungle"]], "gewicht": 1,
+        "spawn_bedingungen": [{"minecraft:spawns_on_surface": {}, "minecraft:weight": {"default": 1},
+                               "minecraft:herd": {"min_size": 1, "max_size": 1},
+                               "minecraft:density_limit": {"surface": 1},
+                               "minecraft:biome_filter": [{"test": "has_biome_tag", "operator": "==",
+                                                           "value": tag}]}
+                              for tag in ("jungle", "bamboo")],
+        "population": "monster",
+        "material": "entity_emissive_alpha",
+        "beute": [("fynn:drachenschuppe", 3, 6, 1.0, False), ("minecraft:bone", 3, 6, 1.0, False),
+                  ("minecraft:echo_shard", 1, 1, 0.3, False)],
+        "laute": {"ambient": "mob.warden.ambient", "hurt": "mob.enderdragon.hit", "death": "mob.ravager.death",
+                  "pitch": [0.7, 0.9]},
+        "ei": ("#6a9a82", "#e8e4d0"),
+        "komponenten": {"minecraft:attack": {"damage": 14}},
+        "atemart": "schall",
+        "steckbrief_extra": [
+            ["Lebt", "selten, in Dschungeln und Bambuswäldern"],
+            ["Gestalt", "ein riesiger Kopf, dessen Schlund immer offen steht, ringsum lange Fangzähne, vier Augen"],
+            ["Schallbrüllen", "Schallringe, die nach vorn laufen, alles wegschleudern und benommen machen"],
+            ["Schnappbiss", "auf mittlere Entfernung schnellt er vor und beißt zu – kleine Tiere verschlingt er ganz"]],
+    }, dg.SCHLUNDDRACHE_SCHWINGE, hals=3, schwanz=9, beinhoehe=20)
+
+
+DRACHEN = [_lindwurm(), _frostwyvern(), _himmelsdrache(), _giftdrache(), _nachtschwinge(), _schlunddrache()]

@@ -146,11 +146,70 @@ def plasmaknall():
     return t
 
 
+# Wie sich jeder Atem bewegt (5.00 - Fynn: "Wir sollen nicht alle das
+# gleiche verschiessen, sondern ein bisschen unterschiedlich. Nicht nur
+# farblich."). Grundlage ist der Feuerstrahl (fantasy_bauen.drachenfeuer);
+# jede Art aendert, wie schnell, wie breit, wie lange und wohin er zieht.
+ATEMFORMEN = {
+    # Frost: ein breiter, langsamer Nebel, der schwer nach unten sinkt und
+    # sich aufbauscht.
+    "frostatem": {"streuung": 0.55, "rate": 180, "tempo": "11.0 + variable.particle_random_1 * 3.0",
+                  "leben": "1.1 + variable.particle_random_4 * 0.4", "beschl": [0, -3.0, 0], "bremse": 2.0,
+                  "groesse": "0.3 + variable.particle_age * 3.0"},
+    # Sturm: ein schmaler, schneller Strahl, der sich schraubt.
+    "sturmatem": {"streuung": 0.1, "rate": 240, "tempo": "24.0 + variable.particle_random_1 * 4.0",
+                  "leben": "0.5 + variable.particle_random_4 * 0.2",
+                  "beschl": ["math.cos(variable.particle_age * 1400.0 + variable.particle_random_1 * 360.0) * 34.0",
+                             "math.sin(variable.particle_age * 1400.0 + variable.particle_random_1 * 360.0) * 34.0",
+                             "math.sin(variable.particle_age * 1100.0 + variable.particle_random_2 * 360.0) * 34.0"],
+                  "bremse": 1.2, "groesse": "0.15 + variable.particle_age * 1.2"},
+    # Gift: schwere Batzen, die im Bogen fliegen und am Boden aufklatschen.
+    "giftatem": {"streuung": 0.3, "rate": 70, "tempo": "13.0 + variable.particle_random_1 * 3.0",
+                 "leben": "1.2 + variable.particle_random_4 * 0.3", "beschl": [0, -14.0, 0], "bremse": 0.6,
+                 "groesse": "0.35 + variable.particle_age * 0.6"},
+    # Schatten: langsame Ranken, die wabern und dabei vergehen.
+    "schattenatem": {"streuung": 0.35, "rate": 150, "tempo": "9.0 + variable.particle_random_1 * 3.0",
+                     "leben": "1.4 + variable.particle_random_4 * 0.4",
+                     "beschl": ["math.sin(variable.particle_age * 500.0 + variable.particle_random_2 * 360.0) * 9.0",
+                                "math.cos(variable.particle_age * 430.0 + variable.particle_random_3 * 360.0) * 9.0",
+                                "math.sin(variable.particle_age * 470.0 + variable.particle_random_1 * 360.0) * 9.0"],
+                     "bremse": 1.2, "groesse": "math.max(0.06, 0.55 - variable.particle_age * 0.3)"},
+}
+
+
 def atem_teilchen(name, verlauf):
     import fantasy_bauen as fb
     t = fb.drachenfeuer()
     t["particle_effect"]["description"]["identifier"] = f"fynn:{name}"
-    t["particle_effect"]["components"]["minecraft:particle_appearance_tinting"]["color"]["gradient"] = verlauf
+    k = t["particle_effect"]["components"]
+    k["minecraft:particle_appearance_tinting"]["color"]["gradient"] = verlauf
+    f = ATEMFORMEN.get(name)
+    if f:
+        st = f["streuung"]
+        k["minecraft:emitter_shape_sphere"]["direction"] = [
+            f"variable.fynn_{a} + (variable.particle_random_{i + 1} - 0.5) * {st}" for i, a in enumerate("xyz")]
+        k["minecraft:emitter_rate_steady"]["spawn_rate"] = f["rate"]
+        k["minecraft:particle_initial_speed"] = f["tempo"]
+        k["minecraft:particle_lifetime_expression"]["max_lifetime"] = f["leben"]
+        k["minecraft:particle_motion_dynamic"] = {"linear_acceleration": f["beschl"],
+                                                  "linear_drag_coefficient": f["bremse"]}
+        k["minecraft:particle_appearance_billboard"]["size"] = [f["groesse"], f["groesse"]]
+    return t
+
+
+def frostsplitter():
+    """Zum Frosthauch: kleine, helle Eissplitter, die schnell voraus fliegen
+    und im Bogen zu Boden fallen."""
+    t = funken()
+    t["particle_effect"]["description"]["identifier"] = "fynn:frostsplitter"
+    k = t["particle_effect"]["components"]
+    k["minecraft:emitter_rate_instant"] = {"num_particles": 6}
+    k["minecraft:particle_initial_speed"] = "16.0 + variable.particle_random_1 * 6.0"
+    k["minecraft:particle_lifetime_expression"] = {"max_lifetime": "0.7 + variable.particle_random_4 * 0.3"}
+    k["minecraft:particle_motion_dynamic"] = {"linear_acceleration": [0, -14.0, 0], "linear_drag_coefficient": 0.8}
+    k["minecraft:particle_appearance_billboard"]["size"] = [0.1, 0.1]
+    k["minecraft:particle_appearance_tinting"]["color"]["gradient"] = {
+        "0.0": "#FFFFFFFF", "0.5": "#FFD8F4FF", "1.0": "#0090D0F0"}
     return t
 
 
@@ -292,6 +351,7 @@ def main():
     bk.schreibe(RES / "entity" / "plasmaschuss.entity.json",
                 sprite_aussehen("plasmaschuss", "textures/items/plasmaschuss", "1.8"))
     bk.schreibe(RES / "particles" / "plasmaknall.particle.json", plasmaknall())
+    bk.schreibe(RES / "particles" / "frostsplitter.particle.json", frostsplitter())
     ordner = RES / "textures" / "particle"
     ordner.mkdir(parents=True, exist_ok=True)
     teilchenbild(Z_BILD, {"k": (40, 44, 70), "W": (245, 248, 255)}).save(ordner / "fynn_schlaf_z.png")

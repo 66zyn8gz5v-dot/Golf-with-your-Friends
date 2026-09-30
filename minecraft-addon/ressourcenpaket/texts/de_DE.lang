@@ -44,11 +44,11 @@ item.fynn:eisenklinge.name=Eisenklinge
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.99
+item.iron_sword.name=Stahlschwert 5.0
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.99
-item.fynn:degen.name=Degen 4.99
+item.fynn:degen=Degen 5.0
+item.fynn:degen.name=Degen 5.0
 
 
 
@@ -562,6 +562,12 @@ item.fynn:greifenfeder.name=Greifenfeder
 
 
 
+
+
+
+
+
+
 ## Die Tiere
 entity.fynn:braunbaer.name=Braunbär
 item.spawn_egg.entity.fynn:braunbaer.name=Braunbär-Spawn-Ei
@@ -639,6 +645,8 @@ entity.fynn:giftdrache.name=Giftdrache
 item.spawn_egg.entity.fynn:giftdrache.name=Giftdrache-Spawn-Ei
 entity.fynn:nachtschwinge.name=Nachtschwinge
 item.spawn_egg.entity.fynn:nachtschwinge.name=Nachtschwinge-Spawn-Ei
+entity.fynn:schlunddrache.name=Schlunddrache
+item.spawn_egg.entity.fynn:schlunddrache.name=Schlunddrache-Spawn-Ei
 
 ## Fantasy-Wesen
 item.fynn:wurmzahn=Wurmzahn

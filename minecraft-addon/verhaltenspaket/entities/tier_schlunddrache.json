@@ -2,7 +2,7 @@
   "format_version": "1.26.30",
   "minecraft:entity": {
     "description": {
-      "identifier": "fynn:lindwurm",
+      "identifier": "fynn:schlunddrache",
       "spawn_category": "creature",
       "is_spawnable": true,
       "is_summonable": true,
@@ -77,22 +77,27 @@
                   {
                     "test": "is_family",
                     "subject": "other",
+                    "value": "pig"
+                  },
+                  {
+                    "test": "is_family",
+                    "subject": "other",
                     "value": "sheep"
                   },
                   {
                     "test": "is_family",
                     "subject": "other",
-                    "value": "horse"
+                    "value": "panda"
                   },
                   {
                     "test": "is_family",
                     "subject": "other",
-                    "value": "bison"
+                    "value": "ocelot"
                   },
                   {
                     "test": "is_family",
                     "subject": "other",
-                    "value": "elch"
+                    "value": "parrot"
                   }
                 ]
               },
@@ -103,7 +108,7 @@
       },
       "fynn:luft": {
         "minecraft:movement": {
-          "value": 1.4
+          "value": 1.3
         },
         "minecraft:movement.glide": {
           "start_speed": 0.12,
@@ -140,7 +145,7 @@
       },
       "fynn:boden": {
         "minecraft:movement": {
-          "value": 0.2
+          "value": 0.22
         },
         "minecraft:movement.basic": {},
         "minecraft:navigation.walk": {
@@ -317,8 +322,8 @@
             {
               "position": [
                 0.0,
-                2.84,
-                -0.27
+                2.16,
+                -0.12
               ]
             }
           ]
@@ -359,7 +364,7 @@
         "minecraft:input_ground_controlled": {},
         "minecraft:behavior.player_ride_tamed": {},
         "minecraft:movement": {
-          "value": 0.27999999999999997
+          "value": 0.308
         },
         "minecraft:can_power_jump": {},
         "minecraft:horse.jump_strength": {
@@ -371,16 +376,16 @@
           "value": 2.2
         },
         "minecraft:health": {
-          "value": 400,
-          "max": 400
+          "value": 375,
+          "max": 375
         },
         "minecraft:attack": {
-          "damage": 19
+          "damage": 22
         }
       },
       "fynn:erwachsen": {
         "minecraft:loot": {
-          "table": "loot_tables/entities/lindwurm.json"
+          "table": "loot_tables/entities/schlunddrache.json"
         }
       },
       "fynn:variante_0": {
@@ -402,21 +407,21 @@
     "components": {
       "minecraft:type_family": {
         "family": [
-          "lindwurm",
+          "schlunddrache",
           "fynn_tier",
           "mob"
         ]
       },
       "minecraft:health": {
-        "value": 160,
-        "max": 160
+        "value": 150,
+        "max": 150
       },
       "minecraft:collision_box": {
-        "width": 4.4,
-        "height": 3.4
+        "width": 2.8,
+        "height": 2.4
       },
       "minecraft:movement": {
-        "value": 1.4
+        "value": 1.3
       },
       "minecraft:hurt_on_condition": {
         "damage_conditions": [
@@ -481,9 +486,8 @@
       "minecraft:behavior.float": {
         "priority": 0
       },
-      "minecraft:fire_immune": {},
       "minecraft:attack": {
-        "damage": 12
+        "damage": 14
       }
     },
     "events": {
@@ -694,7 +698,7 @@
           {
             "randomize": [
               {
-                "weight": 50,
+                "weight": 55,
                 "add": {
                   "component_groups": [
                     "fynn:variante_0"
@@ -702,7 +706,7 @@
                 }
               },
               {
-                "weight": 35,
+                "weight": 30,
                 "add": {
                   "component_groups": [
                     "fynn:variante_1"

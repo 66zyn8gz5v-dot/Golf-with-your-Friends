@@ -566,6 +566,18 @@ EIER = {
         },
         "farben": {"h": "#a8aabc", "y": "#8aff5a", "S": "#4a4a58"},
     },
+    # Der Schlunddrache (5.00): ein riesiges Maul voller Zaehne.
+    "schlunddrache": {
+        "oben": "#6a9a82", "unten": "#d8e4c8", "teilung": 10,
+        "karte": {
+            3: ".....y....y.....",
+            7: "..RRRRRRRRRRRR..",
+            8: "..RZRZRZRZRZRR..",
+            10: "..RRZRZRZRZRR...",
+            11: "..RRRRRRRRRRRR..",
+        },
+        "farben": {"y": "#ffe86a", "R": "#3a0e14", "Z": "#f4eedc"},
+    },
     # Zweite Fantasy-Welle (4.81).
     "glutskorpion": {
         "oben": "#2a2226", "flecken": ("#3e3438", 0.25),

@@ -301,6 +301,23 @@ function wesen(w, typeId, ort, extra = {}) {
         Math.hypot(m2.x, m2.z) > Math.hypot(m1.x, m1.z) && m2.y > m1.y);
 }
 
+// Der Schlunddrache (5.00): Schallringe den Strahl entlang, der Schnappbiss.
+{
+    const w = welt();
+    const sd = wesen(w, "fynn:schlunddrache", { x: 0, y: 66, z: 0 }, { eig: { "fynn:fliegt": false } });
+    sd.dyn["fynn:drache490"] = true;
+    const opfer = wesen(w, "minecraft:player", { x: 0, y: 64, z: 8 }, { applyKnockback() {} });
+    sd.target = opfer;
+    for (let t = 70000; t < 70000 + 80; t += 2) d.atemTakt(sd, t, () => 0);
+    pruefe("Schallbruellen: Ringe laufen den Strahl entlang",
+        w.teilchen.filter((n) => n === "minecraft:sonic_explosion").length > 4);
+    pruefe("... wer drin steht, ist benommen", opfer.effekte.includes("nausea") && opfer.schaden > 0);
+    const vorher = opfer.schaden;
+    opfer.location = { x: 0, y: 64, z: 12 };
+    pruefe("Schnappbiss: er schnellt vor und beisst", d.faehigkeitTakt(sd, 90000, undefined, () => 0) === "gebissen"
+        && opfer.schaden > vorher && Math.abs(sd.location.z - 9.5) < 0.01);
+}
+
 pruefe("Anmeldung: der Takt alle zwei Ticks", gemerkt.takte.some(([f, t]) => typeof f === "function" && t === 2));
 
 const gut = ergebnisse.every(Boolean);

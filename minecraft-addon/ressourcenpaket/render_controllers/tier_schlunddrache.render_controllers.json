@@ -1,0 +1,117 @@
+{
+  "format_version": "1.8.0",
+  "render_controllers": {
+    "controller.render.fynn.schlunddrache": {
+      "arrays": {
+        "textures": {
+          "Array.haut": [
+            "Texture.moos",
+            "Texture.knochen",
+            "Texture.tiefsee"
+          ]
+        }
+      },
+      "geometry": "Geometry.default",
+      "materials": [
+        {
+          "*": "Material.default"
+        }
+      ],
+      "textures": [
+        "Array.haut[query.variant]"
+      ],
+      "part_visibility": [
+        {
+          "lider": "query.property('fynn:schlaeft') || query.property('fynn:besiegt') || math.mod(variable.fynn_t + 0.0, 4.7) < 0.14"
+        },
+        {
+          "sattel": "query.is_saddled"
+        },
+        {
+          "uralt_kopf": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_geweih_links": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_geweih2_links": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_geweih_rechts": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_geweih2_rechts": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_hals1": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_hals2": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_hals3": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_schwanz1": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_schwanz2": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_schwanz3": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_schwanz4": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_schwanz5": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_schwanz6": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_schwanz7": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_schwanz8": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_schwanz9": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_rumpf": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_bein_hinten_links": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_bein_vorn_links": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_bein_hinten_rechts": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_bein_vorn_rechts": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_fluegel_links": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_unterarm_links": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_fluegel_rechts": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_unterarm_rechts": "query.property('fynn:uralt')"
+        },
+        {
+          "stachel_sattel": "!query.is_saddled"
+        },
+        {
+          "uralt_sattel": "query.property('fynn:uralt') && !query.is_saddled"
+        }
+      ]
+    }
+  }
+}

@@ -658,6 +658,9 @@
     },
     "nachtschwinge_ei": {
       "textures": "textures/items/nachtschwinge_ei"
+    },
+    "schlunddrache_ei": {
+      "textures": "textures/items/schlunddrache_ei"
     }
   }
 }
