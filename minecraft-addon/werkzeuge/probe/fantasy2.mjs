@@ -1,4 +1,4 @@
-// Probe: Glutskorpion, Kristallspinne, Irrlicht - ohne Spiel.
+// Probe: Glutskorpion, Kristallspinne, Irrlicht, Moosgolem - ohne Spiel.
 import { gemerkt } from "@minecraft/server";
 const f = await import("./fantasy2.js");
 
@@ -87,34 +87,6 @@ function wesen(w, typeId, ort, extra = {}) {
     pruefe("... und nach drei Minuten ist es wieder dunkel", w.bloecke["2,65,2"] === "minecraft:air");
 }
 
-// Werwolf
-{
-    pruefe("Vollmondnacht", f.mondnacht(18000, 0) && f.mondnacht(14000, 7));
-    pruefe("Tag oder dunkler Mond: keine Wolfsnacht", !f.mondnacht(6000, 0) && !f.mondnacht(18000, 4));
-    const w = welt();
-    const ww = wesen(w, f.WERWOLF, { x: 0, y: 64, z: 0 });
-    pruefe("Am Tag bleibt er ein Mensch", f.werwolfTakt(ww, 0, false) === "Mensch");
-    pruefe("In der Mondnacht beginnt die Verwandlung", f.werwolfTakt(ww, 20, true) === "beginnt"
-        && ww.ereignisse.includes("fynn:wandeln"));
-    pruefe("... dauert einen Moment", f.werwolfTakt(ww, 30, true) === "wandelt");
-    pruefe("... dann ist er ein Wolf und heult", f.werwolfTakt(ww, 20 + f.WANDELN.dauer, true) === "ist Wolf"
-        && ww.ereignisse.includes("fynn:zum_wolf") && w.toene.includes("mob.wolf.howl"));
-    ww.eig["fynn:wolf"] = true;
-    pruefe("Im Morgengrauen wird er wieder Mensch", f.werwolfTakt(ww, 200, false) === "beginnt"
-        && f.werwolfTakt(ww, 200 + f.WANDELN.dauer, false) === "ist Mensch" && ww.ereignisse.includes("fynn:zum_menschen"));
-    const schaeden = [];
-    const wolf = wesen(w, f.WERWOLF, { x: 0, y: 64, z: 0 }, { eig: { "fynn:wolf": true },
-        applyDamage(m) { schaeden.push(m); } });
-    const mitSilber = wesen(w, "minecraft:player", { x: 1, y: 64, z: 0 }, {
-        getComponent: () => ({ getEquipment: () => ({ typeId: "fynn:silberklinge" }) }) });
-    const mitEisen = wesen(w, "minecraft:player", { x: 1, y: 64, z: 0 }, {
-        getComponent: () => ({ getEquipment: () => ({ typeId: "minecraft:iron_sword" }) }) });
-    pruefe("Silber trifft den Wolf doppelt", f.silberTreffer(wolf, mitSilber, 3) === 9 && schaeden[0] === 9);
-    pruefe("Eisen nicht", f.silberTreffer(wolf, mitEisen, 3) === 0);
-    const mensch = wesen(w, f.WERWOLF, { x: 0, y: 64, z: 0 }, { eig: { "fynn:wolf": false } });
-    pruefe("Den Menschen trifft Silber nicht besonders", f.silberTreffer(mensch, mitSilber, 3) === 0);
-}
-
 // Moosgolem
 {
     const w = welt();
@@ -129,12 +101,51 @@ function wesen(w, typeId, ort, extra = {}) {
     s.addEffect = (n) => s.effekte.push(n);
     s.applyDamage = () => {};
     g.target = s;
-    pruefe("Wach, mit Ziel: Wurzeln brechen hervor", f.golemTakt(g, 20) === "wurzeln" && s.effekte.includes("slowness"));
+    pruefe("Wach, mit Ziel nah: Wurzeln brechen hervor", f.golemTakt(g, 20) === "wurzeln" && s.effekte.includes("slowness"));
     pruefe("... dann eine Pause", f.golemTakt(g, 40) === "kaempft");
+
+    // Steht man weiter weg, holt er aus und wirft einen Stein aus dem Arm.
+    s.location = { x: 18, y: 64, z: 0 };
+    pruefe("Weiter weg: er holt aus", f.golemTakt(g, 60) === "holt aus" && g.eig["fynn:wurf"] === f.STEIN.holt);
+    pruefe("... ein Takt spaeter fliegt der Felsbrocken", f.golemTakt(g, 80) === "wirft"
+        && w.neu.includes(f.FELSBROCKEN) && g.eig["fynn:wurf"] === f.STEIN.leer);
+    const schub = f.felsWerfen(g, s, false);
+    pruefe("... im Bogen nach oben und auf das Ziel zu", schub.y > 0 && schub.x > 0);
+    pruefe("Solange der Arm leer ist, kein zweiter Wurf", f.golemTakt(g, 100) === "kaempft");
+    f.golemTakt(g, 80 + f.GOLEMWURF.leer);
+    pruefe("Dann waechst der Stein nach", g.eig["fynn:wurf"] === f.STEIN.waechst);
+    const r = f.golemTakt(g, 80 + f.GOLEMWURF.leer + f.GOLEMWURF.wachsen);
+    pruefe("... dann holt er wieder aus, diesmal mit dem anderen Arm", r === "holt aus" && g.eig["fynn:links"] === true);
+    f.golemTakt(g, 80 + f.GOLEMWURF.leer + f.GOLEMWURF.wachsen + f.GOLEMWURF.ausholen);
     g.target = undefined;
-    pruefe("Ohne Ziel wacht er noch eine Weile", f.golemTakt(g, 60) === "wacht");
-    pruefe("... dann schlaeft er wieder ein", f.golemTakt(g, 40 + f.GOLEMZEIT.wach) === "schlaeft ein"
-        && g.ereignisse.includes("fynn:einschlafen"));
+    for (const n of [1, 2]) f.golemTakt(g, 400 * n);
+    pruefe("Die Steine wachsen auch ohne Ziel nach", g.eig["fynn:wurf"] === f.STEIN.bereit);
+    pruefe("Ohne Ziel wacht er noch eine Weile", f.golemTakt(g, 400) === "wacht");
+    pruefe("... dann schlaeft er wieder ein", f.golemTakt(g, 400 + f.GOLEMZEIT.wach) === "schlaeft ein"
+        && g.ereignisse.includes("fynn:einschlafen") && g.eig["fynn:wurf"] === f.STEIN.bereit);
+
+    // Nach dem Neuladen der Welt ist ein wacher Golem nicht mehr gemerkt.
+    const g2 = wesen(w, f.GOLEM, { x: 0, y: 64, z: 0 }, { eig: { "fynn:schlaeft": false } });
+    const s2 = wesen(w, "minecraft:player", { x: 12, y: 64, z: 0 });
+    g2.target = s2;
+    pruefe("Ein wacher Golem nach dem Neuladen kaempft weiter", f.golemTakt(g2, 5000) === "holt aus");
+    g2.target = undefined;
+    s2.isValid = false;
+    pruefe("Stirbt das Ziel beim Ausholen, bricht er ab", f.golemTakt(g2, 5000 + f.GOLEMWURF.ausholen) === "bricht ab"
+        && g2.eig["fynn:wurf"] === f.STEIN.bereit);
+}
+
+// Das Erz auf dem Buckel
+{
+    const w = welt();
+    const s = wesen(w, "minecraft:player", { x: 0, y: 64, z: 0 });
+    const ohne = wesen(w, f.GOLEM, { x: 0, y: 64, z: 0 }, { eig: { "fynn:erz": 0 } });
+    pruefe("Ohne Erz sagt er nichts", f.erzBeiTod(ohne, s) === undefined);
+    const rubin = wesen(w, f.GOLEM, { x: 0, y: 64, z: 0 }, { eig: { "fynn:erz": 4 } });
+    const text = f.erzBeiTod(rubin, s);
+    pruefe("Mit Rubin: wer ihn besiegt, erfaehrt es", text.includes("Rubin") && text.includes("sehr selten")
+        && s.onScreenDisplay.leiste === text);
+    pruefe("Der Diamant ist legendaer", f.GOLEMERZE[5].name === "Diamant" && f.GOLEMERZE[5].seltenheit === "legendär");
 }
 
 // Moosherz

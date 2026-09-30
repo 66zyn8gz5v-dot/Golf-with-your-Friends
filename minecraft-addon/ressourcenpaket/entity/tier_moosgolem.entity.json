@@ -4,7 +4,7 @@
     "description": {
       "identifier": "fynn:moosgolem",
       "materials": {
-        "default": "entity_alphatest"
+        "default": "entity_emissive_alpha"
       },
       "textures": {
         "wald": "textures/entity/tiere/moosgolem_wald",
@@ -17,7 +17,11 @@
         "schlafen": "animation.fynn.moosgolem.schlafen",
         "golem_geht": "animation.fynn.moosgolem.golem_geht",
         "golem_steht": "animation.fynn.moosgolem.golem_steht",
-        "schlag": "animation.fynn.moosgolem.schlag"
+        "klopfen": "animation.fynn.moosgolem.klopfen",
+        "schlag": "animation.fynn.moosgolem.schlag",
+        "wurf_links": "animation.fynn.moosgolem.wurf_links",
+        "wurf_rechts": "animation.fynn.moosgolem.wurf_rechts",
+        "steine": "animation.fynn.moosgolem.steine"
       },
       "scripts": {
         "initialize": [
@@ -29,7 +33,13 @@
           "variable.fynn_d = query.body_y_rotation - variable.fynn_gier_alt;",
           "variable.fynn_d = variable.fynn_d > 180.0 ? variable.fynn_d - 360.0 : (variable.fynn_d < -180.0 ? variable.fynn_d + 360.0 : variable.fynn_d);",
           "variable.fynn_gier_alt = query.body_y_rotation;",
-          "variable.fynn_dreh = math.lerp(variable.fynn_dreh, math.clamp(variable.fynn_d / math.max(query.delta_time, 0.01) / 20.0, -10.0, 10.0), 0.12);"
+          "variable.fynn_dreh = math.lerp(variable.fynn_dreh, math.clamp(variable.fynn_d / math.max(query.delta_time, 0.01) / 20.0, -10.0, 10.0), 0.12);",
+          "variable.fynn_wz = query.property('fynn:wurf') == 1 ? variable.fynn_wz + query.delta_time : 0.0;",
+          "variable.fynn_wl = query.property('fynn:wurf') == 2 ? variable.fynn_wl + query.delta_time : 0.0;",
+          "variable.fynn_holt = math.clamp(variable.fynn_wz / 0.7, 0.0, 1.0);",
+          "variable.fynn_los = query.property('fynn:wurf') == 2 ? (variable.fynn_wl < 0.15 ? 1.0 - variable.fynn_wl / 0.15 * 0.88 : 0.12 * (1.0 - math.clamp((variable.fynn_wl - 0.15) / 0.45, 0.0, 1.0))) : 0.0;",
+          "variable.fynn_schwung = variable.fynn_holt + (query.property('fynn:wurf') == 2 ? (variable.fynn_wl < 0.15 ? 1.0 - variable.fynn_wl / 0.15 * 1.7 : -0.7 * (1.0 - math.clamp((variable.fynn_wl - 0.15) / 0.45, 0.0, 1.0))) : 0.0);",
+          "variable.fynn_wachs = query.property('fynn:wurf') == 3 ? math.min(variable.fynn_wachs + query.delta_time / 0.8, 1.0) : 0.0;"
         ],
         "animate": [
           {
@@ -42,7 +52,19 @@
             "golem_steht": "(1.0 - query.property('fynn:schlaeft')) * (1.0 - math.clamp(query.modified_move_speed * 4.0, 0.0, 1.0))"
           },
           {
+            "klopfen": "(1.0 - query.property('fynn:schlaeft')) * (1.0 - query.has_target) * (1.0 - math.clamp(query.modified_move_speed * 4.0, 0.0, 1.0)) * math.clamp((math.sin(query.life_time * 9.0 + variable.fynn_zufall + 0.0) - 0.93) * 21.43, 0.0, 1.0)"
+          },
+          {
             "schlag": "(1.0 - query.property('fynn:schlaeft')) * (variable.attack_time > 0.0)"
+          },
+          {
+            "wurf_links": "(1.0 - query.property('fynn:schlaeft')) * (query.property('fynn:links') ? 1.0 : 0.0)"
+          },
+          {
+            "wurf_rechts": "(1.0 - query.property('fynn:schlaeft')) * (query.property('fynn:links') ? 0.0 : 1.0)"
+          },
+          {
+            "steine": "1.0"
           }
         ]
       },

@@ -346,6 +346,7 @@ SCHALTER = {
     "fynn:spinnt": "Spinnt ein Netz", "fynn:lockt": "Lockt",
     "fynn:wolf": "Wolfsgestalt", "fynn:wandelt": "Verwandelt sich", "fynn:schlaeft": "Schläft",
     "fynn:fliegt": "Fliegt", "fynn:besiegt": "Besiegt", "fynn:uralt": "Uralt (riesig, selten)", "fynn:wartet": "Platz (bleib hier)",
+    "fynn:erz": "Erz", "fynn:wurf": "Steinwurf", "fynn:links": "Wirft mit links",
 }
 
 
@@ -529,6 +530,8 @@ def mob_daten(kennung, entitaet_datei, gruppe, info):
         teile.append("gischt:" + json.dumps(info["gischt"], separators=(",", ":")))
     if info.get("atem"):
         teile.append("atem:" + json.dumps(info["atem"], separators=(",", ":")))
+    if info.get("stufen"):
+        teile.append("stufen:" + json.dumps(info["stufen"], ensure_ascii=False))
     return "{" + ",\n".join(teile) + "}"
 
 
@@ -544,6 +547,12 @@ TIER_EXTRA = {
     "sandwurm": {
         "sonder": {"auftauchen": "Auftauchen", "abtauchen": "Abtauchen"},
         "ohne_schalter": ["fynn:auf", "fynn:ab"],
+    },
+    # Der Moosgolem (5.1): Welches Erz er traegt und wie weit der Wurf ist,
+    # sind Zahlen - der Knopf schaltet sie der Reihe nach durch.
+    "moosgolem": {
+        "stufen": {"fynn:erz": ["kein", "Amethyst", "Lapislazuli", "Smaragd", "Rubin", "Diamant"],
+                   "fynn:wurf": ["bereit", "holt aus", "geworfen", "Stein wächst"]},
     },
     "wal": {
         "sonder": {"sprung": "Sprung"},

@@ -202,72 +202,58 @@ export function lichterTakt(jetzt) {
     }
 }
 
-// ------------------------------------------------------------ Werwolf (4.82)
+// ------------------------------------------------------------ Moosgolem (4.82, neu 5.1)
+//
+// 5.1 - Fynn: "Der kann Steine werfen, die Teil seiner Arme sind ... mit
+// einer gewissen Wahrscheinlichkeit ein Erz auf dem Ruecken ... davon droppt
+// er dann auch beim Sterben." Das Erz wuerfelt das Spiel beim Erscheinen
+// (fynn:erz, die Beute haengt an der Komponentengruppe), hier steht nur,
+// was er dabei sagt. Der Wurf dagegen ist ganz Skript: ausholen, loslassen,
+// der Stein fehlt am Arm und waechst nach - abwechselnd links und rechts.
 
-export const WERWOLF = "fynn:werwolf";
 export const GOLEM = "fynn:moosgolem";
-export const WANDELN = { dauer: 30 };
-// Wann der Wolf herauskommt: nachts, wenn der Mond voll oder fast voll ist
-// (0 Vollmond, 1 und 7 die Naechte davor und danach).
-const HELLE_MONDE = new Set([0, 1, 7]);
+export const FELSBROCKEN = "fynn:felsbrocken";
 
-export function mondnacht(zeit, mond) {
-    return zeit >= 13000 && zeit <= 23000 && HELLE_MONDE.has(mond);
+export const GOLEMZEIT = { wach: 1200, wurzelPause: 100, weckWeite: 12, wurzelWeite: 7 };
+// Ticks: wie lange er ausholt, wie lange der Arm leer ist, wie lange der
+// Stein nachwaechst, und die Pause bis zum naechsten Wurf.
+export const GOLEMWURF = { min: 6, max: 22, ausholen: 20, leer: 100, wachsen: 20, pause: 140, tempo: 1.3, fall: 0.05 };
+export const STEIN = { bereit: 0, holt: 1, leer: 2, waechst: 3 };
+
+// Wie die Kristalle auf seinem Buckel heissen - in derselben Reihenfolge
+// wie fynn:erz (fantasy2_gestalt.GOLEMERZE).
+export const GOLEMERZE = [
+    null,
+    { name: "Amethyst", seltenheit: "gewöhnlich", farbe: "§7" },
+    { name: "Lapislazuli", seltenheit: "ungewöhnlich", farbe: "§a" },
+    { name: "Smaragd", seltenheit: "selten", farbe: "§9" },
+    { name: "Rubin", seltenheit: "sehr selten", farbe: "§d" },
+    { name: "Diamant", seltenheit: "legendär", farbe: "§6" },
+];
+
+const golems = new Map();        // Id -> { ruhe, wurzeln, wurf, loslassen, weiter, ziel }
+
+function eigenschaft(w, name, sonst) {
+    try { return w.getProperty(name) ?? sonst; } catch (e) { return sonst; }
 }
 
-const wandelnd = new Map();      // Werwolf-Id -> { bis, zumWolf }
+function setzen(w, name, wert) {
+    try { w.setProperty(name, wert); } catch (e) { /* egal */ }
+}
 
-/** Ein Takt (alle 20 Ticks): Passt die Gestalt zur Nacht? */
-export function werwolfTakt(werwolf, jetzt, nachtJetzt) {
-    const w = wandelnd.get(werwolf.id);
-    if (w) {
-        if (jetzt < w.bis) return "wandelt";
-        wandelnd.delete(werwolf.id);
-        try {
-            werwolf.triggerEvent(w.zumWolf ? "fynn:zum_wolf" : "fynn:zum_menschen");
-            if (w.zumWolf) werwolf.dimension.playSound("mob.wolf.howl", werwolf.location, { volume: 3, pitch: 0.5 });
-        } catch (e) { /* egal */ }
-        return w.zumWolf ? "ist Wolf" : "ist Mensch";
+function golemZustand(golem, jetzt) {
+    let z = golems.get(golem.id);
+    if (!z) {
+        z = { ruhe: jetzt + GOLEMZEIT.wach, wurzeln: 0, wurf: 0, loslassen: 0, weiter: 0, ziel: undefined };
+        golems.set(golem.id, z);
     }
-    let istWolf = false;
-    try { istWolf = !!werwolf.getProperty("fynn:wolf"); } catch (e) { /* egal */ }
-    if (istWolf === nachtJetzt) return istWolf ? "Wolf" : "Mensch";
-    try { werwolf.triggerEvent("fynn:wandeln"); } catch (e) { return "?"; }
-    wandelnd.set(werwolf.id, { bis: jetzt + WANDELN.dauer, zumWolf: nachtJetzt });
-    try { werwolf.dimension.playSound("mob.wolf.growl", werwolf.location, { volume: 2, pitch: 0.5 }); } catch (e) { /* egal */ }
-    return "beginnt";
+    return z;
 }
-
-/** Silber trifft den Wolf doppelt - der Rest nur halb (siehe Verhalten). */
-export function silberTreffer(werwolf, taeter, schaden) {
-    let wolf = false;
-    try { wolf = !!werwolf.getProperty("fynn:wolf"); } catch (e) { return 0; }
-    if (!wolf || taeter?.typeId !== "minecraft:player") return 0;
-    let waffe;
-    try { waffe = taeter.getComponent("minecraft:equippable")?.getEquipment("Mainhand")?.typeId; } catch (e) { /* egal */ }
-    if (!waffe || !waffe.includes("silber")) return 0;
-    // Das Verhalten hat den Schlag halbiert: dreimal so viel obendrauf ergibt
-    // das Doppelte des vollen Schlags.
-    const extra = schaden * 3;
-    try {
-        werwolf.applyDamage(extra, { cause: "magic", damagingEntity: taeter });
-        werwolf.dimension.spawnParticle("minecraft:endrod", { x: werwolf.location.x, y: werwolf.location.y + 1.5, z: werwolf.location.z });
-    } catch (e) { /* egal */ }
-    return extra;
-}
-
-// ------------------------------------------------------------ Moosgolem (4.82)
-
-export const GOLEMZEIT = { wach: 1200, wurzelPause: 100, weckWeite: 12 };
-const golems = new Map();        // Id -> { ruhe, wurzeln }
 
 export function wecken(golem, jetzt) {
-    const z = golems.get(golem.id) ?? { ruhe: 0, wurzeln: 0 };
-    golems.set(golem.id, z);
+    const z = golemZustand(golem, jetzt);
     z.ruhe = jetzt + GOLEMZEIT.wach;
-    let schlaeft = true;
-    try { schlaeft = golem.getProperty("fynn:schlaeft") !== false; } catch (e) { /* egal */ }
-    if (!schlaeft) return false;
+    if (eigenschaft(golem, "fynn:schlaeft", true) === false) return false;
     try {
         golem.triggerEvent("fynn:aufwachen");
         golem.dimension.playSound("mob.irongolem.death", golem.location, { volume: 1.5, pitch: 0.4 });
@@ -297,28 +283,122 @@ export function wurzeln(ziel) {
     } catch (e) { /* egal */ }
 }
 
+/**
+ * Den Stein vom Arm auf das Ziel werfen. Er fliegt im Bogen: Die Zeit bis
+ * zum Ziel ergibt sich aus Weite und Tempo, und so viel hoeher wird gezielt,
+ * wie der Stein in dieser Zeit faellt.
+ */
+export function felsWerfen(golem, ziel, links) {
+    const dim = golem.dimension, o = golem.location;
+    let f = { x: 0, z: 1 };
+    try {
+        const v = golem.getViewDirection();
+        const l = Math.hypot(v.x, v.z) || 1;
+        f = { x: v.x / l, z: v.z / l };
+    } catch (e) { /* dann eben geradeaus */ }
+    // Rechts von der Blickrichtung (nach Sueden blickend liegt rechts Westen).
+    const seite = links ? -1 : 1;
+    const start = { x: o.x - f.z * 1.3 * seite + f.x * 0.6, y: o.y + 3.0, z: o.z + f.x * 1.3 * seite + f.z * 0.6 };
+    const z = ziel.location;
+    const dx = z.x - start.x, dy = z.y + 1.0 - start.y, dz = z.z - start.z;
+    const t = Math.max(4, Math.hypot(dx, dz) / GOLEMWURF.tempo);
+    const schub = { x: dx / t, y: dy / t + 0.5 * GOLEMWURF.fall * t, z: dz / t };
+    try {
+        dim.playSound("mob.irongolem.throw", o, { volume: 1.5, pitch: 0.6 });
+        dim.spawnParticle("fynn:steinstaub", start);
+    } catch (e) { /* egal */ }
+    try {
+        const stein = dim.spawnEntity(FELSBROCKEN, start);
+        const p = stein?.getComponent?.("minecraft:projectile");
+        if (p) { p.owner = golem; p.shoot(schub); }
+        return schub;
+    } catch (e) {
+        return undefined;
+    }
+}
+
+/** Der Stein am Arm: loslassen, leer, nachwachsen, bereit. */
+function steinTakt(golem, z, jetzt) {
+    const stufe = eigenschaft(golem, "fynn:wurf", STEIN.bereit);
+    if (stufe === STEIN.bereit || jetzt < z.weiter) return undefined;
+    if (stufe === STEIN.holt) {
+        if (!lebt(z.ziel)) {
+            setzen(golem, "fynn:wurf", STEIN.bereit);
+            return "bricht ab";
+        }
+        felsWerfen(golem, z.ziel, eigenschaft(golem, "fynn:links", false));
+        setzen(golem, "fynn:wurf", STEIN.leer);
+        z.weiter = jetzt + GOLEMWURF.leer;
+        return "wirft";
+    }
+    if (stufe === STEIN.leer) {
+        setzen(golem, "fynn:wurf", STEIN.waechst);
+        try { golem.dimension.playSound("dig.stone", golem.location, { volume: 1, pitch: 0.5 }); } catch (e) { /* egal */ }
+        z.weiter = jetzt + GOLEMWURF.wachsen;
+        return undefined;
+    }
+    // Nachgewachsen - der naechste Wurf kommt vom anderen Arm.
+    setzen(golem, "fynn:wurf", STEIN.bereit);
+    setzen(golem, "fynn:links", !eigenschaft(golem, "fynn:links", false));
+    return undefined;
+}
+
 /** Ein Takt (alle 20 Ticks) fuer einen Golem. */
 export function golemTakt(golem, jetzt) {
-    const z = golems.get(golem.id);
-    if (!z) return "schlaeft";
+    if (!golems.has(golem.id) && eigenschaft(golem, "fynn:schlaeft", true) !== false) return "schlaeft";
+    // Wach, aber nicht gemerkt (nach dem Neuladen der Welt): jetzt merken.
+    const z = golemZustand(golem, jetzt);
+    const stein = steinTakt(golem, z, jetzt);
+    if (stein) return stein;
     let ziel;
     try { ziel = golem.target; } catch (e) { /* egal */ }
     if (lebt(ziel)) {
         z.ruhe = jetzt + GOLEMZEIT.wach;
-        if (jetzt >= z.wurzeln && weite(golem.location, ziel.location) <= 10
-            && !(ziel.typeId === "minecraft:player" && istKreativ(ziel))) {
+        if (ziel.typeId === "minecraft:player" && istKreativ(ziel)) return "kaempft";
+        const d = weite(golem.location, ziel.location);
+        if (jetzt >= z.wurzeln && d <= GOLEMZEIT.wurzelWeite) {
             z.wurzeln = jetzt + GOLEMZEIT.wurzelPause;
             wurzeln(ziel);
             return "wurzeln";
+        }
+        if (jetzt >= z.wurf && d >= GOLEMWURF.min && d <= GOLEMWURF.max
+            && eigenschaft(golem, "fynn:wurf", STEIN.bereit) === STEIN.bereit) {
+            setzen(golem, "fynn:wurf", STEIN.holt);
+            z.ziel = ziel;
+            z.weiter = jetzt + GOLEMWURF.ausholen;
+            z.wurf = jetzt + GOLEMWURF.pause;
+            return "holt aus";
         }
         return "kaempft";
     }
     if (jetzt >= z.ruhe) {
         golems.delete(golem.id);
+        setzen(golem, "fynn:wurf", STEIN.bereit);
         try { golem.triggerEvent("fynn:einschlafen"); } catch (e) { /* egal */ }
         return "schlaeft ein";
     }
     return "wacht";
+}
+
+/** Wo der Felsbrocken aufschlaegt, staubt es. */
+export function felsAufschlag(dim, ort) {
+    try {
+        dim.spawnParticle("fynn:steinstaub", ort);
+        dim.playSound("dig.stone", ort, { volume: 2, pitch: 0.5 });
+        dim.playSound("random.explode", ort, { volume: 0.4, pitch: 1.6 });
+    } catch (e) { /* egal */ }
+}
+
+/** Beim Tod: Wer ihn besiegt hat, erfaehrt, was er auf dem Buckel trug. */
+export function erzBeiTod(golem, taeter) {
+    const erz = GOLEMERZE[eigenschaft(golem, "fynn:erz", 0)];
+    golems.delete(golem.id);
+    if (!erz) return undefined;
+    const text = `${erz.farbe}Der Moosgolem trug ${erz.name} auf dem Buckel – ${erz.seltenheit}!`;
+    try {
+        if (taeter?.typeId === "minecraft:player") taeter.onScreenDisplay?.setActionBar(text);
+    } catch (e) { /* egal */ }
+    return text;
 }
 
 /** Das Moosherz: rundum reift das Getreide, und im Gras spriessen Blumen. */
@@ -371,9 +451,6 @@ world.afterEvents.entityHurt.subscribe((e) => {
     try {
         const taeter = e.damageSource?.damagingEntity;
         if (taeter?.typeId === SKORPION) skorpionStich(e.hurtEntity);
-        if (e.hurtEntity?.typeId === WERWOLF && e.damageSource?.cause !== "magic") {
-            silberTreffer(e.hurtEntity, taeter, e.damage);
-        }
         if (e.hurtEntity?.typeId === GOLEM && taeter) wecken(e.hurtEntity, system.currentTick);
         if (e.hurtEntity?.typeId === IRRLICHT && taeter) {
             // Geschlagen verlischt das Irrlicht - es flieht in die Nacht.
@@ -391,6 +468,7 @@ function lichtAnOrt(e, ort) {
 }
 
 world.afterEvents.projectileHitBlock.subscribe((e) => {
+    if (e.projectile?.typeId === FELSBROCKEN) felsAufschlag(e.dimension, e.location);
     if (e.projectile?.typeId !== LICHTWURF) return;
     const b = e.getBlockHit?.();
     const f = b?.face;
@@ -401,6 +479,7 @@ world.afterEvents.projectileHitBlock.subscribe((e) => {
 });
 
 world.afterEvents.projectileHitEntity.subscribe((e) => {
+    if (e.projectile?.typeId === FELSBROCKEN) felsAufschlag(e.dimension, e.location);
     if (e.projectile?.typeId !== LICHTWURF) return;
     const o = e.getEntityHit?.()?.entity?.location ?? e.location;
     lichtAnOrt(e, { x: o.x, y: o.y + 1, z: o.z });
@@ -413,6 +492,14 @@ world.afterEvents.playerBreakBlock.subscribe((e) => {
         }
     } catch (fehler) {
         console.warn(`Moosgolem, Baum: ${fehler}`);
+    }
+});
+
+world.afterEvents.entityDie.subscribe((e) => {
+    try {
+        if (e.deadEntity?.typeId === GOLEM) erzBeiTod(e.deadEntity, e.damageSource?.damagingEntity);
+    } catch (fehler) {
+        console.warn(`Moosgolem, Tod: ${fehler}`);
     }
 });
 
@@ -441,11 +528,6 @@ system.runInterval(() => {
         }
         if (r % 20 === 0 && lichter.length) lichterTakt(jetzt);
         if (r % 4 !== 0) return;
-        let nacht = false;
-        try { nacht = mondnacht(world.getTimeOfDay(), world.getMoonPhase()); } catch (f) { /* egal */ }
-        for (const w of welt.getEntities({ type: WERWOLF })) {
-            try { werwolfTakt(w, jetzt, nacht); } catch (f) { /* egal */ }
-        }
         for (const g of welt.getEntities({ type: GOLEM })) {
             try { golemTakt(g, jetzt); } catch (f) { /* egal */ }
         }

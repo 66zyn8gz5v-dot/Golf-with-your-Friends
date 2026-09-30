@@ -752,6 +752,11 @@ def verhalten(t, varianten_namen):
     else:
         folge.append({"randomize": zufall})
     folge.append({"randomize": alter})
+    if t.get("start_wuerfeln"):
+        # Was beim Erscheinen noch ausgewuerfelt wird (das Erz auf dem
+        # Ruecken des Moosgolems) - erst nach dem Alter, damit eine
+        # Beutegruppe darin die des Erwachsenen ersetzt.
+        folge.append({"randomize": t["start_wuerfeln"]})
     if t.get("start_setzen"):
         # Was von Anfang an gilt (der Sandwurm beginnt unter dem Sand).
         folge.append({"set_property": t["start_setzen"]})
@@ -1989,6 +1994,8 @@ def baue(t, bilder=None):
     schreibe(VER / "entities" / f"tier_{name}.json", verhalten(t, namen))
     schreibe(VER / "spawn_rules" / f"tier_{name}.json", spawnregel(t))
     schreibe(VER / "loot_tables" / "entities" / f"{name}.json", beuteliste(t["beute"]))
+    for zusatz, eintraege in t.get("beute_extra", {}).items():
+        schreibe(VER / "loot_tables" / "entities" / f"{name}_{zusatz}.json", beuteliste(eintraege))
 
     if bilder is not None:
         bilder.append((t, geo, texturen, eigene))

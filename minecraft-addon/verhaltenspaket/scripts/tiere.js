@@ -23,8 +23,6 @@ export const TALISMANE = {
     // Aus dem Kristall der Kristallspinne (4.81). Nachtsicht blinkt, wenn
     // sie unter zehn Sekunden faellt - darum laenger als die anderen.
     "fynn:hoehlenauge": { wirkung: "night_vision", stufe: 0, dauer: 300 },
-    // Aus der Klaue des Werwolfs (4.82): nachts Staerke.
-    "fynn:mondtalisman": { wirkung: "strength", stufe: 0, nurNachts: true },
 };
 const JAEGERKETTE = "fynn:jaegerkette";
 

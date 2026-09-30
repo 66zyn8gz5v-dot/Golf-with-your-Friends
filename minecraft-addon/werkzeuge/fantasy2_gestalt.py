@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Die Fantasy-Wesen, zweite Welle (4.81 bis 4.83) - Gestalt und Haut.
 
-Fynn: "Mach am besten sechs neue Mobs." Gewaehlt hat er Greif, Werwolf,
-Moosgolem, Glutskorpion und Kristallspinne; das Irrlicht kam als sechstes
+Fynn: "Mach am besten sechs neue Mobs." Gewaehlt hat er Greif, Werwolf
+(seit 5.1 wieder draussen), Moosgolem, Glutskorpion und Kristallspinne; das Irrlicht kam als sechstes
 dazu. Hier stehen zuerst die kleineren drei (4.81).
 
 Was leuchtet, bekommt Alpha 254 (siehe fantasy_gestalt.glut).
@@ -205,199 +205,208 @@ def irrlicht_maler(variante):
     return male
 
 
-# ================================================================== Werwolf (4.82)
+# ================================================================== Moosgolem (4.82, neu 5.1)
+#
+# 5.1 - Fynn: "Der sieht kakafuzzi aus. Der sollte schoen breit sein, so ein
+# bisschen runde Vibes, wie so ein Steinriese, der leicht bemoost ist, recht
+# kleine Beine, grosse Arme ... kann Steine werfen, die Teil seiner Arme
+# sind ... mit einer gewissen Wahrscheinlichkeit ein Erz auf dem Ruecken."
+#
+# Rund wird ein Klotz aus drei ineinandergesteckten Kaesten, jeder an zwei
+# Achsen eingezogen: So bricht jede Kante einmal ab, und der Fels wirkt
+# gerundet statt wuerfelig.
 
-def werwolf_modell():
-    """Zwei Gestalten in einem Modell: der Wanderer im Kapuzenmantel und der
-    Wolf, der aufrecht auf zwei Beinen steht, gebeugt, mit langen Armen.
-    Welche man sieht, schalten die Bewegungen (Groesse 0 oder 1)."""
-    m = Modell("werwolf", sichtbreite=1.4, sichthoehe=2.6)
-    # --- Der Wanderer
-    mensch = m.knoch("mensch", [0, 12, 0])
-    mensch.kasten([-4, 12, -2], [8, 12, 4], "mantel")
-    mkopf = m.knoch("mensch_kopf", [0, 24, 0], "mensch")
-    mkopf.kasten([-4, 24, -4], [8, 8, 8], "gesicht")
-    mkopf.kasten([-4.5, 24, -4.5], [9, 9, 9], "kapuze")
-    for seite, x in (("links", 6), ("rechts", -6)):
-        a = m.knoch(f"mensch_arm_{seite}", [x, 22, 0], "mensch")
-        a.kasten([x - 2, 12, -2], [4, 12, 4], "aermel")
-        b = m.knoch(f"mensch_bein_{seite}", [x / 3, 12, 0], "mensch")
-        b.kasten([x / 3 - 2, 0, -2], [4, 12, 4], "hose")
-    stab = m.knoch("stab", [6, 14, -1], "mensch_arm_links")
-    stab.kasten([5.5, 0, -2.5], [1, 26, 1], "stab")
-    # --- Der Wolf
-    wolf = m.knoch("wolf", [0, 18, 0])
-    wolf.kasten([-6, 14, -4], [12, 14, 9], "fell")                    # Brust, maechtig
-    wolf.kasten([-5, 10, -3], [10, 5, 7], "fell")                     # Huefte
-    wolf.kasten([-5.5, 24, -5], [11, 5, 10], "maehne")
-    wkopf = m.knoch("wolf_kopf", [0, 28, -4], "wolf")
-    wkopf.kasten([-4, 26, -11], [8, 7, 7], "wolfskopf")
-    wkopf.kasten([-2.5, 26, -16], [5, 4, 5], "schnauze")
-    paar(wkopf, [1.5, 33, -7], [2, 4, 2], "ohr")
-    kiefer = m.knoch("wolf_kiefer", [0, 26.5, -11], "wolf_kopf")
-    kiefer.kasten([-2, 25, -16], [4, 1.5, 5], "kiefer")
-    for seite, x in (("links", 8), ("rechts", -8)):
-        a = m.knoch(f"wolf_arm_{seite}", [x, 26, -1], "wolf")
-        a.kasten([x - 2.5, 13, -3.5], [5, 13, 5], "fell")
-        pfote = m.knoch(f"wolf_pranke_{seite}", [x, 13, -1], f"wolf_arm_{seite}")
-        pfote.kasten([x - 2.5, 5, -3.5], [5, 8, 5], "fell")
-        for i in range(3):
-            pfote.kasten([x - 2 + i * 1.6, 3, -3.5], [1, 2, 1], "kralle")
-        # Die Beine knicken nach hinten ab, wie bei einem Wolf.
-        ob = m.knoch(f"wolf_bein_{seite}", [x / 2, 12, 0], "wolf", drehung=[-20, 0, 0])
-        ob.kasten([x / 2 - 2.5, 6, -2.5], [5, 7, 6], "fell")
-        un = m.knoch(f"wolf_lauf_{seite}", [x / 2, 6.5, 3], f"wolf_bein_{seite}", drehung=[45, 0, 0])
-        un.kasten([x / 2 - 1.5, 0, 1.5], [3, 7, 3], "fell")
-        un.kasten([x / 2 - 2, 0, -1.5], [4, 2, 4], "pfote")
-    schwanz = m.knoch("wolf_schwanz", [0, 13, 4], "wolf", drehung=[-30, 0, 0])
-    schwanz.kasten([-1.5, 11.5, 4], [3, 3, 10], "fell")
-    return m
+def rundling(k, ursprung, groesse, stoff, fase=1):
+    x, y, z = ursprung
+    w, h, d = groesse
+    f = fase
+    # Die beiden eingezogenen Kaesten heissen "~rand": Ihr Deckel ist nur
+    # die abgebrochene Kante, dort waechst kein Moos (sonst zieht sich um
+    # jede Stufe ein gruener Strich).
+    k.kasten([x, y + f, z + f], [w, h - 2 * f, d - 2 * f], stoff + "~rand")
+    k.kasten([x + f, y, z + f], [w - 2 * f, h, d - 2 * f], stoff)
+    k.kasten([x + f, y + f, z], [w - 2 * f, h - 2 * f, d], stoff + "~rand")
 
 
-WERWOLF_FARBEN = {
-    # Fell, Fell dunkel, Mantel, Augen
-    "grau": ("#6a665e", "#3e3a36", "#4a3a2a", "#ffcf2a"),
-    "schwarz": ("#2e2c2a", "#18171a", "#2a3a2e", "#ff4a2a"),
+# Die Erze auf dem Buckel, von gewoehnlich bis legendaer. Die Nummer ist der
+# Wert von fynn:erz; welcher Stein wie oft kommt, wuerfelt das Spiel beim
+# Erscheinen (fantasy2_daten._moosgolem), die Beute steht dort auch.
+# (Name, Seltenheit, dunkel, mittel, hell)
+GOLEMERZE = {
+    1: ("Amethyst", "gewöhnlich", "#5a2e8a", "#a070e0", "#e8d0ff"),
+    2: ("Lapislazuli", "ungewöhnlich", "#1a2e7a", "#3a64d8", "#a8c4ff"),
+    3: ("Smaragd", "selten", "#0e5a2e", "#2ec862", "#b8ffd0"),
+    4: ("Rubin", "sehr selten", "#6a0a1a", "#e0283e", "#ffc0c8"),
+    5: ("Diamant", "legendär", "#1a6a78", "#5ae8e8", "#f0ffff"),
+}
+
+# Jeder Kristall: Fuss (x, z), Breite, Hoehe, Neigung (um x, um z). Die
+# hoeheren Stufen tragen mehr und groessere Kristalle.
+ERZKRISTALLE = {
+    1: [(-3, 4, 2, 9, (-14, 12)), (1, 5, 3, 11, (6, -10)), (-5, 7, 2, 6, (18, 28)), (4, 3, 2, 6, (-20, -26)),
+        (0, 8, 2, 5, (30, -4))],
+    2: [(-3, 3, 4, 7, (-8, 10)), (1, 5, 4, 6, (10, -14)), (-5, 7, 3, 4, (16, 22)), (3, 8, 3, 4, (22, -20))],
+    3: [(-1, 4, 3, 13, (-6, 6)), (-5, 5, 2, 9, (12, 22)), (3, 5, 3, 10, (10, -16)), (0, 8, 2, 6, (28, 0))],
+    4: [(-2, 3, 4, 12, (-10, 8)), (2, 6, 3, 9, (8, -20)), (-6, 6, 3, 8, (14, 26)), (1, 9, 2, 5, (30, -6))],
+    5: [(-2, 3, 4, 15, (-8, 6)), (3, 4, 3, 11, (6, -22)), (-6, 5, 3, 10, (12, 28)), (0, 8, 3, 8, (32, 0)),
+        (5, 8, 2, 6, (24, -36))],
 }
 
 
-def werwolf_maler(variante):
-    """4.88: Fell ohne Flecken - der Ruecken dunkel, zum Bauch und zur Brust
-    hin in Stufen heller; die Maehne als ganze dunkle Flaeche."""
-    fell, dunkel, mantel, augen = WERWOLF_FARBEN.get(variante, WERWOLF_FARBEN["grau"])
-    bauch = mische(hexfarbe(fell), (220, 210, 190), 0.3)
-
-    def pelz(p, n, texel):
-        return H.koerper(p, n, texel, bauch, fell, dunkel, grenze=0.25, stufen=4)
-
-    def male(stoff, p, n, texel):
-        x, y, z = p
-        if stoff == "gesicht":
-            if n[2] < -0.5:
-                if abs(y - 28.5) < 0.6 and abs(abs(x) - 2) < 0.6:
-                    return glut(augen, -0.3)
-                if 25 < y < 27.5 and abs(x) < 2.5:
-                    return H.farbe(dunkel)                                    # der Bart
-                return hexfarbe("#b08a6a")
-            return H.farbe(dunkel)
-        if stoff == "kapuze":
-            if n[2] < -0.5 and abs(x) < 3.5 and y < 31:
-                return None
-            return H.verlauf([H.dunkler(mantel, 0.15), mantel], H.hoehe(p, n, texel), 3)
-        if stoff in ("mantel", "aermel"):
-            if stoff == "mantel" and 12 < y < 13.5:
-                return hexfarbe("#2a1e14")                                    # Guertel
-            return H.verlauf([H.dunkler(mantel, 0.2), mantel, H.heller(mantel, 0.08)], H.hoehe(p, n, texel), 3)
-        if stoff == "hose":
-            return H.verlauf(["#2e2820", "#3a3228"], H.hoehe(p, n, texel), 2)
-        if stoff == "stab":
-            return hexfarbe("#6a4a2a")
-        if stoff == "maehne":
-            return H.verlauf([H.dunkler(dunkel, 0.15), dunkel], H.hoehe(p, n, texel), 2)
-        if stoff == "fell":
-            if n[2] < -0.5 and y > 14:
-                return bauch                                                  # helle Brust
-            return pelz(p, n, texel)
-        if stoff == "wolfskopf":
-            if abs(n[0]) > 0.5 and abs(y - 30.5) < 0.6 and -10 < z < -8:
-                return glut(augen)
-            return pelz(p, n, texel)
-        if stoff == "schnauze":
-            if n[2] < -0.5 and y > 28.5:
-                return hexfarbe("#141010")                                    # Nase
-            if n[1] < -0.5 or y < 27:
-                return hexfarbe("#f0e8d4") if texel[0] % 2 == 0 else H.farbe(dunkel)
-            return pelz(p, n, texel)
-        if stoff == "kiefer":
-            if n[1] > 0.5 and texel[0] % 2 == 0:
-                return hexfarbe("#f0e8d4")
-            return H.farbe(dunkel)
-        if stoff == "ohr":
-            return H.farbe(dunkel)
-        if stoff == "kralle":
-            return hexfarbe("#e0d8c4")
-        if stoff == "pfote":
-            return H.farbe(dunkel)
-        return pelz(p, n, texel)
-    return male
-
-
-# ================================================================== Moosgolem (4.82)
-
 def moosgolem_modell():
-    m = Modell("moosgolem", sichtbreite=2.4, sichthoehe=3.4)
-    k = m.knoch("koerper", [0, 18, 0])
-    k.kasten([-10, 18, -6], [20, 16, 12], "stein")
-    k.kasten([-10.5, 30, -6.5], [21, 5, 13], "moos")                 # Moosschultern
-    k.kasten([-3, 24, -6.6], [6, 6, 1], "kern")                       # das gluehende Herz im Stein
-    kopf = m.knoch("kopf", [0, 34, -1], "koerper")
-    kopf.kasten([-5, 34, -6], [10, 9, 9], "stein")
-    kopf.kasten([-5.5, 41, -6.5], [11, 3, 10], "moos")
-    kopf.kasten([-6, 38, -7], [12, 2, 3], "braue")
-    for x, z in ((-3, -3), (2, -1), (-1, 1)):
-        kopf.kasten([x, 44, z], [1, 2, 1], "blume")
-    for seite, x in (("links", 13), ("rechts", -13)):
-        a = m.knoch(f"arm_{seite}", [x, 32, 0], "koerper")
-        a.kasten([x - 3, 16, -3.5], [6, 17, 7], "stein")
-        a.kasten([x - 3.5, 28, -4], [7, 5, 8], "moos")
-        faust = m.knoch(f"faust_{seite}", [x, 16, 0], f"arm_{seite}")
-        faust.kasten([x - 4, 6, -4.5], [8, 10, 9], "stein")
-        faust.kasten([x - 4.5, 11, -5], [9, 2, 10], "ranke")
-        b = m.knoch(f"bein_{seite}", [x / 2.6, 18, 0], "koerper")
-        b.kasten([x / 2.6 - 4, 0, -4], [8, 18, 8], "stein")
-        b.kasten([x / 2.6 - 4.5, 0, -4.5], [9, 3, 9], "moos")
+    m = Modell("moosgolem", sichtbreite=3.6, sichthoehe=3.0)
+    k = m.knoch("koerper", [0, 9, 1])
+    # Der Leib ein Fass: unten und oben schmaler als in der Mitte.
+    rundling(k, [-11, 6, -7], [22, 5, 16], "stein", 2)
+    rundling(k, [-13, 9, -9], [26, 14, 19], "stein", 3)
+    rundling(k, [-12, 21, -7], [24, 7, 17], "stein", 2)
+    rundling(k, [-10, 26, -3], [20, 8, 14], "stein", 3)               # der Buckel hinter dem Kopf
+    k.kasten([-7, 34, 0], [14, 1, 8], "moos")                         # Moosdecke auf dem Buckel
+    for x in (-13.5, 12.5):
+        k.kasten([x, 17, -3], [1, 7, 12], "moosbart")                 # an den Flanken haengt es herab
+    kopf = m.knoch("kopf", [0, 24, -7], "koerper")
+    rundling(kopf, [-5, 19, -15], [10, 9, 9], "stein")
+    kopf.kasten([-6, 25, -16], [12, 2, 4], "braue")                   # die Stirn wie ein Felsvorsprung
+    # Die Augen eigens, damit er sie im Schlaf schliessen kann.
+    augen = m.knoch("augen", [0, 24, -15], "kopf")
+    augen.kasten([-4, 23, -15.4], [2, 2, 1], "auge")
+    augen.kasten([2, 23, -15.4], [2, 2, 1], "auge")
+    kopf.kasten([-4, 18, -14.5], [8, 2, 6], "kiefer")
+    kopf.kasten([-4, 28, -13], [8, 1, 6], "moos")
+    for x, z in ((-3, -12), (2, -10)):
+        kopf.kasten([x, 29, z], [1, 2, 1], "blume")
+    for seite, s in (("links", 1), ("rechts", -1)):
+        def sx(x, w):
+            # Die rechte Seite ist die gespiegelte linke.
+            return x if s > 0 else -x - w
+        arm = m.knoch(f"arm_{seite}", [16 * s, 27, -1], "koerper")
+        # Die Schultern: runde Felsen, hoeher als der Kopf.
+        rundling(arm, [sx(11, 12), 21, -8], [12, 12, 13], "stein", 3)
+        arm.kasten([sx(13, 8), 33, -5], [8, 1, 7], "moos")
+        for x, z, h in ((13, -8.4, 6), (17, -8.4, 4), (20, -4, 7)):
+            arm.kasten([sx(x, 1), 33 - h, z], [1, h, 1], "ranke")
+        rundling(arm, [sx(13, 8), 12, -6], [8, 10, 9], "stein", 2)       # der Oberarm
+        unter = m.knoch(f"unterarm_{seite}", [17 * s, 13, -1], f"arm_{seite}")
+        rundling(unter, [sx(11, 12), 5, -8], [12, 9, 12], "stein", 2)
+        faust = m.knoch(f"faust_{seite}", [17 * s, 6, -2], f"unterarm_{seite}")
+        rundling(faust, [sx(9, 15), 0, -10], [15, 8, 14], "stein", 3)
+        # Vier Finger, eingeschlagen: jeder ein eigener Brocken.
+        for i in range(4):
+            faust.kasten([sx(10 + i * 3.4, 3), 1, -11], [3, 5, 2], "finger")
+        # Die Wurfsteine sitzen aussen auf dem Unterarm - sie brechen ab,
+        # wenn er wirft, und wachsen nach.
+        st = m.knoch(f"armstein_{seite}", [23 * s, 9, -1], f"unterarm_{seite}")
+        rundling(st, [sx(22, 7), 5, -7], [7, 9, 11], "wurfstein", 2)
+        rundling(st, [sx(21, 6), 12, -5], [6, 5, 7], "wurfstein", 1)
+        st.kasten([sx(22, 4), 16.5, -3], [4, 1, 4], "moos")
+        bein = m.knoch(f"bein_{seite}", [6 * s, 9, 1], "koerper")
+        rundling(bein, [sx(2, 8), 1, -3], [8, 9, 8], "stein", 2)
+        rundling(bein, [sx(1, 10), 0, -6], [10, 3, 10], "stein", 1)      # der breite Fuss
+    # Das Erz auf dem Buckel: ein Brocken dunkles Gestein, aus dem die
+    # Kristalle wachsen. Welche zu sehen sind, sagt fynn:erz.
+    fels = m.knoch("erzfels", [0, 34, 5], "koerper")
+    rundling(fels, [-7, 33, 0], [14, 4, 11], "erzstein", 2)
+    for nr, kristalle in ERZKRISTALLE.items():
+        e = m.knoch(f"erz_{nr}", [0, 36, 5], "erzfels")
+        for x, z, w, h, (nx, nz) in kristalle:
+            e.kasten([x, 36, z], [w, h, w], f"erz{nr}", drehung=[nx, 0, nz], drehpunkt=[x + w / 2, 36, z + w / 2])
     return m
 
 
 MOOSGOLEM_FARBEN = {
-    # Stein, Stein dunkel, Moos, Kern
-    "wald": ("#7a7a74", "#4e4e4a", "#4e7a2e", "#7affa0"),
-    "tiefwald": ("#5e6058", "#383a34", "#2e5a26", "#a0ffda"),
+    # Stein hell, Stein dunkel, Moos, Kern
+    "wald": ("#8e8c82", "#57554e", "#5a8a32", "#7affa0"),
+    "tiefwald": ("#6e7068", "#3c3e38", "#3a6a2a", "#a0ffda"),
 }
 
 
 def moosgolem_maler(variante):
-    """4.88: Steinquader mit Fugen (Linien), oben bemoost als ganze Kante
-    statt verstreuter Moospunkte; das Moos selbst oben hell, unten dunkler."""
+    """Grosse Flaechen, keine Punkte: Gesteinsschichten als wellige Linien,
+    oben hell, unten im Schatten dunkler, das Moos kriecht in einer
+    welligen Kante die Flanken herab."""
     stein, dunkel, moos, kern = MOOSGOLEM_FARBEN.get(variante, MOOSGOLEM_FARBEN["wald"])
+    stein_reihe = [H.dunkler(stein, 0.32), H.dunkler(stein, 0.16), stein, H.heller(stein, 0.08)]
+    moos_reihe = [H.dunkler(moos, 0.3), H.dunkler(moos, 0.12), moos, mische(hexfarbe(moos), (170, 200, 80), 0.35)]
+
+    def fels(p, n, texel, reihe, mooskante=0.78):
+        x, y, z = p
+        t = H.hoehe(p, n, texel)
+        if n[1] > 0.5:
+            return H.farbe(moos)
+        k = H.kasten_von(texel)
+        hoch = k.groesse[1] if k else 0
+        # Die Mooskante wellt sich, statt gerade zu verlaufen - nur an den
+        # hohen Flaechen, sonst wird jede Stufe zum gruenen Strich.
+        if hoch >= 8 and n[1] > -0.5 and t > mooskante + 0.1 * math.sin(x * 0.6 + z * 0.8):
+            return H.verlauf(moos_reihe[1:], (t - mooskante) / (1 - mooskante), 3)
+        if n[1] < -0.5:
+            return H.farbe(reihe[0])
+        # Der Verlauf haengt an der Hoehe im ganzen Golem, nicht im
+        # einzelnen Kasten: Sonst beginnt jede Stufe wieder dunkel, und der
+        # Fels bekommt Streifen. Unten im Schatten, oben im Licht.
+        c = H.verlauf(reihe, (y - 1.0) / 30.0, 4)
+        # Grosse dunklere Flecken, wie Flechten und Nassstellen am Fels -
+        # ganze Flaechen, keine Punkte.
+        if math.sin(x * 0.28 + y * 0.12) + math.sin(z * 0.33 - y * 0.21 + 1.3) > 1.15:
+            c = H.dunkler(c, 0.1)
+        return c
 
     def male(stoff, p, n, texel):
         x, y, z = p
+        stoff, _, rand = stoff.partition("~")
+        if rand and n[1] > 0.5:
+            # Die Kante oben: heller Stein, wo das Licht sie trifft.
+            return H.heller(stein if stoff != "wurfstein" else mische(hexfarbe(stein), (176, 150, 120), 0.3), 0.12)
         if stoff == "stein":
-            if y > 34 and n[2] < -0.5 and abs(y - 37) < 1 and abs(abs(x) - 2.5) < 1:
-                return glut(kern)                                               # Augen
+            return fels(p, n, texel, stein_reihe)
+        if stoff == "wurfstein":
+            # Die Wurfsteine sind heller und waermer, mit dunkler Bruchfuge
+            # unten - man sieht, dass sie nur aufsitzen.
+            if n[1] < -0.5:
+                return H.farbe(dunkel)
+            k = H.kasten_von(texel)
+            if k and y - k.ursprung[1] < 1 and n[1] < 0.5:
+                return H.farbe(dunkel)
+            warm = mische(hexfarbe(stein), (176, 150, 120), 0.3)
+            return fels(p, n, texel, [H.dunkler(warm, 0.25), H.dunkler(warm, 0.1), warm, H.heller(warm, 0.1)], 0.9)
+        if stoff in ("moos", "moosbart"):
+            if n[1] < -0.5 and int(math.floor(x + z)) % 3 == 0:
+                return None                                                   # herabhaengende Faeden
+            t = H.hoehe(p, n, texel)
+            if stoff == "moosbart":
+                # Der Bart wird nach unten duenner: unten nur noch Straehnen.
+                if t < 0.45 and int(math.floor(z)) % 2 == 0:
+                    return None
+            return H.verlauf(moos_reihe, t if n[1] <= 0.5 else 1.0, 4)
+        if stoff == "auge":
+            return glut(H.heller(kern, 0.3)) if n[2] < -0.5 else H.farbe(dunkel)
+        if stoff == "braue":
             if n[1] > 0.5:
                 return H.farbe(moos)
-            if texel[1] % 5 == 0 or (texel[0] + (texel[1] // 5) * 3) % 6 == 0:
-                return H.farbe(dunkel)                                        # Fugen
-            # Oben an der Flanke kriecht das Moos ein Stueck herunter.
-            if H.hoehe(p, n, texel) > 0.9:
-                return H.dunkler(moos, 0.1)
-            return H.verlauf([H.dunkler(stein, 0.1), stein], H.hoehe(p, n, texel), 3)
-        if stoff == "moos":
-            if n[1] < -0.5 and texel[0] % 3 == 0:
-                return None                                                   # herabhaengende Faeden
-            return H.verlauf([H.dunkler(moos, 0.2), moos, mische(hexfarbe(moos), (140, 170, 60), 0.3)],
-                             H.hoehe(p, n, texel), 3)
-        if stoff == "kern":
-            # Von der Mitte nach aussen: hell, Glut, dunkler Rand.
-            k = H.kasten_von(texel)
-            if k is not None:
-                mx = k.ursprung[0] + k.groesse[0] / 2
-                my = k.ursprung[1] + k.groesse[1] / 2
-                r = max(abs(x - mx) / (k.groesse[0] / 2), abs(y - my) / (k.groesse[1] / 2))
-                if r > 0.8:
-                    return H.farbe(dunkel)
-                return glut(H.verlauf([H.heller(kern, 0.4), kern], r / 0.8, 3))
-            return glut(kern)
-        if stoff == "braue":
-            return H.farbe(dunkel)
+            return H.verlauf([H.dunkler(stein, 0.35), H.dunkler(stein, 0.15)], H.hoehe(p, n, texel), 2)
+        if stoff == "kiefer":
+            return H.verlauf([H.dunkler(stein, 0.35), H.dunkler(stein, 0.2)], H.hoehe(p, n, texel), 2)
+        if stoff == "finger":
+            if n[1] > 0.5:
+                return H.heller(stein, 0.05)
+            return H.verlauf([H.dunkler(stein, 0.3), H.dunkler(stein, 0.1)], H.hoehe(p, n, texel), 2)
         if stoff == "blume":
             return glut("#ff8ab8") if n[1] > 0.5 else hexfarbe("#3a6a22")
         if stoff == "ranke":
-            if texel[0] % 2 == 0:
-                return hexfarbe("#3a5a1e")
-            return None
+            return H.verlauf([H.dunkler(moos, 0.35), H.dunkler(moos, 0.1)], H.hoehe(p, n, texel), 2)
+        if stoff == "erzstein":
+            # Tiefschiefer, dunkel und kuehl.
+            if n[1] > 0.5:
+                return hexfarbe("#3a3a44")
+            return H.verlauf(["#26262e", "#34343e", "#44444e"], H.hoehe(p, n, texel), 3)
+        if stoff.startswith("erz"):
+            _, _, tief, mitte, hell = GOLEMERZE[int(stoff[3:])]
+            t = H.hoehe(p, n, texel)
+            if n[1] > 0.5:
+                return glut(hell)
+            # Eine Seite jedes Kristalls faengt das Licht (die Facette).
+            seite = 0.25 if (n[0] > 0.5 or n[2] < -0.5) else 0.0
+            return glut(H.verlauf([tief, mitte, hell], min(1.0, t * 0.85 + seite), 4))
         return H.farbe(stein)
     return male
 

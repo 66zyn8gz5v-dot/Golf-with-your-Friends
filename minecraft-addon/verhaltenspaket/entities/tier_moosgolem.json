@@ -11,6 +11,29 @@
           "type": "bool",
           "default": false,
           "client_sync": true
+        },
+        "fynn:links": {
+          "type": "bool",
+          "default": false,
+          "client_sync": true
+        },
+        "fynn:erz": {
+          "type": "int",
+          "range": [
+            0,
+            5
+          ],
+          "default": 0,
+          "client_sync": true
+        },
+        "fynn:wurf": {
+          "type": "int",
+          "range": [
+            0,
+            3
+          ],
+          "default": 0,
+          "client_sync": true
         }
       }
     },
@@ -36,7 +59,7 @@
           "priority": 2,
           "must_see": true,
           "reselect_targets": true,
-          "within_radius": 16,
+          "within_radius": 22,
           "entity_types": [
             {
               "filters": {
@@ -54,9 +77,38 @@
                   }
                 ]
               },
-              "max_dist": 16
+              "max_dist": 22
             }
           ]
+        },
+        "minecraft:follow_range": {
+          "value": 24,
+          "max": 24
+        }
+      },
+      "fynn:erz_1": {
+        "minecraft:loot": {
+          "table": "loot_tables/entities/moosgolem_erz1.json"
+        }
+      },
+      "fynn:erz_2": {
+        "minecraft:loot": {
+          "table": "loot_tables/entities/moosgolem_erz2.json"
+        }
+      },
+      "fynn:erz_3": {
+        "minecraft:loot": {
+          "table": "loot_tables/entities/moosgolem_erz3.json"
+        }
+      },
+      "fynn:erz_4": {
+        "minecraft:loot": {
+          "table": "loot_tables/entities/moosgolem_erz4.json"
+        }
+      },
+      "fynn:erz_5": {
+        "minecraft:loot": {
+          "table": "loot_tables/entities/moosgolem_erz5.json"
         }
       },
       "fynn:erwachsen": {
@@ -84,12 +136,12 @@
         ]
       },
       "minecraft:health": {
-        "value": 100,
-        "max": 100
+        "value": 120,
+        "max": 120
       },
       "minecraft:collision_box": {
-        "width": 2.0,
-        "height": 2.9
+        "width": 2.8,
+        "height": 2.6
       },
       "minecraft:movement": {
         "value": 0.2
@@ -235,6 +287,96 @@
                   "component_groups": [
                     "fynn:erwachsen",
                     "fynn:schlafend"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "randomize": [
+              {
+                "weight": 50,
+                "set_property": {
+                  "fynn:erz": 0
+                }
+              },
+              {
+                "weight": 18,
+                "set_property": {
+                  "fynn:erz": 1
+                },
+                "remove": {
+                  "component_groups": [
+                    "fynn:erwachsen"
+                  ]
+                },
+                "add": {
+                  "component_groups": [
+                    "fynn:erz_1"
+                  ]
+                }
+              },
+              {
+                "weight": 13,
+                "set_property": {
+                  "fynn:erz": 2
+                },
+                "remove": {
+                  "component_groups": [
+                    "fynn:erwachsen"
+                  ]
+                },
+                "add": {
+                  "component_groups": [
+                    "fynn:erz_2"
+                  ]
+                }
+              },
+              {
+                "weight": 9,
+                "set_property": {
+                  "fynn:erz": 3
+                },
+                "remove": {
+                  "component_groups": [
+                    "fynn:erwachsen"
+                  ]
+                },
+                "add": {
+                  "component_groups": [
+                    "fynn:erz_3"
+                  ]
+                }
+              },
+              {
+                "weight": 6,
+                "set_property": {
+                  "fynn:erz": 4
+                },
+                "remove": {
+                  "component_groups": [
+                    "fynn:erwachsen"
+                  ]
+                },
+                "add": {
+                  "component_groups": [
+                    "fynn:erz_4"
+                  ]
+                }
+              },
+              {
+                "weight": 4,
+                "set_property": {
+                  "fynn:erz": 5
+                },
+                "remove": {
+                  "component_groups": [
+                    "fynn:erwachsen"
+                  ]
+                },
+                "add": {
+                  "component_groups": [
+                    "fynn:erz_5"
                   ]
                 }
               }

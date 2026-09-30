@@ -752,23 +752,6 @@
           }
         }
       },
-      "fynn:werwolf": {
-        "volume": 1.0,
-        "pitch": [
-          0.55,
-          0.7
-        ],
-        "events": {
-          "hurt": {
-            "sound": "mob.wolf.hurt",
-            "volume": 1.0
-          },
-          "death": {
-            "sound": "mob.wolf.death",
-            "volume": 1.0
-          }
-        }
-      },
       "fynn:moosgolem": {
         "volume": 1.0,
         "pitch": [
