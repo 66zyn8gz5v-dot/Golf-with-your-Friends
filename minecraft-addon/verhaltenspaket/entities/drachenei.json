@@ -68,6 +68,8 @@
         "value": 1.0
       },
       "minecraft:persistent": {},
+      "minecraft:fire_immune": {},
+      "minecraft:freezing_immune": {},
       "minecraft:nameable": {},
       "minecraft:interact": {
         "interactions": [

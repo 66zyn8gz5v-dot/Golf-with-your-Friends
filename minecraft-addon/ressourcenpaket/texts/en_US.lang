@@ -612,6 +612,22 @@ tile.fynn:kobel.name=Squirrel Drey
 tile.fynn:adlerhorst.name=Eagle Eyrie
 tile.fynn:greifennest.name=Griffin Nest
 
+
+
+
+## Drachen
+item.fynn:drachenpfeife=Dragon Whistle
+entity.fynn:eissplitter.name=Ice Shard
+entity.fynn:plasmaschuss.name=Plasma Blast
+item.fynn:drachenpfeife.name=Dragon Whistle
+
+
+## Drachenzucht
+item.fynn:drachenei=Dragon Egg
+entity.fynn:drachenei.name=Dragon Egg
+action.interact.fynn.drachenei=Pick up
+item.fynn:drachenei.name=Dragon Egg
+
 ## Die Tiere
 entity.fynn:braunbaer.name=Brown Bear
 item.spawn_egg.entity.fynn:braunbaer.name=Brown Bear Spawn Egg
@@ -689,15 +705,9 @@ entity.fynn:nachtschwinge.name=Night Fury Dragon
 item.spawn_egg.entity.fynn:nachtschwinge.name=Night Fury Dragon Spawn Egg
 entity.fynn:schlunddrache.name=Maw Dragon
 item.spawn_egg.entity.fynn:schlunddrache.name=Maw Dragon Spawn Egg
-
-## Drachen
-item.fynn:drachenpfeife=Dragon Whistle
-entity.fynn:eissplitter.name=Ice Shard
-entity.fynn:plasmaschuss.name=Plasma Blast
-item.fynn:drachenpfeife.name=Dragon Whistle
-
-## Drachenzucht
-item.fynn:drachenei=Dragon Egg
-entity.fynn:drachenei.name=Dragon Egg
-action.interact.fynn.drachenei=Pick up
-item.fynn:drachenei.name=Dragon Egg
+entity.fynn:dampfdrache.name=Steam Dragon
+item.spawn_egg.entity.fynn:dampfdrache.name=Steam Dragon Spawn Egg
+entity.fynn:sternendrache.name=Star Dragon
+item.spawn_egg.entity.fynn:sternendrache.name=Star Dragon Spawn Egg
+entity.fynn:lavadrache.name=Lava Dragon
+item.spawn_egg.entity.fynn:lavadrache.name=Lava Dragon Spawn Egg

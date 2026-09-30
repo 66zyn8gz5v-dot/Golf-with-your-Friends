@@ -618,6 +618,22 @@ tile.fynn:kobel.name=Kobel
 tile.fynn:adlerhorst.name=Adlerhorst
 tile.fynn:greifennest.name=Greifennest
 
+
+
+
+## Drachen
+item.fynn:drachenpfeife=Drachenpfeife
+entity.fynn:eissplitter.name=Eissplitter
+entity.fynn:plasmaschuss.name=Plasmaschuss
+item.fynn:drachenpfeife.name=Drachenpfeife
+
+
+## Drachenzucht
+item.fynn:drachenei=Drachenei
+entity.fynn:drachenei.name=Drachenei
+action.interact.fynn.drachenei=Aufheben
+item.fynn:drachenei.name=Drachenei
+
 ## Die Tiere
 entity.fynn:braunbaer.name=Braunbär
 item.spawn_egg.entity.fynn:braunbaer.name=Braunbär-Spawn-Ei
@@ -695,15 +711,9 @@ entity.fynn:nachtschwinge.name=Nachtschwinge
 item.spawn_egg.entity.fynn:nachtschwinge.name=Nachtschwinge-Spawn-Ei
 entity.fynn:schlunddrache.name=Schlunddrache
 item.spawn_egg.entity.fynn:schlunddrache.name=Schlunddrache-Spawn-Ei
-
-## Drachen
-item.fynn:drachenpfeife=Drachenpfeife
-entity.fynn:eissplitter.name=Eissplitter
-entity.fynn:plasmaschuss.name=Plasmaschuss
-item.fynn:drachenpfeife.name=Drachenpfeife
-
-## Drachenzucht
-item.fynn:drachenei=Drachenei
-entity.fynn:drachenei.name=Drachenei
-action.interact.fynn.drachenei=Aufheben
-item.fynn:drachenei.name=Drachenei
+entity.fynn:dampfdrache.name=Dampfdrache
+item.spawn_egg.entity.fynn:dampfdrache.name=Dampfdrache-Spawn-Ei
+entity.fynn:sternendrache.name=Sternendrache
+item.spawn_egg.entity.fynn:sternendrache.name=Sternendrache-Spawn-Ei
+entity.fynn:lavadrache.name=Lavadrache
+item.spawn_egg.entity.fynn:lavadrache.name=Lavadrache-Spawn-Ei

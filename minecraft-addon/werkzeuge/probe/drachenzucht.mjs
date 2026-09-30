@@ -73,15 +73,30 @@ function spieler(w, ort) {
         && g.GABENNAMEN[ei.gabe] === "Dampfwelle");
     pruefe("Die Generation zaehlt weiter, das Junge ist staerker", ei.generation === 3 && ei.staerke === 126);
     pruefe("Koerper des einen, Farben des anderen", ei.koerper === "fynn:lindwurm" && ei.farbe === "fynn:frostwyvern");
-    const andersrum = z.mischen(feuer, frost, () => 0.1);
+    const folge = (...w) => { let i = 0; return () => w[Math.min(i++, w.length - 1)]; };
+    const andersrum = z.mischen(feuer, frost, folge(0.3, 0.1));
     pruefe("... oder andersherum", andersrum.koerper === "fynn:frostwyvern" && andersrum.farbe === "fynn:lindwurm");
     const rein = z.mischen(feuer, { ...feuer }, () => 0.9);
     pruefe("Zwei Feuerdrachen: rein, ohne Gabe", rein.koerper === rein.farbe && !rein.gabe);
     pruefe("Uraltes Blut vererbt sich manchmal", z.mischen({ ...feuer, uralt: true }, frost, () => 0.1).uralt
         && !z.mischen({ ...feuer, uralt: true }, frost, () => 0.9).uralt);
+    const neu = z.mischen(feuer, frost, () => 0.1);
+    pruefe("Feuer und Frost: manchmal ein Dampfdrache", neu.koerper === "fynn:dampfdrache" && neu.neueArt
+        && neu.atem === "dampf" && neu.faehigkeit === "geysir" && neu.gabe === "feuer+frost");
+    const himmel = { art: "fynn:himmelsdrache", atem: "sturm", faehigkeit: "blitzschlag", staerke: 110, generation: 1 };
+    const nacht = { art: "fynn:nachtschwinge", atem: "schatten", faehigkeit: "plasma", staerke: 130, generation: 1 };
+    const schlund = { art: "fynn:schlunddrache", atem: "schall", faehigkeit: "schnappen", staerke: 120, generation: 1 };
+    pruefe("Himmel und Nacht: manchmal ein Sternendrache",
+        z.mischen(himmel, nacht, () => 0.1).koerper === "fynn:sternendrache");
+    pruefe("Feuer und Schlund: manchmal ein Lavadrache",
+        z.mischen(feuer, schlund, () => 0.1).koerper === "fynn:lavadrache");
+    pruefe("... aber meistens ein Mischling", !z.mischen(feuer, schlund, () => 0.9).neueArt);
+    pruefe("Lava und Frost vertragen sich nicht", !z.vertraeglich("fynn:frostwyvern", "fynn:lavadrache"));
+    pruefe("Die neuen Arten kennen ihren Atem",
+        ["dampf", "sterne", "lava"].every((a) => d.ATEMARTEN[a]) && ["geysir", "meteor", "lavabomben"].every((f) => d.FAEHIGKEITEN[f]));
     pruefe("Der Himmelsdrache mag den Schlunddrachen nicht",
         !z.vertraeglich("fynn:himmelsdrache", "fynn:schlunddrache") && z.vertraeglich("fynn:lindwurm", "fynn:nachtschwinge"));
-    pruefe("Jedes Atempaar hat eine Gabe", Object.keys(g.GABEN).length === 15
+    pruefe("Jedes Atempaar hat eine Gabe", Object.keys(g.GABEN).length === 36
         && g.gabeFuer("sturm", "feuer") === "feuer+sturm" && !g.gabeFuer("gift", "gift"));
 }
 

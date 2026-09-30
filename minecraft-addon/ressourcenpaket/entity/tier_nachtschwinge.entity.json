@@ -15,7 +15,10 @@
         "misch_himmelsdrache": "textures/entity/tiere/nachtschwinge_misch_himmelsdrache",
         "misch_giftdrache": "textures/entity/tiere/nachtschwinge_misch_giftdrache",
         "misch_nachtschwinge": "textures/entity/tiere/nachtschwinge_misch_nachtschwinge",
-        "misch_schlunddrache": "textures/entity/tiere/nachtschwinge_misch_schlunddrache"
+        "misch_schlunddrache": "textures/entity/tiere/nachtschwinge_misch_schlunddrache",
+        "misch_dampfdrache": "textures/entity/tiere/nachtschwinge_misch_dampfdrache",
+        "misch_sternendrache": "textures/entity/tiere/nachtschwinge_misch_sternendrache",
+        "misch_lavadrache": "textures/entity/tiere/nachtschwinge_misch_lavadrache"
       },
       "geometry": {
         "default": "geometry.fynn.nachtschwinge"
@@ -36,11 +39,19 @@
         "drachenbiss": "animation.fynn.nachtschwinge.drachenbiss",
         "uralt": "animation.fynn.nachtschwinge.uralt",
         "jung": "animation.fynn.nachtschwinge.jung",
+        "jung_hopsen": "animation.fynn.nachtschwinge.jung_hopsen",
+        "jung_flattern": "animation.fynn.nachtschwinge.jung_flattern",
+        "jung_wedeln": "animation.fynn.nachtschwinge.jung_wedeln",
+        "verliebt": "animation.fynn.nachtschwinge.verliebt",
+        "gabe_wirken": "animation.fynn.nachtschwinge.gabe_wirken",
         "misch_lindwurm": "animation.fynn.nachtschwinge.misch_lindwurm",
         "misch_frostwyvern": "animation.fynn.nachtschwinge.misch_frostwyvern",
         "misch_himmelsdrache": "animation.fynn.nachtschwinge.misch_himmelsdrache",
         "misch_giftdrache": "animation.fynn.nachtschwinge.misch_giftdrache",
-        "misch_schlunddrache": "animation.fynn.nachtschwinge.misch_schlunddrache"
+        "misch_schlunddrache": "animation.fynn.nachtschwinge.misch_schlunddrache",
+        "misch_dampfdrache": "animation.fynn.nachtschwinge.misch_dampfdrache",
+        "misch_sternendrache": "animation.fynn.nachtschwinge.misch_sternendrache",
+        "misch_lavadrache": "animation.fynn.nachtschwinge.misch_lavadrache"
       },
       "scripts": {
         "initialize": [
@@ -64,8 +75,8 @@
           "variable.fynn_holen = query.property('fynn:feuer') * math.clamp(variable.fynn_az / 0.25, 0.0, 1.0) * (1.0 - math.clamp((variable.fynn_az - 1.0) / 0.12, 0.0, 1.0));",
           "variable.fynn_speit = query.property('fynn:feuer') * math.clamp((variable.fynn_az - 1.0) / 0.12, 0.0, 1.0);",
           "variable.fynn_ruck = variable.fynn_speit * math.max(0.0, 1.0 - (variable.fynn_az - 1.0) / 0.4);",
-          "variable.fynn_offen_l = math.max(math.max(variable.fynn_bruell, math.clamp(math.sin(math.clamp((variable.fynn_sz - 0.0) / 3.2, 0.0, 1.0) * 180.0) * 1.6, 0.0, 1.0) * variable.fynn_ruhig), variable.fynn_speit * 0.6);",
-          "variable.fynn_offen_r = math.max(math.max(variable.fynn_bruell, math.clamp(math.sin(math.clamp((variable.fynn_sz - 3.8) / 3.2, 0.0, 1.0) * 180.0) * 1.6, 0.0, 1.0) * variable.fynn_ruhig), variable.fynn_speit * 0.6);"
+          "variable.fynn_offen_l = math.max(math.max(math.max(variable.fynn_bruell, math.clamp(math.sin(math.clamp((variable.fynn_sz - 0.0) / 3.2, 0.0, 1.0) * 180.0) * 1.6, 0.0, 1.0) * variable.fynn_ruhig), variable.fynn_speit * 0.6), math.max(query.property('fynn:wirkt'), ((query.property('fynn:wuchs') < 10) * variable.fynn_ruhig * (math.mod(variable.fynn_t, 14.0) >= 5.0 && math.mod(variable.fynn_t, 14.0) < 7.0 ? math.clamp(math.sin((math.mod(variable.fynn_t, 14.0) - 5.0) / 2.0 * 180.0) * 2.0, 0.0, 1.0) : 0.0))));",
+          "variable.fynn_offen_r = math.max(math.max(math.max(variable.fynn_bruell, math.clamp(math.sin(math.clamp((variable.fynn_sz - 3.8) / 3.2, 0.0, 1.0) * 180.0) * 1.6, 0.0, 1.0) * variable.fynn_ruhig), variable.fynn_speit * 0.6), math.max(query.property('fynn:wirkt'), ((query.property('fynn:wuchs') < 10) * variable.fynn_ruhig * (math.mod(variable.fynn_t, 14.0) >= 5.0 && math.mod(variable.fynn_t, 14.0) < 7.0 ? math.clamp(math.sin((math.mod(variable.fynn_t, 14.0) - 5.0) / 2.0 * 180.0) * 2.0, 0.0, 1.0) : 0.0))));"
         ],
         "animate": [
           {
@@ -114,6 +125,21 @@
             "jung": "query.property('fynn:wuchs') < 10"
           },
           {
+            "jung_hopsen": "(query.property('fynn:wuchs') < 10) * variable.fynn_ruhig * (math.mod(variable.fynn_t, 14.0) >= 0.0 && math.mod(variable.fynn_t, 14.0) < 2.2 ? math.clamp(math.sin((math.mod(variable.fynn_t, 14.0) - 0.0) / 2.2 * 180.0) * 2.0, 0.0, 1.0) : 0.0)"
+          },
+          {
+            "jung_flattern": "(query.property('fynn:wuchs') < 10) * variable.fynn_ruhig * (math.mod(variable.fynn_t, 14.0) >= 5.0 && math.mod(variable.fynn_t, 14.0) < 7.0 ? math.clamp(math.sin((math.mod(variable.fynn_t, 14.0) - 5.0) / 2.0 * 180.0) * 2.0, 0.0, 1.0) : 0.0)"
+          },
+          {
+            "jung_wedeln": "(query.property('fynn:wuchs') < 10) * variable.fynn_ruhig * (math.mod(variable.fynn_t, 14.0) >= 9.0 && math.mod(variable.fynn_t, 14.0) < 11.6 ? math.clamp(math.sin((math.mod(variable.fynn_t, 14.0) - 9.0) / 2.6 * 180.0) * 2.0, 0.0, 1.0) : 0.0)"
+          },
+          {
+            "verliebt": "query.property('fynn:verliebt') * variable.fynn_ruhig"
+          },
+          {
+            "gabe_wirken": "query.property('fynn:wirkt')"
+          },
+          {
             "misch_lindwurm": "query.property('fynn:misch') == 1"
           },
           {
@@ -127,6 +153,15 @@
           },
           {
             "misch_schlunddrache": "query.property('fynn:misch') == 6"
+          },
+          {
+            "misch_dampfdrache": "query.property('fynn:misch') == 7"
+          },
+          {
+            "misch_sternendrache": "query.property('fynn:misch') == 8"
+          },
+          {
+            "misch_lavadrache": "query.property('fynn:misch') == 9"
           },
           {
             "jung": "query.is_baby"

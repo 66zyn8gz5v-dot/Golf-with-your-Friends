@@ -2608,6 +2608,190 @@
         }
       }
     },
+    "animation.fynn.frostwyvern.jung_hopsen": {
+      "loop": true,
+      "bones": {
+        "rumpf": {
+          "position": [
+            0.0,
+            "math.abs(math.sin(variable.fynn_t * 540.0)) * 2.5",
+            0.0
+          ],
+          "rotation": [
+            "-math.sin(variable.fynn_t * 540.0) * 6.0",
+            0.0,
+            0.0
+          ]
+        },
+        "schwanz1": {
+          "rotation": [
+            8.0,
+            "math.sin(variable.fynn_t * 900.0) * 20.0",
+            0.0
+          ]
+        },
+        "kopf": {
+          "rotation": [
+            15.0,
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.frostwyvern.jung_flattern": {
+      "loop": true,
+      "bones": {
+        "rumpf": {
+          "position": [
+            0.0,
+            "math.abs(math.sin(variable.fynn_t * 800.0)) * 1.2",
+            0.0
+          ]
+        },
+        "fluegel_links": {
+          "rotation": [
+            0.0,
+            0.0,
+            "-30.0 + math.sin(variable.fynn_t * 1600.0) * 35.0"
+          ]
+        },
+        "fluegel_rechts": {
+          "rotation": [
+            0.0,
+            0.0,
+            "30.0 - math.sin(variable.fynn_t * 1600.0) * 35.0"
+          ]
+        },
+        "kopf": {
+          "rotation": [
+            -15.0,
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.frostwyvern.jung_wedeln": {
+      "loop": true,
+      "bones": {
+        "schwanz1": {
+          "rotation": [
+            0.0,
+            "math.sin(variable.fynn_t * 700.0 - 40) * 18.0",
+            0.0
+          ]
+        },
+        "schwanz2": {
+          "rotation": [
+            0.0,
+            "math.sin(variable.fynn_t * 700.0 - 80) * 18.0",
+            0.0
+          ]
+        },
+        "schwanz3": {
+          "rotation": [
+            0.0,
+            "math.sin(variable.fynn_t * 700.0 - 120) * 18.0",
+            0.0
+          ]
+        },
+        "kopf": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(variable.fynn_t * 200.0) * 14.0"
+          ]
+        }
+      }
+    },
+    "animation.fynn.frostwyvern.verliebt": {
+      "loop": true,
+      "bones": {
+        "schwanz1": {
+          "rotation": [
+            0.0,
+            "math.sin(variable.fynn_t * 400.0 - 40) * 12.0",
+            0.0
+          ]
+        },
+        "schwanz2": {
+          "rotation": [
+            0.0,
+            "math.sin(variable.fynn_t * 400.0 - 80) * 12.0",
+            0.0
+          ]
+        },
+        "schwanz3": {
+          "rotation": [
+            0.0,
+            "math.sin(variable.fynn_t * 400.0 - 120) * 12.0",
+            0.0
+          ]
+        },
+        "kopf": {
+          "rotation": [
+            18.0,
+            0.0,
+            "math.sin(variable.fynn_t * 150.0) * 14.0"
+          ]
+        },
+        "hals1": {
+          "rotation": [
+            10.0,
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.frostwyvern.gabe_wirken": {
+      "loop": true,
+      "bones": {
+        "rumpf": {
+          "rotation": [
+            "-14.0 * (1.0 - query.property('fynn:fliegt'))",
+            0.0,
+            0.0
+          ]
+        },
+        "hals1": {
+          "rotation": [
+            -15.0,
+            0.0,
+            0.0
+          ]
+        },
+        "fluegel_links": {
+          "rotation": [
+            0.0,
+            -10.0,
+            -45.0
+          ]
+        },
+        "fluegel_rechts": {
+          "rotation": [
+            0.0,
+            10.0,
+            45.0
+          ]
+        },
+        "kopf": {
+          "rotation": [
+            -20.0,
+            0.0,
+            0.0
+          ]
+        },
+        "kiefer": {
+          "rotation": [
+            "35.0 + math.sin(variable.fynn_t * 900.0) * 3.0",
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
     "animation.fynn.frostwyvern.misch_lindwurm": {
       "loop": true,
       "bones": {
@@ -2675,6 +2859,68 @@
         },
         "hals1": {
           "scale": 0.9
+        }
+      }
+    },
+    "animation.fynn.frostwyvern.misch_dampfdrache": {
+      "loop": true,
+      "bones": {
+        "bein_hinten_links": {
+          "scale": [
+            0.9,
+            1.12,
+            0.9
+          ]
+        },
+        "bein_hinten_rechts": {
+          "scale": [
+            0.9,
+            1.12,
+            0.9
+          ]
+        },
+        "kopf": {
+          "scale": 0.94
+        }
+      }
+    },
+    "animation.fynn.frostwyvern.misch_sternendrache": {
+      "loop": true,
+      "bones": {
+        "fluegel_links": {
+          "scale": 1.1
+        },
+        "fluegel_rechts": {
+          "scale": 1.1
+        },
+        "schwanz1": {
+          "scale": [
+            0.9,
+            0.9,
+            1.2
+          ]
+        }
+      }
+    },
+    "animation.fynn.frostwyvern.misch_lavadrache": {
+      "loop": true,
+      "bones": {
+        "kopf": {
+          "scale": 1.12
+        },
+        "bein_hinten_links": {
+          "scale": [
+            1.15,
+            0.95,
+            1.15
+          ]
+        },
+        "bein_hinten_rechts": {
+          "scale": [
+            1.15,
+            0.95,
+            1.15
+          ]
         }
       }
     }

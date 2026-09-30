@@ -578,6 +578,39 @@ EIER = {
         },
         "farben": {"y": "#ffe86a", "R": "#3a0e14", "Z": "#f4eedc"},
     },
+    # Die Drachen aus der Zucht (5.2).
+    "dampfdrache": {
+        "oben": "#d8d4cc", "unten": "#f4ece0", "teilung": 11,
+        "karte": {
+            2: "....KK....KK....",
+            3: "....KK....KK....",
+            6: ".....t....t.....",
+            8: "..KKKKKKKKKKKK..",
+        },
+        "farben": {"K": "#c87a3a", "t": "#5affe8"},
+    },
+    "sternendrache": {
+        "oben": "#2a2a5a", "unten": "#6a4aa8", "teilung": 11,
+        "karte": {
+            2: ".......W........",
+            3: "......WWW.......",
+            4: ".......W........",
+            6: ".....y....y.....",
+            9: "..V..........V..",
+            10: ".VV..........VV.",
+        },
+        "farben": {"W": "#ffffff", "y": "#fff4a0", "V": "#c8b0ff"},
+    },
+    "lavadrache": {
+        "oben": "#3a3230", "unten": "#e0601a", "teilung": 10,
+        "karte": {
+            2: "...BBBBBBBBBB...",
+            5: ".....o....o.....",
+            7: "..L...L..L...L..",
+            8: "...L.L....L.L...",
+        },
+        "farben": {"B": "#1e1a1a", "o": "#ffc21a", "L": "#ff7a1a"},
+    },
     # Zweite Fantasy-Welle (4.81).
     "glutskorpion": {
         "oben": "#2a2226", "flecken": ("#3e3438", 0.25),

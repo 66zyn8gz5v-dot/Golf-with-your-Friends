@@ -94,6 +94,9 @@ def ei_verhalten():
             "minecraft:pushable": {"is_pushable": False, "is_pushable_by_piston": True},
             "minecraft:knockback_resistance": {"value": 1.0},
             "minecraft:persistent": {},
+            # Es liegt ja gerade an Feuer, Lava oder im Schnee.
+            "minecraft:fire_immune": {},
+            "minecraft:freezing_immune": {},
             "minecraft:nameable": {},
             "minecraft:interact": {"interactions": [{
                 "on_interact": {"filters": {"test": "is_family", "subject": "other", "value": "player"}},

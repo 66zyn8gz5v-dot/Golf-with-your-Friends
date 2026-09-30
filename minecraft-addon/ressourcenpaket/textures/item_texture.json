@@ -658,6 +658,15 @@
     },
     "drachenei": {
       "textures": "textures/items/drachenei"
+    },
+    "dampfdrache_ei": {
+      "textures": "textures/items/dampfdrache_ei"
+    },
+    "sternendrache_ei": {
+      "textures": "textures/items/sternendrache_ei"
+    },
+    "lavadrache_ei": {
+      "textures": "textures/items/lavadrache_ei"
     }
   }
 }

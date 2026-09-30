@@ -347,6 +347,7 @@ SCHALTER = {
     "fynn:wolf": "Wolfsgestalt", "fynn:wandelt": "Verwandelt sich", "fynn:schlaeft": "Schläft",
     "fynn:fliegt": "Fliegt", "fynn:besiegt": "Besiegt", "fynn:uralt": "Uralt (riesig, selten)", "fynn:wartet": "Platz (bleib hier)",
     "fynn:erz": "Erz", "fynn:wurf": "Steinwurf", "fynn:links": "Wirft mit links",
+    "fynn:wuchs": "Wachstum", "fynn:verliebt": "Verliebt", "fynn:wirkt": "Wirkt seine Gabe",
 }
 
 

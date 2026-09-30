@@ -902,6 +902,69 @@
             "volume": 1.0
           }
         }
+      },
+      "fynn:dampfdrache": {
+        "volume": 1.0,
+        "pitch": [
+          1.1,
+          1.3
+        ],
+        "events": {
+          "ambient": {
+            "sound": "mob.enderdragon.growl",
+            "volume": 1.0
+          },
+          "hurt": {
+            "sound": "mob.enderdragon.hit",
+            "volume": 1.0
+          },
+          "death": {
+            "sound": "mob.ravager.death",
+            "volume": 1.0
+          }
+        }
+      },
+      "fynn:sternendrache": {
+        "volume": 1.0,
+        "pitch": [
+          0.8,
+          1.0
+        ],
+        "events": {
+          "ambient": {
+            "sound": "mob.phantom.idle",
+            "volume": 1.0
+          },
+          "hurt": {
+            "sound": "mob.phantom.hurt",
+            "volume": 1.0
+          },
+          "death": {
+            "sound": "mob.phantom.death",
+            "volume": 1.0
+          }
+        }
+      },
+      "fynn:lavadrache": {
+        "volume": 1.0,
+        "pitch": [
+          0.6,
+          0.8
+        ],
+        "events": {
+          "ambient": {
+            "sound": "mob.enderdragon.growl",
+            "volume": 1.0
+          },
+          "hurt": {
+            "sound": "mob.enderdragon.hit",
+            "volume": 1.0
+          },
+          "death": {
+            "sound": "mob.ravager.death",
+            "volume": 1.0
+          }
+        }
       }
     }
   }

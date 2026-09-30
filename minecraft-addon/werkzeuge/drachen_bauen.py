@@ -106,6 +106,10 @@ ATEMFARBEN = {
     "giftatem": {"0.0": "#FFE8FFB0", "0.2": "#FFB8F050", "0.5": "#E080C830", "0.8": "#A0507A28", "1.0": "#00384A20"},
     # Der Schattenatem der Nachtschwinge (4.96): violett, dann schwarz.
     "schattenatem": {"0.0": "#FFE8C8FF", "0.2": "#FFA060F0", "0.5": "#E04A1A8A", "0.8": "#A01A0A2A", "1.0": "#00000000"},
+    # Die Arten aus der Zucht (5.2): Dampf weiss, Sterne violett-weiss, Lava glutrot.
+    "dampfatem": {"0.0": "#FFFFFFFF", "0.3": "#E0F0F4F8", "0.7": "#90D0D8E0", "1.0": "#00B0B8C0"},
+    "sternenatem": {"0.0": "#FFFFFFFF", "0.2": "#FFE8E0FF", "0.5": "#E0A080FF", "1.0": "#004020A0"},
+    "lavaatem": {"0.0": "#FFFFF0A0", "0.2": "#FFFFA030", "0.5": "#E0E05010", "0.8": "#A0501810", "1.0": "#00201010"},
 }
 
 # Der Plasmaschuss (4.96): eine violett gluehende Kugel.
@@ -174,6 +178,18 @@ ATEMFORMEN = {
                                 "math.cos(variable.particle_age * 430.0 + variable.particle_random_3 * 360.0) * 9.0",
                                 "math.sin(variable.particle_age * 470.0 + variable.particle_random_1 * 360.0) * 9.0"],
                      "bremse": 1.2, "groesse": "math.max(0.06, 0.55 - variable.particle_age * 0.3)"},
+    # Dampf: breit und kurz, er steigt und quillt auf.
+    "dampfatem": {"streuung": 0.6, "rate": 170, "tempo": "9.0 + variable.particle_random_1 * 3.0",
+                  "leben": "0.9 + variable.particle_random_4 * 0.3", "beschl": [0, 4.0, 0], "bremse": 2.2,
+                  "groesse": "0.3 + variable.particle_age * 3.2"},
+    # Sterne: ein gerader, schmaler, sehr schneller Strahl.
+    "sternenatem": {"streuung": 0.05, "rate": 260, "tempo": "30.0 + variable.particle_random_1 * 4.0",
+                    "leben": "0.45 + variable.particle_random_4 * 0.15", "beschl": [0, 0, 0], "bremse": 0.3,
+                    "groesse": "0.12 + variable.particle_age * 0.4"},
+    # Lava: schwere Batzen im Bogen.
+    "lavaatem": {"streuung": 0.25, "rate": 90, "tempo": "14.0 + variable.particle_random_1 * 3.0",
+                 "leben": "1.1 + variable.particle_random_4 * 0.3", "beschl": [0, -12.0, 0], "bremse": 0.5,
+                 "groesse": "0.4 + variable.particle_age * 0.5"},
 }
 
 
@@ -207,6 +223,9 @@ GABENFARBEN = {
     "gift":     ("#FFD8FF60", "#E070C030", "#00305018", 0.3),
     "schatten": ("#FFD0A0FF", "#E05020A0", "#00100418", 0.2),
     "schall":   ("#FFFFF4C8", "#D0A0E8D0", "#004060A0", 0.4),
+    "dampf":    ("#FFFFFFFF", "#D0E8F0F4", "#0090A0A8", 1.4),
+    "sterne":   ("#FFFFFFFF", "#F0C8B8FF", "#006040C0", 0.1),
+    "lava":     ("#FFFFE080", "#F0FF6010", "#00401008", -0.8),
 }
 
 

@@ -18,6 +18,7 @@ ARTEN in scripts/drachenzucht.js: Die Nummer steht in fynn:misch (+1).
 
 import drachen_gestalt as dg
 import drachen_klotz as dk
+import drachen_neu as dn
 import haut as H
 from tiermodell import mische
 
@@ -29,9 +30,14 @@ ARTEN = [
     ("giftdrache", "giftdrache", dk.GIFTDRACHE_FARBEN),
     ("nachtschwinge", "nachtschwinge", dk.NACHTSCHWINGE_FARBEN),
     ("schlunddrache", "schlunddrache", dk.SCHLUNDDRACHE_FARBEN),
+    # Die Arten aus der Zucht (5.2, drachen_neu.py).
+    ("dampfdrache", "dampfdrache", dn.DAMPFDRACHE_FARBEN),
+    ("sternendrache", "sternendrache", dn.STERNENDRACHE_FARBEN),
+    ("lavadrache", "lavadrache", dn.LAVADRACHE_FARBEN),
 ]
 NAMEN = {"lindwurm": "Feuerdrache", "frostwyvern": "Frostwyvern", "himmelsdrache": "Himmelsdrache",
-         "giftdrache": "Giftdrache", "nachtschwinge": "Nachtschwinge", "schlunddrache": "Schlunddrache"}
+         "giftdrache": "Giftdrache", "nachtschwinge": "Nachtschwinge", "schlunddrache": "Schlunddrache",
+         "dampfdrache": "Dampfdrache", "sternendrache": "Sternendrache", "lavadrache": "Lavadrache"}
 VOM_ANDEREN = ("ruecken", "fleck", "haut", "hautfleck", "augen", "glut", "horn")
 
 
@@ -224,8 +230,55 @@ def _knochenkranz(m, vor, stoff):
         b.kasten([cx - 1, hi[1] - 1, z], [2, 6, 2], stoff, drehung=[-45, 0, 0], drehpunkt=[cx, hi[1] - 1, z + 1])
 
 
+def _ruecken_reihe(m, vor, n):
+    """Wo auf dem Ruecken Platz ist: n Stellen von vorn nach hinten."""
+    r = _knoch(m, f"{vor}_ruecken", "rumpf")
+    lo, hi = _kasten(m.finde("rumpf"))
+    laenge = hi[2] - lo[2]
+    return r, hi[1], [lo[2] + 2 + i * (laenge - 6) / max(1, n - 1) for i in range(n)]
+
+
+def _schlote(m, vor, stoff):
+    """Dampfdrache: zwei Paar Dampfschlote hinter den Schultern."""
+    r, oben, orte = _ruecken_reihe(m, vor, 4)
+    for z in orte[:2]:
+        for x in (2.5, -2.5):
+            r.kasten([x - 1, oben - 1, z], [2, 4, 2], stoff)
+            r.kasten([x - 1.5, oben + 2.5, z - 0.5], [3, 1, 3], stoff + "_glut")
+
+
+def _sternkristalle(m, vor, stoff):
+    """Sternendrache: leuchtende Kristalle den Ruecken entlang, ein Stern auf der Stirn."""
+    r, oben, orte = _ruecken_reihe(m, vor, 5)
+    for i, z in enumerate(orte):
+        h = (5, 7, 6, 5, 4)[i]
+        r.kasten([-1, oben - 1, z], [2, round(h * 0.6), 2], stoff, drehung=[-22, 0, 0], drehpunkt=[0, oben - 1, z + 1])
+        r.kasten([-0.5, oben - 1 + round(h * 0.6) - 0.5, z + 0.5], [1, round(h * 0.5), 1], stoff,
+                 drehung=[-22, 0, 0], drehpunkt=[0, oben - 1, z + 1])
+    for kopf in _koepfe(m):
+        lo, hi = _kasten(kopf)
+        cx = (lo[0] + hi[0]) / 2
+        b = _knoch(m, f"{vor}_kopf{kopf.name[4:]}", kopf.name)
+        b.kasten([cx - 1, hi[1] - 1, lo[2] + (hi[2] - lo[2]) * 0.45], [2, 2, 2], stoff)
+
+
+def _basaltpanzer(m, vor, stoff):
+    """Lavadrache: breite Basaltplatten auf dem Ruecken, ein Stirnpanzer."""
+    r, oben, orte = _ruecken_reihe(m, vor, 3)
+    lo, hi = _kasten(m.finde("rumpf"))
+    breit = hi[0] - lo[0]
+    for z in orte:
+        r.kasten([-(breit - 2) / 2, oben - 0.5, z], [breit - 2, 2, 5], stoff)
+        r.kasten([-0.5, oben + 1, z + 1], [1, 4, 3], stoff, drehung=[-30, 0, 0], drehpunkt=[0, oben + 1, z + 2.5])
+    for kopf in _koepfe(m):
+        klo, khi = _kasten(kopf)
+        b = _knoch(m, f"{vor}_kopf{kopf.name[4:]}", kopf.name)
+        b.kasten([klo[0] - 0.5, khi[1] - 1.5, khi[2] - 8], [khi[0] - klo[0] + 1, 2, 6], stoff)
+
+
 ERBTEILE = {"lindwurm": _klingen, "frostwyvern": _eiszacken, "himmelsdrache": _maehne,
-            "giftdrache": _kragen, "nachtschwinge": _sichel, "schlunddrache": _knochenkranz}
+            "giftdrache": _kragen, "nachtschwinge": _sichel, "schlunddrache": _knochenkranz,
+            "dampfdrache": _schlote, "sternendrache": _sternkristalle, "lavadrache": _basaltpanzer}
 
 
 def erbteile(m, eigene_art):
@@ -266,6 +319,15 @@ def erbe_farbe(stoff, p, n, texel):
         k = H.kasten_von(texel)
         rand = k is not None and abs(n[2]) > 0.5 and p[1] - k.ursprung[1] > k.groesse[1] - 2
         return H.farbe(f["stachel"]) if rand else H.verlauf([f["hautfleck"], f["haut"]], t, 3)
+    if art == "sternendrache":
+        return H.verlauf([f["maehne"][0], f["glut"], "#ffffff"], t, 3) + (254,)
+    if art == "dampfdrache" and stoff.endswith("_glut"):
+        return H.farbe(f["horn"][1]) if n[1] <= 0.5 else H.farbe(f["glut"]) + (254,)
+    if art == "lavadrache":
+        k = H.kasten_von(texel)
+        if k is not None and abs(n[1]) < 0.5 and p[1] - k.ursprung[1] < 0.8:
+            return H.farbe(f["glut"]) + (254,)
+        return H.verlauf([H.dunkler(f["ruecken"], 0.2), f["ruecken"], f["horn"][1]], t, 3)
     return H.verlauf(list(f["horn"]), t, 3)
 
 

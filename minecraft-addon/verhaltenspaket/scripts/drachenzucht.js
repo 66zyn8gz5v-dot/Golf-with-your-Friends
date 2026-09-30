@@ -38,7 +38,7 @@ const { world, system } = mc;
 // (werkzeuge/drachen_misch.py, ARTEN) - fynn:misch und fynn:koerper sind
 // Nummern darin.
 export const ARTEN = ["fynn:lindwurm", "fynn:frostwyvern", "fynn:himmelsdrache", "fynn:giftdrache",
-    "fynn:nachtschwinge", "fynn:schlunddrache"];
+    "fynn:nachtschwinge", "fynn:schlunddrache", "fynn:dampfdrache", "fynn:sternendrache", "fynn:lavadrache"];
 export const EI = "fynn:drachenei";
 
 export const ZUCHT = {
@@ -57,15 +57,24 @@ export const ZUCHT = {
 export const STAERKE = {
     "fynn:lindwurm": 120, "fynn:frostwyvern": 100, "fynn:himmelsdrache": 110, "fynn:giftdrache": 100,
     "fynn:nachtschwinge": 130, "fynn:schlunddrache": 120,
+    "fynn:dampfdrache": 135, "fynn:sternendrache": 145, "fynn:lavadrache": 150,
 };
 
 export const UNVERTRAEGLICH = [
     ["fynn:himmelsdrache", "fynn:schlunddrache"],
     ["fynn:himmelsdrache", "fynn:giftdrache"],
+    // Glut und Eis vertragen sich nicht - und der Sternendrache hat fuer den
+    // schweren Lavadrachen nichts uebrig.
+    ["fynn:lavadrache", "fynn:frostwyvern"],
+    ["fynn:sternendrache", "fynn:lavadrache"],
 ];
 
-// Paare, aus denen selten eine neue Art schluepft (werden in 5.2 ergaenzt).
-export const NEUE_ARTEN = {};
+// Paare, aus denen manchmal eine ganz neue Art schluepft (jedes vierte Ei).
+export const NEUE_ARTEN = {
+    "fynn:frostwyvern+fynn:lindwurm": { art: "fynn:dampfdrache", chance: 0.25 },
+    "fynn:himmelsdrache+fynn:nachtschwinge": { art: "fynn:sternendrache", chance: 0.25 },
+    "fynn:lindwurm+fynn:schlunddrache": { art: "fynn:lavadrache", chance: 0.25 },
+};
 
 // Welche Eier es kalt brauchen statt warm.
 export const KALTE_EIER = new Set(["fynn:frostwyvern"]);
@@ -186,11 +195,16 @@ export function fuettern(drache, spieler, jetzt) {
         return "ruht";
     }
     verliebt.set(drache.id, { drache, bis: jetzt + ZUCHT.liebe });
+    try { drache.setProperty("fynn:verliebt", true); } catch (e) { /* egal */ }
     herzen(dim, drache.location, 7);
     try { dim.playSound("mob.enderdragon.growl", drache.location, { volume: 1, pitch: 1.6 }); } catch (e) { /* egal */ }
     verbrauchen(spieler);
     spieler.onScreenDisplay?.setActionBar(`§d${name(drache.typeId)} ist verliebt! §7Jetzt noch ein zweiter Drache in der Nähe.`);
     return "verliebt";
+}
+
+function entlieben(d) {
+    try { if (lebt(d)) d.setProperty("fynn:verliebt", false); } catch (e) { /* egal */ }
 }
 
 export function istVerliebt(d, jetzt) {
@@ -201,13 +215,19 @@ export function istVerliebt(d, jetzt) {
 /** Wer verliebt ist und einen verliebten Partner in der Naehe hat: paaren. */
 export function paarTakt(jetzt, zufall = Math.random) {
     const liste = [...verliebt.values()].filter((v) => jetzt < v.bis && lebt(v.drache));
-    for (const [id, v] of verliebt) if (!liste.includes(v)) verliebt.delete(id);
+    for (const [id, v] of verliebt) {
+        if (liste.includes(v)) continue;
+        verliebt.delete(id);
+        entlieben(v.drache);
+    }
     for (let i = 0; i < liste.length; i++) {
         for (let j = i + 1; j < liste.length; j++) {
             const a = liste[i].drache, b = liste[j].drache;
             if (a.dimension !== b.dimension || weite(a.location, b.location) > ZUCHT.weite) continue;
             verliebt.delete(a.id);
             verliebt.delete(b.id);
+            entlieben(a);
+            entlieben(b);
             if (!vertraeglich(a.typeId, b.typeId)) {
                 leiste(a.dimension, a.location,
                     `§cDer ${name(a.typeId)} und der ${name(b.typeId)} mögen sich nicht – sie passen nicht zusammen.`);
@@ -472,6 +492,28 @@ world.afterEvents.playerInteractWithBlock.subscribe((e) => {
     }
 });
 
+// Die Arten aus der Zucht zeigen, was sie sind: Aus den Schloten des
+// Dampfdrachen steigt Dampf, vom Lavadrachen tropft Glut, um den
+// Sternendrachen glitzert es.
+const SCHEIN = {
+    "fynn:dampfdrache": ["fynn:gabe_dampf", 1.8, -0.4],
+    "fynn:lavadrache": ["minecraft:lava_particle", 1.2, 0.3],
+    "fynn:sternendrache": ["fynn:gabe_sterne", 1.4, 0.8],
+};
+export function umgebung(d) {
+    const s = SCHEIN[d.typeId];
+    if (!s) return false;
+    const [teil, hoch, zurueck] = s;
+    const g = (wuchsVon(d) < WUCHS ? 0.3 + 0.07 * wuchsVon(d) : 1) * (DRACHEN[d.typeId]?.groesse ?? 1);
+    let b = { x: 0, z: 1 };
+    try { const v = d.getViewDirection(); const l = Math.hypot(v.x, v.z) || 1; b = { x: v.x / l, z: v.z / l }; } catch (e) { /* egal */ }
+    const o = d.location;
+    try {
+        d.dimension.spawnParticle(teil, { x: o.x - b.x * zurueck * g, y: o.y + hoch * g, z: o.z - b.z * zurueck * g });
+    } catch (e) { return false; }
+    return true;
+}
+
 // Was drachen.js von der Zucht wissen will: im Sattel geht die Pfeife
 // zuerst an die Gabe, und wer seinen Drachen antippt, erfaehrt sein Erbe.
 zusatz.pfeife = (drache, spieler, jetzt, richtung) => {
@@ -508,6 +550,7 @@ system.runInterval(() => {
                         if (wuchsVon(d) < WUCHS) wachsTakt(d);
                         else gabeImKampf(d, jetzt);
                         if (r % 2 === 0 && istVerliebt(d, jetzt)) herzen(d.dimension, d.location, 2);
+                        if (r % 2 === 1) umgebung(d);
                     } catch (f) { /* egal */ }
                 }
             }

@@ -50,9 +50,19 @@
           "type": "int",
           "range": [
             0,
-            6
+            15
           ],
           "default": 0,
+          "client_sync": true
+        },
+        "fynn:verliebt": {
+          "type": "bool",
+          "default": false,
+          "client_sync": true
+        },
+        "fynn:wirkt": {
+          "type": "bool",
+          "default": false,
           "client_sync": true
         }
       }

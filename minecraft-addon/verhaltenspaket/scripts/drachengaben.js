@@ -32,6 +32,7 @@ const { world, system } = mc;
 export const ATEMNAMEN = {
     feuer: "Feueratem", frost: "Frosthauch", sturm: "Sturmatem", gift: "Giftatem",
     schatten: "Schattenatem", schall: "Schallbrüllen",
+    dampf: "Dampfatem", sterne: "Sternenstrahl", lava: "Lavaatem",
 };
 
 // Paar der Atemarten (sortiert) -> Gabe.
@@ -51,6 +52,28 @@ export const GABEN = {
     "gift+schatten":   { name: "Fluchnebel", form: "wolke" },
     "gift+schall":     { name: "Sporenknall", form: "welle" },
     "schall+schatten": { name: "Schattenregen", form: "regen" },
+    // Mit den Atemarten der Arten aus der Zucht: Dampf, Sterne, Lava.
+    "dampf+feuer":     { name: "Siedewelle", form: "welle" },
+    "dampf+frost":     { name: "Nebelsturm", form: "wirbel" },
+    "dampf+sturm":     { name: "Dampfwirbel", form: "wirbel" },
+    "dampf+gift":      { name: "Faulnebel", form: "wolke" },
+    "dampf+schatten":  { name: "Geisternebel", form: "wolke" },
+    "dampf+schall":    { name: "Kesselknall", form: "welle" },
+    "dampf+sterne":    { name: "Nebelsterne", form: "regen" },
+    "dampf+lava":      { name: "Geysirfeld", form: "regen" },
+    "feuer+sterne":    { name: "Sonnenregen", form: "regen" },
+    "frost+sterne":    { name: "Kometenhagel", form: "regen" },
+    "sterne+sturm":    { name: "Sternenkette", form: "kette" },
+    "gift+sterne":     { name: "Irrlichtschwarm", form: "wolke" },
+    "schatten+sterne": { name: "Sonnenfinsternis", form: "wolke" },
+    "schall+sterne":   { name: "Himmelsglocke", form: "welle" },
+    "lava+sterne":     { name: "Meteorschauer", form: "regen" },
+    "feuer+lava":      { name: "Vulkanregen", form: "regen" },
+    "frost+lava":      { name: "Obsidianwelle", form: "welle" },
+    "lava+sturm":      { name: "Feuertornado", form: "wirbel" },
+    "gift+lava":       { name: "Schwefelwolke", form: "wolke" },
+    "lava+schatten":   { name: "Höllenschlund", form: "wirbel" },
+    "lava+schall":     { name: "Erdbeben", form: "welle" },
 };
 export const GABENNAMEN = Object.fromEntries(Object.entries(GABEN).map(([k, g]) => [k, g.name]));
 
@@ -85,6 +108,15 @@ function wirkung(el, ziel, quelle, st, von) {
                 ziel.addEffect("wither", Math.round(40 * st), { amplifier: 0, showParticles: true });
                 break;
             case "schall": ziel.addEffect("nausea", 100, { amplifier: 0, showParticles: false }); break;
+            case "dampf":
+                ziel.addEffect("blindness", 40, { amplifier: 0, showParticles: false });
+                ziel.applyDamage(Math.round(2 * st), { cause: "fire", damagingEntity: quelle });
+                break;
+            case "sterne": ziel.addEffect("levitation", Math.round(30 * st), { amplifier: 0, showParticles: true }); break;
+            case "lava":
+                ziel.setOnFire(Math.round(7 * st), true);
+                ziel.addEffect("slowness", 40, { amplifier: 1, showParticles: false });
+                break;
             default: break;
         }
     } catch (e) { /* manche Wesen haben keine Effekte */ }
@@ -267,6 +299,11 @@ export function gabeWirken(drache, ziel, jetzt, zufall = Math.random) {
     laufend.push(g);
     pausen.set(drache.id, jetzt + GABE_PAUSE[0] + Math.floor(zufall() * (GABE_PAUSE[1] - GABE_PAUSE[0])));
     try { drache.dimension.playSound("mob.enderdragon.growl", drache.location, { volume: 3, pitch: 0.7 }); } catch (e) { /* egal */ }
+    // Anderthalb Sekunden baeumt er sich auf (die Bewegung gabe_wirken).
+    try {
+        drache.setProperty("fynn:wirkt", true);
+        system.runTimeout(() => { try { if (lebt(drache)) drache.setProperty("fynn:wirkt", false); } catch (e) { /* egal */ } }, 30);
+    } catch (e) { /* egal */ }
     return gabe.name;
 }
 

@@ -125,9 +125,12 @@ def vorher(atemfluegel=0.0):
     """Was das Spiel je Bild vorab rechnet. atemfluegel: wie weit die Art
     beim Speien die Schwingen oeffnet (der Frostwyvern reisst sie ganz auf,
     der Lindwurm halb) - das Oeffnen selbst tut der Stand (OFFEN)."""
+    # Dazu (5.2): Wer eine Gabe wirkt, reisst die Schwingen auf, und ein
+    # Junges breitet sie fuer seinen Flatterversuch aus.
+    auf = f"math.max(query.property('fynn:wirkt'), {JUNG_FLATTERN})"
     return VORHER + [
-        f"{OFFEN['links']} = math.max(math.max({BRUELL}, {strecken(0.0)}), {SPEIT} * {atemfluegel});",
-        f"{OFFEN['rechts']} = math.max(math.max({BRUELL}, {strecken(3.8)}), {SPEIT} * {atemfluegel});",
+        f"{OFFEN['links']} = math.max(math.max(math.max({BRUELL}, {strecken(0.0)}), {SPEIT} * {atemfluegel}), {auf});",
+        f"{OFFEN['rechts']} = math.max(math.max(math.max({BRUELL}, {strecken(3.8)}), {SPEIT} * {atemfluegel}), {auf});",
     ]
 SCHLAEFT = "query.property('fynn:schlaeft') * (1.0 - query.property('fynn:besiegt'))"
 BESIEGT = "query.property('fynn:besiegt')"
@@ -137,7 +140,10 @@ BESIEGT = "query.property('fynn:besiegt')"
 # in der Pixelschmiede.
 ATEMARTEN = {"feuer": ("Feueratem", "feueratem"), "frost": ("Frosthauch", "frosthauch"),
              "blitz": ("Sturmhauch", "sturmhauch"), "gift": ("Giftodem", "giftodem"),
-             "schatten": ("Schattenatem", "schattenatem"), "schall": ("Schallbrüllen", "schallbruellen")}
+             "schatten": ("Schattenatem", "schattenatem"), "schall": ("Schallbrüllen", "schallbruellen"),
+             # Nur die Arten aus der Zucht (5.2).
+             "dampf": ("Dampfatem", "dampfatem"), "sterne": ("Sternenstrahl", "sternenstrahl"),
+             "lava": ("Lavaatem", "lavaatem")}
 
 
 def atem_posen(art, hals, schwanz, stuetzt=False):
@@ -723,7 +729,71 @@ MISCHGESTALT = {
     "giftdrache": {**_alle(HAELSE, [1.15, 1.15, 1.0]), **_alle(KOEPFE, 1.06)},
     "nachtschwinge": {**_alle(SCHWINGEN, 1.16), **_alle(KOEPFE, [0.9, 0.92, 1.05])},
     "schlunddrache": {**_alle(KOEPFE, 1.22), **_alle(HAELSE, 0.9)},
+    # Die Arten aus der Zucht: vom Dampfdrachen die hohen Beine, vom
+    # Sternendrachen der lange Schwanz und weite Schwingen, vom Lavadrachen
+    # der wuchtige Kopf und staemmige Beine.
+    "dampfdrache": {**_alle(BEINE, [0.9, 1.12, 0.9]), **_alle(KOEPFE, 0.94)},
+    "sternendrache": {**_alle(SCHWINGEN, 1.1), "schwanz1": {"scale": [0.9, 0.9, 1.2]}},
+    "lavadrache": {**_alle(KOEPFE, 1.12), **_alle(BEINE, [1.15, 0.95, 1.15])},
 }
+
+
+def _szene(von, dauer):
+    """0..1..0 in einem Fenster der vierzehn Sekunden langen Spieluhr der Jungen."""
+    uhr = f"math.mod({T}, 14.0)"
+    return (f"({uhr} >= {von} && {uhr} < {von + dauer} ? "
+            f"math.clamp(math.sin(({uhr} - {von}) / {dauer} * 180.0) * 2.0, 0.0, 1.0) : 0.0)")
+
+
+JUNG_SPIELT = "(query.property('fynn:wuchs') < 10) * variable.fynn_ruhig"
+JUNG_FLATTERN = f"({JUNG_SPIELT} * {_szene(5.0, 2.0)})"
+
+
+def zucht_bewegungen(koepfe):
+    """Kleine Szenen zur Zucht (5.2).
+
+    * Junge spielen, wenn sie ruhig stehen: alle vierzehn Sekunden erst ein
+      paar Hopser mit gesenktem Kopf, dann ein Flatterversuch mit den kleinen
+      Schwingen, dann ein Schwanzwedeln mit schief gelegtem Kopf.
+    * Verliebt (fynn:verliebt): Kopf gesenkt und schraeg, der Schwanz wedelt.
+    * Wirkt er eine Gabe (fynn:wirkt): Er baeumt sich auf, reisst die
+      Schwingen hoch und bruellt."""
+    jung = JUNG_SPIELT
+    szene = _szene
+
+    def fuer_koepfe(k, name, wert):
+        for s_ in koepfe:
+            k[f"{name}{s_}"] = wert
+
+    hopsen = {"rumpf": {"position": [0.0, f"math.abs(math.sin({T} * 540.0)) * 2.5", 0.0],
+                        "rotation": [f"-math.sin({T} * 540.0) * 6.0", 0.0, 0.0]},
+              "schwanz1": {"rotation": [8.0, f"math.sin({T} * 900.0) * 20.0", 0.0]}}
+    beidseitig(hopsen, {"bein_vorn": [-25.0, 0.0, 0.0]})
+    fuer_koepfe(hopsen, "kopf", {"rotation": [15.0, 0.0, 0.0]})
+    flattern = {"rumpf": {"position": [0.0, f"math.abs(math.sin({T} * 800.0)) * 1.2", 0.0]}}
+    for vor in ("", "h"):
+        flattern[f"{vor}fluegel_links"] = {"rotation": [0.0, 0.0, f"math.sin({T} * 1600.0) * 35.0"]}
+        flattern[f"{vor}fluegel_rechts"] = {"rotation": [0.0, 0.0, f"-math.sin({T} * 1600.0) * 35.0"]}
+    fuer_koepfe(flattern, "kopf", {"rotation": [-15.0, 0.0, 0.0]})
+    wedeln = {f"schwanz{i}": {"rotation": [0.0, f"math.sin({T} * 700.0 - {i * 40}) * 18.0", 0.0]} for i in (1, 2, 3)}
+    fuer_koepfe(wedeln, "kopf", {"rotation": [0.0, 0.0, f"math.sin({T} * 200.0) * 14.0"]})
+    verliebt = {f"schwanz{i}": {"rotation": [0.0, f"math.sin({T} * 400.0 - {i * 40}) * 12.0", 0.0]} for i in (1, 2, 3)}
+    fuer_koepfe(verliebt, "kopf", {"rotation": [18.0, 0.0, f"math.sin({T} * 150.0) * 14.0"]})
+    fuer_koepfe(verliebt, "hals", {"rotation": [10.0, 0.0, 0.0]})
+    verliebt["hals1"] = {"rotation": [10.0, 0.0, 0.0]}
+    wirkt = {"rumpf": {"rotation": [f"-14.0 * (1.0 - {FLIEGT})", 0.0, 0.0]}, "hals1": {"rotation": [-15.0, 0.0, 0.0]}}
+    for vor in ("", "h"):
+        wirkt[f"{vor}fluegel_links"] = {"rotation": [0.0, 0.0, -20.0]}
+        wirkt[f"{vor}fluegel_rechts"] = {"rotation": [0.0, 0.0, 20.0]}
+    fuer_koepfe(wirkt, "kopf", {"rotation": [-20.0, 0.0, 0.0]})
+    fuer_koepfe(wirkt, "kiefer", {"rotation": [f"35.0 + math.sin({T} * 900.0) * 3.0", 0.0, 0.0]})
+    return {
+        "jung_hopsen": ({"loop": True, "bones": hopsen}, f"{jung} * {szene(0.0, 2.2)}"),
+        "jung_flattern": ({"loop": True, "bones": flattern}, f"{jung} * {szene(5.0, 2.0)}"),
+        "jung_wedeln": ({"loop": True, "bones": wedeln}, f"{jung} * {szene(9.0, 2.6)}"),
+        "verliebt": ({"loop": True, "bones": verliebt}, "query.property('fynn:verliebt') * variable.fynn_ruhig"),
+        "gabe_wirken": ({"loop": True, "bones": wirkt}, "query.property('fynn:wirkt')"),
+    }
 
 
 def jung_bewegung(koepfe):
@@ -896,7 +966,8 @@ def eigenschaften_drache():
     # Jungdrachen und Mischlinge (5.2): wie gross (WUCHS = erwachsen) und in
     # wessen Farben (0 = eigene, sonst 1 + Nummer der Art in DRACHEN).
     e["fynn:wuchs"] = {"type": "int", "range": [0, WUCHS], "default": WUCHS, "client_sync": True}
-    e["fynn:misch"] = {"type": "int", "range": [0, 6], "default": 0, "client_sync": True}
+    e["fynn:misch"] = {"type": "int", "range": [0, 15], "default": 0, "client_sync": True}
+    e.update(eigenschaft("fynn:verliebt", "fynn:wirkt"))
     return e
 
 
@@ -1202,6 +1273,7 @@ def drache(eintrag, schwinge, bewegungen=None, koepfe=("",), **bewegung):
             gross[f"geweih{s_}_{seite}"] = {"scale": [1.45, 1.45, 1.45]}
     bew["uralt"] = ({"loop": True, "bones": gross}, "query.property('fynn:uralt')")
     bew["jung"] = (jung_bewegung(koepfe), f"{WUCHS_EIG} < {WUCHS}")
+    bew.update(zucht_bewegungen(koepfe))
     import drachen_misch as dm
     for nr, (art, _, _) in enumerate(dm.ARTEN, 1):
         if art != eintrag["id"]:
@@ -1240,7 +1312,20 @@ def drache(eintrag, schwinge, bewegungen=None, koepfe=("",), **bewegung):
         ["Schlafen", "nachts eingerollt am Boden – wer schleicht, weckt ihn nicht"],
         ["Uralt", "etwa jeder 25. ist uralt: mehr als doppelt so groß, mit Geweih, Stachelkrone, "
                   "Dornen überall und glühenden Adern, mehr als doppelt so viel Leben, stärkerer Atem – "
-                  "und mit Reiter schneller"]]
+                  "und mit Reiter schneller"],
+        # Die Zucht (5.2, scripts/drachenzucht.js und drachengaben.js).
+        ["Zucht", "zwei zahme, ausgewachsene Drachen schleichend mit rohem Fleisch füttern – stehen beide "
+                  "verliebt beieinander, legt einer ein Ei. Nicht jede Art mag jede"],
+        ["Drachenei", "braucht Wärme (Feuer, Lagerfeuer, Lava, Magma), ein Frostei Kälte (Schnee, Eis); nach "
+                      "sechs Minuten schlüpft das Junge. Antippen: aufheben und woanders absetzen"],
+        ["Junges", "wächst in zehn Stufen (mit rohem Fleisch schneller) und gehört dir; erst ausgewachsen "
+                   "trägt es einen Sattel"],
+        ["Erbe", "Körper vom einen Elternteil, Farben, ein Kennzeichen und ein wenig Gestalt vom anderen; "
+                 "den Atem vom Stärkeren, die Fähigkeit vom anderen; jede Generation wird stärker"],
+        ["Gabe", "aus zwei verschiedenen Atemarten entsteht eine neue Fähigkeit – Feuer und Sturm: "
+                 "Feuerwirbel, Frost und Sturm: Schneesturm … Im Sattel löst die Drachenpfeife sie aus"],
+        ["Neue Arten", "Feuerdrache und Frostwyvern bringen manchmal einen Dampfdrachen hervor, Himmelsdrache "
+                       "und Nachtschwinge einen Sternendrachen, Feuerdrache und Schlunddrache einen Lavadrachen"]]
     return eintrag
 
 
@@ -1474,4 +1559,96 @@ def _schlunddrache():
     }, dg.SCHLUNDDRACHE_SCHWINGE, hals=3, schwanz=9, beinhoehe=20)
 
 
-DRACHEN = [_lindwurm(), _frostwyvern(), _himmelsdrache(), _giftdrache(), _nachtschwinge(), _schlunddrache()]
+# ------------------------------------------------------------ Nur aus der Zucht (5.2)
+#
+# Fynn: "Bei manchen entsteht auch eine andere Art, eine neue Art von
+# Drache." Diese drei erscheinen nie wild - sie schluepfen nur aus den Eiern
+# bestimmter Paare (scripts/drachenzucht.js, NEUE_ARTEN). Modelle und Haeute:
+# drachen_neu.py.
+
+def nur_zucht(eintrag):
+    eintrag.update({"biome": [], "gewicht": 0, "nur_zucht": True, "population": "creature"})
+    eintrag["steckbrief_extra"] = [["Herkunft", eintrag.pop("herkunft")]] + eintrag.get("steckbrief_extra", [])
+    return eintrag
+
+
+def _lavadrache():
+    import drachen_gestalt as dg
+    return drache(nur_zucht({
+        "id": "lavadrache", "name": ("Lavadrache", "Lava Dragon"), "gestalt": "lavadrache",
+        "herkunft": "schlüpft manchmal aus dem Ei von Feuerdrache und Schlunddrache – nie wild",
+        "varianten": [("basalt", 60), ("magma", 30), ("seele", 10)],
+        "leben": 190, "schaden": 15, "tempo": 1.2, "tempo_luft": 1.2, "tempo_boden": 0.19,
+        "kollision": (3.0, 2.6), "herde": (1, 1), "groesse": 1.3, "atemfluegel": 0.35,
+        "jagt_tiere": ["cow", "pig", "sheep", "hoglin"],
+        "sitz": [0.0, 2.0, -0.2],
+        "material": "entity_emissive_alpha",
+        "beute": [("fynn:drachenschuppe", 5, 8, 1.0, False), ("minecraft:magma_cream", 2, 5, 1.0, False),
+                  ("minecraft:obsidian", 1, 3, 1.0, False)],
+        "laute": {"ambient": "mob.enderdragon.growl", "hurt": "mob.enderdragon.hit", "death": "mob.ravager.death",
+                  "pitch": [0.6, 0.8]},
+        "ei": ("#3a3230", "#ff7a1a"),
+        "komponenten": {"minecraft:fire_immune": {}, "minecraft:attack": {"damage": 15}},
+        "atemart": "lava",
+        "steckbrief_extra": [
+            ["Gestalt", "schwer und breit, Basaltplatten auf dem Rücken, ein glühender Bauch, eine Keule am Schwanz"],
+            ["Lavaatem", "zähe Lava im Bogen: brennt lange und setzt alles in Brand"],
+            ["Lavabomben", "wirft drei glühende Brocken im Fächer, die beim Aufprall zerplatzen"]],
+    }), dg.LAVADRACHE_SCHWINGE, hals=3, schwanz=7, beinhoehe=21)
+
+
+def _dampfdrache():
+    import drachen_gestalt as dg
+    return drache(nur_zucht({
+        "id": "dampfdrache", "name": ("Dampfdrache", "Steam Dragon"), "gestalt": "dampfdrache",
+        "herkunft": "schlüpft manchmal aus dem Ei von Feuerdrache und Frostwyvern – nie wild",
+        "varianten": [("kupfer", 60), ("rost", 30), ("silber", 10)],
+        "leben": 140, "schaden": 11, "tempo": 1.5, "tempo_luft": 1.5, "tempo_boden": 0.24,
+        "kollision": (2.6, 2.2), "herde": (1, 1), "groesse": 1.1, "atemfluegel": 0.55,
+        "jagt_tiere": ["sheep", "goat", "rabbit", "fox"],
+        "sitz": [0.0, 1.75, -0.2],
+        "material": "entity_emissive_alpha",
+        "beute": [("fynn:drachenschuppe", 3, 6, 1.0, False), ("minecraft:copper_ingot", 3, 7, 1.0, False),
+                  ("minecraft:blaze_powder", 1, 3, 0.6, False)],
+        "laute": {"ambient": "mob.enderdragon.growl", "hurt": "mob.enderdragon.hit", "death": "mob.ravager.death",
+                  "pitch": [1.1, 1.3]},
+        "ei": ("#d8d4cc", "#c87a3a"),
+        "komponenten": {"minecraft:fire_immune": {}, "minecraft:freezing_immune": {},
+                        "minecraft:attack": {"damage": 11}},
+        "atemart": "dampf",
+        "steckbrief_extra": [
+            ["Gestalt", "schlank und hell, Kupferplatten, zwei Paar Dampfschlote hinter den Schultern"],
+            ["Dampfatem", "brühend heißer Dampf in einer breiten Wolke: verbrüht, blendet, löscht Feuer, "
+                          "taut Schnee und Eis"],
+            ["Geysir", "unter dem Ziel schießt eine Dampfsäule aus dem Boden und schleudert es hoch"]],
+    }), dg.DAMPFDRACHE_SCHWINGE, hals=5, schwanz=8, beinhoehe=22)
+
+
+def _sternendrache():
+    import drachen_gestalt as dg
+    return drache(nur_zucht({
+        "id": "sternendrache", "name": ("Sternendrache", "Star Dragon"), "gestalt": "sternendrache",
+        "herkunft": "schlüpft manchmal aus dem Ei von Himmelsdrache und Nachtschwinge – nie wild",
+        "varianten": [("nacht", 60), ("morgen", 30), ("polar", 10)],
+        "leben": 150, "schaden": 12, "tempo": 1.9, "tempo_luft": 1.9, "tempo_boden": 0.26,
+        "kollision": (2.4, 1.8), "herde": (1, 1), "groesse": 1.05, "atemfluegel": 0.6,
+        "jagt_tiere": ["sheep", "rabbit", "fox", "phantom"],
+        "sitz": [0.0, 1.75, -0.2],
+        "material": "entity_emissive_alpha",
+        "beute": [("fynn:drachenschuppe", 4, 7, 1.0, False), ("minecraft:amethyst_shard", 3, 6, 1.0, False),
+                  ("minecraft:nether_star", 1, 1, 0.05, False)],
+        "laute": {"ambient": "mob.phantom.idle", "hurt": "mob.phantom.hurt", "death": "mob.phantom.death",
+                  "pitch": [0.8, 1.0]},
+        "ei": ("#2a2a5a", "#c8b0ff"),
+        "komponenten": {"minecraft:attack": {"damage": 12}},
+        "atemart": "sterne",
+        "steckbrief_extra": [
+            ["Gestalt", "vier Sichelschwingen mit leuchtendem Rand, ein langer Schwanz, Mähne, "
+                        "leuchtende Kristalle und ein Stern auf der Stirn"],
+            ["Sternenstrahl", "ein gerader, glitzernder Strahl: trifft hart und lässt schweben"],
+            ["Meteor", "ein Meteor stürzt vom Himmel auf das Ziel"]],
+    }), dg.STERNENDRACHE_SCHWINGE, hals=6, schwanz=12, beinhoehe=19, tempo=260.0, vier_fluegel=True)
+
+
+DRACHEN = [_lindwurm(), _frostwyvern(), _himmelsdrache(), _giftdrache(), _nachtschwinge(), _schlunddrache(),
+           _dampfdrache(), _sternendrache(), _lavadrache()]

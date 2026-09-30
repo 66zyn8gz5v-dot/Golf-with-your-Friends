@@ -774,3 +774,5 @@ def himmelsdrache_maler(variante):
 # Die neuen Drachen (4.96) im Stil von Fynns Vorbildern stehen in
 # drachen_klotz; hier sind sie mit ihrem Namen zu finden wie alle anderen.
 from drachen_klotz import *  # noqa: E402,F401,F403
+# Die Arten aus der Zucht (5.2).
+from drachen_neu import *  # noqa: E402,F401,F403

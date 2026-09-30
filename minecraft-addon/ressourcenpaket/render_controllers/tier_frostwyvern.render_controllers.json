@@ -15,7 +15,10 @@
             "Texture.misch_himmelsdrache",
             "Texture.misch_giftdrache",
             "Texture.misch_nachtschwinge",
-            "Texture.misch_schlunddrache"
+            "Texture.misch_schlunddrache",
+            "Texture.misch_dampfdrache",
+            "Texture.misch_sternendrache",
+            "Texture.misch_lavadrache"
           ]
         }
       },
@@ -151,6 +154,21 @@
         },
         {
           "erbe_schlunddrache_kopf": "query.property('fynn:misch') == 6"
+        },
+        {
+          "erbe_dampfdrache_ruecken": "query.property('fynn:misch') == 7 && !query.is_saddled"
+        },
+        {
+          "erbe_sternendrache_ruecken": "query.property('fynn:misch') == 8 && !query.is_saddled"
+        },
+        {
+          "erbe_sternendrache_kopf": "query.property('fynn:misch') == 8"
+        },
+        {
+          "erbe_lavadrache_ruecken": "query.property('fynn:misch') == 9 && !query.is_saddled"
+        },
+        {
+          "erbe_lavadrache_kopf": "query.property('fynn:misch') == 9"
         }
       ]
     }

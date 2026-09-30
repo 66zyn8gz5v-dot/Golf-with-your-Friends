@@ -1,0 +1,167 @@
+{
+  "format_version": "1.8.0",
+  "render_controllers": {
+    "controller.render.fynn.lavadrache": {
+      "arrays": {
+        "textures": {
+          "Array.haut": [
+            "Texture.basalt",
+            "Texture.magma",
+            "Texture.seele"
+          ],
+          "Array.misch": [
+            "Texture.misch_lindwurm",
+            "Texture.misch_frostwyvern",
+            "Texture.misch_himmelsdrache",
+            "Texture.misch_giftdrache",
+            "Texture.misch_nachtschwinge",
+            "Texture.misch_schlunddrache",
+            "Texture.misch_dampfdrache",
+            "Texture.misch_sternendrache",
+            "Texture.misch_lavadrache"
+          ]
+        }
+      },
+      "geometry": "Geometry.default",
+      "materials": [
+        {
+          "*": "Material.default"
+        }
+      ],
+      "textures": [
+        "query.property('fynn:misch') > 0 ? Array.misch[query.property('fynn:misch') - 1] : Array.haut[query.variant]"
+      ],
+      "part_visibility": [
+        {
+          "lider": "query.property('fynn:schlaeft') || query.property('fynn:besiegt') || math.mod(variable.fynn_t + 0.0, 4.7) < 0.14"
+        },
+        {
+          "sattel": "query.is_saddled"
+        },
+        {
+          "uralt_kopf": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_geweih_links": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_geweih2_links": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_geweih_rechts": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_geweih2_rechts": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_hals1": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_hals2": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_hals3": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_schwanz1": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_schwanz2": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_schwanz3": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_schwanz4": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_schwanz5": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_schwanz6": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_schwanz7": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_rumpf": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_bein_hinten_links": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_bein_vorn_links": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_bein_hinten_rechts": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_bein_vorn_rechts": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_fluegel_links": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_unterarm_links": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_fluegel_rechts": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_unterarm_rechts": "query.property('fynn:uralt')"
+        },
+        {
+          "stachel_sattel": "!query.is_saddled"
+        },
+        {
+          "uralt_sattel": "query.property('fynn:uralt') && !query.is_saddled"
+        },
+        {
+          "erbe_lindwurm_kopf": "query.property('fynn:misch') == 1"
+        },
+        {
+          "erbe_lindwurm_ruecken": "query.property('fynn:misch') == 1 && !query.is_saddled"
+        },
+        {
+          "erbe_frostwyvern_ruecken": "query.property('fynn:misch') == 2 && !query.is_saddled"
+        },
+        {
+          "erbe_frostwyvern_schwanz": "query.property('fynn:misch') == 2"
+        },
+        {
+          "erbe_himmelsdrache_kopf": "query.property('fynn:misch') == 3"
+        },
+        {
+          "erbe_himmelsdrache_hals3": "query.property('fynn:misch') == 3"
+        },
+        {
+          "erbe_himmelsdrache_hals2": "query.property('fynn:misch') == 3"
+        },
+        {
+          "erbe_himmelsdrache_hals1": "query.property('fynn:misch') == 3"
+        },
+        {
+          "erbe_giftdrache_kopf": "query.property('fynn:misch') == 4"
+        },
+        {
+          "erbe_nachtschwinge_schwanz": "query.property('fynn:misch') == 5"
+        },
+        {
+          "erbe_nachtschwinge_kopf": "query.property('fynn:misch') == 5"
+        },
+        {
+          "erbe_schlunddrache_kopf": "query.property('fynn:misch') == 6"
+        },
+        {
+          "erbe_dampfdrache_ruecken": "query.property('fynn:misch') == 7 && !query.is_saddled"
+        },
+        {
+          "erbe_sternendrache_ruecken": "query.property('fynn:misch') == 8 && !query.is_saddled"
+        },
+        {
+          "erbe_sternendrache_kopf": "query.property('fynn:misch') == 8"
+        }
+      ]
+    }
+  }
+}

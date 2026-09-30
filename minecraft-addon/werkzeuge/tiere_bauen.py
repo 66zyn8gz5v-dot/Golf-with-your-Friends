@@ -2010,7 +2010,11 @@ def baue(t, bilder=None):
     schreibe(RES / "render_controllers" / f"tier_{name}.render_controllers.json", steuerung(t, texturen))
 
     schreibe(VER / "entities" / f"tier_{name}.json", verhalten(t, namen))
-    schreibe(VER / "spawn_rules" / f"tier_{name}.json", spawnregel(t))
+    if t.get("nur_zucht"):
+        # Die Drachen aus der Zucht (5.2) erscheinen nie von selbst.
+        (VER / "spawn_rules" / f"tier_{name}.json").unlink(missing_ok=True)
+    else:
+        schreibe(VER / "spawn_rules" / f"tier_{name}.json", spawnregel(t))
     schreibe(VER / "loot_tables" / "entities" / f"{name}.json", beuteliste(t["beute"]))
     for zusatz, eintraege in t.get("beute_extra", {}).items():
         schreibe(VER / "loot_tables" / "entities" / f"{name}_{zusatz}.json", beuteliste(eintraege))
@@ -2098,8 +2102,12 @@ def vorschau(bilder, ordner):
 
 def main():
     bilder = [] if "--bilder" in sys.argv else None
+    # --nur a,b: nur diese Tiere neu bauen (beim Ausprobieren - die Drachen
+    # mit all ihren Mischhaeuten brauchen allein Minuten).
+    nur = set(sys.argv[sys.argv.index("--nur") + 1].split(",")) if "--nur" in sys.argv else None
     for t in TIERE:
-        baue(t, bilder)
+        if nur is None or t["id"] in nur:
+            baue(t, bilder)
     laute()
     sprache()
     wal_partikel()

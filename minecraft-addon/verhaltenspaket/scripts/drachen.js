@@ -156,6 +156,63 @@ ATEMARTEN.schall = {
     block() { return 0; },
 };
 
+// Die Atemarten der Arten aus der Zucht (5.2).
+//
+// Dampf (Dampfdrache): eine breite, kurze Wolke bruehend heissen Dampfes -
+// sie verbrueht und blendet, loescht Feuer und taut Schnee und Eis.
+ATEMARTEN.dampf = {
+    teilchen: "fynn:dampfatem", weite: 10, kegel: 1.4, dauer: 40, anlauf: 20, pause: [140, 220], veraendert: true,
+    laut: "random.fizz", knistern: "random.fizz",
+    wesen(ziel, drache) {
+        try { ziel.applyDamage(4, { cause: "fire", damagingEntity: drache }); } catch (e) { /* egal */ }
+        try { ziel.addEffect("blindness", 40, { amplifier: 0 }); } catch (e) { /* egal */ }
+        try { ziel.extinguishFire?.(); } catch (e) { /* egal */ }
+    },
+    block(dim, getroffen) {
+        let n = 0;
+        for (const [dx, dy, dz] of [[0, 0, 0], [0, 1, 0], [1, 1, 0], [-1, 1, 0], [0, 1, 1], [0, 1, -1]]) {
+            try {
+                const b = dim.getBlock({ x: getroffen.x + dx, y: getroffen.y + dy, z: getroffen.z + dz });
+                const typ = b?.typeId;
+                if (typ === "minecraft:fire" || typ === "minecraft:snow_layer") { b.setType("minecraft:air"); n++; }
+                else if (typ === "minecraft:ice" || typ === "minecraft:snow") { b.setType("minecraft:water"); n++; }
+            } catch (e) { /* ungeladen */ }
+        }
+        return n;
+    },
+};
+// Sterne (Sternendrache): ein gerader, schmaler Strahl, der weit reicht,
+// hart trifft und schweben laesst. Unterwegs glitzert es.
+ATEMARTEN.sterne = {
+    teilchen: "fynn:sternenatem", weite: 18, kegel: 0.45, dauer: 30, anlauf: 20, pause: [140, 220],
+    laut: "mob.shulker.shoot", knistern: "random.orb",
+    wesen(ziel, drache) {
+        try { ziel.applyDamage(4, { cause: "magic", damagingEntity: drache }); } catch (e) { /* egal */ }
+        try { ziel.addEffect("levitation", 30, { amplifier: 0 }); } catch (e) { /* egal */ }
+    },
+    strahl(dim, mund, r, jetzt) {
+        if (jetzt % 4) return;
+        for (const s of [2, 5, 8, 11, 14, 17]) {
+            teilchen(dim, "fynn:gabe_sterne", { x: mund.x + r.x * s, y: mund.y + r.y * s, z: mund.z + r.z * s });
+        }
+    },
+    block() { return 0; },
+};
+// Lava (Lavadrache): zaehe Glut im Bogen - brennt lange und setzt in Brand.
+ATEMARTEN.lava = {
+    teilchen: "fynn:lavaatem", weite: 12, kegel: 1.0, dauer: 40, anlauf: 20, pause: [160, 240], veraendert: true,
+    laut: "bucket.empty_lava", knistern: "liquid.lavapop",
+    wesen(ziel, drache) {
+        try { ziel.setOnFire(8, true); } catch (e) { /* egal */ }
+        try { ziel.applyDamage(4, { cause: "lava", damagingEntity: drache }); } catch (e) { /* egal */ }
+        try { ziel.addEffect("slowness", 40, { amplifier: 0 }); } catch (e) { /* egal */ }
+    },
+    block(dim, getroffen, zufall) {
+        teilchen(dim, "minecraft:lava_particle", { x: getroffen.x + 0.5, y: getroffen.y + 1, z: getroffen.z + 0.5 });
+        return ATEMARTEN.feuer.block(dim, getroffen, zufall);
+    },
+};
+
 // ------------------------------------------------------------ Giftwolken
 
 export const WOLKE = { dauer: 200, weite: 3.5, abstand: 3 };
@@ -368,6 +425,91 @@ export const DRACHEN = {
         name: "Frostwyvern", atem: "frost", faehigkeit: "eiskristalle", maul: 3.8, hoehe: 1.6, groesse: 0.85,
         luft: [1000, 2000], boden: [600, 1400],
         reitflug: { tempo: 1.45, steigen: 0.15, nachziehen: 0.14, schwebe: 0.045, hoechstSteigen: 0.8 },
+    },
+};
+
+// Die Arten aus der Zucht (5.2): Sie erscheinen nie wild, nur aus Eiern
+// (drachenzucht.js).
+DRACHEN["fynn:dampfdrache"] = {
+    name: "Dampfdrache", atem: "dampf", faehigkeit: "geysir", maul: 3.8, hoehe: 1.6, groesse: 1.1,
+    luft: [1200, 2200], boden: [700, 1500],
+    reitflug: { tempo: 1.45, steigen: 0.16, nachziehen: 0.14, schwebe: 0.05, hoechstSteigen: 0.8 },
+};
+DRACHEN["fynn:sternendrache"] = {
+    name: "Sternendrache", atem: "sterne", faehigkeit: "meteor", maul: 3.8, hoehe: 1.4, groesse: 1.05,
+    luft: [1600, 3000], boden: [500, 1000],
+    reitflug: { tempo: 1.85, steigen: 0.17, nachziehen: 0.16, schwebe: 0.06, hoechstSteigen: 0.85 },
+};
+DRACHEN["fynn:lavadrache"] = {
+    name: "Lavadrache", atem: "lava", faehigkeit: "lavabomben", maul: 3.6, hoehe: 1.6, groesse: 1.3,
+    luft: [900, 1800], boden: [900, 1900],
+    reitflug: { tempo: 1.2, steigen: 0.12, nachziehen: 0.11, schwebe: 0.04, hoechstSteigen: 0.65 },
+};
+
+// Geysir (Dampfdrache): Unter dem Ziel schiesst eine Dampfsaeule empor.
+FAEHIGKEITEN.geysir = {
+    min: 4, max: 24, pause: [180, 280], name: "Geysir",
+    wirken(drache, mund, r, ziel) {
+        const dim = drache.dimension;
+        const o = lebt(ziel) ? ziel.location : { x: mund.x + r.x * 10, y: drache.location.y, z: mund.z + r.z * 10 };
+        try { dim.playSound("random.fizz", o, { volume: 3, pitch: 0.5 }); } catch (e) { /* egal */ }
+        for (let h = 0; h <= 7; h++) {
+            system.runTimeout(() => teilchen(dim, "fynn:gabe_dampf", { x: o.x, y: o.y + h, z: o.z }), h);
+        }
+        let nah = [];
+        try { nah = dim.getEntities({ location: o, maxDistance: 2.5 }); } catch (e) { /* egal */ }
+        for (const w of nah) {
+            if (w.id === drache.id || w.typeId === "minecraft:item") continue;
+            try { w.applyDamage(6, { cause: "fire", damagingEntity: drache }); } catch (e) { /* egal */ }
+            try {
+                if (w.typeId === "minecraft:player") w.applyKnockback({ x: 0, z: 0 }, 1.6);
+                else w.applyImpulse({ x: 0, y: 1.6, z: 0 });
+            } catch (e) { /* egal */ }
+        }
+        return "Geysir";
+    },
+};
+// Meteor (Sternendrache): Er stuerzt in einer Sekunde vom Himmel und schlaegt
+// ein - ohne Bloecke zu zerstoeren.
+FAEHIGKEITEN.meteor = {
+    min: 8, max: 40, pause: [240, 360], name: "Meteor",
+    wirken(drache, mund, r, ziel) {
+        const dim = drache.dimension;
+        const o = lebt(ziel) ? { ...ziel.location } : { x: mund.x + r.x * 16, y: drache.location.y, z: mund.z + r.z * 16 };
+        try { dim.playSound("mob.enderdragon.growl", drache.location, { volume: 3, pitch: 1.5 }); } catch (e) { /* egal */ }
+        for (let i = 0; i < 10; i++) {
+            system.runTimeout(() => {
+                const h = 20 - i * 2;
+                teilchen(dim, "fynn:gabe_sterne", { x: o.x + h * 0.3, y: o.y + h, z: o.z });
+                teilchen(dim, "fynn:gabe_feuer", { x: o.x + h * 0.3, y: o.y + h + 0.6, z: o.z });
+            }, i * 2);
+        }
+        system.runTimeout(() => {
+            try {
+                dim.createExplosion(o, 2.5, { breaksBlocks: false, causesFire: false, source: drache });
+            } catch (e) {
+                try { dim.spawnParticle("minecraft:huge_explosion_emitter", o); } catch (f) { /* egal */ }
+            }
+            for (let k = 0; k < 6; k++) teilchen(dim, "fynn:gabe_sterne", { x: o.x + (k % 3 - 1), y: o.y + 0.5, z: o.z + (k < 3 ? 1 : -1) });
+        }, 20);
+        return "Meteor";
+    },
+};
+// Lavabomben (Lavadrache): drei gluehende Brocken im Faecher.
+FAEHIGKEITEN.lavabomben = {
+    min: 6, max: 30, pause: [200, 300], name: "Lavabomben",
+    wirken(drache, mund, r) {
+        const dim = drache.dimension;
+        try { dim.playSound("mob.ghast.fireball", mund, { volume: 3, pitch: 0.5 }); } catch (e) { /* egal */ }
+        for (const w of [-0.22, 0, 0.22]) {
+            const q = einheit({ x: r.x - r.z * w, y: r.y + 0.15, z: r.z + r.x * w });
+            try {
+                const b = dim.spawnEntity("minecraft:small_fireball", mund);
+                const p = b.getComponent("minecraft:projectile");
+                if (p) { p.owner = drache; p.shoot({ x: q.x * 1.3, y: q.y * 1.3, z: q.z * 1.3 }); }
+            } catch (e) { /* egal */ }
+        }
+        return "Lavabomben";
     },
 };
 
