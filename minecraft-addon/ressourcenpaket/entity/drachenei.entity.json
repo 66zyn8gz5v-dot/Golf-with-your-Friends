@@ -4,7 +4,7 @@
     "description": {
       "identifier": "fynn:drachenei",
       "materials": {
-        "default": "entity_alphatest"
+        "default": "entity_emissive_alpha"
       },
       "textures": {
         "ei_lindwurm_lindwurm": "textures/entity/drachenei/ei_lindwurm_lindwurm",

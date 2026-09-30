@@ -60,6 +60,10 @@ def ei_maler(koerper, farbe):
     grund = [H.dunkler(a["leib"], 0.3), a["leib"], H.heller(a["leib"], 0.18)]
     band = b["ruecken"] if koerper != farbe else a["ruecken"]
     glanz = b["glut"]
+    # Die Eier von Lava- und Sternendrache gluehen: ihre Baender leuchten.
+    leuchtet = koerper == farbe and dm.ARTEN[koerper][0] in ("lavadrache", "sternendrache")
+    if leuchtet:
+        band = a["glut"]
 
     def male(stoff, p, n, texel):
         x, y, z = p
@@ -71,7 +75,8 @@ def ei_maler(koerper, farbe):
         if 6.5 <= y < 7.2 and abs(n[1]) < 0.5:
             return H.dunkler(band, 0.2)
         if 2.5 <= s < 4.5 or 8.2 <= s < 10.0:
-            return H.verlauf([H.dunkler(band, 0.15), band], y / 12.0, 2)
+            c = H.verlauf([H.dunkler(band, 0.15), band], y / 12.0, 2)
+            return c + (254,) if leuchtet else c
         return H.verlauf(grund, y / 12.0, 3)
     return male
 
@@ -107,7 +112,7 @@ def ei_verhalten():
 def ei_aussehen(namen):
     return {"format_version": "1.10.0", "minecraft:client_entity": {"description": {
         "identifier": "fynn:drachenei",
-        "materials": {"default": "entity_alphatest"},
+        "materials": {"default": "entity_emissive_alpha"},
         "textures": {n: f"textures/entity/drachenei/{n}" for n in namen},
         "geometry": {"default": "geometry.fynn.drachenei"},
         "scripts": {

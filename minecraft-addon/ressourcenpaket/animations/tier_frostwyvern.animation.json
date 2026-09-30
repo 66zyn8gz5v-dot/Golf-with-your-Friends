@@ -2653,14 +2653,14 @@
           "rotation": [
             0.0,
             0.0,
-            "-30.0 + math.sin(variable.fynn_t * 1600.0) * 35.0"
+            "math.sin(variable.fynn_t * 1600.0) * 35.0"
           ]
         },
         "fluegel_rechts": {
           "rotation": [
             0.0,
             0.0,
-            "30.0 - math.sin(variable.fynn_t * 1600.0) * 35.0"
+            "-math.sin(variable.fynn_t * 1600.0) * 35.0"
           ]
         },
         "kopf": {
@@ -2765,15 +2765,15 @@
         "fluegel_links": {
           "rotation": [
             0.0,
-            -10.0,
-            -45.0
+            0.0,
+            -20.0
           ]
         },
         "fluegel_rechts": {
           "rotation": [
             0.0,
-            10.0,
-            45.0
+            0.0,
+            20.0
           ]
         },
         "kopf": {
