@@ -24,7 +24,8 @@
         "sturmhauch": "animation.fynn.himmelsdrache.sturmhauch",
         "drachenbruellen": "animation.fynn.himmelsdrache.drachenbruellen",
         "drachenblick": "animation.fynn.himmelsdrache.drachenblick",
-        "drachenbiss": "animation.fynn.himmelsdrache.drachenbiss"
+        "drachenbiss": "animation.fynn.himmelsdrache.drachenbiss",
+        "uralt": "animation.fynn.himmelsdrache.uralt"
       },
       "scripts": {
         "initialize": [
@@ -79,6 +80,9 @@
           },
           {
             "drachenbiss": "(variable.attack_time > 0.0) * (1.0 - math.max(query.property('fynn:schlaeft'), query.property('fynn:besiegt')))"
+          },
+          {
+            "uralt": "query.property('fynn:uralt')"
           }
         ],
         "scale": "1.15"

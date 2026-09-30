@@ -44,11 +44,11 @@ item.fynn:eisenklinge.name=Eisenklinge
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.96
+item.iron_sword.name=Stahlschwert 4.97
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.96
-item.fynn:degen.name=Degen 4.96
+item.fynn:degen=Degen 4.97
+item.fynn:degen.name=Degen 4.97
 
 
 
@@ -521,6 +521,10 @@ item.fynn:werwolfsklaue.name=Werwolfsklaue
 item.fynn:mondtalisman.name=Mondtalisman
 item.fynn:moosherz.name=Moosherz
 item.fynn:greifenfeder.name=Greifenfeder
+
+
+
+
 
 
 

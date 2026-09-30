@@ -26,6 +26,11 @@
           "type": "bool",
           "default": false,
           "client_sync": true
+        },
+        "fynn:uralt": {
+          "type": "bool",
+          "default": false,
+          "client_sync": true
         }
       }
     },
@@ -356,6 +361,18 @@
           "value": 0.5
         }
       },
+      "fynn:uralt": {
+        "minecraft:scale": {
+          "value": 1.6
+        },
+        "minecraft:health": {
+          "value": 400,
+          "max": 400
+        },
+        "minecraft:attack": {
+          "damage": 19
+        }
+      },
       "fynn:erwachsen": {
         "minecraft:loot": {
           "table": "loot_tables/entities/lindwurm.json"
@@ -650,6 +667,16 @@
             }
           }
         ]
+      },
+      "fynn:uralt_werden": {
+        "add": {
+          "component_groups": [
+            "fynn:uralt"
+          ]
+        },
+        "set_property": {
+          "fynn:uralt": true
+        }
       },
       "minecraft:entity_spawned": {
         "sequence": [

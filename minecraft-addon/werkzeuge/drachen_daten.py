@@ -280,6 +280,22 @@ def seitenweise(knochen, name, links, wert):
         knochen[f"{name}_{seite}"] = {"rotation": wert(seite, zeichen)}
 
 
+def hinterfluegel(bewegungen, nachlauf=0.18):
+    """Ein zweites Fluegelpaar (die Nachtschwinge, 4.97): Es tut, was das
+    erste tut, einen Augenblick spaeter - so schlagen die vier Fluegel nicht
+    im Gleichtakt, sondern in einer Welle von vorn nach hinten."""
+    import re
+    muster = re.compile(r"^(fluegel|unterarm|hand|finger\d+)_(links|rechts)$")
+    aus = {}
+    for name, (anim, gewicht) in bewegungen.items():
+        knochen = dict(anim["bones"])
+        for k, werte in anim["bones"].items():
+            if muster.match(k):
+                knochen["h" + k] = json.loads(json.dumps(werte).replace(T, f"({T} - {nachlauf})"))
+        aus[name] = (dict(anim, bones=knochen), gewicht)
+    return aus
+
+
 def drachen_bewegungen(schwinge, hals=4, schwanz=6, tempo=220.0, beinhoehe=20, finger=None, stuetzt=False,
                        atem="feuer"):
     """schwinge: die Schwinge der Art (fuer die ausgerechnete Faltung);
@@ -560,6 +576,7 @@ def drachen_bewegungen(schwinge, hals=4, schwanz=6, tempo=220.0, beinhoehe=20, f
 # ------------------------------------------------------------ Verhalten
 
 HEILMITTEL = ["minecraft:golden_apple", "minecraft:enchanted_golden_apple"]
+URALT_GROESSE = 1.6
 
 
 def drachen_zustaende(tempo_luft, tempo_boden, beute, sitz, reitflug=0.5, reichweite=48, schwimmt=False):
@@ -699,7 +716,7 @@ def drachen_grundlage():
 
 def eigenschaften_drache():
     e = {}
-    for n in ("fynn:feuer", "fynn:fliegt", "fynn:schlaeft", "fynn:besiegt"):
+    for n in ("fynn:feuer", "fynn:fliegt", "fynn:schlaeft", "fynn:besiegt", "fynn:uralt"):
         e.update(eigenschaft(n))
     return e
 
@@ -938,9 +955,35 @@ def drache(eintrag, schwinge, bewegungen=None, koepfe=("",), **bewegung):
     eintrag.setdefault("atemname", ATEMARTEN.get(atem, ATEMARTEN["feuer"])[0])
     if bewegungen is None:
         bewegung.setdefault("atem", atem)
+    # Uralte Drachen (4.97): selten, riesig, staerker. Das Skript wuerfelt
+    # einmal je Drache (drachen.js, uraltWuerfeln) und loest fynn:uralt_werden
+    # aus. Die Gruppe macht ihn groesser (auch den Trefferkasten), gibt ihm
+    # mehr Leben und einen haerteren Biss; Atem, Faehigkeit und Reitflug
+    # verstaerkt das Skript.
+    angriff = dict(k.get("minecraft:attack", {"damage": eintrag.get("schaden", 10)}))
+    angriff["damage"] = round(angriff["damage"] * 1.6)
+    gruppen["fynn:uralt"] = {"minecraft:scale": {"value": URALT_GROESSE},
+                             "minecraft:health": {"value": round(eintrag["leben"] * 2.5),
+                                                  "max": round(eintrag["leben"] * 2.5)},
+                             "minecraft:attack": angriff}
+    ereignisse["fynn:uralt_werden"] = {"add": {"component_groups": ["fynn:uralt"]},
+                                       "set_property": {"fynn:uralt": True}}
+    vier = bewegung.pop("vier_fluegel", False)
     bew = bewegungen or drachen_bewegungen(schwinge, **bewegung)
+    if vier:
+        bew = hinterfluegel(bew)
     if len(koepfe) > 1:
         bew = mehrere_koepfe(bew, koepfe)
+    # Die Uralten sehen maechtiger aus: groessere Schwingen und Hoerner.
+    gross = {}
+    for vor in ("", "h"):
+        for seite in ("links", "rechts"):
+            gross[f"{vor}fluegel_{seite}"] = {"scale": [1.3, 1.3, 1.3]}
+    for s_ in koepfe:
+        for seite in ("links", "rechts"):
+            gross[f"horn{s_}_{seite}"] = {"scale": [1.45, 1.45, 1.45]}
+            gross[f"geweih{s_}_{seite}"] = {"scale": [1.45, 1.45, 1.45]}
+    bew["uralt"] = ({"loop": True, "bones": gross}, "query.property('fynn:uralt')")
     eintrag.update({
         "art": "drache", "verhalten": "drache", "keine_panik": True, "baby": False,
         "komponenten": k, "gruppen": gruppen, "ereignisse": ereignisse,
@@ -951,7 +994,8 @@ def drache(eintrag, schwinge, bewegungen=None, koepfe=("",), **bewegung):
         # Augenlider im Schlaf und besiegt - und zum Blinzeln; jeder Kopf
         # blinzelt fuer sich. Der Sattel nur gesattelt.
         "sichtbarkeit": [{f"lider{s}": blinzeln(j * 0.9)} for j, s in enumerate(koepfe)]
-        + [{"sattel": "query.is_saddled"}],
+        + [{"sattel": "query.is_saddled"}]
+        + [{f"uralt_{k_}": "query.property('fynn:uralt')"} for k_ in [f"kopf{s}" for s in koepfe] + ["rumpf"]],
         "gruppe": "Drachen",
     })
     eintrag["steckbrief_extra"] = eintrag.get("steckbrief_extra", []) + [
@@ -960,7 +1004,9 @@ def drache(eintrag, schwinge, bewegungen=None, koepfe=("",), **bewegung):
         ["Zahm", "folgt dir und kämpft mit dir; schleichend antippen: bleib hier / komm mit"],
         ["Reiten", "mit Sattel: Sprungtaste zum Steigen, er fliegt, wohin du schaust; "
                    "schlägst du beim Reiten zu, speit er dorthin"],
-        ["Schlafen", "nachts eingerollt am Boden – wer schleicht, weckt ihn nicht"]]
+        ["Schlafen", "nachts eingerollt am Boden – wer schleicht, weckt ihn nicht"],
+        ["Uralt", "etwa jeder 25. ist uralt: riesig, mit Stachelkrone und glühenden Adern, "
+                  "mehr als doppelt so viel Leben, stärkerer Atem – und mit Reiter schneller"]]
     return eintrag
 
 
@@ -1153,10 +1199,10 @@ def _nachtschwinge():
         "atemart": "schatten",
         "steckbrief_extra": [
             ["Lebt", "extrem selten, nur im Dunkeln: im dunklen Wald, in alten Taigas und auf zackigen Gipfeln"],
-            ["Gestalt", "keine Flughaut, sondern Sicheln – der schnellste aller Drachen"],
+            ["Gestalt", "vier Flügel aus Sicheln statt Flughaut – der schnellste aller Drachen"],
             ["Schattenatem", "macht blind und laesst verdorren"],
             ["Plasmaschuss", "auf weite Entfernung: eine violette Kugel, die beim Aufprall explodiert"]],
-    }, dg.NACHTSCHWINGE_SCHWINGE, hals=5, schwanz=8, beinhoehe=19, tempo=260.0)
+    }, dg.NACHTSCHWINGE_SCHWINGE, hals=5, schwanz=8, beinhoehe=19, tempo=260.0, vier_fluegel=True)
 
 
 DRACHEN = [_lindwurm(), _frostwyvern(), _himmelsdrache(), _giftdrache(), _nachtschwinge()]

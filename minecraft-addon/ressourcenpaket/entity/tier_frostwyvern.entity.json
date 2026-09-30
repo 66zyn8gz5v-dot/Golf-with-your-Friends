@@ -26,7 +26,8 @@
         "drachenbruellen": "animation.fynn.frostwyvern.drachenbruellen",
         "sturzflug": "animation.fynn.frostwyvern.sturzflug",
         "drachenblick": "animation.fynn.frostwyvern.drachenblick",
-        "drachenbiss": "animation.fynn.frostwyvern.drachenbiss"
+        "drachenbiss": "animation.fynn.frostwyvern.drachenbiss",
+        "uralt": "animation.fynn.frostwyvern.uralt"
       },
       "scripts": {
         "initialize": [
@@ -87,6 +88,9 @@
           },
           {
             "drachenbiss": "(variable.attack_time > 0.0) * (1.0 - math.max(query.property('fynn:schlaeft'), query.property('fynn:besiegt')))"
+          },
+          {
+            "uralt": "query.property('fynn:uralt')"
           }
         ],
         "scale": "0.85"

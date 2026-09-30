@@ -29,6 +29,15 @@
         },
         {
           "sattel": "query.is_saddled"
+        },
+        {
+          "uralt_kopf_a": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_kopf_b": "query.property('fynn:uralt')"
+        },
+        {
+          "uralt_rumpf": "query.property('fynn:uralt')"
         }
       ]
     }

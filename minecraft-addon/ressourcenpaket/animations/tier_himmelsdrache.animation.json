@@ -2615,6 +2615,25 @@
           ]
         }
       }
+    },
+    "animation.fynn.himmelsdrache.uralt": {
+      "loop": true,
+      "bones": {
+        "geweih_links": {
+          "scale": [
+            1.45,
+            1.45,
+            1.45
+          ]
+        },
+        "geweih_rechts": {
+          "scale": [
+            1.45,
+            1.45,
+            1.45
+          ]
+        }
+      }
     }
   }
 }

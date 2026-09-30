@@ -105,8 +105,21 @@ def kopf_klotz(m, art, eltern, ky, kz, schaedel=(12, 10, 11), schnauze=(10, 6, 1
         kopf.kasten([x * sb / 2 - (1 if x > 0 else 2), y0 + sh - 3, kz - sl - 1], [3, 2, 6], "braue",
                     drehung=[-12, 0, 0], drehpunkt=[x * sb / 2, y0 + sh - 2, kz - sl])
         # Wangenplatten hinten am Kiefer.
-        kopf.kasten([x * sb / 2 - (0 if x > 0 else 1), y0 - 1, kz - 5], [1, 4, 5], "klinge",
-                    drehung=[0, -x * 15, 0], drehpunkt=[x * sb / 2, y0, kz - 5])
+        kopf.kasten([x * sb / 2 - (0 if x > 0 else 1), y0 - 1, kz - 4], [1, 4, 4], "klinge",
+                    drehung=[0, -x * 20, 0], drehpunkt=[x * sb / 2, y0, kz - 4])
+        # Kiefermuskeln (4.97): ein Wulst hinten an jeder Wange, unter dem Auge.
+        kopf.kasten([x * sb / 2 - (0 if x > 0 else 1.5), y0, kz - sl + 4], [1, 4, 5], "muskel",
+                    aufblasen=0.25)
+        # Das Auge: ein eigener Block, ein Stueck aus dem Schaedel heraus, unter
+        # der Braue - mit Schlitzpupille und dunkler Hoehle darum.
+        kopf.kasten([x * sb / 2 - (0 if x > 0 else 1), y0 + sh - 6, kz - sl + 1], [1, 3, 4], "auge",
+                    aufblasen=0.02)
+        # Nuestern: zwei kleine Wuelste vorn auf der Schnauze.
+        kopf.kasten([x * (nb / 2 - 2) - (0 if x > 0 else 2), y0 + nh - 0.5, kz - sl - nl + 0.5], [2, 1, 2], "nuester")
+    # Eine Stufe von der Stirn zur Schnauze - weicher Uebergang statt Kante.
+    kopf.kasten([-nb / 2 - 0.5, y0 + nh, kz - sl - 3], [nb + 1, 2, 4], "kopf")
+    # Kinnwulst unter dem Schaedel, zum Hals hin.
+    kopf.kasten([-sb / 2 + 1.5, y0 - 2, kz - 6], [sb - 3, 2, 6], "kehle")
     if zaehne:
         # Oben: Zaehne einzeln an den Seiten, vorn zwei lange Fangzaehne.
         for z in range(int(kz - sl - nl + 2), int(kz - sl), 2):
@@ -117,16 +130,20 @@ def kopf_klotz(m, art, eltern, ky, kz, schaedel=(12, 10, 11), schnauze=(10, 6, 1
     kiefer = m.knoch(f"kiefer{s}", [0, y0, kz - sl + 2], f"kopf{s}")
     kiefer.kasten([-nb / 2 + 0.5, y0 - 3, kz - sl - nl + 1], [nb - 1, 3, nl + sl - 4], "kiefer")
     kiefer.kasten([-nb / 2 + 2, y0 - 0.5, kz - sl - nl + 3], [nb - 4, 1, nl - 2], "zunge")
+    # Das Kinn: vorn ein Wulst nach unten, hinten die Kieferleiste.
+    kiefer.kasten([-nb / 2 + 1.5, y0 - 4, kz - sl - nl + 1.5], [nb - 3, 1, 4], "kiefer")
+    for x in (1, -1):
+        kiefer.kasten([x * (nb / 2 - 0.5) - (0 if x > 0 else 1), y0 - 3.5, kz - sl - 2], [1, 2, 5], "muskel")
     if zaehne:
         for z in range(int(kz - sl - nl + 3), int(kz - sl), 2):
             for x in (nb / 2 - 1.5, -nb / 2 + 0.5):
                 kiefer.kasten([x, y0, z], [1, 1, 1], "zahn")
     MAEULER.setdefault(art, []).append((f"kopf{s}", [0, y0, kz - sl - nl]))
-    oy, oz = y0 + sh - 4.5, kz - sl + 2.5
-    AUGEN[art] = (oy, oz, sb / 2)
+    oy, oz = y0 + sh - 4.5, kz - sl + 3
+    AUGEN[art] = (oy, oz, sb / 2 + 1)
     lid = m.knoch(f"lider{s}", [0, ky, kz], f"kopf{s}")
-    for x in (sb / 2 + 0.05, -sb / 2 - 0.05):
-        lid.kasten([x, oy - 1, oz - 1.5], [0, 2, 3], "lid")
+    for x in (sb / 2 + 1.1, -sb / 2 - 1.1):
+        lid.kasten([x, oy - 1.5, oz - 2], [0, 3, 4], "lid")
     if hoerner == "klingen":
         # Drei flache Klingen je Seite, uebereinander geschichtet, schraeg nach
         # hinten und oben - wie auf Fynns Bild vom orangen Drachen.
@@ -171,37 +188,63 @@ def kante(p, n, k):
 
 
 def klotz_haut(f, saat=0):
-    """Der Maler fuer Leib, Kopf und Beine: Verlauf Bauch -> Flanke ->
-    Ruecken, grosse dunkle Flecken (kein Sprenkel: ein Fleck ist viele Pixel
-    gross), heller Saum oben, dunkler Saum unten an jedem Block."""
+    """Der Maler fuer Leib, Kopf und Beine.
+
+    4.97 - Fynn: "was diesen Realismus bringt, sind diese dunklen Stellen
+    beim Drachen, dass Schatten und Muskeln besser abgebildet werden ... ein
+    schoener Uebergang von Bauch zu Oberkoerper." Darum:
+
+    * Der Bauch geht in mehreren Stufen in die Flanke ueber, nicht mit
+      einer harten Kante.
+    * Jeder Block ist an seinen Enden dunkler (vorn, hinten, zu den Seiten
+      des Rueckens) - so wirkt er rund statt flach.
+    * Gleich ueber dem Bauch liegt ein Schattenband, wie unter einem
+      Muskelwulst; unten an Schenkeln und Oberarmen ebenso.
+    * Grosse dunkle Flecken, heller Saum oben, dunkler Saum unten."""
     bauch, leib, ruecken, fleck = f["bauch"], f["leib"], f["ruecken"], f.get("fleck", H.dunkler(f["leib"], 0.25))
+    uebergang = [H.farbe(bauch), mische(H.farbe(bauch), H.farbe(leib), 0.35),
+                 mische(H.farbe(bauch), H.farbe(leib), 0.7), H.farbe(leib)]
 
     def haut(p, n, texel, grenze=0.3, flecken=True):
         k = H.kasten_von(texel)
         t = H.hoehe(p, n, texel)
-        if n[1] < -0.5 or (t < grenze and n[1] <= 0.5):
+        if n[1] < -0.5:
             c = H.farbe(bauch)
             # Bauchschilde: Querbaender, jedes drei Pixel breit.
             if int(math.floor(p[2])) % 3 == 0:
                 c = H.dunkler(c, 0.1)
-            if n[1] > -0.5 and t > grenze - 0.12:
-                c = mische(c, H.farbe(leib), 0.4)
             return c
-        c = H.verlauf([mische(H.farbe(bauch), H.farbe(leib), 0.6), leib, ruecken],
-                      (t - grenze) / (1 - grenze), 4)
-        if flecken and wolken(p, 4.0, saat) > 0.57:
-            c = mische(c, H.farbe(fleck), 0.8)
+        if n[1] <= 0.5 and t < grenze + 0.12 and grenze > 0:
+            # Der Uebergang vom Bauch zur Flanke in vier Stufen.
+            s_ = max(0.0, min(1.0, (t - (grenze - 0.2)) / 0.32))
+            c = H.verlauf(uebergang, s_, 4)
+            if s_ < 0.3 and int(math.floor(p[2])) % 3 == 0:
+                c = H.dunkler(c, 0.08)
+        else:
+            c = H.verlauf([mische(H.farbe(bauch), H.farbe(leib), 0.75), leib, ruecken],
+                          (t - grenze) / max(0.01, 1 - grenze), 5)
+            if flecken and wolken(p, 4.0, saat) > 0.57:
+                c = mische(c, H.farbe(fleck), 0.8)
+        if n[1] <= 0.5 and grenze > 0 and grenze + 0.1 < t < grenze + 0.24:
+            c = H.dunkler(c, 0.12)                           # Muskelschatten ueber dem Bauch
+        if grenze == 0.0 and n[1] <= 0.5 and t < 0.3:
+            c = H.dunkler(c, 0.1 + (0.3 - t) * 0.3)          # Schatten unten am Bein
+        if k is not None and abs(n[1]) <= 0.5:
+            # Rundung: zu den Enden des Blocks hin dunkler.
+            achse = 2 if abs(n[0]) > 0.5 else 0
+            rand = min(p[achse] - k.ursprung[achse], k.ursprung[achse] + k.groesse[achse] - p[achse])
+            if k.groesse[achse] >= 5 and rand < 2.0:
+                c = H.dunkler(c, 0.14 if rand < 1.0 else 0.07)
         oben, unten = kante(p, n, k)
         if oben < 1.0:
             c = H.heller(c, 0.12)
         elif unten < 1.0:
             c = H.dunkler(c, 0.18)
         if n[1] > 0.5 and k is not None:
-            # Oben auf den Bloecken: ein heller Rand, innen ruhig.
-            rand = min(p[0] - k.ursprung[0], k.ursprung[0] + k.groesse[0] - p[0],
-                       p[2] - k.ursprung[2], k.ursprung[2] + k.groesse[2] - p[2])
-            if rand < 1.0:
-                c = H.heller(c, 0.08)
+            # Oben: die Mitte (Rueckgrat) etwas heller, die Seiten dunkler.
+            rand = min(p[0] - k.ursprung[0], k.ursprung[0] + k.groesse[0] - p[0])
+            if k.groesse[0] >= 6 and rand < 2.0:
+                c = H.dunkler(c, 0.1 if rand < 1.0 else 0.05)
         return c
     return haut
 
@@ -247,6 +290,36 @@ def klotz_maler(art, f, schwinge=None, besonders=None, saat=0):
             if stoff == "schnauze" and n[1] < -0.5:
                 return H.farbe(f.get("rachen", "#7a2a2a"))                   # Gaumen
             return haut(p, n, texel, grenze=0.25)
+        if stoff == "glutader":
+            return glutader(f)
+        if stoff == "auge":
+            # Gelbe Iris, eine senkrechte schwarze Schlitzpupille, oben der
+            # Schatten der Braue, aussen ein dunkler Ring.
+            k = H.kasten_von(texel)
+            if abs(n[0]) > 0.5 and k is not None:
+                lz = p[2] - k.ursprung[2]
+                ly = p[1] - k.ursprung[1]
+                if ly > k.groesse[1] - 1:
+                    return H.dunkler(f["ruecken"], 0.35)
+                if 1.5 <= lz < 2.5:
+                    return hexfarbe("#0e0604")
+                if lz < 0.7 or lz > k.groesse[2] - 0.7:
+                    return H.dunkler(f["augen"], 0.45)
+                return glut(f["augen"]) if ly > 0.8 else glut(H.dunkler(f["augen"], 0.2))
+            return H.dunkler(f["ruecken"], 0.3)
+        if stoff == "nuester":
+            if n[1] > 0.5 or n[2] < -0.5:
+                k = H.kasten_von(texel)
+                if k is not None and abs(p[0] - (k.ursprung[0] + k.groesse[0] / 2)) < 0.6:
+                    return hexfarbe("#140806")
+            return H.dunkler(f["leib"], 0.1)
+        if stoff == "muskel":
+            # Die Kiefermuskeln: oben im Licht, unten tief im Schatten.
+            t = H.hoehe(p, n, texel)
+            return H.verlauf([H.dunkler(f["leib"], 0.3), H.dunkler(f["leib"], 0.12), f["leib"]], t, 3)
+        if stoff == "kehle":
+            return H.verlauf([f["bauch"], mische(H.farbe(f["bauch"]), H.farbe(f["leib"]), 0.5)],
+                             H.hoehe(p, n, texel), 3)
         if stoff == "braue":
             return H.verlauf([f["ruecken"], H.dunkler(f["ruecken"], 0.2)], H.hoehe(p, n, texel), 2)
         if stoff == "kiefer":
@@ -288,8 +361,12 @@ def klotz_maler(art, f, schwinge=None, besonders=None, saat=0):
 
 # Kraeftige Schwingen mit dicken Knochen: vier lange Finger, die Flughaut
 # dazwischen am Rand gezackt, an jeder Fingerspitze eine Kralle.
-FEUERDRACHE_SCHWINGE = Schwinge((9, 30, -8), oberarm=14, unterarm=18, finger=(50, 46, 40, 32),
-                                winkel=(18, -12, -40, -68), hinterkante=(9, 19), dicke=(6, 5, 3))
+# 4.97 - Fynn: "die Groesse der Fluegel ist ein bisschen groesser bei dem
+# roten Drachen, der geflogen ist": laengere Arme und Finger, die Finger
+# geknickt, die Hinterkante tiefer eingebuchtet.
+FEUERDRACHE_SCHWINGE = Schwinge((9, 30, -8), oberarm=17, unterarm=22, finger=(64, 60, 52, 42),
+                                winkel=(18, -12, -40, -68), hinterkante=(9, 20), dicke=(7, 5, 3),
+                                biegung=12, bogen=6.0)
 
 
 def fingerkrallen(m, s):
@@ -297,7 +374,12 @@ def fingerkrallen(m, s):
     am Ellbogen ein Dorn nach hinten, am Handgelenk eine grosse Daumenklaue."""
     hx, sy, sz = s.handgelenk
     for i in range(s.anzahl):
-        m.finde(f"finger{i + 1}_links").kasten([hx + s.finger[i], sy - 0.5, sz - 0.5], [4, 1, 1], "kralle")
+        if s.biegung:
+            a = round(s.finger[i] * 0.66)
+            m.finde(f"finger{i + 1}_links").kasten([hx + s.finger[i], sy - 0.5, sz - 0.5], [4, 1, 1], "kralle",
+                                                   drehung=[0, -s.biegung, 0], drehpunkt=[hx + a, sy, sz])
+        else:
+            m.finde(f"finger{i + 1}_links").kasten([hx + s.finger[i], sy - 0.5, sz - 0.5], [4, 1, 1], "kralle")
     ex = s.ellbogen[0]
     m.finde("unterarm_links").kasten([ex - 0.5, sy + 1, sz], [1, 1, 5], "horn",
                                      drehung=[-25, 0, 0], drehpunkt=[ex, sy + 1, sz])
@@ -350,6 +432,7 @@ def feuerdrache_modell():
     schwinge_bauen(m, FEUERDRACHE_SCHWINGE, zusatz=fingerkrallen)
     becken_abtrennen(m, 8, 22)
     sattel_bauen(m, "rumpf", 32, -3, 18)
+    uralt_zier(m)
     return m
 
 
@@ -382,8 +465,9 @@ def feuerdrache_maler(variante):
 
 # Nach Fynns tuerkisem Vorbild: lange, duenne Knochenarme, eine blasse
 # Flughaut, die zwischen den Fingern tief ausgefranst ist.
-FROSTWYVERN_SCHWINGE = Schwinge((6.5, 23, -8), oberarm=14, unterarm=19, finger=(46, 42, 36, 28),
-                                winkel=(14, -14, -42, -72), hinterkante=(6, 14), dicke=(3, 3, 2))
+FROSTWYVERN_SCHWINGE = Schwinge((6.5, 23, -8), oberarm=14, unterarm=19, finger=(48, 44, 38, 30),
+                                winkel=(14, -14, -42, -72), hinterkante=(6, 14), dicke=(3, 3, 2),
+                                biegung=10, bogen=5.0)
 
 
 def wyvernkrallen(m, s):
@@ -452,6 +536,7 @@ def frostwyvern_modell():
     schwinge_bauen(m, FROSTWYVERN_SCHWINGE, zusatz=wyvernkrallen)
     becken_abtrennen(m, 7, 17)
     sattel_bauen(m, "rumpf", 22, -3, 12)
+    uralt_zier(m)
     return m
 
 
@@ -491,29 +576,34 @@ def frostwyvern_maler(variante):
 # Finger ist eine gebogene Klinge.
 NACHTSCHWINGE_SCHWINGE = Schwinge((7, 24, -7), oberarm=13, unterarm=16, finger=(40, 36, 30, 24),
                                   winkel=(8, -20, -48, -78), hinterkante=(7, 15), dicke=(4, 3, 3))
+# 4.97 - Fynn: "bei dem schwarzen Drachen, dass er vier Fluegel hat, das
+# fand ich sehr cool." Das zweite Paar sitzt hinter dem ersten, ueber der
+# Huefte, kleiner und flacher gewinkelt.
+NACHTSCHWINGE_HINTEN = Schwinge((6, 22, 5), oberarm=10, unterarm=12, finger=(30, 26, 21),
+                                winkel=(-4, -32, -62), hinterkante=(6, 14), dicke=(3, 3, 2))
 
 
-def sichelschwinge_bauen(m, s, eltern="rumpf"):
+def sichelschwinge_bauen(m, s, eltern="rumpf", vor=""):
     """Die Sichelschwinge: Oberarm, Unterarm, Hand wie sonst, dann je Finger
     eine Sichel aus drei Stuecken, jedes weiter nach hinten gebogen, und
     darunter ein flaches Blatt, das zur Spitze schmal wird. Die Knochen
     heissen wie bei einer Schwinge mit Haut - so falten die Bewegungen sie
-    genauso."""
+    genauso. vor: Vorsilbe fuer ein zweites Paar (hfluegel_links ...)."""
     sx, sy, sz = s.schulter
     ex, _, _ = s.ellbogen
     hx, _, hz = s.handgelenk
     d0, d1, d2 = s.dicke
-    arm = m.knoch("fluegel_links", [sx, sy, sz], eltern)
+    arm = m.knoch(f"{vor}fluegel_links", [sx, sy, sz], eltern)
     arm.kasten([sx, sy - d0 / 2, sz - d0 / 2], [s.oberarm, d0, d0], "knochen")
     klinge(arm, sx + s.oberarm * 0.6, sy + d0 / 2, sz, 3, 3, neigung=-40)
-    unter = m.knoch("unterarm_links", [ex, sy, sz], "fluegel_links")
+    unter = m.knoch(f"{vor}unterarm_links", [ex, sy, sz], f"{vor}fluegel_links")
     unter.kasten([ex, sy - d1 / 2, sz - d1 / 2], [s.unterarm, d1, d1], "knochen")
     klinge(unter, ex + s.unterarm * 0.5, sy + d1 / 2, sz, 3, 3, neigung=-40)
-    hand = m.knoch("hand_links", [hx, sy, sz], "unterarm_links")
+    hand = m.knoch(f"{vor}hand_links", [hx, sy, sz], f"{vor}unterarm_links")
     hand.kasten([hx - 2, sy - 2, sz - 2], [4, 4, 4], "knochen")
     hand.kasten([hx - 0.5, sy - 1, sz - 6], [1, 2, 4], "kralle")
     for i in range(s.anzahl):
-        f = m.knoch(f"finger{i + 1}_links", [hx, sy, sz], "hand_links", drehung=[0, s.winkel[i], 0])
+        f = m.knoch(f"{vor}finger{i + 1}_links", [hx, sy, sz], f"{vor}hand_links", drehung=[0, s.winkel[i], 0])
         L = s.finger[i]
         a, b, c = round(L * 0.55), round(L * 0.3), round(L * 0.22)
         st = d2
@@ -529,7 +619,7 @@ def sichelschwinge_bauen(m, s, eltern="rumpf"):
         f.kasten([p2[0], sy - 0.5, p2[1] - 0.5], [c, 1, 1], "kralle", drehung=[0, -58, 0], drehpunkt=[p2[0], sy, p2[1]])
         f.kasten([p2[0], sy - 0.01, p2[1]], [c, 0, 3], "sichel", drehung=[0, -58, 0], drehpunkt=[p2[0], sy, p2[1]])
     from drachen_gestalt import spiegel_knochen, rechts
-    spiegel_knochen(m, "fluegel_links", None, rechts)
+    spiegel_knochen(m, f"{vor}fluegel_links", None, rechts)
 
 
 def nachtschwinge_modell():
@@ -568,8 +658,10 @@ def nachtschwinge_modell():
         bein_klotz(m, f"bein_vorn_{seite}", "rumpf", (x * 5.5, 18, -8), (5, 8, 5), (4, 7, 4), (5, 3, 4),
                    zehen=3, zehlang=3)
     sichelschwinge_bauen(m, NACHTSCHWINGE_SCHWINGE)
+    sichelschwinge_bauen(m, NACHTSCHWINGE_HINTEN, vor="h")
     becken_abtrennen(m, 7, 17)
     sattel_bauen(m, "rumpf", 23, -3, 12)
+    uralt_zier(m)
     return m
 
 
@@ -611,3 +703,42 @@ def nachtschwinge_maler(variante):
             return c
         return False
     return klotz_maler("nachtschwinge", f, None, besonders, saat=13)
+
+
+# ================================================================== Uralte Drachen (4.97)
+
+def uralt_zier(m, koepfe=("kopf",)):
+    """Was nur ein uralter Drache hat (Fynn: "zu einer sehr geringen
+    Wahrscheinlichkeit ... riesig ... sehen maechtiger aus"): eine Krone aus
+    Klingen um den Hinterkopf, gluehende Adern an Schaedel und Flanken, hohe
+    Klingen zwischen den Rueckenstacheln. Die Knochen uralt_... sind nur zu
+    sehen, wenn fynn:uralt gesetzt ist (Sichtbarkeit im Aussehen)."""
+    for kn in koepfe:
+        k = m.finde(kn)
+        c = k.kaesten[0]
+        x0, y0, z0 = c.ursprung
+        b, h, l = c.groesse
+        oben = y0 + h
+        z = m.knoch(f"uralt_{kn}", list(k.drehpunkt), kn)
+        # Die Krone: fuenf Klingen im Halbkreis um den Hinterkopf.
+        for i, w in enumerate((-60, -30, 0, 30, 60)):
+            klinge(z, x0 + b / 2, oben - 1, z0 + l - 2, 7 - abs(i - 2), 4, neigung=-45, seite=w)
+        for x in (x0 - 0.05, x0 + b + 0.05):
+            z.kasten([x, y0 + 2, z0 + 1], [0, 1, l - 2], "glutader")
+            z.kasten([x, y0 + 3, z0 + l - 4], [0, 3, 1], "glutader")
+    r = m.finde("rumpf")
+    c = r.kaesten[0]
+    x0, y0, z0 = c.ursprung
+    b, h, l = c.groesse
+    z = m.knoch("uralt_rumpf", list(r.drehpunkt), "rumpf")
+    for i in range(4):
+        klinge(z, 0, y0 + h - 1, z0 + 2 + i * 5, 11 - i, 4, neigung=-35)
+    for x in (x0 - 0.05, x0 + b + 0.05):
+        z.kasten([x, y0 + h * 0.55, z0 + 1], [0, 1, l + 12], "glutader")
+        z.kasten([x, y0 + h * 0.35, z0 + 3], [0, 1, l + 6], "glutader")
+    return ["uralt_" + kn for kn in koepfe] + ["uralt_rumpf"]
+
+
+def glutader(f):
+    """Die gluehenden Adern der Uralten: in der Farbe ihres Atems."""
+    return glut(f.get("glut", "#ffb030"), 0.1)

@@ -26,7 +26,8 @@
         "drachenbruellen": "animation.fynn.lindwurm.drachenbruellen",
         "sturzflug": "animation.fynn.lindwurm.sturzflug",
         "drachenblick": "animation.fynn.lindwurm.drachenblick",
-        "drachenbiss": "animation.fynn.lindwurm.drachenbiss"
+        "drachenbiss": "animation.fynn.lindwurm.drachenbiss",
+        "uralt": "animation.fynn.lindwurm.uralt"
       },
       "scripts": {
         "initialize": [
@@ -87,6 +88,9 @@
           },
           {
             "drachenbiss": "(variable.attack_time > 0.0) * (1.0 - math.max(query.property('fynn:schlaeft'), query.property('fynn:besiegt')))"
+          },
+          {
+            "uralt": "query.property('fynn:uralt')"
           }
         ],
         "scale": "1.35"

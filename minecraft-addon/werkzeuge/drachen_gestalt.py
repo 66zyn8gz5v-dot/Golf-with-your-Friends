@@ -72,7 +72,12 @@ class Schwinge:
     zurueck zum Leib. dicke: Staerke von Oberarm, Unterarm und Fingern -
     Fynns Vorbilder (Ice and Fire) haben kraeftige Fluegelknochen."""
     def __init__(self, schulter, oberarm=12, unterarm=16, finger=(26, 22, 16), winkel=(10, -30, -70),
-                 hinterkante=None, dicke=(3, 2, 1)):
+                 hinterkante=None, dicke=(3, 2, 1), biegung=0, bogen=3.0):
+        # biegung: um wie viel Grad jeder Finger im letzten Drittel nach hinten
+        # knickt (4.97, Fynn: "bei den Fluegeln nicht so gerade"); bogen: wie
+        # tief die Hinterkante zwischen den Fingern eingebuchtet ist.
+        self.biegung = biegung
+        self.bogen = bogen
         self.schulter = schulter
         self.oberarm = oberarm
         self.unterarm = unterarm
@@ -155,7 +160,17 @@ def schwinge_bauen(m, s, eltern="rumpf", zusatz=None):
     for i in range(s.anzahl):
         f = m.knoch(f"finger{i + 1}_links", [hx, sy, sz], "hand_links", drehung=[0, s.winkel[i], 0])
         st = d2 + (1 if i == 0 else 0)
-        f.kasten([hx, sy - st / 2, sz - st / 2], [s.finger[i], st, st], "fingerknochen")
+        if s.biegung:
+            # Zwei Drittel gerade, dann knickt der Finger nach hinten und wird
+            # duenner - wie ein echter Fluegelfinger.
+            a = round(s.finger[i] * 0.66)
+            f.kasten([hx, sy - st / 2, sz - st / 2], [a, st, st], "fingerknochen")
+            f.kasten([hx + a - 1, sy - (st - 1) / 2, sz - (st - 1) / 2], [s.finger[i] - a + 1, max(1, st - 1), max(1, st - 1)],
+                     "fingerknochen", drehung=[0, -s.biegung, 0], drehpunkt=[hx + a, sy, sz])
+            # Ein Knoechel am Knick.
+            f.kasten([hx + a - 1, sy - st / 2 - 0.5, sz - st / 2 - 0.5], [2, st + 1, st + 1], "fingerknochen")
+        else:
+            f.kasten([hx, sy - st / 2, sz - st / 2], [s.finger[i], st, st], "fingerknochen")
         if i < s.anzahl - 1:
             # Die Haut bis zum naechsten Finger - als Dreieck im Rechteck.
             zwischen = math.radians(s.winkel[i] - s.winkel[i + 1])
@@ -192,7 +207,7 @@ def schwinge_maler(s, haut, knochen, aderfarbe=None, zacken=0.0, flecken=None):
             spitze_b = (s.finger[i + 1] * math.cos(zwischen), s.finger[i + 1] * math.sin(zwischen))
             if not innen((lx, lz), [(0.0, 0.0), spitze_a, spitze_b]):
                 return None
-            if bogenkante(lx, lz, spitze_b, spitze_a, 3.0) - zackenkante(lx, lz, zacken) < 0:
+            if bogenkante(lx, lz, spitze_b, spitze_a, s.bogen) - zackenkante(lx, lz, zacken) < 0:
                 return None
             if int(round(lz)) % 5 == 0 and lz > 1:
                 return ader
@@ -206,7 +221,7 @@ def schwinge_maler(s, haut, knochen, aderfarbe=None, zacken=0.0, flecken=None):
         ecken = [(s.schulter[0], s.schulter[2]), (hx, hz), letzte, hinten]
         if not innen((x, z), ecken):
             return None
-        if bogenkante(x, z, hinten, letzte, 3.5) - zackenkante(x, z, zacken) < 0:
+        if bogenkante(x, z, hinten, letzte, s.bogen + 0.5) - zackenkante(x, z, zacken) < 0:
             return None
         if int(round(z - hz)) % 5 == 0 and z - hz > 1:
             return ader
@@ -473,6 +488,8 @@ def drachen_maler(art, f, schwinge=None, besonders=None):
                 return farbe
         if stoff.startswith("flughaut") and fluegel:
             return fluegel(stoff, p, n, texel)
+        if stoff == "glutader":
+            return glut(gluht, 0.1)
         if stoff == "leib":
             return koerper(p, n, texel)
         if stoff == "bauch":
@@ -690,6 +707,8 @@ def himmelsdrache_modell():
         bein_bauen(m, f"bein_hinten_{seite}", f"schwanz{HIMMELSDRACHE_BEINGLIED}", (x * 0.8, 12, gz), (3, 5, 3),
                    (2, 5, 2), (3, 2, 4), krallen=4)
     sattel_bauen(m, "rumpf", 18, -1, 9)
+    from drachen_klotz import uralt_zier
+    uralt_zier(m)
     return m
 
 
@@ -777,6 +796,8 @@ def giftdrache_modell():
     schwinge_bauen(m, GIFTDRACHE_SCHWINGE)
     becken_abtrennen(m, 8, 17)
     sattel_bauen(m, "rumpf", 24, -3, 14)
+    from drachen_klotz import uralt_zier
+    uralt_zier(m, ("kopf_a", "kopf_b"))
     return m
 
 

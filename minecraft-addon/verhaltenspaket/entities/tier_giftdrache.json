@@ -26,6 +26,11 @@
           "type": "bool",
           "default": false,
           "client_sync": true
+        },
+        "fynn:uralt": {
+          "type": "bool",
+          "default": false,
+          "client_sync": true
         }
       }
     },
@@ -351,6 +356,20 @@
           "value": 0.5
         }
       },
+      "fynn:uralt": {
+        "minecraft:scale": {
+          "value": 1.6
+        },
+        "minecraft:health": {
+          "value": 350,
+          "max": 350
+        },
+        "minecraft:attack": {
+          "damage": 16,
+          "effect_name": "poison",
+          "effect_duration": 6
+        }
+      },
       "fynn:erwachsen": {
         "minecraft:loot": {
           "table": "loot_tables/entities/giftdrache.json"
@@ -646,6 +665,16 @@
             }
           }
         ]
+      },
+      "fynn:uralt_werden": {
+        "add": {
+          "component_groups": [
+            "fynn:uralt"
+          ]
+        },
+        "set_property": {
+          "fynn:uralt": true
+        }
       },
       "minecraft:entity_spawned": {
         "sequence": [

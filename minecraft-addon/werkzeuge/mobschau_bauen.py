@@ -345,7 +345,7 @@ SCHALTER = {
     "fynn:unten": "Unter dem Sand", "fynn:feuer": "Feueratem",
     "fynn:spinnt": "Spinnt ein Netz", "fynn:lockt": "Lockt",
     "fynn:wolf": "Wolfsgestalt", "fynn:wandelt": "Verwandelt sich", "fynn:schlaeft": "Schläft",
-    "fynn:fliegt": "Fliegt", "fynn:besiegt": "Besiegt",
+    "fynn:fliegt": "Fliegt", "fynn:besiegt": "Besiegt", "fynn:uralt": "Uralt (riesig, selten)",
 }
 
 

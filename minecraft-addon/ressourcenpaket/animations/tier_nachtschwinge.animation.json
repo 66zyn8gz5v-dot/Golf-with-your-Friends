@@ -337,6 +337,90 @@
             "math.sin(variable.fynn_t * 55.0 - 320) * 15.0 - variable.fynn_dreh * 8",
             0.0
           ]
+        },
+        "hfluegel_links": {
+          "rotation": [
+            0.0,
+            "-math.max(0.0, math.cos((variable.fynn_t - 0.18) * 260.0)) * 10.0 * math.max(0.3 + 0.7 * math.clamp(math.sin((variable.fynn_t - 0.18) * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
+            "-6.0 - math.sin((variable.fynn_t - 0.18) * 260.0) * 42.0 * math.max(0.3 + 0.7 * math.clamp(math.sin((variable.fynn_t - 0.18) * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))"
+          ]
+        },
+        "hfluegel_rechts": {
+          "rotation": [
+            0.0,
+            "-(-math.max(0.0, math.cos((variable.fynn_t - 0.18) * 260.0)) * 10.0 * math.max(0.3 + 0.7 * math.clamp(math.sin((variable.fynn_t - 0.18) * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer')))",
+            "-(-6.0 - math.sin((variable.fynn_t - 0.18) * 260.0) * 42.0 * math.max(0.3 + 0.7 * math.clamp(math.sin((variable.fynn_t - 0.18) * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer')))"
+          ]
+        },
+        "hunterarm_links": {
+          "rotation": [
+            0.0,
+            "math.max(0.0, math.cos((variable.fynn_t - 0.18) * 260.0)) * 18.0 * math.max(0.3 + 0.7 * math.clamp(math.sin((variable.fynn_t - 0.18) * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
+            "-math.sin((variable.fynn_t - 0.18) * 260.0 - 50.0) * 22.0 * math.max(0.3 + 0.7 * math.clamp(math.sin((variable.fynn_t - 0.18) * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))"
+          ]
+        },
+        "hunterarm_rechts": {
+          "rotation": [
+            0.0,
+            "-(math.max(0.0, math.cos((variable.fynn_t - 0.18) * 260.0)) * 18.0 * math.max(0.3 + 0.7 * math.clamp(math.sin((variable.fynn_t - 0.18) * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer')))",
+            "-(-math.sin((variable.fynn_t - 0.18) * 260.0 - 50.0) * 22.0 * math.max(0.3 + 0.7 * math.clamp(math.sin((variable.fynn_t - 0.18) * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer')))"
+          ]
+        },
+        "hhand_links": {
+          "rotation": [
+            0.0,
+            "-math.max(0.0, math.cos((variable.fynn_t - 0.18) * 260.0 - 40.0)) * 10.0 * math.max(0.3 + 0.7 * math.clamp(math.sin((variable.fynn_t - 0.18) * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
+            "-math.sin((variable.fynn_t - 0.18) * 260.0 - 90.0) * 14.0 * math.max(0.3 + 0.7 * math.clamp(math.sin((variable.fynn_t - 0.18) * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))"
+          ]
+        },
+        "hhand_rechts": {
+          "rotation": [
+            0.0,
+            "-(-math.max(0.0, math.cos((variable.fynn_t - 0.18) * 260.0 - 40.0)) * 10.0 * math.max(0.3 + 0.7 * math.clamp(math.sin((variable.fynn_t - 0.18) * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer')))",
+            "-(-math.sin((variable.fynn_t - 0.18) * 260.0 - 90.0) * 14.0 * math.max(0.3 + 0.7 * math.clamp(math.sin((variable.fynn_t - 0.18) * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer')))"
+          ]
+        },
+        "hfinger1_links": {
+          "rotation": [
+            0.0,
+            "-math.max(0.0, -math.sin((variable.fynn_t - 0.18) * 260.0)) * 4.5 + math.max(0.0, math.sin((variable.fynn_t - 0.18) * 260.0)) * 1.5",
+            "-math.sin((variable.fynn_t - 0.18) * 260.0 - 72) * 3.0 * math.max(0.3 + 0.7 * math.clamp(math.sin((variable.fynn_t - 0.18) * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))"
+          ]
+        },
+        "hfinger1_rechts": {
+          "rotation": [
+            0.0,
+            "-(-math.max(0.0, -math.sin((variable.fynn_t - 0.18) * 260.0)) * 4.5 + math.max(0.0, math.sin((variable.fynn_t - 0.18) * 260.0)) * 1.5)",
+            "-(-math.sin((variable.fynn_t - 0.18) * 260.0 - 72) * 3.0 * math.max(0.3 + 0.7 * math.clamp(math.sin((variable.fynn_t - 0.18) * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer')))"
+          ]
+        },
+        "hfinger2_links": {
+          "rotation": [
+            0.0,
+            "-math.max(0.0, -math.sin((variable.fynn_t - 0.18) * 260.0)) * 9.0 + math.max(0.0, math.sin((variable.fynn_t - 0.18) * 260.0)) * 3.0",
+            "-math.sin((variable.fynn_t - 0.18) * 260.0 - 84) * 4.0 * math.max(0.3 + 0.7 * math.clamp(math.sin((variable.fynn_t - 0.18) * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))"
+          ]
+        },
+        "hfinger2_rechts": {
+          "rotation": [
+            0.0,
+            "-(-math.max(0.0, -math.sin((variable.fynn_t - 0.18) * 260.0)) * 9.0 + math.max(0.0, math.sin((variable.fynn_t - 0.18) * 260.0)) * 3.0)",
+            "-(-math.sin((variable.fynn_t - 0.18) * 260.0 - 84) * 4.0 * math.max(0.3 + 0.7 * math.clamp(math.sin((variable.fynn_t - 0.18) * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer')))"
+          ]
+        },
+        "hfinger3_links": {
+          "rotation": [
+            0.0,
+            "-math.max(0.0, -math.sin((variable.fynn_t - 0.18) * 260.0)) * 13.5 + math.max(0.0, math.sin((variable.fynn_t - 0.18) * 260.0)) * 4.5",
+            "-math.sin((variable.fynn_t - 0.18) * 260.0 - 96) * 5.0 * math.max(0.3 + 0.7 * math.clamp(math.sin((variable.fynn_t - 0.18) * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))"
+          ]
+        },
+        "hfinger3_rechts": {
+          "rotation": [
+            0.0,
+            "-(-math.max(0.0, -math.sin((variable.fynn_t - 0.18) * 260.0)) * 13.5 + math.max(0.0, math.sin((variable.fynn_t - 0.18) * 260.0)) * 4.5)",
+            "-(-math.sin((variable.fynn_t - 0.18) * 260.0 - 96) * 5.0 * math.max(0.3 + 0.7 * math.clamp(math.sin((variable.fynn_t - 0.18) * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer')))"
+          ]
         }
       }
     },
@@ -751,6 +835,90 @@
             0.0,
             0.0
           ]
+        },
+        "hfluegel_links": {
+          "rotation": [
+            0.0,
+            "-68.0 * (1.0 - variable.fynn_offen_l)",
+            "-60.0 * (1.0 - variable.fynn_offen_l) - variable.fynn_offen_l * 45.0 - variable.fynn_offen_l * math.sin((variable.fynn_t - 0.18) * 400.0) * 1.5"
+          ]
+        },
+        "hunterarm_links": {
+          "rotation": [
+            0.0,
+            "140.0 * (1.0 - variable.fynn_offen_l)",
+            0.0
+          ]
+        },
+        "hhand_links": {
+          "rotation": [
+            "-28.0 * (1.0 - variable.fynn_offen_l)",
+            "-170.0 * (1.0 - variable.fynn_offen_l)",
+            0.0
+          ]
+        },
+        "hfinger1_links": {
+          "rotation": [
+            0.0,
+            "-6.0 * (1.0 - variable.fynn_offen_l)",
+            0.0
+          ]
+        },
+        "hfinger2_links": {
+          "rotation": [
+            0.0,
+            "15.0 * (1.0 - variable.fynn_offen_l)",
+            0.0
+          ]
+        },
+        "hfinger3_links": {
+          "rotation": [
+            0.0,
+            "36.0 * (1.0 - variable.fynn_offen_l)",
+            0.0
+          ]
+        },
+        "hfluegel_rechts": {
+          "rotation": [
+            0.0,
+            "68.0 * (1.0 - variable.fynn_offen_r)",
+            "60.0 * (1.0 - variable.fynn_offen_r) - variable.fynn_offen_r * -45.0 - variable.fynn_offen_r * math.sin((variable.fynn_t - 0.18) * 400.0) * -1.5"
+          ]
+        },
+        "hunterarm_rechts": {
+          "rotation": [
+            0.0,
+            "-140.0 * (1.0 - variable.fynn_offen_r)",
+            0.0
+          ]
+        },
+        "hhand_rechts": {
+          "rotation": [
+            "-28.0 * (1.0 - variable.fynn_offen_r)",
+            "170.0 * (1.0 - variable.fynn_offen_r)",
+            0.0
+          ]
+        },
+        "hfinger1_rechts": {
+          "rotation": [
+            0.0,
+            "6.0 * (1.0 - variable.fynn_offen_r)",
+            0.0
+          ]
+        },
+        "hfinger2_rechts": {
+          "rotation": [
+            0.0,
+            "-15.0 * (1.0 - variable.fynn_offen_r)",
+            0.0
+          ]
+        },
+        "hfinger3_rechts": {
+          "rotation": [
+            0.0,
+            "-36.0 * (1.0 - variable.fynn_offen_r)",
+            0.0
+          ]
         }
       }
     },
@@ -998,6 +1166,20 @@
             "-math.sin(query.modified_distance_moved * 22.0 * 2.0 - 150) * 2.5",
             "math.sin(query.modified_distance_moved * 22.0) * 3.0",
             0.0
+          ]
+        },
+        "hfluegel_links": {
+          "rotation": [
+            0.0,
+            "math.sin(query.modified_distance_moved * 22.0) * 3.0 * 1",
+            "math.sin(query.modified_distance_moved * 22.0 * 2.0) * 2.0 * 1"
+          ]
+        },
+        "hfluegel_rechts": {
+          "rotation": [
+            0.0,
+            "math.sin(query.modified_distance_moved * 22.0) * 3.0 * -1",
+            "math.sin(query.modified_distance_moved * 22.0 * 2.0) * 2.0 * -1"
           ]
         }
       }
@@ -1338,6 +1520,90 @@
             -23.8,
             "math.pow(math.max(0.0, math.sin(variable.fynn_t * 9.0)), 30.0) * math.sin(variable.fynn_t * 500.0) * 12.0"
           ]
+        },
+        "hfluegel_links": {
+          "rotation": [
+            0.0,
+            -57.8,
+            "-39.0 + math.pow(math.max(0.0, math.sin((variable.fynn_t - 0.18) * 5.0)), 40.0) * 8.0"
+          ]
+        },
+        "hfluegel_rechts": {
+          "rotation": [
+            0.0,
+            68.0,
+            60.0
+          ]
+        },
+        "hunterarm_links": {
+          "rotation": [
+            0.0,
+            119.0,
+            0.0
+          ]
+        },
+        "hunterarm_rechts": {
+          "rotation": [
+            0.0,
+            -140.0,
+            -0.0
+          ]
+        },
+        "hhand_links": {
+          "rotation": [
+            -23.8,
+            -144.5,
+            0.0
+          ]
+        },
+        "hhand_rechts": {
+          "rotation": [
+            -28.0,
+            170.0,
+            -0.0
+          ]
+        },
+        "hfinger1_links": {
+          "rotation": [
+            0.0,
+            -5.1,
+            0.0
+          ]
+        },
+        "hfinger1_rechts": {
+          "rotation": [
+            0.0,
+            6.0,
+            -0.0
+          ]
+        },
+        "hfinger2_links": {
+          "rotation": [
+            0.0,
+            12.8,
+            0.0
+          ]
+        },
+        "hfinger2_rechts": {
+          "rotation": [
+            0.0,
+            -15.0,
+            -0.0
+          ]
+        },
+        "hfinger3_links": {
+          "rotation": [
+            0.0,
+            30.6,
+            0.0
+          ]
+        },
+        "hfinger3_rechts": {
+          "rotation": [
+            0.0,
+            -36.0,
+            -0.0
+          ]
         }
       }
     },
@@ -1647,6 +1913,90 @@
             "math.sin(variable.fynn_t * 80.0) * 10.0",
             0.0
           ]
+        },
+        "hfluegel_links": {
+          "rotation": [
+            0.0,
+            -23.8,
+            -116.0
+          ]
+        },
+        "hfluegel_rechts": {
+          "rotation": [
+            0.0,
+            68.0,
+            60.0
+          ]
+        },
+        "hunterarm_links": {
+          "rotation": [
+            0.0,
+            49.0,
+            0.0
+          ]
+        },
+        "hunterarm_rechts": {
+          "rotation": [
+            0.0,
+            -140.0,
+            -0.0
+          ]
+        },
+        "hhand_links": {
+          "rotation": [
+            -9.8,
+            -59.5,
+            0.0
+          ]
+        },
+        "hhand_rechts": {
+          "rotation": [
+            -28.0,
+            170.0,
+            -0.0
+          ]
+        },
+        "hfinger1_links": {
+          "rotation": [
+            0.0,
+            -2.1,
+            0.0
+          ]
+        },
+        "hfinger1_rechts": {
+          "rotation": [
+            0.0,
+            6.0,
+            -0.0
+          ]
+        },
+        "hfinger2_links": {
+          "rotation": [
+            0.0,
+            5.2,
+            0.0
+          ]
+        },
+        "hfinger2_rechts": {
+          "rotation": [
+            0.0,
+            -15.0,
+            -0.0
+          ]
+        },
+        "hfinger3_links": {
+          "rotation": [
+            0.0,
+            12.6,
+            0.0
+          ]
+        },
+        "hfinger3_rechts": {
+          "rotation": [
+            0.0,
+            -36.0,
+            -0.0
+          ]
         }
       }
     },
@@ -1808,6 +2158,20 @@
             0.0,
             "math.sin(variable.fynn_t * 220.0 - 320) * 3.0",
             0.0
+          ]
+        },
+        "hfluegel_links": {
+          "rotation": [
+            0.0,
+            0.0,
+            -15.0
+          ]
+        },
+        "hfluegel_rechts": {
+          "rotation": [
+            0.0,
+            -0.0,
+            15.0
           ]
         }
       }
@@ -1972,6 +2336,20 @@
             0.0,
             "math.sin(variable.fynn_t * 300.0 - 320) * 8.4",
             0.0
+          ]
+        },
+        "hfluegel_links": {
+          "rotation": [
+            0.0,
+            0.0,
+            "-8.0 * (1.0 - query.property('fynn:fliegt'))"
+          ]
+        },
+        "hfluegel_rechts": {
+          "rotation": [
+            0.0,
+            -0.0,
+            "-(-8.0 * (1.0 - query.property('fynn:fliegt')))"
           ]
         }
       }
@@ -2366,6 +2744,48 @@
             "-math.sin(variable.fynn_t * 55.0 - 320) * 15.0",
             0.0
           ]
+        },
+        "hfluegel_links": {
+          "rotation": [
+            0.0,
+            -30.0,
+            -12.0
+          ]
+        },
+        "hfluegel_rechts": {
+          "rotation": [
+            0.0,
+            30.0,
+            12.0
+          ]
+        },
+        "hunterarm_links": {
+          "rotation": [
+            0.0,
+            45.0,
+            0.0
+          ]
+        },
+        "hunterarm_rechts": {
+          "rotation": [
+            0.0,
+            -45.0,
+            -0.0
+          ]
+        },
+        "hhand_links": {
+          "rotation": [
+            0.0,
+            -40.0,
+            0.0
+          ]
+        },
+        "hhand_rechts": {
+          "rotation": [
+            0.0,
+            40.0,
+            -0.0
+          ]
         }
       }
     },
@@ -2555,6 +2975,53 @@
             "-math.sin(math.clamp(variable.attack_time / 0.35, 0.0, 1.0) * 180.0) * 35.0 + math.sin(math.clamp((variable.attack_time - 0.3) / 0.7, 0.0, 1.0) * 180.0) * 20.0",
             0.0,
             0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.nachtschwinge.uralt": {
+      "loop": true,
+      "bones": {
+        "fluegel_links": {
+          "scale": [
+            1.3,
+            1.3,
+            1.3
+          ]
+        },
+        "fluegel_rechts": {
+          "scale": [
+            1.3,
+            1.3,
+            1.3
+          ]
+        },
+        "hfluegel_links": {
+          "scale": [
+            1.3,
+            1.3,
+            1.3
+          ]
+        },
+        "hfluegel_rechts": {
+          "scale": [
+            1.3,
+            1.3,
+            1.3
+          ]
+        },
+        "horn_links": {
+          "scale": [
+            1.45,
+            1.45,
+            1.45
+          ]
+        },
+        "horn_rechts": {
+          "scale": [
+            1.45,
+            1.45,
+            1.45
           ]
         }
       }

@@ -285,6 +285,22 @@ function wesen(w, typeId, ort, extra = {}) {
     world.gameRules = undefined;
 }
 
+// Uralte Drachen (4.97): einmal gewuerfelt, selten uralt - dann weiterer Atem.
+{
+    const w = welt();
+    const alt = wesen(w, "fynn:lindwurm", { x: 0, y: 70, z: 0 }, { eig: { "fynn:fliegt": true } });
+    pruefe("Uralt: beim ersten Wurf mit Glueck", d.uraltWuerfeln(alt, () => 0) === true
+        && alt.ereignisse.includes("fynn:uralt_werden"));
+    pruefe("... nur einmal gewuerfelt", d.uraltWuerfeln(alt, () => 0) === false);
+    const normal = wesen(w, "fynn:lindwurm", { x: 0, y: 70, z: 0 }, { eig: { "fynn:fliegt": true } });
+    pruefe("... und meistens nicht", d.uraltWuerfeln(normal, () => 0.5) === false
+        && !normal.ereignisse.includes("fynn:uralt_werden"));
+    alt.eig["fynn:uralt"] = true;
+    const m1 = d.maul(normal), m2 = d.maul(alt);
+    pruefe("... sein Maul sitzt weiter vorn und hoeher (er ist groesser)",
+        Math.hypot(m2.x, m2.z) > Math.hypot(m1.x, m1.z) && m2.y > m1.y);
+}
+
 pruefe("Anmeldung: der Takt alle zwei Ticks", gemerkt.takte.some(([f, t]) => typeof f === "function" && t === 2));
 
 const gut = ergebnisse.every(Boolean);

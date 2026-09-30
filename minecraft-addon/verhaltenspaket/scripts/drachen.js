@@ -309,6 +309,10 @@ export const DRACHEN = {
 };
 
 export const BESIEGT = { anteil: 0.25, dauer: 6000, hiebe: 3 };
+// Uralte Drachen (4.97): so selten, so viel groesser (wie URALT_GROESSE in
+// drachen_daten.py), so viel staerker.
+export const URALT = { chance: 0.04, groesse: 1.6, weite: 1.5, kegel: 1.3, schaden: 4, pause: 0.5, flug: 1.35,
+                       schuppen: 8 };
 export const SCHLAF = { weckweite: 8, weckchance: 0.35 };
 export const PFEIFE = "fynn:drachenpfeife";
 const HEILMITTEL = new Set(["minecraft:golden_apple", "minecraft:enchanted_golden_apple"]);
@@ -357,8 +361,8 @@ export function maul(drache, kopf = 0) {
     try { b = drache.getViewDirection(); } catch (e) { /* geradeaus */ }
     const flach = einheit({ x: b.x, y: 0, z: b.z });
     // Die Arten sind verschieden gross (4.95); die Masse oben gelten fuer
-    // Groesse 1, das Maul wandert mit.
-    const g = art.groesse ?? 1;
+    // Groesse 1, das Maul wandert mit - bei den Uralten noch weiter.
+    const g = (art.groesse ?? 1) * (eig(drache, "fynn:uralt") ? URALT.groesse : 1);
     const seite = (art.koepfe?.[kopf] ?? 0) * g;
     return { x: o.x + flach.x * art.maul * g - flach.z * seite, y: o.y + art.hoehe * g,
              z: o.z + flach.z * art.maul * g + flach.x * seite };
@@ -422,12 +426,38 @@ export function imKegel(dim, mund, r, atem, drache) {
     });
 }
 
+/** Der Atem eines Uralten reicht weiter, ist breiter und trifft haerter. */
+function staerker(atem, drache) {
+    if (!eig(drache, "fynn:uralt")) return atem;
+    return {
+        ...atem, weite: atem.weite * URALT.weite, kegel: atem.kegel * URALT.kegel,
+        wesen(ziel, d) {
+            atem.wesen(ziel, d);
+            try { ziel.applyDamage(URALT.schaden, { cause: "magic", damagingEntity: d }); } catch (e) { /* egal */ }
+        },
+    };
+}
+
+/** Einmal je Drache wird gewuerfelt, ob er uralt ist. */
+export function uraltWuerfeln(drache, zufall = Math.random) {
+    try {
+        if (drache.getDynamicProperty("fynn:gewuerfelt")) return false;
+        drache.setDynamicProperty("fynn:gewuerfelt", true);
+    } catch (e) { return false; }
+    if (istZahm(drache) || zufall() >= URALT.chance) return false;
+    try {
+        drache.triggerEvent("fynn:uralt_werden");
+        drache.dimension.playSound("mob.enderdragon.growl", drache.location, { volume: 6, pitch: 0.5 });
+    } catch (e) { return false; }
+    return true;
+}
+
 /** Ein Takt (alle 2 Ticks) des Atems. Liefert, was er tut. */
 export function atemTakt(drache, jetzt, zufall = Math.random) {
     const art = DRACHEN[drache.typeId];
     if (!art) return "kein Drache";
     if (eig(drache, "fynn:besiegt") || eig(drache, "fynn:schlaeft")) return "ruht";
-    const atem = ATEMARTEN[art.atem];
+    const atem = staerker(ATEMARTEN[art.atem], drache);
     const z = von(drache);
     const ziel = zielFuer(drache, z, jetzt);
     if (z.bis) {
@@ -503,7 +533,8 @@ export function faehigkeitTakt(drache, jetzt, richtung = undefined, zufall = Mat
         if (d < f.min || d > f.max) return "wartet";
         r = einheit({ x: ziel.location.x - mund.x, y: ziel.location.y + 0.8 - mund.y, z: ziel.location.z - mund.z });
     }
-    z.kugelPause = jetzt + f.pause[0] + Math.floor(zufall() * (f.pause[1] - f.pause[0]));
+    const pause = f.pause[0] + Math.floor(zufall() * (f.pause[1] - f.pause[0]));
+    z.kugelPause = jetzt + Math.round(pause * (eig(drache, "fynn:uralt") ? URALT.pause : 1));
     const was = f.wirken(drache, mund, r, richtung ? undefined : zielFuer(drache, z, jetzt));
     return typeof was === "string" ? was : f.name;
 }
@@ -794,6 +825,13 @@ world.afterEvents.itemUse.subscribe((e) => {
 
 world.afterEvents.entityDie.subscribe((e) => {
     try { zustand.delete(e.deadEntity?.id); } catch (fehler) { /* egal */ }
+    // Ein Uralter hinterlaesst mehr Schuppen.
+    try {
+        const d = e.deadEntity;
+        if (DRACHEN[d?.typeId] && eig(d, "fynn:uralt")) {
+            d.dimension.spawnItem(new mc.ItemStack("fynn:drachenschuppe", URALT.schuppen), d.location);
+        }
+    } catch (fehler) { /* egal */ }
 });
 
 world.afterEvents.projectileHitBlock.subscribe((e) => {
@@ -826,7 +864,11 @@ system.runInterval(() => {
                 for (const d of welt.getEntities({ type: typ })) {
                     try {
                         const reiter = reiterVon(d);
-                        if (reiter) reitflug(d, DRACHEN[typ].reitflug);
+                        if (r % 40 === 0) uraltWuerfeln(d);
+                        if (reiter) {
+                            const rf = DRACHEN[typ].reitflug;
+                            reitflug(d, eig(d, "fynn:uralt") ? { ...rf, tempo: rf.tempo * URALT.flug } : rf);
+                        }
                         atemTakt(d, jetzt);
                         if (r % 5 === 0) faehigkeitTakt(d, jetzt);
                         if (r % 10 === 0) flugTakt(d, jetzt);
