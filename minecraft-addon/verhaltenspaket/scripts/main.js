@@ -25,6 +25,8 @@ import "./kleintiere.js";
 import "./fantasy.js";
 import "./sandwurm.js";
 import "./drachen.js";
+import "./drachenzucht.js";
+import "./drachengaben.js";
 import "./fantasy2.js";
 import "./greif.js";
 import "./nester.js";

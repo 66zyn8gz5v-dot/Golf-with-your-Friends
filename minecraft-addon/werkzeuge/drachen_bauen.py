@@ -197,6 +197,60 @@ def atem_teilchen(name, verlauf):
     return t
 
 
+# Die Gaben der Mischlinge (5.2, scripts/drachengaben.js): je Element ein
+# kleiner Ballen, den das Skript zu Wirbeln, Ringen, Blitzen und Wolken
+# zusammensetzt. (Farbe am Anfang, in der Mitte, am Ende; Steigen.)
+GABENFARBEN = {
+    "feuer":    ("#FFFFE070", "#E0FF7020", "#00501010", 1.2),
+    "frost":    ("#FFFFFFFF", "#E0A8E8FF", "#0060A0D0", -0.4),
+    "sturm":    ("#FFFFFFFF", "#D0C8D8E8", "#00708898", 0.6),
+    "gift":     ("#FFD8FF60", "#E070C030", "#00305018", 0.3),
+    "schatten": ("#FFD0A0FF", "#E05020A0", "#00100418", 0.2),
+    "schall":   ("#FFFFF4C8", "#D0A0E8D0", "#004060A0", 0.4),
+}
+
+
+def gabenteilchen(element):
+    anfang, mitte, ende, steigen = GABENFARBEN[element]
+    return {"format_version": "1.10.0", "particle_effect": {
+        "description": {"identifier": f"fynn:gabe_{element}", "basic_render_parameters": {
+            "material": "particles_blend", "texture": "textures/particle/fynn_rauch"}},
+        "components": {
+            "minecraft:emitter_rate_instant": {"num_particles": 3},
+            "minecraft:emitter_lifetime_once": {"active_time": 0.05},
+            "minecraft:emitter_shape_sphere": {"radius": 0.35, "direction": "outwards"},
+            "minecraft:particle_lifetime_expression": {"max_lifetime": "0.7 + variable.particle_random_1 * 0.4"},
+            "minecraft:particle_initial_speed": 0.3,
+            "minecraft:particle_motion_dynamic": {"linear_acceleration": [0, steigen, 0], "linear_drag_coefficient": 1.2},
+            "minecraft:particle_appearance_billboard": {
+                "size": ["0.35 + variable.particle_age * 0.5", "0.35 + variable.particle_age * 0.5"],
+                "facing_camera_mode": "rotate_xyz",
+                "uv": {"texture_width": 8, "texture_height": 8, "uv": [0, 0], "uv_size": [8, 8]}},
+            "minecraft:particle_appearance_lighting": {},
+            "minecraft:particle_appearance_tinting": {"color": {
+                "interpolant": "variable.particle_age / variable.particle_lifetime",
+                "gradient": {"0.0": anfang, "0.4": mitte, "1.0": ende}}},
+        }}}
+
+
+def eierschale():
+    """Wenn ein Drache schluepft: Schalenstuecke fliegen und fallen."""
+    t = funken()
+    t["particle_effect"]["description"]["identifier"] = "fynn:eierschale"
+    k = t["particle_effect"]["components"]
+    t["particle_effect"]["description"]["basic_render_parameters"]["material"] = "particles_alpha"
+    k["minecraft:emitter_rate_instant"] = {"num_particles": 14}
+    k["minecraft:emitter_shape_point"] = {"direction": [
+        "(variable.particle_random_1 - 0.5) * 2.0", "1.0", "(variable.particle_random_2 - 0.5) * 2.0"]}
+    k["minecraft:particle_initial_speed"] = "3.0 + variable.particle_random_1 * 3.0"
+    k["minecraft:particle_lifetime_expression"] = {"max_lifetime": "1.0 + variable.particle_random_4 * 0.5"}
+    k["minecraft:particle_motion_dynamic"] = {"linear_acceleration": [0, -12.0, 0], "linear_drag_coefficient": 0.5}
+    k["minecraft:particle_appearance_billboard"]["size"] = [0.14, 0.14]
+    k["minecraft:particle_appearance_tinting"]["color"]["gradient"] = {
+        "0.0": "#FFF4E8D0", "0.6": "#FFD8C8A8", "1.0": "#00A89878"}
+    return t
+
+
 def frostsplitter():
     """Zum Frosthauch: kleine, helle Eissplitter, die schnell voraus fliegen
     und im Bogen zu Boden fallen."""
@@ -352,6 +406,9 @@ def main():
                 sprite_aussehen("plasmaschuss", "textures/items/plasmaschuss", "1.8"))
     bk.schreibe(RES / "particles" / "plasmaknall.particle.json", plasmaknall())
     bk.schreibe(RES / "particles" / "frostsplitter.particle.json", frostsplitter())
+    for element in GABENFARBEN:
+        bk.schreibe(RES / "particles" / f"gabe_{element}.particle.json", gabenteilchen(element))
+    bk.schreibe(RES / "particles" / "eierschale.particle.json", eierschale())
     ordner = RES / "textures" / "particle"
     ordner.mkdir(parents=True, exist_ok=True)
     teilchenbild(Z_BILD, {"k": (40, 44, 70), "W": (245, 248, 255)}).save(ordner / "fynn_schlaf_z.png")

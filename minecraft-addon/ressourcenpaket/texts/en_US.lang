@@ -596,11 +596,6 @@ item.fynn:irrlichtflasche.name=Wisp in a Bottle
 item.fynn:moosherz.name=Moss Heart
 item.fynn:greifenfeder.name=Griffin Feather
 
-## Drachen
-item.fynn:drachenpfeife=Dragon Whistle
-entity.fynn:eissplitter.name=Ice Shard
-entity.fynn:plasmaschuss.name=Plasma Blast
-item.fynn:drachenpfeife.name=Dragon Whistle
 
 ## Nester und Eier
 item.fynn:vogelei=Bird Egg
@@ -694,3 +689,15 @@ entity.fynn:nachtschwinge.name=Night Fury Dragon
 item.spawn_egg.entity.fynn:nachtschwinge.name=Night Fury Dragon Spawn Egg
 entity.fynn:schlunddrache.name=Maw Dragon
 item.spawn_egg.entity.fynn:schlunddrache.name=Maw Dragon Spawn Egg
+
+## Drachen
+item.fynn:drachenpfeife=Dragon Whistle
+entity.fynn:eissplitter.name=Ice Shard
+entity.fynn:plasmaschuss.name=Plasma Blast
+item.fynn:drachenpfeife.name=Dragon Whistle
+
+## Drachenzucht
+item.fynn:drachenei=Dragon Egg
+entity.fynn:drachenei.name=Dragon Egg
+action.interact.fynn.drachenei=Pick up
+item.fynn:drachenei.name=Dragon Egg

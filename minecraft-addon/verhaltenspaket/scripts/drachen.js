@@ -380,22 +380,60 @@ export const SCHLAF = { weckweite: 8, weckchance: 0.35 };
 export const PFEIFE = "fynn:drachenpfeife";
 const HEILMITTEL = new Set(["minecraft:golden_apple", "minecraft:enchanted_golden_apple"]);
 
+// ------------------------------------------------------------ Jungdrachen und Erbe (5.2)
+//
+// Wie gross ein Drache ist (fynn:wuchs, 10 = erwachsen) und was er geerbt
+// hat, steht an ihm selbst: Atem und Faehigkeit koennen von seinen Eltern
+// stammen statt von seiner Art (scripts/drachenzucht.js).
+export const WUCHS = 10;
+// Was die Zucht (drachenzucht.js) hier einhaengt: die Gabe fuer die Pfeife
+// und eine Zeile ueber das Erbe beim Antippen.
+export const zusatz = { pfeife: null, info: null };
+export const FLEISCH = new Set(["minecraft:beef", "minecraft:porkchop", "minecraft:mutton", "minecraft:chicken",
+    "minecraft:rabbit", "minecraft:cod", "minecraft:salmon", "fynn:elchfleisch", "fynn:bisonfleisch"]);
+
+export function wuchsVon(d) {
+    const w = eig(d, "fynn:wuchs");
+    return typeof w === "number" ? w : WUCHS;
+}
+/** So gross im Verhaeltnis zum Erwachsenen (wie im Aussehen: 0,3 bis 1). */
+export function wuchsFaktor(d) {
+    return 0.3 + 0.7 * wuchsVon(d) / WUCHS;
+}
+function erbe(d, schluessel) {
+    try { return d.getDynamicProperty(schluessel); } catch (e) { return undefined; }
+}
+export function atemVon(d) {
+    const a = erbe(d, "fynn:atem");
+    return ATEMARTEN[a] ? a : DRACHEN[d.typeId]?.atem;
+}
+/** Die Blutlinie (5.2): Gezuechtete werden je Generation staerker, bis zur
+ *  sechsten - 12 % je Stufe; ein Uralter noch einmal die Haelfte. */
+export function blutMacht(d) {
+    const gen = Number(erbe(d, "fynn:generation") ?? 1);
+    return (1 + 0.12 * Math.min(5, Math.max(0, gen - 1))) * (eig(d, "fynn:uralt") ? 1.5 : 1);
+}
+export function faehigkeitVon(d) {
+    const f = erbe(d, "fynn:faehigkeit");
+    return FAEHIGKEITEN[f] ? f : DRACHEN[d.typeId]?.faehigkeit;
+}
+
 // ------------------------------------------------------------ Kleinkram
 
-function lebt(w) {
+export function lebt(w) {
     try { return !!w && w.isValid !== false; } catch (e) { return false; }
 }
-function weite(a, b) {
+export function weite(a, b) {
     return Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z);
 }
-function einheit(v) {
+export function einheit(v) {
     const l = Math.hypot(v.x, v.y, v.z) || 1;
     return { x: v.x / l, y: v.y / l, z: v.z / l };
 }
-function eig(w, n) {
+export function eig(w, n) {
     try { return w.getProperty(n); } catch (e) { return undefined; }
 }
-function istZahm(d) {
+export function istZahm(d) {
     try { return !!d.getComponent("minecraft:is_tamed"); } catch (e) { return false; }
 }
 export function reiterVon(d) {
@@ -407,7 +445,7 @@ function erlaubtZuZuendeln() {
 function nachts() {
     try { const z = world.getTimeOfDay(); return z >= 13000 && z <= 23000; } catch (e) { return false; }
 }
-function leiste(dim, ort, text, weite = 24) {
+export function leiste(dim, ort, text, weite = 24) {
     try {
         for (const s of dim.getEntities({ type: "minecraft:player", location: ort, maxDistance: weite })) {
             s.onScreenDisplay?.setActionBar(text);
@@ -425,13 +463,13 @@ export function maul(drache, kopf = 0) {
     const flach = einheit({ x: b.x, y: 0, z: b.z });
     // Die Arten sind verschieden gross (4.95); die Masse oben gelten fuer
     // Groesse 1, das Maul wandert mit - bei den Uralten noch weiter.
-    const g = (art.groesse ?? 1) * (eig(drache, "fynn:uralt") ? URALT.groesse : 1);
+    const g = (art.groesse ?? 1) * (eig(drache, "fynn:uralt") ? URALT.groesse : 1) * wuchsFaktor(drache);
     const seite = (art.koepfe?.[kopf] ?? 0) * g;
     return { x: o.x + flach.x * art.maul * g - flach.z * seite, y: o.y + art.hoehe * g,
              z: o.z + flach.z * art.maul * g + flach.x * seite };
 }
 
-function teilchen(dim, name, ort, r) {
+export function teilchen(dim, name, ort, r) {
     try {
         const Karte = mc.MolangVariableMap;
         if (Karte && r) {
@@ -489,8 +527,22 @@ export function imKegel(dim, mund, r, atem, drache) {
     });
 }
 
-/** Der Atem eines Uralten reicht weiter, ist breiter und trifft haerter. */
+/** Der Atem eines Uralten reicht weiter, ist breiter und trifft haerter.
+ *  Ein Junges (5.2) speit erst ab halber Groesse, und nur so weit, wie es
+ *  gross ist. */
 function staerker(atem, drache) {
+    if (wuchsVon(drache) < WUCHS) return { ...atem, weite: atem.weite * wuchsFaktor(drache) };
+    const gen = Math.min(5, Math.max(0, Number(erbe(drache, "fynn:generation") ?? 1) - 1));
+    if (gen > 0 && !eig(drache, "fynn:uralt")) {
+        // Eine starke Blutlinie: weiter und haerter, je Generation ein Stueck.
+        return {
+            ...atem, weite: atem.weite * (1 + 0.06 * gen),
+            wesen(ziel, d) {
+                atem.wesen(ziel, d);
+                try { ziel.applyDamage(gen, { cause: "magic", damagingEntity: d }); } catch (e) { /* egal */ }
+            },
+        };
+    }
     if (!eig(drache, "fynn:uralt")) return atem;
     return {
         ...atem, weite: atem.weite * URALT.weite, kegel: atem.kegel * URALT.kegel,
@@ -507,6 +559,8 @@ export function uraltWuerfeln(drache, zufall = Math.random) {
         if (drache.getDynamicProperty("fynn:gewuerfelt")) return false;
         drache.setDynamicProperty("fynn:gewuerfelt", true);
     } catch (e) { return false; }
+    // Gezuechtete Drachen erben das Uralte von ihren Eltern (drachenzucht.js).
+    if (wuchsVon(drache) < WUCHS || erbe(drache, "fynn:gezuechtet")) return false;
     if (istZahm(drache) || zufall() >= URALT.chance) return false;
     try {
         drache.triggerEvent("fynn:uralt_werden");
@@ -520,7 +574,8 @@ export function atemTakt(drache, jetzt, zufall = Math.random) {
     const art = DRACHEN[drache.typeId];
     if (!art) return "kein Drache";
     if (eig(drache, "fynn:besiegt") || eig(drache, "fynn:schlaeft")) return "ruht";
-    const atem = staerker(ATEMARTEN[art.atem], drache);
+    if (wuchsVon(drache) < WUCHS / 2) return "zu jung";
+    const atem = staerker(ATEMARTEN[atemVon(drache)], drache);
     const z = von(drache);
     const ziel = zielFuer(drache, z, jetzt);
     if (z.bis) {
@@ -585,8 +640,9 @@ export function atemTakt(drache, jetzt, zufall = Math.random) {
  *  wenn es weit genug weg ist. */
 export function faehigkeitTakt(drache, jetzt, richtung = undefined, zufall = Math.random) {
     const art = DRACHEN[drache.typeId];
-    const f = art && FAEHIGKEITEN[art.faehigkeit];
+    const f = art && FAEHIGKEITEN[faehigkeitVon(drache)];
     if (!f || eig(drache, "fynn:besiegt") || eig(drache, "fynn:schlaeft")) return "nichts";
+    if (wuchsVon(drache) < WUCHS) return "zu jung";
     const z = von(drache);
     if (jetzt < z.kugelPause || z.bis) return "wartet";
     const mund = maul(drache, f.kopf ?? 0);
@@ -787,7 +843,9 @@ export function bleibOderKomm(drache, spieler) {
         drache.setDynamicProperty("fynn:bleibt", !bleibt);
     } catch (e) { /* egal */ }
     const name = DRACHEN[drache.typeId]?.name ?? "Drache";
-    spieler.onScreenDisplay?.setActionBar(bleibt ? `§aDer ${name} kommt mit.` : `§eDer ${name} wartet hier.`);
+    const erbe = zusatz.info?.(drache);
+    spieler.onScreenDisplay?.setActionBar((bleibt ? `§aDer ${name} kommt mit.` : `§eDer ${name} wartet hier.`)
+        + (erbe ? ` §7${erbe}` : ""));
     return bleibt ? "folgt" : "bleibt";
 }
 
@@ -801,6 +859,12 @@ export function pfeife(spieler, jetzt) {
     if (geritten) {
         let r = { x: 0, y: 0, z: 1 };
         try { r = einheit(spieler.getViewDirection()); } catch (e) { /* egal */ }
+        // Eine Gabe (5.2) geht vor, wenn sie bereit ist.
+        const gabe = zusatz.pfeife?.(geritten, spieler, jetzt, r);
+        if (gabe && gabe !== "wartet") {
+            spieler.onScreenDisplay?.setActionBar(`§d${gabe}!`);
+            return gabe;
+        }
         const was = faehigkeitTakt(geritten, jetzt, r);
         if (was === "wartet") spieler.onScreenDisplay?.setActionBar("§7Dein Drache sammelt noch Kraft ...");
         return was;
@@ -862,6 +926,8 @@ world.beforeEvents.playerInteractWithEntity.subscribe((e) => {
             heiler.set(d.id, e.player);
             return;
         }
+        // Mit rohem Fleisch in der Hand fuettert man (drachenzucht.js).
+        if (FLEISCH.has(e.itemStack?.typeId)) return;
         if (e.player.isSneaking && istZahm(d) && besitzerVon(d) === e.player.id) {
             system.run(() => bleibOderKomm(d, e.player));
         }
