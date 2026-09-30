@@ -28,7 +28,7 @@ import math
 import haut as H
 from tiermodell import Modell, hexfarbe, mische, wolken
 from drachen_gestalt import (MAEULER, AUGEN, Schwinge, schwinge_bauen, schwinge_maler, glieder,
-                             becken_abtrennen, sattel_bauen, glut)
+                             becken_abtrennen, sattel_bauen, sattelzeug, glut)
 
 
 # ================================================================== Bausteine
@@ -353,6 +353,8 @@ def klotz_maler(art, f, schwinge=None, besonders=None, saat=0):
             return H.verlauf(["#4a2e1a", "#6a4226"], H.hoehe(p, n, texel), 2)
         if stoff == "gurt":
             return hexfarbe("#3a2414") if int(y) % 4 else hexfarbe("#a8a8b0")
+        if stoff in ("decke", "metall"):
+            return sattelzeug(stoff, p, n, texel)
         return haut(p, n, texel)
     return male
 
@@ -433,6 +435,7 @@ def feuerdrache_modell():
     becken_abtrennen(m, 8, 22)
     sattel_bauen(m, "rumpf", 32, -3, 18)
     uralt_zier(m)
+    sattelzone(m)
     return m
 
 
@@ -537,6 +540,7 @@ def frostwyvern_modell():
     becken_abtrennen(m, 7, 17)
     sattel_bauen(m, "rumpf", 22, -3, 12)
     uralt_zier(m)
+    sattelzone(m)
     return m
 
 
@@ -662,6 +666,7 @@ def nachtschwinge_modell():
     becken_abtrennen(m, 7, 17)
     sattel_bauen(m, "rumpf", 23, -3, 12)
     uralt_zier(m)
+    sattelzone(m)
     return m
 
 
@@ -815,3 +820,146 @@ def uralt_zier(m, koepfe=("kopf",)):
 def glutader(f):
     """Die gluehenden Adern der Uralten: in der Farbe ihres Atems."""
     return glut(f.get("glut", "#ffb030"), 0.1)
+
+
+# ================================================================== Sattel und Stacheln (4.99)
+
+STACHELSTOFFE = ("klinge", "stachel", "knochenstachel", "maehne", "eiszacke", "horn")
+
+
+def sattelzone(m):
+    """Fynn: "Die Stacheln vom Ruecken gehen manchmal durch den Sattel, das
+    sieht scheisse aus." Die Rueckenstacheln, die dort stehen, wo der Sattel
+    liegt, kommen auf eigene Knochen (stachel_sattel, beim Uralten
+    uralt_sattel). Die blendet das Aussehen aus, sobald er gesattelt ist -
+    wie ein Reiter, der die Stacheln unter dem Sattel flachdrueckt."""
+    sattel = m.finde("sattel").kaesten[0]
+    z_von, z_bis = sattel.ursprung[2] - 3, sattel.ursprung[2] + sattel.groesse[2] + 3
+    unten = sattel.ursprung[1] - 4
+    for quelle, ziel in (("rumpf", "stachel_sattel"), ("uralt_rumpf", "uralt_sattel")):
+        try:
+            k = m.finde(quelle)
+        except StopIteration:
+            continue
+        neu = m.knoch(ziel, list(k.drehpunkt), quelle)
+        bleibt = []
+        for c in k.kaesten:
+            z = (c.drehpunkt or [0, 0, c.ursprung[2] + c.groesse[2] / 2])[2]
+            y = c.ursprung[1]
+            if c.stoff in STACHELSTOFFE and z_von <= z <= z_bis and y >= unten:
+                neu.kaesten.append(c)
+            else:
+                bleibt.append(c)
+        k.kaesten = bleibt
+
+
+# ================================================================== Giftdrache (4.99)
+
+# Nach Fynns zweikoepfigem Vorbild: breite, gefleckte Schwingen.
+GIFTDRACHE_SCHWINGE = Schwinge((7.5, 24, -6), oberarm=14, unterarm=17, finger=(48, 44, 38, 30),
+                               winkel=(14, -12, -38, -66), hinterkante=(7, 16), dicke=(5, 4, 2),
+                               biegung=10, bogen=5.0)
+
+
+def kragen(m, s, sb, ky, kz):
+    """Der Halskragen (wie bei der Kragenechse): zwei Haeute, im Ruhen nach
+    hinten an den Hals gelegt; beim Giftspeien und Bruellen klappt er auf
+    (kragen_a_links ... in den Bewegungen)."""
+    for seite, x in (("links", 1), ("rechts", -1)):
+        kr = m.knoch(f"kragen{s}_{seite}", [x * sb / 2, ky + 1, kz - 1], f"kopf{s}", drehung=[0, -x * 70, 0])
+        kr.kasten([x * sb / 2 - (0 if x > 0 else 7), ky - 4, kz - 1], [7, 10, 0], "kragen")
+        for dy, w in ((5, 30), (1, 0), (-3, -30)):
+            kr.kasten([x * sb / 2 - (0 if x > 0 else 7), ky + 1 + dy * 0.8, kz - 1.5], [7, 1, 1], "stachel",
+                      drehung=[0, 0, x * w * 0.6], drehpunkt=[x * sb / 2, ky + 1, kz - 1])
+
+
+def giftdrache_modell():
+    """Der Giftdrache nach Fynns zweikoepfigem Vorbild: ein breiter Leib, aus
+    dessen Brust zwei lange Haelse wachsen, jeder mit einer Reihe roter
+    Stacheln und einem flachen, kantigen Kopf mit Hoernern und einem
+    Kragen. Breite, gefleckte Schwingen; am Schwanz eine Stachelkeule."""
+    m = Modell("giftdrache", sichtbreite=9.0, sichthoehe=3.2)
+    MAEULER.pop("giftdrache", None)
+    r = m.knoch("rumpf", [0, 18, 0])
+    r.kasten([-8, 10, -11], [16, 14, 11], "leib")                       # Brust: breit fuer zwei Haelse
+    r.kasten([-7, 9.5, -12], [14, 10, 2], "brust")
+    r.kasten([-7, 10.5, -1], [14, 12, 10], "leib")
+    r.kasten([-6, 11, 8], [12, 10, 7], "leib")
+    r.kasten([-6, 9.5, -10], [12, 1, 23], "bauch")
+    for z, h in ((-7, 5), (-2, 6), (3, 6), (8, 5), (12, 4)):
+        klinge(r, 0, 22 if z < 6 else 21, z, h, 4, neigung=-35, stoff="stachel")
+    for sfx, x, w in (("_a", 4.5, -22), ("_b", -4.5, 22)):
+        hals, ende = glieder(m, f"hals{sfx}", "rumpf", (0, 20, -11), -1,
+                             [(6, 7, 7, 1.5), (6, 7, 7, 1.5), (6, 6, 6, 1.0), (6, 6, 6, 0.5), (5, 6, 6, 0.5)],
+                             stoff="leib", drehung=[0, w, 0])
+        klingen_reihe(m, hals, stoff="stachel", hoehe=(4, 3), neigung=-40)
+        vorher = {k.name for k in m.knochen}
+        _, ky, kz = ende
+        sb = 8
+        kopf_klotz(m, "giftdrache", hals[-1], ky, kz, schaedel=(sb, 7, 8), schnauze=(7, 5, 8),
+                   hoerner="sicheln" if sfx == "_a" else "stacheln", s=sfx)
+        kragen(m, sfx, sb, ky, kz)
+        from drachen_gestalt import verschiebe
+        verschiebe(m, [k.name for k in m.knochen if k.name not in vorher] + hals, x)
+    # Die Maeuler liegen seitlich: MAEULER hat sie noch in der Mitte.
+    MAEULER["giftdrache"] = [(k, [o[0] + (4.5 if k.endswith("_a") else -4.5), o[1], o[2]])
+                             for k, o in MAEULER["giftdrache"]]
+    schwanz, ende = glieder(m, "schwanz", "rumpf", (0, 17.5, 15), 1,
+                            [(8, 9, 8, -0.5), (8, 7, 6, -0.4), (8, 6, 5, -0.2), (8, 5, 4, 0.0),
+                             (8, 4, 4, 0.0), (8, 3, 3, 0.0), (7, 3, 3, 0.0)], stoff="leib")
+    klingen_reihe(m, schwanz, stoff="stachel", hoehe=(5, 2), neigung=-40)
+    _, sy, sz = ende
+    keule = m.finde(schwanz[-1])
+    # Kein Pfeil, eine Keule: ein Knoten mit Stacheln rundum.
+    keule.kasten([-2.5, sy - 2.5, sz - 3], [5, 5, 6], "leib")
+    for wx, wz in ((0, 0), (0, 60), (0, -60), (90, 0), (-90, 0), (0, 180), (40, 90), (40, -90)):
+        keule.kasten([-0.5, sy + 2, sz - 0.5], [1, 4, 1], "stachel", drehung=[wx, 0, wz], drehpunkt=[0, sy, sz])
+    for seite, x in (("links", 1), ("rechts", -1)):
+        bein_klotz(m, f"bein_hinten_{seite}", "rumpf", (x * 6.5, 18, 10), (7, 8, 8), (5, 7, 5), (7, 3, 5),
+                   zehen=3, zehlang=4)
+        bein_klotz(m, f"bein_vorn_{seite}", "rumpf", (x * 6.5, 17, -8), (6, 7, 6), (4, 7, 4), (6, 3, 4),
+                   zehen=3, zehlang=4)
+    schwinge_bauen(m, GIFTDRACHE_SCHWINGE, zusatz=fingerkrallen)
+    becken_abtrennen(m, 8, 17)
+    sattel_bauen(m, "rumpf", 24, -2, 16)
+    uralt_zier(m, ("kopf_a", "kopf_b"))
+    sattelzone(m)
+    return m
+
+
+GIFTDRACHE_FARBEN = {
+    # Wie das Vorbild: gruen mit dunkleren Flecken, ein gelber Bauch, rote
+    # Stacheln, gefleckte gruen-gelbe Schwingen.
+    "sumpf": {"leib": "#5e9a3a", "ruecken": "#2e5a22", "bauch": "#f0c84a", "fleck": "#3e7428",
+              "haut": "#a8c048", "hautfleck": "#5a8a2a", "augen": "#ffe23a", "glut": "#b8ff3a",
+              "horn": ("#6a5a30", "#b8a068", "#f0e0b0"), "kralle": "#1a1a10", "zunge": "#d86a7a",
+              "rachen": "#4a1a1e", "stachel": "#c83a2a", "zacken": 1.8},
+    "moor":  {"leib": "#7a6a3a", "ruecken": "#3e3218", "bauch": "#e0b060", "fleck": "#56482a",
+              "haut": "#b89a58", "hautfleck": "#7a5a2a", "augen": "#ffb030", "glut": "#ffd040",
+              "horn": ("#3a2a14", "#7a5a30", "#c8a870"), "kralle": "#1a140c", "zunge": "#c86a6a",
+              "rachen": "#3a1a14", "stachel": "#8a2a1a", "zacken": 1.8},
+    "gift":  {"leib": "#8ac030", "ruecken": "#1e2418", "bauch": "#e8f090", "fleck": "#2a3a1a",
+              "haut": "#b8e048", "hautfleck": "#3a4a20", "augen": "#ff3aff", "glut": "#d0ff40",
+              "horn": ("#1a1a1a", "#4a4a4a", "#8a8a8a"), "kralle": "#101010", "zunge": "#b04ab0",
+              "rachen": "#2a0a2a", "stachel": "#d02aa0", "zacken": 1.8},
+}
+
+
+def giftdrache_maler(variante):
+    f = GIFTDRACHE_FARBEN.get(variante, GIFTDRACHE_FARBEN["sumpf"])
+
+    def besonders(stoff, p, n, texel):
+        if stoff == "stachel":
+            # Rote Stacheln: am Ansatz dunkel, zur Spitze heller.
+            return H.verlauf([H.dunkler(f["stachel"], 0.3), f["stachel"], H.heller(f["stachel"], 0.25)],
+                             H.hoehe(p, n, texel) if abs(n[1]) < 0.5 else 0.7, 3)
+        if stoff == "kragen":
+            k = H.kasten_von(texel)
+            if k is None:
+                return H.farbe(f["haut"])
+            mx = k.ursprung[0] + (0 if k.ursprung[0] >= 0 else k.groesse[0])
+            t = min(1.0, abs(p[0] - mx) / max(1, k.groesse[0]))
+            c = H.verlauf([H.dunkler(f["haut"], 0.2), f["haut"], f["glut"]], t, 4)
+            return H.dunkler(c, 0.2) if int(p[1] // 2) % 2 == 0 and t < 0.8 else c
+        return False
+    return klotz_maler("giftdrache", f, GIFTDRACHE_SCHWINGE, besonders, saat=21)

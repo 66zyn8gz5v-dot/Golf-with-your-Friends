@@ -456,15 +456,38 @@ def kopf_bauen(m, art, eltern, ky, kz, schaedel=(9, 6, 10), schnauze=(7, 4, 6), 
     return kopf
 
 
+def sattelzeug(stoff, p, n, texel):
+    """Satteldecke (tiefrot, goldener Saum) und Beschlaege (Eisen)."""
+    if stoff == "metall":
+        return H.verlauf(["#6a6a72", "#c8c8d0"], H.hoehe(p, n, texel), 2)
+    k = H.kasten_von(texel)
+    if k is not None:
+        rand = min(p[0] - k.ursprung[0], k.ursprung[0] + k.groesse[0] - p[0],
+                   p[2] - k.ursprung[2], k.ursprung[2] + k.groesse[2] - p[2])
+        if rand < 1.0:
+            return hexfarbe("#e0b040")
+    return hexfarbe("#8a1e22") if int(p[2] // 2) % 2 else hexfarbe("#7a181c")
+
+
 def sattel_bauen(m, eltern, oben, z, breite):
-    """Ein Drachensattel: Sitz, vorn ein Knauf, seitlich Gurte. Nur zu sehen,
-    wenn der Drache gesattelt ist (render controller)."""
+    """Ein Drachensattel (4.99 groesser und genauer): unten eine Satteldecke
+    mit Saum, darauf der Sitz aus Leder mit hohem Hinterzwiesel und einem
+    Knauf vorn, seitlich Gurte und Steigbuegel. Nur zu sehen, wenn der
+    Drache gesattelt ist (render controller)."""
     s = m.knoch("sattel", [0, oben, z], eltern)
-    s.kasten([-4, oben, z - 4], [8, 1, 9], "sattel")
-    s.kasten([-1, oben + 1, z - 4], [2, 2, 1], "sattel")
-    s.kasten([-4.5, oben + 1, z + 4], [9, 1, 1], "sattel")
-    for x in (breite / 2 + 0.1, -breite / 2 - 0.1):
-        s.kasten([x, oben - 10, z], [0, 10, 2], "gurt")
+    db = min(breite - 2, 14)
+    s.kasten([-db / 2, oben - 0.5, z - 6], [db, 1, 14], "decke")
+    s.kasten([-4, oben + 0.5, z - 4], [8, 2, 9], "sattel")
+    s.kasten([-4, oben + 2.5, z + 3], [8, 3, 2], "sattel")                  # Hinterzwiesel
+    s.kasten([-1.5, oben + 2.5, z - 4], [3, 3, 2], "sattel")                # Knauf
+    s.kasten([-1, oben + 5, z - 4], [2, 1, 2], "metall")
+    for x in (1, -1):
+        gx = x * (breite / 2 + 0.1) - (0 if x > 0 else 0)
+        s.kasten([gx, oben - 10, z - 1], [0, 10, 2], "gurt")
+        # Steigbuegel an einem Riemen, neben der Flanke.
+        bx = x * (db / 2 + 0.5) - (0.5 if x > 0 else 0.5)
+        s.kasten([bx, oben - 6, z + 1], [1, 6, 1], "gurt")
+        s.kasten([bx - 1, oben - 7, z + 0.5], [3, 1, 2], "metall")
     return s
 
 
@@ -549,6 +572,8 @@ def drachen_maler(art, f, schwinge=None, besonders=None):
             return H.verlauf(["#4a2e1a", "#6a4226"], H.hoehe(p, n, texel), 2)
         if stoff == "gurt":
             return hexfarbe("#3a2414") if int(y) % 4 else hexfarbe("#a8a8b0")  # Gurt mit Schnalle
+        if stoff in ("decke", "metall"):
+            return sattelzeug(stoff, p, n, texel)
         return koerper(p, n, texel)
     return male
 
@@ -710,8 +735,9 @@ def himmelsdrache_modell():
         bein_bauen(m, f"bein_hinten_{seite}", f"schwanz{HIMMELSDRACHE_BEINGLIED}", (x * 0.8, 12, gz), (3, 5, 3),
                    (2, 5, 2), (3, 2, 4), krallen=4)
     sattel_bauen(m, "rumpf", 18, -1, 9)
-    from drachen_klotz import uralt_zier
+    from drachen_klotz import uralt_zier, sattelzone
     uralt_zier(m)
+    sattelzone(m)
     return m
 
 
@@ -743,94 +769,6 @@ def himmelsdrache_maler(variante):
             return H.dunkler(f["bauch"], 0.12) if int(p[2] // 1) % 2 == 0 else H.farbe(f["bauch"])
         return False
     return drachen_maler("himmelsdrache", f, None, besonders)
-
-
-# ================================================================== Giftdrache (4.93)
-
-GIFTDRACHE_SCHWINGE = Schwinge((6.5, 24, -6), oberarm=11, unterarm=14, finger=(38, 34, 29, 22),
-                               winkel=(14, -12, -38, -66), hinterkante=(6, 14), dicke=(4, 3, 2))
-
-
-def giftdrache_modell():
-    """Der Giftdrache: zwei lange Haelse, zwei Koepfe - Fynn: "der
-    Giftdrache, so maessig zwei Koepfe". Aus der Brust wachsen links und
-    rechts je ein Hals, leicht auseinandergestellt; die Koepfe haben kurze
-    Hoerner. Der Leib ist schmaler und laenger als beim Lindwurm, die
-    Schwingen mittelgross, der Schwanz lang mit einem Stachelkamm."""
-    m = Modell("giftdrache", sichtbreite=8.0, sichthoehe=3.2)
-    MAEULER.pop("giftdrache", None)
-    r = m.knoch("rumpf", [0, 18, 0])
-    r.kasten([-7, 11, -11], [14, 13, 11], "leib")                    # Brust: breit fuer zwei Haelse
-    r.kasten([-6, 11.5, -1], [12, 12, 10], "leib")
-    r.kasten([-5.5, 12, 8], [11, 10, 7], "leib")
-    r.kasten([-5, 10.5, -10], [10, 1, 23], "bauch")
-    for z, h in ((-2, 4), (2, 4), (6, 3), (10, 3)):
-        r.kasten([-0.5, 23.5, z], [1, h - 1, 3], "stachel", drehung=[-20, 0, 0], drehpunkt=[0, 24, z + 1.5])
-    kopfbau = []
-    for s, x, w in (("_a", 3.5, -16), ("_b", -3.5, 16)):
-        # Die Haelse: fuenf Glieder, jeder etwas nach aussen gestellt.
-        hals, ende = glieder(m, f"hals{s}", "rumpf", (x, 20, -11), -1,
-                             [(6, 7, 7, 1.5), (6, 6, 6, 1.5), (6, 6, 6, 1.0), (5, 5, 5, 0.5), (5, 5, 5, 0.5)],
-                             stoff="leib", zacken="stachel", drehung=[0, w, 0])
-        vorher = {k.name for k in m.knochen}
-        _, ky, kz = ende
-        kopf_bauen(m, "giftdrache", hals[-1], ky, kz, schaedel=(7, 5, 8), schnauze=(5, 3, 7), hoerner="stumpf", s=s,
-                  zier=("kragen",))
-        neu = [k.name for k in m.knochen if k.name not in vorher]
-        verschiebe(m, neu, x)
-        kopfbau.append((s, x))
-    # Die Maeuler liegen seitlich: MAEULER hat sie noch in der Mitte.
-    MAEULER["giftdrache"] = [(k, [o[0] + (3.5 if k.endswith("_a") else -3.5), o[1], o[2]])
-                             for k, o in MAEULER["giftdrache"]]
-    schwanz, ende = glieder(m, "schwanz", "rumpf", (0, 17.5, 15),
-                            1, [(8, 9, 8, -0.5), (8, 7, 6, -0.4), (8, 6, 5, -0.2), (8, 5, 4, 0.0),
-                                (8, 4, 4, 0.0), (8, 3, 3, 0.0), (7, 2, 2, 0.0)],
-                            stoff="leib", zacken="stachel")
-    _, sy, sz = ende
-    keule = m.finde(schwanz[-1])
-    # Kein Pfeil, eine Keule: ein Knoten mit Stacheln rundum - der Schlag
-    # damit vergiftet.
-    keule.kasten([-2, sy - 2, sz - 3], [4, 4, 5], "leib")
-    for wy, wz in ((0, 0), (0, 60), (0, -60), (90, 0), (-90, 0), (0, 180)):
-        keule.kasten([-0.5, sy + 1.5, sz - 1], [1, 3, 1], "stachel", drehung=[wy, 0, wz], drehpunkt=[0, sy, sz - 0.5])
-    for seite, x in (("links", 6), ("rechts", -6)):
-        bein_bauen(m, f"bein_hinten_{seite}", "rumpf", (x, 18, 10), (6, 8, 7), (4, 7, 4), (6, 3, 7), krallen=3)
-        bein_bauen(m, f"bein_vorn_{seite}", "rumpf", (x, 17, -8), (5, 7, 5), (4, 7, 4), (5, 3, 6), krallen=3)
-    schwinge_bauen(m, GIFTDRACHE_SCHWINGE)
-    becken_abtrennen(m, 8, 17)
-    sattel_bauen(m, "rumpf", 24, -3, 14)
-    from drachen_klotz import uralt_zier
-    uralt_zier(m, ("kopf_a", "kopf_b"))
-    return m
-
-
-GIFTDRACHE_FARBEN = {
-    "sumpf": {"leib": "#5a8a3a", "ruecken": "#2a4a1e", "bauch": "#d8d070", "haut": "#6a3a78",
-              "augen": "#d8ff4a", "glut": "#a8ff3a", "horn": ("#3a2e1a", "#6a5a30", "#a89a60"), "kralle": "#1a1a10"},
-    "moor":  {"leib": "#6a5a34", "ruecken": "#3a2e1a", "bauch": "#d8b060", "haut": "#9a5222",
-              "augen": "#ffb030", "glut": "#ffd040", "horn": ("#2a2014", "#5a4828", "#9a8a58"), "kralle": "#1a140c"},
-    "gift":  {"leib": "#8ac030", "ruecken": "#1a1c16", "bauch": "#e8f090", "haut": "#34363a",
-              "augen": "#ff3aff", "glut": "#d0ff40", "horn": ("#1a1a1a", "#4a4a4a", "#8a8a8a"), "kralle": "#101010"},
-}
-
-
-def giftdrache_maler(variante):
-    f = GIFTDRACHE_FARBEN.get(variante, GIFTDRACHE_FARBEN["sumpf"])
-
-    def besonders(stoff, p, n, texel):
-        if stoff == "kragen":
-            # Die Kragenhaut: innen dunkel, zum Rand hin giftig hell - offen
-            # sieht man sie von weitem.
-            k = H.kasten_von(texel)
-            if k is None:
-                return H.farbe(f["haut"])
-            mx = k.ursprung[0] + (0 if k.ursprung[0] >= 0 else k.groesse[0])
-            t = min(1.0, abs(p[0] - mx) / max(1, k.groesse[0]))
-            return H.verlauf([H.dunkler(f["haut"], 0.2), f["haut"], f["glut"]], t, 4)
-        if stoff == "leib" and n[1] > 0.5 and abs(abs(p[0]) - 3.5) < 1.0 and p[2] < -10:
-            return H.dunkler(f["ruecken"], 0.1)          # der Aalstrich laeuft jeden Hals hinauf
-        return False
-    return drachen_maler("giftdrache", f, GIFTDRACHE_SCHWINGE, besonders)
 
 
 # Die neuen Drachen (4.96) im Stil von Fynns Vorbildern stehen in

@@ -325,13 +325,17 @@ def drachen_bewegungen(schwinge, hals=4, schwanz=6, tempo=220.0, beinhoehe=20, f
         "fluegel": [0.0, f"-math.max(0.0, math.cos({phi})) * 10.0 * {schlagen}",
                     f"-6.0 - math.sin({phi}) * 42.0 * {schlagen}"],
         "unterarm": [0.0, 0.0, f"-math.sin({phi} - 50.0) * 26.0 * {schlagen}"],
-        # Im Flug: Hinterbeine nach hinten gestreckt, Vorderbeine angezogen;
-        # sie pendeln mit jedem Schlag ein wenig nach.
-        "bein_hinten": [f"55.0 + math.sin({phi} - 120.0) * 5.0 * {schlagen}", 0.0, 0.0],
-        "unterbein_hinten": [f"25.0 + math.sin({phi} - 160.0) * 6.0 * {schlagen}", 0.0, 0.0],
-        "fuss_hinten": [45.0, 0.0, 0.0], "zehen_hinten": [35.0, 0.0, 0.0],
-        "bein_vorn": [40.0, 0.0, 0.0], "unterbein_vorn": [-70.0, 0.0, 0.0], "fuss_vorn": [40.0, 0.0, 0.0],
-        "zehen_vorn": [30.0, 0.0, 0.0],
+        # Im Flug (4.99 neu - Fynn: "bei der Fluganimation gefallen mir die
+        # Drachenbeine noch nicht"): Die Beine sind eng an den Leib gezogen wie
+        # bei einem Greifvogel. Hinten: der Schenkel nach vorn unter den Bauch,
+        # das Knie gebeugt, Unterschenkel und Fuss liegen nach hinten, die
+        # Zehen gekruemmt. Vorn: die Arme an die Brust gezogen, der Ellbogen
+        # geknickt, die Klauen zur Faust. Sie pendeln leicht mit dem Schlag.
+        "bein_hinten": [f"-18.0 + math.sin({phi} - 120.0) * 4.0 * {schlagen}", 0.0, -6.0],
+        "unterbein_hinten": [f"88.0 + math.sin({phi} - 160.0) * 5.0 * {schlagen}", 0.0, 0.0],
+        "fuss_hinten": [38.0, 0.0, 0.0], "zehen_hinten": [55.0, 0.0, 0.0],
+        "bein_vorn": [-42.0, 0.0, -8.0], "unterbein_vorn": [95.0, 0.0, 0.0], "fuss_vorn": [25.0, 0.0, 0.0],
+        "zehen_vorn": [65.0, 0.0, 0.0],
     })
     # Der Leib geht mit dem Schlag: hebt sich, wenn die Schwingen nach unten
     # druecken, nickt dabei ein wenig - und legt sich in die Kurve.
@@ -519,7 +523,8 @@ def drachen_bewegungen(schwinge, hals=4, schwanz=6, tempo=220.0, beinhoehe=20, f
     schlaf["kiefer"] = {"rotation": [f"math.max(0.0, math.sin({T} * 24.0)) * 5.0", 0.0, 0.0]}
     for i in range(1, schwanz + 1):
         traum = f"{zucken(9.0, 30.0)} * math.sin({T} * 500.0) * 12.0" if i == schwanz else 0.0
-        schlaf[f"schwanz{i}"] = {"rotation": [-4.0 if i == 1 else 0.0, round(-190.0 / schwanz, 1), traum]}
+        schlaf[f"schwanz{i}"] = {"rotation": [-14.0 if i == 1 else (3.0 if i == 2 else 1.0),
+                                              round(-190.0 / schwanz, 1), traum]}
 
     # Besiegt (4.98 neu) - Fynn: "sieht nicht realistisch aus, wenn die Beine
     # einfach so gerade stehen ... er sollte so liegen, als waere er wirklich
@@ -567,9 +572,17 @@ def drachen_bewegungen(schwinge, hals=4, schwanz=6, tempo=220.0, beinhoehe=20, f
     heben = f"math.pow(math.max(0.0, math.sin({T} * 22.0)), 8.0)"
     nieder["kopf"] = {"rotation": [f"10.0 - {heben} * 16.0", 8.0, f"38.0 - {heben} * 20.0"]}
     nieder["kiefer"] = {"rotation": [f"20.0 + math.sin({T} * 170.0) * 2.0 - {heben} * 8.0", 0.0, 0.0]}
+    # Der Schwanz (4.99 - Fynn: "die Schwaenze schweben noch steif in der
+    # Luft, wenn er besiegt ist"): Der Leib liegt tiefer, der Schwanz setzt
+    # also dicht ueber dem Boden an - das erste Glied knickt nach unten,
+    # die folgenden liegen flach auf und werden duenner, jedes ein wenig
+    # zur Seite gelegt wie ein hingeworfenes Seil.
     for i in range(1, schwanz + 1):
-        nieder[f"schwanz{i}"] = {"rotation": [2.0 if i < 3 else 0.5, f"{(6.0 if i % 2 else -3.0)} + math.sin({T} * 30.0 - {i * 30}) * 1.0", 0.0]}
-    nieder[f"schwanz{schwanz}"] = {"rotation": [0.5, f"math.sin({T} * 80.0) * 3.0 + {zucken(5.0, 30.0)} * 14.0", 0.0]}
+        # (Beim Schwanz, der nach hinten zeigt, senkt ein negativer Winkel.)
+        senk = -20.0 if i == 1 else max(0.0, round(4.0 - (i - 2) * 0.7, 1))
+        nieder[f"schwanz{i}"] = {"rotation": [senk, f"{(7.0 if i % 2 else -4.0)} + math.sin({T} * 30.0 - {i * 30}) * 0.8",
+                                              0.0]}
+    nieder[f"schwanz{schwanz}"]["rotation"][1] = f"math.sin({T} * 80.0) * 3.0 + {zucken(5.0, 30.0)} * 14.0"
 
     ruht = f"(1.0 - {LIEGT})"
     return {
@@ -963,7 +976,8 @@ def nur_vorhandene(bewegungen, gestalt):
 def uralt_knochen(gestalt):
     """Die Knochen, die nur ein Uralter zeigt - wie das Modell sie baut."""
     import drachen_gestalt as dg
-    return [k.name for k in getattr(dg, f"{gestalt}_modell")().knochen if k.name.startswith("uralt_")]
+    return [k.name for k in getattr(dg, f"{gestalt}_modell")().knochen
+            if k.name.startswith("uralt_") and k.name != "uralt_sattel"]
 
 
 def drache(eintrag, schwinge, bewegungen=None, koepfe=("",), **bewegung):
@@ -1024,7 +1038,10 @@ def drache(eintrag, schwinge, bewegungen=None, koepfe=("",), **bewegung):
         # blinzelt fuer sich. Der Sattel nur gesattelt.
         "sichtbarkeit": [{f"lider{s}": blinzeln(j * 0.9)} for j, s in enumerate(koepfe)]
         + [{"sattel": "query.is_saddled"}]
-        + [{k_: "query.property('fynn:uralt')"} for k_ in uralt_knochen(eintrag["gestalt"])],
+        + [{k_: "query.property('fynn:uralt')"} for k_ in uralt_knochen(eintrag["gestalt"])]
+        # Unter dem Sattel keine Stacheln.
+        + [{"stachel_sattel": "!query.is_saddled"},
+           {"uralt_sattel": "query.property('fynn:uralt') && !query.is_saddled"}],
         "gruppe": "Drachen",
     })
     eintrag["steckbrief_extra"] = eintrag.get("steckbrief_extra", []) + [
@@ -1181,7 +1198,7 @@ def _giftdrache():
             ["Linker Kopf", "bläst eine Giftwolke, die eine Weile liegen bleibt – wer hineingerät, wird vergiftet"],
             ["Rechter Kopf", "spuckt Funken: Trifft er die Wolke, explodiert sie"],
             ["Biss", "vergiftet"]],
-    }, dg.GIFTDRACHE_SCHWINGE, koepfe=("_a", "_b"), hals=5, schwanz=7, beinhoehe=17)
+    }, dg.GIFTDRACHE_SCHWINGE, koepfe=("_a", "_b"), hals=5, schwanz=7, beinhoehe=18)
     b = t["eigene_bewegungen"]
     # Der rechte Kopf (b) spuckt Funken: kurze Stoesse, das Maul schnappt
     # dabei auf und zu - der linke zieht die Giftwolke in langen Boegen.
