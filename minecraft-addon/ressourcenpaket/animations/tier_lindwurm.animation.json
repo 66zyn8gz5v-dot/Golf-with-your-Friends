@@ -102,20 +102,6 @@
             "-(-math.sin(variable.fynn_t * 220.0 - 108) * 6.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer')))"
           ]
         },
-        "finger5_links": {
-          "rotation": [
-            0.0,
-            "-math.max(0.0, -math.sin(variable.fynn_t * 220.0)) * 22.5 + math.max(0.0, math.sin(variable.fynn_t * 220.0)) * 7.5",
-            "-math.sin(variable.fynn_t * 220.0 - 120) * 7.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))"
-          ]
-        },
-        "finger5_rechts": {
-          "rotation": [
-            0.0,
-            "-(-math.max(0.0, -math.sin(variable.fynn_t * 220.0)) * 22.5 + math.max(0.0, math.sin(variable.fynn_t * 220.0)) * 7.5)",
-            "-(-math.sin(variable.fynn_t * 220.0 - 120) * 7.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer')))"
-          ]
-        },
         "bein_hinten_links": {
           "rotation": [
             "55.0 + math.sin(variable.fynn_t * 220.0 - 120.0) * 5.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
@@ -540,56 +526,49 @@
         "fluegel_links": {
           "rotation": [
             0.0,
-            "-76.0 * (1.0 - variable.fynn_offen_l)",
-            "-67.0 * (1.0 - variable.fynn_offen_l) - variable.fynn_offen_l * 45.0 - variable.fynn_offen_l * math.sin(variable.fynn_t * 400.0) * 1.5"
+            "-75.0 * (1.0 - variable.fynn_offen_l)",
+            "-65.0 * (1.0 - variable.fynn_offen_l) - variable.fynn_offen_l * 45.0 - variable.fynn_offen_l * math.sin(variable.fynn_t * 400.0) * 1.5"
           ]
         },
         "unterarm_links": {
           "rotation": [
             0.0,
-            "140.0 * (1.0 - variable.fynn_offen_l)",
+            "149.0 * (1.0 - variable.fynn_offen_l)",
             0.0
           ]
         },
         "hand_links": {
           "rotation": [
-            "-28.0 * (1.0 - variable.fynn_offen_l)",
-            "-160.0 * (1.0 - variable.fynn_offen_l)",
+            "-36.0 * (1.0 - variable.fynn_offen_l)",
+            "-170.0 * (1.0 - variable.fynn_offen_l)",
             0.0
           ]
         },
         "finger1_links": {
           "rotation": [
             0.0,
-            "-12.0 * (1.0 - variable.fynn_offen_l)",
+            "-13.5 * (1.0 - variable.fynn_offen_l)",
             0.0
           ]
         },
         "finger2_links": {
           "rotation": [
             0.0,
-            "7.5 * (1.0 - variable.fynn_offen_l)",
+            "9.0 * (1.0 - variable.fynn_offen_l)",
             0.0
           ]
         },
         "finger3_links": {
           "rotation": [
             0.0,
-            "27.0 * (1.0 - variable.fynn_offen_l)",
+            "30.0 * (1.0 - variable.fynn_offen_l)",
             0.0
           ]
         },
         "finger4_links": {
           "rotation": [
             0.0,
-            "46.5 * (1.0 - variable.fynn_offen_l)",
-            0.0
-          ]
-        },
-        "finger5_links": {
-          "rotation": [
-            0.0,
-            "67.5 * (1.0 - variable.fynn_offen_l)",
+            "51.0 * (1.0 - variable.fynn_offen_l)",
             0.0
           ]
         },
@@ -628,66 +607,52 @@
             "0.12 + 0.88 * variable.fynn_offen_l"
           ]
         },
-        "fingerhaut4_links": {
-          "scale": [
-            1.0,
-            1.0,
-            "0.12 + 0.88 * variable.fynn_offen_l"
-          ]
-        },
         "fluegel_rechts": {
           "rotation": [
             0.0,
-            "76.0 * (1.0 - variable.fynn_offen_r)",
-            "67.0 * (1.0 - variable.fynn_offen_r) - variable.fynn_offen_r * -45.0 - variable.fynn_offen_r * math.sin(variable.fynn_t * 400.0) * -1.5"
+            "75.0 * (1.0 - variable.fynn_offen_r)",
+            "65.0 * (1.0 - variable.fynn_offen_r) - variable.fynn_offen_r * -45.0 - variable.fynn_offen_r * math.sin(variable.fynn_t * 400.0) * -1.5"
           ]
         },
         "unterarm_rechts": {
           "rotation": [
             0.0,
-            "-140.0 * (1.0 - variable.fynn_offen_r)",
+            "-149.0 * (1.0 - variable.fynn_offen_r)",
             0.0
           ]
         },
         "hand_rechts": {
           "rotation": [
-            "-28.0 * (1.0 - variable.fynn_offen_r)",
-            "160.0 * (1.0 - variable.fynn_offen_r)",
+            "-36.0 * (1.0 - variable.fynn_offen_r)",
+            "170.0 * (1.0 - variable.fynn_offen_r)",
             0.0
           ]
         },
         "finger1_rechts": {
           "rotation": [
             0.0,
-            "12.0 * (1.0 - variable.fynn_offen_r)",
+            "13.5 * (1.0 - variable.fynn_offen_r)",
             0.0
           ]
         },
         "finger2_rechts": {
           "rotation": [
             0.0,
-            "-7.5 * (1.0 - variable.fynn_offen_r)",
+            "-9.0 * (1.0 - variable.fynn_offen_r)",
             0.0
           ]
         },
         "finger3_rechts": {
           "rotation": [
             0.0,
-            "-27.0 * (1.0 - variable.fynn_offen_r)",
+            "-30.0 * (1.0 - variable.fynn_offen_r)",
             0.0
           ]
         },
         "finger4_rechts": {
           "rotation": [
             0.0,
-            "-46.5 * (1.0 - variable.fynn_offen_r)",
-            0.0
-          ]
-        },
-        "finger5_rechts": {
-          "rotation": [
-            0.0,
-            "-67.5 * (1.0 - variable.fynn_offen_r)",
+            "-51.0 * (1.0 - variable.fynn_offen_r)",
             0.0
           ]
         },
@@ -720,13 +685,6 @@
           ]
         },
         "fingerhaut3_rechts": {
-          "scale": [
-            1.0,
-            1.0,
-            "0.12 + 0.88 * variable.fynn_offen_r"
-          ]
-        },
-        "fingerhaut4_rechts": {
           "scale": [
             1.0,
             1.0,
@@ -1120,112 +1078,98 @@
         "fluegel_links": {
           "rotation": [
             0.0,
-            -64.6,
-            "-44.9 + math.pow(math.max(0.0, math.sin(variable.fynn_t * 5.0)), 40.0) * 8.0"
+            -63.8,
+            "-43.2 + math.pow(math.max(0.0, math.sin(variable.fynn_t * 5.0)), 40.0) * 8.0"
           ]
         },
         "fluegel_rechts": {
           "rotation": [
             0.0,
-            76.0,
-            67.0
+            75.0,
+            65.0
           ]
         },
         "unterarm_links": {
           "rotation": [
             0.0,
-            119.0,
+            126.6,
             0.0
           ]
         },
         "unterarm_rechts": {
           "rotation": [
             0.0,
-            -140.0,
+            -149.0,
             -0.0
           ]
         },
         "hand_links": {
           "rotation": [
-            -23.8,
-            -136.0,
+            -30.6,
+            -144.5,
             0.0
           ]
         },
         "hand_rechts": {
           "rotation": [
-            -28.0,
-            160.0,
+            -36.0,
+            170.0,
             -0.0
           ]
         },
         "finger1_links": {
           "rotation": [
             0.0,
-            -10.2,
+            -11.5,
             0.0
           ]
         },
         "finger1_rechts": {
           "rotation": [
             0.0,
-            12.0,
+            13.5,
             -0.0
           ]
         },
         "finger2_links": {
           "rotation": [
             0.0,
-            6.4,
+            7.6,
             0.0
           ]
         },
         "finger2_rechts": {
           "rotation": [
             0.0,
-            -7.5,
+            -9.0,
             -0.0
           ]
         },
         "finger3_links": {
           "rotation": [
             0.0,
-            22.9,
+            25.5,
             0.0
           ]
         },
         "finger3_rechts": {
           "rotation": [
             0.0,
-            -27.0,
+            -30.0,
             -0.0
           ]
         },
         "finger4_links": {
           "rotation": [
             0.0,
-            39.5,
+            43.4,
             0.0
           ]
         },
         "finger4_rechts": {
           "rotation": [
             0.0,
-            -46.5,
-            -0.0
-          ]
-        },
-        "finger5_links": {
-          "rotation": [
-            0.0,
-            57.4,
-            0.0
-          ]
-        },
-        "finger5_rechts": {
-          "rotation": [
-            0.0,
-            -67.5,
+            -51.0,
             -0.0
           ]
         },
@@ -1264,13 +1208,6 @@
             0.3
           ]
         },
-        "fingerhaut4_links": {
-          "scale": [
-            1.0,
-            1.0,
-            0.3
-          ]
-        },
         "armhaut_rechts": {
           "scale": [
             1.0,
@@ -1300,13 +1237,6 @@
           ]
         },
         "fingerhaut3_rechts": {
-          "scale": [
-            1.0,
-            1.0,
-            0.12
-          ]
-        },
-        "fingerhaut4_rechts": {
           "scale": [
             1.0,
             1.0,
@@ -1428,7 +1358,7 @@
         "rumpf": {
           "position": [
             0.0,
-            -14.0,
+            -15.0,
             0.0
           ],
           "scale": [
@@ -1557,112 +1487,98 @@
         "fluegel_links": {
           "rotation": [
             0.0,
-            -26.6,
-            -118.5
+            -26.2,
+            -117.8
           ]
         },
         "fluegel_rechts": {
           "rotation": [
             0.0,
-            76.0,
-            67.0
+            75.0,
+            65.0
           ]
         },
         "unterarm_links": {
           "rotation": [
             0.0,
-            49.0,
+            52.1,
             0.0
           ]
         },
         "unterarm_rechts": {
           "rotation": [
             0.0,
-            -140.0,
+            -149.0,
             -0.0
           ]
         },
         "hand_links": {
           "rotation": [
-            -9.8,
-            -56.0,
+            -12.6,
+            -59.5,
             0.0
           ]
         },
         "hand_rechts": {
           "rotation": [
-            -28.0,
-            160.0,
+            -36.0,
+            170.0,
             -0.0
           ]
         },
         "finger1_links": {
           "rotation": [
             0.0,
-            -4.2,
+            -4.7,
             0.0
           ]
         },
         "finger1_rechts": {
           "rotation": [
             0.0,
-            12.0,
+            13.5,
             -0.0
           ]
         },
         "finger2_links": {
           "rotation": [
             0.0,
-            2.6,
+            3.1,
             0.0
           ]
         },
         "finger2_rechts": {
           "rotation": [
             0.0,
-            -7.5,
+            -9.0,
             -0.0
           ]
         },
         "finger3_links": {
           "rotation": [
             0.0,
-            9.4,
+            10.5,
             0.0
           ]
         },
         "finger3_rechts": {
           "rotation": [
             0.0,
-            -27.0,
+            -30.0,
             -0.0
           ]
         },
         "finger4_links": {
           "rotation": [
             0.0,
-            16.3,
+            17.8,
             0.0
           ]
         },
         "finger4_rechts": {
           "rotation": [
             0.0,
-            -46.5,
-            -0.0
-          ]
-        },
-        "finger5_links": {
-          "rotation": [
-            0.0,
-            23.6,
-            0.0
-          ]
-        },
-        "finger5_rechts": {
-          "rotation": [
-            0.0,
-            -67.5,
+            -51.0,
             -0.0
           ]
         },
@@ -1695,13 +1611,6 @@
           ]
         },
         "fingerhaut3_links": {
-          "scale": [
-            1.0,
-            1.0,
-            0.8
-          ]
-        },
-        "fingerhaut4_links": {
           "scale": [
             1.0,
             1.0,
@@ -1743,13 +1652,6 @@
             0.12
           ]
         },
-        "fingerhaut4_rechts": {
-          "scale": [
-            1.0,
-            1.0,
-            0.12
-          ]
-        },
         "rumpf": {
           "rotation": [
             0.0,
@@ -1758,7 +1660,7 @@
           ],
           "position": [
             0.0,
-            -11.0,
+            -12.0,
             0.0
           ],
           "scale": [

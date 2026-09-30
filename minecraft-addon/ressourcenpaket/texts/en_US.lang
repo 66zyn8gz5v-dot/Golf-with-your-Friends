@@ -44,11 +44,11 @@ item.fynn:eisenklinge.name=Iron Blade
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.95
+item.iron_sword.name=Stahlschwert 4.96
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.95
-item.fynn:degen.name=Degen 4.95
+item.fynn:degen=Degen 4.96
+item.fynn:degen.name=Degen 4.96
 
 
 
@@ -536,6 +536,14 @@ item.fynn:greifenfeder.name=Griffin Feather
 
 
 
+
+
+
+
+
+
+
+
 ## Die Tiere
 entity.fynn:braunbaer.name=Brown Bear
 item.spawn_egg.entity.fynn:braunbaer.name=Brown Bear Spawn Egg
@@ -611,6 +619,8 @@ entity.fynn:himmelsdrache.name=Sky Serpent
 item.spawn_egg.entity.fynn:himmelsdrache.name=Sky Serpent Spawn Egg
 entity.fynn:giftdrache.name=Twin-Headed Venom Dragon
 item.spawn_egg.entity.fynn:giftdrache.name=Twin-Headed Venom Dragon Spawn Egg
+entity.fynn:nachtschwinge.name=Night Fury Dragon
+item.spawn_egg.entity.fynn:nachtschwinge.name=Night Fury Dragon Spawn Egg
 
 ## Fantasy-Wesen
 item.fynn:wurmzahn=Sandworm Tooth
@@ -639,6 +649,7 @@ item.fynn:basiliskenauge.name=Basilisk Eye
 ## Drachen
 item.fynn:drachenpfeife=Dragon Whistle
 entity.fynn:eissplitter.name=Ice Shard
+entity.fynn:plasmaschuss.name=Plasma Blast
 item.fynn:drachenpfeife.name=Dragon Whistle
 
 ## Nester und Eier

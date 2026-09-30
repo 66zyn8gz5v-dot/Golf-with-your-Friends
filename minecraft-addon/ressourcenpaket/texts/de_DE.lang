@@ -44,11 +44,11 @@ item.fynn:eisenklinge.name=Eisenklinge
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 4.95
+item.iron_sword.name=Stahlschwert 4.96
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 4.95
-item.fynn:degen.name=Degen 4.95
+item.fynn:degen=Degen 4.96
+item.fynn:degen.name=Degen 4.96
 
 
 
@@ -542,6 +542,14 @@ item.fynn:greifenfeder.name=Greifenfeder
 
 
 
+
+
+
+
+
+
+
+
 ## Die Tiere
 entity.fynn:braunbaer.name=Braunbär
 item.spawn_egg.entity.fynn:braunbaer.name=Braunbär-Spawn-Ei
@@ -609,14 +617,16 @@ entity.fynn:moosgolem.name=Moosgolem
 item.spawn_egg.entity.fynn:moosgolem.name=Moosgolem-Spawn-Ei
 entity.fynn:greif.name=Greif
 item.spawn_egg.entity.fynn:greif.name=Greif-Spawn-Ei
-entity.fynn:lindwurm.name=Lindwurm
-item.spawn_egg.entity.fynn:lindwurm.name=Lindwurm-Spawn-Ei
+entity.fynn:lindwurm.name=Feuerdrache
+item.spawn_egg.entity.fynn:lindwurm.name=Feuerdrache-Spawn-Ei
 entity.fynn:frostwyvern.name=Frostwyvern
 item.spawn_egg.entity.fynn:frostwyvern.name=Frostwyvern-Spawn-Ei
 entity.fynn:himmelsdrache.name=Himmelsdrache
 item.spawn_egg.entity.fynn:himmelsdrache.name=Himmelsdrache-Spawn-Ei
 entity.fynn:giftdrache.name=Giftdrache
 item.spawn_egg.entity.fynn:giftdrache.name=Giftdrache-Spawn-Ei
+entity.fynn:nachtschwinge.name=Nachtschwinge
+item.spawn_egg.entity.fynn:nachtschwinge.name=Nachtschwinge-Spawn-Ei
 
 ## Fantasy-Wesen
 item.fynn:wurmzahn=Wurmzahn
@@ -645,6 +655,7 @@ item.fynn:basiliskenauge.name=Basiliskenauge
 ## Drachen
 item.fynn:drachenpfeife=Drachenpfeife
 entity.fynn:eissplitter.name=Eissplitter
+entity.fynn:plasmaschuss.name=Plasmaschuss
 item.fynn:drachenpfeife.name=Drachenpfeife
 
 ## Nester und Eier

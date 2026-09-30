@@ -506,7 +506,7 @@ EIER = {
         "farben": {"T": "#f0e8d4", "M": "#8a2a2a", "m": "#5a1414", "k": "#1a0a08", "R": "#7a5a36"},
     },
     "lindwurm": {
-        "oben": "#3a5a2e", "unten": "#c0b078", "teilung": 11, "flecken": ("#243a1e", 0.3),
+        "oben": "#c0302a", "unten": "#f0a048", "teilung": 11, "flecken": ("#6e1218", 0.3),
         "karte": {
             1: "...h........h...",
             2: "...hh......hh...",
@@ -516,11 +516,11 @@ EIER = {
             9: ".WWW........WWW.",
             10: "WWW..........WWW",
         },
-        "farben": {"h": "#d8ccb0", "y": "#ffa21a", "W": "#5a4a2e"},
+        "farben": {"h": "#e8c8a0", "y": "#ffd21a", "W": "#e0706a"},
     },
     # Die Drachenarten (ab 4.91).
     "frostwyvern": {
-        "oben": "#b8d4e6", "unten": "#eef6fa", "teilung": 11,
+        "oben": "#5aa898", "unten": "#dcece4", "teilung": 11,
         "karte": {
             1: "..c..c..c..c....",
             2: "..cc.cc.cc.cc...",
@@ -529,7 +529,7 @@ EIER = {
             9: ".WWW........WWW.",
             10: "WWW..........WWW",
         },
-        "farben": {"c": "#e8faff", "y": "#7ae8ff", "W": "#4a7aa8"},
+        "farben": {"c": "#fbfbf2", "y": "#8af0ff", "W": "#e4e8d8"},
     },
     "himmelsdrache": {
         "oben": "#3c8a64", "unten": "#e8d890", "teilung": 10,
@@ -552,6 +552,19 @@ EIER = {
             10: "WWW..........WWW",
         },
         "farben": {"y": "#d8ff4a", "W": "#6a3a78"},
+    },
+    # Die Nachtschwinge (4.96): schwarz, gruene Augen, Sicheln.
+    "nachtschwinge": {
+        "oben": "#26262e", "unten": "#3a3a46", "teilung": 11, "flecken": ("#4a5874", 0.25),
+        "karte": {
+            1: "...h........h...",
+            2: "....h......h....",
+            6: ".....y....y.....",
+            8: ".SS..........SS.",
+            9: "SSS..........SSS",
+            10: "SS............SS",
+        },
+        "farben": {"h": "#a8aabc", "y": "#8aff5a", "S": "#4a4a58"},
     },
     # Zweite Fantasy-Welle (4.81).
     "glutskorpion": {

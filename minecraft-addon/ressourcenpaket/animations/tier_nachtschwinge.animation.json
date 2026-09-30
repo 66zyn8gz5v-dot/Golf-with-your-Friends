@@ -1,131 +1,131 @@
 {
   "format_version": "1.10.0",
   "animations": {
-    "animation.fynn.frostwyvern.flug": {
+    "animation.fynn.nachtschwinge.flug": {
       "loop": true,
       "bones": {
         "fluegel_links": {
           "rotation": [
             0.0,
-            "-math.max(0.0, math.cos(variable.fynn_t * 220.0)) * 10.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
-            "-6.0 - math.sin(variable.fynn_t * 220.0) * 42.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))"
+            "-math.max(0.0, math.cos(variable.fynn_t * 260.0)) * 10.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
+            "-6.0 - math.sin(variable.fynn_t * 260.0) * 42.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))"
           ]
         },
         "fluegel_rechts": {
           "rotation": [
             0.0,
-            "-(-math.max(0.0, math.cos(variable.fynn_t * 220.0)) * 10.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer')))",
-            "-(-6.0 - math.sin(variable.fynn_t * 220.0) * 42.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer')))"
+            "-(-math.max(0.0, math.cos(variable.fynn_t * 260.0)) * 10.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer')))",
+            "-(-6.0 - math.sin(variable.fynn_t * 260.0) * 42.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer')))"
           ]
         },
         "unterarm_links": {
           "rotation": [
             0.0,
-            "math.max(0.0, math.cos(variable.fynn_t * 220.0)) * 18.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
-            "-math.sin(variable.fynn_t * 220.0 - 50.0) * 22.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))"
+            "math.max(0.0, math.cos(variable.fynn_t * 260.0)) * 18.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
+            "-math.sin(variable.fynn_t * 260.0 - 50.0) * 22.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))"
           ]
         },
         "unterarm_rechts": {
           "rotation": [
             0.0,
-            "-(math.max(0.0, math.cos(variable.fynn_t * 220.0)) * 18.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer')))",
-            "-(-math.sin(variable.fynn_t * 220.0 - 50.0) * 22.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer')))"
+            "-(math.max(0.0, math.cos(variable.fynn_t * 260.0)) * 18.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer')))",
+            "-(-math.sin(variable.fynn_t * 260.0 - 50.0) * 22.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer')))"
           ]
         },
         "hand_links": {
           "rotation": [
             0.0,
-            "-math.max(0.0, math.cos(variable.fynn_t * 220.0 - 40.0)) * 10.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
-            "-math.sin(variable.fynn_t * 220.0 - 90.0) * 14.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))"
+            "-math.max(0.0, math.cos(variable.fynn_t * 260.0 - 40.0)) * 10.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
+            "-math.sin(variable.fynn_t * 260.0 - 90.0) * 14.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))"
           ]
         },
         "hand_rechts": {
           "rotation": [
             0.0,
-            "-(-math.max(0.0, math.cos(variable.fynn_t * 220.0 - 40.0)) * 10.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer')))",
-            "-(-math.sin(variable.fynn_t * 220.0 - 90.0) * 14.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer')))"
+            "-(-math.max(0.0, math.cos(variable.fynn_t * 260.0 - 40.0)) * 10.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer')))",
+            "-(-math.sin(variable.fynn_t * 260.0 - 90.0) * 14.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer')))"
           ]
         },
         "finger1_links": {
           "rotation": [
             0.0,
-            "-math.max(0.0, -math.sin(variable.fynn_t * 220.0)) * 4.5 + math.max(0.0, math.sin(variable.fynn_t * 220.0)) * 1.5",
-            "-math.sin(variable.fynn_t * 220.0 - 72) * 3.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))"
+            "-math.max(0.0, -math.sin(variable.fynn_t * 260.0)) * 4.5 + math.max(0.0, math.sin(variable.fynn_t * 260.0)) * 1.5",
+            "-math.sin(variable.fynn_t * 260.0 - 72) * 3.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))"
           ]
         },
         "finger1_rechts": {
           "rotation": [
             0.0,
-            "-(-math.max(0.0, -math.sin(variable.fynn_t * 220.0)) * 4.5 + math.max(0.0, math.sin(variable.fynn_t * 220.0)) * 1.5)",
-            "-(-math.sin(variable.fynn_t * 220.0 - 72) * 3.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer')))"
+            "-(-math.max(0.0, -math.sin(variable.fynn_t * 260.0)) * 4.5 + math.max(0.0, math.sin(variable.fynn_t * 260.0)) * 1.5)",
+            "-(-math.sin(variable.fynn_t * 260.0 - 72) * 3.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer')))"
           ]
         },
         "finger2_links": {
           "rotation": [
             0.0,
-            "-math.max(0.0, -math.sin(variable.fynn_t * 220.0)) * 9.0 + math.max(0.0, math.sin(variable.fynn_t * 220.0)) * 3.0",
-            "-math.sin(variable.fynn_t * 220.0 - 84) * 4.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))"
+            "-math.max(0.0, -math.sin(variable.fynn_t * 260.0)) * 9.0 + math.max(0.0, math.sin(variable.fynn_t * 260.0)) * 3.0",
+            "-math.sin(variable.fynn_t * 260.0 - 84) * 4.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))"
           ]
         },
         "finger2_rechts": {
           "rotation": [
             0.0,
-            "-(-math.max(0.0, -math.sin(variable.fynn_t * 220.0)) * 9.0 + math.max(0.0, math.sin(variable.fynn_t * 220.0)) * 3.0)",
-            "-(-math.sin(variable.fynn_t * 220.0 - 84) * 4.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer')))"
+            "-(-math.max(0.0, -math.sin(variable.fynn_t * 260.0)) * 9.0 + math.max(0.0, math.sin(variable.fynn_t * 260.0)) * 3.0)",
+            "-(-math.sin(variable.fynn_t * 260.0 - 84) * 4.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer')))"
           ]
         },
         "finger3_links": {
           "rotation": [
             0.0,
-            "-math.max(0.0, -math.sin(variable.fynn_t * 220.0)) * 13.5 + math.max(0.0, math.sin(variable.fynn_t * 220.0)) * 4.5",
-            "-math.sin(variable.fynn_t * 220.0 - 96) * 5.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))"
+            "-math.max(0.0, -math.sin(variable.fynn_t * 260.0)) * 13.5 + math.max(0.0, math.sin(variable.fynn_t * 260.0)) * 4.5",
+            "-math.sin(variable.fynn_t * 260.0 - 96) * 5.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))"
           ]
         },
         "finger3_rechts": {
           "rotation": [
             0.0,
-            "-(-math.max(0.0, -math.sin(variable.fynn_t * 220.0)) * 13.5 + math.max(0.0, math.sin(variable.fynn_t * 220.0)) * 4.5)",
-            "-(-math.sin(variable.fynn_t * 220.0 - 96) * 5.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer')))"
+            "-(-math.max(0.0, -math.sin(variable.fynn_t * 260.0)) * 13.5 + math.max(0.0, math.sin(variable.fynn_t * 260.0)) * 4.5)",
+            "-(-math.sin(variable.fynn_t * 260.0 - 96) * 5.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer')))"
           ]
         },
         "finger4_links": {
           "rotation": [
             0.0,
-            "-math.max(0.0, -math.sin(variable.fynn_t * 220.0)) * 18.0 + math.max(0.0, math.sin(variable.fynn_t * 220.0)) * 6.0",
-            "-math.sin(variable.fynn_t * 220.0 - 108) * 6.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))"
+            "-math.max(0.0, -math.sin(variable.fynn_t * 260.0)) * 18.0 + math.max(0.0, math.sin(variable.fynn_t * 260.0)) * 6.0",
+            "-math.sin(variable.fynn_t * 260.0 - 108) * 6.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))"
           ]
         },
         "finger4_rechts": {
           "rotation": [
             0.0,
-            "-(-math.max(0.0, -math.sin(variable.fynn_t * 220.0)) * 18.0 + math.max(0.0, math.sin(variable.fynn_t * 220.0)) * 6.0)",
-            "-(-math.sin(variable.fynn_t * 220.0 - 108) * 6.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer')))"
+            "-(-math.max(0.0, -math.sin(variable.fynn_t * 260.0)) * 18.0 + math.max(0.0, math.sin(variable.fynn_t * 260.0)) * 6.0)",
+            "-(-math.sin(variable.fynn_t * 260.0 - 108) * 6.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer')))"
           ]
         },
         "bein_hinten_links": {
           "rotation": [
-            "55.0 + math.sin(variable.fynn_t * 220.0 - 120.0) * 5.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
+            "55.0 + math.sin(variable.fynn_t * 260.0 - 120.0) * 5.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
             0.0,
             0.0
           ]
         },
         "bein_hinten_rechts": {
           "rotation": [
-            "55.0 + math.sin(variable.fynn_t * 220.0 - 120.0) * 5.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
+            "55.0 + math.sin(variable.fynn_t * 260.0 - 120.0) * 5.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
             -0.0,
             -0.0
           ]
         },
         "unterbein_hinten_links": {
           "rotation": [
-            "25.0 + math.sin(variable.fynn_t * 220.0 - 160.0) * 6.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
+            "25.0 + math.sin(variable.fynn_t * 260.0 - 160.0) * 6.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
             0.0,
             0.0
           ]
         },
         "unterbein_hinten_rechts": {
           "rotation": [
-            "25.0 + math.sin(variable.fynn_t * 220.0 - 160.0) * 6.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
+            "25.0 + math.sin(variable.fynn_t * 260.0 - 160.0) * 6.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
             -0.0,
             -0.0
           ]
@@ -158,56 +158,112 @@
             -0.0
           ]
         },
+        "bein_vorn_links": {
+          "rotation": [
+            40.0,
+            0.0,
+            0.0
+          ]
+        },
+        "bein_vorn_rechts": {
+          "rotation": [
+            40.0,
+            -0.0,
+            -0.0
+          ]
+        },
+        "unterbein_vorn_links": {
+          "rotation": [
+            -70.0,
+            0.0,
+            0.0
+          ]
+        },
+        "unterbein_vorn_rechts": {
+          "rotation": [
+            -70.0,
+            -0.0,
+            -0.0
+          ]
+        },
+        "fuss_vorn_links": {
+          "rotation": [
+            40.0,
+            0.0,
+            0.0
+          ]
+        },
+        "fuss_vorn_rechts": {
+          "rotation": [
+            40.0,
+            -0.0,
+            -0.0
+          ]
+        },
+        "zehen_vorn_links": {
+          "rotation": [
+            30.0,
+            0.0,
+            0.0
+          ]
+        },
+        "zehen_vorn_rechts": {
+          "rotation": [
+            30.0,
+            -0.0,
+            -0.0
+          ]
+        },
         "rumpf": {
           "rotation": [
-            "-query.target_x_rotation * 0.4 + math.sin(variable.fynn_t * 220.0 - 60.0) * 3.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
+            "-query.target_x_rotation * 0.4 + math.sin(variable.fynn_t * 260.0 - 60.0) * 3.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
             0.0,
             "variable.fynn_dreh * 3.0"
           ],
           "position": [
             0.0,
-            "-math.sin(variable.fynn_t * 220.0 - 30.0) * 1.6 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
+            "-math.sin(variable.fynn_t * 260.0 - 30.0) * 1.6 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
             0.0
           ]
         },
         "becken": {
           "rotation": [
-            "math.sin(variable.fynn_t * 220.0 - 110.0) * 4.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
+            "math.sin(variable.fynn_t * 260.0 - 110.0) * 4.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
             "-variable.fynn_dreh * 1.5",
             0.0
           ]
         },
         "hals1": {
           "rotation": [
-            "-3.0 + math.sin(variable.fynn_t * 60.0 - 30) * 3.0 - math.sin(variable.fynn_t * 220.0 - 60) * 1.5 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
+            "-3.0 + math.sin(variable.fynn_t * 60.0 - 30) * 3.0 - math.sin(variable.fynn_t * 260.0 - 60) * 1.5 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
             "math.sin(variable.fynn_t * 45.0 - 35) * 5.0",
             0.0
           ]
         },
         "hals2": {
           "rotation": [
-            "-3.0 + math.sin(variable.fynn_t * 60.0 - 60) * 3.0 - math.sin(variable.fynn_t * 220.0 - 80) * 1.5 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
+            "-3.0 + math.sin(variable.fynn_t * 60.0 - 60) * 3.0 - math.sin(variable.fynn_t * 260.0 - 80) * 1.5 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
             "math.sin(variable.fynn_t * 45.0 - 70) * 5.0",
             0.0
           ]
         },
         "hals3": {
           "rotation": [
-            "-3.0 + math.sin(variable.fynn_t * 60.0 - 90) * 3.0 - math.sin(variable.fynn_t * 220.0 - 100) * 1.5 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
+            "-3.0 + math.sin(variable.fynn_t * 60.0 - 90) * 3.0 - math.sin(variable.fynn_t * 260.0 - 100) * 1.5 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
             "math.sin(variable.fynn_t * 45.0 - 105) * 5.0",
             0.0
           ]
         },
         "hals4": {
           "rotation": [
-            "-3.0 + math.sin(variable.fynn_t * 60.0 - 120) * 3.0 - math.sin(variable.fynn_t * 220.0 - 120) * 1.5 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
+            "-3.0 + math.sin(variable.fynn_t * 60.0 - 120) * 3.0 - math.sin(variable.fynn_t * 260.0 - 120) * 1.5 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
             "math.sin(variable.fynn_t * 45.0 - 140) * 5.0",
             0.0
           ]
         },
         "hals5": {
           "rotation": [
-            "-3.0 + math.sin(variable.fynn_t * 60.0 - 150) * 3.0 - math.sin(variable.fynn_t * 220.0 - 140) * 1.5 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
+            "-3.0 + math.sin(variable.fynn_t * 60.0 - 150) * 3.0 - math.sin(variable.fynn_t * 260.0 - 140) * 1.5 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
             "math.sin(variable.fynn_t * 45.0 - 175) * 5.0",
             0.0
           ]
@@ -228,63 +284,63 @@
         },
         "schwanz1": {
           "rotation": [
-            "math.sin(variable.fynn_t * 70.0 - 40) * 3.0 + math.sin(variable.fynn_t * 220.0 - 175) * 1.4 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
+            "math.sin(variable.fynn_t * 70.0 - 40) * 3.0 + math.sin(variable.fynn_t * 260.0 - 175) * 1.4 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
             "math.sin(variable.fynn_t * 55.0 - 40) * 4.5 - variable.fynn_dreh * 1",
             0.0
           ]
         },
         "schwanz2": {
           "rotation": [
-            "math.sin(variable.fynn_t * 70.0 - 80) * 3.0 + math.sin(variable.fynn_t * 220.0 - 200) * 1.8 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
+            "math.sin(variable.fynn_t * 70.0 - 80) * 3.0 + math.sin(variable.fynn_t * 260.0 - 200) * 1.8 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
             "math.sin(variable.fynn_t * 55.0 - 80) * 6.0 - variable.fynn_dreh * 2",
             0.0
           ]
         },
         "schwanz3": {
           "rotation": [
-            "math.sin(variable.fynn_t * 70.0 - 120) * 3.0 + math.sin(variable.fynn_t * 220.0 - 225) * 2.2 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
+            "math.sin(variable.fynn_t * 70.0 - 120) * 3.0 + math.sin(variable.fynn_t * 260.0 - 225) * 2.2 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
             "math.sin(variable.fynn_t * 55.0 - 120) * 7.5 - variable.fynn_dreh * 3",
             0.0
           ]
         },
         "schwanz4": {
           "rotation": [
-            "math.sin(variable.fynn_t * 70.0 - 160) * 3.0 + math.sin(variable.fynn_t * 220.0 - 250) * 2.6 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
+            "math.sin(variable.fynn_t * 70.0 - 160) * 3.0 + math.sin(variable.fynn_t * 260.0 - 250) * 2.6 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
             "math.sin(variable.fynn_t * 55.0 - 160) * 9.0 - variable.fynn_dreh * 4",
             0.0
           ]
         },
         "schwanz5": {
           "rotation": [
-            "math.sin(variable.fynn_t * 70.0 - 200) * 3.0 + math.sin(variable.fynn_t * 220.0 - 275) * 3.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
+            "math.sin(variable.fynn_t * 70.0 - 200) * 3.0 + math.sin(variable.fynn_t * 260.0 - 275) * 3.0 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
             "math.sin(variable.fynn_t * 55.0 - 200) * 10.5 - variable.fynn_dreh * 5",
             0.0
           ]
         },
         "schwanz6": {
           "rotation": [
-            "math.sin(variable.fynn_t * 70.0 - 240) * 3.0 + math.sin(variable.fynn_t * 220.0 - 300) * 3.4 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
+            "math.sin(variable.fynn_t * 70.0 - 240) * 3.0 + math.sin(variable.fynn_t * 260.0 - 300) * 3.4 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
             "math.sin(variable.fynn_t * 55.0 - 240) * 12.0 - variable.fynn_dreh * 6",
             0.0
           ]
         },
         "schwanz7": {
           "rotation": [
-            "math.sin(variable.fynn_t * 70.0 - 280) * 3.0 + math.sin(variable.fynn_t * 220.0 - 325) * 3.8 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
+            "math.sin(variable.fynn_t * 70.0 - 280) * 3.0 + math.sin(variable.fynn_t * 260.0 - 325) * 3.8 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
             "math.sin(variable.fynn_t * 55.0 - 280) * 13.5 - variable.fynn_dreh * 7",
             0.0
           ]
         },
         "schwanz8": {
           "rotation": [
-            "math.sin(variable.fynn_t * 70.0 - 320) * 3.0 + math.sin(variable.fynn_t * 220.0 - 350) * 4.2 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
+            "math.sin(variable.fynn_t * 70.0 - 320) * 3.0 + math.sin(variable.fynn_t * 260.0 - 350) * 4.2 * math.max(0.3 + 0.7 * math.clamp(math.sin(variable.fynn_t * 28.0) * 2.0 + 0.6, 0.0, 1.0), query.property('fynn:feuer'))",
             "math.sin(variable.fynn_t * 55.0 - 320) * 15.0 - variable.fynn_dreh * 8",
             0.0
           ]
         }
       }
     },
-    "animation.fynn.frostwyvern.schweben": {
+    "animation.fynn.nachtschwinge.schweben": {
       "loop": true,
       "bones": {
         "rumpf": {
@@ -357,6 +413,48 @@
             -0.0
           ]
         },
+        "bein_vorn_links": {
+          "rotation": [
+            -60.0,
+            0.0,
+            0.0
+          ]
+        },
+        "bein_vorn_rechts": {
+          "rotation": [
+            -60.0,
+            -0.0,
+            -0.0
+          ]
+        },
+        "unterbein_vorn_links": {
+          "rotation": [
+            80.0,
+            0.0,
+            0.0
+          ]
+        },
+        "unterbein_vorn_rechts": {
+          "rotation": [
+            80.0,
+            -0.0,
+            -0.0
+          ]
+        },
+        "zehen_vorn_links": {
+          "rotation": [
+            -35.0,
+            0.0,
+            0.0
+          ]
+        },
+        "zehen_vorn_rechts": {
+          "rotation": [
+            -35.0,
+            -0.0,
+            -0.0
+          ]
+        },
         "hals1": {
           "rotation": [
             6.8,
@@ -422,175 +520,105 @@
         }
       }
     },
-    "animation.fynn.frostwyvern.stand": {
+    "animation.fynn.nachtschwinge.stand": {
       "loop": true,
       "bones": {
         "fluegel_links": {
           "rotation": [
             0.0,
-            "-60.0 * (1.0 - variable.fynn_offen_l)",
-            "74.0 * (1.0 - variable.fynn_offen_l) - variable.fynn_offen_l * 45.0 - variable.fynn_offen_l * math.sin(variable.fynn_t * 400.0) * 1.5"
+            "-68.0 * (1.0 - variable.fynn_offen_l)",
+            "-60.0 * (1.0 - variable.fynn_offen_l) - variable.fynn_offen_l * 45.0 - variable.fynn_offen_l * math.sin(variable.fynn_t * 400.0) * 1.5"
           ]
         },
         "unterarm_links": {
           "rotation": [
             0.0,
-            "106.0 * (1.0 - variable.fynn_offen_l)",
+            "140.0 * (1.0 - variable.fynn_offen_l)",
             0.0
           ]
         },
         "hand_links": {
           "rotation": [
-            "-10.0 * (1.0 - variable.fynn_offen_l)",
-            "167.0 * (1.0 - variable.fynn_offen_l)",
+            "-28.0 * (1.0 - variable.fynn_offen_l)",
+            "-170.0 * (1.0 - variable.fynn_offen_l)",
             0.0
           ]
         },
         "finger1_links": {
           "rotation": [
             0.0,
-            "19.5 * (1.0 - variable.fynn_offen_l)",
+            "-6.0 * (1.0 - variable.fynn_offen_l)",
             0.0
           ]
         },
         "finger2_links": {
           "rotation": [
             0.0,
-            "40.5 * (1.0 - variable.fynn_offen_l)",
+            "15.0 * (1.0 - variable.fynn_offen_l)",
             0.0
           ]
         },
         "finger3_links": {
           "rotation": [
             0.0,
-            "61.5 * (1.0 - variable.fynn_offen_l)",
+            "36.0 * (1.0 - variable.fynn_offen_l)",
             0.0
           ]
         },
         "finger4_links": {
           "rotation": [
             0.0,
-            "84.0 * (1.0 - variable.fynn_offen_l)",
+            "58.5 * (1.0 - variable.fynn_offen_l)",
             0.0
-          ]
-        },
-        "armhaut_links": {
-          "scale": [
-            1.0,
-            1.0,
-            "0.15 + 0.85 * variable.fynn_offen_l"
-          ]
-        },
-        "unterarmhaut_links": {
-          "scale": [
-            1.0,
-            1.0,
-            "0.15 + 0.85 * variable.fynn_offen_l"
-          ]
-        },
-        "fingerhaut1_links": {
-          "scale": [
-            1.0,
-            1.0,
-            "0.12 + 0.88 * variable.fynn_offen_l"
-          ]
-        },
-        "fingerhaut2_links": {
-          "scale": [
-            1.0,
-            1.0,
-            "0.12 + 0.88 * variable.fynn_offen_l"
-          ]
-        },
-        "fingerhaut3_links": {
-          "scale": [
-            1.0,
-            1.0,
-            "0.12 + 0.88 * variable.fynn_offen_l"
           ]
         },
         "fluegel_rechts": {
           "rotation": [
             0.0,
-            "60.0 * (1.0 - variable.fynn_offen_r)",
-            "-74.0 * (1.0 - variable.fynn_offen_r) - variable.fynn_offen_r * -45.0 - variable.fynn_offen_r * math.sin(variable.fynn_t * 400.0) * -1.5"
+            "68.0 * (1.0 - variable.fynn_offen_r)",
+            "60.0 * (1.0 - variable.fynn_offen_r) - variable.fynn_offen_r * -45.0 - variable.fynn_offen_r * math.sin(variable.fynn_t * 400.0) * -1.5"
           ]
         },
         "unterarm_rechts": {
           "rotation": [
             0.0,
-            "-106.0 * (1.0 - variable.fynn_offen_r)",
+            "-140.0 * (1.0 - variable.fynn_offen_r)",
             0.0
           ]
         },
         "hand_rechts": {
           "rotation": [
-            "-10.0 * (1.0 - variable.fynn_offen_r)",
-            "-167.0 * (1.0 - variable.fynn_offen_r)",
+            "-28.0 * (1.0 - variable.fynn_offen_r)",
+            "170.0 * (1.0 - variable.fynn_offen_r)",
             0.0
           ]
         },
         "finger1_rechts": {
           "rotation": [
             0.0,
-            "-19.5 * (1.0 - variable.fynn_offen_r)",
+            "6.0 * (1.0 - variable.fynn_offen_r)",
             0.0
           ]
         },
         "finger2_rechts": {
           "rotation": [
             0.0,
-            "-40.5 * (1.0 - variable.fynn_offen_r)",
+            "-15.0 * (1.0 - variable.fynn_offen_r)",
             0.0
           ]
         },
         "finger3_rechts": {
           "rotation": [
             0.0,
-            "-61.5 * (1.0 - variable.fynn_offen_r)",
+            "-36.0 * (1.0 - variable.fynn_offen_r)",
             0.0
           ]
         },
         "finger4_rechts": {
           "rotation": [
             0.0,
-            "-84.0 * (1.0 - variable.fynn_offen_r)",
+            "-58.5 * (1.0 - variable.fynn_offen_r)",
             0.0
-          ]
-        },
-        "armhaut_rechts": {
-          "scale": [
-            1.0,
-            1.0,
-            "0.15 + 0.85 * variable.fynn_offen_r"
-          ]
-        },
-        "unterarmhaut_rechts": {
-          "scale": [
-            1.0,
-            1.0,
-            "0.15 + 0.85 * variable.fynn_offen_r"
-          ]
-        },
-        "fingerhaut1_rechts": {
-          "scale": [
-            1.0,
-            1.0,
-            "0.12 + 0.88 * variable.fynn_offen_r"
-          ]
-        },
-        "fingerhaut2_rechts": {
-          "scale": [
-            1.0,
-            1.0,
-            "0.12 + 0.88 * variable.fynn_offen_r"
-          ]
-        },
-        "fingerhaut3_rechts": {
-          "scale": [
-            1.0,
-            1.0,
-            "0.12 + 0.88 * variable.fynn_offen_r"
           ]
         },
         "hals1": {
@@ -716,12 +744,47 @@
             "math.sin(variable.fynn_t * 28.0 - 320) * 10 + math.pow(math.max(0.0, math.sin(variable.fynn_t * 13.0)), 16.0) * math.sin(variable.fynn_t * 720.0) * 48",
             0.0
           ]
+        },
+        "zehen_vorn_links": {
+          "rotation": [
+            "-math.pow(math.max(0.0, math.sin(variable.fynn_t * 7.0)), 6.0) * math.max(0.0, math.sin(variable.fynn_t * 900.0)) * 18.0",
+            0.0,
+            0.0
+          ]
         }
       }
     },
-    "animation.fynn.frostwyvern.gehen": {
+    "animation.fynn.nachtschwinge.gehen": {
       "loop": true,
       "bones": {
+        "bein_vorn_links": {
+          "rotation": [
+            "math.sin(query.modified_distance_moved * 22.0 + 0.0) * 30.0",
+            0.0,
+            0.0
+          ]
+        },
+        "unterbein_vorn_links": {
+          "rotation": [
+            "math.max(0.0, -math.cos(query.modified_distance_moved * 22.0 + 0.0)) * -34.0",
+            0.0,
+            0.0
+          ]
+        },
+        "fuss_vorn_links": {
+          "rotation": [
+            "-math.sin(query.modified_distance_moved * 22.0 + 0.0) * 16.0",
+            0.0,
+            0.0
+          ]
+        },
+        "zehen_vorn_links": {
+          "rotation": [
+            "math.max(0.0, -math.cos(query.modified_distance_moved * 22.0 + 0.0)) * 40.0 - math.max(0.0, math.cos(query.modified_distance_moved * 22.0 + 0.0)) * 10.0",
+            0.0,
+            0.0
+          ]
+        },
         "bein_hinten_links": {
           "rotation": [
             "math.sin(query.modified_distance_moved * 22.0 + 180.0) * 30.0",
@@ -744,6 +807,34 @@
           ]
         },
         "zehen_hinten_links": {
+          "rotation": [
+            "math.max(0.0, -math.cos(query.modified_distance_moved * 22.0 + 180.0)) * 40.0 - math.max(0.0, math.cos(query.modified_distance_moved * 22.0 + 180.0)) * 10.0",
+            0.0,
+            0.0
+          ]
+        },
+        "bein_vorn_rechts": {
+          "rotation": [
+            "math.sin(query.modified_distance_moved * 22.0 + 180.0) * 30.0",
+            0.0,
+            0.0
+          ]
+        },
+        "unterbein_vorn_rechts": {
+          "rotation": [
+            "math.max(0.0, -math.cos(query.modified_distance_moved * 22.0 + 180.0)) * -34.0",
+            0.0,
+            0.0
+          ]
+        },
+        "fuss_vorn_rechts": {
+          "rotation": [
+            "-math.sin(query.modified_distance_moved * 22.0 + 180.0) * 16.0",
+            0.0,
+            0.0
+          ]
+        },
+        "zehen_vorn_rechts": {
           "rotation": [
             "math.max(0.0, -math.cos(query.modified_distance_moved * 22.0 + 180.0)) * 40.0 - math.max(0.0, math.cos(query.modified_distance_moved * 22.0 + 180.0)) * 10.0",
             0.0,
@@ -781,15 +872,15 @@
         "fluegel_links": {
           "rotation": [
             0.0,
-            "math.sin(query.modified_distance_moved * 22.0 + 180.0) * 14.0 * 1",
-            "math.max(0.0, math.cos(query.modified_distance_moved * 22.0 + 180.0)) * -8.0 * 1"
+            "math.sin(query.modified_distance_moved * 22.0) * 3.0 * 1",
+            "math.sin(query.modified_distance_moved * 22.0 * 2.0) * 2.0 * 1"
           ]
         },
         "fluegel_rechts": {
           "rotation": [
             0.0,
-            "math.sin(query.modified_distance_moved * 22.0 + 0.0) * 14.0 * -1",
-            "math.max(0.0, math.cos(query.modified_distance_moved * 22.0 + 0.0)) * -8.0 * -1"
+            "math.sin(query.modified_distance_moved * 22.0) * 3.0 * -1",
+            "math.sin(query.modified_distance_moved * 22.0 * 2.0) * 2.0 * -1"
           ]
         },
         "rumpf": {
@@ -911,175 +1002,161 @@
         }
       }
     },
-    "animation.fynn.frostwyvern.schlafen": {
+    "animation.fynn.nachtschwinge.schlafen": {
       "loop": true,
       "bones": {
         "fluegel_links": {
           "rotation": [
             0.0,
-            -51.0,
-            "74.9 + math.pow(math.max(0.0, math.sin(variable.fynn_t * 5.0)), 40.0) * 8.0"
+            -57.8,
+            "-39.0 + math.pow(math.max(0.0, math.sin(variable.fynn_t * 5.0)), 40.0) * 8.0"
           ]
         },
         "fluegel_rechts": {
           "rotation": [
             0.0,
-            60.0,
-            -74.0
+            68.0,
+            60.0
           ]
         },
         "unterarm_links": {
           "rotation": [
             0.0,
-            90.1,
+            119.0,
             0.0
           ]
         },
         "unterarm_rechts": {
           "rotation": [
             0.0,
-            -106.0,
+            -140.0,
             -0.0
           ]
         },
         "hand_links": {
           "rotation": [
-            -8.5,
-            141.9,
+            -23.8,
+            -144.5,
             0.0
           ]
         },
         "hand_rechts": {
           "rotation": [
-            -10.0,
-            -167.0,
+            -28.0,
+            170.0,
             -0.0
           ]
         },
         "finger1_links": {
           "rotation": [
             0.0,
-            16.6,
+            -5.1,
             0.0
           ]
         },
         "finger1_rechts": {
           "rotation": [
             0.0,
-            -19.5,
+            6.0,
             -0.0
           ]
         },
         "finger2_links": {
           "rotation": [
             0.0,
-            34.4,
+            12.8,
             0.0
           ]
         },
         "finger2_rechts": {
           "rotation": [
             0.0,
-            -40.5,
+            -15.0,
             -0.0
           ]
         },
         "finger3_links": {
           "rotation": [
             0.0,
-            52.3,
+            30.6,
             0.0
           ]
         },
         "finger3_rechts": {
           "rotation": [
             0.0,
-            -61.5,
+            -36.0,
             -0.0
           ]
         },
         "finger4_links": {
           "rotation": [
             0.0,
-            71.4,
+            49.7,
             0.0
           ]
         },
         "finger4_rechts": {
           "rotation": [
             0.0,
-            -84.0,
+            -58.5,
             -0.0
           ]
         },
-        "armhaut_links": {
-          "scale": [
-            1.0,
-            1.0,
-            0.35
+        "bein_vorn_links": {
+          "rotation": [
+            -75.0,
+            0.0,
+            0.0
           ]
         },
-        "unterarmhaut_links": {
-          "scale": [
-            1.0,
-            1.0,
-            0.35
+        "bein_vorn_rechts": {
+          "rotation": [
+            -75.0,
+            -0.0,
+            -0.0
           ]
         },
-        "fingerhaut1_links": {
-          "scale": [
-            1.0,
-            1.0,
-            0.3
+        "unterbein_vorn_links": {
+          "rotation": [
+            55.0,
+            0.0,
+            0.0
           ]
         },
-        "fingerhaut2_links": {
-          "scale": [
-            1.0,
-            1.0,
-            0.3
+        "unterbein_vorn_rechts": {
+          "rotation": [
+            55.0,
+            -0.0,
+            -0.0
           ]
         },
-        "fingerhaut3_links": {
-          "scale": [
-            1.0,
-            1.0,
-            0.3
+        "fuss_vorn_links": {
+          "rotation": [
+            20.0,
+            0.0,
+            0.0
           ]
         },
-        "armhaut_rechts": {
-          "scale": [
-            1.0,
-            1.0,
-            0.15
+        "fuss_vorn_rechts": {
+          "rotation": [
+            20.0,
+            -0.0,
+            -0.0
           ]
         },
-        "unterarmhaut_rechts": {
-          "scale": [
-            1.0,
-            1.0,
-            0.15
+        "zehen_vorn_links": {
+          "rotation": [
+            15.0,
+            0.0,
+            0.0
           ]
         },
-        "fingerhaut1_rechts": {
-          "scale": [
-            1.0,
-            1.0,
-            0.12
-          ]
-        },
-        "fingerhaut2_rechts": {
-          "scale": [
-            1.0,
-            1.0,
-            0.12
-          ]
-        },
-        "fingerhaut3_rechts": {
-          "scale": [
-            1.0,
-            1.0,
-            0.12
+        "zehen_vorn_rechts": {
+          "rotation": [
+            15.0,
+            -0.0,
+            -0.0
           ]
         },
         "bein_hinten_links": {
@@ -1141,7 +1218,7 @@
         "rumpf": {
           "position": [
             0.0,
-            -11.0,
+            -12.0,
             0.0
           ],
           "scale": [
@@ -1264,175 +1341,105 @@
         }
       }
     },
-    "animation.fynn.frostwyvern.niederliegen": {
+    "animation.fynn.nachtschwinge.niederliegen": {
       "loop": true,
       "bones": {
         "fluegel_links": {
           "rotation": [
             0.0,
-            -21.0,
-            -69.1
+            -23.8,
+            -116.0
           ]
         },
         "fluegel_rechts": {
           "rotation": [
             0.0,
-            60.0,
-            -74.0
+            68.0,
+            60.0
           ]
         },
         "unterarm_links": {
           "rotation": [
             0.0,
-            37.1,
+            49.0,
             0.0
           ]
         },
         "unterarm_rechts": {
           "rotation": [
             0.0,
-            -106.0,
+            -140.0,
             -0.0
           ]
         },
         "hand_links": {
           "rotation": [
-            -3.5,
-            58.4,
+            -9.8,
+            -59.5,
             0.0
           ]
         },
         "hand_rechts": {
           "rotation": [
-            -10.0,
-            -167.0,
+            -28.0,
+            170.0,
             -0.0
           ]
         },
         "finger1_links": {
           "rotation": [
             0.0,
-            6.8,
+            -2.1,
             0.0
           ]
         },
         "finger1_rechts": {
           "rotation": [
             0.0,
-            -19.5,
+            6.0,
             -0.0
           ]
         },
         "finger2_links": {
           "rotation": [
             0.0,
-            14.2,
+            5.2,
             0.0
           ]
         },
         "finger2_rechts": {
           "rotation": [
             0.0,
-            -40.5,
+            -15.0,
             -0.0
           ]
         },
         "finger3_links": {
           "rotation": [
             0.0,
-            21.5,
+            12.6,
             0.0
           ]
         },
         "finger3_rechts": {
           "rotation": [
             0.0,
-            -61.5,
+            -36.0,
             -0.0
           ]
         },
         "finger4_links": {
           "rotation": [
             0.0,
-            29.4,
+            20.5,
             0.0
           ]
         },
         "finger4_rechts": {
           "rotation": [
             0.0,
-            -84.0,
+            -58.5,
             -0.0
-          ]
-        },
-        "armhaut_links": {
-          "scale": [
-            1.0,
-            1.0,
-            0.8
-          ]
-        },
-        "unterarmhaut_links": {
-          "scale": [
-            1.0,
-            1.0,
-            0.8
-          ]
-        },
-        "fingerhaut1_links": {
-          "scale": [
-            1.0,
-            1.0,
-            0.8
-          ]
-        },
-        "fingerhaut2_links": {
-          "scale": [
-            1.0,
-            1.0,
-            0.8
-          ]
-        },
-        "fingerhaut3_links": {
-          "scale": [
-            1.0,
-            1.0,
-            0.8
-          ]
-        },
-        "armhaut_rechts": {
-          "scale": [
-            1.0,
-            1.0,
-            0.15
-          ]
-        },
-        "unterarmhaut_rechts": {
-          "scale": [
-            1.0,
-            1.0,
-            0.15
-          ]
-        },
-        "fingerhaut1_rechts": {
-          "scale": [
-            1.0,
-            1.0,
-            0.12
-          ]
-        },
-        "fingerhaut2_rechts": {
-          "scale": [
-            1.0,
-            1.0,
-            0.12
-          ]
-        },
-        "fingerhaut3_rechts": {
-          "scale": [
-            1.0,
-            1.0,
-            0.12
           ]
         },
         "rumpf": {
@@ -1443,13 +1450,55 @@
           ],
           "position": [
             0.0,
-            -8.0,
+            -9.0,
             0.0
           ],
           "scale": [
             "1.0 + math.sin(variable.fynn_t * 170.0) * 0.012",
             "1.0 + math.sin(variable.fynn_t * 170.0) * 0.018",
             1.0
+          ]
+        },
+        "bein_vorn_links": {
+          "rotation": [
+            -25.0,
+            0.0,
+            0.0
+          ]
+        },
+        "bein_vorn_rechts": {
+          "rotation": [
+            -25.0,
+            -0.0,
+            -0.0
+          ]
+        },
+        "unterbein_vorn_links": {
+          "rotation": [
+            15.0,
+            0.0,
+            0.0
+          ]
+        },
+        "unterbein_vorn_rechts": {
+          "rotation": [
+            15.0,
+            -0.0,
+            -0.0
+          ]
+        },
+        "zehen_vorn_links": {
+          "rotation": [
+            30.0,
+            0.0,
+            0.0
+          ]
+        },
+        "zehen_vorn_rechts": {
+          "rotation": [
+            30.0,
+            -0.0,
+            -0.0
           ]
         },
         "bein_hinten_links": {
@@ -1601,137 +1650,78 @@
         }
       }
     },
-    "animation.fynn.frostwyvern.luftholen": {
+    "animation.fynn.nachtschwinge.luftholen": {
       "loop": true,
       "bones": {
         "rumpf": {
           "rotation": [
-            "5.0 * (1.0 - query.property('fynn:fliegt'))",
+            "-10.0 * (1.0 - query.property('fynn:fliegt'))",
             0.0,
             0.0
           ],
           "position": [
             0.0,
-            "-2.0 * (1.0 - query.property('fynn:fliegt'))",
-            0.0
+            "1.5 * (1.0 - query.property('fynn:fliegt'))",
+            1.0
           ],
           "scale": [
-            1.05,
-            1.05,
+            1.07,
+            1.06,
             1.0
+          ]
+        },
+        "becken": {
+          "rotation": [
+            "8.0 * (1.0 - query.property('fynn:fliegt'))",
+            0.0,
+            0.0
           ]
         },
         "hals1": {
           "rotation": [
-            12.0,
-            "math.sin(variable.fynn_t * 200.0 - 0) * 2.0",
+            -20.0,
+            0.0,
             0.0
           ]
         },
         "hals2": {
           "rotation": [
-            -6.0,
-            "math.sin(variable.fynn_t * 200.0 - 40) * 2.0",
+            -14.0,
+            0.0,
             0.0
           ]
         },
         "hals3": {
           "rotation": [
-            -14.0,
-            "math.sin(variable.fynn_t * 200.0 - 80) * 2.0",
+            4.0,
+            0.0,
             0.0
           ]
         },
         "hals4": {
-          "rotation": [
-            -10.0,
-            "math.sin(variable.fynn_t * 200.0 - 120) * 2.0",
-            0.0
-          ]
-        },
-        "kopf": {
           "rotation": [
             14.0,
             0.0,
             0.0
           ]
         },
-        "kiefer": {
+        "hals5": {
           "rotation": [
-            "6.0 + math.sin(variable.fynn_t * 500.0) * 2.0",
+            18.0,
             0.0,
-            0.0
-          ]
-        },
-        "fluegel_links": {
-          "rotation": [
-            0.0,
-            22.0,
-            -18.0
-          ]
-        },
-        "fluegel_rechts": {
-          "rotation": [
-            0.0,
-            -22.0,
-            18.0
-          ]
-        }
-      }
-    },
-    "animation.fynn.frostwyvern.frosthauch": {
-      "loop": true,
-      "bones": {
-        "rumpf": {
-          "rotation": [
-            "6.0 * (1.0 - query.property('fynn:fliegt')) - variable.fynn_ruck * 6.0",
-            0.0,
-            0.0
-          ],
-          "position": [
-            0.0,
-            0.0,
-            "-variable.fynn_ruck * 2.0"
-          ]
-        },
-        "hals1": {
-          "rotation": [
-            "16.0 * (1.0 - query.property('fynn:fliegt')) - 3.0",
-            "math.sin(variable.fynn_t * 90.0 - 0) * 8.0",
-            0.0
-          ]
-        },
-        "hals2": {
-          "rotation": [
-            "10.0 * (1.0 - query.property('fynn:fliegt')) - 3.0",
-            "math.sin(variable.fynn_t * 90.0 - 25) * 8.0",
-            0.0
-          ]
-        },
-        "hals3": {
-          "rotation": [
-            "4.0 * (1.0 - query.property('fynn:fliegt')) - 3.0",
-            "math.sin(variable.fynn_t * 90.0 - 50) * 8.0",
-            0.0
-          ]
-        },
-        "hals4": {
-          "rotation": [
-            "0.0 * (1.0 - query.property('fynn:fliegt')) - 3.0",
-            "math.sin(variable.fynn_t * 90.0 - 75) * 8.0",
             0.0
           ]
         },
         "kopf": {
           "rotation": [
-            "-14.0 * (1.0 - query.property('fynn:fliegt')) + 6.0 + math.sin(variable.fynn_t * 900.0) * 1.5",
-            "math.sin(variable.fynn_t * 90.0 - 110.0) * 10.0",
+            -18.0,
+            0.0,
             0.0
           ]
         },
         "kiefer": {
           "rotation": [
-            "40.0 + math.sin(variable.fynn_t * 700.0) * 2.0",
+            "8.0 + math.sin(variable.fynn_t * 400.0) * 2.0",
             0.0,
             0.0
           ]
@@ -1739,76 +1729,254 @@
         "fluegel_links": {
           "rotation": [
             0.0,
-            "-20.0 + math.sin(variable.fynn_t * 400.0) * 6.0",
-            "10.0 + math.sin(variable.fynn_t * 400.0) * 8.0"
+            0.0,
+            -15.0
           ]
         },
         "fluegel_rechts": {
           "rotation": [
             0.0,
-            "-(-20.0 + math.sin(variable.fynn_t * 400.0) * 6.0)",
-            "-(10.0 + math.sin(variable.fynn_t * 400.0) * 8.0)"
+            -0.0,
+            15.0
+          ]
+        },
+        "bein_vorn_links": {
+          "rotation": [
+            -8.0,
+            0.0,
+            0.0
+          ]
+        },
+        "bein_vorn_rechts": {
+          "rotation": [
+            -8.0,
+            -0.0,
+            -0.0
           ]
         },
         "schwanz1": {
           "rotation": [
-            4.0,
-            "math.sin(variable.fynn_t * 250.0 - 40) * 1.6",
+            -8.0,
+            0.0,
             0.0
           ]
         },
         "schwanz2": {
           "rotation": [
             0.0,
-            "math.sin(variable.fynn_t * 250.0 - 80) * 2.2",
+            "math.sin(variable.fynn_t * 220.0 - 80) * 3.0",
             0.0
           ]
         },
         "schwanz3": {
           "rotation": [
             0.0,
-            "math.sin(variable.fynn_t * 250.0 - 120) * 2.8",
+            "math.sin(variable.fynn_t * 220.0 - 120) * 3.0",
             0.0
           ]
         },
         "schwanz4": {
           "rotation": [
             0.0,
-            "math.sin(variable.fynn_t * 250.0 - 160) * 3.4",
+            "math.sin(variable.fynn_t * 220.0 - 160) * 3.0",
             0.0
           ]
         },
         "schwanz5": {
           "rotation": [
             0.0,
-            "math.sin(variable.fynn_t * 250.0 - 200) * 4.0",
+            "math.sin(variable.fynn_t * 220.0 - 200) * 3.0",
             0.0
           ]
         },
         "schwanz6": {
           "rotation": [
             0.0,
-            "math.sin(variable.fynn_t * 250.0 - 240) * 4.6",
+            "math.sin(variable.fynn_t * 220.0 - 240) * 3.0",
             0.0
           ]
         },
         "schwanz7": {
           "rotation": [
             0.0,
-            "math.sin(variable.fynn_t * 250.0 - 280) * 5.2",
+            "math.sin(variable.fynn_t * 220.0 - 280) * 3.0",
             0.0
           ]
         },
         "schwanz8": {
           "rotation": [
             0.0,
-            "math.sin(variable.fynn_t * 250.0 - 320) * 5.8",
+            "math.sin(variable.fynn_t * 220.0 - 320) * 3.0",
             0.0
           ]
         }
       }
     },
-    "animation.fynn.frostwyvern.drachenbruellen": {
+    "animation.fynn.nachtschwinge.schattenatem": {
+      "loop": true,
+      "bones": {
+        "rumpf": {
+          "rotation": [
+            "6.0 * (1.0 - query.property('fynn:fliegt'))",
+            0.0,
+            0.0
+          ],
+          "position": [
+            0.0,
+            0.0,
+            "-variable.fynn_ruck * 2.5 + (1.0 - variable.fynn_ruck) * 1.0"
+          ]
+        },
+        "hals1": {
+          "rotation": [
+            "14.0 * (1.0 - query.property('fynn:fliegt')) - 3.0 + variable.fynn_ruck * 3.0",
+            "math.sin(variable.fynn_t * 70.0 - 0) * 5.0",
+            0.0
+          ]
+        },
+        "hals2": {
+          "rotation": [
+            "8.0 * (1.0 - query.property('fynn:fliegt')) - 3.0 + variable.fynn_ruck * 3.0",
+            "math.sin(variable.fynn_t * 70.0 - 20) * 5.0",
+            0.0
+          ]
+        },
+        "hals3": {
+          "rotation": [
+            "-2.0 * (1.0 - query.property('fynn:fliegt')) - 3.0 + variable.fynn_ruck * 3.0",
+            "math.sin(variable.fynn_t * 70.0 - 40) * 5.0",
+            0.0
+          ]
+        },
+        "hals4": {
+          "rotation": [
+            "-6.0 * (1.0 - query.property('fynn:fliegt')) - 3.0 + variable.fynn_ruck * 3.0",
+            "math.sin(variable.fynn_t * 70.0 - 60) * 5.0",
+            0.0
+          ]
+        },
+        "hals5": {
+          "rotation": [
+            "-6.0 * (1.0 - query.property('fynn:fliegt')) - 3.0 + variable.fynn_ruck * 3.0",
+            "math.sin(variable.fynn_t * 70.0 - 80) * 5.0",
+            0.0
+          ]
+        },
+        "kopf": {
+          "rotation": [
+            "-8.0 * (1.0 - query.property('fynn:fliegt')) + 8.0 * query.property('fynn:fliegt') + math.sin(variable.fynn_t * 900.0) * 1.5",
+            "math.sin(variable.fynn_t * 70.0 - 100.0) * 6.0",
+            0.0
+          ]
+        },
+        "kiefer": {
+          "rotation": [
+            "45.0 + math.sin(variable.fynn_t * 700.0) * 3.0",
+            0.0,
+            0.0
+          ]
+        },
+        "fluegel_links": {
+          "rotation": [
+            0.0,
+            0.0,
+            "-8.0 * (1.0 - query.property('fynn:fliegt'))"
+          ]
+        },
+        "fluegel_rechts": {
+          "rotation": [
+            0.0,
+            -0.0,
+            "-(-8.0 * (1.0 - query.property('fynn:fliegt')))"
+          ]
+        },
+        "bein_vorn_links": {
+          "rotation": [
+            "-12.0 * (1.0 - query.property('fynn:fliegt'))",
+            0.0,
+            0.0
+          ]
+        },
+        "bein_vorn_rechts": {
+          "rotation": [
+            "-12.0 * (1.0 - query.property('fynn:fliegt'))",
+            -0.0,
+            -0.0
+          ]
+        },
+        "zehen_vorn_links": {
+          "rotation": [
+            "-20.0 * (1.0 - query.property('fynn:fliegt'))",
+            0.0,
+            0.0
+          ]
+        },
+        "zehen_vorn_rechts": {
+          "rotation": [
+            "-20.0 * (1.0 - query.property('fynn:fliegt'))",
+            -0.0,
+            -0.0
+          ]
+        },
+        "schwanz1": {
+          "rotation": [
+            -6.0,
+            "math.sin(variable.fynn_t * 300.0 - 40) * 2.8",
+            0.0
+          ]
+        },
+        "schwanz2": {
+          "rotation": [
+            0.0,
+            "math.sin(variable.fynn_t * 300.0 - 80) * 3.6",
+            0.0
+          ]
+        },
+        "schwanz3": {
+          "rotation": [
+            0.0,
+            "math.sin(variable.fynn_t * 300.0 - 120) * 4.4",
+            0.0
+          ]
+        },
+        "schwanz4": {
+          "rotation": [
+            0.0,
+            "math.sin(variable.fynn_t * 300.0 - 160) * 5.2",
+            0.0
+          ]
+        },
+        "schwanz5": {
+          "rotation": [
+            0.0,
+            "math.sin(variable.fynn_t * 300.0 - 200) * 6.0",
+            0.0
+          ]
+        },
+        "schwanz6": {
+          "rotation": [
+            0.0,
+            "math.sin(variable.fynn_t * 300.0 - 240) * 6.8",
+            0.0
+          ]
+        },
+        "schwanz7": {
+          "rotation": [
+            0.0,
+            "math.sin(variable.fynn_t * 300.0 - 280) * 7.6",
+            0.0
+          ]
+        },
+        "schwanz8": {
+          "rotation": [
+            0.0,
+            "math.sin(variable.fynn_t * 300.0 - 320) * 8.4",
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.nachtschwinge.drachenbruellen": {
       "loop": true,
       "bones": {
         "rumpf": {
@@ -1828,6 +1996,62 @@
             20.0,
             0.0,
             0.0
+          ]
+        },
+        "bein_vorn_links": {
+          "rotation": [
+            -50.0,
+            0.0,
+            6.0
+          ]
+        },
+        "bein_vorn_rechts": {
+          "rotation": [
+            -50.0,
+            -0.0,
+            -6.0
+          ]
+        },
+        "unterbein_vorn_links": {
+          "rotation": [
+            65.0,
+            0.0,
+            0.0
+          ]
+        },
+        "unterbein_vorn_rechts": {
+          "rotation": [
+            65.0,
+            -0.0,
+            -0.0
+          ]
+        },
+        "fuss_vorn_links": {
+          "rotation": [
+            10.0,
+            0.0,
+            0.0
+          ]
+        },
+        "fuss_vorn_rechts": {
+          "rotation": [
+            10.0,
+            -0.0,
+            -0.0
+          ]
+        },
+        "zehen_vorn_links": {
+          "rotation": [
+            -30.0,
+            0.0,
+            0.0
+          ]
+        },
+        "zehen_vorn_rechts": {
+          "rotation": [
+            -30.0,
+            -0.0,
+            -0.0
           ]
         },
         "bein_hinten_links": {
@@ -1965,7 +2189,7 @@
         }
       }
     },
-    "animation.fynn.frostwyvern.sturzflug": {
+    "animation.fynn.nachtschwinge.sturzflug": {
       "loop": true,
       "bones": {
         "fluegel_links": {
@@ -2007,6 +2231,48 @@
           "rotation": [
             0.0,
             40.0,
+            -0.0
+          ]
+        },
+        "bein_vorn_links": {
+          "rotation": [
+            -60.0,
+            0.0,
+            0.0
+          ]
+        },
+        "bein_vorn_rechts": {
+          "rotation": [
+            -60.0,
+            -0.0,
+            -0.0
+          ]
+        },
+        "unterbein_vorn_links": {
+          "rotation": [
+            20.0,
+            0.0,
+            0.0
+          ]
+        },
+        "unterbein_vorn_rechts": {
+          "rotation": [
+            20.0,
+            -0.0,
+            -0.0
+          ]
+        },
+        "zehen_vorn_links": {
+          "rotation": [
+            -65.0,
+            0.0,
+            0.0
+          ]
+        },
+        "zehen_vorn_rechts": {
+          "rotation": [
+            -65.0,
+            -0.0,
             -0.0
           ]
         },
@@ -2103,7 +2369,7 @@
         }
       }
     },
-    "animation.fynn.frostwyvern.drachenblick": {
+    "animation.fynn.nachtschwinge.drachenblick": {
       "loop": true,
       "bones": {
         "hals1": {
@@ -2150,7 +2416,7 @@
         }
       }
     },
-    "animation.fynn.frostwyvern.drachenbiss": {
+    "animation.fynn.nachtschwinge.drachenbiss": {
       "loop": true,
       "bones": {
         "hals1": {
@@ -2267,6 +2533,27 @@
           "rotation": [
             0.0,
             "math.sin(variable.attack_time * 360.0 - 240) * 11",
+            0.0
+          ]
+        },
+        "bein_vorn_links": {
+          "rotation": [
+            "-math.sin(math.clamp(variable.attack_time / 0.35, 0.0, 1.0) * 180.0) * 45.0 + math.sin(math.clamp((variable.attack_time - 0.3) / 0.7, 0.0, 1.0) * 180.0) * 30.0",
+            0.0,
+            "math.sin(math.clamp(variable.attack_time / 0.35, 0.0, 1.0) * 180.0) * 10.0"
+          ]
+        },
+        "unterbein_vorn_links": {
+          "rotation": [
+            "math.sin(math.clamp(variable.attack_time / 0.35, 0.0, 1.0) * 180.0) * 35.0",
+            0.0,
+            0.0
+          ]
+        },
+        "zehen_vorn_links": {
+          "rotation": [
+            "-math.sin(math.clamp(variable.attack_time / 0.35, 0.0, 1.0) * 180.0) * 35.0 + math.sin(math.clamp((variable.attack_time - 0.3) / 0.7, 0.0, 1.0) * 180.0) * 20.0",
+            0.0,
             0.0
           ]
         }

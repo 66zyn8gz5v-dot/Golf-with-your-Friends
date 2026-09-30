@@ -652,6 +652,12 @@
     },
     "giftdrache_ei": {
       "textures": "textures/items/giftdrache_ei"
+    },
+    "plasmaschuss": {
+      "textures": "textures/items/plasmaschuss"
+    },
+    "nachtschwinge_ei": {
+      "textures": "textures/items/nachtschwinge_ei"
     }
   }
 }

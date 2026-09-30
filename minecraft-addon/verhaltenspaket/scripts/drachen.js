@@ -117,6 +117,19 @@ export const ATEMARTEN = {
     },
 };
 
+// Der Schattenatem (Nachtschwinge, 4.96): Wer darin steht, sieht nichts
+// mehr und verdorrt - die Welt veraendert er nicht.
+ATEMARTEN.schatten = {
+    teilchen: "fynn:schattenatem", weite: 13, kegel: 1.0, dauer: 36, anlauf: 20, pause: [140, 220],
+    laut: "mob.wither.shoot", knistern: "mob.phantom.swoop",
+    wesen(ziel, drache) {
+        try { ziel.addEffect("blindness", 80, { amplifier: 0 }); } catch (e) { /* egal */ }
+        try { ziel.addEffect("wither", 60, { amplifier: 0 }); } catch (e) { /* egal */ }
+        try { ziel.applyDamage(2, { cause: "magic", damagingEntity: drache }); } catch (e) { /* egal */ }
+    },
+    block() { return 0; },
+};
+
 // ------------------------------------------------------------ Giftwolken
 
 export const WOLKE = { dauer: 200, weite: 3.5, abstand: 3 };
@@ -170,6 +183,32 @@ export const FAEHIGKEITEN = {
         },
     },
 };
+
+// Der Plasmaschuss (Nachtschwinge): eine violette Kugel, schnell und
+// gerade, die beim Aufprall explodiert - ohne Feuer. Die Explosion macht
+// das Skript (plasmaTreffer), das Geschoss selbst trifft nur.
+FAEHIGKEITEN.plasma = {
+    min: 8, max: 40, pause: [120, 200], name: "Plasmaschuss",
+    wirken(drache, mund, r) {
+        const dim = drache.dimension;
+        try { dim.playSound("mob.blaze.shoot", mund, { volume: 3, pitch: 0.6 }); } catch (e) { /* egal */ }
+        try {
+            const e = dim.spawnEntity("fynn:plasmaschuss", mund);
+            const p = e.getComponent("minecraft:projectile");
+            if (p) { p.owner = drache; p.shoot({ x: r.x * 2.4, y: r.y * 2.4, z: r.z * 2.4 }); }
+            return e;
+        } catch (e) {
+            return undefined;
+        }
+    },
+};
+
+export function plasmaTreffer(dim, ort, quelle) {
+    try {
+        dim.createExplosion(ort, 1.8, { causesFire: false, breaksBlocks: erlaubtZuZuendeln(), source: quelle });
+    } catch (e) { /* egal */ }
+    teilchen(dim, "fynn:plasmaknall", ort);
+}
 
 // Drei Eissplitter im Faecher (Frostwyvern): Die Splitter sind echte
 // Geschosse (fynn:eissplitter) - sie treffen hart und verlangsamen.
@@ -238,7 +277,7 @@ FAEHIGKEITEN.zuenden = {
 
 export const DRACHEN = {
     "fynn:lindwurm": {
-        name: "Lindwurm", atem: "feuer", faehigkeit: "feuerkugel", maul: 5.0, hoehe: 1.8, groesse: 1.35,
+        name: "Feuerdrache", atem: "feuer", faehigkeit: "feuerkugel", maul: 5.0, hoehe: 1.8, groesse: 1.35,
         luft: [1200, 2400], boden: [800, 1800],
         // Wie er mit Reiter fliegt: schneller als der Greif, steigt kraeftiger.
         reitflug: { tempo: 1.3, steigen: 0.14, nachziehen: 0.12, schwebe: 0.04, hoechstSteigen: 0.75 },
@@ -254,6 +293,12 @@ export const DRACHEN = {
         name: "Himmelsdrache", atem: "sturm", faehigkeit: "blitzschlag", maul: 3.2, hoehe: 1.3, groesse: 1.15,
         luft: [1600, 3000], boden: [400, 900],
         reitflug: { tempo: 1.6, steigen: 0.15, nachziehen: 0.15, schwebe: 0.06, hoechstSteigen: 0.8 },
+    },
+    // Die Nachtschwinge (4.96): der schnellste Drache, auch mit Reiter.
+    "fynn:nachtschwinge": {
+        name: "Nachtschwinge", atem: "schatten", faehigkeit: "plasma", maul: 3.6, hoehe: 1.4, groesse: 1.0,
+        luft: [1400, 2600], boden: [600, 1200],
+        reitflug: { tempo: 1.8, steigen: 0.17, nachziehen: 0.16, schwebe: 0.05, hoechstSteigen: 0.85 },
     },
     // Kleiner und wendiger: fliegt mit Reiter schneller, steigt leichter.
     "fynn:frostwyvern": {
@@ -749,6 +794,18 @@ world.afterEvents.itemUse.subscribe((e) => {
 
 world.afterEvents.entityDie.subscribe((e) => {
     try { zustand.delete(e.deadEntity?.id); } catch (fehler) { /* egal */ }
+});
+
+world.afterEvents.projectileHitBlock.subscribe((e) => {
+    try {
+        if (e.projectile?.typeId === "fynn:plasmaschuss") plasmaTreffer(e.dimension, e.location, e.source);
+    } catch (fehler) { /* egal */ }
+});
+
+world.afterEvents.projectileHitEntity.subscribe((e) => {
+    try {
+        if (e.projectile?.typeId === "fynn:plasmaschuss") plasmaTreffer(e.dimension, e.location, e.source);
+    } catch (fehler) { /* egal */ }
 });
 
 function kopfOrt(d) {

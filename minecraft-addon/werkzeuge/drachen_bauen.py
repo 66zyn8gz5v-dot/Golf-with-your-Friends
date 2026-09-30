@@ -93,6 +93,7 @@ EISSPLITTER_F = {"k": (30, 70, 110), "W": (250, 254, 255), "C": (170, 226, 250),
 NAMEN = [
     ("item.fynn:drachenpfeife", "Drachenpfeife", "Dragon Whistle"),
     ("entity.fynn:eissplitter.name", "Eissplitter", "Ice Shard"),
+    ("entity.fynn:plasmaschuss.name", "Plasmaschuss", "Plasma Blast"),
 ]
 NAMEN += [(k + ".name", d, e) for k, d, e in NAMEN if k.startswith("item.")]
 
@@ -103,7 +104,46 @@ ATEMFARBEN = {
     "frostatem": {"0.0": "#FFFFFFFF", "0.2": "#FFE4F8FF", "0.5": "#E0A8DCF8", "0.8": "#A07AB4E6", "1.0": "#00C8E0F0"},
     "sturmatem": {"0.0": "#FFFFFFFF", "0.15": "#FFE8F0FF", "0.4": "#D0B8C8FF", "0.7": "#8098A8E8", "1.0": "#00C0C8E0"},
     "giftatem": {"0.0": "#FFE8FFB0", "0.2": "#FFB8F050", "0.5": "#E080C830", "0.8": "#A0507A28", "1.0": "#00384A20"},
+    # Der Schattenatem der Nachtschwinge (4.96): violett, dann schwarz.
+    "schattenatem": {"0.0": "#FFE8C8FF", "0.2": "#FFA060F0", "0.5": "#E04A1A8A", "0.8": "#A01A0A2A", "1.0": "#00000000"},
 }
+
+# Der Plasmaschuss (4.96): eine violett gluehende Kugel.
+PLASMASCHUSS = [
+    "................",
+    "................",
+    "................",
+    "................",
+    "......kkkk......",
+    ".....kPPPPk.....",
+    "....kPWWppPk....",
+    "....kPWppppk....",
+    "....kPppppPk....",
+    "....kPpppPPk....",
+    ".....kPPPPk.....",
+    "......kkkk......",
+    "................",
+    "................",
+    "................",
+    "................",
+]
+PLASMASCHUSS_F = {"k": (60, 20, 110), "P": (160, 90, 255), "p": (210, 170, 255), "W": (255, 250, 255)}
+
+
+def plasmaknall():
+    """Der Knall des Plasmaschusses: violette Funken nach allen Seiten."""
+    t = funken()
+    t["particle_effect"]["description"]["identifier"] = "fynn:plasmaknall"
+    k = t["particle_effect"]["components"]
+    k["minecraft:emitter_rate_instant"] = {"num_particles": 60}
+    k["minecraft:emitter_shape_sphere"] = {"radius": 0.4, "direction": "outwards"}
+    del k["minecraft:emitter_shape_point"]
+    k["minecraft:particle_initial_speed"] = "6.0 + variable.particle_random_1 * 6.0"
+    k["minecraft:particle_motion_dynamic"] = {"linear_drag_coefficient": 2.5}
+    k["minecraft:particle_appearance_billboard"]["size"] = [0.14, 0.14]
+    k["minecraft:particle_appearance_tinting"]["color"]["gradient"] = {
+        "0.0": "#FFFFFFFF", "0.3": "#FFC08CFF", "1.0": "#006A2AC8"}
+    return t
 
 
 def atem_teilchen(name, verlauf):
@@ -218,7 +258,8 @@ def teilchenbild(muster, farben):
 
 def bilder():
     return {"drachenpfeife": rbb.male(DRACHENPFEIFE, DRACHENPFEIFE_F),
-            "eissplitter": rbb.male(EISSPLITTER, EISSPLITTER_F)}
+            "eissplitter": rbb.male(EISSPLITTER, EISSPLITTER_F),
+            "plasmaschuss": rbb.male(PLASMASCHUSS, PLASMASCHUSS_F)}
 
 
 def main():
@@ -243,13 +284,21 @@ def main():
     bk.schreibe(RES / "entity" / "eissplitter.entity.json",
                 sprite_aussehen("eissplitter", "textures/items/eissplitter", "1.4"))
     bk.schreibe(RES / "particles" / "benommen.particle.json", benommen())
+    # Der Plasmaschuss (Nachtschwinge): schnell, kaum Fall, explodiert beim
+    # Aufprall (das macht scripts/drachen.js).
+    plasma = geschoss("plasmaschuss", 6)
+    plasma["minecraft:entity"]["components"]["minecraft:projectile"].update({"gravity": 0.005, "power": 2.4})
+    bk.schreibe(VER / "entities" / "plasmaschuss.json", plasma)
+    bk.schreibe(RES / "entity" / "plasmaschuss.entity.json",
+                sprite_aussehen("plasmaschuss", "textures/items/plasmaschuss", "1.8"))
+    bk.schreibe(RES / "particles" / "plasmaknall.particle.json", plasmaknall())
     ordner = RES / "textures" / "particle"
     ordner.mkdir(parents=True, exist_ok=True)
     teilchenbild(Z_BILD, {"k": (40, 44, 70), "W": (245, 248, 255)}).save(ordner / "fynn_schlaf_z.png")
     teilchenbild(STERN_BILD, {"k": (90, 60, 10), "Y": (255, 214, 60), "W": (255, 250, 210)}).save(ordner / "fynn_stern.png")
     bk.item_bilder(bilder())
     bk.sprache("Drachen", NAMEN)
-    print("gebaut: Drachenpfeife, Schlaf-Z, Benommen-Sterne, Atemarten, Giftwolke, Funken, Eissplitter")
+    print("gebaut: Drachenpfeife, Schlaf-Z, Benommen-Sterne, Atemarten, Giftwolke, Funken, Eissplitter, Plasmaschuss")
     if "--bilder" in sys.argv:
         from PIL import Image
         ziel = Path(sys.argv[sys.argv.index("--bilder") + 1])

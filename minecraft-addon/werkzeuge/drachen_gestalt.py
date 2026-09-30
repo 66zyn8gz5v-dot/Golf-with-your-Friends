@@ -20,7 +20,7 @@ zusammenhaengende Verlaeufe, keine Punkte.
 
 import math
 
-from tiermodell import Modell, hexfarbe, mische
+from tiermodell import Modell, hexfarbe, mische, wolken
 import haut as H
 
 
@@ -127,8 +127,10 @@ def innen(punkt, ecken):
     return True
 
 
-def schwinge_bauen(m, s, eltern="rumpf"):
-    """Die linke Schwinge; die rechte entsteht durch spiegel_knochen."""
+def schwinge_bauen(m, s, eltern="rumpf", zusatz=None):
+    """Die linke Schwinge; die rechte entsteht durch spiegel_knochen.
+    zusatz(m, s): was eine Art noch an die linke Schwinge baut (Krallen an
+    den Fingerspitzen ...) - es wird mit gespiegelt."""
     sx, sy, sz = s.schulter
     ex, _, _ = s.ellbogen
     hx, _, hz = s.handgelenk
@@ -160,10 +162,18 @@ def schwinge_bauen(m, s, eltern="rumpf"):
             tief = int(math.ceil(s.finger[i] * math.sin(zwischen))) + 1
             m.knoch(f"fingerhaut{i + 1}_links", [hx, sy, sz], f"finger{i + 1}_links").kasten(
                 [hx, sy, sz], [s.finger[i], 0, tief], f"flughaut_f{i + 1}")
+    if zusatz:
+        zusatz(m, s)
     spiegel_knochen(m, "fluegel_links", None, rechts)
 
 
-def schwinge_maler(s, haut, knochen, aderfarbe=None):
+def zackenkante(lx, lz, hoehe):
+    """Eine gezackte Hinterkante (4.96, nach Fynns Vorbildern): ein
+    Saegezahn, der entlang der Kante laeuft - so franst die Flughaut aus."""
+    return hoehe * abs(((lx * 0.45 + lz * 0.2) % 2.0) - 1.0)
+
+
+def schwinge_maler(s, haut, knochen, aderfarbe=None, zacken=0.0, flecken=None):
     """Die Farbe der Flughaut: vorn am Knochen dunkler, zur Hinterkante hin
     heller; feine Adern laufen parallel zum Finger. Ausserhalb des
     Dreiecks zwischen zwei Fingern: nichts (durchsichtig). Die Hinterkante
@@ -182,22 +192,28 @@ def schwinge_maler(s, haut, knochen, aderfarbe=None):
             spitze_b = (s.finger[i + 1] * math.cos(zwischen), s.finger[i + 1] * math.sin(zwischen))
             if not innen((lx, lz), [(0.0, 0.0), spitze_a, spitze_b]):
                 return None
-            if bogenkante(lx, lz, spitze_b, spitze_a, 3.0) < 0:
+            if bogenkante(lx, lz, spitze_b, spitze_a, 3.0) - zackenkante(lx, lz, zacken) < 0:
                 return None
             if int(round(lz)) % 5 == 0 and lz > 1:
                 return ader
-            return H.verlauf([H.dunkler(haut, 0.12), haut, H.heller(haut, 0.12)], lz / 14.0, 4)
+            grund = H.verlauf([H.dunkler(haut, 0.12), haut, H.heller(haut, 0.12)], lz / 14.0, 4)
+            if flecken and wolken((p[0], 0, p[2]), 4.0, 11) > 0.6:
+                return H.mische(grund, H.farbe(flecken), 0.55)
+            return grund
         # Arm und Unterarm: vom Knochen bis zur Linie letzte Fingerspitze - Leib.
         letzte = s.spitze(s.anzahl - 1)
         hinten = s.hinterkante
         ecken = [(s.schulter[0], s.schulter[2]), (hx, hz), letzte, hinten]
         if not innen((x, z), ecken):
             return None
-        if bogenkante(x, z, hinten, letzte, 3.5) < 0:
+        if bogenkante(x, z, hinten, letzte, 3.5) - zackenkante(x, z, zacken) < 0:
             return None
         if int(round(z - hz)) % 5 == 0 and z - hz > 1:
             return ader
-        return H.verlauf([H.dunkler(haut, 0.12), haut, H.heller(haut, 0.12)], (z - hz) / 16.0, 4)
+        grund = H.verlauf([H.dunkler(haut, 0.12), haut, H.heller(haut, 0.12)], (z - hz) / 16.0, 4)
+        if flecken and wolken((p[0], 0, p[2]), 4.0, 11) > 0.6:
+            return H.mische(grund, H.farbe(flecken), 0.55)
+        return grund
     return male
 
 
@@ -434,69 +450,6 @@ def sattel_bauen(m, eltern, oben, z, breite):
     return s
 
 
-# Wie bei Fynns Vorbildern (Ice and Fire): kraeftige Fluegelknochen, fuenf
-# sehr lange Finger, die weit auseinanderstehen - der ganze Fluegel ist ein
-# riesiger Faecher, dessen letzter Finger fast bis zur Huefte zurueckzeigt.
-LINDWURM_SCHWINGE = Schwinge((8.5, 31, -9), oberarm=12, unterarm=16, finger=(54, 50, 44, 37, 28),
-                             winkel=(16, -10, -36, -62, -90), hinterkante=(8, 18), dicke=(5, 4, 2))
-
-
-def lindwurm_modell():
-    """Der Feuerdrache, gebaut nach Fynns Vorbildern (Ice and Fire): ein
-    grosser, kantiger Kopf mit Hoernerkrone, ein langer, dicker Hals, ein
-    massiger Brustkorb, kurze dicke Beine mit grossen Klauen, riesige
-    Faecherschwingen und ein langer Schwanz - ueberall hohe Rueckenstacheln."""
-    m = Modell("lindwurm", sichtbreite=11.0, sichthoehe=4.0)
-    MAEULER.pop("lindwurm", None)
-    r = m.knoch("rumpf", [0, 21, 0])
-    r.kasten([-9, 13, -15], [18, 18, 14], "leib")                    # Brust: hoch und breit
-    r.kasten([-8, 13.5, -2], [16, 16, 11], "leib")                   # Bauch
-    r.kasten([-7, 14.5, 8], [14, 14, 9], "leib")                     # Huefte
-    r.kasten([-7, 12.5, -14], [14, 1, 29], "bauch")                  # Bauchschilde
-    for z, h, top in ((-13, 5, 31), (-9, 6, 31), (-5, 6, 31), (-1, 6, 29.5), (3, 5, 29.5), (7, 5, 28.5),
-                      (11, 4, 28.5), (14, 4, 28.5)):
-        r.kasten([-0.5, top - 0.5, z], [1, h - 1, 3], "stachel", drehung=[-20, 0, 0], drehpunkt=[0, top, z + 1.5])
-        r.kasten([-0.5, top + h - 2, z + 1.5], [1, 2, 1], "stachel", drehung=[-20, 0, 0], drehpunkt=[0, top, z + 1.5])
-    hals, ende = glieder(m, "hals", "rumpf", (0, 25, -15),
-                         -1, [(7, 12, 12, 1.5), (7, 11, 11, 1.5), (7, 10, 10, 1.5), (7, 9, 9, 1.0), (6, 9, 9, 0.5)],
-                         stoff="leib", zacken="stachel")
-    _, ky, kz = ende
-    kopf_bauen(m, "lindwurm", hals[-1], ky, kz, schaedel=(12, 9, 12), schnauze=(9, 5, 11), hoerner="krone",
-              zier=("kinn",))
-    schwanz, ende = glieder(m, "schwanz", "rumpf", (0, 21.5, 17),
-                            1, [(8, 12, 11, -0.6), (8, 10, 9, -0.6), (8, 9, 8, -0.4), (8, 8, 7, -0.3),
-                                (8, 6, 6, -0.2), (8, 5, 5, 0.0), (8, 4, 4, 0.0), (8, 3, 3, 0.0)],
-                            stoff="leib", zacken="stachel")
-    _, sy, sz = ende
-    m.finde(schwanz[-1]).kasten([-5, sy - 0.5, sz - 1], [10, 1, 8], "spitze")
-    for seite, x in (("links", 7.5), ("rechts", -7.5)):
-        # Kurze, dicke Beine; vorn richtige Haende mit vier Klauen.
-        bein_bauen(m, f"bein_hinten_{seite}", "rumpf", (x, 21, 12), (8, 9, 10), (6, 8, 6), (8, 4, 10), krallen=4)
-        bein_bauen(m, f"bein_vorn_{seite}", "rumpf", (x, 20, -10), (7, 8, 7), (5, 8, 5), (7, 4, 8), krallen=4)
-    for seite, x in (("links", 1), ("rechts", -1)):
-        # Stacheln an den Ellbogen der Vorderbeine und an den Fersen, nach
-        # hinten gerichtet - dazu ein Paar kraeftige Schulterdornen.
-        for bein, (y, z) in (("unterbein_vorn", (12, -10)), ("unterbein_hinten", (12, 12))):
-            m.finde(f"{bein}_{seite}").kasten([x * 7.5 - 0.5, y - 1, z + 2], [1, 1, 4], "horn",
-                                               drehung=[-30, 0, 0], drehpunkt=[x * 7.5, y, z + 2])
-        m.finde("rumpf").kasten([x * 8 - 0.5, 28, -12], [1, 4, 2], "stachel",
-                                drehung=[-25, 0, -x * 35], drehpunkt=[x * 8, 28, -11])
-    schwinge_bauen(m, LINDWURM_SCHWINGE)
-    becken_abtrennen(m, 8, 21)
-    sattel_bauen(m, "rumpf", 31, -3, 18)
-    return m
-
-
-LINDWURM_FARBEN = {
-    "gruen":   {"leib": "#3e6a30", "ruecken": "#1e3a1a", "bauch": "#d0c080", "haut": "#6a5230",
-                "augen": "#ffa21a", "glut": "#ff7a1a"},
-    "rot":     {"leib": "#8a2a22", "ruecken": "#4a1210", "bauch": "#e0b858", "haut": "#7a2e20",
-                "augen": "#ffd21a", "glut": "#ffb030"},
-    "schwarz": {"leib": "#2e2e36", "ruecken": "#121216", "bauch": "#7a6a8a", "haut": "#34303e",
-                "augen": "#c07aff", "glut": "#b86aff"},
-}
-
-
 def drachen_maler(art, f, schwinge=None, besonders=None):
     """Der gemeinsame Maler aller Drachen. f: Farben (leib, ruecken, bauch,
     haut, augen, glut; wahlweise horn als drei Toene, kralle). besonders:
@@ -580,12 +533,6 @@ def drachen_maler(art, f, schwinge=None, besonders=None):
     return male
 
 
-def lindwurm_maler(variante):
-    return drachen_maler("lindwurm", LINDWURM_FARBEN.get(variante, LINDWURM_FARBEN["gruen"]), LINDWURM_SCHWINGE)
-
-
-# ================================================================== Faltung
-
 _faltungen = {}
 
 
@@ -663,90 +610,6 @@ def faltung(s, stuetzt=False):
         w[f"finger{i + 1}"] = [0.0, round(c - 0.75 * s.winkel[i], 1), 0.0]
     _faltungen[schluessel] = w
     return w
-
-
-# ================================================================== Frostwyvern (4.91)
-
-# Ein Wyvern: Die Schwingen sind zugleich seine Vorderbeine. Der Arm ist
-# deshalb laenger und kraeftiger, die Finger etwas kuerzer als beim Lindwurm.
-FROSTWYVERN_SCHWINGE = Schwinge((6.5, 23, -8), oberarm=13, unterarm=17, finger=(42, 38, 32, 25),
-                                winkel=(14, -14, -42, -72), hinterkante=(6, 14), dicke=(4, 3, 2))
-
-
-def frostwyvern_modell():
-    """Der Frostwyvern: schlanker als der Lindwurm, zwei Beine, die
-    Schwingen als Vorderbeine, ein langer duenner Hals mit einem schmalen
-    Kopf voller Eisdornen, ein langer Schwanz, der in einem Faecher aus
-    Eiszacken endet. Ueber den Ruecken wachsen leuchtende Eiskristalle."""
-    m = Modell("frostwyvern", sichtbreite=9.0, sichthoehe=3.5)
-    MAEULER.pop("frostwyvern", None)
-    r = m.knoch("rumpf", [0, 18, 0])
-    r.kasten([-6, 10, -11], [12, 12, 11], "leib")                    # Brust
-    r.kasten([-5.5, 10.5, -1], [11, 11, 9], "leib")                  # Bauch
-    r.kasten([-5, 11, 7], [10, 10, 7], "leib")                       # Huefte
-    r.kasten([-4.5, 9.5, -10], [9, 1, 23], "bauch")
-    # Eiskristalle auf dem Ruecken: Bueschel aus zwei, drei Spitzen.
-    for z, h in ((-10, 5), (-6, 6), (-2, 5), (2, 5), (6, 4), (10, 3)):
-        top = 22 if z < 0 else 21
-        r.kasten([-1, top - 0.5, z], [2, h - 1, 2], "eiszacke", drehung=[-15, 0, 0], drehpunkt=[0, top, z + 1])
-        r.kasten([-0.5, top + h - 2, z + 0.5], [1, 2, 1], "eiszacke", drehung=[-15, 0, 0], drehpunkt=[0, top, z + 1])
-        r.kasten([1, top - 0.5, z + 0.5], [1, h - 2, 1], "eiszacke", drehung=[-15, 0, -25], drehpunkt=[1, top, z + 1])
-    hals, ende = glieder(m, "hals", "rumpf", (0, 20, -11),
-                         -1, [(6, 8, 8, 2.0), (6, 7, 7, 2.0), (6, 7, 7, 1.5), (5, 6, 6, 1.0)],
-                         stoff="leib", zacken="eiszacke")
-    _, ky, kz = ende
-    kopf_bauen(m, "frostwyvern", hals[-1], ky, kz, schaedel=(8, 6, 9), schnauze=(6, 4, 9), hoerner="stacheln",
-              zier=("eisbart", "eiskamm"))
-    schwanz, ende = glieder(m, "schwanz", "rumpf", (0, 17, 14),
-                            1, [(8, 9, 8, -0.4), (8, 7, 6, -0.3), (8, 6, 5, -0.2), (8, 5, 4, 0.0),
-                                (8, 4, 4, 0.0), (8, 3, 3, 0.0), (8, 3, 3, 0.0), (7, 2, 2, 0.0)],
-                            stoff="leib", zacken="eiszacke")
-    _, sy, sz = ende
-    # Das Schwanzende: ein Faecher aus Eiszacken.
-    letztes = m.finde(schwanz[-1])
-    for w in (-40, -15, 15, 40):
-        letztes.kasten([-0.5, sy - 0.5, sz - 1], [1, 1, 7], "eiszacke", drehung=[0, w, 0], drehpunkt=[0, sy, sz - 1])
-    for seite, x in (("links", 5.5), ("rechts", -5.5)):
-        bein_bauen(m, f"bein_hinten_{seite}", "rumpf", (x, 18, 9), (6, 8, 8), (4, 7, 4), (6, 3, 8), krallen=3)
-    schwinge_bauen(m, FROSTWYVERN_SCHWINGE)
-    # Die Handgelenke tragen ihn am Boden: dort sitzt eine grosse Klaue.
-    for seite in ("links", "rechts"):
-        h = m.finde(f"hand_{seite}")
-        hx = FROSTWYVERN_SCHWINGE.handgelenk[0] * (1 if seite == "links" else -1)
-        h.kasten([hx - 1, 21, -11], [2, 2, 3], "kralle")
-        # Ein Eiskristall waechst aus jedem Handgelenk.
-        h.kasten([hx - 0.5, 24, -9], [1, 5, 1], "eiszacke", drehung=[-20, 0, 0], drehpunkt=[hx, 24, -8.5])
-        h.kasten([hx - 0.5, 24, -8], [1, 3, 1], "eiszacke", drehung=[10, 0, 25 if seite == "links" else -25],
-                 drehpunkt=[hx, 24, -7.5])
-    becken_abtrennen(m, 7, 17)
-    sattel_bauen(m, "rumpf", 22, -3, 12)
-    return m
-
-
-FROSTWYVERN_FARBEN = {
-    "eis":       {"leib": "#b8d4e6", "ruecken": "#4a7aa8", "bauch": "#eef6fa", "haut": "#8cb8d8",
-                  "augen": "#7ae8ff", "glut": "#c0f4ff", "horn": ("#8ab8d8", "#d0ecfa", "#f4fcff"),
-                  "kralle": "#1e3a58"},
-    "gletscher": {"leib": "#98ccc8", "ruecken": "#2a6a74", "bauch": "#e0f4f0", "haut": "#78b4b0",
-                  "augen": "#b0fff0", "glut": "#c8fff4", "horn": ("#7ab8b0", "#c8f0e8", "#f0fffc"),
-                  "kralle": "#1a3a3a"},
-    "nacht":     {"leib": "#3e5282", "ruecken": "#182444", "bauch": "#a0b4de", "haut": "#2c3e6c",
-                  "augen": "#9ad8ff", "glut": "#b8e4ff", "horn": ("#6a88c0", "#b8ccf0", "#e8f0ff"),
-                  "kralle": "#0e1428"},
-}
-
-
-def frostwyvern_maler(variante):
-    f = FROSTWYVERN_FARBEN.get(variante, FROSTWYVERN_FARBEN["eis"])
-
-    def eis(stoff, p, n, texel):
-        if stoff == "eiszacke":
-            # Durchscheinendes Eis kann Minecraft nicht - also leuchtend, unten
-            # tiefer blau, zur Spitze fast weiss.
-            return glut(H.verlauf([H.dunkler(f["glut"], 0.35), f["glut"], "#ffffff"],
-                                  H.hoehe(p, n, texel) if abs(n[1]) < 0.5 else (1.0 if n[1] > 0 else 0.3), 3))
-        return False
-    return drachen_maler("frostwyvern", f, FROSTWYVERN_SCHWINGE, eis)
 
 
 # ================================================================== Himmelsdrache (4.92)
@@ -944,3 +807,8 @@ def giftdrache_maler(variante):
             return H.dunkler(f["ruecken"], 0.1)          # der Aalstrich laeuft jeden Hals hinauf
         return False
     return drachen_maler("giftdrache", f, GIFTDRACHE_SCHWINGE, besonders)
+
+
+# Die neuen Drachen (4.96) im Stil von Fynns Vorbildern stehen in
+# drachen_klotz; hier sind sie mit ihrem Namen zu finden wie alle anderen.
+from drachen_klotz import *  # noqa: E402,F401,F403

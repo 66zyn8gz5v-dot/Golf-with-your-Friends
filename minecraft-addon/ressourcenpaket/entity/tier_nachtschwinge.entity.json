@@ -2,31 +2,31 @@
   "format_version": "1.10.0",
   "minecraft:client_entity": {
     "description": {
-      "identifier": "fynn:lindwurm",
+      "identifier": "fynn:nachtschwinge",
       "materials": {
         "default": "entity_emissive_alpha"
       },
       "textures": {
-        "rot": "textures/entity/tiere/lindwurm_rot",
-        "orange": "textures/entity/tiere/lindwurm_orange",
-        "obsidian": "textures/entity/tiere/lindwurm_obsidian"
+        "nacht": "textures/entity/tiere/nachtschwinge_nacht",
+        "sturm": "textures/entity/tiere/nachtschwinge_sturm",
+        "blut": "textures/entity/tiere/nachtschwinge_blut"
       },
       "geometry": {
-        "default": "geometry.fynn.lindwurm"
+        "default": "geometry.fynn.nachtschwinge"
       },
       "animations": {
-        "flug": "animation.fynn.lindwurm.flug",
-        "schweben": "animation.fynn.lindwurm.schweben",
-        "stand": "animation.fynn.lindwurm.stand",
-        "gehen": "animation.fynn.lindwurm.gehen",
-        "schlafen": "animation.fynn.lindwurm.schlafen",
-        "niederliegen": "animation.fynn.lindwurm.niederliegen",
-        "luftholen": "animation.fynn.lindwurm.luftholen",
-        "feueratem": "animation.fynn.lindwurm.feueratem",
-        "drachenbruellen": "animation.fynn.lindwurm.drachenbruellen",
-        "sturzflug": "animation.fynn.lindwurm.sturzflug",
-        "drachenblick": "animation.fynn.lindwurm.drachenblick",
-        "drachenbiss": "animation.fynn.lindwurm.drachenbiss"
+        "flug": "animation.fynn.nachtschwinge.flug",
+        "schweben": "animation.fynn.nachtschwinge.schweben",
+        "stand": "animation.fynn.nachtschwinge.stand",
+        "gehen": "animation.fynn.nachtschwinge.gehen",
+        "schlafen": "animation.fynn.nachtschwinge.schlafen",
+        "niederliegen": "animation.fynn.nachtschwinge.niederliegen",
+        "luftholen": "animation.fynn.nachtschwinge.luftholen",
+        "schattenatem": "animation.fynn.nachtschwinge.schattenatem",
+        "drachenbruellen": "animation.fynn.nachtschwinge.drachenbruellen",
+        "sturzflug": "animation.fynn.nachtschwinge.sturzflug",
+        "drachenblick": "animation.fynn.nachtschwinge.drachenblick",
+        "drachenbiss": "animation.fynn.nachtschwinge.drachenbiss"
       },
       "scripts": {
         "initialize": [
@@ -48,8 +48,8 @@
           "variable.fynn_holen = query.property('fynn:feuer') * math.clamp(variable.fynn_az / 0.25, 0.0, 1.0) * (1.0 - math.clamp((variable.fynn_az - 1.0) / 0.12, 0.0, 1.0));",
           "variable.fynn_speit = query.property('fynn:feuer') * math.clamp((variable.fynn_az - 1.0) / 0.12, 0.0, 1.0);",
           "variable.fynn_ruck = variable.fynn_speit * math.max(0.0, 1.0 - (variable.fynn_az - 1.0) / 0.4);",
-          "variable.fynn_offen_l = math.max(math.max(variable.fynn_bruell, math.clamp(math.sin(math.clamp((variable.fynn_sz - 0.0) / 3.2, 0.0, 1.0) * 180.0) * 1.6, 0.0, 1.0) * variable.fynn_ruhig), variable.fynn_speit * 0.45);",
-          "variable.fynn_offen_r = math.max(math.max(variable.fynn_bruell, math.clamp(math.sin(math.clamp((variable.fynn_sz - 3.8) / 3.2, 0.0, 1.0) * 180.0) * 1.6, 0.0, 1.0) * variable.fynn_ruhig), variable.fynn_speit * 0.45);"
+          "variable.fynn_offen_l = math.max(math.max(variable.fynn_bruell, math.clamp(math.sin(math.clamp((variable.fynn_sz - 0.0) / 3.2, 0.0, 1.0) * 180.0) * 1.6, 0.0, 1.0) * variable.fynn_ruhig), variable.fynn_speit * 0.6);",
+          "variable.fynn_offen_r = math.max(math.max(variable.fynn_bruell, math.clamp(math.sin(math.clamp((variable.fynn_sz - 3.8) / 3.2, 0.0, 1.0) * 180.0) * 1.6, 0.0, 1.0) * variable.fynn_ruhig), variable.fynn_speit * 0.6);"
         ],
         "animate": [
           {
@@ -74,7 +74,7 @@
             "luftholen": "variable.fynn_holen"
           },
           {
-            "feueratem": "variable.fynn_speit"
+            "schattenatem": "variable.fynn_speit"
           },
           {
             "drachenbruellen": "variable.fynn_bruell"
@@ -89,13 +89,13 @@
             "drachenbiss": "(variable.attack_time > 0.0) * (1.0 - math.max(query.property('fynn:schlaeft'), query.property('fynn:besiegt')))"
           }
         ],
-        "scale": "1.35"
+        "scale": "1.0"
       },
       "render_controllers": [
-        "controller.render.fynn.lindwurm"
+        "controller.render.fynn.nachtschwinge"
       ],
       "spawn_egg": {
-        "texture": "lindwurm_ei",
+        "texture": "nachtschwinge_ei",
         "texture_index": 0
       }
     }

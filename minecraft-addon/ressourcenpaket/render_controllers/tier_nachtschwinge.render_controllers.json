@@ -1,13 +1,13 @@
 {
   "format_version": "1.8.0",
   "render_controllers": {
-    "controller.render.fynn.lindwurm": {
+    "controller.render.fynn.nachtschwinge": {
       "arrays": {
         "textures": {
           "Array.haut": [
-            "Texture.rot",
-            "Texture.orange",
-            "Texture.obsidian"
+            "Texture.nacht",
+            "Texture.sturm",
+            "Texture.blut"
           ]
         }
       },

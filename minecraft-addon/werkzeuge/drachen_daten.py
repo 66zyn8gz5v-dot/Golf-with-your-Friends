@@ -133,7 +133,8 @@ BESIEGT = "query.property('fynn:besiegt')"
 # unterschiedlich benennen") - so heisst auch die Bewegung und der Schalter
 # in der Pixelschmiede.
 ATEMARTEN = {"feuer": ("Feueratem", "feueratem"), "frost": ("Frosthauch", "frosthauch"),
-             "blitz": ("Sturmhauch", "sturmhauch"), "gift": ("Giftodem", "giftodem")}
+             "blitz": ("Sturmhauch", "sturmhauch"), "gift": ("Giftodem", "giftodem"),
+             "schatten": ("Schattenatem", "schattenatem")}
 
 
 def atem_posen(art, hals, schwanz, stuetzt=False):
@@ -968,8 +969,8 @@ def drache(eintrag, schwinge, bewegungen=None, koepfe=("",), **bewegung):
 def _lindwurm():
     import drachen_gestalt as dg
     return drache({
-        "id": "lindwurm", "name": ("Lindwurm", "Fire Dragon"), "gestalt": "lindwurm",
-        "varianten": [("gruen", 50), ("rot", 35), ("schwarz", 15)],
+        "id": "lindwurm", "name": ("Feuerdrache", "Fire Dragon"), "gestalt": "feuerdrache",
+        "varianten": [("rot", 50), ("orange", 35), ("obsidian", 15)],
         "leben": 160, "schaden": 12, "tempo": 1.4, "tempo_luft": 1.4, "tempo_boden": 0.2,
         "kollision": (4.4, 3.4), "herde": (1, 1), "groesse": 1.35, "atemfluegel": 0.45,
         "jagt_tiere": ["cow", "sheep", "horse", "bison", "elch"],
@@ -994,7 +995,7 @@ def _lindwurm():
             ["Feueratem", "ein Flammenstrahl, der alles in Brand setzt, was darin steht"],
             ["Feuerkugel", "auf weite Entfernung: eine Kugel, die beim Aufprall explodiert"],
             ["Drachenschuppen", "daraus die Drachenschuppen-Rüstung (stark wie Diamant)"]],
-    }, dg.LINDWURM_SCHWINGE, hals=5, schwanz=8, beinhoehe=21)
+    }, dg.FEUERDRACHE_SCHWINGE, hals=5, schwanz=8, beinhoehe=22)
 
 
 # ------------------------------------------------------------ Frostwyvern
@@ -1030,7 +1031,7 @@ def _frostwyvern():
             ["Gestalt", "ein Wyvern: nur zwei Beine, die Schwingen sind seine Vorderbeine"],
             ["Frosthauch", "verlangsamt stark, lässt Wasser zu Eis gefrieren und Schnee fallen"],
             ["Eiskristalle", "auf weite Entfernung: drei Eissplitter im Fächer, die treffen und verlangsamen"]],
-    }, dg.FROSTWYVERN_SCHWINGE, hals=4, schwanz=8, beinhoehe=18, stuetzt=True)
+    }, dg.FROSTWYVERN_SCHWINGE, hals=5, schwanz=8, beinhoehe=18, stuetzt=True)
 
 
 # ------------------------------------------------------------ Himmelsdrache
@@ -1121,4 +1122,41 @@ def _giftdrache():
     return t
 
 
-DRACHEN = [_lindwurm(), _frostwyvern(), _himmelsdrache(), _giftdrache()]
+# ------------------------------------------------------------ Nachtschwinge
+
+def _nachtschwinge():
+    import drachen_gestalt as dg
+    return drache({
+        "id": "nachtschwinge", "name": ("Nachtschwinge", "Night Fury Dragon"), "gestalt": "nachtschwinge",
+        "varianten": [("nacht", 60), ("sturm", 30), ("blut", 10)],
+        "leben": 110, "schaden": 11, "tempo": 1.8, "tempo_luft": 1.8, "tempo_boden": 0.26,
+        "kollision": (2.4, 1.8), "herde": (1, 1), "groesse": 1.0, "atemfluegel": 0.6,
+        "jagt_tiere": ["sheep", "pig", "fox", "wolf", "rabbit"],
+        "sitz": [0.0, 1.75, -0.2],
+        "biome": [["roofed"], ["mega"]], "gewicht": 1,
+        # Sehr selten, und nur im Dunkeln - nachts oder unter dichtem Laub.
+        "spawn_bedingungen": [{"minecraft:spawns_on_surface": {}, "minecraft:weight": {"default": 1},
+                               "minecraft:herd": {"min_size": 1, "max_size": 1},
+                               "minecraft:density_limit": {"surface": 1},
+                               "minecraft:brightness_filter": {"min": 0, "max": 6, "adjust_for_weather": True},
+                               "minecraft:biome_filter": [{"test": "has_biome_tag", "operator": "==",
+                                                           "value": tag}]}
+                              for tag in ("roofed", "mega", "jagged_peaks")],
+        "population": "monster",
+        "material": "entity_emissive_alpha",
+        "beute": [("fynn:drachenschuppe", 3, 5, 1.0, False), ("minecraft:phantom_membrane", 2, 4, 1.0, False),
+                  ("minecraft:ender_pearl", 1, 2, 0.6, False)],
+        "laute": {"ambient": "mob.phantom.idle", "hurt": "mob.phantom.hurt", "death": "mob.phantom.death",
+                  "pitch": [0.5, 0.7]},
+        "ei": ("#1a1a22", "#8a4aff"),
+        "komponenten": {"minecraft:attack": {"damage": 11}},
+        "atemart": "schatten",
+        "steckbrief_extra": [
+            ["Lebt", "extrem selten, nur im Dunkeln: im dunklen Wald, in alten Taigas und auf zackigen Gipfeln"],
+            ["Gestalt", "keine Flughaut, sondern Sicheln – der schnellste aller Drachen"],
+            ["Schattenatem", "macht blind und laesst verdorren"],
+            ["Plasmaschuss", "auf weite Entfernung: eine violette Kugel, die beim Aufprall explodiert"]],
+    }, dg.NACHTSCHWINGE_SCHWINGE, hals=5, schwanz=8, beinhoehe=19, tempo=260.0)
+
+
+DRACHEN = [_lindwurm(), _frostwyvern(), _himmelsdrache(), _giftdrache(), _nachtschwinge()]
