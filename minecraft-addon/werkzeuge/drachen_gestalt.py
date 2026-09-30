@@ -316,7 +316,7 @@ MAEULER = {}
 AUGEN = {}
 
 
-def kopf_bauen(m, art, eltern, ky, kz, schaedel=(9, 6, 10), schnauze=(7, 4, 6), hoerner="krone", s=""):
+def kopf_bauen(m, art, eltern, ky, kz, schaedel=(9, 6, 10), schnauze=(7, 4, 6), hoerner="krone", s="", zier=()):
     """Ein Drachenkopf mit Unterkiefer, Zaehnen, Augenlidern und Hoernern.
     s haengt an jeden Knochennamen (fuer Drachen mit mehreren Koepfen).
     hoerner: "krone" (viele nach hinten, wie bei Fynns Vorbild), "stacheln"
@@ -390,6 +390,35 @@ def kopf_bauen(m, art, eltern, ky, kz, schaedel=(9, 6, 10), schnauze=(7, 4, 6), 
         for x in (1, -1):
             kopf.kasten([x * sb / 2 - (0 if x > 0 else 0), ky - 1, kz - 4], [0, 4, 6], "flosse",
                         drehung=[0, -x * 30, 0], drehpunkt=[x * sb / 2, ky, kz - 4])
+    # Zierrat (4.95) - Fynn: "generell ein bisschen mehr Details noch in den
+    # Drachen", und die Arten sollen sich staerker unterscheiden.
+    if "kinn" in zier:
+        # Kinnstacheln: zwei Reihen unter dem Unterkiefer, nach hinten gekaemmt.
+        for i in range(3):
+            for x in (nb / 2 - 1.5, -nb / 2 + 0.5):
+                kiefer.kasten([x, ky - 5, kz - sl - 1 + i * 2.5], [1, 1, 3 - (i == 2)], "horn",
+                              drehung=[-35, 0, 0], drehpunkt=[x + 0.5, ky - 4, kz - sl - 1 + i * 2.5])
+    if "eisbart" in zier:
+        # Ein Bart aus Eiszapfen am Kinn, vorn kurz, nach hinten laenger.
+        for i, (x, lang) in enumerate(((-1.5, 2), (0.5, 3), (-0.5, 4), (1.5, 3), (-2.5, 2))):
+            kiefer.kasten([x, ky - 4 - lang, kz - sl - nl + 3 + i * 1.5], [1, lang, 1], "eiszacke",
+                          drehung=[15, 0, 0], drehpunkt=[x + 0.5, ky - 4, kz - sl - nl + 3.5 + i * 1.5])
+    if "eiskamm" in zier:
+        # Ein Kamm aus Eis vom Nasenruecken bis in den Nacken.
+        for i, h in enumerate((2, 3, 4, 3)):
+            kopf.kasten([-0.5, ky - 2 + sh - 0.5, kz - sl + i * 2.5], [1, h, 2], "eiszacke",
+                        drehung=[-25, 0, 0], drehpunkt=[0, ky - 2 + sh, kz - sl + 1 + i * 2.5])
+    if "kragen" in zier:
+        # Ein Halskragen wie bei der Kragenechse: zwei Haeute, im Ruhen nach
+        # hinten an den Hals gelegt - beim Giftspeien und Bruellen klappt er
+        # auf (Knochen kragen_links/rechts, gedreht in den Bewegungen).
+        for seite, x in (("links", 1), ("rechts", -1)):
+            kr = m.knoch(f"kragen{s}_{seite}", [x * sb / 2, ky + 1, kz - 1], f"kopf{s}", drehung=[0, -x * 70, 0])
+            kr.kasten([x * sb / 2 - (0 if x > 0 else 7), ky - 4, kz - 1], [7, 10, 0], "kragen")
+            # Die Stacheln, die die Haut spannen.
+            for j, (dy, w) in enumerate(((5, 30), (1, 0), (-3, -30))):
+                kr.kasten([x * sb / 2 - (0 if x > 0 else 7), ky + 1 + dy * 0.8, kz - 1.5], [7, 1, 1], "horn",
+                          drehung=[0, 0, x * w * 0.6], drehpunkt=[x * sb / 2, ky + 1, kz - 1])
     return kopf
 
 
@@ -432,7 +461,8 @@ def lindwurm_modell():
                          -1, [(7, 12, 12, 1.5), (7, 11, 11, 1.5), (7, 10, 10, 1.5), (7, 9, 9, 1.0), (6, 9, 9, 0.5)],
                          stoff="leib", zacken="stachel")
     _, ky, kz = ende
-    kopf_bauen(m, "lindwurm", hals[-1], ky, kz, schaedel=(12, 9, 12), schnauze=(9, 5, 11), hoerner="krone")
+    kopf_bauen(m, "lindwurm", hals[-1], ky, kz, schaedel=(12, 9, 12), schnauze=(9, 5, 11), hoerner="krone",
+              zier=("kinn",))
     schwanz, ende = glieder(m, "schwanz", "rumpf", (0, 21.5, 17),
                             1, [(8, 12, 11, -0.6), (8, 10, 9, -0.6), (8, 9, 8, -0.4), (8, 8, 7, -0.3),
                                 (8, 6, 6, -0.2), (8, 5, 5, 0.0), (8, 4, 4, 0.0), (8, 3, 3, 0.0)],
@@ -443,6 +473,14 @@ def lindwurm_modell():
         # Kurze, dicke Beine; vorn richtige Haende mit vier Klauen.
         bein_bauen(m, f"bein_hinten_{seite}", "rumpf", (x, 21, 12), (8, 9, 10), (6, 8, 6), (8, 4, 10), krallen=4)
         bein_bauen(m, f"bein_vorn_{seite}", "rumpf", (x, 20, -10), (7, 8, 7), (5, 8, 5), (7, 4, 8), krallen=4)
+    for seite, x in (("links", 1), ("rechts", -1)):
+        # Stacheln an den Ellbogen der Vorderbeine und an den Fersen, nach
+        # hinten gerichtet - dazu ein Paar kraeftige Schulterdornen.
+        for bein, (y, z) in (("unterbein_vorn", (12, -10)), ("unterbein_hinten", (12, 12))):
+            m.finde(f"{bein}_{seite}").kasten([x * 7.5 - 0.5, y - 1, z + 2], [1, 1, 4], "horn",
+                                               drehung=[-30, 0, 0], drehpunkt=[x * 7.5, y, z + 2])
+        m.finde("rumpf").kasten([x * 8 - 0.5, 28, -12], [1, 4, 2], "stachel",
+                                drehung=[-25, 0, -x * 35], drehpunkt=[x * 8, 28, -11])
     schwinge_bauen(m, LINDWURM_SCHWINGE)
     becken_abtrennen(m, 8, 21)
     sattel_bauen(m, "rumpf", 31, -3, 18)
@@ -657,7 +695,8 @@ def frostwyvern_modell():
                          -1, [(6, 8, 8, 2.0), (6, 7, 7, 2.0), (6, 7, 7, 1.5), (5, 6, 6, 1.0)],
                          stoff="leib", zacken="eiszacke")
     _, ky, kz = ende
-    kopf_bauen(m, "frostwyvern", hals[-1], ky, kz, schaedel=(8, 6, 9), schnauze=(6, 4, 9), hoerner="stacheln")
+    kopf_bauen(m, "frostwyvern", hals[-1], ky, kz, schaedel=(8, 6, 9), schnauze=(6, 4, 9), hoerner="stacheln",
+              zier=("eisbart", "eiskamm"))
     schwanz, ende = glieder(m, "schwanz", "rumpf", (0, 17, 14),
                             1, [(8, 9, 8, -0.4), (8, 7, 6, -0.3), (8, 6, 5, -0.2), (8, 5, 4, 0.0),
                                 (8, 4, 4, 0.0), (8, 3, 3, 0.0), (8, 3, 3, 0.0), (7, 2, 2, 0.0)],
@@ -675,6 +714,10 @@ def frostwyvern_modell():
         h = m.finde(f"hand_{seite}")
         hx = FROSTWYVERN_SCHWINGE.handgelenk[0] * (1 if seite == "links" else -1)
         h.kasten([hx - 1, 21, -11], [2, 2, 3], "kralle")
+        # Ein Eiskristall waechst aus jedem Handgelenk.
+        h.kasten([hx - 0.5, 24, -9], [1, 5, 1], "eiszacke", drehung=[-20, 0, 0], drehpunkt=[hx, 24, -8.5])
+        h.kasten([hx - 0.5, 24, -8], [1, 3, 1], "eiszacke", drehung=[10, 0, 25 if seite == "links" else -25],
+                 drehpunkt=[hx, 24, -7.5])
     becken_abtrennen(m, 7, 17)
     sattel_bauen(m, "rumpf", 22, -3, 12)
     return m
@@ -708,15 +751,24 @@ def frostwyvern_maler(variante):
 
 # ================================================================== Himmelsdrache (4.92)
 
-HIMMELSDRACHE_GLIEDER = 14
+# 4.95: Fynn: "Der Luftdrache ... fliegt ein bisschen wie Rayquaza. Der
+# braucht bessere Animation, mehr Gelenke, weil der sehr gelenkig ist."
+# Statt 14 Gliedern zu 7 Pixeln jetzt 22 zu 5: Die Wellen laufen runder
+# durch den Leib, er kann sich enger winden und zur Schraube drehen.
+HIMMELSDRACHE_GLIEDER = 22
+# An welchen Gliedern die Seitenflossen sitzen und das hintere Beinpaar.
+HIMMELSDRACHE_FLOSSEN = (3, 7, 11, 15, 19)
+HIMMELSDRACHE_BEINGLIED = 6
 
 
 def himmelsdrache_modell():
     """Der Himmelsdrache: lang wie eine Schlange, keine Schwingen - er
-    schwebt schlaengelnd durch die Luft wie die Drachen aus dem Osten. Ein
-    Vorderleib mit kleinen Beinen, ein kurzer Hals, ein Kopf mit Geweih,
-    langen Barthaaren und einer Maehne, dann vierzehn Glieder, an denen
-    weiter hinten das zweite Beinpaar sitzt, und am Ende eine Quaste."""
+    schwebt schlaengelnd durch die Luft wie die Drachen aus dem Osten (und
+    wie Rayquaza). Ein Vorderleib mit kleinen Beinen, ein kurzer Hals, ein
+    Kopf mit Geweih, Barthaaren aus drei Gliedern und einer Maehne, dann
+    22 Glieder mit einem Rueckenkamm; an fuenf davon ein Paar Seitenflossen
+    auf eigenen Gelenken, die im Flug schlagen. Hinten das zweite Beinpaar
+    und am Ende eine Schwanzflosse wie ein Faecher."""
     m = Modell("himmelsdrache", sichtbreite=9.0, sichthoehe=3.0)
     MAEULER.pop("himmelsdrache", None)
     r = m.knoch("rumpf", [0, 14, 0])
@@ -731,28 +783,49 @@ def himmelsdrache_modell():
         k.kasten([-0.5, k.kaesten[0].ursprung[1] + k.kaesten[0].groesse[1], z0 + 1], [1, 3, 4], "maehne")
     _, ky, kz = ende
     kopf_bauen(m, "himmelsdrache", hals[-1], ky, kz, schaedel=(8, 6, 8), schnauze=(6, 4, 7), hoerner="geweih")
-    # Die Barthaare: zwei lange, duenne Faeden von der Schnauze, jeder mit
-    # eigenem Knochen, damit sie im Flug wehen.
     for seite, x in (("links", 1), ("rechts", -1)):
-        b = m.knoch(f"bart_{seite}", [x * 3, ky - 1, kz - 13], "kopf")
-        b.kasten([x * 3 - 0.5, ky - 1.5, kz - 13], [1, 1, 12], "bart", drehung=[20, -x * 30, 0],
-                 drehpunkt=[x * 3, ky - 1, kz - 13])
+        # Die Barthaare: drei Glieder je Seite, damit sie im Flug in Wellen
+        # nachwehen statt wie Stangen abzustehen.
+        eltern, bz = "kopf", kz - 13
+        for i in range(3):
+            b = m.knoch(f"bart{i + 1}_{seite}", [x * 3, ky - 1, bz], eltern,
+                        drehung=[20, -x * 30, 0] if i == 0 else None)
+            b.kasten([x * 3 - 0.5, ky - 1.5, bz], [1, 1, 5], "bart")
+            eltern, bz = f"bart{i + 1}_{seite}", bz + 5
         # Die Maehne am Hinterkopf: zwei breite Buschel.
         m.finde("kopf").kasten([x * 4 - (0 if x > 0 else 1), ky, kz - 3], [1, 5, 5], "maehne",
                                 drehung=[-25, -x * 20, 0], drehpunkt=[x * 4, ky + 2, kz - 3])
+        # Flossenohren, nach hinten gelegt.
+        m.finde("kopf").kasten([x * 4 - (0 if x > 0 else 0), ky + 1, kz - 6], [0, 3, 6], "flosse",
+                                drehung=[15, -x * 35, 0], drehpunkt=[x * 4, ky + 2, kz - 6])
     teile = []
     for i in range(HIMMELSDRACHE_GLIEDER):
-        dicke = max(3, round(8 - i * 0.4))
-        teile.append((7, dicke, dicke, 0.0))
+        dicke = max(3, round(8 - i * 0.26))
+        teile.append((5, dicke, dicke, 0.0))
     schwanz, ende = glieder(m, "schwanz", "rumpf", (0, 14, 6), 1, teile, stoff="leib", zacken="maehne")
     _, sy, sz = ende
-    quaste = m.finde(schwanz[-1])
-    quaste.kasten([-2, sy - 2, sz - 2], [4, 4, 6], "maehne")
-    quaste.kasten([-0.5, sy - 4, sz - 1], [1, 8, 5], "maehne")
+    for n in HIMMELSDRACHE_FLOSSEN:
+        # Seitenflossen: schmale Klingen, schraeg nach hinten und aussen -
+        # jede auf einem eigenen Gelenk.
+        g = m.finde(f"schwanz{n}")
+        gz = g.drehpunkt[2]
+        d = teile[n - 1][1]
+        for seite, x in (("links", 1), ("rechts", -1)):
+            fl = m.knoch(f"flosse{n}_{seite}", [x * d / 2, 14, gz + 2], f"schwanz{n}", drehung=[0, -x * 40, x * 10])
+            lang = max(5, 10 - n // 4)
+            fl.kasten([x * d / 2 - (0 if x > 0 else lang), 13.5, gz + 1], [lang, 1, 4], "flosse")
+            fl.kasten([x * d / 2 + (lang if x > 0 else -lang - 3), 13.5, gz + 2], [3, 1, 3], "flosse")
+    # Die Schwanzflosse: ein Faecher aus fuenf Strahlen auf eigenem Gelenk.
+    faecher = m.knoch("schwanzflosse", [0, sy, sz - 1], schwanz[-1])
+    for w in (-50, -25, 0, 25, 50):
+        faecher.kasten([-0.5, sy - 0.5, sz - 1], [1, 1, 7], "maehne", drehung=[0, w, 0], drehpunkt=[0, sy, sz - 1])
+    faecher.kasten([-3, sy - 0.5, sz - 1], [6, 0, 6], "flosse")
     for seite, x in (("links", 4), ("rechts", -4)):
         bein_bauen(m, f"bein_vorn_{seite}", "rumpf", (x, 12, -2), (3, 5, 3), (2, 5, 2), (3, 2, 4), krallen=4)
-        # Das hintere Beinpaar sitzt am vierten Glied und schwingt mit ihm.
-        bein_bauen(m, f"bein_hinten_{seite}", "schwanz4", (x * 0.8, 12, 30), (3, 5, 3), (2, 5, 2), (3, 2, 4), krallen=4)
+        # Das hintere Beinpaar sitzt am sechsten Glied und schwingt mit ihm.
+        gz = m.finde(f"schwanz{HIMMELSDRACHE_BEINGLIED}").drehpunkt[2] + 2
+        bein_bauen(m, f"bein_hinten_{seite}", f"schwanz{HIMMELSDRACHE_BEINGLIED}", (x * 0.8, 12, gz), (3, 5, 3),
+                   (2, 5, 2), (3, 2, 4), krallen=4)
     sattel_bauen(m, "rumpf", 18, -1, 9)
     return m
 
@@ -816,7 +889,8 @@ def giftdrache_modell():
                              stoff="leib", zacken="stachel", drehung=[0, w, 0])
         vorher = {k.name for k in m.knochen}
         _, ky, kz = ende
-        kopf_bauen(m, "giftdrache", hals[-1], ky, kz, schaedel=(7, 5, 8), schnauze=(5, 3, 7), hoerner="stumpf", s=s)
+        kopf_bauen(m, "giftdrache", hals[-1], ky, kz, schaedel=(7, 5, 8), schnauze=(5, 3, 7), hoerner="stumpf", s=s,
+                  zier=("kragen",))
         neu = [k.name for k in m.knochen if k.name not in vorher]
         verschiebe(m, neu, x)
         kopfbau.append((s, x))
@@ -828,7 +902,12 @@ def giftdrache_modell():
                                 (8, 4, 4, 0.0), (8, 3, 3, 0.0), (7, 2, 2, 0.0)],
                             stoff="leib", zacken="stachel")
     _, sy, sz = ende
-    m.finde(schwanz[-1]).kasten([-3, sy - 0.5, sz - 1], [6, 1, 6], "spitze")
+    keule = m.finde(schwanz[-1])
+    # Kein Pfeil, eine Keule: ein Knoten mit Stacheln rundum - der Schlag
+    # damit vergiftet.
+    keule.kasten([-2, sy - 2, sz - 3], [4, 4, 5], "leib")
+    for wy, wz in ((0, 0), (0, 60), (0, -60), (90, 0), (-90, 0), (0, 180)):
+        keule.kasten([-0.5, sy + 1.5, sz - 1], [1, 3, 1], "stachel", drehung=[wy, 0, wz], drehpunkt=[0, sy, sz - 0.5])
     for seite, x in (("links", 6), ("rechts", -6)):
         bein_bauen(m, f"bein_hinten_{seite}", "rumpf", (x, 18, 10), (6, 8, 7), (4, 7, 4), (6, 3, 7), krallen=3)
         bein_bauen(m, f"bein_vorn_{seite}", "rumpf", (x, 17, -8), (5, 7, 5), (4, 7, 4), (5, 3, 6), krallen=3)
@@ -852,6 +931,15 @@ def giftdrache_maler(variante):
     f = GIFTDRACHE_FARBEN.get(variante, GIFTDRACHE_FARBEN["sumpf"])
 
     def besonders(stoff, p, n, texel):
+        if stoff == "kragen":
+            # Die Kragenhaut: innen dunkel, zum Rand hin giftig hell - offen
+            # sieht man sie von weitem.
+            k = H.kasten_von(texel)
+            if k is None:
+                return H.farbe(f["haut"])
+            mx = k.ursprung[0] + (0 if k.ursprung[0] >= 0 else k.groesse[0])
+            t = min(1.0, abs(p[0] - mx) / max(1, k.groesse[0]))
+            return H.verlauf([H.dunkler(f["haut"], 0.2), f["haut"], f["glut"]], t, 4)
         if stoff == "leib" and n[1] > 0.5 and abs(abs(p[0]) - 3.5) < 1.0 and p[2] < -10:
             return H.dunkler(f["ruecken"], 0.1)          # der Aalstrich laeuft jeden Hals hinauf
         return False

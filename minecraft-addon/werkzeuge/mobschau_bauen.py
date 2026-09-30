@@ -520,7 +520,8 @@ def mob_daten(kennung, entitaet_datei, gruppe, info):
         "start:function(Q,V,M,P){" + js_anweisungen(skripte.get("initialize", [])) + "}",
         "vorher:function(Q,V,M,P){" + js_anweisungen(skripte.get("pre_animation", [])) + "}",
         "sicht:{" + ",".join(sichtbar) + "}",
-        "schalter:" + json.dumps([[s, SCHALTER.get(s, s)] for s in dict.fromkeys(schalter)
+        "schalter:" + json.dumps([[s, info.get("schalter_namen", {}).get(s, SCHALTER.get(s, s))]
+                                  for s in dict.fromkeys(schalter)
                                   if s not in info.get("ohne_schalter", [])], ensure_ascii=False),
         "knoepfe:" + json.dumps(sonder, ensure_ascii=False),
     ]
@@ -631,6 +632,10 @@ def alle_mobs():
             info["atem"] = {"koepfe": [{"knochen": k, "punkt": o, "art": arten[min(i, len(arten) - 1)]}
                                        for i, (k, o) in enumerate(drachen_gestalt.MAEULER[t["id"]])],
                             "eig": "fynn:feuer", "art": arten[0]}
+            # Der Atem heisst bei jeder Art anders - so auch der Schalter.
+            info["schalter_namen"] = {"fynn:feuer": t.get("atemname", "Feueratem")}
+        if t.get("groesse"):
+            info["gross"] = t["groesse"]
         mobs.append(mob_daten(t["id"], f"tier_{t['id']}.entity.json",
                               t.get("gruppe") or GRUPPE.get(t["art"], "An Land"), info))
     for b in banditen_bauen.BANDITEN:

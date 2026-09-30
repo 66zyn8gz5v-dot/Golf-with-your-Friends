@@ -31,7 +31,7 @@ const { world, system } = mc;
 
 export const ATEMARTEN = {
     feuer: {
-        teilchen: "fynn:drachenfeuer", weite: 14, kegel: 0.9, dauer: 44, anlauf: 8, pause: [140, 220], veraendert: true,
+        teilchen: "fynn:drachenfeuer", weite: 14, kegel: 0.9, dauer: 44, anlauf: 20, pause: [140, 220], veraendert: true,
         laut: "mob.blaze.shoot", knistern: "fire.fire",
         wesen(ziel, drache) {
             try { ziel.setOnFire(5, true); } catch (e) { /* manche brennen nicht */ }
@@ -55,7 +55,7 @@ export const ATEMARTEN = {
     // Der Frosthauch (Frostwyvern, 4.91): Wer darin steht, wird stark
     // verlangsamt und friert; Wasser gefriert zu Eis, auf den Boden faellt Schnee.
     frost: {
-        teilchen: "fynn:frostatem", weite: 13, kegel: 1.0, dauer: 44, anlauf: 8, pause: [140, 220], veraendert: true,
+        teilchen: "fynn:frostatem", weite: 13, kegel: 1.0, dauer: 44, anlauf: 20, pause: [140, 220], veraendert: true,
         laut: "random.glass", knistern: "block.powder_snow.step",
         wesen(ziel, drache) {
             try { ziel.addEffect("slowness", 100, { amplifier: 3 }); } catch (e) { /* egal */ }
@@ -83,7 +83,7 @@ export const ATEMARTEN = {
     // Der Sturmhauch (Himmelsdrache, 4.92): ein Windstoss voller Funken.
     // Er schleudert weg, was im Strahl steht, und trifft mit einem Schlag.
     sturm: {
-        teilchen: "fynn:sturmatem", weite: 14, kegel: 1.1, dauer: 30, anlauf: 6, pause: [120, 200],
+        teilchen: "fynn:sturmatem", weite: 14, kegel: 1.1, dauer: 30, anlauf: 20, pause: [120, 200],
         laut: "mob.breeze.shoot", knistern: "mob.breeze.wind_burst",
         wesen(ziel, drache) {
             try {
@@ -104,7 +104,7 @@ export const ATEMARTEN = {
     // Das Gift (linker Kopf des Giftdrachen, 4.93): Wer im Strahl steht,
     // wird vergiftet, und wo der Strahl auftrifft, bleibt eine Giftwolke liegen.
     gift: {
-        teilchen: "fynn:giftatem", weite: 12, kegel: 1.0, dauer: 40, anlauf: 8, pause: [140, 220],
+        teilchen: "fynn:giftatem", weite: 12, kegel: 1.0, dauer: 40, anlauf: 20, pause: [140, 220],
         laut: "mob.witch.throw", knistern: "random.fizz",
         wesen(ziel) {
             try { ziel.addEffect("poison", 120, { amplifier: 1 }); } catch (e) { /* egal */ }
@@ -238,26 +238,26 @@ FAEHIGKEITEN.zuenden = {
 
 export const DRACHEN = {
     "fynn:lindwurm": {
-        name: "Lindwurm", atem: "feuer", faehigkeit: "feuerkugel", maul: 5.0, hoehe: 1.8,
+        name: "Lindwurm", atem: "feuer", faehigkeit: "feuerkugel", maul: 5.0, hoehe: 1.8, groesse: 1.35,
         luft: [1200, 2400], boden: [800, 1800],
         // Wie er mit Reiter fliegt: schneller als der Greif, steigt kraeftiger.
         reitflug: { tempo: 1.3, steigen: 0.14, nachziehen: 0.12, schwebe: 0.04, hoechstSteigen: 0.75 },
     },
     // Zwei Koepfe: der linke (1,8 Bloecke daneben) speit Gift, der rechte Funken.
     "fynn:giftdrache": {
-        name: "Giftdrache", atem: "gift", faehigkeit: "zuenden", maul: 3.8, hoehe: 1.5, koepfe: [1.6, -1.6],
+        name: "Giftdrache", atem: "gift", faehigkeit: "zuenden", maul: 3.8, hoehe: 1.5, koepfe: [1.6, -1.6], groesse: 1.1,
         luft: [1000, 2000], boden: [800, 1600],
         reitflug: { tempo: 1.25, steigen: 0.13, nachziehen: 0.12, schwebe: 0.04, hoechstSteigen: 0.7 },
     },
     // Er schwebt: mit Reiter der schnellste, und er faellt kaum.
     "fynn:himmelsdrache": {
-        name: "Himmelsdrache", atem: "sturm", faehigkeit: "blitzschlag", maul: 3.2, hoehe: 1.3,
+        name: "Himmelsdrache", atem: "sturm", faehigkeit: "blitzschlag", maul: 3.2, hoehe: 1.3, groesse: 1.15,
         luft: [1600, 3000], boden: [400, 900],
         reitflug: { tempo: 1.6, steigen: 0.15, nachziehen: 0.15, schwebe: 0.06, hoechstSteigen: 0.8 },
     },
     // Kleiner und wendiger: fliegt mit Reiter schneller, steigt leichter.
     "fynn:frostwyvern": {
-        name: "Frostwyvern", atem: "frost", faehigkeit: "eiskristalle", maul: 3.8, hoehe: 1.6,
+        name: "Frostwyvern", atem: "frost", faehigkeit: "eiskristalle", maul: 3.8, hoehe: 1.6, groesse: 0.85,
         luft: [1000, 2000], boden: [600, 1400],
         reitflug: { tempo: 1.45, steigen: 0.15, nachziehen: 0.14, schwebe: 0.045, hoechstSteigen: 0.8 },
     },
@@ -311,9 +311,12 @@ export function maul(drache, kopf = 0) {
     let b = { x: 0, y: 0, z: 1 };
     try { b = drache.getViewDirection(); } catch (e) { /* geradeaus */ }
     const flach = einheit({ x: b.x, y: 0, z: b.z });
-    const seite = art.koepfe?.[kopf] ?? 0;
-    return { x: o.x + flach.x * art.maul - flach.z * seite, y: o.y + art.hoehe,
-             z: o.z + flach.z * art.maul + flach.x * seite };
+    // Die Arten sind verschieden gross (4.95); die Masse oben gelten fuer
+    // Groesse 1, das Maul wandert mit.
+    const g = art.groesse ?? 1;
+    const seite = (art.koepfe?.[kopf] ?? 0) * g;
+    return { x: o.x + flach.x * art.maul * g - flach.z * seite, y: o.y + art.hoehe * g,
+             z: o.z + flach.z * art.maul * g + flach.x * seite };
 }
 
 function teilchen(dim, name, ort, r) {
@@ -421,7 +424,8 @@ export function atemTakt(drache, jetzt, zufall = Math.random) {
     if ((!befohlen && jetzt < z.pause) || !lebt(ziel)) return "wartet";
     const d = weite(drache.location, ziel.location);
     if (d > atem.weite + 6 || d < 2) return "wartet";
-    // Tief Luft holen - das Maul geht auf, dann kommt der Strahl.
+    // Tief Luft holen - eine Sekunde lang baeumt er sich auf (die Bewegung
+    // luftholen im Modell), dann kommt der Strahl.
     if (befohlen) z.befehl = null;
     z.ab = jetzt + atem.anlauf;
     z.bis = z.ab + atem.dauer;

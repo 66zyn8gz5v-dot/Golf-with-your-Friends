@@ -226,7 +226,7 @@ function wesen(w, typeId, ort, extra = {}) {
     const effekte = [];
     const opfer = wesen(w, "minecraft:player", { x: 0, y: 64, z: 9 }, { addEffect(n) { effekte.push(n); } });
     wyvern.target = opfer;
-    for (let t = 20000; t < 20000 + 60; t += 2) d.atemTakt(wyvern, t, () => 0);
+    for (let t = 20000; t < 20000 + 80; t += 2) d.atemTakt(wyvern, t, () => 0);
     pruefe("Frosthauch: Er speit Frost, nicht Feuer",
         w.teilchen.includes("fynn:frostatem") && !w.teilchen.includes("fynn:drachenfeuer"));
     pruefe("... wer drin steht, wird langsam und friert", effekte.includes("slowness") && opfer.schaden > 0 && opfer.brand === 0);
@@ -248,7 +248,7 @@ function wesen(w, typeId, ort, extra = {}) {
     const opfer = wesen(w, "minecraft:player", { x: 0, y: 64, z: 8 },
         { applyKnockback(v, h) { stoesse.push([v, h]); } });
     hd.target = opfer;
-    for (let t = 40000; t < 40000 + 50; t += 2) d.atemTakt(hd, t, () => 0);
+    for (let t = 40000; t < 40000 + 80; t += 2) d.atemTakt(hd, t, () => 0);
     pruefe("Sturmhauch: Windstoss mit Funken", w.teilchen.includes("fynn:sturmatem"));
     pruefe("... wer drin steht, fliegt weg - vom Drachen fort", stoesse.length > 0 && stoesse[0][0].z > 1
         && opfer.schaden > 0 && opfer.brand === 0);
@@ -270,7 +270,7 @@ function wesen(w, typeId, ort, extra = {}) {
     gd.target = opfer;
     const links = d.maul(gd, 0), rechts = d.maul(gd, 1);
     pruefe("Zwei Maeuler, links und rechts", Math.abs(links.x - rechts.x) > 3);
-    for (let t = 60000; t < 60000 + 60; t += 2) d.atemTakt(gd, t, () => 0);
+    for (let t = 60000; t < 60000 + 80; t += 2) d.atemTakt(gd, t, () => 0);
     pruefe("Linker Kopf: Giftstrahl, wer drin steht, ist vergiftet",
         w.teilchen.includes("fynn:giftatem") && effekte.includes("poison"));
     pruefe("... und eine Giftwolke bleibt liegen - auch ohne mobGriefing", d.wolken.length === 1);

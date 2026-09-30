@@ -307,8 +307,8 @@
             {
               "position": [
                 0.0,
-                2.1,
-                -0.2
+                2.84,
+                -0.27
               ]
             }
           ]
@@ -390,8 +390,8 @@
         "max": 160
       },
       "minecraft:collision_box": {
-        "width": 3.5,
-        "height": 2.6
+        "width": 4.4,
+        "height": 3.4
       },
       "minecraft:movement": {
         "value": 1.4

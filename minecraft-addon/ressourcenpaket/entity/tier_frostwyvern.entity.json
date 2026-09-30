@@ -19,9 +19,10 @@
         "schweben": "animation.fynn.frostwyvern.schweben",
         "stand": "animation.fynn.frostwyvern.stand",
         "gehen": "animation.fynn.frostwyvern.gehen",
-        "liegen": "animation.fynn.frostwyvern.liegen",
-        "benommen": "animation.fynn.frostwyvern.benommen",
-        "feueratem": "animation.fynn.frostwyvern.feueratem",
+        "schlafen": "animation.fynn.frostwyvern.schlafen",
+        "niederliegen": "animation.fynn.frostwyvern.niederliegen",
+        "luftholen": "animation.fynn.frostwyvern.luftholen",
+        "frosthauch": "animation.fynn.frostwyvern.frosthauch",
         "drachenbruellen": "animation.fynn.frostwyvern.drachenbruellen",
         "sturzflug": "animation.fynn.frostwyvern.sturzflug",
         "drachenblick": "animation.fynn.frostwyvern.drachenblick",
@@ -43,8 +44,12 @@
           "variable.fynn_bz = math.mod(variable.fynn_t, 17.0);",
           "variable.fynn_bruell = variable.fynn_bz < 2.4 ? math.clamp(math.sin(variable.fynn_bz / 2.4 * 180.0) * 2.2, 0.0, 1.0) * variable.fynn_ruhig : 0.0;",
           "variable.fynn_sz = math.mod(variable.fynn_t + 6.0, 31.0);",
-          "variable.fynn_offen_l = math.max(variable.fynn_bruell, math.clamp(math.sin(math.clamp((variable.fynn_sz - 0.0) / 3.2, 0.0, 1.0) * 180.0) * 1.6, 0.0, 1.0) * variable.fynn_ruhig);",
-          "variable.fynn_offen_r = math.max(variable.fynn_bruell, math.clamp(math.sin(math.clamp((variable.fynn_sz - 3.8) / 3.2, 0.0, 1.0) * 180.0) * 1.6, 0.0, 1.0) * variable.fynn_ruhig);"
+          "variable.fynn_az = query.property('fynn:feuer') ? variable.fynn_az + query.delta_time : 0.0;",
+          "variable.fynn_holen = query.property('fynn:feuer') * math.clamp(variable.fynn_az / 0.25, 0.0, 1.0) * (1.0 - math.clamp((variable.fynn_az - 1.0) / 0.12, 0.0, 1.0));",
+          "variable.fynn_speit = query.property('fynn:feuer') * math.clamp((variable.fynn_az - 1.0) / 0.12, 0.0, 1.0);",
+          "variable.fynn_ruck = variable.fynn_speit * math.max(0.0, 1.0 - (variable.fynn_az - 1.0) / 0.4);",
+          "variable.fynn_offen_l = math.max(math.max(variable.fynn_bruell, math.clamp(math.sin(math.clamp((variable.fynn_sz - 0.0) / 3.2, 0.0, 1.0) * 180.0) * 1.6, 0.0, 1.0) * variable.fynn_ruhig), variable.fynn_speit * 1.0);",
+          "variable.fynn_offen_r = math.max(math.max(variable.fynn_bruell, math.clamp(math.sin(math.clamp((variable.fynn_sz - 3.8) / 3.2, 0.0, 1.0) * 180.0) * 1.6, 0.0, 1.0) * variable.fynn_ruhig), variable.fynn_speit * 1.0);"
         ],
         "animate": [
           {
@@ -60,13 +65,16 @@
             "gehen": "(1.0 - query.property('fynn:fliegt')) * math.clamp(query.modified_move_speed * 4.0, 0.0, 1.0) * (1.0 - math.max(query.property('fynn:schlaeft'), query.property('fynn:besiegt')))"
           },
           {
-            "liegen": "math.max(query.property('fynn:schlaeft'), query.property('fynn:besiegt'))"
+            "schlafen": "query.property('fynn:schlaeft') * (1.0 - query.property('fynn:besiegt'))"
           },
           {
-            "benommen": "query.property('fynn:besiegt')"
+            "niederliegen": "query.property('fynn:besiegt')"
           },
           {
-            "feueratem": "query.property('fynn:feuer')"
+            "luftholen": "variable.fynn_holen"
+          },
+          {
+            "frosthauch": "variable.fynn_speit"
           },
           {
             "drachenbruellen": "variable.fynn_bruell"
@@ -80,7 +88,8 @@
           {
             "drachenbiss": "(variable.attack_time > 0.0) * (1.0 - math.max(query.property('fynn:schlaeft'), query.property('fynn:besiegt')))"
           }
-        ]
+        ],
+        "scale": "0.85"
       },
       "render_controllers": [
         "controller.render.fynn.frostwyvern"

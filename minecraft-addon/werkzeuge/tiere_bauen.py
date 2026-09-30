@@ -1917,7 +1917,10 @@ def aussehen(t, anims, texturen):
                     # Was die Bewegungen eines Tiers gemeinsam brauchen (die
                     # Drachen: wann er bruellt, wann er sich streckt).
                     + t.get("vorher", []),
-                    "animate": animate_liste(t, anims)},
+                    "animate": animate_liste(t, anims),
+                    # Nur im Bild groesser (die Drachen): Der Trefferkasten
+                    # steht schon passend in kollision.
+                    **({"scale": str(t["groesse"])} if t.get("groesse") else {})},
         "render_controllers": [f"controller.render.fynn.{name}"],
         "spawn_egg": ei_eintrag(t["id"], {"base_color": t["ei"][0], "overlay_color": t["ei"][1]}),
     }

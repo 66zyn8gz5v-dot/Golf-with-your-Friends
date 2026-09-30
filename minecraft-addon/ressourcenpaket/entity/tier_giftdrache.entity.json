@@ -19,9 +19,10 @@
         "schweben": "animation.fynn.giftdrache.schweben",
         "stand": "animation.fynn.giftdrache.stand",
         "gehen": "animation.fynn.giftdrache.gehen",
-        "liegen": "animation.fynn.giftdrache.liegen",
-        "benommen": "animation.fynn.giftdrache.benommen",
-        "feueratem": "animation.fynn.giftdrache.feueratem",
+        "schlafen": "animation.fynn.giftdrache.schlafen",
+        "niederliegen": "animation.fynn.giftdrache.niederliegen",
+        "luftholen": "animation.fynn.giftdrache.luftholen",
+        "giftodem": "animation.fynn.giftdrache.giftodem",
         "drachenbruellen": "animation.fynn.giftdrache.drachenbruellen",
         "sturzflug": "animation.fynn.giftdrache.sturzflug",
         "drachenblick": "animation.fynn.giftdrache.drachenblick",
@@ -43,8 +44,12 @@
           "variable.fynn_bz = math.mod(variable.fynn_t, 17.0);",
           "variable.fynn_bruell = variable.fynn_bz < 2.4 ? math.clamp(math.sin(variable.fynn_bz / 2.4 * 180.0) * 2.2, 0.0, 1.0) * variable.fynn_ruhig : 0.0;",
           "variable.fynn_sz = math.mod(variable.fynn_t + 6.0, 31.0);",
-          "variable.fynn_offen_l = math.max(variable.fynn_bruell, math.clamp(math.sin(math.clamp((variable.fynn_sz - 0.0) / 3.2, 0.0, 1.0) * 180.0) * 1.6, 0.0, 1.0) * variable.fynn_ruhig);",
-          "variable.fynn_offen_r = math.max(variable.fynn_bruell, math.clamp(math.sin(math.clamp((variable.fynn_sz - 3.8) / 3.2, 0.0, 1.0) * 180.0) * 1.6, 0.0, 1.0) * variable.fynn_ruhig);"
+          "variable.fynn_az = query.property('fynn:feuer') ? variable.fynn_az + query.delta_time : 0.0;",
+          "variable.fynn_holen = query.property('fynn:feuer') * math.clamp(variable.fynn_az / 0.25, 0.0, 1.0) * (1.0 - math.clamp((variable.fynn_az - 1.0) / 0.12, 0.0, 1.0));",
+          "variable.fynn_speit = query.property('fynn:feuer') * math.clamp((variable.fynn_az - 1.0) / 0.12, 0.0, 1.0);",
+          "variable.fynn_ruck = variable.fynn_speit * math.max(0.0, 1.0 - (variable.fynn_az - 1.0) / 0.4);",
+          "variable.fynn_offen_l = math.max(math.max(variable.fynn_bruell, math.clamp(math.sin(math.clamp((variable.fynn_sz - 0.0) / 3.2, 0.0, 1.0) * 180.0) * 1.6, 0.0, 1.0) * variable.fynn_ruhig), variable.fynn_speit * 0.3);",
+          "variable.fynn_offen_r = math.max(math.max(variable.fynn_bruell, math.clamp(math.sin(math.clamp((variable.fynn_sz - 3.8) / 3.2, 0.0, 1.0) * 180.0) * 1.6, 0.0, 1.0) * variable.fynn_ruhig), variable.fynn_speit * 0.3);"
         ],
         "animate": [
           {
@@ -60,13 +65,16 @@
             "gehen": "(1.0 - query.property('fynn:fliegt')) * math.clamp(query.modified_move_speed * 4.0, 0.0, 1.0) * (1.0 - math.max(query.property('fynn:schlaeft'), query.property('fynn:besiegt')))"
           },
           {
-            "liegen": "math.max(query.property('fynn:schlaeft'), query.property('fynn:besiegt'))"
+            "schlafen": "query.property('fynn:schlaeft') * (1.0 - query.property('fynn:besiegt'))"
           },
           {
-            "benommen": "query.property('fynn:besiegt')"
+            "niederliegen": "query.property('fynn:besiegt')"
           },
           {
-            "feueratem": "query.property('fynn:feuer')"
+            "luftholen": "variable.fynn_holen"
+          },
+          {
+            "giftodem": "variable.fynn_speit"
           },
           {
             "drachenbruellen": "variable.fynn_bruell"
@@ -80,7 +88,8 @@
           {
             "drachenbiss": "(variable.attack_time > 0.0) * (1.0 - math.max(query.property('fynn:schlaeft'), query.property('fynn:besiegt')))"
           }
-        ]
+        ],
+        "scale": "1.1"
       },
       "render_controllers": [
         "controller.render.fynn.giftdrache"
