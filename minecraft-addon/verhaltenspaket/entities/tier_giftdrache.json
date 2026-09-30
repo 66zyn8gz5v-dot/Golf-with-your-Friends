@@ -36,6 +36,24 @@
           "type": "bool",
           "default": false,
           "client_sync": true
+        },
+        "fynn:wuchs": {
+          "type": "int",
+          "range": [
+            0,
+            10
+          ],
+          "default": 10,
+          "client_sync": true
+        },
+        "fynn:misch": {
+          "type": "int",
+          "range": [
+            0,
+            6
+          ],
+          "default": 0,
+          "client_sync": true
         }
       }
     },
@@ -375,6 +393,110 @@
           "effect_duration": 6
         }
       },
+      "fynn:wuchs_0": {
+        "minecraft:collision_box": {
+          "width": 0.93,
+          "height": 0.72
+        },
+        "minecraft:is_baby": {}
+      },
+      "fynn:wuchs_1": {
+        "minecraft:collision_box": {
+          "width": 1.15,
+          "height": 0.89
+        },
+        "minecraft:is_baby": {}
+      },
+      "fynn:wuchs_2": {
+        "minecraft:collision_box": {
+          "width": 1.36,
+          "height": 1.06
+        },
+        "minecraft:is_baby": {}
+      },
+      "fynn:wuchs_3": {
+        "minecraft:collision_box": {
+          "width": 1.58,
+          "height": 1.22
+        },
+        "minecraft:is_baby": {}
+      },
+      "fynn:wuchs_4": {
+        "minecraft:collision_box": {
+          "width": 1.8,
+          "height": 1.39
+        },
+        "minecraft:is_baby": {}
+      },
+      "fynn:wuchs_5": {
+        "minecraft:collision_box": {
+          "width": 2.02,
+          "height": 1.56
+        },
+        "minecraft:is_baby": {}
+      },
+      "fynn:wuchs_6": {
+        "minecraft:collision_box": {
+          "width": 2.23,
+          "height": 1.73
+        },
+        "minecraft:is_baby": {}
+      },
+      "fynn:wuchs_7": {
+        "minecraft:collision_box": {
+          "width": 2.45,
+          "height": 1.9
+        },
+        "minecraft:is_baby": {}
+      },
+      "fynn:wuchs_8": {
+        "minecraft:collision_box": {
+          "width": 2.67,
+          "height": 2.06
+        },
+        "minecraft:is_baby": {}
+      },
+      "fynn:wuchs_9": {
+        "minecraft:collision_box": {
+          "width": 2.88,
+          "height": 2.23
+        },
+        "minecraft:is_baby": {}
+      },
+      "fynn:wuchs_10": {
+        "minecraft:collision_box": {
+          "width": 3.1,
+          "height": 2.4
+        }
+      },
+      "fynn:zaehmbar": {
+        "minecraft:tameable": {
+          "probability": 1.0,
+          "tame_items": [
+            "minecraft:beef",
+            "minecraft:porkchop",
+            "minecraft:mutton",
+            "minecraft:chicken",
+            "minecraft:rabbit",
+            "minecraft:cod",
+            "minecraft:salmon",
+            "fynn:elchfleisch",
+            "fynn:bisonfleisch"
+          ],
+          "tame_event": {
+            "event": "fynn:jung_zahm",
+            "target": "self"
+          }
+        }
+      },
+      "fynn:zahm_jung": {
+        "minecraft:is_tamed": {},
+        "minecraft:behavior.look_at_player": {
+          "priority": 7,
+          "look_distance": 8,
+          "probability": 0.1
+        }
+      },
       "fynn:erwachsen": {
         "minecraft:loot": {
           "table": "loot_tables/entities/giftdrache.json"
@@ -685,6 +807,308 @@
         },
         "set_property": {
           "fynn:uralt": true
+        }
+      },
+      "fynn:schluepfen": {
+        "sequence": [
+          {
+            "randomize": [
+              {
+                "weight": 55,
+                "add": {
+                  "component_groups": [
+                    "fynn:variante_0"
+                  ]
+                }
+              },
+              {
+                "weight": 30,
+                "add": {
+                  "component_groups": [
+                    "fynn:variante_1"
+                  ]
+                }
+              },
+              {
+                "weight": 15,
+                "add": {
+                  "component_groups": [
+                    "fynn:variante_2"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "add": {
+              "component_groups": [
+                "fynn:boden",
+                "fynn:zaehmbar",
+                "fynn:wuchs_0"
+              ]
+            },
+            "set_property": {
+              "fynn:wuchs": 0,
+              "fynn:fliegt": false
+            }
+          }
+        ]
+      },
+      "fynn:jung_zahm": {
+        "remove": {
+          "component_groups": [
+            "fynn:zaehmbar"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "fynn:zahm_jung",
+            "fynn:folgt"
+          ]
+        }
+      },
+      "fynn:wachsen_1": {
+        "remove": {
+          "component_groups": [
+            "fynn:wuchs_0",
+            "fynn:wuchs_2",
+            "fynn:wuchs_3",
+            "fynn:wuchs_4",
+            "fynn:wuchs_5",
+            "fynn:wuchs_6",
+            "fynn:wuchs_7",
+            "fynn:wuchs_8",
+            "fynn:wuchs_9",
+            "fynn:wuchs_10"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "fynn:wuchs_1"
+          ]
+        },
+        "set_property": {
+          "fynn:wuchs": 1
+        }
+      },
+      "fynn:wachsen_2": {
+        "remove": {
+          "component_groups": [
+            "fynn:wuchs_0",
+            "fynn:wuchs_1",
+            "fynn:wuchs_3",
+            "fynn:wuchs_4",
+            "fynn:wuchs_5",
+            "fynn:wuchs_6",
+            "fynn:wuchs_7",
+            "fynn:wuchs_8",
+            "fynn:wuchs_9",
+            "fynn:wuchs_10"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "fynn:wuchs_2"
+          ]
+        },
+        "set_property": {
+          "fynn:wuchs": 2
+        }
+      },
+      "fynn:wachsen_3": {
+        "remove": {
+          "component_groups": [
+            "fynn:wuchs_0",
+            "fynn:wuchs_1",
+            "fynn:wuchs_2",
+            "fynn:wuchs_4",
+            "fynn:wuchs_5",
+            "fynn:wuchs_6",
+            "fynn:wuchs_7",
+            "fynn:wuchs_8",
+            "fynn:wuchs_9",
+            "fynn:wuchs_10"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "fynn:wuchs_3"
+          ]
+        },
+        "set_property": {
+          "fynn:wuchs": 3
+        }
+      },
+      "fynn:wachsen_4": {
+        "remove": {
+          "component_groups": [
+            "fynn:wuchs_0",
+            "fynn:wuchs_1",
+            "fynn:wuchs_2",
+            "fynn:wuchs_3",
+            "fynn:wuchs_5",
+            "fynn:wuchs_6",
+            "fynn:wuchs_7",
+            "fynn:wuchs_8",
+            "fynn:wuchs_9",
+            "fynn:wuchs_10"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "fynn:wuchs_4"
+          ]
+        },
+        "set_property": {
+          "fynn:wuchs": 4
+        }
+      },
+      "fynn:wachsen_5": {
+        "remove": {
+          "component_groups": [
+            "fynn:wuchs_0",
+            "fynn:wuchs_1",
+            "fynn:wuchs_2",
+            "fynn:wuchs_3",
+            "fynn:wuchs_4",
+            "fynn:wuchs_6",
+            "fynn:wuchs_7",
+            "fynn:wuchs_8",
+            "fynn:wuchs_9",
+            "fynn:wuchs_10"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "fynn:wuchs_5"
+          ]
+        },
+        "set_property": {
+          "fynn:wuchs": 5
+        }
+      },
+      "fynn:wachsen_6": {
+        "remove": {
+          "component_groups": [
+            "fynn:wuchs_0",
+            "fynn:wuchs_1",
+            "fynn:wuchs_2",
+            "fynn:wuchs_3",
+            "fynn:wuchs_4",
+            "fynn:wuchs_5",
+            "fynn:wuchs_7",
+            "fynn:wuchs_8",
+            "fynn:wuchs_9",
+            "fynn:wuchs_10"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "fynn:wuchs_6"
+          ]
+        },
+        "set_property": {
+          "fynn:wuchs": 6
+        }
+      },
+      "fynn:wachsen_7": {
+        "remove": {
+          "component_groups": [
+            "fynn:wuchs_0",
+            "fynn:wuchs_1",
+            "fynn:wuchs_2",
+            "fynn:wuchs_3",
+            "fynn:wuchs_4",
+            "fynn:wuchs_5",
+            "fynn:wuchs_6",
+            "fynn:wuchs_8",
+            "fynn:wuchs_9",
+            "fynn:wuchs_10"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "fynn:wuchs_7"
+          ]
+        },
+        "set_property": {
+          "fynn:wuchs": 7
+        }
+      },
+      "fynn:wachsen_8": {
+        "remove": {
+          "component_groups": [
+            "fynn:wuchs_0",
+            "fynn:wuchs_1",
+            "fynn:wuchs_2",
+            "fynn:wuchs_3",
+            "fynn:wuchs_4",
+            "fynn:wuchs_5",
+            "fynn:wuchs_6",
+            "fynn:wuchs_7",
+            "fynn:wuchs_9",
+            "fynn:wuchs_10"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "fynn:wuchs_8"
+          ]
+        },
+        "set_property": {
+          "fynn:wuchs": 8
+        }
+      },
+      "fynn:wachsen_9": {
+        "remove": {
+          "component_groups": [
+            "fynn:wuchs_0",
+            "fynn:wuchs_1",
+            "fynn:wuchs_2",
+            "fynn:wuchs_3",
+            "fynn:wuchs_4",
+            "fynn:wuchs_5",
+            "fynn:wuchs_6",
+            "fynn:wuchs_7",
+            "fynn:wuchs_8",
+            "fynn:wuchs_10"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "fynn:wuchs_9"
+          ]
+        },
+        "set_property": {
+          "fynn:wuchs": 9
+        }
+      },
+      "fynn:ausgewachsen": {
+        "remove": {
+          "component_groups": [
+            "fynn:wuchs_0",
+            "fynn:wuchs_1",
+            "fynn:wuchs_2",
+            "fynn:wuchs_3",
+            "fynn:wuchs_4",
+            "fynn:wuchs_5",
+            "fynn:wuchs_6",
+            "fynn:wuchs_7",
+            "fynn:wuchs_8",
+            "fynn:wuchs_9",
+            "fynn:zahm_jung",
+            "fynn:zaehmbar"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "fynn:wuchs_10",
+            "fynn:zahm",
+            "fynn:erwachsen"
+          ]
+        },
+        "set_property": {
+          "fynn:wuchs": 10
         }
       },
       "minecraft:entity_spawned": {

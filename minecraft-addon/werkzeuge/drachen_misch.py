@@ -1,0 +1,278 @@
+#!/usr/bin/env python3
+"""Mischlinge und Dracheneier (5.2).
+
+Fynn: "Man kann zwei gezaehmte Drachen paaren, und diese legen dann ein Ei
+... das Ei ist ein kleiner Mix, also du musst so ein bisschen Mix aus den
+Drachen machen. Das wird ein bisschen schwieriger, weil du jetzt recht
+viele Kombinationen machen musst."
+
+Ein Junges hat den Koerper der einen Art und die Farben der anderen: Leib
+und Bauch bleiben (leicht zur anderen Art hin getoent), Ruecken, Flecken,
+Flughaut, Hoerner, Augen und Glut kommen vom anderen Elternteil. So gibt
+es zu jeder der sechs Arten fuenf Mischhaeute - dreissig Kombinationen,
+alle aus denselben Malern wie die reinen Arten.
+
+Die Reihenfolge von ARTEN ist die von drachen_daten.DRACHEN und von
+ARTEN in scripts/drachenzucht.js: Die Nummer steht in fynn:misch (+1).
+"""
+
+import drachen_gestalt as dg
+import drachen_klotz as dk
+import haut as H
+from tiermodell import mische
+
+# (Kennung, Gestalt, Farbtafel)
+ARTEN = [
+    ("lindwurm", "feuerdrache", dk.FEUERDRACHE_FARBEN),
+    ("frostwyvern", "frostwyvern", dk.FROSTWYVERN_FARBEN),
+    ("himmelsdrache", "himmelsdrache", dg.HIMMELSDRACHE_FARBEN),
+    ("giftdrache", "giftdrache", dk.GIFTDRACHE_FARBEN),
+    ("nachtschwinge", "nachtschwinge", dk.NACHTSCHWINGE_FARBEN),
+    ("schlunddrache", "schlunddrache", dk.SCHLUNDDRACHE_FARBEN),
+]
+NAMEN = {"lindwurm": "Feuerdrache", "frostwyvern": "Frostwyvern", "himmelsdrache": "Himmelsdrache",
+         "giftdrache": "Giftdrache", "nachtschwinge": "Nachtschwinge", "schlunddrache": "Schlunddrache"}
+VOM_ANDEREN = ("ruecken", "fleck", "haut", "hautfleck", "augen", "glut", "horn")
+
+
+def tafel(gestalt):
+    return next(f for _, g, f in ARTEN if g == gestalt)
+
+
+def grundfarben(gestalt):
+    """Die Farben der haeufigsten Variante einer Art."""
+    return next(iter(tafel(gestalt).values()))
+
+
+def hexa(c):
+    c = H.farbe(c)
+    return "#%02x%02x%02x" % c
+
+
+def mischfarben(koerper, farbe):
+    a = dict(grundfarben(koerper))
+    b = grundfarben(farbe)
+    # Der Himmelsdrache hat keine Flecken und keine Flughaut-Flecken: dann
+    # aus seinem Ruecken und seiner Haut abgeleitet.
+    b = dict(b)
+    b.setdefault("fleck", hexa(H.dunkler(b["ruecken"], 0.2)))
+    b.setdefault("hautfleck", hexa(H.dunkler(b["haut"], 0.25)))
+    for k in VOM_ANDEREN:
+        if k in a:
+            a[k] = b[k]
+    a["leib"] = hexa(mische(H.farbe(a["leib"]), H.farbe(b["leib"]), 0.35))
+    if "maehne" in a:
+        # Maehne und Bart des Himmelsdrachen in den Farben des anderen.
+        a["maehne"] = (b["ruecken"], b["glut"])
+        a["bart"] = b["horn"][2]
+    return a
+
+
+def misch_maler(koerper, farbe):
+    """Der Maler der Art koerper, mit den Mischfarben - die Maler kennen nur
+    ihre Farbtafel, also steht die Mischung dort kurz als eigene Variante."""
+    t = tafel(koerper)
+    t["_misch"] = mischfarben(koerper, farbe)
+    try:
+        return mit_erbe(getattr(dg, f"{koerper}_maler")("_misch"))
+    finally:
+        del t["_misch"]
+
+
+# ------------------------------------------------------------ Erbteile
+#
+# Fynn: "Kannst du das Aussehen auch minimal veraendern waehrend der
+# Kombination." Ein Mischling bekommt vom anderen Elternteil dessen
+# Kennzeichen als eigenes Stueck Modell - der Feuerdrache seine
+# Hornklingen, der Frostwyvern Eiszacken, der Himmelsdrache Maehne und
+# Barteln, der Giftdrache den Kragen, die Nachtschwinge die Schwanzsichel,
+# der Schlunddrache den Knochenkranz. Sie sitzen an Kopf, Hals, Ruecken
+# und Schwanzspitze - wo genau, wird am Modell gemessen, damit es bei
+# allen sechs Koerpern passt. Sichtbar ist nur das der anderen Art
+# (fynn:misch); die Stuecke auf dem Ruecken verschwinden unter dem Sattel.
+
+import re  # noqa: E402
+
+
+def _kasten(k):
+    lo = [min(c.ursprung[i] for c in k.kaesten) for i in range(3)]
+    hi = [max(c.ursprung[i] + c.groesse[i] for c in k.kaesten) for i in range(3)]
+    return lo, hi
+
+
+def _koepfe(m):
+    return [k for k in m.knochen if re.fullmatch(r"kopf(_[ab])?", k.name)]
+
+
+def _hals(m, kopf):
+    """Die Halswirbel von vorn nach hinten, die zu diesem Kopf fuehren."""
+    kette, k = [], kopf
+    while k.eltern and k.eltern.startswith("hals"):
+        k = m.finde(k.eltern)
+        kette.append(k)
+    return kette
+
+
+def _schwanzspitze(m):
+    glieder = [k for k in m.knochen if re.fullmatch(r"schwanz\d+", k.name)]
+    return max(glieder, key=lambda k: int(k.name[7:])) if glieder else None
+
+
+def _knoch(m, name, eltern):
+    e = m.finde(eltern)
+    return m.knoch(name, list(e.drehpunkt), eltern)
+
+
+def _klingen(m, vor, stoff):
+    """Feuerdrache: zwei Hornklingen nach hinten, eine Klingenreihe am Ruecken."""
+    for kopf in _koepfe(m):
+        lo, hi = _kasten(kopf)
+        cx, w = (lo[0] + hi[0]) / 2, hi[0] - lo[0]
+        b = _knoch(m, f"{vor}_kopf{kopf.name[4:]}", kopf.name)
+        for s in (-1, 1):
+            x, y, z = cx + s * (w / 2 - 2), hi[1] - 1.5, hi[2] - 5
+            for i, (dicke, hoehe, laenge, ab) in enumerate(((3, 3, 7, 0), (2, 2, 6, 7), (1, 1, 4, 13))):
+                b.kasten([x - dicke / 2, y + (3 - hoehe) / 2, z + ab], [dicke, hoehe, laenge], stoff,
+                         drehung=[28 + i * 6, s * 14, 0], drehpunkt=[x, y + 1.5, z])
+    r = _knoch(m, f"{vor}_ruecken", "rumpf")
+    lo, hi = _kasten(m.finde("rumpf"))
+    laenge = hi[2] - lo[2]
+    for i, h in enumerate((4, 6, 7, 5)):
+        z = lo[2] + 3 + i * (laenge - 8) / 3
+        r.kasten([-0.5, hi[1] - 1, z], [1, h, 4], stoff, drehung=[-28, 0, 0], drehpunkt=[0, hi[1] - 1, z + 2])
+
+
+def _eiszacken(m, vor, stoff):
+    """Frostwyvern: Eiskristalle am Ruecken und an der Schwanzspitze."""
+    r = _knoch(m, f"{vor}_ruecken", "rumpf")
+    lo, hi = _kasten(m.finde("rumpf"))
+    laenge = hi[2] - lo[2]
+    for i, (h, s) in enumerate(((5, 1), (7, -1), (6, 1), (8, -1), (4, 1))):
+        z = lo[2] + 2 + i * (laenge - 5) / 4
+        x = s * 1.5
+        r.kasten([x - 1, hi[1] - 1.5, z], [2, h, 2], stoff, drehung=[-12, 0, s * 16], drehpunkt=[x, hi[1] - 1.5, z + 1])
+    spitze = _schwanzspitze(m)
+    if spitze:
+        lo, hi = _kasten(spitze)
+        t = _knoch(m, f"{vor}_schwanz", spitze.name)
+        for h, nx, nz in ((7, -40, 0), (5, -20, 30), (5, -20, -30)):
+            t.kasten([-1, hi[1] - 1, hi[2] - 3], [2, h, 2], stoff, drehung=[nx, 0, nz], drehpunkt=[0, hi[1] - 1, hi[2] - 2])
+
+
+def _maehne(m, vor, stoff):
+    """Himmelsdrache: eine Maehne ueber den Hals und Barteln am Maul."""
+    for kopf in _koepfe(m):
+        lo, hi = _kasten(kopf)
+        cx, w = (lo[0] + hi[0]) / 2, hi[0] - lo[0]
+        b = _knoch(m, f"{vor}_kopf{kopf.name[4:]}", kopf.name)
+        b.kasten([cx - 0.5, hi[1] - 1, hi[2] - 7], [1, 5, 8], stoff, drehung=[-12, 0, 0], drehpunkt=[cx, hi[1], hi[2]])
+        for s in (-1, 1):
+            x = cx + s * (w / 2 - 1)
+            b.kasten([x - 0.5, lo[1] + 2, lo[2] + 2], [1, 1, 10], stoff + "_bart",
+                     drehung=[-38, s * 24, 0], drehpunkt=[x, lo[1] + 2.5, lo[2] + 2])
+        for glied in _hals(m, kopf):
+            glo, ghi = _kasten(glied)
+            gx = (glo[0] + ghi[0]) / 2
+            h = _knoch(m, f"{vor}_{glied.name}", glied.name)
+            h.kasten([gx - 0.5, ghi[1] - 1, glo[2]], [1, 5, max(2, round(ghi[2] - glo[2]))], stoff,
+                     drehung=[-8, 0, 0], drehpunkt=[gx, ghi[1], ghi[2]])
+
+
+def _kragen(m, vor, stoff):
+    """Giftdrache: ein gefaecherter Kragen hinter dem Kopf."""
+    for kopf in _koepfe(m):
+        lo, hi = _kasten(kopf)
+        cx, cy = (lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2
+        b = _knoch(m, f"{vor}_kopf{kopf.name[4:]}", kopf.name)
+        for a in (-80, -45, -15, 15, 45, 80):
+            b.kasten([cx - 1.5, cy, hi[2] - 3], [3, 8, 1], stoff, drehung=[-25, 0, a], drehpunkt=[cx, cy, hi[2] - 2.5])
+
+
+def _sichel(m, vor, stoff):
+    """Nachtschwinge: eine Sichel an der Schwanzspitze, dazu Dornen am Kopf."""
+    spitze = _schwanzspitze(m)
+    if spitze:
+        lo, hi = _kasten(spitze)
+        cy = (lo[1] + hi[1]) / 2
+        t = _knoch(m, f"{vor}_schwanz", spitze.name)
+        z = hi[2] - 3
+        t.kasten([-1, cy - 1.5, z], [2, 3, 4], stoff)
+        t.kasten([-0.5, cy + 1, z + 1], [1, 9, 2], stoff, drehung=[-40, 0, 0], drehpunkt=[0, cy + 1, z + 2])
+        t.kasten([-0.5, cy + 8.5, z + 1], [1, 5, 2], stoff, drehung=[-80, 0, 0], drehpunkt=[0, cy + 1, z + 2])
+        t.kasten([-0.5, cy - 8, z + 1], [1, 7, 2], stoff, drehung=[40, 0, 0], drehpunkt=[0, cy - 1, z + 2])
+    for kopf in _koepfe(m):
+        lo, hi = _kasten(kopf)
+        cx, w = (lo[0] + hi[0]) / 2, hi[0] - lo[0]
+        b = _knoch(m, f"{vor}_kopf{kopf.name[4:]}", kopf.name)
+        for s in (-1, 1):
+            x = cx + s * (w / 2 - 0.5)
+            b.kasten([x - 0.5, hi[1] - 3, hi[2] - 3], [1, 2, 6], stoff, drehung=[10, s * 30, 0],
+                     drehpunkt=[x, hi[1] - 2, hi[2] - 3])
+
+
+def _knochenkranz(m, vor, stoff):
+    """Schlunddrache: ein Kranz Knochendornen um den Kopf."""
+    for kopf in _koepfe(m):
+        lo, hi = _kasten(kopf)
+        cx, w, cy = (lo[0] + hi[0]) / 2, hi[0] - lo[0], (lo[1] + hi[1]) / 2
+        b = _knoch(m, f"{vor}_kopf{kopf.name[4:]}", kopf.name)
+        z = hi[2] - 4
+        for s in (-1, 1):
+            for dy, rz, h in ((cy - 1, 70, 5), (cy + 2, 45, 7), (hi[1] - 1, 20, 6)):
+                x = cx + s * (w / 2 - 1)
+                b.kasten([x - 1, dy, z], [2, h, 2], stoff, drehung=[-30, 0, -s * rz], drehpunkt=[x, dy, z + 1])
+        b.kasten([cx - 1, hi[1] - 1, z], [2, 6, 2], stoff, drehung=[-45, 0, 0], drehpunkt=[cx, hi[1] - 1, z + 1])
+
+
+ERBTEILE = {"lindwurm": _klingen, "frostwyvern": _eiszacken, "himmelsdrache": _maehne,
+            "giftdrache": _kragen, "nachtschwinge": _sichel, "schlunddrache": _knochenkranz}
+
+
+def erbteile(m, eigene_art):
+    """Haengt die Erbteile aller anderen Arten an das Modell. Liefert
+    (Knochen, Nummer der Art ab 1, am Ruecken?) fuer die Sichtbarkeit."""
+    liste = []
+    for nr, (art, _, _) in enumerate(ARTEN, 1):
+        if art == eigene_art:
+            continue
+        vor = f"erbe_{art}"
+        vorher = {k.name for k in m.knochen}
+        ERBTEILE[art](m, vor, vor)
+        for k in m.knochen:
+            if k.name not in vorher:
+                liste.append((k.name, nr, k.name.endswith("_ruecken")))
+    return liste
+
+
+def erbe_sichtbarkeit(gestalt, eigene_art):
+    m = getattr(dg, f"{gestalt}_modell")()
+    return [{name: f"query.property('fynn:misch') == {nr}" + (" && !query.is_saddled" if ruecken else "")}
+            for name, nr, ruecken in erbteile(m, eigene_art)]
+
+
+def erbe_farbe(stoff, p, n, texel):
+    """Die Farben der Erbteile: immer die der Art, von der sie stammen."""
+    art = stoff.split("_")[1]
+    gestalt = next(g for a, g, _ in ARTEN if a == art)
+    f = grundfarben(gestalt)
+    t = H.hoehe(p, n, texel) if abs(n[1]) < 0.5 else (1.0 if n[1] > 0 else 0.0)
+    if art == "frostwyvern":
+        return H.verlauf([f["haut"], f["glut"], "#ffffff"], t, 3) + (254,)
+    if art == "himmelsdrache":
+        if stoff.endswith("_bart"):
+            return H.farbe(f["bart"])
+        return H.verlauf([f["maehne"][0], f["maehne"][1]], t, 3)
+    if art == "giftdrache":
+        k = H.kasten_von(texel)
+        rand = k is not None and abs(n[2]) > 0.5 and p[1] - k.ursprung[1] > k.groesse[1] - 2
+        return H.farbe(f["stachel"]) if rand else H.verlauf([f["hautfleck"], f["haut"]], t, 3)
+    return H.verlauf(list(f["horn"]), t, 3)
+
+
+def mit_erbe(maler):
+    """Ein Maler, der auch die Erbteile malen kann."""
+    def male(stoff, p, n, texel):
+        if stoff.startswith("erbe_"):
+            return erbe_farbe(stoff, p, n, texel)
+        return maler(stoff, p, n, texel)
+    return male

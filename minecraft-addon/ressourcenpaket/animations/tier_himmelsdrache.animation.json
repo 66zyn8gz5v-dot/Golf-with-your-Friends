@@ -2943,6 +2943,133 @@
           ]
         }
       }
+    },
+    "animation.fynn.himmelsdrache.jung": {
+      "loop": true,
+      "bones": {
+        "kopf": {
+          "scale": "1.0 + 0.75 * (1.0 - variable.fynn_wuchs / 10.0)"
+        },
+        "hals1": {
+          "scale": "1.0 + -0.22 * (1.0 - variable.fynn_wuchs / 10.0)"
+        },
+        "geweih_links": {
+          "scale": "1.0 + -0.5 * (1.0 - variable.fynn_wuchs / 10.0)"
+        },
+        "geweih_rechts": {
+          "scale": "1.0 + -0.5 * (1.0 - variable.fynn_wuchs / 10.0)"
+        },
+        "schwanz1": {
+          "scale": "1.0 + -0.25 * (1.0 - variable.fynn_wuchs / 10.0)"
+        },
+        "bein_vorn_links": {
+          "scale": [
+            "1.0 + 0.3 * (1.0 - variable.fynn_wuchs / 10.0)",
+            1.0,
+            "1.0 + 0.3 * (1.0 - variable.fynn_wuchs / 10.0)"
+          ]
+        },
+        "bein_vorn_rechts": {
+          "scale": [
+            "1.0 + 0.3 * (1.0 - variable.fynn_wuchs / 10.0)",
+            1.0,
+            "1.0 + 0.3 * (1.0 - variable.fynn_wuchs / 10.0)"
+          ]
+        },
+        "bein_hinten_links": {
+          "scale": [
+            "1.0 + 0.3 * (1.0 - variable.fynn_wuchs / 10.0)",
+            1.0,
+            "1.0 + 0.3 * (1.0 - variable.fynn_wuchs / 10.0)"
+          ]
+        },
+        "bein_hinten_rechts": {
+          "scale": [
+            "1.0 + 0.3 * (1.0 - variable.fynn_wuchs / 10.0)",
+            1.0,
+            "1.0 + 0.3 * (1.0 - variable.fynn_wuchs / 10.0)"
+          ]
+        }
+      }
+    },
+    "animation.fynn.himmelsdrache.misch_lindwurm": {
+      "loop": true,
+      "bones": {
+        "kopf": {
+          "scale": 1.1
+        }
+      }
+    },
+    "animation.fynn.himmelsdrache.misch_frostwyvern": {
+      "loop": true,
+      "bones": {
+        "bein_vorn_links": {
+          "scale": [
+            0.85,
+            1.08,
+            0.85
+          ]
+        },
+        "bein_vorn_rechts": {
+          "scale": [
+            0.85,
+            1.08,
+            0.85
+          ]
+        },
+        "bein_hinten_links": {
+          "scale": [
+            0.85,
+            1.08,
+            0.85
+          ]
+        },
+        "bein_hinten_rechts": {
+          "scale": [
+            0.85,
+            1.08,
+            0.85
+          ]
+        }
+      }
+    },
+    "animation.fynn.himmelsdrache.misch_giftdrache": {
+      "loop": true,
+      "bones": {
+        "hals1": {
+          "scale": [
+            1.15,
+            1.15,
+            1.0
+          ]
+        },
+        "kopf": {
+          "scale": 1.06
+        }
+      }
+    },
+    "animation.fynn.himmelsdrache.misch_nachtschwinge": {
+      "loop": true,
+      "bones": {
+        "kopf": {
+          "scale": [
+            0.9,
+            0.92,
+            1.05
+          ]
+        }
+      }
+    },
+    "animation.fynn.himmelsdrache.misch_schlunddrache": {
+      "loop": true,
+      "bones": {
+        "kopf": {
+          "scale": 1.22
+        },
+        "hals1": {
+          "scale": 0.9
+        }
+      }
     }
   }
 }

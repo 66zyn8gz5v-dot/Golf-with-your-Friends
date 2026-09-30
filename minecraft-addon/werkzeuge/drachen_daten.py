@@ -638,6 +638,120 @@ HEILMITTEL = ["minecraft:golden_apple", "minecraft:enchanted_golden_apple"]
 URALT_GROESSE = 2.2
 
 
+# ------------------------------------------------------------ Jungdrachen (5.2)
+#
+# Fynn: "Babydrachen, die langsam wachsen, und man sieht den Wachstum in
+# kleineren Ticks, dass er nicht direkt von klein zu gross wird."
+#
+# fynn:wuchs zaehlt von 0 (frisch geschluepft) bis WUCHS (ausgewachsen);
+# wilde Drachen stehen von Anfang an auf WUCHS. Das Skript zaehlt die Zeit
+# und stellt die Stufen weiter (scripts/drachenzucht.js). Im Bild waechst
+# er ueber die Groesse im Aussehen - weich in gut einer Sekunde von Stufe
+# zu Stufe (variable.fynn_wuchs zieht nach); der Trefferkasten waechst in
+# den Stufengruppen mit.
+WUCHS = 10
+FLEISCH = ["minecraft:beef", "minecraft:porkchop", "minecraft:mutton", "minecraft:chicken", "minecraft:rabbit",
+           "minecraft:cod", "minecraft:salmon", "fynn:elchfleisch", "fynn:bisonfleisch"]
+WUCHS_EIG = "query.property('fynn:wuchs')"
+WUCHS_VAR = "variable.fynn_wuchs"
+WUCHS_ANFANG = [f"{WUCHS_VAR} = {WUCHS_EIG};"]
+WUCHS_VORHER = [f"{WUCHS_VAR} = math.lerp({WUCHS_VAR}, {WUCHS_EIG}, math.min(1.0, query.delta_time * 1.5));"]
+JUNG = f"(1.0 - {WUCHS_VAR} / {WUCHS:.1f})"
+
+
+def wuchs_faktor(k):
+    """Wie gross im Verhaeltnis zum Erwachsenen: frisch geschluepft 0,3."""
+    return round(0.3 + 0.7 * k / WUCHS, 3)
+
+
+def jung_zustaende(gruppen, ereignisse, eintrag):
+    """Stufengruppen, Zaehmen nach dem Schluepfen und das Erwachsenwerden."""
+    breite, hoehe = eintrag["kollision"]
+    stufen = [f"fynn:wuchs_{k}" for k in range(WUCHS + 1)]
+    for k in range(WUCHS + 1):
+        f = wuchs_faktor(k)
+        gruppen[stufen[k]] = {"minecraft:collision_box": {"width": round(breite * f, 2), "height": round(hoehe * f, 2)}}
+        if k < WUCHS:
+            gruppen[stufen[k]]["minecraft:is_baby"] = {}
+    # Frisch geschluepft gehoert er noch niemandem: Das Skript zaehmt ihn fuer
+    # den Besitzer des Eis; wer nicht da ist, kann ihn mit rohem Fleisch zaehmen.
+    gruppen["fynn:zaehmbar"] = {"minecraft:tameable": {"probability": 1.0, "tame_items": FLEISCH,
+                                                        "tame_event": {"event": "fynn:jung_zahm", "target": "self"}}}
+    # Zahm, aber noch zu klein: kein Sattel, kein Reiter, kein Kampf.
+    gruppen["fynn:zahm_jung"] = {
+        "minecraft:is_tamed": {},
+        "minecraft:behavior.look_at_player": {"priority": 7, "look_distance": 8, "probability": 0.1},
+    }
+    varianten = eintrag["varianten"]
+    ereignisse["fynn:schluepfen"] = {"sequence": [
+        {"randomize": [{"weight": w, "add": {"component_groups": [f"fynn:variante_{i}"]}}
+                       for i, (_, w) in enumerate(varianten)]},
+        {"add": {"component_groups": ["fynn:boden", "fynn:zaehmbar", stufen[0]]},
+         "set_property": {"fynn:wuchs": 0, "fynn:fliegt": False}}]}
+    ereignisse["fynn:jung_zahm"] = {"remove": {"component_groups": ["fynn:zaehmbar"]},
+                                    "add": {"component_groups": ["fynn:zahm_jung", "fynn:folgt"]}}
+    for k in range(1, WUCHS):
+        ereignisse[f"fynn:wachsen_{k}"] = {"remove": {"component_groups": [s for s in stufen if s != stufen[k]]},
+                                          "add": {"component_groups": [stufen[k]]},
+                                          "set_property": {"fynn:wuchs": k}}
+    # Ausgewachsen: jetzt mit Sattel, Reiter und Beute. Die Stufe WUCHS
+    # traegt den vollen Trefferkasten (die Gruppe davor ist ja weg).
+    ereignisse["fynn:ausgewachsen"] = {
+        "remove": {"component_groups": [s for s in stufen if s != stufen[WUCHS]] + ["fynn:zahm_jung", "fynn:zaehmbar"]},
+        "add": {"component_groups": [stufen[WUCHS], "fynn:zahm", "fynn:erwachsen"]},
+        "set_property": {"fynn:wuchs": WUCHS}}
+
+
+# Mischlinge (5.2) haben nicht nur die Farben und ein Kennzeichen der
+# anderen Art, sondern auch ein wenig von ihrer Gestalt: vom Feuerdrachen
+# den schweren Kopf, vom Frostwyvern lange, schlanke Beine und weite
+# Schwingen, vom Himmelsdrachen den langen Schwanz und kleinere Schwingen,
+# vom Giftdrachen den dicken Hals, von der Nachtschwinge den schmalen Kopf
+# und riesige Schwingen, vom Schlunddrachen den maechtigen Kopf.
+def _alle(namen, wert):
+    return {n: {"scale": wert} for n in namen}
+
+
+KOEPFE = ("kopf", "kopf_a", "kopf_b")
+HAELSE = ("hals1", "hals_a1", "hals_b1")
+SCHWINGEN = ("fluegel_links", "fluegel_rechts", "hfluegel_links", "hfluegel_rechts")
+BEINE = tuple(f"bein_{l}_{s}" for l in ("vorn", "hinten") for s in ("links", "rechts"))
+MISCHGESTALT = {
+    "lindwurm": {**_alle(KOEPFE, 1.1), **_alle(("horn_links", "horn_rechts", "horn_a_links", "horn_a_rechts"), 1.2)},
+    "frostwyvern": {**_alle(SCHWINGEN, 1.1), **_alle(BEINE, [0.85, 1.08, 0.85])},
+    "himmelsdrache": {**_alle(SCHWINGEN, 0.85), "schwanz1": {"scale": [0.9, 0.9, 1.18]}},
+    "giftdrache": {**_alle(HAELSE, [1.15, 1.15, 1.0]), **_alle(KOEPFE, 1.06)},
+    "nachtschwinge": {**_alle(SCHWINGEN, 1.16), **_alle(KOEPFE, [0.9, 0.92, 1.05])},
+    "schlunddrache": {**_alle(KOEPFE, 1.22), **_alle(HAELSE, 0.9)},
+}
+
+
+def jung_bewegung(koepfe):
+    """Ein Junges ist nicht einfach ein kleiner Drache: Der Kopf ist gross,
+    Hals und Schwanz kurz, Schwingen und Hoerner Stummel, die Beine
+    staemmig. Je aelter, desto weniger davon."""
+    k = {}
+
+    def gross(name, wie, flach=False):
+        s = f"1.0 + {wie} * {JUNG}"
+        k[name] = {"scale": [s, 1.0, s] if flach else s}
+
+    for s_ in koepfe:
+        gross(f"kopf{s_}", 0.75)
+        gross(f"hals{s_}1", -0.22)
+        for seite in ("links", "rechts"):
+            gross(f"horn{s_}_{seite}", -0.55)
+            gross(f"geweih{s_}_{seite}", -0.5)
+    gross("schwanz1", -0.25)
+    for vor in ("", "h"):
+        for seite in ("links", "rechts"):
+            gross(f"{vor}fluegel_{seite}", -0.4)
+    for lage in ("vorn", "hinten"):
+        for seite in ("links", "rechts"):
+            gross(f"bein_{lage}_{seite}", 0.3, flach=True)
+    return {"loop": True, "bones": k}
+
+
 def drachen_zustaende(tempo_luft, tempo_boden, beute, sitz, reitflug=0.5, reichweite=48, schwimmt=False):
     """Alle Zustaende eines Drachen als Komponentengruppen, dazu die
     Ereignisse, die zwischen ihnen wechseln. sitz: wo der Reiter sitzt."""
@@ -779,6 +893,10 @@ def eigenschaften_drache():
     e = {}
     for n in ("fynn:feuer", "fynn:fliegt", "fynn:schlaeft", "fynn:besiegt", "fynn:uralt", "fynn:wartet"):
         e.update(eigenschaft(n))
+    # Jungdrachen und Mischlinge (5.2): wie gross (WUCHS = erwachsen) und in
+    # wessen Farben (0 = eigene, sonst 1 + Nummer der Art in DRACHEN).
+    e["fynn:wuchs"] = {"type": "int", "range": [0, WUCHS], "default": WUCHS, "client_sync": True}
+    e["fynn:misch"] = {"type": "int", "range": [0, 6], "default": 0, "client_sync": True}
     return e
 
 
@@ -1015,7 +1133,12 @@ def nur_vorhandene(bewegungen, gestalt):
     da = {k.name for k in getattr(dg, f"{gestalt}_modell")().knochen}
     aus = {}
     for name, (anim, gewicht) in bewegungen.items():
-        aus[name] = (dict(anim, bones={k: v for k, v in anim["bones"].items() if k in da}), gewicht)
+        knochen = {k: v for k, v in anim["bones"].items() if k in da}
+        # Bleibt nichts uebrig (eine Mischgestalt, die nur Schwingen
+        # aendert, beim Himmelsdrachen), faellt die Bewegung ganz weg.
+        if not knochen and set(anim) <= {"loop", "bones"}:
+            continue
+        aus[name] = (dict(anim, bones=knochen), gewicht)
     return aus
 
 
@@ -1057,6 +1180,7 @@ def drache(eintrag, schwinge, bewegungen=None, koepfe=("",), **bewegung):
                              "minecraft:attack": angriff}
     ereignisse["fynn:uralt_werden"] = {"add": {"component_groups": ["fynn:uralt"]},
                                        "set_property": {"fynn:uralt": True}}
+    jung_zustaende(gruppen, ereignisse, eintrag)
     if bewegungen is None:
         import drachen_gestalt as dg
         r = getattr(dg, f"{eintrag['gestalt']}_modell")().finde("rumpf")
@@ -1077,13 +1201,24 @@ def drache(eintrag, schwinge, bewegungen=None, koepfe=("",), **bewegung):
             gross[f"horn{s_}_{seite}"] = {"scale": [1.45, 1.45, 1.45]}
             gross[f"geweih{s_}_{seite}"] = {"scale": [1.45, 1.45, 1.45]}
     bew["uralt"] = ({"loop": True, "bones": gross}, "query.property('fynn:uralt')")
+    bew["jung"] = (jung_bewegung(koepfe), f"{WUCHS_EIG} < {WUCHS}")
+    import drachen_misch as dm
+    for nr, (art, _, _) in enumerate(dm.ARTEN, 1):
+        if art != eintrag["id"]:
+            bew[f"misch_{art}"] = ({"loop": True, "bones": MISCHGESTALT[art]}, f"query.property('fynn:misch') == {nr}")
+    groesse = eintrag.get("groesse", 1.0)
     eintrag.update({
         "art": "drache", "verhalten": "drache", "keine_panik": True, "baby": False,
         "komponenten": k, "gruppen": gruppen, "ereignisse": ereignisse,
         "start_gruppen": ["fynn:luft", "fynn:wildjagd"], "start_setzen": {"fynn:fliegt": True},
         "eigenschaften": eigenschaften_drache(),
         "eigene_bewegungen": nur_vorhandene(bew, eintrag["gestalt"]),
-        "vorher": vorher(eintrag.pop("atemfluegel", 0.0)),
+        "vorher": WUCHS_VORHER + vorher(eintrag.pop("atemfluegel", 0.0)),
+        "anfang": WUCHS_ANFANG,
+        # Im Bild waechst er mit (Jungdrachen, 5.2): frisch geschluepft 0,3.
+        "skala": f"{groesse} * (0.3 + 0.7 * {WUCHS_VAR} / {WUCHS:.1f})",
+        # Mischlinge (5.2): Koerper der einen Art in den Farben der anderen.
+        "misch_haut": eintrag["gestalt"],
         # Augenlider im Schlaf und besiegt - und zum Blinzeln; jeder Kopf
         # blinzelt fuer sich. Der Sattel nur gesattelt.
         "sichtbarkeit": [{f"lider{s}": blinzeln(j * 0.9)} for j, s in enumerate(koepfe)]
@@ -1091,7 +1226,9 @@ def drache(eintrag, schwinge, bewegungen=None, koepfe=("",), **bewegung):
         + [{k_: "query.property('fynn:uralt')"} for k_ in uralt_knochen(eintrag["gestalt"])]
         # Unter dem Sattel keine Stacheln.
         + [{"stachel_sattel": "!query.is_saddled"},
-           {"uralt_sattel": "query.property('fynn:uralt') && !query.is_saddled"}],
+           {"uralt_sattel": "query.property('fynn:uralt') && !query.is_saddled"}]
+        # Die Erbteile der Mischlinge (5.2, drachen_misch.py).
+        + __import__("drachen_misch").erbe_sichtbarkeit(eintrag["gestalt"], eintrag["id"]),
         "gruppe": "Drachen",
     })
     eintrag["steckbrief_extra"] = eintrag.get("steckbrief_extra", []) + [

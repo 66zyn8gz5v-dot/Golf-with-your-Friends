@@ -559,6 +559,70 @@ action.interact.fynn_schleim=Schleim abfüllen
 
 
 
+
+## Fantasy-Wesen
+item.fynn:wurmzahn=Wurmzahn
+item.fynn:sandperle=Sandperle
+item.fynn:sandklopfer=Sandklopfer
+item.fynn:drachenschuppe=Drachenschuppe
+item.fynn:glutstaub=Glutstaub
+item.fynn:glutflasche=Glutflasche
+item.fynn:sturmfluegel=Sturmflügel
+item.fynn:frostpanzer=Frostpanzer
+item.fynn:frosttalisman=Frosttalisman
+item.fynn:basiliskenauge=Basiliskenauge
+entity.fynn:glutflasche_wurf.name=Glutflasche
+action.interact.fynn_fangen=Einfangen
+item.fynn:wurmzahn.name=Wurmzahn
+item.fynn:sandperle.name=Sandperle
+item.fynn:sandklopfer.name=Sandklopfer
+item.fynn:drachenschuppe.name=Drachenschuppe
+item.fynn:glutstaub.name=Glutstaub
+item.fynn:glutflasche.name=Glutflasche
+item.fynn:sturmfluegel.name=Sturmflügel
+item.fynn:frostpanzer.name=Frostpanzer
+item.fynn:frosttalisman.name=Frosttalisman
+item.fynn:basiliskenauge.name=Basiliskenauge
+
+## Fantasy-Wesen, zweite Welle
+item.fynn:glutstachel=Glutstachel
+item.fynn:glutpfeil=Glutpfeil
+item.fynn:spinnenkristall=Spinnenkristall
+item.fynn:hoehlenauge=Höhlenauge
+item.fynn:irrlichtflasche=Irrlichtflasche
+entity.fynn:irrlichtflasche_wurf.name=Irrlichtflasche
+item.fynn:moosherz=Moosherz
+entity.fynn:felsbrocken.name=Felsbrocken
+item.fynn:greifenfeder=Greifenfeder
+item.fynn:glutstachel.name=Glutstachel
+item.fynn:glutpfeil.name=Glutpfeil
+item.fynn:spinnenkristall.name=Spinnenkristall
+item.fynn:hoehlenauge.name=Höhlenauge
+item.fynn:irrlichtflasche.name=Irrlichtflasche
+item.fynn:moosherz.name=Moosherz
+item.fynn:greifenfeder.name=Greifenfeder
+
+## Drachen
+item.fynn:drachenpfeife=Drachenpfeife
+entity.fynn:eissplitter.name=Eissplitter
+entity.fynn:plasmaschuss.name=Plasmaschuss
+item.fynn:drachenpfeife.name=Drachenpfeife
+
+## Nester und Eier
+item.fynn:vogelei=Vogelei
+item.fynn:vogelei.name=Vogelei
+item.fynn:spechtei=Spechtei
+item.fynn:spechtei.name=Spechtei
+item.fynn:adlerei=Adlerei
+item.fynn:adlerei.name=Adlerei
+item.fynn:greifenei=Greifenei
+item.fynn:greifenei.name=Greifenei
+tile.fynn:vogelnest.name=Vogelnest
+tile.fynn:spechthoehle.name=Spechthöhle
+tile.fynn:kobel.name=Kobel
+tile.fynn:adlerhorst.name=Adlerhorst
+tile.fynn:greifennest.name=Greifennest
+
 ## Die Tiere
 entity.fynn:braunbaer.name=Braunbär
 item.spawn_egg.entity.fynn:braunbaer.name=Braunbär-Spawn-Ei
@@ -636,66 +700,3 @@ entity.fynn:nachtschwinge.name=Nachtschwinge
 item.spawn_egg.entity.fynn:nachtschwinge.name=Nachtschwinge-Spawn-Ei
 entity.fynn:schlunddrache.name=Schlunddrache
 item.spawn_egg.entity.fynn:schlunddrache.name=Schlunddrache-Spawn-Ei
-
-## Fantasy-Wesen
-item.fynn:wurmzahn=Wurmzahn
-item.fynn:sandperle=Sandperle
-item.fynn:sandklopfer=Sandklopfer
-item.fynn:drachenschuppe=Drachenschuppe
-item.fynn:glutstaub=Glutstaub
-item.fynn:glutflasche=Glutflasche
-item.fynn:sturmfluegel=Sturmflügel
-item.fynn:frostpanzer=Frostpanzer
-item.fynn:frosttalisman=Frosttalisman
-item.fynn:basiliskenauge=Basiliskenauge
-entity.fynn:glutflasche_wurf.name=Glutflasche
-action.interact.fynn_fangen=Einfangen
-item.fynn:wurmzahn.name=Wurmzahn
-item.fynn:sandperle.name=Sandperle
-item.fynn:sandklopfer.name=Sandklopfer
-item.fynn:drachenschuppe.name=Drachenschuppe
-item.fynn:glutstaub.name=Glutstaub
-item.fynn:glutflasche.name=Glutflasche
-item.fynn:sturmfluegel.name=Sturmflügel
-item.fynn:frostpanzer.name=Frostpanzer
-item.fynn:frosttalisman.name=Frosttalisman
-item.fynn:basiliskenauge.name=Basiliskenauge
-
-## Fantasy-Wesen, zweite Welle
-item.fynn:glutstachel=Glutstachel
-item.fynn:glutpfeil=Glutpfeil
-item.fynn:spinnenkristall=Spinnenkristall
-item.fynn:hoehlenauge=Höhlenauge
-item.fynn:irrlichtflasche=Irrlichtflasche
-entity.fynn:irrlichtflasche_wurf.name=Irrlichtflasche
-item.fynn:moosherz=Moosherz
-entity.fynn:felsbrocken.name=Felsbrocken
-item.fynn:greifenfeder=Greifenfeder
-item.fynn:glutstachel.name=Glutstachel
-item.fynn:glutpfeil.name=Glutpfeil
-item.fynn:spinnenkristall.name=Spinnenkristall
-item.fynn:hoehlenauge.name=Höhlenauge
-item.fynn:irrlichtflasche.name=Irrlichtflasche
-item.fynn:moosherz.name=Moosherz
-item.fynn:greifenfeder.name=Greifenfeder
-
-## Drachen
-item.fynn:drachenpfeife=Drachenpfeife
-entity.fynn:eissplitter.name=Eissplitter
-entity.fynn:plasmaschuss.name=Plasmaschuss
-item.fynn:drachenpfeife.name=Drachenpfeife
-
-## Nester und Eier
-item.fynn:vogelei=Vogelei
-item.fynn:vogelei.name=Vogelei
-item.fynn:spechtei=Spechtei
-item.fynn:spechtei.name=Spechtei
-item.fynn:adlerei=Adlerei
-item.fynn:adlerei.name=Adlerei
-item.fynn:greifenei=Greifenei
-item.fynn:greifenei.name=Greifenei
-tile.fynn:vogelnest.name=Vogelnest
-tile.fynn:spechthoehle.name=Spechthöhle
-tile.fynn:kobel.name=Kobel
-tile.fynn:adlerhorst.name=Adlerhorst
-tile.fynn:greifennest.name=Greifennest

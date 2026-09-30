@@ -3049,6 +3049,152 @@
           ]
         }
       }
+    },
+    "animation.fynn.schlunddrache.jung": {
+      "loop": true,
+      "bones": {
+        "kopf": {
+          "scale": "1.0 + 0.75 * (1.0 - variable.fynn_wuchs / 10.0)"
+        },
+        "hals1": {
+          "scale": "1.0 + -0.22 * (1.0 - variable.fynn_wuchs / 10.0)"
+        },
+        "schwanz1": {
+          "scale": "1.0 + -0.25 * (1.0 - variable.fynn_wuchs / 10.0)"
+        },
+        "fluegel_links": {
+          "scale": "1.0 + -0.4 * (1.0 - variable.fynn_wuchs / 10.0)"
+        },
+        "fluegel_rechts": {
+          "scale": "1.0 + -0.4 * (1.0 - variable.fynn_wuchs / 10.0)"
+        },
+        "bein_vorn_links": {
+          "scale": [
+            "1.0 + 0.3 * (1.0 - variable.fynn_wuchs / 10.0)",
+            1.0,
+            "1.0 + 0.3 * (1.0 - variable.fynn_wuchs / 10.0)"
+          ]
+        },
+        "bein_vorn_rechts": {
+          "scale": [
+            "1.0 + 0.3 * (1.0 - variable.fynn_wuchs / 10.0)",
+            1.0,
+            "1.0 + 0.3 * (1.0 - variable.fynn_wuchs / 10.0)"
+          ]
+        },
+        "bein_hinten_links": {
+          "scale": [
+            "1.0 + 0.3 * (1.0 - variable.fynn_wuchs / 10.0)",
+            1.0,
+            "1.0 + 0.3 * (1.0 - variable.fynn_wuchs / 10.0)"
+          ]
+        },
+        "bein_hinten_rechts": {
+          "scale": [
+            "1.0 + 0.3 * (1.0 - variable.fynn_wuchs / 10.0)",
+            1.0,
+            "1.0 + 0.3 * (1.0 - variable.fynn_wuchs / 10.0)"
+          ]
+        }
+      }
+    },
+    "animation.fynn.schlunddrache.misch_lindwurm": {
+      "loop": true,
+      "bones": {
+        "kopf": {
+          "scale": 1.1
+        }
+      }
+    },
+    "animation.fynn.schlunddrache.misch_frostwyvern": {
+      "loop": true,
+      "bones": {
+        "fluegel_links": {
+          "scale": 1.1
+        },
+        "fluegel_rechts": {
+          "scale": 1.1
+        },
+        "bein_vorn_links": {
+          "scale": [
+            0.85,
+            1.08,
+            0.85
+          ]
+        },
+        "bein_vorn_rechts": {
+          "scale": [
+            0.85,
+            1.08,
+            0.85
+          ]
+        },
+        "bein_hinten_links": {
+          "scale": [
+            0.85,
+            1.08,
+            0.85
+          ]
+        },
+        "bein_hinten_rechts": {
+          "scale": [
+            0.85,
+            1.08,
+            0.85
+          ]
+        }
+      }
+    },
+    "animation.fynn.schlunddrache.misch_himmelsdrache": {
+      "loop": true,
+      "bones": {
+        "fluegel_links": {
+          "scale": 0.85
+        },
+        "fluegel_rechts": {
+          "scale": 0.85
+        },
+        "schwanz1": {
+          "scale": [
+            0.9,
+            0.9,
+            1.18
+          ]
+        }
+      }
+    },
+    "animation.fynn.schlunddrache.misch_giftdrache": {
+      "loop": true,
+      "bones": {
+        "hals1": {
+          "scale": [
+            1.15,
+            1.15,
+            1.0
+          ]
+        },
+        "kopf": {
+          "scale": 1.06
+        }
+      }
+    },
+    "animation.fynn.schlunddrache.misch_nachtschwinge": {
+      "loop": true,
+      "bones": {
+        "fluegel_links": {
+          "scale": 1.16
+        },
+        "fluegel_rechts": {
+          "scale": 1.16
+        },
+        "kopf": {
+          "scale": [
+            0.9,
+            0.92,
+            1.05
+          ]
+        }
+      }
     }
   }
 }

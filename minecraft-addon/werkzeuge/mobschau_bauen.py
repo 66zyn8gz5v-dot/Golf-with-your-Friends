@@ -449,6 +449,15 @@ def mob_daten(kennung, entitaet_datei, gruppe, info):
             varianten.append({"n": VARIANTENNAME.get(schluessel, schluessel.replace("_", " ").capitalize()),
                               "b": mit_zusatz(RES / (texturen[schluessel] + ".png")),
                               "v": i, "w": gewichte.get(schluessel)})
+    # Die Mischlinge der Drachen (5.2): in der Schau als weitere Haeute.
+    for nr_misch, t_misch in enumerate(steuer.get("arrays", {}).get("textures", {}).get("Array.misch", [])):
+        schluessel = t_misch.split(".", 1)[1]
+        andere = schluessel.split("_", 1)[1]
+        if ident.endswith(":" + andere):
+            continue
+        import drachen_misch as dm
+        varianten.append({"n": f"Mischling: Farben {dm.NAMEN[andere]}",
+                          "b": mit_zusatz(RES / (texturen[schluessel] + ".png")), "v": 0, "m": nr_misch + 1})
     if baby:
         varianten.append({"n": VARIANTENNAME.get(baby, baby.capitalize()),
                           "b": mit_zusatz(RES / (texturen[baby] + ".png")), "v": 0, "baby": 1})
@@ -530,6 +539,8 @@ def mob_daten(kennung, entitaet_datei, gruppe, info):
         teile.append("gischt:" + json.dumps(info["gischt"], separators=(",", ":")))
     if info.get("atem"):
         teile.append("atem:" + json.dumps(info["atem"], separators=(",", ":")))
+    if info.get("vorgabe"):
+        teile.append("vorgabe:" + json.dumps(info["vorgabe"]))
     if info.get("stufen"):
         teile.append("stufen:" + json.dumps(info["stufen"], ensure_ascii=False))
     return "{" + ",\n".join(teile) + "}"
@@ -631,6 +642,13 @@ def alle_mobs():
     for t in tiere_bauen.TIERE:
         info = {"varianten": t["varianten"], "steckbrief": steckbrief_tier(t)}
         info.update(TIER_EXTRA.get(t["id"], {}))
+        if t.get("misch_haut"):
+            # Drachen (5.2): erwachsen von sich aus; das Wachsen als Stufen,
+            # die Mischfarben als weitere Haeute (sie setzen fynn:misch).
+            info["vorgabe"] = {"fynn:wuchs": 10}
+            info.setdefault("stufen", {})["fynn:wuchs"] = (
+                ["frisch geschlüpft"] + [f"Stufe {k}" for k in range(1, 10)] + ["erwachsen"])
+            info["ohne_schalter"] = info.get("ohne_schalter", []) + ["fynn:misch"]
         # Drachen: Wo das Maul ist, damit der Atem dort herauskommt. Das
         # Modell traegt es beim Bauen ein.
         import drachen_gestalt

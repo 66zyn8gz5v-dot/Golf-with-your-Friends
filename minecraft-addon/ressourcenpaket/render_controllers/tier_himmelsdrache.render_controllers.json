@@ -8,6 +8,14 @@
             "Texture.jade",
             "Texture.perle",
             "Texture.gold"
+          ],
+          "Array.misch": [
+            "Texture.misch_lindwurm",
+            "Texture.misch_frostwyvern",
+            "Texture.misch_himmelsdrache",
+            "Texture.misch_giftdrache",
+            "Texture.misch_nachtschwinge",
+            "Texture.misch_schlunddrache"
           ]
         }
       },
@@ -18,7 +26,7 @@
         }
       ],
       "textures": [
-        "Array.haut[query.variant]"
+        "query.property('fynn:misch') > 0 ? Array.misch[query.property('fynn:misch') - 1] : Array.haut[query.variant]"
       ],
       "part_visibility": [
         {
@@ -101,6 +109,30 @@
         },
         {
           "uralt_sattel": "query.property('fynn:uralt') && !query.is_saddled"
+        },
+        {
+          "erbe_lindwurm_kopf": "query.property('fynn:misch') == 1"
+        },
+        {
+          "erbe_lindwurm_ruecken": "query.property('fynn:misch') == 1 && !query.is_saddled"
+        },
+        {
+          "erbe_frostwyvern_ruecken": "query.property('fynn:misch') == 2 && !query.is_saddled"
+        },
+        {
+          "erbe_frostwyvern_schwanz": "query.property('fynn:misch') == 2"
+        },
+        {
+          "erbe_giftdrache_kopf": "query.property('fynn:misch') == 4"
+        },
+        {
+          "erbe_nachtschwinge_schwanz": "query.property('fynn:misch') == 5"
+        },
+        {
+          "erbe_nachtschwinge_kopf": "query.property('fynn:misch') == 5"
+        },
+        {
+          "erbe_schlunddrache_kopf": "query.property('fynn:misch') == 6"
         }
       ]
     }

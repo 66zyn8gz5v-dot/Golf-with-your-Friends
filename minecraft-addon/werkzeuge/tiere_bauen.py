@@ -1916,7 +1916,7 @@ def aussehen(t, anims, texturen):
         "textures": {k: f"textures/entity/tiere/{name}_{k}" for k in texturen},
         "geometry": {"default": f"geometry.fynn.{name}"},
         "animations": kurz,
-        "scripts": {"initialize": DREHUNG_START,
+        "scripts": {"initialize": DREHUNG_START + t.get("anfang", []),
                     "pre_animation": DREHUNG + ([f"variable.galopp = {GALOPP};"] if "galopp" in anims else [])
                     + ([TROMMELN_WANN] if "trommeln" in anims else [])
                     # Was die Bewegungen eines Tiers gemeinsam brauchen (die
@@ -1925,7 +1925,7 @@ def aussehen(t, anims, texturen):
                     "animate": animate_liste(t, anims),
                     # Nur im Bild groesser (die Drachen): Der Trefferkasten
                     # steht schon passend in kollision.
-                    **({"scale": str(t["groesse"])} if t.get("groesse") else {})},
+                    **({"scale": t.get("skala") or str(t["groesse"])} if t.get("groesse") else {})},
         "render_controllers": [f"controller.render.fynn.{name}"],
         "spawn_egg": ei_eintrag(t["id"], {"base_color": t["ei"][0], "overlay_color": t["ei"][1]}),
     }
@@ -1945,8 +1945,13 @@ def steuerung(t, texturen):
     bild = "Array.haut[query.variant]"
     if babyhaut(t):
         bild = f"query.is_baby ? Texture.{babyhaut(t)} : Array.haut[query.variant]"
+    arrays = {"Array.haut": varianten}
+    if t.get("misch_haut"):
+        import drachen_misch as dm
+        arrays["Array.misch"] = [f"Texture.misch_{art}" for art, _, _ in dm.ARTEN]
+        bild = f"query.property('fynn:misch') > 0 ? Array.misch[query.property('fynn:misch') - 1] : {bild}"
     steuer = {
-        "arrays": {"textures": {"Array.haut": varianten}},
+        "arrays": {"textures": arrays},
         "geometry": "Geometry.default",
         "materials": [{"*": "Material.default"}],
         "textures": [bild],
@@ -1969,6 +1974,11 @@ def baue(t, bilder=None):
     name = t["id"]
     modell = getattr(g, f"{t['gestalt']}_modell")()
     maler = getattr(g, f"{t['gestalt']}_maler")
+    if t.get("misch_haut"):
+        # Die Erbteile der Mischlinge (5.2) gehoeren zu jedem Drachenmodell.
+        import drachen_misch as dm
+        dm.erbteile(modell, t["id"])
+        maler = (lambda roh: lambda v: dm.mit_erbe(roh(v)))(maler)
     geo = modell.geometrie()
     schreibe(RES / "models" / "entity" / f"tier_{name}.geo.json", geo)
 
@@ -1984,6 +1994,14 @@ def baue(t, bilder=None):
         ziel.parent.mkdir(parents=True, exist_ok=True)
         bild.save(ziel)
         texturen[v] = bild
+    if t.get("misch_haut"):
+        # Mischlinge (5.2, die Drachen): der Koerper dieser Art in den Farben
+        # jeder Art - welche, sagt fynn:misch (drachen_misch.py).
+        import drachen_misch as dm
+        for art, gestalt, _ in dm.ARTEN:
+            bild = modell.male(dm.misch_maler(t["misch_haut"], gestalt))
+            bild.save(RES / "textures" / "entity" / "tiere" / f"{name}_misch_{art}.png")
+            texturen[f"misch_{art}"] = bild
 
     anims = bewegungen(t, modell)
     eigene = {f"animation.fynn.{name}.{k}": v for k, v in anims.items() if not isinstance(v, str)}

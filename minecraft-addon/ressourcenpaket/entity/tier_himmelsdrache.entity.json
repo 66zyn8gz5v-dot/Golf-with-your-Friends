@@ -9,7 +9,13 @@
       "textures": {
         "jade": "textures/entity/tiere/himmelsdrache_jade",
         "perle": "textures/entity/tiere/himmelsdrache_perle",
-        "gold": "textures/entity/tiere/himmelsdrache_gold"
+        "gold": "textures/entity/tiere/himmelsdrache_gold",
+        "misch_lindwurm": "textures/entity/tiere/himmelsdrache_misch_lindwurm",
+        "misch_frostwyvern": "textures/entity/tiere/himmelsdrache_misch_frostwyvern",
+        "misch_himmelsdrache": "textures/entity/tiere/himmelsdrache_misch_himmelsdrache",
+        "misch_giftdrache": "textures/entity/tiere/himmelsdrache_misch_giftdrache",
+        "misch_nachtschwinge": "textures/entity/tiere/himmelsdrache_misch_nachtschwinge",
+        "misch_schlunddrache": "textures/entity/tiere/himmelsdrache_misch_schlunddrache"
       },
       "geometry": {
         "default": "geometry.fynn.himmelsdrache"
@@ -26,19 +32,27 @@
         "drachenbruellen": "animation.fynn.himmelsdrache.drachenbruellen",
         "drachenblick": "animation.fynn.himmelsdrache.drachenblick",
         "drachenbiss": "animation.fynn.himmelsdrache.drachenbiss",
-        "uralt": "animation.fynn.himmelsdrache.uralt"
+        "uralt": "animation.fynn.himmelsdrache.uralt",
+        "jung": "animation.fynn.himmelsdrache.jung",
+        "misch_lindwurm": "animation.fynn.himmelsdrache.misch_lindwurm",
+        "misch_frostwyvern": "animation.fynn.himmelsdrache.misch_frostwyvern",
+        "misch_giftdrache": "animation.fynn.himmelsdrache.misch_giftdrache",
+        "misch_nachtschwinge": "animation.fynn.himmelsdrache.misch_nachtschwinge",
+        "misch_schlunddrache": "animation.fynn.himmelsdrache.misch_schlunddrache"
       },
       "scripts": {
         "initialize": [
           "variable.fynn_gier_alt = query.body_y_rotation;",
           "variable.fynn_dreh = 0.0;",
-          "variable.fynn_zufall = math.random(0.0, 360.0);"
+          "variable.fynn_zufall = math.random(0.0, 360.0);",
+          "variable.fynn_wuchs = query.property('fynn:wuchs');"
         ],
         "pre_animation": [
           "variable.fynn_d = query.body_y_rotation - variable.fynn_gier_alt;",
           "variable.fynn_d = variable.fynn_d > 180.0 ? variable.fynn_d - 360.0 : (variable.fynn_d < -180.0 ? variable.fynn_d + 360.0 : variable.fynn_d);",
           "variable.fynn_gier_alt = query.body_y_rotation;",
           "variable.fynn_dreh = math.lerp(variable.fynn_dreh, math.clamp(variable.fynn_d / math.max(query.delta_time, 0.01) / 20.0, -10.0, 10.0), 0.12);",
+          "variable.fynn_wuchs = math.lerp(variable.fynn_wuchs, query.property('fynn:wuchs'), math.min(1.0, query.delta_time * 1.5));",
           "variable.fynn_t = query.life_time + variable.fynn_zufall * 0.05;",
           "variable.fynn_ruhig = (1.0 - math.clamp(query.modified_move_speed * 4.0, 0.0, 1.0)) * (1.0 - query.property('fynn:feuer')) * (1.0 - query.property('fynn:fliegt')) * (1.0 - math.max(query.property('fynn:schlaeft'), query.property('fynn:besiegt'))) * (1.0 - (query.property('fynn:wartet') * (1.0 - query.has_rider)));",
           "variable.fynn_bz = math.mod(variable.fynn_t, 17.0);",
@@ -87,9 +101,30 @@
           },
           {
             "uralt": "query.property('fynn:uralt')"
+          },
+          {
+            "jung": "query.property('fynn:wuchs') < 10"
+          },
+          {
+            "misch_lindwurm": "query.property('fynn:misch') == 1"
+          },
+          {
+            "misch_frostwyvern": "query.property('fynn:misch') == 2"
+          },
+          {
+            "misch_giftdrache": "query.property('fynn:misch') == 4"
+          },
+          {
+            "misch_nachtschwinge": "query.property('fynn:misch') == 5"
+          },
+          {
+            "misch_schlunddrache": "query.property('fynn:misch') == 6"
+          },
+          {
+            "jung": "query.is_baby"
           }
         ],
-        "scale": "1.15"
+        "scale": "1.15 * (0.3 + 0.7 * variable.fynn_wuchs / 10.0)"
       },
       "render_controllers": [
         "controller.render.fynn.himmelsdrache"
