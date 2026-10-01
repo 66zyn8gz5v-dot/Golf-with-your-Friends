@@ -495,11 +495,98 @@ function seelensturm(z, a, t) {
     }
 }
 
+// Seelengericht (Phase zwei, der ultimative Angriff). Fynn: "Er laedt so
+// seine Kraft maessig auf. Und dabei bildet sich so ein grosser Magiekreis
+// um ihn herum ... der ist auf jeden Fall gefaehrlich." Vier Sekunden
+// waechst ein Kreis von vierzehn Bloecken um ihn; darin leuchten warme
+// Schutzlichter. Dann bricht im ganzen Kreis die Seele aus dem Boden - wer
+// noch drin steht und nicht in einem Schutzlicht, den trifft es schwer.
+export const GERICHT_WEITE = 14;
+const SCHUTZ_WEITE = 1.9;
+
+export function schutzOrte(mitte, anzahl, zufall = Math.random) {
+    const orte = [];
+    const versatz = zufall() * Math.PI * 2;
+    for (let i = 0; i < anzahl; i++) {
+        const w = versatz + (i / anzahl) * Math.PI * 2;
+        const r = 6 + zufall() * 4;
+        orte.push({ x: mitte.x + Math.cos(w) * r, y: mitte.y, z: mitte.z + Math.sin(w) * r });
+    }
+    return orte;
+}
+
+// Wen das Gericht trifft: wer im Kreis steht und in keinem Schutzlicht.
+export function imGericht(mitte, schutz, ort) {
+    if (abstand(mitte, ort) > GERICHT_WEITE + 0.5) return false;
+    return !schutz.some((s) => abstand(s, ort) <= SCHUTZ_WEITE);
+}
+
+function seelengericht(z, a, t) {
+    const d = A.seelengericht;
+    const dim = z.boss.dimension;
+    const o = z.boss.location;
+    if (t === 0) {
+        a.mitte = { ...o };
+        const anzahl = z.n > 2 ? 4 : 3;
+        a.schutz = schutzOrte(a.mitte, anzahl).map((p) => boden(dim, p, 2) ?? p);
+        z.merk.gericht = true;
+        ton(dim, "mob.enderdragon.growl", o, 3, 0.4);
+        titel(spielerBei(z.boss, 48), "§bAschvaru ruft das Seelengericht", "§7Raus aus dem Kreis - oder ins goldene Licht!", 70);
+    }
+    if (!a.mitte) return;
+    if (t >= d.laden_von && t < d.entladung) {
+        const s = Math.min(1, (t - d.laden_von) / (d.laden_bis - d.laden_von));
+        // Der grosse Kreis: zuerst alle acht Ticks, zum Ende hin dichter -
+        // er flackert immer schneller.
+        const takt = s < 0.7 ? 8 : (s < 0.9 ? 5 : 3);
+        if ((t - d.laden_von) % takt === 0) funken(dim, "fynn:seelengericht", a.mitte);
+        if (t % 6 === 0) {
+            for (const p of a.schutz) {
+                funken(dim, "fynn:seelenschutz", p);
+                funken(dim, "fynn:schutzlicht", p);
+            }
+        }
+        // Seelen steigen ueberall im Kreis auf - immer mehr.
+        if (t % 2 === 0) {
+            for (let i = 0; i < 1 + Math.floor(s * 4); i++) {
+                const w = Math.random() * Math.PI * 2, r = Math.sqrt(Math.random()) * GERICHT_WEITE;
+                funken(dim, "fynn:seelenhauch", { x: a.mitte.x + Math.cos(w) * r, y: a.mitte.y + 0.3, z: a.mitte.z + Math.sin(w) * r });
+            }
+        }
+        if (t % 10 === 0) ton(dim, "beacon.ambient", o, 2, 0.5 + s * 1.3);
+        if (t === d.laden_bis) ton(dim, "mob.warden.sonic_charge", o, 3, 0.6);
+    }
+    if (t === d.entladung) {
+        ton(dim, "random.explode", o, 3, 0.5);
+        ton(dim, "mob.warden.sonic_boom", o, 3, 0.7);
+        // Saeulen ueberall im Kreis, Ring um Ring - nur in den Schutzlichtern nicht.
+        for (const [r, n] of [[0, 1], [3.5, 6], [7, 11], [10.5, 16], [13.5, 20]]) {
+            for (let i = 0; i < n; i++) {
+                const w = (i / n) * Math.PI * 2 + r;
+                const p = { x: a.mitte.x + Math.cos(w) * r, y: a.mitte.y, z: a.mitte.z + Math.sin(w) * r };
+                if (a.schutz.some((s) => abstand(s, p) <= SCHUTZ_WEITE)) continue;
+                funken(dim, "fynn:seelensaeule", p);
+            }
+        }
+        ring(dim, a.mitte, GERICHT_WEITE, 40, "fynn:seelenfunke", 0.4);
+        for (const p of a.schutz) ring(dim, p, 1.2, 8, "fynn:seelenhauch", 0.2);
+        for (const w of ziele(z.boss, a.mitte, GERICHT_WEITE + 1, SCHONEN)) {
+            if (!imGericht(a.mitte, a.schutz, w.location)) continue;
+            const weg = richtung(a.mitte, w.location);
+            kampf.treffe(z, w, 20, { x: weg.x * 1.2, z: weg.z * 1.2 }, 0.8);
+            try {
+                w.addEffect("darkness", 120, { amplifier: 0 });
+                w.addEffect("weakness", 200, { amplifier: 1 });
+            } catch (e) { /* egal */ }
+        }
+    }
+}
+
 // ------------------------------------------------------------ Die Wahl
 
 const ABKLINGEN = {
     seelenstrahl: 240, seelenkreise: 260, fluegelschlag: 140, schweifhieb: 90,
-    seelensog: 400, seelenspiegel: 700, seelensturm: 520,
+    seelensog: 400, seelenspiegel: 700, seelensturm: 520, seelengericht: 1000,
 };
 
 export function moeglich(z, weite, bereit) {
@@ -511,7 +598,13 @@ export function moeglich(z, weite, bereit) {
     if (z.phase === 2 && weite < 14 && bereit("seelensog")) liste.push("seelensog");
     if (z.phase === 2 && bereit("seelenspiegel") && abbildZahl(z) === 0) liste.push("seelenspiegel");
     if (z.phase === 2 && weite < 22 && bereit("seelensturm")) liste.push("seelensturm");
+    if (z.phase === 2 && weite < 18 && bereit("seelengericht")) liste.push("seelengericht");
     return liste;
+}
+
+export function unterHaelfte(z) {
+    const l = leben(z.boss);
+    return !!l && l.jetzt <= l.max / 2;
 }
 
 // Steht jemand neben oder hinter ihm, waehrend er sich dem Ziel zuwendet?
@@ -536,9 +629,12 @@ export const kampf = bossKampf({
     titelWechsel: ["§bAschvaru sammelt die Seelen", "§7Er ist unverwundbar"],
     titelSieg: "§7Aschvarus Seele steigt zum Himmel",
     gefolgeWeg: "fynn:seelenfunke",
-    schritte: { seelenstrahl, seelenkreise, fluegelschlag, schweifhieb, seelensog, seelenspiegel, seelensturm },
+    schritte: { seelenstrahl, seelenkreise, fluegelschlag, schweifhieb, seelensog, seelenspiegel, seelensturm, seelengericht },
     waehle(z, ziel, weite) {
         const liste = moeglich(z, weite, (n) => kampf.bereit(z, n));
+        // Faellt er in Phase zwei unter die Haelfte, ruft er das Gericht -
+        // sobald er kann, das erste Mal ohne Warten.
+        if (liste.includes("seelengericht") && !z.merk.gericht && unterHaelfte(z)) return "seelengericht";
         if (liste.includes("schweifhieb") && flankiert(z, ziel)) return "schweifhieb";
         const ohne = liste.filter((n) => n !== "schweifhieb");
         const wahl = ohne.length ? ohne : liste;

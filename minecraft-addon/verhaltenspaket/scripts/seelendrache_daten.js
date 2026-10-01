@@ -71,6 +71,13 @@ export const ANGRIFFE = {
         "nr": 10,
         "laenge": 80,
         "beute": 64
+    },
+    "seelengericht": {
+        "nr": 11,
+        "laenge": 132,
+        "laden_von": 20,
+        "laden_bis": 100,
+        "entladung": 108
     }
 };
 export const LEBEN = {"1": 320, "2": 480, "3": 640, "4": 800, "5": 960, "6": 1120};

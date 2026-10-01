@@ -800,7 +800,7 @@ def alle_mobs():
             "auftritt": "Auftritt", "hieb_biss": "Biss", "hieb_klaue": "Klauenhieb", "seelenstrahl": "Seelenstrahl",
             "seelenkreise": "Seelenkreise", "fluegelschlag": "Flügelschlag", "schweifhieb": "Schweifhieb",
             "seelensog": "Seelensog", "seelenspiegel": "Seelenspiegel", "seelensturm": "Seelensturm",
-            "wechsel": "Phasenwechsel", "abschied": "Abschied",
+            "seelengericht": "Seelengericht", "wechsel": "Phasenwechsel", "abschied": "Abschied",
         },
         "steckbrief": {"name": "Aschvaru, der Seelendrache", "en": "Aschvaru the Soul Dragon", "zeilen": [
             ["Rang", "weißer Drache, Hüter der Seelen – der vierte Boss"],
@@ -810,6 +810,9 @@ def alle_mobs():
             ["Angriffe", "Seelenstrahl (seitlich ausweichen oder hinter eine Wand), Seelenkreise mit Lichtsäulen, "
                          "Flügelschlag, Schweifhieb; in Phase 2 Seelensog, Seelensturm aus der Luft und zwei "
                          "hellblaue Spiegelbilder, die Seelenkugeln werfen – ein Treffer, und sie zerspringen"],
+            ["Ultimativ", "Seelengericht (Phase 2, unter halbem Leben): Er lädt sich auf, ein riesiger "
+                          "Magiekreis wächst um ihn – dann bricht im ganzen Kreis die Seele aus dem Boden. "
+                          "Raus aus dem Kreis oder ins goldene Schutzlicht!"],
             ["Diener", "keine – er kämpft nur mit Magie"],
             ["Rufen", "Seelenruf entzünden (Seelenlaterne, Ghast-Tränen, Diamanten)"],
             ["Beute", "Seelenklinge, Seelenkristalle, Diamanten, Echosplitter; jeder Mitkämpfer seinen Anteil"]]}}))

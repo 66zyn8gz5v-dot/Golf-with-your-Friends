@@ -17,6 +17,7 @@
         "haltung": "animation.fynn.seelendrache.haltung",
         "gang": "animation.fynn.seelendrache.gang",
         "beben": "animation.fynn.seelendrache.beben",
+        "zittern": "animation.fynn.seelendrache.zittern",
         "lider": "animation.fynn.seelendrache.lider",
         "ring_aus": "animation.fynn.seelendrache.ring_aus",
         "ring_an": "animation.fynn.seelendrache.ring_an",
@@ -32,6 +33,7 @@
         "wechsel": "animation.fynn.seelendrache.wechsel",
         "auftritt": "animation.fynn.seelendrache.auftritt",
         "abschied": "animation.fynn.seelendrache.abschied",
+        "seelengericht": "animation.fynn.seelendrache.seelengericht",
         "kampf": "controller.animation.fynn.seelendrache.kampf"
       },
       "scripts": {

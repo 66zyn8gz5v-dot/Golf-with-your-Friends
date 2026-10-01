@@ -48,10 +48,12 @@ export const BOSSE = [
         rang: "Weißer Drache, Hüter der Seelen",
         rufen: "Entzünde den §fSeelenruf§r: eine Seelenlaterne, zwei Ghast-Tränen, zwei Diamanten.",
         angriffe: "Seelenstrahl, Seelenkreise mit Lichtsäulen, Flügelschlag, Schweifhieb. "
-            + "In Phase 2 erwacht sein Seelenring: Seelensog, Seelensturm aus der Luft und zwei Spiegelbilder.",
+            + "In Phase 2 erwacht sein Seelenring: Seelensog, Seelensturm aus der Luft und zwei Spiegelbilder. "
+            + "Und das Seelengericht: ein riesiger Magiekreis, in dem die Seelen aus dem Boden brechen.",
         tipp: "Dem Strahl läufst du seitlich davon - oder du stellst dich hinter eine Wand. "
             + "Verlass die leuchtenden Kreise, bevor die Säule kommt. Die Spiegelbilder zerspringen "
-            + "beim ersten Treffer; landet er nach dem Seelensturm, spring über die Welle.",
+            + "beim ersten Treffer; landet er nach dem Seelensturm, spring über die Welle. "
+            + "Beim Seelengericht: raus aus dem großen Kreis - oder hinein in eines der goldenen Schutzlichter.",
         beute: "Seelenklinge, Seelenkristalle, Diamanten, Echosplitter, Seelenlaternen.",
     },
 ];

@@ -43,6 +43,9 @@
               "angriff_10": "query.property('fynn:angriff') == 10"
             },
             {
+              "angriff_11": "query.property('fynn:angriff') == 11"
+            },
+            {
               "hieb": "variable.attack_time > 0.0"
             }
           ],
@@ -90,6 +93,9 @@
             },
             {
               "angriff_10": "query.property('fynn:angriff') == 10"
+            },
+            {
+              "angriff_11": "query.property('fynn:angriff') == 11"
             },
             {
               "bereit": "query.all_animations_finished"
@@ -204,6 +210,18 @@
           "transitions": [
             {
               "bereit": "query.property('fynn:angriff') != 10"
+            }
+          ],
+          "blend_transition": 0.15
+        },
+        "angriff_11": {
+          "animations": [
+            "seelengericht",
+            "zittern"
+          ],
+          "transitions": [
+            {
+              "bereit": "query.property('fynn:angriff') != 11"
             }
           ],
           "blend_transition": 0.15

@@ -136,7 +136,7 @@ z.pause = 1e12;
 k.starte(z, "seelenkreise", { ziel: alle[0] });
 laufe(z, ANGRIFFE.seelenkreise.zeichen + 2);
 pruefe("Kreise: Zauberkreise leuchten", boss.dimension.partikel.some(([n]) => n === "fynn:seelenkreis"));
-alle[1].location = { x: 14, y: 64, z: 0 };
+alle[1].location = { x: 30, y: 64, z: 0 };   // weit genug, dass auch ein zufaelliger Extrakreis ihn nicht erreicht
 laufe(z, ANGRIFFE.seelenkreise.ausbruch - ANGRIFFE.seelenkreise.zeichen);
 pruefe("Kreise: der Stehende getroffen und hochgeworfen", alle[0].schaden.length === 1 && alle[0].stoss[1] >= 0.8);
 pruefe("Kreise: der Weggegangene nicht", alle[1].schaden.length === 0);
@@ -186,6 +186,7 @@ pruefe(`Spiegelbilder: Seelenkugeln treffen (${alle[0].schaden.length})`, alle[0
 // ---- Seelensog: zieht, dann stoesst er fort (die Spiegelbilder sind
 // vorher zersprungen - sonst zaehlten ihre Kugeln mit)
 for (const g of boss.dimension.gerufen) g.isValid = false;
+laufe(z, 80);   // Kugeln, die noch fliegen, verglimmen erst
 alle[0].schaden = [];
 alle[0].stoesse = [];
 alle[0].location = { x: 0, y: 64, z: 6 };
@@ -210,6 +211,29 @@ laufe(z, ANGRIFFE.seelensturm.laenge - ANGRIFFE.seelensturm.aufprall);
 pruefe("Seelensturm: wieder unten", Math.abs(boss.location.y - 64) < 0.01);
 pruefe("Seelensturm: der Stehende getroffen (Seelen und Welle)", alle[0].schaden.length >= 1);
 pruefe("Seelensturm: der Springende entgeht der Welle", b2.schaden.length === 0);
+
+// ---- Seelengericht: wer im Kreis bleibt, den trifft es; im Schutzlicht
+// und draussen nicht
+pruefe("Seelengericht nur in Phase zwei", !r.moeglich(frisch, 8, alles).includes("seelengericht")
+    && r.moeglich({ phase: 2, gefolge: [] }, 8, alles).includes("seelengericht"));
+pruefe("Seelengericht: Schutzlicht schuetzt, draussen auch", !r.imGericht({ x: 0, z: 0 }, [{ x: 8, z: 0 }], { x: 8.5, z: 0 })
+    && !r.imGericht({ x: 0, z: 0 }, [], { x: 16, z: 0 }) && r.imGericht({ x: 0, z: 0 }, [{ x: 8, z: 0 }], { x: 0, z: 5 }));
+for (const g of boss.dimension.gerufen) g.isValid = false;
+const drinnen = spieler("d", 0, 2.5), geschuetzt = spieler("g", 3, 3), draussen = spieler("f", 20, 0);
+alle.push(drinnen, geschuetzt, draussen);
+alle[0].location = { x: 30, y: 64, z: 30 };
+b2.location = { x: -30, y: 64, z: 30 };
+k.starte(z, "seelengericht", { ziel: drinnen });
+laufe(z, 2);
+const licht = z.aktion.schutz[0];
+geschuetzt.location = { x: licht.x, y: 64, z: licht.z };
+laufe(z, ANGRIFFE.seelengericht.laenge);
+pruefe(`Seelengericht: der im Kreis schwer getroffen (${drinnen.schaden.length})`, drinnen.schaden.length === 1
+    && drinnen.wirkungen.includes("darkness"));
+pruefe("Seelengericht: im Schutzlicht heil", geschuetzt.schaden.length === 0);
+pruefe("Seelengericht: draussen heil", draussen.schaden.length === 0);
+pruefe("Seelengericht: drei Schutzlichter allein, Saeulen im Kreis", z.n === 1
+    && boss.dimension.partikel.some(([n]) => n === "fynn:seelengericht"));
 
 // ---- Abschied
 boss.lebenJetzt = 10;

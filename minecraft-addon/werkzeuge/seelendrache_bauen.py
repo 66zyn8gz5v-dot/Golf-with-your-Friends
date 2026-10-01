@@ -562,6 +562,38 @@ def wechsel():
     ])
 
 
+def seelengericht():
+    """Der ultimative Angriff (Phase zwei) - Fynn: "Er laedt so seine Kraft
+    maessig auf. Und dabei bildet sich so ein grosser Magiekreis um ihn
+    herum ... der ist auf jeden Fall gefaehrlich." Ein Schrei, dann stemmt
+    er sich in den Boden, breitet die Schwingen und reckt den Kopf zum
+    Himmel; er laedt (1,0 bis 5,0 s) und zittert dabei immer staerker. Er
+    baeumt sich ein letztes Mal auf - und schlaegt die Schwingen herab
+    (5,4 s): Im ganzen Kreis brechen Seelen aus dem Boden."""
+    laden = pose(aufbaeumen(-14, 1.5), fluegel(1.0, 50), hals(-22, -16, -10, -6, -2), beine_vorn(-22, 30, -8),
+                 kopf=[-30.0, 0.0, 0.0], kiefer=[30.0, 0.0, 0.0])
+    return ablauf(6.6, [
+        (0.40, pose(aufbaeumen(-24, 2.0), fluegel(0.9, 40), kopf=[-30.0, 0.0, 0.0], kiefer=[46.0, 0.0, 0.0])),
+        (1.00, laden),
+        (3.00, dict(laden, kopf=[-36.0, 0.0, 0.0], kiefer=[38.0, 0.0, 0.0])),
+        (4.60, pose(laden, fluegel(1.0, 64))),
+        (5.00, pose(aufbaeumen(-32, 3.0), fluegel(1.0, 82), hals(-24, -18, -12, -6, -2), beine_hinten(0.0),
+                    kopf=[-38.0, 0.0, 0.0], kiefer=[50.0, 0.0, 0.0])),
+        (5.40, pose(aufbaeumen(6.0), fluegel(1.0, -12, knick=-20), hals(-4, 2, 6, 10, 12), kopf=[24.0, 0.0, 0.0],
+                    kiefer=[34.0, 0.0, 0.0], wurzel={"position": [0.0, -1.5, 0.0]})),
+        (5.90, pose(fluegel(0.6, 5), kopf=[KOPF_STAND, 0.0, 0.0], kiefer=[6.0, 0.0, 0.0],
+                    wurzel={"position": [0.0, 0.0, 0.0]})),
+    ])
+
+
+def zittern():
+    """Waehrend des Seelengerichts bebt er - je laenger er laedt, desto mehr."""
+    huelle = "math.clamp((query.anim_time - 1.0) / 4.0, 0.0, 1.0) * (query.anim_time < 5.0)"
+    return {"loop": "hold_on_last_frame", "animation_length": 6.6, "bones": {
+        "wurzel": {"rotation": [f"math.sin(query.anim_time * 2600.0) * 1.1 * {huelle}", 0.0,
+                                f"math.sin(query.anim_time * 1900.0) * 1.1 * {huelle}"]}}}
+
+
 def beben():
     """Waehrend er laedt, zittert er - immer staerker."""
     huelle = "math.clamp((query.anim_time - 1.0) / 2.6, 0.0, 1.0) * (query.anim_time < 3.6)"
@@ -625,12 +657,14 @@ ANGRIFFE = {
     "wechsel": (8, wechsel, {"laden_von": 1.0, "laden_bis": 3.6, "umschlag": 4.2}),
     "auftritt": (9, auftritt, {"bereit": 2.8}),
     "abschied": (10, abschied, {"beute": 3.2}),
+    "seelengericht": (11, seelengericht, {"laden_von": 1.0, "laden_bis": 5.0, "entladung": 5.4}),
 }
 HIEBE = [("hieb_biss", hieb_biss), ("hieb_klaue", hieb_klaue)]
 
 
 def alle_animationen():
     anims = {PRAEFIX + "haltung": haltung(), PRAEFIX + "gang": gang(), PRAEFIX + "beben": beben(),
+             PRAEFIX + "zittern": zittern(),
              PRAEFIX + "lider": lider(), PRAEFIX + "ring_aus": ring_aus(), PRAEFIX + "ring_an": ring_an()}
     for name, bau in HIEBE:
         anims[PRAEFIX + name] = bau()
@@ -849,7 +883,58 @@ def partikel_bilder():
             a = int(255 * min(1.0, oben * 1.6) * (1.0 if d < 0.6 else 0.6))
             if a > 8:
                 saeule.putpixel((x, y), tuple(f[:3]) + (a,))
-    return {"fynn_seele": seele, "fynn_seelenkreis": kreis, "fynn_seelensaeule": saeule}
+    return {"fynn_seele": seele, "fynn_seelenkreis": kreis, "fynn_seelensaeule": saeule,
+            "fynn_seelengericht": gerichtskreis(), "fynn_schutzkreis": schutzkreis()}
+
+
+def gerichtskreis():
+    """Der grosse Kreis des Seelengerichts, 64 Pixel fuer 28 Bloecke:
+    doppelter Aussenring, ein Band aus Runen, ein achtzackiger Stern aus
+    zwei Quadraten, Speichen zur Mitte. Durchgehende Linien, keine Punkte."""
+    b = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
+    hell, mitte_f, tief = (236, 252, 255, 255), (130, 226, 255, 255), (60, 160, 235, 230)
+    for y in range(64):
+        for x in range(64):
+            dx, dy = x - 31.5, y - 31.5
+            r = math.hypot(dx, dy)
+            w = math.degrees(math.atan2(dy, dx)) % 360
+            if 30.2 <= r < 31.6:
+                b.putpixel((x, y), hell)
+            elif 28.2 <= r < 29.2:
+                b.putpixel((x, y), tief)
+            elif 24.0 <= r < 27.4 and (w % 15) < 7:
+                b.putpixel((x, y), mitte_f)                       # Runenband
+            elif 22.6 <= r < 23.6:
+                b.putpixel((x, y), tief)
+            elif 8.4 <= r < 9.6:
+                b.putpixel((x, y), hell)
+            elif 9.6 <= r < 22.6 and min(w % 45, 45 - w % 45) * math.radians(1) * r < 0.6:
+                b.putpixel((x, y), tief)                          # Speichen
+    for drehung in (0, 45):
+        ecken = [(31.5 + math.cos(math.radians(drehung + i * 90)) * 22.6,
+                  31.5 + math.sin(math.radians(drehung + i * 90)) * 22.6) for i in range(4)]
+        for i in range(4):
+            (ax, ay), (bx, by) = ecken[i], ecken[(i + 1) % 4]
+            for s_ in range(80):
+                t = s_ / 79
+                b.putpixel((int(ax + (bx - ax) * t), int(ay + (by - ay) * t)), hell)
+    return b
+
+
+def schutzkreis():
+    """Ein Schutzlicht: warm statt kalt, damit man es im blauen Kreis sofort
+    findet - ein heller Ring, innen ein sanfter Schein."""
+    b = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
+    for y in range(32):
+        for x in range(32):
+            r = math.hypot(x - 15.5, y - 15.5)
+            if 13.6 <= r < 15.6:
+                b.putpixel((x, y), (255, 244, 196, 255))
+            elif 8.0 <= r < 9.2:
+                b.putpixel((x, y), (255, 214, 120, 240))
+            elif r < 13.6:
+                b.putpixel((x, y), (255, 226, 150, int(40 + 50 * (1 - r / 13.6))))
+    return b
 
 
 def alle_partikel():
@@ -920,6 +1005,36 @@ def alle_partikel():
             "minecraft:particle_motion_dynamic": {"linear_acceleration": [0, 1.0, 0], "linear_drag_coefficient": 1.0},
             "minecraft:particle_appearance_billboard": {"size": [0.13, 0.13], "facing_camera_mode": "rotate_xyz",
                                                         "uv": seele_uv}}, **aus)),
+        # Das Seelengericht: der grosse Kreis, 14 Bloecke Halbmesser, flach am
+        # Boden. Das Skript setzt ihn alle paar Ticks neu, er dreht sich.
+        "seelengericht": p("seelengericht", "fynn_seelengericht", {
+            "minecraft:emitter_rate_instant": {"num_particles": 1},
+            "minecraft:emitter_lifetime_once": {"active_time": 0.05},
+            "minecraft:emitter_shape_point": {"offset": [0, 0.1, 0]},
+            "minecraft:particle_lifetime_expression": {"max_lifetime": 0.45},
+            "minecraft:particle_initial_speed": 0,
+            "minecraft:particle_initial_spin": {"rotation": "math.random(0, 360)", "rotation_rate": 12},
+            "minecraft:particle_appearance_billboard": {"size": [14, 14], "facing_camera_mode": "emitter_transform_xz",
+                "uv": {"texture_width": 64, "texture_height": 64, "uv": [0, 0], "uv_size": [64, 64]}}}),
+        # Ein Schutzlicht: ein warmer Kreis am Boden ...
+        "seelenschutz": p("seelenschutz", "fynn_schutzkreis", {
+            "minecraft:emitter_rate_instant": {"num_particles": 1},
+            "minecraft:emitter_lifetime_once": {"active_time": 0.05},
+            "minecraft:emitter_shape_point": {"offset": [0, 0.12, 0]},
+            "minecraft:particle_lifetime_expression": {"max_lifetime": 0.45},
+            "minecraft:particle_initial_speed": 0,
+            "minecraft:particle_appearance_billboard": {"size": [1.8, 1.8], "facing_camera_mode": "emitter_transform_xz",
+                "uv": {"texture_width": 32, "texture_height": 32, "uv": [0, 0], "uv_size": [32, 32]}}}),
+        # ... und darueber eine goldene Lichtsaeule, damit man es von weitem sieht.
+        "schutzlicht": p("schutzlicht", "fynn_seelensaeule", dict({
+            "minecraft:emitter_rate_instant": {"num_particles": 1},
+            "minecraft:emitter_lifetime_once": {"active_time": 0.05},
+            "minecraft:emitter_shape_point": {"offset": [0, 3.0, 0]},
+            "minecraft:particle_lifetime_expression": {"max_lifetime": 0.6},
+            "minecraft:particle_initial_speed": 0,
+            "minecraft:particle_appearance_billboard": {"size": [0.45, 3.0], "facing_camera_mode": "lookat_y",
+                "uv": {"texture_width": 8, "texture_height": 32, "uv": [0, 0], "uv_size": [8, 32]}},
+            "minecraft:particle_appearance_tinting": {"color": [1.0, 0.88, 0.55, "0.9 - v.particle_age"]}})),
         # Der Sog: Seelen stroemen von aussen zu ihm.
         "seelensog": p("seelensog", "fynn_seele", dict({
             "minecraft:emitter_rate_instant": {"num_particles": 24},
@@ -1099,7 +1214,7 @@ def verhalten():
         "minecraft:behavior.look_at_player": {"priority": 6, "look_distance": 16.0, "probability": 0.05},
         "minecraft:behavior.random_stroll": {"priority": 7, "speed_multiplier": 0.6},
     }, nahkampf={"minecraft:behavior.melee_box_attack": {"priority": 3, "speed_multiplier": 1.2, "track_target": True}},
-        phase_zwei={"minecraft:movement": {"value": 0.26}}, anzahl_angriffe=10)
+        phase_zwei={"minecraft:movement": {"value": 0.26}}, anzahl_angriffe=len(ANGRIFFE))
 
 
 NAMEN = [
@@ -1126,7 +1241,7 @@ def main():
     kurz = {nr: name for name, (nr, _, _) in ANGRIFFE.items()}
     bk.schreibe(RES / "animation_controllers" / f"{NAME}.animation_controllers.json", bk.steuerung(
         NAME, kurz, ["haltung", {"gang": "math.clamp(query.modified_move_speed * 2.5, 0.0, 1.0)"}],
-        zusatz={"wechsel": ["beben"]}, hiebe=[h for h, _ in HIEBE]))
+        zusatz={"wechsel": ["beben"], "seelengericht": ["zittern"]}, hiebe=[h for h, _ in HIEBE]))
     bk.schreibe(RES / "entity" / f"{NAME}.entity.json", bk.aussehen(
         TYP, NAME, anims, PRAEFIX, GROESSE, {"base_color": "#eef3fa", "overlay_color": "#7cf2ff"},
         skripte={"animate": ["kampf", "lider", {"ring_aus": "query.property('fynn:phase') == 1"},
