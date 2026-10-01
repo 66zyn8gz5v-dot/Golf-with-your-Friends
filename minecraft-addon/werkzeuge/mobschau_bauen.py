@@ -451,14 +451,18 @@ def mob_daten(kennung, entitaet_datei, gruppe, info):
                               "b": mit_zusatz(RES / (texturen[schluessel] + ".png")),
                               "v": i, "w": gewichte.get(schluessel)})
     # Die Mischlinge der Drachen (5.2): in der Schau als weitere Haeute.
-    for nr_misch, t_misch in enumerate(steuer.get("arrays", {}).get("textures", {}).get("Array.misch", [])):
-        schluessel = t_misch.split(".", 1)[1]
-        andere = schluessel.split("_", 1)[1]
-        if ident.endswith(":" + andere):
-            continue
+    # Gezeigt wird je Art ein Mischling: erste Variante mit erster Variante.
+    if steuer.get("arrays", {}).get("textures", {}).get("Array.misch"):
         import drachen_misch as dm
-        varianten.append({"n": f"Mischling: Farben {dm.NAMEN[andere]}",
-                          "b": mit_zusatz(RES / (texturen[schluessel] + ".png")), "v": 0, "m": nr_misch + 1})
+        erste = reihe[0]
+        for nr_art, (art, gestalt, _) in enumerate(dm.ARTEN):
+            if ident.endswith(":" + art):
+                continue
+            fv = dm.varianten(gestalt)[0]
+            schluessel = f"misch_{erste}_{art}_{fv}"
+            varianten.append({"n": f"Mischling: {dm.NAMEN[art]}",
+                              "b": mit_zusatz(RES / (texturen[schluessel] + ".png")), "v": 0,
+                              "m": dm.platz(nr_art, 0)})
     if baby:
         varianten.append({"n": VARIANTENNAME.get(baby, baby.capitalize()),
                           "b": mit_zusatz(RES / (texturen[baby] + ".png")), "v": 0, "baby": 1})

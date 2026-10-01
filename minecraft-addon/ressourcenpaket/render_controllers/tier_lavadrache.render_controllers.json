@@ -10,15 +10,87 @@
             "Texture.seele"
           ],
           "Array.misch": [
-            "Texture.misch_lindwurm",
-            "Texture.misch_frostwyvern",
-            "Texture.misch_himmelsdrache",
-            "Texture.misch_giftdrache",
-            "Texture.misch_nachtschwinge",
-            "Texture.misch_schlunddrache",
-            "Texture.misch_dampfdrache",
-            "Texture.misch_sternendrache",
-            "Texture.misch_lavadrache"
+            "Texture.misch_basalt_lindwurm_rot",
+            "Texture.misch_basalt_lindwurm_orange",
+            "Texture.misch_basalt_lindwurm_obsidian",
+            "Texture.misch_basalt_frostwyvern_eis",
+            "Texture.misch_basalt_frostwyvern_gletscher",
+            "Texture.misch_basalt_frostwyvern_nacht",
+            "Texture.misch_basalt_himmelsdrache_jade",
+            "Texture.misch_basalt_himmelsdrache_perle",
+            "Texture.misch_basalt_himmelsdrache_gold",
+            "Texture.misch_basalt_giftdrache_sumpf",
+            "Texture.misch_basalt_giftdrache_moor",
+            "Texture.misch_basalt_giftdrache_gift",
+            "Texture.misch_basalt_nachtschwinge_nacht",
+            "Texture.misch_basalt_nachtschwinge_sturm",
+            "Texture.misch_basalt_nachtschwinge_blut",
+            "Texture.misch_basalt_schlunddrache_moos",
+            "Texture.misch_basalt_schlunddrache_knochen",
+            "Texture.misch_basalt_schlunddrache_tiefsee",
+            "Texture.misch_basalt_dampfdrache_kupfer",
+            "Texture.misch_basalt_dampfdrache_rost",
+            "Texture.misch_basalt_dampfdrache_silber",
+            "Texture.misch_basalt_sternendrache_nacht",
+            "Texture.misch_basalt_sternendrache_morgen",
+            "Texture.misch_basalt_sternendrache_polar",
+            "Texture.basalt",
+            "Texture.misch_basalt_lavadrache_magma",
+            "Texture.misch_basalt_lavadrache_seele",
+            "Texture.misch_magma_lindwurm_rot",
+            "Texture.misch_magma_lindwurm_orange",
+            "Texture.misch_magma_lindwurm_obsidian",
+            "Texture.misch_magma_frostwyvern_eis",
+            "Texture.misch_magma_frostwyvern_gletscher",
+            "Texture.misch_magma_frostwyvern_nacht",
+            "Texture.misch_magma_himmelsdrache_jade",
+            "Texture.misch_magma_himmelsdrache_perle",
+            "Texture.misch_magma_himmelsdrache_gold",
+            "Texture.misch_magma_giftdrache_sumpf",
+            "Texture.misch_magma_giftdrache_moor",
+            "Texture.misch_magma_giftdrache_gift",
+            "Texture.misch_magma_nachtschwinge_nacht",
+            "Texture.misch_magma_nachtschwinge_sturm",
+            "Texture.misch_magma_nachtschwinge_blut",
+            "Texture.misch_magma_schlunddrache_moos",
+            "Texture.misch_magma_schlunddrache_knochen",
+            "Texture.misch_magma_schlunddrache_tiefsee",
+            "Texture.misch_magma_dampfdrache_kupfer",
+            "Texture.misch_magma_dampfdrache_rost",
+            "Texture.misch_magma_dampfdrache_silber",
+            "Texture.misch_magma_sternendrache_nacht",
+            "Texture.misch_magma_sternendrache_morgen",
+            "Texture.misch_magma_sternendrache_polar",
+            "Texture.misch_magma_lavadrache_basalt",
+            "Texture.magma",
+            "Texture.misch_magma_lavadrache_seele",
+            "Texture.misch_seele_lindwurm_rot",
+            "Texture.misch_seele_lindwurm_orange",
+            "Texture.misch_seele_lindwurm_obsidian",
+            "Texture.misch_seele_frostwyvern_eis",
+            "Texture.misch_seele_frostwyvern_gletscher",
+            "Texture.misch_seele_frostwyvern_nacht",
+            "Texture.misch_seele_himmelsdrache_jade",
+            "Texture.misch_seele_himmelsdrache_perle",
+            "Texture.misch_seele_himmelsdrache_gold",
+            "Texture.misch_seele_giftdrache_sumpf",
+            "Texture.misch_seele_giftdrache_moor",
+            "Texture.misch_seele_giftdrache_gift",
+            "Texture.misch_seele_nachtschwinge_nacht",
+            "Texture.misch_seele_nachtschwinge_sturm",
+            "Texture.misch_seele_nachtschwinge_blut",
+            "Texture.misch_seele_schlunddrache_moos",
+            "Texture.misch_seele_schlunddrache_knochen",
+            "Texture.misch_seele_schlunddrache_tiefsee",
+            "Texture.misch_seele_dampfdrache_kupfer",
+            "Texture.misch_seele_dampfdrache_rost",
+            "Texture.misch_seele_dampfdrache_silber",
+            "Texture.misch_seele_sternendrache_nacht",
+            "Texture.misch_seele_sternendrache_morgen",
+            "Texture.misch_seele_sternendrache_polar",
+            "Texture.misch_seele_lavadrache_basalt",
+            "Texture.misch_seele_lavadrache_magma",
+            "Texture.seele"
           ]
         }
       },
@@ -29,7 +101,7 @@
         }
       ],
       "textures": [
-        "query.property('fynn:misch') > 0 ? Array.misch[query.property('fynn:misch') - 1] : Array.haut[query.variant]"
+        "query.property('fynn:misch') > 0 ? Array.misch[query.variant * 27 + query.property('fynn:misch') - 1] : Array.haut[query.variant]"
       ],
       "part_visibility": [
         {
@@ -117,49 +189,49 @@
           "uralt_sattel": "query.property('fynn:uralt') && !query.is_saddled"
         },
         {
-          "erbe_lindwurm_kopf": "query.property('fynn:misch') == 1"
+          "erbe_lindwurm_kopf": "math.floor((query.property('fynn:misch') + 2) / 3) == 1"
         },
         {
-          "erbe_lindwurm_ruecken": "query.property('fynn:misch') == 1 && !query.is_saddled"
+          "erbe_lindwurm_ruecken": "math.floor((query.property('fynn:misch') + 2) / 3) == 1 && !query.is_saddled"
         },
         {
-          "erbe_frostwyvern_ruecken": "query.property('fynn:misch') == 2 && !query.is_saddled"
+          "erbe_frostwyvern_ruecken": "math.floor((query.property('fynn:misch') + 2) / 3) == 2 && !query.is_saddled"
         },
         {
-          "erbe_frostwyvern_schwanz": "query.property('fynn:misch') == 2"
+          "erbe_frostwyvern_schwanz": "math.floor((query.property('fynn:misch') + 2) / 3) == 2"
         },
         {
-          "erbe_himmelsdrache_kopf": "query.property('fynn:misch') == 3"
+          "erbe_himmelsdrache_kopf": "math.floor((query.property('fynn:misch') + 2) / 3) == 3"
         },
         {
-          "erbe_himmelsdrache_hals3": "query.property('fynn:misch') == 3"
+          "erbe_himmelsdrache_hals3": "math.floor((query.property('fynn:misch') + 2) / 3) == 3"
         },
         {
-          "erbe_himmelsdrache_hals2": "query.property('fynn:misch') == 3"
+          "erbe_himmelsdrache_hals2": "math.floor((query.property('fynn:misch') + 2) / 3) == 3"
         },
         {
-          "erbe_himmelsdrache_hals1": "query.property('fynn:misch') == 3"
+          "erbe_himmelsdrache_hals1": "math.floor((query.property('fynn:misch') + 2) / 3) == 3"
         },
         {
-          "erbe_giftdrache_kopf": "query.property('fynn:misch') == 4"
+          "erbe_giftdrache_kopf": "math.floor((query.property('fynn:misch') + 2) / 3) == 4"
         },
         {
-          "erbe_nachtschwinge_schwanz": "query.property('fynn:misch') == 5"
+          "erbe_nachtschwinge_schwanz": "math.floor((query.property('fynn:misch') + 2) / 3) == 5"
         },
         {
-          "erbe_nachtschwinge_kopf": "query.property('fynn:misch') == 5"
+          "erbe_nachtschwinge_kopf": "math.floor((query.property('fynn:misch') + 2) / 3) == 5"
         },
         {
-          "erbe_schlunddrache_kopf": "query.property('fynn:misch') == 6"
+          "erbe_schlunddrache_kopf": "math.floor((query.property('fynn:misch') + 2) / 3) == 6"
         },
         {
-          "erbe_dampfdrache_ruecken": "query.property('fynn:misch') == 7 && !query.is_saddled"
+          "erbe_dampfdrache_ruecken": "math.floor((query.property('fynn:misch') + 2) / 3) == 7 && !query.is_saddled"
         },
         {
-          "erbe_sternendrache_ruecken": "query.property('fynn:misch') == 8 && !query.is_saddled"
+          "erbe_sternendrache_ruecken": "math.floor((query.property('fynn:misch') + 2) / 3) == 8 && !query.is_saddled"
         },
         {
-          "erbe_sternendrache_kopf": "query.property('fynn:misch') == 8"
+          "erbe_sternendrache_kopf": "math.floor((query.property('fynn:misch') + 2) / 3) == 8"
         }
       ]
     }

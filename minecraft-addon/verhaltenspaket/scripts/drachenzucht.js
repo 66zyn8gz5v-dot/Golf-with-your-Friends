@@ -51,6 +51,8 @@ export const ZUCHT = {
     uraltErbe: 0.3,       // Chance, dass das Junge eines Uralten uralt wird
     staerkeSprung: 6,     // so viel staerker als der staerkere Elternteil
     staerkeMax: 260,
+    wieElternteil: 0.6,   // so oft kommt das Junge ganz nach einem Elternteil
+    mischBonus: 10,       // so viel staerker ist ein Mischling noch dazu
 };
 
 // Wie stark eine Art von sich aus ist - wer staerker ist, gibt den Atem.
@@ -69,11 +71,12 @@ export const UNVERTRAEGLICH = [
     ["fynn:sternendrache", "fynn:lavadrache"],
 ];
 
-// Paare, aus denen manchmal eine ganz neue Art schluepft (jedes vierte Ei).
+// Paare, aus denen manchmal eine ganz neue Art schluepft: jeder zweite
+// ihrer Mischlinge (also jedes fuenfte Ei).
 export const NEUE_ARTEN = {
-    "fynn:frostwyvern+fynn:lindwurm": { art: "fynn:dampfdrache", chance: 0.25 },
-    "fynn:himmelsdrache+fynn:nachtschwinge": { art: "fynn:sternendrache", chance: 0.25 },
-    "fynn:lindwurm+fynn:schlunddrache": { art: "fynn:lavadrache", chance: 0.25 },
+    "fynn:frostwyvern+fynn:lindwurm": { art: "fynn:dampfdrache", chance: 0.5 },
+    "fynn:himmelsdrache+fynn:nachtschwinge": { art: "fynn:sternendrache", chance: 0.5 },
+    "fynn:lindwurm+fynn:schlunddrache": { art: "fynn:lavadrache", chance: 0.5 },
 };
 
 // Welche Eier es kalt brauchen statt warm.
@@ -119,14 +122,35 @@ function verbrauchen(spieler) {
 
 // ------------------------------------------------------------ Merkmale
 
-/** Was ein Drache vererbt: seine Art, sein (vielleicht geerbter) Atem, seine
- *  Faehigkeit und Gabe, wie stark er ist, welche Generation, ob uralt. */
+function varianteVon(d) {
+    try { return d.getComponent("minecraft:variant")?.value ?? 0; } catch (e) { return 0; }
+}
+function nummerVon(art) {
+    return Math.max(0, ARTEN.indexOf(art));
+}
+/** fynn:misch: 1 + Art mal 3 + Farbvariante der Details (wie drachen_misch.platz). */
+export function mischPlatz(art, variante) {
+    return nummerVon(art) * 3 + (variante ?? 0) + 1;
+}
+/** Von welcher Art die Details eines Eis oder Drachen stammen. */
+export function detailArt(inhalt) {
+    return inhalt.misch > 0 ? ARTEN[Math.floor((inhalt.misch - 1) / 3)] : inhalt.koerper;
+}
+
+/** Was ein Drache vererbt: Art und Farbvariante, Details (fynn:misch), seinen
+ *  (vielleicht geerbten, vielleicht doppelten) Atem, seine Faehigkeiten und
+ *  Gabe, wie stark er ist, welche Generation, ob uralt, ob Mischling. */
 export function merkmale(d) {
     return {
         art: d.typeId,
+        variante: varianteVon(d),
+        misch: Number(eig(d, "fynn:misch") ?? 0),
         atem: atemVon(d),
+        atem2: dyn(d, "fynn:atem2"),
         faehigkeit: faehigkeitVon(d),
+        faehigkeit2: dyn(d, "fynn:faehigkeit2"),
         gabe: gabeVon(d),
+        mischling: !!dyn(d, "fynn:mischling"),
         staerke: Number(dyn(d, "fynn:staerke") ?? STAERKE[d.typeId] ?? 100),
         generation: Number(dyn(d, "fynn:generation") ?? 1),
         uralt: !!eig(d, "fynn:uralt"),
@@ -139,31 +163,54 @@ export function vertraeglich(a, b) {
 
 /**
  * Was im Ei steckt. a und b: die Merkmale der Eltern.
- * - Neue Art: manche Paare bringen selten eine ganz neue hervor.
- * - Koerper von einem, Farben vom anderen (bei gleicher Art: rein).
- * - Atem vom staerkeren, Faehigkeit vom schwaecheren Elternteil.
- * - Gabe: was aus beiden Atemarten entsteht - sonst vielleicht die eines
- *   Elternteils.
+ *
+ * 5.2 - Fynn: "Es gibt eine Wahrscheinlichkeit, dass ein Mischling
+ * rauskommt, oder dass ein Teil der Eltern rauskommt ... so 60-40. Und der
+ * Mischling ist dann minimal staerker, weil er diese kombinierte Faehigkeit
+ * hat, und sieht anders aus ... richtige Vererbung."
+ *
+ * - Sechs von zehn Jungen kommen ganz nach einem Elternteil: Art,
+ *   Farbvariante, Details, Atem, Faehigkeiten, Gabe - alles von ihm.
+ * - Vier von zehn sind Mischlinge: Koerper und Farbvariante vom einen, die
+ *   Details in der Farbvariante des anderen; beide Atemarten in einem Atem,
+ *   beide Faehigkeiten im Wechsel, dazu die Gabe aus beiden Atemarten; etwas
+ *   staerker als die Eltern.
+ * - Bei manchen Paaren ist jeder zweite Mischling eine ganz neue Art.
  */
 export function mischen(a, b, zufall = Math.random) {
-    const neu = NEUE_ARTEN[paarSchluessel(a.art, b.art)];
-    const staerker = a.staerke === b.staerke ? (zufall() < 0.5 ? a : b) : (a.staerke > b.staerke ? a : b);
-    const schwaecher = staerker === a ? b : a;
-    const ei = {
-        koerper: a.art, farbe: b.art,
-        atem: staerker.atem, faehigkeit: schwaecher.faehigkeit,
-        gabe: gabeFuer(a.atem, b.atem) ?? (zufall() < 0.5 ? (a.gabe || b.gabe || undefined) : undefined),
+    const grund = {
         staerke: Math.min(ZUCHT.staerkeMax, Math.max(a.staerke, b.staerke) + ZUCHT.staerkeSprung),
         generation: Math.max(a.generation, b.generation) + 1,
         uralt: (a.uralt || b.uralt) && zufall() < ZUCHT.uraltErbe,
     };
+    if (zufall() < ZUCHT.wieElternteil) {
+        const p = zufall() < 0.5 ? a : b;
+        return { ...grund, koerper: p.art, variante: p.variante, misch: p.misch, atem: p.atem, atem2: p.atem2,
+                 faehigkeit: p.faehigkeit, faehigkeit2: p.faehigkeit2, gabe: p.gabe, mischling: p.mischling,
+                 wieElternteil: true };
+    }
+    const gabe = gabeFuer(a.atem, b.atem) ?? a.gabe ?? b.gabe;
+    const staerke = Math.min(ZUCHT.staerkeMax, grund.staerke + ZUCHT.mischBonus);
+    const neu = NEUE_ARTEN[paarSchluessel(a.art, b.art)];
     if (neu && zufall() < neu.chance) {
         const art = DRACHEN[neu.art];
-        return { ...ei, koerper: neu.art, farbe: neu.art, atem: art.atem, faehigkeit: art.faehigkeit,
-                 gabe: ei.gabe, neueArt: true };
+        return { ...grund, staerke, koerper: neu.art, variante: Math.floor(zufall() * 3) % 3, misch: 0,
+                 atem: art.atem, faehigkeit: art.faehigkeit, gabe, neueArt: true };
     }
-    if (zufall() < 0.5) { ei.koerper = b.art; ei.farbe = a.art; }
-    return ei;
+    const koerper = zufall() < 0.5 ? a : b;
+    const spender = koerper === a ? b : a;
+    const staerker = a.staerke === b.staerke ? koerper : (a.staerke > b.staerke ? a : b);
+    const schwaecher = staerker === a ? b : a;
+    const gleich = koerper.art === spender.art && koerper.variante === spender.variante;
+    return {
+        ...grund, staerke, koerper: koerper.art, variante: koerper.variante,
+        misch: gleich ? koerper.misch : mischPlatz(spender.art, spender.variante),
+        atem: staerker.atem,
+        atem2: schwaecher.atem !== staerker.atem ? schwaecher.atem : (schwaecher.atem2 ?? staerker.atem2),
+        faehigkeit: koerper.faehigkeit,
+        faehigkeit2: spender.faehigkeit !== koerper.faehigkeit ? spender.faehigkeit : (spender.faehigkeit2 ?? koerper.faehigkeit2),
+        gabe, mischling: true,
+    };
 }
 
 // ------------------------------------------------------------ Fuettern und Liebe
@@ -260,7 +307,7 @@ export function eiLegen(dim, ort, inhalt, besitzer, brut = 0) {
     if (!ei || typeof ei !== "object") return undefined;
     try {
         ei.setProperty("fynn:koerper", nummer(inhalt.koerper));
-        ei.setProperty("fynn:farbe", nummer(inhalt.farbe));
+        ei.setProperty("fynn:farbe", nummer(detailArt(inhalt)));
     } catch (e) { /* egal */ }
     setzeDyn(ei, "fynn:ei", JSON.stringify(inhalt));
     setzeDyn(ei, "fynn:brut", brut);
@@ -281,8 +328,10 @@ export function eiInhalt(ei) {
 export function eiBeschreibung(inhalt) {
     if (!inhalt) return "ein Drachenei";
     if (inhalt.neueArt) return `ein ${name(inhalt.koerper)} (neue Art!)`;
-    if (inhalt.koerper === inhalt.farbe) return `ein ${name(inhalt.koerper)}`;
-    return `${name(inhalt.koerper)} mit den Farben des ${name(inhalt.farbe)}`;
+    if (inhalt.mischling && !inhalt.wieElternteil) {
+        return `Mischling: ${name(inhalt.koerper)} mit Zügen des ${name(detailArt(inhalt))}`;
+    }
+    return `ein ${name(inhalt.koerper)}`;
 }
 
 /** Liegt das Ei richtig - warm, oder (Frostei) kalt? */
@@ -331,7 +380,8 @@ export function eiTakt(ei, jetzt, schritt = 20) {
 function zufallsInhalt() {
     // Ein Ei ohne Eltern (aus dem Kreativinventar): irgendeine reine Art.
     const art = ARTEN[Math.floor(Math.random() * ARTEN.length)];
-    return { koerper: art, farbe: art, atem: DRACHEN[art].atem, faehigkeit: DRACHEN[art].faehigkeit,
+    return { koerper: art, variante: Math.floor(Math.random() * 3), misch: 0, atem: DRACHEN[art].atem,
+             faehigkeit: DRACHEN[art].faehigkeit,
              staerke: STAERKE[art], generation: 1, uralt: false };
 }
 
@@ -355,9 +405,12 @@ export function schluepfen(ei, inhalt = eiInhalt(ei)) {
 export function einrichten(junges, inhalt, besitzer) {
     if (!lebt(junges)) return false;
     try {
-        junges.setProperty("fynn:misch", inhalt.farbe !== inhalt.koerper ? nummer(inhalt.farbe) + 1 : 0);
+        junges.setProperty("fynn:misch", inhalt.misch ?? 0);
+        junges.triggerEvent(`fynn:farbe_${inhalt.variante ?? 0}`);
     } catch (e) { /* egal */ }
-    for (const [k, v] of [["fynn:atem", inhalt.atem], ["fynn:faehigkeit", inhalt.faehigkeit], ["fynn:gabe", inhalt.gabe],
+    for (const [k, v] of [["fynn:atem", inhalt.atem], ["fynn:atem2", inhalt.atem2],
+                          ["fynn:faehigkeit", inhalt.faehigkeit], ["fynn:faehigkeit2", inhalt.faehigkeit2],
+                          ["fynn:gabe", inhalt.gabe], ["fynn:mischling", !!inhalt.mischling],
                           ["fynn:staerke", inhalt.staerke], ["fynn:generation", inhalt.generation],
                           ["fynn:uralt_erbe", !!inhalt.uralt], ["fynn:gezuechtet", true],
                           ["fynn:drache490", true], ["fynn:gewuerfelt", true], ["fynn:wuchszeit", 0]]) {
@@ -374,10 +427,14 @@ export function einrichten(junges, inhalt, besitzer) {
         try { gezaehmt = !!junges.getComponent("minecraft:tameable")?.tame?.(spieler); } catch (e) { /* egal */ }
         try { junges.triggerEvent("fynn:jung_zahm"); } catch (e) { /* egal */ }
         setzeDyn(junges, "fynn:besitzer", spieler.id);
-        const teile = [`§6Ein junger ${name(inhalt.koerper)} ist geschlüpft – er gehört dir!`];
-        if (inhalt.farbe !== inhalt.koerper) teile.push(`§7Farben: ${name(inhalt.farbe)}`);
-        teile.push(`§7Atem: ${ATEMNAMEN[inhalt.atem] ?? inhalt.atem}`);
-        teile.push(`§7Fähigkeit: ${FAEHIGKEITEN[inhalt.faehigkeit]?.name ?? inhalt.faehigkeit}`);
+        const teile = [`§6${inhalt.mischling && !inhalt.wieElternteil ? "Ein Mischling" : `Ein junger ${name(inhalt.koerper)}`}`
+            + " ist geschlüpft – er gehört dir!"];
+        if (inhalt.mischling && !inhalt.wieElternteil) {
+            teile.push(`§7${name(inhalt.koerper)} mit Zügen des ${name(detailArt(inhalt))}`);
+        }
+        teile.push(`§7Atem: ${[inhalt.atem, inhalt.atem2].filter(Boolean).map((x) => ATEMNAMEN[x] ?? x).join(" + ")}`);
+        teile.push(`§7Fähigkeit: ${[inhalt.faehigkeit, inhalt.faehigkeit2].filter(Boolean)
+            .map((x) => FAEHIGKEITEN[x]?.name ?? x).join(" / ")}`);
         if (inhalt.gabe) teile.push(`§dGabe: ${GABENNAMEN[inhalt.gabe] ?? inhalt.gabe}`);
         spieler.onScreenDisplay?.setActionBar(teile.join(" · "));
         return gezaehmt || true;
@@ -527,7 +584,9 @@ zusatz.pfeife = (drache, spieler, jetzt, richtung) => {
 zusatz.info = (drache) => {
     const m = merkmale(drache);
     const teile = [`Gen. ${m.generation}`, `Stärke ${Math.round(m.staerke * macht(drache))}`,
-                   ATEMNAMEN[m.atem] ?? m.atem, FAEHIGKEITEN[m.faehigkeit]?.name ?? m.faehigkeit];
+                   [m.atem, m.atem2].filter(Boolean).map((x) => ATEMNAMEN[x] ?? x).join(" + "),
+                   [m.faehigkeit, m.faehigkeit2].filter(Boolean).map((x) => FAEHIGKEITEN[x]?.name ?? x).join(" / ")];
+    if (m.mischling) teile.unshift("Mischling");
     if (m.gabe) teile.push(`Gabe: ${GABENNAMEN[m.gabe]}`);
     if (wuchsVon(drache) < WUCHS) teile.push(`jung (${wuchsVon(drache)}/${WUCHS})`);
     return teile.join(" · ");

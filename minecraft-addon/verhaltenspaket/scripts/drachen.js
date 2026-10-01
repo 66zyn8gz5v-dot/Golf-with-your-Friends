@@ -553,7 +553,14 @@ export function atemVon(d) {
  *  sechsten - 12 % je Stufe; ein Uralter noch einmal die Haelfte. */
 export function blutMacht(d) {
     const gen = Number(erbe(d, "fynn:generation") ?? 1);
-    return (1 + 0.12 * Math.min(5, Math.max(0, gen - 1))) * (eig(d, "fynn:uralt") ? 1.5 : 1);
+    // Ein Mischling ist dazu noch ein Stueck staerker (5.2).
+    return (1 + 0.12 * Math.min(5, Math.max(0, gen - 1))) * (eig(d, "fynn:uralt") ? 1.5 : 1)
+        * (erbe(d, "fynn:mischling") ? 1.1 : 1);
+}
+/** Der zweite Atem eines Mischlings (5.2): Er speit beide zugleich. */
+export function atem2Von(d) {
+    const a = erbe(d, "fynn:atem2");
+    return ATEMARTEN[a] && a !== atemVon(d) ? a : undefined;
 }
 export function faehigkeitVon(d) {
     const f = erbe(d, "fynn:faehigkeit");
@@ -742,8 +749,17 @@ export function atemTakt(drache, jetzt, zufall = Math.random) {
         // Was jede Art zusaetzlich ausstoesst (Eissplitter, Schallringe ...).
         if (atem.beiteilchen) teilchen(dim, atem.beiteilchen, mund, r);
         if (atem.strahl) atem.strahl(dim, mund, r, jetzt);
+        // Ein Mischling speit beide Atemarten in einem Strahl (5.2).
+        const zweit = atem2Von(drache) && ATEMARTEN[atem2Von(drache)];
+        if (zweit) {
+            teilchen(dim, zweit.teilchen, mund, r);
+            if (zweit.strahl) zweit.strahl(dim, mund, r, jetzt);
+        }
         if ((jetzt - z.ab) % 6 === 0) {
-            for (const w of imKegel(dim, mund, r, atem, drache)) atem.wesen(w, drache);
+            for (const w of imKegel(dim, mund, r, atem, drache)) {
+                atem.wesen(w, drache);
+                if (zweit) zweit.wesen(w, drache);
+            }
             // Was die Welt veraendert (Feuer, Eis, Schnee), nur mit mobGriefing;
             // eine Giftwolke dagegen immer.
             if (!atem.veraendert || erlaubtZuZuendeln()) {
@@ -782,7 +798,11 @@ export function atemTakt(drache, jetzt, zufall = Math.random) {
  *  wenn es weit genug weg ist. */
 export function faehigkeitTakt(drache, jetzt, richtung = undefined, zufall = Math.random) {
     const art = DRACHEN[drache.typeId];
-    const f = art && FAEHIGKEITEN[faehigkeitVon(drache)];
+    // Ein Mischling hat beide Faehigkeiten seiner Eltern und wechselt ab (5.2).
+    const z0 = von(drache);
+    const zweite = erbe(drache, "fynn:faehigkeit2");
+    const welche = z0.wechsel && FAEHIGKEITEN[zweite] ? zweite : faehigkeitVon(drache);
+    const f = art && FAEHIGKEITEN[welche];
     if (!f || eig(drache, "fynn:besiegt") || eig(drache, "fynn:schlaeft")) return "nichts";
     if (wuchsVon(drache) < WUCHS) return "zu jung";
     const z = von(drache);
@@ -800,6 +820,7 @@ export function faehigkeitTakt(drache, jetzt, richtung = undefined, zufall = Mat
     const pause = f.pause[0] + Math.floor(zufall() * (f.pause[1] - f.pause[0]));
     z.kugelPause = jetzt + Math.round(pause * (eig(drache, "fynn:uralt") ? URALT.pause : 1));
     const was = f.wirken(drache, mund, r, richtung ? undefined : zielFuer(drache, z, jetzt));
+    if (FAEHIGKEITEN[zweite]) z.wechsel = !z.wechsel;
     return typeof was === "string" ? was : f.name;
 }
 

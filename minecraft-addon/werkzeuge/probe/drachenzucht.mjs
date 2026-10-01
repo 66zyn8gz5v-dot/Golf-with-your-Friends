@@ -65,32 +65,50 @@ function spieler(w, ort) {
 
 // --- Mischen
 {
-    const feuer = { art: "fynn:lindwurm", atem: "feuer", faehigkeit: "feuerkugel", staerke: 120, generation: 1, uralt: false };
-    const frost = { art: "fynn:frostwyvern", atem: "frost", faehigkeit: "eiskristalle", staerke: 100, generation: 2, uralt: false };
-    const ei = z.mischen(feuer, frost, () => 0.9);
-    pruefe("Atem vom Staerkeren, Faehigkeit vom Schwaecheren", ei.atem === "feuer" && ei.faehigkeit === "eiskristalle");
-    pruefe("Feuer und Frost ergeben eine Gabe: Dampfwelle", ei.gabe === "feuer+frost"
-        && g.GABENNAMEN[ei.gabe] === "Dampfwelle");
-    pruefe("Die Generation zaehlt weiter, das Junge ist staerker", ei.generation === 3 && ei.staerke === 126);
-    pruefe("Koerper des einen, Farben des anderen", ei.koerper === "fynn:lindwurm" && ei.farbe === "fynn:frostwyvern");
+    const feuer = { art: "fynn:lindwurm", variante: 2, misch: 0, atem: "feuer", faehigkeit: "feuerkugel",
+                    staerke: 120, generation: 1, uralt: false };
+    const frost = { art: "fynn:frostwyvern", variante: 1, misch: 0, atem: "frost", faehigkeit: "eiskristalle",
+                    staerke: 100, generation: 2, uralt: false };
     const folge = (...w) => { let i = 0; return () => w[Math.min(i++, w.length - 1)]; };
-    const andersrum = z.mischen(feuer, frost, folge(0.3, 0.1));
-    pruefe("... oder andersherum", andersrum.koerper === "fynn:frostwyvern" && andersrum.farbe === "fynn:lindwurm");
-    const rein = z.mischen(feuer, { ...feuer }, () => 0.9);
-    pruefe("Zwei Feuerdrachen: rein, ohne Gabe", rein.koerper === rein.farbe && !rein.gabe);
+    // Reihenfolge der Wuerfe: Elternteil oder Mischling, neue Art, welcher Koerper.
+    const ei = z.mischen(feuer, frost, folge(0.9, 0.9, 0.1));
+    pruefe("Mischling: beide Atemarten in einem Atem", ei.mischling && ei.atem === "feuer" && ei.atem2 === "frost");
+    pruefe("... beide Fähigkeiten", ei.faehigkeit === "feuerkugel" && ei.faehigkeit2 === "eiskristalle");
+    pruefe("... dazu die Gabe aus beiden: Dampfwelle", ei.gabe === "feuer+frost" && g.GABENNAMEN[ei.gabe] === "Dampfwelle");
+    pruefe("... und etwas stärker als ein Elternteil-Kind", ei.generation === 3 && ei.staerke === 136);
+    pruefe("Körper und Farbvariante vom einen (obsidian), Details in der Variante des anderen (Gletscher)",
+        ei.koerper === "fynn:lindwurm" && ei.variante === 2 && ei.misch === z.mischPlatz("fynn:frostwyvern", 1)
+        && z.detailArt(ei) === "fynn:frostwyvern");
+    const andersrum = z.mischen(feuer, frost, folge(0.9, 0.9, 0.9));
+    pruefe("... oder andersherum", andersrum.koerper === "fynn:frostwyvern" && andersrum.variante === 1
+        && andersrum.misch === z.mischPlatz("fynn:lindwurm", 2) && andersrum.faehigkeit === "eiskristalle");
+    const kind = z.mischen(feuer, frost, folge(0.3, 0.2));
+    pruefe("Sechs von zehn kommen ganz nach einem Elternteil", kind.wieElternteil && kind.koerper === "fynn:lindwurm"
+        && kind.variante === 2 && kind.misch === 0 && kind.atem === "feuer" && !kind.atem2 && !kind.mischling);
+    const mischVater = { ...feuer, variante: 0, misch: 5, atem2: "frost", faehigkeit2: "eiskristalle", mischling: true,
+                         gabe: "feuer+frost" };
+    const wieVater = z.mischen(mischVater, frost, folge(0.3, 0.2));
+    pruefe("... auch ein Mischling vererbt sich so, mit allem", wieVater.misch === 5 && wieVater.atem2 === "frost"
+        && wieVater.gabe === "feuer+frost" && wieVater.mischling);
+    let mischlinge = 0;
+    for (let i = 0; i < 2000; i++) if (z.mischen(feuer, { ...feuer, variante: 0 }).mischling) mischlinge++;
+    pruefe(`Etwa 40 von 100 sind Mischlinge (${Math.round(mischlinge / 20)} %)`, mischlinge > 700 && mischlinge < 900);
+    const sorten = z.mischen(feuer, { ...feuer, variante: 0 }, folge(0.9, 0.1));
+    pruefe("Zwei Feuerdrachen verschiedener Farbe: der Mischling mischt die Farben", sorten.koerper === "fynn:lindwurm"
+        && sorten.variante === 2 && sorten.misch === z.mischPlatz("fynn:lindwurm", 0) && !sorten.gabe && !sorten.atem2);
     pruefe("Uraltes Blut vererbt sich manchmal", z.mischen({ ...feuer, uralt: true }, frost, () => 0.1).uralt
         && !z.mischen({ ...feuer, uralt: true }, frost, () => 0.9).uralt);
-    const neu = z.mischen(feuer, frost, () => 0.1);
-    pruefe("Feuer und Frost: manchmal ein Dampfdrache", neu.koerper === "fynn:dampfdrache" && neu.neueArt
+    const neu = z.mischen(feuer, frost, folge(0.9, 0.1));
+    pruefe("Feuer und Frost: mancher Mischling ist ein Dampfdrache", neu.koerper === "fynn:dampfdrache" && neu.neueArt
         && neu.atem === "dampf" && neu.faehigkeit === "geysir" && neu.gabe === "feuer+frost");
-    const himmel = { art: "fynn:himmelsdrache", atem: "sturm", faehigkeit: "blitzschlag", staerke: 110, generation: 1 };
-    const nacht = { art: "fynn:nachtschwinge", atem: "schatten", faehigkeit: "plasma", staerke: 130, generation: 1 };
-    const schlund = { art: "fynn:schlunddrache", atem: "schall", faehigkeit: "schnappen", staerke: 120, generation: 1 };
+    const himmel = { art: "fynn:himmelsdrache", variante: 0, misch: 0, atem: "sturm", faehigkeit: "blitzschlag", staerke: 110, generation: 1 };
+    const nacht = { art: "fynn:nachtschwinge", variante: 0, misch: 0, atem: "schatten", faehigkeit: "plasma", staerke: 130, generation: 1 };
+    const schlund = { art: "fynn:schlunddrache", variante: 0, misch: 0, atem: "schall", faehigkeit: "schnappen", staerke: 120, generation: 1 };
     pruefe("Himmel und Nacht: manchmal ein Sternendrache",
-        z.mischen(himmel, nacht, () => 0.1).koerper === "fynn:sternendrache");
+        z.mischen(himmel, nacht, folge(0.9, 0.1)).koerper === "fynn:sternendrache");
     pruefe("Feuer und Schlund: manchmal ein Lavadrache",
-        z.mischen(feuer, schlund, () => 0.1).koerper === "fynn:lavadrache");
-    pruefe("... aber meistens ein Mischling", !z.mischen(feuer, schlund, () => 0.9).neueArt);
+        z.mischen(feuer, schlund, folge(0.9, 0.1)).koerper === "fynn:lavadrache");
+    pruefe("... aber meistens nicht", !z.mischen(feuer, schlund, () => 0.9).neueArt);
     pruefe("Lava und Frost vertragen sich nicht", !z.vertraeglich("fynn:frostwyvern", "fynn:lavadrache"));
     pruefe("Die neuen Arten kennen ihren Atem",
         ["dampf", "sterne", "lava"].every((a) => d.ATEMARTEN[a]) && ["geysir", "meteor", "lavabomben"].every((f) => d.FAEHIGKEITEN[f]));
@@ -111,11 +129,11 @@ function spieler(w, ort) {
     pruefe("Mit Fleisch verliebt er sich", z.fuettern(a, s, 100) === "verliebt" && z.istVerliebt(a, 100));
     pruefe("Allein legt er kein Ei", z.paarTakt(120) === "wartet");
     z.fuettern(b, s, 130);
-    pruefe("Zwei Verliebte: ein Drachenei", z.paarTakt(140, () => 0.3) === "ei" && w.neu.includes(z.EI));
+    pruefe("Zwei Verliebte: ein Drachenei", z.paarTakt(140, () => 0.7) === "ei" && w.neu.includes(z.EI));
     const ei = w.wesen.find((e) => e.typeId === z.EI);
     const inhalt = z.eiInhalt(ei);
-    pruefe("Im Ei stecken beide Eltern", inhalt && [inhalt.koerper, inhalt.farbe].sort().join()
-        === "fynn:frostwyvern,fynn:lindwurm" && ei.dyn["fynn:besitzer"] === s.id);
+    pruefe("Im Ei: ein Mischling aus beiden Eltern", inhalt && inhalt.mischling && inhalt.koerper === "fynn:frostwyvern"
+        && z.detailArt(inhalt) === "fynn:lindwurm" && ei.dyn["fynn:besitzer"] === s.id);
     pruefe("Danach brauchen beide Ruhe", z.fuettern(a, s, 200) === "ruht");
 
     // Unvertraegliche Paare
@@ -141,11 +159,14 @@ function spieler(w, ort) {
     world.getAllPlayers = () => [s];
     pruefe("Es gehört dem Besitzer des Eis", z.einrichten(junges, inhalt, s.id) && junges.zahm
         && junges.ereignisse.includes("fynn:jung_zahm") && junges.dyn["fynn:besitzer"] === s.id);
-    pruefe("... mit den Farben der anderen Art und seinem Erbe",
-        junges.eig["fynn:misch"] === z.ARTEN.indexOf(inhalt.farbe) + 1 && junges.dyn["fynn:gabe"] === "feuer+frost"
+    pruefe("... mit Farbvariante, Details und Erbe beider Eltern",
+        junges.eig["fynn:misch"] === inhalt.misch && junges.ereignisse.includes("fynn:farbe_0")
+        && junges.dyn["fynn:gabe"] === "feuer+frost" && junges.dyn["fynn:mischling"] === true
         && junges.dyn["fynn:gezuechtet"] === true);
-    pruefe("Geerbter Atem gilt", d.atemVon(junges) === inhalt.atem);
-    pruefe("Beim Antippen erfährt man sein Erbe", d.zusatz.info(junges).includes("Dampfwelle"));
+    pruefe("Doppelter Atem gilt", d.atemVon(junges) === "feuer" && d.atem2Von(junges) === "frost");
+    pruefe("Mischlinge sind stärker", d.blutMacht(junges) > 1.12);
+    pruefe("Beim Antippen erfährt man sein Erbe", d.zusatz.info(junges).includes("Dampfwelle")
+        && d.zusatz.info(junges).includes("Mischling"));
 
     // Wachsen
     junges.eig["fynn:wuchs"] = 0;
@@ -195,6 +216,19 @@ function spieler(w, ort) {
     for (let t = 0; t < 30; t += 2) g.gabenTakt();
     pruefe("Die Dampfwelle läuft nach außen und verlangsamt", zombie.schaden > 0 && zombie.effekte.includes("slowness")
         && zombie.brand > 0);
+}
+
+// --- Beide Faehigkeiten im Wechsel
+{
+    const w = welt();
+    const drache = wesen(w, "fynn:lindwurm", { x: 0, y: 70, z: 0 });
+    drache.dyn["fynn:faehigkeit2"] = "eiskristalle";
+    drache.target = wesen(w, "minecraft:zombie", { x: 0, y: 70, z: 20 });
+    const erste = d.faehigkeitTakt(drache, 100000, undefined, () => 0);
+    const zweite = d.faehigkeitTakt(drache, 200000, undefined, () => 0);
+    const dritte = d.faehigkeitTakt(drache, 300000, undefined, () => 0);
+    pruefe(`Ein Mischling wechselt seine Fähigkeiten ab (${erste}, ${zweite}, ${dritte})`,
+        erste === "Feuerkugel" && zweite === "Eiskristalle" && dritte === "Feuerkugel");
 }
 
 const gut = ergebnisse.every(Boolean);

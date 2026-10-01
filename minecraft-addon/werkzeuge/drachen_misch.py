@@ -38,7 +38,12 @@ ARTEN = [
 NAMEN = {"lindwurm": "Feuerdrache", "frostwyvern": "Frostwyvern", "himmelsdrache": "Himmelsdrache",
          "giftdrache": "Giftdrache", "nachtschwinge": "Nachtschwinge", "schlunddrache": "Schlunddrache",
          "dampfdrache": "Dampfdrache", "sternendrache": "Sternendrache", "lavadrache": "Lavadrache"}
-VOM_ANDEREN = ("ruecken", "fleck", "haut", "hautfleck", "augen", "glut", "horn")
+# Was vom anderen Elternteil kommt: die Details. Leib, Ruecken und Bauch
+# bleiben die des Koerper-Elternteils (Fynn: "die Grundform ... die Farben
+# sollen beibehalten werden und dann halt die kleinen Details"); Leib und
+# Ruecken bekommen nur einen Hauch der anderen Farbe.
+VOM_ANDEREN = ("fleck", "haut", "hautfleck", "augen", "glut", "horn")
+HAUCH = {"leib": 0.12, "ruecken": 0.3}
 
 
 def tafel(gestalt):
@@ -55,9 +60,42 @@ def hexa(c):
     return "#%02x%02x%02x" % c
 
 
-def mischfarben(koerper, farbe):
-    a = dict(grundfarben(koerper))
-    b = grundfarben(farbe)
+def farben(gestalt, variante=None):
+    """Die Farben einer Variante (ohne Angabe: die haeufigste)."""
+    t = tafel(gestalt)
+    return t.get(variante) or next(iter(t.values()))
+
+
+def varianten(gestalt):
+    """Die Farbvarianten einer Art, in der Reihenfolge von query.variant."""
+    return [v for v in tafel(gestalt) if not v.startswith("_")]
+
+
+# 5.2 (zweiter Teil) - Fynn: "Es gibt ja auch verschiedene Farben von den
+# Drachen an sich ... wenn da eine Kombination ist, dann sollen die Farben
+# quasi auch beibehalten werden und dann halt die kleinen Details." Darum
+# zaehlt fuer einen Mischling nicht die Art der Eltern, sondern ihre
+# Farbvariante: Der Koerper behaelt die Farben des einen Elternteils, die
+# Details (Ruecken, Flecken, Flughaut, Hoerner, Augen, das Erbteil) kommen
+# in der Variante des anderen. fynn:misch sagt, welche: 1 + Nummer der Art
+# mal 3 + Nummer ihrer Variante (0 = kein Mischling).
+def platz(art_nr, variante_nr):
+    return art_nr * 3 + variante_nr + 1
+
+
+def plaetze():
+    """Alle (Art, Gestalt, Variante) in der Reihenfolge von fynn:misch."""
+    return [(art, gestalt, v) for art, gestalt, _ in ARTEN for v in varianten(gestalt)]
+
+
+def misch_bedingung(art_nr):
+    """Molang: stammen die Details von dieser Art (Nummer ab 1)?"""
+    return f"math.floor((query.property('fynn:misch') + 2) / 3) == {art_nr}"
+
+
+def mischfarben(koerper, farbe, kv=None, fv=None):
+    a = dict(farben(koerper, kv))
+    b = farben(farbe, fv)
     # Der Himmelsdrache hat keine Flecken und keine Flughaut-Flecken: dann
     # aus seinem Ruecken und seiner Haut abgeleitet.
     b = dict(b)
@@ -66,7 +104,8 @@ def mischfarben(koerper, farbe):
     for k in VOM_ANDEREN:
         if k in a:
             a[k] = b[k]
-    a["leib"] = hexa(mische(H.farbe(a["leib"]), H.farbe(b["leib"]), 0.35))
+    for k, wie in HAUCH.items():
+        a[k] = hexa(mische(H.farbe(a[k]), H.farbe(b[k]), wie))
     if "maehne" in a:
         # Maehne und Bart des Himmelsdrachen in den Farben des anderen.
         a["maehne"] = (b["ruecken"], b["glut"])
@@ -74,13 +113,15 @@ def mischfarben(koerper, farbe):
     return a
 
 
-def misch_maler(koerper, farbe):
+def misch_maler(koerper, farbe, kv=None, fv=None):
     """Der Maler der Art koerper, mit den Mischfarben - die Maler kennen nur
-    ihre Farbtafel, also steht die Mischung dort kurz als eigene Variante."""
+    ihre Farbtafel, also steht die Mischung dort kurz als eigene Variante.
+    kv/fv: die Farbvarianten von Koerper und Details."""
     t = tafel(koerper)
-    t["_misch"] = mischfarben(koerper, farbe)
+    t["_misch"] = mischfarben(koerper, farbe, kv, fv)
+    art = next(a for a, g, _ in ARTEN if g == farbe)
     try:
-        return mit_erbe(getattr(dg, f"{koerper}_maler")("_misch"))
+        return mit_erbe(getattr(dg, f"{koerper}_maler")("_misch"), {art: farben(farbe, fv)})
     finally:
         del t["_misch"]
 
@@ -299,15 +340,18 @@ def erbteile(m, eigene_art):
 
 def erbe_sichtbarkeit(gestalt, eigene_art):
     m = getattr(dg, f"{gestalt}_modell")()
-    return [{name: f"query.property('fynn:misch') == {nr}" + (" && !query.is_saddled" if ruecken else "")}
+    return [{name: misch_bedingung(nr) + (" && !query.is_saddled" if ruecken else "")}
             for name, nr, ruecken in erbteile(m, eigene_art)]
 
 
-def erbe_farbe(stoff, p, n, texel):
-    """Die Farben der Erbteile: immer die der Art, von der sie stammen."""
+def erbe_farbe(stoff, p, n, texel, tafeln=None):
+    """Die Farben der Erbteile: immer die der Art, von der sie stammen - in
+    der Farbvariante des Elternteils, wenn sie in tafeln steht."""
     art = stoff.split("_")[1]
     gestalt = next(g for a, g, _ in ARTEN if a == art)
-    f = grundfarben(gestalt)
+    f = dict((tafeln or {}).get(art) or grundfarben(gestalt))
+    f.setdefault("fleck", hexa(H.dunkler(f["ruecken"], 0.2)))
+    f.setdefault("hautfleck", hexa(H.dunkler(f["haut"], 0.25)))
     t = H.hoehe(p, n, texel) if abs(n[1]) < 0.5 else (1.0 if n[1] > 0 else 0.0)
     if art == "frostwyvern":
         return H.verlauf([f["haut"], f["glut"], "#ffffff"], t, 3) + (254,)
@@ -331,10 +375,10 @@ def erbe_farbe(stoff, p, n, texel):
     return H.verlauf(list(f["horn"]), t, 3)
 
 
-def mit_erbe(maler):
+def mit_erbe(maler, tafeln=None):
     """Ein Maler, der auch die Erbteile malen kann."""
     def male(stoff, p, n, texel):
         if stoff.startswith("erbe_"):
-            return erbe_farbe(stoff, p, n, texel)
+            return erbe_farbe(stoff, p, n, texel, tafeln)
         return maler(stoff, p, n, texel)
     return male

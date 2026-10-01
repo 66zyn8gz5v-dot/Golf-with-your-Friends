@@ -694,6 +694,11 @@ def jung_zustaende(gruppen, ereignisse, eintrag):
                        for i, (_, w) in enumerate(varianten)]},
         {"add": {"component_groups": ["fynn:boden", "fynn:zaehmbar", stufen[0]]},
          "set_property": {"fynn:wuchs": 0, "fynn:fliegt": False}}]}
+    # Das Skript gibt dem Jungen die Farbvariante seines Elternteils (5.2).
+    for i in range(len(varianten)):
+        ereignisse[f"fynn:farbe_{i}"] = {
+            "remove": {"component_groups": [f"fynn:variante_{j}" for j in range(len(varianten)) if j != i]},
+            "add": {"component_groups": [f"fynn:variante_{i}"]}}
     ereignisse["fynn:jung_zahm"] = {"remove": {"component_groups": ["fynn:zaehmbar"]},
                                     "add": {"component_groups": ["fynn:zahm_jung", "fynn:folgt"]}}
     for k in range(1, WUCHS):
@@ -966,7 +971,7 @@ def eigenschaften_drache():
     # Jungdrachen und Mischlinge (5.2): wie gross (WUCHS = erwachsen) und in
     # wessen Farben (0 = eigene, sonst 1 + Nummer der Art in DRACHEN).
     e["fynn:wuchs"] = {"type": "int", "range": [0, WUCHS], "default": WUCHS, "client_sync": True}
-    e["fynn:misch"] = {"type": "int", "range": [0, 15], "default": 0, "client_sync": True}
+    e["fynn:misch"] = {"type": "int", "range": [0, 27], "default": 0, "client_sync": True}
     e.update(eigenschaft("fynn:verliebt", "fynn:wirkt"))
     return e
 
@@ -1277,7 +1282,7 @@ def drache(eintrag, schwinge, bewegungen=None, koepfe=("",), **bewegung):
     import drachen_misch as dm
     for nr, (art, _, _) in enumerate(dm.ARTEN, 1):
         if art != eintrag["id"]:
-            bew[f"misch_{art}"] = ({"loop": True, "bones": MISCHGESTALT[art]}, f"query.property('fynn:misch') == {nr}")
+            bew[f"misch_{art}"] = ({"loop": True, "bones": MISCHGESTALT[art]}, dm.misch_bedingung(nr))
     groesse = eintrag.get("groesse", 1.0)
     eintrag.update({
         "art": "drache", "verhalten": "drache", "keine_panik": True, "baby": False,
@@ -1320,12 +1325,15 @@ def drache(eintrag, schwinge, bewegungen=None, koepfe=("",), **bewegung):
                       "sechs Minuten schlüpft das Junge. Antippen: aufheben und woanders absetzen"],
         ["Junges", "wächst in zehn Stufen (mit rohem Fleisch schneller) und gehört dir; erst ausgewachsen "
                    "trägt es einen Sattel"],
-        ["Erbe", "Körper vom einen Elternteil, Farben, ein Kennzeichen und ein wenig Gestalt vom anderen; "
-                 "den Atem vom Stärkeren, die Fähigkeit vom anderen; jede Generation wird stärker"],
+        ["Erbe", "sechs von zehn Jungen kommen ganz nach einem Elternteil – Art, Farbe, Fähigkeiten, alles; "
+                 "vier von zehn sind Mischlinge: Körper und Farbvariante vom einen, Details, ein Kennzeichen und "
+                 "ein wenig Gestalt in der Farbvariante des anderen"],
+        ["Mischling", "speit beide Atemarten in einem Strahl, hat beide Fähigkeiten im Wechsel und eine Gabe – "
+                      "und ist etwas stärker; jede Generation wird noch stärker"],
         ["Gabe", "aus zwei verschiedenen Atemarten entsteht eine neue Fähigkeit – Feuer und Sturm: "
                  "Feuerwirbel, Frost und Sturm: Schneesturm … Im Sattel löst die Drachenpfeife sie aus"],
-        ["Neue Arten", "Feuerdrache und Frostwyvern bringen manchmal einen Dampfdrachen hervor, Himmelsdrache "
-                       "und Nachtschwinge einen Sternendrachen, Feuerdrache und Schlunddrache einen Lavadrachen"]]
+        ["Neue Arten", "jeder zweite Mischling von Feuerdrache und Frostwyvern ist ein Dampfdrache, von Himmelsdrache "
+                       "und Nachtschwinge ein Sternendrache, von Feuerdrache und Schlunddrache ein Lavadrache"]]
     return eintrag
 
 

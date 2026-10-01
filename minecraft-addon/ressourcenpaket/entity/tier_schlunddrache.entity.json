@@ -10,15 +10,84 @@
         "moos": "textures/entity/tiere/schlunddrache_moos",
         "knochen": "textures/entity/tiere/schlunddrache_knochen",
         "tiefsee": "textures/entity/tiere/schlunddrache_tiefsee",
-        "misch_lindwurm": "textures/entity/tiere/schlunddrache_misch_lindwurm",
-        "misch_frostwyvern": "textures/entity/tiere/schlunddrache_misch_frostwyvern",
-        "misch_himmelsdrache": "textures/entity/tiere/schlunddrache_misch_himmelsdrache",
-        "misch_giftdrache": "textures/entity/tiere/schlunddrache_misch_giftdrache",
-        "misch_nachtschwinge": "textures/entity/tiere/schlunddrache_misch_nachtschwinge",
-        "misch_schlunddrache": "textures/entity/tiere/schlunddrache_misch_schlunddrache",
-        "misch_dampfdrache": "textures/entity/tiere/schlunddrache_misch_dampfdrache",
-        "misch_sternendrache": "textures/entity/tiere/schlunddrache_misch_sternendrache",
-        "misch_lavadrache": "textures/entity/tiere/schlunddrache_misch_lavadrache"
+        "misch_moos_lindwurm_orange": "textures/entity/tiere/schlunddrache_misch_moos_lindwurm_orange",
+        "misch_moos_frostwyvern_eis": "textures/entity/tiere/schlunddrache_misch_moos_frostwyvern_eis",
+        "misch_moos_lindwurm_rot": "textures/entity/tiere/schlunddrache_misch_moos_lindwurm_rot",
+        "misch_moos_lindwurm_obsidian": "textures/entity/tiere/schlunddrache_misch_moos_lindwurm_obsidian",
+        "misch_moos_frostwyvern_gletscher": "textures/entity/tiere/schlunddrache_misch_moos_frostwyvern_gletscher",
+        "misch_moos_frostwyvern_nacht": "textures/entity/tiere/schlunddrache_misch_moos_frostwyvern_nacht",
+        "misch_moos_himmelsdrache_perle": "textures/entity/tiere/schlunddrache_misch_moos_himmelsdrache_perle",
+        "misch_moos_himmelsdrache_jade": "textures/entity/tiere/schlunddrache_misch_moos_himmelsdrache_jade",
+        "misch_moos_himmelsdrache_gold": "textures/entity/tiere/schlunddrache_misch_moos_himmelsdrache_gold",
+        "misch_moos_giftdrache_sumpf": "textures/entity/tiere/schlunddrache_misch_moos_giftdrache_sumpf",
+        "misch_moos_nachtschwinge_nacht": "textures/entity/tiere/schlunddrache_misch_moos_nachtschwinge_nacht",
+        "misch_moos_giftdrache_moor": "textures/entity/tiere/schlunddrache_misch_moos_giftdrache_moor",
+        "misch_moos_giftdrache_gift": "textures/entity/tiere/schlunddrache_misch_moos_giftdrache_gift",
+        "misch_moos_nachtschwinge_sturm": "textures/entity/tiere/schlunddrache_misch_moos_nachtschwinge_sturm",
+        "misch_moos_nachtschwinge_blut": "textures/entity/tiere/schlunddrache_misch_moos_nachtschwinge_blut",
+        "misch_moos_dampfdrache_kupfer": "textures/entity/tiere/schlunddrache_misch_moos_dampfdrache_kupfer",
+        "misch_moos_schlunddrache_knochen": "textures/entity/tiere/schlunddrache_misch_moos_schlunddrache_knochen",
+        "misch_moos_schlunddrache_tiefsee": "textures/entity/tiere/schlunddrache_misch_moos_schlunddrache_tiefsee",
+        "misch_moos_dampfdrache_rost": "textures/entity/tiere/schlunddrache_misch_moos_dampfdrache_rost",
+        "misch_moos_dampfdrache_silber": "textures/entity/tiere/schlunddrache_misch_moos_dampfdrache_silber",
+        "misch_moos_sternendrache_nacht": "textures/entity/tiere/schlunddrache_misch_moos_sternendrache_nacht",
+        "misch_moos_sternendrache_morgen": "textures/entity/tiere/schlunddrache_misch_moos_sternendrache_morgen",
+        "misch_moos_sternendrache_polar": "textures/entity/tiere/schlunddrache_misch_moos_sternendrache_polar",
+        "misch_moos_lavadrache_basalt": "textures/entity/tiere/schlunddrache_misch_moos_lavadrache_basalt",
+        "misch_knochen_lindwurm_rot": "textures/entity/tiere/schlunddrache_misch_knochen_lindwurm_rot",
+        "misch_knochen_lindwurm_orange": "textures/entity/tiere/schlunddrache_misch_knochen_lindwurm_orange",
+        "misch_moos_lavadrache_magma": "textures/entity/tiere/schlunddrache_misch_moos_lavadrache_magma",
+        "misch_moos_lavadrache_seele": "textures/entity/tiere/schlunddrache_misch_moos_lavadrache_seele",
+        "misch_knochen_lindwurm_obsidian": "textures/entity/tiere/schlunddrache_misch_knochen_lindwurm_obsidian",
+        "misch_knochen_frostwyvern_eis": "textures/entity/tiere/schlunddrache_misch_knochen_frostwyvern_eis",
+        "misch_knochen_frostwyvern_nacht": "textures/entity/tiere/schlunddrache_misch_knochen_frostwyvern_nacht",
+        "misch_knochen_frostwyvern_gletscher": "textures/entity/tiere/schlunddrache_misch_knochen_frostwyvern_gletscher",
+        "misch_knochen_himmelsdrache_jade": "textures/entity/tiere/schlunddrache_misch_knochen_himmelsdrache_jade",
+        "misch_knochen_himmelsdrache_perle": "textures/entity/tiere/schlunddrache_misch_knochen_himmelsdrache_perle",
+        "misch_knochen_himmelsdrache_gold": "textures/entity/tiere/schlunddrache_misch_knochen_himmelsdrache_gold",
+        "misch_knochen_giftdrache_sumpf": "textures/entity/tiere/schlunddrache_misch_knochen_giftdrache_sumpf",
+        "misch_knochen_giftdrache_gift": "textures/entity/tiere/schlunddrache_misch_knochen_giftdrache_gift",
+        "misch_knochen_nachtschwinge_nacht": "textures/entity/tiere/schlunddrache_misch_knochen_nachtschwinge_nacht",
+        "misch_knochen_giftdrache_moor": "textures/entity/tiere/schlunddrache_misch_knochen_giftdrache_moor",
+        "misch_knochen_nachtschwinge_sturm": "textures/entity/tiere/schlunddrache_misch_knochen_nachtschwinge_sturm",
+        "misch_knochen_schlunddrache_tiefsee": "textures/entity/tiere/schlunddrache_misch_knochen_schlunddrache_tiefsee",
+        "misch_knochen_schlunddrache_moos": "textures/entity/tiere/schlunddrache_misch_knochen_schlunddrache_moos",
+        "misch_knochen_nachtschwinge_blut": "textures/entity/tiere/schlunddrache_misch_knochen_nachtschwinge_blut",
+        "misch_knochen_dampfdrache_kupfer": "textures/entity/tiere/schlunddrache_misch_knochen_dampfdrache_kupfer",
+        "misch_knochen_dampfdrache_rost": "textures/entity/tiere/schlunddrache_misch_knochen_dampfdrache_rost",
+        "misch_knochen_dampfdrache_silber": "textures/entity/tiere/schlunddrache_misch_knochen_dampfdrache_silber",
+        "misch_knochen_sternendrache_morgen": "textures/entity/tiere/schlunddrache_misch_knochen_sternendrache_morgen",
+        "misch_knochen_sternendrache_nacht": "textures/entity/tiere/schlunddrache_misch_knochen_sternendrache_nacht",
+        "misch_knochen_sternendrache_polar": "textures/entity/tiere/schlunddrache_misch_knochen_sternendrache_polar",
+        "misch_knochen_lavadrache_basalt": "textures/entity/tiere/schlunddrache_misch_knochen_lavadrache_basalt",
+        "misch_knochen_lavadrache_seele": "textures/entity/tiere/schlunddrache_misch_knochen_lavadrache_seele",
+        "misch_knochen_lavadrache_magma": "textures/entity/tiere/schlunddrache_misch_knochen_lavadrache_magma",
+        "misch_tiefsee_lindwurm_rot": "textures/entity/tiere/schlunddrache_misch_tiefsee_lindwurm_rot",
+        "misch_tiefsee_lindwurm_orange": "textures/entity/tiere/schlunddrache_misch_tiefsee_lindwurm_orange",
+        "misch_tiefsee_lindwurm_obsidian": "textures/entity/tiere/schlunddrache_misch_tiefsee_lindwurm_obsidian",
+        "misch_tiefsee_frostwyvern_eis": "textures/entity/tiere/schlunddrache_misch_tiefsee_frostwyvern_eis",
+        "misch_tiefsee_frostwyvern_gletscher": "textures/entity/tiere/schlunddrache_misch_tiefsee_frostwyvern_gletscher",
+        "misch_tiefsee_frostwyvern_nacht": "textures/entity/tiere/schlunddrache_misch_tiefsee_frostwyvern_nacht",
+        "misch_tiefsee_himmelsdrache_jade": "textures/entity/tiere/schlunddrache_misch_tiefsee_himmelsdrache_jade",
+        "misch_tiefsee_himmelsdrache_perle": "textures/entity/tiere/schlunddrache_misch_tiefsee_himmelsdrache_perle",
+        "misch_tiefsee_himmelsdrache_gold": "textures/entity/tiere/schlunddrache_misch_tiefsee_himmelsdrache_gold",
+        "misch_tiefsee_giftdrache_sumpf": "textures/entity/tiere/schlunddrache_misch_tiefsee_giftdrache_sumpf",
+        "misch_tiefsee_giftdrache_moor": "textures/entity/tiere/schlunddrache_misch_tiefsee_giftdrache_moor",
+        "misch_tiefsee_giftdrache_gift": "textures/entity/tiere/schlunddrache_misch_tiefsee_giftdrache_gift",
+        "misch_tiefsee_nachtschwinge_sturm": "textures/entity/tiere/schlunddrache_misch_tiefsee_nachtschwinge_sturm",
+        "misch_tiefsee_nachtschwinge_nacht": "textures/entity/tiere/schlunddrache_misch_tiefsee_nachtschwinge_nacht",
+        "misch_tiefsee_nachtschwinge_blut": "textures/entity/tiere/schlunddrache_misch_tiefsee_nachtschwinge_blut",
+        "misch_tiefsee_schlunddrache_moos": "textures/entity/tiere/schlunddrache_misch_tiefsee_schlunddrache_moos",
+        "misch_tiefsee_schlunddrache_knochen": "textures/entity/tiere/schlunddrache_misch_tiefsee_schlunddrache_knochen",
+        "misch_tiefsee_dampfdrache_kupfer": "textures/entity/tiere/schlunddrache_misch_tiefsee_dampfdrache_kupfer",
+        "misch_tiefsee_dampfdrache_rost": "textures/entity/tiere/schlunddrache_misch_tiefsee_dampfdrache_rost",
+        "misch_tiefsee_sternendrache_nacht": "textures/entity/tiere/schlunddrache_misch_tiefsee_sternendrache_nacht",
+        "misch_tiefsee_dampfdrache_silber": "textures/entity/tiere/schlunddrache_misch_tiefsee_dampfdrache_silber",
+        "misch_tiefsee_sternendrache_morgen": "textures/entity/tiere/schlunddrache_misch_tiefsee_sternendrache_morgen",
+        "misch_tiefsee_sternendrache_polar": "textures/entity/tiere/schlunddrache_misch_tiefsee_sternendrache_polar",
+        "misch_tiefsee_lavadrache_basalt": "textures/entity/tiere/schlunddrache_misch_tiefsee_lavadrache_basalt",
+        "misch_tiefsee_lavadrache_seele": "textures/entity/tiere/schlunddrache_misch_tiefsee_lavadrache_seele",
+        "misch_tiefsee_lavadrache_magma": "textures/entity/tiere/schlunddrache_misch_tiefsee_lavadrache_magma"
       },
       "geometry": {
         "default": "geometry.fynn.schlunddrache"
@@ -140,28 +209,28 @@
             "gabe_wirken": "query.property('fynn:wirkt')"
           },
           {
-            "misch_lindwurm": "query.property('fynn:misch') == 1"
+            "misch_lindwurm": "math.floor((query.property('fynn:misch') + 2) / 3) == 1"
           },
           {
-            "misch_frostwyvern": "query.property('fynn:misch') == 2"
+            "misch_frostwyvern": "math.floor((query.property('fynn:misch') + 2) / 3) == 2"
           },
           {
-            "misch_himmelsdrache": "query.property('fynn:misch') == 3"
+            "misch_himmelsdrache": "math.floor((query.property('fynn:misch') + 2) / 3) == 3"
           },
           {
-            "misch_giftdrache": "query.property('fynn:misch') == 4"
+            "misch_giftdrache": "math.floor((query.property('fynn:misch') + 2) / 3) == 4"
           },
           {
-            "misch_nachtschwinge": "query.property('fynn:misch') == 5"
+            "misch_nachtschwinge": "math.floor((query.property('fynn:misch') + 2) / 3) == 5"
           },
           {
-            "misch_dampfdrache": "query.property('fynn:misch') == 7"
+            "misch_dampfdrache": "math.floor((query.property('fynn:misch') + 2) / 3) == 7"
           },
           {
-            "misch_sternendrache": "query.property('fynn:misch') == 8"
+            "misch_sternendrache": "math.floor((query.property('fynn:misch') + 2) / 3) == 8"
           },
           {
-            "misch_lavadrache": "query.property('fynn:misch') == 9"
+            "misch_lavadrache": "math.floor((query.property('fynn:misch') + 2) / 3) == 9"
           },
           {
             "jung": "query.is_baby"

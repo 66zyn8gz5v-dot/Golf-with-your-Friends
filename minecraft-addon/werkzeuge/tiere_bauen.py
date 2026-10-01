@@ -1948,8 +1948,11 @@ def steuerung(t, texturen):
     arrays = {"Array.haut": varianten}
     if t.get("misch_haut"):
         import drachen_misch as dm
-        arrays["Array.misch"] = [f"Texture.misch_{art}" for art, _, _ in dm.ARTEN]
-        bild = f"query.property('fynn:misch') > 0 ? Array.misch[query.property('fynn:misch') - 1] : {bild}"
+        n = len(dm.plaetze())
+        arrays["Array.misch"] = [f"Texture.{kv}" if (art == t["id"] and fv == kv) else f"Texture.misch_{kv}_{art}_{fv}"
+                                 for kv in dm.varianten(t["gestalt"]) for art, _, fv in dm.plaetze()]
+        bild = (f"query.property('fynn:misch') > 0 ? "
+                f"Array.misch[query.variant * {n} + query.property('fynn:misch') - 1] : {bild}")
     steuer = {
         "arrays": {"textures": arrays},
         "geometry": "Geometry.default",
@@ -1969,6 +1972,36 @@ def steuerung(t, texturen):
 
 
 # ------------------------------------------------------------ Zusammenbau
+
+_MISCH = {}
+
+
+def palette_speichern(bild, ziel):
+    """Als Palettenbild speichern, wenn es hoechstens 256 Farben hat - ohne
+    jeden Verlust (Durchsichtigkeit und Leuchten bleiben je Farbe erhalten),
+    aber nicht einmal halb so gross. Die vielen Mischhaeute der Drachen
+    passen so ins Paket."""
+    bild = bild.convert("RGBA")
+    roh = bild.tobytes()
+    punkte = [roh[i:i + 4] for i in range(0, len(roh), 4)]
+    farben = list(dict.fromkeys(punkte))
+    if len(farben) > 256:
+        bild.save(ziel)
+        return
+    nr = {f: i for i, f in enumerate(farben)}
+    p = tm.Image.new("P", bild.size)
+    p.frombytes(bytes(nr[f] for f in punkte))
+    p.putpalette([k for f in farben for k in f[:3]])
+    p.save(ziel, "PNG", optimize=True, transparency=bytes(f[3] for f in farben))
+
+
+def _misch_malen(auftrag):
+    """Eine Mischhaut malen (laeuft in einem eigenen Prozess)."""
+    name, koerper, kv, farbe, fv, ziel = auftrag
+    import drachen_misch as dm
+    palette_speichern(_MISCH["modell"].male(dm.misch_maler(koerper, farbe, kv, fv)), ziel)
+    return name
+
 
 def baue(t, bilder=None):
     name = t["id"]
@@ -1995,13 +2028,27 @@ def baue(t, bilder=None):
         bild.save(ziel)
         texturen[v] = bild
     if t.get("misch_haut"):
-        # Mischlinge (5.2, die Drachen): der Koerper dieser Art in den Farben
-        # jeder Art - welche, sagt fynn:misch (drachen_misch.py).
+        # Mischlinge (5.2, die Drachen): der Koerper dieser Art in jeder ihrer
+        # Farbvarianten, mit den Details in jeder Variante jeder Art - welche,
+        # sagen query.variant und fynn:misch (drachen_misch.py). Gut 70
+        # Haeute je Art: Sie werden auf allen Kernen zugleich gemalt.
+        import multiprocessing
         import drachen_misch as dm
-        for art, gestalt, _ in dm.ARTEN:
-            bild = modell.male(dm.misch_maler(t["misch_haut"], gestalt))
-            bild.save(RES / "textures" / "entity" / "tiere" / f"{name}_misch_{art}.png")
-            texturen[f"misch_{art}"] = bild
+        assert dm.varianten(t["gestalt"]) == [v for v, _ in t["varianten"]], t["id"]
+        auftraege = []
+        for kv in dm.varianten(t["gestalt"]):
+            for art, gestalt, fv in dm.plaetze():
+                if art == t["id"] and fv == kv:
+                    continue
+                auftraege.append((f"misch_{kv}_{art}_{fv}", t["gestalt"], kv, gestalt, fv,
+                                  str(RES / "textures" / "entity" / "tiere" / f"{name}_misch_{kv}_{art}_{fv}.png")))
+        _MISCH["modell"] = modell
+        with multiprocessing.get_context("fork").Pool() as pool:
+            for fertig in pool.imap_unordered(_misch_malen, auftraege):
+                texturen[fertig] = None
+        for alt in (RES / "textures" / "entity" / "tiere").glob(f"{name}_misch_*.png"):
+            if alt.stem[len(name) + 1:] not in texturen:
+                alt.unlink()
 
     anims = bewegungen(t, modell)
     eigene = {f"animation.fynn.{name}.{k}": v for k, v in anims.items() if not isinstance(v, str)}
@@ -2067,6 +2114,8 @@ def vorschau(bilder, ordner):
     zellen = []
     for t, geo, texturen, eigene in bilder:
         for v, bild in texturen.items():
+            if bild is None:
+                continue                                     # Mischhaeute: nicht in der Uebersicht
             baby = v == babyhaut(t)
             werte = {"q.is_baby": 1.0 if baby else 0.0,
                      "q.variant": float(next((i for i, (n, _) in enumerate(t["varianten"]) if n == v), 0)),

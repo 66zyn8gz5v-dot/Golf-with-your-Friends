@@ -50,7 +50,7 @@
           "type": "int",
           "range": [
             0,
-            15
+            27
           ],
           "default": 0,
           "client_sync": true
@@ -864,6 +864,45 @@
             }
           }
         ]
+      },
+      "fynn:farbe_0": {
+        "remove": {
+          "component_groups": [
+            "fynn:variante_1",
+            "fynn:variante_2"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "fynn:variante_0"
+          ]
+        }
+      },
+      "fynn:farbe_1": {
+        "remove": {
+          "component_groups": [
+            "fynn:variante_0",
+            "fynn:variante_2"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "fynn:variante_1"
+          ]
+        }
+      },
+      "fynn:farbe_2": {
+        "remove": {
+          "component_groups": [
+            "fynn:variante_0",
+            "fynn:variante_1"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "fynn:variante_2"
+          ]
+        }
       },
       "fynn:jung_zahm": {
         "remove": {

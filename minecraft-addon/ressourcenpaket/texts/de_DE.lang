@@ -44,11 +44,11 @@ item.fynn:eisenklinge.name=Eisenklinge
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 5.2
+item.iron_sword.name=Stahlschwert 5.3
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 5.2
-item.fynn:degen.name=Degen 5.2
+item.fynn:degen=Degen 5.3
+item.fynn:degen.name=Degen 5.3
 
 
 
@@ -570,6 +570,13 @@ action.interact.fynn_schleim=Schleim abfüllen
 
 
 
+
+
+
+
+
+
+
 ## Die Tiere
 entity.fynn:braunbaer.name=Braunbär
 item.spawn_egg.entity.fynn:braunbaer.name=Braunbär-Spawn-Ei
@@ -702,6 +709,11 @@ entity.fynn:eissplitter.name=Eissplitter
 entity.fynn:plasmaschuss.name=Plasmaschuss
 item.fynn:drachenpfeife.name=Drachenpfeife
 
+## Drachenzucht
+item.fynn:drachenei=Drachenei
+entity.fynn:drachenei.name=Drachenei
+action.interact.fynn.drachenei=Aufheben
+item.fynn:drachenei.name=Drachenei
 
 ## Nester und Eier
 item.fynn:vogelei=Vogelei
@@ -717,9 +729,3 @@ tile.fynn:spechthoehle.name=Spechthöhle
 tile.fynn:kobel.name=Kobel
 tile.fynn:adlerhorst.name=Adlerhorst
 tile.fynn:greifennest.name=Greifennest
-
-## Drachenzucht
-item.fynn:drachenei=Drachenei
-entity.fynn:drachenei.name=Drachenei
-action.interact.fynn.drachenei=Aufheben
-item.fynn:drachenei.name=Drachenei
