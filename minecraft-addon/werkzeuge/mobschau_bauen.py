@@ -546,6 +546,12 @@ def mob_daten(kennung, entitaet_datei, gruppe, info):
         teile.append("atem:" + json.dumps(info["atem"], separators=(",", ":")))
     if info.get("vorgabe"):
         teile.append("vorgabe:" + json.dumps(info["vorgabe"]))
+    if info.get("rahmen"):
+        teile.append("rahmen:" + json.dumps(info["rahmen"]))
+    if info.get("buehne"):
+        teile.append("buehne:" + json.dumps(info["buehne"]))
+    if info.get("boden"):
+        teile.append("boden:1")
     if info.get("stufen"):
         teile.append("stufen:" + json.dumps(info["stufen"], ensure_ascii=False))
     return "{" + ",\n".join(teile) + "}"
@@ -762,7 +768,9 @@ def alle_mobs():
             ["Dauer", "zerfällt nach 45 Sekunden zu Schnee"]]}}))
     import seelendrache_bauen as sd
     mobs.append(mob_daten("seelendrache", "seelendrache.entity.json", "Bosse", {
-        "gross": sd.GROESSE,
+        "gross": sd.GROESSE, "rahmen": "haltung", "boden": True,
+        # Abendhimmel, Boden in kaltem Blau, Gitterlinien hell.
+        "buehne": ["#2a3150", "#4b5878", "#c4d6f2"],
         # In der Schau steht der Seelenring immer - im Spiel erwacht er erst
         # in Phase zwei.
         "grund": [{"haltung": 1.0}, {"gang": "math.clamp(query.modified_move_speed * 2.0, 0.0, 1.0)"},

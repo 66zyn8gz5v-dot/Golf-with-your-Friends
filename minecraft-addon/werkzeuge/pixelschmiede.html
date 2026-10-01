@@ -7709,7 +7709,10 @@ start:function(Q,V,M,P){V.hieb=(0);},
 vorher:function(Q,V,M,P){},
 sicht:{},
 schalter:[],
-knoepfe:{"auftritt": "Auftritt", "hieb_biss": "Biss", "hieb_klaue": "Klauenhieb", "seelenstrahl": "Seelenstrahl", "seelenkreise": "Seelenkreise", "fluegelschlag": "Flügelschlag", "schweifhieb": "Schweifhieb", "seelensog": "Seelensog", "seelenspiegel": "Seelenspiegel", "seelensturm": "Seelensturm", "wechsel": "Phasenwechsel", "abschied": "Abschied"}},
+knoepfe:{"auftritt": "Auftritt", "hieb_biss": "Biss", "hieb_klaue": "Klauenhieb", "seelenstrahl": "Seelenstrahl", "seelenkreise": "Seelenkreise", "fluegelschlag": "Flügelschlag", "schweifhieb": "Schweifhieb", "seelensog": "Seelensog", "seelenspiegel": "Seelenspiegel", "seelensturm": "Seelensturm", "wechsel": "Phasenwechsel", "abschied": "Abschied"},
+rahmen:"haltung",
+buehne:["#2a3150", "#4b5878", "#c4d6f2"],
+boden:1},
 {id:"glimmerling",
 ident:"fynn:glimmerling",
 gruppe:"Weitere",
@@ -8103,7 +8106,11 @@ knoepfe:{}}
   // das ausgewachsene Tier, damit ein Kalb daneben auch klein aussieht.
   function ausmass(mob, modell) {
     var z = neuerZustand(mob);
-    var pose = lagen(mob, modell, z, null);
+    // rahmen "haltung" (der Seelendrache, 5.4): In der Ruhelage des Modells
+    // stehen seine Schwingen ausgebreitet, fast 15 Bloecke breit - die
+    // Kamera trat so weit zurueck, dass er winzig wurde. Dann zaehlt, wie
+    // er wirklich dasteht: die Schwingen am Leib.
+    var pose = mob.rahmen === "haltung" ? posieren(mob, modell, z, 1.0) : lagen(mob, modell, z, null);
     var lo = [1e9, 1e9, 1e9], hi = [-1e9, -1e9, -1e9];
     // Auch was nur manchmal zu sehen ist, zaehlt mit - sonst ragt das Dach
     // der Saenfte oben aus dem Bild, sobald man sie aufsetzt.
@@ -8280,7 +8287,9 @@ knoepfe:{}}
     function hat(n) { return namen.indexOf(n) >= 0; }
     var liste = [];
     var imWasser = mob.gruppe === "Im Wasser";
-    if (hat("laufen") || hat("gehen") || hat("walk")) {
+    // boden: Ein Boss, dessen Gehen "gang" heisst, steht auf dem Boden -
+    // sonst hielte ihn die Schau fuer einen Flieger hoch am Himmel.
+    if (hat("laufen") || hat("gehen") || hat("walk") || (mob.boden && hat("gang"))) {
       liste.push({ n: "Stehen", tempo: 0, wasser: 0 });
       liste.push({ n: "Gehen", tempo: 0.55, wasser: 0, start: 1 });
     }
@@ -8613,7 +8622,11 @@ knoepfe:{}}
   }
 
   function grundMalen(kam, bereich) {
-    var oben = tok("--flaeche", "#F6F4EF"), unten = tok("--stein-tief", "#D3CFC6");
+    // buehne (der Seelendrache, 5.4): Ein weisser Drache verschwindet vor
+    // dem hellen Grund - er steht unter einem Abendhimmel, vor dem das Weiss
+    // und sein Seelenlicht leuchten.
+    var buehne = jetzt.mob.buehne;
+    var oben = buehne ? buehne[0] : tok("--flaeche", "#F6F4EF"), unten = buehne ? buehne[1] : tok("--stein-tief", "#D3CFC6");
     var verlauf = stift.createLinearGradient(0, 0, 0, H);
     verlauf.addColorStop(0, oben);
     verlauf.addColorStop(1, unten);
@@ -8670,7 +8683,7 @@ knoepfe:{}}
     stift.fillStyle = "rgba(0, 0, 0, 0.13)";
     stift.fill();
 
-    stift.strokeStyle = tok("--schrift-leise", "#6B655B");
+    stift.strokeStyle = buehne ? buehne[2] : tok("--schrift-leise", "#6B655B");
     stift.lineWidth = Math.max(1, W / 900);
     for (var k = -anzahl; k <= anzahl; k++) {
       var x = k * 16;
