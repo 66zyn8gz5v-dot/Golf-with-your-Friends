@@ -1,0 +1,47 @@
+{
+  "format_version": "1.26.30",
+  "minecraft:item": {
+    "description": {
+      "identifier": "fynn:rabenklinge",
+      "menu_category": {
+        "category": "equipment",
+        "group": "minecraft:itemGroup.name.sword"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "rabenklinge"
+        }
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:hand_equipped": true,
+      "minecraft:damage": 8,
+      "minecraft:rarity": "epic",
+      "minecraft:durability": {
+        "max_durability": 1400
+      },
+      "minecraft:enchantable": {
+        "value": 18,
+        "slot": "sword"
+      },
+      "minecraft:repairable": {
+        "repair_items": [
+          {
+            "items": [
+              "fynn:stahlbarren"
+            ],
+            "repair_amount": 350
+          }
+        ]
+      },
+      "minecraft:use_modifiers": {
+        "use_duration": 0.1
+      },
+      "minecraft:cooldown": {
+        "category": "fynn:rabenklinge",
+        "duration": 6.0
+      }
+    }
+  }
+}

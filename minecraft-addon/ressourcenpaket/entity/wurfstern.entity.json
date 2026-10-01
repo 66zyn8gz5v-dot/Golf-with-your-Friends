@@ -1,0 +1,29 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:wurfstern",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/items/wurfstern"
+      },
+      "geometry": {
+        "default": "geometry.wurfstern_flug"
+      },
+      "animations": {
+        "drehen": "animation.wurfstern.drehen"
+      },
+      "scripts": {
+        "scale": "0.45",
+        "animate": [
+          "drehen"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.default"
+      ]
+    }
+  }
+}

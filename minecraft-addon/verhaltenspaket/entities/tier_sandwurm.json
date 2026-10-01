@@ -1,0 +1,312 @@
+{
+  "format_version": "1.26.30",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "fynn:sandwurm",
+      "spawn_category": "creature",
+      "is_spawnable": true,
+      "is_summonable": true,
+      "properties": {
+        "fynn:unten": {
+          "type": "bool",
+          "default": false,
+          "client_sync": true
+        },
+        "fynn:auf": {
+          "type": "bool",
+          "default": false,
+          "client_sync": true
+        },
+        "fynn:ab": {
+          "type": "bool",
+          "default": false,
+          "client_sync": true
+        }
+      }
+    },
+    "component_groups": {
+      "fynn:unten": {
+        "minecraft:damage_sensor": {
+          "triggers": [
+            {
+              "cause": "all",
+              "deals_damage": false
+            }
+          ]
+        },
+        "minecraft:behavior.nearest_attackable_target": {
+          "priority": 2,
+          "must_see": false,
+          "reselect_targets": true,
+          "within_radius": 24,
+          "entity_types": [
+            {
+              "filters": {
+                "all_of": [
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "player"
+                  },
+                  {
+                    "test": "has_ability",
+                    "subject": "other",
+                    "value": "instabuild",
+                    "operator": "!="
+                  },
+                  {
+                    "test": "is_sneaking",
+                    "subject": "other",
+                    "value": false
+                  }
+                ]
+              },
+              "max_dist": 24
+            }
+          ]
+        },
+        "minecraft:behavior.move_towards_target": {
+          "priority": 3,
+          "within_radius": 32,
+          "speed_multiplier": 1.3
+        }
+      },
+      "fynn:oben": {
+        "minecraft:movement": {
+          "value": 0.0
+        },
+        "minecraft:attack": {
+          "damage": 10
+        },
+        "minecraft:behavior.melee_box_attack": {
+          "priority": 2,
+          "speed_multiplier": 1.0,
+          "track_target": true
+        },
+        "minecraft:behavior.nearest_attackable_target": {
+          "priority": 2,
+          "must_see": true,
+          "reselect_targets": true,
+          "within_radius": 12,
+          "entity_types": [
+            {
+              "filters": {
+                "all_of": [
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "player"
+                  },
+                  {
+                    "test": "has_ability",
+                    "subject": "other",
+                    "value": "instabuild",
+                    "operator": "!="
+                  }
+                ]
+              },
+              "max_dist": 12
+            }
+          ]
+        }
+      },
+      "fynn:erwachsen": {
+        "minecraft:loot": {
+          "table": "loot_tables/entities/sandwurm.json"
+        }
+      },
+      "fynn:variante_0": {
+        "minecraft:variant": {
+          "value": 0
+        }
+      },
+      "fynn:variante_1": {
+        "minecraft:variant": {
+          "value": 1
+        }
+      }
+    },
+    "components": {
+      "minecraft:type_family": {
+        "family": [
+          "sandwurm",
+          "fynn_tier",
+          "mob"
+        ]
+      },
+      "minecraft:health": {
+        "value": 80,
+        "max": 80
+      },
+      "minecraft:collision_box": {
+        "width": 2.2,
+        "height": 3.5
+      },
+      "minecraft:movement": {
+        "value": 0.22
+      },
+      "minecraft:hurt_on_condition": {
+        "damage_conditions": [
+          {
+            "filters": {
+              "test": "in_lava",
+              "subject": "self",
+              "operator": "==",
+              "value": true
+            },
+            "cause": "lava",
+            "damage_per_tick": 4
+          }
+        ]
+      },
+      "minecraft:nameable": {},
+      "minecraft:physics": {},
+      "minecraft:pushable_by_entity": {},
+      "minecraft:pushable_by_block": {},
+      "minecraft:jump.static": {},
+      "minecraft:follow_range": {
+        "value": 24,
+        "max": 24
+      },
+      "minecraft:despawn": {
+        "despawn_from_distance": {}
+      },
+      "minecraft:conditional_bandwidth_optimization": {},
+      "minecraft:experience_reward": {
+        "on_death": "query.last_hit_by_player ? Math.Random(1,3) : 0"
+      },
+      "minecraft:behavior.random_look_around": {
+        "priority": 9
+      },
+      "minecraft:behavior.hurt_by_target": {
+        "priority": 1
+      },
+      "minecraft:navigation.walk": {
+        "avoid_water": true,
+        "can_path_over_water": false,
+        "avoid_damage_blocks": true
+      },
+      "minecraft:movement.basic": {},
+      "minecraft:breathable": {
+        "total_supply": 15,
+        "suffocate_time": 0,
+        "breathes_solids": true
+      },
+      "minecraft:knockback_resistance": {
+        "value": 1.0
+      },
+      "minecraft:behavior.random_stroll": {
+        "priority": 7,
+        "speed_multiplier": 1.0,
+        "interval": 60
+      }
+    },
+    "events": {
+      "fynn:auftauchen": {
+        "remove": {
+          "component_groups": [
+            "fynn:unten"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "fynn:oben"
+          ]
+        },
+        "set_property": {
+          "fynn:unten": false,
+          "fynn:auf": true,
+          "fynn:ab": false
+        }
+      },
+      "fynn:steht": {
+        "set_property": {
+          "fynn:auf": false
+        }
+      },
+      "fynn:abtauchen": {
+        "set_property": {
+          "fynn:ab": true,
+          "fynn:auf": false
+        }
+      },
+      "fynn:versunken": {
+        "remove": {
+          "component_groups": [
+            "fynn:oben"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "fynn:unten"
+          ]
+        },
+        "set_property": {
+          "fynn:unten": true,
+          "fynn:ab": false
+        }
+      },
+      "minecraft:entity_spawned": {
+        "sequence": [
+          {
+            "filters": {
+              "test": "has_biome_tag",
+              "value": "mesa"
+            },
+            "add": {
+              "component_groups": [
+                "fynn:variante_1"
+              ]
+            }
+          },
+          {
+            "filters": {
+              "none_of": [
+                {
+                  "test": "has_biome_tag",
+                  "value": "mesa"
+                }
+              ]
+            },
+            "randomize": [
+              {
+                "weight": 70,
+                "add": {
+                  "component_groups": [
+                    "fynn:variante_0"
+                  ]
+                }
+              },
+              {
+                "weight": 30,
+                "add": {
+                  "component_groups": [
+                    "fynn:variante_1"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "randomize": [
+              {
+                "weight": 88,
+                "add": {
+                  "component_groups": [
+                    "fynn:erwachsen",
+                    "fynn:unten"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "set_property": {
+              "fynn:unten": true
+            }
+          }
+        ]
+      }
+    }
+  }
+}

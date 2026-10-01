@@ -1,0 +1,29 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "fynn:magierrock"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "WWW",
+      "W W",
+      "W W"
+    ],
+    "key": {
+      "W": {
+        "item": "minecraft:blue_wool"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:blue_wool"
+      }
+    ],
+    "result": {
+      "item": "fynn:magierrock"
+    }
+  }
+}

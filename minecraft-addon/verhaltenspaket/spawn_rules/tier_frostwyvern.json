@@ -1,0 +1,131 @@
+{
+  "format_version": "1.8.0",
+  "minecraft:spawn_rules": {
+    "description": {
+      "identifier": "fynn:frostwyvern",
+      "population_control": "monster"
+    },
+    "conditions": [
+      {
+        "minecraft:spawns_on_surface": {},
+        "minecraft:weight": {
+          "default": 2
+        },
+        "minecraft:herd": {
+          "min_size": 1,
+          "max_size": 1
+        },
+        "minecraft:density_limit": {
+          "surface": 1
+        },
+        "minecraft:height_filter": {
+          "min": 70,
+          "max": 320
+        },
+        "minecraft:biome_filter": [
+          {
+            "test": "has_biome_tag",
+            "operator": "==",
+            "value": "frozen_peaks"
+          }
+        ]
+      },
+      {
+        "minecraft:spawns_on_surface": {},
+        "minecraft:weight": {
+          "default": 2
+        },
+        "minecraft:herd": {
+          "min_size": 1,
+          "max_size": 1
+        },
+        "minecraft:density_limit": {
+          "surface": 1
+        },
+        "minecraft:height_filter": {
+          "min": 70,
+          "max": 320
+        },
+        "minecraft:biome_filter": [
+          {
+            "test": "has_biome_tag",
+            "operator": "==",
+            "value": "jagged_peaks"
+          }
+        ]
+      },
+      {
+        "minecraft:spawns_on_surface": {},
+        "minecraft:weight": {
+          "default": 2
+        },
+        "minecraft:herd": {
+          "min_size": 1,
+          "max_size": 1
+        },
+        "minecraft:density_limit": {
+          "surface": 1
+        },
+        "minecraft:height_filter": {
+          "min": 70,
+          "max": 320
+        },
+        "minecraft:biome_filter": [
+          {
+            "test": "has_biome_tag",
+            "operator": "==",
+            "value": "ice_plains"
+          }
+        ]
+      },
+      {
+        "minecraft:spawns_on_surface": {},
+        "minecraft:weight": {
+          "default": 2
+        },
+        "minecraft:herd": {
+          "min_size": 1,
+          "max_size": 1
+        },
+        "minecraft:density_limit": {
+          "surface": 1
+        },
+        "minecraft:height_filter": {
+          "min": 70,
+          "max": 320
+        },
+        "minecraft:biome_filter": [
+          {
+            "test": "has_biome_tag",
+            "operator": "==",
+            "value": "snowy_slopes"
+          }
+        ]
+      },
+      {
+        "minecraft:spawns_on_surface": {},
+        "minecraft:weight": {
+          "default": 2
+        },
+        "minecraft:herd": {
+          "min_size": 1,
+          "max_size": 1
+        },
+        "minecraft:density_limit": {
+          "surface": 1
+        },
+        "minecraft:height_filter": {
+          "min": 70,
+          "max": 320
+        },
+        "minecraft:biome_filter": [
+          {
+            "test": "has_biome_tag",
+            "operator": "==",
+            "value": "grove"
+          }
+        ]
+      }
+    ]
+  }
+}

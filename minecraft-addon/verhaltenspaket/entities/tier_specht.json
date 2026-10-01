@@ -1,0 +1,271 @@
+{
+  "format_version": "1.26.30",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "fynn:specht",
+      "spawn_category": "creature",
+      "is_spawnable": true,
+      "is_summonable": true,
+      "properties": {
+        "fynn:hackt": {
+          "type": "bool",
+          "default": false,
+          "client_sync": true
+        }
+      }
+    },
+    "component_groups": {
+      "fynn:haengt": {
+        "minecraft:physics": {
+          "has_gravity": false,
+          "has_collision": true
+        },
+        "minecraft:movement": {
+          "value": 0.0
+        }
+      },
+      "fynn:erwachsen": {
+        "minecraft:loot": {
+          "table": "loot_tables/entities/specht.json"
+        }
+      },
+      "fynn:variante_0": {
+        "minecraft:variant": {
+          "value": 0
+        }
+      },
+      "fynn:variante_1": {
+        "minecraft:variant": {
+          "value": 1
+        }
+      }
+    },
+    "components": {
+      "minecraft:type_family": {
+        "family": [
+          "specht",
+          "fynn_tier",
+          "mob"
+        ]
+      },
+      "minecraft:health": {
+        "value": 6,
+        "max": 6
+      },
+      "minecraft:collision_box": {
+        "width": 0.7,
+        "height": 0.8
+      },
+      "minecraft:movement": {
+        "value": 0.2
+      },
+      "minecraft:hurt_on_condition": {
+        "damage_conditions": [
+          {
+            "filters": {
+              "test": "in_lava",
+              "subject": "self",
+              "operator": "==",
+              "value": true
+            },
+            "cause": "lava",
+            "damage_per_tick": 4
+          }
+        ]
+      },
+      "minecraft:nameable": {},
+      "minecraft:physics": {},
+      "minecraft:pushable_by_entity": {},
+      "minecraft:pushable_by_block": {},
+      "minecraft:jump.static": {},
+      "minecraft:follow_range": {
+        "value": 24,
+        "max": 24
+      },
+      "minecraft:despawn": {
+        "despawn_from_distance": {}
+      },
+      "minecraft:conditional_bandwidth_optimization": {},
+      "minecraft:experience_reward": {
+        "on_death": "query.last_hit_by_player ? Math.Random(1,3) : 0"
+      },
+      "minecraft:behavior.random_look_around": {
+        "priority": 9
+      },
+      "minecraft:navigation.fly": {
+        "can_path_from_air": true,
+        "can_path_over_water": true,
+        "avoid_damage_blocks": true,
+        "avoid_water": true
+      },
+      "minecraft:movement.basic": {},
+      "minecraft:can_fly": {},
+      "minecraft:flying_speed": {
+        "value": 0.3
+      },
+      "minecraft:breathable": {
+        "total_supply": 15,
+        "suffocate_time": 0
+      },
+      "minecraft:damage_sensor": {
+        "triggers": [
+          {
+            "cause": "fall",
+            "deals_damage": false
+          }
+        ]
+      },
+      "minecraft:game_event_movement_tracking": {
+        "emit_flap": true
+      },
+      "minecraft:behavior.float": {
+        "priority": 0
+      },
+      "minecraft:behavior.random_fly": {
+        "priority": 6,
+        "xz_dist": 12,
+        "y_dist": 4,
+        "y_offset": 0,
+        "speed_multiplier": 1.0,
+        "can_land_on_trees": true,
+        "avoid_damage_blocks": true
+      },
+      "minecraft:behavior.random_stroll": {
+        "priority": 7,
+        "speed_multiplier": 0.8
+      },
+      "minecraft:behavior.look_at_player": {
+        "priority": 8,
+        "look_distance": 6,
+        "probability": 0.02
+      },
+      "minecraft:behavior.avoid_mob_type": {
+        "priority": 1,
+        "remove_target": true,
+        "entity_types": [
+          {
+            "filters": {
+              "any_of": [
+                {
+                  "test": "is_family",
+                  "subject": "other",
+                  "value": "steinadler"
+                },
+                {
+                  "test": "is_family",
+                  "subject": "other",
+                  "value": "fox"
+                },
+                {
+                  "test": "is_family",
+                  "subject": "other",
+                  "value": "ocelot"
+                },
+                {
+                  "test": "is_family",
+                  "subject": "other",
+                  "value": "cat"
+                },
+                {
+                  "test": "is_family",
+                  "subject": "other",
+                  "value": "wolf"
+                }
+              ]
+            },
+            "max_dist": 8,
+            "walk_speed_multiplier": 1.3,
+            "sprint_speed_multiplier": 1.6
+          }
+        ]
+      },
+      "minecraft:behavior.move_to_block": {
+        "priority": 5,
+        "tick_interval": 160,
+        "start_chance": 0.7,
+        "search_range": 12,
+        "search_height": 5,
+        "goal_radius": 1.6,
+        "stay_duration": 2.0,
+        "speed_multiplier": 1.0,
+        "target_blocks": [
+          "minecraft:oak_log",
+          "minecraft:birch_log",
+          "minecraft:spruce_log",
+          "minecraft:jungle_log",
+          "minecraft:dark_oak_log",
+          "minecraft:acacia_log",
+          "minecraft:cherry_log",
+          "minecraft:mangrove_log",
+          "minecraft:pale_oak_log",
+          "minecraft:poplar_log"
+        ],
+        "on_reach": [
+          {
+            "event": "fynn:ziel_erreicht",
+            "target": "self"
+          }
+        ]
+      },
+      "minecraft:scale": {
+        "value": 0.55
+      },
+      "minecraft:behavior.panic": {
+        "priority": 1,
+        "speed_multiplier": 1.3
+      }
+    },
+    "events": {
+      "fynn:festhalten": {
+        "add": {
+          "component_groups": [
+            "fynn:haengt"
+          ]
+        }
+      },
+      "fynn:loslassen": {
+        "remove": {
+          "component_groups": [
+            "fynn:haengt"
+          ]
+        }
+      },
+      "minecraft:entity_spawned": {
+        "sequence": [
+          {
+            "randomize": [
+              {
+                "weight": 50,
+                "add": {
+                  "component_groups": [
+                    "fynn:variante_0"
+                  ]
+                }
+              },
+              {
+                "weight": 50,
+                "add": {
+                  "component_groups": [
+                    "fynn:variante_1"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "randomize": [
+              {
+                "weight": 88,
+                "add": {
+                  "component_groups": [
+                    "fynn:erwachsen"
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

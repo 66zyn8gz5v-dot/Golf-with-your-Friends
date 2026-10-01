@@ -1,0 +1,28 @@
+{
+  "format_version": "1.12",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "fynn:vogelei_ei"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "fynn:vogelei"
+      },
+      {
+        "item": "fynn:vogelei"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "fynn:vogelei"
+      }
+    ],
+    "result": {
+      "item": "minecraft:egg",
+      "count": 1
+    }
+  }
+}

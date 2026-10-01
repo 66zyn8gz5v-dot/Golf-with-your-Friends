@@ -1,0 +1,33 @@
+{
+  "format_version": "1.12",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "fynn:baerenfellmantel"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "F F",
+      "III",
+      "FIF"
+    ],
+    "key": {
+      "F": {
+        "item": "fynn:baerenfell"
+      },
+      "I": {
+        "item": "minecraft:iron_ingot"
+      }
+    },
+    "unlock": [
+      {
+        "item": "fynn:baerenfell"
+      }
+    ],
+    "result": {
+      "item": "fynn:baerenfellmantel",
+      "count": 1
+    }
+  }
+}

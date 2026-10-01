@@ -1,0 +1,47 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:block": {
+    "description": {
+      "identifier": "fynn:rubinblock",
+      "menu_category": {
+        "category": "construction"
+      }
+    },
+    "components": {
+      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "rubinblock",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:map_color": "#C0203A",
+      "minecraft:light_dampening": 15,
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 3.0
+      },
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 25.0,
+        "item_specific_speeds": [
+          {
+            "item": "minecraft:iron_pickaxe",
+            "destroy_speed": 0.4
+          },
+          {
+            "item": "minecraft:golden_pickaxe",
+            "destroy_speed": 0.2
+          },
+          {
+            "item": "minecraft:diamond_pickaxe",
+            "destroy_speed": 0.3
+          },
+          {
+            "item": "minecraft:netherite_pickaxe",
+            "destroy_speed": 0.25
+          }
+        ]
+      },
+      "minecraft:loot": "loot_tables/blocks/rubinblock.json"
+    }
+  }
+}

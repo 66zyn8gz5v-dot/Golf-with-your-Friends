@@ -1,0 +1,208 @@
+{
+  "format_version": "1.26.30",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "fynn:irrlicht",
+      "spawn_category": "creature",
+      "is_spawnable": true,
+      "is_summonable": true,
+      "properties": {
+        "fynn:lockt": {
+          "type": "bool",
+          "default": false,
+          "client_sync": true
+        }
+      }
+    },
+    "component_groups": {
+      "fynn:gefangen": {
+        "minecraft:instant_despawn": {}
+      },
+      "fynn:erwachsen": {
+        "minecraft:loot": {
+          "table": "loot_tables/entities/irrlicht.json"
+        }
+      },
+      "fynn:variante_0": {
+        "minecraft:variant": {
+          "value": 0
+        }
+      },
+      "fynn:variante_1": {
+        "minecraft:variant": {
+          "value": 1
+        }
+      }
+    },
+    "components": {
+      "minecraft:type_family": {
+        "family": [
+          "irrlicht",
+          "fynn_tier",
+          "mob"
+        ]
+      },
+      "minecraft:health": {
+        "value": 6,
+        "max": 6
+      },
+      "minecraft:collision_box": {
+        "width": 0.5,
+        "height": 0.6
+      },
+      "minecraft:movement": {
+        "value": 0.25
+      },
+      "minecraft:hurt_on_condition": {
+        "damage_conditions": [
+          {
+            "filters": {
+              "test": "in_lava",
+              "subject": "self",
+              "operator": "==",
+              "value": true
+            },
+            "cause": "lava",
+            "damage_per_tick": 4
+          }
+        ]
+      },
+      "minecraft:nameable": {},
+      "minecraft:physics": {},
+      "minecraft:pushable_by_entity": {},
+      "minecraft:pushable_by_block": {},
+      "minecraft:jump.static": {},
+      "minecraft:follow_range": {
+        "value": 24,
+        "max": 24
+      },
+      "minecraft:despawn": {
+        "despawn_from_distance": {}
+      },
+      "minecraft:conditional_bandwidth_optimization": {},
+      "minecraft:experience_reward": {
+        "on_death": "query.last_hit_by_player ? Math.Random(1,3) : 0"
+      },
+      "minecraft:behavior.random_look_around": {
+        "priority": 9
+      },
+      "minecraft:navigation.hover": {
+        "can_path_over_water": true,
+        "can_sink": false,
+        "can_pass_doors": false,
+        "can_path_from_air": true,
+        "avoid_water": true,
+        "avoid_damage_blocks": true
+      },
+      "minecraft:movement.hover": {},
+      "minecraft:can_fly": {},
+      "minecraft:flying_speed": {
+        "value": 0.35
+      },
+      "minecraft:breathable": {
+        "total_supply": 15,
+        "suffocate_time": 0
+      },
+      "minecraft:damage_sensor": {
+        "triggers": [
+          {
+            "cause": "fall",
+            "deals_damage": false
+          }
+        ]
+      },
+      "minecraft:behavior.random_hover": {
+        "priority": 8,
+        "xz_dist": 10,
+        "y_dist": 5,
+        "y_offset": -1,
+        "interval": 1,
+        "hover_height": {
+          "min": 1,
+          "max": 4
+        }
+      },
+      "minecraft:fire_immune": {},
+      "minecraft:interact": {
+        "interactions": [
+          {
+            "on_interact": {
+              "filters": {
+                "all_of": [
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "player"
+                  },
+                  {
+                    "test": "has_equipment",
+                    "domain": "hand",
+                    "subject": "other",
+                    "value": "minecraft:glass_bottle"
+                  }
+                ]
+              },
+              "event": "fynn:gefangen",
+              "target": "self"
+            },
+            "use_item": true,
+            "transform_to_item": "fynn:irrlichtflasche",
+            "interact_text": "action.interact.fynn_fangen"
+          }
+        ]
+      }
+    },
+    "events": {
+      "fynn:gefangen": {
+        "add": {
+          "component_groups": [
+            "fynn:gefangen"
+          ]
+        }
+      },
+      "fynn:verschwinden": {
+        "add": {
+          "component_groups": [
+            "fynn:gefangen"
+          ]
+        }
+      },
+      "minecraft:entity_spawned": {
+        "sequence": [
+          {
+            "randomize": [
+              {
+                "weight": 60,
+                "add": {
+                  "component_groups": [
+                    "fynn:variante_0"
+                  ]
+                }
+              },
+              {
+                "weight": 40,
+                "add": {
+                  "component_groups": [
+                    "fynn:variante_1"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "randomize": [
+              {
+                "weight": 88,
+                "add": {
+                  "component_groups": [
+                    "fynn:erwachsen"
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

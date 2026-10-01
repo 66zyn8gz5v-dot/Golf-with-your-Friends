@@ -1,0 +1,94 @@
+{
+  "format_version": "1.10.0",
+  "animations": {
+    "animation.fynn_ruestung.umhang": {
+      "loop": true,
+      "bones": {
+        "umhang": {
+          "rotation": [
+            "(c.owning_entity->v.fynn_umhang) + (c.owning_entity->v.fynn_rucksack) * 38.0 + math.sin(q.life_time * 400.0) * 2.0 * (c.owning_entity->v.fynn_tempo)",
+            0.0,
+            "math.sin(q.life_time * 230.0) * 1.5 * (c.owning_entity->v.fynn_tempo)"
+          ]
+        },
+        "umhang_unten": {
+          "rotation": [
+            "(c.owning_entity->v.fynn_umhang) * 0.4 - (c.owning_entity->v.fynn_rucksack) * 20.0 + math.sin(q.life_time * 400.0 - 70.0) * 4.0 * (c.owning_entity->v.fynn_tempo)",
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn_ruestung.hutspitze": {
+      "loop": true,
+      "bones": {
+        "hut3": {
+          "rotation": [
+            "-(c.owning_entity->v.fynn_umhang) * 0.15 + math.sin((c.owning_entity->v.fynn_gang) * 2.0) * 4.0 * (c.owning_entity->v.fynn_tempo)",
+            0.0,
+            "math.sin((c.owning_entity->v.fynn_gang)) * 5.0 * (c.owning_entity->v.fynn_tempo)"
+          ]
+        },
+        "hut4": {
+          "rotation": [
+            "-(c.owning_entity->v.fynn_umhang) * 0.2 + math.sin((c.owning_entity->v.fynn_gang) * 2.0 - 40.0) * 6.0 * (c.owning_entity->v.fynn_tempo)",
+            0.0,
+            "math.sin((c.owning_entity->v.fynn_gang) - 30.0) * 7.0 * (c.owning_entity->v.fynn_tempo)"
+          ]
+        }
+      }
+    },
+    "animation.fynn_ruestung.zipfel": {
+      "loop": true,
+      "bones": {
+        "zipfel": {
+          "rotation": [
+            "(c.owning_entity->v.fynn_umhang) * 0.5 + math.sin(q.life_time * 380.0) * 2.0 * (c.owning_entity->v.fynn_tempo)",
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn_ruestung.schal": {
+      "loop": true,
+      "bones": {
+        "schalende": {
+          "rotation": [
+            "(c.owning_entity->v.fynn_umhang) * 0.9 + math.sin(q.life_time * 420.0) * 5.0 * (c.owning_entity->v.fynn_tempo)",
+            0.0,
+            "math.sin(q.life_time * 260.0) * 4.0 * (c.owning_entity->v.fynn_tempo)"
+          ]
+        }
+      }
+    },
+    "animation.fynn_ruestung.feder": {
+      "loop": true,
+      "bones": {
+        "feder": {
+          "rotation": [
+            "-(c.owning_entity->v.fynn_umhang) * 0.2",
+            0.0,
+            "math.sin((c.owning_entity->v.fynn_gang) * 2.0) * 6.0 * (c.owning_entity->v.fynn_tempo) + math.sin(q.life_time * 500.0) * 1.5 * (c.owning_entity->v.fynn_tempo)"
+          ]
+        }
+      }
+    },
+    "animation.fynn_ruestung.koecher": {
+      "loop": true,
+      "bones": {
+        "pfeile": {
+          "scale": "(c.owning_entity->v.fynn_pfeile)"
+        },
+        "koecher": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin((c.owning_entity->v.fynn_gang) * 2.0) * 2.0 * (c.owning_entity->v.fynn_tempo)"
+          ]
+        }
+      }
+    }
+  }
+}

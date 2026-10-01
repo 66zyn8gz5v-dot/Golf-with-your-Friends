@@ -1,0 +1,39 @@
+{
+  "format_version": "1.12",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "fynn:pflaumenkuchen"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "PPP",
+      "ZEZ",
+      "WWW"
+    ],
+    "key": {
+      "P": {
+        "item": "fynn:pflaume"
+      },
+      "Z": {
+        "item": "minecraft:sugar"
+      },
+      "E": {
+        "item": "minecraft:egg"
+      },
+      "W": {
+        "item": "minecraft:wheat"
+      }
+    },
+    "unlock": [
+      {
+        "item": "fynn:pflaume"
+      }
+    ],
+    "result": {
+      "item": "fynn:pflaumenkuchen",
+      "count": 3
+    }
+  }
+}

@@ -1,0 +1,140 @@
+{
+  "format_version": "1.8.0",
+  "minecraft:spawn_rules": {
+    "description": {
+      "identifier": "fynn:sturmlibelle",
+      "population_control": "animal"
+    },
+    "conditions": [
+      {
+        "minecraft:spawns_on_surface": {},
+        "minecraft:weight": {
+          "default": 5
+        },
+        "minecraft:herd": {
+          "min_size": 1,
+          "max_size": 2
+        },
+        "minecraft:spawns_on_block_filter": [
+          "minecraft:grass_block",
+          "minecraft:sand",
+          "minecraft:mud",
+          "minecraft:dirt"
+        ],
+        "minecraft:brightness_filter": {
+          "min": 7,
+          "max": 15,
+          "adjust_for_weather": false
+        },
+        "minecraft:density_limit": {
+          "surface": 3
+        },
+        "minecraft:biome_filter": [
+          {
+            "test": "has_biome_tag",
+            "operator": "==",
+            "value": "swamp"
+          }
+        ]
+      },
+      {
+        "minecraft:spawns_on_surface": {},
+        "minecraft:weight": {
+          "default": 5
+        },
+        "minecraft:herd": {
+          "min_size": 1,
+          "max_size": 2
+        },
+        "minecraft:spawns_on_block_filter": [
+          "minecraft:grass_block",
+          "minecraft:sand",
+          "minecraft:mud",
+          "minecraft:dirt"
+        ],
+        "minecraft:brightness_filter": {
+          "min": 7,
+          "max": 15,
+          "adjust_for_weather": false
+        },
+        "minecraft:density_limit": {
+          "surface": 3
+        },
+        "minecraft:biome_filter": [
+          {
+            "test": "has_biome_tag",
+            "operator": "==",
+            "value": "river"
+          }
+        ]
+      },
+      {
+        "minecraft:spawns_on_surface": {},
+        "minecraft:weight": {
+          "default": 5
+        },
+        "minecraft:herd": {
+          "min_size": 1,
+          "max_size": 2
+        },
+        "minecraft:spawns_on_block_filter": [
+          "minecraft:grass_block",
+          "minecraft:sand",
+          "minecraft:mud",
+          "minecraft:dirt"
+        ],
+        "minecraft:brightness_filter": {
+          "min": 7,
+          "max": 15,
+          "adjust_for_weather": false
+        },
+        "minecraft:density_limit": {
+          "surface": 3
+        },
+        "minecraft:biome_filter": [
+          {
+            "test": "has_biome_tag",
+            "operator": "==",
+            "value": "mangrove_swamp"
+          }
+        ]
+      },
+      {
+        "minecraft:spawns_on_surface": {},
+        "minecraft:weight": {
+          "default": 5
+        },
+        "minecraft:herd": {
+          "min_size": 1,
+          "max_size": 2
+        },
+        "minecraft:spawns_on_block_filter": [
+          "minecraft:grass_block",
+          "minecraft:sand",
+          "minecraft:mud",
+          "minecraft:dirt"
+        ],
+        "minecraft:brightness_filter": {
+          "min": 7,
+          "max": 15,
+          "adjust_for_weather": false
+        },
+        "minecraft:density_limit": {
+          "surface": 3
+        },
+        "minecraft:biome_filter": [
+          {
+            "test": "has_biome_tag",
+            "operator": "==",
+            "value": "beach"
+          },
+          {
+            "test": "has_biome_tag",
+            "operator": "!=",
+            "value": "cold"
+          }
+        ]
+      }
+    ]
+  }
+}

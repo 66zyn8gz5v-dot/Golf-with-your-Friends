@@ -1,0 +1,131 @@
+{
+  "format_version": "1.8.0",
+  "minecraft:spawn_rules": {
+    "description": {
+      "identifier": "fynn:walross",
+      "population_control": "animal"
+    },
+    "conditions": [
+      {
+        "minecraft:weight": {
+          "default": 7
+        },
+        "minecraft:herd": {
+          "min_size": 2,
+          "max_size": 5
+        },
+        "minecraft:biome_filter": [
+          {
+            "test": "has_biome_tag",
+            "operator": "==",
+            "value": "frozen"
+          },
+          {
+            "test": "has_biome_tag",
+            "operator": "==",
+            "value": "ocean"
+          }
+        ],
+        "minecraft:spawns_on_surface": {},
+        "minecraft:spawns_on_block_filter": [
+          "minecraft:ice",
+          "minecraft:packed_ice",
+          "minecraft:snow",
+          "minecraft:snow_layer",
+          "minecraft:gravel",
+          "minecraft:stone",
+          "minecraft:sand"
+        ],
+        "minecraft:brightness_filter": {
+          "min": 7,
+          "max": 15,
+          "adjust_for_weather": false
+        },
+        "minecraft:density_limit": {
+          "surface": 4
+        }
+      },
+      {
+        "minecraft:weight": {
+          "default": 7
+        },
+        "minecraft:herd": {
+          "min_size": 2,
+          "max_size": 5
+        },
+        "minecraft:biome_filter": [
+          {
+            "test": "has_biome_tag",
+            "operator": "==",
+            "value": "beach"
+          },
+          {
+            "test": "has_biome_tag",
+            "operator": "==",
+            "value": "cold"
+          }
+        ],
+        "minecraft:spawns_on_surface": {},
+        "minecraft:spawns_on_block_filter": [
+          "minecraft:ice",
+          "minecraft:packed_ice",
+          "minecraft:snow",
+          "minecraft:snow_layer",
+          "minecraft:gravel",
+          "minecraft:stone",
+          "minecraft:sand"
+        ],
+        "minecraft:brightness_filter": {
+          "min": 7,
+          "max": 15,
+          "adjust_for_weather": false
+        },
+        "minecraft:density_limit": {
+          "surface": 4
+        }
+      },
+      {
+        "minecraft:spawns_underwater": {},
+        "minecraft:weight": {
+          "default": 7
+        },
+        "minecraft:herd": {
+          "min_size": 1,
+          "max_size": 1
+        },
+        "minecraft:height_filter": {
+          "min": 55,
+          "max": 64
+        },
+        "minecraft:biome_filter": [
+          {
+            "test": "has_biome_tag",
+            "operator": "==",
+            "value": "frozen"
+          }
+        ]
+      },
+      {
+        "minecraft:spawns_underwater": {},
+        "minecraft:weight": {
+          "default": 7
+        },
+        "minecraft:herd": {
+          "min_size": 1,
+          "max_size": 1
+        },
+        "minecraft:height_filter": {
+          "min": 55,
+          "max": 64
+        },
+        "minecraft:biome_filter": [
+          {
+            "test": "has_biome_tag",
+            "operator": "==",
+            "value": "beach"
+          }
+        ]
+      }
+    ]
+  }
+}

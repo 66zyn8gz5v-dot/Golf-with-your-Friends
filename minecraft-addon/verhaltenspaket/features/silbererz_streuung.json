@@ -1,0 +1,23 @@
+{
+  "format_version": "1.13.0",
+  "minecraft:scatter_feature": {
+    "description": {
+      "identifier": "fynn:silbererz_streuung"
+    },
+    "places_feature": "fynn:silbererz_ader",
+    "iterations": 4,
+    "project_input_to_floor": false,
+    "x": {
+      "distribution": "uniform",
+      "extent": [ 0, 16 ]
+    },
+    "y": {
+      "distribution": "uniform",
+      "extent": [ -40, 48 ]
+    },
+    "z": {
+      "distribution": "uniform",
+      "extent": [ 0, 16 ]
+    }
+  }
+}

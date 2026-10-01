@@ -1,0 +1,32 @@
+{
+  "format_version": "1.13.0",
+  "minecraft:scatter_feature": {
+    "description": {
+      "identifier": "fynn:tiefenrubinerz_streuung"
+    },
+    "places_feature": "fynn:tiefenrubinerz_ader",
+    "iterations": 2,
+    "project_input_to_floor": false,
+    "x": {
+      "distribution": "uniform",
+      "extent": [
+        0,
+        16
+      ]
+    },
+    "y": {
+      "distribution": "uniform",
+      "extent": [
+        -60,
+        -8
+      ]
+    },
+    "z": {
+      "distribution": "uniform",
+      "extent": [
+        0,
+        16
+      ]
+    }
+  }
+}

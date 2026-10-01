@@ -1,0 +1,49 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "fynn:wurfstern",
+      "is_spawnable": false,
+      "is_summonable": true
+    },
+    "components": {
+      "minecraft:type_family": {
+        "family": [
+          "projectile",
+          "wurfstern"
+        ]
+      },
+      "minecraft:collision_box": {
+        "width": 0.25,
+        "height": 0.25
+      },
+      "minecraft:physics": {},
+      "minecraft:projectile": {
+        "anchor": "eye_height",
+        "offset": [
+          0,
+          -0.1,
+          0
+        ],
+        "on_hit": {
+          "impact_damage": {
+            "damage": 5,
+            "knockback": true
+          },
+          "remove_on_hit": {},
+          "mob_effect": {
+            "effect": "poison",
+            "durationeasy": 40,
+            "durationnormal": 60,
+            "durationhard": 80,
+            "amplifier": 0
+          }
+        },
+        "gravity": 0.03,
+        "power": 1.8
+      },
+      "minecraft:pushable_by_entity": {},
+      "minecraft:pushable_by_block": {}
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "format_version": "1.12",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "fynn:wildeintopf_bisonsteak"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:bowl"
+      },
+      {
+        "item": "fynn:bisonsteak"
+      },
+      {
+        "item": "minecraft:carrot"
+      },
+      {
+        "item": "minecraft:potato"
+      },
+      {
+        "item": "minecraft:brown_mushroom"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "minecraft:bowl"
+      }
+    ],
+    "result": {
+      "item": "fynn:wildeintopf",
+      "count": 1
+    }
+  }
+}

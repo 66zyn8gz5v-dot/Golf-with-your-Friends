@@ -1,0 +1,84 @@
+{
+  "pools": [
+    {
+      "rolls": 1,
+      "conditions": [
+        {
+          "condition": "match_tool",
+          "item": "minecraft:stone_pickaxe"
+        }
+      ],
+      "entries": [
+        {
+          "type": "item",
+          "name": "fynn:feuerkasten",
+          "weight": 1
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "conditions": [
+        {
+          "condition": "match_tool",
+          "item": "minecraft:iron_pickaxe"
+        }
+      ],
+      "entries": [
+        {
+          "type": "item",
+          "name": "fynn:feuerkasten",
+          "weight": 1
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "conditions": [
+        {
+          "condition": "match_tool",
+          "item": "minecraft:golden_pickaxe"
+        }
+      ],
+      "entries": [
+        {
+          "type": "item",
+          "name": "fynn:feuerkasten",
+          "weight": 1
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "conditions": [
+        {
+          "condition": "match_tool",
+          "item": "minecraft:diamond_pickaxe"
+        }
+      ],
+      "entries": [
+        {
+          "type": "item",
+          "name": "fynn:feuerkasten",
+          "weight": 1
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "conditions": [
+        {
+          "condition": "match_tool",
+          "item": "minecraft:netherite_pickaxe"
+        }
+      ],
+      "entries": [
+        {
+          "type": "item",
+          "name": "fynn:feuerkasten",
+          "weight": 1
+        }
+      ]
+    }
+  ]
+}

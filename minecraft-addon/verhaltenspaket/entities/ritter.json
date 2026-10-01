@@ -1,0 +1,157 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "fynn:ritter",
+      "is_spawnable": true,
+      "is_summonable": true
+    },
+    "component_groups": {
+      "fynn:schwertritter": {
+        "minecraft:variant": {
+          "value": 0
+        },
+        "minecraft:attack": {
+          "damage": 4
+        },
+        "minecraft:behavior.melee_box_attack": {
+          "priority": 3,
+          "speed_multiplier": 1.2,
+          "track_target": true
+        },
+        "minecraft:loot": {
+          "table": "loot_tables/entities/ritter.json"
+        }
+      },
+      "fynn:armbrustritter": {
+        "minecraft:variant": {
+          "value": 1
+        },
+        "minecraft:shooter": {
+          "def": "minecraft:arrow"
+        },
+        "minecraft:behavior.ranged_attack": {
+          "priority": 3,
+          "attack_interval_min": 1.6,
+          "attack_interval_max": 2.6,
+          "attack_radius": 18.0,
+          "speed_multiplier": 1.0
+        },
+        "minecraft:loot": {
+          "table": "loot_tables/entities/ritter_armbrust.json"
+        }
+      }
+    },
+    "components": {
+      "minecraft:experience_reward": {
+        "on_death": "query.last_hit_by_player ? 8 : 0"
+      },
+      "minecraft:type_family": {
+        "family": [
+          "ritter",
+          "monster",
+          "mob"
+        ]
+      },
+      "minecraft:collision_box": {
+        "width": 0.7,
+        "height": 1.95
+      },
+      "minecraft:health": {
+        "value": 30,
+        "max": 30
+      },
+      "minecraft:movement": {
+        "value": 0.24
+      },
+      "minecraft:movement.basic": {},
+      "minecraft:navigation.walk": {
+        "can_path_over_water": false,
+        "avoid_water": true,
+        "can_open_doors": true
+      },
+      "minecraft:jump.static": {},
+      "minecraft:can_climb": {},
+      "minecraft:physics": {},
+      "minecraft:pushable": {
+        "is_pushable": true,
+        "is_pushable_by_piston": true
+      },
+      "minecraft:breathable": {
+        "total_supply": 15,
+        "suffocate_time": 0
+      },
+      "minecraft:nameable": {},
+      "minecraft:despawn": {
+        "despawn_from_distance": {}
+      },
+      "minecraft:conditional_bandwidth_optimization": {},
+      "minecraft:behavior.float": {
+        "priority": 0
+      },
+      "minecraft:behavior.hurt_by_target": {
+        "priority": 1
+      },
+      "minecraft:behavior.nearest_attackable_target": {
+        "priority": 2,
+        "must_see": true,
+        "reselect_targets": true,
+        "within_radius": 24,
+        "entity_types": [
+          {
+            "filters": {
+              "all_of": [
+                {
+                  "test": "is_family",
+                  "subject": "other",
+                  "value": "player"
+                },
+                {
+                  "test": "has_ability",
+                  "subject": "other",
+                  "value": "instabuild",
+                  "operator": "!="
+                }
+              ]
+            },
+            "max_dist": 20
+          }
+        ]
+      },
+      "minecraft:behavior.look_at_player": {
+        "priority": 6,
+        "look_distance": 8.0,
+        "probability": 0.02
+      },
+      "minecraft:behavior.random_stroll": {
+        "priority": 7,
+        "speed_multiplier": 0.8
+      },
+      "minecraft:behavior.random_look_around": {
+        "priority": 8
+      }
+    },
+    "events": {
+      "minecraft:entity_spawned": {
+        "randomize": [
+          {
+            "weight": 70,
+            "add": {
+              "component_groups": [
+                "fynn:schwertritter"
+              ]
+            }
+          },
+          {
+            "weight": 30,
+            "add": {
+              "component_groups": [
+                "fynn:armbrustritter"
+              ]
+            }
+          }
+        ]
+      }
+    }
+  }
+}

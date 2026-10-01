@@ -1,0 +1,36 @@
+{
+  "format_version": "1.12",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "fynn:drachenpfeife"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "  G",
+      " K ",
+      "F  "
+    ],
+    "key": {
+      "G": {
+        "item": "minecraft:gold_ingot"
+      },
+      "K": {
+        "item": "minecraft:bone"
+      },
+      "F": {
+        "item": "minecraft:string"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:gold_ingot"
+      }
+    ],
+    "result": {
+      "item": "fynn:drachenpfeife",
+      "count": 1
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "format_version": "1.12",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "fynn:baerenfellhose"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "FIF",
+      "I I",
+      "F F"
+    ],
+    "key": {
+      "F": {
+        "item": "fynn:baerenfell"
+      },
+      "I": {
+        "item": "minecraft:iron_ingot"
+      }
+    },
+    "unlock": [
+      {
+        "item": "fynn:baerenfell"
+      }
+    ],
+    "result": {
+      "item": "fynn:baerenfellhose",
+      "count": 1
+    }
+  }
+}

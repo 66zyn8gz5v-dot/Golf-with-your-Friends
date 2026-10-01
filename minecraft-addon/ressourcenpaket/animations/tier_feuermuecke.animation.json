@@ -1,0 +1,69 @@
+{
+  "format_version": "1.10.0",
+  "animations": {
+    "animation.fynn.feuermuecke.summen": {
+      "loop": true,
+      "bones": {
+        "fluegel_links": {
+          "rotation": [
+            0.0,
+            "math.sin(query.life_time * 4200.0) * 20.0",
+            "-12.0 - math.sin(query.life_time * 4200.0) * 45.0"
+          ]
+        },
+        "fluegel_rechts": {
+          "rotation": [
+            0.0,
+            "-math.sin(query.life_time * 4200.0) * 20.0",
+            "12.0 + math.sin(query.life_time * 4200.0) * 45.0"
+          ]
+        },
+        "rumpf": {
+          "position": [
+            0.0,
+            "math.sin(query.life_time * 300.0) * 0.8",
+            0.0
+          ],
+          "rotation": [
+            "math.sin(query.life_time * 170.0) * 5.0",
+            0.0,
+            "math.sin(query.life_time * 130.0) * 6.0"
+          ]
+        },
+        "hinterleib": {
+          "rotation": [
+            "math.sin(query.life_time * 420.0) * 7.0",
+            0.0,
+            0.0
+          ]
+        },
+        "beine": {
+          "rotation": [
+            "20.0 + math.sin(query.life_time * 260.0) * 10.0",
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.feuermuecke.stich": {
+      "loop": true,
+      "bones": {
+        "kopf": {
+          "rotation": [
+            "math.sin(variable.attack_time * 180.0) * 35.0",
+            0.0,
+            0.0
+          ]
+        },
+        "hinterleib": {
+          "rotation": [
+            "-math.sin(variable.attack_time * 180.0) * 30.0",
+            0.0,
+            0.0
+          ]
+        }
+      }
+    }
+  }
+}

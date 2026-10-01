@@ -1,0 +1,33 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "fynn:kriegshammer"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "BBB",
+      "BSB",
+      " S "
+    ],
+    "key": {
+      "B": {
+        "item": "fynn:stahlbarren"
+      },
+      "S": {
+        "item": "minecraft:stick"
+      }
+    },
+    "unlock": [
+      {
+        "item": "fynn:stahlbarren"
+      }
+    ],
+    "result": {
+      "item": "fynn:kriegshammer",
+      "count": 1
+    }
+  }
+}

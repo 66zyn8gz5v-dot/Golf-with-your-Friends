@@ -1,0 +1,394 @@
+{
+  "format_version": "1.26.30",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "fynn:moosgolem",
+      "spawn_category": "creature",
+      "is_spawnable": true,
+      "is_summonable": true,
+      "properties": {
+        "fynn:schlaeft": {
+          "type": "bool",
+          "default": false,
+          "client_sync": true
+        },
+        "fynn:links": {
+          "type": "bool",
+          "default": false,
+          "client_sync": true
+        },
+        "fynn:erz": {
+          "type": "int",
+          "range": [
+            0,
+            5
+          ],
+          "default": 0,
+          "client_sync": true
+        },
+        "fynn:wurf": {
+          "type": "int",
+          "range": [
+            0,
+            3
+          ],
+          "default": 0,
+          "client_sync": true
+        }
+      }
+    },
+    "component_groups": {
+      "fynn:schlafend": {
+        "minecraft:movement": {
+          "value": 0.0
+        }
+      },
+      "fynn:wach": {
+        "minecraft:attack": {
+          "damage": 14
+        },
+        "minecraft:behavior.hurt_by_target": {
+          "priority": 1
+        },
+        "minecraft:behavior.melee_box_attack": {
+          "priority": 2,
+          "speed_multiplier": 1.0,
+          "track_target": true
+        },
+        "minecraft:behavior.nearest_attackable_target": {
+          "priority": 2,
+          "must_see": true,
+          "reselect_targets": true,
+          "within_radius": 22,
+          "entity_types": [
+            {
+              "filters": {
+                "all_of": [
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "player"
+                  },
+                  {
+                    "test": "has_ability",
+                    "subject": "other",
+                    "value": "instabuild",
+                    "operator": "!="
+                  }
+                ]
+              },
+              "max_dist": 22
+            }
+          ]
+        },
+        "minecraft:follow_range": {
+          "value": 24,
+          "max": 24
+        }
+      },
+      "fynn:erz_1": {
+        "minecraft:loot": {
+          "table": "loot_tables/entities/moosgolem_erz1.json"
+        }
+      },
+      "fynn:erz_2": {
+        "minecraft:loot": {
+          "table": "loot_tables/entities/moosgolem_erz2.json"
+        }
+      },
+      "fynn:erz_3": {
+        "minecraft:loot": {
+          "table": "loot_tables/entities/moosgolem_erz3.json"
+        }
+      },
+      "fynn:erz_4": {
+        "minecraft:loot": {
+          "table": "loot_tables/entities/moosgolem_erz4.json"
+        }
+      },
+      "fynn:erz_5": {
+        "minecraft:loot": {
+          "table": "loot_tables/entities/moosgolem_erz5.json"
+        }
+      },
+      "fynn:erwachsen": {
+        "minecraft:loot": {
+          "table": "loot_tables/entities/moosgolem.json"
+        }
+      },
+      "fynn:variante_0": {
+        "minecraft:variant": {
+          "value": 0
+        }
+      },
+      "fynn:variante_1": {
+        "minecraft:variant": {
+          "value": 1
+        }
+      }
+    },
+    "components": {
+      "minecraft:type_family": {
+        "family": [
+          "moosgolem",
+          "fynn_tier",
+          "mob"
+        ]
+      },
+      "minecraft:health": {
+        "value": 120,
+        "max": 120
+      },
+      "minecraft:collision_box": {
+        "width": 2.8,
+        "height": 2.6
+      },
+      "minecraft:movement": {
+        "value": 0.2
+      },
+      "minecraft:hurt_on_condition": {
+        "damage_conditions": [
+          {
+            "filters": {
+              "test": "in_lava",
+              "subject": "self",
+              "operator": "==",
+              "value": true
+            },
+            "cause": "lava",
+            "damage_per_tick": 4
+          }
+        ]
+      },
+      "minecraft:nameable": {},
+      "minecraft:physics": {},
+      "minecraft:pushable_by_entity": {},
+      "minecraft:pushable_by_block": {},
+      "minecraft:jump.static": {},
+      "minecraft:follow_range": {
+        "value": 24,
+        "max": 24
+      },
+      "minecraft:despawn": {
+        "despawn_from_distance": {}
+      },
+      "minecraft:conditional_bandwidth_optimization": {},
+      "minecraft:experience_reward": {
+        "on_death": "query.last_hit_by_player ? Math.Random(1,3) : 0"
+      },
+      "minecraft:behavior.random_look_around": {
+        "priority": 9
+      },
+      "minecraft:behavior.hurt_by_target": {
+        "priority": 1
+      },
+      "minecraft:navigation.walk": {
+        "avoid_water": true,
+        "avoid_damage_blocks": true
+      },
+      "minecraft:movement.basic": {},
+      "minecraft:breathable": {
+        "total_supply": 15,
+        "suffocate_time": 0
+      },
+      "minecraft:behavior.float": {
+        "priority": 0
+      },
+      "minecraft:behavior.random_stroll": {
+        "priority": 6,
+        "speed_multiplier": 1.0
+      },
+      "minecraft:behavior.look_at_player": {
+        "priority": 8,
+        "look_distance": 8,
+        "probability": 0.02
+      },
+      "minecraft:knockback_resistance": {
+        "value": 1.0
+      }
+    },
+    "events": {
+      "fynn:aufwachen": {
+        "remove": {
+          "component_groups": [
+            "fynn:schlafend"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "fynn:wach"
+          ]
+        },
+        "set_property": {
+          "fynn:schlaeft": false
+        }
+      },
+      "fynn:einschlafen": {
+        "remove": {
+          "component_groups": [
+            "fynn:wach"
+          ]
+        },
+        "add": {
+          "component_groups": [
+            "fynn:schlafend"
+          ]
+        },
+        "set_property": {
+          "fynn:schlaeft": true
+        }
+      },
+      "minecraft:entity_spawned": {
+        "sequence": [
+          {
+            "filters": {
+              "test": "has_biome_tag",
+              "value": "roofed"
+            },
+            "add": {
+              "component_groups": [
+                "fynn:variante_1"
+              ]
+            }
+          },
+          {
+            "filters": {
+              "none_of": [
+                {
+                  "test": "has_biome_tag",
+                  "value": "roofed"
+                }
+              ]
+            },
+            "randomize": [
+              {
+                "weight": 65,
+                "add": {
+                  "component_groups": [
+                    "fynn:variante_0"
+                  ]
+                }
+              },
+              {
+                "weight": 35,
+                "add": {
+                  "component_groups": [
+                    "fynn:variante_1"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "randomize": [
+              {
+                "weight": 88,
+                "add": {
+                  "component_groups": [
+                    "fynn:erwachsen",
+                    "fynn:schlafend"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "randomize": [
+              {
+                "weight": 50,
+                "set_property": {
+                  "fynn:erz": 0
+                }
+              },
+              {
+                "weight": 18,
+                "set_property": {
+                  "fynn:erz": 1
+                },
+                "remove": {
+                  "component_groups": [
+                    "fynn:erwachsen"
+                  ]
+                },
+                "add": {
+                  "component_groups": [
+                    "fynn:erz_1"
+                  ]
+                }
+              },
+              {
+                "weight": 13,
+                "set_property": {
+                  "fynn:erz": 2
+                },
+                "remove": {
+                  "component_groups": [
+                    "fynn:erwachsen"
+                  ]
+                },
+                "add": {
+                  "component_groups": [
+                    "fynn:erz_2"
+                  ]
+                }
+              },
+              {
+                "weight": 9,
+                "set_property": {
+                  "fynn:erz": 3
+                },
+                "remove": {
+                  "component_groups": [
+                    "fynn:erwachsen"
+                  ]
+                },
+                "add": {
+                  "component_groups": [
+                    "fynn:erz_3"
+                  ]
+                }
+              },
+              {
+                "weight": 6,
+                "set_property": {
+                  "fynn:erz": 4
+                },
+                "remove": {
+                  "component_groups": [
+                    "fynn:erwachsen"
+                  ]
+                },
+                "add": {
+                  "component_groups": [
+                    "fynn:erz_4"
+                  ]
+                }
+              },
+              {
+                "weight": 4,
+                "set_property": {
+                  "fynn:erz": 5
+                },
+                "remove": {
+                  "component_groups": [
+                    "fynn:erwachsen"
+                  ]
+                },
+                "add": {
+                  "component_groups": [
+                    "fynn:erz_5"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "set_property": {
+              "fynn:schlaeft": true
+            }
+          }
+        ]
+      }
+    }
+  }
+}

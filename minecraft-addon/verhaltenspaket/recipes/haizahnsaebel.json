@@ -1,0 +1,36 @@
+{
+  "format_version": "1.12",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "fynn:haizahnsaebel"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "  Z",
+      "SZ ",
+      "T  "
+    ],
+    "key": {
+      "Z": {
+        "item": "fynn:haizahn"
+      },
+      "S": {
+        "item": "fynn:stahlbarren"
+      },
+      "T": {
+        "item": "minecraft:stick"
+      }
+    },
+    "unlock": [
+      {
+        "item": "fynn:haizahn"
+      }
+    ],
+    "result": {
+      "item": "fynn:haizahnsaebel",
+      "count": 1
+    }
+  }
+}

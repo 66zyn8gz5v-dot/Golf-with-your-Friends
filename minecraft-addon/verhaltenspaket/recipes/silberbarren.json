@@ -1,0 +1,11 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_furnace": {
+    "description": {
+      "identifier": "fynn:silberbarren_schmelzen"
+    },
+    "tags": [ "furnace", "blast_furnace" ],
+    "input": "fynn:rohsilber",
+    "output": "fynn:silberbarren"
+  }
+}

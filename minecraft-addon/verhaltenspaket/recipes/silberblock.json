@@ -1,0 +1,23 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "fynn:silberblock"
+    },
+    "tags": ["crafting_table"],
+    "pattern": [
+      "bbb",
+      "bbb",
+      "bbb"
+    ],
+    "key": {
+      "b": { "item": "fynn:silberbarren" }
+    },
+    "unlock": [
+      { "item": "fynn:silberbarren" }
+    ],
+    "result": {
+      "item": "fynn:silberblock"
+    }
+  }
+}

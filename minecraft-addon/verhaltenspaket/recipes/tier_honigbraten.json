@@ -1,0 +1,28 @@
+{
+  "format_version": "1.12",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "fynn:honigbraten"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "fynn:baerenbraten"
+      },
+      {
+        "item": "minecraft:honey_bottle"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "fynn:baerenbraten"
+      }
+    ],
+    "result": {
+      "item": "fynn:honigbraten",
+      "count": 1
+    }
+  }
+}

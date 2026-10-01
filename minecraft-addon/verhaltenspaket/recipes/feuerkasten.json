@@ -1,0 +1,25 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "fynn:feuerkasten"
+    },
+    "tags": [ "crafting_table" ],
+    "pattern": [
+      "#s#",
+      "#O#",
+      "#s#"
+    ],
+    "key": {
+      "#": { "item": "minecraft:stone_bricks" },
+      "s": { "item": "fynn:stahlbarren" },
+      "O": { "item": "minecraft:blast_furnace" }
+    },
+    "unlock": [
+      { "item": "fynn:stahlbarren" }
+    ],
+    "result": {
+      "item": "fynn:feuerkasten"
+    }
+  }
+}

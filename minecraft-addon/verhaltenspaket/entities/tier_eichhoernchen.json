@@ -1,0 +1,364 @@
+{
+  "format_version": "1.26.30",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "fynn:eichhoernchen",
+      "spawn_category": "creature",
+      "is_spawnable": true,
+      "is_summonable": true,
+      "properties": {
+        "fynn:klettert": {
+          "type": "bool",
+          "default": false,
+          "client_sync": true
+        },
+        "fynn:graebt": {
+          "type": "bool",
+          "default": false,
+          "client_sync": true
+        }
+      }
+    },
+    "component_groups": {
+      "fynn:haengt": {
+        "minecraft:physics": {
+          "has_gravity": false,
+          "has_collision": true
+        },
+        "minecraft:movement": {
+          "value": 0.0
+        }
+      },
+      "fynn:erwachsen": {
+        "minecraft:loot": {
+          "table": "loot_tables/entities/eichhoernchen.json"
+        }
+      },
+      "fynn:variante_0": {
+        "minecraft:variant": {
+          "value": 0
+        }
+      },
+      "fynn:variante_1": {
+        "minecraft:variant": {
+          "value": 1
+        }
+      }
+    },
+    "components": {
+      "minecraft:type_family": {
+        "family": [
+          "eichhoernchen",
+          "fynn_tier",
+          "mob"
+        ]
+      },
+      "minecraft:health": {
+        "value": 6,
+        "max": 6
+      },
+      "minecraft:collision_box": {
+        "width": 0.7,
+        "height": 0.9
+      },
+      "minecraft:movement": {
+        "value": 0.32
+      },
+      "minecraft:hurt_on_condition": {
+        "damage_conditions": [
+          {
+            "filters": {
+              "test": "in_lava",
+              "subject": "self",
+              "operator": "==",
+              "value": true
+            },
+            "cause": "lava",
+            "damage_per_tick": 4
+          }
+        ]
+      },
+      "minecraft:nameable": {},
+      "minecraft:physics": {},
+      "minecraft:pushable_by_entity": {},
+      "minecraft:pushable_by_block": {},
+      "minecraft:jump.static": {},
+      "minecraft:follow_range": {
+        "value": 24,
+        "max": 24
+      },
+      "minecraft:despawn": {
+        "despawn_from_distance": {}
+      },
+      "minecraft:conditional_bandwidth_optimization": {},
+      "minecraft:experience_reward": {
+        "on_death": "query.last_hit_by_player ? Math.Random(1,3) : 0"
+      },
+      "minecraft:behavior.random_look_around": {
+        "priority": 9
+      },
+      "minecraft:navigation.walk": {
+        "can_path_over_water": true,
+        "avoid_damage_blocks": true
+      },
+      "minecraft:movement.basic": {},
+      "minecraft:can_climb": {},
+      "minecraft:breathable": {
+        "total_supply": 15,
+        "suffocate_time": 0
+      },
+      "minecraft:leashable": {
+        "soft_distance": 4.0,
+        "hard_distance": 6.0,
+        "max_distance": 10.0
+      },
+      "minecraft:behavior.float": {
+        "priority": 0
+      },
+      "minecraft:behavior.random_stroll": {
+        "priority": 6,
+        "speed_multiplier": 0.8
+      },
+      "minecraft:behavior.look_at_player": {
+        "priority": 7,
+        "look_distance": 8,
+        "probability": 0.02
+      },
+      "minecraft:behavior.avoid_mob_type": {
+        "priority": 1,
+        "remove_target": true,
+        "entity_types": [
+          {
+            "filters": {
+              "any_of": [
+                {
+                  "test": "is_family",
+                  "subject": "other",
+                  "value": "steinadler"
+                },
+                {
+                  "test": "is_family",
+                  "subject": "other",
+                  "value": "fox"
+                },
+                {
+                  "test": "is_family",
+                  "subject": "other",
+                  "value": "ocelot"
+                },
+                {
+                  "test": "is_family",
+                  "subject": "other",
+                  "value": "cat"
+                },
+                {
+                  "test": "is_family",
+                  "subject": "other",
+                  "value": "wolf"
+                }
+              ]
+            },
+            "max_dist": 10,
+            "walk_speed_multiplier": 1.3,
+            "sprint_speed_multiplier": 1.6
+          },
+          {
+            "filters": {
+              "all_of": [
+                {
+                  "test": "is_family",
+                  "subject": "other",
+                  "value": "player"
+                },
+                {
+                  "test": "is_sneaking",
+                  "subject": "other",
+                  "value": false
+                }
+              ]
+            },
+            "max_dist": 6,
+            "walk_speed_multiplier": 1.3,
+            "sprint_speed_multiplier": 1.6
+          }
+        ]
+      },
+      "minecraft:behavior.move_to_block": {
+        "priority": 5,
+        "tick_interval": 240,
+        "start_chance": 0.5,
+        "search_range": 12,
+        "search_height": 5,
+        "goal_radius": 1.6,
+        "stay_duration": 2.0,
+        "speed_multiplier": 1.0,
+        "target_blocks": [
+          "minecraft:oak_log",
+          "minecraft:birch_log",
+          "minecraft:spruce_log",
+          "minecraft:jungle_log",
+          "minecraft:dark_oak_log",
+          "minecraft:acacia_log",
+          "minecraft:cherry_log",
+          "minecraft:mangrove_log",
+          "minecraft:pale_oak_log",
+          "minecraft:poplar_log"
+        ],
+        "on_reach": [
+          {
+            "event": "fynn:ziel_erreicht",
+            "target": "self"
+          }
+        ]
+      },
+      "minecraft:behavior.tempt": {
+        "priority": 4,
+        "speed_multiplier": 1.1,
+        "items": [
+          "minecraft:sweet_berries",
+          "minecraft:glow_berries",
+          "minecraft:wheat_seeds",
+          "minecraft:pumpkin_seeds",
+          "minecraft:melon_seeds",
+          "minecraft:beetroot_seeds",
+          "minecraft:torchflower_seeds",
+          "fynn:nuss"
+        ],
+        "can_tempt_vertically": true
+      },
+      "minecraft:interact": {
+        "interactions": [
+          {
+            "on_interact": {
+              "filters": {
+                "all_of": [
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "player"
+                  },
+                  {
+                    "any_of": [
+                      {
+                        "test": "has_equipment",
+                        "domain": "hand",
+                        "subject": "other",
+                        "value": "minecraft:sweet_berries"
+                      },
+                      {
+                        "test": "has_equipment",
+                        "domain": "hand",
+                        "subject": "other",
+                        "value": "minecraft:glow_berries"
+                      },
+                      {
+                        "test": "has_equipment",
+                        "domain": "hand",
+                        "subject": "other",
+                        "value": "minecraft:wheat_seeds"
+                      },
+                      {
+                        "test": "has_equipment",
+                        "domain": "hand",
+                        "subject": "other",
+                        "value": "minecraft:pumpkin_seeds"
+                      },
+                      {
+                        "test": "has_equipment",
+                        "domain": "hand",
+                        "subject": "other",
+                        "value": "minecraft:melon_seeds"
+                      },
+                      {
+                        "test": "has_equipment",
+                        "domain": "hand",
+                        "subject": "other",
+                        "value": "minecraft:beetroot_seeds"
+                      },
+                      {
+                        "test": "has_equipment",
+                        "domain": "hand",
+                        "subject": "other",
+                        "value": "minecraft:torchflower_seeds"
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "use_item": true,
+            "interact_text": "action.interact.feed",
+            "cooldown": 20.0
+          }
+        ]
+      },
+      "minecraft:damage_sensor": {
+        "triggers": [
+          {
+            "cause": "fall",
+            "deals_damage": false
+          }
+        ]
+      },
+      "minecraft:scale": {
+        "value": 0.7
+      },
+      "minecraft:behavior.panic": {
+        "priority": 1,
+        "speed_multiplier": 1.3
+      }
+    },
+    "events": {
+      "fynn:festhalten": {
+        "add": {
+          "component_groups": [
+            "fynn:haengt"
+          ]
+        }
+      },
+      "fynn:loslassen": {
+        "remove": {
+          "component_groups": [
+            "fynn:haengt"
+          ]
+        }
+      },
+      "minecraft:entity_spawned": {
+        "sequence": [
+          {
+            "randomize": [
+              {
+                "weight": 70,
+                "add": {
+                  "component_groups": [
+                    "fynn:variante_0"
+                  ]
+                }
+              },
+              {
+                "weight": 30,
+                "add": {
+                  "component_groups": [
+                    "fynn:variante_1"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "randomize": [
+              {
+                "weight": 88,
+                "add": {
+                  "component_groups": [
+                    "fynn:erwachsen"
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:block": {
+    "description": {
+      "identifier": "fynn:weidenroeschen",
+      "menu_category": {
+        "category": "nature",
+        "group": "minecraft:itemGroup.name.flower"
+      }
+    },
+    "components": {
+      "minecraft:geometry": "geometry.fynn.weidenroeschen",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "weidenroeschen",
+          "render_method": "alpha_test"
+        }
+      },
+      "minecraft:collision_box": false,
+      "minecraft:selection_box": {
+        "origin": [
+          -5,
+          0,
+          -5
+        ],
+        "size": [
+          10,
+          15,
+          10
+        ]
+      },
+      "minecraft:light_dampening": 0,
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 0.0
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 0.0
+      },
+      "minecraft:flammable": {
+        "catch_chance_modifier": 60,
+        "destroy_chance_modifier": 100
+      },
+      "minecraft:placement_filter": {
+        "conditions": [
+          {
+            "allowed_faces": [
+              "up"
+            ],
+            "block_filter": [
+              "minecraft:grass_block",
+              "minecraft:dirt",
+              "minecraft:podzol",
+              "minecraft:coarse_dirt",
+              "minecraft:moss_block",
+              "minecraft:mud",
+              "minecraft:rooted_dirt"
+            ]
+          }
+        ]
+      },
+      "minecraft:map_color": "#D8509A"
+    }
+  }
+}

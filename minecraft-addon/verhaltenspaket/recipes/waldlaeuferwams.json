@@ -1,0 +1,35 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "fynn:waldlaeuferwams"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "L L",
+      "GAG",
+      "LLL"
+    ],
+    "key": {
+      "L": {
+        "item": "minecraft:leather"
+      },
+      "G": {
+        "item": "minecraft:green_wool"
+      },
+      "A": {
+        "item": "minecraft:arrow"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:leather"
+      }
+    ],
+    "result": {
+      "item": "fynn:waldlaeuferwams"
+    }
+  }
+}

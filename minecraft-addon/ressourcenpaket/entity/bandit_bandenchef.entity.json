@@ -1,0 +1,61 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:bandenchef",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/banditen/bandenchef"
+      },
+      "geometry": {
+        "default": "geometry.fynn.bandenchef"
+      },
+      "animations": {
+        "laufen": "animation.fynn.bandenchef.laufen",
+        "stehen": "animation.fynn.bandenchef.stehen",
+        "halten": "animation.fynn.bandenchef.halten",
+        "hieb": "animation.fynn.bandenchef.hieb",
+        "bogen": "animation.fynn.bandenchef.bogen",
+        "umhang": "animation.fynn.bandenchef.umhang",
+        "blick": "animation.common.look_at_target"
+      },
+      "scripts": {
+        "animate": [
+          {
+            "laufen": "math.clamp(query.modified_move_speed * 1.4, 0.0, 1.0)"
+          },
+          "stehen",
+          "blick",
+          "halten",
+          {
+            "hieb": "variable.attack_time > 0.0"
+          },
+          "umhang"
+        ],
+        "variables": {
+          "variable.attack_time": "public",
+          "variable.fynn_schwert": "public",
+          "variable.fynn_waffe": "public",
+          "variable.fynn_schlag": "public",
+          "variable.fynn_hiebzeit": "public"
+        },
+        "initialize": [
+          "variable.fynn_schwert = 0.0;",
+          "variable.fynn_waffe = 0.0;",
+          "variable.fynn_schlag = 0.0;",
+          "variable.fynn_hiebzeit = 0.0;"
+        ],
+        "scale": "1.12"
+      },
+      "render_controllers": [
+        "controller.render.default"
+      ],
+      "spawn_egg": {
+        "texture": "bandenchef_ei",
+        "texture_index": 0
+      }
+    }
+  }
+}

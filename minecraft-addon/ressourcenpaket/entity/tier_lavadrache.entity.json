@@ -1,0 +1,250 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:lavadrache",
+      "materials": {
+        "default": "entity_emissive_alpha"
+      },
+      "textures": {
+        "basalt": "textures/entity/tiere/lavadrache_basalt",
+        "magma": "textures/entity/tiere/lavadrache_magma",
+        "seele": "textures/entity/tiere/lavadrache_seele",
+        "misch_basalt_lindwurm_rot": "textures/entity/tiere/lavadrache_misch_basalt_lindwurm_rot",
+        "misch_basalt_lindwurm_orange": "textures/entity/tiere/lavadrache_misch_basalt_lindwurm_orange",
+        "misch_basalt_lindwurm_obsidian": "textures/entity/tiere/lavadrache_misch_basalt_lindwurm_obsidian",
+        "misch_basalt_frostwyvern_eis": "textures/entity/tiere/lavadrache_misch_basalt_frostwyvern_eis",
+        "misch_basalt_frostwyvern_nacht": "textures/entity/tiere/lavadrache_misch_basalt_frostwyvern_nacht",
+        "misch_basalt_frostwyvern_gletscher": "textures/entity/tiere/lavadrache_misch_basalt_frostwyvern_gletscher",
+        "misch_basalt_himmelsdrache_jade": "textures/entity/tiere/lavadrache_misch_basalt_himmelsdrache_jade",
+        "misch_basalt_himmelsdrache_perle": "textures/entity/tiere/lavadrache_misch_basalt_himmelsdrache_perle",
+        "misch_basalt_himmelsdrache_gold": "textures/entity/tiere/lavadrache_misch_basalt_himmelsdrache_gold",
+        "misch_basalt_giftdrache_sumpf": "textures/entity/tiere/lavadrache_misch_basalt_giftdrache_sumpf",
+        "misch_basalt_giftdrache_gift": "textures/entity/tiere/lavadrache_misch_basalt_giftdrache_gift",
+        "misch_basalt_giftdrache_moor": "textures/entity/tiere/lavadrache_misch_basalt_giftdrache_moor",
+        "misch_basalt_nachtschwinge_blut": "textures/entity/tiere/lavadrache_misch_basalt_nachtschwinge_blut",
+        "misch_basalt_nachtschwinge_nacht": "textures/entity/tiere/lavadrache_misch_basalt_nachtschwinge_nacht",
+        "misch_basalt_nachtschwinge_sturm": "textures/entity/tiere/lavadrache_misch_basalt_nachtschwinge_sturm",
+        "misch_basalt_schlunddrache_moos": "textures/entity/tiere/lavadrache_misch_basalt_schlunddrache_moos",
+        "misch_basalt_schlunddrache_tiefsee": "textures/entity/tiere/lavadrache_misch_basalt_schlunddrache_tiefsee",
+        "misch_basalt_schlunddrache_knochen": "textures/entity/tiere/lavadrache_misch_basalt_schlunddrache_knochen",
+        "misch_basalt_dampfdrache_kupfer": "textures/entity/tiere/lavadrache_misch_basalt_dampfdrache_kupfer",
+        "misch_basalt_dampfdrache_rost": "textures/entity/tiere/lavadrache_misch_basalt_dampfdrache_rost",
+        "misch_basalt_dampfdrache_silber": "textures/entity/tiere/lavadrache_misch_basalt_dampfdrache_silber",
+        "misch_basalt_sternendrache_nacht": "textures/entity/tiere/lavadrache_misch_basalt_sternendrache_nacht",
+        "misch_basalt_sternendrache_morgen": "textures/entity/tiere/lavadrache_misch_basalt_sternendrache_morgen",
+        "misch_basalt_sternendrache_polar": "textures/entity/tiere/lavadrache_misch_basalt_sternendrache_polar",
+        "misch_basalt_lavadrache_magma": "textures/entity/tiere/lavadrache_misch_basalt_lavadrache_magma",
+        "misch_basalt_lavadrache_seele": "textures/entity/tiere/lavadrache_misch_basalt_lavadrache_seele",
+        "misch_magma_lindwurm_rot": "textures/entity/tiere/lavadrache_misch_magma_lindwurm_rot",
+        "misch_magma_lindwurm_obsidian": "textures/entity/tiere/lavadrache_misch_magma_lindwurm_obsidian",
+        "misch_magma_frostwyvern_eis": "textures/entity/tiere/lavadrache_misch_magma_frostwyvern_eis",
+        "misch_magma_lindwurm_orange": "textures/entity/tiere/lavadrache_misch_magma_lindwurm_orange",
+        "misch_magma_frostwyvern_nacht": "textures/entity/tiere/lavadrache_misch_magma_frostwyvern_nacht",
+        "misch_magma_frostwyvern_gletscher": "textures/entity/tiere/lavadrache_misch_magma_frostwyvern_gletscher",
+        "misch_magma_himmelsdrache_jade": "textures/entity/tiere/lavadrache_misch_magma_himmelsdrache_jade",
+        "misch_magma_himmelsdrache_perle": "textures/entity/tiere/lavadrache_misch_magma_himmelsdrache_perle",
+        "misch_magma_himmelsdrache_gold": "textures/entity/tiere/lavadrache_misch_magma_himmelsdrache_gold",
+        "misch_magma_giftdrache_sumpf": "textures/entity/tiere/lavadrache_misch_magma_giftdrache_sumpf",
+        "misch_magma_giftdrache_gift": "textures/entity/tiere/lavadrache_misch_magma_giftdrache_gift",
+        "misch_magma_giftdrache_moor": "textures/entity/tiere/lavadrache_misch_magma_giftdrache_moor",
+        "misch_magma_nachtschwinge_nacht": "textures/entity/tiere/lavadrache_misch_magma_nachtschwinge_nacht",
+        "misch_magma_nachtschwinge_blut": "textures/entity/tiere/lavadrache_misch_magma_nachtschwinge_blut",
+        "misch_magma_schlunddrache_moos": "textures/entity/tiere/lavadrache_misch_magma_schlunddrache_moos",
+        "misch_magma_nachtschwinge_sturm": "textures/entity/tiere/lavadrache_misch_magma_nachtschwinge_sturm",
+        "misch_magma_schlunddrache_knochen": "textures/entity/tiere/lavadrache_misch_magma_schlunddrache_knochen",
+        "misch_magma_schlunddrache_tiefsee": "textures/entity/tiere/lavadrache_misch_magma_schlunddrache_tiefsee",
+        "misch_magma_dampfdrache_kupfer": "textures/entity/tiere/lavadrache_misch_magma_dampfdrache_kupfer",
+        "misch_magma_dampfdrache_rost": "textures/entity/tiere/lavadrache_misch_magma_dampfdrache_rost",
+        "misch_magma_dampfdrache_silber": "textures/entity/tiere/lavadrache_misch_magma_dampfdrache_silber",
+        "misch_magma_sternendrache_nacht": "textures/entity/tiere/lavadrache_misch_magma_sternendrache_nacht",
+        "misch_magma_sternendrache_morgen": "textures/entity/tiere/lavadrache_misch_magma_sternendrache_morgen",
+        "misch_magma_lavadrache_basalt": "textures/entity/tiere/lavadrache_misch_magma_lavadrache_basalt",
+        "misch_magma_sternendrache_polar": "textures/entity/tiere/lavadrache_misch_magma_sternendrache_polar",
+        "misch_seele_lindwurm_rot": "textures/entity/tiere/lavadrache_misch_seele_lindwurm_rot",
+        "misch_magma_lavadrache_seele": "textures/entity/tiere/lavadrache_misch_magma_lavadrache_seele",
+        "misch_seele_lindwurm_orange": "textures/entity/tiere/lavadrache_misch_seele_lindwurm_orange",
+        "misch_seele_lindwurm_obsidian": "textures/entity/tiere/lavadrache_misch_seele_lindwurm_obsidian",
+        "misch_seele_frostwyvern_eis": "textures/entity/tiere/lavadrache_misch_seele_frostwyvern_eis",
+        "misch_seele_frostwyvern_gletscher": "textures/entity/tiere/lavadrache_misch_seele_frostwyvern_gletscher",
+        "misch_seele_frostwyvern_nacht": "textures/entity/tiere/lavadrache_misch_seele_frostwyvern_nacht",
+        "misch_seele_himmelsdrache_perle": "textures/entity/tiere/lavadrache_misch_seele_himmelsdrache_perle",
+        "misch_seele_himmelsdrache_jade": "textures/entity/tiere/lavadrache_misch_seele_himmelsdrache_jade",
+        "misch_seele_himmelsdrache_gold": "textures/entity/tiere/lavadrache_misch_seele_himmelsdrache_gold",
+        "misch_seele_giftdrache_sumpf": "textures/entity/tiere/lavadrache_misch_seele_giftdrache_sumpf",
+        "misch_seele_giftdrache_moor": "textures/entity/tiere/lavadrache_misch_seele_giftdrache_moor",
+        "misch_seele_giftdrache_gift": "textures/entity/tiere/lavadrache_misch_seele_giftdrache_gift",
+        "misch_seele_nachtschwinge_nacht": "textures/entity/tiere/lavadrache_misch_seele_nachtschwinge_nacht",
+        "misch_seele_nachtschwinge_sturm": "textures/entity/tiere/lavadrache_misch_seele_nachtschwinge_sturm",
+        "misch_seele_nachtschwinge_blut": "textures/entity/tiere/lavadrache_misch_seele_nachtschwinge_blut",
+        "misch_seele_schlunddrache_moos": "textures/entity/tiere/lavadrache_misch_seele_schlunddrache_moos",
+        "misch_seele_schlunddrache_knochen": "textures/entity/tiere/lavadrache_misch_seele_schlunddrache_knochen",
+        "misch_seele_schlunddrache_tiefsee": "textures/entity/tiere/lavadrache_misch_seele_schlunddrache_tiefsee",
+        "misch_seele_dampfdrache_kupfer": "textures/entity/tiere/lavadrache_misch_seele_dampfdrache_kupfer",
+        "misch_seele_dampfdrache_rost": "textures/entity/tiere/lavadrache_misch_seele_dampfdrache_rost",
+        "misch_seele_sternendrache_nacht": "textures/entity/tiere/lavadrache_misch_seele_sternendrache_nacht",
+        "misch_seele_dampfdrache_silber": "textures/entity/tiere/lavadrache_misch_seele_dampfdrache_silber",
+        "misch_seele_sternendrache_morgen": "textures/entity/tiere/lavadrache_misch_seele_sternendrache_morgen",
+        "misch_seele_sternendrache_polar": "textures/entity/tiere/lavadrache_misch_seele_sternendrache_polar",
+        "misch_seele_lavadrache_basalt": "textures/entity/tiere/lavadrache_misch_seele_lavadrache_basalt",
+        "misch_seele_lavadrache_magma": "textures/entity/tiere/lavadrache_misch_seele_lavadrache_magma"
+      },
+      "geometry": {
+        "default": "geometry.fynn.lavadrache"
+      },
+      "animations": {
+        "flug": "animation.fynn.lavadrache.flug",
+        "schweben": "animation.fynn.lavadrache.schweben",
+        "stand": "animation.fynn.lavadrache.stand",
+        "gehen": "animation.fynn.lavadrache.gehen",
+        "platz": "animation.fynn.lavadrache.platz",
+        "schlafen": "animation.fynn.lavadrache.schlafen",
+        "niederliegen": "animation.fynn.lavadrache.niederliegen",
+        "luftholen": "animation.fynn.lavadrache.luftholen",
+        "lavaatem": "animation.fynn.lavadrache.lavaatem",
+        "drachenbruellen": "animation.fynn.lavadrache.drachenbruellen",
+        "sturzflug": "animation.fynn.lavadrache.sturzflug",
+        "drachenblick": "animation.fynn.lavadrache.drachenblick",
+        "drachenbiss": "animation.fynn.lavadrache.drachenbiss",
+        "uralt": "animation.fynn.lavadrache.uralt",
+        "jung": "animation.fynn.lavadrache.jung",
+        "jung_hopsen": "animation.fynn.lavadrache.jung_hopsen",
+        "jung_flattern": "animation.fynn.lavadrache.jung_flattern",
+        "jung_wedeln": "animation.fynn.lavadrache.jung_wedeln",
+        "verliebt": "animation.fynn.lavadrache.verliebt",
+        "gabe_wirken": "animation.fynn.lavadrache.gabe_wirken",
+        "misch_lindwurm": "animation.fynn.lavadrache.misch_lindwurm",
+        "misch_frostwyvern": "animation.fynn.lavadrache.misch_frostwyvern",
+        "misch_himmelsdrache": "animation.fynn.lavadrache.misch_himmelsdrache",
+        "misch_giftdrache": "animation.fynn.lavadrache.misch_giftdrache",
+        "misch_nachtschwinge": "animation.fynn.lavadrache.misch_nachtschwinge",
+        "misch_schlunddrache": "animation.fynn.lavadrache.misch_schlunddrache",
+        "misch_dampfdrache": "animation.fynn.lavadrache.misch_dampfdrache",
+        "misch_sternendrache": "animation.fynn.lavadrache.misch_sternendrache"
+      },
+      "scripts": {
+        "initialize": [
+          "variable.fynn_gier_alt = query.body_y_rotation;",
+          "variable.fynn_dreh = 0.0;",
+          "variable.fynn_zufall = math.random(0.0, 360.0);",
+          "variable.fynn_wuchs = query.property('fynn:wuchs');"
+        ],
+        "pre_animation": [
+          "variable.fynn_d = query.body_y_rotation - variable.fynn_gier_alt;",
+          "variable.fynn_d = variable.fynn_d > 180.0 ? variable.fynn_d - 360.0 : (variable.fynn_d < -180.0 ? variable.fynn_d + 360.0 : variable.fynn_d);",
+          "variable.fynn_gier_alt = query.body_y_rotation;",
+          "variable.fynn_dreh = math.lerp(variable.fynn_dreh, math.clamp(variable.fynn_d / math.max(query.delta_time, 0.01) / 20.0, -10.0, 10.0), 0.12);",
+          "variable.fynn_wuchs = math.lerp(variable.fynn_wuchs, query.property('fynn:wuchs'), math.min(1.0, query.delta_time * 1.5));",
+          "variable.fynn_t = query.life_time + variable.fynn_zufall * 0.05;",
+          "variable.fynn_ruhig = (1.0 - math.clamp(query.modified_move_speed * 4.0, 0.0, 1.0)) * (1.0 - query.property('fynn:feuer')) * (1.0 - query.property('fynn:fliegt')) * (1.0 - math.max(query.property('fynn:schlaeft'), query.property('fynn:besiegt'))) * (1.0 - (query.property('fynn:wartet') * (1.0 - query.has_rider)));",
+          "variable.fynn_bz = math.mod(variable.fynn_t, 17.0);",
+          "variable.fynn_bruell = variable.fynn_bz < 2.4 ? math.clamp(math.sin(variable.fynn_bz / 2.4 * 180.0) * 2.2, 0.0, 1.0) * variable.fynn_ruhig : 0.0;",
+          "variable.fynn_sz = math.mod(variable.fynn_t + 6.0, 31.0);",
+          "variable.fynn_az = query.property('fynn:feuer') ? variable.fynn_az + query.delta_time : 0.0;",
+          "variable.fynn_holen = query.property('fynn:feuer') * math.clamp(variable.fynn_az / 0.25, 0.0, 1.0) * (1.0 - math.clamp((variable.fynn_az - 1.0) / 0.12, 0.0, 1.0));",
+          "variable.fynn_speit = query.property('fynn:feuer') * math.clamp((variable.fynn_az - 1.0) / 0.12, 0.0, 1.0);",
+          "variable.fynn_ruck = variable.fynn_speit * math.max(0.0, 1.0 - (variable.fynn_az - 1.0) / 0.4);",
+          "variable.fynn_offen_l = math.max(math.max(math.max(variable.fynn_bruell, math.clamp(math.sin(math.clamp((variable.fynn_sz - 0.0) / 3.2, 0.0, 1.0) * 180.0) * 1.6, 0.0, 1.0) * variable.fynn_ruhig), variable.fynn_speit * 0.35), math.max(query.property('fynn:wirkt'), ((query.property('fynn:wuchs') < 10) * variable.fynn_ruhig * (math.mod(variable.fynn_t, 14.0) >= 5.0 && math.mod(variable.fynn_t, 14.0) < 7.0 ? math.clamp(math.sin((math.mod(variable.fynn_t, 14.0) - 5.0) / 2.0 * 180.0) * 2.0, 0.0, 1.0) : 0.0))));",
+          "variable.fynn_offen_r = math.max(math.max(math.max(variable.fynn_bruell, math.clamp(math.sin(math.clamp((variable.fynn_sz - 3.8) / 3.2, 0.0, 1.0) * 180.0) * 1.6, 0.0, 1.0) * variable.fynn_ruhig), variable.fynn_speit * 0.35), math.max(query.property('fynn:wirkt'), ((query.property('fynn:wuchs') < 10) * variable.fynn_ruhig * (math.mod(variable.fynn_t, 14.0) >= 5.0 && math.mod(variable.fynn_t, 14.0) < 7.0 ? math.clamp(math.sin((math.mod(variable.fynn_t, 14.0) - 5.0) / 2.0 * 180.0) * 2.0, 0.0, 1.0) : 0.0))));"
+        ],
+        "animate": [
+          {
+            "flug": "query.property('fynn:fliegt') * (1.0 - math.max(query.property('fynn:schlaeft'), query.property('fynn:besiegt')))"
+          },
+          {
+            "schweben": "query.property('fynn:fliegt') * query.property('fynn:feuer') * (1.0 - math.max(query.property('fynn:schlaeft'), query.property('fynn:besiegt')))"
+          },
+          {
+            "stand": "(1.0 - query.property('fynn:fliegt')) * (1.0 - math.max(query.property('fynn:schlaeft'), query.property('fynn:besiegt'))) * (1.0 - (query.property('fynn:wartet') * (1.0 - query.has_rider)))"
+          },
+          {
+            "gehen": "(1.0 - query.property('fynn:fliegt')) * math.clamp(query.modified_move_speed * 4.0, 0.0, 1.0) * (1.0 - math.max(query.property('fynn:schlaeft'), query.property('fynn:besiegt'))) * (1.0 - (query.property('fynn:wartet') * (1.0 - query.has_rider)))"
+          },
+          {
+            "platz": "(1.0 - query.property('fynn:fliegt')) * (1.0 - math.max(query.property('fynn:schlaeft'), query.property('fynn:besiegt'))) * (query.property('fynn:wartet') * (1.0 - query.has_rider))"
+          },
+          {
+            "schlafen": "query.property('fynn:schlaeft') * (1.0 - query.property('fynn:besiegt'))"
+          },
+          {
+            "niederliegen": "query.property('fynn:besiegt')"
+          },
+          {
+            "luftholen": "variable.fynn_holen"
+          },
+          {
+            "lavaatem": "variable.fynn_speit"
+          },
+          {
+            "drachenbruellen": "variable.fynn_bruell"
+          },
+          {
+            "sturzflug": "query.property('fynn:fliegt') * math.clamp(-query.vertical_speed * 0.6 - 0.2, 0.0, 1.0)"
+          },
+          {
+            "drachenblick": "(1.0 - math.max(query.property('fynn:schlaeft'), query.property('fynn:besiegt')))"
+          },
+          {
+            "drachenbiss": "(variable.attack_time > 0.0) * (1.0 - math.max(query.property('fynn:schlaeft'), query.property('fynn:besiegt')))"
+          },
+          {
+            "uralt": "query.property('fynn:uralt')"
+          },
+          {
+            "jung": "query.property('fynn:wuchs') < 10"
+          },
+          {
+            "jung_hopsen": "(query.property('fynn:wuchs') < 10) * variable.fynn_ruhig * (math.mod(variable.fynn_t, 14.0) >= 0.0 && math.mod(variable.fynn_t, 14.0) < 2.2 ? math.clamp(math.sin((math.mod(variable.fynn_t, 14.0) - 0.0) / 2.2 * 180.0) * 2.0, 0.0, 1.0) : 0.0)"
+          },
+          {
+            "jung_flattern": "(query.property('fynn:wuchs') < 10) * variable.fynn_ruhig * (math.mod(variable.fynn_t, 14.0) >= 5.0 && math.mod(variable.fynn_t, 14.0) < 7.0 ? math.clamp(math.sin((math.mod(variable.fynn_t, 14.0) - 5.0) / 2.0 * 180.0) * 2.0, 0.0, 1.0) : 0.0)"
+          },
+          {
+            "jung_wedeln": "(query.property('fynn:wuchs') < 10) * variable.fynn_ruhig * (math.mod(variable.fynn_t, 14.0) >= 9.0 && math.mod(variable.fynn_t, 14.0) < 11.6 ? math.clamp(math.sin((math.mod(variable.fynn_t, 14.0) - 9.0) / 2.6 * 180.0) * 2.0, 0.0, 1.0) : 0.0)"
+          },
+          {
+            "verliebt": "query.property('fynn:verliebt') * variable.fynn_ruhig"
+          },
+          {
+            "gabe_wirken": "query.property('fynn:wirkt')"
+          },
+          {
+            "misch_lindwurm": "math.floor((query.property('fynn:misch') + 2) / 3) == 1"
+          },
+          {
+            "misch_frostwyvern": "math.floor((query.property('fynn:misch') + 2) / 3) == 2"
+          },
+          {
+            "misch_himmelsdrache": "math.floor((query.property('fynn:misch') + 2) / 3) == 3"
+          },
+          {
+            "misch_giftdrache": "math.floor((query.property('fynn:misch') + 2) / 3) == 4"
+          },
+          {
+            "misch_nachtschwinge": "math.floor((query.property('fynn:misch') + 2) / 3) == 5"
+          },
+          {
+            "misch_schlunddrache": "math.floor((query.property('fynn:misch') + 2) / 3) == 6"
+          },
+          {
+            "misch_dampfdrache": "math.floor((query.property('fynn:misch') + 2) / 3) == 7"
+          },
+          {
+            "misch_sternendrache": "math.floor((query.property('fynn:misch') + 2) / 3) == 8"
+          },
+          {
+            "jung": "query.is_baby"
+          }
+        ],
+        "scale": "1.3 * (0.3 + 0.7 * variable.fynn_wuchs / 10.0)"
+      },
+      "render_controllers": [
+        "controller.render.fynn.lavadrache"
+      ],
+      "spawn_egg": {
+        "texture": "lavadrache_ei",
+        "texture_index": 0
+      }
+    }
+  }
+}

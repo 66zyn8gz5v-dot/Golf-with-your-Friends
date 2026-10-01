@@ -1,0 +1,33 @@
+{
+  "format_version": "1.12",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "fynn:frosttalisman"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      " p ",
+      "pDp",
+      " p "
+    ],
+    "key": {
+      "p": {
+        "item": "fynn:frostpanzer"
+      },
+      "D": {
+        "item": "minecraft:diamond"
+      }
+    },
+    "unlock": [
+      {
+        "item": "fynn:frostpanzer"
+      }
+    ],
+    "result": {
+      "item": "fynn:frosttalisman",
+      "count": 1
+    }
+  }
+}

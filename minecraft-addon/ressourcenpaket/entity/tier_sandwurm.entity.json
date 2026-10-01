@@ -1,0 +1,66 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:sandwurm",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "wueste": "textures/entity/tiere/sandwurm_wueste",
+        "rotsand": "textures/entity/tiere/sandwurm_rotsand"
+      },
+      "geometry": {
+        "default": "geometry.fynn.sandwurm"
+      },
+      "animations": {
+        "wiegen": "animation.fynn.sandwurm.wiegen",
+        "unten": "animation.fynn.sandwurm.unten",
+        "oben": "animation.fynn.sandwurm.oben",
+        "auftauchen": "animation.fynn.sandwurm.auftauchen",
+        "abtauchen": "animation.fynn.sandwurm.abtauchen",
+        "schnappen": "animation.fynn.sandwurm.schnappen"
+      },
+      "scripts": {
+        "initialize": [
+          "variable.fynn_gier_alt = query.body_y_rotation;",
+          "variable.fynn_dreh = 0.0;",
+          "variable.fynn_zufall = math.random(0.0, 360.0);"
+        ],
+        "pre_animation": [
+          "variable.fynn_d = query.body_y_rotation - variable.fynn_gier_alt;",
+          "variable.fynn_d = variable.fynn_d > 180.0 ? variable.fynn_d - 360.0 : (variable.fynn_d < -180.0 ? variable.fynn_d + 360.0 : variable.fynn_d);",
+          "variable.fynn_gier_alt = query.body_y_rotation;",
+          "variable.fynn_dreh = math.lerp(variable.fynn_dreh, math.clamp(variable.fynn_d / math.max(query.delta_time, 0.01) / 20.0, -10.0, 10.0), 0.12);"
+        ],
+        "animate": [
+          {
+            "wiegen": "1.0 - query.property('fynn:unten')"
+          },
+          {
+            "unten": "query.property('fynn:unten')"
+          },
+          {
+            "oben": "1.0 - query.property('fynn:unten')"
+          },
+          {
+            "auftauchen": "query.property('fynn:auf')"
+          },
+          {
+            "abtauchen": "query.property('fynn:ab')"
+          },
+          {
+            "schnappen": "variable.attack_time > 0.0"
+          }
+        ]
+      },
+      "render_controllers": [
+        "controller.render.fynn.sandwurm"
+      ],
+      "spawn_egg": {
+        "texture": "sandwurm_ei",
+        "texture_index": 0
+      }
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "fynn:silberklinge"
+    },
+    "tags": ["crafting_table"],
+    "pattern": [
+      "X",
+      "X",
+      "#"
+    ],
+    "key": {
+      "#": { "item": "minecraft:stick" },
+      "X": { "item": "fynn:silberbarren" }
+    },
+    "unlock": [
+      { "item": "fynn:silberbarren" }
+    ],
+    "result": {
+      "item": "fynn:silberklinge"
+    }
+  }
+}

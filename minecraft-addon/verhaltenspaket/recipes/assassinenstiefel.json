@@ -1,0 +1,31 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "fynn:assassinenstiefel"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "D D",
+      "L L"
+    ],
+    "key": {
+      "D": {
+        "item": "minecraft:black_wool"
+      },
+      "L": {
+        "item": "minecraft:leather"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:black_wool"
+      }
+    ],
+    "result": {
+      "item": "fynn:assassinenstiefel"
+    }
+  }
+}

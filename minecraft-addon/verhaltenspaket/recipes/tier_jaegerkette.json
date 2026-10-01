@@ -1,0 +1,37 @@
+{
+  "format_version": "1.12",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "fynn:jaegerkette"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:string"
+      },
+      {
+        "item": "fynn:wildschweinhauer"
+      },
+      {
+        "item": "fynn:krokodilzahn"
+      },
+      {
+        "item": "fynn:haizahn"
+      },
+      {
+        "item": "minecraft:gold_nugget"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "minecraft:string"
+      }
+    ],
+    "result": {
+      "item": "fynn:jaegerkette",
+      "count": 1
+    }
+  }
+}

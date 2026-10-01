@@ -1,0 +1,2173 @@
+#!/usr/bin/env python3
+"""Baut die zwoelf Tiere: Verhalten, Aussehen, Bewegung, Vorkommen, Beute.
+
+Fynn: "ein paar neue Mobs ... die es auch im echten Leben gibt ... gross,
+cool, gefaehrlich ... Codes, wie die sich verhalten, was sie machen, was
+die droppen ... Baby-Varianten ... acht an Land, vier im Wasser ... auf die
+Biome verteilen ... verschiedene Varianten ... Drops mit unterschiedlicher
+Seltenheit ... Check die Lebensraeume."
+
+Die Gestalt jedes Tiers steht in tiere_gestalt.py, der Werkzeugkasten in
+tiermodell.py. Hier steht, wie sich die Tiere verhalten und wo sie leben -
+jedes als ein Eintrag in TIERE. Die Verhaltensbausteine folgen Mojangs
+eigenen Tieren (Beispielpaket bedrock-samples): Der Baer verteidigt seine
+Jungen wie der Eisbaer, der Wal taucht zum Atmen auf wie der Delfin, das
+Krokodil ist an Land und im Wasser zu Hause wie die Schildkroete.
+
+Wo sie leben (Biom-Merkmale aus Mojangs Biomdateien):
+
+    Braunbaer      Taiga (auch verschneit und Riesentaiga)
+    Elch           Taiga, verschneite Taiga
+    Wildschwein    Laub- und Birkenwald, dunkler Wald
+    Bison          Ebenen und Sonnenblumenebenen; im Schnee im Winterfell
+    Loewe          Savanne, in Rudeln
+    Tiger          Dschungel und Bambusdschungel, allein
+    Krokodil       Sumpf und Mangrovensumpf, an Land und im Wasser
+    Schneeleopard  Gipfel, Schneehaenge, Hain - hoch oben im Schnee
+    Buckelwal      Ozeane und tiefe Ozeane (nicht gefroren)
+    Hai            warme und laue Ozeane
+    Riesenkalmar   tiefe Ozeane, unter Hoehe 40, im Dunkeln
+    Schwertfisch   warme und laue Ozeane
+
+    python3 werkzeuge/tiere_bauen.py [--bilder ORDNER]
+"""
+
+import copy
+import json
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import tiere_gestalt as g                               # noqa: E402
+import tiermodell as tm                                 # noqa: E402
+from spawneier import ei_eintrag  # noqa: E402
+
+WURZEL = Path(__file__).resolve().parent.parent
+RES = WURZEL / "ressourcenpaket"
+VER = WURZEL / "verhaltenspaket"
+
+
+def schreibe(pfad, daten):
+    pfad.parent.mkdir(parents=True, exist_ok=True)
+    pfad.write_text(json.dumps(daten, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+def familie(*namen):
+    return {"any_of": [{"test": "is_family", "subject": "other", "value": n} for n in namen]}
+
+
+SPIELER = {"test": "is_family", "subject": "other", "value": "player"}
+KEIN_KREATIV = {"test": "has_ability", "subject": "other", "value": "instabuild", "operator": "!="}
+
+
+# ------------------------------------------------------------ Die Tiere
+#
+# verhalten:
+#   "neutral"   greift an, wenn man es angreift oder seinen Jungen zu nahe kommt
+#   "feindlich" greift Spieler in der Naehe an (reichweite), jagt Beute
+#   "friedlich" greift nie an
+# art: "land", "amphib" (Krokodil), "fisch" (atmet Wasser), "wal" (atmet Luft)
+
+TIERE = [
+    {
+        "id": "braunbaer", "name": ("Braunbär", "Brown Bear"), "gestalt": "baer",
+        "varianten": [("braun", 60), ("grizzly", 25), ("schwarz", 15)],
+        "art": "land", "verhalten": "neutral", "leben": 40, "schaden": 7, "tempo": 0.25,
+        "kollision": (1.4, 1.4), "baby": True, "herde": (1, 2),
+        # Baeren moegen Honig - wer Honigwaben in der Hand haelt, dem laufen
+        # sie nach, und mit Honig bekommen sie Junge.
+        "futter": ["minecraft:honeycomb", "minecraft:sweet_berries", "minecraft:salmon"],
+        "jagt": ["minecraft:salmon", "minecraft:cod"],
+        "biome": [["taiga"], ["extreme_hills", "forest"], ["roofed"]], "gewicht": 6,
+        "boden": ["minecraft:grass_block", "minecraft:podzol", "minecraft:snow_layer", "minecraft:coarse_dirt"],
+        "beute": [("fynn:baerenfleisch", 1, 3, 1.0, True), ("fynn:baerenfell", 1, 1, 0.5, False),
+                  ("fynn:baerenkralle", 1, 1, 0.08, False)],
+        "laute": {"ambient": "mob.polarbear.idle", "hurt": "mob.polarbear.hurt", "death": "mob.polarbear.death",
+                  "step": "mob.polarbear.step", "pitch": [0.7, 0.9]},
+        "ei": ("#6b4424", "#c9a26f"), "angriff": "tatze",
+        "verteidigt": ["loewe", "tiger"],
+        # Fynn (4.74): "Die Tiere sollen eine richtige Mission haben, nicht
+        # einfach durch die Welt latschen - der Braunbaer sucht Honig oder
+        # holt Lachs. Aggressiv ist er, wenn er Jungtiere hat, sonst nicht,
+        # ausser wenn man ihn anschlaegt." Die Ziele sucht er selbst
+        # (move_to_block), was er dort tut, steuert scripts/tiere.js ueber
+        # fynn:tun (1 Honig, 2 Beeren, 3 Angeln, 4 Warnen).
+        "aufgaben": True,
+        "eigenschaften": {"fynn:tun": {"type": "int", "range": [0, 4], "default": 0, "client_sync": True}},
+    },
+    {
+        "id": "elch", "grast": True, "scharrt": True, "name": ("Elch", "Moose"), "gestalt": "elch",
+        "varianten": [("bulle", 50), ("kuh", 50)], "baby_textur": "kalb",
+        "art": "land", "verhalten": "neutral", "leben": 36, "schaden": 6, "tempo": 0.23,
+        "kollision": (1.5, 2.3), "baby": True, "herde": (1, 3), "stoss": 1.6,
+        "futter": ["minecraft:apple", "minecraft:sweet_berries", "fynn:weidenroeschen"],
+        # Fynn: "Man kann jetzt auch den Elch reiten. Zaehmen mit irgendwas,
+        # was der frisst - eine Pflanze, oder Setzlinge." Elche fressen im
+        # Sommer Weidenroeschen und junge Baeume - beides zaehmt ihn.
+        "reiten": {"zaehmen": ["fynn:weidenroeschen", "minecraft:birch_sapling", "minecraft:spruce_sapling",
+                               "minecraft:oak_sapling", "minecraft:dark_oak_sapling", "minecraft:cherry_sapling"],
+                   "chance": 0.2, "tempo": 0.25, "sitz": [0.0, 1.75, -0.19], "sprung": 0.7},
+        "biome": [["taiga"], ["swamp"]], "gewicht": 6,
+        "boden": ["minecraft:grass_block", "minecraft:podzol", "minecraft:snow_layer", "minecraft:coarse_dirt"],
+        "beute": [("fynn:elchfleisch", 1, 3, 1.0, True), ("minecraft:leather", 0, 2, 1.0, False)],
+        # Das Geweih verlieren nur die Bullen - das entscheidet tiere.js,
+        # denn eine Beuteliste weiss nicht, welche Variante gestorben ist.
+        "laute": {"ambient": "mob.cow.say", "hurt": "mob.cow.hurt", "death": "mob.cow.hurt",
+                  "step": "mob.cow.step", "pitch": [0.45, 0.6]},
+        "ei": ("#3e2a1a", "#d8c8a0"), "angriff": "stoss",
+        # Elche fliehen vor dem Baeren und dem Krokodil am Ufer.
+        "flieht": ["braunbaer", "krokodil"],
+        "zeigen": {"geweih": "query.variant == 0 && !query.is_baby"},
+    },
+    {
+        "id": "wildschwein", "grast": True, "name": ("Wildschwein", "Wild Boar"), "gestalt": "wildschwein",
+        "varianten": [("erwachsen", 100)], "baby_textur": "frischling",
+        "art": "land", "verhalten": "feindlich", "reichweite": 5, "leben": 22, "schaden": 5, "tempo": 0.27,
+        "kollision": (0.9, 0.9), "baby": True, "herde": (2, 4), "stoss": 1.2,
+        "futter": ["minecraft:carrot", "minecraft:potato", "minecraft:beetroot", "minecraft:apple"],
+        "biome": [["forest", "!taiga", "!mountains"]], "gewicht": 8,
+        "boden": ["minecraft:grass_block", "minecraft:podzol", "minecraft:coarse_dirt"],
+        "beute": [("fynn:wildschweinfleisch", 1, 3, 1.0, True), ("fynn:wildschweinhauer", 1, 1, 0.12, False)],
+        "laute": {"ambient": "mob.hoglin.ambient", "hurt": "mob.hoglin.hurt", "death": "mob.hoglin.death",
+                  "step": "mob.hoglin.step", "pitch": [1.0, 1.2]},
+        "ei": ("#4a3c30", "#a88478"), "angriff": "stoss",
+        "flieht": ["loewe", "tiger", "krokodil", "braunbaer"],
+    },
+    {
+        "id": "bison", "grast": True, "scharrt": True, "name": ("Bison", "Bison"), "gestalt": "bison",
+        # Waldbisons sind dunkler; ganz selten ein weisser Bison - bei den
+        # Praerievoelkern ein heiliges Tier.
+        "varianten": [("prarie", 72), ("winter", 0), ("wald", 26), ("weiss", 2)], "baby_textur": "kalb",
+        "art": "land", "verhalten": "neutral", "herdenwut": True, "leben": 50, "schaden": 7, "tempo": 0.22,
+        "kollision": (1.8, 2.2), "baby": True, "herde": (3, 6), "stoss": 2.0,
+        "futter": ["minecraft:wheat"],
+        "biome": [["plains"], ["ice_plains", "!mutated"], ["meadow"]], "gewicht": 9,
+        "boden": ["minecraft:grass_block", "minecraft:snow_layer"],
+        # Im Schnee tragen sie Raureif auf dem Fell.
+        "variante_nach_biom": {"frozen": 1},
+        "beute": [("fynn:bisonfleisch", 2, 4, 1.0, True), ("fynn:bisonfell", 1, 1, 0.4, False),
+                  ("fynn:bisonhorn", 1, 1, 0.1, False)],
+        "laute": {"ambient": "mob.cow.say", "hurt": "mob.cow.hurt", "death": "mob.cow.hurt",
+                  "step": "mob.cow.step", "pitch": [0.35, 0.5]},
+        "ei": ("#3a2618", "#7a5636"), "angriff": "stoss",
+        # Kommt ein Loewe der Herde zu nahe, stellen sich die Bisons ihm
+        # entgegen - die ganze Herde, und die Kaelber laufen weg.
+        "verteidigt": ["loewe"], "jung_flieht": ["loewe", "braunbaer"],
+    },
+    {
+        "id": "loewe", "name": ("Löwe", "Lion"), "gestalt": "loewe",
+        "varianten": [("loewe", 35), ("loewin", 65)], "baby_textur": "junges",
+        "art": "land", "verhalten": "feindlich", "reichweite": 8, "nachts": 16,
+        "leben": 32, "schaden": 7, "tempo": 0.3,
+        "kollision": (1.1, 1.3), "baby": True, "herde": (2, 4),
+        "futter": ["minecraft:beef", "minecraft:mutton", "minecraft:porkchop"],
+        "jagt": ["minecraft:cow", "minecraft:sheep", "minecraft:pig", "minecraft:horse", "minecraft:donkey",
+                 "fynn:wildschwein"],
+        # Erwachsene Bisons und Nashoerner sind zu stark - nur ihre Jungen.
+        "jagt_jung": ["bison", "nashorn", "elefant"],
+        # Vor einer Elefantenherde weicht jedes Rudel zurueck.
+        "flieht": ["elefant"],
+        "biome": [["savanna"]], "gewicht": 6,
+        "boden": ["minecraft:grass_block", "minecraft:coarse_dirt"],
+        "beute": [("fynn:loewenfell", 1, 1, 0.35, False), ("fynn:loewenzahn", 1, 1, 0.15, False)],
+        "laute": {"ambient": "mob.polarbear.warning", "hurt": "mob.cat.hit", "death": "mob.polarbear.death",
+                  "step": "mob.polarbear.step", "pitch": [0.75, 0.9]},
+        "ei": ("#d8a864", "#6a3e1a"), "angriff": "tatze", "springt": True,
+        "zeigen": {"maehne": "query.variant == 0 && !query.is_baby"},
+    },
+    {
+        "id": "tiger", "name": ("Tiger", "Tiger"), "gestalt": "tiger",
+        "varianten": [("orange", 95), ("weiss", 5)],
+        "art": "land", "verhalten": "feindlich", "reichweite": 10, "leben": 32, "schaden": 8, "tempo": 0.3,
+        "kollision": (1.1, 1.2), "baby": True, "herde": (1, 1),
+        "futter": ["minecraft:beef", "minecraft:porkchop", "minecraft:chicken"],
+        "jagt": ["minecraft:pig", "minecraft:chicken", "minecraft:ocelot", "minecraft:panda", "fynn:wildschwein"],
+        "jagt_jung": ["gorilla", "elefant"], "flieht": ["elefant"],
+        "biome": [["jungle"]], "gewicht": 5,
+        "boden": ["minecraft:grass_block", "minecraft:podzol", "minecraft:moss_block"],
+        "beute": [("fynn:tigerfell", 1, 1, 0.35, False), ("fynn:tigerkralle", 1, 1, 0.12, False)],
+        "laute": {"ambient": "mob.polarbear.warning", "hurt": "mob.cat.hit", "death": "mob.polarbear.death",
+                  "step": "mob.polarbear.step", "pitch": [0.85, 1.0]},
+        "ei": ("#e8923a", "#1c1410"), "angriff": "tatze", "springt": True,
+    },
+    {
+        "id": "krokodil", "name": ("Krokodil", "Crocodile"), "gestalt": "krokodil",
+        "varianten": [("alt", 100)], "baby_textur": "jung",
+        "art": "amphib", "verhalten": "feindlich", "reichweite": 7, "leben": 30, "schaden": 8, "tempo": 0.17,
+        "wassertempo": 0.09, "kollision": (1.2, 0.6), "baby": True, "herde": (1, 2),
+        "futter": ["minecraft:cod", "minecraft:salmon", "minecraft:chicken"],
+        "jagt": ["minecraft:chicken", "minecraft:pig", "minecraft:cod", "minecraft:salmon", "minecraft:frog",
+                 "fynn:wildschwein"],
+        # Am Ufer packt es, was zum Trinken kommt.
+        "jagt_jung": ["elch"],
+        "biome": [["swamp"], ["mangrove_swamp"]], "gewicht": 6,
+        "boden": ["minecraft:grass_block", "minecraft:mud", "minecraft:mangrove_roots", "minecraft:muddy_mangrove_roots"],
+        "beute": [("fynn:krokodilfleisch", 1, 2, 1.0, True), ("fynn:krokodilleder", 1, 1, 0.5, False),
+                  ("fynn:krokodilzahn", 1, 1, 0.12, False)],
+        "laute": {"ambient": "mob.turtle.ambient", "hurt": "mob.turtle.hurt", "death": "mob.turtle.death",
+                  "step": "mob.turtle.step", "pitch": [0.4, 0.55]},
+        "ei": ("#3e4a22", "#d8cf9c"), "angriff": "biss",
+    },
+    {
+        "id": "schneeleopard", "name": ("Schneeleopard", "Snow Leopard"), "gestalt": "schneeleopard",
+        "varianten": [("grau", 100)],
+        "art": "land", "verhalten": "feindlich", "reichweite": 6, "leben": 24, "schaden": 6, "tempo": 0.32,
+        "kollision": (0.9, 1.0), "baby": True, "herde": (1, 1),
+        "futter": ["minecraft:mutton", "minecraft:rabbit"],
+        "jagt": ["minecraft:goat", "minecraft:rabbit", "minecraft:sheep"],
+        "flieht": ["braunbaer"],
+        "biome": [["frozen_peaks"], ["jagged_peaks"], ["snowy_slopes"], ["grove"]], "gewicht": 6,
+        "boden": ["minecraft:snow", "minecraft:snow_layer", "minecraft:stone", "minecraft:packed_ice",
+                  "minecraft:grass_block", "minecraft:powder_snow"],
+        "beute": [("fynn:schneeleopardenfell", 1, 1, 0.4, False)],
+        "laute": {"ambient": "mob.ocelot.idle", "hurt": "mob.cat.hit", "death": "mob.ocelot.death",
+                  "pitch": [0.55, 0.7]},
+        "ei": ("#e0e0dc", "#4a4844"), "angriff": "tatze", "springt": True, "kaelte": True,
+    },
+    {
+        "id": "wal", "name": ("Buckelwal", "Humpback Whale"), "gestalt": "wal",
+        "varianten": [("hell", 60), ("dunkel", 40)], "baby_textur": "kalb",
+        # Fynn (4.75): "Der Buckelwal soll auch aus dem Wasser springen und
+        # dann darauf klatschen koennen." Den Sprung stoesst scripts/tiere.js
+        # an (fynn:sprung), die Bewegung steht in wal_sprung().
+        "eigenschaften": {"fynn:sprung": {"type": "bool", "default": False, "client_sync": True}},
+        # Fynn: "Der Wal jagt ja diesen Riesenkalmar." Spielern tut er nichts,
+        # aber einen Kalmar in der Tiefe greift er an - rammt ihn mit dem
+        # Kopf, und der Kalmar wehrt sich (scripts/begegnungen.js).
+        "jagt": ["fynn:riesenkalmar"], "schaden": 9, "angriff": "ramme",
+        "art": "wal", "verhalten": "friedlich", "leben": 100, "tempo": 0.06, "wassertempo": 0.06,
+        "kollision": (3.0, 2.2), "baby": True, "herde": (1, 2), "luft": 1200,
+        "futter": ["minecraft:cod", "minecraft:salmon"],
+        "biome": [["ocean", "!frozen", "!warm"]], "gewicht": 2, "wasser": True,
+        "beute": [("fynn:walbarte", 1, 3, 1.0, False), ("fynn:ambra", 1, 1, 0.05, False)],
+        "laute": {"ambient": "mob.elderguardian.idle", "hurt": "mob.dolphin.hurt", "death": "mob.dolphin.death",
+                  "pitch": [0.3, 0.45]},
+        "ei": ("#1e2328", "#e6eaec"),
+    },
+    {
+        "id": "hai", "name": ("Hai", "Shark"), "gestalt": "hai",
+        "varianten": [("weisser_hai", 30), ("tigerhai", 40), ("hammerhai", 30)],
+        # Fynn (4.73): "Es soll den weissen Hai geben, der ist deutlich
+        # groesser." Er waechst im Verhaltenspaket (mit Trefferkasten), hat
+        # mehr Leben und beisst haerter.
+        "variante_zusatz": {0: {"minecraft:scale": {"value": 1.6}, "minecraft:health": {"value": 60, "max": 60},
+                                "minecraft:attack": {"damage": 11}}},
+        # Der Sturmangriff (scripts/tiere.js): Er nimmt Anlauf auf sein Ziel
+        # und wird dabei schneller; das Skript setzt fynn:sturm.
+        "eigenschaften": {"fynn:sturm": {"type": "bool", "default": False, "client_sync": True}},
+        "sturm": True,
+        "art": "fisch", "verhalten": "feindlich", "reichweite": 12, "blut": 24,
+        "leben": 34, "schaden": 7, "tempo": 0.12, "wassertempo": 0.16,
+        "kollision": (1.2, 0.8), "baby": False, "herde": (1, 2),
+        "jagt": ["minecraft:cod", "minecraft:salmon", "minecraft:tropicalfish", "minecraft:squid",
+                 "minecraft:dolphin", "minecraft:turtle"],
+        "biome": [["ocean", "warm"], ["ocean", "lukewarm"]], "gewicht": 4, "wasser": True,
+        "beute": [("fynn:haifleisch", 1, 2, 1.0, True), ("fynn:haihaut", 1, 1, 0.35, False),
+                  ("fynn:haizahn", 1, 2, 0.15, False)],
+        "laute": {"hurt": "mob.fish.hurt", "death": "mob.fish.hurt", "flop": "mob.fish.flop", "pitch": [0.5, 0.6]},
+        "ei": ("#5a6670", "#eef0f0"), "angriff": "biss",
+        "zeigen": {"hammer": "query.variant == 2"},
+    },
+    {
+        "id": "riesenkalmar", "name": ("Riesenkalmar", "Giant Squid"), "gestalt": "riesenkalmar",
+        "varianten": [("rot", 100)],
+        "art": "fisch", "verhalten": "feindlich", "reichweite": 10, "leben": 50, "schaden": 6,
+        "tempo": 0.1, "wassertempo": 0.1, "kollision": (1.6, 1.0), "baby": False, "herde": (1, 1),
+        "jagt": ["minecraft:squid", "minecraft:cod", "minecraft:salmon"],
+        # Gegen den Wal wehrt er sich - umschlingt ihn (scripts/begegnungen.js).
+        "verteidigt": ["wal"],
+        "biome": [["ocean", "deep"]], "gewicht": 3, "wasser": True, "tief": 40,
+        "beute": [("fynn:kalmarfleisch", 2, 3, 1.0, True), ("minecraft:ink_sac", 1, 3, 1.0, False),
+                  ("fynn:kalmarauge", 1, 1, 0.1, False)],
+        "laute": {"ambient": "mob.squid.ambient", "hurt": "mob.squid.hurt", "death": "mob.squid.death",
+                  "pitch": [0.4, 0.5]},
+        "ei": ("#8a2a34", "#e8a0a0"), "angriff": "arme",
+    },
+    {
+        "id": "schwertfisch", "name": ("Schwertfisch", "Swordfish"), "gestalt": "schwertfisch",
+        "varianten": [("blau", 100)],
+        "art": "fisch", "verhalten": "neutral", "leben": 18, "schaden": 6, "tempo": 0.12, "wassertempo": 0.2,
+        "kollision": (0.9, 0.6), "baby": False, "herde": (1, 3), "stoss": 1.0,
+        "jagt": ["minecraft:cod", "minecraft:salmon", "minecraft:tropicalfish"],
+        "biome": [["ocean", "warm"], ["ocean", "lukewarm"]], "gewicht": 5, "wasser": True,
+        "beute": [("fynn:schwertfischfilet", 1, 2, 1.0, True), ("fynn:schwertfischspiess", 1, 1, 0.15, False)],
+        "laute": {"hurt": "mob.fish.hurt", "death": "mob.fish.hurt", "flop": "mob.fish.flop", "pitch": [0.8, 1.0]},
+        "ei": ("#2e2644", "#c4ccd4"), "angriff": "spiess",
+    },
+    # ---------------------------------------------------- Fassung 4.41
+    {
+        "id": "elefant", "name": ("Elefant", "Elephant"), "gestalt": "elefant",
+        "varianten": [("savanne", 60), ("grau", 40)], "baby_textur": "kalb",
+        "art": "land", "verhalten": "neutral", "herdenwut": True, "leben": 80, "schaden": 10, "tempo": 0.2,
+        "kollision": (2.2, 2.8), "baby": True, "herde": (2, 4), "stoss": 2.0,
+        "futter": ["minecraft:melon_slice", "minecraft:wheat", "minecraft:apple"],
+        "biome": [["savanna"]], "gewicht": 5,
+        "boden": ["minecraft:grass_block", "minecraft:coarse_dirt"],
+        "beute": [("minecraft:leather", 2, 4, 1.0, False)],
+        "laute": {"ambient": "mob.ravager.roar", "hurt": "mob.ravager.hurt", "death": "mob.ravager.death",
+                  "step": "mob.ravager.step", "pitch": [1.2, 1.4]},
+        "ei": ("#8a8078", "#ece4cc"), "angriff": "stoss",
+        # Elefanten dulden keine Grosskatzen bei der Herde - sie vertreiben sie.
+        "verteidigt": ["loewe", "tiger"],
+        "zeigen": {"stosszaehne": "!query.is_baby"},
+        # Fynn: "Es gibt eine geringe Wahrscheinlichkeit, dass besonders
+        # grosse Elefanten spawnen. Auf dem kann man dann einen Spezialsattel
+        # drauf machen ... ordentlich Stauraum ... bis zu drei Spieler."
+        "riese": {"chance": 6, "gross": 1.4, "leben": 140, "kollision": (2.9, 3.8), "tempo": 0.22,
+                  "zaehmen": ["minecraft:hay_block", "minecraft:melon_block"], "zaehmchance": 0.25,
+                  "sattel": "fynn:elefantensattel",
+                  # Plattform oben bei y = 42 Pixel, um 1.4 vergroessert:
+                  # 42 * 1.4 / 16 = 3.7 Bloecke; die Reiter sitzen knapp darunter.
+                  "sitze": [[0.0, 3.45, 0.5], [-0.35, 3.45, -0.35], [0.35, 3.45, -0.35]]},
+    },
+    {
+        "id": "nashorn", "grast": True, "scharrt": True, "name": ("Nashorn", "Rhino"), "gestalt": "nashorn",
+        "varianten": [("grau", 70), ("dunkel", 30)], "baby_textur": "kalb",
+        "art": "land", "verhalten": "neutral", "leben": 50, "schaden": 9, "tempo": 0.24,
+        "kollision": (1.6, 1.9), "baby": True, "herde": (1, 2), "stoss": 2.5,
+        "futter": ["minecraft:wheat", "minecraft:hay_block"],
+        "biome": [["savanna"]], "gewicht": 4,
+        "boden": ["minecraft:grass_block", "minecraft:coarse_dirt"],
+        "beute": [("minecraft:leather", 1, 3, 1.0, False)],
+        "laute": {"ambient": "mob.hoglin.ambient", "hurt": "mob.hoglin.hurt", "death": "mob.hoglin.death",
+                  "step": "mob.ravager.step", "pitch": [0.55, 0.7]},
+        "ei": ("#8a8884", "#5e5a56"), "angriff": "stoss",
+        "verteidigt": ["loewe"], "jung_flieht": ["loewe"],
+        "zeigen": {"horn": "!query.is_baby"},
+    },
+    {
+        "id": "gorilla", "name": ("Gorilla", "Gorilla"), "gestalt": "gorilla",
+        "varianten": [("silberruecken", 35), ("schwarz", 65)], "baby_textur": "jung",
+        # Fynn: "Der Silberruecken muss ein bisschen groesser sein als der
+        # normale Affe." Wie in echt: Der alte Anfuehrer der Gruppe ist der
+        # schwerste Gorilla, gut ein Siebtel groesser als die anderen.
+        "variante_gross": {0: 1.15},
+        "art": "land", "verhalten": "neutral", "herdenwut": True, "leben": 40, "schaden": 8, "tempo": 0.26,
+        "kollision": (1.3, 1.8), "baby": True, "herde": (2, 4),
+        "futter": ["minecraft:melon_slice", "minecraft:sweet_berries", "minecraft:bamboo"],
+        "biome": [["jungle"]], "gewicht": 5,
+        "boden": ["minecraft:grass_block", "minecraft:podzol", "minecraft:moss_block"],
+        "beute": [("minecraft:leather", 0, 1, 1.0, False)],
+        "laute": {"ambient": "mob.panda.idle.aggressive", "hurt": "mob.panda.hurt", "death": "mob.panda.death",
+                  "step": "mob.polarbear.step", "pitch": [0.5, 0.65]},
+        "ei": ("#2c2a28", "#8a8884"), "angriff": "tatze", "trommelt": True,
+        # Der Silberruecken stellt sich dem Tiger, die Jungen fliehen.
+        "verteidigt": ["tiger"], "jung_flieht": ["tiger"],
+    },
+    {
+        "id": "walross", "name": ("Walross", "Walrus"), "gestalt": "walross",
+        "varianten": [("braun", 100)], "baby_textur": "jung",
+        "art": "amphib", "verhalten": "neutral", "herdenwut": True, "leben": 40, "schaden": 6, "tempo": 0.12,
+        "wassertempo": 0.08, "kollision": (1.6, 1.2), "baby": True, "herde": (2, 5), "stoss": 1.5,
+        "futter": ["minecraft:cod", "minecraft:salmon"],
+        "biome": [["frozen", "ocean"], ["beach", "cold"]], "gewicht": 7,
+        "boden": ["minecraft:ice", "minecraft:packed_ice", "minecraft:snow", "minecraft:snow_layer", "minecraft:gravel",
+                  "minecraft:stone", "minecraft:sand"],
+        "beute": [("minecraft:cod", 1, 3, 1.0, True), ("minecraft:leather", 0, 2, 1.0, False)],
+        "laute": {"ambient": "mob.cow.say", "hurt": "mob.cow.hurt", "death": "mob.cow.hurt",
+                  "step": "mob.turtle.step", "pitch": [0.4, 0.5]},
+        "ei": ("#9a6a52", "#ece2c8"), "angriff": "stoss",
+        "zeigen": {"zaehne": "!query.is_baby"},
+    },
+    {
+        "id": "mantarochen", "name": ("Mantarochen", "Manta Ray"), "gestalt": "manta",
+        "varianten": [("ozean", 70), ("riff", 30)],
+        "art": "fisch", "verhalten": "friedlich", "leben": 30, "tempo": 0.1, "wassertempo": 0.12,
+        "kollision": (1.8, 0.4), "baby": False, "herde": (1, 2), "fluegel": True,
+        "biome": [["ocean", "warm"], ["ocean", "lukewarm"]], "gewicht": 4, "wasser": True,
+        "beute": [("minecraft:prismarine_crystals", 0, 1, 1.0, False)],
+        "laute": {"hurt": "mob.fish.hurt", "death": "mob.fish.hurt", "flop": "mob.fish.flop", "pitch": [0.5, 0.6]},
+        "ei": ("#23272e", "#e8eaec"),
+    },
+    {
+        "id": "steinadler", "name": ("Steinadler", "Golden Eagle"), "gestalt": "adler",
+        "varianten": [("altvogel", 70), ("jungvogel", 30)],
+        "art": "vogel", "verhalten": "neutral", "leben": 16, "schaden": 4, "tempo": 1.2,
+        "kollision": (1.0, 0.6), "baby": False, "herde": (1, 1),
+        # Seit 4.77 auch Singvoegel und Eichhoernchen - die fliehen vor ihm.
+        "jagt": ["minecraft:rabbit", "minecraft:chicken", "fynn:singvogel", "fynn:eichhoernchen"],
+        "biome": [["mountains"], ["extreme_hills"], ["meadow"]], "gewicht": 4,
+        "boden": ["minecraft:grass_block", "minecraft:stone", "minecraft:snow_layer", "minecraft:gravel"],
+        "beute": [("minecraft:feather", 1, 3, 1.0, False)],
+        "laute": {"ambient": "mob.parrot.idle", "hurt": "mob.parrot.hurt", "death": "mob.parrot.death",
+                  "pitch": [0.55, 0.65]},
+        "ei": ("#4a3222", "#b8863a"), "angriff": "krallen",
+    },
+]
+
+
+# Die Kleintiere (4.77) stehen in eigenen Dateien - Gestalt in
+# kleintiere_gestalt.py, Steckbriefe in kleintiere_daten.py.
+from kleintiere_daten import KLEINTIERE  # noqa: E402
+from fantasy_daten import FANTASY  # noqa: E402
+from fantasy2_daten import FANTASY2  # noqa: E402
+from drachen_daten import DRACHEN  # noqa: E402
+TIERE += KLEINTIERE + FANTASY + FANTASY2 + DRACHEN
+
+
+# ------------------------------------------------------------ Verhalten
+
+def lava():
+    return {"damage_conditions": [{"filters": {"test": "in_lava", "subject": "self", "operator": "==", "value": True},
+                                   "cause": "lava", "damage_per_tick": 4}]}
+
+
+def angriffsziele(t):
+    """Wen ein feindliches Tier angreift."""
+    ziele = []
+    r = t.get("reichweite", 8)
+    if t["art"] in ("fisch",):
+        # Im Wasser: nur Spieler, die auch im Wasser sind. Wer blutet (wenig
+        # Leben), den wittert der Hai auch von weiter her.
+        ziele.append({"filters": {"all_of": [SPIELER, KEIN_KREATIV,
+                                              {"test": "in_water", "subject": "other", "value": True}]},
+                      "max_dist": r})
+        if t.get("blut"):
+            ziele.append({"filters": {"all_of": [SPIELER, KEIN_KREATIV,
+                                                  {"test": "in_water", "subject": "other", "value": True},
+                                                  {"test": "actor_health", "subject": "other",
+                                                   "operator": "<", "value": 10}]},
+                          "max_dist": t["blut"]})
+    else:
+        tag = {"filters": {"all_of": [SPIELER, KEIN_KREATIV]}, "max_dist": r}
+        ziele.append(tag)
+        if t.get("nachts"):
+            # Loewen jagen in der Daemmerung und nachts - dann sehen sie weiter.
+            ziele.append({"filters": {"all_of": [SPIELER, KEIN_KREATIV,
+                                                  {"test": "is_daytime", "value": False}]},
+                          "max_dist": t["nachts"]})
+    if t.get("jagt"):
+        ziele.append({"filters": familie(*[n.split(":")[1] for n in t["jagt"]]), "max_dist": 12})
+    if t.get("jagt_jung"):
+        ziele.append({"filters": {"all_of": [familie(*t["jagt_jung"]),
+                                              {"test": "is_baby", "subject": "other", "value": True}]},
+                      "max_dist": 12})
+    return ziele
+
+
+def flucht(familien, weite=10):
+    """Vor wem ein Tier wegrennt - vorrangig vor allem anderen, auch vor der
+    eigenen Jagd."""
+    return {"priority": 1, "remove_target": True, "entity_types": [
+        {"filters": familie(*familien), "max_dist": weite, "walk_speed_multiplier": 1.25,
+         "sprint_speed_multiplier": 1.45}]}
+
+
+def baerenaufgaben(t, gruppen, ereignisse):
+    """Der Baer geht von selbst zu Bienennestern, Beerenstraeuchern und ans
+    Wasser - aber nur, solange er ruhig ist. Kommt er an, meldet er es dem
+    Skript (fynn:ziel_erreicht), und das laesst ihn Honig holen, Beeren
+    fressen oder nach Lachsen schlagen.
+
+    Die Baerenmutter: Das Skript warnt erst (aufrichten, bruellen); kommt man
+    trotzdem naeher, loest es fynn:baerenmutter aus - dann greift sie jeden
+    Spieler in der Naehe an, zwoelf Sekunden lang."""
+    gruppen["fynn:ruhig"]["minecraft:behavior.move_to_block"] = {
+        "priority": 5, "tick_interval": 300, "start_chance": 0.6, "search_range": 16, "search_height": 4,
+        "goal_radius": 1.6, "stay_duration": 4.0, "speed_multiplier": 0.9,
+        "target_blocks": ["minecraft:bee_nest", "minecraft:beehive", "minecraft:sweet_berry_bush", "minecraft:water"],
+        "on_reach": [{"event": "fynn:ziel_erreicht", "target": "self"}]}
+    gruppen["fynn:aufgabe"] = {"minecraft:timer": {"time": 6.0, "looping": False,
+                                                   "time_down_event": {"event": "fynn:aufgabe_ende", "target": "self"}}}
+    ereignisse["fynn:ziel_erreicht"] = {"add": {"component_groups": ["fynn:aufgabe"]}}
+    ereignisse["fynn:aufgabe_ende"] = {"remove": {"component_groups": ["fynn:aufgabe"]}}
+    mutter = {
+        "minecraft:behavior.nearest_attackable_target": {
+            "priority": 1, "must_see": False, "reselect_targets": True, "within_radius": 16,
+            "entity_types": [{"filters": {"all_of": [SPIELER, KEIN_KREATIV]}, "max_dist": 16}]},
+        "minecraft:timer": {"time": 12.0, "looping": False,
+                            "time_down_event": {"event": "fynn:baerenmutter_ruhig", "target": "self"}},
+    }
+    mutter.update(angriffsbausteine(t))
+    gruppen["fynn:baerenmutter"] = mutter
+    ereignisse["fynn:baerenmutter"] = {"remove": {"component_groups": ["fynn:ruhig"]},
+                                       "add": {"component_groups": ["fynn:baerenmutter"]}}
+    ereignisse["fynn:baerenmutter_ruhig"] = {"remove": {"component_groups": ["fynn:baerenmutter"]},
+                                             "add": {"component_groups": ["fynn:ruhig"]}}
+
+
+def angriffsbausteine(t, prio=2):
+    b = {
+        "minecraft:attack": {"damage": t["schaden"]},
+        "minecraft:behavior.melee_box_attack": {"priority": prio, "speed_multiplier": 1.3, "track_target": True},
+    }
+    if t.get("springt"):
+        # Grosskatzen springen ihre Beute an.
+        b["minecraft:behavior.leap_at_target"] = {"priority": prio - 1, "yd": 0.4, "must_be_on_ground": True}
+    if t.get("stoss"):
+        b["minecraft:attack"]["effect_name"] = "slowness"
+        b["minecraft:attack"]["effect_duration"] = 1
+    if t.get("gift"):
+        b["minecraft:attack"]["effect_name"] = "poison"
+        b["minecraft:attack"]["effect_duration"] = 5
+    return b
+
+
+def verhalten(t, varianten_namen):
+    kennung = f"fynn:{t['id']}"
+    art = t["art"]
+    wasser = art in ("fisch", "wal")
+    c = {
+        "minecraft:type_family": {"family": [t["id"], "fynn_tier", "mob"] + (["aquatic"] if wasser else [])},
+        "minecraft:health": {"value": t["leben"], "max": t["leben"]},
+        "minecraft:collision_box": {"width": t["kollision"][0], "height": t["kollision"][1]},
+        "minecraft:movement": {"value": t["tempo"]},
+        "minecraft:hurt_on_condition": lava(),
+        "minecraft:nameable": {},
+        "minecraft:physics": {},
+        "minecraft:pushable_by_entity": {},
+        "minecraft:pushable_by_block": {},
+        "minecraft:jump.static": {},
+        "minecraft:follow_range": {"value": 24, "max": 24},
+        "minecraft:despawn": {"despawn_from_distance": {}},
+        "minecraft:conditional_bandwidth_optimization": {},
+        "minecraft:experience_reward": {"on_death": "query.last_hit_by_player ? Math.Random(1,3) : 0"},
+        "minecraft:behavior.random_look_around": {"priority": 9},
+    }
+    if t["verhalten"] != "friedlich":
+        c["minecraft:behavior.hurt_by_target"] = {"priority": 1}
+    if t.get("flieht"):
+        c["minecraft:behavior.avoid_mob_type"] = flucht(t["flieht"])
+
+    # --- Bewegung
+    if art == "land":
+        c.update({
+            "minecraft:navigation.walk": {"can_path_over_water": True, "avoid_damage_blocks": True},
+            "minecraft:movement.basic": {},
+            "minecraft:can_climb": {},
+            "minecraft:breathable": {"total_supply": 15, "suffocate_time": 0},
+            "minecraft:leashable": {"soft_distance": 4.0, "hard_distance": 6.0, "max_distance": 10.0},
+            "minecraft:behavior.float": {"priority": 0},
+            "minecraft:behavior.random_stroll": {"priority": 6, "speed_multiplier": 0.8},
+            "minecraft:behavior.look_at_player": {"priority": 7, "look_distance": 8, "probability": 0.02},
+        })
+        if t.get("kaelte"):
+            c["minecraft:freezing_immune"] = {}
+    elif art == "amphib":
+        c.update({
+            "minecraft:navigation.generic": {"is_amphibious": True, "can_path_over_water": False, "can_swim": True,
+                                             "can_walk": True, "can_sink": False, "avoid_damage_blocks": True},
+            "minecraft:movement.amphibious": {"max_turn": 10.0},
+            "minecraft:underwater_movement": {"value": t["wassertempo"]},
+            "minecraft:breathable": {"total_supply": 60, "suffocate_time": 0, "breathes_water": True,
+                                     "breathes_air": True, "generates_bubbles": False},
+            "minecraft:leashable": {"soft_distance": 4.0, "hard_distance": 6.0, "max_distance": 10.0},
+            "minecraft:behavior.random_stroll": {"priority": 7, "speed_multiplier": 0.8, "interval": 60},
+            "minecraft:behavior.random_swim": {"priority": 6, "interval": 0, "xz_dist": 16, "y_dist": 4},
+            "minecraft:behavior.look_at_player": {"priority": 8, "look_distance": 8, "probability": 0.02},
+        })
+    elif art == "fisch":
+        c.update({
+            "minecraft:navigation.generic": {"is_amphibious": False, "can_path_over_water": False, "can_swim": True,
+                                             "can_walk": False, "can_breach": False, "can_sink": False},
+            "minecraft:movement.sway": {"sway_amplitude": 0},
+            "minecraft:underwater_movement": {"value": t["wassertempo"]},
+            # Atmet Wasser - an Land erstickt er wie ein Fisch.
+            "minecraft:breathable": {"total_supply": 15, "suffocate_time": 0, "breathes_water": True,
+                                     "breathes_air": False},
+            "minecraft:behavior.random_swim": {"priority": 5, "interval": 0, "xz_dist": 16, "y_dist": 4,
+                                               "speed_multiplier": 1.0},
+            "minecraft:behavior.swim_idle": {"priority": 7, "idle_time": 3.0, "success_rate": 0.1},
+        })
+    elif art == "wal":
+        c.update({
+            "minecraft:navigation.generic": {"is_amphibious": True, "can_path_over_water": True, "can_swim": True,
+                                             "can_walk": False, "can_breach": True, "can_sink": False},
+            "minecraft:underwater_movement": {"value": t["wassertempo"]},
+            "minecraft:movement.sway": {"sway_amplitude": 0},
+            # Wale atmen Luft - alle Minute muessen sie hoch.
+            "minecraft:breathable": {"total_supply": t["luft"], "suffocate_time": 0, "breathes_air": True,
+                                     "breathes_water": False, "generates_bubbles": False},
+            "minecraft:behavior.swim_up_for_breath": {"priority": 1},
+            "minecraft:behavior.move_to_water": {"priority": 1, "search_range": 15, "search_height": 5},
+            "minecraft:behavior.random_swim": {"priority": 5, "interval": 0, "xz_dist": 24, "y_dist": 6},
+            "minecraft:behavior.random_breach": {"priority": 6, "interval": 200, "xz_dist": 6, "cooldown_time": 20.0},
+        })
+
+    elif art in ("kleinvogel", "kriecher", "insekt", "drache"):
+        pass    # alles Noetige steht in t["komponenten"]
+    elif art == "vogel":
+        # Wie Mojangs Phantom: gleitet ohne Schwerkraft, kreist hoch ueber
+        # einem Punkt und stoesst von oben herab - auf Kaninchen und
+        # Huehner, und auf jeden, der ihn angreift.
+        c.update({
+            "minecraft:movement.glide": {"start_speed": 0.1, "speed_when_turning": 0.2},
+            "minecraft:physics": {"has_gravity": False},
+            "minecraft:breathable": {"total_supply": 15, "suffocate_time": 0},
+            "minecraft:game_event_movement_tracking": {"emit_flap": True},
+            "minecraft:follow_range": {"value": 48, "max": 48},
+            "minecraft:attack": {"damage": t["schaden"]},
+            "minecraft:behavior.circle_around_anchor": {
+                "priority": 3, "goal_radius": 1, "radius_range": {"min": 6.0, "max": 14.0},
+                "height_offset_range": {"min": -3, "max": 4},
+                "height_above_target_range": {"min": 14, "max": 26}},
+            "minecraft:behavior.swoop_attack": {"priority": 2, "damage_reach": 0.3, "speed_multiplier": 1.0,
+                                                "delay_range": {"min": 8.0, "max": 16.0}},
+            "minecraft:behavior.nearest_attackable_target": {
+                "priority": 2, "must_see": True, "reselect_targets": True, "within_radius": 40,
+                "target_search_height": 40,
+                "entity_types": [{"filters": familie(*[n.split(":")[1] for n in t["jagt"]]), "max_dist": 40}]},
+        })
+
+    # Was nur dieses Tier hat (die Kleintiere bringen es fertig mit).
+    c.update(t.get("komponenten", {}))
+    for weg in t.get("ohne", []):
+        c.pop(weg, None)
+    if t.get("skalierung"):
+        c["minecraft:scale"] = {"value": t["skalierung"]}
+
+    # --- Verhalten und Junge
+    gruppen = dict(t.get("gruppen", {}))
+    ereignisse = dict(t.get("ereignisse", {}))
+    erwachsen, baby = "fynn:erwachsen", "fynn:baby"
+    gruppen[erwachsen] = {"minecraft:loot": {"table": f"loot_tables/entities/{t['id']}.json"}}
+
+    if t["verhalten"] == "neutral" and art != "vogel":
+        # Wie Mojangs Eisbaer: ruhig, bis man es angreift - oder bis man einem
+        # Jungen zu nahe kommt. Dann ruft das Junge, und die Alten kommen.
+        gruppen["fynn:ruhig"] = {
+            "minecraft:on_target_acquired": {"event": "fynn:wuetend", "target": "self"},
+            "minecraft:on_friendly_anger": {"event": "fynn:wuetend", "target": "self"},
+        }
+        wut = {"minecraft:angry": {"duration": 400, "broadcast_anger": bool(t.get("herdenwut")),
+                                   "broadcast_range": 16,
+                                   "broadcast_targets": [t["id"]],
+                                   "calm_event": {"event": "fynn:beruhigt", "target": "self"}}}
+        wut.update(angriffsbausteine(t))
+        gruppen["fynn:wuetend"] = wut
+        if t.get("verteidigt"):
+            # Kommt ein Raeuber nahe, wird das Tier wuetend wie bei einem
+            # Angriff - bei Herdentieren die ganze Herde.
+            gruppen["fynn:ruhig"]["minecraft:behavior.nearest_attackable_target"] = {
+                "priority": 2, "must_see": True, "reselect_targets": True, "within_radius": 10,
+                "entity_types": [{"filters": familie(*t["verteidigt"]), "max_dist": 10}]}
+        ereignisse["fynn:wuetend"] = {"remove": {"component_groups": ["fynn:ruhig"]},
+                                       "add": {"component_groups": ["fynn:wuetend"]}}
+        ereignisse["fynn:beruhigt"] = {"remove": {"component_groups": ["fynn:wuetend"]},
+                                        "add": {"component_groups": ["fynn:ruhig"]}}
+    elif t["verhalten"] == "feindlich":
+        ziele = angriffsziele(t)
+        if t.get("verteidigt"):
+            ziele.append({"filters": familie(*t["verteidigt"]), "max_dist": 10})
+        f = {"minecraft:behavior.nearest_attackable_target": {"priority": 3, "must_see": True, "reselect_targets": True,
+                                                              "within_radius": 24, "entity_types": ziele}}
+        f.update(angriffsbausteine(t))
+        gruppen["fynn:jagd"] = f
+    elif t.get("jagt") and art == "wal":
+        # Friedlich zu Spielern, aber ein Jaeger: Er sucht nur seine Beute
+        # und wehrt sich nur gegen sie - wer ihn schlaegt, vor dem taucht er ab.
+        f = {"minecraft:behavior.nearest_attackable_target": {
+                 "priority": 3, "must_see": False, "reselect_targets": True, "within_radius": 24,
+                 "entity_types": [{"filters": familie(*[n.split(":")[1] for n in t["jagt"]]), "max_dist": 24}]},
+             "minecraft:behavior.hurt_by_target": {
+                 "priority": 1, "entity_types": {"filters": familie(*[n.split(":")[1] for n in t["jagt"]])}}}
+        f.update(angriffsbausteine(t))
+        gruppen["fynn:jagd"] = f
+    elif art != "vogel" and not t.get("keine_panik"):
+        c["minecraft:behavior.panic"] = {"priority": 1, "speed_multiplier": 1.3}
+
+    if t.get("aufgaben"):
+        baerenaufgaben(t, gruppen, ereignisse)
+
+    erwachsen_liste = [erwachsen] + (["fynn:ruhig"] if "fynn:ruhig" in gruppen else []) + \
+                      (["fynn:jagd"] if "fynn:jagd" in gruppen else [])
+    erwachsen_liste += t.get("start_gruppen", [])
+    if t.get("reiten"):
+        erwachsen_liste.append("fynn:wild")
+        reittier(t, c, gruppen, ereignisse)
+
+    if t.get("baby"):
+        gruppen[baby] = {
+            "minecraft:is_baby": {},
+            "minecraft:scale": {"value": 0.5},
+            "minecraft:ageable": {"duration": 1200, "feed_items": t.get("futter", []),
+                                  "grow_up": {"event": "minecraft:ageable_grow_up", "target": "self"}},
+            # Fynn: "Babys sollen in der Naehe der Erwachsenen laufen." Das
+            # Junge folgt eng, und wenn es selbst herumlaeuft, dann nur ein
+            # paar Schritte weit.
+            "minecraft:behavior.follow_parent": {"priority": 3, "speed_multiplier": 1.3},
+            "minecraft:behavior.random_stroll": {"priority": 7, "speed_multiplier": 0.8, "xz_dist": 3, "y_dist": 1},
+            "minecraft:behavior.panic": {"priority": 1, "speed_multiplier": 1.4},
+        }
+        if t.get("jung_flieht"):
+            gruppen[baby]["minecraft:behavior.avoid_mob_type"] = flucht(t["jung_flieht"], 12)
+        if t["verhalten"] != "friedlich" and not wasser:
+            # Ein Junges, dem ein Spieler zu nahe kommt, ruft die Alten.
+            gruppen[baby]["minecraft:behavior.nearest_attackable_target"] = {
+                "priority": 5, "entity_types": [{"filters": {"all_of": [SPIELER, KEIN_KREATIV]}, "max_dist": 6}]}
+            gruppen[baby]["minecraft:on_target_acquired"] = {"event": "fynn:junges_ruft", "target": "self"}
+            gruppen["fynn:junges_ruft"] = {"minecraft:angry": {
+                "duration": 1, "broadcast_anger": True, "broadcast_range": 20, "broadcast_targets": [t["id"]],
+                "calm_event": {"event": "fynn:junges_still", "target": "self"}}}
+            ereignisse["fynn:junges_ruft"] = {"add": {"component_groups": ["fynn:junges_ruft"]}}
+            ereignisse["fynn:junges_still"] = {"remove": {"component_groups": ["fynn:junges_ruft"]}}
+            if t["verhalten"] == "feindlich":
+                # Feindliche Alte greifen ohnehin an; ruft ein Junges, werden
+                # sie wuetend auch ueber ihre Reichweite hinaus.
+                gruppen["fynn:jagd"]["minecraft:on_friendly_anger"] = {"event": "fynn:mutter", "target": "self"}
+                gruppen["fynn:mutter"] = {"minecraft:angry": {"duration": 200, "broadcast_anger": False,
+                                                               "calm_event": {"event": "fynn:mutter_ruhig",
+                                                                              "target": "self"}}}
+                ereignisse["fynn:mutter"] = {"add": {"component_groups": ["fynn:mutter"]}}
+                ereignisse["fynn:mutter_ruhig"] = {"remove": {"component_groups": ["fynn:mutter"]}}
+        ereignisse["minecraft:ageable_grow_up"] = {"remove": {"component_groups": [baby, "fynn:junges_ruft"]},
+                                                   "add": {"component_groups": erwachsen_liste}}
+        ereignisse["minecraft:entity_born"] = {"add": {"component_groups": [baby]}}
+        if t.get("futter"):
+            # Reittiere bekommen Junge nur, wenn sie gezaehmt sind - wie
+            # Pferde. So stoert das Fuettern das Zaehmen nicht.
+            c["minecraft:breedable"] = {"require_tame": bool(t.get("reiten")), "breed_items": t["futter"],
+                                        "breeds_with": {"mate_type": kennung, "baby_type": kennung,
+                                                        "breed_event": {"event": "minecraft:entity_born",
+                                                                        "target": "baby"}}}
+            c["minecraft:behavior.breed"] = {"priority": 3, "speed_multiplier": 1.0}
+    if t.get("futter"):
+        c["minecraft:behavior.tempt"] = {"priority": 4, "speed_multiplier": 1.1, "items": t["futter"],
+                                         "can_tempt_vertically": True}
+
+    # --- Varianten
+    for i, _ in enumerate(varianten_namen):
+        gruppen[f"fynn:variante_{i}"] = {"minecraft:variant": {"value": i}}
+        gruppen[f"fynn:variante_{i}"].update(t.get("variante_zusatz", {}).get(i, {}))
+
+    zufall = [{"weight": w, "add": {"component_groups": [f"fynn:variante_{i}"]}}
+              for i, (_, w) in enumerate(t["varianten"]) if w > 0]
+    alter = [{"weight": 88, "add": {"component_groups": erwachsen_liste}}]
+    if t.get("riese"):
+        rie = t["riese"]
+        alter = [{"weight": 88 - rie["chance"], "add": {"component_groups": erwachsen_liste}},
+                 {"weight": rie["chance"], "add": {"component_groups": erwachsen_liste + ["fynn:riese"]},
+                  "set_property": {"fynn:riese": True}}]
+        riesenreittier(t, c, gruppen, ereignisse)
+    if t.get("baby"):
+        alter.append({"weight": 12, "add": {"component_groups": [baby]}})
+    folge = []
+    if t.get("variante_nach_biom"):
+        for merkmal, v in t["variante_nach_biom"].items():
+            folge.append({"filters": {"test": "has_biome_tag", "value": merkmal},
+                          "add": {"component_groups": [f"fynn:variante_{v}"]}})
+        folge.append({"filters": {"none_of": [{"test": "has_biome_tag", "value": m}
+                                              for m in t["variante_nach_biom"]]},
+                      "randomize": zufall})
+    else:
+        folge.append({"randomize": zufall})
+    folge.append({"randomize": alter})
+    if t.get("start_wuerfeln"):
+        # Was beim Erscheinen noch ausgewuerfelt wird (das Erz auf dem
+        # Ruecken des Moosgolems) - erst nach dem Alter, damit eine
+        # Beutegruppe darin die des Erwachsenen ersetzt.
+        folge.append({"randomize": t["start_wuerfeln"]})
+    if t.get("start_setzen"):
+        # Was von Anfang an gilt (der Sandwurm beginnt unter dem Sand).
+        folge.append({"set_property": t["start_setzen"]})
+    ereignisse["minecraft:entity_spawned"] = {"sequence": folge}
+    if t.get("baby"):
+        ereignisse["minecraft:entity_born"] = {"sequence": [{"add": {"component_groups": [baby]}},
+                                                            {"randomize": zufall}]}
+
+    beschreibung = {"identifier": kennung, "spawn_category": "water_creature" if wasser else "creature",
+                    "is_spawnable": True, "is_summonable": True}
+    if t.get("riese"):
+        beschreibung["properties"] = {"fynn:riese": {"type": "bool", "default": False, "client_sync": True}}
+    if t.get("reiten"):
+        # Wie viele Rucksaecke der Elch traegt (0 bis 2) - das Spiel zeigt
+        # danach die Taschen an den Flanken (verhaltenspaket/scripts/rucksack.js).
+        beschreibung["properties"] = {"fynn:taschen": {"type": "int", "range": [0, 2], "default": 0,
+                                                       "client_sync": True}}
+    if t.get("eigenschaften"):
+        beschreibung.setdefault("properties", {}).update(t["eigenschaften"])
+    return {
+        "format_version": "1.26.30",
+        "minecraft:entity": {
+            "description": beschreibung,
+            "component_groups": gruppen,
+            "components": c,
+            "events": ereignisse,
+        },
+    }
+
+
+def reittier(t, c, gruppen, ereignisse):
+    """Zaehmen, Satteln, Reiten - nach Mojangs Kamel und Pferd.
+
+    Wild: Fuettern mit dem, was in "zaehmen" steht, zaehmt mit einer
+    Chance. Gezaehmt: vergisst jede Wut, bleibt fuer immer, laesst einen
+    Sattel auflegen (mit der Schere wieder ab) und traegt einen Reiter.
+    Gesattelt: laesst sich lenken, so schnell wie ein Pferd, springt hoch,
+    wenn man die Sprungtaste haelt."""
+    r = t["reiten"]
+    sattel_in_hand = {"test": "has_equipment", "subject": "other", "domain": "hand", "value": "saddle"}
+    hat_sattel = {"test": "has_equipment", "subject": "self", "domain": "inventory", "value": "saddle"}
+    nicht_geduckt = {"test": "is_sneak_held", "subject": "other", "value": False}
+    gruppen["fynn:wild"] = {"minecraft:tameable": {
+        "probability": r["chance"], "tame_items": r["zaehmen"],
+        "tame_event": {"event": "fynn:gezaehmt", "target": "self"}}}
+    gruppen["fynn:gezaehmt"] = {
+        "minecraft:is_tamed": {},
+        "minecraft:inventory": {"container_type": "horse"},
+        "minecraft:equippable": {"slots": [{"slot": 0, "item": "saddle", "accepted_items": ["saddle"],
+                                            "on_equip": {"event": "fynn:gesattelt"},
+                                            "on_unequip": {"event": "fynn:abgesattelt"}}]},
+        "minecraft:interact": {"interactions": [
+            {"on_interact": {"filters": {"all_of": [dict(hat_sattel, operator="not"), sattel_in_hand, nicht_geduckt]}},
+             "equip_item_slot": "0", "interact_text": "action.interact.saddle"},
+            {"on_interact": {"filters": {"all_of": [
+                hat_sattel, {"test": "rider_count", "subject": "self", "operator": "equals", "value": 0},
+                {"test": "has_equipment", "subject": "other", "domain": "hand", "value": "shears"}, nicht_geduckt]}},
+             "hurt_item": 1, "drop_item_slot": "0", "drop_item_y_offset": 2,
+             "interact_text": "action.interact.removesaddle", "play_sounds": "unsaddle"},
+        ]},
+        "minecraft:rideable": {"seat_count": 1, "crouching_skip_interact": True, "family_types": ["player"],
+                               "interact_text": "action.interact.ride.horse",
+                               "seats": [{"position": r["sitz"]}]},
+        "minecraft:variable_max_auto_step": {"base_value": 1.0625, "controlled_value": 1.0625,
+                                             "jump_prevented_value": 0.5625},
+    }
+    gruppen["fynn:gesattelt"] = {
+        "minecraft:is_saddled": {},
+        "minecraft:input_ground_controlled": {},
+        "minecraft:behavior.player_ride_tamed": {},
+        "minecraft:movement": {"value": r["tempo"]},
+        "minecraft:can_power_jump": {},
+        "minecraft:horse.jump_strength": {"value": r["sprung"]},
+    }
+    ereignisse["fynn:gezaehmt"] = {"remove": {"component_groups": ["fynn:wild", "fynn:ruhig", "fynn:wuetend"]},
+                                    "add": {"component_groups": ["fynn:gezaehmt"]}}
+    ereignisse["fynn:gesattelt"] = {"add": {"component_groups": ["fynn:gesattelt"]}}
+    ereignisse["fynn:abgesattelt"] = {"remove": {"component_groups": ["fynn:gesattelt"]}}
+    # Ein gezaehmtes Tier verschwindet nie, auch wenn man weit weg ist.
+    c["minecraft:despawn"] = {"despawn_from_distance": {},
+                              "filters": {"test": "is_tamed", "subject": "self", "operator": "!=", "value": True}}
+    # Wer wuetend ist, laesst sich nicht zaehmen - der Eisbaer-Wutzustand
+    # bleibt fuer wilde Elche.
+    if "fynn:ruhig" in gruppen:
+        ereignisse["fynn:beruhigt"] = {"sequence": [
+            {"filters": {"test": "is_tamed", "subject": "self", "value": False},
+             "remove": {"component_groups": ["fynn:wuetend"]}, "add": {"component_groups": ["fynn:ruhig"]}},
+            {"filters": {"test": "is_tamed", "subject": "self", "value": True},
+             "remove": {"component_groups": ["fynn:wuetend"]}}]}
+
+
+def riesenreittier(t, c, gruppen, ereignisse):
+    """Der Riesenelefant: selten, gross, gutmuetig. Mit Heuballen oder
+    Melonen zaehmen, dann den Elefantensattel auflegen (mit der Schere
+    wieder ab). Gesattelt tragen sie drei Reiter - wer zuerst aufsteigt,
+    lenkt - und eine Kiste mit 15 Plaetzen (geduckt antippen oder beim
+    Reiten das Inventar oeffnen)."""
+    r = t["riese"]
+    nicht_geduckt = {"test": "is_sneak_held", "subject": "other", "value": False}
+    gesattelt = {"test": "has_component", "subject": "self", "value": "minecraft:is_saddled"}
+    gruppen["fynn:riese"] = {
+        "minecraft:collision_box": {"width": r["kollision"][0], "height": r["kollision"][1]},
+        "minecraft:health": {"value": r["leben"], "max": r["leben"]},
+        "minecraft:variable_max_auto_step": {"base_value": 1.5625, "controlled_value": 1.5625,
+                                             "jump_prevented_value": 1.5625},
+        "minecraft:tameable": {"probability": r["zaehmchance"], "tame_items": r["zaehmen"],
+                               "tame_event": {"event": "fynn:gezaehmt", "target": "self"}},
+    }
+    gruppen["fynn:gezaehmt"] = {
+        "minecraft:is_tamed": {},
+        "minecraft:inventory": {"container_type": "horse", "inventory_size": 16},
+        "minecraft:interact": {"interactions": [
+            {"on_interact": {"filters": {"all_of": [
+                dict(gesattelt, operator="!="),
+                {"test": "has_equipment", "subject": "other", "domain": "hand", "value": r["sattel"]},
+                nicht_geduckt]}, "event": "fynn:gesattelt", "target": "self"},
+             "use_item": True, "play_sounds": "saddle", "interact_text": "action.interact.saddle"},
+            {"on_interact": {"filters": {"all_of": [
+                gesattelt, {"test": "rider_count", "subject": "self", "operator": "equals", "value": 0},
+                {"test": "has_equipment", "subject": "other", "domain": "hand", "value": "shears"}, nicht_geduckt]},
+                "event": "fynn:abgesattelt", "target": "self"},
+             "hurt_item": 1, "spawn_items": {"table": "loot_tables/elefantensattel.json"},
+             "play_sounds": "unsaddle", "interact_text": "action.interact.removesaddle"},
+        ]},
+    }
+    gruppen["fynn:gesattelt"] = {
+        "minecraft:is_saddled": {},
+        "minecraft:is_chested": {},
+        "minecraft:input_ground_controlled": {},
+        "minecraft:behavior.player_ride_tamed": {},
+        "minecraft:movement": {"value": r["tempo"]},
+        "minecraft:rideable": {"seat_count": len(r["sitze"]), "controlling_seat": 0, "crouching_skip_interact": True,
+                               "family_types": ["player"], "interact_text": "action.interact.ride.horse",
+                               "seats": [{"position": pos} for pos in r["sitze"]]},
+    }
+    ereignisse["fynn:gezaehmt"] = {"remove": {"component_groups": ["fynn:ruhig", "fynn:wuetend"]},
+                                    "add": {"component_groups": ["fynn:gezaehmt"]}}
+    ereignisse["fynn:gesattelt"] = {"add": {"component_groups": ["fynn:gesattelt"]}}
+    ereignisse["fynn:abgesattelt"] = {"remove": {"component_groups": ["fynn:gesattelt"]}}
+    # Zum Ausprobieren, ohne lange zu suchen:
+    #     /event entity @e[type=fynn:elefant,r=10] fynn:wird_riese
+    ereignisse["fynn:wird_riese"] = {"add": {"component_groups": ["fynn:riese"]}, "set_property": {"fynn:riese": True}}
+    c["minecraft:despawn"] = {"despawn_from_distance": {},
+                              "filters": {"test": "is_tamed", "subject": "self", "operator": "!=", "value": True}}
+    ereignisse["fynn:beruhigt"] = {"sequence": [
+        {"filters": {"test": "is_tamed", "subject": "self", "value": False},
+         "remove": {"component_groups": ["fynn:wuetend"]}, "add": {"component_groups": ["fynn:ruhig"]}},
+        {"filters": {"test": "is_tamed", "subject": "self", "value": True},
+         "remove": {"component_groups": ["fynn:wuetend"]}}]}
+
+
+def beuteliste(eintraege):
+    """(Gegenstand, min, max, Chance, briet) -> Beuteliste. Seltenes nur vom
+    Spieler (killed_by_player) und mit Pluenderung etwas haeufiger; Fleisch
+    kommt gebraten heraus, wenn das Tier brennt - wie bei Mojangs Kuh."""
+    toepfe = []
+    for name, lo, hi, chance, briet in eintraege:
+        funktionen = [{"function": "set_count", "count": {"min": lo, "max": hi}},
+                      {"function": "looting_enchant", "count": {"min": 0, "max": 1}}]
+        if briet:
+            funktionen.append({"function": "furnace_smelt", "conditions": [
+                {"condition": "entity_properties", "entity": "this", "properties": {"on_fire": True}}]})
+        topf = {"rolls": 1, "entries": [{"type": "item", "name": name, "weight": 1, "functions": funktionen}]}
+        if chance < 1.0:
+            topf["conditions"] = [{"condition": "killed_by_player"},
+                                  {"condition": "random_chance_with_looting", "chance": chance,
+                                   "looting_multiplier": round(chance / 4, 3)}]
+        toepfe.append(topf)
+    return {"pools": toepfe}
+
+
+def spawnregel(t):
+    bedingungen = []
+    for merkmale in t["biome"]:
+        filt = [{"test": "has_biome_tag", "operator": "!=" if m.startswith("!") else "==", "value": m.lstrip("!")}
+                for m in merkmale]
+        b = {"minecraft:weight": {"default": t["gewicht"]},
+             "minecraft:herd": {"min_size": t["herde"][0], "max_size": t["herde"][1]},
+             "minecraft:biome_filter": filt}
+        if t.get("wasser"):
+            b["minecraft:spawns_underwater"] = {}
+            b["minecraft:height_filter"] = {"min": -20 if t.get("tief") else 30, "max": t.get("tief", 62)}
+            b["minecraft:density_limit"] = {"surface": 2 if t["id"] == "wal" else 4, "underground": 1}
+            if t.get("tief"):
+                b["minecraft:brightness_filter"] = {"min": 0, "max": 6, "adjust_for_weather": False}
+        else:
+            b["minecraft:spawns_on_surface"] = {}
+            if t.get("boden"):
+                # Nur auf passendem Boden - nicht auf Blaettern oder Dachziegeln.
+                b["minecraft:spawns_on_block_filter"] = t["boden"]
+            b["minecraft:brightness_filter"] = {"min": 7, "max": 15, "adjust_for_weather": False}
+            b["minecraft:density_limit"] = {"surface": 4}
+        bedingungen.append(b)
+    if t.get("spawn_bedingungen"):
+        # Wesen mit eigenen Regeln (die Feuermuecke im Nether und nachts in
+        # der Wueste) bringen sie vollstaendig mit.
+        bedingungen = t["spawn_bedingungen"]
+    if t["art"] == "amphib":
+        # Krokodile auch im flachen Sumpfwasser.
+        for merkmale in t["biome"]:
+            bedingungen.append({"minecraft:spawns_underwater": {}, "minecraft:weight": {"default": t["gewicht"]},
+                                "minecraft:herd": {"min_size": 1, "max_size": 1},
+                                "minecraft:height_filter": {"min": 55, "max": 64},
+                                "minecraft:biome_filter": [{"test": "has_biome_tag", "operator": "==",
+                                                            "value": merkmale[0]}]})
+    return {"format_version": "1.8.0", "minecraft:spawn_rules": {
+        "description": {"identifier": f"fynn:{t['id']}",
+                        "population_control": t.get("population") or ("water_animal" if t.get("wasser") else "animal")},
+        "conditions": bedingungen}}
+
+
+# ------------------------------------------------------------ Bewegung
+
+# Kleine Dinge, die Tiere zwischendurch tun. Jede kommt in Abstaenden, je
+# Tier versetzt (variable.fynn_zufall), damit eine Herde nicht im Gleichtakt
+# zuckt. puls(): 0, und fuer kurze Zeit 1 - weich an- und abschwellend.
+def puls(tempo, versatz, schwelle):
+    k = round(1.5 / (1.0 - schwelle), 2)
+    return (f"math.clamp((math.sin(query.life_time * {tempo} + variable.fynn_zufall + {versatz}) - {schwelle})"
+            f" * {k}, 0.0, 1.0)")
+
+
+STEHT = "(1.0 - math.clamp(query.modified_move_speed * 3.0, 0.0, 1.0))"
+ZUSATZ_GEWICHT = {
+    "kopfschuetteln": f"{STEHT} * {puls(19.0, 0, 0.93)}",
+    "schwanzschlag": puls(31.0, 120, 0.8),
+    "grasen": f"{STEHT} * {puls(13.0, 200, 0.7)}",
+    "rupfen": f"{STEHT} * {puls(9.0, 90, 0.86)}",
+    "kauen": f"{STEHT} * {puls(11.0, 310, 0.84)}",
+    "schnuppern": f"{STEHT} * {puls(7.0, 40, 0.88)}",
+    "scharren": f"query.is_angry * {STEHT}",
+    "trompeten": puls(14.0, 40, 0.93),
+    "kratzen": f"{STEHT} * {puls(11.0, 300, 0.9)}",
+    "bruellen": f"{STEHT} * {puls(17.0, 60, 0.9)}",
+    "wedeln": f"{STEHT} * {puls(23.0, 90, 0.85)}",
+    "sonnen": f"{STEHT} * (1.0 - query.is_in_water) * {puls(9.0, 0, 0.5)}",
+    "schrei": puls(21.0, 0, 0.93),
+    "salto": "1.0",
+    # Der Braunbaer bei seinen Aufgaben (scripts/tiere.js setzt fynn:tun).
+    "honig": "query.property('fynn:tun') == 1",
+    "beeren": "query.property('fynn:tun') == 2",
+    "angeln": "query.property('fynn:tun') == 3",
+    "warnen": "query.property('fynn:tun') == 4",
+    "sprung": "query.property('fynn:sprung')",
+}
+
+
+def aufrecht(winkel, anheben):
+    """Auf den Hinterbeinen: Der Rumpf kippt nach hinten, die Hinterbeine
+    drehen um denselben Winkel zurueck und bleiben senkrecht, der Koerper
+    wird so weit gehoben, dass die Fuesse am Boden bleiben."""
+    return {"body": {"rotation": [f"-{winkel}", 0.0, 0.0], "position": [0.0, anheben, 0.0]},
+            "leg2": {"rotation": [f"{winkel}", 0.0, 0.0]}, "leg3": {"rotation": [f"{winkel}", 0.0, 0.0]}}
+
+
+def baerenbewegungen(lt):
+    """Was der Baer bei seinen Aufgaben tut (Gewicht: fynn:tun)."""
+    z = {}
+    # Honig: aufgerichtet am Nest, die Tatzen schlagen abwechselnd hinein,
+    # der Kopf reckt sich nach oben.
+    honig = aufrecht(50.0, 3.0)
+    honig.update({
+        "leg0": {"rotation": [f"-95.0 + math.sin({lt} * 400.0) * 35.0", 0.0, 12.0]},
+        "leg1": {"rotation": [f"-95.0 + math.sin({lt} * 400.0 + 180.0) * 35.0", 0.0, -12.0]},
+        "knie0": {"rotation": [f"-25.0 + math.sin({lt} * 400.0) * 20.0", 0.0, 0.0]},
+        "knie1": {"rotation": [f"-25.0 + math.sin({lt} * 400.0 + 180.0) * 20.0", 0.0, 0.0]},
+        "head": {"rotation": [f"25.0 + math.sin({lt} * 300.0) * 6.0", 0.0, 0.0]}})
+    z["honig"] = {"loop": True, "bones": honig}
+    # Beeren: Kopf tief im Strauch, kauen, ab und zu ein Zupfen.
+    z["beeren"] = {"loop": True, "bones": {
+        "head": {"rotation": [f"38.0 + math.sin({lt} * 700.0) * 4.0", f"math.sin({lt} * 150.0) * 10.0", 0.0]},
+        "body": {"rotation": [5.0, 0.0, 0.0]}}}
+    # Angeln: vorgebeugt am Wasser, der Blick geht nach unten; die rechte
+    # Tatze hebt sich langsam und schlaegt dann schnell ins Wasser.
+    schlag = f"math.pow(math.abs(math.sin({lt} * 150.0)), 6.0)"
+    auf = f"math.clamp(math.sin({lt} * 150.0 + 90.0), 0.0, 1.0)"
+    z["angeln"] = {"loop": True, "bones": {
+        "body": {"rotation": [14.0, 0.0, 0.0]},
+        "head": {"rotation": [f"40.0 - {schlag} * 12.0", 0.0, 0.0]},
+        "leg0": {"rotation": [f"-80.0 * {auf} + {schlag} * 30.0", 0.0, 8.0]},
+        "knie0": {"rotation": [f"-50.0 * {auf}", 0.0, 0.0]},
+        "leg2": {"rotation": [-8.0, 0.0, 0.0]}, "leg3": {"rotation": [-8.0, 0.0, 0.0]}}}
+    # Warnen: ganz aufgerichtet, Tatzen weit auseinander, der Kopf schlaegt
+    # beim Bruellen hin und her.
+    warnen = aufrecht(62.0, 4.5)
+    warnen.update({
+        "leg0": {"rotation": [-60.0, 0.0, f"45.0 + math.sin({lt} * 500.0) * 6.0"]},
+        "leg1": {"rotation": [-60.0, 0.0, f"-45.0 - math.sin({lt} * 500.0) * 6.0"]},
+        "knie0": {"rotation": [-35.0, 0.0, 0.0]}, "knie1": {"rotation": [-35.0, 0.0, 0.0]},
+        "head": {"rotation": [f"40.0 + math.sin({lt} * 900.0) * 5.0", f"math.sin({lt} * 450.0) * 14.0", 0.0]}})
+    z["warnen"] = {"loop": True, "bones": warnen}
+    return z
+
+
+def zusatzbewegungen(t, da, kopf, schwanzkette):
+    """Kopfschuetteln (gegen Fliegen), Schwanzschlagen, Grasen, Scharren vor
+    dem Angriff - und was nur ein Tier tut: Elefanten trompeten, Gorillas
+    kratzen sich am Kopf, Walrosse bruellen und wedeln mit der Flosse,
+    Krokodile liegen mit offenem Maul in der Sonne."""
+    lt = "query.life_time"
+    z = {}
+    ohren = [o for o in ("ohr_links", "ohr_rechts") if o in da]
+    if kopf:
+        schuetteln = {kopf: {"rotation": [0.0, f"math.sin({lt} * 1100.0) * 9.0", f"math.sin({lt} * 1100.0 + 90.0) * 12.0"]}}
+        for o in ohren:
+            schuetteln[o] = {"rotation": [0.0, f"math.sin({lt} * 1100.0 + 60.0) * {-25 if o == 'ohr_links' else 25}", 0.0]}
+        z["kopfschuetteln"] = {"loop": True, "bones": schuetteln}
+    if schwanzkette:
+        z["schwanzschlag"] = {"loop": True, "bones": {
+            k: {"rotation": [f"-10.0 - {i * 5}", f"math.sin({lt} * 700.0 - {i * 60}) * {30 + 10 * i}", 0.0]}
+            for i, k in enumerate(schwanzkette)}}
+    if t.get("aufgaben"):
+        z.update(baerenbewegungen(lt))
+    if t.get("grast") and kopf:
+        # Fynn: "verschiedene Grasanimationen, also Fressanimationen" - vier
+        # Arten, die sich abwechseln (siehe ZUSATZ_GEWICHT):
+        # Grasen: Kopf unten, das Maul mahlt, der Kopf wandert langsam weiter.
+        z["grasen"] = {"loop": True, "bones": {
+            kopf: {"rotation": [f"48.0 + math.sin({lt} * 400.0) * 3.0",
+                                f"math.sin({lt} * 60.0) * 10.0", f"math.sin({lt} * 400.0 + 90.0) * 2.0"]},
+            "body": {"rotation": [4.0, 0.0, 0.0], "position": [0.0, -0.3, 0.0]}}}
+        # Rupfen: ein Ruck zur Seite und nach oben - das Bueschel reisst ab.
+        ruck = f"math.pow(math.max(0.0, math.sin({lt} * 220.0)), 6.0)"
+        z["rupfen"] = {"loop": True, "bones": {
+            kopf: {"rotation": [f"44.0 - {ruck} * 22.0", f"{ruck} * 18.0", f"{ruck} * -8.0"]},
+            "body": {"rotation": [f"3.0 - {ruck} * 3.0", 0.0, 0.0]},
+            "leg0": {"rotation": [f"-{ruck} * 6.0", 0.0, 0.0]}, "leg1": {"rotation": [f"-{ruck} * 6.0", 0.0, 0.0]}}}
+        # Kauen: den Kopf gehoben, der Unterkiefer (oder der ganze Kopf) mahlt.
+        kauen = {kopf: {"rotation": [f"8.0 + math.sin({lt} * 700.0) * 2.5", f"math.sin({lt} * 350.0) * 4.0",
+                                     f"math.sin({lt} * 700.0 + 90.0) * 2.0"]}}
+        if "kiefer" in da:
+            kauen["kiefer"] = {"rotation": [f"math.max(0.0, math.sin({lt} * 700.0)) * 10.0", 0.0, 0.0]}
+        z["kauen"] = {"loop": True, "bones": kauen}
+    if kopf and t["art"] in ("land", "amphib"):
+        # Schnuppern - das tun alle: die Nase am Boden, hin und her, kurze Stoesse.
+        schnuff = f"math.sin({lt} * 1500.0) * 1.5"
+        z["schnuppern"] = {"loop": True, "bones": {
+            kopf: {"rotation": [f"30.0 + {schnuff}", f"math.sin({lt} * 90.0) * 25.0", 0.0]},
+            "body": {"rotation": [2.0, f"math.sin({lt} * 90.0 - 40.0) * 3.0", 0.0]}}}
+    if t.get("scharrt"):
+        z["scharren"] = {"loop": True, "bones": {
+            "leg0": {"rotation": [f"-15.0 + math.sin({lt} * 500.0) * 28.0", 0.0, 0.0]},
+            kopf: {"rotation": [22.0, f"math.sin({lt} * 250.0) * 6.0", 0.0]}}}
+    if "ruessel1" in da:
+        z["trompeten"] = {"loop": True, "bones": {
+            kopf: {"rotation": [-22.0, 0.0, 0.0]},
+            "ruessel1": {"rotation": [-85.0, 0.0, 0.0]},
+            "ruessel2": {"rotation": [-55.0, 0.0, 0.0]},
+            "ruessel3": {"rotation": [f"-45.0 + math.sin({lt} * 900.0) * 8.0", 0.0, 0.0]},
+            "kiefer": {"rotation": [22.0, 0.0, 0.0]},
+            "ohr_links": {"rotation": [0.0, -38.0, 0.0]},
+            "ohr_rechts": {"rotation": [0.0, 38.0, 0.0]}}}
+    if t["id"] == "gorilla":
+        z["kratzen"] = {"loop": True, "bones": {
+            "leg0": {"rotation": [f"-92.0 + math.sin({lt} * 800.0) * 6.0", 0.0, 42.0]},
+            kopf: {"rotation": [8.0, -12.0, -14.0]},
+            "body": {"rotation": [-10.0, 0.0, 0.0]}}}
+    if t["id"] == "walross":
+        z["bruellen"] = {"loop": True, "bones": {
+            kopf: {"rotation": [f"-38.0 + math.sin({lt} * 300.0) * 4.0", 0.0, 0.0]},
+            "body": {"rotation": [-8.0, 0.0, 0.0]}}}
+        z["wedeln"] = {"loop": True, "bones": {
+            "leg0": {"rotation": [0.0, f"math.sin({lt} * 400.0) * 20.0", f"-25.0 + math.sin({lt} * 400.0) * 15.0"]}}}
+    if "kiefer" in da and t["id"] == "krokodil":
+        z["sonnen"] = {"loop": True, "bones": {"kiefer": {"rotation": [32.0, 0.0, 0.0]},
+                                               kopf: {"rotation": [-6.0, 0.0, 0.0]}}}
+    return z
+
+
+# ------------------------------------------------------------ Gangarten
+#
+# Fynn: "Die gehen noch ein bisschen wild ... mit diesen Kloetzen als
+# Beine. Vielleicht brauchst du noch ein Gelenk, ein bisschen Knie-maessig."
+#
+# Wie Vierbeiner wirklich laufen (siehe Animationsleitfaeden, z. B.
+# Animation Mentor, AnimSchool): Im Schritt setzen sie die Fuesse einzeln,
+# immer in derselben Reihenfolge - hinten links, vorn links, hinten rechts,
+# vorn rechts, je eine Viertelrunde versetzt ("lateraler Viertakt"); drei
+# Fuesse stehen fast immer. Beim Vorschwingen knickt das Knie ein und der
+# Huf hebt sich nach hinten; steht der Fuss, ist das Bein gerade. Schneller
+# wird daraus der Trab: die diagonalen Beine gemeinsam. Nur Katzen
+# galoppieren, mit gebogenem Ruecken.
+#
+# Drehrichtung: Positiv um x schwingt ein haengendes Bein nach hinten.
+# Die Oberschenkel schwingen mit cos(T + Phase); nach vorn (und damit in
+# der Luft) sind sie, solange sin(T + Phase) positiv ist - genau dann
+# knickt das Knie ein.
+
+VIERTAKT = {"leg2": 0.0, "leg0": -90.0, "leg3": -180.0, "leg1": -270.0}
+DIAGONAL = {"leg0": 0.0, "leg3": 0.0, "leg1": -180.0, "leg2": -180.0}
+
+
+def beinpaar(T, phasen, winkel, knie, knie_da):
+    knochen = {}
+    for bein, phase in phasen.items():
+        knochen[bein] = {"rotation": [f"math.cos({T} + {phase}) * {winkel}", 0.0, 0.0]}
+        k = "knie" + bein[-1]
+        if k in knie_da:
+            # Nur in der Luft einknicken, und dort weich an- und abschwellend.
+            knochen[k] = {"rotation": [f"math.max(0.0, math.sin({T} + {phase}) - 0.15) * {knie / 0.85:.1f}", 0.0, 0.0]}
+    return knochen
+
+
+def nachschwingen(knochen, T, da, kopf, schwanzkette, heben, rollen, nicken, wedeln, tempo=2.0):
+    """Was ein Tier beim Laufen lebendig macht - ohne neue Gelenke, nur mit
+    mehr Bewegung in denen, die es gibt (Fynn: "nicht mehr Gelenke, sondern
+    mehr Bewegung der Gelenke, die schon vorhanden sind"):
+
+    * Der Koerper federt zweimal je Runde, rollt zur Seite des Beins, das
+      gerade traegt, und dreht die Hueften ein wenig mit.
+    * Der Kopf haelt dagegen: Er gleicht Heben und Rollen zum Teil aus und
+      nickt etwas spaeter nach - so wirkt er schwer und doch ruhig, wie bei
+      echten Tieren, die ihren Blick stillhalten.
+    * Ohren wippen einen Hauch nach dem Kopf.
+    * Der Schwanz folgt als Welle: jedes Glied spaeter und weiter als das
+      davor, dazu ein Auf und Ab mit dem Koerper."""
+    knochen["body"] = {
+        "position": [0.0, f"-math.cos({T} * {tempo}) * {heben}", 0.0],
+        "rotation": [f"math.sin({T} * {tempo} - 90.0) * {nicken * 0.4}",
+                     f"math.sin({T} - 20.0) * {rollen * 0.6}",
+                     f"math.sin({T} - 45.0) * {rollen}"]}
+    if kopf:
+        knochen[kopf] = {"rotation": [
+            f"math.sin({T} * {tempo} - 50.0) * {nicken} - math.sin({T} * {tempo} - 90.0) * {nicken * 0.3}",
+            f"math.sin({T} - 80.0) * {rollen * 1.2}",
+            f"-math.sin({T} - 45.0) * {rollen * 0.7}"]}
+    for seite, zeichen in (("ohr_links", 1), ("ohr_rechts", -1)):
+        if seite in da:
+            knochen[seite] = {"rotation": [f"math.sin({T} * {tempo} - 110.0) * {nicken * 1.5}", 0.0,
+                                           f"{zeichen} * math.sin({T} * {tempo} - 120.0) * {nicken * 2.0}"]}
+    kette = list(schwanzkette) + [k for k in ("schwanz1", "schwanz2", "schwanz3") if k in da]
+    for i, k in enumerate(kette):
+        knochen[k] = {"rotation": [
+            f"math.cos({T} * {tempo} - {30 + 35 * i}) * {wedeln * 0.35 + i * 1.5}",
+            f"math.sin({T} - {40 + 35 * i}) * {wedeln + 5 * i}", 0.0]}
+    return knochen
+
+
+def schrittgang(T, art, da, kopf, schwanzkette):
+    """Der ruhige Schritt im Viertakt - mit Nachschwingen."""
+    knie_da = {k for k in da if k.startswith("knie")}
+    knochen = beinpaar(T, VIERTAKT, 14.0 if art == "amphib" else 22.0, 38.0, knie_da)
+    nachschwingen(knochen, T, da, kopf, schwanzkette, heben=0.45, rollen=2.2, nicken=3.5, wedeln=9.0)
+    return {"anim_time_update": "query.modified_distance_moved", "loop": True, "bones": knochen}
+
+
+def trab(T, da, kopf, schwanzkette):
+    """Schneller: der Trab, diagonale Beine gemeinsam, weite Schritte - der
+    Koerper federt kraeftiger, der Schwanz steht etwas hoch."""
+    knie_da = {k for k in da if k.startswith("knie")}
+    T2 = f"({T} * 0.8)"
+    knochen = beinpaar(T2, DIAGONAL, 30.0, 58.0, knie_da)
+    nachschwingen(knochen, T2, da, kopf, schwanzkette, heben=0.8, rollen=1.4, nicken=4.0, wedeln=7.0)
+    for k in schwanzkette:
+        r = knochen[k]["rotation"]
+        knochen[k]["rotation"] = [f"-12.0 + {r[0]}", r[1], r[2]]
+    return {"anim_time_update": "query.modified_distance_moved", "loop": True, "bones": knochen}
+
+
+def galopp(T, da, kopf, schwanzkette):
+    """Katzen: Sprunggalopp - vorn und hinten je fast gemeinsam, der Ruecken
+    streckt und beugt sich weit, der Kopf bleibt dabei erstaunlich ruhig,
+    der Schwanz steuert als lange Welle."""
+    knie_da = {k for k in da if k.startswith("knie")}
+    T2 = f"({T} * 0.7)"
+    phasen = {"leg0": 0.0, "leg1": -25.0, "leg2": -180.0, "leg3": -205.0}
+    knochen = beinpaar(T2, phasen, 38.0, 60.0, knie_da)
+    nachschwingen(knochen, T2, da, kopf, schwanzkette, heben=0.7, rollen=1.0, nicken=2.0, wedeln=10.0, tempo=1.0)
+    knochen["body"]["rotation"][0] = f"math.sin({T2}) * 7.0"
+    knochen["body"]["position"][1] = f"(1.0 - math.cos({T2} * 2.0)) * 0.7"
+    if kopf:
+        knochen[kopf]["rotation"][0] = f"-math.sin({T2}) * 6.0 + math.sin({T2} * 2.0 - 60.0) * 2.0"
+    for i, k in enumerate(schwanzkette):
+        knochen[k]["rotation"][0] = f"-15.0 + math.sin({T2} * 2.0 - {50 + 40 * i}) * {8 + 6 * i}"
+    return {"anim_time_update": "query.modified_distance_moved", "loop": True, "bones": knochen}
+
+
+def huepfen(T, da, kopf, schwanzkette, schnell=False):
+    """Das Eichhoernchen laeuft nicht, es huepft in Saetzen: beide Vorder-
+    pfoten zugleich, dann beide Hinterbeine, der Ruecken biegt sich wie eine
+    Feder - und der buschige Schwanz wogt dabei in einer grossen Welle hinter
+    ihm her (Fynn: "dass sich der Schwanz beim Laufen ein bisschen mehr
+    bewegt")."""
+    knie_da = {k for k in da if k.startswith("knie")}
+    T2 = f"({T} * {0.9 if schnell else 0.75})"
+    phasen = {"leg0": 0.0, "leg1": -12.0, "leg2": -170.0, "leg3": -182.0}
+    knochen = beinpaar(T2, phasen, 48.0 if schnell else 40.0, 65.0, knie_da)
+    knochen["body"] = {"position": [0.0, f"math.max(0.0, math.sin({T2})) * {2.2 if schnell else 1.6}", 0.0],
+                       "rotation": [f"math.sin({T2} + 90.0) * {12.0 if schnell else 9.0}", 0.0, 0.0]}
+    if kopf:
+        knochen[kopf] = {"rotation": [f"-math.sin({T2} + 90.0) * 8.0 + math.sin({T2} * 2.0) * 3.0", 0.0, 0.0]}
+    for i, k in enumerate(schwanzkette):
+        # Hoch getragen und wogend: jedes Glied spaeter, die Spitze am weitesten.
+        knochen[k] = {"rotation": [f"math.sin({T2} - {70 + 60 * i}) * {12 + 12 * i}",
+                                   f"math.sin({T2} * 0.5 - {40 * i}) * {6 + 4 * i}", 0.0]}
+    return {"anim_time_update": "query.modified_distance_moved", "loop": True, "bones": knochen}
+
+
+def elefant_dazu(a, T):
+    """Der Ruessel pendelt im Gehen und tastet im Stehen herum, die Spitze
+    rollt sich ein; die grossen Ohren faecheln - so kuehlen sich Elefanten."""
+    lt = "query.life_time"
+    for anim, x, y, spitze in (
+            (a["laufen"], f"math.sin({T} * 2.0) * 5.0", f"math.sin({T}) * 12.0", f"math.sin({T} * 2.0 - 60.0) * 12.0"),
+            (a["stehen"], f"math.sin({lt} * 40.0) * 8.0 - 4.0", f"math.sin({lt} * 27.0) * 10.0",
+             f"math.sin({lt} * 55.0 - 80.0) * 18.0 - 12.0")):
+        anim["bones"]["ruessel1"] = {"rotation": [x, y, 0.0]}
+        anim["bones"]["ruessel2"] = {"rotation": [f"({x}) * 1.4", f"({y}) * 0.6", 0.0]}
+        anim["bones"]["ruessel3"] = {"rotation": [spitze, 0.0, 0.0]}
+    faecheln = f"(math.sin({lt} * 70.0) * 0.5 + 0.5) * 22.0"
+    a["stehen"]["bones"]["ohr_links"] = {"rotation": [0.0, f"-{faecheln}", 0.0]}
+    a["stehen"]["bones"]["ohr_rechts"] = {"rotation": [0.0, faecheln, 0.0]}
+    a["laufen"]["bones"]["ohr_links"] = {"rotation": [0.0, f"-math.abs(math.sin({T})) * 10.0", 0.0]}
+    a["laufen"]["bones"]["ohr_rechts"] = {"rotation": [0.0, f"math.abs(math.sin({T})) * 10.0", 0.0]}
+
+
+# Der Gorilla trommelt: Er richtet sich auf, legt den Kopf zurueck und
+# schlaegt abwechselnd mit beiden Haenden auf die Brust. Wann, rechnet
+# variable.trommeln (siehe aussehen): alle gut 15 Sekunden fuer etwa drei.
+TROMMELN = {"loop": True, "bones": {
+    "body": {"rotation": [-32.0, 0.0, 0.0], "position": [0.0, 3.0, 0.0]},
+    "head": {"rotation": [-18.0, 0.0, 0.0]},
+    "kiefer": {"rotation": ["18.0 + math.sin(query.life_time * 450.0) * 6.0", 0.0, 0.0]},
+    "leg0": {"rotation": ["-22.0 + math.sin(query.life_time * 900.0) * 16.0", 0.0, 20.0]},
+    "leg1": {"rotation": ["-22.0 - math.sin(query.life_time * 900.0) * 16.0", 0.0, -20.0]},
+    "leg2": {"rotation": [32.0, 0.0, 0.0]},
+    "leg3": {"rotation": [32.0, 0.0, 0.0]},
+}}
+TROMMELN_WANN = "variable.trommeln = math.clamp(math.sin(query.life_time * 22.0) * 5.0 - 4.2, 0.0, 1.0);"
+
+
+def vogelbewegungen():
+    """Der Adler segelt: Fluegel weit und leicht nach oben (V-Form), sie
+    atmen langsam mit; alle paar Sekunden ein paar kraeftige Schlaege,
+    deren Spitzen etwas spaeter nachkommen. In der Kurve rollt er hinein,
+    der Schwanz steuert. Stoesst er herab, legt er die Schwingen an und
+    streckt die Faenge vor."""
+    lt = "query.life_time"
+    schlagen = f"math.clamp(math.sin({lt} * 24.0) * 3.0 - 2.0, 0.0, 1.0)"
+    # Fynn: "Der Fluegelschlag muss noch geiler sein." Ein echter Schlag ist
+    # nicht gleichmaessig: der Abschlag kraeftig und schnell, der Aufschlag
+    # langsamer - darum die zweite Welle (doppelte Frequenz) dazu. Beim
+    # Abschlag dreht sich die Schwinge nach vorn, beim Aufschlag klappen die
+    # Spitzen ein; der Rumpf hebt sich mit jedem Abschlag.
+    welle = f"(math.sin({lt} * 520.0) + math.sin({lt} * 1040.0 + 90.0) * 0.3)"
+    schlag = f"{welle} * 40.0 * {schlagen}"
+    nach = f"math.sin({lt} * 520.0 - 70.0) * 32.0 * {schlagen}"
+    drehen = f"math.cos({lt} * 520.0) * 12.0 * {schlagen}"
+    fliegen = {"loop": True, "bones": {
+        "rumpf": {"rotation": [f"-query.target_x_rotation * 0.5 + math.sin({lt} * 520.0 + 150.0) * 3.0 * {schlagen}",
+                               0.0, "variable.fynn_dreh * 2.5"],
+                  "position": [0.0, f"-math.sin({lt} * 520.0 + 30.0) * 0.8 * {schlagen}", 0.0]},
+        # Greifvoegel schauen ruckartig: alle zwei Drittel Sekunden ein
+        # neuer Blickwinkel, dazwischen steht der Kopf still - auch gegen
+        # das Auf und Ab des Rumpfes.
+        "kopf": {"rotation": [f"math.sin(math.floor({lt} * 1.5) * 57.0) * 10.0 - math.sin({lt} * 520.0 + 150.0) * 3.0 * {schlagen}",
+                              f"math.sin(math.floor({lt} * 1.5) * 97.0) * 30.0", 0.0]},
+        "fluegel_links": {"rotation": [0.0, f"{drehen}", f"-8.0 - math.sin({lt} * 60.0) * 3.0 - {schlag}"]},
+        "fluegel_rechts": {"rotation": [0.0, f"-{drehen}", f"8.0 + math.sin({lt} * 60.0) * 3.0 + {schlag}"]},
+        "fluegelspitze_links": {"rotation": [0.0, f"math.max(0.0, -{nach}) * 0.6", f"-4.0 - {nach}"],
+                                "scale": [1.0, 1.0, f"1.0 + math.max(0.0, {welle}) * 0.12 * {schlagen}"]},
+        "fluegelspitze_rechts": {"rotation": [0.0, f"-math.max(0.0, -{nach}) * 0.6", f"4.0 + {nach}"],
+                                 "scale": [1.0, 1.0, f"1.0 + math.max(0.0, {welle}) * 0.12 * {schlagen}"]},
+        "schwanz": {"rotation": [f"math.sin({lt} * 40.0) * 4.0", "-variable.fynn_dreh * 3.0", "variable.fynn_dreh * 2.0"],
+                    "scale": ["1.0 + math.min(math.abs(variable.fynn_dreh) * 0.04, 0.35)", 1.0, 1.0]},
+        "fuesse": {"rotation": [70.0, 0.0, 0.0]},
+    }}
+    # Fynn: "ein krankerer Sturzflug". Steil vornueber, die Schwingen ganz an
+    # den Koerper, die Spitzen nach hinten, der Schwanz geschlossen, die
+    # Faenge eng angelegt - und bei dem Tempo zittert alles ein wenig.
+    zittern = f"math.sin({lt} * 2200.0)"
+    stossen = {"loop": True, "bones": {
+        "rumpf": {"rotation": [f"38.0 + {zittern} * 1.5", 0.0, f"math.sin({lt} * 300.0) * 6.0"]},
+        "fluegel_links": {"rotation": [0.0, f"-72.0 + {zittern} * 3.0", -12.0]},
+        "fluegel_rechts": {"rotation": [0.0, f"72.0 - {zittern} * 3.0", 12.0]},
+        "fluegelspitze_links": {"rotation": [0.0, -55.0, f"{zittern} * 4.0"]},
+        "fluegelspitze_rechts": {"rotation": [0.0, 55.0, f"-{zittern} * 4.0"]},
+        "schwanz": {"rotation": [-8.0, 0.0, 0.0], "scale": [0.55, 1.0, 1.0]},
+        "fuesse": {"rotation": [85.0, 0.0, 0.0]},
+        "kopf": {"rotation": [-28.0, 0.0, 0.0]},
+    }}
+    schrei = {"loop": True, "bones": {
+        "unterschnabel": {"rotation": [28.0, 0.0, 0.0]},
+        "kopf": {"rotation": [-22.0, 0.0, 0.0]},
+    }}
+    return {"fliegen": fliegen, "stossen": stossen, "schrei": schrei}
+
+
+# Kopf und Beine der Jungtiere, je Tier. Fynn: "Die haben oft ein bisschen
+# zu grossen Kopf, vor allem der Elch." Vorher bekamen alle denselben
+# anderthalbfachen Kopf - bei einer Katze niedlich, bei einem Tier mit langem
+# Schaedel wie Elch oder Nashorn ein Klotz. Kaelber von Huftieren haben
+# ausserdem lange Beine, sie laufen gleich nach der Geburt mit der Herde;
+# gestauchte Stummelbeine passen nur zu Baeren und Katzen.
+BABY = {          # Kopf, Beinlaenge
+    "elch":        (1.15, 0.82),
+    "bison":       (1.2, 0.76),
+    "nashorn":     (1.15, 0.74),
+    "elefant":     (1.2, 0.76),
+    "wildschwein": (1.15, 0.72),
+    "braunbaer":   (1.3, 0.7),
+    "loewe":       (1.35, 0.72),
+    "tiger":       (1.35, 0.72),
+    "schneeleopard": (1.35, 0.72),
+    "gorilla":     (1.3, 1.0),
+    "krokodil":    (1.2, 0.85),
+    "walross":     (1.2, 0.85),
+    "wal":         (1.2, 1.0),
+}
+
+
+def bewegungen(t, modell):
+    """Animationen je nach Bauart. Knochen, die es im Modell gibt, bestimmen,
+    was sich bewegt.
+
+    Zweite Fassung (Fynn: "Animation noch mal ein bisschen besser machen,
+    dass sie noch kranker sind"):
+    * Gehen: Beine im Kreuzgang, dazu wippt der Koerper, der Kopf nickt im
+      Takt, der Schwanz schwingt.
+    * Rennen: ab etwa halbem Tempo geht es in den Galopp ueber - Vorder-
+      und Hinterbeine springen paarweise, der Koerper schaukelt.
+    * Stehen: atmen, sich umschauen, der Schwanz pendelt.
+    * Angriff: Baeren und Katzen richten sich auf und schlagen mit beiden
+      Tatzen, Elch, Bison und Wildschwein senken den Kopf und rammen,
+      Krokodil und Hai reissen das Maul auf und stossen vor, der
+      Schwertfisch schlaegt mit dem Schwert zur Seite, der Kalmar reisst
+      die Arme auf und schlaegt sie zusammen.
+    """
+    da = {k.name for k in modell.knochen}
+    a = {}
+    art = t["art"]
+    name = t["id"]
+    kopf = "head" if "head" in da else ("kopf" if "kopf" in da else None)
+    schwanzkette = [k for k in ("tail", "tail2") if k in da]
+    if art in ("land", "amphib"):
+        # Beinlaenge = Hoehe der Huefte (die Beine reichen bis zum Boden).
+        beinlaenge = next(k for k in modell.knochen if k.name == "leg0").drehpunkt[1]
+        schritt = round(38.17 * (12.0 / max(6.0, beinlaenge)), 2)
+        T = f"query.anim_time * {schritt}"
+        katze = t.get("gestalt") in ("loewe", "tiger", "schneeleopard")
+        if t.get("gang") == "huepfen":
+            a["laufen"] = huepfen(T, da, kopf, schwanzkette)
+            a["galopp"] = huepfen(T, da, kopf, schwanzkette, schnell=True)
+        else:
+            a["laufen"] = schrittgang(T, art, da, kopf, schwanzkette)
+            if art == "land":
+                a["galopp"] = galopp(T, da, kopf, schwanzkette) if katze else trab(T, da, kopf, schwanzkette)
+        # Stehen: atmen und ab und zu das Gewicht verlagern - langsam, damit
+        # nichts zittert.
+        a["stehen"] = {"loop": True, "bones": {
+            "body": {"scale": [1.0, "1.0 + math.sin(query.life_time * 60.0) * 0.012", 1.0],
+                     "rotation": [0.0, 0.0, "math.sin(query.life_time * 21.0) * 1.2"]}}}
+        if kopf:
+            # Umschauen: langsam und nicht ganz regelmaessig (zwei Wellen).
+            a["stehen"]["bones"][kopf] = {"rotation": [
+                "math.sin(query.life_time * 17.0) * 3.0",
+                "math.sin(query.life_time * 23.0) * 9.0 + math.sin(query.life_time * 61.0) * 3.0", 0.0]}
+        for i, k in enumerate(schwanzkette):
+            a["stehen"]["bones"][k] = {"rotation": [0.0, f"math.sin(query.life_time * 70.0 - {40 * i}) * {8 + 6 * i}",
+                                                    0.0]}
+        if "schwanz1" in da:
+            for i, k in enumerate(("schwanz1", "schwanz2", "schwanz3")):
+                a["stehen"]["bones"][k] = {"rotation": [0.0, f"math.sin(query.life_time * 40.0 - {40 * i}) * {3 + 3 * i}",
+                                                        0.0]}
+        a["blick"] = "animation.common.look_at_target"
+        if "ruessel1" in da:
+            elefant_dazu(a, T)
+        if t.get("trommelt"):
+            a["trommeln"] = TROMMELN
+        a.update(zusatzbewegungen(t, da, kopf, schwanzkette))
+        # In die Kurve legen: Der Kopf geht voraus, der Koerper neigt sich
+        # nach innen, der Schwanz schwingt nach aussen (v.fynn_dreh, siehe
+        # DREHUNG).
+        drehen = {"body": {"rotation": [0.0, 0.0, "-variable.fynn_dreh * 0.8"]}}
+        if kopf:
+            drehen[kopf] = {"rotation": [0.0, "variable.fynn_dreh * 1.6", 0.0]}
+        for i, k in enumerate(schwanzkette + [k for k in ("schwanz1", "schwanz2", "schwanz3") if k in da]):
+            drehen[k] = {"rotation": [0.0, f"-variable.fynn_dreh * {1.5 + i}", 0.0]}
+        a["drehen"] = {"loop": True, "bones": drehen}
+        if art == "amphib":
+            # Im Wasser: Beine angelegt, der Schwanz treibt.
+            a["schwimmen"] = {"loop": True, "bones": {
+                k: {"rotation": [0.0, "math.sin(query.life_time * 200.0 - %d) * %.1f" % (50 * i, 14 + 8 * i), 0.0]}
+                for i, k in enumerate(("schwanz1", "schwanz2", "schwanz3"))}}
+            a["schwimmen"]["bones"]["body"] = {"rotation": [0.0, "math.sin(query.life_time * 200.0 + 90.0) * 4.0", 0.0]}
+            for bein in ("leg0", "leg1", "leg2", "leg3"):
+                a["schwimmen"]["bones"][bein] = {"rotation": [70.0, 0.0, 0.0]}
+    elif art == "vogel":
+        a.update(vogelbewegungen())
+    elif art in ("kleinvogel", "kriecher", "insekt", "drache"):
+        pass    # ihre Bewegungen bringen sie mit (eigene_bewegungen)
+    else:
+        # Im Wasser: Fische schlagen seitlich (um y), Wale auf und ab (um x).
+        kette = [k for k in ("schwanz1", "schwanz2", "fluke", "schwanzflosse") if k in da]
+        achse = 0 if art == "wal" else 1
+        tempo = 90.0 if art == "wal" else 260.0
+        staerke = "(0.6 + query.modified_move_speed * 1.2)"
+        knochen = {}
+        for i, k in enumerate(kette):
+            w = [0.0, 0.0, 0.0]
+            amp = (6 + 5 * i) if art == "wal" else (9 + 8 * i)
+            w[achse] = f"math.sin(query.life_time * {tempo} - {45 * i}) * {amp} * {staerke}"
+            knochen[k] = {"rotation": w}
+        for seite, zeichen in (("flosse_links", 1), ("flosse_rechts", -1)):
+            if seite in da and t.get("fluegel"):
+                # Der Manta fliegt durchs Wasser: grosse, langsame Schlaege,
+                # die aussen etwas spaeter ankommen - eine Welle durch die
+                # ganze Schwinge.
+                spitze = seite.replace("flosse", "spitze")
+                knochen[seite] = {"rotation": [0.0, 0.0, f"math.sin(query.life_time * 150.0) * {24 * zeichen}"]}
+                knochen[spitze] = {"rotation": [0.0, 0.0, f"math.sin(query.life_time * 150.0 - 70.0) * {20 * zeichen}"]}
+            elif seite in da:
+                knochen[seite] = {"rotation": [f"math.sin(query.life_time * {tempo * 0.5}) * 6.0",
+                                               0.0, f"math.sin(query.life_time * {tempo * 0.7}) * {12 * zeichen}"]}
+        if kopf and art != "wal" and "mantel" not in da:
+            # Der Kopf pendelt gegen den Schwanz - so schwimmt ein Fisch.
+            knochen[kopf] = {"rotation": [0.0, f"-math.sin(query.life_time * {tempo}) * 4.0 * {staerke}", 0.0]}
+        if "flossen" in da:
+            knochen["flossen"] = {"rotation": [0.0, 0.0, "math.sin(query.life_time * 300.0) * 8.0"]}
+        if "mantel" in da:
+            # Der Kalmar pumpt: Der Mantel wird schmal und wieder weit, die
+            # Arme rollen sich an den Spitzen ein und wieder auf.
+            knochen["mantel"] = {"scale": ["1.0 + math.sin(query.life_time * 150.0) * 0.06",
+                                           "1.0 + math.sin(query.life_time * 150.0) * 0.06", 1.0]}
+            for i in range(g.KALMAR_ARME):
+                knochen[f"arm{i}"] = {"rotation": [
+                    f"math.sin(query.life_time * 120.0 + {i * 45}) * 12.0",
+                    f"math.cos(query.life_time * 110.0 + {i * 45}) * 8.0", 0.0]}
+                knochen[f"armspitze{i}"] = {"rotation": [
+                    f"math.sin(query.life_time * 120.0 + {i * 45 - 60}) * 25.0", 0.0, 0.0]}
+            for i in range(2):
+                knochen[f"fangarm{i}"] = {"rotation": [
+                    f"math.sin(query.life_time * 80.0 + {i * 90}) * 8.0",
+                    f"math.sin(query.life_time * 70.0 + {i * 90}) * 12.0", 0.0]}
+        # Den ganzen Koerper in Schwimmrichtung neigen, wie der Delfin, und
+        # dabei leicht rollen.
+        rumpf = "mantel" if "mantel" in da else "rumpf"
+        # In der Kurve rollt er nach innen, wie ein Flugzeug.
+        knochen.setdefault(rumpf, {})["rotation"] = [
+            "query.target_x_rotation * 0.6", 0.0,
+            f"math.sin(query.life_time * {tempo * 0.5}) * {2.0 if art == 'wal' else 4.0} - variable.fynn_dreh * 2.0"]
+        a["schwimmen"] = {"loop": True, "bones": knochen}
+        if "horn_links" in da:
+            # Die Kopflappen rollen sich auf und ein; alle halbe Minute
+            # schlaegt der Manta einen Salto - wie beim Fressen im Plankton.
+            for seite, zeichen in (("horn_links", 1), ("horn_rechts", -1)):
+                knochen[seite] = {"rotation": ["math.sin(query.life_time * 45.0) * 25.0 - 10.0", 0.0,
+                                               f"math.sin(query.life_time * 45.0) * {8 * zeichen}"]}
+            zeit = "math.mod(query.life_time + variable.fynn_zufall * 0.1, 30.0)"
+            a["salto"] = {"loop": True, "bones": {"rumpf": {"rotation": [
+                f"{zeit} < 2.5 ? math.pow(math.sin({zeit} / 2.5 * 90.0), 2.0) * 360.0 : 0.0", 0.0, 0.0]}}}
+        if art == "fisch" and name != "riesenkalmar":
+            a["an_land"] = an_land(da, rumpf, kopf)
+        if t.get("sturm"):
+            a["sturm"] = sturm(da, kopf)
+        if name == "wal":
+            a["sprung"] = wal_sprung()
+
+    # --- Angriff: am Zaehler v.attack_time des Spiels
+    stoss = "math.sin(variable.attack_time * 180.0)"
+    nach = "math.sin(math.clamp(variable.attack_time * 1.4 - 0.2, 0.0, 1.0) * 180.0)"
+    # Erst ausholen (das erste Drittel), dann zuschlagen - so sieht man den
+    # Schlag kommen, und er trifft mit Wucht.
+    aus = "math.sin(math.clamp(variable.attack_time / 0.35, 0.0, 1.0) * 180.0)"
+    zu = "math.sin(math.clamp((variable.attack_time - 0.3) / 0.7, 0.0, 1.0) * 180.0)"
+    ang = {}
+    art_angriff = t.get("angriff")
+    if art_angriff == "tatze":
+        # Aufrichten, und dann beide Tatzen nacheinander.
+        ang = {"body": {"rotation": [f"-{aus} * 30.0 - {zu} * 12.0", f"{zu} * 6.0", 0.0],
+                        "position": [0.0, f"{aus} * 2.5", f"-{zu} * 2.0"]},
+               "leg0": {"rotation": [f"-{aus} * 120.0 + {zu} * 40.0", 0.0, f"{aus} * 18.0"]},
+               "leg1": {"rotation": [f"-{nach} * 85.0", 0.0, f"-{nach} * 15.0"]},
+               "leg2": {"rotation": [f"{aus} * 28.0", 0.0, 0.0]},
+               "leg3": {"rotation": [f"{aus} * 28.0", 0.0, 0.0]},
+               kopf: {"rotation": [f"-{aus} * 10.0 + {zu} * 22.0", f"{zu} * 10.0", 0.0]}}
+    elif art_angriff == "stoss":
+        # Kopf runter, Hinterbeine stemmen, der ganze Koerper schiesst vor.
+        # Den Kopf senken und zuruecknehmen, dann mit ganzem Gewicht vor.
+        ang = {kopf: {"rotation": [f"{aus} * 30.0 + {zu} * 20.0", f"{zu} * 12.0", 0.0]},
+               "body": {"rotation": [f"{aus} * 4.0 + {zu} * 6.0", 0.0, 0.0],
+                        "position": [0.0, f"-{aus} * 0.8", f"{aus} * 1.5 - {zu} * 4.5"]},
+               "leg0": {"rotation": [f"{aus} * 12.0 - {zu} * 18.0", 0.0, 0.0]},
+               "leg1": {"rotation": [f"{aus} * 12.0 - {zu} * 18.0", 0.0, 0.0]},
+               "leg2": {"rotation": [f"-{aus} * 8.0 + {zu} * 34.0", 0.0, 0.0]},
+               "leg3": {"rotation": [f"-{aus} * 8.0 + {zu} * 34.0", 0.0, 0.0]}}
+    elif art_angriff == "biss":
+        # Maul auf, vorschnellen, zupacken - und den Kopf schuetteln.
+        if "kiefer" in da:
+            ang["kiefer"] = {"rotation": [f"{aus} * 50.0 + {zu} * 10.0", 0.0, 0.0]}
+        ang[kopf] = {"rotation": [f"-{aus} * 16.0 + {zu} * 6.0", f"math.sin(variable.attack_time * 900.0) * 12.0 * {zu}",
+                                  f"math.sin(variable.attack_time * 900.0 + 90.0) * 8.0 * {zu}"],
+                     "position": [0.0, 0.0, f"{aus} * 1.0 - {zu} * 3.0"]}
+        ang["body"] = {"position": [0.0, 0.0, f"-{zu} * 2.0"]}
+    elif art_angriff == "spiess":
+        ang = {kopf: {"rotation": [0.0, "math.sin(variable.attack_time * 360.0) * 30.0", 0.0]},
+               "rumpf": {"rotation": [0.0, "-math.sin(variable.attack_time * 360.0) * 12.0", 0.0]}}
+    elif art_angriff == "krallen":
+        # Der Adler faengt ab: Schwingen weit nach vorn gerissen, Schwanz
+        # gefaechert, die Faenge weit voraus - und zupacken.
+        ang = {"fuesse": {"rotation": [f"-{aus} * 100.0 - {zu} * 20.0", 0.0, 0.0]},
+               "kopf": {"rotation": [f"-{aus} * 15.0 + {zu} * 35.0", 0.0, 0.0]},
+               "fluegel_links": {"rotation": [0.0, f"{aus} * 30.0", f"-{aus} * 35.0"]},
+               "fluegel_rechts": {"rotation": [0.0, f"-{aus} * 30.0", f"{aus} * 35.0"]},
+               "schwanz": {"rotation": [f"-{aus} * 25.0", 0.0, 0.0], "scale": [f"1.0 + {aus} * 0.5", 1.0, 1.0]},
+               "rumpf": {"rotation": [f"-{aus} * 30.0", 0.0, 0.0]}}
+    elif art_angriff == "ramme":
+        # Der Wal holt mit dem Kopf aus und stoesst vor, die Fluke schlaegt nach.
+        ang = {"rumpf": {"rotation": [f"-{stoss} * 10.0", 0.0, 0.0], "position": [0.0, 0.0, f"-{stoss} * 8.0"]},
+               "kopf": {"rotation": [f"{stoss} * 12.0", 0.0, 0.0]},
+               "schwanz1": {"rotation": [f"{nach} * 25.0", 0.0, 0.0]},
+               "fluke": {"rotation": [f"{nach} * 40.0", 0.0, 0.0]}}
+    elif art_angriff == "arme":
+        for i in range(g.KALMAR_ARME):
+            ang[f"arm{i}"] = {"rotation": [f"-{stoss} * 30.0", 0.0, 0.0]}
+            ang[f"armspitze{i}"] = {"rotation": [f"-{nach} * 45.0", 0.0, 0.0]}
+        for i in range(2):
+            ang[f"fangarm{i}"] = {"rotation": [f"-{stoss} * 50.0", 0.0, 0.0]}
+    if ang:
+        a["angriff"] = {"loop": True, "bones": {k: v for k, v in ang.items() if k}}
+
+    # --- Junge: so gebaut wie Mojangs neue Tierbabys - grosser runder
+    # Kopf, kurze stummelige Beine, kurzer Schwanz. Die Beine werden an der
+    # Huefte gestaucht; damit die Fuesse trotzdem am Boden stehen, sinkt der
+    # Koerper um genau das Stueck, das die Beine kuerzer werden.
+    if t.get("baby") and kopf:
+        kopfmass, faktor = BABY.get(t["id"], (1.3, 0.8 if art == "amphib" else 0.72))
+        # Der Kopf waechst um seinen Drehpunkt, und der sitzt am Koerper -
+        # so bleibt er angewachsen. Vorher wurde er zusaetzlich um einen
+        # Pixel nach oben und hinten geschoben; beim Walross sass er damit
+        # eine Stufe ueber dem Ruecken. Die Schnauze waechst weniger mit als
+        # der Rest: Jungtiere haben kurze Gesichter, und ein langer Kopf in
+        # voller Vergroesserung war beim Nashorn hoeher als der ganze Koerper.
+        jung = {kopf: {"scale": [kopfmass, kopfmass, round(kopfmass * 0.85, 3)]}}
+        if "glocke" in da:
+            jung["glocke"] = {"scale": [1.0, 0.45, 1.0]}
+        if "leg0" in da:
+            bein = next(k for k in modell.knochen if k.name == "leg0").drehpunkt[1]
+            for b_ in ("leg0", "leg1", "leg2", "leg3"):
+                jung[b_] = {"scale": [1.1, faktor, 1.1]}
+            jung["body"] = {"position": [0.0, round(-(1 - faktor) * bein, 2), 0.0]}
+        for k in schwanzkette:
+            jung[k] = {"scale": 0.7}
+        for seite in ("flosse_links", "flosse_rechts"):
+            if seite in da:
+                jung[seite] = {"scale": 0.8}
+        a["jung"] = {"loop": True, "bones": jung}
+
+    # --- Der Riese: alles um den Faktor groesser. Weil die Beine am Rumpf
+    # haengen und der Rumpf in seinem Drehpunkt waechst, wird er um genau
+    # so viel angehoben, dass die Fuesse wieder auf dem Boden stehen.
+    if t.get("riese"):
+        f = t["riese"]["gross"]
+        rumpf_y = next(k.drehpunkt[1] for k in modell.knochen if k.name == "body")
+        a["riese"] = {"loop": True, "bones": {"body": {"scale": f, "position": [0.0, round(rumpf_y * (f - 1), 2), 0.0]}}}
+
+    # --- Einzelne Varianten groesser (der Silberruecken). Nur gezeichnet:
+    # Eine Groesse im Verhaltenspaket stritte sich mit der des Jungtiers,
+    # und beim Erwachsenwerden fiele sie mit dessen Gruppe wieder weg.
+    # Angehoben wie beim Riesen, damit die Fuesse am Boden bleiben.
+    if t.get("variante_gross"):
+        rumpf_y = next(k.drehpunkt[1] for k in modell.knochen if k.name == "body")
+        for nr, f in t["variante_gross"].items():
+            a[f"gross{nr}"] = {"loop": True, "bones": {"body": {
+                "scale": f, "position": [0.0, round(rumpf_y * (f - 1), 2), 0.0]}}}
+
+    # --- Teile, die nur manche Varianten haben (Geweih, Maehne, Hammerkopf)
+    if t.get("zeigen"):
+        a["teile"] = {"loop": True, "bones": {k: {"scale": f"({bed}) ? 1.0 : 0.0"} for k, bed in t["zeigen"].items()}}
+    for name, (anim, _) in t.get("eigene_bewegungen", {}).items():
+        a[name] = anim
+    return a
+
+
+# Trab bzw. Galopp erst, wenn es schneller geht als beim Umherstreifen -
+# beim Fliehen und Angreifen. Frueher schon ab 0.6: Da trabten Bisons beim
+# gemuetlichen Grasen wild durch die Gegend.
+GALOPP = "math.clamp((query.modified_move_speed - 0.95) * 4.0, 0.0, 1.0)"
+# Wie stark die Gehbewegung wirkt: mit dem Tempo, aber nie ueber 1 - sonst
+# schlagen die Beine bei schnellen Tieren weiter aus, als sie duerfen.
+GEHEN = "math.clamp(query.modified_move_speed * 1.4, 0.0, 1.0)"
+# Wie schnell sich das Tier gerade dreht, weich nachgezogen, in etwa Grad
+# je zwanzigstel Sekunde; Spruenge ueber die 180-Grad-Grenze abgefangen.
+DREHUNG_START = ["variable.fynn_gier_alt = query.body_y_rotation;", "variable.fynn_dreh = 0.0;",
+                 "variable.fynn_zufall = math.random(0.0, 360.0);"]
+DREHUNG = [
+    "variable.fynn_d = query.body_y_rotation - variable.fynn_gier_alt;",
+    "variable.fynn_d = variable.fynn_d > 180.0 ? variable.fynn_d - 360.0 : "
+    "(variable.fynn_d < -180.0 ? variable.fynn_d + 360.0 : variable.fynn_d);",
+    "variable.fynn_gier_alt = query.body_y_rotation;",
+    "variable.fynn_dreh = math.lerp(variable.fynn_dreh, "
+    "math.clamp(variable.fynn_d / math.max(query.delta_time, 0.01) / 20.0, -10.0, 10.0), 0.12);",
+]
+
+
+def an_land(da, rumpf, kopf):
+    """An Land liegt der Fisch auf der Seite und zappelt.
+
+    Fynn (4.73): "Der Haifisch braucht an Land eine bessere Animation des
+    Zappelns. Da sollen die ganzen Gelenke sich bewegen - dann sieht es
+    dynamischer aus, als wenn er wie ein Brett zappelt." Frueher drehte sich
+    nur der Rumpf. Jetzt biegt sich der ganze Fisch zu einem C und wieder
+    zurueck: Kopf und Schwanz schlagen gegeneinander, jedes Schwanzglied
+    etwas spaeter als das vorige (eine Welle), der Koerper hebt bei jedem
+    Schlag kurz ab, der Kiefer schnappt nach Luft, die Brustflossen flattern.
+    Die Schlaege kommen in Schueben - ein paar heftige, dann eine kurze
+    Pause, wie bei einem echten Fisch, der Kraft sammelt."""
+    t = "(query.life_time + variable.fynn_zufall * 0.01)"
+    schlag = f"math.sin({t} * 520.0)"
+    # Schub: laut und leise im Wechsel, nie ganz still.
+    schub = f"(0.35 + 0.65 * math.pow(math.abs(math.sin({t} * 55.0)), 0.6))"
+    knochen = {rumpf: {
+        "rotation": [f"math.sin({t} * 260.0) * 6.0 * {schub}", f"{schlag} * 12.0 * {schub}",
+                     f"90.0 + math.sin({t} * 780.0) * 7.0 * {schub}"],
+        # Bei jedem Schlag hebt er kurz ab.
+        "position": [0.0, f"-3.0 + math.abs({schlag}) * 1.6 * {schub}", 0.0]}}
+    if kopf:
+        knochen[kopf] = {"rotation": [0.0, f"-{schlag} * 16.0 * {schub}", 0.0]}
+    kette = [k for k in ("schwanz1", "schwanz2", "schwanz3", "schwanzflosse") if k in da]
+    for i, k in enumerate(kette):
+        knochen[k] = {"rotation": [0.0, f"math.sin({t} * 520.0 - {40 + 35 * i}.0) * {20 + 6 * i}.0 * {schub}", 0.0]}
+    if "kiefer" in da:
+        knochen["kiefer"] = {"rotation": [f"math.pow(math.abs(math.sin({t} * 160.0)), 3.0) * 26.0", 0.0, 0.0]}
+    for seite, zeichen in (("flosse_links", 1), ("flosse_rechts", -1)):
+        if seite in da:
+            knochen[seite] = {"rotation": [f"math.sin({t} * 640.0) * 10.0", 0.0,
+                                           f"math.sin({t} * 900.0) * {22 * zeichen}.0"]}
+    return {"loop": True, "bones": knochen}
+
+
+def sturm(da, kopf):
+    """Der Hai nimmt Anlauf (Fynn: "auf einen zuschwimmen und dann auch ein
+    bisschen beschleunigen"): gestreckt, die Brustflossen angelegt, der
+    Schwanz schlaegt doppelt so schnell und weit, das Maul geht auf."""
+    k = {}
+    kette = [x for x in ("schwanz1", "schwanz2", "schwanzflosse") if x in da]
+    for i, x in enumerate(kette):
+        k[x] = {"rotation": [0.0, f"math.sin(query.life_time * 1100.0 - {40 * i}.0) * {14 + 8 * i}.0", 0.0]}
+    for seite, zeichen in (("flosse_links", 1), ("flosse_rechts", -1)):
+        if seite in da:
+            k[seite] = {"rotation": [0.0, f"{-25 * zeichen}.0", f"{-15 * zeichen}.0"]}
+    if kopf:
+        k[kopf] = {"rotation": [-6.0, 0.0, 0.0]}
+    if "kiefer" in da:
+        k["kiefer"] = {"rotation": [28.0, 0.0, 0.0]}
+    return {"loop": True, "bones": k}
+
+
+# Wie der Wal sich beim Sprung dreht: (Zeit, aufgerichtet, um die Laengsachse
+# gerollt), in Grad. Er schiesst fast senkrecht hoch, rollt dabei auf den
+# Ruecken, kippt vornueber und schlaegt so mit dem Ruecken aufs Wasser -
+# wie ein echter Buckelwal. Unter Wasser rollt er sich denselben Weg zurueck:
+# Endete er bei 360 Grad, drehte er sich beim Ausblenden noch einmal ein
+# Stueck, weil Minecraft von 360 nach 0 zurueckrechnet.
+WALSPRUNG_LAGE = [(0.0, 50, 0), (0.6, 72, 50), (1.2, 78, 150), (1.8, 40, 185),
+                  (2.3, -6, 180), (2.7, 0, 70), (3.0, 0, 0)]
+
+
+def _mal(a, b):
+    return [[sum(a[i][k] * b[k][j] for k in range(3)) for j in range(3)] for i in range(3)]
+
+
+def walsprung_drehung(zeit):
+    """Die Drehung des Rumpfes als Bedrock-Winkel.
+
+    Bedrock dreht einen Knochen erst um X, dann um Y, dann um Z - jeweils um
+    die Achsen des Elternteils. Ein Rollen als Z-Wert kippte den aufrecht
+    stehenden Wal darum seitlich um, statt ihn um sich selbst zu drehen
+    (4.74 purzelte er so durch die Luft). Hier wird zuerst um die eigene
+    Laengsachse gerollt und dann aufgerichtet, und daraus die drei Winkel
+    zurueckgerechnet."""
+    import math
+    lage = WALSPRUNG_LAGE
+    for (t0, a0, r0), (t1, a1, r1) in zip(lage, lage[1:]):
+        if t0 <= zeit <= t1:
+            f = (zeit - t0) / (t1 - t0)
+            f = f * f * (3 - 2 * f)
+            auf, roll = a0 + (a1 - a0) * f, r0 + (r1 - r0) * f
+            break
+    a, r = math.radians(auf), math.radians(roll)
+    ca, sa, cr, sr = math.cos(a), math.sin(a), math.cos(r), math.sin(r)
+    m = _mal([[1, 0, 0], [0, ca, -sa], [0, sa, ca]], [[cr, -sr, 0], [sr, cr, 0], [0, 0, 1]])
+    # m = Rz(A) * Ry(B) * Rx(C); Bedrock zaehlt X und Z andersherum.
+    b = math.asin(max(-1.0, min(1.0, -m[2][0])))
+    c = math.atan2(m[2][1], m[2][2])
+    z = math.atan2(m[1][0], m[0][0])
+    return [-math.degrees(c), math.degrees(b), -math.degrees(z)]
+
+
+def walsprung_rumpf():
+    """Alle zehntel Sekunden ein Schluessel - zwischen zweien rechnet Bedrock
+    die Winkel einzeln, und nur so dicht bleibt das die richtige Drehung.
+    Sprunge um eine ganze Umdrehung werden ausgeglichen, sonst wirbelte er
+    zwischen zwei Schluesseln einmal um sich selbst."""
+    schluessel, vorher = {}, None
+    for i in range(31):
+        zeit = i / 10
+        w = walsprung_drehung(zeit)
+        if vorher:
+            w = [x + 360 * round((v - x) / 360) for x, v in zip(w, vorher)]
+        schluessel[f"{zeit:g}"] = [round(x, 1) for x in w]
+        vorher = w
+    return schluessel
+
+
+def wal_sprung():
+    """Der Sprung des Buckelwals, drei Sekunden: steil aus dem Wasser, oben
+    rollt er auf den Ruecken und breitet die langen Brustflossen aus, dann
+    kippt er vornueber und klatscht mit dem Ruecken aufs Wasser.
+    Die Schwanzflosse schlaegt beim Absprung kraeftig und rollt sich beim
+    Fallen ein."""
+    def kf(werte):
+        return {str(z): v for z, v in werte}
+    return {"animation_length": 3.0, "loop": "hold_on_last_frame", "bones": {
+        "rumpf": {"rotation": walsprung_rumpf()},
+        "kopf": {"rotation": kf([(0.0, [-10, 0, 0]), (1.2, [5, 0, 0]), (2.3, [15, 0, 0]), (3.0, [0, 0, 0])])},
+        "flosse_links": {"rotation": kf([(0.0, [0, 0, 10]), (1.0, [0, -20, 70]), (2.0, [0, 0, 80]),
+                                         (2.4, [0, 0, 20]), (3.0, [0, 0, 0])])},
+        "flosse_rechts": {"rotation": kf([(0.0, [0, 0, -10]), (1.0, [0, 20, -70]), (2.0, [0, 0, -80]),
+                                          (2.4, [0, 0, -20]), (3.0, [0, 0, 0])])},
+        "schwanz1": {"rotation": kf([(0.0, [25, 0, 0]), (0.3, [-20, 0, 0]), (0.6, [15, 0, 0]),
+                                     (1.8, [-10, 0, 0]), (2.3, [20, 0, 0]), (3.0, [0, 0, 0])])},
+        "schwanz2": {"rotation": kf([(0.0, [30, 0, 0]), (0.3, [-30, 0, 0]), (0.6, [20, 0, 0]),
+                                     (1.8, [-15, 0, 0]), (2.3, [25, 0, 0]), (3.0, [0, 0, 0])])},
+        "fluke": {"rotation": kf([(0.0, [35, 0, 0]), (0.3, [-35, 0, 0]), (0.6, [25, 0, 0]),
+                                  (1.8, [-25, 0, 0]), (2.3, [30, 0, 0]), (3.0, [0, 0, 0])])},
+    }}
+
+
+def _partikel(kennung, teile):
+    return {"format_version": "1.10.0", "particle_effect": {
+        "description": {"identifier": kennung, "basic_render_parameters": {
+            "material": "particles_alpha", "texture": "textures/particle/walfontaene"}},
+        "components": teile}}
+
+
+def wal_partikel():
+    """Die Gischt beim Walsprung (Fynn: "dass da so ein bisschen Wasser
+    hochspritzt"). Zwei Teile: eine Krone aus Tropfen, von denen die meisten
+    niedrig bleiben und nur wenige hoch fliegen - und ein flacher Schaumring,
+    der auf dem Wasser auseinanderlaeuft. Tropfen, die zurueck ins Wasser
+    fallen, verschwinden dort, statt durch die Oberflaeche zu sinken."""
+    uv = {"texture_width": 8, "texture_height": 8, "uv": [0, 0], "uv_size": [8, 8]}
+    schreibe(RES / "particles" / "walgischt.particle.json", _partikel("fynn:walgischt", {
+        "minecraft:emitter_rate_instant": {"num_particles": 90},
+        "minecraft:emitter_lifetime_once": {"active_time": 0.1},
+        "minecraft:emitter_shape_disc": {
+            "radius": 1.6, "plane_normal": "y",
+            "direction": ["(variable.particle_random_1 - 0.5) * 1.4", 1.0,
+                          "(variable.particle_random_2 - 0.5) * 1.4"]},
+        "minecraft:particle_lifetime_expression": {"max_lifetime": "0.9 + variable.particle_random_3 * 1.1"},
+        # Quadriert: viele niedrige Spritzer, wenige hohe.
+        "minecraft:particle_initial_speed": "4.0 + variable.particle_random_3 * variable.particle_random_3 * 9.0",
+        "minecraft:particle_motion_dynamic": {"linear_acceleration": [0, -16, 0], "linear_drag_coefficient": 0.4},
+        "minecraft:particle_expire_if_in_blocks": ["minecraft:water", "minecraft:flowing_water"],
+        "minecraft:particle_appearance_billboard": {
+            "size": ["0.1 + variable.particle_random_4 * 0.14", "0.1 + variable.particle_random_4 * 0.14"],
+            "facing_camera_mode": "rotate_xyz", "uv": uv},
+        "minecraft:particle_appearance_tinting": {"color": [
+            "0.78 + variable.particle_random_2 * 0.22", "0.9 + variable.particle_random_2 * 0.1", 1,
+            "math.min(1, 3 * (1 - variable.particle_age / variable.particle_lifetime))"]},
+    }))
+    schreibe(RES / "particles" / "walschaum.particle.json", _partikel("fynn:walschaum", {
+        "minecraft:emitter_rate_instant": {"num_particles": 70},
+        "minecraft:emitter_lifetime_once": {"active_time": 0.1},
+        "minecraft:emitter_shape_disc": {"radius": 1.2, "plane_normal": "y", "surface_only": True,
+                                         "direction": "outwards"},
+        "minecraft:particle_lifetime_expression": {"max_lifetime": "1.4 + variable.particle_random_1 * 0.5"},
+        "minecraft:particle_initial_speed": "3.0 + variable.particle_random_2 * 1.5",
+        "minecraft:particle_motion_dynamic": {"linear_drag_coefficient": 1.3},
+        # Flach auf dem Wasser, nicht zur Kamera gedreht - ein Ring aus Schaum.
+        "minecraft:particle_appearance_billboard": {
+            "size": ["0.22 + variable.particle_random_3 * 0.12", "0.22 + variable.particle_random_3 * 0.12"],
+            "facing_camera_mode": "emitter_transform_xz", "uv": uv},
+        "minecraft:particle_appearance_tinting": {"color": [
+            1, 1, 1, "0.85 * (1 - variable.particle_age / variable.particle_lifetime)"]},
+    }))
+
+
+def tintenwolke():
+    """Die Tinte des Riesenkalmars, wenn der Wal ihn rammt: eine dunkle,
+    langsam aufquellende Wolke, in der er verschwindet."""
+    teile = {
+        "minecraft:emitter_rate_instant": {"num_particles": 40},
+        "minecraft:emitter_lifetime_once": {"active_time": 0.05},
+        "minecraft:emitter_shape_sphere": {"radius": 1.2, "direction": "outwards"},
+        "minecraft:particle_lifetime_expression": {"max_lifetime": "2.5 + variable.particle_random_1 * 1.5"},
+        "minecraft:particle_initial_speed": "0.6 + variable.particle_random_2 * 1.4",
+        "minecraft:particle_motion_dynamic": {"linear_drag_coefficient": 1.5},
+        "minecraft:particle_appearance_billboard": {
+            "size": ["0.5 + variable.particle_age * 0.6", "0.5 + variable.particle_age * 0.6"],
+            "facing_camera_mode": "rotate_xyz",
+            "uv": {"texture_width": 8, "texture_height": 8, "uv": [0, 0], "uv_size": [8, 8]}},
+        "minecraft:particle_appearance_tinting": {"color": [
+            0.08, 0.06, "0.12 + variable.particle_random_3 * 0.08",
+            "0.9 * (1 - variable.particle_age / variable.particle_lifetime)"]},
+    }
+    daten = _partikel("fynn:tintenwolke", teile)
+    daten["particle_effect"]["description"]["basic_render_parameters"] = {
+        "material": "particles_blend", "texture": "textures/particle/fynn_rauch"}
+    schreibe(RES / "particles" / "tintenwolke.particle.json", daten)
+
+
+def animate_liste(t, anims):
+    liste = []
+    wasser = t["art"] in ("fisch", "wal")
+    if "laufen" in anims:
+        if t["art"] == "amphib":
+            liste.append({"laufen": f"!query.is_in_water ? {GEHEN} : 0.0"})
+            liste.append({"schwimmen": "query.is_in_water"})
+        elif "galopp" in anims:
+            liste.append({"laufen": f"{GEHEN} * (1.0 - variable.galopp)"})
+            liste.append({"galopp": "variable.galopp"})
+        else:
+            liste.append({"laufen": GEHEN})
+        liste.append({"stehen": "1.0 - math.clamp(query.modified_move_speed * 2.0, 0.0, 0.8)"})
+        liste.append("blick")
+        liste.append("drehen")
+    if wasser:
+        liste.append({"schwimmen": "query.is_in_water" if "an_land" in anims else "1.0"})
+        if "an_land" in anims:
+            liste.append({"an_land": "!query.is_in_water"})
+    if "sturm" in anims:
+        liste.append({"sturm": "query.property('fynn:sturm')"})
+    for name, gewicht in ZUSATZ_GEWICHT.items():
+        if name in anims:
+            liste.append({name: gewicht})
+    if "fliegen" in anims:
+        liste.append("fliegen")
+        # Im Sturzflug die Schwingen anlegen.
+        liste.append({"stossen": "math.clamp(-query.vertical_speed * 0.6 - 0.2, 0.0, 1.0)"})
+    for name, (_, gewicht) in t.get("eigene_bewegungen", {}).items():
+        liste.append({name: gewicht})
+    if "trommeln" in anims:
+        liste.append({"trommeln": "(1.0 - math.clamp(query.modified_move_speed * 3.0, 0.0, 1.0)) * variable.trommeln"})
+    if "angriff" in anims:
+        liste.append({"angriff": "variable.attack_time > 0.0"})
+    if "jung" in anims:
+        liste.append({"jung": "query.is_baby"})
+    if "teile" in anims:
+        liste.append("teile")
+    if "riese" in anims:
+        liste.append({"riese": "query.property('fynn:riese')"})
+    for nr in t.get("variante_gross", {}):
+        liste.append({f"gross{nr}": f"query.variant == {nr} && !query.is_baby"})
+    return liste
+
+
+def aussehen(t, anims, texturen):
+    name = t["id"]
+    kurz = {k: (v if isinstance(v, str) else f"animation.fynn.{name}.{k}") for k, v in anims.items()}
+    d = {
+        "identifier": f"fynn:{name}",
+        # Leuchtende Wesen (Feuermuecke, Basilisk) gluehen, wo die Haut
+        # Alpha 254 hat.
+        "materials": {"default": t.get("material", "entity_alphatest")},
+        "textures": {k: f"textures/entity/tiere/{name}_{k}" for k in texturen},
+        "geometry": {"default": f"geometry.fynn.{name}"},
+        "animations": kurz,
+        "scripts": {"initialize": DREHUNG_START + t.get("anfang", []),
+                    "pre_animation": DREHUNG + ([f"variable.galopp = {GALOPP};"] if "galopp" in anims else [])
+                    + ([TROMMELN_WANN] if "trommeln" in anims else [])
+                    # Was die Bewegungen eines Tiers gemeinsam brauchen (die
+                    # Drachen: wann er bruellt, wann er sich streckt).
+                    + t.get("vorher", []),
+                    "animate": animate_liste(t, anims),
+                    # Nur im Bild groesser (die Drachen): Der Trefferkasten
+                    # steht schon passend in kollision.
+                    **({"scale": t.get("skala") or str(t["groesse"])} if t.get("groesse") else {})},
+        "render_controllers": [f"controller.render.fynn.{name}"],
+        "spawn_egg": ei_eintrag(t["id"], {"base_color": t["ei"][0], "overlay_color": t["ei"][1]}),
+    }
+    return {"format_version": "1.10.0", "minecraft:client_entity": {"description": d}}
+
+
+def babyhaut(t):
+    """Name der Haut fuer die Jungen - oder None, wenn das Tier keine hat."""
+    if not t.get("baby"):
+        return None
+    return t.get("baby_textur") or "jung"
+
+
+def steuerung(t, texturen):
+    """Welche Haut: die Variante - und bei manchen Jungen eine eigene."""
+    varianten = [f"Texture.{v}" for v, _ in t["varianten"]]
+    bild = "Array.haut[query.variant]"
+    if babyhaut(t):
+        bild = f"query.is_baby ? Texture.{babyhaut(t)} : Array.haut[query.variant]"
+    arrays = {"Array.haut": varianten}
+    if t.get("misch_haut"):
+        import drachen_misch as dm
+        n = len(dm.plaetze())
+        arrays["Array.misch"] = [f"Texture.{kv}" if (art == t["id"] and fv == kv) else f"Texture.misch_{kv}_{art}_{fv}"
+                                 for kv in dm.varianten(t["gestalt"]) for art, _, fv in dm.plaetze()]
+        bild = (f"query.property('fynn:misch') > 0 ? "
+                f"Array.misch[query.variant * {n} + query.property('fynn:misch') - 1] : {bild}")
+    steuer = {
+        "arrays": {"textures": arrays},
+        "geometry": "Geometry.default",
+        "materials": [{"*": "Material.default"}],
+        "textures": [bild],
+    }
+    if t.get("riese"):
+        steuer["part_visibility"] = [{"saenfte": "query.is_saddled"}]
+    if t.get("reiten"):
+        steuer["part_visibility"] = [{"sattel": "query.is_saddled"},
+                                     {"tasche_links": "query.property('fynn:taschen') >= 1"},
+                                     {"tasche_rechts": "query.property('fynn:taschen') >= 2"}]
+    if t.get("sichtbarkeit"):
+        # Was eine Art selbst ein- und ausblendet (die Augenlider der Drachen).
+        steuer.setdefault("part_visibility", []).extend(t["sichtbarkeit"])
+    return {"format_version": "1.8.0", "render_controllers": {f"controller.render.fynn.{t['id']}": steuer}}
+
+
+# ------------------------------------------------------------ Zusammenbau
+
+_MISCH = {}
+
+
+def palette_speichern(bild, ziel):
+    """Als Palettenbild speichern, wenn es hoechstens 256 Farben hat - ohne
+    jeden Verlust (Durchsichtigkeit und Leuchten bleiben je Farbe erhalten),
+    aber nicht einmal halb so gross. Die vielen Mischhaeute der Drachen
+    passen so ins Paket."""
+    bild = bild.convert("RGBA")
+    roh = bild.tobytes()
+    punkte = [roh[i:i + 4] for i in range(0, len(roh), 4)]
+    farben = list(dict.fromkeys(punkte))
+    if len(farben) > 256:
+        bild.save(ziel)
+        return
+    nr = {f: i for i, f in enumerate(farben)}
+    p = tm.Image.new("P", bild.size)
+    p.frombytes(bytes(nr[f] for f in punkte))
+    p.putpalette([k for f in farben for k in f[:3]])
+    p.save(ziel, "PNG", optimize=True, transparency=bytes(f[3] for f in farben))
+
+
+def _misch_malen(auftrag):
+    """Eine Mischhaut malen (laeuft in einem eigenen Prozess)."""
+    name, koerper, kv, farbe, fv, ziel = auftrag
+    import drachen_misch as dm
+    palette_speichern(_MISCH["modell"].male(dm.misch_maler(koerper, farbe, kv, fv)), ziel)
+    return name
+
+
+def baue(t, bilder=None):
+    name = t["id"]
+    modell = getattr(g, f"{t['gestalt']}_modell")()
+    maler = getattr(g, f"{t['gestalt']}_maler")
+    if t.get("misch_haut"):
+        # Die Erbteile der Mischlinge (5.2) gehoeren zu jedem Drachenmodell.
+        import drachen_misch as dm
+        dm.erbteile(modell, t["id"])
+        maler = (lambda roh: lambda v: dm.mit_erbe(roh(v)))(maler)
+    geo = modell.geometrie()
+    schreibe(RES / "models" / "entity" / f"tier_{name}.geo.json", geo)
+
+    texturen = {}
+    namen = [v for v, _ in t["varianten"]] + ([babyhaut(t)] if babyhaut(t) else [])
+    for v in namen:
+        # Jungtiere: eigene Haut mit grossen, glaenzenden Augen. Wer keine
+        # eigene Jungtierfarbe hat, nimmt die der ersten Variante.
+        g.JUNG = v == babyhaut(t)
+        bild = modell.male(maler(t.get("baby_textur") or t["varianten"][0][0] if g.JUNG else v))
+        g.JUNG = False
+        ziel = RES / "textures" / "entity" / "tiere" / f"{name}_{v}.png"
+        ziel.parent.mkdir(parents=True, exist_ok=True)
+        bild.save(ziel)
+        texturen[v] = bild
+    if t.get("misch_haut"):
+        # Mischlinge (5.2, die Drachen): der Koerper dieser Art in jeder ihrer
+        # Farbvarianten, mit den Details in jeder Variante jeder Art - welche,
+        # sagen query.variant und fynn:misch (drachen_misch.py). Gut 70
+        # Haeute je Art: Sie werden auf allen Kernen zugleich gemalt.
+        import multiprocessing
+        import drachen_misch as dm
+        assert dm.varianten(t["gestalt"]) == [v for v, _ in t["varianten"]], t["id"]
+        auftraege = []
+        for kv in dm.varianten(t["gestalt"]):
+            for art, gestalt, fv in dm.plaetze():
+                if art == t["id"] and fv == kv:
+                    continue
+                auftraege.append((f"misch_{kv}_{art}_{fv}", t["gestalt"], kv, gestalt, fv,
+                                  str(RES / "textures" / "entity" / "tiere" / f"{name}_misch_{kv}_{art}_{fv}.png")))
+        _MISCH["modell"] = modell
+        with multiprocessing.get_context("fork").Pool() as pool:
+            for fertig in pool.imap_unordered(_misch_malen, auftraege):
+                texturen[fertig] = None
+        for alt in (RES / "textures" / "entity" / "tiere").glob(f"{name}_misch_*.png"):
+            if alt.stem[len(name) + 1:] not in texturen:
+                alt.unlink()
+
+    anims = bewegungen(t, modell)
+    eigene = {f"animation.fynn.{name}.{k}": v for k, v in anims.items() if not isinstance(v, str)}
+    schreibe(RES / "animations" / f"tier_{name}.animation.json", {"format_version": "1.10.0", "animations": eigene})
+    schreibe(RES / "entity" / f"tier_{name}.entity.json", aussehen(t, anims, texturen))
+    schreibe(RES / "render_controllers" / f"tier_{name}.render_controllers.json", steuerung(t, texturen))
+
+    schreibe(VER / "entities" / f"tier_{name}.json", verhalten(t, namen))
+    if t.get("nur_zucht"):
+        # Die Drachen aus der Zucht (5.2) erscheinen nie von selbst.
+        (VER / "spawn_rules" / f"tier_{name}.json").unlink(missing_ok=True)
+    else:
+        schreibe(VER / "spawn_rules" / f"tier_{name}.json", spawnregel(t))
+    schreibe(VER / "loot_tables" / "entities" / f"{name}.json", beuteliste(t["beute"]))
+    for zusatz, eintraege in t.get("beute_extra", {}).items():
+        schreibe(VER / "loot_tables" / "entities" / f"{name}_{zusatz}.json", beuteliste(eintraege))
+
+    if bilder is not None:
+        bilder.append((t, geo, texturen, eigene))
+    return geo
+
+
+def laute():
+    """Die Geraeusche - alles Klaenge aus Minecraft, tiefer oder hoeher
+    gestimmt: ein tief gestimmtes Kuhmuhen ist ein Bison, ein langsamer
+    Waechter-Gesang ist ein Wal."""
+    pfad = RES / "sounds.json"
+    daten = json.loads(pfad.read_text(encoding="utf-8")) if pfad.exists() else {}
+    wesen = daten.setdefault("entity_sounds", {}).setdefault("entities", {})
+    for t in TIERE:
+        l = dict(t["laute"])
+        tonhoehe = l.pop("pitch")
+        ereignisse = {}
+        for ereignis, klang in l.items():
+            ereignisse[ereignis] = {"sound": klang, "volume": 0.25 if ereignis == "step" else 1.0}
+            if t["art"] in ("fisch", "wal") and ereignis in ("ambient", "hurt", "death"):
+                ereignisse[f"{ereignis}.in.water"] = ereignisse[ereignis]
+        wesen[f"fynn:{t['id']}"] = {"volume": 1.0, "pitch": tonhoehe, "events": ereignisse}
+    schreibe(pfad, daten)
+
+
+def sprache():
+    for datei, i in (("de_DE.lang", 0), ("en_US.lang", 1)):
+        pfad = RES / "texts" / datei
+        zeilen = [z for z in pfad.read_text(encoding="utf-8").splitlines()
+                  if not any(z.startswith(f"entity.fynn:{t['id']}.") or z.startswith(f"item.spawn_egg.entity.fynn:{t['id']}")
+                             for t in TIERE) and z != "## Die Tiere"]
+        while zeilen and not zeilen[-1].strip():
+            zeilen.pop()
+        zeilen += ["", "## Die Tiere"]
+        for t in TIERE:
+            n = t["name"][i]
+            ei = "Spawn-Ei" if i == 0 else "Spawn Egg"
+            zeilen += [f"entity.fynn:{t['id']}.name={n}", f"item.spawn_egg.entity.fynn:{t['id']}.name={n}-{ei}"
+                       if i == 0 else f"item.spawn_egg.entity.fynn:{t['id']}.name={n} {ei}"]
+        pfad.write_text("\n".join(zeilen) + "\n", encoding="utf-8")
+
+
+def vorschau(bilder, ordner):
+    from PIL import Image, ImageDraw
+    ordner = Path(ordner)
+    ordner.mkdir(parents=True, exist_ok=True)
+    zellen = []
+    for t, geo, texturen, eigene in bilder:
+        for v, bild in texturen.items():
+            if bild is None:
+                continue                                     # Mischhaeute: nicht in der Uebersicht
+            baby = v == babyhaut(t)
+            werte = {"q.is_baby": 1.0 if baby else 0.0,
+                     "q.variant": float(next((i for i, (n, _) in enumerate(t["varianten"]) if n == v), 0)),
+                     "q.is_in_water": 1.0}
+            anims = [(a, 1.0) for k, a in eigene.items() if k.endswith((".teile", ".jung")) and
+                     (not k.endswith(".jung") or baby)]
+            nr = int(werte["q.variant"])
+            if not baby and nr in t.get("variante_gross", {}):
+                anims += [(a, 1.0) for k, a in eigene.items() if k.endswith(f".gross{nr}")]
+            if t.get("riese"):
+                anims.append(({"loop": True, "bones": {"saenfte": {"scale": 0.0}}}, 1.0))
+            if t.get("reiten"):
+                # Im Spiel blendet die Darstellung Sattel und Taschen aus,
+                # solange keine da sind - hier dasselbe von Hand.
+                anims.append(({"loop": True, "bones": {k: {"scale": 0.0} for k in
+                                                        ("sattel", "tasche_links", "tasche_rechts")}}, 1.0))
+            b = tm.ansehen(geo, bild, anims, werte, gier=35, neigung=20, breite=260, hoehe=220)
+            # Die Schrift der Vorschau kennt keine Umlaute.
+            name = t["name"][0].replace("ä", "ae").replace("ö", "oe").replace("ü", "ue")
+            zellen.append((b, f"{name} ({v})"))
+    spalten = 5
+    zeilen = (len(zellen) + spalten - 1) // spalten
+    gesamt = Image.new("RGBA", (spalten * 260, zeilen * 240), (250, 250, 252, 255))
+    mal = ImageDraw.Draw(gesamt)
+    for i, (b, text) in enumerate(zellen):
+        x, y = (i % spalten) * 260, (i // spalten) * 240
+        gesamt.paste(b, (x, y))
+        mal.text((x + 8, y + 222), text, fill=(30, 30, 40, 255))
+    ziel = ordner / "tiere_alle.png"
+    gesamt.save(ziel)
+    print("gezeichnet:", ziel)
+
+
+def main():
+    bilder = [] if "--bilder" in sys.argv else None
+    # --nur a,b: nur diese Tiere neu bauen (beim Ausprobieren - die Drachen
+    # mit all ihren Mischhaeuten brauchen allein Minuten).
+    nur = set(sys.argv[sys.argv.index("--nur") + 1].split(",")) if "--nur" in sys.argv else None
+    for t in TIERE:
+        if nur is None or t["id"] in nur:
+            baue(t, bilder)
+    laute()
+    sprache()
+    wal_partikel()
+    tintenwolke()
+    print(f"gebaut: {len(TIERE)} Tiere, "
+          f"{sum(1 for t in TIERE if t['art'] in ('land', 'amphib'))} an Land, "
+          f"{sum(1 for t in TIERE if t['art'] in ('fisch', 'wal'))} im Wasser, "
+          f"{sum(1 for t in TIERE if t['art'] == 'vogel')} in der Luft")
+    if bilder is not None:
+        vorschau(bilder, sys.argv[sys.argv.index("--bilder") + 1])
+
+
+if __name__ == "__main__":
+    main()

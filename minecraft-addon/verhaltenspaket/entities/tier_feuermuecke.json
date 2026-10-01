@@ -1,0 +1,237 @@
+{
+  "format_version": "1.26.30",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "fynn:feuermuecke",
+      "spawn_category": "creature",
+      "is_spawnable": true,
+      "is_summonable": true
+    },
+    "component_groups": {
+      "fynn:gefangen": {
+        "minecraft:instant_despawn": {}
+      },
+      "fynn:erwachsen": {
+        "minecraft:loot": {
+          "table": "loot_tables/entities/feuermuecke.json"
+        }
+      },
+      "fynn:jagd": {
+        "minecraft:behavior.nearest_attackable_target": {
+          "priority": 3,
+          "must_see": true,
+          "reselect_targets": true,
+          "within_radius": 24,
+          "entity_types": [
+            {
+              "filters": {
+                "all_of": [
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "player"
+                  },
+                  {
+                    "test": "has_ability",
+                    "subject": "other",
+                    "value": "instabuild",
+                    "operator": "!="
+                  }
+                ]
+              },
+              "max_dist": 10
+            }
+          ]
+        },
+        "minecraft:attack": {
+          "damage": 2
+        },
+        "minecraft:behavior.melee_box_attack": {
+          "priority": 2,
+          "speed_multiplier": 1.3,
+          "track_target": true
+        }
+      },
+      "fynn:variante_0": {
+        "minecraft:variant": {
+          "value": 0
+        }
+      },
+      "fynn:variante_1": {
+        "minecraft:variant": {
+          "value": 1
+        }
+      }
+    },
+    "components": {
+      "minecraft:type_family": {
+        "family": [
+          "feuermuecke",
+          "fynn_tier",
+          "mob"
+        ]
+      },
+      "minecraft:health": {
+        "value": 4,
+        "max": 4
+      },
+      "minecraft:collision_box": {
+        "width": 0.8,
+        "height": 0.8
+      },
+      "minecraft:movement": {
+        "value": 0.3
+      },
+      "minecraft:hurt_on_condition": {
+        "damage_conditions": [
+          {
+            "filters": {
+              "test": "in_water",
+              "subject": "self",
+              "operator": "==",
+              "value": true
+            },
+            "cause": "drowning",
+            "damage_per_tick": 1
+          }
+        ]
+      },
+      "minecraft:nameable": {},
+      "minecraft:physics": {},
+      "minecraft:pushable_by_entity": {},
+      "minecraft:pushable_by_block": {},
+      "minecraft:jump.static": {},
+      "minecraft:follow_range": {
+        "value": 24,
+        "max": 24
+      },
+      "minecraft:despawn": {
+        "despawn_from_distance": {}
+      },
+      "minecraft:conditional_bandwidth_optimization": {},
+      "minecraft:experience_reward": {
+        "on_death": "query.last_hit_by_player ? Math.Random(1,3) : 0"
+      },
+      "minecraft:behavior.random_look_around": {
+        "priority": 9
+      },
+      "minecraft:behavior.hurt_by_target": {
+        "priority": 1
+      },
+      "minecraft:navigation.hover": {
+        "can_path_over_water": true,
+        "can_sink": false,
+        "can_pass_doors": false,
+        "can_path_from_air": true,
+        "avoid_water": true,
+        "avoid_damage_blocks": true
+      },
+      "minecraft:movement.hover": {},
+      "minecraft:can_fly": {},
+      "minecraft:flying_speed": {
+        "value": 0.5
+      },
+      "minecraft:breathable": {
+        "total_supply": 15,
+        "suffocate_time": 0
+      },
+      "minecraft:damage_sensor": {
+        "triggers": [
+          {
+            "cause": "fall",
+            "deals_damage": false
+          }
+        ]
+      },
+      "minecraft:behavior.random_hover": {
+        "priority": 8,
+        "xz_dist": 10,
+        "y_dist": 5,
+        "y_offset": -1,
+        "interval": 1,
+        "hover_height": {
+          "min": 1,
+          "max": 4
+        }
+      },
+      "minecraft:fire_immune": {},
+      "minecraft:interact": {
+        "interactions": [
+          {
+            "on_interact": {
+              "filters": {
+                "all_of": [
+                  {
+                    "test": "is_family",
+                    "subject": "other",
+                    "value": "player"
+                  },
+                  {
+                    "test": "has_equipment",
+                    "domain": "hand",
+                    "subject": "other",
+                    "value": "minecraft:glass_bottle"
+                  }
+                ]
+              },
+              "event": "fynn:gefangen",
+              "target": "self"
+            },
+            "use_item": true,
+            "transform_to_item": "fynn:glutflasche",
+            "interact_text": "action.interact.fynn_fangen"
+          }
+        ]
+      },
+      "minecraft:scale": {
+        "value": 0.45
+      }
+    },
+    "events": {
+      "fynn:gefangen": {
+        "add": {
+          "component_groups": [
+            "fynn:gefangen"
+          ]
+        }
+      },
+      "minecraft:entity_spawned": {
+        "sequence": [
+          {
+            "randomize": [
+              {
+                "weight": 85,
+                "add": {
+                  "component_groups": [
+                    "fynn:variante_0"
+                  ]
+                }
+              },
+              {
+                "weight": 15,
+                "add": {
+                  "component_groups": [
+                    "fynn:variante_1"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "randomize": [
+              {
+                "weight": 88,
+                "add": {
+                  "component_groups": [
+                    "fynn:erwachsen",
+                    "fynn:jagd"
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

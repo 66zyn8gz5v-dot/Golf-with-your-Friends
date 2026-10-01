@@ -1,0 +1,74 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:block": {
+    "description": {
+      "identifier": "fynn:kobel",
+      "menu_category": {
+        "category": "nature",
+        "group": "minecraft:itemGroup.name.leaves"
+      },
+      "states": {
+        "fynn:inhalt": {
+          "values": {
+            "min": 0,
+            "max": 3
+          }
+        }
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 0.3
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 1.0
+      },
+      "minecraft:flammable": {
+        "catch_chance_modifier": 30,
+        "destroy_chance_modifier": 60
+      },
+      "minecraft:map_color": "#6a4a2a",
+      "minecraft:tick": {
+        "interval_range": [
+          1200,
+          2400
+        ],
+        "looping": true
+      },
+      "fynn:nest": {},
+      "minecraft:geometry": "geometry.fynn.kobel",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "nest_kobel",
+          "render_method": "alpha_test"
+        }
+      },
+      "minecraft:collision_box": {
+        "origin": [
+          -6,
+          0,
+          -6
+        ],
+        "size": [
+          12,
+          3,
+          12
+        ]
+      },
+      "minecraft:selection_box": {
+        "origin": [
+          -6,
+          0,
+          -6
+        ],
+        "size": [
+          12,
+          10,
+          12
+        ]
+      },
+      "minecraft:light_dampening": 0,
+      "minecraft:loot": "loot_tables/blocks/kobel.json"
+    }
+  }
+}

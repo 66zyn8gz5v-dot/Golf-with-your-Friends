@@ -1,0 +1,32 @@
+{
+  "format_version": "1.13.0",
+  "minecraft:scatter_feature": {
+    "description": {
+      "identifier": "fynn:rubinerz_huegel_streuung"
+    },
+    "places_feature": "fynn:rubinerz_huegel_ader",
+    "iterations": 5,
+    "project_input_to_floor": false,
+    "x": {
+      "distribution": "uniform",
+      "extent": [
+        0,
+        16
+      ]
+    },
+    "y": {
+      "distribution": "uniform",
+      "extent": [
+        0,
+        100
+      ]
+    },
+    "z": {
+      "distribution": "uniform",
+      "extent": [
+        0,
+        16
+      ]
+    }
+  }
+}

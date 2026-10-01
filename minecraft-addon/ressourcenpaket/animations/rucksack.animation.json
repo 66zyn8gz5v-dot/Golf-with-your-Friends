@@ -1,0 +1,40 @@
+{
+  "format_version": "1.10.0",
+  "animations": {
+    "animation.fynn.rucksack_an": {
+      "animation_length": 0.05,
+      "timeline": {
+        "0.0": [
+          "variable.fynn_rucksack_seit = variable.fynn_rucksack < 0.5 ? query.life_time : variable.fynn_rucksack_seit;",
+          "variable.fynn_rucksack = 1.0;"
+        ]
+      }
+    },
+    "animation.fynn.rucksack_ab": {
+      "animation_length": 0.05,
+      "timeline": {
+        "0.0": [
+          "variable.fynn_rucksack = 0.0;"
+        ]
+      }
+    },
+    "animation.fynn.rucksack_halten": {
+      "loop": true,
+      "bones": {
+        "halten": {
+          "position": [
+            "c.is_first_person ? -3.5 : 0.0",
+            "c.is_first_person ? -3.5 : -3.0",
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            "c.is_first_person ? 180.0 : 90.0",
+            "c.is_first_person ? -135.0 : 0.0"
+          ],
+          "scale": "c.is_first_person ? 0.55 : 0.6"
+        }
+      }
+    }
+  }
+}

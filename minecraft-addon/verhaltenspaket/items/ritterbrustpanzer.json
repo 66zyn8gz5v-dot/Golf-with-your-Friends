@@ -1,0 +1,46 @@
+{
+  "format_version": "1.26.30",
+  "minecraft:item": {
+    "description": {
+      "identifier": "fynn:ritterbrustpanzer",
+      "menu_category": {
+        "category": "equipment",
+        "group": "minecraft:itemGroup.name.chestplate"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "ritterbrustpanzer"
+        }
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:wearable": {
+        "slot": "slot.armor.chest",
+        "protection": 7
+      },
+      "minecraft:durability": {
+        "max_durability": 360
+      },
+      "minecraft:enchantable": {
+        "slot": "armor_torso",
+        "value": 9
+      },
+      "minecraft:repairable": {
+        "repair_items": [
+          {
+            "items": [
+              "fynn:stahlbarren"
+            ],
+            "repair_amount": 90
+          }
+        ]
+      },
+      "minecraft:tags": {
+        "tags": [
+          "minecraft:is_armor"
+        ]
+      }
+    }
+  }
+}

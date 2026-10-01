@@ -1,0 +1,39 @@
+{
+  "format_version": "1.12",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "fynn:sandklopfer"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "zLz",
+      "ISI",
+      " S "
+    ],
+    "key": {
+      "z": {
+        "item": "fynn:wurmzahn"
+      },
+      "L": {
+        "item": "minecraft:leather"
+      },
+      "I": {
+        "item": "minecraft:iron_ingot"
+      },
+      "S": {
+        "item": "minecraft:stick"
+      }
+    },
+    "unlock": [
+      {
+        "item": "fynn:wurmzahn"
+      }
+    ],
+    "result": {
+      "item": "fynn:sandklopfer",
+      "count": 1
+    }
+  }
+}

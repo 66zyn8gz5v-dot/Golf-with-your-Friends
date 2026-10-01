@@ -1,0 +1,23 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "fynn:elektrum"
+    },
+    "tags": [
+      "fynn_tiegel"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:gold_ingot"
+      },
+      {
+        "item": "fynn:silberbarren"
+      }
+    ],
+    "result": {
+      "item": "fynn:elektrumbarren",
+      "count": 2
+    }
+  }
+}

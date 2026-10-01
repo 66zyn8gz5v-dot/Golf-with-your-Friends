@@ -1,0 +1,50 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:schnecke",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "weinberg": "textures/entity/tiere/schnecke_weinberg",
+        "baender": "textures/entity/tiere/schnecke_baender"
+      },
+      "geometry": {
+        "default": "geometry.fynn.schnecke"
+      },
+      "animations": {
+        "kriechen": "animation.fynn.schnecke.kriechen",
+        "verstecken": "animation.fynn.schnecke.verstecken"
+      },
+      "scripts": {
+        "initialize": [
+          "variable.fynn_gier_alt = query.body_y_rotation;",
+          "variable.fynn_dreh = 0.0;",
+          "variable.fynn_zufall = math.random(0.0, 360.0);"
+        ],
+        "pre_animation": [
+          "variable.fynn_d = query.body_y_rotation - variable.fynn_gier_alt;",
+          "variable.fynn_d = variable.fynn_d > 180.0 ? variable.fynn_d - 360.0 : (variable.fynn_d < -180.0 ? variable.fynn_d + 360.0 : variable.fynn_d);",
+          "variable.fynn_gier_alt = query.body_y_rotation;",
+          "variable.fynn_dreh = math.lerp(variable.fynn_dreh, math.clamp(variable.fynn_d / math.max(query.delta_time, 0.01) / 20.0, -10.0, 10.0), 0.12);"
+        ],
+        "animate": [
+          {
+            "kriechen": "1.0"
+          },
+          {
+            "verstecken": "query.property('fynn:versteckt')"
+          }
+        ]
+      },
+      "render_controllers": [
+        "controller.render.fynn.schnecke"
+      ],
+      "spawn_egg": {
+        "texture": "schnecke_ei",
+        "texture_index": 0
+      }
+    }
+  }
+}

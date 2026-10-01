@@ -1,0 +1,42 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "fynn:plasmaschuss",
+      "is_spawnable": false,
+      "is_summonable": true
+    },
+    "components": {
+      "minecraft:type_family": {
+        "family": [
+          "projectile",
+          "plasmaschuss"
+        ]
+      },
+      "minecraft:collision_box": {
+        "width": 0.25,
+        "height": 0.25
+      },
+      "minecraft:physics": {},
+      "minecraft:projectile": {
+        "anchor": "eye_height",
+        "offset": [
+          0,
+          -0.1,
+          0
+        ],
+        "on_hit": {
+          "impact_damage": {
+            "damage": 6,
+            "knockback": true
+          },
+          "remove_on_hit": {}
+        },
+        "gravity": 0.005,
+        "power": 2.4
+      },
+      "minecraft:pushable_by_entity": {},
+      "minecraft:pushable_by_block": {}
+    }
+  }
+}

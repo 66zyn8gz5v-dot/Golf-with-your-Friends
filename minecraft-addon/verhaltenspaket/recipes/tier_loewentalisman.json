@@ -1,0 +1,33 @@
+{
+  "format_version": "1.12",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "fynn:loewentalisman"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      " S ",
+      "S S",
+      " T "
+    ],
+    "key": {
+      "S": {
+        "item": "minecraft:string"
+      },
+      "T": {
+        "item": "fynn:loewenzahn"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:string"
+      }
+    ],
+    "result": {
+      "item": "fynn:loewentalisman",
+      "count": 1
+    }
+  }
+}
