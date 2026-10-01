@@ -379,7 +379,7 @@ def roland_leiste():
 
 # Die Bosse nach Roland bringen ihre Leiste selbst mit (Funktion bossleiste()
 # in ihrem Bauskript).
-WEITERE = ["rabenfuerst_bauen", "frostmammut_bauen"]
+WEITERE = ["rabenfuerst_bauen", "frostmammut_bauen", "seelendrache_bauen"]
 
 
 def alle_leisten():

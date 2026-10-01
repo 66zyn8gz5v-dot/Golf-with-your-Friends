@@ -1,0 +1,78 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "fynn:seelenabbild",
+      "is_spawnable": false,
+      "is_summonable": true
+    },
+    "component_groups": {
+      "fynn:vergehen": {
+        "minecraft:instant_despawn": {}
+      }
+    },
+    "components": {
+      "minecraft:type_family": {
+        "family": [
+          "seelendrache",
+          "seelenabbild",
+          "monster",
+          "mob"
+        ]
+      },
+      "minecraft:health": {
+        "value": 4,
+        "max": 4
+      },
+      "minecraft:collision_box": {
+        "width": 2.2,
+        "height": 2.2
+      },
+      "minecraft:physics": {
+        "has_gravity": false
+      },
+      "minecraft:pushable": {
+        "is_pushable": false,
+        "is_pushable_by_piston": false
+      },
+      "minecraft:knockback_resistance": {
+        "value": 1.0
+      },
+      "minecraft:fire_immune": true,
+      "minecraft:damage_sensor": {
+        "triggers": [
+          {
+            "cause": "fall",
+            "deals_damage": "no"
+          },
+          {
+            "on_damage": {
+              "filters": {
+                "test": "is_family",
+                "subject": "other",
+                "value": "seelendrache"
+              }
+            },
+            "deals_damage": "no"
+          }
+        ]
+      },
+      "minecraft:timer": {
+        "time": 24,
+        "looping": false,
+        "time_down_event": {
+          "event": "fynn:vergehen"
+        }
+      }
+    },
+    "events": {
+      "fynn:vergehen": {
+        "add": {
+          "component_groups": [
+            "fynn:vergehen"
+          ]
+        }
+      }
+    }
+  }
+}

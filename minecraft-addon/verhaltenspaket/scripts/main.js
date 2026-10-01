@@ -36,6 +36,7 @@ import "./rucksack.js";
 import "./roland.js";
 import "./rabenfuerst.js";
 import "./frostmammut.js";
+import "./seelendrache.js";
 import "./chronik.js";
 
 const DEGEN = "fynn:degen";

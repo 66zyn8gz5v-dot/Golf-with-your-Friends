@@ -12,7 +12,7 @@ function spieler() {
 }
 
 const s = spieler();
-pruefe("drei Bosse, jeder mit Ei als Bild", c.BOSSE.length === 3 && c.BOSSE.every((b) => b.bild.startsWith("textures/items/")));
+pruefe("vier Bosse, jeder mit Ei als Bild", c.BOSSE.length === 4 && c.BOSSE.every((b) => b.bild.startsWith("textures/items/")));
 pruefe("noch nichts besiegt", k.siegeVon(s, "fynn:roland") === 0);
 k.merkeSiege([s], "fynn:roland");
 k.merkeSiege([s], "fynn:roland");
@@ -22,8 +22,8 @@ pruefe("ein Spieler ohne Speicher zaehlt nicht, stuerzt aber nicht", k.siegeVon(
 
 setzeAntwort(() => ({ canceled: true, cancelationReason: "UserClosed" }));
 await c.zeigeChronik(s);
-pruefe("Uebersicht: drei Knoepfe mit Bild", letztesFenster.knoepfe.length === 3 && letztesFenster.knoepfe.every((kn) => kn.bild));
-pruefe("Uebersicht: besiegt 2 von 3", letztesFenster.text.includes("Besiegt: 2 von 3"));
+pruefe("Uebersicht: vier Knoepfe mit Bild", letztesFenster.knoepfe.length === 4 && letztesFenster.knoepfe.every((kn) => kn.bild));
+pruefe("Uebersicht: besiegt 2 von 4", letztesFenster.text.includes("Besiegt: 2 von 4"));
 pruefe("Knopf Roland: besiegt 2x", letztesFenster.knoepfe[0].beschriftung.includes("besiegt: 2"));
 pruefe("Knopf Morvan: noch unbesiegt", letztesFenster.knoepfe[1].beschriftung.includes("noch unbesiegt"));
 

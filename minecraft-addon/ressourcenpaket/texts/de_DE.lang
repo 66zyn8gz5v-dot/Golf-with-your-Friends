@@ -44,11 +44,11 @@ item.fynn:eisenklinge.name=Eisenklinge
 ## Die Nummer steht vorerst mit drin, damit am Werkzeug selbst abzulesen
 ## ist, welche Fassung im Spiel liegt. Sie kommt wieder raus, sobald die
 ## Auslieferung zuverlaessig laeuft.
-item.iron_sword.name=Stahlschwert 5.3
+item.iron_sword.name=Stahlschwert 5.4
 
 ## Die Stichwaffe
-item.fynn:degen=Degen 5.3
-item.fynn:degen.name=Degen 5.3
+item.fynn:degen=Degen 5.4
+item.fynn:degen.name=Degen 5.4
 
 
 
@@ -577,6 +577,13 @@ action.interact.fynn_schleim=Schleim abfüllen
 
 
 
+
+
+
+
+
+
+
 ## Die Tiere
 entity.fynn:braunbaer.name=Braunbär
 item.spawn_egg.entity.fynn:braunbaer.name=Braunbär-Spawn-Ei
@@ -715,6 +722,7 @@ entity.fynn:drachenei.name=Drachenei
 action.interact.fynn.drachenei=Aufheben
 item.fynn:drachenei.name=Drachenei
 
+
 ## Nester und Eier
 item.fynn:vogelei=Vogelei
 item.fynn:vogelei.name=Vogelei
@@ -729,3 +737,14 @@ tile.fynn:spechthoehle.name=Spechthöhle
 tile.fynn:kobel.name=Kobel
 tile.fynn:adlerhorst.name=Adlerhorst
 tile.fynn:greifennest.name=Greifennest
+
+## Aschvaru, der Seelendrache
+entity.fynn:seelendrache.name=Aschvaru
+item.spawn_egg.entity.fynn:seelendrache.name=Aschvaru, der Seelendrache
+entity.fynn:seelenabbild.name=Seelenabbild
+item.fynn:seelenklinge=Seelenklinge
+item.fynn:seelenklinge.name=Seelenklinge
+item.fynn:seelenkristall=Seelenkristall
+item.fynn:seelenkristall.name=Seelenkristall
+item.fynn:seelenruf=Seelenruf
+item.fynn:seelenruf.name=Seelenruf

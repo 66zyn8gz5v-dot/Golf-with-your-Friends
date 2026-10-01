@@ -43,6 +43,17 @@ export const BOSSE = [
             + "Dem Ansturm weichst du zur Seite aus.",
         beute: "Frostzahn, Herz des Winters, Diamanten, Blaueis, Leder.",
     },
+    {
+        typ: "fynn:seelendrache", name: "Aschvaru, der Seelendrache", farbe: "§b", bild: "textures/items/seelendrache_ei",
+        rang: "Weißer Drache, Hüter der Seelen",
+        rufen: "Entzünde den §fSeelenruf§r: eine Seelenlaterne, zwei Ghast-Tränen, zwei Diamanten.",
+        angriffe: "Seelenstrahl, Seelenkreise mit Lichtsäulen, Flügelschlag, Schweifhieb. "
+            + "In Phase 2 erwacht sein Seelenring: Seelensog, Seelensturm aus der Luft und zwei Spiegelbilder.",
+        tipp: "Dem Strahl läufst du seitlich davon - oder du stellst dich hinter eine Wand. "
+            + "Verlass die leuchtenden Kreise, bevor die Säule kommt. Die Spiegelbilder zerspringen "
+            + "beim ersten Treffer; landet er nach dem Seelensturm, spring über die Welle.",
+        beute: "Seelenklinge, Seelenkristalle, Diamanten, Echosplitter, Seelenlaternen.",
+    },
 ];
 
 export function knopfText(boss, siege) {

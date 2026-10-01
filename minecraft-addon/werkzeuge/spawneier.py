@@ -376,6 +376,20 @@ EIER = {
         },
         "farben": {"i": "#bfe6ff", "c": "#8ad0f0", "R": "#4a3325", "z": "#f0e6cc"},
     },
+    "seelendrache": {
+        "oben": "#eef3fa", "flecken": ("#d6dfeb", 0.3),
+        "karte": {
+            2: "......c..c......",
+            3: ".....c....c.....",
+            6: "......SSSS......",
+            7: ".....SsSSsS.....",
+            8: "......SSSS......",
+            10: ".......KK.......",
+            11: "......KkkK......",
+            12: ".......KK.......",
+        },
+        "farben": {"c": "#9aa6b8", "S": "#5ec8f0", "s": "#ffffff", "K": "#4ab8e8", "k": "#e6fbff"},
+    },
     "eiswolf": {
         "oben": "#dce8f0",
         "karte": {

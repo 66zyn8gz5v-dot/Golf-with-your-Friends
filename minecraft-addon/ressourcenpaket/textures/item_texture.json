@@ -667,6 +667,18 @@
     },
     "lavadrache_ei": {
       "textures": "textures/items/lavadrache_ei"
+    },
+    "seelenklinge": {
+      "textures": "textures/items/seelenklinge"
+    },
+    "seelenkristall": {
+      "textures": "textures/items/seelenkristall"
+    },
+    "seelenruf": {
+      "textures": "textures/items/seelenruf"
+    },
+    "seelendrache_ei": {
+      "textures": "textures/items/seelendrache_ei"
     }
   }
 }

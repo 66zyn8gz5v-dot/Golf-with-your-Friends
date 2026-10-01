@@ -58,7 +58,7 @@ const FUNKE_CHANCE = 0.2;
 
 // Bosse verschwinden nach dem Abschied statt zu sterben - ihre Level gibt
 // boss_kern.js mit der Beute, jedem Mitkaempfer ganz.
-export const BOSS_LEVEL = { "fynn:roland": 8, "fynn:rabenfuerst": 9, "fynn:frostmammut": 10 };
+export const BOSS_LEVEL = { "fynn:roland": 8, "fynn:rabenfuerst": 9, "fynn:frostmammut": 10, "fynn:seelendrache": 12 };
 
 function istMonster(wesen) {
     try {

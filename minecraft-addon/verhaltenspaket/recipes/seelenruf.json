@@ -1,0 +1,36 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "fynn:seelenruf"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      " g ",
+      "dLd",
+      " g "
+    ],
+    "key": {
+      "L": {
+        "item": "minecraft:soul_lantern"
+      },
+      "g": {
+        "item": "minecraft:ghast_tear"
+      },
+      "d": {
+        "item": "minecraft:diamond"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:soul_lantern"
+      }
+    ],
+    "result": {
+      "item": "fynn:seelenruf",
+      "count": 1
+    }
+  }
+}

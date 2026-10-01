@@ -338,7 +338,7 @@ export function kostenRabatt(spieler, art) {
 
 // Bosse nie unter ihre letzte Kraft druecken: Den Rest regelt ihr
 // Kampfskript (Phasenwechsel, Abschied).
-const BOSSE = new Set(["fynn:roland", "fynn:rabenfuerst", "fynn:frostmammut"]);
+const BOSSE = new Set(["fynn:roland", "fynn:rabenfuerst", "fynn:frostmammut", "fynn:seelendrache"]);
 const LETZTE_KRAFT = 30;
 
 function lebenVon(wesen) {

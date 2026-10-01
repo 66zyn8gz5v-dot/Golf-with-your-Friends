@@ -760,6 +760,32 @@ def alle_mobs():
         "name": "Eiswolf", "en": "Ice Wolf", "zeilen": [
             ["Leben", "8 Herzen"], ["Verhalten", "Frosthauers Gefolge in Phase 2 – beißt und verlangsamt"],
             ["Dauer", "zerfällt nach 45 Sekunden zu Schnee"]]}}))
+    import seelendrache_bauen as sd
+    mobs.append(mob_daten("seelendrache", "seelendrache.entity.json", "Bosse", {
+        "gross": sd.GROESSE,
+        # In der Schau steht der Seelenring immer - im Spiel erwacht er erst
+        # in Phase zwei.
+        "grund": [{"haltung": 1.0}, {"gang": "math.clamp(query.modified_move_speed * 2.0, 0.0, 1.0)"},
+                  {"lider": 1.0}, {"ring_an": 1.0}],
+        "ohne_schalter": ["fynn:phase", "fynn:angriff"],
+        "bleibend": ["lider", "ring_an"],
+        "sonder": {
+            "auftritt": "Auftritt", "hieb_biss": "Biss", "hieb_klaue": "Klauenhieb", "seelenstrahl": "Seelenstrahl",
+            "seelenkreise": "Seelenkreise", "fluegelschlag": "Flügelschlag", "schweifhieb": "Schweifhieb",
+            "seelensog": "Seelensog", "seelenspiegel": "Seelenspiegel", "seelensturm": "Seelensturm",
+            "wechsel": "Phasenwechsel", "abschied": "Abschied",
+        },
+        "steckbrief": {"name": "Aschvaru, der Seelendrache", "en": "Aschvaru the Soul Dragon", "zeilen": [
+            ["Rang", "weißer Drache, Hüter der Seelen – der vierte Boss"],
+            ["Leben", f"je Phase {sd.GRUNDLEBEN // 2} Herzen allein – je Mitspieler die Hälfte mehr"],
+            ["Phasen", "ist Phase 1 leer, hüllt er sich in seine Schwingen und sammelt die Seelen; dann "
+                       "erwacht der Seelenring um seinen Kopf, und Adern aus Licht durchziehen ihn"],
+            ["Angriffe", "Seelenstrahl (seitlich ausweichen oder hinter eine Wand), Seelenkreise mit Lichtsäulen, "
+                         "Flügelschlag, Schweifhieb; in Phase 2 Seelensog, Seelensturm aus der Luft und zwei "
+                         "hellblaue Spiegelbilder, die Seelenkugeln werfen – ein Treffer, und sie zerspringen"],
+            ["Diener", "keine – er kämpft nur mit Magie"],
+            ["Rufen", "Seelenruf entzünden (Seelenlaterne, Ghast-Tränen, Diamanten)"],
+            ["Beute", "Seelenklinge, Seelenkristalle, Diamanten, Echosplitter; jeder Mitkämpfer seinen Anteil"]]}}))
     wo = biom_text(biome_aus_spawnregel("fynn:glimmerling"))
     mobs.append(mob_daten("glimmerling", "glimmerling.entity.json", "Weitere", {"steckbrief": {
         "name": "Glimmerling", "en": "Glimmerling", "zeilen": [
