@@ -498,6 +498,10 @@ def mob_daten(kennung, entitaet_datei, gruppe, info):
                 animationen[kurz] = animationen[kurz][:-1] + ",bleibt:1}"
     for kurz, (anim, _) in extra_anim.items():
         animationen[kurz] = animation_js(anim)
+    # Bewegungen, die nicht im Ablauf stehen - die Schau holt sie selbst
+    # (die Spiegelbilder des Seelendrachen schweben mit ihnen).
+    for kurz, anim in info.get("nur_anim", {}).items():
+        animationen[kurz] = animation_js(anim)
     ablauf = []
     # Wird der Ablauf von einer Animationssteuerung bestimmt (Roland), sagt
     # der Steckbrief, was von selbst laeuft; die Angriffe sind Knoepfe.
@@ -546,6 +550,8 @@ def mob_daten(kennung, entitaet_datei, gruppe, info):
         teile.append("atem:" + json.dumps(info["atem"], separators=(",", ":")))
     if info.get("vorgabe"):
         teile.append("vorgabe:" + json.dumps(info["vorgabe"]))
+    if info.get("seele"):
+        teile.append("seele:" + json.dumps(info["seele"], separators=(",", ":")))
     if info.get("rahmen"):
         teile.append("rahmen:" + json.dumps(info["rahmen"]))
     if info.get("buehne"):
@@ -771,6 +777,19 @@ def alle_mobs():
         "gross": sd.GROESSE, "rahmen": "haltung", "boden": True,
         # Abendhimmel, Boden in kaltem Blau, Gitterlinien hell.
         "buehne": ["#2a3150", "#4b5878", "#c4d6f2"],
+        # Fynn: "Ich sehe die Angriffsanimation, aber ich sehe den Angriff an
+        # sich nicht." Was das Kampfskript als Partikel zeichnet, malt die
+        # Schau nach (seelenMalen in der Pixelschmiede).
+        "seele": sd.schau_daten(),
+        "nur_anim": {"ab_" + k[len(sd.AB_PRAEFIX):]: a for k, a in sd.abbild_animationen().items()
+                     if not k.endswith("lider")},
+        # Im Spiel hebt das Skript ihn beim Seelensturm sechs Bloecke in die
+        # Luft - hier eine Bahn an der Wurzel, etwas niedriger (vier Bloecke,
+        # in Modellpixeln vor der Groesse), sonst tritt die Kamera so weit
+        # zurueck, dass er winzig wird.
+        "bahn": {"seelensturm": {"wurzel": {"position": {
+            "0.0": [0, 0, 0], "0.8": [0, 0, 0], "1.4": [0, 40, 0], "2.6": [0, 42, 0], "3.9": [0, 40, 0],
+            "4.2": [0, 0, 0], "5.2": [0, 0, 0]}}}},
         # In der Schau steht der Seelenring immer - im Spiel erwacht er erst
         # in Phase zwei.
         "grund": [{"haltung": 1.0}, {"gang": "math.clamp(query.modified_move_speed * 2.0, 0.0, 1.0)"},

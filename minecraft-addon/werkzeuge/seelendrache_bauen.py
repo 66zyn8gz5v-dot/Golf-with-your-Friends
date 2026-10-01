@@ -659,6 +659,33 @@ def maul_ort(geo, anim, zeit):
     return round(-w[2] * GROESSE / 16, 2), round(w[1] * GROESSE / 16, 2)
 
 
+def schau_daten():
+    """Was die Pixelschmiede braucht, um die Angriffe zu zeigen: die Zeiten
+    (in Sekunden), wo das Maul sitzt, die Haut der Spiegelbilder und wohin
+    Kreise und Seelen fallen (Beispielorte vor ihm, in Welteinheiten - ein
+    Block sind 16, er schaut nach -z)."""
+    import base64
+    import io
+    from drachen_gestalt import MAEULER
+    zeiten = {}
+    for name, (_, bau, z) in ANGRIFFE.items():
+        laenge = bau()["animation_length"]
+        e = dict(z, laenge=laenge, ende=laenge + 0.8)
+        zeiten[name] = e
+    zeiten["seelenspiegel"]["ende"] = zeiten["seelenspiegel"]["spaltung"] + 6.5
+    m, _, _, h2 = bauen()
+    puffer = io.BytesIO()
+    abbild_haut(h2).save(puffer, "PNG")
+    return {
+        "zeiten": zeiten,
+        "maul": MAEULER[NAME][0][1],
+        "abbild": "data:image/png;base64," + base64.b64encode(puffer.getvalue()).decode("ascii"),
+        "kreise": [[[-48, -150], [56, -112], [4, -205], [-112, -64]],
+                   [[44, -175], [-64, -122], [108, -58], [8, -92]]],
+        "sturm": [[-40, -120], [50, -150], [-90, -70], [20, -190]],
+    }
+
+
 # ============================================================ Spiegelbild
 
 AB_PRAEFIX = "animation.fynn.seelenabbild."
@@ -671,8 +698,10 @@ def abbild_animationen():
     schlag = f"(22.0 + math.sin({T} * 120.0) * 34.0)"
     k = {}
     for seite, s_ in (("links", 1), ("rechts", -1)):
-        k[f"fluegel_{seite}"] = {"rotation": [0.0, 0.0, f"-{s_} * {schlag}"]}
-        k[f"unterarm_{seite}"] = {"rotation": [0.0, 0.0, f"{s_} * math.sin({T} * 120.0 - 50.0) * 14.0"]}
+        # Das Vorzeichen als Zahl ausgeschrieben: "-" vor "-1" ergab "--1",
+        # und daran scheitert Molang.
+        k[f"fluegel_{seite}"] = {"rotation": [0.0, 0.0, f"{-s_:.1f} * {schlag}"]}
+        k[f"unterarm_{seite}"] = {"rotation": [0.0, 0.0, f"{s_:.1f} * math.sin({T} * 120.0 - 50.0) * 14.0"]}
     for name, w in pose(beine_hinten(30, 30, 20), beine_vorn(-40, 80, 20)).items():
         k[name] = {"rotation": w}
     for i in range(HALS):

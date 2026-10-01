@@ -8,28 +8,28 @@
           "rotation": [
             0.0,
             0.0,
-            "-1 * (22.0 + math.sin(query.life_time * 120.0) * 34.0)"
+            "-1.0 * (22.0 + math.sin(query.life_time * 120.0) * 34.0)"
           ]
         },
         "unterarm_links": {
           "rotation": [
             0.0,
             0.0,
-            "1 * math.sin(query.life_time * 120.0 - 50.0) * 14.0"
+            "1.0 * math.sin(query.life_time * 120.0 - 50.0) * 14.0"
           ]
         },
         "fluegel_rechts": {
           "rotation": [
             0.0,
             0.0,
-            "--1 * (22.0 + math.sin(query.life_time * 120.0) * 34.0)"
+            "1.0 * (22.0 + math.sin(query.life_time * 120.0) * 34.0)"
           ]
         },
         "unterarm_rechts": {
           "rotation": [
             0.0,
             0.0,
-            "-1 * math.sin(query.life_time * 120.0 - 50.0) * 14.0"
+            "-1.0 * math.sin(query.life_time * 120.0 - 50.0) * 14.0"
           ]
         },
         "bein_hinten_links": {
