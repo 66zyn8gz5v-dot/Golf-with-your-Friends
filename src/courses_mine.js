@@ -469,7 +469,7 @@ const MINE_COURSES = [
   },
   {
     name: 'Die Schmelze', par: 5, theme: 'schmelze', maxStrokes: 18, dunkel: 0.45, lampe: 3.0,
-    intro: 'Ganz unten steht das Erz flüssig. Mitten im See liegt die Insel mit dem Loch, und nur ein schmaler Damm führt hinüber – am Anfang zugemauert, in der Mitte bewacht von einer Ladung, die im Takt alles hinunterfegt. Wer den Augenblick nach dem Knall erwischt, hat freie Bahn.',
+    intro: 'Ganz unten steht das Erz flüssig. Mitten im See liegt die Insel mit dem Loch, und nur ein schmaler Damm führt hinüber – am Anfang zugemauert, dahinter versperrt der Schmelzofen den Weg, und seine Klappe fährt im Takt herunter. Wer durch das Maul ist, hat noch die letzte Ladung vor sich, die alles hinunterfegt. Drei Uhren hintereinander, und keine davon wartet.',
     map: [
       '......................................',
       '......................................',

@@ -289,7 +289,7 @@ function stepPhysics(level, ball, dt, t, allowForces, maschinenLaufen = true) {
     const cdx = ball.x - level.cup.x, cdy = ball.y - level.cup.y;
     const cd = Math.hypot(cdx, cdy);
     sp = Math.hypot(ball.vx, ball.vy);
-    const cr = level.cup.r || 0.42, pullR = level.cup.pull || 0.62, pullF = 9 * pullR / 0.62;
+    const cr = level.cup.r || 0.42, pullR = level.cup.pull || 0.50, pullF = 9 * pullR / 0.62;
     if (cd < pullR && sp < 7.5 && sp > 0.01) { // leichte Anziehung am Lochrand
       ball.vx -= (cdx / cd) * pullF * dt; ball.vy -= (cdy / cd) * pullF * dt;
     }

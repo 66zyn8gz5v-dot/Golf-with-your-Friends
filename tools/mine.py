@@ -438,8 +438,9 @@ bahn('Die Schmelze', 'schmelze', f, [
     lampe_(23.0, 8.5, 4.4), lampe_(29.5, 8.5, 4.2),
 ], par=5, dunkel=0.45, maxStrokes=18,
 intro='Ganz unten steht das Erz flüssig. Mitten im See liegt die Insel mit dem Loch, und nur ein '
-      'schmaler Damm führt hinüber – am Anfang zugemauert, in der Mitte bewacht von einer Ladung, '
-      'die im Takt alles hinunterfegt. Wer den Augenblick nach dem Knall erwischt, hat freie Bahn.')
+      'schmaler Damm führt hinüber – am Anfang zugemauert, dahinter versperrt der Schmelzofen den '
+      'Weg, und seine Klappe fährt im Takt herunter. Wer durch das Maul ist, hat noch die letzte '
+      'Ladung vor sich, die alles hinunterfegt. Drei Uhren hintereinander, und keine davon wartet.')
 
 # ---------------------------------------------------------------------------- Prüfen
 FEST = set('#THsio')             # begehbar und nicht tödlich ('o' ist Boden mit offener Kante)

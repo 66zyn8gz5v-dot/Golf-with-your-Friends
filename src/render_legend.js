@@ -1990,8 +1990,26 @@ Object.assign(Renderer.prototype, {
     ctx.globalAlpha = 1;
   },
 
+  /* Die Farben einer Leitung. Die Uhrwerkstadt legt Kupfer, die Erzmagierloge schneidet Gänge in
+     den Marmor und versiegelt sie – dieselbe Maschine, dieselbe Zeichnung, nur ein anderer Satz
+     Farben. Zwei Kopien derselben Funktion wären die schlechtere Lösung: Was man am Bogen ändert,
+     hätte man in der zweiten prompt vergessen. */
+  rohrFarben(ob) {
+    if (ob.style === 'siegelroehre') return {
+      kontur: '#0a0813', seite: '#1a1628', deck: '#3d3455', glanz: 'rgba(196,172,255,0.55)',
+      muffe: ['#e0bb62', '#8a6c2c'], muffeGlanz: 'rgba(255,238,190,0.8)',
+      schein: ['rgba(214,160,255,0.5)', 'rgba(150,90,220,0)', 'rgba(178,120,255,0.85)', 'rgba(240,225,255,0.95)'],
+    };
+    return {
+      kontur: '#3a1c08', seite: '#8a4a1e', deck: '#d9853f', glanz: 'rgba(255,206,150,0.7)',
+      muffe: ['#e8a15c', '#7d4416'], muffeGlanz: 'rgba(255,226,190,0.8)',
+      schein: ['rgba(255,226,150,0.5)', 'rgba(255,190,90,0)', 'rgba(255,180,90,0.85)', 'rgba(255,240,200,0.95)'],
+    };
+  },
+
   drawPipeLauf(ctx, ob, k, t) {
     const s = this.scale, r = this.ROHR_R;
+    const F = this.rohrFarben(ob);
     const { u0, u1, bogen, teile } = ob.stuecke[k];
     const a = ob.punkt(u0), b = ob.punkt(u1);
     ctx.lineCap = 'round'; ctx.lineJoin = 'round';
@@ -2010,26 +2028,26 @@ Object.assign(Renderer.prototype, {
         }
         ctx.stroke();
       };
-      bahn(0, s * r * 2.24, '#3a1c08');
-      bahn(0, s * r * 1.95, '#8a4a1e');
-      bahn(r * 0.34, s * r * 1.1, '#d9853f');
-      bahn(r * 0.62, s * 0.08, 'rgba(255,206,150,0.7)');
+      bahn(0, s * r * 2.24, F.kontur);
+      bahn(0, s * r * 1.95, F.seite);
+      bahn(r * 0.34, s * r * 1.1, F.deck);
+      bahn(r * 0.62, s * 0.08, F.glanz);
       ctx.lineCap = 'butt'; ctx.lineJoin = 'miter';
       return;
     }
-    this.walze(ctx, a[0], a[1], b[0], b[1], (a[2] + b[2]) / 2, r, '#d9853f', '#8a4a1e', { n: 12, outline: '#3a1c08' });
+    this.walze(ctx, a[0], a[1], b[0], b[1], (a[2] + b[2]) / 2, r, F.deck, F.seite, { n: 12, outline: F.kontur });
     // Glanzstreifen auf dem Scheitel
     const p0 = this.proj(a[0], a[1], a[2] + r * 0.6), p1 = this.proj(b[0], b[1], b[2] + r * 0.6);
-    ctx.strokeStyle = 'rgba(255,206,150,0.7)'; ctx.lineWidth = Math.max(1, s * 0.07);
+    ctx.strokeStyle = F.glanz; ctx.lineWidth = Math.max(1, s * 0.07);
     ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke();
     // Muffen, die in diesen Lauf fallen
     const halb = 0.16 / Math.max(0.001, ob.len);
     for (const m of ob.muffen) {
       if (m < u0 + halb || m > u1 - halb) continue;
       const c0 = ob.punkt(m - halb), c1 = ob.punkt(m + halb);
-      this.walze(ctx, c0[0], c0[1], c1[0], c1[1], (c0[2] + c1[2]) / 2, r * 1.25, '#e8a15c', '#7d4416', { n: 12, outline: '#3a1c08' });
+      this.walze(ctx, c0[0], c0[1], c1[0], c1[1], (c0[2] + c1[2]) / 2, r * 1.25, F.muffe[0], F.muffe[1], { n: 12, outline: F.kontur });
       const q0 = this.proj(c0[0], c0[1], c0[2] + r * 0.78), q1 = this.proj(c1[0], c1[1], c1[2] + r * 0.78);
-      ctx.strokeStyle = 'rgba(255,226,190,0.8)'; ctx.lineWidth = Math.max(1, s * 0.075);
+      ctx.strokeStyle = F.muffeGlanz; ctx.lineWidth = Math.max(1, s * 0.075);
       ctx.beginPath(); ctx.moveTo(q0[0], q0[1]); ctx.lineTo(q1[0], q1[1]); ctx.stroke();
     }
     ctx.lineCap = 'butt'; ctx.lineJoin = 'miter';
@@ -2043,16 +2061,16 @@ Object.assign(Renderer.prototype, {
      gezeichnet, in dem sie gerade steckt – so bleibt sie richtig einsortiert und verschwindet
      hinter einer Mauer, wenn der Lauf dort hinter ihr liegt. */
   drawPipeSchein(ctx, ob, u0, u1) {
-    const s = this.scale, r = this.ROHR_R;
+    const s = this.scale, r = this.ROHR_R, F = this.rohrFarben(ob);
     const lang = 0.8 / Math.max(0.001, ob.len);                 // gut acht Zehntel Kacheln
     const a = Math.max(u0, ob.fahrt - lang), b = Math.min(u1, ob.fahrt + lang);
     if (b <= a) return;
     const g = ob.punkt(ob.fahrt), p = this.proj(g[0], g[1], g[2]);
     const halo = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], s * 0.9);
-    halo.addColorStop(0, 'rgba(255,226,150,0.5)'); halo.addColorStop(1, 'rgba(255,190,90,0)');
+    halo.addColorStop(0, F.schein[0]); halo.addColorStop(1, F.schein[1]);
     ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(p[0], p[1], s * 0.9, 0, TAU); ctx.fill();
     ctx.lineCap = 'round';
-    for (const [hoch, breit, farbe] of [[r * 0.3, r * 1.5, 'rgba(255,180,90,0.85)'], [r * 0.52, r * 0.8, 'rgba(255,240,200,0.95)']]) {
+    for (const [hoch, breit, farbe] of [[r * 0.3, r * 1.5, F.schein[2]], [r * 0.52, r * 0.8, F.schein[3]]]) {
       ctx.strokeStyle = farbe; ctx.lineWidth = Math.max(1, s * breit);
       ctx.beginPath();
       for (let i = 0; i <= 5; i++) {

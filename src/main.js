@@ -80,6 +80,10 @@
   const state = {
     phase: 'title', players: [], holeIdx: 0, level: null, theme: null, t: 0, ball: null, aim: null,
     particles: [], curPlayer: 0, strokes: 0, restTimer: 0, slowTimer: 0, lastBounceSfx: 0,
+    /* Abwechselnd: ein Ball je Spieler, alle gleichzeitig auf der Bahn. baelle[i] gehört
+       Spieler i und entsteht erst, wenn er zum ersten Mal an der Reihe ist - sonst stünden
+       vier Bälle übereinander auf derselben Abschlagkachel. */
+    wechsel: false, baelle: [],
     camMode: 'overview', camTheta: Math.PI / 4, zoomFactor: 1,
     controlMode: 'sling', // 'sling' = Schleuder (vom Ball wegziehen), 'push' = Schieben (in Schussrichtung ziehen)
     mode: 'normal',       // 'normal' = Wettkampf, 'creative' = Kreativ (Bahnen frei wählen und überspringen, kein Schlaglimit), 'boule' = Boule
@@ -110,6 +114,10 @@
       : base;
   }
   let playerCount = 1, gameMode = 'normal', msgTimer = null, waitTimer = null;
+  /* Die Reihenfolge am selben Gerät: 'nach' = einer spielt die Bahn zu Ende, dann der nächste
+     (so war es immer); 'wechsel' = nach JEDEM Schlag ist der nächste dran, und alle Bälle liegen
+     dabei zugleich auf der Bahn und stoßen sich. */
+  let reihenfolge = 'nach';
 
   /* ---------- Uhr ----------
      Gemessen wird die Zeit, die jemand für seine Bahn braucht: von dem Moment, in dem sein Ball
@@ -415,7 +423,8 @@
         <span class="btn mode" id="to-build">${SCENE_CREATIVE}<span class="mode-schleier"></span>
           <span class="mode-label long">Bauen &amp; Eigene Welt<small>Eigene Bahnen bauen und verschicken</small></span></span>
       </div>
-      <div class="atlas-extra"><span class="btn small ghost" id="to-turnier">${Icons.svg('golf_course')} Turnier</span>
+      <div class="atlas-extra"><span class="btn small ghost ereignis" id="to-zauber">${Icons.svg('star')} Zauberreich</span>
+        <span class="btn small ghost" id="to-turnier">${Icons.svg('golf_course')} Turnier</span>
         <span class="btn small ghost" id="to-online">${Icons.svg('public')} Online spielen</span>
         <span class="btn small ghost" id="to-best">${Icons.svg('emoji_events')} Rangliste</span></div>
       ${turnierBand()}
@@ -425,6 +434,7 @@
     turnierSchirm = showTitle;
     // Der Turnier-Knopf führt auf den Turnierbildschirm: dort stehen Stand, Restlaufzeit und
     // Rangliste, und von dort geht es in die Arena.
+    $('to-zauber').addEventListener('click', () => { Sfx.unlock(); Music.start(); showZauberreich(); });
     $('to-turnier').addEventListener('click', () => { Sfx.unlock(); Music.start(); showTurnier(); });
     $('to-online').addEventListener('click', () => { Sfx.unlock(); Music.start(); showOnline(); });
     $('to-best').addEventListener('click', () => { Sfx.unlock(); Music.start(); showBestList(); });
@@ -633,6 +643,80 @@
   }
 
   /* Turnierbildschirm: Stand, Restlaufzeit, Rangliste und der Weg in die Arena */
+  /* ---------- Das Zauberreich ----------
+     Ein Ereignis, kein Turnier: Es hat keinen Anfang und kein Ende, und nichts läuft ab. Was es
+     zum Ereignis macht, ist der Aufstieg – drei Welten auf einer Insel, vom Garten des Lehrlings
+     bis zur Loge der Erzmagier, und an jeder hängt ein Hut.
+
+     Warum ein eigener Bildschirm und nicht nur drei Nadeln auf der Weltkarte: Auf der Karte
+     stünden sie als drei Welten neben elf anderen, und der Zusammenhang – daß man hier von unten
+     nach oben geht und drei Hüte holen kann – wäre nirgends zu sehen. Hier steht er.
+
+     Die Liste beschreibt die REIHENFOLGE des Aufstiegs, nicht den Bestand; darum steht sie hier
+     und nicht in courses_pro.js. Ein Ort, dessen Welt es noch nicht gibt, wird als „in Arbeit"
+     gezeigt statt versteckt: Man soll sehen, was kommt. */
+  const ZAUBERREICH = [
+    { id: 'lehrling', hut: 'lehrlingshut', stufe: 'Normal',
+      satz: 'Der ummauerte Garten in der Dämmerung. Hier lernt man, die Uhr selbst zu starten: '
+          + 'Die Blüte anstoßen, und die Ranke trägt – ein paar Sekunden lang.' },
+    { id: 'warte', hut: 'sternenhut', stufe: 'Profi',
+      satz: 'Oben auf dem Turm, wo die Karten des Himmels liegen. Der Mond zieht und stößt im '
+          + 'Wechsel, und ein Tor geht erst auf, wenn das Sternbild vollständig ist.' },
+    { id: 'loge', hut: 'erzmagierhut', stufe: 'Legende',
+      satz: 'Die Halle, in der die Erzmagier tagen, und die Bannkreis-Gruft darunter. Der '
+          + 'Zauberspiegel wirft seitenverkehrt aus – wo man auftrifft, entscheidet, wo man '
+          + 'landet. Wer hier besteht, hat ausgelernt.' },
+  ];
+
+  function showZauberreich() {
+    state.phase = 'title'; state.editorReturn = false; Music.set('title');
+    document.body.classList.add('title');
+    document.body.classList.remove('creative', 'editing', 'testing');
+
+    const karten = ZAUBERREICH.map((e, i) => {
+      const w = SPIELWELTEN().find(x => x.id === e.id);
+      if (!w) return `<div class="zr-ort offen">
+          <div class="zr-nr">${i + 1}</div>
+          <div class="zr-text"><b>${Text.esc(e.stufe)} · in Arbeit</b>
+            <span class="sub">${Text.esc(e.satz)}</span></div>
+        </div>`;
+      const f = Best.fortschritt(w.id);
+      const hutDa = Hats.has(e.hut) && Hats.freigeschaltet(e.hut);
+      const stand = Hats.has(e.hut) ? Hats.stand(e.hut) : '';
+      const name = Hats.has(e.hut) ? (Hats.LIST.find(h => h.id === e.hut) || {}).name : '';
+      return `<div class="zr-ort ${hutDa ? 'fertig' : ''}">
+          <div class="zr-nr">${i + 1}</div>
+          <div class="zr-text">
+            <b>${Text.esc(w.name)}</b> <span class="zr-stufe">${Text.esc(e.stufe)} · ${w.courses.length} Bahnen</span>
+            <span class="sub">${Text.esc(e.satz)}</span>
+            <span class="zr-stand">${hutDa ? Icons.svg('check') + ' ' : ''}${Text.esc(name)}: ${Text.esc(stand || 'noch nichts gespielt')}</span>
+          </div>
+          <div class="zr-hut"><canvas class="hutbild" data-hut="${e.hut}" width="72" height="72"></canvas></div>
+          <span class="btn small zr-spielen" data-welt="${w.id}">${Icons.svg('play_arrow')} Spielen</span>
+        </div>`;
+    }).join('');
+
+    const gebaut = ZAUBERREICH.filter(e => SPIELWELTEN().some(x => x.id === e.id)).length;
+    overlay(`<div class="panel wide">
+      <div class="panel-head"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span>
+        <h2>${Icons.svg('star')} Das Zauberreich</h2></div>
+      <div class="sub">Eine Insel, drei Orte, ein Aufstieg – und an jedem Ort ein Hut. Den bekommt,
+        wer <b>jede Bahn des Ortes gespielt</b> hat und in der <b>Summe unter Par</b> bleibt. Es
+        zählt die Summe: Eine Bahn über Par ist keine verlorene Belohnung.</div>
+      <div class="zr-liste">${karten}</div>
+      <div class="sub">${gebaut} von ${ZAUBERREICH.length} Orten sind offen. Die Insel liegt im
+        Nordwesten der Weltkarte.</div>
+    </div>`);
+    $('back').addEventListener('click', showTitle);
+    ui.overlay.querySelectorAll('.zr-spielen').forEach(b => b.addEventListener('click', () => {
+      Sfx.unlock(); setWorld(b.dataset.welt); showSetup();
+    }));
+    // Die Hutbilder: dieselbe Zeichnung wie in der Hutwahl, nur klein
+    ui.overlay.querySelectorAll('.hutbild').forEach(cv => {
+      try { Hats.preview(cv, cv.dataset.hut, '#ffd166'); } catch (e) { /* ein Hut, den es noch nicht gibt */ }
+    });
+  }
+
   function showTurnier() {
     state.phase = 'title'; state.editorReturn = false; Music.set('title');
     document.body.classList.add('title');
@@ -1545,6 +1629,13 @@
         <p style="margin-top:10px">Spieler:</p>
         <div id="pc"></div>
       </div>
+      <div id="rf-row" hidden>
+        <p style="margin-top:10px">Reihenfolge:</p>
+        <div id="rf">
+          <span class="btn ghost small" data-r="nach">Nacheinander</span>
+          <span class="btn ghost small" data-r="wechsel">Abwechselnd</span>
+        </div>
+      </div>
       <p style="margin-top:10px">Hut:</p>
       <div id="hat-who"></div>
       <div id="hats" class="hat-grid">${SPIELHUETE().map(h => `<button type="button" class="hat" data-h="${h.id}" title="${Text.esc(h.name)}"><canvas></canvas><span>${Text.esc(h.name)}</span><i class="hat-lock">${Icons.svg('lock')}</i></button>`).join('')}</div>
@@ -1560,7 +1651,11 @@
       </div>
       <p style="margin-top:14px"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span> <span class="btn" id="start">Los geht's!</span></p>
       <div class="legend">
-        <b>Wettkampf:</b> alle Bahnen der Reihe nach, mit Schlaglimit und Ergebnistafel. <b>Kreativ:</b> allein, ohne Limit, mit den Bahn-Knöpfen (Tasten P / N) frei springen.<br>
+        <b>Wettkampf:</b> alle Bahnen der Reihe nach, mit Schlaglimit und Ergebnistafel.
+        <b>Nacheinander:</b> einer spielt die Bahn zu Ende, dann der nächste. <b>Abwechselnd:</b>
+        jeder einen Schlag, dann ist der nächste dran – alle Bälle liegen gleichzeitig auf der Bahn
+        und stoßen sich an. Ein fremder Ball, den man ins Loch schießt, zählt für den anderen; einen,
+        den man ins Wasser schießt, kostet ihn den Strafschlag. Nur am selben Gerät. <b>Kreativ:</b> allein, ohne Limit, mit den Bahn-Knöpfen (Tasten P / N) frei springen.<br>
         ${NUR_VORSCHAU ? `<b>Boule:</b> Ein ausgeloster Spieler schießt die Zielkugel mit der Kanone auf die
         Bahn – sie zeigt fest nach vorn, gewählt wird nur die Stärke. Er fängt auch an; danach spielen
         alle reihum je drei Kugeln. Jede Kugel bleibt liegen und darf angestoßen werden, auch die
@@ -1672,10 +1767,22 @@
       $('pc').querySelectorAll('.btn').forEach(b => b.addEventListener('click', () => {
         playerCount = +b.dataset.n;
         $('pc').querySelectorAll('.btn').forEach(x => x.classList.toggle('sel', +x.dataset.n === playerCount));
-        doppelAufloesen(); drawWho(); drawHats();
+        doppelAufloesen(); drawWho(); drawHats(); drawReihenfolge();
       }));
     }
+    /* Die Reihenfolge gibt es nur dort, wo sie etwas bedeutet: im Wettkampf am selben Gerät mit
+       mindestens zwei Spielern. Allein, im Kreativ-Modus und bei Boule ist nichts zu wählen. */
+    function drawReihenfolge() {
+      const zeigen = gameMode === 'normal' && playerCount > 1;
+      $('rf-row').hidden = !zeigen;
+      ui.overlay.querySelectorAll('#rf .btn').forEach(x => x.classList.toggle('sel', x.dataset.r === reihenfolge));
+    }
+    ui.overlay.querySelectorAll('#rf .btn').forEach(b => b.addEventListener('click', () => {
+      reihenfolge = b.dataset.r;
+      drawReihenfolge();
+    }));
     drawSpielerzahl();
+    drawReihenfolge();
     ui.overlay.querySelectorAll('#cm .btn').forEach(b => b.addEventListener('click', () => {
       setControlMode(b.dataset.m);
       ui.overlay.querySelectorAll('#cm .btn').forEach(x => x.classList.toggle('sel', x.dataset.m === state.controlMode));
@@ -1688,7 +1795,7 @@
       gameMode = b.dataset.g;
       ui.overlay.querySelectorAll('#gm .btn').forEach(x => x.classList.toggle('sel', x.dataset.g === gameMode));
       $('pc-row').hidden = gameMode === 'creative';
-      drawSpielerzahl(); doppelAufloesen(); drawWho(); drawHats();
+      drawSpielerzahl(); doppelAufloesen(); drawWho(); drawHats(); drawReihenfolge();
     }));
     for (const id of ['back', 'back-top']) $(id).addEventListener('click', nurBoule ? showBuild : showMap);
     $('start').addEventListener('click', () => {
@@ -1733,6 +1840,12 @@
     // Die Flut – vier Abschnitte, von der Wasserlinie bis zum Grund
     wasserlinie: 'sailing', flachwasser: 'water_drop', daemmerzone: 'dark_mode',
     meeresgrund: 'local_fire_department',
+    // Das Zauberreich
+    lehrlingsgarten: 'local_florist', gewaechshaus: 'science',
+    sternenwarte: 'dark_mode', kartensaal: 'schedule',
+    erzmagierloge: 'crown', bannkreis: 'church',
+    // Der Alte Platz – eine einzige Kulisse für alle zehn Bahnen, so wie ein echter Platz
+    altplatz: 'golf_course',
     // Kolosseum, Tüftlerreich, Wüste
     colosseum: 'stadium', palace: 'temple_buddhist', desert: 'sonne',
   };
@@ -1803,6 +1916,10 @@
       ? roster.map((p, i) => ({ name: seatName(p, i), color: PLAYER_COLORS[i], hat: p.hat, scores: [], times: [], gone: !!p.gone }))
       : Array.from({ length: n }, (_, i) => ({ name: PLAYER_NAMES[i], color: PLAYER_COLORS[i], hat: geliehenErlaubt ? playerHats[i] : hutOderErsatz(playerHats[i], i), scores: [], times: [] }));
     state.holeIdx = first;
+    /* Abwechselnd gibt es nur am selben Gerät und nur zu mehreren. Im Netzspiel wäre jeder Schlag
+       eine eigene Übertragung mit allen Bällen - das ist dieselbe Arbeit noch einmal und kommt
+       später; allein wäre es ohnehin dasselbe wie nacheinander. */
+    state.wechsel = reihenfolge === 'wechsel' && !roster && n > 1 && state.mode === 'normal';
     document.body.classList.remove('title');
     document.body.classList.toggle('creative', state.mode === 'creative');
     hideOverlay();
@@ -1861,10 +1978,103 @@
     state.holeIdx = i; state.phase = 'loading';
     loadLevelPreview(i);
     state.particles = [];
+    state.baelle = []; state.liegendeBaelle = null;   // jede Bahn fängt mit leerem Feld an
     state.curPlayer = 0;
     showMessage(`Bahn ${i + 1}: ${state.courses[i].name}`, 2200);
     setTimeout(state.mode === 'boule' ? bouleRundeStarten : beginTurn, 900);
   }
+  /* ================= Abwechselnd =================
+     Fynn: „Momentan kann man nur hintereinander - einer geht ins Loch, dann der andere. Jetzt
+     brauchen wir abwechselnd, also einer ein Schlag, dann der nächste, mit Kollision."
+
+     Die Bauweise dafür gab es schon: Boule rechnet seit jeher mehrere Kugeln zusammen und läßt sie
+     sich stoßen (stepBaelle in physics.js). Was fehlte, war der Golf-Ablauf darum herum - Schläge,
+     Strafschläge, Schlaglimit, Einlochen -, denn der kannte genau einen Ball.
+
+     DREI ENTSCHEIDUNGEN, die man dem Verhalten ansieht:
+     * Jeder Ball entsteht erst, wenn sein Spieler zum ersten Mal an der Reihe ist. Alle vier am
+       Anfang auf die Abschlagkachel zu setzen hieße, vier Bälle übereinander zu stapeln; so legt
+       jeder beim ersten Schlag von vorn los, wie auf einem echten Platz.
+     * Der nächste schlägt erst, wenn ALLES liegt - nicht nur sein eigener Ball. Sonst schlüge er
+       in eine noch rollende Kugel hinein, und der Treffer wäre Zufall statt Absicht.
+     * Wer einen fremden Ball einlocht, locht ihn wirklich ein: Der Schlag zählt für dessen
+       Besitzer. Das ist der Grund, warum man diesen Modus spielt. */
+  const wechselAn = () => !!state.wechsel && state.players.length > 1;
+  const wechselBaelle = () => (state.baelle || []).filter(b => b && !b.fertig);
+  /* Was die Zeichnung sieht: alle Bälle außer dem, der gerade gespielt wird - der wird ohnehin
+     zuletzt gezeichnet, damit er vor allem anderen liegt. */
+  function wechselSichtbar() {
+    /* Ein fertiger Ball bleibt noch einen Augenblick sichtbar, solange er ins Loch fällt - sonst
+       wäre der schönste Treffer des Modus ein Ball, der einfach verschwindet. */
+    state.liegendeBaelle = wechselAn()
+      ? (state.baelle || []).filter(b => b && b !== state.ball && (!b.fertig || (b.sunk && b.sinkT < 0.4)))
+      : null;
+  }
+  /* Ein freier Platz am Abschlag. Der erste Spieler bekommt die Kachel selbst; wer später kommt,
+     wird danebengelegt, solange dort trockener Boden ist - zwei Bälle, die ineinanderstehen,
+     schieben sich beim ersten Schritt gegenseitig quer über die Bahn. */
+  function abschlagPlatz(lv) {
+    const frei = (x, y) => trockenerBoden(lv, lv.teeEbene || 0, x, y)
+      && (state.baelle || []).every(o => !o || o.fertig || Math.hypot(o.x - x, o.y - y) > 0.7);
+    if (frei(lv.tee.x, lv.tee.y)) return { x: lv.tee.x, y: lv.tee.y };
+    for (let r = 0.75; r <= 2.5; r += 0.35) {
+      for (let k = 0; k < 12; k++) {
+        const a = (k / 12) * Math.PI * 2;
+        const x = lv.tee.x + Math.cos(a) * r, y = lv.tee.y + Math.sin(a) * r;
+        if (frei(x, y)) return { x, y };
+      }
+    }
+    return { x: lv.tee.x, y: lv.tee.y };
+  }
+  /* Wer ist als Nächstes dran? Reihum, und wer fertig ist, wird übersprungen. Gibt es niemanden
+     mehr, ist die Bahn zu Ende. */
+  function wechselWeiter() {
+    const n = state.players.length;
+    for (let k = 1; k <= n; k++) {
+      const i = (state.curPlayer + k) % n;
+      const b = state.baelle[i];
+      if (!b || !b.fertig) { state.curPlayer = i; beginTurn(); return; }
+    }
+    showHoleDone();
+  }
+  /* Ein fremder Ball ist eingelocht worden - vom Schlag eines anderen. Gezählt wird für seinen
+     Besitzer, mit der Schlagzahl, die er selbst gebraucht hat: Der Stoß des anderen ist ein
+     Geschenk, kein Schlag. */
+  function wechselFremdSunk(b) {
+    const i = b.spieler;
+    Sfx.sink(); burst(state.level.cup.x, state.level.cup.y, state.theme.accent, 26, true);
+    b.vx = 0; b.vy = 0; b.x = state.level.cup.x; b.y = state.level.cup.y; b.z = 0; b.vz = 0;
+    b.sunk = true; b.sinkT = 0; b.fertig = true;
+    state.players[i].scores[state.holeIdx] = b.schlaege;
+    state.players[i].times[state.holeIdx] = 0;
+    showMessage(`${state.players[i].name} ist im Loch – ${b.schlaege} Schläge`, 1800);
+  }
+  /* Ein fremder Ball ist von der Bahn. Kein Strafschlag für den, der gestoßen hat, aber auch keiner
+     für den Getroffenen: Er wird dort abgelegt, wo er vor dem Stoß lag. Das ist die mildeste Regel,
+     die noch Sinn ergibt - alles andere bestraft jemanden für den Fehler eines anderen. */
+  function wechselFremdRaus(b, art) {
+    Sfx.oob(); burst(b.x, b.y, '#ffffff', 12, true);
+    b.vx = 0; b.vy = 0; b.z = 0; b.vz = 0; b.air = false;
+    const lv = state.level;
+    const ziel = (b.restX != null && trockenerBoden(lv, b.restEbene || 0, b.restX, b.restY))
+      ? { x: b.restX, y: b.restY, e: b.restEbene || 0 } : { x: lv.tee.x, y: lv.tee.y, e: lv.teeEbene || 0 };
+    b.x = ziel.x; b.y = ziel.y; b.ebene = ziel.e;
+    showMessage(`${state.players[b.spieler].name} wurde zurückgelegt`, 1400);
+  }
+  /* Die Ereignisse eines Balls, der gerade nicht gespielt wird. Gehört wird nur, was ihn wirklich
+     betrifft - Prellgeräusche und Sprungmeldungen gehören dem, der schlägt. */
+  function wechselFremdEreignisse(b, events) {
+    for (const ev of events) {
+      if (ev.type === 'sunk') { wechselFremdSunk(b); return; }
+      if (ev.type === 'oob' || ev.type === 'water' || ev.type === 'lava' || ev.type === 'fell') { wechselFremdRaus(b, ev.type); return; }
+      if (ev.type === 'ballStoss' && ev.speed > 1.5 && state.t - state.lastBounceSfx > 0.06) {
+        state.lastBounceSfx = state.t; Sfx.bumper(); burst(ev.x, ev.y, '#ffffff', 4);
+      }
+    }
+  }
+  /* Liegt alles still? Erst dann darf der Nächste schlagen. */
+  const wechselAllesRuht = () => wechselBaelle().every(b => !b.air && !b.rider && Math.hypot(b.vx, b.vy) < 0.08);
+
   function beginTurn() {
     if (state.inner) { // zurück in den Außenbereich der Bahn
       const def = state.courses[state.holeIdx];
@@ -1872,10 +2082,27 @@
       R.setLevel(state.level, state.theme);
     }
     const p = state.players[state.curPlayer], lv = state.level;
-    state.ball = makeBall(lv.tee.x, lv.tee.y, p.color, p.hat);
-    state.ball.ebene = lv.teeEbene || 0;   // der Abschlag darf eine Etage höher liegen
-    lv.setzeEbene(0);   // jeder Spieler beginnt unten, auch wenn der vorige oben aufgehört hat
-    state.strokes = 0; state.phase = 'aim'; state.aim = null; state.restTimer = 0; state.slowTimer = 0; state.rollT = 0; state.stuckRef = null;
+    if (wechselAn()) {
+      /* Der Ball bleibt liegen, wo er liegt - nur der Zeiger wandert weiter. Wer noch keinen hat,
+         bekommt ihn jetzt am Abschlag; seine Schlagzahl steht am Ball, nicht am Spielstand. */
+      let b = state.baelle[state.curPlayer];
+      if (!b) {
+        const platz = abschlagPlatz(lv);
+        b = makeBall(platz.x, platz.y, p.color, p.hat);
+        b.ebene = lv.teeEbene || 0; b.spieler = state.curPlayer; b.schlaege = 0; b.fertig = false;
+        b.restX = b.x; b.restY = b.y; b.restEbene = b.ebene;
+        state.baelle[state.curPlayer] = b;
+      }
+      state.ball = b; state.strokes = b.schlaege;
+      lv.setzeEbene(b.ebene || 0);
+    } else {
+      state.ball = makeBall(lv.tee.x, lv.tee.y, p.color, p.hat);
+      state.ball.ebene = lv.teeEbene || 0;   // der Abschlag darf eine Etage höher liegen
+      lv.setzeEbene(0);   // jeder Spieler beginnt unten, auch wenn der vorige oben aufgehört hat
+      state.strokes = 0;
+    }
+    wechselSichtbar();
+    state.phase = 'aim'; state.aim = null; state.restTimer = 0; state.slowTimer = 0; state.rollT = 0; state.stuckRef = null;
     faceCup(); setCamMode('follow');
     clockStart();
     if (state.players.length > 1) showMessage(`${p.name} ist dran`, 1300);
@@ -1977,7 +2204,16 @@
     faceCup();
     // Wer dran ist, sagt Ruheort und Schlagzahl an; die anderen uebernehmen sie
     if (online && online.started && myTurn()) netSend({ t: 'rest', h: state.holeIdx, pi: state.curPlayer, x: b.x, y: b.y, e: b.ebene || 0, s: state.strokes, st: state.t, sz: schlagZahl() });
+    if (wechselAn()) b.schlaege = state.strokes;
     if (state.strokes >= maxStrokes()) { showMessage(`Maximale Schlagzahl (${maxStrokes()}) erreicht`, 1800); finishTurn(maxStrokes()); return; }
+    if (wechselAn()) {
+      /* Nach JEDEM Schlag der Nächste. Die kurze Pause ist dieselbe wie beim Zugwechsel sonst -
+         sie gibt dem Auge Zeit, zu sehen, wo alles liegengeblieben ist. */
+      state.phase = 'wait'; state.aim = null; updateHud();
+      clearTimeout(waitTimer);
+      waitTimer = setTimeout(wechselWeiter, 900);
+      return;
+    }
     state.phase = 'aim';
   }
   function finishTurn(score, fromNet = false, netMs = null) {
@@ -1993,6 +2229,14 @@
     noteRecord(score, zeit);
     state.phase = 'wait'; state.aim = null; updateHud();
     clearTimeout(waitTimer);
+    if (wechselAn()) {
+      /* Fertig ist hier nur DIESER Spieler. Sein Ball verschwindet aus dem Feld, die anderen
+         spielen weiter - die Bahn ist erst zu Ende, wenn niemand mehr dran ist. */
+      const b = state.baelle[state.curPlayer];
+      if (b) { b.fertig = true; b.schlaege = score; }
+      waitTimer = setTimeout(wechselWeiter, 1700);
+      return;
+    }
     waitTimer = setTimeout(() => {
       state.curPlayer++;
       if (state.curPlayer < state.players.length) beginTurn(); else showHoleDone();
@@ -2019,7 +2263,18 @@
      Endlosschleife nicht. */
   const imSog = (lv, e, x, y) => (lv.obstacles || []).some(o =>
     o.type === 'stroemung' && (o.ebene || 0) === e && o.inside && o.inside(x, y));
-  const ruhigerBoden = (lv, e, x, y) => trockenerBoden(lv, e, x, y) && !imSog(lv, e, x, y);
+  /* Und die dritte Stelle: auf einer Rankenbrücke. Ihre Felder sind in der Karte gewöhnlicher
+     Boden – die Ranke sorgt nur dafür, daß man dort NICHT hindurchfällt (siehe
+     obstacles_zauber.js). Wer nach einem Strafschlag dorthin zurückgelegt wird, liegt über einer
+     Lücke, deren Ranke längst verwelkt ist: Er fällt sofort wieder, bekommt den nächsten
+     Strafschlag, wird an dieselbe Stelle gelegt – und das ohne Ende, bis das Schlaglimit erreicht
+     ist. Derselbe Fehler wie beim Wasser und bei der Strömung, nur eine Maschine weiter.
+     AUF DER BRÜCKE LIEGENZUBLEIBEN IST DAGEGEN RICHTIG und bleibt es: Wer zu sacht schlägt, fällt
+     mit der Ranke, und das ist die Aufgabe der Maschine. Verboten ist nur, ihn dort WIEDER
+     HINZULEGEN – ein Strafschlag darf wehtun, eine Endlosschleife nicht. */
+  const aufRanke = (lv, e, x, y) => (lv.obstacles || []).some(o =>
+    o.type === 'ranke' && (o.ebene || 0) === e && o.drauf && o.drauf({ x, y }));
+  const ruhigerBoden = (lv, e, x, y) => trockenerBoden(lv, e, x, y) && !imSog(lv, e, x, y) && !aufRanke(lv, e, x, y);
   /* Wohin der Ball nach einem Strafschlag zurückkommt.
      Solange nichts den Boden verändert, konnte der gemerkte Ruhepunkt gar nicht naß sein: In Wasser
      bleibt man nicht liegen, man geht unter. Seit dem Gießlöffel kann sich Boden aber verwandeln,
@@ -2089,10 +2344,21 @@
       b.restX = r.x; b.restY = r.y;
       state.level.setzeEbene(b.ebene);
       faceCup();
-      if (state.strokes >= maxStrokes()) finishTurn(maxStrokes()); else state.phase = 'aim';
+      if (state.strokes >= maxStrokes()) finishTurn(maxStrokes());
+      else if (wechselAn()) uebergabeNachStrafe();
+      else state.phase = 'aim';
       updateHud();
     }, 900);
     updateHud();
+  }
+  /* Ein Schlag, der im Wasser endete, ist trotzdem ein Schlag: Im Abwechseln geht es danach weiter
+     zum Nächsten, nicht zurück zum Zielen. Der Strafschlag steht vorher schon am Ball. */
+  function uebergabeNachStrafe() {
+    const b = state.ball;
+    if (b) b.schlaege = state.strokes;
+    state.phase = 'wait'; state.aim = null;
+    clearTimeout(waitTimer);
+    waitTimer = setTimeout(wechselWeiter, 600);
   }
   /* Zurück an den letzten Ruhepunkt, aber OHNE Strafschlag. Feuerturm und Kaiserloge teilen sich
      das: Beide schlagen nach der Uhr bzw. nach dem Willen des Kaisers, nicht nach dem Können des
@@ -2125,7 +2391,7 @@
       b.restX = r.x; b.restY = r.y;
       state.level.setzeEbene(b.ebene);
       faceCup();
-      state.phase = 'aim';
+      if (wechselAn()) uebergabeNachStrafe(); else state.phase = 'aim';
       updateHud();
     }, 900);
     updateHud();
@@ -2755,6 +3021,31 @@
         // Boule rechnet alle Bälle zusammen und kennt weder Strafschlag noch Schlaglimit
         if (state.phase === 'aim' || state.phase === 'rolling' || state.boule.stand === 'ziel') bouleSchritt(lv);
         else for (const ob of lv.obstacles) if (ob.update) ob.update(state.t);
+      } else if (wechselAn() && b && (state.phase === 'aim' || state.phase === 'rolling')) {
+        /* Alle zusammen, damit sie sich stoßen können. Die Ereignisse des eigenen Balls gehen den
+           gewohnten Weg (Strafschlag, Schlaglimit, Einlochen); die der anderen werden kleiner
+           behandelt - sie spielen gerade nicht, aber einlochen und von der Bahn fliegen können
+           sie trotzdem, und genau das ist der Reiz. */
+        const liste = wechselBaelle();
+        const listen = stepBaelle(lv, liste, STEP, state.t, state.phase === 'rolling');
+        for (let k = 0; k < liste.length; k++) {
+          if (liste[k] === b) continue;
+          wechselFremdEreignisse(liste[k], listen[k]);
+        }
+        const eigene = listen[liste.indexOf(b)] || [];
+        handleEvents(eigene);
+        if (eigene.some(e => e.type === 'contact' && e.kind === 'mover')) state.lastMoverHit = state.t;
+        if (b.rider || b.air) { state.restTimer = 0; state.slowTimer = 0; state.rollT = 0; state.stuckRef = null; if (state.phase === 'aim') { state.phase = 'rolling'; state.aim = null; } }
+        else if (state.phase === 'rolling') {
+          /* Weiter ist erst, wenn ALLES liegt - nicht nur der eigene Ball. Sonst schlüge der
+             Nächste in eine rollende Kugel, und der Treffer wäre Zufall statt Absicht. */
+          if (wechselAllesRuht()) { state.restTimer += STEP; if (state.restTimer > 0.3) ballAtRest(); }
+          else state.restTimer = 0;
+          state.rollT = (state.rollT || 0) + STEP;
+          if (state.rollT > 14) ballAtRest();   // Notbremse, wie bei einem Ball
+        } else if (state.phase === 'aim') {
+          if (Math.hypot(b.vx, b.vy) > 0.3) { state.phase = 'rolling'; state.aim = null; state.restTimer = 0; state.rollT = 0; }
+        }
       } else if (b && (state.phase === 'aim' || state.phase === 'rolling')) {
         const ev = stepPhysics(lv, b, STEP, state.t, state.phase === 'rolling');
         handleEvents(ev);
@@ -2780,6 +3071,7 @@
     }
     updateParticles(dt);
     if (state.ball && state.ball.sunk) state.ball.sinkT += dt;
+    for (const lb of (state.liegendeBaelle || [])) if (lb && lb.sunk) lb.sinkT += dt;
     updateCamera(dt);
     // Auf dem Startbildschirm liegt die Weltkarte als Tafelhintergrund über der Leinwand: Was dort
     // gezeichnet würde, sähe niemand. Also wird es gar nicht erst gezeichnet.
@@ -2951,6 +3243,23 @@
       const wl = SPIELWELTEN();
       if (!wl.some(w => w.id === id)) return false;
       setWorld(id); return true;
+    },
+    /* Eine Runde anpfeifen – das Gegenstück zu welt(). Ohne sie läuft openHole in eine Bahn
+       ohne Spieler, und beginTurn stolpert über den leeren Platz. Nur fürs Prüfen. */
+    starte(n = 1, erste = 0, folge = null) {
+      if (!state.courses || !state.courses.length) return false;
+      // 'folge' setzt die Reihenfolge, die sonst auf dem Startbildschirm gewählt wird
+      if (folge === 'wechsel' || folge === 'nach') reihenfolge = folge;
+      startGame(Math.max(1, Math.min(4, n | 0)), erste);
+      return true;
+    },
+    /* Schlagen, ohne zu ziehen: Richtung als Einheitsvektor, Stärke 0..1. Die Browserprobe des
+       Abwechselmodus braucht gezielte Schläge auf fremde Bälle. */
+    schlag(dx, dy, power = 0.8) {
+      if (state.phase !== 'aim' || !state.ball) return false;
+      const l = Math.hypot(dx, dy) || 1;
+      shoot(dx / l, dy / l, Math.max(0.05, Math.min(1, power)));
+      return true;
     },
     /* Direkt auf eine Bahn springen – nur fürs automatische Prüfen */
     openHole(i) {
