@@ -28,6 +28,10 @@ const pruef = (name, ok, zusatz = '') => {
 const browser = await chromium.launch();
 const seite = await browser.newPage({ viewport: { width: 1100, height: 760 } });
 seite.on('pageerror', e => { console.log('Absturz im Browser: ' + e.message); fehler++; });
+/* Der Lehrlingsgarten steht zurzeit nur in der Vorschau, und die Oberfläche bietet nur an, was im
+   Spiel ist. Ein Prüfwerkzeug soll alles sehen – dafür gibt es PRUEFSTAND, dieselbe Kennung, die
+   auch die Einzeldatei zum Weitergeben setzt. Sie muß stehen, bevor main.js läuft. */
+await seite.addInitScript(() => { window.PRUEFSTAND = true; });
 await seite.goto(ADRESSE, { waitUntil: 'networkidle' });
 await seite.waitForFunction(() => typeof window.__golfDebug !== 'undefined', null, { timeout: 20000 });
 

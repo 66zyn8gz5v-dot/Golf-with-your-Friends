@@ -907,6 +907,77 @@ const Hats = (() => {
        kräftiger Umriß. Ein Filzhut ohne Schattenseite sieht aus wie ein ausgeschnittenes Stück
        Papier - das war der Grund, warum die erste Fassung so flach wirkte. */
 
+    wanderpokal(ctx, color, t, fein) {   // Der Alte Platz: der Pokal aus dem Schaukasten
+      /* Ein Platz ohne Abgrund und ohne Zauberei kann als Belohnung keinen Zauberhut hergeben.
+         Was dort im Schaukasten neben dem Kassenhäuschen steht, ist ein Wanderpokal - silbern,
+         zu oft poliert, mit einem Holzsockel, auf dem die Gravur längst blind ist. Er wandert,
+         wie der Name sagt: Wer ihn gewinnt, trägt ihn, bis ihn jemand anders holt.
+
+         Gezeichnet wird er von unten nach oben, damit Henkel hinter der Schale liegen: erst der
+         Sockel, dann die Henkel, dann Fuß und Schale darüber. */
+      const blitzen = 0.5 + 0.5 * Math.sin(t * 1.3);
+
+      // Sockel aus dunklem Holz, oben eine schmale Messingkante
+      ctx.beginPath(); ctx.moveTo(-0.54, 0.08); ctx.lineTo(0.54, 0.08);
+      ctx.lineTo(0.46, -0.20); ctx.lineTo(-0.46, -0.20); ctx.closePath();
+      const holz = ctx.createLinearGradient(-0.5, 0, 0.5, -0.14);
+      holz.addColorStop(0, '#5a3a1e'); holz.addColorStop(0.5, '#8a5a2e'); holz.addColorStop(1, '#4a2f18');
+      fs(ctx, holz);
+      ctx.beginPath(); ctx.moveTo(-0.47, -0.20); ctx.lineTo(0.47, -0.20);
+      ctx.lineTo(0.44, -0.27); ctx.lineTo(-0.44, -0.27); ctx.closePath();
+      fs(ctx, '#c9a227');
+
+      // Henkel: zwei Ohren, die seitlich an der Schale hängen. Sie kommen VOR die Schale, damit
+      // ihr Ansatz nicht als Loch im Silber steht.
+      ctx.strokeStyle = '#8f98a2'; ctx.lineWidth = 0.13; ctx.lineCap = 'round';
+      for (const d of [-1, 1]) {
+        ctx.beginPath();
+        ctx.moveTo(d * 0.46, -1.22);
+        ctx.quadraticCurveTo(d * 0.84, -1.16, d * 0.80, -0.92);
+        ctx.quadraticCurveTo(d * 0.74, -0.70, d * 0.38, -0.70);
+        ctx.stroke();
+      }
+
+      // Fuß: Teller, kurzer Stiel, und darüber der Knoten, auf dem die Schale sitzt
+      ctx.beginPath(); ctx.moveTo(-0.34, -0.27); ctx.lineTo(0.34, -0.27);
+      ctx.lineTo(0.22, -0.37); ctx.lineTo(-0.22, -0.37); ctx.closePath();
+      fs(ctx, '#aab2bb');
+      ctx.beginPath(); ctx.rect(-0.10, -0.60, 0.20, 0.24); fs(ctx, '#99a2ac');
+      ctx.beginPath(); ctx.ellipse(0, -0.62, 0.17, 0.08, 0, 0, TAU2); fs(ctx, '#b9c1ca');
+
+      // Die Schale: unten rund, nach oben weit geöffnet
+      ctx.beginPath();
+      ctx.moveTo(-0.50, -1.26);
+      ctx.quadraticCurveTo(-0.54, -0.74, 0, -0.62);
+      ctx.quadraticCurveTo(0.54, -0.74, 0.50, -1.26);
+      ctx.closePath();
+      const silber = ctx.createLinearGradient(-0.5, -1.2, 0.5, -0.62);
+      silber.addColorStop(0, '#78818a'); silber.addColorStop(0.32, '#eaeff4');
+      silber.addColorStop(0.62, '#b4bcc5'); silber.addColorStop(1, '#737c85');
+      fs(ctx, silber);
+      // Der Rand: eine Ellipse, damit die Schale hohl wirkt und nicht wie ein Blechstück
+      ctx.beginPath(); ctx.ellipse(0, -1.26, 0.50, 0.14, 0, 0, TAU2); fs(ctx, '#d2dae2');
+      ctx.beginPath(); ctx.ellipse(0, -1.26, 0.39, 0.09, 0, 0, TAU2); fs(ctx, '#58626c');
+
+      if (!fein) return;
+      // Ein Glanzstreifen, der über das Silber wandert - poliert wird hier noch
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(-0.50, -1.26); ctx.quadraticCurveTo(-0.54, -0.74, 0, -0.62);
+      ctx.quadraticCurveTo(0.54, -0.74, 0.50, -1.26); ctx.closePath();
+      ctx.clip();
+      ctx.globalAlpha = 0.28 + 0.34 * blitzen;
+      ctx.beginPath(); ctx.moveTo(-0.30, -1.30); ctx.lineTo(-0.13, -1.30);
+      ctx.lineTo(-0.17, -0.64); ctx.lineTo(-0.33, -0.66); ctx.closePath();
+      fs(ctx, '#ffffff');
+      ctx.globalAlpha = 1;
+      ctx.restore();
+      // Das blinde Schild am Sockel: die Gravur liest schon lange niemand mehr
+      ctx.beginPath(); ctx.rect(-0.24, -0.17, 0.48, 0.15); fs(ctx, '#d8c07a');
+      ctx.strokeStyle = 'rgba(90,60,20,0.55)'; ctx.lineWidth = 0.035;
+      ctx.beginPath(); ctx.moveTo(-0.17, -0.095); ctx.lineTo(0.17, -0.095); ctx.stroke();
+    },
+
     lehrlingshut(ctx, color, t, fein) {   // Lehrlingsgarten: der erste eigene Zauberhut
       /* Der schlichteste der drei: ein Filzkegel, der eine Nummer zu groß ist, mit einem Knick
          kurz unter der Spitze. Kein Gold, keine Runen - das kommt in den beiden Welten darüber.
@@ -2177,6 +2248,7 @@ const Hats = (() => {
     { id: 'orb', name: 'Kristallkugel', welt: 'shadow', voll: true },
     { id: 'pocketwatch', name: 'Taschenuhr', welt: 'clock', voll: true },
     { id: 'taucherhelm', name: 'Taucherhelm', welt: 'flut', voll: true },
+    { id: 'wanderpokal', name: 'Wanderpokal', welt: 'altplatz' },
     { id: 'lehrlingshut', name: 'Lehrlingshut', welt: 'lehrling' },
     { id: 'sternenhut', name: 'Sternenhut', welt: 'warte' },
     { id: 'erzmagierhut', name: 'Erzmagierhut', welt: 'loge' },

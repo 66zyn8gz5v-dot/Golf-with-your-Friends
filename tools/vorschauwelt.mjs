@@ -9,13 +9,12 @@
  * fehlt irgendwo eine Zeile. Darum war es *ein* Stand mit einem Schalter, so wie beim Boule-Modus:
  * 'nurVorschau' an der Welt, und die Oberfläche filtert.
  *
- * SEIT FASSUNG 163 IST DIE MINE IM SPIEL, und keine Welt trägt die Kennzeichnung mehr. Die Prüfung
- * bleibt trotzdem stehen, und zwar aus zwei Gründen:
- *   - Der Schalter ist der Weg, den auch die nächste Welt gehen wird. Eine Mechanik, die nur
- *     einmal benutzt und dann nicht mehr geprüft wird, ist beim nächsten Mal kaputt.
- *   - Sie hält jetzt das Gegenteil fest: Was fertig ist, muß auch wirklich angeboten werden. Eine
- *     vergessene Kennzeichnung wäre eine Welt, die niemand findet – und niemand vermißt, weil
- *     niemand weiß, daß es sie gibt.
+ * SEIT FASSUNG 163 IST DIE MINE IM SPIEL, seit 189 auch die Flut. Zurzeit tragen die drei Welten
+ * des Zauberreichs die Kennzeichnung: gebaut, durchgemessen, überarbeitet – aber noch nicht
+ * freigegeben. Geprüft wird darum beides:
+ *   - Was die Kennzeichnung trägt, taucht im Spiel NICHT auf (sonst wäre sie wirkungslos).
+ *   - Was sie nicht trägt, taucht im Spiel AUF. Eine vergessene Kennzeichnung wäre eine Welt, die
+ *     niemand findet – und niemand vermißt, weil niemand weiß, daß es sie gibt.
  */
 import fs from 'node:fs'; import path from 'node:path'; import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
@@ -43,15 +42,19 @@ pruef('und sie ist nicht mehr als „nur Vorschau" gekennzeichnet', !!mine && !m
 const flut = WORLDS.find(w => w.id === 'flut');
 pruef('die Flut steht in der Weltliste', !!flut && flut.courses.length > 0,
       flut ? `${flut.courses.length} Bahnen` : 'fehlt ganz');
-pruef('und ist als „nur Vorschau" gekennzeichnet', !!flut && flut.nurVorschau === true);
-/* Die Regel dahinter, als Zahl: Im Spiel steht genau eine Welt weniger als in der Liste. Wäre die
-   Kennzeichnung weg, stünden beide Zahlen gleich – und die Flut wäre unbemerkt im Spiel. */
+pruef('und ist nicht mehr als „nur Vorschau" gekennzeichnet', !!flut && !flut.nurVorschau);
+/* Das Zauberreich wartet als Ganzes: drei Welten auf einer Insel, ein Aufstieg. Zwei davon im
+   Spiel und eine in der Vorschau wäre eine Treppe ohne oberste Stufe. */
+const ZAUBER = ['lehrling', 'warte', 'loge'];
 const versteckt = WORLDS.filter(w => w.nurVorschau);
-pruef('und sie ist die einzige mit dieser Kennzeichnung', versteckt.length === 1,
+pruef('die drei Welten des Zauberreichs sind als „nur Vorschau" gekennzeichnet',
+      ZAUBER.every(id => (WORLDS.find(w => w.id === id) || {}).nurVorschau === true),
+      ZAUBER.filter(id => !(WORLDS.find(w => w.id === id) || {}).nurVorschau).join(', ') || 'alle drei');
+pruef('und sie sind die einzigen', versteckt.length === ZAUBER.length && versteckt.every(w => ZAUBER.includes(w.id)),
       versteckt.map(w => w.name).join(', ') || 'keine');
-pruef('das Spiel bietet eine Welt weniger an',
-      WORLDS.filter(w => !w.nurVorschau).length === WORLDS.length - 1,
-      `${WORLDS.length} Welten, davon ${WORLDS.length - 1} im Spiel`);
+pruef('das Spiel bietet drei Welten weniger an',
+      WORLDS.filter(w => !w.nurVorschau).length === WORLDS.length - ZAUBER.length,
+      `${WORLDS.length} Welten, davon ${WORLDS.length - ZAUBER.length} im Spiel`);
 
 /* ---------- Die Oberfläche ---------- */
 const main = lies('src/main.js');

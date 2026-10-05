@@ -469,7 +469,8 @@ const PRO_COURSES = [
 
    Die Zwergenmine war die erste Welt, die diesen Weg gegangen ist; sie ist seit Fassung 163 im
    Spiel. „Die Flut" trug die Kennzeichnung von Fassung 166 bis 188 – erst zwei Probebahnen, dann
-   dreizehn – und ist seit Fassung 189 im Spiel. Zurzeit trägt sie keine Welt. */
+   dreizehn – und ist seit Fassung 189 im Spiel. Zurzeit tragen sie die drei Welten des
+   Zauberreichs. */
 const WORLDS = [
   { id: 'normal', name: 'Märchenland', short: 'Märchen', mode: 'normal', courses: COURSES },
   { id: 'sea', name: 'Meereswelt', short: 'Meer', mode: 'normal', courses: SEA_COURSES },
@@ -485,8 +486,12 @@ const WORLDS = [
   { id: 'altplatz', name: 'Der Alte Platz', short: 'Platz', mode: 'normal', courses: ALTPLATZ_COURSES },
   /* Das Zauberreich: drei Welten auf einer Insel, ein Aufstieg vom Lehrling zum Erzmagier. Jede
      trägt ihren eigenen Belohnungshut – die Regel dafür steht längst in hats.js und brauchte
-     nichts Neues. */
-  { id: 'lehrling', name: 'Lehrlingsgarten', short: 'Garten', mode: 'normal', courses: ZAUBER_GARTEN },
-  { id: 'warte', name: 'Sternenwarte', short: 'Warte', mode: 'pro', courses: ZAUBER_WARTE },
-  { id: 'loge', name: 'Erzmagierloge', short: 'Loge', mode: 'legend', courses: ZAUBER_LOGE },
+     nichts Neues.
+
+     Sie stehen in der Vorschau und noch nicht im Spiel: Lüddecke hat sie in Fassung 225 wieder
+     herausgenommen, damit die Bots sie erst durchspielen. Das ist geschehen, überarbeitet sind
+     sie auch – ins Spiel gehen sie trotzdem erst, wenn er es sagt. */
+  { id: 'lehrling', name: 'Lehrlingsgarten', short: 'Garten', mode: 'normal', courses: ZAUBER_GARTEN, nurVorschau: true },
+  { id: 'warte', name: 'Sternenwarte', short: 'Warte', mode: 'pro', courses: ZAUBER_WARTE, nurVorschau: true },
+  { id: 'loge', name: 'Erzmagierloge', short: 'Loge', mode: 'legend', courses: ZAUBER_LOGE, nurVorschau: true },
 ];

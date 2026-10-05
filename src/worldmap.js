@@ -51,9 +51,9 @@ const WorldMap = (() => {
        Reichweiten) – und weit genug vom Märchenland weg, daß sie nicht mit ihm verwachsen. Genau
        das soll man sehen: ein Reich, kein Archipel. Der Aufstieg läuft von Südwest nach Nordost,
        vom Garten über die Warte bis zur Loge. */
-    { id: 'lehrling', name: 'Lehrlingsgarten', x: 10, y: 16, r: 9, biom: 'wiese', marke: 'local_florist', farbe: '#9fe06a' },
-    { id: 'warte', name: 'Sternenwarte', x: 18, y: 7, r: 9, biom: 'gebirge', marke: 'star', farbe: '#a9c8ff' },
-    { id: 'loge', name: 'Erzmagierloge', x: 31, y: 6, r: 9, biom: 'moor', marke: 'crown', farbe: '#e0b0ff' },
+    { id: 'lehrling', name: 'Lehrlingsgarten', x: 10, y: 16, r: 9, biom: 'wiese', marke: 'local_florist', farbe: '#9fe06a', nurVorschau: true },
+    { id: 'warte', name: 'Sternenwarte', x: 18, y: 7, r: 9, biom: 'gebirge', marke: 'star', farbe: '#a9c8ff', nurVorschau: true },
+    { id: 'loge', name: 'Erzmagierloge', x: 31, y: 6, r: 9, biom: 'moor', marke: 'crown', farbe: '#e0b0ff', nurVorschau: true },
     // ---- Nebeninsel im Südwesten: weit genug weg, damit sie eine eigene Insel bleibt
     { id: 'sea', name: 'Meereswelt', x: 14, y: 50, r: 11, biom: 'kueste', marke: 'waves', farbe: '#7fd8ff' },
     /* ---- Feuerinsel im Ostmeer: die Zwergenmine. Sie stand zuerst als kleines Landstück am Fuß
