@@ -981,7 +981,9 @@ class Renderer {
        nimmt sie von der Durchsichtigkeit aus, mit der Hindernisse vor dem eigenen Ball
        zurücktreten – ein halb durchsichtiger Ball sähe aus wie ein Fehler. */
     for (const lb of (state.liegendeBaelle || [])) {
-      if (!lb || lb.sunk) continue;
+      // Ein eingelochter Ball darf noch fallen (drawBall blendet ihn nach 0,35 s selbst aus);
+      // erst danach ist er weg. Sonst verschwände der fremde Ball im Abwechseln ohne Bild.
+      if (!lb || (lb.sunk && !(lb.sinkT < 0.35))) continue;
       items.push({ x: lb.x, y: lb.y, ball: true, noFade: true, bias: 0.02, draw: () => this.drawBall(ctx, lb) });
     }
     /* Boule: die Kanone, mit der die Zielkugel nach vorn geschossen wird. Es ist dieselbe Kanone

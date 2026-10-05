@@ -215,10 +215,16 @@ keinen Eintrag in `WorldMap.spots` hat; die Karte zeichnet dann weder Marke noch
 | --- | --- | --- |
 | Kolosseum | Legende | 12 Turnierbahnen in der Arena (nur über den Turnier-Knopf) |
 
-Nach dem Antippen eines Ortes folgt die Startaufstellung mit **Modus**, **Spielern**, **Hut**, **Musik** und **Steuerung**:
+Nach dem Antippen eines Ortes folgt die Startaufstellung mit **Modus**, **Spielern**, **Reihenfolge**,
+**Hut**, **Musik** und **Steuerung**:
 
 - **🏆 Wettkampf**: alle Bahnen der Welt der Reihe nach, mit Schlaglimit, Zwischen- und Endtafel, 1–4 Spieler im Hotseat.
 - **🛠 Kreativ**: allein und ohne Schlaglimit; im Spiel mit „◀ Bahn" / „Bahn ▶" (Tasten P / N) frei springen, „Ball zurück" (R) setzt an den Abschlag. Gedacht zum Erkunden und zum schnellen Prüfen einzelner Bahnen.
+
+Ab zwei Spielern am selben Gerät kommt im Wettkampf die **Reihenfolge** dazu:
+
+- **Nacheinander**: einer spielt die Bahn zu Ende, dann der Nächste. So war es bis Fassung 234.
+- **Abwechselnd**: jeder einen Schlag, dann ist der Nächste dran. Siehe [Abwechselnd](#abwechselnd).
 
 ### Hüte
 
@@ -512,6 +518,57 @@ Die Hüte werden in `src/hats.js` gezeichnet – reine Canvas-Pfade, keine Bildd
 nur eine Zeichenfunktion in `DEFS` und einen Eintrag in `LIST`; der Nullpunkt liegt auf dem Kopf des Balls,
 eine Einheit entspricht dem Ballradius, und die Ballmitte liegt bei (0, 0.72). Wer die Spielerfarbe braucht,
 nimmt sie als zweiten Wert der Zeichenfunktion entgegen.
+
+## Abwechselnd
+
+Der Wettkampf am selben Gerät kannte bis Fassung 234 nur eine Reihenfolge: Spieler 1 spielt die Bahn
+zu Ende, dann Spieler 2, und wer wartet, sieht zu. Das ist die Reihenfolge einer Rangliste, nicht die
+eines Spiels. **Abwechselnd** dreht es um: jeder einen Schlag, dann der Nächste – und alle Bälle
+liegen gleichzeitig auf der Bahn.
+
+Damit wird aus dem Nebeneinander ein Gegeneinander. Der Ball des anderen ist kein Bild mehr, sondern
+ein Hindernis, das man wegräumen kann – oder ein Geschenk, das man aus Versehen ins Loch schiebt.
+
+**Wählbar ist er in der Startaufstellung**, unter „Reihenfolge", und nur dort, wo er etwas bedeutet:
+im Wettkampf, am selben Gerät, ab zwei Spielern. Im Kreativmodus, bei Boule und allein fehlt die
+Zeile ganz. **Im Netzspiel bleibt es beim Nacheinander** – dort müßte jedes Gerät alle Bälle gleich
+rechnen, und das ist eine eigene Baustelle (`state.wechsel` wird in `startGame` nur ohne `roster`
+gesetzt).
+
+### Wie es gerechnet wird
+
+Der Golf-Ablauf kannte genau *einen* Ball (`state.ball`), der Boule-Modus kennt viele. Abwechselnd
+nimmt die Boule-Bauweise und hängt den Golf-Ablauf daran:
+
+* `state.baelle[i]` ist der Ball von Spieler i, `state.ball` zeigt auf den, der gerade dran ist.
+  Alle anderen stehen in `state.liegendeBaelle` – dieselbe Liste, aus der der Renderer schon für
+  Boule die fremden Kugeln zeichnet.
+* Gerechnet wird mit `stepBaelle(level, baelle, dt, t, allowForces)` aus `src/physics.js`. Sie
+  bewegt alle Bälle in einem Schritt und löst die Stöße zwischen ihnen elastisch auf; zurück kommt
+  **je eine Ereignisliste pro Ball**. Die des eigenen geht den gewohnten Weg (`handleEvents`:
+  Strafschlag, Schlaglimit, Einlochen), die der anderen den kleinen (`wechselFremdEreignisse`).
+* **Jeder Ball entsteht erst, wenn sein Spieler das erste Mal dran ist.** Alle vier gleich an den
+  Abschlag zu setzen hieße, vier Bälle übereinanderzustapeln. Wer später kommt, bekommt über
+  `abschlagPlatz` einen freien Fleck daneben – mindestens 0,7 Kacheln Abstand, sonst schieben sich
+  zwei Bälle beim ersten Schritt gegenseitig quer über die Bahn.
+* **Der Nächste schlägt erst, wenn ALLES liegt**, nicht nur sein eigener Ball (`wechselAllesRuht`).
+  Sonst schlüge er in eine noch rollende Kugel, und der Treffer wäre Zufall statt Absicht.
+* Die Schlagzahl steht **am Ball** (`b.schlaege`), nicht am Spielstand: `state.strokes` gehört immer
+  dem, der gerade dran ist, und wird beim Zugwechsel vom Ball geholt.
+
+### Die Regeln, die sich daraus ergeben
+
+* **Ein fremder Ball, den man einlocht, ist eingelocht.** Gewertet wird für seinen Besitzer, mit der
+  Schlagzahl, die *er* gebraucht hat – der Stoß des anderen ist ein Geschenk, kein Schlag. Das ist
+  der Grund, warum man diesen Modus spielt.
+* **Ein fremder Ball, den man von der Bahn schießt, wird zurückgelegt** – an seinen letzten
+  Ruhepunkt, ohne Strafschlag. Weder für den, der gestoßen hat, noch für den Getroffenen. Jede
+  andere Regel bestraft jemanden für den Fehler eines anderen.
+* **Der eigene Strafschlag bleibt der eigene.** Wer selbst ins Wasser schlägt, zahlt wie immer –
+  und danach ist der Nächste dran, nicht noch einmal er (`uebergabeNachStrafe`).
+* **Wer fertig ist, ist vom Platz.** Eingelocht oder am Schlaglimit: Sein Ball bekommt `fertig` und
+  verschwindet; die anderen spielen weiter. Die Bahn ist erst zu Ende, wenn niemand mehr dran ist
+  (`wechselWeiter` ruft dann `showHoleDone`).
 
 ## Boule
 
