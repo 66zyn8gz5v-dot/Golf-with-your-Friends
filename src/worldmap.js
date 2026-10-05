@@ -70,6 +70,11 @@ const WorldMap = (() => {
        Bis Fassung 188 hielt 'nurVorschau' sie aus dem Spiel; die Insel lag trotzdem schon da, denn
        ein Stück Land ohne Beschriftung verspricht nichts. Seit 189 ist die Welt dahinter offen. */
     { id: 'flut', name: 'Die Flut', x: 100, y: 52, r: 11, biom: 'kueste', marke: 'church', farbe: '#7fe8d8' },
+    /* ---- Der Alte Platz. Er liegt als einziger NICHT auf einer eigenen Insel, sondern am
+       Festland südlich des Märchenlands – weil er als einziger kein fernes Land ist, sondern
+       ein Platz am Ortsrand. Die Marke ist die Fahne; ein Schloß oder ein Zahnrad wäre hier
+       gelogen. */
+    { id: 'altplatz', name: 'Der Alte Platz', x: 22, y: 46, r: 10, biom: 'wiese', marke: 'golf_course', farbe: '#8fd14f' },
     // ---- Schären: zu klein für eine Welt, groß genug fürs Auge. Sie brechen die leere See auf
     //      und zeigen, dass die Küste gerechnet wird – auch ein Punkt mit r=4 bekommt ein Ufer.
     { x: 8, y: 34, r: 3.4, biom: 'kueste' },

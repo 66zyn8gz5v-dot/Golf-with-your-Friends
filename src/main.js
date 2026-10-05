@@ -1813,6 +1813,8 @@
     lehrlingsgarten: 'local_florist', gewaechshaus: 'science',
     sternenwarte: 'dark_mode', kartensaal: 'schedule',
     erzmagierloge: 'crown', bannkreis: 'church',
+    // Der Alte Platz – eine einzige Kulisse für alle zehn Bahnen, so wie ein echter Platz
+    altplatz: 'golf_course',
     // Kolosseum, Tüftlerreich, Wüste
     colosseum: 'stadium', palace: 'temple_buddhist', desert: 'sonne',
   };

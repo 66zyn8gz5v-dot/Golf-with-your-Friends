@@ -599,6 +599,23 @@ const THEMES = {
      Warum Glühwürmchen und nicht Blütenstaub wie auf der Elfenwiese: Der Garten spielt in der
      Dämmerung. Das ist die Tageszeit, zu der ein Lehrling übt – tagsüber hat er zu tun –, und es
      gibt den leuchtenden Dingen im Garten überhaupt erst etwas zu leuchten. */
+  /* ---- Der Alte Platz ----
+     Minigolf am Sommernachmittag: Filzbahnen in zwei Grüntönen, Holzbanden, Betonklötze. Die
+     einzige Palette im Spiel, die nichts darstellen soll als das, was sie ist - kein Zauber, kein
+     Abgrund, kein Leuchten. Darum auch der hellste Himmel: Hier ist einfach Nachmittag. */
+  altplatz: {
+    atmo: 'pollen',
+    sky: ['#7fc4ea', '#f7e9c4'], ground: '#5f9440', groundEdge: '#3d6228',
+    floor: ['#4f9b58', '#459050'], sand: '#ded0a4', ice: '#cfeaff', snow: '#f3f8ff',
+    water: '#3d86c6', lava: '#ff5a1f',
+    wall: { top: '#b07c42', side: '#6e4726', style: 'stone' },
+    block: { top: '#cbc4b6', side: '#857e70' },
+    mover: { top: '#b5723c', side: '#6b4524' },
+    rotor: { top: '#e2dccf', side: '#8d8678' },
+    accent: '#f2c14e', flag: '#e4572e', stars: false,
+    autoDecor: ['tree', 'flowerbush', 'bollard', 'tree', 'rock', 'fern', 'barrel', 'flowerbush', 'crate'],
+  },
+
   lehrlingsgarten: { // Ummauerter Zaubergarten in der Abenddämmerung: Hecken, Beete, erste Lichter
     atmo: 'fireflies',
     sky: ['#3b2a63', '#f0b878'], ground: '#33562f', groundEdge: '#1d331b',
