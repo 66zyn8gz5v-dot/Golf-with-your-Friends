@@ -100,6 +100,17 @@
     abschlagMatte: true,
   };
   try { const m = localStorage.getItem(speicherSchluessel('control')); if (m === 'sling' || m === 'push') state.controlMode = m; } catch (e) { /* kein Speicher verfügbar */ }
+  /* Schärfe: wie fein gezeichnet wird. Auf einem Gerät mit zwei Bildpunkten je Maßpunkt - jedem
+     iPad, jedem neueren Telefon - kostet 'fein' die vierfache Fläche von einem Punkt. Wem das
+     Gerät zu warm wird, stellt hier auf 'sparsam'; die Erklärung steht in render.js. */
+  let schaerfe = 'fein';
+  try { const f = localStorage.getItem(speicherSchluessel('schaerfe')); if (f === 'fein' || f === 'sparsam') schaerfe = f; } catch (e) { /* kein Speicher verfügbar */ }
+  function setzeSchaerfe(f) {
+    schaerfe = f;
+    try { localStorage.setItem(speicherSchluessel('schaerfe'), f); } catch (e) { /* ignorieren */ }
+    R.setzeSchaerfe(f);
+  }
+  R.setzeSchaerfe(schaerfe);   // die gemerkte Wahl gilt ab dem ersten Bild
   function setControlMode(m) {
     state.controlMode = m;
     try { localStorage.setItem(speicherSchluessel('control'), m); } catch (e) { /* ignorieren */ }
@@ -1649,6 +1660,11 @@
         <span class="btn ghost small ${state.controlMode === 'sling' ? 'sel' : ''}" data-m="sling">Schleuder</span>
         <span class="btn ghost small ${state.controlMode === 'push' ? 'sel' : ''}" data-m="push">Schieben</span>
       </div>
+      <p style="margin-top:10px">Schärfe:</p>
+      <div id="sf">
+        <span class="btn ghost small ${schaerfe === 'fein' ? 'sel' : ''}" data-f="fein">Fein</span>
+        <span class="btn ghost small ${schaerfe === 'sparsam' ? 'sel' : ''}" data-f="sparsam">Sparsam</span>
+      </div>
       <p style="margin-top:14px"><span class="btn ghost small" id="back">${Icons.svg('arrow_back')} Zurück</span> <span class="btn" id="start">Los geht's!</span></p>
       <div class="legend">
         <b>Wettkampf:</b> alle Bahnen der Reihe nach, mit Schlaglimit und Ergebnistafel.
@@ -1665,6 +1681,9 @@
         verdienten Belohnungen und die Helme der Arena. Das gilt nur für diese Partie und wird nicht
         gespeichert. Zwei Spieler dürfen nicht denselben tragen; tippt man auf einen belegten, wird
         getauscht.<br>
+        <b>Schärfe:</b> <b>Fein</b> zeichnet so fein, wie der Bildschirm es hergibt. <b>Sparsam</b>
+        zeichnet gröber – auf einem iPad etwa die halbe Fläche und damit die halbe Arbeit. Die
+        Kanten werden dabei etwas weicher; dafür bleibt das Gerät kühler und der Akku länger voll.<br>
         Aufsetzen, ziehen, loslassen. Weiter ziehen = mehr Kraft.
         <b>Schleuder:</b> vom Ball wegziehen, er fliegt in die Gegenrichtung. <b>Schieben:</b> dorthin ziehen, wo der Ball hin soll.
         Wasser, Lava und Abgrund kosten einen Strafschlag.
@@ -1786,6 +1805,10 @@
     ui.overlay.querySelectorAll('#cm .btn').forEach(b => b.addEventListener('click', () => {
       setControlMode(b.dataset.m);
       ui.overlay.querySelectorAll('#cm .btn').forEach(x => x.classList.toggle('sel', x.dataset.m === state.controlMode));
+    }));
+    ui.overlay.querySelectorAll('#sf .btn').forEach(b => b.addEventListener('click', () => {
+      setzeSchaerfe(b.dataset.f);
+      ui.overlay.querySelectorAll('#sf .btn').forEach(x => x.classList.toggle('sel', x.dataset.f === schaerfe));
     }));
     ui.overlay.querySelectorAll('#mu .btn').forEach(b => b.addEventListener('click', () => {
       Sfx.unlock(); Music.setOn(b.dataset.v === '1'); syncMusicBtn();
@@ -3009,7 +3032,50 @@
     }
   }
 
-  /* ---------- Hauptschleife ---------- */
+  /* ---------- Hauptschleife ----------
+
+     GERECHNET WIRD IMMER, GEZEICHNET NICHT.
+
+     Fynn hat gemeldet, daß das Gerät zu viel Strom zieht, und die Messung war eindeutig: Das
+     Rechnen kostet unter einer halben Millisekunde je Bild, das Zeichnen das Zwei- bis
+     Zwanzigfache davon. Auf dem Schneeberg reichte eine Sechzigstelsekunde nicht einmal mehr aus,
+     um ein Bild fertigzustellen - es fielen Bilder aus, und das Gerät lief dabei am Anschlag.
+
+     Der Grund ist nicht ein einzelner teurer Zug, sondern die Zahl: Jedes Bild malt die ganze
+     Welt neu, Baum für Baum, Fels für Fels, mit Verläufen und Dutzenden Pfaden - auch dann, wenn
+     der Ball still liegt und jemand eine Minute lang überlegt, wohin er schlägt.
+
+     Also wird nur so oft gezeichnet, wie das Auge es braucht:
+       - Der Ball rollt, oder jemand zieht die Schleuder auf: sechzig Bilder. Hier zählt jede
+         Zwischenstufe, und hier schaut man auch hin.
+       - Es wird nur gezielt oder gewartet: dreißig. Die Mühlen drehen sich sichtbar weiter, aber
+         das halbe Bild spart die halbe Last - und das ist die Zeit, in der das Gerät sonst
+         minutenlang für nichts heizt.
+       - Eine Tafel liegt darüber (Ergebnis, Endstand): zehn. Man liest, man spielt nicht.
+       - Startbildschirm: gar nicht. Dort liegt die Weltkarte als Tafelhintergrund über der
+         Leinwand; was gezeichnet würde, sähe niemand.
+
+     Die Spieluhr bleibt davon unberührt: Sie läuft in state.t weiter, in Schritten von 1/240 s,
+     gleich wie oft gezeichnet wird. Ein Schlag fliegt also genau gleich weit - sonst stünden
+     Rekorde und Bot-Messungen auf einem anderen Spiel. */
+  let letztesBild = -1e9;
+  function zeichenTakt() {
+    if (typeof document !== 'undefined' && document.hidden) return 0;
+    if (state.phase === 'title' || state.phase === 'loading') return 0;
+    if (state.phase === 'rolling' || state.phase === 'edit' || state.aim || drag) return 60;
+    if (state.phase === 'summary' || state.phase === 'final') return 10;
+    return 30;
+  }
+  function zeichnenJetzt(now) {
+    const takt = zeichenTakt();
+    if (!takt) return false;
+    /* Eine Millisekunde Spielraum: Die Bildschirmtakte liegen nie genau 16,67 ms auseinander, und
+       ohne den Spielraum fiele bei dreißig Bildern jedes zweite aus Versehen aus. */
+    if (now - letztesBild < 1000 / takt - 1) return false;
+    letztesBild = now;
+    return true;
+  }
+
   let last = performance.now(), acc = 0;
   function frame(now) {
     const dt = Math.min(0.05, (now - last) / 1000); last = now; acc += dt;
@@ -3073,9 +3139,7 @@
     if (state.ball && state.ball.sunk) state.ball.sinkT += dt;
     for (const lb of (state.liegendeBaelle || [])) if (lb && lb.sunk) lb.sinkT += dt;
     updateCamera(dt);
-    // Auf dem Startbildschirm liegt die Weltkarte als Tafelhintergrund über der Leinwand: Was dort
-    // gezeichnet würde, sähe niemand. Also wird es gar nicht erst gezeichnet.
-    if (state.phase !== 'title') { R.drawFrame(state); if (state.phase === 'edit') editor.drawOverlay(R.ctx); }
+    if (zeichnenJetzt(now)) { R.drawFrame(state); if (state.phase === 'edit') editor.drawOverlay(R.ctx); }
     syncClock();
     ui.power.classList.toggle('visible', !!state.aim);
     if (state.aim) ui.powerFill.style.width = `${Math.round(state.aim.power * 100)}%`;

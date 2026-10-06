@@ -216,7 +216,7 @@ keinen Eintrag in `WorldMap.spots` hat; die Karte zeichnet dann weder Marke noch
 | Kolosseum | Legende | 12 Turnierbahnen in der Arena (nur über den Turnier-Knopf) |
 
 Nach dem Antippen eines Ortes folgt die Startaufstellung mit **Modus**, **Spielern**, **Reihenfolge**,
-**Hut**, **Musik** und **Steuerung**:
+**Hut**, **Musik**, **Steuerung** und **Schärfe** (siehe [Strom](#strom)):
 
 - **🏆 Wettkampf**: alle Bahnen der Welt der Reihe nach, mit Schlaglimit, Zwischen- und Endtafel, 1–4 Spieler im Hotseat.
 - **🛠 Kreativ**: allein und ohne Schlaglimit; im Spiel mit „◀ Bahn" / „Bahn ▶" (Tasten P / N) frei springen, „Ball zurück" (R) setzt an den Abschlag. Gedacht zum Erkunden und zum schnellen Prüfen einzelner Bahnen.
@@ -518,6 +518,98 @@ Die Hüte werden in `src/hats.js` gezeichnet – reine Canvas-Pfade, keine Bildd
 nur eine Zeichenfunktion in `DEFS` und einen Eintrag in `LIST`; der Nullpunkt liegt auf dem Kopf des Balls,
 eine Einheit entspricht dem Ballradius, und die Ballmitte liegt bei (0, 0.72). Wer die Spielerfarbe braucht,
 nimmt sie als zweiten Wert der Zeichenfunktion entgegen.
+
+## Strom
+
+Fynn hat am 6. Oktober gemeldet, daß das Gerät beim Spielen zu warm wird. Gemessen statt geraten,
+und das Ergebnis war eindeutig: **Das Rechnen kostet fast nichts, das Zeichnen alles.** Ein
+Rechenschritt der Physik lag unter einer halben Millisekunde je Bild; eine Zeichnung brauchte das
+Zwei- bis Zwanzigfache. Auf dem Schneeberg reichte eine Sechzigstelsekunde nicht einmal aus, um ein
+Bild fertigzustellen – es fielen Bilder aus, und das Gerät lief dabei durchgehend am Anschlag.
+
+Drei Eingriffe, keiner davon sichtbar.
+
+### Nur so oft zeichnen, wie das Auge es braucht
+
+Gerechnet wird weiter in jedem Bild, in Schritten von 1/240 s – daran durfte sich nichts ändern,
+sonst flöge derselbe Schlag anders weit und Rekorde wie Bot-Messungen stünden auf einem anderen
+Spiel. **Gezeichnet** wird nach Bedarf (`zeichenTakt` in `src/main.js`):
+
+| Lage | Bilder je Sekunde |
+|---|---|
+| Der Ball rollt, oder jemand zieht die Schleuder auf | 60 |
+| Es wird nur gezielt oder gewartet | 30 |
+| Eine Tafel liegt darüber (Ergebnis, Endstand) | 10 |
+| Startbildschirm (dort liegt die Weltkarte über der Leinwand) | 0 |
+
+Die zweite Zeile ist die wichtige: Das ist die Zeit, in der jemand überlegt, wohin er schlägt – und
+in der das Gerät vorher minutenlang für nichts heizte.
+
+### Einen Baum einmal malen, dann stempeln
+
+Auf dem Schneeberg entfielen **vier Fünftel** der Zeichenlast auf das Beiwerk: Bäume, Felsen,
+Blumen, Fässer. Ein Nadelbaum ist ein Stamm und drei Kegel, jeder Kegel ein Dutzend Pfade mit
+Verlauf; mal hundert Stück, mal sechzig Bilder in der Sekunde. Dabei ändert sich an einem Baum
+nichts – er steht.
+
+Also wird er einmal in eine eigene kleine Leinwand gemalt und danach nur noch hingestempelt
+(`BEIWERK_FEST` und `beiwerkZeichnen` in `src/render.js`). Die Tiefensortierung bleibt dabei
+unangetastet: Jedes Stück wird weiterhin an seiner Stelle in der Reihenfolge gezeichnet, nur eben
+als ein Zug statt als hundert. Auch das Durchsichtigwerden vor dem Ball gilt weiter – es liegt am
+Aufrufer, nicht am Stück.
+
+Drei Vorbehalte, die in der Bauweise stecken:
+
+* **Was sich bewegt, wird nicht gestempelt.** Die Liste `BEIWERK_FEST` sagt, was stillsteht. Wer
+  neues Beiwerk baut, trägt es dort nur ein, wenn es wirklich steht; im Zweifel nicht – dann wird
+  es gemalt wie bisher, und das ist langsam, aber nie falsch. Der Laubbaum steht in der Liste,
+  obwohl ihm die Uhr mitgegeben wird: Er braucht sie nur für die Glühpunkte des Zauberbaums, und
+  die hängen an `d.glow`.
+* **Ein Stempel gilt für eine Kameraform** – Zoomstufe, Drehwinkel, Neigung, Höhenmaß,
+  Punktdichte. Verschieben ändert daran nichts, der Stempel wandert mit; Drehen und Zoomen schon.
+  Solange die Form in Bewegung ist, wird gemalt wie früher; erst wenn sie stillsteht, wird neu
+  gebacken, und höchstens sechs Stück je Bild.
+* **Was den Rahmen berührt, in den gebacken wurde, wird nie gestempelt.** So ein Stück wäre
+  abgeschnitten – vielleicht um einen Punkt, vielleicht um den halben Turm –, und das sieht man
+  dem Bild nicht an. Lieber ein langsames Stück als ein halbes.
+
+Das Gedächtnis bleibt klein: auf dem Schneeberg 1,1 MB für 63 gebackene Stücke, mit einem Deckel
+von 22 MB.
+
+### Die Schärfe als Wahl, nicht als Regel
+
+Ein iPad hat zwei Bildpunkte je Maßpunkt: Dieselbe Bahn kostet dort die **vierfache Fläche**. Das
+meiste davon erledigt inzwischen das Beiwerk-Gedächtnis; was bleibt, ist reine Fläche.
+
+Hier stand zwischenzeitlich ein selbsttätiger Regler, der die Dichte nach der erreichten Bildzahl
+nachführte. Er ist wieder draußen, und der Grund ließ sich nicht wegbauen: Der Prüfrechner zeichnet
+in Software, nicht auf einem Grafikwerk. Dort fallen Bilder aus Gründen aus, die es auf dem iPad
+nicht gibt – jede Schwelle, die hier richtig aussah, wäre dort geraten gewesen. Ein Regler, dessen
+Schwellen niemand geprüft hat, stellt im Zweifel die Schärfe herunter und findet nie zurück.
+
+Also entscheidet der Mensch, in der Startaufstellung unter **Schärfe**:
+
+* **Fein** – bis zu zwei Punkte je Maßpunkt. So war es immer.
+* **Sparsam** – höchstens 1,25. Auf einem iPad sind das 39 % der Fläche und damit gut ein Drittel
+  der Arbeit; die Kanten werden etwas weicher, mehr ändert sich nicht.
+
+Die Wahl merkt sich der Browser (`fantasygolf.schaerfe`).
+
+### Was dabei herauskam
+
+Anteil der Zeit, in der der Hauptfaden arbeitet, beim Zielen auf einem gewöhnlichen Bildschirm:
+
+| Bahn | vorher | nachher |
+|---|---|---|
+| Alter Platz 1 | 10,1 % | 4,0 % |
+| Märchenland 1 | 15,3 % | 6,2 % |
+| Die Flut 1 | 12,6 % | 8,1 % |
+| Schneeberg 1 | 34,3 % | 6,8 % |
+
+`tools/strom.mjs` hält beides fest: daß gespart wird **und** daß das Bild dabei dasselbe bleibt
+(Punktvergleich gestempelt gegen gemalt). Unsichtbare Ersparnisse verfallen sonst unbemerkt – wer
+später an einer Zeichnung arbeitet, nimmt sie versehentlich zurück, und niemand sieht es, weil das
+Bild dasselbe bleibt. Nur der Akku weiß davon.
 
 ## Abwechselnd
 

@@ -78,6 +78,66 @@ const FLAG_DESIGNS = {
   ghostship: { main: '#1a1020', second: '#8a3bff', pattern: 'stripes', emblem: 'anchor', emblemColor: '#c58bff', emblemDark: '#0a0610', finial: '#c58bff', pole: '#5a4030' },
 };
 
+/* ---------- Beiwerk: einmal malen, dann nur noch stempeln ----------
+
+   WARUM ES DAS GIBT. Fynn hat gemeldet, daß das Gerät beim Spielen zu viel Strom zieht. Die
+   Messung sagte, wohin er geht: Auf dem Schneeberg entfielen VIER FÜNFTEL der Zeichenlast auf das
+   Beiwerk – Bäume, Felsen, Blumen, Fässer. Ein Nadelbaum ist ein Stamm und drei Kegel, jeder
+   Kegel ein Dutzend Pfade mit Verlauf; mal hundert Stück, mal sechzig Bilder in der Sekunde. Das
+   Gerät kam nicht mehr nach, es fielen Bilder aus – und dabei lief es am Anschlag.
+
+   An einem Baum ändert sich nichts. Er steht. Also wird er einmal in eine eigene kleine Leinwand
+   gemalt und danach nur noch hingestempelt – ein Zug statt hundert.
+
+   WAS NICHT GESTEMPELT WIRD. Alles, was sich bewegt: die Laterne, die flackert, der Fisch, der
+   schwimmt, der Zauberbaum mit seinen Glühpunkten. Die Liste unten sagt, was stillsteht. Wer
+   neues Beiwerk baut, trägt es dort nur ein, wenn es wirklich steht; im Zweifel nicht – dann wird
+   es gemalt wie bisher, und das ist langsam, aber nie falsch.
+
+   WANN DER STEMPEL VERFÄLLT. Ein Stempel gilt für eine Kameraform: Zoomstufe, Drehwinkel,
+   Neigung, Höhenmaß, Bildpunktdichte. Verschieben ändert daran nichts – der Stempel wandert mit.
+   Drehen und Zoomen schon. Solange die Form in Bewegung ist, wird gemalt wie früher; erst wenn
+   sie stillsteht, wird neu gebacken, und höchstens ein paar Stück je Bild, damit das Nachbacken
+   nicht selbst zum Ruckler wird.
+
+   WAS NIE GESTEMPELT WIRD, OBWOHL ES DÜRFTE. Ein Stück, dessen Zeichnung den Rahmen berührt, in
+   den gebacken wurde, ist abgeschnitten – vielleicht nur um einen Bildpunkt, vielleicht um den
+   halben Turm. Das läßt sich nicht ansehen, also wird es gar nicht erst gestempelt, sondern für
+   immer gemalt. Lieber ein langsames Stück als ein halbes. */
+const BEIWERK_FEST = new Set([
+  'pine', 'pineSnow', 'deadTree', 'mushroom', 'mushroomBig', 'flowerbush', 'rock', 'rockSnow',
+  'crystal', 'crystalBlue', 'crystalOrange', 'tower', 'stalagmite', 'bones', 'anvil', 'coral',
+  'ropepost', 'barrel', 'crate', 'anchor', 'wrack', 'amphore', 'torbogen', 'shell', 'starfish',
+  'basalt', 'obsidian', 'burntTree', 'cactus', 'urn', 'skull', 'shelf', 'bottle', 'broom',
+  'obelisk', 'gravestone', 'gravecross', 'pillar', 'pillarLight', 'urnDark',
+  /* Der Laubbaum steht in der Liste, obwohl drawDecor ihm die Uhr mitgibt: Er braucht sie nur für
+     die Glühpunkte des Zauberbaums, und die hängen an d.glow. Ein gewöhnlicher Baum rührt sich
+     nicht – darum der Vorbehalt unten in stempelbar(). */
+  'tree',
+]);
+/* ---------- Wie fein gezeichnet wird ----------
+
+   Ein iPad hat zwei Bildpunkte je Maßpunkt: Dieselbe Bahn kostet dort die VIERFACHE Fläche, und
+   die Messung am 6. Oktober war unmißverständlich – auf einem solchen Bildschirm brauchte das
+   Märchenland 9,4 ms für ein Bild und schaffte nur 93 von 300. Das meiste davon ist seit dem
+   Beiwerk-Gedächtnis (siehe unten) erledigt; was bleibt, ist reine Fläche.
+
+   Es gab hier zwischenzeitlich einen selbsttätigen Regler, der die Dichte nach der erreichten
+   Bildzahl nachführte. Er ist wieder draußen, und zwar aus einem Grund, der sich nicht wegbauen
+   ließ: Auf dem Prüfrechner wird in Software gezeichnet, nicht auf einem Grafikwerk. Dort fallen
+   Bilder aus Gründen aus, die es auf dem iPad nicht gibt – jede Schwelle, die hier richtig
+   aussah, wäre dort geraten gewesen. Ein Regler, dessen Schwellen niemand geprüft hat, stellt im
+   Zweifel die Schärfe herunter und findet nie zurück.
+
+   Also entscheidet der Mensch. Zwei Stufen, in der Startaufstellung zu wählen:
+     'fein'    – bis zu zwei Punkte je Maßpunkt. So war es immer.
+     'sparsam' – höchstens 1,25. Auf dem iPad ist das gut die halbe Fläche und damit die halbe
+                 Arbeit; die Kanten werden etwas weicher, mehr ändert sich nicht. */
+const DICHTE = { fein: 2, sparsam: 1.25 };
+
+const BEIWERK_HAUSHALT = 22 * 1024 * 1024;   // Bildpunkte mal vier Byte, danach wird nur noch gemalt
+const BEIWERK_PRO_BILD = 6;                  // so viele Stück dürfen je Bild neu gebacken werden
+
 class Renderer {
   constructor(canvas) {
     this.cv = canvas; this.ctx = canvas.getContext('2d');
@@ -86,17 +146,25 @@ class Renderer {
     this.cam = { fx: 0, fy: 0, th: Math.PI / 4, zoom: 40, tilt: this.tilt, zf: CAM_ZF, cx: 0, cy: 0 };
     this.target = { fx: 0, fy: 0, th: Math.PI / 4, zoom: 40, tilt: this.tilt, zf: CAM_ZF, cx: 0, cy: 0 };
     this.scale = 40;
+    // Das Gedächtnis für das Beiwerk (siehe oben): Stück → gebackenes Bild
+    this.beiwerk = new Map(); this.beiwerkForm = ''; this.beiwerkBytes = 0; this.beiwerkProBild = 0;
+    this.formSteht = false;
+    this.dichte = DICHTE.fein;   // vom Startbildschirm gesetzt, siehe oben
     this.updateTrig();
   }
   updateTrig() { const c = this.cam; c.sin = Math.sin(c.th); c.cos = Math.cos(c.th); this.scale = c.zoom; }
   resize() {
-    this.dpr = Math.min(window.devicePixelRatio || 1, 2);
+    this.dpr = Math.min(window.devicePixelRatio || 1, this.dichte);
     this.w = window.innerWidth; this.h = window.innerHeight;
     this.tilt = camTiltFor(this.w, this.h); // Neigung an das Seitenverhältnis anpassen
     this.cv.width = Math.round(this.w * this.dpr); this.cv.height = Math.round(this.h * this.dpr);
     this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
   }
-  setLevel(level, theme) { this.level = level; this.theme = theme; }
+  setLevel(level, theme) {
+    this.level = level; this.theme = theme;
+    // Die alten Stempel gehören zu Stücken, die es nicht mehr gibt – sie hielten nur Speicher fest
+    this.beiwerk.clear(); this.beiwerkBytes = 0;
+  }
   /* Zoomstufe für die Verfolger-Kamera, abhängig von der Bildschirmgröße */
   defaultZoom() { const c = Math.sqrt(this.tilt / CAM_TILT); return Math.max(30, Math.min(60, Math.min(this.w / 12, this.h / (14 * c)))); }
   /* Übersicht: ganze Bahn im Bild */
@@ -895,6 +963,7 @@ class Renderer {
        in den Zusatzdateien (render_zauber.js und Geschwister) kommen sonst nicht daran. Der
        Zauberspiegel braucht ihn, weil sein Spiegelbild am Ball hängt. */
     this.ball = state.ball;
+    this.formMerken();   // steht die Kamera still? Nur dann wird Beiwerk gebacken
     // Himmel
     const g = ctx.createLinearGradient(0, 0, 0, this.h);
     g.addColorStop(0, th.sky[0]); g.addColorStop(1, th.sky[1]);
@@ -961,7 +1030,7 @@ class Renderer {
       if (th.blockStil === 'fels') { items.push({ x: b.x + 0.5, y: b.y + 0.5, draw: () => this.drawSchneefels(ctx, b) }); continue; }
       items.push({ x: b.x + 0.5, y: b.y + 0.5, draw: () => this.prism(ctx, poly, 0, 1.0, th.block.top, th.block.side, { outline: shade(th.block.side, 0.7) }) });
     }
-    for (const d of lv.decor) items.push({ x: d.x, y: d.y, draw: () => this.drawDecor(ctx, d, t) });
+    for (const d of lv.decor) items.push({ x: d.x, y: d.y, draw: () => this.beiwerkZeichnen(ctx, d, t) });
     /* Jedes Stück merkt sich seine Ebene. Die Schollen werden nach allen Stücken gezeichnet, damit
        eine höhere Etage die darunter verdeckt – und genau dabei verschwand jedes Hindernis, das
        oben steht: Es wurde brav auf Höhe null gemalt und dann von der eigenen Scholle zugedeckt.
@@ -3148,6 +3217,89 @@ class Renderer {
   }
 
   /* ---------- Deko-Sprites (Bildschirmkoordinaten, verankert am Bodenpunkt) ---------- */
+  /* Die Schärfe umstellen. Die gebackenen Stempel tragen die Punktdichte in ihrer Form und
+     werden darum von selbst ersetzt; der Haushalt zählt das Alte beim Ersetzen wieder ab. */
+  setzeSchaerfe(art) {
+    const d = DICHTE[art] || DICHTE.fein;
+    if (d === this.dichte) return;
+    this.dichte = d; this.resize();
+  }
+  /* Darf dieses Stück gestempelt werden? Nur, wenn es wirklich stillsteht. */
+  stempelbar(d) {
+    if (!BEIWERK_FEST.has(d.t)) return false;
+    return !d.glow;   // der Zauberbaum funkelt, der gewöhnliche Baum nicht
+  }
+  /* Die Kameraform, auf die ein Stempel paßt. Verschieben steht mit Absicht nicht darin: Es
+     verrückt das Bild, nicht seine Gestalt. Gerundet wird, weil die Kamera ihre Zielwerte
+     asymptotisch anläuft – ohne Rundung stünde sie nie still. */
+  formMerken() {
+    const c = this.cam;
+    const f = [Math.round(c.zoom * 2), Math.round(c.th * 200), Math.round(c.tilt * 500),
+               Math.round((c.zf ?? CAM_ZF) * 500), this.dpr].join(',');
+    this.formSteht = f === this.beiwerkForm;
+    this.beiwerkForm = f;
+    this.beiwerkProBild = 0;
+  }
+  /* Ein Stück Beiwerk zeichnen – gestempelt, wenn es geht, gemalt, wenn nicht. */
+  beiwerkZeichnen(ctx, d, t) {
+    if (!this.stempelbar(d)) { this.drawDecor(ctx, d, t); return; }
+    let e = this.beiwerk.get(d);
+    if (!e || e.form !== this.beiwerkForm) {
+      // Nur backen, wenn die Kamera steht, das Bild noch Luft hat und der Haushalt es hergibt
+      if (!this.formSteht || this.beiwerkProBild >= BEIWERK_PRO_BILD || this.beiwerkBytes > BEIWERK_HAUSHALT) {
+        this.drawDecor(ctx, d, t); return;
+      }
+      this.beiwerkProBild++;
+      if (e) this.beiwerkBytes -= e.bytes || 0;
+      e = this.beiwerkBacken(d);
+      this.beiwerk.set(d, e);
+      this.beiwerkBytes += e.bytes || 0;
+    }
+    if (e.aus) { this.drawDecor(ctx, d, t); return; }
+    if (e.leer) return;   // das Stück malt nichts – dann gibt es auch nichts zu stempeln
+    const [ax, ay] = this.proj(d.x, d.y, d.z || 0);
+    /* Auf ganze Bildpunkte setzen. Ein Stempel, der auf einem halben Punkt landet, wird vom
+       Browser neu verrechnet statt kopiert – das kostet ein Vielfaches und macht ihn obendrein
+       unscharf. Der halbe Punkt Versatz sieht an einem Baum niemand. */
+    const q = this.dpr;
+    ctx.drawImage(e.cv, Math.round((ax + e.ox) * q) / q, Math.round((ay + e.oy) * q) / q, e.bw, e.bh);
+  }
+  /* Ein Stück einmal in eine eigene Leinwand malen und auf das Bemalte zurückschneiden.
+     Der Rahmen ist mit Absicht großzügig: Was ihn berührt, wäre abgeschnitten, und so ein Stück
+     wird lieber für immer gemalt als halb gestempelt. */
+  beiwerkBacken(d) {
+    const form = this.beiwerkForm, dpr = this.dpr;
+    const [ax, ay] = this.proj(d.x, d.y, d.z || 0);
+    const k = Math.max(0.2, d.s || 1) * this.scale;
+    const links = Math.ceil(Math.min(700, k * 3.2 + 26)), oben = Math.ceil(Math.min(1000, k * 6.5 + 26));
+    const bw = links * 2, bh = oben + Math.ceil(Math.min(420, k * 2.2 + 26));
+    if (bw < 2 || bh < 2 || bw * bh * dpr * dpr > 1600 * 1600) return { form, aus: true };
+    const roh = document.createElement('canvas');
+    roh.width = Math.ceil(bw * dpr); roh.height = Math.ceil(bh * dpr);
+    const rc = roh.getContext('2d');
+    // Dieselbe Abbildung wie auf dem Bildschirm, nur um den Rahmen verschoben: Die Zeichnungen
+    // rechnen in Bildschirmpunkten (this.proj), und die sollen hier drinnen landen.
+    rc.setTransform(dpr, 0, 0, dpr, -(ax - links) * dpr, -(ay - oben) * dpr);
+    this.drawDecor(rc, d, 0);
+    const W = roh.width, H = roh.height;
+    const a = rc.getImageData(0, 0, W, H).data;
+    let x0 = W, y0 = H, x1 = -1, y1 = -1;
+    for (let y = 0; y < H; y++) {
+      const zeile = y * W * 4;
+      for (let x = 0; x < W; x++) {
+        if (a[zeile + x * 4 + 3] === 0) continue;
+        if (x < x0) x0 = x; if (x > x1) x1 = x;
+        if (y < y0) y0 = y; if (y > y1) y1 = y;
+      }
+    }
+    if (x1 < 0) return { form, leer: true };
+    if (x0 === 0 || y0 === 0 || x1 === W - 1 || y1 === H - 1) return { form, aus: true };
+    const tw = x1 - x0 + 1, th = y1 - y0 + 1;
+    const fein = document.createElement('canvas');
+    fein.width = tw; fein.height = th;
+    fein.getContext('2d').drawImage(roh, x0, y0, tw, th, 0, 0, tw, th);
+    return { form, cv: fein, ox: x0 / dpr - links, oy: y0 / dpr - oben, bw: tw / dpr, bh: th / dpr, bytes: tw * th * 4 };
+  }
   drawDecor(ctx, d, t) {
     const s = this.scale * d.s;
     const [sx, sy] = this.proj(d.x, d.y, d.z || 0);
