@@ -1,0 +1,71 @@
+{
+  "format_version": "1.8.0",
+  "minecraft:spawn_rules": {
+    "description": {
+      "identifier": "fynn:schwertfisch",
+      "population_control": "water_animal"
+    },
+    "conditions": [
+      {
+        "minecraft:weight": {
+          "default": 5
+        },
+        "minecraft:herd": {
+          "min_size": 1,
+          "max_size": 3
+        },
+        "minecraft:biome_filter": [
+          {
+            "test": "has_biome_tag",
+            "operator": "==",
+            "value": "ocean"
+          },
+          {
+            "test": "has_biome_tag",
+            "operator": "==",
+            "value": "warm"
+          }
+        ],
+        "minecraft:spawns_underwater": {},
+        "minecraft:height_filter": {
+          "min": 30,
+          "max": 62
+        },
+        "minecraft:density_limit": {
+          "surface": 4,
+          "underground": 1
+        }
+      },
+      {
+        "minecraft:weight": {
+          "default": 5
+        },
+        "minecraft:herd": {
+          "min_size": 1,
+          "max_size": 3
+        },
+        "minecraft:biome_filter": [
+          {
+            "test": "has_biome_tag",
+            "operator": "==",
+            "value": "ocean"
+          },
+          {
+            "test": "has_biome_tag",
+            "operator": "==",
+            "value": "lukewarm"
+          }
+        ],
+        "minecraft:spawns_underwater": {},
+        "minecraft:height_filter": {
+          "min": 30,
+          "max": 62
+        },
+        "minecraft:density_limit": {
+          "surface": 4,
+          "underground": 1
+        }
+      }
+    ]
+  }
+}

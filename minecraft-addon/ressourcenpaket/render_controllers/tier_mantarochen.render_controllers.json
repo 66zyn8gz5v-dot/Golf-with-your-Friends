@@ -1,0 +1,24 @@
+{
+  "format_version": "1.8.0",
+  "render_controllers": {
+    "controller.render.fynn.mantarochen": {
+      "arrays": {
+        "textures": {
+          "Array.haut": [
+            "Texture.ozean",
+            "Texture.riff"
+          ]
+        }
+      },
+      "geometry": "Geometry.default",
+      "materials": [
+        {
+          "*": "Material.default"
+        }
+      ],
+      "textures": [
+        "Array.haut[query.variant]"
+      ]
+    }
+  }
+}

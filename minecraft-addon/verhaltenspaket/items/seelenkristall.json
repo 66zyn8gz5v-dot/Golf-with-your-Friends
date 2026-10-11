@@ -1,0 +1,24 @@
+{
+  "format_version": "1.26.30",
+  "minecraft:item": {
+    "description": {
+      "identifier": "fynn:seelenkristall",
+      "menu_category": {
+        "category": "equipment",
+        "group": "fynn:itemGroup.name.jagd"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "seelenkristall"
+        }
+      },
+      "minecraft:max_stack_size": 16,
+      "minecraft:rarity": "epic",
+      "minecraft:use_modifiers": {
+        "use_duration": 0.1
+      }
+    }
+  }
+}

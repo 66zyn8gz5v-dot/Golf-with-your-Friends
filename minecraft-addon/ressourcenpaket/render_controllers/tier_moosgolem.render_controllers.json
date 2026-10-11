@@ -1,0 +1,53 @@
+{
+  "format_version": "1.8.0",
+  "render_controllers": {
+    "controller.render.fynn.moosgolem": {
+      "arrays": {
+        "textures": {
+          "Array.haut": [
+            "Texture.wald",
+            "Texture.tiefwald"
+          ]
+        }
+      },
+      "geometry": "Geometry.default",
+      "materials": [
+        {
+          "*": "Material.default"
+        }
+      ],
+      "textures": [
+        "Array.haut[query.variant]"
+      ],
+      "part_visibility": [
+        {
+          "erzfels": "query.property('fynn:erz') > 0"
+        },
+        {
+          "augen": "!query.property('fynn:schlaeft')"
+        },
+        {
+          "erz_1": "query.property('fynn:erz') == 1"
+        },
+        {
+          "erz_2": "query.property('fynn:erz') == 2"
+        },
+        {
+          "erz_3": "query.property('fynn:erz') == 3"
+        },
+        {
+          "erz_4": "query.property('fynn:erz') == 4"
+        },
+        {
+          "erz_5": "query.property('fynn:erz') == 5"
+        },
+        {
+          "armstein_links": "!(query.property('fynn:wurf') == 2 && query.property('fynn:links'))"
+        },
+        {
+          "armstein_rechts": "!(query.property('fynn:wurf') == 2 && !query.property('fynn:links'))"
+        }
+      ]
+    }
+  }
+}

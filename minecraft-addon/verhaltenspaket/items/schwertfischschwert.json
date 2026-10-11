@@ -1,0 +1,40 @@
+{
+  "format_version": "1.26.30",
+  "minecraft:item": {
+    "description": {
+      "identifier": "fynn:schwertfischschwert",
+      "menu_category": {
+        "category": "equipment",
+        "group": "minecraft:itemGroup.name.sword"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "schwertfischschwert"
+        }
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:hand_equipped": true,
+      "minecraft:damage": 9,
+      "minecraft:rarity": "epic",
+      "minecraft:durability": {
+        "max_durability": 1100
+      },
+      "minecraft:enchantable": {
+        "value": 15,
+        "slot": "sword"
+      },
+      "minecraft:repairable": {
+        "repair_items": [
+          {
+            "items": [
+              "fynn:schwertfischspiess"
+            ],
+            "repair_amount": 400
+          }
+        ]
+      }
+    }
+  }
+}

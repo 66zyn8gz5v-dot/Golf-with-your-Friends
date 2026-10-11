@@ -1,0 +1,46 @@
+{
+  "format_version": "1.26.30",
+  "minecraft:item": {
+    "description": {
+      "identifier": "fynn:baerenfellmantel",
+      "menu_category": {
+        "category": "equipment",
+        "group": "minecraft:itemGroup.name.chestplate"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "baerenfellmantel"
+        }
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:wearable": {
+        "slot": "slot.armor.chest",
+        "protection": 5
+      },
+      "minecraft:durability": {
+        "max_durability": 220
+      },
+      "minecraft:enchantable": {
+        "slot": "armor_torso",
+        "value": 12
+      },
+      "minecraft:repairable": {
+        "repair_items": [
+          {
+            "items": [
+              "minecraft:iron_ingot"
+            ],
+            "repair_amount": 55
+          }
+        ]
+      },
+      "minecraft:tags": {
+        "tags": [
+          "minecraft:is_armor"
+        ]
+      }
+    }
+  }
+}

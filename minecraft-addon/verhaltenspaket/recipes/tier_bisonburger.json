@@ -1,0 +1,36 @@
+{
+  "format_version": "1.12",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "fynn:bisonburger"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      " B ",
+      "RSR",
+      " B "
+    ],
+    "key": {
+      "B": {
+        "item": "minecraft:bread"
+      },
+      "S": {
+        "item": "fynn:bisonsteak"
+      },
+      "R": {
+        "item": "minecraft:beetroot"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:bread"
+      }
+    ],
+    "result": {
+      "item": "fynn:bisonburger",
+      "count": 2
+    }
+  }
+}

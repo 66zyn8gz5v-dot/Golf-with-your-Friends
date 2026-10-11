@@ -1,0 +1,16 @@
+{
+  "format_version": "1.8.0",
+  "render_controllers": {
+    "controller.render.fynn.ritter_helmbusch": {
+      "geometry": "Geometry.helmbusch",
+      "materials": [
+        {
+          "*": "Material.default"
+        }
+      ],
+      "textures": [
+        "Texture.helmbusch"
+      ]
+    }
+  }
+}

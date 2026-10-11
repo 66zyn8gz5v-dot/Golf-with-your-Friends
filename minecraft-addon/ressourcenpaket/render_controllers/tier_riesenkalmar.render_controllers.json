@@ -1,0 +1,23 @@
+{
+  "format_version": "1.8.0",
+  "render_controllers": {
+    "controller.render.fynn.riesenkalmar": {
+      "arrays": {
+        "textures": {
+          "Array.haut": [
+            "Texture.rot"
+          ]
+        }
+      },
+      "geometry": "Geometry.default",
+      "materials": [
+        {
+          "*": "Material.default"
+        }
+      ],
+      "textures": [
+        "Array.haut[query.variant]"
+      ]
+    }
+  }
+}

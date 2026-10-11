@@ -1,0 +1,32 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "fynn:assassinenharnisch"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "L L",
+      "LRL",
+      "LLL"
+    ],
+    "key": {
+      "L": {
+        "item": "minecraft:leather"
+      },
+      "R": {
+        "item": "minecraft:red_wool"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:leather"
+      }
+    ],
+    "result": {
+      "item": "fynn:assassinenharnisch"
+    }
+  }
+}

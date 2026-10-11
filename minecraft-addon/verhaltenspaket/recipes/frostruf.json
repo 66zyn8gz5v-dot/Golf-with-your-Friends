@@ -1,0 +1,36 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "fynn:frostruf"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      " b ",
+      "iDi",
+      " i "
+    ],
+    "key": {
+      "b": {
+        "item": "fynn:bisonhorn"
+      },
+      "i": {
+        "item": "minecraft:packed_ice"
+      },
+      "D": {
+        "item": "minecraft:diamond"
+      }
+    },
+    "unlock": [
+      {
+        "item": "fynn:bisonhorn"
+      }
+    ],
+    "result": {
+      "item": "fynn:frostruf",
+      "count": 1
+    }
+  }
+}

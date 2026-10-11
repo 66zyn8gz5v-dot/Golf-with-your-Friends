@@ -1,0 +1,24 @@
+{
+  "format_version": "1.26.30",
+  "minecraft:item": {
+    "description": {
+      "identifier": "fynn:jagdhorn",
+      "menu_category": {
+        "category": "equipment",
+        "group": "fynn:itemGroup.name.jagd"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "jagdhorn"
+        }
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:rarity": "rare",
+      "minecraft:use_modifiers": {
+        "use_duration": 0.1
+      }
+    }
+  }
+}

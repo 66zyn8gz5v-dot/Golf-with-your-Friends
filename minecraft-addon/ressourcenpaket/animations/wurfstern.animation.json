@@ -1,0 +1,47 @@
+{
+  "format_version": "1.10.0",
+  "animations": {
+    "animation.wurfstern.halten": {
+      "loop": true,
+      "bones": {
+        "waffe": {
+          "position": [
+            "c.is_first_person ? -3.5 : 0.0",
+            "c.is_first_person ? -3.5 : -2.0",
+            0.0
+          ],
+          "rotation": [
+            "c.is_first_person ? 0.0 : 90.0",
+            0.0,
+            "c.is_first_person ? -135.0 : 0.0"
+          ],
+          "scale": "c.is_first_person ? 0.22 : 0.3"
+        },
+        "griff": {
+          "position": [
+            0.0,
+            "c.is_first_person ? -22.00 : -4.50",
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            "c.is_first_person ? 0.0 : 90.0",
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.wurfstern.drehen": {
+      "loop": true,
+      "bones": {
+        "stern": {
+          "rotation": [
+            0.0,
+            "q.life_time * 1080.0",
+            0.0
+          ]
+        }
+      }
+    }
+  }
+}

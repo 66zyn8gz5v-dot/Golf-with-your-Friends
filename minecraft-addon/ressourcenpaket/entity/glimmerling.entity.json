@@ -1,0 +1,36 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:glimmerling",
+      "materials": {
+        "default": "entity_emissive_alpha"
+      },
+      "textures": {
+        "default": "textures/entity/glimmerling"
+      },
+      "geometry": {
+        "default": "geometry.glimmerling"
+      },
+      "animations": {
+        "walk": "animation.quadruped.walk",
+        "look_at_target": "animation.common.look_at_target"
+      },
+      "scripts": {
+        "animate": [
+          {
+            "walk": "query.modified_move_speed"
+          },
+          "look_at_target"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.default"
+      ],
+      "spawn_egg": {
+        "texture": "glimmerling_ei",
+        "texture_index": 0
+      }
+    }
+  }
+}

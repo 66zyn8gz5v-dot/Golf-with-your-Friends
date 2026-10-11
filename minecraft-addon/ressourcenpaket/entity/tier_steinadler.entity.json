@@ -1,0 +1,56 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:steinadler",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "altvogel": "textures/entity/tiere/steinadler_altvogel",
+        "jungvogel": "textures/entity/tiere/steinadler_jungvogel"
+      },
+      "geometry": {
+        "default": "geometry.fynn.steinadler"
+      },
+      "animations": {
+        "fliegen": "animation.fynn.steinadler.fliegen",
+        "stossen": "animation.fynn.steinadler.stossen",
+        "schrei": "animation.fynn.steinadler.schrei",
+        "angriff": "animation.fynn.steinadler.angriff"
+      },
+      "scripts": {
+        "initialize": [
+          "variable.fynn_gier_alt = query.body_y_rotation;",
+          "variable.fynn_dreh = 0.0;",
+          "variable.fynn_zufall = math.random(0.0, 360.0);"
+        ],
+        "pre_animation": [
+          "variable.fynn_d = query.body_y_rotation - variable.fynn_gier_alt;",
+          "variable.fynn_d = variable.fynn_d > 180.0 ? variable.fynn_d - 360.0 : (variable.fynn_d < -180.0 ? variable.fynn_d + 360.0 : variable.fynn_d);",
+          "variable.fynn_gier_alt = query.body_y_rotation;",
+          "variable.fynn_dreh = math.lerp(variable.fynn_dreh, math.clamp(variable.fynn_d / math.max(query.delta_time, 0.01) / 20.0, -10.0, 10.0), 0.12);"
+        ],
+        "animate": [
+          {
+            "schrei": "math.clamp((math.sin(query.life_time * 21.0 + variable.fynn_zufall + 0) - 0.93) * 21.43, 0.0, 1.0)"
+          },
+          "fliegen",
+          {
+            "stossen": "math.clamp(-query.vertical_speed * 0.6 - 0.2, 0.0, 1.0)"
+          },
+          {
+            "angriff": "variable.attack_time > 0.0"
+          }
+        ]
+      },
+      "render_controllers": [
+        "controller.render.fynn.steinadler"
+      ],
+      "spawn_egg": {
+        "texture": "steinadler_ei",
+        "texture_index": 0
+      }
+    }
+  }
+}

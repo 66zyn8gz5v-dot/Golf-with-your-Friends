@@ -1,0 +1,35 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "fynn:feuerstab_2"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      " GF",
+      " SG",
+      "S  "
+    ],
+    "key": {
+      "F": {
+        "item": "minecraft:blaze_powder"
+      },
+      "G": {
+        "item": "minecraft:gold_ingot"
+      },
+      "S": {
+        "item": "minecraft:stick"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:blaze_powder"
+      }
+    ],
+    "result": {
+      "item": "fynn:feuerstab_2"
+    }
+  }
+}

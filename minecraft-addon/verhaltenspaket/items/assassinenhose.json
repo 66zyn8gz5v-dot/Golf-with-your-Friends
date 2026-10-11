@@ -1,0 +1,46 @@
+{
+  "format_version": "1.26.30",
+  "minecraft:item": {
+    "description": {
+      "identifier": "fynn:assassinenhose",
+      "menu_category": {
+        "category": "equipment",
+        "group": "minecraft:itemGroup.name.leggings"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "assassinenhose"
+        }
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:wearable": {
+        "slot": "slot.armor.legs",
+        "protection": 4
+      },
+      "minecraft:durability": {
+        "max_durability": 300
+      },
+      "minecraft:enchantable": {
+        "slot": "armor_legs",
+        "value": 15
+      },
+      "minecraft:repairable": {
+        "repair_items": [
+          {
+            "items": [
+              "minecraft:leather"
+            ],
+            "repair_amount": 75
+          }
+        ]
+      },
+      "minecraft:tags": {
+        "tags": [
+          "minecraft:is_armor"
+        ]
+      }
+    }
+  }
+}

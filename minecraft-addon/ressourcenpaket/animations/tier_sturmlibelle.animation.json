@@ -1,0 +1,78 @@
+{
+  "format_version": "1.10.0",
+  "animations": {
+    "animation.fynn.sturmlibelle.surren": {
+      "loop": true,
+      "bones": {
+        "fluegel_vorn_links": {
+          "rotation": [
+            0.0,
+            0.0,
+            "-1 * (4.0 + math.sin(query.life_time * 2600.0 + 0) * 32.0)"
+          ]
+        },
+        "fluegel_vorn_rechts": {
+          "rotation": [
+            0.0,
+            0.0,
+            "1 * (4.0 + math.sin(query.life_time * 2600.0 + 0) * 32.0)"
+          ]
+        },
+        "fluegel_hinten_links": {
+          "rotation": [
+            0.0,
+            0.0,
+            "-1 * (4.0 + math.sin(query.life_time * 2600.0 + 100) * 32.0)"
+          ]
+        },
+        "fluegel_hinten_rechts": {
+          "rotation": [
+            0.0,
+            0.0,
+            "1 * (4.0 + math.sin(query.life_time * 2600.0 + 100) * 32.0)"
+          ]
+        },
+        "rumpf": {
+          "position": [
+            0.0,
+            "math.sin(query.life_time * 150.0) * 0.6",
+            0.0
+          ],
+          "rotation": [
+            "-query.target_x_rotation * 0.3",
+            0.0,
+            "-variable.fynn_dreh * 2.0"
+          ]
+        },
+        "hinterleib": {
+          "rotation": [
+            "math.sin(query.life_time * 90.0) * 5.0",
+            "-variable.fynn_dreh * 1.5",
+            0.0
+          ]
+        },
+        "leibspitze": {
+          "rotation": [
+            "math.sin(query.life_time * 90.0 - 40.0) * 8.0",
+            "-variable.fynn_dreh * 2.0",
+            0.0
+          ]
+        },
+        "kopf": {
+          "rotation": [
+            0.0,
+            "math.sin(math.floor(query.life_time * 2.0) * 83.0) * 25.0",
+            0.0
+          ]
+        },
+        "beine": {
+          "rotation": [
+            35.0,
+            0.0,
+            0.0
+          ]
+        }
+      }
+    }
+  }
+}

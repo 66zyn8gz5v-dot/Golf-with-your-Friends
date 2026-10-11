@@ -1,0 +1,40 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:eiswolf",
+      "materials": {
+        "default": "entity_emissive_alpha"
+      },
+      "textures": {
+        "default": "textures/entity/eiswolf"
+      },
+      "geometry": {
+        "default": "geometry.fynn.eiswolf"
+      },
+      "animations": {
+        "stehen": "animation.fynn.eiswolf.stehen",
+        "laufen": "animation.fynn.eiswolf.laufen",
+        "biss": "animation.fynn.eiswolf.biss"
+      },
+      "scripts": {
+        "animate": [
+          "stehen",
+          {
+            "laufen": "math.clamp(query.modified_move_speed * 2.0, 0.0, 1.0)"
+          },
+          {
+            "biss": "variable.attack_time > 0.0"
+          }
+        ]
+      },
+      "render_controllers": [
+        "controller.render.default"
+      ],
+      "spawn_egg": {
+        "texture": "eiswolf_ei",
+        "texture_index": 0
+      }
+    }
+  }
+}

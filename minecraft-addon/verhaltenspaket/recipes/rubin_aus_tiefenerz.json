@@ -1,0 +1,14 @@
+{
+  "format_version": "1.12",
+  "minecraft:recipe_furnace": {
+    "description": {
+      "identifier": "fynn:rubin_aus_tiefenerz"
+    },
+    "tags": [
+      "furnace",
+      "blast_furnace"
+    ],
+    "input": "fynn:tiefenrubinerz",
+    "output": "fynn:rubin"
+  }
+}

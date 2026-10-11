@@ -1,0 +1,36 @@
+{
+  "format_version": "1.12",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "fynn:rubinklinge"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      " R ",
+      " R ",
+      "GSG"
+    ],
+    "key": {
+      "R": {
+        "item": "fynn:rubin"
+      },
+      "G": {
+        "item": "minecraft:gold_ingot"
+      },
+      "S": {
+        "item": "minecraft:stick"
+      }
+    },
+    "unlock": [
+      {
+        "item": "fynn:rubin"
+      }
+    ],
+    "result": {
+      "item": "fynn:rubinklinge",
+      "count": 1
+    }
+  }
+}

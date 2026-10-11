@@ -1,0 +1,64 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:seelendrache",
+      "materials": {
+        "default": "entity_emissive_alpha"
+      },
+      "textures": {
+        "default": "textures/entity/seelendrache",
+        "entfesselt": "textures/entity/seelendrache_entfesselt"
+      },
+      "geometry": {
+        "default": "geometry.fynn.seelendrache"
+      },
+      "animations": {
+        "haltung": "animation.fynn.seelendrache.haltung",
+        "gang": "animation.fynn.seelendrache.gang",
+        "beben": "animation.fynn.seelendrache.beben",
+        "zittern": "animation.fynn.seelendrache.zittern",
+        "lider": "animation.fynn.seelendrache.lider",
+        "ring_aus": "animation.fynn.seelendrache.ring_aus",
+        "ring_an": "animation.fynn.seelendrache.ring_an",
+        "hieb_biss": "animation.fynn.seelendrache.hieb_biss",
+        "hieb_klaue": "animation.fynn.seelendrache.hieb_klaue",
+        "seelenstrahl": "animation.fynn.seelendrache.seelenstrahl",
+        "seelenkreise": "animation.fynn.seelendrache.seelenkreise",
+        "fluegelschlag": "animation.fynn.seelendrache.fluegelschlag",
+        "schweifhieb": "animation.fynn.seelendrache.schweifhieb",
+        "seelensog": "animation.fynn.seelendrache.seelensog",
+        "seelenspiegel": "animation.fynn.seelendrache.seelenspiegel",
+        "seelensturm": "animation.fynn.seelendrache.seelensturm",
+        "wechsel": "animation.fynn.seelendrache.wechsel",
+        "auftritt": "animation.fynn.seelendrache.auftritt",
+        "abschied": "animation.fynn.seelendrache.abschied",
+        "seelengericht": "animation.fynn.seelendrache.seelengericht",
+        "kampf": "controller.animation.fynn.seelendrache.kampf"
+      },
+      "scripts": {
+        "scale": "1.6",
+        "initialize": [
+          "variable.hieb = 0;"
+        ],
+        "animate": [
+          "kampf",
+          "lider",
+          {
+            "ring_aus": "query.property('fynn:phase') == 1"
+          },
+          {
+            "ring_an": "query.property('fynn:phase') == 2"
+          }
+        ]
+      },
+      "render_controllers": [
+        "controller.render.fynn.seelendrache"
+      ],
+      "spawn_egg": {
+        "texture": "seelendrache_ei",
+        "texture_index": 0
+      }
+    }
+  }
+}

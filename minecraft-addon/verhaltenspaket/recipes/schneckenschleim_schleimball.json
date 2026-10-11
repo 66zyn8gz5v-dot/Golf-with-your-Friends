@@ -1,0 +1,25 @@
+{
+  "format_version": "1.12",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "fynn:schneckenschleim_schleimball"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "fynn:schneckenschleim"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "fynn:schneckenschleim"
+      }
+    ],
+    "result": {
+      "item": "minecraft:slime_ball",
+      "count": 1
+    }
+  }
+}

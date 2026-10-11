@@ -1,0 +1,286 @@
+{
+  "format_version": "1.10.0",
+  "animations": {
+    "animation.fynn.riesenkalmar.schwimmen": {
+      "loop": true,
+      "bones": {
+        "flossen": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(query.life_time * 300.0) * 8.0"
+          ]
+        },
+        "mantel": {
+          "scale": [
+            "1.0 + math.sin(query.life_time * 150.0) * 0.06",
+            "1.0 + math.sin(query.life_time * 150.0) * 0.06",
+            1.0
+          ],
+          "rotation": [
+            "query.target_x_rotation * 0.6",
+            0.0,
+            "math.sin(query.life_time * 130.0) * 4.0 - variable.fynn_dreh * 2.0"
+          ]
+        },
+        "arm0": {
+          "rotation": [
+            "math.sin(query.life_time * 120.0 + 0) * 12.0",
+            "math.cos(query.life_time * 110.0 + 0) * 8.0",
+            0.0
+          ]
+        },
+        "armspitze0": {
+          "rotation": [
+            "math.sin(query.life_time * 120.0 + -60) * 25.0",
+            0.0,
+            0.0
+          ]
+        },
+        "arm1": {
+          "rotation": [
+            "math.sin(query.life_time * 120.0 + 45) * 12.0",
+            "math.cos(query.life_time * 110.0 + 45) * 8.0",
+            0.0
+          ]
+        },
+        "armspitze1": {
+          "rotation": [
+            "math.sin(query.life_time * 120.0 + -15) * 25.0",
+            0.0,
+            0.0
+          ]
+        },
+        "arm2": {
+          "rotation": [
+            "math.sin(query.life_time * 120.0 + 90) * 12.0",
+            "math.cos(query.life_time * 110.0 + 90) * 8.0",
+            0.0
+          ]
+        },
+        "armspitze2": {
+          "rotation": [
+            "math.sin(query.life_time * 120.0 + 30) * 25.0",
+            0.0,
+            0.0
+          ]
+        },
+        "arm3": {
+          "rotation": [
+            "math.sin(query.life_time * 120.0 + 135) * 12.0",
+            "math.cos(query.life_time * 110.0 + 135) * 8.0",
+            0.0
+          ]
+        },
+        "armspitze3": {
+          "rotation": [
+            "math.sin(query.life_time * 120.0 + 75) * 25.0",
+            0.0,
+            0.0
+          ]
+        },
+        "arm4": {
+          "rotation": [
+            "math.sin(query.life_time * 120.0 + 180) * 12.0",
+            "math.cos(query.life_time * 110.0 + 180) * 8.0",
+            0.0
+          ]
+        },
+        "armspitze4": {
+          "rotation": [
+            "math.sin(query.life_time * 120.0 + 120) * 25.0",
+            0.0,
+            0.0
+          ]
+        },
+        "arm5": {
+          "rotation": [
+            "math.sin(query.life_time * 120.0 + 225) * 12.0",
+            "math.cos(query.life_time * 110.0 + 225) * 8.0",
+            0.0
+          ]
+        },
+        "armspitze5": {
+          "rotation": [
+            "math.sin(query.life_time * 120.0 + 165) * 25.0",
+            0.0,
+            0.0
+          ]
+        },
+        "arm6": {
+          "rotation": [
+            "math.sin(query.life_time * 120.0 + 270) * 12.0",
+            "math.cos(query.life_time * 110.0 + 270) * 8.0",
+            0.0
+          ]
+        },
+        "armspitze6": {
+          "rotation": [
+            "math.sin(query.life_time * 120.0 + 210) * 25.0",
+            0.0,
+            0.0
+          ]
+        },
+        "arm7": {
+          "rotation": [
+            "math.sin(query.life_time * 120.0 + 315) * 12.0",
+            "math.cos(query.life_time * 110.0 + 315) * 8.0",
+            0.0
+          ]
+        },
+        "armspitze7": {
+          "rotation": [
+            "math.sin(query.life_time * 120.0 + 255) * 25.0",
+            0.0,
+            0.0
+          ]
+        },
+        "fangarm0": {
+          "rotation": [
+            "math.sin(query.life_time * 80.0 + 0) * 8.0",
+            "math.sin(query.life_time * 70.0 + 0) * 12.0",
+            0.0
+          ]
+        },
+        "fangarm1": {
+          "rotation": [
+            "math.sin(query.life_time * 80.0 + 90) * 8.0",
+            "math.sin(query.life_time * 70.0 + 90) * 12.0",
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.riesenkalmar.angriff": {
+      "loop": true,
+      "bones": {
+        "arm0": {
+          "rotation": [
+            "-math.sin(variable.attack_time * 180.0) * 30.0",
+            0.0,
+            0.0
+          ]
+        },
+        "armspitze0": {
+          "rotation": [
+            "-math.sin(math.clamp(variable.attack_time * 1.4 - 0.2, 0.0, 1.0) * 180.0) * 45.0",
+            0.0,
+            0.0
+          ]
+        },
+        "arm1": {
+          "rotation": [
+            "-math.sin(variable.attack_time * 180.0) * 30.0",
+            0.0,
+            0.0
+          ]
+        },
+        "armspitze1": {
+          "rotation": [
+            "-math.sin(math.clamp(variable.attack_time * 1.4 - 0.2, 0.0, 1.0) * 180.0) * 45.0",
+            0.0,
+            0.0
+          ]
+        },
+        "arm2": {
+          "rotation": [
+            "-math.sin(variable.attack_time * 180.0) * 30.0",
+            0.0,
+            0.0
+          ]
+        },
+        "armspitze2": {
+          "rotation": [
+            "-math.sin(math.clamp(variable.attack_time * 1.4 - 0.2, 0.0, 1.0) * 180.0) * 45.0",
+            0.0,
+            0.0
+          ]
+        },
+        "arm3": {
+          "rotation": [
+            "-math.sin(variable.attack_time * 180.0) * 30.0",
+            0.0,
+            0.0
+          ]
+        },
+        "armspitze3": {
+          "rotation": [
+            "-math.sin(math.clamp(variable.attack_time * 1.4 - 0.2, 0.0, 1.0) * 180.0) * 45.0",
+            0.0,
+            0.0
+          ]
+        },
+        "arm4": {
+          "rotation": [
+            "-math.sin(variable.attack_time * 180.0) * 30.0",
+            0.0,
+            0.0
+          ]
+        },
+        "armspitze4": {
+          "rotation": [
+            "-math.sin(math.clamp(variable.attack_time * 1.4 - 0.2, 0.0, 1.0) * 180.0) * 45.0",
+            0.0,
+            0.0
+          ]
+        },
+        "arm5": {
+          "rotation": [
+            "-math.sin(variable.attack_time * 180.0) * 30.0",
+            0.0,
+            0.0
+          ]
+        },
+        "armspitze5": {
+          "rotation": [
+            "-math.sin(math.clamp(variable.attack_time * 1.4 - 0.2, 0.0, 1.0) * 180.0) * 45.0",
+            0.0,
+            0.0
+          ]
+        },
+        "arm6": {
+          "rotation": [
+            "-math.sin(variable.attack_time * 180.0) * 30.0",
+            0.0,
+            0.0
+          ]
+        },
+        "armspitze6": {
+          "rotation": [
+            "-math.sin(math.clamp(variable.attack_time * 1.4 - 0.2, 0.0, 1.0) * 180.0) * 45.0",
+            0.0,
+            0.0
+          ]
+        },
+        "arm7": {
+          "rotation": [
+            "-math.sin(variable.attack_time * 180.0) * 30.0",
+            0.0,
+            0.0
+          ]
+        },
+        "armspitze7": {
+          "rotation": [
+            "-math.sin(math.clamp(variable.attack_time * 1.4 - 0.2, 0.0, 1.0) * 180.0) * 45.0",
+            0.0,
+            0.0
+          ]
+        },
+        "fangarm0": {
+          "rotation": [
+            "-math.sin(variable.attack_time * 180.0) * 50.0",
+            0.0,
+            0.0
+          ]
+        },
+        "fangarm1": {
+          "rotation": [
+            "-math.sin(variable.attack_time * 180.0) * 50.0",
+            0.0,
+            0.0
+          ]
+        }
+      }
+    }
+  }
+}

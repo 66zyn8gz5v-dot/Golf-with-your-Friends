@@ -3,3 +3,15 @@ out/
 
 # Bilder, die die Sinnbild-Prüfung ablegt (scratchpad-Kram, nichts fürs Spiel)
 deko/
+
+# Zwischendateien von Python (entstehen beim Ausfuehren der Werkzeuge)
+__pycache__/
+
+# Gebaute Pakete bleiben draussen - mit einer Ausnahme: Was unter
+# auslieferung/ liegt, holt sich das iPad selbst von GitHub. Diese Dateien
+# sind kein Zwischenstand, sondern der Weg ins Spiel, und muessen deshalb
+# abrufbar sein.
+minecraft-addon/*.mcaddon
+minecraft-addon/*.zip
+# Der Notweg gehoert dagegen dazu - er muss zum Antippen abrufbar sein.
+!minecraft-addon/auslieferung/Sternenpaket.mcaddon

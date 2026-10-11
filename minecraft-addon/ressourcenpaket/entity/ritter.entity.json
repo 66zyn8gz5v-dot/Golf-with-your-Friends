@@ -1,0 +1,79 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:ritter",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/ritter",
+        "armbrust": "textures/entity/ritter_armbrust",
+        "eisenschwert": "textures/entity/ritter_eisenschwert"
+      },
+      "geometry": {
+        "default": "geometry.ritter",
+        "armbrust": "geometry.fynn.ritter_armbrust",
+        "eisenschwert": "geometry.fynn.ritter_eisenschwert"
+      },
+      "animations": {
+        "laufen": "animation.fynn.ritter.laufen",
+        "stehen": "animation.fynn.ritter.stehen",
+        "halten": "animation.fynn.ritter.halten",
+        "hieb": "animation.fynn.ritter.hieb",
+        "armbrust": "animation.fynn.ritter.armbrust",
+        "zielen": "animation.fynn.ritter.zielen",
+        "blick": "animation.common.look_at_target",
+        "klinge": "animation.fynn.ritter_eisenschwert.halten"
+      },
+      "scripts": {
+        "animate": [
+          {
+            "laufen": "math.clamp(query.modified_move_speed * 1.4, 0.0, 1.0)"
+          },
+          "stehen",
+          "blick",
+          {
+            "halten": "query.variant == 0"
+          },
+          {
+            "hieb": "variable.attack_time > 0.0 && query.variant == 0"
+          },
+          "klinge",
+          {
+            "armbrust": "query.variant == 1"
+          },
+          {
+            "zielen": "query.variant == 1 && query.has_target"
+          }
+        ],
+        "variables": {
+          "variable.attack_time": "public",
+          "variable.fynn_schwert": "public",
+          "variable.fynn_waffe": "public",
+          "variable.fynn_schlag": "public",
+          "variable.fynn_hiebzeit": "public"
+        },
+        "initialize": [
+          "variable.fynn_schwert = 0.0;",
+          "variable.fynn_waffe = 0.0;",
+          "variable.fynn_schlag = 0.0;",
+          "variable.fynn_hiebzeit = 0.0;"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.default",
+        {
+          "controller.render.fynn.ritter_armbrust": "query.variant == 1"
+        },
+        {
+          "controller.render.fynn.ritter_eisenschwert": "query.variant == 0"
+        }
+      ],
+      "spawn_egg": {
+        "texture": "ritter_ei",
+        "texture_index": 0
+      }
+    }
+  }
+}

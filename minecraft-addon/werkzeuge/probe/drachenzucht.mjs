@@ -1,0 +1,236 @@
+// Probe: Drachenzucht und Gaben (5.2) - paaren, Ei, brueten, schluepfen,
+// wachsen, vererben - ohne Spiel.
+import { world, system } from "@minecraft/server";
+const d = await import("./drachen.js");
+const z = await import("./drachenzucht.js");
+const g = await import("./drachengaben.js");
+
+const ergebnisse = [];
+function pruefe(was, ok) { ergebnisse.push(!!ok); console.log(ok ? "ok  " : "FEHLER", was); }
+
+function welt() {
+    const w = { bloecke: {}, wesen: [], toene: [], teilchen: [], neu: [] };
+    w.dim = {
+        getBlock: (o) => {
+            const k = `${Math.floor(o.x)},${Math.floor(o.y)},${Math.floor(o.z)}`;
+            return { typeId: w.bloecke[k] ?? (o.y < 64 ? "minecraft:grass_block" : "minecraft:air") };
+        },
+        getEntities: (f) => w.wesen.filter((e) => e.isValid && (!f?.type || e.typeId === f.type))
+            .filter((e) => !f?.location || Math.hypot(e.location.x - f.location.x, e.location.y - f.location.y,
+                                                     e.location.z - f.location.z) <= f.maxDistance)
+            .filter((e) => !f?.excludeTypes || !f.excludeTypes.includes(e.typeId)),
+        playSound: (n) => w.toene.push(n),
+        spawnParticle: (n) => w.teilchen.push(n),
+        spawnItem: () => {},
+        spawnEntity: (typ, ort) => {
+            const [art, ereignis] = typ.replace(">", "").split("<");
+            const e = wesen(w, art, ort);
+            if (ereignis) e.ereignisse.push(ereignis);
+            w.neu.push(typ);
+            return e;
+        },
+    };
+    return w;
+}
+let nr = 0;
+function wesen(w, typeId, ort, extra = {}) {
+    const e = { id: `w${++nr}`, typeId, isValid: true, location: { ...ort }, dimension: w.dim, eig: {}, dyn: {},
+        ereignisse: [], effekte: [], schaden: 0, brand: 0, zahm: false,
+        setProperty(n, v) { this.eig[n] = v; }, getProperty(n) { return this.eig[n]; },
+        getDynamicProperty(n) { return this.dyn[n]; }, setDynamicProperty(n, v) { if (v === undefined) delete this.dyn[n]; else this.dyn[n] = v; },
+        triggerEvent(n) { this.ereignisse.push(n); },
+        getComponent(n) {
+            if (n === "minecraft:is_tamed") return this.zahm ? {} : undefined;
+            if (n === "minecraft:tameable") return { tame: (s) => { this.zahm = true; this.herr = s.id; return true; } };
+            if (n === "minecraft:inventory") return this.inv;
+            return undefined;
+        },
+        remove() { this.isValid = false; },
+        addEffect(n) { this.effekte.push(n); }, applyDamage(m) { this.schaden += m; return true; },
+        setOnFire(s) { this.brand = s; }, applyImpulse() {}, applyKnockback() {},
+        getViewDirection: () => ({ x: 0, y: 0, z: 1 }),
+        onScreenDisplay: { leiste: "", setActionBar(t) { this.leiste = t; } }, ...extra };
+    w.wesen.push(e);
+    return e;
+}
+function spieler(w, ort) {
+    const s = wesen(w, "minecraft:player", ort, { isSneaking: true, getGameMode: () => "Survival", selectedSlotIndex: 0 });
+    const faecher = [];
+    s.inv = { container: {
+        getItem: (i) => faecher[i], setItem: (i, v) => { faecher[i] = v; },
+        addItem: (ding) => { faecher.push(ding); return undefined; } } };
+    s.faecher = faecher;
+    return s;
+}
+
+// --- Mischen
+{
+    const feuer = { art: "fynn:lindwurm", variante: 2, misch: 0, atem: "feuer", faehigkeit: "feuerkugel",
+                    staerke: 120, generation: 1, uralt: false };
+    const frost = { art: "fynn:frostwyvern", variante: 1, misch: 0, atem: "frost", faehigkeit: "eiskristalle",
+                    staerke: 100, generation: 2, uralt: false };
+    const folge = (...w) => { let i = 0; return () => w[Math.min(i++, w.length - 1)]; };
+    // Reihenfolge der Wuerfe: Elternteil oder Mischling, neue Art, welcher Koerper.
+    const ei = z.mischen(feuer, frost, folge(0.9, 0.9, 0.1));
+    pruefe("Mischling: beide Atemarten in einem Atem", ei.mischling && ei.atem === "feuer" && ei.atem2 === "frost");
+    pruefe("... beide Fähigkeiten", ei.faehigkeit === "feuerkugel" && ei.faehigkeit2 === "eiskristalle");
+    pruefe("... dazu die Gabe aus beiden: Dampfwelle", ei.gabe === "feuer+frost" && g.GABENNAMEN[ei.gabe] === "Dampfwelle");
+    pruefe("... und etwas stärker als ein Elternteil-Kind", ei.generation === 3 && ei.staerke === 136);
+    pruefe("Körper und Farbvariante vom einen (obsidian), Details in der Variante des anderen (Gletscher)",
+        ei.koerper === "fynn:lindwurm" && ei.variante === 2 && ei.misch === z.mischPlatz("fynn:frostwyvern", 1)
+        && z.detailArt(ei) === "fynn:frostwyvern");
+    const andersrum = z.mischen(feuer, frost, folge(0.9, 0.9, 0.9));
+    pruefe("... oder andersherum", andersrum.koerper === "fynn:frostwyvern" && andersrum.variante === 1
+        && andersrum.misch === z.mischPlatz("fynn:lindwurm", 2) && andersrum.faehigkeit === "eiskristalle");
+    const kind = z.mischen(feuer, frost, folge(0.3, 0.2));
+    pruefe("Sechs von zehn kommen ganz nach einem Elternteil", kind.wieElternteil && kind.koerper === "fynn:lindwurm"
+        && kind.variante === 2 && kind.misch === 0 && kind.atem === "feuer" && !kind.atem2 && !kind.mischling);
+    const mischVater = { ...feuer, variante: 0, misch: 5, atem2: "frost", faehigkeit2: "eiskristalle", mischling: true,
+                         gabe: "feuer+frost" };
+    const wieVater = z.mischen(mischVater, frost, folge(0.3, 0.2));
+    pruefe("... auch ein Mischling vererbt sich so, mit allem", wieVater.misch === 5 && wieVater.atem2 === "frost"
+        && wieVater.gabe === "feuer+frost" && wieVater.mischling);
+    let mischlinge = 0;
+    for (let i = 0; i < 2000; i++) if (z.mischen(feuer, { ...feuer, variante: 0 }).mischling) mischlinge++;
+    pruefe(`Etwa 40 von 100 sind Mischlinge (${Math.round(mischlinge / 20)} %)`, mischlinge > 700 && mischlinge < 900);
+    const sorten = z.mischen(feuer, { ...feuer, variante: 0 }, folge(0.9, 0.1));
+    pruefe("Zwei Feuerdrachen verschiedener Farbe: der Mischling mischt die Farben", sorten.koerper === "fynn:lindwurm"
+        && sorten.variante === 2 && sorten.misch === z.mischPlatz("fynn:lindwurm", 0) && !sorten.gabe && !sorten.atem2);
+    pruefe("Uraltes Blut vererbt sich manchmal", z.mischen({ ...feuer, uralt: true }, frost, () => 0.1).uralt
+        && !z.mischen({ ...feuer, uralt: true }, frost, () => 0.9).uralt);
+    const neu = z.mischen(feuer, frost, folge(0.9, 0.1));
+    pruefe("Feuer und Frost: mancher Mischling ist ein Dampfdrache", neu.koerper === "fynn:dampfdrache" && neu.neueArt
+        && neu.atem === "dampf" && neu.faehigkeit === "geysir" && neu.gabe === "feuer+frost");
+    const himmel = { art: "fynn:himmelsdrache", variante: 0, misch: 0, atem: "sturm", faehigkeit: "blitzschlag", staerke: 110, generation: 1 };
+    const nacht = { art: "fynn:nachtschwinge", variante: 0, misch: 0, atem: "schatten", faehigkeit: "plasma", staerke: 130, generation: 1 };
+    const schlund = { art: "fynn:schlunddrache", variante: 0, misch: 0, atem: "schall", faehigkeit: "schnappen", staerke: 120, generation: 1 };
+    pruefe("Himmel und Nacht: manchmal ein Sternendrache",
+        z.mischen(himmel, nacht, folge(0.9, 0.1)).koerper === "fynn:sternendrache");
+    pruefe("Feuer und Schlund: manchmal ein Lavadrache",
+        z.mischen(feuer, schlund, folge(0.9, 0.1)).koerper === "fynn:lavadrache");
+    pruefe("... aber meistens nicht", !z.mischen(feuer, schlund, () => 0.9).neueArt);
+    pruefe("Lava und Frost vertragen sich nicht", !z.vertraeglich("fynn:frostwyvern", "fynn:lavadrache"));
+    pruefe("Die neuen Arten kennen ihren Atem",
+        ["dampf", "sterne", "lava"].every((a) => d.ATEMARTEN[a]) && ["geysir", "meteor", "lavabomben"].every((f) => d.FAEHIGKEITEN[f]));
+    pruefe("Der Himmelsdrache mag den Schlunddrachen nicht",
+        !z.vertraeglich("fynn:himmelsdrache", "fynn:schlunddrache") && z.vertraeglich("fynn:lindwurm", "fynn:nachtschwinge"));
+    pruefe("Jedes Atempaar hat eine Gabe", Object.keys(g.GABEN).length === 36
+        && g.gabeFuer("sturm", "feuer") === "feuer+sturm" && !g.gabeFuer("gift", "gift"));
+}
+
+// --- Paaren und Ei
+{
+    const w = welt();
+    const s = spieler(w, { x: 0, y: 64, z: 0 });
+    const a = wesen(w, "fynn:lindwurm", { x: 2, y: 64, z: 0 }, { zahm: true });
+    const b = wesen(w, "fynn:frostwyvern", { x: 6, y: 64, z: 0 }, { zahm: true });
+    a.dyn["fynn:besitzer"] = s.id;
+    b.dyn["fynn:besitzer"] = s.id;
+    pruefe("Mit Fleisch verliebt er sich", z.fuettern(a, s, 100) === "verliebt" && z.istVerliebt(a, 100));
+    pruefe("Allein legt er kein Ei", z.paarTakt(120) === "wartet");
+    z.fuettern(b, s, 130);
+    pruefe("Zwei Verliebte: ein Drachenei", z.paarTakt(140, () => 0.7) === "ei" && w.neu.includes(z.EI));
+    const ei = w.wesen.find((e) => e.typeId === z.EI);
+    const inhalt = z.eiInhalt(ei);
+    pruefe("Im Ei: ein Mischling aus beiden Eltern", inhalt && inhalt.mischling && inhalt.koerper === "fynn:frostwyvern"
+        && z.detailArt(inhalt) === "fynn:lindwurm" && ei.dyn["fynn:besitzer"] === s.id);
+    pruefe("Danach brauchen beide Ruhe", z.fuettern(a, s, 200) === "ruht");
+
+    // Unvertraegliche Paare
+    const h = wesen(w, "fynn:himmelsdrache", { x: 40, y: 64, z: 0 }, { zahm: true });
+    const sch = wesen(w, "fynn:schlunddrache", { x: 43, y: 64, z: 0 }, { zahm: true });
+    z.fuettern(h, s, 300);
+    z.fuettern(sch, s, 300);
+    pruefe("Himmelsdrache und Schlunddrache: kein Ei", z.paarTakt(320) === "unvertraeglich");
+
+    // Brueten: kalt nichts, warm schluepft es
+    const brut0 = ei.dyn["fynn:brut"];
+    z.eiTakt(ei, 400);
+    const kalt = z.KALTE_EIER.has(inhalt.koerper);
+    pruefe("Ohne " + (kalt ? "Kälte" : "Wärme") + " brütet es nicht", ei.dyn["fynn:brut"] === brut0 && ei.eig["fynn:warm"] === false);
+    const o = ei.location;
+    w.bloecke[`${Math.floor(o.x) + 1},${Math.floor(o.y)},${Math.floor(o.z)}`] = kalt ? "minecraft:packed_ice" : "minecraft:campfire";
+    pruefe("Richtig gelegt brütet es", z.eiTakt(ei, 420) === "brütet" && ei.dyn["fynn:brut"] === brut0 + 20
+        && ei.eig["fynn:warm"] === true);
+    ei.dyn["fynn:brut"] = z.ZUCHT.brut - 20;
+    pruefe("Nach der Brutzeit schlüpft das Junge", z.eiTakt(ei, 440) === "schlüpft" && !ei.isValid
+        && w.neu.includes(`${inhalt.koerper}<fynn:schluepfen>`));
+    const junges = w.wesen.find((e) => e.typeId === inhalt.koerper && e.ereignisse.includes("fynn:schluepfen"));
+    world.getAllPlayers = () => [s];
+    pruefe("Es gehört dem Besitzer des Eis", z.einrichten(junges, inhalt, s.id) && junges.zahm
+        && junges.ereignisse.includes("fynn:jung_zahm") && junges.dyn["fynn:besitzer"] === s.id);
+    pruefe("... mit Farbvariante, Details und Erbe beider Eltern",
+        junges.eig["fynn:misch"] === inhalt.misch && junges.ereignisse.includes("fynn:farbe_0")
+        && junges.dyn["fynn:gabe"] === "feuer+frost" && junges.dyn["fynn:mischling"] === true
+        && junges.dyn["fynn:gezuechtet"] === true);
+    pruefe("Doppelter Atem gilt", d.atemVon(junges) === "feuer" && d.atem2Von(junges) === "frost");
+    pruefe("Mischlinge sind stärker", d.blutMacht(junges) > 1.12);
+    pruefe("Beim Antippen erfährt man sein Erbe", d.zusatz.info(junges).includes("Dampfwelle")
+        && d.zusatz.info(junges).includes("Mischling"));
+
+    // Wachsen
+    junges.eig["fynn:wuchs"] = 0;
+    pruefe("Ganz klein speit es noch nicht", d.atemTakt(junges, 500) === "zu jung");
+    junges.dyn["fynn:wuchszeit"] = z.ZUCHT.stufe - 20;
+    pruefe("Nach einer Stufe wächst es", z.wachsTakt(junges) === "gewachsen" && junges.ereignisse.includes("fynn:wachsen_1")
+        && junges.eig["fynn:wuchs"] === 1);
+    pruefe("Fleisch lässt es schneller wachsen", z.fuettern(junges, s, 600) === "waechst"
+        && junges.dyn["fynn:wuchszeit"] === z.ZUCHT.futter);
+    junges.eig["fynn:wuchs"] = 9;
+    junges.dyn["fynn:wuchszeit"] = z.ZUCHT.stufe;
+    pruefe("Die letzte Stufe: ausgewachsen", z.wachsTakt(junges) === "ausgewachsen"
+        && junges.ereignisse.includes("fynn:ausgewachsen"));
+    pruefe("Gezüchtete werden nicht zufällig uralt", !d.uraltWuerfeln(junges, () => 0));
+
+    // Aufheben und absetzen
+    const w2 = welt();
+    const s2 = spieler(w2, { x: 0, y: 64, z: 0 });
+    const ei2 = z.eiLegen(w2.dim, { x: 1, y: 64, z: 1 }, inhalt, s2.id, 1234);
+    pruefe("Aufheben: das Ei ist in der Tasche", z.aufheben(ei2, s2) && !ei2.isValid
+        && s2.faecher.some((f) => f?.typeId === z.EI));
+    const ding = s2.faecher.find((f) => f?.typeId === z.EI);
+    s2.faecher[0] = ding;
+    const wieder = z.absetzen(s2, ding, { x: 3, y: 64, z: 3 });
+    pruefe("Absetzen: dasselbe Ei, gleich weit bebrütet", wieder && wieder.dyn["fynn:brut"] === 1234
+        && z.eiInhalt(wieder).koerper === inhalt.koerper);
+}
+
+// --- Gaben
+{
+    const w = welt();
+    const s = spieler(w, { x: 0, y: 64, z: -10 });
+    const drache = wesen(w, "fynn:lindwurm", { x: 0, y: 64, z: 0 }, { zahm: true });
+    drache.dyn["fynn:gabe"] = "feuer+sturm";
+    drache.dyn["fynn:besitzer"] = s.id;
+    drache.dyn["fynn:generation"] = 3;
+    const kuh = wesen(w, "minecraft:zombie", { x: 0, y: 64, z: 10 });
+    pruefe("Gabe: Feuerwirbel", g.gabeWirken(drache, kuh, 1000) === "Feuerwirbel" && g.laufend.length === 1);
+    pruefe("... dann eine Pause", g.gabeWirken(drache, kuh, 1010) === "wartet");
+    for (let t = 0; t < 90; t += 2) g.gabenTakt();
+    pruefe("Der Wirbel brennt und trifft", kuh.schaden > 0 && kuh.brand > 0 && g.laufend.length === 0);
+    pruefe("Den Besitzer trifft er nicht", s.schaden === 0);
+    pruefe("Die Blutlinie macht stärker", g.macht(drache) > 1.2);
+    drache.dyn["fynn:gabe"] = "feuer+frost";
+    const zombie = wesen(w, "minecraft:zombie", { x: 4, y: 64, z: 0 });
+    g.gabeWirken(drache, zombie, 5000);
+    for (let t = 0; t < 30; t += 2) g.gabenTakt();
+    pruefe("Die Dampfwelle läuft nach außen und verlangsamt", zombie.schaden > 0 && zombie.effekte.includes("slowness")
+        && zombie.brand > 0);
+}
+
+// --- Beide Faehigkeiten im Wechsel
+{
+    const w = welt();
+    const drache = wesen(w, "fynn:lindwurm", { x: 0, y: 70, z: 0 });
+    drache.dyn["fynn:faehigkeit2"] = "eiskristalle";
+    drache.target = wesen(w, "minecraft:zombie", { x: 0, y: 70, z: 20 });
+    const erste = d.faehigkeitTakt(drache, 100000, undefined, () => 0);
+    const zweite = d.faehigkeitTakt(drache, 200000, undefined, () => 0);
+    const dritte = d.faehigkeitTakt(drache, 300000, undefined, () => 0);
+    pruefe(`Ein Mischling wechselt seine Fähigkeiten ab (${erste}, ${zweite}, ${dritte})`,
+        erste === "Feuerkugel" && zweite === "Eiskristalle" && dritte === "Feuerkugel");
+}
+
+const gut = ergebnisse.every(Boolean);
+console.log("\nAlles wie erwartet:", gut ? "ja" : "NEIN");
+if (!gut) process.exit(1);

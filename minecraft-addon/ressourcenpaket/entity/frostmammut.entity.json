@@ -1,0 +1,56 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:frostmammut",
+      "materials": {
+        "default": "entity_emissive_alpha"
+      },
+      "textures": {
+        "default": "textures/entity/frostmammut",
+        "entfesselt": "textures/entity/frostmammut_entfesselt"
+      },
+      "geometry": {
+        "default": "geometry.fynn.frostmammut"
+      },
+      "animations": {
+        "haltung": "animation.fynn.frostmammut.haltung",
+        "gang": "animation.fynn.frostmammut.gang",
+        "beben": "animation.fynn.frostmammut.beben",
+        "panzer_weg": "animation.fynn.frostmammut.panzer_weg",
+        "hieb_kopf": "animation.fynn.frostmammut.hieb_kopf",
+        "hieb_stampf": "animation.fynn.frostmammut.hieb_stampf",
+        "ansturm": "animation.fynn.frostmammut.ansturm",
+        "stampfen": "animation.fynn.frostmammut.stampfen",
+        "stosszahnfeger": "animation.fynn.frostmammut.stosszahnfeger",
+        "eiszapfenregen": "animation.fynn.frostmammut.eiszapfenregen",
+        "ruesselschleuder": "animation.fynn.frostmammut.ruesselschleuder",
+        "frostatem": "animation.fynn.frostmammut.frostatem",
+        "eiswoelfe": "animation.fynn.frostmammut.eiswoelfe",
+        "wechsel": "animation.fynn.frostmammut.wechsel",
+        "auftritt": "animation.fynn.frostmammut.auftritt",
+        "abschied": "animation.fynn.frostmammut.abschied",
+        "kampf": "controller.animation.fynn.frostmammut.kampf"
+      },
+      "scripts": {
+        "scale": "1.35",
+        "initialize": [
+          "variable.hieb = 0;"
+        ],
+        "animate": [
+          "kampf",
+          {
+            "panzer_weg": "query.property('fynn:phase') == 2"
+          }
+        ]
+      },
+      "render_controllers": [
+        "controller.render.fynn.frostmammut"
+      ],
+      "spawn_egg": {
+        "texture": "frostmammut_ei",
+        "texture_index": 0
+      }
+    }
+  }
+}

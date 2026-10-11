@@ -1,0 +1,33 @@
+{
+  "format_version": "1.12",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "fynn:schwertfischschwert"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "P",
+      "P",
+      "K"
+    ],
+    "key": {
+      "P": {
+        "item": "fynn:schwertfischspiess"
+      },
+      "K": {
+        "item": "fynn:schwertfischklinge"
+      }
+    },
+    "unlock": [
+      {
+        "item": "fynn:schwertfischspiess"
+      }
+    ],
+    "result": {
+      "item": "fynn:schwertfischschwert",
+      "count": 1
+    }
+  }
+}

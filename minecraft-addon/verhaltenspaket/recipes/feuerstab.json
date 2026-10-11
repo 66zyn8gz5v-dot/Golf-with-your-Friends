@@ -1,0 +1,35 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "fynn:feuerstab"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "  F",
+      " G ",
+      "L  "
+    ],
+    "key": {
+      "F": {
+        "item": "minecraft:fire_charge"
+      },
+      "G": {
+        "item": "minecraft:gold_ingot"
+      },
+      "L": {
+        "item": "minecraft:blaze_rod"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:blaze_rod"
+      }
+    ],
+    "result": {
+      "item": "fynn:feuerstab"
+    }
+  }
+}

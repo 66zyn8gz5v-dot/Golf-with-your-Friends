@@ -1,0 +1,35 @@
+{
+  "format_version": "1.10.0",
+  "animations": {
+    "animation.frostzahn.halten": {
+      "loop": true,
+      "bones": {
+        "waffe": {
+          "position": [
+            "c.is_first_person ? -3.5 : 0.0",
+            "c.is_first_person ? -3.5 : -2.0",
+            0.0
+          ],
+          "rotation": [
+            "c.is_first_person ? 0.0 : 90.0",
+            0.0,
+            "c.is_first_person ? -135.0 : 0.0"
+          ],
+          "scale": "c.is_first_person ? 0.42 : 0.75"
+        },
+        "griff": {
+          "position": [
+            0.0,
+            "c.is_first_person ? -9.17 : 3.28",
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            "c.is_first_person ? 0.0 : 90.0",
+            0.0
+          ]
+        }
+      }
+    }
+  }
+}

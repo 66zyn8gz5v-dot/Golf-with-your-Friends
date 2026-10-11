@@ -1,0 +1,51 @@
+{
+  "format_version": "1.10.0",
+  "animations": {
+    "animation.fynn.irrlicht.schweben": {
+      "loop": true,
+      "bones": {
+        "kern": {
+          "position": [
+            "math.sin(query.life_time * 70.0) * 1.0",
+            "math.sin(query.life_time * 110.0) * 1.5",
+            "math.cos(query.life_time * 60.0) * 1.0"
+          ],
+          "scale": "1.0 + math.sin(query.life_time * 700.0) * 0.08"
+        },
+        "huelle": {
+          "rotation": [
+            "query.life_time * 90.0",
+            "query.life_time * 140.0",
+            0.0
+          ],
+          "scale": "1.0 + math.sin(query.life_time * 400.0 + 40.0) * 0.12"
+        },
+        "kranz": {
+          "rotation": [
+            0.0,
+            "query.life_time * -220.0",
+            0.0
+          ]
+        },
+        "spitze": {
+          "scale": [
+            1.0,
+            "1.0 + math.sin(query.life_time * 900.0) * 0.3",
+            1.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.irrlicht.locken": {
+      "loop": true,
+      "bones": {
+        "kern": {
+          "scale": "1.2 + math.sin(query.life_time * 1500.0) * 0.2"
+        },
+        "huelle": {
+          "scale": "1.25 + math.sin(query.life_time * 600.0) * 0.2"
+        }
+      }
+    }
+  }
+}

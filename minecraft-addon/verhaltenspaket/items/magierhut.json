@@ -1,0 +1,46 @@
+{
+  "format_version": "1.26.30",
+  "minecraft:item": {
+    "description": {
+      "identifier": "fynn:magierhut",
+      "menu_category": {
+        "category": "equipment",
+        "group": "minecraft:itemGroup.name.helmet"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "magierhut"
+        }
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:wearable": {
+        "slot": "slot.armor.head",
+        "protection": 1
+      },
+      "minecraft:durability": {
+        "max_durability": 165
+      },
+      "minecraft:enchantable": {
+        "slot": "armor_head",
+        "value": 15
+      },
+      "minecraft:repairable": {
+        "repair_items": [
+          {
+            "items": [
+              "minecraft:blue_wool"
+            ],
+            "repair_amount": 41
+          }
+        ]
+      },
+      "minecraft:tags": {
+        "tags": [
+          "minecraft:is_armor"
+        ]
+      }
+    }
+  }
+}

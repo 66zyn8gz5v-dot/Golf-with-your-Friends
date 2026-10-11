@@ -1,0 +1,28 @@
+{
+  "format_version": "1.26.30",
+  "minecraft:item": {
+    "description": {
+      "identifier": "fynn:olifant",
+      "menu_category": {
+        "category": "equipment",
+        "group": "fynn:itemGroup.name.jagd"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "olifant"
+        }
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:rarity": "epic",
+      "minecraft:use_modifiers": {
+        "use_duration": 0.1
+      },
+      "minecraft:cooldown": {
+        "category": "fynn:olifant",
+        "duration": 180.0
+      }
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "fynn:silberdolche"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "X X",
+      "# #"
+    ],
+    "key": {
+      "X": {
+        "item": "fynn:silberbarren"
+      },
+      "#": {
+        "item": "minecraft:stick"
+      }
+    },
+    "unlock": [
+      {
+        "item": "fynn:silberbarren"
+      }
+    ],
+    "result": {
+      "item": "fynn:silberdolche"
+    }
+  }
+}

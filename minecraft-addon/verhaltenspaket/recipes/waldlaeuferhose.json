@@ -1,0 +1,32 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "fynn:waldlaeuferhose"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "LLL",
+      "G G",
+      "L L"
+    ],
+    "key": {
+      "L": {
+        "item": "minecraft:leather"
+      },
+      "G": {
+        "item": "minecraft:green_wool"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:leather"
+      }
+    ],
+    "result": {
+      "item": "fynn:waldlaeuferhose"
+    }
+  }
+}

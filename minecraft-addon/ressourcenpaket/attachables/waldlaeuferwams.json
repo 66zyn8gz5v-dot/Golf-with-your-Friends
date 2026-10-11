@@ -1,0 +1,30 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:attachable": {
+    "description": {
+      "identifier": "fynn:waldlaeuferwams",
+      "materials": {
+        "default": "armor",
+        "enchanted": "armor_enchanted"
+      },
+      "textures": {
+        "default": "textures/models/armor/waldlaeufer_stoff",
+        "enchanted": "textures/misc/enchanted_item_glint"
+      },
+      "geometry": {
+        "default": "geometry.waldlaeuferwams"
+      },
+      "render_controllers": [
+        "controller.render.armor"
+      ],
+      "animations": {
+        "koecher": "animation.fynn_ruestung.koecher"
+      },
+      "scripts": {
+        "animate": [
+          "koecher"
+        ]
+      }
+    }
+  }
+}

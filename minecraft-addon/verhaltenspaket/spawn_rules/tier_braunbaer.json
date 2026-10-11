@@ -1,0 +1,109 @@
+{
+  "format_version": "1.8.0",
+  "minecraft:spawn_rules": {
+    "description": {
+      "identifier": "fynn:braunbaer",
+      "population_control": "animal"
+    },
+    "conditions": [
+      {
+        "minecraft:weight": {
+          "default": 6
+        },
+        "minecraft:herd": {
+          "min_size": 1,
+          "max_size": 2
+        },
+        "minecraft:biome_filter": [
+          {
+            "test": "has_biome_tag",
+            "operator": "==",
+            "value": "taiga"
+          }
+        ],
+        "minecraft:spawns_on_surface": {},
+        "minecraft:spawns_on_block_filter": [
+          "minecraft:grass_block",
+          "minecraft:podzol",
+          "minecraft:snow_layer",
+          "minecraft:coarse_dirt"
+        ],
+        "minecraft:brightness_filter": {
+          "min": 7,
+          "max": 15,
+          "adjust_for_weather": false
+        },
+        "minecraft:density_limit": {
+          "surface": 4
+        }
+      },
+      {
+        "minecraft:weight": {
+          "default": 6
+        },
+        "minecraft:herd": {
+          "min_size": 1,
+          "max_size": 2
+        },
+        "minecraft:biome_filter": [
+          {
+            "test": "has_biome_tag",
+            "operator": "==",
+            "value": "extreme_hills"
+          },
+          {
+            "test": "has_biome_tag",
+            "operator": "==",
+            "value": "forest"
+          }
+        ],
+        "minecraft:spawns_on_surface": {},
+        "minecraft:spawns_on_block_filter": [
+          "minecraft:grass_block",
+          "minecraft:podzol",
+          "minecraft:snow_layer",
+          "minecraft:coarse_dirt"
+        ],
+        "minecraft:brightness_filter": {
+          "min": 7,
+          "max": 15,
+          "adjust_for_weather": false
+        },
+        "minecraft:density_limit": {
+          "surface": 4
+        }
+      },
+      {
+        "minecraft:weight": {
+          "default": 6
+        },
+        "minecraft:herd": {
+          "min_size": 1,
+          "max_size": 2
+        },
+        "minecraft:biome_filter": [
+          {
+            "test": "has_biome_tag",
+            "operator": "==",
+            "value": "roofed"
+          }
+        ],
+        "minecraft:spawns_on_surface": {},
+        "minecraft:spawns_on_block_filter": [
+          "minecraft:grass_block",
+          "minecraft:podzol",
+          "minecraft:snow_layer",
+          "minecraft:coarse_dirt"
+        ],
+        "minecraft:brightness_filter": {
+          "min": 7,
+          "max": 15,
+          "adjust_for_weather": false
+        },
+        "minecraft:density_limit": {
+          "surface": 4
+        }
+      }
+    ]
+  }
+}

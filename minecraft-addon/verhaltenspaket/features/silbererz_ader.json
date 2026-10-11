@@ -1,0 +1,22 @@
+{
+  "format_version": "1.13.0",
+  "minecraft:ore_feature": {
+    "description": {
+      "identifier": "fynn:silbererz_ader"
+    },
+    "count": 6,
+    "replace_rules": [
+      {
+        "places_block": "fynn:silbererz",
+        "may_replace": [
+          { "name": "minecraft:stone" },
+          { "name": "minecraft:deepslate" },
+          { "name": "minecraft:tuff" },
+          { "name": "minecraft:andesite" },
+          { "name": "minecraft:diorite" },
+          { "name": "minecraft:granite" }
+        ]
+      }
+    ]
+  }
+}

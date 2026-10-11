@@ -1,0 +1,31 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "fynn:diamantdolche"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "X X",
+      "# #"
+    ],
+    "key": {
+      "X": {
+        "item": "minecraft:diamond"
+      },
+      "#": {
+        "item": "minecraft:stick"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:diamond"
+      }
+    ],
+    "result": {
+      "item": "fynn:diamantdolche"
+    }
+  }
+}

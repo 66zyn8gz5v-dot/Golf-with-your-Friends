@@ -1,0 +1,58 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "fynn:specht",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "maennchen": "textures/entity/tiere/specht_maennchen",
+        "weibchen": "textures/entity/tiere/specht_weibchen"
+      },
+      "geometry": {
+        "default": "geometry.fynn.specht"
+      },
+      "animations": {
+        "flattern": "animation.fynn.specht.flattern",
+        "hopsen": "animation.fynn.specht.hopsen",
+        "am_boden": "animation.fynn.specht.am_boden",
+        "hacken": "animation.fynn.specht.hacken"
+      },
+      "scripts": {
+        "initialize": [
+          "variable.fynn_gier_alt = query.body_y_rotation;",
+          "variable.fynn_dreh = 0.0;",
+          "variable.fynn_zufall = math.random(0.0, 360.0);"
+        ],
+        "pre_animation": [
+          "variable.fynn_d = query.body_y_rotation - variable.fynn_gier_alt;",
+          "variable.fynn_d = variable.fynn_d > 180.0 ? variable.fynn_d - 360.0 : (variable.fynn_d < -180.0 ? variable.fynn_d + 360.0 : variable.fynn_d);",
+          "variable.fynn_gier_alt = query.body_y_rotation;",
+          "variable.fynn_dreh = math.lerp(variable.fynn_dreh, math.clamp(variable.fynn_d / math.max(query.delta_time, 0.01) / 20.0, -10.0, 10.0), 0.12);"
+        ],
+        "animate": [
+          {
+            "flattern": "1.0 - query.is_on_ground"
+          },
+          {
+            "hopsen": "query.is_on_ground * math.clamp(query.modified_move_speed * 4.0, 0.0, 1.0)"
+          },
+          {
+            "am_boden": "query.is_on_ground * (1.0 - math.clamp(query.modified_move_speed * 3.0, 0.0, 1.0))"
+          },
+          {
+            "hacken": "query.property('fynn:hackt')"
+          }
+        ]
+      },
+      "render_controllers": [
+        "controller.render.fynn.specht"
+      ],
+      "spawn_egg": {
+        "texture": "specht_ei",
+        "texture_index": 0
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_smithing_transform": {
+    "description": {
+      "identifier": "fynn:netheritdolche"
+    },
+    "tags": [
+      "smithing_table"
+    ],
+    "template": "minecraft:netherite_upgrade_smithing_template",
+    "base": "fynn:diamantdolche",
+    "addition": "minecraft:netherite_ingot",
+    "result": "fynn:netheritdolche"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "fynn:ritterstiefel"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "s s",
+      "s s"
+    ],
+    "key": {
+      "s": {
+        "item": "fynn:stahlbarren"
+      }
+    },
+    "unlock": [
+      {
+        "item": "fynn:stahlbarren"
+      }
+    ],
+    "result": {
+      "item": "fynn:ritterstiefel"
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "format_version": "1.12",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "fynn:sushi"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "fynn:schwertfischfilet"
+      },
+      {
+        "item": "minecraft:dried_kelp"
+      },
+      {
+        "item": "minecraft:dried_kelp"
+      }
+    ],
+    "unlock": [
+      {
+        "item": "fynn:schwertfischfilet"
+      }
+    ],
+    "result": {
+      "item": "fynn:sushi",
+      "count": 3
+    }
+  }
+}

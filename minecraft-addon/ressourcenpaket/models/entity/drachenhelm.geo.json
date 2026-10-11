@@ -1,0 +1,148 @@
+{
+  "format_version": "1.16.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.drachenhelm",
+        "texture_width": 64,
+        "texture_height": 64,
+        "visible_bounds_width": 3,
+        "visible_bounds_height": 3.5,
+        "visible_bounds_offset": [
+          0,
+          1.5,
+          0
+        ]
+      },
+      "bones": [
+        {
+          "name": "head",
+          "pivot": [
+            0.0,
+            24.0,
+            0.0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -4.0,
+                24.0,
+                -4.0
+              ],
+              "size": [
+                8,
+                8,
+                8
+              ],
+              "uv": [
+                0,
+                0
+              ],
+              "inflate": 0.6
+            },
+            {
+              "origin": [
+                -0.5,
+                32.4,
+                -3.0
+              ],
+              "size": [
+                1,
+                2,
+                7
+              ],
+              "uv": [
+                18,
+                28
+              ]
+            },
+            {
+              "origin": [
+                3.2,
+                30.5,
+                -1.0
+              ],
+              "size": [
+                1,
+                2,
+                5
+              ],
+              "uv": [
+                40,
+                37
+              ],
+              "rotation": [
+                28,
+                0,
+                0
+              ],
+              "pivot": [
+                3.7,
+                31.5,
+                1.5
+              ]
+            },
+            {
+              "origin": [
+                -4.2,
+                30.5,
+                -1.0
+              ],
+              "size": [
+                1,
+                2,
+                5
+              ],
+              "uv": [
+                52,
+                37
+              ],
+              "rotation": [
+                28,
+                0,
+                0
+              ],
+              "pivot": [
+                -3.7,
+                31.5,
+                1.5
+              ]
+            },
+            {
+              "origin": [
+                4.2,
+                27.5,
+                -3.5
+              ],
+              "size": [
+                1,
+                3,
+                1
+              ],
+              "uv": [
+                18,
+                45
+              ]
+            },
+            {
+              "origin": [
+                -5.2,
+                27.5,
+                -3.5
+              ],
+              "size": [
+                1,
+                3,
+                1
+              ],
+              "uv": [
+                22,
+                45
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

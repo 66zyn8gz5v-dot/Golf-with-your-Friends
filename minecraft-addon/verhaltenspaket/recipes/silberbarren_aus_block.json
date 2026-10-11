@@ -1,0 +1,19 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "fynn:silberbarren_aus_block"
+    },
+    "tags": ["crafting_table"],
+    "ingredients": [
+      { "item": "fynn:silberblock" }
+    ],
+    "unlock": [
+      { "item": "fynn:silberblock" }
+    ],
+    "result": {
+      "item": "fynn:silberbarren",
+      "count": 9
+    }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "fynn:artefaktentasche"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "SGS",
+      "LAL",
+      "LLL"
+    ],
+    "key": {
+      "S": {
+        "item": "minecraft:string"
+      },
+      "G": {
+        "item": "minecraft:gold_ingot"
+      },
+      "L": {
+        "item": "minecraft:leather"
+      },
+      "A": {
+        "item": "minecraft:amethyst_shard"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:leather"
+      }
+    ],
+    "result": {
+      "item": "fynn:artefaktentasche"
+    }
+  }
+}

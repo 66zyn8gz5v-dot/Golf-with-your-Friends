@@ -1,0 +1,30 @@
+{
+  "format_version": "1.26.30",
+  "minecraft:item": {
+    "description": {
+      "identifier": "fynn:obstsalat",
+      "menu_category": {
+        "category": "items",
+        "group": "minecraft:itemGroup.name.miscFood"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "obstsalat"
+        }
+      },
+      "minecraft:food": {
+        "nutrition": 12,
+        "saturation_modifier": 0.9,
+        "using_converts_to": "minecraft:bowl"
+      },
+      "minecraft:use_modifiers": {
+        "use_duration": 1.6,
+        "movement_modifier": 0.35
+      },
+      "minecraft:use_animation": "eat",
+      "minecraft:max_stack_size": 1
+    }
+  }
+}

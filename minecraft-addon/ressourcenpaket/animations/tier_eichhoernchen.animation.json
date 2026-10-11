@@ -1,0 +1,495 @@
+{
+  "format_version": "1.10.0",
+  "animations": {
+    "animation.fynn.eichhoernchen.laufen": {
+      "anim_time_update": "query.modified_distance_moved",
+      "loop": true,
+      "bones": {
+        "leg0": {
+          "rotation": [
+            "math.cos((query.anim_time * 76.34 * 0.75) + 0.0) * 40.0",
+            0.0,
+            0.0
+          ]
+        },
+        "knie0": {
+          "rotation": [
+            "math.max(0.0, math.sin((query.anim_time * 76.34 * 0.75) + 0.0) - 0.15) * 76.5",
+            0.0,
+            0.0
+          ]
+        },
+        "leg1": {
+          "rotation": [
+            "math.cos((query.anim_time * 76.34 * 0.75) + -12.0) * 40.0",
+            0.0,
+            0.0
+          ]
+        },
+        "knie1": {
+          "rotation": [
+            "math.max(0.0, math.sin((query.anim_time * 76.34 * 0.75) + -12.0) - 0.15) * 76.5",
+            0.0,
+            0.0
+          ]
+        },
+        "leg2": {
+          "rotation": [
+            "math.cos((query.anim_time * 76.34 * 0.75) + -170.0) * 40.0",
+            0.0,
+            0.0
+          ]
+        },
+        "knie2": {
+          "rotation": [
+            "math.max(0.0, math.sin((query.anim_time * 76.34 * 0.75) + -170.0) - 0.15) * 76.5",
+            0.0,
+            0.0
+          ]
+        },
+        "leg3": {
+          "rotation": [
+            "math.cos((query.anim_time * 76.34 * 0.75) + -182.0) * 40.0",
+            0.0,
+            0.0
+          ]
+        },
+        "knie3": {
+          "rotation": [
+            "math.max(0.0, math.sin((query.anim_time * 76.34 * 0.75) + -182.0) - 0.15) * 76.5",
+            0.0,
+            0.0
+          ]
+        },
+        "body": {
+          "position": [
+            0.0,
+            "math.max(0.0, math.sin((query.anim_time * 76.34 * 0.75))) * 1.6",
+            0.0
+          ],
+          "rotation": [
+            "math.sin((query.anim_time * 76.34 * 0.75) + 90.0) * 9.0",
+            0.0,
+            0.0
+          ]
+        },
+        "head": {
+          "rotation": [
+            "-math.sin((query.anim_time * 76.34 * 0.75) + 90.0) * 8.0 + math.sin((query.anim_time * 76.34 * 0.75) * 2.0) * 3.0",
+            0.0,
+            0.0
+          ]
+        },
+        "tail": {
+          "rotation": [
+            "math.sin((query.anim_time * 76.34 * 0.75) - 70) * 12",
+            "math.sin((query.anim_time * 76.34 * 0.75) * 0.5 - 0) * 6",
+            0.0
+          ]
+        },
+        "tail2": {
+          "rotation": [
+            "math.sin((query.anim_time * 76.34 * 0.75) - 130) * 24",
+            "math.sin((query.anim_time * 76.34 * 0.75) * 0.5 - 40) * 10",
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.eichhoernchen.galopp": {
+      "anim_time_update": "query.modified_distance_moved",
+      "loop": true,
+      "bones": {
+        "leg0": {
+          "rotation": [
+            "math.cos((query.anim_time * 76.34 * 0.9) + 0.0) * 48.0",
+            0.0,
+            0.0
+          ]
+        },
+        "knie0": {
+          "rotation": [
+            "math.max(0.0, math.sin((query.anim_time * 76.34 * 0.9) + 0.0) - 0.15) * 76.5",
+            0.0,
+            0.0
+          ]
+        },
+        "leg1": {
+          "rotation": [
+            "math.cos((query.anim_time * 76.34 * 0.9) + -12.0) * 48.0",
+            0.0,
+            0.0
+          ]
+        },
+        "knie1": {
+          "rotation": [
+            "math.max(0.0, math.sin((query.anim_time * 76.34 * 0.9) + -12.0) - 0.15) * 76.5",
+            0.0,
+            0.0
+          ]
+        },
+        "leg2": {
+          "rotation": [
+            "math.cos((query.anim_time * 76.34 * 0.9) + -170.0) * 48.0",
+            0.0,
+            0.0
+          ]
+        },
+        "knie2": {
+          "rotation": [
+            "math.max(0.0, math.sin((query.anim_time * 76.34 * 0.9) + -170.0) - 0.15) * 76.5",
+            0.0,
+            0.0
+          ]
+        },
+        "leg3": {
+          "rotation": [
+            "math.cos((query.anim_time * 76.34 * 0.9) + -182.0) * 48.0",
+            0.0,
+            0.0
+          ]
+        },
+        "knie3": {
+          "rotation": [
+            "math.max(0.0, math.sin((query.anim_time * 76.34 * 0.9) + -182.0) - 0.15) * 76.5",
+            0.0,
+            0.0
+          ]
+        },
+        "body": {
+          "position": [
+            0.0,
+            "math.max(0.0, math.sin((query.anim_time * 76.34 * 0.9))) * 2.2",
+            0.0
+          ],
+          "rotation": [
+            "math.sin((query.anim_time * 76.34 * 0.9) + 90.0) * 12.0",
+            0.0,
+            0.0
+          ]
+        },
+        "head": {
+          "rotation": [
+            "-math.sin((query.anim_time * 76.34 * 0.9) + 90.0) * 8.0 + math.sin((query.anim_time * 76.34 * 0.9) * 2.0) * 3.0",
+            0.0,
+            0.0
+          ]
+        },
+        "tail": {
+          "rotation": [
+            "math.sin((query.anim_time * 76.34 * 0.9) - 70) * 12",
+            "math.sin((query.anim_time * 76.34 * 0.9) * 0.5 - 0) * 6",
+            0.0
+          ]
+        },
+        "tail2": {
+          "rotation": [
+            "math.sin((query.anim_time * 76.34 * 0.9) - 130) * 24",
+            "math.sin((query.anim_time * 76.34 * 0.9) * 0.5 - 40) * 10",
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.eichhoernchen.stehen": {
+      "loop": true,
+      "bones": {
+        "body": {
+          "scale": [
+            1.0,
+            "1.0 + math.sin(query.life_time * 60.0) * 0.012",
+            1.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            "math.sin(query.life_time * 21.0) * 1.2"
+          ]
+        },
+        "head": {
+          "rotation": [
+            "math.sin(query.life_time * 17.0) * 3.0",
+            "math.sin(query.life_time * 23.0) * 9.0 + math.sin(query.life_time * 61.0) * 3.0",
+            0.0
+          ]
+        },
+        "tail": {
+          "rotation": [
+            0.0,
+            "math.sin(query.life_time * 70.0 - 0) * 8",
+            0.0
+          ]
+        },
+        "tail2": {
+          "rotation": [
+            0.0,
+            "math.sin(query.life_time * 70.0 - 40) * 14",
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.eichhoernchen.kopfschuetteln": {
+      "loop": true,
+      "bones": {
+        "head": {
+          "rotation": [
+            0.0,
+            "math.sin(query.life_time * 1100.0) * 9.0",
+            "math.sin(query.life_time * 1100.0 + 90.0) * 12.0"
+          ]
+        }
+      }
+    },
+    "animation.fynn.eichhoernchen.schwanzschlag": {
+      "loop": true,
+      "bones": {
+        "tail": {
+          "rotation": [
+            "-10.0 - 0",
+            "math.sin(query.life_time * 700.0 - 0) * 30",
+            0.0
+          ]
+        },
+        "tail2": {
+          "rotation": [
+            "-10.0 - 5",
+            "math.sin(query.life_time * 700.0 - 60) * 40",
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.eichhoernchen.schnuppern": {
+      "loop": true,
+      "bones": {
+        "head": {
+          "rotation": [
+            "30.0 + math.sin(query.life_time * 1500.0) * 1.5",
+            "math.sin(query.life_time * 90.0) * 25.0",
+            0.0
+          ]
+        },
+        "body": {
+          "rotation": [
+            2.0,
+            "math.sin(query.life_time * 90.0 - 40.0) * 3.0",
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.eichhoernchen.drehen": {
+      "loop": true,
+      "bones": {
+        "body": {
+          "rotation": [
+            0.0,
+            0.0,
+            "-variable.fynn_dreh * 0.8"
+          ]
+        },
+        "head": {
+          "rotation": [
+            0.0,
+            "variable.fynn_dreh * 1.6",
+            0.0
+          ]
+        },
+        "tail": {
+          "rotation": [
+            0.0,
+            "-variable.fynn_dreh * 1.5",
+            0.0
+          ]
+        },
+        "tail2": {
+          "rotation": [
+            0.0,
+            "-variable.fynn_dreh * 2.5",
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.eichhoernchen.schwanzzucken": {
+      "loop": true,
+      "bones": {
+        "tail": {
+          "rotation": [
+            "math.pow(math.max(0.0, math.sin(query.life_time * 900.0)), 3.0) * 18.0",
+            "math.sin(query.life_time * 900.0) * 6.0",
+            0.0
+          ]
+        },
+        "tail2": {
+          "rotation": [
+            "math.pow(math.max(0.0, math.sin(query.life_time * 900.0 - 70.0)), 3.0) * 28.0",
+            "math.sin(query.life_time * 900.0 - 70.0) * 10.0",
+            0.0
+          ]
+        },
+        "head": {
+          "rotation": [
+            0.0,
+            "math.sin(math.floor(query.life_time * 3.0) * 71.0) * 20.0",
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.eichhoernchen.klettern": {
+      "loop": true,
+      "bones": {
+        "body": {
+          "rotation": [
+            -82.0,
+            0.0,
+            0.0
+          ]
+        },
+        "head": {
+          "rotation": [
+            "20.0 + math.sin(query.life_time * 300.0) * 6.0",
+            0.0,
+            0.0
+          ]
+        },
+        "leg0": {
+          "rotation": [
+            "-40.0 + math.sin(query.life_time * 1100.0) * 35.0",
+            0.0,
+            25.0
+          ]
+        },
+        "leg1": {
+          "rotation": [
+            "-40.0 - math.sin(query.life_time * 1100.0) * 35.0",
+            0.0,
+            -25.0
+          ]
+        },
+        "leg2": {
+          "rotation": [
+            "30.0 - math.sin(query.life_time * 1100.0) * 35.0",
+            0.0,
+            25.0
+          ]
+        },
+        "leg3": {
+          "rotation": [
+            "30.0 + math.sin(query.life_time * 1100.0) * 35.0",
+            0.0,
+            -25.0
+          ]
+        },
+        "tail": {
+          "rotation": [
+            -60.0,
+            "math.sin(query.life_time * 400.0) * 15.0",
+            0.0
+          ]
+        },
+        "tail2": {
+          "rotation": [
+            -45.0,
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.eichhoernchen.graben": {
+      "loop": true,
+      "bones": {
+        "body": {
+          "rotation": [
+            18.0,
+            0.0,
+            0.0
+          ]
+        },
+        "head": {
+          "rotation": [
+            35.0,
+            "math.sin(query.life_time * 500.0) * 8.0",
+            0.0
+          ]
+        },
+        "leg0": {
+          "rotation": [
+            "-30.0 + math.sin(query.life_time * 1600.0) * 45.0",
+            0.0,
+            0.0
+          ]
+        },
+        "leg1": {
+          "rotation": [
+            "-30.0 - math.sin(query.life_time * 1600.0) * 45.0",
+            0.0,
+            0.0
+          ]
+        },
+        "tail": {
+          "rotation": [
+            "-10.0 + math.sin(query.life_time * 800.0) * 10.0",
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.eichhoernchen.knabbern": {
+      "loop": true,
+      "bones": {
+        "body": {
+          "rotation": [
+            -50.0,
+            0.0,
+            0.0
+          ],
+          "position": [
+            0.0,
+            1.5,
+            0.0
+          ]
+        },
+        "head": {
+          "rotation": [
+            "38.0 + math.sin(query.life_time * 1600.0) * 4.0",
+            0.0,
+            0.0
+          ]
+        },
+        "leg0": {
+          "rotation": [
+            -10.0,
+            0.0,
+            -18.0
+          ]
+        },
+        "leg1": {
+          "rotation": [
+            -10.0,
+            0.0,
+            18.0
+          ]
+        },
+        "leg2": {
+          "rotation": [
+            50.0,
+            0.0,
+            0.0
+          ]
+        },
+        "leg3": {
+          "rotation": [
+            50.0,
+            0.0,
+            0.0
+          ]
+        }
+      }
+    }
+  }
+}

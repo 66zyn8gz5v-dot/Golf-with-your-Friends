@@ -1,0 +1,19 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "fynn:silbernuggets_aus_barren"
+    },
+    "tags": ["crafting_table"],
+    "ingredients": [
+      { "item": "fynn:silberbarren" }
+    ],
+    "unlock": [
+      { "item": "fynn:silberbarren" }
+    ],
+    "result": {
+      "item": "fynn:silbernugget",
+      "count": 9
+    }
+  }
+}

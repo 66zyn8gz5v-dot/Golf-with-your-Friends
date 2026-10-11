@@ -1,0 +1,40 @@
+{
+  "format_version": "1.26.30",
+  "minecraft:item": {
+    "description": {
+      "identifier": "fynn:saphirschwert",
+      "menu_category": {
+        "category": "equipment",
+        "group": "minecraft:itemGroup.name.sword"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "textures": {
+          "default": "saphirschwert"
+        }
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:hand_equipped": true,
+      "minecraft:damage": 7,
+      "minecraft:rarity": "rare",
+      "minecraft:durability": {
+        "max_durability": 420
+      },
+      "minecraft:enchantable": {
+        "value": 14,
+        "slot": "sword"
+      },
+      "minecraft:repairable": {
+        "repair_items": [
+          {
+            "items": [
+              "minecraft:iron_ingot"
+            ],
+            "repair_amount": 105
+          }
+        ]
+      }
+    }
+  }
+}

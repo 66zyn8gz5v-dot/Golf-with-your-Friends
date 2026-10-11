@@ -1,0 +1,24 @@
+{
+  "format_version": "1.8.0",
+  "render_controllers": {
+    "controller.render.fynn.glutskorpion": {
+      "arrays": {
+        "textures": {
+          "Array.haut": [
+            "Texture.glut",
+            "Texture.seele"
+          ]
+        }
+      },
+      "geometry": "Geometry.default",
+      "materials": [
+        {
+          "*": "Material.default"
+        }
+      ],
+      "textures": [
+        "Array.haut[query.variant]"
+      ]
+    }
+  }
+}

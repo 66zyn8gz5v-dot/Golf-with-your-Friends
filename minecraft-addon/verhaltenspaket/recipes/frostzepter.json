@@ -1,0 +1,36 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "fynn:frostzepter"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "  D",
+      " P ",
+      "S  "
+    ],
+    "key": {
+      "D": {
+        "item": "minecraft:diamond"
+      },
+      "P": {
+        "item": "minecraft:packed_ice"
+      },
+      "S": {
+        "item": "fynn:silberbarren"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:diamond"
+      }
+    ],
+    "result": {
+      "item": "fynn:frostzepter",
+      "count": 1
+    }
+  }
+}

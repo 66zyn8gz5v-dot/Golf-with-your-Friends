@@ -1,0 +1,23 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "fynn:silberbarren_aus_nuggets"
+    },
+    "tags": ["crafting_table"],
+    "pattern": [
+      "nnn",
+      "nnn",
+      "nnn"
+    ],
+    "key": {
+      "n": { "item": "fynn:silbernugget" }
+    },
+    "unlock": [
+      { "item": "fynn:silbernugget" }
+    ],
+    "result": {
+      "item": "fynn:silberbarren"
+    }
+  }
+}

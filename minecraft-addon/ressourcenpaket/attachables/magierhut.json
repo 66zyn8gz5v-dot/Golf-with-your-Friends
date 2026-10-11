@@ -1,0 +1,30 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:attachable": {
+    "description": {
+      "identifier": "fynn:magierhut",
+      "materials": {
+        "default": "armor",
+        "enchanted": "armor_enchanted"
+      },
+      "textures": {
+        "default": "textures/models/armor/magier_stoff",
+        "enchanted": "textures/misc/enchanted_item_glint"
+      },
+      "geometry": {
+        "default": "geometry.magierhut"
+      },
+      "render_controllers": [
+        "controller.render.armor"
+      ],
+      "animations": {
+        "hutspitze": "animation.fynn_ruestung.hutspitze"
+      },
+      "scripts": {
+        "animate": [
+          "hutspitze"
+        ]
+      }
+    }
+  }
+}

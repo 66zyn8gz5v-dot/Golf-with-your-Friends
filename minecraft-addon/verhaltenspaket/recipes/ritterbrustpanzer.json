@@ -1,0 +1,32 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "fynn:ritterbrustpanzer"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "s s",
+      "sws",
+      "sss"
+    ],
+    "key": {
+      "s": {
+        "item": "fynn:stahlbarren"
+      },
+      "w": {
+        "item": "minecraft:blue_wool"
+      }
+    },
+    "unlock": [
+      {
+        "item": "fynn:stahlbarren"
+      }
+    ],
+    "result": {
+      "item": "fynn:ritterbrustpanzer"
+    }
+  }
+}

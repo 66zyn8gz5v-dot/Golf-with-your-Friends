@@ -1,0 +1,35 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "fynn:heldenbuch"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      " e ",
+      "lBl"
+    ],
+    "key": {
+      "B": {
+        "item": "minecraft:book"
+      },
+      "e": {
+        "item": "minecraft:emerald"
+      },
+      "l": {
+        "item": "minecraft:lapis_lazuli"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:book"
+      }
+    ],
+    "result": {
+      "item": "fynn:heldenbuch",
+      "count": 1
+    }
+  }
+}

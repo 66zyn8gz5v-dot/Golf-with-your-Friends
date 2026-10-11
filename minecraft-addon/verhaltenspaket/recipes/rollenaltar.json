@@ -1,0 +1,35 @@
+{
+  "format_version": "1.20.10",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "fynn:rollenaltar"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "GBG",
+      " S ",
+      "SSS"
+    ],
+    "key": {
+      "G": {
+        "item": "minecraft:gold_ingot"
+      },
+      "B": {
+        "item": "minecraft:book"
+      },
+      "S": {
+        "item": "minecraft:stone_bricks"
+      }
+    },
+    "unlock": [
+      {
+        "item": "minecraft:book"
+      }
+    ],
+    "result": {
+      "item": "fynn:rollenaltar"
+    }
+  }
+}

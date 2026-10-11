@@ -1,0 +1,267 @@
+{
+  "format_version": "1.10.0",
+  "animations": {
+    "animation.fynn.frostkaefer.krabbeln": {
+      "loop": true,
+      "bones": {
+        "bein0": {
+          "rotation": [
+            "math.max(0.0, math.sin(query.life_time * 900.0 + 0 + 90.0)) * -18.0",
+            "math.sin(query.life_time * 900.0 + 0) * 22.0 * 1",
+            0.0
+          ]
+        },
+        "unterbein0": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.max(0.0, math.sin(query.life_time * 900.0 + 0 + 90.0)) * 25.0 * 1"
+          ]
+        },
+        "bein1": {
+          "rotation": [
+            "math.max(0.0, math.sin(query.life_time * 900.0 + 180 + 90.0)) * -18.0",
+            "math.sin(query.life_time * 900.0 + 180) * 22.0 * -1",
+            0.0
+          ]
+        },
+        "unterbein1": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.max(0.0, math.sin(query.life_time * 900.0 + 180 + 90.0)) * 25.0 * -1"
+          ]
+        },
+        "bein2": {
+          "rotation": [
+            "math.max(0.0, math.sin(query.life_time * 900.0 + 180 + 90.0)) * -18.0",
+            "math.sin(query.life_time * 900.0 + 180) * 22.0 * 1",
+            0.0
+          ]
+        },
+        "unterbein2": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.max(0.0, math.sin(query.life_time * 900.0 + 180 + 90.0)) * 25.0 * 1"
+          ]
+        },
+        "bein3": {
+          "rotation": [
+            "math.max(0.0, math.sin(query.life_time * 900.0 + 0 + 90.0)) * -18.0",
+            "math.sin(query.life_time * 900.0 + 0) * 22.0 * -1",
+            0.0
+          ]
+        },
+        "unterbein3": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.max(0.0, math.sin(query.life_time * 900.0 + 0 + 90.0)) * 25.0 * -1"
+          ]
+        },
+        "bein4": {
+          "rotation": [
+            "math.max(0.0, math.sin(query.life_time * 900.0 + 0 + 90.0)) * -18.0",
+            "math.sin(query.life_time * 900.0 + 0) * 22.0 * 1",
+            0.0
+          ]
+        },
+        "unterbein4": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.max(0.0, math.sin(query.life_time * 900.0 + 0 + 90.0)) * 25.0 * 1"
+          ]
+        },
+        "bein5": {
+          "rotation": [
+            "math.max(0.0, math.sin(query.life_time * 900.0 + 180 + 90.0)) * -18.0",
+            "math.sin(query.life_time * 900.0 + 180) * 22.0 * -1",
+            0.0
+          ]
+        },
+        "unterbein5": {
+          "rotation": [
+            0.0,
+            0.0,
+            "math.max(0.0, math.sin(query.life_time * 900.0 + 180 + 90.0)) * 25.0 * -1"
+          ]
+        },
+        "koerper": {
+          "rotation": [
+            0.0,
+            "math.sin(query.life_time * 900.0 * 2.0) * 1.5",
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.frostkaefer.tasten": {
+      "loop": true,
+      "bones": {
+        "fuehler_links": {
+          "rotation": [
+            "math.sin(query.life_time * 120.0) * 12.0",
+            "math.sin(query.life_time * 80.0) * 10.0",
+            0.0
+          ]
+        },
+        "fuehler_rechts": {
+          "rotation": [
+            "math.sin(query.life_time * 120.0 + 60.0) * 12.0",
+            "math.sin(query.life_time * 80.0 + 90.0) * 10.0",
+            0.0
+          ]
+        },
+        "kiefer_links": {
+          "rotation": [
+            0.0,
+            "-math.max(0.0, math.sin(query.life_time * 60.0)) * 18.0",
+            0.0
+          ]
+        },
+        "kiefer_rechts": {
+          "rotation": [
+            0.0,
+            "math.max(0.0, math.sin(query.life_time * 60.0)) * 18.0",
+            0.0
+          ]
+        },
+        "kristalle": {
+          "scale": "1.0 + math.sin(query.life_time * 90.0) * 0.04"
+        }
+      }
+    },
+    "animation.fynn.frostkaefer.einrollen": {
+      "loop": true,
+      "bones": {
+        "bein0": {
+          "scale": 0.05
+        },
+        "bein1": {
+          "scale": 0.05
+        },
+        "bein2": {
+          "scale": 0.05
+        },
+        "bein3": {
+          "scale": 0.05
+        },
+        "bein4": {
+          "scale": 0.05
+        },
+        "bein5": {
+          "scale": 0.05
+        },
+        "kopf": {
+          "scale": 0.3,
+          "position": [
+            0.0,
+            0.0,
+            3.0
+          ]
+        },
+        "koerper": {
+          "position": [
+            0.0,
+            -1.5,
+            0.0
+          ],
+          "scale": [
+            1.05,
+            1.15,
+            0.85
+          ]
+        },
+        "panzer_links": {
+          "rotation": [
+            0.0,
+            0.0,
+            -18.0
+          ]
+        },
+        "panzer_rechts": {
+          "rotation": [
+            0.0,
+            0.0,
+            18.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.frostkaefer.schwirren": {
+      "loop": true,
+      "bones": {
+        "panzer_links": {
+          "rotation": [
+            "-math.clamp(math.sin(math.mod(query.life_time, 23.0) / 1.6 * 180.0) * 2.0, 0.0, 1.0) * 15.0",
+            0.0,
+            "-math.clamp(math.sin(math.mod(query.life_time, 23.0) / 1.6 * 180.0) * 2.0, 0.0, 1.0) * 55.0"
+          ]
+        },
+        "panzer_rechts": {
+          "rotation": [
+            "-math.clamp(math.sin(math.mod(query.life_time, 23.0) / 1.6 * 180.0) * 2.0, 0.0, 1.0) * 15.0",
+            0.0,
+            "math.clamp(math.sin(math.mod(query.life_time, 23.0) / 1.6 * 180.0) * 2.0, 0.0, 1.0) * 55.0"
+          ]
+        },
+        "fluegel_links": {
+          "rotation": [
+            0.0,
+            "-math.clamp(math.sin(math.mod(query.life_time, 23.0) / 1.6 * 180.0) * 2.0, 0.0, 1.0) * 70.0",
+            "-math.clamp(math.sin(math.mod(query.life_time, 23.0) / 1.6 * 180.0) * 2.0, 0.0, 1.0) * (25.0 + math.sin(query.life_time * 3600.0) * 30.0)"
+          ]
+        },
+        "fluegel_rechts": {
+          "rotation": [
+            0.0,
+            "math.clamp(math.sin(math.mod(query.life_time, 23.0) / 1.6 * 180.0) * 2.0, 0.0, 1.0) * 70.0",
+            "math.clamp(math.sin(math.mod(query.life_time, 23.0) / 1.6 * 180.0) * 2.0, 0.0, 1.0) * (25.0 + math.sin(query.life_time * 3600.0) * 30.0)"
+          ]
+        },
+        "koerper": {
+          "position": [
+            0.0,
+            "math.clamp(math.sin(math.mod(query.life_time, 23.0) / 1.6 * 180.0) * 2.0, 0.0, 1.0) * 0.8",
+            0.0
+          ]
+        },
+        "kopf": {
+          "rotation": [
+            "-math.clamp(math.sin(math.mod(query.life_time, 23.0) / 1.6 * 180.0) * 2.0, 0.0, 1.0) * 10.0",
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    "animation.fynn.frostkaefer.beissen": {
+      "loop": true,
+      "bones": {
+        "kiefer_links": {
+          "rotation": [
+            0.0,
+            "-math.sin(variable.attack_time * 540.0) * 35.0",
+            0.0
+          ]
+        },
+        "kiefer_rechts": {
+          "rotation": [
+            0.0,
+            "math.sin(variable.attack_time * 540.0) * 35.0",
+            0.0
+          ]
+        },
+        "kopf": {
+          "rotation": [
+            "math.sin(variable.attack_time * 180.0) * 15.0",
+            0.0,
+            0.0
+          ]
+        }
+      }
+    }
+  }
+}

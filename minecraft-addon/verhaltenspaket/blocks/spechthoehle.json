@@ -1,0 +1,397 @@
+{
+  "format_version": "1.21.90",
+  "minecraft:block": {
+    "description": {
+      "identifier": "fynn:spechthoehle",
+      "menu_category": {
+        "category": "nature",
+        "group": "minecraft:itemGroup.name.leaves"
+      },
+      "states": {
+        "fynn:inhalt": {
+          "values": {
+            "min": 0,
+            "max": 3
+          }
+        },
+        "fynn:seite": {
+          "values": {
+            "min": 0,
+            "max": 3
+          }
+        },
+        "fynn:holz": {
+          "values": {
+            "min": 0,
+            "max": 9
+          }
+        }
+      }
+    },
+    "components": {
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 2.0
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 1.0
+      },
+      "minecraft:flammable": {
+        "catch_chance_modifier": 30,
+        "destroy_chance_modifier": 60
+      },
+      "minecraft:map_color": "#6a4a2a",
+      "minecraft:tick": {
+        "interval_range": [
+          1200,
+          2400
+        ],
+        "looping": true
+      },
+      "fynn:nest": {},
+      "minecraft:geometry": "geometry.fynn.spechthoehle",
+      "minecraft:material_instances": {
+        "rinde": {
+          "texture": "fynn_rinde_eiche",
+          "render_method": "opaque"
+        },
+        "stirn": {
+          "texture": "fynn_stirn_eiche",
+          "render_method": "opaque"
+        },
+        "innen": {
+          "texture": "fynn_splint_eiche",
+          "render_method": "opaque"
+        },
+        "loch": {
+          "texture": "fynn_spechtloch",
+          "render_method": "opaque"
+        },
+        "*": {
+          "texture": "fynn_rinde_eiche",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:loot": "loot_tables/leer.json"
+    },
+    "permutations": [
+      {
+        "condition": "q.block_state('fynn:seite') == 0",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('fynn:seite') == 1",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              90,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('fynn:seite') == 2",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              180,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('fynn:seite') == 3",
+        "components": {
+          "minecraft:transformation": {
+            "rotation": [
+              0,
+              270,
+              0
+            ]
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('fynn:holz') == 0",
+        "components": {
+          "minecraft:material_instances": {
+            "rinde": {
+              "texture": "fynn_rinde_eiche",
+              "render_method": "opaque"
+            },
+            "stirn": {
+              "texture": "fynn_stirn_eiche",
+              "render_method": "opaque"
+            },
+            "innen": {
+              "texture": "fynn_splint_eiche",
+              "render_method": "opaque"
+            },
+            "loch": {
+              "texture": "fynn_spechtloch",
+              "render_method": "opaque"
+            },
+            "*": {
+              "texture": "fynn_rinde_eiche",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('fynn:holz') == 1",
+        "components": {
+          "minecraft:material_instances": {
+            "rinde": {
+              "texture": "fynn_rinde_birke",
+              "render_method": "opaque"
+            },
+            "stirn": {
+              "texture": "fynn_stirn_birke",
+              "render_method": "opaque"
+            },
+            "innen": {
+              "texture": "fynn_splint_birke",
+              "render_method": "opaque"
+            },
+            "loch": {
+              "texture": "fynn_spechtloch",
+              "render_method": "opaque"
+            },
+            "*": {
+              "texture": "fynn_rinde_birke",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('fynn:holz') == 2",
+        "components": {
+          "minecraft:material_instances": {
+            "rinde": {
+              "texture": "fynn_rinde_fichte",
+              "render_method": "opaque"
+            },
+            "stirn": {
+              "texture": "fynn_stirn_fichte",
+              "render_method": "opaque"
+            },
+            "innen": {
+              "texture": "fynn_splint_fichte",
+              "render_method": "opaque"
+            },
+            "loch": {
+              "texture": "fynn_spechtloch",
+              "render_method": "opaque"
+            },
+            "*": {
+              "texture": "fynn_rinde_fichte",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('fynn:holz') == 3",
+        "components": {
+          "minecraft:material_instances": {
+            "rinde": {
+              "texture": "fynn_rinde_tropenbaum",
+              "render_method": "opaque"
+            },
+            "stirn": {
+              "texture": "fynn_stirn_tropenbaum",
+              "render_method": "opaque"
+            },
+            "innen": {
+              "texture": "fynn_splint_tropenbaum",
+              "render_method": "opaque"
+            },
+            "loch": {
+              "texture": "fynn_spechtloch",
+              "render_method": "opaque"
+            },
+            "*": {
+              "texture": "fynn_rinde_tropenbaum",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('fynn:holz') == 4",
+        "components": {
+          "minecraft:material_instances": {
+            "rinde": {
+              "texture": "fynn_rinde_akazie",
+              "render_method": "opaque"
+            },
+            "stirn": {
+              "texture": "fynn_stirn_akazie",
+              "render_method": "opaque"
+            },
+            "innen": {
+              "texture": "fynn_splint_akazie",
+              "render_method": "opaque"
+            },
+            "loch": {
+              "texture": "fynn_spechtloch",
+              "render_method": "opaque"
+            },
+            "*": {
+              "texture": "fynn_rinde_akazie",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('fynn:holz') == 5",
+        "components": {
+          "minecraft:material_instances": {
+            "rinde": {
+              "texture": "fynn_rinde_schwarzeiche",
+              "render_method": "opaque"
+            },
+            "stirn": {
+              "texture": "fynn_stirn_schwarzeiche",
+              "render_method": "opaque"
+            },
+            "innen": {
+              "texture": "fynn_splint_schwarzeiche",
+              "render_method": "opaque"
+            },
+            "loch": {
+              "texture": "fynn_spechtloch",
+              "render_method": "opaque"
+            },
+            "*": {
+              "texture": "fynn_rinde_schwarzeiche",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('fynn:holz') == 6",
+        "components": {
+          "minecraft:material_instances": {
+            "rinde": {
+              "texture": "fynn_rinde_mangrove",
+              "render_method": "opaque"
+            },
+            "stirn": {
+              "texture": "fynn_stirn_mangrove",
+              "render_method": "opaque"
+            },
+            "innen": {
+              "texture": "fynn_splint_mangrove",
+              "render_method": "opaque"
+            },
+            "loch": {
+              "texture": "fynn_spechtloch",
+              "render_method": "opaque"
+            },
+            "*": {
+              "texture": "fynn_rinde_mangrove",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('fynn:holz') == 7",
+        "components": {
+          "minecraft:material_instances": {
+            "rinde": {
+              "texture": "fynn_rinde_kirsche",
+              "render_method": "opaque"
+            },
+            "stirn": {
+              "texture": "fynn_stirn_kirsche",
+              "render_method": "opaque"
+            },
+            "innen": {
+              "texture": "fynn_splint_kirsche",
+              "render_method": "opaque"
+            },
+            "loch": {
+              "texture": "fynn_spechtloch",
+              "render_method": "opaque"
+            },
+            "*": {
+              "texture": "fynn_rinde_kirsche",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('fynn:holz') == 8",
+        "components": {
+          "minecraft:material_instances": {
+            "rinde": {
+              "texture": "fynn_rinde_blasseiche",
+              "render_method": "opaque"
+            },
+            "stirn": {
+              "texture": "fynn_stirn_blasseiche",
+              "render_method": "opaque"
+            },
+            "innen": {
+              "texture": "fynn_splint_blasseiche",
+              "render_method": "opaque"
+            },
+            "loch": {
+              "texture": "fynn_spechtloch",
+              "render_method": "opaque"
+            },
+            "*": {
+              "texture": "fynn_rinde_blasseiche",
+              "render_method": "opaque"
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('fynn:holz') == 9",
+        "components": {
+          "minecraft:material_instances": {
+            "rinde": {
+              "texture": "fynn_rinde_pappel",
+              "render_method": "opaque"
+            },
+            "stirn": {
+              "texture": "fynn_stirn_pappel",
+              "render_method": "opaque"
+            },
+            "innen": {
+              "texture": "fynn_splint_pappel",
+              "render_method": "opaque"
+            },
+            "loch": {
+              "texture": "fynn_spechtloch",
+              "render_method": "opaque"
+            },
+            "*": {
+              "texture": "fynn_rinde_pappel",
+              "render_method": "opaque"
+            }
+          }
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "format_version": "1.8.0",
+  "render_controllers": {
+    "controller.render.fynn.drachenei": {
+      "arrays": {
+        "textures": {
+          "Array.schale": [
+            "Texture.ei_lindwurm_lindwurm",
+            "Texture.ei_lindwurm_frostwyvern",
+            "Texture.ei_lindwurm_himmelsdrache",
+            "Texture.ei_lindwurm_giftdrache",
+            "Texture.ei_lindwurm_nachtschwinge",
+            "Texture.ei_lindwurm_schlunddrache",
+            "Texture.ei_lindwurm_dampfdrache",
+            "Texture.ei_lindwurm_sternendrache",
+            "Texture.ei_lindwurm_lavadrache",
+            "Texture.ei_frostwyvern_lindwurm",
+            "Texture.ei_frostwyvern_frostwyvern",
+            "Texture.ei_frostwyvern_himmelsdrache",
+            "Texture.ei_frostwyvern_giftdrache",
+            "Texture.ei_frostwyvern_nachtschwinge",
+            "Texture.ei_frostwyvern_schlunddrache",
+            "Texture.ei_frostwyvern_dampfdrache",
+            "Texture.ei_frostwyvern_sternendrache",
+            "Texture.ei_frostwyvern_lavadrache",
+            "Texture.ei_himmelsdrache_lindwurm",
+            "Texture.ei_himmelsdrache_frostwyvern",
+            "Texture.ei_himmelsdrache_himmelsdrache",
+            "Texture.ei_himmelsdrache_giftdrache",
+            "Texture.ei_himmelsdrache_nachtschwinge",
+            "Texture.ei_himmelsdrache_schlunddrache",
+            "Texture.ei_himmelsdrache_dampfdrache",
+            "Texture.ei_himmelsdrache_sternendrache",
+            "Texture.ei_himmelsdrache_lavadrache",
+            "Texture.ei_giftdrache_lindwurm",
+            "Texture.ei_giftdrache_frostwyvern",
+            "Texture.ei_giftdrache_himmelsdrache",
+            "Texture.ei_giftdrache_giftdrache",
+            "Texture.ei_giftdrache_nachtschwinge",
+            "Texture.ei_giftdrache_schlunddrache",
+            "Texture.ei_giftdrache_dampfdrache",
+            "Texture.ei_giftdrache_sternendrache",
+            "Texture.ei_giftdrache_lavadrache",
+            "Texture.ei_nachtschwinge_lindwurm",
+            "Texture.ei_nachtschwinge_frostwyvern",
+            "Texture.ei_nachtschwinge_himmelsdrache",
+            "Texture.ei_nachtschwinge_giftdrache",
+            "Texture.ei_nachtschwinge_nachtschwinge",
+            "Texture.ei_nachtschwinge_schlunddrache",
+            "Texture.ei_nachtschwinge_dampfdrache",
+            "Texture.ei_nachtschwinge_sternendrache",
+            "Texture.ei_nachtschwinge_lavadrache",
+            "Texture.ei_schlunddrache_lindwurm",
+            "Texture.ei_schlunddrache_frostwyvern",
+            "Texture.ei_schlunddrache_himmelsdrache",
+            "Texture.ei_schlunddrache_giftdrache",
+            "Texture.ei_schlunddrache_nachtschwinge",
+            "Texture.ei_schlunddrache_schlunddrache",
+            "Texture.ei_schlunddrache_dampfdrache",
+            "Texture.ei_schlunddrache_sternendrache",
+            "Texture.ei_schlunddrache_lavadrache",
+            "Texture.ei_dampfdrache_lindwurm",
+            "Texture.ei_dampfdrache_frostwyvern",
+            "Texture.ei_dampfdrache_himmelsdrache",
+            "Texture.ei_dampfdrache_giftdrache",
+            "Texture.ei_dampfdrache_nachtschwinge",
+            "Texture.ei_dampfdrache_schlunddrache",
+            "Texture.ei_dampfdrache_dampfdrache",
+            "Texture.ei_dampfdrache_sternendrache",
+            "Texture.ei_dampfdrache_lavadrache",
+            "Texture.ei_sternendrache_lindwurm",
+            "Texture.ei_sternendrache_frostwyvern",
+            "Texture.ei_sternendrache_himmelsdrache",
+            "Texture.ei_sternendrache_giftdrache",
+            "Texture.ei_sternendrache_nachtschwinge",
+            "Texture.ei_sternendrache_schlunddrache",
+            "Texture.ei_sternendrache_dampfdrache",
+            "Texture.ei_sternendrache_sternendrache",
+            "Texture.ei_sternendrache_lavadrache",
+            "Texture.ei_lavadrache_lindwurm",
+            "Texture.ei_lavadrache_frostwyvern",
+            "Texture.ei_lavadrache_himmelsdrache",
+            "Texture.ei_lavadrache_giftdrache",
+            "Texture.ei_lavadrache_nachtschwinge",
+            "Texture.ei_lavadrache_schlunddrache",
+            "Texture.ei_lavadrache_dampfdrache",
+            "Texture.ei_lavadrache_sternendrache",
+            "Texture.ei_lavadrache_lavadrache"
+          ]
+        }
+      },
+      "geometry": "Geometry.default",
+      "materials": [
+        {
+          "*": "Material.default"
+        }
+      ],
+      "textures": [
+        "Array.schale[query.property('fynn:koerper') * 9 + query.property('fynn:farbe')]"
+      ]
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "format_version": "1.10.0",
+  "animations": {
+    "animation.erzpfeil.halten": {
+      "loop": true,
+      "bones": {
+        "waffe": {
+          "position": [
+            "c.is_first_person ? (c.item_slot == 'slot.weapon.offhand' ? 3.5 : -3.5) : 0.0",
+            "c.is_first_person ? -3.5 : -2.0",
+            0.0
+          ],
+          "rotation": [
+            "c.is_first_person ? 0.0 : 90.0",
+            0.0,
+            "c.is_first_person ? (c.item_slot == 'slot.weapon.offhand' ? 135.0 : -135.0) : 0.0"
+          ],
+          "scale": "c.is_first_person ? 0.28 : 0.37"
+        },
+        "griff": {
+          "position": [
+            0.0,
+            "c.is_first_person ? -19.50 : -2.00",
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            "c.is_first_person ? 0.0 : 90.0",
+            0.0
+          ]
+        }
+      }
+    }
+  }
+}
