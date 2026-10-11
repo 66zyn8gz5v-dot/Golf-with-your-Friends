@@ -350,29 +350,37 @@ def gestalt():
     # ---- die Waffen in der rechten Hand, nach vorn gehalten.
     wx = -10.5
     schwert = m.knoch("schwert", [wx, 32, -10], "hand_r")
-    # Ein geschwungenes Hackmesser: Der Ruecken steigt zur Spitze, das Blatt
-    # wird breiter, die Schneide ist hell - aus 30 schmalen Schnitten, jeder
-    # quer zur Bahn der Klinge.
+    # Das Leunenschwert nach Fynns Bildern: keine Machete, sondern eine
+    # langgezogene Axtklinge - am Heft schmal, zur Spitze laufen beide
+    # Kanten auseinander, oben und unten, bis zu einem breiten, fast gerade
+    # abgeschnittenen Ende. Hell, am Ruecken und am Ende ein dunkler Rand,
+    # unten die helle Schneide. Der Griff ist mit Leder umwickelt, am Knauf
+    # haengt eine Kette.
     schwert.kasten([wx - 1, 31, -14], [2, 2, 8], "leder")
-    schwert.kasten([wx - 1.5, 30, -16], [3, 4, 2], "metall", aufblasen=0.1)
-    schwert.kasten([wx - 1, 30.5, -8], [2, 3, 2], "metall")
-    lang = 30
+    schwert.kasten([wx - 1.5, 30, -16.5], [3, 4, 2], "kupfer", aufblasen=0.1)   # Band am Klingenansatz
+    schwert.kasten([wx - 1, 30.5, -7], [2, 3, 2], "metall")
+    for i in range(3):
+        # Die Kette: drei kleine Ringe, die vom Knauf herabhaengen.
+        ring(schwert, (wx, 29.2 - i * 2.4, -6.5 + (i % 2) * 0.6), 1.3, "kette", segmente=10, dicke=1, breite=1)
+    lang = 34
     for i in range(lang):
-        s0 = i / lang
-        z = -16 - i
-        yc = 31.5 + 4.5 * s0 ** 1.8
-        breit = 4.5 + 5.5 * s0 ** 1.2
-        if i >= lang - 3:
-            breit *= 1 - (i - (lang - 4)) * 0.18                     # schraeg abgeschnittene Spitze
-        steig = 4.5 * 1.8 * s0 ** 0.8 / lang                         # Steigung der Bahn
-        ny, nz = 1.0, steig                                          # Quer zur Bahn
-        nl = math.hypot(ny, nz)
-        ny, nz = ny / nl, nz / nl
-        unten = (yc - breit * 0.45 * ny, z - breit * 0.45 * nz)
-        kante = (yc - (breit * 0.45 - 1.6) * ny, z - (breit * 0.45 - 1.6) * nz)
-        oben = (yc + breit * 0.55 * ny, z + breit * 0.55 * nz)
-        schnitt(schwert, wx, unten, kante, "schneide")
-        schnitt(schwert, wx, kante, oben, "klinge")
+        s0 = i / (lang - 1)
+        z = -17 - i
+        mitte_y = 32 + 1.5 * s0 ** 2                               # die Klinge steigt ein wenig
+        oben = mitte_y + 1.8 + 5.2 * s0 ** 1.7
+        unten = mitte_y - 1.8 - 4.6 * s0 ** 1.9
+        if i >= lang - 2:
+            # Das breite Ende: die Ecken leicht gerundet.
+            oben -= 0.6 * (i - (lang - 3))
+            unten += 0.6 * (i - (lang - 3))
+        ende = i >= lang - 3
+        schnitt(schwert, wx, (unten, z), (unten + 1.4, z), "schneide")
+        schnitt(schwert, wx, (unten + 1.4, z), (oben - 1.4, z), "klingenende" if ende else "klinge")
+        schnitt(schwert, wx, (oben - 1.4, z), (oben, z), "klingenruecken")
+    # Zwei dunkle Kerben auf dem Blatt, wie im Spiel.
+    for z0, y0 in ((-30, 33), (-40, 34.5)):
+        schwert.kasten([wx - 0.55, y0, z0 - 2], [1, 1, 4], "klingenruecken", drehung=[8, 0, 0],
+                       drehpunkt=[wx, y0, z0])
     # Die Keule: ein langer, umwickelter Schaft, oben ein Kopf aus sechs
     # Flanschen, die sternfoermig abstehen, und ein Dorn an der Spitze.
     keule = m.knoch("keule", [wx, 32, -10], "hand_r")
@@ -469,7 +477,7 @@ ARTEN = {
         "fell": ["#23271f", "#353b31", "#4c5446"], "bauch": "#55604e", "streifen": ("#1a1d17", 0.35),
         "maehne": ["#4a100c", "#7e2418", "#a8402a"], "haut": ["#272b24", "#3b4237", "#56604f"],
         "horn": ("#9a8a64", "#d6caa2", "#f0e8cc"), "huf": "#1c1a18", "augen": "#7dff6a", "glut": "#a8ff8a",
-        "metall": ["#26282c", "#44484e", "#767a82"], "klinge": ["#2a2e33", "#4e555c", "#c4c9ce"],
+        "metall": ["#26282c", "#44484e", "#767a82"], "klinge": ["#3e4348", "#a4aaae", "#e6e8e6"],
         "holz": "#4a1c14", "schild": ["#6a3420", "#9a5236", "#c87a52"], "zier": "#d8b088",
         "binde": ["#b8ad8e", "#d8d0b4", "#eee8d4"], "leder": ["#5a2216", "#8a3a26", "#b0563a"],
         "muster": "streifen",
@@ -674,6 +682,10 @@ def maler(art, phase=1):
             # Hell an der Schneide (unten und vorn), dunkler zum Ruecken, eine
             # Kehlung in der Mitte - und bei den wilden und goldenen Waffen
             # eine Gravur in der Zierfarbe.
+            if k is not None and k.groesse[2] <= 2:
+                # Ein Schnitt einer Schnitt-Klinge: hell zur Schneide, mittelgrau
+                # zum Ruecken - ohne Kehlung, die wuerde zu einer Punktreihe.
+                return H.verlauf([f["klinge"][2], f["klinge"][1]], 0.15 + t * 0.7, 3)
             c = H.verlauf(list(reversed(f["klinge"])), t, 4)
             if abs(n[0]) > 0.5 and k is not None and k.groesse[1] >= 5:
                 mitte = k.ursprung[1] + k.groesse[1] * 0.55
@@ -734,6 +746,10 @@ def maler(art, phase=1):
             return c
         if stoff == "schneide":
             return H.farbe(f["klinge"][2])
+        if stoff in ("klingenruecken", "klingenende"):
+            return H.verlauf([f["klinge"][0], f["klinge"][1]], 0.25 if stoff == "klingenruecken" else 0.4, 2)
+        if stoff == "kette":
+            return H.verlauf(["#9aa0a6", "#d4d8dc"], t, 2)
         if stoff == "kupfer":
             # Kupferring: warmer Verlauf, auf der Schauseite je Glied eine Niete.
             ku = f.get("kupfer", ["#7a3a22", "#b0603e", "#d8906a"])
