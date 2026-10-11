@@ -54,214 +54,407 @@ def glut(farbe, hell=0.0):
 
 # ============================================================ Gestalt
 
-def bogen_bauen(k, mitte, hoehe=36, woelbung=7, x_dicke=2, stoff="bogen"):
-    """Ein grosser Reflexbogen aus Gliedern: Er biegt sich vom Griff nach
-    vorn und schwingt an den Enden wieder zurueck - so sehen die
-    Leunenboegen aus. mitte: der Griff (x, y, z); der Bogen steht
-    senkrecht, seine Woelbung zeigt nach -z (vorn)."""
-    x0, y0, z0 = mitte
-    teile = 9
-    punkte = []
-    for i in range(teile + 1):
-        s = i / teile * 2 - 1                         # -1 unten .. 1 oben
-        y = y0 + s * hoehe / 2
-        # Woelbung nach vorn, die Enden schwingen zurueck (Reflex).
-        z = z0 - woelbung * (1 - s * s) + 2.5 * max(0.0, abs(s) - 0.75) / 0.25
-        punkte.append((y, z))
-    for i in range(teile):
-        (ya, za), (yb, zb) = punkte[i], punkte[i + 1]
-        lang = math.hypot(yb - ya, zb - za)
-        winkel = math.degrees(math.atan2(zb - za, yb - ya))
-        dick = 3 if 3 <= i <= 5 else 2
-        k.kasten([x0 - x_dicke / 2, ya, (za + zb) / 2 - dick / 2], [x_dicke, max(1, round(lang + 0.6)), dick],
-                 "griff" if i == 4 else stoff, drehung=[-winkel, 0, 0], drehpunkt=[x0, ya, (za + zb) / 2])
-    # Hornspitzen an den Enden und die Sehne.
-    for (y, z), r in ((punkte[0], 1), (punkte[-1], -1)):
-        k.kasten([x0 - 1, y - (2 if r > 0 else 0), z - 1], [2, 2, 3], "horn")
-    k.kasten([x0 - 0.05, punkte[0][0], punkte[0][1] + 0.5], [0, round(hoehe), 0], "sehne")
-    return punkte
+# Fynn: "Nicht so kantig, mehr Dynamik ... mehr Detail, achte auf die
+# Formen." Darum besteht der Leune nicht aus grossen Kisten, sondern aus
+# Kurven: Hoerner, Maehnenstacheln, Schwanz und Bogenarme sind Ketten aus
+# kurzen Staeben, die einer Bahn folgen und zur Spitze duenner werden;
+# Klingen sind aus vielen schmalen, gedrehten Schnitten zusammengesetzt
+# (wie der runde Kupferring), und Leib, Brust und Glieder haben einen
+# achteckigen Querschnitt statt eines viereckigen.
+#
+# Drehungen wie in Bedrock (nachgerechnet mit modell_ansehen.drehe): Ein
+# Stab, der entlang +z gebaut ist, zeigt nach Drehung [a, b, 0] in die
+# Richtung (cos a sin b, sin a, cos a cos b).
+
+
+def stab(k, a, b, breite, stoff, tiefe=None, ueber=0.6):
+    """Ein Kasten von Punkt a nach Punkt b. breite: quer (lokal x), tiefe:
+    quer (lokal y); ueber: wie weit er an beiden Enden uebersteht, damit in
+    einer Kette keine Fugen klaffen."""
+    tiefe = breite if tiefe is None else tiefe
+    d = [b[i] - a[i] for i in range(3)]
+    lang = math.sqrt(sum(v * v for v in d)) or 0.01
+    c = [(a[i] + b[i]) / 2 for i in range(3)]
+    neig = math.degrees(math.atan2(d[1], math.hypot(d[0], d[2])))
+    gier = math.degrees(math.atan2(d[0], d[2]))
+    L = max(1, int(math.ceil(lang + ueber)))
+    return k.kasten([c[0] - breite / 2, c[1] - tiefe / 2, c[2] - L / 2], [breite, tiefe, L], stoff,
+                    drehung=[round(neig, 2), round(gier, 2), 0], drehpunkt=[round(v, 3) for v in c])
+
+
+def kette(k, punkte, dicken, stoffe, tiefen=None):
+    """Staebe durch eine Folge von Punkten; dicken/stoffe je Glied (oder einer
+    fuer alle)."""
+    for i in range(len(punkte) - 1):
+        dk = dicken[i] if isinstance(dicken, (list, tuple)) else dicken
+        st = stoffe[i] if isinstance(stoffe, (list, tuple)) else stoffe
+        tf = None if tiefen is None else (tiefen[i] if isinstance(tiefen, (list, tuple)) else tiefen)
+        stab(k, punkte[i], punkte[i + 1], dk, st, tf)
+
+
+def bahn(stuetzen, schritte):
+    """Eine weiche Kurve (Catmull-Rom) durch Stuetzpunkte - so biegt sich ein
+    Horn gleichmaessig statt in Knicken."""
+    p = [stuetzen[0]] + list(stuetzen) + [stuetzen[-1]]
+    aus = []
+    for i in range(1, len(p) - 2):
+        p0, p1, p2, p3 = p[i - 1], p[i], p[i + 1], p[i + 2]
+        for j in range(schritte):
+            t = j / schritte
+            aus.append(tuple(0.5 * ((2 * p1[a]) + (-p0[a] + p2[a]) * t + (2 * p0[a] - 5 * p1[a] + 4 * p2[a] - p3[a]) * t * t
+                                    + (-p0[a] + 3 * p1[a] - 3 * p2[a] + p3[a]) * t ** 3) for a in range(3)))
+    aus.append(tuple(stuetzen[-1]))
+    return aus
+
+
+def schnitt(k, x0, innen, aussen, stoff, breite=2, dicke=1):
+    """Ein schmaler Streifen in der y-z-Ebene von innen nach aussen (je ein
+    Punkt (y, z)) - der Baustein fuer Klingen und Halbmonde."""
+    vy, vz = aussen[0] - innen[0], aussen[1] - innen[1]
+    lang = math.hypot(vy, vz)
+    if lang < 0.3:
+        return
+    a = math.degrees(math.atan2(-vz, vy))
+    cy, cz = (innen[0] + aussen[0]) / 2, (innen[1] + aussen[1]) / 2
+    L = max(1, int(math.ceil(lang)))
+    k.kasten([x0 - dicke / 2, cy - L / 2, cz - breite / 2], [dicke, L, breite], stoff,
+             drehung=[round(a, 2), 0, 0], drehpunkt=[x0, round(cy, 3), round(cz, 3)])
+
+
+def ring(k, mitte, r, stoff, segmente=16, dicke=2, breite=2):
+    """Ein runder Ring in der y-z-Ebene aus vielen kurzen, gedrehten Gliedern."""
+    x0, cy, cz = mitte
+    lang = int(math.ceil(2 * math.pi * r / segmente + 0.8))
+    for i in range(segmente):
+        w = 360.0 * i / segmente
+        k.kasten([x0 - dicke / 2, cy + r - breite / 2, cz - lang / 2], [dicke, breite, lang], stoff,
+                 drehung=[w, 0, 0], drehpunkt=[x0, cy, cz])
+
+
+def halbmond(k, x0, mitte, richtung, gross=1.0, stoff="schildklinge", spanne=78, schritt=6):
+    """Eine Halbmondklinge in der y-z-Ebene: zwischen einem aeusseren Kreis
+    (die gewoelbte Schneide) und einem inneren, zum Schaft hin versetzten
+    Kreis (die Hoehlung). Aus strahlenfoermigen Schnitten - die Spitzen
+    entstehen von selbst dort, wo sich die Kreise treffen. Die aeussersten
+    anderthalb Pixel sind die helle Schneide."""
+    my, mz = mitte
+    uy, uz = richtung
+    Ro, Ri = 9.0 * gross, 9.5 * gross
+    co = (my - uy * 2 * gross, mz - uz * 2 * gross)
+    ci = (my - uy * 9.5 * gross, mz - uz * 9.5 * gross)
+    w0 = math.degrees(math.atan2(uz, uy))
+    w = -spanne
+    while w <= spanne + 0.01:
+        ww = math.radians(w0 + w)
+        vy, vz = math.cos(ww), math.sin(ww)
+        # Wo der Strahl den inneren Kreis verlaesst.
+        dy, dz = co[0] - ci[0], co[1] - ci[1]
+        b = 2 * (vy * dy + vz * dz)
+        c = dy * dy + dz * dz - Ri * Ri
+        disk = b * b - 4 * c
+        t0 = (-b + math.sqrt(disk)) / 2 if disk > 0 else 0.0
+        t0 = max(0.0, t0)
+        if t0 < Ro - 1.0:
+            innen = (co[0] + vy * t0, co[1] + vz * t0)
+            kante = (co[0] + vy * (Ro - 1.6), co[1] + vz * (Ro - 1.6))
+            aussen = (co[0] + vy * Ro, co[1] + vz * Ro)
+            if Ro - 1.6 > t0:
+                schnitt(k, x0, innen, kante, stoff)
+            schnitt(k, x0, kante, aussen, "schneide")
+        w += schritt
 
 
 def gestalt():
-    """Gebaut nach Bildern der Leunen aus Breath of the Wild. Masse in
+    """Gebaut nach Fynns Bildern des Leunen aus Breath of the Wild. Masse in
     Pixeln, das Spiel vergroessert je Art (GROESSE)."""
     m = Modell(NAME, sichtbreite=5.0, sichthoehe=6.0)
     m.knoch("wurzel", [0, 0, 0])
 
-    # ---- der Pferdeleib
+    # ---- der Pferdeleib: achteckig im Querschnitt, vorn eine tiefe Brust,
+    # hinten eine runde, hohe Kruppe, die Flanken gewoelbt.
     leib = m.knoch("leib", [0, 31, 2], "wurzel")
-    # Massig wie ein Kaltblut: Der Oberkoerper sitzt vorn auf einem
-    # breiten, tiefen Leib, die Kruppe steht hoch und rund.
-    leib.kasten([-8, 24, -15], [16, 14, 38], "fell")
-    leib.kasten([-7, 38, -11], [14, 2, 32], "fell", aufblasen=0.1)            # gewoelbter Ruecken
-    leib.kasten([-7, 20, -17], [14, 13, 5], "fell", aufblasen=0.3)            # Pferdebrust
-    leib.kasten([-7, 23, -12], [14, 1, 31], "bauch")                         # Bauch
-    leib.kasten([-8.5, 27, 12], [17, 12, 11], "fell", aufblasen=0.3)          # Kruppe
+    leib.kasten([-8, 25, -14], [16, 12, 36], "fell")
+    leib.kasten([-6.5, 23, -14], [13, 16, 36], "fell")
+    leib.kasten([-7, 22, -16.5], [14, 12, 4], "fell", aufblasen=0.2)          # Pferdebrust
+    leib.kasten([-5.5, 20.5, -17.5], [11, 9, 3], "fell", aufblasen=0.2)
+    leib.kasten([-6, 23, -12], [12, 1, 30], "bauch")                         # Bauch
+    # Der Bauch haengt in der Mitte ein wenig durch - die Linie wird weich.
+    leib.kasten([-6, 21.5, -7], [12, 2, 18], "bauch", aufblasen=0.2)
+    leib.kasten([-4.5, 20.5, -3], [9, 1, 10], "bauch", aufblasen=0.2)
+    leib.kasten([-8.5, 27, 13], [17, 11, 9], "fell", aufblasen=0.2)           # Kruppe
+    leib.kasten([-7, 37, 12], [14, 3, 10], "fell", aufblasen=0.2)
+    leib.kasten([-6, 38, -12], [12, 2, 25], "fell")                          # Rueckenlinie
+    for x in (1, -1):
+        # Schultermuskel und Oberschenkelmuskel als Woelbung auf der Flanke.
+        leib.kasten([7.5 if x > 0 else -9.5, 25, -15], [2, 11, 8], "fell", aufblasen=0.25)
+        leib.kasten([7.5 if x > 0 else -9.5, 24, 13], [2, 13, 9], "fell", aufblasen=0.3)
     for seite, x in (("l", 1), ("r", -1)):
-        # Vorderbein: Schulter, Unterarm (Roehre), Fessel mit Haarbusch, Huf.
+        # Vorderbein: kraeftiger Unterarm, schlanke, bandagierte Roehre,
+        # Fessel mit Haarbusch, Huf mit Kronrand.
         bx, bz = x * 5, -10
         o = m.knoch(f"bein_v{seite}", [bx, 27, bz], "leib")
-        o.kasten([bx - 3.5, 14, bz - 3.5], [7, 14, 7], "fell", aufblasen=0.25)
+        o.kasten([bx - 3.5, 15, bz - 3], [7, 13, 6], "fell", aufblasen=0.2)
+        o.kasten([bx - 3, 16, bz - 3.5], [6, 11, 7], "fell", aufblasen=0.2)
         u = m.knoch(f"unterbein_v{seite}", [bx, 15, bz], f"bein_v{seite}")
-        u.kasten([bx - 2.5, 5, bz - 2.5], [5, 11, 5], "binde")
+        u.kasten([bx - 2.5, 10, bz - 2.5], [5, 6, 5], "binde")
+        u.kasten([bx - 2, 5, bz - 2], [4, 6, 4], "binde", aufblasen=0.25)
         f = m.knoch(f"huf_v{seite}", [bx, 5, bz], f"unterbein_v{seite}")
-        f.kasten([bx - 3.5, 3.5, bz - 3.5], [7, 3, 7], "fessel", aufblasen=0.2)
-        f.kasten([bx - 3, 0, bz - 4], [6, 4, 7], "huf")
-        # Hinterbein: maechtiger Schenkel, schraege Roehre, Fessel, Huf.
+        f.kasten([bx - 3.5, 3, bz - 3.5], [7, 3, 7], "fessel", aufblasen=0.3)
+        f.kasten([bx - 3, 0, bz - 4], [6, 3, 7], "huf")
+        f.kasten([bx - 2.5, 2.5, bz - 3.5], [5, 1, 6], "huf", aufblasen=0.2)
+        # Hinterbein: maechtiger Schenkel, Sprunggelenk, schlanke Roehre.
         hx, hz = x * 5, 17
         o = m.knoch(f"bein_h{seite}", [hx, 31, hz], "leib")
-        o.kasten([hx - 4, 16, hz - 5], [8, 16, 10], "fell", aufblasen=0.3)
+        o.kasten([hx - 4, 17, hz - 5], [8, 15, 10], "fell", aufblasen=0.2)
+        o.kasten([hx - 3.5, 15, hz - 3], [7, 6, 8], "fell", aufblasen=0.2)
         u = m.knoch(f"unterbein_h{seite}", [hx, 17, hz + 2], f"bein_h{seite}")
-        u.kasten([hx - 2.5, 5, hz - 0.5], [5, 13, 5], "binde")
+        u.kasten([hx - 2.5, 11, hz - 0.5], [5, 7, 5], "binde")
+        u.kasten([hx - 2, 5, hz], [4, 7, 4], "binde", aufblasen=0.25)
         f = m.knoch(f"huf_h{seite}", [hx, 5, hz + 2], f"unterbein_h{seite}")
-        f.kasten([hx - 3.5, 3.5, hz - 1.5], [7, 3, 7], "fessel", aufblasen=0.2)
-        f.kasten([hx - 3, 0, hz - 2], [6, 4, 7], "huf")
+        f.kasten([hx - 3.5, 3, hz - 1.5], [7, 3, 7], "fessel", aufblasen=0.3)
+        f.kasten([hx - 3, 0, hz - 2], [6, 3, 7], "huf")
+        f.kasten([hx - 2.5, 2.5, hz - 1.5], [5, 1, 6], "huf", aufblasen=0.2)
 
-    # ---- der Loewenschwanz: drei Glieder, nach hinten unten, mit Quaste
-    s1 = m.knoch("schwanz1", [0, 36, 22], "leib", drehung=[-48, 0, 0])
-    s1.kasten([-1, 35, 21], [2, 2, 8], "fell")
-    s2 = m.knoch("schwanz2", [0, 36, 29], "schwanz1", drehung=[-14, 0, 0])
-    s2.kasten([-1, 35, 28.5], [2, 2, 8], "fell")
-    s3 = m.knoch("schwanz3", [0, 36, 36], "schwanz2", drehung=[12, 0, 0])
-    s3.kasten([-1, 35, 35.5], [2, 2, 5], "fell")
-    s3.kasten([-2, 34, 39], [4, 4, 7], "maehne", aufblasen=0.1)
+    # ---- der Loewenschwanz: eine geschwungene Kette, die Quaste am Ende
+    punkte = bahn([(0, 37, 22), (0, 33, 27), (0, 27, 30), (0, 21, 31), (0, 16, 29.5)], 2)
+    s1 = m.knoch("schwanz1", [0, 37, 22], "leib")
+    kette(s1, punkte[:4], [3, 3, 2], "fell")
+    s2 = m.knoch("schwanz2", list(punkte[3]), "schwanz1")
+    kette(s2, punkte[3:7], [2, 2, 2], "fell")
+    s3 = m.knoch("schwanz3", list(punkte[6]), "schwanz2")
+    kette(s3, punkte[6:], 2, "fell")
+    ende = punkte[-1]
+    for dx, dz, lang in ((0, 0, 7), (1.2, 1, 6), (-1.2, 1, 6), (0, -1.2, 5)):
+        stab(s3, (ende[0], ende[1] + 1, ende[2]), (ende[0] + dx * 2, ende[1] - lang, ende[2] + dz * 2), 3,
+             "maehne_spitze" if lang < 7 else "maehne")
 
-    # ---- der Oberkoerper: Taille, Bauch, Brustkorb
+    # ---- der Oberkoerper: schmale Taille, breite Brust, V-Form
     ober = m.knoch("oberkoerper", [0, 36, -9], "leib")
     ober.kasten([-6, 35, -14], [12, 7, 9], "haut")
+    ober.kasten([-5, 35, -14.5], [10, 7, 10], "haut")
     ober.kasten([-5.5, 41, -14.5], [11, 6, 8], "bauchmuskel")
-    # Ein Guertel und vorn ein Schurz aus Lederplatten mit Nieten - wie auf
-    # Fynns Bild.
+    ober.kasten([-4.5, 41, -15], [9, 6, 9], "bauchmuskel")
+    for x in (1, -1):
+        # Die schraegen Bauchmuskeln zur Huefte.
+        ober.kasten([4.5 if x > 0 else -6.5, 37, -13], [2, 8, 6], "haut", drehung=[0, 0, -x * 12],
+                    drehpunkt=[5.5 * x, 41, -10])
     schurz = m.knoch("schurz", [0, 36, -15], "oberkoerper")
-    schurz.kasten([-6.5, 35, -14.5], [13, 2, 10], "guertel", aufblasen=0.15)
-    schurz.kasten([-4.5, 32, -15.6], [9, 4, 1], "schurz")
-    schurz.kasten([-4, 28, -18.2], [8, 4, 1], "schurz")
-    schurz.kasten([-3.5, 24, -18.6], [7, 4, 1], "schurz")
+    schurz.kasten([-6.5, 35, -14.5], [13, 2, 10], "guertel", aufblasen=0.2)
+    for i, (y, z, b) in enumerate(((32, -15.8, 9), (28, -18.2, 8), (24, -18.8, 7), (20, -18.4, 6))):
+        schurz.kasten([-b / 2, y, z], [b, 4, 1], "schurz", drehung=[-4 - i * 3, 0, 0],
+                      drehpunkt=[0, y + 4, z])
     brust = m.knoch("brust", [0, 46, -9], "oberkoerper")
     brust.kasten([-8, 46, -15], [16, 10, 11], "brustkorb")
-    brust.kasten([-7, 50, -16], [14, 5, 1], "brustmuskel")
+    brust.kasten([-7, 45, -16], [14, 12, 13], "brustkorb")
+    brust.kasten([-9.5, 50, -13.5], [19, 6, 9], "brustkorb", aufblasen=0.2)  # breiter Ruecken
     for x in (1, -1):
-        brust.kasten([8 if x > 0 else -12, 50, -14], [4, 6, 8], "schulter", aufblasen=0.25)
-    brust.kasten([-6, 56, -13], [12, 3, 7], "haut")                          # Nacken
-    # Die Rueckenmaehne: ueber die Schultern den Ruecken hinab.
+        # Zwei Brustmuskeln, leicht nach aussen gedreht; Schultern als Kuppeln.
+        brust.kasten([0.3 if x > 0 else -7.3, 49, -16.6], [7, 6, 2], "brustmuskel", aufblasen=0.15,
+                     drehung=[0, x * 10, 0], drehpunkt=[x * 3.5, 52, -16])
+        brust.kasten([8 if x > 0 else -12, 50, -14], [4, 6, 8], "schulter", aufblasen=0.35)
+        brust.kasten([8.5 if x > 0 else -11.5, 53, -13], [3, 3, 6], "schulter", aufblasen=0.3)
+        # Der Kappenmuskel steigt schraeg vom Nacken zur Schulter.
+        brust.kasten([1 if x > 0 else -9, 55, -13], [8, 3, 6], "haut", drehung=[0, 0, -x * 18],
+                     drehpunkt=[x * 1, 56, -10])
     rm = m.knoch("maehne", [0, 58, -6], "brust")
-    rm.kasten([-7, 43, -5], [14, 16, 5], "maehne", aufblasen=0.2)
-    rm.kasten([-6, 39, -2], [12, 6, 4], "maehne")
-    rm.kasten([-8, 52, -10], [16, 6, 6], "maehne", aufblasen=0.2)
+    rm.kasten([-7, 43, -5], [14, 15, 5], "maehne", aufblasen=0.2)
+    for i, x in enumerate((-6, -3, 0, 3, 6)):
+        # Lange Straehnen, die den Ruecken hinab wehen.
+        stab(rm, (x, 56, -4), (x * 1.2, 40 - (i % 2) * 3, -1), 3, "maehne")
+        stab(rm, (x * 1.2, 41 - (i % 2) * 3, -1), (x * 1.3, 36 - (i % 2) * 3, 0.5), 2, "maehne_spitze")
 
     # ---- Hals und Kopf
     hals = m.knoch("hals", [0, 56, -10], "brust")
     hals.kasten([-3, 55, -13], [6, 5, 6], "haut")
     kopf = m.knoch("kopf", [0, 60, -11], "hals")
     kopf.kasten([-5, 59, -16], [10, 9, 9], "kopf")
-    # Eine breite Loewenschnauze, darauf vorn die Nase; die Augen sitzen
-    # darueber unter einem schweren Brauenwulst.
-    kopf.kasten([-3.5, 59, -20], [7, 4, 4], "schnauze")
-    kopf.kasten([-2, 61.5, -21], [4, 2, 2], "nase")
-    kopf.kasten([-3, 63, -18], [6, 1, 2], "schnauze")                        # Nasenruecken
-    kopf.kasten([-5, 66, -17], [10, 2, 2], "braue")
+    kopf.kasten([-4, 58, -15], [8, 11, 7], "kopf")
     for x in (1, -1):
-        kopf.kasten([2 if x > 0 else -3, 58, -20], [1, 2, 1], "zahn")        # Hauer oben
+        kopf.kasten([3.5 if x > 0 else -5.5, 59, -16.5], [2, 4, 4], "kopf", aufblasen=0.2)   # Wangen
+    kopf.kasten([-3.5, 59, -20], [7, 4, 4], "schnauze")
+    kopf.kasten([-2.5, 58.5, -20.5], [5, 5, 3], "schnauze")
+    kopf.kasten([-2, 61.5, -21.2], [4, 2, 2], "nase")
+    kopf.kasten([-3, 63, -18], [6, 1, 2], "schnauze")
+    kopf.kasten([-5, 66, -17], [10, 2, 2], "braue")
+    kopf.kasten([-4, 67, -16.5], [8, 1, 2], "braue")
+    for x in (1, -1):
+        kopf.kasten([2 if x > 0 else -3, 57.5, -20], [1, 2, 1], "zahn")
         kopf.kasten([5 if x > 0 else -6, 65, -11], [1, 3, 2], "ohr")
     kiefer = m.knoch("kiefer", [0, 60, -14], "kopf")
     kiefer.kasten([-3, 57, -19.5], [6, 2, 6], "kiefer")
     for x in (1, -1):
         kiefer.kasten([1.5 if x > 0 else -2.5, 59, -19.3], [1, 1, 1], "zahn")
-    # Die Maehne steht wild und stachelig nach oben und hinten (Fynns Bild),
-    # umrahmt das Gesicht und faellt als langer Bart bis auf die Brust.
+
+    # Die Maehne: viele spitz zulaufende Straehnen, die wild nach oben und
+    # hinten stehen, um das Gesicht ein voller Kragen, darunter der Bart.
     km = m.knoch("maehne_kopf", [0, 62, -9], "kopf")
-    for i, w in enumerate((-56, -28, 0, 28, 56)):
-        x0 = math.sin(math.radians(w)) * 5
-        km.kasten([x0 - 1.5, 66, -13 - 1.5], [3, 9 - abs(i - 2), 3], "maehne",
-                  drehung=[-18, 0, -w * 0.8], drehpunkt=[x0, 66, -13])
-    for i, w in enumerate((-70, -40, -12, 12, 40, 70)):
-        x0 = math.sin(math.radians(w)) * 6
-        km.kasten([x0 - 2, 63, -9 - 2], [4, 12 - abs(round(w / 30)), 4], "maehne",
-                  drehung=[-40, 0, -w * 0.7], drehpunkt=[x0, 64, -9])
-    km.kasten([-6, 65, -15], [12, 3, 8], "maehne", aufblasen=0.2)             # Stirnschopf
+    km.kasten([-6, 64, -15], [12, 4, 8], "maehne", aufblasen=0.2)
     for x in (1, -1):
         km.kasten([5 if x > 0 else -8, 56, -16], [3, 11, 10], "maehne", aufblasen=0.25)
-    km.kasten([-6, 54, -8], [12, 14, 4], "maehne", aufblasen=0.2)             # hinter dem Kopf
-    km.kasten([-3.5, 50, -20], [7, 8, 4], "maehne", aufblasen=0.1)            # Bart
-    km.kasten([-2.5, 45, -19.5], [5, 5, 3], "maehne")
-    km.kasten([-1.5, 42, -19], [3, 3, 2], "maehne")                          # Bartquaste
-    # Die Hoerner: kurz, hell und kraeftig wie bei einem Stier - seitlich aus
-    # dem Kopf, nach aussen und oben, die Spitzen biegen sich nach vorn.
-    for seite, x in (("l", 1), ("r", -1)):
-        hx, hy, hz = x * 5, 66, -12
-        h1 = m.knoch(f"horn_{seite}", [hx, hy, hz], "kopf", drehung=[0, 0, x * 24])
-        h1.kasten([hx if x > 0 else hx - 5, hy - 2, hz - 2], [5, 4, 4], "horn")
-        h2 = m.knoch(f"horn2_{seite}", [x * 10, hy, hz], f"horn_{seite}", drehung=[-10, -x * 30, 0])
-        h2.kasten([x * 10 - 1.5, hy - 1.5, hz - 6], [3, 3, 6], "horn")
-        h3 = m.knoch(f"horn3_{seite}", [x * 10, hy, hz - 6], f"horn2_{seite}", drehung=[40, 0, 0])
-        h3.kasten([x * 10 - 1, hy - 1, hz - 10], [2, 2, 4], "horn")
+    km.kasten([-6, 54, -8], [12, 13, 4], "maehne", aufblasen=0.2)
+    stacheln = [
+        # (Ansatz, Richtung, Laenge)
+        ((0, 67, -14), (0, 1.0, 0.25), 9), ((-3, 67, -13), (-0.35, 1.0, 0.3), 8), ((3, 67, -13), (0.35, 1.0, 0.3), 8),
+        ((-5.5, 66, -11), (-0.8, 0.9, 0.5), 7), ((5.5, 66, -11), (0.8, 0.9, 0.5), 7),
+        ((-1.5, 67, -10), (-0.2, 0.8, 0.9), 10), ((1.5, 67, -10), (0.2, 0.8, 0.9), 10),
+        ((-4.5, 65, -8), (-0.6, 0.6, 1.0), 9), ((4.5, 65, -8), (0.6, 0.6, 1.0), 9),
+        ((0, 64, -7), (0, 0.4, 1.0), 9), ((-7, 61, -12), (-1.0, 0.3, 0.4), 6), ((7, 61, -12), (1.0, 0.3, 0.4), 6),
+        ((-6.5, 58, -9), (-0.9, -0.1, 0.8), 6), ((6.5, 58, -9), (0.9, -0.1, 0.8), 6),
+    ]
+    for (sx_, sy_, sz_), (dx, dy, dz), lang in stacheln:
+        n_ = math.sqrt(dx * dx + dy * dy + dz * dz)
+        dx, dy, dz = dx / n_, dy / n_, dz / n_
+        # Jeder Stachel biegt sich zur Spitze ein wenig nach hinten.
+        p0 = (sx_, sy_, sz_)
+        p1 = (sx_ + dx * lang * 0.55, sy_ + dy * lang * 0.55, sz_ + dz * lang * 0.55 + 0.8)
+        p2 = (sx_ + dx * lang, sy_ + dy * lang - 0.5, sz_ + dz * lang + 2.2)
+        stab(km, p0, p1, 3, "maehne")
+        stab(km, p1, p2, 2, "maehne_spitze")
+    # Der Bart: breit unter dem Kinn, faellt bis auf die Brust, mit Quaste.
+    kette(km, [(0, 57.5, -19.5), (0, 52, -20.2), (0, 47.5, -19.6), (0, 44.5, -19)], [7, 5, 3], "maehne",
+          tiefen=[4, 3, 3])
+    stab(km, (0, 45, -19), (0, 41.5, -18.8), 3, "maehne_spitze")
+    for x in (1, -1):
+        stab(km, (x * 3, 57, -19), (x * 4, 51, -18.5), 2, "maehne_spitze")
 
-    # ---- die Arme. Rechts (-x) die Waffe, links (+x) Schild und Bogen.
+    # Die Hoerner: kraeftig und hell wie bei einem Stier - aus dem Schaedel
+    # nach aussen und oben, dann nach vorn, die Spitze nach unten; quer
+    # gerippt, zur Spitze schmaler.
+    for seite, x in (("l", 1), ("r", -1)):
+        h = m.knoch(f"horn_{seite}", [x * 5, 66, -12], "kopf")
+        weg = bahn([(x * 4.5, 65.5, -12), (x * 8, 67.5, -12.5), (x * 11, 69.5, -14), (x * 12.5, 69, -17),
+                    (x * 12, 67, -19.5), (x * 10.8, 64.5, -20.5)], 2)
+        n_ = len(weg) - 1
+        for i in range(n_):
+            dicke = 4 if i < 2 else (3 if i < 5 else (2 if i < 8 else 1))
+            stoff = "hornspitze" if i >= n_ - 3 else ("hornring" if i % 2 else "horn")
+            stab(h, weg[i], weg[i + 1], dicke, stoff, ueber=0.8)
+
+    # ---- die Arme: Oberarm mit Bizeps, kraeftiger Unterarm, Lederwickel am
+    # Handgelenk, eine Faust.
     for seite, x in (("l", 1), ("r", -1)):
         ax = x * 10.5
         a = m.knoch(f"arm_{seite}", [ax, 55, -10], "brust")
         a.kasten([ax - 2.5, 44, -12.5], [5, 12, 5], "arm", aufblasen=0.2)
+        a.kasten([ax - 2, 44.5, -13], [4, 11, 6], "arm", aufblasen=0.2)
+        a.kasten([ax - 1.5, 46, -13.6], [3, 6, 2], "arm", aufblasen=0.25)        # Bizeps
         u = m.knoch(f"unterarm_{seite}", [ax, 45, -10], f"arm_{seite}")
-        u.kasten([ax - 2.5, 34, -12.5], [5, 11, 5], "unterarm")
-        u.kasten([ax - 3, 38, -13], [6, 2, 6], "armring")
+        u.kasten([ax - 2.75, 40, -12.75], [5, 5, 5], "unterarm", aufblasen=0.35)
+        u.kasten([ax - 2.25, 35, -12.25], [4, 6, 4], "unterarm", aufblasen=0.25)
+        u.kasten([ax - 2.5, 34, -12.5], [5, 3, 5], "leder", aufblasen=0.3)        # Wickel
         h = m.knoch(f"hand_{seite}", [ax, 34, -10], f"unterarm_{seite}")
         h.kasten([ax - 2.5, 30, -12.5], [5, 4, 5], "hand")
+        h.kasten([ax - 2.5, 29.5, -13.2], [5, 2, 2], "hand", aufblasen=0.1)      # Finger
+        h.kasten([ax - (0.5 if x > 0 else 1.5) + x * 2, 31, -13], [2, 2, 3], "hand")   # Daumen
 
-    # ---- die Waffen in der rechten Hand: nach vorn gehalten.
+    # ---- die Waffen in der rechten Hand, nach vorn gehalten.
     wx = -10.5
     schwert = m.knoch("schwert", [wx, 32, -10], "hand_r")
-    # Das Leunenschwert ist ein breites, gebogenes Hackmesser: dunkler Stahl,
-    # helle Schneide unten, zur Spitze hin breiter und nach oben geschwungen.
-    schwert.kasten([wx - 1, 31, -14], [2, 2, 8], "griff")
-    schwert.kasten([wx - 1.5, 30, -16], [3, 4, 2], "metall")                 # Ring am Heft
-    for z0, y0, hoch in ((-22, 29, 4), (-28, 28.5, 5), (-34, 28.5, 7), (-40, 29, 9)):
-        schwert.kasten([wx - 0.5, y0, z0], [1, hoch, 6], "klinge")
-    schwert.kasten([wx - 0.5, 30.5, -43], [1, 8, 3], "klinge")               # die breite Spitze
-    schwert.kasten([wx - 0.5, 33, -45], [1, 5, 2], "klinge")
-    schwert.kasten([wx - 1, 30.5, -8], [2, 3, 2], "metall")                  # Knauf
+    # Ein geschwungenes Hackmesser: Der Ruecken steigt zur Spitze, das Blatt
+    # wird breiter, die Schneide ist hell - aus 30 schmalen Schnitten, jeder
+    # quer zur Bahn der Klinge.
+    schwert.kasten([wx - 1, 31, -14], [2, 2, 8], "leder")
+    schwert.kasten([wx - 1.5, 30, -16], [3, 4, 2], "metall", aufblasen=0.1)
+    schwert.kasten([wx - 1, 30.5, -8], [2, 3, 2], "metall")
+    lang = 30
+    for i in range(lang):
+        s0 = i / lang
+        z = -16 - i
+        yc = 31.5 + 4.5 * s0 ** 1.8
+        breit = 4.5 + 5.5 * s0 ** 1.2
+        if i >= lang - 3:
+            breit *= 1 - (i - (lang - 4)) * 0.18                     # schraeg abgeschnittene Spitze
+        steig = 4.5 * 1.8 * s0 ** 0.8 / lang                         # Steigung der Bahn
+        ny, nz = 1.0, steig                                          # Quer zur Bahn
+        nl = math.hypot(ny, nz)
+        ny, nz = ny / nl, nz / nl
+        unten = (yc - breit * 0.45 * ny, z - breit * 0.45 * nz)
+        kante = (yc - (breit * 0.45 - 1.6) * ny, z - (breit * 0.45 - 1.6) * nz)
+        oben = (yc + breit * 0.55 * ny, z + breit * 0.55 * nz)
+        schnitt(schwert, wx, unten, kante, "schneide")
+        schnitt(schwert, wx, kante, oben, "klinge")
+    # Die Keule: ein langer, umwickelter Schaft, oben ein Kopf aus sechs
+    # Flanschen, die sternfoermig abstehen, und ein Dorn an der Spitze.
     keule = m.knoch("keule", [wx, 32, -10], "hand_r")
-    keule.kasten([wx - 1, 31, -32], [2, 2, 26], "holz")
-    keule.kasten([wx - 1.5, 30.5, -14], [3, 3, 5], "griff")
-    keule.kasten([wx - 4, 27, -44], [8, 9, 13], "metall")
-    keule.kasten([wx - 3, 28, -46], [6, 7, 2], "metall")
-    for dy, dx in ((9, 0), (-1, 0), (4, 4.5), (4, -4.5)):
-        for z in (-42, -36):
-            keule.kasten([wx - 1 + dx, 27 + dy - 1, z], [2, 3, 2], "dorn")
+    keule.kasten([wx - 1, 31, -34], [2, 2, 28], "holz")
+    for z in (-14, -20, -26):
+        keule.kasten([wx - 1.5, 30.5, z], [3, 3, 3], "leder")
+    keule.kasten([wx - 2.5, 29.5, -46], [5, 5, 13], "metall")
+    for i in range(6):
+        w = i * 60
+        keule.kasten([wx - 0.5, 32, -46], [1, 5, 12], "dorn", drehung=[0, 0, w], drehpunkt=[wx, 32, -40])
+    stab(keule, (wx, 32, -46), (wx, 32, -51), 2, "dorn")
+    # Der Speer: Schaft mit Wickeln, ein langes Blatt aus Schnitten, zwei
+    # geschwungene Seitenhaken.
     speer = m.knoch("speer", [wx, 32, -10], "hand_r")
     speer.kasten([wx - 1, 31, -48], [2, 2, 58], "holz")
-    speer.kasten([wx - 1.5, 30.5, -14], [3, 3, 6], "griff")
-    speer.kasten([wx - 0.5, 28, -62], [1, 8, 14], "klinge")                  # Blatt
-    speer.kasten([wx - 0.5, 29.5, -66], [1, 5, 4], "klinge")
-    speer.kasten([wx - 0.5, 31, -68], [1, 2, 2], "klinge")
-    for y in (26, 36):
-        speer.kasten([wx - 0.5, y, -52], [1, 2, 5], "klinge")                # Seitenzacken
-    speer.kasten([wx - 2, 30, -49], [4, 4, 2], "metall")
+    for z in (-14, -22, 4):
+        speer.kasten([wx - 1.5, 30.5, z], [3, 3, 4], "leder")
+    speer.kasten([wx - 2, 30, -50], [4, 4, 3], "metall", aufblasen=0.1)
+    for i in range(18):
+        s0 = i / 17
+        breit = 2 + 6 * math.sin(math.pi * min(1.0, s0 * 1.15)) if s0 < 0.87 else 2 * (1 - s0) / 0.13 + 0.6
+        z = -51 - i
+        schnitt(speer, wx, (32 - breit / 2, z), (32 - breit / 2 + 1.2, z), "schneide")
+        schnitt(speer, wx, (32 - breit / 2 + 1.2, z), (32 + breit / 2 - 1.2, z), "klinge")
+        schnitt(speer, wx, (32 + breit / 2 - 1.2, z), (32 + breit / 2, z), "schneide")
+    for oben in (1, -1):
+        kette(speer, bahn([(wx, 32, -52), (wx, 32 + oben * 4, -53), (wx, 32 + oben * 6.5, -51)], 2), 1, "klinge",
+              tiefen=2)
     speer.kasten([wx - 1, 31, 10], [2, 2, 3], "metall")
 
-    # ---- links: der Schild am Unterarm, der Bogen in der Hand (nur beim Schuss)
+    # ---- links: der Schild am Unterarm, der Bogen in der Hand
     sx = 13.5
     schild = m.knoch("schild", [10.5, 40, -10], "unterarm_l")
-    # Der Leunenschild nach Fynns Bild: ein Ring mit Kupferrand und Nieten,
-    # in der Mitte rotes Fell, und quer hindurch zwei grosse Halbmondklingen.
-    for urs, gr in (([sx, 44, -18], [2, 2, 16]), ([sx, 30, -18], [2, 2, 16]),
-                    ([sx, 32, -18], [2, 12, 2]), ([sx, 32, -4], [2, 12, 2])):
-        schild.kasten(urs, gr, "schild")
-    schild.kasten([sx + 0.5, 32, -16], [1, 12, 12], "maehne")                 # Fell im Ring
-    for z0, r in ((-24, -1), (-2, 1)):
-        schild.kasten([sx + 0.5, 31, z0], [1, 14, 6], "schildklinge")
-        schild.kasten([sx + 0.5, 27, z0 + (0 if r > 0 else -2) + (2 if r > 0 else 0)], [1, 5, 4], "schildklinge")
-        schild.kasten([sx + 0.5, 44, z0 + (0 if r > 0 else -2) + (2 if r > 0 else 0)], [1, 5, 4], "schildklinge")
-    # In der Hand vorgedreht: Beim Zielen hebt er den Arm waagrecht nach vorn
-    # (-90 Grad) - dann steht der Bogen senkrecht, wie man ihn haelt.
+    mitte = (sx + 1, 38, -11)
+    ring(schild, mitte, 7.5, "kupfer", segmente=18, dicke=3, breite=3)
+    schild.kasten([sx + 0.5, 33, -14], [1, 10, 6], "maehne")
+    schild.kasten([sx + 0.5, 35, -16], [1, 6, 10], "maehne")
+    axt = m.knoch("schildaxt", [sx + 1.5, 38, -11], "schild", drehung=[-36, 0, 0])
+    # Das Blatt der Doppelaxt durch den Ring - zur Mitte schmal, zu den
+    # Koepfen breiter.
+    for i in range(23):
+        z = -22 + i
+        breit = 3 + abs(z + 11) * 0.18
+        schnitt(axt, sx + 1.5, (38 - breit / 2, z), (38 + breit / 2, z), "schildklinge")
+    halbmond(axt, sx + 1.5, (38, 1), (0, 1), gross=1.0)
+    halbmond(axt, sx + 1.5, (38, -23), (0, -1), gross=1.0)
+
     bh = m.knoch("bogen_hand", [10.5, 32, -10], "hand_l", drehung=[90, 0, 0])
-    bogen_bauen(bh, (10.5, 32, -10), hoehe=40, woelbung=7)
-    # Auf dem Ruecken, schraeg ueber der Maehne.
+    bogen_bauen(bh, (10.5, 32, -10), hoehe=44, woelbung=7)
     br = m.knoch("bogen_ruecken", [0, 50, -2], "brust", drehung=[0, 0, -38])
-    bogen_bauen(br, (0, 50, -1), hoehe=40, woelbung=6)
+    bogen_bauen(br, (0, 50, 3), hoehe=44, woelbung=6)
     return m
 
 
+def bogen_bauen(k, mitte, hoehe=44, woelbung=7, x_dicke=2):
+    """Der Leunenbogen nach Fynns Bildern: ein grosser Reflexbogen, in der
+    Mitte ein Kupferring als Griff, die Wurfarme hell mit dunkler Innenseite
+    und weich geschwungen, an den Enden kleine Halbmondklingen, die Sehne
+    golden. Er steht senkrecht, seine Woelbung zeigt nach -z."""
+    x0, y0, z0 = mitte
+    zg = z0 - woelbung
+    ring(k, (x0, y0, zg), 4, "kupfer", segmente=12, dicke=x_dicke + 1, breite=2)
+    enden = {}
+    for seite in (1, -1):
+        h = hoehe / 2
+        stuetzen = [(x0, y0 + seite * 4, zg), (x0, y0 + seite * h * 0.4, zg + woelbung * 0.55),
+                    (x0, y0 + seite * h * 0.75, zg + woelbung * 1.05), (x0, y0 + seite * h, zg + woelbung * 0.55)]
+        weg = bahn(stuetzen, 3)
+        n_ = len(weg) - 1
+        for i in range(n_):
+            stab(k, weg[i], weg[i + 1], x_dicke, "bogen", tiefe=3 if i < n_ // 2 else 2)
+        yt, zt = weg[-1][1], weg[-1][2]
+        # Die Endklinge: ein kleiner Halbmond, der nach vorn zeigt.
+        halbmond(k, x0, (yt, zt - 3), (0, -1), gross=0.45, spanne=70, schritt=10)
+        enden[seite] = (yt, zt)
+    (y1, z1), (y2, z2) = enden[-1], enden[1]
+    k.kasten([x0 - 0.05, y1, z1 + 0.5], [0, round(y2 - y1), 0], "sehne")
+    return enden
+
+
 WAFFEN = ["schwert", "keule", "speer"]
+
 
 
 # ============================================================ Malen
@@ -394,6 +587,19 @@ def maler(art, phase=1):
         if stoff == "huf":
             c = H.farbe(f["huf"])
             return H.heller(c, 0.25) if oben else (H.dunkler(c, 0.2) if t < 0.3 else c)
+        if stoff == "maehne_spitze":
+            # Die Spitzen der Straehnen: heller, zur Spitze hin noch heller.
+            lt = H.laenge(p, texel, 2)
+            return H.verlauf([maehne[1], maehne[2]], 0.3 + lt * 0.7, 3)
+        if stoff in ("hornring", "hornspitze"):
+            basis, mitte_, spitze = f["horn"]
+            if stoff == "hornspitze":
+                return H.verlauf([mitte_, spitze], 0.5 + (0.3 if oben else 0.0), 2)
+            return H.dunkler(H.verlauf([basis, mitte_], 0.6, 2), 0.06)
+        if stoff == "leder":
+            le = f.get("leder", [H.dunkler(f["holz"], 0.2), f["holz"], H.heller(f["holz"], 0.2)])
+            c = H.verlauf(le, 0.3 + t * 0.5, 3)
+            return H.dunkler(c, 0.15) if int(math.floor(y + z * 0.5)) % 2 == 0 else c
         if stoff == "maehne":
             # Strähnen von oben nach unten: oben hell, die Spitzen dunkel -
             # als breite Bahnen, nicht als Punkte.
@@ -455,11 +661,7 @@ def maler(art, phase=1):
         if stoff == "horn":
             # Vom Ansatz zur Spitze: drei Toene; quer gerippt wie ein Widderhorn.
             basis, mitte, spitze = f["horn"]
-            stufe = 0.85 if texel[3].startswith("horn3") else (0.55 if texel[3].startswith("horn2") else 0.2)
-            c = H.verlauf([basis, mitte, spitze], stufe + (0.1 if oben else 0.0), 4)
-            if not texel[3].startswith("horn3") and int(math.floor(abs(x) * 1.0 + abs(z) * 0.6)) % 2 == 0:
-                c = H.dunkler(c, 0.12)                                    # Querrillen
-            return c
+            return H.verlauf([basis, mitte, spitze], 0.45 + (0.12 if oben else 0.0), 4)
         if stoff == "armring":
             c = H.verlauf([f["metall"][0], f["metall"][2]], t, 3)
             return glut(f["zier"]) if (phase == 2 and art in ("silber", "gold") and abs(n[1]) <= 0.5 and 0.4 < t < 0.6) else c
@@ -521,15 +723,35 @@ def maler(art, phase=1):
                 return H.farbe(f["zier"])                                  # Schnalle
             return rund(c, p, k, n)
         if stoff == "schildklinge":
-            # Dunkler Stahl, an der aeusseren Kante (weit weg vom Ring) hell.
+            # Dunkler Stahl mit einer hellen Fase entlang der Kanten - wie die
+            # Axtklingen auf Fynns Bild.
             kl = f["klinge"]
-            weit = abs(z + 10) / 14
-            return H.verlauf([kl[0], kl[1], kl[2]], max(0.0, min(1.0, (weit - 0.45) * 2.4)), 3)
-        if stoff == "bogen":
-            c = H.verlauf([f["holz"], H.heller(f["holz"], 0.25)], t, 2)
+            c = H.verlauf([kl[0], kl[1]], t, 2)
+            if k is not None and abs(n[0]) > 0.5:
+                rand = min(y - k.ursprung[1], k.ursprung[1] + k.groesse[1] - y)
+                if rand < 0.9:
+                    c = H.heller(c, 0.18)
             return c
+        if stoff == "schneide":
+            return H.farbe(f["klinge"][2])
+        if stoff == "kupfer":
+            # Kupferring: warmer Verlauf, auf der Schauseite je Glied eine Niete.
+            ku = f.get("kupfer", ["#7a3a22", "#b0603e", "#d8906a"])
+            c = H.verlauf(ku, 0.3 + t * 0.6, 3)
+            if k is not None and abs(n[0]) > 0.5 and k.groesse[2] >= 3:
+                mz = k.ursprung[2] + k.groesse[2] / 2
+                my = k.ursprung[1] + k.groesse[1] / 2
+                if abs(z - mz) < 0.5 and abs(y - my) < 0.5:
+                    return H.farbe(f["zier"])
+            return c
+        if stoff == "bogen":
+            # Die Wurfarme: aussen hell wie Knochen, innen (zur Sehne) dunkel.
+            b = f.get("bogenfarben", ["#3a2a24", "#d8d2c0", "#f2eee2"])
+            if n[2] > 0.5:
+                return H.farbe(b[0])
+            return H.verlauf([b[1], b[2]], t, 2)
         if stoff == "sehne":
-            return (220, 214, 196)
+            return hexfarbe(f.get("sehne", "#d8b45a"))
         return (255, 0, 255)
     return male
 
@@ -548,15 +770,18 @@ def bauen():
 # leicht gesenkt; die Hinterbeine winkeln am Sprunggelenk ab wie bei einem
 # Pferd.
 HALTUNG = {
-    "leib": [0, 0, 0], "oberkoerper": [4, 0, 0], "brust": [2, 0, 0], "hals": [-4, 0, 0], "kopf": [6, 0, 0],
+    # Angriffslustig: Der Oberkoerper beugt sich vor und dreht die Waffenseite
+    # zurueck, der Kopf ist gesenkt, die Waffe hoch und bereit, der Schild
+    # vor der Brust; ein Vorderbein steht vor, die Hinterbeine sind versetzt.
+    "leib": [0, 0, 0], "oberkoerper": [9, -8, 0], "brust": [5, -4, 0], "hals": [-8, 4, 0], "kopf": [8, 6, 0],
     "kiefer": [0, 0, 0],
-    "arm_r": [-14, 0, -10], "unterarm_r": [-26, 0, 0], "hand_r": [0, 0, 0],
-    "arm_l": [-22, 18, 14], "unterarm_l": [-56, 0, 0], "hand_l": [0, 0, 0],
-    "bein_vl": [0, 0, 0], "bein_vr": [0, 0, 0], "unterbein_vl": [0, 0, 0], "unterbein_vr": [0, 0, 0],
-    "huf_vl": [0, 0, 0], "huf_vr": [0, 0, 0],
-    "bein_hl": [10, 0, 0], "bein_hr": [10, 0, 0], "unterbein_hl": [-20, 0, 0], "unterbein_hr": [-20, 0, 0],
-    "huf_hl": [10, 0, 0], "huf_hr": [10, 0, 0],
-    "schwanz1": [0, 0, 0], "schwanz2": [0, 0, 0], "schwanz3": [0, 0, 0],
+    "arm_r": [-40, 30, -34], "unterarm_r": [-46, 0, 0], "hand_r": [10, 0, 0],
+    "arm_l": [-18, 30, 30], "unterarm_l": [-52, 0, 0], "hand_l": [0, 0, 0],
+    "bein_vl": [-14, 0, 0], "bein_vr": [6, 0, 0], "unterbein_vl": [18, 0, 0], "unterbein_vr": [0, 0, 0],
+    "huf_vl": [-4, 0, 0], "huf_vr": [0, 0, 0],
+    "bein_hl": [16, 0, 0], "bein_hr": [2, 0, 0], "unterbein_hl": [-24, 0, 0], "unterbein_hr": [-16, 0, 0],
+    "huf_hl": [8, 0, 0], "huf_hr": [14, 0, 0],
+    "schwanz1": [10, 8, 0], "schwanz2": [6, 10, 0], "schwanz3": [0, 8, 0],
 }
 
 
@@ -624,12 +849,12 @@ def haltung():
     """Er atmet schwer, der Kopf sieht sich um, der Schwanz peitscht leise;
     ab und zu scharrt ein Vorderhuf."""
     knochen = {k: {"rotation": list(v)} for k, v in HALTUNG.items()}
-    knochen["brust"]["rotation"] = [f"2.0 + math.sin({T} * 70.0) * 1.5", 0.0, 0.0]
-    knochen["kopf"]["rotation"] = [f"6.0 + math.sin({T} * 70.0 - 60.0) * 2.0", f"math.sin({T} * 23.0) * 14.0",
+    knochen["brust"]["rotation"] = [f"5.0 + math.sin({T} * 70.0) * 1.5", -4.0, 0.0]
+    knochen["kopf"]["rotation"] = [f"8.0 + math.sin({T} * 70.0 - 60.0) * 2.0", f"6.0 + math.sin({T} * 23.0) * 12.0",
                                    f"math.sin({T} * 17.0) * 4.0"]
     knochen["kiefer"]["rotation"] = [f"math.max(0.0, math.sin({T} * 29.0) - 0.92) * 140.0", 0.0, 0.0]
-    knochen["arm_r"]["rotation"] = [f"-14.0 + math.sin({T} * 70.0) * 3.0", 0.0, -10.0]
-    knochen["schwanz1"]["rotation"] = [f"math.sin({T} * 50.0) * 6.0", f"math.sin({T} * 80.0) * 18.0", 0.0]
+    knochen["arm_r"]["rotation"] = [f"-40.0 + math.sin({T} * 70.0) * 3.0", 30.0, -34.0]
+    knochen["schwanz1"]["rotation"] = [f"10.0 + math.sin({T} * 50.0) * 6.0", f"8.0 + math.sin({T} * 80.0) * 18.0", 0.0]
     knochen["schwanz2"]["rotation"] = [0.0, f"math.sin({T} * 80.0 - 50.0) * 14.0", 0.0]
     knochen["schwanz3"]["rotation"] = [0.0, f"math.sin({T} * 80.0 - 100.0) * 12.0", 0.0]
     # Scharren: alle sieben Sekunden hebt er den rechten Vorderhuf dreimal.
